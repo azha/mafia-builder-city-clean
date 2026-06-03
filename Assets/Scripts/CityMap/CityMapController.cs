@@ -59,6 +59,12 @@ namespace MafiaCleanCity.CityMap
         private RectTransform detailContent;
         private Text detailTitle;
         private Coroutine detailCoroutine;
+        private VerticalLayoutGroup rootVlg;
+
+        // Right padding reserved for the detail panel (380 wide + 16 margin + gap) so the
+        // banks reflow to the left instead of being covered when the panel is open.
+        private const int PanelReservedRight = 408;
+        private const int RootPadding = 16;
 
         private void Start()
         {
@@ -207,8 +213,8 @@ namespace MafiaCleanCity.CityMap
             Stretch(rootRt, Vector2.zero, Vector2.zero);
             Image rootBg = root.AddComponent<Image>();
             rootBg.color = new Color(0.10f, 0.11f, 0.14f, 1f);
-            VerticalLayoutGroup rootVlg = root.AddComponent<VerticalLayoutGroup>();
-            rootVlg.padding = new RectOffset(16, 16, 16, 16);
+            rootVlg = root.AddComponent<VerticalLayoutGroup>();
+            rootVlg.padding = new RectOffset(RootPadding, RootPadding, RootPadding, RootPadding);
             rootVlg.spacing = 12;
             rootVlg.childControlWidth = true;
             rootVlg.childControlHeight = true;
@@ -439,6 +445,7 @@ namespace MafiaCleanCity.CityMap
             DistrictCellView cell = cells.FirstOrDefault(c => c.Model != null && c.Model.id == districtId);
             if (detailTitle != null) detailTitle.text = cell != null ? cell.Model.name_canonical : $"District {districtId}";
             if (detailPanel != null) detailPanel.SetActive(true);
+            ReserveSpaceForPanel(true);
             if (detailCoroutine != null) StopCoroutine(detailCoroutine);
             detailCoroutine = StartCoroutine(BuildDetail(districtId, cell));
         }
@@ -447,6 +454,16 @@ namespace MafiaCleanCity.CityMap
         {
             SelectedDistrictId = -1;
             if (detailPanel != null) detailPanel.SetActive(false);
+            ReserveSpaceForPanel(false);
+        }
+
+        // Reflow the map to the left of the panel (reassign padding so the layout group
+        // re-runs — mutating RectOffset fields in place would not mark it dirty).
+        private void ReserveSpaceForPanel(bool reserve)
+        {
+            if (rootVlg == null) return;
+            int right = reserve ? PanelReservedRight : RootPadding;
+            rootVlg.padding = new RectOffset(RootPadding, right, RootPadding, RootPadding);
         }
 
         private static DetailRow Missing(string label) => new DetailRow(label, "n/a (not ticked)", false);
@@ -512,6 +529,15 @@ namespace MafiaCleanCity.CityMap
             }
             else detail.rows.Add(Missing("Buffer"));
 
+            InspectionDto insp = null; bool inspOk = false;
+            yield return proj.Inspection(districtId, Token, x => { insp = x; inspOk = true; }, _ => { });
+            if (inspOk && insp != null)
+            {
+                detail.rows.Add(new DetailRow("Inspection queue", insp.queue_load));
+                detail.rows.Add(new DetailRow("Dispatcher regime", insp.dispatcher_regime));
+            }
+            else detail.rows.Add(Missing("Inspection queue"));
+
             UnconformityDto unc = null; bool uncOk = false;
             yield return proj.Unconformity(districtId, Token, u => { unc = u; uncOk = true; }, _ => { });
             detail.rows.Add(uncOk && unc != null ? new DetailRow("Audit pins", unc.audit_pin_presence) : Missing("Audit pins"));
@@ -528,6 +554,10 @@ namespace MafiaCleanCity.CityMap
             yield return proj.Belief(districtId, Token, b => { bel = b; belOk = true; }, _ => { });
             int precinct = CityProjectionsClient.PrecinctForDistrict(districtId);
             detail.rows.Add(belOk && bel != null ? new DetailRow($"Police belief (P{precinct})", bel.belief) : Missing($"Police belief (P{precinct})"));
+
+            PatrolDto pat = null; bool patOk = false;
+            yield return proj.Patrol(districtId, Token, p => { pat = p; patOk = true; }, _ => { });
+            detail.rows.Add(patOk && pat != null ? new DetailRow($"Patrol heat (P{precinct})", pat.patrol_heat) : Missing($"Patrol heat (P{precinct})"));
 
             WhisperDto whi = null; bool whiOk = false;
             yield return proj.Whisper(Token, w => { whi = w; whiOk = true; }, _ => { });

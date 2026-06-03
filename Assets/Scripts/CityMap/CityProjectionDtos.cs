@@ -58,6 +58,16 @@ namespace MafiaCleanCity.CityMap
     [Serializable] public class WhisperEnvelope { public WhisperPayload payload; }
     [Serializable] public class WhisperPayload { public WhisperDto data; }
 
+    // inspection  GET /v1/city/district/:id/inspection { district, queue_load, dispatcher_regime, ... }  (404 until 12h tick)
+    [Serializable] public class InspectionDto { public string district; public string queue_load; public string dispatcher_regime; }
+    [Serializable] public class InspectionEnvelope { public InspectionPayload payload; }
+    [Serializable] public class InspectionPayload { public InspectionDto data; }
+
+    // patrol  GET /v1/city/precinct/:id/patrol { precinct, patrol_heat }  (404 until ticked)
+    [Serializable] public class PatrolDto { public string precinct; public string patrol_heat; }
+    [Serializable] public class PatrolEnvelope { public PatrolPayload payload; }
+    [Serializable] public class PatrolPayload { public PatrolDto data; }
+
     // ---------------------------------------------------------------------
     // Detail-panel view model. Each projection contributes one or more rows;
     // a gated projection (HTTP 404 — "sim has not ticked …") contributes a row

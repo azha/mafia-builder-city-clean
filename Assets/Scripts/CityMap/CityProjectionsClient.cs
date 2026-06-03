@@ -61,8 +61,14 @@ namespace MafiaCleanCity.CityMap
         public IEnumerator Cohesion(int districtId, string token, Action<CohesionDto> ok, Action<long> missing) =>
             Get(D(districtId, "cohesion"), token, j => ok(JsonUtility.FromJson<CohesionEnvelope>(j)?.payload?.data), missing);
 
+        public IEnumerator Inspection(int districtId, string token, Action<InspectionDto> ok, Action<long> missing) =>
+            Get(D(districtId, "inspection"), token, j => ok(JsonUtility.FromJson<InspectionEnvelope>(j)?.payload?.data), missing);
+
         public IEnumerator Belief(int districtId, string token, Action<BeliefDto> ok, Action<long> missing) =>
             Get(P(PrecinctForDistrict(districtId), "belief"), token, j => ok(JsonUtility.FromJson<BeliefEnvelope>(j)?.payload?.data), missing);
+
+        public IEnumerator Patrol(int districtId, string token, Action<PatrolDto> ok, Action<long> missing) =>
+            Get(P(PrecinctForDistrict(districtId), "patrol"), token, j => ok(JsonUtility.FromJson<PatrolEnvelope>(j)?.payload?.data), missing);
 
         public IEnumerator Whisper(string token, Action<WhisperDto> ok, Action<long> missing) =>
             Get($"{BaseUrl.TrimEnd('/')}/v1/city/citizens/whisper", token, j => ok(JsonUtility.FromJson<WhisperEnvelope>(j)?.payload?.data), missing);

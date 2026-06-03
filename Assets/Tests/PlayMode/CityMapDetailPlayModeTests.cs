@@ -49,7 +49,7 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.IsNotNull(d, "detail built");
             Assert.AreEqual(3, d.districtId, "detail is for the selected district");
             Assert.AreEqual(3, controller.SelectedDistrictId);
-            Assert.Greater(d.rows.Count, 10, "rich panel aggregates many projection rows");
+            Assert.Greater(d.rows.Count, 15, "rich panel aggregates many projection rows");
 
             // District facts.
             Assert.IsTrue(d.rows.Any(r => r.label == "Control"), "control_state row present");
@@ -67,8 +67,11 @@ namespace MafiaCleanCity.CityMap.Tests
             // Police belief (precinct-derived) is wired too.
             Assert.IsTrue(d.rows.Any(r => r.label.StartsWith("Police belief")), "belief row present");
 
-            // Honest n/a: at least one cadence-gated projection (e.g. cohesion) shown unavailable.
-            Assert.IsTrue(d.rows.Any(r => !r.available), "gated projection rendered as n/a");
+            // The slow-cadence projections now carry real data (the heavy-advance seed fired
+            // nightly/12h/30-min): cohesion, inspection and patrol are no longer n/a.
+            Assert.IsTrue(d.rows.First(r => r.label == "Cohesion").available, "cohesion populated after heavy advance");
+            Assert.IsTrue(d.rows.First(r => r.label == "Inspection queue").available, "inspection populated after heavy advance");
+            Assert.IsTrue(d.rows.First(r => r.label.StartsWith("Patrol heat")).available, "patrol populated after heavy advance");
 
             // Close.
             controller.HideDetail();

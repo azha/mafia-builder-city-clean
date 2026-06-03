@@ -1,13 +1,19 @@
-// Dev fixture: seed a STABLE demo player (+ credential) and a few heated buildings,
-// then advance the city sim so the Heat projection shows variation. Idempotent.
+// Dev fixture: seed a STABLE demo player (+ credential), advance the city sim far
+// enough that the slow cadences (nightly / 12h / 30-min) have fired — so cohesion,
+// inspection and patrol return real data instead of 404 — then seed a few heated
+// buildings for a deterministic heat gradient. Idempotent.
 //
-// This talks to the REAL dockerized backend stack (project mafia-clean-city) — no mocks.
-// It mirrors the seeding the backend E2E specs do (tests/e2e/citysim/heat_propagation.spec.ts):
-//   account(PLAYER,ACTIVE) + player(callsign/email/locale) + account_credential(scrypt hash)
-//   + buildings(ownership='player', operational, heat) + POST /v1/_test/citysim/advance.
+// Talks to the REAL dockerized backend (project mafia-clean-city) — no mocks. Mirrors
+// the seeding the backend E2E specs do (tests/e2e/citysim/*.spec.ts).
+//
+// ORDER MATTERS:
+//   1. clear buildings, 2. heavy-advance with NO buildings (fires the slow cadences
+//   WITHOUT climbing any heat), 3. seed the heat gradient, 4. advance ONE tick (recompute
+//   the heat aggregate from the gradient + climb ~+0.04, staying in-band).
+// Advancing with buildings present would pull operational heat up toward BURNING and wash
+// the gradient — hence buildings are seeded AFTER the heavy advance.
 //
 // Usage:  node Tools/seed_citymap_demo.mjs
-// Prints the demo credentials + resolved player_id/account_id + the per-district heat seeds.
 
 import { execFileSync } from 'node:child_process';
 import { scryptSync, randomBytes } from 'node:crypto';
@@ -17,20 +23,20 @@ const PG_USER = process.env.POSTGRES_USER ?? 'mafia';
 const PG_DB = process.env.POSTGRES_DB ?? 'mafia_clean_city';
 const BASE_URL = process.env.STACK_BASE_URL ?? 'http://localhost';
 
-// Stable, recognizable demo identity (persists in the pg volume across sessions).
 const EMAIL = 'citymap_demo@example.test';
 const CALLSIGN = 'citymap_demo';
 const PASSWORD = 'citymap-demo-pw';
 
-// Per-district heat seeds → expected bucket spread (COLD elsewhere).
-// 0.9 → BURNING, 0.6 → HOT, 0.35 → WARM (exact bucket thresholds owned by the server).
+// Advance to at least this game-minute so nightly (1440) + 12h (720) + 30-min cadences fire.
+const TARGET_MINUTE = 1500;
+
+// Per-district heat seeds (thresholds: COLD <0.2, WARM 0.2–0.5, HOT 0.5–0.8, BURNING ≥0.8).
 const HEAT_SEEDS = [
   { district: 3, heat: 0.9 },
   { district: 7, heat: 0.6 },
   { district: 11, heat: 0.35 },
 ];
 
-// Mirror of services/game-back/src/auth/password.hasher.ts → scrypt$N$r$p$saltB64$hashB64.
 const SCRYPT_N = 16384, SCRYPT_R = 8, SCRYPT_P = 1, SCRYPT_KEYLEN = 32;
 function hashPassword(plain) {
   const salt = randomBytes(16);
@@ -47,31 +53,48 @@ function psql(sql) {
   return out.trim().split('\n')[0].trim();
 }
 
+async function advance(playerId, ticks) {
+  const res = await fetch(`${BASE_URL}/v1/_test/citysim/advance?ticks=${ticks}&player_id=${playerId}`, {
+    method: 'POST',
+    headers: { 'Idempotency-Key': crypto.randomUUID(), 'Content-Type': 'application/json' },
+    body: '{}',
+  });
+  const body = await res.json();
+  return body.payload?.data ?? body;
+}
+
 async function main() {
-  // 1. Idempotent account: reuse if the demo player already exists (by email), else create.
+  // 1. Idempotent account.
   let accountId = psql(`SELECT account_id FROM "player" WHERE email = '${EMAIL}';`);
   let playerId;
   if (accountId) {
     playerId = psql(`SELECT player_id FROM "player" WHERE account_id = '${accountId}';`);
-    // Refresh the credential so the known password always works.
-    psql(
-      `UPDATE "account_credential" SET password_hash = '${hashPassword(PASSWORD)}', updated_at = now() WHERE account_id = '${accountId}';`,
-    );
+    psql(`UPDATE "account_credential" SET password_hash = '${hashPassword(PASSWORD)}', updated_at = now() WHERE account_id = '${accountId}';`);
     console.log(`[seed] reusing demo account ${accountId} (player ${playerId})`);
   } else {
     accountId = psql(`INSERT INTO "account" ("kind","lifecycle_state") VALUES ('PLAYER','ACTIVE') RETURNING account_id;`);
-    playerId = psql(
-      `INSERT INTO "player" ("account_id","callsign","email","locale") VALUES ('${accountId}','${CALLSIGN}','${EMAIL}','en') RETURNING player_id;`,
-    );
-    psql(
-      `INSERT INTO "account_credential" ("account_id","password_hash") VALUES ('${accountId}','${hashPassword(PASSWORD)}');`,
-    );
+    playerId = psql(`INSERT INTO "player" ("account_id","callsign","email","locale") VALUES ('${accountId}','${CALLSIGN}','${EMAIL}','en') RETURNING player_id;`);
+    psql(`INSERT INTO "account_credential" ("account_id","password_hash") VALUES ('${accountId}','${hashPassword(PASSWORD)}');`);
     console.log(`[seed] created demo account ${accountId} (player ${playerId})`);
   }
 
-  // 2. Reset this demo player's buildings, then seed fresh heated ones at EXACT band values
-  //    (thresholds: COLD <0.2, WARM 0.2–0.5, HOT 0.5–0.8, BURNING ≥0.8).
+  // 2. Clear buildings BEFORE the heavy advance (so it climbs no heat).
   psql(`DELETE FROM buildings WHERE player_id = '${playerId}';`);
+
+  // 3. Heavy-advance to fire the slow cadences (cohesion nightly / inspection 12h / patrol).
+  //    Idempotent: skip if the clock is already past the nightly boundary.
+  const currentMinuteRaw = psql(`SELECT game_minute FROM city_sim_clock WHERE player_id = '${playerId}';`);
+  const currentMinute = currentMinuteRaw ? Number(currentMinuteRaw) : 0;
+  if (currentMinute < TARGET_MINUTE) {
+    const ticks = TARGET_MINUTE - currentMinute;
+    console.log(`[seed] heavy-advancing ${ticks} ticks (clock ${currentMinute} → ${TARGET_MINUTE}; may take ~20s)…`);
+    const d = await advance(playerId, ticks);
+    console.log(`[seed] cadences fired:`, JSON.stringify(d.cadences_fired ?? d));
+  } else {
+    console.log(`[seed] clock already at ${currentMinute} (≥ ${TARGET_MINUTE}) — slow cadences already fired, skipping heavy advance`);
+  }
+
+  // 4. Seed the heat gradient (after the heavy advance).
   const seeded = [];
   for (const { district, heat } of HEAT_SEEDS) {
     const blockId = psql(`SELECT id FROM blocks WHERE district_id = ${district} ORDER BY id LIMIT 1;`);
@@ -83,17 +106,9 @@ async function main() {
   }
   console.log('[seed] buildings:', JSON.stringify(seeded));
 
-  // 3. Advance EXACTLY ONE minute-tick: lazily creates the city_sim_clock row AND recomputes the
-  //    in-memory district/citywide aggregates from the freshly-seeded heat (so district_bucket is
-  //    correct, not stale). One tick climbs operational heat only ~+0.04 — each building stays in its
-  //    band, preserving the BURNING/HOT/WARM gradient. (More ticks would trend everything to BURNING.)
-  const res = await fetch(`${BASE_URL}/v1/_test/citysim/advance?ticks=1&player_id=${playerId}`, {
-    method: 'POST',
-    headers: { 'Idempotency-Key': crypto.randomUUID(), 'Content-Type': 'application/json' },
-    body: '{}',
-  });
-  const body = await res.json();
-  console.log(`[seed] advance(1) → HTTP ${res.status}:`, JSON.stringify(body.payload?.data ?? body));
+  // 5. One tick: recompute the heat aggregate from the gradient (stays in-band).
+  const d = await advance(playerId, 1);
+  console.log(`[seed] advance(1) → game_minute ${d.game_minute}`);
 
   console.log('\n=== DEMO CREDENTIALS ===');
   console.log(JSON.stringify({ email: EMAIL, callsign: CALLSIGN, password: PASSWORD, accountId, playerId }, null, 2));
