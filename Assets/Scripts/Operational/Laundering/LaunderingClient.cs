@@ -57,6 +57,37 @@ namespace MafiaCleanCity.Operational
             }
         }
 
+        /// <summary>
+        /// GET /v1/operational/laundering/:nodeId/pipeline — the MULTI-NODE pipeline overview (the
+        /// ordered stages Stage1→2→3→4, each with a cleanliness band + terminal flag + has_cash flag).
+        /// onOk(dto) on 2xx; onErr(code, message) on anything else.
+        /// </summary>
+        public IEnumerator GetLaunderingPipeline(string nodeId, string bearer,
+            Action<LaunderingPipelineDto> onOk, Action<long, string> onErr)
+        {
+            string url = Url($"laundering/{nodeId}/pipeline");
+            using (UnityWebRequest req = UnityWebRequest.Get(url))
+            {
+                req.timeout = TimeoutSeconds;
+                if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
+                yield return req.SendWebRequest();
+
+                if (req.result == UnityWebRequest.Result.Success)
+                {
+                    LaunderingPipelineDto dto = null;
+                    try { dto = JsonUtility.FromJson<LaunderingPipelineEnvelope>(req.downloadHandler.text)?.payload?.data; }
+                    catch (Exception ex) { onErr?.Invoke(req.responseCode, "parse error: " + ex.Message); yield break; }
+
+                    if (dto == null || dto.stages == null) { onErr?.Invoke(req.responseCode, "empty pipeline payload"); yield break; }
+                    onOk?.Invoke(dto);
+                }
+                else
+                {
+                    onErr?.Invoke(req.responseCode, ReadableError(req));
+                }
+            }
+        }
+
         // --------------------------------------------------------------- actions
 
         // POST helper. Body is JSON; an idempotency UUID-v4 is attached for mutations.

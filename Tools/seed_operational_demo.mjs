@@ -72,6 +72,10 @@ const INJECT_CLEANED_CENTS = 50000; // first inject (released to the wallet → 
 const INJECT_MIDPIPE_CENTS = 25000; // second inject (left buffered, node reset DIRTY → "mid-pipeline" demo).
 // After laundering, accrue a fresh UNCOLLECTED dealer float for the "dispatch a runner" demo (a MODERATE cash band).
 const DISPLAY_SELL_TICKS = 5; // 5 ticks × 12500 = 62500 cents → MODERATE band (≥2×12500, <8×12500).
+// Phase-2b MULTI-STAGE pipeline: how many DOWNSTREAM stages to append after the Stage-1 front-shop node (Stage 2/3/4).
+// Each downstream stage needs its OWN distinct player-owned OPERATIONAL building (addStage rejects a building that
+// already hosts a node with 409), so we acquire+convert PIPELINE_DOWNSTREAM_STAGES extra operational buildings.
+const PIPELINE_DOWNSTREAM_STAGES = 3; // Stage1 (front-shop) + 3 downstream → a 4-stage chain (Stage1→2→3→4).
 
 const SCRYPT_N = 16384, SCRYPT_R = 8, SCRYPT_P = 1, SCRYPT_KEYLEN = 32;
 function hashPassword(plain) {
@@ -229,7 +233,17 @@ async function main() {
   const dealerSpot = await operationalBuilding(freeBlock(2), 'dealer_spot_front');
   const frontShop = await operationalBuilding(freeBlock(3), 'front_shop');
   const safehouseBldg = await operationalBuilding(freeBlock(4), 'cash_safehouse');
-  console.log('[op-seed] 5 buildings purchased + converted (gutting)');
+
+  // Phase-2b MULTI-STAGE pipeline hosts: PIPELINE_DOWNSTREAM_STAGES extra OPERATIONAL buildings, each hosting ONE
+  // downstream laundering stage (Stage 2/3/4). addStage accepts ANY player-owned operational building (the per-type
+  // mid-tier specialization is deferred — uniform gain), and rejects a building that already hosts a node (409), so
+  // each stage needs a distinct building. We reuse 'front_shop' as the operational_type (any operational type works);
+  // they live on fresh free blocks (offset 5..) in district 16, so the reset's district-16 building wipe re-claims them.
+  const stageHosts = [];
+  for (let s = 0; s < PIPELINE_DOWNSTREAM_STAGES; s += 1) {
+    stageHosts.push(await operationalBuilding(freeBlock(5 + s), 'front_shop'));
+  }
+  console.log(`[op-seed] ${5 + PIPELINE_DOWNSTREAM_STAGES} buildings purchased + converted (gutting)`);
 
   // Fast-forward ALL setups to operational in ONE 1-tick nudge.
   psql(
@@ -357,6 +371,32 @@ async function main() {
   const nodeOccupancy = psql(`SELECT round(current_occupancy)::int FROM tail_risk_estimates WHERE node_id='${nodeId}';`);
   console.log(`[op-seed] launder inject#2 → node mid-pipeline (DIRTY, ${nodeOccupancy} cents buffered)`);
 
+  // ─────────────────────────── 12. PIPELINE — chain Stage 2/3/4 off the Stage-1 node (Phase 2b, addStage) ───────────────────────────
+  // Append PIPELINE_DOWNSTREAM_STAGES downstream stages so the front-shop Stage-1 node heads a MULTI-NODE chain
+  // (Stage1→2→3→4). Each addStage appends ONE node+edge onto the current TAIL (the linear-chain invariant). This is the
+  // LAST mutation and we do NOT advance after it: so (a) the Stage-1 head node stays DIRTY (mid-pipeline) for the
+  // single-node screen + capstone assertions (no advance ⇒ System 8 never re-cleans it / routes it onward), and (b) the
+  // pipeline overview projection shows the ordered chain with cleanliness bands RISING per stage (the bands are
+  // stage_index-derived, independent of cash position). Idempotent: the reset above wipes this player's laundering
+  // nodes/edges + district-16 buildings, so a re-run rebuilds the chain fresh (no duplicate stages).
+  const pipelineNodeIds = [nodeId]; // the head = the Stage-1 front-shop node (created on inject#1).
+  let tailNodeId = nodeId;          // addStage appends onto the current tail (a node with no outgoing edge).
+  for (let s = 0; s < PIPELINE_DOWNSTREAM_STAGES; s += 1) {
+    const host = stageHosts[s];
+    const stage = await api('POST', '/v1/operational/laundering/stage', token, {
+      from_node_id: tailNodeId,
+      building_id: host,
+    });
+    if (stage.status !== 201) throw new Error(`addStage #${s + 2} failed: HTTP ${stage.status} — ${JSON.stringify(stage.data)}`);
+    tailNodeId = stage.data.node_id;
+    pipelineNodeIds.push(tailNodeId);
+  }
+  const stageCount = psql(
+    `SELECT count(*) FROM laundering_nodes ln WHERE ln.player_id='${playerId}' ` +
+      `AND ln.node_id IN (${pipelineNodeIds.map((id) => `'${id}'`).join(',')});`,
+  );
+  console.log(`[op-seed] pipeline chained → ${stageCount} stages (head=${nodeId} → ${PIPELINE_DOWNSTREAM_STAGES} downstream)`);
+
   // ─────────────────────────── DONE — print creds + the seeded entity IDs ───────────────────────────
   console.log('\n=== OPERATIONAL DEMO SEEDED ===');
   console.log(
@@ -374,7 +414,9 @@ async function main() {
           cash_safehouse: safehouseBldg,
         },
         safehouse_id: safehouseId,
-        laundering_node_id: nodeId,
+        laundering_node_id: nodeId, // the head Stage-1 node — the id the pipeline-overview screen queries.
+        pipeline_node_ids: pipelineNodeIds, // the ordered chain head→tail (Stage1→2→3→4).
+        pipeline_stage_count: pipelineNodeIds.length,
         dealer_id: dealerId,
         courier_id: courierId,
         lek_tile_id: lekTile,

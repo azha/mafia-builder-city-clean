@@ -288,6 +288,52 @@ A node not owned by the player → 404.
 
 ---
 
+## 7b. Laundering pipeline overview — `GET /v1/operational/laundering/:nodeId/pipeline`
+
+The Phase-2b MULTI-NODE overview (screen_6 pipeline view). Given ANY node of a chain, it returns the WHOLE
+chain — the ordered stages head→tail (Stage1→2→3→4), each with its qualitative cleanliness band + a terminal
+flag + a `has_cash` presence flag. The cleanliness band is **stage_index-derived** (the canonical per-stage
+progression 0.40/0.60/0.80/1.00 mapped through System 8's CleanlinessBucket), so it RISES per stage — distinct
+from §7's single-node `cleanliness_band`, which is the live `cleanliness_at_output` float of THAT node (these two
+projections of the head node can differ: a freshly-injected head is `DIRTY` in §7 but `PARTIAL` here).
+
+Captured live (the seeded 4-stage chain, head = the front-shop Stage-1 node with buffered cash):
+```json
+{
+    "response_meta": {
+        "request_id_echo": "f22eefd3-9350-4661-98dd-d94305ec2274",
+        "server_processed_at": "2026-06-04T03:02:17.640Z",
+        "api_version": 1,
+        "correlation_id_echo": null
+    },
+    "payload": {
+        "data": {
+            "stages": [
+                { "node": "e9bc075b-b34a-4377-a13a-39c3e9cc259d", "cleanliness_band": "PARTIAL",      "terminal": false, "has_cash": true  },
+                { "node": "1f423931-6cf6-4ca9-b060-191e4cbfb52e", "cleanliness_band": "MOSTLY_CLEAN", "terminal": false, "has_cash": false },
+                { "node": "ebba6102-bcdd-4b8d-bcef-a55be581e530", "cleanliness_band": "MOSTLY_CLEAN", "terminal": false, "has_cash": false },
+                { "node": "69924194-11ba-4e8d-91e6-0f52c80ad6f3", "cleanliness_band": "CLEAN",        "terminal": true,  "has_cash": false }
+            ]
+        }
+    }
+}
+```
+
+**Fields / bands** (from `laundering.projection.service.ts` — `LaunderingPipelineProjection`):
+- `stages`: the ordered chain head→tail (by `stage_index`). Chain LENGTH = `stages.length` (a structural ordinal
+  derived client-side — NOT surfaced as a raw number field, so the whole payload stays strings + booleans; R2.2).
+- `stages[].node`: uuid string (the stage node identity).
+- `stages[].cleanliness_band`: `DIRTY` \| `PARTIAL` \| `MOSTLY_CLEAN` \| `CLEAN` (rises per stage — Stage1 `PARTIAL`
+  /0.40 → Stage4 `CLEAN`/1.00; the stage_index-derived pipeline cleanliness, never the raw float).
+- `stages[].terminal`: boolean — `true` for the chain's TERMINAL/release stage (the node with no outgoing edge —
+  the one that credits the wallet). Exactly one stage is terminal in a linear chain.
+- `stages[].has_cash`: boolean — whether cash is buffered AT this stage (a presence flag only; never the raw cents).
+
+A node not owned by the player → 404. Querying from a mid-chain node returns the SAME whole-chain payload (the
+recursive walk reaches both the head and the tail).
+
+---
+
 ## 8. Action endpoints (request shapes)
 
 All actions require a PLAYER `Bearer` and an `Idempotency-Key` header. Bodies are JSON. Responses are the
@@ -303,6 +349,7 @@ success envelope wrapping the `data` shown.
 | **Assign** dealer | `POST /v1/operational/dealer/assign` | `{ "dealer_spot_id": "<uuid>", "lek_tile_id": <int> }` | `{ "dealer_id": "<uuid>" }` | 201 |
 | **Collect** (runner) | `POST /v1/operational/dealer/:id/collect` | `{ "safehouse_id": "<uuid>" }` | `{ "dealer_id": "<uuid>", "safehouse_id": "<uuid>" }` | 200 |
 | **Inject** (launder) | `POST /v1/operational/laundering/inject` | `{ "front_shop_id": "<uuid>", "safehouse_id": "<uuid>", "amount_cents": <int> }` | `{ "front_shop_id": "<uuid>", "safehouse_id": "<uuid>", "node_id": "<uuid>", "deviation": <bool> }` | 200 |
+| **Add stage** (pipeline) | `POST /v1/operational/laundering/stage` | `{ "from_node_id": "<uuid>", "building_id": "<uuid>" }` | `{ "from_node_id": "<uuid>", "node_id": "<uuid>", "building_id": "<uuid>", "stage_index": <int> }` | 201 |
 
 Notes:
 - The mutating actions return **ids / a flag only** — never the raw cents debited (R2.2; the wallet balance is
@@ -314,6 +361,10 @@ Notes:
 - The cleaned cash reaches the wallet asynchronously on the `LAUNDER_OUTPUT` tick (`wallet += amount × (1 −
   dwell_tax_rate)`, `dwell_tax_rate = 0.10`), once System 8 cleans the node to the clean band — not synchronously
   in the inject response.
+- `addStage` appends ONE downstream stage onto the pipeline TAIL (the linear-chain invariant). `from_node_id` not
+  the player's / `building_id` not a player-owned OPERATIONAL building → `404`. `from_node_id` is NOT the tail
+  (already has a downstream stage) → `409`. The `building_id` already hosts a laundering node → `409` (one node per
+  building). The new node becomes the new TERMINAL/release node until a further stage is appended.
 
 ---
 

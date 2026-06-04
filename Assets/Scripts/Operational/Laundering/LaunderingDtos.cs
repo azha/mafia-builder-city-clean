@@ -29,6 +29,29 @@ namespace MafiaCleanCity.Operational
     [Serializable] public class LaunderingNodeEnvelope { public LaunderingNodePayload payload; }
     [Serializable] public class LaunderingNodePayload { public LaunderingNodeDto data; }
 
+    // GET /v1/operational/laundering/:nodeId/pipeline  (Phase-2b MULTI-NODE overview, screen_6)
+    //   { stages: [ { node, cleanliness_band, terminal, has_cash }, … ] }
+    // The ordered chain head→tail (Stage1→2→3→4). Each stage carries a stage_index-derived cleanliness
+    // BAND that RISES per stage (PARTIAL→MOSTLY_CLEAN→…→CLEAN), a terminal flag, and a has_cash presence
+    // flag — qualitative bands + booleans + uuid identity ONLY (R2.2; no raw cents/float/length-int leaks).
+    [Serializable]
+    public class LaunderingStageDto
+    {
+        public string node;             // uuid identity (this stage's laundering node)
+        public string cleanliness_band; // DIRTY | PARTIAL | MOSTLY_CLEAN | CLEAN (stage_index-derived; rises per stage)
+        public bool terminal;           // true for the chain's terminal/release stage (no outgoing edge → credits the wallet)
+        public bool has_cash;           // presence flag — whether cash is buffered at this stage (never the raw cents)
+    }
+
+    [Serializable]
+    public class LaunderingPipelineDto
+    {
+        public LaunderingStageDto[] stages; // ordered head→tail (by stage_index)
+    }
+
+    [Serializable] public class LaunderingPipelineEnvelope { public LaunderingPipelinePayload payload; }
+    [Serializable] public class LaunderingPipelinePayload { public LaunderingPipelineDto data; }
+
     // ----- Collect action: ferries a dealer float into the cash-safehouse so the
     //       front-shop has dirty cash to launder. Used by the screen's E2E to put a
     //       genuine balance into the safehouse before an Inject (the terminal seed
