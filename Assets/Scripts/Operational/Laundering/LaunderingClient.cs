@@ -10,7 +10,7 @@ namespace MafiaCleanCity.Operational
     // the Stage-1 front-shop Inject action (plus the Collect action the screen uses to
     // stage dirty cash into the safehouse). Mirrors BuildingCardClient: a UnityWebRequest
     // coroutine + concrete-envelope JsonUtility parsing. No mock — every call hits the live
-    // dockerized stack (Traefik at http://localhost).
+    // dockerized stack (Traefik at https://cleancity.erutheone.eu).
     //
     // Auth: every operational endpoint needs a PLAYER Bearer (AuthClient.SignIn).
     // Mutations additionally need an Idempotency-Key header that MUST be a UUID v4
@@ -20,7 +20,7 @@ namespace MafiaCleanCity.Operational
     // BuildingCardClient.cs (same assembly) and REUSED here — one canonical error shape.
     public class LaunderingClient
     {
-        public string BaseUrl = "http://localhost";
+        public string BaseUrl = "https://cleancity.erutheone.eu";
         public int TimeoutSeconds = 10;
 
         private string Url(string leaf) => $"{BaseUrl.TrimEnd('/')}/v1/operational/{leaf}";

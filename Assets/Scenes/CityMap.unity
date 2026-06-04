@@ -148,7 +148,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9ea0004de96a6c643b19de6a20996822, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CityMap::MafiaCleanCity.CityMap.CityMapController
-  baseUrl: http://localhost
+  baseUrl: https://cleancity.erutheone.eu
 --- !u!4 &320276936
 Transform:
   m_ObjectHideFlags: 0

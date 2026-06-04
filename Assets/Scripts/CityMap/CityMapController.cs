@@ -21,7 +21,7 @@ namespace MafiaCleanCity.CityMap
     {
         [Header("Backend")]
         [Tooltip("Public game API base. /v1 districts is unauthed; heat needs a token.")]
-        [SerializeField] private string baseUrl = "http://localhost";
+        [SerializeField] private string baseUrl = "https://cleancity.erutheone.eu";
 
         [Header("Demo sign-in (seeded by Tools/seed_citymap_demo.mjs)")]
         [SerializeField] private string demoIdentifier = "citymap_demo@example.test";

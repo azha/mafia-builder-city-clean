@@ -9,7 +9,7 @@ namespace MafiaCleanCity.Operational
     // "encaisser" payoff of the M1 loop — and the optional /v1/me player header).
     // Mirrors BuildingCardClient: a UnityWebRequest coroutine + concrete-envelope
     // JsonUtility parsing. No mock — every call hits the live dockerized stack
-    // (Traefik at http://localhost).
+    // (Traefik at https://cleancity.erutheone.eu).
     //
     // Auth: both endpoints need a PLAYER Bearer (AuthClient.SignIn). These are
     // read-only GETs — no Idempotency-Key (that header is mandated only on the
@@ -23,7 +23,7 @@ namespace MafiaCleanCity.Operational
     // once in BuildingCardClient.cs (same assembly) and REUSED here.
     public class DashboardClient
     {
-        public string BaseUrl = "http://localhost";
+        public string BaseUrl = "https://cleancity.erutheone.eu";
         public int TimeoutSeconds = 10;
 
         public string WalletUrl => BaseUrl.TrimEnd('/') + "/v1/economy/wallet";

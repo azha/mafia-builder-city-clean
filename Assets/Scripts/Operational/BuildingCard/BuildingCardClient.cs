@@ -9,14 +9,14 @@ namespace MafiaCleanCity.Operational
     // Reads the JWT-gated Phase-2 operational Building Card projection and drives
     // the per-building-type action endpoints. Mirrors CityMap.CityProjectionsClient:
     // a UnityWebRequest coroutine + concrete-envelope JsonUtility parsing. No mock —
-    // every call hits the live dockerized stack (Traefik at http://localhost).
+    // every call hits the live dockerized stack (Traefik at https://cleancity.erutheone.eu).
     //
     // Auth: every operational endpoint needs a PLAYER Bearer (AuthClient.SignIn).
     // Mutations additionally need an Idempotency-Key header that MUST be a UUID v4
     // (the backend rejects any other shape with 400 IDEMPOTENCY_KEY_FORMAT_INVALID).
     public class BuildingCardClient
     {
-        public string BaseUrl = "http://localhost";
+        public string BaseUrl = "https://cleancity.erutheone.eu";
         public int TimeoutSeconds = 10;
 
         private string Url(string leaf) => $"{BaseUrl.TrimEnd('/')}/v1/operational/{leaf}";

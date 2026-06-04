@@ -13,7 +13,7 @@ namespace MafiaCleanCity.CityMap
     // is required to read the JWT-gated city-sim projections (e.g. heat).
     public class AuthClient
     {
-        public string BaseUrl = "http://localhost";
+        public string BaseUrl = "https://cleancity.erutheone.eu";
         public int TimeoutSeconds = 10;
 
         public string SigninUrl => BaseUrl.TrimEnd('/') + "/auth/v1/signin";
