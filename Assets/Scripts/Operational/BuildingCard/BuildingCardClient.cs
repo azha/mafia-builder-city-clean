@@ -142,6 +142,49 @@ namespace MafiaCleanCity.Operational
                 done);
         }
 
+        /// <summary>
+        /// POST /v1/operational/building/:id/repair (Phase-2b) — repair a DAMAGED building (empty body; the building id
+        /// is the path param). Debits the wallet by the grounded repair cost → structural_state='repairing'. 200
+        /// { repairing: true }. Not DAMAGED / insufficient cash → 409 (a well-formed error, mapped to a readable msg).
+        /// </summary>
+        public IEnumerator Repair(string buildingId, string bearer, Action<ActionOutcome> done)
+        {
+            return Post(Url($"building/{buildingId}/repair"), "{}", bearer,
+                json => JsonUtility.FromJson<RepairEnvelope>(json)?.payload?.data?.repairing == true ? "repairing" : null,
+                done);
+        }
+
+        // ----------------------------------------------------------- wallet (affordability gate)
+
+        /// <summary>
+        /// GET /v1/economy/wallet — the player's qualitative wallet band (REUSE the economy projection; §11). Read only
+        /// to gate the Repair button's affordability (repair_cost band vs wallet band — never raw cents; R2.2). onOk
+        /// with the band string on 2xx; onErr otherwise (a wallet read failure leaves the gate conservative).
+        /// </summary>
+        public IEnumerator GetWalletBand(string bearer, Action<string> onOk, Action<long, string> onErr)
+        {
+            string url = $"{BaseUrl.TrimEnd('/')}/v1/economy/wallet";
+            using (UnityWebRequest req = UnityWebRequest.Get(url))
+            {
+                req.timeout = TimeoutSeconds;
+                if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
+                yield return req.SendWebRequest();
+
+                if (req.result == UnityWebRequest.Result.Success)
+                {
+                    string band = null;
+                    try { band = JsonUtility.FromJson<WalletEnvelope>(req.downloadHandler.text)?.payload?.data?.wallet_band; }
+                    catch (Exception ex) { onErr?.Invoke(req.responseCode, "parse error: " + ex.Message); yield break; }
+                    if (string.IsNullOrEmpty(band)) { onErr?.Invoke(req.responseCode, "empty wallet payload"); yield break; }
+                    onOk?.Invoke(band);
+                }
+                else
+                {
+                    onErr?.Invoke(req.responseCode, ReadableError(req));
+                }
+            }
+        }
+
         // --------------------------------------------------------------- helpers
 
         // Map a non-2xx into a readable string. We deliberately surface the operational

@@ -26,7 +26,8 @@ All endpoints are under the `/v1` major version. `<id>` / `<uuid>` are path/quer
 The Building Card surface. The shape is **identical for all 5 operational building types** — only
 `operational_type` differs. Captured live for each type:
 
-**lab**
+**lab** (Phase-2b — the building card now carries the raid/repair/risk surface too: see §13 for the captured
+raid sequence + the DAMAGED / REPAIRING shapes):
 ```json
 {
     "response_meta": {
@@ -37,23 +38,26 @@ The Building Card surface. The shape is **identical for all 5 operational buildi
     },
     "payload": {
         "data": {
-            "building": "61ae7ebc-53ea-473c-8d1f-a07e148efe08",
+            "building": "74f255d3-a555-414d-a34d-0663867b3fc8",
             "setup_state": "OPERATIONAL",
             "cover_band": "WEAK",
             "operational": true,
-            "operational_type": "lab"
+            "operational_type": "lab",
+            "structural_state": "OPERATIONAL",
+            "recently_raided": false,
+            "seized_amount": "NONE",
+            "repair_cost": "NONE",
+            "raid_risk": "ELEVATED"
         }
     }
 }
 ```
 
-The other four types (same envelope; only the `data` differs):
-```json
-{ "building": "4a065799-24f7-4bdc-867d-2a4772ca95f2", "setup_state": "OPERATIONAL", "cover_band": "WEAK", "operational": true, "operational_type": "stash" }
-{ "building": "32daf382-b89f-4022-b136-77e205bb8ea0", "setup_state": "OPERATIONAL", "cover_band": "WEAK", "operational": true, "operational_type": "dealer_spot_front" }
-{ "building": "de8637d1-f0e6-4cc0-808b-831307ca657b", "setup_state": "OPERATIONAL", "cover_band": "WEAK", "operational": true, "operational_type": "front_shop" }
-{ "building": "64ca2812-eb6e-4c72-8e42-b753144c12a7", "setup_state": "OPERATIONAL", "cover_band": "WEAK", "operational": true, "operational_type": "cash_safehouse" }
-```
+> The `data` shape above is the **EXACT live healthy-lab response** captured 2026-06-04 (a seeded operational
+> lab fresh out of `seed_operational_demo.mjs`; `raid_risk=ELEVATED` because the cook left a MICRO heat injection
+> → the lab sits in the WARM heat bucket). The four non-raid bands (`structural_state` / `recently_raided` /
+> `seized_amount` / `repair_cost`) + the derived `raid_risk` are present on **every** building-card response
+> regardless of type. The other four operational types return the SAME envelope; only `operational_type` differs.
 
 **Fields / bands** (from `real-estate.projection.service.ts`):
 - `building`: uuid string (identity).
@@ -63,6 +67,22 @@ The other four types (same envelope; only the `data` differs):
 - `operational_type`: closed enum string — one of `front_shop` \| `cash_safehouse` \| `stash` \| `lab` \|
   `grow_house` \| `refinery` \| `press_house` \| `distribution_hub` \| `office` \| `dealer_spot_front` \|
   `money_holding` (M1 uses the 5 shown above). `""` (empty) when not converted.
+- `structural_state` *(Phase-2b)*: `OPERATIONAL` \| `DAMAGED` \| `REPAIRING` — the qualitative
+  building_operational_state.structural_state band (the load-bearing "has this building been raided / is it under
+  repair" signal). `OPERATIONAL` when no operational row / never raided.
+- `recently_raided` *(Phase-2b)*: boolean — whether a `building_raid` row exists for this building (raided ≥ once).
+  A flag, never a count.
+- `seized_amount` *(Phase-2b)*: `NONE` \| `LOW` \| `MODERATE` \| `HIGH` — the band of the most-recent raid's
+  grams_seized (R2.2 — NEVER the raw grams). `NONE` when never raided. (Cutpoints: `LOW` < 100 g, `MODERATE`
+  100–399 g, `HIGH` ≥ 400 g — anchored on the 200 g Tier-1 cook.)
+- `repair_cost` *(Phase-2b T3)*: `NONE` \| `MINOR` \| `MODERATE` \| `MAJOR` — the band of the cash cost to repair
+  this building (R2.2 — NEVER cents). `NONE` unless the building is `DAMAGED` (no repair to pay for otherwise — so
+  a `REPAIRING` building reports `NONE`). At the shipped tunables (0.3 × $15k = $4.5k) a DAMAGED M1 building is
+  `MINOR`. (Cutpoints: `MINOR` < $10k, `MODERATE` $10k–$50k, `MAJOR` ≥ $50k.)
+- `raid_risk` *(Phase-2b T4)*: `LOW` \| `ELEVATED` \| `HIGH` \| `IMMINENT` — the derived TELEGRAPH band (a PURE
+  read-time projection from the building's CURRENT heat bucket + audit-pin presence; R2.2 — never the raw heat
+  float / pin timestamp). Mapping: heat COLD→LOW / WARM→ELEVATED / HOT→HIGH / BURNING→IMMINENT, an active audit
+  pin floors it at HIGH, combined by taking the HIGHER band (a pinned BURNING building is `IMMINENT`).
 
 ---
 
@@ -409,6 +429,11 @@ The non-success envelope shape (status mirrors `http_status`):
 | building card | `setup_state` | `NOT_CONVERTED`, `IN_SETUP`, `OPERATIONAL` |
 | building card | `cover_band` | `NONE`, `WEAK`, `STANDARD`, `STRONG` |
 | building card | `operational_type` | `front_shop`, `cash_safehouse`, `stash`, `lab`, `grow_house`, `refinery`, `press_house`, `distribution_hub`, `office`, `dealer_spot_front`, `money_holding` |
+| building card *(Phase-2b)* | `structural_state` | `OPERATIONAL`, `DAMAGED`, `REPAIRING` |
+| building card *(Phase-2b)* | `recently_raided` | boolean |
+| building card *(Phase-2b)* | `seized_amount` | `NONE`, `LOW`, `MODERATE`, `HIGH` |
+| building card *(Phase-2b T3)* | `repair_cost` | `NONE`, `MINOR`, `MODERATE`, `MAJOR` |
+| building card *(Phase-2b T4)* | `raid_risk` | `LOW`, `ELEVATED`, `HIGH`, `IMMINENT` |
 | precursors | `stock_band` | `NONE`, `LOW`, `MEDIUM`, `HIGH` |
 | precursors | `precursor_type` | `PYRALIN` (M1) |
 | lab cook | `cook_stage_band` | `IDLE`, `EARLY`, `MID`, `LATE`, `DONE` |
@@ -483,3 +508,124 @@ The projected player (for an optional dashboard header). JWT-gated (Bearer). Cap
 - `email`: string.
 - `lifecycle_state`: `ACTIVE` \| … (account lifecycle).
 - `locale`: ICU locale string (`en`, …). No cash / no scalar (R2.2).
+
+---
+
+## 13. Raid / repair — the DAMAGED building-card surface + `POST /v1/operational/building/:id/repair` (Phase-2b)
+
+The Phase-2b raid consequence loop (vector #1) adds a raid/repair/risk surface to the **same** building-card
+projection (§1) — `structural_state`, `recently_raided`, `seized_amount`, `repair_cost`, `raid_risk`. Plus a
+PLAYER-FACING recovery action: **repair** a DAMAGED building. Every JSON below is the **EXACT live response**
+captured by `curl` 2026-06-04 against the running dev stack after a TEST-HOOK raid drove a seeded operational lab
+DAMAGED (shapes captured, NOT guessed). The repair endpoint is JWT-gated + idempotent (the same convention as the
+other mutating action endpoints, §8).
+
+> **RE-VERIFIED 2026-06-04 (T7 Step 0)** against the live stack after a fresh `seed_operational_demo.mjs` run: the
+> DAMAGED card (`structural_state=DAMAGED`, `recently_raided=true`, `seized_amount=MODERATE`, `repair_cost=MINOR`,
+> `raid_risk=HIGH` — the audit pin floored it), `POST …/repair` → **200 `{ "repairing": true }`**, the post-repair
+> card (`structural_state=REPAIRING`, `repair_cost=NONE`, `raid_risk=HIGH`, `recently_raided=true`,
+> `seized_amount=MODERATE`), and a second repair on the REPAIRING building → **409 `RESOURCE_STATE_CONFLICT`**. All
+> shapes match the captures below verbatim — the `RepairResultDto { bool repairing }` parse is correct as shipped.
+
+### 13a. How to PRODUCE a DAMAGED building (the seeder / curl recipe — no-auth, non-prod test hooks)
+
+A raid is normally produced by System 4's 12h precinct review, which is not deterministically reachable through the
+advance harness. Use the production-gated `/v1/_test/*` raid hook (the same category as `advance`/`heat-inject` —
+no auth, NODE_ENV != 'production', `Idempotency-Key` required):
+
+1. **Raid** the block a product-holding operational building sits on (the lab/dealer-spot hold product):
+   `POST /v1/_test/citysim/raid?player_id=<uuid>&block_id=<int>&district_id=<int>` (Idempotency-Key). This EMITS a
+   canonical `RaidPlannedEvent` (the same event System 4 emits). `block_id` = `SELECT block_id FROM buildings WHERE
+   building_id='<lab>'` (the seeder places each building on a distinct free district-16 block). Response:
+   `{ "emitted": true, "playerId": "<uuid>", "targetBlockId": <int>, "districtId": <int> }`.
+2. **Advance 1 tick** so the buffered raid flushes on the MINUTE/13 `RAID_EXECUTION` tick:
+   `POST /v1/_test/citysim/advance?ticks=1&player_id=<uuid>` (Idempotency-Key). The raid then seizes the
+   product_storage of EVERY product-holding operational building on that block → those buildings flip
+   `structural_state='damaged'` + a `building_raid` row is inserted (grams_seized = the seized grams).
+
+To drive `raid_risk` UP deterministically (it derives from heat bucket + audit pin):
+- **HIGH**: seed an active audit pin — `UPDATE buildings SET audit_pin_expires_at = now() + interval '1 day' WHERE
+  building_id='<id>';` (System 7 pin floors the band at HIGH).
+- **IMMINENT**: also drive heat to the BURNING bucket — `UPDATE buildings SET heat = 0.95 WHERE building_id='<id>';`
+  (or fire `POST /v1/_test/citysim/heat-inject?...&magnitude=MEDIUM` repeatedly + advance to flush onto
+  buildings.heat). All four `raid_risk` bands were confirmed reachable: COLD→`LOW`, WARM→`ELEVATED` (the seeded
+  default after the cook), audit-pin→`HIGH`, BURNING+pin→`IMMINENT`.
+
+### 13b. Building card — DAMAGED (captured live)
+
+After step 2 the lab card reads (lab had 200 g cooked − 60 g ferried = 140 g → seized → `MODERATE` band; the
+shipped repair cost 0.3 × $15k = $4.5k → `MINOR` band):
+```json
+{
+    "building": "74f255d3-a555-414d-a34d-0663867b3fc8",
+    "setup_state": "OPERATIONAL",
+    "cover_band": "WEAK",
+    "operational": true,
+    "operational_type": "lab",
+    "structural_state": "DAMAGED",
+    "recently_raided": true,
+    "seized_amount": "MODERATE",
+    "repair_cost": "MINOR",
+    "raid_risk": "ELEVATED"
+}
+```
+
+### 13c. Repair — `POST /v1/operational/building/:id/repair`
+
+| Action | Method + path | Request body | Success `data` | Code |
+|---|---|---|---|---|
+| **Repair** building | `POST /v1/operational/building/:id/repair` | `{}` (empty — the building id is the path param) | `{ "repairing": true }` | 200 |
+
+Captured live (a JWT Bearer + an `Idempotency-Key` header; the lab was DAMAGED, wallet FLUSH so the cash debit
+succeeds):
+```json
+{
+    "response_meta": {
+        "request_id_echo": "1bc07086-7c80-4e10-956b-14a8c74e1857",
+        "server_processed_at": "2026-06-04T13:02:22.670Z",
+        "api_version": 1,
+        "correlation_id_echo": null
+    },
+    "payload": { "data": { "repairing": true } }
+}
+```
+
+Notes:
+- 200 (not 201 — a state mutation on an existing building, not a creation). DEBITS `economy_states.cash_cents` by
+  the grounded repair cost (the raw post-debit cents are NOT forwarded — R2.2; the ack is just `{ repairing: true }`).
+- Requires a PLAYER `Bearer` (no token → `401`) + an `Idempotency-Key` (a retried repair replays — no double-debit).
+- A building that is not the player's / not converted → `404`. **Not DAMAGED** (already OPERATIONAL or REPAIRING) →
+  `409 RESOURCE_STATE_CONFLICT`. Insufficient cash → `409`.
+- Atomically transitions `structural_state` → `'repairing'`; the `OPERATIONAL_REPAIR` tick later flips it back to
+  `'operational'`.
+
+### 13d. Building card — REPAIRING (immediately after a successful repair, captured live)
+
+The same building card right after the repair call returns:
+```json
+{
+    "building": "74f255d3-a555-414d-a34d-0663867b3fc8",
+    "setup_state": "OPERATIONAL",
+    "cover_band": "WEAK",
+    "operational": true,
+    "operational_type": "lab",
+    "structural_state": "REPAIRING",
+    "recently_raided": true,
+    "seized_amount": "MODERATE",
+    "repair_cost": "NONE",
+    "raid_risk": "ELEVATED"
+}
+```
+
+> `structural_state` is now `REPAIRING`; `repair_cost` drops to `NONE` (no fresh repair to pay for — the repair is
+> already underway). `recently_raided` stays `true` + `seized_amount` keeps the historical seizure band (the raid
+> ledger is not erased by the repair). A second repair on a REPAIRING building → `409 RESOURCE_STATE_CONFLICT`
+> ("building … is not DAMAGED (structural_state='repairing') — only a damaged building can be repaired.").
+
+### 13e. Affordability (client-side gate — qualitative only, R2.2)
+
+The building-card projection does NOT carry the player's cash. The Repair button's "can I afford this?" gate is a
+**qualitative band comparison** between `repair_cost` (this card) and `wallet_band` (§11, `GET /v1/economy/wallet`):
+the client maps each `repair_cost` band to the minimum `wallet_band` that can pay for it and disables Repair when
+the wallet sits below that floor. No raw cents are ever compared client-side (R2.2). A definitive affordability
+verdict still lives server-side (an unaffordable repair → `409` even if the client allowed it).

@@ -16,7 +16,11 @@ namespace MafiaCleanCity.Operational
     // ---------------------------------------------------------------------
 
     // GET /v1/operational/building/:id
-    //   { building, setup_state, cover_band, operational, operational_type }
+    //   { building, setup_state, cover_band, operational, operational_type,
+    //     structural_state, recently_raided, seized_amount, repair_cost, raid_risk }   (Phase-2b raid surface)
+    // Captured verbatim from the live stack — see Tools/OPERATIONAL_CONTRACTS.md §1 + §13 (the DAMAGED / REPAIRING
+    // shapes + the repair endpoint). Every Phase-2b leaf is a qualitative band STRING or a BOOLEAN (R2.2 — no raw
+    // grams/cents/heat/ticks leaks).
     [Serializable]
     public class BuildingCardDto
     {
@@ -25,7 +29,20 @@ namespace MafiaCleanCity.Operational
         public string cover_band;        // NONE | WEAK | STANDARD | STRONG
         public bool operational;         // setup_state == OPERATIONAL (function-enable gate)
         public string operational_type;  // front_shop | cash_safehouse | stash | lab | dealer_spot_front | ... ("" when not converted)
+
+        // ----- Phase-2b raid / repair / risk surface (present on EVERY building-card response) -----
+        public string structural_state;  // OPERATIONAL | DAMAGED | REPAIRING — the raid/repair band (DAMAGED gates Repair)
+        public bool recently_raided;     // a building_raid row exists (raided ≥ once) — a flag, never a count
+        public string seized_amount;     // NONE | LOW | MODERATE | HIGH — the latest raid's seizure band (never raw grams)
+        public string repair_cost;       // NONE | MINOR | MODERATE | MAJOR — the repair cash cost band (NONE unless DAMAGED)
+        public string raid_risk;         // LOW | ELEVATED | HIGH | IMMINENT — the telegraphed raid-risk band (heat+pin)
     }
+
+    // Wallet affordability for the Repair button reuses the EXISTING wallet DTOs from
+    // Dashboard/DashboardDtos.cs (WalletDto/WalletEnvelope/WalletPayload, same namespace
+    // MafiaCleanCity.Operational) — GET /v1/economy/wallet → { wallet_band }. Do NOT re-declare them
+    // here (CS0101 duplicate). Read ONLY to gate Repair affordability qualitatively (repair_cost band
+    // vs wallet band — never raw cents; R2.2).
 
     [Serializable] public class BuildingCardEnvelope { public BuildingCardPayload payload; }
     [Serializable] public class BuildingCardPayload { public BuildingCardDto data; }
@@ -84,6 +101,12 @@ namespace MafiaCleanCity.Operational
     }
     [Serializable] public class InjectEnvelope { public InjectResultPayload payload; }
     [Serializable] public class InjectResultPayload { public InjectResultDto data; }
+
+    // POST /v1/operational/building/:id/repair → { repairing: bool } (Phase-2b). NOTE: verify this shape
+    // against the live repair response via curl before trusting it (contract-capture discipline).
+    [Serializable] public class RepairResultDto { public bool repairing; }
+    [Serializable] public class RepairEnvelope { public RepairResultPayload payload; }
+    [Serializable] public class RepairResultPayload { public RepairResultDto data; }
 
     // ----- Outcome wrapper: a uniform result so the screen can render success vs a
     //       well-formed error (the error envelope is mapped to a readable message,

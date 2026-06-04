@@ -397,6 +397,39 @@ async function main() {
   );
   console.log(`[op-seed] pipeline chained → ${stageCount} stages (head=${nodeId} → ${PIPELINE_DOWNSTREAM_STAGES} downstream)`);
 
+  // ─────────────────────────── 13. RAID (Phase-2b vector #1) — drive a building DAMAGED for the raid/repair UI ──────────
+  // Stand up the raided/DAMAGED building the Building-Card raid surface (T7) reads: structural_state=DAMAGED,
+  // recently_raided=true, a seized_amount band, a repair_cost band, and (with an audit pin) an escalated raid_risk band.
+  // RECIPE (no-auth, non-prod test hooks — the SAME category as the advance harness):
+  //   (a) POST /v1/_test/citysim/raid?player_id=&block_id=&district_id= → emits a canonical RaidPlannedEvent (exactly
+  //       as System 4's 12h precinct review does) → RaidExecutionService BUFFERS it.
+  //   (b) advance 1 tick → the MINUTE/13 RAID_EXECUTION tick flushes the buffer: it seizes the product_storage of EVERY
+  //       product-holding operational building on the raided block → those buildings flip structural_state='damaged' +
+  //       a building_raid row is inserted (grams_seized).
+  // We raid the LAB's block — the lab still holds 140 g (200 g cooked − 60 g ferried), so the seizure is a real
+  // MODERATE band (≥100 g floor) and the lab becomes DAMAGED. Idempotent: the reset above deletes this player's
+  // district-16 buildings + building_raid rows are cleaned with them on a re-run (a fresh raid is produced each run).
+  const raidBlockId = Number(psql(`SELECT block_id FROM buildings WHERE building_id='${lab}';`));
+  const raidEmit = await api('POST', `/v1/_test/citysim/raid?player_id=${playerId}&block_id=${raidBlockId}&district_id=${OP_DISTRICT}`, null, {});
+  if (raidEmit.status !== 200) throw new Error(`raid emit failed: HTTP ${raidEmit.status} — ${JSON.stringify(raidEmit.data)}`);
+  await advance(playerId, 1); // MINUTE/13 RAID_EXECUTION flush → seize + DAMAGED + building_raid row.
+  const labStructural = psql(`SELECT structural_state FROM building_operational_state WHERE building_id='${lab}';`);
+  const raidRows = psql(`SELECT count(*) FROM building_raid WHERE building_id='${lab}';`);
+  console.log(`[op-seed] raid executed on block ${raidBlockId} → lab structural_state=${labStructural} (${raidRows} raid row(s))`);
+
+  // Escalate the LAB's raid_risk telegraph to HIGH by seeding an active audit pin (System 7 — the band derivation
+  // floors raid_risk at HIGH when buildings.audit_pin_expires_at > now()). This is a deterministic way for the raid-risk
+  // gauge to read above the seeded ELEVATED baseline (the cook's MICRO heat already lands WARM → ELEVATED). The raw pin
+  // timestamp / heat float never leave the server — only the band. Idempotent (re-set on every run).
+  psql(`UPDATE buildings SET audit_pin_expires_at = now() + interval '1 day' WHERE building_id='${lab}';`);
+  const labRiskHeat = psql(`SELECT round(heat::numeric, 2) FROM buildings WHERE building_id='${lab}';`);
+  console.log(`[op-seed] lab audit pin set (raid_risk floored at HIGH; heat≈${labRiskHeat})`);
+
+  // The STASH sits on its OWN block + holds NO product → it is NOT raided: the seeder's "healthy control" building for
+  // the T7 test's "a healthy building → raid_risk readable, no Repair button" assertion. (Confirm it stayed OPERATIONAL.)
+  const stashStructural = psql(`SELECT structural_state FROM building_operational_state WHERE building_id='${stash}';`);
+  console.log(`[op-seed] stash (healthy control) structural_state=${stashStructural}`);
+
   // ─────────────────────────── DONE — print creds + the seeded entity IDs ───────────────────────────
   console.log('\n=== OPERATIONAL DEMO SEEDED ===');
   console.log(
@@ -413,6 +446,11 @@ async function main() {
           front_shop: frontShop,
           cash_safehouse: safehouseBldg,
         },
+        // Phase-2b raid surface (T7): the lab was raided → DAMAGED (the raided_building the building-card raid UI reads);
+        // the stash is the healthy control (OPERATIONAL, never raided → raid_risk readable, no Repair button).
+        raided_building: lab,
+        healthy_building: stash,
+        raid_block_id: raidBlockId,
         safehouse_id: safehouseId,
         laundering_node_id: nodeId, // the head Stage-1 node — the id the pipeline-overview screen queries.
         pipeline_node_ids: pipelineNodeIds, // the ordered chain head→tail (Stage1→2→3→4).

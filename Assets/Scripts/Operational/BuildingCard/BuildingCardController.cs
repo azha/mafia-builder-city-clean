@@ -53,6 +53,15 @@ namespace MafiaCleanCity.Operational
         public string CardError { get; private set; }
         public BuildingCardDto CurrentCard { get; private set; }
         public ActionOutcome LastActionOutcome { get; private set; }
+
+        // ---- Phase-2b raid/repair test hooks -------------------------------
+        /// <summary>The player's qualitative wallet band (GET /v1/economy/wallet) used ONLY to gate Repair
+        /// affordability (repair_cost band vs this band — never raw cents; R2.2). Null until first loaded.</summary>
+        public string WalletBand { get; private set; }
+        /// <summary>True when the Repair button is currently shown (structural_state==DAMAGED).</summary>
+        public bool RepairButtonShown { get; private set; }
+        /// <summary>True when the shown Repair button is INTERACTABLE (DAMAGED + wallet can afford the cost band).</summary>
+        public bool RepairButtonAffordable { get; private set; }
         /// <summary>The full set of text shown to the player (labels + values) — used by the
         /// E2E to prove no raw scalar leaks client-side.</summary>
         public IReadOnlyList<string> RenderedTexts => renderedTexts;
@@ -69,6 +78,7 @@ namespace MafiaCleanCity.Operational
         private RectTransform statusRows;
         private RectTransform actionBar;
         private Text actionStatusText;
+        private Button repairButton; // Phase-2b: the Repair affordance (only built when DAMAGED).
 
         private AuthClient auth;
         private BuildingCardClient client;
@@ -154,8 +164,21 @@ namespace MafiaCleanCity.Operational
                 yield break;
             }
 
+            // Phase-2b: read the wallet band (affordability gate for the Repair button). A read failure
+            // leaves WalletBand null → the gate is CONSERVATIVE (Repair disabled). Only needed when DAMAGED,
+            // but we always refresh it so the card is consistent. Never compares raw cents (R2.2).
+            yield return RefreshWalletBand();
+
             CardLoaded = true;
             Render(CurrentCard);
+        }
+
+        /// <summary>Fetch the qualitative wallet band (REUSE the economy projection). Conservative on failure.</summary>
+        public IEnumerator RefreshWalletBand()
+        {
+            string band = null;
+            yield return client.GetWalletBand(Token, b => band = b, (code, msg) => band = null);
+            WalletBand = band;
         }
 
         // ----------------------------------------------------------- actions API
@@ -186,6 +209,17 @@ namespace MafiaCleanCity.Operational
         {
             yield return RunAction(c => client.Convert(buildingId, operationalType, coverQuality, Token, c),
                 "Conversion requested", "Convert unavailable");
+        }
+
+        /// <summary>Phase-2b recovery action: repair a DAMAGED building (empty body; id is the path param).
+        /// On success the backend flips structural_state → REPAIRING; we re-load the card so it reflects that.</summary>
+        public IEnumerator Repair()
+        {
+            yield return RunAction(c => client.Repair(buildingId, Token, c),
+                "Repair underway", "Repair unavailable");
+            // Refresh the card so it reflects REPAIRING (+ the wallet band debited). Only if the building id
+            // is intact (it always is here). The reload re-renders → the Repair button drops away (now REPAIRING).
+            yield return LoadBuilding(buildingId);
         }
 
         private IEnumerator RunAction(System.Func<System.Action<ActionOutcome>, IEnumerator> call,
@@ -221,6 +255,21 @@ namespace MafiaCleanCity.Operational
                 card.operational ? "[#]" : "[ ]", card.operational ? AccentMild : AccentSevere);
             AddStatusRow("Cover", CoverLabel(card.cover_band), CoverGlyph(card.cover_band), CoverAccent(card.cover_band));
 
+            // ----- Phase-2b raid / repair / risk surface (a11y F2: glyph + text, never colour-only; R2.2: bands only) -----
+            AddStatusRow("Structure", StructuralLabel(card.structural_state),
+                StructuralGlyph(card.structural_state), StructuralAccent(card.structural_state));
+            // Raid-risk band gauge (LOW → IMMINENT) — a filled-bar glyph + worded band label.
+            AddStatusRow("Raid risk", RaidRiskLabel(card.raid_risk),
+                RaidRiskGlyph(card.raid_risk), RaidRiskAccent(card.raid_risk));
+
+            // Raid notification/flag — shown only when this building was recently raided. The seized amount is a
+            // qualitative band (NEVER raw grams; R2.2). A warning glyph carries the alert alongside colour (F2).
+            if (card.recently_raided)
+            {
+                string notif = $"Raided — seized {SeizedLabel(card.seized_amount)}";
+                AddStatusRow("Alert", notif, "[!]", AccentSevere);
+            }
+
             BuildActions(card);
         }
 
@@ -241,6 +290,31 @@ namespace MafiaCleanCity.Operational
 
             string label = NewSectionLabel(actionBar, "ACTIONS");
             TrackText(null, label);
+
+            // Phase-2b: the Repair affordance — visible ONLY when the building is DAMAGED. It shows the repair
+            // COST band (qualitative — never cents) and is DISABLED when the wallet band can't afford that cost
+            // band (a qualitative band comparison; R2.2). The definitive verdict still lives server-side (409).
+            repairButton = null;
+            RepairButtonShown = false;
+            RepairButtonAffordable = false;
+            if (card.structural_state == "DAMAGED")
+            {
+                RepairButtonShown = true;
+                bool affordable = CanAfford(card.repair_cost, WalletBand);
+                RepairButtonAffordable = affordable;
+                string repairLabel = $"Repair ({RepairCostLabel(card.repair_cost)})";
+                repairButton = AddActionButton(actionBar, repairLabel, () => StartCoroutine(Repair()));
+                SetButtonInteractable(repairButton, affordable);
+                if (!affordable)
+                {
+                    // F2: a readable reason, never a raw number, beside the disabled button.
+                    string reason = "Repair (insufficient cash)";
+                    Text hint = NewText("RepairHint", actionBar, reason, 13, TextAnchor.MiddleLeft);
+                    hint.color = AccentSevere;
+                    AddLayoutElement(hint.gameObject, minHeight: 18, flexibleHeight: 0);
+                    TrackText(hint, reason);
+                }
+            }
 
             switch (card.operational_type)
             {
@@ -322,6 +396,99 @@ namespace MafiaCleanCity.Operational
         private static Color CoverAccent(string b) =>
             b == "STRONG" ? AccentMild : b == "STANDARD" ? AccentMild : b == "WEAK" ? AccentModerate : AccentSevere;
 
+        // ----- Phase-2b: structural_state (OPERATIONAL | DAMAGED | REPAIRING) -----
+        private static string StructuralLabel(string s)
+        {
+            switch (s)
+            {
+                case "OPERATIONAL": return "Intact";
+                case "DAMAGED": return "Damaged";
+                case "REPAIRING": return "Repairing";
+                default: return s;
+            }
+        }
+        // Distinct shape per state (a11y F2 — shape carries the meaning alongside colour).
+        private static string StructuralGlyph(string s) =>
+            s == "OPERATIONAL" ? "[#]" : s == "REPAIRING" ? "[~]" : "[x]";
+        private static Color StructuralAccent(string s) =>
+            s == "OPERATIONAL" ? AccentMild : s == "REPAIRING" ? AccentModerate : AccentSevere;
+
+        // ----- Phase-2b: raid_risk band gauge (LOW | ELEVATED | HIGH | IMMINENT) -----
+        private static string RaidRiskLabel(string b)
+        {
+            switch (b)
+            {
+                case "LOW": return "Low";
+                case "ELEVATED": return "Elevated";
+                case "HIGH": return "High";
+                case "IMMINENT": return "Imminent";
+                default: return b;
+            }
+        }
+        // A 4-segment filled-bar gauge (shape encodes the level — a11y F2, mirrors the cover/cleanliness gauges).
+        private static string RaidRiskGlyph(string b)
+        {
+            switch (b)
+            {
+                case "LOW": return "[#...]";
+                case "ELEVATED": return "[##..]";
+                case "HIGH": return "[###.]";
+                case "IMMINENT": return "[####]";
+                default: return "[....]";
+            }
+        }
+        private static Color RaidRiskAccent(string b) =>
+            b == "LOW" ? AccentMild : b == "ELEVATED" ? AccentModerate : AccentSevere;
+
+        // ----- Phase-2b: seized_amount band (NONE | LOW | MODERATE | HIGH) — for the raid notification -----
+        private static string SeizedLabel(string b)
+        {
+            switch (b)
+            {
+                case "HIGH": return "a heavy haul";
+                case "MODERATE": return "a moderate haul";
+                case "LOW": return "a light haul";
+                case "NONE": return "nothing";
+                default: return b;
+            }
+        }
+
+        // ----- Phase-2b: repair_cost band (NONE | MINOR | MODERATE | MAJOR) — shown on the Repair button -----
+        private static string RepairCostLabel(string b)
+        {
+            switch (b)
+            {
+                case "MAJOR": return "major cost";
+                case "MODERATE": return "moderate cost";
+                case "MINOR": return "minor cost";
+                case "NONE": return "no cost";
+                default: return b;
+            }
+        }
+
+        // Qualitative affordability gate: map each repair_cost band to the MINIMUM wallet_band that can pay
+        // for it, then check the wallet sits at/above that floor. NEVER compares raw cents (R2.2). A null/unknown
+        // wallet band is treated as unaffordable (conservative — a wallet read failure leaves Repair disabled).
+        // wallet_band ascending: BROKE < LOW < MODERATE < HIGH < FLUSH (Tools/OPERATIONAL_CONTRACTS.md §11).
+        private static readonly string[] WalletOrder = { "BROKE", "LOW", "MODERATE", "HIGH", "FLUSH" };
+        private static bool CanAfford(string repairCostBand, string walletBand)
+        {
+            // The minimum wallet band that can pay each repair-cost band (conservative qualitative mapping).
+            string floor;
+            switch (repairCostBand)
+            {
+                case "NONE": return true;                  // nothing to pay (e.g. already REPAIRING).
+                case "MINOR": floor = "LOW"; break;        // a MINOR repair needs at least a LOW wallet.
+                case "MODERATE": floor = "MODERATE"; break;
+                case "MAJOR": floor = "HIGH"; break;       // a MAJOR repair needs a HIGH+ wallet.
+                default: floor = "HIGH"; break;            // unknown cost → require a high wallet (conservative).
+            }
+            int walletRank = System.Array.IndexOf(WalletOrder, walletBand);
+            int floorRank = System.Array.IndexOf(WalletOrder, floor);
+            if (walletRank < 0 || floorRank < 0) return false; // unknown/unloaded wallet → conservative (disabled).
+            return walletRank >= floorRank;
+        }
+
         // --------------------------------------------------------------- UI build
 
         private void BuildLayout()
@@ -349,7 +516,7 @@ namespace MafiaCleanCity.Operational
             cardRt.anchorMin = new Vector2(0.5f, 0f);
             cardRt.anchorMax = new Vector2(0.5f, 0f);
             cardRt.pivot = new Vector2(0.5f, 0f);
-            cardRt.sizeDelta = new Vector2(520, 460);
+            cardRt.sizeDelta = new Vector2(520, 600); // taller to fit the Phase-2b raid/risk rows + Repair affordance.
             cardRt.anchoredPosition = new Vector2(0, 24);
             card.AddComponent<Image>().color = SurfaceBg;
             VerticalLayoutGroup vlg = card.AddComponent<VerticalLayoutGroup>();
@@ -433,9 +600,9 @@ namespace MafiaCleanCity.Operational
             return text;
         }
 
-        private void AddActionButton(Transform parent, string label, UnityEngine.Events.UnityAction onClick)
+        private Button AddActionButton(Transform parent, string label, UnityEngine.Events.UnityAction onClick)
         {
-            GameObject btn = NewUI("Action_" + label.Replace(" ", ""), parent);
+            GameObject btn = NewUI("Action_" + label.Replace(" ", "").Replace("(", "").Replace(")", ""), parent);
             Image img = btn.AddComponent<Image>();
             img.color = new Color(0.16f, 0.18f, 0.22f);
             Button b = btn.AddComponent<Button>();
@@ -447,6 +614,18 @@ namespace MafiaCleanCity.Operational
             t.color = CtaColor;
             Stretch((RectTransform)t.transform, new Vector2(8, 2), new Vector2(-8, -2));
             TrackText(t, label);
+            return b;
+        }
+
+        // Disable/enable a button + dim its label so the unaffordable state is visible (and a11y: the disabled
+        // state is conveyed by the dimmed label text + the separate reason line, not colour alone — F2).
+        private static void SetButtonInteractable(Button button, bool interactable)
+        {
+            if (button == null) return;
+            button.interactable = interactable;
+            Text label = button.GetComponentInChildren<Text>();
+            if (label != null && !interactable)
+                label.color = new Color(0.45f, 0.47f, 0.50f); // dimmed → "can't do this now"
         }
 
         // --------------------------------------------------------------- helpers
