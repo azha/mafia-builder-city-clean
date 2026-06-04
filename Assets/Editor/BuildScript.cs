@@ -19,6 +19,10 @@ public static class BuildScript
         const string appId = "eu.erutheone.mafiacleancity";
         PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, appId);
         PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel25;
+        // Force Mono: the embedded Android NDK is broken (clang/clang++ are dangling symlinks),
+        // so IL2CPP native compilation fails. Mono needs no NDK and is ARMv7-only (no architecture
+        // multi-select), which sidesteps both the NDK corruption and the "select an architecture" gate.
+        PlayerSettings.SetScriptingBackend(NamedBuildTarget.Android, ScriptingImplementation.Mono2x);
 
         // The Build Settings list SampleScene (empty default); the real game is CityMap.unity.
         string[] scenes = { "Assets/Scenes/CityMap.unity" };
@@ -41,6 +45,9 @@ public static class BuildScript
         BuildSummary s = report.summary;
         Debug.Log("[BuildScript] BUILD_DONE result=" + s.result + " sizeBytes=" + s.totalSize +
                   " errors=" + s.totalErrors + " path=" + outPath);
-        EditorApplication.Exit(s.result == BuildResult.Succeeded ? 0 : 1);
+        // Only quit when running headless (batchmode CLI). When triggered interactively (menu /
+        // MCP execute_menu_item), do NOT exit — that would close the developer's open editor.
+        if (Application.isBatchMode)
+            EditorApplication.Exit(s.result == BuildResult.Succeeded ? 0 : 1);
     }
 }
