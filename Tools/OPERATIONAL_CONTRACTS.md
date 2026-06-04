@@ -370,3 +370,65 @@ The non-success envelope shape (status mirrors `http_status`):
 | laundering node | `cleanliness_band` | `DIRTY`, `PARTIAL`, `MOSTLY_CLEAN`, `CLEAN` |
 | laundering node | `deviation_active` | boolean |
 | (Phase-1 System-9 stash) | `load_bucket` | `LOW`, `NOMINAL`, `HIGH`, `FULL` — via `GET /v1/city/district/:id/stash` |
+| wallet | `wallet_band` | `BROKE`, `LOW`, `MODERATE`, `HIGH`, `FLUSH` — via `GET /v1/economy/wallet` |
+
+---
+
+## 11. Wallet band — `GET /v1/economy/wallet`
+
+The "encaisser" payoff of the M1 loop — the headline element of the **Home Dashboard** (screen_1).
+JWT-gated (Bearer). The economy projection surfaces the player's cash as a **qualitative band only**
+— never the raw `cash_cents` (R2.2; the cents live in `economy_states.cash_cents` server-side).
+
+Captured live (demo player in the seeded terminal state — laundering has credited clean cash, so the
+band is non-`BROKE`):
+```json
+{
+    "response_meta": {
+        "request_id_echo": "5ecae0e8-37a5-474f-9460-22a07d9eb500",
+        "server_processed_at": "2026-06-04T01:06:14.854Z",
+        "api_version": 1,
+        "correlation_id_echo": null
+    },
+    "payload": {
+        "data": {
+            "wallet_band": "FLUSH"
+        }
+    }
+}
+```
+
+**Fields / bands** (from the economy wallet projection):
+- `wallet_band`: `BROKE` \| `LOW` \| `MODERATE` \| `HIGH` \| `FLUSH` (a closed qualitative band over the
+  player's `cash_cents`; ascending — `BROKE` = empty, `FLUSH` = the richest band).
+
+**Auth behaviour:**
+- No `Bearer` → `401` (`{ payload: { error: { … } } }`).
+- A valid `Bearer` but no player row for the account → `404 RESOURCE_NOT_FOUND` (same error envelope as §9).
+
+---
+
+## 12. Player identity — `GET /v1/me`
+
+The projected player (for an optional dashboard header). JWT-gated (Bearer). Captured live:
+```json
+{
+    "response_meta": { "...": "..." },
+    "payload": {
+        "data": {
+            "account_id": "019e9000-5349-70d8-b63d-dab458fa2d69",
+            "handle": "citymap_demo",
+            "email": "citymap_demo@example.test",
+            "lifecycle_state": "ACTIVE",
+            "locale": "en"
+        }
+    }
+}
+```
+
+**Fields** — `data`:
+- `account_id`: uuid string (the account identity).
+- `handle`: string (the player's display handle / callsign).
+- `email`: string.
+- `lifecycle_state`: `ACTIVE` \| … (account lifecycle).
+- `locale`: ICU locale string (`en`, …). No cash / no scalar (R2.2).
