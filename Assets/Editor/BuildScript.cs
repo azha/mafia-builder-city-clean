@@ -13,6 +13,7 @@ using UnityEngine;
 // branch. Embedded Android SDK/NDK/JDK ship with the editor → no external path config needed.
 public static class BuildScript
 {
+    [MenuItem("Build/Android APK (CityMap)")]
     public static void BuildAndroid()
     {
         const string appId = "eu.erutheone.mafiacleancity";
