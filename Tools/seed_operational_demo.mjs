@@ -3,12 +3,14 @@
 // dockerized backend (project mafia-clean-city) — no mocks. Mirrors the operational E2E specs
 // (tests/e2e/operational/*.spec.ts), especially vertical_slice_loop.spec.ts which chains the whole loop.
 //
-// SHARED DEMO PLAYER: reuses the SAME account the City Map seeder stands up — `citymap_demo@example.test` /
-// `citymap-demo-pw` — so the City Map and the operational screens are ONE coherent player (City Map → building card →
-// pipeline → dashboard for the same demo player, the T13 capstone). Run Tools/seed_citymap_demo.mjs FIRST (this seeder
-// reuses its player; if it is missing this seeder creates the same account, but the City Map heat gradient won't be
-// present). Operational buildings are placed on FREE blocks in district 16 (Verge) — far from the heat-gradient blocks
-// the City Map seeds in districts 3/7/11 (so the two seeders never collide).
+// DISTINCT OPERATIONAL DEMO PLAYER: stands up its OWN account — `operational_demo@example.test` /
+// `operational-demo-pw` — SEPARATE from the City Map seeder's `citymap_demo`. The two concerns share a
+// heat-coupled city: the operational loop drives the player's city to BURNING + escalated, whose heat
+// PROPAGATES across districts and would wash the City Map seeder's exact d3/d7/d11 gradient if both ran on
+// one player. Distinct players make the full PlayMode suite ORDER-INDEPENDENT — neither seeder mutates the
+// other's player (the operational screens read THIS player; the City Map screen reads the citymap player).
+// Operational buildings are placed on FREE blocks in district 16 (Verge). This seeder is self-contained:
+// it creates its account if absent, so it can run standalone (no dependency on the City Map seeder).
 //
 // SPEED (the dev stack uses REAL durations — lab setup 7200 ticks, lead 2880, cook 120, …): after each player-triggered
 // API action we SQL-FAST-FORWARD the persisted tick clocks, then advance ONE tick so the operational MINUTE/* tick
@@ -28,7 +30,7 @@
 //     cleaned cash to the wallet (advance 1).
 // The 1-tick nudges use the production-gated /v1/_test/citysim/advance harness (needs an Idempotency-Key, no auth).
 //
-// Usage:  node Tools/seed_operational_demo.mjs   (run AFTER Tools/seed_citymap_demo.mjs)
+// Usage:  node Tools/seed_operational_demo.mjs   (self-contained — stands up its own operational_demo player)
 
 import { execFileSync } from 'node:child_process';
 import { scryptSync, randomBytes } from 'node:crypto';
@@ -38,9 +40,14 @@ const PG_USER = process.env.POSTGRES_USER ?? 'mafia';
 const PG_DB = process.env.POSTGRES_DB ?? 'mafia_clean_city';
 const BASE_URL = process.env.STACK_BASE_URL ?? 'http://localhost';
 
-const EMAIL = 'citymap_demo@example.test';
-const CALLSIGN = 'citymap_demo';
-const PASSWORD = 'citymap-demo-pw';
+// DISTINCT operational demo player (separate from the City Map seeder's `citymap_demo`).
+// The two concerns share a heat-coupled city: the operational loop drives the player's city to
+// BURNING + escalated, whose heat PROPAGATES across districts and would wash the City Map seeder's
+// exact d3/d7/d11 gradient if both ran on one player. Giving the operational concern its OWN player
+// makes the full PlayMode suite ORDER-INDEPENDENT — neither seeder mutates the other's player.
+const EMAIL = 'operational_demo@example.test';
+const CALLSIGN = 'operational_demo';
+const PASSWORD = 'operational-demo-pw';
 
 // The Verge district the operational buildings live in — far from the City Map heat-gradient blocks (districts 3/7/11).
 const OP_DISTRICT = 16;
@@ -135,24 +142,32 @@ function clockMinute(playerId) {
 }
 
 async function main() {
-  // ─────────────────────────── 1. SHARED demo player (reuse the City Map seeder's account) ───────────────────────────
+  // ─────────────────────────── 1. DISTINCT operational demo player (self-contained) ───────────────────────────
   let accountId = psql(`SELECT account_id FROM "player" WHERE email = '${EMAIL}';`);
   let playerId;
   if (accountId) {
     playerId = psql(`SELECT player_id FROM "player" WHERE account_id = '${accountId}';`);
     psql(`UPDATE "account_credential" SET password_hash = '${hashPassword(PASSWORD)}', updated_at = now() WHERE account_id = '${accountId}';`);
-    console.log(`[op-seed] reusing shared demo account ${accountId} (player ${playerId})`);
+    console.log(`[op-seed] reusing operational demo account ${accountId} (player ${playerId})`);
   } else {
     accountId = psql(`INSERT INTO "account" ("kind","lifecycle_state") VALUES ('PLAYER','ACTIVE') RETURNING account_id;`);
     playerId = psql(`INSERT INTO "player" ("account_id","callsign","email","locale") VALUES ('${accountId}','${CALLSIGN}','${EMAIL}','en') RETURNING player_id;`);
     psql(`INSERT INTO "account_credential" ("account_id","password_hash") VALUES ('${accountId}','${hashPassword(PASSWORD)}');`);
-    console.log(`[op-seed] created shared demo account ${accountId} (player ${playerId})`);
-    console.warn('[op-seed] NOTE: the City Map seeder had not run — the heat gradient (districts 3/7/11) is absent. Run Tools/seed_citymap_demo.mjs for the full City Map demo.');
+    console.log(`[op-seed] created operational demo account ${accountId} (player ${playerId})`);
   }
 
-  // Ensure the clock row exists (advance lazily creates it, but a tiny advance also fires nothing harmful).
-  if (clockMinute(playerId) === 0) {
-    await advance(playerId, 1);
+  // Give this player's clock HEADROOM before the per-action fast-forwards. Each operational step
+  // re-anchors a persisted tick column into the PAST (cook stage_started_at_tick=0, courier
+  // started_at_tick=0, …) and nudges one tick so the MINUTE/* tick systems see a large elapsed and
+  // COMPLETE the step. On a brand-new player the clock starts near 0, so "elapsed since tick 0" is
+  // ~0 and the cook never completes (0 g). Advancing to a baseline minute first restores the headroom
+  // this seeder relied on when it piggybacked on the (heavily-advanced) shared City Map player.
+  const OP_CLOCK_BASELINE = 1500;
+  const startMinute = clockMinute(playerId);
+  if (startMinute < OP_CLOCK_BASELINE) {
+    const ticks = OP_CLOCK_BASELINE - startMinute;
+    console.log(`[op-seed] advancing clock ${startMinute} → ${OP_CLOCK_BASELINE} for fast-forward headroom (may take ~20s)…`);
+    await advance(playerId, ticks);
   }
 
   // ─────────────────────────── 2. IDEMPOTENT reset of the prior operational state ───────────────────────────

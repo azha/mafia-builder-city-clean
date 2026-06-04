@@ -3,7 +3,7 @@
 Authoritative contract for the Unity operational-screen DTOs (building card / laundering pipeline /
 dashboard). Every JSON block below is the **EXACT live response** captured by `curl` against the running
 dev stack (project `mafia-clean-city`, via Traefik at `http://localhost`) after `Tools/seed_operational_demo.mjs`
-stood the shared demo player up in a rich operational state. Shapes were captured, NOT guessed (the T14 lesson).
+stood the operational demo player up in a rich operational state. Shapes were captured, NOT guessed (the T14 lesson).
 
 - **Auth**: every operational endpoint requires a PLAYER `Bearer` (obtain via `POST /auth/v1/signin
   {identifier,password}` → `payload.data.access_token`). Unauthenticated → `401`.
@@ -12,8 +12,8 @@ stood the shared demo player up in a rich operational state. Shapes were capture
 - **R2.2 (information asymmetry)**: every projection leaf is a **qualitative band string**, a **boolean**, or a
   **uuid identity string** — NEVER a raw scalar (no cents / grams / ticks / heat float / purity). Unity DTOs should
   model the bands as enums.
-- Captured against demo player `citymap_demo@example.test` (account `019e9000-5349-70d8-b63d-dab458fa2d69`,
-  player `019e9000-53ae-7158-93df-f0bc22e7de2c`), operational buildings in **district 16 (Verge)**. The seeded
+- Captured against the operational demo player `operational_demo@example.test` (distinct from the City Map
+  seeder's `citymap_demo`), operational buildings in **district 16 (Verge)**. The seeded
   entity UUIDs change on every re-run (the seeder resets + re-creates) — discover them from the seeder's printed
   output or the list endpoints (`/v1/operational/couriers`, `/v1/operational/dealers`), never hard-code them.
 
@@ -416,9 +416,9 @@ The projected player (for an optional dashboard header). JWT-gated (Bearer). Cap
     "response_meta": { "...": "..." },
     "payload": {
         "data": {
-            "account_id": "019e9000-5349-70d8-b63d-dab458fa2d69",
-            "handle": "citymap_demo",
-            "email": "citymap_demo@example.test",
+            "account_id": "019e9044-9415-71c6-a391-909668014443",
+            "handle": "operational_demo",
+            "email": "operational_demo@example.test",
             "lifecycle_state": "ACTIVE",
             "locale": "en"
         }

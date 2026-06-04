@@ -4,21 +4,34 @@ using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
 using MafiaCleanCity.CityMap;
+using MafiaCleanCity.Tests; // SeederSupport — self-seed the gradient this fixture asserts
 
 namespace MafiaCleanCity.CityMap.Tests
 {
     // E2E (charter 27: no mock). Real sign-in against game-back + the JWT-gated Heat
     // projection, consumed by the real CityMapController. Hits the live dockerized stack.
     //
-    // PREREQUISITE: run `node Tools/seed_citymap_demo.mjs` first. It seeds the stable
-    // demo player (citymap_demo@example.test) + heated buildings and advances one tick,
-    // landing a deterministic gradient: district 3 BURNING, 7 HOT, 11 WARM, rest COLD.
+    // SELF-SEEDS its precondition: OneTimeSetUp runs `node Tools/seed_citymap_demo.mjs`, which
+    // seeds the stable demo player (citymap_demo@example.test) + heated buildings and advances
+    // one tick, landing the deterministic gradient: district 3 BURNING, 7 HOT, 11 WARM, rest
+    // COLD. The test OWNS its precondition (rather than relying on an external manual seed run),
+    // so the full PlayMode assembly is order-independent. The operational concern runs on a
+    // DISTINCT player (operational_demo) on its own heat-coupled city, so it never washes this
+    // gradient. (See SeederSupport.)
     public class CityMapHeatPlayModeTests
     {
         private const string DemoIdentifier = "citymap_demo@example.test";
         private const string DemoPassword = "citymap-demo-pw";
 
         private GameObject controllerGo;
+
+        [OneTimeSetUp]
+        public void SeedCityMapGradient()
+        {
+            // Re-seed the d3 BURNING / d7 HOT / d11 WARM gradient this fixture asserts, so it is
+            // deterministic regardless of whether the operational seeder ran before this test.
+            SeederSupport.RunSeeder(SeederSupport.CityMapSeeder, SeederSupport.CityMapMarker);
+        }
 
         [TearDown]
         public void TearDown()

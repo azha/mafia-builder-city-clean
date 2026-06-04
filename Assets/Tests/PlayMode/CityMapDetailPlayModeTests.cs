@@ -4,16 +4,27 @@ using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
 using MafiaCleanCity.CityMap;
+using MafiaCleanCity.Tests; // SeederSupport — self-seed the gradient this fixture asserts
 
 namespace MafiaCleanCity.CityMap.Tests
 {
     // E2E (charter 27: no mock). Drives the real CityMapController, signs in, then opens
     // the district detail panel and asserts it aggregated multiple live system projections.
     //
-    // PREREQUISITE: run `node Tools/seed_citymap_demo.mjs` (district 3 → BURNING heat).
+    // SELF-SEEDS its precondition: OneTimeSetUp runs `node Tools/seed_citymap_demo.mjs`
+    // (district 3 → BURNING heat + the slow-cadence heavy-advance), so the test OWNS its
+    // precondition and the full PlayMode assembly is order-independent. The operational concern
+    // runs on a DISTINCT player (operational_demo), so it never washes this gradient. (See
+    // SeederSupport.)
     public class CityMapDetailPlayModeTests
     {
         private GameObject controllerGo;
+
+        [OneTimeSetUp]
+        public void SeedCityMapGradient()
+        {
+            SeederSupport.RunSeeder(SeederSupport.CityMapSeeder, SeederSupport.CityMapMarker);
+        }
 
         [TearDown]
         public void TearDown()

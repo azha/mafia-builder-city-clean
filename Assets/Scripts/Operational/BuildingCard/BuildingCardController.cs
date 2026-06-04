@@ -38,8 +38,8 @@ namespace MafiaCleanCity.Operational
         [SerializeField] private string baseUrl = "http://localhost";
 
         [Header("Demo sign-in (seeded by Tools/seed_operational_demo.mjs)")]
-        [SerializeField] private string demoIdentifier = "citymap_demo@example.test";
-        [SerializeField] private string demoPassword = "citymap-demo-pw";
+        [SerializeField] private string demoIdentifier = "operational_demo@example.test";
+        [SerializeField] private string demoPassword = "operational-demo-pw";
 
         [Header("Target building")]
         [Tooltip("Operational building uuid to load. Set before Start (or call LoadBuilding).")]

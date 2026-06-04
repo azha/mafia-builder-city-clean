@@ -45,7 +45,19 @@ namespace MafiaCleanCity.Operational.Tests
             if (controllerGo != null) Object.Destroy(controllerGo);
         }
 
-        // -------- one-time: run the operational seeder + parse its printed creds --------
+        // Seed THIS fixture's precondition immediately before its tests run (the operational
+        // seeder deletes + recreates this player's state). Seeding in OneTimeSetUp — rather than
+        // lazily in the first test body — makes the seed→use atomic per fixture and the full
+        // PlayMode suite order-independent (a sibling op fixture's re-seed can't invalidate the
+        // state THIS fixture asserts, because it's re-seeded right before this fixture runs).
+        [OneTimeSetUp]
+        public void OneTimeSeed()
+        {
+            seeded = false;
+            RunSeeder();
+        }
+
+        // -------- run the operational seeder + parse its printed creds --------
 
         private static void RunSeeder()
         {

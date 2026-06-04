@@ -45,7 +45,21 @@ namespace MafiaCleanCity.Operational.Tests
             if (controllerGo != null) Object.Destroy(controllerGo);
         }
 
-        // -------- one-time: run the operational seeder + parse its printed ids --------
+        // Seed THIS fixture's precondition immediately before its tests run (NUnit guarantees
+        // OneTimeSetUp fires after any prior fixture completes and before this fixture's first
+        // test). The operational seeder deletes + recreates this player's buildings with new ids,
+        // so seeding here — rather than lazily in the first test body — makes the seed→use atomic
+        // per fixture and the full PlayMode suite order-independent (a sibling op fixture's re-seed
+        // can never invalidate the ids THIS fixture loads, because they're re-seeded + re-cached
+        // right before this fixture runs).
+        [OneTimeSetUp]
+        public void OneTimeSeed()
+        {
+            seeded = false; // force a fresh seed for this fixture (don't reuse a sibling's stale ids).
+            RunSeeder();
+        }
+
+        // -------- run the operational seeder + parse its printed ids --------
 
         private static void RunSeeder()
         {
@@ -191,8 +205,8 @@ namespace MafiaCleanCity.Operational.Tests
             controllerGo = new GameObject("BuildingCardController");
             var controller = controllerGo.AddComponent<BuildingCardController>();
             controller.BuildingId = ""; // we drive the load manually after wiring the right creds
-            // The controller signs in with its own demo creds; the seeder uses the SAME
-            // shared demo player (citymap_demo@example.test), so the default creds match.
+            // The controller signs in with its own demo creds; the seeder seeds the SAME
+            // operational demo player (operational_demo@example.test), so the default creds match.
 
             // 1) sign in (REUSE AuthClient inside the controller).
             float elapsed = 0f;
