@@ -1,0 +1,10 @@
+# ninja log v5
+0	388	1780624047053244221	GameActivity/CMakeFiles/game.dir/UGADebug.cpp.o	4ed22dd22bfbd00e
+0	394	1780624047060664554	GameActivity/CMakeFiles/game.dir/UGAInputKeyEvent.cpp.o	6de578f4cc167633
+1	406	1780624047071440292	GameActivity/CMakeFiles/game.dir/UGASoftKeyboard.cpp.o	77072f930d04bacf
+0	406	1780624047073831531	GameActivity/CMakeFiles/game.dir/UGAEntry.cpp.o	459bb3d5c38d455c
+0	463	1780624047128323111	GameActivity/CMakeFiles/game.dir/UGAInput.cpp.o	e408ccd97134006b
+0	483	1780624047148104180	GameActivity/CMakeFiles/game.dir/UGAApplication.cpp.o	266b247e0274a7bb
+0	486	1780624047152873073	GameActivity/CMakeFiles/game.dir/UGAConfiguration.cpp.o	97a4a8d488f86596
+1	503	1780624047169096373	GameActivity/CMakeFiles/game.dir/UGAInputMotionEvent.cpp.o	3c5ea82b8387fd55
+503	527	1780624047194392210	/home/erutheone/project/mafia-builder-city-clean/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/build/intermediates/cxx/Debug/6b213o4c/obj/armeabi-v7a/libgame.so	ba5d4d82b06dc4e0

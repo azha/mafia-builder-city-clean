@@ -1,0 +1,2 @@
+/home/erutheone/project/mafia-builder-city-clean/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/src/main/cpp/CMakeLists.txt
+/home/erutheone/project/mafia-builder-city-clean/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/src/main/cpp/GameActivity/CMakeLists.txt

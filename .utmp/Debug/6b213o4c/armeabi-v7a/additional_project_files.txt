@@ -1,0 +1,17 @@
+/home/erutheone/project/mafia-builder-city-clean/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/src/main/cpp/GameActivity/GAToUnityCallbacks.h
+/home/erutheone/project/mafia-builder-city-clean/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/src/main/cpp/GameActivity/MacroEnd.h
+/home/erutheone/project/mafia-builder-city-clean/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/src/main/cpp/GameActivity/MacroHeaderBegin.h
+/home/erutheone/project/mafia-builder-city-clean/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/src/main/cpp/GameActivity/MacroSourceBegin.h
+/home/erutheone/project/mafia-builder-city-clean/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/src/main/cpp/GameActivity/UGAApplication.h
+/home/erutheone/project/mafia-builder-city-clean/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/src/main/cpp/GameActivity/UGAConfiguration.h
+/home/erutheone/project/mafia-builder-city-clean/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/src/main/cpp/GameActivity/UGADebug.h
+/home/erutheone/project/mafia-builder-city-clean/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/src/main/cpp/GameActivity/UGAEvents.h
+/home/erutheone/project/mafia-builder-city-clean/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/src/main/cpp/GameActivity/UGAInput.h
+/home/erutheone/project/mafia-builder-city-clean/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/src/main/cpp/GameActivity/UGASoftKeyboard.h
+/home/erutheone/project/mafia-builder-city-clean/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/src/main/cpp/GameActivity/UGASoftKeyboardCallbacks.h
+/home/erutheone/project/mafia-builder-city-clean/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/src/main/cpp/GameActivity/UGATypes.h
+/home/erutheone/project/mafia-builder-city-clean/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/src/main/cpp/GameActivity/UGAVersion.h
+/home/erutheone/project/mafia-builder-city-clean/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/src/main/cpp/GameActivity/UnityToGACallbacks.h
+/home/erutheone/project/mafia-builder-city-clean/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/src/main/cpp/GameActivity/UnityToGAConfigurationCallbacks.h
+/home/erutheone/project/mafia-builder-city-clean/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/src/main/cpp/GameActivity/UnityToGAKeyEventCallbacks.h
+/home/erutheone/project/mafia-builder-city-clean/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/src/main/cpp/GameActivity/UnityToGAMotionEventCallbacks.h
