@@ -54,6 +54,15 @@ namespace MafiaCleanCity.Operational
         public BuildingCardDto CurrentCard { get; private set; }
         public ActionOutcome LastActionOutcome { get; private set; }
 
+        // ---- Phase-2b vector #2 (Crick) cold-chain test hooks --------------
+        /// <summary>The cook-building storage + cold-chain projection (GET /v1/operational/storage/:id). Null for a
+        /// non-cook building (the storage endpoint 404s → no cold-chain surface). A lab returns BRINDLE with a null
+        /// temperature_status (no cold chain); a refinery returns CRICK with a temperature_status band.</summary>
+        public StorageDto CurrentStorage { get; private set; }
+        /// <summary>True when the cold-chain status row is currently shown (the storage projection carries a
+        /// non-empty temperature_status — a cold-chain substance like Crick in a refinery).</summary>
+        public bool ColdChainShown { get; private set; }
+
         // ---- Phase-2b raid/repair test hooks -------------------------------
         /// <summary>The player's qualitative wallet band (GET /v1/economy/wallet) used ONLY to gate Repair
         /// affordability (repair_cost band vs this band — never raw cents; R2.2). Null until first loaded.</summary>
@@ -67,6 +76,19 @@ namespace MafiaCleanCity.Operational
         public IReadOnlyList<string> RenderedTexts => renderedTexts;
 
         public string BuildingId { get => buildingId; set => buildingId = value; }
+
+        /// <summary>
+        /// Override the backend base URL (test convenience). The SerializeField defaults to the VPS
+        /// (https://cleancity.erutheone.eu); a PlayMode E2E that drives the LOCAL dockerized stack sets this to
+        /// http://localhost BEFORE SignIn so the auth + projection + action clients all target the local stack.
+        /// Re-points the already-built clients too (idempotent; safe before or after EnsureInitialized).
+        /// </summary>
+        public void SetBaseUrl(string url)
+        {
+            baseUrl = url;
+            if (auth != null) auth.BaseUrl = url;
+            if (client != null) client.BaseUrl = url;
+        }
 
         private readonly List<string> renderedTexts = new List<string>();
         private readonly List<Text> textComponents = new List<Text>();
@@ -169,8 +191,24 @@ namespace MafiaCleanCity.Operational
             // but we always refresh it so the card is consistent. Never compares raw cents (R2.2).
             yield return RefreshWalletBand();
 
+            // Phase-2b vector #2 (Crick): also fetch the cook-building storage + cold-chain projection. The storage
+            // endpoint is COOK-ONLY (a lab → BRINDLE, a refinery → CRICK); a non-cook building 404s → CurrentStorage
+            // stays null → no cold-chain row is rendered (a non-cook card is unaffected). A Brindle lab returns a null
+            // temperature_status (no cold chain) → still no cold-chain row. Only a cold-chain substance (Crick in a
+            // refinery, temperature_status != null) renders the cold-chain status row. Never blocks the card load.
+            yield return RefreshStorage(id);
+
             CardLoaded = true;
             Render(CurrentCard);
+        }
+
+        /// <summary>Fetch the cook-building storage + cold-chain projection (REUSE the storage endpoint). A 404 (a
+        /// non-cook building) or any error leaves CurrentStorage null → no cold-chain row (the card is unaffected).</summary>
+        public IEnumerator RefreshStorage(string id)
+        {
+            StorageDto storage = null;
+            yield return client.GetStorage(id, Token, s => storage = s, (code, msg) => storage = null);
+            CurrentStorage = storage;
         }
 
         /// <summary>Fetch the qualitative wallet band (REUSE the economy projection). Conservative on failure.</summary>
@@ -268,6 +306,25 @@ namespace MafiaCleanCity.Operational
             {
                 string notif = $"Raided — seized {SeizedLabel(card.seized_amount)}";
                 AddStatusRow("Alert", notif, "[!]", AccentSevere);
+            }
+
+            // ----- Phase-2b vector #2 (Crick) cold-chain surface — ONLY when the storage projection carries a
+            // cold-chain temperature_status (a refinery holding Crick). A non-cook building (no storage / 404) or a
+            // Brindle lab (temperature_status null) renders NO cold-chain rows. R2.2: bands/labels/glyphs/booleans only
+            // (never a raw °C / grams / rate); F2: every row carries a shape glyph alongside colour. -----
+            ColdChainShown = false;
+            StorageDto storage = CurrentStorage;
+            if (storage != null && !string.IsNullOrEmpty(storage.temperature_status))
+            {
+                ColdChainShown = true;
+                // Substance row — surfaces which substance this cold chain protects (Crick).
+                AddStatusRow("Substance", SubstanceLabel(storage.substance_type), "[*]", AccentMild);
+                // Temperature band row — the qualitative cold-chain status (OPTIMAL_COLD / MODERATE / HOT).
+                AddStatusRow("Temperature", TemperatureLabel(storage.temperature_status),
+                    TemperatureGlyph(storage.temperature_status), TemperatureAccent(storage.temperature_status));
+                // Degrading indicator row — Stable vs Degrading (a boolean, never a raw rate).
+                AddStatusRow("Cold chain", storage.degrading ? "Degrading" : "Stable",
+                    storage.degrading ? "[v]" : "[=]", storage.degrading ? AccentSevere : AccentMild);
             }
 
             BuildActions(card);
@@ -465,6 +522,46 @@ namespace MafiaCleanCity.Operational
                 default: return b;
             }
         }
+
+        // ----- Phase-2b vector #2 (Crick) cold-chain: substance_type label (BRINDLE | CRICK | …) -----
+        private static string SubstanceLabel(string s)
+        {
+            switch (s)
+            {
+                case "BRINDLE": return "Brindle";
+                case "CRICK": return "Crick";
+                case "HUSH": return "Hush";
+                case "ASH": return "Ash";
+                case "": case null: return "—";
+                default: return s;
+            }
+        }
+
+        // ----- Phase-2b vector #2 (Crick) cold-chain: temperature_status band (OPTIMAL_COLD | MODERATE | HOT) -----
+        // R2.2: a qualitative band label, NEVER a raw °C. OPTIMAL_COLD=good (mild), MODERATE=amber, HOT=severe.
+        private static string TemperatureLabel(string b)
+        {
+            switch (b)
+            {
+                case "OPTIMAL_COLD": return "Optimal (cold)";
+                case "MODERATE": return "Warming";
+                case "HOT": return "Hot";
+                default: return b;
+            }
+        }
+        // Distinct shape per band (a11y F2 — shape carries the meaning alongside colour; mirrors the cover/risk gauges).
+        private static string TemperatureGlyph(string b)
+        {
+            switch (b)
+            {
+                case "OPTIMAL_COLD": return "[*]";  // a snowflake-ish mark — cold/good
+                case "MODERATE": return "[~]";       // wavy — warming
+                case "HOT": return "[!]";            // alert — hot/at risk
+                default: return "[?]";
+            }
+        }
+        private static Color TemperatureAccent(string b) =>
+            b == "OPTIMAL_COLD" ? AccentMild : b == "MODERATE" ? AccentModerate : AccentSevere;
 
         // Qualitative affordability gate: map each repair_cost band to the MINIMUM wallet_band that can pay
         // for it, then check the wallet sits at/above that floor. NEVER compares raw cents (R2.2). A null/unknown

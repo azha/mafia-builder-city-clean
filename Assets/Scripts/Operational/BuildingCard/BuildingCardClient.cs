@@ -9,7 +9,7 @@ namespace MafiaCleanCity.Operational
     // Reads the JWT-gated Phase-2 operational Building Card projection and drives
     // the per-building-type action endpoints. Mirrors CityMap.CityProjectionsClient:
     // a UnityWebRequest coroutine + concrete-envelope JsonUtility parsing. No mock —
-    // every call hits the live dockerized stack (Traefik at http://localhost).
+    // every call hits the live dockerized stack (Traefik at https://cleancity.erutheone.eu).
     //
     // Auth: every operational endpoint needs a PLAYER Bearer (AuthClient.SignIn).
     // Mutations additionally need an Idempotency-Key header that MUST be a UUID v4
@@ -44,6 +44,37 @@ namespace MafiaCleanCity.Operational
                     catch (Exception ex) { onErr?.Invoke(req.responseCode, "parse error: " + ex.Message); yield break; }
 
                     if (dto == null) { onErr?.Invoke(req.responseCode, "empty building-card payload"); yield break; }
+                    onOk?.Invoke(dto);
+                }
+                else
+                {
+                    onErr?.Invoke(req.responseCode, ReadableError(req));
+                }
+            }
+        }
+
+        /// <summary>
+        /// GET /v1/operational/storage/:id — the cook-building storage + cold-chain projection (Phase-2b vector #2).
+        /// COOK buildings only (a lab → BRINDLE, a refinery → CRICK); a non-cook building → 404 (onErr). onOk(dto) on
+        /// 2xx with { substance_type, product_band, temperature_status, degrading } (Tools/OPERATIONAL_CONTRACTS.md §14).
+        /// </summary>
+        public IEnumerator GetStorage(string buildingId, string bearer,
+            Action<StorageDto> onOk, Action<long, string> onErr)
+        {
+            string url = Url($"storage/{buildingId}");
+            using (UnityWebRequest req = UnityWebRequest.Get(url))
+            {
+                req.timeout = TimeoutSeconds;
+                if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
+                yield return req.SendWebRequest();
+
+                if (req.result == UnityWebRequest.Result.Success)
+                {
+                    StorageDto dto = null;
+                    try { dto = JsonUtility.FromJson<StorageEnvelope>(req.downloadHandler.text)?.payload?.data; }
+                    catch (Exception ex) { onErr?.Invoke(req.responseCode, "parse error: " + ex.Message); yield break; }
+
+                    if (dto == null) { onErr?.Invoke(req.responseCode, "empty storage payload"); yield break; }
                     onOk?.Invoke(dto);
                 }
                 else

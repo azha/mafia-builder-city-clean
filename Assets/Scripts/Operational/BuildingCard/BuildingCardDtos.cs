@@ -38,6 +38,25 @@ namespace MafiaCleanCity.Operational
         public string raid_risk;         // LOW | ELEVATED | HIGH | IMMINENT — the telegraphed raid-risk band (heat+pin)
     }
 
+    // GET /v1/operational/storage/:id  (COOK buildings only — a lab → BRINDLE, a refinery → CRICK; a non-cook
+    //   building → 404). Phase-2b vector #2 (Crick) cold-chain surface:
+    //   { building, substance_type, product_band, temperature_status, degrading }
+    // Captured verbatim from the live stack — see Tools/OPERATIONAL_CONTRACTS.md §14 (the refinery OPTIMAL_COLD
+    // shape + the lab Brindle temperature_status:null shape). Every leaf is a qualitative band STRING, a BOOLEAN,
+    // or a uuid — temperature_status is NEVER a raw °C, product_band NEVER raw grams (R2.2).
+    [Serializable]
+    public class StorageDto
+    {
+        public string building;            // uuid identity
+        public string substance_type;      // BRINDLE (lab) | CRICK (refinery) — the substance the cook building holds
+        public string product_band;        // NONE | LOW | MEDIUM | HIGH — the stored-grams band (never raw grams)
+        public string temperature_status;  // OPTIMAL_COLD | MODERATE | HOT | null (null when no cold chain — Brindle)
+        public bool degrading;             // true when the held product is actively degrading on a warm chain (a flag)
+    }
+
+    [Serializable] public class StorageEnvelope { public StoragePayload payload; }
+    [Serializable] public class StoragePayload { public StorageDto data; }
+
     // Wallet affordability for the Repair button reuses the EXISTING wallet DTOs from
     // Dashboard/DashboardDtos.cs (WalletDto/WalletEnvelope/WalletPayload, same namespace
     // MafiaCleanCity.Operational) — GET /v1/economy/wallet → { wallet_band }. Do NOT re-declare them

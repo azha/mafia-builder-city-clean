@@ -77,6 +77,14 @@ const DISPLAY_SELL_TICKS = 5; // 5 ticks × 12500 = 62500 cents → MODERATE ban
 // already hosts a node with 409), so we acquire+convert PIPELINE_DOWNSTREAM_STAGES extra operational buildings.
 const PIPELINE_DOWNSTREAM_STAGES = 3; // Stage1 (front-shop) + 3 downstream → a 4-stage chain (Stage1→2→3→4).
 
+// Phase-2b vector #2 (substances / Crick) cold-chain refinery: stand up a refinery holding 200 g Crick so the
+// Building-Card cold-chain row (T8) reads substance_type=CRICK, temperature_status=OPTIMAL_COLD, degrading=false.
+// A refinery is COLD-BY-NATURE (Crick is cold-by-nature when held in a refinery), so its held Crick reads
+// OPTIMAL_COLD regardless of the cold_storage_capable flag. Mirrors the Brindle lab flow but on a refinery, with
+// Crick's single precursor (verdant_root_extract) + a Crick-tagged single-stage cook.
+const CRICK_PRECURSOR_UNITS = 2;   // production.crick.precursor_units_per_batch (one cook consumes one batch).
+const CRICK_OUTPUT_GRAMS = 200;    // production.crick.yield_grams (a single Crick refine cook → MEDIUM storage band).
+
 const SCRYPT_N = 16384, SCRYPT_R = 8, SCRYPT_P = 1, SCRYPT_KEYLEN = 32;
 function hashPassword(plain) {
   const salt = randomBytes(16);
@@ -243,7 +251,21 @@ async function main() {
   for (let s = 0; s < PIPELINE_DOWNSTREAM_STAGES; s += 1) {
     stageHosts.push(await operationalBuilding(freeBlock(5 + s), 'front_shop'));
   }
-  console.log(`[op-seed] ${5 + PIPELINE_DOWNSTREAM_STAGES} buildings purchased + converted (gutting)`);
+
+  // Phase-2b vector #2 (Crick cold-chain): a REFINERY on its OWN fresh district-16 block (offset past the stage
+  // hosts → never the lab's block, so the raid at the end never touches it). Convert passes cold_storage_capable
+  // explicitly (a refinery is cold-by-nature regardless, but the flag is part of the real convert contract).
+  const refineryBlock = freeBlock(5 + PIPELINE_DOWNSTREAM_STAGES);
+  const refineryBuy = await api('POST', '/v1/operational/building/purchase', token, { block_id: refineryBlock, building_type_target: 'refinery' });
+  if (refineryBuy.status !== 201) throw new Error(`purchase refinery failed: HTTP ${refineryBuy.status} — ${JSON.stringify(refineryBuy.data)}`);
+  const refinery = refineryBuy.data.building_id;
+  const refineryConv = await api('POST', `/v1/operational/building/${refinery}/convert`, token, {
+    operational_type: 'refinery',
+    cover_quality: 'weak',
+    cold_storage_capable: false,
+  });
+  if (refineryConv.status !== 200) throw new Error(`convert refinery failed: HTTP ${refineryConv.status} — ${JSON.stringify(refineryConv.data)}`);
+  console.log(`[op-seed] ${5 + PIPELINE_DOWNSTREAM_STAGES + 1} buildings purchased + converted (gutting; incl. Crick refinery ${refinery})`);
 
   // Fast-forward ALL setups to operational in ONE 1-tick nudge.
   psql(
@@ -278,6 +300,32 @@ async function main() {
   await advance(playerId, 1);
   const labGrams = psql(`SELECT COALESCE(SUM(quantity_grams),0) FROM product_storage WHERE player_id='${playerId}' AND building_id='${lab}' AND substance_type='brindle';`);
   console.log(`[op-seed] cook completed → ${labGrams} g Brindle in the lab`);
+
+  // ─────────────────────── 6b. CRICK COLD CHAIN — order verdant_root_extract + refine → 200 g Crick in the refinery ───────────────────────
+  // Mirror the Brindle cook flow on the REFINERY (Crick's host building) with Crick's single precursor + a Crick-tagged
+  // single-stage cook. Crick is COLD-BY-NATURE in a refinery → the storage projection reads OPTIMAL_COLD, degrading=false.
+  // (a) order verdant_root_extract, fast-forward the arrival (MINUTE/7), then (b) start a `crick` cook and fast-forward
+  // its single stage to completion (MINUTE/8) → 200 g Crick in the refinery product_storage (MEDIUM band).
+  const crickOrder = await api('POST', '/v1/operational/precursors/order', token, {
+    building_id: refinery,
+    precursor_type: 'VERDANT_ROOT_EXTRACT',
+    quantity_units: CRICK_PRECURSOR_UNITS,
+  });
+  if (crickOrder.status !== 201) throw new Error(`crick precursor order failed: HTTP ${crickOrder.status} — ${JSON.stringify(crickOrder.data)}`);
+  psql(`UPDATE precursor_order SET arrives_at_tick=${clockMinute(playerId) + 1} WHERE order_id='${crickOrder.data.order_id}';`);
+  await advance(playerId, 1);
+  const verdantStock = psql(`SELECT COALESCE(SUM(quantity_units),0) FROM precursor_stock WHERE player_id='${playerId}' AND building_id='${refinery}';`);
+  console.log(`[op-seed] verdant_root_extract order delivered → ${verdantStock} units in the refinery`);
+
+  // The cook endpoint is /lab/:id/cook even for a refinery; `substance:'crick'` selects the Crick recipe (omitting it
+  // defaults to brindle). Crick is a single-stage cook → current_stage='stage_1' is the only/final stage. The cook_session
+  // building column is `lab_building_id`. Re-anchor stage_started_at_tick into the deep past → the MINUTE/8 tick completes it.
+  const crickCook = await api('POST', `/v1/operational/lab/${refinery}/cook`, token, { substance: 'crick' });
+  if (crickCook.status !== 201) throw new Error(`crick cook failed: HTTP ${crickCook.status} — ${JSON.stringify(crickCook.data)}`);
+  psql(`UPDATE cook_session SET current_stage='stage_1', stage_started_at_tick=0 WHERE cook_session_id='${crickCook.data.cook_session_id}';`);
+  await advance(playerId, 1);
+  const crickGrams = psql(`SELECT COALESCE(SUM(quantity_grams),0) FROM product_storage WHERE player_id='${playerId}' AND building_id='${refinery}' AND substance_type='crick';`);
+  console.log(`[op-seed] crick refine completed → ${crickGrams} g Crick in the refinery (cold-by-nature → OPTIMAL_COLD)`);
 
   // ─────────────────────────── 7. DISTRIBUTE — courier lab → dealer-spot, fast-forward transit ───────────────────────────
   // Ferry part of the cook (120 g) to the dealer-spot (the sell source); the rest stays in the lab (richer storage demo).
@@ -445,7 +493,11 @@ async function main() {
           dealer_spot: dealerSpot,
           front_shop: frontShop,
           cash_safehouse: safehouseBldg,
+          refinery, // Phase-2b vector #2: the Crick cold-chain refinery (holds 200 g Crick → OPTIMAL_COLD).
         },
+        // Phase-2b vector #2 (substances / Crick): the refinery holds 200 g Crick and is cold-by-nature → its storage
+        // projection reads substance_type=CRICK, temperature_status=OPTIMAL_COLD, degrading=false (the cold-chain UI reads it).
+        refinery, // top-level too, so the cold-chain T8 test can discover it with the same flat-regex extractor.
         // Phase-2b raid surface (T7): the lab was raided → DAMAGED (the raided_building the building-card raid UI reads);
         // the stash is the healthy control (OPERATIONAL, never raided → raid_risk readable, no Repair button).
         raided_building: lab,

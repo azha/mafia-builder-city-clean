@@ -438,9 +438,13 @@ The non-success envelope shape (status mirrors `http_status`):
 | precursors | `precursor_type` | `PYRALIN` (M1) |
 | lab cook | `cook_stage_band` | `IDLE`, `EARLY`, `MID`, `LATE`, `DONE` |
 | storage | `product_band` | `NONE`, `LOW`, `MEDIUM`, `HIGH` |
-| storage | `substance_type` | `BRINDLE` (M1) |
+| storage | `substance_type` | `BRINDLE`, `CRICK` (Phase-2b vector #2) |
+| storage *(Phase-2b T5 cold-chain)* | `temperature_status` | `OPTIMAL_COLD`, `MODERATE`, `HOT`, `null` (non-cold-chain → null) |
+| storage *(Phase-2b T5 cold-chain)* | `degrading` | boolean |
 | couriers | `transit_band` | `IDLE`, `IN_TRANSIT`, `ARRIVED` |
-| couriers | `vehicle_type` | `FOOT` (M1) |
+| couriers | `vehicle_type` | `FOOT`, `BIKE`, `CAR`, `REFRIGERATED_VAN` |
+| couriers *(Phase-2b T5 cold-chain)* | `temperature_status` | `OPTIMAL_COLD`, `MODERATE`, `HOT`, `null` (non-cold-chain / not in transit → null) |
+| couriers *(Phase-2b T5 cold-chain)* | `degrading` | boolean |
 | dealer | `activity_band` | `WORKING`, `IDLE`, `ABSENT`, `COMPROMISED` |
 | dealer | `cash_band` | `NONE`, `LOW`, `MODERATE`, `HIGH`, `FULL` |
 | laundering node | `cleanliness_band` | `DIRTY`, `PARTIAL`, `MOSTLY_CLEAN`, `CLEAN` |
@@ -629,3 +633,117 @@ The building-card projection does NOT carry the player's cash. The Repair button
 the client maps each `repair_cost` band to the minimum `wallet_band` that can pay for it and disables Repair when
 the wallet sits below that floor. No raw cents are ever compared client-side (R2.2). A definitive affordability
 verdict still lives server-side (an unaffordable repair → `409` even if the client allowed it).
+
+---
+
+## 14. Cold chain (Crick) — `GET /v1/operational/storage/:id` + `GET /v1/operational/couriers` (Phase-2b vector #2 T5)
+
+The Phase-2b vector #2 (substances / **Crick**) adds a **cold chain**: a qualitative `temperature_status` band
+(`OPTIMAL_COLD` \| `MODERATE` \| `HOT` — R2.2, NEVER a raw °C) + a `degrading` boolean, surfaced on **two EXISTING**
+projections — there is **NO** `/v1/operational/crick/...` endpoint (do not invent one). Every JSON below is the
+**EXACT live response** captured by `curl` 2026-06-05 against the running dev stack after standing up a Crick
+refinery + 200 g Crick + a Crick courier (shapes captured, NOT guessed — the T14 lesson).
+
+### 14a. Storage — `GET /v1/operational/storage/:id`
+
+Scope: **only COOK buildings** (a `lab` → BRINDLE, a `refinery` → CRICK). A non-cook building (stash, dealer-spot,
+front-shop, safehouse) → **`404 RESOURCE_NOT_FOUND`** (out of scope — the storage projection is cook-only).
+
+**refinery holding 200 g Crick** (cold-by-nature — `temperature_status=OPTIMAL_COLD`, `degrading=false`):
+```json
+{
+    "response_meta": { "request_id_echo": "dfbf2bc3-c6e7-4332-8053-6fe0efa66586", "server_processed_at": "2026-06-05T05:17:20.300Z", "api_version": 1, "correlation_id_echo": null },
+    "payload": {
+        "data": {
+            "building": "1a4c2e54-fc9e-4429-aa74-54494eb32aa3",
+            "substance_type": "CRICK",
+            "product_band": "MEDIUM",
+            "temperature_status": "OPTIMAL_COLD",
+            "degrading": false
+        }
+    }
+}
+```
+
+**lab holding Brindle** (no cold chain — `temperature_status=null`, `degrading=false`):
+```json
+{
+    "payload": {
+        "data": {
+            "building": "22d8f060-02a1-4ff6-a5c7-c08a2a672690",
+            "substance_type": "BRINDLE",
+            "product_band": "NONE",
+            "temperature_status": null,
+            "degrading": false
+        }
+    }
+}
+```
+
+**Fields / bands** — `data`:
+- `building`: uuid string (identity).
+- `substance_type`: `BRINDLE` (lab) \| `CRICK` (refinery) — the substance the cook building produces.
+- `product_band`: `NONE` \| `LOW` \| `MEDIUM` \| `HIGH` — the stored-grams band (R2.2 — never raw grams; 200 g → `MEDIUM`).
+- `temperature_status` *(cold-chain T5)*: `OPTIMAL_COLD` \| `MODERATE` \| `HOT` \| `null`. `null` when the substance
+  has **no cold chain** (Brindle always; a refinery is cold-by-nature so Crick reads `OPTIMAL_COLD`). NEVER a raw °C.
+- `degrading` *(cold-chain T5)*: boolean — whether the held product is actively losing grams to a warm chain (a
+  refinery's cold Crick → `false`). A flag, never a rate.
+
+### 14b. Couriers — `GET /v1/operational/couriers` (cold-chain fields added)
+
+The couriers list (§5) now carries `temperature_status` + `degrading` per courier. An **IN_TRANSIT Crick** cargo on
+a warm vehicle reads `HOT` + `degrading=true`; on a `REFRIGERATED_VAN` it reads `OPTIMAL_COLD` + `degrading=false`;
+a non-cold-chain cargo or a courier **not in transit** (ARRIVED / IDLE) reads `null` + `false`.
+
+```json
+{
+    "payload": {
+        "data": {
+            "couriers": [
+                { "courier": "a75a85c8-0566-4fc3-b94d-940d16c2b886", "vehicle_type": "FOOT",            "transit_band": "IN_TRANSIT", "temperature_status": "HOT",         "degrading": true  },
+                { "courier": "d04e57da-3110-440f-a49b-c3a9d493b6f9", "vehicle_type": "FOOT",            "transit_band": "ARRIVED",    "temperature_status": null,          "degrading": false }
+            ]
+        }
+    }
+}
+```
+
+The SAME IN_TRANSIT Crick courier after `UPDATE courier SET vehicle_type='refrigerated_van'` (vehicle enum:
+`foot` \| `bike` \| `car` \| `refrigerated_van`):
+```json
+{ "courier": "a75a85c8-0566-4fc3-b94d-940d16c2b886", "vehicle_type": "REFRIGERATED_VAN", "transit_band": "IN_TRANSIT", "temperature_status": "OPTIMAL_COLD", "degrading": false }
+```
+
+**Fields / bands** — each `data.couriers[]` entry:
+- `courier`: uuid string. `vehicle_type`: `FOOT` \| `BIKE` \| `CAR` \| `REFRIGERATED_VAN`. `transit_band`: `IDLE` \|
+  `IN_TRANSIT` \| `ARRIVED` (§5).
+- `temperature_status` *(cold-chain T5)*: `OPTIMAL_COLD` \| `MODERATE` \| `HOT` \| `null` — `null` for a
+  non-cold-chain cargo or a courier not in transit. A `REFRIGERATED_VAN` keeps a Crick cargo `OPTIMAL_COLD`; a
+  `FOOT`/`BIKE`/`CAR` carrying Crick in transit reads `HOT`. NEVER a raw °C.
+- `degrading` *(cold-chain T5)*: boolean — `true` when an in-transit cold-chain cargo is on a warm vehicle.
+
+### 14c. How to PRODUCE a Crick cold-chain refinery (the seeder / curl recipe)
+
+Mirrors the Brindle lab flow (§8) but on a `refinery`, with the Crick precursor + a Crick-tagged cook:
+1. **Purchase** a building targeting a refinery: `POST /v1/operational/building/purchase
+   { block_id, building_type_target: "refinery" }` → `{ building_id }` (201).
+2. **Convert** to a refinery: `POST /v1/operational/building/:id/convert
+   { operational_type: "refinery", cover_quality: "weak", cold_storage_capable: false }` → `{ converted: true }`
+   (200). A refinery is **cold-by-nature** regardless of the `cold_storage_capable` flag. SQL-fast-forward the setup
+   (`UPDATE building_operational_state SET setup_remaining_ticks=1 …` → advance 1) → operational.
+3. **Order** the Crick precursor: `POST /v1/operational/precursors/order
+   { building_id, precursor_type: "VERDANT_ROOT_EXTRACT", quantity_units: 2 }` → `{ order_id }` (201). (The exact
+   uppercase value the API accepts is `VERDANT_ROOT_EXTRACT` — the Crick analogue of Brindle's `PYRALIN`.)
+   SQL-fast-forward the arrival (`UPDATE precursor_order SET arrives_at_tick=<clock+1> …` → advance 1).
+4. **Cook** Crick: `POST /v1/operational/lab/:id/cook { substance: "crick" }` → `{ cook_session_id }` (201). NOTE:
+   the cook endpoint is `/lab/:id/cook` even for a refinery; omitting `substance` defaults to brindle. Crick is a
+   **single-stage** cook (`cook_session.current_stage='stage_1'` is the only/final stage; the `cook_session`
+   building column is `lab_building_id`). SQL-fast-forward the completion
+   (`UPDATE cook_session SET current_stage='stage_1', stage_started_at_tick=0 WHERE cook_session_id=… ` → advance 1)
+   → the MINUTE/8 cook-advance tick completes it → 200 g Crick in the refinery `product_storage`
+   (`substance_type='crick'`) → storage reads `product_band=MEDIUM, temperature_status=OPTIMAL_COLD, degrading=false`.
+
+To produce an IN_TRANSIT Crick courier: dispatch from the refinery
+(`POST /v1/operational/distribution/dispatch { from_building_id: <refinery>, to_building_id: <other>, cargo_grams }`)
+— the courier stays `IN_TRANSIT` until its `courier_shift` is fast-forwarded (`UPDATE courier_shift SET
+started_at_tick=0 …` → advance 1 ARRIVES it). While IN_TRANSIT on a FOOT courier the cargo reads `HOT` / `degrading`.
