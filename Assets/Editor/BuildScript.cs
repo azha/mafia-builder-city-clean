@@ -19,10 +19,14 @@ public static class BuildScript
         const string appId = "eu.erutheone.mafiacleancity";
         PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, appId);
         PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel25;
-        // Force Mono: the embedded Android NDK is broken (clang/clang++ are dangling symlinks),
-        // so IL2CPP native compilation fails. Mono needs no NDK and is ARMv7-only (no architecture
-        // multi-select), which sidesteps both the NDK corruption and the "select an architecture" gate.
-        PlayerSettings.SetScriptingBackend(NamedBuildTarget.Android, ScriptingImplementation.Mono2x);
+        // IL2CPP + ARM64. The earlier Mono build was ARMv7 (32-bit) only, which has NO matching ABI
+        // on a 64-bit-only device → "App not installed" (INSTALL_FAILED_NO_MATCHING_ABIS). We build a
+        // fat APK (ARM64 + ARMv7) so it installs on every device. The original Mono workaround existed
+        // because the embedded Android NDK had broken symlinks; that's now fixed at the root (the
+        // missing `<NDK>/android-ndk-r27c -> .` symlink was recreated), so IL2CPP native compilation
+        // works. Persisted AndroidTargetArchitectures was 0 (None) → set it explicitly here.
+        PlayerSettings.SetScriptingBackend(NamedBuildTarget.Android, ScriptingImplementation.IL2CPP);
+        PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64 | AndroidArchitecture.ARMv7;
 
         // The Build Settings list SampleScene (empty default); the real game is CityMap.unity.
         string[] scenes = { "Assets/Scenes/CityMap.unity" };
