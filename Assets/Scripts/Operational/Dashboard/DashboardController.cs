@@ -110,6 +110,9 @@ namespace MafiaCleanCity.Operational
         // Start() has run — e.g. an E2E that calls SignIn() in the same frame as AddComponent.
         // Idempotent.
         private bool initialized;
+        // Guards LoadDashboard re-entrancy (the self-started Boot() load racing an external test-driven load —
+        // see the note in LoadDashboard). Cleared at every LoadDashboard exit.
+        private bool isLoading;
         private void EnsureInitialized()
         {
             if (initialized) return;
@@ -158,6 +161,25 @@ namespace MafiaCleanCity.Operational
         public IEnumerator LoadDashboard()
         {
             EnsureInitialized();
+
+            // Re-entrancy guard. Start() fires StartCoroutine(Boot()) which ALSO calls LoadDashboard(),
+            // so the controller can be loading itself at the same time an external caller (a PlayMode E2E
+            // that drives `yield return controller.LoadDashboard()` on its OWN runner object) drives a load.
+            // Both share the mutable projection fields (CurrentWallet / WalletError / …): if the self-Boot
+            // load resets CurrentWallet=null + WalletError=null between the external load's GET completing
+            // (CurrentWallet set) and its null-check, the external load spuriously sees CurrentWallet==null
+            // with an empty WalletError → "[Dashboard] wallet load failed: " (an intermittent ~1/3 flake).
+            // Serialize the two: if a load is already in flight, WAIT for it to finish (so this call still
+            // returns with a completed, consistent load — DashboardLoaded set — rather than clobbering it),
+            // then return without re-fetching. Never no-op immediately (that could leave the caller asserting
+            // DashboardLoaded before the in-flight load set it).
+            if (isLoading)
+            {
+                while (isLoading && this != null) yield return null;
+                yield break;
+            }
+            isLoading = true;
+
             DashboardLoaded = false;
             WalletError = null;
             HeatError = null;
@@ -179,15 +201,23 @@ namespace MafiaCleanCity.Operational
                 heat => CurrentHeat = heat,
                 err => HeatError = err);
 
+            // The GETs above are network round-trips; the controller's GameObject may have been torn down
+            // by an inter-fixture teardown while we awaited them. Bail before touching any UI (Unity's
+            // overloaded == reports a destroyed MonoBehaviour as null) — a continuation that wakes up on a
+            // dead object must no-op, not dereference a destroyed serialized Text → NullReferenceException.
+            if (this == null) { isLoading = false; yield break; }
+
             if (CurrentWallet == null)
             {
                 Debug.LogError($"[Dashboard] wallet load failed: {WalletError}");
                 RenderError();
+                isLoading = false;
                 yield break;
             }
 
             DashboardLoaded = true;
             Render();
+            isLoading = false;
         }
 
         // ----------------------------------------------------------- nav API

@@ -137,6 +137,24 @@ namespace MafiaCleanCity.Operational
         // every purity row also carries a distinct shape glyph + a worded label (F2).
         private static readonly Color AccentPremium = new Color(0.78f, 0.7f, 1f);        // #c7b3ff bright violet-white
 
+        // True once this controller / its GameObject has been destroyed. An async load coroutine (a
+        // UnityWebRequest round-trip) can be driven by an OUTSIDE pump (the PlayMode test runner runs
+        // `yield return controller.LoadBuilding(...)` on ITS OWN runner object — not on this controller),
+        // so destroying this controller's GameObject between fixtures does NOT stop that in-flight
+        // coroutine: it will resume after the round-trip and reach Render(), dereferencing serialized
+        // UI components (typeText, …) that Unity already tore down → NullReferenceException. Every async
+        // resume point that precedes a UI mutation checks this (or `this == null`, Unity's overloaded
+        // equality that reports a destroyed MonoBehaviour as null) and no-ops, so a continuation that
+        // wakes up on a dead object exits cleanly instead of crashing. This is a teardown/cancellation
+        // guard, NOT a render skip in the live app: it only triggers on a genuinely destroyed object.
+        private bool destroyed;
+        private bool Destroyed => destroyed || this == null;
+
+        private void OnDestroy()
+        {
+            destroyed = true;
+        }
+
         private void Start()
         {
             EnsureInitialized();
@@ -202,6 +220,10 @@ namespace MafiaCleanCity.Operational
                 dto => CurrentCard = dto,
                 (code, msg) => CardError = $"{code}: {msg}");
 
+            // The GET above is a network round-trip; this controller's GameObject may have been
+            // destroyed by an inter-fixture teardown while we awaited it. Bail before touching any UI.
+            if (Destroyed) yield break;
+
             if (CurrentCard == null)
             {
                 Debug.LogError($"[BuildingCard] load failed: {CardError}");
@@ -220,6 +242,10 @@ namespace MafiaCleanCity.Operational
             // temperature_status (no cold chain) → still no cold-chain row. Only a cold-chain substance (Crick in a
             // refinery, temperature_status != null) renders the cold-chain status row. Never blocks the card load.
             yield return RefreshStorage(id);
+
+            // RefreshWalletBand + RefreshStorage are further network round-trips; re-check the guard
+            // before rendering so a teardown that landed mid-load no-ops instead of hitting dead UI.
+            if (Destroyed) yield break;
 
             CardLoaded = true;
             Render(CurrentCard);
@@ -321,6 +347,7 @@ namespace MafiaCleanCity.Operational
             {
                 AppointmentId = LastActionOutcome.ResultId;
                 yield return RefreshAppointment();
+                if (Destroyed) yield break; // torn down during the refresh round-trip → don't render dead UI.
                 if (CardLoaded && CurrentCard != null) Render(CurrentCard); // re-render to show the new panel.
             }
         }
@@ -333,6 +360,7 @@ namespace MafiaCleanCity.Operational
             yield return RunAction(c => client.HonorAppointment(AppointmentId, Token, c),
                 "Appointment honored", "Honor unavailable");
             yield return RefreshAppointment();
+            if (Destroyed) yield break; // torn down during the refresh round-trip → don't render dead UI.
             if (CardLoaded && CurrentCard != null) Render(CurrentCard); // re-render to show HONORED + the payout band.
         }
 
@@ -353,6 +381,10 @@ namespace MafiaCleanCity.Operational
             yield return call(o => outcome = o);
             LastActionOutcome = outcome;
 
+            // The action POST is a network round-trip; bail if the controller was torn down meanwhile,
+            // before touching actionStatusText (a destroyed serialized Text → NullReferenceException).
+            if (Destroyed) yield break;
+
             // F2: surface a human message, never a raw HTTP code, to the player.
             string line = outcome.Ok
                 ? (string.IsNullOrEmpty(outcome.ResultId) ? okPrefix : $"{okPrefix}")
@@ -365,6 +397,12 @@ namespace MafiaCleanCity.Operational
 
         private void Render(BuildingCardDto card)
         {
+            // Belt-and-braces: every async resume point above already guards, but Render dereferences the
+            // serialized UI Text fields directly, so it self-guards too — a continuation that somehow reaches
+            // here on a destroyed controller (or before BuildLayout ran) no-ops rather than NREs. The guard
+            // only fires on a genuinely destroyed object / un-built layout, never silently in the live app.
+            if (Destroyed || titleText == null || typeText == null) return;
+
             ClearRows();
 
             titleText.text = "OPERATIONAL BUILDING";
