@@ -747,3 +747,185 @@ To produce an IN_TRANSIT Crick courier: dispatch from the refinery
 (`POST /v1/operational/distribution/dispatch { from_building_id: <refinery>, to_building_id: <other>, cargo_grams }`)
 — the courier stays `IN_TRANSIT` until its `courier_shift` is fast-forwarded (`UPDATE courier_shift SET
 started_at_tick=0 …` → advance 1 ARRIVES it). While IN_TRANSIT on a FOOT courier the cargo reads `HOT` / `degrading`.
+
+---
+
+## 16. Ash luxury channel — specialized_lab tier + refining + purity + appointment (Phase-2c vector #2c T12)
+
+The Phase-2c vector #2c (substances / **Ash**) adds a **luxury channel** that is mechanically distinct from
+Brindle/Crick/Hush: the player builds/owns a **`specialized_lab`** (a `lab_tier` 1..3 lever, upgraded via an
+endpoint), cooks Ash 3-stage with **refining passes** (more passes = longer cook = higher purity), the batch carries
+a deterministic **purity** surfaced as a qualitative band, and Ash sells **only** through an **appointment** at a
+Glass-district venue (book → SCHEDULED → honor → HONORED, or it EXPIRES) — there is **no lek/dealer-spot selling for
+Ash**. Every JSON below is the **EXACT live response** captured by `curl` 2026-06-06 against the running dev stack
+after standing up a specialized_lab (Tier-2) + a 200 g Ash batch at CRYSTALLINE purity + a booked appointment
+(shapes captured, NOT guessed — the T14 lesson). All surfaces are qualitative **bands** (R2.2 — never the raw
+`purity_score` / cents / multiplier / tick).
+
+### 16a. Building card — `GET /v1/operational/building/:id` (the `lab_tier_band` field added)
+
+The building-card projection (§1) now carries **`lab_tier_band`** on **every** response — `NONE` for any
+non-specialized_lab building; `BASIC` / `REFINED` / `MASTER` for a specialized_lab at tier 1 / 2 / 3.
+
+**specialized_lab at Tier-1** (fresh build → `lab_tier_band=BASIC`):
+```json
+{
+    "building": "f7cc748d-f34d-4796-9965-a07c21eef2ef",
+    "setup_state": "OPERATIONAL",
+    "cover_band": "WEAK",
+    "operational": true,
+    "operational_type": "specialized_lab",
+    "cold_storage_capable": false,
+    "structural_state": "OPERATIONAL",
+    "recently_raided": false,
+    "seized_amount": "NONE",
+    "repair_cost": "NONE",
+    "lab_tier_band": "BASIC",
+    "raid_risk": "LOW"
+}
+```
+
+The SAME lab after one `POST …/upgrade-tier` (→ Tier-2 → `lab_tier_band=REFINED`):
+```json
+{
+    "building": "f7cc748d-f34d-4796-9965-a07c21eef2ef",
+    "operational_type": "specialized_lab",
+    "lab_tier_band": "REFINED",
+    "raid_risk": "LOW"
+}
+```
+
+**Fields / bands** — added by Phase-2c:
+- `lab_tier_band` *(Ash T5)*: `NONE` \| `BASIC` \| `REFINED` \| `MASTER` — the specialized_lab's `lab_tier` (1/2/3) as a
+  closed band (R2.2 — NEVER the raw tier int). `NONE` for any non-specialized_lab building (no tier lever). A higher
+  band → a purer Ash batch. The Building Card's Upgrade-tier button gates on this (BASIC/REFINED → upgradable; MASTER →
+  capped, no button).
+
+### 16b. Upgrade lab tier — `POST /v1/operational/building/:id/upgrade-tier`
+
+| Action | Method + path | Request body | Success `data` | Code |
+|---|---|---|---|---|
+| **Upgrade lab tier** | `POST /v1/operational/building/:id/upgrade-tier` | `{}` (empty — the building id is the path param) | `{ "upgraded": true }` | 200 |
+
+Captured live (a JWT Bearer + an `Idempotency-Key`; the lab was Tier-1, wallet FLUSH so the cash debit succeeds):
+```json
+{ "payload": { "data": { "upgraded": true } } }
+```
+
+Notes:
+- 200 (a state mutation on the existing building, not a creation). DEBITS `economy_states.cash_cents` by the grounded
+  upgrade cost (the raw post-debit cents are NOT forwarded — R2.2; the ack is just `{ upgraded: true }`; the player
+  surface is the next card's `lab_tier_band`).
+- Requires a PLAYER `Bearer` (no token → `401`) + an `Idempotency-Key` (a retried upgrade does not double-debit).
+- A building that is not the player's / not converted → `404`. **Not a specialized_lab** → `409` (WRONG_TYPE).
+  **Already at `specialized_lab.max_tier`** (Tier-3 / MASTER) → `409` (AT_CAP). Insufficient cash → `409`.
+- Affordability gate (client-side, qualitative — R2.2): the Building Card maps the upgrade to a minimum `wallet_band`
+  (≥ `MODERATE`) and disables Upgrade below that floor; the definitive verdict still lives server-side (`409`).
+
+### 16c. Ash cook with refining passes — `POST /v1/operational/lab/:id/cook`
+
+The cook endpoint (§8) accepts an Ash overload body `{ substance: "ash", refining_passes: <int 0..max> }` (the path is
+`/lab/:id/cook` even for a specialized_lab — the building id selects the type; omitting `substance` defaults to brindle).
+`refining_passes` is the time↔purity lever (more passes lengthen the 3-stage Ash cook AND raise the batch purity).
+
+| Action | Method + path | Request body | Success `data` | Code |
+|---|---|---|---|---|
+| **Cook Ash** | `POST /v1/operational/lab/:id/cook` | `{ "substance": "ash", "refining_passes": <int 0..max> }` | `{ "cook_session_id": "<uuid>" }` | 201 |
+
+Notes:
+- The Ash precursor is `glass_lily` (the Crick/Brindle analogue): `POST /v1/operational/precursors/order
+  { building_id, precursor_type: "GLASS_LILY", quantity_units: 2 }` → `{ order_id }` (201).
+- Ash is a **3-stage** cook (`cook_session.current_stage` walks `stage_1 → stage_2 → stage_3` then completes; the cook
+  building column is `lab_building_id`). Each refining pass lengthens **stage_1**. `refining_passes` &gt; the substance's
+  max → `422`; a non-zero `refining_passes` on a non-Ash substance → `422`.
+- SQL-fast-forward the completion: `UPDATE cook_session SET current_stage='stage_3', stage_started_at_tick=-100000
+  WHERE cook_session_id=…` → **advance 8 ticks** (the per-stage duration is 3000 ticks, so a deep-past stage clock +
+  enough ticks to land on a `MINUTE/8` cook-advance boundary completes it; a single +1 can miss the cadence) → 200 g
+  Ash in the specialized_lab `product_storage` (`substance_type='ash'`) + the purity stamp on a `batch_purity` row.
+
+### 16d. Product storage — `GET /v1/operational/storage/:id` (the `purity_band` field added)
+
+The storage projection (§4 / §14) now carries **`purity_band`** for an Ash batch — `CUT` \| `STANDARD` \| `PURE` \|
+`CRYSTALLINE`, or `null` for a non-Ash substance / an Ash lab with no completed cook yet.
+
+**specialized_lab holding 200 g Ash at CRYSTALLINE purity** (Tier-2 base + 2 refining passes → score 75 → CRYSTALLINE):
+```json
+{
+    "building": "f7cc748d-f34d-4796-9965-a07c21eef2ef",
+    "substance_type": "ASH",
+    "product_band": "MEDIUM",
+    "temperature_status": null,
+    "degrading": false,
+    "purity_band": "CRYSTALLINE"
+}
+```
+
+**Fields / bands** — added by Phase-2c:
+- `substance_type`: `ASH` for a specialized_lab (joins `BRINDLE` / `CRICK` from §14).
+- `purity_band` *(Ash T9)*: `CUT` \| `STANDARD` \| `PURE` \| `CRYSTALLINE` \| `null`. The FORMAL projection of the batch's
+  deterministic `purity_score` stamped at cook completion (R2.2 — the raw score NEVER escapes). `null` for a non-Ash
+  substance (Brindle/Crick/Hush carry no purity grade) AND for an Ash lab with no completed cook. A purer batch sells at
+  a higher honor margin. Ascending grade: CUT &lt; STANDARD &lt; PURE &lt; CRYSTALLINE.
+- `temperature_status` is `null` for a specialized_lab (Ash has no cold chain).
+
+### 16e. Appointment — book / honor / projection
+
+The ONLY Ash sale path (Ash never lek/dealer-sells — the luxuryChannel trait). Book at a player-owned **Glass-district**
+venue → SCHEDULED; honor (with Ash physically at the venue) → HONORED at the luxury margin × the batch's purity
+multiplier; an un-honored booking EXPIRES after the window.
+
+| Action | Method + path | Request body | Success `data` | Code |
+|---|---|---|---|---|
+| **Book appointment** | `POST /v1/operational/appointment` | `{ "glass_venue_building_id": "<uuid>" }` | `{ "appointment_id": "<uuid>" }` | 201 |
+| **Honor appointment** | `POST /v1/operational/appointment/:id/honor` | `{}` (empty — the appointment id is the path param) | `{ "honored": true }` | 200 |
+| **Appointment projection** | `GET /v1/operational/appointment/:id` | — | `{ appointment_id, status, payout_band }` | 200 |
+
+**Book** (201) → `{ "payload": { "data": { "appointment_id": "a9a08f56-72f7-464f-a045-e2e251d1c4b7" } } }`.
+
+**Appointment projection — SCHEDULED** (right after booking, captured live):
+```json
+{ "payload": { "data": { "appointment_id": "a9a08f56-72f7-464f-a045-e2e251d1c4b7", "status": "SCHEDULED", "payout_band": "PENDING" } } }
+```
+
+**Honor** (200) → `{ "payload": { "data": { "honored": true } } }`.
+
+**Appointment projection — HONORED** (after honoring a CRYSTALLINE batch → PREMIUM payout, captured live):
+```json
+{ "payload": { "data": { "appointment_id": "a9a08f56-72f7-464f-a045-e2e251d1c4b7", "status": "HONORED", "payout_band": "PREMIUM" } } }
+```
+
+**Appointment projection — EXPIRED** (a SCHEDULED booking swept past its window, captured live):
+```json
+{ "payload": { "data": { "appointment_id": "47d506e4-9ede-4f80-a76f-90a39fb3878c", "status": "EXPIRED", "payout_band": "NONE" } } }
+```
+
+**Fields / bands** — `data`:
+- `appointment_id`: uuid string (identity — returned by the book action).
+- `status`: `SCHEDULED` \| `HONORED` \| `EXPIRED` (R2.2 — the up-cased state machine; never the raw booked/expires ticks).
+- `payout_band` *(Ash T9)*: `PENDING` (a SCHEDULED appointment — not sold yet) \| `NONE` (EXPIRED — lost, no sale) \|
+  `MODEST` \| `FAIR` \| `STRONG` \| `PREMIUM` (an HONORED sale's realized purity-premium tier, ascending — CUT 1.0×→
+  MODEST, STANDARD 1.5×→FAIR, PURE 2.5×→STRONG, CRYSTALLINE 4.0×→PREMIUM). R2.2 — NEVER the raw `payout_cents`.
+
+Notes / errors (the existing operational conventions):
+- **Book**: not the player's building → `404`; owned but NOT a Glass-district venue → `422` (the Glass attribute is
+  `buildings.block_id → blocks.district_id → districts.profile = 'glass'`); a missing `glass_venue_building_id` → `422`.
+- **Honor**: not the player's / non-existent appointment → `404`; not SCHEDULED (already HONORED, or EXPIRED) → `409`;
+  SCHEDULED but NO Ash at the venue → `409` (distribute Ash there first). A second honor on an HONORED appointment →
+  `409` (double-honor rejected — exactly one honor wins). Confirmed live: a double-honor returns `409
+  RESOURCE_STATE_CONFLICT`; an honor after expiry returns `409`.
+- **Projection**: no `Bearer` → `401`; an appointment that is not the player's / does not exist → `404`. Confirmed live.
+- **Expiry recipe** (no-auth test hook, like `advance`): book → `UPDATE ash_appointment SET expires_at_tick=0 WHERE
+  id='<id>'` → advance ≥ 1 tick so the `APPOINTMENT_EXPIRE` tick (MINUTE/17) sweeps the SCHEDULED booking to EXPIRED.
+
+### 16f. How to PRODUCE the Ash luxury demo state (the seeder recipe — `Tools/seed_operational_demo.mjs §6c`)
+
+Mirrors the Brindle/Crick cook flow but on a `specialized_lab` placed in a **GLASS** district (so the same building is a
+valid appointment venue + holds the cooked Ash):
+1. **Acquire + convert** a `specialized_lab` on a free GLASS-district block → SQL-fast-forward setup → operational
+   (Tier-1, `lab_tier_band=BASIC`).
+2. **Upgrade-tier** once (REST) → Tier-2 (`lab_tier_band=REFINED`).
+3. **Order** `GLASS_LILY` (REST) → SQL-fast-forward arrival (MINUTE/7).
+4. **Cook** `{ substance: "ash", refining_passes: 2 }` (REST) → SQL-fast-forward stage_3 to completion (deep-past stage
+   clock + advance 8) → 200 g Ash + `batch_purity` score 75 → `purity_band=CRYSTALLINE`.
+5. **Book** an appointment at this (Glass) venue (REST) → SCHEDULED (left un-honored so the UI's Honor affordance is
+   demonstrable). The seeder prints `specialized_lab` + `ash_appointment_id` in its JSON block.

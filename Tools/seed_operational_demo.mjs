@@ -85,6 +85,21 @@ const PIPELINE_DOWNSTREAM_STAGES = 3; // Stage1 (front-shop) + 3 downstream → 
 const CRICK_PRECURSOR_UNITS = 2;   // production.crick.precursor_units_per_batch (one cook consumes one batch).
 const CRICK_OUTPUT_GRAMS = 200;    // production.crick.yield_grams (a single Crick refine cook → MEDIUM storage band).
 
+// Phase-2c vector #2c (substances / Ash) LUXURY channel: stand up a specialized_lab holding 200 g Ash at a known
+// purity band + a booked appointment at a Glass venue, so the Building-Card Ash surface (T12) reads:
+//   - lab_tier_band = REFINED (a Tier-2 specialized_lab — upgraded once from the Tier-1 build default),
+//   - purity_band  = CRYSTALLINE (the storage projection of a Tier-2 lab + 2 refining passes → score 75 → CRYSTALLINE),
+//   - appointment   = SCHEDULED (the panel's book→honor lifecycle; honored in a focused E2E, not pre-honored here so the
+//                     Honor affordance is demonstrable).
+// Mirrors the Brindle/Crick cook flow but on a `specialized_lab`, with Ash's precursor (glass_lily) + a 3-stage,
+// refining-pass cook + the lab_tier lever (upgrade-tier) + the appointment book. The specialized_lab is placed in a
+// GLASS-profile district so the SAME building is a valid appointment venue (book validates owned + Glass district), and
+// the cooked Ash physically sits there (so an honor would sell it). Ash is the luxury channel — NO lek/dealer selling.
+const ASH_PRECURSOR_UNITS = 2;     // production.ash.precursor_units_per_batch (one cook consumes one batch).
+const ASH_OUTPUT_GRAMS = 200;      // substance.ash.yield_grams (a single Ash cook → MEDIUM storage band).
+const ASH_REFINING_PASSES = 2;     // the time↔purity lever chosen at cook start (Tier-2 base 55 + 2×10 = 75 → CRYSTALLINE).
+const ASH_TARGET_PURITY_SCORE = 75; // Tier-2 (base 55) + 2 refining passes (×10) − 0 pauses = 75 → CRYSTALLINE band.
+
 const SCRYPT_N = 16384, SCRYPT_R = 8, SCRYPT_P = 1, SCRYPT_KEYLEN = 32;
 function hashPassword(plain) {
   const salt = randomBytes(16);
@@ -187,6 +202,12 @@ async function main() {
   // buildings in districts 3/7/11 are left untouched). Order respects FKs (children before the building rows).
   console.log('[op-seed] resetting prior operational state (idempotent)…');
   const opBuildingsSubq = `SELECT building_id FROM buildings WHERE player_id='${playerId}' AND block_id IN (SELECT id FROM blocks WHERE district_id=${OP_DISTRICT})`;
+  // Phase-2c (Ash): the player's appointment + batch-purity rows (player-scoped — safe to wipe wholesale; they belong
+  // only to this operational demo player). Deleted FIRST (FK children of ash_appointment→buildings + batch_purity→
+  // product_storage). The specialized_lab building lives in a GLASS district (NOT district 16), so it is wiped by its
+  // own targeted clause below — the district-16 building wipe does not reach it.
+  psql(`DELETE FROM ash_appointment WHERE player_id='${playerId}';`);
+  psql(`DELETE FROM batch_purity WHERE player_id='${playerId}';`);
   psql(`DELETE FROM courier_shift WHERE player_id='${playerId}';`);
   psql(`DELETE FROM courier WHERE player_id='${playerId}';`);
   psql(`DELETE FROM route WHERE player_id='${playerId}';`);
@@ -202,6 +223,21 @@ async function main() {
   psql(`DELETE FROM deal_leks WHERE player_id='${playerId}';`);
   psql(`DELETE FROM building_operational_state WHERE building_id IN (${opBuildingsSubq});`);
   psql(`DELETE FROM buildings WHERE player_id='${playerId}' AND block_id IN (SELECT id FROM blocks WHERE district_id=${OP_DISTRICT});`);
+  // Phase-2c (Ash): the specialized_lab lives in a GLASS district (not district 16), so wipe any prior specialized_lab
+  // this player owns directly. The "specialized_lab" marker is the operational TYPE (building_operational_state.
+  // operational_type) — buildings.building_type is a numeric structural code, NOT the operational type. Capture the
+  // specialized_lab building ids via their operational-state rows, then delete the operational-state rows + the
+  // buildings. Idempotent: a re-run rebuilds it fresh in the Glass district below. (product_storage / cook_session /
+  // precursor_* / batch_purity / ash_appointment were already wiped player-wide above.)
+  const ashLabIds = psql(
+    `SELECT COALESCE(string_agg(quote_literal(bos.building_id::text), ','), '') ` +
+      `FROM building_operational_state bos JOIN buildings b ON b.building_id=bos.building_id ` +
+      `WHERE b.player_id='${playerId}' AND bos.operational_type='specialized_lab';`,
+  );
+  if (ashLabIds) {
+    psql(`DELETE FROM building_operational_state WHERE building_id IN (${ashLabIds});`);
+    psql(`DELETE FROM buildings WHERE building_id IN (${ashLabIds});`);
+  }
 
   // Reset the wallet to a fixed generous balance (deterministic figures regardless of prior runs).
   psql(
@@ -326,6 +362,76 @@ async function main() {
   await advance(playerId, 1);
   const crickGrams = psql(`SELECT COALESCE(SUM(quantity_grams),0) FROM product_storage WHERE player_id='${playerId}' AND building_id='${refinery}' AND substance_type='crick';`);
   console.log(`[op-seed] crick refine completed → ${crickGrams} g Crick in the refinery (cold-by-nature → OPTIMAL_COLD)`);
+
+  // ─────────────────────── 6c. ASH LUXURY CHANNEL — specialized_lab @ Tier-2 + CRYSTALLINE batch + booked appointment ──────────
+  // Stand up the Ash surface the Building-Card luxury UI (T12) reads: a specialized_lab in a GLASS district holding 200 g
+  // Ash at purity_band=CRYSTALLINE + lab_tier_band=REFINED + a SCHEDULED appointment at that (Glass) venue. Mirrors the
+  // Brindle/Crick cook flow but on a `specialized_lab`, with Ash's precursor (glass_lily) + a 3-stage refining-pass cook +
+  // the lab_tier lever (upgrade-tier) + the appointment book. The specialized_lab is placed in a GLASS-profile district so
+  // the SAME building is a valid appointment venue (book validates owned + Glass district) and the cooked Ash physically
+  // sits there. Ash is the LUXURY channel — no lek/dealer selling; the sale path is book→honor (honor is exercised in the
+  // focused E2E, not pre-honored here, so the SCHEDULED state + the Honor affordance are demonstrable in the UI).
+  //
+  //   (a) acquire + convert a specialized_lab on a free GLASS-district block → fast-forward setup → operational (Tier-1);
+  //   (b) UPGRADE-TIER once (REST) → Tier-2 (lab_tier_band BASIC → REFINED);
+  //   (c) order glass_lily (REST) → fast-forward arrival (MINUTE/7);
+  //   (d) start an `ash` cook with refining_passes=2 (REST), then fast-forward its 3rd (last) stage to completion
+  //       (MINUTE/8) → 200 g Ash + the purity stamp (Tier-2 base 55 + 2×10 = score 75 → CRYSTALLINE batch_purity);
+  //   (e) BOOK an appointment at this (Glass) venue (REST) → SCHEDULED.
+  // The 3-stage Ash cook has a long per-stage duration (3000 ticks), so the completion fast-forward re-anchors
+  // stage_started_at_tick into the DEEP past (-100000) and advances enough ticks (8) to land on a MINUTE/8 boundary
+  // (matching the contract-capture recipe; a single +1 tick can miss the cadence boundary and leave the cook mid-stage).
+  const glassDistrict = Number(psql(`SELECT id FROM districts WHERE profile='glass' ORDER BY id LIMIT 1;`));
+  // The Nth free block in the GLASS district for this player (distinct from the district-16 operational blocks).
+  function freeGlassBlock(offset) {
+    return Number(
+      psql(
+        `SELECT id FROM blocks WHERE district_id=${glassDistrict} ` +
+          `AND id NOT IN (SELECT block_id FROM buildings WHERE player_id='${playerId}' AND block_id IS NOT NULL) ` +
+          `ORDER BY id LIMIT 1 OFFSET ${offset};`,
+      ),
+    );
+  }
+  const ashLab = await operationalBuilding(freeGlassBlock(0), 'specialized_lab');
+  // The convert above leaves the lab IN_SETUP; fast-forward its setup to operational (the lab build defaults lab_tier=1).
+  psql(`UPDATE building_operational_state SET setup_remaining_ticks=1 WHERE building_id='${ashLab}' AND conversion_stage <> 'operational';`);
+  await advance(playerId, 1);
+  // (b) UPGRADE-TIER once → Tier-2 (lab_tier_band REFINED). Atomic cash debit server-side; raw cents never surface.
+  const upgrade = await api('POST', `/v1/operational/building/${ashLab}/upgrade-tier`, token, {});
+  if (upgrade.status !== 200) throw new Error(`ash upgrade-tier failed: HTTP ${upgrade.status} — ${JSON.stringify(upgrade.data)}`);
+  const ashLabTier = psql(`SELECT lab_tier FROM building_operational_state WHERE building_id='${ashLab}';`);
+  console.log(`[op-seed] specialized_lab built + upgraded → lab_tier=${ashLabTier} (REFINED band) in glass district ${glassDistrict}`);
+  // (c) order glass_lily → fast-forward arrival.
+  const ashOrder = await api('POST', '/v1/operational/precursors/order', token, {
+    building_id: ashLab,
+    precursor_type: 'GLASS_LILY',
+    quantity_units: ASH_PRECURSOR_UNITS,
+  });
+  if (ashOrder.status !== 201) throw new Error(`ash precursor order failed: HTTP ${ashOrder.status} — ${JSON.stringify(ashOrder.data)}`);
+  psql(`UPDATE precursor_order SET arrives_at_tick=${clockMinute(playerId) + 1} WHERE order_id='${ashOrder.data.order_id}';`);
+  await advance(playerId, 1);
+  const glassLilyStock = psql(`SELECT COALESCE(SUM(quantity_units),0) FROM precursor_stock WHERE player_id='${playerId}' AND building_id='${ashLab}';`);
+  console.log(`[op-seed] glass_lily order delivered → ${glassLilyStock} units in the specialized_lab`);
+  // (d) start an `ash` cook with refining_passes=2, then fast-forward its 3rd (last) functional stage to completion.
+  const ashCook = await api('POST', `/v1/operational/lab/${ashLab}/cook`, token, { substance: 'ash', refining_passes: ASH_REFINING_PASSES });
+  if (ashCook.status !== 201) throw new Error(`ash cook failed: HTTP ${ashCook.status} — ${JSON.stringify(ashCook.data)}`);
+  // Ash (count=3) completes after stage_3; re-anchor to stage_3 with a deep-past stage clock so elapsed >> 3000 → the
+  // MINUTE/8 cook-advance completes it on the next boundary tick (yields 200 g Ash + stamps batch_purity score 75).
+  psql(`UPDATE cook_session SET current_stage='stage_3', stage_started_at_tick=-100000 WHERE cook_session_id='${ashCook.data.cook_session_id}';`);
+  await advance(playerId, 8);
+  const ashGrams = psql(`SELECT COALESCE(SUM(quantity_grams),0) FROM product_storage WHERE player_id='${playerId}' AND building_id='${ashLab}' AND substance_type='ash';`);
+  const ashPurityScore = psql(
+    `SELECT COALESCE((SELECT bp.purity_score FROM batch_purity bp JOIN product_storage ps ON ps.storage_id=bp.storage_id ` +
+      `WHERE ps.building_id='${ashLab}' AND ps.player_id='${playerId}' AND ps.substance_type='ash' LIMIT 1),-1);`,
+  );
+  console.log(`[op-seed] ash cook completed → ${ashGrams} g Ash, purity_score=${ashPurityScore} (target ${ASH_TARGET_PURITY_SCORE} → CRYSTALLINE band)`);
+  // (e) BOOK an appointment at this (Glass) venue → SCHEDULED. The Ash physically sits at the lab (its own storage), and
+  // the lab is in a Glass district → it is a valid venue. The appointment is left SCHEDULED (not honored) for the demo.
+  const ashAppt = await api('POST', '/v1/operational/appointment', token, { glass_venue_building_id: ashLab });
+  if (ashAppt.status !== 201) throw new Error(`ash appointment book failed: HTTP ${ashAppt.status} — ${JSON.stringify(ashAppt.data)}`);
+  const ashAppointmentId = ashAppt.data.appointment_id;
+  const ashApptStatus = psql(`SELECT status FROM ash_appointment WHERE id='${ashAppointmentId}';`);
+  console.log(`[op-seed] ash appointment booked → ${ashAppointmentId} (status=${ashApptStatus}; SCHEDULED) at glass venue ${ashLab}`);
 
   // ─────────────────────────── 7. DISTRIBUTE — courier lab → dealer-spot, fast-forward transit ───────────────────────────
   // Ferry part of the cook (120 g) to the dealer-spot (the sell source); the rest stays in the lab (richer storage demo).
@@ -494,10 +600,15 @@ async function main() {
           front_shop: frontShop,
           cash_safehouse: safehouseBldg,
           refinery, // Phase-2b vector #2: the Crick cold-chain refinery (holds 200 g Crick → OPTIMAL_COLD).
+          specialized_lab: ashLab, // Phase-2c vector #2c: the Ash luxury lab (Tier-2 REFINED, 200 g Ash → CRYSTALLINE).
         },
         // Phase-2b vector #2 (substances / Crick): the refinery holds 200 g Crick and is cold-by-nature → its storage
         // projection reads substance_type=CRICK, temperature_status=OPTIMAL_COLD, degrading=false (the cold-chain UI reads it).
         refinery, // top-level too, so the cold-chain T8 test can discover it with the same flat-regex extractor.
+        // Phase-2c vector #2c (substances / Ash): the specialized_lab holds 200 g Ash at CRYSTALLINE purity, is REFINED
+        // (Tier-2), and has a SCHEDULED appointment at its (Glass) venue — the Ash luxury UI (T12) reads all three.
+        specialized_lab: ashLab, // top-level too, so the Ash T12 test can discover it with the same flat-regex extractor.
+        ash_appointment_id: ashAppointmentId, // the SCHEDULED appointment booked at the specialized_lab (Glass venue).
         // Phase-2b raid surface (T7): the lab was raided → DAMAGED (the raided_building the building-card raid UI reads);
         // the stash is the healthy control (OPERATIONAL, never raided → raid_risk readable, no Repair button).
         raided_building: lab,

@@ -185,6 +185,89 @@ namespace MafiaCleanCity.Operational
                 done);
         }
 
+        // ----------------------------------------------------------- Ash luxury channel (Phase-2c vector #2c)
+
+        /// <summary>
+        /// POST /v1/operational/building/:id/upgrade-tier (Phase-2c) — raise a specialized_lab's lab_tier by one (empty
+        /// body; the id is the path param). Debits the wallet by the grounded upgrade cost → the next card load reflects
+        /// the new lab_tier_band (REFINED / MASTER). 200 { upgraded: true }. At cap / insufficient cash / non-specialized_lab
+        /// → 409 (a well-formed error, mapped to a readable msg). The raw cents NEVER cross the wire (R2.2).
+        /// </summary>
+        public IEnumerator UpgradeTier(string buildingId, string bearer, Action<ActionOutcome> done)
+        {
+            return Post(Url($"building/{buildingId}/upgrade-tier"), "{}", bearer,
+                json => JsonUtility.FromJson<UpgradeTierEnvelope>(json)?.payload?.data?.upgraded == true ? "upgraded" : null,
+                done);
+        }
+
+        /// <summary>
+        /// POST /v1/operational/lab/:id/cook { substance:"ash", refining_passes } — start an Ash cook with the chosen
+        /// refining passes (the time↔purity lever; more passes = longer cook = higher purity). 201 { cook_session_id }.
+        /// A non-specialized_lab / wrong type / passes &gt; max → a well-formed 4xx (the wiring + readable error are asserted).
+        /// </summary>
+        public IEnumerator StartCookAsh(string labBuildingId, int refiningPasses, string bearer, Action<ActionOutcome> done)
+        {
+            string body = JsonUtility.ToJson(new AshCookRequestDto { substance = "ash", refining_passes = refiningPasses });
+            return Post(Url($"lab/{labBuildingId}/cook"), body, bearer,
+                json => JsonUtility.FromJson<CookEnvelope>(json)?.payload?.data?.cook_session_id,
+                done);
+        }
+
+        /// <summary>
+        /// POST /v1/operational/appointment { glass_venue_building_id } — book an Ash appointment at a player-owned Glass
+        /// venue (→ SCHEDULED; the ONLY Ash sale path). 201 { appointment_id }. Not-owned → 404; not-a-Glass-venue → 422
+        /// (well-formed errors mapped to a readable msg). The booked/expires ticks NEVER cross the wire (R2.2).
+        /// </summary>
+        public IEnumerator BookAppointment(string glassVenueBuildingId, string bearer, Action<ActionOutcome> done)
+        {
+            string body = JsonUtility.ToJson(new BookAppointmentRequestDto { glass_venue_building_id = glassVenueBuildingId });
+            return Post(Url("appointment"), body, bearer,
+                json => JsonUtility.FromJson<BookAppointmentEnvelope>(json)?.payload?.data?.appointment_id,
+                done);
+        }
+
+        /// <summary>
+        /// POST /v1/operational/appointment/:id/honor (empty body) — honor a SCHEDULED appointment: sell the Ash present at
+        /// its venue at the luxury margin × purity multiplier → HONORED. 200 { honored: true }. EXPIRED / already HONORED /
+        /// no Ash at the venue → 409 (well-formed errors mapped to a readable msg). The raw cents NEVER cross the wire (R2.2).
+        /// </summary>
+        public IEnumerator HonorAppointment(string appointmentId, string bearer, Action<ActionOutcome> done)
+        {
+            return Post(Url($"appointment/{appointmentId}/honor"), "{}", bearer,
+                json => JsonUtility.FromJson<HonorAppointmentEnvelope>(json)?.payload?.data?.honored == true ? "honored" : null,
+                done);
+        }
+
+        /// <summary>
+        /// GET /v1/operational/appointment/:id — the qualitative appointment projection (status band + payout_band; never
+        /// raw ticks/cents — R2.2). onOk(dto) on 2xx; onErr(code, message) otherwise (401 no-token, 404 not-the-player's).
+        /// </summary>
+        public IEnumerator GetAppointment(string appointmentId, string bearer,
+            Action<AppointmentDto> onOk, Action<long, string> onErr)
+        {
+            string url = Url($"appointment/{appointmentId}");
+            using (UnityWebRequest req = UnityWebRequest.Get(url))
+            {
+                req.timeout = TimeoutSeconds;
+                if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
+                yield return req.SendWebRequest();
+
+                if (req.result == UnityWebRequest.Result.Success)
+                {
+                    AppointmentDto dto = null;
+                    try { dto = JsonUtility.FromJson<AppointmentEnvelope>(req.downloadHandler.text)?.payload?.data; }
+                    catch (Exception ex) { onErr?.Invoke(req.responseCode, "parse error: " + ex.Message); yield break; }
+
+                    if (dto == null) { onErr?.Invoke(req.responseCode, "empty appointment payload"); yield break; }
+                    onOk?.Invoke(dto);
+                }
+                else
+                {
+                    onErr?.Invoke(req.responseCode, ReadableError(req));
+                }
+            }
+        }
+
         // ----------------------------------------------------------- wallet (affordability gate)
 
         /// <summary>

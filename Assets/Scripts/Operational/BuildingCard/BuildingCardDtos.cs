@@ -36,6 +36,12 @@ namespace MafiaCleanCity.Operational
         public string seized_amount;     // NONE | LOW | MODERATE | HIGH — the latest raid's seizure band (never raw grams)
         public string repair_cost;       // NONE | MINOR | MODERATE | MAJOR — the repair cash cost band (NONE unless DAMAGED)
         public string raid_risk;         // LOW | ELEVATED | HIGH | IMMINENT — the telegraphed raid-risk band (heat+pin)
+
+        // ----- Phase-2c vector #2c (Ash — T5) lab-tier surface (present on EVERY building-card response) -----
+        // The specialized_lab lab-tier band: NONE (any non-specialized_lab building) | BASIC (tier 1) | REFINED (tier 2)
+        // | MASTER (tier 3). The raw lab_tier int NEVER escapes (R2.2 — captured verbatim via curl, OPERATIONAL_CONTRACTS.md
+        // §16). A higher band → a purer Ash batch. The upgrade-tier button gates on this (BASIC/REFINED → upgradable).
+        public string lab_tier_band;     // NONE | BASIC | REFINED | MASTER (NONE for non-specialized_lab)
     }
 
     // GET /v1/operational/storage/:id  (COOK buildings only — a lab → BRINDLE, a refinery → CRICK; a non-cook
@@ -52,6 +58,13 @@ namespace MafiaCleanCity.Operational
         public string product_band;        // NONE | LOW | MEDIUM | HIGH — the stored-grams band (never raw grams)
         public string temperature_status;  // OPTIMAL_COLD | MODERATE | HOT | null (null when no cold chain — Brindle)
         public bool degrading;             // true when the held product is actively degrading on a warm chain (a flag)
+
+        // ----- Phase-2c vector #2c (Ash — T9) batch purity surface (on the storage projection of a cook building) -----
+        // The qualitative PURITY band of an Ash batch: CUT | STANDARD | PURE | CRYSTALLINE | null. The FORMAL projection of
+        // the batch's deterministic purity_score (stamped at cook completion). The raw purity_score NEVER escapes (R2.2 —
+        // captured verbatim via curl, OPERATIONAL_CONTRACTS.md §16). null for a NON-Ash substance (Brindle/Crick/Hush carry
+        // no purity grade) AND for an Ash specialized_lab with no completed cook yet. A purer batch sells at a higher margin.
+        public string purity_band;         // CUT | STANDARD | PURE | CRYSTALLINE | null (null for non-Ash / no batch yet)
     }
 
     [Serializable] public class StorageEnvelope { public StoragePayload payload; }
@@ -126,6 +139,55 @@ namespace MafiaCleanCity.Operational
     [Serializable] public class RepairResultDto { public bool repairing; }
     [Serializable] public class RepairEnvelope { public RepairResultPayload payload; }
     [Serializable] public class RepairResultPayload { public RepairResultDto data; }
+
+    // =========================================================================
+    // Phase-2c vector #2c (Ash luxury channel) — captured verbatim via curl against the live stack
+    // (Tools/OPERATIONAL_CONTRACTS.md §16). Every leaf is a band STRING / a BOOLEAN / a uuid — NEVER a raw scalar
+    // (no purity_score / cents / multiplier / tick; R2.2). DTOs are NOT re-declared elsewhere (CS0101 dup-DTO lesson).
+    // =========================================================================
+
+    // POST /v1/operational/building/:id/upgrade-tier  → { upgraded: true } (200). Empty body (the id is the path param).
+    // Debits the wallet by the grounded tier-upgrade cost (raw cents NEVER forwarded — R2.2; the player surface is the
+    // qualitative lab_tier_band on the next card load). 409 at cap / insufficient funds / non-specialized_lab.
+    [Serializable] public class UpgradeTierResultDto { public bool upgraded; }
+    [Serializable] public class UpgradeTierEnvelope { public UpgradeTierResultPayload payload; }
+    [Serializable] public class UpgradeTierResultPayload { public UpgradeTierResultDto data; }
+
+    // POST /v1/operational/lab/:id/cook  { substance: "ash", refining_passes: <int 0..max> } → { cook_session_id } (201).
+    // The Ash cook-start body: the substance + the time↔purity refining-passes lever (more passes = longer cook = higher
+    // purity). The legacy Brindle cook (empty body) keeps using the existing CookRequest path; this is the Ash overload.
+    [Serializable]
+    public class AshCookRequestDto
+    {
+        public string substance;     // "ash"
+        public int refining_passes;  // 0..max — the time↔purity lever (the server validates > max → 422)
+    }
+
+    // POST /v1/operational/appointment  { glass_venue_building_id } → { appointment_id } (201). Book an Ash appointment at a
+    // player-owned Glass-district venue (the ONLY Ash sale path — no lek/dealer selling). 404 not-owned / 422 not-a-glass.
+    [Serializable] public class BookAppointmentRequestDto { public string glass_venue_building_id; }
+    [Serializable] public class BookAppointmentResultDto { public string appointment_id; }
+    [Serializable] public class BookAppointmentEnvelope { public BookAppointmentResultPayload payload; }
+    [Serializable] public class BookAppointmentResultPayload { public BookAppointmentResultDto data; }
+
+    // POST /v1/operational/appointment/:id/honor  {} → { honored: true } (200). Honor a SCHEDULED appointment (sells the
+    // Ash present at the venue at the luxury margin × purity multiplier → HONORED). 409 if EXPIRED / HONORED / no Ash.
+    [Serializable] public class HonorAppointmentResultDto { public bool honored; }
+    [Serializable] public class HonorAppointmentEnvelope { public HonorAppointmentResultPayload payload; }
+    [Serializable] public class HonorAppointmentResultPayload { public HonorAppointmentResultDto data; }
+
+    // GET /v1/operational/appointment/:id → the qualitative appointment projection (R2.2 — never the raw booked/expires
+    // ticks or grams/cents). status: SCHEDULED | HONORED | EXPIRED ; payout_band: PENDING (scheduled) | NONE (expired) |
+    // MODEST | FAIR | STRONG | PREMIUM (an honored sale's realized purity-premium tier). Captured verbatim (§16).
+    [Serializable]
+    public class AppointmentDto
+    {
+        public string appointment_id;  // uuid identity
+        public string status;          // SCHEDULED | HONORED | EXPIRED
+        public string payout_band;     // PENDING | NONE | MODEST | FAIR | STRONG | PREMIUM (never raw cents)
+    }
+    [Serializable] public class AppointmentEnvelope { public AppointmentPayload payload; }
+    [Serializable] public class AppointmentPayload { public AppointmentDto data; }
 
     // ----- Outcome wrapper: a uniform result so the screen can render success vs a
     //       well-formed error (the error envelope is mapped to a readable message,
