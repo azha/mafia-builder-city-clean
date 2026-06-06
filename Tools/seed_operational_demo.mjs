@@ -584,6 +584,17 @@ async function main() {
   const stashStructural = psql(`SELECT structural_state FROM building_operational_state WHERE building_id='${stash}';`);
   console.log(`[op-seed] stash (healthy control) structural_state=${stashStructural}`);
 
+  // ─────────────────────────── 13b. RE-PIN the laundering head node DIRTY (the LAST mutation — no advance after) ──────────
+  // Step 10b set cleanliness_at_output=0 (DIRTY) and warned: "any advance after it would let System 8 (MINUTE/2)
+  // re-clean the idle node". The RAID section above (step 13) violates that — its `advance(playerId, 1)` (the
+  // RAID_EXECUTION flush) ALSO fires System 8, which re-cleans the idle head node to 1.0 → CLEAN. So we must re-pin
+  // the head node DIRTY HERE, as the genuinely final mutation: no `advance()` runs after this point in the seeder,
+  // so the head node truly stays DIRTY (mid-pipeline) at rest — the buffered cash (buffer_load) is untouched by this
+  // float reset, only the cleanliness band returns to DIRTY. Idempotent (re-set on every run).
+  psql(`UPDATE laundering_nodes SET cleanliness_at_output=0 WHERE node_id='${nodeId}';`);
+  const headClean = psql(`SELECT cleanliness_at_output FROM laundering_nodes WHERE node_id='${nodeId}';`);
+  console.log(`[op-seed] laundering head node re-pinned DIRTY after raid advance (cleanliness_at_output=${headClean})`);
+
   // ─────────────────────────── DONE — print creds + the seeded entity IDs ───────────────────────────
   console.log('\n=== OPERATIONAL DEMO SEEDED ===');
   console.log(

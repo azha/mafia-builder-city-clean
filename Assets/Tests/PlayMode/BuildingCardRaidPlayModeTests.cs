@@ -32,7 +32,7 @@ namespace MafiaCleanCity.Operational.Tests
     {
         private GameObject controllerGo;
 
-        // Discovered from the seeder's stdout (see OneTimeSeed).
+        // Discovered from the seeder's stdout (see Seed).
         private static string raidedBuildingId; // the DAMAGED lab
         private static string healthyBuildingId; // the OPERATIONAL control stash
 
@@ -42,12 +42,17 @@ namespace MafiaCleanCity.Operational.Tests
             if (controllerGo != null) Object.Destroy(controllerGo);
         }
 
-        // Self-seed THIS fixture's precondition (a raided/DAMAGED building + a healthy control) immediately
-        // before its tests run, so the seed→use is atomic per fixture and the full suite is order-independent
-        // (a sibling op fixture's re-seed re-creates the ids with new values, but never AFTER this fixture's
-        // OneTimeSetUp re-seeds + re-caches them right before this fixture runs).
-        [OneTimeSetUp]
-        public void OneTimeSeed()
+        // Self-seed THIS fixture's precondition (a raided/DAMAGED building + a healthy control) BEFORE EACH test,
+        // not once per fixture. Two tests in this fixture are DESTRUCTIVE — they call Repair() on the shared
+        // raided lab (CaptureRaidScreenshots + RepairDamagedBuilding), flipping its structural_state DAMAGED→
+        // REPAIRING. A once-per-fixture seed (OneTimeSetUp) let that mutation bleed across tests: NUnit runs the
+        // fixture's tests in alphabetical order, so CaptureRaidScreenshots (Repair) ran BEFORE RaidedBuilding /
+        // RepairDamagedBuilding, leaving the lab REPAIRING when those read it (their DAMAGED precondition failed).
+        // Re-seeding per test (the seeder DELETEs + recreates the district-16 buildings with fresh ids each run)
+        // gives every test a genuinely fresh DAMAGED lab, regardless of run order — no weakened assertion: each
+        // test's "is DAMAGED" precondition is restored to a real DAMAGED building immediately before it runs.
+        [SetUp]
+        public void Seed()
         {
             string json = SeederSupport.RunSeeder(SeederSupport.OperationalSeeder, SeederSupport.OperationalMarker);
             raidedBuildingId = SeederSupport.ExtractString(json, "raided_building");
