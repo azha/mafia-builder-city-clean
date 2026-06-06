@@ -268,6 +268,66 @@ namespace MafiaCleanCity.Operational
             }
         }
 
+        // ----------------------------------------------------------- grow_house cultivation (Phase-3 vector #3)
+
+        /// <summary>
+        /// POST /v1/operational/grow-house/:id/plant { precursor_type } — plant a GROWABLE plant-derived precursor
+        /// (verdant_root_extract | lull_resin | glass_lily) in a player-owned grow_house. 201 { grow_session_id }. Debits
+        /// a cheap seed cost server-side (the make-vs-buy saving; raw cents NEVER cross the wire — R2.2). 404 not-owned /
+        /// 409 WRONG_TYPE / 409 ALREADY_GROWING / 422 non-growable precursor (well-formed errors mapped to a readable msg).
+        /// </summary>
+        public IEnumerator Plant(string growHouseId, string precursorType, string bearer, Action<ActionOutcome> done)
+        {
+            string body = JsonUtility.ToJson(new PlantRequestDto { precursor_type = precursorType });
+            return Post(Url($"grow-house/{growHouseId}/plant"), body, bearer,
+                json => JsonUtility.FromJson<PlantEnvelope>(json)?.payload?.data?.grow_session_id,
+                done);
+        }
+
+        /// <summary>
+        /// POST /v1/operational/grow-session/:id/tend (empty body) — tend a player-owned in-progress grow_session
+        /// (husbandry lever B — one tend bankable per stage, server-authoritative). 200 { tended: true }. A completed
+        /// grow / a stage already tended this cycle / a foreign grow → a well-formed 4xx (the raw tend_count NEVER crosses
+        /// the wire — R2.2; the player surface is the husbandry_band on the next projection load).
+        /// </summary>
+        public IEnumerator Tend(string growSessionId, string bearer, Action<ActionOutcome> done)
+        {
+            return Post(Url($"grow-session/{growSessionId}/tend"), "{}", bearer,
+                json => JsonUtility.FromJson<TendEnvelope>(json)?.payload?.data?.tended == true ? "tended" : null,
+                done);
+        }
+
+        /// <summary>
+        /// GET /v1/operational/grow-session/:id — the qualitative grow projection (grow_stage_band + husbandry_band +
+        /// tend_due; never raw tend_count/stage clock/grams/heat — R2.2). onOk(dto) on 2xx; onErr(code, message) otherwise
+        /// (401 no-token, 404 not-the-player's / no such grow). The building's raid-risk band is read off the building card.
+        /// </summary>
+        public IEnumerator GetGrowSession(string growSessionId, string bearer,
+            Action<GrowSessionDto> onOk, Action<long, string> onErr)
+        {
+            string url = Url($"grow-session/{growSessionId}");
+            using (UnityWebRequest req = UnityWebRequest.Get(url))
+            {
+                req.timeout = TimeoutSeconds;
+                if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
+                yield return req.SendWebRequest();
+
+                if (req.result == UnityWebRequest.Result.Success)
+                {
+                    GrowSessionDto dto = null;
+                    try { dto = JsonUtility.FromJson<GrowSessionEnvelope>(req.downloadHandler.text)?.payload?.data; }
+                    catch (Exception ex) { onErr?.Invoke(req.responseCode, "parse error: " + ex.Message); yield break; }
+
+                    if (dto == null) { onErr?.Invoke(req.responseCode, "empty grow-session payload"); yield break; }
+                    onOk?.Invoke(dto);
+                }
+                else
+                {
+                    onErr?.Invoke(req.responseCode, ReadableError(req));
+                }
+            }
+        }
+
         // ----------------------------------------------------------- wallet (affordability gate)
 
         /// <summary>

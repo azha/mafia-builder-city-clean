@@ -208,6 +208,10 @@ async function main() {
   // own targeted clause below — the district-16 building wipe does not reach it.
   psql(`DELETE FROM ash_appointment WHERE player_id='${playerId}';`);
   psql(`DELETE FROM batch_purity WHERE player_id='${playerId}';`);
+  // Phase-3 vector #3 (grow_house): the player's grow_session rows (player-scoped — safe to wipe wholesale; they belong
+  // only to this operational demo player). Deleted explicitly (a grow_session FK-cascades on its grow_house building
+  // delete below, but an explicit wipe is idempotent + order-safe regardless of which block the grow_house sat on).
+  psql(`DELETE FROM grow_session WHERE player_id='${playerId}';`);
   psql(`DELETE FROM courier_shift WHERE player_id='${playerId}';`);
   psql(`DELETE FROM courier WHERE player_id='${playerId}';`);
   psql(`DELETE FROM route WHERE player_id='${playerId}';`);
@@ -433,6 +437,41 @@ async function main() {
   const ashApptStatus = psql(`SELECT status FROM ash_appointment WHERE id='${ashAppointmentId}';`);
   console.log(`[op-seed] ash appointment booked → ${ashAppointmentId} (status=${ashApptStatus}; SCHEDULED) at glass venue ${ashLab}`);
 
+  // ─────────────────────── 6d. GROW HOUSE (Phase-3 vector #3) — a grow_house mid-grow at a known husbandry band ──────────
+  // Stand up the surface the Building-Card grow UI (T10) reads: a grow_house in a VERGE district (district 16 — a grow_house
+  // is buildable ONLY in Spine/Verge) holding an ACTIVE grow_session at a KNOWN qualitative state:
+  //   - grow_stage_band = MID    (the grow advanced one stage past plant — stage_2 → MID),
+  //   - husbandry_band  = ON_TRACK (tend_count = 2 → the STANDARD yield tier → ON_TRACK trajectory band),
+  //   - tend_due        = true   (the CURRENT (MID) stage is un-tended → the Tend button is enabled + demonstrable),
+  //   - the building's raid_risk climbs above LOW (an active grow makes the grow_house HOT → GROW_HEAT → ELEVATED band).
+  // RECIPE (REST where possible + SQL fast-forward for the grow cycle, mirroring the cook/courier fast-forward):
+  //   (a) acquire + convert a grow_house on a free district-16 (Verge) block → fast-forward setup → operational;
+  //   (b) PLANT verdant_root_extract (REST) → a stage_1 grow_session (cheap seed cost debit);
+  //   (c) SQL-fast-forward the stage clock into the deep past + advance 1 → the GROW_ADVANCE tick (MINUTE/18) advances
+  //       stage_1 → stage_2 (EARLY → MID) AND emits GROW_HEAT (an active grow is hot → raid_risk climbs);
+  //   (d) SQL-set tend_count=2, tended_in_stage=NULL → husbandry_band=ON_TRACK + tend_due=true on the fresh MID stage
+  //       (the projection derives the band from tend_count via the SAME GrowYieldService cut-points the harvest uses).
+  // Idempotent: the reset above deletes this player's grow_session rows (FK-cascade on the district-16 building wipe) +
+  // the district-16 buildings, so a re-run rebuilds the grow_house + a fresh grow.
+  const GROW_STAGE_DURATION_TICKS = 1800; // grow.stage_duration_ticks default (the GROW_ADVANCE per-stage clock).
+  const growHouse = await operationalBuilding(freeBlock(6 + PIPELINE_DOWNSTREAM_STAGES), 'grow_house');
+  psql(`UPDATE building_operational_state SET setup_remaining_ticks=1 WHERE building_id='${growHouse}' AND conversion_stage <> 'operational';`);
+  await advance(playerId, 1);
+  // (b) PLANT verdant_root_extract → stage_1 grow_session.
+  const plant = await api('POST', `/v1/operational/grow-house/${growHouse}/plant`, token, { precursor_type: 'verdant_root_extract' });
+  if (plant.status !== 201) throw new Error(`grow plant failed: HTTP ${plant.status} — ${JSON.stringify(plant.data)}`);
+  const growSessionId = plant.data.grow_session_id;
+  // (c) advance one grow stage: re-anchor the stage clock into the DEEP past so (stage_started + stage_duration <= clock)
+  // holds regardless of the absolute clock, then advance 1 → GROW_ADVANCE (MINUTE/18) flips stage_1 → stage_2 (MID) +
+  // clears tended_in_stage + emits GROW_HEAT (the grow_house turns HOT → its raid_risk band climbs above LOW).
+  psql(`UPDATE grow_session SET stage_started_at_tick=${clockMinute(playerId) - GROW_STAGE_DURATION_TICKS - 1} WHERE grow_session_id='${growSessionId}';`);
+  await advance(playerId, 1);
+  // (d) set the husbandry trajectory to ON_TRACK (tend_count=2 → STANDARD tier) on a FRESH (un-tended) MID stage so the
+  // Tend button is enabled (tend_due=true). The raw tend_count is BO-only (R2.2) — the projection bands it to ON_TRACK.
+  psql(`UPDATE grow_session SET tend_count=2, tended_in_stage=NULL WHERE grow_session_id='${growSessionId}';`);
+  const growState = psql(`SELECT current_stage::text || '|' || tend_count || '|' || COALESCE(tended_in_stage::text,'-') FROM grow_session WHERE grow_session_id='${growSessionId}';`);
+  console.log(`[op-seed] grow_house ${growHouse} planted + advanced → grow_session=${growSessionId} (${growState}; MID / ON_TRACK / tend_due)`);
+
   // ─────────────────────────── 7. DISTRIBUTE — courier lab → dealer-spot, fast-forward transit ───────────────────────────
   // Ferry part of the cook (120 g) to the dealer-spot (the sell source); the rest stays in the lab (richer storage demo).
   const dispatch = await api('POST', '/v1/operational/distribution/dispatch', token, {
@@ -612,6 +651,7 @@ async function main() {
           cash_safehouse: safehouseBldg,
           refinery, // Phase-2b vector #2: the Crick cold-chain refinery (holds 200 g Crick → OPTIMAL_COLD).
           specialized_lab: ashLab, // Phase-2c vector #2c: the Ash luxury lab (Tier-2 REFINED, 200 g Ash → CRYSTALLINE).
+          grow_house: growHouse, // Phase-3 vector #3: the grow_house mid-grow (MID stage / ON_TRACK husbandry / tend_due).
         },
         // Phase-2b vector #2 (substances / Crick): the refinery holds 200 g Crick and is cold-by-nature → its storage
         // projection reads substance_type=CRICK, temperature_status=OPTIMAL_COLD, degrading=false (the cold-chain UI reads it).
@@ -620,6 +660,10 @@ async function main() {
         // (Tier-2), and has a SCHEDULED appointment at its (Glass) venue — the Ash luxury UI (T12) reads all three.
         specialized_lab: ashLab, // top-level too, so the Ash T12 test can discover it with the same flat-regex extractor.
         ash_appointment_id: ashAppointmentId, // the SCHEDULED appointment booked at the specialized_lab (Glass venue).
+        // Phase-3 vector #3 (grow_house): the grow_house holds an ACTIVE grow_session at MID stage / ON_TRACK husbandry /
+        // tend_due — the grow UI (T10) reads grow_stage_band=MID, husbandry_band=ON_TRACK, tend_due=true, raid_risk climbed.
+        grow_house: growHouse, // top-level too, so the grow T10 test can discover it with the same flat-regex extractor.
+        grow_session_id: growSessionId, // the active grow_session the grow surface tracks (the projection id the UI queries).
         // Phase-2b raid surface (T7): the lab was raided → DAMAGED (the raided_building the building-card raid UI reads);
         // the stash is the healthy control (OPERATIONAL, never raided → raid_risk readable, no Repair button).
         raided_building: lab,

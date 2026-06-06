@@ -929,3 +929,102 @@ valid appointment venue + holds the cooked Ash):
    clock + advance 8) → 200 g Ash + `batch_purity` score 75 → `purity_band=CRYSTALLINE`.
 5. **Book** an appointment at this (Glass) venue (REST) → SCHEDULED (left un-honored so the UI's Honor affordance is
    demonstrable). The seeder prints `specialized_lab` + `ash_appointment_id` in its JSON block.
+
+## 17. Grow house cultivation — `plant` + `tend` + grow projection (Phase-3 vector #3 T10)
+
+A `grow_house` is the in-house cultivation building (a `building_operational_type`, buildable **only in Spine/Verge
+districts** — district 16 is **Verge**). It grows a **GROWABLE plant-derived precursor** (`verdant_root_extract` |
+`lull_resin` | `glass_lily`) over a 3-stage cycle, harvesting into `precursor_stock`. An active grow makes the building
+**HOT** (GROW_HEAT) → its **raid-risk band climbs** (the existing vector-#1 surface, §1/§13 `raid_risk`); a raid
+DAMAGED-pauses + seizes the crop (the §13 raid surface). The make-vs-buy lever: grow is **cheap-but-slow-and-hot** vs
+ordering precursors **fast-but-dear**. All shapes below are **captured verbatim via curl** against the live local stack.
+
+All endpoints need a PLAYER Bearer (`POST /auth/v1/signin { identifier, password }` → `payload.data.access_token`); the
+mutations need a UUID-v4 `Idempotency-Key`. **R2.2: every surface is a qualitative BAND / a boolean / a uuid — never a
+raw `tend_count` / grams / tick / heat / stage int.**
+
+### 17a. Plant — `POST /v1/operational/grow-house/:id/plant`
+
+Request body: `{ "precursor_type": "verdant_root_extract" }` (∈ `verdant_root_extract | lull_resin | glass_lily`).
+
+```json
+// 201 Created
+{ "payload": { "data": { "grow_session_id": "eceb0403-23eb-4812-837e-53243f33b819" } } }
+```
+
+Errors: `404 RESOURCE_NOT_FOUND` (not a player-owned operational building), `409 RESOURCE_STATE_CONFLICT`
+(WRONG_TYPE — not a grow_house / ALREADY_GROWING — one active grow per building / INSUFFICIENT_FUNDS), `422
+VALIDATION_FAILED` (a non-growable precursor — captured live):
+
+```json
+// 422 — POST .../plant { precursor_type: "pyralin" }
+{ "payload": { "error": { "code": "VALIDATION_FAILED", "http_status": 422,
+  "message": "precursor_type must be a GROWABLE plant-derived precursor (VERDANT_ROOT_EXTRACT | LULL_RESIN | GLASS_LILY), got \"pyralin\"." } } }
+```
+
+### 17b. Tend — `POST /v1/operational/grow-session/:id/tend`
+
+Empty body `{}`. Tends the in-progress grow (husbandry lever B — one tend bankable per stage, server-authoritative).
+
+```json
+// 200 OK
+{ "payload": { "data": { "tended": true } } }
+```
+
+Errors: `404 RESOURCE_NOT_FOUND` (not the player's grow), `409 RESOURCE_STATE_CONFLICT` — a completed grow, or the
+current stage is **already tended** (captured live):
+
+```json
+// 409 — a second tend on an already-tended stage
+{ "payload": { "error": { "code": "RESOURCE_STATE_CONFLICT", "http_status": 409,
+  "message": "grow_session <id> is already tended in its current stage (one tend per stage)." } } }
+```
+
+The raw `tend_count` is **never** in any response (R2.2 — the player surface is the `husbandry_band` on the projection).
+
+### 17c. Grow projection — `GET /v1/operational/grow-session/:id`
+
+The qualitative grow surface (R2.2 — bands + a flag + the uuid identity only):
+
+```json
+// 200 OK — a fresh stage_1 plant
+{ "payload": { "data": { "grow_session": "<uuid>", "grow_stage_band": "EARLY", "husbandry_band": "WITHERED", "tend_due": true } } }
+// 200 OK — after one GROW_ADVANCE (stage_2) + tend_count=2 on a fresh stage (the seeded demo state)
+{ "payload": { "data": { "grow_session": "<uuid>", "grow_stage_band": "MID", "husbandry_band": "ON_TRACK", "tend_due": true } } }
+// 200 OK — after tending the current stage (tend_count 2→3 → BUMPER tier)
+{ "payload": { "data": { "grow_session": "<uuid>", "grow_stage_band": "MID", "husbandry_band": "THRIVING", "tend_due": false } } }
+```
+
+- `grow_stage_band`: **EARLY** (stage_1) | **MID** (stage_2) | **LATE** (stage_3) | **DONE** (completed — awaiting harvest).
+- `husbandry_band`: **WITHERED** (tend_count ≤ 1) | **ON_TRACK** (=2) | **THRIVING** (=stage_count, every stage tended)
+  — the tend trajectory banded from the SAME `GrowYieldService` cut-points the harvest uses (raw `tend_count` never escapes).
+- `tend_due`: a boolean — the CURRENT stage is still un-tended (a tend action is available now). `GROW_ADVANCE` clears it
+  on each new stage; tending the stage flips it false; a completed grow → false.
+
+Error: `404 RESOURCE_NOT_FOUND` (`No such grow_session for this player: <id>.`) — a foreign/nonexistent grow is invisible.
+
+### 17d. The building's raid-risk (REUSE — §1/§13) — `GET /v1/operational/building/:id`
+
+The grow_house carries the SAME building-card shape (§1); an **idle** grow_house reads `raid_risk: "LOW"`, an **active**
+grow climbs it (GROW_HEAT) — the seeded demo (active grow + the operational loop's accumulated city heat) reads e.g.:
+
+```json
+// 200 OK — the grow_house card while a grow is active
+{ "payload": { "data": { "building": "<uuid>", "operational_type": "grow_house", "setup_state": "OPERATIONAL",
+  "cover_band": "WEAK", "structural_state": "OPERATIONAL", "recently_raided": false, "seized_amount": "NONE",
+  "repair_cost": "NONE", "raid_risk": "IMMINENT" } } }
+```
+
+The grow UI reads `raid_risk` off THIS card (not re-derived). A raid that DAMAGED-pauses + seizes the crop surfaces via
+the §13 raid fields (`structural_state: DAMAGED`, `recently_raided: true`, `seized_amount` band, the Repair affordance).
+
+### 17e. How to PRODUCE the grow demo state (the seeder recipe — `Tools/seed_operational_demo.mjs §6d`)
+
+A grow_house in district 16 (**Verge**) holding an active grow at **MID / ON_TRACK / tend_due** (Tend button enabled):
+1. **Acquire + convert** a `grow_house` on a free district-16 block → SQL-fast-forward setup → operational.
+2. **Plant** `verdant_root_extract` (REST) → a stage_1 grow_session.
+3. SQL-fast-forward the stage clock into the deep past (`stage_started_at_tick = clock − grow.stage_duration_ticks − 1`)
+   + advance 1 → `GROW_ADVANCE` (MINUTE/18) flips stage_1 → stage_2 (EARLY → MID), clears `tended_in_stage`, emits
+   GROW_HEAT (raid_risk climbs).
+4. SQL-set `tend_count=2, tended_in_stage=NULL` → `husbandry_band=ON_TRACK` + `tend_due=true` on the fresh MID stage.
+The seeder prints `grow_house` + `grow_session_id` in its JSON block.

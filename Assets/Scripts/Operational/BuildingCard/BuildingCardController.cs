@@ -93,6 +93,27 @@ namespace MafiaCleanCity.Operational
         /// <summary>The refining-passes value the cook-start selector currently holds (0..max — the time↔purity lever).</summary>
         public int RefiningPasses { get; private set; }
 
+        // ---- Phase-3 vector #3 (grow_house cultivation) test hooks --------------
+        /// <summary>The qualitative grow projection currently loaded for this grow_house's active grow_session (GET
+        /// /v1/operational/grow-session/:id). Null until a grow is planted + refreshed. grow_stage_band + husbandry_band +
+        /// tend_due only (never raw tend_count/stage clock/grams; R2.2).</summary>
+        public GrowSessionDto CurrentGrow { get; private set; }
+        /// <summary>The grow_session id the grow surface tracks (set on a successful Plant, or by a test before Refresh).</summary>
+        public string GrowSessionId { get; set; }
+        /// <summary>The growable precursor the plant selector currently holds (verdant_root_extract | lull_resin | glass_lily).</summary>
+        public string SelectedPrecursor { get; private set; } = "verdant_root_extract";
+        /// <summary>True when the grow-stage band row is shown (an active grow on this grow_house).</summary>
+        public bool GrowStageShown { get; private set; }
+        /// <summary>True when the husbandry-band row is shown (an active grow on this grow_house).</summary>
+        public bool HusbandryShown { get; private set; }
+        /// <summary>True when the Tend button is shown (an active grow that is not DONE).</summary>
+        public bool TendButtonShown { get; private set; }
+        /// <summary>True when the shown Tend button is INTERACTABLE (server-authoritative tend_due gate — the current
+        /// stage is still un-tended). When tend_due is false (already tended this stage), the button is shown but disabled.</summary>
+        public bool TendButtonEnabled { get; private set; }
+        /// <summary>True when the plant selector is shown (an idle grow_house with no active grow yet).</summary>
+        public bool PlantSelectorShown { get; private set; }
+
         public string BuildingId { get => buildingId; set => buildingId = value; }
 
         /// <summary>
@@ -243,7 +264,13 @@ namespace MafiaCleanCity.Operational
             // refinery, temperature_status != null) renders the cold-chain status row. Never blocks the card load.
             yield return RefreshStorage(id);
 
-            // RefreshWalletBand + RefreshStorage are further network round-trips; re-check the guard
+            // Phase-3 vector #3 (grow_house): also fetch the active grow's qualitative projection (grow_stage_band +
+            // husbandry_band + tend_due) when a grow_session is tracked for this grow_house (set on Plant or by a test).
+            // A non-grow_house card, or a grow_house with no tracked grow, leaves CurrentGrow null → no grow rows render.
+            // The grow projection is grow_session-scoped; the building's raid-risk band is read off THIS card (raid_risk).
+            yield return RefreshGrow();
+
+            // RefreshWalletBand + RefreshStorage + RefreshGrow are further network round-trips; re-check the guard
             // before rendering so a teardown that landed mid-load no-ops instead of hitting dead UI.
             if (Destroyed) yield break;
 
@@ -374,6 +401,54 @@ namespace MafiaCleanCity.Operational
             CurrentAppointment = appt;
         }
 
+        // --------------------------------------------- grow_house cultivation actions (Phase-3 vector #3)
+
+        /// <summary>Set the growable precursor the next Plant will use (verdant_root_extract | lull_resin | glass_lily).
+        /// Re-renders the actions so the plant selector reflects the choice (only if the card is loaded). UI convenience —
+        /// the server enforces the GROWABLE set (a non-growable precursor → 422).</summary>
+        public void SetSelectedPrecursor(string precursor)
+        {
+            if (!string.IsNullOrEmpty(precursor)) SelectedPrecursor = precursor;
+            if (CardLoaded && CurrentCard != null) BuildActions(CurrentCard);
+        }
+
+        /// <summary>grow_house action: plant the selected growable precursor (the cultivation PLANT action — debits a
+        /// cheap seed cost server-side). On success the new grow_session id is tracked + its projection refreshed → the
+        /// grow surface appears (EARLY, WITHERED, tend_due) and the card re-renders.</summary>
+        public IEnumerator Plant()
+        {
+            yield return RunAction(c => client.Plant(buildingId, SelectedPrecursor, Token, c),
+                "Planted", "Plant unavailable");
+            // The Post parser returns the new grow_session_id (the uuid) as ResultId on success → track it so the
+            // grow surface (the grow_session-scoped projection) loads on the re-render below.
+            if (LastActionOutcome != null && LastActionOutcome.Ok && !string.IsNullOrEmpty(LastActionOutcome.ResultId))
+                GrowSessionId = LastActionOutcome.ResultId;
+            // Re-load the card so the grow surface (the projection-derived bands) is fetched + rendered.
+            yield return LoadBuilding(buildingId);
+        }
+
+        /// <summary>grow_house action: tend the tracked in-progress grow_session (husbandry lever B — one tend per stage,
+        /// server-authoritative). On success the husbandry_band trajectory rises + tend_due flips false; the card is
+        /// re-loaded so the projection-derived bands reflect it.</summary>
+        public IEnumerator Tend()
+        {
+            if (string.IsNullOrEmpty(GrowSessionId)) yield break;
+            yield return RunAction(c => client.Tend(GrowSessionId, Token, c),
+                "Tended", "Tend unavailable");
+            // Re-load the card so the grow surface reflects the new husbandry_band + tend_due (server-authoritative).
+            yield return LoadBuilding(buildingId);
+        }
+
+        /// <summary>Fetch the tracked grow_session's qualitative projection (grow_stage_band + husbandry_band + tend_due).
+        /// Leaves CurrentGrow null on failure / when no grow is tracked (the surface stays honest — no stale band).</summary>
+        public IEnumerator RefreshGrow()
+        {
+            if (string.IsNullOrEmpty(GrowSessionId)) { CurrentGrow = null; yield break; }
+            GrowSessionDto grow = null;
+            yield return client.GetGrowSession(GrowSessionId, Token, g => grow = g, (code, msg) => grow = null);
+            CurrentGrow = grow;
+        }
+
         private IEnumerator RunAction(System.Func<System.Action<ActionOutcome>, IEnumerator> call,
             string okPrefix, string errPrefix)
         {
@@ -499,6 +574,30 @@ namespace MafiaCleanCity.Operational
                     PayoutGlyph(CurrentAppointment.payout_band), PayoutAccent(CurrentAppointment.payout_band));
             }
 
+            // ----- Phase-3 vector #3 (grow_house cultivation) surface — ONLY for a grow_house with an active grow tracked.
+            // The grow-stage row reads grow_stage_band (EARLY / MID / LATE / DONE); the husbandry row reads husbandry_band
+            // (WITHERED / ON_TRACK / THRIVING — the AccentMild/Moderate/Severe/Premium palette reused). The crop's substance
+            // (the planted precursor) is surfaced too. R2.2: bands/labels/glyphs only (never tend_count / grams / stage int /
+            // heat); F2: every row carries a shape glyph. The raid-risk band is ALREADY rendered above (REUSE — an active
+            // grow makes the grow_house hot → its raid_risk climbs); a raid that seized the crop shows via the Alert row
+            // above (recently_raided + seized_amount band). The grow surface is grow_session-scoped (CurrentGrow). -----
+            GrowStageShown = false;
+            HusbandryShown = false;
+            if (card.operational_type == "grow_house" && CurrentGrow != null
+                && !string.IsNullOrEmpty(CurrentGrow.grow_stage_band))
+            {
+                // Crop row — surfaces which growable precursor this grow_house is cultivating (the planted substance).
+                AddStatusRow("Crop", GrowablePrecursorLabel(SelectedPrecursor), "[*]", AccentMild);
+                // Grow-stage band row — the qualitative growth phase (EARLY → DONE) with a rising filled-bar glyph.
+                GrowStageShown = true;
+                AddStatusRow("Grow stage", GrowStageLabel(CurrentGrow.grow_stage_band),
+                    GrowStageGlyph(CurrentGrow.grow_stage_band), GrowStageAccent(CurrentGrow.grow_stage_band));
+                // Husbandry band row — the qualitative tend trajectory (WITHERED → THRIVING) — the husbandry payoff signal.
+                HusbandryShown = true;
+                AddStatusRow("Husbandry", HusbandryLabel(CurrentGrow.husbandry_band),
+                    HusbandryGlyph(CurrentGrow.husbandry_band), HusbandryAccent(CurrentGrow.husbandry_band));
+            }
+
             BuildActions(card);
         }
 
@@ -526,6 +625,10 @@ namespace MafiaCleanCity.Operational
             repairButton = null;
             RepairButtonShown = false;
             RepairButtonAffordable = false;
+            // Phase-3 vector #3: reset the grow_house affordance flags (set only in the grow_house case below).
+            PlantSelectorShown = false;
+            TendButtonShown = false;
+            TendButtonEnabled = false;
             if (card.structural_state == "DAMAGED")
             {
                 RepairButtonShown = true;
@@ -589,6 +692,42 @@ namespace MafiaCleanCity.Operational
                     // Inject needs a safehouse target — wired by the caller/test via Inject(safehouseId, amount).
                     AddActionButton(actionBar, "Inject (launder)", () => { /* needs safehouse target; driven via Inject() */ });
                     break;
+                case "grow_house":
+                    // Phase-3 vector #3: the cultivation affordances.
+                    //   - NO active grow tracked → the PLANT selector (choose a growable precursor) + the Plant button.
+                    //   - An active grow that is NOT DONE → the Tend button, INTERACTABLE only when tend_due (the current
+                    //     stage is still un-tended). The gate is SERVER-AUTHORITATIVE: tend_due comes from the projection;
+                    //     a tend on an already-tended stage is rejected 409 even if the client allowed it.
+                    PlantSelectorShown = false;
+                    TendButtonShown = false;
+                    TendButtonEnabled = false;
+                    bool hasActiveGrow = CurrentGrow != null && !string.IsNullOrEmpty(CurrentGrow.grow_stage_band)
+                        && CurrentGrow.grow_stage_band != "DONE";
+                    if (hasActiveGrow)
+                    {
+                        TendButtonShown = true;
+                        bool tendDue = CurrentGrow.tend_due;
+                        TendButtonEnabled = tendDue;
+                        Button tendBtn = AddActionButton(actionBar, "Tend crop", () => StartCoroutine(Tend()));
+                        SetButtonInteractable(tendBtn, tendDue);
+                        if (!tendDue)
+                        {
+                            // F2: a readable reason beside the disabled button (this stage is already tended).
+                            string reason = "Tend crop (already tended this stage)";
+                            Text hint = NewText("TendHint", actionBar, reason, 13, TextAnchor.MiddleLeft);
+                            hint.color = new Color(0.55f, 0.59f, 0.63f);
+                            AddLayoutElement(hint.gameObject, minHeight: 18, flexibleHeight: 0);
+                            TrackText(hint, reason);
+                        }
+                    }
+                    else
+                    {
+                        // Idle grow_house (no active grow) → the plant selector + Plant button.
+                        PlantSelectorShown = true;
+                        AddPlantSelector(actionBar);
+                        AddActionButton(actionBar, "Plant", () => StartCoroutine(Plant()));
+                    }
+                    break;
                 case "stash":
                 case "cash_safehouse":
                 case "dealer_spot_front":
@@ -615,6 +754,9 @@ namespace MafiaCleanCity.Operational
                 case "front_shop": return "Front shop";
                 case "cash_safehouse": return "Cash safehouse";
                 case "dealer_spot_front": return "Dealer-spot front";
+                case "specialized_lab": return "Specialized lab";
+                case "refinery": return "Refinery";
+                case "grow_house": return "Grow house";
                 case "": case null: return "Not converted";
                 default: return t;
             }
@@ -892,6 +1034,85 @@ namespace MafiaCleanCity.Operational
             }
         }
 
+        // ----- Phase-3 vector #3 (grow_house — T7): grow_stage_band (EARLY | MID | LATE | DONE) — the growth phase -----
+        // R2.2: a qualitative band label, NEVER the raw stage clock / "stage N of 3" count. Ascending: EARLY < MID < LATE,
+        // then DONE (the grow is complete, awaiting harvest).
+        private static string GrowStageLabel(string b)
+        {
+            switch (b)
+            {
+                case "EARLY": return "Early";
+                case "MID": return "Mid";
+                case "LATE": return "Late";
+                case "DONE": return "Ready to harvest";
+                default: return b;
+            }
+        }
+        // A 3-segment rising filled-bar gauge → a full bar at DONE (shape encodes the phase — a11y F2, mirrors the cover/risk gauges).
+        private static string GrowStageGlyph(string b)
+        {
+            switch (b)
+            {
+                case "EARLY": return "[#..]";
+                case "MID": return "[##.]";
+                case "LATE": return "[###]";
+                case "DONE": return "[***]";
+                default: return "[...]";
+            }
+        }
+        // EARLY/MID = amber (still growing), LATE = cyan (nearly there), DONE = premium violet (a finished crop).
+        private static Color GrowStageAccent(string b) =>
+            b == "DONE" ? AccentPremium : b == "LATE" ? AccentMild : AccentModerate;
+
+        // ----- Phase-3 vector #3 (grow_house — T7): husbandry_band (WITHERED | ON_TRACK | THRIVING) — the tend trajectory -----
+        // R2.2: the husbandry payoff trajectory as a band, NEVER the raw tend_count. WITHERED (neglected — low yield) <
+        // ON_TRACK (partial husbandry — middling) < THRIVING (full husbandry — top yield). Reuses the AccentMild/Moderate/
+        // Severe/Premium palette: WITHERED = severe, ON_TRACK = amber, THRIVING = premium violet (the best trajectory).
+        private static string HusbandryLabel(string b)
+        {
+            switch (b)
+            {
+                case "WITHERED": return "Withered";
+                case "ON_TRACK": return "On track";
+                case "THRIVING": return "Thriving";
+                default: return b;
+            }
+        }
+        // A 3-segment fill gauge (shape encodes the trajectory — a11y F2: shape carries the level alongside colour).
+        private static string HusbandryGlyph(string b)
+        {
+            switch (b)
+            {
+                case "WITHERED": return "[v..]";
+                case "ON_TRACK": return "[^^.]";
+                case "THRIVING": return "[^^^]";
+                default: return "[...]";
+            }
+        }
+        private static Color HusbandryAccent(string b)
+        {
+            switch (b)
+            {
+                case "THRIVING": return AccentPremium;
+                case "ON_TRACK": return AccentModerate;
+                default: return AccentSevere; // WITHERED (the neglected trajectory)
+            }
+        }
+
+        // ----- Phase-3 vector #3 (grow_house — T2): the GROWABLE plant-derived precursor the plant selector cycles -----
+        // The server-enforced GROWABLE set (a non-growable precursor → 422): verdant_root_extract | lull_resin | glass_lily.
+        private static readonly string[] GrowablePrecursors = { "verdant_root_extract", "lull_resin", "glass_lily" };
+        private static string GrowablePrecursorLabel(string p)
+        {
+            switch (p)
+            {
+                case "verdant_root_extract": return "Verdant root";
+                case "lull_resin": return "Lull resin";
+                case "glass_lily": return "Glass lily";
+                default: return p;
+            }
+        }
+
         // The minimum wallet band that can afford each lab-tier upgrade cost band. The upgrade cost is a server-grounded
         // value (R2.3); the client gates qualitatively (band-vs-band, NEVER cents — R2.2). The definitive verdict still
         // lives server-side (an unaffordable upgrade → 409 even if the client allowed it). The upgrade is a meaningful cash
@@ -1105,6 +1326,49 @@ namespace MafiaCleanCity.Operational
                 case 2: return "Standard";
                 default: return "Deep"; // 3+ (clamped at the UI max)
             }
+        }
+
+        // Phase-3 vector #3: the plant selector (choose which growable precursor to cultivate). Three controls on one row:
+        //   [< Crop] [<worded crop>] [Crop >]
+        // The crop is WORDED (Verdant root / Lull resin / Glass lily) — never a raw id leaks to the player; the selector
+        // reads as a qualitative choice. The server enforces the GROWABLE set (a non-growable precursor → 422). Shown only
+        // on an idle grow_house (no active grow). More-vs-buy: planting is cheap-but-slow-and-hot vs ordering precursors.
+        private void AddPlantSelector(Transform parent)
+        {
+            string label = NewSectionLabel(parent, "PLANT — choose a crop");
+            TrackText(null, label);
+
+            GameObject row = NewUI("PlantSelectorRow", parent);
+            HorizontalLayoutGroup hlg = row.AddComponent<HorizontalLayoutGroup>();
+            hlg.spacing = 8;
+            hlg.childAlignment = TextAnchor.MiddleCenter;
+            hlg.childControlWidth = true;
+            hlg.childControlHeight = true;
+            hlg.childForceExpandWidth = true;
+            hlg.childForceExpandHeight = true;
+            AddLayoutElement(row, minHeight: 32, flexibleHeight: 0);
+
+            AddActionButton(row.transform, "< Crop", () => CyclePrecursor(-1));
+
+            string cropWord = GrowablePrecursorLabel(SelectedPrecursor);
+            Text cropText = NewText("PlantSelectorValue", row.transform, cropWord, 15, TextAnchor.MiddleCenter);
+            cropText.color = AccentMild;
+            cropText.fontStyle = FontStyle.Bold;
+            AddLayoutElement(cropText.gameObject, minWidth: 130, flexibleWidth: 0);
+            TrackText(cropText, cropWord);
+
+            AddActionButton(row.transform, "Crop >", () => CyclePrecursor(1));
+        }
+
+        // Cycle the selected growable precursor (wraps around the 3-member GROWABLE set). Re-renders the actions via
+        // SetSelectedPrecursor so the worded crop value updates.
+        private void CyclePrecursor(int delta)
+        {
+            int idx = System.Array.IndexOf(GrowablePrecursors, SelectedPrecursor);
+            if (idx < 0) idx = 0;
+            int n = GrowablePrecursors.Length;
+            int next = ((idx + delta) % n + n) % n;
+            SetSelectedPrecursor(GrowablePrecursors[next]);
         }
 
         // Disable/enable a button + dim its label so the unaffordable state is visible (and a11y: the disabled

@@ -189,6 +189,44 @@ namespace MafiaCleanCity.Operational
     [Serializable] public class AppointmentEnvelope { public AppointmentPayload payload; }
     [Serializable] public class AppointmentPayload { public AppointmentDto data; }
 
+    // =========================================================================
+    // Phase-3 vector #3 (grow_house cultivation) — captured verbatim via curl against the live stack
+    // (Tools/OPERATIONAL_CONTRACTS.md §17). Every leaf is a band STRING / a BOOLEAN / a uuid — NEVER a raw scalar
+    // (no tend_count / grams / tick / heat / stage int; R2.2). DTOs are NOT re-declared elsewhere (CS0101 dup-DTO lesson).
+    // =========================================================================
+
+    // POST /v1/operational/grow-house/:id/plant  { precursor_type } → { grow_session_id } (201). Plant a GROWABLE
+    // plant-derived precursor (verdant_root_extract | lull_resin | glass_lily) in a player-owned grow_house. Debits a
+    // cheap seed cost server-side (raw cents NEVER forwarded — R2.2; the make-vs-buy saving). 404 not-owned / 409
+    // WRONG_TYPE (not a grow_house) / 409 ALREADY_GROWING / 422 non-growable precursor.
+    [Serializable] public class PlantRequestDto { public string precursor_type; } // verdant_root_extract | lull_resin | glass_lily
+    [Serializable] public class PlantResultDto { public string grow_session_id; }
+    [Serializable] public class PlantEnvelope { public PlantResultPayload payload; }
+    [Serializable] public class PlantResultPayload { public PlantResultDto data; }
+
+    // POST /v1/operational/grow-session/:id/tend  {} → { tended: true } (200). Tend a player-owned in-progress
+    // grow_session (husbandry lever B — one tend bankable per stage, server-authoritative). The raw tend_count NEVER
+    // forwarded (R2.2 — the player surface is the husbandry_band). 404 not-the-player's / 409 completed / 409 ALREADY_TENDED.
+    [Serializable] public class TendResultDto { public bool tended; }
+    [Serializable] public class TendEnvelope { public TendResultPayload payload; }
+    [Serializable] public class TendResultPayload { public TendResultDto data; }
+
+    // GET /v1/operational/grow-session/:id → the qualitative grow projection (R2.2 — never raw tend_count / stage clock /
+    // harvest grams / heat). grow_stage_band: EARLY | MID | LATE | DONE ; husbandry_band: WITHERED | ON_TRACK | THRIVING ;
+    // tend_due: a boolean (whether the CURRENT stage is still un-tended → a tend action is available now). Captured
+    // verbatim via curl against the live stack (§17). The building's raid-risk band is REUSED from the building card
+    // (GET /v1/operational/building/:id → raid_risk) — not re-derived here.
+    [Serializable]
+    public class GrowSessionDto
+    {
+        public string grow_session;     // uuid identity
+        public string grow_stage_band;  // EARLY | MID | LATE | DONE (never the raw stage clock / count)
+        public string husbandry_band;   // WITHERED | ON_TRACK | THRIVING (the tend trajectory; never tend_count)
+        public bool tend_due;           // is the current stage un-tended (a tend action is available now) — a flag, never a count
+    }
+    [Serializable] public class GrowSessionEnvelope { public GrowSessionPayload payload; }
+    [Serializable] public class GrowSessionPayload { public GrowSessionDto data; }
+
     // ----- Outcome wrapper: a uniform result so the screen can render success vs a
     //       well-formed error (the error envelope is mapped to a readable message,
     //       never a raw code surfaced to the player — F2). -----
