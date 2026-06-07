@@ -136,6 +136,31 @@ namespace MafiaCleanCity.Operational
         public string DispatchFromBuildingId { get; set; }
         public string DispatchToBuildingId { get; set; }
 
+        // ---- Phase-5 vector #5a (money_holding clean-cash vault) test hooks --------------
+        /// <summary>True when the money_holding-tier band row is shown (a money_holding — money_holding_tier_band != NONE).</summary>
+        public bool MoneyHoldingTierShown { get; private set; }
+        /// <summary>True when the held-magnitude band row is shown (a money_holding card).</summary>
+        public bool HeldBandShown { get; private set; }
+        /// <summary>True when the capacity-fill band row is shown (a money_holding card).</summary>
+        public bool CapacityBandShown { get; private set; }
+        /// <summary>True when the yield band row is shown (a money_holding card).</summary>
+        public bool YieldBandShown { get; private set; }
+        /// <summary>True when the forfeiture telegraph WARNING alert is shown (forfeiture_band PENDING or IMMINENT — the
+        /// "your holding is under audit — withdraw or diversify" warning so the player can react before the seizure).</summary>
+        public bool ForfeitureWarningShown { get; private set; }
+        /// <summary>True when the Upgrade-money-holding-tier button is shown (a money_holding below MAX).</summary>
+        public bool UpgradeMoneyHoldingTierButtonShown { get; private set; }
+        /// <summary>True when the shown Upgrade-money-holding-tier button is INTERACTABLE (wallet band affords the band).</summary>
+        public bool UpgradeMoneyHoldingTierButtonAffordable { get; private set; }
+        /// <summary>True when the deposit-cash action is shown (a money_holding card).</summary>
+        public bool DepositActionShown { get; private set; }
+        /// <summary>True when the withdraw-cash action is shown (a money_holding card).</summary>
+        public bool WithdrawActionShown { get; private set; }
+        /// <summary>The clean-cash transfer amount (in cents) the deposit/withdraw actions currently hold (the player-entered
+        /// amount). SERVER-AUTHORITATIVE: the server enforces capacity/funds and returns 409 — the UI passes this through and
+        /// reflects the verdict, it does NOT pre-decide. Worded into an M1 $-band label client-side (no raw cents rendered; R2.2).</summary>
+        public int TransferAmountCents { get; private set; } = 1_000_000; // default $10k (a MODERATE-band deposit).
+
         public string BuildingId { get => buildingId; set => buildingId = value; }
 
         /// <summary>
@@ -513,6 +538,52 @@ namespace MafiaCleanCity.Operational
             yield return LoadBuilding(buildingId);
         }
 
+        // --------------------------------------------- money_holding clean-cash vault actions (Phase-5 vector #5a)
+
+        /// <summary>Set the clean-cash transfer amount (in cents) the next deposit/withdraw will move (the player-entered
+        /// amount). Clamped at 0 client-side; the server is the final authority (a non-positive amount → 422; over capacity /
+        /// insufficient → 409). Re-renders the actions so the worded $-band amount updates (only if the card is loaded).</summary>
+        public void SetTransferAmount(int amountCents)
+        {
+            TransferAmountCents = amountCents < 0 ? 0 : amountCents;
+            if (CardLoaded && CurrentCard != null) BuildActions(CurrentCard);
+        }
+
+        /// <summary>money_holding action: upgrade the money-holding tier by one (cash-gated server-side). The byte-mirror of
+        /// the specialized_lab / distribution_hub upgrade. On success the card is reloaded so the money_holding_tier_band
+        /// reflects the new tier (SMALL → MEDIUM → … → MAX).</summary>
+        public IEnumerator UpgradeMoneyHoldingTier()
+        {
+            yield return RunAction(c => client.UpgradeMoneyHoldingTier(buildingId, Token, c),
+                "Holding tier upgraded", "Upgrade unavailable");
+            // Reload so the card reflects the new money_holding_tier_band (+ the wallet band debited).
+            yield return LoadBuilding(buildingId);
+        }
+
+        /// <summary>money_holding action: deposit the chosen clean-cash amount (the TransferAmountCents) from the wallet into
+        /// the holding pool. SERVER-AUTHORITATIVE: the server enforces the tier capacity (409 OVER_CAPACITY) + sufficient
+        /// funds (409 INSUFFICIENT_FUNDS); a non-positive amount → 422 — the UI reflects the verdict, it does NOT pre-decide.
+        /// On success the card is reloaded so the held_band / capacity_band / yield_band reflect the new hold.</summary>
+        public IEnumerator DepositCash()
+        {
+            yield return RunAction(c => client.DepositCash(buildingId, TransferAmountCents, Token, c),
+                "Cash deposited", "Deposit unavailable");
+            // Reload so the held / capacity / yield bands reflect the new hold (NONE → LOW/MODERATE…; OPEN → BUSY → FULL).
+            yield return LoadBuilding(buildingId);
+        }
+
+        /// <summary>money_holding action: withdraw the chosen clean-cash amount (the TransferAmountCents) from the holding
+        /// pool back into the wallet. SERVER-AUTHORITATIVE: held &lt; amount → 409 INSUFFICIENT_HELD; a non-positive amount →
+        /// 422 — the UI reflects the verdict. On success the card is reloaded so the held / capacity / yield bands reflect it
+        /// (the player's primary forfeiture-avoidance lever — withdraw to drop the held band below the audit threshold).</summary>
+        public IEnumerator WithdrawCash()
+        {
+            yield return RunAction(c => client.WithdrawCash(buildingId, TransferAmountCents, Token, c),
+                "Cash withdrawn", "Withdraw unavailable");
+            // Reload so the held / capacity / yield / forfeiture bands reflect the drained hold.
+            yield return LoadBuilding(buildingId);
+        }
+
         private IEnumerator RunAction(System.Func<System.Action<ActionOutcome>, IEnumerator> call,
             string okPrefix, string errPrefix)
         {
@@ -695,6 +766,63 @@ namespace MafiaCleanCity.Operational
                 AddStatusRow("Vehicles", AvailableVehiclesLabel(card.available_vehicles), "[~]", AccentMild);
             }
 
+            // ----- Phase-5 vector #5a (money_holding clean-cash vault) surface — ONLY for a money_holding. The tier row reads
+            // money_holding_tier_band (SMALL → MAX — the deposit-capacity lever); the held row reads held_band (NONE → MASSIVE
+            // — the EFFECTIVE clean-cash magnitude); the capacity row reads capacity_band (OPEN / BUSY / FULL — the held-vs-cap
+            // fill; FULL ⇒ a further deposit is refused 409); the yield row reads yield_band (IDLE / EARNING — the passive
+            // accrual). R2.2: bands / glyphs only (NEVER raw held_cents / tier int / yield rate / tick / forfeiture tick); F2:
+            // every row carries a shape glyph. The forfeiture WARNING alert (PENDING / IMMINENT) is rendered just below.
+            MoneyHoldingTierShown = false;
+            HeldBandShown = false;
+            CapacityBandShown = false;
+            YieldBandShown = false;
+            ForfeitureWarningShown = false;
+            if (card.operational_type == "money_holding")
+            {
+                // Money-holding-tier band row — the vault's STANDING (a higher band → a larger deposit capacity). Always shown
+                // for a money_holding (money_holding_tier_band is SMALL..MAX; NONE would only be a non-money_holding).
+                if (!string.IsNullOrEmpty(card.money_holding_tier_band) && card.money_holding_tier_band != "NONE")
+                {
+                    MoneyHoldingTierShown = true;
+                    AddStatusRow("Holding tier", MoneyHoldingTierLabel(card.money_holding_tier_band),
+                        MoneyHoldingTierGlyph(card.money_holding_tier_band), MoneyHoldingTierAccent(card.money_holding_tier_band));
+                }
+                // Held-magnitude band row — how much clean cash is held (NONE → MASSIVE; never raw cents). A higher hold earns
+                // more passive yield but draws the audit-forfeiture eye (the MASSIVE band is the forfeiture-threshold territory).
+                if (!string.IsNullOrEmpty(card.held_band))
+                {
+                    HeldBandShown = true;
+                    AddStatusRow("Held", HeldLabel(card.held_band), HeldGlyph(card.held_band), HeldAccent(card.held_band));
+                }
+                // Capacity-fill band row — how full the vault is (OPEN / BUSY / FULL — never the raw held/cap). FULL telegraphs
+                // that a further deposit is refused (409 OVER_CAPACITY) — upgrade the tier or withdraw to make room.
+                if (!string.IsNullOrEmpty(card.capacity_band) && card.capacity_band != "NONE")
+                {
+                    CapacityBandShown = true;
+                    AddStatusRow("Capacity", CapacityLabel(card.capacity_band),
+                        CapacityGlyph(card.capacity_band), CapacityAccent(card.capacity_band));
+                }
+                // Yield band row — IDLE (nothing held) / EARNING (the passive yield accrues each tick; never the raw rate).
+                if (!string.IsNullOrEmpty(card.yield_band) && card.yield_band != "NONE")
+                {
+                    YieldBandShown = true;
+                    AddStatusRow("Yield", YieldLabel(card.yield_band), YieldGlyph(card.yield_band), YieldAccent(card.yield_band));
+                }
+                // Forfeiture WARNING alert — telegraphed so the player can react BEFORE the seizure. PENDING (the audit is armed,
+                // the deadline is comfortably ahead) / IMMINENT (the deadline is near/at — react NOW). A distinct warning glyph
+                // carries the alert alongside colour (F2). NONE shows no row. The forfeiture tick / threshold never leak (R2.2).
+                if (card.forfeiture_band == "PENDING" || card.forfeiture_band == "IMMINENT")
+                {
+                    ForfeitureWarningShown = true;
+                    bool imminent = card.forfeiture_band == "IMMINENT";
+                    string warn = imminent
+                        ? "Under audit (imminent) — withdraw or diversify NOW"
+                        : "Under audit (pending) — withdraw or diversify to react";
+                    AddStatusRow("Forfeiture", warn, imminent ? "[!!]" : "[!]",
+                        imminent ? AccentSevere : AccentModerate);
+                }
+            }
+
             BuildActions(card);
         }
 
@@ -726,6 +854,9 @@ namespace MafiaCleanCity.Operational
             PlantSelectorShown = false;
             TendButtonShown = false;
             TendButtonEnabled = false;
+            // Phase-5 vector #5a: reset the money_holding affordance flags (set only in the money_holding case below).
+            DepositActionShown = false;
+            WithdrawActionShown = false;
             if (card.structural_state == "DAMAGED")
             {
                 RepairButtonShown = true;
@@ -789,6 +920,32 @@ namespace MafiaCleanCity.Operational
                 {
                     string reason = "Upgrade hub tier (insufficient cash)";
                     Text hint = NewText("HubUpgradeHint", actionBar, reason, 13, TextAnchor.MiddleLeft);
+                    hint.color = AccentSevere;
+                    AddLayoutElement(hint.gameObject, minHeight: 18, flexibleHeight: 0);
+                    TrackText(hint, reason);
+                }
+            }
+
+            // Phase-5 vector #5a: the money_holding Upgrade-money-holding-tier affordance — the SIBLING of the hub / lab
+            // upgrade buttons, calling upgrade-money-holding-tier instead. Visible when the vault is below MAX
+            // (SMALL/MEDIUM/LARGE/MAJOR). DISABLED when the wallet band can't afford the upgrade (a qualitative band-vs-band
+            // comparison; R2.2 — NEVER cents). The definitive verdict still lives server-side (409). MAX (capped) shows no
+            // button. Only rendered for a money_holding.
+            UpgradeMoneyHoldingTierButtonShown = false;
+            UpgradeMoneyHoldingTierButtonAffordable = false;
+            if (card.operational_type == "money_holding" &&
+                (card.money_holding_tier_band == "SMALL" || card.money_holding_tier_band == "MEDIUM" ||
+                 card.money_holding_tier_band == "LARGE" || card.money_holding_tier_band == "MAJOR"))
+            {
+                UpgradeMoneyHoldingTierButtonShown = true;
+                bool affordable = CanAffordUpgrade(WalletBand);
+                UpgradeMoneyHoldingTierButtonAffordable = affordable;
+                Button upgradeBtn = AddActionButton(actionBar, "Upgrade holding tier", () => StartCoroutine(UpgradeMoneyHoldingTier()));
+                SetButtonInteractable(upgradeBtn, affordable);
+                if (!affordable)
+                {
+                    string reason = "Upgrade holding tier (insufficient cash)";
+                    Text hint = NewText("MoneyHoldingUpgradeHint", actionBar, reason, 13, TextAnchor.MiddleLeft);
                     hint.color = AccentSevere;
                     AddLayoutElement(hint.gameObject, minHeight: 18, flexibleHeight: 0);
                     TrackText(hint, reason);
@@ -870,6 +1027,18 @@ namespace MafiaCleanCity.Operational
                         TrackText(hint, reason);
                     }
                     break;
+                case "money_holding":
+                    // Phase-5 vector #5a: the clean-cash vault affordances — a player-entered transfer-amount selector (worded
+                    // into an M1 $-band, no raw cents) + the Deposit + Withdraw buttons. SERVER-AUTHORITATIVE: the amount goes
+                    // to the server which enforces the tier capacity (deposit 409 OVER_CAPACITY) / sufficient funds (deposit
+                    // 409 INSUFFICIENT_FUNDS) / sufficient held (withdraw 409 INSUFFICIENT_HELD) / a positive amount (422) —
+                    // the UI does NOT pre-decide; it surfaces the server verdict (F2: a readable message, never a raw code).
+                    DepositActionShown = true;
+                    WithdrawActionShown = true;
+                    AddTransferAmountSelector(actionBar);
+                    AddActionButton(actionBar, "Deposit cash", () => StartCoroutine(DepositCash()));
+                    AddActionButton(actionBar, "Withdraw cash", () => StartCoroutine(WithdrawCash()));
+                    break;
                 case "stash":
                 case "cash_safehouse":
                 case "dealer_spot_front":
@@ -899,6 +1068,8 @@ namespace MafiaCleanCity.Operational
                 case "specialized_lab": return "Specialized lab";
                 case "refinery": return "Refinery";
                 case "grow_house": return "Grow house";
+                case "distribution_hub": return "Distribution hub";
+                case "money_holding": return "Money holding";
                 case "": case null: return "Not converted";
                 default: return t;
             }
@@ -1337,6 +1508,130 @@ namespace MafiaCleanCity.Operational
             return string.Join(", ", parts);
         }
 
+        // ----- Phase-5 vector #5a (money_holding): money_holding_tier_band (SMALL | MEDIUM | LARGE | MAJOR | MAX) — the vault standing -----
+        // R2.2: a qualitative band label, NEVER the raw money_holding_tier int. Ascending deposit-capacity lever: SMALL <
+        // MEDIUM < LARGE < MAJOR < MAX (the cap at money_holding.max_tier 5). A higher band → a larger held-cash capacity.
+        private static string MoneyHoldingTierLabel(string b)
+        {
+            switch (b)
+            {
+                case "SMALL": return "Small";
+                case "MEDIUM": return "Medium";
+                case "LARGE": return "Large";
+                case "MAJOR": return "Major";
+                case "MAX": return "Max";
+                default: return b;
+            }
+        }
+        // A 5-segment rising filled-bar gauge (shape encodes the tier alongside colour — a11y F2, mirrors the hub/lab gauges).
+        private static string MoneyHoldingTierGlyph(string b)
+        {
+            switch (b)
+            {
+                case "SMALL": return "[$....]";
+                case "MEDIUM": return "[$$...]";
+                case "LARGE": return "[$$$..]";
+                case "MAJOR": return "[$$$$.]";
+                case "MAX": return "[$$$$$]";
+                default: return "[.....]";
+            }
+        }
+        // SMALL/MEDIUM = amber (room to grow), LARGE/MAJOR = cyan (a serious vault), MAX = premium violet (the top tier, capped).
+        private static Color MoneyHoldingTierAccent(string b) =>
+            b == "MAX" ? AccentPremium : (b == "LARGE" || b == "MAJOR") ? AccentMild : AccentModerate;
+
+        // ----- Phase-5 vector #5a (money_holding): held_band (NONE | LOW | MODERATE | HIGH | MASSIVE) — the clean-cash magnitude -----
+        // R2.2: the EFFECTIVE held clean cash as a band, NEVER the raw held_cents. A higher hold earns more passive yield but
+        // draws the audit-forfeiture eye (MASSIVE is the forfeiture-threshold territory). NONE = an empty vault.
+        private static string HeldLabel(string b)
+        {
+            switch (b)
+            {
+                case "NONE": return "Empty";
+                case "LOW": return "Low";
+                case "MODERATE": return "Moderate";
+                case "HIGH": return "High";
+                case "MASSIVE": return "Massive";
+                default: return b;
+            }
+        }
+        // A rising 4-segment stack glyph (NONE = empty brackets) — shape carries the magnitude alongside colour (a11y F2).
+        private static string HeldGlyph(string b)
+        {
+            switch (b)
+            {
+                case "NONE": return "[    ]";
+                case "LOW": return "[=   ]";
+                case "MODERATE": return "[==  ]";
+                case "HIGH": return "[=== ]";
+                case "MASSIVE": return "[====]";
+                default: return "[    ]";
+            }
+        }
+        // NONE/LOW = cyan (safe), MODERATE/HIGH = amber (building up), MASSIVE = severe (forfeiture-threshold territory).
+        private static Color HeldAccent(string b) =>
+            b == "MASSIVE" ? AccentSevere : (b == "MODERATE" || b == "HIGH") ? AccentModerate : AccentMild;
+
+        // ----- Phase-5 vector #5a (money_holding): capacity_band (OPEN | BUSY | FULL) — the held-vs-capacity fill -----
+        // R2.2: the fill as a band, NEVER the raw held/cap. OPEN (empty — deposit freely) → BUSY (some held, room remains) →
+        // FULL (at the cap — a further deposit is refused 409 OVER_CAPACITY). The BYTE-MIRROR of the distribution_hub roster_band.
+        private static string CapacityLabel(string b)
+        {
+            switch (b)
+            {
+                case "OPEN": return "Open";
+                case "BUSY": return "Busy";
+                case "FULL": return "Full";
+                default: return b;
+            }
+        }
+        private static string CapacityGlyph(string b)
+        {
+            switch (b)
+            {
+                case "OPEN": return "[o..]";   // room to deposit
+                case "BUSY": return "[oo.]";   // filling
+                case "FULL": return "[ooo]";   // at the cap — a further deposit 409s
+                default: return "[...]";
+            }
+        }
+        private static Color CapacityAccent(string b) =>
+            b == "OPEN" ? AccentMild : b == "BUSY" ? AccentModerate : AccentSevere;
+
+        // ----- Phase-5 vector #5a (money_holding): yield_band (IDLE | EARNING) — the passive-yield state -----
+        // R2.2: the yield as a boolean-shaped band, NEVER the raw rate / accrued cents. IDLE (nothing held → no yield) /
+        // EARNING (the holding accrues a light passive yield each tick, realized on the next deposit/withdraw).
+        private static string YieldLabel(string b)
+        {
+            switch (b)
+            {
+                case "IDLE": return "Idle";
+                case "EARNING": return "Earning";
+                default: return b;
+            }
+        }
+        private static string YieldGlyph(string b) => b == "EARNING" ? "[+]" : "[ ]";
+        private static Color YieldAccent(string b) => b == "EARNING" ? AccentMild : new Color(0.55f, 0.59f, 0.63f);
+
+        // ----- Phase-5 vector #5a (money_holding): the player-entered transfer amount worded into a qualitative size band -----
+        // R2.2: the deposit/withdraw amount is WORDED as a qualitative SIZE band (Pocket / Small / Medium / Large) rather than
+        // a raw cents/digit, so the selector reads as a qualitative choice + keeps the no-raw-scalar guard simple (no bare
+        // number — not even a "$10k" digit — leaks to the player). The server is the final authority (it enforces capacity/
+        // funds on the ACTUAL cents passed in the request body). The cents VALUE travels in the body (never rendered); only
+        // the band word is shown. The four steps ($1k / $10k / $100k / $1M) anchor on the SAME M1 $ scale the held bands use.
+        private static readonly int[] TransferAmountStepsCents = { 100_000, 1_000_000, 10_000_000, 100_000_000 }; // $1k / $10k / $100k / $1M.
+        private static string TransferAmountLabel(int cents)
+        {
+            switch (cents)
+            {
+                case 100_000: return "Pocket";    // $1k
+                case 1_000_000: return "Small";   // $10k
+                case 10_000_000: return "Medium"; // $100k
+                case 100_000_000: return "Large"; // $1M
+                default: return "Small";          // a defensive fallback (always a known step via the selector).
+            }
+        }
+
         // The minimum wallet band that can afford each lab-tier upgrade cost band. The upgrade cost is a server-grounded
         // value (R2.3); the client gates qualitatively (band-vs-band, NEVER cents — R2.2). The definitive verdict still
         // lives server-side (an unaffordable upgrade → 409 even if the client allowed it). The upgrade is a meaningful cash
@@ -1650,6 +1945,56 @@ namespace MafiaCleanCity.Operational
             int n = unlocked.Length;
             int nextIdx = ((idx + delta) % n + n) % n;
             SetSelectedVehicle(unlocked[nextIdx]);
+        }
+
+        // Phase-5 vector #5a: the deposit/withdraw amount selector (choose how much clean cash to move). Three controls on
+        // one row:  [- Amount] [<worded size band>] [+ Amount]
+        // The amount is WORDED as a qualitative SIZE band (Pocket / Small / Medium / Large) — never a raw cents/digit leaks
+        // to the player (R2.2). The cents VALUE (TransferAmountCents) travels only in the deposit/withdraw request body. The
+        // server is the final authority: the chosen amount may exceed the capacity (deposit 409) or the held (withdraw 409)
+        // — the UI does NOT pre-decide; it surfaces the server verdict on the action.
+        private void AddTransferAmountSelector(Transform parent)
+        {
+            string label = NewSectionLabel(parent, "TRANSFER AMOUNT (server-checked)");
+            TrackText(null, label);
+
+            GameObject row = NewUI("TransferAmountRow", parent);
+            HorizontalLayoutGroup hlg = row.AddComponent<HorizontalLayoutGroup>();
+            hlg.spacing = 8;
+            hlg.childAlignment = TextAnchor.MiddleCenter;
+            hlg.childControlWidth = true;
+            hlg.childControlHeight = true;
+            hlg.childForceExpandWidth = true;
+            hlg.childForceExpandHeight = true;
+            AddLayoutElement(row, minHeight: 32, flexibleHeight: 0);
+
+            int idx = System.Array.IndexOf(TransferAmountStepsCents, TransferAmountCents);
+            if (idx < 0) idx = 1; // default → "Small" ($10k) if the current value is off-grid (defensive).
+
+            Button minus = AddActionButton(row.transform, "- Amount", () => CycleTransferAmount(-1));
+            SetButtonInteractable(minus, idx > 0);
+
+            string amountWord = TransferAmountLabel(TransferAmountCents);
+            Text amountText = NewText("TransferAmountValue", row.transform, amountWord, 15, TextAnchor.MiddleCenter);
+            amountText.color = AccentMild;
+            amountText.fontStyle = FontStyle.Bold;
+            AddLayoutElement(amountText.gameObject, minWidth: 110, flexibleWidth: 0);
+            TrackText(amountText, amountWord);
+
+            Button plus = AddActionButton(row.transform, "+ Amount", () => CycleTransferAmount(1));
+            SetButtonInteractable(plus, idx < TransferAmountStepsCents.Length - 1);
+        }
+
+        // Step the selected transfer amount up/down through the four worded size steps (clamped at the ends — no wrap, so the
+        // worded extremes read honestly). Re-renders the actions via SetTransferAmount so the worded value updates.
+        private void CycleTransferAmount(int delta)
+        {
+            int idx = System.Array.IndexOf(TransferAmountStepsCents, TransferAmountCents);
+            if (idx < 0) idx = 1;
+            int next = idx + delta;
+            if (next < 0) next = 0;
+            if (next > TransferAmountStepsCents.Length - 1) next = TransferAmountStepsCents.Length - 1;
+            SetTransferAmount(TransferAmountStepsCents[next]);
         }
 
         // Disable/enable a button + dim its label so the unaffordable state is visible (and a11y: the disabled

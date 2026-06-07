@@ -36,6 +36,66 @@ namespace MafiaCleanCity.Tests
         public const string OperationalMarker = "=== OPERATIONAL DEMO SEEDED ===";
         public const string CityMapMarker = "=== DEMO CREDENTIALS ===";
 
+        // Run a single SQL statement against the DEV stack's pg container (project mafia-clean-city) via
+        // `docker compose exec -T pg psql` and return the first result row trimmed. The DRY sibling of the
+        // seeder's own psql() helper, for a PlayMode fixture that needs a FAST, deterministic per-test reset
+        // of a tiny bit of seeded state (cheaper than re-running the whole ~40s seeder in every [SetUp]) — e.g.
+        // restoring a single building's row to its seeded baseline so sibling tests that mutate it stay
+        // order-independent (charter 27 — each fixture/test owns its precondition). Asserts a clean exit.
+        public static string RunDevPsql(string sql)
+        {
+            string docker = ResolveDocker();
+            Assert.IsNotNull(docker, "could not locate a 'docker' binary (checked PATH + common dirs)");
+            var psi = new ProcessStartInfo
+            {
+                FileName = docker,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+            };
+            foreach (string a in new[]
+                     {
+                         "compose", "--project-name", "mafia-clean-city", "exec", "-T", "pg",
+                         "psql", "-U", "mafia", "-d", "mafia_clean_city", "-v", "ON_ERROR_STOP=1", "-tAc", sql,
+                     })
+            {
+                psi.ArgumentList.Add(a);
+            }
+            string stdout, stderr;
+            using (var proc = Process.Start(psi))
+            {
+                stdout = proc.StandardOutput.ReadToEnd();
+                stderr = proc.StandardError.ReadToEnd();
+                proc.WaitForExit(30000);
+                Assert.IsTrue(proc.HasExited, "psql did not finish within 30s");
+                Assert.AreEqual(0, proc.ExitCode, $"psql failed (exit {proc.ExitCode}). stderr:\n{stderr}");
+            }
+            string first = stdout.Trim();
+            int nl = first.IndexOf('\n');
+            return nl >= 0 ? first.Substring(0, nl).Trim() : first;
+        }
+
+        // Resolve an absolute path to a docker binary (the Editor does not inherit the login-shell PATH). Probes a
+        // DOCKER_BIN env override, $PATH entries, and the common install dirs. Returns null if none found.
+        public static string ResolveDocker()
+        {
+            string fromEnv = Environment.GetEnvironmentVariable("DOCKER_BIN");
+            if (!string.IsNullOrEmpty(fromEnv) && File.Exists(fromEnv)) return fromEnv;
+            string path = Environment.GetEnvironmentVariable("PATH") ?? "";
+            foreach (string dir in path.Split(Path.PathSeparator))
+            {
+                if (string.IsNullOrEmpty(dir)) continue;
+                string candidate = Path.Combine(dir, "docker");
+                if (File.Exists(candidate)) return candidate;
+            }
+            foreach (string c in new[] { "/usr/bin/docker", "/usr/local/bin/docker", "/bin/docker" })
+            {
+                if (File.Exists(c)) return c;
+            }
+            return null;
+        }
+
         // Run a dev seeder (node <seederRelPath>) from the Unity repo root and return everything
         // printed after <marker> (the JSON block with the seeded ids/creds). Asserts a clean exit.
         public static string RunSeeder(string seederRelPath, string marker)

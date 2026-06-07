@@ -114,6 +114,30 @@ const HUB_DEMO_TARGET_TIER = 2;    // Tier-2 → hub_tier_band MEDIUM (cap 11; t
 const HUB_DEMO_IN_TRANSIT = 2;     // 2 in-transit shipments → BUSY (0 < 2 < cap 11). Small cargo each (the refinery has 200 g).
 const HUB_DEMO_CARGO_GRAMS = 10;   // grams per demo shipment (×2 = 20 g of the refinery's 200 g — plenty left for the Crick UI).
 
+// Phase-5 vector #5a (money_holding — clean-cash holding vault): stand up a money_holding at a KNOWN tier holding a
+// KNOWN clean-cash band + an ARMED forfeiture, so the Building-Card money_holding surface (T9) reads:
+//   - money_holding_tier_band = MEDIUM   (a Tier-2 vault — UPGRADE-MONEY-HOLDING-TIER once from the Tier-1 SMALL build
+//                                default, so the Upgrade-holding-tier affordance is demonstrable + the band is above default),
+//   - held_band              = MODERATE  (a DEPOSIT of $50k → the $10k–$100k MODERATE band; below the Tier-2 $5M cap → BUSY),
+//   - capacity_band          = BUSY      (0 < held < the Tier-2 capacity → room remains; not FULL),
+//   - yield_band             = EARNING   (held > 0 → the passive yield accrues),
+//   - forfeiture_band        = PENDING   (an ARMED forfeiture with the deadline comfortably ahead — the telegraphed warning
+//                                so the player can react; SQL-pinned forfeiture_scheduled_at_tick = clock + a far lead).
+// A money_holding is GLASS-only (the SAME district restriction as the Ash specialized_lab — building_types.md §money_holding
+// "Glass only"). RECIPE (REST where possible + SQL fast-forward, mirroring the cook/hub flow):
+//   (a) acquire + convert a money_holding on a free GLASS block → fast-forward setup → operational (Tier-1 SMALL, held 0);
+//   (b) UPGRADE-MONEY-HOLDING-TIER once (REST) → Tier-2 (money_holding_tier_band SMALL → MEDIUM; atomic cash debit);
+//   (c) DEPOSIT-CASH $50k (REST) → held_band MODERATE / capacity_band BUSY / yield_band EARNING;
+//   (d) SQL-ARM a forfeiture (forfeiture_scheduled_at_tick = clock + a far lead) → forfeiture_band PENDING (the audit
+//       telegraph; the value-driven MONEY_HOLDING_AUDIT tick would schedule one organically only at the $20M threshold,
+//       Tier-4+ territory — too expensive to reach in the demo, so we pin the scheduled tick directly, the SAME pattern
+//       the hub demo uses to pin courier shifts in transit). The forfeiture is left PENDING (a far deadline) so the
+//       telegraphed WARNING is demonstrable without the seizure firing on a later seeder advance.
+// Idempotent: the targeted money_holding wipe in the reset above drops any prior vault + its money_holding row.
+const MONEY_HOLDING_DEMO_TARGET_TIER = 2;        // Tier-2 → money_holding_tier_band MEDIUM (cap $5M; the canon curve by tier).
+const MONEY_HOLDING_DEMO_DEPOSIT_CENTS = 5_000_000; // $50k → the $10k–$100k MODERATE held band (below the Tier-2 $5M cap → BUSY).
+const MONEY_HOLDING_DEMO_FORFEITURE_LEAD_TICKS = 100_000; // a FAR-ahead deadline → forfeiture_band PENDING (not IMMINENT ≤ 2 ticks).
+
 const SCRYPT_N = 16384, SCRYPT_R = 8, SCRYPT_P = 1, SCRYPT_KEYLEN = 32;
 function hashPassword(plain) {
   const salt = randomBytes(16);
@@ -268,6 +292,20 @@ async function main() {
   if (hubIds) {
     psql(`DELETE FROM building_operational_state WHERE building_id IN (${hubIds});`);
     psql(`DELETE FROM buildings WHERE building_id IN (${hubIds});`);
+  }
+  // Phase-5 vector #5a (money_holding): the vault is GLASS-only (NOT district 16 — like the specialized_lab), so it too is
+  // wiped by a TARGETED operational_type clause (the district-16 wipe never reaches it). Its 1-1 money_holding row is an FK
+  // child of buildings (ON DELETE CASCADE) but we wipe it explicitly FIRST for order-safety/idempotence, then drop the
+  // building + its operational-state row so a re-run rebuilds the vault fresh (held 0, tier 1, no forfeiture armed).
+  const moneyHoldingIds = psql(
+    `SELECT COALESCE(string_agg(quote_literal(bos.building_id::text), ','), '') ` +
+      `FROM building_operational_state bos JOIN buildings b ON b.building_id=bos.building_id ` +
+      `WHERE b.player_id='${playerId}' AND bos.operational_type='money_holding';`,
+  );
+  if (moneyHoldingIds) {
+    psql(`DELETE FROM money_holding WHERE building_id IN (${moneyHoldingIds});`);
+    psql(`DELETE FROM building_operational_state WHERE building_id IN (${moneyHoldingIds});`);
+    psql(`DELETE FROM buildings WHERE building_id IN (${moneyHoldingIds});`);
   }
 
   // Reset the wallet to a fixed generous balance (deterministic figures regardless of prior runs).
@@ -561,6 +599,46 @@ async function main() {
   const hubInTransit = psql(`SELECT count(*) FROM courier_shift cs JOIN courier c ON c.courier_id=cs.courier_id WHERE c.player_id='${playerId}' AND cs.status='in_transit';`);
   console.log(`[op-seed] distribution_hub ${distributionHub} dispatched ${hubCourierIds.length} bike shipments → ${hubInTransit} in transit (BUSY roster band)`);
 
+  // ─────────────────────── 6f. MONEY HOLDING (Phase-5 vector #5a) — a Tier-2 vault, MODERATE held, PENDING forfeiture ──────────
+  // Stand up the surface the Building-Card money_holding UI (T9) reads: a money_holding in a GLASS district (the SAME
+  // "Glass only" restriction as the Ash specialized_lab) at a KNOWN qualitative state:
+  //   - money_holding_tier_band = MEDIUM   (Tier-2 — UPGRADE-MONEY-HOLDING-TIER once from the Tier-1 SMALL default),
+  //   - held_band               = MODERATE ($50k deposit → the $10k–$100k band; below the Tier-2 $5M cap),
+  //   - capacity_band           = BUSY     (0 < held < cap → room remains),
+  //   - yield_band              = EARNING  (held > 0 → the passive yield accrues),
+  //   - forfeiture_band         = PENDING  (an ARMED forfeiture with a far-ahead deadline — the telegraphed audit warning).
+  // RECIPE (REST where possible + SQL fast-forward, mirroring the cook/hub flow):
+  //   (a) acquire + convert a money_holding on a free GLASS block → fast-forward setup → operational (Tier-1 SMALL, held 0);
+  //   (b) UPGRADE-MONEY-HOLDING-TIER once (REST) → Tier-2 (atomic cash debit; the player surface is the band, raw cents never surface);
+  //   (c) DEPOSIT-CASH $50k (REST) → held MODERATE / capacity BUSY / yield EARNING (server-authoritative capacity guard);
+  //   (d) SQL-PIN forfeiture_scheduled_at_tick = clock + a far lead → forfeiture_band PENDING (the audit telegraph; the
+  //       organic $20M threshold is too expensive to reach in the demo, so we pin the scheduled tick — the SAME pattern
+  //       §6e uses to pin courier shifts in transit). Left PENDING (far deadline) so the warning is demonstrable without
+  //       the seizure firing on a later seeder advance.
+  // Idempotent: the targeted money_holding wipe in the reset above drops any prior vault + its money_holding row.
+  const moneyHolding = await operationalBuilding(freeGlassBlock(7), 'money_holding'); // a fresh GLASS block (past the Ash lab's offset 0).
+  // The convert above leaves the vault IN_SETUP; fast-forward its setup to operational (the build defaults money_holding_tier=1, held=0).
+  psql(`UPDATE building_operational_state SET setup_remaining_ticks=1 WHERE building_id='${moneyHolding}' AND conversion_stage <> 'operational';`);
+  await advance(playerId, 1);
+  // (b) UPGRADE-MONEY-HOLDING-TIER → Tier-2 (money_holding_tier_band MEDIUM). Atomic cash debit; raw cents never surface.
+  for (let t = 1; t < MONEY_HOLDING_DEMO_TARGET_TIER; t += 1) {
+    const mhUpgrade = await api('POST', `/v1/operational/building/${moneyHolding}/upgrade-money-holding-tier`, token, {});
+    if (mhUpgrade.status !== 200) throw new Error(`money_holding upgrade-money-holding-tier failed: HTTP ${mhUpgrade.status} — ${JSON.stringify(mhUpgrade.data)}`);
+  }
+  // (c) DEPOSIT-CASH $50k → held MODERATE / capacity BUSY / yield EARNING. Server-authoritative (the capacity guard 409s
+  // if the deposit would exceed the tier cap — it won't here: $50k << the Tier-2 $5M cap).
+  const mhDeposit = await api('POST', `/v1/operational/building/${moneyHolding}/deposit-cash`, token, { amount_cents: MONEY_HOLDING_DEMO_DEPOSIT_CENTS });
+  if (mhDeposit.status !== 200) throw new Error(`money_holding deposit-cash failed: HTTP ${mhDeposit.status} — ${JSON.stringify(mhDeposit.data)}`);
+  // (d) the forfeiture is ARMED in §13c (the genuinely-LAST mutation, after all the later advances). RATIONALE: the
+  // MONEY_HOLDING_AUDIT tick (MINUTE/19) CANCELS an armed forfeiture whenever effectiveHeld < the $20M threshold — and our
+  // demo hold ($50k) is far below it — so any advance() AFTER the pin would wipe it. The later §7–§13 advances (courier
+  // transit, dealer sell, launder, raid) all fire MINUTE/19, so the pin MUST come last. (The SAME constraint §10b/§13b
+  // call out for the DIRTY laundering node.) §6f does the build/upgrade/deposit (no-advance-sensitive); §13c arms the pin.
+  const mhBuilt = psql(
+    `SELECT money_holding_tier || '|' || held_cents FROM money_holding WHERE building_id='${moneyHolding}';`,
+  );
+  console.log(`[op-seed] money_holding ${moneyHolding} built + upgraded + deposited → (tier|held_cents=${mhBuilt}; MEDIUM / MODERATE / BUSY / EARNING — forfeiture armed in §13c)`);
+
   // ─────────────────────────── 7. DISTRIBUTE — courier lab → dealer-spot, fast-forward transit ───────────────────────────
   // Ferry part of the cook (120 g) to the dealer-spot (the sell source); the rest stays in the lab (richer storage demo).
   const dispatch = await api('POST', '/v1/operational/distribution/dispatch', token, {
@@ -723,6 +801,20 @@ async function main() {
   const headClean = psql(`SELECT cleanliness_at_output FROM laundering_nodes WHERE node_id='${nodeId}';`);
   console.log(`[op-seed] laundering head node re-pinned DIRTY after raid advance (cleanliness_at_output=${headClean})`);
 
+  // ─────────────────────── 13c. MONEY HOLDING forfeiture ARM (Phase-5 vector #5a — the LAST mutation, NO advance after) ──────
+  // SQL-PIN the money_holding's forfeiture_scheduled_at_tick = clock + a FAR lead → forfeiture_band PENDING (the telegraphed
+  // audit warning the T9 UI reads). This MUST be the genuinely-final mutation: the MONEY_HOLDING_AUDIT tick (MINUTE/19)
+  // CANCELS an armed forfeiture whenever effectiveHeld < the $20M threshold, and our demo hold ($50k) is far below it — so
+  // ANY advance() after this pin would wipe it (the §6f build/deposit happen BEFORE §7–§13's advances precisely so this
+  // arm survives). A FAR lead keeps it PENDING (not IMMINENT, which is ≤ 2 ticks remaining). R2.2: the raw scheduled tick
+  // never leaves the server — the player surface is the qualitative forfeiture_band (NONE → PENDING → IMMINENT). No
+  // advance() runs after this point, so the forfeiture stays PENDING at rest (the warning is demonstrable, the seizure
+  // never fires). Idempotent (re-pinned on every run; the §6f build re-creates the row fresh).
+  const mhArmClock = clockMinute(playerId);
+  psql(`UPDATE money_holding SET forfeiture_scheduled_at_tick=${mhArmClock + MONEY_HOLDING_DEMO_FORFEITURE_LEAD_TICKS} WHERE building_id='${moneyHolding}';`);
+  const mhForfeitureAt = psql(`SELECT COALESCE(forfeiture_scheduled_at_tick::text,'NULL') FROM money_holding WHERE building_id='${moneyHolding}';`);
+  console.log(`[op-seed] money_holding forfeiture armed (scheduled_at_tick=${mhForfeitureAt}, clock=${mhArmClock} → PENDING band; far lead, never fires)`);
+
   // ─────────────────────────── DONE — print creds + the seeded entity IDs ───────────────────────────
   console.log('\n=== OPERATIONAL DEMO SEEDED ===');
   console.log(
@@ -742,6 +834,7 @@ async function main() {
           specialized_lab: ashLab, // Phase-2c vector #2c: the Ash luxury lab (Tier-2 REFINED, 200 g Ash → CRYSTALLINE).
           grow_house: growHouse, // Phase-3 vector #3: the grow_house mid-grow (MID stage / ON_TRACK husbandry / tend_due).
           distribution_hub: distributionHub, // Phase-4 vector #4: the Tier-2 hub (MEDIUM, BUSY roster, FOOT/BIKE/CAR).
+          money_holding: moneyHolding, // Phase-5 vector #5a: the Tier-2 vault (MEDIUM, MODERATE held, BUSY, EARNING, PENDING forfeiture).
         },
         // Phase-2b vector #2 (substances / Crick): the refinery holds 200 g Crick and is cold-by-nature → its storage
         // projection reads substance_type=CRICK, temperature_status=OPTIMAL_COLD, degrading=false (the cold-chain UI reads it).
@@ -761,6 +854,11 @@ async function main() {
         distribution_hub: distributionHub, // top-level too, so the hub T9 test can discover it with the same flat-regex extractor.
         hub_dispatch_from: refinery, // the in-transit demo source (holds Crick) — a valid dispatch source for the T9 vehicle test.
         hub_dispatch_to: dealerSpot, // a valid dispatch destination (a distinct operational building; from≠to).
+        // Phase-5 vector #5a (money_holding): the Tier-2 vault holds $50k (MODERATE) below the $5M Tier-2 cap (BUSY) with the
+        // passive yield EARNING + an ARMED forfeiture (PENDING) — the money_holding UI (T9) reads money_holding_tier_band=MEDIUM,
+        // held_band=MODERATE, capacity_band=BUSY, yield_band=EARNING, forfeiture_band=PENDING, plus the upgrade + deposit/withdraw
+        // affordances. A non-money_holding card carries the neutral NONE defaults (the refinery/lab control surfaces prove it).
+        money_holding: moneyHolding, // top-level too, so the money_holding T9 test can discover it with the same flat-regex extractor.
         // Phase-2b raid surface (T7): the lab was raided → DAMAGED (the raided_building the building-card raid UI reads);
         // the stash is the healthy control (OPERATIONAL, never raided → raid_risk readable, no Repair button).
         raided_building: lab,

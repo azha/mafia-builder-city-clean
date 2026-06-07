@@ -238,6 +238,51 @@ namespace MafiaCleanCity.Operational
                 done);
         }
 
+        // ----------------------------------------------------------- money_holding clean-cash vault (Phase-5 vector #5a)
+
+        /// <summary>
+        /// POST /v1/operational/building/:id/upgrade-money-holding-tier (Phase-5 vector #5a) — raise a money_holding's
+        /// money_holding_tier by one (empty body; the id is the path param). The byte-mirror of UpgradeHubTier / UpgradeTier.
+        /// Debits the wallet by the grounded upgrade cost → the next card load reflects the new money_holding_tier_band
+        /// (SMALL → MEDIUM → … → MAX). 200 { upgraded: true }. At cap (MAX) / insufficient cash / non-money_holding /
+        /// not-owned → 409 / 404 (a well-formed error, mapped to a readable msg). The raw cents NEVER cross the wire (R2.2).
+        /// </summary>
+        public IEnumerator UpgradeMoneyHoldingTier(string buildingId, string bearer, Action<ActionOutcome> done)
+        {
+            return Post(Url($"building/{buildingId}/upgrade-money-holding-tier"), "{}", bearer,
+                json => JsonUtility.FromJson<UpgradeMoneyHoldingTierEnvelope>(json)?.payload?.data?.upgraded == true ? "upgraded" : null,
+                done);
+        }
+
+        /// <summary>
+        /// POST /v1/operational/building/:id/deposit-cash { amount_cents } — move clean cash wallet → the money_holding
+        /// pool. SERVER-AUTHORITATIVE: the server enforces the tier capacity (held + amount &gt; capacity → 409
+        /// OVER_CAPACITY, nothing moved) + sufficient funds (409 INSUFFICIENT_FUNDS); a non-positive amount → 422. 200
+        /// { deposited: true }. The UI passes the player-entered amount and reflects the server verdict (it does NOT
+        /// pre-decide). The raw new balances NEVER cross the wire (R2.2).
+        /// </summary>
+        public IEnumerator DepositCash(string buildingId, int amountCents, string bearer, Action<ActionOutcome> done)
+        {
+            string body = JsonUtility.ToJson(new TransferCashRequestDto { amount_cents = amountCents });
+            return Post(Url($"building/{buildingId}/deposit-cash"), body, bearer,
+                json => JsonUtility.FromJson<DepositCashEnvelope>(json)?.payload?.data?.deposited == true ? "deposited" : null,
+                done);
+        }
+
+        /// <summary>
+        /// POST /v1/operational/building/:id/withdraw-cash { amount_cents } — move clean cash from the money_holding pool
+        /// back to the wallet. SERVER-AUTHORITATIVE: held &lt; amount → 409 INSUFFICIENT_HELD (nothing moved); a non-positive
+        /// amount → 422. 200 { withdrawn: true }. The UI passes the player-entered amount and reflects the server verdict.
+        /// The raw new balances NEVER cross the wire (R2.2).
+        /// </summary>
+        public IEnumerator WithdrawCash(string buildingId, int amountCents, string bearer, Action<ActionOutcome> done)
+        {
+            string body = JsonUtility.ToJson(new TransferCashRequestDto { amount_cents = amountCents });
+            return Post(Url($"building/{buildingId}/withdraw-cash"), body, bearer,
+                json => JsonUtility.FromJson<WithdrawCashEnvelope>(json)?.payload?.data?.withdrawn == true ? "withdrawn" : null,
+                done);
+        }
+
         /// <summary>
         /// POST /v1/operational/lab/:id/cook { substance:"ash", refining_passes } — start an Ash cook with the chosen
         /// refining passes (the time↔purity lever; more passes = longer cook = higher purity). 201 { cook_session_id }.

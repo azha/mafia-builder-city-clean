@@ -1136,3 +1136,134 @@ A distribution_hub in a **tidewater** district at **Tier-2 (MEDIUM)** with a **B
    (MINUTE/9) never arrives them through the later seeder advances → the roster stays genuinely in-transit (`roster_band` BUSY).
 The seeder prints `distribution_hub` + `hub_dispatch_from` (the refinery — a valid dispatch source) + `hub_dispatch_to`
 (the dealer-spot — a valid destination) in its JSON block.
+
+## 19. Money holding — `money_holding_tier_band` + `held_band` + `capacity_band` + `yield_band` + `forfeiture_band` + `upgrade-money-holding-tier` + deposit/withdraw (Phase-5 vector #5a)
+
+The `money_holding` is a CLEAN-CASH HOLDING vault (no production chain): it stores laundered cash, scales its deposit
+capacity with the `money_holding_tier` lever, accrues a light passive yield on the hold, and — once the hold is very large —
+attracts a value-driven AUDIT-FORFEITURE (telegraphed so the player can react). It is buildable ONLY in a **glass** district
+(the GDD-canon high-value district — the SAME restriction the Ash specialized_lab carries; a convert outside it is refused).
+The Building-Card vault surface reads FIVE NEW projection leaves on the SAME `GET /v1/operational/building/:id` response,
+plus three action endpoints. Every leaf is a closed band STRING — **NEVER** a raw scalar (no `held_cents` / `money_holding_tier`
+int / yield rate / tick / `forfeiture_scheduled_at_tick`; R2.2). **All JSON below was captured VERBATIM via curl against the
+live dockerized stack** (the merged money_holding backend T0-T7, migration 0025) — not guessed.
+
+### 19a. `GET /v1/operational/building/:id` — the vault-card projection (the FIVE new leaves)
+
+On EVERY building-card response there are now five additional keys: `money_holding_tier_band`, `held_band`, `capacity_band`,
+`yield_band`, `forfeiture_band`. For a **non**-money_holding building they are the neutral default (all `NONE` — the SAME
+convention `hub_tier_band` / `lab_tier_band` use), so a non-vault card is byte-identical to the pre-T6 shape but for the keys.
+
+```json
+// 200 OK — a Tier-2 money_holding holding $50k with an armed forfeiture (the seeder's demo vault)
+{ "payload": { "data": {
+  "building": "<uuid>", "setup_state": "OPERATIONAL", "cover_band": "WEAK", "operational": true,
+  "operational_type": "money_holding", "cold_storage_capable": false,
+  "structural_state": "OPERATIONAL", "recently_raided": false, "seized_amount": "NONE", "repair_cost": "NONE",
+  "lab_tier_band": "NONE", "hub_tier_band": "NONE", "roster_band": "NONE", "available_vehicles": ["FOOT"],
+  "money_holding_tier_band": "MEDIUM", "held_band": "MODERATE", "capacity_band": "BUSY",
+  "yield_band": "EARNING", "forfeiture_band": "PENDING", "raid_risk": "LOW" } } }
+```
+
+```json
+// 200 OK — the SAME vault fresh (Tier-1 SMALL, held 0, no forfeiture armed) — before the upgrade + deposit
+{ "payload": { "data": { "building": "<uuid>", "operational_type": "money_holding", "setup_state": "OPERATIONAL",
+  "money_holding_tier_band": "SMALL", "held_band": "NONE", "capacity_band": "OPEN",
+  "yield_band": "IDLE", "forfeiture_band": "NONE", "raid_risk": "LOW" } } }
+```
+
+```json
+// 200 OK — the demo vault with the forfeiture deadline NEAR/AT now (forfeiture_band IMMINENT — react NOW)
+{ "payload": { "data": { "building": "<uuid>", "operational_type": "money_holding",
+  "money_holding_tier_band": "MEDIUM", "held_band": "MODERATE", "capacity_band": "BUSY",
+  "yield_band": "EARNING", "forfeiture_band": "IMMINENT" } } }
+```
+
+```json
+// 200 OK — a NON-money_holding building (e.g. a lab): the neutral vault default (all NONE)
+{ "payload": { "data": { "building": "<uuid>", "operational_type": "lab",
+  "money_holding_tier_band": "NONE", "held_band": "NONE", "capacity_band": "NONE",
+  "yield_band": "NONE", "forfeiture_band": "NONE" } } }
+```
+
+**Band domains** (the Unity DTO enums):
+- `money_holding_tier_band`: `NONE | SMALL | MEDIUM | LARGE | MAJOR | MAX` — the vault's standing (tier 1→SMALL, 2→MEDIUM,
+  3→LARGE, 4→MAJOR, ≥5→MAX, capped at `money_holding.max_tier` 5). A higher band → a larger deposit capacity.
+- `held_band`: `NONE | LOW | MODERATE | HIGH | MASSIVE` — the EFFECTIVE held clean cash (held + the live-accrued yield),
+  anchored on the M1 $ scale (LOW < $10k, MODERATE $10k–$100k, HIGH $100k–$1M, MASSIVE ≥ $1M). NONE = an empty vault.
+- `capacity_band`: `NONE | OPEN | BUSY | FULL` — the held-vs-capacity fill (OPEN = empty; BUSY = room remains; FULL = at the
+  cap → a further deposit is refused 409 OVER_CAPACITY). The byte-mirror of the hub `roster_band` semantics. NONE on a non-vault card.
+- `yield_band`: `NONE | IDLE | EARNING` — IDLE (nothing held → no yield) / EARNING (the passive yield accrues each tick). NONE on a non-vault card.
+- `forfeiture_band`: `NONE | PENDING | IMMINENT` — the audit-forfeiture telegraph (NONE = none armed; PENDING = armed, the
+  deadline is comfortably ahead; IMMINENT = the deadline is near/at/past — react NOW). Never the raw scheduled tick.
+
+### 19b. `POST /v1/operational/building/:id/upgrade-money-holding-tier` — raise the vault tier by one (the byte-mirror of upgrade-hub-tier)
+
+Empty body (the id is the path param); requires a PLAYER Bearer + a UUID-v4 Idempotency-Key. Debits the wallet by the
+grounded upgrade cost (raw cents NEVER forwarded — R2.2; the player surface is the qualitative `money_holding_tier_band` on
+the next card load). 200 `{ upgraded: true }`. At cap (MAX) → 409 (AT_CAP); insufficient funds → 409 (INSUFFICIENT_FUNDS);
+non-money_holding → 409 (WRONG_TYPE); not the player's / not converted → 404.
+
+```json
+// 200 OK
+{ "payload": { "data": { "upgraded": true } } }
+```
+
+### 19c. `POST /v1/operational/building/:id/deposit-cash` — move clean cash wallet → the vault (server-authoritative capacity guard)
+
+Body `{ amount_cents }` (a positive integer of cents); requires a PLAYER Bearer + a UUID-v4 Idempotency-Key. SERVER-AUTHORITATIVE:
+the server debits the wallet (insufficient → **409 INSUFFICIENT_FUNDS**, nothing moved) and credits the held under the tier
+capacity guard (held + amount > capacity → **409 OVER_CAPACITY**, the whole tx rolls back). A non-positive / non-integer amount →
+**422 VALIDATION_FAILED**. 200 `{ deposited: true }` — the raw new balances are NOT forwarded (R2.2). The UI passes the
+player-entered amount and reflects the verdict; it does NOT pre-decide.
+
+```json
+// 200 OK — a deposit within the tier capacity
+{ "payload": { "data": { "deposited": true } } }
+```
+
+```json
+// 409 — a deposit that would exceed the tier capacity (OVER_CAPACITY — nothing moved)
+{ "payload": { "error": {
+  "code": "RESOURCE_STATE_CONFLICT", "http_status": 409, "user_facing_i18n_key": "error.resource.state_conflict",
+  "message": "deposit would exceed the money_holding capacity for building <uuid> (OVER_CAPACITY) — nothing was moved." } } }
+```
+
+```json
+// 422 — a non-positive amount
+{ "payload": { "error": {
+  "code": "VALIDATION_FAILED", "http_status": 422, "user_facing_i18n_key": "error.validation.failed",
+  "message": "amount_cents must be a positive integer (cents), got 0." } } }
+```
+
+### 19d. `POST /v1/operational/building/:id/withdraw-cash` — move clean cash from the vault → the wallet (server-authoritative held guard)
+
+Body `{ amount_cents }` (positive integer of cents); requires a PLAYER Bearer + a UUID-v4 Idempotency-Key. SERVER-AUTHORITATIVE:
+the server debits the held (held < amount → **409 INSUFFICIENT_HELD**, nothing moved) and credits the wallet. A non-positive
+amount → **422**. 200 `{ withdrawn: true }` — the raw new balances are NOT forwarded (R2.2). Withdrawing is the player's
+primary forfeiture-avoidance lever (drop the held band below the audit threshold before the seizure fires).
+
+```json
+// 200 OK — a withdraw within the held balance
+{ "payload": { "data": { "withdrawn": true } } }
+```
+
+```json
+// 409 — a withdraw beyond the held balance (INSUFFICIENT_HELD — nothing moved)
+{ "payload": { "error": {
+  "code": "RESOURCE_STATE_CONFLICT", "http_status": 409, "user_facing_i18n_key": "error.resource.state_conflict",
+  "message": "Insufficient held cash in the money_holding to cover the withdrawal (INSUFFICIENT_HELD) — nothing was moved." } } }
+```
+
+### 19e. How to PRODUCE the vault demo state (the seeder recipe — `Tools/seed_operational_demo.mjs §6f + §13c`)
+
+A money_holding in a **glass** district at **Tier-2 (MEDIUM)** holding **$50k (MODERATE)** below the **$5M Tier-2 cap (BUSY)**,
+**EARNING** passive yield, with a **PENDING** forfeiture armed:
+1. **Acquire + convert** a `money_holding` on a free glass block → SQL-fast-forward setup → operational (Tier-1 SMALL, held 0).
+2. **upgrade-money-holding-tier** once (REST) → Tier-2 (`money_holding_tier_band` SMALL → MEDIUM).
+3. **deposit-cash** $50k (REST) → `held_band` MODERATE / `capacity_band` BUSY / `yield_band` EARNING.
+4. **(§13c — the LAST mutation, no advance after)** SQL-pin `money_holding.forfeiture_scheduled_at_tick = clock + a far lead`
+   → `forfeiture_band` PENDING. This MUST be last: the `MONEY_HOLDING_AUDIT` tick (MINUTE/19) CANCELS an armed forfeiture
+   whenever the effective held is below the $20M threshold (and the $50k demo hold is far below it), so any advance after the
+   pin would wipe it — the SAME no-advance-after constraint the DIRTY laundering node (§10b/§13b) carries.
+The seeder prints `money_holding` in its JSON block (the vault id the T9 test loads).

@@ -51,6 +51,17 @@ namespace MafiaCleanCity.Operational
         public string hub_tier_band;     // NONE | SMALL | MEDIUM | LARGE | MAJOR | MAX (NONE for non-distribution_hub)
         public string roster_band;       // NONE | OPEN | BUSY | FULL (NONE for non-distribution_hub; FULL ⇒ dispatch 409 OVER_CAPACITY)
         public string[] available_vehicles; // unlocked vehicle labels: ["FOOT"] (no operational hub) | ["FOOT","BIKE","CAR"] (hub owned)
+
+        // ----- Phase-5 vector #5a (money_holding — T6) clean-cash holding surface (present on EVERY building-card response) -----
+        // Captured verbatim via curl against the live stack (OPERATIONAL_CONTRACTS.md §19). Every leaf is a CLOSED band STRING
+        // — NEVER a raw scalar (no held_cents / money_holding_tier int / yield rate / tick / forfeiture_scheduled_at_tick;
+        // R2.2). NONE is the neutral convention for a NON-money_holding building card (the SAME convention hub_tier_band /
+        // lab_tier_band use), so a non-money_holding card is byte-identical to the pre-T6 shape but for these new keys.
+        public string money_holding_tier_band; // NONE | SMALL | MEDIUM | LARGE | MAJOR | MAX (NONE for non-money_holding) — the tier lever as a band
+        public string held_band;          // NONE | LOW | MODERATE | HIGH | MASSIVE — the EFFECTIVE held clean-cash magnitude (never raw cents)
+        public string capacity_band;       // NONE | OPEN | BUSY | FULL — the held-vs-capacity fill (FULL ⇒ a further deposit 409s OVER_CAPACITY)
+        public string yield_band;          // NONE | IDLE | EARNING — IDLE (nothing held) / EARNING (passive yield accrues); never the raw rate
+        public string forfeiture_band;      // NONE | PENDING | IMMINENT — the audit-forfeiture telegraph (PENDING/IMMINENT ⇒ withdraw or diversify)
     }
 
     // GET /v1/operational/storage/:id  (COOK buildings only — a lab → BRINDLE, a refinery → CRICK; a non-cook
@@ -267,6 +278,38 @@ namespace MafiaCleanCity.Operational
     [Serializable] public class DispatchResultDto { public string courier_id; public string route_id; public string shift_id; }
     [Serializable] public class DispatchEnvelope { public DispatchResultPayload payload; }
     [Serializable] public class DispatchResultPayload { public DispatchResultDto data; }
+
+    // =========================================================================
+    // Phase-5 vector #5a (money_holding — clean-cash holding vault) — captured verbatim via curl against the live stack
+    // (Tools/OPERATIONAL_CONTRACTS.md §19). Every leaf is a band STRING / a BOOLEAN — NEVER a raw scalar (no held_cents /
+    // money_holding_tier int / yield rate / tick / forfeiture_scheduled_at_tick; R2.2). The money_holding bands live on
+    // BuildingCardDto above; these are the ACTION shapes. DTOs are NOT re-declared elsewhere (CS0101 dup-DTO lesson).
+    // =========================================================================
+
+    // POST /v1/operational/building/:id/upgrade-money-holding-tier  → { upgraded: true } (200). Empty body (the id is the
+    // path param). The BYTE-MIRROR of upgrade-hub-tier / upgrade-tier for a money_holding: debits the wallet by the
+    // grounded money-holding-tier-upgrade cost (raw cents NEVER forwarded — R2.2; the player surface is the qualitative
+    // money_holding_tier_band on the next card load). 200 { upgraded: true }. At cap (MAX) / insufficient funds /
+    // non-money_holding / not-owned → 409 (WRONG_TYPE / AT_CAP / INSUFFICIENT_FUNDS) or 404 (well-formed errors).
+    [Serializable] public class UpgradeMoneyHoldingTierResultDto { public bool upgraded; }
+    [Serializable] public class UpgradeMoneyHoldingTierEnvelope { public UpgradeMoneyHoldingTierResultPayload payload; }
+    [Serializable] public class UpgradeMoneyHoldingTierResultPayload { public UpgradeMoneyHoldingTierResultDto data; }
+
+    // POST /v1/operational/building/:id/deposit-cash  { amount_cents } → { deposited: true } (200). Move clean cash from
+    // the player's wallet into the money_holding pool. SERVER-AUTHORITATIVE: the server enforces the tier capacity
+    // (held + amount > capacity → 409 OVER_CAPACITY, nothing moved) + sufficient funds (409 INSUFFICIENT_FUNDS); a
+    // non-positive / non-integer amount → 422 VALIDATION_FAILED. The raw new balances are NOT forwarded (R2.2).
+    [Serializable] public class TransferCashRequestDto { public int amount_cents; } // shared by deposit + withdraw (same body shape).
+    [Serializable] public class DepositCashResultDto { public bool deposited; }
+    [Serializable] public class DepositCashEnvelope { public DepositCashResultPayload payload; }
+    [Serializable] public class DepositCashResultPayload { public DepositCashResultDto data; }
+
+    // POST /v1/operational/building/:id/withdraw-cash  { amount_cents } → { withdrawn: true } (200). Move clean cash from
+    // the money_holding pool back into the player's wallet. SERVER-AUTHORITATIVE: held < amount → 409 INSUFFICIENT_HELD
+    // (nothing moved); a non-positive / non-integer amount → 422. The raw new balances are NOT forwarded (R2.2).
+    [Serializable] public class WithdrawCashResultDto { public bool withdrawn; }
+    [Serializable] public class WithdrawCashEnvelope { public WithdrawCashResultPayload payload; }
+    [Serializable] public class WithdrawCashResultPayload { public WithdrawCashResultDto data; }
 
     // ----- Outcome wrapper: a uniform result so the screen can render success vs a
     //       well-formed error (the error envelope is mapped to a readable message,
