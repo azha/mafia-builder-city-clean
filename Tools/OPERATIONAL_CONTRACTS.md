@@ -1028,3 +1028,111 @@ A grow_house in district 16 (**Verge**) holding an active grow at **MID / ON_TRA
    GROW_HEAT (raid_risk climbs).
 4. SQL-set `tend_count=2, tended_in_stage=NULL` → `husbandry_band=ON_TRACK` + `tend_due=true` on the fresh MID stage.
 The seeder prints `grow_house` + `grow_session_id` in its JSON block.
+
+## 18. Distribution hub — `hub_tier_band` + `roster_band` + `available_vehicles` + `upgrade-hub-tier` + vehicle dispatch (Phase-4 vector #4)
+
+The `distribution_hub` is a LOGISTICS building (no production chain): it scales the player's courier roster cap (the
+`hub_tier` lever) and unlocks wheeled dispatch vehicles (bike/car). It is buildable ONLY in a **tidewater** or **stack**
+district (the GDD-canon hub districts — a convert outside them is refused). The Building-Card hub surface reads three
+NEW projection leaves on the SAME `GET /v1/operational/building/:id` response, plus two action endpoints. Every leaf is
+a closed band STRING / a categorical vehicle-label array / a uuid — **NEVER** a raw scalar (no `hub_tier` int / in-transit
+shift count / cap number / vehicle speed / cents; R2.2). **All JSON below was captured VERBATIM via curl against the live
+dockerized stack** (the merged distribution_hub backend, migration 0024) — not guessed.
+
+### 18a. `GET /v1/operational/building/:id` — the hub-card projection (the THREE new leaves)
+
+On EVERY building-card response there are now three additional keys: `hub_tier_band`, `roster_band`, `available_vehicles`.
+For a **non**-distribution_hub building they are the neutral default (`NONE` / `NONE` / `["FOOT"]` — the SAME convention
+`lab_tier_band` uses), so a non-hub card is byte-identical to the pre-T6 shape but for the keys.
+
+```json
+// 200 OK — a Tier-2 distribution_hub with 2 shipments in transit (the seeder's demo hub)
+{ "payload": { "data": {
+  "building": "<uuid>", "setup_state": "OPERATIONAL", "cover_band": "WEAK", "operational": true,
+  "operational_type": "distribution_hub", "cold_storage_capable": false,
+  "structural_state": "OPERATIONAL", "recently_raided": false, "seized_amount": "NONE", "repair_cost": "NONE",
+  "lab_tier_band": "NONE",
+  "hub_tier_band": "MEDIUM", "roster_band": "BUSY", "available_vehicles": ["FOOT", "BIKE", "CAR"],
+  "raid_risk": "LOW" } } }
+```
+
+```json
+// 200 OK — the SAME hub at Tier-1 (the build default, before the upgrade-hub-tier) — hub_tier_band SMALL, roster OPEN
+{ "payload": { "data": { "building": "<uuid>", "operational_type": "distribution_hub", "setup_state": "OPERATIONAL",
+  "hub_tier_band": "SMALL", "roster_band": "OPEN", "available_vehicles": ["FOOT", "BIKE", "CAR"], "raid_risk": "LOW" } } }
+```
+
+```json
+// 200 OK — a NON-distribution_hub building (e.g. a lab): the neutral hub default (NONE / NONE / foot-only)
+{ "payload": { "data": { "building": "<uuid>", "operational_type": "lab",
+  "hub_tier_band": "NONE", "roster_band": "NONE", "available_vehicles": ["FOOT"] } } }
+```
+
+```json
+// 200 OK — a distribution_hub building that is NOT OPERATIONAL (still in setup): hub_tier_band reflects the PERSISTED
+// tier (MEDIUM) but available_vehicles is FOOT-ONLY (the wheeled modes are unlocked by an OPERATIONAL hub, not just an
+// owned one) and roster_band reflects the player's whole-roster occupancy (BUSY here from other in-transit shipments).
+{ "payload": { "data": { "building": "<uuid>", "operational_type": "distribution_hub", "setup_state": "IN_SETUP",
+  "operational": false, "hub_tier_band": "MEDIUM", "roster_band": "BUSY", "available_vehicles": ["FOOT"] } } }
+```
+
+**Band domains** (the Unity DTO enums):
+- `hub_tier_band`: `NONE | SMALL | MEDIUM | LARGE | MAJOR | MAX` — the hub's standing (tier 1→SMALL, 2→MEDIUM, 3→LARGE,
+  4→MAJOR, ≥5→MAX, capped at `distribution.hub_max_tier` 5). A higher band → a larger concurrent-courier roster cap.
+- `roster_band`: `NONE | OPEN | BUSY | FULL` — the player's concurrent-shipment occupancy (OPEN = idle / dispatch freely;
+  BUSY = some out, capacity remains; FULL = at the cap → a further dispatch is refused 409 OVER_CAPACITY). NONE on a non-hub card.
+- `available_vehicles`: a categorical label array — `["FOOT"]` (no operational hub) or `["FOOT","BIKE","CAR"]` (an
+  operational hub unlocks the wheeled modes). Mode NAMES, never speeds.
+
+### 18b. `POST /v1/operational/building/:id/upgrade-hub-tier` — raise the hub tier by one (the byte-mirror of upgrade-tier)
+
+Empty body (the id is the path param); requires a PLAYER Bearer + a UUID-v4 Idempotency-Key. Debits the wallet by the
+grounded hub-upgrade cost (raw cents NEVER forwarded — R2.2; the player surface is the qualitative `hub_tier_band` on the
+next card load). 200 `{ upgraded: true }`. At cap (MAX) / insufficient funds / non-distribution_hub → 409.
+
+```json
+// 200 OK
+{ "payload": { "data": { "upgraded": true } } }
+```
+
+### 18c. `POST /v1/operational/distribution/dispatch` — dispatch a courier with a chosen vehicle (the vehicle gate)
+
+Body `{ from_building_id, to_building_id, cargo_grams, vehicle_type? }` (vehicle_type defaults to `foot`); requires a
+PLAYER Bearer + a UUID-v4 Idempotency-Key. 201 `{ courier_id, route_id, shift_id }`. The vehicle is SERVER-AUTHORITATIVELY
+gated: `foot` is always allowed; `bike`/`car` require an OPERATIONAL distribution_hub → else **422 VALIDATION_FAILED**
+("vehicle not unlocked"). A roster at the concurrency cap → **409 RESOURCE_STATE_CONFLICT** (OVER_CAPACITY). Insufficient
+source product / same building → 409; a building not the player's / not operational → 404.
+
+```json
+// 201 — dispatched with vehicle_type=bike (the player owns an operational hub → bike is unlocked)
+{ "payload": { "data": { "courier_id": "<uuid>", "route_id": "<uuid>", "shift_id": "<uuid>" } } }
+```
+
+```json
+// 422 — vehicle_type=bike with NO operational distribution_hub (bike/car not unlocked → only foot is allowed)
+{ "payload": { "error": {
+  "code": "VALIDATION_FAILED", "http_status": 422, "user_facing_i18n_key": "error.validation.failed",
+  "message": "dispatch refused: vehicle \"bike\" not unlocked (allowed: foot — a distribution_hub unlocks bike/car)." } } }
+```
+
+```json
+// 409 — the source building holds no product for the requested cargo (or the roster is at the cap → OVER_CAPACITY)
+{ "payload": { "error": {
+  "code": "RESOURCE_STATE_CONFLICT", "http_status": 409, "user_facing_i18n_key": "error.resource.state_conflict",
+  "message": "Insufficient product at the source building to dispatch 10 g." } } }
+```
+
+The in-transit courier surfaces on `GET /v1/operational/couriers` with its `vehicle_type` (uppercase — `FOOT`/`BIKE`/`CAR`)
++ a `transit_band` (`IDLE | IN_TRANSIT | ARRIVED`) — the qualitative bands only (§5). The raw cap / in-transit count never
+escape: the player reads the hub card's `roster_band` instead.
+
+### 18d. How to PRODUCE the hub demo state (the seeder recipe — `Tools/seed_operational_demo.mjs §6e`)
+
+A distribution_hub in a **tidewater** district at **Tier-2 (MEDIUM)** with a **BUSY** roster + bike/car unlocked:
+1. **Acquire + convert** a `distribution_hub` on a free tidewater/stack block → SQL-fast-forward setup → operational (Tier-1 SMALL).
+2. **upgrade-hub-tier** once (REST) → Tier-2 (`hub_tier_band` SMALL → MEDIUM).
+3. **dispatch** 2 shipments FROM the Crick refinery (it holds 200 g) with `vehicle_type=bike` (a hub-unlocked vehicle),
+   then SQL-pin each `courier_shift.started_at_tick` into the FUTURE (`clock + 1_000_000`) so the `COURIER_TRANSIT` tick
+   (MINUTE/9) never arrives them through the later seeder advances → the roster stays genuinely in-transit (`roster_band` BUSY).
+The seeder prints `distribution_hub` + `hub_dispatch_from` (the refinery — a valid dispatch source) + `hub_dispatch_to`
+(the dealer-spot — a valid destination) in its JSON block.

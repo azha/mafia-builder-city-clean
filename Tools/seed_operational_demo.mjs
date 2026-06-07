@@ -100,6 +100,20 @@ const ASH_OUTPUT_GRAMS = 200;      // substance.ash.yield_grams (a single Ash co
 const ASH_REFINING_PASSES = 2;     // the time↔purity lever chosen at cook start (Tier-2 base 55 + 2×10 = 75 → CRYSTALLINE).
 const ASH_TARGET_PURITY_SCORE = 75; // Tier-2 (base 55) + 2 refining passes (×10) − 0 pauses = 75 → CRYSTALLINE band.
 
+// Phase-4 vector #4 (distribution_hub courier-dispatch logistics): stand up a distribution_hub at a KNOWN tier in a
+// TIDEWATER/STACK district (the GDD-canon hub districts) + a couple of IN-TRANSIT shipments, so the Building-Card hub
+// surface (T9) reads:
+//   - hub_tier_band     = MEDIUM (a Tier-2 hub — upgraded once from the Tier-1 SMALL build default, so the
+//                         Upgrade-hub-tier affordance is demonstrable AND the band is above the default),
+//   - roster_band       = BUSY   (some shipments in transit but below the Tier-2 cap of 11 → OPEN < BUSY < FULL),
+//   - available_vehicles = [FOOT, BIKE, CAR] (an operational hub unlocks the wheeled modes — the vehicle selector).
+// A distribution_hub has NO production chain (it is a logistics building) — the demo shipments are dispatched FROM the
+// Crick refinery (which holds 200 g) so the source has product. The shipments are pinned IN-TRANSIT (started_at_tick in
+// the FUTURE so the COURIER_TRANSIT tick never arrives them through the later seeder advances) → a stable BUSY roster.
+const HUB_DEMO_TARGET_TIER = 2;    // Tier-2 → hub_tier_band MEDIUM (cap 11; the canon curve 5/11/18/24/30 by tier).
+const HUB_DEMO_IN_TRANSIT = 2;     // 2 in-transit shipments → BUSY (0 < 2 < cap 11). Small cargo each (the refinery has 200 g).
+const HUB_DEMO_CARGO_GRAMS = 10;   // grams per demo shipment (×2 = 20 g of the refinery's 200 g — plenty left for the Crick UI).
+
 const SCRYPT_N = 16384, SCRYPT_R = 8, SCRYPT_P = 1, SCRYPT_KEYLEN = 32;
 function hashPassword(plain) {
   const salt = randomBytes(16);
@@ -241,6 +255,19 @@ async function main() {
   if (ashLabIds) {
     psql(`DELETE FROM building_operational_state WHERE building_id IN (${ashLabIds});`);
     psql(`DELETE FROM buildings WHERE building_id IN (${ashLabIds});`);
+  }
+  // Phase-4 vector #4 (distribution_hub): the hub is buildable ONLY in a TIDEWATER/STACK district (NOT district 16), so
+  // like the specialized_lab it is wiped by a TARGETED operational_type clause (the district-16 wipe never reaches it).
+  // Its courier/route/courier_shift children were already wiped player-wide above; here we drop the hub building + its
+  // operational-state row so a re-run rebuilds it fresh. Idempotent + order-safe.
+  const hubIds = psql(
+    `SELECT COALESCE(string_agg(quote_literal(bos.building_id::text), ','), '') ` +
+      `FROM building_operational_state bos JOIN buildings b ON b.building_id=bos.building_id ` +
+      `WHERE b.player_id='${playerId}' AND bos.operational_type='distribution_hub';`,
+  );
+  if (hubIds) {
+    psql(`DELETE FROM building_operational_state WHERE building_id IN (${hubIds});`);
+    psql(`DELETE FROM buildings WHERE building_id IN (${hubIds});`);
   }
 
   // Reset the wallet to a fixed generous balance (deterministic figures regardless of prior runs).
@@ -472,6 +499,68 @@ async function main() {
   const growState = psql(`SELECT current_stage::text || '|' || tend_count || '|' || COALESCE(tended_in_stage::text,'-') FROM grow_session WHERE grow_session_id='${growSessionId}';`);
   console.log(`[op-seed] grow_house ${growHouse} planted + advanced → grow_session=${growSessionId} (${growState}; MID / ON_TRACK / tend_due)`);
 
+  // ─────────────────────── 6e. DISTRIBUTION HUB (Phase-4 vector #4) — a Tier-2 hub + in-transit shipments ──────────
+  // Stand up the surface the Building-Card hub UI (T9) reads: a distribution_hub in a TIDEWATER district (the GDD-canon
+  // hub district — buildable ONLY in tidewater/stack) at a KNOWN qualitative state:
+  //   - hub_tier_band     = MEDIUM   (a Tier-2 hub — UPGRADE-HUB-TIER once from the Tier-1 SMALL build default, so the
+  //                          Upgrade-hub-tier affordance is demonstrable + the band is above the default),
+  //   - roster_band       = BUSY     (HUB_DEMO_IN_TRANSIT shipments in transit, below the Tier-2 cap 11 → BUSY),
+  //   - available_vehicles = [FOOT, BIKE, CAR] (an operational hub unlocks bike/car — the vehicle selector).
+  // RECIPE (REST where possible + SQL fast-forward, mirroring the cook/courier flow):
+  //   (a) acquire + convert a distribution_hub on a free TIDEWATER block → fast-forward setup → operational (Tier-1 SMALL);
+  //   (b) UPGRADE-HUB-TIER once (REST) → Tier-2 (hub_tier_band SMALL → MEDIUM; atomic cash debit, raw cents never surface);
+  //   (c) dispatch HUB_DEMO_IN_TRANSIT shipments FROM the Crick refinery (it holds 200 g) with a vehicle the hub unlocks
+  //       (bike), then PIN started_at_tick into the FUTURE so the COURIER_TRANSIT tick never arrives them through the
+  //       later seeder advances → a STABLE in-transit roster (roster_band BUSY at rest).
+  // Idempotent: the targeted distribution_hub wipe in the reset above drops any prior hub + its courier/shift children,
+  // so a re-run rebuilds the hub + fresh in-transit shipments.
+  const hubDistrict = Number(psql(`SELECT id FROM districts WHERE profile IN ('tidewater','stack') ORDER BY id LIMIT 1;`));
+  // The Nth free block in the hub (tidewater/stack) district for this player.
+  function freeHubBlock(offset) {
+    return Number(
+      psql(
+        `SELECT id FROM blocks WHERE district_id=${hubDistrict} ` +
+          `AND id NOT IN (SELECT block_id FROM buildings WHERE player_id='${playerId}' AND block_id IS NOT NULL) ` +
+          `ORDER BY id LIMIT 1 OFFSET ${offset};`,
+      ),
+    );
+  }
+  const distributionHub = await operationalBuilding(freeHubBlock(0), 'distribution_hub');
+  // The convert above leaves the hub IN_SETUP; fast-forward its setup to operational (the build defaults hub_tier=1).
+  psql(`UPDATE building_operational_state SET setup_remaining_ticks=1 WHERE building_id='${distributionHub}' AND conversion_stage <> 'operational';`);
+  await advance(playerId, 1);
+  // (b) UPGRADE-HUB-TIER once → Tier-2 (hub_tier_band MEDIUM). Atomic cash debit server-side; raw cents never surface.
+  for (let t = 1; t < HUB_DEMO_TARGET_TIER; t += 1) {
+    const hubUpgrade = await api('POST', `/v1/operational/building/${distributionHub}/upgrade-hub-tier`, token, {});
+    if (hubUpgrade.status !== 200) throw new Error(`hub upgrade-hub-tier failed: HTTP ${hubUpgrade.status} — ${JSON.stringify(hubUpgrade.data)}`);
+  }
+  const hubTier = psql(`SELECT hub_tier FROM building_operational_state WHERE building_id='${distributionHub}';`);
+  console.log(`[op-seed] distribution_hub built + upgraded → hub_tier=${hubTier} (MEDIUM band) in ${psql(`SELECT profile FROM districts WHERE id=${hubDistrict};`)} district ${hubDistrict}`);
+  // (c) dispatch HUB_DEMO_IN_TRANSIT shipments FROM the Crick refinery (200 g) with bike (a hub-unlocked vehicle), then
+  // PIN them in-transit (future started_at_tick) so they never arrive through the later advances → stable BUSY roster.
+  // The destinations are the dealer-spot + cash-safehouse (distinct operational buildings; a courier route needs from≠to).
+  const hubDispatchDests = [dealerSpot, safehouseBldg];
+  const hubCourierIds = [];
+  for (let s = 0; s < HUB_DEMO_IN_TRANSIT; s += 1) {
+    const hubDispatch = await api('POST', '/v1/operational/distribution/dispatch', token, {
+      from_building_id: refinery,
+      to_building_id: hubDispatchDests[s % hubDispatchDests.length],
+      cargo_grams: HUB_DEMO_CARGO_GRAMS,
+      vehicle_type: 'bike',
+    });
+    if (hubDispatch.status !== 201) throw new Error(`hub demo dispatch #${s + 1} failed: HTTP ${hubDispatch.status} — ${JSON.stringify(hubDispatch.data)}`);
+    hubCourierIds.push(hubDispatch.data.courier_id);
+  }
+  // Pin every demo shift's started_at_tick FAR into the future so (gameMinute − started_at_tick) stays negative → the
+  // COURIER_TRANSIT tick (MINUTE/9) never arrives them, regardless of how many ticks the later seeder steps advance.
+  // This keeps the roster genuinely BUSY at rest (the courier stays in_transit, the shift status='in_transit').
+  if (hubCourierIds.length > 0) {
+    const idList = hubCourierIds.map((id) => `'${id}'`).join(',');
+    psql(`UPDATE courier_shift SET started_at_tick=${clockMinute(playerId) + 1_000_000} WHERE courier_id IN (${idList});`);
+  }
+  const hubInTransit = psql(`SELECT count(*) FROM courier_shift cs JOIN courier c ON c.courier_id=cs.courier_id WHERE c.player_id='${playerId}' AND cs.status='in_transit';`);
+  console.log(`[op-seed] distribution_hub ${distributionHub} dispatched ${hubCourierIds.length} bike shipments → ${hubInTransit} in transit (BUSY roster band)`);
+
   // ─────────────────────────── 7. DISTRIBUTE — courier lab → dealer-spot, fast-forward transit ───────────────────────────
   // Ferry part of the cook (120 g) to the dealer-spot (the sell source); the rest stays in the lab (richer storage demo).
   const dispatch = await api('POST', '/v1/operational/distribution/dispatch', token, {
@@ -652,6 +741,7 @@ async function main() {
           refinery, // Phase-2b vector #2: the Crick cold-chain refinery (holds 200 g Crick → OPTIMAL_COLD).
           specialized_lab: ashLab, // Phase-2c vector #2c: the Ash luxury lab (Tier-2 REFINED, 200 g Ash → CRYSTALLINE).
           grow_house: growHouse, // Phase-3 vector #3: the grow_house mid-grow (MID stage / ON_TRACK husbandry / tend_due).
+          distribution_hub: distributionHub, // Phase-4 vector #4: the Tier-2 hub (MEDIUM, BUSY roster, FOOT/BIKE/CAR).
         },
         // Phase-2b vector #2 (substances / Crick): the refinery holds 200 g Crick and is cold-by-nature → its storage
         // projection reads substance_type=CRICK, temperature_status=OPTIMAL_COLD, degrading=false (the cold-chain UI reads it).
@@ -664,6 +754,13 @@ async function main() {
         // tend_due — the grow UI (T10) reads grow_stage_band=MID, husbandry_band=ON_TRACK, tend_due=true, raid_risk climbed.
         grow_house: growHouse, // top-level too, so the grow T10 test can discover it with the same flat-regex extractor.
         grow_session_id: growSessionId, // the active grow_session the grow surface tracks (the projection id the UI queries).
+        // Phase-4 vector #4 (distribution_hub): the hub is a Tier-2 MEDIUM hub in a tidewater district with HUB_DEMO_IN_TRANSIT
+        // shipments in transit (BUSY roster) + bike/car unlocked — the hub UI (T9) reads hub_tier_band=MEDIUM, roster_band=BUSY,
+        // available_vehicles=[FOOT,BIKE,CAR], and the Upgrade-hub-tier affordance (Tier-2 < MAX). Also dispatch source/dest
+        // hints for the T9 dispatch test (the refinery holds product → a valid source; the dealer-spot is a valid destination).
+        distribution_hub: distributionHub, // top-level too, so the hub T9 test can discover it with the same flat-regex extractor.
+        hub_dispatch_from: refinery, // the in-transit demo source (holds Crick) — a valid dispatch source for the T9 vehicle test.
+        hub_dispatch_to: dealerSpot, // a valid dispatch destination (a distinct operational building; from≠to).
         // Phase-2b raid surface (T7): the lab was raided → DAMAGED (the raided_building the building-card raid UI reads);
         // the stash is the healthy control (OPERATIONAL, never raided → raid_risk readable, no Repair button).
         raided_building: lab,

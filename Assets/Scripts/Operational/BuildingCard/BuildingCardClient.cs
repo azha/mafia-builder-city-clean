@@ -200,6 +200,44 @@ namespace MafiaCleanCity.Operational
                 done);
         }
 
+        // ----------------------------------------------------------- distribution_hub logistics (Phase-4 vector #4)
+
+        /// <summary>
+        /// POST /v1/operational/building/:id/upgrade-hub-tier (Phase-4 vector #4) — raise a distribution_hub's hub_tier by
+        /// one (empty body; the id is the path param). The byte-mirror of UpgradeTier (the specialized_lab action). Debits
+        /// the wallet by the grounded hub-upgrade cost → the next card load reflects the new hub_tier_band (SMALL → MEDIUM →
+        /// … → MAX). 200 { upgraded: true }. At cap (MAX) / insufficient cash / non-distribution_hub → 409 (a well-formed
+        /// error, mapped to a readable msg). The raw cents NEVER cross the wire (R2.2).
+        /// </summary>
+        public IEnumerator UpgradeHubTier(string buildingId, string bearer, Action<ActionOutcome> done)
+        {
+            return Post(Url($"building/{buildingId}/upgrade-hub-tier"), "{}", bearer,
+                json => JsonUtility.FromJson<UpgradeHubTierEnvelope>(json)?.payload?.data?.upgraded == true ? "upgraded" : null,
+                done);
+        }
+
+        /// <summary>
+        /// POST /v1/operational/distribution/dispatch { from_building_id, to_building_id, cargo_grams, vehicle_type } —
+        /// dispatch a courier with the CHOSEN vehicle (foot/bike/car). 201 { courier_id, route_id, shift_id }. The vehicle
+        /// is server-authoritatively gated: bike/car require an OPERATIONAL distribution_hub (else 422 — "vehicle not
+        /// unlocked"); a roster at the cap → 409 OVER_CAPACITY; insufficient source product / same building → 409; a bad
+        /// building → 404 (well-formed errors mapped to a readable msg). The cargo grams / raw cap NEVER surface (R2.2).
+        /// </summary>
+        public IEnumerator Dispatch(string fromBuildingId, string toBuildingId, int cargoGrams, string vehicleType,
+            string bearer, Action<ActionOutcome> done)
+        {
+            string body = JsonUtility.ToJson(new DispatchRequestDto
+            {
+                from_building_id = fromBuildingId,
+                to_building_id = toBuildingId,
+                cargo_grams = cargoGrams,
+                vehicle_type = vehicleType,
+            });
+            return Post(Url("distribution/dispatch"), body, bearer,
+                json => JsonUtility.FromJson<DispatchEnvelope>(json)?.payload?.data?.courier_id,
+                done);
+        }
+
         /// <summary>
         /// POST /v1/operational/lab/:id/cook { substance:"ash", refining_passes } — start an Ash cook with the chosen
         /// refining passes (the time↔purity lever; more passes = longer cook = higher purity). 201 { cook_session_id }.

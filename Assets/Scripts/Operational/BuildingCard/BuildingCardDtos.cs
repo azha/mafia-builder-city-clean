@@ -42,6 +42,15 @@ namespace MafiaCleanCity.Operational
         // | MASTER (tier 3). The raw lab_tier int NEVER escapes (R2.2 — captured verbatim via curl, OPERATIONAL_CONTRACTS.md
         // §16). A higher band → a purer Ash batch. The upgrade-tier button gates on this (BASIC/REFINED → upgradable).
         public string lab_tier_band;     // NONE | BASIC | REFINED | MASTER (NONE for non-specialized_lab)
+
+        // ----- Phase-4 vector #4 (distribution_hub — T6) hub-dispatch surface (present on EVERY building-card response) -----
+        // Captured verbatim via curl against the live stack (OPERATIONAL_CONTRACTS.md §18). Every leaf is a closed band
+        // STRING or a categorical-label array — NEVER a raw scalar (no hub_tier int / shift count / cap number / vehicle
+        // speed; R2.2). NONE / foot-only is the neutral convention for a NON-distribution_hub building card (the SAME
+        // convention lab_tier_band uses), so a non-hub card is byte-identical to the pre-T6 shape but for the new keys.
+        public string hub_tier_band;     // NONE | SMALL | MEDIUM | LARGE | MAJOR | MAX (NONE for non-distribution_hub)
+        public string roster_band;       // NONE | OPEN | BUSY | FULL (NONE for non-distribution_hub; FULL ⇒ dispatch 409 OVER_CAPACITY)
+        public string[] available_vehicles; // unlocked vehicle labels: ["FOOT"] (no operational hub) | ["FOOT","BIKE","CAR"] (hub owned)
     }
 
     // GET /v1/operational/storage/:id  (COOK buildings only — a lab → BRINDLE, a refinery → CRICK; a non-cook
@@ -226,6 +235,38 @@ namespace MafiaCleanCity.Operational
     }
     [Serializable] public class GrowSessionEnvelope { public GrowSessionPayload payload; }
     [Serializable] public class GrowSessionPayload { public GrowSessionDto data; }
+
+    // =========================================================================
+    // Phase-4 vector #4 (distribution_hub courier-dispatch logistics) — captured verbatim via curl against the live stack
+    // (Tools/OPERATIONAL_CONTRACTS.md §18). Every leaf is a band STRING / a BOOLEAN / a uuid / a categorical vehicle label
+    // — NEVER a raw scalar (no hub_tier int / cap / shift count / vehicle speed / cents; R2.2). DTOs are NOT re-declared
+    // elsewhere (CS0101 dup-DTO lesson — the hub bands live on BuildingCardDto above; these are the ACTION shapes).
+    // =========================================================================
+
+    // POST /v1/operational/building/:id/upgrade-hub-tier  → { upgraded: true } (200). Empty body (the id is the path param).
+    // The BYTE-MIRROR of upgrade-tier (the specialized_lab lab-tier action) for a distribution_hub: debits the wallet by
+    // the grounded hub-upgrade cost (raw cents NEVER forwarded — R2.2; the player surface is the qualitative hub_tier_band
+    // on the next card load). 200 { upgraded: true }. At cap (MAX) / insufficient funds / non-distribution_hub → 409.
+    [Serializable] public class UpgradeHubTierResultDto { public bool upgraded; }
+    [Serializable] public class UpgradeHubTierEnvelope { public UpgradeHubTierResultPayload payload; }
+    [Serializable] public class UpgradeHubTierResultPayload { public UpgradeHubTierResultDto data; }
+
+    // POST /v1/operational/distribution/dispatch  { from_building_id, to_building_id, cargo_grams, vehicle_type? } →
+    //   201 { courier_id, route_id, shift_id }. Dispatch a courier carrying the source building's product to a destination.
+    // The vehicle_type (foot/bike/car) is SERVER-AUTHORITATIVELY gated: foot is always allowed; bike/car require an
+    // OPERATIONAL distribution_hub (else 422 VALIDATION_FAILED — "vehicle not unlocked"). A roster at the concurrency cap →
+    // 409 RESOURCE_STATE_CONFLICT (OVER_CAPACITY). Insufficient source product / same building → 409; bad building → 404.
+    [Serializable]
+    public class DispatchRequestDto
+    {
+        public string from_building_id;
+        public string to_building_id;
+        public int cargo_grams;
+        public string vehicle_type;   // foot | bike | car (bike/car require an operational hub; the server validates → 422)
+    }
+    [Serializable] public class DispatchResultDto { public string courier_id; public string route_id; public string shift_id; }
+    [Serializable] public class DispatchEnvelope { public DispatchResultPayload payload; }
+    [Serializable] public class DispatchResultPayload { public DispatchResultDto data; }
 
     // ----- Outcome wrapper: a uniform result so the screen can render success vs a
     //       well-formed error (the error envelope is mapped to a readable message,

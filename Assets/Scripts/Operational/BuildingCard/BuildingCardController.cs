@@ -114,6 +114,28 @@ namespace MafiaCleanCity.Operational
         /// <summary>True when the plant selector is shown (an idle grow_house with no active grow yet).</summary>
         public bool PlantSelectorShown { get; private set; }
 
+        // ---- Phase-4 vector #4 (distribution_hub courier-dispatch logistics) test hooks --------------
+        /// <summary>True when the hub-tier band row is shown (a distribution_hub — hub_tier_band != NONE).</summary>
+        public bool HubTierShown { get; private set; }
+        /// <summary>True when the roster-occupancy band row is shown (a distribution_hub — roster_band != NONE).</summary>
+        public bool RosterShown { get; private set; }
+        /// <summary>True when the unlocked-vehicles row is shown (a distribution_hub card).</summary>
+        public bool VehiclesShown { get; private set; }
+        /// <summary>True when the Upgrade-hub-tier button is shown (a distribution_hub below MAX).</summary>
+        public bool UpgradeHubTierButtonShown { get; private set; }
+        /// <summary>True when the shown Upgrade-hub-tier button is INTERACTABLE (wallet band can afford the upgrade band).</summary>
+        public bool UpgradeHubTierButtonAffordable { get; private set; }
+        /// <summary>True when the dispatch vehicle selector is shown (a distribution_hub card — the foot/bike/car picker).</summary>
+        public bool VehicleSelectorShown { get; private set; }
+        /// <summary>The vehicle the dispatch selector currently holds (FOOT | BIKE | CAR — the chosen vehicle_type, uppercase).
+        /// SERVER-AUTHORITATIVE: only a vehicle present in the card's available_vehicles is selectable; the cycle skips a
+        /// locked one. A dispatch with a non-unlocked vehicle is rejected 422 even if the client bypassed the gate.</summary>
+        public string SelectedVehicle { get; private set; } = "FOOT";
+        /// <summary>The dispatch source + destination building ids a test wires before calling Dispatch() (the card's own
+        /// building is the natural source on a hub demo; the test sets them explicitly so the dispatch is deterministic).</summary>
+        public string DispatchFromBuildingId { get; set; }
+        public string DispatchToBuildingId { get; set; }
+
         public string BuildingId { get => buildingId; set => buildingId = value; }
 
         /// <summary>
@@ -449,6 +471,48 @@ namespace MafiaCleanCity.Operational
             CurrentGrow = grow;
         }
 
+        // --------------------------------------------- distribution_hub logistics actions (Phase-4 vector #4)
+
+        /// <summary>Set the vehicle the next Dispatch will use (FOOT | BIKE | CAR — uppercase). SERVER-AUTHORITATIVE: only a
+        /// vehicle present in the loaded card's available_vehicles is accepted; a locked vehicle is ignored (the gate is
+        /// mirrored client-side, but the definitive verdict is the server's 422). Re-renders the actions so the selector
+        /// reflects the choice (only if the card is loaded). UI/test convenience.</summary>
+        public void SetSelectedVehicle(string vehicle)
+        {
+            if (string.IsNullOrEmpty(vehicle)) return;
+            string v = vehicle.ToUpperInvariant();
+            // Only accept an UNLOCKED vehicle (server-authoritative mirror — the card's available_vehicles set).
+            if (CurrentCard != null && CurrentCard.available_vehicles != null
+                && System.Array.IndexOf(CurrentCard.available_vehicles, v) < 0) return;
+            SelectedVehicle = v;
+            if (CardLoaded && CurrentCard != null) BuildActions(CurrentCard);
+        }
+
+        /// <summary>distribution_hub action: upgrade the hub tier by one (cash-gated server-side). The byte-mirror of the
+        /// specialized_lab UpgradeTier. On success the card is reloaded so the hub_tier_band reflects the new tier
+        /// (SMALL → MEDIUM → … → MAX).</summary>
+        public IEnumerator UpgradeHubTier()
+        {
+            yield return RunAction(c => client.UpgradeHubTier(buildingId, Token, c),
+                "Hub tier upgraded", "Upgrade unavailable");
+            // Reload so the card reflects the new hub_tier_band (+ the wallet band debited).
+            yield return LoadBuilding(buildingId);
+        }
+
+        /// <summary>distribution_hub action: dispatch a courier with the chosen vehicle (the SelectedVehicle — foot/bike/car).
+        /// The vehicle is SERVER-AUTHORITATIVELY gated (bike/car need an operational hub → 422 if not unlocked); a roster at
+        /// the cap → 409 OVER_CAPACITY. The source/destination are the wired DispatchFrom/ToBuildingId. On success the card
+        /// is reloaded so the roster_band reflects the new in-transit shipment.</summary>
+        public IEnumerator Dispatch(int cargoGrams = 10)
+        {
+            string vehicle = (SelectedVehicle ?? "FOOT").ToLowerInvariant(); // the wire wants lowercase foot/bike/car.
+            yield return RunAction(
+                c => client.Dispatch(DispatchFromBuildingId, DispatchToBuildingId, cargoGrams, vehicle, Token, c),
+                "Courier dispatched", "Dispatch unavailable");
+            // Reload so the roster_band reflects the new in-transit shipment (OPEN → BUSY → FULL).
+            yield return LoadBuilding(buildingId);
+        }
+
         private IEnumerator RunAction(System.Func<System.Action<ActionOutcome>, IEnumerator> call,
             string okPrefix, string errPrefix)
         {
@@ -476,7 +540,7 @@ namespace MafiaCleanCity.Operational
             // serialized UI Text fields directly, so it self-guards too — a continuation that somehow reaches
             // here on a destroyed controller (or before BuildLayout ran) no-ops rather than NREs. The guard
             // only fires on a genuinely destroyed object / un-built layout, never silently in the live app.
-            if (Destroyed || titleText == null || typeText == null) return;
+            if (Destroyed || titleText == null || typeText == null || card == null) return;
 
             ClearRows();
 
@@ -598,6 +662,39 @@ namespace MafiaCleanCity.Operational
                     HusbandryGlyph(CurrentGrow.husbandry_band), HusbandryAccent(CurrentGrow.husbandry_band));
             }
 
+            // ----- Phase-4 vector #4 (distribution_hub courier-dispatch logistics) surface — ONLY for a distribution_hub.
+            // The hub-tier row reads hub_tier_band (SMALL → MAX — the roster-cap lever); the roster row reads roster_band
+            // (OPEN / BUSY / FULL — the player's concurrent-shipment occupancy; FULL ⇒ a further dispatch is refused); the
+            // vehicles row surfaces available_vehicles (the unlocked vehicle modes — FOOT always, +BIKE/CAR when the hub is
+            // operational). R2.2: bands / categorical vehicle labels / glyphs only (NEVER a raw hub_tier int / shift count /
+            // cap / vehicle speed); F2: every row carries a shape glyph. The raid-risk band is ALREADY rendered above (REUSE).
+            HubTierShown = false;
+            RosterShown = false;
+            VehiclesShown = false;
+            if (card.operational_type == "distribution_hub")
+            {
+                // Hub-tier band row — the hub's STANDING (a higher band → a larger courier roster cap). Always shown for a
+                // distribution_hub (hub_tier_band is SMALL..MAX; NONE would only be a non-distribution_hub).
+                if (!string.IsNullOrEmpty(card.hub_tier_band) && card.hub_tier_band != "NONE")
+                {
+                    HubTierShown = true;
+                    AddStatusRow("Hub tier", HubTierLabel(card.hub_tier_band),
+                        HubTierGlyph(card.hub_tier_band), HubTierAccent(card.hub_tier_band));
+                }
+                // Roster-occupancy band row — how much of the player's concurrent-shipment capacity is in use (OPEN / BUSY /
+                // FULL — never the raw count/cap). FULL telegraphs that a further dispatch is refused (409 OVER_CAPACITY).
+                if (!string.IsNullOrEmpty(card.roster_band) && card.roster_band != "NONE")
+                {
+                    RosterShown = true;
+                    AddStatusRow("Roster", RosterLabel(card.roster_band),
+                        RosterGlyph(card.roster_band), RosterAccent(card.roster_band));
+                }
+                // Unlocked-vehicles row — the categorical vehicle modes the hub unlocks (FOOT always; +BIKE/CAR on an
+                // operational hub). A worded list (never speeds; R2.2). The "[~]" glyph reads as "fleet/modes available".
+                VehiclesShown = true;
+                AddStatusRow("Vehicles", AvailableVehiclesLabel(card.available_vehicles), "[~]", AccentMild);
+            }
+
             BuildActions(card);
         }
 
@@ -672,6 +769,32 @@ namespace MafiaCleanCity.Operational
                 }
             }
 
+            // Phase-4 vector #4: the distribution_hub Upgrade-hub-tier affordance — the SIBLING of the Ash upgrade-tier
+            // button, calling upgrade-hub-tier instead. Visible when the hub is below MAX (SMALL/MEDIUM/LARGE/MAJOR). It is
+            // DISABLED when the wallet band can't afford the upgrade (a qualitative band-vs-band comparison; R2.2 — NEVER
+            // cents). The definitive verdict still lives server-side (409). MAX (capped) shows no button. Only rendered for
+            // a distribution_hub.
+            UpgradeHubTierButtonShown = false;
+            UpgradeHubTierButtonAffordable = false;
+            if (card.operational_type == "distribution_hub" &&
+                (card.hub_tier_band == "SMALL" || card.hub_tier_band == "MEDIUM" ||
+                 card.hub_tier_band == "LARGE" || card.hub_tier_band == "MAJOR"))
+            {
+                UpgradeHubTierButtonShown = true;
+                bool affordable = CanAffordUpgrade(WalletBand);
+                UpgradeHubTierButtonAffordable = affordable;
+                Button upgradeBtn = AddActionButton(actionBar, "Upgrade hub tier", () => StartCoroutine(UpgradeHubTier()));
+                SetButtonInteractable(upgradeBtn, affordable);
+                if (!affordable)
+                {
+                    string reason = "Upgrade hub tier (insufficient cash)";
+                    Text hint = NewText("HubUpgradeHint", actionBar, reason, 13, TextAnchor.MiddleLeft);
+                    hint.color = AccentSevere;
+                    AddLayoutElement(hint.gameObject, minHeight: 18, flexibleHeight: 0);
+                    TrackText(hint, reason);
+                }
+            }
+
             switch (card.operational_type)
             {
                 case "lab":
@@ -726,6 +849,25 @@ namespace MafiaCleanCity.Operational
                         PlantSelectorShown = true;
                         AddPlantSelector(actionBar);
                         AddActionButton(actionBar, "Plant", () => StartCoroutine(Plant()));
+                    }
+                    break;
+                case "distribution_hub":
+                    // Phase-4 vector #4: the courier-dispatch affordances — the vehicle selector (foot/bike/car, gated by
+                    // the SERVER's available_vehicles set — a locked vehicle is non-selectable) + the Dispatch button. The
+                    // Dispatch button is DISABLED when the source/destination aren't wired yet (a test/UI sets them); the
+                    // server is the final authority (a not-unlocked vehicle → 422, a full roster → 409 OVER_CAPACITY).
+                    AddVehicleSelector(actionBar, card);
+                    bool dispatchReady = !string.IsNullOrEmpty(DispatchFromBuildingId)
+                        && !string.IsNullOrEmpty(DispatchToBuildingId);
+                    Button dispatchBtn = AddActionButton(actionBar, "Dispatch courier", () => StartCoroutine(Dispatch()));
+                    SetButtonInteractable(dispatchBtn, dispatchReady);
+                    if (!dispatchReady)
+                    {
+                        string reason = "Dispatch courier (choose a source + destination)";
+                        Text hint = NewText("DispatchHint", actionBar, reason, 13, TextAnchor.MiddleLeft);
+                        hint.color = new Color(0.55f, 0.59f, 0.63f);
+                        AddLayoutElement(hint.gameObject, minHeight: 18, flexibleHeight: 0);
+                        TrackText(hint, reason);
                     }
                     break;
                 case "stash":
@@ -1113,6 +1255,88 @@ namespace MafiaCleanCity.Operational
             }
         }
 
+        // ----- Phase-4 vector #4 (distribution_hub): hub_tier_band (SMALL | MEDIUM | LARGE | MAJOR | MAX) — the hub standing -----
+        // R2.2: a qualitative band label, NEVER the raw hub_tier int. Ascending roster-cap lever: SMALL < MEDIUM < LARGE <
+        // MAJOR < MAX (the cap at distribution.hub_max_tier 5). A higher band → a larger concurrent-courier roster cap.
+        private static string HubTierLabel(string b)
+        {
+            switch (b)
+            {
+                case "SMALL": return "Small";
+                case "MEDIUM": return "Medium";
+                case "LARGE": return "Large";
+                case "MAJOR": return "Major";
+                case "MAX": return "Max";
+                default: return b;
+            }
+        }
+        // A 5-segment rising filled-bar gauge (shape encodes the tier alongside colour — a11y F2, mirrors the lab-tier/risk gauges).
+        private static string HubTierGlyph(string b)
+        {
+            switch (b)
+            {
+                case "SMALL": return "[#....]";
+                case "MEDIUM": return "[##...]";
+                case "LARGE": return "[###..]";
+                case "MAJOR": return "[####.]";
+                case "MAX": return "[#####]";
+                default: return "[.....]";
+            }
+        }
+        // SMALL/MEDIUM = amber (room to grow), LARGE/MAJOR = cyan (a solid hub), MAX = premium violet (the top tier, capped).
+        private static Color HubTierAccent(string b) =>
+            b == "MAX" ? AccentPremium : (b == "LARGE" || b == "MAJOR") ? AccentMild : AccentModerate;
+
+        // ----- Phase-4 vector #4 (distribution_hub): roster_band (OPEN | BUSY | FULL) — the courier-roster occupancy -----
+        // R2.2: the player's concurrent-shipment occupancy as a band, NEVER the raw in-transit count / cap. OPEN (idle —
+        // dispatch freely) → BUSY (some shipments out, capacity remains) → FULL (at the cap — a further dispatch is refused
+        // 409 OVER_CAPACITY). OPEN = cyan (good), BUSY = amber (filling), FULL = severe (no headroom).
+        private static string RosterLabel(string b)
+        {
+            switch (b)
+            {
+                case "OPEN": return "Open";
+                case "BUSY": return "Busy";
+                case "FULL": return "Full";
+                default: return b;
+            }
+        }
+        // Distinct shape per band (a11y F2 — shape carries the meaning alongside colour).
+        private static string RosterGlyph(string b)
+        {
+            switch (b)
+            {
+                case "OPEN": return "[o..]";   // open slots
+                case "BUSY": return "[oo.]";   // filling
+                case "FULL": return "[ooo]";   // at the cap
+                default: return "[...]";
+            }
+        }
+        private static Color RosterAccent(string b) =>
+            b == "OPEN" ? AccentMild : b == "BUSY" ? AccentModerate : AccentSevere;
+
+        // ----- Phase-4 vector #4 (distribution_hub): the vehicle modes (FOOT | BIKE | CAR) the player can dispatch with -----
+        // The unlocked vehicle SET (available_vehicles) worded as a comma list — categorical labels, NEVER speeds (R2.2).
+        // A hub unlocks bike/car; a no-operational-hub set is foot-only.
+        private static readonly string[] AllVehicles = { "FOOT", "BIKE", "CAR" };
+        private static string VehicleLabel(string v)
+        {
+            switch (v)
+            {
+                case "FOOT": return "Foot";
+                case "BIKE": return "Bike";
+                case "CAR": return "Car";
+                default: return v;
+            }
+        }
+        private static string AvailableVehiclesLabel(string[] vehicles)
+        {
+            if (vehicles == null || vehicles.Length == 0) return "Foot";
+            var parts = new List<string>(vehicles.Length);
+            foreach (string v in vehicles) parts.Add(VehicleLabel(v));
+            return string.Join(", ", parts);
+        }
+
         // The minimum wallet band that can afford each lab-tier upgrade cost band. The upgrade cost is a server-grounded
         // value (R2.3); the client gates qualitatively (band-vs-band, NEVER cents — R2.2). The definitive verdict still
         // lives server-side (an unaffordable upgrade → 409 even if the client allowed it). The upgrade is a meaningful cash
@@ -1369,6 +1593,63 @@ namespace MafiaCleanCity.Operational
             int n = GrowablePrecursors.Length;
             int next = ((idx + delta) % n + n) % n;
             SetSelectedPrecursor(GrowablePrecursors[next]);
+        }
+
+        // Phase-4 vector #4: the dispatch vehicle selector (choose foot/bike/car). Three controls on one row:
+        //   [< Vehicle] [<worded vehicle>] [Vehicle >]
+        // SERVER-AUTHORITATIVE: the selector cycles ONLY through the card's available_vehicles set — a LOCKED vehicle
+        // (bike/car without an operational hub) is never reachable; the worded value never shows a locked mode. The
+        // server is the final authority (a not-unlocked vehicle → 422). The vehicle is WORDED (Foot / Bike / Car) — no
+        // raw speed leaks (R2.2). If only FOOT is unlocked, the cycle is a no-op (a single-member set).
+        private void AddVehicleSelector(Transform parent, BuildingCardDto card)
+        {
+            VehicleSelectorShown = true;
+            // Pin the selection to an unlocked vehicle (defensive — if the previously-selected vehicle is no longer
+            // unlocked, e.g. the hub went non-operational, snap back to FOOT which is always available).
+            string[] unlocked = (card.available_vehicles != null && card.available_vehicles.Length > 0)
+                ? card.available_vehicles
+                : new[] { "FOOT" };
+            if (System.Array.IndexOf(unlocked, SelectedVehicle) < 0) SelectedVehicle = unlocked[0];
+
+            string label = NewSectionLabel(parent, "DISPATCH VEHICLE (hub-gated)");
+            TrackText(null, label);
+
+            GameObject row = NewUI("VehicleSelectorRow", parent);
+            HorizontalLayoutGroup hlg = row.AddComponent<HorizontalLayoutGroup>();
+            hlg.spacing = 8;
+            hlg.childAlignment = TextAnchor.MiddleCenter;
+            hlg.childControlWidth = true;
+            hlg.childControlHeight = true;
+            hlg.childForceExpandWidth = true;
+            hlg.childForceExpandHeight = true;
+            AddLayoutElement(row, minHeight: 32, flexibleHeight: 0);
+
+            // The cycle is enabled only when more than one vehicle is unlocked (a single-member foot-only set is fixed).
+            bool multi = unlocked.Length > 1;
+            Button prev = AddActionButton(row.transform, "< Vehicle", () => CycleVehicle(-1, unlocked));
+            SetButtonInteractable(prev, multi);
+
+            string vehicleWord = VehicleLabel(SelectedVehicle);
+            Text vehText = NewText("VehicleSelectorValue", row.transform, vehicleWord, 15, TextAnchor.MiddleCenter);
+            vehText.color = AccentMild;
+            vehText.fontStyle = FontStyle.Bold;
+            AddLayoutElement(vehText.gameObject, minWidth: 110, flexibleWidth: 0);
+            TrackText(vehText, vehicleWord);
+
+            Button next = AddActionButton(row.transform, "Vehicle >", () => CycleVehicle(1, unlocked));
+            SetButtonInteractable(next, multi);
+        }
+
+        // Cycle the selected vehicle within the UNLOCKED set (server-authoritative — a locked vehicle is never reachable).
+        // Re-renders the actions via SetSelectedVehicle so the worded vehicle value updates.
+        private void CycleVehicle(int delta, string[] unlocked)
+        {
+            if (unlocked == null || unlocked.Length == 0) return;
+            int idx = System.Array.IndexOf(unlocked, SelectedVehicle);
+            if (idx < 0) idx = 0;
+            int n = unlocked.Length;
+            int nextIdx = ((idx + delta) % n + n) % n;
+            SetSelectedVehicle(unlocked[nextIdx]);
         }
 
         // Disable/enable a button + dim its label so the unaffordable state is visible (and a11y: the disabled
