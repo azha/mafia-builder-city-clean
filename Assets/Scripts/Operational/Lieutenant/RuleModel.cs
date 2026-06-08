@@ -45,9 +45,10 @@ namespace MafiaCleanCity.Operational.Lieutenant
     }
 
     /// <summary>
-    /// A COOK signal the builder exposes — drives which trigger primitive (STATE/EVENT) a rule uses, what value-input the
-    /// UI shows (a bool toggle vs a numeric input), and which comparators are offered. The whitelist below is the COOK
-    /// executable subset; other archetypes' palettes are deferred (spec §9).
+    /// An archetype signal the builder exposes — drives which trigger primitive (STATE/EVENT) a rule uses, what value-input
+    /// the UI shows (a bool toggle vs a numeric input), and which comparators are offered. The per-archetype palettes
+    /// (<see cref="RuleModel.PaletteByArchetype"/>) are grounded EXACTLY in the game-back archetype bindings
+    /// ({cook,security,bookkeeper,logistics,laundering,distribution}-binding.ts buildSnapshot — the signal source of truth).
     /// </summary>
     public class FieldSpec
     {
@@ -79,26 +80,185 @@ namespace MafiaCleanCity.Operational.Lieutenant
         public const int PriorityMin = 0;
         public const int PriorityMax = 100;
 
-        // --- the COOK field whitelist (the executable subset) -------------------------------------------------------
-        // cook_idle  → STATE(cook_idle, ==|!=, true|false)   — is the lab idle (no cook running)? bool.
-        // heat       → EVENT(heat, >=|<=|>|<|==|!=, <number>) — the building heat level. numeric.
+        // --- the comparator sets a field offers (parser-accepted CompareOps) ----------------------------------------
+        // A bool field → {==,!=} only; a numeric field → the full ordered set.
         private static readonly string[] BoolComparators = { "==", "!=" };
         private static readonly string[] NumberComparators = { ">=", "<=", ">", "<", "==", "!=" };
 
-        public static readonly IReadOnlyList<FieldSpec> CookFields = new List<FieldSpec>
+        // --- the recruitable archetypes (the picker order = LieutenantArchetype + the recruit order) -----------------
+        // The 6 supported archetypes (matches LieutenantProjectionService.ArchetypeBand / the 6 game-back bindings). The
+        // archetype picker cycles this list; the recruit POSTs the picked one.
+        public static readonly string[] Archetypes =
+            { "COOK", "SECURITY", "BOOKKEEPER", "LOGISTICS", "LAUNDERING", "DISTRIBUTION" };
+
+        // --- the per-archetype field palettes (the builder's dropdown source) ----------------------------------------
+        // Each FieldSpec is grounded EXACTLY in the matching game-back binding's `buildSnapshot` (the signal name +
+        // its trigger primitive STATE/EVENT + its value type bool/number). Confirmed against
+        // services/game-back/src/operational/lieutenant/{cook,security,bookkeeper,logistics,laundering,distribution}-binding.ts:
+        //   COOK         → state.cook_idle (STATE/bool) , events.heat (EVENT/number)
+        //   SECURITY     → state.building_damaged (STATE/bool)
+        //   BOOKKEEPER   → state.wallet_cents (STATE/number)
+        //   LOGISTICS    → state.source_has_product (STATE/bool)
+        //   LAUNDERING   → state.safehouse_filled (STATE/bool) , state.node_has_capacity (STATE/bool)
+        //   DISTRIBUTION → state.dealer_float_cents (STATE/number) , state.safehouse_headroom_cents (STATE/number)
+        // A bool field → {==,!=} ; a numeric field → {>=,<=,>,<,==,!=}.
+        public static readonly IReadOnlyDictionary<string, FieldSpec[]> PaletteByArchetype =
+            new Dictionary<string, FieldSpec[]>
+            {
+                ["COOK"] = new[]
+                {
+                    new FieldSpec("cook_idle", "Cook idle", "STATE", isBool: true, comparators: BoolComparators),
+                    new FieldSpec("heat", "Heat", "EVENT", isBool: false, comparators: NumberComparators),
+                },
+                ["SECURITY"] = new[]
+                {
+                    new FieldSpec("building_damaged", "Building damaged", "STATE", isBool: true, comparators: BoolComparators),
+                },
+                ["BOOKKEEPER"] = new[]
+                {
+                    new FieldSpec("wallet_cents", "Wallet cents", "STATE", isBool: false, comparators: NumberComparators),
+                },
+                ["LOGISTICS"] = new[]
+                {
+                    new FieldSpec("source_has_product", "Source has product", "STATE", isBool: true, comparators: BoolComparators),
+                },
+                ["LAUNDERING"] = new[]
+                {
+                    new FieldSpec("safehouse_filled", "Safehouse filled", "STATE", isBool: true, comparators: BoolComparators),
+                    new FieldSpec("node_has_capacity", "Node has capacity", "STATE", isBool: true, comparators: BoolComparators),
+                },
+                ["DISTRIBUTION"] = new[]
+                {
+                    new FieldSpec("dealer_float_cents", "Dealer float cents", "STATE", isBool: false, comparators: NumberComparators),
+                    new FieldSpec("safehouse_headroom_cents", "Safehouse headroom cents", "STATE", isBool: false, comparators: NumberComparators),
+                },
+            };
+
+        /// <summary>The archetypes that need a SECOND building (target_building_id) at recruit — the dispatch/inject/collect
+        /// destination. Grounded in the bindings' validateAssignment: LOGISTICS (dispatch target), LAUNDERING (safehouse),
+        /// DISTRIBUTION (safehouse) REQUIRE a target; COOK/SECURITY/BOOKKEEPER ignore it.</summary>
+        public static bool NeedsTarget(string archetype) =>
+            archetype == "LOGISTICS" || archetype == "LAUNDERING" || archetype == "DISTRIBUTION";
+
+        /// <summary>The field palette for an archetype (drives the builder's field dropdown). Defaults to the COOK palette
+        /// for an unknown/null archetype (so the builder always has a usable, in-bounds field set).</summary>
+        public static FieldSpec[] FieldsFor(string archetype)
         {
-            new FieldSpec("cook_idle", "Cook idle", "STATE", isBool: true, comparators: BoolComparators),
-            new FieldSpec("heat", "Heat", "EVENT", isBool: false, comparators: NumberComparators),
+            if (!string.IsNullOrEmpty(archetype) && PaletteByArchetype.TryGetValue(archetype, out FieldSpec[] fields))
+                return fields;
+            return PaletteByArchetype["COOK"];
+        }
+
+        /// <summary>The action atoms the builder offers (no-arg Tier-1 actions in the executable subset — archetype-agnostic
+        /// in the slice; every archetype's EXECUTE_DEFAULT maps to its own real action, PAUSE_OPS halts ops).</summary>
+        public static readonly IReadOnlyList<string> Actions = new List<string> { "EXECUTE_DEFAULT", "PAUSE_OPS" };
+
+        // --- B3 locked-tier teaser (DISPLAY-ONLY — never selectable) -------------------------------------------------
+        // The DSL grammar exposes far more than the slice executable subset (STATE/EVENT triggers + EXECUTE_DEFAULT/
+        // PAUSE_OPS actions). The locked catalogues below mirror the rest of the backend grammar so the builder can
+        // TEASE future progression — grayed, non-interactive hints. They are STRICTLY display-only: the executable
+        // subset (Actions + FieldsFor(archetype)) stays the only selectable set; the cycle controls never reach a
+        // locked token. The backend (services/game-back/src/dsl/parser.service.ts — TriggerExpr/ActionExpr grammar,
+        // the TIER1_ACTIONS table, the per-node `tier:` tags + ir.ts/compiler.service.ts) is AUTHORITATIVE: it rejects
+        // every locked primitive at /validate with one of two stable diagnostic kinds (see LieutenantDtos.cs):
+        //   • tier == 1 → NOT_SUPPORTED_YET — a Tier-1 grammar primitive that THIS build does not yet implement.
+        //   • tier >= 2 → TIER_NOT_UNLOCKED — a Tier ≥ 2 primitive gated behind tier progression.
+        // The tokens + tiers are grounded VERBATIM in the grammar — do NOT invent or re-number them (the backend
+        // would 422 any fabricated token/tier).
+
+        /// <summary>A single locked DSL primitive shown in the teaser: a grayed, NON-selectable hint of future
+        /// progression. DISPLAY-ONLY — it is never added to the executable cycle sets (Actions / FieldsFor). The
+        /// <see cref="Label"/> is the precomputed grayed caption (token + a lock hint distinguishing the two backend
+        /// rejection kinds — see <see cref="MakeLabel"/>).</summary>
+        public class LockedPrimitive
+        {
+            public readonly string Token;  // the canonical DSL token, grounded VERBATIM in the backend grammar (never invented).
+            public readonly int Tier;      // the grammar `tier:` tag: 1 → NOT_SUPPORTED_YET, ≥ 2 → TIER_NOT_UNLOCKED.
+            public readonly string Label;  // the precomputed grayed caption shown in the teaser (token + 🔒 hint).
+
+            public LockedPrimitive(string token, int tier)
+            {
+                Token = token;
+                Tier = tier;
+                Label = MakeLabel(token, tier);
+            }
+        }
+
+        // Build the teaser caption + an honest lock hint distinguishing the two backend rejection kinds:
+        //   tier == 1 (NOT_SUPPORTED_YET, a Tier-1 primitive not yet implemented in this build) → "{TOKEN}  🔒 soon".
+        //   tier >= 2 (TIER_NOT_UNLOCKED, gated behind tier progression)                        → "{TOKEN}  🔒 Tier {tier}".
+        private static string MakeLabel(string token, int tier) =>
+            tier >= 2
+                ? $"{token}  🔒 Tier {tier.ToString(CultureInfo.InvariantCulture)}"
+                : $"{token}  🔒 soon";
+
+        /// <summary>The locked TRIGGER primitives — every trigger atom BEYOND the executable STATE/EVENT subset.
+        /// TIME/LIFECYCLE/ORDER_LIFECYCLE are Tier-1 grammar primitives not yet implemented (NOT_SUPPORTED_YET);
+        /// PEER_EVENT is a Tier-2 primitive (TIER_NOT_UNLOCKED). DISPLAY-ONLY — never in any cycle set.</summary>
+        public static readonly LockedPrimitive[] LockedTriggers =
+        {
+            new LockedPrimitive("TIME", 1),            // NOT_SUPPORTED_YET
+            new LockedPrimitive("LIFECYCLE", 1),       // NOT_SUPPORTED_YET
+            new LockedPrimitive("ORDER_LIFECYCLE", 1), // NOT_SUPPORTED_YET
+            new LockedPrimitive("PEER_EVENT", 2),      // TIER_NOT_UNLOCKED
         };
 
-        /// <summary>The action atoms the COOK builder offers (no-arg Tier-1 actions in the executable subset).</summary>
-        public static readonly IReadOnlyList<string> CookActions = new List<string> { "EXECUTE_DEFAULT", "PAUSE_OPS" };
+        /// <summary>The locked ACTION atoms — every action BEYOND the executable EXECUTE_DEFAULT/PAUSE_OPS subset: the
+        /// other 12 of the 14 Tier-1 atoms (NOT_SUPPORTED_YET), then SEQ (Tier 3, action chaining) + COHORT (Tier 6,
+        /// COHORT(role): action) (both TIER_NOT_UNLOCKED). DISPLAY-ONLY — never added to <see cref="Actions"/>.</summary>
+        public static readonly LockedPrimitive[] LockedActions =
+        {
+            new LockedPrimitive("REQUEST_PLAYER_INPUT", 1),  // NOT_SUPPORTED_YET — the other 12 Tier-1 atoms…
+            new LockedPrimitive("REROUTE_TO", 1),
+            new LockedPrimitive("ALERT_PEER", 1),
+            new LockedPrimitive("ABORT_CURRENT_TASK", 1),
+            new LockedPrimitive("LOG_EVENT_AS", 1),
+            new LockedPrimitive("ASSIGN_SUBORDINATE", 1),
+            new LockedPrimitive("INCREMENT_DECOY_AT", 1),
+            new LockedPrimitive("FLAG_DISSENT", 1),
+            new LockedPrimitive("REQUEST_VETO_CLEAR", 1),
+            new LockedPrimitive("REVERT_DEFAULT_SCRIPT", 1),
+            new LockedPrimitive("PROMOTE_UNDERSTUDY", 1),
+            new LockedPrimitive("ESCALATE_TO_TIER", 1),
+            new LockedPrimitive("SEQ", 3),                   // TIER_NOT_UNLOCKED — action chaining.
+            new LockedPrimitive("COHORT", 6),                // TIER_NOT_UNLOCKED — COHORT(role): action.
+        };
 
-        /// <summary>Look up a whitelisted COOK field by its canonical key; null if not in the whitelist.</summary>
+        /// <summary>The locked COMBINATOR marker — the optional condition clause `WHEN trigger AND_IF condition THEN …`.
+        /// AND_IF is a Tier-1 grammar production that is parsed but NOT executable in this build (NOT_SUPPORTED_YET).
+        /// Per the plan we expose only the AND_IF marker, not the individual condition primitives (MY_STATE/PEER_STATE/
+        /// …). DISPLAY-ONLY — there is no combinator cycle control in the slice.</summary>
+        public static readonly LockedPrimitive LockedCombinator = new LockedPrimitive("AND_IF", 1); // NOT_SUPPORTED_YET
+
+        /// <summary>The grayed teaser labels (triggers, then actions, then the AND_IF combinator) — the precomputed
+        /// captions the controller renders as dim, non-interactive lines + exposes via the LockedPrimitiveLabels test
+        /// hook. Derived directly from the catalogues; DISPLAY-ONLY (intentional UI chrome, NOT band data, so the
+        /// controller keeps these OUT of its no-raw-scalar scan corpus — they carry tier numbers by design).</summary>
+        public static string[] LockedPrimitiveLabels()
+        {
+            var labels = new List<string>(LockedTriggers.Length + LockedActions.Length + 1);
+            foreach (LockedPrimitive p in LockedTriggers) labels.Add(p.Label);
+            foreach (LockedPrimitive p in LockedActions) labels.Add(p.Label);
+            labels.Add(LockedCombinator.Label);
+            return labels.ToArray();
+        }
+
+        /// <summary>Look up a field by its canonical key WITHIN an archetype's palette; null if not in that palette.</summary>
+        public static FieldSpec FieldByKey(string archetype, string key)
+        {
+            foreach (FieldSpec f in FieldsFor(archetype))
+                if (f.Key == key) return f;
+            return null;
+        }
+
+        /// <summary>Look up a field by key across ALL archetype palettes (the first match wins). Used by the archetype-agnostic
+        /// serializer/preview, which only need a field's value-type (bool vs numeric) and the field names are globally unique
+        /// across the 6 bindings. Null if no palette contains the key.</summary>
         public static FieldSpec FieldByKey(string key)
         {
-            foreach (FieldSpec f in CookFields)
-                if (f.Key == key) return f;
+            foreach (KeyValuePair<string, FieldSpec[]> entry in PaletteByArchetype)
+                foreach (FieldSpec f in entry.Value)
+                    if (f.Key == key) return f;
             return null;
         }
 

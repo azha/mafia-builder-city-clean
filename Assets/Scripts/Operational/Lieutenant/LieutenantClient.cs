@@ -127,6 +127,45 @@ namespace MafiaCleanCity.Operational.Lieutenant
             }
         }
 
+        // ------------------------------------------------------------- roster (B2)
+
+        /// <summary>
+        /// GET /v1/lieutenants — the band-only ROSTER of the player's delegated lieutenants (A1 backend contract). 200
+        /// returns { lieutenants: RosterRow[] } where each row is the identity uuid + closed-domain bands { archetype,
+        /// op_state_band, rule_count_band } (R2.2 — never a raw scalar). A player with no lieutenant → an empty array (NOT
+        /// an error). Mirrors GetBands exactly: a Bearer GET (no Idempotency-Key — GETs don't send one), concrete-envelope
+        /// JsonUtility parse of `payload.data.lieutenants`, ReadableError on a non-2xx. A null/absent array parses to an
+        /// empty array (never null, like ParseDiagnostics) so the caller can render without a guard. onOk(rows) on 2xx;
+        /// onErr(code, message) on anything else.
+        /// </summary>
+        public IEnumerator ListLieutenants(string bearer, Action<RosterRow[]> onOk, Action<long, string> onErr)
+        {
+            string url = Url(string.Empty); // GET /v1/lieutenants
+            using (UnityWebRequest req = UnityWebRequest.Get(url))
+            {
+                req.timeout = TimeoutSeconds;
+                if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
+                yield return req.SendWebRequest();
+
+                if (req.result == UnityWebRequest.Result.Success)
+                {
+                    RosterRow[] rows;
+                    try
+                    {
+                        rows = JsonUtility.FromJson<RosterListEnvelope>(req.downloadHandler.text)?.payload?.data?.lieutenants
+                               ?? Array.Empty<RosterRow>();
+                    }
+                    catch (Exception ex) { onErr?.Invoke(req.responseCode, "parse error: " + ex.Message); yield break; }
+
+                    onOk?.Invoke(rows);
+                }
+                else
+                {
+                    onErr?.Invoke(req.responseCode, ReadableError(req));
+                }
+            }
+        }
+
         // ------------------------------------------------------------- validate / attach (T3)
 
         /// <summary>

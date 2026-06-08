@@ -32,9 +32,13 @@ namespace MafiaCleanCity.Operational.Lieutenant
         [SerializeField] private string demoIdentifier = "operational_demo@example.test";
         [SerializeField] private string demoPassword = "operational-demo-pw";
 
-        [Header("Target building (the lab to recruit a COOK lieutenant on)")]
-        [Tooltip("Player-owned lab building uuid. Set before Start (or set AssignedBuildingId).")]
+        [Header("Assigned building (the building to recruit the picked archetype on)")]
+        [Tooltip("Player-owned operational building uuid (the assigned/source/host building). Set before Start (or set AssignedBuildingId).")]
         [SerializeField] private string assignedBuildingId = "";
+
+        [Header("Target building (the 2nd building for LOGISTICS/LAUNDERING/DISTRIBUTION)")]
+        [Tooltip("Player-owned operational building uuid — the dispatch destination / safehouse. Only used when the picked archetype NeedsTarget.")]
+        [SerializeField] private string targetBuildingId = "";
 
         // ---- Public state (PlayMode test hooks) -------------------------------
         /// <summary>True once a PLAYER Bearer has been acquired (SignIn succeeded).</summary>
@@ -56,6 +60,10 @@ namespace MafiaCleanCity.Operational.Lieutenant
         /// <summary>The full set of text shown to the player (labels + values) — used by the E2E to prove no raw
         /// scalar leaks client-side (R2.2), mirroring BuildingCardController.RenderedTexts.</summary>
         public IReadOnlyList<string> RenderedTexts => renderedTexts;
+        /// <summary>The last-fetched lieutenant ROSTER (B2 test hook): one band-only row per delegated lieutenant the
+        /// player owns (GET /v1/lieutenants). Empty array (never null) until a successful RefreshRoster, and [] when the
+        /// player owns no lieutenant. R2.2 — each row is the identity uuid + closed-domain band strings only.</summary>
+        public RosterRow[] CurrentRoster { get; private set; } = System.Array.Empty<RosterRow>();
 
         // ---- T3 Rule-builder test hooks ---------------------------------------
         /// <summary>The authored rule rows (T3 test hook). The PlayMode test populates these directly via SetRules /
@@ -66,8 +74,53 @@ namespace MafiaCleanCity.Operational.Lieutenant
         /// attach (the area is cleared) and never null — the no-leak scan + the diagnostics-case assertion read it.</summary>
         public DslDiagnostic[] LastDiagnostics { get; private set; } = System.Array.Empty<DslDiagnostic>();
 
-        /// <summary>The lab building the Recruit COOK action assigns the lieutenant to. Settable before SignIn/Recruit.</summary>
+        /// <summary>The grayed locked-tier teaser labels currently shown (B3 test hook) — the DISPLAY-ONLY locked
+        /// triggers, actions, and the AND_IF combinator, each with its 🔒 lock hint. Derived directly from the
+        /// RuleModel catalogues (it does NOT read the live UI), so it is non-empty whenever the teaser renders. These
+        /// are intentional UI chrome (they carry tier NUMBERS by design) and are deliberately KEPT OUT of RenderedTexts
+        /// — the no-raw-scalar scan covers the BAND corpus, not the locked teaser (see BuildLockedTeaser).</summary>
+        public IReadOnlyList<string> LockedPrimitiveLabels => RuleModel.LockedPrimitiveLabels();
+
+        /// <summary>The (assigned/source/host) building the Recruit action assigns the picked lieutenant to. Settable before SignIn/Recruit.</summary>
         public string AssignedBuildingId { get => assignedBuildingId; set => assignedBuildingId = value; }
+
+        /// <summary>The TARGET building (dispatch destination / safehouse) for a 2-building archetype
+        /// (LOGISTICS/LAUNDERING/DISTRIBUTION). Ignored for the single-building archetypes. Settable before Recruit.</summary>
+        public string TargetBuildingId { get => targetBuildingId; set => targetBuildingId = value; }
+
+        // ---- B1 archetype picker --------------------------------------------------
+        // The currently-PICKED recruit archetype (the picker cycles RuleModel.Archetypes). The Recruit button recruits THIS
+        // archetype; the target input row shows only when RuleModel.NeedsTarget(PickedArchetype). Defaults to the first
+        // archetype (COOK). Settable directly as a test hook (the PlayMode test picks an archetype without UI interaction);
+        // setting it re-renders the recruit section (the target row + the button label follow) AND, when no lieutenant is
+        // selected yet, switches the builder palette (CurrentArchetype follows the pick before any recruit).
+        [SerializeField] private string pickedArchetype = "COOK";
+        /// <summary>The archetype the Recruit button will recruit (the picker selection). Set re-renders the recruit row +
+        /// (pre-recruit) switches the builder palette. Unknown values are accepted but the recruit will 422 server-side.</summary>
+        public string PickedArchetype
+        {
+            get => pickedArchetype;
+            set
+            {
+                pickedArchetype = value;
+                EnsureInitialized();
+                if (Destroyed) return;
+                RenderRecruitSection();
+                // Pre-recruit, the builder palette follows the picker; reset any in-progress rule rows to the new palette's
+                // first field so a stale field from another archetype never lingers on the builder.
+                if (CurrentBands == null)
+                {
+                    RealignRulesToArchetype(CurrentArchetype);
+                    RenderRuleRows();
+                }
+            }
+        }
+
+        /// <summary>The archetype whose field palette the rule-builder is CURRENTLY using: the selected/recruited
+        /// lieutenant's archetype (CurrentBands.archetype, set after a recruit/select) if any, else the picked archetype
+        /// (so the builder offers the right fields before the first recruit). Test hook.</summary>
+        public string CurrentArchetype =>
+            (CurrentBands != null && !string.IsNullOrEmpty(CurrentBands.archetype)) ? CurrentBands.archetype : pickedArchetype;
 
         /// <summary>
         /// Override the backend base URL (test convenience). The SerializeField defaults to localhost; a PlayMode E2E
@@ -89,10 +142,18 @@ namespace MafiaCleanCity.Operational.Lieutenant
         private RectTransform actionBar;
         private Text outcomeText;
         private Button recruitButton;
+        // ---- B1 recruit section (archetype picker + target input) -------------
+        private Text pickerLabel;              // the archetype cycle button's live caption.
+        private Text recruitButtonLabel;       // the Recruit button's live caption ("Recruit COOK" → follows the pick).
+        private GameObject targetRow;          // the target-building input row — shown only when NeedsTarget(picked).
         // ---- T2 Status section -------------------------------------------------
         private RectTransform statusSection;   // holds the Status section label + the Refresh button + the script block.
         private Button refreshButton;          // re-fetches the bands (GET /v1/lieutenants/:id).
         private Text scriptSourceText;         // the player-authored DSL text block (the ONE allowed non-band field).
+
+        // ---- B2 Roster section -------------------------------------------------
+        private RectTransform rosterSection;   // holds the Roster section label + the "Refresh roster" button + the rows.
+        private RectTransform rosterRows;      // the container the per-lieutenant roster rows render into.
 
         // ---- T3 Rule-builder section ------------------------------------------
         private readonly List<RuleRow> rules = new List<RuleRow>();  // the authored rule model (test hook: Rules/SetRules).
@@ -111,6 +172,9 @@ namespace MafiaCleanCity.Operational.Lieutenant
         private static readonly Color AccentModerate = new Color(1f, 0.62f, 0.239f);    // #ff9e3d amber
         private static readonly Color AccentSevere = new Color(1f, 0.353f, 0.302f);     // #ff5a4d red
         private static readonly Color CtaColor = new Color(1f, 0.824f, 0.247f);         // #ffd23f yellow
+        // B3 locked-tier teaser: a single dim/disabled colour for the grayed, non-selectable locked primitives (the
+        // teaser lines + their section header). Distinctly dimmer than TextPrimary so "locked" reads at a glance.
+        private static readonly Color LockedDim = new Color(0.42f, 0.45f, 0.49f);       // #6b7380 muted slate
 
         // Teardown/cancellation guard (the SAME pattern as BuildingCardController): an async Recruit coroutine driven
         // by an OUTSIDE pump (the PlayMode test runner) can resume after this controller's GameObject was destroyed by
@@ -175,18 +239,23 @@ namespace MafiaCleanCity.Operational.Lieutenant
 
         // ----------------------------------------------------------- recruit (T1)
 
-        /// <summary>Recruit a COOK lieutenant on the assigned lab (POST /v1/lieutenants). On success stores the
-        /// lieutenant_id + shows the outcome; on failure shows a readable error (never a raw HTTP code, F2).</summary>
-        public IEnumerator RecruitCook()
+        /// <summary>Recruit the PICKED archetype on the assigned building (POST /v1/lieutenants). For a 2-building archetype
+        /// (LOGISTICS/LAUNDERING/DISTRIBUTION) the target_building_id is sent too (else omitted). On success stores the
+        /// lieutenant_id + shows the outcome + pulls the fresh bands (so the builder palette follows the recruited
+        /// archetype); on failure shows a readable error (never a raw HTTP code, F2). The backend is authoritative — a
+        /// wrong building/type/missing-target returns a readable 404/409/422 surfaced here.</summary>
+        public IEnumerator RecruitChosen()
         {
             EnsureInitialized();
             if (!IsAuthenticated) { SetOutcome("Sign in first.", AccentSevere); yield break; }
 
+            string archetype = pickedArchetype;
             string id = null;
             long errCode = 0;
             string errMsg = null;
-            // COOK loop: no dispatch target (target_building_id omitted — pass null).
-            yield return client.Recruit("COOK", assignedBuildingId, null, Token,
+            // A 2-building archetype sends its target_building_id; a single-building archetype omits it (pass null).
+            string target = RuleModel.NeedsTarget(archetype) ? targetBuildingId : null;
+            yield return client.Recruit(archetype, assignedBuildingId, target, Token,
                 ok => id = ok,
                 (code, msg) => { errCode = code; errMsg = msg; });
 
@@ -197,10 +266,17 @@ namespace MafiaCleanCity.Operational.Lieutenant
             if (!string.IsNullOrEmpty(id))
             {
                 LastRecruitedId = id;
-                SetOutcome("COOK recruited.", AccentMild);
-                // T2: pull the fresh lieutenant bands so the Status section reflects the just-recruited COOK (no script
-                // yet → archetype=COOK / granted_role=executor / mode=delegated / op_state_band=IDLE / rule_count_band=NONE).
+                SetOutcome($"{archetype} recruited.", AccentMild);
+                // Pull the fresh lieutenant bands so the Status section reflects the just-recruited lieutenant (CurrentBands
+                // .archetype set → the rule-builder palette switches to this archetype's fields).
                 yield return RefreshBands();
+                if (!Destroyed)
+                {
+                    // The recruited archetype is now CurrentArchetype (CurrentBands.archetype); realign any in-progress rule
+                    // rows to its palette + re-render so the builder offers the right fields (no stale cross-archetype field).
+                    RealignRulesToArchetype(CurrentArchetype);
+                    RenderRuleRows();
+                }
             }
             else
             {
@@ -208,6 +284,13 @@ namespace MafiaCleanCity.Operational.Lieutenant
                 Debug.LogError($"[Lieutenant] recruit failed ({errCode}): {errMsg}");
                 SetOutcome(errMsg ?? "Recruit failed.", AccentSevere);
             }
+        }
+
+        /// <summary>Back-compat shim — Phase-9 callers/tests recruit COOK via this entry point. Picks COOK then recruits.</summary>
+        public IEnumerator RecruitCook()
+        {
+            PickedArchetype = "COOK";
+            yield return RecruitChosen();
         }
 
         // ----------------------------------------------------------- status bands (T2)
@@ -235,6 +318,43 @@ namespace MafiaCleanCity.Operational.Lieutenant
             if (Destroyed) yield break;
 
             if (CurrentBands != null) RenderBands();
+        }
+
+        // ----------------------------------------------------------- roster (B2)
+
+        /// <summary>Fetch + render the player's lieutenant ROSTER (GET /v1/lieutenants). On success stores CurrentRoster
+        /// + renders one row per lieutenant (archetype + op_state band + an Open button); a player with no lieutenant
+        /// yields an empty roster (rendered as a friendly empty line, NOT an error). On failure shows a readable status
+        /// (never a raw HTTP code, F2) and leaves the previously-rendered roster intact. Called from the "Refresh roster"
+        /// button.</summary>
+        public IEnumerator RefreshRoster()
+        {
+            EnsureInitialized();
+            if (!IsAuthenticated) { SetOutcome("Sign in first.", AccentSevere); yield break; }
+
+            yield return client.ListLieutenants(Token,
+                rows => { CurrentRoster = rows; RenderRoster(); },
+                (code, msg) =>
+                {
+                    // F2: surface the readable error — the raw code is kept on the log line only.
+                    Debug.LogError($"[Lieutenant] roster failed ({code}): {msg}");
+                    SetOutcome("Roster failed — " + msg, AccentSevere);
+                });
+        }
+
+        /// <summary>Select a lieutenant from the roster (the Open button / B2 test hook): point the current-lieutenant id
+        /// (LastRecruitedId — the SAME field Recruit/RefreshBands/Validate/Attach use) at `id`, then RefreshBands() so its
+        /// bands load. Loading the bands sets CurrentBands.archetype → CurrentArchetype switches the builder palette, and
+        /// the script_source renders READ-ONLY in the Status section. Re-parsing the source into editable RuleRows is
+        /// DEFERRED (re-authoring replaces the whole script) — Open does NOT round-trip the source into the builder.</summary>
+        public void OpenLieutenant(string id)
+        {
+            if (string.IsNullOrEmpty(id)) return;
+            EnsureInitialized();
+            if (Destroyed) return;
+            // REUSE the existing current-lieutenant id field — no parallel selection state. RefreshBands reads it.
+            LastRecruitedId = id;
+            StartCoroutine(RefreshBands());
         }
 
         // ----------------------------------------------------------- rule-builder (T3)
@@ -266,16 +386,40 @@ namespace MafiaCleanCity.Operational.Lieutenant
             if (!Destroyed) RenderRuleRows();
         }
 
-        // A default COOK rule for the +Add button — the first whitelisted field, its trigger kind, its first comparator,
-        // a sensible default value, EXECUTE_DEFAULT, mid-priority. The player then edits it via the dropdowns/slider.
-        private static RuleRow NewDefaultRule()
+        // A default rule for the +Add button — the CURRENT archetype's FIRST palette field, its trigger kind, its first
+        // comparator, a sensible default value, EXECUTE_DEFAULT, mid-priority. The player then edits it via the dropdowns/
+        // slider. Uses CurrentArchetype so a +Add on a SECURITY lieutenant seeds a building_damaged rule, not a COOK one.
+        private RuleRow NewDefaultRule()
         {
-            FieldSpec f = RuleModel.CookFields[0];
+            FieldSpec f = RuleModel.FieldsFor(CurrentArchetype)[0];
             return new RuleRow(
                 f.TriggerKind, f.Key, f.Comparators[0],
                 f.IsBool ? "true" : "0",
-                RuleModel.CookActions[0],
+                RuleModel.Actions[0],
                 (RuleModel.PriorityMin + RuleModel.PriorityMax) / 2);
+        }
+
+        // Realign any in-progress rule rows to a (new) archetype's palette: any rule whose field is NOT in the archetype's
+        // palette is reset to the palette's first field (its trigger kind / first comparator / a default value), so a stale
+        // field from another archetype never lingers on the builder when the archetype switches (e.g. after picking
+        // SECURITY, a leftover COOK `heat` rule becomes a `building_damaged` rule). Rules already on a valid palette field
+        // are left untouched. Does NOT re-render — the caller re-renders.
+        private void RealignRulesToArchetype(string archetype)
+        {
+            FieldSpec[] palette = RuleModel.FieldsFor(archetype);
+            FieldSpec first = palette[0];
+            for (int i = 0; i < rules.Count; i++)
+            {
+                RuleRow r = rules[i];
+                bool inPalette = false;
+                for (int j = 0; j < palette.Length; j++)
+                    if (palette[j].Key == r.field) { inPalette = true; break; }
+                if (inPalette) continue;
+                r.field = first.Key;
+                r.triggerKind = first.TriggerKind;
+                r.comparator = first.Comparators[0];
+                r.value = first.IsBool ? "true" : "0";
+            }
         }
 
         /// <summary>Serialize the authored rules to a DSL `source` and DRY-RUN validate it against the backend (POST
@@ -590,7 +734,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             cardRt.anchorMin = new Vector2(0.5f, 0f);
             cardRt.anchorMax = new Vector2(0.5f, 0f);
             cardRt.pivot = new Vector2(0.5f, 0f);
-            cardRt.sizeDelta = new Vector2(560, 760); // T3: title + status bands + script block + rule-builder + recruit + outcome.
+            cardRt.sizeDelta = new Vector2(560, 1180); // B3: title + roster + status bands + script + rule-builder (+ locked teaser) + recruit + outcome.
             cardRt.anchoredPosition = new Vector2(0, 24);
             card.AddComponent<Image>().color = SurfaceBg;
             VerticalLayoutGroup vlg = card.AddComponent<VerticalLayoutGroup>();
@@ -605,6 +749,20 @@ namespace MafiaCleanCity.Operational.Lieutenant
             titleText.fontStyle = FontStyle.Bold;
             AddLayoutElement(titleText.gameObject, minHeight: 30, flexibleHeight: 0);
             TrackText(titleText, "LIEUTENANT");
+
+            // Roster section (B2): a section label + a "Refresh roster" button + one row per delegated lieutenant. Built
+            // directly under the title so the player picks a lieutenant here, then its bands + script render in the Status
+            // section below. Open(row) selects the lieutenant (→ RefreshBands loads its bands incl. archetype → palette).
+            GameObject roster = NewUI("RosterSection", card.transform);
+            VerticalLayoutGroup rovlg = roster.AddComponent<VerticalLayoutGroup>();
+            rovlg.spacing = 6;
+            rovlg.childControlWidth = true;
+            rovlg.childControlHeight = true;
+            rovlg.childForceExpandWidth = true;
+            rovlg.childForceExpandHeight = false;
+            rosterSection = (RectTransform)roster.transform;
+            AddLayoutElement(roster, flexibleHeight: 0);
+            BuildRosterSection();
 
             // Status rows container (used by T2 to render the bands; declared now so the shell layout is complete).
             GameObject rows = NewUI("StatusRows", card.transform);
@@ -657,19 +815,86 @@ namespace MafiaCleanCity.Operational.Lieutenant
             BuildRecruitSection();
         }
 
-        // The Recruit section: a section label + a "Recruit COOK" button + an outcome status line. Mirrors the
-        // building-card action-button + status-line pattern. The button drives RecruitCook() as a coroutine.
+        // The Recruit section (B1): a section label + an ARCHETYPE PICKER (a cycle button over RuleModel.Archetypes) +
+        // an assigned-building row + a CONDITIONAL target-building row (shown only when the picked archetype NeedsTarget) +
+        // a "Recruit <archetype>" button + an outcome status line. Mirrors the building-card action-button + status-line
+        // pattern. The button drives RecruitChosen() as a coroutine (recruits the PICKED archetype).
         private void BuildRecruitSection()
         {
-            NewSectionLabel(actionBar, "RECRUIT — assign a lieutenant");
+            NewSectionLabel(actionBar, "RECRUIT — pick an archetype + assign");
 
-            recruitButton = AddActionButton(actionBar, "Recruit COOK", () => StartCoroutine(RecruitCook()));
+            // Archetype picker — a tap-to-cycle button over the 6 recruitable archetypes (RuleModel.Archetypes). Advancing
+            // it changes PickedArchetype, which re-renders this section (target row + button label follow) + (pre-recruit)
+            // switches the builder palette. We keep the live caption so the next render shows the new pick.
+            GameObject pickerRow = NewUI("ArchetypePicker", actionBar);
+            HorizontalLayoutGroup phlg = pickerRow.AddComponent<HorizontalLayoutGroup>();
+            phlg.spacing = 6;
+            phlg.childAlignment = TextAnchor.MiddleLeft;
+            phlg.childControlWidth = true;
+            phlg.childControlHeight = true;
+            phlg.childForceExpandWidth = false;
+            phlg.childForceExpandHeight = true;
+            AddLayoutElement(pickerRow, minHeight: 30, flexibleHeight: 0);
+
+            Text pickerCap = NewText("PickerCap", pickerRow.transform, "Archetype", 14, TextAnchor.MiddleLeft);
+            pickerCap.color = new Color(0.72f, 0.76f, 0.80f);
+            AddLayoutElement(pickerCap.gameObject, minWidth: 90, flexibleWidth: 0);
+            TrackText(pickerCap, "Archetype");
+
+            Button pick = AddCycleButton(pickerRow.transform, "Archetype",
+                () => ArchetypeLabel(pickedArchetype),
+                CyclePickedArchetype);
+            pickerLabel = pick.GetComponentInChildren<Text>();
+
+            // Assigned-building row caption (the field itself is configured via the SerializeField / AssignedBuildingId hook;
+            // the M1 demo seeds it, so the screen does not need a free-text uuid editor here — the row is a readable label).
+            NewSectionLabel(actionBar, "Assigned building (set by the seeder / AssignedBuildingId)");
+
+            // Conditional target-building row — built once, shown/hidden by RenderRecruitSection per NeedsTarget(picked).
+            targetRow = NewUI("TargetRow", actionBar);
+            VerticalLayoutGroup tvlg = targetRow.AddComponent<VerticalLayoutGroup>();
+            tvlg.spacing = 2;
+            tvlg.childControlWidth = true;
+            tvlg.childControlHeight = true;
+            tvlg.childForceExpandWidth = true;
+            tvlg.childForceExpandHeight = false;
+            AddLayoutElement(targetRow, flexibleHeight: 0);
+            NewSectionLabel(targetRow.transform, "Target building (destination / safehouse — set by TargetBuildingId)");
+
+            recruitButton = AddActionButton(actionBar, RecruitButtonText(pickedArchetype), () => StartCoroutine(RecruitChosen()));
+            recruitButtonLabel = recruitButton.GetComponentInChildren<Text>();
 
             outcomeText = NewText("Outcome", actionBar, "—", 15, TextAnchor.MiddleLeft);
             outcomeText.color = new Color(0.72f, 0.76f, 0.80f);
             AddLayoutElement(outcomeText.gameObject, minHeight: 24, flexibleHeight: 0);
             TrackText(outcomeText, "—");
+
+            RenderRecruitSection();
         }
+
+        // Advance the picked archetype to the next recruitable one (wraps RuleModel.Archetypes). Re-renders the recruit
+        // section + (pre-recruit) switches the builder palette via the PickedArchetype setter.
+        private void CyclePickedArchetype()
+        {
+            string[] all = RuleModel.Archetypes;
+            int idx = 0;
+            for (int i = 0; i < all.Length; i++)
+                if (all[i] == pickedArchetype) { idx = i; break; }
+            PickedArchetype = all[(idx + 1) % all.Length];
+        }
+
+        // Re-render the recruit section's archetype-dependent parts: the picker caption, the Recruit button label, and the
+        // target-row visibility (shown only for a 2-building archetype). Idempotent + Destroyed-guarded.
+        private void RenderRecruitSection()
+        {
+            if (Destroyed) return;
+            if (pickerLabel != null) pickerLabel.text = ArchetypeLabel(pickedArchetype);
+            if (recruitButtonLabel != null) recruitButtonLabel.text = RecruitButtonText(pickedArchetype);
+            if (targetRow != null) targetRow.SetActive(RuleModel.NeedsTarget(pickedArchetype));
+        }
+
+        // The Recruit button caption for an archetype ("Recruit Cook" / "Recruit Security" …).
+        private static string RecruitButtonText(string archetype) => "Recruit " + ArchetypeLabel(archetype);
 
         // The Status section (T2): a section label + a Refresh button (re-fetch the bands) + the player-authored script
         // text block. The band ROWS render into statusRows (above); this section holds the controls + the script. The
@@ -690,6 +915,132 @@ namespace MafiaCleanCity.Operational.Lieutenant
             AddLayoutElement(scriptSourceText.gameObject, minHeight: 40, flexibleHeight: 0);
             // NOT TrackText'd: script_source is the player-authored field, excluded from the no-raw-scalar scan corpus.
             textComponents.Add(scriptSourceText);
+        }
+
+        // ----------------------------------------------------------- roster UI (B2)
+
+        // The Roster section (B2): a section label + a "Refresh roster" button (re-fetch GET /v1/lieutenants) + a rows
+        // container the per-lieutenant rows render into. The button drives RefreshRoster() as a coroutine. Mirrors the
+        // Status-section idiom (section label + action button + a rows container) 1:1.
+        private void BuildRosterSection()
+        {
+            NewSectionLabel(rosterSection, "ROSTER — your lieutenants");
+
+            AddActionButton(rosterSection, "Refresh roster", () => StartCoroutine(RefreshRoster()));
+
+            GameObject rows = NewUI("RosterRows", rosterSection);
+            VerticalLayoutGroup rvlg = rows.AddComponent<VerticalLayoutGroup>();
+            rvlg.spacing = 6;
+            rvlg.childControlWidth = true;
+            rvlg.childControlHeight = true;
+            rvlg.childForceExpandWidth = true;
+            rvlg.childForceExpandHeight = false;
+            rosterRows = (RectTransform)rows.transform;
+            AddLayoutElement(rows, flexibleHeight: 0);
+
+            RenderRoster();
+        }
+
+        // Rebuild the roster rows from CurrentRoster. Each lieutenant → one row: an archetype glyph + worded archetype
+        // label + the op_state band (worded) + an "Open" button that selects it (OpenLieutenant → RefreshBands → the
+        // builder palette + the status bands + the read-only script follow). An empty roster renders a friendly empty
+        // line, never an error. R2.2: every cell is a worded band/label — the uuid stays on the Open button's closure,
+        // never shown; no raw scalar leaks.
+        private void RenderRoster()
+        {
+            if (Destroyed || rosterRows == null) return;
+            ClearRosterRows(); // prune the prior rows' tracked text from the scan corpus, THEN rebuild (parity with ClearStatusRows).
+
+            if (CurrentRoster == null || CurrentRoster.Length == 0)
+            {
+                Text empty = NewText("NoLieutenants", rosterRows, "(no lieutenants — recruit one below)", 13, TextAnchor.MiddleLeft);
+                empty.color = new Color(0.55f, 0.59f, 0.63f);
+                empty.fontStyle = FontStyle.Italic;
+                AddLayoutElement(empty.gameObject, minHeight: 22, flexibleHeight: 0);
+                TrackText(empty, "(no lieutenants — recruit one below)");
+                return;
+            }
+
+            for (int i = 0; i < CurrentRoster.Length; i++)
+                BuildRosterRow(CurrentRoster[i], i);
+        }
+
+        // Destroy the current roster rows AND prune their tracked text from the shared no-raw-scalar scan corpus
+        // (textComponents/renderedTexts) — scoped to rosterRows so it does NOT wipe the Status section's tracked text the
+        // way the global ClearStatusRows does. Without this, repeated "Refresh roster" clicks accumulate now-destroyed Text
+        // components + duplicate strings in the corpus (RenderedTexts). Mirrors ClearStatusRows' prune-then-render intent.
+        private void ClearRosterRows()
+        {
+            if (rosterRows == null) return;
+            for (int i = rosterRows.childCount - 1; i >= 0; i--)
+            {
+                GameObject child = rosterRows.GetChild(i).gameObject;
+                foreach (Text t in child.GetComponentsInChildren<Text>(true))
+                {
+                    textComponents.Remove(t);
+                    renderedTexts.Remove(t.text); // remove one matching occurrence (TrackText added this exact string).
+                }
+                Object.Destroy(child);
+            }
+        }
+
+        // One roster row: archetype glyph + worded archetype label + the op_state band (worded) + an "Open" button. The
+        // Open button captures the row's lieutenant_id and calls OpenLieutenant(id) (selects it → RefreshBands). Mirrors
+        // the AddStatusRow horizontal-row idiom (glyph + label + value), plus a trailing compact action button.
+        private void BuildRosterRow(RosterRow row, int index)
+        {
+            GameObject go = NewUI("RosterRow_" + index, rosterRows);
+            go.AddComponent<Image>().color = RowBg;
+            HorizontalLayoutGroup hlg = go.AddComponent<HorizontalLayoutGroup>();
+            hlg.padding = new RectOffset(10, 10, 6, 6);
+            hlg.spacing = 10;
+            hlg.childAlignment = TextAnchor.MiddleLeft;
+            hlg.childControlWidth = true;
+            hlg.childControlHeight = true;
+            hlg.childForceExpandWidth = false;
+            hlg.childForceExpandHeight = true;
+            AddLayoutElement(go, minHeight: 30, flexibleHeight: 0);
+
+            // Archetype glyph (shape — a11y F2, never colour-only) + worded label.
+            Text g = NewText("Glyph", go.transform, ArchetypeGlyph(row.archetype), 16, TextAnchor.MiddleCenter);
+            g.color = AccentMild;
+            g.fontStyle = FontStyle.Bold;
+            AddLayoutElement(g.gameObject, minWidth: 46, preferredWidth: 46, flexibleWidth: 0);
+
+            Text label = NewText("Archetype", go.transform, ArchetypeLabel(row.archetype), 15, TextAnchor.MiddleLeft);
+            label.color = new Color(0.72f, 0.76f, 0.80f);
+            AddLayoutElement(label.gameObject, minWidth: 120, flexibleWidth: 1);
+
+            // op_state band (ACTIVE | PAUSED | IDLE), worded + colour-coded like the Status section's State row.
+            Text state = NewText("State", go.transform, OpStateLabel(row.op_state_band), 15, TextAnchor.MiddleRight);
+            state.color = OpStateAccent(row.op_state_band);
+            state.fontStyle = FontStyle.Bold;
+            AddLayoutElement(state.gameObject, minWidth: 90, flexibleWidth: 0);
+
+            // Open — select this lieutenant (→ RefreshBands loads its bands + switches the builder palette). The
+            // lieutenant_id is captured in the closure (an opaque key); it is never rendered.
+            string capturedId = row.lieutenant_id;
+            AddActionButton(go.transform, "Open", () => OpenLieutenant(capturedId));
+
+            TrackText(g, ArchetypeGlyph(row.archetype));
+            TrackText(label, ArchetypeLabel(row.archetype));
+            TrackText(state, OpStateLabel(row.op_state_band));
+        }
+
+        // A distinct shape per archetype (a11y F2 — shape carries meaning alongside colour). EXHAUSTIVE over the roster's
+        // ArchetypeBand domain (the 6 recruitable archetypes + UNKNOWN); an unknown value falls back to a neutral glyph.
+        private static string ArchetypeGlyph(string a)
+        {
+            switch (a)
+            {
+                case "COOK": return "[C]";
+                case "SECURITY": return "[S]";
+                case "BOOKKEEPER": return "[B]";
+                case "LOGISTICS": return "[L]";
+                case "LAUNDERING": return "[W]";
+                case "DISTRIBUTION": return "[D]";
+                default: return "[-]";
+            }
         }
 
         // ----------------------------------------------------------- rule-builder UI (T3)
@@ -730,7 +1081,60 @@ namespace MafiaCleanCity.Operational.Lieutenant
             diagnosticsArea = (RectTransform)diags.transform;
             AddLayoutElement(diags, minHeight: 20, flexibleHeight: 0);
 
+            // B3 locked-tier teaser — grayed, non-selectable hints of the primitives beyond the executable subset.
+            // Built LAST in the builder section so it stays visually subordinate to the live (executable) controls.
+            BuildLockedTeaser();
+
             RenderRuleRows();
+        }
+
+        // ----------------------------------------------------------- locked-tier teaser (B3)
+
+        // Render the locked-tier TEASER: a grayed, NON-interactive block hinting at the DSL primitives beyond the slice
+        // executable subset (STATE/EVENT triggers + EXECUTE_DEFAULT/PAUSE_OPS actions). Each locked primitive is a PLAIN
+        // Text label (NOT a Button) in the dim LockedDim colour with a 🔒 hint — it CANNOT be selected, and it is NEVER
+        // added to any cycle set (the executable CycleField/CycleAction reach only RuleModel.FieldsFor/Actions). The
+        // catalogues (RuleModel.LockedTriggers/LockedActions/LockedCombinator) are grounded VERBATIM in the backend
+        // grammar; the labels carry tier NUMBERS by design, so — like script_source / the NL preview / the diagnostics
+        // lines — they are deliberately KEPT OUT of the no-raw-scalar scan corpus (renderedTexts): we track only the
+        // Text COMPONENT (so a re-render can find it), never the string. The teaser is built once (static catalogues).
+        private void BuildLockedTeaser()
+        {
+            NewSectionLabel(builderSection, "🔒 Locked — unlock with tier progression");
+
+            GameObject teaser = NewUI("LockedTeaser", builderSection);
+            VerticalLayoutGroup tvlg = teaser.AddComponent<VerticalLayoutGroup>();
+            tvlg.spacing = 2;
+            tvlg.childControlWidth = true;
+            tvlg.childControlHeight = true;
+            tvlg.childForceExpandWidth = true;
+            tvlg.childForceExpandHeight = false;
+            RectTransform teaserRows = (RectTransform)teaser.transform;
+            AddLayoutElement(teaser, flexibleHeight: 0);
+
+            AddLockedLine(teaserRows, "Triggers");
+            foreach (RuleModel.LockedPrimitive p in RuleModel.LockedTriggers)
+                AddLockedLine(teaserRows, "  " + p.Label);
+
+            AddLockedLine(teaserRows, "Actions");
+            foreach (RuleModel.LockedPrimitive p in RuleModel.LockedActions)
+                AddLockedLine(teaserRows, "  " + p.Label);
+
+            AddLockedLine(teaserRows, "Combinator");
+            AddLockedLine(teaserRows, "  " + RuleModel.LockedCombinator.Label);
+        }
+
+        // One grayed teaser line: a plain (non-interactive) dim Text — NOT a Button, so it is NOT selectable. Tracked as
+        // a Text COMPONENT only; its STRING is NOT added to renderedTexts (the no-raw-scalar scan corpus) because the
+        // locked labels carry tier numbers as intentional UI chrome — the SAME excluded-from-scan technique as
+        // script_source / the NL preview / the diagnostics lines (see those comments).
+        private void AddLockedLine(Transform parent, string text)
+        {
+            Text t = NewText("Locked", parent, text, 12, TextAnchor.MiddleLeft);
+            t.color = LockedDim;
+            AddLayoutElement(t.gameObject, minHeight: 18, flexibleHeight: 0);
+            // Track only the COMPONENT, not the string — excluded from the no-raw-scalar scan (intentional UI chrome).
+            if (!textComponents.Contains(t)) textComponents.Add(t);
         }
 
         // Rebuild the per-rule editor rows from the `rules` model. Each rule → a row with: a field dropdown (drives the
@@ -794,7 +1198,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
                 RenderRuleRows(); // the value editor type may change (bool↔numeric) — rebuild this section.
             });
 
-            // Comparator cycle — within the current field's whitelisted comparator set.
+            // Comparator cycle — within the current field's palette comparator set.
             AddCycleButton(controls.transform, "Cmp", () => rule.comparator, () =>
             {
                 CycleComparator(rule);
@@ -802,7 +1206,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             });
 
             // Value editor — a toggle for a bool field, an InputField for a numeric one.
-            FieldSpec spec = RuleModel.FieldByKey(rule.field);
+            FieldSpec spec = RuleModel.FieldByKey(CurrentArchetype, rule.field);
             if (spec != null && spec.IsBool)
             {
                 AddCycleButton(controls.transform, "Val", () => BoolValueLabel(rule), () =>
@@ -862,25 +1266,29 @@ namespace MafiaCleanCity.Operational.Lieutenant
             if (!textComponents.Contains(preview)) textComponents.Add(preview);
         }
 
-        // --- rule-model mutation helpers (cycle within the whitelist) ----------
+        // --- rule-model mutation helpers (cycle within the CURRENT archetype's palette) ----------
 
-        // Advance to the next whitelisted field; reset trigger kind + comparator + value to that field's defaults.
-        private static void CycleField(RuleRow rule)
+        // Advance to the next field in the CURRENT archetype's palette; reset trigger kind + comparator + value to that
+        // field's defaults. A single-field palette (SECURITY/BOOKKEEPER/LOGISTICS) cycles back onto itself (a no-op),
+        // which is correct. Reads CurrentArchetype so the field set follows the selected/recruited/picked lieutenant.
+        private void CycleField(RuleRow rule)
         {
+            FieldSpec[] palette = RuleModel.FieldsFor(CurrentArchetype);
             int idx = 0;
-            for (int i = 0; i < RuleModel.CookFields.Count; i++)
-                if (RuleModel.CookFields[i].Key == rule.field) { idx = i; break; }
-            FieldSpec next = RuleModel.CookFields[(idx + 1) % RuleModel.CookFields.Count];
+            for (int i = 0; i < palette.Length; i++)
+                if (palette[i].Key == rule.field) { idx = i; break; }
+            FieldSpec next = palette[(idx + 1) % palette.Length];
             rule.field = next.Key;
             rule.triggerKind = next.TriggerKind;
             rule.comparator = next.Comparators[0];
             rule.value = next.IsBool ? "true" : "0";
         }
 
-        // Advance the comparator within the current field's whitelisted set.
-        private static void CycleComparator(RuleRow rule)
+        // Advance the comparator within the current field's palette comparator set (looked up in the current archetype's
+        // palette). Falls back to the rule's own comparator when the field is not in the palette (defensive).
+        private void CycleComparator(RuleRow rule)
         {
-            FieldSpec spec = RuleModel.FieldByKey(rule.field);
+            FieldSpec spec = RuleModel.FieldByKey(CurrentArchetype, rule.field);
             string[] set = spec != null ? spec.Comparators : new[] { rule.comparator };
             int idx = 0;
             for (int i = 0; i < set.Length; i++)
@@ -888,18 +1296,18 @@ namespace MafiaCleanCity.Operational.Lieutenant
             rule.comparator = set[(idx + 1) % set.Length];
         }
 
-        // Advance the action atom within the COOK action set.
+        // Advance the action atom within the (archetype-agnostic) action set.
         private static void CycleAction(RuleRow rule)
         {
             int idx = 0;
-            for (int i = 0; i < RuleModel.CookActions.Count; i++)
-                if (RuleModel.CookActions[i] == rule.action) { idx = i; break; }
-            rule.action = RuleModel.CookActions[(idx + 1) % RuleModel.CookActions.Count];
+            for (int i = 0; i < RuleModel.Actions.Count; i++)
+                if (RuleModel.Actions[i] == rule.action) { idx = i; break; }
+            rule.action = RuleModel.Actions[(idx + 1) % RuleModel.Actions.Count];
         }
 
-        private static string FieldLabelFor(RuleRow rule)
+        private string FieldLabelFor(RuleRow rule)
         {
-            FieldSpec spec = RuleModel.FieldByKey(rule.field);
+            FieldSpec spec = RuleModel.FieldByKey(CurrentArchetype, rule.field);
             return spec != null ? spec.Label : (rule.field ?? "—");
         }
 

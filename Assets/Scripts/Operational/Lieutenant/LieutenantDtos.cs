@@ -80,6 +80,24 @@ namespace MafiaCleanCity.Operational.Lieutenant
     [Serializable] public class LieutenantBandsEnvelope { public LieutenantBandsPayload payload; }
     [Serializable] public class LieutenantBandsPayload { public LieutenantBands data; }
 
+    // GET /v1/lieutenants → the band-only ROSTER projection (B2; A1 backend contract). payload.data is
+    // { lieutenants: RosterRow[] } — one row per delegated lieutenant the player owns ([] when none). Each row is
+    // R2.2-safe: the identity uuid (an opaque key, not a scalar) + closed-domain band STRINGS only (archetype /
+    // op_state_band / rule_count_band) — never a raw role_id / building-id / rule count. The roster RENDERS these bands
+    // and lets the player Open one (→ load its full bands via GET /v1/lieutenants/:id); it never derives a scalar.
+    [Serializable]
+    public class RosterRow
+    {
+        public string lieutenant_id;    // uuid identity of the lieutenant (the Open key; opaque, not a scalar)
+        public string archetype;        // COOK | SECURITY | BOOKKEEPER | LOGISTICS | LAUNDERING | DISTRIBUTION | UNKNOWN
+        public string op_state_band;    // PAUSED | ACTIVE | IDLE — the delegated operational state band
+        public string rule_count_band;  // NONE | FEW | MANY — the behavior-script rule count as a band (never the raw count)
+    }
+
+    [Serializable] public class RosterListData { public RosterRow[] lieutenants; }
+    [Serializable] public class RosterListEnvelope { public RosterListPayload payload; }
+    [Serializable] public class RosterListPayload { public RosterListData data; }
+
     // POST /v1/lieutenants/:id/behavior-script → { attached:true } ; .../validate → { valid:true } (T3). One DTO covers
     // both boolean acks — the client reads the relevant flag (attached / valid) off the parsed data.
     [Serializable]
