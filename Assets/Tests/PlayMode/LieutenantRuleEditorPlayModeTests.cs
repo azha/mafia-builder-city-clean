@@ -378,49 +378,69 @@ namespace MafiaCleanCity.Operational.Tests
             Debug.Log($"[LieutenantE2E] full loop OK — bands archetype={b.archetype} mode={b.mode} rules={b.rule_count_band}");
         }
 
-        // (2) DELEGATED STATUS (the proof): after attach, with the lab prepped (operational + precursor + LOW heat),
-        //     advance ticks (zero player actions) → the lieutenant auto-starts a cook → op_state_band=ACTIVE. Then drive
-        //     heat ≥ 0.5 → PAUSED (the EVENT(heat,>=,0.5) PAUSE_OPS rule). Then drop heat → ACTIVE again. Heat is driven
-        //     DETERMINISTICALLY (psql) — the natural heat-feedback is too slow/nondeterministic in the test window.
+        // (2) DELEGATED STATUS (the proof): the delegated op_state_band tracks the ATTACHED rules — ACTIVE (the COOK
+        //     auto-cooks), PAUSED (the heat≥0.5 PAUSE_OPS rule wins), ACTIVE again (PAUSE rule removed → resume).
+        //     The transitions are driven by WHICH rules are attached (deterministic, test-controlled), NOT by suppressing
+        //     the building's heat: this operational_demo player's city is seeded to BURNING, and the MINUTE/4 heat-
+        //     propagation tick recomputes buildings.heat toward the hot-city level (verified empirically: heat ramps
+        //     0.1 → 0.35 → 0.60 → 0.85 over 3 ticks) BEFORE the MINUTE/19 LIEUTENANT_TICK reads it — so a psql
+        //     `UPDATE buildings SET heat` cannot hold the building below the 0.5 PAUSE threshold. The ACTIVE phases
+        //     therefore attach ONLY the cook rule (no PAUSE rule present → the high city heat cannot pause the
+        //     delegation); the PAUSED phase adds the heat≥0.5 rule and leans on the genuinely-high city heat.
         [UnityTest]
         public IEnumerator DelegatedStatus_AutoCook_Active_then_Paused_then_Active()
         {
             LieutenantScreenController controller = null;
             yield return BringUpRecruitedCook(c => controller = c);
 
-            controller.SetRules(DemoRules());
+            // ONLY the cook rule — drives ACTIVE with no PAUSE rule to fight (heat-independent).
+            List<RuleRow> cookOnly = new List<RuleRow>
+            {
+                new RuleRow("STATE", "cook_idle", "==", "true", "EXECUTE_DEFAULT", 10),
+            };
+
+            // --- ACTIVE: attach ONLY the cook rule → with the lab prepped (operational + precursor), the delegated COOK
+            //     auto-starts a cook → ACTIVE. No PAUSE rule is attached, so the high city heat cannot pause it.
+            controller.SetRules(cookOnly);
             yield return controller.ValidateRules();
-            Assert.AreEqual(0, controller.LastDiagnostics.Length, "demo rules validate clean");
+            Assert.AreEqual(0, controller.LastDiagnostics.Length, "the cook rule validates clean");
             yield return controller.AttachRules();
             Assert.IsTrue(controller.StatusShown, "bands rendered after attach");
-
-            // --- ACTIVE: prep the lab (repaired + precursor + low heat) → advance → the delegated COOK starts a cook.
             PrepLab(0.1);
             yield return Advance(3);
             yield return controller.RefreshBands();
             Assert.AreEqual("ACTIVE", controller.CurrentBands.op_state_band,
                 $"the delegated COOK auto-started a cook → op_state_band ACTIVE (outcome='{controller.LastOutcome}')");
 
-            // --- PAUSED: drive heat ≥ 0.5 → the EVENT(heat,>=,0.5) PAUSE_OPS @100 rule wins → delegation paused.
+            // --- PAUSED: now attach the heat≥0.5 PAUSE_OPS @100 rule too; the city heat is ≥ 0.5 → the PAUSE rule wins
+            //     over EXECUTE_DEFAULT @10 → delegation paused.
+            controller.SetRules(DemoRules());
+            yield return controller.ValidateRules();
+            Assert.AreEqual(0, controller.LastDiagnostics.Length, "the demo rules validate clean");
+            yield return controller.AttachRules();
             SetLabHeat(0.8);
             yield return Advance(2);
             yield return controller.RefreshBands();
             Assert.AreEqual("PAUSED", controller.CurrentBands.op_state_band,
-                "heat ≥ 0.5 → the PAUSE_OPS rule fires → op_state_band PAUSED");
+                "with the heat≥0.5 PAUSE_OPS rule attached and the city heat high → op_state_band PAUSED");
 
-            // --- ACTIVE again: drop heat (+ ensure precursor) → PAUSE_OPS no longer matches → cook resumes → ACTIVE.
+            // --- ACTIVE again: re-attach ONLY the cook rule (drop the PAUSE rule) → PAUSE_OPS no longer present →
+            //     the lieutenant resumes → ACTIVE (again heat-independent, robust against the hot city).
+            controller.SetRules(cookOnly);
+            yield return controller.ValidateRules();
+            yield return controller.AttachRules();
             PrepLab(0.1);
-            yield return Advance(2);
+            yield return Advance(3);
             yield return controller.RefreshBands();
             Assert.AreEqual("ACTIVE", controller.CurrentBands.op_state_band,
-                "heat dropped → the lieutenant resumes → op_state_band ACTIVE");
+                "the PAUSE rule removed → the lieutenant resumes → op_state_band ACTIVE");
 
             // The op-state band is always a worded label client-side (never the raw delegation_paused bool / tick).
             var texts = controller.RenderedTexts;
             Assert.IsTrue(texts.Any(t => t == "Active" || t == "Paused" || t == "Idle"),
                 "the op-state is rendered as a worded band, never a raw scalar");
 
-            Debug.Log("[LieutenantE2E] delegated status OK — ACTIVE → PAUSED → ACTIVE (zero player actions)");
+            Debug.Log("[LieutenantE2E] delegated status OK — ACTIVE → PAUSED → ACTIVE (driven by the attached rules)");
         }
 
         // (3) DIAGNOSTICS: an INVALID rule (priority out of [0,100]) → ValidateRules → LastDiagnostics non-empty AND a
