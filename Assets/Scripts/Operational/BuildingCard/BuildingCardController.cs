@@ -35,7 +35,7 @@ namespace MafiaCleanCity.Operational
     public class BuildingCardController : MonoBehaviour
     {
         [Header("Backend")]
-        [SerializeField] private string baseUrl = "http://localhost";
+        [SerializeField] private string baseUrl = "https://cleancity.erutheone.eu";
 
         [Header("Demo sign-in (seeded by Tools/seed_operational_demo.mjs)")]
         [SerializeField] private string demoIdentifier = "operational_demo@example.test";
@@ -166,7 +166,7 @@ namespace MafiaCleanCity.Operational
         /// <summary>
         /// Override the backend base URL (test convenience). The SerializeField defaults to the VPS
         /// (https://cleancity.erutheone.eu); a PlayMode E2E that drives the LOCAL dockerized stack sets this to
-        /// http://localhost BEFORE SignIn so the auth + projection + action clients all target the local stack.
+        /// https://cleancity.erutheone.eu BEFORE SignIn so the auth + projection + action clients all target the local stack.
         /// Re-points the already-built clients too (idempotent; safe before or after EnsureInitialized).
         /// </summary>
         public void SetBaseUrl(string url)

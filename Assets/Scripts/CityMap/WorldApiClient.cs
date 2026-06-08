@@ -10,7 +10,7 @@ namespace MafiaCleanCity.CityMap
     // Thin HTTP client for the City Map's world data.
     //
     // Talks to the live game-back service through Traefik (default
-    // http://localhost). The editor runs on the same host as the docker
+    // https://cleancity.erutheone.eu). The editor runs on the same host as the docker
     // stack, so the PlayMode E2E hits the real endpoint — no mock (charter 27).
     // ---------------------------------------------------------------------
 
@@ -18,7 +18,7 @@ namespace MafiaCleanCity.CityMap
     {
         // Public game API base. /v1 is part of the route (URI versioning),
         // not a global prefix. GET /v1/world/districts needs no auth.
-        public string BaseUrl = "http://localhost";
+        public string BaseUrl = "https://cleancity.erutheone.eu";
 
         public int TimeoutSeconds = 10;
 

@@ -28,7 +28,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
     // diagnostics (T3); it never re-implements parse/compile (the backend is authoritative).
     public class LieutenantClient
     {
-        public string BaseUrl = "http://localhost";
+        public string BaseUrl = "https://cleancity.erutheone.eu";
         public int TimeoutSeconds = 10;
 
         // POST /v1/lieutenants ; GET/POST /v1/lieutenants/:id[/behavior-script[/validate]]

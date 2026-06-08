@@ -38,7 +38,7 @@ namespace MafiaCleanCity.Operational
     public class LaunderingController : MonoBehaviour
     {
         [Header("Backend")]
-        [SerializeField] private string baseUrl = "http://localhost";
+        [SerializeField] private string baseUrl = "https://cleancity.erutheone.eu";
 
         [Header("Demo sign-in (seeded by Tools/seed_operational_demo.mjs)")]
         [SerializeField] private string demoIdentifier = "operational_demo@example.test";
