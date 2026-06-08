@@ -270,7 +270,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
         /// below is tolerated). Deterministic: same rows → same string (replay-safe round-trip). The trigger field +
         /// comparator + value go inside the trigger atom; the action atom is no-arg; the priority follows `@`.
         ///   STATE bool  → "WHEN STATE(cook_idle,==,true) THEN EXECUTE_DEFAULT @10;"
-        ///   EVENT number → "WHEN EVENT(heat,>=,5) THEN PAUSE_OPS @100;"
+        ///   EVENT number → "WHEN EVENT(heat,>=,0.5) THEN PAUSE_OPS @100;"
         /// The value is trimmed + normalized (a bool field → lower-cased "true"/"false"); the comparator is passed
         /// through verbatim (the parser accepts both "==" [normalized to "="] and the bare ops). The client does NOT
         /// validate — malformed rows still serialize; the backend's 422 diagnostics are authoritative.
@@ -322,7 +322,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
         /// An EN natural-language preview of a rule (slice-1; i18n deferred — spec §9). Maps the comparator + action to
         /// words; bool values read as "is true" / "is false". Examples:
         ///   "When cook_idle is true, run the default behavior (priority 10)."
-        ///   "When heat ≥ 5, pause operations (priority 100)."
+        ///   "When heat ≥ 0.5, pause operations (priority 100)."
         /// </summary>
         public static string PreviewRule(RuleRow r)
         {
