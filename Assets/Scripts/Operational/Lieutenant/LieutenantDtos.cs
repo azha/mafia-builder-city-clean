@@ -1,0 +1,126 @@
+using System;
+
+namespace MafiaCleanCity.Operational.Lieutenant
+{
+    // ---------------------------------------------------------------------
+    // Wire DTOs for the Phase-9 lieutenant rule-editor surface (COOK loop).
+    // Field names are snake_case to match JsonUtility ↔ the NestJS contracts
+    // (services/game-back/src/operational/lieutenant/*). Captured from the live
+    // controller + projection + the DSL error type — no guessing (the T14 lesson):
+    //   - POST /v1/lieutenants                              → { lieutenant_id }
+    //   - GET  /v1/lieutenants/:id                          → LieutenantBands
+    //   - POST /v1/lieutenants/:id/behavior-script[/validate] → { attached:true } / { valid:true }
+    //     ; 422 VALIDATION_FAILED → error.details = DslDiagnostic[]
+    //
+    // R2.2 (information asymmetry): the projection (T2) is band STRINGS + the player-authored
+    // script_source — never a raw scalar (no role_id / tenure / tick / raw rule count). The
+    // recruit/attach/validate POSTs are ids / booleans. The 422 `details` are structured
+    // diagnostics the client RENDERS (T3) — it never re-implements parse/compile.
+    //
+    // T1 (this task) uses only the recruit shapes (RecruitRequest* + RecruitResponse/Envelope)
+    // and the error envelope (LieutenantError* + DslDiagnostic). The projection (LieutenantBands)
+    // and validate/attach (BoolResult*) DTOs are declared now — cheap — so T2/T3 add their client
+    // methods + render without re-touching the contract shapes.
+    // ---------------------------------------------------------------------
+
+    // ----- Request bodies (POST; require Bearer + UUID-v4 Idempotency-Key) -----
+
+    // POST /v1/lieutenants  { archetype, assigned_building_id }  (the COOK loop — no dispatch target).
+    [Serializable]
+    public class RecruitRequest
+    {
+        public string archetype;            // COOK | SECURITY | BOOKKEEPER | LOGISTICS | LAUNDERING | DISTRIBUTION
+        public string assigned_building_id; // the player-owned operational building to assign (a COOK requires a lab)
+    }
+
+    // POST /v1/lieutenants  { archetype, assigned_building_id, target_building_id }  (target ONLY when present — the
+    // LOGISTICS dispatch DESTINATION). A separate DTO because JsonUtility cannot conditionally omit a field; the client
+    // picks this shape only when a target is supplied (COOK/SECURITY/BOOKKEEPER use RecruitRequest, no target key).
+    [Serializable]
+    public class RecruitRequestWithTarget
+    {
+        public string archetype;
+        public string assigned_building_id;
+        public string target_building_id;  // LOGISTICS dispatch destination
+    }
+
+    // POST /v1/lieutenants/:id/behavior-script[/validate]  { source }  (the player-authored DSL text — T3).
+    [Serializable]
+    public class BehaviorScriptRequest
+    {
+        public string source;
+    }
+
+    // ----- Success response payloads (payload.data) -----
+
+    // POST /v1/lieutenants → { lieutenant_id }
+    [Serializable]
+    public class RecruitResponse
+    {
+        public string lieutenant_id; // uuid identity of the recruited lieutenant
+    }
+
+    [Serializable] public class RecruitEnvelope { public RecruitPayload payload; }
+    [Serializable] public class RecruitPayload { public RecruitResponse data; }
+
+    // GET /v1/lieutenants/:id → the qualitative band projection (T2; R2.2 inverted — every field a CLOSED-domain band
+    // STRING, plus the ONE allowed readable field script_source). Captured from LieutenantProjectionService's
+    // LieutenantBands interface (archetype / granted_role / mode / op_state_band / rule_count_band / script_source).
+    [Serializable]
+    public class LieutenantBands
+    {
+        public string archetype;        // COOK | SECURITY | BOOKKEEPER | LOGISTICS | LAUNDERING | DISTRIBUTION | UNKNOWN
+        public string granted_role;     // advisory | executor | delegated_owner | cohort_overseer (CLOSED 07 domain)
+        public string mode;             // tasked | delegated (CLOSED 07 domain)
+        public string op_state_band;    // PAUSED | ACTIVE | IDLE — the delegated operational state band
+        public string rule_count_band;  // NONE | FEW | MANY — the behavior-script rule count as a band (never the raw count)
+        public string script_source;    // the player-authored DSL text (the ONE explicitly-allowed non-band field; "" if none)
+    }
+
+    [Serializable] public class LieutenantBandsEnvelope { public LieutenantBandsPayload payload; }
+    [Serializable] public class LieutenantBandsPayload { public LieutenantBands data; }
+
+    // POST /v1/lieutenants/:id/behavior-script → { attached:true } ; .../validate → { valid:true } (T3). One DTO covers
+    // both boolean acks — the client reads the relevant flag (attached / valid) off the parsed data.
+    [Serializable]
+    public class BoolResult
+    {
+        public bool attached; // POST .../behavior-script
+        public bool valid;    // POST .../behavior-script/validate
+    }
+
+    [Serializable] public class BoolResultEnvelope { public BoolResultPayload payload; }
+    [Serializable] public class BoolResultPayload { public BoolResult data; }
+
+    // ----- Error envelope (payload.error) -----
+
+    // A single structured DSL diagnostic — mirrors the backend's DslDiagnostic (src/dsl/dsl-errors.ts): a 1-based
+    // line/col source span in the player-authored text, a plain-English message, and a stable kind (SYNTAX_ERROR |
+    // TIER_NOT_UNLOCKED | NOT_SUPPORTED_YET | RULE_COUNT_EXCEEDED | PRIORITY_OUT_OF_BOUNDS | CONDITION_DEPTH_EXCEEDED).
+    // The 422 VALIDATION_FAILED error carries these in error.details; the client RENDERS them near the offending rule
+    // (T3) — it never re-implements parse/compile (the backend is authoritative for DSL validity).
+    [Serializable]
+    public class DslDiagnostic
+    {
+        public int line;       // 1-based source line of the offending token
+        public int col;        // 1-based source column of the offending token
+        public string message; // plain-English description of what went wrong / what was expected
+        public string kind;    // the stable diagnostic code (SCREAMING_SNAKE_CASE; cross-version stable)
+    }
+
+    // Mirror of the canonical error envelope (18/error_handling.md §ErrorObjectComposite) so the client can render the
+    // human `message` (F2 — never a raw code) AND, for 422 VALIDATION_FAILED, the structured `details` DslDiagnostic[]
+    // (T3). JsonUtility maps only the fields it knows; the rest of the envelope (trace, retryable_class, …) is ignored.
+    [Serializable] public class LieutenantErrorEnvelope { public LieutenantErrorPayload payload; }
+    [Serializable] public class LieutenantErrorPayload { public LieutenantError error; }
+
+    [Serializable]
+    public class LieutenantError
+    {
+        public string code;                  // SCREAMING_SNAKE_CASE stable code (e.g. VALIDATION_FAILED, RESOURCE_NOT_FOUND)
+        public int http_status;              // the HTTP status (kept for logs; never shown raw to the player)
+        public string message;               // EN dev-facing message — surfaced to the UI as the readable error (F2)
+        public string user_facing_i18n_key;  // the player-facing i18n key (the back never translates)
+        public DslDiagnostic[] details;      // the structured DSL diagnostics on a 422 VALIDATION_FAILED (else null/absent)
+    }
+}

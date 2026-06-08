@@ -1,0 +1,487 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
+using NUnit.Framework;
+using UnityEngine;
+using UnityEngine.Networking;
+using UnityEngine.TestTools;
+using MafiaCleanCity.Operational.Lieutenant;
+using Debug = UnityEngine.Debug;
+using Object = UnityEngine.Object;
+
+namespace MafiaCleanCity.Operational.Tests
+{
+    // Phase-9 vector #9 — the COOK rule-editor CAPSTONE (charter 27: NO MOCK). Drives the real
+    // LieutenantScreenController against the live dockerized stack (Traefik @ http://localhost). It:
+    //   1. runs Tools/seed_operational_demo.mjs (via Process) and parses its stdout JSON to DISCOVER the
+    //      demo creds + the player_id + the lab building id (ids change every run — never hard-coded);
+    //   2. signs in via the controller (AuthClient → Bearer);
+    //   3. recruits a COOK lieutenant on the lab, builds the 2 demo rules via the rule-MODEL (SetRules,
+    //      NOT UI clicks), validates + attaches, and asserts the band projection round-trips (archetype=
+    //      COOK / mode=delegated / rule_count_band=FEW / script_source round-trips);
+    //   4. PROVES the delegation: with the lab prepped (repaired + precursor + low heat) it advances ticks
+    //      (zero player actions) → the lieutenant auto-starts a cook → op_state_band=ACTIVE; then drives
+    //      heat ≥ 0.5 (the EVENT(heat,>=,0.5) PAUSE_OPS rule) → PAUSED; then drops heat → ACTIVE again;
+    //   5. asserts an INVALID rule surfaces a rendered DslDiagnostic (line/col/kind);
+    //   6. asserts NO raw scalar leaks client-side (the band rows only — the player's authored script_source
+    //      / diagnostics / rule previews are correctly excluded from RenderedTexts).
+    //
+    // The lab prep + the heat drive use the SAME subprocess mechanism the seeder uses (psql inside the pg
+    // container), resolving an absolute docker binary (the Editor does not inherit the login-shell PATH). The
+    // tick advance hits the production-gated /v1/_test/citysim/advance harness (no auth; Idempotency-Key) via
+    // UnityWebRequest. Heat is driven DETERMINISTICALLY (a psql set of buildings.heat) rather than relying on
+    // the natural heat-feedback (Phase-6's stored-product heat radiation), so the PAUSE/RESUME transitions are
+    // reproducible inside the test window.
+    public class LieutenantRuleEditorPlayModeTests
+    {
+        private GameObject controllerGo;
+
+        // Discovered from the seeder's stdout (see RunSeeder).
+        private static string demoEmail;
+        private static string demoPassword;
+        private static string playerId;
+        private static string labId;
+        private static bool seeded;
+
+        // Resolved once (the Editor doesn't inherit the login-shell PATH).
+        private static string dockerBin;
+
+        private const string BaseUrl = "http://localhost";
+        private const string ComposeProject = "mafia-clean-city";
+        private const string PgUser = "mafia";
+        private const string PgDb = "mafia_clean_city";
+
+        [TearDown]
+        public void TearDown()
+        {
+            if (controllerGo != null) Object.Destroy(controllerGo);
+        }
+
+        // Seed THIS fixture's precondition immediately before its tests run (NUnit guarantees OneTimeSetUp fires
+        // after any prior fixture completes and before this fixture's first test). The operational seeder deletes +
+        // recreates this player's buildings with new ids; seeding here makes the seed→use atomic per fixture and the
+        // full PlayMode suite order-independent (a sibling op fixture's re-seed can never invalidate the ids THIS
+        // fixture loads — they're re-seeded + re-cached right before this fixture runs).
+        [OneTimeSetUp]
+        public void OneTimeSeed()
+        {
+            seeded = false; // force a fresh seed for this fixture (don't reuse a sibling's stale ids).
+            RunSeeder();
+        }
+
+        // -------- run the operational seeder + parse its printed ids --------
+
+        private static void RunSeeder()
+        {
+            if (seeded) return;
+
+            string repoRoot = FindRepoRoot();
+            Assert.IsNotNull(repoRoot, "could not locate the Unity repo root (Tools/seed_operational_demo.mjs)");
+
+            string nodeBin = ResolveBin("node", "NODE_BIN");
+            Assert.IsNotNull(nodeBin, "could not locate a 'node' binary (checked PATH, nvm, common dirs)");
+
+            var psi = new ProcessStartInfo
+            {
+                FileName = nodeBin,
+                Arguments = "Tools/seed_operational_demo.mjs",
+                WorkingDirectory = repoRoot,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+            };
+            string nodeDir = Path.GetDirectoryName(nodeBin);
+            string existingPath = Environment.GetEnvironmentVariable("PATH") ?? "";
+            if (!string.IsNullOrEmpty(nodeDir) && !existingPath.Contains(nodeDir))
+                psi.EnvironmentVariables["PATH"] = nodeDir + Path.PathSeparator + existingPath;
+
+            string stdout, stderr;
+            using (var proc = Process.Start(psi))
+            {
+                stdout = proc.StandardOutput.ReadToEnd();
+                stderr = proc.StandardError.ReadToEnd();
+                proc.WaitForExit(180000);
+                Assert.IsTrue(proc.HasExited, "seeder did not finish within 180s");
+                Assert.AreEqual(0, proc.ExitCode, $"seeder failed (exit {proc.ExitCode}). stderr:\n{stderr}");
+            }
+
+            const string marker = "=== OPERATIONAL DEMO SEEDED ===";
+            int idx = stdout.IndexOf(marker, StringComparison.Ordinal);
+            Assert.Greater(idx, -1, $"seeder marker not found in stdout. stdout tail:\n{Tail(stdout)}");
+            string json = stdout.Substring(idx + marker.Length);
+
+            demoEmail = ExtractString(json, "email");
+            demoPassword = ExtractString(json, "password");
+            playerId = ExtractString(json, "playerId");
+            // The lab is the seeder's "lab" building (== "raided_building"); both name it. Read "lab".
+            labId = ExtractString(json, "lab");
+
+            Assert.IsFalse(string.IsNullOrEmpty(demoEmail), "discovered demo email");
+            Assert.IsFalse(string.IsNullOrEmpty(demoPassword), "discovered demo password");
+            Assert.IsTrue(IsUuid(playerId), $"discovered player uuid (got '{playerId}')");
+            Assert.IsTrue(IsUuid(labId), $"discovered lab uuid (got '{labId}')");
+
+            Debug.Log($"[LieutenantE2E] seeded — player={playerId} lab={labId} email={demoEmail}");
+            seeded = true;
+        }
+
+        private static string FindRepoRoot()
+        {
+            DirectoryInfo dir = new DirectoryInfo(Application.dataPath);
+            for (int i = 0; i < 6 && dir != null; i++)
+            {
+                if (File.Exists(Path.Combine(dir.FullName, "Tools", "seed_operational_demo.mjs")))
+                    return dir.FullName;
+                dir = dir.Parent;
+            }
+            return null;
+        }
+
+        // Resolve an absolute path to a binary. The Editor doesn't inherit the login shell's PATH, so we probe:
+        // an env override, $PATH entries, nvm versions (for node), and common fixed dirs. Returns null if none found.
+        private static string ResolveBin(string name, string envVar)
+        {
+            string fromEnv = string.IsNullOrEmpty(envVar) ? null : Environment.GetEnvironmentVariable(envVar);
+            if (!string.IsNullOrEmpty(fromEnv) && File.Exists(fromEnv)) return fromEnv;
+
+            string path = Environment.GetEnvironmentVariable("PATH") ?? "";
+            foreach (string dir in path.Split(Path.PathSeparator))
+            {
+                if (string.IsNullOrEmpty(dir)) continue;
+                string candidate = Path.Combine(dir, name);
+                if (File.Exists(candidate)) return candidate;
+            }
+
+            string home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+
+            if (name == "node")
+            {
+                string nvmVersions = Path.Combine(home, ".nvm", "versions", "node");
+                if (Directory.Exists(nvmVersions))
+                {
+                    string best = Directory.GetDirectories(nvmVersions)
+                        .Select(d => Path.Combine(d, "bin", "node"))
+                        .Where(File.Exists)
+                        .OrderBy(p => p, StringComparer.Ordinal)
+                        .LastOrDefault();
+                    if (best != null) return best;
+                }
+            }
+
+            foreach (string c in new[]
+                     {
+                         "/usr/local/bin/" + name,
+                         "/usr/bin/" + name,
+                         "/bin/" + name,
+                         Path.Combine(home, ".local", "bin", name),
+                     })
+            {
+                if (File.Exists(c)) return c;
+            }
+
+            return null;
+        }
+
+        private static string ExtractString(string json, string key)
+        {
+            var m = Regex.Match(json, "\"" + Regex.Escape(key) + "\"\\s*:\\s*\"([^\"]*)\"");
+            return m.Success ? m.Groups[1].Value : null;
+        }
+
+        private static bool IsUuid(string s) =>
+            !string.IsNullOrEmpty(s) &&
+            Regex.IsMatch(s, "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
+
+        private static string Tail(string s) => s.Length <= 600 ? s : s.Substring(s.Length - 600);
+
+        // -------- the live-stack helpers (same mechanism the seeder uses) --------
+
+        // Run a single SQL statement inside the pg container (the SAME `docker compose exec pg psql` the seeder uses).
+        // Resolves an absolute docker binary (the Editor doesn't inherit the login-shell PATH). Asserts exit 0.
+        private static string Psql(string sql)
+        {
+            if (dockerBin == null) dockerBin = ResolveBin("docker", "DOCKER_BIN");
+            Assert.IsNotNull(dockerBin, "could not locate a 'docker' binary (checked PATH, common dirs)");
+
+            var psi = new ProcessStartInfo
+            {
+                FileName = dockerBin,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+            };
+            foreach (string a in new[]
+                     {
+                         "compose", "--project-name", ComposeProject, "exec", "-T", "pg",
+                         "psql", "-U", PgUser, "-d", PgDb, "-v", "ON_ERROR_STOP=1", "-tAc", sql,
+                     })
+                psi.ArgumentList.Add(a);
+
+            string stdout, stderr;
+            using (var proc = Process.Start(psi))
+            {
+                stdout = proc.StandardOutput.ReadToEnd();
+                stderr = proc.StandardError.ReadToEnd();
+                proc.WaitForExit(30000);
+                Assert.IsTrue(proc.HasExited, "psql did not finish within 30s");
+                Assert.AreEqual(0, proc.ExitCode, $"psql failed (exit {proc.ExitCode}) for SQL: {sql}\nstderr:\n{stderr}");
+            }
+            return stdout.Trim();
+        }
+
+        // Prep the lab so a delegated COOK can run a cook: repair it (the seeder raids it → DAMAGED), clear the audit
+        // pin, set the heat, and (re)seed precursor so a startCook can begin. heatValue drives the PAUSE/RESUME rule
+        // deterministically (≥ 0.5 → the EVENT(heat,>=,0.5) PAUSE_OPS rule fires; < 0.5 → it doesn't).
+        private static void PrepLab(double heatValue)
+        {
+            Psql($"UPDATE building_operational_state SET structural_state='operational' WHERE building_id='{labId}';");
+            Psql($"UPDATE buildings SET heat={heatValue.ToString(System.Globalization.CultureInfo.InvariantCulture)}, audit_pin_expires_at=NULL WHERE building_id='{labId}';");
+            Psql($"DELETE FROM precursor_stock WHERE building_id='{labId}';");
+            Psql($"INSERT INTO precursor_stock (player_id, building_id, precursor_type, quantity_units) VALUES ('{playerId}','{labId}','pyralin',20);");
+        }
+
+        // Set ONLY the lab's heat (the PAUSE driver), leaving structural_state + precursor untouched.
+        private static void SetLabHeat(double heatValue)
+        {
+            Psql($"UPDATE buildings SET heat={heatValue.ToString(System.Globalization.CultureInfo.InvariantCulture)} WHERE building_id='{labId}';");
+        }
+
+        // Clear the player's lieutenant roster (+ the orphaned 1-1 behavior_script rows) so EACH test recruits a FRESH
+        // COOK into an empty roster — the roster cap (T.lieutenant.max_count_per_player; this stack caps at 2) would
+        // otherwise 409 the 3rd recruit once tests accumulate. The seeder runs ONCE per fixture ([OneTimeSetUp]); the
+        // tests recruit per-test, so the roster must be reset per-test. Same FK-order the seeder reset uses: capture the
+        // behavior_script_ids → delete the lieutenant rows → delete the now-orphaned behavior_script rows.
+        private static void ResetRoster()
+        {
+            string scriptIds = Psql(
+                "SELECT COALESCE(string_agg(quote_literal(behavior_script_id::text), ','), '') " +
+                $"FROM lieutenant WHERE player_id='{playerId}' AND behavior_script_id IS NOT NULL;");
+            Psql($"DELETE FROM lieutenant WHERE player_id='{playerId}';");
+            if (!string.IsNullOrEmpty(scriptIds))
+                Psql($"DELETE FROM behavior_script WHERE script_id IN ({scriptIds});");
+        }
+
+        // Advance the player's in-game clock N ticks via the deterministic harness (no auth; Idempotency-Key mandated).
+        // Each tick is one game minute → the MINUTE/19 LIEUTENANT_TICK fires once per tick (the delegation evaluation).
+        private static IEnumerator Advance(int ticks)
+        {
+            string url = $"{BaseUrl}/v1/_test/citysim/advance?ticks={ticks}&player_id={playerId}";
+            using (var req = new UnityWebRequest(url, UnityWebRequest.kHttpVerbPOST))
+            {
+                req.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes("{}"));
+                req.downloadHandler = new DownloadHandlerBuffer();
+                req.timeout = 60;
+                req.SetRequestHeader("Content-Type", "application/json");
+                req.SetRequestHeader("Idempotency-Key", Guid.NewGuid().ToString());
+                yield return req.SendWebRequest();
+                Assert.AreEqual(UnityWebRequest.Result.Success, req.result,
+                    $"advance harness failed (http={req.responseCode}) {req.error}");
+            }
+        }
+
+        // -------- shared per-test controller bring-up --------
+
+        // Instantiate the controller, point it at the live stack with the discovered creds, sign in, recruit a COOK on
+        // the lab. Leaves the controller authenticated with LastRecruitedId set. Destroyed-guarded resumes throughout.
+        private IEnumerator BringUpRecruitedCook(System.Action<LieutenantScreenController> onReady)
+        {
+            controllerGo = new GameObject("LieutenantScreenController");
+            var controller = controllerGo.AddComponent<LieutenantScreenController>();
+            controller.SetBaseUrl(BaseUrl);
+            // The controller signs in with its own demo creds; the seeder seeds the SAME operational demo player
+            // (operational_demo@example.test / operational-demo-pw), so the defaults match the discovered creds. We
+            // assert that match so a future seeder/controller drift fails loudly here rather than at sign-in.
+            Assert.AreEqual("operational_demo@example.test", demoEmail,
+                "the seeder's demo email matches the controller's default demo identifier");
+            controller.AssignedBuildingId = labId;
+
+            float elapsed = 0f;
+            yield return controller.SignIn();
+            while (!controller.IsAuthenticated && controller.AuthError == null && elapsed < 20f)
+            {
+                elapsed += Time.deltaTime; yield return null;
+            }
+            Assert.IsNull(controller.AuthError, $"sign-in errored: {controller.AuthError}");
+            Assert.IsTrue(controller.IsAuthenticated, "controller signed in (Bearer acquired)");
+
+            // Start each test with an EMPTY roster (the cap would 409 an accumulated recruit; the seeder runs once per
+            // fixture, the tests recruit per-test). The recruit's lab-host gate validates owned + conversion-operational +
+            // type=lab (NOT structural_state), so a recruit succeeds on the seeded lab even before PrepLab repairs it.
+            ResetRoster();
+
+            yield return controller.RecruitCook();
+            Assert.IsTrue(IsUuid(controller.LastRecruitedId),
+                $"recruit returned a lieutenant_id uuid (got '{controller.LastRecruitedId}', outcome='{controller.LastOutcome}')");
+
+            onReady(controller);
+        }
+
+        // The 2 canonical demo rules (built via the rule-MODEL, never UI clicks). The heat rule's value MUST be 0.5
+        // (the runtime `heat` is the building's heat, constrained to [0,1] — heat>=5 would never fire PAUSE).
+        private static List<RuleRow> DemoRules() => new List<RuleRow>
+        {
+            new RuleRow("STATE", "cook_idle", "==", "true", "EXECUTE_DEFAULT", 10),
+            new RuleRow("EVENT", "heat", ">=", "0.5", "PAUSE_OPS", 100),
+        };
+
+        // ------------------------------------------------------------ the tests --
+
+        // (1) FULL LOOP: seed → signin → recruit COOK → SetRules(2) → Validate (valid) → Attach (ok) → RefreshBands →
+        //     bands archetype=COOK / mode=delegated / rule_count_band=FEW / script_source round-trips the 2 rules.
+        [UnityTest]
+        public IEnumerator FullLoop_RecruitValidateAttach_BandsRoundTrip()
+        {
+            LieutenantScreenController controller = null;
+            yield return BringUpRecruitedCook(c => controller = c);
+
+            // Build the 2 demo rules via the rule-model (no UI clicks).
+            controller.SetRules(DemoRules());
+            Assert.AreEqual(2, controller.Rules.Count, "2 demo rules authored");
+
+            // Validate (dry-run) → no diagnostics, outcome valid.
+            yield return controller.ValidateRules();
+            Assert.AreEqual(0, controller.LastDiagnostics.Length,
+                $"a valid script produces no diagnostics (got {controller.LastDiagnostics.Length}; outcome='{controller.LastOutcome}')");
+            StringAssert.Contains("valid", controller.LastOutcome, "validate outcome reports the script is valid");
+
+            // Attach → success → bands refreshed.
+            yield return controller.AttachRules();
+            Assert.AreEqual(0, controller.LastDiagnostics.Length, "attach of a valid script produces no diagnostics");
+            Assert.IsTrue(controller.StatusShown, "the Status section rendered the bands after attach");
+
+            LieutenantBands b = controller.CurrentBands;
+            Assert.IsNotNull(b, "bands projection parsed");
+            Assert.AreEqual("COOK", b.archetype, "archetype band is COOK");
+            Assert.AreEqual("executor", b.granted_role, "granted_role band is executor");
+            Assert.AreEqual("delegated", b.mode, "mode band is delegated");
+            Assert.AreEqual("FEW", b.rule_count_band, "rule_count_band is FEW (2 rules)");
+
+            // script_source round-trips the serialized 2 rules (the backend may append a trailing newline — compare the
+            // trimmed body line-for-line).
+            string expected = RuleModel.SerializeRules(DemoRules());
+            Assert.AreEqual(expected.Trim(), (b.script_source ?? string.Empty).Trim(),
+                "script_source round-trips the serialized demo rules");
+
+            // The UI reflects the bands: the worded labels are rendered (closed-domain, never raw).
+            var texts = controller.RenderedTexts;
+            Assert.IsTrue(texts.Any(t => t == "Cook"), "archetype 'Cook' rendered");
+            Assert.IsTrue(texts.Any(t => t == "Delegated"), "mode 'Delegated' rendered");
+            Assert.IsTrue(texts.Any(t => t == "A few rules"), "rule_count band 'A few rules' rendered");
+
+            Debug.Log($"[LieutenantE2E] full loop OK — bands archetype={b.archetype} mode={b.mode} rules={b.rule_count_band}");
+        }
+
+        // (2) DELEGATED STATUS (the proof): after attach, with the lab prepped (operational + precursor + LOW heat),
+        //     advance ticks (zero player actions) → the lieutenant auto-starts a cook → op_state_band=ACTIVE. Then drive
+        //     heat ≥ 0.5 → PAUSED (the EVENT(heat,>=,0.5) PAUSE_OPS rule). Then drop heat → ACTIVE again. Heat is driven
+        //     DETERMINISTICALLY (psql) — the natural heat-feedback is too slow/nondeterministic in the test window.
+        [UnityTest]
+        public IEnumerator DelegatedStatus_AutoCook_Active_then_Paused_then_Active()
+        {
+            LieutenantScreenController controller = null;
+            yield return BringUpRecruitedCook(c => controller = c);
+
+            controller.SetRules(DemoRules());
+            yield return controller.ValidateRules();
+            Assert.AreEqual(0, controller.LastDiagnostics.Length, "demo rules validate clean");
+            yield return controller.AttachRules();
+            Assert.IsTrue(controller.StatusShown, "bands rendered after attach");
+
+            // --- ACTIVE: prep the lab (repaired + precursor + low heat) → advance → the delegated COOK starts a cook.
+            PrepLab(0.1);
+            yield return Advance(3);
+            yield return controller.RefreshBands();
+            Assert.AreEqual("ACTIVE", controller.CurrentBands.op_state_band,
+                $"the delegated COOK auto-started a cook → op_state_band ACTIVE (outcome='{controller.LastOutcome}')");
+
+            // --- PAUSED: drive heat ≥ 0.5 → the EVENT(heat,>=,0.5) PAUSE_OPS @100 rule wins → delegation paused.
+            SetLabHeat(0.8);
+            yield return Advance(2);
+            yield return controller.RefreshBands();
+            Assert.AreEqual("PAUSED", controller.CurrentBands.op_state_band,
+                "heat ≥ 0.5 → the PAUSE_OPS rule fires → op_state_band PAUSED");
+
+            // --- ACTIVE again: drop heat (+ ensure precursor) → PAUSE_OPS no longer matches → cook resumes → ACTIVE.
+            PrepLab(0.1);
+            yield return Advance(2);
+            yield return controller.RefreshBands();
+            Assert.AreEqual("ACTIVE", controller.CurrentBands.op_state_band,
+                "heat dropped → the lieutenant resumes → op_state_band ACTIVE");
+
+            // The op-state band is always a worded label client-side (never the raw delegation_paused bool / tick).
+            var texts = controller.RenderedTexts;
+            Assert.IsTrue(texts.Any(t => t == "Active" || t == "Paused" || t == "Idle"),
+                "the op-state is rendered as a worded band, never a raw scalar");
+
+            Debug.Log("[LieutenantE2E] delegated status OK — ACTIVE → PAUSED → ACTIVE (zero player actions)");
+        }
+
+        // (3) DIAGNOSTICS: an INVALID rule (priority out of [0,100]) → ValidateRules → LastDiagnostics non-empty AND a
+        //     diagnostic carries a line/col/kind (the backend is authoritative; the client renders what it returns).
+        [UnityTest]
+        public IEnumerator InvalidRule_SurfacesRenderedDiagnostic()
+        {
+            LieutenantScreenController controller = null;
+            yield return BringUpRecruitedCook(c => controller = c);
+
+            // A single rule with an out-of-bounds priority (the slider clamps 0..100, but the rule-model sets it directly
+            // — the backend rejects it with PRIORITY_OUT_OF_BOUNDS). The client never re-implements parse/compile.
+            controller.SetRules(new List<RuleRow>
+            {
+                new RuleRow("STATE", "cook_idle", "==", "true", "EXECUTE_DEFAULT", 9999),
+            });
+
+            // The controller logs the rejection via Debug.LogError (F2 — the raw code stays on the log line, the readable
+            // message goes to the UI). PlayMode fails on an unhandled LogError, so EXPECT it: this 422 is the whole point
+            // of the test (an invalid script is SUPPOSED to be rejected + rendered).
+            LogAssert.Expect(LogType.Error, new Regex(@"\[Lieutenant\] validate rejected \(422\)"));
+
+            yield return controller.ValidateRules();
+
+            Assert.Greater(controller.LastDiagnostics.Length, 0,
+                $"an invalid rule surfaces ≥ 1 diagnostic (outcome='{controller.LastOutcome}')");
+            DslDiagnostic d = controller.LastDiagnostics[0];
+            Assert.Greater(d.line, 0, "the diagnostic carries a 1-based source line");
+            Assert.IsFalse(string.IsNullOrEmpty(d.kind), "the diagnostic carries a stable kind");
+            Assert.IsFalse(string.IsNullOrEmpty(d.message), "the diagnostic carries a readable message");
+            Assert.AreEqual("PRIORITY_OUT_OF_BOUNDS", d.kind, "the out-of-bounds priority is reported as PRIORITY_OUT_OF_BOUNDS");
+
+            Debug.Log($"[LieutenantE2E] diagnostics OK — line {d.line}:{d.col} [{d.kind}] {d.message}");
+        }
+
+        // (4) R2.2 NO-RAW-SCALAR: scan ALL rendered band text → no raw scalar. The band rows are worded; the player's
+        //     authored script_source / diagnostics / rule previews are deliberately EXCLUDED from RenderedTexts (they
+        //     legitimately carry the player's own numbers), so the scan corpus is band-only.
+        [UnityTest]
+        public IEnumerator NoRawScalarLeaks_InRenderedBands()
+        {
+            LieutenantScreenController controller = null;
+            yield return BringUpRecruitedCook(c => controller = c);
+
+            controller.SetRules(DemoRules());
+            yield return controller.ValidateRules();
+            yield return controller.AttachRules();
+            Assert.IsTrue(controller.StatusShown, "bands rendered after attach");
+
+            // Drive a state change so a non-trivial op-state band is rendered (ACTIVE) — the scan still must find no scalar.
+            PrepLab(0.1);
+            yield return Advance(3);
+            yield return controller.RefreshBands();
+
+            foreach (string t in controller.RenderedTexts)
+            {
+                Assert.IsFalse(Regex.IsMatch(t, @"(?<![A-Za-z])\d+(\.\d+)?(?![A-Za-z])"),
+                    $"no raw scalar may be shown client-side in a band, but rendered text was: '{t}'");
+            }
+
+            Debug.Log($"[LieutenantE2E] no-raw-scalar OK — scanned {controller.RenderedTexts.Count} band texts, all worded");
+        }
+    }
+}

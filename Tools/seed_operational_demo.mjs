@@ -250,6 +250,23 @@ async function main() {
   // only to this operational demo player). Deleted explicitly (a grow_session FK-cascades on its grow_house building
   // delete below, but an explicit wipe is idempotent + order-safe regardless of which block the grow_house sat on).
   psql(`DELETE FROM grow_session WHERE player_id='${playerId}';`);
+  // Phase-9 vector #9 (lieutenant rule-editor / COOK delegation): the player's lieutenant rows + their 1-1
+  // behavior_script rows (player-scoped — safe to wipe wholesale; they belong only to this operational demo player). A
+  // recruited COOK lieutenant holds an `assigned_building_id` FK onto a district-16 building (the lab), so the
+  // district-16 building wipe below FAILS (FK violation) while a lieutenant still references it — the lieutenant rows
+  // MUST be cleared FIRST. Order: capture the lieutenants' behavior_script_ids → delete the lieutenant rows (frees the
+  // assigned/target-building FKs + the behavior_script FK) → delete the now-orphaned behavior_script rows. The Phase-9
+  // demo/PlayMode recruits a fresh COOK each run, so this keeps the seeder idempotent (a prior run's lieutenant never
+  // blocks the next reset). The deferred lieutenant child tables (cue_registry / task_exposure / autonomy_reports / …)
+  // are not populated by this slice, so no extra wipe is needed; if a future vector populates them, add them here.
+  const ltScriptIds = psql(
+    `SELECT COALESCE(string_agg(quote_literal(behavior_script_id::text), ','), '') ` +
+      `FROM lieutenant WHERE player_id='${playerId}' AND behavior_script_id IS NOT NULL;`,
+  );
+  psql(`DELETE FROM lieutenant WHERE player_id='${playerId}';`);
+  if (ltScriptIds) {
+    psql(`DELETE FROM behavior_script WHERE script_id IN (${ltScriptIds});`);
+  }
   psql(`DELETE FROM courier_shift WHERE player_id='${playerId}';`);
   psql(`DELETE FROM courier WHERE player_id='${playerId}';`);
   psql(`DELETE FROM route WHERE player_id='${playerId}';`);
