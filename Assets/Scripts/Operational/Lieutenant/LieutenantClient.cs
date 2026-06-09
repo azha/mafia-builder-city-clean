@@ -90,6 +90,59 @@ namespace MafiaCleanCity.Operational.Lieutenant
             }
         }
 
+        // ------------------------------------------------------------- reassign (B2 / Phase-11)
+
+        /// <summary>
+        /// POST /v1/lieutenants/:id/reassign { assigned_building_id, target_building_id? } — MOVE a player-owned lieutenant
+        /// to a NEW building. The canon (Phase-11 tenure inertia): the move FORFEITS the accumulated tenure (tenure_bucket
+        /// resets to FRESH) AND opens an OLD-bucket-scaled settling window (op_state_band → SETTLING until it expires). The
+        /// new building is gated by the SAME per-archetype assignment gate recruit uses: not owned / not operational → 404;
+        /// the wrong building type for the archetype → 409; a required dispatch target missing → 422; not the player's
+        /// lieutenant → 404; no token → 401. `targetBuildingId` is the dispatch destination — included in the body ONLY when
+        /// non-null/non-empty (COOK/SECURITY/BOOKKEEPER omit it), EXACTLY like Recruit. 200 returns the freshly-projected
+        /// LieutenantBands (tenure_bucket FRESH, op_state_band SETTLING) — we don't need to parse it here (the controller pulls
+        /// fresh bands via RefreshBands on onOk), so onOk() is a bare ack; onErr(code, message) surfaces a readable error (F2).
+        /// Bearer + UUID-v4 Idempotency-Key — mirrors the Recruit POST idiom exactly.
+        /// </summary>
+        public IEnumerator ReassignLieutenant(string lieutenantId, string assignedBuildingId, string targetBuildingId,
+            string bearer, Action onOk, Action<long, string> onErr)
+        {
+            // Build the request body. target_building_id is OMITTED entirely when null/empty (single-building archetypes
+            // never send it) — JsonUtility cannot conditionally drop a field, so we pick the with/without-target DTO.
+            string body = (string.IsNullOrEmpty(targetBuildingId))
+                ? JsonUtility.ToJson(new ReassignRequest
+                {
+                    assigned_building_id = assignedBuildingId,
+                })
+                : JsonUtility.ToJson(new ReassignRequestWithTarget
+                {
+                    assigned_building_id = assignedBuildingId,
+                    target_building_id = targetBuildingId,
+                });
+
+            string url = Url($"/{lieutenantId}/reassign"); // POST /v1/lieutenants/:id/reassign
+            using (var req = new UnityWebRequest(url, UnityWebRequest.kHttpVerbPOST))
+            {
+                req.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(body));
+                req.downloadHandler = new DownloadHandlerBuffer();
+                req.timeout = TimeoutSeconds;
+                req.SetRequestHeader("Content-Type", "application/json");
+                if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
+                req.SetRequestHeader("Idempotency-Key", Guid.NewGuid().ToString()); // UUID v4 — backend mandate
+
+                yield return req.SendWebRequest();
+
+                if (req.result == UnityWebRequest.Result.Success)
+                {
+                    onOk?.Invoke();
+                }
+                else
+                {
+                    onErr?.Invoke(req.responseCode, ReadableError(req));
+                }
+            }
+        }
+
         // ------------------------------------------------------------- bands (T2)
 
         /// <summary>

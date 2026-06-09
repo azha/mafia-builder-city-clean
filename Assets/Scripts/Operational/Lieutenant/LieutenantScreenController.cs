@@ -57,6 +57,13 @@ namespace MafiaCleanCity.Operational.Lieutenant
         public LieutenantBands CurrentBands { get; private set; }
         /// <summary>True once the Status section has rendered at least one band row (a successful RefreshBands).</summary>
         public bool StatusShown { get; private set; }
+        /// <summary>The rendered tenure_bucket chip label (B1/B3 test hook): the worded bucket the Status section last
+        /// rendered ("Fresh" / "Acclimated" / …). Null until a successful RefreshBands. Band-only — never the raw streak.</summary>
+        public string TenureBucketShown { get; private set; }
+        /// <summary>True while the Reassign confirmation form is open (B2/B3 test hook). The form surfaces the CURRENT
+        /// reassignment_disruption (the projected settling) + the CURRENT tenure_bucket/role_efficiency_bonus (what a move
+        /// forfeits) BEFORE the player confirms. False after a confirm/cancel.</summary>
+        public bool ReassignConfirmOpen { get; private set; }
         /// <summary>The full set of text shown to the player (labels + values) — used by the E2E to prove no raw
         /// scalar leaks client-side (R2.2), mirroring BuildingCardController.RenderedTexts.</summary>
         public IReadOnlyList<string> RenderedTexts => renderedTexts;
@@ -160,6 +167,19 @@ namespace MafiaCleanCity.Operational.Lieutenant
         private RectTransform builderSection;  // holds the rule-builder label + the per-rule rows + the +Add/Validate/Attach.
         private RectTransform ruleRows;        // the container the per-rule editor rows render into.
         private RectTransform diagnosticsArea; // where RenderDiagnostics lists the 422 diagnostics (cleared on success).
+        // ---- B2 Reassign section (Phase-11 tenure inertia) --------------------
+        private RectTransform reassignSection;   // holds the Reassign label + the new-building inputs + the Reassign button.
+        private RectTransform reassignConfirm;    // the confirmation block (projected disruption + the tenure/bonus lost), shown on demand.
+        private GameObject reassignTargetRow;     // the new-target-building input row — shown only when NeedsTarget(CurrentArchetype).
+        // The NEW building the reassign moves the lieutenant to (+ the optional new dispatch target). Test hooks (the
+        // PlayMode test sets these directly, no UI typing), mirroring AssignedBuildingId/TargetBuildingId.
+        private string reassignBuildingId = "";
+        private string reassignTargetBuildingId = "";
+        /// <summary>The NEW (assigned/host) building a Reassign moves the lieutenant to. Settable before OpenReassign/ReassignChosen.</summary>
+        public string ReassignBuildingId { get => reassignBuildingId; set => reassignBuildingId = value; }
+        /// <summary>The NEW dispatch TARGET building for a 2-building archetype on the reassign. Ignored for single-building archetypes.</summary>
+        public string ReassignTargetBuildingId { get => reassignTargetBuildingId; set => reassignTargetBuildingId = value; }
+
 
         private AuthClient auth;
         private LieutenantClient client;
@@ -355,6 +375,80 @@ namespace MafiaCleanCity.Operational.Lieutenant
             // REUSE the existing current-lieutenant id field — no parallel selection state. RefreshBands reads it.
             LastRecruitedId = id;
             StartCoroutine(RefreshBands());
+        }
+
+        // ----------------------------------------------------------- reassign (B2 / Phase-11 tenure inertia)
+
+        /// <summary>Open the Reassign CONFIRMATION (the canonical decision point). Surfaces the CURRENT
+        /// reassignment_disruption band (the PROJECTED settling a move would incur) + the CURRENT tenure_bucket /
+        /// role_efficiency_bonus (the tenure + yield the move would FORFEIT) so the player decides with the cost in view.
+        /// `TRIGGER_REASSIGNMENT` = confirm (ReassignChosen); `KEEP_TENURE` = cancel (CancelReassign); `LOCK_BUCKET` is
+        /// DEFERRED. No-ops cleanly when nothing has been recruited/selected. The bands must be loaded (the projection drives
+        /// the disruption/bonus-loss surfaced here) — RefreshBands first if needed.</summary>
+        public void OpenReassign()
+        {
+            EnsureInitialized();
+            if (Destroyed) return;
+            if (!IsAuthenticated) { SetOutcome("Sign in first.", AccentSevere); return; }
+            if (string.IsNullOrEmpty(LastRecruitedId)) { SetOutcome("Recruit or open a lieutenant first.", AccentModerate); return; }
+            ReassignConfirmOpen = true;
+            RenderReassignConfirm();
+        }
+
+        /// <summary>Cancel the Reassign — the canonical `KEEP_TENURE` decision (keep the accumulated tenure + its yield
+        /// bonus; pay nothing). Closes the confirmation. No network call.</summary>
+        public void CancelReassign()
+        {
+            ReassignConfirmOpen = false;
+            if (!Destroyed) RenderReassignConfirm();
+        }
+
+        /// <summary>The canonical `TRIGGER_REASSIGNMENT` decision: MOVE the current lieutenant to ReassignBuildingId
+        /// (POST /v1/lieutenants/:id/reassign). For a 2-building archetype the new dispatch target is sent too (else
+        /// omitted). On success the backend FORFEITS the tenure (tenure_bucket → FRESH) + opens a settling window
+        /// (op_state_band → SETTLING); we close the confirmation, show the outcome, and RefreshBands() so the card reflects
+        /// the reset (tenure shows FRESH). On failure shows a readable error (never a raw HTTP code, F2) and leaves the bands
+        /// intact. No-ops cleanly when nothing has been recruited/selected or no new building is set.</summary>
+        public IEnumerator ReassignChosen()
+        {
+            EnsureInitialized();
+            if (!IsAuthenticated) { SetOutcome("Sign in first.", AccentSevere); yield break; }
+            if (string.IsNullOrEmpty(LastRecruitedId)) { SetOutcome("Recruit or open a lieutenant first.", AccentModerate); yield break; }
+            if (string.IsNullOrEmpty(reassignBuildingId)) { SetOutcome("Pick a building to reassign to.", AccentModerate); yield break; }
+
+            // A 2-building archetype sends its new target; a single-building archetype omits it (pass null), like recruit.
+            string target = RuleModel.NeedsTarget(CurrentArchetype) ? reassignTargetBuildingId : null;
+            bool moved = false;
+            long errCode = 0;
+            string errMsg = null;
+            yield return client.ReassignLieutenant(LastRecruitedId, reassignBuildingId, target, Token,
+                () => moved = true,
+                (code, msg) => { errCode = code; errMsg = msg; });
+
+            // The POST is a network round-trip; bail before any UI if torn down by an inter-fixture teardown.
+            if (Destroyed) yield break;
+
+            if (moved)
+            {
+                ReassignConfirmOpen = false;
+                SetOutcome("Reassigned — tenure reset, settling in.", AccentMild);
+                // Pull the fresh bands so the card reflects the reset (tenure_bucket → FRESH, op_state_band → SETTLING).
+                yield return RefreshBands();
+                if (!Destroyed)
+                {
+                    // The lieutenant may now host a different archetype's building — realign the builder palette + re-render
+                    // (same housekeeping recruit does), so a stale cross-archetype field never lingers.
+                    RealignRulesToArchetype(CurrentArchetype);
+                    RenderRuleRows();
+                    RenderReassignConfirm(); // closed now — collapse the confirmation block.
+                }
+            }
+            else
+            {
+                // Surface the readable error message (F2) — the raw code is kept on the log line only.
+                Debug.LogError($"[Lieutenant] reassign failed ({errCode}): {errMsg}");
+                SetOutcome(errMsg ?? "Reassign failed.", AccentSevere);
+            }
         }
 
         // ----------------------------------------------------------- rule-builder (T3)
@@ -582,12 +676,28 @@ namespace MafiaCleanCity.Operational.Lieutenant
             AddStatusRow("Role", GrantedRoleLabel(b.granted_role), GrantedRoleGlyph(b.granted_role), AccentMild);
             // mode (tasked | delegated).
             AddStatusRow("Mode", ModeLabel(b.mode), ModeGlyph(b.mode), AccentMild);
-            // op_state_band (ACTIVE | PAUSED | IDLE) — the delegated operational state.
+            // op_state_band (SETTLING | ACTIVE | PAUSED | IDLE) — the delegated operational state (Phase-11 adds SETTLING).
             AddStatusRow("State", OpStateLabel(b.op_state_band), OpStateGlyph(b.op_state_band), OpStateAccent(b.op_state_band));
             // rule_count_band (NONE | FEW | MANY) — the behavior-script rule count as a band (never the raw count).
             AddStatusRow("Rules", RuleCountLabel(b.rule_count_band), RuleCountGlyph(b.rule_count_band), RuleCountAccent(b.rule_count_band));
 
+            // ===== Phase-11 tenure-inertia chips (B1) — the tenure_bucket chip + the 3 effect chips. Each is a worded BAND
+            // (NO digit leaks — R2.2): the bucket is DERIVED from the BO-only streak; the 3 effects are DERIVED from the bucket.
+            // tenure_bucket (FRESH | ACCLIMATED | SEASONED | SENIOR | ENTRENCHED) — the tenure band.
+            AddStatusRow("Tenure", TenureBucketLabel(b.tenure_bucket), TenureBucketGlyph(b.tenure_bucket), TenureBucketAccent(b.tenure_bucket));
+            TenureBucketShown = TenureBucketLabel(b.tenure_bucket); // B3 hook — the rendered bucket label.
+            // script_revision_cost (COST_1..COST_MAX) — how costly re-scripting this lieutenant is (the inertia COST).
+            AddStatusRow("Re-script cost", RevisionCostLabel(b.script_revision_cost), RevisionCostGlyph(b.script_revision_cost), RevisionCostAccent(b.script_revision_cost));
+            // reassignment_disruption (DISRUPT_SHORT..DISRUPT_MAX) — the settling-window drag a move would incur (the inertia DRAG).
+            AddStatusRow("Move settling", DisruptionLabel(b.reassignment_disruption), DisruptionGlyph(b.reassignment_disruption), DisruptionAccent(b.reassignment_disruption));
+            // role_efficiency_bonus (BONUS_NONE..BONUS_CAP) — the tenure yield REWARD (lost on a reassignment).
+            AddStatusRow("Yield bonus", EfficiencyBonusLabel(b.role_efficiency_bonus), EfficiencyBonusGlyph(b.role_efficiency_bonus), EfficiencyBonusAccent(b.role_efficiency_bonus));
+
             RenderScriptSource(b.script_source);
+
+            // Refresh the reassign confirmation if it's open (the projected disruption + bonus-loss bands follow the fresh bands).
+            RenderReassignSection(); // the new-target-row visibility follows the loaded archetype.
+            RenderReassignConfirm();
 
             StatusShown = true;
         }
@@ -672,13 +782,15 @@ namespace MafiaCleanCity.Operational.Lieutenant
         }
         private static string ModeGlyph(string m) => m == "delegated" ? "[>>]" : m == "tasked" ? "[>]" : "[-]";
 
-        // ----- op_state_band (ACTIVE | PAUSED | IDLE) — EXHAUSTIVE over OpStateBand -----
-        // R2.2: the delegation_paused bool + live cook state surface ONLY as this band. ACTIVE=working (mild),
-        // PAUSED=script halted ops (severe), IDLE=quiet (moderate).
+        // ----- op_state_band (SETTLING | PAUSED | ACTIVE | IDLE) — EXHAUSTIVE over OpStateBand (Phase-11 adds SETTLING) -----
+        // R2.2: the delegation_paused bool + live cook state + the settling window surface ONLY as this band. PRECEDENCE
+        // SETTLING > PAUSED > ACTIVE > IDLE. SETTLING=re-script/reassign window still open (moderate — transient, resolves on
+        // its own), ACTIVE=working (mild), PAUSED=script halted ops (severe), IDLE=quiet (moderate).
         private static string OpStateLabel(string s)
         {
             switch (s)
             {
+                case "SETTLING": return "Settling in";
                 case "ACTIVE": return "Active";
                 case "PAUSED": return "Paused";
                 case "IDLE": return "Idle";
@@ -686,9 +798,9 @@ namespace MafiaCleanCity.Operational.Lieutenant
             }
         }
         private static string OpStateGlyph(string s) =>
-            s == "ACTIVE" ? "[>]" : s == "PAUSED" ? "[||]" : s == "IDLE" ? "[..]" : "[-]";
+            s == "SETTLING" ? "[~]" : s == "ACTIVE" ? "[>]" : s == "PAUSED" ? "[||]" : s == "IDLE" ? "[..]" : "[-]";
         private static Color OpStateAccent(string s) =>
-            s == "ACTIVE" ? AccentMild : s == "PAUSED" ? AccentSevere : AccentModerate;
+            s == "SETTLING" ? AccentModerate : s == "ACTIVE" ? AccentMild : s == "PAUSED" ? AccentSevere : AccentModerate;
 
         // ----- rule_count_band (NONE | FEW | MANY) — EXHAUSTIVE over RuleCountBand. R2.2: the raw rule count NEVER -----
         // surfaces; the player sees the band. A 2-segment fill gauge (shape encodes the level — a11y F2).
@@ -706,6 +818,85 @@ namespace MafiaCleanCity.Operational.Lieutenant
             b == "MANY" ? "[##]" : b == "FEW" ? "[#.]" : b == "NONE" ? "[..]" : "[-]";
         private static Color RuleCountAccent(string b) =>
             b == "MANY" ? AccentMild : b == "FEW" ? AccentMild : b == "NONE" ? AccentModerate : AccentSevere;
+
+        // ===== Phase-11 tenure-inertia bands (B1) — worded labels + a11y glyphs, BAND-ONLY (NO digits leak — R2.2). =====
+        // The bucket is the DERIVED tenure band (raw tenure_score never escapes); the 3 effect bands are DERIVED from it.
+        // Every label below is a closed-domain WORD/phrase — never a tick count, never a multiplier number.
+
+        // ----- tenure_bucket (FRESH | ACCLIMATED | SEASONED | SENIOR | ENTRENCHED) — EXHAUSTIVE over TenureBucketBand. -----
+        private static string TenureBucketLabel(string b)
+        {
+            switch (b)
+            {
+                case "FRESH": return "Fresh";
+                case "ACCLIMATED": return "Acclimated";
+                case "SEASONED": return "Seasoned";
+                case "SENIOR": return "Senior";
+                case "ENTRENCHED": return "Entrenched";
+                default: return string.IsNullOrEmpty(b) ? "—" : b;
+            }
+        }
+        // A growing-fill gauge (shape encodes the tenure level — a11y F2, never colour-only).
+        private static string TenureBucketGlyph(string b) =>
+            b == "ENTRENCHED" ? "[####]" : b == "SENIOR" ? "[###.]" : b == "SEASONED" ? "[##..]" :
+            b == "ACCLIMATED" ? "[#...]" : b == "FRESH" ? "[....]" : "[-]";
+        // FRESH is neutral (just recruited/moved — moderate); the more tenured, the more “invested” (mild/positive).
+        private static Color TenureBucketAccent(string b) =>
+            b == "FRESH" ? AccentModerate : AccentMild;
+
+        // ----- script_revision_cost (COST_1 | COST_2 | COST_3 | COST_MAX) — the inertia COST of re-scripting. EXHAUSTIVE. -----
+        // Worded as an effort label (NO tick number leaks). Higher cost on a tenured lieutenant reads as a warning (amber/red).
+        private static string RevisionCostLabel(string c)
+        {
+            switch (c)
+            {
+                case "COST_1": return "Cheap to re-script";
+                case "COST_2": return "Costly to re-script";
+                case "COST_3": return "Pricey to re-script";
+                case "COST_MAX": return "Very costly to re-script";
+                default: return string.IsNullOrEmpty(c) ? "—" : c;
+            }
+        }
+        private static string RevisionCostGlyph(string c) =>
+            c == "COST_MAX" ? "[$$$]" : c == "COST_3" ? "[$$.]" : c == "COST_2" ? "[$..]" : c == "COST_1" ? "[...]" : "[-]";
+        private static Color RevisionCostAccent(string c) =>
+            c == "COST_MAX" ? AccentSevere : c == "COST_3" ? AccentModerate : c == "COST_2" ? AccentModerate : AccentMild;
+
+        // ----- reassignment_disruption (DISRUPT_SHORT | DISRUPT_MED | DISRUPT_LONG | DISRUPT_MAX) — the settling DRAG. EXHAUSTIVE. -----
+        // Worded as a settling-length label (NO tick number leaks). Longer settling on a move reads as a heavier penalty.
+        private static string DisruptionLabel(string d)
+        {
+            switch (d)
+            {
+                case "DISRUPT_SHORT": return "Short settling";
+                case "DISRUPT_MED": return "Medium settling";
+                case "DISRUPT_LONG": return "Long settling";
+                case "DISRUPT_MAX": return "Very long settling";
+                default: return string.IsNullOrEmpty(d) ? "—" : d;
+            }
+        }
+        private static string DisruptionGlyph(string d) =>
+            d == "DISRUPT_MAX" ? "[~~~]" : d == "DISRUPT_LONG" ? "[~~.]" : d == "DISRUPT_MED" ? "[~..]" : d == "DISRUPT_SHORT" ? "[...]" : "[-]";
+        private static Color DisruptionAccent(string d) =>
+            d == "DISRUPT_MAX" ? AccentSevere : d == "DISRUPT_LONG" ? AccentModerate : d == "DISRUPT_MED" ? AccentModerate : AccentMild;
+
+        // ----- role_efficiency_bonus (BONUS_NONE | BONUS_LOW | BONUS_MID | BONUS_CAP) — the tenure REWARD. EXHAUSTIVE. -----
+        // Worded as a yield label (NO multiplier number leaks). BONUS_NONE = no change (a FRESH one); higher = a better reward.
+        private static string EfficiencyBonusLabel(string e)
+        {
+            switch (e)
+            {
+                case "BONUS_NONE": return "No yield bonus";
+                case "BONUS_LOW": return "Small yield bonus";
+                case "BONUS_MID": return "Solid yield bonus";
+                case "BONUS_CAP": return "Peak yield bonus";
+                default: return string.IsNullOrEmpty(e) ? "—" : e;
+            }
+        }
+        private static string EfficiencyBonusGlyph(string e) =>
+            e == "BONUS_CAP" ? "[+++]" : e == "BONUS_MID" ? "[++.]" : e == "BONUS_LOW" ? "[+..]" : e == "BONUS_NONE" ? "[...]" : "[-]";
+        private static Color EfficiencyBonusAccent(string e) =>
+            e == "BONUS_NONE" ? AccentModerate : AccentMild;
 
         // --------------------------------------------------------------- layout
 
@@ -734,7 +925,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             cardRt.anchorMin = new Vector2(0.5f, 0f);
             cardRt.anchorMax = new Vector2(0.5f, 0f);
             cardRt.pivot = new Vector2(0.5f, 0f);
-            cardRt.sizeDelta = new Vector2(560, 1180); // B3: title + roster + status bands + script + rule-builder (+ locked teaser) + recruit + outcome.
+            cardRt.sizeDelta = new Vector2(560, 1480); // Phase-11: title + roster + status bands (+ tenure/effect chips) + script + reassign + rule-builder (+ locked teaser) + recruit + outcome.
             cardRt.anchoredPosition = new Vector2(0, 24);
             card.AddComponent<Image>().color = SurfaceBg;
             VerticalLayoutGroup vlg = card.AddComponent<VerticalLayoutGroup>();
@@ -787,6 +978,19 @@ namespace MafiaCleanCity.Operational.Lieutenant
             statusSection = (RectTransform)status.transform;
             AddLayoutElement(status, flexibleHeight: 0);
             BuildStatusSection();
+
+            // Reassign section (B2 / Phase-11): the section label + the new-building inputs + the "Reassign…" button + the
+            // confirmation block. Built BELOW the status section (the tenure chips it references) and ABOVE the rule-builder.
+            GameObject reassign = NewUI("ReassignSection", card.transform);
+            VerticalLayoutGroup revlg = reassign.AddComponent<VerticalLayoutGroup>();
+            revlg.spacing = 6;
+            revlg.childControlWidth = true;
+            revlg.childControlHeight = true;
+            revlg.childForceExpandWidth = true;
+            revlg.childForceExpandHeight = false;
+            reassignSection = (RectTransform)reassign.transform;
+            AddLayoutElement(reassign, flexibleHeight: 0);
+            BuildReassignSection();
 
             // Rule-builder section (T3): the section label + the per-rule editor rows + the +Add / Validate / Attach
             // buttons + the diagnostics area. Built BELOW the status section, ABOVE the recruit action bar.
@@ -1042,6 +1246,118 @@ namespace MafiaCleanCity.Operational.Lieutenant
                 default: return "[-]";
             }
         }
+        // ----------------------------------------------------------- reassign UI (B2 / Phase-11 tenure inertia)
+
+        // The Reassign section: a section label + a NEW-building caption row + a CONDITIONAL new-target row (shown only when
+        // the current archetype NeedsTarget) + a "Reassign…" button that OPENS the confirmation + the confirmation block
+        // (built empty; populated on demand by RenderReassignConfirm). The new-building uuid is set via the test hooks /
+        // SerializeField (the M1 demo seeds it) — the screen shows a readable caption, mirroring the recruit section's idiom.
+        private void BuildReassignSection()
+        {
+            NewSectionLabel(reassignSection, "REASSIGN — move this lieutenant (resets tenure)");
+            NewSectionLabel(reassignSection, "New building (set by the seeder / ReassignBuildingId)");
+
+            // Conditional new-target row — shown/hidden per NeedsTarget(CurrentArchetype) in RenderReassignSection.
+            reassignTargetRow = NewUI("ReassignTargetRow", reassignSection);
+            VerticalLayoutGroup tvlg = reassignTargetRow.AddComponent<VerticalLayoutGroup>();
+            tvlg.spacing = 2;
+            tvlg.childControlWidth = true;
+            tvlg.childControlHeight = true;
+            tvlg.childForceExpandWidth = true;
+            tvlg.childForceExpandHeight = false;
+            AddLayoutElement(reassignTargetRow, flexibleHeight: 0);
+            NewSectionLabel(reassignTargetRow.transform, "New target building (destination / safehouse — set by ReassignTargetBuildingId)");
+
+            // The "Reassign…" button opens the confirmation (it does NOT move immediately — the player confirms with the
+            // projected cost in view). The confirmation's own Confirm button drives ReassignChosen().
+            AddActionButton(reassignSection, "Reassign…", OpenReassign);
+
+            // The confirmation block — built empty; RenderReassignConfirm fills it (the projected disruption + tenure/bonus lost
+            // + a Confirm/Cancel pair) when ReassignConfirmOpen, and clears it otherwise.
+            GameObject confirm = NewUI("ReassignConfirm", reassignSection);
+            VerticalLayoutGroup cvlg = confirm.AddComponent<VerticalLayoutGroup>();
+            cvlg.spacing = 4;
+            cvlg.childControlWidth = true;
+            cvlg.childControlHeight = true;
+            cvlg.childForceExpandWidth = true;
+            cvlg.childForceExpandHeight = false;
+            reassignConfirm = (RectTransform)confirm.transform;
+            AddLayoutElement(confirm, flexibleHeight: 0);
+
+            RenderReassignSection();
+            RenderReassignConfirm();
+        }
+
+        // Re-render the reassign section's archetype-dependent parts: the new-target-row visibility (shown only when the
+        // CURRENT archetype is a 2-building one). Idempotent + Destroyed-guarded.
+        private void RenderReassignSection()
+        {
+            if (Destroyed) return;
+            if (reassignTargetRow != null) reassignTargetRow.SetActive(RuleModel.NeedsTarget(CurrentArchetype));
+        }
+
+        // Build (or clear) the Reassign CONFIRMATION block. When ReassignConfirmOpen + bands are loaded, it surfaces — all
+        // BAND-ONLY (worded, no digits, tracked for the no-raw-scalar scan):
+        //   • the PROJECTED settling a move would incur (the CURRENT reassignment_disruption band);
+        //   • the tenure the move would FORFEIT (the CURRENT tenure_bucket band);
+        //   • the yield bonus the move would LOSE (the CURRENT role_efficiency_bonus band);
+        //   • a Confirm (TRIGGER_REASSIGNMENT → ReassignChosen) + Cancel (KEEP_TENURE → CancelReassign) pair.
+        // When closed (or no bands yet) the block is emptied. Called on open/cancel/confirm AND from RenderBands (so the
+        // projected bands stay fresh when the bands re-load).
+        private void RenderReassignConfirm()
+        {
+            if (Destroyed || reassignConfirm == null) return;
+            ClearReassignConfirmRows();
+            if (!ReassignConfirmOpen) return;
+
+            LieutenantBands b = CurrentBands;
+            if (b == null)
+            {
+                AddReassignConfirmLine("Loading lieutenant… reopen Reassign once the card has loaded.", AccentModerate);
+                return;
+            }
+
+            AddReassignConfirmLine("Confirm reassignment? It resets tenure and starts a settling window.", TextPrimary);
+            // The PROJECTED settling (the move's disruption) — the CURRENT reassignment_disruption band, worded.
+            AddReassignConfirmLine($"Projected settling: {DisruptionLabel(b.reassignment_disruption)}", DisruptionAccent(b.reassignment_disruption));
+            // What the move FORFEITS — the CURRENT tenure bucket + the yield bonus you'd lose (worded bands).
+            AddReassignConfirmLine($"Tenure forfeited: {TenureBucketLabel(b.tenure_bucket)}", TenureBucketAccent(b.tenure_bucket));
+            AddReassignConfirmLine($"Yield bonus lost: {EfficiencyBonusLabel(b.role_efficiency_bonus)}", EfficiencyBonusAccent(b.role_efficiency_bonus));
+
+            // The Confirm / Cancel decision pair.
+            AddActionButton(reassignConfirm, "Confirm reassignment", () => StartCoroutine(ReassignChosen()));
+            AddActionButton(reassignConfirm, "Keep tenure (cancel)", CancelReassign);
+        }
+
+        // One worded line in the confirmation block. Tracked for the no-raw-scalar scan (these are BAND-only sentences — no
+        // digits), mirroring AddStatusRow's TrackText discipline.
+        private void AddReassignConfirmLine(string text, Color color)
+        {
+            Text t = NewText("ReassignLine", reassignConfirm, text, 13, TextAnchor.UpperLeft);
+            t.color = color;
+            t.verticalOverflow = VerticalWrapMode.Overflow;
+            AddLayoutElement(t.gameObject, minHeight: 20, flexibleHeight: 0);
+            TrackText(t, text);
+        }
+
+        // Destroy the confirmation block's rows AND prune their tracked text from the shared no-raw-scalar scan corpus
+        // (textComponents/renderedTexts) — scoped to reassignConfirm (mirrors ClearRosterRows' prune-then-render intent), so
+        // repeated open/close cycles never accumulate stale Text components / duplicate strings in RenderedTexts.
+        private void ClearReassignConfirmRows()
+        {
+            if (reassignConfirm == null) return;
+            for (int i = reassignConfirm.childCount - 1; i >= 0; i--)
+            {
+                GameObject child = reassignConfirm.GetChild(i).gameObject;
+                foreach (Text t in child.GetComponentsInChildren<Text>(true))
+                {
+                    textComponents.Remove(t);
+                    renderedTexts.Remove(t.text); // remove one matching occurrence (TrackText added this exact string).
+                }
+                Object.Destroy(child);
+            }
+        }
+
 
         // ----------------------------------------------------------- rule-builder UI (T3)
 
