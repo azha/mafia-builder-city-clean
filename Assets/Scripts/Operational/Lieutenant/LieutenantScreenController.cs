@@ -359,8 +359,9 @@ namespace MafiaCleanCity.Operational.Lieutenant
         // ----------------------------------------------------------- progression (Phase-20)
 
         /// <summary>Fetch the vocab tier (Phase-20). On a tier change the builder re-renders (the condition slot
-        /// appears per rule row + the teaser drops its AND_IF line). A fetch failure leaves the gate conservative
-        /// (tier 1) — the backend still authoritatively 422s any Tier-2 source (TIER_NOT_UNLOCKED).</summary>
+        /// appears per rule row + the teaser drops its AND_IF line). A fetch failure keeps the last-known tier
+        /// (conservative — tier 1 until the first success) — the backend still authoritatively 422s any Tier-2
+        /// source (TIER_NOT_UNLOCKED).</summary>
         public IEnumerator RefreshProgression()
         {
             EnsureInitialized();
@@ -539,7 +540,9 @@ namespace MafiaCleanCity.Operational.Lieutenant
         // palette is reset to the palette's first field (its trigger kind / first comparator / a default value), so a stale
         // field from another archetype never lingers on the builder when the archetype switches (e.g. after picking
         // SECURITY, a leftover COOK `heat` rule becomes a `building_damaged` rule). Rules already on a valid palette field
-        // are left untouched. Does NOT re-render — the caller re-renders.
+        // are left untouched. Also realigns MY_STATE condition slots independently — a rule whose trigger field survives
+        // the switch can still carry a stranded condField that belongs to the old archetype. Does NOT re-render — the
+        // caller re-renders.
         private void RealignRulesToArchetype(string archetype)
         {
             FieldSpec[] palette = RuleModel.FieldsFor(archetype);
@@ -547,6 +550,19 @@ namespace MafiaCleanCity.Operational.Lieutenant
             for (int i = 0; i < rules.Count; i++)
             {
                 RuleRow r = rules[i];
+
+                // Phase-20: realign the condition slot FIRST (independent of the trigger check below — a rule
+                // whose trigger field survives the switch can still carry a stranded MY_STATE condField). A
+                // MY_STATE condition reads MY archetype's palette; PEER_STATE reads the PEER role's palette and
+                // is unaffected by an archetype switch.
+                if (r.condKind == "MY_STATE")
+                {
+                    bool condInPalette = false;
+                    for (int j = 0; j < palette.Length; j++)
+                        if (palette[j].Key == r.condField) { condInPalette = true; break; }
+                    if (!condInPalette) ResetConditionField(r);
+                }
+
                 bool inPalette = false;
                 for (int j = 0; j < palette.Length; j++)
                     if (palette[j].Key == r.field) { inPalette = true; break; }
@@ -1497,7 +1513,9 @@ namespace MafiaCleanCity.Operational.Lieutenant
             for (int i = lockedTeaserRows.childCount - 1; i >= 0; i--)
                 UnityEngine.Object.Destroy(lockedTeaserRows.GetChild(i).gameObject);
 
-            // Prune destroyed Text refs from the shared tracking list before adding fresh ones.
+            // Prune refs destroyed in EARLIER renders (Destroy is end-of-frame deferred, so this render's
+            // casualties only read as null on the NEXT pass — textComponents is a write-only registry, so the
+            // one-frame stragglers are harmless).
             textComponents.RemoveAll(t => t == null);
 
             AddLockedLine(lockedTeaserRows, "Triggers");
