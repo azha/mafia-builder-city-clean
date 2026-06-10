@@ -31,7 +31,7 @@ namespace MafiaCleanCity.Operational.Exceptions
                     ExceptionCardDto[] cards = null;
                     try { cards = JsonUtility.FromJson<ExceptionQueueEnvelope>(req.downloadHandler.text)?.payload?.data?.exceptions; }
                     catch (Exception ex) { onErr?.Invoke(req.responseCode, "parse error: " + ex.Message); yield break; }
-                    onOk?.Invoke(cards ?? new ExceptionCardDto[0]);
+                    onOk?.Invoke(cards ?? Array.Empty<ExceptionCardDto>());
                 }
                 else
                 {
@@ -63,7 +63,7 @@ namespace MafiaCleanCity.Operational.Exceptions
                     ResolveResponse dto = null;
                     try { dto = JsonUtility.FromJson<ResolveEnvelope>(req.downloadHandler.text)?.payload?.data; }
                     catch (Exception ex) { onErr?.Invoke(req.responseCode, "parse error: " + ex.Message); yield break; }
-                    if (dto == null) { onErr?.Invoke(req.responseCode, "empty resolve payload"); yield break; }
+                    if (dto == null || !dto.resolved) { onErr?.Invoke(req.responseCode, "empty resolve payload"); yield break; }
                     onOk?.Invoke(dto);
                 }
                 else

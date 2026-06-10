@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.Networking;
+using MafiaCleanCity.Operational;
 
 namespace MafiaCleanCity.Operational.Exceptions
 {
@@ -37,9 +38,26 @@ namespace MafiaCleanCity.Operational.Exceptions
                 }
                 else
                 {
-                    onErr?.Invoke(req.responseCode, "progression request failed (" + req.responseCode + ") " + req.error);
+                    onErr?.Invoke(req.responseCode, ReadableError(req));
                 }
             }
+        }
+
+        // Map a non-2xx to the human error-envelope message (F2) — verbatim the BuildingCardClient helper.
+        private static string ReadableError(UnityWebRequest req)
+        {
+            string text = req.downloadHandler != null ? req.downloadHandler.text : null;
+            if (!string.IsNullOrEmpty(text))
+            {
+                try
+                {
+                    OpErrorEnvelope env = JsonUtility.FromJson<OpErrorEnvelope>(text);
+                    string msg = env?.payload?.error?.message;
+                    if (!string.IsNullOrEmpty(msg)) return msg;
+                }
+                catch { /* fall through to a generic message */ }
+            }
+            return $"request failed ({req.responseCode}) {req.error}";
         }
     }
 }
