@@ -884,6 +884,30 @@ async function main() {
 
   console.log(`[op-seed] phase-20 exception demo: COOK ${exceptionLtId} + 4 pending cards (2 teach / 1 one-time / 1 raid-style)`);
 
+  // ─────────── Phase-21: autonomy ceiling demo state (deterministic; FK-CASCADE cleaned by the lieutenant wipe) ───────────
+  // A DEPLETED PRODUCTION_OPS budget (band 'depleted' on the lieutenant screen) + an OPEN 2-issue report for the
+  // exception-demo COOK. cycle_id 0 vs state cycle 2 → backlog_age_cycles = 2. Options = the REAL OPTION_PAIRS.COOK
+  // shape (option-pairs.ts) — never invented. last_refresh_tick is stamped at the CURRENT clock minute so the next
+  // LIEUTENANT_TICK's refreshIfDue (window 30) cannot refresh the depleted budget away mid-test.
+  const seedClockMinute = clockMinute(playerId);
+  const cookBudget = {
+    generation_strategy: 'ARCHETYPE_SEED',
+    entries: { PRODUCTION_OPS: { current: 0, cap: 3, bucket: 'depleted', last_decrement_tick: 0 } },
+  };
+  psql(`INSERT INTO autonomy_ceiling_state (lieutenant_id, archetype_key, budget, cycle_id, last_refresh_tick) ` +
+       `VALUES ('${exceptionLtId}', 'COOK', $J$${JSON.stringify(cookBudget)}$J$::jsonb, 2, ${seedClockMinute});`);
+  const cookOptA = { effect_kind: 'COOK_NOW', label_key: 'autonomy.cook.now', projected_outcome: 'MINIMAL' };
+  const cookOptB = { effect_kind: 'COOK_REFINE', label_key: 'autonomy.cook.refine', projected_outcome: 'TRADEOFF' };
+  const autonomyIssues = [
+    { issue_id: 'iss_demo_1', category: 'PRODUCTION_OPS', refused_action: 'COOK', option_a: cookOptA, option_b: cookOptB },
+    { issue_id: 'iss_demo_2', category: 'PRODUCTION_OPS', refused_action: 'COOK', option_a: cookOptA, option_b: cookOptB },
+  ];
+  const autonomyReportId = psql(
+    `INSERT INTO autonomy_reports (player_id, lieutenant_id, cycle_id, issues) ` +
+      `VALUES ('${playerId}', '${exceptionLtId}', 0, $J$${JSON.stringify(autonomyIssues)}$J$::jsonb) RETURNING report_id;`,
+  );
+  console.log(`[op-seed] phase-21 autonomy demo: depleted PRODUCTION_OPS + open report ${autonomyReportId} (2 issues)`);
+
   // ─────────────────────────── DONE — print creds + the seeded entity IDs ───────────────────────────
   console.log('\n=== OPERATIONAL DEMO SEEDED ===');
   console.log(
@@ -941,6 +965,7 @@ async function main() {
         courier_id: courierId,
         lek_tile_id: lekTile,
         exception_lieutenant_id: exceptionLtId, // Phase-20: the COOK the teach-cards' ADD_RULE attaches to
+        autonomy_report_id: autonomyReportId, // Phase-21: the open 2-issue report (depleted PRODUCTION_OPS, backlog_age_cycles=2)
       },
       null,
       2,

@@ -6,6 +6,7 @@ using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
 using MafiaCleanCity.CityMap; // REUSE AuthClient (signin → Bearer)
 using MafiaCleanCity.Operational.Exceptions; // ProgressionClient / ProgressionDto (Phase-20)
+using MafiaCleanCity.Operational.Autonomy; // AutonomyClient — budget bands + ceiling decisions (Phase-21)
 
 namespace MafiaCleanCity.Operational.Lieutenant
 {
@@ -97,6 +98,13 @@ namespace MafiaCleanCity.Operational.Lieutenant
         /// <summary>Whether the rule-builder currently offers the AND_IF condition slot (tier ≥ 2). Test hook.</summary>
         public bool ConditionEditorVisible => VocabularyTier >= 2;
 
+        // ---- Phase-21 autonomy budget hooks ----------------------------------
+        private readonly List<KeyValuePair<string, string>> budgetBands = new List<KeyValuePair<string, string>>();
+        /// <summary>The per-category autonomy budget bands (Phase-21; empty until loaded / never-gated). Test hook.</summary>
+        public IReadOnlyList<KeyValuePair<string, string>> BudgetBands => budgetBands;
+        /// <summary>Readable failure of the last ceiling decision (409 cooldown included). Null after a success.</summary>
+        public string LastDecisionError { get; private set; }
+
         /// <summary>The (assigned/source/host) building the Recruit action assigns the picked lieutenant to. Settable before SignIn/Recruit.</summary>
         public string AssignedBuildingId { get => assignedBuildingId; set => assignedBuildingId = value; }
 
@@ -149,6 +157,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             if (auth != null) auth.BaseUrl = url;
             if (client != null) client.BaseUrl = url;
             if (progression != null) progression.BaseUrl = url;
+            if (autonomyClient != null) autonomyClient.BaseUrl = url;
         }
 
         private readonly List<string> renderedTexts = new List<string>();
@@ -197,6 +206,11 @@ namespace MafiaCleanCity.Operational.Lieutenant
         private AuthClient auth;
         private LieutenantClient client;
         private ProgressionClient progression;
+        private AutonomyClient autonomyClient; // Phase-21 — budget bands + ceiling decisions
+
+        // ---- Phase-21 autonomy rows container --------------------------------
+        private RectTransform autonomyRows;   // the container the per-category budget-band rows render into
+        private Text decisionErrorText;       // Phase-21 F2: cooldown failure detail — CHROME (component-tracked only, never in scan corpus)
 
         // Slate palette (mirrors BuildingCardController + global_conventions_core direction).
         private static readonly Color SurfaceBg = new Color(0.086f, 0.098f, 0.106f); // #16191b
@@ -239,6 +253,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             auth = new AuthClient { BaseUrl = baseUrl };
             client = new LieutenantClient { BaseUrl = baseUrl };
             progression = new ProgressionClient { BaseUrl = baseUrl };
+            autonomyClient = new AutonomyClient { BaseUrl = baseUrl };
             BuildLayout();
             EnsureEventSystem();
         }
@@ -353,7 +368,13 @@ namespace MafiaCleanCity.Operational.Lieutenant
             // The GET is a network round-trip; bail before touching UI if torn down by an inter-fixture teardown.
             if (Destroyed) yield break;
 
-            if (CurrentBands != null) RenderBands();
+            if (CurrentBands != null)
+            {
+                RenderBands();
+                // Phase-21: pull the autonomy budget bands for the same lieutenant (chained from the bands load
+                // so the gauge is always fresh whenever the lieutenant is selected or recruited).
+                yield return RefreshAutonomy();
+            }
         }
 
         // ----------------------------------------------------------- progression (Phase-20)
@@ -1037,6 +1058,19 @@ namespace MafiaCleanCity.Operational.Lieutenant
             AddLayoutElement(status, flexibleHeight: 0);
             BuildStatusSection();
 
+            // Autonomy section (Phase-21): the section label + the per-category budget-band rows + the 3 ceiling-decision
+            // buttons. Built BELOW the status/tenure section and ABOVE the reassign/rule-builder sections so the gauge
+            // sits next to the bands it extends.
+            GameObject autonomySectionGo = NewUI("AutonomySection", card.transform);
+            VerticalLayoutGroup autovlg = autonomySectionGo.AddComponent<VerticalLayoutGroup>();
+            autovlg.spacing = 6;
+            autovlg.childControlWidth = true;
+            autovlg.childControlHeight = true;
+            autovlg.childForceExpandWidth = true;
+            autovlg.childForceExpandHeight = false;
+            AddLayoutElement(autonomySectionGo, flexibleHeight: 0);
+            BuildAutonomySection((RectTransform)autonomySectionGo.transform);
+
             // Reassign section (B2 / Phase-11): the section label + the new-building inputs + the "Reassign…" button + the
             // confirmation block. Built BELOW the status section (the tenure chips it references) and ABOVE the rule-builder.
             GameObject reassign = NewUI("ReassignSection", card.transform);
@@ -1416,6 +1450,179 @@ namespace MafiaCleanCity.Operational.Lieutenant
             }
         }
 
+
+        // ----------------------------------------------------------- autonomy section (Phase-21)
+
+        // Build the AUTONOMY section shell: the section label, a rows container, and the 3 ceiling-decision buttons.
+        // The rows container is filled lazily by RenderAutonomy (called from RefreshAutonomy, chained after RefreshBands).
+        // Mirrors the Roster-section idiom: section label + a rows container + action buttons below.
+        private void BuildAutonomySection(RectTransform parent)
+        {
+            NewSectionLabel(parent, "AUTONOMY");
+
+            // Rows container — RenderAutonomy fills it with one row per category band.
+            GameObject rows = NewUI("AutonomyRows", parent);
+            VerticalLayoutGroup rvlg = rows.AddComponent<VerticalLayoutGroup>();
+            rvlg.spacing = 6;
+            rvlg.childControlWidth = true;
+            rvlg.childControlHeight = true;
+            rvlg.childForceExpandWidth = true;
+            rvlg.childForceExpandHeight = false;
+            autonomyRows = (RectTransform)rows.transform;
+            AddLayoutElement(rows, flexibleHeight: 0);
+
+            // The 3 ceiling-decision buttons (spec kind strings are the stable API keys).
+            AddActionButton(parent, "Reset budget", () => StartCoroutine(Decide("reset_budget")));
+            AddActionButton(parent, "Raise ceiling", () => StartCoroutine(Decide("raise_ceiling")));
+            AddActionButton(parent, "Override one-shot", () => StartCoroutine(Decide("override_one_shot")));
+
+            // Phase-21 F2: the readable decision-failure detail (cooldown reason — carries ids/digits) renders as
+            // CHROME: component-tracked only, never in the scan corpus (the tier-badge technique).
+            decisionErrorText = NewText("DecisionError", parent, "", 12, TextAnchor.MiddleLeft);
+            decisionErrorText.color = AccentSevere;
+            AddLayoutElement(decisionErrorText.gameObject, minHeight: 18, flexibleHeight: 0);
+            if (!textComponents.Contains(decisionErrorText)) textComponents.Add(decisionErrorText);
+
+            RenderAutonomy();
+        }
+
+        // Scoped corpus clear (the ClearRosterRows pattern): un-track each row Text's string + component
+        // BEFORE destroying, so re-renders never leave stale band strings in the scan corpus.
+        private void ClearAutonomyRows()
+        {
+            if (autonomyRows == null) return;
+            for (int i = autonomyRows.childCount - 1; i >= 0; i--)
+            {
+                GameObject child = autonomyRows.GetChild(i).gameObject;
+                foreach (Text t in child.GetComponentsInChildren<Text>(true))
+                {
+                    textComponents.Remove(t);
+                    renderedTexts.Remove(t.text); // remove one matching occurrence (TrackText added this exact string).
+                }
+                Object.Destroy(child);
+            }
+        }
+
+        // Clear + rebuild the autonomy rows from budgetBands. An empty map → a single "No autonomy budget yet" hint
+        // (a never-gated lieutenant). Each entry: CategoryLabel(key) + BandLabel(value), colour-coded by band level.
+        // Mirrors RenderRoster's clear-then-render discipline (no stale rows accumulate on repeated loads).
+        private void RenderAutonomy()
+        {
+            if (Destroyed || autonomyRows == null) return;
+            ClearAutonomyRows();
+
+            if (budgetBands.Count == 0)
+            {
+                Text empty = NewText("NoAutonomy", autonomyRows, "No autonomy budget yet", 13, TextAnchor.MiddleLeft);
+                empty.color = new Color(0.55f, 0.59f, 0.63f);
+                empty.fontStyle = FontStyle.Italic;
+                AddLayoutElement(empty.gameObject, minHeight: 22, flexibleHeight: 0);
+                TrackText(empty, "No autonomy budget yet");
+                return;
+            }
+
+            foreach (KeyValuePair<string, string> entry in budgetBands)
+            {
+                string catLabel = CategoryLabel(entry.Key);
+                string bandLabel = BandLabel(entry.Value);
+                Color accent = entry.Value == "depleted" ? AccentSevere
+                    : entry.Value == "low" ? AccentModerate
+                    : AccentMild;
+
+                // One row: a category label (left) + a band gauge label (right), matching the house row style.
+                GameObject row = NewUI("AutonRow_" + entry.Key, autonomyRows);
+                row.AddComponent<Image>().color = RowBg;
+                HorizontalLayoutGroup hlg = row.AddComponent<HorizontalLayoutGroup>();
+                hlg.padding = new RectOffset(10, 10, 6, 6);
+                hlg.spacing = 10;
+                hlg.childAlignment = TextAnchor.MiddleLeft;
+                hlg.childControlWidth = true;
+                hlg.childControlHeight = true;
+                hlg.childForceExpandWidth = false;
+                hlg.childForceExpandHeight = true;
+                AddLayoutElement(row, minHeight: 30, flexibleHeight: 0);
+
+                Text l = NewText("Cat", row.transform, catLabel, 15, TextAnchor.MiddleLeft);
+                l.color = new Color(0.72f, 0.76f, 0.80f);
+                AddLayoutElement(l.gameObject, minWidth: 160, flexibleWidth: 1);
+
+                Text v = NewText("Band", row.transform, bandLabel, 15, TextAnchor.MiddleRight);
+                v.color = accent;
+                v.fontStyle = FontStyle.Bold;
+                AddLayoutElement(v.gameObject, minWidth: 140, flexibleWidth: 0);
+
+                TrackText(l, catLabel);
+                TrackText(v, bandLabel);
+            }
+        }
+
+        /// <summary>Fetch the per-category autonomy budget bands (Phase-21). Empty map → the section renders empty
+        /// (a never-gated lieutenant). A fetch failure logs + keeps the previous rows (conservative).</summary>
+        public IEnumerator RefreshAutonomy()
+        {
+            EnsureInitialized();
+            if (!IsAuthenticated || string.IsNullOrEmpty(LastRecruitedId)) yield break;
+            List<KeyValuePair<string, string>> bands = null;
+            yield return autonomyClient.GetBudgetBands(LastRecruitedId, Token,
+                b => bands = b,
+                (code, msg) => Debug.LogWarning($"[Lieutenant] autonomy bands load failed ({code}): {msg}"));
+            if (Destroyed || bands == null) yield break;
+            budgetBands.Clear();
+            budgetBands.AddRange(bands);
+            RenderAutonomy();
+        }
+
+        /// <summary>Apply one ceiling decision (Phase-21). PUBLIC — the PlayMode fixture drives it directly.</summary>
+        public IEnumerator Decide(string kind)
+        {
+            EnsureInitialized();
+            if (!IsAuthenticated || string.IsNullOrEmpty(LastRecruitedId)) yield break;
+            LastDecisionError = null;
+            bool ok = false;
+            yield return autonomyClient.SendDecision(LastRecruitedId, kind, Token,
+                () => ok = true, (code, msg) => LastDecisionError = msg);
+            if (Destroyed) yield break;
+            if (!ok)
+            {
+                // R2.2: LastDecisionError may carry the full backend message (lieutenant uuid, free text) — it is
+                // CHROME (the player reads it in the detail HUD / logs; the PlayMode test asserts it via LastDecisionError).
+                // Pass a band-safe outcome label through SetOutcome (→ renderedTexts) so the scan corpus stays digit-free;
+                // the raw error stays in LastDecisionError ONLY (not tracked into the band corpus).
+                SetOutcome("Decision failed.", AccentSevere);
+                if (decisionErrorText != null) decisionErrorText.text = LastDecisionError ?? "";
+                yield break;
+            }
+            if (decisionErrorText != null) decisionErrorText.text = "";
+            SetOutcome("Decision applied ✓", AccentMild);
+            yield return RefreshAutonomy();
+        }
+
+        // Map backend category keys to readable player-facing labels (TRACKED — digit-free).
+        private static string CategoryLabel(string c)
+        {
+            switch (c) {
+                case "PRODUCTION_OPS": return "Production ops";
+                case "LOGISTICS_ROUTING": return "Logistics routing";
+                case "DISTRIBUTION_DISPATCH": return "Distribution dispatch";
+                case "LAUNDERING_FLOW": return "Laundering flow";
+                case "SECURITY_RESPONSE": return "Security response";
+                case "BOOKKEEPING_AUDIT": return "Bookkeeping audit";
+                case "CROSS_CATEGORY_INCIDENT": return "Cross-category incident";
+                default: return "Unknown category";
+            }
+        }
+
+        // Map budget band values to player-facing gauge labels (TRACKED — closed-domain, digit-free strings).
+        private static string BandLabel(string b)
+        {
+            switch (b) {
+                case "full": return "[####] Full";
+                case "nominal": return "[###.] Nominal";
+                case "low": return "[##..] Low";
+                case "depleted": return "[....] Depleted";
+                default: return "[?] Unknown";
+            }
+        }
 
         // ----------------------------------------------------------- rule-builder UI (T3)
 

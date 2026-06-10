@@ -6,6 +6,7 @@ using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
 using MafiaCleanCity.CityMap; // REUSE AuthClient (signin → Bearer) + WorldApiClient/DistrictHeatDto (heat) + CityMapController (nav)
 using MafiaCleanCity.Operational.Exceptions;
+using MafiaCleanCity.Operational.Autonomy;
 
 namespace MafiaCleanCity.Operational
 {
@@ -63,6 +64,7 @@ namespace MafiaCleanCity.Operational
         public MeDto CurrentMe { get; private set; }
         public ExceptionCardDto[] PendingExceptions { get; private set; } = System.Array.Empty<ExceptionCardDto>();
         public ProgressionDto CurrentProgression { get; private set; }
+        public AutonomyReportDto[] PendingAutonomyReports { get; private set; } = System.Array.Empty<AutonomyReportDto>();
 
         /// <summary>The full set of text shown to the player (labels + values) — used by the
         /// E2E to prove no raw scalar leaks client-side.</summary>
@@ -73,7 +75,7 @@ namespace MafiaCleanCity.Operational
         /// <summary>The GameObject of the controller the last nav button opened (test hook for "clicking opens the target").</summary>
         public GameObject LastNavGameObject { get; private set; }
 
-        public enum NavTarget { None, CityMap, BuildingCard, Pipeline, Exceptions }
+        public enum NavTarget { None, CityMap, BuildingCard, Pipeline, Exceptions, Autonomy }
 
         private readonly List<string> renderedTexts = new List<string>();
 
@@ -91,6 +93,7 @@ namespace MafiaCleanCity.Operational
         private WorldApiClient world; // REUSE — citywide heat (GET /v1/city/district/:id/heat)
         private ExceptionsClient exceptions;   // Phase-20 — pending-exceptions alert note + the Exceptions nav
         private ProgressionClient progression; // Phase-20 — the vocab-tier funnel line
+        private AutonomyClient autonomy;       // Phase-21 — pending autonomy reports alert note + the Autonomy nav
 
         // Slate palette (mirrors BuildingCard / Laundering / global_conventions_core direction).
         private static readonly Color SurfaceBg = new Color(0.051f, 0.059f, 0.063f);   // #0d0f10 (screen_1 ardoise)
@@ -126,6 +129,7 @@ namespace MafiaCleanCity.Operational
             world = new WorldApiClient { BaseUrl = baseUrl };
             exceptions = new ExceptionsClient { BaseUrl = baseUrl };
             progression = new ProgressionClient { BaseUrl = baseUrl };
+            autonomy = new AutonomyClient { BaseUrl = baseUrl };
             BuildLayout();
             EnsureEventSystem();
         }
@@ -192,6 +196,7 @@ namespace MafiaCleanCity.Operational
             CurrentHeat = null;
             PendingExceptions = System.Array.Empty<ExceptionCardDto>();
             CurrentProgression = null;
+            PendingAutonomyReports = System.Array.Empty<AutonomyReportDto>();
 
             // 1) headline wallet band.
             yield return client.GetWallet(Token,
@@ -217,6 +222,11 @@ namespace MafiaCleanCity.Operational
             yield return progression.GetProgression(Token,
                 dto => CurrentProgression = dto,
                 (code, msg) => Debug.LogWarning($"[Dashboard] progression fetch failed (best-effort): {code}: {msg}"));
+
+            // 6) Phase-21: open autonomy reports (drives the alerts note + the Autonomy nav) — best-effort.
+            yield return autonomy.GetReports(Token,
+                reports => PendingAutonomyReports = reports,
+                (code, msg) => Debug.LogWarning($"[Dashboard] autonomy reports fetch failed (best-effort): {code}: {msg}"));
 
             // The GETs above are network round-trips; the controller's GameObject may have been torn down
             // by an inter-fixture teardown while we awaited them. Bail before touching any UI (Unity's
@@ -247,6 +257,8 @@ namespace MafiaCleanCity.Operational
         public void OpenPipeline() => OpenNav(NavTarget.Pipeline);
         /// <summary>Open the Exception Queue screen (Phase-20 — ExceptionQueueController self-builds its Canvas).</summary>
         public void OpenExceptions() => OpenNav(NavTarget.Exceptions);
+        /// <summary>Open the Autonomy Inbox screen (Phase-21 — AutonomyInboxController self-builds its Canvas).</summary>
+        public void OpenAutonomy() => OpenNav(NavTarget.Autonomy);
 
         // Open the target controller. Each target is a MonoBehaviour in this project that builds
         // its own Canvas on Start(); a nav button creates a host GameObject + adds the component.
@@ -261,6 +273,7 @@ namespace MafiaCleanCity.Operational
                 case NavTarget.BuildingCard: host.AddComponent<BuildingCardController>(); break;
                 case NavTarget.Pipeline: host.AddComponent<LaunderingController>(); break;
                 case NavTarget.Exceptions: host.AddComponent<ExceptionQueueController>(); break;
+                case NavTarget.Autonomy: host.AddComponent<AutonomyInboxController>(); break;
             }
             LastNavGameObject = host;
         }
@@ -352,6 +365,7 @@ namespace MafiaCleanCity.Operational
                 else if (cb == "HOT") notes.Add("Citywide heat HOT");
             }
             if (PendingExceptions != null && PendingExceptions.Length > 0) notes.Add("Exceptions waiting");
+            if (PendingAutonomyReports != null && PendingAutonomyReports.Length > 0) notes.Add("Autonomy reports waiting");
 
             string line = notes.Count > 0 ? string.Join("  •  ", notes) : "No active alerts";
             Color accent = notes.Count > 0 ? AccentSevere : AccentMild;
@@ -374,6 +388,7 @@ namespace MafiaCleanCity.Operational
             AddNavButton(navBar, "Building Card", OpenBuildingCard);
             AddNavButton(navBar, "Pipeline", OpenPipeline);
             AddNavButton(navBar, "Exceptions", OpenExceptions);
+            AddNavButton(navBar, "Autonomy", OpenAutonomy);
         }
 
         // ----------------------------------------------------- band → label/glyph
