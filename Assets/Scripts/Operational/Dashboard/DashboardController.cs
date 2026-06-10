@@ -5,6 +5,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
 using MafiaCleanCity.CityMap; // REUSE AuthClient (signin → Bearer) + WorldApiClient/DistrictHeatDto (heat) + CityMapController (nav)
+using MafiaCleanCity.Operational.Exceptions;
 
 namespace MafiaCleanCity.Operational
 {
@@ -24,21 +25,19 @@ namespace MafiaCleanCity.Operational
     //
     // R2.2 / P5: every projection leaf the player sees is a qualitative band STRING or a
     // BOOLEAN — this screen renders exactly those; it NEVER shows a raw scalar (cents / heat
-    // float / ticks). a11y F2: every status line carries a text label AND a shape glyph (not
+    // float / ticks) — except the intentional "Tier N" vocabulary chrome, excluded from the
+    // scan corpus via AddStatusRow(trackValue: false) (see Render). a11y F2: every status line carries a text label AND a shape glyph (not
     // colour alone), mirroring the Building Card / Laundering band rows + the CityMap heat badge.
     //
     // The whole UI is built programmatically from a single Canvas (mirrors
     // BuildingCardController / LaunderingController / CityMapController) so a scene needs almost
     // no manual wiring.
     //
-    // M1 scope note (honest deferral): the full screen_1 design (the HighestLeverageCard +
-    // [Consider]/[Commit]/[Skip], the top-3 ExceptionQueuePanel with inline actions, the
-    // 4-bar OrgVitalsPanel heat/cohesion/friction/stress, the ContextualBanner Compression-Week,
-    // the ShortcutBar, the rich KPI tiles + decision feed) is intentionally NOT built here —
-    // those depend on the core_loops.* endpoints (one_decision / exception_queue) that are not
-    // part of the M1 backend. This controller renders the M1-live surface faithfully — the
-    // wallet band headline, the citywide heat band + escalation, a heat-derived alerts line,
-    // and the cross-screen nav — and defers the rest.
+    // M1 scope note (honest deferral, amended Phase-20): the full screen_1 design (the HighestLeverageCard +
+    // [Consider]/[Commit]/[Skip], the top-3 ExceptionQueuePanel with INLINE actions, the 4-bar OrgVitalsPanel,
+    // the ContextualBanner, the ShortcutBar, the rich KPI tiles + decision feed) is still NOT built here. Since
+    // Phase-20 the exception queue IS live as its own screen (ExceptionQueueController — nav below) + a pending
+    // alerts note; the INLINE top-3 panel and one_decision (core_loops.*) remain deferred.
     public class DashboardController : MonoBehaviour
     {
         [Header("Backend")]
@@ -62,6 +61,8 @@ namespace MafiaCleanCity.Operational
         public WalletDto CurrentWallet { get; private set; }
         public DistrictHeatDto CurrentHeat { get; private set; }
         public MeDto CurrentMe { get; private set; }
+        public ExceptionCardDto[] PendingExceptions { get; private set; } = System.Array.Empty<ExceptionCardDto>();
+        public ProgressionDto CurrentProgression { get; private set; }
 
         /// <summary>The full set of text shown to the player (labels + values) — used by the
         /// E2E to prove no raw scalar leaks client-side.</summary>
@@ -72,7 +73,7 @@ namespace MafiaCleanCity.Operational
         /// <summary>The GameObject of the controller the last nav button opened (test hook for "clicking opens the target").</summary>
         public GameObject LastNavGameObject { get; private set; }
 
-        public enum NavTarget { None, CityMap, BuildingCard, Pipeline }
+        public enum NavTarget { None, CityMap, BuildingCard, Pipeline, Exceptions }
 
         private readonly List<string> renderedTexts = new List<string>();
 
@@ -88,6 +89,8 @@ namespace MafiaCleanCity.Operational
         private AuthClient auth;
         private DashboardClient client;
         private WorldApiClient world; // REUSE — citywide heat (GET /v1/city/district/:id/heat)
+        private ExceptionsClient exceptions;   // Phase-20 — pending-exceptions alert note + the Exceptions nav
+        private ProgressionClient progression; // Phase-20 — the vocab-tier funnel line
 
         // Slate palette (mirrors BuildingCard / Laundering / global_conventions_core direction).
         private static readonly Color SurfaceBg = new Color(0.051f, 0.059f, 0.063f);   // #0d0f10 (screen_1 ardoise)
@@ -121,6 +124,8 @@ namespace MafiaCleanCity.Operational
             auth = new AuthClient { BaseUrl = baseUrl };
             client = new DashboardClient { BaseUrl = baseUrl };
             world = new WorldApiClient { BaseUrl = baseUrl };
+            exceptions = new ExceptionsClient { BaseUrl = baseUrl };
+            progression = new ProgressionClient { BaseUrl = baseUrl };
             BuildLayout();
             EnsureEventSystem();
         }
@@ -185,6 +190,8 @@ namespace MafiaCleanCity.Operational
             HeatError = null;
             CurrentWallet = null;
             CurrentHeat = null;
+            PendingExceptions = System.Array.Empty<ExceptionCardDto>();
+            CurrentProgression = null;
 
             // 1) headline wallet band.
             yield return client.GetWallet(Token,
@@ -200,6 +207,16 @@ namespace MafiaCleanCity.Operational
             yield return world.GetDistrictHeat(heatProbeDistrictId, Token,
                 heat => CurrentHeat = heat,
                 err => HeatError = err);
+
+            // 4) Phase-20: pending exceptions (drives the alerts note + proves the funnel surface) — best-effort.
+            yield return exceptions.GetQueue(Token,
+                cards => PendingExceptions = cards,
+                (code, msg) => Debug.LogWarning($"[Dashboard] exceptions queue fetch failed (best-effort): {code}: {msg}"));
+
+            // 5) Phase-20: the vocab-tier funnel line — best-effort.
+            yield return progression.GetProgression(Token,
+                dto => CurrentProgression = dto,
+                (code, msg) => Debug.LogWarning($"[Dashboard] progression fetch failed (best-effort): {code}: {msg}"));
 
             // The GETs above are network round-trips; the controller's GameObject may have been torn down
             // by an inter-fixture teardown while we awaited them. Bail before touching any UI (Unity's
@@ -228,6 +245,8 @@ namespace MafiaCleanCity.Operational
         public void OpenBuildingCard() => OpenNav(NavTarget.BuildingCard);
         /// <summary>Open the Laundering Pipeline screen (REUSE LaunderingController).</summary>
         public void OpenPipeline() => OpenNav(NavTarget.Pipeline);
+        /// <summary>Open the Exception Queue screen (Phase-20 — ExceptionQueueController self-builds its Canvas).</summary>
+        public void OpenExceptions() => OpenNav(NavTarget.Exceptions);
 
         // Open the target controller. Each target is a MonoBehaviour in this project that builds
         // its own Canvas on Start(); a nav button creates a host GameObject + adds the component.
@@ -241,6 +260,7 @@ namespace MafiaCleanCity.Operational
                 case NavTarget.CityMap: host.AddComponent<CityMapController>(); break;
                 case NavTarget.BuildingCard: host.AddComponent<BuildingCardController>(); break;
                 case NavTarget.Pipeline: host.AddComponent<LaunderingController>(); break;
+                case NavTarget.Exceptions: host.AddComponent<ExceptionQueueController>(); break;
             }
             LastNavGameObject = host;
         }
@@ -285,6 +305,15 @@ namespace MafiaCleanCity.Operational
                 AddStatusRow("Citywide heat", "Unavailable", "[?]", TextSecondary);
             }
 
+            // ---- Phase-20: the vocabulary-tier funnel line (GET /v1/progression). The "Tier N" digit is
+            //      intentional UI chrome (the locked-teaser technique) — the VALUE is kept out of the scan corpus.
+            if (CurrentProgression != null)
+            {
+                AddStatusRow("Vocabulary",
+                    $"Tier {CurrentProgression.vocabulary_tier} — {ProgressLabel(CurrentProgression.progress_to_next)}",
+                    "[*]", AccentMild, trackValue: false);
+            }
+
             // ---- Minimal alerts line — derived STRICTLY from the projections we fetched. No fabrication.
             BuildAlerts();
 
@@ -322,6 +351,7 @@ namespace MafiaCleanCity.Operational
                 if (cb == "BURNING") notes.Add("Citywide heat BURNING");
                 else if (cb == "HOT") notes.Add("Citywide heat HOT");
             }
+            if (PendingExceptions != null && PendingExceptions.Length > 0) notes.Add("Exceptions waiting");
 
             string line = notes.Count > 0 ? string.Join("  •  ", notes) : "No active alerts";
             Color accent = notes.Count > 0 ? AccentSevere : AccentMild;
@@ -343,6 +373,7 @@ namespace MafiaCleanCity.Operational
             AddNavButton(navBar, "City Map", OpenCityMap);
             AddNavButton(navBar, "Building Card", OpenBuildingCard);
             AddNavButton(navBar, "Pipeline", OpenPipeline);
+            AddNavButton(navBar, "Exceptions", OpenExceptions);
         }
 
         // ----------------------------------------------------- band → label/glyph
@@ -418,6 +449,18 @@ namespace MafiaCleanCity.Operational
                 case "HOT": return AccentSevere;
                 case "BURNING": return AccentSevere;
                 default: return TextSecondary;
+            }
+        }
+
+        // Phase-20: progress_to_next band (UNLOCKED | IN_PROGRESS | LOCKED).
+        private static string ProgressLabel(string b)
+        {
+            switch (b)
+            {
+                case "UNLOCKED": return "Unlocked";
+                case "IN_PROGRESS": return "In progress";
+                case "LOCKED": return "Locked";
+                default: return string.IsNullOrEmpty(b) ? "Unknown" : b;
             }
         }
 
@@ -526,7 +569,7 @@ namespace MafiaCleanCity.Operational
             AddLayoutElement(nav, flexibleHeight: 1);
         }
 
-        private void AddStatusRow(string label, string value, string glyph, Color accent)
+        private void AddStatusRow(string label, string value, string glyph, Color accent, bool trackValue = true)
         {
             GameObject row = NewUI("Row_" + label.Replace(" ", ""), statusRows);
             row.AddComponent<Image>().color = RowBg;
@@ -557,7 +600,7 @@ namespace MafiaCleanCity.Operational
 
             TrackText(g, glyph);
             TrackText(l, label);
-            TrackText(v, value);
+            if (trackValue) TrackText(v, value); // opt-out = chrome (digit-bearing values stay out of the scan corpus)
         }
 
         private string NewSectionLabel(Transform parent, string text)

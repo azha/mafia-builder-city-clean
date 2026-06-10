@@ -16,6 +16,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
     //
     // Slice executable subset (COOK loop): triggers STATE / EVENT ; actions EXECUTE_DEFAULT / PAUSE_OPS. No AND_IF,
     // no AND/OR/NOT, no SEQ/COHORT, no tiers 2-7 (deferred — spec §9). One trigger atom → one action atom per rule.
+    // Phase-20: the AND_IF condition slot (MY_STATE / PEER_STATE, Tier ≥ 2) is now authorable — see RuleRow.cond*.
 
     /// <summary>
     /// A single authored rule row (the builder's rule-model unit; the PlayMode test populates these directly via the
@@ -30,6 +31,15 @@ namespace MafiaCleanCity.Operational.Lieutenant
         public string value;       // the comparison literal — "true"/"false" for a bool field, a number for a numeric one.
         public string action;      // "EXECUTE_DEFAULT" | "PAUSE_OPS" — the action atom (no-arg, Tier 1).
         public int priority;       // the @priority integer (within [PriorityMin, PriorityMax]).
+
+        // ---- Phase-20 (Tier-2) — the OPTIONAL AND_IF condition slot. The grammar allows AT MOST ONE condition
+        // per rule (RuleDecl ::= 'WHEN' TriggerExpr ['AND_IF' ConditionExpr] 'THEN' …) — one slot, no chaining.
+        public string condKind = "NONE";      // "NONE" | "MY_STATE" | "PEER_STATE"
+        public string condField = "";          // condition field — MY palette (MY_STATE) or the PEER role's (PEER_STATE)
+        public string condComparator = "";     // a parser-accepted CompareOp
+        public string condValue = "";          // literal ("true"/"false" for a bool field, a number otherwise)
+        public string condPeerRole = "";       // PEER_STATE only — an archetype name (serialized lower-case: cook@…)
+        public string condPeerZone = "";       // PEER_STATE only — "same_zone" (default; serialized BARE) | "same_building"
 
         public RuleRow() { }
 
@@ -153,6 +163,14 @@ namespace MafiaCleanCity.Operational.Lieutenant
         /// in the slice; every archetype's EXECUTE_DEFAULT maps to its own real action, PAUSE_OPS halts ops).</summary>
         public static readonly IReadOnlyList<string> Actions = new List<string> { "EXECUTE_DEFAULT", "PAUSE_OPS" };
 
+        /// <summary>The condition kinds the Tier-2 editor cycles. Only the EXECUTABLE conditions are offered
+        /// (MY_STATE since P12, PEER_STATE since P18); EXCEPTION_FROM / CONVICTION_ABOVE stay locked teasers.</summary>
+        public static readonly IReadOnlyList<string> ConditionKinds = new List<string> { "NONE", "MY_STATE", "PEER_STATE" };
+
+        /// <summary>The peer-zone qualifiers (P18 hybrid addressing): same_zone is the grammar DEFAULT and is
+        /// serialized BARE (no @qualifier); same_building serializes as role@same_building.</summary>
+        public static readonly IReadOnlyList<string> PeerZones = new List<string> { "same_zone", "same_building" };
+
         // --- B3 locked-tier teaser (DISPLAY-ONLY — never selectable) -------------------------------------------------
         // The DSL grammar exposes far more than the slice executable subset (STATE/EVENT triggers + EXECUTE_DEFAULT/
         // PAUSE_OPS actions). The locked catalogues below mirror the rest of the backend grammar so the builder can
@@ -224,11 +242,10 @@ namespace MafiaCleanCity.Operational.Lieutenant
             new LockedPrimitive("COHORT", 6),                // TIER_NOT_UNLOCKED — COHORT(role): action.
         };
 
-        /// <summary>The locked COMBINATOR marker — the optional condition clause `WHEN trigger AND_IF condition THEN …`.
-        /// AND_IF is a Tier-1 grammar production that is parsed but NOT executable in this build (NOT_SUPPORTED_YET).
-        /// Per the plan we expose only the AND_IF marker, not the individual condition primitives (MY_STATE/PEER_STATE/
-        /// …). DISPLAY-ONLY — there is no combinator cycle control in the slice.</summary>
-        public static readonly LockedPrimitive LockedCombinator = new LockedPrimitive("AND_IF", 1); // NOT_SUPPORTED_YET
+        /// <summary>The locked COMBINATOR marker — `WHEN trigger AND_IF condition THEN …`. Since P12 (Tier-2a) the
+        /// backend EXECUTES AND_IF conditions and tier-gates them (TIER_NOT_UNLOCKED below Tier 2); the Phase-20
+        /// editor reveals the condition slot at vocabulary_tier ≥ 2 and this teaser shows only below it.</summary>
+        public static readonly LockedPrimitive LockedCombinator = new LockedPrimitive("AND_IF", 2); // TIER_NOT_UNLOCKED below Tier 2
 
         /// <summary>The grayed teaser labels (triggers, then actions, then the AND_IF combinator) — the precomputed
         /// captions the controller renders as dim, non-interactive lines + exposes via the LockedPrimitiveLabels test
@@ -287,34 +304,62 @@ namespace MafiaCleanCity.Operational.Lieutenant
             return sb.ToString();
         }
 
-        /// <summary>Serialize a single rule to its DSL line (no trailing newline).</summary>
+        /// <summary>Serialize a single rule to its DSL line (no trailing newline). Phase-20: when the rule carries a
+        /// condition slot, the AND_IF clause serializes between the trigger atom and THEN —
+        ///   "WHEN STATE(cook_idle,==,true) AND_IF PEER_STATE(cook@same_building,heat,>=,0.5) THEN PAUSE_OPS @90;"
+        /// same_zone (the grammar default) serializes the BARE role: "AND_IF PEER_STATE(cook,heat,>=,0.5)".
+        /// Without a condition the output is byte-identical to the original form:
+        ///   STATE bool   → "WHEN STATE(cook_idle,==,true) THEN EXECUTE_DEFAULT @10;"
+        ///   EVENT number → "WHEN EVENT(heat,>=,0.5) THEN PAUSE_OPS @100;"</summary>
         public static string SerializeRule(RuleRow r)
         {
             string field = (r.field ?? string.Empty).Trim();
             string comparator = (r.comparator ?? string.Empty).Trim();
-            string value = NormalizeValue(r);
+            string value = NormalizeLiteral(field, r.value);
             string trigger = (r.triggerKind ?? string.Empty).Trim();
             string action = (r.action ?? string.Empty).Trim();
-            // WHEN <trigger>(<field>,<comparator>,<value>) THEN <action> @<priority>;
-            return $"WHEN {trigger}({field},{comparator},{value}) THEN {action} @{r.priority};";
+            string condition = SerializeCondition(r);
+            string andIf = condition.Length == 0 ? string.Empty : $" AND_IF {condition}";
+            // WHEN <trigger>(<field>,<comparator>,<value>)[ AND_IF <condition>] THEN <action> @<priority>;
+            return $"WHEN {trigger}({field},{comparator},{value}){andIf} THEN {action} @{r.priority};";
         }
 
-        // Normalize the literal value: a bool field → lower-cased "true"/"false" (the parser reads `true`/`false` as
-        // IDENT enum literals); a numeric field → the trimmed raw text (the parser reads it as a NUMBER literal). We do
-        // NOT coerce/repair beyond casing/trim — a bad value still serializes and the backend reports the diagnostic.
-        private static string NormalizeValue(RuleRow r)
+        // The AND_IF condition atom, or "" when the slot is empty. The client does NOT validate — a malformed
+        // slot still serializes and the backend's 422 diagnostics stay authoritative.
+        private static string SerializeCondition(RuleRow r)
         {
-            string raw = (r.value ?? string.Empty).Trim();
-            FieldSpec spec = FieldByKey((r.field ?? string.Empty).Trim());
+            string kind = (r.condKind ?? "NONE").Trim();
+            if (kind == "MY_STATE")
+            {
+                string f = (r.condField ?? string.Empty).Trim();
+                return $"MY_STATE({f},{(r.condComparator ?? string.Empty).Trim()},{NormalizeLiteral(f, r.condValue)})";
+            }
+            if (kind == "PEER_STATE")
+            {
+                string role = (r.condPeerRole ?? string.Empty).Trim().ToLowerInvariant();
+                string zone = (r.condPeerZone ?? string.Empty).Trim();
+                string peerRef = (zone.Length == 0 || zone == "same_zone") ? role : $"{role}@{zone}";
+                string f = (r.condField ?? string.Empty).Trim();
+                return $"PEER_STATE({peerRef},{f},{(r.condComparator ?? string.Empty).Trim()},{NormalizeLiteral(f, r.condValue)})";
+            }
+            return string.Empty;
+        }
+
+        // Normalize a literal for a (possibly cross-archetype) field key: a bool field → lower-cased "true"/"false";
+        // anything else passes through trimmed (the backend rejects bad literals — we never silently rewrite).
+        private static string NormalizeLiteral(string fieldKey, string rawValue)
+        {
+            string raw = (rawValue ?? string.Empty).Trim();
+            FieldSpec spec = FieldByKey((fieldKey ?? string.Empty).Trim());
             if (spec != null && spec.IsBool)
             {
-                // Normalize common bool spellings to canonical lower-case; leave anything else as-typed (let the
-                // backend reject it) so we never silently rewrite a value the player intended.
                 if (raw.Equals("true", StringComparison.OrdinalIgnoreCase)) return "true";
                 if (raw.Equals("false", StringComparison.OrdinalIgnoreCase)) return "false";
             }
             return raw;
         }
+
+        private static string NormalizeValue(RuleRow r) => NormalizeLiteral((r.field ?? string.Empty).Trim(), r.value);
 
         // --- natural-language preview ------------------------------------------------------------------------------
 
@@ -342,7 +387,22 @@ namespace MafiaCleanCity.Operational.Lieutenant
             {
                 condition = $"{field} {ComparatorWord(r.comparator)} {NormalizeValue(r)}".TrimEnd();
             }
-            return $"When {condition}, {ActionWord(r.action)} (priority {r.priority.ToString(CultureInfo.InvariantCulture)}).";
+            return $"When {condition}{ConditionClause(r)}, {ActionWord(r.action)} (priority {r.priority.ToString(CultureInfo.InvariantCulture)}).";
+        }
+
+        // ", and only if …" — the NL preview of the AND_IF slot ("" when empty). EN slice-1; i18n deferred.
+        private static string ConditionClause(RuleRow r)
+        {
+            string kind = (r.condKind ?? "NONE").Trim();
+            if (kind == "MY_STATE")
+                return $", and only if my {(r.condField ?? string.Empty).Trim()} {ComparatorWord(r.condComparator)} {NormalizeLiteral(r.condField, r.condValue)}";
+            if (kind == "PEER_STATE")
+            {
+                string where = (r.condPeerZone ?? string.Empty).Trim() == "same_building" ? "in my building" : "in my zone";
+                return $", and only if the {(r.condPeerRole ?? string.Empty).Trim().ToLowerInvariant()} {where} has " +
+                       $"{(r.condField ?? string.Empty).Trim()} {ComparatorWord(r.condComparator)} {NormalizeLiteral(r.condField, r.condValue)}";
+            }
+            return string.Empty;
         }
 
         // Comparator → a readable symbol/word for the preview (the math symbols read clearer than "==").

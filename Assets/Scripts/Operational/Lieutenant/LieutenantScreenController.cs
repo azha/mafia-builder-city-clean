@@ -5,6 +5,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
 using MafiaCleanCity.CityMap; // REUSE AuthClient (signin → Bearer)
+using MafiaCleanCity.Operational.Exceptions; // ProgressionClient / ProgressionDto (Phase-20)
 
 namespace MafiaCleanCity.Operational.Lieutenant
 {
@@ -88,6 +89,14 @@ namespace MafiaCleanCity.Operational.Lieutenant
         /// — the no-raw-scalar scan covers the BAND corpus, not the locked teaser (see BuildLockedTeaser).</summary>
         public IReadOnlyList<string> LockedPrimitiveLabels => RuleModel.LockedPrimitiveLabels();
 
+        /// <summary>The player's vocabulary tier (GET /v1/progression; 1 until fetched). Tier ≥ 2 reveals the
+        /// AND_IF condition editor (Phase-20). Test hook.</summary>
+        public int VocabularyTier { get; private set; } = 1;
+        /// <summary>Qualitative progress toward the next tier (LOCKED | IN_PROGRESS | UNLOCKED; "" until fetched).</summary>
+        public string ProgressToNext { get; private set; } = "";
+        /// <summary>Whether the rule-builder currently offers the AND_IF condition slot (tier ≥ 2). Test hook.</summary>
+        public bool ConditionEditorVisible => VocabularyTier >= 2;
+
         /// <summary>The (assigned/source/host) building the Recruit action assigns the picked lieutenant to. Settable before SignIn/Recruit.</summary>
         public string AssignedBuildingId { get => assignedBuildingId; set => assignedBuildingId = value; }
 
@@ -139,6 +148,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             baseUrl = url;
             if (auth != null) auth.BaseUrl = url;
             if (client != null) client.BaseUrl = url;
+            if (progression != null) progression.BaseUrl = url;
         }
 
         private readonly List<string> renderedTexts = new List<string>();
@@ -167,6 +177,9 @@ namespace MafiaCleanCity.Operational.Lieutenant
         private RectTransform builderSection;  // holds the rule-builder label + the per-rule rows + the +Add/Validate/Attach.
         private RectTransform ruleRows;        // the container the per-rule editor rows render into.
         private RectTransform diagnosticsArea; // where RenderDiagnostics lists the 422 diagnostics (cleared on success).
+        // ---- Phase-20 progression gating -------------------------------------
+        private Text tierBadgeText;            // the tier badge below the builder section label (component-tracked only).
+        private RectTransform lockedTeaserRows; // the rows container inside the locked teaser (re-rendered by RenderLockedTeaser).
         // ---- B2 Reassign section (Phase-11 tenure inertia) --------------------
         private RectTransform reassignSection;   // holds the Reassign label + the new-building inputs + the Reassign button.
         private RectTransform reassignConfirm;    // the confirmation block (projected disruption + the tenure/bonus lost), shown on demand.
@@ -183,6 +196,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
 
         private AuthClient auth;
         private LieutenantClient client;
+        private ProgressionClient progression;
 
         // Slate palette (mirrors BuildingCardController + global_conventions_core direction).
         private static readonly Color SurfaceBg = new Color(0.086f, 0.098f, 0.106f); // #16191b
@@ -224,6 +238,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             auth = new AuthClient { BaseUrl = baseUrl };
             client = new LieutenantClient { BaseUrl = baseUrl };
+            progression = new ProgressionClient { BaseUrl = baseUrl };
             BuildLayout();
             EnsureEventSystem();
         }
@@ -248,6 +263,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             }
             Token = token;
             IsAuthenticated = true;
+            yield return RefreshProgression();
         }
 
         /// <summary>Set the player Bearer directly (test convenience when already signed in elsewhere).</summary>
@@ -338,6 +354,33 @@ namespace MafiaCleanCity.Operational.Lieutenant
             if (Destroyed) yield break;
 
             if (CurrentBands != null) RenderBands();
+        }
+
+        // ----------------------------------------------------------- progression (Phase-20)
+
+        /// <summary>Fetch the vocab tier (Phase-20). On a tier change the builder re-renders (the condition slot
+        /// appears per rule row + the teaser drops its AND_IF line). A fetch failure keeps the last-known tier
+        /// (conservative — tier 1 until the first success) — the backend still authoritatively 422s any Tier-2
+        /// source (TIER_NOT_UNLOCKED).</summary>
+        public IEnumerator RefreshProgression()
+        {
+            EnsureInitialized();
+            if (!IsAuthenticated) yield break;
+            int tier = VocabularyTier;
+            string band = null;
+            yield return progression.GetProgression(Token,
+                dto => { tier = dto.vocabulary_tier; band = dto.progress_to_next; },
+                (code, msg) => Debug.LogWarning($"[Lieutenant] progression load failed ({code}): {msg}"));
+            if (Destroyed) yield break;
+            bool changed = tier != VocabularyTier;
+            VocabularyTier = tier;
+            if (band != null) ProgressToNext = band;
+            if (changed)
+            {
+                RenderRuleRows();      // the per-rule condition editor appears/disappears
+                RenderLockedTeaser();  // the AND_IF teaser line shows only below tier 2
+            }
+            RenderTierBadge();
         }
 
         // ----------------------------------------------------------- roster (B2)
@@ -497,7 +540,9 @@ namespace MafiaCleanCity.Operational.Lieutenant
         // palette is reset to the palette's first field (its trigger kind / first comparator / a default value), so a stale
         // field from another archetype never lingers on the builder when the archetype switches (e.g. after picking
         // SECURITY, a leftover COOK `heat` rule becomes a `building_damaged` rule). Rules already on a valid palette field
-        // are left untouched. Does NOT re-render — the caller re-renders.
+        // are left untouched. Also realigns MY_STATE condition slots independently — a rule whose trigger field survives
+        // the switch can still carry a stranded condField that belongs to the old archetype. Does NOT re-render — the
+        // caller re-renders.
         private void RealignRulesToArchetype(string archetype)
         {
             FieldSpec[] palette = RuleModel.FieldsFor(archetype);
@@ -505,6 +550,19 @@ namespace MafiaCleanCity.Operational.Lieutenant
             for (int i = 0; i < rules.Count; i++)
             {
                 RuleRow r = rules[i];
+
+                // Phase-20: realign the condition slot FIRST (independent of the trigger check below — a rule
+                // whose trigger field survives the switch can still carry a stranded MY_STATE condField). A
+                // MY_STATE condition reads MY archetype's palette; PEER_STATE reads the PEER role's palette and
+                // is unaffected by an archetype switch.
+                if (r.condKind == "MY_STATE")
+                {
+                    bool condInPalette = false;
+                    for (int j = 0; j < palette.Length; j++)
+                        if (palette[j].Key == r.condField) { condInPalette = true; break; }
+                    if (!condInPalette) ResetConditionField(r);
+                }
+
                 bool inPalette = false;
                 for (int j = 0; j < palette.Length; j++)
                     if (palette[j].Key == r.field) { inPalette = true; break; }
@@ -1369,6 +1427,14 @@ namespace MafiaCleanCity.Operational.Lieutenant
         {
             NewSectionLabel(builderSection, "RULE BUILDER — author a behavior script");
 
+            // Phase-20: the tier badge — carries the tier digit (intentional chrome): component-tracked only,
+            // excluded from the scan corpus (the locked-teaser technique).
+            tierBadgeText = NewText("TierBadge", builderSection, "", 12, TextAnchor.MiddleLeft);
+            tierBadgeText.color = LockedDim;
+            AddLayoutElement(tierBadgeText.gameObject, minHeight: 18, flexibleHeight: 0);
+            if (!textComponents.Contains(tierBadgeText)) textComponents.Add(tierBadgeText);
+            RenderTierBadge();
+
             // The per-rule editor rows render here (one editor block per RuleRow).
             GameObject rows = NewUI("RuleRows", builderSection);
             VerticalLayoutGroup rvlg = rows.AddComponent<VerticalLayoutGroup>();
@@ -1404,6 +1470,14 @@ namespace MafiaCleanCity.Operational.Lieutenant
             RenderRuleRows();
         }
 
+        private void RenderTierBadge()
+        {
+            if (Destroyed || tierBadgeText == null) return;
+            tierBadgeText.text = ConditionEditorVisible
+                ? $"Vocabulary Tier {VocabularyTier} — conditions unlocked (AND_IF)"
+                : "Vocabulary Tier 1 — conditions locked 🔒 (resolve exceptions + teach rules to unlock)";
+        }
+
         // ----------------------------------------------------------- locked-tier teaser (B3)
 
         // Render the locked-tier TEASER: a grayed, NON-interactive block hinting at the DSL primitives beyond the slice
@@ -1425,19 +1499,38 @@ namespace MafiaCleanCity.Operational.Lieutenant
             tvlg.childControlHeight = true;
             tvlg.childForceExpandWidth = true;
             tvlg.childForceExpandHeight = false;
-            RectTransform teaserRows = (RectTransform)teaser.transform;
+            lockedTeaserRows = (RectTransform)teaser.transform;
             AddLayoutElement(teaser, flexibleHeight: 0);
 
-            AddLockedLine(teaserRows, "Triggers");
+            RenderLockedTeaser();
+        }
+
+        // Re-render the teaser lines (Phase-20: the AND_IF/combinator line shows only below Tier 2 — once the
+        // condition editor is live the marker is no longer "locked").
+        private void RenderLockedTeaser()
+        {
+            if (Destroyed || lockedTeaserRows == null) return;
+            for (int i = lockedTeaserRows.childCount - 1; i >= 0; i--)
+                UnityEngine.Object.Destroy(lockedTeaserRows.GetChild(i).gameObject);
+
+            // Prune refs destroyed in EARLIER renders (Destroy is end-of-frame deferred, so this render's
+            // casualties only read as null on the NEXT pass — textComponents is a write-only registry, so the
+            // one-frame stragglers are harmless).
+            textComponents.RemoveAll(t => t == null);
+
+            AddLockedLine(lockedTeaserRows, "Triggers");
             foreach (RuleModel.LockedPrimitive p in RuleModel.LockedTriggers)
-                AddLockedLine(teaserRows, "  " + p.Label);
+                AddLockedLine(lockedTeaserRows, "  " + p.Label);
 
-            AddLockedLine(teaserRows, "Actions");
+            AddLockedLine(lockedTeaserRows, "Actions");
             foreach (RuleModel.LockedPrimitive p in RuleModel.LockedActions)
-                AddLockedLine(teaserRows, "  " + p.Label);
+                AddLockedLine(lockedTeaserRows, "  " + p.Label);
 
-            AddLockedLine(teaserRows, "Combinator");
-            AddLockedLine(teaserRows, "  " + RuleModel.LockedCombinator.Label);
+            if (!ConditionEditorVisible)
+            {
+                AddLockedLine(lockedTeaserRows, "Combinator");
+                AddLockedLine(lockedTeaserRows, "  " + RuleModel.LockedCombinator.Label);
+            }
         }
 
         // One grayed teaser line: a plain (non-interactive) dim Text — NOT a Button, so it is NOT selectable. Tracked as
@@ -1580,6 +1673,10 @@ namespace MafiaCleanCity.Operational.Lieutenant
             // The preview reads the player's OWN authored values (priority / value) — like script_source, it is excluded
             // from the no-raw-scalar scan corpus (renderedTexts); we track only the component.
             if (!textComponents.Contains(preview)) textComponents.Add(preview);
+
+            // Phase-20 (tier ≥ 2): the optional AND_IF condition — ONE slot per rule (the grammar allows at most one).
+            if (ConditionEditorVisible)
+                BuildConditionEditor(block.transform, rule, () => { if (preview != null) preview.text = RuleModel.PreviewRule(rule); });
         }
 
         // --- rule-model mutation helpers (cycle within the CURRENT archetype's palette) ----------
@@ -1620,6 +1717,111 @@ namespace MafiaCleanCity.Operational.Lieutenant
                 if (RuleModel.Actions[i] == rule.action) { idx = i; break; }
             rule.action = RuleModel.Actions[(idx + 1) % RuleModel.Actions.Count];
         }
+
+        // The AND_IF condition editor row: kind cycle (NONE/MY_STATE/PEER_STATE) + per-kind controls. Tap-to-cycle
+        // idiom; kind/role/field changes rebuild the rows (the control set / value-editor type changes).
+        private void BuildConditionEditor(Transform parent, RuleRow rule, System.Action refreshPreview)
+        {
+            GameObject row = NewUI("Condition", parent);
+            HorizontalLayoutGroup hlg = row.AddComponent<HorizontalLayoutGroup>();
+            hlg.spacing = 6;
+            hlg.childAlignment = TextAnchor.MiddleLeft;
+            hlg.childControlWidth = true; hlg.childControlHeight = true;
+            hlg.childForceExpandWidth = false; hlg.childForceExpandHeight = true;
+            AddLayoutElement(row, minHeight: 30, flexibleHeight: 0);
+
+            AddCycleButton(row.transform, "AND_IF", () => string.IsNullOrEmpty(rule.condKind) ? "NONE" : rule.condKind, () =>
+            {
+                CycleConditionKind(rule);
+                RenderRuleRows();
+            });
+            string kind = string.IsNullOrEmpty(rule.condKind) ? "NONE" : rule.condKind;
+            if (kind == "NONE") return;
+
+            if (kind == "PEER_STATE")
+            {
+                AddCycleButton(row.transform, "Peer", () => rule.condPeerRole, () =>
+                {
+                    int i = System.Array.IndexOf(RuleModel.Archetypes, rule.condPeerRole);
+                    rule.condPeerRole = RuleModel.Archetypes[(i + 1 + RuleModel.Archetypes.Length) % RuleModel.Archetypes.Length];
+                    ResetConditionField(rule); // the peer's palette changes with the role
+                    RenderRuleRows();
+                });
+                AddCycleButton(row.transform, "Zone", () => rule.condPeerZone, () =>
+                {
+                    rule.condPeerZone = rule.condPeerZone == "same_zone" ? "same_building" : "same_zone";
+                    refreshPreview();
+                });
+            }
+
+            AddCycleButton(row.transform, "Field", () => rule.condField, () =>
+            {
+                FieldSpec[] palette = RuleModel.FieldsFor(ConditionPaletteArchetype(rule));
+                int i = 0;
+                for (int j = 0; j < palette.Length; j++)
+                    if (palette[j].Key == rule.condField) { i = j; break; }
+                FieldSpec next = palette[(i + 1) % palette.Length];
+                rule.condField = next.Key;
+                rule.condComparator = next.Comparators[0];
+                rule.condValue = next.IsBool ? "true" : "0";
+                RenderRuleRows(); // the value editor type may change (bool↔numeric)
+            });
+
+            AddCycleButton(row.transform, "Cmp", () => rule.condComparator, () =>
+            {
+                FieldSpec spec = RuleModel.FieldByKey(rule.condField);
+                string[] set = spec != null ? spec.Comparators : new[] { "==", "!=" };
+                int i = System.Array.IndexOf(set, rule.condComparator);
+                rule.condComparator = set[(i + 1 + set.Length) % set.Length];
+                refreshPreview();
+            });
+
+            FieldSpec condSpec = RuleModel.FieldByKey(rule.condField);
+            if (condSpec != null && condSpec.IsBool)
+            {
+                AddCycleButton(row.transform, "Val", () => rule.condValue, () =>
+                {
+                    rule.condValue = rule.condValue == "true" ? "false" : "true";
+                    refreshPreview();
+                });
+            }
+            else
+            {
+                InputField input = AddNumberInput(row.transform, rule.condValue, v => { rule.condValue = v; refreshPreview(); });
+                input.gameObject.name = "CondValueInput";
+            }
+        }
+
+        // NONE → MY_STATE → PEER_STATE → NONE; entering a kind seeds its defaults.
+        private void CycleConditionKind(RuleRow rule)
+        {
+            string kind = string.IsNullOrEmpty(rule.condKind) ? "NONE" : rule.condKind;
+            int i = 0;
+            for (int j = 0; j < RuleModel.ConditionKinds.Count; j++)
+                if (RuleModel.ConditionKinds[j] == kind) { i = j; break; }
+            string next = RuleModel.ConditionKinds[(i + 1) % RuleModel.ConditionKinds.Count];
+            rule.condKind = next;
+            if (next == "NONE") return;
+            if (next == "PEER_STATE" && string.IsNullOrEmpty(rule.condPeerRole))
+            {
+                rule.condPeerRole = "COOK";
+                rule.condPeerZone = "same_zone";
+            }
+            ResetConditionField(rule);
+        }
+
+        // Seed the condition field/cmp/value from the relevant palette's FIRST field.
+        private void ResetConditionField(RuleRow rule)
+        {
+            FieldSpec f = RuleModel.FieldsFor(ConditionPaletteArchetype(rule))[0];
+            rule.condField = f.Key;
+            rule.condComparator = f.Comparators[0];
+            rule.condValue = f.IsBool ? "true" : "0";
+        }
+
+        // MY_STATE reads MY archetype's palette; PEER_STATE reads the PEER role's palette.
+        private string ConditionPaletteArchetype(RuleRow rule) =>
+            rule.condKind == "PEER_STATE" ? rule.condPeerRole : CurrentArchetype;
 
         private string FieldLabelFor(RuleRow rule)
         {
