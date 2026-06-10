@@ -25,7 +25,8 @@ namespace MafiaCleanCity.Operational
     //
     // R2.2 / P5: every projection leaf the player sees is a qualitative band STRING or a
     // BOOLEAN — this screen renders exactly those; it NEVER shows a raw scalar (cents / heat
-    // float / ticks). a11y F2: every status line carries a text label AND a shape glyph (not
+    // float / ticks) — except the intentional "Tier N" vocabulary chrome, excluded from the
+    // scan corpus via AddStatusRow(trackValue: false) (see Render). a11y F2: every status line carries a text label AND a shape glyph (not
     // colour alone), mirroring the Building Card / Laundering band rows + the CityMap heat badge.
     //
     // The whole UI is built programmatically from a single Canvas (mirrors
@@ -210,12 +211,12 @@ namespace MafiaCleanCity.Operational
             // 4) Phase-20: pending exceptions (drives the alerts note + proves the funnel surface) — best-effort.
             yield return exceptions.GetQueue(Token,
                 cards => PendingExceptions = cards,
-                (code, msg) => { /* best-effort; the alerts note simply stays absent */ });
+                (code, msg) => Debug.LogWarning($"[Dashboard] exceptions queue fetch failed (best-effort): {code}: {msg}"));
 
             // 5) Phase-20: the vocab-tier funnel line — best-effort.
             yield return progression.GetProgression(Token,
                 dto => CurrentProgression = dto,
-                (code, msg) => { /* best-effort */ });
+                (code, msg) => Debug.LogWarning($"[Dashboard] progression fetch failed (best-effort): {code}: {msg}"));
 
             // The GETs above are network round-trips; the controller's GameObject may have been torn down
             // by an inter-fixture teardown while we awaited them. Bail before touching any UI (Unity's
@@ -599,7 +600,7 @@ namespace MafiaCleanCity.Operational
 
             TrackText(g, glyph);
             TrackText(l, label);
-            TrackText(v, trackValue ? value : null);
+            if (trackValue) TrackText(v, value); // opt-out = chrome (digit-bearing values stay out of the scan corpus)
         }
 
         private string NewSectionLabel(Transform parent, string text)
