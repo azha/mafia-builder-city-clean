@@ -45,6 +45,10 @@ namespace MafiaCleanCity.Operational.Tests
         [TearDown]
         public void TearDown()
         {
+            // A test may end with a detail screen still open (its Nav_ host is a SIBLING of controllerGo) —
+            // destroy it too so its canvas overlay never leaks into the next test (final-review Minor 1).
+            var queue = controllerGo != null ? controllerGo.GetComponent<ExceptionQueueController>() : null;
+            if (queue != null && queue.LastNavGameObject != null) Object.Destroy(queue.LastNavGameObject);
             if (controllerGo != null) Object.Destroy(controllerGo);
         }
 
