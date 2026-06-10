@@ -267,6 +267,11 @@ async function main() {
   if (ltScriptIds) {
     psql(`DELETE FROM behavior_script WHERE script_id IN (${ltScriptIds});`);
   }
+  // Phase-20: the exception-queue + progression funnel demo state is REBUILT each run — wipe this player's rows
+  // (player-scoped). ensureRow re-creates progression at tier 1 / taught [] on first read, and the handled count
+  // is COUNT(resolved exception rows) → wiping both resets the funnel to LOCKED deterministically.
+  psql(`DELETE FROM exception_queue WHERE player_id='${playerId}';`);
+  psql(`DELETE FROM player_progression_state WHERE player_id='${playerId}';`);
   psql(`DELETE FROM courier_shift WHERE player_id='${playerId}';`);
   psql(`DELETE FROM courier WHERE player_id='${playerId}';`);
   psql(`DELETE FROM route WHERE player_id='${playerId}';`);
@@ -832,6 +837,53 @@ async function main() {
   const mhForfeitureAt = psql(`SELECT COALESCE(forfeiture_scheduled_at_tick::text,'NULL') FROM money_holding WHERE building_id='${moneyHolding}';`);
   console.log(`[op-seed] money_holding forfeiture armed (scheduled_at_tick=${mhForfeitureAt}, clock=${mhArmClock} → PENDING band; far lead, never fires)`);
 
+  // ─────────────────────────── Phase-20: exception queue + progression demo state ───────────────────────────
+  // Deterministic PENDING cards for the Unity Exception Queue UI (screen_5/5a reduced) + the Tier-1→2 funnel.
+  // A dedicated COOK lieutenant carries the teachable cards (ADD_RULE appends the chosen rule to HIS script) —
+  // recruited via the REAL API (the same recruit the rule-editor PlayMode does, on the same raided lab — proven
+  // recruitable). Roster cap is 5 (T.lieutenant.max_count_per_player); this is #1 after the wipe, fixtures may
+  // recruit up to 4 more. Placed AFTER the last tick advance so no producer emits extra cards before the tests.
+  const excRecruit = await api('POST', '/v1/lieutenants', token, { archetype: 'COOK', assigned_building_id: lab });
+  if (excRecruit.status !== 201 && excRecruit.status !== 200) {
+    throw new Error(`phase-20 exception-demo recruit failed: HTTP ${excRecruit.status} — ${JSON.stringify(excRecruit.data)}`);
+  }
+  const exceptionLtId = excRecruit.data?.payload?.data?.lieutenant_id ?? excRecruit.data?.lieutenant_id;
+  if (!exceptionLtId) throw new Error('phase-20 recruit returned no lieutenant_id');
+
+  // Card bands span the 3 projection bands (cut-points = even thirds — exceptions.projection.service.ts).
+  // jsonb payloads are dollar-quoted ($J$…$J$) so JSON quoting never fights SQL quoting (labels stay apostrophe-free).
+  const insertCard = (descriptor, ltId, candidates, suggested, confidence, priority, severity) =>
+    psql(
+      `INSERT INTO exception_queue (player_id, lieutenant_id, event_descriptor, candidate_actions, suggested_action, confidence, priority, severity) ` +
+        `VALUES ('${playerId}', ${ltId ? `'${ltId}'` : 'NULL'}, '${descriptor}', ` +
+        `$J$${JSON.stringify(candidates)}$J$::jsonb, $J$${JSON.stringify(suggested)}$J$::jsonb, ${confidence}, ${priority}, ${severity}) RETURNING exception_id;`,
+    );
+
+  const teachHeat = {
+    id: 'teach_heat', label: 'Teach: pause on high heat',
+    projected_consequence: 'Ops pause whenever heat spikes',
+    add_rule_dsl: 'WHEN EVENT(heat,>=,0.5) THEN PAUSE_OPS @90;',
+  };
+  const teachIdle = {
+    id: 'teach_idle', label: 'Teach: restart when idle',
+    projected_consequence: 'The cook restarts when the lab sits idle',
+    add_rule_dsl: 'WHEN STATE(cook_idle,==,true) THEN EXECUTE_DEFAULT @10;',
+  };
+  const letRide = { id: 'let_ride', label: 'Let it ride', projected_consequence: 'The risk stays', add_rule_dsl: null };
+
+  insertCard('exc_demo_teach_heat', exceptionLtId, [teachHeat, letRide], teachHeat, 0.8, 80, 80); // CONFIDENT/HIGH/HIGH
+  insertCard('exc_demo_teach_idle', exceptionLtId, [teachIdle, letRide], teachIdle, 0.5, 50, 50); // LIKELY/MEDIUM/MEDIUM
+  insertCard('exc_demo_one_time', null, [letRide], letRide, 0.2, 10, 10);                          // TENTATIVE/LOW/LOW, unbound
+
+  // Raid-style card (P16 shape): candidates carry the effect descriptor. DISPLAY-ONLY for PlayMode — the tests
+  // NEVER resolve it (REPAIR/BRIBE/LAY_LOW would mutate the raided-lab state the raid fixtures read).
+  const repair = { id: 'fix_quiet', label: 'Repair quietly', projected_consequence: 'Costs cash, sheds no heat', add_rule_dsl: null, effect: { type: 'REPAIR', target_building_id: lab } };
+  const bribe = { id: 'pay_off', label: 'Bribe the inspector', projected_consequence: 'Cheaper but riskier', add_rule_dsl: null, effect: { type: 'BRIBE', target_building_id: lab } };
+  const layLow = { id: 'lay_low', label: 'Lay low', projected_consequence: 'Free, ops slow down', add_rule_dsl: null, effect: { type: 'LAY_LOW', target_building_id: lab } };
+  insertCard('exc_demo_raid_style', exceptionLtId, [repair, bribe, layLow], repair, 0.8, 80, 30);
+
+  console.log(`[op-seed] phase-20 exception demo: COOK ${exceptionLtId} + 4 pending cards (2 teach / 1 one-time / 1 raid-style)`);
+
   // ─────────────────────────── DONE — print creds + the seeded entity IDs ───────────────────────────
   console.log('\n=== OPERATIONAL DEMO SEEDED ===');
   console.log(
@@ -888,6 +940,7 @@ async function main() {
         dealer_id: dealerId,
         courier_id: courierId,
         lek_tile_id: lekTile,
+        exception_lieutenant_id: exceptionLtId, // Phase-20: the COOK the teach-cards' ADD_RULE attaches to
       },
       null,
       2,
