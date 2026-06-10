@@ -1478,14 +1478,30 @@ namespace MafiaCleanCity.Operational.Lieutenant
             RenderAutonomy();
         }
 
+        // Scoped corpus clear (the ClearRosterRows pattern): un-track each row Text's string + component
+        // BEFORE destroying, so re-renders never leave stale band strings in the scan corpus.
+        private void ClearAutonomyRows()
+        {
+            if (autonomyRows == null) return;
+            for (int i = autonomyRows.childCount - 1; i >= 0; i--)
+            {
+                GameObject child = autonomyRows.GetChild(i).gameObject;
+                foreach (Text t in child.GetComponentsInChildren<Text>(true))
+                {
+                    textComponents.Remove(t);
+                    renderedTexts.Remove(t.text); // remove one matching occurrence (TrackText added this exact string).
+                }
+                Object.Destroy(child);
+            }
+        }
+
         // Clear + rebuild the autonomy rows from budgetBands. An empty map → a single "No autonomy budget yet" hint
         // (a never-gated lieutenant). Each entry: CategoryLabel(key) + BandLabel(value), colour-coded by band level.
         // Mirrors RenderRoster's clear-then-render discipline (no stale rows accumulate on repeated loads).
         private void RenderAutonomy()
         {
             if (Destroyed || autonomyRows == null) return;
-            for (int i = autonomyRows.childCount - 1; i >= 0; i--)
-                UnityEngine.Object.Destroy(autonomyRows.GetChild(i).gameObject);
+            ClearAutonomyRows();
 
             if (budgetBands.Count == 0)
             {
