@@ -44,6 +44,25 @@ namespace MafiaCleanCity.Operational.Lieutenant
         public string target_building_id;  // LOGISTICS dispatch destination
     }
 
+    // POST /v1/lieutenants/:id/reassign  { assigned_building_id }  (move a lieutenant to a NEW building — Phase-11 B2; no
+    // dispatch target). The same with/without-target split as recruit: JsonUtility cannot conditionally omit a field, so the
+    // client picks ReassignRequest (no target key) for COOK/SECURITY/BOOKKEEPER and ReassignRequestWithTarget when a target
+    // is supplied (the dispatch archetypes). The backend normalizes an absent target to null (same as recruit).
+    [Serializable]
+    public class ReassignRequest
+    {
+        public string assigned_building_id; // the NEW player-owned operational building to move the lieutenant to
+    }
+
+    // POST /v1/lieutenants/:id/reassign  { assigned_building_id, target_building_id }  (target ONLY when present — the
+    // LOGISTICS/LAUNDERING/DISTRIBUTION dispatch DESTINATION on the new assignment).
+    [Serializable]
+    public class ReassignRequestWithTarget
+    {
+        public string assigned_building_id;
+        public string target_building_id;  // dispatch destination on the new assignment
+    }
+
     // POST /v1/lieutenants/:id/behavior-script[/validate]  { source }  (the player-authored DSL text — T3).
     [Serializable]
     public class BehaviorScriptRequest
@@ -75,6 +94,11 @@ namespace MafiaCleanCity.Operational.Lieutenant
         public string op_state_band;    // PAUSED | ACTIVE | IDLE — the delegated operational state band
         public string rule_count_band;  // NONE | FEW | MANY — the behavior-script rule count as a band (never the raw count)
         public string script_source;    // the player-authored DSL text (the ONE explicitly-allowed non-band field; "" if none)
+        // ----- Phase-11 tenure-inertia bands (NEW; A5 backend contract — closed-domain band STRINGS, never a raw scalar) -----
+        public string tenure_bucket;          // FRESH | ACCLIMATED | SEASONED | SENIOR | ENTRENCHED — DERIVED from the BO-only streak (raw tenure_score NEVER escapes)
+        public string script_revision_cost;   // COST_1 | COST_2 | COST_3 | COST_MAX — how expensive re-scripting is (the inertia COST), DERIVED from the bucket
+        public string reassignment_disruption;// DISRUPT_SHORT | DISRUPT_MED | DISRUPT_LONG | DISRUPT_MAX — the settling-window drag after a move, DERIVED from the bucket
+        public string role_efficiency_bonus;  // BONUS_NONE | BONUS_LOW | BONUS_MID | BONUS_CAP — the tenure yield reward (NONE = no change for a FRESH one), DERIVED from the bucket
     }
 
     [Serializable] public class LieutenantBandsEnvelope { public LieutenantBandsPayload payload; }
@@ -92,6 +116,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
         public string archetype;        // COOK | SECURITY | BOOKKEEPER | LOGISTICS | LAUNDERING | DISTRIBUTION | UNKNOWN
         public string op_state_band;    // PAUSED | ACTIVE | IDLE — the delegated operational state band
         public string rule_count_band;  // NONE | FEW | MANY — the behavior-script rule count as a band (never the raw count)
+        public string tenure_bucket;    // FRESH | ACCLIMATED | SEASONED | SENIOR | ENTRENCHED — the roster's tenure band (Phase-11; the filter-by-bucket teaser surface). The roster carries ONLY the bucket (NOT the 3 effect bands — those live on the detail GET /:id).
     }
 
     [Serializable] public class RosterListData { public RosterRow[] lieutenants; }
