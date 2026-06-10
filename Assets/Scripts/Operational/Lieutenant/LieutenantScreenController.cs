@@ -1576,7 +1576,11 @@ namespace MafiaCleanCity.Operational.Lieutenant
             if (Destroyed) yield break;
             if (!ok)
             {
-                SetOutcome(LastDecisionError ?? "Decision failed.", AccentSevere); // 409 cooldown reads readable (F2)
+                // R2.2: LastDecisionError may carry the full backend message (lieutenant uuid, free text) — it is
+                // CHROME (the player reads it in the detail HUD / logs; the PlayMode test asserts it via LastDecisionError).
+                // Pass a band-safe outcome label through SetOutcome (→ renderedTexts) so the scan corpus stays digit-free;
+                // the raw error stays in LastDecisionError ONLY (not tracked into the band corpus).
+                SetOutcome("Decision failed.", AccentSevere);
                 yield break;
             }
             SetOutcome("Decision applied ✓", AccentMild);
