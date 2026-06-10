@@ -3,7 +3,7 @@ using System;
 namespace MafiaCleanCity.Operational.Autonomy
 {
     // IMPLEMENTS: spec §4-T3 — wire DTOs for the Autonomy Inbox surface (P21 backend). snake_case to match
-    // JsonUtility ↔ the NestJS contracts (services/game-back/src/autonomy). Mirror ExceptionDtos.cs idiom.
+    // JsonUtility ↔ the NestJS contracts (services/game-back/src/operational/lieutenant/autonomy). Mirror ExceptionDtos.cs idiom.
     //
     // JsonUtility quirks the render code MUST honor:
     //   - a missing/null JSON string deserializes as "" (never null) → decided non-empty: !string.IsNullOrEmpty(decided)

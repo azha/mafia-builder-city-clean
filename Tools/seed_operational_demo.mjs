@@ -899,8 +899,8 @@ async function main() {
   const cookOptA = { effect_kind: 'COOK_NOW', label_key: 'autonomy.cook.now', projected_outcome: 'MINIMAL' };
   const cookOptB = { effect_kind: 'COOK_REFINE', label_key: 'autonomy.cook.refine', projected_outcome: 'TRADEOFF' };
   const autonomyIssues = [
-    { issue_id: 'iss_demo_1', category: 'PRODUCTION_OPS', refused_action: 'EXECUTE_DEFAULT', option_a: cookOptA, option_b: cookOptB },
-    { issue_id: 'iss_demo_2', category: 'PRODUCTION_OPS', refused_action: 'EXECUTE_DEFAULT', option_a: cookOptA, option_b: cookOptB },
+    { issue_id: 'iss_demo_1', category: 'PRODUCTION_OPS', refused_action: 'COOK', option_a: cookOptA, option_b: cookOptB },
+    { issue_id: 'iss_demo_2', category: 'PRODUCTION_OPS', refused_action: 'COOK', option_a: cookOptA, option_b: cookOptB },
   ];
   const autonomyReportId = psql(
     `INSERT INTO autonomy_reports (player_id, lieutenant_id, cycle_id, issues) ` +
