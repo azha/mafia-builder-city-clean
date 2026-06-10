@@ -1267,3 +1267,16 @@ A money_holding in a **glass** district at **Tier-2 (MEDIUM)** holding **$50k (M
    whenever the effective held is below the $20M threshold (and the $50k demo hold is far below it), so any advance after the
    pin would wipe it — the SAME no-advance-after constraint the DIRTY laundering node (§10b/§13b) carries.
 The seeder prints `money_holding` in its JSON block (the vault id the T9 test loads).
+
+## §Phase-20 — Exceptions + Progression (consumed by the Exception Queue UI + the Tier-2 rule editor)
+
+- `GET /v1/exceptions/queue` (Bearer) → `{ payload: { data: { exceptions: [ { exception_id, lieutenant_id|null,
+  event_descriptor, candidate_actions: [ { id, label, projected_consequence, add_rule_dsl|null,
+  effect?: { type: REPAIR|BRIBE|LAY_LOW, target_building_id } } ], suggested_action, confidence_band:
+  TENTATIVE|LIKELY|CONFIDENT, priority_band: LOW|MEDIUM|HIGH, severity_band: LOW|MEDIUM|HIGH,
+  resolution_status } ] } } }` — PENDING cards only; R2.2 bands, never the raw scalars.
+- `POST /v1/exceptions/:id/resolve` (Bearer + UUID-v4 Idempotency-Key) body `{ method, chosen_action_id }`,
+  method ∈ ONE_TIME|ESCALATE|ADD_RULE|REPAIR|BRIBE|LAY_LOW → `{ payload: { data: { resolved: true, outcome } } }`;
+  404 not-owned / 409 not-pending / 422 unknown method or un-addable candidate (standard error envelope).
+- `GET /v1/progression` (Bearer) → `{ payload: { data: { vocabulary_tier: 1..6, progress_to_next:
+  LOCKED|IN_PROGRESS|UNLOCKED } } }` — Tier 1→2 = ≥2 distinct ADD_RULE-taught signals AND ≥3 handled.
