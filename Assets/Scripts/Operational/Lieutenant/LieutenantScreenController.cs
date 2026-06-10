@@ -209,7 +209,8 @@ namespace MafiaCleanCity.Operational.Lieutenant
         private AutonomyClient autonomyClient; // Phase-21 — budget bands + ceiling decisions
 
         // ---- Phase-21 autonomy rows container --------------------------------
-        private RectTransform autonomyRows; // the container the per-category budget-band rows render into
+        private RectTransform autonomyRows;   // the container the per-category budget-band rows render into
+        private Text decisionErrorText;       // Phase-21 F2: cooldown failure detail — CHROME (component-tracked only, never in scan corpus)
 
         // Slate palette (mirrors BuildingCardController + global_conventions_core direction).
         private static readonly Color SurfaceBg = new Color(0.086f, 0.098f, 0.106f); // #16191b
@@ -1475,6 +1476,13 @@ namespace MafiaCleanCity.Operational.Lieutenant
             AddActionButton(parent, "Raise ceiling", () => StartCoroutine(Decide("raise_ceiling")));
             AddActionButton(parent, "Override one-shot", () => StartCoroutine(Decide("override_one_shot")));
 
+            // Phase-21 F2: the readable decision-failure detail (cooldown reason — carries ids/digits) renders as
+            // CHROME: component-tracked only, never in the scan corpus (the tier-badge technique).
+            decisionErrorText = NewText("DecisionError", parent, "", 12, TextAnchor.MiddleLeft);
+            decisionErrorText.color = AccentSevere;
+            AddLayoutElement(decisionErrorText.gameObject, minHeight: 18, flexibleHeight: 0);
+            if (!textComponents.Contains(decisionErrorText)) textComponents.Add(decisionErrorText);
+
             RenderAutonomy();
         }
 
@@ -1581,8 +1589,10 @@ namespace MafiaCleanCity.Operational.Lieutenant
                 // Pass a band-safe outcome label through SetOutcome (→ renderedTexts) so the scan corpus stays digit-free;
                 // the raw error stays in LastDecisionError ONLY (not tracked into the band corpus).
                 SetOutcome("Decision failed.", AccentSevere);
+                if (decisionErrorText != null) decisionErrorText.text = LastDecisionError ?? "";
                 yield break;
             }
+            if (decisionErrorText != null) decisionErrorText.text = "";
             SetOutcome("Decision applied ✓", AccentMild);
             yield return RefreshAutonomy();
         }
