@@ -38,7 +38,21 @@ namespace MafiaCleanCity.Operational.Exceptions
         private RectTransform body;
         private bool initialized;
         private bool resolving;
-        private bool Destroyed => this == null;
+        private GameObject backdropGo;
+        private GameObject sheetGo;
+
+        // House teardown pattern (BuildingCardController precedent): a destroyed flag set in OnDestroy +
+        // Unity fake-null. OnDestroy also tears down the screen's canvas children — BuildLayout parents the
+        // backdrop/sheet to the SHARED canvas (not the host), so destroying the host alone would orphan an
+        // opaque, raycast-eating overlay on top of the queue (the review C1 finding).
+        private bool destroyed;
+        private void OnDestroy()
+        {
+            destroyed = true;
+            if (backdropGo != null) Destroy(backdropGo);
+            if (sheetGo != null) Destroy(sheetGo);
+        }
+        private bool Destroyed => destroyed || this == null;
 
         // Slate palette (mirrors DashboardController).
         private static readonly Color SurfaceBg = new Color(0.051f, 0.059f, 0.063f);
@@ -125,11 +139,12 @@ namespace MafiaCleanCity.Operational.Exceptions
             Render();
         }
 
-        /// <summary>Back to the queue: destroy this host + let the queue re-fetch.</summary>
+        /// <summary>Back to the queue: destroy this host (OnDestroy tears down the backdrop/sheet) + let the
+        /// queue re-fetch.</summary>
         public void Back()
         {
             Action cb = onBack;
-            if (gameObject != null) Destroy(gameObject);
+            if (this != null) Destroy(gameObject);
             cb?.Invoke();
         }
 
@@ -248,7 +263,7 @@ namespace MafiaCleanCity.Operational.Exceptions
 
                     // Resolve button — "Resolve: " + label is chrome (label is producer text).
                     CandidateActionDto captured = ca;
-                    AddButtonTo(block.transform, "Resolve: " + ca.label, () => StartCoroutine(ResolveWith(captured)));
+                    AddButtonTo(block.transform, "Resolve: " + ca.label, () => StartCoroutine(ResolveWith(captured)), track: false); // producer text in the caption — chrome (R2.2)
                 }
             }
 
@@ -257,9 +272,9 @@ namespace MafiaCleanCity.Operational.Exceptions
             AddButton("Back", Back);
         }
 
-        private void AddButton(string label, UnityEngine.Events.UnityAction onClick) => AddButtonTo(body, label, onClick);
+        private void AddButton(string label, UnityEngine.Events.UnityAction onClick) => AddButtonTo(body, label, onClick, track: true);
 
-        private void AddButtonTo(Transform parent, string label, UnityEngine.Events.UnityAction onClick)
+        private void AddButtonTo(Transform parent, string label, UnityEngine.Events.UnityAction onClick, bool track = true)
         {
             GameObject btn = NewUI("Btn_" + label.Replace(" ", "").Replace(":", ""), parent);
             Image img = btn.AddComponent<Image>();
@@ -271,8 +286,7 @@ namespace MafiaCleanCity.Operational.Exceptions
             Text t = NewText("Label", btn.transform, label, 14, TextAnchor.MiddleCenter);
             t.color = CtaColor;
             Stretch((RectTransform)t.transform, new Vector2(10, 2), new Vector2(-10, -2));
-            // Button captions that embed producer text (Resolve: {label}) are CHROME; closed captions are tracked.
-            if (!label.StartsWith("Resolve: ")) TrackText(t, label);
+            if (track) TrackText(t, label);
         }
 
         private static string Cap(string b) =>
@@ -295,12 +309,13 @@ namespace MafiaCleanCity.Operational.Exceptions
             }
 
             // Full-screen ardoise backdrop.
-            GameObject backdrop = NewUI("ExceptionDetailBackdrop", canvas.transform);
-            Stretch((RectTransform)backdrop.transform, Vector2.zero, Vector2.zero);
-            backdrop.AddComponent<Image>().color = SurfaceBg;
+            backdropGo = NewUI("ExceptionDetailBackdrop", canvas.transform);
+            Stretch((RectTransform)backdropGo.transform, Vector2.zero, Vector2.zero);
+            backdropGo.AddComponent<Image>().color = SurfaceBg;
 
             // The detail card, anchored top-centre.
-            GameObject card = NewUI("ExceptionDetailSheet", canvas.transform);
+            sheetGo = NewUI("ExceptionDetailSheet", canvas.transform);
+            GameObject card = sheetGo;
             RectTransform cardRt = (RectTransform)card.transform;
             cardRt.anchorMin = new Vector2(0.5f, 1f);
             cardRt.anchorMax = new Vector2(0.5f, 1f);
@@ -340,7 +355,7 @@ namespace MafiaCleanCity.Operational.Exceptions
             renderedTexts.Clear();
             if (body != null)
                 for (int i = body.childCount - 1; i >= 0; i--)
-                    Object.Destroy(body.GetChild(i).gameObject);
+                    UnityEngine.Object.Destroy(body.GetChild(i).gameObject);
             // Re-track the static header "EXCEPTION" (it lives outside body but is part of the corpus).
             renderedTexts.Add("EXCEPTION");
         }

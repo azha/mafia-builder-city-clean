@@ -45,7 +45,12 @@ namespace MafiaCleanCity.Operational.Exceptions
         private AuthClient auth;
         private ExceptionsClient client;
         private bool initialized;
-        private bool Destroyed => this == null;
+
+        // House teardown flag (BuildingCardController precedent) — covers coroutines resumed by an external
+        // PlayMode runner after an inter-fixture teardown.
+        private bool destroyed;
+        private void OnDestroy() { destroyed = true; }
+        private bool Destroyed => destroyed || this == null;
 
         // Slate palette (mirrors DashboardController).
         private static readonly Color SurfaceBg = new Color(0.051f, 0.059f, 0.063f);
@@ -137,6 +142,9 @@ namespace MafiaCleanCity.Operational.Exceptions
         public void OpenDetail(ExceptionCardDto card)
         {
             if (card == null) return;
+            // One detail at a time: a double-tap (or a second row) must not stack screens — the previous
+            // detail still owns the shared canvas overlay (review I1).
+            if (LastDetail != null && LastDetail) return;
             LastNavGameObject = new GameObject("Nav_ExceptionDetail");
             ExceptionDetailController detail = LastNavGameObject.AddComponent<ExceptionDetailController>();
             detail.Init(card, Token, baseUrl, onBack: () => { if (!Destroyed) StartCoroutine(LoadQueue()); });
@@ -287,7 +295,7 @@ namespace MafiaCleanCity.Operational.Exceptions
             renderedTexts.Clear();
             if (rowsArea != null)
                 for (int i = rowsArea.childCount - 1; i >= 0; i--)
-                    Object.Destroy(rowsArea.GetChild(i).gameObject);
+                    UnityEngine.Object.Destroy(rowsArea.GetChild(i).gameObject);
         }
 
         // --------------------------------------------------------------- helpers (verbatim DashboardController)
