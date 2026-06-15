@@ -13,7 +13,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
     // Phase-9 vector #9 — drives the Lieutenant rule-editor screen (screen_4a) for the COOK loop.
     //
     // T1 scope (this file): the screen SHELL + the Recruit section.
-    //   1. signs in (POST /auth/v1/signin) to get a PLAYER Bearer — REUSE CityMap.AuthClient;
+    //   1. signs in (POST /v1/auth/signin) to get a PLAYER Bearer — REUSE CityMap.AuthClient;
     //   2. offers a "Recruit COOK" button → POST /v1/lieutenants { archetype:"COOK", assigned_building_id } →
     //      stores the returned lieutenant_id + shows the outcome;
     //   3. a status line that reports the last outcome (recruited / a readable error — never a raw HTTP code, F2).

@@ -5,7 +5,7 @@ dashboard). Every JSON block below is the **EXACT live response** captured by `c
 dev stack (project `mafia-clean-city`, via Traefik at `http://localhost`) after `Tools/seed_operational_demo.mjs`
 stood the operational demo player up in a rich operational state. Shapes were captured, NOT guessed (the T14 lesson).
 
-- **Auth**: every operational endpoint requires a PLAYER `Bearer` (obtain via `POST /auth/v1/signin
+- **Auth**: every operational endpoint requires a PLAYER `Bearer` (obtain via `POST /v1/auth/signin
   {identifier,password}` → `payload.data.access_token`). Unauthenticated → `401`.
 - **Envelope**: every success response is `{ response_meta, payload: { data: {…} } }`. Errors are
   `{ response_meta, payload: { error: {…} } }` (see the 404 example at the end).
@@ -939,7 +939,7 @@ districts** — district 16 is **Verge**). It grows a **GROWABLE plant-derived p
 DAMAGED-pauses + seizes the crop (the §13 raid surface). The make-vs-buy lever: grow is **cheap-but-slow-and-hot** vs
 ordering precursors **fast-but-dear**. All shapes below are **captured verbatim via curl** against the live local stack.
 
-All endpoints need a PLAYER Bearer (`POST /auth/v1/signin { identifier, password }` → `payload.data.access_token`); the
+All endpoints need a PLAYER Bearer (`POST /v1/auth/signin { identifier, password }` → `payload.data.access_token`); the
 mutations need a UUID-v4 `Idempotency-Key`. **R2.2: every surface is a qualitative BAND / a boolean / a uuid — never a
 raw `tend_count` / grams / tick / heat / stage int.**
 

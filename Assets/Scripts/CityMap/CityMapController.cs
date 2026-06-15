@@ -11,7 +11,7 @@ namespace MafiaCleanCity.CityMap
     // Drives the City Map screen:
     //   1. fetches /v1/world/districts (public) and builds a two-column layout grouped
     //      by bank_side, one DistrictCellView per district coloured by control_state;
-    //   2. signs in (POST /auth/v1/signin) to get a Bearer token;
+    //   2. signs in (POST /v1/auth/signin) to get a Bearer token;
     //   3. fetches the JWT-gated Heat projection per district and shows a heat badge
     //      on each cell — a togglable overlay.
     //

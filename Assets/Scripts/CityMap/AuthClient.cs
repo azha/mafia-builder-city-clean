@@ -7,7 +7,7 @@ using UnityEngine.Networking;
 namespace MafiaCleanCity.CityMap
 {
     // Minimal auth client: real sign-in against the game-back auth surface
-    // (POST /auth/v1/signin → HS256 Bearer token, audience GAME_BACK). No mock.
+    // (POST /v1/auth/signin → HS256 Bearer token, audience GAME_BACK). No mock.
     //
     // /auth is a literal path prefix routed by Traefik (NOT under /v1). The token
     // is required to read the JWT-gated city-sim projections (e.g. heat).
@@ -16,7 +16,7 @@ namespace MafiaCleanCity.CityMap
         public string BaseUrl = "http://localhost";
         public int TimeoutSeconds = 10;
 
-        public string SigninUrl => BaseUrl.TrimEnd('/') + "/auth/v1/signin";
+        public string SigninUrl => BaseUrl.TrimEnd('/') + "/v1/auth/signin";
 
         /// <summary>
         /// Coroutine: sign in with an identifier (email or callsign) + password.

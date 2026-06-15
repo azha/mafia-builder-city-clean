@@ -10,7 +10,7 @@ namespace MafiaCleanCity.Operational
 {
     // Drives the Laundering Pipeline screen (screen_6 / screen_6a) for the M1 vertical
     // slice — a SINGLE Stage-1 front-shop laundering node. It:
-    //   1. signs in (POST /auth/v1/signin) to get a PLAYER Bearer — REUSE CityMap.AuthClient;
+    //   1. signs in (POST /v1/auth/signin) to get a PLAYER Bearer — REUSE CityMap.AuthClient;
     //   2. fetches GET /v1/operational/laundering/:nodeId (the node projection) and renders
     //      the pipeline view: the Stage-1 node's qualitative CLEANLINESS BAND
     //      (DIRTY | PARTIAL | MOSTLY_CLEAN | CLEAN) as a SemanticBar row + the DEVIATION

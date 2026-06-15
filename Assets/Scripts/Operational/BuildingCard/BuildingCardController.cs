@@ -9,7 +9,7 @@ using MafiaCleanCity.CityMap; // REUSE AuthClient (signin → Bearer)
 namespace MafiaCleanCity.Operational
 {
     // Drives the Building Card screen (screen_2a) for a single operational building:
-    //   1. signs in (POST /auth/v1/signin) to get a PLAYER Bearer — REUSE CityMap.AuthClient;
+    //   1. signs in (POST /v1/auth/signin) to get a PLAYER Bearer — REUSE CityMap.AuthClient;
     //   2. fetches GET /v1/operational/building/:id (the Building Card projection) and
     //      renders the qualitative operational state — setup_state band, cover_band,
     //      operational flag, operational_type;
