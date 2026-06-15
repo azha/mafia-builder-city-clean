@@ -75,7 +75,7 @@ namespace MafiaCleanCity.CityMap
         Burning,
     }
 
-    // ---- Auth (POST /auth/v1/signin) -----------------------------------
+    // ---- Auth (POST /v1/auth/signin) -----------------------------------
 
     [Serializable]
     public class SigninRequestDto

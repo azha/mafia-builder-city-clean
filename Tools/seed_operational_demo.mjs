@@ -157,7 +157,7 @@ function psql(sql) {
 
 /** Sign in via the real auth endpoint → a Bearer token (the T14 City Map AuthClient recipe). */
 async function signin() {
-  const res = await fetch(`${BASE_URL}/auth/v1/signin`, {
+  const res = await fetch(`${BASE_URL}/v1/auth/signin`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ identifier: EMAIL, password: PASSWORD }),

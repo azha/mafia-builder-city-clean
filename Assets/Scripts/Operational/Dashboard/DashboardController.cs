@@ -12,7 +12,7 @@ namespace MafiaCleanCity.Operational
 {
     // Drives the Home Dashboard screen (screen_1) — the cold-open landing screen and the
     // "encaisser" payoff of the M1 loop. It:
-    //   1. signs in (POST /auth/v1/signin) to get a PLAYER Bearer — REUSE CityMap.AuthClient;
+    //   1. signs in (POST /v1/auth/signin) to get a PLAYER Bearer — REUSE CityMap.AuthClient;
     //   2. fetches the HEADLINE wallet band  GET /v1/economy/wallet  (BROKE | LOW | MODERATE |
     //      HIGH | FLUSH) — the qualitative cash band, the loop's payoff;
     //   3. fetches the CITYWIDE heat band  GET /v1/city/district/:id/heat  (REUSE

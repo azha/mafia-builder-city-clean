@@ -14,7 +14,7 @@ namespace MafiaCleanCity.Operational
     // stage, each with its qualitative CLEANLINESS BAND (rising along the chain
     // PARTIAL → MOSTLY_CLEAN → … → CLEAN), a TERMINAL marker on the release stage, and a "buffered cash"
     // presence chip — exactly the fields GET /v1/operational/laundering/:nodeId/pipeline returns. It:
-    //   1. signs in (POST /auth/v1/signin) to get a PLAYER Bearer — REUSE CityMap.AuthClient;
+    //   1. signs in (POST /v1/auth/signin) to get a PLAYER Bearer — REUSE CityMap.AuthClient;
     //   2. fetches GET /v1/operational/laundering/:nodeId/pipeline (the chain overview, given ANY node of
     //      the chain — the backend's recursive walk returns the whole head→tail chain) and renders the
     //      ordered stages as SemanticBar rows.
