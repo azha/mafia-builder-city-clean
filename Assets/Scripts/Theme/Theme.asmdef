@@ -1,11 +1,7 @@
 {
-    "name": "CityMap",
-    "rootNamespace": "MafiaCleanCity.CityMap",
-    "references": [
-        "UnityEngine.UI",
-        "Unity.InputSystem",
-        "Theme"
-    ],
+    "name": "Theme",
+    "rootNamespace": "MafiaCleanCity.Theme",
+    "references": [],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

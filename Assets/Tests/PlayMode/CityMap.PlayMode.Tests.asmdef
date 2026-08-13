@@ -6,7 +6,8 @@
         "UnityEditor.TestRunner",
         "CityMap",
         "Operational",
-        "UnityEngine.UI"
+        "UnityEngine.UI",
+        "Theme"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
