@@ -1,0 +1,34 @@
+# Git LFS — décision user 2026-08-07 (Q2c).
+# ⚠️ À POSER AVANT le premier gros binaire : une fois un asset commité en plain git, le
+# rattraper demande une réécriture d'historique. Le dépôt est aujourd'hui à 0 prefab et
+# 0 asset UI — c'est le moment.
+# Prérequis : `git lfs install` (une fois par machine, après `sudo apt install git-lfs`).
+
+# ── Textures / images ────────────────────────────────────────────────────────────────
+*.png  filter=lfs diff=lfs merge=lfs -text
+*.jpg  filter=lfs diff=lfs merge=lfs -text
+*.jpeg filter=lfs diff=lfs merge=lfs -text
+*.psd  filter=lfs diff=lfs merge=lfs -text
+*.tga  filter=lfs diff=lfs merge=lfs -text
+*.exr  filter=lfs diff=lfs merge=lfs -text
+*.tif  filter=lfs diff=lfs merge=lfs -text
+
+# ── Audio (ch23) ─────────────────────────────────────────────────────────────────────
+*.wav  filter=lfs diff=lfs merge=lfs -text
+*.mp3  filter=lfs diff=lfs merge=lfs -text
+*.ogg  filter=lfs diff=lfs merge=lfs -text
+
+# ── Modèles / animations ─────────────────────────────────────────────────────────────
+*.fbx  filter=lfs diff=lfs merge=lfs -text
+*.blend filter=lfs diff=lfs merge=lfs -text
+
+# ── Vidéo / polices / bundles ────────────────────────────────────────────────────────
+*.mp4  filter=lfs diff=lfs merge=lfs -text
+*.ttf  filter=lfs diff=lfs merge=lfs -text
+*.otf  filter=lfs diff=lfs merge=lfs -text
+*.unitypackage filter=lfs diff=lfs merge=lfs -text
+
+# ── Fusion : les assets Unity ne se mergent pas à la main ────────────────────────────
+*.unity   -merge
+*.prefab  -merge
+*.asset   -merge
