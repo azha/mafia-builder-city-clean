@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
+using MafiaCleanCity.Theme;
 
 namespace MafiaCleanCity.CityMap
 {
@@ -212,7 +213,7 @@ namespace MafiaCleanCity.CityMap
             RectTransform rootRt = (RectTransform)root.transform;
             Stretch(rootRt, Vector2.zero, Vector2.zero);
             Image rootBg = root.AddComponent<Image>();
-            rootBg.color = new Color(0.10f, 0.11f, 0.14f, 1f);
+            rootBg.color = DesignTokens.Current.mapRootBg;
             rootVlg = root.AddComponent<VerticalLayoutGroup>();
             rootVlg.padding = new RectOffset(RootPadding, RootPadding, RootPadding, RootPadding);
             rootVlg.spacing = 12;
@@ -248,8 +249,8 @@ namespace MafiaCleanCity.CityMap
             banksHlg.childForceExpandHeight = true;
             AddLayoutElement(banks, flexibleHeight: 1);
 
-            northContent = BuildColumn(banks.transform, "North Bank", new Color(0.13f, 0.15f, 0.20f));
-            southContent = BuildColumn(banks.transform, "South Bank", new Color(0.18f, 0.14f, 0.16f));
+            northContent = BuildColumn(banks.transform, "North Bank", DesignTokens.Current.mapPanelNorth);
+            southContent = BuildColumn(banks.transform, "South Bank", DesignTokens.Current.mapPanelSouth);
 
             BuildLegend(root.transform);
             BuildDetailPanel(canvas.transform);
@@ -259,7 +260,7 @@ namespace MafiaCleanCity.CityMap
         {
             GameObject btn = NewUI("HeatToggle", parent);
             Image img = btn.AddComponent<Image>();
-            img.color = new Color(0.22f, 0.24f, 0.30f);
+            img.color = DesignTokens.Current.mapChipBg;
             Button button = btn.AddComponent<Button>();
             button.targetGraphic = img;
             AddLayoutElement(btn, minHeight: 36, flexibleHeight: 0, minWidth: 210, preferredWidth: 210);
@@ -388,7 +389,7 @@ namespace MafiaCleanCity.CityMap
             dp.anchoredPosition = new Vector2(-16f, -16f);
 
             Image bg = detailPanel.AddComponent<Image>();
-            bg.color = new Color(0.07f, 0.08f, 0.11f, 0.98f);
+            bg.color = DesignTokens.Current.mapDialogBg;
 
             VerticalLayoutGroup vlg = detailPanel.AddComponent<VerticalLayoutGroup>();
             vlg.padding = new RectOffset(14, 14, 12, 12);
@@ -415,7 +416,7 @@ namespace MafiaCleanCity.CityMap
 
             GameObject closeBtn = NewUI("Close", header.transform);
             Image closeImg = closeBtn.AddComponent<Image>();
-            closeImg.color = new Color(0.32f, 0.20f, 0.22f);
+            closeImg.color = DesignTokens.Current.mapCloseButtonBg;
             Button cb = closeBtn.AddComponent<Button>();
             cb.targetGraphic = closeImg;
             cb.onClick.AddListener(HideDetail);
@@ -591,13 +592,13 @@ namespace MafiaCleanCity.CityMap
                 AddLayoutElement(rowGo, minHeight: 22, flexibleHeight: 0);
 
                 Text l = NewText("Label", rowGo.transform, row.label, 14, TextAnchor.MiddleLeft);
-                l.color = new Color(0.66f, 0.68f, 0.74f);
+                l.color = DesignTokens.Current.mapLabelMuted;
                 AddLayoutElement(l.gameObject, flexibleWidth: 1);
 
                 Text v = NewText("Value", rowGo.transform, row.value, 14, TextAnchor.MiddleRight);
                 v.fontStyle = row.available ? FontStyle.Bold : FontStyle.Italic;
                 v.color = !row.available
-                    ? new Color(0.5f, 0.5f, 0.55f)
+                    ? DesignTokens.Current.mapConditionalGrey
                     : (row.useAccent ? row.accent : Color.white);
                 AddLayoutElement(v.gameObject, minWidth: 130, flexibleWidth: 0);
             }

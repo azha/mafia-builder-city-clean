@@ -5,6 +5,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
 using MafiaCleanCity.CityMap; // REUSE AuthClient (signin → Bearer)
+using MafiaCleanCity.Theme;
 
 namespace MafiaCleanCity.Operational
 {
@@ -192,18 +193,18 @@ namespace MafiaCleanCity.Operational
         private BuildingCardClient client;
 
         // Slate palette (mirrors CityMap + global_conventions_core direction).
-        private static readonly Color SurfaceBg = new Color(0.086f, 0.098f, 0.106f); // #16191b
-        private static readonly Color RowBg = new Color(0.137f, 0.165f, 0.176f);     // #232a2d
-        private static readonly Color TextPrimary = new Color(0.933f, 0.945f, 0.949f);
-        private static readonly Color AccentMild = new Color(0.263f, 0.878f, 0.753f);   // #43e0c0 cyan
-        private static readonly Color AccentModerate = new Color(1f, 0.62f, 0.239f);     // #ff9e3d amber
-        private static readonly Color AccentSevere = new Color(1f, 0.353f, 0.302f);      // #ff5a4d red
-        private static readonly Color CtaColor = new Color(1f, 0.824f, 0.247f);          // #ffd23f yellow
+        private static readonly Color SurfaceBg = DesignTokens.Current.surfaceCard; // #16191b
+        private static readonly Color RowBg = DesignTokens.Current.surfaceRow;     // #232a2d
+        private static readonly Color TextPrimary = DesignTokens.Current.onSurfacePrimary;
+        private static readonly Color AccentMild = DesignTokens.Current.accentSuccess;   // #43e0c0 cyan
+        private static readonly Color AccentModerate = DesignTokens.Current.accentWarning;     // #ff9e3d amber
+        private static readonly Color AccentSevere = DesignTokens.Current.accentDanger;      // #ff5a4d red
+        private static readonly Color CtaColor = DesignTokens.Current.accentGold;          // #ffd23f yellow
         // Phase-2c: the 4th purity-band accent (the AccentMild/Moderate/Severe palette extended to 4 bands for the
         // ascending CUT < STANDARD < PURE < CRYSTALLINE grade). CRYSTALLINE = a bright violet-white "premium" hue,
         // visibly distinct from the cyan AccentMild so the top grade reads as exceptional. a11y: never colour-only —
         // every purity row also carries a distinct shape glyph + a worded label (F2).
-        private static readonly Color AccentPremium = new Color(0.78f, 0.7f, 1f);        // #c7b3ff bright violet-white
+        private static readonly Color AccentPremium = DesignTokens.Current.accentPremium;        // #c7b3ff bright violet-white
 
         // True once this controller / its GameObject has been destroyed. An async load coroutine (a
         // UnityWebRequest round-trip) can be driven by an OUTSIDE pump (the PlayMode test runner runs
@@ -995,7 +996,7 @@ namespace MafiaCleanCity.Operational
                             // F2: a readable reason beside the disabled button (this stage is already tended).
                             string reason = "Tend crop (already tended this stage)";
                             Text hint = NewText("TendHint", actionBar, reason, 13, TextAnchor.MiddleLeft);
-                            hint.color = new Color(0.55f, 0.59f, 0.63f);
+                            hint.color = DesignTokens.Current.onSurfaceSecondaryAlt;
                             AddLayoutElement(hint.gameObject, minHeight: 18, flexibleHeight: 0);
                             TrackText(hint, reason);
                         }
@@ -1022,7 +1023,7 @@ namespace MafiaCleanCity.Operational
                     {
                         string reason = "Dispatch courier (choose a source + destination)";
                         Text hint = NewText("DispatchHint", actionBar, reason, 13, TextAnchor.MiddleLeft);
-                        hint.color = new Color(0.55f, 0.59f, 0.63f);
+                        hint.color = DesignTokens.Current.onSurfaceSecondaryAlt;
                         AddLayoutElement(hint.gameObject, minHeight: 18, flexibleHeight: 0);
                         TrackText(hint, reason);
                     }
@@ -1050,7 +1051,7 @@ namespace MafiaCleanCity.Operational
             AddActionButton(actionBar, "Convert", () => StartCoroutine(Convert(card.operational_type)));
 
             actionStatusText = NewText("ActionStatus", actionBar, "", 14, TextAnchor.MiddleLeft);
-            actionStatusText.color = new Color(0.7f, 0.74f, 0.78f);
+            actionStatusText.color = DesignTokens.Current.onSurfaceMutedAlt;
             AddLayoutElement(actionStatusText.gameObject, minHeight: 22, flexibleHeight: 0);
         }
 
@@ -1611,7 +1612,7 @@ namespace MafiaCleanCity.Operational
             }
         }
         private static string YieldGlyph(string b) => b == "EARNING" ? "[+]" : "[ ]";
-        private static Color YieldAccent(string b) => b == "EARNING" ? AccentMild : new Color(0.55f, 0.59f, 0.63f);
+        private static Color YieldAccent(string b) => b == "EARNING" ? AccentMild : DesignTokens.Current.onSurfaceSecondaryAlt;
 
         // ----- Phase-5 vector #5a (money_holding): the player-entered transfer amount worded into a qualitative size band -----
         // R2.2: the deposit/withdraw amount is WORDED as a qualitative SIZE band (Pocket / Small / Medium / Large) rather than
@@ -1686,7 +1687,7 @@ namespace MafiaCleanCity.Operational
             // Dim backdrop (the City Map would sit behind in-game).
             GameObject backdrop = NewUI("BuildingCardBackdrop", canvas.transform);
             Stretch((RectTransform)backdrop.transform, Vector2.zero, Vector2.zero);
-            backdrop.AddComponent<Image>().color = new Color(0.05f, 0.05f, 0.06f, 0.85f);
+            backdrop.AddComponent<Image>().color = DesignTokens.Current.scrimBackdrop;
 
             // The bottom-sheet card, anchored bottom-centre.
             GameObject card = NewUI("BuildingCardSheet", canvas.transform);
@@ -1712,7 +1713,7 @@ namespace MafiaCleanCity.Operational
             AddLayoutElement(titleText.gameObject, minHeight: 30, flexibleHeight: 0);
 
             typeText = NewText("Type", card.transform, "Type: —", 16, TextAnchor.MiddleLeft);
-            typeText.color = new Color(0.75f, 0.79f, 0.83f);
+            typeText.color = DesignTokens.Current.onSurfaceDim;
             AddLayoutElement(typeText.gameObject, minHeight: 24, flexibleHeight: 0);
 
             GameObject rows = NewUI("StatusRows", card.transform);
@@ -1757,7 +1758,7 @@ namespace MafiaCleanCity.Operational
             AddLayoutElement(g.gameObject, minWidth: 46, preferredWidth: 46, flexibleWidth: 0);
 
             Text l = NewText("Label", row.transform, label, 15, TextAnchor.MiddleLeft);
-            l.color = new Color(0.72f, 0.76f, 0.80f);
+            l.color = DesignTokens.Current.onSurfaceMuted;
             AddLayoutElement(l.gameObject, minWidth: 120, flexibleWidth: 1);
 
             Text v = NewText("Value", row.transform, value, 16, TextAnchor.MiddleRight);
@@ -1773,7 +1774,7 @@ namespace MafiaCleanCity.Operational
         private string NewSectionLabel(Transform parent, string text)
         {
             Text t = NewText("Section", parent, text, 13, TextAnchor.MiddleLeft);
-            t.color = new Color(0.55f, 0.59f, 0.63f);
+            t.color = DesignTokens.Current.onSurfaceSecondaryAlt;
             t.fontStyle = FontStyle.Bold;
             AddLayoutElement(t.gameObject, minHeight: 20, flexibleHeight: 0);
             return text;
@@ -1783,7 +1784,7 @@ namespace MafiaCleanCity.Operational
         {
             GameObject btn = NewUI("Action_" + label.Replace(" ", "").Replace("(", "").Replace(")", ""), parent);
             Image img = btn.AddComponent<Image>();
-            img.color = new Color(0.16f, 0.18f, 0.22f);
+            img.color = DesignTokens.Current.surfaceRaised;
             Button b = btn.AddComponent<Button>();
             b.targetGraphic = img;
             b.onClick.AddListener(onClick);
@@ -2005,7 +2006,7 @@ namespace MafiaCleanCity.Operational
             button.interactable = interactable;
             Text label = button.GetComponentInChildren<Text>();
             if (label != null && !interactable)
-                label.color = new Color(0.45f, 0.47f, 0.50f); // dimmed → "can't do this now"
+                label.color = DesignTokens.Current.buildingCardHintDim; // dimmed → "can't do this now"
         }
 
         // --------------------------------------------------------------- helpers

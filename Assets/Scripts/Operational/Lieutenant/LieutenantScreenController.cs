@@ -7,6 +7,7 @@ using UnityEngine.UI;
 using MafiaCleanCity.CityMap; // REUSE AuthClient (signin → Bearer)
 using MafiaCleanCity.Operational.Exceptions; // ProgressionClient / ProgressionDto (Phase-20)
 using MafiaCleanCity.Operational.Autonomy; // AutonomyClient — budget bands + ceiling decisions (Phase-21)
+using MafiaCleanCity.Theme;
 
 namespace MafiaCleanCity.Operational.Lieutenant
 {
@@ -213,16 +214,16 @@ namespace MafiaCleanCity.Operational.Lieutenant
         private Text decisionErrorText;       // Phase-21 F2: cooldown failure detail — CHROME (component-tracked only, never in scan corpus)
 
         // Slate palette (mirrors BuildingCardController + global_conventions_core direction).
-        private static readonly Color SurfaceBg = new Color(0.086f, 0.098f, 0.106f); // #16191b
-        private static readonly Color RowBg = new Color(0.137f, 0.165f, 0.176f);     // #232a2d
-        private static readonly Color TextPrimary = new Color(0.933f, 0.945f, 0.949f);
-        private static readonly Color AccentMild = new Color(0.263f, 0.878f, 0.753f);   // #43e0c0 cyan
-        private static readonly Color AccentModerate = new Color(1f, 0.62f, 0.239f);    // #ff9e3d amber
-        private static readonly Color AccentSevere = new Color(1f, 0.353f, 0.302f);     // #ff5a4d red
-        private static readonly Color CtaColor = new Color(1f, 0.824f, 0.247f);         // #ffd23f yellow
+        private static readonly Color SurfaceBg = DesignTokens.Current.surfaceCard; // #16191b
+        private static readonly Color RowBg = DesignTokens.Current.surfaceRow;     // #232a2d
+        private static readonly Color TextPrimary = DesignTokens.Current.onSurfacePrimary;
+        private static readonly Color AccentMild = DesignTokens.Current.accentSuccess;   // #43e0c0 cyan
+        private static readonly Color AccentModerate = DesignTokens.Current.accentWarning;    // #ff9e3d amber
+        private static readonly Color AccentSevere = DesignTokens.Current.accentDanger;     // #ff5a4d red
+        private static readonly Color CtaColor = DesignTokens.Current.accentGold;         // #ffd23f yellow
         // B3 locked-tier teaser: a single dim/disabled colour for the grayed, non-selectable locked primitives (the
         // teaser lines + their section header). Distinctly dimmer than TextPrimary so "locked" reads at a glance.
-        private static readonly Color LockedDim = new Color(0.42f, 0.45f, 0.49f);       // #6b7380 muted slate
+        private static readonly Color LockedDim = DesignTokens.Current.onSurfaceDisabled;       // #6b7380 muted slate
 
         // Teardown/cancellation guard (the SAME pattern as BuildingCardController): an async Recruit coroutine driven
         // by an OUTSIDE pump (the PlayMode test runner) can resume after this controller's GameObject was destroyed by
@@ -794,7 +795,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             if (scriptSourceText != null)
             {
                 scriptSourceText.text = shown;
-                scriptSourceText.color = empty ? new Color(0.55f, 0.59f, 0.63f) : TextPrimary;
+                scriptSourceText.color = empty ? DesignTokens.Current.onSurfaceSecondaryAlt : TextPrimary;
                 scriptSourceText.fontStyle = empty ? FontStyle.Italic : FontStyle.Normal;
                 // Track only the COMPONENT (not the string) — script_source is the allowed readable field, excluded from
                 // the no-raw-scalar scan; the "(no script yet)" placeholder is band-safe but we keep the policy uniform.
@@ -996,7 +997,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             // Dim backdrop (the City Map would sit behind in-game).
             GameObject backdrop = NewUI("LieutenantBackdrop", canvas.transform);
             Stretch((RectTransform)backdrop.transform, Vector2.zero, Vector2.zero);
-            backdrop.AddComponent<Image>().color = new Color(0.05f, 0.05f, 0.06f, 0.85f);
+            backdrop.AddComponent<Image>().color = DesignTokens.Current.scrimBackdrop;
 
             // The bottom-sheet card, anchored bottom-centre (mirrors BuildingCardController).
             GameObject card = NewUI("LieutenantSheet", canvas.transform);
@@ -1133,7 +1134,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             AddLayoutElement(pickerRow, minHeight: 30, flexibleHeight: 0);
 
             Text pickerCap = NewText("PickerCap", pickerRow.transform, "Archetype", 14, TextAnchor.MiddleLeft);
-            pickerCap.color = new Color(0.72f, 0.76f, 0.80f);
+            pickerCap.color = DesignTokens.Current.onSurfaceMuted;
             AddLayoutElement(pickerCap.gameObject, minWidth: 90, flexibleWidth: 0);
             TrackText(pickerCap, "Archetype");
 
@@ -1161,7 +1162,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             recruitButtonLabel = recruitButton.GetComponentInChildren<Text>();
 
             outcomeText = NewText("Outcome", actionBar, "—", 15, TextAnchor.MiddleLeft);
-            outcomeText.color = new Color(0.72f, 0.76f, 0.80f);
+            outcomeText.color = DesignTokens.Current.onSurfaceMuted;
             AddLayoutElement(outcomeText.gameObject, minHeight: 24, flexibleHeight: 0);
             TrackText(outcomeText, "—");
 
@@ -1205,7 +1206,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             // attached (T3); shows "(no script yet)" so a fresh recruit reads clearly.
             NewSectionLabel(statusSection, "Behavior script");
             scriptSourceText = NewText("ScriptSource", statusSection, "(no script yet)", 13, TextAnchor.UpperLeft);
-            scriptSourceText.color = new Color(0.55f, 0.59f, 0.63f);
+            scriptSourceText.color = DesignTokens.Current.onSurfaceSecondaryAlt;
             scriptSourceText.fontStyle = FontStyle.Italic;
             scriptSourceText.verticalOverflow = VerticalWrapMode.Overflow;
             AddLayoutElement(scriptSourceText.gameObject, minHeight: 40, flexibleHeight: 0);
@@ -1250,7 +1251,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             if (CurrentRoster == null || CurrentRoster.Length == 0)
             {
                 Text empty = NewText("NoLieutenants", rosterRows, "(no lieutenants — recruit one below)", 13, TextAnchor.MiddleLeft);
-                empty.color = new Color(0.55f, 0.59f, 0.63f);
+                empty.color = DesignTokens.Current.onSurfaceSecondaryAlt;
                 empty.fontStyle = FontStyle.Italic;
                 AddLayoutElement(empty.gameObject, minHeight: 22, flexibleHeight: 0);
                 TrackText(empty, "(no lieutenants — recruit one below)");
@@ -1304,7 +1305,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             AddLayoutElement(g.gameObject, minWidth: 46, preferredWidth: 46, flexibleWidth: 0);
 
             Text label = NewText("Archetype", go.transform, ArchetypeLabel(row.archetype), 15, TextAnchor.MiddleLeft);
-            label.color = new Color(0.72f, 0.76f, 0.80f);
+            label.color = DesignTokens.Current.onSurfaceMuted;
             AddLayoutElement(label.gameObject, minWidth: 120, flexibleWidth: 1);
 
             // op_state band (ACTIVE | PAUSED | IDLE), worded + colour-coded like the Status section's State row.
@@ -1514,7 +1515,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             if (budgetBands.Count == 0)
             {
                 Text empty = NewText("NoAutonomy", autonomyRows, "No autonomy budget yet", 13, TextAnchor.MiddleLeft);
-                empty.color = new Color(0.55f, 0.59f, 0.63f);
+                empty.color = DesignTokens.Current.onSurfaceSecondaryAlt;
                 empty.fontStyle = FontStyle.Italic;
                 AddLayoutElement(empty.gameObject, minHeight: 22, flexibleHeight: 0);
                 TrackText(empty, "No autonomy budget yet");
@@ -1543,7 +1544,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
                 AddLayoutElement(row, minHeight: 30, flexibleHeight: 0);
 
                 Text l = NewText("Cat", row.transform, catLabel, 15, TextAnchor.MiddleLeft);
-                l.color = new Color(0.72f, 0.76f, 0.80f);
+                l.color = DesignTokens.Current.onSurfaceMuted;
                 AddLayoutElement(l.gameObject, minWidth: 160, flexibleWidth: 1);
 
                 Text v = NewText("Band", row.transform, bandLabel, 15, TextAnchor.MiddleRight);
@@ -1767,7 +1768,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             if (rules.Count == 0)
             {
                 Text empty = NewText("NoRules", ruleRows, "(no rules — tap “+ Add rule”)", 13, TextAnchor.MiddleLeft);
-                empty.color = new Color(0.55f, 0.59f, 0.63f);
+                empty.color = DesignTokens.Current.onSurfaceSecondaryAlt;
                 empty.fontStyle = FontStyle.Italic;
                 AddLayoutElement(empty.gameObject, minHeight: 22, flexibleHeight: 0);
                 return;
@@ -2049,7 +2050,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
         {
             GameObject btn = NewUI("Cycle_" + tag, parent);
             Image img = btn.AddComponent<Image>();
-            img.color = new Color(0.16f, 0.18f, 0.22f);
+            img.color = DesignTokens.Current.surfaceRaised;
             Button b = btn.AddComponent<Button>();
             b.targetGraphic = img;
             AddLayoutElement(btn, minHeight: 28, minWidth: 96, flexibleWidth: 1);
@@ -2070,7 +2071,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
         {
             GameObject btn = NewUI("Compact_" + label, parent);
             Image img = btn.AddComponent<Image>();
-            img.color = new Color(0.16f, 0.18f, 0.22f);
+            img.color = DesignTokens.Current.surfaceRaised;
             Button b = btn.AddComponent<Button>();
             b.targetGraphic = img;
             b.onClick.AddListener(onClick);
@@ -2089,7 +2090,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
         {
             GameObject go = NewUI("Value", parent);
             Image img = go.AddComponent<Image>();
-            img.color = new Color(0.10f, 0.12f, 0.14f);
+            img.color = DesignTokens.Current.lieutenantMutedDeep;
             AddLayoutElement(go, minHeight: 28, minWidth: 80, flexibleWidth: 1);
 
             InputField input = go.AddComponent<InputField>();
@@ -2159,7 +2160,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
         private string NewSectionLabel(Transform parent, string text)
         {
             Text t = NewText("Section", parent, text, 13, TextAnchor.MiddleLeft);
-            t.color = new Color(0.55f, 0.59f, 0.63f);
+            t.color = DesignTokens.Current.onSurfaceSecondaryAlt;
             t.fontStyle = FontStyle.Bold;
             AddLayoutElement(t.gameObject, minHeight: 20, flexibleHeight: 0);
             TrackText(t, text);
@@ -2188,7 +2189,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             AddLayoutElement(g.gameObject, minWidth: 46, preferredWidth: 46, flexibleWidth: 0);
 
             Text l = NewText("Label", row.transform, label, 15, TextAnchor.MiddleLeft);
-            l.color = new Color(0.72f, 0.76f, 0.80f);
+            l.color = DesignTokens.Current.onSurfaceMuted;
             AddLayoutElement(l.gameObject, minWidth: 120, flexibleWidth: 1);
 
             Text v = NewText("Value", row.transform, value, 16, TextAnchor.MiddleRight);
@@ -2205,7 +2206,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
         {
             GameObject btn = NewUI("Action_" + label.Replace(" ", "").Replace("(", "").Replace(")", ""), parent);
             Image img = btn.AddComponent<Image>();
-            img.color = new Color(0.16f, 0.18f, 0.22f);
+            img.color = DesignTokens.Current.surfaceRaised;
             Button b = btn.AddComponent<Button>();
             b.targetGraphic = img;
             b.onClick.AddListener(onClick);

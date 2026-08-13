@@ -7,6 +7,7 @@ using UnityEngine.UI;
 using MafiaCleanCity.CityMap; // REUSE AuthClient (signin → Bearer) + WorldApiClient/DistrictHeatDto (heat) + CityMapController (nav)
 using MafiaCleanCity.Operational.Exceptions;
 using MafiaCleanCity.Operational.Autonomy;
+using MafiaCleanCity.Theme;
 
 namespace MafiaCleanCity.Operational
 {
@@ -96,15 +97,15 @@ namespace MafiaCleanCity.Operational
         private AutonomyClient autonomy;       // Phase-21 — pending autonomy reports alert note + the Autonomy nav
 
         // Slate palette (mirrors BuildingCard / Laundering / global_conventions_core direction).
-        private static readonly Color SurfaceBg = new Color(0.051f, 0.059f, 0.063f);   // #0d0f10 (screen_1 ardoise)
-        private static readonly Color CardBg = new Color(0.086f, 0.098f, 0.106f);      // #16191b
-        private static readonly Color RowBg = new Color(0.137f, 0.165f, 0.176f);       // #232a2d
-        private static readonly Color TextPrimary = new Color(0.933f, 0.945f, 0.949f); // #eef1f2
-        private static readonly Color TextSecondary = new Color(0.541f, 0.592f, 0.612f); // #8a979c
-        private static readonly Color AccentMild = new Color(0.263f, 0.878f, 0.753f);   // #43e0c0 teal
-        private static readonly Color AccentModerate = new Color(1f, 0.62f, 0.239f);    // #ff9e3d amber
-        private static readonly Color AccentSevere = new Color(1f, 0.353f, 0.302f);     // #ff5a4d red
-        private static readonly Color CtaColor = new Color(1f, 0.824f, 0.247f);         // #ffd23f yellow
+        private static readonly Color SurfaceBg = DesignTokens.Current.surfaceBase;   // #0d0f10 (screen_1 ardoise)
+        private static readonly Color CardBg = DesignTokens.Current.surfaceCard;      // #16191b
+        private static readonly Color RowBg = DesignTokens.Current.surfaceRow;       // #232a2d
+        private static readonly Color TextPrimary = DesignTokens.Current.onSurfacePrimary; // #eef1f2
+        private static readonly Color TextSecondary = DesignTokens.Current.onSurfaceSecondary; // #8a979c
+        private static readonly Color AccentMild = DesignTokens.Current.accentSuccess;   // #43e0c0 teal
+        private static readonly Color AccentModerate = DesignTokens.Current.accentWarning;    // #ff9e3d amber
+        private static readonly Color AccentSevere = DesignTokens.Current.accentDanger;     // #ff5a4d red
+        private static readonly Color CtaColor = DesignTokens.Current.accentGold;         // #ffd23f yellow
 
         private void Start()
         {
@@ -621,7 +622,7 @@ namespace MafiaCleanCity.Operational
         private string NewSectionLabel(Transform parent, string text)
         {
             Text t = NewText("Section", parent, text, 13, TextAnchor.MiddleLeft);
-            t.color = new Color(0.45f, 0.49f, 0.53f);
+            t.color = DesignTokens.Current.dashboardIconDim;
             t.fontStyle = FontStyle.Bold;
             AddLayoutElement(t.gameObject, minHeight: 20, flexibleHeight: 0);
             return text;
@@ -631,7 +632,7 @@ namespace MafiaCleanCity.Operational
         {
             GameObject btn = NewUI("Nav_" + label.Replace(" ", ""), parent);
             Image img = btn.AddComponent<Image>();
-            img.color = new Color(0.16f, 0.18f, 0.22f);
+            img.color = DesignTokens.Current.surfaceRaised;
             Button b = btn.AddComponent<Button>();
             b.targetGraphic = img;
             b.onClick.AddListener(onClick);

@@ -6,6 +6,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
 using MafiaCleanCity.CityMap; // REUSE AuthClient (signin → Bearer)
+using MafiaCleanCity.Theme;
 
 namespace MafiaCleanCity.Operational.Autonomy
 {
@@ -55,14 +56,14 @@ namespace MafiaCleanCity.Operational.Autonomy
         private bool Destroyed => destroyed || this == null;
 
         // Slate palette (mirrors DashboardController).
-        private static readonly Color SurfaceBg = new Color(0.051f, 0.059f, 0.063f);
-        private static readonly Color CardBg = new Color(0.086f, 0.098f, 0.106f);
-        private static readonly Color RowBg = new Color(0.137f, 0.165f, 0.176f);
-        private static readonly Color TextPrimary = new Color(0.933f, 0.945f, 0.949f);
-        private static readonly Color TextSecondary = new Color(0.541f, 0.592f, 0.612f);
-        private static readonly Color AccentMild = new Color(0.263f, 0.878f, 0.753f);
-        private static readonly Color AccentSevere = new Color(1f, 0.353f, 0.302f);
-        private static readonly Color CtaColor = new Color(1f, 0.824f, 0.247f);
+        private static readonly Color SurfaceBg = DesignTokens.Current.surfaceBase;
+        private static readonly Color CardBg = DesignTokens.Current.surfaceCard;
+        private static readonly Color RowBg = DesignTokens.Current.surfaceRow;
+        private static readonly Color TextPrimary = DesignTokens.Current.onSurfacePrimary;
+        private static readonly Color TextSecondary = DesignTokens.Current.onSurfaceSecondary;
+        private static readonly Color AccentMild = DesignTokens.Current.accentSuccess;
+        private static readonly Color AccentSevere = DesignTokens.Current.accentDanger;
+        private static readonly Color CtaColor = DesignTokens.Current.accentGold;
 
         private void Start()
         {
@@ -242,7 +243,7 @@ namespace MafiaCleanCity.Operational.Autonomy
         private void AddIssueBlock(Transform parent, AutonomyReportDto report, AutonomyIssueDto issue)
         {
             GameObject block = NewUI("Issue_" + issue.issue_id, parent);
-            block.AddComponent<Image>().color = new Color(0.102f, 0.122f, 0.133f);
+            block.AddComponent<Image>().color = DesignTokens.Current.autonomyBlockBg;
             VerticalLayoutGroup v = block.AddComponent<VerticalLayoutGroup>();
             v.padding = new RectOffset(8, 8, 6, 6);
             v.spacing = 4;
@@ -305,7 +306,7 @@ namespace MafiaCleanCity.Operational.Autonomy
             string caption = "Choose " + choice; // "Choose A" or "Choose B" — digit-free
             GameObject btn = NewUI("Btn_" + choice, optBlock.transform);
             Image img = btn.AddComponent<Image>();
-            img.color = new Color(0.16f, 0.18f, 0.22f);
+            img.color = DesignTokens.Current.surfaceRaised;
             Button b = btn.AddComponent<Button>();
             b.targetGraphic = img;
             string capturedChoice = choice;

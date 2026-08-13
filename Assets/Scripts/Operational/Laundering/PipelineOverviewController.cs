@@ -5,6 +5,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
 using MafiaCleanCity.CityMap; // REUSE AuthClient (signin → Bearer)
+using MafiaCleanCity.Theme;
 
 namespace MafiaCleanCity.Operational
 {
@@ -77,13 +78,13 @@ namespace MafiaCleanCity.Operational
         private LaunderingClient client;
 
         // Slate palette (mirrors LaunderingController + global_conventions_core direction).
-        private static readonly Color SurfaceBg = new Color(0.086f, 0.098f, 0.106f); // #16191b
-        private static readonly Color RowBg = new Color(0.137f, 0.165f, 0.176f);     // #232a2d
-        private static readonly Color TextPrimary = new Color(0.933f, 0.945f, 0.949f);
-        private static readonly Color AccentMild = new Color(0.263f, 0.878f, 0.753f);   // #43e0c0 teal (clean)
-        private static readonly Color AccentModerate = new Color(1f, 0.62f, 0.239f);     // #ff9e3d amber (partial)
-        private static readonly Color AccentSevere = new Color(1f, 0.353f, 0.302f);      // #ff5a4d red (dirty)
-        private static readonly Color TerminalColor = new Color(1f, 0.824f, 0.247f);     // #ffd23f yellow (release stage)
+        private static readonly Color SurfaceBg = DesignTokens.Current.surfaceCard; // #16191b
+        private static readonly Color RowBg = DesignTokens.Current.surfaceRow;     // #232a2d
+        private static readonly Color TextPrimary = DesignTokens.Current.onSurfacePrimary;
+        private static readonly Color AccentMild = DesignTokens.Current.accentSuccess;   // #43e0c0 teal (clean)
+        private static readonly Color AccentModerate = DesignTokens.Current.accentWarning;     // #ff9e3d amber (partial)
+        private static readonly Color AccentSevere = DesignTokens.Current.accentDanger;      // #ff5a4d red (dirty)
+        private static readonly Color TerminalColor = DesignTokens.Current.accentGold;     // #ffd23f yellow (release stage)
 
         private void Start()
         {
@@ -211,7 +212,7 @@ namespace MafiaCleanCity.Operational
             // Header line: the stage label (worded ordinal) + the terminal/release marker.
             string header = StageLabel(index, total) + (stage.terminal ? "  •  Release (terminal)" : "");
             Text head = NewText("Header", card.transform, header, 14, TextAnchor.MiddleLeft);
-            head.color = stage.terminal ? TerminalColor : new Color(0.72f, 0.76f, 0.80f);
+            head.color = stage.terminal ? TerminalColor : DesignTokens.Current.onSurfaceMuted;
             head.fontStyle = FontStyle.Bold;
             AddLayoutElement(head.gameObject, minHeight: 20, flexibleHeight: 0);
             TrackText(header);
@@ -245,7 +246,7 @@ namespace MafiaCleanCity.Operational
             // Buffered-cash presence chip (a boolean — never the cents). Only shown when cash is present.
             string chip = stage.has_cash ? "Cash buffered" : "Empty";
             Text c = NewText("Cash", row.transform, chip, 13, TextAnchor.MiddleRight);
-            c.color = stage.has_cash ? AccentModerate : new Color(0.55f, 0.59f, 0.63f);
+            c.color = stage.has_cash ? AccentModerate : DesignTokens.Current.onSurfaceSecondaryAlt;
             AddLayoutElement(c.gameObject, minWidth: 110, flexibleWidth: 0);
             TrackText(chip);
         }
@@ -320,7 +321,7 @@ namespace MafiaCleanCity.Operational
             // Dim backdrop (the Pipeline tab would sit behind in-game).
             GameObject backdrop = NewUI("PipelineBackdrop", canvas.transform);
             Stretch((RectTransform)backdrop.transform, Vector2.zero, Vector2.zero);
-            backdrop.AddComponent<Image>().color = new Color(0.05f, 0.05f, 0.06f, 0.85f);
+            backdrop.AddComponent<Image>().color = DesignTokens.Current.scrimBackdrop;
 
             // The pipeline overview card, anchored centre.
             GameObject card = NewUI("PipelineSheet", canvas.transform);
@@ -344,7 +345,7 @@ namespace MafiaCleanCity.Operational
             AddLayoutElement(titleText.gameObject, minHeight: 30, flexibleHeight: 0);
 
             subtitleText = NewText("Subtitle", card.transform, "Cash cleanliness rises stage by stage", 16, TextAnchor.MiddleLeft);
-            subtitleText.color = new Color(0.75f, 0.79f, 0.83f);
+            subtitleText.color = DesignTokens.Current.onSurfaceDim;
             AddLayoutElement(subtitleText.gameObject, minHeight: 24, flexibleHeight: 0);
 
             GameObject rows = NewUI("StageRows", card.transform);

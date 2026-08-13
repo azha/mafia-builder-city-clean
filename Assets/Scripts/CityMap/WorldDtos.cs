@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using MafiaCleanCity.Theme;
 
 namespace MafiaCleanCity.CityMap
 {
@@ -167,11 +168,11 @@ namespace MafiaCleanCity.CityMap
         {
             switch (state)
             {
-                case ControlState.Uncontested: return new Color(0.55f, 0.55f, 0.58f); // neutral grey
-                case ControlState.Contested: return new Color(0.95f, 0.74f, 0.20f);   // amber
-                case ControlState.PlayerHeld: return new Color(0.24f, 0.70f, 0.34f);  // green
-                case ControlState.RivalHeld: return new Color(0.82f, 0.26f, 0.26f);   // red
-                default: return new Color(0.30f, 0.30f, 0.32f);                       // unknown / dark
+                case ControlState.Uncontested: return DesignTokens.Current.controlUncontested; // neutral grey
+                case ControlState.Contested: return DesignTokens.Current.controlContested;   // amber
+                case ControlState.PlayerHeld: return DesignTokens.Current.controlPlayerHeld;  // green
+                case ControlState.RivalHeld: return DesignTokens.Current.controlRivalHeld;   // red
+                default: return DesignTokens.Current.controlUnknown;                       // unknown / dark
             }
         }
 
@@ -205,11 +206,11 @@ namespace MafiaCleanCity.CityMap
         {
             switch (bucket)
             {
-                case HeatBucket.Cold: return new Color(0.27f, 0.45f, 0.72f);    // cool blue
-                case HeatBucket.Warm: return new Color(0.93f, 0.80f, 0.28f);    // yellow
-                case HeatBucket.Hot: return new Color(0.94f, 0.55f, 0.20f);     // orange
-                case HeatBucket.Burning: return new Color(0.86f, 0.20f, 0.18f); // red
-                default: return new Color(0.35f, 0.35f, 0.38f);                 // unknown
+                case HeatBucket.Cold: return DesignTokens.Current.heatCold;    // cool blue
+                case HeatBucket.Warm: return DesignTokens.Current.heatWarm;    // yellow
+                case HeatBucket.Hot: return DesignTokens.Current.heatHot;     // orange
+                case HeatBucket.Burning: return DesignTokens.Current.heatBurning; // red
+                default: return DesignTokens.Current.heatUnknown;                 // unknown
             }
         }
 
@@ -218,7 +219,7 @@ namespace MafiaCleanCity.CityMap
         public static Color ReadableTextColor(Color bg)
         {
             float luminance = 0.299f * bg.r + 0.587f * bg.g + 0.114f * bg.b;
-            return luminance > 0.6f ? new Color(0.1f, 0.1f, 0.1f) : Color.white;
+            return luminance > 0.6f ? DesignTokens.Current.readableTextDark : Color.white;
         }
     }
 }

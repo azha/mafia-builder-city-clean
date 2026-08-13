@@ -5,6 +5,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
 using MafiaCleanCity.CityMap; // REUSE AuthClient (signin → Bearer)
+using MafiaCleanCity.Theme;
 
 namespace MafiaCleanCity.Operational
 {
@@ -76,13 +77,13 @@ namespace MafiaCleanCity.Operational
         private LaunderingClient client;
 
         // Slate palette (mirrors BuildingCard + global_conventions_core direction).
-        private static readonly Color SurfaceBg = new Color(0.086f, 0.098f, 0.106f); // #16191b
-        private static readonly Color RowBg = new Color(0.137f, 0.165f, 0.176f);     // #232a2d
-        private static readonly Color TextPrimary = new Color(0.933f, 0.945f, 0.949f);
-        private static readonly Color AccentMild = new Color(0.263f, 0.878f, 0.753f);   // #43e0c0 teal (clean)
-        private static readonly Color AccentModerate = new Color(1f, 0.62f, 0.239f);     // #ff9e3d amber (partial)
-        private static readonly Color AccentSevere = new Color(1f, 0.353f, 0.302f);      // #ff5a4d red (dirty / deviation)
-        private static readonly Color CtaColor = new Color(1f, 0.824f, 0.247f);          // #ffd23f yellow
+        private static readonly Color SurfaceBg = DesignTokens.Current.surfaceCard; // #16191b
+        private static readonly Color RowBg = DesignTokens.Current.surfaceRow;     // #232a2d
+        private static readonly Color TextPrimary = DesignTokens.Current.onSurfacePrimary;
+        private static readonly Color AccentMild = DesignTokens.Current.accentSuccess;   // #43e0c0 teal (clean)
+        private static readonly Color AccentModerate = DesignTokens.Current.accentWarning;     // #ff9e3d amber (partial)
+        private static readonly Color AccentSevere = DesignTokens.Current.accentDanger;      // #ff5a4d red (dirty / deviation)
+        private static readonly Color CtaColor = DesignTokens.Current.accentGold;          // #ffd23f yellow
 
         private void Start()
         {
@@ -246,7 +247,7 @@ namespace MafiaCleanCity.Operational
             AddActionButton(actionBar, "Inject (launder)", () => { /* needs front-shop + safehouse targets; driven via Inject() */ });
 
             actionStatusText = NewText("ActionStatus", actionBar, "", 14, TextAnchor.MiddleLeft);
-            actionStatusText.color = new Color(0.7f, 0.74f, 0.78f);
+            actionStatusText.color = DesignTokens.Current.onSurfaceMutedAlt;
             AddLayoutElement(actionStatusText.gameObject, minHeight: 22, flexibleHeight: 0);
         }
 
@@ -307,7 +308,7 @@ namespace MafiaCleanCity.Operational
             // Dim backdrop (the City Map / Pipeline tab would sit behind in-game).
             GameObject backdrop = NewUI("LaunderingBackdrop", canvas.transform);
             Stretch((RectTransform)backdrop.transform, Vector2.zero, Vector2.zero);
-            backdrop.AddComponent<Image>().color = new Color(0.05f, 0.05f, 0.06f, 0.85f);
+            backdrop.AddComponent<Image>().color = DesignTokens.Current.scrimBackdrop;
 
             // The pipeline card, anchored centre.
             GameObject card = NewUI("LaunderingSheet", canvas.transform);
@@ -331,7 +332,7 @@ namespace MafiaCleanCity.Operational
             AddLayoutElement(titleText.gameObject, minHeight: 30, flexibleHeight: 0);
 
             subtitleText = NewText("Subtitle", card.transform, "Front shop — first stage", 16, TextAnchor.MiddleLeft);
-            subtitleText.color = new Color(0.75f, 0.79f, 0.83f);
+            subtitleText.color = DesignTokens.Current.onSurfaceDim;
             AddLayoutElement(subtitleText.gameObject, minHeight: 24, flexibleHeight: 0);
 
             GameObject rows = NewUI("StatusRows", card.transform);
@@ -376,7 +377,7 @@ namespace MafiaCleanCity.Operational
             AddLayoutElement(g.gameObject, minWidth: 60, preferredWidth: 60, flexibleWidth: 0);
 
             Text l = NewText("Label", row.transform, label, 15, TextAnchor.MiddleLeft);
-            l.color = new Color(0.72f, 0.76f, 0.80f);
+            l.color = DesignTokens.Current.onSurfaceMuted;
             AddLayoutElement(l.gameObject, minWidth: 120, flexibleWidth: 1);
 
             Text v = NewText("Value", row.transform, value, 16, TextAnchor.MiddleRight);
@@ -392,7 +393,7 @@ namespace MafiaCleanCity.Operational
         private string NewSectionLabel(Transform parent, string text)
         {
             Text t = NewText("Section", parent, text, 13, TextAnchor.MiddleLeft);
-            t.color = new Color(0.55f, 0.59f, 0.63f);
+            t.color = DesignTokens.Current.onSurfaceSecondaryAlt;
             t.fontStyle = FontStyle.Bold;
             AddLayoutElement(t.gameObject, minHeight: 20, flexibleHeight: 0);
             return text;
@@ -402,7 +403,7 @@ namespace MafiaCleanCity.Operational
         {
             GameObject btn = NewUI("Action_" + label.Replace(" ", ""), parent);
             Image img = btn.AddComponent<Image>();
-            img.color = new Color(0.16f, 0.18f, 0.22f);
+            img.color = DesignTokens.Current.surfaceRaised;
             Button b = btn.AddComponent<Button>();
             b.targetGraphic = img;
             b.onClick.AddListener(onClick);
