@@ -6,6 +6,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
 using MafiaCleanCity.Theme;
+using TMPro;
 
 namespace MafiaCleanCity.Operational.Exceptions
 {
@@ -35,7 +36,7 @@ namespace MafiaCleanCity.Operational.Exceptions
         private ExceptionsClient client;
 
         private readonly List<string> renderedTexts = new List<string>();
-        private Font font;
+        private TMP_FontAsset font;
         private RectTransform body;
         private bool initialized;
         private bool resolving;
@@ -84,7 +85,7 @@ namespace MafiaCleanCity.Operational.Exceptions
         {
             if (initialized) return;
             initialized = true;
-            font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            font = DesignTokens.Current.primaryFont;
             client = new ExceptionsClient { BaseUrl = baseUrl };
             BuildLayout();
             EnsureEventSystem();
@@ -159,13 +160,13 @@ namespace MafiaCleanCity.Operational.Exceptions
             ClearBody();
 
             // Descriptor — producer free text (an i18n key may carry digits): CHROME, component-tracked only.
-            Text desc = NewText("Descriptor", body, c.event_descriptor, 16, TextAnchor.MiddleLeft);
-            desc.fontStyle = FontStyle.Bold;
+            TextMeshProUGUI desc = NewText("Descriptor", body, c.event_descriptor, 16, TextAlignmentOptions.Left);
+            desc.fontStyle = FontStyles.Bold;
             AddLayoutElement(desc.gameObject, minHeight: 22, flexibleHeight: 0);
 
             // Bands line — CLOSED labels, tracked (the scan corpus). Color TextSecondary (neutral — detail shows all bands).
             string bands = $"Severity {Cap(c.severity_band)}  •  Priority {Cap(c.priority_band)}  •  Confidence {Cap(c.confidence_band)}";
-            Text bandText = NewText("Bands", body, bands, 13, TextAnchor.MiddleLeft);
+            TextMeshProUGUI bandText = NewText("Bands", body, bands, 13, TextAlignmentOptions.Left);
             bandText.color = TextSecondary;
             AddLayoutElement(bandText.gameObject, minHeight: 18, flexibleHeight: 0);
             TrackText(bandText, bands);
@@ -173,14 +174,14 @@ namespace MafiaCleanCity.Operational.Exceptions
             // ---- Resolved state: show outcome + Back, then return. ----
             if (!string.IsNullOrEmpty(LastOutcome))
             {
-                Text resolved = NewText("Resolved", body, "Resolved ✓", 16, TextAnchor.MiddleLeft);
+                TextMeshProUGUI resolved = NewText("Resolved", body, "Resolved ✓", 16, TextAlignmentOptions.Left);
                 resolved.color = AccentMild;
-                resolved.fontStyle = FontStyle.Bold;
+                resolved.fontStyle = FontStyles.Bold;
                 AddLayoutElement(resolved.gameObject, minHeight: 22, flexibleHeight: 0);
                 TrackText(resolved, "Resolved ✓");
 
                 // Outcome — producer free text (enum value may carry letters but qualitative): CHROME, TextPrimary.
-                Text outcomeText = NewText("Outcome", body, "Outcome: " + LastOutcome, 14, TextAnchor.MiddleLeft);
+                TextMeshProUGUI outcomeText = NewText("Outcome", body, "Outcome: " + LastOutcome, 14, TextAlignmentOptions.Left);
                 outcomeText.color = TextPrimary;
                 AddLayoutElement(outcomeText.gameObject, minHeight: 20, flexibleHeight: 0);
                 // chrome — NOT tracked
@@ -192,7 +193,7 @@ namespace MafiaCleanCity.Operational.Exceptions
             // ---- Error line (if present — producer text, chrome). ----
             if (!string.IsNullOrEmpty(LastError))
             {
-                Text errText = NewText("Error", body, LastError, 13, TextAnchor.MiddleLeft);
+                TextMeshProUGUI errText = NewText("Error", body, LastError, 13, TextAlignmentOptions.Left);
                 errText.color = AccentSevere;
                 AddLayoutElement(errText.gameObject, minHeight: 18, flexibleHeight: 0);
                 // chrome — NOT tracked
@@ -230,15 +231,15 @@ namespace MafiaCleanCity.Operational.Exceptions
                     AddLayoutElement(block, flexibleHeight: 0);
 
                     // Label — producer free text (chrome); bold when suggested.
-                    Text labelText = NewText("Label", block.transform, ca.label, 15, TextAnchor.MiddleLeft);
-                    if (isSuggested) labelText.fontStyle = FontStyle.Bold;
+                    TextMeshProUGUI labelText = NewText("Label", block.transform, ca.label, 15, TextAlignmentOptions.Left);
+                    if (isSuggested) labelText.fontStyle = FontStyles.Bold;
                     AddLayoutElement(labelText.gameObject, minHeight: 20, flexibleHeight: 0);
                     // chrome — NOT tracked
 
                     // "★ Suggested" marker — CLOSED label, tracked.
                     if (isSuggested)
                     {
-                        Text sugMarker = NewText("Suggested", block.transform, "★ Suggested", 13, TextAnchor.MiddleLeft);
+                        TextMeshProUGUI sugMarker = NewText("Suggested", block.transform, "★ Suggested", 13, TextAlignmentOptions.Left);
                         sugMarker.color = CtaColor;
                         AddLayoutElement(sugMarker.gameObject, minHeight: 18, flexibleHeight: 0);
                         TrackText(sugMarker, "★ Suggested");
@@ -247,7 +248,7 @@ namespace MafiaCleanCity.Operational.Exceptions
                     // Projected consequence — producer free text (chrome).
                     if (!string.IsNullOrEmpty(ca.projected_consequence))
                     {
-                        Text conseq = NewText("Consequence", block.transform, ca.projected_consequence, 13, TextAnchor.MiddleLeft);
+                        TextMeshProUGUI conseq = NewText("Consequence", block.transform, ca.projected_consequence, 13, TextAlignmentOptions.Left);
                         conseq.color = TextSecondary;
                         AddLayoutElement(conseq.gameObject, minHeight: 18, flexibleHeight: 0);
                         // chrome — NOT tracked
@@ -256,7 +257,7 @@ namespace MafiaCleanCity.Operational.Exceptions
                     // DSL preview — producer free text (chrome), shown only when AddAsRule && teachable.
                     if (AddAsRule && isTeachable)
                     {
-                        Text dslText = NewText("DSL", block.transform, "Teaches: " + ca.add_rule_dsl, 12, TextAnchor.MiddleLeft);
+                        TextMeshProUGUI dslText = NewText("DSL", block.transform, "Teaches: " + ca.add_rule_dsl, 12, TextAlignmentOptions.Left);
                         dslText.color = AccentMild;
                         AddLayoutElement(dslText.gameObject, minHeight: 16, flexibleHeight: 0);
                         // chrome — NOT tracked
@@ -284,7 +285,7 @@ namespace MafiaCleanCity.Operational.Exceptions
             b.targetGraphic = img;
             b.onClick.AddListener(onClick);
             AddLayoutElement(btn, minHeight: 44, flexibleHeight: 0); // ≥44dp tap target (F2)
-            Text t = NewText("Label", btn.transform, label, 14, TextAnchor.MiddleCenter);
+            TextMeshProUGUI t = NewText("Label", btn.transform, label, 14, TextAlignmentOptions.Center);
             t.color = CtaColor;
             Stretch((RectTransform)t.transform, new Vector2(10, 2), new Vector2(-10, -2));
             if (track) TrackText(t, label);
@@ -333,8 +334,8 @@ namespace MafiaCleanCity.Operational.Exceptions
             vlg.childForceExpandHeight = false;
 
             // Header.
-            Text headerText = NewText("Header", card.transform, "EXCEPTION", 24, TextAnchor.MiddleLeft);
-            headerText.fontStyle = FontStyle.Bold;
+            TextMeshProUGUI headerText = NewText("Header", card.transform, "EXCEPTION", 24, TextAlignmentOptions.Left);
+            headerText.fontStyle = FontStyles.Bold;
             AddLayoutElement(headerText.gameObject, minHeight: 32, flexibleHeight: 0);
             TrackText(headerText, "EXCEPTION");
 
@@ -363,7 +364,7 @@ namespace MafiaCleanCity.Operational.Exceptions
 
         // --------------------------------------------------------------- helpers (verbatim DashboardController)
 
-        private void TrackText(Text comp, string text)
+        private void TrackText(TextMeshProUGUI comp, string text)
         {
             if (!string.IsNullOrEmpty(text)) renderedTexts.Add(text);
         }
@@ -384,17 +385,17 @@ namespace MafiaCleanCity.Operational.Exceptions
             return go;
         }
 
-        private Text NewText(string name, Transform parent, string value, int size, TextAnchor anchor)
+        private TextMeshProUGUI NewText(string name, Transform parent, string value, int size, TextAlignmentOptions anchor)
         {
             GameObject go = NewUI(name, parent);
-            Text t = go.AddComponent<Text>();
+            TextMeshProUGUI t = go.AddComponent<TextMeshProUGUI>();
             t.font = font;
             t.text = value;
             t.fontSize = size;
             t.alignment = anchor;
             t.color = TextPrimary;
-            t.horizontalOverflow = HorizontalWrapMode.Overflow;
-            t.verticalOverflow = VerticalWrapMode.Truncate;
+            t.textWrappingMode = TextWrappingModes.NoWrap;
+            t.overflowMode = TextOverflowModes.Truncate;
             t.raycastTarget = false;
             return t;
         }

@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 namespace MafiaCleanCity.CityMap
 {
@@ -12,15 +13,15 @@ namespace MafiaCleanCity.CityMap
         public ControlState State { get; private set; }
         public BankSide Bank { get; private set; }
         public Image Background { get; private set; }
-        public Text Label { get; private set; }
+        public TextMeshProUGUI Label { get; private set; }
 
         // Heat overlay (set up by the controller; populated once heat is fetched).
         public GameObject HeatBadge { get; private set; }
         public Image HeatBadgeBg { get; private set; }
-        public Text HeatBadgeLabel { get; private set; }
+        public TextMeshProUGUI HeatBadgeLabel { get; private set; }
         public HeatBucket Heat { get; private set; }
 
-        public void Bind(DistrictDto dto, Image background, Text label)
+        public void Bind(DistrictDto dto, Image background, TextMeshProUGUI label)
         {
             Model = dto;
             Background = background;
@@ -33,7 +34,7 @@ namespace MafiaCleanCity.CityMap
         }
 
         /// <summary>Wire the heat badge UI (built by the controller). Hidden until heat is set.</summary>
-        public void AttachHeatBadge(GameObject badge, Image badgeBg, Text badgeLabel)
+        public void AttachHeatBadge(GameObject badge, Image badgeBg, TextMeshProUGUI badgeLabel)
         {
             HeatBadge = badge;
             HeatBadgeBg = badgeBg;

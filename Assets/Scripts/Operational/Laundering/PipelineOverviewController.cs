@@ -6,6 +6,7 @@ using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
 using MafiaCleanCity.CityMap; // REUSE AuthClient (signin → Bearer)
 using MafiaCleanCity.Theme;
+using TMPro;
 
 namespace MafiaCleanCity.Operational
 {
@@ -69,9 +70,9 @@ namespace MafiaCleanCity.Operational
 
         private readonly List<string> renderedTexts = new List<string>();
 
-        private Font font;
-        private Text titleText;
-        private Text subtitleText;
+        private TMP_FontAsset font;
+        private TextMeshProUGUI titleText;
+        private TextMeshProUGUI subtitleText;
         private RectTransform stageRows;
 
         private AuthClient auth;
@@ -99,7 +100,7 @@ namespace MafiaCleanCity.Operational
         {
             if (initialized) return;
             initialized = true;
-            font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            font = DesignTokens.Current.primaryFont;
             auth = new AuthClient { BaseUrl = baseUrl };
             client = new LaunderingClient { BaseUrl = baseUrl };
             BuildLayout();
@@ -211,9 +212,9 @@ namespace MafiaCleanCity.Operational
 
             // Header line: the stage label (worded ordinal) + the terminal/release marker.
             string header = StageLabel(index, total) + (stage.terminal ? "  •  Release (terminal)" : "");
-            Text head = NewText("Header", card.transform, header, 14, TextAnchor.MiddleLeft);
+            TextMeshProUGUI head = NewText("Header", card.transform, header, 14, TextAlignmentOptions.Left);
             head.color = stage.terminal ? TerminalColor : DesignTokens.Current.onSurfaceMuted;
-            head.fontStyle = FontStyle.Bold;
+            head.fontStyle = FontStyles.Bold;
             AddLayoutElement(head.gameObject, minHeight: 20, flexibleHeight: 0);
             TrackText(header);
 
@@ -231,21 +232,21 @@ namespace MafiaCleanCity.Operational
             Color accent = CleanlinessAccent(stage.cleanliness_band);
 
             // Glyph (shape — a11y: colour is never the sole differentiator).
-            Text g = NewText("Glyph", row.transform, CleanlinessGlyph(stage.cleanliness_band), 15, TextAnchor.MiddleCenter);
+            TextMeshProUGUI g = NewText("Glyph", row.transform, CleanlinessGlyph(stage.cleanliness_band), 15, TextAlignmentOptions.Center);
             g.color = accent;
-            g.fontStyle = FontStyle.Bold;
+            g.fontStyle = FontStyles.Bold;
             AddLayoutElement(g.gameObject, minWidth: 58, preferredWidth: 58, flexibleWidth: 0);
             TrackText(CleanlinessGlyph(stage.cleanliness_band));
 
-            Text band = NewText("BandValue", row.transform, CleanlinessLabel(stage.cleanliness_band), 15, TextAnchor.MiddleLeft);
+            TextMeshProUGUI band = NewText("BandValue", row.transform, CleanlinessLabel(stage.cleanliness_band), 15, TextAlignmentOptions.Left);
             band.color = accent;
-            band.fontStyle = FontStyle.Bold;
+            band.fontStyle = FontStyles.Bold;
             AddLayoutElement(band.gameObject, minWidth: 130, flexibleWidth: 1);
             TrackText(CleanlinessLabel(stage.cleanliness_band));
 
             // Buffered-cash presence chip (a boolean — never the cents). Only shown when cash is present.
             string chip = stage.has_cash ? "Cash buffered" : "Empty";
-            Text c = NewText("Cash", row.transform, chip, 13, TextAnchor.MiddleRight);
+            TextMeshProUGUI c = NewText("Cash", row.transform, chip, 13, TextAlignmentOptions.Right);
             c.color = stage.has_cash ? AccentModerate : DesignTokens.Current.onSurfaceSecondaryAlt;
             AddLayoutElement(c.gameObject, minWidth: 110, flexibleWidth: 0);
             TrackText(chip);
@@ -340,11 +341,11 @@ namespace MafiaCleanCity.Operational
             vlg.childForceExpandWidth = true;
             vlg.childForceExpandHeight = false;
 
-            titleText = NewText("Title", card.transform, "LAUNDERING PIPELINE", 22, TextAnchor.MiddleLeft);
-            titleText.fontStyle = FontStyle.Bold;
+            titleText = NewText("Title", card.transform, "LAUNDERING PIPELINE", 22, TextAlignmentOptions.Left);
+            titleText.fontStyle = FontStyles.Bold;
             AddLayoutElement(titleText.gameObject, minHeight: 30, flexibleHeight: 0);
 
-            subtitleText = NewText("Subtitle", card.transform, "Cash cleanliness rises stage by stage", 16, TextAnchor.MiddleLeft);
+            subtitleText = NewText("Subtitle", card.transform, "Cash cleanliness rises stage by stage", 16, TextAlignmentOptions.Left);
             subtitleText.color = DesignTokens.Current.onSurfaceDim;
             AddLayoutElement(subtitleText.gameObject, minHeight: 24, flexibleHeight: 0);
 
@@ -390,17 +391,17 @@ namespace MafiaCleanCity.Operational
             return go;
         }
 
-        private Text NewText(string name, Transform parent, string value, int size, TextAnchor anchor)
+        private TextMeshProUGUI NewText(string name, Transform parent, string value, int size, TextAlignmentOptions anchor)
         {
             GameObject go = NewUI(name, parent);
-            Text t = go.AddComponent<Text>();
+            TextMeshProUGUI t = go.AddComponent<TextMeshProUGUI>();
             t.font = font;
             t.text = value;
             t.fontSize = size;
             t.alignment = anchor;
             t.color = TextPrimary;
-            t.horizontalOverflow = HorizontalWrapMode.Overflow;
-            t.verticalOverflow = VerticalWrapMode.Truncate;
+            t.textWrappingMode = TextWrappingModes.NoWrap;
+            t.overflowMode = TextOverflowModes.Truncate;
             t.raycastTarget = false;
             return t;
         }

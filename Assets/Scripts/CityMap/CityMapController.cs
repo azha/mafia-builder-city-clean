@@ -6,6 +6,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
 using MafiaCleanCity.Theme;
+using TMPro;
 
 namespace MafiaCleanCity.CityMap
 {
@@ -53,12 +54,12 @@ namespace MafiaCleanCity.CityMap
         private readonly List<DistrictCellView> cells = new List<DistrictCellView>();
         private RectTransform northContent;
         private RectTransform southContent;
-        private Text toggleLabel;
-        private Font font;
+        private TextMeshProUGUI toggleLabel;
+        private TMP_FontAsset font;
 
         private GameObject detailPanel;
         private RectTransform detailContent;
-        private Text detailTitle;
+        private TextMeshProUGUI detailTitle;
         private Coroutine detailCoroutine;
         private VerticalLayoutGroup rootVlg;
 
@@ -69,7 +70,7 @@ namespace MafiaCleanCity.CityMap
 
         private void Start()
         {
-            font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            font = DesignTokens.Current.primaryFont;
             BuildLayout();
             EnsureEventSystem();
             StartCoroutine(Load());
@@ -176,7 +177,7 @@ namespace MafiaCleanCity.CityMap
                 if (bank == BankSide.South) SouthCount++; else NorthCount++;
 
                 DistrictCellView cell = BuildCell(parent);
-                cell.Bind(dto, cell.GetComponent<Image>(), cell.GetComponentInChildren<Text>());
+                cell.Bind(dto, cell.GetComponent<Image>(), cell.GetComponentInChildren<TextMeshProUGUI>());
                 cells.Add(cell);
             }
         }
@@ -233,8 +234,8 @@ namespace MafiaCleanCity.CityMap
             hhlg.childForceExpandHeight = true;
             AddLayoutElement(header, minHeight: 44, flexibleHeight: 0);
 
-            Text title = NewText("Title", header.transform, "CITY MAP  —  Districts", 28, TextAnchor.MiddleLeft);
-            title.fontStyle = FontStyle.Bold;
+            TextMeshProUGUI title = NewText("Title", header.transform, "CITY MAP  —  Districts", 28, TextAlignmentOptions.Left);
+            title.fontStyle = FontStyles.Bold;
             AddLayoutElement(title.gameObject, flexibleWidth: 1);
 
             BuildToggleButton(header.transform);
@@ -265,7 +266,7 @@ namespace MafiaCleanCity.CityMap
             button.targetGraphic = img;
             AddLayoutElement(btn, minHeight: 36, flexibleHeight: 0, minWidth: 210, preferredWidth: 210);
 
-            toggleLabel = NewText("Label", btn.transform, "", 16, TextAnchor.MiddleCenter);
+            toggleLabel = NewText("Label", btn.transform, "", 16, TextAlignmentOptions.Center);
             Stretch((RectTransform)toggleLabel.transform, new Vector2(8, 4), new Vector2(-8, -4));
 
             button.onClick.AddListener(() => SetHeatOverlay(!heatOverlayOn));
@@ -295,8 +296,8 @@ namespace MafiaCleanCity.CityMap
             vlg.childForceExpandHeight = false;
             AddLayoutElement(col, flexibleWidth: 1);
 
-            Text h = NewText("Header", col.transform, header.ToUpperInvariant(), 20, TextAnchor.MiddleCenter);
-            h.fontStyle = FontStyle.Bold;
+            TextMeshProUGUI h = NewText("Header", col.transform, header.ToUpperInvariant(), 20, TextAlignmentOptions.Center);
+            h.fontStyle = FontStyles.Bold;
             AddLayoutElement(h.gameObject, minHeight: 32, flexibleHeight: 0);
 
             return (RectTransform)col.transform;
@@ -309,7 +310,7 @@ namespace MafiaCleanCity.CityMap
             bg.color = Color.gray;
             AddLayoutElement(cell, minHeight: 40, preferredHeight: 40, flexibleHeight: 0);
 
-            Text label = NewText("Label", cell.transform, "", 16, TextAnchor.MiddleLeft);
+            TextMeshProUGUI label = NewText("Label", cell.transform, "", 16, TextAlignmentOptions.Left);
             RectTransform labelRt = (RectTransform)label.transform;
             Stretch(labelRt, new Vector2(10, 2), new Vector2(-94, -2)); // leave room for the heat badge
 
@@ -324,7 +325,7 @@ namespace MafiaCleanCity.CityMap
             Image badgeBg = badge.AddComponent<Image>();
             badgeBg.color = CityMapEnums.HeatColorFor(HeatBucket.Unknown);
             badgeBg.raycastTarget = false; // let clicks fall through to the cell button
-            Text badgeLabel = NewText("HeatLabel", badge.transform, "", 12, TextAnchor.MiddleCenter);
+            TextMeshProUGUI badgeLabel = NewText("HeatLabel", badge.transform, "", 12, TextAlignmentOptions.Center);
             Stretch((RectTransform)badgeLabel.transform, Vector2.zero, Vector2.zero);
 
             DistrictCellView view = cell.AddComponent<DistrictCellView>();
@@ -372,7 +373,7 @@ namespace MafiaCleanCity.CityMap
             sw.color = swatchColor;
             AddLayoutElement(swatch, minHeight: 18, preferredHeight: 18, minWidth: 18, preferredWidth: 18);
 
-            Text t = NewText("Caption", item.transform, label, 14, TextAnchor.MiddleLeft);
+            TextMeshProUGUI t = NewText("Caption", item.transform, label, 14, TextAlignmentOptions.Left);
             AddLayoutElement(t.gameObject, minHeight: 18);
         }
 
@@ -410,8 +411,8 @@ namespace MafiaCleanCity.CityMap
             hlg.spacing = 8;
             AddLayoutElement(header, minHeight: 30, flexibleHeight: 0);
 
-            detailTitle = NewText("Title", header.transform, "", 20, TextAnchor.MiddleLeft);
-            detailTitle.fontStyle = FontStyle.Bold;
+            detailTitle = NewText("Title", header.transform, "", 20, TextAlignmentOptions.Left);
+            detailTitle.fontStyle = FontStyles.Bold;
             AddLayoutElement(detailTitle.gameObject, flexibleWidth: 1);
 
             GameObject closeBtn = NewUI("Close", header.transform);
@@ -421,7 +422,7 @@ namespace MafiaCleanCity.CityMap
             cb.targetGraphic = closeImg;
             cb.onClick.AddListener(HideDetail);
             AddLayoutElement(closeBtn, minHeight: 26, flexibleHeight: 0, minWidth: 30, preferredWidth: 30);
-            Text cx = NewText("X", closeBtn.transform, "X", 16, TextAnchor.MiddleCenter);
+            TextMeshProUGUI cx = NewText("X", closeBtn.transform, "X", 16, TextAlignmentOptions.Center);
             Stretch((RectTransform)cx.transform, Vector2.zero, Vector2.zero);
 
             GameObject content = NewUI("Content", detailPanel.transform);
@@ -591,12 +592,12 @@ namespace MafiaCleanCity.CityMap
                 hlg.childForceExpandHeight = false;
                 AddLayoutElement(rowGo, minHeight: 22, flexibleHeight: 0);
 
-                Text l = NewText("Label", rowGo.transform, row.label, 14, TextAnchor.MiddleLeft);
+                TextMeshProUGUI l = NewText("Label", rowGo.transform, row.label, 14, TextAlignmentOptions.Left);
                 l.color = DesignTokens.Current.mapLabelMuted;
                 AddLayoutElement(l.gameObject, flexibleWidth: 1);
 
-                Text v = NewText("Value", rowGo.transform, row.value, 14, TextAnchor.MiddleRight);
-                v.fontStyle = row.available ? FontStyle.Bold : FontStyle.Italic;
+                TextMeshProUGUI v = NewText("Value", rowGo.transform, row.value, 14, TextAlignmentOptions.Right);
+                v.fontStyle = row.available ? FontStyles.Bold : FontStyles.Italic;
                 v.color = !row.available
                     ? DesignTokens.Current.mapConditionalGrey
                     : (row.useAccent ? row.accent : Color.white);
@@ -622,17 +623,17 @@ namespace MafiaCleanCity.CityMap
             return go;
         }
 
-        private Text NewText(string name, Transform parent, string value, int size, TextAnchor anchor)
+        private TextMeshProUGUI NewText(string name, Transform parent, string value, int size, TextAlignmentOptions anchor)
         {
             GameObject go = NewUI(name, parent);
-            Text t = go.AddComponent<Text>();
+            TextMeshProUGUI t = go.AddComponent<TextMeshProUGUI>();
             t.font = font;
             t.text = value;
             t.fontSize = size;
             t.alignment = anchor;
             t.color = Color.white;
-            t.horizontalOverflow = HorizontalWrapMode.Overflow;
-            t.verticalOverflow = VerticalWrapMode.Truncate;
+            t.textWrappingMode = TextWrappingModes.NoWrap;
+            t.overflowMode = TextOverflowModes.Truncate;
             t.raycastTarget = false;
             return t;
         }

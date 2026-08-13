@@ -1,4 +1,5 @@
 using UnityEngine;
+using TMPro;
 
 namespace MafiaCleanCity.Theme
 {
@@ -73,6 +74,13 @@ namespace MafiaCleanCity.Theme
         // ── Chrome ──────────────────────────────────────────────────────────────────────────
         [Header("Chrome")]
         public Color scrimBackdrop;  // (0.05,0.05,0.06,0.85) — fond de modale
+
+        // ── Typographie (W4.P4a/C5) ─────────────────────────────────────────────────────────
+        // Remplace les 9 Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf") (raster,
+        // Latin-only — §1.4b du design). SDF, chaîne de repli non-vide (LiberationSans SDF),
+        // TMP déjà présent dans com.unity.ugui 2.0.0 (§1.6b — pas un ajout de package).
+        [Header("Typography")]
+        public TMP_FontAsset primaryFont;  // "DejaVuSans SDF" — Latin/Cyrillic/Greek/Armenian/…
 
         // ── Écran par écran (un seul consommateur mesuré, gardé nommé plutôt que fondu dans
         //    un palier générique pour ne pas fausser un autre écran plus tard) ────────────────

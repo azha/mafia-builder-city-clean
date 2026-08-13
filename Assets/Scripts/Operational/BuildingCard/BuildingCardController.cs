@@ -6,6 +6,7 @@ using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
 using MafiaCleanCity.CityMap; // REUSE AuthClient (signin → Bearer)
 using MafiaCleanCity.Theme;
+using TMPro;
 
 namespace MafiaCleanCity.Operational
 {
@@ -178,15 +179,15 @@ namespace MafiaCleanCity.Operational
         }
 
         private readonly List<string> renderedTexts = new List<string>();
-        private readonly List<Text> textComponents = new List<Text>();
+        private readonly List<TextMeshProUGUI> textComponents = new List<TextMeshProUGUI>();
 
-        private Font font;
+        private TMP_FontAsset font;
         private RectTransform cardContent;
-        private Text titleText;
-        private Text typeText;
+        private TextMeshProUGUI titleText;
+        private TextMeshProUGUI typeText;
         private RectTransform statusRows;
         private RectTransform actionBar;
-        private Text actionStatusText;
+        private TextMeshProUGUI actionStatusText;
         private Button repairButton; // Phase-2b: the Repair affordance (only built when DAMAGED).
 
         private AuthClient auth;
@@ -238,7 +239,7 @@ namespace MafiaCleanCity.Operational
         {
             if (initialized) return;
             initialized = true;
-            font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            font = DesignTokens.Current.primaryFont;
             auth = new AuthClient { BaseUrl = baseUrl };
             client = new BuildingCardClient { BaseUrl = baseUrl };
             BuildLayout();
@@ -593,7 +594,7 @@ namespace MafiaCleanCity.Operational
             LastActionOutcome = outcome;
 
             // The action POST is a network round-trip; bail if the controller was torn down meanwhile,
-            // before touching actionStatusText (a destroyed serialized Text → NullReferenceException).
+            // before touching actionStatusText (a destroyed serialized TextMeshProUGUI → NullReferenceException).
             if (Destroyed) yield break;
 
             // F2: surface a human message, never a raw HTTP code, to the player.
@@ -609,7 +610,7 @@ namespace MafiaCleanCity.Operational
         private void Render(BuildingCardDto card)
         {
             // Belt-and-braces: every async resume point above already guards, but Render dereferences the
-            // serialized UI Text fields directly, so it self-guards too — a continuation that somehow reaches
+            // serialized UI TextMeshProUGUI fields directly, so it self-guards too — a continuation that somehow reaches
             // here on a destroyed controller (or before BuildLayout ran) no-ops rather than NREs. The guard
             // only fires on a genuinely destroyed object / un-built layout, never silently in the live app.
             if (Destroyed || titleText == null || typeText == null || card == null) return;
@@ -870,7 +871,7 @@ namespace MafiaCleanCity.Operational
                 {
                     // F2: a readable reason, never a raw number, beside the disabled button.
                     string reason = "Repair (insufficient cash)";
-                    Text hint = NewText("RepairHint", actionBar, reason, 13, TextAnchor.MiddleLeft);
+                    TextMeshProUGUI hint = NewText("RepairHint", actionBar, reason, 13, TextAlignmentOptions.Left);
                     hint.color = AccentSevere;
                     AddLayoutElement(hint.gameObject, minHeight: 18, flexibleHeight: 0);
                     TrackText(hint, reason);
@@ -894,7 +895,7 @@ namespace MafiaCleanCity.Operational
                 if (!affordable)
                 {
                     string reason = "Upgrade lab tier (insufficient cash)";
-                    Text hint = NewText("UpgradeHint", actionBar, reason, 13, TextAnchor.MiddleLeft);
+                    TextMeshProUGUI hint = NewText("UpgradeHint", actionBar, reason, 13, TextAlignmentOptions.Left);
                     hint.color = AccentSevere;
                     AddLayoutElement(hint.gameObject, minHeight: 18, flexibleHeight: 0);
                     TrackText(hint, reason);
@@ -920,7 +921,7 @@ namespace MafiaCleanCity.Operational
                 if (!affordable)
                 {
                     string reason = "Upgrade hub tier (insufficient cash)";
-                    Text hint = NewText("HubUpgradeHint", actionBar, reason, 13, TextAnchor.MiddleLeft);
+                    TextMeshProUGUI hint = NewText("HubUpgradeHint", actionBar, reason, 13, TextAlignmentOptions.Left);
                     hint.color = AccentSevere;
                     AddLayoutElement(hint.gameObject, minHeight: 18, flexibleHeight: 0);
                     TrackText(hint, reason);
@@ -946,7 +947,7 @@ namespace MafiaCleanCity.Operational
                 if (!affordable)
                 {
                     string reason = "Upgrade holding tier (insufficient cash)";
-                    Text hint = NewText("MoneyHoldingUpgradeHint", actionBar, reason, 13, TextAnchor.MiddleLeft);
+                    TextMeshProUGUI hint = NewText("MoneyHoldingUpgradeHint", actionBar, reason, 13, TextAlignmentOptions.Left);
                     hint.color = AccentSevere;
                     AddLayoutElement(hint.gameObject, minHeight: 18, flexibleHeight: 0);
                     TrackText(hint, reason);
@@ -995,7 +996,7 @@ namespace MafiaCleanCity.Operational
                         {
                             // F2: a readable reason beside the disabled button (this stage is already tended).
                             string reason = "Tend crop (already tended this stage)";
-                            Text hint = NewText("TendHint", actionBar, reason, 13, TextAnchor.MiddleLeft);
+                            TextMeshProUGUI hint = NewText("TendHint", actionBar, reason, 13, TextAlignmentOptions.Left);
                             hint.color = DesignTokens.Current.onSurfaceSecondaryAlt;
                             AddLayoutElement(hint.gameObject, minHeight: 18, flexibleHeight: 0);
                             TrackText(hint, reason);
@@ -1022,7 +1023,7 @@ namespace MafiaCleanCity.Operational
                     if (!dispatchReady)
                     {
                         string reason = "Dispatch courier (choose a source + destination)";
-                        Text hint = NewText("DispatchHint", actionBar, reason, 13, TextAnchor.MiddleLeft);
+                        TextMeshProUGUI hint = NewText("DispatchHint", actionBar, reason, 13, TextAlignmentOptions.Left);
                         hint.color = DesignTokens.Current.onSurfaceSecondaryAlt;
                         AddLayoutElement(hint.gameObject, minHeight: 18, flexibleHeight: 0);
                         TrackText(hint, reason);
@@ -1050,7 +1051,7 @@ namespace MafiaCleanCity.Operational
             // A Convert affordance is always offered (no-op if already operational — backend 409s cleanly).
             AddActionButton(actionBar, "Convert", () => StartCoroutine(Convert(card.operational_type)));
 
-            actionStatusText = NewText("ActionStatus", actionBar, "", 14, TextAnchor.MiddleLeft);
+            actionStatusText = NewText("ActionStatus", actionBar, "", 14, TextAlignmentOptions.Left);
             actionStatusText.color = DesignTokens.Current.onSurfaceMutedAlt;
             AddLayoutElement(actionStatusText.gameObject, minHeight: 22, flexibleHeight: 0);
         }
@@ -1708,11 +1709,11 @@ namespace MafiaCleanCity.Operational
             vlg.childForceExpandHeight = false;
             cardContent = cardRt;
 
-            titleText = NewText("Title", card.transform, "OPERATIONAL BUILDING", 22, TextAnchor.MiddleLeft);
-            titleText.fontStyle = FontStyle.Bold;
+            titleText = NewText("Title", card.transform, "OPERATIONAL BUILDING", 22, TextAlignmentOptions.Left);
+            titleText.fontStyle = FontStyles.Bold;
             AddLayoutElement(titleText.gameObject, minHeight: 30, flexibleHeight: 0);
 
-            typeText = NewText("Type", card.transform, "Type: —", 16, TextAnchor.MiddleLeft);
+            typeText = NewText("Type", card.transform, "Type: —", 16, TextAlignmentOptions.Left);
             typeText.color = DesignTokens.Current.onSurfaceDim;
             AddLayoutElement(typeText.gameObject, minHeight: 24, flexibleHeight: 0);
 
@@ -1752,18 +1753,18 @@ namespace MafiaCleanCity.Operational
             AddLayoutElement(row, minHeight: 30, flexibleHeight: 0);
 
             // Glyph (shape — a11y: colour is never the sole differentiator).
-            Text g = NewText("Glyph", row.transform, glyph, 16, TextAnchor.MiddleCenter);
+            TextMeshProUGUI g = NewText("Glyph", row.transform, glyph, 16, TextAlignmentOptions.Center);
             g.color = accent;
-            g.fontStyle = FontStyle.Bold;
+            g.fontStyle = FontStyles.Bold;
             AddLayoutElement(g.gameObject, minWidth: 46, preferredWidth: 46, flexibleWidth: 0);
 
-            Text l = NewText("Label", row.transform, label, 15, TextAnchor.MiddleLeft);
+            TextMeshProUGUI l = NewText("Label", row.transform, label, 15, TextAlignmentOptions.Left);
             l.color = DesignTokens.Current.onSurfaceMuted;
             AddLayoutElement(l.gameObject, minWidth: 120, flexibleWidth: 1);
 
-            Text v = NewText("Value", row.transform, value, 16, TextAnchor.MiddleRight);
+            TextMeshProUGUI v = NewText("Value", row.transform, value, 16, TextAlignmentOptions.Right);
             v.color = accent;
-            v.fontStyle = FontStyle.Bold;
+            v.fontStyle = FontStyles.Bold;
             AddLayoutElement(v.gameObject, minWidth: 140, flexibleWidth: 0);
 
             TrackText(g, glyph);
@@ -1773,9 +1774,9 @@ namespace MafiaCleanCity.Operational
 
         private string NewSectionLabel(Transform parent, string text)
         {
-            Text t = NewText("Section", parent, text, 13, TextAnchor.MiddleLeft);
+            TextMeshProUGUI t = NewText("Section", parent, text, 13, TextAlignmentOptions.Left);
             t.color = DesignTokens.Current.onSurfaceSecondaryAlt;
-            t.fontStyle = FontStyle.Bold;
+            t.fontStyle = FontStyles.Bold;
             AddLayoutElement(t.gameObject, minHeight: 20, flexibleHeight: 0);
             return text;
         }
@@ -1790,7 +1791,7 @@ namespace MafiaCleanCity.Operational
             b.onClick.AddListener(onClick);
             AddLayoutElement(btn, minHeight: 34, flexibleHeight: 0);
 
-            Text t = NewText("Label", btn.transform, label, 15, TextAnchor.MiddleCenter);
+            TextMeshProUGUI t = NewText("Label", btn.transform, label, 15, TextAlignmentOptions.Center);
             t.color = CtaColor;
             Stretch((RectTransform)t.transform, new Vector2(8, 2), new Vector2(-8, -2));
             TrackText(t, label);
@@ -1824,9 +1825,9 @@ namespace MafiaCleanCity.Operational
             SetButtonInteractable(minus, RefiningPasses > 0);
 
             string passesWord = RefiningPassesLabel(RefiningPasses);
-            Text passesText = NewText("RefiningPassesValue", row.transform, passesWord, 15, TextAnchor.MiddleCenter);
+            TextMeshProUGUI passesText = NewText("RefiningPassesValue", row.transform, passesWord, 15, TextAlignmentOptions.Center);
             passesText.color = AccentMild;
-            passesText.fontStyle = FontStyle.Bold;
+            passesText.fontStyle = FontStyles.Bold;
             AddLayoutElement(passesText.gameObject, minWidth: 110, flexibleWidth: 0);
             TrackText(passesText, passesWord);
 
@@ -1871,9 +1872,9 @@ namespace MafiaCleanCity.Operational
             AddActionButton(row.transform, "< Crop", () => CyclePrecursor(-1));
 
             string cropWord = GrowablePrecursorLabel(SelectedPrecursor);
-            Text cropText = NewText("PlantSelectorValue", row.transform, cropWord, 15, TextAnchor.MiddleCenter);
+            TextMeshProUGUI cropText = NewText("PlantSelectorValue", row.transform, cropWord, 15, TextAlignmentOptions.Center);
             cropText.color = AccentMild;
-            cropText.fontStyle = FontStyle.Bold;
+            cropText.fontStyle = FontStyles.Bold;
             AddLayoutElement(cropText.gameObject, minWidth: 130, flexibleWidth: 0);
             TrackText(cropText, cropWord);
 
@@ -1926,9 +1927,9 @@ namespace MafiaCleanCity.Operational
             SetButtonInteractable(prev, multi);
 
             string vehicleWord = VehicleLabel(SelectedVehicle);
-            Text vehText = NewText("VehicleSelectorValue", row.transform, vehicleWord, 15, TextAnchor.MiddleCenter);
+            TextMeshProUGUI vehText = NewText("VehicleSelectorValue", row.transform, vehicleWord, 15, TextAlignmentOptions.Center);
             vehText.color = AccentMild;
-            vehText.fontStyle = FontStyle.Bold;
+            vehText.fontStyle = FontStyles.Bold;
             AddLayoutElement(vehText.gameObject, minWidth: 110, flexibleWidth: 0);
             TrackText(vehText, vehicleWord);
 
@@ -1976,9 +1977,9 @@ namespace MafiaCleanCity.Operational
             SetButtonInteractable(minus, idx > 0);
 
             string amountWord = TransferAmountLabel(TransferAmountCents);
-            Text amountText = NewText("TransferAmountValue", row.transform, amountWord, 15, TextAnchor.MiddleCenter);
+            TextMeshProUGUI amountText = NewText("TransferAmountValue", row.transform, amountWord, 15, TextAlignmentOptions.Center);
             amountText.color = AccentMild;
-            amountText.fontStyle = FontStyle.Bold;
+            amountText.fontStyle = FontStyles.Bold;
             AddLayoutElement(amountText.gameObject, minWidth: 110, flexibleWidth: 0);
             TrackText(amountText, amountWord);
 
@@ -2004,7 +2005,7 @@ namespace MafiaCleanCity.Operational
         {
             if (button == null) return;
             button.interactable = interactable;
-            Text label = button.GetComponentInChildren<Text>();
+            TextMeshProUGUI label = button.GetComponentInChildren<TextMeshProUGUI>();
             if (label != null && !interactable)
                 label.color = DesignTokens.Current.buildingCardHintDim; // dimmed → "can't do this now"
         }
@@ -2020,7 +2021,7 @@ namespace MafiaCleanCity.Operational
                     Object.Destroy(statusRows.GetChild(i).gameObject);
         }
 
-        private void TrackText(Text comp, string text)
+        private void TrackText(TextMeshProUGUI comp, string text)
         {
             if (comp != null) textComponents.Add(comp);
             if (!string.IsNullOrEmpty(text)) renderedTexts.Add(text);
@@ -2042,17 +2043,17 @@ namespace MafiaCleanCity.Operational
             return go;
         }
 
-        private Text NewText(string name, Transform parent, string value, int size, TextAnchor anchor)
+        private TextMeshProUGUI NewText(string name, Transform parent, string value, int size, TextAlignmentOptions anchor)
         {
             GameObject go = NewUI(name, parent);
-            Text t = go.AddComponent<Text>();
+            TextMeshProUGUI t = go.AddComponent<TextMeshProUGUI>();
             t.font = font;
             t.text = value;
             t.fontSize = size;
             t.alignment = anchor;
             t.color = TextPrimary;
-            t.horizontalOverflow = HorizontalWrapMode.Overflow;
-            t.verticalOverflow = VerticalWrapMode.Truncate;
+            t.textWrappingMode = TextWrappingModes.NoWrap;
+            t.overflowMode = TextOverflowModes.Truncate;
             t.raycastTarget = false;
             return t;
         }

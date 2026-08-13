@@ -1,7 +1,9 @@
 {
     "name": "Theme",
     "rootNamespace": "MafiaCleanCity.Theme",
-    "references": [],
+    "references": [
+        "Unity.TextMeshPro"
+    ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

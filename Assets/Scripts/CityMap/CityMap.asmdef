@@ -4,7 +4,8 @@
     "references": [
         "UnityEngine.UI",
         "Unity.InputSystem",
-        "Theme"
+        "Theme",
+        "Unity.TextMeshPro"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

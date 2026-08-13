@@ -7,6 +7,7 @@ using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
 using MafiaCleanCity.CityMap; // REUSE AuthClient (signin → Bearer)
 using MafiaCleanCity.Theme;
+using TMPro;
 
 namespace MafiaCleanCity.Operational.Exceptions
 {
@@ -40,8 +41,8 @@ namespace MafiaCleanCity.Operational.Exceptions
         public ExceptionDetailController LastDetail { get; private set; }
 
         private readonly List<string> renderedTexts = new List<string>();
-        private Font font;
-        private Text headerText;
+        private TMP_FontAsset font;
+        private TextMeshProUGUI headerText;
         private RectTransform rowsArea;
         private AuthClient auth;
         private ExceptionsClient client;
@@ -74,7 +75,7 @@ namespace MafiaCleanCity.Operational.Exceptions
         {
             if (initialized) return;
             initialized = true;
-            font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            font = DesignTokens.Current.primaryFont;
             auth = new AuthClient { BaseUrl = baseUrl };
             client = new ExceptionsClient { BaseUrl = baseUrl };
             BuildLayout();
@@ -161,7 +162,7 @@ namespace MafiaCleanCity.Operational.Exceptions
 
             if (Cards.Length == 0)
             {
-                Text empty = NewText("Empty", rowsArea, "No exceptions waiting", 14, TextAnchor.MiddleLeft);
+                TextMeshProUGUI empty = NewText("Empty", rowsArea, "No exceptions waiting", 14, TextAlignmentOptions.Left);
                 empty.color = TextSecondary;
                 AddLayoutElement(empty.gameObject, minHeight: 24, flexibleHeight: 0);
                 TrackText(empty, empty.text);
@@ -176,7 +177,7 @@ namespace MafiaCleanCity.Operational.Exceptions
         {
             ClearRows();
             headerText.text = "EXCEPTIONS";
-            Text err = NewText("Error", rowsArea, "Queue unavailable — check the stack", 14, TextAnchor.MiddleLeft);
+            TextMeshProUGUI err = NewText("Error", rowsArea, "Queue unavailable — check the stack", 14, TextAlignmentOptions.Left);
             err.color = AccentSevere;
             AddLayoutElement(err.gameObject, minHeight: 24, flexibleHeight: 0);
             TrackText(headerText, headerText.text);
@@ -196,15 +197,15 @@ namespace MafiaCleanCity.Operational.Exceptions
             AddLayoutElement(row, flexibleHeight: 0);
 
             // Descriptor — producer free text (an i18n key may carry digits): CHROME, component-tracked only.
-            Text desc = NewText("Descriptor", row.transform, card.event_descriptor, 15, TextAnchor.MiddleLeft);
-            desc.fontStyle = FontStyle.Bold;
+            TextMeshProUGUI desc = NewText("Descriptor", row.transform, card.event_descriptor, 15, TextAlignmentOptions.Left);
+            desc.fontStyle = FontStyles.Bold;
             AddLayoutElement(desc.gameObject, minHeight: 20, flexibleHeight: 0);
 
             // Bands line — CLOSED labels, tracked (the scan corpus).
             string bound = string.IsNullOrEmpty(card.lieutenant_id) ? "" : "  •  Lieutenant-bound";
             string bands = $"{SeverityGlyph(card.severity_band)} Severity {Cap(card.severity_band)}  •  " +
                            $"Priority {Cap(card.priority_band)}  •  Confidence {Cap(card.confidence_band)}{bound}";
-            Text bandText = NewText("Bands", row.transform, bands, 13, TextAnchor.MiddleLeft);
+            TextMeshProUGUI bandText = NewText("Bands", row.transform, bands, 13, TextAlignmentOptions.Left);
             bandText.color = SeverityAccent(card.severity_band);
             AddLayoutElement(bandText.gameObject, minHeight: 18, flexibleHeight: 0);
             TrackText(bandText, bands);
@@ -217,7 +218,7 @@ namespace MafiaCleanCity.Operational.Exceptions
             b.targetGraphic = img;
             b.onClick.AddListener(() => OpenDetail(card));
             AddLayoutElement(btn, minHeight: 44, flexibleHeight: 0);
-            Text bt = NewText("Label", btn.transform, "Open", 14, TextAnchor.MiddleCenter);
+            TextMeshProUGUI bt = NewText("Label", btn.transform, "Open", 14, TextAlignmentOptions.Center);
             bt.color = CtaColor;
             Stretch((RectTransform)bt.transform, new Vector2(10, 2), new Vector2(-10, -2));
             TrackText(bt, "Open");
@@ -274,8 +275,8 @@ namespace MafiaCleanCity.Operational.Exceptions
             vlg.childForceExpandHeight = false;
 
             // Header.
-            headerText = NewText("Header", card.transform, "EXCEPTIONS", 24, TextAnchor.MiddleLeft);
-            headerText.fontStyle = FontStyle.Bold;
+            headerText = NewText("Header", card.transform, "EXCEPTIONS", 24, TextAlignmentOptions.Left);
+            headerText.fontStyle = FontStyles.Bold;
             AddLayoutElement(headerText.gameObject, minHeight: 32, flexibleHeight: 0);
 
             // Rows area.
@@ -301,7 +302,7 @@ namespace MafiaCleanCity.Operational.Exceptions
 
         // --------------------------------------------------------------- helpers (verbatim DashboardController)
 
-        private void TrackText(Text comp, string text)
+        private void TrackText(TextMeshProUGUI comp, string text)
         {
             if (!string.IsNullOrEmpty(text)) renderedTexts.Add(text);
         }
@@ -322,17 +323,17 @@ namespace MafiaCleanCity.Operational.Exceptions
             return go;
         }
 
-        private Text NewText(string name, Transform parent, string value, int size, TextAnchor anchor)
+        private TextMeshProUGUI NewText(string name, Transform parent, string value, int size, TextAlignmentOptions anchor)
         {
             GameObject go = NewUI(name, parent);
-            Text t = go.AddComponent<Text>();
+            TextMeshProUGUI t = go.AddComponent<TextMeshProUGUI>();
             t.font = font;
             t.text = value;
             t.fontSize = size;
             t.alignment = anchor;
             t.color = TextPrimary;
-            t.horizontalOverflow = HorizontalWrapMode.Overflow;
-            t.verticalOverflow = VerticalWrapMode.Truncate;
+            t.textWrappingMode = TextWrappingModes.NoWrap;
+            t.overflowMode = TextOverflowModes.Truncate;
             t.raycastTarget = false;
             return t;
         }

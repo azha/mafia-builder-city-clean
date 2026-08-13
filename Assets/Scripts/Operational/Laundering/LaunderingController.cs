@@ -6,6 +6,7 @@ using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
 using MafiaCleanCity.CityMap; // REUSE AuthClient (signin → Bearer)
 using MafiaCleanCity.Theme;
+using TMPro;
 
 namespace MafiaCleanCity.Operational
 {
@@ -64,14 +65,14 @@ namespace MafiaCleanCity.Operational
         public string NodeId { get => nodeId; set => nodeId = value; }
 
         private readonly List<string> renderedTexts = new List<string>();
-        private readonly List<Text> textComponents = new List<Text>();
+        private readonly List<TextMeshProUGUI> textComponents = new List<TextMeshProUGUI>();
 
-        private Font font;
-        private Text titleText;
-        private Text subtitleText;
+        private TMP_FontAsset font;
+        private TextMeshProUGUI titleText;
+        private TextMeshProUGUI subtitleText;
         private RectTransform statusRows;
         private RectTransform actionBar;
-        private Text actionStatusText;
+        private TextMeshProUGUI actionStatusText;
 
         private AuthClient auth;
         private LaunderingClient client;
@@ -99,7 +100,7 @@ namespace MafiaCleanCity.Operational
         {
             if (initialized) return;
             initialized = true;
-            font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            font = DesignTokens.Current.primaryFont;
             auth = new AuthClient { BaseUrl = baseUrl };
             client = new LaunderingClient { BaseUrl = baseUrl };
             BuildLayout();
@@ -246,7 +247,7 @@ namespace MafiaCleanCity.Operational
             // the affordance is present; the actual launder is driven through Inject().
             AddActionButton(actionBar, "Inject (launder)", () => { /* needs front-shop + safehouse targets; driven via Inject() */ });
 
-            actionStatusText = NewText("ActionStatus", actionBar, "", 14, TextAnchor.MiddleLeft);
+            actionStatusText = NewText("ActionStatus", actionBar, "", 14, TextAlignmentOptions.Left);
             actionStatusText.color = DesignTokens.Current.onSurfaceMutedAlt;
             AddLayoutElement(actionStatusText.gameObject, minHeight: 22, flexibleHeight: 0);
         }
@@ -327,11 +328,11 @@ namespace MafiaCleanCity.Operational
             vlg.childForceExpandWidth = true;
             vlg.childForceExpandHeight = false;
 
-            titleText = NewText("Title", card.transform, "LAUNDERING PIPELINE", 22, TextAnchor.MiddleLeft);
-            titleText.fontStyle = FontStyle.Bold;
+            titleText = NewText("Title", card.transform, "LAUNDERING PIPELINE", 22, TextAlignmentOptions.Left);
+            titleText.fontStyle = FontStyles.Bold;
             AddLayoutElement(titleText.gameObject, minHeight: 30, flexibleHeight: 0);
 
-            subtitleText = NewText("Subtitle", card.transform, "Front shop — first stage", 16, TextAnchor.MiddleLeft);
+            subtitleText = NewText("Subtitle", card.transform, "Front shop — first stage", 16, TextAlignmentOptions.Left);
             subtitleText.color = DesignTokens.Current.onSurfaceDim;
             AddLayoutElement(subtitleText.gameObject, minHeight: 24, flexibleHeight: 0);
 
@@ -371,18 +372,18 @@ namespace MafiaCleanCity.Operational
             AddLayoutElement(row, minHeight: 34, flexibleHeight: 0);
 
             // Glyph (shape — a11y: colour is never the sole differentiator).
-            Text g = NewText("Glyph", row.transform, glyph, 16, TextAnchor.MiddleCenter);
+            TextMeshProUGUI g = NewText("Glyph", row.transform, glyph, 16, TextAlignmentOptions.Center);
             g.color = accent;
-            g.fontStyle = FontStyle.Bold;
+            g.fontStyle = FontStyles.Bold;
             AddLayoutElement(g.gameObject, minWidth: 60, preferredWidth: 60, flexibleWidth: 0);
 
-            Text l = NewText("Label", row.transform, label, 15, TextAnchor.MiddleLeft);
+            TextMeshProUGUI l = NewText("Label", row.transform, label, 15, TextAlignmentOptions.Left);
             l.color = DesignTokens.Current.onSurfaceMuted;
             AddLayoutElement(l.gameObject, minWidth: 120, flexibleWidth: 1);
 
-            Text v = NewText("Value", row.transform, value, 16, TextAnchor.MiddleRight);
+            TextMeshProUGUI v = NewText("Value", row.transform, value, 16, TextAlignmentOptions.Right);
             v.color = accent;
-            v.fontStyle = FontStyle.Bold;
+            v.fontStyle = FontStyles.Bold;
             AddLayoutElement(v.gameObject, minWidth: 160, flexibleWidth: 0);
 
             TrackText(g, glyph);
@@ -392,9 +393,9 @@ namespace MafiaCleanCity.Operational
 
         private string NewSectionLabel(Transform parent, string text)
         {
-            Text t = NewText("Section", parent, text, 13, TextAnchor.MiddleLeft);
+            TextMeshProUGUI t = NewText("Section", parent, text, 13, TextAlignmentOptions.Left);
             t.color = DesignTokens.Current.onSurfaceSecondaryAlt;
-            t.fontStyle = FontStyle.Bold;
+            t.fontStyle = FontStyles.Bold;
             AddLayoutElement(t.gameObject, minHeight: 20, flexibleHeight: 0);
             return text;
         }
@@ -409,7 +410,7 @@ namespace MafiaCleanCity.Operational
             b.onClick.AddListener(onClick);
             AddLayoutElement(btn, minHeight: 44, flexibleHeight: 0); // ≥ 44 dp tap target (F2)
 
-            Text t = NewText("Label", btn.transform, label, 15, TextAnchor.MiddleCenter);
+            TextMeshProUGUI t = NewText("Label", btn.transform, label, 15, TextAlignmentOptions.Center);
             t.color = CtaColor;
             Stretch((RectTransform)t.transform, new Vector2(8, 2), new Vector2(-8, -2));
             TrackText(t, label);
@@ -426,7 +427,7 @@ namespace MafiaCleanCity.Operational
                     Object.Destroy(statusRows.GetChild(i).gameObject);
         }
 
-        private void TrackText(Text comp, string text)
+        private void TrackText(TextMeshProUGUI comp, string text)
         {
             if (comp != null) textComponents.Add(comp);
             if (!string.IsNullOrEmpty(text)) renderedTexts.Add(text);
@@ -448,17 +449,17 @@ namespace MafiaCleanCity.Operational
             return go;
         }
 
-        private Text NewText(string name, Transform parent, string value, int size, TextAnchor anchor)
+        private TextMeshProUGUI NewText(string name, Transform parent, string value, int size, TextAlignmentOptions anchor)
         {
             GameObject go = NewUI(name, parent);
-            Text t = go.AddComponent<Text>();
+            TextMeshProUGUI t = go.AddComponent<TextMeshProUGUI>();
             t.font = font;
             t.text = value;
             t.fontSize = size;
             t.alignment = anchor;
             t.color = TextPrimary;
-            t.horizontalOverflow = HorizontalWrapMode.Overflow;
-            t.verticalOverflow = VerticalWrapMode.Truncate;
+            t.textWrappingMode = TextWrappingModes.NoWrap;
+            t.overflowMode = TextOverflowModes.Truncate;
             t.raycastTarget = false;
             return t;
         }

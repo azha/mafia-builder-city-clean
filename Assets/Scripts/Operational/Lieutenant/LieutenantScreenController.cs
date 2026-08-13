@@ -8,6 +8,7 @@ using MafiaCleanCity.CityMap; // REUSE AuthClient (signin → Bearer)
 using MafiaCleanCity.Operational.Exceptions; // ProgressionClient / ProgressionDto (Phase-20)
 using MafiaCleanCity.Operational.Autonomy; // AutonomyClient — budget bands + ceiling decisions (Phase-21)
 using MafiaCleanCity.Theme;
+using TMPro;
 
 namespace MafiaCleanCity.Operational.Lieutenant
 {
@@ -162,21 +163,21 @@ namespace MafiaCleanCity.Operational.Lieutenant
         }
 
         private readonly List<string> renderedTexts = new List<string>();
-        private readonly List<Text> textComponents = new List<Text>();
+        private readonly List<TextMeshProUGUI> textComponents = new List<TextMeshProUGUI>();
 
-        private Font font;
+        private TMP_FontAsset font;
         private RectTransform statusRows;
         private RectTransform actionBar;
-        private Text outcomeText;
+        private TextMeshProUGUI outcomeText;
         private Button recruitButton;
         // ---- B1 recruit section (archetype picker + target input) -------------
-        private Text pickerLabel;              // the archetype cycle button's live caption.
-        private Text recruitButtonLabel;       // the Recruit button's live caption ("Recruit COOK" → follows the pick).
+        private TextMeshProUGUI pickerLabel;              // the archetype cycle button's live caption.
+        private TextMeshProUGUI recruitButtonLabel;       // the Recruit button's live caption ("Recruit COOK" → follows the pick).
         private GameObject targetRow;          // the target-building input row — shown only when NeedsTarget(picked).
         // ---- T2 Status section -------------------------------------------------
         private RectTransform statusSection;   // holds the Status section label + the Refresh button + the script block.
         private Button refreshButton;          // re-fetches the bands (GET /v1/lieutenants/:id).
-        private Text scriptSourceText;         // the player-authored DSL text block (the ONE allowed non-band field).
+        private TextMeshProUGUI scriptSourceText;         // the player-authored DSL text block (the ONE allowed non-band field).
 
         // ---- B2 Roster section -------------------------------------------------
         private RectTransform rosterSection;   // holds the Roster section label + the "Refresh roster" button + the rows.
@@ -188,7 +189,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
         private RectTransform ruleRows;        // the container the per-rule editor rows render into.
         private RectTransform diagnosticsArea; // where RenderDiagnostics lists the 422 diagnostics (cleared on success).
         // ---- Phase-20 progression gating -------------------------------------
-        private Text tierBadgeText;            // the tier badge below the builder section label (component-tracked only).
+        private TextMeshProUGUI tierBadgeText;            // the tier badge below the builder section label (component-tracked only).
         private RectTransform lockedTeaserRows; // the rows container inside the locked teaser (re-rendered by RenderLockedTeaser).
         // ---- B2 Reassign section (Phase-11 tenure inertia) --------------------
         private RectTransform reassignSection;   // holds the Reassign label + the new-building inputs + the Reassign button.
@@ -211,7 +212,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
 
         // ---- Phase-21 autonomy rows container --------------------------------
         private RectTransform autonomyRows;   // the container the per-category budget-band rows render into
-        private Text decisionErrorText;       // Phase-21 F2: cooldown failure detail — CHROME (component-tracked only, never in scan corpus)
+        private TextMeshProUGUI decisionErrorText;       // Phase-21 F2: cooldown failure detail — CHROME (component-tracked only, never in scan corpus)
 
         // Slate palette (mirrors BuildingCardController + global_conventions_core direction).
         private static readonly Color SurfaceBg = DesignTokens.Current.surfaceCard; // #16191b
@@ -250,7 +251,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
         {
             if (initialized) return;
             initialized = true;
-            font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            font = DesignTokens.Current.primaryFont;
             auth = new AuthClient { BaseUrl = baseUrl };
             client = new LieutenantClient { BaseUrl = baseUrl };
             progression = new ProgressionClient { BaseUrl = baseUrl };
@@ -711,9 +712,9 @@ namespace MafiaCleanCity.Operational.Lieutenant
         // (the no-raw-scalar scan), like script_source: it legitimately references the player's own rule positions.
         private void AddDiagnosticLine(string text, Color color)
         {
-            Text t = NewText("Diagnostic", diagnosticsArea, text, 13, TextAnchor.UpperLeft);
+            TextMeshProUGUI t = NewText("Diagnostic", diagnosticsArea, text, 13, TextAlignmentOptions.TopLeft);
             t.color = color;
-            t.verticalOverflow = VerticalWrapMode.Overflow;
+            t.overflowMode = TextOverflowModes.Overflow;
             AddLayoutElement(t.gameObject, minHeight: 20, flexibleHeight: 0);
             // Track only the COMPONENT, not the string — excluded from the no-raw-scalar scan (player's own spans).
             if (!textComponents.Contains(t)) textComponents.Add(t);
@@ -784,7 +785,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
 
         // Render the player-authored DSL source as a readable text block (the ONE explicitly-allowed non-band field;
         // spec §7 — the player WROTE it, so it reads back). Shows "(no script yet)" when empty (a fresh recruit). The
-        // content is tracked as a Text COMPONENT (so a re-render can find it) but its STRING is NOT added to the
+        // content is tracked as a TextMeshProUGUI COMPONENT (so a re-render can find it) but its STRING is NOT added to the
         // no-raw-scalar scan corpus (renderedTexts) — it legitimately contains the player's own scalars (priorities /
         // values), and the T4 scan covers the BAND rows, not the player's authored text.
         private void RenderScriptSource(string source)
@@ -796,14 +797,14 @@ namespace MafiaCleanCity.Operational.Lieutenant
             {
                 scriptSourceText.text = shown;
                 scriptSourceText.color = empty ? DesignTokens.Current.onSurfaceSecondaryAlt : TextPrimary;
-                scriptSourceText.fontStyle = empty ? FontStyle.Italic : FontStyle.Normal;
+                scriptSourceText.fontStyle = empty ? FontStyles.Italic : FontStyles.Normal;
                 // Track only the COMPONENT (not the string) — script_source is the allowed readable field, excluded from
                 // the no-raw-scalar scan; the "(no script yet)" placeholder is band-safe but we keep the policy uniform.
                 if (!textComponents.Contains(scriptSourceText)) textComponents.Add(scriptSourceText);
             }
         }
 
-        // Clear just the band rows (statusRows) — independent of the script_source block (a persistent Text in the
+        // Clear just the band rows (statusRows) — independent of the script_source block (a persistent TextMeshProUGUI in the
         // status section). Mirrors BuildingCardController.ClearRows but scoped to the bands; it also prunes the band
         // rows' tracked text from renderedTexts so the no-raw-scalar scan reflects only the CURRENT render.
         private void ClearStatusRows()
@@ -1016,8 +1017,8 @@ namespace MafiaCleanCity.Operational.Lieutenant
             vlg.childForceExpandWidth = true;
             vlg.childForceExpandHeight = false;
 
-            Text titleText = NewText("Title", card.transform, "LIEUTENANT", 22, TextAnchor.MiddleLeft);
-            titleText.fontStyle = FontStyle.Bold;
+            TextMeshProUGUI titleText = NewText("Title", card.transform, "LIEUTENANT", 22, TextAlignmentOptions.Left);
+            titleText.fontStyle = FontStyles.Bold;
             AddLayoutElement(titleText.gameObject, minHeight: 30, flexibleHeight: 0);
             TrackText(titleText, "LIEUTENANT");
 
@@ -1133,7 +1134,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             phlg.childForceExpandHeight = true;
             AddLayoutElement(pickerRow, minHeight: 30, flexibleHeight: 0);
 
-            Text pickerCap = NewText("PickerCap", pickerRow.transform, "Archetype", 14, TextAnchor.MiddleLeft);
+            TextMeshProUGUI pickerCap = NewText("PickerCap", pickerRow.transform, "Archetype", 14, TextAlignmentOptions.Left);
             pickerCap.color = DesignTokens.Current.onSurfaceMuted;
             AddLayoutElement(pickerCap.gameObject, minWidth: 90, flexibleWidth: 0);
             TrackText(pickerCap, "Archetype");
@@ -1141,7 +1142,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             Button pick = AddCycleButton(pickerRow.transform, "Archetype",
                 () => ArchetypeLabel(pickedArchetype),
                 CyclePickedArchetype);
-            pickerLabel = pick.GetComponentInChildren<Text>();
+            pickerLabel = pick.GetComponentInChildren<TextMeshProUGUI>();
 
             // Assigned-building row caption (the field itself is configured via the SerializeField / AssignedBuildingId hook;
             // the M1 demo seeds it, so the screen does not need a free-text uuid editor here — the row is a readable label).
@@ -1159,9 +1160,9 @@ namespace MafiaCleanCity.Operational.Lieutenant
             NewSectionLabel(targetRow.transform, "Target building (destination / safehouse — set by TargetBuildingId)");
 
             recruitButton = AddActionButton(actionBar, RecruitButtonText(pickedArchetype), () => StartCoroutine(RecruitChosen()));
-            recruitButtonLabel = recruitButton.GetComponentInChildren<Text>();
+            recruitButtonLabel = recruitButton.GetComponentInChildren<TextMeshProUGUI>();
 
-            outcomeText = NewText("Outcome", actionBar, "—", 15, TextAnchor.MiddleLeft);
+            outcomeText = NewText("Outcome", actionBar, "—", 15, TextAlignmentOptions.Left);
             outcomeText.color = DesignTokens.Current.onSurfaceMuted;
             AddLayoutElement(outcomeText.gameObject, minHeight: 24, flexibleHeight: 0);
             TrackText(outcomeText, "—");
@@ -1205,10 +1206,10 @@ namespace MafiaCleanCity.Operational.Lieutenant
             // Script-source sub-label + the readable DSL block (the ONE allowed non-band field). Empty until a script is
             // attached (T3); shows "(no script yet)" so a fresh recruit reads clearly.
             NewSectionLabel(statusSection, "Behavior script");
-            scriptSourceText = NewText("ScriptSource", statusSection, "(no script yet)", 13, TextAnchor.UpperLeft);
+            scriptSourceText = NewText("ScriptSource", statusSection, "(no script yet)", 13, TextAlignmentOptions.TopLeft);
             scriptSourceText.color = DesignTokens.Current.onSurfaceSecondaryAlt;
-            scriptSourceText.fontStyle = FontStyle.Italic;
-            scriptSourceText.verticalOverflow = VerticalWrapMode.Overflow;
+            scriptSourceText.fontStyle = FontStyles.Italic;
+            scriptSourceText.overflowMode = TextOverflowModes.Overflow;
             AddLayoutElement(scriptSourceText.gameObject, minHeight: 40, flexibleHeight: 0);
             // NOT TrackText'd: script_source is the player-authored field, excluded from the no-raw-scalar scan corpus.
             textComponents.Add(scriptSourceText);
@@ -1250,9 +1251,9 @@ namespace MafiaCleanCity.Operational.Lieutenant
 
             if (CurrentRoster == null || CurrentRoster.Length == 0)
             {
-                Text empty = NewText("NoLieutenants", rosterRows, "(no lieutenants — recruit one below)", 13, TextAnchor.MiddleLeft);
+                TextMeshProUGUI empty = NewText("NoLieutenants", rosterRows, "(no lieutenants — recruit one below)", 13, TextAlignmentOptions.Left);
                 empty.color = DesignTokens.Current.onSurfaceSecondaryAlt;
-                empty.fontStyle = FontStyle.Italic;
+                empty.fontStyle = FontStyles.Italic;
                 AddLayoutElement(empty.gameObject, minHeight: 22, flexibleHeight: 0);
                 TrackText(empty, "(no lieutenants — recruit one below)");
                 return;
@@ -1264,7 +1265,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
 
         // Destroy the current roster rows AND prune their tracked text from the shared no-raw-scalar scan corpus
         // (textComponents/renderedTexts) — scoped to rosterRows so it does NOT wipe the Status section's tracked text the
-        // way the global ClearStatusRows does. Without this, repeated "Refresh roster" clicks accumulate now-destroyed Text
+        // way the global ClearStatusRows does. Without this, repeated "Refresh roster" clicks accumulate now-destroyed TextMeshProUGUI
         // components + duplicate strings in the corpus (RenderedTexts). Mirrors ClearStatusRows' prune-then-render intent.
         private void ClearRosterRows()
         {
@@ -1272,7 +1273,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             for (int i = rosterRows.childCount - 1; i >= 0; i--)
             {
                 GameObject child = rosterRows.GetChild(i).gameObject;
-                foreach (Text t in child.GetComponentsInChildren<Text>(true))
+                foreach (TextMeshProUGUI t in child.GetComponentsInChildren<TextMeshProUGUI>(true))
                 {
                     textComponents.Remove(t);
                     renderedTexts.Remove(t.text); // remove one matching occurrence (TrackText added this exact string).
@@ -1299,19 +1300,19 @@ namespace MafiaCleanCity.Operational.Lieutenant
             AddLayoutElement(go, minHeight: 30, flexibleHeight: 0);
 
             // Archetype glyph (shape — a11y F2, never colour-only) + worded label.
-            Text g = NewText("Glyph", go.transform, ArchetypeGlyph(row.archetype), 16, TextAnchor.MiddleCenter);
+            TextMeshProUGUI g = NewText("Glyph", go.transform, ArchetypeGlyph(row.archetype), 16, TextAlignmentOptions.Center);
             g.color = AccentMild;
-            g.fontStyle = FontStyle.Bold;
+            g.fontStyle = FontStyles.Bold;
             AddLayoutElement(g.gameObject, minWidth: 46, preferredWidth: 46, flexibleWidth: 0);
 
-            Text label = NewText("Archetype", go.transform, ArchetypeLabel(row.archetype), 15, TextAnchor.MiddleLeft);
+            TextMeshProUGUI label = NewText("Archetype", go.transform, ArchetypeLabel(row.archetype), 15, TextAlignmentOptions.Left);
             label.color = DesignTokens.Current.onSurfaceMuted;
             AddLayoutElement(label.gameObject, minWidth: 120, flexibleWidth: 1);
 
             // op_state band (ACTIVE | PAUSED | IDLE), worded + colour-coded like the Status section's State row.
-            Text state = NewText("State", go.transform, OpStateLabel(row.op_state_band), 15, TextAnchor.MiddleRight);
+            TextMeshProUGUI state = NewText("State", go.transform, OpStateLabel(row.op_state_band), 15, TextAlignmentOptions.Right);
             state.color = OpStateAccent(row.op_state_band);
-            state.fontStyle = FontStyle.Bold;
+            state.fontStyle = FontStyles.Bold;
             AddLayoutElement(state.gameObject, minWidth: 90, flexibleWidth: 0);
 
             // Open — select this lieutenant (→ RefreshBands loads its bands + switches the builder palette). The
@@ -1426,23 +1427,23 @@ namespace MafiaCleanCity.Operational.Lieutenant
         // digits), mirroring AddStatusRow's TrackText discipline.
         private void AddReassignConfirmLine(string text, Color color)
         {
-            Text t = NewText("ReassignLine", reassignConfirm, text, 13, TextAnchor.UpperLeft);
+            TextMeshProUGUI t = NewText("ReassignLine", reassignConfirm, text, 13, TextAlignmentOptions.TopLeft);
             t.color = color;
-            t.verticalOverflow = VerticalWrapMode.Overflow;
+            t.overflowMode = TextOverflowModes.Overflow;
             AddLayoutElement(t.gameObject, minHeight: 20, flexibleHeight: 0);
             TrackText(t, text);
         }
 
         // Destroy the confirmation block's rows AND prune their tracked text from the shared no-raw-scalar scan corpus
         // (textComponents/renderedTexts) — scoped to reassignConfirm (mirrors ClearRosterRows' prune-then-render intent), so
-        // repeated open/close cycles never accumulate stale Text components / duplicate strings in RenderedTexts.
+        // repeated open/close cycles never accumulate stale TextMeshProUGUI components / duplicate strings in RenderedTexts.
         private void ClearReassignConfirmRows()
         {
             if (reassignConfirm == null) return;
             for (int i = reassignConfirm.childCount - 1; i >= 0; i--)
             {
                 GameObject child = reassignConfirm.GetChild(i).gameObject;
-                foreach (Text t in child.GetComponentsInChildren<Text>(true))
+                foreach (TextMeshProUGUI t in child.GetComponentsInChildren<TextMeshProUGUI>(true))
                 {
                     textComponents.Remove(t);
                     renderedTexts.Remove(t.text); // remove one matching occurrence (TrackText added this exact string).
@@ -1479,7 +1480,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
 
             // Phase-21 F2: the readable decision-failure detail (cooldown reason — carries ids/digits) renders as
             // CHROME: component-tracked only, never in the scan corpus (the tier-badge technique).
-            decisionErrorText = NewText("DecisionError", parent, "", 12, TextAnchor.MiddleLeft);
+            decisionErrorText = NewText("DecisionError", parent, "", 12, TextAlignmentOptions.Left);
             decisionErrorText.color = AccentSevere;
             AddLayoutElement(decisionErrorText.gameObject, minHeight: 18, flexibleHeight: 0);
             if (!textComponents.Contains(decisionErrorText)) textComponents.Add(decisionErrorText);
@@ -1487,7 +1488,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             RenderAutonomy();
         }
 
-        // Scoped corpus clear (the ClearRosterRows pattern): un-track each row Text's string + component
+        // Scoped corpus clear (the ClearRosterRows pattern): un-track each row TextMeshProUGUI's string + component
         // BEFORE destroying, so re-renders never leave stale band strings in the scan corpus.
         private void ClearAutonomyRows()
         {
@@ -1495,7 +1496,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             for (int i = autonomyRows.childCount - 1; i >= 0; i--)
             {
                 GameObject child = autonomyRows.GetChild(i).gameObject;
-                foreach (Text t in child.GetComponentsInChildren<Text>(true))
+                foreach (TextMeshProUGUI t in child.GetComponentsInChildren<TextMeshProUGUI>(true))
                 {
                     textComponents.Remove(t);
                     renderedTexts.Remove(t.text); // remove one matching occurrence (TrackText added this exact string).
@@ -1514,9 +1515,9 @@ namespace MafiaCleanCity.Operational.Lieutenant
 
             if (budgetBands.Count == 0)
             {
-                Text empty = NewText("NoAutonomy", autonomyRows, "No autonomy budget yet", 13, TextAnchor.MiddleLeft);
+                TextMeshProUGUI empty = NewText("NoAutonomy", autonomyRows, "No autonomy budget yet", 13, TextAlignmentOptions.Left);
                 empty.color = DesignTokens.Current.onSurfaceSecondaryAlt;
-                empty.fontStyle = FontStyle.Italic;
+                empty.fontStyle = FontStyles.Italic;
                 AddLayoutElement(empty.gameObject, minHeight: 22, flexibleHeight: 0);
                 TrackText(empty, "No autonomy budget yet");
                 return;
@@ -1543,13 +1544,13 @@ namespace MafiaCleanCity.Operational.Lieutenant
                 hlg.childForceExpandHeight = true;
                 AddLayoutElement(row, minHeight: 30, flexibleHeight: 0);
 
-                Text l = NewText("Cat", row.transform, catLabel, 15, TextAnchor.MiddleLeft);
+                TextMeshProUGUI l = NewText("Cat", row.transform, catLabel, 15, TextAlignmentOptions.Left);
                 l.color = DesignTokens.Current.onSurfaceMuted;
                 AddLayoutElement(l.gameObject, minWidth: 160, flexibleWidth: 1);
 
-                Text v = NewText("Band", row.transform, bandLabel, 15, TextAnchor.MiddleRight);
+                TextMeshProUGUI v = NewText("Band", row.transform, bandLabel, 15, TextAlignmentOptions.Right);
                 v.color = accent;
-                v.fontStyle = FontStyle.Bold;
+                v.fontStyle = FontStyles.Bold;
                 AddLayoutElement(v.gameObject, minWidth: 140, flexibleWidth: 0);
 
                 TrackText(l, catLabel);
@@ -1637,7 +1638,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
 
             // Phase-20: the tier badge — carries the tier digit (intentional chrome): component-tracked only,
             // excluded from the scan corpus (the locked-teaser technique).
-            tierBadgeText = NewText("TierBadge", builderSection, "", 12, TextAnchor.MiddleLeft);
+            tierBadgeText = NewText("TierBadge", builderSection, "", 12, TextAlignmentOptions.Left);
             tierBadgeText.color = LockedDim;
             AddLayoutElement(tierBadgeText.gameObject, minHeight: 18, flexibleHeight: 0);
             if (!textComponents.Contains(tierBadgeText)) textComponents.Add(tierBadgeText);
@@ -1690,12 +1691,12 @@ namespace MafiaCleanCity.Operational.Lieutenant
 
         // Render the locked-tier TEASER: a grayed, NON-interactive block hinting at the DSL primitives beyond the slice
         // executable subset (STATE/EVENT triggers + EXECUTE_DEFAULT/PAUSE_OPS actions). Each locked primitive is a PLAIN
-        // Text label (NOT a Button) in the dim LockedDim colour with a 🔒 hint — it CANNOT be selected, and it is NEVER
+        // TextMeshProUGUI label (NOT a Button) in the dim LockedDim colour with a 🔒 hint — it CANNOT be selected, and it is NEVER
         // added to any cycle set (the executable CycleField/CycleAction reach only RuleModel.FieldsFor/Actions). The
         // catalogues (RuleModel.LockedTriggers/LockedActions/LockedCombinator) are grounded VERBATIM in the backend
         // grammar; the labels carry tier NUMBERS by design, so — like script_source / the NL preview / the diagnostics
         // lines — they are deliberately KEPT OUT of the no-raw-scalar scan corpus (renderedTexts): we track only the
-        // Text COMPONENT (so a re-render can find it), never the string. The teaser is built once (static catalogues).
+        // TextMeshProUGUI COMPONENT (so a re-render can find it), never the string. The teaser is built once (static catalogues).
         private void BuildLockedTeaser()
         {
             NewSectionLabel(builderSection, "🔒 Locked — unlock with tier progression");
@@ -1741,13 +1742,13 @@ namespace MafiaCleanCity.Operational.Lieutenant
             }
         }
 
-        // One grayed teaser line: a plain (non-interactive) dim Text — NOT a Button, so it is NOT selectable. Tracked as
-        // a Text COMPONENT only; its STRING is NOT added to renderedTexts (the no-raw-scalar scan corpus) because the
+        // One grayed teaser line: a plain (non-interactive) dim TextMeshProUGUI — NOT a Button, so it is NOT selectable. Tracked as
+        // a TextMeshProUGUI COMPONENT only; its STRING is NOT added to renderedTexts (the no-raw-scalar scan corpus) because the
         // locked labels carry tier numbers as intentional UI chrome — the SAME excluded-from-scan technique as
         // script_source / the NL preview / the diagnostics lines (see those comments).
         private void AddLockedLine(Transform parent, string text)
         {
-            Text t = NewText("Locked", parent, text, 12, TextAnchor.MiddleLeft);
+            TextMeshProUGUI t = NewText("Locked", parent, text, 12, TextAlignmentOptions.Left);
             t.color = LockedDim;
             AddLayoutElement(t.gameObject, minHeight: 18, flexibleHeight: 0);
             // Track only the COMPONENT, not the string — excluded from the no-raw-scalar scan (intentional UI chrome).
@@ -1767,9 +1768,9 @@ namespace MafiaCleanCity.Operational.Lieutenant
 
             if (rules.Count == 0)
             {
-                Text empty = NewText("NoRules", ruleRows, "(no rules — tap “+ Add rule”)", 13, TextAnchor.MiddleLeft);
+                TextMeshProUGUI empty = NewText("NoRules", ruleRows, "(no rules — tap “+ Add rule”)", 13, TextAlignmentOptions.Left);
                 empty.color = DesignTokens.Current.onSurfaceSecondaryAlt;
-                empty.fontStyle = FontStyle.Italic;
+                empty.fontStyle = FontStyles.Italic;
                 AddLayoutElement(empty.gameObject, minHeight: 22, flexibleHeight: 0);
                 return;
             }
@@ -1794,7 +1795,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             AddLayoutElement(block, flexibleHeight: 0);
 
             // The live preview line (updated by each control). Declared first so the control callbacks can refresh it.
-            Text preview = null;
+            TextMeshProUGUI preview = null;
 
             // Row 1: field cycle + comparator cycle + value editor.
             GameObject controls = NewUI("Controls", block.transform);
@@ -1822,7 +1823,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
                 if (preview != null) preview.text = RuleModel.PreviewRule(rule);
             });
 
-            // Value editor — a toggle for a bool field, an InputField for a numeric one.
+            // Value editor — a toggle for a bool field, an TMP_InputField for a numeric one.
             FieldSpec spec = RuleModel.FieldByKey(CurrentArchetype, rule.field);
             if (spec != null && spec.IsBool)
             {
@@ -1834,7 +1835,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             }
             else
             {
-                InputField input = AddNumberInput(controls.transform, rule.value, v =>
+                TMP_InputField input = AddNumberInput(controls.transform, rule.value, v =>
                 {
                     rule.value = v;
                     if (preview != null) preview.text = RuleModel.PreviewRule(rule);
@@ -1874,9 +1875,9 @@ namespace MafiaCleanCity.Operational.Lieutenant
             }, AccentSevere);
 
             // The NL preview line.
-            preview = NewText("Preview", block.transform, RuleModel.PreviewRule(rule), 13, TextAnchor.MiddleLeft);
+            preview = NewText("Preview", block.transform, RuleModel.PreviewRule(rule), 13, TextAlignmentOptions.Left);
             preview.color = AccentMild;
-            preview.verticalOverflow = VerticalWrapMode.Overflow;
+            preview.overflowMode = TextOverflowModes.Overflow;
             AddLayoutElement(preview.gameObject, minHeight: 20, flexibleHeight: 0);
             // The preview reads the player's OWN authored values (priority / value) — like script_source, it is excluded
             // from the no-raw-scalar scan corpus (renderedTexts); we track only the component.
@@ -1995,7 +1996,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             }
             else
             {
-                InputField input = AddNumberInput(row.transform, rule.condValue, v => { rule.condValue = v; refreshPreview(); });
+                TMP_InputField input = AddNumberInput(row.transform, rule.condValue, v => { rule.condValue = v; refreshPreview(); });
                 input.gameObject.name = "CondValueInput";
             }
         }
@@ -2055,7 +2056,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             b.targetGraphic = img;
             AddLayoutElement(btn, minHeight: 28, minWidth: 96, flexibleWidth: 1);
 
-            Text t = NewText("Label", btn.transform, caption() ?? "—", 13, TextAnchor.MiddleCenter);
+            TextMeshProUGUI t = NewText("Label", btn.transform, caption() ?? "—", 13, TextAlignmentOptions.Center);
             t.color = TextPrimary;
             Stretch((RectTransform)t.transform, new Vector2(6, 1), new Vector2(-6, -1));
             b.onClick.AddListener(() =>
@@ -2077,28 +2078,28 @@ namespace MafiaCleanCity.Operational.Lieutenant
             b.onClick.AddListener(onClick);
             AddLayoutElement(btn, minHeight: 28, minWidth: 34, preferredWidth: 34, flexibleWidth: 0);
 
-            Text t = NewText("Label", btn.transform, label, 14, TextAnchor.MiddleCenter);
+            TextMeshProUGUI t = NewText("Label", btn.transform, label, 14, TextAlignmentOptions.Center);
             t.color = color;
-            t.fontStyle = FontStyle.Bold;
+            t.fontStyle = FontStyles.Bold;
             Stretch((RectTransform)t.transform, Vector2.zero, Vector2.zero);
             return b;
         }
 
-        // A numeric InputField for a numeric field's value. onChanged fires per keystroke; the model stores the raw text
+        // A numeric TMP_InputField for a numeric field's value. onChanged fires per keystroke; the model stores the raw text
         // (the backend judges validity — a non-numeric value still serializes + returns a diagnostic).
-        private InputField AddNumberInput(Transform parent, string initial, UnityEngine.Events.UnityAction<string> onChanged)
+        private TMP_InputField AddNumberInput(Transform parent, string initial, UnityEngine.Events.UnityAction<string> onChanged)
         {
             GameObject go = NewUI("Value", parent);
             Image img = go.AddComponent<Image>();
             img.color = DesignTokens.Current.lieutenantMutedDeep;
             AddLayoutElement(go, minHeight: 28, minWidth: 80, flexibleWidth: 1);
 
-            InputField input = go.AddComponent<InputField>();
-            input.contentType = InputField.ContentType.DecimalNumber;
+            TMP_InputField input = go.AddComponent<TMP_InputField>();
+            input.contentType = TMP_InputField.ContentType.DecimalNumber;
 
-            Text text = NewText("Text", go.transform, initial ?? string.Empty, 13, TextAnchor.MiddleLeft);
+            TextMeshProUGUI text = NewText("Text", go.transform, initial ?? string.Empty, 13, TextAlignmentOptions.Left);
             text.color = TextPrimary;
-            text.supportRichText = false;
+            text.richText = false;
             Stretch((RectTransform)text.transform, new Vector2(8, 2), new Vector2(-8, -2));
 
             input.textComponent = text;
@@ -2121,7 +2122,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             hlg.childForceExpandHeight = true;
             AddLayoutElement(wrap, minHeight: 28, minWidth: 150, flexibleWidth: 1);
 
-            Text cap = NewText("PrioCap", wrap.transform, "P " + initial, 13, TextAnchor.MiddleLeft);
+            TextMeshProUGUI cap = NewText("PrioCap", wrap.transform, "P " + initial, 13, TextAlignmentOptions.Left);
             cap.color = TextPrimary;
             AddLayoutElement(cap.gameObject, minWidth: 48, flexibleWidth: 0);
 
@@ -2159,9 +2160,9 @@ namespace MafiaCleanCity.Operational.Lieutenant
 
         private string NewSectionLabel(Transform parent, string text)
         {
-            Text t = NewText("Section", parent, text, 13, TextAnchor.MiddleLeft);
+            TextMeshProUGUI t = NewText("Section", parent, text, 13, TextAlignmentOptions.Left);
             t.color = DesignTokens.Current.onSurfaceSecondaryAlt;
-            t.fontStyle = FontStyle.Bold;
+            t.fontStyle = FontStyles.Bold;
             AddLayoutElement(t.gameObject, minHeight: 20, flexibleHeight: 0);
             TrackText(t, text);
             return text;
@@ -2183,18 +2184,18 @@ namespace MafiaCleanCity.Operational.Lieutenant
             hlg.childForceExpandHeight = true;
             AddLayoutElement(row, minHeight: 30, flexibleHeight: 0);
 
-            Text g = NewText("Glyph", row.transform, glyph, 16, TextAnchor.MiddleCenter);
+            TextMeshProUGUI g = NewText("Glyph", row.transform, glyph, 16, TextAlignmentOptions.Center);
             g.color = accent;
-            g.fontStyle = FontStyle.Bold;
+            g.fontStyle = FontStyles.Bold;
             AddLayoutElement(g.gameObject, minWidth: 46, preferredWidth: 46, flexibleWidth: 0);
 
-            Text l = NewText("Label", row.transform, label, 15, TextAnchor.MiddleLeft);
+            TextMeshProUGUI l = NewText("Label", row.transform, label, 15, TextAlignmentOptions.Left);
             l.color = DesignTokens.Current.onSurfaceMuted;
             AddLayoutElement(l.gameObject, minWidth: 120, flexibleWidth: 1);
 
-            Text v = NewText("Value", row.transform, value, 16, TextAnchor.MiddleRight);
+            TextMeshProUGUI v = NewText("Value", row.transform, value, 16, TextAlignmentOptions.Right);
             v.color = accent;
-            v.fontStyle = FontStyle.Bold;
+            v.fontStyle = FontStyles.Bold;
             AddLayoutElement(v.gameObject, minWidth: 140, flexibleWidth: 0);
 
             TrackText(g, glyph);
@@ -2212,7 +2213,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             b.onClick.AddListener(onClick);
             AddLayoutElement(btn, minHeight: 34, flexibleHeight: 0);
 
-            Text t = NewText("Label", btn.transform, label, 15, TextAnchor.MiddleCenter);
+            TextMeshProUGUI t = NewText("Label", btn.transform, label, 15, TextAlignmentOptions.Center);
             t.color = CtaColor;
             Stretch((RectTransform)t.transform, new Vector2(8, 2), new Vector2(-8, -2));
             TrackText(t, label);
@@ -2235,17 +2236,17 @@ namespace MafiaCleanCity.Operational.Lieutenant
             return go;
         }
 
-        private Text NewText(string name, Transform parent, string value, int size, TextAnchor anchor)
+        private TextMeshProUGUI NewText(string name, Transform parent, string value, int size, TextAlignmentOptions anchor)
         {
             GameObject go = NewUI(name, parent);
-            Text t = go.AddComponent<Text>();
+            TextMeshProUGUI t = go.AddComponent<TextMeshProUGUI>();
             t.font = font;
             t.text = value;
             t.fontSize = size;
             t.alignment = anchor;
             t.color = TextPrimary;
-            t.horizontalOverflow = HorizontalWrapMode.Overflow;
-            t.verticalOverflow = VerticalWrapMode.Truncate;
+            t.textWrappingMode = TextWrappingModes.NoWrap;
+            t.overflowMode = TextOverflowModes.Truncate;
             t.raycastTarget = false;
             return t;
         }
@@ -2270,7 +2271,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             if (preferredWidth >= 0) le.preferredWidth = preferredWidth;
         }
 
-        private void TrackText(Text comp, string text)
+        private void TrackText(TextMeshProUGUI comp, string text)
         {
             if (comp != null) textComponents.Add(comp);
             if (!string.IsNullOrEmpty(text)) renderedTexts.Add(text);
