@@ -22,3 +22,31 @@ echo "OK: faute injectee -> rouge (code de sortie non nul)"
 echo "=== 3/3 : re-vert apres retrait ==="
 ./Tools/run-unity-check.sh
 echo "OK: le harnais distingue vert et rouge"
+
+echo "=== 4/4 : le chemin -executeMethod async (MafiaCI) rougit vraiment sur un test qui echoue ==="
+echo "    (regression du piege mesure pendant C3 : -quit inconditionnel fermait le process AVANT"
+echo "     que TestRunnerApi.RunFinished ne soit jamais appele -- RC=0 silencieux, aucun test execute)"
+PROBE=Assets/Tests/PlayMode/_W4P4aHarnessProbeTests.cs
+cat > "$PROBE" <<'CS'
+using NUnit.Framework;
+namespace MafiaCleanCity.Theme.Tests
+{
+    [Category("W4P4a")]
+    public class _W4P4aHarnessProbeTests
+    {
+        [Test]
+        public void Probe_DeliberateFailure() { Assert.Fail("sonde de regression du harnais"); }
+    }
+}
+CS
+if ./Tools/run-unity-check.sh -executeMethod MafiaCI.RunPlayModeTests; then
+  rm -f "$PROBE" "$PROBE.meta"
+  echo "ECHEC: MafiaCI.RunPlayModeTests n'a pas rougi sur un test qui echoue (regression du piege -quit)"
+  exit 1
+fi
+rm -f "$PROBE" "$PROBE.meta"
+if ! ./Tools/run-unity-check.sh -executeMethod MafiaCI.RunPlayModeTests; then
+  echo "ECHEC: MafiaCI.RunPlayModeTests reste rouge apres retrait de la sonde"
+  exit 1
+fi
+echo "OK: MafiaCI.RunPlayModeTests distingue vert et rouge sur le chemin async"
