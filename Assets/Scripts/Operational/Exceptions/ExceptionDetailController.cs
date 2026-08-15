@@ -21,7 +21,7 @@ namespace MafiaCleanCity.Operational.Exceptions
     //   else addAsRule && add_rule_dsl non-empty → ADD_RULE
     //   else → ONE_TIME
     // Escalate is its own affordance → ESCALATE with chosen_action_id = suggested_action.id.
-    public class ExceptionDetailController : MonoBehaviour
+    public class ExceptionDetailController : MonoBehaviour, MafiaCleanCity.Shell.IShellTenant
     {
         // ---- Public state (PlayMode test hooks) ----
         public ExceptionCardDto CurrentCard { get; private set; }
@@ -294,6 +294,11 @@ namespace MafiaCleanCity.Operational.Exceptions
         private static string Cap(string b) =>
             string.IsNullOrEmpty(b) ? "Unknown" : char.ToUpperInvariant(b[0]) + b.Substring(1).ToLowerInvariant();
 
+        // W3.U1 C1 (design D2) — optional parent-of-mount the AppShell renseigne BEFORE Start() runs.
+        // See DashboardController.mountParent for the full rationale (byte-identical mechanism here).
+        private Transform mountParent;
+        public void SetMountParent(Transform parent) => mountParent = parent;
+
         // --------------------------------------------------------------- UI build
 
         private void BuildLayout()
@@ -309,14 +314,15 @@ namespace MafiaCleanCity.Operational.Exceptions
                 scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
                 scaler.referenceResolution = new Vector2(1280, 720);
             }
+            Transform root = mountParent != null ? mountParent : canvas.transform; // W3.U1 D2
 
             // Full-screen ardoise backdrop.
-            backdropGo = NewUI("ExceptionDetailBackdrop", canvas.transform);
+            backdropGo = NewUI("ExceptionDetailBackdrop", root);
             Stretch((RectTransform)backdropGo.transform, Vector2.zero, Vector2.zero);
             backdropGo.AddComponent<Image>().color = SurfaceBg;
 
             // The detail card, anchored top-centre.
-            sheetGo = NewUI("ExceptionDetailSheet", canvas.transform);
+            sheetGo = NewUI("ExceptionDetailSheet", root);
             GameObject card = sheetGo;
             RectTransform cardRt = (RectTransform)card.transform;
             cardRt.anchorMin = new Vector2(0.5f, 1f);

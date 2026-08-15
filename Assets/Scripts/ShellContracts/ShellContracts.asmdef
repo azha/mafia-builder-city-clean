@@ -1,13 +1,7 @@
 {
-    "name": "CityMap",
-    "rootNamespace": "MafiaCleanCity.CityMap",
-    "references": [
-        "UnityEngine.UI",
-        "Unity.InputSystem",
-        "Theme",
-        "Unity.TextMeshPro",
-        "ShellContracts"
-    ],
+    "name": "ShellContracts",
+    "rootNamespace": "MafiaCleanCity.Shell",
+    "references": [],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

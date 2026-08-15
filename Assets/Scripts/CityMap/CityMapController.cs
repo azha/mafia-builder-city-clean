@@ -19,7 +19,7 @@ namespace MafiaCleanCity.CityMap
     //
     // The whole UI is built programmatically from a single Canvas so the scene needs
     // almost no manual wiring — the controller find-or-creates the Canvas + EventSystem.
-    public class CityMapController : MonoBehaviour
+    public class CityMapController : MonoBehaviour, MafiaCleanCity.Shell.IShellTenant
     {
         [Header("Backend")]
         [Tooltip("Public game API base. /v1 districts is unauthed; heat needs a token.")]
@@ -194,6 +194,11 @@ namespace MafiaCleanCity.CityMap
             HeatLoaded = false;
         }
 
+        // W3.U1 C1 (design D2) — optional parent-of-mount the AppShell renseigne BEFORE Start() runs.
+        // See DashboardController.mountParent for the full rationale (byte-identical mechanism here).
+        private Transform mountParent;
+        public void SetMountParent(Transform parent) => mountParent = parent;
+
         // ----------------------------------------------------------------- UI
 
         private void BuildLayout()
@@ -209,8 +214,9 @@ namespace MafiaCleanCity.CityMap
                 scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
                 scaler.referenceResolution = new Vector2(1280, 720);
             }
+            Transform mountRoot = mountParent != null ? mountParent : canvas.transform; // W3.U1 D2
 
-            GameObject root = NewUI("CityMapRoot", canvas.transform);
+            GameObject root = NewUI("CityMapRoot", mountRoot);
             RectTransform rootRt = (RectTransform)root.transform;
             Stretch(rootRt, Vector2.zero, Vector2.zero);
             Image rootBg = root.AddComponent<Image>();
@@ -254,7 +260,7 @@ namespace MafiaCleanCity.CityMap
             southContent = BuildColumn(banks.transform, "South Bank", DesignTokens.Current.mapPanelSouth);
 
             BuildLegend(root.transform);
-            BuildDetailPanel(canvas.transform);
+            BuildDetailPanel(mountRoot); // W3.U1 D2 — modal stays confined to the shell's content slot too
         }
 
         private void BuildToggleButton(Transform parent)

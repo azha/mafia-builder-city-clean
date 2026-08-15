@@ -17,17 +17,31 @@
 # `-executeMethod` est présent, on laisse la méthode elle-même appeler EditorApplication.Exit()
 # (c'est ce que fait MafiaCI.RunPlayModeTests) ; sinon (contrôle de compilation nu, comme la
 # falsifiable de C2), `-quit` reste nécessaire — rien d'autre ne fermerait le process.
+#
+# ⚠️ CORRECTIF W3.U1/C1-F0 : le log portait `passed=N` (MafiaCI.cs, RunFinished) — la SEULE trace
+# qui distingue "le filtre a matché et tout est vert" de "le filtre n'a rien matché" (les deux
+# sortent RC=0). Ce script le détruisait sur SES DEUX chemins de sortie avant qu'on ait pu le lire
+# — une falsifiable qui interroge cet artefact n'était pas exécutable. LOG_FILE (optionnel) fixe le
+# chemin et EN CONSERVE le contenu ; par défaut (LOG_FILE non posé), comportement byte-identique à
+# avant (mktemp + suppression) pour tout appelant existant.
 set -uo pipefail
 
 : "${UNITY:=/home/erutheone/Unity/Hub/Editor/6000.4.6f1/Editor/Unity}"
 : "${WT:=/home/erutheone/project/mafia-builder-city-clean}"
+: "${LOG_FILE:=}"
 
 EXTRA_ARGS=(-quit)
 for a in "$@"; do
   if [[ "$a" == "-executeMethod" ]]; then EXTRA_ARGS=(); fi
 done
 
-LOG=$(mktemp)
+if [[ -n "$LOG_FILE" ]]; then
+  LOG="$LOG_FILE"
+  KEEP_LOG=1
+else
+  LOG=$(mktemp)
+  KEEP_LOG=0
+fi
 # filet de sécurité : sans -quit (chemin -executeMethod), un run qui n'appelle jamais
 # EditorApplication.Exit() (exception avant RunFinished, etc.) resterait ouvert pour toujours —
 # incendie silencieux (charge machine sans notification, leçon déjà payée sur ce dépôt).
@@ -36,9 +50,9 @@ RC=$?                                  # capturé AVANT tout pipe
 
 if grep -qF 'error CS' "$LOG"; then
   grep -F 'error CS' "$LOG"
-  rm -f "$LOG"
+  [[ "$KEEP_LOG" == 0 ]] && rm -f "$LOG"
   exit 1
 fi
 
-rm -f "$LOG"
+[[ "$KEEP_LOG" == 0 ]] && rm -f "$LOG"
 exit $RC

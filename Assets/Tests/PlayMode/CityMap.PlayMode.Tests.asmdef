@@ -9,7 +9,8 @@
         "UnityEngine.UI",
         "Theme",
         "Unity.TextMeshPro",
-        "AssetLint"
+        "AssetLint",
+        "Shell"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
