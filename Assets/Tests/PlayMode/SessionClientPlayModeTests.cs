@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Linq;
 using NUnit.Framework;
@@ -143,18 +144,96 @@ namespace MafiaCleanCity.Shell.Tests
             Assert.Greater(payload.opened_game_day, 0, "opened_game_day: a real, positive day count (epoch pinned to 1500 minutes)");
         }
 
-        // C3-F2 (parité de forme) — le nombre de clés du DTO client ÉGALE celui de l'interface
-        // serveur. Reflection sur le TYPE (jamais un motif texte) : un ajout côté serveur SANS ajout
-        // côté client fait rougir CE test, sans jamais avoir besoin de recompter à la main.
+        // C3-F2 (parité de forme, MOITIÉ cliente) — le nombre de champs du DTO client ÉGALE
+        // l'ensemble fermé de 12 clés que le design déclare (`session-open-sequence.service.ts:
+        // 229-246` sur CETTE branche — voir IMPORTANT-4 de la revue ⊥, l'ancre `229-251` était
+        // fausse de 5 lignes). Reflection sur le TYPE, jamais un motif texte.
+        // ⚠️ Revue ⊥ IMPORTANT-2 : CE test seul NE VOIT PAS un ajout/retrait côté SERVEUR — il
+        // compare le DTO à une constante (12), jamais au corps réellement reçu. C'est C3-F3
+        // ci-dessous qui ferme la boucle en comptant les clés du CORPS BRUT et en les comparant à
+        // CE compte — les deux ENSEMBLE forment la parité que le design décrit (`design:760-762`).
         [Test]
         public void C3F2_ClientDtoFieldCount_EqualsServerInterfaceKeyCount_Twelve()
         {
             var fields = typeof(SessionOpenDto).GetFields(
                 System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.DeclaredOnly);
             Assert.AreEqual(12, fields.Length,
-                $"SessionOpenDto must declare EXACTLY the 12 keys `session-open-sequence.service.ts:229-251` " +
+                $"SessionOpenDto must declare EXACTLY the 12 keys `session-open-sequence.service.ts:229-246` " +
                 $"declares (11 + opened_game_day, W3.U1 C2/D3) — found {fields.Length}: " +
                 string.Join(", ", fields.Select(f => f.Name)));
+        }
+
+        /// <summary>Count the top-level (depth-1) `"key":` occurrences inside the FIRST JSON object
+        /// found after `marker` in `json` — string-aware (tracks escape sequences, never miscounts a
+        /// brace sitting inside a quoted value), brace-depth-aware (never counts a key nested inside
+        /// a sub-object like `structural_budget`). Returns -1 if `marker` or the object isn't found.
+        /// Used by C3-F3 to compare the REAL response body's key count to the DTO's — the ONLY way to
+        /// genuinely see a server-side add/remove (design:760-762, "événement de donnée que le
+        /// compilateur C# ne verra jamais").</summary>
+        private static int CountTopLevelObjectKeys(string json, string marker)
+        {
+            int markerIdx = json.IndexOf(marker, StringComparison.Ordinal);
+            if (markerIdx < 0) return -1;
+            int braceStart = json.IndexOf('{', markerIdx);
+            if (braceStart < 0) return -1;
+
+            int depth = 0;
+            bool inString = false, escaped = false;
+            int keyCount = 0;
+            for (int i = braceStart; i < json.Length; i++)
+            {
+                char c = json[i];
+                if (inString)
+                {
+                    if (escaped) escaped = false;
+                    else if (c == '\\') escaped = true;
+                    else if (c == '"') inString = false;
+                    continue;
+                }
+                if (c == '"')
+                {
+                    inString = true;
+                    if (depth == 1)
+                    {
+                        // Find this string's closing quote, then check the next non-space char is ':'
+                        // — that's what distinguishes a KEY from a plain string VALUE at this depth.
+                        int j = i + 1;
+                        bool esc2 = false;
+                        while (j < json.Length)
+                        {
+                            if (esc2) { esc2 = false; j++; continue; }
+                            if (json[j] == '\\') { esc2 = true; j++; continue; }
+                            if (json[j] == '"') break;
+                            j++;
+                        }
+                        int k = j + 1;
+                        while (k < json.Length && char.IsWhiteSpace(json[k])) k++;
+                        if (k < json.Length && json[k] == ':') keyCount++;
+                    }
+                    continue;
+                }
+                if (c == '{') depth++;
+                else if (c == '}')
+                {
+                    depth--;
+                    if (depth == 0) break;
+                }
+            }
+            return keyCount;
+        }
+
+        // Contrôle du contrôle : l'oracle lui-même doit savoir compter — vérifié sur un mini-JSON
+        // synthétique AVANT de lui faire confiance sur un vrai corps réseau (contrôle positif ET
+        // négatif : profondeur imbriquée exclue, valeur contenant "}" et ":" dans une string ignorée).
+        [Test]
+        public void CountTopLevelObjectKeys_SelfCheck_OnSyntheticJson()
+        {
+            const string synthetic = "{\"payload\":{\"data\":{\"a\":1,\"b\":{\"nested\":\"x\"},\"c\":\"a value with a } and a : inside\",\"d\":true}}}";
+            Assert.AreEqual(4, CountTopLevelObjectKeys(synthetic, "\"data\":"),
+                "4 top-level keys (a,b,c,d) — nested.x must NOT be counted, and a ':'/'}' inside a string value must NOT confuse the scanner");
+            Assert.AreEqual(-1, CountTopLevelObjectKeys(synthetic, "\"absent_marker\":"), "missing marker -> -1, never a silent 0");
+            Assert.AreEqual(1, CountTopLevelObjectKeys(synthetic, ""),
+                "marker=\"\" finds the ROOT object's own opening brace — 1 top-level key here (\"payload\")");
         }
 
         // C3-F3 (l'enveloppe elle-même) — le corps réel porte 2 clés de premier niveau et les 12
@@ -178,11 +257,16 @@ namespace MafiaCleanCity.Shell.Tests
                 Assert.AreEqual(UnityWebRequest.Result.Success, req.result, $"session/open failed: {req.error}");
 
                 string raw = req.downloadHandler.text;
-                // Top-level: EXACTLY {response_meta, payload} — a lightweight brace-count-free check
-                // via the SAME JsonUtility path every client already trusts, cross-checked with a raw
-                // string scan for the two known top-level key names (belt-and-braces on the literal body).
+                // Top-level: EXACTLY {response_meta, payload} — the two KNOWN key names are present…
                 Assert.IsTrue(raw.Contains("\"response_meta\""), "top-level key response_meta present in the RAW body");
                 Assert.IsTrue(raw.Contains("\"payload\""), "top-level key payload present in the RAW body");
+                // …and revue ⊥ M1: presence of 2 NAMED keys doesn't rule out a 3rd. Count the ROOT
+                // object's own top-level keys (the SAME brace-depth-aware scanner as payload.data
+                // below — marker="" finds the body's own opening brace) — design:763-765 says
+                // "EXACTLY 2", so assert the count, not just two presences.
+                Assert.AreEqual(2, CountTopLevelObjectKeys(raw, ""),
+                    "the body root carries EXACTLY 2 top-level keys — a 3rd key (silently ignored by " +
+                    "the two .Contains checks above) would be caught here");
 
                 var envelope = JsonUtility.FromJson<SessionOpenEnvelope>(raw);
                 Assert.IsNotNull(envelope?.payload?.data, "the 12 keys live at payload.data, not the body root");
@@ -193,6 +277,20 @@ namespace MafiaCleanCity.Shell.Tests
                 var flatAttempt = JsonUtility.FromJson<SessionOpenDto>(raw);
                 Assert.IsTrue(string.IsNullOrEmpty(flatAttempt.session_id),
                     "a FLAT parse (ignoring the envelope) finds NO session_id — proving the 12 keys are nested under payload.data, not at the body root");
+
+                // Revue ⊥ IMPORTANT-2 — LA vraie parité serveur<->client : compte les clés du CORPS
+                // BRUT réellement reçu (pas le type client) et compare au compte de champs du DTO.
+                // C'est CE couple qui voit un ajout/retrait SERVEUR — ni C3-F2 seul (compare le DTO à
+                // une constante), ni une lecture typée seule (JsonUtility ignore silencieusement une
+                // clé inconnue au lieu de la signaler).
+                int rawDataKeyCount = CountTopLevelObjectKeys(raw, "\"data\":");
+                Assert.AreNotEqual(-1, rawDataKeyCount, "the raw body actually contains a payload.data object");
+                var fields = typeof(SessionOpenDto).GetFields(
+                    System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.DeclaredOnly);
+                Assert.AreEqual(fields.Length, rawDataKeyCount,
+                    $"the REAL response body's payload.data carries {rawDataKeyCount} top-level keys, the client DTO declares " +
+                    $"{fields.Length} — a server-side add/remove would move rawDataKeyCount and leave this failing, which is " +
+                    "exactly the event the compiler can never see (design:760-762).");
             }
         }
     }
