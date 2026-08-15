@@ -60,7 +60,14 @@ namespace MafiaCleanCity.AssetLint
             return float.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture, out var v) ? v : fallback;
         }
 
-        public static List<Sample> Rasterize(string svgText, int gridSize)
+        private struct Parsed
+        {
+            public List<Shape> Shapes;
+            public Dictionary<string, Dictionary<string, string>> ClassRules;
+            public float MinX, MinY, W, H;
+        }
+
+        private static Parsed ParseDocument(string svgText)
         {
             var doc = XDocument.Parse(svgText);
             var ns = doc.Root.GetDefaultNamespace();
@@ -89,44 +96,97 @@ namespace MafiaCleanCity.AssetLint
                 }
             }
 
+            return new Parsed { Shapes = shapes, ClassRules = classRules, MinX = minX, MinY = minY, W = w, H = h };
+        }
+
+        /// <summary>Évalue un point : accumule TOUTES les formes touchées en ordre document (peint
+        /// bas -&gt; haut) avec un compositing alpha "source-over" correct — jamais un simple Lerp
+        /// depuis un fond fixe. Retourne null si aucune forme ne couvre ce point (transparent).</summary>
+        private static Color? EvaluatePoint(List<Shape> shapes, Dictionary<string, Dictionary<string, string>> classRules, Vector2 point)
+        {
+            Color accum = new Color(0, 0, 0, 0); // transparent, RGB non pré-multiplié
+            bool any = false;
+
+            foreach (var shape in shapes)
+            {
+                var style = SvgColorResolver.Resolve(shape.Element, classRules);
+
+                if (style.HasFill && style.FillOpacity > 0f && shape.FillSubpaths != null && ContainsPoint(shape.FillSubpaths, point))
+                {
+                    accum = SrcOver(accum, style.FillRgb, style.FillOpacity);
+                    any = true;
+                }
+                if (style.HasStroke && style.StrokeOpacity > 0f && shape.StrokePolyline != null &&
+                    NearPolyline(shape.StrokePolyline, point, style.StrokeWidth / 2f, shape.IsClosed))
+                {
+                    accum = SrcOver(accum, style.StrokeRgb, style.StrokeOpacity);
+                    any = true;
+                }
+            }
+
+            return any ? accum : (Color?)null;
+        }
+
+        private static Color SrcOver(Color dst, Color srcRgb, float srcA)
+        {
+            float outA = srcA + dst.a * (1f - srcA);
+            if (outA <= 0f) return new Color(0, 0, 0, 0);
+            float r = (srcRgb.r * srcA + dst.r * dst.a * (1f - srcA)) / outA;
+            float g = (srcRgb.g * srcA + dst.g * dst.a * (1f - srcA)) / outA;
+            float b = (srcRgb.b * srcA + dst.b * dst.a * (1f - srcA)) / outA;
+            return new Color(r, g, b, outA);
+        }
+
+        /// <summary>G4/G5 : échantillonnage LINT — grille régulière, composée sur fond BLANC (c'est
+        /// ce qui piège un `fill-opacity` conforme en littéral mais hors palette une fois rendu,
+        /// cf §4.3 cas 7 du design). Ne retourne que les points COUVERTS (transparent = hors lint).</summary>
+        public static List<Sample> Rasterize(string svgText, int gridSize)
+        {
+            var parsed = ParseDocument(svgText);
             var samples = new List<Sample>();
             for (int iy = 0; iy < gridSize; iy++)
             {
                 for (int ix = 0; ix < gridSize; ix++)
                 {
-                    float px = minX + (ix + 0.5f) / gridSize * w;
-                    float py = minY + (iy + 0.5f) / gridSize * h;
+                    float px = parsed.MinX + (ix + 0.5f) / gridSize * parsed.W;
+                    float py = parsed.MinY + (iy + 0.5f) / gridSize * parsed.H;
                     var point = new Vector2(px, py);
-
-                    Color? composed = null;
-                    // document order = paint order ; on garde le DERNIER hit (topmost)
-                    foreach (var shape in shapes)
+                    var covered = EvaluatePoint(parsed.Shapes, parsed.ClassRules, point);
+                    if (covered.HasValue)
                     {
-                        var style = SvgColorResolver.Resolve(shape.Element, classRules);
-
-                        if (style.HasFill && style.FillOpacity > 0f && shape.FillSubpaths != null && ContainsPoint(shape.FillSubpaths, point))
-                        {
-                            composed = Compose(composed ?? Color.white, style.FillRgb, style.FillOpacity);
-                        }
-                        if (style.HasStroke && style.StrokeOpacity > 0f && shape.StrokePolyline != null &&
-                            NearPolyline(shape.StrokePolyline, point, style.StrokeWidth / 2f, shape.IsClosed))
-                        {
-                            composed = Compose(composed ?? Color.white, style.StrokeRgb, style.StrokeOpacity);
-                        }
-                    }
-
-                    if (composed.HasValue)
-                    {
-                        samples.Add(new Sample { X = px, Y = py, Color = composed.Value });
+                        var onWhite = Color.Lerp(Color.white, covered.Value, covered.Value.a);
+                        samples.Add(new Sample { X = px, Y = py, Color = new Color(onWhite.r, onWhite.g, onWhite.b, 1f) });
                     }
                 }
             }
             return samples;
         }
 
-        private static Color Compose(Color background, Color fg, float alpha)
+        /// <summary>
+        /// W3.U-DA/C3 — export RASTER RÉEL (C4.1 : "rasters dérivés à l'import"). Alpha PRÉSERVÉ
+        /// (fond transparent, PAS composé sur blanc — à la différence de <see cref="Rasterize"/>
+        /// qui sert le LINT). Une grille de sizePx × sizePx échantillons, un par pixel de sortie —
+        /// pas d'anti-aliasing (limite documentée : formes simples, trait constant, cf classe).
+        /// </summary>
+        public static Texture2D RasterizeToTexture(string svgText, int sizePx)
         {
-            return Color.Lerp(background, fg, Mathf.Clamp01(alpha));
+            var parsed = ParseDocument(svgText);
+            var tex = new Texture2D(sizePx, sizePx, TextureFormat.RGBA32, false);
+            var pixels = new Color[sizePx * sizePx];
+            for (int iy = 0; iy < sizePx; iy++)
+            {
+                for (int ix = 0; ix < sizePx; ix++)
+                {
+                    float px = parsed.MinX + (ix + 0.5f) / sizePx * parsed.W;
+                    // Unity Texture2D : ligne 0 = BAS de l'image ; le SVG a Y croissant vers le BAS.
+                    float py = parsed.MinY + (sizePx - 1 - iy + 0.5f) / sizePx * parsed.H;
+                    var covered = EvaluatePoint(parsed.Shapes, parsed.ClassRules, new Vector2(px, py));
+                    pixels[iy * sizePx + ix] = covered ?? new Color(0, 0, 0, 0);
+                }
+            }
+            tex.SetPixels(pixels);
+            tex.Apply(false, false);
+            return tex;
         }
 
         // ── construction de formes ──────────────────────────────────────────────────────────

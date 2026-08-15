@@ -1,0 +1,1498 @@
+{
+  "IconDef": [
+    {
+      "id": "icon_inference_confidence_high",
+      "family": "InferenceConfidenceIcon",
+      "member": "HIGH",
+      "chunk": "C3a",
+      "source_path": "Assets/Art/Icons/Source/icon_inference_confidence_high.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "status",
+        "paired_label_required": true
+      },
+      "a11y_label_key": "icon.inferenceconfidenceicon.high"
+    },
+    {
+      "id": "icon_inference_confidence_medium",
+      "family": "InferenceConfidenceIcon",
+      "member": "MEDIUM",
+      "chunk": "C3a",
+      "source_path": "Assets/Art/Icons/Source/icon_inference_confidence_medium.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "status",
+        "paired_label_required": true
+      },
+      "a11y_label_key": "icon.inferenceconfidenceicon.medium"
+    },
+    {
+      "id": "icon_inference_confidence_low",
+      "family": "InferenceConfidenceIcon",
+      "member": "LOW",
+      "chunk": "C3a",
+      "source_path": "Assets/Art/Icons/Source/icon_inference_confidence_low.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "status",
+        "paired_label_required": true
+      },
+      "a11y_label_key": "icon.inferenceconfidenceicon.low"
+    },
+    {
+      "id": "icon_sandpile_stable",
+      "family": "SandpileCornerIcon",
+      "member": "STABLE",
+      "chunk": "C3a",
+      "source_path": "Assets/Art/Icons/Source/icon_sandpile_stable.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "status",
+        "paired_label_required": true
+      },
+      "a11y_label_key": "icon.sandpilecornericon.stable"
+    },
+    {
+      "id": "icon_sandpile_building",
+      "family": "SandpileCornerIcon",
+      "member": "BUILDING",
+      "chunk": "C3a",
+      "source_path": "Assets/Art/Icons/Source/icon_sandpile_building.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "status",
+        "paired_label_required": true
+      },
+      "a11y_label_key": "icon.sandpilecornericon.building"
+    },
+    {
+      "id": "icon_sandpile_critical",
+      "family": "SandpileCornerIcon",
+      "member": "CRITICAL",
+      "chunk": "C3a",
+      "source_path": "Assets/Art/Icons/Source/icon_sandpile_critical.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "status",
+        "paired_label_required": true
+      },
+      "a11y_label_key": "icon.sandpilecornericon.critical"
+    },
+    {
+      "id": "icon_diag_error",
+      "family": "RuleEditorDiagnostic",
+      "member": "ERROR",
+      "chunk": "C3a",
+      "source_path": "Assets/Art/Icons/Source/icon_diag_error.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "status",
+        "paired_label_required": true
+      },
+      "a11y_label_key": "icon.ruleeditordiagnostic.error"
+    },
+    {
+      "id": "icon_diag_warning",
+      "family": "RuleEditorDiagnostic",
+      "member": "WARNING",
+      "chunk": "C3a",
+      "source_path": "Assets/Art/Icons/Source/icon_diag_warning.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "status",
+        "paired_label_required": true
+      },
+      "a11y_label_key": "icon.ruleeditordiagnostic.warning"
+    },
+    {
+      "id": "icon_diag_hint",
+      "family": "RuleEditorDiagnostic",
+      "member": "HINT",
+      "chunk": "C3a",
+      "source_path": "Assets/Art/Icons/Source/icon_diag_hint.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "status",
+        "paired_label_required": true
+      },
+      "a11y_label_key": "icon.ruleeditordiagnostic.hint"
+    },
+    {
+      "id": "icon_veto_empty",
+      "family": "VetoCell",
+      "member": "EMPTY",
+      "chunk": "C3a",
+      "source_path": "Assets/Art/Icons/Source/icon_veto_empty.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "status",
+        "paired_label_required": true
+      },
+      "a11y_label_key": "icon.vetocell.empty"
+    },
+    {
+      "id": "icon_veto_active",
+      "family": "VetoCell",
+      "member": "ACTIVE",
+      "chunk": "C3a",
+      "source_path": "Assets/Art/Icons/Source/icon_veto_active.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "status",
+        "paired_label_required": true
+      },
+      "a11y_label_key": "icon.vetocell.active"
+    },
+    {
+      "id": "icon_hazard_rising",
+      "family": "HazardTrendEnum",
+      "member": "RISING",
+      "chunk": "C3a",
+      "source_path": "Assets/Art/Icons/Source/icon_hazard_rising.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "status",
+        "paired_label_required": true
+      },
+      "a11y_label_key": "icon.hazardtrendenum.rising"
+    },
+    {
+      "id": "icon_hazard_stable",
+      "family": "HazardTrendEnum",
+      "member": "STABLE",
+      "chunk": "C3a",
+      "source_path": "Assets/Art/Icons/Source/icon_hazard_stable.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "status",
+        "paired_label_required": true
+      },
+      "a11y_label_key": "icon.hazardtrendenum.stable"
+    },
+    {
+      "id": "icon_hazard_falling",
+      "family": "HazardTrendEnum",
+      "member": "FALLING",
+      "chunk": "C3a",
+      "source_path": "Assets/Art/Icons/Source/icon_hazard_falling.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "status",
+        "paired_label_required": true
+      },
+      "a11y_label_key": "icon.hazardtrendenum.falling"
+    },
+    {
+      "id": "icon_wear_prefers",
+      "family": "WearTierBucketRow",
+      "member": "PREFERS",
+      "chunk": "C3a",
+      "source_path": "Assets/Art/Icons/Source/icon_wear_prefers.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "status",
+        "paired_label_required": true
+      },
+      "a11y_label_key": "icon.weartierbucketrow.prefers"
+    },
+    {
+      "id": "icon_wear_neutral",
+      "family": "WearTierBucketRow",
+      "member": "NEUTRAL",
+      "chunk": "C3a",
+      "source_path": "Assets/Art/Icons/Source/icon_wear_neutral.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "status",
+        "paired_label_required": true
+      },
+      "a11y_label_key": "icon.weartierbucketrow.neutral"
+    },
+    {
+      "id": "icon_wear_rejects",
+      "family": "WearTierBucketRow",
+      "member": "REJECTS",
+      "chunk": "C3a",
+      "source_path": "Assets/Art/Icons/Source/icon_wear_rejects.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "status",
+        "paired_label_required": true
+      },
+      "a11y_label_key": "icon.weartierbucketrow.rejects"
+    },
+    {
+      "id": "icon_walkfinding_present",
+      "family": "WalkFindingStateEnum",
+      "member": "PRESENT",
+      "chunk": "C3a",
+      "source_path": "Assets/Art/Icons/Source/icon_walkfinding_present.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "status",
+        "paired_label_required": true
+      },
+      "a11y_label_key": "icon.walkfindingstateenum.present"
+    },
+    {
+      "id": "icon_walkfinding_flagged",
+      "family": "WalkFindingStateEnum",
+      "member": "FLAGGED",
+      "chunk": "C3a",
+      "source_path": "Assets/Art/Icons/Source/icon_walkfinding_flagged.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "status",
+        "paired_label_required": true
+      },
+      "a11y_label_key": "icon.walkfindingstateenum.flagged"
+    },
+    {
+      "id": "icon_walkfinding_matches_age",
+      "family": "WalkFindingStateEnum",
+      "member": "MATCHES_AGE",
+      "chunk": "C3a",
+      "source_path": "Assets/Art/Icons/Source/icon_walkfinding_matches_age.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "status",
+        "paired_label_required": true
+      },
+      "a11y_label_key": "icon.walkfindingstateenum.matches_age"
+    },
+    {
+      "id": "icon_walkfinding_consistent",
+      "family": "WalkFindingStateEnum",
+      "member": "CONSISTENT",
+      "chunk": "C3a",
+      "source_path": "Assets/Art/Icons/Source/icon_walkfinding_consistent.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "status",
+        "paired_label_required": true
+      },
+      "a11y_label_key": "icon.walkfindingstateenum.consistent"
+    },
+    {
+      "id": "icon_walkfinding_minor",
+      "family": "WalkFindingStateEnum",
+      "member": "MINOR",
+      "chunk": "C3a",
+      "source_path": "Assets/Art/Icons/Source/icon_walkfinding_minor.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "status",
+        "paired_label_required": true
+      },
+      "a11y_label_key": "icon.walkfindingstateenum.minor"
+    },
+    {
+      "id": "icon_achievement_check",
+      "family": "AchievementCoche",
+      "member": "DONE",
+      "chunk": "C3a",
+      "source_path": "Assets/Art/Icons/Source/icon_achievement_check.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "status",
+        "paired_label_required": true
+      },
+      "a11y_label_key": "icon.achievementcoche.done"
+    },
+    {
+      "id": "icon_slot_dependency_arrow",
+      "family": "SlotCardDependencyArrow",
+      "member": "DEFAULT",
+      "chunk": "C3a",
+      "source_path": "Assets/Art/Icons/Source/icon_slot_dependency_arrow.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "decorative",
+        "paired_label_required": false
+      },
+      "a11y_label_key": "icon.slotcarddependencyarrow.default"
+    },
+    {
+      "id": "icon_building_front_shop",
+      "family": "BuildingTypeIcon",
+      "member": "FRONT_SHOP",
+      "chunk": "C3b",
+      "source_path": "Assets/Art/Icons/Source/icon_building_front_shop.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "status",
+        "paired_label_required": true
+      },
+      "a11y_label_key": "icon.buildingtypeicon.front_shop"
+    },
+    {
+      "id": "icon_building_cash_safehouse",
+      "family": "BuildingTypeIcon",
+      "member": "CASH_SAFEHOUSE",
+      "chunk": "C3b",
+      "source_path": "Assets/Art/Icons/Source/icon_building_cash_safehouse.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "status",
+        "paired_label_required": true
+      },
+      "a11y_label_key": "icon.buildingtypeicon.cash_safehouse"
+    },
+    {
+      "id": "icon_building_stash",
+      "family": "BuildingTypeIcon",
+      "member": "STASH",
+      "chunk": "C3b",
+      "source_path": "Assets/Art/Icons/Source/icon_building_stash.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "status",
+        "paired_label_required": true
+      },
+      "a11y_label_key": "icon.buildingtypeicon.stash"
+    },
+    {
+      "id": "icon_building_lab",
+      "family": "BuildingTypeIcon",
+      "member": "LAB",
+      "chunk": "C3b",
+      "source_path": "Assets/Art/Icons/Source/icon_building_lab.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "status",
+        "paired_label_required": true
+      },
+      "a11y_label_key": "icon.buildingtypeicon.lab"
+    },
+    {
+      "id": "icon_building_grow_house",
+      "family": "BuildingTypeIcon",
+      "member": "GROW_HOUSE",
+      "chunk": "C3b",
+      "source_path": "Assets/Art/Icons/Source/icon_building_grow_house.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "status",
+        "paired_label_required": true
+      },
+      "a11y_label_key": "icon.buildingtypeicon.grow_house"
+    },
+    {
+      "id": "icon_building_refinery",
+      "family": "BuildingTypeIcon",
+      "member": "REFINERY",
+      "chunk": "C3b",
+      "source_path": "Assets/Art/Icons/Source/icon_building_refinery.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "status",
+        "paired_label_required": true
+      },
+      "a11y_label_key": "icon.buildingtypeicon.refinery"
+    },
+    {
+      "id": "icon_building_press_house",
+      "family": "BuildingTypeIcon",
+      "member": "PRESS_HOUSE",
+      "chunk": "C3b",
+      "source_path": "Assets/Art/Icons/Source/icon_building_press_house.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "status",
+        "paired_label_required": true
+      },
+      "a11y_label_key": "icon.buildingtypeicon.press_house"
+    },
+    {
+      "id": "icon_building_distribution_hub",
+      "family": "BuildingTypeIcon",
+      "member": "DISTRIBUTION_HUB",
+      "chunk": "C3b",
+      "source_path": "Assets/Art/Icons/Source/icon_building_distribution_hub.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "status",
+        "paired_label_required": true
+      },
+      "a11y_label_key": "icon.buildingtypeicon.distribution_hub"
+    },
+    {
+      "id": "icon_building_office",
+      "family": "BuildingTypeIcon",
+      "member": "OFFICE",
+      "chunk": "C3b",
+      "source_path": "Assets/Art/Icons/Source/icon_building_office.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "status",
+        "paired_label_required": true
+      },
+      "a11y_label_key": "icon.buildingtypeicon.office"
+    },
+    {
+      "id": "icon_building_dealer_spot_front",
+      "family": "BuildingTypeIcon",
+      "member": "DEALER_SPOT_FRONT",
+      "chunk": "C3b",
+      "source_path": "Assets/Art/Icons/Source/icon_building_dealer_spot_front.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "status",
+        "paired_label_required": true
+      },
+      "a11y_label_key": "icon.buildingtypeicon.dealer_spot_front"
+    },
+    {
+      "id": "icon_building_money_holding",
+      "family": "BuildingTypeIcon",
+      "member": "MONEY_HOLDING",
+      "chunk": "C3b",
+      "source_path": "Assets/Art/Icons/Source/icon_building_money_holding.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "status",
+        "paired_label_required": true
+      },
+      "a11y_label_key": "icon.buildingtypeicon.money_holding"
+    },
+    {
+      "id": "icon_audit_pin",
+      "family": "AuditPin",
+      "member": "DEFAULT",
+      "chunk": "C3b",
+      "source_path": "Assets/Art/Icons/Source/icon_audit_pin.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "status",
+        "paired_label_required": true
+      },
+      "a11y_label_key": "icon.auditpin.default"
+    },
+    {
+      "id": "icon_auto_truce_active",
+      "family": "AutoTruceActive",
+      "member": "ACTIVE",
+      "chunk": "C3b",
+      "source_path": "Assets/Art/Icons/Source/icon_auto_truce_active.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "status",
+        "paired_label_required": true
+      },
+      "a11y_label_key": "icon.autotruceactive.active"
+    },
+    {
+      "id": "icon_lek_overlay_player",
+      "family": "LekOverlayFaction",
+      "member": "PLAYER",
+      "chunk": "C3b",
+      "source_path": "Assets/Art/Icons/Source/icon_lek_overlay_player.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "status",
+        "paired_label_required": true
+      },
+      "a11y_label_key": "icon.lekoverlayfaction.player"
+    },
+    {
+      "id": "icon_lek_overlay_rival",
+      "family": "LekOverlayFaction",
+      "member": "RIVAL",
+      "chunk": "C3b",
+      "source_path": "Assets/Art/Icons/Source/icon_lek_overlay_rival.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "status",
+        "paired_label_required": true
+      },
+      "a11y_label_key": "icon.lekoverlayfaction.rival"
+    },
+    {
+      "id": "icon_walk_residue_dot",
+      "family": "WalkResidueDot",
+      "member": "DEFAULT",
+      "chunk": "C3b",
+      "source_path": "Assets/Art/Icons/Source/icon_walk_residue_dot.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "status",
+        "paired_label_required": true
+      },
+      "a11y_label_key": "icon.walkresiduedot.default"
+    },
+    {
+      "id": "icon_lek_memory_footprint",
+      "family": "LekMemoryFootprintMark",
+      "member": "DEFAULT",
+      "chunk": "C3b",
+      "source_path": "Assets/Art/Icons/Source/icon_lek_memory_footprint.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "decorative",
+        "paired_label_required": false
+      },
+      "a11y_label_key": "icon.lekmemoryfootprintmark.default"
+    },
+    {
+      "id": "icon_more_menu_cue_stack",
+      "family": "MoreMenuDestinationEnum",
+      "member": "CUE_STACK",
+      "chunk": "C3c",
+      "source_path": "Assets/Art/Icons/Source/icon_more_menu_cue_stack.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "navigation",
+        "paired_label_required": false
+      },
+      "a11y_label_key": "icon.moremenudestinationenum.cue_stack"
+    },
+    {
+      "id": "icon_more_menu_daily_review",
+      "family": "MoreMenuDestinationEnum",
+      "member": "DAILY_REVIEW",
+      "chunk": "C3c",
+      "source_path": "Assets/Art/Icons/Source/icon_more_menu_daily_review.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "navigation",
+        "paired_label_required": false
+      },
+      "a11y_label_key": "icon.moremenudestinationenum.daily_review"
+    },
+    {
+      "id": "icon_more_menu_mis_queue",
+      "family": "MoreMenuDestinationEnum",
+      "member": "MIS_QUEUE",
+      "chunk": "C3c",
+      "source_path": "Assets/Art/Icons/Source/icon_more_menu_mis_queue.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "navigation",
+        "paired_label_required": false
+      },
+      "a11y_label_key": "icon.moremenudestinationenum.mis_queue"
+    },
+    {
+      "id": "icon_more_menu_precincts",
+      "family": "MoreMenuDestinationEnum",
+      "member": "PRECINCTS",
+      "chunk": "C3c",
+      "source_path": "Assets/Art/Icons/Source/icon_more_menu_precincts.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "navigation",
+        "paired_label_required": false
+      },
+      "a11y_label_key": "icon.moremenudestinationenum.precincts"
+    },
+    {
+      "id": "icon_more_menu_recruitment",
+      "family": "MoreMenuDestinationEnum",
+      "member": "RECRUITMENT",
+      "chunk": "C3c",
+      "source_path": "Assets/Art/Icons/Source/icon_more_menu_recruitment.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "navigation",
+        "paired_label_required": false
+      },
+      "a11y_label_key": "icon.moremenudestinationenum.recruitment"
+    },
+    {
+      "id": "icon_more_menu_compression_week",
+      "family": "MoreMenuDestinationEnum",
+      "member": "COMPRESSION_WEEK",
+      "chunk": "C3c",
+      "source_path": "Assets/Art/Icons/Source/icon_more_menu_compression_week.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "navigation",
+        "paired_label_required": false
+      },
+      "a11y_label_key": "icon.moremenudestinationenum.compression_week"
+    },
+    {
+      "id": "icon_more_menu_settings",
+      "family": "MoreMenuDestinationEnum",
+      "member": "SETTINGS",
+      "chunk": "C3c",
+      "source_path": "Assets/Art/Icons/Source/icon_more_menu_settings.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "navigation",
+        "paired_label_required": false
+      },
+      "a11y_label_key": "icon.moremenudestinationenum.settings"
+    },
+    {
+      "id": "icon_more_menu_backoffice",
+      "family": "MoreMenuDestinationEnum",
+      "member": "BACKOFFICE",
+      "chunk": "C3c",
+      "source_path": "Assets/Art/Icons/Source/icon_more_menu_backoffice.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "navigation",
+        "paired_label_required": false
+      },
+      "a11y_label_key": "icon.moremenudestinationenum.backoffice"
+    },
+    {
+      "id": "icon_more_menu_help_about",
+      "family": "MoreMenuDestinationEnum",
+      "member": "HELP_ABOUT",
+      "chunk": "C3c",
+      "source_path": "Assets/Art/Icons/Source/icon_more_menu_help_about.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "navigation",
+        "paired_label_required": false
+      },
+      "a11y_label_key": "icon.moremenudestinationenum.help_about"
+    },
+    {
+      "id": "icon_archetype_cook",
+      "family": "LieutenantArchetypeKey",
+      "member": "COOK",
+      "chunk": "C3c",
+      "source_path": "Assets/Art/Icons/Source/icon_archetype_cook.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "status",
+        "paired_label_required": true
+      },
+      "a11y_label_key": "icon.lieutenantarchetypekey.cook"
+    },
+    {
+      "id": "icon_archetype_logistics",
+      "family": "LieutenantArchetypeKey",
+      "member": "LOGISTICS",
+      "chunk": "C3c",
+      "source_path": "Assets/Art/Icons/Source/icon_archetype_logistics.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "status",
+        "paired_label_required": true
+      },
+      "a11y_label_key": "icon.lieutenantarchetypekey.logistics"
+    },
+    {
+      "id": "icon_archetype_distribution",
+      "family": "LieutenantArchetypeKey",
+      "member": "DISTRIBUTION",
+      "chunk": "C3c",
+      "source_path": "Assets/Art/Icons/Source/icon_archetype_distribution.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "status",
+        "paired_label_required": true
+      },
+      "a11y_label_key": "icon.lieutenantarchetypekey.distribution"
+    },
+    {
+      "id": "icon_archetype_laundering",
+      "family": "LieutenantArchetypeKey",
+      "member": "LAUNDERING",
+      "chunk": "C3c",
+      "source_path": "Assets/Art/Icons/Source/icon_archetype_laundering.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "status",
+        "paired_label_required": true
+      },
+      "a11y_label_key": "icon.lieutenantarchetypekey.laundering"
+    },
+    {
+      "id": "icon_archetype_security",
+      "family": "LieutenantArchetypeKey",
+      "member": "SECURITY",
+      "chunk": "C3c",
+      "source_path": "Assets/Art/Icons/Source/icon_archetype_security.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "status",
+        "paired_label_required": true
+      },
+      "a11y_label_key": "icon.lieutenantarchetypekey.security"
+    },
+    {
+      "id": "icon_archetype_bookkeeper",
+      "family": "LieutenantArchetypeKey",
+      "member": "BOOKKEEPER",
+      "chunk": "C3c",
+      "source_path": "Assets/Art/Icons/Source/icon_archetype_bookkeeper.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "status",
+        "paired_label_required": true
+      },
+      "a11y_label_key": "icon.lieutenantarchetypekey.bookkeeper"
+    },
+    {
+      "id": "icon_node_type_production",
+      "family": "NodeTypeEnum",
+      "member": "PRODUCTION",
+      "chunk": "C3c",
+      "source_path": "Assets/Art/Icons/Source/icon_node_type_production.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "status",
+        "paired_label_required": true
+      },
+      "a11y_label_key": "icon.nodetypeenum.production"
+    },
+    {
+      "id": "icon_node_type_safehouse",
+      "family": "NodeTypeEnum",
+      "member": "SAFEHOUSE",
+      "chunk": "C3c",
+      "source_path": "Assets/Art/Icons/Source/icon_node_type_safehouse.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "status",
+        "paired_label_required": true
+      },
+      "a11y_label_key": "icon.nodetypeenum.safehouse"
+    },
+    {
+      "id": "icon_node_type_front_shop",
+      "family": "NodeTypeEnum",
+      "member": "FRONT_SHOP",
+      "chunk": "C3c",
+      "source_path": "Assets/Art/Icons/Source/icon_node_type_front_shop.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "status",
+        "paired_label_required": true
+      },
+      "a11y_label_key": "icon.nodetypeenum.front_shop"
+    },
+    {
+      "id": "icon_probation_stretching",
+      "family": "ProbationStatusEnum",
+      "member": "STRETCHING",
+      "chunk": "C3c",
+      "source_path": "Assets/Art/Icons/Source/icon_probation_stretching.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "status",
+        "paired_label_required": true
+      },
+      "a11y_label_key": "icon.probationstatusenum.stretching"
+    },
+    {
+      "id": "icon_probation_observing",
+      "family": "ProbationStatusEnum",
+      "member": "OBSERVING",
+      "chunk": "C3c",
+      "source_path": "Assets/Art/Icons/Source/icon_probation_observing.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "status",
+        "paired_label_required": true
+      },
+      "a11y_label_key": "icon.probationstatusenum.observing"
+    },
+    {
+      "id": "icon_probation_walking",
+      "family": "ProbationStatusEnum",
+      "member": "WALKING",
+      "chunk": "C3c",
+      "source_path": "Assets/Art/Icons/Source/icon_probation_walking.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "status",
+        "paired_label_required": true
+      },
+      "a11y_label_key": "icon.probationstatusenum.walking"
+    },
+    {
+      "id": "icon_dissent_breach",
+      "family": "DissentAccumulationBadge",
+      "member": "BREACH",
+      "chunk": "C3c",
+      "source_path": "Assets/Art/Icons/Source/icon_dissent_breach.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "status",
+        "paired_label_required": true
+      },
+      "a11y_label_key": "icon.dissentaccumulationbadge.breach"
+    },
+    {
+      "id": "icon_extinction_alert",
+      "family": "ExtinctionBadge",
+      "member": "ALERT",
+      "chunk": "C3c",
+      "source_path": "Assets/Art/Icons/Source/icon_extinction_alert.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "status",
+        "paired_label_required": true
+      },
+      "a11y_label_key": "icon.extinctionbadge.alert"
+    },
+    {
+      "id": "icon_instrument_pressure",
+      "family": "DiplomacyInstrument",
+      "member": "PRESSURE",
+      "chunk": "C3d",
+      "source_path": "Assets/Art/Icons/Source/icon_instrument_pressure.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "status",
+        "paired_label_required": true
+      },
+      "a11y_label_key": "icon.diplomacyinstrument.pressure"
+    },
+    {
+      "id": "icon_instrument_shield",
+      "family": "DiplomacyInstrument",
+      "member": "PROTECTION",
+      "chunk": "C3d",
+      "source_path": "Assets/Art/Icons/Source/icon_instrument_shield.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "status",
+        "paired_label_required": true
+      },
+      "a11y_label_key": "icon.diplomacyinstrument.protection"
+    },
+    {
+      "id": "icon_instrument_tribute",
+      "family": "DiplomacyInstrument",
+      "member": "TRIBUTE",
+      "chunk": "C3d",
+      "source_path": "Assets/Art/Icons/Source/icon_instrument_tribute.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "status",
+        "paired_label_required": true
+      },
+      "a11y_label_key": "icon.diplomacyinstrument.tribute"
+    },
+    {
+      "id": "icon_instrument_payment",
+      "family": "DiplomacyInstrument",
+      "member": "PAYMENT",
+      "chunk": "C3d",
+      "source_path": "Assets/Art/Icons/Source/icon_instrument_payment.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "status",
+        "paired_label_required": true
+      },
+      "a11y_label_key": "icon.diplomacyinstrument.payment"
+    },
+    {
+      "id": "icon_instrument_truce_vigil",
+      "family": "DiplomacyInstrument",
+      "member": "TRUCE_VIGIL",
+      "chunk": "C3d",
+      "source_path": "Assets/Art/Icons/Source/icon_instrument_truce_vigil.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "status",
+        "paired_label_required": true
+      },
+      "a11y_label_key": "icon.diplomacyinstrument.truce_vigil"
+    },
+    {
+      "id": "icon_instrument_mimicry",
+      "family": "DiplomacyInstrument",
+      "member": "MIMICRY",
+      "chunk": "C3d",
+      "source_path": "Assets/Art/Icons/Source/icon_instrument_mimicry.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "status",
+        "paired_label_required": true
+      },
+      "a11y_label_key": "icon.diplomacyinstrument.mimicry"
+    },
+    {
+      "id": "icon_instrument_message",
+      "family": "DiplomacyInstrument",
+      "member": "MESSAGE",
+      "chunk": "C3d",
+      "source_path": "Assets/Art/Icons/Source/icon_instrument_message.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "status",
+        "paired_label_required": true
+      },
+      "a11y_label_key": "icon.diplomacyinstrument.message"
+    },
+    {
+      "id": "icon_instrument_neutral",
+      "family": "DiplomacyInstrument",
+      "member": "NEUTRAL",
+      "chunk": "C3d",
+      "source_path": "Assets/Art/Icons/Source/icon_instrument_neutral.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "status",
+        "paired_label_required": true
+      },
+      "a11y_label_key": "icon.diplomacyinstrument.neutral"
+    },
+    {
+      "id": "icon_exception_category_conflict",
+      "family": "ConflictExceptionCategoryIcon",
+      "member": "conflict",
+      "chunk": "C3d",
+      "source_path": "Assets/Art/Icons/Source/icon_exception_category_conflict.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "status",
+        "paired_label_required": true
+      },
+      "a11y_label_key": "icon.conflictexceptioncategoryicon.conflict"
+    },
+    {
+      "id": "icon_exception_category_diplomacy",
+      "family": "ConflictExceptionCategoryIcon",
+      "member": "diplomacy",
+      "chunk": "C3d",
+      "source_path": "Assets/Art/Icons/Source/icon_exception_category_diplomacy.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "status",
+        "paired_label_required": true
+      },
+      "a11y_label_key": "icon.conflictexceptioncategoryicon.diplomacy"
+    },
+    {
+      "id": "icon_exception_category_intel",
+      "family": "ConflictExceptionCategoryIcon",
+      "member": "intel",
+      "chunk": "C3d",
+      "source_path": "Assets/Art/Icons/Source/icon_exception_category_intel.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "status",
+        "paired_label_required": true
+      },
+      "a11y_label_key": "icon.conflictexceptioncategoryicon.intel"
+    },
+    {
+      "id": "icon_exception_category_reputation",
+      "family": "ConflictExceptionCategoryIcon",
+      "member": "reputation",
+      "chunk": "C3d",
+      "source_path": "Assets/Art/Icons/Source/icon_exception_category_reputation.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "status",
+        "paired_label_required": true
+      },
+      "a11y_label_key": "icon.conflictexceptioncategoryicon.reputation"
+    },
+    {
+      "id": "icon_dispatcher_nominal",
+      "family": "DispatcherRegimeBucket",
+      "member": "NOMINAL",
+      "chunk": "C3d",
+      "source_path": "Assets/Art/Icons/Source/icon_dispatcher_nominal.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "status",
+        "paired_label_required": true
+      },
+      "a11y_label_key": "icon.dispatcherregimebucket.nominal"
+    },
+    {
+      "id": "icon_dispatcher_backlogged",
+      "family": "DispatcherRegimeBucket",
+      "member": "BACKLOGGED",
+      "chunk": "C3d",
+      "source_path": "Assets/Art/Icons/Source/icon_dispatcher_backlogged.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "status",
+        "paired_label_required": true
+      },
+      "a11y_label_key": "icon.dispatcherregimebucket.backlogged"
+    },
+    {
+      "id": "icon_dispatcher_budget_cut",
+      "family": "DispatcherRegimeBucket",
+      "member": "BUDGET_CUT",
+      "chunk": "C3d",
+      "source_path": "Assets/Art/Icons/Source/icon_dispatcher_budget_cut.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "status",
+        "paired_label_required": true
+      },
+      "a11y_label_key": "icon.dispatcherregimebucket.budget_cut"
+    },
+    {
+      "id": "icon_dispatcher_surge",
+      "family": "DispatcherRegimeBucket",
+      "member": "SURGE",
+      "chunk": "C3d",
+      "source_path": "Assets/Art/Icons/Source/icon_dispatcher_surge.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "status",
+        "paired_label_required": true
+      },
+      "a11y_label_key": "icon.dispatcherregimebucket.surge"
+    },
+    {
+      "id": "icon_curriculum_absorbed",
+      "family": "CurriculumFlagStateEnum",
+      "member": "ABSORBED",
+      "chunk": "C3d",
+      "source_path": "Assets/Art/Icons/Source/icon_curriculum_absorbed.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "status",
+        "paired_label_required": true
+      },
+      "a11y_label_key": "icon.curriculumflagstateenum.absorbed"
+    },
+    {
+      "id": "icon_curriculum_not_absorbed",
+      "family": "CurriculumFlagStateEnum",
+      "member": "NOT_ABSORBED",
+      "chunk": "C3d",
+      "source_path": "Assets/Art/Icons/Source/icon_curriculum_not_absorbed.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "status",
+        "paired_label_required": true
+      },
+      "a11y_label_key": "icon.curriculumflagstateenum.not_absorbed"
+    },
+    {
+      "id": "icon_curriculum_unknown",
+      "family": "CurriculumFlagStateEnum",
+      "member": "UNKNOWN",
+      "chunk": "C3d",
+      "source_path": "Assets/Art/Icons/Source/icon_curriculum_unknown.svg",
+      "raster_sizes_px": [
+        16,
+        24,
+        32,
+        48
+      ],
+      "semantic_role": {
+        "role": "status",
+        "paired_label_required": true
+      },
+      "a11y_label_key": "icon.curriculumflagstateenum.unknown"
+    }
+  ]
+}
