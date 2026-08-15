@@ -107,6 +107,18 @@ namespace MafiaCleanCity.CityMap
         public SigninPayload payload;
     }
 
+    // ---- Auth (POST /v1/auth/signup) — W3.U1 C2/C3: a real, disposable player, no dependency on
+    // the heavy operational seeder (Tools/seed_operational_demo.mjs), which the district/refinery
+    // assumption it hard-codes can leave transiently broken — signup only needs callsign+password,
+    // and returns the SAME SigninResult shape as /v1/auth/signin (REUSE SigninDataDto/Payload/Envelope
+    // below, never a re-declared duplicate). ------------------------------
+    [Serializable]
+    public class SignupRequestDto
+    {
+        public string callsign;
+        public string password;
+    }
+
     // ---- Heat projection (GET /v1/city/district/:id/heat) --------------
 
     [Serializable]

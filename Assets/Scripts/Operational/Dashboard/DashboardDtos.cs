@@ -20,11 +20,20 @@ namespace MafiaCleanCity.Operational
     // for GET /v1/city/district/:id/heat.
     // ---------------------------------------------------------------------
 
-    // GET /v1/economy/wallet  →  { wallet_band }
+    // GET /v1/economy/wallet  →  { player_id, cash_cents, wallet_band }
+    // W3.U1 C2 (design §1.3.f) — `cash_cents` ADDED. The server ALREADY sent it (`WalletProjection`,
+    // `economy.projection.service.ts:56-63` — fixed on `main` by `263175e7`, canon §8.1/§8.2: a
+    // concrete monetary balance is player-facing, R2.2 forbids SOCIAL-JUDGMENT scalars, not this);
+    // this DTO simply hadn't declared the field. With JsonUtility an undeclared field is silently
+    // DROPPED, not an error — the same family as an optional marker turning a compile error into
+    // silence (CLAUDE.md). `cash_cents` is a BigInt-serialized STRING (never a JSON number — values
+    // beyond Number.MAX_SAFE_INTEGER would truncate) — kept as `string` here for the same reason.
     [Serializable]
     public class WalletDto
     {
-        public string wallet_band; // BROKE | LOW | MODERATE | HIGH | FLUSH (ascending qualitative cash band)
+        public string player_id;
+        public string cash_cents;  // BigInt-serialized cents, JSON-safe string — never parse via float/double.
+        public string wallet_band; // BROKE | LOW | MODERATE | HIGH | FLUSH (SUPPLEMENTARY band, not a substitute for cash_cents)
     }
 
     [Serializable] public class WalletEnvelope { public WalletPayload payload; }

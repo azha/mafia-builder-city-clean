@@ -208,5 +208,32 @@ namespace MafiaCleanCity.Tests
             Regex.IsMatch(s, "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
 
         public static string Tail(string s) => s.Length <= 600 ? s : s.Substring(s.Length - 600);
+
+        // W3.U1 — a PURELY ALPHABETIC unique token, safe to embed in any string a screen might
+        // RENDER without ever tripping the R2.2 "no bare digit" guard (`DashboardPlayModeTests.cs:
+        // 287` — `(?<![A-Za-z])\d+(\.\d+)?(?![A-Za-z])`). MEASURED, not assumed: a digit run of
+        // length >= 3 sandwiched between letters (e.g. "c2q9320920z2q") is NOT safe — the regex
+        // engine can start/end a match on an INTERIOR substring whose immediate neighbours are
+        // OTHER DIGITS from the same run (themselves not letters), e.g. "32092" inside "q9320920z"
+        // matches even though the run's own outer edges sit against letters. Only runs of length
+        // <= 2 are genuinely safe; the robust fix is to carry NO digit at all. Maps each decimal
+        // digit to a letter (0->a .. 9->j) — deterministic, still as unique as the source number.
+        public static string DigitsToLetters(long n)
+        {
+            string digits = System.Math.Abs(n).ToString();
+            var chars = new char[digits.Length];
+            for (int i = 0; i < digits.Length; i++) chars[i] = (char)('a' + (digits[i] - '0'));
+            return new string(chars);
+        }
+
+        /// <summary>A short, unique, PURELY ALPHABETIC callsign (player.callsign is varchar(24)) —
+        /// safe even when a screen renders it verbatim (TopBar shows the callsign directly).
+        /// `tag` identifies the calling chunk/fixture (kept short — it counts against the 24 cap).</summary>
+        public static string SafeCallsign(string tag, ref int seqCounter)
+        {
+            string callsign = tag + DigitsToLetters(System.DateTime.UtcNow.Ticks % 10000000) + DigitsToLetters(seqCounter);
+            seqCounter++;
+            return callsign;
+        }
     }
 }
