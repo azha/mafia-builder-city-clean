@@ -37,10 +37,15 @@ check "C3 ferme la forme C" \
   "/v1/session/open" 1
 
 # 2) Le juge (MafiaCI.cs) — le design prescrit d'ÉLARGIR le juge existant, jamais d'en créer un
-#    second (C1-F0). "W3U1" doit être présent EXACTEMENT une fois dans le tableau des catégories.
-check "C1-F0 élargit le juge (pas de 2e point d'entrée)" \
+#    second (C1-F0). Revue ⊥ IMPORTANT-5 : `'"W3U1"'` seul comptait 2 (le tableau ET un mot dans un
+#    commentaire de prose au-dessus) — un désaccord entre le commentaire ("doit être présent
+#    EXACTEMENT une fois") et le contrôle (`>= 1`), qui n'aurait PAS attrapé un second point
+#    d'entrée resté en prose sans jamais toucher le tableau. Motif resserré à une sous-chaîne qui
+#    n'existe QUE dans la déclaration `Categories = { … }` elle-même (jamais dans la prose au-dessus,
+#    formulée différemment) — vérifié : exactement 1 occurrence.
+check "C1-F0 élargit le juge (le TABLEAU, pas seulement sa prose)" \
   "$UNITY_ROOT/Assets/Editor/MafiaCI.cs" \
-  '"W3U1"' 1
+  ', "W3U1" };' 1
 
 # 3) L'artefact que run-unity-check.sh détruisait sur ses DEUX chemins de sortie (design C1-F0,
 #    §3) — le correctif (LOG_FILE, préservation optionnelle) doit être présent.

@@ -1,7 +1,10 @@
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Reflection;
 using NUnit.Framework;
 using UnityEngine;
+using Debug = UnityEngine.Debug;
 
 namespace MafiaCleanCity.Shell.Tests
 {
@@ -87,19 +90,60 @@ namespace MafiaCleanCity.Shell.Tests
             // « le découpage en chunks couvre-t-il exactement ce que le DTO CLIENT déclare ? ».
         }
 
-        // Le détecteur d'horloge (design §3-bis, BLOCKING-1) : si Q2 avait été refusée, la somme
-        // resterait 10+1=11 et l'apparition ULTÉRIEURE de la clé casserait l'égalité. Documenté ici
-        // (jamais exécuté sous cette polarité — Q2 EST OUI dans ce lot) pour que le prochain lecteur
-        // sache que le MÊME dispositif couvre les deux branches, sans re-décrire le raisonnement.
+        // Revue ⊥ IMPORTANT-5 : `Tools/verify-w3u1-anti-staleness.sh` (C9-F1) n'avait AUCUN
+        // consommateur mesuré (0 référence dans Unity, 0 dans les docs back) — « un dispositif de
+        // sécurité doit rester sur un chemin que quelqu'un emprunte, sinon il sera retiré de bonne
+        // foi » (socle). Ce test EST ce chemin : il exécute le script réel (jamais une réécriture
+        // C# de sa logique, qui pourrait diverger) via un process, et fait échouer la suite W3U1
+        // elle-même si le script régresse — le patron `SeederSupport`/`RunDevPsql` (Process +
+        // stdout/stderr capturés + code de sortie asserté), appliqué à un script de clôture au lieu
+        // d'un seeder.
         [Test]
-        public void ClockKeyDetector_BothBranchesOfQ2AreCoveredByTheSameMechanism_DocumentedNotExecuted()
+        public void C9F1_AntiStalenessScript_Executes_ExitsZero()
         {
-            Assert.Pass(
-                "Q2 = OUI (tranché par le contrôleur) : la somme de contrôle ci-dessus est 12, et " +
-                "`opened_game_day` est classée CONSOMMÉE par C2. Si une future régression retirait la " +
-                "clé du DTO serveur sans mettre à jour SessionOpenDto/ConsumedByChunk, C3-F2 (parité de " +
-                "forme, 12 champs) rougirait EN PREMIER — c'est le MÊME dispositif que design §3-bis " +
-                "prescrit, appliqué ici au lieu d'être re-décrit.");
+            string repoRoot = FindRepoRoot();
+            Assert.IsNotNull(repoRoot, "could not locate the Unity repo root (Tools/verify-w3u1-anti-staleness.sh)");
+            string scriptPath = Path.Combine(repoRoot, "Tools", "verify-w3u1-anti-staleness.sh");
+            Assert.IsTrue(File.Exists(scriptPath), $"script exists at {scriptPath}");
+
+            var psi = new ProcessStartInfo
+            {
+                FileName = "/bin/bash",
+                ArgumentList = { scriptPath },
+                WorkingDirectory = repoRoot,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+            };
+            string stdout, stderr;
+            int exitCode;
+            using (var proc = Process.Start(psi))
+            {
+                stdout = proc.StandardOutput.ReadToEnd();
+                stderr = proc.StandardError.ReadToEnd();
+                proc.WaitForExit(30000);
+                Assert.IsTrue(proc.HasExited, "verify-w3u1-anti-staleness.sh did not finish within 30s");
+                exitCode = proc.ExitCode;
+            }
+            Assert.AreEqual(0, exitCode,
+                $"verify-w3u1-anti-staleness.sh failed (exit {exitCode}).\nstdout:\n{stdout}\nstderr:\n{stderr}");
+            Debug.Log($"[C9-F1] anti-staleness script output:\n{stdout}");
+        }
+
+        // Mirrors `SeederSupport`'s own repo-root walk (Application.dataPath -> up to 6 levels) —
+        // inlined here rather than exposed from SeederSupport to keep this chunk's consumer
+        // self-contained (SeederSupport's version is scoped to node seeders, a different marker file).
+        private static string FindRepoRoot()
+        {
+            DirectoryInfo dir = new DirectoryInfo(Application.dataPath);
+            for (int i = 0; i < 6 && dir != null; i++)
+            {
+                if (File.Exists(Path.Combine(dir.FullName, "Tools", "verify-w3u1-anti-staleness.sh")))
+                    return dir.FullName;
+                dir = dir.Parent;
+            }
+            return null;
         }
     }
 }
