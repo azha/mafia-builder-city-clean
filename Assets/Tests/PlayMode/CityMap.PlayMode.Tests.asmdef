@@ -8,7 +8,8 @@
         "Operational",
         "UnityEngine.UI",
         "Theme",
-        "Unity.TextMeshPro"
+        "Unity.TextMeshPro",
+        "AssetLint"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
