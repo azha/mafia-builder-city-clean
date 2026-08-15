@@ -5,7 +5,7 @@ using MafiaCleanCity.Operational.Exceptions; // REUSE ExceptionCardDto (queue) �
 namespace MafiaCleanCity.Shell
 {
     // W3.U1 C3 (design §3 C3, §1.3.b/c) — wire DTOs for `POST /v1/session/open`
-    // (`session-open-sequence.service.ts:225-237` — the closed set of 12 top-level keys, W3.U1 C2's
+    // (`session-open-sequence.service.ts:229-246` — the closed set of 12 top-level keys, W3.U1 C2's
     // `opened_game_day` addition included, design D3/§3-bis). Captured field-for-field from the
     // server interfaces (never guessed — the T14 lesson every other DTO file in this repo cites).
     //
@@ -79,7 +79,7 @@ namespace MafiaCleanCity.Shell
     }
 
     // The FULL `POST /v1/session/open` response — a closed set of 12 top-level keys
-    // (`session-open-sequence.service.ts:229-251`, W3.U1 C2 GREW it additively with
+    // (`session-open-sequence.service.ts:229-246`, W3.U1 C2 GREW it additively with
     // `opened_game_day`). §3-bis of the design is the falsifiable that keeps this DTO's field COUNT
     // in lockstep with the server interface (C3-F2 — parity of FORM, never a re-typed shape check).
     [Serializable]

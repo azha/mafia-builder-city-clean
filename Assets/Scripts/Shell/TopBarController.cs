@@ -40,7 +40,7 @@ namespace MafiaCleanCity.Shell
 
         /// <summary>Every SCANNED text (R2.2 corpus — design C2-F4). Excludes elements whose
         /// `trackValue` is false (numeric UI chrome: cash, game-day — mirrors
-        /// `DashboardController.AddStatusRow(trackValue:false)`, `:329`).</summary>
+        /// `DashboardController.AddStatusRow(trackValue:false)`, `:340`).</summary>
         public IReadOnlyList<string> RenderedTexts => renderedTexts;
         private readonly List<string> renderedTexts = new List<string>();
 
@@ -94,7 +94,7 @@ namespace MafiaCleanCity.Shell
 
             // 2) Cash — LOCALE-formatted, NO hard-coded currency symbol (design C2-F1). Digit-bearing
             //    UI chrome, EXCLUDED from the scan corpus (design C2-F4 / IMPORTANT-5) — the SAME
-            //    mechanism DashboardController already uses for "Tier N" (`:329`).
+            //    mechanism DashboardController already uses for "Tier N" (`:340`).
             string locale = CurrentMe != null ? CurrentMe.locale : null;
             string cashRaw = CurrentWallet != null ? CurrentWallet.cash_cents : null;
             RenderedCashText = FormatCash(cashRaw, locale);

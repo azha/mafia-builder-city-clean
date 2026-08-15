@@ -147,7 +147,7 @@ namespace MafiaCleanCity.Shell.Tests
 
         // C2-F4 (la garde R2.2 — IMPORTANT-5) — le solde ET le temps in-game sont des chrome
         // digit-bearing EXCLUS du corpus de scan (même mécanisme que "Tier N",
-        // DashboardController.cs:329) ; callsign ET le point de notification restent SOUMIS au scan.
+        // DashboardController.cs:340) ; callsign ET le point de notification restent SOUMIS au scan.
         // Dimensionné : au moins un élément exclu ET un élément soumis (tout exclure viderait la garde).
         [UnityTest]
         public IEnumerator C2F4_R22Guard_CashAndGameDayExcluded_CallsignAndNotificationScanned()

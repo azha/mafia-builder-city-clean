@@ -131,8 +131,11 @@ namespace MafiaCleanCity.Shell
         }
 
         // Cohesion (D5) — rendered ONCE, at build time: an EXPLICIT "indisponible" state, the SAME
-        // precedent `DashboardController.cs:320` already established for a probe that can fail — a
+        // precedent `DashboardController.cs:331` already established for a probe that can fail — a
         // VALUE, never the bar's absence (which a shell that never built a 4th bar would ALSO satisfy).
+        // (Revue ⊥ IMPORTANT-4 : cette ancre était `:320` sur `main`, correcte à l'origine — c'est
+        // C1 de CE lot, en insérant le bloc `mountParent`, qui l'a décalée sans que ce commentaire,
+        // écrit APRÈS, ne re-dérive du fichier déjà modifié. Re-mesurée : `:331`.)
         private void RenderCohesionDeclaredUnavailable()
         {
             CohesionDeclaredUnavailable = true;
