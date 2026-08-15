@@ -83,8 +83,23 @@ namespace MafiaCleanCity.Shell.Tests
             // backdrop AT THE CANVAS ROOT (the pre-shell behaviour, BLOCKING-3) would show up here.
             Assert.AreEqual(3, shell.ShellCanvas.transform.childCount,
                 "the Canvas root holds EXACTLY the 3 shell slots — no tenant UI escaped to its root");
-            Assert.Greater(shell.ContentSlot.childCount, 0,
-                "the Home tenant (DashboardController) DID build something, confined INSIDE ContentSlot");
+
+            // ⚠️ Revue ⊥ IMPORTANT-1 : `ContentSlot.childCount > 0` était vraie PAR CONSTRUCTION —
+            // `AppShell.MountTenant<T>()` y parente lui-même le host du locataire (`AppShell.cs`,
+            // `host.transform.SetParent(ContentSlot, false)`) AVANT que le locataire ne construise
+            // quoi que ce soit. Un `DashboardController.BuildLayout()` qui ne produirait plus rien
+            // laissait ce test entièrement vert. Correctif : asserter le PARENT EFFECTIF d'un objet
+            // NOMMÉ que le locataire construit lui-même — c'est la « cible » littérale du design
+            // (§3 C1-F2 : « cible : le parent effectif du locataire »), et ça échoue réellement si
+            // `mountParent` est nul (le locataire découvre alors le Canvas et y construit son
+            // "DashboardBackdrop" directement, jamais sous ContentSlot).
+            Transform dashboardBackdrop = shell.ContentSlot.Find("DashboardBackdrop");
+            Assert.IsNotNull(dashboardBackdrop,
+                "the Home tenant's OWN named object ('DashboardBackdrop', DashboardController.BuildLayout) exists as a DIRECT child of ContentSlot");
+            Assert.AreEqual(shell.ContentSlot, dashboardBackdrop.parent,
+                "the tenant's effective parent IS ContentSlot — not merely 'ContentSlot has some child' (which the host itself would already satisfy)");
+            Assert.AreNotEqual(shell.ShellCanvas.transform, dashboardBackdrop.parent,
+                "and NOT the Canvas root — the exact degenerate case an unset mountParent would produce");
 
             // Second tab change — proves it's not a one-shot fluke, and that unmount/remount actually
             // swaps content rather than accumulating it forever inside ContentSlot.
@@ -93,8 +108,13 @@ namespace MafiaCleanCity.Shell.Tests
             yield return null;
             Assert.AreEqual(3, shell.ShellCanvas.transform.childCount,
                 "STILL exactly 3 Canvas children after a SECOND tenant — confinement holds across swaps");
-            Assert.Greater(shell.ContentSlot.childCount, 0,
-                "the City tenant also built something confined inside ContentSlot");
+            Transform cityMapRoot = shell.ContentSlot.Find("CityMapRoot");
+            Assert.IsNotNull(cityMapRoot,
+                "the City tenant's OWN named object ('CityMapRoot', CityMapController.BuildLayout) exists as a DIRECT child of ContentSlot");
+            Assert.AreEqual(shell.ContentSlot, cityMapRoot.parent, "the City tenant's effective parent IS ContentSlot");
+            Assert.AreNotEqual(shell.ShellCanvas.transform, cityMapRoot.parent, "and NOT the Canvas root");
+            Assert.IsNull(shell.ContentSlot.Find("DashboardBackdrop"),
+                "the FIRST tenant's object is genuinely gone — unmount/remount swaps, it doesn't accumulate");
 
             // Non-occlusion via SIBLING ORDER (design C1-F2 explicitly sanctions "ordre de frères OU
             // test de raycast" — sibling order is deterministic under batchmode, unlike a real
