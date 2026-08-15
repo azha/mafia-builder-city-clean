@@ -32,7 +32,14 @@ public static class MafiaCI
     {
         public void RunStarted(ITestAdaptor testsToRun)
         {
-            Debug.Log($"MafiaCI: RunPlayModeTests started — {testsToRun.TestCaseCount} test(s)");
+            // Revue ⊥ MINOR-6 : `testsToRun.TestCaseCount` reflète l'ARBRE PlayMode DÉCOUVERT dans
+            // son ensemble (le filtre de catégories s'applique à L'EXÉCUTION des feuilles, pas à la
+            // taille de l'arbre rapportée ici) — mesuré : 151 sur ce dépôt alors que 3 catégories
+            // combinées n'en exécutent que 86. Un lecteur qui rapproche "started — 151" de
+            // "passed=86" peut lire 65 tests évaporés là où rien n'a disparu. Le mot "découverts"
+            // rend ça explicite sans changer ce que la ligne mesure (aucune falsifiable n'en dépend
+            // — seul `passed=`/`failed=` de RunFinished ci-dessous compte).
+            Debug.Log($"MafiaCI: RunPlayModeTests started — {testsToRun.TestCaseCount} test(s) découverts (arbre PlayMode entier ; le filtre de catégories s'applique à l'exécution, voir passed= ci-dessous)");
         }
 
         public void RunFinished(ITestResultAdaptor result)
