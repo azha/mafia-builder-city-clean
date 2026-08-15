@@ -9,17 +9,20 @@ using UnityEngine;
 // un échec), plutôt que de laisser `-quit` clore le process avant la fin réelle des tests.
 public static class MafiaCI
 {
-    // Scopé à la catégorie W4P4a plutôt qu'à TOUT PlayMode : la suite existante contient des
-    // tests E2E lourds (charter 27, live docker stack, seed via Process) que ce lot ne touche
-    // ni ne garantit disponibles — "aucun E2E" pour ce lot (voir mandat). Le juge Unity de
-    // W4.P4a exécute SES tests, pas la suite entière.
-    private const string Category = "W4P4a";
+    // Scopé à une liste de catégories plutôt qu'à TOUT PlayMode : la suite existante contient
+    // des tests E2E lourds (charter 27, live docker stack, seed via Process) qu'aucun de ces
+    // lots ne touche ni ne garantit disponibles — "aucun E2E" pour ces lots (voir mandats). Le
+    // juge Unity exécute LEURS tests, pas la suite entière.
+    // W3.U-DA (2026-08-15) : ajoute "W3UDA" à côté de "W4P4a" plutôt que de créer un second
+    // point d'entrée — un seul juge batchmode par projet, élargi au fil des lots (même patron
+    // que le cumul de branches côté back : on n'ajoute pas de gate, on élargit celui qui existe).
+    private static readonly string[] Categories = { "W4P4a", "W3UDA" };
 
     public static void RunPlayModeTests()
     {
         var api = ScriptableObject.CreateInstance<TestRunnerApi>();
         api.RegisterCallbacks(new Callbacks());
-        api.Execute(new ExecutionSettings(new Filter { testMode = TestMode.PlayMode, categoryNames = new[] { Category } }));
+        api.Execute(new ExecutionSettings(new Filter { testMode = TestMode.PlayMode, categoryNames = Categories }));
     }
 
     private class Callbacks : ICallbacks
