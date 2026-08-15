@@ -68,13 +68,23 @@ namespace MafiaCleanCity.Shell.Tests
             int total = consumedFromOriginal11 + 1 /* settling_glance */ + 1 /* opened_game_day */;
             Assert.AreEqual(12, total, "10 + 1 + 1 = 12 — la somme de contrôle du découpage, Q2 = OUI");
             Assert.AreEqual(interfaceKeys.Count, total,
-                "la somme de contrôle ÉGALE le compte RÉEL de champs de l'interface — c'est CE dispositif " +
-                "qui voit l'apparition d'une clé (le détecteur d'horloge, design §3-bis) : si une 13e clé " +
-                "apparaissait sans être classée ici, ce test rougirait AVANT toute autre falsifiable.");
+                "la somme de contrôle ÉGALE le compte de champs du DTO CLIENT — si un chunk classait " +
+                "une clé absente du DTO, ou classait deux fois la même, CE test rougirait.");
 
             // Chaque clé classée est unique à SA classification (jamais consommée ET déclarée non-consommée).
             Assert.IsFalse(ConsumedByChunk.ContainsKey(DeclaredNonConsumed),
                 "settling_glance ne peut pas être À LA FOIS consommée et déclarée non-consommée");
+
+            // ⚠️ Revue ⊥ IMPORTANT-2 : cette égalité ne compare QUE des grandeurs CLIENTES
+            // (`ConsumedByChunk` + `DeclaredNonConsumed`, écrits à la main, contre `SessionOpenDto`,
+            // un type C#) — AUCUNE des deux ne lit le corps réellement reçu du serveur. Une clé
+            // ajoutée ou retirée CÔTÉ SERVEUR SANS toucher `SessionOpenDto` laisse ce test entièrement
+            // vert : ce N'EST PAS le détecteur d'horloge du design §3-bis (qui exige de voir un
+            // changement de DONNÉE serveur). Le détecteur RÉEL est
+            // `SessionClientPlayModeTests.C3F3_...` : il compte les clés du CORPS BRUT reçu et les
+            // compare au compte de champs du DTO — c'est LUI qui rougirait si le serveur bougeait sans
+            // que ce lot s'en aperçoive. Ce test-ci ferme une question DIFFÉRENTE, toujours utile :
+            // « le découpage en chunks couvre-t-il exactement ce que le DTO CLIENT déclare ? ».
         }
 
         // Le détecteur d'horloge (design §3-bis, BLOCKING-1) : si Q2 avait été refusée, la somme
