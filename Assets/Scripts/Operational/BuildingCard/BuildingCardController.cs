@@ -34,7 +34,7 @@ namespace MafiaCleanCity.Operational
     // M1 operational building-card endpoint, which returns only the four operational
     // fields above. This controller renders the M1-live surface faithfully and defers the
     // rest.
-    public class BuildingCardController : MonoBehaviour
+    public class BuildingCardController : MonoBehaviour, MafiaCleanCity.Shell.IShellTenant
     {
         [Header("Backend")]
         [SerializeField] private string baseUrl = "http://localhost";
@@ -1669,6 +1669,11 @@ namespace MafiaCleanCity.Operational
             return walletRank >= floorRank;
         }
 
+        // W3.U1 C1 (design D2) — optional parent-of-mount the AppShell renseigne BEFORE Start() runs.
+        // See DashboardController.mountParent for the full rationale (byte-identical mechanism here).
+        private Transform mountParent;
+        public void SetMountParent(Transform parent) => mountParent = parent;
+
         // --------------------------------------------------------------- UI build
 
         private void BuildLayout()
@@ -1684,14 +1689,15 @@ namespace MafiaCleanCity.Operational
                 scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
                 scaler.referenceResolution = new Vector2(1280, 720);
             }
+            Transform root = mountParent != null ? mountParent : canvas.transform; // W3.U1 D2
 
             // Dim backdrop (the City Map would sit behind in-game).
-            GameObject backdrop = NewUI("BuildingCardBackdrop", canvas.transform);
+            GameObject backdrop = NewUI("BuildingCardBackdrop", root);
             Stretch((RectTransform)backdrop.transform, Vector2.zero, Vector2.zero);
             backdrop.AddComponent<Image>().color = DesignTokens.Current.scrimBackdrop;
 
             // The bottom-sheet card, anchored bottom-centre.
-            GameObject card = NewUI("BuildingCardSheet", canvas.transform);
+            GameObject card = NewUI("BuildingCardSheet", root);
             RectTransform cardRt = (RectTransform)card.transform;
             cardRt.anchorMin = new Vector2(0.5f, 0f);
             cardRt.anchorMax = new Vector2(0.5f, 0f);

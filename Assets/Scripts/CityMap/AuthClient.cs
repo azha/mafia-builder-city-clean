@@ -17,6 +17,7 @@ namespace MafiaCleanCity.CityMap
         public int TimeoutSeconds = 10;
 
         public string SigninUrl => BaseUrl.TrimEnd('/') + "/v1/auth/signin";
+        public string SignupUrl => BaseUrl.TrimEnd('/') + "/v1/auth/signup";
 
         /// <summary>
         /// Coroutine: sign in with an identifier (email or callsign) + password.
@@ -57,6 +58,56 @@ namespace MafiaCleanCity.CityMap
                 if (string.IsNullOrEmpty(token))
                 {
                     onError?.Invoke("Signin succeeded but no access_token in response");
+                    yield break;
+                }
+
+                onSuccess?.Invoke(token);
+            }
+        }
+
+        // W3.U1 C2/C3 — a REAL, disposable player via POST /v1/auth/signup, so falsifiables that
+        // just need "some real signed-in player" (a fresh callsign is enough for `POST
+        // /v1/session/open` to have a home, a wallet to read, etc.) don't depend on the heavy
+        // operational seeder's building/district assumptions (Tools/seed_operational_demo.mjs — see
+        // TopBarControllerPlayModeTests' own header for the measured seeder failure this sidesteps).
+        // `Idempotency-Key` is REQUIRED server-side (`@Idempotent({ required: true })`,
+        // `auth.controller.ts:229-233`) — a fresh GUID per call, never reused.
+        public IEnumerator SignUp(string callsign, string password,
+            Action<string> onSuccess, Action<string> onError)
+        {
+            string body = JsonUtility.ToJson(new SignupRequestDto { callsign = callsign, password = password });
+
+            using (var req = new UnityWebRequest(SignupUrl, UnityWebRequest.kHttpVerbPOST))
+            {
+                req.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(body));
+                req.downloadHandler = new DownloadHandlerBuffer();
+                req.SetRequestHeader("Content-Type", "application/json");
+                req.SetRequestHeader("Idempotency-Key", Guid.NewGuid().ToString());
+                req.timeout = TimeoutSeconds;
+
+                yield return req.SendWebRequest();
+
+                if (req.result != UnityWebRequest.Result.Success)
+                {
+                    onError?.Invoke($"POST {SignupUrl} failed: {req.result} ({req.responseCode}) {req.error}");
+                    yield break;
+                }
+
+                string token;
+                try
+                {
+                    SigninEnvelope env = JsonUtility.FromJson<SigninEnvelope>(req.downloadHandler.text);
+                    token = env?.payload?.data?.access_token;
+                }
+                catch (Exception ex)
+                {
+                    onError?.Invoke($"Failed to parse signup response: {ex.Message}");
+                    yield break;
+                }
+
+                if (string.IsNullOrEmpty(token))
+                {
+                    onError?.Invoke("Signup succeeded but no access_token in response");
                     yield break;
                 }
 

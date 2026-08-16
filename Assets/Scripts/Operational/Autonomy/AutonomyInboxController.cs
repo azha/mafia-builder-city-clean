@@ -20,7 +20,7 @@ namespace MafiaCleanCity.Operational.Autonomy
     // Scan discipline: every TrackText'ed string is digit-free (closed labels + static captions only).
     // Producer text (lieutenant ids, age counts, label_key, refused_action, outcome, errors) = CHROME (component-
     // tracked only — an i18n key or id may carry digits).
-    public class AutonomyInboxController : MonoBehaviour
+    public class AutonomyInboxController : MonoBehaviour, MafiaCleanCity.Shell.IShellTenant
     {
         [Header("Backend")]
         [SerializeField] private string baseUrl = "http://localhost";
@@ -333,6 +333,11 @@ namespace MafiaCleanCity.Operational.Autonomy
             }
         }
 
+        // W3.U1 C1 (design D2) — optional parent-of-mount the AppShell renseigne BEFORE Start() runs.
+        // See DashboardController.mountParent for the full rationale (byte-identical mechanism here).
+        private Transform mountParent;
+        public void SetMountParent(Transform parent) => mountParent = parent;
+
         // --------------------------------------------------------------- UI build
 
         private void BuildLayout()
@@ -348,14 +353,15 @@ namespace MafiaCleanCity.Operational.Autonomy
                 scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
                 scaler.referenceResolution = new Vector2(1280, 720);
             }
+            Transform root = mountParent != null ? mountParent : canvas.transform; // W3.U1 D2
 
             // Full-screen ardoise backdrop.
-            GameObject backdrop = NewUI("AutonomyInboxBackdrop", canvas.transform);
+            GameObject backdrop = NewUI("AutonomyInboxBackdrop", root);
             Stretch((RectTransform)backdrop.transform, Vector2.zero, Vector2.zero);
             backdrop.AddComponent<Image>().color = SurfaceBg;
 
             // The inbox card, anchored top-centre.
-            GameObject card = NewUI("AutonomyInboxSheet", canvas.transform);
+            GameObject card = NewUI("AutonomyInboxSheet", root);
             RectTransform cardRt = (RectTransform)card.transform;
             cardRt.anchorMin = new Vector2(0.5f, 1f);
             cardRt.anchorMax = new Vector2(0.5f, 1f);

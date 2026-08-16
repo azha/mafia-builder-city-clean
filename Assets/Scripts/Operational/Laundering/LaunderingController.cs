@@ -37,7 +37,7 @@ namespace MafiaCleanCity.Operational
     // part of the M1 laundering-node endpoint, which returns only the three fields above. The
     // M1 loop is a single Stage-1 front-shop node; this controller renders that node's live
     // surface faithfully (cleanliness band + deviation flag + inject) and defers the rest.
-    public class LaunderingController : MonoBehaviour
+    public class LaunderingController : MonoBehaviour, MafiaCleanCity.Shell.IShellTenant
     {
         [Header("Backend")]
         [SerializeField] private string baseUrl = "http://localhost";
@@ -290,6 +290,11 @@ namespace MafiaCleanCity.Operational
             }
         }
 
+        // W3.U1 C1 (design D2) — optional parent-of-mount the AppShell renseigne BEFORE Start() runs.
+        // See DashboardController.mountParent for the full rationale (byte-identical mechanism here).
+        private Transform mountParent;
+        public void SetMountParent(Transform parent) => mountParent = parent;
+
         // --------------------------------------------------------------- UI build
 
         private void BuildLayout()
@@ -305,14 +310,15 @@ namespace MafiaCleanCity.Operational
                 scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
                 scaler.referenceResolution = new Vector2(1280, 720);
             }
+            Transform root = mountParent != null ? mountParent : canvas.transform; // W3.U1 D2
 
             // Dim backdrop (the City Map / Pipeline tab would sit behind in-game).
-            GameObject backdrop = NewUI("LaunderingBackdrop", canvas.transform);
+            GameObject backdrop = NewUI("LaunderingBackdrop", root);
             Stretch((RectTransform)backdrop.transform, Vector2.zero, Vector2.zero);
             backdrop.AddComponent<Image>().color = DesignTokens.Current.scrimBackdrop;
 
             // The pipeline card, anchored centre.
-            GameObject card = NewUI("LaunderingSheet", canvas.transform);
+            GameObject card = NewUI("LaunderingSheet", root);
             RectTransform cardRt = (RectTransform)card.transform;
             cardRt.anchorMin = new Vector2(0.5f, 0.5f);
             cardRt.anchorMax = new Vector2(0.5f, 0.5f);

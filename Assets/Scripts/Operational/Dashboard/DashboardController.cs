@@ -41,7 +41,7 @@ namespace MafiaCleanCity.Operational
     // the ContextualBanner, the ShortcutBar, the rich KPI tiles + decision feed) is still NOT built here. Since
     // Phase-20 the exception queue IS live as its own screen (ExceptionQueueController — nav below) + a pending
     // alerts note; the INLINE top-3 panel and one_decision (core_loops.*) remain deferred.
-    public class DashboardController : MonoBehaviour
+    public class DashboardController : MonoBehaviour, MafiaCleanCity.Shell.IShellTenant
     {
         [Header("Backend")]
         [SerializeField] private string baseUrl = "http://localhost";
@@ -76,6 +76,17 @@ namespace MafiaCleanCity.Operational
         public NavTarget LastNavTarget { get; private set; } = NavTarget.None;
         /// <summary>The GameObject of the controller the last nav button opened (test hook for "clicking opens the target").</summary>
         public GameObject LastNavGameObject { get; private set; }
+
+        // W3.U1 C1 (design D2) — optional parent-of-mount the AppShell renseigne BEFORE Start() runs
+        // (AddComponent + SetMountParent happen synchronously, same frame; Start() is deferred to the
+        // next frame — see AppShell.MountTenant). When set, BuildLayout() parents this screen's root
+        // under it INSTEAD of the discovered Canvas — confining it to the shell's content slot rather
+        // than the Canvas root (BLOCKING-3 of the design: an unconfined tenant recovers the shell's
+        // Canvas and occludes both bars, which are neither destroyed nor recreated). Left null OUTSIDE
+        // the shell (every existing PlayMode test, every nav-opened screen below) — behaviour there
+        // stays EXACTLY today's Canvas discovery, byte-identical (C1-F3).
+        private Transform mountParent;
+        public void SetMountParent(Transform parent) => mountParent = parent;
 
         public enum NavTarget { None, CityMap, BuildingCard, Pipeline, Exceptions, Autonomy }
 
@@ -496,14 +507,15 @@ namespace MafiaCleanCity.Operational
                 scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
                 scaler.referenceResolution = new Vector2(1280, 720);
             }
+            Transform root = mountParent != null ? mountParent : canvas.transform; // W3.U1 D2
 
             // Full-screen ardoise backdrop (screen_1 is the cold-open landing screen).
-            GameObject backdrop = NewUI("DashboardBackdrop", canvas.transform);
+            GameObject backdrop = NewUI("DashboardBackdrop", root);
             Stretch((RectTransform)backdrop.transform, Vector2.zero, Vector2.zero);
             backdrop.AddComponent<Image>().color = SurfaceBg;
 
             // The dashboard card, anchored top-centre (portrait landing column).
-            GameObject card = NewUI("DashboardSheet", canvas.transform);
+            GameObject card = NewUI("DashboardSheet", root);
             RectTransform cardRt = (RectTransform)card.transform;
             cardRt.anchorMin = new Vector2(0.5f, 1f);
             cardRt.anchorMax = new Vector2(0.5f, 1f);

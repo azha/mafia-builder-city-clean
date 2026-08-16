@@ -39,7 +39,7 @@ namespace MafiaCleanCity.Operational
     // cleanliness band + terminal flag + has_cash flag. The M1b core IS the multi-node chain with rising
     // cleanliness bands + the terminal release stage; this controller renders that faithfully and defers
     // the rest (the same honest-deferral posture as the T11 LaunderingController).
-    public class PipelineOverviewController : MonoBehaviour
+    public class PipelineOverviewController : MonoBehaviour, MafiaCleanCity.Shell.IShellTenant
     {
         [Header("Backend")]
         [SerializeField] private string baseUrl = "http://localhost";
@@ -303,6 +303,11 @@ namespace MafiaCleanCity.Operational
             return $"Stage {ordinal} — mid-tier";
         }
 
+        // W3.U1 C1 (design D2) — optional parent-of-mount the AppShell renseigne BEFORE Start() runs.
+        // See DashboardController.mountParent for the full rationale (byte-identical mechanism here).
+        private Transform mountParent;
+        public void SetMountParent(Transform parent) => mountParent = parent;
+
         // --------------------------------------------------------------- UI build
 
         private void BuildLayout()
@@ -318,14 +323,15 @@ namespace MafiaCleanCity.Operational
                 scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
                 scaler.referenceResolution = new Vector2(1280, 720);
             }
+            Transform root = mountParent != null ? mountParent : canvas.transform; // W3.U1 D2
 
             // Dim backdrop (the Pipeline tab would sit behind in-game).
-            GameObject backdrop = NewUI("PipelineBackdrop", canvas.transform);
+            GameObject backdrop = NewUI("PipelineBackdrop", root);
             Stretch((RectTransform)backdrop.transform, Vector2.zero, Vector2.zero);
             backdrop.AddComponent<Image>().color = DesignTokens.Current.scrimBackdrop;
 
             // The pipeline overview card, anchored centre.
-            GameObject card = NewUI("PipelineSheet", canvas.transform);
+            GameObject card = NewUI("PipelineSheet", root);
             RectTransform cardRt = (RectTransform)card.transform;
             cardRt.anchorMin = new Vector2(0.5f, 0.5f);
             cardRt.anchorMax = new Vector2(0.5f, 0.5f);

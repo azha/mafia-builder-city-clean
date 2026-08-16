@@ -6,7 +6,8 @@
         "UnityEngine.UI",
         "Unity.InputSystem",
         "Theme",
-        "Unity.TextMeshPro"
+        "Unity.TextMeshPro",
+        "ShellContracts"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

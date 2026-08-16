@@ -19,7 +19,7 @@ namespace MafiaCleanCity.Operational.Exceptions
     //
     // R2.2: the rows render the 3 CLOSED band labels (tracked in the scan corpus) + producer free text
     // (event_descriptor — chrome, component-tracked only: an i18n key may carry digits).
-    public class ExceptionQueueController : MonoBehaviour
+    public class ExceptionQueueController : MonoBehaviour, MafiaCleanCity.Shell.IShellTenant
     {
         [Header("Backend")]
         [SerializeField] private string baseUrl = "http://localhost";
@@ -236,6 +236,11 @@ namespace MafiaCleanCity.Operational.Exceptions
         private static string Cap(string b) =>
             string.IsNullOrEmpty(b) ? "Unknown" : char.ToUpperInvariant(b[0]) + b.Substring(1).ToLowerInvariant();
 
+        // W3.U1 C1 (design D2) — optional parent-of-mount the AppShell renseigne BEFORE Start() runs.
+        // See DashboardController.mountParent for the full rationale (byte-identical mechanism here).
+        private Transform mountParent;
+        public void SetMountParent(Transform parent) => mountParent = parent;
+
         // --------------------------------------------------------------- UI build
 
         private void BuildLayout()
@@ -251,14 +256,15 @@ namespace MafiaCleanCity.Operational.Exceptions
                 scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
                 scaler.referenceResolution = new Vector2(1280, 720);
             }
+            Transform root = mountParent != null ? mountParent : canvas.transform; // W3.U1 D2
 
             // Full-screen ardoise backdrop.
-            GameObject backdrop = NewUI("ExceptionQueueBackdrop", canvas.transform);
+            GameObject backdrop = NewUI("ExceptionQueueBackdrop", root);
             Stretch((RectTransform)backdrop.transform, Vector2.zero, Vector2.zero);
             backdrop.AddComponent<Image>().color = SurfaceBg;
 
             // The queue card, anchored top-centre.
-            GameObject card = NewUI("ExceptionQueueSheet", canvas.transform);
+            GameObject card = NewUI("ExceptionQueueSheet", root);
             RectTransform cardRt = (RectTransform)card.transform;
             cardRt.anchorMin = new Vector2(0.5f, 1f);
             cardRt.anchorMax = new Vector2(0.5f, 1f);

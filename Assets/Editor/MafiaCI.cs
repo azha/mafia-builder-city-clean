@@ -16,7 +16,10 @@ public static class MafiaCI
     // W3.U-DA (2026-08-15) : ajoute "W3UDA" à côté de "W4P4a" plutôt que de créer un second
     // point d'entrée — un seul juge batchmode par projet, élargi au fil des lots (même patron
     // que le cumul de branches côté back : on n'ajoute pas de gate, on élargit celui qui existe).
-    private static readonly string[] Categories = { "W4P4a", "W3UDA" };
+    // W3.U1 (design C1-F0) — ajoute "W3U1" au même titre : le shell/Home/Daily-Review est le
+    // PATRON des 11 lots d'écrans suivants, et C1-F0 exige que ce lot passe par le MÊME filtre
+    // que les précédents, jamais un second juge.
+    private static readonly string[] Categories = { "W4P4a", "W3UDA", "W3U1" };
 
     public static void RunPlayModeTests()
     {
@@ -29,7 +32,14 @@ public static class MafiaCI
     {
         public void RunStarted(ITestAdaptor testsToRun)
         {
-            Debug.Log($"MafiaCI: RunPlayModeTests started — {testsToRun.TestCaseCount} test(s)");
+            // Revue ⊥ MINOR-6 : `testsToRun.TestCaseCount` reflète l'ARBRE PlayMode DÉCOUVERT dans
+            // son ensemble (le filtre de catégories s'applique à L'EXÉCUTION des feuilles, pas à la
+            // taille de l'arbre rapportée ici) — mesuré : 151 sur ce dépôt alors que 3 catégories
+            // combinées n'en exécutent que 86. Un lecteur qui rapproche "started — 151" de
+            // "passed=86" peut lire 65 tests évaporés là où rien n'a disparu. Le mot "découverts"
+            // rend ça explicite sans changer ce que la ligne mesure (aucune falsifiable n'en dépend
+            // — seul `passed=`/`failed=` de RunFinished ci-dessous compte).
+            Debug.Log($"MafiaCI: RunPlayModeTests started — {testsToRun.TestCaseCount} test(s) découverts (arbre PlayMode entier ; le filtre de catégories s'applique à l'exécution, voir passed= ci-dessous)");
         }
 
         public void RunFinished(ITestResultAdaptor result)

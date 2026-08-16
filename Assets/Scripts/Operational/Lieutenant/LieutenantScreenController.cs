@@ -27,7 +27,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
     //
     // DEFERRED to the next tasks (NOT built here): the status-bands render (T2), the guided rule-builder + DSL-source
     // serializer + validate/attach + diagnostics (T3), the PlayMode E2E capstone (T4). This is the recruit-only shell.
-    public class LieutenantScreenController : MonoBehaviour
+    public class LieutenantScreenController : MonoBehaviour, MafiaCleanCity.Shell.IShellTenant
     {
         [Header("Backend")]
         [SerializeField] private string baseUrl = "http://localhost";
@@ -979,6 +979,11 @@ namespace MafiaCleanCity.Operational.Lieutenant
         private static Color EfficiencyBonusAccent(string e) =>
             e == "BONUS_NONE" ? AccentModerate : AccentMild;
 
+        // W3.U1 C1 (design D2) — optional parent-of-mount the AppShell renseigne BEFORE Start() runs.
+        // See DashboardController.mountParent for the full rationale (byte-identical mechanism here).
+        private Transform mountParent;
+        public void SetMountParent(Transform parent) => mountParent = parent;
+
         // --------------------------------------------------------------- layout
 
         private void BuildLayout()
@@ -994,14 +999,15 @@ namespace MafiaCleanCity.Operational.Lieutenant
                 scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
                 scaler.referenceResolution = new Vector2(1280, 720);
             }
+            Transform root = mountParent != null ? mountParent : canvas.transform; // W3.U1 D2
 
             // Dim backdrop (the City Map would sit behind in-game).
-            GameObject backdrop = NewUI("LieutenantBackdrop", canvas.transform);
+            GameObject backdrop = NewUI("LieutenantBackdrop", root);
             Stretch((RectTransform)backdrop.transform, Vector2.zero, Vector2.zero);
             backdrop.AddComponent<Image>().color = DesignTokens.Current.scrimBackdrop;
 
             // The bottom-sheet card, anchored bottom-centre (mirrors BuildingCardController).
-            GameObject card = NewUI("LieutenantSheet", canvas.transform);
+            GameObject card = NewUI("LieutenantSheet", root);
             RectTransform cardRt = (RectTransform)card.transform;
             cardRt.anchorMin = new Vector2(0.5f, 0f);
             cardRt.anchorMax = new Vector2(0.5f, 0f);
