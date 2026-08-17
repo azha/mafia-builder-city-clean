@@ -206,14 +206,31 @@ namespace MafiaCleanCity.CityMap.Tests
                 Assert.IsNotNull(diorama.ScreenRoot.Find("DayPhaseFallbackPanel"), $"{phase} renders the NAMED fallback panel");
                 Assert.IsNull(diorama.ScreenRoot.Find("GridArea"), $"{phase} does NOT render the night grid");
                 Assert.AreEqual(0, diorama.RenderedCellCount, $"{phase} — no cells rendered (fallback, not the diorama)");
+
+                // ⚠️ MESURÉ (juge réel) : `ClearContent` (`Destroy`, différé à la fin de frame, patron
+                // codebase-wide) laisse le panneau de repli de CETTE itération physiquement présent tant
+                // qu'aucune frame ne s'est écoulée — sans cette pause, l'itération NIGHT qui suit (hors
+                // boucle) trouverait encore le panneau DUSK et l'épingle d'absence ci-dessous rougirait
+                // pour une raison de staleness, pas pour un défaut de mapping. Même mécanisme que
+                // C10F2c/C10F1 (ambient loops / lieutenant markers).
+                yield return null;
             }
 
             dto.day_phase = "NIGHT";
             diorama.Render(dto);
             Assert.AreEqual(DioramaArtPhase.NightHero, diorama.LastArtPhase, "NIGHT maps to the hero art");
             Assert.IsNotNull(diorama.ScreenRoot.Find("GridArea"), "NIGHT renders the night grid");
-            Assert.IsNull(diorama.ScreenRoot.Find("DayPhaseFallbackPanel"), "NIGHT does not render the fallback panel");
             Assert.Greater(diorama.RenderedCellCount, 0, "NIGHT actually renders cells");
+            // Socle : une épingle d'ABSENCE (`Assert.IsNull(Find("DayPhaseFallbackPanel"))`) reste
+            // fragile même une fois la staleness ci-dessus corrigée — elle peut rougir pour n'importe
+            // quelle raison sans rapport avec ce qu'elle prétend prouver. Remplacée par une VALEUR
+            // PRÉSENTE : `RenderNightDiorama` construit EXACTEMENT 4 enfants directs de `root`
+            // (OutOfDistrictBackdrop, DistrictTitle, GridArea, Haze — vérifié dans le corps de la
+            // méthode) ; `RenderNonHeroFallback` n'en construit qu'1 (DayPhaseFallbackPanel). Le compte
+            // prouve POSITIVEMENT la composition exacte de NIGHT, ce qui implique l'absence de tout
+            // panneau de repli sans jamais chercher son absence directement.
+            Assert.AreEqual(4, diorama.ScreenRoot.childCount,
+                "NIGHT construit EXACTEMENT ses 4 nœuds nommés (backdrop/titre/grille/brume) — aucun panneau de repli en trop");
         }
     }
 }
