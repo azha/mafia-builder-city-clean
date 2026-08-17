@@ -26,6 +26,21 @@ namespace MafiaCleanCity.CityMap
     // TearDown ne nettoie que son propre host). Render() bâtit sa racine PARESSEUSEMENT, à son premier
     // appel — un futur chunk qui câble une navigation réelle vers cet écran appelle les deux
     // explicitement (SetSession puis Render, ou un petit wrapper), avec un TearDown pensé pour les deux.
+    //
+    // W3.U2 C9 (design §3 C9, §1.5 — U-10 : les 5 bindings lumineux) : chaque lumière est un FAIT du
+    // back (engagement 3, "aucune lumière décorative"), jamais une décoration inconditionnelle. Les
+    // noms de token portent leur binding dans leur PROPRE commentaire (DesignTokens.cs) :
+    //   binding 1 (§1.5 ligne 1, "fenêtres ambre = possédé") : nightWindowLit, gardé par la PRÉSENCE de
+    //     l'entrée (BuildBuildingCell n'est jamais appelée pour un bloc vide, C8/BuildEmptyCell) ;
+    //   binding 2 (§1.5 ligne 2, "fenêtres éteintes = raid/saisie") : condition_band != SOUND ÉTEINT
+    //     binding 1 — §1.1a/D3 : la colonne du raid est building_operational_state.structural_state
+    //     (condition_band), JAMAIS shell_state (invariant en production, D2 v2 MINOR R9) ;
+    //   binding 3 (§1.5 ligne 3, D3) : nightNeonGlow, la règle à 3 états EXACTE de D3 ;
+    //   binding 4 (§1.5 ligne 4) : nightSmoke, gardé par activity_band == ACTIVE ;
+    //   binding 5 (§1.5 ligne 5) : pas de token de nuit dédié (aucun n'a été ajouté en C5) — REUSE de
+    //     accentWarning (token de base, déjà asset-backed, R2.3), gardé par lapse_phase_bucket ET
+    //     maintenance_in_progress (mécanisme non prescrit par le design au-delà du nom du champ — voir
+    //     Tools/w3u2-c9-notes.md § Deviations).
     public class DistrictInteriorScreenController : MonoBehaviour, MafiaCleanCity.Shell.IShellTenant
     {
         [Header("Backend")]
@@ -47,6 +62,16 @@ namespace MafiaCleanCity.CityMap
         public DioramaArtPhase LastArtPhase { get; private set; } = DioramaArtPhase.Unknown;
         public int RenderedCellCount { get; private set; }
         public int RenderedBuildingCount { get; private set; }
+        // ---- test hooks : les 5 bindings lumineux (C9) ---------------------------------------
+        /// <summary>Binding 1+2 (§1.5 lignes 1-2) — fenêtres ambre allumées (condition_band == SOUND).</summary>
+        public int RenderedWindowLightCount { get; private set; }
+        /// <summary>Binding 3 (§1.5 ligne 3) — néons RÉELLEMENT allumés (revenue_band == EARNING) ;
+        /// n'inclut PAS l'enseigne "présente mais sombre" (D3) — celle-ci n'émet aucune lumière.</summary>
+        public int RenderedNeonGlowCount { get; private set; }
+        /// <summary>Binding 4 (§1.5 ligne 4) — fumée d'opération active (activity_band == ACTIVE).</summary>
+        public int RenderedSmokeCount { get; private set; }
+        /// <summary>Binding 5 (§1.5 ligne 5) — enseigne de maintenance qui grésille.</summary>
+        public int RenderedMaintenanceFlickerCount { get; private set; }
         /// <summary>Chaque texte rendu (C8-F3 — le corpus que le garde R2.2 scanne).</summary>
         public IReadOnlyList<string> RenderedTexts => renderedTexts;
         private readonly List<string> renderedTexts = new List<string>();
@@ -97,6 +122,10 @@ namespace MafiaCleanCity.CityMap
             renderedTexts.Clear();
             RenderedCellCount = 0;
             RenderedBuildingCount = 0;
+            RenderedWindowLightCount = 0;
+            RenderedNeonGlowCount = 0;
+            RenderedSmokeCount = 0;
+            RenderedMaintenanceFlickerCount = 0;
 
             LastArtPhase = ResolveArtPhase(dto.day_phase);
             if (LastArtPhase == DioramaArtPhase.NightHero)
@@ -245,6 +274,98 @@ namespace MafiaCleanCity.CityMap
             labelRt.anchoredPosition = Vector2.zero;
             label.color = DesignTokens.Current.onSurfacePrimary;
             TrackText(label);
+
+            // C9 (§3, §1.5 — U-10) : les 5 bindings lumineux. Chacun est GARDÉ par SA bande — l'absence
+            // de GameObject EST le rendu "éteint/pas d'opération/pas de dette" (jamais un objet caché) :
+            // c'est exactement ce que C9-F2 compte (source rendue == fait qui la commande).
+            BuildWindowLight(cell.transform, building);       // bindings 1+2 — possédé / raid-saisie
+            BuildRevenueSign(cell.transform, building);       // binding 3 — néon "ça rapporte" (D3)
+            BuildActivitySmoke(cell.transform, building);     // binding 4 — fumée "op active"
+            BuildMaintenanceFlicker(cell.transform, building); // binding 5 — grésillement "maintenance en retard"
+        }
+
+        /// <summary>Bindings 1+2 (§1.5 lignes 1-2) — la fenêtre ambre. Binding 1 (possédé) : TOUT
+        /// bâtiment reçu EST possédé (prémisse §2 — `buildings[]` ne porte que les bâtiments du
+        /// joueur), donc le fait qui commande cette lumière est la simple PRÉSENCE de l'entrée —
+        /// déjà garantie par l'appelant (`BuildBuildingCell` n'est jamais invoquée pour une cellule
+        /// vide, `BuildEmptyCell`). Binding 2 (raid/saisie, "fenêtres éteintes") : `condition_band !=
+        /// SOUND` ÉTEINT la lumière — §1.1a/D3 : la colonne qui porte le raid est
+        /// `building_operational_state.structural_state` (`condition_band`), JAMAIS `shell_state`
+        /// (invariant en production aujourd'hui, D2 v2 MINOR R9).</summary>
+        private void BuildWindowLight(Transform cell, DistrictInteriorBuildingDto building)
+        {
+            if (building.condition_band != "SOUND") return; // éteinte — aucune lumière décorative (C9-F2)
+            GameObject light = NewUI("WindowLight", cell);
+            RectTransform rt = (RectTransform)light.transform;
+            rt.anchorMin = new Vector2(0.2f, 0.55f);
+            rt.anchorMax = new Vector2(0.8f, 0.75f);
+            rt.offsetMin = rt.offsetMax = Vector2.zero;
+            light.AddComponent<Image>().color = DesignTokens.Current.nightWindowLit;
+            RenderedWindowLightCount++;
+        }
+
+        /// <summary>Binding 3 (§1.5 ligne 3, D3) — l'enseigne "ça rapporte". Les TROIS états prescrits
+        /// par D3, exactement : néon allumé (`revenue_band == EARNING`) ; enseigne présente mais
+        /// SOMBRE (`revenue_chain == WIRED` et `revenue_band == IDLE`) ; pas d'enseigne du tout
+        /// (`revenue_chain == UNWIRED` — "le bâtiment lit comme un local occupé, pas comme un commerce
+        /// éteint", D3). Seul le premier état compte comme une SOURCE lumineuse (C9-F2/F3 : "néon
+        /// rendu" == binding 3 qui commande une lumière, pas une enseigne simplement présente).</summary>
+        private void BuildRevenueSign(Transform cell, DistrictInteriorBuildingDto building)
+        {
+            if (building.revenue_chain != "WIRED") return; // pas d'enseigne du tout (D3)
+            GameObject sign = NewUI("RevenueSign", cell);
+            RectTransform rt = (RectTransform)sign.transform;
+            rt.anchorMin = new Vector2(0.05f, 0.78f);
+            rt.anchorMax = new Vector2(0.35f, 0.92f);
+            rt.offsetMin = rt.offsetMax = Vector2.zero;
+            bool earning = building.revenue_band == "EARNING";
+            sign.AddComponent<Image>().color = earning
+                ? DesignTokens.Current.nightNeonGlow
+                // sombre — REUSE du patron de blend déjà établi par FloorTint (C8) entre deux tokens
+                // .asset-backed existants, jamais une couleur inline neuve (R2.3).
+                : Color.Lerp(DesignTokens.Current.nightNeonGlow, DesignTokens.Current.nightBase, 0.7f);
+            if (earning) RenderedNeonGlowCount++;
+        }
+
+        /// <summary>Binding 4 (§1.5 ligne 4) — la fumée "op active". `activity_band == ACTIVE` seul
+        /// commande cette lumière (D2 v2 MAJOR R4 : `IDLE` est le défaut honnête pour tout bâtiment, y
+        /// compris les 6 types qui ne peuvent JAMAIS opérer).</summary>
+        private void BuildActivitySmoke(Transform cell, DistrictInteriorBuildingDto building)
+        {
+            if (building.activity_band != "ACTIVE") return;
+            GameObject smoke = NewUI("ActivitySmoke", cell);
+            RectTransform rt = (RectTransform)smoke.transform;
+            rt.anchorMin = new Vector2(0.35f, 0.82f);
+            rt.anchorMax = new Vector2(0.65f, 1.05f);
+            rt.offsetMin = rt.offsetMax = Vector2.zero;
+            Image img = smoke.AddComponent<Image>();
+            img.color = DesignTokens.Current.nightSmoke;
+            img.raycastTarget = false;
+            RenderedSmokeCount++;
+        }
+
+        /// <summary>Binding 5 (§1.5 ligne 5) — l'enseigne qui grésille, "maintenance en retard".
+        /// Combine les DEUX clés que le DTO porte pour "binding 5" (D2 — `lapse_phase_bucket` ET
+        /// `maintenance_in_progress`) plutôt que de laisser la seconde sans consommateur (socle : un
+        /// champ sans consommateur ne survit pas) : le grésillement signale une dette EN RETARD ET NON
+        /// PRISE EN CHARGE — dès qu'une réparation est en cours, l'alarme s'éteint, même si la phase
+        /// n'a pas encore rattrapé son retard. Mécanisme non prescrit par le design au-delà du nom du
+        /// champ — voir Tools/w3u2-c9-notes.md § Deviations pour la mesure qui fonde ce choix (imprévu
+        /// non bloquant, option conservatrice : un seul état binaire, jamais un 3ᵉ palier inventé sans
+        /// token pour le porter).</summary>
+        private void BuildMaintenanceFlicker(Transform cell, DistrictInteriorBuildingDto building)
+        {
+            bool overdue = building.lapse_phase_bucket != "WITHIN_WINDOW";
+            if (!overdue || building.maintenance_in_progress) return;
+            GameObject flicker = NewUI("MaintenanceFlicker", cell);
+            RectTransform rt = (RectTransform)flicker.transform;
+            rt.anchorMin = new Vector2(0.7f, 0.78f);
+            rt.anchorMax = new Vector2(0.95f, 0.92f);
+            rt.offsetMin = rt.offsetMax = Vector2.zero;
+            // REUSE d'un token de base déjà asset-backed (R2.3) — aucun token de nuit dédié n'a été
+            // ajouté pour ce binding en C5 (DesignTokens.cs "District Night" n'en porte que 4).
+            flicker.AddComponent<Image>().color = DesignTokens.Current.accentWarning;
+            RenderedMaintenanceFlickerCount++;
         }
 
         private void BuildEmptyCell(RectTransform gridRt, int x, int y)
