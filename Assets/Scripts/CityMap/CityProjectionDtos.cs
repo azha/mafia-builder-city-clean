@@ -63,6 +63,61 @@ namespace MafiaCleanCity.CityMap
     [Serializable] public class InspectionEnvelope { public InspectionPayload payload; }
     [Serializable] public class InspectionPayload { public InspectionDto data; }
 
+    // interior  GET /v1/city/district/:id/interior — W3.U2 C7 (design D1/D2, U-7): the district-
+    // interior diorama's own payload. { district, district_id, profile, name_canonical, bank_side,
+    // grid, blocks[], day_phase, buildings[] }. R2.2: every building-level field is a closed band
+    // string or a boolean EXCEPT block_id/building (geography/identity, D1 §1.4 — hors P5). Binding 5
+    // here carries ONLY lapse_phase_bucket + maintenance_in_progress (district-interior.controller.ts's
+    // DistrictInteriorBuildingResponse) — the THIRD maintenance key, days_until_maintenance_due, lives
+    // on the SEPARATE building-card route/DTO only (D7, U-8 — BuildingCardDtos.cs, not this file).
+    [Serializable]
+    public class DistrictInteriorBlockDto
+    {
+        public int block_id;
+        public int x;
+        public int y;
+    }
+
+    [Serializable]
+    public class DistrictInteriorGridDto
+    {
+        public int width;
+        public int height;
+    }
+
+    [Serializable]
+    public class DistrictInteriorBuildingDto
+    {
+        public string building;              // uuid identity
+        public int block_id;                 // jointure vers blocks[] — géographie
+        public string operational_type;      // 12 membres back, "" si non converti
+        public string conversion_band;       // NOT_CONVERTED | IN_SETUP | OPERATIONAL
+        public string shell_state;           // STANDING | GONE
+        public string condition_band;        // SOUND | DAMAGED | REPAIRING | FAILED
+        public string revenue_band;          // IDLE | EARNING
+        public string revenue_chain;         // WIRED | UNWIRED
+        public string activity_band;         // IDLE | ACTIVE
+        public string lapse_phase_bucket;    // WITHIN_WINDOW | SOFT | HARD | CRITICAL — binding 5
+        public bool maintenance_in_progress; // binding 5
+    }
+
+    [Serializable]
+    public class DistrictInteriorDto
+    {
+        public string district;       // "district-N" — REUSE heat.projection.service.ts's convention
+        public int district_id;
+        public string profile;        // 6 membres — la clé de jointure des sous-teintes (DA)
+        public string name_canonical;
+        public string bank_side;
+        public DistrictInteriorGridDto grid;
+        public DistrictInteriorBlockDto[] blocks;
+        public string day_phase;      // DAWN | DAY | DUSK | NIGHT — D8, engagement 1
+        public DistrictInteriorBuildingDto[] buildings;
+    }
+
+    [Serializable] public class DistrictInteriorPayload { public DistrictInteriorDto data; }
+    [Serializable] public class DistrictInteriorEnvelope { public DistrictInteriorPayload payload; }
+
     // patrol  GET /v1/city/precinct/:id/patrol { precinct, patrol_heat }  (404 until ticked)
     [Serializable] public class PatrolDto { public string precinct; public string patrol_heat; }
     [Serializable] public class PatrolEnvelope { public PatrolPayload payload; }
