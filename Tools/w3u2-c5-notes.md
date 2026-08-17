@@ -3,6 +3,97 @@
 Design : `docs/superpowers/plans/2026-08-17-w3u2-district-nuit-design.md`, chunk C5 (§3, C5-F1/F2/F3),
 livrables **U-2** (tokens de nuit) + **U-3** (chrome + repointage + détecteur d'allowlist).
 
+## Correctif de fenêtre (2026-08-17, post `ca29564`) — trou trouvé par `CanonPaletteBridgePlayModeTests`
+
+**Symptôme rapporté par le contrôleur** : `Comparator_Green_OnHealthyTree_BothDirections` rouge —
+les 8 tokens neufs de C5 (`chromeTabActive` + les 7 `night*`) étaient déclarés côté runtime
+(`DesignTokens.cs` + `.asset`) mais **jamais déclarés côté canon** — "orphelin RUNTIME" ×8. En
+cascade, `Comparator_Red_OnAlteredByte` tombait aussi (sa précondition — "la copie clonée doit être
+verte avant altération" — présuppose 0 orphelin).
+
+**Où vivait l'extrait canon** : `Assets/Editor/CanonPaletteExtract/canon_palette_extract.json` — un
+JSON **committé** dans CE dépôt Unity (pas un doc `gdd/` local, il n'y en a aucun ici — vérifié,
+`find . -iname "*.md" -path "*gdd*"` : 0 résultat). C'est un **instantané manuel**, extrait une fois
+du canon réel (`gdd/14_tunable_constants.md §Asset pipeline — palette & DA`, repo back
+`azha/mafia-clean-city`, commit `918bf4b2` — champs `canonSection`/`backCommitSha` du JSON), commité
+lors de W3.U-DA/C1 (commit Unity `29505df`, cf `docs/superpowers/specs/2026-08-15-w3uda-
+implementation-notes.md:141`). Le comparateur (`CanonPaletteComparator.Compare`, dans
+`CanonPaletteBridgePlayModeTests.cs`) lit ce JSON à l'exécution — il ne touche jamais le repo back.
+
+**Forme de déclaration** — un objet JSON par token, schéma FIXE (`CanonPaletteTokenEntry` :
+`name, r, g, b, a, hex`), ajouté en fin du tableau `tokens[]` — patron recopié verbatim de l'entrée
+existante `readableTextDark` (dernière avant les 8 neuves). `hex` calculé avec la convention DÉJÀ
+déclarée en tête de fichier (`roundingConvention: "demi-haut: floor(channel*255+0.5)"`), reproduite
+par oracle Python indépendant — voir § Evidence ci-dessous. `a` (alpha) inclus explicitement pour
+CHAQUE entrée, y compris `nightSmoke` (0.35) et `nightHaze` (0.2) : le comparateur mesure une
+distance sur le **Vector4 complet** (r,g,b,a) — omettre `a` l'aurait fait défauter à 0 côté canon et
+aurait fabriqué un mismatch de VALEUR sur ces deux tokens précisément (translucides par design).
+
+`CanonPaletteComparator.ExpectedTokenCount` bumpé `40 -> 48` (le scénario dimensionné G6 — "un
+extrait tronqué doit rougir" — reste inchangé, aucun autre test du fichier ne code le nombre 40 en
+dur : vérifié par lecture des 5 tests, `Comparator_Red_OnTruncatedExtract` utilise `.Take(10)` et une
+borne `>= 29`, qui reste vraie à 48-10=38 orphelins).
+
+**Classe(s) choisie(s)** : **aucune** — le pont canon↔runtime (`CanonPaletteComparator`/l'extrait
+JSON) n'a PAS de notion de classe ; c'est une liste homogène `{name,r,g,b,a,hex}`, comparée par
+égalité de nom + distance de valeur, sans distinction art/chrome/game-state. La `ForbiddenList`
+scopée aux assets d'art (mentionnée par le contrôleur) est un mécanisme **différent**
+(`Assets/Editor/AssetLint/ForbiddenPredicates.cs`, consommé par `AssetLintGates.G5_ForbiddenColors`
+— lint de PIXELS de PNG rendus, pas de tokens `DesignTokens`) : pas de convention de classe à
+respecter ici, donc pas de classe créée. Les 8 entrées sont ajoutées **à plat**, comme les 40
+existantes.
+
+⚠️ **Ce qui remonte au contrôleur — trou de provenance, PAS comblé ici** : les 40 entrées d'origine
+portent une provenance vérifiable (`backCommitSha: "918bf4b2"`, un commit RÉEL de `gdd/14` dans le
+repo back). Les 8 entrées neuves n'ont **aucun commit `gdd/14` équivalent** — leurs valeurs viennent
+de `DesignTokens.asset` (exécution du ruling user 2026-08-17 sur la direction nuit), **jamais lues
+depuis un document canon**. Je n'ai PAS touché `backCommitSha`/`canonSection`/`generatedAt` (rester
+honnête sur ce que CES 40 entrées-là décrivent), et je n'ai PAS pu amender `gdd/14` : ce document vit
+dans le repo back (`azha/mafia-clean-city`), hors de mon arbre (`TON ARBRE : repo Unity`). ⇒ **Tant
+que `gdd/14` ne porte pas ces 8 valeurs, l'extrait JSON de ce dépôt est en avance sur son propre
+canon déclaré** — le comparateur ne peut pas le détecter (il ne lit que le JSON local, jamais le repo
+back), donc ce n'est PAS une falsifiable rouge, c'est un écart de gouvernance à trancher par le
+contrôleur : soit amender `gdd/14` (repo back) pour y ajouter les 8 clés au format existant, soit
+documenter explicitement que l'extrait canonique de CE lot est "runtime-first, canon à rattraper".
+
+## Evidence du correctif (statique, mode léger — aucun run Unity)
+
+pwd = `/home/erutheone/project/mafia-builder-city-clean`
+
+```
+$ python3 -c "... json.load(canon_palette_extract.json), len(tokens) ..."
+token count: 48
+unique: True
+dups: set()
+```
+
+Oracle qui REPRODUIT `CanonPaletteComparator.Compare()` champ par champ (parse `.asset` en
+`{name: (r,g,b,a)}`, parse le JSON, compare les 2 ensembles de noms ET la distance de valeur par
+token, épsilon 0.001 — même seuil que `CanonPaletteComparator.Epsilon`) :
+
+```
+asset color entries: 48
+extract entries: 48
+orphan CANON (in extract, not runtime): set()
+orphan RUNTIME (in runtime, not extract): set()
+value mismatches (dist >= 0.001): []
+
+VERDICT: errors = 0
+```
+
+⇒ **Attendu au juge réel** : `Comparator_Green_OnHealthyTree_BothDirections` vert (0 erreur, les deux
+sens), `Extract_LoadsFromDisk_IsDimensioned` vert (48 == `ExpectedTokenCount`), et
+`Comparator_Red_OnAlteredByte`/`Comparator_Red_OnOrphanCanon_EntryRemoved`/
+`Comparator_Red_OnTruncatedExtract` verts aussi (leur précondition "copie clonée verte" est
+désormais satisfaite, plus aucune cascade). Non exécuté ici — ruling MODE LÉGER, le contrôleur
+exécute le juge après ce commit.
+
+### RUNS DIFFÉRÉS — ajout à la liste existante
+
+6. **Les 5 tests de `CanonPaletteBridgePlayModeTests`** — vérifiés uniquement par l'oracle Python
+   ci-dessus (reproduction de `Compare()`, pas son exécution réelle). Le contrôleur les exécute au
+   juge suivant.
+
 ⛔⛔ **MODE LÉGER — ruling contrôleur (2026-08-17, machine sous charge)** : aucun run Unity (batchmode
 compris), aucune stack Docker, aucun `Tools/run-unity-check.sh` n'a été exécuté pour ce chunk. Tout
 ce qui suit est une mesure **statique** (lecture de fichiers, oracles Python indépendants reproduisant

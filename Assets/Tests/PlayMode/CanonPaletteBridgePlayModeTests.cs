@@ -43,7 +43,9 @@ namespace MafiaCleanCity.Theme.Tests
     /// </summary>
     public static class CanonPaletteComparator
     {
-        public const int ExpectedTokenCount = 40; // scénario dimensionné (G6) : un extrait tronqué doit rougir, pas passer à vide.
+        public const int ExpectedTokenCount = 48; // W3.U2/C5 (2026-08-17) : 40 -> 48, +8 tokens de nuit + chrome
+                                                    // (chromeTabActive, night* — voir canon_palette_extract.json).
+                                                    // scénario dimensionné (G6) : un extrait tronqué doit rougir, pas passer à vide.
         public const float Epsilon = 0.001f;
 
         public static string ExtractAbsolutePath =>
