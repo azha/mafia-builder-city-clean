@@ -142,6 +142,14 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.AreEqual(1, MarkersUnderCell(diorama, 0, 0), "avant réaffectation — le marqueur est sur building-0");
             Assert.AreEqual(0, MarkersUnderCell(diorama, 1, 0), "avant réaffectation — rien sur building-1");
 
+            // ⚠️ MESURÉ (juge réel) : `ClearContent` (`Destroy`, différé à la fin de frame — patron
+            // codebase-wide, jamais `DestroyImmediate`) laisse l'ancienne `Cell_0_0` (avec son marqueur)
+            // physiquement présente tant qu'aucune frame ne s'est écoulée. `MarkersUnderCell` fait une
+            // VRAIE requête de hiérarchie (`GetComponentsInChildren`), pas un compteur C# — sans cette
+            // frame, elle trouverait la cellule STALE en premier (toujours 1 marqueur) au lieu de la
+            // neuve. Même mécanisme que C10F2c (AmbientLoops).
+            yield return null;
+
             diorama.Render(WrapGrid(new[]
             {
                 MakeBuilding("building-0", 0, new string[0]),

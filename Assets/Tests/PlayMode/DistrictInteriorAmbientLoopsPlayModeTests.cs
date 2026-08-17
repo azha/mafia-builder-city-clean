@@ -180,6 +180,15 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.AreEqual(DistrictInteriorScreenController.MaxAmbientLoops, diorama.ActiveAmbientLoopCount,
                 "premier rendu — saturé");
 
+            // ⚠️ MESURÉ (juge réel, première exécution) : `ClearContent` appelle `Destroy` — DIFFÉRÉ à
+            // la fin de frame (patron IDENTIQUE à tous les re-renders du dépôt, cf. AppShell/
+            // CityMapController/LieutenantScreenController — jamais `DestroyImmediate`). Sans une frame
+            // entre les deux `Render()`, les composants du PREMIER rendu (4, au plafond) ne sont pas
+            // encore détruits quand le second en ajoute 3 : un `GetComponentsInChildren` verrait 7, pas
+            // 3, alors même que le COMPTEUR (`ActiveAmbientLoopCount`, un champ C# remis à 0 et
+            // ré-incrémenté de façon SYNCHRONE dans le second `Render()`) est déjà correct.
+            yield return null;
+
             var single = new[] { MakeTripleCandidate("building-0", 0) }; // 1 bâtiment = 3 candidats
             diorama.Render(WrapGrid(single));
             Assert.AreEqual(3, diorama.ActiveAmbientLoopCount,
