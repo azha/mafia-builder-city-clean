@@ -74,6 +74,12 @@ namespace MafiaCleanCity.Theme
         // ── Chrome ──────────────────────────────────────────────────────────────────────────
         [Header("Chrome")]
         public Color scrimBackdrop;  // (0.05,0.05,0.06,0.85) — fond de modale
+        // W3.U2/C5 (D5, U-3) — l'or quitte le chrome : AppShell.cs repointe l'onglet actif sur CE
+        // token, accentGold n'y apparaît plus (allowlist detector : C5-F2). Valeur documentée :
+        // #ffd23f (1,0.824,0.247) — reprise TELLE QUELLE d'accentGold, zéro changement de pixel au
+        // repointage (patron déjà suivi par ce fichier pour D5 lui-même). A-DA-1 (la VALEUR propre
+        // du token, indépendante de son usage) reste un arbitrage OUVERT, hors périmètre de C5.
+        public Color chromeTabActive;
 
         // ── Typographie (W4.P4a/C5) ─────────────────────────────────────────────────────────
         // Remplace la résolution de fonte système raster que les 9 écrans utilisaient

@@ -29,6 +29,7 @@ MonoBehaviour:
   accentDanger: {r: 1, g: 0.353, b: 0.302, a: 1}
   accentPremium: {r: 0.78, g: 0.7, b: 1, a: 1}
   scrimBackdrop: {r: 0.05, g: 0.05, b: 0.06, a: 0.85}
+  chromeTabActive: {r: 1, g: 0.824, b: 0.247, a: 1}
   primaryFont: {fileID: 11400000, guid: 9eaab2888c5293b55b02ef482198c48b, type: 2}
   buildingCardHintDim: {r: 0.45, g: 0.47, b: 0.5, a: 1}
   autonomyBlockBg: {r: 0.102, g: 0.122, b: 0.133, a: 1}

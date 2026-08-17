@@ -252,7 +252,10 @@ namespace MafiaCleanCity.Shell
             {
                 bool active = order[i] == CurrentTab;
                 Image img = tabButtons[i].GetComponent<Image>();
-                img.color = active ? DesignTokens.Current.accentGold : DesignTokens.Current.surfaceRow;
+                // W3.U2/C5 (D5, U-3) — l'or quitte le chrome : l'onglet actif est repointé sur
+                // chromeTabActive (accentGold reste réservé aux CTA — détecteur d'allowlist :
+                // ChromeTabAccentAllowlistPlayModeTests.C5F2, ensemble à 11 entrées, AppShell exclu).
+                img.color = active ? DesignTokens.Current.chromeTabActive : DesignTokens.Current.surfaceRow;
                 TextMeshProUGUI t = tabButtons[i].GetComponentInChildren<TextMeshProUGUI>();
                 if (t != null) t.color = active ? DesignTokens.Current.surfaceBase : DesignTokens.Current.onSurfaceSecondary;
             }
