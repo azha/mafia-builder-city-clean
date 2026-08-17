@@ -62,6 +62,17 @@ namespace MafiaCleanCity.Operational
         public string capacity_band;       // NONE | OPEN | BUSY | FULL — the held-vs-capacity fill (FULL ⇒ a further deposit 409s OVER_CAPACITY)
         public string yield_band;          // NONE | IDLE | EARNING — IDLE (nothing held) / EARNING (passive yield accrues); never the raw rate
         public string forfeiture_band;      // NONE | PENDING | IMMINENT — the audit-forfeiture telegraph (PENDING/IMMINENT ⇒ withdraw or diversify)
+
+        // ----- 04f-A C2 (D1/D14) maintenance-lapse surface (present on EVERY building-card response) -----
+        // W3.U2 C7 (D7, C7-F2) — the server has sent these 3 keys since 04f-A (real-estate.projection.
+        // service.ts:225-242) but this DTO never declared them: JsonUtility drops an undeclared key
+        // SILENTLY (no error), which is exactly how the hole survived. Captured verbatim from the
+        // server's own doc comments — R2.2 still holds: days_until_maintenance_due is the ONE numeric
+        // maintenance signal the server exposes (the raw output multiplier / failure probability / heat
+        // additive never escape).
+        public string lapse_phase_bucket;      // WITHIN_WINDOW | SOFT | HARD | CRITICAL — WITHIN_WINDOW for a not-yet-operational building
+        public int days_until_maintenance_due; // SIGNED days until due (negative = overdue); 0 for a not-yet-operational building
+        public bool maintenance_in_progress;   // whether a scheduled-maintenance job is CURRENTLY armed; false for a not-yet-operational building
     }
 
     // GET /v1/operational/storage/:id  (COOK buildings only — a lab → BRINDLE, a refinery → CRICK; a non-cook
