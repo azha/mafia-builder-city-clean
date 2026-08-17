@@ -63,7 +63,7 @@ namespace MafiaCleanCity.CityMap.Tests
             }
             finally
             {
-                Object.DestroyImmediate(slots);
+                UnityEngine.Object.DestroyImmediate(slots);
             }
         }
 
@@ -82,7 +82,7 @@ namespace MafiaCleanCity.CityMap.Tests
             }
             finally
             {
-                Object.DestroyImmediate(slots);
+                UnityEngine.Object.DestroyImmediate(slots);
             }
         }
 

@@ -119,7 +119,7 @@ namespace MafiaCleanCity.Theme.Tests
                 ScanResult withRogue = ScanDirectory(tempDir);
                 Assert.AreEqual(2, withRogue.TotalOccurrences,
                     "la liaison neuve aurait dû être comptée (rouge attendu sur une égalité d'ensembles).");
-                CollectionAssert.IsNotEquivalent(baseline.FilesWithHits.ToList(), withRogue.FilesWithHits.ToList(),
+                CollectionAssert.AreNotEquivalent(baseline.FilesWithHits.ToList(), withRogue.FilesWithHits.ToList(),
                     "l'ensemble des fichiers portant une liaison doit changer quand une liaison neuve apparaît " +
                     "— sinon l'assertion d'égalité d'ensembles ne rougirait jamais.");
 
