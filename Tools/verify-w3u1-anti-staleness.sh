@@ -43,9 +43,17 @@ check "C3 ferme la forme C" \
 #    d'entrée resté en prose sans jamais toucher le tableau. Motif resserré à une sous-chaîne qui
 #    n'existe QUE dans la déclaration `Categories = { … }` elle-même (jamais dans la prose au-dessus,
 #    formulée différemment) — vérifié : exactement 1 occurrence.
+#    ⚠️ W3.U2/C4 (2026-08-17, imprévu non bloquant — voir message du commit qui a introduit ce delta) :
+#    l'ancre d'origine (`, "W3U1" };`) supposait "W3U1" DERNIER du tableau — exactement le défaut de
+#    jointure que ce protocole existe pour attraper, retourné contre son propre auteur. Élargir le
+#    tableau par C4 (ajout de "W3U2" après "W3U1", chronologique, patron "on élargit, jamais un
+#    second point d'entrée") a fait passer ce motif à 0 sur le fichier INTACT-après-C4 — un motif à
+#    0 est un motif FAUX, pas une régression. Ancre déplacée sur le PRÉFIXE du tableau (stable tant
+#    que "W4P4a", "W3UDA", "W3U1" restent dans cet ordre — invariant depuis 2 lots), robuste à tout
+#    ajout FUTUR après "W3U1" : plus besoin de retoucher ce fichier au prochain élargissement.
 check "C1-F0 élargit le juge (le TABLEAU, pas seulement sa prose)" \
   "$UNITY_ROOT/Assets/Editor/MafiaCI.cs" \
-  ', "W3U1" };' 1
+  '"W4P4a", "W3UDA", "W3U1"' 1
 
 # 3) L'artefact que run-unity-check.sh détruisait sur ses DEUX chemins de sortie (design C1-F0,
 #    §3) — le correctif (LOG_FILE, préservation optionnelle) doit être présent.
