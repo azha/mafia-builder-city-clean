@@ -41,6 +41,22 @@ namespace MafiaCleanCity.CityMap
     //     accentWarning (token de base, déjà asset-backed, R2.3), gardé par lapse_phase_bucket ET
     //     maintenance_in_progress (mécanisme non prescrit par le design au-delà du nom du champ — voir
     //     Tools/w3u2-c9-notes.md § Deviations).
+    //
+    // W3.U2 C10 (design §3 C10, engagement 7 — U-12 : boucles ambiantes budgétées) : AU PLUS
+    // MaxAmbientLoops (4) micro-animations actives simultanément, quel que soit le nombre de sources
+    // qui les réclameraient. TryStartAmbientLoop est le SEUL point d'entrée qui attache
+    // AmbientPulseLoop — les 3 bindings DYNAMIQUES déjà branchés à un fait du back (néon EARNING,
+    // fumée ACTIVE, grésillement de maintenance) sont candidats, dans l'ORDRE où BuildBuildingCell
+    // les construit déjà (déterministe — pas de tri ajouté). Binding 1+2 (fenêtre ambre, la
+    // possession — l'état le plus commun et le moins événementiel) N'EST PAS candidat : l'intensité
+    // du feedback doit être proportionnée à l'importance, pas uniforme (mécanisme non prescrit par le
+    // design au-delà du nombre — voir Tools/w3u2-c10-notes.md § Deviations).
+    //
+    // ⛔ U-11 (lieutenants visibles à leur affectation, C10-F1) N'EST PAS livré par ce chunk — AUCUNE
+    // route/projection du back ne porte d'affectation lieutenant→bâtiment jusqu'au joueur (mesuré :
+    // ni district-interior.*, ni GET /v1/lieutenants[/:id] — R2.2 y redacte explicitement
+    // assigned_building_id). Voir Tools/w3u2-c10-notes.md § Deviations pour la mesure complète —
+    // aucun marqueur de lieutenant n'est construit ici, et aucune clé n'est inventée.
     public class DistrictInteriorScreenController : MonoBehaviour, MafiaCleanCity.Shell.IShellTenant
     {
         [Header("Backend")]
@@ -75,6 +91,16 @@ namespace MafiaCleanCity.CityMap
         /// <summary>Chaque texte rendu (C8-F3 — le corpus que le garde R2.2 scanne).</summary>
         public IReadOnlyList<string> RenderedTexts => renderedTexts;
         private readonly List<string> renderedTexts = new List<string>();
+        // ---- test hooks : les boucles ambiantes budgétées (C10) ------------------------------
+        /// <summary>U-12 (C10-F2, engagement 7) — le nombre de boucles ambiantes RÉELLEMENT
+        /// démarrées ce rendu (jamais plus de <see cref="MaxAmbientLoops"/>, quel que soit le
+        /// nombre de sources candidates). "cible : le compte à l'exécution" (C10-F2) — un compteur
+        /// d'intention ne suffirait pas ; TryStartAmbientLoop attache un composant RÉEL par unité
+        /// comptée ici.</summary>
+        public int ActiveAmbientLoopCount { get; private set; }
+        /// <summary>Le budget lui-même — une PROPRIÉTÉ que le code fait tenir (C10-F2), pas une
+        /// intention en prose. Exposé pour que le test ne duplique pas le nombre "4" en dur.</summary>
+        public const int MaxAmbientLoops = 4;
 
         private CityProjectionsClient projections;
         private bool initialized;
@@ -126,6 +152,7 @@ namespace MafiaCleanCity.CityMap
             RenderedNeonGlowCount = 0;
             RenderedSmokeCount = 0;
             RenderedMaintenanceFlickerCount = 0;
+            ActiveAmbientLoopCount = 0;
 
             LastArtPhase = ResolveArtPhase(dto.day_phase);
             if (LastArtPhase == DioramaArtPhase.NightHero)
@@ -324,7 +351,11 @@ namespace MafiaCleanCity.CityMap
                 // sombre — REUSE du patron de blend déjà établi par FloorTint (C8) entre deux tokens
                 // .asset-backed existants, jamais une couleur inline neuve (R2.3).
                 : Color.Lerp(DesignTokens.Current.nightNeonGlow, DesignTokens.Current.nightBase, 0.7f);
-            if (earning) RenderedNeonGlowCount++;
+            if (earning)
+            {
+                RenderedNeonGlowCount++;
+                TryStartAmbientLoop(sign); // C10-F2 — candidat : néon RÉELLEMENT allumé, pas l'enseigne sombre
+            }
         }
 
         /// <summary>Binding 4 (§1.5 ligne 4) — la fumée "op active". `activity_band == ACTIVE` seul
@@ -342,6 +373,7 @@ namespace MafiaCleanCity.CityMap
             img.color = DesignTokens.Current.nightSmoke;
             img.raycastTarget = false;
             RenderedSmokeCount++;
+            TryStartAmbientLoop(smoke); // C10-F2 — candidat : opération active
         }
 
         /// <summary>Binding 5 (§1.5 ligne 5) — l'enseigne qui grésille, "maintenance en retard".
@@ -366,6 +398,22 @@ namespace MafiaCleanCity.CityMap
             // ajouté pour ce binding en C5 (DesignTokens.cs "District Night" n'en porte que 4).
             flicker.AddComponent<Image>().color = DesignTokens.Current.accentWarning;
             RenderedMaintenanceFlickerCount++;
+            TryStartAmbientLoop(flicker); // C10-F2 — candidat : dette de maintenance en retard
+        }
+
+        /// <summary>U-12 (C10-F2, engagement 7) — le budget d'ambiances : au plus MaxAmbientLoops
+        /// boucles ACTIVES simultanément, quel que soit le nombre de sources qui la réclament (les 3
+        /// bindings dynamiques déjà gardés par un fait du back — néon EARNING, fumée ACTIVE,
+        /// grésillement de maintenance). Au-delà du budget, la source reste RENDUE (C9-F2 n'est pas
+        /// dégradée — sa présence reste un fait) mais SANS micro-motion : ce que C10-F2 vérifie porte
+        /// sur le compte de boucles ACTIVES, jamais sur le compte de lumières rendues. Ordre d'appel
+        /// = ordre de construction (déterministe, pas de tri ajouté) : les 4 premiers candidats
+        /// rencontrés gagnent le budget.</summary>
+        private void TryStartAmbientLoop(GameObject source)
+        {
+            if (ActiveAmbientLoopCount >= MaxAmbientLoops) return;
+            source.AddComponent<AmbientPulseLoop>();
+            ActiveAmbientLoopCount++;
         }
 
         private void BuildEmptyCell(RectTransform gridRt, int x, int y)
