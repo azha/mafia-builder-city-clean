@@ -52,11 +52,15 @@ namespace MafiaCleanCity.CityMap
     // du feedback doit être proportionnée à l'importance, pas uniforme (mécanisme non prescrit par le
     // design au-delà du nombre — voir Tools/w3u2-c10-notes.md § Deviations).
     //
-    // ⛔ U-11 (lieutenants visibles à leur affectation, C10-F1) N'EST PAS livré par ce chunk — AUCUNE
-    // route/projection du back ne porte d'affectation lieutenant→bâtiment jusqu'au joueur (mesuré :
-    // ni district-interior.*, ni GET /v1/lieutenants[/:id] — R2.2 y redacte explicitement
-    // assigned_building_id). Voir Tools/w3u2-c10-notes.md § Deviations pour la mesure complète —
-    // aucun marqueur de lieutenant n'est construit ici, et aucune clé n'est inventée.
+    // U-11 (lieutenants visibles à leur affectation, C10-F1) — DÉBLOQUÉ par D10/§C2-bis (B-7, back
+    // `mafia-w3u2` commit adf8d368) : `buildings[].lieutenant_ids: string[]` (poignées de ressources
+    // possédées, R2.2 — jamais un scalaire brut ; `[]` si aucun, jamais `null`, trié par
+    // lieutenant_id côté back). BuildLieutenantMarkers rend EXACTEMENT un marqueur par entrée, appariés
+    // par bâtiment — AUCUN budget/plafond ne s'applique ici (contrairement à C10-F2/U-12 : le design
+    // amendé (git show spec/w3.u2:…/2026-08-17-w3u2-district-nuit-design.md, section C10/C2-bis) ne
+    // borne QUE les boucles ambiantes ; un marqueur de lieutenant est une PRÉSENCE, pas une boucle).
+    // Le J0 (prémisse §3, re-mesuré par D10) affecte les 2 lieutenants COOK au MÊME bâtiment (le lab)
+    // — le cas dégénéré que C10-F1 dimensionne : 2 marqueurs DISTINCTS sur 1 bâtiment, jamais 1.
     public class DistrictInteriorScreenController : MonoBehaviour, MafiaCleanCity.Shell.IShellTenant
     {
         [Header("Backend")]
@@ -101,6 +105,12 @@ namespace MafiaCleanCity.CityMap
         /// <summary>Le budget lui-même — une PROPRIÉTÉ que le code fait tenir (C10-F2), pas une
         /// intention en prose. Exposé pour que le test ne duplique pas le nombre "4" en dur.</summary>
         public const int MaxAmbientLoops = 4;
+        // ---- test hooks : U-11, les marqueurs de lieutenant (C10, D10/§C2-bis) ----------------
+        /// <summary>C10-F1 — le nombre de marqueurs de lieutenant RENDUS ce rendu, sommé sur tous les
+        /// bâtiments (compte total, pas par bâtiment — les falsifiables qui exigent une répartition
+        /// par bâtiment lisent le DTO source directement, comme C9-F2 le fait pour les 5 bindings).
+        /// AUCUN budget ne s'applique ici — un marqueur par entrée de `lieutenant_ids`, toujours.</summary>
+        public int RenderedLieutenantMarkerCount { get; private set; }
 
         private CityProjectionsClient projections;
         private bool initialized;
@@ -153,6 +163,7 @@ namespace MafiaCleanCity.CityMap
             RenderedSmokeCount = 0;
             RenderedMaintenanceFlickerCount = 0;
             ActiveAmbientLoopCount = 0;
+            RenderedLieutenantMarkerCount = 0;
 
             LastArtPhase = ResolveArtPhase(dto.day_phase);
             if (LastArtPhase == DioramaArtPhase.NightHero)
@@ -309,6 +320,7 @@ namespace MafiaCleanCity.CityMap
             BuildRevenueSign(cell.transform, building);       // binding 3 — néon "ça rapporte" (D3)
             BuildActivitySmoke(cell.transform, building);     // binding 4 — fumée "op active"
             BuildMaintenanceFlicker(cell.transform, building); // binding 5 — grésillement "maintenance en retard"
+            BuildLieutenantMarkers(cell.transform, building);  // U-11 (C10-F1, D10) — affectation lieutenant
         }
 
         /// <summary>Bindings 1+2 (§1.5 lignes 1-2) — la fenêtre ambre. Binding 1 (possédé) : TOUT
@@ -399,6 +411,36 @@ namespace MafiaCleanCity.CityMap
             flicker.AddComponent<Image>().color = DesignTokens.Current.accentWarning;
             RenderedMaintenanceFlickerCount++;
             TryStartAmbientLoop(flicker); // C10-F2 — candidat : dette de maintenance en retard
+        }
+
+        /// <summary>U-11 (C10-F1, D10/§C2-bis) — un marqueur PAR ENTRÉE de `lieutenant_ids`, jamais un
+        /// marqueur par bâtiment : le J0 affecte 2 lieutenants au MÊME bâtiment (prémisse §3, re-mesurée
+        /// par D10) — c'est le cas dégénéré que la falsifiable dimensionne, et un rendu "1 marqueur si
+        /// au moins 1 affecté" y échouerait. AUCUN budget (contrairement à TryStartAmbientLoop) — la
+        /// clé porte déjà l'exhaustivité de l'affectation (D10 : `[]` jamais `null`), donc le compte
+        /// rendu doit égaler EXACTEMENT `lieutenant_ids.Length`, pour chaque bâtiment. Défensif contre
+        /// un null (JsonUtility peut laisser le champ à sa valeur par défaut C# si absent du JSON, même
+        /// si le back garantit `[]` — jamais planter sur un payload malformé).</summary>
+        private void BuildLieutenantMarkers(Transform cell, DistrictInteriorBuildingDto building)
+        {
+            if (building.lieutenant_ids == null) return;
+            for (int i = 0; i < building.lieutenant_ids.Length; i++)
+            {
+                GameObject marker = NewUI($"LieutenantMarker_{i}", cell);
+                RectTransform rt = (RectTransform)marker.transform;
+                // Petits marqueurs en rangée, bande basse de la cellule (au-dessus du socle) —
+                // décalés par index pour rester des objets VISUELLEMENT distincts (2 marqueurs sur le
+                // MÊME bâtiment, C10-F1, ne doivent jamais se confondre en un seul).
+                const float slotWidth = 0.12f, slotGap = 0.02f, xStart = 0.04f;
+                float xMin = xStart + i * (slotWidth + slotGap);
+                rt.anchorMin = new Vector2(xMin, 0.02f);
+                rt.anchorMax = new Vector2(xMin + slotWidth, 0.18f);
+                rt.offsetMin = rt.offsetMax = Vector2.zero;
+                // REUSE d'un token déjà asset-backed (R2.3) — `lieutenantMutedDeep`, "Par-écran" §1.2
+                // de la mesure du territoire, jamais un tunable/token neuf pour ce chunk.
+                marker.AddComponent<Image>().color = DesignTokens.Current.lieutenantMutedDeep;
+                RenderedLieutenantMarkerCount++;
+            }
         }
 
         /// <summary>U-12 (C10-F2, engagement 7) — le budget d'ambiances : au plus MaxAmbientLoops

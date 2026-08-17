@@ -99,6 +99,12 @@ namespace MafiaCleanCity.CityMap
         public string activity_band;         // IDLE | ACTIVE
         public string lapse_phase_bucket;    // WITHIN_WINDOW | SOFT | HARD | CRITICAL — binding 5
         public bool maintenance_in_progress; // binding 5
+        // D10/§C2-bis (B-7, W3.U2 C10 amendé) — poignées de ressources possédées (JAMAIS un scalaire
+        // brut, R2.2), [] si aucun lieutenant affecté, jamais null côté back. REUSE du patron
+        // `string[]` déjà établi par BuildingCardDtos.available_vehicles (même fichier de famille,
+        // JsonUtility gère un tableau de primitives EN CHAMP d'une classe — seul un tableau EN RACINE
+        // exigerait un wrapper).
+        public string[] lieutenant_ids;      // trié par lieutenant_id côté back — ordre stable
     }
 
     [Serializable]
