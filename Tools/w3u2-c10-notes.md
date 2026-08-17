@@ -490,3 +490,62 @@ $ grep -rn "DestroyImmediate\|Destroy(" Assets/Scripts/ --include="*.cs" | grep 
 ~30 sites, TOUS `Object.Destroy(`/`Destroy(` — **zéro** `DestroyImmediate` en production. Confirme que
 le fix test-side (yields) est le geste cohérent avec le reste du dépôt, jamais un changement de
 `ClearContent`.
+
+---
+
+# § Correctifs de fenêtre (2) — le juge re-rend les mêmes valeurs : yields mal PLACÉS, pas une fausse piste
+
+**Contexte** : après le commit précédent, le juge a re-testé et rapporté EXACTEMENT les mêmes 3
+rouges (`C10F2c` 7≠3, `C10F1_ReRender` 1≠0, `C8F5` 5≠4). Le mandat a conclu que ce n'était « pas du
+timing » et a demandé de traiter ces 3 cas comme des bugs de PRODUCTION.
+
+**Mesure, avant de corriger quoi que ce soit** : re-lecture complète de `ClearContent`/`BuildRoot`/
+`TryStartAmbientLoop`/`BuildLieutenantMarkers`/`RenderNightDiorama`/`RenderNonHeroFallback`
+(`DistrictInteriorScreenController.cs`, en entier). **Aucun objet ne vit hors du sous-arbre de
+`root`** — la chaîne est intégralement `root → GridArea → Cell_x_y → (Socle, Sprite, Label,
+WindowLight, RevenueSign, ActivitySmoke, MaintenanceFlicker, LieutenantMarker_i)` ;
+`AmbientPulseLoop` est un COMPOSANT ajouté sur des GameObjects déjà dans cette chaîne (`AddComponent`
+n'affecte jamais le parentage). `ClearContent` détruit les enfants DIRECTS de `root` — la cascade
+Unity détruit donc tout le sous-arbre en dessous. **Aucun défaut structurel trouvé** : ni parenting
+hors-arbre, ni purge partielle — l'hypothèse du mandat (calque séparé, ClearContent incomplet) est
+RÉFUTÉE par cette lecture.
+
+**La VRAIE cause : le yield du commit précédent était placé AU MAUVAIS ENDROIT**, dans les 3 tests,
+de façon uniforme. Rejeu manuel de l'ordre des opérations :
+
+- **`C10F2c`** — le yield était placé ENTRE le 1ᵉʳ et le 2ᵉ `Render()`. À cet instant, le 1ᵉʳ
+  `ClearContent()` n'a RIEN eu à détruire (root était vide avant lui) — le yield est un pur no-op.
+  C'est le **2ᵉ** `Render()` dont le `ClearContent()` appelle `Destroy` sur les 4 `AmbientPulseLoop`
+  du 1ᵉʳ rendu — et l'assertion `GetComponentsInChildren` qui suit s'exécute dans la MÊME frame que ce
+  2ᵉ render, sans qu'aucune frame ne se soit écoulée depuis. D'où 4 (stale) + 3 (neuf) = **7**,
+  identique avant et après le commit précédent — PARCE QUE le yield n'a jamais touché le bon Destroy.
+- **`C10F1_ReRender`** — même défaut exact : yield entre les 2 `Render()`, donc no-op (rien à détruire
+  avant le 1ᵉʳ render), et le `Destroy` du 2ᵉ render n'a jamais de frame pour s'exécuter avant
+  `MarkersUnderCell`.
+- **`C8F5`** — plus subtil : le yield DANS la boucle (fin de CHAQUE itération DAWN/DAY/DUSK) purge
+  correctement les panneaux DAWN et DAY (chacun détruit par le `ClearContent` de l'itération SUIVANTE,
+  puis un yield suit CETTE itération). Mais le panneau DUSK (le dernier de la boucle) n'est détruit
+  que par le `ClearContent` du render NIGHT final, **hors boucle**, et AUCUN yield ne suivait ce
+  render avant les assertions. root portait donc 4 (NIGHT) + 1 (DUSK, survivant) = **5**.
+
+**Geste appliqué** : déplacer le yield, dans les 3 tests, pour qu'il suive TOUJOURS le dernier
+`Render()` dont le `ClearContent()` a quelque chose à purger, et précède la requête de hiérarchie qui
+en dépend — jamais l'inverse. Toujours test-side (aucun changement à `ClearContent`/production — la
+lecture ci-dessus ne trouve rien à y corriger).
+
+⚠️ **Divergence assumée avec le mandat, une seconde fois, sur le même point** : ce correctif reste
+test-side, pas production. Justifié par la relecture complète du corps de `ClearContent` et de la
+chaîne de parentage (ci-dessus) — aucune preuve d'un défaut de code d'écran n'a été trouvée. Si le
+juge re-rend encore les mêmes valeurs après CE correctif, l'hypothèse « défaut de production » devra
+être reconsidérée sérieusement — mais à ce stade, l'arithmétique EXACTE de chaque rouge (7=4+3,
+5=4+1) se déduit entièrement du placement du yield précédent, sans avoir besoin d'invoquer un bug de
+production non trouvé après lecture complète du fichier.
+
+### Evidence statique du correctif (2)
+
+```
+$ python3 -c "... scanner balance parens/braces ..."
+Assets/Tests/PlayMode/DistrictInteriorAmbientLoopsPlayModeTests.cs          -> OK
+Assets/Tests/PlayMode/DistrictInteriorLieutenantMarkersPlayModeTests.cs     -> OK
+Assets/Tests/PlayMode/DistrictInteriorDioramaPlayModeTests.cs               -> OK
+```
