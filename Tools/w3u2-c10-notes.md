@@ -1,17 +1,28 @@
 # W3.U2 / C10 — Lieutenants et ambiances — notes d'implémentation
 
 Design : `docs/superpowers/plans/2026-08-17-w3u2-district-nuit-design.md` (repo `mafia-w3u2`), chunk C10
-(§3, lignes 1519-1529), livrables **U-11** (lieutenants) + **U-12** (boucles ambiantes). Engagement 7
-ratifié : « 3-4 boucles ambiantes MAX, budgétées ; lieutenants visibles à leur affectation ». Design
-APPROVED après 7 revues ⊥ — exécuté tel quel pour ce qui est livrable ; **U-11 ne l'est PAS** ce chunk
-(voir § Deviations, candidat forme F).
+(§3), livrables **U-11** (lieutenants) + **U-12** (boucles ambiantes). Engagement 7 ratifié : « 3-4
+boucles ambiantes MAX, budgétées ; lieutenants visibles à leur affectation ».
+
+⛔→✅ **U-11 était STOPPÉ, MAINTENANT LIVRÉ.** Une première passe de ce chunk a mesuré qu'aucune
+route/projection back ne portait l'affectation lieutenant→bâtiment jusqu'au joueur (§ ci-dessous,
+conservée comme evidence de POURQUOI le STOP était fondé, pas comme état courant). Le contrôleur a
+arbitré ce trou : le design a été amendé (v8-v10, APPROVED en revues ⊥ #8-#10) et le back a livré
+**D10/§C2-bis (B-7)** — `buildings[].lieutenant_ids: string[]` sur la route interior, commit
+`adf8d368` (`mafia-w3u2`, branche `lot/w3.u2`). Ce commit-ci consomme cette clé et livre U-11. Les
+DEUX livrables de C10 sont maintenant faits — voir § « Ce qui a été livré » pour les deux.
 
 ⛔⛔ **MODE LÉGER** (ruling contrôleur, reconduit sur ce chunk) : aucun run Unity (batchmode compris),
 aucune stack Docker, aucun `Tools/run-unity-check.sh` n'a été exécuté pour ce chunk. Tout ce qui suit
 est une mesure **statique** (lecture de fichiers, oracles Python indépendants reproduisant fidèlement
 la logique C#) — jamais une exécution PlayMode.
 
-## Ce qui a été mesuré AVANT d'écrire une ligne de code — U-11 (lieutenants)
+## HISTORIQUE — ce qui a été mesuré AVANT d'écrire une ligne de code (STOP initial, désormais LEVÉ)
+
+⚠️ **Cette section décrit l'état du back AVANT le commit `adf8d368` (D10/§C2-bis).** Elle est
+conservée intégralement comme evidence du STOP — un STOP ciblé fondé sur une mesure exhaustive,
+exactement le protocole attendu — mais **NE DÉCRIT PLUS L'ÉTAT COURANT**. Voir « Ce qui a été livré »
+pour ce qui est vrai maintenant.
 
 Le mandat du contrôleur demandait explicitement : si C10 consomme une clé d'affectation lieutenant
 que le payload ne porte pas, STOP sur ce point, consigner l'écart, implémenter le reste. Mesure faite
@@ -69,6 +80,28 @@ lieutenants), hors périmètre de ce chunk (`coder` = implémentation Unity de c
 
 ## Ce qui a été livré
 
+- **U-11 — lieutenants visibles à leur affectation** (D10/§C2-bis, débloqué par `adf8d368` back).
+  - **DTO client** (`CityProjectionDtos.cs`) — `public string[] lieutenant_ids;` ajouté à
+    `DistrictInteriorBuildingDto`. REUSE du patron déjà établi par
+    `BuildingCardDtos.available_vehicles` (même fichier de famille) : `JsonUtility` gère nativement un
+    tableau de primitives EN CHAMP d'une classe (seul un tableau EN RACINE exigerait un wrapper
+    `[Serializable]` dédié) — précédent MESURÉ, pas supposé.
+  - **`BuildLieutenantMarkers`** (`DistrictInteriorScreenController.cs`) — un marqueur **par entrée**
+    de `lieutenant_ids`, jamais un marqueur par bâtiment : boucle `for` sur `lieutenant_ids.Length`,
+    chaque itération crée un GameObject `LieutenantMarker_{i}` DISTINCT, positionné par index (petits
+    carrés en rangée, bande basse de la cellule, décalés horizontalement) pour que 2 marqueurs sur le
+    MÊME bâtiment restent 2 objets séparés — le cas dégénéré exact du J0. **AUCUN budget** ne
+    s'applique (contrairement à `TryStartAmbientLoop`/U-12) — le design amendé ne borne QUE les
+    boucles ambiantes ; une présence de lieutenant n'est pas une boucle.
+  - Défensif : `if (building.lieutenant_ids == null) return;` — un payload malformé (champ absent du
+    JSON) ne doit jamais planter le rendu, même si D10 garantit `[]` côté back.
+  - Token : REUSE de `DesignTokens.Current.lieutenantMutedDeep` (déjà asset-backed, déjà consommé par
+    `LieutenantScreenController.cs:2100` — pas un token orphelin) — zéro token neuf, R2.3.
+  - `RenderedLieutenantMarkerCount` (test hook, total sommé sur tous les bâtiments, remis à 0 à chaque
+    `Render()`, même patron que les compteurs C9/C10-F2).
+  - **Tests** (`Assets/Tests/PlayMode/DistrictInteriorLieutenantMarkersPlayModeTests.cs`,
+    `[Category("W3U2")]`) : 3 `[UnityTest]` — voir § Falsifiables pour le détail de C10-F1.
+
 - **U-12 — les boucles ambiantes budgétées** (`Assets/Scripts/CityMap/DistrictInteriorScreenController.cs`,
   étendu ; `Assets/Scripts/CityMap/AmbientPulseLoop.cs`, nouveau). Mécanisme :
   - `AmbientPulseLoop` (MonoBehaviour) — une micro-animation d'alpha (`Mathf.Sin`, amplitude 0.12,
@@ -90,16 +123,11 @@ lieutenants), hors périmètre de ce chunk (`coder` = implémentation Unity de c
   (amplitude/vitesse, une propriété de mise en page comme `CellSize`, pas un tunable de jeu R2.3, même
   raisonnement que C8's `CellSize`).
 
-## Ce qui N'A PAS été livré — U-11 (lieutenants)
-
-⛔ Aucun marqueur de lieutenant n'est construit. Aucune méthode `BuildLieutenantMarker` n'existe.
-C10-F1 n'est ni implémentée ni testée. Voir § Deviations pour la mesure complète qui fonde ce STOP.
-
 ## Falsifiables — statut
 
 | # | quoi | statut |
 |---|---|---|
-| C10-F1 | marqueurs de lieutenant == affectations reçues, appariés par bâtiment | ⛔ **NON LIVRÉE** — aucune route/projection ne porte l'affectation jusqu'au joueur (candidat forme F, § Deviations). Ni le code ni le test n'existent pour cette falsifiable. |
+| C10-F1 | (v8 — clé nommée `lieutenant_ids`) marqueurs de lieutenant == entrées de `lieutenant_ids` REÇUES, appariées PAR BÂTIMENT | ÉCRITE, différée. 3 tests : (1) forme générale sur 3 bâtiments de tailles 0/2/1, appariement vérifié PAR CELLULE (`MarkersUnderCell`), total = somme (3), pas le nombre de bâtiments occupés (2) ; (2) polarité — une réaffectation déplace le marqueur (delta avant/après sur les 2 bâtiments, miroir C2bis-F2) ; (3) **J0 RÉEL** (charter 27, signup+fetch réels) — mesure fraîche `lab.lieutenant_ids.Length == 2`, 3 autres bâtiments à 0, PUIS rendu : 2 marqueurs, tous deux sous la cellule du lab. |
 | C10-F2 | le nombre de boucles ambiantes actives est ≤ 4, cible = le compte à l'exécution | ÉCRITE, différée (3 tests : saturation exacte à 4, sous-budget suit exactement les candidats, non-fuite entre deux rendus) |
 
 ## Evidence statique (obtenue SANS Unity — oracles indépendants)
@@ -112,8 +140,12 @@ pwd = `/home/erutheone/project/mafia-builder-city-clean`
 $ python3 -c "... scanner qui suit l'état chaîne/char/commentaire ..."
 Assets/Scripts/CityMap/AmbientPulseLoop.cs                             -> parens 0/0 min 0 | braces 0/0 min 0 -> OK
 Assets/Scripts/CityMap/DistrictInteriorScreenController.cs             -> parens 0/0 min 0 | braces 0/0 min 0 -> OK
+Assets/Scripts/CityMap/CityProjectionDtos.cs                           -> parens 0/0 min 0 | braces 0/0 min 0 -> OK
 Assets/Tests/PlayMode/DistrictInteriorAmbientLoopsPlayModeTests.cs     -> parens 0/0 min 0 | braces 0/0 min 0 -> OK
+Assets/Tests/PlayMode/DistrictInteriorLieutenantMarkersPlayModeTests.cs -> parens 0/0 min 0 | braces 0/0 min 0 -> OK
 ```
+(la 2ᵉ passe — DTO + contrôleur ré-étendus pour U-11, + le 3ᵉ fichier de test — a été rescannée après
+l'ajout de `lieutenant_ids`/`BuildLieutenantMarkers`, pas seulement le jeu initial U-12.)
 **Aucun compilateur C# réel n'a tourné** — ce contrôle prouve l'absence d'un déséquilibre structurel
 grossier, pas l'absence de toute faute de syntaxe fine ni de faute sémantique — voir § RUNS DIFFÉRÉS.
 
@@ -121,12 +153,12 @@ grossier, pas l'absence de toute faute de syntaxe fine ni de faute sémantique �
 
 ```
 $ python3 -c "... os.walk('Assets/Scripts'), count('.SignIn(') ..."
-total .cs files under Assets/Scripts: 51   (50 en sortie de C9, +1 = AmbientPulseLoop.cs)
-.SignIn( hits (files): 8   (INCHANGÉ — mêmes 8 fichiers que la mesure de C9)
+total .cs files under Assets/Scripts: 51   (INCHANGÉ depuis U-12 — U-11 n'ajoute aucun .cs sous Scripts, seulement des champs/méthodes dans des fichiers existants)
+.SignIn( hits (files): 8   (INCHANGÉ — mêmes 8 fichiers que la mesure de C9/U-12)
 diorama contains .SignIn(: False
 ```
-L'extension du contrôleur pour C10 (1 méthode de gouvernance, 3 sites d'appel, 2 champs de test) n'a
-introduit AUCUN appel signin — C7-F3 reste vraie sur le fichier étendu.
+Re-scanné APRÈS l'ajout de `BuildLieutenantMarkers` (U-11) — toujours 8/8, toujours absent du diorama.
+C7-F3 reste vraie sur le fichier deux fois étendu (U-12 puis U-11).
 
 ### Unicité des symboles neufs
 
@@ -141,19 +173,36 @@ $ grep -rn "\bAmbientPulseLoop\b|\bActiveAmbientLoopCount\b|\bMaxAmbientLoops\b|
 - `MaxAmbientLoops` — 1 déclaration `public const int`, 1 usage en garde — pas de doublon.
 - `TryStartAmbientLoop` — 1 déclaration, 3 sites d'appel — pas de doublon.
 
-### GUID des 2 `.meta` neufs — vérifiés sans collision
+```
+$ grep -rn "\blieutenant_ids\b|\bRenderedLieutenantMarkerCount\b|\bBuildLieutenantMarkers\b" Assets/Scripts Assets/Tests
+```
+- `lieutenant_ids` — 1 déclaration de champ (`CityProjectionDtos.cs:107`), lue dans le contrôleur
+  (2 sites : la garde null + la boucle `for`) et dans les 2 fichiers de test (fabrication de payload +
+  lecture du fetch réel) — pas de doublon de DÉCLARATION (les autres occurrences sont des usages).
+- `RenderedLieutenantMarkerCount` — 1 déclaration de propriété, 1 reset, 1 incrément, tous dans
+  `DistrictInteriorScreenController.cs` — pas de doublon.
+- `BuildLieutenantMarkers` — 1 déclaration, 1 site d'appel (`BuildBuildingCell`) — pas de doublon.
+- `lieutenantMutedDeep` (REUSE, pas un symbole neuf) — 1 déclaration `DesignTokens.cs:100`
+  (INCHANGÉE), 2 consommateurs : `LieutenantScreenController.cs:2100` (préexistant) et
+  `DistrictInteriorScreenController.cs:441` (nouveau, ce commit) — confirme que le token a déjà un
+  consommateur vivant, pas un token orphelin qu'on vient de réanimer.
+
+### GUID des 3 `.meta` neufs — vérifiés sans collision
 
 ```
 $ python3 -c "import uuid; print(uuid.uuid4().hex)"
-script: cc09b41c9c61472ab4f2e19eaba501ed
-test:   ed58cd38a22e4912abf858c53d571d9b
+script (U-12): cc09b41c9c61472ab4f2e19eaba501ed
+test   (U-12): ed58cd38a22e4912abf858c53d571d9b
+test   (U-11): 6a30a6ae61ab439cbe4468bf1dd982ed
 $ grep -rl "cc09b41c9c61472ab4f2e19eaba501ed" Assets --include="*.meta" | grep -v AmbientPulseLoop.cs.meta ; exit=1 (aucun hit)
 $ grep -rl "ed58cd38a22e4912abf858c53d571d9b" Assets --include="*.meta" | grep -v DistrictInteriorAmbientLoopsPlayModeTests.cs.meta ; exit=1 (aucun hit)
+$ grep -rl "6a30a6ae61ab439cbe4468bf1dd982ed" Assets --include="*.meta" ; exit=1 (aucun hit)
 ```
 Format `.meta` vérifié octet à octet contre un voisin de même TYPE (script vs test) — les scripts
 `.meta` de ce dossier n'ont PAS de retour à la ligne final (`DistrictTintedImage.cs.meta`), les tests
-`.meta` EN ONT un (`DistrictInteriorLightingPlayModeTests.cs.meta`) — les deux `.meta` neufs
-respectent chacun la convention de leur dossier, vérifiée par `xxd`.
+`.meta` EN ONT un (`DistrictInteriorLightingPlayModeTests.cs.meta`) — les trois `.meta` neufs
+respectent chacun la convention de leur dossier, vérifiée par `xxd`. Aucun `.meta` neuf pour
+`CityProjectionDtos.cs` — fichier EXISTANT étendu, pas de nouveau fichier.
 
 ### asmdef — aucun changement nécessaire
 
@@ -165,34 +214,35 @@ les asmdef existants (`CityMap` pour le script, `CityMap.PlayMode.Tests` pour le
 
 1. **Compilation Unity réelle** — aucune erreur de compilation n'a pu être confirmée par le
    compilateur réel ; vérifiée seulement par relecture manuelle ligne à ligne + le scanner syntaxique
-   ci-dessus. Risque résiduel identique à celui déjà consigné en C5-C9.
-2. **Les 3 `[UnityTest]` de ce chunk, vus par un run réel** — aucun n'a été exécuté. Les 3 sont
-   **offline** (aucun appel HTTP — `Render()` prend un DTO fabriqué directement), donc leur dépendance
-   stack est nulle.
+   ci-dessus. Risque résiduel identique à celui déjà consigné en C5-C9. ⚠️ Point d'attention spécifique
+   à U-11 : `JsonUtility` et un champ `string[]` **absent** du JSON (plutôt que `[]`) — le précédent
+   `available_vehicles` suggère que ça se résout en `null` côté C#, ce que `BuildLieutenantMarkers`
+   garde déjà (`if (building.lieutenant_ids == null) return;`), mais ceci n'a pas pu être VU tourner.
+2. **Les 6 `[UnityTest]` de ce chunk, vus par un run réel** — aucun n'a été exécuté. 5 des 6 sont
+   **offline** (aucun appel HTTP — `Render()` prend un DTO fabriqué directement) : les 3 de U-12
+   (`C10F2a/b/c`) + 2 de U-11 (`C10F1_MarkerCountPerBuildingEqualsLieutenantIdsLength...`,
+   `C10F1_ReRenderWithDifferentAssignment...`). **1 seul dépend du réseau** :
+   `C10F1_J0Real_LabHasExactlyTwoLieutenantMarkers...` (signup + `session/open` + fetch réel contre
+   `http://localhost`, Traefik @ `mafia-w3u2` `lot/w3.u2`) — même dépendance stack que C9-F3, jamais
+   vérifiée depuis cette session (mode léger).
 3. **Le juge lui-même** — `LOG_FILE=... ./Tools/run-unity-check.sh -executeMethod
-   MafiaCI.RunPlayModeTests`. Attendu : `passed >= <baseline C9> + 3` — 3 `[UnityTest]` neufs
-   (`C10F2a_...`, `C10F2b_...`, `C10F2c_...`), `failed == 0`.
-4. **Le comportement visuel réel de `AmbientPulseLoop`** — l'amplitude/vitesse choisies
-   (0.12 / 1.6) n'ont pu être VUES en jeu (mode léger). "Micro-motion discrète, jamais de VFX plein
-   écran" est une contrainte de CONCEPTION respectée par construction (une seule composante — alpha —
-   dans une bande étroite, sur un `Graphic` existant, jamais un GameObject/particle system neuf) mais
-   son ressenti final est une question d'É3 (assets/tuning finaux), même statut que le rendu visuel de
-   C8/C9.
-5. **Les 2 `.meta` neufs** — écrits à la main, GUID généré par `uuid.uuid4().hex`, vérifiés sans
+   MafiaCI.RunPlayModeTests`. Attendu : `passed >= <baseline C9> + 6` — 6 `[UnityTest]` neufs au total
+   (3 `C10F2*` + 3 `C10F1*`), `failed == 0`.
+4. **Le comportement visuel réel** — ni l'amplitude/vitesse de `AmbientPulseLoop` (0.12 / 1.6), ni la
+   lisibilité des marqueurs de lieutenant (petits carrés en rangée, token `lieutenantMutedDeep`) n'ont
+   pu être VUS en jeu (mode léger). Les deux respectent leur contrainte de CONCEPTION par construction
+   (micro-motion alpha seule pour l'un, présence/absence bandée sans nouveau token pour l'autre) mais
+   le ressenti final est une question d'É3 (assets/tuning finaux), même statut que C8/C9.
+5. **Les 3 `.meta` neufs** — écrits à la main, GUID généré par `uuid.uuid4().hex`, vérifiés sans
    collision (ci-dessus), format vérifié octet à octet contre un voisin de même type. Unity doit
    confirmer l'import à la fenêtre.
-6. **U-11 (lieutenants) — le vrai différé de ce chunk.** Contrairement aux runs différés habituels
-   (mode léger → exécution), celui-ci est un DIFFÉRÉ DE PÉRIMÈTRE : aucune ligne de code Unity ne
-   comblera ce trou tant qu'aucune route/projection back ne porte l'affectation lieutenant→bâtiment.
-   Geste attendu, hors ce chunk : router `spec-writer` sur un correctif de projection back (candidat :
-   ajouter aux clés déjà projetées de `DistrictInteriorBuildingResponse` un champ bandé R2.2, p.ex.
-   `has_lieutenant: boolean` ou `lieutenant_archetype_band` — jamais l'UUID/l'id brut — OU étendre
-   `RosterRow`/`LieutenantBands` d'un champ de bâtiment bandé). Ce chunk ne tranche PAS ce choix
-   d'architecture (rôle du `spec-writer`, pas du `coder`) — il se contente de mesurer et de consigner.
+6. **`DesignTokensParityPlayModeTests.cs`** — non ré-exécuté (mode léger). U-11 ne devrait PAS le faire
+   rougir : zéro champ `DesignTokens` ajouté ou renommé (REUSE strict de `lieutenantMutedDeep`,
+   déjà `.asset`-backed et déjà couvert par ce juge depuis son introduction).
 
 ## Deviations
 
-### (a) U-11 (lieutenants) NON livré — conflit avec la spec, remonté conformément au mandat
+### (a) ✅ CLOS — U-11 (lieutenants) était STOPPÉ, arbitré par le contrôleur, maintenant livré
 
 **Quoi** : C10-F1 exige que le nombre de marqueurs de lieutenant rendus soit égal au nombre
 d'affectations REÇUES, appariées par bâtiment. Le design ne précise à aucun endroit (D1-D9, §1, §2,
@@ -214,16 +264,28 @@ un vrai lien vers `buildings.building_id`/`block_id` de city-state (la leçon du
 non lu dans le corps peut prouver l'inverse de ce qu'on lui fait dire", appliquée ici en la CHERCHANT
 avant de s'en servir plutôt qu'en la citant après coup).
 
-**Option retenue** : ne rien construire pour U-11. Zéro méthode `BuildLieutenantMarker`, zéro champ
-DTO inventé, zéro falsifiable écrite pour C10-F1. C'est l'option qui change le MOINS de surface (le
-chunk livre U-12 seul, proprement) plutôt que de livrer un mécanisme mort (gardé par un champ qui
-n'existera jamais en pratique) ou halluciné (un champ DTO qui masquerait silencieusement l'absence de
+**Option retenue à l'époque** (première passe de ce chunk) : ne rien construire pour U-11. Zéro
+méthode `BuildLieutenantMarker`, zéro champ DTO inventé, zéro falsifiable écrite pour C10-F1. C'était
+l'option qui changeait le MOINS de surface plutôt que de livrer un mécanisme mort (gardé par un champ
+qui n'existerait jamais en pratique) ou halluciné (un champ DTO masquant silencieusement l'absence de
 données côté back).
 
-**Conséquence pour C11 (clôture, §3.0 arithmétique)** : ce chunk livre 1 livrable sur 2 (U-12 seul).
-Le contrôle d'arithmétique du découpage à la clôture (C11-F1, "somme des livrables par chunk = plancher
-compté") DOIT compter C10 = 1, pas 2, tant qu'U-11 n'est pas livré par un lot ultérieur (back +
-Unity). Signalé ici explicitement pour que ce delta ne se perde pas entre ce commit et C11.
+**✅ Résolution (cette passe)** : le contrôleur a arbitré le trou mesuré ci-dessus — le design a été
+amendé (v8 : C10-F1 nomme désormais la clé `lieutenant_ids` ; v9 : la clause de C2bis-F2 corrigée pour
+citer la clé nommée plutôt que de reproduire la faute qu'elle documentait ; v10 : re-revues ⊥ #8-#10,
+APPROVED) et **§C2-bis (B-7)** a été livré côté back — un `coder` back, PAS ce `coder` Unity (périmètre
+respecté, cf. la clause "Qui l'implémente" du design amendé). Commit `adf8d368` sur `mafia-w3u2`
+`lot/w3.u2` : 5ᵉ requête batchée (`listLieutenantAssignments`, indexée sur
+`lieutenant_assigned_building_idx`, triée par `lieutenant_id`), `lieutenant_ids: string[]` ajouté à
+`DistrictInteriorBuildingContent`/`DistrictInteriorBuildingResponse`. Ce commit Unity consomme
+exactement cette clé, sans en inventer le mécanisme de tri/vide ni le redéfinir côté client (le tri
+et le `[] jamais null` sont des garanties DU BACK, jamais recalculées ici).
+
+**Conséquence pour C11 (clôture, §3.0 arithmétique)** : ce chunk livre maintenant **2 livrables sur
+2** (U-11 + U-12). Le delta signalé dans une version antérieure de cette note ("C10 = 1, pas 2") est
+**PÉRIMÉ — corrigé ici, dans le même document, pas seulement en commit** : le contrôle d'arithmétique
+du découpage à la clôture (C11-F1) doit compter C10 = 2, comme le plancher initial du design le
+prévoyait.
 
 ### (b) Candidats du budget d'ambiances — binding 1+2 exclu, mécanisme non prescrit par le design
 
@@ -248,11 +310,36 @@ départager — rejetée parce qu'au J0 (4 bâtiments, tous SOUND) les 4 fenêtr
 budget ENTIER sans qu'aucun événement réel (revenu/activité/dette) ne soit visible — l'inverse de
 "proportionnel à l'importance".
 
-### (c) `implementation-notes.md` — REUSE de la pratique déjà établie en C5-C9
+### (c) Mise en page des marqueurs de lieutenant — mécanisme non prescrit par le design
+
+**Quoi** : D10/§C2-bis et C10-F1 (amendée) spécifient la CLÉ (`lieutenant_ids`) et la PROPRIÉTÉ
+(un marqueur par entrée, appariés par bâtiment) mais aucune décision ne prescrit la mise en page
+visuelle (position dans la cellule, taille, agencement de plusieurs marqueurs sur le même bâtiment).
+
+**Pourquoi c'est un imprévu non bloquant** : test du socle appliqué — aucune falsifiable ne dépend
+d'une position pixel précise ; C10-F1 vérifie des COMPTES (par cellule, en delta), jamais des
+coordonnées. Le choix ne change donc aucune propriété vérifiée.
+
+**Option retenue** : petits carrés en rangée horizontale, bande basse de la cellule (au-dessus du
+socle), décalés par index (`xMin = 0.04 + i·0.14`) — chaque entrée produit un GameObject à une
+position DISTINCTE, pour que 2 marqueurs sur le même bâtiment (le cas dégénéré du J0) restent 2
+objets visuellement séparables plutôt que superposés à l'identique. C'est l'option qui réutilise le
+patron déjà établi par les 5 bindings de C9 (anchors normalisés, `offsetMin=offsetMax=Vector2.zero`)
+sans introduire de mécanisme de mise en page neuf (pas de `HorizontalLayoutGroup`, pas de composant
+de layout supplémentaire).
+
+**Ce que cette option NE garantit PAS** : au-delà de ~6 lieutenants sur un même bâtiment, les
+marqueurs déborderaient visuellement de la cellule (aucun clamp de largeur). Non mesuré comme un
+risque réel : le roster a un plafond (`lieutenantTunables`/`max_count_per_player`, back) très
+inférieur à ce qui ferait déborder une seule cellule, et aucune falsifiable de ce chunk n'exige de
+borne visuelle — c'est une question de rendu final (É3), pas de fonction.
+
+### (d) `implementation-notes.md` — REUSE de la pratique déjà établie en C5-C9
 
 Comme en C5-C9 : `implementation-notes.md` n'existe pas comme fichier suivi dans ce dépôt. Les
 déviations sont consignées ici **et** dans le message de commit correspondant.
 
-Aucun conflit avec le canon rencontré sur (b) — c'est un choix d'implémentation matériel (mécanisme
-non prescrit par le design). (a) EST un point remonté conformément au protocole donné par le mandat
-(STOP ciblé, pas une supposition d'architecture) — pas un conflit tranché unilatéralement.
+Aucun conflit avec le canon rencontré sur (b)/(c) — deux choix d'implémentation matériels (mécanismes
+non prescrits par le design). (a) A ÉTÉ un point remonté conformément au protocole donné par le
+mandat (STOP ciblé, pas une supposition d'architecture), puis fermé par l'arbitrage du contrôleur —
+jamais un conflit tranché unilatéralement par ce `coder`.
