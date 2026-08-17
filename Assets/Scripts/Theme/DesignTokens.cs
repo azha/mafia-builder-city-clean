@@ -126,5 +126,32 @@ namespace MafiaCleanCity.Theme
         // ── City Map — texte lisible sur fond variable (WorldDtos.ReadableTextColor) ────────
         [Header("City Map — Readable Text")]
         public Color readableTextDark;  // (0.1,0.1,0.1)
+
+        // ── District — nuit (W3.U2/C5, design §3 C5, U-2) ───────────────────────────────────
+        // Le diorama "intérieur de district" nocturne (D8 : palier NUIT rendu inconditionnellement
+        // ce lot, les 3 autres paliers différés). R2.3 : AUCUNE valeur ci-dessous — le .asset est
+        // la seule source (parité vérifiée par le gate déjà existant, DesignTokensParityPlayModeTests
+        // C0-F1/C5-F1). Valeurs attendues documentées en commentaire pour traçabilité uniquement.
+        [Header("District Night")]
+        public Color nightBackground;          // #10161a approx (0.065,0.088,0.1) — bleu-pétrole
+                                                // désaturé (S=0.35 en HSV) — JAMAIS gris (engagement 2,
+                                                // C5-F3 : la saturation doit être NON NULLE).
+        public Color nightWindowLit;           // (1,0.717,0.15) — fenêtre ambre allumée (binding 1 :
+                                                // possédé — D2/D3, §1.5 ligne 1).
+        public Color nightNeonGlow;            // (1,0.1,0.7) — néon "ça rapporte" (binding 3 —
+                                                // §1.5 ligne 3). Token UNIQUE et générique, pas une
+                                                // teinte par `operational_type` — voir la déviation
+                                                // consignée pour "néons par type de business" (commit
+                                                // de ce chunk : le sujet visuel varie par TYPE de
+                                                // business QUI a un néon, pas la COULEUR du néon).
+        public Color nightSmoke;               // (0.57,0.585,0.6, alpha 0.35) — fumée d'opération
+                                                // active (binding 4 — `activity_band`), translucide.
+        public Color nightHaze;                // (0.69,0.72,0.75, alpha 0.2) — brume d'ambiance du
+                                                // diorama, translucide, plus claire et plus transparente
+                                                // que nightSmoke (deux effets distincts à l'écran).
+        public Color nightBase;                // (0.16,0.154,0.147) — socle/plinthe des bâtiments.
+        public Color nightOutOfDistrictMuted;  // (0.085,0.087,0.09) — silhouette hors-district,
+                                                // délibérément sourde (engagement 5) : plus sombre et
+                                                // plus plate que nightBackground.
     }
 }
