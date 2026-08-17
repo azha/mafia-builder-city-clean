@@ -263,9 +263,25 @@ namespace MafiaCleanCity.CityMap.Tests
             yield return FetchInterior("c9a", d => dto = d);
             Assert.AreEqual(4, dto.buildings.Length, "starter kit J0 — scénario dimensionné (prémisse §3)");
 
+            // ⚠️ MESURÉ (juge réel — cause RÉELLE du rouge de la garde de capacité, PAS un défaut de
+            // bande D3) : `day_phase` d'un fetch RÉEL suit `city_sim_clock.game_minute`, seedé au
+            // signup depuis `city_epoch` (`db/schema/city_epoch.ts:12,46`, mafia-w3u2) — PAS depuis 0 —
+            // donc NON déterministe. Sans le forcer, ce test pouvait tomber sur DAWN/DAY/DUSK : les DEUX
+            // Render() ci-dessous auraient alors pris le repli (`RenderNonHeroFallback`), qui n'appelle
+            // JAMAIS `BuildBuildingCell` — les compteurs neon/smoke resteraient à 0 pour la MAUVAISE
+            // raison (repli, pas bandes IDLE), et la garde de capacité (ligne ~296) échouerait
+            // exactement comme mesuré. Même geste que C8F5 (`DistrictInteriorDioramaPlayModeTests.cs`).
+            dto.day_phase = "NIGHT";
+
             bareHostGo = new GameObject("DistrictInteriorDiorama_C9F3");
             var diorama = bareHostGo.AddComponent<DistrictInteriorScreenController>();
             diorama.Render(dto);
+
+            // Anti-vacuité RENFORCÉE : les 4 bâtiments ont bien été traités par BuildBuildingCell — le
+            // "0" ci-dessous vient des BANDES (IDLE partout au J0), pas d'un repli qui aurait shortcut
+            // tout le monde (la classe de faux-négatif exacte que ce fetch non forcé a produite au run réel).
+            Assert.AreEqual(DioramaArtPhase.NightHero, diorama.LastArtPhase, "day_phase forcé — l'art de nuit tourne réellement");
+            Assert.AreEqual(4, diorama.RenderedBuildingCount, "les 4 bâtiments sont bien passés par BuildBuildingCell, pas le repli");
 
             Assert.AreEqual(0, diorama.RenderedNeonGlowCount,
                 "J0 — aucune chaîne de revenu vivante (§1.5 lignes 3/3b : aucun front_shop/cash_safehouse ne peut rapporter, TD-358)");

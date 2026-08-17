@@ -203,6 +203,18 @@ namespace MafiaCleanCity.CityMap.Tests
             int buildingsWithLieutenants = dto.buildings.Count(b => b.lieutenant_ids != null && b.lieutenant_ids.Length > 0);
             Assert.AreEqual(1, buildingsWithLieutenants, "les 3 AUTRES bâtiments du J0 portent 0 affectation");
 
+            // ⚠️ MESURÉ (juge réel — le rouge n'était PAS l'accumulation, un seul Render() ici) : le
+            // `day_phase` d'un fetch RÉEL dépend de `city_sim_clock.game_minute`, lui-même seedé au
+            // signup depuis `city_epoch` — PAS depuis 0 (`db/schema/city_epoch.ts:12,46`, mafia-w3u2) —
+            // donc NON déterministe d'une exécution à l'autre. `quarterIndexForGameMinute` (D8) peut
+            // très bien rendre DAWN/DAY/DUSK pour un J0 frais : `RenderNightDiorama` ne tourne alors
+            // JAMAIS, et `BuildLieutenantMarkers` avec — d'où "Expected 2, But was 0" sur un compteur
+            // pourtant correctement remis à 0 puis jamais réincrémenté. Cette falsifiable teste
+            // l'APPARIEMENT lieutenant→bâtiment (D10), pas le mapping day_phase→art (C8-F5) : forcer
+            // NIGHT ici est le MÊME geste que fait déjà C8F5 (`DistrictInteriorDioramaPlayModeTests.cs`,
+            // `dto.day_phase = "NIGHT"`) pour la même raison — isoler la propriété qu'on vérifie.
+            dto.day_phase = "NIGHT";
+
             bareHostGo = new GameObject("DistrictInteriorDiorama_C10F1_J0");
             var diorama = bareHostGo.AddComponent<DistrictInteriorScreenController>();
             diorama.Render(dto);
