@@ -180,19 +180,22 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.AreEqual(DistrictInteriorScreenController.MaxAmbientLoops, diorama.ActiveAmbientLoopCount,
                 "premier rendu — saturé");
 
-            // ⚠️ MESURÉ (juge réel, première exécution) : `ClearContent` appelle `Destroy` — DIFFÉRÉ à
-            // la fin de frame (patron IDENTIQUE à tous les re-renders du dépôt, cf. AppShell/
-            // CityMapController/LieutenantScreenController — jamais `DestroyImmediate`). Sans une frame
-            // entre les deux `Render()`, les composants du PREMIER rendu (4, au plafond) ne sont pas
-            // encore détruits quand le second en ajoute 3 : un `GetComponentsInChildren` verrait 7, pas
-            // 3, alors même que le COMPTEUR (`ActiveAmbientLoopCount`, un champ C# remis à 0 et
-            // ré-incrémenté de façon SYNCHRONE dans le second `Render()`) est déjà correct.
-            yield return null;
-
             var single = new[] { MakeTripleCandidate("building-0", 0) }; // 1 bâtiment = 3 candidats
             diorama.Render(WrapGrid(single));
             Assert.AreEqual(3, diorama.ActiveAmbientLoopCount,
                 "second rendu — 3 candidats, PAS 4 : le compteur ne doit pas hériter du rendu précédent");
+
+            // ⚠️ CORRECTIF DE PLACEMENT (le yield précédent, placé AVANT ce second Render(), était un
+            // no-op : `ClearContent` du PREMIER render n'avait rien à détruire — root était vide avant
+            // lui. C'est LE SECOND `Render()` (juste au-dessus) dont le `ClearContent` appelle `Destroy`
+            // sur les 4 `AmbientPulseLoop` du premier rendu — différé à la fin de frame. Le yield doit
+            // suivre CE render-ci, pas le précéder, pour que `GetComponentsInChildren` ci-dessous voie
+            // la hiérarchie RÉELLEMENT purgée (4+3=7 sinon — exactement le rouge mesuré). Vérifié dans
+            // le corps de `ClearContent`/`TryStartAmbientLoop` : aucun objet ne vit hors du sous-arbre
+            // de `root` (root → GridArea → Cell → sign/smoke/flicker, `AmbientPulseLoop` est un
+            // COMPOSANT ajouté sur ces GameObjects, jamais un objet séparé) — `ClearContent` détruit
+            // bien `root` en entier par cascade, aucune purge partielle.
+            yield return null;
 
             int actualComponents = diorama.ScreenRoot.GetComponentsInChildren<AmbientPulseLoop>(true).Length;
             Assert.AreEqual(3, actualComponents,

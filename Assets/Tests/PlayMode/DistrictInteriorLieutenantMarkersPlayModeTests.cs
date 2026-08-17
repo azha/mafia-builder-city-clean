@@ -142,19 +142,22 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.AreEqual(1, MarkersUnderCell(diorama, 0, 0), "avant réaffectation — le marqueur est sur building-0");
             Assert.AreEqual(0, MarkersUnderCell(diorama, 1, 0), "avant réaffectation — rien sur building-1");
 
-            // ⚠️ MESURÉ (juge réel) : `ClearContent` (`Destroy`, différé à la fin de frame — patron
-            // codebase-wide, jamais `DestroyImmediate`) laisse l'ancienne `Cell_0_0` (avec son marqueur)
-            // physiquement présente tant qu'aucune frame ne s'est écoulée. `MarkersUnderCell` fait une
-            // VRAIE requête de hiérarchie (`GetComponentsInChildren`), pas un compteur C# — sans cette
-            // frame, elle trouverait la cellule STALE en premier (toujours 1 marqueur) au lieu de la
-            // neuve. Même mécanisme que C10F2c (AmbientLoops).
-            yield return null;
-
             diorama.Render(WrapGrid(new[]
             {
                 MakeBuilding("building-0", 0, new string[0]),
                 MakeBuilding("building-1", 1, new[] { "lt-aaa" }),
             }));
+
+            // ⚠️ CORRECTIF DE PLACEMENT (le yield précédent, placé AVANT ce second Render(), était un
+            // no-op : `ClearContent` du PREMIER render n'avait rien à détruire — root était vide avant
+            // lui. C'est LE SECOND `Render()` (celui juste au-dessus) dont le `ClearContent` appelle
+            // `Destroy` sur l'ancienne `Cell_0_0`/`Cell_1_0` — différé à la fin de frame. Le yield doit
+            // suivre CE render-ci, pas le précéder, pour que la requête de hiérarchie qui suit voie la
+            // hiérarchie RÉELLEMENT purgée. Vérifié dans le corps de `ClearContent`/`Render` — aucun
+            // objet ne vit hors du sous-arbre de `root` (chaîne root → GridArea → Cell → marqueur),
+            // `ClearContent` détruit bien `root` en entier par cascade.
+            yield return null;
+
             Assert.AreEqual(0, MarkersUnderCell(diorama, 0, 0), "après réaffectation — building-0 a PERDU son marqueur");
             Assert.AreEqual(1, MarkersUnderCell(diorama, 1, 0), "après réaffectation — building-1 a GAGNÉ le marqueur");
 
