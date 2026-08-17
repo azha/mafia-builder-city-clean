@@ -207,17 +207,26 @@ namespace MafiaCleanCity.CityMap.Tests
                 Assert.IsNull(diorama.ScreenRoot.Find("GridArea"), $"{phase} does NOT render the night grid");
                 Assert.AreEqual(0, diorama.RenderedCellCount, $"{phase} — no cells rendered (fallback, not the diorama)");
 
-                // ⚠️ MESURÉ (juge réel) : `ClearContent` (`Destroy`, différé à la fin de frame, patron
-                // codebase-wide) laisse le panneau de repli de CETTE itération physiquement présent tant
-                // qu'aucune frame ne s'est écoulée — sans cette pause, l'itération NIGHT qui suit (hors
-                // boucle) trouverait encore le panneau DUSK et l'épingle d'absence ci-dessous rougirait
-                // pour une raison de staleness, pas pour un défaut de mapping. Même mécanisme que
-                // C10F2c/C10F1 (ambient loops / lieutenant markers).
+                // Yield de fin d'itération — laisse le temps au `ClearContent` de l'itération SUIVANTE
+                // (celle qui vient de tourner juste au-dessus, dont le Destroy() est différé) de
+                // purger CE panneau AVANT que l'itération suivante n'en reconstruise un. Suffisant pour
+                // les transitions DAWN→DAY et DAY→DUSK (vérifié : ces itérations ne rougissaient pas).
                 yield return null;
             }
 
             dto.day_phase = "NIGHT";
             diorama.Render(dto);
+
+            // ⚠️ CORRECTIF DE PLACEMENT (mesuré : "Expected 4, But was 5" persistait après le yield de
+            // fin de boucle ci-dessus). Ce yield de boucle nettoie les panneaux DAWN et DAY (détruits
+            // pendant les ClearContent() de DAY et DUSK, chacun suivi d'un yield) — mais PAS le panneau
+            // DUSK (P3) : son propre Destroy() n'est appelé QUE pendant le ClearContent() de CE render
+            // NIGHT, juste au-dessus, et aucun yield ne suivait ce render avant l'assertion. root avait
+            // donc 4 (NIGHT) + 1 (P3, encore vivant) = 5 enfants. Le repli n'est PAS créé "même en
+            // phase héros" (le if/else de Render() est strictement exclusif, vérifié dans le corps) —
+            // c'est le REPLI DE L'ITÉRATION PRÉCÉDENTE qui survit faute d'une frame après CE render-ci.
+            yield return null;
+
             Assert.AreEqual(DioramaArtPhase.NightHero, diorama.LastArtPhase, "NIGHT maps to the hero art");
             Assert.IsNotNull(diorama.ScreenRoot.Find("GridArea"), "NIGHT renders the night grid");
             Assert.Greater(diorama.RenderedCellCount, 0, "NIGHT actually renders cells");
