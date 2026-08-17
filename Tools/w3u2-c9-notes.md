@@ -213,3 +213,14 @@ déviations sont consignées ici **et** dans le message de commit correspondant.
 
 Aucun conflit avec le canon rencontré — les 2 points ci-dessus sont des choix d'implémentation
 matériels (mécanisme non prescrit par le design), jamais des désaccords avec la spec.
+
+## ⚠️ Correctif de fenêtre (post-C10) — voir `Tools/w3u2-c10-notes.md` § Correctifs de fenêtre
+
+Le juge final (première exécution réelle, fenêtre C8-C10) a fait rougir **C9-F3**
+(`DistrictInteriorLightingPlayModeTests.cs`, la garde de capacité). Cause MESURÉE : PAS un défaut de
+bande D3 (l'hypothèse initiale) — `day_phase` d'un fetch RÉEL suit `city_sim_clock.game_minute`, seedé
+au signup depuis `city_epoch` (mafia-w3u2), donc NON déterministe ; sans forcer `dto.day_phase =
+"NIGHT"` après le fetch, les DEUX `Render()` du test pouvaient tomber sur le repli (DAWN/DAY/DUSK),
+qui n'appelle jamais `BuildBuildingCell` — d'où des compteurs à 0 pour la MAUVAISE raison. Corrigé +
+anti-vacuité renforcée (`RenderedBuildingCount == 4` après le render forcé). Détail complet + evidence :
+`Tools/w3u2-c10-notes.md` § Correctifs de fenêtre, classe day_phase.

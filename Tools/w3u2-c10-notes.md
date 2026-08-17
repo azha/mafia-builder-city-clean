@@ -343,3 +343,150 @@ Aucun conflit avec le canon rencontré sur (b)/(c) — deux choix d'implémentat
 non prescrits par le design). (a) A ÉTÉ un point remonté conformément au protocole donné par le
 mandat (STOP ciblé, pas une supposition d'architecture), puis fermé par l'arbitrage du contrôleur —
 jamais un conflit tranché unilatéralement par ce `coder`.
+
+---
+
+# § Correctifs de fenêtre — juge réel, 1ʳᵉ exécution (C8-C10)
+
+**Contexte** : après tout ce travail en MODE LÉGER (jamais un run réel), le juge final a exécuté les
+tests C8-C10 pour la PREMIÈRE FOIS. 120 verts, 5 rouges du lot (+1 flaky W3U1 hors périmètre). Les 5
+se groupent en **3 causes mesurées** — dont deux DIFFÉRENTES de l'hypothèse initiale du contrôleur,
+divergence assumée et justifiée ci-dessous par le corps du code, jamais pour « faire passer ».
+
+## Classe ① — `Destroy()` différé + une VRAIE requête de hiérarchie après un `Render()` répété
+
+**Mesure** : `ClearContent()` (`DistrictInteriorScreenController.cs:546-550`) appelle `Destroy`
+(jamais `DestroyImmediate`) — ce qui est le patron **UNIFORME** de tout le dépôt : balayage de
+`Object.Destroy(` sur `Assets/Scripts/` → ~30 sites, **zéro** `DestroyImmediate` en dehors des méta
+d'éditeur. `Destroy` est DIFFÉRÉ à la fin de la frame Unity. `Render()` appelle `ClearContent()` puis
+reconstruit tout **de façon synchrone, dans le MÊME appel** — donc un test qui appelle `Render()` DEUX
+fois **dans la même frame** (aucun `yield return null` entre les deux) voit, à l'instant du second
+`Render()`, les enfants de l'ANCIEN rendu encore physiquement présents dans la hiérarchie.
+
+**Ce qui EST affecté** vs **ce qui NE L'EST PAS**, et c'est la distinction qui explique pourquoi
+C9-F1 (10 `Render()` séquentiels, ZÉRO yield, toujours VERT) n'a jamais été touché : les compteurs
+`RenderedXCount`/`ActiveAmbientLoopCount` sont des CHAMPS C# remis à 0 puis ré-incrémentés de façon
+SYNCHRONE **dans** le `Render()` courant — corrects immédiatement, indépendamment de l'état RÉEL de
+la hiérarchie Unity. Une assertion qui interroge la hiérarchie RÉELLE (`GetComponentsInChildren<T>`,
+`Transform.Find`, `.childCount`) voit en revanche l'ANCIEN ET le NEUF simultanément tant qu'aucune
+frame ne s'est écoulée.
+
+**Geste choisi, et pourquoi** : **test-side** (`yield return null;` entre les `Render()` successifs),
+**jamais** `DestroyImmediate` en production. Mesuré, pas supposé : ~30 sites de re-render dans ce
+dépôt (`AppShell`, `CityMapController`, `LieutenantScreenController`, `BuildingCardController`,
+`LaunderingController`, `DashboardController`, `ExceptionQueueController`, …) utilisent TOUS `Destroy`
+— aucun `DestroyImmediate`. Basculer CE contrôleur sur `DestroyImmediate` casserait la cohérence
+codebase-wide pour un écran RUNTIME (pas un outil d'éditeur), pour un gain nul en production (l'écran
+n'y appelle jamais `Render()` deux fois dans la même frame). Le fix appartient donc au TEST, appliqué
+de façon cohérente aux DEUX côtés (Unity + les DEUX repos de test qui en avaient besoin) :
+
+| test | fichier | site du yield |
+|---|---|---|
+| `C10F2c_ReRenderBelowBudget…` | `DistrictInteriorAmbientLoopsPlayModeTests.cs` | entre les 2 `Render()` |
+| `C10F1_ReRenderWithDifferentAssignment…` | `DistrictInteriorLieutenantMarkersPlayModeTests.cs` | entre les 2 `Render()` |
+| `C8F5_ThreeNonHeroPhases…` | `DistrictInteriorDioramaPlayModeTests.cs` (C8) | fin de CHAQUE itération de la boucle DAWN/DAY/DUSK (3 yields, 1 ligne) |
+
+Rétro-trace confirmée pour chaque rouge :
+- **`C10F2c`** — 1ᵉʳ rendu sature à `MaxAmbientLoops` (4, compteur correct) ; 2ᵉ rendu = 3 candidats
+  (compteur correct, 3) MAIS `GetComponentsInChildren<AmbientPulseLoop>` voyait 4 (ancien, pas détruit)
+  + 3 (neuf) = **7**, exactement le rouge rapporté.
+- **`C10F1_ReRenderWithDifferentAssignment`** — `MarkersUnderCell` fait un VRAI `GetComponentsInChildren
+  <RectTransform>(true)` puis prend le PREMIER `Cell_0_0` trouvé par nom : sans yield, DEUX
+  `Cell_0_0` coexistent (l'ancienne `GridArea`, pas détruite, ET la nouvelle) — le premier trouvé est
+  l'ANCIEN, qui porte encore son marqueur → "building-0 a PERDU son marqueur — Expected 0, But was 1",
+  exactement le rouge rapporté.
+
+## Classe ② — épingle d'absence (C8-F5), remplacée par une valeur PRÉSENTE
+
+**Mesure du code réel** : `RenderNightDiorama` construit **exactement 4** enfants directs de `root`
+(`OutOfDistrictBackdrop`, `DistrictTitle`, `GridArea`, `Haze` — vérifié ligne par ligne dans le corps
+de la méthode) ; `RenderNonHeroFallback` en construit **exactement 1** (`DayPhaseFallbackPanel`). Les
+deux méthodes sont appelées par un `if`/`else` STRICTEMENT exclusif dans `Render()` — **le code ne
+crée JAMAIS un panneau vide ou inactif à NIGHT**, contrairement à l'une des deux hypothèses posées par
+le mandat. Le panneau que `Assert.IsNull(Find("DayPhaseFallbackPanel"))` trouvait n'était donc PAS
+créé par le rendu NIGHT lui-même — c'était le panneau STALE de l'itération DUSK (classe ①, ci-dessus),
+toujours vivant faute de frame écoulée.
+
+**Correctif appliqué (les deux, comme demandé par le mandat)** : (1) le yield de la classe ① élimine
+la cause RÉELLE du rouge ; (2) l'épingle d'absence est en plus REMPLACÉE par une valeur PRÉSENTE —
+`Assert.AreEqual(4, diorama.ScreenRoot.childCount, …)` — qui prouve POSITIVEMENT la composition exacte
+de NIGHT (et implique donc l'absence de tout panneau de repli, sans jamais chercher cette absence
+directement). C'est strictement PLUS robuste que l'ancienne épingle : elle attraperait aussi un futur
+bug qui ajouterait un enfant NON prévu, quel que soit son nom — l'ancienne épingle ne réagissait qu'à
+UN nom précis.
+
+## Classe ③ (renommée) — `day_phase` non forcé sur un fetch RÉEL, PAS un défaut de bande D3
+
+⚠️ **Divergence assumée avec l'hypothèse initiale du mandat.** Le mandat proposait : « le payload
+fabriqué du test porte-t-il les valeurs de bandes qui déclenchent le néon (D3) ? ». **Mesure : NON,
+ce n'est pas ça.** `C9F3`/`C10F1_J0Real` n'utilisent pas un payload fabriqué à cet endroit — ils
+MUTENT/consomment un `dto` **RÉELLEMENT FETCHÉ**, et les champs mutés (`revenue_chain: "WIRED"`,
+`revenue_band: "EARNING"`) correspondent EXACTEMENT à la règle à 3 états de D3
+(`BuildRevenueSign` : `if (revenue_chain != "WIRED") return;` puis `earning = revenue_band ==
+"EARNING"`) — aucun défaut de bande.
+
+**La VRAIE cause, mesurée dans le back (`mafia-w3u2`)** : `day_phase` d'un fetch réel dérive de
+`city_sim_clock.game_minute` (`district-interior.controller.ts` → `quarterIndexForGameMinute`, D8).
+`db/schema/city_epoch.ts:12,46` : « *A freshly-signed-up player's OWN `city_sim_clock.game_minute` is
+seeded from THIS value (C1.3), NOT from 0* » — le clock d'un joueur frais est seedé depuis un
+**epoch partagé, qui avance avec l'activité du serveur/de la suite de tests**, PAS depuis 0. Le
+`day_phase` d'un J0 frais est donc **NON DÉTERMINISTE** d'une exécution à l'autre : il peut tomber sur
+DAWN/DAY/DUSK aussi bien que NIGHT. Si ce n'est pas NIGHT, `Render()` prend le repli
+(`RenderNonHeroFallback`), qui **n'appelle jamais** `BuildBuildingCell` — TOUS les compteurs
+(neon/smoke/marqueurs) restent à 0, pour la MAUVAISE raison (repli, pas bandes IDLE ou absence
+d'affectation). Exactement le rouge rapporté sur les DEUX tests :
+- **`C9F3`** — la garde de capacité (`Assert.Greater(RenderedNeonGlowCount, 0)` après mutation)
+  échoue : le second `Render()` reste sur le repli, la mutation de bande n'a jamais l'occasion de
+  s'exprimer.
+- **`C10F1_J0Real`** — "Expected 2, But was 0" sur `RenderedLieutenantMarkerCount` : `lab.lieutenant_ids
+  .Length == 2` est CONFIRMÉ correct sur le `dto` fetché (parsing JsonUtility intact — le champ
+  `public string[] lieutenant_ids;` est bien déclaré, aucun souci là), mais si `day_phase != NIGHT`,
+  `BuildLieutenantMarkers` n'est jamais appelée pour AUCUN bâtiment.
+
+**Précédent qui confirme le geste correct** : `C8F5` (`DistrictInteriorDioramaPlayModeTests.cs`, C8,
+déjà dans le dépôt AVANT ce correctif) force **déjà** `dto.day_phase = "NIGHT";` avant son render NUIT
+— exactement pour isoler la propriété qu'il vérifie du bruit du clock réel. C9F3/C10F1_J0Real
+n'avaient simplement jamais appliqué ce même geste, parce qu'en MODE LÉGER personne n'avait de fetch
+réel sous les yeux pour le remarquer.
+
+**Correctif** : `dto.day_phase = "NIGHT";` ajouté juste après le fetch, avant le premier `Render()`,
+dans les deux tests. Anti-vacuité RENFORCÉE ajoutée dans `C9F3` (`Assert.AreEqual(4,
+diorama.RenderedBuildingCount, …)` juste après le render forcé) — pour que si ce défaut de
+déterminisme revient un jour sous une autre forme, il rougisse à cet endroit précis plutôt que de
+retomber, silencieusement, dans la même vacuité.
+
+## Verdict sur C10F1-J0Real
+
+**PAS la même cause que la classe ①** (confirmé — un seul `Render()`, aucune accumulation possible).
+**C'est la classe ③ (day_phase non forcé)**, la MÊME cause que C9F3 — pas un bug de parsing DTO (le
+champ est bien déclaré `public string[] lieutenant_ids;`, JsonUtility le parse correctement, prouvé
+par l'assertion `lab.lieutenant_ids.Length == 2` qui passait DÉJÀ, avant même mon correctif) et pas un
+chemin de construction conditionné à un sprite absent (`BuildLieutenantMarkers` est appelée
+INCONDITIONNELLEMENT après le sprite, sans dépendance à sa résolution — vérifié dans le corps de
+`BuildBuildingCell`). Le correctif (forcer NIGHT) suffit et n'a nécessité aucun changement côté
+production.
+
+## Ce qui n'a PAS pu être vérifié (mode léger toujours en vigueur)
+
+Aucun de ces 5 correctifs n'a été RE-EXÉCUTÉ — le contrôleur confirme au juge lui-même après ce
+commit, comme demandé. Le scanner syntaxique (balance parens/braces, REUSE des chunks précédents) a
+été repassé sur les 4 fichiers de test touchés — voir § Evidence ci-dessous.
+
+### Evidence statique du correctif
+
+```
+$ python3 -c "... scanner balance parens/braces ..."
+Assets/Tests/PlayMode/DistrictInteriorAmbientLoopsPlayModeTests.cs          -> OK
+Assets/Tests/PlayMode/DistrictInteriorLieutenantMarkersPlayModeTests.cs     -> OK
+Assets/Tests/PlayMode/DistrictInteriorLightingPlayModeTests.cs              -> OK
+Assets/Tests/PlayMode/DistrictInteriorDioramaPlayModeTests.cs               -> OK
+```
+
+### Balayage `Object.Destroy(` vs `DestroyImmediate(` — confirme le patron uniforme cité en classe ①
+
+```
+$ grep -rn "DestroyImmediate\|Destroy(" Assets/Scripts/ --include="*.cs" | grep -v DistrictInteriorScreenController.cs
+```
+~30 sites, TOUS `Object.Destroy(`/`Destroy(` — **zéro** `DestroyImmediate` en production. Confirme que
+le fix test-side (yields) est le geste cohérent avec le reste du dépôt, jamais un changement de
+`ClearContent`.

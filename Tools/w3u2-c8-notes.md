@@ -234,3 +234,11 @@ déviations sont consignées ici **et** dans les messages de commit correspondan
 Aucun conflit avec le canon rencontré — les 6 points ci-dessus sont des choix d'implémentation
 matériels (mécanisme non prescrit par le design, ou option la moins coûteuse conforme à la lettre du
 design), jamais des désaccords avec la spec.
+
+## ⚠️ Correctif de fenêtre (post-C10) — voir `Tools/w3u2-c10-notes.md` § Correctifs de fenêtre
+
+Le juge final (première exécution réelle, fenêtre C8-C10) a fait rougir **C8-F5**
+(`DistrictInteriorDioramaPlayModeTests.cs`) : `ClearContent`/`Destroy` différé (staleness entre les
+`Render()` successifs de la boucle DAWN/DAY/DUSK) + une épingle d'absence fragile (`Assert.IsNull
+(Find("DayPhaseFallbackPanel"))`), remplacée par une valeur PRÉSENTE (`childCount == 4`). Détail complet
++ evidence : `Tools/w3u2-c10-notes.md` § Correctifs de fenêtre, classe ①/②.
