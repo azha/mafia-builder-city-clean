@@ -210,17 +210,18 @@ namespace MafiaCleanCity.Operational.Tests
             // Bands are CLOSED labels — and the seeded scalars landed in the intended bands.
             foreach (var c in ctl.Cards)
             {
-                Assert.That(new[] { "TENTATIVE", "LIKELY", "CONFIDENT" }, Does.Contain(c.confidence_band),
+                Assert.That(new[] { "tentative", "likely", "confident" }, Does.Contain(c.confidence_band), // casse = ConfidenceBucket canon (back lot-3 TD-072, 2026-06-13)
                     $"confidence_band '{c.confidence_band}' not in closed set for card {c.event_descriptor}");
-                Assert.That(new[] { "LOW", "MEDIUM", "HIGH" }, Does.Contain(c.priority_band),
+                Assert.That(new[] { "silent", "watching", "urgent", "critical" }, Does.Contain(c.priority_band), // PriorityBucket canon (back lot-3 TD-072)
                     $"priority_band '{c.priority_band}' not in closed set for card {c.event_descriptor}");
-                Assert.That(new[] { "LOW", "MEDIUM", "HIGH" }, Does.Contain(c.severity_band),
+                Assert.That(new[] { "MILD", "MODERATE", "SEVERE" }, Does.Contain(c.severity_band), // SeverityEnum canon REUSE 08 (back lot-3 TD-072)
                     $"severity_band '{c.severity_band}' not in closed set for card {c.event_descriptor}");
             }
             var heat = ctl.Cards.First(c => c.event_descriptor == "exc_demo_teach_heat");
-            Assert.AreEqual("CONFIDENT", heat.confidence_band);
-            Assert.AreEqual("HIGH", heat.priority_band);
-            Assert.AreEqual("HIGH", heat.severity_band);
+            Assert.AreEqual("confident", heat.confidence_band);
+            // Épingles = valeurs MESURÉES sur la route réelle (2026-08-20, carte seedée exc_demo_teach_heat).
+            Assert.AreEqual("critical", heat.priority_band);
+            Assert.AreEqual("SEVERE", heat.severity_band);
             Assert.IsNotEmpty(heat.lieutenant_id, "teach card must be lieutenant-bound");
 
             // Raid-style card: effect-bearing candidates + the action-bound method derivation.

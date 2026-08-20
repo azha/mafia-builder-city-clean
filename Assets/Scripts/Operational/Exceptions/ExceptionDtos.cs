@@ -40,9 +40,9 @@ namespace MafiaCleanCity.Operational.Exceptions
         public string event_descriptor;       // i18n-key text (chrome)
         public CandidateActionDto[] candidate_actions;
         public CandidateActionDto suggested_action;
-        public string confidence_band;        // TENTATIVE | LIKELY | CONFIDENT  (closed — tracked in the scan corpus)
-        public string priority_band;          // LOW | MEDIUM | HIGH
-        public string severity_band;          // LOW | MEDIUM | HIGH
+        public string confidence_band;        // tentative | likely | confident  (closed, casse canon ConfidenceBucket — back lot-3 TD-072)
+        public string priority_band;          // silent | watching | urgent | critical  (PriorityBucket canon — back lot-3 TD-072)
+        public string severity_band;          // MILD | MODERATE | SEVERE  (SeverityEnum canon REUSE 08 — back lot-3 TD-072)
         public string resolution_status;      // pending | resolved | escalated | aged_out
     }
 

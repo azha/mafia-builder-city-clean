@@ -244,7 +244,9 @@ namespace MafiaCleanCity.Operational.Tests
             Psql($"UPDATE building_operational_state SET structural_state='operational' WHERE building_id='{labId}';");
             Psql($"UPDATE buildings SET heat={heatValue.ToString(System.Globalization.CultureInfo.InvariantCulture)}, audit_pin_expires_at=NULL WHERE building_id='{labId}';");
             Psql($"DELETE FROM precursor_stock WHERE building_id='{labId}';");
-            Psql($"INSERT INTO precursor_stock (player_id, building_id, precursor_type, quantity_units) VALUES ('{playerId}','{labId}','pyralin',20);");
+            // D1 C4 (back) : le cook — délégué compris, cook-binding vérifie les signaux — exige les
+            // 3 précurseurs dans le bâtiment ; pyralin seul laissait l'auto-cook en IDLE.
+            Psql($"INSERT INTO precursor_stock (player_id, building_id, precursor_type, quantity_units) VALUES ('{playerId}','{labId}','pyralin',20),('{playerId}','{labId}','thalmite',20),('{playerId}','{labId}','garnet_salt',20);");
         }
 
         // Set ONLY the lab's heat (the PAUSE driver), leaving structural_state + precursor untouched.
