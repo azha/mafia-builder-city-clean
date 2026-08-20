@@ -145,7 +145,10 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.IsNull(scene.GetComponent<LayoutGroup>(), "pp-F1 — pas de LayoutGroup parent qui redimensionnerait le fond");
         }
 
-        // ── pp-F2 / F-calage — le pivot du bâtiment tombe sur pivot_px LU dans le JSON ───────────
+        // ── pp-F2 / F-calage — POUR CHAQUE bâtiment du payload, son pivot tombe sur pivot_px LU
+        // dans le JSON (quantificateur vérifié par le geste 4 du round 2 ⊥ : ni pp-F2 ni pp-F3 ne
+        // portent un singulier — la boucle ci-dessous couvre TOUS les `dto.buildings` du J0, avec
+        // anti-vacuité sur le compte exact (checkedBuildings == 4), jamais un seul bloc de test. ──
 
         [UnityTest]
         public IEnumerator PpF2_BuildingPivot_MatchesJsonPivotPx_WithinTwoPixels_AndGridSpacingIsUniform()
@@ -276,6 +279,13 @@ namespace MafiaCleanCity.CityMap.Tests
         // chunk Unity). `BuildingSpriteSlots.cashSafehouse` a été RE-CÂBLÉ sur `residentiel3` (propre,
         // 0,12%) pour que le chemin de RENDU (pp-F3 Part 1, PpF2, la capture) ne dépende pas de cet
         // asset défectueux — seul ce balayage EXHAUSTIF (Part 2, les 54 fichiers bruts) le voit encore.
+        //
+        // MODE D'EMPLOI DE PÉREMPTION (précédent maison : le test qui épinglait un bug ratifié via
+        // `toBe(404)`, socle) — en toutes lettres : CE ROUGE EST ATTENDU tant que `laverie_nuit_base`
+        // (ppm24.0 ET ppm56.471) n'a PAS été re-rendue à l'atelier (chunk P1, lot séparé). LE JOUR OU
+        // ELLE L'EST, ce test devient VERT et CETTE NOTE (du "⚠️ DÉFAUT MESURÉ" ci-dessus jusqu'ici)
+        // DOIT ÊTRE SUPPRIMÉE — un rouge qui reste épinglé après que sa cause a été fermée devient un
+        // faux négatif silencieux, la classe exacte que ce mode d'emploi existe pour prévenir.
         [Test]
         public void PpF3_Part2_AllFiftyFourDeliveredSprites_CrossPpmRatioMatchesDeclaredPpm_WithinOnePercent()
         {

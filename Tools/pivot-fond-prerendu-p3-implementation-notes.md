@@ -214,3 +214,95 @@ choix technique tranché par une mesure que je peux faire seul.
 - ⚠️ **Piège de mesure évité** (socle : `ls`/`wc -l` proxifiés) : un premier `ls Sprites/*.png |
   wc -l` a rendu 56 (faux) contre 54 réels (`python3 -c "import glob; ..."`, oracle indépendant,
   confirmé par `AssetDatabase.FindAssets` côté Unity : 56 = 54 sprites + 2 fonds, cohérent).
+
+---
+
+## § ROUND 2 (verdict ⊥ sur la sonde) — geste par geste, 2026-08-20
+
+Contexte : le ⊥ a confirmé la géométrie une 4ᵉ fois (corrélation normalisée 0,9098, échelle
+1,000, offset ±2px) et classé la panne comme un TRANSFORT DE VALEURS (« calque »), pas un
+rééchantillonnage — sur SA mesure de « l'état livré » : MAE 59,63 / ratio 1,1:1. Il notait aussi
+que mon 5,4/23-40:1 du round 1 n'était pas reproductible chez lui faute d'avoir reçu le rect exact.
+
+### Geste 1 — le chiffre arbitral (rect imprimé, source brute, sans recadrage ni déclaration)
+
+Re-capture fraîche (flux réel identique au round 1), rect imprimé AU MOMENT DE LA CAPTURE :
+`screenW=1100 screenH=577 rectX=10 rectYTopDown=-672 rectW=1080 rectH=1920 scaleFactor=0.859375`
+— identique au round 1 à 1px près (confirmé par une recherche d'offset indépendante, voir plus
+bas), la géométrie ne bouge pas.
+
+```
+python3 Tools/resemblance-probe.py --source .../VERGE_D_NUIT_FINAL.png \
+  --capture Assets/Screenshots/district_fond_v2_methodA_capturescreenshot.png --rect 10,-672,1080,1920
+```
+```
+F-transport  MAE arêtes =  10.48   (seuil ≤ 1.00)  ROUGE
+F-nocalque   MAE plats  =   5.95   (seuil ≤ 0.50)  ROUGE
+F-cadre      rect 1080x1920 vs source 1080x1920, coins 0/4  ROUGE
+diagnostic   CADRE (rect 1080x1920 != source 1080x1920) — les MAE ci-dessus mesurent le décalage
+             du mapping, PAS une panne de teinte
+RESULT transport=10.479 nocalque=5.951 ratio=1.8 cadre=0 compares=2101/432
+```
+F-cadre rouge = attendu (le fond natif 1080×1920 dépasse le viewport 1100×577, §2.1 F-cadre du
+design). Ce chiffre — **10,48 / 5,95 / ratio 1,8:1** — est LE chiffre arbitral demandé : reproductible
+2 fois (round 1 et round 2, sessions Unity distinctes), byte-cohérent aux 3 décimales près.
+
+### Geste 2 — une variable à la fois
+
+| variable | protocole | résultat | verdict |
+|---|---|---|---|
+| **(a) méthode de capture** | `ScreenCapture.CaptureScreenshot` vs `Texture2D.ReadPixels` manuel, MÊME frame (`WaitForEndOfFrame` commun), même rect | `10.479/5.951/1.8` pour LES DEUX, **identique à la 3ᵉ décimale** | **RÉFUTÉE** — la méthode de capture n'est pas la variable |
+| **(c) config URP caméra/Canvas** | Mesuré en jeu (réflexion, pas de doc) au moment exact de la capture | `camCount=0 volumeCount=0 rpAsset=Mobile_RPAsset colorGradingMode=LowDynamicRange GLsRGBWrite=True` | **RÉFUTÉE PAR MESURE** — zéro caméra, zéro Volume dans la scène : aucun post-processing/tonemapping n'est possible sur un Canvas Overlay sans caméra. Rejoint le ⊥ : un transform de valeurs existe, mais PAS celui-là. |
+| **(b) sRGBTexture du fond, ISOLÉ** | toggle SEUL (filterMode/compression/pixelPerfect inchangés), recapture, sonde, puis revert | **off → 59.982/53.907/ratio 1.1** — quasi IDENTIQUE au chiffre du ⊥ (59,63/~/1,1). **on (= état commité SHA 92e3c08, vérifié `git show 92e3c08:...meta` → `sRGBTexture: 1`) → 10.479/5.951/1.8**, PAS 59,63. | **CONFIRMÉE comme levier réel et de grande magnitude** — mais dans la MAUVAISE direction pour expliquer « l'état livré » : le commit livré a `sRGBTexture=1` (le bon réglage), et NE reproduit PAS le chiffre du ⊥. |
+
+**⚠️ Constat, pas une accusation — les faits, avec leurs commandes** : le chiffre du ⊥ (59,63,
+ratio 1,1:1) est reproduit **presque exactement** par mon essai isolé `sRGBTexture=false`
+(59,98/53,91/1,1) et **PAS DU TOUT** par l'état réellement commité (`sRGBTexture=true`, 10,48/5,95/1,8
+brut). Deux lectures possibles, aucune tranchée ici : (i) sa mesure a porté sur un état transitoire
+`sRGBTexture=false` — session Unity partagée, mon propre toggle du round 1 (testé puis reverti) —
+si sa capture est tombée entre les deux ; (ii) autre chose explique la coïncidence. Ce que je PEUX
+affirmer, avec commande+sortie collées à l'appui : **l'état COMMITÉ (SHA 92e3c08, celui qui compte)
+a `sRGBTexture=1`, et NE mesure PAS 59,63/1,1 — ni en brut (10,48/5,95/1,8), ni en recadrage propre
+(ci-dessous, 5,63/0,23/24:1)**. Recommandation : que le ⊥ re-mesure sur une capture FRAÎCHE,
+horodatée après ce commit, pour lever le doute — je ne peux pas trancher pour lui.
+
+**Recadrage propre (hors chrome TopBar/TabBar, `sRGBTexture=true`, l'état livré), reproduit 2×
+(round 1 et round 2, à 0,03 MAE près)** :
+```
+F-transport  MAE arêtes =   5.63   (seuil ≤ 1.00)  ROUGE
+F-nocalque   MAE plats  =   0.23   (seuil ≤ 0.50)  VERT
+F-cadre      rect 1080x473 vs source 1080x473, coins 4/4  VERT
+diagnostic   RÉÉCHANTILLONNÉ (signature arêtes/plats 24:1)
+RESULT transport=5.632 nocalque=0.233 ratio=24.2 cadre=1 compares=3000/3000
+```
+Recherche d'offset indépendante (grille fine pleine résolution, 6≤rx≤22, -680≤ry≤-664, stride 5,
+métrique luma) : meilleur point `rx=10, ry=-671` — **confirme le rect imprimé à 1px près**, donc ce
+résidu n'est pas un défaut d'alignement de ma part.
+
+**État final : AUCUNE des 3 variables prescrites, seule, n'atteint « transport intact ».**
+(a) et (c) sont réfutées par mesure directe. (b) est un vrai levier (off casse tout), mais l'état
+LIVRÉ a déjà le bon réglage et ne montre pas le grand écart rapporté — il montre un écart PLUS
+PETIT mais toujours réel : MAE arêtes 5,63 (seuil 1,0), signature RÉÉCHANTILLONNÉ (24:1), pas
+CALQUE. C'est le round 1 qui avait raison sur la SIGNATURE ; le round 1 avait tort de ne pas
+transmettre le rect exact, ce qui a empêché le ⊥ de reproduire ce chiffre précis — corrigé ici.
+**Piste non résolue, hors des 3 variables prescrites** : `Mobile_RPAsset` est actif en PlayMode
+(pas `PC_RPAsset`, vu hors Play mode) — un tiers de qualité différent avec un pipeline couleur
+propre est une 4ᵉ variable non testée par ce round, candidate pour la suite.
+
+### Geste 3 — mode d'emploi de péremption sur le rouge laverie
+
+Ajouté verbatim dans `DistrictBackgroundPlayModeTests.cs` (juste avant `PpF3_Part2`) : « CE ROUGE
+EST ATTENDU tant que `laverie_nuit_base` n'a pas été re-rendue à l'atelier ; le jour où elle l'est,
+ce test devient VERT et cette note doit être supprimée » — précédent `toBe(404)` du socle.
+
+### Geste 4 — quantificateur « POUR CHACUN »
+
+pp-F3 le portait déjà explicitement (§ header, « POUR CHACUN des sprites livrés », 27/27 couples
+vérifiés par compte). pp-F2 le PORTAIT DÉJÀ EN CODE (`foreach` sur `dto.buildings`, anti-vacuité
+`checkedBuildings==4`) mais le HEADER ne le disait pas explicitement — corrigé (aucun changement de
+comportement, seulement la clarté du commentaire).
+
+### Evidence finale round 2
+
+PlayMode W3U2 complet, re-vérifié après tous les changements de ce round : **56 tests, 55 verts,
+1 rouge** (`PpF3_Part2..._laverie_nuit_base`, désormais avec son mode d'emploi de péremption).
