@@ -132,5 +132,69 @@ namespace MafiaCleanCity.CityMap
                                            // tout type inconnu.
             }
         }
+
+        // ── Ambiant — nav-hud-design-v1.md §2 (chunk 1, Décisions A-D) — remplissage des
+        // parcelles NON possédées. Champ NOUVEAU dans CE ScriptableObject (Décision B, §2.2), pas
+        // un second asset : le seam `Resources.Load` reste UNIQUE, et `metresParBloc` reste
+        // l'échelle COMMUNE aux tables bâtiment ET ambiant — la dupliquer créerait une valeur à
+        // deux propriétaires (R9.3). Aucun nom de fichier de sprite en C# (C6-F3, étendu ici) : la
+        // donnée (quel PNG, quel poids) vit uniquement dans BuildingSpriteSlots.asset.
+        [System.Serializable]
+        public class AmbientTemplate
+        {
+            public Sprite nuit;
+            public Sprite jour;
+            public int poids;
+        }
+
+        /// <summary>Un profil de remplissage ambiant (§2.2) : la table de templates pondérés et la
+        /// partition rue/parcelle (§2.1) qu'elle porte. Déviation consignée (implementation-notes.md
+        /// § Deviations) : le design proposait deux champs distincts `rangs`/`façadesParRang` ; ce
+        /// chunk les consolide en un seul champ `facadesParParcelle` (2 rangs × 2 façades — Décision
+        /// C, §2.3 — fixés en code, pas un degré de liberté ouvert par l'asset).</summary>
+        [System.Serializable]
+        public class AmbientSet
+        {
+            public AmbientTemplate[] templates;
+            public int streetEveryX;
+            public int streetEveryY;
+            public int facadesParParcelle;
+
+            /// <summary>Tirage pondéré déterministe (§2.3 : "template : tirage pondéré par poids,
+            /// index hash % Σpoids"). Poids nuls/négatifs ignorés. Repli sur le premier template si
+            /// la table est non vide mais que la somme des poids est nulle — jamais un `null`
+            /// silencieux tant qu'au moins un template existe (l'appelant gère la table vide).</summary>
+            public AmbientTemplate PickWeighted(int hash)
+            {
+                if (templates == null || templates.Length == 0) return null;
+                int total = 0;
+                foreach (AmbientTemplate t in templates) total += Mathf.Max(0, t.poids);
+                if (total <= 0) return templates[0];
+                int idx = ((hash % total) + total) % total; // hash = XOR de int, peut être négatif
+                int cum = 0;
+                foreach (AmbientTemplate t in templates)
+                {
+                    cum += Mathf.Max(0, t.poids);
+                    if (idx < cum) return t;
+                }
+                return templates[templates.Length - 1];
+            }
+        }
+
+        [Header("Ambiant — profils (§2.5)")]
+        public AmbientSet ambientVerge;    // profile == "verge"
+        public AmbientSet ambientDefaut;   // repli DÉCLARÉ — jamais un null silencieux (§2.2)
+
+        /// <summary>Résout un `profile` de district-interior (§2.5) vers son <see cref="AmbientSet"/>.
+        /// Exhaustif : `"verge"` → <see cref="ambientVerge"/> ; les 5 autres profils connus ET tout
+        /// profil inconnu → <see cref="ambientDefaut"/>, jamais un `null` silencieux.</summary>
+        public AmbientSet ResolveAmbient(string profile)
+        {
+            switch (profile)
+            {
+                case "verge": return ambientVerge;
+                default: return ambientDefaut;
+            }
+        }
     }
 }

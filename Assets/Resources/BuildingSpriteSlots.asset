@@ -61,3 +61,76 @@ MonoBehaviour:
     neon: {fileID: 0}
     dev: {fileID: 0}
     actif: {fileID: 0}
+  ambientVerge:
+    templates:
+    - nuit: {fileID: 21300000, guid: 4394d092be1d4181a8cbc96b81827da2, type: 3}
+      jour: {fileID: 21300000, guid: 7609f969b4de2462ba013a6b495fb734, type: 3}
+      poids: 4
+    - nuit: {fileID: 21300000, guid: fe3621751a403d4e8a17c3172220da50, type: 3}
+      jour: {fileID: 21300000, guid: b55fed5f3b78f4fc08316e5a53034655, type: 3}
+      poids: 4
+    - nuit: {fileID: 21300000, guid: e88ec22f266dcf1e7a81ab1498667c92, type: 3}
+      jour: {fileID: 21300000, guid: 0f5b6cafa43b95ede8444c28af3ba8d3, type: 3}
+      poids: 4
+    - nuit: {fileID: 21300000, guid: e4dece16e718aba95a6cc2febb41253b, type: 3}
+      jour: {fileID: 21300000, guid: 9808b7380cdc3c5ebbf6c9696dd5cce3, type: 3}
+      poids: 4
+    - nuit: {fileID: 21300000, guid: 2051111f9ab706f579054acd477c1eb6, type: 3}
+      jour: {fileID: 21300000, guid: 0a32b0e162f962a95bfc83549463046b, type: 3}
+      poids: 2
+    - nuit: {fileID: 21300000, guid: 8bcf0736bf7daf95a9d2e5387758b684, type: 3}
+      jour: {fileID: 21300000, guid: 8b93f931ab74d805197004ad0c648c98, type: 3}
+      poids: 2
+    - nuit: {fileID: 21300000, guid: cd34b47246be0154683f0fc7b9bb5bc1, type: 3}
+      jour: {fileID: 21300000, guid: 9d209ec84c5b79fd98187d581aa6073e, type: 3}
+      poids: 2
+    - nuit: {fileID: 21300000, guid: ead82da86794794efa9fbb4f77bd9a7c, type: 3}
+      jour: {fileID: 21300000, guid: 4c176d67c7e18deab984e72e2dd8f4f4, type: 3}
+      poids: 2
+    - nuit: {fileID: 21300000, guid: d56bdc67c307d33aea04c35a8e69f429, type: 3}
+      jour: {fileID: 21300000, guid: 307b80985554f0fa6939f9af7aeb1bab, type: 3}
+      poids: 1
+    streetEveryX: 5
+    streetEveryY: 0
+    facadesParParcelle: 4
+  ambientDefaut:
+    templates:
+    - nuit: {fileID: 21300000, guid: 4394d092be1d4181a8cbc96b81827da2, type: 3}
+      jour: {fileID: 21300000, guid: 7609f969b4de2462ba013a6b495fb734, type: 3}
+      poids: 1
+    - nuit: {fileID: 21300000, guid: fe3621751a403d4e8a17c3172220da50, type: 3}
+      jour: {fileID: 21300000, guid: b55fed5f3b78f4fc08316e5a53034655, type: 3}
+      poids: 1
+    - nuit: {fileID: 21300000, guid: e88ec22f266dcf1e7a81ab1498667c92, type: 3}
+      jour: {fileID: 21300000, guid: 0f5b6cafa43b95ede8444c28af3ba8d3, type: 3}
+      poids: 1
+    - nuit: {fileID: 21300000, guid: e4dece16e718aba95a6cc2febb41253b, type: 3}
+      jour: {fileID: 21300000, guid: 9808b7380cdc3c5ebbf6c9696dd5cce3, type: 3}
+      poids: 1
+    - nuit: {fileID: 21300000, guid: 2051111f9ab706f579054acd477c1eb6, type: 3}
+      jour: {fileID: 21300000, guid: 0a32b0e162f962a95bfc83549463046b, type: 3}
+      poids: 1
+    - nuit: {fileID: 21300000, guid: 8bcf0736bf7daf95a9d2e5387758b684, type: 3}
+      jour: {fileID: 21300000, guid: 8b93f931ab74d805197004ad0c648c98, type: 3}
+      poids: 1
+    - nuit: {fileID: 21300000, guid: cd34b47246be0154683f0fc7b9bb5bc1, type: 3}
+      jour: {fileID: 21300000, guid: 9d209ec84c5b79fd98187d581aa6073e, type: 3}
+      poids: 1
+    - nuit: {fileID: 21300000, guid: ead82da86794794efa9fbb4f77bd9a7c, type: 3}
+      jour: {fileID: 21300000, guid: 4c176d67c7e18deab984e72e2dd8f4f4, type: 3}
+      poids: 1
+    - nuit: {fileID: 21300000, guid: d56bdc67c307d33aea04c35a8e69f429, type: 3}
+      jour: {fileID: 21300000, guid: 307b80985554f0fa6939f9af7aeb1bab, type: 3}
+      poids: 1
+    - nuit: {fileID: 21300000, guid: f9a6adb30fe76c680b9d3f0def852955, type: 3}
+      jour: {fileID: 21300000, guid: ac159ec26a284b91c84b7cb6fe70bdd5, type: 3}
+      poids: 1
+    - nuit: {fileID: 21300000, guid: b4900c1526311385585200999ed8809f, type: 3}
+      jour: {fileID: 21300000, guid: cae319919f02ff0fcada99c0f9b2431c, type: 3}
+      poids: 1
+    - nuit: {fileID: 21300000, guid: 344f1bc65c7f57f77b16daf8d2bb4b1c, type: 3}
+      jour: {fileID: 21300000, guid: 4aab4a799c1995fdda9d3eee3b4027ed, type: 3}
+      poids: 1
+    streetEveryX: 5
+    streetEveryY: 0
+    facadesParParcelle: 4
