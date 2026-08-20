@@ -1,0 +1,23 @@
+{
+ "template": "hotel",
+ "ppm": 56,
+ "size_px": [
+  405,
+  480
+ ],
+ "pivot_px": [
+  202,
+  480
+ ],
+ "couches": {
+  "jour": [
+   "hotel_jour.png"
+  ],
+  "nuit": [
+   "hotel_nuit.png",
+   "hotel_nuit_ov_fen.png",
+   "hotel_nuit_ov_sign.png"
+  ]
+ },
+ "blend_overlays": "additive"
+}

@@ -1,0 +1,22 @@
+{
+ "template": "barbier",
+ "ppm": 56,
+ "size_px": [
+  255,
+  299
+ ],
+ "pivot_px": [
+  127,
+  299
+ ],
+ "couches": {
+  "jour": [
+   "barbier_jour.png"
+  ],
+  "nuit": [
+   "barbier_nuit.png",
+   "barbier_nuit_ov_fen.png"
+  ]
+ },
+ "blend_overlays": "additive"
+}

@@ -1,0 +1,22 @@
+{
+ "template": "diner",
+ "ppm": 56,
+ "size_px": [
+  355,
+  293
+ ],
+ "pivot_px": [
+  177,
+  293
+ ],
+ "couches": {
+  "jour": [
+   "diner_jour.png"
+  ],
+  "nuit": [
+   "diner_nuit.png",
+   "diner_nuit_ov_fen.png"
+  ]
+ },
+ "blend_overlays": "additive"
+}

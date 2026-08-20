@@ -12,11 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6ef2aaa478cc44ae8a010927a27756ef, type: 3}
   m_Name: BuildingSpriteSlots
   m_EditorClassIdentifier: CityMap::MafiaCleanCity.CityMap.BuildingSpriteSlots
-  frontShop: {fileID: 0}
-  cashSafehouse: {fileID: 0}
-  stash: {fileID: 0}
-  lab: {fileID: 0}
-  growHouse: {fileID: 0}
-  dealerSpotFront: {fileID: 0}
-  moneyHolding: {fileID: 0}
-  fallback: {fileID: 0}
+  frontShop: {fileID: 21300000, guid: 2051111f9ab706f579054acd477c1eb6, type: 3}
+  cashSafehouse: {fileID: 21300000, guid: f9a6adb30fe76c680b9d3f0def852955, type: 3}
+  stash: {fileID: 21300000, guid: b4900c1526311385585200999ed8809f, type: 3}
+  lab: {fileID: 21300000, guid: 344f1bc65c7f57f77b16daf8d2bb4b1c, type: 3}
+  growHouse: {fileID: 21300000, guid: fe3621751a403d4e8a17c3172220da50, type: 3}
+  dealerSpotFront: {fileID: 21300000, guid: 8bcf0736bf7daf95a9d2e5387758b684, type: 3}
+  moneyHolding: {fileID: 21300000, guid: cd34b47246be0154683f0fc7b9bb5bc1, type: 3}
+  fallback: {fileID: 21300000, guid: 4394d092be1d4181a8cbc96b81827da2, type: 3}

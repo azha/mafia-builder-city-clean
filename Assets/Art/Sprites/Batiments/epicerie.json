@@ -1,0 +1,22 @@
+{
+ "template": "epicerie",
+ "ppm": 56,
+ "size_px": [
+  299,
+  283
+ ],
+ "pivot_px": [
+  149,
+  283
+ ],
+ "couches": {
+  "jour": [
+   "epicerie_jour.png"
+  ],
+  "nuit": [
+   "epicerie_nuit.png",
+   "epicerie_nuit_ov_fen.png"
+  ]
+ },
+ "blend_overlays": "additive"
+}

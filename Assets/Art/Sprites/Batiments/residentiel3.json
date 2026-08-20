@@ -1,0 +1,22 @@
+{
+ "template": "residentiel3",
+ "ppm": 56,
+ "size_px": [
+  385,
+  302
+ ],
+ "pivot_px": [
+  192,
+  302
+ ],
+ "couches": {
+  "jour": [
+   "residentiel3_jour.png"
+  ],
+  "nuit": [
+   "residentiel3_nuit.png",
+   "residentiel3_nuit_ov_fen.png"
+  ]
+ },
+ "blend_overlays": "additive"
+}

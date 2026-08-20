@@ -1,0 +1,22 @@
+{
+ "template": "usine",
+ "ppm": 56,
+ "size_px": [
+  1227,
+  855
+ ],
+ "pivot_px": [
+  613,
+  855
+ ],
+ "couches": {
+  "jour": [
+   "usine_jour.png"
+  ],
+  "nuit": [
+   "usine_nuit.png",
+   "usine_nuit_ov_actif.png"
+  ]
+ },
+ "blend_overlays": "additive"
+}

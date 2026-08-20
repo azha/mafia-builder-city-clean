@@ -1,0 +1,22 @@
+{
+ "template": "entrepot",
+ "ppm": 56,
+ "size_px": [
+  566,
+  363
+ ],
+ "pivot_px": [
+  283,
+  363
+ ],
+ "couches": {
+  "jour": [
+   "entrepot_jour.png"
+  ],
+  "nuit": [
+   "entrepot_nuit.png",
+   "entrepot_nuit_ov_actif.png"
+  ]
+ },
+ "blend_overlays": "additive"
+}

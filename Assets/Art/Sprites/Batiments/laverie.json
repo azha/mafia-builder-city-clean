@@ -1,0 +1,22 @@
+{
+ "template": "laverie",
+ "ppm": 56,
+ "size_px": [
+  291,
+  295
+ ],
+ "pivot_px": [
+  145,
+  295
+ ],
+ "couches": {
+  "jour": [
+   "laverie_jour.png"
+  ],
+  "nuit": [
+   "laverie_nuit.png",
+   "laverie_nuit_ov_fen.png"
+  ]
+ },
+ "blend_overlays": "additive"
+}

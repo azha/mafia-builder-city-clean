@@ -1,0 +1,24 @@
+{
+ "template": "bar_hero",
+ "ppm": 56,
+ "size_px": [
+  683,
+  580
+ ],
+ "pivot_px": [
+  341,
+  580
+ ],
+ "couches": {
+  "jour": [
+   "bar_hero_jour.png"
+  ],
+  "nuit": [
+   "bar_hero_nuit.png",
+   "bar_hero_nuit_ov_fen.png",
+   "bar_hero_nuit_ov_neon.png",
+   "bar_hero_nuit_ov_dev.png"
+  ]
+ },
+ "blend_overlays": "additive"
+}
