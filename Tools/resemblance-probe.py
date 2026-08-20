@@ -81,6 +81,11 @@ SEUIL_TRANSPORT = 1.00         # MAE max sur les arêtes
 SEUIL_NOCALQUE = 0.50          # MAE max sur les plats
 RATIO_RESAMPLE = 8.0           # arêtes/plats au-delà ⇒ signature « rééchantillonné »
 TOL_ECHELLE_PX = 1             # F-cadre : écart toléré en px sur chaque dimension
+GRAD_POINTS_FOND = 42196       # points de grille rendus par les gelés sur 1080x1920
+SAMPLE_FRACTION = N_SAMPLES / float(GRAD_POINTS_FOND)   # 7,110 % — dérivée, pas choisie
+MIN_SAMPLES_POP = 200          # plancher DÉCLARÉ (un choix, pas un séparateur mesuré) :
+                               # en dessous, la moyenne est trop bruyante ⇒ code 2, jamais
+                               # un chiffre présentable. « Aucune exécution » reste distinct.
 CORR_WINDOW = 3                # rayon de recherche d'alignement ENTIER, en px
 SEUIL_CORR_HAUTE = 0.90        # au-dessus : la géométrie se superpose à l'entier
 SEUIL_CORR_BASSE = 0.70        # en dessous : rien ne se superpose ⇒ GÉOMÉTRIE
@@ -93,6 +98,15 @@ CTRL_CROP = 0.90               # attendu : F-cadre rouge
 CTRL_GAMMA = 1.25              # attendu : corr ~0,997 (ALIGNÉ) + ratio bas ⇒ VALEURS
 CTRL_PHASE = 0.5               # attendu : corr ~0,979 (ALIGNÉ) + ratio ~25:1 ⇒ arêtes
 CTRL_DECAL_PX = 40             # hors fenêtre ±3 ⇒ attendu : corr ~0,22 ⇒ GÉOMÉTRIE
+CTRL_SPRITE = ('Assets/Art/District/Sprites/residentiel3_nuit_base_ppm24.0.png')
+                               # sprite RÉEL (196x257, RGBA) — les contrôles à l'échelle
+                               # sprite tournent dessus, jamais sur une image fabriquée.
+
+
+def ouvrir(chemin):
+    """Ouvre en conservant l'alpha s'il existe — voir `regime`/`populations`."""
+    im = Image.open(chemin)
+    return im if im.mode in ('RGB', 'RGBA') else im.convert('RGB')
 
 
 def luma(c):
@@ -109,6 +123,19 @@ def l2s(x):
     return int(round((12.92 * x if x <= 0.0031308 else 1.055 * x ** (1 / 2.4) - 0.055) * 255))
 
 
+def regime(src):
+    """(stride, alpha_mask) — les deux DÉDUITS de l'image, jamais d'un drapeau qu'on oublie.
+
+    Le stride dérivé reproduit GRAD_STRIDE sur l'artefact de référence ; c'est le contrôle
+    positif de la formule, et il est vérifié par le self-test."""
+    W, H = src.size
+    stride = max(1, int(round(math.sqrt(W * H / (1080.0 * 1920.0 / (GRAD_STRIDE ** 2))))))
+    masque = False
+    if src.mode == 'RGBA':
+        masque = src.split()[3].getextrema()[0] != 255
+    return stride, masque
+
+
 def populations(src):
     """Les deux populations de pixels de la SOURCE : plus fort gradient, plus plats.
 
@@ -118,19 +145,27 @@ def populations(src):
     « ça s'améliore » soit une mesure et pas une impression.
     """
     W, H = src.size
-    px = src.load()
+    stride, masque = regime(src)
+    rgbsrc = src.convert('RGB') if src.mode != 'RGB' else src
+    px = rgbsrc.load()
+    ap = src.split()[3].load() if masque else None
     grad = []
-    for y in range(2, H - 2, GRAD_STRIDE):
-        for x in range(2, W - 2, GRAD_STRIDE):
+    for y in range(2, H - 2, stride):
+        for x in range(2, W - 2, stride):
+            if ap is not None:
+                # voisinage 3x3 entièrement opaque : le gradient lit les voisins ±1, un
+                # texel bordant la transparence porte le NOIR de dossier, pas de l'image.
+                if any(ap[x + dx, y + dy] != 255 for dy in (-1, 0, 1) for dx in (-1, 0, 1)):
+                    continue
             g = (abs(luma(px[x + 1, y]) - luma(px[x - 1, y]))
                  + abs(luma(px[x, y + 1]) - luma(px[x, y - 1])))
             grad.append((g, x, y))
-    if len(grad) < 2 * N_SAMPLES:
+    n = (N_SAMPLES if stride == GRAD_STRIDE and ap is None
+         else int(round(SAMPLE_FRACTION * len(grad))))
+    if n < MIN_SAMPLES_POP or len(grad) < 2 * n:
         return None, None
     grad.sort(key=lambda t: t[0], reverse=True)
-    hi = [(x, y) for _, x, y in grad[:N_SAMPLES]]
-    lo = [(x, y) for _, x, y in grad[-N_SAMPLES:]]
-    return hi, lo
+    return [(x, y) for _, x, y in grad[:n]], [(x, y) for _, x, y in grad[-n:]]
 
 
 def mae(src, cap, pts, rect):
@@ -227,14 +262,17 @@ def juger(src, cap, rect, label, declared_fraction=None):
     W, H = src.size
     hi, lo = populations(src)
     if hi is None:
-        print("  n'a pas pu s'exécuter : artefact trop petit pour 2 x %d échantillons" % N_SAMPLES)
-        return 2
+        st, mq = regime(src)
+        print("  n'a pas pu s'exécuter : trop peu de points exploitables "
+              "(stride %d, masque alpha %s, plancher %d par population)"
+              % (st, "OUI" if mq else "non", MIN_SAMPLES_POP))
+        return 2, "INEXÉCUTABLE"
 
     m_hi, n_hi = mae(src, cap, hi, rect)
     m_lo, n_lo = mae(src, cap, lo, rect)
     if not n_hi or not n_lo:
         print("  n'a pas pu s'exécuter : 0 pixel comparé (rect hors de la capture ?)")
-        return 2
+        return 2, "INEXÉCUTABLE"
 
     rx, ry, rw, rh = rect
     d_w, d_h = abs(rw - W), abs(rh - H)
@@ -280,6 +318,10 @@ def juger(src, cap, rect, label, declared_fraction=None):
           % (rw, rh, W, H, coins_presents(src, cap, rect),
              "" if declared_fraction is None else " (fraction déclarée %.3f)" % declared_fraction,
              "VERT" if cadre_ok else "ROUGE"))
+    _st, _mq = regime(src)
+    print("    régime       stride %d (%s), masque alpha %s, N = %d par population"
+          % (_st, "gelé" if _st == GRAD_STRIDE and not _mq else "dérivé",
+             "OUI" if _mq else "non", len(hi)))
     print("    corrélation  r = %.4f au meilleur alignement (%+d,%+d)  seuils %.2f/%.2f  -> %s"
           % (r_corr, r_dx, r_dy, SEUIL_CORR_BASSE, SEUIL_CORR_HAUTE, cls))
     print("    diagnostic   %s" % diag)
@@ -296,6 +338,7 @@ def fabriquer_panne(src, quoi):
         return src.resize((int(W * CTRL_SCALE), int(H * CTRL_SCALE)), Image.BILINEAR) \
                   .resize((W, H), Image.BILINEAR), (0, 0, W, H)
     if quoi == "haze":
+        src = src.convert('RGB')
         out = src.copy()
         sp, op = src.load(), out.load()
         hz = [s2l(CTRL_HAZE_RGB[i] * 255) for i in range(3)]
@@ -311,7 +354,7 @@ def fabriquer_panne(src, quoi):
     if quoi == "gamma":
         # panne de VALEURS pure : transformation MONOTONE, donc la géométrie est intacte
         lut = [min(255, int(round(255 * ((v / 255.0) ** (1.0 / CTRL_GAMMA))))) for v in range(256)]
-        return src.point(lut * 3), (0, 0, W, H)
+        return src.point(lut * len(src.getbands())), (0, 0, W, H)
     if quoi == "phase":
         # panne de GÉOMÉTRIE SOUS-PIXEL : décalage bilinéaire d'une fraction de pixel.
         # C'est la panne que le pivot « fond pré-rendu » a réellement rencontrée, et la
@@ -329,7 +372,7 @@ def selftest(source):
     """Les 4 contrôles. Le NÉGATIF est aussi obligatoire que les positifs : une
     sonde qui ne sait que dire ROUGE est aussi inutile qu'une qui ne sait que dire
     VERT. Attendu : identité VERTE, les 3 pannes ROUGES."""
-    src = Image.open(source).convert('RGB')
+    src = ouvrir(source)
     print("CONTRÔLES — source %s (%dx%d)" % (os.path.basename(source), *src.size))
     print()
     attendus = [("identité (contrôle NÉGATIF — DOIT être vert)", src, (0, 0, *src.size), 0, "ALIGNÉ"),
@@ -354,6 +397,56 @@ def selftest(source):
                  "OK" if ok else "CONTRÔLE CASSÉ"))
         print()
     n = len(pannes)
+
+    # ── contrôle du RÉGIME DÉRIVÉ : la formule doit reproduire la constante gelée ──
+    st_fond, _ = regime(src)
+    ok_formule = (st_fond == GRAD_STRIDE)
+    n += 1
+    if not ok_formule:
+        echecs += 1
+    print("  formule de stride sur l'artefact de référence : %d (gelé %d) : %s"
+          % (st_fond, GRAD_STRIDE, "OK" if ok_formule else "CONTRÔLE CASSÉ"))
+    print()
+
+    # ── contrôle « trop petit » : DOIT rendre le code 2, JAMAIS 1 (le bug du round 4) ──
+    petit = src.crop((0, 0, 24, 24))
+    code, cls = juger(petit, petit, (0, 0, 24, 24), "artefact 24x24 (DOIT rendre le code 2)")
+    ok_petit = (code == 2 and cls == "INEXÉCUTABLE")
+    n += 1
+    if not ok_petit:
+        echecs += 1
+    print("    -> attendu code 2 / INEXÉCUTABLE, obtenu code %d / %s : %s"
+          % (code, cls, "OK" if ok_petit else "CONTRÔLE CASSÉ"))
+    print()
+
+    # ── contrôles à l'échelle SPRITE, sur le sprite RÉEL (jamais une image fabriquée) ──
+    if os.path.exists(CTRL_SPRITE):
+        spr = Image.open(CTRL_SPRITE)
+        print("  ÉCHELLE SPRITE — %s (%dx%d, %s)"
+              % (os.path.basename(CTRL_SPRITE), spr.size[0], spr.size[1], spr.mode))
+        srgb = spr.convert('RGB')
+        attendus_s = [("identité", None, 0, "ALIGNÉ"),
+                      ("gamma %.2f" % CTRL_GAMMA, "gamma", 1, "ALIGNÉ"),
+                      ("phase sous-pixel %.2f px" % CTRL_PHASE, "phase", 1, "ALIGNÉ"),
+                      ("translation %d px" % CTRL_DECAL_PX, "translation", 1, "GÉOMÉTRIE"),
+                      ("brume %.0f%%" % (CTRL_HAZE_A * 100), "haze", 1, "ALIGNÉ")]
+        for label, panne, att, cls_att in attendus_s:
+            cap = srgb if panne is None else fabriquer_panne(srgb, panne)[0]
+            code, cls = juger(spr, cap, (0, 0, *spr.size), "  sprite / " + label)
+            ok = (code == att) and (cls == cls_att)
+            n += 1
+            if not ok:
+                echecs += 1
+            print("    -> attendu code %d / %s, obtenu code %d / %s : %s"
+                  % (att, cls_att, code, cls, "OK" if ok else "CONTRÔLE CASSÉ"))
+            print()
+    else:
+        n += 1
+        echecs += 1
+        print("  ÉCHELLE SPRITE : NON EXÉCUTÉE — %s introuvable. Ce n'est PAS un succès :"
+              " le compte ci-dessous le porte comme un échec." % CTRL_SPRITE)
+        print()
+
     print("CONTRÔLES : %d/%d conformes" % (n - echecs, n))
     return 0 if echecs == 0 else 2
 
@@ -382,8 +475,11 @@ def main():
         sys.stderr.write("capture introuvable : %s\n" % a.capture)
         return 2
 
-    src = Image.open(a.source).convert('RGB')
-    cap = Image.open(a.capture).convert('RGB')
+    # NE PAS convertir en RGB ici : `regime()` a besoin du canal alpha pour décider du
+    # masque. Une conversion en amont rendrait le masque MORT-NÉ tout en laissant la
+    # sortie parfaitement plausible (trouvé exactement comme ça, round 5).
+    src = ouvrir(a.source)
+    cap = ouvrir(a.capture)
     if a.rect:
         rect = tuple(int(v) for v in a.rect.split(','))
         if len(rect) != 4:
