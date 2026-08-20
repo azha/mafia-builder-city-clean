@@ -52,16 +52,21 @@ capture + sonde de ressemblance, run PlayMode W3U2 complet.
    `fallback←barbier`. `bar_hero`, `residentiel4`, `residentiel5` restent importés mais NON câblés
    (pas de 8e/9e/10e slot dans `BuildingSpriteSlots` — hors scope de ce chunk).
 
-2. **pp-F2/F-calage, second volet — la formule LITTÉRALE du design ne tient pas sur la donnée
-   livrée.** §8 du design : « l'écart entre (0,0) et (9,0) vaut `9×pas_parcelle_m×ex` ». MESURÉ sur
-   `VERGE_D_NUIT_FINAL.json` : delta observé `(-1.76, 824.53)` px contre `(1308.35, 299.11)` px
-   pour cette formule — hors tolérance de PLUS DE 1000 px, pas une erreur d'arrondi.
-   Cause identifiée : `parcelles.py` a choisi une orientation de grille NON alignée sur l'axe monde
-   X (`ex`) — angle mesuré ≈ −68,8° — un FAIT de la donnée livrée par l'atelier (P0, hors ce
-   chunk), pas un bug Unity. Remplacé par un contrôle équivalent en INTENTION (§9 : « tué par le
-   contrôle d'écart inter-blocs », anti-dégénérescence d'un maillage non uniforme) mesuré avec le
-   pas RÉEL (0,0)→(1,0) plutôt qu'assumé via `ex`. Voir `DistrictBackgroundPlayModeTests.cs`,
-   `PpF2_...` (commentaire in-situ).
+2. ⚠️ **AMENDÉE (round 4, verdict ⊥) — DIAGNOSTIC INITIAL FAUX, corrigé par une mesure dans la
+   BONNE base.** La première version de cette Deviation comparait un pas mesuré en PIXELS BRUTS à
+   une formule qui suppose le maillage aligné sur l'axe monde X — hors tolérance de plus de 1000px
+   — et concluait que la propriété de pas régulier du design NE TENAIT PAS sur la donnée livrée.
+   **Cette conclusion était FAUSSE.** Le maillage EST un quadrillage régulier en MÈTRES MONDE, à
+   ~6,50m de pas sur toute sa longueur (54 pas horizontaux mesurés, extrêmes 6.4998–6.5006m) — il
+   est simplement TOURNÉ d'environ 21,2° par rapport aux axes `ex`/`ey`, et la base `(ex,ey)`
+   elle-même est OBLIQUE (déterminant non nul, axes du maillage orthogonaux entre eux à ~90,00°
+   mesurés dans cette base — la grille est un vrai rectangle, pas les axes monde). Un pas en pixels
+   bruts ne peut donc jamais se comparer à `pas_parcelle_m × |ex|` — ce n'est pas la question que
+   pose la donnée. Le contrôle a été refait : résoudre le pas mesuré dans la base `(ex,ey)` (système
+   2×2, données déjà dans le DTO) et vérifier que sa norme EN MÈTRES vaut `pas_parcelle_m` — c'est
+   ce que `DistrictBackgroundPlayModeTests.cs` (`PpF2_...`, commentaire in-situ) vérifie désormais,
+   remplaçant le contrôle précédent qui comparait le JSON à une translation de lui-même
+   (tautologique — il ne pouvait rougir sur AUCUN maillage, régulier ou non).
 
 3. **pp-F3, second volet — interprétation de `largeur_monde_m`.** Le design ne fournit aucune
    table de largeurs réelles par template (ni dans les artefacts livrés, ni dans le code existant),
@@ -356,3 +361,95 @@ protocoles légèrement différents, et n'est expliqué par AUCUNE des 4 variabl
 (méthode de capture, sRGBTexture, config URP caméra/Volume, render scale). Le changement
 `m_RenderScale=1` est CONSERVÉ (améliore la fidélité pixel-perfect par principe même sans effet
 mesuré ici, et suit le ruling user) mais n'est plus une piste pour CE résidu spécifique.
+
+---
+
+## § ROUND 4 (verdict ⊥, relecteur frais) — CAUSE TRANCHÉE, CIBLE ATTEINTE — 2026-08-20
+
+Diagnostic du ⊥ : phase sous-pixel (0,000 ; 0,500) produite par la PARITÉ IMPAIRE du viewport
+(577 ⇒ centre vertical à 288,5, un demi-pixel). Sonde mise à jour (commit `238b1ab`, 3ᵉ branche
+« corrélation au meilleur alignement », 7 contrôles dont un « phase sous-pixel 0,5px » — selftest
+7/7 reproduit avant de commencer.
+
+### Geste 0 — la preuve gratuite (prédiction ⊥ écrite d'avance : MAE ~0,0x VERT)
+
+Re-capture à viewport **1100×576** (hauteur PAIRE, via un `GameViewSize` custom sélectionné par
+réflexion — code du contrôleur INCHANGÉ à ce stade). Recadrage propre hors chrome, sonde :
+```
+F-transport  MAE arêtes =   0.00   VERT
+F-nocalque   MAE plats  =   0.00   VERT
+F-cadre      coins 4/4  VERT
+corrélation  r = 1.0000  -> ALIGNÉ
+diagnostic   transport intact
+RESULT transport=0.000 nocalque=0.000 ratio=inf cadre=1 corr=1.0000 dxy=+0+0 classe=ALIGNÉ compares=3000/3000
+```
+**Prédiction confirmée exactement.** La cause est tranchée — pas de re-bouclage nécessaire.
+
+### Gestes 1-3 — le correctif en code (viewport ODD 1100×577, le cas dur, gardé pour la suite)
+
+- **B2** : `canvas.pixelPerfect = true` (ex `DistrictInteriorScreenController.cs:728`) RETIRÉ.
+  Bloc de commentaire au-dessus PARAPHRASÉ (aucune citation de l'affirmation retirée) — décrit
+  maintenant l'essai antérieur au passé, sa mesure négative, et renvoie au round 4 des notes.
+- **Snap explicite** (`SnapToScreenPixel`, nouvelle méthode) : mesure `RectTransform.position`
+  (coïncide avec l'écran sur un Canvas ScreenSpaceOverlay), arrondit au pixel entier, réinjecte la
+  correction dans `anchoredPosition` via `lossyScale` (≈ `scaleFactor` sur cette hiérarchie).
+  Appliqué au fond (geste 2, juste après `fondRt.anchoredPosition = Vector2.zero`) ET à CHAQUE
+  ancre de bâtiment (geste 3 / I2, juste après `cellRt.anchoredPosition = localPos` — `:406`
+  d'origine, `pivot_px` fractionnaire, aucun arrondi avant ce correctif).
+
+### Geste 4 (B1) — capture sous l'état livré, commitée, avec son chiffre
+
+Re-capture au viewport DUR (1100×577, impair) sous le code corrigé. Rect imprimé :
+`rectX=10 rectYTopDown=-671 rectW=1080 rectH=1920` (glissé de −672 à −671 — le snap a bougé le
+fond d'exactement 1px, la correction attendue). Fichier commité : `Assets/Screenshots/district_fond_v1.png`.
+
+```
+python3 Tools/resemblance-probe.py --source .../VERGE_D_NUIT_FINAL.png --capture district_fond_v1.png --rect 10,-671,1080,1920
+```
+Brut (F-cadre rouge attendu — fond natif > viewport, §2.1 du design, inchangé) :
+```
+RESULT transport=3.334 nocalque=5.820 ratio=0.6 cadre=0 corr=0.9486 dxy=+0+0 classe=ALIGNÉ compares=2088/427
+```
+**Recadrage propre hors chrome TopBar/TabBar — LE CHIFFRE FINAL :**
+```
+F-transport  MAE arêtes =   0.00   (seuil ≤ 1.00)  VERT
+F-nocalque   MAE plats  =   0.00   (seuil ≤ 0.50)  VERT
+F-cadre      rect 1080x473 vs source 1080x473, coins 4/4  VERT
+corrélation  r = 1.0000 au meilleur alignement (+0,+0)  seuils 0.70/0.90  -> ALIGNÉ
+diagnostic   transport intact
+RESULT transport=0.000 nocalque=0.000 ratio=inf cadre=1 corr=1.0000 dxy=+0+0 classe=ALIGNÉ compares=3000/3000
+```
+**CIBLE ATTEINTE : transport intact, sur le viewport DUR (impair), capture commitée reproductible.**
+
+**Validation de la falsifiable pré-enregistrée ⊥ (« pixelPerfect ON ⇒ ~1,3-1,4 ROUGE ; OFF ⇒
+~0,0x VERT »)** — testée par une réactivation TEMPORAIRE de `canvas.pixelPerfect = true` après le
+snap, recapture, sonde, puis retrait (état final = OFF, code livré). Résultat mesuré, honnête :
+**les deux captures (ON et OFF) sont OCTET POUR OCTET IDENTIQUES** (md5 identique, 0 octet de
+différence sur 1 532 520) — **0,00/0,00 VERT dans LES DEUX cas**, PAS ~1,3-1,4 ROUGE en ON. La
+falsifiable numérique n'est donc PAS confirmée telle quelle sur cette mesure : une fois le snap
+explicite en place, `pixelPerfect` n'a plus RIEN à corriger (positions déjà entières) et devient un
+no-op mesuré, ni positif ni négatif — cohérent avec le retrait (B2) mais pas avec l'amplitude
+prédite. Consigné sans l'ajuster pour coller à la prédiction.
+
+### Geste 5 (I1) — le contrôle d'ancrage tautologique remplacé, Deviation #2 amendée
+
+Vérifié indépendamment (Python, avant d'écrire le C#) : `det(ex,ey) = -338,26` ✓,
+`√(a²+b²) = 6,5006m` pour le pas (0,0)→(1,0) ✓ (54 pas horizontaux mesurés : 6,4998–6,5006m),
+angle entre les deux axes du maillage (dans la base ex,ey) = 89,997° ✓, rotation du maillage par
+rapport à `ex` ≈ 21,198° ✓ — les 4 nombres du ⊥ reproduits à la 3ᵉ décimale. Le contrôle dans
+`DistrictBackgroundPlayModeTests.cs` (`PpF2_...`) est remplacé : résout `perStep = a·ex + b·ey`
+(système 2×2, données du DTO) et vérifie `√(a²+b²) == pas_parcelle_m` (±0,01m). La Deviation #2 de
+ce fichier est amendée (paraphrasée, pas de citation du diagnostic retiré) — voir plus haut.
+
+### Geste 6 (I3) — la note laverie, forme honnête
+
+Retiré : la revendication que la note fonctionne comme le précédent `toBe(404)` (auto-invalidant
+par un ROUGE à la fermeture). Ce test-ci VERDIT silencieusement à la fermeture du défaut — rien ne
+force la relecture de la note. Dit tel quel maintenant : c'est une consigne en prose, acceptée
+comme telle, pas un mécanisme qui s'applique tout seul.
+
+### Geste 7 — evidence finale
+
+PlayMode W3U2 complet, re-vérifié après TOUS les changements de ce round : **56 tests, 55 verts,
+1 rouge** (`PpF3_Part2..._laverie_nuit_base`, note honnête). `pp-F1`/`pp-F2` (avec le nouveau
+contrôle I1) inclus dans les 55 verts.

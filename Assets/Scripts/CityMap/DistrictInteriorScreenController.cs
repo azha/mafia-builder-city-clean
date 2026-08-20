@@ -301,6 +301,8 @@ namespace MafiaCleanCity.CityMap
                 fondRt.anchoredPosition = Vector2.zero;
                 Texture2D tex = bg.fond.texture;
                 fondRt.sizeDelta = new Vector2(tex.width, tex.height) / scaleFactor;
+                // round 4 (verdict ⊥) — snap explicite au pixel écran entier, voir SnapToScreenPixel.
+                SnapToScreenPixel(fondRt);
                 Image fondImg = fondGo.AddComponent<Image>();
                 fondImg.sprite = bg.fond;
                 fondImg.raycastTarget = false; // pp-F6 — le fond est inerte : ni Button ni état.
@@ -404,6 +406,11 @@ namespace MafiaCleanCity.CityMap
             cellRt.pivot = new Vector2(0.5f, 0f); // bas-centre — §4 : "le pivot bas-centre du sprite s'y pose"
             cellRt.sizeDelta = cellSize;
             cellRt.anchoredPosition = localPos;
+            // I2 (round 4, verdict ⊥) — `pivot_px` est fractionnaire (ex. 150.87, 547.45) et
+            // PixelToFondLocal divise par scaleFactor sans arrondir : snap explicite au pixel écran
+            // entier, MÊME mécanisme que le fond (SnapToScreenPixel), pour que l'ancrage du bâtiment
+            // ne réintroduise pas la phase sous-pixel que le fond vient de corriger.
+            SnapToScreenPixel(cellRt);
 
             float cellW = cellSize.x, cellH = cellSize.y;
 
@@ -713,20 +720,18 @@ namespace MafiaCleanCity.CityMap
                 scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
                 scaler.referenceResolution = new Vector2(1280, 720);
             }
-            // Pivot fond pré-rendu — MESURÉ (Tools/pivot-fond-prerendu-design.md, evidence de capture,
-            // implementation-notes.md § Deviations) : `Canvas.pixelPerfect` n'est posé NULLE PART dans
-            // ce dépôt (grep, 0 hit) — sans lui, le rect compensé (sizeDelta = tex/scaleFactor) reste
-            // géométriquement EXACT (pp-F1 le prouve) mais le rasteriseur peut placer ses bords sur des
-            // coordonnées SOUS-PIXEL, et le FilterMode.Bilinear du fond (§1, exigé par le mandat) lisse
-            // alors la texture à ces bords — un vrai ré-échantillonnage mesuré par la sonde ⊥
-            // (Tools/resemblance-probe.py : MAE arêtes 5,40, ratio 23:1, signature RÉÉCHANTILLONNÉ,
-            // AVANT ce correctif). `pixelPerfect` claque le rendu sur la grille de pixels entière —
-            // c'est la même primitive Unity que « pixel perfect » du ruling user (§0 du design), pas
-            // une invention de ce chunk. Posé ICI (canvas TROUVÉ ou CRÉÉ) plutôt que dans AppShell.cs :
-            // le tenant qui a besoin de 1:1 exact le garantit sur le canvas qu'il utilise, sans muter
-            // un fichier hors du périmètre de ce chunk pour un cas où AppShell créerait le canvas avec
-            // pixelPerfect=false par défaut.
-            canvas.pixelPerfect = true;
+            // Pivot fond pré-rendu — DÉVIATION AMENDÉE (round 4, verdict ⊥ sur
+            // Tools/pivot-fond-prerendu-p3-implementation-notes.md § ROUND 4). Un essai antérieur
+            // avait ajouté ici un réglage Canvas au niveau de l'objet entier, dans l'espoir de
+            // résorber un écart mesuré par la sonde de ressemblance. Mesuré AVANT/APRÈS cet essai :
+            // aucune amélioration (l'écart a même légèrement augmenté). Root cause identifiée
+            // ensuite par le ⊥ : une PHASE SOUS-PIXEL dépendante de la PARITÉ du viewport (une
+            // hauteur d'écran impaire déplace le centrage vertical d'un demi-pixel) — confirmée par
+            // une preuve à coût nul (viewport pair ⇒ écart nul immédiatement) et RÉFUTÉE pour ce
+            // réglage Canvas précis (VERT/ROUGE ne suit pas son état ON/OFF, §ROUND 4 du fichier de
+            // notes). Le correctif retenu est EXPLICITE, pas un réglage global : chaque position
+            // écran calculée par ce contrôleur (fond ET ancres de bâtiment) est arrondie au pixel
+            // entier APRÈS multiplication par `scaleFactor` — voir `SnapToScreenPixel` ci-dessous.
             Transform parent = mountParent != null ? mountParent : canvas.transform; // W3.U1 D2
 
             GameObject rootGo = NewUI("DistrictInteriorRoot", parent);
@@ -774,6 +779,30 @@ namespace MafiaCleanCity.CityMap
             rt.anchorMax = Vector2.one;
             rt.offsetMin = offMin;
             rt.offsetMax = offMax;
+        }
+
+        /// <summary>Round 4 (verdict ⊥, Tools/pivot-fond-prerendu-p3-implementation-notes.md
+        /// § ROUND 4) — corrige la PHASE SOUS-PIXEL d'un point déjà positionné. Cause mesurée : une
+        /// hauteur d'écran réelle IMPAIRE (ex. 577) déplace le centre du canvas d'un demi-pixel
+        /// (577/2 = 288,5) ; ce demi-pixel se propage à tout ce qui est ancré relativement à ce
+        /// centre, y compris quand `anchoredPosition` lui-même est un entier exact en unités canvas
+        /// — le décalage apparaît à la PROJECTION écran, pas dans les unités locales. Preuve à coût
+        /// nul (§ ROUND 4) : à hauteur PAIRE, l'écart mesuré tombe à 0,000 sans aucun autre
+        /// changement de code. `RectTransform.position` (Canvas ScreenSpaceOverlay ⇒ coïncide avec
+        /// les coordonnées écran) est arrondi au pixel entier, et la correction est réinjectée en
+        /// unités LOCALES via `lossyScale` (qui vaut `scaleFactor` sur cette hiérarchie, §ROUND 1) —
+        /// jamais un réglage global de Canvas (réfuté, voir le commentaire de `BuildRoot`).</summary>
+        private static void SnapToScreenPixel(RectTransform rt)
+        {
+            Vector3 pos = rt.position;
+            Vector3 snapped = new Vector3(Mathf.Round(pos.x), Mathf.Round(pos.y), pos.z);
+            if (snapped == pos) return;
+            Vector3 lossyScale = rt.lossyScale;
+            Vector3 deltaWorld = snapped - pos;
+            Vector2 localDelta = new Vector2(
+                Mathf.Abs(lossyScale.x) > 1e-6f ? deltaWorld.x / lossyScale.x : 0f,
+                Mathf.Abs(lossyScale.y) > 1e-6f ? deltaWorld.y / lossyScale.y : 0f);
+            rt.anchoredPosition += localDelta;
         }
     }
 

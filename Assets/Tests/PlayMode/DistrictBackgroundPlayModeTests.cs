@@ -196,29 +196,34 @@ namespace MafiaCleanCity.CityMap.Tests
             }
             Assert.AreEqual(4, checkedBuildings, "starter kit J0 — scénario dimensionné, les 4 bâtiments calibrés");
 
-            // F-calage, second volet — écart inter-blocs. ⚠️ DÉVIATION MESURÉE (implementation-notes.md
-            // § Deviations) : le design (§8) écrit littéralement « l'écart entre (0,0) et (9,0) vaut
-            // 9×pas_parcelle_m×ex ». Mesuré sur VERGE_D_NUIT_FINAL.json : delta observé
-            // (-1,76 ; 824,53)px contre (1308,35 ; 299,11)px pour cette formule — parcelles.py a
-            // choisi une orientation de grille NON alignée sur l'axe monde X (`ex`), un FAIT de la
-            // donnée livrée (angle mesuré ≈ -68,8° de `ex`), pas une erreur d'implémentation Unity.
-            // La propriété qui SURVIT (§9 : « tué par le contrôle d'écart inter-blocs » — anti-
-            // dégénérescence d'un JSON dont les blocs ne formeraient pas un maillage uniforme) est
-            // vérifiée avec un pas MESURÉ (0,0)→(1,0) plutôt qu'assumé via `ex` : le maillage doit
-            // rester linéaire jusqu'à (9,0).
-            DistrictBackgroundParcelDto p00 = DistrictBackgroundAnchor.FindParcel(map, 0, 0);
-            DistrictBackgroundParcelDto p10 = DistrictBackgroundAnchor.FindParcel(map, 1, 0);
-            DistrictBackgroundParcelDto p90 = DistrictBackgroundAnchor.FindParcel(map, 9, 0);
-            Assert.IsNotNull(p00); Assert.IsNotNull(p10); Assert.IsNotNull(p90);
-            Vector2 v00 = new Vector2(p00.pivot_px[0], p00.pivot_px[1]);
-            Vector2 v10 = new Vector2(p10.pivot_px[0], p10.pivot_px[1]);
-            Vector2 v90 = new Vector2(p90.pivot_px[0], p90.pivot_px[1]);
-            Vector2 perStep = v10 - v00;
-            Assert.Greater(perStep.magnitude, 1f, "anti-vacuité — le pas mesuré (0,0)→(1,0) n'est pas dégénéré (quasi-nul)");
-            Vector2 expectedNine = v00 + 9f * perStep;
-            float gridErrorPx = Vector2.Distance(expectedNine, v90);
-            Assert.LessOrEqual(gridErrorPx, 2f,
-                $"F-calage — maillage (0,0)→(9,0) linéaire à ≤2px du pas mesuré (0,0)→(1,0) (écart {gridErrorPx:F2}px)");
+            // F-calage, second volet — AMENDÉ (round 4, verdict ⊥ sur
+            // Tools/pivot-fond-prerendu-p3-implementation-notes.md § ROUND 4). Le contrôle précédent
+            // comparait un pas mesuré en pixels à lui-même translaté (tautologique — il ne pouvait
+            // jamais rougir sur un maillage réellement irrégulier) ET la Deviation qui l'accompagnait
+            // concluait à tort que la propriété `pas_parcelle_m` du design ne tenait pas sur cette
+            // donnée. Mesuré à nouveau, dans la BONNE base : elle tient EXACTEMENT — le maillage est
+            // un vrai quadrillage régulier en MÈTRES MONDE, simplement tourné (les axes du maillage
+            // ne sont pas alignés sur les axes `ex`/`ey` du monde, et cette base elle-même est
+            // oblique, déterminant non nul) — un pas exprimé en pixels bruts ne peut donc PAS être
+            // comparé à `pas_parcelle_m × |ex|`. Le contrôle correct résout le pas mesuré (0,0)→(1,0)
+            // dans la base (ex,ey) — système 2×2, toutes les données déjà dans le DTO — et vérifie
+            // que sa norme EN MÈTRES égale `pas_parcelle_m` à la tolérance près.
+            DistrictBackgroundParcelDto q00 = DistrictBackgroundAnchor.FindParcel(map, 0, 0);
+            DistrictBackgroundParcelDto q10 = DistrictBackgroundAnchor.FindParcel(map, 1, 0);
+            Assert.IsNotNull(q00); Assert.IsNotNull(q10);
+            Vector2 stepPx = new Vector2(q10.pivot_px[0] - q00.pivot_px[0], q10.pivot_px[1] - q00.pivot_px[1]);
+            Assert.Greater(stepPx.magnitude, 1f, "anti-vacuité — le pas mesuré (0,0)→(1,0) n'est pas dégénéré (quasi-nul)");
+
+            Vector2 exVec = new Vector2(map.base_px_par_m.ex[0], map.base_px_par_m.ex[1]);
+            Vector2 eyVec = new Vector2(map.base_px_par_m.ey[0], map.base_px_par_m.ey[1]);
+            float det = exVec.x * eyVec.y - eyVec.x * exVec.y;
+            Assert.AreNotEqual(0f, det, "anti-vacuité — la base (ex,ey) ne doit pas être dégénérée (colinéaire)");
+            float a = (stepPx.x * eyVec.y - eyVec.x * stepPx.y) / det;
+            float b = (exVec.x * stepPx.y - stepPx.x * exVec.y) / det;
+            float stepMeters = Mathf.Sqrt(a * a + b * b);
+            Assert.AreEqual(map.pas_parcelle_m, stepMeters, 0.01f,
+                $"F-calage — le pas (0,0)→(1,0), décomposé dans la base (ex,ey), vaut {stepMeters:F4}m " +
+                $"(pas_parcelle_m déclaré {map.pas_parcelle_m:F4}m) — la propriété du design tient dans la BONNE base");
         }
 
         // ── pp-F3 — zéro rescale, POUR CHACUN des sprites livrés ─────────────────────────────────
@@ -280,12 +285,18 @@ namespace MafiaCleanCity.CityMap.Tests
         // 0,12%) pour que le chemin de RENDU (pp-F3 Part 1, PpF2, la capture) ne dépende pas de cet
         // asset défectueux — seul ce balayage EXHAUSTIF (Part 2, les 54 fichiers bruts) le voit encore.
         //
-        // MODE D'EMPLOI DE PÉREMPTION (précédent maison : le test qui épinglait un bug ratifié via
-        // `toBe(404)`, socle) — en toutes lettres : CE ROUGE EST ATTENDU tant que `laverie_nuit_base`
-        // (ppm24.0 ET ppm56.471) n'a PAS été re-rendue à l'atelier (chunk P1, lot séparé). LE JOUR OU
-        // ELLE L'EST, ce test devient VERT et CETTE NOTE (du "⚠️ DÉFAUT MESURÉ" ci-dessus jusqu'ici)
-        // DOIT ÊTRE SUPPRIMÉE — un rouge qui reste épinglé après que sa cause a été fermée devient un
-        // faux négatif silencieux, la classe exacte que ce mode d'emploi existe pour prévenir.
+        // MODE D'EMPLOI DE PÉREMPTION — en toutes lettres : CE ROUGE EST ATTENDU tant que
+        // `laverie_nuit_base` (ppm24.0 ET ppm56.471) n'a PAS été re-rendue à l'atelier (chunk P1,
+        // lot séparé). LE JOUR OU ELLE L'EST, ce test devient VERT et CETTE NOTE (du "⚠️ DÉFAUT
+        // MESURÉ" ci-dessus jusqu'ici) DOIT ÊTRE SUPPRIMÉE.
+        // ⚠️ AMENDÉ (round 4, verdict ⊥) — CE N'EST PAS la même forme que le précédent maison
+        // `toBe(404)` : celui-là s'auto-invalide en ROUGISSANT (le bug se ferme ⇒ l'assertion pinnée
+        // sur l'ancien comportement CASSE ⇒ quelqu'un est FORCÉ de remarquer et de retirer le pin).
+        // ICI c'est l'INVERSE : la fermeture du défaut fait VERDIR ce test — rien ne se déclenche,
+        // aucune alarme ne force la relecture de cette note. C'est une CONSIGNE EN PROSE, pas un
+        // mécanisme auto-invalidant — et c'est ACCEPTÉ comme tel (le socle : « une déviation
+        // consignée est le fonctionnement normal ») du moment que ça se dit tel quel, pas déguisé en
+        // garde qui s'appliquerait toute seule.
         [Test]
         public void PpF3_Part2_AllFiftyFourDeliveredSprites_CrossPpmRatioMatchesDeclaredPpm_WithinOnePercent()
         {
