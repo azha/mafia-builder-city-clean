@@ -24,8 +24,17 @@ namespace MafiaCleanCity.Shell
     // `GET /v1/economy/wallet` en propre).
     public class TopBarController : MonoBehaviour
     {
+        // nav-hud-design-v1.md §3.1 (chunk 2) — l'action « leading » : ÉTEND le TopBar, ne le
+        // REMPLACE pas (§3.1 : "aucun bouton ne devient jamais un 4ᵉ enfant du Canvas" — 3
+        // falsifiables C1-F2/C8-F1 assertent déjà childCount==3 sur la racine ; un enfant de
+        // TopBarSlot ne les touche pas). État NOMMÉ, jamais déduit d'une absence d'objet.
+        public enum LeadingAction { None, BackToMap }
+
         [Header("Backend")]
         [SerializeField] private string baseUrl = "http://localhost";
+
+        // ---- test hooks — action leading (§3.1) ----------------------------
+        public LeadingAction CurrentLeadingAction { get; private set; } = LeadingAction.None;
 
         // ---- test hooks ---------------------------------------------------
         public bool Loaded { get; private set; }
@@ -48,6 +57,12 @@ namespace MafiaCleanCity.Shell
         private TextMeshProUGUI cashText;
         private TextMeshProUGUI notificationText;
         private TextMeshProUGUI gameDayText;
+
+        // §3.1 — le bouton leading, construit UNE fois dans BuildLayout, premier enfant du
+        // HorizontalLayoutGroup, JAMAIS détruit ; seule sa visibilité (SetActive) suit l'état.
+        private GameObject leadingGo;
+        private TextMeshProUGUI leadingText;
+        private System.Action leadingOnClick;
 
         private DashboardClient client;
         private bool initialized;
@@ -120,6 +135,30 @@ namespace MafiaCleanCity.Shell
             if (trackValue && !string.IsNullOrEmpty(text)) renderedTexts.Add(text);
         }
 
+        /// <summary>§3.1 — bascule l'action leading. `LeadingAction.None` cache le bouton (les 4
+        /// éléments canoniques reflow vers la gauche, HorizontalLayoutGroup ignore un enfant
+        /// inactif) ; `BackToMap` le montre avec `onClick` câblé. Épinglé par sa VALEUR
+        /// (`CurrentLeadingAction`), jamais par la présence/absence du GameObject — le bouton
+        /// existe toujours, seule sa visibilité change (§3.1).</summary>
+        public void SetLeadingAction(LeadingAction action, System.Action onClick)
+        {
+            EnsureInitialized();
+            CurrentLeadingAction = action;
+            leadingOnClick = onClick;
+            bool visible = action != LeadingAction.None;
+            leadingGo.SetActive(visible);
+            if (visible) leadingText.text = LabelFor(action);
+        }
+
+        private static string LabelFor(LeadingAction action)
+        {
+            switch (action)
+            {
+                case LeadingAction.BackToMap: return "← Carte"; // "← Carte" — libellé littéral du design §3
+                default: return "";
+            }
+        }
+
         // ----------------------------------------------------------- cash formatting (C2-F1)
 
         /// <summary>Format a BigInt-serialized cents STRING as a locale-appropriate currency string —
@@ -174,6 +213,32 @@ namespace MafiaCleanCity.Shell
             hlg.childControlHeight = true;
             hlg.childForceExpandWidth = false;
             hlg.childForceExpandHeight = true;
+
+            // §3.1 — le bouton leading est le PREMIER enfant du HorizontalLayoutGroup, construit
+            // AVANT les 4 éléments canoniques pour que la fratrie le place en tête (gauche). Caché
+            // par défaut (LeadingAction.None) — un test qui ne l'active jamais ne doit rien voir.
+            leadingGo = new GameObject("LeadingAction", typeof(RectTransform));
+            leadingGo.transform.SetParent(transform, false);
+            Image leadingImg = leadingGo.AddComponent<Image>();
+            leadingImg.color = DesignTokens.Current.surfaceRow; // REUSE — même famille que le chrome de la TabBar
+            Button leadingBtn = leadingGo.AddComponent<Button>();
+            leadingBtn.targetGraphic = leadingImg;
+            leadingBtn.onClick.AddListener(() => leadingOnClick?.Invoke());
+            LayoutElement leadingLe = leadingGo.AddComponent<LayoutElement>();
+            leadingLe.preferredWidth = 90;
+            leadingLe.flexibleWidth = 0;
+
+            GameObject leadingLabelGo = new GameObject("Label", typeof(RectTransform));
+            leadingLabelGo.transform.SetParent(leadingGo.transform, false);
+            leadingText = leadingLabelGo.AddComponent<TextMeshProUGUI>();
+            leadingText.font = DesignTokens.Current.primaryFont;
+            leadingText.text = "";
+            leadingText.fontSize = 14;
+            leadingText.alignment = TextAlignmentOptions.Center;
+            leadingText.color = DesignTokens.Current.onSurfacePrimary;
+            leadingText.raycastTarget = false;
+            Stretch((RectTransform)leadingText.transform, new Vector2(6, 2), new Vector2(-6, -2));
+            leadingGo.SetActive(false);
 
             callsignText = NewText("Callsign", "Boss", 130);
             gameDayText = NewText("GameDay", "Day —", 90);
