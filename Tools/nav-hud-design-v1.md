@@ -372,8 +372,12 @@ bits, niveau quantifié sur 32) :
 | rang **médian** | `nightBase` | 0,285 / 0,228 / 0,180 | **61,1** | 7 |
 | rang **proche** (au contact de la grille) | `nightSocle` | 0,062 / 0,055 / 0,047 | **14,3** | 1 |
 
-Quatre niveaux quantifiés distincts (4 / 10 / 7 / 1) ; écarts de luminance au fond : **43,2 · 20,7 · 24,9** (le plus serré, 20,7, garde 6,9 de marge sur le seuil de
-15 posé en hd-F2). Le rang **proche** est le plus sombre et reprend le token du liseré `GridBorder` (`:274-278`) : au contact de la grille il lit comme une ombre, ce
+Quatre niveaux quantifiés distincts (4 / 10 / 7 / 1). Luminances Rec.601 COMPOSÉES, recalculées
+par le ⊥ au re-gate v2 (elles font foi) : `nightFloorAlt` 81,5 · `nightBase` 60,7 · fond 40,0 ·
+`nightSocle` 17,9 ⇒ écarts CONSÉCUTIFS **20,7 · 20,8 · 22,0** — le plus serré, 20,7, garde **5,7**
+de marge sur le seuil de 15 posé en hd-F2. (v2 disait « min 21,9, marge 6,9 » sur une autre
+construction, écarts au fond — remplacée par celle-ci, qui mesure la distinction entre rangs
+ADJACENTS, la propriété que hd-F2 asserte.) Le rang **proche** est le plus sombre et reprend le token du liseré `GridBorder` (`:274-278`) : au contact de la grille il lit comme une ombre, ce
 qui est le bon signe visuel. ⚠️ **Risque nommé** : `nightFloorAlt` et `nightBase` sont **aussi** deux des trois teintes de sol (`FloorTint`, `:663-665`) ; un rang
 pourrait fusionner avec une tuile de sol de même niveau s'ils devenaient adjacents. Le rang lointain est le plus clair et le plus éloigné de la grille, le rang
 proche (`nightSocle`) n'est pas une teinte de sol — hd-F1 reste le détecteur.
@@ -435,7 +439,7 @@ supplémentaire**, sans écrivain nouveau.
 `HeatBucket` a **4** membres (`city-event-bus.ts:484`). Le HUD validé demande « 3 états » ; écraser 4 en 3 perdrait `BURNING`, l'état le plus tendu. ⇒ **3 zones
 peintes** au cadran et **4 arrêts d'aiguille**.
 
-**Ce n'est pas une idée neuve** : `DashboardController.HeatGlyph` (`:460-469`) rend **déjà** une jauge à **4 niveaux** (`[#...]` → `[####]`) pour exactement cette
+**Ce n'est pas une idée neuve** : la méthode `DashboardController.HeatGlyph` (`DashboardController.cs:460-469`) rend **déjà** une jauge à **4 niveaux** (`[#...]` → `[####]`) pour exactement cette
 valeur, et `HeatLabel` (`:449-458`) nomme les 4 buckets avec un repli déclaré. Les deux sont `private static`. ⇒ **Lever la résolution des 4 buckets dans un lieu
 unique et repointer les deux appelants** — laisser deux `switch` à 4 branches sur la même énumération est précisément la dérive que ce dépôt a déjà payée sur un type
 homonyme. La falsifiable hud-F6 est le garde-fou, et elle reste sur un chemin que les deux surfaces empruntent.
