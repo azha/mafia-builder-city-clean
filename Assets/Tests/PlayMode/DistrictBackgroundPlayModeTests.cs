@@ -196,34 +196,59 @@ namespace MafiaCleanCity.CityMap.Tests
             }
             Assert.AreEqual(4, checkedBuildings, "starter kit J0 — scénario dimensionné, les 4 bâtiments calibrés");
 
-            // F-calage, second volet — AMENDÉ (round 4, verdict ⊥ sur
-            // Tools/pivot-fond-prerendu-p3-implementation-notes.md § ROUND 4). Le contrôle précédent
-            // comparait un pas mesuré en pixels à lui-même translaté (tautologique — il ne pouvait
-            // jamais rougir sur un maillage réellement irrégulier) ET la Deviation qui l'accompagnait
-            // concluait à tort que la propriété `pas_parcelle_m` du design ne tenait pas sur cette
-            // donnée. Mesuré à nouveau, dans la BONNE base : elle tient EXACTEMENT — le maillage est
-            // un vrai quadrillage régulier en MÈTRES MONDE, simplement tourné (les axes du maillage
-            // ne sont pas alignés sur les axes `ex`/`ey` du monde, et cette base elle-même est
-            // oblique, déterminant non nul) — un pas exprimé en pixels bruts ne peut donc PAS être
-            // comparé à `pas_parcelle_m × |ex|`. Le contrôle correct résout le pas mesuré (0,0)→(1,0)
-            // dans la base (ex,ey) — système 2×2, toutes les données déjà dans le DTO — et vérifie
-            // que sa norme EN MÈTRES égale `pas_parcelle_m` à la tolérance près.
-            DistrictBackgroundParcelDto q00 = DistrictBackgroundAnchor.FindParcel(map, 0, 0);
-            DistrictBackgroundParcelDto q10 = DistrictBackgroundAnchor.FindParcel(map, 1, 0);
-            Assert.IsNotNull(q00); Assert.IsNotNull(q10);
-            Vector2 stepPx = new Vector2(q10.pivot_px[0] - q00.pivot_px[0], q10.pivot_px[1] - q00.pivot_px[1]);
-            Assert.Greater(stepPx.magnitude, 1f, "anti-vacuité — le pas mesuré (0,0)→(1,0) n'est pas dégénéré (quasi-nul)");
-
+            // F-calage, second volet — AMENDÉ deux fois (round 4, verdict ⊥ sur
+            // Tools/pivot-fond-prerendu-p3-implementation-notes.md § ROUND 4, clôture P3). V1 :
+            // comparait un pas en pixels à lui-même translaté (tautologique). V2 : décomposait le
+            // pas dans la base (ex,ey) MAIS sur UN SEUL pas (0,0)→(1,0) — un maillage irrégulier
+            // PARTOUT SAUF sur ce pas passait quand même. V3 (celle-ci) : boucle la décomposition
+            // `perStep = a·ex + b·ey` sur TOUS les pas d'index adjacents du maillage, les DEUX axes
+            // (x et y), pour CHAQUE paire de parcelles voisines réellement présentes — 104 pas sur
+            // ce fond (54 horizontaux + 50 verticaux, mesuré indépendamment en Python avant ce
+            // commit). Tolérance 0,01f — bonne à 17× de marge sur l'écart max mesuré (0,00058m).
             Vector2 exVec = new Vector2(map.base_px_par_m.ex[0], map.base_px_par_m.ex[1]);
             Vector2 eyVec = new Vector2(map.base_px_par_m.ey[0], map.base_px_par_m.ey[1]);
             float det = exVec.x * eyVec.y - eyVec.x * exVec.y;
             Assert.AreNotEqual(0f, det, "anti-vacuité — la base (ex,ey) ne doit pas être dégénérée (colinéaire)");
+
+            var byXy = new System.Collections.Generic.Dictionary<(int x, int y), DistrictBackgroundParcelDto>();
+            foreach (DistrictBackgroundParcelDto p in map.parcelles) byXy[(p.x, p.y)] = p;
+
+            int stepsChecked = 0;
+            foreach (DistrictBackgroundParcelDto p0 in map.parcelles)
+            {
+                // pas horizontal (x, y) -> (x+1, y)
+                if (byXy.TryGetValue((p0.x + 1, p0.y), out DistrictBackgroundParcelDto pxNext))
+                {
+                    stepsChecked += CheckStepMeters(p0, pxNext, exVec, eyVec, det, map.pas_parcelle_m, "x");
+                }
+                // pas vertical (x, y) -> (x, y+1)
+                if (byXy.TryGetValue((p0.x, p0.y + 1), out DistrictBackgroundParcelDto pyNext))
+                {
+                    stepsChecked += CheckStepMeters(p0, pyNext, exVec, eyVec, det, map.pas_parcelle_m, "y");
+                }
+            }
+            Assert.AreEqual(104, stepsChecked,
+                "F-calage — scénario dimensionné : les 104 pas adjacents (54 horizontaux + 50 verticaux) du " +
+                "maillage verge sont TOUS vérifiés, pas un seul pas témoin");
+        }
+
+        /// <summary>Décompose le pas PIXEL entre deux parcelles adjacentes dans la base (ex,ey) et
+        /// vérifie que sa norme EN MÈTRES égale `pasParcelleM` à ±0,01m (§9 : anti-dégénérescence —
+        /// un maillage irrégulier sur N'IMPORTE LEQUEL des 104 pas doit rougir CE pas précis, pas
+        /// un pas voisin qui serait resté correct). Retourne 1 (pour le compte anti-vacuité).</summary>
+        private static int CheckStepMeters(DistrictBackgroundParcelDto from, DistrictBackgroundParcelDto to,
+            Vector2 exVec, Vector2 eyVec, float det, float pasParcelleM, string axisLabel)
+        {
+            Vector2 stepPx = new Vector2(to.pivot_px[0] - from.pivot_px[0], to.pivot_px[1] - from.pivot_px[1]);
+            Assert.Greater(stepPx.magnitude, 1f,
+                $"anti-vacuité — le pas ({from.x},{from.y})->({to.x},{to.y}) [{axisLabel}] n'est pas dégénéré (quasi-nul)");
             float a = (stepPx.x * eyVec.y - eyVec.x * stepPx.y) / det;
             float b = (exVec.x * stepPx.y - stepPx.x * exVec.y) / det;
             float stepMeters = Mathf.Sqrt(a * a + b * b);
-            Assert.AreEqual(map.pas_parcelle_m, stepMeters, 0.01f,
-                $"F-calage — le pas (0,0)→(1,0), décomposé dans la base (ex,ey), vaut {stepMeters:F4}m " +
-                $"(pas_parcelle_m déclaré {map.pas_parcelle_m:F4}m) — la propriété du design tient dans la BONNE base");
+            Assert.AreEqual(pasParcelleM, stepMeters, 0.01f,
+                $"F-calage — pas ({from.x},{from.y})->({to.x},{to.y}) [{axisLabel}], décomposé dans (ex,ey), " +
+                $"vaut {stepMeters:F4}m (pas_parcelle_m déclaré {pasParcelleM:F4}m)");
+            return 1;
         }
 
         // ── pp-F3 — zéro rescale, POUR CHACUN des sprites livrés ─────────────────────────────────
