@@ -8,6 +8,16 @@ d'une commande exécutée. Dépôt Unity `/home/erutheone/project/mafia-builder-
 §2.1/§2.3 (2 rangs × 2 façades), §2.6 (cibles redérivées), §2.7 (amb-F6, amb-F8), §3.4 (marges décomposées), §3.6 (nav-F5 reciblée), §4 (rue-F4), §5 (trois tokens
 distincts, hd-F2), §6.1/§6.2/§6.4 (D3 mesuré, appelant heat, résolveur existant), §7 (reclassement), §8.
 
+> ⛔ **AVIS DE PÉREMPTION PARTIELLE — 2026-08-20, après le ruling « pixel perfect / le juge c'est la ressemblance aux
+> screenshots ».** Les chunks **1 (remplissage ambiant)**, **3 (rues)** et **4 (hors-district)** de ce document sont
+> **REMPLACÉS** par `Tools/pivot-fond-prerendu-design.md` : le décor n'est plus assemblé par Unity, il est **pré-rendu** par
+> l'atelier Blender. Les falsifiables amb-F1/F4/F5/F8 et rue-F1..F4 et hd-F1/F2 tombent avec eux ; amb-F2/F3/F6 y sont
+> transposées et amb-F7 survit telle quelle — le détail ligne à ligne est au §7 du pivot.
+> **Les chunks 2 (navigation) et 5 (HUD v3.1) de ce document restent EN VIGUEUR et non bloqués** : le pivot ne touche ni
+> `AppShell`, ni `TopBarController`, ni `CityMapController`.
+> ⚠️ Deux grandeurs de ce document ont cessé d'être des réglages de mise en page (`metresParBloc`, `CellSize`) : voir §2.2 du
+> pivot. Ne pas exécuter les chunks 1, 3 ou 4 d'ici sans avoir lu le pivot.
+
 ## 0. Périmètre et ordre
 
 | # | chunk | ce qu'il livre | falsifiables |
