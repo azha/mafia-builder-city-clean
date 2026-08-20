@@ -85,12 +85,15 @@ namespace MafiaCleanCity.Theme.Tests
         [Test]
         public void R2F2_Socle_DistinctFromEveryFloorBucket()
         {
-            // Revue ⊥ r5 : l'ombre est TRANSLUCIDE — la garde mesure la couleur COMPOSÉE au cœur
+            // Revue ⊥ r5-r6 : l'ombre est TRANSLUCIDE — la garde mesure la couleur COMPOSÉE au cœur
             // (Lerp(sol, socle, SocleCoreAlpha)), jamais le token nu, sinon elle certifierait une
-            // ombre invisible. Arithmétique WCAG posée AVANT d'écrire (leçon r2) : sur b0, la paire
-            // plafonne à 1,332 OPAQUE — 1,3 exigerait un cœur à 0,88, c'est-à-dire une ombre
-            // redevenue opaque. Plancher b0 = 1,15 (soutenable mesuré : 1,164 au cœur 0,45),
-            // arbitrage remonté au ⊥ au round 6 ; b1/b2 tiennent 1,3 au composite.
+            // ombre invisible. Le plancher b0 = 1,15 N'EST PAS une tolérance négociée : c'est le
+            // p95 MESURÉ du régime sombre de l'art cible (⊥ r6, 2026-08-20 : 400 paires de patchs
+            // de sol voisins à lum<45 dans DISTRICT_ZO_NUIT_FINAL.png → p50=1,034 · p95=1,150 ·
+            // max=1,244 — 1,30 n'y est JAMAIS atteint, et au cœur 0,45 même le NOIR PUR plafonne
+            // à 1,247 vs b0). Le 1,30 initial (posé r2 pour une plinthe OPAQUE mesurée 1,000:1)
+            // était un seuil de composant d'interface, retiré par son auteur pour cet objet.
+            // b1/b2 gardent 1,30 : ils l'atteignent sans effort au composite (1,615 / 1,356).
             var t = DesignTokens.Current;
             float coeur = MafiaCleanCity.CityMap.DistrictInteriorScreenController.SocleCoreAlpha;
             foreach (var (nom, sol, plancher) in new (string, Color, float)[] {

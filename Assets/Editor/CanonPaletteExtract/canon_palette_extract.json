@@ -1,8 +1,8 @@
 {
-  "backCommitSha": "dc15f1c0",
+  "backCommitSha": "6e91edd1",
   "backCommitRepo": "azha/mafia-clean-city",
   "canonSection": "projects/mafia_city_game/gdd/14_tunable_constants.md §Asset pipeline — palette & DA",
-  "generatedAt": "2026-08-15",
+  "generatedAt": "2026-08-20T15:36:42+02:00",
   "roundingConvention": "demi-haut: floor(channel*255+0.5)",
   "tokens": [
     {
@@ -335,11 +335,11 @@
     },
     {
       "name": "nightBackground",
-      "r": 0.065,
-      "g": 0.088,
-      "b": 0.1,
+      "r": 0.13,
+      "g": 0.168,
+      "b": 0.21,
       "a": 1,
-      "hex": "#11161a"
+      "hex": "#212b36"
     },
     {
       "name": "nightWindowLit",
@@ -352,10 +352,10 @@
     {
       "name": "nightNeonGlow",
       "r": 1,
-      "g": 0.1,
-      "b": 0.7,
+      "g": 0.93,
+      "b": 0.75,
       "a": 1,
-      "hex": "#ff1ab3"
+      "hex": "#ffedbf"
     },
     {
       "name": "nightSmoke",
@@ -367,27 +367,51 @@
     },
     {
       "name": "nightHaze",
-      "r": 0.69,
-      "g": 0.72,
-      "b": 0.75,
-      "a": 0.2,
-      "hex": "#b0b8bf"
+      "r": 0.14,
+      "g": 0.2,
+      "b": 0.3,
+      "a": 0.05,
+      "hex": "#24334d"
     },
     {
       "name": "nightBase",
-      "r": 0.16,
-      "g": 0.154,
-      "b": 0.147,
+      "r": 0.285,
+      "g": 0.228,
+      "b": 0.18,
       "a": 1,
-      "hex": "#292725"
+      "hex": "#493a2e"
     },
     {
       "name": "nightOutOfDistrictMuted",
-      "r": 0.085,
-      "g": 0.087,
-      "b": 0.09,
+      "r": 0.128,
+      "g": 0.158,
+      "b": 0.2,
       "a": 1,
-      "hex": "#161617"
+      "hex": "#212833"
+    },
+    {
+      "name": "nightSocle",
+      "r": 0.062,
+      "g": 0.055,
+      "b": 0.047,
+      "a": 1,
+      "hex": "#100e0c"
+    },
+    {
+      "name": "nightLieutenantMarker",
+      "r": 0.95,
+      "g": 0.82,
+      "b": 0.56,
+      "a": 1,
+      "hex": "#f2d18f"
+    },
+    {
+      "name": "nightFloorAlt",
+      "r": 0.29,
+      "g": 0.325,
+      "b": 0.4,
+      "a": 1,
+      "hex": "#4a5366"
     }
   ]
 }
