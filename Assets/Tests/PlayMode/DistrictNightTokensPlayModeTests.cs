@@ -22,9 +22,21 @@ namespace MafiaCleanCity.Theme.Tests
         public void C5F3_NightBackground_HasNonZeroSaturation_NeverGray()
         {
             Color.RGBToHSV(DesignTokens.Current.nightBackground, out float h, out float s, out float v);
-            Assert.Greater(s, 0f,
-                "engagement 2 : le fond de nuit doit être un bleu-pétrole DÉSATURÉ, jamais un gris " +
-                $"pur (saturation nulle en HSV interdite). Mesuré : h={h:F3} s={s:F3} v={v:F3}");
+            Assert.Greater(s, 0.20f,
+                "engagement 2 : le fond de nuit doit être un bleu-pétrole saturé, jamais un gris " +
+                $"(seuil 0.20 — revue ⊥ 2026-08-20 : « > 0 » laissait passer un gris à +0,005 de bleu). " +
+                $"Mesuré : h={h:F3} s={s:F3} v={v:F3}");
+        }
+
+        [Test]
+        public void C5F3bis_OutOfDistrictMuted_CoversTheRoot_MustAlsoBeSaturatedNightBlue()
+        {
+            // Revue ⊥ 2026-08-20 : la garde d'origine surveillait nightBackground (~3,6 % de l'écran)
+            // pendant que nightOutOfDistrictMuted peignait 100 % de la racine en gris (s=0,056).
+            // « La garde vérifiait la mauvaise propriété » — celle-ci vise le token qui COUVRE.
+            Color.RGBToHSV(DesignTokens.Current.nightOutOfDistrictMuted, out float h, out float s, out float v);
+            Assert.Greater(s, 0.20f,
+                $"le token qui couvre la racine entière doit être un bleu nuit saturé. Mesuré : h={h:F3} s={s:F3} v={v:F3}");
         }
 
         [Test]

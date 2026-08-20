@@ -63,6 +63,49 @@ namespace MafiaCleanCity.CityMap
         [Header("Repli — champ déclaré, jamais un null silencieux (D6)")]
         public Sprite fallback;
 
+        // ── Calques additifs de nuit (revue ⊥ 2026-08-20, BLOCKING 3) — un jeu par slot. Comme les
+        //    slots de base : le C# ne porte que des NOMS, les PNG vivent dans le .asset (C6-F3). Un
+        //    calque absent rend null — le contrôleur garde alors son rendu de repli. ──
+        [System.Serializable]
+        public class OverlaySet { public Sprite fen; public Sprite neon; public Sprite dev; public Sprite actif; }
+
+        [Header("Calques additifs — nuit")]
+        public OverlaySet frontShopOv;
+        public OverlaySet cashSafehouseOv;
+        public OverlaySet stashOv;
+        public OverlaySet labOv;
+        public OverlaySet growHouseOv;
+        public OverlaySet dealerSpotFrontOv;
+        public OverlaySet moneyHoldingOv;
+        public OverlaySet fallbackOv;
+
+        /// <summary>Résout le calque additif (fen|neon|dev|actif) d'un operational_type — null si le
+        /// jeu de calques ou la couche n'existe pas (jamais une exception).</summary>
+        public Sprite ResolveOverlay(string operationalType, string couche)
+        {
+            OverlaySet set;
+            switch (operationalType)
+            {
+                case "front_shop": set = frontShopOv; break;
+                case "cash_safehouse": set = cashSafehouseOv; break;
+                case "stash": set = stashOv; break;
+                case "lab": set = labOv; break;
+                case "grow_house": set = growHouseOv; break;
+                case "dealer_spot_front": set = dealerSpotFrontOv; break;
+                case "money_holding": set = moneyHoldingOv; break;
+                default: set = fallbackOv; break;
+            }
+            if (set == null) return null;
+            switch (couche)
+            {
+                case "fen": return set.fen;
+                case "neon": return set.neon;
+                case "dev": return set.dev;
+                case "actif": return set.actif;
+            }
+            return null;
+        }
+
         /// <summary>
         /// Résout un `operational_type` vers son sprite. Table TOTALE sur les 13 valeurs possibles
         /// (12 membres de l'énum back + la chaîne vide — un bâtiment acheté et pas encore converti,

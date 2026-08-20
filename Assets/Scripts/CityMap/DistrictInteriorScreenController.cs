@@ -68,7 +68,8 @@ namespace MafiaCleanCity.CityMap
 
         // Taille de cellule en px uGUI (mise en page, pas un tunable de jeu — R2.3 ne porte pas sur les
         // dimensions d'écran, cf. les tailles inline déjà partout dans AppShell/LaunderingController).
-        private const float CellSize = 48f;
+        private float CellSize = 48f;   // revue ⊥ 2026-08-20 (BLOCKING 4) : calculé par rendu, plus une const
+        private const float MetresParBloc = 14f;   // largeur-monde d'un bloc — porte l'échelle commune ppm 56
 
         // ---- test hooks : data (C7) --------------------------------------------------------
         public DistrictInteriorDto LastFetch { get; private set; }
@@ -233,6 +234,12 @@ namespace MafiaCleanCity.CityMap
             int width = Mathf.Max(1, dto.grid != null ? dto.grid.width : 1);
             int height = Mathf.Max(1, dto.grid != null ? dto.grid.height : 1);
 
+            // Revue ⊥ (BLOCKING 4) : la grille plafonnait structurellement à 10 % de l'écran.
+            RectTransform rootSizeRt = (RectTransform)root;
+            float availW = rootSizeRt.rect.width  > 1f ? rootSizeRt.rect.width  - 100f : 1180f;
+            float availH = rootSizeRt.rect.height > 1f ? rootSizeRt.rect.height - 160f : 560f;
+            CellSize = Mathf.Max(48f, Mathf.Floor(Mathf.Min(availW / width, availH / height)));
+
             GameObject gridArea = NewUI("GridArea", root);
             RectTransform gridRt = (RectTransform)gridArea.transform;
             gridRt.anchorMin = gridRt.anchorMax = new Vector2(0.5f, 0.46f);
@@ -245,25 +252,27 @@ namespace MafiaCleanCity.CityMap
             var blockByBlockId = new Dictionary<int, DistrictInteriorBlockDto>();
             if (dto.blocks != null)
                 foreach (DistrictInteriorBlockDto b in dto.blocks) blockByBlockId[b.block_id] = b;
-            var builtBlockIds = new HashSet<int>();
-
+            // Revue ⊥ (IMPORTANT 5) : dès que les sprites débordent de leur cellule, l'ordre de
+            // fratrie EST l'ordre de profondeur — construction arrière → avant (y croissant),
+            // bâtiments et vides confondus. Les comptes C8-F2/F4 sont inchangés.
+            var buildingByBlockId = new Dictionary<int, DistrictInteriorBuildingDto>();
             if (dto.buildings != null)
-            {
-                foreach (DistrictInteriorBuildingDto building in dto.buildings)
-                {
-                    if (!blockByBlockId.TryGetValue(building.block_id, out DistrictInteriorBlockDto block))
-                        continue; // D2 garantit l'appartenance ; défensif, jamais exercé en production.
-                    builtBlockIds.Add(building.block_id);
-                    BuildBuildingCell(gridRt, block.x, block.y, building);
-                    RenderedBuildingCount++;
-                }
-            }
+                foreach (DistrictInteriorBuildingDto b in dto.buildings)
+                    if (blockByBlockId.ContainsKey(b.block_id)) // D2 garantit l'appartenance ; défensif.
+                        buildingByBlockId[b.block_id] = b;
 
             if (dto.blocks != null)
             {
-                foreach (DistrictInteriorBlockDto block in dto.blocks)
+                var ordered = new List<DistrictInteriorBlockDto>(dto.blocks);
+                ordered.Sort((a, b) => a.y != b.y ? a.y.CompareTo(b.y) : a.x.CompareTo(b.x));
+                foreach (DistrictInteriorBlockDto block in ordered)
                 {
-                    if (!builtBlockIds.Contains(block.block_id))
+                    if (buildingByBlockId.TryGetValue(block.block_id, out DistrictInteriorBuildingDto building))
+                    {
+                        BuildBuildingCell(gridRt, block.x, block.y, building);
+                        RenderedBuildingCount++;
+                    }
+                    else
                         BuildEmptyCell(gridRt, block.x, block.y); // C8-F4 : "silhouette sourde" — juste le sol.
                 }
                 RenderedCellCount = dto.blocks.Length;
@@ -293,13 +302,28 @@ namespace MafiaCleanCity.CityMap
 
             // Sprite — D6/C6 : BuildingSpriteSlots, premier appelant de PRODUCTION (jusqu'ici son seul
             // consommateur était son propre test, C6-F4).
+            // Revue ⊥ (IMPORTANT 5) : échelle COMMUNE ppm 56 (le contrat des manifestes de
+            // l'atelier — l'épicerie s'affichait 3,55× plus grande par mètre que l'usine), pivot au
+            // sol, débordement autorisé (l'ordre de fratrie porte la profondeur).
             GameObject spriteGo = NewUI("BuildingSprite", cell.transform);
             RectTransform spriteRt = (RectTransform)spriteGo.transform;
-            Stretch(spriteRt, new Vector2(3, CellSize * 0.22f), new Vector2(-3, -3));
             Image spriteImg = spriteGo.AddComponent<Image>();
-            spriteImg.preserveAspect = true;
             BuildingSpriteSlots slots = BuildingSpriteSlots.Current;
-            if (slots != null) spriteImg.sprite = slots.Resolve(building.operational_type);
+            Sprite baseSprite = slots != null ? slots.Resolve(building.operational_type) : null;
+            if (baseSprite != null)
+            {
+                spriteImg.sprite = baseSprite;
+                float k = CellSize / (MetresParBloc * 56f);
+                spriteRt.anchorMin = spriteRt.anchorMax = new Vector2(0.5f, 0f);
+                spriteRt.pivot = new Vector2(0.5f, 0f);
+                spriteRt.sizeDelta = new Vector2(baseSprite.rect.width, baseSprite.rect.height) * k;
+                spriteRt.anchoredPosition = new Vector2(0, CellSize * 0.18f);
+            }
+            else
+            {
+                Stretch(spriteRt, new Vector2(3, CellSize * 0.22f), new Vector2(-3, -3));
+                spriteImg.preserveAspect = true;
+            }
 
             // Libellé de type — texte, jamais un nombre nu (C8-F3).
             TextMeshProUGUI label = NewText("TypeLabel", cell.transform, TypeLabel(building.operational_type),
@@ -331,15 +355,53 @@ namespace MafiaCleanCity.CityMap
         /// SOUND` ÉTEINT la lumière — §1.1a/D3 : la colonne qui porte le raid est
         /// `building_operational_state.structural_state` (`condition_band`), JAMAIS `shell_state`
         /// (invariant en production aujourd'hui, D2 v2 MINOR R9).</summary>
+        private static Material additiveMat;
+        private static Material AdditiveMat
+        {
+            get
+            {
+                if (additiveMat == null) additiveMat = Resources.Load<Material>("UIAdditive");
+                return additiveMat;
+            }
+        }
+
+        /// <summary>Revue ⊥ 2026-08-20 (BLOCKING 3) — un calque lumineux de l'atelier, aligné pixel à
+        /// pixel sur le rect du sprite de base (les couches sont recadrées ENSEMBLE par sprites_post),
+        /// en blend additif. Rend null si le calque manque pour ce type — l'appelant garde alors son
+        /// rendu de repli (rectangle token), jamais un trou silencieux.</summary>
+        private Image TryBuildOverlay(Transform cell, string name, string opType, string couche, Color tint)
+        {
+            BuildingSpriteSlots slots = BuildingSpriteSlots.Current;
+            Sprite ov = slots != null ? slots.ResolveOverlay(opType, couche) : null;
+            if (ov == null || AdditiveMat == null) return null;
+            GameObject go = NewUI(name, cell);
+            RectTransform rt = (RectTransform)go.transform;
+            float k = CellSize / (MetresParBloc * 56f);
+            rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0f);
+            rt.pivot = new Vector2(0.5f, 0f);
+            rt.sizeDelta = new Vector2(ov.rect.width, ov.rect.height) * k;
+            rt.anchoredPosition = new Vector2(0, CellSize * 0.18f);
+            Image img = go.AddComponent<Image>();
+            img.sprite = ov;
+            img.material = AdditiveMat;
+            img.color = tint;
+            img.raycastTarget = false;
+            return img;
+        }
+
         private void BuildWindowLight(Transform cell, DistrictInteriorBuildingDto building)
         {
             if (building.condition_band != "SOUND") return; // éteinte — aucune lumière décorative (C9-F2)
-            GameObject light = NewUI("WindowLight", cell);
-            RectTransform rt = (RectTransform)light.transform;
-            rt.anchorMin = new Vector2(0.2f, 0.55f);
-            rt.anchorMax = new Vector2(0.8f, 0.75f);
-            rt.offsetMin = rt.offsetMax = Vector2.zero;
-            light.AddComponent<Image>().color = DesignTokens.Current.nightWindowLit;
+            Image ov = TryBuildOverlay(cell, "WindowLight", building.operational_type, "fen", Color.white);
+            if (ov == null)
+            {
+                GameObject light = NewUI("WindowLight", cell);
+                RectTransform rt = (RectTransform)light.transform;
+                rt.anchorMin = new Vector2(0.2f, 0.55f);
+                rt.anchorMax = new Vector2(0.8f, 0.75f);
+                rt.offsetMin = rt.offsetMax = Vector2.zero;
+                light.AddComponent<Image>().color = DesignTokens.Current.nightWindowLit;
+            }
             RenderedWindowLightCount++;
         }
 
@@ -352,21 +414,29 @@ namespace MafiaCleanCity.CityMap
         private void BuildRevenueSign(Transform cell, DistrictInteriorBuildingDto building)
         {
             if (building.revenue_chain != "WIRED") return; // pas d'enseigne du tout (D3)
-            GameObject sign = NewUI("RevenueSign", cell);
-            RectTransform rt = (RectTransform)sign.transform;
-            rt.anchorMin = new Vector2(0.05f, 0.78f);
-            rt.anchorMax = new Vector2(0.35f, 0.92f);
-            rt.offsetMin = rt.offsetMax = Vector2.zero;
             bool earning = building.revenue_band == "EARNING";
-            sign.AddComponent<Image>().color = earning
-                ? DesignTokens.Current.nightNeonGlow
-                // sombre — REUSE du patron de blend déjà établi par FloorTint (C8) entre deux tokens
-                // .asset-backed existants, jamais une couleur inline neuve (R2.3).
-                : Color.Lerp(DesignTokens.Current.nightNeonGlow, DesignTokens.Current.nightBase, 0.7f);
+            // Revue ⊥ (BLOCKING 3 + IMPORTANT 9) : le calque neon de l'atelier porte la vraie lumière
+            // (blanc chaud + halo) ; la teinte n'est plus qu'une INTENSITÉ — pleine si EARNING, blend
+            // vers nightBase si IDLE (REUSE du patron FloorTint, R2.3).
+            Color tint = earning ? Color.white : Color.Lerp(Color.white, DesignTokens.Current.nightBase, 0.75f);
+            Image ov = TryBuildOverlay(cell, "RevenueSign", building.operational_type, "neon", tint);
+            GameObject signGo;
+            if (ov != null) signGo = ov.gameObject;
+            else
+            {
+                signGo = NewUI("RevenueSign", cell);
+                RectTransform rt = (RectTransform)signGo.transform;
+                rt.anchorMin = new Vector2(0.05f, 0.78f);
+                rt.anchorMax = new Vector2(0.35f, 0.92f);
+                rt.offsetMin = rt.offsetMax = Vector2.zero;
+                signGo.AddComponent<Image>().color = earning
+                    ? DesignTokens.Current.nightNeonGlow
+                    : Color.Lerp(DesignTokens.Current.nightNeonGlow, DesignTokens.Current.nightBase, 0.7f);
+            }
             if (earning)
             {
                 RenderedNeonGlowCount++;
-                TryStartAmbientLoop(sign); // C10-F2 — candidat : néon RÉELLEMENT allumé, pas l'enseigne sombre
+                TryStartAmbientLoop(signGo); // C10-F2 — candidat : néon RÉELLEMENT allumé, pas l'enseigne sombre
             }
         }
 
@@ -376,14 +446,20 @@ namespace MafiaCleanCity.CityMap
         private void BuildActivitySmoke(Transform cell, DistrictInteriorBuildingDto building)
         {
             if (building.activity_band != "ACTIVE") return;
-            GameObject smoke = NewUI("ActivitySmoke", cell);
-            RectTransform rt = (RectTransform)smoke.transform;
-            rt.anchorMin = new Vector2(0.35f, 0.82f);
-            rt.anchorMax = new Vector2(0.65f, 1.05f);
-            rt.offsetMin = rt.offsetMax = Vector2.zero;
-            Image img = smoke.AddComponent<Image>();
-            img.color = DesignTokens.Current.nightSmoke;
-            img.raycastTarget = false;
+            Image ov = TryBuildOverlay(cell, "ActivitySmoke", building.operational_type, "actif", Color.white);
+            GameObject smoke;
+            if (ov != null) smoke = ov.gameObject;
+            else
+            {
+                smoke = NewUI("ActivitySmoke", cell);
+                RectTransform rt = (RectTransform)smoke.transform;
+                rt.anchorMin = new Vector2(0.35f, 0.82f);
+                rt.anchorMax = new Vector2(0.65f, 1.05f);
+                rt.offsetMin = rt.offsetMax = Vector2.zero;
+                Image img = smoke.AddComponent<Image>();
+                img.color = DesignTokens.Current.nightSmoke;
+                img.raycastTarget = false;
+            }
             RenderedSmokeCount++;
             TryStartAmbientLoop(smoke); // C10-F2 — candidat : opération active
         }
