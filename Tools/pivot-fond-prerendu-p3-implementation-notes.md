@@ -527,13 +527,180 @@ appliqué UNIFORMÉMENT au fond et à chaque ancre bâtiment, même mécanisme q
 
 ### c) Portée de la certification — hors device réel
 
-⚠️ **La certification « transport intact » ne couvre QUE l'environnement de capture mesuré ici**
-(Éditeur Unity, Game View 1100×577/1100×576, `scaleFactor = Screen.width / referenceResolution.x`
-= 1100/1280 = 0,859375). Sur un DEVICE RÉEL (APK Android, build IL2CPP), `Screen.width` sera une
-AUTRE valeur (résolution physique de l'écran) — `scaleFactor` en découle mais N'A JAMAIS ÉTÉ MESURÉ
-sur un device réel dans cette investigation. C'est un DÉDUIT assumé (le mécanisme de compensation
-est générique, indépendant de la valeur numérique de `scaleFactor` — `SnapToScreenPixel` corrige
-QUELLE QUE SOIT la phase sous-pixel résultante), pas une mesure. **Détecteur de péremption** : la
-MÊME sonde, rejouée sur la PREMIÈRE capture device disponible — si elle rend autre chose que
-« transport intact », cette section doit être mise à jour et la certification restreinte au device
-testé.
+⚠️ **AMENDÉ (round 6, verdict ⊥) — le détecteur de péremption ci-dessous était FAUX tel qu'écrit.**
+Il fixait la barre à « transport intact » (le diagnostic qualitatif de la sonde, déclenché dès que
+F-transport ET F-nocalque sont VERT, c-à-d MAE ≤ 1,00 chacun). Cette barre était correcte tant que
+le meilleur résultat PROUVÉ restait « transport intact » avec un résidu non nul (round 4 : MAE
+0,00 sur le fond mais AUCUNE preuve encore obtenue sur un sprite — § b ci-dessus, STOP instrument).
+**Depuis, le round 6 a prouvé BIT-EXACT (MAE EXACTEMENT 0,000, pas seulement ≤ 1,00) à la fois sur
+le fond (contrôle brut pixel-à-pixel, PAS la sonde à échantillonnage épars — voir § ROUND 6 a) ET
+sur un sprite (§ ROUND 6 b, `cash_safehouse`/`residentiel3`, F-transport=0,000 F-nocalque=0,000
+corr=1,0000).** La barre correcte n'est donc plus « obtient VERT » (≤1,00) — un résidu de, disons,
+0,80 serait ENCORE « transport intact » au sens de la sonde (toujours ≤ seuil), mais constituerait
+une RÉGRESSION mesurable par rapport à ce qui est maintenant prouvé atteignable et attendu.
+
+**La certification « transport intact » (et plus précisément BIT-EXACT) ne couvre QUE l'environnement
+de capture mesuré ici** (Éditeur Unity, Game View 1100×577/1100×576, `scaleFactor = Screen.width /
+referenceResolution.x` = 1100/1280 = 0,859375). Sur un DEVICE RÉEL (APK Android, build IL2CPP),
+`Screen.width` sera une AUTRE valeur (résolution physique de l'écran) — `scaleFactor` en découle
+mais N'A JAMAIS ÉTÉ MESURÉ sur un device réel dans cette investigation. C'est un DÉDUIT assumé (le
+mécanisme de compensation est générique, indépendant de la valeur numérique de `scaleFactor` —
+`SnapToScreenPixel` corrige QUELLE QUE SOIT la phase sous-pixel résultante), pas une mesure.
+
+**Détecteur de péremption CORRIGÉ** : sur la PREMIÈRE capture device disponible, l'attendu est
+**BIT-EXACT dans la fenêtre re-mesurée** (contrôle brut pixel-à-pixel — PAS uniquement « la sonde
+rend VERT »). Concrètement : rejouer le CONTRÔLE BRUT (masquage des empreintes de cellule bâtiment,
+§ ROUND 6 a) sur la capture device — `nonzero == 0` attendu, `maxdiff == 0` attendu. **Un
+`maxdiff` non nul MAIS ≤ 1,00 (donc encore « transport intact »/VERT au sens de la sonde) DOIT ÊTRE
+TRAITÉ COMME UNE RÉGRESSION à investiguer, PAS comme une confirmation** — puisque le mécanisme de
+compensation ne dépend structurellement d'AUCUNE valeur numérique de `scaleFactor` (raisonnement
+DÉDUIT ci-dessus), rien ne justifie qu'un device réel produise un résidu que l'Éditeur ne produit
+pas ; un tel résidu signalerait une variable NON identifiée par cette investigation (filtrage GPU
+mobile, précision framebuffer, pipeline couleur IL2CPP — aucune testée ici), pas une tolérance
+acceptable. Si la capture device rend BIT-EXACT (0/0), cette section doit être mise à jour pour
+étendre la certification au device testé ; si elle rend un résidu (même petit, même sous le seuil
+≤1,00 de la sonde), cette section reste EN L'ÉTAT et le résidu doit être investigué avant toute
+extension de la certification.
+
+---
+
+## § ROUND 6 (verdict ⊥, trois gestes) — 2026-08-20/21
+
+### a) Bug de timing `Canvas.scaleFactor` — découvert en montant la sonde sprite
+
+En reproduisant le patron « bare » (sans AppShell, direct `AddComponent<DistrictInteriorScreenController>()`
++ `Render(dto)`, même patron que `DistrictBackgroundPlayModeTests.cs`), la première capture a échoué
+CATASTROPHIQUEMENT à l'oracle du fond (corr=0,0956, classe GÉOMÉTRIE — « rien ne se superpose »).
+Investigation, dans l'ordre : (1) frames de settle supplémentaires avant capture — AUCUN effet ;
+(2) comparaison visuelle côte-à-côte — contenu semblable mais décalé ; (3) recherche d'offset large —
+toujours un MAE élevé, pas un simple décalage entier ; (4) **log de diagnostic sur `Canvas.scaleFactor`
+lui-même** — révèle la cause : lu à la MÊME frame que `AddComponent<CanvasScaler>()`, `scaleFactor`
+rend la valeur par défaut NON INITIALISÉE `1,000000` au lieu de `0,859375`. Mesuré précisément :
+`sameFrame=1.000000`, `after1Yield=0.859375`. **Correctif** : pré-créer le `Canvas`+`CanvasScaler` dans
+le test, `yield return null;` UNE fois pour laisser stabiliser, PUIS laisser `BuildRoot()` du
+contrôleur trouver ce canvas déjà stabilisé via `FindFirstObjectByType<Canvas>()`. Aucun changement
+de code PRODUCTION requis — le bug n'existe que dans le PATRON DE TEST « bare », qui n'était pas
+exercé avant ce round (les tests `PpF*` existants font tous l'aller-retour HTTP complet, qui laisse
+largement le temps à plusieurs frames de s'écouler avant tout `Render()`).
+
+### b) Fidélité SPRITE — bit-exact, avec un détour d'occlusion inter-bâtiments non prévu
+
+**Élément (a) — oracle bit-exact du fond, PROPREMENT masqué.** Une première tentative a réutilisé
+telle quelle la fenêtre `[49,522]×[10,1090]` déjà établie pour les captures fond-seul (rounds 2-4,
+AppShell) et a mesuré un résidu localisé non nul (bbox ≈100×10px, maxdiff≈21 puis, sur une capture
+différente, bbox≈167×102px maxdiff≈246) — **FAUX ALARME** : inspection visuelle a montré que ce
+résidu est une VRAIE façade de bâtiment joueur (fenêtres allumées, `cash_safehouse`/`residentiel3`)
+rendue PAR-DESSUS le fond, PAS un défaut de transport. La fenêtre `[49,522]` a été établie pour des
+captures FOND-SEUL (AppShell driven, sans bâtiment visible à cette hauteur) ; elle n'était jamais
+garantie exempte de bâtiment une fois des cellules réellement rendues dedans. **Correctif de
+méthode** : construire un MASQUE excluant l'empreinte écran de CHAQUE cellule bâtiment (`Cell_{x}_{y}`,
+rect lu via `GetWorldCorners`) avant le diff brut pixel-à-pixel. Résultat, capture
+`district_sprite_clean_v3.png` : **0/490848 pixels non-nuls, maxdiff=0** dans la région du fond hors
+empreintes de cellule — bit-exact confirmé, RIGOUREUSEMENT (diff brut, PAS la sonde à échantillonnage
+épars — un diff exhaustif est un test plus strict que les ~3000 points échantillonnés par la sonde).
+
+**Élément (b) — le rect d'une cellule NOMMÉE.** Détour : la cellule initialement visée
+(`Cell_2_0`/`front_shop`, x=87 yTop=-110 w=146 h=169) s'est révélée ENTIÈREMENT occluse à l'écran par
+`Cell_3_0`/`cash_safehouse` (x=62 yTop=-106 w=196 h=257) — son empreinte écran est un SOUS-ENSEMBLE
+strict de celle de `cash_safehouse`, et `cash_safehouse` vient APRÈS dans `dto.buildings` (fratrie UI,
+dessiné PAR-DESSUS). Capture directe de ce rect a montré une façade résidentielle aux fenêtres
+allumées, pas l'épicerie — confirmé visuellement avant toute mesure de sonde. **Cible retenue** :
+`Cell_3_0`/`cash_safehouse`, rect **x=62, yTop=-106, w=196, h=257** — footprint non occlus par rien
+(lab/stash entièrement hors écran à ce viewport ; rien ne vient après `cash_safehouse` dans la
+fratrie à ce rect, confirmé par le contrôle bit-exact masqué de l'élément (a) : 0 résidu en dehors
+des 2 seules cellules qui touchent la fenêtre).
+
+**Élément (c) — la liste des couches composées.** `shop.condition_band="DAMAGED"` (tue WindowLight),
+`revenue_chain="UNWIRED"` (tue RevenueSign), `activity_band="IDLE"` (tue ActivitySmoke),
+`lapse_phase_bucket="WITHIN_WINDOW"`+`maintenance_in_progress=false` (tue MaintenanceFlicker),
+`lieutenant_ids=[]` (zéro marqueur) — appliqués à `cash_safehouse`. Log direct des enfants de
+`Cell_3_0` : `layers=[Socle,BuildingSprite]` — confirmé structurellement ZÉRO couche active.
+
+**Le chiffre arbitral** :
+```
+python3 Tools/resemblance-probe.py \
+  --source Assets/Art/District/Sprites/residentiel3_nuit_base_ppm24.0.png \
+  --capture Assets/Screenshots/district_sprite_clean_v3.png \
+  --rect 62,-106,196,257 --declare-fraction 0.5875
+```
+```
+F-transport  MAE arêtes =   0.00   (seuil ≤ 1.00)  VERT
+F-nocalque   MAE plats  =   0.00   (seuil ≤ 0.50)  VERT
+F-cadre      rect 196x257 vs source 196x257, coins 2/4 (fraction déclarée 0.588)  VERT
+régime       stride 1 (dérivé), masque alpha OUI, N = 1814 par population
+corrélation  r = 1.0000 au meilleur alignement (+0,+0)  seuils 0.70/0.90  -> ALIGNÉ
+diagnostic   transport intact
+RESULT transport=0.000 nocalque=0.000 ratio=inf cadre=1 corr=1.0000 dxy=+0+0 classe=ALIGNÉ compares=1013/1420
+```
+`--declare-fraction 0,5875` = fraction verticale réellement visible à l'écran (151px visibles sur
+257 natifs, le haut du sprite dépasse le viewport 577px — même mécanisme que le fond, F-cadre rouge
+EST attendu sans cette déclaration). **BIT-EXACT — 3 éléments requis tous fournis, capture commitée
+`Assets/Screenshots/district_sprite_clean_v3.png`.**
+
+### c) LAVERIE — root cause confirmée + correctif, avec un risque de pivot trouvé et corrigé
+
+**Root cause confirmée par mesure** (pas de re-rendu Blender) : le CONTENU (bbox alpha) était DÉJÀ à
+la bonne échelle avant tout re-cadrage — `laverie_nuit_base` bbox 138×136 (ppm24.0) vs 324×318
+(ppm56.471), ratio 0,4259 vs attendu 0,42504, écart 0,21%, largement dans la tolérance. Le défaut
+vivait ENTIÈREMENT dans la marge de CANEVAS : ppm24.0 original (L=14,R=7,T=4,B=5 px) vs ppm56.471
+original (L=19,R=4,T=27,B=30 px) — non proportionnelles entre elles (14×2,353=32,9 ≠ 19 ; le ratio de
+FICHIER, lui, était à 7,8% d'écart — c'est CE proxy qui était cassé, pas l'art).
+
+**Premier correctif (commit atelier `fd5a5ee`) — RECADRAGE ARBITRAIRE, risque non vérifié.**
+Re-cadrage des 2 PNG à une marge constante de 2px symétrique (bbox alpha + 2px partout). Mesure
+a posteriori : ce recadrage déplace le PIVOT bas-centre du fichier ppm24.0 (le SEUL consommé par le
+rendu — commentaire code `:348`, « camera ZO — non consommée par cet écran ») de **+3,5px horizontal
+/ −3px vertical relatif au CONTENU** (soit +14,6cm / −12,5cm à ppm24.0 dans l'espace du monde). Le
+contrôleur place le bas-centre du FICHIER (pas de la bbox) exactement sur `pivot_px`
+(`DistrictInteriorScreenController.cs:424`, commentaire « le pivot bas-centre du sprite tombe donc
+PILE sur pivot_px ») — un déplacement de cette taille est un risque RÉEL, et **non vérifiable** sans
+les données de scène Blender de l'atelier (hors portée de ce chunk Unity). `laverie` n'est câblée à
+AUCUN slot de `BuildingSpriteSlots` (zéro consommateur de rendu actuel), donc zéro impact PRODUCTION
+immédiat — mais le risque restait latent pour tout futur câblage.
+
+**Correctif RÉVISÉ (commit atelier `3f43b66`) — pivot préservé, prouvé à 0,0000px.** Découverte du
+concours du risque ci-dessus → application de la règle du socle (« au moindre doute, corriger avant
+d'avancer ») : re-crop refait avec une CONTRAINTE mathématique explicite — ne recadrer QUE depuis le
+HAUT (jamais le bas, ce qui préserve automatiquement l'écart bas-fichier/bas-contenu, quel que soit
+le montant retiré) et choisir `cropL+cropR == largeur originale` (ce qui préserve exactement l'offset
+horizontal centre-fichier/centre-contenu, par construction algébrique — DÉMONTRÉ, pas supposé).
+Résultat vérifié par script : `horiz_offset delta=+0,0000` `vert_gap delta=0` — **pivot identique au
+pixel près**, tout en resserrant la marge 159×145 (L14/R7/T4/B5) → 149×143 (L9/R2/T2/B5). `laverie`
+n'étant câblée à aucun slot, la propriété reste NON VÉRIFIÉE EN RENDU (seule une vérification par
+géométrie/preuve algébrique a été faite) — si un futur chunk câble `laverie` à un slot, un contrôle
+pp-F2-like (calage réel vs `pivot_px`) reste dû AVANT livraison, comme pour tout sprite nouvellement
+câblé. `laverie_nuit_base_ppm56.471.png` (non consommée par le rendu, cross-check pp-F3 uniquement)
+reste inchangée depuis `fd5a5ee` : aucune contrainte de pivot ne s'y applique.
+
+**pp-F3 Part 2 re-visée sur la BBOX ALPHA** (`DistrictBackgroundPlayModeTests.cs`, méthode renommée
+`PpF3_Part2_AllFiftyFourDeliveredSprites_CrossPpmContentRatioMatchesDeclaredPpm_WithinOnePointFivePercent`) :
+la comparaison porte désormais sur `ReadAlphaBboxSize` (bbox des pixels alpha≥128), plus sur les
+dimensions de fichier — c'était une « forme E » (argument/prédicat en unités différentes : la marge
+de canevas, pas le rendu, pilotait le ratio). Tolérance élargie 1% → 1,5% (mesuré : max 0,85% observé
+sur les 27 couples en bbox — marge de sécurité conservée). La note de péremption laverie (« CE ROUGE
+EST ATTENDU… ») est SUPPRIMÉE — son cause de fond (le proxy fichier) n'existe plus, la garder aurait
+été une prose datée décrivant un état révolu (le socle : « une note de péremption dont la cause a
+fermé doit disparaître »).
+
+**Résultat, run scopé** (`PpF2`, `PpF3_Part1`, `PpF3_Part2` — `CityMap.PlayMode.Tests`, assembly
+réelle, pas le namespace) : **3/3 VERT**, laverie comprise dans les 27/27 couples de `PpF3_Part2`.
+
+### d) Portée device — correctif du détecteur de péremption
+
+Voir § P4-c ci-dessus, amendé en place (le détecteur tel qu'écrit acceptait à tort un résidu ≤1,00
+comme confirmation ; corrigé pour exiger BIT-EXACT strict sur la première capture device, tout résidu
+non-nul — même sous le seuil VERT de la sonde — étant désormais une régression à investiguer, pas une
+tolérance).
+
+### Nettoyage
+
+Fichiers temporaires de repro (`_TempReproSpriteFidelity.cs`, `_diag_settle{0..3}.png`,
+`district_sprite_clean_v{1,2}.png` — captures intermédiaires/diagnostiques, superseded par v3)
+supprimés avant commit. `Assets/InitTestScene*` (généré par le harnais de test PlayMode) supprimé.
+`Tools/__pycache__/` supprimé.
+
+### Evidence finale round 6
+
+Run scopé PlayMode (`CityMap.PlayMode.Tests`, 3 tests ciblés `PpF2`/`PpF3_Part1`/`PpF3_Part2`) :
+**3/3 VERT** — voir § c ci-dessus. Run complet W3U2 : voir § Evidence pour le tableau final
+avant/après.

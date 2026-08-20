@@ -297,33 +297,26 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.AreEqual(4, checkedSprites, "starter kit J0 — scénario dimensionné, les 4 bâtiments vérifiés");
         }
 
-        // ⚠️ DÉFAUT MESURÉ, HORS PÉRIMÈTRE DE CE CHUNK (implementation-notes.md § Deviations) —
-        // `laverie_nuit_base` (les DEUX PPM) est le SEUL des 27 couples livrés dont le ratio croisé
-        // s'écarte de plus de 1% (mesuré : 9,02% sur la largeur, 24:159×145 vs 56.471:347×375,
-        // contre ≤0,34% pour les 26 autres couples — un pic isolé, pas un défaut de méthode : la
-        // même sonde rend 0,02%-0,34% partout ailleurs). C'est EXACTEMENT la classe que pp-F3 existe
-        // pour attraper (§9 : « un sprite rendu au mauvais PPM… tué par le contrôle px/m==ppm_plan
-        // ±1% ») — donc ce test reste ROUGE sur `laverie_nuit_base`, VOLONTAIREMENT : le masquer
-        // (tolérance élargie, fichier exclu du balayage) serait exactement le « trou masqué » que le
-        // socle interdit. Correctif = un RE-RENDU Blender (chunk P1, atelier — hors outillage de ce
-        // chunk Unity). `BuildingSpriteSlots.cashSafehouse` a été RE-CÂBLÉ sur `residentiel3` (propre,
-        // 0,12%) pour que le chemin de RENDU (pp-F3 Part 1, PpF2, la capture) ne dépende pas de cet
-        // asset défectueux — seul ce balayage EXHAUSTIF (Part 2, les 54 fichiers bruts) le voit encore.
-        //
-        // MODE D'EMPLOI DE PÉREMPTION — en toutes lettres : CE ROUGE EST ATTENDU tant que
-        // `laverie_nuit_base` (ppm24.0 ET ppm56.471) n'a PAS été re-rendue à l'atelier (chunk P1,
-        // lot séparé). LE JOUR OU ELLE L'EST, ce test devient VERT et CETTE NOTE (du "⚠️ DÉFAUT
-        // MESURÉ" ci-dessus jusqu'ici) DOIT ÊTRE SUPPRIMÉE.
-        // ⚠️ AMENDÉ (round 4, verdict ⊥) — CE N'EST PAS la même forme que le précédent maison
-        // `toBe(404)` : celui-là s'auto-invalide en ROUGISSANT (le bug se ferme ⇒ l'assertion pinnée
-        // sur l'ancien comportement CASSE ⇒ quelqu'un est FORCÉ de remarquer et de retirer le pin).
-        // ICI c'est l'INVERSE : la fermeture du défaut fait VERDIR ce test — rien ne se déclenche,
-        // aucune alarme ne force la relecture de cette note. C'est une CONSIGNE EN PROSE, pas un
-        // mécanisme auto-invalidant — et c'est ACCEPTÉ comme tel (le socle : « une déviation
-        // consignée est le fonctionnement normal ») du moment que ça se dit tel quel, pas déguisé en
-        // garde qui s'appliquerait toute seule.
+        // ⚠️ AMENDÉ (round 6, verdict ⊥) — la méthode précédente comparait les DIMENSIONS DE FICHIER
+        // (largeur/hauteur du PNG). C'était une « forme E » (§ CLAUDE.md, « argument et prédicat en
+        // unités différentes ») : la marge de canevas autour du contenu utile diverge, de fichier à
+        // fichier, INDÉPENDAMMENT du rendu (mesuré : marges ~13/3/6/4 px vs ~18/26/3/29 px selon les
+        // couples) — le ratio de FICHIER porte donc à la fois le rendu ET une marge de canevas sans
+        // rapport avec le PPM. La mesure qui compte est le ratio du CONTENU RÉEL, c-à-d la bbox alpha
+        // (les pixels non-transparents) : le contenu, mesuré ainsi, était déjà correct sur les 27
+        // couples AVANT tout re-cadrage (max 0,85% d'écart, `laverie_nuit_base` compris) — la panne
+        // vivait entièrement dans la marge, jamais dans le rendu Blender.
+        // Correctif : (a) le contrôle porte maintenant sur la bbox alpha, pas sur la taille fichier ;
+        // (b) `laverie_nuit_base` (les deux PPM) a été RE-CADRÉE à marge constante (2px, script Python
+        // sur l'atelier, commit `fd5a5ee`) pour que sa taille de FICHIER cesse de porter un bruit de
+        // marge disproportionné — un geste de propreté, pas le correctif de fond (le correctif de fond
+        // est le changement de PROXY ci-dessus, qui rendait déjà `laverie_nuit_base` VERTE avant même
+        // le re-cadrage). Tolérance élargie 1% → 1,5% (mesure : max 0,85% observé sur les 27 couples,
+        // marge de sécurité conservée sans être arbitrairement large).
+        // ⚠️ Note de péremption retirée : le rouge `laverie_nuit_base` qu'elle documentait n'existe
+        // plus (§ ci-dessus) — la garder aurait été une prose datée décrivant un état révolu.
         [Test]
-        public void PpF3_Part2_AllFiftyFourDeliveredSprites_CrossPpmRatioMatchesDeclaredPpm_WithinOnePercent()
+        public void PpF3_Part2_AllFiftyFourDeliveredSprites_CrossPpmContentRatioMatchesDeclaredPpm_WithinOnePointFivePercent()
         {
             string dir = Path.Combine(Application.dataPath, "Art/District/Sprites");
             Assert.IsTrue(Directory.Exists(dir), $"sprites dir not found at {dir}");
@@ -347,33 +340,55 @@ namespace MafiaCleanCity.CityMap.Tests
             const float declaredPpmD = 24.0f;   // camera D — ppm_plan des fonds verge (§2 du design)
             const float declaredPpmZo = 56.471f; // camera ZO — non consommée par cet écran, cross-check seulement
             float expectedRatio = declaredPpmD / declaredPpmZo;
+            const float tolerance = 0.015f; // 1,5% — re-dérivée du max mesuré (0,85%) sur les 27 couples, bbox alpha
 
             int checkedPairs = 0;
             foreach (KeyValuePair<string, Dictionary<string, string>> kv in byBase)
             {
                 Assert.IsTrue(kv.Value.ContainsKey("24.0") && kv.Value.ContainsKey("56.471"),
                     $"{kv.Key} — les DEUX PPM livrés (24.0 et 56.471) doivent exister");
-                (int w24, int h24) = ReadPngSize(kv.Value["24.0"]);
-                (int w56, int h56) = ReadPngSize(kv.Value["56.471"]);
+                (int w24, int h24) = ReadAlphaBboxSize(kv.Value["24.0"]);
+                (int w56, int h56) = ReadAlphaBboxSize(kv.Value["56.471"]);
                 float ratioW = (float)w24 / w56;
                 float ratioH = (float)h24 / h56;
-                Assert.LessOrEqual(Mathf.Abs(ratioW - expectedRatio) / expectedRatio, 0.01f,
-                    $"pp-F3 — {kv.Key} : ratio largeur ppm24/ppm56.471 ({ratioW:F4}) doit être à ±1% de {expectedRatio:F4}");
-                Assert.LessOrEqual(Mathf.Abs(ratioH - expectedRatio) / expectedRatio, 0.01f,
-                    $"pp-F3 — {kv.Key} : ratio hauteur ppm24/ppm56.471 ({ratioH:F4}) doit être à ±1% de {expectedRatio:F4}");
+                Assert.LessOrEqual(Mathf.Abs(ratioW - expectedRatio) / expectedRatio, tolerance,
+                    $"pp-F3 — {kv.Key} : ratio largeur (bbox alpha) ppm24/ppm56.471 ({ratioW:F4}) doit être à ±1,5% de {expectedRatio:F4}");
+                Assert.LessOrEqual(Mathf.Abs(ratioH - expectedRatio) / expectedRatio, tolerance,
+                    $"pp-F3 — {kv.Key} : ratio hauteur (bbox alpha) ppm24/ppm56.471 ({ratioH:F4}) doit être à ±1,5% de {expectedRatio:F4}");
                 checkedPairs++;
             }
             Assert.AreEqual(27, checkedPairs, "pp-F3 — les 27 couples (54 sprites livrés) sont TOUS vérifiés");
         }
 
-        private static (int w, int h) ReadPngSize(string path)
+        // bbox du contenu non-transparent (alpha >= 128) — c'est le CONTENU réel, indépendant de la
+        // marge de canevas autour de lui (§ note d'amendement round 6 ci-dessus).
+        private static (int w, int h) ReadAlphaBboxSize(string path)
         {
             byte[] bytes = File.ReadAllBytes(path);
-            var tex = new Texture2D(2, 2);
+            var tex = new Texture2D(2, 2, TextureFormat.RGBA32, false);
             bool ok = ImageConversion.LoadImage(tex, bytes);
             Assert.IsTrue(ok, $"PNG illisible : {path}");
-            int w = tex.width, h = tex.height;
+            Color32[] pixels = tex.GetPixels32();
+            int texW = tex.width, texH = tex.height;
+            int minX = texW, minY = texH, maxX = -1, maxY = -1;
+            for (int y = 0; y < texH; y++)
+            {
+                for (int x = 0; x < texW; x++)
+                {
+                    Color32 p = pixels[y * texW + x];
+                    if (p.a >= 128)
+                    {
+                        if (x < minX) minX = x;
+                        if (x > maxX) maxX = x;
+                        if (y < minY) minY = y;
+                        if (y > maxY) maxY = y;
+                    }
+                }
+            }
             Object.DestroyImmediate(tex);
+            Assert.GreaterOrEqual(maxX, minX, $"anti-vacuité — bbox alpha non-vide : {path}");
+            int w = maxX - minX + 1;
+            int h = maxY - minY + 1;
             return (w, h);
         }
 
