@@ -40,3 +40,18 @@ Règle 5 du socle : imprévu non bloquant → option conservatrice CONSIGNÉE. L
 - **FloorTint** : hash position (73856093/19349663) — même monde ⇒ mêmes taches, zéro période lisible.
 - **Libellés de type** : seulement en repli sans art (le sprite est l'identité). Titre inchangé
   (MINOR restant : name_canonical — attend un display_name côté back, pas d'invention C#).
+
+## Round 5-6 — CONVERGENCE PRONONCÉE (⊥, sans réserve) — 2026-08-20
+- Verdict ⊥ r5 : palette / contrastes / échelle / calques **CONVERGÉS**, « je ne les rouvrirai pas ».
+  5 tours, 5 BLOCKING fondés, 0 réfuté — et le seul tour sans BLOCKING est le premier où le
+  correctif est arrivé avec sa garde STRUCTURELLE (R4F1/R4F2) plutôt qu'une garde de valeur.
+- (b) réfuté par la mesure du ⊥ : les rectangles beiges = les 2 marqueurs de lieutenant du lab
+  (cas dégénéré J0, 2 COOK même bâtiment), PAS un repli token-rect — 0 px de repli dans l'écran.
+- r5 livré : ombre 3 bandes translucide (r7→r8 : 292 px quasi noirs → 2) · TypeLabel sur repli
+  (la branche null seule était MORTE — Resolve ne rend jamais null) · R4F1 ordre inter-cellules ·
+  R2F2 composite.
+- ⚠️ ARBITRAGE OUVERT (round 6) : cœur 0,45 et plancher 1,3 incompatibles sur b0 (plafond de la
+  paire = 1,332 OPAQUE ; 0,45 → 1,164 ; 1,3 exigerait 0,88). Livré : 1,15 sur b0, 1,3 sur b1/b2.
+  Recommandé (i) ratifier 1,15.
+- Restent consignés sans urgence : liseré 4 px haut (offsetMax) · titre name_canonical (attend un
+  display_name back) · pivot .meta bas-centre.
