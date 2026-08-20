@@ -99,7 +99,7 @@ et deux coins de la bbox des bâtiments actuels tombent dehors (mesuré : (−25
 
 ### 2.1 Le contrat d'écran — traité MAINTENANT, pas au premier rendu (prédictions ⊥ P1 et F-cadre)
 
-**P1 — le canvas rééchantillonne, et c'est rouge d'office.** `AppShell.cs:159-161` pose `ScaleWithScreenSize` avec
+**P1 — le canvas rééchantillonne, et c'est rouge d'office.** `AppShell.cs:229-230` pose `ScaleWithScreenSize` avec
 `referenceResolution = (1280, 720)` et ne touche jamais `matchWidthOrHeight` (défaut **0** = appariement sur la largeur).
 Sur la vue de recette 1100×577 ⇒ `scaleFactor = 1100/1280 = **0,859375**`. Une `Image` dimensionnée en unités canvas est donc
 rendue à **0,859×** : rééchantillonnage garanti, **F-transport rouge sans qu'aucun pixel d'art soit en cause**.
@@ -230,7 +230,7 @@ du premier fond. Vague 1 ≈ **20-50 min** selon le gain réel.
 ### 5.3 Le contrôle de cadrage — le livrable qui manque aujourd'hui
 
 Après chaque rendu de sprite, le script **vérifie** que l'alpha solide (≥ 128) est nul sur les 4 bordures de 2 px ; sinon il
-élargit la marge et **re-rend**, jusqu'à 3 tentatives, puis échoue bruyamment. C'est un contrôle **exécuté**, pas une marge
+élargit les **BORNES MONDE (w, h)** — jamais `ortho_scale` seul, qui ferait chuter le px/m et rougirait pp-F3 par le correctif de pp-F4 ; `res = (w·PPM, h·PPM)` suit — et **re-rend**, jusqu'à 3 tentatives, puis échoue bruyamment. C'est un contrôle **exécuté**, pas une marge
 espérée — mesure de départ : **12/12 des sprites actuels échoueraient ce contrôle** (§1.2), donc il n'est pas vide.
 
 ---
@@ -293,7 +293,7 @@ Toutes `[Category("W3U2")]`, PlayMode. Mondes dégénérés en §9.
 - **pp-F2 — calage.** Pour un bloc de test connu, le pivot du sprite joueur tombe à **≤ 2 px** de `pivot_px` **lu dans le JSON**
   (valeur produite par Blender, jamais recalculée côté Unity) ; **et** l'écart entre les ancres des blocs (0,0) et (9,0) vaut
   `9 × pas_parcelle_m × ex` à ≤ 2 px près.
-- **pp-F3 — zéro rescale du sprite joueur.** `rect.size == sprite.texture.size` exactement (facteur 1,000) ; **et**
+- **pp-F3 — zéro rescale, POUR CHACUN des sprites livrés** (quantificateur exigé par l'arbitrage B du ⊥ : le sceau « échelle » r5-r6 est TRANSFÉRÉ à cette falsifiable — une vérification par instance ne verrait pas une divergence ENTRE types). `rect.size == sprite.texture.size` exactement (facteur 1,000) ; **et**
   `sprite.texture.width / largeur_monde_m` est égal à `ppm_plan` du JSON à **±1 %**.
 - **pp-F4 — zéro crop du sprite.** Pour chacun des sprites livrés, l'alpha solide (≥ 128) est **nul** sur les bordures de 2 px
   des 4 côtés. *(Mesure de départ : 12/12 échouent — la falsifiable n'est pas vide.)*
@@ -365,7 +365,7 @@ JPEG 0,44/0,29/0,23 Mo · l'existence d'une seule scène de district.
 | P5 | les 5 autres profils sont authorables au même coût | non pour la vague 1 | vague 1 = `verge-a` seul, le reste est chiffré (§5.2/§6) et planifiable |
 
 **Point faible nommé** : P4 est le seul déduit qui touche au verdict de l'user, et **il est mesurable dès le premier fond** —
-pp-F5 en égalité stricte le tranche sans discussion. Si elle rouge à q90, on remonte à q95 (0,44 Mo) ou au PNG.
+F-transport (grille ⊥, sonde Tools/resemblance-probe.py) le tranche sans discussion. Si elle rouge à q90, on remonte à q95 (0,44 Mo) ou au PNG.
 
 ---
 
@@ -377,7 +377,7 @@ pp-F5 en égalité stricte le tranche sans discussion. Si elle rouge à q90, on 
 | **P1** | contrôle de cadrage des sprites (§5.3) + re-rendu **nuit** aux 2 PPM (54 rendus, ~7 min) | pp-F4 sur les 27 couples |
 | **P2** | 2 fonds `verge` (jour + nuit, caméra D, ~50 min) | l'artefact lui-même |
 | **P3** | Unity : `DistrictInteriorScreenController` rend fond + sprites ancrés, plus aucune grille procédurale | pp-F1, pp-F2, pp-F3, pp-F6 |
-| **P4** | boucle ⊥ finale sur la ressemblance | **pp-F5**, égalité stricte hors parcelles |
+| **P4** | boucle ⊥ finale sur la ressemblance | **F-transport** (sonde ⊥ resemblance-probe.py — l'égalité stricte est RETIRÉE, §8) |
 
 Les chunks 2 (navigation) et 5 (HUD) du design nav-hud restent **en vol et non bloqués** par ce pivot.
 
