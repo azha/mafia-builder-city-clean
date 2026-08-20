@@ -69,7 +69,17 @@ namespace MafiaCleanCity.CityMap
         // Taille de cellule en px uGUI (mise en page, pas un tunable de jeu — R2.3 ne porte pas sur les
         // dimensions d'écran, cf. les tailles inline déjà partout dans AppShell/LaunderingController).
         private float CellSize = 48f;   // revue ⊥ 2026-08-20 (BLOCKING 4) : calculé par rendu, plus une const
-        private const float MetresParBloc = 14f;   // largeur-monde d'un bloc — porte l'échelle commune ppm 56
+        // revue ⊥ r2 (IMPORTANT 3) : l'échelle-monde d'un bloc n'a rien à faire en const C# — elle
+        // vit dans BuildingSpriteSlots.asset (metresParBloc, défaut 22 : l'usine, 21,86 m d'opaque,
+        // est le plus large sprite livré — à 14 elle faisait 1,56 bloc et se faisait couper).
+        private static float MetresParBloc
+        {
+            get
+            {
+                BuildingSpriteSlots slots = BuildingSpriteSlots.Current;
+                return slots != null && slots.metresParBloc > 0f ? slots.metresParBloc : 22f;
+            }
+        }
 
         // ---- test hooks : data (C7) --------------------------------------------------------
         public DistrictInteriorDto LastFetch { get; private set; }
@@ -263,18 +273,27 @@ namespace MafiaCleanCity.CityMap
 
             if (dto.blocks != null)
             {
+                // Revue ⊥ r2 (BLOCKING 1) : DEUX passes. Passe 1 — les 40 sols (l'ordre des blocks[]
+                // suffit : un sol ne déborde pas). Passe 2 — chaque cellule OCCUPÉE repasse en fin de
+                // fratrie en (y,x) croissant : tout bâtiment passe devant TOUT sol (une seule passe
+                // triée laissait le sol du voisin de DROITE manger le débordement — 44 lignes coupées
+                // à x=144, mesuré). Noms, comptes, parents : inchangés pour les falsifiables.
                 var ordered = new List<DistrictInteriorBlockDto>(dto.blocks);
                 ordered.Sort((a, b) => a.y != b.y ? a.y.CompareTo(b.y) : a.x.CompareTo(b.x));
+                var occupied = new List<(DistrictInteriorBlockDto block, GameObject cell)>();
                 foreach (DistrictInteriorBlockDto block in ordered)
                 {
                     if (buildingByBlockId.TryGetValue(block.block_id, out DistrictInteriorBuildingDto building))
                     {
-                        BuildBuildingCell(gridRt, block.x, block.y, building);
+                        GameObject cell = BuildBuildingCell(gridRt, block.x, block.y, building);
+                        occupied.Add((block, cell));
                         RenderedBuildingCount++;
                     }
                     else
                         BuildEmptyCell(gridRt, block.x, block.y); // C8-F4 : "silhouette sourde" — juste le sol.
                 }
+                foreach (var (block, cell) in occupied) // déjà triés (y,x) par la passe 1
+                    cell.transform.SetAsLastSibling();
                 RenderedCellCount = dto.blocks.Length;
             }
 
@@ -286,7 +305,7 @@ namespace MafiaCleanCity.CityMap
             hazeImg.raycastTarget = false;
         }
 
-        private void BuildBuildingCell(RectTransform gridRt, int x, int y, DistrictInteriorBuildingDto building)
+        private GameObject BuildBuildingCell(RectTransform gridRt, int x, int y, DistrictInteriorBuildingDto building)
         {
             GameObject cell = NewCell(gridRt, x, y);
 
@@ -298,7 +317,7 @@ namespace MafiaCleanCity.CityMap
             socleRt.pivot = new Vector2(0.5f, 0f);
             socleRt.sizeDelta = new Vector2(0, CellSize * 0.2f);
             socleRt.anchoredPosition = Vector2.zero;
-            socle.AddComponent<Image>().color = DesignTokens.Current.nightBase;
+            socle.AddComponent<Image>().color = DesignTokens.Current.nightSocle; // revue ⊥ r2 : nightBase servait aussi de bucket 2 du sol
 
             // Sprite — D6/C6 : BuildingSpriteSlots, premier appelant de PRODUCTION (jusqu'ici son seul
             // consommateur était son propre test, C6-F4).
@@ -345,6 +364,7 @@ namespace MafiaCleanCity.CityMap
             BuildActivitySmoke(cell.transform, building);     // binding 4 — fumée "op active"
             BuildMaintenanceFlicker(cell.transform, building); // binding 5 — grésillement "maintenance en retard"
             BuildLieutenantMarkers(cell.transform, building);  // U-11 (C10-F1, D10) — affectation lieutenant
+            return cell;
         }
 
         /// <summary>Bindings 1+2 (§1.5 lignes 1-2) — la fenêtre ambre. Binding 1 (possédé) : TOUT
@@ -514,7 +534,7 @@ namespace MafiaCleanCity.CityMap
                 rt.offsetMin = rt.offsetMax = Vector2.zero;
                 // REUSE d'un token déjà asset-backed (R2.3) — `lieutenantMutedDeep`, "Par-écran" §1.2
                 // de la mesure du territoire, jamais un tunable/token neuf pour ce chunk.
-                marker.AddComponent<Image>().color = DesignTokens.Current.lieutenantMutedDeep;
+                marker.AddComponent<Image>().color = DesignTokens.Current.nightLieutenantMarker; // revue ⊥ r1+r2 : 1,055:1 contre le socle — invisible deux rounds de suite
                 RenderedLieutenantMarkerCount++;
             }
         }

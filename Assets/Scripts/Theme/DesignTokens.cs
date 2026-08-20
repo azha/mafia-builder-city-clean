@@ -159,5 +159,15 @@ namespace MafiaCleanCity.Theme
         public Color nightOutOfDistrictMuted;  // (0.085,0.087,0.09) — silhouette hors-district,
                                                 // délibérément sourde (engagement 5) : plus sombre et
                                                 // plus plate que nightBackground.
+        public Color nightSocle;               // revue ⊥ r2 (IMPORTANT 4) — socle des bâtiments,
+                                                // DISTINCT de nightBase (qui servait à la fois de
+                                                // socle et de bucket 2 du sol ⇒ contraste 1,000:1
+                                                // une cellule sur trois). Plus sombre que tous les
+                                                // buckets de FloorTint.
+        public Color nightLieutenantMarker;    // revue ⊥ r2 (IMPORTANT 5 de r1 / point 5 de r2) —
+                                                // marqueur d'affectation lieutenant, chaud et clair :
+                                                // ratio WCAG ≥ 3:1 contre socle ET les 3 buckets de
+                                                // sol (falsifiable dédiée, 2 revues l'ont signalé
+                                                // invisible à l'œil ET à la sonde).
     }
 }

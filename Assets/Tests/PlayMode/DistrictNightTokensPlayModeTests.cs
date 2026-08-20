@@ -46,10 +46,50 @@ namespace MafiaCleanCity.Theme.Tests
             // de rendre non-zéro) — un GRIS PUR n'a par définition aucune teinte : ce fixture DOIT
             // échouer le même test que celui qui protège nightBackground, sinon la sonde ne
             // distinguerait pas un vrai bleu-pétrole d'un gris déguisé.
-            Color pureGray = new Color(0.1f, 0.1f, 0.1f, 1f);
-            Color.RGBToHSV(pureGray, out _, out float s, out _);
-            Assert.AreEqual(0f, s,
-                "contrôle positif cassé : un gris pur (r=g=b) devrait mesurer une saturation nulle.");
+            // revue ⊥ r2 (MINOR 7) : la fixture doit échouer LE SEUIL RÉEL (0.20), pas seulement
+            // s==0 — un gris à s=0.15 doit être rejeté par la sonde que ce contrôle certifie.
+            Color grisDeguise = new Color(0.10f, 0.107f, 0.112f, 1f); // s ≈ 0.107 — sous le seuil
+            Color.RGBToHSV(grisDeguise, out _, out float s, out _);
+            Assert.Less(s, 0.20f,
+                "contrôle positif cassé : cette fixture est censée être SOUS le seuil 0.20 que C5F3 applique.");
+            Assert.Greater(s, 0f,
+                "contrôle positif dégénéré : la fixture doit être un gris DÉGUISÉ (s>0), pas un gris pur — " +
+                "c'est précisément la classe que l'ancien contrôle (s==0) ne couvrait pas.");
+        }
+
+        // revue ⊥ r2 (point 5) — la falsifiable que DEUX revues manuelles ont dû remplacer : le
+        // contraste des éléments non textuels du diorama, en RATIO WCAG mesuré, jamais à l'œil.
+        private static float Lum(Color c)
+        {
+            System.Func<float, float> lin = (u) => u <= 0.03928f ? u / 12.92f : Mathf.Pow((u + 0.055f) / 1.055f, 2.4f);
+            return 0.2126f * lin(c.r) + 0.7152f * lin(c.g) + 0.0722f * lin(c.b);
+        }
+        private static float Ratio(Color a, Color b)
+        {
+            float la = Lum(a), lb = Lum(b);
+            return (Mathf.Max(la, lb) + 0.05f) / (Mathf.Min(la, lb) + 0.05f);
+        }
+
+        [Test]
+        public void R2F1_LieutenantMarker_WCAG3vs_SocleAndAllFloorBuckets()
+        {
+            var t = DesignTokens.Current;
+            Color b0 = t.nightBackground;
+            Color b1 = Color.Lerp(t.nightBackground, t.nightBase, 0.5f); // le bucket 1 de FloorTint, même formule
+            Color b2 = t.nightBase;
+            foreach (var (nom, fond) in new (string, Color)[] { ("socle", t.nightSocle), ("sol_b0", b0), ("sol_b1", b1), ("sol_b2", b2) })
+                Assert.GreaterOrEqual(Ratio(t.nightLieutenantMarker, fond), 3f,
+                    $"marqueur lieutenant vs {nom} : ratio WCAG < 3:1 — invisible (mesuré 1,055:1 aux rounds 1-2, deux revues à la main).");
+        }
+
+        [Test]
+        public void R2F2_Socle_DistinctFromEveryFloorBucket()
+        {
+            var t = DesignTokens.Current;
+            Color b1 = Color.Lerp(t.nightBackground, t.nightBase, 0.5f);
+            foreach (var (nom, sol) in new (string, Color)[] { ("b0", t.nightBackground), ("b1", b1), ("b2", t.nightBase) })
+                Assert.GreaterOrEqual(Ratio(t.nightSocle, sol), 1.3f,
+                    $"socle vs sol {nom} : ratio < 1,3:1 — le socle disparaît dans le sol (mesuré 1,000:1 au r2 quand nightBase servait aux deux).");
         }
     }
 }

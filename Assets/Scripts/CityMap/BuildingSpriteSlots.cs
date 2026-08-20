@@ -69,6 +69,10 @@ namespace MafiaCleanCity.CityMap
         [System.Serializable]
         public class OverlaySet { public Sprite fen; public Sprite neon; public Sprite dev; public Sprite actif; }
 
+        [Header("Échelle-monde (revue ⊥ r2 — IMPORTANT 3)")]
+        [Tooltip("Largeur-monde d'un bloc en mètres — porte l'échelle commune ppm 56 du diorama. ≥ 22 : l'usine (21,86 m) est le plus large sprite livré.")]
+        public float metresParBloc = 22f;
+
         [Header("Calques additifs — nuit")]
         public OverlaySet frontShopOv;
         public OverlaySet cashSafehouseOv;

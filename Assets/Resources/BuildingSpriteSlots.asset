@@ -20,6 +20,7 @@ MonoBehaviour:
   dealerSpotFront: {fileID: 21300000, guid: 8bcf0736bf7daf95a9d2e5387758b684, type: 3}
   moneyHolding: {fileID: 21300000, guid: cd34b47246be0154683f0fc7b9bb5bc1, type: 3}
   fallback: {fileID: 21300000, guid: 4394d092be1d4181a8cbc96b81827da2, type: 3}
+  metresParBloc: 22
   frontShopOv:
     fen: {fileID: 21300000, guid: f06712211daf0ce46b93c10b62293a5d, type: 3}
     neon: {fileID: 0}
