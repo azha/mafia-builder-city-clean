@@ -51,6 +51,11 @@ namespace MafiaCleanCity.CityMap
         public bool DetailLoaded { get; private set; }
         public int SelectedDistrictId { get; private set; } = -1;
 
+        // nav-hud-design-v1.md §3.2 (chunk 2) — « Entrer » : fired with the district id the SAME
+        // way every other event in this file surfaces state (a public C# event, no shell coupling
+        // here — AppShell subscribes when it mounts this controller as the City tenant, §3.3).
+        public event System.Action<int> OnEnterDistrict;
+
         private readonly List<DistrictCellView> cells = new List<DistrictCellView>();
         private RectTransform northContent;
         private RectTransform southContent;
@@ -62,6 +67,11 @@ namespace MafiaCleanCity.CityMap
         private TextMeshProUGUI detailTitle;
         private Coroutine detailCoroutine;
         private VerticalLayoutGroup rootVlg;
+
+        // §3.2 — « Entrer », un enfant PERSISTANT de detailPanel ("Footer", 3ᵉ enfant — §3.2 : la
+        // destruction de RenderDetail est scopée à detailContent, jamais à detailPanel lui-même,
+        // donc ce bouton SURVIT à tous les rafraîchissements du panneau).
+        private Button enterButton;
 
         // Right padding reserved for the detail panel (380 wide + 16 margin + gap) so the
         // banks reflow to the left instead of being covered when the panel is open.
@@ -118,6 +128,7 @@ namespace MafiaCleanCity.CityMap
 
             Token = token;
             IsAuthenticated = true;
+            RefreshEnterInteractable(); // §3.2 — 2e point : le panneau peut avoir été ouvert AVANT l'auth (Populate à :98, signature à :102)
             Debug.Log("[CityMap] Signed in — Bearer token acquired.");
 
             yield return LoadHeat();
@@ -442,7 +453,44 @@ namespace MafiaCleanCity.CityMap
             AddLayoutElement(content, flexibleHeight: 1);
             detailContent = (RectTransform)content.transform;
 
+            // §3.2 — "Footer", 3ᵉ enfant DIRECT de detailPanel (siblings: Header, Content, Footer).
+            // Construit ICI, UNE fois, jamais recréé par RenderDetail (dont la boucle de
+            // destruction est scopée à detailContent — vérifié dans le corps ci-dessus, :587 avant
+            // ce chunk). Second argument décisif du design : BuildDetail fait ~13 requêtes
+            // séquentielles avant FinishDetail ⇒ un bouton construit dans RenderDetail serait
+            // ABSENT pendant tout le chargement ; construit ici, il existe dès l'ouverture du
+            // panneau (SelectDistrict), avant même la première requête de projection.
+            GameObject footer = NewUI("Footer", detailPanel.transform);
+            HorizontalLayoutGroup fhlg = footer.AddComponent<HorizontalLayoutGroup>();
+            fhlg.childAlignment = TextAnchor.MiddleCenter;
+            fhlg.childControlWidth = true;
+            fhlg.childControlHeight = true;
+            fhlg.childForceExpandWidth = true;
+            fhlg.childForceExpandHeight = true;
+            AddLayoutElement(footer, minHeight: 40, flexibleHeight: 0);
+
+            GameObject enterGo = NewUI("EnterButton", footer.transform);
+            Image enterImg = enterGo.AddComponent<Image>();
+            enterImg.color = DesignTokens.Current.mapChipBg; // REUSE — même token que HeatToggle (pas accentGold : allowlist C5F2 fermée)
+            enterButton = enterGo.AddComponent<Button>();
+            enterButton.targetGraphic = enterImg;
+            enterButton.interactable = false; // aucun jeton au démarrage (nav-F3)
+            enterButton.onClick.AddListener(() => OnEnterDistrict?.Invoke(SelectedDistrictId));
+
+            TextMeshProUGUI enterLabel = NewText("Label", enterGo.transform, "Entrer", 16, TextAlignmentOptions.Center);
+            Stretch((RectTransform)enterLabel.transform, Vector2.zero, Vector2.zero);
+
             detailPanel.SetActive(false);
+        }
+
+        /// <summary>§3.2 — les TROIS points de rafraîchissement de l'interactable de « Entrer »,
+        /// EXACTEMENT ceux nommés par le design : SelectDistrict, juste après IsAuthenticated=true,
+        /// FinishDetail. Un jeton ET un district sélectionné sont tous deux requis — le panneau qui
+        /// porte ce bouton n'est de toute façon visible que quand un district est sélectionné, mais
+        /// l'interactable epingle la valeur, jamais l'activation du GameObject seule.</summary>
+        private void RefreshEnterInteractable()
+        {
+            if (enterButton != null) enterButton.interactable = IsAuthenticated && SelectedDistrictId >= 0;
         }
 
         /// <summary>Open the detail panel for a district and fetch its system projections.</summary>
@@ -454,6 +502,7 @@ namespace MafiaCleanCity.CityMap
             if (detailTitle != null) detailTitle.text = cell != null ? cell.Model.name_canonical : $"District {districtId}";
             if (detailPanel != null) detailPanel.SetActive(true);
             ReserveSpaceForPanel(true);
+            RefreshEnterInteractable(); // §3.2 — 1er point
             if (detailCoroutine != null) StopCoroutine(detailCoroutine);
             detailCoroutine = StartCoroutine(BuildDetail(districtId, cell));
         }
@@ -578,6 +627,7 @@ namespace MafiaCleanCity.CityMap
         {
             CurrentDetail = detail;
             DetailLoaded = true;
+            RefreshEnterInteractable(); // §3.2 — 3e point (nommé explicitement par le design)
             if (SelectedDistrictId == detail.districtId) RenderDetail(detail);
         }
 
