@@ -296,6 +296,16 @@ namespace MafiaCleanCity.CityMap
                     if (blockByBlockId.ContainsKey(b.block_id)) // D2 garantit l'appartenance ; défensif.
                         buildingByBlockId[b.block_id] = b;
 
+            // Chunk 1 (nav-hud-design-v1.md §2.1, Décision A) — le PARCELLAIRE : partition
+            // déterministe rue/parcelle depuis les seules (x,y) de blocks[], résolue UNE fois par
+            // rendu (le profil ne change pas cellule à cellule). `ResolveAmbient` est exhaustif à
+            // repli déclaré (BuildingSpriteSlots.cs) — jamais null tant que l'asset est chargé ; si
+            // l'asset lui-même manque, `ambientSet` reste null et toute parcelle retombe sur le sol
+            // nu de BuildEmptyCell (même défensive que `slots` plus bas).
+            BuildingSpriteSlots slotsForAmbient = BuildingSpriteSlots.Current;
+            BuildingSpriteSlots.AmbientSet ambientSet =
+                slotsForAmbient != null ? slotsForAmbient.ResolveAmbient(dto.profile) : null;
+
             if (dto.blocks != null)
             {
                 // Revue ⊥ r2 (BLOCKING 1) : DEUX passes. Passe 1 — les 40 sols (l'ordre des blocks[]
@@ -310,12 +320,16 @@ namespace MafiaCleanCity.CityMap
                 {
                     if (buildingByBlockId.TryGetValue(block.block_id, out DistrictInteriorBuildingDto building))
                     {
+                        // Décision D (§2.4) : un bloc possédé reste une parcelle du joueur quelle
+                        // que soit sa classe rue/parcelle — jamais d'ambiant sur une cellule possédée.
                         GameObject cell = BuildBuildingCell(gridRt, block.x, block.y, building);
                         occupied.Add((block, cell));
                         RenderedBuildingCount++;
                     }
+                    else if (IsStreetCell(block.x, block.y, ambientSet))
+                        BuildEmptyCell(gridRt, block.x, block.y); // cellule-rue : sol nu inchangé (§2.1) — habillée au chunk 3.
                     else
-                        BuildEmptyCell(gridRt, block.x, block.y); // C8-F4 : "silhouette sourde" — juste le sol.
+                        BuildAmbientCell(gridRt, block.x, block.y, ambientSet); // §2.1 Décision D — à la place de BuildEmptyCell
                 }
                 foreach (var (block, cell) in occupied) // déjà triés (y,x) par la passe 1
                     cell.transform.SetAsLastSibling();
@@ -624,6 +638,62 @@ namespace MafiaCleanCity.CityMap
             if (ActiveAmbientLoopCount >= MaxAmbientLoops) return;
             source.AddComponent<AmbientPulseLoop>();
             ActiveAmbientLoopCount++;
+        }
+
+        /// <summary>Décision A (§2.1) — le PARCELLAIRE : cellule-rue si `x % streetEveryX == 0 ||
+        /// y % streetEveryY == 0`. Un axe à 0 est DÉSACTIVÉ (jamais un modulo par zéro, jamais
+        /// vrai) — c'est la valeur retenue par le design pour `streetEveryY` (§2.1 : "streetEveryX
+        /// = 5, streetEveryY désactivé"). `ambientSet == null` (asset introuvable) ⇒ aucune cellule
+        /// n'est classée rue par CETTE fonction ; l'appelant construit alors de l'ambiant partout,
+        /// et `BuildAmbientCell` retombe elle-même sur un sol nu si la table de templates est vide.</summary>
+        private static bool IsStreetCell(int x, int y, BuildingSpriteSlots.AmbientSet ambientSet)
+        {
+            if (ambientSet == null) return false;
+            return (ambientSet.streetEveryX > 0 && x % ambientSet.streetEveryX == 0)
+                || (ambientSet.streetEveryY > 0 && y % ambientSet.streetEveryY == 0);
+        }
+
+        /// <summary>Décisions B/C/D (§2.2-§2.4) — les façades ambiantes d'une parcelle NON possédée,
+        /// à la place de <see cref="BuildEmptyCell"/>. 2 rangs × 2 façades (Décision C, §2.3 — fixé
+        /// en code, pas un degré de liberté ouvert par l'asset : voir implementation-notes.md §
+        /// Deviations pour la consolidation `rangs`/`façadesParRang` → `facadesParParcelle`).
+        /// Placement et tirage DÉTERMINISTES — REUSE du hash maison de <see cref="FloorTint"/>
+        /// (`x*73856093 ^ y*19349663`), étendu par `(2i + r)*83492791` : deux `Render` du MÊME
+        /// payload produisent la MÊME suite de templates (amb-F1). Aucune marque d'état (pas de
+        /// Socle/*Ov/LieutenantMarker/Button — §2.4) : c'est ce qui distingue une façade ambiante
+        /// d'un bâtiment joueur quand les deux tirent la même famille (amb-F3).</summary>
+        private void BuildAmbientCell(RectTransform gridRt, int x, int y, BuildingSpriteSlots.AmbientSet ambientSet)
+        {
+            GameObject cell = NewCell(gridRt, x, y);
+            if (ambientSet == null || ambientSet.templates == null || ambientSet.templates.Length == 0)
+                return; // repli déclaré : rien à peindre plutôt qu'une exception — reste un sol nu.
+
+            int baseHash = unchecked((x * 73856093) ^ (y * 19349663)); // REUSE du hash maison (FloorTint)
+            const int rangs = 2, facadesParRang = 2; // Décision C (§2.3) — 2×2, fixe et motivé
+            float k = CellSize / (MetresParBloc * 56f); // échelle EXACTE des bâtiments joueur (§2.3, :401)
+            int facadeOrdinal = 0;
+            for (int r = rangs - 1; r >= 0; r--) // rang ARRIÈRE (r=1) construit d'abord, AVANT (r=0)
+            {                                     // ensuite — occlusion par ordre de fratrie (§2.3).
+                float fy = (r == 1) ? 0.28f : 0f; // avant (r=0) au sol, arrière (r=1) plus profond
+                for (int i = 0; i < facadesParRang; i++, facadeOrdinal++)
+                {
+                    int hash = unchecked(baseHash ^ ((2 * i + r) * 83492791));
+                    BuildingSpriteSlots.AmbientTemplate tpl = ambientSet.PickWeighted(hash);
+                    if (tpl == null || tpl.nuit == null) continue; // repli déclaré : jamais avaler l'échec en objet vide muet
+
+                    GameObject facade = NewUI($"Ambient_{x}_{y}_{facadeOrdinal}", cell.transform);
+                    RectTransform frt = (RectTransform)facade.transform;
+                    float fx = (i + 0.5f) / facadesParRang;
+                    frt.anchorMin = frt.anchorMax = new Vector2(fx, fy);
+                    frt.pivot = new Vector2(0.5f, 0f); // pivot bas-centre (§2.3)
+                    frt.sizeDelta = new Vector2(tpl.nuit.rect.width, tpl.nuit.rect.height) * k;
+                    float lateral = (((hash >> 3) & 1) == 0 ? -0.15f : 0.15f) * CellSize; // décalage latéral issu du hash (§2.3)
+                    frt.anchoredPosition = new Vector2(lateral, 0f);
+                    Image fimg = facade.AddComponent<Image>();
+                    fimg.sprite = tpl.nuit; // §2.5 : l'ambiant n'apparaît qu'au palier NIGHT — `jour` n'a pas de chemin de rendu ce chunk
+                    fimg.raycastTarget = false; // ambiant inerte — jamais cliquable (amb-F3)
+                }
+            }
         }
 
         private void BuildEmptyCell(RectTransform gridRt, int x, int y)
