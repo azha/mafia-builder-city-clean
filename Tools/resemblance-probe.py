@@ -45,7 +45,7 @@ négociée.
 
 USAGE
   ./resemblance-probe.py --source ART.png --capture CAP.png --rect X,Y,W,H
-  ./resemblance-probe.py --selftest          # les 4 contrôles, sans capture
+  ./resemblance-probe.py --selftest          # tous les contrôles, sans capture
 
 `--rect` = où l'artefact est dessiné DANS la capture, en pixels de capture. Il
 s'imprime au moment de la capture (protocole r9, élément 5 : un chiffre
@@ -81,12 +81,18 @@ SEUIL_TRANSPORT = 1.00         # MAE max sur les arêtes
 SEUIL_NOCALQUE = 0.50          # MAE max sur les plats
 RATIO_RESAMPLE = 8.0           # arêtes/plats au-delà ⇒ signature « rééchantillonné »
 TOL_ECHELLE_PX = 1             # F-cadre : écart toléré en px sur chaque dimension
+CORR_WINDOW = 3                # rayon de recherche d'alignement ENTIER, en px
+SEUIL_CORR_HAUTE = 0.90        # au-dessus : la géométrie se superpose à l'entier
+SEUIL_CORR_BASSE = 0.70        # en dessous : rien ne se superpose ⇒ GÉOMÉTRIE
 
 # Contrôles positifs — les pannes que la sonde DOIT voir rougir (valeurs ⊥ mesurées)
 CTRL_SCALE = 0.95              # attendu : MAE arêtes ≈ 5,26
 CTRL_HAZE_RGB = (0.14, 0.20, 0.30)
 CTRL_HAZE_A = 0.05             # attendu : MAE plats ≈ 1,16
 CTRL_CROP = 0.90               # attendu : F-cadre rouge
+CTRL_GAMMA = 1.25              # attendu : corr ~0,997 (ALIGNÉ) + ratio bas ⇒ VALEURS
+CTRL_PHASE = 0.5               # attendu : corr ~0,979 (ALIGNÉ) + ratio ~25:1 ⇒ arêtes
+CTRL_DECAL_PX = 40             # hors fenêtre ±3 ⇒ attendu : corr ~0,22 ⇒ GÉOMÉTRIE
 
 
 def luma(c):
@@ -149,6 +155,65 @@ def mae(src, cap, pts, rect):
     return (total / n if n else None), n
 
 
+def pearson(a, b):
+    """Corrélation de Pearson. Rend 0,0 si une des deux séries est constante — un
+    échantillon sans variance ne PEUT pas corréler, et rendre 1,0 y serait le faux
+    positif exact que cette branche existe pour éviter."""
+    n = len(a)
+    if n < 2:
+        return 0.0
+    ma, mb = sum(a) / n, sum(b) / n
+    va = sum((v - ma) ** 2 for v in a)
+    vb = sum((v - mb) ** 2 for v in b)
+    if va <= 1e-12 or vb <= 1e-12:
+        return 0.0
+    return sum((a[i] - ma) * (b[i] - mb) for i in range(n)) / math.sqrt(va * vb)
+
+
+def correlation_alignee(src, cap, pts, rect):
+    """Corrélation maximisée sur les décalages ENTIERS de ±CORR_WINDOW px.
+
+    Sur la population ARÊTES, pas sur une grille uniforme : c'est la même raison qui a
+    fait refuser SSIM (§ docstring) — on veut la question posée là où l'information
+    vit. MESURÉ : sur la panne de phase, la version pondérée par le gradient rend
+    0,9794 contre 0,9897 pour une grille uniforme — la pondérée est la plus SENSIBLE
+    des deux, donc c'est elle qu'on garde.
+
+    Rend (r_max, dx, dy). `dx/dy` sont informatifs : un optimum sur le BORD de la
+    fenêtre signale que le vrai décalage est plus grand qu'elle."""
+    sp, cp = src.load(), cap.load()
+    SW, SH = src.size
+    CW, CH = cap.size
+    rx, ry, rw, rh = rect
+    base, cible = [], []
+    for x, y in pts:
+        base.append(luma(sp[x, y]))
+        cible.append((rx + int(x * rw / SW), ry + int(y * rh / SH)))
+    best = (-2.0, 0, 0)
+    for dy in range(-CORR_WINDOW, CORR_WINDOW + 1):
+        for dx in range(-CORR_WINDOW, CORR_WINDOW + 1):
+            a, b = [], []
+            for i, (cx, cy) in enumerate(cible):
+                px_, py_ = cx + dx, cy + dy
+                if 0 <= px_ < CW and 0 <= py_ < CH:
+                    a.append(base[i])
+                    b.append(luma(cp[px_, py_]))
+            if len(a) < len(pts) // 2:
+                continue
+            r = pearson(a, b)
+            if r > best[0]:
+                best = (r, dx, dy)
+    return best
+
+
+def classe_corr(r):
+    if r >= SEUIL_CORR_HAUTE:
+        return "ALIGNÉ"
+    if r < SEUIL_CORR_BASSE:
+        return "GÉOMÉTRIE"
+    return "INDÉTERMINÉ"
+
+
 def coins_presents(src, cap, rect):
     """F-cadre : les 4 coins de l'artefact tombent-ils dans la capture ?"""
     SW, SH = src.size
@@ -181,6 +246,8 @@ def juger(src, cap, rect, label, declared_fraction=None):
     t_ok = m_hi <= SEUIL_TRANSPORT
     n_ok = m_lo <= SEUIL_NOCALQUE
     ratio = (m_hi / m_lo) if m_lo > 1e-9 else float('inf')
+    r_corr, r_dx, r_dy = correlation_alignee(src, cap, hi, rect)
+    cls = classe_corr(r_corr)
 
     if t_ok and n_ok:
         diag = "transport intact"
@@ -191,10 +258,16 @@ def juger(src, cap, rect, label, declared_fraction=None):
         # Un diagnostic qui nomme la mauvaise panne est pire que pas de diagnostic.
         diag = ("CADRE (rect %dx%d != source %dx%d) — les MAE ci-dessus mesurent le "
                 "décalage du mapping, PAS une panne de teinte" % (rw, rh, W, H))
+    elif cls == "GÉOMÉTRIE":
+        diag = ("GÉOMÉTRIE (corr %.4f < %.2f au meilleur alignement %+d%+d — rien ne se "
+                "superpose ; les MAE ne mesurent PAS une teinte)" % (r_corr, SEUIL_CORR_BASSE, r_dx, r_dy))
     elif ratio >= RATIO_RESAMPLE:
-        diag = "RÉÉCHANTILLONNÉ (signature arêtes/plats %.0f:1)" % ratio
+        diag = ("RÉÉCHANTILLONNÉ (signature arêtes/plats %.0f:1 ; corr %.4f ⇒ aligné à "
+                "l'entier, dommage confiné aux ARÊTES : échelle OU phase sous-pixel)"
+                % (ratio, r_corr))
     elif not n_ok:
-        diag = "CALQUE PAR-DESSUS (signature arêtes/plats %.1f:1)" % ratio
+        diag = ("VALEURS / CALQUE PAR-DESSUS (signature arêtes/plats %.1f:1 ; corr %.4f "
+                "⇒ la géométrie se superpose, ce sont les VALEURS qui bougent)" % (ratio, r_corr))
     else:
         diag = "écart non caractérisé"
 
@@ -207,10 +280,13 @@ def juger(src, cap, rect, label, declared_fraction=None):
           % (rw, rh, W, H, coins_presents(src, cap, rect),
              "" if declared_fraction is None else " (fraction déclarée %.3f)" % declared_fraction,
              "VERT" if cadre_ok else "ROUGE"))
+    print("    corrélation  r = %.4f au meilleur alignement (%+d,%+d)  seuils %.2f/%.2f  -> %s"
+          % (r_corr, r_dx, r_dy, SEUIL_CORR_BASSE, SEUIL_CORR_HAUTE, cls))
     print("    diagnostic   %s" % diag)
-    print("    RESULT transport=%.3f nocalque=%.3f ratio=%.1f cadre=%d compares=%d/%d"
-          % (m_hi, m_lo, ratio, 1 if cadre_ok else 0, n_hi, n_lo))
-    return 0 if (t_ok and n_ok and cadre_ok) else 1
+    print("    RESULT transport=%.3f nocalque=%.3f ratio=%.1f cadre=%d corr=%.4f "
+          "dxy=%+d%+d classe=%s compares=%d/%d"
+          % (m_hi, m_lo, ratio, 1 if cadre_ok else 0, r_corr, r_dx, r_dy, cls, n_hi, n_lo))
+    return 0 if (t_ok and n_ok and cadre_ok) else 1, cls
 
 
 # ─────────────────────── CONTRÔLES POSITIFS ET NÉGATIF ───────────────────────
@@ -232,6 +308,20 @@ def fabriquer_panne(src, quoi):
     if quoi == "crop":
         cw, ch = int(W * CTRL_CROP), int(H * CTRL_CROP)
         return src.crop((0, 0, cw, ch)), (0, 0, cw, ch)
+    if quoi == "gamma":
+        # panne de VALEURS pure : transformation MONOTONE, donc la géométrie est intacte
+        lut = [min(255, int(round(255 * ((v / 255.0) ** (1.0 / CTRL_GAMMA))))) for v in range(256)]
+        return src.point(lut * 3), (0, 0, W, H)
+    if quoi == "phase":
+        # panne de GÉOMÉTRIE SOUS-PIXEL : décalage bilinéaire d'une fraction de pixel.
+        # C'est la panne que le pivot « fond pré-rendu » a réellement rencontrée, et la
+        # sonde n'en avait AUCUN contrôle avant ce round.
+        return src.transform(src.size, Image.AFFINE, (1, 0, 0, 0, 1, CTRL_PHASE),
+                             resample=Image.BILINEAR), (0, 0, W, H)
+    if quoi == "translation":
+        # panne de GÉOMÉTRIE GROSSIÈRE : décalage HORS de la fenêtre de recherche.
+        return src.transform(src.size, Image.AFFINE, (1, 0, -CTRL_DECAL_PX, 0, 1, 0),
+                             resample=Image.BILINEAR), (0, 0, W, H)
     raise ValueError(quoi)
 
 
@@ -242,22 +332,29 @@ def selftest(source):
     src = Image.open(source).convert('RGB')
     print("CONTRÔLES — source %s (%dx%d)" % (os.path.basename(source), *src.size))
     print()
-    attendus = [("identité (contrôle NÉGATIF — DOIT être vert)", src, (0, 0, *src.size), 0),
-                ("rééchantillonnage x%.2f (DOIT rougir F-transport)" % CTRL_SCALE, None, None, 1),
-                ("brume %.0f%% (DOIT rougir F-nocalque)" % (CTRL_HAZE_A * 100), None, None, 1),
-                ("recadrage x%.2f (DOIT rougir F-cadre)" % CTRL_CROP, None, None, 1)]
-    pannes = [None, "resample", "haze", "crop"]
+    attendus = [("identité (contrôle NÉGATIF — DOIT être vert)", src, (0, 0, *src.size), 0, "ALIGNÉ"),
+                ("rééchantillonnage x%.2f (DOIT rougir F-transport)" % CTRL_SCALE, None, None, 1, "ALIGNÉ"),
+                ("brume %.0f%% (DOIT rougir F-nocalque)" % (CTRL_HAZE_A * 100), None, None, 1, "ALIGNÉ"),
+                ("recadrage x%.2f (DOIT rougir F-cadre)" % CTRL_CROP, None, None, 1, None),
+                ("gamma %.2f (VALEURS — DOIT rester ALIGNÉ)" % CTRL_GAMMA, None, None, 1, "ALIGNÉ"),
+                ("phase sous-pixel %.2f px (DOIT rester ALIGNÉ, ratio >= %.0f:1)"
+                 % (CTRL_PHASE, RATIO_RESAMPLE), None, None, 1, "ALIGNÉ"),
+                ("translation %d px (DOIT tomber en GÉOMÉTRIE)" % CTRL_DECAL_PX, None, None, 1, "GÉOMÉTRIE")]
+    pannes = [None, "resample", "haze", "crop", "gamma", "phase", "translation"]
     echecs = 0
-    for (label, cap, rect, attendu), panne in zip(attendus, pannes):
+    for (label, cap, rect, attendu, cls_att), panne in zip(attendus, pannes):
         if panne is not None:
             cap, rect = fabriquer_panne(src, panne)
-        code = juger(src, cap, rect, label)
-        verdict = "OK" if code == attendu else "CONTRÔLE CASSÉ"
-        if code != attendu:
+        code, cls = juger(src, cap, rect, label)
+        ok = (code == attendu) and (cls_att is None or cls == cls_att)
+        if not ok:
             echecs += 1
-        print("    -> attendu %d, obtenu %d : %s" % (attendu, code, verdict))
+        print("    -> attendu code %d / classe %s, obtenu code %d / classe %s : %s"
+              % (attendu, cls_att if cls_att else "(libre)", code, cls,
+                 "OK" if ok else "CONTRÔLE CASSÉ"))
         print()
-    print("CONTRÔLES : %d/4 conformes" % (4 - echecs))
+    n = len(pannes)
+    print("CONTRÔLES : %d/%d conformes" % (n - echecs, n))
     return 0 if echecs == 0 else 2
 
 
@@ -302,7 +399,8 @@ def main():
 
     print("SONDE DE RESSEMBLANCE — source %s / capture %s"
           % (os.path.basename(a.source), os.path.basename(a.capture)))
-    return juger(src, cap, rect, "capture", a.declare_fraction)
+    code, _ = juger(src, cap, rect, "capture", a.declare_fraction)
+    return code
 
 
 if __name__ == '__main__':
