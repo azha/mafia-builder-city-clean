@@ -704,3 +704,60 @@ supprimés avant commit. `Assets/InitTestScene*` (généré par le harnais de te
 Run scopé PlayMode (`CityMap.PlayMode.Tests`, 3 tests ciblés `PpF2`/`PpF3_Part1`/`PpF3_Part2`) :
 **3/3 VERT** — voir § c ci-dessus. Run complet W3U2 : voir § Evidence pour le tableau final
 avant/après.
+
+---
+
+## § GESTE 0 (résiduels du pivot, post-certification ⊥) — 2026-08-21
+
+### a) `laverie_nuit_base_ppm56.471` — re-crop corrigé, même contrainte que ppm24.0
+
+Le ⊥ a mesuré que le crop 4-côtés de `fd5a5ee` avait déplacé le pivot bas-centre de ce fichier de
++7,5px horizontal / −28px vertical relatif à l'original — latent (`ppm56.471`/camera ZO n'a
+aujourd'hui aucun consommateur de rendu, cross-check pp-F3 uniquement) mais fermé pendant que
+c'est frais plutôt que laissé comme dette. **Choix retenu (des deux options proposées) : re-crop,
+PAS un nouveau falsifiable de balayage.** Raison : le risque est spécifique à MON édition manuelle de
+`laverie` (les 26 autres couples sont des rendus Blender originaux, jamais retouchés, donc pas
+exposés à cette classe de défaut) — un falsifiable permanent aurait un coût de conception/calibration
+non trivial (quel seuil de tolérance sur l'égalité proportionnelle du pivot entre 2 PPM ? quel régime
+pour les couples dont le contenu touche un bord ?) pour fermer un risque qui n'a qu'UNE instance
+connue. Le re-crop, à l'inverse, réutilise EXACTEMENT la méthode déjà prouvée du round 6 (crop du
+HAUT seulement, `cropL+cropR` == largeur originale) — 10 minutes, delta prouvé à 0,000000px par le
+même script.
+
+Résultat (script, vérifié) : `orig ppm56.471 W=347 H=375 bbox=(19,27,343,345)` →
+`new W=343 H=350 bbox=(17,2,341,320)` — `horiz_offset DELTA=+0.000000`, `vert_gap DELTA=0`.
+Confirmation indépendante que le crop `fd5a5ee` PORTAIT bien le défaut mesuré par le ⊥ : recalculé
+sur le fichier encore en place avant ce correctif, `horiz_offset` dérive de +7,5000 et `vert_gap` de
+−28,0000 par rapport à l'original — **exactement** les chiffres cités (« 7,5/28 px »).
+
+Commit atelier `d2ffd1d` (après `3f43b66`/ppm24.0). Réimporté dans Unity (`Assets/Art/District/
+Sprites/laverie_nuit_base_ppm56.471.png`, 343×350, réglages d'import 1:1 strict confirmés inchangés).
+`pp-F3 Part2` re-vérifiée : **1/1 VERT** (le contenu bbox de `laverie_nuit_base` est identique à
+avant — un crop de MARGE ne change jamais la bbox de contenu — donc ce résultat était acquis par
+construction ; la valeur du test était de confirmer l'absence de régression, pas de fermer un rouge).
+
+### b) Tolérance 1,5 % de pp-F3 Part2 — GARDE-FOU DE RÉGRESSION, PAS un séparateur de régimes
+
+**Re-mesuré, pas recopié** (le socle : « un nombre repris d'un rapport sans être recompté est un
+fait DÉDUIT »). Le chiffre cité par le ⊥ (« pire couple 1,45 % ») et mon propre chiffre documenté au
+round 6 (« max 0,85 % ») sont TOUS LES DEUX vrais — ils mesurent des choses légèrement différentes :
+
+| seuil alpha (bbox)         | pire couple mesuré        | fichier                  |
+|-----------------------------|----------------------------|---------------------------|
+| `p.a >= 128` (implémentation `ReadAlphaBboxSize`, `DistrictBackgroundPlayModeTests.cs`) | **0,850 %** | `laverie_nuit_fen` |
+| `p.a >= 1` (tout pixel non totalement transparent — capture le halo d'anti-aliasing) | **1,471 %** | `laverie_nuit_base` |
+| `p.a >= 255` (opacité totale stricte) | 1,712 % | `laverie_nuit_fen` |
+
+Le seuil RÉELLEMENT exécuté par le test est `>=128` (0,850 % de pire cas) — la tolérance de 1,5 %
+lui laisse ~0,65 point de marge. Mais le seuil du test n'est PAS le seul choix défendable (le halo
+d'anti-aliasing est un signal réel, pas un artefact de mesure), et à un seuil plus strict le pire cas
+monte à 1,47-1,71 % — **au-delà de la tolérance actuelle si le test utilisait ce seuil-là.**
+
+⇒ **La tolérance 1,5 % est donc un GARDE-FOU DE RÉGRESSION calé AU-DESSUS de la distribution
+observée à travers plusieurs seuils plausibles, PAS une frontière physique qui séparerait « transport
+correct » de « transport cassé ».** Une régression future qui pousserait un couple à 1,6-2 % serait
+détectée (le test rougirait) ; mais un couple légitimement PROCHE de la tolérance (comme `laverie` au
+seuil `>=1`, à 1,47 %) ne doit PAS être lu comme « presque cassé » — c'est un pair-cadrage
+naturellement plus riche en pixels de bord (bâtiment fin, silhouette détaillée) mesuré à un seuil qui
+capture plus de contour. **À relire comme telle avant tout futur resserrement de ce seuil** : resserrer
+sans re-mesurer sur PLUSIEURS seuils alpha ferait rougir des couples SAINS.
