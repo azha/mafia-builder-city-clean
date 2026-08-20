@@ -306,3 +306,53 @@ comportement, seulement la clarté du commentaire).
 
 PlayMode W3U2 complet, re-vérifié après tous les changements de ce round : **56 tests, 55 verts,
 1 rouge** (`PpF3_Part2..._laverie_nuit_base`, désormais avec son mode d'emploi de péremption).
+
+---
+
+## § ROUND 3 (verdict ⊥ : Mobile_RPAsset.m_RenderScale) — 2026-08-20
+
+**Comparaison statique** (geste 1) : `Assets/Settings/PC_RPAsset.asset` porte `m_RenderScale: 1` ;
+`Assets/Settings/Mobile_RPAsset.asset` portait `m_RenderScale: 0.8` — cohérent avec le round 2
+(`rpAsset=Mobile_RPAsset` mesuré actif en PlayMode ; `PC_RPAsset` est ce que je lisais hors Play
+mode, expliquant la différence d'observation entre les deux contextes).
+
+**Changement appliqué** (geste 2) : `Mobile_RPAsset.asset` `m_RenderScale: 0.8 → 1` (édition YAML
+directe + `refresh_unity`, vérifié chargé côté Unity via l'API URP :
+`Mobile_RPAsset.renderScale=1`).
+
+⚠️ **DEVIATION (nature PRODUIT, à consigner)** — `m_RenderScale=0.8` était vraisemblablement un
+choix de PERFORMANCE MOBILE (rendre à 80% de résolution puis upscaler, un compromis qualité/FPS
+standard sur mobile), pas un défaut. Le ruling user « pixel perfect » DOMINE pour ce pivot, donc le
+réglage passe à 1.0 — mais **la performance mobile devra être RE-VALIDÉE plus tard** (FPS sur
+device réel) avant de considérer ce changement définitivement acquis. Valeur d'origine : `0.8`,
+consignée ici pour un rollback informé si la validation perf l'exige.
+
+**Re-capture + sonde (geste 3)** — MÊME protocole exact (flux réel, rect imprimé `10,-672,1080,1920`,
+`scaleFactor=0.859375`, confirmé `renderScale=1` au moment de la capture) :
+
+Brut (rect imprimé, F-cadre rouge attendu — fond natif > viewport) :
+```
+RESULT transport=10.479 nocalque=5.951 ratio=1.8 cadre=0 compares=2101/432
+```
+Recadrage propre (hors chrome TopBar/TabBar, F-cadre vert nativement) :
+```
+F-transport  MAE arêtes =   5.63   (seuil ≤ 1.00)  ROUGE
+F-nocalque   MAE plats  =   0.23   (seuil ≤ 0.50)  VERT
+F-cadre      rect 1080x473 vs source 1080x473, coins 4/4  VERT
+diagnostic   RÉÉCHANTILLONNÉ (signature arêtes/plats 24:1)
+RESULT transport=5.632 nocalque=0.233 ratio=24.2 cadre=1 compares=3000/3000
+```
+
+**⚠️ RÉSULTAT : IDENTIQUE au round 2, à 3 décimales près (5.632/0.233/24.2 avant ET après).**
+`m_RenderScale` n'était PAS la cause de ce résidu — changer 0.8→1.0 n'a mesurablement RIEN changé.
+Explication cohérente avec le round 2 : `camCount=0` pendant toute la capture (mesuré, réflexion,
+pas la doc) — le Render Scale d'URP s'applique au rendu D'UNE CAMÉRA (rendre en interne à
+renderScale×résolution puis upscaler) ; sans caméra du tout, un Canvas ScreenSpaceOverlay composite
+directement sur le backbuffer final et n'a jamais transité par ce chemin, donc rien à corriger là.
+
+**STOP, conformément à la consigne** — pas de bricolage supplémentaire. Le résidu RÉÉCHANTILLONNÉ
+(MAE arêtes 5,63, ratio 24:1) reste réel, mesuré, reproduit sur 3 rounds indépendants avec des
+protocoles légèrement différents, et n'est expliqué par AUCUNE des 4 variables testées à ce jour
+(méthode de capture, sRGBTexture, config URP caméra/Volume, render scale). Le changement
+`m_RenderScale=1` est CONSERVÉ (améliore la fidélité pixel-perfect par principe même sans effet
+mesuré ici, et suit le ruling user) mais n'est plus une piste pour CE résidu spécifique.
