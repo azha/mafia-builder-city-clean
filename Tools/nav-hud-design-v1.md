@@ -64,7 +64,7 @@ plus grande région, même ordre de grandeur sur le facteur ⇒ **je ne me sers 
 
 | famille | m | frac. bbox | **aire opaque / cellule** | slot |
 |---|---|---|---|---|
-| usine | 21,91 | 1,37 | **0,743** | `lab` |
+| usine | 20,71 | 1,37 | **0,743** | `lab` |
 | bar_hero | 12,20 | 0,76 | **0,373** | `cashSafehouse` |
 | hotel | 7,23 | 0,45 | **0,244** | — **libre** |
 | entrepot | 10,11 | 0,63 | **0,159** | `stash` |
@@ -372,7 +372,7 @@ bits, niveau quantifié sur 32) :
 | rang **médian** | `nightBase` | 0,285 / 0,228 / 0,180 | **61,1** | 7 |
 | rang **proche** (au contact de la grille) | `nightSocle` | 0,062 / 0,055 / 0,047 | **14,3** | 1 |
 
-Quatre niveaux quantifiés distincts (4 / 10 / 7 / 1) ; écarts de luminance au fond : **43,2 · 21,9 · 24,9** (le plus serré, 21,9, garde 6,9 de marge sur le seuil de
+Quatre niveaux quantifiés distincts (4 / 10 / 7 / 1) ; écarts de luminance au fond : **43,2 · 20,7 · 24,9** (le plus serré, 20,7, garde 6,9 de marge sur le seuil de
 15 posé en hd-F2). Le rang **proche** est le plus sombre et reprend le token du liseré `GridBorder` (`:274-278`) : au contact de la grille il lit comme une ombre, ce
 qui est le bon signe visuel. ⚠️ **Risque nommé** : `nightFloorAlt` et `nightBase` sont **aussi** deux des trois teintes de sol (`FloorTint`, `:663-665`) ; un rang
 pourrait fusionner avec une tuile de sol de même niveau s'ils devenaient adjacents. Le rang lointain est le plus clair et le plus éloigné de la grille, le rang
@@ -508,6 +508,15 @@ et D6 restent indifférents au verdict. **Aucun DÉDUIT décisif ne reste sans d
 | hud-F4 | forme F : une clé qui apparaît | un inventaire de routes resterait vert ⇒ tué en comptant les clés du **corps brut** |
 | hud-F5 | état nommé hors district | l'épingle serait vraie pour la mauvaise raison ⇒ tué par `CityTabDistrictId == -1` |
 | hud-F6 | pas de dérive entre les 2 surfaces | deux résolveurs qui dérivent séparément restent chacun cohérent ⇒ tué en comparant les **rangs** des deux, sur un chemin que les deux empruntent |
+
+## 8-bis. Sonde de composition — paramètres GELÉS (re-gate ⊥ v2)
+
+La divergence de sondes du tour précédent (50,3 % vs 25,3 % pour la MÊME référence) venait de deux
+résolutions différentes. Paramètres désormais GELÉS, à recopier avec CHAQUE valeur collée :
+**Rec.601 · largeur normalisée 360 px · fenêtre 7×7 · plat = sd<2 · quantification 32 niveaux ·
+régions 4-connexes.** Une valeur de platitude sans ses paramètres n'est pas comparable, donc pas
+une mesure de gate. Sous CES paramètres : référence plein cadre 25,3 % · r8 bbox grille 68,7 % ·
+gate chunk 1 ≤ 58 % (attendu ≈ 50,2 %).
 
 ## 9. Runs scopés et juge
 
