@@ -93,7 +93,7 @@ namespace MafiaCleanCity.Theme.Tests
             // max=1,244 — 1,30 n'y est JAMAIS atteint, et au cœur 0,45 même le NOIR PUR plafonne
             // à 1,247 vs b0). Le 1,30 initial (posé r2 pour une plinthe OPAQUE mesurée 1,000:1)
             // était un seuil de composant d'interface, retiré par son auteur pour cet objet.
-            // b1/b2 gardent 1,30 : ils l'atteignent sans effort au composite (1,615 / 1,356).
+            // b1/b2 gardent 1,30 au composite (mesuré 1,615 / 1,356 — marge b2 : 0,056).
             var t = DesignTokens.Current;
             float coeur = MafiaCleanCity.CityMap.DistrictInteriorScreenController.SocleCoreAlpha;
             foreach (var (nom, sol, plancher) in new (string, Color, float)[] {
