@@ -453,3 +453,87 @@ comme telle, pas un mécanisme qui s'applique tout seul.
 PlayMode W3U2 complet, re-vérifié après TOUS les changements de ce round : **56 tests, 55 verts,
 1 rouge** (`PpF3_Part2..._laverie_nuit_base`, note honnête). `pp-F1`/`pp-F2` (avec le nouveau
 contrôle I1) inclus dans les 55 verts.
+
+---
+
+## § P4 (première tranche, périmètre écrit par le ⊥) — 2026-08-20
+
+### a) Fond JOUR câblé
+
+`DistrictBackgroundSlots.cs` : ajout `vergeJour` (BackgroundEntry) + généralisation
+`ResolveNight(profile)` → `Resolve(profile, mode)` (`ResolveNight` conservée comme raccourci
+`Resolve(profile, "nuit")`, zéro changement pour les appelants existants).
+`DistrictInteriorScreenController.cs` : `DioramaArtPhase` gagne `DayHero` ; `ResolveArtPhase`
+route NIGHT→NightHero, **DAY→DayHero** (neuf), DAWN/DUSK→NonHeroFallback (D8 original, inchangé —
+aucun art DAWN/DUSK produit par l'atelier). `RenderNightDiorama`/`RenderDayDiorama` délèguent
+désormais à `RenderHeroDiorama(dto, mode)` partagée (même construction, seul le fond change — les
+sprites bâtiment restent `_nuit`, aucun sprite `_jour` livré par l'atelier, consigné ici).
+`DistrictBackgroundPlayModeTests.cs`/`DistrictInteriorDioramaPlayModeTests.cs` (C8F5) amendés en
+conséquence — `C8F5_ThreeNonHeroPhases...` devient `C8F5_TwoNonHeroPhases_MapToDeclaredFallback_DayAndNightMapToHeroArt`
+(DAWN/DUSK seuls dans la boucle repli ; DAY vérifiée séparément comme second palier héros).
+
+**Capture + sonde, DAY, viewport 1100×577** (`Assets/Screenshots/district_fond_jour_v1.png`,
+rect imprimé `10,-671,1080,1920` — géométrie IDENTIQUE au fond nuit, même mécanisme) :
+
+Brut (F-cadre rouge attendu, fond natif > viewport) :
+```
+RESULT transport=7.427 nocalque=9.942 ratio=0.7 cadre=0 corr=0.7627 dxy=+0+0 classe=INDÉTERMINÉ compares=1824/497
+```
+Recadrage propre hors chrome — LE CHIFFRE :
+```
+F-transport  MAE arêtes =   0.00   VERT
+F-nocalque   MAE plats  =   0.00   VERT
+F-cadre      coins 4/4  VERT
+corrélation  r = 1.0000 -> ALIGNÉ
+diagnostic   transport intact
+RESULT transport=0.000 nocalque=0.000 ratio=inf cadre=1 corr=1.0000 dxy=+0+0 classe=ALIGNÉ compares=3000/3000
+```
+**Bit-exact, comme prédit** (même compensation, même snap que le fond nuit).
+
+### b) Sonde de fidélité SPRITES — INSTRUMENT LIMITÉ, STOP conformément à la consigne
+
+Bâtiment testé : `cash_safehouse` (sprite `residentiel3_nuit_base_ppm24.0`, 196×257, le plus visible
+des 4 bâtiments du J0 à ce viewport — `lab`/`usine` et `stash`/`entrepot` tombent ENTIÈREMENT hors
+écran, mesuré : `rectYTopDown` + `rectH` ≤ 0 pour les deux). Capture commitée :
+`Assets/Screenshots/district_sprite_lab_v1.png`, rect imprimé `62,-106,196,257`.
+
+```
+python3 Tools/resemblance-probe.py --source .../residentiel3_nuit_base_ppm24.0.png \
+  --capture district_sprite_lab_v1.png --rect 62,-106,196,257
+```
+```
+n'a pas pu s'exécuter : artefact trop petit pour 2 x 3000 échantillons
+Traceback ... TypeError: cannot unpack non-iterable int object
+```
+**Deux constats distincts, aucun n'est un résidu de transport** :
+1. `N_SAMPLES=3000` (paramètre GELÉ, calibré sur le fond 1080×1920, ~2M px) exige 2×3000
+   échantillons de gradient — un sprite de 196×257 (~50K px, stride 7) n'en fournit qu'environ 972.
+   L'instrument, TEL QUE CALIBRÉ, ne peut PAS juger un artefact de cette taille — ni vert ni rouge,
+   `n'a pas pu s'exécuter` (code 2), la 3ᵉ catégorie que le fichier lui-même distingue explicitement
+   de VERT/ROUGE.
+2. **Bug distinct trouvé dans `resemblance-probe.py` (commit `238b1ab`)** : `main()` fait
+   `code, _ = juger(...)`, mais les branches `return 2` de `juger()` (image trop petite, rect hors
+   capture, etc.) rendent un `int` NU, pas un tuple — `TypeError` à l'unpacking. Reproductible sur
+   n'importe quel artefact trop petit, pas spécifique à ce sprite. Je NE CORRIGE PAS l'instrument du
+   ⊥ moi-même (frontière auteur/relecteur) — consigné pour lui.
+
+**STOP ici, conformément à la consigne** ("Si résidu : STOP + chiffre + on itère"). Ce n'est pas un
+résidu mesuré, c'est une incapacité d'instrument — je ne bricole pas de solution de contournement
+(pas de N_SAMPLES local, pas de patch du script du ⊥). Attente d'une décision (recalibrer
+N_SAMPLES pour les artefacts à l'échelle sprite, ou une méthodologie différente). Note structurelle,
+PAS une preuve : la géométrie du sprite (rect 196×257 == texture native, `SnapToScreenPixel`
+appliqué UNIFORMÉMENT au fond et à chaque ancre bâtiment, même mécanisme que le fond bit-exact) rend
+`transport intact` PLAUSIBLE, mais NON PROUVÉ par cette tentative.
+
+### c) Portée de la certification — hors device réel
+
+⚠️ **La certification « transport intact » ne couvre QUE l'environnement de capture mesuré ici**
+(Éditeur Unity, Game View 1100×577/1100×576, `scaleFactor = Screen.width / referenceResolution.x`
+= 1100/1280 = 0,859375). Sur un DEVICE RÉEL (APK Android, build IL2CPP), `Screen.width` sera une
+AUTRE valeur (résolution physique de l'écran) — `scaleFactor` en découle mais N'A JAMAIS ÉTÉ MESURÉ
+sur un device réel dans cette investigation. C'est un DÉDUIT assumé (le mécanisme de compensation
+est générique, indépendant de la valeur numérique de `scaleFactor` — `SnapToScreenPixel` corrige
+QUELLE QUE SOIT la phase sous-pixel résultante), pas une mesure. **Détecteur de péremption** : la
+MÊME sonde, rejouée sur la PREMIÈRE capture device disponible — si elle rend autre chose que
+« transport intact », cette section doit être mise à jour et la certification restreinte au device
+testé.

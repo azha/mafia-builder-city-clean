@@ -216,26 +216,32 @@ namespace MafiaCleanCity.CityMap
             {
                 RenderNightDiorama(dto);
             }
+            else if (LastArtPhase == DioramaArtPhase.DayHero)
+            {
+                RenderDayDiorama(dto);
+            }
             else
             {
                 RenderNonHeroFallback();
             }
         }
 
-        /// <summary>D8/C8-F5 — mapping EXPLICITE sur les 4 quarts connus : les 3 paliers non-héros
-        /// (DAWN/DAY/DUSK) retombent TOUS sur le MÊME repli déclaré ; NIGHT seul obtient l'art de nuit.
-        /// Toute valeur de fil qui n'est AUCUN des 4 quarts connus rend Unknown — jamais silencieusement
-        /// confondue avec le repli des 3 quarts NOMMÉS (l'esprit du "résolveur exhaustif sans default"
+        /// <summary>D8/C8-F5, AMENDÉ (P4, périmètre écrit par le ⊥) — mapping EXPLICITE sur les 4
+        /// quarts connus : NIGHT et DAY obtiennent chacun un palier HÉROS dédié (fond pré-rendu
+        /// propre — verge-a a un fond réel pour les deux, vague 1) ; DAWN/DUSK restent le repli
+        /// déclaré (D8 original : aucun art DAWN/DUSK n'a été produit par l'atelier). Toute valeur
+        /// de fil qui n'est AUCUN des 4 quarts connus rend Unknown — jamais silencieusement confondue
+        /// avec le repli des 2 quarts NOMMÉS restants (l'esprit du "résolveur exhaustif sans default"
         /// de D2/D8, transposé à un `switch` sur une chaîne de fil plutôt qu'un enum C#).</summary>
         private static DioramaArtPhase ResolveArtPhase(string dayPhase)
         {
             switch (dayPhase)
             {
                 case "NIGHT": return DioramaArtPhase.NightHero;
+                case "DAY": return DioramaArtPhase.DayHero;
                 case "DAWN":
-                case "DAY":
                 case "DUSK": return DioramaArtPhase.NonHeroFallback;
-                default: return DioramaArtPhase.Unknown; // 5e valeur inattendue — jamais avalée par le repli des 3 nommés
+                default: return DioramaArtPhase.Unknown; // 5e valeur inattendue — jamais avalée par le repli des 2 nommés
             }
         }
 
@@ -256,11 +262,23 @@ namespace MafiaCleanCity.CityMap
             TrackText(label);
         }
 
-        /// <summary>L'art de nuit — le palier héros (D8, engagement 1). P3 : un fond pré-rendu
+        /// <summary>Palier héros NIGHT (D8, engagement 1) — délègue à <see cref="RenderHeroDiorama"/>
+        /// avec le mode "nuit". Nom conservé pour ne pas toucher les commentaires/appelants
+        /// existants qui le citent (P3, avant que "jour" n'existe).</summary>
+        private void RenderNightDiorama(DistrictInteriorDto dto) => RenderHeroDiorama(dto, "nuit");
+
+        /// <summary>Palier héros DAY (P4, périmètre ⊥) — même construction que NIGHT, fond `jour`
+        /// à la place du fond `nuit`. Aucun sprite d'état "jour" n'existe (l'atelier n'a livré que
+        /// des sprites `_nuit` — vague 1) : les bâtiments restent rendus avec leurs sprites de nuit,
+        /// seul le FOND change. Consigné en Deviation (implementation-notes.md § ROUND P4).</summary>
+        private void RenderDayDiorama(DistrictInteriorDto dto) => RenderHeroDiorama(dto, "jour");
+
+        /// <summary>L'art héros, PARAMÉTRÉ par mode ("nuit" ou "jour") — P3 : un fond pré-rendu
         /// (DistrictBackgroundSlots, résolution native compensée — pp-F1) porte le sol/rues/ambiant/
         /// ville au loin/brume ; Unity ne dessine plus QUE les bâtiments joueur, ancrés sur le fond
-        /// via la carte JSON (pp-F2/F-calage), et leurs calques d'état (C9/C10, inchangés).</summary>
-        private void RenderNightDiorama(DistrictInteriorDto dto)
+        /// via la carte JSON (pp-F2/F-calage), et leurs calques d'état (C9/C10, inchangés — INDÉPENDANTS
+        /// du mode, ils suivent les FAITS du bâtiment, pas l'heure du jour).</summary>
+        private void RenderHeroDiorama(DistrictInteriorDto dto, string mode)
         {
             // Titre — inchangé par P3 (nav-F5 : le pivot ne touche ni la position ni le mécanisme).
             TextMeshProUGUI title = NewText("DistrictTitle", root, dto.name_canonical, 20, TextAlignmentOptions.TopLeft);
@@ -285,7 +303,7 @@ namespace MafiaCleanCity.CityMap
             Stretch(sceneRt, Vector2.zero, Vector2.zero);
 
             DistrictBackgroundSlots bgSlots = DistrictBackgroundSlots.Current;
-            DistrictBackgroundSlots.BackgroundEntry bg = bgSlots != null ? bgSlots.ResolveNight(dto.profile) : null;
+            DistrictBackgroundSlots.BackgroundEntry bg = bgSlots != null ? bgSlots.Resolve(dto.profile, mode) : null;
             DistrictBackgroundAnchorDto anchorMap = (bg != null && bg.ancre != null)
                 ? JsonUtility.FromJson<DistrictBackgroundAnchorDto>(bg.ancre.text)
                 : null;
@@ -806,9 +824,10 @@ namespace MafiaCleanCity.CityMap
         }
     }
 
-    /// <summary>W3.U2/C8 (D8) — le résultat du mapping day_phase -> art. 3 des 4 quarts retombent sur
-    /// le repli déclaré (art différé, §0) ; NIGHT seul obtient l'art héros. "Unknown" couvre toute
-    /// valeur de fil qui n'est AUCUN des 4 quarts connus — jamais silencieusement confondue avec le
-    /// repli des 3 quarts NOMMÉS (C8-F5 : le mapping doit être EXPLICITE).</summary>
-    public enum DioramaArtPhase { NightHero, NonHeroFallback, Unknown }
+    /// <summary>W3.U2/C8 (D8), AMENDÉ P4 — le résultat du mapping day_phase -> art. NIGHT et DAY
+    /// obtiennent chacun un palier HÉROS (fond pré-rendu propre) ; DAWN/DUSK retombent sur le repli
+    /// déclaré (art différé, D8 original — aucun art DAWN/DUSK produit par l'atelier). "Unknown"
+    /// couvre toute valeur de fil qui n'est AUCUN des 4 quarts connus — jamais silencieusement
+    /// confondue avec le repli des 2 quarts NOMMÉS restants (C8-F5 : le mapping doit être EXPLICITE).</summary>
+    public enum DioramaArtPhase { NightHero, DayHero, NonHeroFallback, Unknown }
 }

@@ -13,10 +13,10 @@ namespace MafiaCleanCity.CityMap
     /// PARTIELLE par construction et rend `null` pour tout profil non couvert : l'appelant
     /// (le contrôleur) est responsable du repli déclaré (jamais un null silencieux qui plante).
     ///
-    /// Le fond `jour` (`VERGE_D_JOUR_FINAL`) est importé (livrable #1) mais N'EST PAS câblé ici :
-    /// D8 (`DistrictInteriorScreenController`, ResolveArtPhase) ne construit l'art de nuit QUE sur
-    /// NIGHT — les 3 autres quarts restent le repli déclaré existant, inchangé par ce pivot (§0 du
-    /// design nav-hud, jamais touché par ce document). Câbler le jour reste un chunk futur.
+    /// P4 (verdict ⊥, périmètre écrit par lui) — le fond `jour` (`VERGE_D_JOUR_FINAL`) est
+    /// désormais câblé : `ResolveArtPhase` route DAY sur un palier héros JOUR dédié (voir
+    /// `DistrictInteriorScreenController.DioramaArtPhase.DayHero`), DAWN/DUSK restant le repli
+    /// déclaré existant (D8, inchangé — aucun art DAWN/DUSK n'a été produit par l'atelier).
     /// </summary>
     [CreateAssetMenu(fileName = "DistrictBackgroundSlots", menuName = "MafiaCleanCity/District Background Slots")]
     public class DistrictBackgroundSlots : ScriptableObject
@@ -49,19 +49,31 @@ namespace MafiaCleanCity.CityMap
             public TextAsset ancre;
         }
 
-        [Header("verge (districts 16-18, vague 1 : verge-a seul a un fond réel)")]
+        [Header("verge (districts 16-18, vague 1 : verge-a seul a des fonds réels)")]
         public BackgroundEntry vergeNuit;
+        public BackgroundEntry vergeJour;
 
-        /// <summary>Résout (profile, "nuit") vers son <see cref="BackgroundEntry"/> — `null` si ce
-        /// profil n'a aucune scène rendue (§6 : c'est le cas pour tidewater/spine/lattice/stack/glass
-        /// en vague 1). Exhaustif à repli explicite, jamais une exception.</summary>
-        public BackgroundEntry ResolveNight(string profile)
+        /// <summary>Résout (profile, mode) vers son <see cref="BackgroundEntry"/> — `null` si ce
+        /// profil/mode n'a aucune scène rendue (§6 : c'est le cas pour tidewater/spine/lattice/
+        /// stack/glass en vague 1, et pour `verge` hors "nuit"/"jour"). Exhaustif à repli explicite,
+        /// jamais une exception.</summary>
+        public BackgroundEntry Resolve(string profile, string mode)
         {
             switch (profile)
             {
-                case "verge": return vergeNuit;
+                case "verge":
+                    switch (mode)
+                    {
+                        case "nuit": return vergeNuit;
+                        case "jour": return vergeJour;
+                        default: return null;
+                    }
                 default: return null;
             }
         }
+
+        /// <summary>REUSE — équivalent à <c>Resolve(profile, "nuit")</c>, conservé pour ne pas
+        /// toucher les appelants existants (P3, avant que "jour" n'existe).</summary>
+        public BackgroundEntry ResolveNight(string profile) => Resolve(profile, "nuit");
     }
 }

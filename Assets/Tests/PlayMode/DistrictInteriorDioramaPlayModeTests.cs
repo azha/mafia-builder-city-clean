@@ -210,10 +210,13 @@ namespace MafiaCleanCity.CityMap.Tests
             }
         }
 
-        // ── C8-F5 — le mapping EXPLICITE day_phase -> repli déclaré / art de nuit ──
+        // ── C8-F5 — le mapping EXPLICITE day_phase -> repli déclaré / art héros (nuit OU jour) ──
+        // AMENDÉ (P4, périmètre ⊥) : DAY quitte le repli commun DAWN/DAY/DUSK pour devenir un
+        // second palier HÉROS (DayHero, fond VERGE_D_JOUR) — DAWN/DUSK restent le repli déclaré
+        // (D8 original, inchangé : aucun art DAWN/DUSK n'a été produit par l'atelier).
 
         [UnityTest]
-        public IEnumerator C8F5_ThreeNonHeroPhases_MapToDeclaredFallback_NightMapsToHeroArt()
+        public IEnumerator C8F5_TwoNonHeroPhases_MapToDeclaredFallback_DayAndNightMapToHeroArt()
         {
             DistrictInteriorDto dto = null;
             yield return FetchInterior("c8c", d => dto = d);
@@ -221,35 +224,42 @@ namespace MafiaCleanCity.CityMap.Tests
             bareHostGo = new GameObject("DistrictInteriorDiorama_C8F5");
             var diorama = bareHostGo.AddComponent<DistrictInteriorScreenController>();
 
-            foreach (string phase in new[] { "DAWN", "DAY", "DUSK" })
+            foreach (string phase in new[] { "DAWN", "DUSK" })
             {
                 dto.day_phase = phase;
                 diorama.Render(dto);
                 Assert.AreEqual(DioramaArtPhase.NonHeroFallback, diorama.LastArtPhase, $"{phase} maps to the declared fallback");
                 Assert.IsNotNull(diorama.ScreenRoot.Find("DayPhaseFallbackPanel"), $"{phase} renders the NAMED fallback panel");
-                // AMENDÉ (pivot fond pré-rendu, pp-F5) — "GridArea" → "DistrictScene" : même rôle
-                // structurel (le conteneur qui porte le fond + tous les bâtiments), plus de grille.
-                Assert.IsNull(diorama.ScreenRoot.Find("DistrictScene"), $"{phase} does NOT render the night scene");
+                Assert.IsNull(diorama.ScreenRoot.Find("DistrictScene"), $"{phase} does NOT render a hero scene");
                 Assert.AreEqual(0, diorama.RenderedBuildingCount, $"{phase} — no buildings rendered (fallback, not the diorama)");
 
                 // Yield de fin d'itération — laisse le temps au `ClearContent` de l'itération SUIVANTE
-                // (celle qui vient de tourner juste au-dessus, dont le Destroy() est différé) de
-                // purger CE panneau AVANT que l'itération suivante n'en reconstruise un. Suffisant pour
-                // les transitions DAWN→DAY et DAY→DUSK (vérifié : ces itérations ne rougissaient pas).
+                // de purger CE panneau AVANT que l'itération suivante n'en reconstruise un.
                 yield return null;
             }
+
+            dto.day_phase = "DAY";
+            diorama.Render(dto);
+            yield return null; // purge le repli DUSK de l'itération précédente (même correctif de placement que NIGHT ci-dessous)
+
+            Assert.AreEqual(DioramaArtPhase.DayHero, diorama.LastArtPhase, "DAY maps to the day hero art");
+            Assert.IsNotNull(diorama.ScreenRoot.Find("DistrictScene"), "DAY renders a hero scene (fond+bâtiments)");
+            Assert.Greater(diorama.RenderedBuildingCount, 0, "DAY actually renders buildings");
+            Assert.AreEqual(2, diorama.ScreenRoot.childCount,
+                "DAY construit EXACTEMENT ses 2 nœuds nommés (titre/scène), même forme que NIGHT (pp-F5)");
+            Transform dayScene = diorama.ScreenRoot.Find("DistrictScene");
+            Assert.IsNotNull(dayScene.Find("DistrictBackgroundImage"), "DAY doit avoir un fond réel (verge-a, vague 1)");
 
             dto.day_phase = "NIGHT";
             diorama.Render(dto);
 
-            // ⚠️ CORRECTIF DE PLACEMENT (mesuré : "Expected 4, But was 5" persistait après le yield de
-            // fin de boucle ci-dessus). Ce yield de boucle nettoie les panneaux DAWN et DAY (détruits
-            // pendant les ClearContent() de DAY et DUSK, chacun suivi d'un yield) — mais PAS le panneau
-            // DUSK (P3) : son propre Destroy() n'est appelé QUE pendant le ClearContent() de CE render
-            // NIGHT, juste au-dessus, et aucun yield ne suivait ce render avant l'assertion. root avait
-            // donc 4 (NIGHT) + 1 (P3, encore vivant) = 5 enfants. Le repli n'est PAS créé "même en
-            // phase héros" (le if/else de Render() est strictement exclusif, vérifié dans le corps) —
-            // c'est le REPLI DE L'ITÉRATION PRÉCÉDENTE qui survit faute d'une frame après CE render-ci.
+            // ⚠️ CORRECTIF DE PLACEMENT (mécanisme original mesuré : "Expected 4, But was 5" avant
+            // un yield manquant — même cause ici). Le rendu NIGHT ci-dessus détruit la SCÈNE DAY
+            // (ClearContent, Destroy différé à la fin de frame) : sans un yield avant l'assertion,
+            // root porterait encore la scène DAY en plus de la scène NIGHT fraîche. Un rendu HÉROS
+            // qui en remplace un autre n'est pas concerné par le bug d'origine (repli qui survit —
+            // seul un repli laissait un nœud de PLUS que ce que Render() venait de construire), mais
+            // le même yield-avant-assertion reste nécessaire pour laisser Destroy() s'exécuter.
             yield return null;
 
             Assert.AreEqual(DioramaArtPhase.NightHero, diorama.LastArtPhase, "NIGHT maps to the hero art");

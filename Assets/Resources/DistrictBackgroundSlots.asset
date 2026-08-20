@@ -15,3 +15,6 @@ MonoBehaviour:
   vergeNuit:
     fond: {fileID: 21300000, guid: 2c7ecd0b0730132f19a49a6aa1326dfb, type: 3}
     ancre: {fileID: 4900000, guid: bcbc00e74fdf0454cbb731fc5833af8c, type: 3}
+  vergeJour:
+    fond: {fileID: 21300000, guid: c117a561dbaae2e47bfe6adb42f971bb, type: 3}
+    ancre: {fileID: 4900000, guid: 5388a67df9d004858b7f6c4c7b862f59, type: 3}
