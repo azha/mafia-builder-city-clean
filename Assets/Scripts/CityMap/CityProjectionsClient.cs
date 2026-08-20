@@ -72,5 +72,11 @@ namespace MafiaCleanCity.CityMap
 
         public IEnumerator Whisper(string token, Action<WhisperDto> ok, Action<long> missing) =>
             Get($"{BaseUrl.TrimEnd('/')}/v1/city/citizens/whisper", token, j => ok(JsonUtility.FromJson<WhisperEnvelope>(j)?.payload?.data), missing);
+
+        /// <summary>GET /v1/city/district/:id/interior — W3.U2 C7 (U-7, D1/D2): the district-interior
+        /// diorama's own payload (grid + day_phase + per-building bands). onOk(dto) on 2xx via
+        /// payload.data; onMissing(code) otherwise (e.g. an out-of-range district id → VALIDATION_FAILED).</summary>
+        public IEnumerator Interior(int districtId, string token, Action<DistrictInteriorDto> ok, Action<long> missing) =>
+            Get(D(districtId, "interior"), token, j => ok(JsonUtility.FromJson<DistrictInteriorEnvelope>(j)?.payload?.data), missing);
     }
 }

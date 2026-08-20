@@ -1,5 +1,5 @@
 {
-  "backCommitSha": "918bf4b2",
+  "backCommitSha": "dc15f1c0",
   "backCommitRepo": "azha/mafia-clean-city",
   "canonSection": "projects/mafia_city_game/gdd/14_tunable_constants.md §Asset pipeline — palette & DA",
   "generatedAt": "2026-08-15",
@@ -324,6 +324,70 @@
       "b": 0.1,
       "a": 1,
       "hex": "#1a1a1a"
+    },
+    {
+      "name": "chromeTabActive",
+      "r": 1,
+      "g": 0.824,
+      "b": 0.247,
+      "a": 1,
+      "hex": "#ffd23f"
+    },
+    {
+      "name": "nightBackground",
+      "r": 0.065,
+      "g": 0.088,
+      "b": 0.1,
+      "a": 1,
+      "hex": "#11161a"
+    },
+    {
+      "name": "nightWindowLit",
+      "r": 1,
+      "g": 0.717,
+      "b": 0.15,
+      "a": 1,
+      "hex": "#ffb726"
+    },
+    {
+      "name": "nightNeonGlow",
+      "r": 1,
+      "g": 0.1,
+      "b": 0.7,
+      "a": 1,
+      "hex": "#ff1ab3"
+    },
+    {
+      "name": "nightSmoke",
+      "r": 0.57,
+      "g": 0.585,
+      "b": 0.6,
+      "a": 0.35,
+      "hex": "#919599"
+    },
+    {
+      "name": "nightHaze",
+      "r": 0.69,
+      "g": 0.72,
+      "b": 0.75,
+      "a": 0.2,
+      "hex": "#b0b8bf"
+    },
+    {
+      "name": "nightBase",
+      "r": 0.16,
+      "g": 0.154,
+      "b": 0.147,
+      "a": 1,
+      "hex": "#292725"
+    },
+    {
+      "name": "nightOutOfDistrictMuted",
+      "r": 0.085,
+      "g": 0.087,
+      "b": 0.09,
+      "a": 1,
+      "hex": "#161617"
     }
   ]
 }

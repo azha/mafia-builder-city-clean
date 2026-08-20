@@ -19,7 +19,9 @@ public static class MafiaCI
     // W3.U1 (design C1-F0) — ajoute "W3U1" au même titre : le shell/Home/Daily-Review est le
     // PATRON des 11 lots d'écrans suivants, et C1-F0 exige que ce lot passe par le MÊME filtre
     // que les précédents, jamais un second juge.
-    private static readonly string[] Categories = { "W4P4a", "W3UDA", "W3U1" };
+    // W3.U2/C4 (2026-08-17) — ajoute "W3U2" : premier chunk Unity du lot "intérieur de district"
+    // (diorama nocturne), même patron — élargir, jamais un second point d'entrée.
+    private static readonly string[] Categories = { "W4P4a", "W3UDA", "W3U1", "W3U2" };
 
     public static void RunPlayModeTests()
     {
