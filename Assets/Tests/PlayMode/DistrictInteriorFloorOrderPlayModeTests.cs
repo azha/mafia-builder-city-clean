@@ -39,18 +39,32 @@ namespace MafiaCleanCity.CityMap.Tests
             profile = "lattice",
             name_canonical = "Test",
             bank_side = "north",
-            grid = new DistrictInteriorGridDto { width = 3, height = 1 },
+            grid = new DistrictInteriorGridDto { width = 3, height = 2 },
             blocks = new[]
             {
                 new DistrictInteriorBlockDto { block_id = 1, x = 0, y = 0 },
                 new DistrictInteriorBlockDto { block_id = 2, x = 1, y = 0 },
                 new DistrictInteriorBlockDto { block_id = 3, x = 2, y = 0 },
+                new DistrictInteriorBlockDto { block_id = 4, x = 0, y = 1 },
+                new DistrictInteriorBlockDto { block_id = 5, x = 1, y = 1 },
+                new DistrictInteriorBlockDto { block_id = 6, x = 2, y = 1 },
             },
+            // Deux bâtiments dont l'ordre (y,x) INVERSE l'ordre des x : (2,0) doit précéder (0,1).
+            // C'est le discriminant de la garde d'ordre inter-cellules (revue ⊥ r5, MINOR R4F1) :
+            // un refactor qui trierait par x seul rendrait la profondeur arrière→avant fausse
+            // sans faire rougir la version courte de R4F1.
             buildings = new[]
             {
                 new DistrictInteriorBuildingDto
                 {
-                    block_id = 1, operational_type = "lab", condition_band = "SOUND",
+                    block_id = 3, operational_type = "lab", condition_band = "SOUND",
+                    revenue_chain = "UNWIRED", revenue_band = "IDLE", activity_band = "IDLE",
+                    lapse_phase_bucket = "WITHIN_WINDOW", maintenance_in_progress = false,
+                    lieutenant_ids = new string[0],
+                },
+                new DistrictInteriorBuildingDto
+                {
+                    block_id = 4, operational_type = "stash", condition_band = "SOUND",
                     revenue_chain = "UNWIRED", revenue_band = "IDLE", activity_band = "IDLE",
                     lapse_phase_bucket = "WITHIN_WINDOW", maintenance_in_progress = false,
                     lieutenant_ids = new string[0],
@@ -71,7 +85,7 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.IsNotNull(gridArea, "GridArea absent");
             Transform floors = gridArea.Find("GridFloors");
             Assert.IsNotNull(floors, "GridFloors absent — les sols doivent vivre HORS des cellules");
-            Assert.AreEqual(3, floors.childCount, "anti-vacuité : les 3 sols du payload existent");
+            Assert.AreEqual(6, floors.childCount, "anti-vacuité : les 6 sols du payload existent");
 
             // la propriété d'ordre : TOUT sol précède TOUT BuildingSprite dans la fratrie effective
             int idxFloors = floors.GetSiblingIndex();
@@ -94,6 +108,22 @@ namespace MafiaCleanCity.CityMap.Tests
                 if (enfant.name.StartsWith("Cell_"))
                     Assert.IsNull(enfant.GetComponent<Image>(),
                         $"'{enfant.name}' porte encore une Image (sol) — les cellules doivent être des conteneurs transparents.");
+
+            // Revue ⊥ r5 : l'ordre RELATIF entre cellules occupées porte la profondeur
+            // arrière→avant maintenant que les sprites débordent — les index de fratrie
+            // doivent croître avec (y, x), pas seulement dépasser GridFloors.
+            var occupees = new System.Collections.Generic.List<(int y, int x, int sib)>();
+            foreach (Transform enfant in gridArea)
+                if (enfant.name.StartsWith("Cell_") && enfant.Find("BuildingSprite") != null)
+                {
+                    string[] parts = enfant.name.Split('_');
+                    occupees.Add((int.Parse(parts[2]), int.Parse(parts[1]), enfant.GetSiblingIndex()));
+                }
+            Assert.GreaterOrEqual(occupees.Count, 2, "anti-vacuité : le DTO porte 2 bâtiments dont l'ordre (y,x) inverse l'ordre des x");
+            occupees.Sort();
+            for (int i = 1; i < occupees.Count; i++)
+                Assert.Greater(occupees[i].sib, occupees[i - 1].sib,
+                    $"profondeur cassée : Cell_{occupees[i].x}_{occupees[i].y} devrait être dessinée APRÈS Cell_{occupees[i - 1].x}_{occupees[i - 1].y} (ordre (y,x)).");
         }
 
         [UnityTest]

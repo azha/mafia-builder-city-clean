@@ -85,11 +85,21 @@ namespace MafiaCleanCity.Theme.Tests
         [Test]
         public void R2F2_Socle_DistinctFromEveryFloorBucket()
         {
+            // Revue ⊥ r5 : l'ombre est TRANSLUCIDE — la garde mesure la couleur COMPOSÉE au cœur
+            // (Lerp(sol, socle, SocleCoreAlpha)), jamais le token nu, sinon elle certifierait une
+            // ombre invisible. Arithmétique WCAG posée AVANT d'écrire (leçon r2) : sur b0, la paire
+            // plafonne à 1,332 OPAQUE — 1,3 exigerait un cœur à 0,88, c'est-à-dire une ombre
+            // redevenue opaque. Plancher b0 = 1,15 (soutenable mesuré : 1,164 au cœur 0,45),
+            // arbitrage remonté au ⊥ au round 6 ; b1/b2 tiennent 1,3 au composite.
             var t = DesignTokens.Current;
-            Color b1 = t.nightFloorAlt;
-            foreach (var (nom, sol) in new (string, Color)[] { ("b0", t.nightBackground), ("b1", b1), ("b2", t.nightBase) })
-                Assert.GreaterOrEqual(Ratio(t.nightSocle, sol), 1.3f,
-                    $"socle vs sol {nom} : ratio < 1,3:1 — le socle disparaît dans le sol (mesuré 1,000:1 au r2 quand nightBase servait aux deux).");
+            float coeur = MafiaCleanCity.CityMap.DistrictInteriorScreenController.SocleCoreAlpha;
+            foreach (var (nom, sol, plancher) in new (string, Color, float)[] {
+                ("b0", t.nightBackground, 1.15f), ("b1", t.nightFloorAlt, 1.3f), ("b2", t.nightBase, 1.3f) })
+            {
+                Color compose = Color.Lerp(sol, t.nightSocle, coeur);
+                Assert.GreaterOrEqual(Ratio(compose, sol), plancher,
+                    $"ombre composée vs sol {nom} : ratio < {plancher} — l'ombre de contact disparaît dans ce sol.");
+            }
         }
 
         // revue ⊥ r3 (IMPORTANT 5) — les paires manquantes portaient 97,48 % des pixels.

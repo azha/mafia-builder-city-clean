@@ -330,6 +330,13 @@ namespace MafiaCleanCity.CityMap
             hazeImg.raycastTarget = false;
         }
 
+        // Alphas de COMPOSITE de l'ombre de contact (revue ⊥ r5 (a)) — publics : R2F2 mesure la
+        // couleur COMPOSÉE Lerp(sol, socle, SocleCoreAlpha), jamais le token nu (une ombre
+        // translucide rendrait sinon la garde verte sur une ombre invisible).
+        public const float SocleCoreAlpha = 0.45f;
+        public const float SocleMidAlpha = 0.28f;
+        public const float SocleOuterAlpha = 0.15f;
+
         private GameObject BuildBuildingCell(RectTransform gridRt, int x, int y, DistrictInteriorBuildingDto building)
         {
             GameObject cell = NewCell(gridRt, x, y);
@@ -338,19 +345,45 @@ namespace MafiaCleanCity.CityMap
             // Revue ⊥ r3 (BLOCKING 2) : plus jamais une plinthe pleine-cellule — les 4 socles
             // fusionnaient en une barre continue de 376 px, l'élément le plus clair de l'écran.
             // Largeur du BÂTIMENT, et plus sombre que les sols (l'ombre de contact, pas une étagère).
+            // Revue ⊥ r5 (a) : l'ombre de contact n'est plus un rectangle opaque pleine largeur —
+            // 0,7 × la largeur du rect (deux voisins ne sont plus jointifs : la marge transparente
+            // du rect ne compte plus), translucide, atténuée en 3 bandes concentriques. Les alphas
+            // de COMPOSITE visés sont les constantes ci-dessous ; chaque bande porte l'alpha de
+            // COUCHE qui, empilé sur les précédentes, atteint sa cible (1-(1-a)(1-b) = cible).
             GameObject socle = NewUI("Socle", cell.transform);
             RectTransform socleRt = (RectTransform)socle.transform;
             socleRt.anchorMin = socleRt.anchorMax = new Vector2(0.5f, 0f);
             socleRt.pivot = new Vector2(0.5f, 0f);
-            float socleW = CellSize * 0.6f;
+            float socleW = CellSize * 0.42f;
             {
                 BuildingSpriteSlots slotsPourSocle = BuildingSpriteSlots.Current;
                 Sprite spPourSocle = slotsPourSocle != null ? slotsPourSocle.Resolve(building.operational_type) : null;
-                if (spPourSocle != null) socleW = spPourSocle.rect.width * (CellSize / (MetresParBloc * 56f));
+                if (spPourSocle != null) socleW = 0.7f * spPourSocle.rect.width * (CellSize / (MetresParBloc * 56f));
             }
             socleRt.sizeDelta = new Vector2(socleW, CellSize * 0.2f);
             socleRt.anchoredPosition = Vector2.zero;
-            socle.AddComponent<Image>().color = DesignTokens.Current.nightSocle; // revue ⊥ r2 : nightBase servait aussi de bucket 2 du sol
+            Color socleTeinte = DesignTokens.Current.nightSocle; // revue ⊥ r2 : nightBase servait aussi de bucket 2 du sol
+            float aCouche1 = SocleOuterAlpha;
+            float aCouche2 = 1f - (1f - SocleMidAlpha) / (1f - SocleOuterAlpha);
+            float aCouche3 = 1f - (1f - SocleCoreAlpha) / (1f - SocleMidAlpha);
+            var bandes = new (string nom, float wFrac, float hFrac, float aCouche)[]
+            {
+                ("SocleOuter", 1.00f, 1.00f, aCouche1),
+                ("SocleMid",   0.72f, 0.80f, aCouche2),
+                ("SocleCore",  0.45f, 0.60f, aCouche3),
+            };
+            foreach (var bande in bandes)
+            {
+                GameObject go = NewUI(bande.nom, socle.transform);
+                RectTransform brt = (RectTransform)go.transform;
+                brt.anchorMin = brt.anchorMax = new Vector2(0.5f, 0f);
+                brt.pivot = new Vector2(0.5f, 0f);
+                brt.sizeDelta = new Vector2(socleW * bande.wFrac, CellSize * 0.2f * bande.hFrac);
+                brt.anchoredPosition = Vector2.zero;
+                Image bimg = go.AddComponent<Image>();
+                bimg.color = new Color(socleTeinte.r, socleTeinte.g, socleTeinte.b, bande.aCouche);
+                bimg.raycastTarget = false;
+            }
 
             // Sprite — D6/C6 : BuildingSpriteSlots, premier appelant de PRODUCTION (jusqu'ici son seul
             // consommateur était son propre test, C6-F4).
@@ -377,9 +410,11 @@ namespace MafiaCleanCity.CityMap
                 spriteImg.preserveAspect = true;
             }
 
-            // Libellé — SEULEMENT quand l'art manque (r4 MINOR : le sprite EST l'identité ;
-            // C8-F3 reste satisfait par le titre, toujours rendu et tracké).
-            if (baseSprite == null)
+            // Libellé — quand l'art manque OU quand le sprite est le REPLI partagé (revue ⊥ r5,
+            // IMPORTANT) : Resolve ne rend JAMAIS null (table totale C6-F4), donc la branche null
+            // seule était morte, et 6 types tombant sur fallback rendaient le même sprite sans
+            // aucun discriminant. Le libellé est le discriminant du repli.
+            if (baseSprite == null || (slots != null && baseSprite == slots.fallback))
             {
                 TextMeshProUGUI label = NewText("TypeLabel", cell.transform, TypeLabel(building.operational_type),
                     9, TextAlignmentOptions.Bottom);
