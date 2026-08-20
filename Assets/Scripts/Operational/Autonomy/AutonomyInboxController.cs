@@ -57,14 +57,14 @@ namespace MafiaCleanCity.Operational.Autonomy
         private bool Destroyed => destroyed || this == null;
 
         // Slate palette (mirrors DashboardController).
-        private static readonly Color SurfaceBg = DesignTokens.Current.surfaceBase;
-        private static readonly Color CardBg = DesignTokens.Current.surfaceCard;
-        private static readonly Color RowBg = DesignTokens.Current.surfaceRow;
-        private static readonly Color TextPrimary = DesignTokens.Current.onSurfacePrimary;
-        private static readonly Color TextSecondary = DesignTokens.Current.onSurfaceSecondary;
-        private static readonly Color AccentMild = DesignTokens.Current.accentSuccess;
-        private static readonly Color AccentSevere = DesignTokens.Current.accentDanger;
-        private static readonly Color CtaColor = DesignTokens.Current.accentGold;
+        private static Color SurfaceBg => DesignTokens.Current.surfaceBase;
+        private static Color CardBg => DesignTokens.Current.surfaceCard;
+        private static Color RowBg => DesignTokens.Current.surfaceRow;
+        private static Color TextPrimary => DesignTokens.Current.onSurfacePrimary;
+        private static Color TextSecondary => DesignTokens.Current.onSurfaceSecondary;
+        private static Color AccentMild => DesignTokens.Current.accentSuccess;
+        private static Color AccentSevere => DesignTokens.Current.accentDanger;
+        private static Color CtaColor => DesignTokens.Current.accentGold;
 
         private void Start()
         {

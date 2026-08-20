@@ -194,18 +194,18 @@ namespace MafiaCleanCity.Operational
         private BuildingCardClient client;
 
         // Slate palette (mirrors CityMap + global_conventions_core direction).
-        private static readonly Color SurfaceBg = DesignTokens.Current.surfaceCard; // #16191b
-        private static readonly Color RowBg = DesignTokens.Current.surfaceRow;     // #232a2d
-        private static readonly Color TextPrimary = DesignTokens.Current.onSurfacePrimary;
-        private static readonly Color AccentMild = DesignTokens.Current.accentSuccess;   // #43e0c0 cyan
-        private static readonly Color AccentModerate = DesignTokens.Current.accentWarning;     // #ff9e3d amber
-        private static readonly Color AccentSevere = DesignTokens.Current.accentDanger;      // #ff5a4d red
-        private static readonly Color CtaColor = DesignTokens.Current.accentGold;          // #ffd23f yellow
+        private static Color SurfaceBg => DesignTokens.Current.surfaceCard; // #16191b
+        private static Color RowBg => DesignTokens.Current.surfaceRow;     // #232a2d
+        private static Color TextPrimary => DesignTokens.Current.onSurfacePrimary;
+        private static Color AccentMild => DesignTokens.Current.accentSuccess;   // #43e0c0 cyan
+        private static Color AccentModerate => DesignTokens.Current.accentWarning;     // #ff9e3d amber
+        private static Color AccentSevere => DesignTokens.Current.accentDanger;      // #ff5a4d red
+        private static Color CtaColor => DesignTokens.Current.accentGold;          // #ffd23f yellow
         // Phase-2c: the 4th purity-band accent (the AccentMild/Moderate/Severe palette extended to 4 bands for the
         // ascending CUT < STANDARD < PURE < CRYSTALLINE grade). CRYSTALLINE = a bright violet-white "premium" hue,
         // visibly distinct from the cyan AccentMild so the top grade reads as exceptional. a11y: never colour-only —
         // every purity row also carries a distinct shape glyph + a worded label (F2).
-        private static readonly Color AccentPremium = DesignTokens.Current.accentPremium;        // #c7b3ff bright violet-white
+        private static Color AccentPremium => DesignTokens.Current.accentPremium;        // #c7b3ff bright violet-white
 
         // True once this controller / its GameObject has been destroyed. An async load coroutine (a
         // UnityWebRequest round-trip) can be driven by an OUTSIDE pump (the PlayMode test runner runs

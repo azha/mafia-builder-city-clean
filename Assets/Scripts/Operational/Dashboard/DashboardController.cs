@@ -109,15 +109,15 @@ namespace MafiaCleanCity.Operational
         private AutonomyClient autonomy;       // Phase-21 — pending autonomy reports alert note + the Autonomy nav
 
         // Slate palette (mirrors BuildingCard / Laundering / global_conventions_core direction).
-        private static readonly Color SurfaceBg = DesignTokens.Current.surfaceBase;   // #0d0f10 (screen_1 ardoise)
-        private static readonly Color CardBg = DesignTokens.Current.surfaceCard;      // #16191b
-        private static readonly Color RowBg = DesignTokens.Current.surfaceRow;       // #232a2d
-        private static readonly Color TextPrimary = DesignTokens.Current.onSurfacePrimary; // #eef1f2
-        private static readonly Color TextSecondary = DesignTokens.Current.onSurfaceSecondary; // #8a979c
-        private static readonly Color AccentMild = DesignTokens.Current.accentSuccess;   // #43e0c0 teal
-        private static readonly Color AccentModerate = DesignTokens.Current.accentWarning;    // #ff9e3d amber
-        private static readonly Color AccentSevere = DesignTokens.Current.accentDanger;     // #ff5a4d red
-        private static readonly Color CtaColor = DesignTokens.Current.accentGold;         // #ffd23f yellow
+        private static Color SurfaceBg => DesignTokens.Current.surfaceBase;   // #0d0f10 (screen_1 ardoise)
+        private static Color CardBg => DesignTokens.Current.surfaceCard;      // #16191b
+        private static Color RowBg => DesignTokens.Current.surfaceRow;       // #232a2d
+        private static Color TextPrimary => DesignTokens.Current.onSurfacePrimary; // #eef1f2
+        private static Color TextSecondary => DesignTokens.Current.onSurfaceSecondary; // #8a979c
+        private static Color AccentMild => DesignTokens.Current.accentSuccess;   // #43e0c0 teal
+        private static Color AccentModerate => DesignTokens.Current.accentWarning;    // #ff9e3d amber
+        private static Color AccentSevere => DesignTokens.Current.accentDanger;     // #ff5a4d red
+        private static Color CtaColor => DesignTokens.Current.accentGold;         // #ffd23f yellow
 
         private void Start()
         {

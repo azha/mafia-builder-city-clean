@@ -215,16 +215,16 @@ namespace MafiaCleanCity.Operational.Lieutenant
         private TextMeshProUGUI decisionErrorText;       // Phase-21 F2: cooldown failure detail — CHROME (component-tracked only, never in scan corpus)
 
         // Slate palette (mirrors BuildingCardController + global_conventions_core direction).
-        private static readonly Color SurfaceBg = DesignTokens.Current.surfaceCard; // #16191b
-        private static readonly Color RowBg = DesignTokens.Current.surfaceRow;     // #232a2d
-        private static readonly Color TextPrimary = DesignTokens.Current.onSurfacePrimary;
-        private static readonly Color AccentMild = DesignTokens.Current.accentSuccess;   // #43e0c0 cyan
-        private static readonly Color AccentModerate = DesignTokens.Current.accentWarning;    // #ff9e3d amber
-        private static readonly Color AccentSevere = DesignTokens.Current.accentDanger;     // #ff5a4d red
-        private static readonly Color CtaColor = DesignTokens.Current.accentGold;         // #ffd23f yellow
+        private static Color SurfaceBg => DesignTokens.Current.surfaceCard; // #16191b
+        private static Color RowBg => DesignTokens.Current.surfaceRow;     // #232a2d
+        private static Color TextPrimary => DesignTokens.Current.onSurfacePrimary;
+        private static Color AccentMild => DesignTokens.Current.accentSuccess;   // #43e0c0 cyan
+        private static Color AccentModerate => DesignTokens.Current.accentWarning;    // #ff9e3d amber
+        private static Color AccentSevere => DesignTokens.Current.accentDanger;     // #ff5a4d red
+        private static Color CtaColor => DesignTokens.Current.accentGold;         // #ffd23f yellow
         // B3 locked-tier teaser: a single dim/disabled colour for the grayed, non-selectable locked primitives (the
         // teaser lines + their section header). Distinctly dimmer than TextPrimary so "locked" reads at a glance.
-        private static readonly Color LockedDim = DesignTokens.Current.onSurfaceDisabled;       // #6b7380 muted slate
+        private static Color LockedDim => DesignTokens.Current.onSurfaceDisabled;       // #6b7380 muted slate
 
         // Teardown/cancellation guard (the SAME pattern as BuildingCardController): an async Recruit coroutine driven
         // by an OUTSIDE pump (the PlayMode test runner) can resume after this controller's GameObject was destroyed by

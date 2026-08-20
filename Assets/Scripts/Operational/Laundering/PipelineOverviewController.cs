@@ -79,13 +79,13 @@ namespace MafiaCleanCity.Operational
         private LaunderingClient client;
 
         // Slate palette (mirrors LaunderingController + global_conventions_core direction).
-        private static readonly Color SurfaceBg = DesignTokens.Current.surfaceCard; // #16191b
-        private static readonly Color RowBg = DesignTokens.Current.surfaceRow;     // #232a2d
-        private static readonly Color TextPrimary = DesignTokens.Current.onSurfacePrimary;
-        private static readonly Color AccentMild = DesignTokens.Current.accentSuccess;   // #43e0c0 teal (clean)
-        private static readonly Color AccentModerate = DesignTokens.Current.accentWarning;     // #ff9e3d amber (partial)
-        private static readonly Color AccentSevere = DesignTokens.Current.accentDanger;      // #ff5a4d red (dirty)
-        private static readonly Color TerminalColor = DesignTokens.Current.accentGold;     // #ffd23f yellow (release stage)
+        private static Color SurfaceBg => DesignTokens.Current.surfaceCard; // #16191b
+        private static Color RowBg => DesignTokens.Current.surfaceRow;     // #232a2d
+        private static Color TextPrimary => DesignTokens.Current.onSurfacePrimary;
+        private static Color AccentMild => DesignTokens.Current.accentSuccess;   // #43e0c0 teal (clean)
+        private static Color AccentModerate => DesignTokens.Current.accentWarning;     // #ff9e3d amber (partial)
+        private static Color AccentSevere => DesignTokens.Current.accentDanger;      // #ff5a4d red (dirty)
+        private static Color TerminalColor => DesignTokens.Current.accentGold;     // #ffd23f yellow (release stage)
 
         private void Start()
         {
