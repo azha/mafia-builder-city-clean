@@ -310,12 +310,20 @@ namespace MafiaCleanCity.CityMap
             GameObject cell = NewCell(gridRt, x, y);
 
             // Socle — plinthe sous le bâtiment.
+            // Revue ⊥ r3 (BLOCKING 2) : plus jamais une plinthe pleine-cellule — les 4 socles
+            // fusionnaient en une barre continue de 376 px, l'élément le plus clair de l'écran.
+            // Largeur du BÂTIMENT, et plus sombre que les sols (l'ombre de contact, pas une étagère).
             GameObject socle = NewUI("Socle", cell.transform);
             RectTransform socleRt = (RectTransform)socle.transform;
-            socleRt.anchorMin = new Vector2(0f, 0f);
-            socleRt.anchorMax = new Vector2(1f, 0f);
+            socleRt.anchorMin = socleRt.anchorMax = new Vector2(0.5f, 0f);
             socleRt.pivot = new Vector2(0.5f, 0f);
-            socleRt.sizeDelta = new Vector2(0, CellSize * 0.2f);
+            float socleW = CellSize * 0.6f;
+            {
+                BuildingSpriteSlots slotsPourSocle = BuildingSpriteSlots.Current;
+                Sprite spPourSocle = slotsPourSocle != null ? slotsPourSocle.Resolve(building.operational_type) : null;
+                if (spPourSocle != null) socleW = spPourSocle.rect.width * (CellSize / (MetresParBloc * 56f));
+            }
+            socleRt.sizeDelta = new Vector2(socleW, CellSize * 0.2f);
             socleRt.anchoredPosition = Vector2.zero;
             socle.AddComponent<Image>().color = DesignTokens.Current.nightSocle; // revue ⊥ r2 : nightBase servait aussi de bucket 2 du sol
 
@@ -586,7 +594,7 @@ namespace MafiaCleanCity.CityMap
             switch (bucket)
             {
                 case 0: return DesignTokens.Current.nightBackground;
-                case 1: return Color.Lerp(DesignTokens.Current.nightBackground, DesignTokens.Current.nightBase, 0.5f);
+                case 1: return DesignTokens.Current.nightFloorAlt; // revue ⊥ r3 : le Lerp RGB de teintes opposées fabriquait un gris
                 default: return DesignTokens.Current.nightBase;
             }
         }

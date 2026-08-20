@@ -164,7 +164,13 @@ namespace MafiaCleanCity.Theme
                                                 // socle et de bucket 2 du sol ⇒ contraste 1,000:1
                                                 // une cellule sur trois). Plus sombre que tous les
                                                 // buckets de FloorTint.
-        public Color nightLieutenantMarker;    // revue ⊥ r2 (IMPORTANT 5 de r1 / point 5 de r2) —
+        public Color nightLieutenantMarker;
+        public Color nightFloorAlt;            // revue ⊥ r3 (IMPORTANT 4) — le bucket 1 du sol en
+                                                // TOKEN propre : le Lerp RGB entre deux teintes
+                                                // opposées (bleu/chaud) fabriquait un gris-vert
+                                                // S=6,9 % sur 20 % de l'écran. Plan clair froid de
+                                                // l'échelle de sols (b0 sombre froid · b1 clair
+                                                // froid · b2 moyen chaud, ratios 1,3-1,9:1).    // revue ⊥ r2 (IMPORTANT 5 de r1 / point 5 de r2) —
                                                 // marqueur d'affectation lieutenant, chaud et clair :
                                                 // ratio WCAG ≥ 3:1 contre socle ET les 3 buckets de
                                                 // sol (falsifiable dédiée, 2 revues l'ont signalé

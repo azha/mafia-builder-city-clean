@@ -75,7 +75,7 @@ namespace MafiaCleanCity.Theme.Tests
         {
             var t = DesignTokens.Current;
             Color b0 = t.nightBackground;
-            Color b1 = Color.Lerp(t.nightBackground, t.nightBase, 0.5f); // le bucket 1 de FloorTint, même formule
+            Color b1 = t.nightFloorAlt; // r3 : le bucket 1 est un token propre désormais
             Color b2 = t.nightBase;
             foreach (var (nom, fond) in new (string, Color)[] { ("socle", t.nightSocle), ("sol_b0", b0), ("sol_b1", b1), ("sol_b2", b2) })
                 Assert.GreaterOrEqual(Ratio(t.nightLieutenantMarker, fond), 3f,
@@ -86,10 +86,45 @@ namespace MafiaCleanCity.Theme.Tests
         public void R2F2_Socle_DistinctFromEveryFloorBucket()
         {
             var t = DesignTokens.Current;
-            Color b1 = Color.Lerp(t.nightBackground, t.nightBase, 0.5f);
+            Color b1 = t.nightFloorAlt;
             foreach (var (nom, sol) in new (string, Color)[] { ("b0", t.nightBackground), ("b1", b1), ("b2", t.nightBase) })
                 Assert.GreaterOrEqual(Ratio(t.nightSocle, sol), 1.3f,
                     $"socle vs sol {nom} : ratio < 1,3:1 — le socle disparaît dans le sol (mesuré 1,000:1 au r2 quand nightBase servait aux deux).");
+        }
+
+        // revue ⊥ r3 (IMPORTANT 5) — les paires manquantes portaient 97,48 % des pixels.
+        [Test]
+        public void R3F1_FloorPlanesAndBackdrop_SeparateLikeTheTarget()
+        {
+            var t = DesignTokens.Current;
+            var plans = new (string, Color)[] {
+                ("fond", t.nightOutOfDistrictMuted), ("b0", t.nightBackground),
+                ("b1", t.nightFloorAlt), ("b2", t.nightBase) };
+            for (int i = 0; i < plans.Length; i++)
+                for (int j = i + 1; j < plans.Length; j++)
+                {
+                    if (plans[i].Item1 == "fond" && plans[j].Item1 == "b0") continue; // le hors-district PEUT
+                    // rester proche de l'asphalte (même famille) — les PLANS DE SOL, eux, doivent s'étager.
+                    Assert.GreaterOrEqual(Ratio(plans[i].Item2, plans[j].Item2), 1.3f,
+                        $"{plans[i].Item1} ↔ {plans[j].Item1} : < 1,3:1 (cible mesurée : 1,6-2,1 entre plans de sol).");
+                }
+        }
+
+        // revue ⊥ r3 (BLOCKING 1) — l'axe que TROIS tours de gardes n'ont jamais regardé : la VALEUR.
+        // La saturation convergeait pendant que la luminance dérivait. Borne absolue, des deux côtés.
+        [Test]
+        public void R3F2_CoveringTokens_ValueStaysInTargetBand()
+        {
+            var t = DesignTokens.Current;
+            foreach (var (nom, c) in new (string, Color)[] {
+                ("nightBackground", t.nightBackground), ("nightOutOfDistrictMuted", t.nightOutOfDistrictMuted),
+                ("nightBase", t.nightBase), ("nightFloorAlt", t.nightFloorAlt) })
+            {
+                Color.RGBToHSV(c, out _, out _, out float v);
+                Assert.That(v, Is.InRange(0.18f, 0.45f),
+                    $"{nom} : V={v:F3} hors de la bande cible [0,18 ; 0,45] (asphalte de l'art target : 0,38-0,47 ; " +
+                    "tiers sombre ~0,21). Sous 0,18 l'écran est une cave, au-dessus de 0,45 c'est un after-work.");
+            }
         }
     }
 }

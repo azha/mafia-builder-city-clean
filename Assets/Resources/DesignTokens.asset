@@ -54,12 +54,13 @@ MonoBehaviour:
   heatBurning: {r: 0.86, g: 0.2, b: 0.18, a: 1}
   heatUnknown: {r: 0.35, g: 0.35, b: 0.38, a: 1}
   readableTextDark: {r: 0.1, g: 0.1, b: 0.1, a: 1}
-  nightBackground: {r: 0.058, g: 0.075, b: 0.094, a: 1}
+  nightBackground: {r: 0.13, g: 0.168, b: 0.21, a: 1}
   nightWindowLit: {r: 1, g: 0.717, b: 0.15, a: 1}
   nightNeonGlow: {r: 1, g: 0.93, b: 0.75, a: 1}
   nightSmoke: {r: 0.57, g: 0.585, b: 0.6, a: 0.35}
   nightHaze: {r: 0.14, g: 0.2, b: 0.3, a: 0.05}
-  nightBase: {r: 0.165, g: 0.132, b: 0.104, a: 1}
-  nightSocle: {r: 0.26, g: 0.22, b: 0.18, a: 1}
+  nightBase: {r: 0.285, g: 0.228, b: 0.18, a: 1}
+  nightSocle: {r: 0.062, g: 0.055, b: 0.047, a: 1}
   nightLieutenantMarker: {r: 0.95, g: 0.82, b: 0.56, a: 1}
-  nightOutOfDistrictMuted: {r: 0.082, g: 0.1, b: 0.126, a: 1}
+  nightFloorAlt: {r: 0.29, g: 0.325, b: 0.4, a: 1}
+  nightOutOfDistrictMuted: {r: 0.128, g: 0.158, b: 0.2, a: 1}

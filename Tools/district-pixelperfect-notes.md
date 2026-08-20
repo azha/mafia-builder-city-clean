@@ -18,3 +18,15 @@ Règle 5 du socle : imprévu non bloquant → option conservatrice CONSIGNÉE. L
   l'image (gamma) — un écran sombre y paraît laiteux. Le fichier fait foi : juger les rendus Unity
   aux sondes PIL, jamais à l'aperçu. (Le vérificateur ⊥ l'a prouvé : prédiction (47,52,59), PIL
   (48,53,60), aperçu « gris clair ».)
+
+## Round 3 (revue ⊥) — arbitrages supplémentaires
+- **metresParBloc 22 → 16** : à 22 les bâtiments perdaient 36 % et le tri deux-passes n'avait plus
+  aucun consommateur (« un garde-fou hors du chemin sera retiré de bonne foi »). À 16, l'usine fait
+  ~138 px et déborde de 1,37 bloc — absorbé par le tri. ⚠️ DÉCISION PRODUIT (densité vs lisibilité)
+  remontée à l'user — réversible dans BuildingSpriteSlots.asset sans code.
+- **Échelle de sols en 3 tokens étagés** (b0 froid sombre / b1 = nightFloorAlt froid clair / b2 chaud
+  moyen), ratios calculés 1,33-1,90:1 (cible mesurée 1,6-2,1) ; socle = ombre de contact (sombre,
+  largeur du bâtiment) — l'inverse du r2, la falsifiable R2F2 mesure une séparation, pas une
+  direction, donc elle couvre les deux mondes.
+- **Question de présentation remontée à l'user** (limite honnête du ⊥) : une grille 10×4 peut-elle
+  jamais lire comme le diorama rapproché de l'art target ? Les correctifs pixel n'y répondent pas.
