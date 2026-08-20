@@ -265,6 +265,31 @@ namespace MafiaCleanCity.CityMap
             // Revue ⊥ (IMPORTANT 5) : dès que les sprites débordent de leur cellule, l'ordre de
             // fratrie EST l'ordre de profondeur — construction arrière → avant (y croissant),
             // bâtiments et vides confondus. Les comptes C8-F2/F4 sont inchangés.
+            // Revue ⊥ r4 (BLOCKING A — prescription r2 incomplète, assumée par le ⊥) :
+            // SetAsLastSibling déplaçait la cellule AVEC son sol opaque — le sol du voisin occultait
+            // toujours le débordement. Le sol QUITTE la cellule : GridFloors (créé en premier sous
+            // GridArea) porte les Floor_{x}_{y} ; Cell_{x}_{y} devient un conteneur transparent.
+            // Garde structurelle : R4F1. Le liseré GridBorder porte le contour du district (le
+            // carve-out fond↔b0 de R3F1 est adossé à CET indice — assertion R4F2, pas une exception nue).
+            GameObject bord = NewUI("GridBorder", gridRt);
+            Stretch((RectTransform)bord.transform, new Vector2(-2, -2), new Vector2(2, 2));
+            Image bordImg = bord.AddComponent<Image>();
+            bordImg.color = DesignTokens.Current.nightSocle;
+            bordImg.raycastTarget = false;
+            GameObject gridFloors = NewUI("GridFloors", gridRt);
+            Stretch((RectTransform)gridFloors.transform, Vector2.zero, Vector2.zero);
+            if (dto.blocks != null)
+                foreach (DistrictInteriorBlockDto fb in dto.blocks)
+                {
+                    GameObject floor = NewUI($"Floor_{fb.x}_{fb.y}", gridFloors.transform);
+                    RectTransform frt = (RectTransform)floor.transform;
+                    frt.anchorMin = frt.anchorMax = new Vector2(0f, 1f);
+                    frt.pivot = new Vector2(0f, 1f);
+                    frt.sizeDelta = new Vector2(CellSize, CellSize);
+                    frt.anchoredPosition = new Vector2(fb.x * CellSize, -fb.y * CellSize);
+                    floor.AddComponent<Image>().color = FloorTint(fb.x, fb.y);
+                }
+
             var buildingByBlockId = new Dictionary<int, DistrictInteriorBuildingDto>();
             if (dto.buildings != null)
                 foreach (DistrictInteriorBuildingDto b in dto.buildings)
@@ -352,17 +377,21 @@ namespace MafiaCleanCity.CityMap
                 spriteImg.preserveAspect = true;
             }
 
-            // Libellé de type — texte, jamais un nombre nu (C8-F3).
-            TextMeshProUGUI label = NewText("TypeLabel", cell.transform, TypeLabel(building.operational_type),
-                9, TextAlignmentOptions.Bottom);
-            RectTransform labelRt = (RectTransform)label.transform;
-            labelRt.anchorMin = new Vector2(0f, 0f);
-            labelRt.anchorMax = new Vector2(1f, 0f);
-            labelRt.pivot = new Vector2(0.5f, 0f);
-            labelRt.sizeDelta = new Vector2(0, CellSize * 0.2f);
-            labelRt.anchoredPosition = Vector2.zero;
-            label.color = DesignTokens.Current.onSurfacePrimary;
-            TrackText(label);
+            // Libellé — SEULEMENT quand l'art manque (r4 MINOR : le sprite EST l'identité ;
+            // C8-F3 reste satisfait par le titre, toujours rendu et tracké).
+            if (baseSprite == null)
+            {
+                TextMeshProUGUI label = NewText("TypeLabel", cell.transform, TypeLabel(building.operational_type),
+                    9, TextAlignmentOptions.Bottom);
+                RectTransform labelRt = (RectTransform)label.transform;
+                labelRt.anchorMin = new Vector2(0f, 0f);
+                labelRt.anchorMax = new Vector2(1f, 0f);
+                labelRt.pivot = new Vector2(0.5f, 0f);
+                labelRt.sizeDelta = new Vector2(0, CellSize * 0.2f);
+                labelRt.anchoredPosition = Vector2.zero;
+                label.color = DesignTokens.Current.onSurfacePrimary;
+                TrackText(label);
+            }
 
             // C9 (§3, §1.5 — U-10) : les 5 bindings lumineux. Chacun est GARDÉ par SA bande — l'absence
             // de GameObject EST le rendu "éteint/pas d'opération/pas de dette" (jamais un objet caché) :
@@ -576,7 +605,7 @@ namespace MafiaCleanCity.CityMap
             cellRt.pivot = new Vector2(0f, 1f);
             cellRt.sizeDelta = new Vector2(CellSize, CellSize);
             cellRt.anchoredPosition = new Vector2(x * CellSize, -y * CellSize);
-            cell.AddComponent<Image>().color = FloorTint(x, y); // sol — engagement 6
+            // r4 : PLUS de sol ici — les sols vivent dans GridFloors (revue ⊥ BLOCKING A).
             return cell;
         }
 
@@ -590,7 +619,10 @@ namespace MafiaCleanCity.CityMap
         /// Tools/w3u2-c8-notes.md § Deviations.</summary>
         private static Color FloorTint(int x, int y)
         {
-            int bucket = ((x + y) % 3 + 3) % 3;
+            // Revue ⊥ r4 (IMPORTANT B) : (x+y)%3 dessinait un réseau diagonal parfait — une mire.
+            // Hash de position déterministe (usure PLACÉE : même monde, mêmes taches), sans période lisible.
+            int h = unchecked((x * 73856093) ^ (y * 19349663));
+            int bucket = ((h >> 4) & 0x7fffffff) % 3;
             switch (bucket)
             {
                 case 0: return DesignTokens.Current.nightBackground;

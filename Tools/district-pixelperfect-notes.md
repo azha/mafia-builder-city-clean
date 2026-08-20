@@ -30,3 +30,13 @@ Règle 5 du socle : imprévu non bloquant → option conservatrice CONSIGNÉE. L
   direction, donc elle couvre les deux mondes.
 - **Question de présentation remontée à l'user** (limite honnête du ⊥) : une grille 10×4 peut-elle
   jamais lire comme le diorama rapproché de l'art target ? Les correctifs pixel n'y répondent pas.
+
+## Round 4 (revue ⊥) — arbitrages
+- **GridFloors** : les sols sortent des cellules (la prescription r2 du ⊥ était incomplète — il
+  l'assume : SetAsLastSibling déplaçait le sol AVEC la cellule). Garde structurelle R4F1 posée :
+  la classe « occlusion par fratrie » est enfin testée SANS pixel.
+- **GridBorder** : le carve-out fond↔b0 de R3F1 est adossé à un indice réel (liseré nightSocle,
+  2 px), asserté par R4F2 — plus jamais un `continue` nu.
+- **FloorTint** : hash position (73856093/19349663) — même monde ⇒ mêmes taches, zéro période lisible.
+- **Libellés de type** : seulement en repli sans art (le sprite est l'identité). Titre inchangé
+  (MINOR restant : name_canonical — attend un display_name côté back, pas d'invention C#).
