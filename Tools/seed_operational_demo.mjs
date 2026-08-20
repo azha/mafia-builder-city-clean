@@ -315,6 +315,18 @@ async function main() {
     psql(`DELETE FROM building_operational_state WHERE building_id IN (${hubIds});`);
     psql(`DELETE FROM buildings WHERE building_id IN (${hubIds});`);
   }
+  // Crick refinery: lives in a STACK district (canon building_types.md invariant 3 — the back now enforces it at
+  // convert), so the district-16 wipe never reaches it either. Same targeted operational_type wipe as the hub/vault;
+  // its precursor_stock/cook_session/product_storage children were already wiped player-wide above. Idempotent.
+  const refineryIds = psql(
+    `SELECT COALESCE(string_agg(quote_literal(bos.building_id::text), ','), '') ` +
+      `FROM building_operational_state bos JOIN buildings b ON b.building_id=bos.building_id ` +
+      `WHERE b.player_id='${playerId}' AND bos.operational_type='refinery';`,
+  );
+  if (refineryIds) {
+    psql(`DELETE FROM building_operational_state WHERE building_id IN (${refineryIds});`);
+    psql(`DELETE FROM buildings WHERE building_id IN (${refineryIds});`);
+  }
   // Phase-5 vector #5a (money_holding): the vault is GLASS-only (NOT district 16 — like the specialized_lab), so it too is
   // wiped by a TARGETED operational_type clause (the district-16 wipe never reaches it). Its 1-1 money_holding row is an FK
   // child of buildings (ON DELETE CASCADE) but we wipe it explicitly FIRST for order-safety/idempotence, then drop the
@@ -379,10 +391,19 @@ async function main() {
     stageHosts.push(await operationalBuilding(freeBlock(5 + s), 'front_shop'));
   }
 
-  // Phase-2b vector #2 (Crick cold-chain): a REFINERY on its OWN fresh district-16 block (offset past the stage
-  // hosts → never the lab's block, so the raid at the end never touches it). Convert passes cold_storage_capable
-  // explicitly (a refinery is cold-by-nature regardless, but the flag is part of the real convert contract).
-  const refineryBlock = freeBlock(5 + PIPELINE_DOWNSTREAM_STAGES);
+  // Phase-2b vector #2 (Crick cold-chain): a REFINERY on a free STACK-district block — the back enforces canon
+  // building_types.md invariant 3 (refinery converts only in a Stack district), so district 16 (verge) is invalid.
+  // Out of district 16 it also stays clear of the raid at the end (which targets the lab's district-16 block).
+  // Convert passes cold_storage_capable explicitly (a refinery is cold-by-nature regardless, but the flag is part
+  // of the real convert contract). Reset-side, the targeted refinery wipe above re-claims it on re-run.
+  const stackDistrict = Number(psql(`SELECT id FROM districts WHERE profile='stack' ORDER BY id LIMIT 1;`));
+  const refineryBlock = Number(
+    psql(
+      `SELECT id FROM blocks WHERE district_id=${stackDistrict} ` +
+        `AND id NOT IN (SELECT block_id FROM buildings WHERE player_id='${playerId}' AND block_id IS NOT NULL) ` +
+        `ORDER BY id LIMIT 1 OFFSET 0;`,
+    ),
+  );
   const refineryBuy = await api('POST', '/v1/operational/building/purchase', token, { block_id: refineryBlock, building_type_target: 'refinery' });
   if (refineryBuy.status !== 201) throw new Error(`purchase refinery failed: HTTP ${refineryBuy.status} — ${JSON.stringify(refineryBuy.data)}`);
   const refinery = refineryBuy.data.building_id;
@@ -414,8 +435,25 @@ async function main() {
   // Re-anchor arrives_at_tick to the next tick (clock+1) → the MINUTE/7 arrival tick delivers it on the nudge.
   psql(`UPDATE precursor_order SET arrives_at_tick=${clockMinute(playerId) + 1} WHERE order_id='${orderId}';`);
   await advance(playerId, 1);
-  const pyralinStock = psql(`SELECT COALESCE(SUM(quantity_units),0) FROM precursor_stock WHERE player_id='${playerId}' AND building_id='${lab}';`);
+  const pyralinStock = psql(`SELECT COALESCE(SUM(quantity_units),0) FROM precursor_stock WHERE player_id='${playerId}' AND building_id='${lab}' AND precursor_type='pyralin';`);
   console.log(`[op-seed] Pyralin order delivered → ${pyralinStock} units in the lab`);
+
+  // D1 C4: a brindle cook fail-fasts unless ALL 3 precursors are in the building — Thalmite (Stage 2) and
+  // Garnet salt (Stage 3) on top of the primary Pyralin (production.service.ts upfront validation). Order both
+  // through the same real route + arrival fast-forward as the Pyralin above (2 units each = the per-batch tunable
+  // defaults production.brindle.{thalmite,garnet_salt}_units_per_batch).
+  for (const secondary of ['THALMITE', 'GARNET_SALT']) {
+    const sOrd = await api('POST', '/v1/operational/precursors/order', token, {
+      building_id: lab,
+      precursor_type: secondary,
+      quantity_units: 2,
+    });
+    if (sOrd.status !== 201) throw new Error(`${secondary} order failed: HTTP ${sOrd.status} — ${JSON.stringify(sOrd.data)}`);
+    psql(`UPDATE precursor_order SET arrives_at_tick=${clockMinute(playerId) + 1} WHERE order_id='${sOrd.data.order_id}';`);
+    await advance(playerId, 1);
+  }
+  const secondaryStock = psql(`SELECT COALESCE(SUM(quantity_units),0) FROM precursor_stock WHERE player_id='${playerId}' AND building_id='${lab}' AND precursor_type IN ('thalmite','garnet_salt');`);
+  console.log(`[op-seed] secondary precursors delivered → ${secondaryStock} units (thalmite+garnet_salt) in the lab`);
 
   // ─────────────────────────── 6. COOK — start a Brindle cook, fast-forward completion → 200 g in the lab ───────────────────────────
   const cook = await api('POST', `/v1/operational/lab/${lab}/cook`, token, {});
