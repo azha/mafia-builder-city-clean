@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -59,6 +60,11 @@ namespace MafiaCleanCity.Shell
         /// on a tab switch, unlike a tenant screen). Null until `BuildLayout()` runs.</summary>
         public TopBarController TopBar { get; private set; }
 
+        // nav-hud-design-v1.md §3.3 (chunk 2) — the state a single `MountedTenantGameObject` field
+        // can't carry on its own: "are we inside a district, and which one". -1 = "sur la carte", a
+        // NAMED state, never a magic default read as "district zero".
+        public int CityTabDistrictId { get; private set; } = -1;
+
         private readonly List<GameObject> tabButtons = new List<GameObject>();
         private bool initialized;
 
@@ -93,10 +99,24 @@ namespace MafiaCleanCity.Shell
             CurrentTab = tab;
             OnEmptyMoreDestination = tab == Tab.More;
 
+            // §3.3 — "re-tap City from a district brings back the map, by the ORDINARY remount
+            // path — no special-cased no-op". CityTabDistrictId resets to -1 for EVERY tab
+            // activation (not just City): the leading action is meaningless outside a district
+            // view, so any tab switch clears it defensively — EnterDistrict is the ONLY path that
+            // sets it back (§3.3 only names the City case explicitly; this chunk extends the SAME
+            // reset to the other 4 tabs so "← Carte" can never survive a jump straight to e.g. Home
+            // — an obvious-defect guard, not a design reinterpretation, consigned as a Deviation).
+            CityTabDistrictId = -1;
+            TopBar.SetLeadingAction(TopBarController.LeadingAction.None, null);
+
             switch (tab)
             {
                 case Tab.Home: MountTenant<DashboardController>(); break;
-                case Tab.City: MountTenant<CityMapController>(); break;
+                case Tab.City:
+                    MountTenant<CityMapController>();
+                    CityMapController cityMap = MountedTenantGameObject.GetComponent<CityMapController>();
+                    if (cityMap != null) cityMap.OnEnterDistrict += EnterDistrict; // §3.3 — subscribed at mount time
+                    break;
                 case Tab.Org: MountTenant<LieutenantScreenController>(); break;
                 case Tab.Pipeline: MountTenant<LaunderingController>(); break;
                 case Tab.More:
@@ -107,6 +127,55 @@ namespace MafiaCleanCity.Shell
             }
             RefreshTabButtonVisuals();
         }
+
+        /// <summary>nav-hud-design-v1.md §3.3 (chunk 2) — enters `districtId`, replacing whatever is
+        /// currently mounted (only ever wired to fire while the City tab's CityMapController is
+        /// mounted — its own OnEnterDistrict subscription, above). Reuses EXACTLY MountTenant&lt;T&gt;'s
+        /// own body (§3.3 : ":111-129") for T = DistrictInteriorScreenController — NOT a second
+        /// mounting mechanism. `UnmountCurrentTenant()` is called here for the SAME reason
+        /// `ActivateTab` calls it before its own `MountTenant&lt;T&gt;` : `MountTenant&lt;T&gt;`'s body never
+        /// unmounts on its own, that's always the CALLER's job — "un seul locataire à la fois —
+        /// entrer dans un district DÉTRUIT CityMapController" (§3.3 preamble). The bearer token
+        /// comes from the CityMapController tenant being replaced (its OWN demo-auth token, §3.2) —
+        /// the design's own EnterDistrict(int) signature carries no token parameter and never says
+        /// where one comes from; reading it off the outgoing tenant before destroying it is the
+        /// only source available in this architecture at chunk 2 (Deviation, consigned).</summary>
+        public void EnterDistrict(int districtId)
+        {
+            string token = null;
+            if (MountedTenantType == typeof(CityMapController) && MountedTenantGameObject != null)
+            {
+                CityMapController cityMap = MountedTenantGameObject.GetComponent<CityMapController>();
+                if (cityMap != null) token = cityMap.Token;
+            }
+
+            UnmountCurrentTenant();
+
+            // ── EXACTLY MountTenant<T>'s body (:111-129), T = DistrictInteriorScreenController ──
+            GameObject host = new GameObject($"Tenant_{typeof(DistrictInteriorScreenController).Name}");
+            host.transform.SetParent(ContentSlot, false);
+            DistrictInteriorScreenController tenant = host.AddComponent<DistrictInteriorScreenController>();
+            tenant.SetMountParent(ContentSlot);
+            MountedTenantGameObject = host;
+            MountedTenantType = typeof(DistrictInteriorScreenController);
+            // ── end MountTenant<T> body ──
+
+            CityTabDistrictId = districtId;
+            tenant.SetSafeInsets(TopBarSlot.rect.height, TabBarRoot.rect.height); // §3.4
+            TopBar.SetLeadingAction(TopBarController.LeadingAction.BackToMap, ExitToCityMap);
+            StartCoroutine(EnterDistrictSequence(tenant, token, districtId));
+        }
+
+        private IEnumerator EnterDistrictSequence(DistrictInteriorScreenController tenant, string token, int districtId)
+        {
+            yield return tenant.SetSession(token, districtId);
+            if (tenant == null) yield break; // torn down mid-fetch (e.g. ExitToCityMap raced the request)
+            tenant.Render(tenant.LastFetch);
+        }
+
+        /// <summary>§3.3 — "→ ActivateTab(Tab.City)" verbatim : no special branch, the ordinary
+        /// remount path resets CityTabDistrictId to -1 and clears the leading action.</summary>
+        public void ExitToCityMap() => ActivateTab(Tab.City);
 
         private void MountTenant<T>() where T : MonoBehaviour, IShellTenant
         {

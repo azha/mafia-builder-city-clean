@@ -69,6 +69,22 @@ namespace MafiaCleanCity.CityMap
         // Taille de cellule en px uGUI (mise en page, pas un tunable de jeu — R2.3 ne porte pas sur les
         // dimensions d'écran, cf. les tailles inline déjà partout dans AppShell/LaunderingController).
         private float CellSize = 48f;   // revue ⊥ 2026-08-20 (BLOCKING 4) : calculé par rendu, plus une const
+
+        // nav-hud-design-v1.md §3.4 (chunk 2) — les insets de chrome (0/0 hors shell, la valeur par
+        // défaut de ces champs — les 46 falsifiables convergées d'avant ce chunk n'appellent jamais
+        // SetSafeInsets et restent donc byte-identiques). Dans le shell, le chrome SUBSTITUE la
+        // respiration au lieu de s'y ajouter — voir RenderNightDiorama pour l'arithmétique exacte.
+        private float safeInsetTop;
+        private float safeInsetBottom;
+
+        /// <summary>§3.4 — posé par l'appelant (AppShell.EnterDistrict) AVANT le premier Render(),
+        /// persiste à travers tous les Render() suivants (day_phase change, etc.). Jamais appelé
+        /// hors shell ⇒ 0/0, l'arithmétique retombe sur l'historique (H−160, CellSize identique).</summary>
+        public void SetSafeInsets(float top, float bottom)
+        {
+            safeInsetTop = Mathf.Max(0f, top);
+            safeInsetBottom = Mathf.Max(0f, bottom);
+        }
         // revue ⊥ r2 (IMPORTANT 3) : l'échelle-monde d'un bloc n'a rien à faire en const C# — elle
         // vit dans BuildingSpriteSlots.asset (metresParBloc, défaut 22 : l'usine, 21,86 m d'opaque,
         // est le plus large sprite livré — à 14 elle faisait 1,56 bloc et se faisait couper).
@@ -230,24 +246,47 @@ namespace MafiaCleanCity.CityMap
             Stretch((RectTransform)backdrop.transform, Vector2.zero, Vector2.zero);
             backdrop.AddComponent<Image>().color = DesignTokens.Current.nightOutOfDistrictMuted;
 
-            // Titre — texte, jamais un nombre nu (C8-F3).
+            // Titre — texte, jamais un nombre nu (C8-F3). §3.4 : l'inset haut DÉCALE le titre pour
+            // qu'il reste sous le TopBar plutôt que derrière lui (nav-F5 — écart attendu 56px).
             TextMeshProUGUI title = NewText("DistrictTitle", root, dto.name_canonical, 20, TextAlignmentOptions.TopLeft);
             RectTransform titleRt = (RectTransform)title.transform;
             titleRt.anchorMin = new Vector2(0f, 1f);
             titleRt.anchorMax = new Vector2(1f, 1f);
             titleRt.pivot = new Vector2(0.5f, 1f);
             titleRt.sizeDelta = new Vector2(0, 32);
-            titleRt.anchoredPosition = new Vector2(0, -8);
+            titleRt.anchoredPosition = new Vector2(0, -(8f + safeInsetTop));
             title.color = DesignTokens.Current.onSurfacePrimary;
             TrackText(title);
 
             int width = Mathf.Max(1, dto.grid != null ? dto.grid.width : 1);
             int height = Mathf.Max(1, dto.grid != null ? dto.grid.height : 1);
 
-            // Revue ⊥ (BLOCKING 4) : la grille plafonnait structurellement à 10 % de l'écran.
+            // §3.4 (chunk 2, re-dérivation ⊥) — les marges décomposées : titreBand est la SEULE
+            // composante sourcée (bandeau de titre, 40px = anchoredPosition.y=-8 + hauteur 32,
+            // l'historique avant insets). Le reste (120px = 60 haut + 60 bas, la "respiration")
+            // existait pour que la grille ne touche pas les bords SANS shell. Dans le shell, les
+            // deux barres fournissent déjà cette séparation : la respiration leur CÈDE LA PLACE
+            // (jamais additive) — respTop/respBottom ne comblent que ce que l'inset ne couvre pas.
+            //   hors shell (0/0)   : respTop=60, respBottom=60 ⇒ availH = H−(40+0+60)−(0+60) = H−160 (byte-identique à l'historique)
+            //   dans le shell(56/64): respTop=4,  respBottom=0  ⇒ availH = H−(40+56+4)−(64+0)  = H−164 (CellSize reste 118 à 1280×720)
+            const float titreBand = 40f; // sourcé : anchoredPosition.y=-8 (hors shell) + hauteur 32
+            float respTop = Mathf.Max(0f, 60f - safeInsetTop);
+            float respBottom = Mathf.Max(0f, 60f - safeInsetBottom);
+
+            // Revue ⊥ (BLOCKING 4) : la grille plafonnait structurellement à 10 % de l'écran. Les
+            // replis (rect pas encore posé, ex. premier frame) sont DÉRIVÉS de referenceResolution,
+            // avec la MÊME arithmétique qu'à insets nuls (§3.4 : "1180=1280−100, 560=720−160") — pas
+            // l'arithmétique générale (qui dépendrait d'insets pas forcément posés à cet instant).
+            // Monde dégénéré NOMMÉ : un CanvasScaler en ConstantPixelSize rend referenceResolution
+            // (0,0) ⇒ replis négatifs ⇒ CellSize retombe sur son plancher 48 (ci-dessous) — un échec
+            // NOMMÉ, pas un crash.
             RectTransform rootSizeRt = (RectTransform)root;
-            float availW = rootSizeRt.rect.width  > 1f ? rootSizeRt.rect.width  - 100f : 1180f;
-            float availH = rootSizeRt.rect.height > 1f ? rootSizeRt.rect.height - 160f : 560f;
+            CanvasScaler scaler = root != null ? root.GetComponentInParent<CanvasScaler>() : null;
+            Vector2 refRes = scaler != null ? scaler.referenceResolution : Vector2.zero;
+            float availW = rootSizeRt.rect.width  > 1f ? rootSizeRt.rect.width  - 100f : refRes.x - 100f;
+            float availH = rootSizeRt.rect.height > 1f
+                ? rootSizeRt.rect.height - (titreBand + safeInsetTop + respTop) - (safeInsetBottom + respBottom)
+                : refRes.y - 160f;
             CellSize = Mathf.Max(48f, Mathf.Floor(Mathf.Min(availW / width, availH / height)));
 
             GameObject gridArea = NewUI("GridArea", root);
