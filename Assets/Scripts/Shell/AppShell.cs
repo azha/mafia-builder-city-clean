@@ -39,9 +39,12 @@ namespace MafiaCleanCity.Shell
     // LaunderingController ("tuyau", "Vue pipeline de blanchiment" — le MÊME contrôleur que
     // `DashboardController.OpenPipeline()` ouvre déjà, précédent existant REUSE) ; More → sheet
     // vide assumée (screen_12, hors périmètre du design §0 — ses 7 destinations ne sont PAS ce lot).
-    public class AppShell : MonoBehaviour
+    public class AppShell : MonoBehaviour, IShellSessionSink
     {
         public enum Tab { Home, City, Org, Pipeline, More }
+
+        [Header("Backend")]
+        [SerializeField] private string baseUrl = "http://localhost";
 
         // ---- test hooks --------------------------------------------------
         public Tab CurrentTab { get; private set; } = (Tab)(-1); // "no tab activated yet" — a named state, not a magic default
@@ -64,6 +67,23 @@ namespace MafiaCleanCity.Shell
         // can't carry on its own: "are we inside a district, and which one". -1 = "sur la carte", a
         // NAMED state, never a magic default read as "district zero".
         public int CityTabDistrictId { get; private set; } = -1;
+
+        // nav-hud-design-v1.md §6.1 (chunk 5) — LE MAILLON : deux locataires publient un jeton ici
+        // (DashboardController après son SignIn, CityMapController après son auth) → session/open →
+        // TopBar.Load. `AdoptToken` est idempotent SUR LE MÊME JETON (un second appel avec le même
+        // jeton ne rejoue pas session/open) — un jeton DIFFÉRENT (l'autre locataire démo) rouvre bien
+        // une session, par conception (deux comptes démo distincts, §6.1 ne prescrit rien de plus).
+        public string SessionToken { get; private set; }
+        public SessionOpenDto LastSessionOpen { get; private set; }
+
+        // §6.2 — la valeur citywide_bucket, publiée par un tenant (Dashboard, REUSE de son propre
+        // appel :225) OU sondée en repli par CE shell si aucun tenant ne l'a fait (voir
+        // AdoptTokenSequence). Null tant qu'aucune des deux voies n'a résolu.
+        public string CitywideHeatBucket { get; private set; }
+        private bool heatPublishedByTenant;
+        // Précédent maison DOUBLEMENT attesté (DashboardController.cs:54-55, "Any district id 1..18
+        // returns the same citywide_bucket" ; OrgVitalsPanelController.cs:21) — jamais un nombre neuf.
+        private const int HeatProbeDistrictId = 16;
 
         private readonly List<GameObject> tabButtons = new List<GameObject>();
         private bool initialized;
@@ -108,6 +128,10 @@ namespace MafiaCleanCity.Shell
             // — an obvious-defect guard, not a design reinterpretation, consigned as a Deviation).
             CityTabDistrictId = -1;
             TopBar.SetLeadingAction(TopBarController.LeadingAction.None, null);
+            // §6.3 — hors district, état NOMMÉ ("—"), jamais la dernière valeur d'un district
+            // quitté (MÊME reset défensif que CityTabDistrictId ci-dessus, pour LA MÊME raison :
+            // toute activation d'onglet doit effacer ce qui n'a de sens qu'EN district).
+            TopBar.SetDayPhase(null);
 
             switch (tab)
             {
@@ -171,11 +195,65 @@ namespace MafiaCleanCity.Shell
             yield return tenant.SetSession(token, districtId);
             if (tenant == null) yield break; // torn down mid-fetch (e.g. ExitToCityMap raced the request)
             tenant.Render(tenant.LastFetch);
+            // §6.3 — le manomètre affiche day_phase SEULEMENT en district, valeur du DTO déjà
+            // récupéré (JAMAIS dérivée côté client — §6.3 : "la donnée day_phase... est déjà
+            // projetée par le back").
+            TopBar.SetDayPhase(tenant.LastFetch?.day_phase);
         }
 
         /// <summary>§3.3 — "→ ActivateTab(Tab.City)" verbatim : no special branch, the ordinary
         /// remount path resets CityTabDistrictId to -1 and clears the leading action.</summary>
         public void ExitToCityMap() => ActivateTab(Tab.City);
+
+        /// <summary>nav-hud-design-v1.md §6.1 — reçoit un jeton d'un locataire (DashboardController
+        /// ou CityMapController) et ouvre la session côté shell si ce n'est pas déjà fait POUR CE
+        /// JETON (idempotent — §6.1 : "un second appel avec le même jeton ne rejoue pas
+        /// session/open").</summary>
+        public void AdoptToken(string token)
+        {
+            EnsureInitialized();
+            if (string.IsNullOrEmpty(token) || token == SessionToken) return;
+            SessionToken = token;
+            StartCoroutine(AdoptTokenSequence(token));
+        }
+
+        /// <summary>§6.2 — reçoit citywide_bucket d'un tenant qui vient de le récupérer lui-même
+        /// (Dashboard, REUSE de son propre appel :225) et le pousse vers le TopBar.</summary>
+        public void PublishCitywideHeat(string citywideBucket)
+        {
+            heatPublishedByTenant = true;
+            CitywideHeatBucket = citywideBucket;
+            if (TopBar != null) TopBar.SetCitywideHeatBucket(citywideBucket);
+        }
+
+        private IEnumerator AdoptTokenSequence(string token)
+        {
+            var sessionClient = new SessionClient { BaseUrl = baseUrl };
+            SessionOpenDto dto = null;
+            string err = null;
+            yield return sessionClient.OpenSession(token, Application.version, d => dto = d, (c, m) => err = $"{c}: {m}");
+            if (this == null) yield break; // shell torn down mid-fetch
+            if (dto == null)
+            {
+                Debug.LogError($"[AppShell] AdoptToken: session/open failed: {err}");
+                yield break;
+            }
+            LastSessionOpen = dto;
+            yield return TopBar.Load(token, dto.backlog_badge, dto.opened_game_day);
+            if (this == null) yield break;
+
+            // §6.2 — ne sonde lui-même que si aucun locataire ne l'a fait : si le tenant MONTÉ à
+            // l'instant où cette séquence se termine n'est PAS DashboardController, personne d'autre
+            // ne publiera citywide_bucket (Dashboard est le SEUL publieur de heat, §6.2) — repli,
+            // une fois, REUSE du même flux (probe district 16, best-effort).
+            if (!heatPublishedByTenant && MountedTenantType != typeof(DashboardController))
+            {
+                var world = new WorldApiClient { BaseUrl = baseUrl };
+                yield return world.GetDistrictHeat(HeatProbeDistrictId, token,
+                    heat => PublishCitywideHeat(heat.citywide_bucket),
+                    errMsg => Debug.LogWarning($"[AppShell] repli sonde heat (best-effort) échoué : {errMsg}"));
+            }
+        }
 
         private void MountTenant<T>() where T : MonoBehaviour, IShellTenant
         {

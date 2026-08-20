@@ -131,6 +131,13 @@ namespace MafiaCleanCity.CityMap
             RefreshEnterInteractable(); // §3.2 — 2e point : le panneau peut avoir été ouvert AVANT l'auth (Populate à :98, signature à :102)
             Debug.Log("[CityMap] Signed in — Bearer token acquired.");
 
+            // nav-hud-design-v1.md §6.1 (chunk 5) — SECOND publieur du jeton vers le shell (le
+            // premier est DashboardController, §6.1). Idempotent côté AppShell sur le MÊME jeton.
+            // `IShellSessionSink` (ShellContracts) — CityMap ne référence PAS l'assembly Shell
+            // (référence circulaire) ; hors shell, la recherche ne trouve rien, no-op.
+            MafiaCleanCity.Shell.IShellSessionSink shellSink = FindShellSink();
+            shellSink?.AdoptToken(Token);
+
             yield return LoadHeat();
         }
 
@@ -491,6 +498,16 @@ namespace MafiaCleanCity.CityMap
         private void RefreshEnterInteractable()
         {
             if (enterButton != null) enterButton.interactable = IsAuthenticated && SelectedDistrictId >= 0;
+        }
+
+        // §6.1 — trouve le shell (s'il existe) SANS référencer l'assembly Shell (voir
+        // IShellSessionSink.cs pour la raison). `FindObjectsByType<MonoBehaviour>` puis un filtre
+        // d'interface, PAS `FindFirstObjectByType<IShellSessionSink>` (contrainte générique Unity :
+        // `T : UnityEngine.Object`, qu'une interface ne satisfait jamais).
+        private static MafiaCleanCity.Shell.IShellSessionSink FindShellSink()
+        {
+            return FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Exclude, FindObjectsSortMode.None)
+                .OfType<MafiaCleanCity.Shell.IShellSessionSink>().FirstOrDefault();
         }
 
         /// <summary>Open the detail panel for a district and fetch its system projections.</summary>

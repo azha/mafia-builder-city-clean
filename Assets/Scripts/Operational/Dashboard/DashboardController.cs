@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
@@ -151,6 +152,17 @@ namespace MafiaCleanCity.Operational
         {
             yield return SignIn();
             if (!IsAuthenticated) yield break;
+
+            // nav-hud-design-v1.md §6.1 (chunk 5) — Home est le PREMIER publieur du jeton vers le
+            // shell (D3 : "l'onglet Home, activé par défaut, possède un jeton et l'expose").
+            // `IShellSessionSink` (ShellContracts) — Operational ne référence PAS l'assembly Shell
+            // (référence circulaire), donc pas de `FindFirstObjectByType<AppShell>` direct ; ce
+            // dernier exige de toute façon `T : UnityEngine.Object`, qu'une interface ne satisfait
+            // jamais. Hors shell (tout test PlayMode existant, DashboardController ouvert seul) :
+            // la recherche ne trouve rien, no-op — comportement identique à avant ce chunk.
+            MafiaCleanCity.Shell.IShellSessionSink shellSink = FindShellSink();
+            shellSink?.AdoptToken(Token);
+
             yield return LoadDashboard();
         }
 
@@ -176,6 +188,16 @@ namespace MafiaCleanCity.Operational
         {
             Token = token;
             IsAuthenticated = !string.IsNullOrEmpty(token);
+        }
+
+        // §6.1 — trouve le shell (s'il existe) SANS référencer l'assembly Shell (voir
+        // IShellSessionSink.cs pour la raison). `FindObjectsByType<MonoBehaviour>` puis un filtre
+        // d'interface, PAS `FindFirstObjectByType<IShellSessionSink>` (contrainte générique Unity :
+        // `T : UnityEngine.Object`, qu'une interface ne satisfait jamais).
+        private static MafiaCleanCity.Shell.IShellSessionSink FindShellSink()
+        {
+            return FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Exclude, FindObjectsSortMode.None)
+                .OfType<MafiaCleanCity.Shell.IShellSessionSink>().FirstOrDefault();
         }
 
         /// <summary>Fetch + render the dashboard: wallet band (headline), citywide heat band +
@@ -225,6 +247,15 @@ namespace MafiaCleanCity.Operational
             yield return world.GetDistrictHeat(heatProbeDistrictId, Token,
                 heat => CurrentHeat = heat,
                 err => HeatError = err);
+
+            // nav-hud-design-v1.md §6.2 (chunk 5) — publie citywide_bucket vers le shell : REUSE de
+            // CET appel (probe district 16, ligne au-dessus), ne crée PAS un 3e appelant. Hors shell,
+            // no-op. Seulement sur succès — un échec laisse le repli de l'AppShell libre d'essayer.
+            if (CurrentHeat != null)
+            {
+                MafiaCleanCity.Shell.IShellSessionSink shellSink = FindShellSink();
+                shellSink?.PublishCitywideHeat(CurrentHeat.citywide_bucket);
+            }
 
             // 4) Phase-20: pending exceptions (drives the alerts note + proves the funnel surface) — best-effort.
             yield return exceptions.GetQueue(Token,
@@ -446,28 +477,12 @@ namespace MafiaCleanCity.Operational
         }
 
         // Citywide heat band (COLD | WARM | HOT | BURNING). The glyph is a fill-ramp.
-        private static string HeatLabel(string b)
-        {
-            switch (b)
-            {
-                case "COLD": return "Cold";
-                case "WARM": return "Warm";
-                case "HOT": return "Hot";
-                case "BURNING": return "Burning";
-                default: return string.IsNullOrEmpty(b) ? "Unknown" : b;
-            }
-        }
-        private static string HeatGlyph(string b)
-        {
-            switch (b)
-            {
-                case "COLD": return "[#...]";
-                case "WARM": return "[##..]";
-                case "HOT": return "[###.]";
-                case "BURNING": return "[####]";
-                default: return "[....]";
-            }
-        }
+        // REPOINTÉ (nav-hud-design-v1.md §6.4, chunk 5) — la résolution des 4 buckets vit désormais
+        // dans `MafiaCleanCity.Shell.HeatBucketResolver` (lieu UNIQUE, aussi consommé par le
+        // manomètre du HUD) ; signature et visibilité INCHANGÉES pour les appelants internes de
+        // cette classe (`:322-323`) — seul le corps délègue, la valeur produite est byte-identique.
+        private static string HeatLabel(string b) => MafiaCleanCity.Shell.HeatBucketResolver.Label(b);
+        private static string HeatGlyph(string b) => MafiaCleanCity.Shell.HeatBucketResolver.Glyph(b);
         private static Color HeatAccent(string b)
         {
             switch (b)

@@ -10,7 +10,8 @@
         "Theme",
         "Unity.TextMeshPro",
         "AssetLint",
-        "Shell"
+        "Shell",
+        "ShellContracts"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

@@ -79,6 +79,14 @@ async function main() {
   }
 
   // 2. Clear buildings BEFORE the heavy advance (so it climbs no heat).
+  //    MESURÉ (nav-hud-design-v1.md chunk 5, hud-F5) : un run précédent (le heavy-advance de
+  //    l'étape 3 déclenche les cadences lentes, dont l'assignation de lieutenant) peut laisser un
+  //    lieutenant assigné à un bâtiment que CE DELETE veut supprimer — `lieutenant.
+  //    assigned_building_id` référence `buildings(building_id)` SANS `ON DELETE` (migration 0026),
+  //    donc sans ce détachement le DELETE échoue avec une violation de FK, à CHAQUE run suivant
+  //    (reproduit 2×, pas transitoire). Détache d'abord — la colonne est NULLable par conception
+  //    (0026 : "NULL si non-délégué"), donc ce reset est schema-compliant, pas un contournement.
+  psql(`UPDATE lieutenant SET assigned_building_id = NULL WHERE assigned_building_id IN (SELECT building_id FROM buildings WHERE player_id = '${playerId}');`);
   psql(`DELETE FROM buildings WHERE player_id = '${playerId}';`);
 
   // 3. Heavy-advance to fire the slow cadences (cohesion nightly / inspection 12h / patrol).

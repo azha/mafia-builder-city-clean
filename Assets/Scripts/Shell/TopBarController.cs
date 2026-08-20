@@ -47,6 +47,20 @@ namespace MafiaCleanCity.Shell
         public string RenderedGameDayText { get; private set; }
         public string RenderedCashText { get; private set; }
 
+        // ---- test hooks — day_phase (§6.3, chunk 5) -------------------------
+        /// <summary>État affiché par le manomètre pour day_phase : la valeur DAWN|DAY|DUSK|NIGHT du
+        /// DTO district déjà récupéré quand `AppShell` est en district, sinon l'état NOMMÉ "—"
+        /// (jamais la dernière valeur d'un district quitté — voir `SetDayPhase`).</summary>
+        public string DayPhaseText { get; private set; } = "—";
+
+        // ---- test hooks — manomètre heat (§6.4, chunk 5) --------------------
+        public string CitywideHeatBucket { get; private set; }
+        public HeatBucketResolver.Rank CitywideHeatRank { get; private set; } = HeatBucketResolver.Rank.Unknown;
+        /// <summary>hud-F2 — 4 valeurs DISTINCTES pour les 4 buckets réels (dérivées de
+        /// `HeatBucketResolver.NeedleAngleDegrees`, fonction pure — voir ce fichier pour le test
+        /// hors-réseau direct).</summary>
+        public float HeatNeedleAngleDegrees { get; private set; }
+
         /// <summary>Every SCANNED text (R2.2 corpus — design C2-F4). Excludes elements whose
         /// `trackValue` is false (numeric UI chrome: cash, game-day — mirrors
         /// `DashboardController.AddStatusRow(trackValue:false)`, `:340`).</summary>
@@ -57,6 +71,8 @@ namespace MafiaCleanCity.Shell
         private TextMeshProUGUI cashText;
         private TextMeshProUGUI notificationText;
         private TextMeshProUGUI gameDayText;
+        private TextMeshProUGUI dayPhaseLabel;
+        private RectTransform heatNeedle;
 
         // §3.1 — le bouton leading, construit UNE fois dans BuildLayout, premier enfant du
         // HorizontalLayoutGroup, JAMAIS détruit ; seule sa visibilité (SetActive) suit l'état.
@@ -159,6 +175,33 @@ namespace MafiaCleanCity.Shell
             }
         }
 
+        // ----------------------------------------------------------- day_phase (§6.3, chunk 5)
+
+        /// <summary>Appelé par `AppShell` : la valeur du DTO district déjà récupéré quand on est EN
+        /// district, `null` sinon (§6.3 — état NOMMÉ "—", jamais dérivé côté client, jamais la
+        /// dernière valeur d'un district quitté).</summary>
+        public void SetDayPhase(string dayPhase)
+        {
+            EnsureInitialized();
+            DayPhaseText = string.IsNullOrEmpty(dayPhase) ? "—" : dayPhase;
+            dayPhaseLabel.text = DayPhaseText;
+        }
+
+        // ----------------------------------------------------------- manomètre heat (§6.4, chunk 5)
+
+        /// <summary>Appelé par `AppShell` (publié par un tenant, ou par le repli de l'AppShell lui-
+        /// même — §6.2). Résout via `HeatBucketResolver`, le lieu UNIQUE partagé avec
+        /// `DashboardController.HeatGlyph`/`HeatLabel` (§6.4 — un seul `switch` à 4 branches, pas
+        /// deux résolveurs qui pourraient dériver l'un de l'autre).</summary>
+        public void SetCitywideHeatBucket(string bucket)
+        {
+            EnsureInitialized();
+            CitywideHeatBucket = bucket;
+            CitywideHeatRank = HeatBucketResolver.ResolveRank(bucket);
+            HeatNeedleAngleDegrees = HeatBucketResolver.NeedleAngleDegrees(bucket);
+            heatNeedle.localEulerAngles = new Vector3(0f, 0f, HeatNeedleAngleDegrees);
+        }
+
         // ----------------------------------------------------------- cash formatting (C2-F1)
 
         /// <summary>Format a BigInt-serialized cents STRING as a locale-appropriate currency string —
@@ -244,6 +287,58 @@ namespace MafiaCleanCity.Shell
             gameDayText = NewText("GameDay", "Day —", 90);
             notificationText = NewText("Notification", "[ ] Clear", 110);
             cashText = NewText("Cash", "—", 160);
+            dayPhaseLabel = NewText("DayPhase", "—", 60);
+            BuildManometre();
+        }
+
+        // §6.4 (chunk 5) — 3 zones peintes / 4 arrêts d'aiguille. Le juge de CE chunk est
+        // fonctionnel (§0 périmètre du design : le pixel-perfect du HUD vient avec les écrans
+        // doctrine, #24) — une représentation SIMPLE et CORRECTE, pas le cadran radial de
+        // l'artefact de référence. `ZoneRow` (3 bandes peintes, sa propre HorizontalLayoutGroup)
+        // et `Needle` (pivot bas-centre, tourné par `SetCitywideHeatBucket`) sont des FRÈRES —
+        // jamais parent/enfant — sinon la Layout Group du premier écraserait la rotation du second.
+        private void BuildManometre()
+        {
+            GameObject manoGo = new GameObject("Manometre", typeof(RectTransform));
+            manoGo.transform.SetParent(transform, false);
+            LayoutElement manoLe = manoGo.AddComponent<LayoutElement>();
+            manoLe.preferredWidth = 48;
+            manoLe.flexibleWidth = 0;
+
+            GameObject zoneRowGo = new GameObject("ZoneRow", typeof(RectTransform));
+            zoneRowGo.transform.SetParent(manoGo.transform, false);
+            Stretch((RectTransform)zoneRowGo.transform, Vector2.zero, Vector2.zero);
+            HorizontalLayoutGroup zoneHlg = zoneRowGo.AddComponent<HorizontalLayoutGroup>();
+            zoneHlg.childControlWidth = true;
+            zoneHlg.childControlHeight = true;
+            zoneHlg.childForceExpandWidth = true;
+            zoneHlg.childForceExpandHeight = true;
+            zoneHlg.spacing = 1;
+            Color[] zoneColors =
+            {
+                DesignTokens.Current.accentSuccess, // doux (COLD/WARM)
+                DesignTokens.Current.accentWarning, // modéré (HOT)
+                DesignTokens.Current.accentDanger,  // sévère (BURNING)
+            };
+            foreach (Color c in zoneColors)
+            {
+                GameObject zoneGo = new GameObject("Zone", typeof(RectTransform));
+                zoneGo.transform.SetParent(zoneRowGo.transform, false);
+                Image zoneImg = zoneGo.AddComponent<Image>();
+                zoneImg.color = c;
+                zoneImg.raycastTarget = false;
+            }
+
+            GameObject needleGo = new GameObject("Needle", typeof(RectTransform));
+            needleGo.transform.SetParent(manoGo.transform, false);
+            heatNeedle = (RectTransform)needleGo.transform;
+            heatNeedle.anchorMin = heatNeedle.anchorMax = new Vector2(0.5f, 0.5f);
+            heatNeedle.pivot = new Vector2(0.5f, 0f);
+            heatNeedle.sizeDelta = new Vector2(3, 16);
+            heatNeedle.anchoredPosition = Vector2.zero;
+            Image needleImg = needleGo.AddComponent<Image>();
+            needleImg.color = DesignTokens.Current.onSurfacePrimary;
+            needleImg.raycastTarget = false;
         }
 
         private TextMeshProUGUI NewText(string name, string initial, float preferredWidth)
