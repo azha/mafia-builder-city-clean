@@ -196,18 +196,24 @@ namespace MafiaCleanCity.Shell.Tests
             Assert.IsTrue(enterBtn.interactable, "nav-F3 — interactable==true AFTER real authentication, same instance");
         }
 
-        // ── nav-F4 — non-occlusion ──────────────────────────────────────────────────────────
-        // District 16 (verge-a, 10x4 blocks) — the EXACT scenario design §3.4's own arithmetic
-        // proves clear ("grille 4x118=472px centrée à 0,46x720 ... TabBar/TopBar dégagés").
-        // MEASURED (not assumed) during this chunk: district 3's grid is 10x6, not 10x4 — its
-        // taller grid genuinely dips into TabBarRoot's zone at THIS environment's actual canvas
-        // height (671.42, from the 1100x577 game view, not the 720 reference) — a real interaction
-        // between the pre-existing (pre-chunk-2) fixed 0.46 vertical anchor and grid ROW COUNT /
-        // canvas ASPECT RATIO, outside this chunk's mandate (§3.4 only touches insets/titreBand).
-        // Flagged, not silently patched — see Tools/nav-hud-chunk2-implementation-notes.md.
+        // ── nav-F4 — non-occlusion — AMENDÉE par le pivot fond pré-rendu ────────────────────────
+        // (Tools/pivot-fond-prerendu-design.md, §2.1 F-cadre, §12, gate ⊥ APPROVED 2026-08-20).
+        // District 16 (verge-a) — la propriété TITRE survit intacte (inchangée). La propriété
+        // GRILLE-vs-TABBAR (confinement + largeur ≥60%) ne survit PAS littéralement : le pivot
+        // remplace la grille CONFINÉE (dimensionnée pour tenir dans ContentSlot, §3.4 de l'ancien
+        // design nav-hud) par un fond PIXEL-PERFECT en résolution NATIVE (§2.1 F-cadre : « il n'y a
+        // pas de rescale (ruling)... le fond est ancré au centre »). Un fond natif 1080×1920 dépasse
+        // largement le viewport de test 1100×577 et chevauche donc TopBarSlot/TabBarRoot en bornes
+        // BRUTES — attendu et BÉNIN : la non-occlusion VISUELLE reste garantie par l'ORDRE DE
+        // FRATRIE du shell (AppShell.cs:29-33, C1-F2 : « ContentSlot [sous les barres] PUIS
+        // TopBarSlot PUIS TabBarRoot... un locataire qui étire un fond plein écran DANS ContentSlot
+        // reste donc toujours SOUS les deux barres »), pas par le confinement de ses BORNES. Une
+        // intersection de bornes n'est donc plus un signal valide pour le FOND lui-même —
+        // F-cadre (sonde ⊥ Tools/resemblance-probe.py, §8) est l'instrument que le design désigne
+        // pour cette propriété au moment de la capture. Voir implementation-notes.md § Deviations.
 
         [UnityTest]
-        public IEnumerator NavF4_TitleClearsTopBar_GridClearsTabBar_GridAtLeast60PercentOfContent()
+        public IEnumerator NavF4_TitleClearsTopBar_BackgroundExistsAtNativeResolution()
         {
             shellGo = new GameObject("AppShell");
             shell = shellGo.AddComponent<AppShell>();
@@ -216,23 +222,65 @@ namespace MafiaCleanCity.Shell.Tests
             yield return EnterDistrictViaRealFlow(shell, 16, s => entered = s);
 
             Transform titleT = entered.ScreenRoot.Find("DistrictTitle");
-            Transform gridT = entered.ScreenRoot.Find("GridArea");
+            Transform sceneT = entered.ScreenRoot.Find("DistrictScene");
             Assert.IsNotNull(titleT);
-            Assert.IsNotNull(gridT);
+            Assert.IsNotNull(sceneT, "pp-F5 — le conteneur fond+bâtiments existe");
+            Transform fondT = sceneT.Find("DistrictBackgroundImage");
+            Assert.IsNotNull(fondT, "district 16 (verge-a) a un fond réel en vague 1");
 
             Transform canvasRoot = shell.ShellCanvas.transform;
             Bounds titleB = RectTransformUtility.CalculateRelativeRectTransformBounds(canvasRoot, (RectTransform)titleT);
             Bounds topBarB = RectTransformUtility.CalculateRelativeRectTransformBounds(canvasRoot, shell.TopBarSlot);
-            Bounds gridB = RectTransformUtility.CalculateRelativeRectTransformBounds(canvasRoot, (RectTransform)gridT);
+            Assert.IsFalse(titleB.Intersects(topBarB), "nav-F4 — the title does not overlap TopBarSlot (survit inchangé)");
+
+            // Propriété positive qui remplace le confinement retiré : le fond est bien en
+            // résolution NATIVE — sur l'axe où ça se voit (HAUTEUR : l'artefact est 9:16 portrait,
+            // 1920px natifs contre un ContentSlot large de quelques centaines d'unités canvas ; la
+            // LARGEUR, elle, reste sous celle de ContentSlot à ce scaleFactor — mesuré, pas supposé),
+            // le fond DÉPASSE largement ContentSlot (au lieu d'y être confiné comme l'ancienne
+            // grille), preuve que le pivot est bien appliqué ici (pas un vestige du confinement).
+            float fondHeight = ((RectTransform)fondT).rect.height;
+            float contentHeight = shell.ContentSlot.rect.height;
+            Assert.Greater(fondHeight, contentHeight,
+                $"nav-F4 (amendée) — le fond natif ({fondHeight:F1}) dépasse ContentSlot ({contentHeight:F1}) : " +
+                "comportement ATTENDU du pivot (pas de rescale), pas une régression");
+        }
+
+        // ── nav-F4 étendue au district 3 (Tools/pivot-fond-prerendu-design.md §12) — le geste du
+        // ⊥, retenu par le design : « la falsifiable est écrite maintenant, elle échoue maintenant
+        // [ou pas], et elle porte son mode d'emploi de péremption ». MESURÉ ici (pas supposé) : le
+        // pivot P3 supprime l'ancrage vertical `0,46` qui causait le chevauchement mesuré par
+        // l'ancien design nav-hud (grille 10×6 du district 3 contre TabBarRoot, ci-dessus, texte
+        // original conservé) — il n'y a plus de grille, donc plus d'ancrage 0,46 à ce mécanisme.
+        // District 3 (profil "tidewater") n'a de toute façon AUCUN fond en vague 1 (§6 : verge-a
+        // seul a une scène). ⇒ **VERTE, et je le dis** : le repli déclaré
+        // (DistrictBackgroundPlaceholder) reste CONFINÉ à ContentSlot (Stretch), contrairement au
+        // fond natif de district 16 ci-dessus — voir DistrictInteriorScreenController.RenderNightDiorama.
+
+        [UnityTest]
+        public IEnumerator NavF4_District3_NoBackgroundYet_PlaceholderStaysConfined_Green()
+        {
+            shellGo = new GameObject("AppShell");
+            shell = shellGo.AddComponent<AppShell>();
+
+            DistrictInteriorScreenController entered = null;
+            yield return EnterDistrictViaRealFlow(shell, 3, s => entered = s);
+
+            Transform sceneT = entered.ScreenRoot.Find("DistrictScene");
+            Assert.IsNotNull(sceneT, "pp-F5 — le conteneur existe même sans fond réel");
+            Transform placeholderT = sceneT.Find("DistrictBackgroundPlaceholder");
+            Assert.IsNotNull(placeholderT, "district 3 (profil tidewater) n'a AUCUN fond en vague 1 — repli déclaré attendu");
+            Assert.IsNull(sceneT.Find("DistrictBackgroundImage"), "anti-vacuité — ce n'est PAS le chemin fond réel");
+
+            Transform canvasRoot = shell.ShellCanvas.transform;
+            Bounds placeholderB = RectTransformUtility.CalculateRelativeRectTransformBounds(canvasRoot, (RectTransform)placeholderT);
+            Bounds topBarB = RectTransformUtility.CalculateRelativeRectTransformBounds(canvasRoot, shell.TopBarSlot);
             Bounds tabBarB = RectTransformUtility.CalculateRelativeRectTransformBounds(canvasRoot, shell.TabBarRoot);
 
-            Assert.IsFalse(titleB.Intersects(topBarB), "nav-F4 — the title does not overlap TopBarSlot");
-            Assert.IsFalse(gridB.Intersects(tabBarB), "nav-F4 — the grid does not overlap TabBarRoot");
-
-            float gridWidth = ((RectTransform)gridT).rect.width;
-            float contentWidth = shell.ContentSlot.rect.width;
-            Assert.GreaterOrEqual(gridWidth, 0.6f * contentWidth,
-                $"nav-F4 — GridArea width ({gridWidth:F1}) >= 0.6x ContentSlot width ({contentWidth:F1})");
+            Assert.IsFalse(placeholderB.Intersects(topBarB),
+                "nav-F4/district 3 — GREEN : le repli confiné ne chevauche PAS TopBarSlot (plus d'ancrage 0,46, §12)");
+            Assert.IsFalse(placeholderB.Intersects(tabBarB),
+                "nav-F4/district 3 — GREEN : le repli confiné ne chevauche PAS TabBarRoot");
         }
 
         // ── nav-F5 (RECIBLÉE) — insets CONSOMMÉS, jamais 118-vs-110 (cette forme est FAUSSE) ──

@@ -61,14 +61,46 @@ namespace MafiaCleanCity.CityMap
     // borne QUE les boucles ambiantes ; un marqueur de lieutenant est une PRÉSENCE, pas une boucle).
     // Le J0 (prémisse §3, re-mesuré par D10) affecte les 2 lieutenants COOK au MÊME bâtiment (le lab)
     // — le cas dégénéré que C10-F1 dimensionne : 2 marqueurs DISTINCTS sur 1 bâtiment, jamais 1.
+    //
+    // ══════════════════════════════════════════════════════════════════════════════════════════════
+    // W3.U2 P3 — PIVOT « FOND PRÉ-RENDU » (Tools/pivot-fond-prerendu-design.md, §P3, gate ⊥ APPROVED
+    // 2026-08-20). Remplace toute la grille procédurale par un fond pré-rendu 1:1 pixel-perfect + les
+    // bâtiments joueur ancrés sur ce fond via une carte JSON produite par l'atelier (jamais dérivée en
+    // C#, §4 : "Unity ne fait qu'une lecture ; il ne dérive rien").
+    //
+    // RETIRÉS (« plus aucune grille procédurale », §11 P3) — ambiant, rues, sol, socle-grille, bordure :
+    // GridArea/GridFloors/GridBorder/Cell-comme-case-de-grille, FloorTint (3 tokens nightBackground/
+    // nightFloorAlt/nightBase perdent leur SEUL consommateur — DÉLIBÉRÉMENT non supprimés du registre
+    // DesignTokens, voir implementation-notes.md § Deviations), IsStreetCell/BuildAmbientCell/
+    // BuildEmptyCell (l'ambiant est baqué dans le fond, §3 : "Ce que le fond porte : ... bâtiments
+    // AMBIANTS ... Ce que le fond ne porte pas : aucun bâtiment sur une parcelle. Unity dessine
+    // par-dessus, et RIEN D'AUTRE"), OutOfDistrictBackdrop + Haze (pp-F5 — le fond porte déjà sa ville
+    // au loin et sa brume ; amendement NOMMÉ de DistrictInteriorDioramaPlayModeTests.cs:241,
+    // childCount 4→2), `CellSize`/`MetresParBloc` et les 4 sites `k = CellSize/(MetresParBloc*56f)`
+    // (§2.2 du design : l'échelle et la position viennent désormais du fond).
+    //
+    // AJOUTÉS : DistrictBackgroundSlots (registre profil→fond+ancre, REUSE du seam Resources.Load de
+    // BuildingSpriteSlots/DesignTokens) ; DistrictBackgroundAnchorDto + DistrictBackgroundAnchor (DTO
+    // JSON + helper PUR bloc→pixel→UI, DistrictBackgroundAnchorDto.cs) ; un fond Image en résolution
+    // native compensée (pp-F1) ; chaque bâtiment joueur ancré sur SA parcelle via la carte JSON
+    // (pp-F2/F-calage), sprite affiché à facteur 1,000 (pp-F3).
+    //
+    // DÉCISION NOMMÉE — le conteneur par bâtiment reste nommé `Cell_{x}_{y}` (inchangé) : ce n'est
+    // plus une case de grille mais l'ancre du bâtiment sur le fond, MÊME rôle structurel (le support
+    // qui porte Socle/BuildingSprite/les calques d'état/les marqueurs de lieutenant). Ce choix évite
+    // tout changement à DistrictInteriorLightingPlayModeTests.cs, DistrictInteriorAmbientLoopsPlayModeTests.cs
+    // et DistrictInteriorLieutenantMarkersPlayModeTests.cs (aucun des trois ne référence CellSize/
+    // GridArea — seuls les COMPTES et l'appariement par nom `Cell_x_y` comptent) — l'option qui change
+    // le moins de surface (règle du socle sur les imprévus non bloquants).
+    //
+    // Structure de root en art de nuit (pp-F5) : EXACTEMENT 2 enfants directs — DistrictTitle, puis
+    // DistrictScene (conteneur passe-plat qui porte le fond/placeholder + tous les Cell_x_y). Le
+    // childCount de root reste donc FIXE à 2 quel que soit le nombre de bâtiments — c'est ce qui
+    // rend l'amendement de :241 exact (4 → 2), pas 2+N.
     public class DistrictInteriorScreenController : MonoBehaviour, MafiaCleanCity.Shell.IShellTenant
     {
         [Header("Backend")]
         [SerializeField] private string baseUrl = "http://localhost";
-
-        // Taille de cellule en px uGUI (mise en page, pas un tunable de jeu — R2.3 ne porte pas sur les
-        // dimensions d'écran, cf. les tailles inline déjà partout dans AppShell/LaunderingController).
-        private float CellSize = 48f;   // revue ⊥ 2026-08-20 (BLOCKING 4) : calculé par rendu, plus une const
 
         // nav-hud-design-v1.md §3.4 (chunk 2) — les insets de chrome (0/0 hors shell, la valeur par
         // défaut de ces champs — les 46 falsifiables convergées d'avant ce chunk n'appellent jamais
@@ -79,22 +111,11 @@ namespace MafiaCleanCity.CityMap
 
         /// <summary>§3.4 — posé par l'appelant (AppShell.EnterDistrict) AVANT le premier Render(),
         /// persiste à travers tous les Render() suivants (day_phase change, etc.). Jamais appelé
-        /// hors shell ⇒ 0/0, l'arithmétique retombe sur l'historique (H−160, CellSize identique).</summary>
+        /// hors shell ⇒ 0/0, l'arithmétique retombe sur l'historique (byte-identique).</summary>
         public void SetSafeInsets(float top, float bottom)
         {
             safeInsetTop = Mathf.Max(0f, top);
             safeInsetBottom = Mathf.Max(0f, bottom);
-        }
-        // revue ⊥ r2 (IMPORTANT 3) : l'échelle-monde d'un bloc n'a rien à faire en const C# — elle
-        // vit dans BuildingSpriteSlots.asset (metresParBloc, défaut 22 : l'usine, 21,86 m d'opaque,
-        // est le plus large sprite livré — à 14 elle faisait 1,56 bloc et se faisait couper).
-        private static float MetresParBloc
-        {
-            get
-            {
-                BuildingSpriteSlots slots = BuildingSpriteSlots.Current;
-                return slots != null && slots.metresParBloc > 0f ? slots.metresParBloc : 22f;
-            }
         }
 
         // ---- test hooks : data (C7) --------------------------------------------------------
@@ -107,7 +128,6 @@ namespace MafiaCleanCity.CityMap
         /// la racine du Canvas. Null tant que Render() n'a pas été appelé une première fois.</summary>
         public Transform ScreenRoot => root;
         public DioramaArtPhase LastArtPhase { get; private set; } = DioramaArtPhase.Unknown;
-        public int RenderedCellCount { get; private set; }
         public int RenderedBuildingCount { get; private set; }
         // ---- test hooks : les 5 bindings lumineux (C9) ---------------------------------------
         /// <summary>Binding 1+2 (§1.5 lignes 1-2) — fenêtres ambre allumées (condition_band == SOUND).</summary>
@@ -183,7 +203,6 @@ namespace MafiaCleanCity.CityMap
             if (root == null) BuildRoot();
             ClearContent();
             renderedTexts.Clear();
-            RenderedCellCount = 0;
             RenderedBuildingCount = 0;
             RenderedWindowLightCount = 0;
             RenderedNeonGlowCount = 0;
@@ -221,7 +240,8 @@ namespace MafiaCleanCity.CityMap
         }
 
         /// <summary>Le repli DÉCLARÉ des 3 paliers non-héros (§0 : l'art de DAWN/DAY/DUSK est différé,
-        /// pas cet écran). Un état NOMMÉ, jamais un rendu vide — sinon indiscernable d'un bug.</summary>
+        /// pas cet écran). Un état NOMMÉ, jamais un rendu vide — sinon indiscernable d'un bug.
+        /// INCHANGÉ par le pivot P3 (le pivot ne touche que le palier héros NIGHT).</summary>
         private void RenderNonHeroFallback()
         {
             GameObject panel = NewUI("DayPhaseFallbackPanel", root);
@@ -236,18 +256,13 @@ namespace MafiaCleanCity.CityMap
             TrackText(label);
         }
 
-        /// <summary>L'art de nuit — le palier héros (D8, engagement 1). Grille depuis blocks[]
-        /// (C8-F2), socle + sol (engagement 6) par cellule, hors-district sourd tout autour
-        /// (engagement 5), brume par-dessus tout.</summary>
+        /// <summary>L'art de nuit — le palier héros (D8, engagement 1). P3 : un fond pré-rendu
+        /// (DistrictBackgroundSlots, résolution native compensée — pp-F1) porte le sol/rues/ambiant/
+        /// ville au loin/brume ; Unity ne dessine plus QUE les bâtiments joueur, ancrés sur le fond
+        /// via la carte JSON (pp-F2/F-calage), et leurs calques d'état (C9/C10, inchangés).</summary>
         private void RenderNightDiorama(DistrictInteriorDto dto)
         {
-            // hors-district (engagement 5) — remplit toute la racine, sourd, sous tout le reste.
-            GameObject backdrop = NewUI("OutOfDistrictBackdrop", root);
-            Stretch((RectTransform)backdrop.transform, Vector2.zero, Vector2.zero);
-            backdrop.AddComponent<Image>().color = DesignTokens.Current.nightOutOfDistrictMuted;
-
-            // Titre — texte, jamais un nombre nu (C8-F3). §3.4 : l'inset haut DÉCALE le titre pour
-            // qu'il reste sous le TopBar plutôt que derrière lui (nav-F5 — écart attendu 56px).
+            // Titre — inchangé par P3 (nav-F5 : le pivot ne touche ni la position ni le mécanisme).
             TextMeshProUGUI title = NewText("DistrictTitle", root, dto.name_canonical, 20, TextAlignmentOptions.TopLeft);
             RectTransform titleRt = (RectTransform)title.transform;
             titleRt.anchorMin = new Vector2(0f, 1f);
@@ -258,164 +273,152 @@ namespace MafiaCleanCity.CityMap
             title.color = DesignTokens.Current.onSurfacePrimary;
             TrackText(title);
 
-            int width = Mathf.Max(1, dto.grid != null ? dto.grid.width : 1);
-            int height = Mathf.Max(1, dto.grid != null ? dto.grid.height : 1);
+            // scaleFactor LU AU RUNTIME (design §2.1 : "la valeur 0,859375 n'est vraie qu'à 1100×577,
+            // jamais en dur") — le MÊME facteur compense le fond ET chaque sprite joueur.
+            Canvas canvas = root.GetComponentInParent<Canvas>();
+            float scaleFactor = (canvas != null && canvas.scaleFactor > 0f) ? canvas.scaleFactor : 1f;
 
-            // §3.4 (chunk 2, re-dérivation ⊥) — les marges décomposées : titreBand est la SEULE
-            // composante sourcée (bandeau de titre, 40px = anchoredPosition.y=-8 + hauteur 32,
-            // l'historique avant insets). Le reste (120px = 60 haut + 60 bas, la "respiration")
-            // existait pour que la grille ne touche pas les bords SANS shell. Dans le shell, les
-            // deux barres fournissent déjà cette séparation : la respiration leur CÈDE LA PLACE
-            // (jamais additive) — respTop/respBottom ne comblent que ce que l'inset ne couvre pas.
-            //   hors shell (0/0)   : respTop=60, respBottom=60 ⇒ availH = H−(40+0+60)−(0+60) = H−160 (byte-identique à l'historique)
-            //   dans le shell(56/64): respTop=4,  respBottom=0  ⇒ availH = H−(40+56+4)−(64+0)  = H−164 (CellSize reste 118 à 1280×720)
-            const float titreBand = 40f; // sourcé : anchoredPosition.y=-8 (hors shell) + hauteur 32
-            float respTop = Mathf.Max(0f, 60f - safeInsetTop);
-            float respBottom = Mathf.Max(0f, 60f - safeInsetBottom);
+            // DistrictScene — le SEUL second enfant direct de root (pp-F5 : root.childCount == 2,
+            // fixe, quel que soit le nombre de bâtiments — voir le commentaire de tête de fichier).
+            GameObject sceneGo = NewUI("DistrictScene", root);
+            RectTransform sceneRt = (RectTransform)sceneGo.transform;
+            Stretch(sceneRt, Vector2.zero, Vector2.zero);
 
-            // Revue ⊥ (BLOCKING 4) : la grille plafonnait structurellement à 10 % de l'écran. Les
-            // replis (rect pas encore posé, ex. premier frame) sont DÉRIVÉS de referenceResolution,
-            // avec la MÊME arithmétique qu'à insets nuls (§3.4 : "1180=1280−100, 560=720−160") — pas
-            // l'arithmétique générale (qui dépendrait d'insets pas forcément posés à cet instant).
-            // Monde dégénéré NOMMÉ : un CanvasScaler en ConstantPixelSize rend referenceResolution
-            // (0,0) ⇒ replis négatifs ⇒ CellSize retombe sur son plancher 48 (ci-dessous) — un échec
-            // NOMMÉ, pas un crash.
-            RectTransform rootSizeRt = (RectTransform)root;
-            CanvasScaler scaler = root != null ? root.GetComponentInParent<CanvasScaler>() : null;
-            Vector2 refRes = scaler != null ? scaler.referenceResolution : Vector2.zero;
-            float availW = rootSizeRt.rect.width  > 1f ? rootSizeRt.rect.width  - 100f : refRes.x - 100f;
-            float availH = rootSizeRt.rect.height > 1f
-                ? rootSizeRt.rect.height - (titreBand + safeInsetTop + respTop) - (safeInsetBottom + respBottom)
-                : refRes.y - 160f;
-            CellSize = Mathf.Max(48f, Mathf.Floor(Mathf.Min(availW / width, availH / height)));
+            DistrictBackgroundSlots bgSlots = DistrictBackgroundSlots.Current;
+            DistrictBackgroundSlots.BackgroundEntry bg = bgSlots != null ? bgSlots.ResolveNight(dto.profile) : null;
+            DistrictBackgroundAnchorDto anchorMap = (bg != null && bg.ancre != null)
+                ? JsonUtility.FromJson<DistrictBackgroundAnchorDto>(bg.ancre.text)
+                : null;
 
-            GameObject gridArea = NewUI("GridArea", root);
-            RectTransform gridRt = (RectTransform)gridArea.transform;
-            gridRt.anchorMin = gridRt.anchorMax = new Vector2(0.5f, 0.46f);
-            gridRt.pivot = new Vector2(0.5f, 0.5f);
-            gridRt.sizeDelta = new Vector2(width * CellSize, height * CellSize);
-            gridRt.anchoredPosition = Vector2.zero;
+            if (bg != null && bg.fond != null)
+            {
+                // pp-F1 — résolution native : sizeDelta = texture/scaleFactor (JAMAIS `rect == tex`
+                // — §2.1 : "pp-F1 vérifie rect × scaleFactor == tex, c'était le piège"). Ancré au
+                // centre (F-cadre, §2.1 : "il n'y a pas de rescale... le fond est ancré au centre").
+                GameObject fondGo = NewUI("DistrictBackgroundImage", sceneRt);
+                RectTransform fondRt = (RectTransform)fondGo.transform;
+                fondRt.anchorMin = fondRt.anchorMax = fondRt.pivot = new Vector2(0.5f, 0.5f);
+                fondRt.anchoredPosition = Vector2.zero;
+                Texture2D tex = bg.fond.texture;
+                fondRt.sizeDelta = new Vector2(tex.width, tex.height) / scaleFactor;
+                Image fondImg = fondGo.AddComponent<Image>();
+                fondImg.sprite = bg.fond;
+                fondImg.raycastTarget = false; // pp-F6 — le fond est inerte : ni Button ni état.
+                // pp-F6 : le fond ne porte AUCUN enfant — bâtiments et calques d'état sont des
+                // FRÈRES sous DistrictScene (construits ci-dessous), jamais des enfants de fondGo.
+            }
+            else
+            {
+                // Repli déclaré — AUCUN fond rendu pour ce profil en vague 1 (§6 : seul verge-a a
+                // une scène). PAS de taille native (rien à ancrer au centre) : confiné entre les
+                // deux barres, EXACTEMENT comme le titre évite le TopBar (mêmes insets) — jamais un
+                // Stretch(0,0) plein-root, qui chevaucherait TopBarSlot/TabBarRoot en bornes brutes
+                // (mesuré : root/ContentSlot couvre le MÊME espace que les barres, la non-occlusion
+                // du shell tient par l'ORDRE DE FRATRIE, pas par un ContentSlot rétréci —
+                // AppShell.cs:29-33). C'est ce qui rend nav-F4 (extension district 3, profil
+                // "tidewater", sans fond) VERTE — voir NavigationPlayModeTests.cs.
+                // +2px de marge sous l'inset : `safeInsetBottom` seul plaçait le bord bas du repli
+                // PILE sur le bord haut de TabBarRoot (mesuré : les deux bornes coïncidaient à
+                // -271.71) — un contact exact que Bounds.Intersects() compte comme un chevauchement
+                // (intervalle fermé). La marge garantit un écart STRICT, pas un artefact de bord.
+                GameObject placeholderGo = NewUI("DistrictBackgroundPlaceholder", sceneRt);
+                Stretch((RectTransform)placeholderGo.transform,
+                    new Vector2(0f, safeInsetBottom + 2f), new Vector2(0f, -(8f + safeInsetTop + 32f)));
+                Image placeholderImg = placeholderGo.AddComponent<Image>();
+                placeholderImg.color = DesignTokens.Current.nightOutOfDistrictMuted;
+                placeholderImg.raycastTarget = false;
+            }
 
-            // C8-F2 : unité = le bloc, des deux côtés. block_id -> (x,y) pour situer chaque bâtiment
-            // sur SA cellule ; le complément (D2 : blocks[] moins buildings[].block_id) donne les vides.
+            // C8-F2 (amendée, §Deviations) : unité = le bloc, jointure bâtiment→bloc pour situer
+            // chaque bâtiment sur SA parcelle. §3 du design : Unity ne dessine plus QUE les
+            // bâtiments — plus de silhouette pour les blocs vides (baqués dans le fond).
             var blockByBlockId = new Dictionary<int, DistrictInteriorBlockDto>();
             if (dto.blocks != null)
                 foreach (DistrictInteriorBlockDto b in dto.blocks) blockByBlockId[b.block_id] = b;
-            // Revue ⊥ (IMPORTANT 5) : dès que les sprites débordent de leur cellule, l'ordre de
-            // fratrie EST l'ordre de profondeur — construction arrière → avant (y croissant),
-            // bâtiments et vides confondus. Les comptes C8-F2/F4 sont inchangés.
-            // Revue ⊥ r4 (BLOCKING A — prescription r2 incomplète, assumée par le ⊥) :
-            // SetAsLastSibling déplaçait la cellule AVEC son sol opaque — le sol du voisin occultait
-            // toujours le débordement. Le sol QUITTE la cellule : GridFloors (créé en premier sous
-            // GridArea) porte les Floor_{x}_{y} ; Cell_{x}_{y} devient un conteneur transparent.
-            // Garde structurelle : R4F1. Le liseré GridBorder porte le contour du district (le
-            // carve-out fond↔b0 de R3F1 est adossé à CET indice — assertion R4F2, pas une exception nue).
-            GameObject bord = NewUI("GridBorder", gridRt);
-            Stretch((RectTransform)bord.transform, new Vector2(-2, -2), new Vector2(2, 2));
-            Image bordImg = bord.AddComponent<Image>();
-            bordImg.color = DesignTokens.Current.nightSocle;
-            bordImg.raycastTarget = false;
-            GameObject gridFloors = NewUI("GridFloors", gridRt);
-            Stretch((RectTransform)gridFloors.transform, Vector2.zero, Vector2.zero);
-            if (dto.blocks != null)
-                foreach (DistrictInteriorBlockDto fb in dto.blocks)
-                {
-                    GameObject floor = NewUI($"Floor_{fb.x}_{fb.y}", gridFloors.transform);
-                    RectTransform frt = (RectTransform)floor.transform;
-                    frt.anchorMin = frt.anchorMax = new Vector2(0f, 1f);
-                    frt.pivot = new Vector2(0f, 1f);
-                    frt.sizeDelta = new Vector2(CellSize, CellSize);
-                    frt.anchoredPosition = new Vector2(fb.x * CellSize, -fb.y * CellSize);
-                    floor.AddComponent<Image>().color = FloorTint(fb.x, fb.y);
-                }
 
-            var buildingByBlockId = new Dictionary<int, DistrictInteriorBuildingDto>();
             if (dto.buildings != null)
-                foreach (DistrictInteriorBuildingDto b in dto.buildings)
-                    if (blockByBlockId.ContainsKey(b.block_id)) // D2 garantit l'appartenance ; défensif.
-                        buildingByBlockId[b.block_id] = b;
-
-            // Chunk 1 (nav-hud-design-v1.md §2.1, Décision A) — le PARCELLAIRE : partition
-            // déterministe rue/parcelle depuis les seules (x,y) de blocks[], résolue UNE fois par
-            // rendu (le profil ne change pas cellule à cellule). `ResolveAmbient` est exhaustif à
-            // repli déclaré (BuildingSpriteSlots.cs) — jamais null tant que l'asset est chargé ; si
-            // l'asset lui-même manque, `ambientSet` reste null et toute parcelle retombe sur le sol
-            // nu de BuildEmptyCell (même défensive que `slots` plus bas).
-            BuildingSpriteSlots slotsForAmbient = BuildingSpriteSlots.Current;
-            BuildingSpriteSlots.AmbientSet ambientSet =
-                slotsForAmbient != null ? slotsForAmbient.ResolveAmbient(dto.profile) : null;
-
-            if (dto.blocks != null)
             {
-                // Revue ⊥ r2 (BLOCKING 1) : DEUX passes. Passe 1 — les 40 sols (l'ordre des blocks[]
-                // suffit : un sol ne déborde pas). Passe 2 — chaque cellule OCCUPÉE repasse en fin de
-                // fratrie en (y,x) croissant : tout bâtiment passe devant TOUT sol (une seule passe
-                // triée laissait le sol du voisin de DROITE manger le débordement — 44 lignes coupées
-                // à x=144, mesuré). Noms, comptes, parents : inchangés pour les falsifiables.
-                var ordered = new List<DistrictInteriorBlockDto>(dto.blocks);
-                ordered.Sort((a, b) => a.y != b.y ? a.y.CompareTo(b.y) : a.x.CompareTo(b.x));
-                var occupied = new List<(DistrictInteriorBlockDto block, GameObject cell)>();
-                foreach (DistrictInteriorBlockDto block in ordered)
+                // Tri (y,x) conservé par précaution de profondeur visuelle (héritage de la revue ⊥
+                // r4/r5 — deux bâtiments dont les sprites déborderaient l'un sur l'autre restent
+                // dessinés arrière→avant) ; aucune falsifiable de ce chunk ne l'exige (les parcelles
+                // sont espacées de 6,5 m, §3 — un chevauchement entre DEUX bâtiments joueur est un
+                // cas non observé au J0), donc c'est un choix conservateur, pas une propriété testée.
+                var ordered = new List<DistrictInteriorBuildingDto>(dto.buildings);
+                var blockOf = new Dictionary<DistrictInteriorBuildingDto, DistrictInteriorBlockDto>();
+                foreach (DistrictInteriorBuildingDto b in ordered)
+                    if (blockByBlockId.TryGetValue(b.block_id, out DistrictInteriorBlockDto blk)) blockOf[b] = blk;
+                ordered.Sort((a, b) =>
                 {
-                    if (buildingByBlockId.TryGetValue(block.block_id, out DistrictInteriorBuildingDto building))
-                    {
-                        // Décision D (§2.4) : un bloc possédé reste une parcelle du joueur quelle
-                        // que soit sa classe rue/parcelle — jamais d'ambiant sur une cellule possédée.
-                        GameObject cell = BuildBuildingCell(gridRt, block.x, block.y, building);
-                        occupied.Add((block, cell));
-                        RenderedBuildingCount++;
-                    }
-                    else if (IsStreetCell(block.x, block.y, ambientSet))
-                        BuildEmptyCell(gridRt, block.x, block.y); // cellule-rue : sol nu inchangé (§2.1) — habillée au chunk 3.
-                    else
-                        BuildAmbientCell(gridRt, block.x, block.y, ambientSet); // §2.1 Décision D — à la place de BuildEmptyCell
-                }
-                foreach (var (block, cell) in occupied) // déjà triés (y,x) par la passe 1
-                    cell.transform.SetAsLastSibling();
-                RenderedCellCount = dto.blocks.Length;
-            }
+                    bool ha = blockOf.TryGetValue(a, out DistrictInteriorBlockDto ba);
+                    bool hb = blockOf.TryGetValue(b, out DistrictInteriorBlockDto bb);
+                    if (!ha || !hb) return 0;
+                    return ba.y != bb.y ? ba.y.CompareTo(bb.y) : ba.x.CompareTo(bb.x);
+                });
 
-            // Brume — par-dessus tout, translucide, jamais un obstacle au tap.
-            GameObject haze = NewUI("Haze", root);
-            Stretch((RectTransform)haze.transform, Vector2.zero, Vector2.zero);
-            Image hazeImg = haze.AddComponent<Image>();
-            hazeImg.color = DesignTokens.Current.nightHaze;
-            hazeImg.raycastTarget = false;
+                foreach (DistrictInteriorBuildingDto building in ordered)
+                {
+                    if (!blockByBlockId.TryGetValue(building.block_id, out DistrictInteriorBlockDto block))
+                        continue; // D2 garantit l'appartenance ; défensif.
+                    BuildBuildingCell(sceneRt, block.x, block.y, building, anchorMap, scaleFactor);
+                    RenderedBuildingCount++;
+                }
+            }
         }
 
         // Alphas de COMPOSITE de l'ombre de contact (revue ⊥ r5 (a)) — publics : R2F2 mesure la
         // couleur COMPOSÉE Lerp(sol, socle, SocleCoreAlpha), jamais le token nu (une ombre
-        // translucide rendrait sinon la garde verte sur une ombre invisible).
+        // translucide rendrait sinon la garde verte sur une ombre invisible). Inchangés par P3.
         public const float SocleCoreAlpha = 0.45f;
         public const float SocleMidAlpha = 0.28f;
         public const float SocleOuterAlpha = 0.15f;
 
-        private GameObject BuildBuildingCell(RectTransform gridRt, int x, int y, DistrictInteriorBuildingDto building)
+        /// <summary>P3 — construit l'ancre d'un bâtiment joueur : un conteneur `Cell_{x}_{y}` (nom
+        /// INCHANGÉ, voir le commentaire de tête de fichier) dimensionné sur la taille NATIVE
+        /// compensée du sprite lui-même (plus de grille uniforme — l'échelle et la position viennent
+        /// du fond, §2.2) et positionné au pixel `pivot_px` lu dans <paramref name="anchorMap"/>
+        /// (pp-F2/F-calage) — ou une grille de secours déterministe si ce bloc n'a pas d'ancre
+        /// (profil sans fond en vague 1 : voir RenderNightDiorama et implementation-notes.md).</summary>
+        private GameObject BuildBuildingCell(RectTransform sceneRt, int x, int y, DistrictInteriorBuildingDto building,
+            DistrictBackgroundAnchorDto anchorMap, float scaleFactor)
         {
-            GameObject cell = NewCell(gridRt, x, y);
+            BuildingSpriteSlots slots = BuildingSpriteSlots.Current;
+            Sprite baseSprite = slots != null ? slots.Resolve(building.operational_type) : null;
 
-            // Socle — plinthe sous le bâtiment.
-            // Revue ⊥ r3 (BLOCKING 2) : plus jamais une plinthe pleine-cellule — les 4 socles
-            // fusionnaient en une barre continue de 376 px, l'élément le plus clair de l'écran.
-            // Largeur du BÂTIMENT, et plus sombre que les sols (l'ombre de contact, pas une étagère).
-            // Revue ⊥ r5 (a) : l'ombre de contact n'est plus un rectangle opaque pleine largeur —
-            // 0,7 × la largeur du rect (deux voisins ne sont plus jointifs : la marge transparente
-            // du rect ne compte plus), translucide, atténuée en 3 bandes concentriques. Les alphas
-            // de COMPOSITE visés sont les constantes ci-dessous ; chaque bande porte l'alpha de
-            // COUCHE qui, empilé sur les précédentes, atteint sa cible (1-(1-a)(1-b) = cible).
+            // Taille de l'ancre = taille NATIVE compensée du sprite (pp-F3 : facteur 1,000, le sceau
+            // "échelle" r5-r6 transféré ici). Repli défensif à 64px SI Resolve() ne rend rien — table
+            // TOTALE (C6-F4) donc en pratique jamais atteint tant que l'asset est chargé.
+            Vector2 cellSize = baseSprite != null
+                ? new Vector2(baseSprite.rect.width, baseSprite.rect.height) / scaleFactor
+                : new Vector2(64f, 64f) / scaleFactor;
+
+            Vector2? pivotLocal = DistrictBackgroundAnchor.PivotLocalForBlock(anchorMap, x, y, scaleFactor);
+            // Repli déclaré si ce bloc n'a pas d'ancre — grille de secours DÉTERMINISTE, jamais
+            // testée au pixel près (seul verge/district 16 porte pp-F2 — voir implementation-notes.md
+            // § Deviations). Elle garde néanmoins C9/C10/lieutenant-markers vivants pour tout profil
+            // synthétique de test (ex. "lattice") qui n'a pas de fond en vague 1.
+            Vector2 localPos = pivotLocal ?? new Vector2(x * 100f, -y * 100f);
+
+            GameObject cell = NewUI($"Cell_{x}_{y}", sceneRt);
+            RectTransform cellRt = (RectTransform)cell.transform;
+            cellRt.anchorMin = cellRt.anchorMax = new Vector2(0.5f, 0.5f);
+            cellRt.pivot = new Vector2(0.5f, 0f); // bas-centre — §4 : "le pivot bas-centre du sprite s'y pose"
+            cellRt.sizeDelta = cellSize;
+            cellRt.anchoredPosition = localPos;
+
+            float cellW = cellSize.x, cellH = cellSize.y;
+
+            // Socle — plinthe/ombre de contact sous le bâtiment (survit au pivot — seul le facteur
+            // `k` est retiré, §2.2). Largeur = 70% du bâtiment (revue ⊥ r5(a)), dérivée directement
+            // de la taille RÉELLE de l'ancre : plus de branche séparée "pas de sprite trouvé", cellW
+            // porte déjà le repli défensif ci-dessus.
             GameObject socle = NewUI("Socle", cell.transform);
             RectTransform socleRt = (RectTransform)socle.transform;
             socleRt.anchorMin = socleRt.anchorMax = new Vector2(0.5f, 0f);
             socleRt.pivot = new Vector2(0.5f, 0f);
-            float socleW = CellSize * 0.42f;
-            {
-                BuildingSpriteSlots slotsPourSocle = BuildingSpriteSlots.Current;
-                Sprite spPourSocle = slotsPourSocle != null ? slotsPourSocle.Resolve(building.operational_type) : null;
-                if (spPourSocle != null) socleW = 0.7f * spPourSocle.rect.width * (CellSize / (MetresParBloc * 56f));
-            }
-            socleRt.sizeDelta = new Vector2(socleW, CellSize * 0.2f);
+            float socleW = cellW * 0.7f;
+            socleRt.sizeDelta = new Vector2(socleW, cellH * 0.2f);
             socleRt.anchoredPosition = Vector2.zero;
-            Color socleTeinte = DesignTokens.Current.nightSocle; // revue ⊥ r2 : nightBase servait aussi de bucket 2 du sol
+            Color socleTeinte = DesignTokens.Current.nightSocle;
             float aCouche1 = SocleOuterAlpha;
             float aCouche2 = 1f - (1f - SocleMidAlpha) / (1f - SocleOuterAlpha);
             float aCouche3 = 1f - (1f - SocleCoreAlpha) / (1f - SocleMidAlpha);
@@ -431,42 +434,34 @@ namespace MafiaCleanCity.CityMap
                 RectTransform brt = (RectTransform)go.transform;
                 brt.anchorMin = brt.anchorMax = new Vector2(0.5f, 0f);
                 brt.pivot = new Vector2(0.5f, 0f);
-                brt.sizeDelta = new Vector2(socleW * bande.wFrac, CellSize * 0.2f * bande.hFrac);
+                brt.sizeDelta = new Vector2(socleW * bande.wFrac, cellH * 0.2f * bande.hFrac);
                 brt.anchoredPosition = Vector2.zero;
                 Image bimg = go.AddComponent<Image>();
                 bimg.color = new Color(socleTeinte.r, socleTeinte.g, socleTeinte.b, bande.aCouche);
                 bimg.raycastTarget = false;
             }
 
-            // Sprite — D6/C6 : BuildingSpriteSlots, premier appelant de PRODUCTION (jusqu'ici son seul
-            // consommateur était son propre test, C6-F4).
-            // Revue ⊥ (IMPORTANT 5) : échelle COMMUNE ppm 56 (le contrat des manifestes de
-            // l'atelier — l'épicerie s'affichait 3,55× plus grande par mètre que l'usine), pivot au
-            // sol, débordement autorisé (l'ordre de fratrie porte la profondeur).
+            // Sprite — pp-F3 : ZÉRO rescale, remplit SA propre ancre exactement (Cell est
+            // dimensionnée sur le sprite lui-même) : le pivot bas-centre du sprite tombe donc PILE
+            // sur pivot_px (§4), sans le décalage vertical `CellSize*0.18f` de l'ancien k.
             GameObject spriteGo = NewUI("BuildingSprite", cell.transform);
             RectTransform spriteRt = (RectTransform)spriteGo.transform;
             Image spriteImg = spriteGo.AddComponent<Image>();
-            BuildingSpriteSlots slots = BuildingSpriteSlots.Current;
-            Sprite baseSprite = slots != null ? slots.Resolve(building.operational_type) : null;
             if (baseSprite != null)
             {
                 spriteImg.sprite = baseSprite;
-                float k = CellSize / (MetresParBloc * 56f);
-                spriteRt.anchorMin = spriteRt.anchorMax = new Vector2(0.5f, 0f);
-                spriteRt.pivot = new Vector2(0.5f, 0f);
-                spriteRt.sizeDelta = new Vector2(baseSprite.rect.width, baseSprite.rect.height) * k;
-                spriteRt.anchoredPosition = new Vector2(0, CellSize * 0.18f);
+                Stretch(spriteRt, Vector2.zero, Vector2.zero); // == Cell exactement (facteur 1,000, pp-F3)
             }
             else
             {
-                Stretch(spriteRt, new Vector2(3, CellSize * 0.22f), new Vector2(-3, -3));
+                Stretch(spriteRt, new Vector2(3, 3), new Vector2(-3, -3));
                 spriteImg.preserveAspect = true;
             }
 
             // Libellé — quand l'art manque OU quand le sprite est le REPLI partagé (revue ⊥ r5,
             // IMPORTANT) : Resolve ne rend JAMAIS null (table totale C6-F4), donc la branche null
             // seule était morte, et 6 types tombant sur fallback rendaient le même sprite sans
-            // aucun discriminant. Le libellé est le discriminant du repli.
+            // aucun discriminant. Le libellé est le discriminant du repli. Inchangé par P3.
             if (baseSprite == null || (slots != null && baseSprite == slots.fallback))
             {
                 TextMeshProUGUI label = NewText("TypeLabel", cell.transform, TypeLabel(building.operational_type),
@@ -475,15 +470,15 @@ namespace MafiaCleanCity.CityMap
                 labelRt.anchorMin = new Vector2(0f, 0f);
                 labelRt.anchorMax = new Vector2(1f, 0f);
                 labelRt.pivot = new Vector2(0.5f, 0f);
-                labelRt.sizeDelta = new Vector2(0, CellSize * 0.2f);
+                labelRt.sizeDelta = new Vector2(0, cellH * 0.2f);
                 labelRt.anchoredPosition = Vector2.zero;
                 label.color = DesignTokens.Current.onSurfacePrimary;
                 TrackText(label);
             }
 
-            // C9 (§3, §1.5 — U-10) : les 5 bindings lumineux. Chacun est GARDÉ par SA bande — l'absence
-            // de GameObject EST le rendu "éteint/pas d'opération/pas de dette" (jamais un objet caché) :
-            // c'est exactement ce que C9-F2 compte (source rendue == fait qui la commande).
+            // C9 (§3, §1.5 — U-10) : les 5 bindings lumineux. C10 (D10/§C2-bis) : les marqueurs de
+            // lieutenant. INCHANGÉS par P3 — aucune des deux familles de falsifiables ne référence
+            // CellSize/GridArea, seuls les comptes et l'appariement par nom `Cell_x_y` comptent.
             BuildWindowLight(cell.transform, building);       // bindings 1+2 — possédé / raid-saisie
             BuildRevenueSign(cell.transform, building);       // binding 3 — néon "ça rapporte" (D3)
             BuildActivitySmoke(cell.transform, building);     // binding 4 — fumée "op active"
@@ -495,8 +490,8 @@ namespace MafiaCleanCity.CityMap
         /// <summary>Bindings 1+2 (§1.5 lignes 1-2) — la fenêtre ambre. Binding 1 (possédé) : TOUT
         /// bâtiment reçu EST possédé (prémisse §2 — `buildings[]` ne porte que les bâtiments du
         /// joueur), donc le fait qui commande cette lumière est la simple PRÉSENCE de l'entrée —
-        /// déjà garantie par l'appelant (`BuildBuildingCell` n'est jamais invoquée pour une cellule
-        /// vide, `BuildEmptyCell`). Binding 2 (raid/saisie, "fenêtres éteintes") : `condition_band !=
+        /// déjà garantie par l'appelant (`BuildBuildingCell` n'est jamais invoquée pour un bloc non
+        /// possédé). Binding 2 (raid/saisie, "fenêtres éteintes") : `condition_band !=
         /// SOUND` ÉTEINT la lumière — §1.1a/D3 : la colonne qui porte le raid est
         /// `building_operational_state.structural_state` (`condition_band`), JAMAIS `shell_state`
         /// (invariant en production aujourd'hui, D2 v2 MINOR R9).</summary>
@@ -513,7 +508,9 @@ namespace MafiaCleanCity.CityMap
         /// <summary>Revue ⊥ 2026-08-20 (BLOCKING 3) — un calque lumineux de l'atelier, aligné pixel à
         /// pixel sur le rect du sprite de base (les couches sont recadrées ENSEMBLE par sprites_post),
         /// en blend additif. Rend null si le calque manque pour ce type — l'appelant garde alors son
-        /// rendu de repli (rectangle token), jamais un trou silencieux.</summary>
+        /// rendu de repli (rectangle token), jamais un trou silencieux. P3 : remplit SA cellule
+        /// exactement (plus de `k` — la cellule EST déjà la taille native compensée du sprite de
+        /// base, et les calques sont recadrés pixel-à-pixel sur ce même sprite).</summary>
         private Image TryBuildOverlay(Transform cell, string name, string opType, string couche, Color tint)
         {
             BuildingSpriteSlots slots = BuildingSpriteSlots.Current;
@@ -521,11 +518,7 @@ namespace MafiaCleanCity.CityMap
             if (ov == null || AdditiveMat == null) return null;
             GameObject go = NewUI(name, cell);
             RectTransform rt = (RectTransform)go.transform;
-            float k = CellSize / (MetresParBloc * 56f);
-            rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0f);
-            rt.pivot = new Vector2(0.5f, 0f);
-            rt.sizeDelta = new Vector2(ov.rect.width, ov.rect.height) * k;
-            rt.anchoredPosition = new Vector2(0, CellSize * 0.18f);
+            Stretch(rt, Vector2.zero, Vector2.zero);
             Image img = go.AddComponent<Image>();
             img.sprite = ov;
             img.material = AdditiveMat;
@@ -562,7 +555,7 @@ namespace MafiaCleanCity.CityMap
             bool earning = building.revenue_band == "EARNING";
             // Revue ⊥ (BLOCKING 3 + IMPORTANT 9) : le calque neon de l'atelier porte la vraie lumière
             // (blanc chaud + halo) ; la teinte n'est plus qu'une INTENSITÉ — pleine si EARNING, blend
-            // vers nightBase si IDLE (REUSE du patron FloorTint, R2.3).
+            // vers nightBase si IDLE (REUSE du patron FloorTint historique, R2.3).
             Color tint = earning ? Color.white : Color.Lerp(Color.white, DesignTokens.Current.nightBase, 0.75f);
             Image ov = TryBuildOverlay(cell, "RevenueSign", building.operational_type, "neon", tint);
             GameObject signGo;
@@ -679,102 +672,6 @@ namespace MafiaCleanCity.CityMap
             ActiveAmbientLoopCount++;
         }
 
-        /// <summary>Décision A (§2.1) — le PARCELLAIRE : cellule-rue si `x % streetEveryX == 0 ||
-        /// y % streetEveryY == 0`. Un axe à 0 est DÉSACTIVÉ (jamais un modulo par zéro, jamais
-        /// vrai) — c'est la valeur retenue par le design pour `streetEveryY` (§2.1 : "streetEveryX
-        /// = 5, streetEveryY désactivé"). `ambientSet == null` (asset introuvable) ⇒ aucune cellule
-        /// n'est classée rue par CETTE fonction ; l'appelant construit alors de l'ambiant partout,
-        /// et `BuildAmbientCell` retombe elle-même sur un sol nu si la table de templates est vide.</summary>
-        private static bool IsStreetCell(int x, int y, BuildingSpriteSlots.AmbientSet ambientSet)
-        {
-            if (ambientSet == null) return false;
-            return (ambientSet.streetEveryX > 0 && x % ambientSet.streetEveryX == 0)
-                || (ambientSet.streetEveryY > 0 && y % ambientSet.streetEveryY == 0);
-        }
-
-        /// <summary>Décisions B/C/D (§2.2-§2.4) — les façades ambiantes d'une parcelle NON possédée,
-        /// à la place de <see cref="BuildEmptyCell"/>. 2 rangs × 2 façades (Décision C, §2.3 — fixé
-        /// en code, pas un degré de liberté ouvert par l'asset : voir implementation-notes.md §
-        /// Deviations pour la consolidation `rangs`/`façadesParRang` → `facadesParParcelle`).
-        /// Placement et tirage DÉTERMINISTES — REUSE du hash maison de <see cref="FloorTint"/>
-        /// (`x*73856093 ^ y*19349663`), étendu par `(2i + r)*83492791` : deux `Render` du MÊME
-        /// payload produisent la MÊME suite de templates (amb-F1). Aucune marque d'état (pas de
-        /// Socle/*Ov/LieutenantMarker/Button — §2.4) : c'est ce qui distingue une façade ambiante
-        /// d'un bâtiment joueur quand les deux tirent la même famille (amb-F3).</summary>
-        private void BuildAmbientCell(RectTransform gridRt, int x, int y, BuildingSpriteSlots.AmbientSet ambientSet)
-        {
-            GameObject cell = NewCell(gridRt, x, y);
-            if (ambientSet == null || ambientSet.templates == null || ambientSet.templates.Length == 0)
-                return; // repli déclaré : rien à peindre plutôt qu'une exception — reste un sol nu.
-
-            int baseHash = unchecked((x * 73856093) ^ (y * 19349663)); // REUSE du hash maison (FloorTint)
-            const int rangs = 2, facadesParRang = 2; // Décision C (§2.3) — 2×2, fixe et motivé
-            float k = CellSize / (MetresParBloc * 56f); // échelle EXACTE des bâtiments joueur (§2.3, :401)
-            int facadeOrdinal = 0;
-            for (int r = rangs - 1; r >= 0; r--) // rang ARRIÈRE (r=1) construit d'abord, AVANT (r=0)
-            {                                     // ensuite — occlusion par ordre de fratrie (§2.3).
-                float fy = (r == 1) ? 0.28f : 0f; // avant (r=0) au sol, arrière (r=1) plus profond
-                for (int i = 0; i < facadesParRang; i++, facadeOrdinal++)
-                {
-                    int hash = unchecked(baseHash ^ ((2 * i + r) * 83492791));
-                    BuildingSpriteSlots.AmbientTemplate tpl = ambientSet.PickWeighted(hash);
-                    if (tpl == null || tpl.nuit == null) continue; // repli déclaré : jamais avaler l'échec en objet vide muet
-
-                    GameObject facade = NewUI($"Ambient_{x}_{y}_{facadeOrdinal}", cell.transform);
-                    RectTransform frt = (RectTransform)facade.transform;
-                    float fx = (i + 0.5f) / facadesParRang;
-                    frt.anchorMin = frt.anchorMax = new Vector2(fx, fy);
-                    frt.pivot = new Vector2(0.5f, 0f); // pivot bas-centre (§2.3)
-                    frt.sizeDelta = new Vector2(tpl.nuit.rect.width, tpl.nuit.rect.height) * k;
-                    float lateral = (((hash >> 3) & 1) == 0 ? -0.15f : 0.15f) * CellSize; // décalage latéral issu du hash (§2.3)
-                    frt.anchoredPosition = new Vector2(lateral, 0f);
-                    Image fimg = facade.AddComponent<Image>();
-                    fimg.sprite = tpl.nuit; // §2.5 : l'ambiant n'apparaît qu'au palier NIGHT — `jour` n'a pas de chemin de rendu ce chunk
-                    fimg.raycastTarget = false; // ambiant inerte — jamais cliquable (amb-F3)
-                }
-            }
-        }
-
-        private void BuildEmptyCell(RectTransform gridRt, int x, int y)
-        {
-            // C8-F4 : "36 en silhouette sourde" — juste le sol (engagement 6), jamais de sprite/socle/libellé.
-            NewCell(gridRt, x, y);
-        }
-
-        private GameObject NewCell(RectTransform gridRt, int x, int y)
-        {
-            GameObject cell = NewUI($"Cell_{x}_{y}", gridRt);
-            RectTransform cellRt = (RectTransform)cell.transform;
-            cellRt.anchorMin = cellRt.anchorMax = new Vector2(0f, 1f);
-            cellRt.pivot = new Vector2(0f, 1f);
-            cellRt.sizeDelta = new Vector2(CellSize, CellSize);
-            cellRt.anchoredPosition = new Vector2(x * CellSize, -y * CellSize);
-            // r4 : PLUS de sol ici — les sols vivent dans GridFloors (revue ⊥ BLOCKING A).
-            return cell;
-        }
-
-        // ----------------------------------------------------- sol : ≥3 textures, usure PLACÉE (engagement 6)
-
-        /// <summary>3 rendus de sol distincts, choisis par une fonction DÉTERMINISTE de la position —
-        /// jamais un tirage aléatoire ("usure PLACÉE", pas procédurale — l'énoncé du chunk l'oppose
-        /// explicitement à un bruit non contrôlé). Composés à partir des DEUX tokens déjà provisionnés
-        /// par C5 pour ce diorama (nightBackground/nightBase) plutôt que d'en ajouter de nouveaux
-        /// qu'aucune falsifiable de ce chunk ne réclame — choix documenté, voir
-        /// Tools/w3u2-c8-notes.md § Deviations.</summary>
-        private static Color FloorTint(int x, int y)
-        {
-            // Revue ⊥ r4 (IMPORTANT B) : (x+y)%3 dessinait un réseau diagonal parfait — une mire.
-            // Hash de position déterministe (usure PLACÉE : même monde, mêmes taches), sans période lisible.
-            int h = unchecked((x * 73856093) ^ (y * 19349663));
-            int bucket = ((h >> 4) & 0x7fffffff) % 3;
-            switch (bucket)
-            {
-                case 0: return DesignTokens.Current.nightBackground;
-                case 1: return DesignTokens.Current.nightFloorAlt; // revue ⊥ r3 : le Lerp RGB de teintes opposées fabriquait un gris
-                default: return DesignTokens.Current.nightBase;
-            }
-        }
-
         // ----------------------------------------------------- operational_type -> libellé
         // REUSE du PATRON de BuildingCardController.TypeLabel (copie locale à ce fichier — chaque écran
         // porte les siennes dans ce dépôt, cf. LaunderingController.CleanlinessLabel : jamais une
@@ -816,6 +713,20 @@ namespace MafiaCleanCity.CityMap
                 scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
                 scaler.referenceResolution = new Vector2(1280, 720);
             }
+            // Pivot fond pré-rendu — MESURÉ (Tools/pivot-fond-prerendu-design.md, evidence de capture,
+            // implementation-notes.md § Deviations) : `Canvas.pixelPerfect` n'est posé NULLE PART dans
+            // ce dépôt (grep, 0 hit) — sans lui, le rect compensé (sizeDelta = tex/scaleFactor) reste
+            // géométriquement EXACT (pp-F1 le prouve) mais le rasteriseur peut placer ses bords sur des
+            // coordonnées SOUS-PIXEL, et le FilterMode.Bilinear du fond (§1, exigé par le mandat) lisse
+            // alors la texture à ces bords — un vrai ré-échantillonnage mesuré par la sonde ⊥
+            // (Tools/resemblance-probe.py : MAE arêtes 5,40, ratio 23:1, signature RÉÉCHANTILLONNÉ,
+            // AVANT ce correctif). `pixelPerfect` claque le rendu sur la grille de pixels entière —
+            // c'est la même primitive Unity que « pixel perfect » du ruling user (§0 du design), pas
+            // une invention de ce chunk. Posé ICI (canvas TROUVÉ ou CRÉÉ) plutôt que dans AppShell.cs :
+            // le tenant qui a besoin de 1:1 exact le garantit sur le canvas qu'il utilise, sans muter
+            // un fichier hors du périmètre de ce chunk pour un cas où AppShell créerait le canvas avec
+            // pixelPerfect=false par défaut.
+            canvas.pixelPerfect = true;
             Transform parent = mountParent != null ? mountParent : canvas.transform; // W3.U1 D2
 
             GameObject rootGo = NewUI("DistrictInteriorRoot", parent);

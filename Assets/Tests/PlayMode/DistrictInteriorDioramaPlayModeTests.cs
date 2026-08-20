@@ -1,5 +1,7 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
 using UnityEngine;
@@ -131,10 +133,19 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.AreNotEqual(shell.ShellCanvas.transform, dioramaRoot.parent, "and NOT the Canvas root");
         }
 
-        // ── C8-F2 / C8-F4 — la grille = les blocs reçus, jointure par cellule, le J0 tient ──
+        // ── C8-F2 / C8-F4 — AMENDÉES par le pivot fond pré-rendu (Tools/pivot-fond-prerendu-design.md
+        // §P3/§3, gate ⊥ APPROVED 2026-08-20) — raison NOMMÉE : la grille procédurale et la
+        // "silhouette sourde" des blocs vides n'existent plus. Le sol/les rues/l'ambiant sont
+        // désormais BAQUÉS dans le fond pré-rendu (§3 du design : "Unity dessine par-dessus, et RIEN
+        // D'AUTRE") — il n'y a donc plus AUCUN objet Unity pour les 36 blocs non possédés du J0.
+        // `RenderedCellCount` (unité=le bloc, 40 cellules dont 36 muettes) est RETIRÉE de
+        // DistrictInteriorScreenController — voir implementation-notes.md § Deviations. Ce qui
+        // SURVIT, inchangé dans sa FORME : chaque bâtiment est rendu sur SA cellule (ancrée par nom
+        // `Cell_x_y`, avec BuildingSprite + Socle) — vérifié via `RenderedBuildingCount`. Ce qui est
+        // NEUF : l'absence positive d'objet pour tout bloc non possédé (C8-F4 amendée).
 
         [UnityTest]
-        public IEnumerator C8F2_C8F4_GridEqualsBlocks_EachBuildingOnOwnCell_J0Renders40CellsWith36Muted()
+        public IEnumerator C8F2_EachBuildingAnchoredOnOwnBlock_J0Renders4Buildings_NoEmptyBlockObjects()
         {
             DistrictInteriorDto dto = null;
             yield return FetchInterior("c8a", d => dto = d);
@@ -147,23 +158,35 @@ namespace MafiaCleanCity.CityMap.Tests
             diorama.Render(dto);
 
             Assert.AreEqual(DioramaArtPhase.NightHero, diorama.LastArtPhase);
-            Assert.AreEqual(dto.blocks.Length, diorama.RenderedCellCount, "C8-F2 — unité = le bloc, des deux côtés");
-            Assert.AreEqual(dto.buildings.Length, diorama.RenderedBuildingCount, "C8-F2 — chaque bâtiment rendu");
-            Assert.AreEqual(40, diorama.RenderedCellCount, "C8-F4 — l'écran tient au J0 : 40 cellules");
-            Assert.AreEqual(36, diorama.RenderedCellCount - diorama.RenderedBuildingCount, "C8-F4 — 36 en silhouette sourde");
+            Assert.AreEqual(dto.buildings.Length, diorama.RenderedBuildingCount, "C8-F2 — chaque bâtiment rendu, un par un");
 
-            Transform gridArea = diorama.ScreenRoot.Find("GridArea");
-            Assert.IsNotNull(gridArea);
+            Transform scene = diorama.ScreenRoot.Find("DistrictScene");
+            Assert.IsNotNull(scene, "le conteneur fond+bâtiments existe (pp-F5)");
             foreach (DistrictInteriorBuildingDto building in dto.buildings)
             {
                 DistrictInteriorBlockDto block = Array.Find(dto.blocks, b => b.block_id == building.block_id);
                 Assert.IsNotNull(block, $"building {building.building} references a real block (D2)");
-                Transform cell = gridArea.Find($"Cell_{block.x}_{block.y}");
+                Transform cell = scene.Find($"Cell_{block.x}_{block.y}");
                 Assert.IsNotNull(cell, $"cell at ({block.x},{block.y}) exists for building {building.building}");
                 Assert.IsNotNull(cell.Find("BuildingSprite"),
                     "a built cell carries its building sprite — chaque bâtiment se pose sur SA cellule (C8-F2)");
                 Assert.IsNotNull(cell.Find("Socle"), "a built cell carries its socle");
             }
+
+            // C8-F4 (amendée) — "36 en silhouette sourde" n'a plus d'objet à compter (§3 : plus de
+            // rendu Unity pour un bloc non possédé, baqué dans le fond). La propriété qui survit :
+            // AUCUN Cell_x_y n'existe pour un bloc SANS bâtiment — vérifié positivement sur les 36
+            // blocs non possédés du J0 (anti-vacuité : le compte doit être exactement 36, pas 0).
+            var ownedBlockIds = new HashSet<int>(dto.buildings.Select(b => b.block_id));
+            int uncheckedEmpty = 0;
+            foreach (DistrictInteriorBlockDto b in dto.blocks)
+            {
+                if (ownedBlockIds.Contains(b.block_id)) continue;
+                Assert.IsNull(scene.Find($"Cell_{b.x}_{b.y}"),
+                    $"C8-F4 (amendée) — le bloc non possédé ({b.x},{b.y}) n'a AUCUN objet Unity (silhouette baquée dans le fond)");
+                uncheckedEmpty++;
+            }
+            Assert.AreEqual(36, uncheckedEmpty, "C8-F4 (amendée) — 36 blocs non possédés au J0, tous sans objet Unity");
         }
 
         // ── C8-F3 — garde R2.2, scénario dimensionné (l'écran rend BIEN du texte) ──
@@ -204,8 +227,10 @@ namespace MafiaCleanCity.CityMap.Tests
                 diorama.Render(dto);
                 Assert.AreEqual(DioramaArtPhase.NonHeroFallback, diorama.LastArtPhase, $"{phase} maps to the declared fallback");
                 Assert.IsNotNull(diorama.ScreenRoot.Find("DayPhaseFallbackPanel"), $"{phase} renders the NAMED fallback panel");
-                Assert.IsNull(diorama.ScreenRoot.Find("GridArea"), $"{phase} does NOT render the night grid");
-                Assert.AreEqual(0, diorama.RenderedCellCount, $"{phase} — no cells rendered (fallback, not the diorama)");
+                // AMENDÉ (pivot fond pré-rendu, pp-F5) — "GridArea" → "DistrictScene" : même rôle
+                // structurel (le conteneur qui porte le fond + tous les bâtiments), plus de grille.
+                Assert.IsNull(diorama.ScreenRoot.Find("DistrictScene"), $"{phase} does NOT render the night scene");
+                Assert.AreEqual(0, diorama.RenderedBuildingCount, $"{phase} — no buildings rendered (fallback, not the diorama)");
 
                 // Yield de fin d'itération — laisse le temps au `ClearContent` de l'itération SUIVANTE
                 // (celle qui vient de tourner juste au-dessus, dont le Destroy() est différé) de
@@ -228,18 +253,26 @@ namespace MafiaCleanCity.CityMap.Tests
             yield return null;
 
             Assert.AreEqual(DioramaArtPhase.NightHero, diorama.LastArtPhase, "NIGHT maps to the hero art");
-            Assert.IsNotNull(diorama.ScreenRoot.Find("GridArea"), "NIGHT renders the night grid");
-            Assert.Greater(diorama.RenderedCellCount, 0, "NIGHT actually renders cells");
+            Assert.IsNotNull(diorama.ScreenRoot.Find("DistrictScene"), "NIGHT renders the night scene (fond+bâtiments)");
+            Assert.Greater(diorama.RenderedBuildingCount, 0, "NIGHT actually renders buildings");
             // Socle : une épingle d'ABSENCE (`Assert.IsNull(Find("DayPhaseFallbackPanel"))`) reste
             // fragile même une fois la staleness ci-dessus corrigée — elle peut rougir pour n'importe
             // quelle raison sans rapport avec ce qu'elle prétend prouver. Remplacée par une VALEUR
-            // PRÉSENTE : `RenderNightDiorama` construit EXACTEMENT 4 enfants directs de `root`
-            // (OutOfDistrictBackdrop, DistrictTitle, GridArea, Haze — vérifié dans le corps de la
-            // méthode) ; `RenderNonHeroFallback` n'en construit qu'1 (DayPhaseFallbackPanel). Le compte
-            // prouve POSITIVEMENT la composition exacte de NIGHT, ce qui implique l'absence de tout
-            // panneau de repli sans jamais chercher son absence directement.
-            Assert.AreEqual(4, diorama.ScreenRoot.childCount,
-                "NIGHT construit EXACTEMENT ses 4 nœuds nommés (backdrop/titre/grille/brume) — aucun panneau de repli en trop");
+            // PRÉSENTE : `RenderNightDiorama` construit EXACTEMENT 2 enfants directs de `root`
+            // (DistrictTitle, DistrictScene — vérifié dans le corps de la méthode) ; `RenderNonHeroFallback`
+            // n'en construit qu'1 (DayPhaseFallbackPanel). Le compte prouve POSITIVEMENT la composition
+            // exacte de NIGHT, ce qui implique l'absence de tout panneau de repli sans jamais chercher
+            // son absence directement.
+            //
+            // ⚠️ AMENDEMENT NOMMÉ (pivot fond pré-rendu, Tools/pivot-fond-prerendu-design.md, pp-F5,
+            // §8, gate ⊥ APPROVED 2026-08-20) — 4 → 2. `OutOfDistrictBackdrop` et `Haze` sont
+            // RETIRÉS : le fond pré-rendu porte déjà sa ville au loin (`map_district.py:34-36`) et sa
+            // brume (`:26`) — les deux calques Unity coûtaient 1,16 à 1,70 de MAE uniforme
+            // (F-nocalque) sans plus avoir d'objet à représenter (prédiction ⊥ P2). `GridArea`
+            // devient `DistrictScene` (même rôle structurel — voir DistrictInteriorScreenController.cs).
+            // Forme de compte POSITIF conservée à l'identique (jamais une recherche d'absence).
+            Assert.AreEqual(2, diorama.ScreenRoot.childCount,
+                "NIGHT construit EXACTEMENT ses 2 nœuds nommés (titre/scène) — aucun calque hors-district/brume résiduel (pp-F5)");
         }
     }
 }

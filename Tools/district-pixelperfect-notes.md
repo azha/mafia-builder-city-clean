@@ -1,3 +1,16 @@
+⚠️ **PÉREMPTION PARTIELLE (2026-08-20, pivot fond pré-rendu, `Tools/pivot-fond-prerendu-design.md`
+§P3, gate ⊥ APPROVED)** — ce fichier documente la GRILLE PROCÉDURALE (CellSize, GridFloors,
+GridBorder, FloorTint, metresParBloc comme facteur d'échelle des sprites). Le pivot RETIRE cette
+grille entière (« plus aucune grille procédurale ») au profit d'un fond pré-rendu + bâtiments
+ancrés par JSON. **Ce qui reste VRAI** : la leçon d'instrument ligne 17-20 (juger aux sondes PIL,
+jamais à l'aperçu — directement invoquée dans l'investigation de la sonde de ressemblance de P3,
+voir `Tools/pivot-fond-prerendu-p3-implementation-notes.md`) et R2F2/les tokens de sol (toujours
+déclarés dans DesignTokens, désormais sans consommateur — voir le nouveau fichier § Deviations).
+**Ce qui ne s'applique plus** : tout le reste (CellSize, metresParBloc comme échelle-sprite,
+GridFloors/GridBorder, FloorTint). Conservé pour l'historique, jamais à ré-exécuter tel quel.
+
+---
+
 # Boucle pixel-perfect du diorama district — déviations consignées (revues ⊥ r1-r2)
 
 Règle 5 du socle : imprévu non bloquant → option conservatrice CONSIGNÉE. Les arbitrages pris seuls :

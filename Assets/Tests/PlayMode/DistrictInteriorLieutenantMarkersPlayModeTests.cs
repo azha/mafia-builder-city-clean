@@ -154,7 +154,7 @@ namespace MafiaCleanCity.CityMap.Tests
             // `Destroy` sur l'ancienne `Cell_0_0`/`Cell_1_0` — différé à la fin de frame. Le yield doit
             // suivre CE render-ci, pas le précéder, pour que la requête de hiérarchie qui suit voie la
             // hiérarchie RÉELLEMENT purgée. Vérifié dans le corps de `ClearContent`/`Render` — aucun
-            // objet ne vit hors du sous-arbre de `root` (chaîne root → GridArea → Cell → marqueur),
+            // objet ne vit hors du sous-arbre de `root` (chaîne root → DistrictScene → Cell → marqueur),
             // `ClearContent` détruit bien `root` en entier par cascade.
             yield return null;
 

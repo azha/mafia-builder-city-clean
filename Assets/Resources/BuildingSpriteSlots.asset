@@ -12,22 +12,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6ef2aaa478cc44ae8a010927a27756ef, type: 3}
   m_Name: BuildingSpriteSlots
   m_EditorClassIdentifier: CityMap::MafiaCleanCity.CityMap.BuildingSpriteSlots
-  frontShop: {fileID: 21300000, guid: 2051111f9ab706f579054acd477c1eb6, type: 3}
-  cashSafehouse: {fileID: 21300000, guid: f9a6adb30fe76c680b9d3f0def852955, type: 3}
-  stash: {fileID: 21300000, guid: b4900c1526311385585200999ed8809f, type: 3}
-  lab: {fileID: 21300000, guid: 344f1bc65c7f57f77b16daf8d2bb4b1c, type: 3}
-  growHouse: {fileID: 21300000, guid: fe3621751a403d4e8a17c3172220da50, type: 3}
-  dealerSpotFront: {fileID: 21300000, guid: 8bcf0736bf7daf95a9d2e5387758b684, type: 3}
-  moneyHolding: {fileID: 21300000, guid: cd34b47246be0154683f0fc7b9bb5bc1, type: 3}
-  fallback: {fileID: 21300000, guid: 4394d092be1d4181a8cbc96b81827da2, type: 3}
+  frontShop: {fileID: 21300000, guid: 3e19aefd1581c9e56a7c5e7028da24f2, type: 3}
+  cashSafehouse: {fileID: 21300000, guid: 2b57ceabf4a0a53d484a178ac535a269, type: 3}
+  stash: {fileID: 21300000, guid: e6f62a0c3fc8211ea8be8ad6dd88456d, type: 3}
+  lab: {fileID: 21300000, guid: 61f1e8224025817c6b0dfcdf38310806, type: 3}
+  growHouse: {fileID: 21300000, guid: c77ff7f45916a77c4b29a503d7990f71, type: 3}
+  dealerSpotFront: {fileID: 21300000, guid: e86afc73ed9988c8d94dc592dd94e4a1, type: 3}
+  moneyHolding: {fileID: 21300000, guid: dc3f0b84a89f9f481a32425dd128a6a4, type: 3}
+  fallback: {fileID: 21300000, guid: ec10fee613eb90c5aa64c1c1648220d9, type: 3}
   metresParBloc: 16
   frontShopOv:
-    fen: {fileID: 21300000, guid: f06712211daf0ce46b93c10b62293a5d, type: 3}
+    fen: {fileID: 21300000, guid: 5b8e5efc3217521bf9ca4df5067050f2, type: 3}
     neon: {fileID: 0}
     dev: {fileID: 0}
     actif: {fileID: 0}
   cashSafehouseOv:
-    fen: {fileID: 21300000, guid: 573dd0e9b591642138de78360bc68224, type: 3}
+    fen: {fileID: 21300000, guid: 8285df57c21e475fa88bae6f73d52119, type: 3}
     neon: {fileID: 21300000, guid: bf98e42b822d0e0928ed75cc4966b1dc, type: 3}
     dev: {fileID: 21300000, guid: 14e44fdb1f690780696f606404304918, type: 3}
     actif: {fileID: 0}
@@ -35,29 +35,29 @@ MonoBehaviour:
     fen: {fileID: 21300000, guid: 2d943d8a9a5f9a874bbdd10eb1567cd5, type: 3}
     neon: {fileID: 0}
     dev: {fileID: 0}
-    actif: {fileID: 21300000, guid: 2d943d8a9a5f9a874bbdd10eb1567cd5, type: 3}
+    actif: {fileID: 21300000, guid: daf3e07ec30b2c419847512c9b7d1258, type: 3}
   labOv:
     fen: {fileID: 21300000, guid: 4bc544226ec4f52f38929161eb590127, type: 3}
     neon: {fileID: 0}
     dev: {fileID: 0}
-    actif: {fileID: 21300000, guid: 4bc544226ec4f52f38929161eb590127, type: 3}
+    actif: {fileID: 21300000, guid: f4ae4600d223e91f6b54170e1370ef5c, type: 3}
   growHouseOv:
-    fen: {fileID: 21300000, guid: 3641461c2e6feedb6816dcf2f0acc124, type: 3}
+    fen: {fileID: 21300000, guid: 769912144cea955cba4deeaef2ce7241, type: 3}
     neon: {fileID: 0}
     dev: {fileID: 0}
     actif: {fileID: 0}
   dealerSpotFrontOv:
-    fen: {fileID: 21300000, guid: ef52a1ca98a70d32491b0915ce6c4c54, type: 3}
+    fen: {fileID: 21300000, guid: 13df6449fbfe6368db8cdb5f15edf2ba, type: 3}
     neon: {fileID: 0}
     dev: {fileID: 0}
     actif: {fileID: 0}
   moneyHoldingOv:
-    fen: {fileID: 21300000, guid: 27e4d916ee2c413a98b7188516a7959e, type: 3}
-    neon: {fileID: 0}
+    fen: {fileID: 21300000, guid: 3fbdff8fa67bdfb98afc4f44c26ee15a, type: 3}
+    neon: {fileID: 21300000, guid: 0a14ac200a3e0769f92eff8a8ac78c92, type: 3}
     dev: {fileID: 0}
     actif: {fileID: 0}
   fallbackOv:
-    fen: {fileID: 21300000, guid: f9080d967cf95f7df951ad484ba7ed71, type: 3}
+    fen: {fileID: 21300000, guid: 2ebd88ec76b0c47b7b68f79ba0c08c95, type: 3}
     neon: {fileID: 0}
     dev: {fileID: 0}
     actif: {fileID: 0}
