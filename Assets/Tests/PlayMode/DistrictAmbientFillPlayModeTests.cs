@@ -277,7 +277,14 @@ namespace MafiaCleanCity.CityMap.Tests
 
         // ── amb-F5 — recouvrement réel ─────────────────────────────────────────────────────
         // Monde dégénéré tué : (a) toutes les façades au même point ⇒ tué par positions ancrées
-        // DISTINCTES ; (b) sprites minuscules ⇒ tué par largeur moyenne ≥0,45×CellSize (§8).
+        // DISTINCTES ; (b) sprites minuscules ⇒ tué d'abord par (a) paires intersectantes, puis par
+        // le plancher de largeur ci-dessous. SEUIL 0,35 — arbitrage ⊥ (round composition chunk 1) :
+        // c'est un SÉPARATEUR entre deux mélanges MESURÉS (voulu au run : 0,396 · dégénéré admissible
+        // le plus étroit, tout-barbier : 0,28), pas une valeur de référence — à recalculer si le
+        // mélange change. Le 0,45 d'origine descendait d'un chiffre en bbox jamais redérivé après le
+        // passage à l'aire opaque, et exigeait 100 % d'hotel — contradictoire avec amb-F1 (≥4
+        // templates distincts) : deux falsifiables du même chunk ne pouvaient pas être vertes ensemble.
+        // Ce que la clause garde : que le recouvrement vienne de la MASSE, pas du seul jitter.
 
         [UnityTest]
         public IEnumerator AmbF5_FacadesOverlapSomewhere_DistinctPositions_AverageWidthFloor()
@@ -312,9 +319,9 @@ namespace MafiaCleanCity.CityMap.Tests
                 "amb-F5 — positions ancrées DISTINCTES == nombre de façades (aucune paire au même point)");
 
             float avgWidth = facades.Select(f => ((RectTransform)f).rect.width).Average();
-            Assert.GreaterOrEqual(avgWidth, 0.45f * cellSize,
-                $"amb-F5 — largeur moyenne ≥ 0,45×CellSize (observé {avgWidth:F2}px, CellSize {cellSize:F2}px, " +
-                $"seuil {0.45f * cellSize:F2}px)");
+            Assert.GreaterOrEqual(avgWidth, 0.35f * cellSize,
+                $"amb-F5 — largeur moyenne ≥ 0,35×CellSize (observé {avgWidth:F2}px, CellSize {cellSize:F2}px, " +
+                $"seuil {0.35f * cellSize:F2}px)");
         }
 
         // ── amb-F6 — parcellaire réel ──────────────────────────────────────────────────────

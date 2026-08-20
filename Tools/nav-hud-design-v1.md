@@ -513,6 +513,22 @@ et D6 restent indifférents au verdict. **Aucun DÉDUIT décisif ne reste sans d
 | hud-F5 | état nommé hors district | l'épingle serait vraie pour la mauvaise raison ⇒ tué par `CityTabDistrictId == -1` |
 | hud-F6 | pas de dérive entre les 2 surfaces | deux résolveurs qui dérivent séparément restent chacun cohérent ⇒ tué en comparant les **rangs** des deux, sur un chemin que les deux empruntent |
 
+## 2.6-bis. Base GELÉE du chunk 1 et cibles du chunk 3 en DELTA (arbitrage ⊥, round composition)
+
+Mesuré au round composition (sonde gelée §8-bis, bbox grille de diorama_nuit_chunk1.png) :
+**platitude 28,7 % · sd p50 = 9,00 · plus grande région plein cadre 52,72 %**. Ces valeurs sont la
+BASE. Les cibles absolues du chunk 3 posées en §2.6 (≤50 %, sd ≥2,0) étaient DÉJÀ satisfaites par
+le chunk 1 — une garde qui ne peut pas voir son événement. Remplacées par :
+- chunk 3 : platitude ≤ 24 % ET au moins −4 pts contre la base 28,7 % ;
+- chunk 3 : nombre de régions ≥ ×1,5 contre la base (4 844) ;
+- **plafond de texture** (nouveau, borné par la référence qui mesure sd p50 = 6,08 plein cadre) :
+  sd p50 ≤ 7 sur la bbox de grille, à CHAQUE chunk restant — les cibles à sens unique ne suffisent
+  pas, gouttières/bordures/flaques ajoutent des arêtes et rien n'arrêtait la dérive vers le bruit.
+- amb-F5 : seuil 0,35 (séparateur entre mélanges mesurés 0,396/0,28 — voir le commentaire du test).
+★ Leçon de transfert d'ancre : l'ancre 43,0 % venait d'un régime « peu de grandes masses » ; le
+chunk 1 pose « beaucoup de petites » — à aire égale, 4 petites masses portent ~2× le périmètre,
+donc ~2× les arêtes. **Toute ancre transférée doit dire son régime.**
+
 ## 8-bis. Sonde de composition — paramètres GELÉS (re-gate ⊥ v2)
 
 La divergence de sondes du tour précédent (50,3 % vs 25,3 % pour la MÊME référence) venait de deux
