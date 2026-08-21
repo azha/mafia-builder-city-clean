@@ -123,7 +123,7 @@ namespace MafiaCleanCity.CityMap.Tests
 
             RectTransform rootRt = (RectTransform)diorama.ScreenRoot;
             RectTransform fondRt = (RectTransform)diorama.ScreenRoot.Find("DistrictScene/DistrictBackgroundImage");
-            RectTransform backdropRt = (RectTransform)diorama.ScreenRoot.Find("DistrictScene/DistrictSceneBackdrop");
+            RectTransform backdropRt = (RectTransform)diorama.ScreenRoot.Find("DistrictSceneBackdrop"); // hors de la scène mobile depuis 2026-08-21
             Assert.IsNotNull(backdropRt, "JUGE-D2 — le backdrop existe dès qu'il y a un fond réel, même bloc `if` que " +
                 "DistrictBackgroundImage (DistrictInteriorScreenController.RenderHeroDiorama)");
 
@@ -609,19 +609,26 @@ namespace MafiaCleanCity.CityMap.Tests
             yield return FetchInterior("juged2backdrop", d => dto = d);
             var diorama = RenderFresh("DistrictMapNav_JugeD2", dto);
 
+            // ⚠️ AMENDÉ 2026-08-21 : le backdrop vivait sous `DistrictScene` — la MÊME
+            // transformation que le pan/zoom déplace. Il partait donc avec la scène et cessait
+            // de couvrir (mesuré : 160 px découverts à 1200×1600 après un pan extrême), ce qui
+            // est exactement ce qu'il existe pour empêcher. Il est désormais enfant de la RACINE
+            // immobile. La propriété assertée ne change pas — elle devient seulement VRAIE : le
+            // backdrop couvre la racine, donc le viewport, à tout pan/zoom/résolution.
             Transform scene = diorama.ScreenRoot.Find("DistrictScene");
-            Transform backdropT = scene.Find("DistrictSceneBackdrop");
+            Transform backdropT = diorama.ScreenRoot.Find("DistrictSceneBackdrop");
             Assert.IsNotNull(backdropT, "JUGE-D2 — un backdrop plein-écran existe (jamais de vide brut derrière le fond)");
 
             Transform fondT = scene.Find("DistrictBackgroundImage");
-            Assert.Less(backdropT.GetSiblingIndex(), fondT.GetSiblingIndex(),
-                "JUGE-D2 — le backdrop est un sibling ANTÉRIEUR au fond (dessiné SOUS lui, jamais par-dessus)");
+            Assert.Less(backdropT.GetSiblingIndex(), scene.GetSiblingIndex(),
+                "JUGE-D2 — le backdrop est un sibling ANTÉRIEUR à la scène (dessiné SOUS elle, jamais par-dessus)");
+            Assert.IsNotNull(fondT, "JUGE-D2 — anti-vacuité : la scène porte bien un fond réel");
 
             var backdropRt = (RectTransform)backdropT;
-            var sceneRt = (RectTransform)scene;
+            var rootRt = (RectTransform)diorama.ScreenRoot;
             Vector3[] bc = new Vector3[4]; backdropRt.GetWorldCorners(bc);
-            Vector3[] sc = new Vector3[4]; sceneRt.GetWorldCorners(sc);
-            Assert.AreEqual(sc[0].x, bc[0].x, 0.05f, "JUGE-D2 — le backdrop couvre EXACTEMENT DistrictScene, bord GAUCHE");
+            Vector3[] sc = new Vector3[4]; rootRt.GetWorldCorners(sc);
+            Assert.AreEqual(sc[0].x, bc[0].x, 0.05f, "JUGE-D2 — le backdrop couvre EXACTEMENT la racine, bord GAUCHE");
             Assert.AreEqual(sc[0].y, bc[0].y, 0.05f, "JUGE-D2 — bord BAS");
             Assert.AreEqual(sc[2].x, bc[2].x, 0.05f, "JUGE-D2 — bord DROIT");
             Assert.AreEqual(sc[2].y, bc[2].y, 0.05f, "JUGE-D2 — bord HAUT");

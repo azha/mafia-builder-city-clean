@@ -374,7 +374,15 @@ namespace MafiaCleanCity.CityMap
                 // "bandes remplies par un panneau désigné", à toute résolution, y compris au(x)
                 // palier(s) de dézoom "district entier" (JUGE-D3, DistrictMapNavigation) qui peut
                 // laisser voir au-delà du fond sur l'axe non contraignant.
-                GameObject backdropGo = NewUI("DistrictSceneBackdrop", sceneRt);
+                // ⚠️ CORRIGÉ 2026-08-21 (nav-district-F1 rouge à 1200×1600 : 160 px découverts) :
+                // ce panneau était enfant de `sceneRt` — LA MÊME transformation que le pan/zoom
+                // déplace. Il partait donc AVEC la scène et cessait de couvrir dès le premier
+                // déplacement, ce qui est précisément ce qu'il existe pour empêcher. Il est
+                // désormais enfant de `root` (immobile), posé EN PREMIER donc sous la scène :
+                // sa couverture devient une propriété STRUCTURELLE, indépendante du pan, du zoom
+                // et de la résolution.
+                GameObject backdropGo = NewUI("DistrictSceneBackdrop", root);
+                backdropGo.transform.SetAsFirstSibling();
                 Stretch((RectTransform)backdropGo.transform, Vector2.zero, Vector2.zero);
                 Image backdropImg = backdropGo.AddComponent<Image>();
                 backdropImg.color = DesignTokens.Current.nightOutOfDistrictMuted;
