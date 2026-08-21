@@ -131,3 +131,36 @@ l'horloge ») est EXACT aujourd'hui.
   dit et ne s'appuie pas dessus.
 - **Une seule résolution jugée** (1200×1600). 1080×2400 / 1440×3200 : non vérifiés.
 - Le **second marqueur de lieutenant** : il ne peut pas distinguer « hors écran » de « non rendu ».
+
+---
+
+## Complément mesuré après le verdict — le débordement ne « déborde » pas, il PERD du contenu
+
+Le juge écrit qu'il voit **UN seul** marqueur de lieutenant et qu'il ne peut pas distinguer
+« hors écran » de « non rendu ». Recompté indépendamment sur la capture, par balayage de la
+teinte du marqueur `(242,209,143)` avec regroupement en amas :
+
+    points de cette teinte : 1475
+    amas trouvés           : 1 (le second a moins de 20 points, c'est du bruit)
+    amas : centre (0,454), x 0..68
+
+Un seul amas, **68 px de large** — alors qu'un marqueur en fait **85**. Il est donc **coupé par
+le bord d'écran**, pas simplement posé sur la bande.
+
+**Et le kit de départ en pose DEUX** : `onboarding-grant.service.ts:362,377` recrute un
+`primary` ET un `understudy`, tous deux `assignedBuildingId: labBuildingId` — donc **deux
+marqueurs sur LE MÊME bâtiment**, que le contrôleur rend « EXACTEMENT un par entrée »
+(`DistrictInteriorScreenController.cs:61`, cas dégénéré dimensionné par C10-F1 : « 2 marqueurs
+DISTINCTS sur 1 bâtiment, jamais 1 »).
+
+⇒ **Inférence, à VÉRIFIER par lecture de scène** (`RenderedLieutenantMarkerCount` + la position
+de chaque marqueur, via l'éditeur — non fait, la suite occupait Unity) : les deux marqueurs sont
+posés côte à côte, le premier est rogné à x=0 et **le second est entièrement hors écran**. Tant
+que ce n'est pas lu dans la scène, ça reste DÉDUIT.
+
+**Si l'inférence tient, elle change la spécification du correctif de découpe** : découper ne
+suffirait pas — ça cacherait proprement un marqueur au lieu de le montrer mal. Le vrai besoin est
+que la mise en page des marqueurs **reste dans le fond** quand le bâtiment est au bord du
+district. C'est une question de conception (où va un marqueur quand il n'y a plus de place à
+gauche ?), et c'est exactement pourquoi ce chantier passe par un design plutôt que par une
+retouche.
