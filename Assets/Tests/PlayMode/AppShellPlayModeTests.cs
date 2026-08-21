@@ -2,6 +2,7 @@ using System.Collections;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
+using UnityEngine.UI;
 using MafiaCleanCity.CityMap;
 using MafiaCleanCity.Operational; // DashboardController + LaunderingController
 using MafiaCleanCity.Operational.Lieutenant;
@@ -198,6 +199,112 @@ namespace MafiaCleanCity.Shell.Tests
                 "le montage tardif de Home NE DOIT PAS écraser la navigation du joueur — la course fermée en production, pas seulement en test");
             Assert.AreEqual(typeof(CityMapController), shell.MountedTenantType,
                 "le locataire City doit rester monté — un ActivateTab(Home) forcé l'aurait détruit");
+        }
+
+        // Défaut MESURÉ (Tools/district-v2-reimport-implementation-notes.md § FILE D'ATTENTE,
+        // défaut 1, 2026-08-21) — un PREMIER AppShell dont le host n'est JAMAIS détruit (exactement
+        // le piège que le commentaire de TearDown ci-dessus nomme : « the NEXT test's AppShell would
+        // then find and reuse it, silently DOUBLING its slot count ») reste VIVANT, avec SON PROPRE
+        // CityMapController monté et sa liste de districts active. Un SECOND AppShell, créé ensuite,
+        // retrouve LE MÊME Canvas via `FindFirstObjectByType<Canvas>()` (`BuildLayout` ne crée un
+        // Canvas QUE s'il n'en trouve aucun) et empilait — AVANT correctif — ses propres
+        // ContentSlot/TopBarSlot/TabBarRoot en SIBLING des anciens, jamais nettoyés : `UnmountCurrentTenant`
+        // ne connaît que SA PROPRE instance de `ContentSlot`. Mesuré à la capture : le fond du
+        // district (centré, 1080px dans un viewport 1280px — marges de 100px de chaque côté) ne
+        // peint rien dans ces marges, où l'ANCIEN CityMapController (rendu, sibling d'ordre
+        // inférieur mais jamais occlus dans cette zone) restait visible.
+        //
+        // Garde STRUCTURELLE, deux formes ensemble (socle : « une garde qui compterait seulement les
+        // enfants directs du Canvas passerait alors qu'un objet fuit deux niveaux plus bas ») :
+        //  (a) Canvas.childCount reste EXACTEMENT 3 — un doublon de slot serait un 4e enfant DIRECT ;
+        //  (b) balayage PAR TYPE DE COMPOSANT, insensible à la profondeur de nichage —
+        //      DistrictCellView (marqueur exclusif de la liste CityMapController, `BuildCell`) ne
+        //      doit exister NULLE PART dans la scène une fois qu'on a quitté City pour un district
+        //      — (b) seule aurait vu le défaut même si l'objet fuyant avait été niché encore plus
+        //      profond que le cas mesuré ici (Canvas/ContentSlot-orphelin/CityMapRoot/Banks/.../DistrictCell).
+        //
+        // CONTRÔLE POSITIF (rouge AVANT le correctif de `AppShell.BuildLayout`, mesuré) :
+        // Canvas.childCount == 6 (3 slots × 2 shells) et DistrictCellView.Length == 24 (le corpus
+        // seedé par CityMapSeeder) — voir implementation-notes.md § Deviations pour la commande et
+        // la sortie collées de cette mesure AVANT correctif.
+        [UnityTest]
+        public IEnumerator StaleAbandonedShell_NeverLeaksTenantContentUnderReusedCanvas()
+        {
+            ExpectTenantOwnDemoAuthNoise();
+
+            // ---- shell A : jamais détruit — l'abandon EST le scénario testé (repro d'un
+            // teardown de test/capture incomplet, cf. commentaire de TearDown ci-dessus). ----
+            GameObject shellAGo = new GameObject("AppShell_A_abandoned");
+            AppShell shellA = shellAGo.AddComponent<AppShell>();
+            shellA.SetIdentity("citymap_demo@example.test", "citymap-demo-pw");
+            yield return WaitForHomeMounted(shellA);
+            shellA.ActivateTab(AppShell.Tab.City);
+            yield return null;
+            yield return null;
+            Assert.AreEqual(typeof(CityMapController), shellA.MountedTenantType, "prémisse : A a bien monté CityMapController");
+            var cityMapA = shellA.MountedTenantGameObject.GetComponent<CityMapController>();
+            float authElapsedA = 0f;
+            while (!cityMapA.IsAuthenticated && cityMapA.AuthError == null && authElapsedA < 25f) { authElapsedA += Time.deltaTime; yield return null; }
+            yield return null; // laisser Populate() construire la liste
+
+            Assert.Greater(Object.FindObjectsByType<DistrictCellView>(FindObjectsInactive.Include, FindObjectsSortMode.None).Length, 0,
+                "prémisse : A a bien une liste de districts vivante avant l'entrée en scène de B");
+
+            // ---- shell B : le VRAI flux joueur, City -> district (via `shell`/`shellGo`, trackés
+            // par le TearDown de la fixture — A est nettoyé explicitement en fin de test). ----
+            shellGo = new GameObject("AppShell_B");
+            shell = shellGo.AddComponent<AppShell>();
+            shell.SetIdentity("citymap_demo@example.test", "citymap-demo-pw");
+            yield return WaitForHomeMounted(shell);
+            shell.ActivateTab(AppShell.Tab.City);
+            yield return null;
+            yield return null;
+            var cityMapB = shell.MountedTenantGameObject.GetComponent<CityMapController>();
+            Assert.IsNotNull(cityMapB, "B a bien monté un CityMapController");
+            float authElapsedB = 0f;
+            while (!cityMapB.IsAuthenticated && cityMapB.AuthError == null && authElapsedB < 25f) { authElapsedB += Time.deltaTime; yield return null; }
+
+            const int districtId = 16;
+            cityMapB.SelectDistrict(districtId);
+            yield return null;
+            Transform enterBtnT = shell.ContentSlot.Find("DetailPanel")?.Find("Footer")?.Find("EnterButton");
+            Assert.IsNotNull(enterBtnT, "'Entrer' existe");
+            Button enterBtn = enterBtnT.GetComponent<Button>();
+            float interactElapsed = 0f;
+            while (!enterBtn.interactable && interactElapsed < 10f) { interactElapsed += Time.deltaTime; yield return null; }
+            Assert.IsTrue(enterBtn.interactable, "'Entrer' interactable");
+            enterBtn.onClick.Invoke(); // le VRAI chemin de clic
+
+            float enterElapsed = 0f;
+            DistrictInteriorScreenController screen = null;
+            while (enterElapsed < 20f)
+            {
+                if (shell.MountedTenantType == typeof(DistrictInteriorScreenController))
+                {
+                    screen = shell.MountedTenantGameObject.GetComponent<DistrictInteriorScreenController>();
+                    if (screen != null && screen.LastFetchSucceeded) break;
+                }
+                enterElapsed += Time.deltaTime;
+                yield return null;
+            }
+            Assert.IsNotNull(screen, "B a atteint le district via le VRAI chemin de clic");
+            yield return null;
+            yield return null; // laisser les Destroy() différés se traiter réellement (nav-F2)
+
+            // ---- la garde ----
+            Assert.AreEqual(3, shell.ShellCanvas.transform.childCount,
+                "le Canvas ne porte JAMAIS plus de 3 enfants — un slot dupliqué d'un shell abandonné serait un 4e (ou plus)");
+            Assert.AreEqual(0, Object.FindObjectsByType<DistrictCellView>(FindObjectsInactive.Include, FindObjectsSortMode.None).Length,
+                "AUCUN DistrictCellView (marqueur exclusif de la liste CityMapController) ne survit nulle part dans la " +
+                "scène une fois qu'on a quitté City pour un district — même niché sous un ContentSlot orphelin, " +
+                "invisible à un comptage des seuls enfants DIRECTS du Canvas");
+
+            // Nettoyage de A (B est nettoyé par le TearDown de la fixture via shell/shellGo — le
+            // Canvas, partagé par construction si le défaut n'est pas corrigé OU réutilisé même
+            // après correctif, n'est détruit qu'UNE fois).
+            if (shellA.ShellCanvas != null && shellA.ShellCanvas.gameObject != shell.ShellCanvas.gameObject)
+                Object.Destroy(shellA.ShellCanvas.gameObject);
+            Object.Destroy(shellAGo);
         }
     }
 }

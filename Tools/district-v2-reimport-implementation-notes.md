@@ -241,13 +241,130 @@ Tous les tests district/navigation/nocturne (`DistrictInterior*`, `DistrictNight
    externe ponctuel, pas de falsifiable permanent, pas de changement de mécanisme).
 
 
-## ⛔ FILE D'ATTENTE — à traiter APRÈS convergence du HUD (collision de fichiers)
-1. **Fuite de la liste des districts** : après `EnterDistrict`, la liste `CityMapController`
-   reste visible en marge gauche (x<100). Trou de nettoyage côté `AppShell.UnmountCurrentTenant`
-   ou parentage hors `ContentSlot`. **Aucune falsifiable ne le voit** — la garde à écrire est
-   structurelle : après un montage de locataire, AUCUN objet d'un locataire précédent ne survit
-   sous le Canvas (compte d'objets par type, ou empreinte de racine). Découvert par capture le
-   2026-08-21, consigné, non corrigé (le Shell était en édition parallèle).
-2. Vérifier au même moment que les 4 bâtiments joueur J0 apparaissent bien sur le fond v2
-   (la capture de réimport ne les montrait pas dans le cadre — à confirmer : hors champ, ou
-   non rendus ?).
+## 6. FILE D'ATTENTE — TRAITÉE (2026-08-21, coder, SHA `7387043` déblocage HUD confirmé)
+
+### Défaut 1 — fuite de la liste des districts après `EnterDistrict`
+
+**Diagnostic par mesure — DEUX causes distinctes trouvées, PAS une seule.**
+
+1. **Mesuré par instrumentation C# (hiérarchie réelle, pas par lecture)** : un `AppShell` dont le
+   host n'est jamais détruit (host abandonné — exactement le cas d'un script de capture/test qui
+   omet son teardown) reste vivant. Un SECOND `AppShell` créé ensuite retrouve LE MÊME `Canvas` via
+   `FindFirstObjectByType<Canvas>()` (`BuildLayout` ne crée un Canvas que s'il n'en trouve aucun) et
+   empilait — avant correctif — un second jeu de `ContentSlot`/`TopBarSlot`/`TabBarRoot` en SIBLING
+   des anciens, jamais atteints par `UnmountCurrentTenant` (qui ne connaît que SA PROPRE instance de
+   `ContentSlot`). **Contrôle positif mesuré, rouge avant correctif** :
+   `Assert.AreEqual(3, shell.ShellCanvas.transform.childCount)` → `Expected: 3, But was: 6` (3 slots
+   × 2 shells). Correctif : `AppShell.BuildLayout()` détruit tout jeu de slots préexistant sur un
+   Canvas réutilisé avant d'y bâtir le sien (`AppShell.cs`, méthode `DestroyExistingSlot`). Après
+   correctif : vert (`Assets/Scripts/Shell/AppShell.cs`, `Assets/Tests/PlayMode/AppShellPlayModeTests.cs`
+   § `StaleAbandonedShell_NeverLeaksTenantContentUnderReusedCanvas`).
+2. **La cause de LA CAPTURE ORIGINALE (`district_fond_v2_nuit.png`), trouvée séparément** : la scène
+   `Assets/Scenes/CityMap.unity` (jamais touchée depuis le commit initial `1a45510` « Phase 1 T14 »,
+   antérieur à tout le patron Shell/W3.U1, absente de Build Settings, référencée par AUCUN script)
+   portait un GameObject `CityMapController` placé EN DUR À LA RACINE de la scène — un résidu de dev
+   pré-Shell. Rechargé manuellement dans l'Éditeur (comme l'a fait, très probablement, la session qui
+   a produit la capture originale), ce composant boote seul au Play Mode, signe avec le compte démo,
+   et bâtit sa liste de districts DIRECTEMENT sous le Canvas trouvé — sans jamais recevoir
+   `SetMountParent`, donc jamais géré ni démonté par AUCUN `AppShell`. Confirmé par mesure directe
+   (Play Mode manuel + `execute_code`) : 18 `DistrictCellView` vivants à
+   `Canvas/CityMapRoot/Banks/{North,South}Bank/DistrictCell`, alors que le `ContentSlot` du VRAI
+   shell (celui qui pilote la navigation testée) restait propre (2 enfants). Correctif : suppression
+   du GameObject `CityMapController` orphelin, scène sauvegardée (`Assets/Scenes/CityMap.unity`,
+   diff : 46 lignes supprimées, rien d'autre).
+   ⚠️ **Piège d'outil découvert au passage, distinct des deux ci-dessus** : `ScreenCapture.
+   CaptureScreenshot()` appelé depuis un test PlayMode exécuté via `run_tests` (Éditeur non focus)
+   rend un fichier PNG **byte-identique** (même SHA-256) sur deux exécutions séparées par un
+   changement RÉEL de scène (suppression + save du `CityMapController` orphelin entre les deux) —
+   preuve que ce mécanisme de capture, DANS CE HARNAIS PRÉCIS, ne reflète pas l'état courant. La
+   hiérarchie C# lue AU MÊME INSTANT (via `FindObjectsByType`) était, elle, correcte et changeante.
+   Contourné pour toute capture de preuve en pilotant un Play Mode MANUEL (`manage_editor play` +
+   `execute_code` pas à pas) et en capturant via `manage_camera` (action `screenshot`,
+   `capture_source: game_view`) plutôt que via `ScreenCapture.CaptureScreenshot` dans un run
+   automatisé — chaque capture ainsi produite porte un SHA-256 distinct et cohérent avec l'état
+   mesuré. Non creusé plus avant (mécanisme exact non isolé — hors scope), consigné ici pour la
+   prochaine fois qu'un test automatisé doit produire une capture qui PROUVE quelque chose.
+
+**Garde structurelle permanente** — `AppShellPlayModeTests.cs`,
+`StaleAbandonedShell_NeverLeaksTenantContentUnderReusedCanvas` : deux formes ensemble (le monde
+dégénéré tué : une garde qui ne compterait que les enfants DIRECTS du Canvas passerait alors qu'un
+objet fuit 4 niveaux plus bas, `Canvas/ContentSlot/CityMapRoot/Banks/NorthBank/DistrictCell`) —
+(a) `Canvas.childCount == 3` exactement ; (b) `FindObjectsByType<DistrictCellView>(...).Length == 0`
+n'importe où dans la scène, insensible à la profondeur de nichage. Rouge mesuré avant le correctif
+(a), vert après. `DistrictCellView` est un marqueur EXCLUSIF de `CityMapController.BuildCell` — zéro
+faux positif possible avec un autre écran.
+
+### Défaut 2 — bâtiments joueur J0, verdict (a)+(b), PAS (c)
+
+Mesuré (pas supposé), deux comptes, district 16 :
+- `citymap_demo` (compte démo seedé) : `screen.LastFetch.buildings.Length == 0`,
+  `RenderedBuildingCount == 0`. **Hypothèse (b) confirmée** — payload backend vide, aucun bâtiment à
+  rendre pour ce compte (précédent connu : `Tools/district-v2-reimport-implementation-notes.md` §4
+  le notait déjà).
+- Compte fraîchement inscrit (`AuthClient.SignUp` réel, callsign `claude_d2_1787297862`,
+  `session/open` accordant le starter kit) : `buildings.Length == 4`, `RenderedBuildingCount == 4`
+  après `Render()` — **le starter kit EST livré et EST rendu**, donc PAS d'hypothèse (c) (aucune
+  régression de rendu).
+  Ancres mesurées en pixels, cadrage PAR DÉFAUT (`DistrictScene.anchoredPosition == (0,0)`,
+  fond à `x=100 ytop=-600 w=1080 h=1920`, `screenH=720`) :
+  | cellule | ytop (haut, px écran) | hauteur | pied (ytop+h) | dans le cadre [0,720] ? |
+  |---|---|---|---|---|
+  | Cell_0_0 | -568 | 515 | -53 | **NON** — entièrement hors cadre (toit ET pied négatifs) |
+  | Cell_1_0 | -196 | 235 | 39 | pied tout juste visible, 196 px de toit coupés |
+  | Cell_2_0 | -69 | 200 | 131 | pied visible, 69 px de toit coupés |
+  | Cell_3_0 | -289 | 511 | 222 | pied visible, 289 px (plus de la moitié) coupés |
+  **Hypothèse (a) confirmée par la mesure** : le fond fait 1920 px de haut, la fenêtre n'en montre
+  que 720 (bande `[600,1320]` du fond, centrage fixe — aucun mécanisme de scroll/pan n'existe côté
+  client), et les 4 ancres du starter kit tombent dans le TIERS SUPÉRIEUR du fond
+  (`y_fond` pied ∈ `[547, 822]` sur 1920) — hors ou en bord de la bande visible par défaut, pour
+  UN compte comme pour l'AUTRE tant qu'aucun district ne place ses parcelles de départ dans la
+  bande centrale. Ce n'est PAS un défaut de ce lot ni une régression du réimport v2 : le mécanisme
+  de centrage du fond (`SnapToScreenPixel`, inchangé) et l'absence de scroll sont antérieurs à v2 —
+  simplement jamais observés avec un compte AYANT des bâtiments avant cette mesure.
+  Preuve produite (capture qui les MONTRE, comme demandé) : `DistrictScene.anchoredPosition` décalé
+  temporairement à `(100, -316)` — geste de DÉMONSTRATION en Play Mode manuel, PAS un changement de
+  code — amenant les 4 pieds dans `[263, 538]` (tous dans `[0,720]`), capturé
+  (`Assets/Screenshots/district_v2_starter_kit_4buildings.png`, 1280×720). Les 4 bâtiments sont
+  visibles, dont 2 portent des marqueurs `LieutenantMarker` (rectangles pleins — aucun lieutenant
+  assigné à J0, cohérent).
+
+### Verdict final — plancher scopé
+
+Run complet, catégories `W3U1`+`W3U2`+`HUDv31`+`W3UDA` (le plancher prescrit) :
+**163 tests, 163 verts, 0 rouge** (job `e4f2c8e7`, 72,4 s). `HudPlayModeTests.
+F2_BucketLiteralOccurrences_EqualMeasuredAllowlist` (inclus dans ce cumul) : **vert** — le HUD est
+bien livré depuis `7387043`, aucun correctif nécessaire de ce côté.
+
+### Captures livrées (commitées avec ce lot)
+
+- `Assets/Screenshots/district_fond_v2_nuit.png` / `_jour.png` — RECAPTURÉES post-correctif (compte
+  `citymap_demo`, district 16, flux réel `AppShell → City → EnterDistrict`, day_phase forcé) :
+  aucune fuite de locataire précédent (0 `DistrictCellView` orphelin, `Canvas.childCount==3`),
+  fond v2, HUD v3.1 en haut. 0 bâtiment visible — attendu, ce compte n'en a pas (§ Défaut 2).
+  Rect du fond à la capture : `x=100 ytop=-600 w=1080 h=1920` (1280×720, identique aux mesures
+  antérieures de ce document, transport inchangé).
+- `Assets/Screenshots/district_v2_starter_kit_4buildings.png` — NOUVELLE, preuve du Défaut 2
+  (compte frais, 4 bâtiments starter kit rendus, cadrage de démonstration décalé sur la zone des
+  ancres — voir tableau ci-dessus pour les chiffres exacts, décalage appliqué documenté, pas un
+  changement de comportement de production).
+
+### § Deviations (complète la section §Deviations plus haut)
+
+3. **Suppression du `CityMapController` orphelin de `CityMap.unity`** — quoi : ce GameObject
+   n'était nommé nulle part dans le mandat, découvert pendant le diagnostic du Défaut 1. Pourquoi :
+   c'est la cause directe et mesurée de la capture originale montrant la fuite (18 `DistrictCellView`
+   vivants, hors de tout contrôle `AppShell`) ; scène non buildée, non référencée par aucun script,
+   inchangée depuis le tout premier commit du dépôt (pré-Shell). Option retenue : suppression
+   (option conservatrice — seul le GameObject fautif retiré, caméra/lumière/scène conservées),
+   plutôt que suppression du fichier de scène entier (aucune preuve qu'il ne sert plus à rien
+   d'autre) ou modification du comportement de `CityMapController` lui-même (qui, LUI, respecte
+   parfaitement le contrat `IShellTenant` quand il est monté par un `AppShell` — le composant n'est
+   pas en cause, seul son placement en scène l'était).
+4. **Cadrage de la capture de preuve du Défaut 2 décalé manuellement** — quoi : le mandat demandait
+   une capture qui MONTRE les bâtiments ; le système n'a aucun mécanisme de scroll/pan permettant de
+   le faire par un geste joueur normal. Pourquoi : sans ce geste de démonstration, aucune capture
+   « propre » ne peut montrer un starter kit dont les ancres tombent hors de la bande verticale
+   fixe que le fond expose. Option retenue : décalage ponctuel de `DistrictScene.anchoredPosition`
+   en Play Mode manuel (jamais commité comme changement de code), documenté avec ses chiffres exacts
+   ci-dessus — pas de nouveau mécanisme de scroll ajouté au produit (hors scope de ce mandat, non
+   demandé, changerait l'UX sans arbitrage produit).

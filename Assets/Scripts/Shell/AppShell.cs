@@ -378,6 +378,22 @@ namespace MafiaCleanCity.Shell
                 scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
                 scaler.referenceResolution = new Vector2(1280, 720);
             }
+            else
+            {
+                // Défensif — MESURÉ (Tools/district-v2-reimport-implementation-notes.md § FILE
+                // D'ATTENTE, défaut 1) : un Canvas trouvé peut déjà porter les 3 slots d'un AppShell
+                // ANTÉRIEUR dont le host n'a jamais été détruit (test/capture qui a omis son
+                // teardown — cf. le commentaire de TearDown d'AppShellPlayModeTests.cs, « silently
+                // DOUBLING its slot count »). Sans ce nettoyage, le code ci-dessous empilait un
+                // second jeu de ContentSlot/TopBarSlot/TabBarRoot en SIBLING des anciens — jamais
+                // atteints par UnmountCurrentTenant (qui ne connaît que L'INSTANCE COURANTE de
+                // ContentSlot) — laissant le contenu de l'ANCIEN locataire visible pour toujours
+                // sous ce Canvas. Un seul shell possède un Canvas donné à la fois (design C1) : on
+                // détruit tout jeu de slots préexistant avant d'y bâtir le sien.
+                DestroyExistingSlot(ShellCanvas.transform, "ContentSlot");
+                DestroyExistingSlot(ShellCanvas.transform, "TopBarSlot");
+                DestroyExistingSlot(ShellCanvas.transform, "TabBarRoot");
+            }
 
             // 1) ContentSlot FIRST (lowest sibling index → rendered BENEATH the two bars below,
             //    regardless of what a tenant stretches inside it — design C1-F2).
@@ -494,6 +510,17 @@ namespace MafiaCleanCity.Shell
             rt.anchorMax = Vector2.one;
             rt.offsetMin = offMin;
             rt.offsetMax = offMax;
+        }
+
+        // BuildLayout (Canvas réutilisé) — détruit un slot NOMMÉ laissé par un AppShell antérieur
+        // jamais démonté, s'il existe. `Find` ne cherche que les enfants DIRECTS de `canvasTransform`
+        // (les 3 slots sont toujours des enfants directs du Canvas, jamais nichés) — suffisant ici,
+        // contrairement à la garde de test qui doit rester insensible à la profondeur pour le
+        // CONTENU d'un locataire (elle balaie par type de composant, pas par nom direct).
+        private static void DestroyExistingSlot(Transform canvasTransform, string childName)
+        {
+            Transform existing = canvasTransform.Find(childName);
+            if (existing != null) Object.Destroy(existing.gameObject);
         }
     }
 }
