@@ -76,3 +76,5 @@ MonoBehaviour:
   hudGaugeArcHot: {r: 0.878, g: 0.4, b: 0.29, a: 1}
   hudCreme: {r: 0.918, g: 0.878, b: 0.784, a: 1}
   hudCremeSecondary: {r: 0.725, g: 0.678, b: 0.573, a: 1}
+  lieutenantGlassTop: {r: 0.086, g: 0.129, b: 0.208, a: 0.58}
+  lieutenantGlassBottom: {r: 0.035, g: 0.055, b: 0.094, a: 0.74}

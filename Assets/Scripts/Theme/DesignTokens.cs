@@ -106,6 +106,15 @@ namespace MafiaCleanCity.Theme
 
         [Header("Lieutenant")]
         public Color lieutenantMutedDeep;  // (0.10,0.12,0.14)
+        // "La Famille — l'organigramme" (2026-08-21, maquette ratifiée user) — le dégradé « verre
+        // gravé » des panneaux Don/lieutenant/homme. REUSE verbatim de la redéfinition finale de
+        // `--tx-panneau` (bloc CSS « DOCTRINE FINALE : VERRE GRAVÉ + TAMPON »,
+        // atelier3d-mafia/ecrans-brennar.html:163) — DISTINCT du dégradé de `.barre`
+        // (hudBarGlassTop/hudBarGlassBottom) : panneau de carte vs barre HUD, deux surfaces, même
+        // doctrine, pas de fusion (cf. gdd/14 §Asset pipeline pour la règle "un token par
+        // consommateur mesuré"). Valeur réelle dans DesignTokens.asset uniquement (R2.3).
+        public Color lieutenantGlassTop;    // rgba(22,33,53,.58) -> #162135
+        public Color lieutenantGlassBottom; // rgba(9,14,24,.74) -> #090e18
 
         [Header("Dashboard")]
         public Color dashboardIconDim;     // (0.45,0.49,0.53)

@@ -43,10 +43,13 @@ namespace MafiaCleanCity.Theme.Tests
     /// </summary>
     public static class CanonPaletteComparator
     {
-        public const int ExpectedTokenCount = 62; // HUD v3.1 boucle ⊥ pixel-perfect (2026-08-21) : 51 -> 61
+        public const int ExpectedTokenCount = 64; // HUD v3.1 boucle ⊥ pixel-perfect (2026-08-21) : 51 -> 61
                                                     // (tour 1, +10 tokens hud* glass/gold/gauge/text) -> 62
                                                     // (tour 2, +1 hudMoneyUnderlineGold mesuré directement sur
                                                     // le rendu pixel) — gdd/14 @8c33ea3b.
+                                                    // La Famille — l'organigramme (2026-08-21) : 62 -> 64 (+2
+                                                    // lieutenantGlassTop/lieutenantGlassBottom, REUSE verbatim
+                                                    // de --tx-panneau, ecrans-brennar.html:163) — gdd/14 note dédiée.
                                                     // Ruling user "pixel perfect" : sceau des 51 levé nommément
                                                     // pour ce lot — root cause du round précédent (247ed3b) était
                                                     // de COMPOSER depuis les tokens existants au lieu des hex

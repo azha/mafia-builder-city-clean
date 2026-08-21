@@ -1,8 +1,8 @@
 {
-  "backCommitSha": "8c33ea3b",
+  "backCommitSha": "5fc5b70b",
   "backCommitRepo": "azha/mafia-clean-city",
-  "canonSection": "projects/mafia_city_game/gdd/14_tunable_constants.md §Asset pipeline — palette & DA",
-  "generatedAt": "2026-08-21T08:45:00+02:00",
+  "canonSection": "projects/mafia_city_game/gdd/14_tunable_constants.md \u00a7Asset pipeline \u2014 palette & DA",
+  "generatedAt": "2026-08-21T23:00:00+02:00",
   "roundingConvention": "demi-haut: floor(channel*255+0.5)",
   "tokens": [
     {
@@ -500,6 +500,22 @@
       "b": 0.573,
       "a": 1,
       "hex": "#b9ad92"
+    },
+    {
+      "name": "lieutenantGlassTop",
+      "r": 0.086,
+      "g": 0.129,
+      "b": 0.208,
+      "a": 0.58,
+      "hex": "#162135"
+    },
+    {
+      "name": "lieutenantGlassBottom",
+      "r": 0.035,
+      "g": 0.055,
+      "b": 0.094,
+      "a": 0.74,
+      "hex": "#090e18"
     }
   ]
 }
