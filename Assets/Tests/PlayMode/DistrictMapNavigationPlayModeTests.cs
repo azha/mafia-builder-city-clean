@@ -3,6 +3,7 @@ using System.Collections;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;                   // nav-district-F12 : ShaderUtilities (mots-clés/ID de l'ombre du titre)
 using UnityEngine.TestTools;
 using MafiaCleanCity.CityMap;  // AuthClient, CityProjectionsClient, DistrictInterior* DTOs, DistrictMapNavigation
 using MafiaCleanCity.Shell;    // SessionClient, SessionOpenDto (starter-kit grant)
@@ -637,6 +638,191 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.AreEqual(DesignTokens.Current.nightOutOfDistrictMuted, backdropImg.color,
                 "JUGE-D2 — couleur DÉCLARÉE (REUSE du token du repli confiné, R2.3), jamais une couleur inventée localement");
             Assert.IsFalse(backdropImg.raycastTarget, "JUGE-D2 — le backdrop est inerte, comme le fond (pp-F6)");
+        }
+
+        // ── nav-district-F12 — le titre de district : marge, fonte, lisibilité ─────────────────────
+        // Événements que ces falsifiables doivent voir rougir (nommés AVANT d'être écrites, socle) :
+        //  E1 « le titre repart au bord de l'écran » — la classe exacte du défaut de la capture de
+        //     livraison, où le « V » de « Verge-A » était coupé (premier pixel du glyphe à x=1).
+        //  E2 « le titre repasse en sans-serif » — perte de la DA de l'en-tête.
+        //  E3 « l'ombre disparaît » — le glyphe retombe à 2,23:1 sur le ciel pâle.
+        //  E4 « l'ombre est posée sur le matériau PARTAGÉ » — défaut À DISTANCE : tout le texte serif
+        //     du HUD (argent, heure-phase, manomètre) prendrait un halo, dans un AUTRE écran.
+        // Aucune de ces quatre n'est pixel : elles portent sur la FORME, donc elles restent vraies à
+        // toute résolution et ne dépendent d'aucune capture datée.
+        [UnityTest]
+        public IEnumerator NavD12_DistrictTitle_MargeGouttiere_Serif_EtOmbreSurMateriauDInstance()
+        {
+            DistrictInteriorDto dto = null;
+            yield return FetchInterior("navd12", d => dto = d);
+            var diorama = RenderFresh("DistrictMapNav_D12", dto);
+
+            var titleRt = (RectTransform)diorama.ScreenRoot.Find("DistrictTitle");
+            var title = titleRt.GetComponent<TextMeshProUGUI>();
+            Assert.IsNotNull(title, "sanity — DistrictTitle EST le texte lui-même (aucun nœud intercalé)");
+
+            // ── E1 · marge ────────────────────────────────────────────────────────────────────────
+            // Mesurée sur le rect RENDU, pas sur le champ qu'on vient d'écrire : c'est ce qui attrape
+            // une erreur d'ancre ou de pivot, qu'une relecture de `sizeDelta` laisserait passer.
+            var rootRt = (RectTransform)diorama.ScreenRoot;
+            Assert.Greater(rootRt.rect.width, 4f * ShellChrome.GutterX,
+                "anti-vacuité : la racine doit être PLUS LARGE que les deux gouttières réunies — sinon " +
+                "l'égalité suivante serait satisfaite par un rect dégénéré, pas par la marge");
+
+            Bounds titleB = RectTransformUtility.CalculateRelativeRectTransformBounds(rootRt, titleRt);
+            float bordGauche = titleB.min.x - rootRt.rect.xMin;
+            float bordDroit = rootRt.rect.xMax - titleB.max.x;
+            Assert.AreEqual(ShellChrome.GutterX, bordGauche, 0.5f,
+                $"E1 — le titre s'aligne sur LA gouttière du chrome ({ShellChrome.GutterX}px), " +
+                "pas sur le bord de l'écran (la capture de livraison le montrait coupé au pixel 1)");
+            Assert.AreEqual(ShellChrome.GutterX, bordDroit, 0.5f,
+                "E1 — et symétriquement à droite : un titre long ne doit pas déborder de l'autre côté");
+
+            // ── E2 · fonte ────────────────────────────────────────────────────────────────────────
+            Assert.AreSame(DesignTokens.Current.hudSerifFont, title.font,
+                "E2 — titre d'écran en SERIF (même famille que l'en-tête « LA FAMILLE » du corpus)");
+            Assert.AreNotSame(DesignTokens.Current.primaryFont, title.font,
+                "E2 — et explicitement PAS la sans-serif par défaut de NewText : c'est cette " +
+                "assertion-là qui rougirait si quelqu'un retirait la ligne d'affectation");
+            Assert.AreEqual(DistrictInteriorScreenController.DistrictTitleCharacterSpacing,
+                title.characterSpacing, 0.01f, "E2 — « titre serif ESPACÉ » : l'interlettrage de la DA");
+
+            // ── E3 · l'ombre existe ET fait quelque chose ─────────────────────────────────────────
+            Material instance = title.fontMaterial;
+            Assert.IsTrue(instance.IsKeywordEnabled(ShaderUtilities.Keyword_Underlay),
+                "E3 — le halo est ACTIF sur le matériau du titre");
+            Color halo = instance.GetColor(ShaderUtilities.ID_UnderlayColor);
+            Assert.Greater(halo.a, 0f,
+                "E3 — monde dégénéré nº1 : un halo à alpha 0 est ACTIVÉ et totalement invisible. " +
+                "Le mot-clé seul ne prouve rien.");
+            Assert.AreEqual(DistrictInteriorScreenController.DistrictTitleShadowAlpha, halo.a, 0.001f,
+                "E3 — et c'est bien l'opacité que le code DÉCLARE (lue de la constante, jamais recopiée ici)");
+            float dilate = instance.GetFloat(ShaderUtilities.ID_UnderlayDilate);
+            float offX = instance.GetFloat(ShaderUtilities.ID_UnderlayOffsetX);
+            float offY = instance.GetFloat(ShaderUtilities.ID_UnderlayOffsetY);
+            Assert.Greater(Mathf.Abs(dilate) + Mathf.Abs(offX) + Mathf.Abs(offY), 0.05f,
+                "E3 — monde dégénéré nº2 : un halo à dilate NUL et décalage NUL tombe EXACTEMENT sous " +
+                "le glyphe, donc n'ajoute aucun pixel autour de lui — actif, opaque, et sans effet. " +
+                "L'assertion porte sur l'étendue RÉELLE du halo, pas sur sa présence.");
+
+            // ── E4 · et il ne contamine pas le HUD ───────────────────────────────────────────────
+            // Le défaut que cette assertion attrape ne se voit PAS sur cet écran : il se verrait sur
+            // l'argent du bandeau, dans un autre fichier, sans que rien ici ne bouge.
+            //
+            // ⚠️ Une PREMIÈRE version de ce bloc assertait aussi `AreNotSame(partage, instance)` —
+            // « le titre porte bien un matériau d'instance ». Le contrôle positif D (remplacer
+            // `fontMaterial` par `fontSharedMaterial` dans le contrôleur) l'a montrée TAUTOLOGIQUE :
+            // elle est restée VERTE avec la faute en place, parce que `instance` est lu par LE TEST
+            // via `title.fontMaterial`, qui fabrique l'instance lui-même quoi qu'ait fait le
+            // contrôleur. Elle n'observait donc pas le code testé mais l'API de TMP. Retirée.
+            //
+            // Ce qui RESTE observe la bonne chose, et la mesure le dit : `DesignTokens.Current
+            // .hudSerifFont.material` et `title.fontSharedMaterial` sont LE MÊME objet (instance id
+            // 49846 pour les deux, `ReferenceEquals` == True — mesuré 2026-08-21 dans l'éditeur).
+            // Asserter que l'asset de fonte est propre EST donc le détecteur de « quelqu'un a écrit
+            // sur le partagé », et le contrôle D l'a prouvé en le faisant rougir (`Expected: False,
+            // But was: True`).
+            Material partage = DesignTokens.Current.hudSerifFont.material;
+            Assert.IsFalse(partage.IsKeywordEnabled(ShaderUtilities.Keyword_Underlay),
+                "E4 — le matériau PARTAGÉ de la fonte serif reste SANS halo : sinon l'argent, " +
+                "l'heure-phase et la valeur du manomètre du HUD en hériteraient tous les trois");
+        }
+
+        // ── nav-district-F13 — le halo du titre PRODUIT-IL DES PIXELS ? ────────────────────────────
+        // Cette falsifiable existe parce que la précédente ne suffisait PAS, et l'aveu vaut mieux que
+        // le silence : F12 vérifie que le halo est activé, opaque et dilaté — trois propriétés
+        // VRAIES dans une version où le halo ne produisait AUCUN pixel (dilate 0,2 ; deux captures
+        // identiques à la ligne d'appel près donnaient 0,2709 et 0,2712 de luminance d'anneau). Une
+        // garde sur les PARAMÈTRES d'un effet n'est pas une garde sur son EFFET, et elle est pire que
+        // rien : elle certifie le défaut.
+        //
+        // Ici on rend le vrai matériau du titre sur le fond le PLUS DÉFAVORABLE qui existe dans l'art
+        // de ce district — le ciel pâle, échantillonné à (150,164,183) sur la capture de livraison —
+        // et on compte les pixels. Résolution-indépendant, aucune capture datée, aucun seuil de goût.
+        [UnityTest]
+        public IEnumerator NavD13_HaloDuTitre_ProduitVraimentDesPixelsSombres_SurLeCielPale()
+        {
+            DistrictInteriorDto dto = null;
+            yield return FetchInterior("navd13", d => dto = d);
+            var diorama = RenderFresh("DistrictMapNav_D13", dto);
+            var titre = diorama.ScreenRoot.Find("DistrictTitle").GetComponent<TextMeshProUGUI>();
+
+            // Le ciel pâle MESURÉ, pas un gris choisi : c'est le pire fond réel, donc le seul qui
+            // fasse de cette assertion une preuve plutôt qu'une démonstration.
+            var cielPale = new Color(150f / 255f, 164f / 255f, 183f / 255f);
+            const int W = 400, H = 80;
+
+            var rt = new RenderTexture(W, H, 24, RenderTextureFormat.ARGB32);
+            var camGo = new GameObject("F13_cam");
+            var cam = camGo.AddComponent<Camera>();
+            cam.targetTexture = rt;
+            cam.clearFlags = CameraClearFlags.SolidColor;
+            cam.backgroundColor = cielPale;
+            cam.orthographic = true;
+
+            var canGo = new GameObject("F13_canvas");
+            var can = canGo.AddComponent<Canvas>();
+            can.renderMode = RenderMode.ScreenSpaceCamera;
+            can.worldCamera = cam;
+            canGo.AddComponent<UnityEngine.UI.CanvasScaler>();
+
+            var txtGo = new GameObject("F13_texte");
+            txtGo.transform.SetParent(canGo.transform, false);
+            var sonde = txtGo.AddComponent<TextMeshProUGUI>();
+            sonde.font = titre.font;
+            sonde.text = titre.text;
+            sonde.fontSize = titre.fontSize;
+            sonde.characterSpacing = titre.characterSpacing;
+            sonde.color = titre.color;
+            sonde.alignment = TextAlignmentOptions.Center;
+            ((RectTransform)sonde.transform).sizeDelta = new Vector2(300f, 40f);
+            // LE point : on copie le matériau RÉEL du titre de production. Une sonde qui se
+            // re-paramétrerait elle-même prouverait que TMP sait faire un halo, pas que CE titre
+            // en a un.
+            sonde.fontMaterial.CopyPropertiesFromMaterial(titre.fontMaterial);
+            foreach (string kw in titre.fontMaterial.shaderKeywords) sonde.fontMaterial.EnableKeyword(kw);
+            sonde.ForceMeshUpdate();
+            yield return null;
+
+            cam.Render();
+            RenderTexture prev = RenderTexture.active;
+            RenderTexture.active = rt;
+            var tex = new Texture2D(W, H, TextureFormat.RGB24, false);
+            tex.ReadPixels(new Rect(0, 0, W, H), 0, 0);
+            tex.Apply();
+            RenderTexture.active = prev;
+
+            Func<Color, float> lum = c => 0.2126f * c.r + 0.7152f * c.g + 0.0722f * c.b;
+            float lFond = lum(cielPale);
+            int sombres = 0, clairs = 0;
+            float minL = 1f;
+            foreach (Color c in tex.GetPixels())
+            {
+                float l = lum(c);
+                if (l < lFond - 0.10f) sombres++;
+                if (l > 0.80f) clairs++;
+                if (l < minL) minL = l;
+            }
+
+            Object.DestroyImmediate(tex);
+            Object.DestroyImmediate(canGo);
+            Object.DestroyImmediate(camGo);
+            rt.Release();
+            Object.DestroyImmediate(rt);
+
+            // Anti-vacuité D'ABORD : sans glyphe rendu, « 0 pixel sombre » et « 0 pixel clair »
+            // seraient tous deux vrais, et l'assertion suivante rougirait pour la mauvaise raison —
+            // ou, pire, un test écrit à l'envers serait resté vert sur une sonde vide.
+            Assert.Greater(clairs, 50,
+                $"anti-vacuité — la sonde doit avoir RENDU du texte clair (mesuré {clairs} px). " +
+                "Sans ça, le compte de pixels sombres ne parle de rien.");
+
+            Assert.Greater(sombres, 40,
+                $"F13 — le halo doit produire de VRAIS pixels plus sombres que le ciel pâle (mesuré " +
+                $"{sombres} px sous {lFond - 0.10f:F3}, luminance minimale {minL:F3}). Balayage qui " +
+                "fixe le seuil : dilate 0,0 → 0 px · 0,2 → 0 px · 0,4 → 94 · 0,6 → 204 · 0,8 → 299 · " +
+                "1,0 → 340. Le seuil de 40 sépare donc « aucun effet » de « effet mesurable » avec " +
+                "de la marge des deux côtés — il n'est pas choisi, il est lu sur la courbe.");
         }
     }
 }

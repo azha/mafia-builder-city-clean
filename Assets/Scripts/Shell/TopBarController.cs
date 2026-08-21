@@ -162,7 +162,12 @@ namespace MafiaCleanCity.Shell
         private Image boitierRing;
         private Color calmGoldColor;
 
-        private const float BarPaddingX = 16f;
+        /// <summary>Gouttière horizontale du chrome. La VALEUR a déménagé dans `ShellChrome.GutterX`
+        /// (assembly `ShellContracts`) le 2026-08-21 : les locataires en ont besoin pour s'y aligner
+        /// et ne peuvent pas lire `Shell` sans cycle d'assemblies. Cet alias reste pour que les ~30
+        /// sites d'appel du bandeau ne changent pas — mais il n'y a plus qu'UNE définition, donc le
+        /// bandeau et le titre de district ne peuvent plus diverger.</summary>
+        private const float BarPaddingX = ShellChrome.GutterX;
         private const float LeadingWidth = 90f;
         private const float LeadingHeight = 40f;
         private const float ManometreDiameter = 64f;

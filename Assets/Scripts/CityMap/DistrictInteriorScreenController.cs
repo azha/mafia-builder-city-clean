@@ -96,10 +96,12 @@ namespace MafiaCleanCity.CityMap
     // GridArea — seuls les COMPTES et l'appariement par nom `Cell_x_y` comptent) — l'option qui change
     // le moins de surface (règle du socle sur les imprévus non bloquants).
     //
-    // Structure de root en art de nuit (pp-F5) : EXACTEMENT 2 enfants directs — DistrictTitle et
-    // DistrictScene (conteneur passe-plat qui porte le fond/placeholder + tous les Cell_x_y). Le
-    // childCount de root reste donc FIXE à 2 quel que soit le nombre de bâtiments — c'est ce qui
-    // rend l'amendement de :241 exact (4 → 2), pas 2+N. AMENDÉ (nav-district) : l'ORDRE DE FRATRIE
+    // Structure de root en art de nuit (pp-F5) : EXACTEMENT 3 enfants directs — DistrictSceneBackdrop,
+    // DistrictTitle et DistrictScene (conteneur passe-plat qui porte le fond/placeholder + tous les
+    // Cell_x_y). Le childCount de root reste donc FIXE à 3 quel que soit le nombre de bâtiments —
+    // c'est ce qui rend l'amendement de :241 exact, pas 2+N. ⚠️ AMENDÉ 2026-08-21 : cette prose
+    // annonçait encore « 2 » APRÈS que le backdrop a été sorti de la scène mobile — un texte laissé
+    // intact dans un fichier corrigé devient faux dès que la correction déplace ce qu'il référence. AMENDÉ (nav-district) : l'ORDRE DE FRATRIE
     // n'est plus "Titre puis Scène" — DistrictTitle est repoussé en DERNIER sibling en fin de
     // RenderHeroDiorama (le titre est du chrome, il doit rester rendu AU-DESSUS d'un DistrictScene
     // que la navigation peut désormais paner/zoomer sous lui). Le COMPTE (2) est inchangé ; seul
@@ -320,14 +322,47 @@ namespace MafiaCleanCity.CityMap
             // que lui seul, contrairement aux deux barres, vit DANS `root`/ContentSlot plutôt que dans
             // le shell (donc PAS protégé par l'ordre de fratrie du shell, AppShell.cs:29-33).
             var playerBuildingLocalPositions = new List<Vector2>();
+            // ── Titre du district — cartouche de chrome (2026-08-21) ──────────────────────────────
+            // Trois défauts MESURÉS sur la capture de livraison (Assets/Screenshots/
+            // vue_principale_batiments_hud.png, 1200×1600), pas trois questions de goût :
+            //
+            //  (a) ROGNAGE — le titre commençait au pixel 1 : le « V » de « Verge-A » était coupé par
+            //      le bord de l'écran. Cause mécanique : ancres étirées 0→1 avec `sizeDelta.x` NUL,
+            //      donc la boîte de texte touchait littéralement les deux bords. Le bouton de retour
+            //      du chrome, lui, commence à 15px sur la même capture. La marge reprend LA constante
+            //      du chrome (`ShellChrome.GutterX`) au lieu d'un 16 recopié : si la
+            //      gouttière du HUD bouge, le titre suit — les deux ne peuvent pas diverger en silence.
+            //
+            //  (b) FONTE — le titre était en sans-serif alors que la DA de ce corpus met les TITRES
+            //      d'écran en serif (l'en-tête « LA FAMILLE » du même programme). `hudSerifFont` est
+            //      déjà un token, déjà consommé par le HUD, chaîne de repli non vide.
+            //
+            //  (c) LISIBILITÉ — et c'est le seul des trois qui soit un vrai défaut fonctionnel.
+            //      Contraste mesuré du glyphe (238,241,242) contre ce qui passe derrière lui :
+            //        · silhouette sombre (34,38,49)  → 13,31:1   (confortable)
+            //        · ciel pâle        (150,164,183) →  2,23:1   (SOUS le seuil de 3:1 des grands textes)
+            //      Le fond est PEINT et il DÉFILE (pan/zoom/quart du jour/district) : aucune couleur de
+            //      texte fixe n'est lisible sur les deux extrêmes — ce n'est pas réglable en changeant
+            //      la teinte. L'ombre portée sombre résout la classe entière : elle place autour du
+            //      glyphe un halo à 8,29:1 contre ce même ciel pâle, donc le voisinage EFFECTIF du
+            //      glyphe cesse de dépendre de l'art. ⚠️ Elle est posée sur un matériau d'INSTANCE
+            //      (`fontMaterial`, jamais `fontSharedMaterial`) : sur le partagé, elle contaminerait
+            //      TOUS les textes serif du HUD (argent, heure-phase, valeur du manomètre).
+            //
+            // Aucun nœud ajouté : `DistrictTitle` reste le TextMeshProUGUI lui-même, donc le compte de
+            // 3 enfants de root et l'ordre de fratrie (titre en DERNIER, nav-district-F8) sont
+            // inchangés, et `anchoredPosition.y` reste byte-identique (nav-F5 le mesure).
             TextMeshProUGUI title = NewText("DistrictTitle", root, dto.name_canonical, 20, TextAlignmentOptions.TopLeft);
+            title.font = DesignTokens.Current.hudSerifFont;
+            title.characterSpacing = DistrictTitleCharacterSpacing;
             RectTransform titleRt = (RectTransform)title.transform;
             titleRt.anchorMin = new Vector2(0f, 1f);
             titleRt.anchorMax = new Vector2(1f, 1f);
             titleRt.pivot = new Vector2(0.5f, 1f);
-            titleRt.sizeDelta = new Vector2(0, 32);
+            titleRt.sizeDelta = new Vector2(-2f * MafiaCleanCity.Shell.ShellChrome.GutterX, 32);
             titleRt.anchoredPosition = new Vector2(0, -(8f + safeInsetTop));
             title.color = DesignTokens.Current.onSurfacePrimary;
+            ApplyTitleShadow(title);
             TrackText(title);
 
             // scaleFactor LU AU RUNTIME (design §2.1 : "la valeur 0,859375 n'est vraie qu'à 1100×577,
@@ -924,6 +959,69 @@ namespace MafiaCleanCity.CityMap
             GameObject go = new GameObject(name, typeof(RectTransform));
             go.transform.SetParent(parent, false);
             return go;
+        }
+
+        // ── Titre de district : espacement et ombre portée (2026-08-21) ───────────────────────────
+        // Constantes PUBLIQUES parce que les falsifiables les LISENT au lieu d'en recopier les
+        // valeurs : un test qui redéclare 0,75 chez lui reste vert le jour où le code passe à 0.
+        /// <summary>« titre serif ESPACÉ » — l'interlettrage de l'en-tête de la DA maison.</summary>
+        public const float DistrictTitleCharacterSpacing = 6f;
+        /// <summary>Opacité du halo. Ce qui commande la valeur : le glyphe tombe à 2,19:1 contre le
+        /// ciel pâle de l'art de jour (mesuré sur la capture de livraison). À 0 l'ombre est ACTIVE
+        /// et ne fait rien — premier monde dégénéré.</summary>
+        public const float DistrictTitleShadowAlpha = 1.0f;
+        /// <summary>Épaississement du halo AU-DELÀ du glyphe — et c'est la constante qui porte TOUTE
+        /// la propriété.
+        ///
+        /// ⚠️ Elle valait 0,2 dans la première version de ce correctif, et à 0,2 le halo NE PRODUIT
+        /// AUCUN PIXEL. Mesuré deux fois, indépendamment : (a) deux captures identiques à la ligne
+        /// d'appel près donnent une luminance d'anneau de 0,2709 sans halo contre 0,2712 avec — soit
+        /// 0,0003 d'écart ; (b) balayage en rendu hors-écran sur fond du ciel pâle mesuré (150,164,
+        /// 183), en comptant les pixels plus sombres que le fond :
+        ///     dilate 0,0 → 0 px · 0,2 → 0 px · 0,4 → 94 · 0,6 → 204 · 0,8 → 299 · 1,0 → 340.
+        /// À pleine opacité, le halo n'atteint le vrai noir qu'à 1,0 (luminance minimale : 0,481 à
+        /// 0,4 · 0,369 à 0,6 · 0,187 à 0,8 · 0,000 à 1,0), en laissant 188 des 238 pixels clairs du
+        /// glyphe — il protège sans manger la lettre.
+        ///
+        /// La leçon, elle, est plus large que le nombre : la version à 0,2 passait une falsifiable qui
+        /// vérifiait les PARAMÈTRES du halo (activé ? opaque ? dilaté ?) — tous vrais — alors que le
+        /// halo n'avait aucun EFFET. Un dispositif décoratif qui nomme un mécanisme réel est pire
+        /// qu'aucun dispositif : un lecteur vérifie qu'il existe, le trouve, et conclut.</summary>
+        public const float DistrictTitleShadowDilate = 1.0f;
+        /// <summary>Adoucissement des bords — esthétique (un halo dur lit comme un contour de
+        /// contrefaçon). Gardé BAS : la mesure ci-dessus est faite à 0, et adoucir éclaircit.
+        ///
+        /// ⚠️ Le CONTOUR (`_OutlineWidth`) a été essayé comme mécanisme concurrent et RÉFUTÉ par la
+        /// même sonde : il est tracé À L'INTÉRIEUR du bord SDF, donc il ronge la lettre sans jamais
+        /// devenir sombre — 195 puis 90 puis 28 pixels clairs restants pour des largeurs de 0,10 /
+        /// 0,20 / 0,30, avec une luminance minimale qui ne descend qu'à 0,371. Le halo passe DERRIÈRE,
+        /// c'est ce qui le rend seul capable de la propriété.</summary>
+        // ⚠️ Le décalage est NUL sur les deux axes, délibérément : une ombre DIRECTIONNELLE ne protège
+        // qu'un côté du glyphe, et l'art défile sous le titre — le côté non protégé finit par tomber
+        // sur du clair. C'est le `dilate` (halo SYMÉTRIQUE) qui porte toute la propriété, pas l'offset.
+        public const float DistrictTitleShadowSoftness = 0.05f;
+
+        /// <summary>Pose l'ombre portée du titre sur un matériau D'INSTANCE. `fontMaterial` (par
+        /// opposition à `fontSharedMaterial`) fait cloner le matériau par TMP au premier accès : sans
+        /// ce clonage, activer l'ombre ici l'activerait sur l'asset de fonte serif lui-même, donc sur
+        /// l'argent, l'heure-phase et la valeur du manomètre du HUD — un défaut à distance, dans un
+        /// autre écran, que rien dans ce fichier ne laisserait soupçonner.</summary>
+        private static void ApplyTitleShadow(TextMeshProUGUI title)
+        {
+            // Les `ID_*` sont des `Shader.PropertyToID` remplis PARESSEUSEMENT (TMP_ShaderUtilities.cs
+            // :178-183, gardés par `isInitialized`). Les lire avant l'initialisation rendrait 0 —
+            // c'est-à-dire un identifiant de propriété VALIDE qui désigne autre chose : l'ombre serait
+            // « posée » en silence sur rien. L'appel est idempotent ; c'est le prix d'une ligne pour
+            // ne pas dépendre de l'ordre d'éveil d'un autre composant.
+            ShaderUtilities.GetShaderPropertyIDs();
+
+            Material instance = title.fontMaterial;   // clone implicite — NE PAS remplacer par fontSharedMaterial
+            instance.EnableKeyword(ShaderUtilities.Keyword_Underlay);
+            instance.SetColor(ShaderUtilities.ID_UnderlayColor, new Color(0f, 0f, 0f, DistrictTitleShadowAlpha));
+            instance.SetFloat(ShaderUtilities.ID_UnderlayOffsetX, 0f);
+            instance.SetFloat(ShaderUtilities.ID_UnderlayOffsetY, 0f);
+            instance.SetFloat(ShaderUtilities.ID_UnderlayDilate, DistrictTitleShadowDilate);
+            instance.SetFloat(ShaderUtilities.ID_UnderlaySoftness, DistrictTitleShadowSoftness);
         }
 
         private static TextMeshProUGUI NewText(string name, Transform parent, string value, int size, TextAlignmentOptions anchor)
