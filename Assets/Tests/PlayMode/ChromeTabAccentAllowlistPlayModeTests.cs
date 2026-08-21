@@ -137,11 +137,14 @@ namespace MafiaCleanCity.Theme.Tests
 
         // ── La mesure réelle — Assets/Scripts, allowlist figée par le design (D5, re-mesurée ici) ──
 
-        // 11 entrées : les 12 liaisons mesurées par D5 (8 champ statique + 4 affectation directe),
-        // MOINS AppShell.cs:255 que ce chunk repointe sur chromeTabActive. Chemins relatifs à
-        // Assets/Scripts, '/' — PAS de numéro de ligne (un refactor sans rapport ne doit pas faire
-        // rougir cette garde ; c'est l'ENSEMBLE des fichiers-porteurs qui est l'allowlist, pas leurs
-        // lignes).
+        // 12 entrées : les 11 liaisons post-D5 (12 liaisons mesurées par D5, MOINS AppShell.cs:255
+        // repointé sur chromeTabActive), PLUS "Shell/TopBarController.cs" — AMENDÉ NOMMÉMENT ici par
+        // HUD v3.1 (doctrine DA, 2026-08-21) : le restyle du TopBar introduit le PREMIER accès à
+        // `accentGold` de ce fichier (`InitPalette`, forme (iii) — indirection par variable), une
+        // SEULE fois, composé par alpha pour un filet + un anneau (jamais un aplat — voir le header
+        // de classe de TopBarController.cs). Chemins relatifs à Assets/Scripts, '/' — PAS de numéro
+        // de ligne (un refactor sans rapport ne doit pas faire rougir cette garde ; c'est
+        // l'ENSEMBLE des fichiers-porteurs qui est l'allowlist, pas leurs lignes).
         private static readonly HashSet<string> ExpectedAccentGoldBindings = new HashSet<string>
         {
             "Operational/Autonomy/AutonomyInboxController.cs",
@@ -155,6 +158,7 @@ namespace MafiaCleanCity.Theme.Tests
             "Shell/DailyReviewScreenController.cs",
             "Shell/ExceptionQueuePanelController.cs",
             "Shell/HighestLeverageCardController.cs",
+            "Shell/TopBarController.cs",
         };
 
         [Test]
