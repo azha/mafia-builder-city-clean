@@ -368,7 +368,9 @@ namespace MafiaCleanCity.Shell
         public void SetDayPhase(string dayPhase)
         {
             EnsureInitialized();
-            DayPhaseText = string.IsNullOrEmpty(dayPhase) ? "—" : dayPhase;
+            // La valeur du back passe par un RÉSOLVEUR NOMMÉ, comme la chaleur voisine — sans lui,
+            // le joueur lisait `DAWN` (l'enum de la base) à côté de `JOUR 1`.
+            DayPhaseText = DayPhaseResolver.Label(dayPhase);
             phaseValueText.text = DayPhaseText;
         }
 

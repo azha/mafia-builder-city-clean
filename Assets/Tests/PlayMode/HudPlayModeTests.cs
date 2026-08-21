@@ -343,7 +343,15 @@ namespace MafiaCleanCity.Shell.Tests
             // Prémisse (CLAUDE.md — « vérifier la prémisse de l'épingle ») : EN district, day_phase
             // porte une VRAIE valeur AVANT qu'on sorte — sinon "—" hors district serait vrai pour la
             // MAUVAISE raison (un mécanisme qui n'aurait jamais rien poussé du tout).
-            Assert.Contains(shell.TopBar.DayPhaseText, new[] { "DAWN", "DAY", "DUSK", "NIGHT" },
+            // AMENDÉ NOMMÉMENT (2026-08-21) — la liste attendue était celle des valeurs BRUTES du
+            // back. Le bandeau les affichait telles quelles (le joueur lisait « DAWN » à côté de
+            // « JOUR 1 ») ; elles passent désormais par `DayPhaseResolver.Label`. La liste est
+            // DÉRIVÉE du résolveur au lieu d'être recopiée : recopier quatre libellés ici les ferait
+            // vieillir seuls le jour où le résolveur change, et le test épinglerait une mise en forme
+            // que plus personne n'applique.
+            string[] libellesAttendus = System.Array.ConvertAll(
+                DayPhaseResolver.CanonicalPhases, DayPhaseResolver.Label);
+            Assert.Contains(shell.TopBar.DayPhaseText, libellesAttendus,
                 $"prémisse : EN district, day_phase doit porter une vraie valeur — obtenu '{shell.TopBar.DayPhaseText}'");
             Assert.AreNotEqual(-1, shell.CityTabDistrictId, "prémisse : EN district, CityTabDistrictId != -1");
 
@@ -674,6 +682,42 @@ namespace MafiaCleanCity.Shell.Tests
                 $"la forme '{sourceLine}' aurait dû compter {expectedHits} littéral(aux) de bucket, " +
                 $"obtenu {hits} — le motif 2 doit voir une correspondance ALIASÉE que le motif 1 (accès " +
                 "direct aux tokens) rate structurellement.");
+        }
+
+        // ── hud-F2c — la phase du jour ne fuit pas son enum de base ────────────────────────────────
+        // Événement à faire rougir : quelqu'un remet la valeur brute dans le bandeau (ou ajoute un
+        // 5ᵉ quart sans lui donner de libellé). Côté C# la valeur arrive en `string` : il n'y a pas
+        // d'enum à rendre exhaustif, donc le compilateur ne verra jamais rien — le détecteur DOIT
+        // être un test qui ÉNUMÈRE les quarts canoniques.
+        //
+        // Monde dégénéré tué explicitement : un résolveur qui rendrait son entrée telle quelle
+        // passerait n'importe quelle assertion « le libellé n'est pas vide ». On exige donc que
+        // CHAQUE quart canonique soit rendu DIFFÉREMMENT de sa forme brute.
+        [Test]
+        public void HudF2c_LibelleDeQuartDuJour_JamaisLaValeurBrute_PourChaqueQuartCanonique()
+        {
+            Assert.AreEqual(4, DayPhaseResolver.CanonicalPhases.Length,
+                "anti-vacuité — la boucle suivante ne prouve rien sur un jeu vide ; si le back gagne " +
+                "un 5ᵉ quart, ce compte doit être amendé NOMMÉMENT et le libellé ajouté avec lui");
+
+            foreach (string brut in DayPhaseResolver.CanonicalPhases)
+            {
+                string libelle = DayPhaseResolver.Label(brut);
+                Assert.AreNotEqual(brut, libelle,
+                    $"« {brut} » est rendu tel quel — c'est la valeur d'enum de la base qui arrive " +
+                    "à l'écran, à côté d'un « JOUR 1 » déjà mis en forme");
+                Assert.IsNotEmpty(libelle, $"« {brut} » n'a pas de libellé");
+                StringAssert.AreEqualIgnoringCase(brut, libelle,
+                    $"le libellé de « {brut} » doit rester LE MÊME MOT — ce résolveur met en forme, " +
+                    "il ne traduit pas (la langue de l'interface est un arbitrage produit ouvert)");
+            }
+
+            // Une valeur inconnue passe TELLE QUELLE, délibérément : voir passer un quart inattendu
+            // est un signal, le voir disparaître derrière un « — » n'en est pas un.
+            Assert.AreEqual("MIDNIGHT_SUN", DayPhaseResolver.Label("MIDNIGHT_SUN"),
+                "un quart inconnu reste visible plutôt que masqué");
+            Assert.AreEqual("—", DayPhaseResolver.Label(null),
+                "hors district : l'état NOMMÉ « — », jamais la dernière valeur d'un district quitté");
         }
     }
 }
