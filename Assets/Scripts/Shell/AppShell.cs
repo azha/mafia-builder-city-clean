@@ -213,8 +213,14 @@ namespace MafiaCleanCity.Shell
             // `EffectiveBottomOverhangPx` MESURE en live de combien. Sans lui, un titre positionné
             // pour juste dégager 56px se retrouve chevauché par l'anneau/le filet — c'est le rouge
             // que ce correctif ferme (nav-F4).
-            float topInset = TopBarSlot.rect.height + TopBar.EffectiveBottomOverhangPx;
-            tenant.SetSafeInsets(topInset, TabBarRoot.rect.height); // §3.4
+            // RE-AMENDÉ (2026-08-21, `Screen.safeArea`) : `TopBarSlot`/`TabBarRoot` sont maintenant
+            // TRANSLATÉS par leur inset de zone sûre respectif (`BuildLayout`/`BuildTabBar`) — le
+            // titre du district doit dégager la MÊME distance depuis le bord du canvas, insets
+            // inclus, sinon un appareil à encoche/barre de gestes le chevaucherait quand même.
+            (float topSafeInset, float bottomSafeInset) = SafeAreaInsetsLocal();
+            float topInset = topSafeInset + TopBarSlot.rect.height + TopBar.EffectiveBottomOverhangPx;
+            float bottomInset = bottomSafeInset + TabBarRoot.rect.height;
+            tenant.SetSafeInsets(topInset, bottomInset); // §3.4
             TopBar.SetLeadingAction(TopBarController.LeadingAction.BackToMap, ExitToCityMap);
             StartCoroutine(EnterDistrictSequence(tenant, token, districtId));
         }
@@ -372,6 +378,40 @@ namespace MafiaCleanCity.Shell
 
         // --------------------------------------------------------------- UI build
 
+        // Retour user relayé par le contrôleur (2026-08-21) : « `Screen.safeArea`, ta trouvaille…
+        // traite-la maintenant ». MESURÉ (ce même lot) : 0 occurrence de `safeArea` dans tout
+        // `Assets/Scripts/` avant ce correctif — le chrome (TopBar en haut, TabBar en bas) était
+        // ancré ABSOLUMENT aux bords du canvas, sans réserver l'espace d'une encoche caméra ou
+        // d'une barre de gestes système sur un téléphone réel.
+        //
+        // `Screen.safeArea` est EN LECTURE SEULE sur un vrai appareil/build — un test PlayMode ne
+        // peut PAS le forcer directement. Seam testable : ce délégué, par défaut la valeur réelle,
+        // qu'un test peut remplacer AVANT que le shell ne construise son layout pour prouver que
+        // les marges s'appliquent MÉCANIQUEMENT, sans dépendre d'un simulateur/appareil physique
+        // (voir `ChromeSafeAreaPlayModeTests.cs`, contrôle positif — monde dégénéré à tuer : un
+        // test qui passe seulement parce que la zone sûre vaut zéro dans l'éditeur). Remis à son
+        // défaut par le `TearDown` de CE test — jamais laissé fuiter vers un test SANS RAPPORT.
+        public static System.Func<Rect> SafeAreaProvider = () => Screen.safeArea;
+
+        /// <summary>Insets HAUT/BAS de `Screen.safeArea`, convertis en unités CANVAS LOCALES.
+        /// `CanvasScaler.ScaleWithScreenSize` + `matchWidthOrHeight=0` (défaut Unity, JAMAIS changé
+        /// dans ce dépôt — vérifié `execute_code` sur un `CanvasScaler` frais) ⇒ le facteur
+        /// d'échelle est TOUJOURS `Screen.width / referenceResolution.x`, calculé DIRECTEMENT
+        /// plutôt que lu sur `canvas.scaleFactor` (qui peut ne pas être encore à jour dans LA MÊME
+        /// frame que la construction du Canvas — pas de dépendance de timing implicite).</summary>
+        private static (float top, float bottom) SafeAreaInsetsLocal()
+        {
+            Rect safeArea = SafeAreaProvider();
+            float screenW = Screen.width, screenH = Screen.height;
+            if (screenW <= 0f || screenH <= 0f) return (0f, 0f); // anti-vacuité — jamais une division par 0
+            float scaleFactor = screenW / ReferenceResolutionWidth;
+            float topPx = Mathf.Max(0f, screenH - safeArea.yMax);
+            float bottomPx = Mathf.Max(0f, safeArea.yMin);
+            return (topPx / scaleFactor, bottomPx / scaleFactor);
+        }
+
+        private const float ReferenceResolutionWidth = 1280f; // REUSE — CanvasScaler.referenceResolution.x ci-dessous
+
         private void BuildLayout()
         {
             ShellCanvas = FindFirstObjectByType<Canvas>();
@@ -383,7 +423,7 @@ namespace MafiaCleanCity.Shell
                 ShellCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
                 CanvasScaler scaler = canvasGo.GetComponent<CanvasScaler>();
                 scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-                scaler.referenceResolution = new Vector2(1280, 720);
+                scaler.referenceResolution = new Vector2(ReferenceResolutionWidth, 720);
             }
             else
             {
@@ -418,7 +458,11 @@ namespace MafiaCleanCity.Shell
             TopBarSlot.anchorMax = new Vector2(1f, 1f);
             TopBarSlot.pivot = new Vector2(0.5f, 1f);
             TopBarSlot.sizeDelta = new Vector2(0, 56);
-            TopBarSlot.anchoredPosition = Vector2.zero;
+            // Zone sûre — décale la barre SOUS une encoche/caméra perforée (Screen.safeArea.yMax <
+            // Screen.height). 0 sur tout appareil/éditeur SANS encoche (safeArea == plein écran) —
+            // additif, jamais une refonte d'ancrage.
+            (float topSafeInset, _) = SafeAreaInsetsLocal();
+            TopBarSlot.anchoredPosition = new Vector2(0f, -topSafeInset);
             topBarGo.AddComponent<Image>().color = DesignTokens.Current.surfaceCard;
             // W3.U1 C2 — TopBarController lives on a CHILD GameObject (never directly on TopBarSlot
             // itself): its own BuildLayout() stretches ITS OWN RectTransform to fill its parent
@@ -461,7 +505,10 @@ namespace MafiaCleanCity.Shell
             TabBarRoot.anchorMax = new Vector2(1f, 0f);
             TabBarRoot.pivot = new Vector2(0.5f, 0f);
             TabBarRoot.sizeDelta = new Vector2(0, 64);
-            TabBarRoot.anchoredPosition = Vector2.zero;
+            // Zone sûre — décale la barre AU-DESSUS d'une barre de gestes système (Screen.safeArea
+            // .yMin > 0). Même mécanisme que TopBarSlot ci-dessus, même provider.
+            (_, float bottomSafeInset) = SafeAreaInsetsLocal();
+            TabBarRoot.anchoredPosition = new Vector2(0f, bottomSafeInset);
 
             // Verre fumé bleu nuit, coins arrondis — REUSE exact du patron
             // `TopBarController.BuildBarBackground` (Mask+RoundedRectMask+VerticalGradientImage).

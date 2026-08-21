@@ -43,7 +43,13 @@ namespace MafiaCleanCity.CityMap
             HeatBadge.SetActive(false);
         }
 
-        /// <summary>Apply a fetched heat band to this cell's badge (colour + text label).</summary>
+        /// <summary>Apply a fetched heat band to this cell's badge (small colour swatch + text
+        /// label). Retour user relayé par le contrôleur (2026-08-21) : « signalé sans pastille
+        /// pleine » — `HeatBadgeBg` n'est plus le fond d'un pavé 80×24, c'est un petit carré-témoin
+        /// de 14px (voir `CityMapController.BuildCell`) ; le texte reste NEUTRE (blanc, comme tout
+        /// le reste de cet écran — `ReadableTextColor` n'a plus lieu d'être ici : il compensait le
+        /// contraste contre un fond coloré qui n'existe plus. Fonction laissée définie, INCHANGÉE,
+        /// dans `WorldDtos.cs` — jamais retirée pour un seul appelant qui cesse de l'utiliser).</summary>
         public void SetHeat(HeatBucket bucket)
         {
             Heat = bucket;
@@ -52,7 +58,6 @@ namespace MafiaCleanCity.CityMap
             if (HeatBadgeLabel != null)
             {
                 HeatBadgeLabel.text = CityMapEnums.HeatLabel(bucket);
-                HeatBadgeLabel.color = CityMapEnums.ReadableTextColor(c); // legible on yellow/orange
             }
         }
 

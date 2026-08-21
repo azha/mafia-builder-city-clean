@@ -193,13 +193,38 @@ namespace MafiaCleanCity.Shell
         //   séparés (voir `Tools/hud-v31-manometre-fix-notes.md` § Deviations pour la mesure).
         private const float ManometreVerticalOffsetPx = -13f;
 
-        // Alarme (`UpdateAlarmState`) — MESURÉ (capture Play Mode réelle, 2026-08-21) : basculer
-        // l'anneau/filet sur `HeatBucketResolver.SeverityColor(Severe)` PUR (#ff5a4d) lit comme un
-        // signal d'alerte générique partagé avec les badges de danger de tout l'écran, pas comme
-        // « le chrome qui se réchauffe » de la doctrine. Mélangé avec le laiton calme via
-        // `Color.Lerp` — jamais un token dédié inventé (R2.3 : aucune couleur inline ; seule une
-        // PROPORTION est appliquée à deux tokens déjà scellés).
-        private const float AlarmTintBlendRatio = 0.55f;
+        // Alarme (`UpdateAlarmState`) — RE-DÉRIVÉ (2026-08-21, retour user relayé par le
+        // contrôleur : « posé sur le décor du district, l'anneau doit lire comme un médaillon
+        // suspendu, jamais comme un trait parasite »). AUCUNE maquette de l'état chaud n'existe
+        // dans ce dépôt — vérifié EXHAUSTIVEMENT (`find . -iname "*.html"` : 3 fichiers réels,
+        // aucun ne définit `.tel.chaud`/`.tel.descente` ; ce nom de classe n'existe QUE comme
+        // citation dans `Tools/hud-v31-doctrine-implementation-notes.md`, un round antérieur —
+        // la source elle-même a disparu). L'ancien 0.55 avait donc été choisi À L'ŒIL (« lit
+        // comme… » — aucun chiffre à l'appui) ; c'est précisément ce que le retour visait.
+        //
+        // Critère QUANTIFIÉ retenu, faute de pixel de référence : « reconnaissable laiton » =
+        // la TEINTE (hue HSV) du mélange reste plus proche de `hudHairlineGold` (41,6°) que de
+        // `accentDanger` (4,4°) — le point médian des deux teintes est à 22,98°. Calculé
+        // (script indépendant, `Color.Lerp` linéaire RGB) : le point de bascule exact est à
+        // ratio=0,390 (au-delà, la teinte perçue est plus proche du rouge que du laiton).
+        // L'ANCIEN 0,55 était donc DÉJÀ passé du côté rouge (hue 17,2°, à 24,4° de laiton contre
+        // 13,2° de danger) — la lecture "orange vif" du retour user est exactement ce que ce
+        // calcul prédit. Repris à 0,30 — marge délibérée sous le point de bascule (hue 26,7°,
+        // encore à ~4° du bord des 22,98°), pas juste en-deçà : une valeur AU bord serait aussi
+        // arbitraire qu'un choix à l'œil. Vérifié ne PAS dégrader les deux propriétés déjà
+        // testées (`ManometreOraclePlayModeTests.Oracle1`, distances euclidiennes RGB
+        // normalisées, recalculées indépendamment — script Python, jamais estimées) : distance
+        // calme↔alarme = 0,112 (seuil existant > 0,05 — 2,2× de marge ; RATRAPÉ : plus BASSE
+        // qu'avant, 0,55 donnait 0,205 — l'ancien réglage "changeait plus", au prix d'être plus
+        // proche du rouge, voir ci-dessous) ; distance alarme↔`accentDanger` brut = 0,261 (seuil
+        // existant > 0,10 — 2,6× de marge, contre 1,7× à 0,55 qui donnait 0,168) — la propriété
+        // qui compte pour CE correctif (rester loin du rouge d'alerte) est mieux marginée
+        // qu'avant, au prix assumé d'un signal de changement un peu moins ample (toujours 2,2×
+        // le seuil existant, donc toujours largement distinguible). Mélangé avec le laiton calme
+        // via `Color.Lerp` — jamais un token
+        // dédié inventé (R2.3 : aucune couleur inline ; seule une PROPORTION est appliquée à deux
+        // tokens déjà scellés).
+        private const float AlarmTintBlendRatio = 0.30f;
 
         // Défaut 4 — « pivot discret » : diamètre AFFICHÉ inchangé (proportion SVG déjà correcte,
         // voir le docblock au site d'appel), seule la résolution INTERNE de la texture générée

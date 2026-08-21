@@ -272,13 +272,26 @@ namespace MafiaCleanCity.CityMap
             hhlg.childForceExpandHeight = true;
             AddLayoutElement(header, minHeight: 44, flexibleHeight: 0);
 
-            TextMeshProUGUI title = NewText("Title", header.transform, "CITY MAP  —  Districts", 28, TextAlignmentOptions.Left);
+            // JUGE-D5 (audit visuel du district, 2026-08-21, balayage étendu à CityMap.cs — même
+            // périmètre CityMap/) — chaîne traduite, était en anglais dans une surface autrement
+            // française ("← Carte"/"Entrer" plus bas dans ce même fichier).
+            TextMeshProUGUI title = NewText("Title", header.transform, "CARTE DE LA VILLE — Districts", 28, TextAlignmentOptions.Left);
             title.fontStyle = FontStyles.Bold;
             AddLayoutElement(title.gameObject, flexibleWidth: 1);
 
             BuildToggleButton(header.transform);
 
-            // Banks row: two columns side by side, filling remaining height.
+            // Banks row: two columns side by side, DIMENSIONNÉES SUR LEUR CONTENU (retour user
+            // relayé par le contrôleur, 2026-08-21 : les captures multi-résolution du lot HUD v3.1
+            // ont montré cette rangée forcée à `flexibleHeight=1` — elle s'étirait pour occuper
+            // TOUT l'espace vertical restant du canvas, laissant les 3/4 d'un écran portrait
+            // recouverts d'un aplat de couleur totalement vide sous la liste de districts. MESURÉ
+            // (execute_code, geometry live) : le contenu réel (en-tête + N cellules de 40px) tenait
+            // dans le quart supérieur d'un canvas 1080×2400. `flexibleHeight=0` (retiré) : `Banks`
+            // se dimensionne maintenant sur son CONTENU — le reste du canvas montre `mapRootBg`
+            // (le fond de l'écran, PAS un second aplat de panneau) ; `childForceExpandHeight=true`
+            // À L'INTÉRIEUR de `Banks` reste utile pour égaliser les deux colonnes ENTRE ELLES si
+            // north/south ont des comptes différents — inchangé, portée réduite au strict besoin.
             GameObject banks = NewUI("Banks", root.transform);
             HorizontalLayoutGroup banksHlg = banks.AddComponent<HorizontalLayoutGroup>();
             banksHlg.spacing = 12;
@@ -286,7 +299,7 @@ namespace MafiaCleanCity.CityMap
             banksHlg.childControlHeight = true;
             banksHlg.childForceExpandWidth = true;
             banksHlg.childForceExpandHeight = true;
-            AddLayoutElement(banks, flexibleHeight: 1);
+            AddLayoutElement(banks, flexibleHeight: 0);
 
             northContent = BuildColumn(banks.transform, "North Bank", DesignTokens.Current.mapPanelNorth);
             southContent = BuildColumn(banks.transform, "South Bank", DesignTokens.Current.mapPanelSouth);
@@ -322,8 +335,21 @@ namespace MafiaCleanCity.CityMap
         private RectTransform BuildColumn(Transform parent, string header, Color panelColor)
         {
             GameObject col = NewUI(header.Replace(" ", ""), parent);
-            Image colBg = col.AddComponent<Image>();
-            colBg.color = panelColor;
+            // PIÈGE MESURÉ ailleurs dans ce dépôt (`Shell/VerticalGradientImage.cs`) — `Graphic`
+            // porte `[RequireComponent(typeof(CanvasRenderer))]`, mais `AddComponent<T>()` seul ne
+            // l'ajoute PAS à l'exécution : sans lui, ce Graphic ne dessinerait RIEN, silencieusement.
+            // `NewUI` ne construit qu'un `RectTransform` — CanvasRenderer explicite ici.
+            col.AddComponent<CanvasRenderer>();
+            // Retour user relayé par le contrôleur (2026-08-21) : « verre gravé, aucun aplat de
+            // couleur » — REUSE du dégradé 2 arrêts (voir `CityMapVerticalGradient.cs`, patron de
+            // `Shell/VerticalGradientImage.cs`, dupliqué ICI faute de pouvoir référencer `Shell`
+            // depuis `CityMap` sans cycle d'assembly). Arrêt HAUT = `panelColor` (identité de la
+            // banque, PRÉSERVÉE — north/south restent visuellement distincts) ; arrêt BAS =
+            // `mapRootBg` (le fond partagé de l'écran) — le panneau se fond dans le fond au lieu
+            // de s'arrêter net sur un bord d'aplat, quelle que soit sa hauteur réelle après le
+            // correctif de layout ci-dessus.
+            CityMapVerticalGradient colBg = col.AddComponent<CityMapVerticalGradient>();
+            colBg.SetColors(panelColor, DesignTokens.Current.mapRootBg);
             VerticalLayoutGroup vlg = col.AddComponent<VerticalLayoutGroup>();
             vlg.padding = new RectOffset(8, 8, 8, 8);
             vlg.spacing = 6;
@@ -353,6 +379,16 @@ namespace MafiaCleanCity.CityMap
             Stretch(labelRt, new Vector2(10, 2), new Vector2(-94, -2)); // leave room for the heat badge
 
             // Heat badge — right-anchored. Hidden until heat is fetched.
+            //
+            // Retour user relayé par le contrôleur (2026-08-21) : « l'état de chaleur signalé sans
+            // pastille pleine ». L'ANCIEN badge remplissait tout le conteneur 80×24 de la couleur
+            // heat (une vraie "pastille pleine" — même défaut que l'ancien onglet actif de la
+            // TabBar, une teinte fonctionnelle en APLAT). REUSE du patron déjà établi PLUS BAS dans
+            // ce même fichier pour la légende de contrôle (`AddLegendItem` : petit carré-témoin +
+            // légende neutre, jamais un pavé coloré) — le même conteneur 80×24 reste inchangé (le
+            // label de la cellule réserve déjà 94px pour lui, `Stretch` ci-dessus), mais son CONTENU
+            // devient un petit carré-témoin (14px, gauche) + un texte NEUTRE (blanc, comme tout
+            // autre texte de cet écran — `NewText`) au lieu d'un fond coloré.
             GameObject badge = NewUI("HeatBadge", cell.transform);
             RectTransform badgeRt = (RectTransform)badge.transform;
             badgeRt.anchorMin = new Vector2(1f, 0.5f);
@@ -360,11 +396,21 @@ namespace MafiaCleanCity.CityMap
             badgeRt.pivot = new Vector2(1f, 0.5f);
             badgeRt.sizeDelta = new Vector2(80f, 24f);
             badgeRt.anchoredPosition = new Vector2(-8f, 0f);
-            Image badgeBg = badge.AddComponent<Image>();
+
+            const float SwatchDiameterPx = 14f;
+            GameObject swatchGo = NewUI("HeatSwatch", badge.transform);
+            RectTransform swatchRt = (RectTransform)swatchGo.transform;
+            swatchRt.anchorMin = new Vector2(0f, 0.5f);
+            swatchRt.anchorMax = new Vector2(0f, 0.5f);
+            swatchRt.pivot = new Vector2(0f, 0.5f);
+            swatchRt.sizeDelta = new Vector2(SwatchDiameterPx, SwatchDiameterPx);
+            swatchRt.anchoredPosition = Vector2.zero;
+            Image badgeBg = swatchGo.AddComponent<Image>();
             badgeBg.color = CityMapEnums.HeatColorFor(HeatBucket.Unknown);
             badgeBg.raycastTarget = false; // let clicks fall through to the cell button
-            TextMeshProUGUI badgeLabel = NewText("HeatLabel", badge.transform, "", 12, TextAlignmentOptions.Center);
-            Stretch((RectTransform)badgeLabel.transform, Vector2.zero, Vector2.zero);
+
+            TextMeshProUGUI badgeLabel = NewText("HeatLabel", badge.transform, "", 12, TextAlignmentOptions.Left);
+            Stretch((RectTransform)badgeLabel.transform, new Vector2(SwatchDiameterPx + 6f, 2f), new Vector2(0f, -2f));
 
             DistrictCellView view = cell.AddComponent<DistrictCellView>();
             view.AttachHeatBadge(badge, badgeBg, badgeLabel);

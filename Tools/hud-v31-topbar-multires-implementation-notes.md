@@ -322,3 +322,135 @@ nécessaire.
    contrôleur plutôt que devinée.
 4. **Défaut 1** : aucun code de correction écrit (rien à corriger — investigation complète,
    ci-dessus). Seule la garde structurelle demandée a été ajoutée (DA7).
+
+---
+
+## Round 2 — retour du contrôleur sur ce même lot (mêmes fichiers, suite directe)
+
+Le contrôleur a re-mesuré le défaut 1 lui-même et confirme : aucun bug d'ordre de dessin (voir
+§ ci-dessus, inchangé). Trois gestes supplémentaires demandés dans le même message.
+
+### Geste 1 — teinte de l'anneau en alarme, re-dérivée par le calcul (pas à l'œil)
+
+`AlarmTintBlendRatio` (`TopBarController.cs`) passait de 0,55 à... **aucune maquette de l'état
+chaud n'existe dans ce dépôt** — vérifié exhaustivement : `find . -iname "*.html"` ne rend que 3
+fichiers réels, aucun ne définit `.tel.chaud`/`.tel.descente` ; ce nom de classe n'existe QUE
+comme citation dans `Tools/hud-v31-doctrine-implementation-notes.md` (un round antérieur — sa
+propre source a disparu du dépôt).
+
+**Critère quantifié retenu** : « reconnaissable laiton » = la teinte (hue HSV) du mélange reste
+plus proche de `hudHairlineGold` (41,6°) que de `accentDanger` (4,4°) — point médian à 22,98°.
+Calculé (script Python indépendant, `Color.Lerp` linéaire RGB) : point de bascule exact à
+ratio=0,390. **L'ANCIEN 0,55 était déjà passé côté rouge** (hue 17,2°) — exactement ce que le
+retour user décrivait. Repris à **0,30** (marge délibérée sous le point de bascule, hue 26,7°) :
+distance calme↔alarme = 0,112 (seuil existant Oracle1 > 0,05, 2,2× marge) ; distance
+alarme↔`accentDanger` brut = 0,261 (seuil existant > 0,10, 2,6× marge, MEILLEURE qu'avant : 0,55
+donnait 0,168). Capturé visuellement (`Assets/Screenshots/citymap_v1_restyled_portrait_1080x2400
+.png`, médaillon en haut) : la teinte lit maintenant comme un laiton chaud, pas un rouge d'alerte.
+
+### Geste 2 — l'écran City Map (jamais touché par la doctrine)
+
+Confirmé par mesure : `CityMapController.cs` (les colonnes North/South Bank) portait un fond en
+APLAT PLEIN (`mapPanelNorth`/`mapPanelSouth`) et des badges de heat en PASTILLE PLEINE
+(`HeatColorFor` remplissant tout un rectangle 80×24). **Aucune maquette n'existe pour cet écran
+non plus** — même vérification exhaustive que Geste 1.
+
+- **Layout (le bug confirmé)** : `Banks` (la rangée des deux colonnes) portait
+  `AddLayoutElement(banks, flexibleHeight: 1)`, la forçant à occuper TOUT l'espace vertical
+  restant du canvas — mesuré : sur 1080×2400, le contenu réel (9 lignes + en-tête) tenait dans le
+  quart supérieur, les 3/4 restants montraient un aplat de couleur totalement vide.
+  **Corrigé** : `flexibleHeight: 0` — `Banks` se dimensionne maintenant sur son CONTENU, le reste
+  du canvas montre `mapRootBg` (le fond de l'écran, jamais un second aplat de panneau).
+  ⚠️ **« en-têtes de colonnes répétés tout en bas »** — cette sous-affirmation du retour (marquée
+  « a priori » par le contrôleur lui-même) n'a PAS été retrouvée : vérifié sur les 4 captures
+  multi-résolution du round précédent ET sur 2 captures fraîches de ce round (Play Mode réel, une
+  AVANT le fetch heat, une APRÈS) — aucune ne montre de doublon. Non reproduit, non "corrigé"
+  (rien à corriger) — consigné honnêtement plutôt que masqué.
+- **Fond des colonnes** : `CityMapVerticalGradient.cs` (nouveau, ~40 lignes) — REUSE du patron de
+  `Shell/VerticalGradientImage.cs`, dupliqué car `CityMap.asmdef` ne référence PAS `Shell` (et
+  `Shell` référence déjà `CityMap` — une référence dans l'autre sens créerait un cycle qu'Unity
+  refuse). Dégradé 2 arrêts : `panelColor` (identité de banque préservée) en haut → `mapRootBg`
+  (fond partagé) en bas — le panneau se fond dans le fond au lieu de s'arrêter net.
+- **Heat badge** : redessiné en petit carré-témoin (14px) + texte NEUTRE (blanc, comme tout le
+  reste de cet écran), REUSE du patron déjà établi PLUS BAS dans le même fichier
+  (`AddLegendItem` — carré-témoin + légende neutre, jamais un pavé coloré). `ReadableTextColor`
+  (`WorldDtos.cs`) n'a plus de consommateur mais reste défini (même discipline que
+  `chromeTabActive` au round précédent — un token/fonction sans consommateur peut redevenir
+  légitime demain, jamais retiré pour un seul appelant qui change).
+- Capturé visuellement (`Assets/Screenshots/citymap_v1_restyled_portrait_1080x2400.png`) : les
+  deux corrections confirmées — panneaux dimensionnés au contenu, badges en carré-témoin
+  (WARM=jaune, COLD=bleu, BURNING=rouge) + texte blanc.
+
+### Geste 3 — `Screen.safeArea`
+
+Confirmé absent : `grep -rn "safeArea" Assets/Scripts/` = 0 occurrence avant ce correctif.
+`TopBarSlot`/`TabBarRoot` (`AppShell.cs`) étaient ancrés ABSOLUMENT aux bords du canvas.
+
+**Seam testable** — `AppShell.SafeAreaProvider` (`public static System.Func<Rect>`, défaut
+`() => Screen.safeArea`) : `Screen.safeArea` est en lecture seule sur un appareil réel, ce
+délégué permet à un test de le FORCER avant que le shell construise son layout. Conversion
+écran→local via `Screen.width / referenceResolution.x` (le même facteur `matchWidthOrHeight=0`
+déjà établi au round précédent — calculé directement, jamais lu sur `canvas.scaleFactor` qui
+pourrait ne pas être à jour dans la même frame). `TopBarSlot.anchoredPosition.y` décalé du
+NÉGATIF de l'inset haut ; `TabBarRoot.anchoredPosition.y` décalé du POSITIF de l'inset bas —
+additif, jamais une refonte d'ancrage. `EnterDistrict`'s `topInset`/`bottomInset` (passés à
+`DistrictInteriorScreenController.SetSafeInsets`) amendés pour inclure ces deux insets — sinon un
+titre de district resterait positionné comme si le chrome n'avait pas bougé.
+
+Falsifiables — `ChromeSafeAreaPlayModeTests.cs` (3 tests) :
+1. `SafeArea_ZeroInset_...FlushToScreenEdges` — non-régression EXPLICITE (défaut éditeur, 0 inset).
+2. `SafeArea_NonZeroInset_...ShiftByExactConvertedInset` — **contrôle positif nommé par le
+   contrôleur** ("monde dégénéré à tuer : un test qui passe parce que la zone sûre vaut zéro dans
+   l'éditeur") : force une encoche 60px + barre de gestes 40px via `SafeAreaProvider`, vérifie que
+   les deux barres se décalent de l'inset CONVERTI EXACT, plus un double témoin en coins monde.
+3. `SafeArea_ProviderReset_DoesNotLeakBetweenTests` — le seam lui-même a un mode d'échec (fuite
+   entre tests) ; ce test le prouve fermé.
+
+### Evidence (round 2)
+
+- Compile propre : 0 erreur, confirmé après CHAQUE étape (Geste 1, Geste 2, Geste 3), avec le WIP
+  `LieutenantScreenController.cs` re-shelvé pour la durée de la vérification (re-restauré après,
+  diff identique — même discipline que le round précédent).
+- Suite scopée, PlayMode : **35/35** (TopBar + TabBar + multi-résolution + safe-area + Manometre +
+  AppShell) + **11/11** (CityMap render/heat/detail/tint, backend réel) + **23/23** (Navigation +
+  allowlist + DistrictNightTokens + Hud) + **2/2** (OperationalLoopPlayModeTests, boucle bout-en-
+  bout incluant CityMapController) = **71/71 VERT**, tous obtenus AVANT la collision décrite
+  ci-dessous.
+- Captures Play Mode réelles (`run_tests`, jamais la manipulation manuelle du Game View — voir
+  § Collision) : `Assets/Screenshots/citymap_v1_restyled_portrait_1080x2400.png` (2 passes, une
+  avant/une après le chargement heat).
+
+### ⚠️ Trouvaille opérationnelle — collision avec un AUTRE processus sur LE MÊME arbre ET LE MÊME
+### éditeur Unity, EN DIRECT pendant ce round
+
+Après le dernier run vert (71/71), une recompilation a fait apparaître 3 erreurs dans
+`Assets/Scripts/CityMap/DistrictMapNavigation.cs` — un fichier que je n'ai JAMAIS ouvert en
+écriture. `git status`/`git diff` confirment : ce fichier, `DistrictInteriorScreenController.cs`,
+`BuildingSpriteSlots.cs`/`.asset`, `DistrictBackgroundSlots.cs`, et 2 nouveaux fichiers
+(`DistrictSocleFootprintPlayModeTests.cs`, `Tools/juge_d4_socle_footprint_measure.py`) portent un
+travail SUBSTANTIEL et bien documenté (« JUGE-D3 »/« JUGE-D4 », zoom-to-fit du fond de district)
+— visiblement un AUTRE lot, actif EN CE MOMENT MÊME, sur le MÊME dépôt, PAS dans un worktree
+séparé. `git status` en tout DÉBUT de session ne montrait QUE 4 fichiers modifiés (fonts,
+2 screenshots, le WIP Lieutenant) — ce travail est donc apparu PENDANT cette session.
+
+**Ce que ça explique rétroactivement** : plusieurs échecs déroutants de manipulation manuelle du
+Play Mode plus tôt dans ce lot (`isPlaying` restant `false` après plusieurs appels `play`
+successifs, un `MissingReferenceException` sur un GameObject `AppShell` que je venais de créer,
+un message `"Refresh recovered after Unity disconnect/retry"`) — L'ÉDITEUR UNITY LUI-MÊME est une
+ressource UNIQUE et PARTAGÉE ici, pas seulement l'arbre git : un AUTRE agent envoyait des
+commandes MCP au MÊME processus Editor pendant que j'en envoyais aussi.
+
+**Ce qui a été fait** : (1) vérifié que MES fichiers (`AppShell.cs`, `TopBarController.cs`,
+`CityMapController.cs`, `DistrictCellView.cs`, `CityMapVerticalGradient.cs`) ne portent AUCUNE
+trace de ce second travail (`grep` négatif sur ses marqueurs) — mes 71/71 verts, obtenus quand
+l'arbre entier compilait, restent une preuve valide de MON travail ; (2) N'AI PAS touché aux
+fichiers de l'autre lot, ni pour les corriger ni pour les comprendre en détail — pas mon
+territoire, et les toucher pendant qu'ils sont en cours d'édition aurait pu activement nuire au
+travail en cours ailleurs ; (3) N'AI PAS relancé d'autre compilation/test pleine-arborescence
+après cette découverte — le faire aurait mesuré un arbre qui bouge sous mes pieds ET aurait
+concurrencé l'autre processus pour le même Editor ; (4) commit scopé PRÉCISÉMENT à mes fichiers
+(jamais `git add -A`), comme au round précédent.
+
+⇒ **Remonté au contrôleur explicitement** : ceci est une collision d'infrastructure (arbre de
+travail ET processus Editor partagés entre deux lots simultanés), pas quelque chose qu'un
+`coder` peut ou doit arbitrer seul.
