@@ -289,7 +289,35 @@ namespace MafiaCleanCity.Shell.Tests
             Transform canvasRoot = shell.ShellCanvas.transform;
             Bounds titleB = RectTransformUtility.CalculateRelativeRectTransformBounds(canvasRoot, (RectTransform)titleT);
             Bounds topBarB = RectTransformUtility.CalculateRelativeRectTransformBounds(canvasRoot, shell.TopBarSlot);
-            Assert.IsFalse(titleB.Intersects(topBarB), "nav-F4 — the title does not overlap TopBarSlot (survit inchangé)");
+
+            // AMENDÉ NOMMÉMENT (2026-08-21, frontière avec le lot manomètre — Shell/TopBarController.cs)
+            // — MESURÉ (diagnostic Debug.Log en construisant ce correctif) : `topBarB`, calculé via
+            // `RectTransformUtility.CalculateRelativeRectTransformBounds(canvasRoot, shell.
+            // TopBarSlot)`, N'EST PAS borné à `TopBarSlot.rect` seul — cette surcharge AGRÈGE
+            // récursivement les RectTransforms de TOUS LES DESCENDANTS (donc `Manometre`, qui pend
+            // sous `TopBarSlot` par construction, doctrine — voir `ManometreVerticalOffsetPx`).
+            // `topBarB` inclut donc DÉJÀ le débordement réel du médaillon — la 1ʳᵉ version de cet
+            // amendement l'étendait UNE SECONDE FOIS (double-compte), ce qui faisait rougir la
+            // sonde même après le correctif d'`AppShell.EnterDistrict`. La régression réelle que ce
+            // test capturait à l'origine n'était donc pas "topBarB ignore le médaillon" mais
+            // "`safeInsetTop` (passé par `EnterDistrict`) ne réservait que 56px NOMINAUX alors que
+            // `topBarB` — donc le chrome RÉEL — en occupe `56 + EffectiveBottomOverhangPx`" :
+            // `EnterDistrict` réserve désormais la portée EFFECTIVE, donc `topBarB` SEUL (déjà
+            // inclusif) redevient la bonne borne à comparer.
+            float overhang = shell.TopBar.EffectiveBottomOverhangPx;
+            // anti-vacuité (demandée par le contrôleur) : le débordement DOIT être mesuré
+            // STRICTEMENT positif — un médaillon recentré par erreur (régression du lot manomètre)
+            // ramènerait ce nombre à ~0, et cette assertion perdrait sa raison d'être (topBarB
+            // n'aurait alors plus rien d'effectif à prouver au-delà du nominal).
+            Assert.Greater(overhang, 4f,
+                "anti-vacuité : EffectiveBottomOverhangPx doit être mesuré STRICTEMENT positif (le " +
+                "médaillon doit réellement pendre sous la barre, doctrine) — sinon cette assertion " +
+                "serait vraie par dégénérescence, pas par une vraie marge réservée");
+
+            Assert.IsFalse(titleB.Intersects(topBarB),
+                "nav-F4 (amendée) — the title does not overlap TopBarSlot's EFFECTIVE bounds (déjà " +
+                $"inclusives du débordement du médaillon, {overhang:F1}px mesurés) — un titre qui ne " +
+                "réserve que 56px nominaux serait chevauché par l'anneau/le filet qui pendent en dessous");
 
             // Propriété positive qui remplace le confinement retiré : le fond est bien en
             // résolution NATIVE — sur l'axe où ça se voit (HAUTEUR : l'artefact est 9:16 portrait,
@@ -370,7 +398,18 @@ namespace MafiaCleanCity.Shell.Tests
             DistrictInteriorScreenController entered = null;
             yield return EnterDistrictViaRealFlow(shell, 3, s => entered = s);
 
-            float insetTop = shell.TopBarSlot.rect.height;
+            // AMENDÉ NOMMÉMENT (2026-08-21, frontière avec le lot manomètre — Shell/TopBarController.cs)
+            // — `insetTop` visait `TopBarSlot.rect.height` (56px NOMINAUX) seul ; `AppShell.
+            // EnterDistrict` réserve désormais la portée EFFECTIVE (`+TopBar.EffectiveBottomOverhangPx`,
+            // MESURÉE en live — le médaillon pend sous la barre par construction, doctrine). Le
+            // "56px" du nom de ce test devient un CAS PARTICULIER (le nominal), pas l'écart total —
+            // `insetTop` et le delta suivent la MÊME formule que `AppShell.EnterDistrict` calcule
+            // réellement, sinon ce test prouverait une propriété que le shell ne garantit plus.
+            float overhang = shell.TopBar.EffectiveBottomOverhangPx;
+            Assert.Greater(overhang, 4f,
+                "anti-vacuité : EffectiveBottomOverhangPx doit être mesuré STRICTEMENT positif — sinon " +
+                "l'écart attendu retomberait au nominal 56px par dégénérescence, pas par mesure");
+            float insetTop = shell.TopBarSlot.rect.height + overhang;
             Assert.Greater(insetTop, 0f,
                 "nav-F5 — insetTop > 0 ASSERTÉ D'ABORD : sinon un écart nul rendrait l'assertion suivante vraie sans rien prouver");
 
@@ -378,7 +417,9 @@ namespace MafiaCleanCity.Shell.Tests
             Assert.AreEqual(-(8f + insetTop), shellTitleY, 0.01f, "dans le shell : anchoredPosition.y == -(8+insetTop)");
 
             float delta = shellTitleY - bareTitleY;
-            Assert.AreEqual(-56f, delta, 0.01f, "nav-F5 — écart attendu : 56px (TopBarSlot.rect.height)");
+            Assert.AreEqual(-insetTop, delta, 0.01f,
+                $"nav-F5 — écart attendu : {insetTop:F1}px (TopBarSlot.rect.height {shell.TopBarSlot.rect.height} " +
+                $"+ débordement médaillon {overhang:F1})");
         }
     }
 }

@@ -207,7 +207,14 @@ namespace MafiaCleanCity.Shell
             // ── end MountTenant<T> body ──
 
             CityTabDistrictId = districtId;
-            tenant.SetSafeInsets(TopBarSlot.rect.height, TabBarRoot.rect.height); // §3.4
+            // §3.4 — AMENDÉ (2026-08-21, frontière avec le lot manomètre) : `TopBarSlot.rect.
+            // height` seul est la hauteur NOMINALE (56px) — le médaillon pend sous cette hauteur
+            // par construction (doctrine, voir `TopBarController.ManometreVerticalOffsetPx`) et
+            // `EffectiveBottomOverhangPx` MESURE en live de combien. Sans lui, un titre positionné
+            // pour juste dégager 56px se retrouve chevauché par l'anneau/le filet — c'est le rouge
+            // que ce correctif ferme (nav-F4).
+            float topInset = TopBarSlot.rect.height + TopBar.EffectiveBottomOverhangPx;
+            tenant.SetSafeInsets(topInset, TabBarRoot.rect.height); // §3.4
             TopBar.SetLeadingAction(TopBarController.LeadingAction.BackToMap, ExitToCityMap);
             StartCoroutine(EnterDistrictSequence(tenant, token, districtId));
         }

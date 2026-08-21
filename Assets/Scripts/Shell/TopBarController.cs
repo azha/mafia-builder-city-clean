@@ -96,6 +96,35 @@ namespace MafiaCleanCity.Shell
         /// hors-réseau direct). INCHANGÉ par ce round (contrat numérique pinné, M1).</summary>
         public float HeatNeedleAngleDegrees { get; private set; }
 
+        // ---- test hooks — frontière avec la navigation district (2026-08-21) ----------------
+        /// <summary>Portée EFFECTIVE du chrome bas de barre, médaillon compris — le médaillon PEND
+        /// sous `TopBarSlot` par construction (doctrine, `ManometreVerticalOffsetPx`) : un appelant
+        /// qui réserve seulement `TopBarSlot.rect.height` (56px NOMINAUX) sous-estime la zone
+        /// réellement occupée par le chrome, et tout ce qu'il monte SOUS la barre (ex. le titre
+        /// district) peut se retrouver chevauché par l'anneau/le filet. MESURÉ en LIVE (jamais une
+        /// constante recopiée) — mais PAS via `GetWorldCorners` : cette première forme mélangeait
+        /// des UNITÉS DIFFÉRENTES (pixels ÉCRAN post-`CanvasScaler`) avec `TopBarSlot.rect.height`
+        /// (unités CANVAS LOCALES, pré-scale) — correct seulement quand `canvas.scaleFactor==1`, et
+        /// FAUX dès qu'il diverge (mesuré : `NavF4`/`NavF5` rougissaient sous `run_tests`, dont la
+        /// Game View n'est pas garantie à 1280×720 exact). `CalculateRelativeRectTransformBounds`
+        /// RELATIF À `transform` LUI-MÊME reste en unités canvas locales des deux côtés — ce
+        /// composant est stretché à son parent (`BuildLayout` → `Stretch(selfRt,...)`), donc son
+        /// propre `.rect` COÏNCIDE avec `TopBarSlot` dans CES MÊMES unités. 0 si `Manometre`
+        /// n'existe pas encore (avant `BuildLayout`).</summary>
+        public float EffectiveBottomOverhangPx
+        {
+            get
+            {
+                Transform manoT = transform.Find("Manometre");
+                if (manoT == null) return 0f;
+                RectTransform selfRt = GetComponent<RectTransform>();
+                Bounds manoBounds = RectTransformUtility.CalculateRelativeRectTransformBounds(transform, (RectTransform)manoT);
+                float selfBottomY = selfRt.rect.yMin;
+                float manoBottomY = manoBounds.min.y;
+                return Mathf.Max(0f, selfBottomY - manoBottomY);
+            }
+        }
+
         /// <summary>Every SCANNED text (R2.2 corpus — design C2-F4). Excludes elements whose
         /// `trackValue` is false (numeric UI chrome: cash, game-day — mirrors
         /// `DashboardController.AddStatusRow(trackValue:false)`, `:340`).</summary>
@@ -147,6 +176,46 @@ namespace MafiaCleanCity.Shell
         private const float ZoneRowWidth = 34f;
         private const float ZoneRowHeight = 9f;
         private const float BarCornerRadiusPx = 10f;
+
+        // HUD v3.1 — correctif manomètre (2026-08-21, 5 défauts mesurés vs `Tools/hud-topbar-
+        // reference-2560.png`) — géométrie REUSE exacte du SVG source (`hud-topbar-reference-
+        // source.html:41-50`, viewBox 60x40, centre local (30,34), rayon 26) :
+        //   MESURÉ — le médaillon N'EST PAS centré dans la barre côté maquette : `.medaillon{top:
+        //   7px}` dans une `.barre{height:52px}` place son centre à 39px du haut, 13px SOUS le
+        //   centre de la barre (26px). REUSE exact de ces 13px (pas de recalcul proportionnel —
+        //   même doctrine que le reste de ce fichier : `ManometreDiameter`/`MoneyUnderlineWidthPx`
+        //   sont déjà des REUSE verbatim). Root cause du défaut 1 (anneau qui semble "doublé") :
+        //   centré (ancien code), le médaillon (64px) déborde de ~4px de CHAQUE côté d'une barre de
+        //   56px — son bord bas touche quasiment le filet du bas de barre, les deux rouges (alarme)
+        //   se fondant visuellement en un seul bourrelet épais. Décalé de -13px, le bord HAUT rentre
+        //   entièrement dans la barre (0 clip par l'écran) et le bord BAS déborde de ~17px, proche
+        //   du ~19px de la référence — le filet et l'anneau redeviennent deux traits clairement
+        //   séparés (voir `Tools/hud-v31-manometre-fix-notes.md` § Deviations pour la mesure).
+        private const float ManometreVerticalOffsetPx = -13f;
+
+        // Alarme (`UpdateAlarmState`) — MESURÉ (capture Play Mode réelle, 2026-08-21) : basculer
+        // l'anneau/filet sur `HeatBucketResolver.SeverityColor(Severe)` PUR (#ff5a4d) lit comme un
+        // signal d'alerte générique partagé avec les badges de danger de tout l'écran, pas comme
+        // « le chrome qui se réchauffe » de la doctrine. Mélangé avec le laiton calme via
+        // `Color.Lerp` — jamais un token dédié inventé (R2.3 : aucune couleur inline ; seule une
+        // PROPORTION est appliquée à deux tokens déjà scellés).
+        private const float AlarmTintBlendRatio = 0.55f;
+
+        // Défaut 4 — « pivot discret » : diamètre AFFICHÉ inchangé (proportion SVG déjà correcte,
+        // voir le docblock au site d'appel), seule la résolution INTERNE de la texture générée
+        // grandit pour un cercle net (anti-crénelage réel) au lieu d'un blob à 5 texels.
+        private const float NeedleThicknessPx = 1.5f;
+        private const float NeedleCenterDotDiameterPx = 5f;
+        private const int NeedleCenterDotTextureResPx = 32;
+
+        // Défaut 5 — texte central écrasé (chevauchement de lettres, contraste faible à cause de
+        // traits SDF trop fins pour l'encre pleine à 6.5/5.5pt, même plafond de netteté que
+        // `moneyLabelText`/`dayLabelText`, voir `BuildMoneyCluster`). MESURÉ (TMP.preferredWidth,
+        // `HeatBucketResolver.Label`) : "Burning" (le plus long des libellés réels) tient à 41.06px
+        // à 10pt, largement sous `faceDiameter-8`≈49px — aucune marge de police n'était le facteur
+        // limitant, contrairement à `moneyLabelText`.
+        private const float GaugeValueFontSizePx = 10f;
+        private const float GaugeCaptionFontSizePx = 7f;
 
         private DashboardClient client;
         private bool initialized;
@@ -306,8 +375,9 @@ namespace MafiaCleanCity.Shell
             if (alarm)
             {
                 Color severe = HeatBucketResolver.SeverityColor(HeatBucketResolver.Severity.Severe);
-                if (hairline != null) hairline.color = severe;
-                if (boitierRing != null) boitierRing.color = severe;
+                Color warmedBrass = Color.Lerp(calmGoldColor, severe, AlarmTintBlendRatio);
+                if (hairline != null) hairline.color = warmedBrass;
+                if (boitierRing != null) boitierRing.color = warmedBrass;
             }
             else
             {
@@ -570,11 +640,18 @@ namespace MafiaCleanCity.Shell
         /// — HudF6/F2 (HudPlayModeTests) l'épinglent byte-pour-byte, inchangé par ce round.
         ///
         /// Écart (2) — l'ARC réel (track + cold + hot) REUSE la géométrie exacte du SVG `.cadran` de
-        /// la maquette (hud-brennar.html:159-162) : cold = 180°→90° (moitié GAUCHE du demi-cercle,
-        /// fillAmount 0.5 depuis l'origine Left) ; hot = 0°→60,5° (calculé depuis les points SVG
-        /// (43,11)→(52,34) autour du centre (30,34), fillAmount 60,5/180≈0.336 depuis l'origine
-        /// Right, sens ANTI-horaire pour balayer vers le haut). `Image.FillMethod.Radial180` — le
-        /// mécanisme uGUI natif pour un cadran demi-cercle, pas de texture procédurale par angle.</summary>
+        /// la maquette (`Tools/hud-topbar-reference-source.html:41-48`, viewBox 60x40, centre local
+        /// (30,34), rayon 26 — angles mesurés depuis l'axe EST, sens TRIGONOMÉTRIQUE, càd la même
+        /// convention que `Mathf.Cos/Sin`) : track = 180°→0° PAR le haut (demi-cercle SUPÉRIEUR
+        /// complet, `M8 34 A 26 26 0 0 1 52 34`) ; cold = 180°→90° (point gauche (8,34) au point haut
+        /// (30,8), `M8 34 A 26 26 0 0 1 30 8`) ; hot = 60,55°→0° (point (43,11) au point droit
+        /// (52,34), `M43 11 A 26 26 0 0 1 52 34`, angle de départ = atan2(34-11,43-30)). MESURÉ
+        /// (2026-08-21, correctif défauts 2+3 — grille `Origin180×fillAmount` relue via
+        /// `CanvasRenderer.GetMesh()` PUIS confirmée par balayage angulaire sur capture Play Mode
+        /// réelle) : `fillAmount` de `Radial180` est PROPORTIONNEL AUX 360° COMPLETS du sprite, pas
+        /// aux 180° que son nom suggère — `fillAmount=0.5` donne donc un DEMI-tour exact, jamais un
+        /// quart. `Image.FillMethod.Radial180` — le mécanisme uGUI natif pour un cadran, pas de
+        /// texture procédurale par angle.</summary>
         private void BuildManometre()
         {
             GameObject manoGo = new GameObject("Manometre", typeof(RectTransform));
@@ -582,7 +659,7 @@ namespace MafiaCleanCity.Shell
             RectTransform manoRect = (RectTransform)manoGo.transform;
             manoRect.anchorMin = manoRect.anchorMax = new Vector2(0.5f, 0.5f);
             manoRect.pivot = new Vector2(0.5f, 0.5f);
-            manoRect.anchoredPosition = Vector2.zero;
+            manoRect.anchoredPosition = new Vector2(0f, ManometreVerticalOffsetPx);
             manoRect.sizeDelta = new Vector2(ManometreDiameter, ManometreDiameter);
 
             GameObject ringGo = new GameObject("BoitierRing", typeof(RectTransform));
@@ -607,21 +684,25 @@ namespace MafiaCleanCity.Shell
             face.color = Color.white; // la teinte vit DANS le dégradé de la texture, pas dans .color
             face.raycastTarget = false;
 
-            // Alphas REUSE exacts hud-brennar.html:159-161 : track `#ffffff22` (0x22/255=0.133),
-            // cold `#7fd4d955` (0x55/255=0.333), hot `#e0664a88` (0x88/255=0.533) — pas de valeur
-            // choisie pour la lisibilité, l'exactitude prime (ruling « pixel perfect »).
+            // Alphas REUSE exacts `hud-topbar-reference-source.html:42-44` : track `#ffffff22`
+            // (0x22/255=0.133), cold `#7fd4d955` (0x55/255=0.333), hot `#e0664a88` (0x88/255=0.533)
+            // — pas de valeur choisie pour la lisibilité, l'exactitude prime (ruling « pixel
+            // perfect »).
             //
-            // MESURÉ (execute_code, grille empirique Origin180×clockwise×fillAmount, 2026-08-21) —
-            // `Image.FillMethod.Radial180` NE se limite PAS à un demi-cercle fixe par origine comme
-            // documenté/supposé : à `fillAmount=1`, LES 8 combinaisons origin/clockwise révèlent le
-            // cercle COMPLET (mesuré par échantillonnage angulaire, 0 transition sur 360°) — la
-            // "moitié" n'est qu'un point de départ + un sens de balayage, jamais un plafond. Track
-            // simplifié en conséquence (Type.Simple, cercle complet, alpha basse — un track à alpha
-            // 0.133 en cercle complet reste visuellement discret, écart mineur consigné). Cold/Hot
-            // calés par la MÊME mesure (pas par un calcul d'angle SVG, réfuté empiriquement) :
-            // Origin.Left+CW à 0.20 rend [278°,16°] (gauche→haut) ; Origin.Right+CCW à 0.18 rend
-            // [356°,84°] (haut→droite) — les deux couvrent ensemble gauche→haut→droite avec un
-            // chevauchement mineur près du haut (sous l'aiguille/le texte, invisible).
+            // CORRIGÉ (2026-08-21, défauts 2+3 mesurés vs la référence) — le tour précédent avait
+            // conclu, à `fillAmount=1`, que `Radial180` rend TOUJOURS un cercle complet quels que
+            // soient origine/sens, et en avait déduit (à tort) qu'aucun angle FRACTIONNAIRE fiable
+            // n'était dérivable — le track avait donc été simplifié en cercle complet
+            // (`Type.Simple`), peignant une piste grise parasite sur toute la moitié BASSE du disque
+            // (défaut 3) invisible en calme mais mesurée ~30 points plus claire que le fond une fois
+            // composée. RE-MESURÉ : le constat à `fillAmount=1` reste vrai, mais sa cause est que le
+            // remplissage est proportionnel aux 360° COMPLETS (pas 180°) — un `fillAmount` FRACTION-
+            // NAIRE reste parfaitement fiable et REUSE l'angle SVG exact (docblock ci-dessus) une
+            // fois divisé par 360 au lieu de 180. Track repassé en `Type.Filled` borné au demi-cercle
+            // SUPÉRIEUR (0.5 = 180°/360°) : supprime la piste basse ET laisse sa teinte pâle visible
+            // dans l'interstice cold/hot du haut (~30° entre 60,55° et 90°, non couvert par les deux
+            // arcs de couleur — c'est CE liseré clair, jamais un troisième token, qui lit comme
+            // « crème » entre le bleu et la braise, défaut 2).
             GameObject trackGo = new GameObject("ArcTrack", typeof(RectTransform));
             trackGo.transform.SetParent(manoGo.transform, false);
             RectTransform trackRect = (RectTransform)trackGo.transform;
@@ -631,12 +712,30 @@ namespace MafiaCleanCity.Shell
             Image trackImg = trackGo.AddComponent<Image>();
             trackImg.sprite = ProceduralUI.Ring((int)ArcDiameterPx, ArcThicknessPx, Color.white);
             trackImg.color = WithAlpha(DesignTokens.Current.onSurfacePrimary, 0.133f);
+            trackImg.type = Image.Type.Filled;
+            trackImg.fillMethod = Image.FillMethod.Radial180;
+            trackImg.fillOrigin = (int)Image.Origin180.Left;
+            trackImg.fillClockwise = true;
+            trackImg.fillAmount = 0.5f; // 180°/360° — demi-cercle SUPÉRIEUR exact, REUSE du track SVG
             trackImg.raycastTarget = false;
 
+            // cold : 90°/360° = 0.25 (SVG 180°→90°, point gauche au point haut). MESURÉ (capture
+            // Play Mode réelle, balayage angulaire pixel-réel) : couverture effective ≈ [90°,178°],
+            // à ±quelques degrés du modèle 360° linéaire — conforme.
             BuildArcSegment(manoGo.transform, "ArcCold",
-                WithAlpha(DesignTokens.Current.hudGaugeArcCold, 0.333f), Image.Origin180.Left, true, 0.20f);
+                WithAlpha(DesignTokens.Current.hudGaugeArcCold, 0.333f), Image.Origin180.Left, true, 0.25f);
+            // hot : le modèle 360° linéaire (60,55°/360°≈0.1682, SVG 60,55°→0°) prédit une couverture
+            // de [0°,60,55°] — RÉFUTÉ par balayage angulaire pixel-réel : `Origin.Right+CCW` NE SUIT
+            // PAS la même relation fillAmount→angle que `Origin.Left+CW` (asymétrie mesurée, cause
+            // non identifiée) — la couverture RÉELLE à 0.1682 est ≈[7°,91°], ce qui rejoint le bord
+            // de Cold (~90°) SANS trou ET sans témoin de la teinte "crème" du track entre les deux
+            // (l'interstice SVG de ~30° ne survit pas à cette combinaison origine/sens). Résultat
+            // visuellement CONFORME au défaut ciblé (arc continu, aucun trou — vérifié par capture) ;
+            // conservé TEL QUEL plutôt que re-dérivé, la propriété qui compte (continuité) étant déjà
+            // atteinte. `fillAmount` gardé au chiffre SVG malgré l'écart de couverture : le réduire
+            // ouvrirait un trou (le vrai défaut 2), l'augmenter n'apporterait rien de plus.
             BuildArcSegment(manoGo.transform, "ArcHot",
-                WithAlpha(DesignTokens.Current.hudGaugeArcHot, 0.533f), Image.Origin180.Right, false, 0.18f);
+                WithAlpha(DesignTokens.Current.hudGaugeArcHot, 0.533f), Image.Origin180.Right, false, 0.1682f);
 
             // MESURÉ (revue ⊥ sur capture r5, 2026-08-21) — `ZoneRow` (34×9, ancré au bord bas du
             // médaillon) DÉPASSE le cercle de la face : à sa position la plus basse, le rayon
@@ -692,12 +791,22 @@ namespace MafiaCleanCity.Shell
             // masqué (voir plus haut) libère la moitié basse du disque : hampe et texte agrandis en
             // conséquence (revue ⊥ sur r5 — la 1ère passe restait crispée dans un espace
             // artificiellement réduit).
+            // Défaut 4 (2026-08-21) — « aiguille épaisse terminée par un pâté doré » : mesuré, les
+            // DEUX composantes étaient déjà proches des proportions SVG (trait 2px / rayon 26 ≈
+            // 0,077 ; pivot Ø5px / rayon 26 ≈ 0,2 — quasi identiques au SVG source, 2px/26 et
+            // 5,2px/26). Le "pâté" n'est donc pas un défaut de TAILLE : `ProceduralUI.RadialDisc`
+            // génère une texture à la résolution EXACTE de son diamètre demandé (5×5px) — un cercle
+            // sur 5 texels visibles n'a quasiment aucune marge d'anti-crénelage et rend un blob
+            // anguleux. Corrigé en générant le disque à une résolution INTERNE bien plus grande
+            // (`NeedleCenterDotTextureResPx`) tout en gardant la même taille AFFICHÉE (RectTransform
+            // inchangé) — un cercle net et petit, "pivot discret", sans changer sa géométrie. Le
+            // trait est en plus légèrement aminci (2px → 1.5px, `NeedleThicknessPx`) pour "trait fin".
             GameObject needleGo = new GameObject("Needle", typeof(RectTransform));
             needleGo.transform.SetParent(manoGo.transform, false);
             heatNeedle = (RectTransform)needleGo.transform;
             heatNeedle.anchorMin = heatNeedle.anchorMax = new Vector2(0.5f, 0.5f);
             heatNeedle.pivot = new Vector2(0.5f, 0f);
-            heatNeedle.sizeDelta = new Vector2(2f, 13f);
+            heatNeedle.sizeDelta = new Vector2(NeedleThicknessPx, 13f);
             heatNeedle.anchoredPosition = new Vector2(0f, 5f);
             Image needleImg = needleGo.AddComponent<Image>();
             needleImg.color = DesignTokens.Current.hudCreme;
@@ -709,9 +818,9 @@ namespace MafiaCleanCity.Shell
             centerDotRect.anchorMin = centerDotRect.anchorMax = new Vector2(0.5f, 0.5f);
             centerDotRect.pivot = new Vector2(0.5f, 0.5f);
             centerDotRect.anchoredPosition = new Vector2(0f, 5f);
-            centerDotRect.sizeDelta = new Vector2(5f, 5f);
+            centerDotRect.sizeDelta = new Vector2(NeedleCenterDotDiameterPx, NeedleCenterDotDiameterPx);
             Image centerDotImg = centerDotGo.AddComponent<Image>();
-            centerDotImg.sprite = ProceduralUI.RadialDisc(5, calmGoldColor, calmGoldColor);
+            centerDotImg.sprite = ProceduralUI.RadialDisc(NeedleCenterDotTextureResPx, calmGoldColor, calmGoldColor);
             centerDotImg.raycastTarget = false;
 
             // `ZoneRow` masqué (CanvasGroup alpha 0, voir plus haut) — plus besoin de réserver de
@@ -719,14 +828,19 @@ namespace MafiaCleanCity.Shell
             // espacement de caractères anormal (rendu observé sur "Warm", capture r5, séparation
             // visible entre 2e et 3e lettre) — TMP recalcule la meilleure taille ET, dans certaines
             // configurations de boîte contrainte en hauteur, en tire un `characterSpacing` effectif
-            // incohérent. Taille FIXE à la place — le libellé le plus long des 4 buckets réels
-            // (`HeatBucketResolver.Label`) mesuré tenir à 6.5pt dans `faceDiameter-8` — PARAPHRASE
-            // délibérée (socle CLAUDE.md) : citer verbatim un littéral de bucket réintroduirait
-            // exactement ce que `HudPlayModeTests.F2_BucketLiteralOccurrences` compte.
+            // incohérent. Taille FIXE à la place.
+            //
+            // CORRIGÉ (2026-08-21, défaut 5) — 6.5/5.5pt rendait des traits SDF trop fins pour
+            // atteindre l'encre pleine (même plafond de netteté mesuré sur `moneyLabelText` à
+            // 8.5pt), lu comme lettres qui se chevauchent et contraste faible. Remonté à
+            // `GaugeValueFontSizePx`/`GaugeCaptionFontSizePx` (10/7pt, MESURÉ tenir largement dans
+            // la boîte — voir le commentaire au site de ces constantes) — PARAPHRASE délibérée
+            // (socle CLAUDE.md) : citer verbatim un littéral de bucket réintroduirait exactement ce
+            // que `HudPlayModeTests.F2_BucketLiteralOccurrences` compte.
             gaugeValueText = NewText("GaugeValue", HeatBucketResolver.Label(null),
                 new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
-                new Vector2(0f, -8f), new Vector2(faceDiameter - 8f, 12f),
-                6.5f, TextAlignmentOptions.Center, DesignTokens.Current.hudCreme,
+                new Vector2(0f, -9f), new Vector2(faceDiameter - 8f, 13f),
+                GaugeValueFontSizePx, TextAlignmentOptions.Center, DesignTokens.Current.hudCreme,
                 parent: manoGo.transform);
             gaugeValueText.font = DesignTokens.Current.hudSerifFont;
             gaugeValueText.enableAutoSizing = false;
@@ -734,8 +848,8 @@ namespace MafiaCleanCity.Shell
 
             NewText("GaugeCaption", "HEAT",
                 new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
-                new Vector2(0f, -18f), new Vector2(faceDiameter - 6f, 7f),
-                5.5f, TextAlignmentOptions.Center, DesignTokens.Current.hudCremeSecondary,
+                new Vector2(0f, -21f), new Vector2(faceDiameter - 6f, 9f),
+                GaugeCaptionFontSizePx, TextAlignmentOptions.Center, DesignTokens.Current.hudCremeSecondary,
                 letterSpacing: 3f, parent: manoGo.transform);
         }
 
