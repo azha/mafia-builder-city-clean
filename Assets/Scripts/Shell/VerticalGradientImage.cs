@@ -18,7 +18,8 @@ namespace MafiaCleanCity.Shell
     // `CanvasRenderer`, ce Graphic ne dessine RIEN — silencieusement, aucune erreur console. TOUT
     // appelant DOIT construire le GameObject avec `typeof(CanvasRenderer)` explicite :
     // `new GameObject("X", typeof(RectTransform), typeof(CanvasRenderer), typeof(VerticalGradientImage))`
-    // — voir `TopBarController.BuildBarBackground` pour le seul usage actuel.
+    // — voir `TopBarController.BuildBarBackground` pour l'usage d'origine ; `AppShell.BuildTabBar`
+    // (HUD v3.1 cohérence, 2026-08-21) le reprend TEL QUEL pour la TabBar — même verre, même patron.
     public class VerticalGradientImage : Graphic
     {
         private Color topColor = Color.white;

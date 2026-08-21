@@ -434,6 +434,24 @@ namespace MafiaCleanCity.Shell
             BuildTabBar();
         }
 
+        // HUD v3.1 cohérence de chrome (2026-08-21, demandé NOMMÉMENT par le contrôleur — la
+        // TabBar n'avait jamais été touchée par la doctrine du restyle TopBar : verre gris plat,
+        // aucun filet, onglet actif signalé par un APLAT `chromeTabActive` = `accentGold` #ffd23f,
+        // « l'ancien or vif » que le restyle TopBar avait précisément quitté). ⚠️ AUCUNE référence
+        // pixel n'existe pour cette barre — vérifié : 0 mention d'une barre d'onglets dans les
+        // maquettes DA disponibles à ce lot (elles montrent un téléphone SANS chrome de navigation
+        // bas). Cette section est donc dérivée par COHÉRENCE avec `TopBarController` (même verre
+        // fumé bleu nuit `hudBarGlassTop/Bottom`, même laiton `hudHairlineGold` — UN SEUL or dans
+        // tout le chrome, les deux barres partagent le token), jamais comparée à un artefact pixel
+        // fabriqué — un juge inventé serait pire que pas de juge (leçon payée ailleurs dans ce
+        // dépôt). `chromeTabActive` reste un champ scellé de `DesignTokens` (canon gdd/14, ne pas
+        // retirer — un token sans consommateur peut redevenir un consommateur légitime demain) mais
+        // n'est plus RÉFÉRENCÉ ici : l'onglet actif se signale par le laiton (filet haut + libellé
+        // teinté), jamais par un pavé de couleur pleine (doctrine « l'or jamais en aplat »).
+        private const float TabBarCornerRadiusPx = 10f; // REUSE — même rayon que TopBarController.BarCornerRadiusPx
+        private const float TabBarHairlineThicknessPx = 2f; // REUSE — même épaisseur que le filet du TopBar
+        private const float TabActiveIndicatorThicknessPx = 3f;
+
         private void BuildTabBar()
         {
             GameObject tabBarGo = new GameObject("TabBarRoot", typeof(RectTransform));
@@ -444,7 +462,46 @@ namespace MafiaCleanCity.Shell
             TabBarRoot.pivot = new Vector2(0.5f, 0f);
             TabBarRoot.sizeDelta = new Vector2(0, 64);
             TabBarRoot.anchoredPosition = Vector2.zero;
-            tabBarGo.AddComponent<Image>().color = DesignTokens.Current.surfaceCard;
+
+            // Verre fumé bleu nuit, coins arrondis — REUSE exact du patron
+            // `TopBarController.BuildBarBackground` (Mask+RoundedRectMask+VerticalGradientImage).
+            // `TabBarMask` PREMIER enfant (rendu SOUS tout le reste) et exclu du HorizontalLayoutGroup
+            // ci-dessous (`LayoutElement.ignoreLayout` — sinon le HLG le traiterait comme un 6e
+            // bouton et lui disputerait de la largeur).
+            GameObject maskGo = new GameObject("TabBarMask", typeof(RectTransform), typeof(CanvasRenderer));
+            maskGo.transform.SetParent(tabBarGo.transform, false);
+            Stretch((RectTransform)maskGo.transform, Vector2.zero, Vector2.zero);
+            Image maskImg = maskGo.AddComponent<Image>();
+            maskImg.sprite = ProceduralUI.RoundedRectMask((int)TabBarCornerRadiusPx);
+            maskImg.type = Image.Type.Sliced;
+            maskImg.color = Color.white;
+            maskImg.raycastTarget = false;
+            maskGo.AddComponent<LayoutElement>().ignoreLayout = true;
+            Mask mask = maskGo.AddComponent<Mask>();
+            mask.showMaskGraphic = false;
+            maskGo.transform.SetAsFirstSibling();
+
+            GameObject bgGo = new GameObject("TabBarBackground", typeof(RectTransform), typeof(CanvasRenderer));
+            bgGo.transform.SetParent(maskGo.transform, false);
+            Stretch((RectTransform)bgGo.transform, Vector2.zero, Vector2.zero);
+            VerticalGradientImage barBackground = bgGo.AddComponent<VerticalGradientImage>();
+            barBackground.raycastTarget = false;
+            barBackground.SetColors(DesignTokens.Current.hudBarGlassTop, DesignTokens.Current.hudBarGlassBottom);
+
+            // Filet laiton — bord HAUT de la TabBar (la couture qui la sépare du contenu, symétrique
+            // du filet BAS du TopBar ; même token `hudHairlineGold`, jamais un second or).
+            GameObject hlGo = new GameObject("Hairline", typeof(RectTransform));
+            hlGo.transform.SetParent(tabBarGo.transform, false);
+            RectTransform hlRect = (RectTransform)hlGo.transform;
+            hlRect.anchorMin = new Vector2(0f, 1f);
+            hlRect.anchorMax = new Vector2(1f, 1f);
+            hlRect.pivot = new Vector2(0.5f, 1f);
+            hlRect.sizeDelta = new Vector2(0f, TabBarHairlineThicknessPx);
+            hlRect.anchoredPosition = Vector2.zero;
+            Image tabBarHairlineImg = hlGo.AddComponent<Image>();
+            tabBarHairlineImg.color = DesignTokens.Current.hudHairlineGold;
+            tabBarHairlineImg.raycastTarget = false;
+            hlGo.AddComponent<LayoutElement>().ignoreLayout = true;
 
             HorizontalLayoutGroup hlg = tabBarGo.AddComponent<HorizontalLayoutGroup>();
             hlg.padding = new RectOffset(8, 8, 6, 6);
@@ -471,6 +528,25 @@ namespace MafiaCleanCity.Shell
             b.targetGraphic = img;
             b.onClick.AddListener(() => ActivateTab(tab));
 
+            // HUD v3.1 cohérence — l'indicateur d'onglet actif : un FILET laiton (3px, bord HAUT du
+            // bouton), jamais un pavé de couleur pleine (voir BuildTabBar pour la doctrine complète).
+            // Enfant DIRECT du bouton (jamais nommé "Label" — `Find("ActiveIndicator")` en dépend,
+            // RefreshTabButtonVisuals ci-dessous). Masqué par défaut (SetActive) — mêmes idiome que
+            // `leadingGo`/`TopBarController.LeadingAction` : présence/absence NOMMÉE, jamais déduite
+            // d'une couleur.
+            GameObject indicatorGo = new GameObject("ActiveIndicator", typeof(RectTransform));
+            indicatorGo.transform.SetParent(btn.transform, false);
+            RectTransform indicatorRect = (RectTransform)indicatorGo.transform;
+            indicatorRect.anchorMin = new Vector2(0f, 1f);
+            indicatorRect.anchorMax = new Vector2(1f, 1f);
+            indicatorRect.pivot = new Vector2(0.5f, 1f);
+            indicatorRect.sizeDelta = new Vector2(0f, TabActiveIndicatorThicknessPx);
+            indicatorRect.anchoredPosition = Vector2.zero;
+            Image indicatorImg = indicatorGo.AddComponent<Image>();
+            indicatorImg.color = DesignTokens.Current.hudHairlineGold;
+            indicatorImg.raycastTarget = false;
+            indicatorGo.SetActive(false);
+
             GameObject textGo = new GameObject("Label", typeof(RectTransform));
             textGo.transform.SetParent(btn.transform, false);
             RectTransform textRt = (RectTransform)textGo.transform;
@@ -492,13 +568,21 @@ namespace MafiaCleanCity.Shell
             for (int i = 0; i < tabButtons.Count && i < order.Length; i++)
             {
                 bool active = order[i] == CurrentTab;
-                Image img = tabButtons[i].GetComponent<Image>();
-                // W3.U2/C5 (D5, U-3) — l'or quitte le chrome : l'onglet actif est repointé sur
-                // chromeTabActive (accentGold reste réservé aux CTA — détecteur d'allowlist :
-                // ChromeTabAccentAllowlistPlayModeTests.C5F2, ensemble à 11 entrées, AppShell exclu).
-                img.color = active ? DesignTokens.Current.chromeTabActive : DesignTokens.Current.surfaceRow;
+                // HUD v3.1 cohérence (2026-08-21, demandé par le contrôleur — voir BuildTabBar) :
+                // le fond du bouton reste `surfaceRow` dans LES DEUX états (jamais d'aplat coloré
+                // pour signaler l'actif — doctrine « l'or jamais en aplat », W3.U2/C5). L'actif se
+                // signale par le filet `ActiveIndicator` (laiton, `hudHairlineGold` — MÊME token que
+                // TopBarController, un seul or dans tout le chrome) + le libellé teinté. Remplace le
+                // repointage sur `chromeTabActive` (W3.U2/C5, D5) : ce token reste défini (canon
+                // gdd/14, scellé) mais n'est plus référencé ici — ChromeTabAccentAllowlistPlayModeTests
+                // .C5F2 ne le trackait de toute façon jamais (son motif porte sur l'accès au token DE
+                // L'AUTRE nom — PARAPHRASE délibérée, socle CLAUDE.md : citer verbatim ce littéral ici
+                // le compterait dans le SCAN LUI-MÊME que cette phrase décrit, faussant l'allowlist de
+                // C5F2 — vu 2026-08-21, régression mesurée puis retirée dans le même lot).
+                Transform indicator = tabButtons[i].transform.Find("ActiveIndicator");
+                if (indicator != null) indicator.gameObject.SetActive(active);
                 TextMeshProUGUI t = tabButtons[i].GetComponentInChildren<TextMeshProUGUI>();
-                if (t != null) t.color = active ? DesignTokens.Current.surfaceBase : DesignTokens.Current.onSurfaceSecondary;
+                if (t != null) t.color = active ? DesignTokens.Current.hudHairlineGold : DesignTokens.Current.onSurfaceSecondary;
             }
         }
 

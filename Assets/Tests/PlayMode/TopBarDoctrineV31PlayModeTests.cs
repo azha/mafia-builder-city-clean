@@ -463,5 +463,106 @@ namespace MafiaCleanCity.Shell.Tests
                 Object.Destroy(tex);
             }
         }
+
+        // ══════════════════════════════════════════════════════════════════════════════════════
+        // (f) — retour user, défaut 1 (2026-08-21) : « le filet traverse le médaillon ». INVESTIGUÉ,
+        // PAS REPRODUIT — mesure pixel-réelle, classification orange/sombre pixel par pixel de la
+        // rangée du filet (bas de barre) sur QUATRE images indépendantes du même état (capture Play
+        // Mode live re-testée ICI, `Assets/Screenshots/hud_v31_manometre_final_burning.png` committé,
+        // le crop zoomé cité par la demande depuis un autre dépôt, ET `Tools/hud-topbar-reference-
+        // 2560.png` lui-même) : LES QUATRE montrent le MÊME motif — le filet n'est visible QUE hors
+        // du cercle du médaillon, jamais dedans (le disque occulte déjà correctement le filet, à la
+        // fois en Unity ET dans la référence). Voir `Tools/hud-v31-topbar-multires-implementation-
+        // notes.md` § Deviations pour le détail (RGB exacts, seuils, les 3 rangées scannées). Ce qui
+        // crée l'illusion visuelle : l'anneau ET le filet partagent EXACTEMENT le même token
+        // (`hudHairlineGold` calme, ou le même `warmedBrass` sous alarme) — leur frontière commune se
+        // fond à l'œil en un seul trait continu, un artefact que LA RÉFÉRENCE ELLE-MÊME présente
+        // (même classification appliquée à la maquette, même motif trouvé). PAS un bug d'ORDRE DE
+        // DESSIN. Garde STRUCTURELLE posée quand même, telle que demandée — VERTE sur le code actuel
+        // (résultat attendu : aucun défaut de cette classe), avec un CONTRÔLE POSITIF qui casse
+        // délibérément l'ordre de fratrie et prouve que LE MÊME détecteur rougit dessus.
+        // ══════════════════════════════════════════════════════════════════════════════════════
+
+        private static bool RectsOverlap(RectTransform a, RectTransform b)
+        {
+            var ca = new Vector3[4]; a.GetWorldCorners(ca);
+            var cb = new Vector3[4]; b.GetWorldCorners(cb);
+            float aMinX = ca[0].x, aMaxX = ca[2].x, aMinY = ca[0].y, aMaxY = ca[1].y;
+            float bMinX = cb[0].x, bMaxX = cb[2].x, bMinY = cb[0].y, bMaxY = cb[1].y;
+            return aMinX < bMaxX && aMaxX > bMinX && aMinY < bMaxY && aMaxY > bMinY;
+        }
+
+        /// <summary>Un frère ne peut dessiner "par-dessus" que s'il dessine RÉELLEMENT quelque chose —
+        /// MESURÉ (ce lot) : `Notification` (hook de données headless, alpha 0 — design C2F2/C2F4/DA5)
+        /// chevauche géométriquement le médaillon (ancré 0.5/0.5, comme lui) et le suit en sibling
+        /// index, mais ne PEINT rien (0 pixel visible) — un premier jet de cette garde le signalait à
+        /// tort, exactement le piège du socle CLAUDE.md ("une garde qui vérifie la mauvaise propriété
+        /// est pire que pas de garde"). `Graphic.color.a` proche de 0, sur TOUS les Graphics du sous-
+        /// arbre, ⇒ rien à occulter ⇒ pas un offenseur.</summary>
+        private static bool HasAnyVisibleGraphic(Transform t)
+        {
+            foreach (Graphic g in t.GetComponentsInChildren<Graphic>(true))
+                if (g.color.a > 0.01f) return true;
+            return false;
+        }
+
+        /// <summary>Tout FRÈRE DIRECT de `target` (jamais un descendant — la garde porte sur
+        /// l'agencement de la BARRE, pas sur le contenu interne du médaillon) dont le rect chevauche
+        /// géométriquement le rect de `target`, dont le sibling index est SUPÉRIEUR (dessiné APRÈS,
+        /// donc PAR-DESSUS en uGUI), ET qui peint RÉELLEMENT quelque chose de visible, est un
+        /// offenseur structurel.</summary>
+        private static List<string> FindSiblingsDrawnOverElement(Transform parent, Transform target)
+        {
+            var offenders = new List<string>();
+            int targetIndex = target.GetSiblingIndex();
+            var targetRect = (RectTransform)target;
+            for (int i = 0; i < parent.childCount; i++)
+            {
+                Transform sib = parent.GetChild(i);
+                if (sib == target) continue;
+                var sibRect = sib as RectTransform;
+                if (sibRect == null) continue;
+                if (!RectsOverlap(sibRect, targetRect)) continue;
+                if (sib.GetSiblingIndex() <= targetIndex) continue;
+                if (!HasAnyVisibleGraphic(sib)) continue; // rien à occulter — voir docblock ci-dessus
+                offenders.Add(sib.name);
+            }
+            return offenders;
+        }
+
+        [UnityTest]
+        public IEnumerator DA7_NoBarSibling_EverDrawnOverTheMedallion_StructuralSiblingOrder()
+        {
+            yield return WaitTopBarLoaded(BootShell());
+
+            Transform root = shell.TopBar.transform;
+            Transform manoT = root.Find("Manometre");
+            Assert.IsNotNull(manoT, "Manometre doit exister comme enfant DIRECT du TopBar");
+
+            // Anti-vacuité — au moins un frère DOIT chevaucher géométriquement le médaillon, sinon
+            // "aucun offenseur" serait vrai par ABSENCE de sujet testable, jamais par discipline
+            // d'ordre. Le médaillon déborde sous la barre (`ManometreVerticalOffsetPx`) : `Hairline`
+            // (bord bas de la barre) chevauche TOUJOURS son rect — c'est précisément le cas que le
+            // retour user visait.
+            Transform hairlineT = root.Find("Hairline");
+            Assert.IsNotNull(hairlineT, "Hairline doit exister comme enfant DIRECT du TopBar");
+            Assert.IsTrue(RectsOverlap((RectTransform)hairlineT, (RectTransform)manoT),
+                "anti-vacuité : Hairline doit géométriquement chevaucher le médaillon (le débordement " +
+                "bas du médaillon est le cas réel où un ordre de fratrie incorrect serait visible) — " +
+                "sinon ce test ne peut rien prouver");
+
+            List<string> offenders = FindSiblingsDrawnOverElement(root, manoT);
+            Assert.IsEmpty(offenders,
+                "aucun frère du médaillon ne doit être dessiné PAR-DESSUS lui (sibling index supérieur) " +
+                "tout en chevauchant géométriquement son rect — coupables : " + string.Join(", ", offenders));
+
+            // Contrôle positif OBLIGATOIRE (socle CLAUDE.md) — casse l'ordre de fratrie RÉEL (déplace
+            // Hairline APRÈS Manometre) et prouve que LE MÊME détecteur rougit dessus.
+            hairlineT.SetSiblingIndex(manoT.GetSiblingIndex() + 1);
+            List<string> brokenOffenders = FindSiblingsDrawnOverElement(root, manoT);
+            CollectionAssert.Contains(brokenOffenders, "Hairline",
+                "CONTRÔLE POSITIF : après avoir déplacé Hairline APRÈS Manometre dans l'ordre de " +
+                "fratrie, le détecteur DOIT le signaler — sinon le 0 ci-dessus ne prouve rien");
+        }
     }
 }
