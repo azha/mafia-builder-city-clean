@@ -266,8 +266,18 @@ namespace MafiaCleanCity.CityMap.Tests
                 Transform sceneT = diorama.ScreenRoot.Find("DistrictScene");
                 Assert.IsNotNull(sceneT, $"{c.phase} — rend une DistrictScene (fond+bâtiments), pas un repli");
                 Assert.Greater(diorama.RenderedBuildingCount, 0, $"{c.phase} — anti-vacuité : les bâtiments du starter kit sont bien rendus");
-                Assert.AreEqual(2, diorama.ScreenRoot.childCount,
-                    $"{c.phase} — 2 nœuds nommés (titre/scène), même forme que tout palier héros (pp-F5)");
+                // AMENDÉ NOMMÉMENT 2026-08-21 (2 → 3) : `DistrictSceneBackdrop` a été SORTI de
+                // `DistrictScene` pour devenir enfant de la racine. Raison mesurée : enfant de la
+                // scène, il subissait la transformation du pan/zoom et s'en allait avec elle —
+                // 160 px découverts à 1200×1600 après un pan extrême, alors qu'il existe
+                // précisément pour interdire les bandes nues. La propriété assertée ici ne change
+                // pas (la racine ne porte QUE des nœuds nommés, aucun nœud parasite) : seul le
+                // compte bouge, et il est ré-énuméré ci-dessous pour que le test dise QUELS nœuds
+                // il attend plutôt qu'un nombre nu.
+                Assert.AreEqual(3, diorama.ScreenRoot.childCount,
+                    $"{c.phase} — 3 nœuds nommés (backdrop/titre/scène), même forme que tout palier héros (pp-F5)");
+                Assert.IsNotNull(diorama.ScreenRoot.Find("DistrictSceneBackdrop"),
+                    $"{c.phase} — le backdrop plein-écran vit à la RACINE (hors de la scène mobile)");
 
                 Transform fondT = sceneT.Find("DistrictBackgroundImage");
                 Assert.IsNotNull(fondT, $"{c.phase} — un fond réel est rendu (jamais de bare band ni de vide)");
