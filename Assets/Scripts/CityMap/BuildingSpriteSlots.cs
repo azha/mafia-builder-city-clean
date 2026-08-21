@@ -133,6 +133,59 @@ namespace MafiaCleanCity.CityMap
             }
         }
 
+        // ── Footprint de socle (JUGE-D4, audit visuel 2026-08-21) — DONNÉE MESURÉE, jamais un
+        // fichier de sprite ni une constante en C# (R2.3, même discipline que les slots ci-dessus).
+        // Root cause du Défaut 4 (plaques translucides) : le Socle (ombre de contact,
+        // DistrictInteriorScreenController.BuildBuildingCell) était centré sur cellW (la largeur DU
+        // FICHIER, sprite.rect.width) — correct pour un bâtiment simple, FAUX pour un sprite dont le
+        // contenu opaque ne couvre pas toute la largeur du fichier (annexe détachée avec un grand
+        // vide entre les deux, ou un bâtiment décentré dans son cadre) : le Socle DÉBORDE dans le
+        // vide, où rien ne le recouvre, et devient une plaque semi-transparente flottante — mesuré
+        // (script Python, alpha≥128, bande basse 20% du sprite = la bande que Socle occupe) sur les
+        // 4 sprites J0 :
+        //   lab (usine)        : footprint x=[20,533] sur 712  (72,2% — annexe "BUREAU" détachée)
+        //   stash (entrepot)   : footprint x=[32,174] sur 244  (58,6%)
+        //   frontShop (epicerie): footprint x=[28,130] sur 175  (58,9%)
+        //   cashSafehouse (residentiel3) : AUCUN pixel opaque dans la bande basse 20% — marge basse
+        //     mesurée 151px/29,5% (> les 20% que Socle occupe) : le Socle flottait à 100% dans le
+        //     vide, sans AUCUNE couverture par le sprite, sur CE type précisément.
+        // `widthPx`/`centerOffsetPx`/`bottomMarginPx` valent 0 par défaut (non mesuré) : la formule
+        // ci-dessous retombe alors EXACTEMENT sur le calcul historique (cellW*0.7, centré, ancré au
+        // tout bas) — aucun changement de comportement pour un type sans footprint mesuré (dette
+        // consignée, implementation-notes.md § Deviations : les 3 slots de marge growHouse/
+        // dealerSpotFront/moneyHolding restent non mesurés, jamais rendus en J0).
+        [System.Serializable]
+        public class FootprintOverride
+        {
+            [Tooltip("Largeur du contenu opaque (pixels natifs, alpha>=128, bande basse 20% du sprite). 0 = non mesuré, repli sur cellW*0.7 (historique).")]
+            public float widthPx;
+            [Tooltip("Décalage horizontal du centre du contenu opaque par rapport au centre du FICHIER (pixels natifs, signé). 0 = centré (historique).")]
+            public float centerOffsetPx;
+            [Tooltip("Marge basse du fichier (pixels natifs, alpha>=128) — hauteur de vide sous le pied visuel. 0 = pas de marge mesurée (historique : Socle ancré au tout bas du fichier).")]
+            public float bottomMarginPx;
+        }
+
+        [Header("Footprint de socle — mesuré (JUGE-D4), 0 = repli historique cellW*0.7 centré")]
+        public FootprintOverride labFootprint;
+        public FootprintOverride stashFootprint;
+        public FootprintOverride frontShopFootprint;
+        public FootprintOverride cashSafehouseFootprint;
+
+        /// <summary>Résout le footprint mesuré d'un `operational_type` — jamais `null` : un type sans
+        /// champ dédié (les 3 slots de marge + fallback) rend un `FootprintOverride` à zéro, qui
+        /// retombe sur le calcul historique côté appelant (repli déclaré, jamais un null à garder).</summary>
+        public FootprintOverride ResolveFootprint(string operationalType)
+        {
+            switch (operationalType)
+            {
+                case "lab": return labFootprint ?? new FootprintOverride();
+                case "stash": return stashFootprint ?? new FootprintOverride();
+                case "front_shop": return frontShopFootprint ?? new FootprintOverride();
+                case "cash_safehouse": return cashSafehouseFootprint ?? new FootprintOverride();
+                default: return new FootprintOverride(); // non mesuré — repli historique
+            }
+        }
+
         // ── Ambiant — nav-hud-design-v1.md §2 (chunk 1, Décisions A-D) — remplissage des
         // parcelles NON possédées. Champ NOUVEAU dans CE ScriptableObject (Décision B, §2.2), pas
         // un second asset : le seam `Resources.Load` reste UNIQUE, et `metresParBloc` reste

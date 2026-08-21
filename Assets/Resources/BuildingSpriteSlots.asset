@@ -93,6 +93,22 @@ MonoBehaviour:
     streetEveryX: 5
     streetEveryY: 0
     facadesParParcelle: 4
+  labFootprint:
+    widthPx: 523
+    centerOffsetPx: -75
+    bottomMarginPx: 14
+  stashFootprint:
+    widthPx: 152
+    centerOffsetPx: -19.5
+    bottomMarginPx: 16
+  frontShopFootprint:
+    widthPx: 126
+    centerOffsetPx: -4
+    bottomMarginPx: 24
+  cashSafehouseFootprint:
+    widthPx: 166
+    centerOffsetPx: 2.5
+    bottomMarginPx: 151
   ambientDefaut:
     templates:
     - nuit: {fileID: 21300000, guid: 4394d092be1d4181a8cbc96b81827da2, type: 3}

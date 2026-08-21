@@ -30,7 +30,10 @@ namespace MafiaCleanCity.CityMap
             Bank = CityMapEnums.ParseBankSide(dto.bank_side);
 
             background.color = CityMapEnums.ColorFor(State);
-            label.text = $"{dto.name_canonical}    ·    {dto.profile}    ·    {dto.block_count} blocks";
+            // JUGE-D5 (audit visuel, 2026-08-21, balayage étendu à CityMap.cs/DistrictCellView.cs,
+            // même périmètre CityMap/) — "blocks" traduit en "blocs" (terme déjà établi dans ce
+            // dépôt, ex. DistrictInteriorScreenController.cs : "unité = le bloc").
+            label.text = $"{dto.name_canonical}    ·    {dto.profile}    ·    {dto.block_count} blocs";
         }
 
         /// <summary>Wire the heat badge UI (built by the controller). Hidden until heat is set.</summary>

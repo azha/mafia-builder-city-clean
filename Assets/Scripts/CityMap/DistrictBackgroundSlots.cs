@@ -15,8 +15,12 @@ namespace MafiaCleanCity.CityMap
     ///
     /// P4 (verdict ⊥, périmètre écrit par lui) — le fond `jour` (`VERGE_D_JOUR_FINAL`) est
     /// désormais câblé : `ResolveArtPhase` route DAY sur un palier héros JOUR dédié (voir
-    /// `DistrictInteriorScreenController.DioramaArtPhase.DayHero`), DAWN/DUSK restant le repli
-    /// déclaré existant (D8, inchangé — aucun art DAWN/DUSK n'a été produit par l'atelier).
+    /// `DistrictInteriorScreenController.DioramaArtPhase.DayHero`).
+    /// JUGE-D1 (audit visuel, 2026-08-21) — DAWN et DUSK routent DÉSORMAIS eux aussi vers un palier
+    /// héros : AUCUN fond dédié n'existe pour ces deux quarts (seuls `vergeNuit`/`vergeJour` sont
+    /// câblés ci-dessous), donc `ResolveArtPhase` les fait REPRENDRE le mode "jour" (DAWN) / "nuit"
+    /// (DUSK) — un PIS-ALLER consigné en dette, pas un 3e/4e mode ajouté ici : `Resolve(profile,
+    /// mode)` ne connaît toujours QUE "nuit"/"jour" (§6, aucun changement de cette table).
     /// </summary>
     [CreateAssetMenu(fileName = "DistrictBackgroundSlots", menuName = "MafiaCleanCity/District Background Slots")]
     public class DistrictBackgroundSlots : ScriptableObject

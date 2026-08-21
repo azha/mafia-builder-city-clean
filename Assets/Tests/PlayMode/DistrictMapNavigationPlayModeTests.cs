@@ -7,6 +7,7 @@ using UnityEngine.TestTools;
 using MafiaCleanCity.CityMap;  // AuthClient, CityProjectionsClient, DistrictInterior* DTOs, DistrictMapNavigation
 using MafiaCleanCity.Shell;    // SessionClient, SessionOpenDto (starter-kit grant)
 using MafiaCleanCity.Tests;    // SeederSupport
+using MafiaCleanCity.Theme;    // DesignTokens (JUGE-D2 backdrop color)
 using Object = UnityEngine.Object;
 
 namespace MafiaCleanCity.CityMap.Tests
@@ -209,7 +210,15 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.Less(Vector2.Distance(v1, vPanned), 0.6f,
                 "nav-district-F3 — à échelle IDENTIQUE, un pan ne change PAS le vecteur fond→bâtiment (fond et bâtiment bougent ENSEMBLE)");
 
-            nav.ZoomTo(1, new Vector2(Screen.width * 0.5f, Screen.height * 0.5f)); // ×2
+            // JUGE-D3 — ZoomLevels est désormais D'INSTANCE (paliers recalculés par format,
+            // §Configure) : ×2/×3 ne sont plus garantis aux index 1/2 (un palier "district entier"
+            // peut désormais s'intercaler avant/entre eux) — on cherche l'index par VALEUR.
+            int idx2x = System.Array.IndexOf(nav.ZoomLevels, 2f);
+            int idx3x = System.Array.IndexOf(nav.ZoomLevels, 3f);
+            Assert.GreaterOrEqual(idx2x, 0, "anti-vacuité — le palier ×2 existe toujours dans ZoomLevels");
+            Assert.GreaterOrEqual(idx3x, 0, "anti-vacuité — le palier ×3 existe toujours dans ZoomLevels");
+
+            nav.ZoomTo(idx2x, new Vector2(Screen.width * 0.5f, Screen.height * 0.5f)); // ×2
             Vector2 v2 = VectorFondToCell();
             Assert.AreEqual(v1.x * 2f, v2.x, 1.5f, "nav-district-F3 — ×2 : le vecteur fond→bâtiment scale EXACTEMENT ×2");
             Assert.AreEqual(v1.y * 2f, v2.y, 1.5f, "nav-district-F3 — ×2, idem sur Y");
@@ -219,7 +228,7 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.Less(Vector2.Distance(v2, v2Panned), 0.6f,
                 "nav-district-F3 — re-pan à ×2 : le vecteur ne bouge toujours pas");
 
-            nav.ZoomTo(2, new Vector2(Screen.width * 0.3f, Screen.height * 0.7f)); // ×3, focus différent
+            nav.ZoomTo(idx3x, new Vector2(Screen.width * 0.3f, Screen.height * 0.7f)); // ×3, focus différent
             Vector2 v3 = VectorFondToCell();
             Assert.AreEqual(v1.x * 3f, v3.x, 2f, "nav-district-F3 — ×3 : le vecteur fond→bâtiment scale EXACTEMENT ×3");
             Assert.AreEqual(v1.y * 3f, v3.y, 2f, "nav-district-F3 — ×3, idem sur Y");
@@ -238,7 +247,9 @@ namespace MafiaCleanCity.CityMap.Tests
             DistrictMapNavigation nav = diorama.MapNavigation;
             RectTransform sceneRt = (RectTransform)diorama.ScreenRoot.Find("DistrictScene");
 
-            for (int i = 0; i < DistrictMapNavigation.ZoomLevels.Length; i++)
+            // JUGE-D3 — ZoomLevels est désormais D'INSTANCE (§Configure) : on itère `nav.ZoomLevels`,
+            // pas la constante statique retirée — le nombre de paliers dépend maintenant du format.
+            for (int i = 0; i < nav.ZoomLevels.Length; i++)
             {
                 nav.ZoomTo(i, new Vector2(Screen.width * 0.5f, Screen.height * 0.5f));
                 nav.PanBy(new Vector2(11f, -7f));
@@ -249,7 +260,7 @@ namespace MafiaCleanCity.CityMap.Tests
                     $"nav-district-F4 (palier {i}) — échelle UNIFORME x==y, jamais un étirement anisotrope (pas de shear)");
                 Assert.AreEqual(1f, sceneRt.localScale.z, 0.0001f,
                     $"nav-district-F4 (palier {i}) — z inchangé, aucune profondeur/caméra 3D touchée");
-                Assert.AreEqual(DistrictMapNavigation.ZoomLevels[i], sceneRt.localScale.x, 0.0001f,
+                Assert.AreEqual(nav.ZoomLevels[i], sceneRt.localScale.x, 0.0001f,
                     $"nav-district-F4 (palier {i}) — l'échelle appliquée EST le palier demandé, rien d'autre ne la module");
             }
         }
@@ -322,11 +333,17 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.AreEqual(FilterMode.Bilinear, fondImg.sprite.texture.filterMode,
                 "nav-district-F7 — à ×1 (référence), le fond reste BILINEAR (réglage d'import déjà certifié bit-exact)");
 
-            nav.ZoomTo(1, new Vector2(Screen.width * 0.5f, Screen.height * 0.5f)); // ×2
+            // JUGE-D3 — ×2 n'est plus garanti à l'index 1 (ZoomLevels est D'INSTANCE) : cherché par valeur.
+            int idx2xF7 = System.Array.IndexOf(nav.ZoomLevels, 2f);
+            Assert.GreaterOrEqual(idx2xF7, 0, "anti-vacuité — le palier ×2 existe toujours");
+            int idxRefF7 = System.Array.IndexOf(nav.ZoomLevels, 1f);
+            Assert.GreaterOrEqual(idxRefF7, 0, "anti-vacuité — le palier ×1 (référence) existe toujours");
+
+            nav.ZoomTo(idx2xF7, new Vector2(Screen.width * 0.5f, Screen.height * 0.5f)); // ×2
             Assert.AreEqual(FilterMode.Point, fondImg.sprite.texture.filterMode,
                 "nav-district-F7 — ×2 : POINT mesuré meilleur que BILINEAR à échelle entière (§Zoom)");
 
-            nav.ZoomTo(0, new Vector2(Screen.width * 0.5f, Screen.height * 0.5f)); // retour ×1
+            nav.ZoomTo(idxRefF7, new Vector2(Screen.width * 0.5f, Screen.height * 0.5f)); // retour ×1
             Assert.AreEqual(FilterMode.Bilinear, fondImg.sprite.texture.filterMode,
                 "nav-district-F7 — retour à ×1 : BILINEAR à nouveau, jamais bloqué sur POINT par une visite précédente");
         }
@@ -364,11 +381,18 @@ namespace MafiaCleanCity.CityMap.Tests
             var diorama = RenderFresh("DistrictMapNav_D9", dto);
             DistrictMapNavigation nav = diorama.MapNavigation;
 
+            // JUGE-D3 — ZoomLevels est D'INSTANCE (§Configure) : bornes recalculées sur `nav.ZoomLevels`,
+            // pas sur la constante statique retirée. L'index 0 n'est plus garanti être ×1 (un palier
+            // "district entier" peut désormais s'intercaler AVANT ×1, ex. viewport 1280×720) — la
+            // valeur au palier minimum est donc affirmée en PLUS de l'index (self-documenting).
             nav.ZoomTo(999, new Vector2(Screen.width * 0.5f, Screen.height * 0.5f));
-            Assert.AreEqual(DistrictMapNavigation.ZoomLevels.Length - 1, nav.ZoomIndex, "nav-district-F9 — sature au palier maximum (×3)");
+            Assert.AreEqual(nav.ZoomLevels.Length - 1, nav.ZoomIndex, "nav-district-F9 — sature au dernier index (palier maximum, ×3)");
+            Assert.AreEqual(3f, nav.CurrentScale, 0.0001f, "nav-district-F9 — le palier maximum reste bien ×3");
 
             nav.ZoomTo(-999, new Vector2(Screen.width * 0.5f, Screen.height * 0.5f));
-            Assert.AreEqual(0, nav.ZoomIndex, "nav-district-F9 — sature au palier minimum (×1)");
+            Assert.AreEqual(0, nav.ZoomIndex, "nav-district-F9 — sature au premier index (palier minimum)");
+            Assert.LessOrEqual(nav.CurrentScale, 1f,
+                "nav-district-F9 — le palier minimum ne dépasse jamais ×1 (soit ×1 lui-même, soit un dézoom \"district entier\" plus petit, JUGE-D3)");
         }
 
         // ── nav-district-F10 — RÉGRESSION de l'artefact fond→§6, DEUX ÉTAPES ────────────────────
@@ -432,6 +456,162 @@ namespace MafiaCleanCity.CityMap.Tests
             // n'a pas aussi supprimé le compteur (qui resterait alors faux pour C9-F2/C9F1).
             Assert.AreEqual(4, diorama.RenderedWindowLightCount,
                 "nav-district-F10 — les 4 bâtiments J0 sont condition_band SOUND : le COMPTE reste 4 même si 2 n'ont aucun objet visuel");
+        }
+
+        // ══════════════════════════════════════════════════════════════════════════════════════
+        // JUGE-D3 (audit visuel, 2026-08-21, Défaut 3 — "le joueur ne peut jamais voir son quartier
+        // en entier") — {1,2,3} n'avait AUCUNE valeur ≤1, donc AUCUN dézoom ne pouvait jamais
+        // montrer le fond ENTIER (mesuré : 31,25% de l'artefact visible à 1280×720). Falsifiables
+        // PARAMÉTRÉES PAR LA RÉSOLUTION (JUGE §MÉTHODE, `[TestCase]`), pures — sans Canvas ni
+        // Screen, elles testent directement `ComputeContainScale`/`BuildZoomLevels`, les DEUX
+        // fonctions que `Configure()` appelle avec le VRAI fond et le VRAI viewport.
+        //
+        // Résolutions couvertes (même jeu que JUGE-D2, portrait 1080×1920/1080×2400/1440×3200 +
+        // 1280×720 historique) — MESURE IMPORTANTE, à consigner : sur les 3 formats PORTRAIT réels,
+        // le fond (1080×1920) tient DÉJÀ ENTIER à ×1 (viewport ≥ fond sur les DEUX axes) — le
+        // Défaut 3, tel que MESURÉ (31,25%), n'existe QUE sur le format historique 1280×720
+        // (landscape, non atteignable sur un appareil verrouillé portrait — ProjectSettings.asset
+        // §JUGE-D2). Le correctif reste appliqué UNIFORMÉMENT (aucune branche par résolution) —
+        // implementation-notes.md § Deviations en tire la conséquence produit.
+        // ══════════════════════════════════════════════════════════════════════════════════════
+
+        private static readonly Vector2 FondNativeSize = new Vector2(1080f, 1920f); // VERGE_D_{NUIT,JOUR}_FINAL — les 2 seuls fonds livrés (vague 1)
+
+        [TestCase(1080f, 1920f, 1f, TestName = "ContainScale_1080x1920_ExactMatch")]
+        [TestCase(1080f, 2400f, 1f, TestName = "ContainScale_1080x2400_WidthBound_AlreadyFits")]
+        [TestCase(1440f, 3200f, 1.3333333f, TestName = "ContainScale_1440x3200_WidthBound_AlreadyFitsAt1_ContainZoomsInFurther")]
+        [TestCase(1280f, 720f, 0.375f, TestName = "ContainScale_1280x720_HeightBound_Historique_LeSeulCasOuLeDefautExiste")]
+        public void JugeD3_ComputeContainScale_MatchesHandComputedValue_PerResolution(float viewportW, float viewportH, float expected)
+        {
+            float actual = DistrictMapNavigation.ComputeContainScale(FondNativeSize, new Vector2(viewportW, viewportH));
+            Assert.AreEqual(expected, actual, 0.001f,
+                $"contain-scale à {viewportW}x{viewportH} — recalculé À LA MAIN (pas relu du code)");
+
+            // La propriété que ce palier existe pour PROUVER (JUGE Défaut 3) : à cette échelle, le
+            // fond COMPLET (dimensions natives) tient dans le viewport sur LES DEUX AXES — jamais
+            // coupé. Vérifiée indépendamment de la formule (multiplication directe), pas seulement
+            // la valeur numérique de min().
+            Vector2 fondAtContain = FondNativeSize * actual;
+            Assert.LessOrEqual(fondAtContain.x, viewportW + 0.5f, "le fond à l'échelle contain ne dépasse pas la largeur du viewport");
+            Assert.LessOrEqual(fondAtContain.y, viewportH + 0.5f, "le fond à l'échelle contain ne dépasse pas la hauteur du viewport");
+
+            // Anti-dégénérescence : contain doit être le PLUS GRAND facteur qui tient encore — un
+            // cran au-dessus doit déborder sur AU MOINS un axe (sinon une valeur arbitrairement
+            // petite satisferait trivialement les deux Assert ci-dessus, sans être la bonne).
+            Vector2 fondJustAbove = FondNativeSize * (actual + 0.02f);
+            Assert.IsTrue(fondJustAbove.x > viewportW + 0.5f || fondJustAbove.y > viewportH + 0.5f,
+                "contain est bien le PLUS GRAND facteur qui tient — un cran au-dessus déborde déjà sur un axe");
+        }
+
+        [TestCase(1080f, 1920f, TestName = "BuildZoomLevels_1080x1920")]
+        [TestCase(1080f, 2400f, TestName = "BuildZoomLevels_1080x2400")]
+        [TestCase(1440f, 3200f, TestName = "BuildZoomLevels_1440x3200")]
+        [TestCase(1280f, 720f, TestName = "BuildZoomLevels_1280x720_Historique")]
+        public void JugeD3_BuildZoomLevels_AlwaysIncludesAWayToSeeTheWholeDistrict_PerResolution(float viewportW, float viewportH)
+        {
+            Vector2 viewport = new Vector2(viewportW, viewportH);
+            float[] levels = DistrictMapNavigation.BuildZoomLevels(FondNativeSize, viewport, out int refIndex);
+
+            // Monde dégénéré tué (JUGE Défaut 3) : la propriété exigée n'est pas "un palier de plus
+            // existe", c'est "AU MOINS UN palier de ce tableau montre le district ENTIER" — vérifié
+            // en REJOUANT chaque palier contre le fond réel, jamais en supposant que le palier
+            // AJOUTÉ est celui-là (BuildZoomLevels pourrait, par erreur, ajouter n'importe quoi).
+            bool oneShowsWholeDistrict = false;
+            foreach (float lvl in levels)
+            {
+                Vector2 fondAtLvl = FondNativeSize * lvl;
+                if (fondAtLvl.x <= viewportW + 0.5f && fondAtLvl.y <= viewportH + 0.5f) { oneShowsWholeDistrict = true; break; }
+            }
+            Assert.IsTrue(oneShowsWholeDistrict,
+                $"à {viewportW}x{viewportH} — AU MOINS un palier de [{string.Join(",", levels)}] doit montrer le district ENTIER");
+
+            // Contrôle positif — doit rougir sur le code D'AVANT, mais SEULEMENT là où le fond ne
+            // tenait pas DÉJÀ à ×1 (mesure importante, consignée en tête de section : sur les 3
+            // formats portrait réels, {1,2,3} historique montrait déjà tout à ×1 — le Défaut 3 tel
+            // que MESURÉ n'existe qu'à 1280×720). Un contrôle positif qui prétendrait rougir partout
+            // mentirait sur sa propre portée.
+            bool fondFitsNativelyAlready = FondNativeSize.x <= viewportW + 0.5f && FondNativeSize.y <= viewportH + 0.5f;
+            if (!fondFitsNativelyAlready)
+            {
+                bool oldLevelsShowWholeDistrict = false;
+                foreach (float lvl in new[] { 1f, 2f, 3f })
+                {
+                    Vector2 fondAtLvl = FondNativeSize * lvl;
+                    if (fondAtLvl.x <= viewportW + 0.5f && fondAtLvl.y <= viewportH + 0.5f) { oldLevelsShowWholeDistrict = true; break; }
+                }
+                Assert.IsFalse(oldLevelsShowWholeDistrict,
+                    $"contrôle positif — à {viewportW}x{viewportH}, l'ANCIEN jeu {{1,2,3}} NE POUVAIT PAS montrer le district entier " +
+                    "(reproduit le Défaut 3 mesuré, 31,25% visible à 1280×720) : ce test doit rougir sur le code d'avant");
+            }
+
+            Assert.AreEqual(1f, levels[refIndex], 0.0001f, "referenceIndex doit TOUJOURS pointer vers la valeur ×1, jamais 0 en dur");
+        }
+
+        // ── JUGE-D3 live — preuve END-TO-END sur le format où le défaut est RÉELLEMENT mesuré
+        // (1280×720, le format du harnais de test lui-même) : après Configure(), le palier le plus
+        // bas montre VRAIMENT le fond entier dans le viewport RENDU (pas seulement la formule pure
+        // ci-dessus) — ferme la boucle "la formule est juste" → "le composant l'applique".
+
+        [UnityTest]
+        public IEnumerator JugeD3_Live_LowestZoomLevel_ShowsWholeFondWithinRenderedViewport()
+        {
+            DistrictInteriorDto dto = null;
+            yield return FetchInterior("juged3live", d => dto = d);
+            var diorama = RenderFresh("DistrictMapNav_JugeD3Live", dto);
+            DistrictMapNavigation nav = diorama.MapNavigation;
+
+            RectTransform rootRt = (RectTransform)diorama.ScreenRoot;
+            RectTransform fondRt = (RectTransform)diorama.ScreenRoot.Find("DistrictScene/DistrictBackgroundImage");
+
+            nav.ZoomTo(0, new Vector2(Screen.width * 0.5f, Screen.height * 0.5f)); // palier le plus bas
+            yield return null;
+
+            Vector3[] fc = new Vector3[4]; fondRt.GetWorldCorners(fc);
+            Vector3[] vc = new Vector3[4]; rootRt.GetWorldCorners(vc);
+            Assert.GreaterOrEqual(fc[0].x, vc[0].x - 0.5f, "au palier le plus bas, le bord GAUCHE du fond reste DANS le viewport");
+            Assert.LessOrEqual(fc[2].x, vc[2].x + 0.5f, "au palier le plus bas, le bord DROIT du fond reste DANS le viewport");
+            Assert.GreaterOrEqual(fc[0].y, vc[0].y - 0.5f, "au palier le plus bas, le bord BAS du fond reste DANS le viewport");
+            Assert.LessOrEqual(fc[2].y, vc[2].y + 0.5f, "au palier le plus bas, le bord HAUT du fond reste DANS le viewport — " +
+                "le district ENTIER est visible (JUGE Défaut 3), pas seulement une bande");
+        }
+
+        // ══════════════════════════════════════════════════════════════════════════════════════
+        // JUGE-D2 (audit visuel, 2026-08-21, Défaut 2 — "le portrait n'a jamais été exercé") —
+        // garde structurelle : le backdrop posé par DistrictInteriorScreenController.RenderHeroDiorama
+        // (DistrictSceneBackdrop) couvre TOUJOURS DistrictScene en entier, quel que soit le viewport
+        // — jamais de bande NUE (skybox brut) visible, à AUCUNE résolution ni AUCUN palier de zoom
+        // (y compris le palier "district entier" de JUGE-D3, qui peut laisser voir au-delà du fond
+        // sur l'axe non contraignant).
+        // ══════════════════════════════════════════════════════════════════════════════════════
+
+        [UnityTest]
+        public IEnumerator JugeD2_Backdrop_AlwaysCoversTheFullSceneRect_BehindTheFond()
+        {
+            DistrictInteriorDto dto = null;
+            yield return FetchInterior("juged2backdrop", d => dto = d);
+            var diorama = RenderFresh("DistrictMapNav_JugeD2", dto);
+
+            Transform scene = diorama.ScreenRoot.Find("DistrictScene");
+            Transform backdropT = scene.Find("DistrictSceneBackdrop");
+            Assert.IsNotNull(backdropT, "JUGE-D2 — un backdrop plein-écran existe (jamais de vide brut derrière le fond)");
+
+            Transform fondT = scene.Find("DistrictBackgroundImage");
+            Assert.Less(backdropT.GetSiblingIndex(), fondT.GetSiblingIndex(),
+                "JUGE-D2 — le backdrop est un sibling ANTÉRIEUR au fond (dessiné SOUS lui, jamais par-dessus)");
+
+            var backdropRt = (RectTransform)backdropT;
+            var sceneRt = (RectTransform)scene;
+            Vector3[] bc = new Vector3[4]; backdropRt.GetWorldCorners(bc);
+            Vector3[] sc = new Vector3[4]; sceneRt.GetWorldCorners(sc);
+            Assert.AreEqual(sc[0].x, bc[0].x, 0.05f, "JUGE-D2 — le backdrop couvre EXACTEMENT DistrictScene, bord GAUCHE");
+            Assert.AreEqual(sc[0].y, bc[0].y, 0.05f, "JUGE-D2 — bord BAS");
+            Assert.AreEqual(sc[2].x, bc[2].x, 0.05f, "JUGE-D2 — bord DROIT");
+            Assert.AreEqual(sc[2].y, bc[2].y, 0.05f, "JUGE-D2 — bord HAUT");
+
+            Image backdropImg = backdropT.GetComponent<Image>();
+            Assert.AreEqual(DesignTokens.Current.nightOutOfDistrictMuted, backdropImg.color,
+                "JUGE-D2 — couleur DÉCLARÉE (REUSE du token du repli confiné, R2.3), jamais une couleur inventée localement");
+            Assert.IsFalse(backdropImg.raycastTarget, "JUGE-D2 — le backdrop est inerte, comme le fond (pp-F6)");
         }
     }
 }

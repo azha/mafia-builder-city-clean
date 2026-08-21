@@ -44,8 +44,58 @@ namespace MafiaCleanCity.CityMap
         // rétrécit sous ce qu'un seul bâtiment occupe déjà à l'écran (aucun gain d'information — le
         // fond est une image FIXE, pas de détail supplémentaire à révéler au-delà de sa résolution
         // native) et le signe NEAREST-gagne s'affaiblit (marginal à ×3, mesuré).
-        public static readonly float[] ZoomLevels = { 1f, 2f, 3f };
-        private const int ReferenceZoomIndex = 0; // ZoomLevels[0] == 1f, l'échelle certifiée bit-exacte
+        //
+        // JUGE-D3 (audit visuel, 2026-08-21, Défaut 3 — « le joueur ne peut jamais voir son quartier
+        // en entier ») — AMENDÉ : {1,2,3} n'incluait AUCUN palier ≤ 1, donc AUCUN dézoom ne pouvait
+        // jamais montrer le fond ENTIER (mesuré : 31,25% de l'artefact visible à 1280×720, le
+        // district-v2-navigation-implementation-notes.md §Deviations avait explicitement écarté le
+        // dézoom comme "question de filtrage séparée" — un STOP produit, pas une Deviation
+        // technique). `ZoomLevels` DEVIENT une propriété D'INSTANCE, calculée par `Configure()` à
+        // partir du VRAI fond et du VRAI viewport de CE rendu (jamais une constante statique — la
+        // résolution du joueur n'est pas connue à la compilation) : {1,2,3} PLUS un palier
+        // "district entier" (voir <see cref="ComputeContainScale"/>), inséré dans l'ORDRE, sauf s'il
+        // coïncide déjà avec un palier existant (cas 1080×1920 : le fond EST déjà un écran entier à
+        // ×1, aucun palier de plus). ×1 (l'échelle certifiée bit-exacte) reste le palier DE DÉPART
+        // (`referenceZoomIndex`, recalculé — plus jamais 0 en dur) : ce correctif ajoute une capacité
+        // de dézoom, il ne change pas le cadrage initial par défaut (JUGE-D2 couvre séparément
+        // l'absence de bande nue, via un backdrop — DistrictInteriorScreenController).
+        public float[] ZoomLevels { get; private set; } = { 1f, 2f, 3f };
+        private int referenceZoomIndex; // index de la valeur 1f dans ZoomLevels — recalculé à chaque Configure()
+
+        /// <summary>Le plus grand facteur d'échelle tel que le fond ENTIER (dimensions natives)
+        /// tienne dans le viewport SANS être coupé sur AUCUN axe — la classique "contain fit"
+        /// (par opposition à la "cover fit" qui remplirait le viewport en coupant l'excédent). Pure,
+        /// testable sans Canvas ni Screen (JUGE §MÉTHODE : falsifiables PARAMÉTRÉES par la
+        /// résolution, `[TestCase]`) — voir DistrictMapNavigationPlayModeTests.
+        /// `fondSizeNative`/`viewportSize` : mêmes unités (locales post-scaleFactor, comme partout
+        /// ailleurs dans ce fichier) — le rapport est indépendant de l'unité choisie tant qu'elle est
+        /// PARTAGÉE par les deux arguments.</summary>
+        public static float ComputeContainScale(Vector2 fondSizeNative, Vector2 viewportSize)
+        {
+            if (fondSizeNative.x <= 0f || fondSizeNative.y <= 0f) return 1f; // défensif — jamais une division par zéro
+            return Mathf.Min(viewportSize.x / fondSizeNative.x, viewportSize.y / fondSizeNative.y);
+        }
+
+        /// <summary>Construit le jeu de paliers pour CE rendu : {1,2,3} plus le palier "district
+        /// entier" (<see cref="ComputeContainScale"/>) s'il n'est pas déjà l'un des trois (tolérance
+        /// <paramref name="eps"/> — évite un doublon quasi-identique, ex. 1080×1920 où contain==1
+        /// EXACTEMENT). Trié ascendant : le nouveau palier peut tomber AVANT ×1 (viewport plus
+        /// "large" que le fond — ex. 1280×720, contain≈0,375) ou ENTRE deux paliers existants
+        /// (viewport plus "haut" que le fond MAIS plus étroit que lui à ×1 — ex. 1440×3200,
+        /// contain≈1,333, entre ×1 et ×2). `referenceIndex` sort l'index de la valeur ×1 dans le
+        /// tableau résultant (jamais supposé être 0).</summary>
+        public static float[] BuildZoomLevels(Vector2 fondSizeNative, Vector2 viewportSize, out int referenceIndex, float eps = 0.01f)
+        {
+            float contain = ComputeContainScale(fondSizeNative, viewportSize);
+            var levels = new System.Collections.Generic.List<float> { 1f, 2f, 3f };
+            bool alreadyPresent = false;
+            foreach (float lvl in levels)
+                if (Mathf.Abs(lvl - contain) < eps) { alreadyPresent = true; break; }
+            if (!alreadyPresent && contain > 0f) levels.Add(contain);
+            levels.Sort();
+            referenceIndex = levels.FindIndex(v => Mathf.Abs(v - 1f) < eps);
+            return levels.ToArray();
+        }
 
         // ---- test hooks ------------------------------------------------------------------------
         public int ZoomIndex { get; private set; }
@@ -71,7 +121,18 @@ namespace MafiaCleanCity.CityMap
             HasFond = fondRt != null;
             canvas = GetComponentInParent<Canvas>();
 
-            ZoomIndex = ReferenceZoomIndex;
+            // JUGE-D3 — jeu de paliers RECALCULÉ pour CE fond/viewport (jamais la constante {1,2,3}
+            // seule). Repli {1,2,3}/index 0 si pas de fond (rien à borner — HasFond==false ci-dessous
+            // retourne de toute façon avant que ça compte).
+            if (HasFond)
+                ZoomLevels = BuildZoomLevels(fondRt.rect.size, rootRt.rect.size, out referenceZoomIndex);
+            else
+            {
+                ZoomLevels = new[] { 1f, 2f, 3f };
+                referenceZoomIndex = 0;
+            }
+
+            ZoomIndex = referenceZoomIndex;
             sceneRt.localScale = Vector3.one; // ×1 — jamais un rescale résiduel d'un composant précédent
 
             if (!HasFond) return;
@@ -99,7 +160,7 @@ namespace MafiaCleanCity.CityMap
             float sf = EffectiveScaleFactor();
             Vector2 localDelta = screenPixelDelta / sf;
             sceneRt.anchoredPosition = ClampPan(sceneRt.anchoredPosition + localDelta, CurrentScale);
-            if (ZoomIndex == ReferenceZoomIndex) DistrictInteriorScreenController.SnapToScreenPixel(sceneRt);
+            if (ZoomIndex == referenceZoomIndex) DistrictInteriorScreenController.SnapToScreenPixel(sceneRt);
         }
 
         /// <summary>Zoome vers `ZoomLevels[newIndex]` (borné à [0, Length-1]) en gardant le point de
@@ -124,7 +185,7 @@ namespace MafiaCleanCity.CityMap
             ZoomIndex = newIndex;
             sceneRt.localScale = new Vector3(newScale, newScale, 1f);
             sceneRt.anchoredPosition = ClampPan(desiredPos, newScale);
-            if (ZoomIndex == ReferenceZoomIndex) DistrictInteriorScreenController.SnapToScreenPixel(sceneRt);
+            if (ZoomIndex == referenceZoomIndex) DistrictInteriorScreenController.SnapToScreenPixel(sceneRt);
             ApplyFilterModeForZoom();
         }
 
@@ -174,7 +235,7 @@ namespace MafiaCleanCity.CityMap
         /// ne jamais hériter d'un mode POINT laissé par une visite de district précédente.</summary>
         private void ApplyFilterModeForZoom()
         {
-            FilterMode mode = (ZoomIndex == ReferenceZoomIndex) ? FilterMode.Bilinear : FilterMode.Point;
+            FilterMode mode = (ZoomIndex == referenceZoomIndex) ? FilterMode.Bilinear : FilterMode.Point;
             Image[] images = sceneRt.GetComponentsInChildren<Image>(true);
             foreach (Image img in images)
                 if (img.sprite != null && img.sprite.texture != null)

@@ -16,9 +16,12 @@ namespace MafiaCleanCity.CityMap
     // SignUp et ne porte AUCUN identifiant sérialisé — C7-F3 balaie CE fichier exact pour ça.
     //
     // Décision D8 (C8, U-15) : la donnée `day_phase` (4 quarts) est déjà projetée par le back (C2/B-6).
-    // CET écran mappe EXPLICITEMENT les 3 paliers non-héros (DAWN/DAY/DUSK) sur un repli DÉCLARÉ, et
-    // NIGHT seul sur l'art de nuit construit ci-dessous (C8-F5, §0 : l'art des 3 autres paliers est
-    // DIFFÉRÉ, pas cet écran).
+    // AMENDÉ JUGE-D1 (audit visuel, 2026-08-21 — Défaut 1, LE PLUS GRAVE : DAWN/DUSK = 50% du temps
+    // de jeu sans aucun art, prouvé par `day-phase-quarter.ts` — 4 quarts ÉGAUX) : les 4 paliers
+    // rendent DÉSORMAIS tous un fond héros — DAY/NIGHT sur leur fond dédié, DAWN/DUSK en PIS-ALLER
+    // sur le fond du quart vers lequel ils MÈNENT (DAWN→jour, DUSK→nuit), dette consignée jusqu'à des
+    // rendus DAWN/DUSK dédiés de l'atelier (implementation-notes.md § Deviations). Le repli DÉCLARÉ
+    // ne couvre plus que `day_phase` INCONNU (5e valeur de fil, jamais un des 4 quarts nommés).
     //
     // SetSession et Render() sont DÉLIBÉRÉMENT NON couplés dans ce chunk — voir Tools/w3u2-c8-notes.md
     // § Deviations : aucune falsifiable C8 n'exige que le succès du fetch déclenche le rendu, et les
@@ -242,36 +245,47 @@ namespace MafiaCleanCity.CityMap
             }
         }
 
-        /// <summary>D8/C8-F5, AMENDÉ (P4, périmètre écrit par le ⊥) — mapping EXPLICITE sur les 4
-        /// quarts connus : NIGHT et DAY obtiennent chacun un palier HÉROS dédié (fond pré-rendu
-        /// propre — verge-a a un fond réel pour les deux, vague 1) ; DAWN/DUSK restent le repli
-        /// déclaré (D8 original : aucun art DAWN/DUSK n'a été produit par l'atelier). Toute valeur
-        /// de fil qui n'est AUCUN des 4 quarts connus rend Unknown — jamais silencieusement confondue
-        /// avec le repli des 2 quarts NOMMÉS restants (l'esprit du "résolveur exhaustif sans default"
+        /// <summary>D8/C8-F5, AMENDÉ (P4 puis JUGE-D1, périmètre écrit par le ⊥/le juge visuel) —
+        /// mapping EXPLICITE sur les 4 quarts connus, LES 4 SUR UN PALIER HÉROS : NIGHT et DAY
+        /// portent chacun un fond dédié (verge-a, vague 1) ; DAWN et DUSK — 50% du temps de jeu —
+        /// N'ONT AUCUN ART DÉDIÉ produit par l'atelier, et REPRENDRE le repli confiné les aurait
+        /// laissés sans fond réel la moitié du temps (JUGE Défaut 1, mesuré : `day-phase-quarter.ts`
+        /// découpe le jour en 4 quarts ÉGAUX, DAWN et DUSK ne sont PAS des états rares). PIS-ALLER
+        /// consigné (implementation-notes.md § Deviations, dette 2 rendus dédiés × N profils) :
+        /// DAWN emprunte le fond JOUR (l'aube est le quart qui MÈNE au jour) et DUSK emprunte le
+        /// fond NUIT (le crépuscule est le quart qui MÈNE à la nuit) — le rattachement chronologique
+        /// le plus défendable entre les deux seuls fonds livrés, jamais un choix arbitraire. Toute
+        /// valeur de fil qui n'est AUCUN des 4 quarts connus rend Unknown — jamais silencieusement
+        /// confondue avec l'un des 4 quarts NOMMÉS (l'esprit du "résolveur exhaustif sans default"
         /// de D2/D8, transposé à un `switch` sur une chaîne de fil plutôt qu'un enum C#).</summary>
         private static DioramaArtPhase ResolveArtPhase(string dayPhase)
         {
             switch (dayPhase)
             {
                 case "NIGHT": return DioramaArtPhase.NightHero;
+                case "DUSK": return DioramaArtPhase.NightHero; // pis-aller — pas de fond DUSK dédié (JUGE D1)
                 case "DAY": return DioramaArtPhase.DayHero;
-                case "DAWN":
-                case "DUSK": return DioramaArtPhase.NonHeroFallback;
-                default: return DioramaArtPhase.Unknown; // 5e valeur inattendue — jamais avalée par le repli des 2 nommés
+                case "DAWN": return DioramaArtPhase.DayHero;   // pis-aller — pas de fond DAWN dédié (JUGE D1)
+                default: return DioramaArtPhase.Unknown; // 5e valeur inattendue — jamais avalée par un des 4 quarts nommés
             }
         }
 
-        /// <summary>Le repli DÉCLARÉ des 3 paliers non-héros (§0 : l'art de DAWN/DAY/DUSK est différé,
-        /// pas cet écran). Un état NOMMÉ, jamais un rendu vide — sinon indiscernable d'un bug.
-        /// INCHANGÉ par le pivot P3 (le pivot ne touche que le palier héros NIGHT).</summary>
+        /// <summary>Le repli DÉCLARÉ d'un `day_phase` INCONNU (aucun des 4 quarts nommés — donnée de
+        /// fil malformée ou future 5e valeur, §0/JUGE-D1). Un état NOMMÉ, jamais un rendu vide —
+        /// sinon indiscernable d'un bug. Depuis JUGE-D1, les 4 quarts connus rendent TOUS un palier
+        /// héros (voir <see cref="ResolveArtPhase"/>) ; ce repli ne couvre plus que l'inconnu.</summary>
         private void RenderNonHeroFallback()
         {
             GameObject panel = NewUI("DayPhaseFallbackPanel", root);
             Stretch((RectTransform)panel.transform, Vector2.zero, Vector2.zero);
             panel.AddComponent<Image>().color = DesignTokens.Current.nightOutOfDistrictMuted;
 
+            // JUGE-D5 (audit visuel, 2026-08-21) — chaîne traduite (était en anglais dans une
+            // surface autrement française — ← Carte / ARGENT / JOUR N). Reformulée pour son nouveau
+            // périmètre JUGE-D1 : ce repli ne couvre plus DAWN/DAY/DUSK (tous rendent un fond héros
+            // désormais), seulement un `day_phase` inconnu.
             TextMeshProUGUI label = NewText("FallbackLabel", panel.transform,
-                "Daylight scene not rendered yet for this district — check back at night.",
+                "Scène indisponible pour ce quart horaire — réessayez plus tard.",
                 16, TextAlignmentOptions.Center);
             Stretch((RectTransform)label.transform, new Vector2(24, 24), new Vector2(-24, -24));
             label.color = DesignTokens.Current.onSurfaceSecondary;
@@ -341,6 +355,31 @@ namespace MafiaCleanCity.CityMap
 
             if (bg != null && bg.fond != null)
             {
+                // JUGE-D2 (audit visuel, 2026-08-21, Défaut 2 — le portrait n'a jamais été exercé) —
+                // le fond est TOUJOURS dessiné en pixels écran NATIFS (pp-F1, ci-dessous) : sur tout
+                // viewport dont les dimensions dépassent celles du fond (1080×1920), des bandes
+                // NUES apparaissaient — mesuré : 0px à 1080×1920 (correspondance exacte), ~379px de
+                // hauteur à 1080×2400 (20:9), ~360px de largeur à 1440×3200, TOUJOURS présentes à
+                // 1280×720 (historique, ~100px de chaque côté — jamais remarqué faute de backdrop).
+                // Un `ClampAxis` qui centre un contenu plus petit que le viewport (déjà le
+                // comportement voulu, DistrictMapNavigation.ClampAxis) ne peut PAS, à lui seul,
+                // empêcher un vide visible — il fallait un FOND à cette zone, pas un mécanisme de
+                // pan de plus. Choix retenu (implementation-notes.md § Deviations, option
+                // "complété" plutôt que "mis à l'échelle" — la bit-exactité du fond, certifiée à
+                // 1080×1920/1280×720, reste donc INTACTE à TOUTE résolution, aucun état à
+                // recertifier) : un backdrop plein-`DistrictScene`, couleur DÉCLARÉE (REUSE du
+                // token du repli confiné ci-dessous, R2.3 — jamais une nouvelle couleur inventée),
+                // posé EN PREMIER enfant (donc SOUS le fond et tout le reste — ordre de fratrie,
+                // jamais un z-index). "Jamais de bandes nues sur du skybox brut" (JUGE) devient
+                // "bandes remplies par un panneau désigné", à toute résolution, y compris au(x)
+                // palier(s) de dézoom "district entier" (JUGE-D3, DistrictMapNavigation) qui peut
+                // laisser voir au-delà du fond sur l'axe non contraignant.
+                GameObject backdropGo = NewUI("DistrictSceneBackdrop", sceneRt);
+                Stretch((RectTransform)backdropGo.transform, Vector2.zero, Vector2.zero);
+                Image backdropImg = backdropGo.AddComponent<Image>();
+                backdropImg.color = DesignTokens.Current.nightOutOfDistrictMuted;
+                backdropImg.raycastTarget = false;
+
                 // pp-F1 — résolution native : sizeDelta = texture/scaleFactor (JAMAIS `rect == tex`
                 // — §2.1 : "pp-F1 vérifie rect × scaleFactor == tex, c'était le piège"). Ancré au
                 // centre (F-cadre, §2.1 : "il n'y a pas de rescale... le fond est ancré au centre").
@@ -496,16 +535,33 @@ namespace MafiaCleanCity.CityMap
             float cellW = cellSize.x, cellH = cellSize.y;
 
             // Socle — plinthe/ombre de contact sous le bâtiment (survit au pivot — seul le facteur
-            // `k` est retiré, §2.2). Largeur = 70% du bâtiment (revue ⊥ r5(a)), dérivée directement
-            // de la taille RÉELLE de l'ancre : plus de branche séparée "pas de sprite trouvé", cellW
-            // porte déjà le repli défensif ci-dessus.
+            // `k` est retiré, §2.2). Largeur = 70% du FOOTPRINT réel (JUGE-D4, audit visuel
+            // 2026-08-21, Défaut 4 — AMENDÉ : était 70% de cellW, la largeur du FICHIER. Pour un
+            // sprite dont le contenu opaque ne couvre PAS toute cette largeur (annexe détachée avec
+            // un grand vide entre les deux — mesuré sur "usine"/lab — ou une marge basse qui dépasse
+            // la bande que Socle occupe — mesuré sur "residentiel3"/cash_safehouse, AUCUNE couverture
+            // du tout), le Socle débordait dans le vide et devenait une plaque semi-transparente
+            // flottante, screen-aligned, sans rapport avec aucune parcelle — voir
+            // BuildingSpriteSlots.FootprintOverride pour les 4 mesures et implementation-notes.md.
+            // `footprint.widthPx==0` (type non mesuré) retombe EXACTEMENT sur le calcul historique —
+            // cellW porte déjà le repli défensif ci-dessus, offset/marge restent (0,0).
+            BuildingSpriteSlots.FootprintOverride footprint = slots != null
+                ? slots.ResolveFootprint(building.operational_type)
+                : new BuildingSpriteSlots.FootprintOverride();
+            float footprintW = footprint.widthPx > 0f ? footprint.widthPx / scaleFactor : cellW;
+            float footprintOffsetX = footprint.centerOffsetPx / scaleFactor;
+            float footprintBottomMargin = footprint.bottomMarginPx / scaleFactor;
+
             GameObject socle = NewUI("Socle", cell.transform);
             RectTransform socleRt = (RectTransform)socle.transform;
             socleRt.anchorMin = socleRt.anchorMax = new Vector2(0.5f, 0f);
             socleRt.pivot = new Vector2(0.5f, 0f);
-            float socleW = cellW * 0.7f;
+            float socleW = footprintW * 0.7f;
             socleRt.sizeDelta = new Vector2(socleW, cellH * 0.2f);
-            socleRt.anchoredPosition = Vector2.zero;
+            // Recentré sur le contenu opaque (footprintOffsetX) et remonté au-dessus de la marge
+            // basse vide du fichier (footprintBottomMargin) — les deux valent 0 pour un type non
+            // mesuré, byte-identique au Vector2.zero historique.
+            socleRt.anchoredPosition = new Vector2(footprintOffsetX, footprintBottomMargin);
             Color socleTeinte = DesignTokens.Current.nightSocle;
             float aCouche1 = SocleOuterAlpha;
             float aCouche2 = 1f - (1f - SocleMidAlpha) / (1f - SocleOuterAlpha);
@@ -912,10 +968,12 @@ namespace MafiaCleanCity.CityMap
         }
     }
 
-    /// <summary>W3.U2/C8 (D8), AMENDÉ P4 — le résultat du mapping day_phase -> art. NIGHT et DAY
-    /// obtiennent chacun un palier HÉROS (fond pré-rendu propre) ; DAWN/DUSK retombent sur le repli
-    /// déclaré (art différé, D8 original — aucun art DAWN/DUSK produit par l'atelier). "Unknown"
-    /// couvre toute valeur de fil qui n'est AUCUN des 4 quarts connus — jamais silencieusement
-    /// confondue avec le repli des 2 quarts NOMMÉS restants (C8-F5 : le mapping doit être EXPLICITE).</summary>
-    public enum DioramaArtPhase { NightHero, DayHero, NonHeroFallback, Unknown }
+    /// <summary>W3.U2/C8 (D8), AMENDÉ P4 puis JUGE-D1 — le résultat du mapping day_phase -> art. LES
+    /// 4 quarts (NIGHT/DAY/DUSK/DAWN) obtiennent désormais un palier HÉROS — DUSK/DAWN en pis-aller
+    /// sur NightHero/DayHero (aucun fond dédié livré, voir ResolveArtPhase). "Unknown" couvre toute
+    /// valeur de fil qui n'est AUCUN des 4 quarts connus — jamais silencieusement confondue avec l'un
+    /// des 4 quarts NOMMÉS (C8-F5/JUGE-D1 : le mapping doit être EXPLICITE). `NonHeroFallback` retiré
+    /// (JUGE-D1) : plus aucun `day_phase` nommé n'y mène, un enum-membre inatteignable serait un
+    /// dispositif décoratif — voir RenderNonHeroFallback (méthode conservée pour Unknown).</summary>
+    public enum DioramaArtPhase { NightHero, DayHero, Unknown }
 }

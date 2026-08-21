@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.UI;
 using UnityEngine.TestTools;
 using MafiaCleanCity.CityMap;  // AuthClient, CityProjectionsClient, DistrictInterior* DTOs, DioramaArtPhase
 using MafiaCleanCity.Shell;    // AppShell, SessionClient, SessionOpenDto (starter-kit grant)
@@ -210,13 +211,21 @@ namespace MafiaCleanCity.CityMap.Tests
             }
         }
 
-        // ── C8-F5 — le mapping EXPLICITE day_phase -> repli déclaré / art héros (nuit OU jour) ──
-        // AMENDÉ (P4, périmètre ⊥) : DAY quitte le repli commun DAWN/DAY/DUSK pour devenir un
-        // second palier HÉROS (DayHero, fond VERGE_D_JOUR) — DAWN/DUSK restent le repli déclaré
-        // (D8 original, inchangé : aucun art DAWN/DUSK n'a été produit par l'atelier).
+        // ── C8-F5 — le mapping EXPLICITE day_phase -> art héros, POUR LES 4 QUARTS (JUGE-D1) ──
+        // AMENDÉ (P4 puis JUGE-D1, audit visuel 2026-08-21, Défaut 1 — LE PLUS GRAVE : DAWN+DUSK =
+        // 50% du temps de jeu SANS AUCUN ART, `day-phase-quarter.ts` découpe le jour en 4 quarts
+        // ÉGAUX). Les 4 quarts rendent DÉSORMAIS tous un fond héros réel — DAWN/DUSK en PIS-ALLER
+        // sur le fond du quart voisin (DAWN→jour, DUSK→nuit ; implementation-notes.md § Deviations,
+        // dette 2 rendus dédiés × N profils).
+        // Monde dégénéré tué (JUGE §Falsifiable Défaut 1) : un test qui ne vérifierait qu'UN palier,
+        // ou qui passerait parce que LE REPLI EXISTE (un fallback rendu vaudrait comme "ça marche"),
+        // ne prouverait rien — la boucle ci-dessous couvre les 4 quarts, CHACUN avec sa PROPRE
+        // assertion sur le SPRITE de fond réellement monté (pas seulement "une DistrictScene
+        // existe") : un bug qui rendrait toujours le fond NUIT, quel que soit le quart, resterait
+        // invisible à une assertion plus faible — celle-ci le tue.
 
         [UnityTest]
-        public IEnumerator C8F5_TwoNonHeroPhases_MapToDeclaredFallback_DayAndNightMapToHeroArt()
+        public IEnumerator C8F5_AllFourDayPhases_RenderRealHeroArt_DawnDuskBorrowNeighborBackground()
         {
             DistrictInteriorDto dto = null;
             yield return FetchInterior("c8c", d => dto = d);
@@ -224,65 +233,73 @@ namespace MafiaCleanCity.CityMap.Tests
             bareHostGo = new GameObject("DistrictInteriorDiorama_C8F5");
             var diorama = bareHostGo.AddComponent<DistrictInteriorScreenController>();
 
-            foreach (string phase in new[] { "DAWN", "DUSK" })
+            DistrictBackgroundSlots bgSlots = DistrictBackgroundSlots.Current;
+            Assert.IsNotNull(bgSlots, "l'asset DistrictBackgroundSlots doit être chargé");
+            Sprite jourFond = bgSlots.Resolve("verge", "jour")?.fond;
+            Sprite nuitFond = bgSlots.Resolve("verge", "nuit")?.fond;
+            Assert.IsNotNull(jourFond, "anti-vacuité — le fond JOUR existe (sinon la comparaison ci-dessous est vide)");
+            Assert.IsNotNull(nuitFond, "anti-vacuité — le fond NUIT existe");
+
+            // (phase, palier attendu, fond attendu — le PIS-ALLER de DAWN/DUSK emprunte le fond du
+            // quart voisin qu'il précède chronologiquement, JUGE-D1)
+            var cases = new (string phase, DioramaArtPhase expectedArtPhase, Sprite expectedFond)[]
             {
-                dto.day_phase = phase;
+                ("NIGHT", DioramaArtPhase.NightHero, nuitFond),
+                ("DAY",   DioramaArtPhase.DayHero,   jourFond),
+                ("DUSK",  DioramaArtPhase.NightHero, nuitFond), // pis-aller : pas de fond DUSK dédié
+                ("DAWN",  DioramaArtPhase.DayHero,   jourFond), // pis-aller : pas de fond DAWN dédié
+            };
+
+            foreach (var c in cases)
+            {
+                dto.day_phase = c.phase;
                 diorama.Render(dto);
-                Assert.AreEqual(DioramaArtPhase.NonHeroFallback, diorama.LastArtPhase, $"{phase} maps to the declared fallback");
-                Assert.IsNotNull(diorama.ScreenRoot.Find("DayPhaseFallbackPanel"), $"{phase} renders the NAMED fallback panel");
-                Assert.IsNull(diorama.ScreenRoot.Find("DistrictScene"), $"{phase} does NOT render a hero scene");
-                Assert.AreEqual(0, diorama.RenderedBuildingCount, $"{phase} — no buildings rendered (fallback, not the diorama)");
-
-                // Yield de fin d'itération — laisse le temps au `ClearContent` de l'itération SUIVANTE
-                // de purger CE panneau AVANT que l'itération suivante n'en reconstruise un.
+                // Même correctif de placement que l'historique C8-F5 (mécanisme mesuré : un rendu
+                // héros qui en remplace un autre laisse l'ancienne scène vivante jusqu'à la fin de
+                // frame, Destroy() différé) — un yield avant CHAQUE assertion, pas seulement entre
+                // repli et héros.
                 yield return null;
+
+                Assert.AreEqual(c.expectedArtPhase, diorama.LastArtPhase, $"{c.phase} — palier d'art attendu");
+                Assert.IsNull(diorama.ScreenRoot.Find("DayPhaseFallbackPanel"),
+                    $"{c.phase} — NE rend PAS le repli (JUGE-D1 : les 4 quarts nommés sont tous des paliers héros)");
+                Transform sceneT = diorama.ScreenRoot.Find("DistrictScene");
+                Assert.IsNotNull(sceneT, $"{c.phase} — rend une DistrictScene (fond+bâtiments), pas un repli");
+                Assert.Greater(diorama.RenderedBuildingCount, 0, $"{c.phase} — anti-vacuité : les bâtiments du starter kit sont bien rendus");
+                Assert.AreEqual(2, diorama.ScreenRoot.childCount,
+                    $"{c.phase} — 2 nœuds nommés (titre/scène), même forme que tout palier héros (pp-F5)");
+
+                Transform fondT = sceneT.Find("DistrictBackgroundImage");
+                Assert.IsNotNull(fondT, $"{c.phase} — un fond réel est rendu (jamais de bare band ni de vide)");
+                Image fondImg = fondT.GetComponent<Image>();
+                Assert.AreSame(c.expectedFond, fondImg.sprite,
+                    $"{c.phase} — le SPRITE de fond réellement monté est celui attendu (tue le monde dégénéré " +
+                    "\"toujours le même fond quel que soit le quart\" — une assertion plus faible ne l'aurait pas vu)");
             }
+        }
 
-            dto.day_phase = "DAY";
+        // ── C8-F5bis — le repli déclaré survit pour un `day_phase` VRAIMENT inconnu (JUGE-D1 : ce
+        // n'est plus DAWN/DUSK qui l'atteint — voir C8-F5 ci-dessus — mais le mécanisme de repli
+        // lui-même doit rester vivant pour la 5e valeur / donnée de fil malformée que ResolveArtPhase
+        // nomme explicitement Unknown, sans quoi le retrait de NonHeroFallback de l'enum aurait
+        // silencieusement supprimé un état de sécurité au lieu de le rescoper). ──
+
+        [UnityTest]
+        public IEnumerator C8F5bis_UnknownDayPhase_StillMapsToDeclaredFallback()
+        {
+            DistrictInteriorDto dto = null;
+            yield return FetchInterior("c8cbis", d => dto = d);
+            dto.day_phase = "ECLIPSE"; // 5e valeur — jamais un des 4 quarts nommés
+
+            bareHostGo = new GameObject("DistrictInteriorDiorama_C8F5bis");
+            var diorama = bareHostGo.AddComponent<DistrictInteriorScreenController>();
             diorama.Render(dto);
-            yield return null; // purge le repli DUSK de l'itération précédente (même correctif de placement que NIGHT ci-dessous)
 
-            Assert.AreEqual(DioramaArtPhase.DayHero, diorama.LastArtPhase, "DAY maps to the day hero art");
-            Assert.IsNotNull(diorama.ScreenRoot.Find("DistrictScene"), "DAY renders a hero scene (fond+bâtiments)");
-            Assert.Greater(diorama.RenderedBuildingCount, 0, "DAY actually renders buildings");
-            Assert.AreEqual(2, diorama.ScreenRoot.childCount,
-                "DAY construit EXACTEMENT ses 2 nœuds nommés (titre/scène), même forme que NIGHT (pp-F5)");
-            Transform dayScene = diorama.ScreenRoot.Find("DistrictScene");
-            Assert.IsNotNull(dayScene.Find("DistrictBackgroundImage"), "DAY doit avoir un fond réel (verge-a, vague 1)");
-
-            dto.day_phase = "NIGHT";
-            diorama.Render(dto);
-
-            // ⚠️ CORRECTIF DE PLACEMENT (mécanisme original mesuré : "Expected 4, But was 5" avant
-            // un yield manquant — même cause ici). Le rendu NIGHT ci-dessus détruit la SCÈNE DAY
-            // (ClearContent, Destroy différé à la fin de frame) : sans un yield avant l'assertion,
-            // root porterait encore la scène DAY en plus de la scène NIGHT fraîche. Un rendu HÉROS
-            // qui en remplace un autre n'est pas concerné par le bug d'origine (repli qui survit —
-            // seul un repli laissait un nœud de PLUS que ce que Render() venait de construire), mais
-            // le même yield-avant-assertion reste nécessaire pour laisser Destroy() s'exécuter.
-            yield return null;
-
-            Assert.AreEqual(DioramaArtPhase.NightHero, diorama.LastArtPhase, "NIGHT maps to the hero art");
-            Assert.IsNotNull(diorama.ScreenRoot.Find("DistrictScene"), "NIGHT renders the night scene (fond+bâtiments)");
-            Assert.Greater(diorama.RenderedBuildingCount, 0, "NIGHT actually renders buildings");
-            // Socle : une épingle d'ABSENCE (`Assert.IsNull(Find("DayPhaseFallbackPanel"))`) reste
-            // fragile même une fois la staleness ci-dessus corrigée — elle peut rougir pour n'importe
-            // quelle raison sans rapport avec ce qu'elle prétend prouver. Remplacée par une VALEUR
-            // PRÉSENTE : `RenderNightDiorama` construit EXACTEMENT 2 enfants directs de `root`
-            // (DistrictTitle, DistrictScene — vérifié dans le corps de la méthode) ; `RenderNonHeroFallback`
-            // n'en construit qu'1 (DayPhaseFallbackPanel). Le compte prouve POSITIVEMENT la composition
-            // exacte de NIGHT, ce qui implique l'absence de tout panneau de repli sans jamais chercher
-            // son absence directement.
-            //
-            // ⚠️ AMENDEMENT NOMMÉ (pivot fond pré-rendu, Tools/pivot-fond-prerendu-design.md, pp-F5,
-            // §8, gate ⊥ APPROVED 2026-08-20) — 4 → 2. `OutOfDistrictBackdrop` et `Haze` sont
-            // RETIRÉS : le fond pré-rendu porte déjà sa ville au loin (`map_district.py:34-36`) et sa
-            // brume (`:26`) — les deux calques Unity coûtaient 1,16 à 1,70 de MAE uniforme
-            // (F-nocalque) sans plus avoir d'objet à représenter (prédiction ⊥ P2). `GridArea`
-            // devient `DistrictScene` (même rôle structurel — voir DistrictInteriorScreenController.cs).
-            // Forme de compte POSITIF conservée à l'identique (jamais une recherche d'absence).
-            Assert.AreEqual(2, diorama.ScreenRoot.childCount,
-                "NIGHT construit EXACTEMENT ses 2 nœuds nommés (titre/scène) — aucun calque hors-district/brume résiduel (pp-F5)");
+            Assert.AreEqual(DioramaArtPhase.Unknown, diorama.LastArtPhase,
+                "day_phase inconnu — palier Unknown, jamais avalé par l'un des 4 quarts nommés");
+            Assert.IsNotNull(diorama.ScreenRoot.Find("DayPhaseFallbackPanel"), "day_phase inconnu — rend bien le repli déclaré");
+            Assert.IsNull(diorama.ScreenRoot.Find("DistrictScene"), "day_phase inconnu — ne rend PAS de scène héros");
+            Assert.AreEqual(0, diorama.RenderedBuildingCount, "day_phase inconnu — aucun bâtiment (repli, pas la diorama)");
         }
     }
 }
