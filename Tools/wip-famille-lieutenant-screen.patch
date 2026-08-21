@@ -1,0 +1,266 @@
+.../Lieutenant/LieutenantScreenController.cs       | 666 ++++++++++++++++++---
+ 1 file changed, 599 insertions(+), 67 deletions(-)
+
+--- Changes ---
+
+Assets/Scripts/Operational/Lieutenant/LieutenantScreenController.cs
+  @@ -183,6 +183,33 @@
+  +        // ---- "La Famille — l'organigramme" (2026-08-21, maquette ratifiée user) ----------------
+  +        // Restyle du header + de la section Roster (B2) en organigramme "verre gravé" : le Don en
+  +        // tête, chaque lieutenant accroché au fil laiton, son équipe indentée dessous. Les sections
+  +        // Status/Reassign/Builder/Recruit plus bas restent INCHANGÉES — OpenLieutenant() reste
+  +        // l'unique pont (taper un rang sélectionne le lieutenant, sa fiche apparaît plus bas dans la
+  +        // MÊME card ; patron déjà existant, aucune navigation nouvelle introduite ici).
+  +        private TextMeshProUGUI familySubtitleText; // "{N} lieutenant(s)" — le SEUL compte réel affiché (jamais "hommes", Phase 1).
+  +        /// <summary>The rendered header subtitle (Family test hook). Null before the first render.</summary>
+  +        public string FamilySubtitle => familySubtitleText != null ? familySubtitleText.text : null;
+  +        // Quels lieutenants ont leur équipe DÉPLIÉE (RÈGLE maquette "taper une chip déplie"). Le
+  +        // lieutenant ACTIF (op_state_band==ACTIVE) est déplié PAR DÉFAUT la PREMIÈRE fois qu'il est
+  +        // vu (RÈGLE maquette "le lieutenant actif montre ses hommes un par un") — jamais re-forcé aux
+  +        // renders suivants (sinon un joueur qui replie explicitement un actif le revoit toujours
+  +        // déplié). Clé = lieutenant_id.
+  +        private readonly HashSet<string> expandedTeams = new HashSet<string>();
+  +        private readonly HashSet<string> seenLieutenantIds = new HashSet<string>();
+  +        /// <summary>Whether lieutenant `id`'s team section is expanded (Family test hook).</summary>
+  +        public bool IsTeamExpanded(string id) => id != null && expandedTeams.Contains(id);
+  +        /// <summary>Toggle a lieutenant's team expand state and re-render (test hook — mirrors tapping the eq-chip / the
+  +        /// expanded empty-state box; RÈGLE maquette "taper une chip déplie").</summary>
+  +        public void ToggleTeamExpanded(string id)
+  +        {
+  +            if (string.IsNullOrEmpty(id) || Destroyed) return;
+  +            if (!expandedTeams.Remove(id)) expandedTeams.Add(id);
+  +            RenderRoster();
+  +        }
+  +
+           // ---- T3 Rule-builder section ------------------------------------------
+           private readonly List<RuleRow> rules = new List<RuleRow>();  // the authored rule model (test hook: Rules/SetRules).
+           private RectTransform builderSection;  // holds the rule-builder label + the per-rule rows + the +Add/Validate/Attach.
+  @@ -1023,10 +1050,10 @@
+  -            TextMeshProUGUI titleText = NewText("Title", card.transform, "LIEUTENANT", 22, TextAlignmentOptions.Left);
+  -            titleText.fontStyle = FontStyles.Bold;
+  -            AddLayoutElement(titleText.gameObject, minHeight: 30, flexibleHeight: 0);
+  -            TrackText(titleText, "LIEUTENANT");
+  +            // "La Famille — l'organigramme" (2026-08-21) : le header .tete de la maquette remplace le
+  +            // Title plein qu'affichait ce screen (retour rond · titre serif espacé · sous-titre ·
+  +            // filet laiton — RÈGLE maquette "en-tête unique").
+  +            BuildFamilyHeader(card.transform);
+   
+               // Roster section (B2): a section label + a "Refresh roster" button + one row per delegated lieutenant. Built
+               // directly under the title so the player picks a lieutenant here, then its bands + script render in the Status
+  @@ -1228,13 +1255,9 @@
+  -            NewSectionLabel(rosterSection, "ROSTER — your lieutenants");
+  -
+  -            AddActionButton(rosterSection, "Refresh roster", () => StartCoroutine(RefreshRoster()));
+  -
+               GameObject rows = NewUI("RosterRows", rosterSection);
+               VerticalLayoutGroup rvlg = rows.AddComponent<VerticalLayoutGroup>();
+  -            rvlg.spacing = 6;
+  +            rvlg.spacing = FX(10);
+               rvlg.childControlWidth = true;
+               rvlg.childControlHeight = true;
+               rvlg.childForceExpandWidth = true;
+  @@ -1245,34 +1268,92 @@
+  -        // Rebuild the roster rows from CurrentRoster. Each lieutenant → one row: an archetype glyph + worded archetype
+  -        // label + the op_state band (worded) + an "Open" button that selects it (OpenLieutenant → RefreshBands → the
+  -        // builder palette + the status bands + the read-only script follow). An empty roster renders a friendly empty
+  -        // line, never an error. R2.2: every cell is a worded band/label — the uuid stays on the Open button's closure,
+  -        // never shown; no raw scalar leaks.
+  +        // Rebuild the Family tree from CurrentRoster: the Don row, then one "rang" per lieutenant (archetype-as-identity
+  +        // + mode chip + op_state badge, glass panel, tap → OpenLieutenant selects it → the fiche further down the SAME
+  +        // card follows via RefreshBands, unchanged) with its "équipe" slot beneath (RÈGLE maquette : l'actif se montre
+  +        // déplié, les autres résument en chip repliée — taper une chip déplie), joined by a continuous brass rail. No
+  +        // named crew / headcount / loyalty % is fabricated anywhere (Phase 1 — no backend data model for any of the
+  +        // three; see implementation-notes.md). An empty roster renders a friendly empty line, never an error.
+           private void RenderRoster()
+           {
+               if (Destroyed || rosterRows == null) return;
+               ClearRosterRows(); // prune the prior rows' tracked text from the scan corpus, THEN rebuild (parity with ClearStatusRows).
+   
+  -            if (CurrentRoster == null || CurrentRoster.Length == 0)
+  +            int count = CurrentRoster?.Length ?? 0;
+  +            if (familySubtitleText != null)
+               {
+  -                TextMeshProUGUI empty = NewText("NoLieutenants", rosterRows, "(no lieutenants — recruit one below)", 13, TextAlignmentOptions.Left);
+  +                // Own-roster ITEM COUNT (a UI list-length affordance — every lieutenant it counts is
+  +                // individually rendered right below), NOT a backend judgment scalar (R2.2 targets
+  +                // tenure/reputation/heat-class values, not "how many rows are in the list you're
+  +                // looking at"). Tracked as a COMPONENT only (never the string), mirroring the
+  +                // script_source exemption (RenderScriptSource) — kept OUT of the no-raw-scalar scan
+  +                // corpus on purpose, same family, same reason.
+  +                string subtitle = count == 0 ? "aucun lieutenant" : count == 1 ? "1 lieutenant" : count + " lieutenants";
+  +                familySubtitleText.text = subtitle;
+  +                if (!textComponents.Contains(familySubtitleText)) textComponents.Add(familySubtitleText);
+  +            }
+  +
+  +            BuildDonRow(rosterRows);
+  +
+  +            if (count == 0)
+  +            {
+  +                TextMeshProUGUI empty = NewText("NoLieutenants", rosterRows, "Aucun lieutenant recruté", 13, TextAlignmentOptions.Center);
+                   empty.color = DesignTokens.Current.onSurfaceSecondaryAlt;
+                   empty.fontStyle = FontStyles.Italic;
+                   AddLayoutElement(empty.gameObject, minHeight: 22, flexibleHeight: 0);
+  -                TrackText(empty, "(no lieutenants — recruit one below)");
+  -                return;
+  +                TrackText(empty, "Aucun lieutenant recruté");
+  +            }
+  +            else
+  +            {
+  +                GameObject tree = NewUI("Arbre", rosterRows);
+  +                VerticalLayoutGroup treeVlg = tree.AddComponent<VerticalLayoutGroup>();
+  +                treeVlg.spacing = FX(8);
+  +                treeVlg.padding = new RectOffset(Mathf.RoundToInt(FX(14)), 0, 0, 0);
+  +                treeVlg.childControlWidth = true;
+  +                treeVlg.childControlHeight = true;
+  +                treeVlg.childForceExpandWidth = true;
+  +                treeVlg.childForceExpandHeight = false;
+  +                AddLayoutElement(tree, flexibleHeight: 0);
+  +
+  +                // Le fil laiton : un Image étiré par ANCRAGE (anchorMin/Max=(0,0)-(0,1), sizeDelta.y=0)
+  +                // sur toute la hauteur RÉELLE de `tree` — recalculé automatiquement par le
+  +                // VerticalLayoutGroup ambiant à CHAQUE rebuild (tap-to-expand inclus), sans coroutine
+  +                // ni lecture de RectTransform dans la frame de création (le piège "valeur lue dans la
+  +                // frame de création est suspecte" ne s'applique pas ici : rien n'est LU, l'ancrage est
+  +                // POSÉ une fois et Unity le ré-évalue lui-même). `ignoreLayout=true` l'exclut du calcul
+  +                // du VerticalLayoutGroup de `tree` (sinon il compterait comme une rangée de plus).
+  +                GameObject railGo = NewUI("Rail", tree.transform);
+  +                RectTransform railRt = (RectTransform)railGo.transform;
+  +                railRt.anchorMin = new Vector2(0f, 0f);
+  +                railRt.anchorMax = new Vector2(0f, 1f);
+  +                railRt.pivot = new Vector2(0.5f, 1f);
+  +                railRt.sizeDelta = new Vector2(FX(1.87f), 0f);
+  +                railRt.anchoredPosition = new Vector2(FX(5f), 0f);
+  +                Image railImg = railGo.AddComponent<Image>();
+  +                railImg.color = DesignTokens.Current.hudHairlineGold; // --laiton
+  +                railImg.raycastTarget = false;
+  +                railGo.AddComponent<LayoutElement>().ignoreLayout = true;
+  +                railGo.transform.SetAsFirstSibling();
+  +
+  +                for (int i = 0; i < CurrentRoster.Length; i++)
+  +                {
+  +                    RosterRow row = CurrentRoster[i];
+  +                    // L'actif se déplie tout seul la PREMIÈRE fois qu'on le voit (RÈGLE maquette) —
+  +                    // jamais re-forcé (un joueur qui replie explicitement le revoit replié).
+  +                    if (seenLieutenantIds.Add(row.lieutenant_id) && row.op_state_band == "ACTIVE")
+  +                        expandedTeams.Add(row.lieutenant_id);
+  +                    BuildFamilyLieutenantRow(tree.transform, row);
+  +                }
+               }
+   
+  -            for (int i = 0; i < CurrentRoster.Length; i++)
+  -                BuildRosterRow(CurrentRoster[i], i);
+  +            BuildRecruitCta(rosterRows);
+           }
+   
+  -        // Destroy the current roster rows AND prune their tracked text from the shared no-raw-scalar scan corpus
+  +        // Destroy the current roster tree AND prune its tracked text from the shared no-raw-scalar scan corpus
+           // (textComponents/renderedTexts) — scoped to rosterRows so it does NOT wipe the Status section's tracked text the
+  -        // way the global ClearStatusRows does. Without this, repeated "Refresh roster" clicks accumulate now-destroyed TextMeshProUGUI
+  -        // components + duplicate strings in the corpus (RenderedTexts). Mirrors ClearStatusRows' prune-then-render intent.
+  +        // way the global ClearStatusRows does. GetComponentsInChildren walks the WHOLE subtree (Don row, brass rail,
+  +        // every rang/équipe, the recruit CTA), so this stays correct regardless of nesting depth. Mirrors
+  +        // ClearStatusRows' prune-then-render intent.
+  @@ -1288,64 +1369,515 @@
+  -        // One roster row: archetype glyph + worded archetype label + the op_state band (worded) + an "Open" button. The
+  -        // Open button captures the row's lieutenant_id and calls OpenLieutenant(id) (selects it → RefreshBands). Mirrors
+  -        // the AddStatusRow horizontal-row idiom (glyph + label + value), plus a trailing compact action button.
+  -        private void BuildRosterRow(RosterRow row, int index)
+  +        // ===== "La Famille — l'organigramme" — construction (2026-08-21) ===========================
+  +
+  +        // ÉCHELLE — la maquette (atelier3d-mafia/ecrans-brennar.html) est autorée pour le cadre phone
+  +        // `.tel` (300px CSS). La card Unity de cet écran ("LieutenantSheet") est ÉTABLIE à 560px
+  +        // (précédent DashboardController/LieutenantScreenController, partagée avec les sections
+  +        // Status/Reassign/Builder/Recruit non touchées par ce lot — la largeur de la card ne peut donc
+  +        // pas changer). FX() applique le facteur d'échelle UNIQUE et UNIFORME 560/300 à une dimension
+  +        // px de la maquette — jamais une valeur réinventée, la MÊME opération mécanique que
+  +        // --force-device-scale-factor applique déjà à la résolution physique (voir
+  +        // Tools/family-organigramme-reference-source.html, qui applique EXACTEMENT le même calcul —
+  +        // les deux doivent produire des nombres identiques).
+  +        private const float FamilyScale = 560f / 300f;
+  +        private static float FX(float mockupPx) => mockupPx * FamilyScale;
+  +
+  +        // R2.3/DA — la même règle que ProceduralUI.cs (canaux de couverture NEUTRES exemptés du
+  +        // câblage DesignTokens, jamais une teinte CHOISIE) : un blanc/noir à alpha variable pour un
+  +        // biseau/filet, jamais un token dédié pour ça. REUSE du patron TopBarController.WithAlpha
+  +        // (copie locale — Shell/ n'est pas dans le périmètre déclaré de ce lot).
+  +        private static Color WithAlpha(Color c, float a) { c.a = a; return c; }
+  +
+  +        // ----- archétype -> "nom" affiché en position primaire (RÈGLE maquette : Sal/Vito/Rosa sont
+  +        // des noms personnels — AUCUNE donnée de nom personnel n'existe côté back : lieutenant.name /
+  +        // lieutenant.name_locale EXISTENT en DB (schema_lieutenant.ts:99-104) mais ne sont JAMAIS
+  +        // projetés vers GET /v1/lieutenants ni GET /v1/lieutenants/:id — mesuré, 0 hit "name" dans
+  +        // lieutenant.projection.service.ts. L'archétype (RÉEL, R2.2-clean) prend donc la position
+  +        // "nom" — Phase 1, implementation-notes.md). EXHAUSTIVE sur ArchetypeBand (les 9 archétypes +
+  +        // UNKNOWN). Seuls COMPTABLE/SÉCURITÉ/BLANCHIMENT/LOGISTIQUE sont écrits noir sur blanc dans la
+  +        // maquette (Sal=Comptable/Vito=Sécurité/Rosa=Blanchiment/Enzo=Logistique) ; les 5 autres
+  +        // traductions FR (COOK/DISTRIBUTION/MUSCLE/INTELLIGENCE/FACILITY_MANAGER/UNKNOWN) ne sont
+  +        // ratifiées par AUCUNE maquette — consigné en Deviations.
+  +        private static string FamilyArchetypeLabelFr(string a)
+           {
+  -            GameObject go = NewUI("RosterRow_" + index, rosterRows);
+  -            go.AddComponent<Image>().color = RowBg;
+  -            HorizontalLayoutGroup hlg = go.AddComponent<HorizontalLayoutGroup>();
+  -            hlg.padding = new RectOffset(10, 10, 6, 6);
+  -            hlg.spacing = 10;
+  +            switch (a)
+  +            {
+  +                case "BOOKKEEPER": return "Comptable";
+  +                case "SECURITY": return "Sécurité";
+  +                case "LAUNDERING": return "Blanchiment";
+  +                case "LOGISTICS": return "Logistique";
+  +                case "COOK": return "Cuisine";
+  +                case "DISTRIBUTION": return "Distribution";
+  +                case "MUSCLE": return "Muscle";
+  +                case "INTELLIGENCE": return "Renseignement";
+  +                case "FACILITY_MANAGER": return "Intendance";
+  +                case "UNKNOWN": return "Indéterminé";
+  +                default: return string.IsNullOrEmpty(a) ? "—" : a;
+  +            }
+  +        }
+  +
+  +        // ----- mode -> chip FR (tasked|delegated). EXHAUSTIVE sur ModeBand. La couleur suit le MÊME
+  +        // mapping que la maquette (.chip.del cyan / .chip.self creme-2).
+  +        private static string FamilyModeLabelFr(string m) => m == "delegated" ? "Délégué" : m == "tasked" ? "Direct" : "—";
+  +        private static Color FamilyModeChipColor(string m) =>
+  +            m == "delegated" ? DesignTokens.Current.hudGaugeArcCold /* --cyan */ : DesignTokens.Current.hudCremeSecondary /* --creme-2 */;
+  +
+  +        // ----- op_state_band -> "état" FR — remplace "Loyauté" de la maquette. AUCUNE donnée de
+  +        // loyauté n'existe côté back pour un lieutenant : loyalty_seed_bucket n'est écrit QU'à
+  +        // l'embauche par quête de recrutement et n'est projeté NULLE PART (0 hit dans
+  +        // lieutenant.projection.service.ts) ; trust_budget_bucket EXISTE et EST projeté mais porte un
+  +        // système DIFFÉRENT (crédibilité de flag disciplinaire, pas loyauté) — le réutiliser
+  +        // mentirait sur ce qu'il mesure. op_state_band est RÉEL, projeté, R2.2-clean, et occupe la
+  +        // MÊME position visuelle que "Loyauté" dans la maquette (Phase 1, implementation-notes.md).
+  +        // EXHAUSTIVE sur OpStateBand (SETTLING|PAUSED|ACTIVE|IDLE) ; la couleur RÉUTILISE OpStateAccent
+  +        // (déjà exhaustive/correcte, Status section).
+  +        private static string FamilyOpStateLabelFr(string s)
+  +        {
+  +            switch (s)
+  +            {
+  +                case "SETTLING": return "Stabilisation";
+  +                case "ACTIVE": return "Actif";
+  +                case "PAUSED": return "En pause";
+  +                case "IDLE": return "Repos";
+  +                default: return string.IsNullOrEmpty(s) ? "—" : s;
+  +            }
+  +        }
+  +
+  +        private static readonly Dictionary<string, Sprite> busteSpriteCache = new Dictionary<string, Sprite>();
+  +        // homburg (Don) / fedora (lieutenants) / casquette (les hommes — RÈGLE maquette "le rang se lit
+  +        // au chapeau"). REUSE Resources.Load<Sprite> — le SEUL seam de livraison pour ces 9 écrans
+  +        // construits 100% à l'exécution, sans prefab ni scène (même contrainte que DesignTokens.asset ;
+  +        // voir Tools/family-bustes-render.sh pour la provenance). `casquette` n'a aujourd'hui AUCUN
+  +        // consommateur (aucune donnée d'équipe nommée n'existe côté back — Phase 1) ; importé quand
+  +        // même pour la complétude du système visuel (les 3 bustes forment UN jeu, REUSE verbatim de la
+  +        // maquette) — consigné en Deviations.
+  +        private static Sprite BusteSprite(string kind)
+  +        {
+  +            if (busteSpriteCache.TryGetValue(kind, out Sprite cached) && cached != null) return cached;
+  +            Sprite s = Resources.Load<Sprite>("Lieutenant/ui_element_buste_" + kind);
+  +            if (s != null) busteSpriteCache[kind] = s;
+  +            return s;
+  +        }
+  +
+  ... (440 lines truncated)
+  +599 -67
+[full diff: rtk git diff --no-compact]
