@@ -28,16 +28,16 @@ MonoBehaviour:
     actif: {fileID: 0}
   cashSafehouseOv:
     fen: {fileID: 21300000, guid: 8285df57c21e475fa88bae6f73d52119, type: 3}
-    neon: {fileID: 21300000, guid: bf98e42b822d0e0928ed75cc4966b1dc, type: 3}
-    dev: {fileID: 21300000, guid: 14e44fdb1f690780696f606404304918, type: 3}
+    neon: {fileID: 0}
+    dev: {fileID: 0}
     actif: {fileID: 0}
   stashOv:
-    fen: {fileID: 21300000, guid: 2d943d8a9a5f9a874bbdd10eb1567cd5, type: 3}
+    fen: {fileID: 0}
     neon: {fileID: 0}
     dev: {fileID: 0}
     actif: {fileID: 21300000, guid: daf3e07ec30b2c419847512c9b7d1258, type: 3}
   labOv:
-    fen: {fileID: 21300000, guid: 4bc544226ec4f52f38929161eb590127, type: 3}
+    fen: {fileID: 0}
     neon: {fileID: 0}
     dev: {fileID: 0}
     actif: {fileID: 21300000, guid: f4ae4600d223e91f6b54170e1370ef5c, type: 3}

@@ -93,10 +93,14 @@ namespace MafiaCleanCity.CityMap
     // GridArea — seuls les COMPTES et l'appariement par nom `Cell_x_y` comptent) — l'option qui change
     // le moins de surface (règle du socle sur les imprévus non bloquants).
     //
-    // Structure de root en art de nuit (pp-F5) : EXACTEMENT 2 enfants directs — DistrictTitle, puis
+    // Structure de root en art de nuit (pp-F5) : EXACTEMENT 2 enfants directs — DistrictTitle et
     // DistrictScene (conteneur passe-plat qui porte le fond/placeholder + tous les Cell_x_y). Le
     // childCount de root reste donc FIXE à 2 quel que soit le nombre de bâtiments — c'est ce qui
-    // rend l'amendement de :241 exact (4 → 2), pas 2+N.
+    // rend l'amendement de :241 exact (4 → 2), pas 2+N. AMENDÉ (nav-district) : l'ORDRE DE FRATRIE
+    // n'est plus "Titre puis Scène" — DistrictTitle est repoussé en DERNIER sibling en fin de
+    // RenderHeroDiorama (le titre est du chrome, il doit rester rendu AU-DESSUS d'un DistrictScene
+    // que la navigation peut désormais paner/zoomer sous lui). Le COMPTE (2) est inchangé ; seul
+    // l'ORDRE l'est — aucune falsifiable existante n'assertait l'ordre (childCount seul).
     public class DistrictInteriorScreenController : MonoBehaviour, MafiaCleanCity.Shell.IShellTenant
     {
         [Header("Backend")]
@@ -129,6 +133,11 @@ namespace MafiaCleanCity.CityMap
         public Transform ScreenRoot => root;
         public DioramaArtPhase LastArtPhase { get; private set; } = DioramaArtPhase.Unknown;
         public int RenderedBuildingCount { get; private set; }
+        // ---- test hooks : nav-district (pan+zoom) ---------------------------------------------
+        /// <summary>Null pour un palier héros SANS fond réel (repli confiné, rien à borner/faire
+        /// suivre) — sinon le composant attaché à DistrictScene pour CE rendu (recréé à chaque
+        /// Render(), comme le reste de la scène).</summary>
+        public DistrictMapNavigation MapNavigation { get; private set; }
         // ---- test hooks : les 5 bindings lumineux (C9) ---------------------------------------
         /// <summary>Binding 1+2 (§1.5 lignes 1-2) — fenêtres ambre allumées (condition_band == SOUND).</summary>
         public int RenderedWindowLightCount { get; private set; }
@@ -287,7 +296,16 @@ namespace MafiaCleanCity.CityMap
         /// du mode, ils suivent les FAITS du bâtiment, pas l'heure du jour).</summary>
         private void RenderHeroDiorama(DistrictInteriorDto dto, string mode)
         {
-            // Titre — inchangé par P3 (nav-F5 : le pivot ne touche ni la position ni le mécanisme).
+            // Titre — construit en PREMIER (inchangé par P3, nav-F5 : le pivot ne touche ni la
+            // position ni le mécanisme) mais repoussé en DERNIER sibling de `root` en fin de méthode
+            // (nav-district) : la navigation panne/zoome DistrictScene, dont le fond/les bâtiments
+            // peuvent désormais visuellement atteindre la bande du titre — repéré par mesure sur
+            // `district_v2_starter_kit_4buildings.png` (le "Ver" tronqué). Le titre est du CHROME
+            // (comme TopBar/TabBar), il ne doit JAMAIS pouvoir être recouvert par un geste de carte —
+            // même mécanisme que la garde "TabBar/TopBar jamais traversés", étendu ici au titre parce
+            // que lui seul, contrairement aux deux barres, vit DANS `root`/ContentSlot plutôt que dans
+            // le shell (donc PAS protégé par l'ordre de fratrie du shell, AppShell.cs:29-33).
+            var playerBuildingLocalPositions = new List<Vector2>();
             TextMeshProUGUI title = NewText("DistrictTitle", root, dto.name_canonical, 20, TextAlignmentOptions.TopLeft);
             RectTransform titleRt = (RectTransform)title.transform;
             titleRt.anchorMin = new Vector2(0f, 1f);
@@ -315,13 +333,19 @@ namespace MafiaCleanCity.CityMap
                 ? JsonUtility.FromJson<DistrictBackgroundAnchorDto>(bg.ancre.text)
                 : null;
 
+            // nav-district (pan+zoom) — hissé hors du bloc `if` ci-dessous : DistrictMapNavigation a
+            // besoin du RectTransform du fond APRÈS la construction des bâtiments (bornes de pan).
+            // Reste `null` dans la branche repli (aucun fond réel, §Deviations nav-district #1) —
+            // c'est ce qui décide, plus bas, de NE PAS attacher de navigation à un profil sans fond.
+            RectTransform fondRt = null;
+
             if (bg != null && bg.fond != null)
             {
                 // pp-F1 — résolution native : sizeDelta = texture/scaleFactor (JAMAIS `rect == tex`
                 // — §2.1 : "pp-F1 vérifie rect × scaleFactor == tex, c'était le piège"). Ancré au
                 // centre (F-cadre, §2.1 : "il n'y a pas de rescale... le fond est ancré au centre").
                 GameObject fondGo = NewUI("DistrictBackgroundImage", sceneRt);
-                RectTransform fondRt = (RectTransform)fondGo.transform;
+                fondRt = (RectTransform)fondGo.transform;
                 fondRt.anchorMin = fondRt.anchorMax = fondRt.pivot = new Vector2(0.5f, 0.5f);
                 fondRt.anchoredPosition = Vector2.zero;
                 Texture2D tex = bg.fond.texture;
@@ -386,10 +410,42 @@ namespace MafiaCleanCity.CityMap
                 {
                     if (!blockByBlockId.TryGetValue(building.block_id, out DistrictInteriorBlockDto block))
                         continue; // D2 garantit l'appartenance ; défensif.
-                    BuildBuildingCell(sceneRt, block.x, block.y, building, anchorMap, scaleFactor);
+                    GameObject cell = BuildBuildingCell(sceneRt, block.x, block.y, building, anchorMap, scaleFactor);
                     RenderedBuildingCount++;
+                    playerBuildingLocalPositions.Add(((RectTransform)cell.transform).anchoredPosition);
                 }
             }
+
+            // nav-district — pièce manquante mesurée (le fond fait 1920px de haut, la fenêtre n'en
+            // montre que 720, sans aucun mécanisme de défilement — Tools/district-v2-reimport-
+            // implementation-notes.md §6 Défaut 2). Attaché sur DistrictScene lui-même : fond ET
+            // bâtiments sont ses enfants directs/indirects, donc "suivent le fond" est une propriété
+            // de la HIÉRARCHIE (une similitude 2D appliquée au parent commun), jamais une
+            // synchronisation ajoutée après coup — voir DistrictMapNavigation.cs. AUCUNE navigation
+            // n'est attachée si ce profil n'a pas de fond réel (fondRt == null, repli confiné,
+            // §Deviations nav-district #1) : rien à borner, rien à faire suivre.
+            MapNavigation = null;
+            if (fondRt != null)
+            {
+                MapNavigation = sceneGo.AddComponent<DistrictMapNavigation>();
+                // Cadrage initial (§ livrable 4) : barycentre des bâtiments du joueur s'il en a,
+                // sinon le centre du fond (0,0 local — repli byte-identique à l'historique
+                // pré-navigation, jamais un cadrage inventé sans donnée).
+                Vector2 initialFocus = Vector2.zero;
+                if (playerBuildingLocalPositions.Count > 0)
+                {
+                    Vector2 sum = Vector2.zero;
+                    foreach (Vector2 p in playerBuildingLocalPositions) sum += p;
+                    initialFocus = sum / playerBuildingLocalPositions.Count;
+                }
+                MapNavigation.Configure(fondRt, initialFocus);
+            }
+
+            // nav-district — le titre est du CHROME (voir le commentaire au début de cette méthode) :
+            // toujours DERNIER sibling de `root`, donc rendu AU-DESSUS de DistrictScene quel que soit
+            // ce que la navigation lui fait faire visuellement. root.childCount reste 2 (pp-F5) — cet
+            // appel réordonne, ne recompte pas.
+            title.transform.SetAsLastSibling();
         }
 
         // Alphas de COMPOSITE de l'ombre de contact (revue ⊥ r5 (a)) — publics : R2F2 mesure la
@@ -559,11 +615,27 @@ namespace MafiaCleanCity.CityMap
             return img;
         }
 
+        // nav-district (mesure demandée, artefact de la capture starter kit) — deux gabarits
+        // (`lab`←usine, `stash`←entrepot) n'ont JAMAIS eu de calque "fen" produit par l'atelier :
+        // leurs seuls états livrés sont `base`/`actif` (0 fichier `_fen` dans
+        // Assets/Art/District/Sprites/, mesuré). Leur art de BASE bake déjà l'éclairage (vérifié
+        // visuellement — le rez-de-chaussée d'`usine_nuit_base` est chaud/éclairé dans le fichier
+        // lui-même). Le repli générique ci-dessous (rectangle plein `nightWindowLit`) viole la
+        // doctrine ratifiée (l'or jamais en aplat) ET double une information déjà portée par l'art
+        // — décision prise (correctif dont la bonne réponse est lisible dans le code/l'art/la
+        // doctrine, ne remonte pas à l'user). Un ancien câblage aliasait `fen := actif` pour ces
+        // deux gabarits (un contournement déjà consigné comme défaut latent) ; le nuller
+        // (BuildingSpriteSlots.asset, correctif du fantôme dupliqué) a démasqué ce repli plutôt que
+        // de le créer. Dette consignée : un vrai état "fenêtres" pour ces deux gabarits se RENDRAIT
+        // à l'atelier (sprites_batch.py n'a pas d'état `fen` pour eux), jamais bricolé ici — même
+        // famille que le précédent `laverie` de ce dépôt.
+        private static readonly HashSet<string> BakedLightingTemplates = new HashSet<string> { "lab", "stash" };
+
         private void BuildWindowLight(Transform cell, DistrictInteriorBuildingDto building)
         {
             if (building.condition_band != "SOUND") return; // éteinte — aucune lumière décorative (C9-F2)
             Image ov = TryBuildOverlay(cell, "WindowLight", building.operational_type, "fen", Color.white);
-            if (ov == null)
+            if (ov == null && !BakedLightingTemplates.Contains(building.operational_type))
             {
                 GameObject light = NewUI("WindowLight", cell);
                 RectTransform rt = (RectTransform)light.transform;
@@ -572,6 +644,11 @@ namespace MafiaCleanCity.CityMap
                 rt.offsetMin = rt.offsetMax = Vector2.zero;
                 light.AddComponent<Image>().color = DesignTokens.Current.nightWindowLit;
             }
+            // Le FAIT (binding 1+2 : possédé, condition SOUND) reste compté que la représentation
+            // soit un calque texturé, le repli rectangle, OU l'art de base déjà éclairé — C9-F2
+            // (DistrictInteriorLightingPlayModeTests) mesure l'ÉGALITÉ fait↔compte, jamais la
+            // présence d'un objet précis ; changer ÇA romprait 3 falsifiables scellées pour un motif
+            // sans rapport (comment le fait est DESSINÉ, pas s'il est VRAI).
             RenderedWindowLightCount++;
         }
 
@@ -817,7 +894,11 @@ namespace MafiaCleanCity.CityMap
         /// les coordonnées écran) est arrondi au pixel entier, et la correction est réinjectée en
         /// unités LOCALES via `lossyScale` (qui vaut `scaleFactor` sur cette hiérarchie, §ROUND 1) —
         /// jamais un réglage global de Canvas (réfuté, voir le commentaire de `BuildRoot`).</summary>
-        private static void SnapToScreenPixel(RectTransform rt)
+        // nav-district (pan+zoom) — REUSE explicite : élargi de `private` à `internal` pour que
+        // DistrictMapNavigation.cs (même assembly CityMap) puisse re-snapper le pan à l'échelle de
+        // référence après chaque déplacement, plutôt que de dupliquer ce mécanisme (R9.3, généralisé
+        // à "un mécanisme se réutilise, jamais ne se recopie"). Comportement INCHANGÉ.
+        internal static void SnapToScreenPixel(RectTransform rt)
         {
             Vector3 pos = rt.position;
             Vector3 snapped = new Vector3(Mathf.Round(pos.x), Mathf.Round(pos.y), pos.z);
