@@ -148,21 +148,16 @@ namespace MafiaCleanCity.Operational
             EnsureEventSystem();
         }
 
+        // AMENDÉ (hud-session-arbitrages-design.md §1.2, B1) — le publieur `AdoptToken` QUITTE ce
+        // point : le shell possède désormais la session (il signe UNE fois, dans `AppShell.Start()`,
+        // et DONNE son jeton via `SetToken` avant que `Start()` de CE contrôleur ne s'exécute — voir
+        // `MountTenant<T>`). `SignIn()` reste (repli inchangé, `IShellTenant.cs`) : APPELÉ, il
+        // NO-OP via son propre garde `if (IsAuthenticated) yield break;` quand un jeton a déjà été
+        // injecté — aucun changement de structure nécessaire ici.
         private IEnumerator Boot()
         {
             yield return SignIn();
             if (!IsAuthenticated) yield break;
-
-            // nav-hud-design-v1.md §6.1 (chunk 5) — Home est le PREMIER publieur du jeton vers le
-            // shell (D3 : "l'onglet Home, activé par défaut, possède un jeton et l'expose").
-            // `IShellSessionSink` (ShellContracts) — Operational ne référence PAS l'assembly Shell
-            // (référence circulaire), donc pas de `FindFirstObjectByType<AppShell>` direct ; ce
-            // dernier exige de toute façon `T : UnityEngine.Object`, qu'une interface ne satisfait
-            // jamais. Hors shell (tout test PlayMode existant, DashboardController ouvert seul) :
-            // la recherche ne trouve rien, no-op — comportement identique à avant ce chunk.
-            MafiaCleanCity.Shell.IShellSessionSink shellSink = FindShellSink();
-            shellSink?.AdoptToken(Token);
-
             yield return LoadDashboard();
         }
 
@@ -188,16 +183,6 @@ namespace MafiaCleanCity.Operational
         {
             Token = token;
             IsAuthenticated = !string.IsNullOrEmpty(token);
-        }
-
-        // §6.1 — trouve le shell (s'il existe) SANS référencer l'assembly Shell (voir
-        // IShellSessionSink.cs pour la raison). `FindObjectsByType<MonoBehaviour>` puis un filtre
-        // d'interface, PAS `FindFirstObjectByType<IShellSessionSink>` (contrainte générique Unity :
-        // `T : UnityEngine.Object`, qu'une interface ne satisfait jamais).
-        private static MafiaCleanCity.Shell.IShellSessionSink FindShellSink()
-        {
-            return FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Exclude, FindObjectsSortMode.None)
-                .OfType<MafiaCleanCity.Shell.IShellSessionSink>().FirstOrDefault();
         }
 
         /// <summary>Fetch + render the dashboard: wallet band (headline), citywide heat band +
@@ -250,10 +235,13 @@ namespace MafiaCleanCity.Operational
 
             // nav-hud-design-v1.md §6.2 (chunk 5) — publie citywide_bucket vers le shell : REUSE de
             // CET appel (probe district 16, ligne au-dessus), ne crée PAS un 3e appelant. Hors shell,
-            // no-op. Seulement sur succès — un échec laisse le repli de l'AppShell libre d'essayer.
+            // no-op. Seulement sur succès — un échec laisse la sonde propre de l'AppShell (§1.2 B1)
+            // seule source. I2 (hud-session-arbitrages-design.md §3) : localisateur DÉDUPLIQUÉ dans
+            // `ShellContracts.ShellSessionSinkLocator` — CityMapController n'a plus de copie (il ne
+            // publie rien sous B1), et CE localisateur reste sur un chemin emprunté (cet appel).
             if (CurrentHeat != null)
             {
-                MafiaCleanCity.Shell.IShellSessionSink shellSink = FindShellSink();
+                MafiaCleanCity.Shell.IShellSessionSink shellSink = MafiaCleanCity.Shell.ShellSessionSinkLocator.Find();
                 shellSink?.PublishCitywideHeat(CurrentHeat.citywide_bucket);
             }
 
@@ -483,17 +471,15 @@ namespace MafiaCleanCity.Operational
         // cette classe (`:322-323`) — seul le corps délègue, la valeur produite est byte-identique.
         private static string HeatLabel(string b) => MafiaCleanCity.Shell.HeatBucketResolver.Label(b);
         private static string HeatGlyph(string b) => MafiaCleanCity.Shell.HeatBucketResolver.Glyph(b);
-        private static Color HeatAccent(string b)
-        {
-            switch (b)
-            {
-                case "COLD": return AccentMild;
-                case "WARM": return AccentModerate;
-                case "HOT": return AccentSevere;
-                case "BURNING": return AccentSevere;
-                default: return TextSecondary;
-            }
-        }
+        // CORRIGÉ (hud-session-arbitrages-design.md §2.2/§2.4, B2) — LA MAUVAISE PAIRE : cette
+        // méthode fusionnait {HOT, BURNING} → AccentSevere (rouge). Le canon (screen_2_city_map.md
+        // :148/:405 = gdd/15_glossary.md:2726, screen_2a_building_card.md:308/:182) dit
+        // {WARM, HOT} → MODERATE (ambre) ; BURNING → SEVERE. HOT était rouge, il doit être ambre.
+        // REPOINTÉE sur `HeatBucketResolver.SeverityColor` (lieu UNIQUE désormais partagé avec le
+        // manomètre du HUD, `TopBarController.cs` — §2.4 : « aucun switch de bucket ne survit
+        // ailleurs »). Signature/visibilité inchangées pour l'appelant interne (`:354`).
+        private static Color HeatAccent(string b) =>
+            MafiaCleanCity.Shell.HeatBucketResolver.SeverityColor(MafiaCleanCity.Shell.HeatBucketResolver.SeverityFor(b));
 
         // Phase-20: progress_to_next band (UNLOCKED | IN_PROGRESS | LOCKED).
         private static string ProgressLabel(string b)

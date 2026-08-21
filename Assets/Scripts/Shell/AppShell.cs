@@ -46,6 +46,16 @@ namespace MafiaCleanCity.Shell
         [Header("Backend")]
         [SerializeField] private string baseUrl = "http://localhost";
 
+        // hud-session-arbitrages-design.md §1.2 (B1) — « le SHELL possède la session » : une
+        // identité, portée par un [SerializeField] — LA migration déjà payée (un futur écran de
+        // login l'écrit, rien d'autre). Défaut = le compte démo Home (operational_demo), premier
+        // onglet activé par `Start()`. `SetIdentity` permet à un appelant (un test, un futur écran
+        // de login) de la remplacer AVANT `Start()` — même fenêtre synchrone que `SetToken`/
+        // `SetMountParent` reçus par un locataire.
+        [Header("Identité de session (B1 — le shell signe UNE fois)")]
+        [SerializeField] private string demoIdentifier = "operational_demo@example.test";
+        [SerializeField] private string demoPassword = "operational-demo-pw";
+
         // ---- test hooks --------------------------------------------------
         public Tab CurrentTab { get; private set; } = (Tab)(-1); // "no tab activated yet" — a named state, not a magic default
         public GameObject MountedTenantGameObject { get; private set; }
@@ -68,19 +78,19 @@ namespace MafiaCleanCity.Shell
         // NAMED state, never a magic default read as "district zero".
         public int CityTabDistrictId { get; private set; } = -1;
 
-        // nav-hud-design-v1.md §6.1 (chunk 5) — LE MAILLON : deux locataires publient un jeton ici
-        // (DashboardController après son SignIn, CityMapController après son auth) → session/open →
-        // TopBar.Load. `AdoptToken` est idempotent SUR LE MÊME JETON (un second appel avec le même
-        // jeton ne rejoue pas session/open) — un jeton DIFFÉRENT (l'autre locataire démo) rouvre bien
-        // une session, par conception (deux comptes démo distincts, §6.1 ne prescrit rien de plus).
-        public string SessionToken { get; private set; }
+        // hud-session-arbitrages-design.md §1.2 (B1, AMENDE nav-hud-design-v1.md §6.1) — LE
+        // MAILLON, refondu : le shell acquiert SON PROPRE jeton UNE FOIS dans `Start()` (plus
+        // d'`AdoptToken` reçu d'un locataire — cette direction meurt avec la course qu'elle portait,
+        // §1.1 : « le sujet n'est pas la course, c'est l'identité »). `Token` est ensuite DONNÉ à
+        // chaque locataire monté, dans la fenêtre synchrone de `MountTenant<T>`.
+        public string Token { get; private set; }
         public SessionOpenDto LastSessionOpen { get; private set; }
 
-        // §6.2 — la valeur citywide_bucket, publiée par un tenant (Dashboard, REUSE de son propre
-        // appel :225) OU sondée en repli par CE shell si aucun tenant ne l'a fait (voir
-        // AdoptTokenSequence). Null tant qu'aucune des deux voies n'a résolu.
+        // §6.2 — la valeur citywide_bucket, sondée par CE shell avec SON jeton (voir
+        // AcquireSessionThenActivateHome — Deviation notée là : sonde inconditionnelle sous B1,
+        // plus simple et sans fenêtre de course que le repli conditionnel du chunk 5). Null tant que
+        // rien n'a résolu.
         public string CitywideHeatBucket { get; private set; }
-        private bool heatPublishedByTenant;
         // Précédent maison DOUBLEMENT attesté (DashboardController.cs:54-55, "Any district id 1..18
         // returns the same citywide_bucket" ; OrgVitalsPanelController.cs:21) — jamais un nombre neuf.
         private const int HeatProbeDistrictId = 16;
@@ -91,7 +101,19 @@ namespace MafiaCleanCity.Shell
         private void Start()
         {
             EnsureInitialized();
-            ActivateTab(Tab.Home);
+            StartCoroutine(AcquireSessionThenActivateHome());
+        }
+
+        /// <summary>B1 — remplace `SetIdentity` sérialisé par une valeur d'appel AVANT `Start()`.
+        /// Fenêtre synchrone identique à `SetToken`/`SetMountParent` : appelé même-frame que
+        /// `AddComponent&lt;AppShell&gt;()`, avant que `Start()` (différé d'une frame) ne lise ces
+        /// champs. §1.3 : « le champ sérialisé est la migration déjà payée » — ce setter est son
+        /// point d'entrée pour un appelant qui doit poser une AUTRE identité que le défaut Home
+        /// (ex. `NavigationPlayModeTests.cs`, identité citymap_demo).</summary>
+        public void SetIdentity(string identifier, string password)
+        {
+            demoIdentifier = identifier;
+            demoPassword = password;
         }
 
         // Defensive: whenever the SHELL itself is torn down (a test destroying its host GameObject,
@@ -209,50 +231,73 @@ namespace MafiaCleanCity.Shell
         /// ou CityMapController) et ouvre la session côté shell si ce n'est pas déjà fait POUR CE
         /// JETON (idempotent — §6.1 : "un second appel avec le même jeton ne rejoue pas
         /// session/open").</summary>
-        public void AdoptToken(string token)
-        {
-            EnsureInitialized();
-            if (string.IsNullOrEmpty(token) || token == SessionToken) return;
-            SessionToken = token;
-            StartCoroutine(AdoptTokenSequence(token));
-        }
-
         /// <summary>§6.2 — reçoit citywide_bucket d'un tenant qui vient de le récupérer lui-même
-        /// (Dashboard, REUSE de son propre appel :225) et le pousse vers le TopBar.</summary>
+        /// (Dashboard, REUSE de son propre appel :225) et le pousse vers le TopBar. Sous B1 le shell
+        /// sonde aussi lui-même (voir `AcquireSessionThenActivateHome`) — Dashboard qui publie
+        /// ENSUITE la même donnée écrase sans dommage (même compte, même valeur).</summary>
         public void PublishCitywideHeat(string citywideBucket)
         {
-            heatPublishedByTenant = true;
             CitywideHeatBucket = citywideBucket;
             if (TopBar != null) TopBar.SetCitywideHeatBucket(citywideBucket);
         }
 
-        private IEnumerator AdoptTokenSequence(string token)
+        /// <summary>B1 (hud-session-arbitrages-design.md §1.2) — LE shell signe UNE fois (son
+        /// identité, `demoIdentifier`/`demoPassword`, remplaçable via `SetIdentity` avant `Start()`),
+        /// ouvre SA session (`SessionClient.OpenSession` → `TopBar.Load`), sonde citywide_bucket avec
+        /// SON jeton, PUIS active Home — dans cet ordre, pour que le premier montage trouve déjà
+        /// `Token` renseigné (`MountTenant<T>` l'injecte dans la MÊME fenêtre que `SetMountParent`).
+        /// Échec à N'IMPORTE quelle étape ⇒ Home est monté quand même : repli inchangé
+        /// (`IShellTenant.cs` — un locataire sans jeton signe lui-même, comme avant ce chunk).</summary>
+        private IEnumerator AcquireSessionThenActivateHome()
         {
-            var sessionClient = new SessionClient { BaseUrl = baseUrl };
-            SessionOpenDto dto = null;
-            string err = null;
-            yield return sessionClient.OpenSession(token, Application.version, d => dto = d, (c, m) => err = $"{c}: {m}");
+            var auth = new AuthClient { BaseUrl = baseUrl };
+            string t = null, authErr = null;
+            yield return auth.SignIn(demoIdentifier, demoPassword, x => t = x, e => authErr = e);
             if (this == null) yield break; // shell torn down mid-fetch
-            if (dto == null)
+
+            if (string.IsNullOrEmpty(t))
             {
-                Debug.LogError($"[AppShell] AdoptToken: session/open failed: {err}");
+                Debug.LogError($"[AppShell] sign-in failed: {authErr}");
+                ActivateTab(Tab.Home); // repli : le locataire signera lui-même
                 yield break;
             }
-            LastSessionOpen = dto;
-            yield return TopBar.Load(token, dto.backlog_badge, dto.opened_game_day);
+
+            Token = t;
+            var sessionClient = new SessionClient { BaseUrl = baseUrl };
+            SessionOpenDto dto = null;
+            string sessionErr = null;
+            yield return sessionClient.OpenSession(t, Application.version, d => dto = d, (c, m) => sessionErr = $"{c}: {m}");
             if (this == null) yield break;
 
-            // §6.2 — ne sonde lui-même que si aucun locataire ne l'a fait : si le tenant MONTÉ à
-            // l'instant où cette séquence se termine n'est PAS DashboardController, personne d'autre
-            // ne publiera citywide_bucket (Dashboard est le SEUL publieur de heat, §6.2) — repli,
-            // une fois, REUSE du même flux (probe district 16, best-effort).
-            if (!heatPublishedByTenant && MountedTenantType != typeof(DashboardController))
+            if (dto != null)
             {
-                var world = new WorldApiClient { BaseUrl = baseUrl };
-                yield return world.GetDistrictHeat(HeatProbeDistrictId, token,
-                    heat => PublishCitywideHeat(heat.citywide_bucket),
-                    errMsg => Debug.LogWarning($"[AppShell] repli sonde heat (best-effort) échoué : {errMsg}"));
+                LastSessionOpen = dto;
+                yield return TopBar.Load(t, dto.backlog_badge, dto.opened_game_day);
+                if (this == null) yield break;
             }
+            else
+            {
+                Debug.LogError($"[AppShell] session/open failed: {sessionErr}");
+            }
+
+            // ActivateTab(Home) juste APRÈS TopBar.Load — mesuré (pas supposé) : un appelant qui
+            // attend `TopBar.Loaded` (poll par frame) doit trouver `MountedTenantGameObject` déjà
+            // renseigné dès que `Loaded` devient vrai ; la sonde heat ci-dessous est un aller-retour
+            // réseau SUPPLÉMENTAIRE — la placer AVANT ce montage aurait laissé une fenêtre où
+            // `TopBar.Loaded==true` mais `MountedTenantGameObject==null` (rougi une première fois,
+            // corrigé ici).
+            ActivateTab(Tab.Home);
+
+            // §6.2, AMENDÉ (B1, Deviation) — le chunk 5 sondait CONDITIONNELLEMENT ("seulement si le
+            // tenant monté n'est pas Dashboard"), un mécanisme conçu pour départager DEUX locataires
+            // qui publiaient chacun à un moment ARBITRAIRE (la course que B1 supprime). Sous B1 il
+            // n'y a plus qu'UNE identité, acquise ICI avant tout montage : la sonder directement,
+            // inconditionnellement, est plus SIMPLE et sans fenêtre de course. Best-effort, APRÈS le
+            // montage de Home — ne bloque pas l'affichage du TopBar/onglet sur ce round-trip de plus.
+            var world = new WorldApiClient { BaseUrl = baseUrl };
+            yield return world.GetDistrictHeat(HeatProbeDistrictId, t,
+                heat => PublishCitywideHeat(heat.citywide_bucket),
+                errMsg => Debug.LogWarning($"[AppShell] sonde heat (best-effort) échouée : {errMsg}"));
         }
 
         private void MountTenant<T>() where T : MonoBehaviour, IShellTenant
@@ -271,6 +316,15 @@ namespace MafiaCleanCity.Shell
             // Synchronous, same frame as AddComponent — Start() (and therefore BuildLayout()) is
             // deferred to the NEXT frame, so this is always visible in time (design D2).
             tenant.SetMountParent(ContentSlot);
+            // B1 (hud-session-arbitrages-design.md §1.2) — le shell DONNE son jeton, MÊME fenêtre
+            // synchrone que `SetMountParent` (vérifiée par le ⊥ : AVANT tout Boot()/SignIn() du
+            // locataire, différé d'une frame). Distinction à retenir : cette fenêtre même-frame est
+            // SÛRE EN ÉCRITURE sur les champs du composant qu'on vient de créer (ce qu'on fait ici) —
+            // elle serait DANGEREUSE EN LECTURE d'un état initialisé par Unity (ex. Canvas.scaleFactor
+            // avant un premier layout pass, round P3 du pivot fond). Rien à donner (le signin du
+            // shell n'a pas encore résolu, ou a échoué) ⇒ repli inchangé — le locataire signe
+            // lui-même (`IShellTenant.cs`).
+            if (!string.IsNullOrEmpty(Token)) tenant.SetToken(Token);
             MountedTenantGameObject = host;
             MountedTenantType = typeof(T);
         }

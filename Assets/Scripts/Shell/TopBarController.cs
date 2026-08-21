@@ -314,11 +314,19 @@ namespace MafiaCleanCity.Shell
             zoneHlg.childForceExpandWidth = true;
             zoneHlg.childForceExpandHeight = true;
             zoneHlg.spacing = 1;
+            // CORRIGÉ (hud-session-arbitrages-design.md §2.3/§2.4, F2 IMPORTANT — CHANGEMENT DE
+            // FORME D'ABORD) — l'ancien tableau POSITIONNEL portait la correspondance bucket→couleur
+            // dans des COMMENTAIRES ("doux (COLD/WARM)" etc.), une prose inexécutable qu'AUCUN
+            // balayage ne pouvait voir (mesuré : 0/4 littéraux de bucket dans ce fichier). C'était en
+            // outre une TROISIÈME paire, différente à la fois de `DashboardController.HeatAccent` et
+            // du canon (§2.3, tableau). Ce tableau est maintenant un lookup NOMMÉ — `Severity(rank)`
+            // via `HeatBucketResolver`, le lieu UNIQUE (§2.4) — trois appels DIRECTS, indexés par
+            // `Severity`, jamais par une position de bucket implicite.
             Color[] zoneColors =
             {
-                DesignTokens.Current.accentSuccess, // doux (COLD/WARM)
-                DesignTokens.Current.accentWarning, // modéré (HOT)
-                DesignTokens.Current.accentDanger,  // sévère (BURNING)
+                HeatBucketResolver.SeverityColor(HeatBucketResolver.Severity.Mild),
+                HeatBucketResolver.SeverityColor(HeatBucketResolver.Severity.Moderate),
+                HeatBucketResolver.SeverityColor(HeatBucketResolver.Severity.Severe),
             };
             foreach (Color c in zoneColors)
             {

@@ -105,6 +105,16 @@ namespace MafiaCleanCity.Operational.Exceptions
             IsAuthenticated = true;
         }
 
+        /// <summary>IShellTenant token injection (B1, hud-session-arbitrages-design.md §1.2) — set
+        /// directly by the shell BEFORE Start() runs (synchronous MountTenant<T> window). Mirrors
+        /// DashboardController.SetToken; SignIn()'s own `if (IsAuthenticated) yield break;` guard
+        /// then no-ops without further changes.</summary>
+        public void SetToken(string token)
+        {
+            Token = token;
+            IsAuthenticated = !string.IsNullOrEmpty(token);
+        }
+
         /// <summary>Fetch the pending queue + render the rows (EmptyState when none). Re-entrancy is SERIALIZED
         /// (the DashboardController.LoadDashboard precedent): a Boot() self-load racing a test-driven load on the
         /// shared Cards/QueueError fields is the documented intermittent-flake shape — a second caller WAITS for the

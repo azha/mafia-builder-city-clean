@@ -152,8 +152,12 @@ namespace MafiaCleanCity.Shell
             if (!string.IsNullOrEmpty(cohesionText.text)) renderedTexts.Add(cohesionText.text);
         }
 
-        private static string HeatLabel(string b) =>
-            b == "COLD" ? "Cold" : b == "WARM" ? "Warm" : b == "HOT" ? "Hot" : b == "BURNING" ? "Burning" : "Unknown";
+        // CORRIGÉ (hud-session-arbitrages-design.md §3, F1 IMPORTANT) — la prescription §2.4 visait
+        // une SYNTAXE (« aucun `switch` de bucket ailleurs ») ; sa propre classe lui échappait ici :
+        // une CHAÎNE DE TERNAIRES rendant les MÊMES labels que `HeatBucketResolver.Label`. Re-visé
+        // sur la PROPRIÉTÉ (« aucune correspondance bucket→apparence hors du résolveur ») —
+        // repointé, byte-identique.
+        private static string HeatLabel(string b) => HeatBucketResolver.Label(b);
         private static string FrictionLabel(string b) =>
             string.IsNullOrEmpty(b) ? "Unknown" : char.ToUpperInvariant(b[0]) + b.Substring(1);
         private static string StressLabel(string b) =>

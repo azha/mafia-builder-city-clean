@@ -299,6 +299,12 @@ namespace MafiaCleanCity.Operational.Exceptions
         private Transform mountParent;
         public void SetMountParent(Transform parent) => mountParent = parent;
 
+        // IShellTenant conformance (B1, hud-session-arbitrages-design.md §1.2) — NO-OP ici : ce
+        // contrôleur ne s'authentifie jamais lui-même (Start() ne fait que `EnsureInitialized();
+        // Render();`, aucun Token/IsAuthenticated dans ce fichier) — il reçoit ses données déjà
+        // résolues d'un appelant externe (ExceptionQueueController). Rien à sauter.
+        public void SetToken(string token) { }
+
         // --------------------------------------------------------------- UI build
 
         private void BuildLayout()

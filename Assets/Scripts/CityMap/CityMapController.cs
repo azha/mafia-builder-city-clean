@@ -112,8 +112,21 @@ namespace MafiaCleanCity.CityMap
             yield return AuthThenHeat();
         }
 
+        /// <summary>AMENDÉ (hud-session-arbitrages-design.md §1.2, B1) — si un jeton a déjà été
+        /// INJECTÉ par le shell (`SetToken`, avant `Start()`), `IsAuthenticated` est déjà vrai ici :
+        /// saute le sign-in démo, pose l'état comme le ferait un signin réussi (repli inchangé,
+        /// `IShellTenant.cs` — REÇU un jeton ⇒ ne signe pas soi-même). Le second publieur du chunk 5
+        /// (`AdoptToken` vers le shell) a QUITTÉ ce point : le shell possède la session, la
+        /// direction locataire→shell pour le JETON meurt avec la course qu'elle portait (§1.1).</summary>
         private IEnumerator AuthThenHeat()
         {
+            if (IsAuthenticated)
+            {
+                RefreshEnterInteractable();
+                yield return LoadHeat();
+                yield break;
+            }
+
             var auth = new AuthClient { BaseUrl = baseUrl };
             string token = null;
             string err = null;
@@ -131,14 +144,15 @@ namespace MafiaCleanCity.CityMap
             RefreshEnterInteractable(); // §3.2 — 2e point : le panneau peut avoir été ouvert AVANT l'auth (Populate à :98, signature à :102)
             Debug.Log("[CityMap] Signed in — Bearer token acquired.");
 
-            // nav-hud-design-v1.md §6.1 (chunk 5) — SECOND publieur du jeton vers le shell (le
-            // premier est DashboardController, §6.1). Idempotent côté AppShell sur le MÊME jeton.
-            // `IShellSessionSink` (ShellContracts) — CityMap ne référence PAS l'assembly Shell
-            // (référence circulaire) ; hors shell, la recherche ne trouve rien, no-op.
-            MafiaCleanCity.Shell.IShellSessionSink shellSink = FindShellSink();
-            shellSink?.AdoptToken(Token);
-
             yield return LoadHeat();
+        }
+
+        /// <summary>IShellTenant token injection (B1) — set directly by the shell BEFORE Start() runs
+        /// (synchronous MountTenant<T> window). Mirrors DashboardController.SetToken.</summary>
+        public void SetToken(string token)
+        {
+            Token = token;
+            IsAuthenticated = !string.IsNullOrEmpty(token);
         }
 
         /// <summary>Fetch the heat projection for every district and badge each cell.</summary>
@@ -500,15 +514,12 @@ namespace MafiaCleanCity.CityMap
             if (enterButton != null) enterButton.interactable = IsAuthenticated && SelectedDistrictId >= 0;
         }
 
-        // §6.1 — trouve le shell (s'il existe) SANS référencer l'assembly Shell (voir
-        // IShellSessionSink.cs pour la raison). `FindObjectsByType<MonoBehaviour>` puis un filtre
-        // d'interface, PAS `FindFirstObjectByType<IShellSessionSink>` (contrainte générique Unity :
-        // `T : UnityEngine.Object`, qu'une interface ne satisfait jamais).
-        private static MafiaCleanCity.Shell.IShellSessionSink FindShellSink()
-        {
-            return FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Exclude, FindObjectsSortMode.None)
-                .OfType<MafiaCleanCity.Shell.IShellSessionSink>().FirstOrDefault();
-        }
+        // I2 (hud-session-arbitrages-design.md §3) — RETIRÉ FRANCHEMENT (branche 2 : « garde-le sur
+        // un chemin emprunté OU retire-le franchement »). Ce localisateur n'a plus AUCUN appelant
+        // ici sous B1 : `AdoptToken` a quitté le contrat (§1.2) et CityMapController ne publie pas
+        // de heat (seul Dashboard le fait, §6.2). Sa copie dédupliquée vit désormais dans
+        // `ShellContracts.ShellSessionSinkLocator`, sur le seul chemin qui l'emprunte encore
+        // (`DashboardController.LoadDashboard`).
 
         /// <summary>Open the detail panel for a district and fetch its system projections.</summary>
         public void SelectDistrict(int districtId)

@@ -46,6 +46,21 @@ namespace MafiaCleanCity.Shell.Tests
             LogAssert.ignoreFailingMessages = true;
         }
 
+        // AMENDÉ (hud-session-arbitrages-design.md §1.2, B1) — `Start()` lance désormais
+        // `AcquireSessionThenActivateHome` (le shell signe SA PROPRE session : signin+session/open+
+        // TopBar.Load) en tâche de fond, terminée par SON PROPRE `ActivateTab(Tab.Home)`. Un unique
+        // `yield return null;` (patron pré-B1) ne garantit plus que ce montage a eu lieu — MESURÉ :
+        // en lot (contention réseau), `MountedTenantType` était encore `null` au moment prévu pour
+        // `DashboardController`. `CurrentTab == Home` est le signal robuste (vrai sur SES DEUX
+        // branches, succès et repli-échec) — voir NavigationPlayModeTests.NavF3 pour le cas où la
+        // branche échoue délibérément.
+        private static IEnumerator WaitForHomeMounted(AppShell s)
+        {
+            float elapsed = 0f;
+            while (s.CurrentTab != AppShell.Tab.Home && elapsed < 15f) { elapsed += Time.deltaTime; yield return null; }
+            Assert.AreEqual(AppShell.Tab.Home, s.CurrentTab, "acquisition de session propre du shell résolue (Home monté)");
+        }
+
         // C1-F1 (atteignabilité) — les 5 onglets activés successivement dans le MÊME test montent
         // chacun le type attendu ; le 5e (More) est asserté PAR SA VALEUR (OnEmptyMoreDestination),
         // jamais par l'absence d'un composant monté (sinon un shell qui ne monte JAMAIS rien passerait).
@@ -55,7 +70,7 @@ namespace MafiaCleanCity.Shell.Tests
             ExpectTenantOwnDemoAuthNoise();
             shellGo = new GameObject("AppShell");
             shell = shellGo.AddComponent<AppShell>();
-            yield return null; // Start()/BuildLayout + the initial Home activation
+            yield return WaitForHomeMounted(shell);
 
             Assert.AreEqual(typeof(DashboardController), shell.MountedTenantType, "Home mounts DashboardController");
             Assert.IsFalse(shell.OnEmptyMoreDestination, "Home is not the empty destination");
@@ -92,7 +107,7 @@ namespace MafiaCleanCity.Shell.Tests
             ExpectTenantOwnDemoAuthNoise();
             shellGo = new GameObject("AppShell");
             shell = shellGo.AddComponent<AppShell>();
-            yield return null; // Home activates + BuildLayout defers one more frame
+            yield return WaitForHomeMounted(shell);
             yield return null; // DashboardController.Start()/BuildLayout actually runs here
 
             // The Canvas root NEVER gains a 4th child: only the shell's own 3 slots

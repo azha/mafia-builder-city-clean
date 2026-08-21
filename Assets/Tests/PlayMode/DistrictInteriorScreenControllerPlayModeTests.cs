@@ -58,7 +58,7 @@ namespace MafiaCleanCity.CityMap.Tests
         // ── C7-F3 — le seam d'injection ─────────────────────────────────────────
 
         [Test]
-        public void C7F3_NoSigninCall_InDioramaFile_PositiveControlFindsEightElsewhere()
+        public void C7F3_NoSigninCall_InDioramaFile_PositiveControlFindsNineElsewhere()
         {
             string dioramaFile = Path.Combine(Application.dataPath, "Scripts", "CityMap", "DistrictInteriorScreenController.cs");
             Assert.IsTrue(File.Exists(dioramaFile), $"diorama file not found at {dioramaFile}");
@@ -68,16 +68,20 @@ namespace MafiaCleanCity.CityMap.Tests
                 "via SetSession, jamais un auto-signin.");
 
             // Contrôle positif obligatoire (socle : « un zéro mesuré sur le mauvais chemin est le plus
-            // crédible des faux ») — le MÊME motif doit retrouver les 8 sites d'auto-signin CONNUS
-            // (D9's own measured table) ailleurs dans Assets/Scripts, sinon le zéro ci-dessus ne prouve
-            // que l'impuissance du motif.
+            // crédible des faux ») — le MÊME motif doit retrouver les sites d'auto-signin CONNUS
+            // ailleurs dans Assets/Scripts, sinon le zéro ci-dessus ne prouve que l'impuissance du motif.
+            // AMENDÉ (hud-session-arbitrages-design.md §1.2, B1) — 8 -> 9 : `AppShell.cs` acquiert
+            // désormais SA PROPRE session (`AcquireSessionThenActivateHome`, `auth.SignIn(...)`), un
+            // 9e site LÉGITIME (le shell signe UNE fois pour toute la session — §1.2). Re-mesuré, pas
+            // recopié : ce n'est pas une dérive à corriger, c'est le changement architectural que B1
+            // prescrit.
             var scriptsRoot = Path.Combine(Application.dataPath, "Scripts");
             var csFiles = Directory.GetFiles(scriptsRoot, "*.cs", SearchOption.AllDirectories);
             Assert.IsTrue(csFiles.Length > 0, "anti-vacuité : 0 fichier .cs balayé sous Assets/Scripts.");
             int hits = csFiles.Count(f => File.ReadAllText(f).Contains(".SignIn("));
-            Assert.AreEqual(8, hits,
-                "contrôle positif : le motif '.SignIn(' doit retrouver les 8 sites d'auto-signin connus " +
-                "(D9) ailleurs dans Assets/Scripts.");
+            Assert.AreEqual(9, hits,
+                "contrôle positif : le motif '.SignIn(' doit retrouver les 9 sites d'auto-signin connus " +
+                "(8 pré-B1 + AppShell.cs, B1 §1.2) ailleurs dans Assets/Scripts.");
         }
 
         [Test]

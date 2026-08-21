@@ -41,8 +41,31 @@ namespace MafiaCleanCity.Shell.Tests
 
         private static IEnumerator MountShellAtCityTab(AppShell s)
         {
+            // hud-session-arbitrages-design.md §1.3 (B1) — « NavigationPlayModeTests.cs:25,59,122
+            // reste vert en posant l'identité du shell sur le compte citymap via le champ sérialisé ».
+            // Sous B1 le shell signe UNE fois pour Home ET pour la City tab qu'il monte ensuite — ces
+            // falsifiables ont besoin du compte citymap_demo (seedé ci-dessus), pas du défaut Home
+            // (operational_demo). Même fenêtre synchrone que `SetToken`/`SetMountParent` : appelé
+            // AVANT le premier `yield return null` ci-dessous, donc AVANT que `Start()` (différé
+            // d'une frame) ne lise ces champs.
+            s.SetIdentity("citymap_demo@example.test", "citymap-demo-pw");
             LogAssert.ignoreFailingMessages = true; // Home's own DashboardController demo-auth noise (byte-identical rationale to AppShellPlayModeTests)
-            yield return null; // Start()/BuildLayout + Home activation
+
+            // MESURÉ (course trouvée en lot W3U2, invisible en fichier isolé) : `AppShell.Start()`
+            // lance `AcquireSessionThenActivateHome` (signin+session/open+TopBar.Load) en tâche de
+            // fond, qui se termine par SON PROPRE `ActivateTab(Tab.Home)`. Un unique
+            // `yield return null;` ne garantit pas que cette séquence est terminée ; sous contention
+            // (lot complet), elle peut encore être en vol quand ce test bascule manuellement vers
+            // City — son `ActivateTab(Home)` tardif ÉCRASE alors tout ce que le test a construit
+            // depuis (CityTabDistrictId remis à -1, l'écran district démonté — reproduit :
+            // `MissingReferenceException` sur des objets que le test croyait encore vivants). Fix :
+            // attendre `TopBar.Loaded` — `ActivateTab(Home)` s'exécute SYNCHRONE juste après, dans
+            // la MÊME passe de coroutine, donc le voir vrai garantit que le montage interne de Home
+            // est déjà réglé avant toute bascule manuelle.
+            float bootElapsed = 0f;
+            while ((s.TopBar == null || !s.TopBar.Loaded) && bootElapsed < 15f) { bootElapsed += Time.deltaTime; yield return null; }
+            Assert.IsTrue(s.TopBar != null && s.TopBar.Loaded, "acquisition de session propre du shell terminée avant toute bascule manuelle");
+
             s.ActivateTab(AppShell.Tab.City);
             yield return null; // CityMapController.Start()/BuildLayout deferred one frame
             yield return null; // ... and its own coroutines actually begin running here
@@ -168,14 +191,44 @@ namespace MafiaCleanCity.Shell.Tests
         // Monde dégénéré tué : « le bouton est absent » serait satisfait par un panneau qui n'en
         // construit jamais ⇒ tué en épinglant la VALEUR de interactable sur la MÊME instance (§8).
 
+        // AMENDÉ (hud-session-arbitrages-design.md §1.2, B1) — sous B1, un `CityMapController` monté
+        // APRÈS que le shell a acquis SA PROPRE session reçoit un jeton INJECTÉ, synchrone, avant
+        // même que `Start()` ne tourne : `IsAuthenticated` peut donc être déjà VRAI dès le premier
+        // frame, effaçant la fenêtre "avant authentification" que ce test observait (mesuré : en
+        // lot, `interactable` était déjà `True` au moment prévu pour `False` — pas une course sur UN
+        // jeton, une DISPARITION structurelle de la fenêtre, conséquence directe de l'injection).
+        // Pour observer le repli AUTHENTIQUE (« rien reçu ⇒ le locataire signe lui-même »,
+        // `IShellTenant.cs`), ce test pose une identité de shell délibérément INVALIDE : le signin du
+        // shell échoue vite (pas de round-trip session/open), `Token` reste vide, `MountTenant<T>`
+        // n'injecte donc RIEN — CityMapController retombe sur SON PROPRE signin démo, la fenêtre
+        // avant/après que ce test a toujours testée, inchangée.
         [UnityTest]
         public IEnumerator NavF3_EnterButton_ExistsDisabledWithoutToken_EnabledAfterRealAuth_SameInstance()
         {
             shellGo = new GameObject("AppShell");
             shell = shellGo.AddComponent<AppShell>();
-            yield return MountShellAtCityTab(shell);
+            shell.SetIdentity("nav-f3-deliberately-invalid@example.test", "not-a-real-password");
+            LogAssert.ignoreFailingMessages = true; // le signin (délibérément raté) du shell loggue une Error attendue
+
+            // MESURÉ (course trouvée en lot, invisible seule) : même un signin DESTINÉ À ÉCHOUER
+            // exige un aller-retour réseau RÉEL (>1 frame) — un unique `yield return null;` ne
+            // suffit pas, le test bascule alors vers City AVANT que la branche d'échec d'
+            // `AcquireSessionThenActivateHome` n'ait elle-même appelé `ActivateTab(Home)`, qui
+            // arrive ENSUITE et écrase le montage manuel (repro : `cityMap` == null en lot). Fix :
+            // attendre `CurrentTab == Home`, signal robuste aux DEUX branches (succès ET échec) —
+            // plus précis que `TopBar.Loaded` (vrai seulement en cas de succès).
+            float bootElapsed = 0f;
+            while (shell.CurrentTab != AppShell.Tab.Home && bootElapsed < 15f) { bootElapsed += Time.deltaTime; yield return null; }
+            Assert.AreEqual(AppShell.Tab.Home, shell.CurrentTab, "acquisition (même ratée) du shell résolue avant toute bascule manuelle");
+
+            shell.ActivateTab(AppShell.Tab.City);
+            yield return null;
+            yield return null;
+
             var cityMap = shell.MountedTenantGameObject.GetComponent<CityMapController>();
             Assert.IsNotNull(cityMap);
+            Assert.IsFalse(cityMap.IsAuthenticated,
+                "prémisse : le shell n'a RIEN injecté (son propre signin a échoué) — CityMap doit démarrer NON authentifié");
 
             // Fired before AuthThenHeat's own signin round-trip can possibly have completed
             // (Load() does GetDistricts() first, THEN AuthThenHeat() — at least one prior HTTP

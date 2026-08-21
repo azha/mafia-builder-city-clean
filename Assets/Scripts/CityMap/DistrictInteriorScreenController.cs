@@ -168,6 +168,13 @@ namespace MafiaCleanCity.CityMap
         // CityMapController.mountParent pour le mécanisme byte-identique).
         public void SetMountParent(Transform parent) => mountParent = parent;
 
+        // IShellTenant conformance (B1, hud-session-arbitrages-design.md §1.2) — NO-OP ici : ce
+        // contrôleur reçoit son jeton via `SetSession(bearer, districtId)`, appelé par
+        // `AppShell.EnterDistrict` (mécanisme PRÉEXISTANT, inchangé) — pas via cette injection
+        // générique de `MountTenant<T>` (`EnterDistrict` duplique le corps de `MountTenant<T>` sans
+        // appeler la méthode générique elle-même). Rien à sauter ici.
+        public void SetToken(string token) { }
+
         private void Start() => EnsureInitialized();
 
         private void EnsureInitialized()
