@@ -87,6 +87,14 @@ namespace MafiaCleanCity.Theme
         // TMP déjà présent dans com.unity.ugui 2.0.0 (§1.6b — pas un ajout de package).
         [Header("Typography")]
         public TMP_FontAsset primaryFont;  // "DejaVuSans SDF" — Latin/Cyrillic/Greek/Armenian/…
+        // HUD v3.1 boucle ⊥ pixel-perfect (2026-08-21) — écart (5) : la maquette utilise
+        // `font-family:Georgia,serif` pour l'argent/l'heure-phase/la valeur du manomètre (une
+        // transitionnelle de type Georgia/Playfair) ; ce projet ne portait qu'une sans-serif. Créé
+        // depuis `/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf` (la serif la plus proche déjà
+        // disponible sur la machine de build — voir implementation-notes.md § Deviations pour la
+        // mesure comparée). DA4 (TopBarDoctrineV31PlayModeTests) compte ce champ comme le 2e non-
+        // Color de `DesignTokens` (`ExpectedTokenCount + 2`, amendé nommément).
+        public TMP_FontAsset hudSerifFont; // "DejaVuSerif SDF"
 
         // ── Écran par écran (un seul consommateur mesuré, gardé nommé plutôt que fondu dans
         //    un palier générique pour ne pas fausser un autre écran plus tard) ────────────────
@@ -175,5 +183,29 @@ namespace MafiaCleanCity.Theme
                                                 // ratio WCAG ≥ 3:1 contre socle ET les 3 buckets de
                                                 // sol (falsifiable dédiée, 2 revues l'ont signalé
                                                 // invisible à l'œil ET à la sonde).
+
+        // ── HUD v3.1 — boucle ⊥ pixel-perfect (2026-08-21, ruling user) ────────────────────────
+        // Root cause du round précédent (Unity 247ed3b) : ces teintes étaient COMPOSÉES par alpha
+        // depuis des tokens existants (accentGold, nightBackground/surfaceBase) au lieu de porter
+        // les hex EXACTS de la maquette (hud-brennar.html §:root). Sceau des 51 levé nommément pour
+        // ce lot — REUSE verbatim, zéro valeur inventée (gdd/14 §Asset pipeline, commit `e171c594`).
+        [Header("HUD Bar — glass")]
+        public Color hudBarGlassTop;    // #0b111b alpha 0.91 — --or de hud-brennar.html:26, stop haut
+        public Color hudBarGlassBottom; // #0d131e alpha 0.847 — stop bas du même dégradé
+        [Header("HUD Bar — gold")]
+        public Color hudHairlineGold;   // #b08d3e — --laiton (filet bas, anneau médaillon)
+        public Color hudMoneyGold;      // #f2c96b — --or-vif (montant $, "l'argent seul or de l'écran")
+        public Color hudMoneyUnderlineGold; // #d9ab4e — --or (soulignement décoratif sous le montant ;
+                                             // AJOUTÉ tour 2, mesuré directement sur le rendu pixel —
+                                             // distinct de hudHairlineGold, voir gdd/14 @8c33ea3b)
+        [Header("HUD Bar — gauge")]
+        public Color hudGaugeFaceInner; // #2c3242 — stop intérieur radial-gradient(.boitier)
+        public Color hudGaugeFaceOuter; // #0a0e16 — stop extérieur radial-gradient(.boitier)
+        public Color hudGaugeArcCold;   // #7fd4d9 — --cyan, moitié froide de l'arc
+        public Color hudGaugeArcHot;    // #e0664a — --braise, moitié chaude de l'arc (calme, DISTINCT
+                                         // de la bascule alarme qui reste sur HeatBucketResolver)
+        [Header("HUD Bar — text")]
+        public Color hudCreme;          // #eae0c8 — --creme (aiguille, valeur centrale, heure/phase)
+        public Color hudCremeSecondary; // #b9ad92 — --creme-2 (légendes petites capitales)
     }
 }

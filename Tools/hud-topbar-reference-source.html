@@ -1,0 +1,53 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<title>barre isolee</title>
+<style>
+:root{
+  --encre:#0b1016; --panneau:#111823; --lisere:#2a3648;
+  --creme:#eae0c8; --creme-2:#b9ad92; --or:#d9ab4e; --or-vif:#f2c96b; --laiton:#b08d3e;
+  --braise:#e0664a; --cyan:#7fd4d9;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:#3a2f5c}
+.serif{font-family:Georgia,"Times New Roman",serif}
+.barre{position:relative;width:1280px;height:52px;background:linear-gradient(180deg,#0b111be8,#0d131ed8);
+  display:flex;align-items:center;justify-content:space-between;padding:0 16px}
+.barre::after{content:"";position:absolute;left:0;right:0;bottom:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--laiton) 18%,var(--laiton) 82%,transparent)}
+.aile{display:flex;flex-direction:column;line-height:1.12;min-width:96px}
+.aile .lib{font-size:8.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--creme-2)}
+.aile .val{font-family:Georgia,serif;font-variant-numeric:tabular-nums;font-size:17px;letter-spacing:.02em}
+.aile.gauche .val{color:var(--or-vif)}
+.aile.droite{align-items:flex-end;text-align:right}
+.aile.droite .val{color:var(--creme)}
+.medaillon{position:absolute;left:50%;top:7px;transform:translateX(-50%);width:64px;height:64px;z-index:3}
+.medaillon .boitier{width:100%;height:100%;border-radius:50%;
+  background:radial-gradient(circle at 38% 30%,#2c3242,#141a26 60%,#0a0e16);
+  border:1.5px solid var(--laiton);box-shadow:inset 0 1px 2px #ffffff2a,inset 0 -4px 8px #0009,0 6px 14px #000c;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative}
+.medaillon .losange{position:absolute;bottom:-11px;left:50%;transform:translateX(-50%) rotate(45deg);
+  width:7px;height:7px;background:var(--laiton);box-shadow:0 0 0 1px #0009}
+.ratio{display:block;width:74px;height:2px;background:#5a6376;margin-top:3px;border-radius:1px;overflow:hidden}
+.ratio i{display:block;height:100%;background:var(--or)}
+.cadran{width:44px;height:28px;margin-top:1px}
+.heatpct{font-family:Georgia,serif;font-size:13px;line-height:1;color:var(--creme);margin-top:-14px}
+.heatlib{font-size:7px;letter-spacing:.22em;color:var(--creme-2);text-transform:uppercase;margin-top:1px}
+</style></head>
+<body>
+<div class="barre">
+  <div class="aile gauche"><span class="lib">Argent</span><span class="val">$ 24 850</span>
+    <span class="ratio"><i style="width:68%"></i></span></div>
+  <div class="medaillon"><div class="boitier">
+    <svg class="cadran" viewBox="0 0 60 40">
+      <path d="M8 34 A 26 26 0 0 1 52 34" fill="none" stroke="#ffffff22" stroke-width="3.5"/>
+      <path d="M8 34 A 26 26 0 0 1 30 8" fill="none" stroke="#7fd4d955" stroke-width="3.5"/>
+      <path d="M43 11 A 26 26 0 0 1 52 34" fill="none" stroke="#e0664a88" stroke-width="3.5"/>
+      <line id="aiguille" x1="30" y1="34" x2="30" y2="12" stroke="#eae0c8" stroke-width="2"
+        stroke-linecap="round" transform="rotate(-42 30 34)"/>
+      <circle cx="30" cy="34" r="2.6" fill="#b08d3e"/>
+    </svg>
+    <span class="heatpct" id="heatval">37%</span>
+    <span class="heatlib" id="heatlib">Heat</span></div><div class="losange"></div></div>
+  <div class="aile droite"><span class="lib">Jour 12 · Soirée</span><span class="val serif" id="heure" style="font-size:15px">21:40</span></div>
+</div>
+</body></html>

@@ -37,7 +37,8 @@ namespace MafiaCleanCity.Shell
 
         // hud-session-arbitrages-design.md §2.1 — canon `SeverityEnum`
         // (`global_conventions_core.md:205`) : EXACTEMENT 3 membres, point. Une 4e couleur serait un
-        // 52e token et casserait `ExpectedTokenCount = 51` — STOP confirmé, §2.1.
+        // token de plus et casserait `ExpectedTokenCount` (62 depuis HUD v3.1 boucle ⊥, 2026-08-21 —
+        // le nombre bouge avec des additions légitimes ailleurs, la règle "3 membres, point" ne bouge pas) — STOP confirmé, §2.1.
         public enum Severity
         {
             Mild = 0,

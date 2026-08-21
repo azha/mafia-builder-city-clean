@@ -137,14 +137,16 @@ namespace MafiaCleanCity.Theme.Tests
 
         // ── La mesure réelle — Assets/Scripts, allowlist figée par le design (D5, re-mesurée ici) ──
 
-        // 12 entrées : les 11 liaisons post-D5 (12 liaisons mesurées par D5, MOINS AppShell.cs:255
-        // repointé sur chromeTabActive), PLUS "Shell/TopBarController.cs" — AMENDÉ NOMMÉMENT ici par
-        // HUD v3.1 (doctrine DA, 2026-08-21) : le restyle du TopBar introduit le PREMIER accès à
-        // `accentGold` de ce fichier (`InitPalette`, forme (iii) — indirection par variable), une
-        // SEULE fois, composé par alpha pour un filet + un anneau (jamais un aplat — voir le header
-        // de classe de TopBarController.cs). Chemins relatifs à Assets/Scripts, '/' — PAS de numéro
-        // de ligne (un refactor sans rapport ne doit pas faire rougir cette garde ; c'est
-        // l'ENSEMBLE des fichiers-porteurs qui est l'allowlist, pas leurs lignes).
+        // 11 entrées : les 11 liaisons post-D5 (12 liaisons mesurées par D5, MOINS AppShell.cs:255
+        // repointé sur chromeTabActive). "Shell/TopBarController.cs" avait été ajouté ici par le
+        // round HUD v3.1 du 2026-08-21 (247ed3b, `InitPalette` composait un filet/anneau par alpha
+        // depuis `accentGold`) — RETIRÉ NOMMÉMENT par la boucle ⊥ pixel-perfect qui a suivi
+        // (même jour) : la root cause du ruling user était PRÉCISÉMENT cette composition depuis un
+        // token mal assorti (accentGold #ffd23f jaune vif ≠ maquette #b08d3e laiton mat) ; le
+        // correctif introduit des tokens DÉDIÉS (`hudHairlineGold`/`hudMoneyGold`, gdd/14 @e171c594)
+        // et TopBarController n'accède plus à `accentGold` du tout. Chemins relatifs à
+        // Assets/Scripts, '/' — PAS de numéro de ligne (un refactor sans rapport ne doit pas faire
+        // rougir cette garde ; c'est l'ENSEMBLE des fichiers-porteurs qui est l'allowlist).
         private static readonly HashSet<string> ExpectedAccentGoldBindings = new HashSet<string>
         {
             "Operational/Autonomy/AutonomyInboxController.cs",
@@ -158,7 +160,6 @@ namespace MafiaCleanCity.Theme.Tests
             "Shell/DailyReviewScreenController.cs",
             "Shell/ExceptionQueuePanelController.cs",
             "Shell/HighestLeverageCardController.cs",
-            "Shell/TopBarController.cs",
         };
 
         [Test]

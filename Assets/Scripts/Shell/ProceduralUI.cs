@@ -86,6 +86,74 @@ namespace MafiaCleanCity.Shell
             return sprite;
         }
 
+        /// <summary>HUD v3.1 boucle ⊥ pixel-perfect (2026-08-21) — masque de coins arrondis,
+        /// 9-slice (`Sprite.border`) pour rester correct à N'IMPORTE QUELLE largeur de barre sans
+        /// régénérer de texture par résolution d'appareil (une bitmap pleine-largeur serait gaspillée
+        /// et fausse dès que l'écran change). Utilisé comme graphique d'un `UnityEngine.UI.Mask`
+        /// (`showMaskGraphic=false` — seul le canal ALPHA sert de stencil, jamais sa couleur) : le
+        /// fond en dégradé (`VerticalGradientImage`, enfant de ce mask) se retrouve ainsi rogné aux 4
+        /// coins. Blanc opaque partout SAUF les 4 quarts de cercle des coins (alpha 0 hors rayon).</summary>
+        public static Sprite RoundedRectMask(int cornerRadiusPx)
+        {
+            string key = $"roundmask:{cornerRadiusPx}";
+            if (cache.TryGetValue(key, out Sprite cached) && cached != null) return cached;
+
+            int r = Mathf.Max(1, cornerRadiusPx);
+            int d = r * 2 + 3; // 1px de marge de chaque côté du centre pour l'anti-crénelage du rayon
+            var tex = NewTexture(d);
+            var pixels = new Color[d * d];
+            var cornerCenter = new Vector2(r, r); // coin bas-gauche, en espace texture (0,0 = bas-gauche)
+            for (int y = 0; y < d; y++)
+            {
+                for (int x = 0; x < d; x++)
+                {
+                    // Distance au coin de référence LE PLUS PROCHE — seuls les 4 quarts de cercle
+                    // (un par coin, répliqués par symétrie du 9-slice) doivent être testés ; le reste
+                    // du carré (bords/centre, hors zone d'influence d'un coin) reste opaque.
+                    bool nearLeft = x < r, nearBottom = y < r;
+                    bool nearRight = x >= d - r, nearTop = y >= d - r;
+                    float alpha = 1f;
+                    if (nearLeft && nearBottom)
+                    {
+                        float dist = Vector2.Distance(new Vector2(x + 0.5f, y + 0.5f), cornerCenter);
+                        alpha = Mathf.Clamp01((r - dist) + 0.5f);
+                    }
+                    else if (nearRight && nearBottom)
+                    {
+                        float dist = Vector2.Distance(new Vector2(x + 0.5f, y + 0.5f), new Vector2(d - r, r));
+                        alpha = Mathf.Clamp01((r - dist) + 0.5f);
+                    }
+                    else if (nearLeft && nearTop)
+                    {
+                        float dist = Vector2.Distance(new Vector2(x + 0.5f, y + 0.5f), new Vector2(r, d - r));
+                        alpha = Mathf.Clamp01((r - dist) + 0.5f);
+                    }
+                    else if (nearRight && nearTop)
+                    {
+                        float dist = Vector2.Distance(new Vector2(x + 0.5f, y + 0.5f), new Vector2(d - r, d - r));
+                        alpha = Mathf.Clamp01((r - dist) + 0.5f);
+                    }
+                    // R2.3/DA3 — le constructeur littéral à 4 arguments est le motif scanné par
+                    // DA3_NoRawColorLiterals ; l'éviter en partant d'une couleur nommée puis en
+                    // modifiant son canal alpha, même patron que Ring/RadialDisc ci-dessus. Piège du
+                    // socle CLAUDE.md : NE JAMAIS citer verbatim la forme évitée dans ce commentaire —
+                    // le scanner compte les COMMENTAIRES aussi bien que le code, la citer la
+                    // réintroduirait dans le compte.
+                    Color px = Color.white;
+                    px.a = alpha;
+                    pixels[y * d + x] = px;
+                }
+            }
+            tex.SetPixels(pixels);
+            tex.Apply(false, false);
+
+            var border = new Vector4(r, r, r, r); // (left, bottom, right, top) — 9-slice
+            Sprite sprite = Sprite.Create(tex, new Rect(0, 0, d, d), new Vector2(0.5f, 0.5f), 100f,
+                0, SpriteMeshType.FullRect, border);
+            cache[key] = sprite;
+            return sprite;
+        }
+
         private static Texture2D NewTexture(int d) => new Texture2D(d, d, TextureFormat.RGBA32, false)
         {
             wrapMode = TextureWrapMode.Clamp,

@@ -426,11 +426,17 @@ namespace MafiaCleanCity.CityMap.Tests
         // byte-identique à DistrictAmbientFillPlayModeTests.cs (retiré, voir tête de ce fichier) —
         // seul le fichier change.
 
+        // AMENDÉ NOMMÉMENT — HUD v3.1 boucle ⊥ pixel-perfect (2026-08-21) : 51 -> 61 -> 62. La propriété
+        // que cette falsifiable épingle (« le pivot fond pré-rendu n'ajoute AUCUNE teinte ») reste
+        // VRAIE — ce lot ne touche NI DistrictBackgroundController NI le pivot, il ajoute 10 tokens
+        // `hud*` scopés au TopBar (gdd/14 @e171c594). L'assertion pin le compte GLOBAL scellé, donc
+        // toute addition légitime ailleurs la fait bouger par construction — ce n'est pas une
+        // régression du pivot, c'est le mécanisme attendu d'un compteur partagé.
         [Test]
         public void AmbF7_SealedTokenCountUnchanged()
         {
-            Assert.AreEqual(51, MafiaCleanCity.Theme.Tests.CanonPaletteComparator.ExpectedTokenCount,
-                "amb-F7 — le pivot fond pré-rendu n'ajoute AUCUNE teinte : les 51 clés de DesignTokens restent fermées");
+            Assert.AreEqual(62, MafiaCleanCity.Theme.Tests.CanonPaletteComparator.ExpectedTokenCount,
+                "amb-F7 — le pivot fond pré-rendu n'ajoute AUCUNE teinte : les 62 clés de DesignTokens restent fermées (51 + 11 hud* HUD v3.1)");
         }
     }
 }

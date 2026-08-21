@@ -31,6 +31,7 @@ MonoBehaviour:
   scrimBackdrop: {r: 0.05, g: 0.05, b: 0.06, a: 0.85}
   chromeTabActive: {r: 1, g: 0.824, b: 0.247, a: 1}
   primaryFont: {fileID: 11400000, guid: 9eaab2888c5293b55b02ef482198c48b, type: 2}
+  hudSerifFont: {fileID: 11400000, guid: 584251e3af35ebbceb2bee53900a5998, type: 2}
   buildingCardHintDim: {r: 0.45, g: 0.47, b: 0.5, a: 1}
   autonomyBlockBg: {r: 0.102, g: 0.122, b: 0.133, a: 1}
   lieutenantMutedDeep: {r: 0.1, g: 0.12, b: 0.14, a: 1}
@@ -60,7 +61,18 @@ MonoBehaviour:
   nightSmoke: {r: 0.57, g: 0.585, b: 0.6, a: 0.35}
   nightHaze: {r: 0.14, g: 0.2, b: 0.3, a: 0.05}
   nightBase: {r: 0.285, g: 0.228, b: 0.18, a: 1}
+  nightOutOfDistrictMuted: {r: 0.128, g: 0.158, b: 0.2, a: 1}
   nightSocle: {r: 0.062, g: 0.055, b: 0.047, a: 1}
   nightLieutenantMarker: {r: 0.95, g: 0.82, b: 0.56, a: 1}
   nightFloorAlt: {r: 0.29, g: 0.325, b: 0.4, a: 1}
-  nightOutOfDistrictMuted: {r: 0.128, g: 0.158, b: 0.2, a: 1}
+  hudBarGlassTop: {r: 0.043, g: 0.067, b: 0.106, a: 0.91}
+  hudBarGlassBottom: {r: 0.051, g: 0.075, b: 0.118, a: 0.847}
+  hudHairlineGold: {r: 0.69, g: 0.553, b: 0.243, a: 1}
+  hudMoneyGold: {r: 0.949, g: 0.788, b: 0.42, a: 1}
+  hudMoneyUnderlineGold: {r: 0.851, g: 0.671, b: 0.306, a: 1}
+  hudGaugeFaceInner: {r: 0.173, g: 0.196, b: 0.259, a: 1}
+  hudGaugeFaceOuter: {r: 0.039, g: 0.055, b: 0.086, a: 1}
+  hudGaugeArcCold: {r: 0.498, g: 0.831, b: 0.851, a: 1}
+  hudGaugeArcHot: {r: 0.878, g: 0.4, b: 0.29, a: 1}
+  hudCreme: {r: 0.918, g: 0.878, b: 0.784, a: 1}
+  hudCremeSecondary: {r: 0.725, g: 0.678, b: 0.573, a: 1}

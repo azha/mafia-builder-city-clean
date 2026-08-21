@@ -1,8 +1,8 @@
 {
-  "backCommitSha": "6e91edd1",
+  "backCommitSha": "8c33ea3b",
   "backCommitRepo": "azha/mafia-clean-city",
   "canonSection": "projects/mafia_city_game/gdd/14_tunable_constants.md §Asset pipeline — palette & DA",
-  "generatedAt": "2026-08-20T15:36:42+02:00",
+  "generatedAt": "2026-08-21T08:45:00+02:00",
   "roundingConvention": "demi-haut: floor(channel*255+0.5)",
   "tokens": [
     {
@@ -412,6 +412,94 @@
       "b": 0.4,
       "a": 1,
       "hex": "#4a5366"
+    },
+    {
+      "name": "hudBarGlassTop",
+      "r": 0.043,
+      "g": 0.067,
+      "b": 0.106,
+      "a": 0.91,
+      "hex": "#0b111b"
+    },
+    {
+      "name": "hudBarGlassBottom",
+      "r": 0.051,
+      "g": 0.075,
+      "b": 0.118,
+      "a": 0.847,
+      "hex": "#0d131e"
+    },
+    {
+      "name": "hudHairlineGold",
+      "r": 0.69,
+      "g": 0.553,
+      "b": 0.243,
+      "a": 1,
+      "hex": "#b08d3e"
+    },
+    {
+      "name": "hudMoneyGold",
+      "r": 0.949,
+      "g": 0.788,
+      "b": 0.42,
+      "a": 1,
+      "hex": "#f2c96b"
+    },
+    {
+      "name": "hudMoneyUnderlineGold",
+      "r": 0.851,
+      "g": 0.671,
+      "b": 0.306,
+      "a": 1,
+      "hex": "#d9ab4e"
+    },
+    {
+      "name": "hudGaugeFaceInner",
+      "r": 0.173,
+      "g": 0.196,
+      "b": 0.259,
+      "a": 1,
+      "hex": "#2c3242"
+    },
+    {
+      "name": "hudGaugeFaceOuter",
+      "r": 0.039,
+      "g": 0.055,
+      "b": 0.086,
+      "a": 1,
+      "hex": "#0a0e16"
+    },
+    {
+      "name": "hudGaugeArcCold",
+      "r": 0.498,
+      "g": 0.831,
+      "b": 0.851,
+      "a": 1,
+      "hex": "#7fd4d9"
+    },
+    {
+      "name": "hudGaugeArcHot",
+      "r": 0.878,
+      "g": 0.4,
+      "b": 0.29,
+      "a": 1,
+      "hex": "#e0664a"
+    },
+    {
+      "name": "hudCreme",
+      "r": 0.918,
+      "g": 0.878,
+      "b": 0.784,
+      "a": 1,
+      "hex": "#eae0c8"
+    },
+    {
+      "name": "hudCremeSecondary",
+      "r": 0.725,
+      "g": 0.678,
+      "b": 0.573,
+      "a": 1,
+      "hex": "#b9ad92"
     }
   ]
 }

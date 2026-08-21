@@ -43,8 +43,14 @@ namespace MafiaCleanCity.Theme.Tests
     /// </summary>
     public static class CanonPaletteComparator
     {
-        public const int ExpectedTokenCount = 51; // W3.U2 boucle ⊥ (2026-08-20) : 48 -> 51, +3 tokens de nuit (socle/marqueur/sol alt) — gdd/14 @6e91edd1
-                                                    // (chromeTabActive, night* — voir canon_palette_extract.json).
+        public const int ExpectedTokenCount = 62; // HUD v3.1 boucle ⊥ pixel-perfect (2026-08-21) : 51 -> 61
+                                                    // (tour 1, +10 tokens hud* glass/gold/gauge/text) -> 62
+                                                    // (tour 2, +1 hudMoneyUnderlineGold mesuré directement sur
+                                                    // le rendu pixel) — gdd/14 @8c33ea3b.
+                                                    // Ruling user "pixel perfect" : sceau des 51 levé nommément
+                                                    // pour ce lot — root cause du round précédent (247ed3b) était
+                                                    // de COMPOSER depuis les tokens existants au lieu des hex
+                                                    // exacts de la maquette (voir DesignTokens.cs header HUD Bar).
                                                     // scénario dimensionné (G6) : un extrait tronqué doit rougir, pas passer à vide.
         public const float Epsilon = 0.001f;
 
@@ -211,7 +217,7 @@ namespace MafiaCleanCity.Theme.Tests
             Assert.IsTrue(errors.Any(e => e.Contains("heatBurning") && e.Contains("orphelin RUNTIME")),
                 "retirer une entrée du canon (heatBurning) n'a PAS produit d'orphelin RUNTIME détecté.\n" + string.Join("\n", errors));
             Assert.IsTrue(errors.Any(e => e.Contains("arité extrait")),
-                "retirer une entrée n'a pas fait rougir le contrôle d'arité (39 != 40).\n" + string.Join("\n", errors));
+                "retirer une entrée n'a pas fait rougir le contrôle d'arité (61 != 62).\n" + string.Join("\n", errors));
         }
 
         [Test]

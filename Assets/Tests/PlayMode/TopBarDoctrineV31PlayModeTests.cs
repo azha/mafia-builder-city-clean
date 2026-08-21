@@ -10,7 +10,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.TestTools;
 using MafiaCleanCity.Theme;
-using MafiaCleanCity.Theme.Tests; // CanonPaletteComparator.ExpectedTokenCount — source unique des 51 tokens
+using MafiaCleanCity.Theme.Tests; // CanonPaletteComparator.ExpectedTokenCount — source unique des 62 tokens (HUD v3.1 boucle ⊥, 51->61->62)
 using Object = UnityEngine.Object;
 
 namespace MafiaCleanCity.Shell.Tests
@@ -20,7 +20,7 @@ namespace MafiaCleanCity.Shell.Tests
     // fonctionnelles existantes (TopBarControllerPlayModeTests C2F1-F4, HudPlayModeTests hud-F1..F7/
     // F2/F6/M1/M2) : celles-ci restent la preuve de non-régression (a). Ce fichier prouve les 4
     // livrables DOCTRINE : (DA1) le manomètre est CENTRÉ, (DA2) l'or n'est jamais un aplat, (DA3/
-    // DA4) toute couleur du TopBar vient des 51 tokens scellés, (DA5) le restyle ne fait fuir aucune
+    // DA4) toute couleur du TopBar vient des 62 tokens scellés, (DA5) le restyle ne fait fuir aucune
     // légende décorative dans le corpus R2.2 scanné.
     [Category("HUDv31")]
     public class TopBarDoctrineV31PlayModeTests
@@ -129,9 +129,15 @@ namespace MafiaCleanCity.Shell.Tests
         // accident. Contrôle négatif (ci-dessous) : un aplat or 80x40=3200px² DOIT être classé aplat.
         private const float FlatCoverageAreaMaxPx2 = 900f;
 
+        // AMENDÉ NOMMÉMENT — HUD v3.1 boucle ⊥ pixel-perfect (2026-08-21) : comparait contre
+        // `accentGold` (#ffd23f, jaune vif — c'était PRÉCISÉMENT la root cause du ruling user, le
+        // round précédent composait le filet/anneau par alpha depuis ce token trop vif). Le filet et
+        // l'anneau viennent maintenant de `hudHairlineGold` (#b08d3e, laiton mat — REUSE exact de la
+        // maquette, gdd/14 @e171c594) — la PROPRIÉTÉ testée (l'or structurel n'est jamais un aplat)
+        // est inchangée, seul le token qui EST "l'or" pour ce scan est corrigé.
         private static bool IsGoldHue(Color c)
         {
-            Color gold = DesignTokens.Current.accentGold;
+            Color gold = DesignTokens.Current.hudHairlineGold;
             return Mathf.Abs(c.r - gold.r) < GoldHueEpsilon
                 && Mathf.Abs(c.g - gold.g) < GoldHueEpsilon
                 && Mathf.Abs(c.b - gold.b) < GoldHueEpsilon;
@@ -200,7 +206,7 @@ namespace MafiaCleanCity.Shell.Tests
             {
                 ((RectTransform)probeGo.transform).sizeDelta = new Vector2(80, 40); // 3200px², non-thin
                 Image probe = probeGo.AddComponent<Image>();
-                probe.color = DesignTokens.Current.accentGold;
+                probe.color = DesignTokens.Current.hudHairlineGold;
                 Assert.IsTrue(IsFlatSurface(probe),
                     "contrôle négatif : un aplat or 80x40 DOIT être classé comme aplat — sinon le détecteur ne peut rien voir");
             }
@@ -216,7 +222,7 @@ namespace MafiaCleanCity.Shell.Tests
         }
 
         // ══════════════════════════════════════════════════════════════════════════════════════
-        // (c) — toute couleur du TopBar vient des 51 tokens scellés (REUSE le patron
+        // (c) — toute couleur du TopBar vient des 62 tokens scellés (REUSE le patron
         // ChromeTabAccentAllowlistPlayModeTests : contrôle de FORME avant contrôle de contenu,
         // y compris la forme ALIASÉE/indirection par variable).
         // ══════════════════════════════════════════════════════════════════════════════════════
@@ -299,10 +305,12 @@ namespace MafiaCleanCity.Shell.Tests
             var sealedFields = new HashSet<string>();
             foreach (FieldInfo field in typeof(DesignTokens).GetFields(BindingFlags.Public | BindingFlags.Instance))
                 sealedFields.Add(field.Name);
-            // 51 Color scellés (CanonPaletteComparator.ExpectedTokenCount, source UNIQUE) + 1
-            // TMP_FontAsset (primaryFont, hors du périmètre couleur mais un champ public réel).
-            Assert.AreEqual(CanonPaletteComparator.ExpectedTokenCount + 1, sealedFields.Count,
-                "sanity du reflet lui-même — doit voir 51 Color + primaryFont");
+            // 62 Color scellés (CanonPaletteComparator.ExpectedTokenCount, source UNIQUE) + 2
+            // TMP_FontAsset (primaryFont, hudSerifFont — hors du périmètre couleur mais des champs
+            // publics réels). AMENDÉ NOMMÉMENT — HUD v3.1 boucle ⊥ pixel-perfect (2026-08-21) : +1 →
+            // +2, `hudSerifFont` ajouté (écart (5), DesignTokens.cs).
+            Assert.AreEqual(CanonPaletteComparator.ExpectedTokenCount + 2, sealedFields.Count,
+                "sanity du reflet lui-même — doit voir 62 Color + primaryFont + hudSerifFont");
 
             MatchCollection matches = Regex.Matches(text, @"DesignTokens\.Current\.(\w+)");
             Assert.GreaterOrEqual(matches.Count, 5,
@@ -313,7 +321,7 @@ namespace MafiaCleanCity.Shell.Tests
                 .Where(name => !sealedFields.Contains(name))
                 .Distinct().ToList();
             Assert.IsEmpty(invalid,
-                "accès à un champ qui n'existe PAS sur DesignTokens (typo, ou fuite hors des 51 tokens scellés) : " +
+                "accès à un champ qui n'existe PAS sur DesignTokens (typo, ou fuite hors des 62 tokens scellés) : " +
                 string.Join(", ", invalid));
         }
 
@@ -342,6 +350,117 @@ namespace MafiaCleanCity.Shell.Tests
             {
                 Assert.IsFalse(Regex.IsMatch(t, @"(?<![A-Za-z])\d+(\.\d+)?(?![A-Za-z])"),
                     $"aucun scalaire brut dans le corpus scanné : '{t}'");
+            }
+        }
+
+        // ══════════════════════════════════════════════════════════════════════════════════════
+        // (e) — HUD v3.1 boucle ⊥ pixel-perfect, tour 2 (revue ⊥ sur capture r5, 2026-08-21) : le
+        // cadran est un ARC tracé DANS le disque — RIEN ne doit dépasser le cercle inscrit de la
+        // face du médaillon (le défaut mesuré : `ZoneRow`, 3 carrés ancrés au bord bas, débordait
+        // visiblement). Falsifiable de FORME, pixel-réelle (pas géométrique sur les RectTransform —
+        // un texte centré a une boîte englobante plus large que son encre, un contrôle sur les
+        // COINS du RectTransform aurait un faux positif systématique sur `GaugeValue`/`GaugeCaption`).
+        // ══════════════════════════════════════════════════════════════════════════════════════
+
+        private static float ColorDistance(Color a, Color b) =>
+            Mathf.Sqrt(Mathf.Pow(a.r - b.r, 2) + Mathf.Pow(a.g - b.g, 2) + Mathf.Pow(a.b - b.b, 2));
+
+        /// <summary>Échantillonne un ANNEAU de rayons [radius, radius+marginPx] autour de (cx,cy)
+        /// dans `tex` (coordonnées ÉCRAN, origine bas-gauche comme `Texture2D.GetPixel`) et compte
+        /// les pixels qui s'écartent de TOUTES les couleurs de `knownGood` de plus de `colorEpsilon`
+        /// — "quelque chose est dessiné ici qui ne devrait pas l'être". `knownGood` porte le fond de
+        /// barre ET le filet or du bas de barre (`hudHairlineGold`, REUSE `DesignTokens.Current` —
+        /// MESURÉ, revue ⊥ 2026-08-21 : le médaillon (rayon 32) déborde légèrement sous le bas de
+        /// la barre par construction, donc une partie de l'anneau de contrôle croise le filet — un
+        /// élément DOCTRINE-LÉGITIME, permanent, sans rapport avec le contenu du médaillon ; l'exclure
+        /// PAR SA COULEUR CONNUE plutôt que par une zone d'angle exclue à la main garde la sonde
+        /// capable de voir un VRAI débordement à cet endroit précis (une teinte différente du filet,
+        /// même proche de lui, resterait détectée). Retourne (offenderCount, sampleCount, exemples
+        /// pour diagnostic — jamais lus par la logique, seulement par le message d'assertion).</summary>
+        private static (int offenders, int sampled, List<string> examples) CountOffendersOutsideCircle(
+            Texture2D tex, float cx, float cy, float radiusPx, float marginPx, Color[] knownGood, float colorEpsilon)
+        {
+            int offenders = 0, sampled = 0;
+            var examples = new List<string>();
+            for (float ang = 0f; ang < 360f; ang += 3f)
+            {
+                float rad = ang * Mathf.Deg2Rad;
+                for (float r = radiusPx + 1.5f; r <= radiusPx + marginPx; r += 2f)
+                {
+                    int px = Mathf.RoundToInt(cx + r * Mathf.Cos(rad));
+                    int py = Mathf.RoundToInt(cy + r * Mathf.Sin(rad));
+                    if (px < 0 || py < 0 || px >= tex.width || py >= tex.height) continue;
+                    sampled++;
+                    Color c = tex.GetPixel(px, py);
+                    float minDist = float.MaxValue;
+                    foreach (Color known in knownGood)
+                        minDist = Mathf.Min(minDist, ColorDistance(c, known));
+                    if (minDist > colorEpsilon)
+                    {
+                        offenders++;
+                        if (examples.Count < 10)
+                            examples.Add($"ang={ang:F0} r={r - radiusPx:F1}px-hors-cercle color={c} minDist={minDist:F3}");
+                    }
+                }
+            }
+            return (offenders, sampled, examples);
+        }
+
+        [UnityTest]
+        public IEnumerator DA6_ManometreContent_NeverExceedsInscribedCircle_PixelReal()
+        {
+            yield return WaitTopBarLoaded(BootShell());
+            yield return new WaitForEndOfFrame();
+
+            Transform manoT = shell.TopBar.transform.Find("Manometre");
+            Assert.IsNotNull(manoT, "Manometre doit exister comme enfant DIRECT du TopBar");
+            var manoRect = (RectTransform)manoT;
+            var corners = new Vector3[4];
+            manoRect.GetWorldCorners(corners); // ScreenSpaceOverlay : coïncide avec l'écran, origine bas-gauche
+
+            float cx = (corners[0].x + corners[2].x) / 2f;
+            float cy = (corners[0].y + corners[1].y) / 2f;
+            float radiusPx = (corners[2].x - corners[0].x) / 2f; // le médaillon (ring inclus) est carré
+            Assert.Greater(radiusPx, 5f, "anti-vacuité : le médaillon doit avoir une taille réelle mesurée");
+
+            Texture2D tex = ScreenCapture.CaptureScreenshotAsTexture();
+            try
+            {
+                // Fond de référence : un point sur la barre, à bonne distance du médaillon (hors
+                // de tout halo/dégradé local), même hauteur Y. `knownGood` porte AUSSI le filet or
+                // du bas de barre (`hudHairlineGold`, REUSE le token — MESURÉ, revue ⊥ 2026-08-21 :
+                // le médaillon déborde légèrement sous la barre par construction, une partie de
+                // l'anneau de contrôle croise donc le filet, un élément DOCTRINE-LÉGITIME sans
+                // rapport avec le médaillon — voir le docblock de `CountOffendersOutsideCircle`).
+                Color bg = tex.GetPixel(Mathf.RoundToInt(cx - radiusPx - 60f), Mathf.RoundToInt(cy));
+                Color[] knownGood = { bg, DesignTokens.Current.hudHairlineGold };
+                const float colorEpsilon = 0.06f; // tolère l'anti-crénelage du bord du ring lui-même
+                const float marginPx = 14f; // fenêtre juste hors du médaillon où un débordement serait visible
+
+                var (offenders, sampled, examples) = CountOffendersOutsideCircle(tex, cx, cy, radiusPx, marginPx, knownGood, colorEpsilon);
+                Assert.Greater(sampled, 100, "anti-vacuité : l'anneau de contrôle doit couvrir un nombre RÉEL de pixels");
+                Assert.AreEqual(0, offenders,
+                    $"du contenu du manomètre déborde du cercle inscrit ({offenders}/{sampled} pixels de l'anneau de " +
+                    "contrôle diffèrent du fond ET du filet, bg=" + bg + ") — doctrine : un ARC dans le disque, rien " +
+                    "ne dépasse. Exemples (jusqu'à 10) :\n" + string.Join("\n", examples));
+
+                // Contrôle POSITIF (socle : un détecteur qui rend toujours 0 peut le faire pour la
+                // mauvaise raison) — une sonde synthétique DEHORS du cercle, sur la MÊME texture,
+                // DOIT être vue par le même balayage — MÊME avec le filet dans `knownGood` (magenta
+                // est loin des DEUX couleurs connues).
+                int probeX = Mathf.RoundToInt(cx + radiusPx + 6f);
+                int probeY = Mathf.RoundToInt(cy);
+                Color probeOriginal = tex.GetPixel(probeX, probeY);
+                tex.SetPixel(probeX, probeY, Color.magenta);
+                tex.Apply();
+                var (probeOffenders, _, _) = CountOffendersOutsideCircle(tex, cx, cy, radiusPx, marginPx, knownGood, colorEpsilon);
+                Assert.Greater(probeOffenders, 0,
+                    "contrôle positif : un pixel magenta planté juste hors du cercle DOIT être détecté — sinon " +
+                    "le balayage ne peut rien voir et le 0 ci-dessus ne prouve rien");
+            }
+            finally
+            {
+                Object.Destroy(tex);
             }
         }
     }
