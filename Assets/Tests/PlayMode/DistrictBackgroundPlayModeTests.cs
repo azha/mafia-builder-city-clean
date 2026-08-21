@@ -432,11 +432,18 @@ namespace MafiaCleanCity.CityMap.Tests
         // `hud*` scopés au TopBar (gdd/14 @e171c594). L'assertion pin le compte GLOBAL scellé, donc
         // toute addition légitime ailleurs la fait bouger par construction — ce n'est pas une
         // régression du pivot, c'est le mécanisme attendu d'un compteur partagé.
+        //
+        // AMENDÉ NOMMÉMENT (2) — La Famille — l'organigramme (2026-08-21) : 62 -> 64. Même raison
+        // que ci-dessus, un cran plus loin : +2 tokens `lieutenantGlassTop`/`lieutenantGlassBottom`
+        // (verre gravé des panneaux Don/lieutenant), propagation canon-first complète et vérifiée
+        // aux 4 sources (gdd/14 note dédiée = 64 · `DesignTokens.cs`/`.asset` = 64 champs Color ·
+        // `canon_palette_extract.json` = 64 tokens, `lieutenantGlassTop/Bottom` présents aux 3).
+        // Le pivot fond pré-rendu n'a de nouveau pas été touché — la propriété épinglée reste vraie.
         [Test]
         public void AmbF7_SealedTokenCountUnchanged()
         {
-            Assert.AreEqual(62, MafiaCleanCity.Theme.Tests.CanonPaletteComparator.ExpectedTokenCount,
-                "amb-F7 — le pivot fond pré-rendu n'ajoute AUCUNE teinte : les 62 clés de DesignTokens restent fermées (51 + 11 hud* HUD v3.1)");
+            Assert.AreEqual(64, MafiaCleanCity.Theme.Tests.CanonPaletteComparator.ExpectedTokenCount,
+                "amb-F7 — le pivot fond pré-rendu n'ajoute AUCUNE teinte : les 64 clés de DesignTokens restent fermées (51 + 11 hud* HUD v3.1 + 2 lieutenantGlass* La Famille)");
         }
     }
 }

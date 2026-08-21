@@ -153,8 +153,22 @@ namespace MafiaCleanCity.Shell.Tests
                 req.uploadHandler = new UploadHandlerRaw(new byte[0]);
                 req.downloadHandler = new DownloadHandlerBuffer();
                 // 2000 in-game minutes fires EVERY cadence handler crossed (minute/5-min/30-min/12h/
-                // nightly/weekly) — genuinely CPU-heavy server-side, measured to exceed 30s.
-                req.timeout = 120;
+                // nightly/weekly) — genuinely CPU-heavy server-side.
+                //
+                // AMENDÉ NOMMÉMENT (2026-08-21, en fermant un rouge de suite complète) — l'ancien
+                // `120` reposait sur « mesuré à dépasser 30s » (un PLANCHER, pas la vraie durée) et
+                // rougissait en ConnectionError/"Request timeout". MESURÉ en isolant la cause
+                // (`curl` DIRECT sur `_test/citysim/advance?ticks=2000`, backend AU REPOS — 0% CPU
+                // `game-back` avant lancement, 2 joueurs FRAIS indépendants, hors Unity) : 134,2s puis
+                // 135,0s — DEUX fois, sur machine calme, l'hypothèse "rouge d'environnement transitoire"
+                // est donc RÉFUTÉE (le socle demande justement cette preuve avant de conclure) : la
+                // route dépasse DÉJÀ 120s à vide, ce n'est pas de la contention passagère. `120` était
+                // trop court pour ce que l'opération coûte RÉELLEMENT aujourd'hui (dérive plausible :
+                // volume de données accumulé sur la stack dev partagée, longue durée de vie). Porté à
+                // `240` — ~1,8× la pire mesure mesurée, marge pour une exécution sous charge réelle de
+                // gate (plusieurs conteneurs actifs), sans changer la route elle-même (`_test`-only,
+                // jamais un chemin joueur — R9.3 n'est pas concerné).
+                req.timeout = 240;
                 yield return req.SendWebRequest();
                 Assert.AreEqual(UnityWebRequest.Result.Success, req.result,
                     $"citysim advance failed: {req.error} ({req.downloadHandler?.text})");

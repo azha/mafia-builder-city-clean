@@ -320,16 +320,38 @@ namespace MafiaCleanCity.Shell.Tests
                 "réserve que 56px nominaux serait chevauché par l'anneau/le filet qui pendent en dessous");
 
             // Propriété positive qui remplace le confinement retiré : le fond est bien en
-            // résolution NATIVE — sur l'axe où ça se voit (HAUTEUR : l'artefact est 9:16 portrait,
-            // 1920px natifs contre un ContentSlot large de quelques centaines d'unités canvas ; la
-            // LARGEUR, elle, reste sous celle de ContentSlot à ce scaleFactor — mesuré, pas supposé),
-            // le fond DÉPASSE largement ContentSlot (au lieu d'y être confiné comme l'ancienne
-            // grille), preuve que le pivot est bien appliqué ici (pas un vestige du confinement).
+            // résolution NATIVE (pas un vestige du confinement de l'ancienne grille).
+            //
+            // AMENDÉ NOMMÉMENT (2026-08-21, frontière district — même resolution que nav-district-F1,
+            // DistrictMapNavigationPlayModeTests.cs) — MESURÉ (Debug.Log injecté puis retiré) : à la
+            // résolution de test ACTUELLE (Screen=1080×2400, scaleFactor=0,84375 — Screen.width/1280,
+            // AppShell.cs:399), fondHeight=2275,6 < contentHeight=2844,4. La comparaison "fond >
+            // ContentSlot" supposait implicitement un device MOINS haut que le fond (portrait proche
+            // de 9:16, comme 1080×1920) — vrai à l'ancienne résolution de test, FAUX à 1080×2400 (un
+            // aspect ratio 20:9 plus haut, JUSTEMENT le cas que JUGE-D2/DistrictSceneBackdrop couvre,
+            // voir DistrictInteriorScreenController.cs:64-82). "dépasse ContentSlot" n'est donc PAS un
+            // invariant de "résolution native, aucun rescale" — c'est une COÏNCIDENCE d'aspect ratio.
+            // ⇒ Propriété robuste, indépendante du device : le rect du fond doit égaler EXACTEMENT
+            // texture/scaleFactor (la définition même de pp-F1 — DistrictInteriorScreenController.cs:97,
+            // "sizeDelta = texture/scaleFactor... §2.1 : rect × scaleFactor == tex"), pas une inégalité
+            // contre un ContentSlot dont la taille dépend du device. Testé ICI (chemin in-shell, via
+            // AppShell) — REUSE de la même formule, pas une nouvelle règle : la falsifiable pp-F1
+            // "bare host" existe déjà côté DistrictBackgroundPlayModeTests.cs, celle-ci couvre le
+            // chemin de montage RÉEL (nav-F4 exerce shell.EnterDistrict, pas RenderFresh).
+            Image fondImg = fondT.GetComponent<Image>();
+            Assert.IsNotNull(fondImg?.sprite?.texture, "district 16 — le fond porte un Image avec une texture réelle (pp-F1)");
+            Texture2D fondTex = fondImg.sprite.texture;
+            Canvas fondCanvas = fondT.GetComponentInParent<Canvas>();
+            float fondScaleFactor = (fondCanvas != null && fondCanvas.scaleFactor > 0f) ? fondCanvas.scaleFactor : 1f;
+            float expectedFondHeight = fondTex.height / fondScaleFactor;
+            float expectedFondWidth = fondTex.width / fondScaleFactor;
             float fondHeight = ((RectTransform)fondT).rect.height;
-            float contentHeight = shell.ContentSlot.rect.height;
-            Assert.Greater(fondHeight, contentHeight,
-                $"nav-F4 (amendée) — le fond natif ({fondHeight:F1}) dépasse ContentSlot ({contentHeight:F1}) : " +
-                "comportement ATTENDU du pivot (pas de rescale), pas une régression");
+            float fondWidth = ((RectTransform)fondT).rect.width;
+            Assert.AreEqual(expectedFondHeight, fondHeight, 0.05f,
+                $"nav-F4 (amendée) — hauteur du fond ({fondHeight:F1}) == texture/scaleFactor ({expectedFondHeight:F1}) : " +
+                "résolution NATIVE, pas de rescale, INDÉPENDAMMENT de ContentSlot/du device");
+            Assert.AreEqual(expectedFondWidth, fondWidth, 0.05f,
+                $"nav-F4 (amendée) — largeur du fond ({fondWidth:F1}) == texture/scaleFactor ({expectedFondWidth:F1}) : idem sur X");
         }
 
         // ── nav-F4 étendue au district 3 (Tools/pivot-fond-prerendu-design.md §12) — le geste du

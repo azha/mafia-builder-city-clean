@@ -385,7 +385,21 @@ namespace MafiaCleanCity.Shell.Tests
             for (float ang = 0f; ang < 360f; ang += 3f)
             {
                 float rad = ang * Mathf.Deg2Rad;
-                for (float r = radiusPx + 1.5f; r <= radiusPx + marginPx; r += 2f)
+                // AMENDÉ NOMMÉMENT (2026-08-21, en fermant ce rouge) — MESURÉ (balayage 360° fin,
+                // pas 0,25px, Debug.Log injecté puis retiré, co-tenance HUDv31 reproduite) : le PIRE
+                // rayon de stabilisation de l'anti-crénelage du bord de `boitierRing` sur TOUT le
+                // cercle est `radiusPx+1,75` (à ang=240°, un angle NON cardinal — la piste circulaire
+                // rastérisée + le sur-échantillonnage bilinéaire de l'Image y prennent visiblement
+                // plus de largeur qu'aux angles cardinaux 0/90/180/270, où c'est déjà stable par
+                // r=radiusPx+0,5). L'ancien `+1,5f` tombait DANS cette fenêtre (0,25px de trop court)
+                // — un vrai débordement d'un demi-pixel n'existe pas ; c'est la tolérance RADIALE qui
+                // était trop serrée pour l'AA du ring lui-même. `+2,5f` retenu : 0,75px de marge de
+                // sécurité au-dessus du pire cas MESURÉ, jamais relâché au point de couvrir le
+                // `marginPx` de 14px qui doit rester sensible à un vrai contenu débordant. La couleur
+                // (`colorEpsilon`) reste À 0,06 — c'est le RAYON de départ qui était mal calibré, pas
+                // la tolérance de teinte (widen l'un OU l'autre suffisait ; le rayon est le plus
+                // proche de la cause physique mesurée).
+                for (float r = radiusPx + 2.5f; r <= radiusPx + marginPx; r += 2f)
                 {
                     int px = Mathf.RoundToInt(cx + r * Mathf.Cos(rad));
                     int py = Mathf.RoundToInt(cy + r * Mathf.Sin(rad));
@@ -448,10 +462,19 @@ namespace MafiaCleanCity.Shell.Tests
                 // mauvaise raison) — une sonde synthétique DEHORS du cercle, sur la MÊME texture,
                 // DOIT être vue par le même balayage — MÊME avec le filet dans `knownGood` (magenta
                 // est loin des DEUX couleurs connues).
-                int probeX = Mathf.RoundToInt(cx + radiusPx + 6f);
-                int probeY = Mathf.RoundToInt(cy);
-                Color probeOriginal = tex.GetPixel(probeX, probeY);
-                tex.SetPixel(probeX, probeY, Color.magenta);
+                // AMENDÉ NOMMÉMENT (2026-08-21, même correctif que ci-dessus) — MESURÉ : la sonde à
+                // UN SEUL pixel ne survivait que par une COÏNCIDENCE d'arrondi entre son offset fixe
+                // (+6px) et la grille (ang,r) du balayage — décaler la grille (le correctif du rayon
+                // de départ, ci-dessus) l'a fait manquer silencieusement (contrôle positif tombé à 0
+                // offender, prouvant que ce n'était PAS un test robuste). Peindre un PETIT BLOC
+                // (5×5px) au lieu d'un pixel unique rend la sonde insensible à l'arrondi exact de la
+                // grille — n'importe quel point (ang,r) à ±2px de la cible la voit, quel que soit le
+                // pas radial choisi.
+                int probeCx = Mathf.RoundToInt(cx + radiusPx + 6f);
+                int probeCy = Mathf.RoundToInt(cy);
+                for (int dx = -2; dx <= 2; dx++)
+                    for (int dy = -2; dy <= 2; dy++)
+                        tex.SetPixel(probeCx + dx, probeCy + dy, Color.magenta);
                 tex.Apply();
                 var (probeOffenders, _, _) = CountOffendersOutsideCircle(tex, cx, cy, radiusPx, marginPx, knownGood, colorEpsilon);
                 Assert.Greater(probeOffenders, 0,

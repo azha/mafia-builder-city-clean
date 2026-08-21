@@ -78,6 +78,7 @@ namespace MafiaCleanCity.Shell.Tests
             public float Cx, Cy;          // centre du médaillon, coordonnées ÉCRAN (origine bas-gauche)
             public float MedallionRadius; // demi-largeur du RectTransform Manometre (anneau inclus)
             public float BarTopY, BarBottomY; // bords de TopBarSlot, coordonnées ÉCRAN
+            public float HairlineTopY, HairlineBottomY; // bords du filet bas de barre, coordonnées ÉCRAN
         }
 
         private static Geo MeasureGeo(TopBarController topBar, RectTransform topBarSlot)
@@ -91,6 +92,11 @@ namespace MafiaCleanCity.Shell.Tests
             var bc = new Vector3[4];
             topBarSlot.GetWorldCorners(bc);
 
+            Transform hairlineT = topBar.transform.Find("Hairline");
+            Assert.IsNotNull(hairlineT, "Hairline doit exister comme enfant DIRECT du TopBar (BuildHairline)");
+            var hc = new Vector3[4];
+            ((RectTransform)hairlineT).GetWorldCorners(hc);
+
             return new Geo
             {
                 Cx = (mc[0].x + mc[2].x) / 2f,
@@ -98,8 +104,51 @@ namespace MafiaCleanCity.Shell.Tests
                 MedallionRadius = (mc[2].x - mc[0].x) / 2f,
                 BarTopY = bc[1].y,    // haut de la barre (Unity : y plus GRAND = plus haut à l'écran)
                 BarBottomY = bc[0].y, // bas de la barre
+                HairlineTopY = hc[1].y,
+                HairlineBottomY = hc[0].y,
             };
         }
+
+        /// <summary>MESURÉ (2026-08-21, en fermant Oracle1) — le filet bas de barre (`Hairline`,
+        /// pleine largeur, MÊME famille laiton que l'anneau en état calme ET en état alarme,
+        /// `UpdateAlarmState`) croise géométriquement l'anneau de RECHERCHE de CHECK 1 (pas l'anneau
+        /// lui-même — `ManometreVerticalOffsetPx` le tient hors du DISQUE, §2.1) à deux fenêtres
+        /// angulaires ÉTROITES et SYMÉTRIQUES autour de 270° (bas), parce que le filet est une ligne
+        /// HORIZONTALE quasi tangente à la bande de recherche annulaire. Mesuré empiriquement (balayage
+        /// fin, 1°) : [201°,203°] et [336°,339°] — HORS de `TextZoneExcludeStartDeg/EndDeg` ([210,330],
+        /// dérivé UNIQUEMENT de GaugeCaption/GaugeValue, sans rapport avec le filet). Cette fonction
+        /// DÉRIVE la fenêtre géométriquement (jamais un magic number recopié de la mesure) : pour les 2
+        /// arêtes du filet (haut/bas) × les 2 bornes du rayon de recherche, le point de croisement
+        /// x=√(r²−Δy²) donne un angle (même convention que `SamplePolar` : atan2(Δy,Δx)) ; l'enveloppe
+        /// (min/max) des 4 combinaisons + `marginDeg` (anti-crénelage) couvre tout le croisement RÉEL.
+        /// Le filet lui-même est une propriété DOCTRINE-LÉGITIME, couverte séparément par CHECK 2
+        /// (`MaxTopOverflowPx`/l'overhang bas borné, tête de section ci-dessous) — CHECK 1 ne doit
+        /// JAMAIS le compter comme un second anneau.</summary>
+        private static (float start, float end)? HairlineCrossingWindow(
+            float cx, float cy, float hairlineNearY, float hairlineFarY, float rMin, float rMax,
+            bool rightSide, float marginDeg)
+        {
+            var angles = new List<float>();
+            foreach (float y in new[] { hairlineNearY, hairlineFarY })
+            {
+                float dyUp = y - cy; // négatif : le filet est SOUS le centre du médaillon
+                foreach (float r in new[] { rMin, rMax })
+                {
+                    if (Mathf.Abs(dyUp) >= r) continue; // filet hors de portée de ce rayon — pas de croisement
+                    float dx = Mathf.Sqrt(r * r - dyUp * dyUp);
+                    float signedDx = rightSide ? dx : -dx;
+                    float ang = Mathf.Atan2(dyUp, signedDx) * Mathf.Rad2Deg;
+                    if (ang < 0f) ang += 360f;
+                    angles.Add(ang);
+                }
+            }
+            if (angles.Count == 0) return null;
+            return (angles.Min() - marginDeg, angles.Max() + marginDeg);
+        }
+
+        private static bool InHairlineWindow(float ang, (float start, float end)? left, (float start, float end)? right) =>
+            (left.HasValue && ang >= left.Value.start && ang <= left.Value.end) ||
+            (right.HasValue && ang >= right.Value.start && ang <= right.Value.end);
 
         // angle : convention TRIGONOMÉTRIQUE standard (0°=est/3h, 90°=nord/12h, sens anti-horaire),
         // cohérente avec `Mathf.Cos/Sin` et le docblock de `TopBarController.BuildManometre`.
@@ -267,16 +316,49 @@ namespace MafiaCleanCity.Shell.Tests
                 var offendersAlarm = new List<string>();
                 float ringR2 = calmGeo.MedallionRadius - 1.5f;
                 const float RingSearchBandInner = 2f, RingSearchBandOuter = 8f;
+                float rMin = ringR2 - RingSearchBandInner, rMax = ringR2 + RingSearchBandOuter;
+
+                // AMENDÉ NOMMÉMENT (2026-08-21, en fermant ce rouge) — MESURÉ (balayage fin 1°,
+                // Debug.Log injecté puis retiré, co-tenance HUDv31 reproduite) : le filet bas de barre
+                // (`Hairline`, MÊME famille laiton que l'anneau, `UpdateAlarmState` colore les DEUX
+                // identiquement) croise la bande de recherche à deux fenêtres ÉTROITES et SYMÉTRIQUES
+                // — mesuré [201°,203°] et [336°,339°], toutes deux HORS de `TextZoneExcludeStartDeg/
+                // EndDeg` ([210,330], dérivé UNIQUEMENT du texte GaugeCaption/GaugeValue, sans rapport
+                // avec le filet). Ce n'est pas un anneau doublé : ce sont deux éléments CHROME
+                // DISTINCTS et INTENTIONNELS (voir le commentaire de CHECK 2 ci-dessous — l'overhang
+                // bas est un débordement VOULU) qui se trouvent tomber dans la même bande radiale à cet
+                // angle précis. `HairlineCrossingWindow` DÉRIVE la fenêtre géométriquement (jamais les
+                // degrés mesurés recopiés en dur) à partir de la position RÉELLE du filet — robuste à
+                // tout futur changement de `ManometreVerticalOffsetPx`/hauteur de barre. La coarse
+                // sweep à 6° ne voyait QUE la fenêtre droite (336 tombe dans [336,339] ; à gauche, 198
+                // et 204 encadrent [201,203] sans le toucher — un pas de 6° peut donc manquer un défaut
+                // RÉEL tout comme il peut en signaler un faux) — les deux fenêtres sont dérivées et
+                // exclues symétriquement, indépendamment de ce qu'un pas de 6° aurait vu.
+                var leftWindowCalm = HairlineCrossingWindow(calmGeo.Cx, calmGeo.Cy,
+                    calmGeo.HairlineTopY, calmGeo.HairlineBottomY, rMin, rMax, rightSide: false, marginDeg: 2f);
+                var rightWindowCalm = HairlineCrossingWindow(calmGeo.Cx, calmGeo.Cy,
+                    calmGeo.HairlineTopY, calmGeo.HairlineBottomY, rMin, rMax, rightSide: true, marginDeg: 2f);
+                var leftWindowAlarm = HairlineCrossingWindow(alarmGeo.Cx, alarmGeo.Cy,
+                    alarmGeo.HairlineTopY, alarmGeo.HairlineBottomY, rMin, rMax, rightSide: false, marginDeg: 2f);
+                var rightWindowAlarm = HairlineCrossingWindow(alarmGeo.Cx, alarmGeo.Cy,
+                    alarmGeo.HairlineTopY, alarmGeo.HairlineBottomY, rMin, rMax, rightSide: true, marginDeg: 2f);
+
                 for (float ang = 0f; ang < 360f; ang += 6f)
                 {
                     if (ang >= TextZoneExcludeStartDeg && ang <= TextZoneExcludeEndDeg) continue;
-                    int runsCalm = CountRingRunsAtAngle(calmTexCopy, calmGeo.Cx, calmGeo.Cy, ang,
-                        ringR2 - RingSearchBandInner, ringR2 + RingSearchBandOuter, calmRing);
-                    if (runsCalm > 1) offendersCalm.Add($"calme ang={ang:F0} runs={runsCalm}");
+                    if (!InHairlineWindow(ang, leftWindowCalm, rightWindowCalm))
+                    {
+                        int runsCalm = CountRingRunsAtAngle(calmTexCopy, calmGeo.Cx, calmGeo.Cy, ang,
+                            rMin, rMax, calmRing);
+                        if (runsCalm > 1) offendersCalm.Add($"calme ang={ang:F0} runs={runsCalm}");
+                    }
 
-                    int runsAlarm = CountRingRunsAtAngle(alarmTexCopy, alarmGeo.Cx, alarmGeo.Cy, ang,
-                        ringR2 - RingSearchBandInner, ringR2 + RingSearchBandOuter, alarmRing);
-                    if (runsAlarm > 1) offendersAlarm.Add($"alarme ang={ang:F0} runs={runsAlarm}");
+                    if (!InHairlineWindow(ang, leftWindowAlarm, rightWindowAlarm))
+                    {
+                        int runsAlarm = CountRingRunsAtAngle(alarmTexCopy, alarmGeo.Cx, alarmGeo.Cy, ang,
+                            rMin, rMax, alarmRing);
+                        if (runsAlarm > 1) offendersAlarm.Add($"alarme ang={ang:F0} runs={runsAlarm}");
+                    }
                 }
                 Assert.IsEmpty(offendersCalm, "anneau DOUBLÉ détecté en état calme : " + string.Join("; ", offendersCalm));
                 Assert.IsEmpty(offendersAlarm, "anneau DOUBLÉ détecté en état alarme : " + string.Join("; ", offendersAlarm));

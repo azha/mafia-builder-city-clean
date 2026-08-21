@@ -123,6 +123,9 @@ namespace MafiaCleanCity.CityMap.Tests
 
             RectTransform rootRt = (RectTransform)diorama.ScreenRoot;
             RectTransform fondRt = (RectTransform)diorama.ScreenRoot.Find("DistrictScene/DistrictBackgroundImage");
+            RectTransform backdropRt = (RectTransform)diorama.ScreenRoot.Find("DistrictScene/DistrictSceneBackdrop");
+            Assert.IsNotNull(backdropRt, "JUGE-D2 — le backdrop existe dès qu'il y a un fond réel, même bloc `if` que " +
+                "DistrictBackgroundImage (DistrictInteriorScreenController.RenderHeroDiorama)");
 
             nav.PanBy(new Vector2(1_000_000f, 1_000_000f));
             float expUpperX = UpperBoundExpected(fondRt.rect.width * nav.CurrentScale, rootRt.rect.width);
@@ -130,22 +133,37 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.AreEqual(expUpperX, nav.PanPosition.x, 0.05f, "nav-district-F1 — borne haute X (recalculée indépendamment)");
             Assert.AreEqual(expUpperY, nav.PanPosition.y, 0.05f, "nav-district-F1 — borne haute Y (recalculée indépendamment)");
 
-            // Preuve géométrique directe, PAS seulement la valeur interne : sur l'axe Y (fond 1920px
-            // natif, systématiquement plus grand que le viewport ici — contrairement à X où le fond
-            // 1080px peut être plus ÉTROIT qu'un viewport de référence 1280px, cas préexistant/hors
-            // scope, §Deviations), le fond doit couvrir le viewport ENTIER, sans aucun vide.
-            Vector3[] fc = new Vector3[4]; fondRt.GetWorldCorners(fc);
+            // AMENDÉ NOMMÉMENT (2026-08-21, JUGE-D2 — DistrictSceneBackdrop) : la preuve géométrique
+            // portait sur le FOND (fc) — c'était vrai tant que l'axe Y du fond (1920px natifs)
+            // dépassait TOUJOURS le viewport de test. MESURÉ (Debug.Log injecté puis retiré) : à la
+            // résolution de test ACTUELLE (Screen=1080×2400, scaleFactor=1), rootRt.rect=(1080,2400)
+            // dépasse désormais fondRt.rect=(1080,1920) sur Y ⇒ ClampAxis retombe sur sa clause
+            // "contenu plus petit que le viewport : reste centré" (PanPosition.y==0, confirmé par
+            // l'assertion expUpperY ci-dessus qui passe déjà) ⇒ le FOND seul laisse 240px de bandes
+            // NUES en haut ET en bas (fc0.y=240, fc2.y=2160 contre vc0.y=0, vc2.y=2400 — mesuré).
+            // Or c'est EXACTEMENT le cas que JUGE-D2 a fermé avec DistrictSceneBackdrop (voir son
+            // commentaire de tête, DistrictInteriorScreenController.cs:64-82 : "à toute résolution, y
+            // compris au(x) palier(s) de dézoom... qui peut laisser voir au-delà du fond sur l'axe non
+            // contraignant") : le backdrop est un FRÈRE du fond sous DistrictScene, Stretch(0,0) — il
+            // subit le MÊME pan/zoom, mais sa taille LOCALE est celle de DistrictScene (== rootRt, pas
+            // fondRt). MESURÉ (même run) : bc0=(0,0) bc2=(1080,2400), IDENTIQUE (0 d'écart) à
+            // vc0/vc2 — le backdrop couvre le viewport EXACTEMENT là où le fond ne le peut plus. La
+            // propriété "aucun vide VISIBLE" reste donc vraie ; seul l'OBJET qui la porte a changé —
+            // ce n'est plus une régression du pivot, c'est le mécanisme JUGE-D2 qui fait exactement
+            // son travail. On garde fc/vc pour la borne PanPosition ci-dessus (toujours dérivée du
+            // fond, R9.3 — un seul calcul de bornage) et on bascule la preuve géométrique sur bc.
+            Vector3[] bc = new Vector3[4]; backdropRt.GetWorldCorners(bc);
             Vector3[] vc = new Vector3[4]; rootRt.GetWorldCorners(vc);
-            Assert.LessOrEqual(fc[0].y, vc[0].y + 0.5f, "nav-district-F1 — aucun vide en BAS (fond couvre le viewport)");
-            Assert.GreaterOrEqual(fc[2].y, vc[2].y - 0.5f, "nav-district-F1 — aucun vide en HAUT");
+            Assert.LessOrEqual(bc[0].y, vc[0].y + 0.5f, "nav-district-F1 — aucun vide en BAS (le backdrop couvre le viewport)");
+            Assert.GreaterOrEqual(bc[2].y, vc[2].y - 0.5f, "nav-district-F1 — aucun vide en HAUT (le backdrop couvre le viewport)");
 
             nav.PanBy(new Vector2(-2_000_000f, -2_000_000f));
             float expLowerX = -expUpperX, expLowerY = -expUpperY;
             Assert.AreEqual(expLowerX, nav.PanPosition.x, 0.05f, "nav-district-F1 — borne basse X, symétrique");
             Assert.AreEqual(expLowerY, nav.PanPosition.y, 0.05f, "nav-district-F1 — borne basse Y, symétrique");
-            fondRt.GetWorldCorners(fc); rootRt.GetWorldCorners(vc);
-            Assert.LessOrEqual(fc[0].y, vc[0].y + 0.5f, "nav-district-F1 — aucun vide en BAS, l'autre extrémité");
-            Assert.GreaterOrEqual(fc[2].y, vc[2].y - 0.5f, "nav-district-F1 — aucun vide en HAUT, l'autre extrémité");
+            backdropRt.GetWorldCorners(bc); rootRt.GetWorldCorners(vc);
+            Assert.LessOrEqual(bc[0].y, vc[0].y + 0.5f, "nav-district-F1 — aucun vide en BAS, l'autre extrémité (backdrop)");
+            Assert.GreaterOrEqual(bc[2].y, vc[2].y - 0.5f, "nav-district-F1 — aucun vide en HAUT, l'autre extrémité (backdrop)");
         }
 
         // ── nav-district-F2 (livrable 5b) — bit-exactité à l'échelle de référence ENCORE vraie ──
