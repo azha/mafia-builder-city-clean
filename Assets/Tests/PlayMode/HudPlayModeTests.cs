@@ -167,23 +167,73 @@ namespace MafiaCleanCity.Shell.Tests
 
         // ── hud-F2 — l'aiguille discrimine, STRICTEMENT (M1) ────────────────────────────
 
-        // M1 (hud-session-arbitrages-design.md §3) — l'ancienne version assertait "4 valeurs
-        // distinctes", ce qu'une aiguille INVERSÉE (BURNING à gauche, COLD à droite) satisferait
-        // tout autant qu'une aiguille correcte. La propriété est l'ORDRE, en prose dans
-        // `HeatBucketResolver.cs` : « COLD à gauche, BURNING à droite » — suite STRICTEMENT
-        // croissante des 4 valeurs RÉELLES. Monde dégénéré : une suite croissante par PALIERS
-        // CONSTANTS satisferait un simple `<=`, d'où le strict (`Assert.Less`).
+        // ⛔⛔ RÉÉCRITE LE 2026-08-21 — CETTE GARDE A LAISSÉ PASSER UNE AIGUILLE INVERSÉE, ET SON
+        // COMMENTAIRE D'ORIGINE NOMMAIT EXACTEMENT CE DÉFAUT.
+        //
+        // Elle disait ceci, et c'était déjà un durcissement : « l'ancienne version assertait 4
+        // valeurs distinctes, ce qu'une aiguille INVERSÉE (BURNING à gauche, COLD à droite)
+        // satisferait tout autant qu'une aiguille correcte. La propriété est l'ORDRE. » Le monde
+        // dégénéré était donc nommé, et le durcissement l'a quand même manqué — parce que
+        // « strictement croissant » est une propriété de la SUITE DE NOMBRES, et l'inversion est une
+        // propriété de l'ÉCRAN. `-60 < -20 < 20 < 60` est strictement croissant ; c'était la valeur
+        // livrée ; et elle mettait COLD à DROITE, dans l'arc rouge.
+        //
+        // ⇒ Cette version ne regarde plus les nombres : elle applique la rotation à un
+        // RectTransform aux dimensions EXACTES de production et mesure où le BOUT atterrit. Aucune
+        // convention de signe ne peut plus la satisfaire par accident, parce qu'elle ne lit plus le
+        // signe. C'est la troisième fois aujourd'hui qu'une garde de FORME est remplacée par une
+        // garde d'EFFET pour la même raison.
         [Test]
-        public void HudF2_NeedleAngleResolver_StrictlyIncreasing_ColdToBurning_PureFunction_NoNetwork()
+        public void HudF2_BoutDeLAiguille_VaDeGaucheADroite_QuandLaChaleurMonte_MesureALEcran()
         {
-            float cold = HeatBucketResolver.NeedleAngleDegrees(HeatBucketResolver.Rank.Cold);
-            float warm = HeatBucketResolver.NeedleAngleDegrees(HeatBucketResolver.Rank.Warm);
-            float hot = HeatBucketResolver.NeedleAngleDegrees(HeatBucketResolver.Rank.Hot);
-            float burning = HeatBucketResolver.NeedleAngleDegrees(HeatBucketResolver.Rank.Burning);
+            var ranks = new[]
+            {
+                HeatBucketResolver.Rank.Cold, HeatBucketResolver.Rank.Warm,
+                HeatBucketResolver.Rank.Hot, HeatBucketResolver.Rank.Burning,
+            };
 
-            Assert.Less(cold, warm, $"COLD ({cold}) < WARM ({warm}) — croissance STRICTE, pas seulement distinction");
-            Assert.Less(warm, hot, $"WARM ({warm}) < HOT ({hot})");
-            Assert.Less(hot, burning, $"HOT ({hot}) < BURNING ({burning})");
+            var canvasGo = new GameObject("HudF2_Canvas", typeof(Canvas));
+            canvasGo.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
+            var needleGo = new GameObject("HudF2_Needle", typeof(RectTransform));
+            needleGo.transform.SetParent(canvasGo.transform, false);
+            var rt = (RectTransform)needleGo.transform;
+            // REUSE des dimensions de PRODUCTION (TopBarController.cs:837-840). Les recopier ailleurs
+            // ferait de ce test une mesure d'une aiguille imaginaire.
+            rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f);
+            rt.pivot = new Vector2(0.5f, 0f);
+            rt.sizeDelta = new Vector2(1.5f, 13f);
+            rt.anchoredPosition = new Vector2(0f, 5f);
+
+            var xs = new float[ranks.Length];
+            var coins = new Vector3[4];
+            try
+            {
+                for (int i = 0; i < ranks.Length; i++)
+                {
+                    rt.localEulerAngles = new Vector3(0f, 0f, HeatBucketResolver.NeedleAngleDegrees(ranks[i]));
+                    Canvas.ForceUpdateCanvases();
+                    rt.GetWorldCorners(coins);
+                    Vector3 bout = (coins[1] + coins[2]) * 0.5f;   // milieu du bord HAUT = le bout
+                    xs[i] = bout.x - rt.position.x;                 // écart signé au pivot
+                }
+            }
+            finally { Object.DestroyImmediate(canvasGo); }
+
+            // Anti-vacuité D'ABORD : une aiguille de longueur nulle, ou une rotation jamais
+            // appliquée, donnerait quatre écarts nuls — et toutes les comparaisons ci-dessous
+            // seraient satisfaites « à vide » par des égalités. On exige donc une amplitude RÉELLE.
+            float amplitude = Mathf.Max(Mathf.Abs(xs[0]), Mathf.Abs(xs[3]));
+            Assert.Greater(amplitude, 2f,
+                $"anti-vacuité — le bout doit VRAIMENT se déplacer (amplitude mesurée {amplitude:F2}px). " +
+                "Sans ça, quatre zéros satisferaient l'ordre sans qu'aucune aiguille ne bouge.");
+
+            Assert.Less(xs[0], 0f, $"COLD doit pointer à GAUCHE du pivot (écart mesuré {xs[0]:F2}px) — " +
+                "c'est le côté où `TopBarController` peint l'arc froid");
+            Assert.Greater(xs[3], 0f, $"BURNING doit pointer à DROITE (écart mesuré {xs[3]:F2}px) — " +
+                "le côté de `ArcHot` (`Origin180.Right`, couverture mesurée ≈[7°,91°])");
+            Assert.Less(xs[0], xs[1], $"COLD ({xs[0]:F2}) plus à gauche que WARM ({xs[1]:F2})");
+            Assert.Less(xs[1], xs[2], $"WARM ({xs[1]:F2}) plus à gauche que HOT ({xs[2]:F2})");
+            Assert.Less(xs[2], xs[3], $"HOT ({xs[2]:F2}) plus à gauche que BURNING ({xs[3]:F2})");
         }
 
         // ── M2 — le détecteur est un TEST, pas le compilateur ───────────────────────────

@@ -130,13 +130,31 @@ namespace MafiaCleanCity.Shell
             }
         }
 
-        // §6.4 / hud-F2 — 4 angles DISTINCTS et STRICTEMENT CROISÉS (COLD < WARM < HOT < BURNING —
-        // M1, hud-session-arbitrages-design.md §3 : une suite croissante par PALIERS CONSTANTS
-        // satisferait une simple distinction ou une monotonie non stricte ; ici l'ordre lui-même est
-        // la propriété). Fonction PURE, hors réseau — directement testable sans UI ni requête. Un
-        // balayage -60°..+60° (COLD à gauche, BURNING à droite) — le juge de ce chunk est fonctionnel
-        // (§0 : le pixel-perfect du HUD vient avec les écrans doctrine, #24) : seule l'ORDRE/la
-        // DISTINCTION des 4 arrêts compte ici, pas leur valeur absolue.
+        // §6.4 / hud-F2 — l'angle de rotation Z de l'aiguille, par rang.
+        //
+        // ⛔⛔ SIGNE CORRIGÉ LE 2026-08-21 — L'AIGUILLE ÉTAIT INVERSÉE ET LE HUD MENTAIT.
+        // Les valeurs étaient `Cold=-60 … Burning=+60`, et la prose de ce bloc affirmait
+        // « COLD à gauche, BURNING à droite ». La MESURE dit l'inverse : l'aiguille a son pivot en
+        // bas (`TopBarController.cs:838`, `pivot=(0.5,0)`) et pointe vers le HAUT au repos ; sous la
+        // rotation Z d'Unity (positif = ANTIHORAIRE à l'écran), le bout se retrouve à
+        //     Z=-60 → 30° (DROITE) · Z=-20 → 70° (DROITE) · Z=+20 → 110° (GAUCHE) · Z=+60 → 150° (GAUCHE)
+        // (mesuré sur un RectTransform réel aux dimensions de production, `GetWorldCorners`).
+        // Or l'arc CHAUD est peint à DROITE : `TopBarController.cs:768-769` pose `ArcHot` en
+        // `Origin180.Right`, et le commentaire qui l'accompagne a mesuré sa couverture réelle à
+        // ≈[7°,91°]. ⇒ `Cold` pointait dans le rouge et `Burning` dans le teal, sur les quatre rangs.
+        //
+        // ★★ ET AUCUNE GARDE NE POUVAIT LE VOIR, parce que les deux qui existaient portaient sur les
+        // NOMBRES et non sur l'ÉCRAN : `M2` vérifie que les 4 valeurs sont distinctes (une inversion
+        // les garde distinctes) et `hud-F2` qu'elles sont strictement croissantes (`-60 < -20 < 20 <
+        // 60` l'est autant que l'inverse). Le fichier de test le dit lui-même : il avait DÉJÀ été
+        // durci une fois, de « distinctes » vers « croissantes », en nommant exactement le monde
+        // dégénéré « une aiguille INVERSÉE » — et le durcissement a raté sa cible, parce que
+        // « croissant » est une propriété de la SUITE, pas du CÔTÉ. La garde qui mord est celle qui
+        // mesure la position du BOUT à l'écran (hud-F2 réécrite) et celle qui échantillonne la
+        // COULEUR DE L'ARC sous ce bout (hud-F2b) — voir `HudPlayModeTests.cs`.
+        //
+        // Fonction PURE, hors réseau. Balayage +60°..-60° : COLD À GAUCHE, BURNING À DROITE — et
+        // c'est désormais MESURÉ, pas affirmé.
         //
         // M2 — scindée en `(Rank)` + surcharge `(string)` : le détecteur (`HudPlayModeTests.cs`)
         // énumère `Enum.GetValues(typeof(Rank))` et appelle la forme `(Rank)` directement, pour que
@@ -145,10 +163,10 @@ namespace MafiaCleanCity.Shell
         {
             switch (rank)
             {
-                case Rank.Cold: return -60f;
-                case Rank.Warm: return -20f;
-                case Rank.Hot: return 20f;
-                case Rank.Burning: return 60f;
+                case Rank.Cold: return 60f;      // Z=+60 ⇒ bout à 150° ⇒ GAUCHE (teal)
+                case Rank.Warm: return 20f;      // Z=+20 ⇒ 110° ⇒ gauche du vertical
+                case Rank.Hot: return -20f;      // Z=-20 ⇒  70° ⇒ droite du vertical
+                case Rank.Burning: return -60f;  // Z=-60 ⇒  30° ⇒ DROITE (rouge/ambre)
                 case Rank.Unknown: return 0f; // repli EXPLICITE — distinct des 4 valeurs réelles (aucune n'est nulle)
                 default: throw new ArgumentOutOfRangeException(nameof(rank), rank,
                     "HeatBucketResolver.NeedleAngleDegrees : membre de Rank non résolu — un 5e membre " +
