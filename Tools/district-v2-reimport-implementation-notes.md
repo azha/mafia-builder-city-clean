@@ -239,3 +239,15 @@ Tous les tests district/navigation/nocturne (`DistrictInterior*`, `DistrictNight
    avec le design. Mesure indépendante (marge bas v1→v2) montre une amélioration, pas une
    régression. Précédent direct : laverie round 6, même classe de risque, même réponse (script
    externe ponctuel, pas de falsifiable permanent, pas de changement de mécanisme).
+
+
+## ⛔ FILE D'ATTENTE — à traiter APRÈS convergence du HUD (collision de fichiers)
+1. **Fuite de la liste des districts** : après `EnterDistrict`, la liste `CityMapController`
+   reste visible en marge gauche (x<100). Trou de nettoyage côté `AppShell.UnmountCurrentTenant`
+   ou parentage hors `ContentSlot`. **Aucune falsifiable ne le voit** — la garde à écrire est
+   structurelle : après un montage de locataire, AUCUN objet d'un locataire précédent ne survit
+   sous le Canvas (compte d'objets par type, ou empreinte de racine). Découvert par capture le
+   2026-08-21, consigné, non corrigé (le Shell était en édition parallèle).
+2. Vérifier au même moment que les 4 bâtiments joueur J0 apparaissent bien sur le fond v2
+   (la capture de réimport ne les montrait pas dans le cadre — à confirmer : hors champ, ou
+   non rendus ?).
