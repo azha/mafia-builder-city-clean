@@ -258,7 +258,16 @@ namespace MafiaCleanCity.Shell
             if (string.IsNullOrEmpty(t))
             {
                 Debug.LogError($"[AppShell] sign-in failed: {authErr}");
-                ActivateTab(Tab.Home); // repli : le locataire signera lui-même
+                // IMPORTANT-1 (verdict ⊥ HUD v3.1) — fermé en PRODUCTION, pas seulement côté tests :
+                // la TabBar est cliquable dès EnsureInitialized (Start()), donc un joueur peut avoir
+                // DÉJÀ touché un autre onglet pendant les 2-4 allers-retours réseau de cette
+                // acquisition. Un `ActivateTab(Tab.Home)` inconditionnel ici le RAMÈNERAIT de force,
+                // détruisant le locataire qu'il vient d'ouvrir — motif 6/6 pour la 2e fois dans ce
+                // chunk (round 1 : course à 2 comptes fermée par isolation ; round 2 : montage tardif
+                // fermé par attente ; les deux fois le mécanisme restait vivant EN PRODUCTION, fermé
+                // seulement côté test). Le remède est le sentinel `(Tab)(-1)` (`CurrentTab`, "a named
+                // state, not a magic default") : ne forcer Home que si RIEN n'a encore été activé.
+                if (CurrentTab == (Tab)(-1)) ActivateTab(Tab.Home); // repli : le locataire signera lui-même
                 yield break;
             }
 
@@ -286,7 +295,15 @@ namespace MafiaCleanCity.Shell
             // réseau SUPPLÉMENTAIRE — la placer AVANT ce montage aurait laissé une fenêtre où
             // `TopBar.Loaded==true` mais `MountedTenantGameObject==null` (rougi une première fois,
             // corrigé ici).
-            ActivateTab(Tab.Home);
+            // IMPORTANT-1 (verdict ⊥ HUD v3.1) — MÊME garde que la branche d'échec ci-dessus : la
+            // TabBar est cliquable dès `Start()` (`EnsureInitialized`), donc les 2-4 allers-retours
+            // réseau de CETTE branche (signin + session/open + TopBar.Load) laissent, EN
+            // PRODUCTION, une fenêtre réelle où un joueur peut avoir déjà touché un AUTRE onglet.
+            // `ActivateTab(Tab.Home)` inconditionnel le ramènerait de force et détruirait le
+            // locataire qu'il vient d'ouvrir. `TopBar.Load` ci-dessus reste inconditionnel (le
+            // TopBar est persistant, affiche l'identité du shell quel que soit l'onglet actif) —
+            // seul le MONTAGE forcé de Home est gardé par le sentinel.
+            if (CurrentTab == (Tab)(-1)) ActivateTab(Tab.Home);
 
             // §6.2, AMENDÉ (B1, Deviation) — le chunk 5 sondait CONDITIONNELLEMENT ("seulement si le
             // tenant monté n'est pas Dashboard"), un mécanisme conçu pour départager DEUX locataires

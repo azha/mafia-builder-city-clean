@@ -123,4 +123,88 @@ ré-invoquer via `Tools/seed_operational_demo.mjs` échoue sur un plafond de jeu
 (`STRUCTURAL_CAP_EXHAUSTED`, "retry next session") — pas un bug de ce lot, juste un compte déjà à
 l'état voulu.
 
+⚠️ **CONSÉQUENCE (MINORS, verdict ⊥ closing) — pas seulement le constat.** Cette capture n'est PAS
+reproductible aujourd'hui : `operational_demo` est actuellement le SEUL compte connu dont l'état
+(BURNING) satisfait I1, et le mécanisme qui l'y a amené (le seeder) est actuellement cassé pour ce
+compte par le plafond de session. Si cet état se perd (la heat décroît naturellement avec le temps
+in-game côté back, ou un futur reset de stack/DB efface la ville) **personne ne peut regénérer cette
+preuve avant que le seeder soit corrigé pour gérer `STRUCTURAL_CAP_EXHAUSTED`** (ex. ouvrir une
+session fraîche — `POST /v1/session/open` — avant sa tentative de conversion, ce que le script
+n'appelle actuellement JAMAIS) **ou qu'une nouvelle fenêtre de session s'ouvre naturellement**. Tant
+que ce correctif n'existe pas, `hud_topbar_burning_v1.png` reste la SEULE preuve I1 valide de ce
+dépôt — la traiter comme un artefact ponctuel à préserver, pas comme quelque chose de re-dérivable à
+la demande. Hors périmètre de ce lot (seeder Node.js, pas du code HUD) — consigné, pas corrigé.
+
+## Quatre gestes de clôture (verdict ⊥, 2026-08-21) — APPROVED, 0 BLOCKING
+
+Le gate a validé HUD v3.1 avec 0 BLOCKING et demandé 4 gestes de clôture, aucun bloquant. Tous
+faits, W3U2 68/68 (deux fois) + W3U1 37/37 (deux fois) après.
+
+### IMPORTANT-1 — la course de montage tardif fermée EN PRODUCTION, pas seulement côté tests
+
+`AcquireSessionThenActivateHome` appelait `ActivateTab(Tab.Home)` INCONDITIONNELLEMENT (les deux
+branches, succès et échec) après 2-4 allers-retours réseau, alors que la TabBar est cliquable dès
+`Start()` (`EnsureInitialized`). Un joueur qui touche « City » PENDANT l'acquisition se faisait
+ramener de force sur Home, son locataire détruit — motif 6/6 pour la 2e fois dans ce chunk (round 1 :
+course à 2 comptes fermée par isolation ; round 2 : montage tardif fermé par attente ; les deux fois
+le mécanisme restait vivant EN PRODUCTION). Fermé cette fois avec le sentinel `(Tab)(-1)`
+(`AppShell.cs:60`, « a named state, not a magic default ») : les DEUX appels `ActivateTab(Tab.Home)`
+ne s'exécutent que si `CurrentTab == (Tab)(-1)` — rien n'a encore été activé. `TopBar.Load` reste
+inconditionnel (le TopBar est persistant, affiche l'identité du shell quel que soit l'onglet actif) ;
+seul le MONTAGE forcé de Home est gardé.
+
+Falsifiable neuve : `AppShellPlayModeTests.LateHomeActivation_DoesNotOverride_PlayerNavigationDuringAcquisition`
+— reproduction DÉTERMINISTE (pas dépendante du minutage réseau réel) : `ActivateTab(City)` appelé
+AVANT même que `Start()` ne tourne (fenêtre synchrone même-frame que `AddComponent<AppShell>()`),
+puis l'acquisition asynchrone du shell tourne à son terme — `CurrentTab` doit rester `City`,
+`MountedTenantType` doit rester `CityMapController`.
+
+### IMPORTANT-2 — l'angle mort de la garde F2, fermé par un second motif + contrôle positif
+
+Le premier motif (accès direct aux 3 tokens `DesignTokens.Current.accentXXX`) a un angle mort
+MESURÉ : 8 des 12 fichiers de son allowlist définissent des ALIAS locaux (`AccentMild =>
+DesignTokens.Current.accentSuccess`). Une correspondance bucket→apparence DIVERGENTE écrite VIA
+l'alias (`b == "HOT" ? AccentSevere : AccentMild`) ajoute ZÉRO occurrence du premier motif — F2
+resterait VERTE à travers la classe exacte qu'elle existe pour attraper.
+
+Second motif ajouté : les 4 littéraux de bucket (`"COLD"`/`"WARM"`/`"HOT"`/`"BURNING"`), MÊME
+mécanisme (égalité d'ensembles contre allowlist mesurée : **4 fichiers, 24 occurrences**).
+`BuildingCardController.cs` (2 occurrences, "HOT" seulement) est un **faux positif documenté** :
+sa bande `temperature_status` (Crick cold-chain, `OPTIMAL_COLD|MODERATE|HOT`) est un domaine
+ENTIÈREMENT différent qui partage par coïncidence le mot anglais "HOT" — vérifié : zéro occurrence
+de "COLD"/"WARM"/"BURNING" dans ce fichier (les 3 littéraux les moins ambigus). Laissé sur
+l'allowlist (pas de motif rétréci à 3 littéraux) : le total exact reste le détecteur, et une VRAIE
+correspondance ajoutée dans ce fichier ferait quand même diverger le compte.
+
+Contrôle positif ajouté (`Scan_DetectsAliasedBucketColorMapping_ViaBucketLiteralMotif`, 3 fixtures) :
+prouve que le second motif attrape la forme aliasée (`b == "HOT" ? AccentSevere : AccentMild`,
+`case "BURNING": return AccentSevere;`) — et qu'une définition d'alias SEULE (sans littéral de
+bucket) ne compte pas comme une correspondance (0 attendu).
+
+Revendication corrigée : le commentaire disait « aucune correspondance bucket→apparence hors du
+résolveur » (absolu). Corrigé en « aucune correspondance DÉTECTABLE PAR CES DEUX MOTIFS » — ni l'un
+ni l'autre ne voit un hex en dur ou une 3e forme d'indirection ; ce n'est pas une preuve
+universelle, bornée comme `Scan_DetectsAllThreeSyntacticForms` l'est à SES 3 formes.
+
+### hud-F7 — une ligne, CityMapController.Token == shell.Token à chaque palier City
+
+Ajoutée : `CityMapController` est le SEUL locataire dont le repli ressusciterait la course à 2
+comptes AU NIVEAU TENANT (son propre signin démo, citymap_demo, s'il n'était pas injecté) — ni
+hud-F1 (Dashboard) ni le reste de hud-F7 (qui ne lit que le TopBar) ne le voyaient. Vérifié
+maintenant à CHAQUE palier City, pas seulement au premier.
+
+### MINORS
+
+- **nav-F3** : le commentaire disait la fenêtre "avant authentification" INCHANGÉE. Précisé : le
+  MÉCANISME est inchangé, le STATUT ne l'est pas — c'était le chemin NOMINAL avant B1 (CityMap
+  signait toujours lui-même), c'est devenu le chemin DÉGRADÉ sous B1 (atteignable SEULEMENT en
+  provoquant un échec délibéré du shell) — un joueur réel ne la traverse plus jamais.
+- **Capture BURNING** : voir § CONSÉQUENCE ci-dessus (déplacée à côté du constat, pas seulement
+  après).
+- **hud-F6** : précision ajoutée — `HeatAccent` ET le manomètre consomment tous deux
+  `SeverityColor` désormais, donc l'égalité surface-contre-surface est un témoin FAIBLE (un bug
+  DANS le résolveur partagé ferait dériver les deux surfaces ENSEMBLE, identiquement, et cette
+  égalité resterait verte). **L'assertion porteuse est l'égalité aux 3 hex canon** — le seul oracle
+  réellement indépendant des deux surfaces.
+
 SHA : voir le commit qui accompagne ces notes (`git log -1 --format=%H`).

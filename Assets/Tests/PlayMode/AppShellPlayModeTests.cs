@@ -162,5 +162,42 @@ namespace MafiaCleanCity.Shell.Tests
             Assert.AreEqual(shell.ShellCanvas.transform, shell.TopBarSlot.parent, "TopBarSlot still parented under the Canvas");
             Assert.AreEqual(shell.ShellCanvas.transform, shell.TabBarRoot.parent, "TabBarRoot still parented under the Canvas");
         }
+
+        // IMPORTANT-1 (verdict ⊥ HUD v3.1, hud-session-arbitrages-design.md §1.2/B1) — un joueur qui
+        // touche un AUTRE onglet pendant les 2-4 allers-retours réseau d'`AcquireSessionThenActivateHome`
+        // (la TabBar est cliquable dès `Start()`) ne doit PAS être ramené de force sur Home quand
+        // cette acquisition se termine, son locataire détruit. Fermé par le sentinel `(Tab)(-1)` de
+        // `CurrentTab` : `ActivateTab(Tab.Home)` (les DEUX branches, succès et échec) ne s'exécute
+        // que si RIEN n'a encore été activé.
+        //
+        // Reproduction DÉTERMINISTE (pas dépendante du minutage réseau réel) : `ActivateTab(City)`
+        // appelé AVANT même que `Start()` ne tourne (fenêtre synchrone même-frame que
+        // `AddComponent<AppShell>()`) pose `CurrentTab=City` avant que l'acquisition asynchrone
+        // n'ait la moindre chance de démarrer — exactement la condition que le sentinel doit
+        // respecter, quel que soit le moment RÉEL où le joueur aurait tapé pendant la fenêtre réseau.
+        [UnityTest]
+        public IEnumerator LateHomeActivation_DoesNotOverride_PlayerNavigationDuringAcquisition()
+        {
+            ExpectTenantOwnDemoAuthNoise();
+            shellGo = new GameObject("AppShell");
+            shell = shellGo.AddComponent<AppShell>();
+            shell.ActivateTab(AppShell.Tab.City); // AVANT Start() — le joueur "a déjà touché City"
+            Assert.AreEqual(AppShell.Tab.City, shell.CurrentTab, "prémisse : City est bien actif avant toute acquisition");
+
+            // Laisse l'acquisition de session du shell (Start() -> AcquireSessionThenActivateHome)
+            // tourner à son terme (signin démo -> échec ou succès -> ActivateTab(Home) SEULEMENT si
+            // le sentinel le permet).
+            float elapsed = 0f;
+            while (elapsed < 15f)
+            {
+                elapsed += Time.deltaTime;
+                yield return null;
+            }
+
+            Assert.AreEqual(AppShell.Tab.City, shell.CurrentTab,
+                "le montage tardif de Home NE DOIT PAS écraser la navigation du joueur — la course fermée en production, pas seulement en test");
+            Assert.AreEqual(typeof(CityMapController), shell.MountedTenantType,
+                "le locataire City doit rester monté — un ActivateTab(Home) forcé l'aurait détruit");
+        }
     }
 }

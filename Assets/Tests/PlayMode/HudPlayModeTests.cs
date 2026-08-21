@@ -312,6 +312,14 @@ namespace MafiaCleanCity.Shell.Tests
         // ordre). Les deux DOIVENT être égales entre elles ET aux 3 hex canon EXACTS
         // (`global_conventions_core.md:50-52`), plus la monotonie NON STRICTE
         // Severity(COLD) ≤ WARM ≤ HOT ≤ BURNING (le collapse 4→3 EST canon, §2.1).
+        // ⚠️ PRÉCISION (verdict ⊥) — `HeatAccent` ET le manomètre consomment TOUS DEUX
+        // `HeatBucketResolver.SeverityColor` désormais (§2.4 : un seul résolveur) : l'égalité
+        // SURFACE-CONTRE-SURFACE ci-dessus est donc un témoin FAIBLE — les deux surfaces
+        // partagent la MÊME source, un bug DANS `SeverityColor` lui-même les ferait dériver
+        // ENSEMBLE, identiquement, et cette égalité resterait VERTE. **L'assertion PORTEUSE est
+        // l'égalité aux 3 hex canon** — le SEUL oracle réellement INDÉPENDANT des deux surfaces (il
+        // vient de `global_conventions_core.md`, pas du code). Le dire ici évite de croire qu'on
+        // tient deux témoins quand on en tient un (le hex canon) plus un étalon partagé.
         [UnityTest]
         public IEnumerator HudF6_NoDrift_DashboardAccentAndTopBarZoneColor_EqualEachOtherAndCanonHex_NonStrictMonotonicity()
         {
@@ -431,6 +439,21 @@ namespace MafiaCleanCity.Shell.Tests
                 Assert.AreEqual(firstCallsign, shell.TopBar.CurrentMe.handle,
                     $"palier {i} : le callsign doit rester CELUI DU PREMIER palier — un callsign " +
                     "différent prouverait qu'un AUTRE compte a pris la main (la course que B1 ferme)");
+
+                // (verdict ⊥ HUD v3.1, geste 3) — CityMapController est le SEUL locataire dont le
+                // repli ressusciterait la course à 2 comptes AU NIVEAU TENANT (son propre signin
+                // démo, citymap_demo, si jamais il n'était PAS injecté) — ni hud-F1 (Dashboard) ni
+                // le reste de CE test (qui ne lit que le TopBar) ne le verraient. Vérifié à CHAQUE
+                // palier City : le jeton du locataire monté == EXACTEMENT celui du shell.
+                if (alternation[i] == AppShell.Tab.City)
+                {
+                    var cityMapTenant = shell.MountedTenantGameObject != null
+                        ? shell.MountedTenantGameObject.GetComponent<CityMapController>() : null;
+                    Assert.IsNotNull(cityMapTenant, $"palier {i} : City doit monter CityMapController");
+                    Assert.AreEqual(shell.Token, cityMapTenant.Token,
+                        $"palier {i} : CityMapController doit porter EXACTEMENT le jeton du shell — " +
+                        "injecté, jamais re-signé avec citymap_demo (le repli ressusciterait la course à 2 comptes)");
+                }
             }
 
             Assert.AreEqual(operationalCallsign, firstCallsign,
@@ -444,15 +467,26 @@ namespace MafiaCleanCity.Shell.Tests
                 "le cash du TopBar (dernier palier) == le wallet lu indépendamment POUR ce callsign-là");
         }
 
-        // ── F2 (IMPORTANT) — aucune correspondance bucket→apparence hors du résolveur ──────
+        // ── F2 (IMPORTANT) — aucune correspondance bucket→apparence DÉTECTABLE hors du résolveur ──
 
         // (hud-session-arbitrages-design.md §3, F2) — REUSE du patron
         // `ChromeTabAccentAllowlistPlayModeTests` (égalité d'ENSEMBLES contre une allowlist MESURÉE,
-        // jamais un `contains`). Le motif porte sur l'ACCÈS aux 3 tokens de sévérité — leur usage
-        // LÉGITIME hors heat (bandes wallet, etc.) reste sur l'allowlist ; la régression que CE
-        // chunk fermait (TopBarController.cs accédait ces tokens DIRECTEMENT pour peindre le
-        // manomètre) se voit à SA DISPARITION de l'ensemble — vérifiée explicitement ci-dessous,
-        // pas seulement par l'égalité globale.
+        // jamais un `contains`). DEUX motifs, PAS un seul (IMPORTANT-2, verdict ⊥) : le premier
+        // (accès direct aux 3 tokens de sévérité) a un ANGLE MORT mesuré — 8 des 12 fichiers de son
+        // allowlist définissent des ALIAS locaux (`private static Color AccentMild =>
+        // DesignTokens.Current.accentSuccess;`) ; une correspondance bucket→apparence DIVERGENTE
+        // écrite VIA l'alias (`b == "HOT" ? AccentSevere : AccentMild`) ajoute ZÉRO occurrence du
+        // premier motif — total inchangé, ensemble inchangé, F2 resterait VERTE à travers la classe
+        // exacte qu'elle existe pour attraper. Le second motif (littéraux de bucket "COLD"/"WARM"/
+        // "HOT"/"BURNING") ferme cet angle mort : une correspondance ALIASÉE référence toujours AU
+        // MOINS un littéral de bucket, même quand elle ne touche aucun token `DesignTokens` en
+        // clair. Portée EXPLICITE de la revendication (le commentaire du chunk précédent
+        // sur-affirmait) : ces DEUX motifs ne voient PAS une correspondance qui n'utiliserait NI
+        // l'un NI l'autre (un hex en dur, une 3e indirection) — ce n'est PAS une preuve universelle,
+        // c'est une preuve bornée aux DEUX formes mesurées ici, comme
+        // `Scan_DetectsAllThreeSyntacticForms` l'est aux 3 formes qu'IL mesure.
+
+        // ── motif 1 — accès direct aux tokens de sévérité ──────────────────────────────────
         private static readonly string[] SeverityTokenAccesses =
         {
             "DesignTokens.Current.accentSuccess",
@@ -460,29 +494,29 @@ namespace MafiaCleanCity.Shell.Tests
             "DesignTokens.Current.accentDanger",
         };
 
-        private static int CountSeverityTokenAccesses(string text)
+        private static int CountLiteralOccurrences(string text, string[] literals)
         {
             if (string.IsNullOrEmpty(text)) return 0;
             int count = 0;
-            foreach (string token in SeverityTokenAccesses)
+            foreach (string lit in literals)
             {
                 int idx = 0;
-                while ((idx = text.IndexOf(token, idx, System.StringComparison.Ordinal)) != -1)
+                while ((idx = text.IndexOf(lit, idx, System.StringComparison.Ordinal)) != -1)
                 {
                     count++;
-                    idx += token.Length;
+                    idx += lit.Length;
                 }
             }
             return count;
         }
 
-        private static (int total, HashSet<string> files) ScanSeverityTokenAccesses(string rootDirectory)
+        private static (int total, HashSet<string> files) ScanLiteralOccurrences(string rootDirectory, string[] literals)
         {
             int total = 0;
             var files = new HashSet<string>();
             foreach (string path in Directory.GetFiles(rootDirectory, "*.cs", SearchOption.AllDirectories))
             {
-                int hits = CountSeverityTokenAccesses(File.ReadAllText(path));
+                int hits = CountLiteralOccurrences(File.ReadAllText(path), literals);
                 if (hits <= 0) continue;
                 total += hits;
                 string rel = path.Substring(rootDirectory.Length)
@@ -512,6 +546,27 @@ namespace MafiaCleanCity.Shell.Tests
         };
         private const int ExpectedSeverityTokenTotal = 32;
 
+        // ── motif 2 — littéraux de bucket (ferme l'angle mort du motif 1, IMPORTANT-2) ──────
+        private static readonly string[] BucketLiterals = { "\"COLD\"", "\"WARM\"", "\"HOT\"", "\"BURNING\"" };
+
+        // Allowlist MESURÉE (script Python indépendant, même méthode que ci-dessus) — 4 fichiers,
+        // 24 occurrences. `BuildingCardController.cs` (2 occurrences, "HOT" seulement) est un FAUX
+        // POSITIF DOCUMENTÉ : sa bande `temperature_status` (Crick cold-chain, OPTIMAL_COLD|
+        // MODERATE|HOT, `TemperatureLabel`/`TemperatureGlyph`/`TemperatureAccent`) est un domaine
+        // ENTIÈREMENT DIFFÉRENT qui partage par coïncidence le mot anglais "HOT" — vérifié : ce
+        // fichier a ZÉRO occurrence de "COLD"/"WARM"/"BURNING" (les 3 littéraux les moins ambigus).
+        // Laissé SUR l'allowlist plutôt que le motif rétréci à 3 littéraux : le total exact reste le
+        // détecteur, et une VRAIE correspondance HeatBucket ajoutée dans ce fichier ferait quand
+        // même diverger le compte.
+        private static readonly HashSet<string> ExpectedBucketLiteralFiles = new HashSet<string>
+        {
+            "CityMap/WorldDtos.cs",
+            "Operational/BuildingCard/BuildingCardController.cs", // faux positif documenté — temperature_status, pas HeatBucket
+            "Operational/Dashboard/DashboardController.cs",
+            "ShellContracts/HeatBucketResolver.cs",
+        };
+        private const int ExpectedBucketLiteralTotal = 24;
+
         [Test]
         public void F2_SeverityTokenAccesses_EqualMeasuredAllowlist_TopBarControllerExcluded()
         {
@@ -519,7 +574,7 @@ namespace MafiaCleanCity.Shell.Tests
             string scriptsRoot = Path.Combine(Application.dataPath, "Scripts");
             Assert.IsTrue(Directory.Exists(scriptsRoot), $"Assets/Scripts introuvable à {scriptsRoot}");
 
-            (int total, HashSet<string> files) = ScanSeverityTokenAccesses(scriptsRoot);
+            (int total, HashSet<string> files) = ScanLiteralOccurrences(scriptsRoot, SeverityTokenAccesses);
 
             Assert.AreEqual(ExpectedSeverityTokenTotal, total,
                 $"attendu {ExpectedSeverityTokenTotal} accès aux 3 tokens de sévérité, trouvé {total} — " +
@@ -532,8 +587,43 @@ namespace MafiaCleanCity.Shell.Tests
             // DIRECTEMENT (positionnel + commentaires) — il passe désormais PAR `HeatBucketResolver`.
             Assert.IsFalse(files.Contains("Shell/TopBarController.cs"),
                 "TopBarController.cs ne doit PLUS accéder ces tokens directement — le manomètre " +
-                "passe par HeatBucketResolver.SeverityColor (F2/B2 : aucune correspondance " +
-                "bucket→apparence hors du résolveur).");
+                "passe par HeatBucketResolver.SeverityColor.");
+        }
+
+        [Test]
+        public void F2_BucketLiteralOccurrences_EqualMeasuredAllowlist()
+        {
+            Assert.IsNotEmpty(ExpectedBucketLiteralFiles);
+            string scriptsRoot = Path.Combine(Application.dataPath, "Scripts");
+            Assert.IsTrue(Directory.Exists(scriptsRoot), $"Assets/Scripts introuvable à {scriptsRoot}");
+
+            (int total, HashSet<string> files) = ScanLiteralOccurrences(scriptsRoot, BucketLiterals);
+
+            Assert.AreEqual(ExpectedBucketLiteralTotal, total,
+                $"attendu {ExpectedBucketLiteralTotal} littéraux de bucket, trouvé {total} — un " +
+                "littéral a été ajouté ou retiré (possiblement une correspondance bucket→apparence " +
+                "ALIASÉE, IMPORTANT-2) sans mettre à jour l'allowlist déclarée ci-dessus.");
+            CollectionAssert.AreEquivalent(ExpectedBucketLiteralFiles, files,
+                "l'ENSEMBLE des fichiers portant un littéral de bucket a divergé de l'allowlist mesurée.");
+        }
+
+        // Contrôle positif (IMPORTANT-2, verdict ⊥) — le motif 2 doit attraper la forme ALIASÉE que
+        // le motif 1 rate structurellement : une correspondance bucket→couleur écrite via un alias
+        // local (`AccentSevere`/`AccentMild`), jamais un accès direct à `DesignTokens.Current.*`.
+        // Mêmes fixtures dans l'esprit que `Scan_DetectsAllThreeSyntacticForms` : prouver que
+        // l'INSTRUMENT peut voir la forme qu'on lui demande de traquer, avant de lui faire confiance
+        // sur le vrai arbre source.
+        [TestCase("b == \"HOT\" ? AccentSevere : AccentMild", 1, TestName = "Forme aliasée — ternaire sur alias")]
+        [TestCase("case \"BURNING\": return AccentSevere;", 1, TestName = "Forme aliasée — switch sur alias")]
+        [TestCase("private static readonly Color AccentMild = DesignTokens.Current.accentSuccess;", 0,
+            TestName = "Définition d'alias SEULE (aucun littéral de bucket) — 0 attendu, ce n'est pas une correspondance")]
+        public void Scan_DetectsAliasedBucketColorMapping_ViaBucketLiteralMotif(string sourceLine, int expectedHits)
+        {
+            int hits = CountLiteralOccurrences(sourceLine, BucketLiterals);
+            Assert.AreEqual(expectedHits, hits,
+                $"la forme '{sourceLine}' aurait dû compter {expectedHits} littéral(aux) de bucket, " +
+                $"obtenu {hits} — le motif 2 doit voir une correspondance ALIASÉE que le motif 1 (accès " +
+                "direct aux tokens) rate structurellement.");
         }
     }
 }

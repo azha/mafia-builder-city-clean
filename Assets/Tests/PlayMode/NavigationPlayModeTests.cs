@@ -200,8 +200,13 @@ namespace MafiaCleanCity.Shell.Tests
         // Pour observer le repli AUTHENTIQUE (« rien reçu ⇒ le locataire signe lui-même »,
         // `IShellTenant.cs`), ce test pose une identité de shell délibérément INVALIDE : le signin du
         // shell échoue vite (pas de round-trip session/open), `Token` reste vide, `MountTenant<T>`
-        // n'injecte donc RIEN — CityMapController retombe sur SON PROPRE signin démo, la fenêtre
-        // avant/après que ce test a toujours testée, inchangée.
+        // n'injecte donc RIEN — CityMapController retombe sur SON PROPRE signin démo, le MÊME
+        // MÉCANISME avant/après que ce test a toujours testé. ⚠️ Précision de STATUT (verdict ⊥,
+        // MINORS) — le mécanisme est inchangé, mais son ATTEIGNABILITÉ ne l'est pas : avant B1,
+        // c'était le chemin NOMINAL (CityMapController signait TOUJOURS lui-même) ; sous B1, ce
+        // n'est plus atteignable QUE par le repli — le chemin DÉGRADÉ, exercé ici en le provoquant
+        // délibérément (identité invalide). Un joueur réel, sur une stack où le shell signe
+        // normalement, ne traverse plus jamais cette fenêtre.
         [UnityTest]
         public IEnumerator NavF3_EnterButton_ExistsDisabledWithoutToken_EnabledAfterRealAuth_SameInstance()
         {
