@@ -153,3 +153,30 @@ nom court a rendu `total: 0, passed: 0, resultState: Passed`. Il faut le **nom c
   `_UnderlayColor a: 0.5` — les valeurs du disque. ⚠️ Conséquence à connaître : cette fonte est
   **dynamique**, donc un run de tests peut salir un asset commité. Si la churn devient gênante,
   la réponse est de pré-rasteriser un jeu de glyphes fixe, pas d'ignorer le fichier.
+
+---
+
+# Mesure annexe — le vide de l'écran est DANS L'ART, pas dans l'intégration
+
+En regardant la capture entière, ce qui saute aux yeux n'est plus le titre : c'est une vaste
+**étendue grise plate** qui occupe le haut de l'écran. Avant d'en faire un défaut d'intégration,
+je l'ai mesurée des deux côtés — même instrument, même seuil de platitude (un point est « plat »
+si ses 4 voisins à 4 px sont à moins de 6 niveaux cumulés) :
+
+| | part de l'image PLATE | aplat dominant | sa part |
+|---|---|---|---|
+| **en jeu** (`vue_principale_batiments_hud.png`, zone de jeu y 90..1530) | 61,8 % | `(104,112,128)` | **18,9 %** |
+| **source Blender** (`VERGE_D_JOUR_FINAL.png`, 1080×1920) | 73,5 % | `(104,112,128)` | **19,1 %** |
+
+**Même teinte, même proportion.** L'intégration est donc FIDÈLE — elle est même un peu moins plate
+que la source (18,9 < 19,1), les bâtiments du joueur ajoutant du détail. ⇒ **Aucun travail Unity
+n'améliore ce point.** Le vide est un choix d'atelier : le haut du rendu est le sol des parcelles
+**non bâties**, et il est nu.
+
+C'est exactement la **décision DA (3) en attente de l'user** (« parcelles vides : sol nu / art de
+terrain vague / bâtiments d'ambiance qui s'effacent à la construction »), et cette mesure lui donne
+son chiffre : **près d'un cinquième de l'écran est un seul aplat**, dont 39 % dans le quadrant haut-
+droit. Tant qu'elle n'est pas tranchée, relancer des rendus serait du temps machine à refaire.
+
+★ Ce que la mesure évite : conclure « l'écran est raté » et partir chercher la faute dans le
+contrôleur. Le contrôleur fait exactement son travail.
