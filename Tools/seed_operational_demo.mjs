@@ -352,6 +352,44 @@ async function main() {
   const token = await signin();
   console.log('[op-seed] signed in (Bearer acquired)');
 
+  // ─────────────────────────── 3b. Force SESSION-LESS structural mutations (D9) ───────────────────
+  // MEASURED (2026-08-21, psql against the live dev stack): every structural mutation below
+  // (BUILDING_ACQUISITION/BUILDING_CONVERT/LIEUTENANT_RECRUIT/…) is wrapped by
+  // `StructuralDecisionGovernorService.commit` (services/game-back/src/progression/loop10/
+  // structural-decision-governor.service.ts:88-92), which caps them at
+  // `core_loops.one_decision_structural_per_session_cap` (default 1, core-loops-tunables.ts:428-431)
+  // PER REAL `gameplay_sessions` ROW — but `enforcementGate = activeSession !== null || …` (:90):
+  // the cap is enforced ONLY while the player has an ACTIVE session. A SESSION-LESS mutation still
+  // succeeds AND is audited (`session_ref: null`) — this is the governor's own documented D9
+  // "zero-regression" mode (real-estate.controller.ts:87-89's own comment names it), not a bypass.
+  // This seeder commits ~15-20 structural decisions per run (9+ operational buildings ×
+  // acquire+convert, + the lieutenant recruit, + the specialized_lab tier upgrade) — far beyond the
+  // 1/session cap, so it MUST run session-less throughout.
+  //
+  // WHY THE RESET ABOVE (`DELETE FROM player_progression_state`) DOES NOT PREVENT THIS: that DELETE
+  // wipes the COUNTER (`structural_decisions_this_session`) — a DIFFERENT table from
+  // `gameplay_sessions`. The HUD lot (b37d93e) wired AppShell's DEFAULT identity to THIS SAME
+  // account (Assets/Tests/PlayMode/HudPlayModeTests.cs:410) and calls the REAL
+  // `signin → POST /v1/session/open` on boot (:157,:243,:463) — so any HudPlayModeTests run earlier
+  // in the SAME PlayMode assembly leaves an ACTIVE `gameplay_sessions` row for this player.
+  // `findActive`/`getActiveSession` (session.repository.ts:59-67) does not check staleness — a
+  // session opened hours ago still counts as "active" — so the leftover row alone flips
+  // `enforcementGate` ON regardless of the freshly-zeroed counter, and the 2nd structural call of
+  // THIS run 409s STRUCTURAL_CAP_EXHAUSTED. MEASURED on this exact player (01a01f34-…-b75efa6e8023):
+  // 3 `gameplay_sessions` rows, the newest (576bec77-…) opened 2026-08-21 08:44 UTC, `ended_at` NULL,
+  // `structural_commits=23` accumulated across dozens of overnight seeder runs each getting exactly
+  // 1 structural call through before hitting the wall.
+  //
+  // FIX: close the session via the REAL player-facing `POST /v1/session/close` (idempotent —
+  // `{closed:false}` if none was active) — the SAME endpoint AppShell itself calls to end a play
+  // session, not a `_test`-only shortcut and not a raw-SQL bypass of `SessionClosedEvent`. This
+  // returns the player to the legitimate session-less mode BEFORE any structural call below.
+  const closeResult = await api('POST', '/v1/session/close', token, {});
+  if (closeResult.status !== 200) {
+    throw new Error(`session/close failed: HTTP ${closeResult.status} — ${JSON.stringify(closeResult.data)}`);
+  }
+  console.log(`[op-seed] session closed (closed=${closeResult.data.closed}) — structural mutations now run session-less (D9, uncapped)`);
+
   // The Nth free block in district 16 (free for THIS player — distinct blocks for distinct buildings).
   function freeBlock(offset) {
     return Number(
