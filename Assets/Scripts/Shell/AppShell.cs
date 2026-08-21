@@ -188,8 +188,15 @@ namespace MafiaCleanCity.Shell
         /// only source available in this architecture at chunk 2 (Deviation, consigned).</summary>
         public void EnterDistrict(int districtId)
         {
-            string token = null;
-            if (MountedTenantType == typeof(CityMapController) && MountedTenantGameObject != null)
+            // MESURÉ 2026-08-21 : ce jeton était pris UNIQUEMENT sur le locataire carte — donc
+            // `null` dès qu'on entre dans un district sans venir de l'onglet Ville, et la requête
+            // partait sans authentification (401 observé, écran vide sans message). Or B1 a
+            // justement établi que LE SHELL possède la session : `Token` est la source, le jeton
+            // du locataire n'est qu'un repli pour le cas où le shell n'a pas encore acquis la
+            // sienne. La décision n'était appliquée qu'à moitié.
+            string token = Token;
+            if (string.IsNullOrEmpty(token)
+                && MountedTenantType == typeof(CityMapController) && MountedTenantGameObject != null)
             {
                 CityMapController cityMap = MountedTenantGameObject.GetComponent<CityMapController>();
                 if (cityMap != null) token = cityMap.Token;
@@ -229,6 +236,20 @@ namespace MafiaCleanCity.Shell
         {
             yield return tenant.SetSession(token, districtId);
             if (tenant == null) yield break; // torn down mid-fetch (e.g. ExitToCityMap raced the request)
+            // MESURÉ 2026-08-21 (capture de la vue principale) : `Render(null)` lève une
+            // NullReferenceException à la première ligne qui lit le payload — l'écran principal
+            // plantait dès que la récupération échouait (réseau, 404, session expirée). Le défaut
+            // était visible dans le code même : la ligne SUIVANTE se protège déjà d'un payload
+            // absent, celle-ci non. Un échec de fetch doit donner un état NOMMÉ, jamais une
+            // exception : le contrôleur porte déjà ce repli déclaré pour un palier inconnu.
+            if (tenant.LastFetch == null)
+            {
+                Debug.LogWarning($"[AppShell] district {districtId} : payload absent " +
+                                 $"(code={tenant.LastErrorCode}) — repli déclaré affiché.");
+                tenant.Render(new DistrictInteriorDto { day_phase = "UNAVAILABLE" });
+                TopBar.SetDayPhase(null);
+                yield break;
+            }
             tenant.Render(tenant.LastFetch);
             // §6.3 — le manomètre affiche day_phase SEULEMENT en district, valeur du DTO déjà
             // récupéré (JAMAIS dérivée côté client — §6.3 : "la donnée day_phase... est déjà
