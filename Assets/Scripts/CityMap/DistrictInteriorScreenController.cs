@@ -670,7 +670,10 @@ namespace MafiaCleanCity.CityMap
             BuildRevenueSign(cell.transform, building);       // binding 3 — néon "ça rapporte" (D3)
             BuildActivitySmoke(cell.transform, building);     // binding 4 — fumée "op active"
             BuildMaintenanceFlicker(cell.transform, building); // binding 5 — grésillement "maintenance en retard"
-            BuildLieutenantMarkers(cell.transform, building);  // U-11 (C10-F1, D10) — affectation lieutenant
+            // Les 4 mesures d'empreinte sont passées : un marqueur s'aligne sur le BÂTIMENT, pas sur
+            // le rectangle de son fichier de sprite (voir BuildLieutenantMarkers).
+            BuildLieutenantMarkers(cell.transform, building,
+                footprintW, footprintOffsetX, footprintBottomMargin, cellH);  // U-11 (C10-F1, D10)
             return cell;
         }
 
@@ -843,21 +846,58 @@ namespace MafiaCleanCity.CityMap
         /// rendu doit égaler EXACTEMENT `lieutenant_ids.Length`, pour chaque bâtiment. Défensif contre
         /// un null (JsonUtility peut laisser le champ à sa valeur par défaut C# si absent du JSON, même
         /// si le back garantit `[]` — jamais planter sur un payload malformé).</summary>
-        private void BuildLieutenantMarkers(Transform cell, DistrictInteriorBuildingDto building)
+        private void BuildLieutenantMarkers(Transform cell, DistrictInteriorBuildingDto building,
+            float footprintW, float footprintOffsetX, float footprintBottomMargin, float cellH)
         {
             if (building.lieutenant_ids == null) return;
-            for (int i = 0; i < building.lieutenant_ids.Length; i++)
+            int n = building.lieutenant_ids.Length;
+            if (n == 0) return;
+
+            // ⛔ RÉÉCRIT LE 2026-08-22 — LES MARQUEURS SORTAIENT DE L'ÉCRAN.
+            //
+            // L'ancienne mise en page les posait en fractions de la CELLULE, alignés à GAUCHE :
+            // `xMin = 0,04 + i × 0,14`. Or la cellule fait la largeur du FICHIER de sprite, pas celle
+            // du bâtiment : pour le lab (un sprite de 29,7 m sur une parcelle de 6,5 m), l'origine à
+            // 4 % de la cellule tombe très à gauche de la parcelle. Sur un bâtiment au bord ouest du
+            // district, ça met le premier marqueur ENTIÈREMENT hors du fond. Mesuré par C10-F3 sur le
+            // monde J0 réel : `LieutenantMarker_0` à **165,5 px** au-delà du bord gauche du fond, et
+            // le second rogné — un juge visuel n'en voyait qu'UN, large de 68 px là où il en fait 85.
+            //
+            // ★ Et les trois falsifiables qui existaient étaient VERTES pendant ce temps : elles
+            // comptent des nœuds (« 2 affectations ⇒ 2 marqueurs »), aucune ne regardait OÙ ils
+            // atterrissent. Même famille que l'aiguille inversée corrigée la veille.
+            //
+            // La correction ne consiste pas à recentrer sur la cellule : c'est de s'aligner sur
+            // l'EMPREINTE RÉELLE du bâtiment — `footprintW`/`footprintOffsetX`, les mêmes valeurs
+            // MESURÉES par type que le socle utilise déjà (`BuildingSpriteSlots.FootprintOverride`).
+            // Un marqueur appartient au bâtiment, pas au rectangle de son fichier.
+            const float largeurRelative = 0.12f, ecartRelatif = 0.02f;
+            float marqueurW = footprintW * largeurRelative;
+            float ecart = footprintW * ecartRelatif;
+            float rangeeW = n * marqueurW + (n - 1) * ecart;
+            // Un bâtiment très peuplé ne doit pas voir sa rangée déborder de sa PROPRE empreinte :
+            // on rétrécit plutôt que de sortir. Sans ce garde-fou, le défaut reviendrait à
+            // `n >= 8` — un cran plus bas, comme un correctif qui reproduit son défaut.
+            if (rangeeW > footprintW && rangeeW > 0f)
+            {
+                float k = footprintW / rangeeW;
+                marqueurW *= k; ecart *= k; rangeeW = footprintW;
+            }
+            float marqueurH = cellH * 0.16f;
+            float socleH = cellH * 0.2f;   // REUSE — la hauteur que `Socle` occupe juste en dessous
+
+            for (int i = 0; i < n; i++)
             {
                 GameObject marker = NewUI($"LieutenantMarker_{i}", cell);
                 RectTransform rt = (RectTransform)marker.transform;
-                // Petits marqueurs en rangée, bande basse de la cellule (au-dessus du socle) —
-                // décalés par index pour rester des objets VISUELLEMENT distincts (2 marqueurs sur le
-                // MÊME bâtiment, C10-F1, ne doivent jamais se confondre en un seul).
-                const float slotWidth = 0.12f, slotGap = 0.02f, xStart = 0.04f;
-                float xMin = xStart + i * (slotWidth + slotGap);
-                rt.anchorMin = new Vector2(xMin, 0.02f);
-                rt.anchorMax = new Vector2(xMin + slotWidth, 0.18f);
-                rt.offsetMin = rt.offsetMax = Vector2.zero;
+                // Rangée CENTRÉE sur l'empreinte, posée juste au-dessus de l'ombre de contact.
+                // Décalés par index pour rester VISUELLEMENT distincts (2 marqueurs sur le MÊME
+                // bâtiment, C10-F1, ne doivent jamais se confondre en un seul).
+                rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0f);
+                rt.pivot = new Vector2(0.5f, 0f);
+                rt.sizeDelta = new Vector2(marqueurW, marqueurH);
+                float xCentre = footprintOffsetX - rangeeW * 0.5f + i * (marqueurW + ecart) + marqueurW * 0.5f;
+                rt.anchoredPosition = new Vector2(xCentre, footprintBottomMargin + socleH);
                 // REUSE d'un token déjà asset-backed (R2.3) — `lieutenantMutedDeep`, "Par-écran" §1.2
                 // de la mesure du territoire, jamais un tunable/token neuf pour ce chunk.
                 marker.AddComponent<Image>().color = DesignTokens.Current.nightLieutenantMarker; // revue ⊥ r1+r2 : 1,055:1 contre le socle — invisible deux rounds de suite

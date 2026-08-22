@@ -228,5 +228,75 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.AreEqual(2, MarkersUnderCell(diorama, labBlock.x, labBlock.y),
                 "les 2 marqueurs sont bien sur LA cellule du lab — cas dégénéré réel (2 lieutenants, MÊME bâtiment)");
         }
+
+        // ── C10-F3 — les marqueurs sont-ils VISIBLES ? ─────────────────────────────────────────────
+        //
+        // Pourquoi cette falsifiable existe : les trois qui la précèdent dans ce fichier vérifient des
+        // COMPTES (« 2 affectations ⇒ 2 marqueurs »), aucune ne regarde OÙ ils atterrissent. Elles
+        // étaient toutes VERTES pendant qu'un juge visuel indépendant mesurait, sur la capture de
+        // livraison, **un seul** amas de la teinte des marqueurs, large de 68 px là où un marqueur en
+        // fait 85 — donc rogné par le bord — et l'autre nulle part. Un compte de nœuds ne dit rien de
+        // ce que le joueur voit : c'est la même famille que « 4 angles distincts » pour une aiguille
+        // inversée, corrigée hier dans ce dépôt.
+        //
+        // L'ÉVÉNEMENT que cette garde doit voir rougir : un marqueur posé hors du fond. La classe est
+        // GÉOMÉTRIQUE (des rects), donc la mesure l'est aussi — pas de pixels, pas de capture datée,
+        // et vrai à toute résolution.
+        [UnityTest]
+        public IEnumerator C10F3_ChaqueMarqueur_EstEntierementDansLeFond_JamaisHorsCadre()
+        {
+            string token = null;
+            yield return SignUpAndOpenSession("c10f3", t => token = t);
+            var client = new CityProjectionsClient { BaseUrl = BaseUrl };
+            DistrictInteriorDto dto = null;
+            long errCode = -1;
+            yield return client.Interior(VergeADistrictId, token, d => dto = d, code => errCode = code);
+            Assert.AreEqual(-1, errCode, $"interior fetch must succeed, got code {errCode}");
+            dto.day_phase = "NIGHT"; // MÊME geste que C10-F1 ci-dessus, et pour la même raison
+
+            bareHostGo = new GameObject("DistrictInteriorDiorama_C10F3");
+            var diorama = bareHostGo.AddComponent<DistrictInteriorScreenController>();
+            diorama.Render(dto);
+            yield return null;
+
+            Transform fondT = diorama.ScreenRoot.Find("DistrictScene/DistrictBackgroundImage");
+            Assert.IsNotNull(fondT,
+                "prémisse — ce district a un fond réel ; sans lui, « dans le fond » n'a pas de sens et " +
+                "la boucle ci-dessous serait vraie pour rien");
+            var fondRt = (RectTransform)fondT;
+
+            var marqueurs = diorama.ScreenRoot.GetComponentsInChildren<RectTransform>(true)
+                .Where(t => t.name.StartsWith("LieutenantMarker_")).ToArray();
+
+            // Anti-vacuité — sans marqueur rendu, « tous dedans » est vrai et ne prouve rien. Le monde
+            // J0 en porte 2 (C10-F1 le mesure sur le fetch réel), donc ce plancher n'est pas décoratif.
+            Assert.AreEqual(2, marqueurs.Length,
+                $"scénario dimensionné — le J0 doit rendre 2 marqueurs (obtenu {marqueurs.Length})");
+
+            var coinsFond = new Vector3[4];
+            fondRt.GetWorldCorners(coinsFond);
+            float fx0 = coinsFond[0].x, fx1 = coinsFond[2].x;
+            float fy0 = coinsFond[0].y, fy1 = coinsFond[2].y;
+
+            // Anti-vacuité nº2 : un fond dégénéré (rect nul) contiendrait « tout » ou « rien » pour la
+            // mauvaise raison. On exige une surface réelle avant de s'en servir comme cadre.
+            Assert.Greater(fx1 - fx0, 100f, $"le fond doit avoir une largeur réelle (mesuré {fx1 - fx0:F1})");
+            Assert.Greater(fy1 - fy0, 100f, $"le fond doit avoir une hauteur réelle (mesuré {fy1 - fy0:F1})");
+
+            var coins = new Vector3[4];
+            foreach (RectTransform m in marqueurs)
+            {
+                m.GetWorldCorners(coins);
+                float mx0 = coins[0].x, mx1 = coins[2].x, my0 = coins[0].y, my1 = coins[2].y;
+                Assert.GreaterOrEqual(mx0, fx0 - 0.5f,
+                    $"{m.name} déborde du fond à GAUCHE — bord du marqueur {mx0:F1}, bord du fond {fx0:F1} " +
+                    $"(soit {fx0 - mx0:F1}px dehors). C'est le défaut mesuré : un marqueur entièrement " +
+                    "hors cadre, l'autre rogné.");
+                Assert.LessOrEqual(mx1, fx1 + 0.5f,
+                    $"{m.name} déborde du fond à DROITE — {mx1:F1} contre {fx1:F1}");
+                Assert.GreaterOrEqual(my0, fy0 - 0.5f, $"{m.name} déborde du fond en BAS — {my0:F1} contre {fy0:F1}");
+                Assert.LessOrEqual(my1, fy1 + 0.5f, $"{m.name} déborde du fond en HAUT — {my1:F1} contre {fy1:F1}");
+            }
+        }
     }
 }
