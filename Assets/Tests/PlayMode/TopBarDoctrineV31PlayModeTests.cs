@@ -231,7 +231,14 @@ namespace MafiaCleanCity.Shell.Tests
         {
             "Shell/TopBarController.cs",
             "Shell/VerticalGradientImage.cs",
-            "Shell/ProceduralUI.cs",
+            // AMENDÉ NOMMÉMENT (2026-08-22) — le fichier a DÉMÉNAGÉ vers `ShellContracts` (sans
+            // changer de namespace, donc aucun site d'appel ne bouge) pour que `CityMap` puisse
+            // s'en servir : le médaillon d'un marqueur de lieutenant en a besoin, et `Shell`
+            // référence `CityMap`, jamais l'inverse (CS0234 mesuré). La PROPRIÉTÉ assertée ne
+            // change pas — ce fichier reste sous contrôle de provenance des couleurs ; seul son
+            // chemin bouge. ★ Et la garde a fait exactement son travail : elle a rougi sur
+            // « fichier attendu introuvable », pas en silence.
+            "ShellContracts/ProceduralUI.cs",
         };
 
         // Les 3 façons de fabriquer une Color SANS passer par un token DesignTokens.

@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using MafiaCleanCity.Theme;
 using TMPro;
+using MafiaCleanCity.Shell;   // ProceduralUI (médaillon du marqueur), ShellChrome — assembly ShellContracts
 
 namespace MafiaCleanCity.CityMap
 {
@@ -846,6 +847,34 @@ namespace MafiaCleanCity.CityMap
         /// rendu doit égaler EXACTEMENT `lieutenant_ids.Length`, pour chaque bâtiment. Défensif contre
         /// un null (JsonUtility peut laisser le champ à sa valeur par défaut C# si absent du JSON, même
         /// si le back garantit `[]` — jamais planter sur un payload malformé).</summary>
+        /// <summary>Bornes du médaillon d'un marqueur. Un marqueur est une AFFORDANCE : il dit
+        /// « un lieutenant est affecté ici ». Sa taille suit donc la lisibilité, pas la taille du
+        /// bâtiment — sans borne, un gros bâtiment en obtenait un pavé et un petit un confetti.</summary>
+        private const float MarqueurDiametreMinPx = 14f;
+        private const float MarqueurDiametreMaxPx = 26f;
+        /// <summary>Résolution INTERNE des textures du médaillon — délibérément supérieure au
+        /// diamètre affiché (14 à 26 px). Voir le commentaire au site d'usage : générer à la taille
+        /// affichée rend un blob anguleux, défaut déjà payé par le manomètre du bandeau.</summary>
+        private const int MarqueurTextureResPx = 64;
+
+        /// <summary>La silhouette du médaillon (le fedora de la maquette « LA FAMILLE »), chargée
+        /// PARESSEUSEMENT et mise en cache.
+        ///
+        /// ⚠️ Le chargement ne doit JAMAIS partir d'un initialiseur statique : `Resources.Load` jette
+        /// en contexte de constructeur, et ce dépôt a déjà payé ce défaut (65 `static readonly Color`
+        /// convertis en propriétés le 2026-08-20 — VERTS en run complet parce qu'un test antérieur
+        /// chauffait le cache, ROUGES en run scopé à froid). Ici : appel depuis une méthode d'instance,
+        /// et un ABSENT est traité comme un absent, pas comme une erreur.</summary>
+        private static Sprite busteLieutenantCache;
+        private static bool busteLieutenantCherche;
+        private static Sprite BusteLieutenant()
+        {
+            if (busteLieutenantCherche) return busteLieutenantCache;
+            busteLieutenantCherche = true;
+            busteLieutenantCache = Resources.Load<Sprite>("Lieutenant/ui_element_buste_fedora");
+            return busteLieutenantCache;
+        }
+
         private void BuildLieutenantMarkers(Transform cell, DistrictInteriorBuildingDto building,
             float footprintW, float footprintOffsetX, float footprintBottomMargin, float cellH)
         {
@@ -883,7 +912,13 @@ namespace MafiaCleanCity.CityMap
                 float k = footprintW / rangeeW;
                 marqueurW *= k; ecart *= k; rangeeW = footprintW;
             }
-            float marqueurH = cellH * 0.16f;
+            // Un marqueur est une AFFORDANCE, pas de l'art : sa taille ne doit pas suivre celle du
+            // bâtiment. Sans borne, le lab (empreinte large) en obtenait deux pavés de ~65px, ce que
+            // la capture montrait comme deux rectangles flottants. Bornes choisies pour rester
+            // lisibles au zoom ×1 sans écraser un petit bâtiment.
+            marqueurW = Mathf.Clamp(marqueurW, MarqueurDiametreMinPx, MarqueurDiametreMaxPx);
+            ecart = marqueurW * 0.25f;
+            rangeeW = n * marqueurW + (n - 1) * ecart;
             float socleH = cellH * 0.2f;   // REUSE — la hauteur que `Socle` occupe juste en dessous
 
             for (int i = 0; i < n; i++)
@@ -895,12 +930,62 @@ namespace MafiaCleanCity.CityMap
                 // bâtiment, C10-F1, ne doivent jamais se confondre en un seul).
                 rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0f);
                 rt.pivot = new Vector2(0.5f, 0f);
-                rt.sizeDelta = new Vector2(marqueurW, marqueurH);
+                rt.sizeDelta = new Vector2(marqueurW, marqueurW);   // CARRÉ : c'est un médaillon
                 float xCentre = footprintOffsetX - rangeeW * 0.5f + i * (marqueurW + ecart) + marqueurW * 0.5f;
                 rt.anchoredPosition = new Vector2(xCentre, footprintBottomMargin + socleH);
-                // REUSE d'un token déjà asset-backed (R2.3) — `lieutenantMutedDeep`, "Par-écran" §1.2
-                // de la mesure du territoire, jamais un tunable/token neuf pour ce chunk.
-                marker.AddComponent<Image>().color = DesignTokens.Current.nightLieutenantMarker; // revue ⊥ r1+r2 : 1,055:1 contre le socle — invisible deux rounds de suite
+                // ── L'APPARENCE (ruling user « fais mieux », 2026-08-22) ──────────────────────────
+                // C'était un APLAT rectangulaire opaque. Deux d'entre eux, posés sur un bâtiment
+                // peint, lisaient comme un défaut d'affichage — et ne disaient rien de ce qu'ils
+                // signifient. La DA de ce programme a déjà son signe pour « un lieutenant est ici » :
+                // le médaillon à silhouette de fedora de la maquette « LA FAMILLE », dont les bustes
+                // sont DÉJÀ importés et vérifiés dans le dépôt (`Assets/Resources/Lieutenant/`).
+                // Composition, du fond vers l'avant, exactement celle du médaillon du bandeau :
+                // disque sombre → anneau laiton → silhouette. REUSE de `ProceduralUI` (descendu dans
+                // ShellContracts pour ça) et des tokens existants — aucun token neuf.
+                // ⚠️ La texture est générée à `MarqueurTextureResPx`, PAS au diamètre affiché.
+                // `ProceduralUI.RadialDisc` produit une texture à la résolution EXACTE qu'on lui
+                // demande : un disque de 20 texels n'a quasiment aucune marge d'anti-crénelage et
+                // rend un blob anguleux. Le manomètre du bandeau a payé ce défaut et le contourne de
+                // la même façon (`TopBarController.cs:829-833`, `NeedleCenterDotTextureResPx = 32`) —
+                // générer GRAND, afficher petit. Le `RectTransform` garde la taille affichée.
+                Image disque = marker.AddComponent<Image>();
+                disque.sprite = ProceduralUI.RadialDisc(MarqueurTextureResPx,
+                    DesignTokens.Current.hudGaugeFaceInner,   // REUSE — la face de médaillon de la
+                    DesignTokens.Current.hudGaugeFaceOuter);  // doctrine (#2c3242 → #0a0e16), SOMBRE
+                disque.color = Color.white;   // la teinte vit dans le sprite, pas dans un multiply
+                disque.raycastTarget = false;
+
+                // ★ Pourquoi une face SOMBRE et pas la teinte historique du marqueur : la silhouette
+                // se pose DESSUS. Une face claire (l'ancien `nightLieutenantMarker`, beige) sous une
+                // silhouette crème ne laisse rien voir — mesuré sur la capture, le médaillon rendait
+                // un halo sans forme. Le signe distinctif est porté par l'ANNEAU laiton, pas par le
+                // fond ; c'est exactement la composition du médaillon du bandeau.
+                GameObject anneauGo = NewUI("Anneau", marker.transform);
+                Stretch((RectTransform)anneauGo.transform, Vector2.zero, Vector2.zero);
+                Image anneau = anneauGo.AddComponent<Image>();
+                anneau.sprite = ProceduralUI.Ring(MarqueurTextureResPx,
+                    MarqueurTextureResPx * 0.10f, DesignTokens.Current.hudHairlineGold);
+                anneau.color = Color.white;
+                anneau.raycastTarget = false;
+
+                // La silhouette est un CONFORT, jamais une condition : si la ressource manque, le
+                // médaillon reste un disque cerclé et le marqueur garde tout son sens. C'est pour ça
+                // que le chargement est gardé et non asserté ici — la falsifiable porte sur la
+                // PRÉSENCE et la POSITION du marqueur, pas sur son ornement.
+                Sprite buste = BusteLieutenant();
+                if (buste != null)
+                {
+                    GameObject busteGo = NewUI("Buste", marker.transform);
+                    RectTransform brt = (RectTransform)busteGo.transform;
+                    brt.anchorMin = brt.anchorMax = brt.pivot = new Vector2(0.5f, 0.5f);
+                    brt.anchoredPosition = Vector2.zero;
+                    brt.sizeDelta = new Vector2(marqueurW * 0.60f, marqueurW * 0.60f);
+                    Image bi = busteGo.AddComponent<Image>();
+                    bi.sprite = buste;
+                    bi.color = DesignTokens.Current.hudCreme;
+                    bi.preserveAspect = true;
+                    bi.raycastTarget = false;
+                }
                 RenderedLieutenantMarkerCount++;
             }
         }

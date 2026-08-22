@@ -3,6 +3,15 @@ using UnityEngine;
 
 namespace MafiaCleanCity.Shell
 {
+    // ⚠️ CE FICHIER A DÉMÉNAGÉ DE `Shell` VERS `ShellContracts` LE 2026-08-22, sans changer de
+    // namespace — donc AUCUN des sites d'appel existants ne bouge (`AppShell`, `TopBarController`
+    // et leurs deux fichiers de test continuent d'écrire `ProceduralUI.Ring(...)`).
+    // Raison : les locataires du shell en ont besoin (le médaillon d'un marqueur de lieutenant,
+    // `DistrictInteriorScreenController`) et `Shell` référence `CityMap`, jamais l'inverse — lire
+    // ce type depuis `CityMap` donnait CS0234. `ShellContracts` est la seule assembly que les deux
+    // côtés voient, comme pour `ShellChrome` et `HeatBucketResolver`.
+    // Le fichier ne dépendait que de `UnityEngine` et `System.Collections.Generic` : le déplacement
+    // n'ajoute aucune dépendance à `ShellContracts`.
     // HUD v3.1 (doctrine DA — hud-brennar.html `.medaillon .boitier`, un boîtier CIRCULAIRE avec
     // dégradé radial + anneau laiton) — uGUI n'a pas de sprite rond builtin accessible en BUILD
     // (les sprites internes de l'éditeur type "UI/Skin/Knob" passent par AssetDatabase, éditeur-
