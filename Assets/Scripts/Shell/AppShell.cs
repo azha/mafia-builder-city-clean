@@ -624,8 +624,18 @@ namespace MafiaCleanCity.Shell
             b.targetGraphic = img;
             b.onClick.AddListener(() => ActivateTab(tab));
 
-            // HUD v3.1 cohérence — l'indicateur d'onglet actif : un FILET laiton (3px, bord HAUT du
-            // bouton), jamais un pavé de couleur pleine (voir BuildTabBar pour la doctrine complète).
+            // HUD v3.1 cohérence — l'indicateur d'onglet actif : un FILET laiton (3px), jamais un
+            // pavé de couleur pleine (voir BuildTabBar pour la doctrine complète).
+            //
+            // ⚠️ DÉPLACÉ DU BORD HAUT AU BORD BAS DU BOUTON (2026-08-22, verdict du juge visuel).
+            // Au bord HAUT, il tombait à 5 px sous le filet séparateur pleine largeur de la barre
+            // (mesuré : séparateur à y 1540-1541, indicateur à y 1546-1547) : **deux filets d'or
+            // parallèles à cinq pixels l'un de l'autre**, dont le second bégayait le premier au lieu
+            // de désigner quoi que ce soit. Au bord BAS il souligne l'onglet actif — le geste lit
+            // sans ambiguïté, et il ne concurrence plus le séparateur.
+            // ★ Vérifié avant de bouger : la maquette du bandeau (`hud-brennar.html`) ne contient
+            // AUCUNE barre d'onglets. Ce placement était donc notre choix, pas une ratification de
+            // l'user — sinon il aurait fallu remonter l'arbitrage au lieu de trancher.
             // Enfant DIRECT du bouton (jamais nommé "Label" — `Find("ActiveIndicator")` en dépend,
             // RefreshTabButtonVisuals ci-dessous). Masqué par défaut (SetActive) — mêmes idiome que
             // `leadingGo`/`TopBarController.LeadingAction` : présence/absence NOMMÉE, jamais déduite
@@ -633,9 +643,9 @@ namespace MafiaCleanCity.Shell
             GameObject indicatorGo = new GameObject("ActiveIndicator", typeof(RectTransform));
             indicatorGo.transform.SetParent(btn.transform, false);
             RectTransform indicatorRect = (RectTransform)indicatorGo.transform;
-            indicatorRect.anchorMin = new Vector2(0f, 1f);
-            indicatorRect.anchorMax = new Vector2(1f, 1f);
-            indicatorRect.pivot = new Vector2(0.5f, 1f);
+            indicatorRect.anchorMin = new Vector2(0f, 0f);
+            indicatorRect.anchorMax = new Vector2(1f, 0f);
+            indicatorRect.pivot = new Vector2(0.5f, 0f);
             indicatorRect.sizeDelta = new Vector2(0f, TabActiveIndicatorThicknessPx);
             indicatorRect.anchoredPosition = Vector2.zero;
             Image indicatorImg = indicatorGo.AddComponent<Image>();
