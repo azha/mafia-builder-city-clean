@@ -164,3 +164,46 @@ que la mise en page des marqueurs **reste dans le fond** quand le bâtiment est 
 district. C'est une question de conception (où va un marqueur quand il n'y a plus de place à
 gauche ?), et c'est exactement pourquoi ce chantier passe par un design plutôt que par une
 retouche.
+
+---
+
+# 2026-08-22 — la lisibilité du titre reste OUVERTE, et c'est un arbitrage DA
+
+La couture du letterbox est franchie (le titre est entièrement sur l'art, 0 px sur la bande contre
+65 % avant). Mais le contraste, lui, ne s'est pas amélioré — il a même perdu le bénéfice
+accidentel qu'il tirait de la bande sombre :
+
+    glyphe / art pâle           2,21:1
+    glyphe / anneau (avec halo) 2,26:1     ⇒ le halo n'apporte que +0,05
+    seuil des grands textes     3,00:1
+
+★ **Et deux mesures successives m'avaient donné raison à tort**, ce qui vaut d'être écrit :
+- « anneau 0,2223 contre art 0,3490, le halo mord » — l'anneau échantillonnait en réalité **la
+  bande sombre du letterbox**, sur laquelle le titre reposait alors aux deux tiers ;
+- « anneau == art, écart +0,0000, le halo ne fait rien » — la **bande morte** de l'instrument
+  (2 px) sautait exactement la zone où le halo vit (profil mesuré par le juge : +0,073 à d=1,
+  +0,080 à d=2, +0,031 à d=3, 0,000 à d=10).
+Deux contaminations différentes, deux conclusions opposées, et **celle qui m'arrangeait est celle
+que je n'ai pas questionnée**. L'instrument est en v5 et déclare désormais sa bande morte.
+
+## Pourquoi aucun réglage ne ferme ce défaut
+
+- **Une couleur de texte fixe ne peut pas marcher** : l'art défile sous le titre. Clair sur le ciel
+  pâle → 2,2:1 ; sombre sur une silhouette sombre → pire encore.
+- **Le halo est déjà à son maximum utile** : alpha 1,0, noir pur, `dilate` 1,0 (le plafond de
+  l'API). L'élargir davantage n'est pas possible, et le juge a prévenu que l'épaissir donnerait
+  « un pâté ».
+- **Le contour a été essayé et réfuté** par la sonde : tracé à l'intérieur du bord SDF, il ronge la
+  lettre (195 → 90 → 28 px clairs) sans jamais devenir sombre.
+
+## Les deux sorties, et pourquoi je ne tranche pas seul
+
+1. **Un cartouche sombre derrière le titre.** Ferme le défaut définitivement, coûte ~90×24 px du
+   rendu de l'user — c'est-à-dire qu'on recouvre l'image qu'il a demandé de ne pas toucher.
+2. **Remonter le nom du district DANS le bandeau haut**, où le fond est maîtrisé. C'est ce que la
+   doctrine maison fait déjà ailleurs (l'en-tête « LA FAMILLE » : retour rond, titre serif,
+   sous-titre, filet laiton). Le titre cesse alors de flotter sur l'art — il devient du chrome
+   assumé — et le rendu reste intact à 100 %.
+
+L'option 2 est la plus cohérente avec « je veux une vue exactement comme ça », mais elle change la
+composition du bandeau, que l'user a ratifiée sur maquette. **Arbitrage remonté, pas tranché.**
