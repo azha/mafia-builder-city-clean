@@ -437,6 +437,23 @@ namespace MafiaCleanCity.CityMap
                 fondRt.sizeDelta = new Vector2(tex.width, tex.height) / scaleFactor;
                 // round 4 (verdict ⊥) — snap explicite au pixel écran entier, voir SnapToScreenPixel.
                 SnapToScreenPixel(fondRt);
+
+                // ── Le titre ne doit pas être à cheval sur la couture du letterbox ────────────────
+                // Le fond fait 1080 de large dans un viewport de 1200 : deux bandes sombres de 60 px.
+                // Le titre, lui, s'alignait sur le bord de l'ÉCRAN — donc 65 % de son encre tombait
+                // sur la bande (contraste 7,31:1) et 35 % sur le ciel peint (2,70:1). **Une rupture
+                // de contraste de ×3 au milieu du même mot**, relevée par le juge visuel : le titre
+                // n'appartenait ni au bandeau ni à l'art, il chevauchait la frontière des deux.
+                //
+                // Il s'aligne désormais sur le bord du FOND, plus la même gouttière. Le `Max` compte :
+                // à une résolution où le fond est PLUS LARGE que le viewport, la bande est nulle ou
+                // négative et le titre doit rester sur le bord de l'écran — sans ce garde-fou, on le
+                // pousserait hors champ pour corriger un défaut qui n'existe pas là.
+                float bandeLetterbox = Mathf.Max(0f, (root.rect.width - fondRt.sizeDelta.x) * 0.5f);
+                float margeTitre = MafiaCleanCity.Shell.ShellChrome.GutterX + bandeLetterbox;
+                titleRt.offsetMin = new Vector2(margeTitre, titleRt.offsetMin.y);
+                titleRt.offsetMax = new Vector2(-margeTitre, titleRt.offsetMax.y);
+
                 Image fondImg = fondGo.AddComponent<Image>();
                 fondImg.sprite = bg.fond;
                 fondImg.raycastTarget = false; // pp-F6 — le fond est inerte : ni Button ni état.

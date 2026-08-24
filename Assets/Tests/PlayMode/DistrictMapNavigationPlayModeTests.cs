@@ -685,10 +685,28 @@ namespace MafiaCleanCity.CityMap.Tests
             Bounds titleB = RectTransformUtility.CalculateRelativeRectTransformBounds(rootRt, titleRt);
             float bordGauche = titleB.min.x - rootRt.rect.xMin;
             float bordDroit = rootRt.rect.xMax - titleB.max.x;
-            Assert.AreEqual(ShellChrome.GutterX, bordGauche, 0.5f,
-                $"E1 — le titre s'aligne sur LA gouttière du chrome ({ShellChrome.GutterX}px), " +
-                "pas sur le bord de l'écran (la capture de livraison le montrait coupé au pixel 1)");
-            Assert.AreEqual(ShellChrome.GutterX, bordDroit, 0.5f,
+
+            // ⚠️ AMENDÉ NOMMÉMENT (2026-08-22) — la référence n'est plus le bord de l'ÉCRAN mais le
+            // bord du FOND. Raison mesurée par le juge visuel : le fond fait 1080 de large dans un
+            // viewport de 1200, donc deux bandes de letterbox de 60 px, et un titre aligné sur
+            // l'écran posait **65 % de son encre sur la bande** (contraste 7,31:1) et 35 % sur le
+            // ciel peint (2,70:1) — une rupture de ×3 au milieu du même mot. La propriété assertée
+            // est donc plus forte qu'avant : le titre ne CHEVAUCHE PAS la couture.
+            // Le `Max` reproduit le garde-fou du contrôleur : à une résolution où le fond est plus
+            // large que le viewport il n'y a pas de bande, et la marge redevient la gouttière seule.
+            Transform fondT = diorama.ScreenRoot.Find("DistrictScene/DistrictBackgroundImage");
+            Assert.IsNotNull(fondT, "prémisse — ce district a un fond réel ; sans lui « le bord du fond » n'a pas de sens");
+            float bande = Mathf.Max(0f, (rootRt.rect.width - ((RectTransform)fondT).sizeDelta.x) * 0.5f);
+            Assert.Greater(bande, 0.5f,
+                $"scénario dimensionné — cette résolution DOIT produire une bande de letterbox " +
+                $"(mesuré {bande:F1}px), sinon l'assertion suivante ne teste pas le défaut visé");
+            float margeAttendue = ShellChrome.GutterX + bande;
+
+            Assert.AreEqual(margeAttendue, bordGauche, 0.5f,
+                $"E1 — le titre s'aligne sur le bord du FOND plus la gouttière ({margeAttendue:F0}px = " +
+                $"{bande:F0} de bande + {ShellChrome.GutterX} de gouttière), jamais sur le bord de l'écran : " +
+                "sinon il est à cheval sur la couture du letterbox et son contraste varie de ×3 en son milieu");
+            Assert.AreEqual(margeAttendue, bordDroit, 0.5f,
                 "E1 — et symétriquement à droite : un titre long ne doit pas déborder de l'autre côté");
 
             // ── E2 · fonte ────────────────────────────────────────────────────────────────────────
