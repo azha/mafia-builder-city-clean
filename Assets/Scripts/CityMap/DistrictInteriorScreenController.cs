@@ -849,10 +849,26 @@ namespace MafiaCleanCity.CityMap
             disque.color = Color.white;
             disque.raycastTarget = false;
 
+            // ⚠️ L'ANNEAU EST RENTRÉ, ET C'EST UNE MESURE QUI LE COMMANDE — pas une préférence.
+            // Contraste de l'anneau laiton contre le fond, sous les 12 premières ancres :
+            //     jour  3,17:1      nuit  2,40:1
+            // Le badge est donc MOINS visible la nuit que le jour, contre l'intuition : le rendu de
+            // nuit a ses fenêtres allumées, et sa luminance médiane sous les ancres (0,332) est plus
+            // HAUTE que celle du rendu de jour (0,263). À 2,40:1 l'anneau passe sous le seuil de 3:1
+            // d'un élément d'interface contre son fond.
+            // En le rentrant de 8 %, le bord SOMBRE du disque (`hudGaugeFaceOuter`, #0a0e16) fait une
+            // bordure entre le laiton et l'art : l'œil voit alors laiton-sur-sombre (4,10:1, une
+            // valeur qui ne dépend d'AUCUN art) au lieu de laiton-sur-décor. Même principe que le
+            // halo du titre — intercaler une bande, plutôt que chercher une couleur qui tienne sur
+            // tous les fonds, ce qui n'existe pas.
+            const float retraitAnneau = 0.08f;
             GameObject anneauGo = NewUI("BadgeAnneau", go.transform);
-            Stretch((RectTransform)anneauGo.transform, Vector2.zero, Vector2.zero);
+            RectTransform anneauRt = (RectTransform)anneauGo.transform;
+            anneauRt.anchorMin = Vector2.zero; anneauRt.anchorMax = Vector2.one;
+            anneauRt.offsetMin = new Vector2(d * retraitAnneau, d * retraitAnneau);
+            anneauRt.offsetMax = new Vector2(-d * retraitAnneau, -d * retraitAnneau);
             Image anneau = anneauGo.AddComponent<Image>();
-            anneau.sprite = ProceduralUI.Ring(BadgeTextureResPx, BadgeTextureResPx * 0.11f,
+            anneau.sprite = ProceduralUI.Ring(BadgeTextureResPx, BadgeTextureResPx * 0.12f,
                 DesignTokens.Current.hudHairlineGold);
             anneau.color = Color.white;
             anneau.raycastTarget = false;
@@ -1200,11 +1216,16 @@ namespace MafiaCleanCity.CityMap
                 // silhouette crème ne laisse rien voir — mesuré sur la capture, le médaillon rendait
                 // un halo sans forme. Le signe distinctif est porté par l'ANNEAU laiton, pas par le
                 // fond ; c'est exactement la composition du médaillon du bandeau.
+                // Même retrait que le badge, et pour la même mesure (anneau/fond 2,40:1 la nuit) :
+                // le bord sombre du disque s'interpose entre le laiton et l'art.
                 GameObject anneauGo = NewUI("Anneau", marker.transform);
-                Stretch((RectTransform)anneauGo.transform, Vector2.zero, Vector2.zero);
+                RectTransform anneauRt2 = (RectTransform)anneauGo.transform;
+                anneauRt2.anchorMin = Vector2.zero; anneauRt2.anchorMax = Vector2.one;
+                anneauRt2.offsetMin = new Vector2(marqueurW * 0.08f, marqueurW * 0.08f);
+                anneauRt2.offsetMax = new Vector2(-marqueurW * 0.08f, -marqueurW * 0.08f);
                 Image anneau = anneauGo.AddComponent<Image>();
                 anneau.sprite = ProceduralUI.Ring(MarqueurTextureResPx,
-                    MarqueurTextureResPx * 0.10f, DesignTokens.Current.hudHairlineGold);
+                    MarqueurTextureResPx * 0.12f, DesignTokens.Current.hudHairlineGold);
                 anneau.color = Color.white;
                 anneau.raycastTarget = false;
 
