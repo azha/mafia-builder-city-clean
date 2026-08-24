@@ -827,8 +827,17 @@ namespace MafiaCleanCity.CityMap
             rt.pivot = new Vector2(0.5f, 0f);
             rt.sizeDelta = new Vector2(d, d);
             // Au-dessus de la rangée de lieutenants (elle occupe `socleH` + son propre diamètre).
+            // ⚠️ HAUTEUR REVUE (2026-08-22). L'empilement d'avant — marge basse + hauteur du socle
+            // + un diamètre et demi de médaillon — datait de l'époque où la cellule ÉTAIT le sprite
+            // du bâtiment : il fallait monter au-dessus du socle pour ne pas le recouvrir. Le sprite
+            // et le socle ne sont plus dessinés, et l'ancre désigne désormais le POINT SOL d'un
+            // bâtiment réel du rendu — mesurée sur un bâtiment 51 fois sur 51.
+            // Monter de ~100px depuis ce point, c'est quitter le bâtiment par le haut : mesuré sur
+            // la capture, 2 des 5 marqueurs atterrissaient sur un fond à 5,4 et 7,2 d'écart-type,
+            // c'est-à-dire au-dessus du toit. Le badge se pose donc JUSTE au-dessus de l'ancre,
+            // sur la façade basse — là où la mesure garantit qu'il y a du bâtiment.
             rt.anchoredPosition = new Vector2(footprintOffsetX,
-                footprintBottomMargin + cellH * 0.2f + MarqueurDiametrePx * 1.30f);
+                footprintBottomMargin + BadgeDiametrePx * 0.55f);
 
             // Même composition que le médaillon de lieutenant et que celui du bandeau : disque
             // sombre, anneau laiton. Texture générée GRANDE et affichée petite — un disque généré à
@@ -1159,7 +1168,11 @@ namespace MafiaCleanCity.CityMap
                 rt.pivot = new Vector2(0.5f, 0f);
                 rt.sizeDelta = new Vector2(marqueurW, marqueurW);   // CARRÉ : c'est un médaillon
                 float xCentre = footprintOffsetX - rangeeW * 0.5f + i * (marqueurW + ecart) + marqueurW * 0.5f;
-                rt.anchoredPosition = new Vector2(xCentre, footprintBottomMargin + socleH);
+                // Même raison que le badge ci-dessus : l'ancre est au SOL du bâtiment, et la rangée
+                // de médaillons se pose juste au-dessus d'elle — jamais à la hauteur d'un socle qui
+                // n'est plus dessiné.
+                rt.anchoredPosition = new Vector2(xCentre,
+                    footprintBottomMargin + BadgeDiametrePx * 1.35f);
                 // ── L'APPARENCE (ruling user « fais mieux », 2026-08-22) ──────────────────────────
                 // C'était un APLAT rectangulaire opaque. Deux d'entre eux, posés sur un bâtiment
                 // peint, lisaient comme un défaut d'affichage — et ne disaient rien de ce qu'ils

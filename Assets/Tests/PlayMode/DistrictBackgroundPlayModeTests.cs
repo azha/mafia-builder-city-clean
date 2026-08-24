@@ -196,40 +196,68 @@ namespace MafiaCleanCity.CityMap.Tests
             }
             Assert.AreEqual(4, checkedBuildings, "starter kit J0 — scénario dimensionné, les 4 bâtiments calibrés");
 
-            // F-calage, second volet — AMENDÉ deux fois (round 4, verdict ⊥ sur
-            // Tools/pivot-fond-prerendu-p3-implementation-notes.md § ROUND 4, clôture P3). V1 :
-            // comparait un pas en pixels à lui-même translaté (tautologique). V2 : décomposait le
-            // pas dans la base (ex,ey) MAIS sur UN SEUL pas (0,0)→(1,0) — un maillage irrégulier
-            // PARTOUT SAUF sur ce pas passait quand même. V3 (celle-ci) : boucle la décomposition
-            // `perStep = a·ex + b·ey` sur TOUS les pas d'index adjacents du maillage, les DEUX axes
-            // (x et y), pour CHAQUE paire de parcelles voisines réellement présentes — 104 pas sur
-            // ce fond (54 horizontaux + 50 verticaux, mesuré indépendamment en Python avant ce
-            // commit). Tolérance 0,01f — bonne à 17× de marge sur l'écart max mesuré (0,00058m).
+            // ⛔⛔ F-calage, SECOND VOLET — RETIRÉ ET REMPLACÉ LE 2026-08-22, avec sa raison.
+            //
+            // Ce qu'il assertait : que les ancres forment un MAILLAGE RÉGULIER de pas 6,5 m,
+            // vérifié sur les 104 pas adjacents, décomposé dans la base (ex,ey). C'était rigoureux
+            // — trois versions successives, la première tautologique, la deuxième aveugle hors d'un
+            // seul pas — et c'était la propriété exacte d'une grille de parcelles.
+            //
+            // La carte d'ancrage n'est plus une grille. Elle désigne des BÂTIMENTS RÉELS de la
+            // scène Blender, et des bâtiments réels ne sont pas alignés au cordeau. Le raisonnement
+            // qui a conduit là est mesuré et tient en deux nombres : sur les 60 ancres de la grille,
+            // 47 (78 %) tombaient bien sur un bâtiment, mais **les blocs (0,0) et (1,0) — que le kit
+            // de départ occupe — étaient sur du sol nu** (écart-type de luminance 0,5 contre 24,9 et
+            // 17,0 pour leurs voisins). La carte livrée aujourd'hui est mesurée **51/51 sur un
+            // bâtiment**, minimum 9,8.
+            // ⇒ Garder cette assertion aurait exigé de revenir à une grille, c'est-à-dire de
+            // rétablir le défaut. Une garde qu'on ne peut satisfaire qu'en cassant ce qu'elle
+            // protège doit être remplacée, pas assouplie.
+            //
+            // CE QUI LA REMPLACE est la propriété que la nouvelle carte garantit ET qui répond à un
+            // défaut MESURÉ par le juge visuel : deux badges se posaient à **6,5 px de bord à bord**,
+            // indiscernables. Deux ancres trop proches désignent le même bâtiment.
+            // ⚠️ La propriété « chaque ancre est sur un bâtiment » ne peut PAS être assertée ici :
+            // la texture du fond est importée `isReadable: 0`, donc illisible à l'exécution. Elle
+            // est mesurée hors ligne par `Tools/mesure-ancres-sur-batiments.py`, commité, dont la
+            // sortie est collée dans le message de commit. Dire ici « les ancres sont sur des
+            // bâtiments » sans pouvoir le vérifier serait exactement la garde décorative que ce
+            // dépôt a déjà payée deux fois.
             Vector2 exVec = new Vector2(map.base_px_par_m.ex[0], map.base_px_par_m.ex[1]);
             Vector2 eyVec = new Vector2(map.base_px_par_m.ey[0], map.base_px_par_m.ey[1]);
             float det = exVec.x * eyVec.y - eyVec.x * exVec.y;
             Assert.AreNotEqual(0f, det, "anti-vacuité — la base (ex,ey) ne doit pas être dégénérée (colinéaire)");
 
-            var byXy = new System.Collections.Generic.Dictionary<(int x, int y), DistrictBackgroundParcelDto>();
-            foreach (DistrictBackgroundParcelDto p in map.parcelles) byXy[(p.x, p.y)] = p;
+            Assert.Greater(map.parcelles.Length, 30,
+                $"anti-vacuité — la carte doit porter assez d'ancres pour les blocs du district " +
+                $"(mesuré {map.parcelles.Length}) ; sinon les comparaisons deux à deux ci-dessous " +
+                "seraient vraies sur un jeu trop petit pour rien prouver");
 
-            int stepsChecked = 0;
-            foreach (DistrictBackgroundParcelDto p0 in map.parcelles)
+            const float ecartMinPx = 40f;
+            int pairesVerifiees = 0;
+            float pireEcart = float.MaxValue;
+            string pireCouple = "";
+            for (int i = 0; i < map.parcelles.Length; i++)
             {
-                // pas horizontal (x, y) -> (x+1, y)
-                if (byXy.TryGetValue((p0.x + 1, p0.y), out DistrictBackgroundParcelDto pxNext))
+                for (int j = i + 1; j < map.parcelles.Length; j++)
                 {
-                    stepsChecked += CheckStepMeters(p0, pxNext, exVec, eyVec, det, map.pas_parcelle_m, "x");
-                }
-                // pas vertical (x, y) -> (x, y+1)
-                if (byXy.TryGetValue((p0.x, p0.y + 1), out DistrictBackgroundParcelDto pyNext))
-                {
-                    stepsChecked += CheckStepMeters(p0, pyNext, exVec, eyVec, det, map.pas_parcelle_m, "y");
+                    DistrictBackgroundParcelDto a = map.parcelles[i], b = map.parcelles[j];
+                    float d = Vector2.Distance(new Vector2(a.pivot_px[0], a.pivot_px[1]),
+                                               new Vector2(b.pivot_px[0], b.pivot_px[1]));
+                    pairesVerifiees++;
+                    if (d < pireEcart)
+                    {
+                        pireEcart = d;
+                        pireCouple = $"({a.x},{a.y})↔({b.x},{b.y})";
+                    }
                 }
             }
-            Assert.AreEqual(104, stepsChecked,
-                "F-calage — scénario dimensionné : les 104 pas adjacents (54 horizontaux + 50 verticaux) du " +
-                "maillage verge sont TOUS vérifiés, pas un seul pas témoin");
+            Assert.Greater(pairesVerifiees, 400,
+                $"anti-vacuité — {pairesVerifiees} paires comparées, le scénario doit être dimensionné");
+            Assert.GreaterOrEqual(pireEcart, ecartMinPx,
+                $"F-calage — deux ancres à moins de {ecartMinPx}px désignent le même bâtiment et " +
+                $"produisent deux marqueurs indiscernables : le juge visuel en a mesuré deux à 6,5px " +
+                $"de bord à bord. Pire couple mesuré ici : {pireCouple} à {pireEcart:F1}px.");
         }
 
         /// <summary>Décompose le pas PIXEL entre deux parcelles adjacentes dans la base (ex,ey) et
