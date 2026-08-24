@@ -836,8 +836,20 @@ namespace MafiaCleanCity.CityMap
             // la capture, 2 des 5 marqueurs atterrissaient sur un fond à 5,4 et 7,2 d'écart-type,
             // c'est-à-dire au-dessus du toit. Le badge se pose donc JUSTE au-dessus de l'ancre,
             // sur la façade basse — là où la mesure garantit qu'il y a du bâtiment.
-            rt.anchoredPosition = new Vector2(footprintOffsetX,
-                footprintBottomMargin + BadgeDiametrePx * 0.55f);
+            // ⛔⛔ NE PLUS UTILISER `footprintOffsetX` NI `footprintBottomMargin` ICI (2026-08-22,
+            // second verdict du juge visuel). Ces deux valeurs décrivent l'empreinte opaque d'un
+            // SPRITE DE BÂTIMENT que cet écran ne dessine plus (`FondPorteDejaLesBatiments`). Les
+            // employer revient à piloter la position d'un marqueur par la géométrie d'un objet
+            // INVISIBLE — et le décalage dépend du TYPE :
+            //     lab −75 px en X / +40 en Y · stash +42 · front_shop +50 · cash_safehouse **+177**
+            // Mesuré par le juge : au pivot, le minimum de l'instrument d'ancrage vaut 9,635 ; à la
+            // position RÉELLE du badge il tombe à **0,413**, et 9 ancres sur 51 passent sous le seuil
+            // certifié. Autrement dit : **j'ai validé la carte à un endroit où rien n'est dessiné.**
+            // ★ Et mon propre commentaire d'hier — « monter de ~100 px, c'est quitter le bâtiment par
+            //   le haut » — livrait `cash_safehouse` à +177, DAVANTAGE que ce qu'il retirait. Le
+            //   défaut avait migré d'un cran, il n'était pas fermé.
+            // Le badge se pose donc À L'ANCRE, au décalage près de son propre rayon.
+            rt.anchoredPosition = new Vector2(0f, BadgeDiametrePx * 0.55f);
 
             // Même composition que le médaillon de lieutenant et que celui du bandeau : disque
             // sombre, anneau laiton. Texture générée GRANDE et affichée petite — un disque généré à
@@ -861,7 +873,14 @@ namespace MafiaCleanCity.CityMap
             // valeur qui ne dépend d'AUCUN art) au lieu de laiton-sur-décor. Même principe que le
             // halo du titre — intercaler une bande, plutôt que chercher une couleur qui tienne sur
             // tous les fonds, ce qui n'existe pas.
-            const float retraitAnneau = 0.08f;
+            // ⚠️ RETRAIT PORTÉ DE 8 % À 16 %. À 8 %, la bordure sombre ne faisait qu'environ 1 px à
+            // l'affichage (23,5 px de diamètre réel), insuffisant : le juge a mesuré l'anneau à
+            // **1,48:1 contre un toit pâle** et le disque à **1,19:1 contre une façade sombre** —
+            // aucun élément du badge ne tenait sur les deux extrêmes, et le badge passait sous 3:1
+            // sur **41 % de la carte d'ancrage**. Le laiton (L≈0,28) est précisément la valeur la
+            // plus mal placée, à mi-chemin des deux. Une bordure sombre plus épaisse donne à l'anneau
+            // un fond CONSTANT, qui ne dépend d'aucun art — le même remède que le halo du titre.
+            const float retraitAnneau = 0.16f;
             GameObject anneauGo = NewUI("BadgeAnneau", go.transform);
             RectTransform anneauRt = (RectTransform)anneauGo.transform;
             anneauRt.anchorMin = Vector2.zero; anneauRt.anchorMax = Vector2.one;
@@ -887,9 +906,23 @@ namespace MafiaCleanCity.CityMap
             GameObject go = NewUI(nom, badge);
             var rt = (RectTransform)go.transform;
             rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0.5f, 0.5f);
-            rt.sizeDelta = new Vector2(d * 0.30f, d * 0.30f);
+            // ⚠️ LA PASTILLE PERÇAIT L'ANNEAU. Mesuré par le juge : à `r = 0,42·d` avec un rayon de
+            // `0,15·d`, elle occupait r = 7,1 à 14,1 alors que l'anneau vit à r = 10,0 à 11,8 —
+            // résultat, **l'anneau laiton n'était continu que sur 88 à 90 % de sa circonférence**,
+            // le contour du marqueur primaire était troué à midi, et la pastille sur l'anneau
+            // qu'elle perçait ne contrastait qu'à 1,79:1.
+            // Elle rentre donc ENTIÈREMENT à l'intérieur : r + rayon < rayon intérieur de l'anneau.
+            // Géométrie posée par le calcul, pas à l'œil — mon premier jet était encore trop grand
+            // et la pastille touchait toujours l'anneau :
+            //   rayon du badge            0,500·d
+            //   rayon extérieur de l'anneau 0,500 − 0,16 = 0,340·d   (retrait de 16 %)
+            //   épaisseur de l'anneau     0,12 × 0,68·d = 0,082·d
+            //   rayon INTÉRIEUR           0,340 − 0,082 = 0,258·d    ← la pastille doit rester dedans
+            // Avec un rayon de pastille de 0,08·d posée à 0,15·d du centre : elle occupe 0,07 à
+            // 0,23·d, soit 0,028·d de marge sous l'anneau. Aucun contact possible.
+            rt.sizeDelta = new Vector2(d * 0.16f, d * 0.16f);
             // 4 positions cardinales : haut, droite, bas, gauche — déterministes par rang.
-            float r = d * 0.42f;
+            float r = d * 0.15f;
             float a = Mathf.PI * 0.5f * rang + Mathf.PI * 0.5f;
             rt.anchoredPosition = new Vector2(Mathf.Cos(a) * r, Mathf.Sin(a) * r);
             Image img = go.AddComponent<Image>();
@@ -1156,7 +1189,12 @@ namespace MafiaCleanCity.CityMap
             // MESURÉES par type que le socle utilise déjà (`BuildingSpriteSlots.FootprintOverride`).
             // Un marqueur appartient au bâtiment, pas au rectangle de son fichier.
             float marqueurW = MarqueurDiametrePx;
-            float ecart = MarqueurDiametrePx * 0.25f;
+            // ⚠️ ÉCART PORTÉ DE 0,25 À 0,70 DIAMÈTRE. Mesuré par le juge sur la capture : les deux
+            // médaillons d'un bâtiment à 2 lieutenants étaient à **4 px bord à bord**, leurs anneaux
+            // se touchaient, et avec le badge juste dessous les trois formaient **un seul composant
+            // connexe de 927 px** — une silhouette à trois lobes, « la forme la plus voyante de
+            // l'écran, et elle ne dit rien ». C'était PIRE qu'avant (6,5 px au verdict précédent).
+            float ecart = MarqueurDiametrePx * 0.70f;
             float rangeeW = n * marqueurW + (n - 1) * ecart;
             // Un bâtiment très peuplé ne doit pas voir sa rangée déborder de sa PROPRE empreinte :
             // on rétrécit plutôt que de sortir. Sans ce garde-fou, le défaut reviendrait à
@@ -1183,12 +1221,20 @@ namespace MafiaCleanCity.CityMap
                 rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0f);
                 rt.pivot = new Vector2(0.5f, 0f);
                 rt.sizeDelta = new Vector2(marqueurW, marqueurW);   // CARRÉ : c'est un médaillon
-                float xCentre = footprintOffsetX - rangeeW * 0.5f + i * (marqueurW + ecart) + marqueurW * 0.5f;
+                float xCentre = -rangeeW * 0.5f + i * (marqueurW + ecart) + marqueurW * 0.5f;
                 // Même raison que le badge ci-dessus : l'ancre est au SOL du bâtiment, et la rangée
                 // de médaillons se pose juste au-dessus d'elle — jamais à la hauteur d'un socle qui
                 // n'est plus dessiné.
-                rt.anchoredPosition = new Vector2(xCentre,
-                    footprintBottomMargin + BadgeDiametrePx * 1.35f);
+                // Même raison que le badge : l'ancre est le point sol du bâtiment, et l'empreinte
+                // d'un sprite qu'on ne dessine plus n'a rien à dire sur la position d'un marqueur.
+                // Hauteur choisie par ARITHMÉTIQUE, pas à l'œil. Le juge a CALCULÉ (sans pouvoir
+                // l'observer — aucun bâtiment de la capture n'a exactement 1 lieutenant) que le cas
+                // à UN médaillon le place pile au-dessus du centre du badge : il faut donc que
+                // l'écart vertical dépasse la somme des rayons.
+                //   badge   : centre à 26×0,55 = 14,3, rayon 13
+                //   médaillon : rayon 9  ⇒ somme des rayons 22
+                //   ici     : centre à 26×1,75 = 45,5 ⇒ écart 31,2, marge 9,2
+                rt.anchoredPosition = new Vector2(xCentre, BadgeDiametrePx * 1.75f);
                 // ── L'APPARENCE (ruling user « fais mieux », 2026-08-22) ──────────────────────────
                 // C'était un APLAT rectangulaire opaque. Deux d'entre eux, posés sur un bâtiment
                 // peint, lisaient comme un défaut d'affichage — et ne disaient rien de ce qu'ils
@@ -1221,8 +1267,8 @@ namespace MafiaCleanCity.CityMap
                 GameObject anneauGo = NewUI("Anneau", marker.transform);
                 RectTransform anneauRt2 = (RectTransform)anneauGo.transform;
                 anneauRt2.anchorMin = Vector2.zero; anneauRt2.anchorMax = Vector2.one;
-                anneauRt2.offsetMin = new Vector2(marqueurW * 0.08f, marqueurW * 0.08f);
-                anneauRt2.offsetMax = new Vector2(-marqueurW * 0.08f, -marqueurW * 0.08f);
+                anneauRt2.offsetMin = new Vector2(marqueurW * 0.16f, marqueurW * 0.16f);
+                anneauRt2.offsetMax = new Vector2(-marqueurW * 0.16f, -marqueurW * 0.16f);
                 Image anneau = anneauGo.AddComponent<Image>();
                 anneau.sprite = ProceduralUI.Ring(MarqueurTextureResPx,
                     MarqueurTextureResPx * 0.12f, DesignTokens.Current.hudHairlineGold);

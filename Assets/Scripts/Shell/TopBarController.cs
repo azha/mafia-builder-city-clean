@@ -170,7 +170,22 @@ namespace MafiaCleanCity.Shell
         private const float BarPaddingX = ShellChrome.GutterX;
         private const float LeadingWidth = 90f;
         private const float LeadingHeight = 40f;
-        private const float ManometreDiameter = 64f;
+        // ⛔ RATIOS RE-MESURÉS CONTRE LA MAQUETTE (2026-08-22, demande user « traite le menu en haut
+        // et en bas, en terme de ratio »). Tout est rapporté à la HAUTEUR DE BARRE, la seule grandeur
+        // comparable entre une maquette de 2560 px et un écran de 1200.
+        //   maquette : anneau y 14..141 (le filet à y 102-103 le coupe) ⇒ 128 px pour une barre de
+        //              104 ⇒ **123,1 %** ; débord sous la barre 141−103 = 38 px ⇒ **36,5 %**
+        //   capture  : 58 px pour une barre de 53 ⇒ 109,4 % ; débord 15 px ⇒ 28,3 %
+        // ⇒ 1,231 × 56 = 68,9. ★ Et la mesure a failli être fausse : mon premier relevé donnait
+        //   « 53,8 % de débord » parce que la bande verticale d'or incluait le LOSANGE que la
+        //   maquette pose SOUS le médaillon (y 148..159) — un ornement séparé, pas l'anneau.
+        // ⚠️ 68 ET NON 69, ET C'EST UNE MESURE QUI L'IMPOSE. À 69 — la valeur exacte du ratio —
+        // l'oracle du manomètre rougit : « piste parasite détectée dans le demi-cercle INFÉRIEUR,
+        // ang=333 r=2,5 ». Un diamètre IMPAIR place le centre du cercle procédural entre deux texels
+        // et laisse un pixel isolé près du centre. Ce dépôt connaît déjà cette famille : la parité
+        // d'un conteneur avait fabriqué une phase d'un demi-pixel sur le fond pré-rendu.
+        // 68 donne 121,4 % contre 123,1 % visé (70 donnerait 125,0 %) — c'est le pair le plus proche.
+        private const float ManometreDiameter = 68f;
         private const float BoitierRingThicknessPx = 3f;
         private const float ArcDiameterPx = 48f;
         private const float ArcThicknessPx = 5f;
@@ -196,7 +211,9 @@ namespace MafiaCleanCity.Shell
         //   entièrement dans la barre (0 clip par l'écran) et le bord BAS déborde de ~17px, proche
         //   du ~19px de la référence — le filet et l'anneau redeviennent deux traits clairement
         //   séparés (voir `Tools/hud-v31-manometre-fix-notes.md` § Deviations pour la mesure).
-        private const float ManometreVerticalOffsetPx = -13f;
+        // Débord visé 36,5 % × 56 = 20,4 px sous la barre. Avec un rayon de 34,5 :
+        //   bas = −(28 + 20,4) = −48,4  ⇒  centre = −48,4 + 34,5 = −13,9
+        private const float ManometreVerticalOffsetPx = -14f;
 
         // Alarme (`UpdateAlarmState`) — RE-DÉRIVÉ (2026-08-21, retour user relayé par le
         // contrôleur : « posé sur le décor du district, l'anneau doit lire comme un médaillon
@@ -499,7 +516,12 @@ namespace MafiaCleanCity.Shell
             leadingText = leadingLabelGo.AddComponent<TextMeshProUGUI>();
             leadingText.font = DesignTokens.Current.primaryFont;
             leadingText.text = "";
-            leadingText.fontSize = 14;
+            // Ratio re-mesuré (2026-08-22) : à 14, le libellé du bouton retour occupait **18,9 %**
+            // de la hauteur de barre, presque autant que le MONTANT (20,8 %) — un contrôle secondaire
+            // aussi présent que la valeur principale. La maquette du bandeau ne porte aucun bouton
+            // ici, donc il n'y a pas de ratio ratifié à copier : on le place ENTRE le libellé
+            // (11,3 %) et la valeur (20,8 %), soit ~15 % ⇒ 14 × 15/18,9 = 11,1.
+            leadingText.fontSize = 11;
             leadingText.alignment = TextAlignmentOptions.Center;
             leadingText.color = DesignTokens.Current.onSurfacePrimary;
             leadingText.raycastTarget = false;
@@ -612,13 +634,24 @@ namespace MafiaCleanCity.Shell
             moneyLabelText = NewText("Label", "ARGENT",
                 new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(0f, 1f),
                 new Vector2(0f, -1f), new Vector2(MoneyClusterWidth, 13f),
-                11f, TextAlignmentOptions.Left, DesignTokens.Current.hudCremeSecondary,
+                // Ratio re-mesuré : la maquette met ce libellé à **10,6 %** de la hauteur de barre
+                // (encre y 22..32 pour une barre de 104), la capture était à **13,2 %** (7 px sur 53).
+                // 11 × 10,6/13,2 = 8,8.
+                9f, TextAlignmentOptions.Left, DesignTokens.Current.hudCremeSecondary,
                 letterSpacing: 3f, parent: clusterGo.transform);
 
             moneyValueText = NewText("Value", "—",
                 new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(0f, 1f),
                 new Vector2(0f, -14f), new Vector2(MoneyClusterWidth, 22f),
-                19f, TextAlignmentOptions.Left, DesignTokens.Current.hudMoneyGold,
+                // Ratio re-mesuré, et c'est l'écart le plus fort du bandeau : la maquette met le
+                // montant à **21,2 %** de la hauteur de barre (encre y 44..65 sur 104), la capture
+                // était à **34,0 %** (18 px sur 53) — 60 % trop gros. La hiérarchie s'en trouvait
+                // inversée : la maquette est dominée par le montant, la capture l'était par la jauge.
+                // 19 × 21,2/34,0 = 11,8 ⇒ premier essai à 12f. ⚠️ MESURÉ APRÈS COUP : 18,9 %, donc
+                // TROP PETIT — parce que mon 34,0 % de départ était contaminé par le libellé du
+                // bouton « ← Carte », qui partage ces lignes. Fenêtre resserrée sur la seule colonne
+                // ARGENT (x 108..260), puis 12 × 21,2/18,9 = 13,5 ⇒ 13f.
+                13f, TextAlignmentOptions.Left, DesignTokens.Current.hudMoneyGold,
                 parent: clusterGo.transform);
             moneyValueText.font = DesignTokens.Current.hudSerifFont;
 
@@ -651,13 +684,19 @@ namespace MafiaCleanCity.Shell
             dayLabelText = NewText("DayLabel", "JOUR —",
                 new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(1f, 1f),
                 new Vector2(0f, -1f), new Vector2(ClockClusterWidth, 13f),
-                11f, TextAlignmentOptions.Right, DesignTokens.Current.hudCremeSecondary,
+                // Ratio re-mesuré comme l'aile gauche : la maquette met cette ligne à **10,6 %** de
+                // la hauteur de barre (encre y 30..40 sur 104), la capture était à **15,1 %**.
+                // 11 × 10,6/15,1 = 7,7 ⇒ 8f. Symétrique du libellé « ARGENT », comme il se doit.
+                8f, TextAlignmentOptions.Right, DesignTokens.Current.hudCremeSecondary,
                 letterSpacing: 3f, parent: clusterGo.transform);
 
             phaseValueText = NewText("PhaseValue", "—",
                 new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(1f, 1f),
                 new Vector2(0f, -14f), new Vector2(ClockClusterWidth, 22f),
-                17f, TextAlignmentOptions.Right, DesignTokens.Current.hudCreme,
+                // Maquette : **19,2 %** (encre y 51..70 sur 104) ; capture : **22,6 %**.
+                // 17 × 19,2/22,6 = 14,4 ⇒ 14f. ★ La maquette fait volontairement la valeur de droite
+                // un peu plus PETITE que celle de gauche (19,2 contre 21,2) : l'argent domine.
+                14f, TextAlignmentOptions.Right, DesignTokens.Current.hudCreme,
                 parent: clusterGo.transform);
             phaseValueText.font = DesignTokens.Current.hudSerifFont;
         }
@@ -693,6 +732,41 @@ namespace MafiaCleanCity.Shell
             manoRect.pivot = new Vector2(0.5f, 0.5f);
             manoRect.anchoredPosition = new Vector2(0f, ManometreVerticalOffsetPx);
             manoRect.sizeDelta = new Vector2(ManometreDiameter, ManometreDiameter);
+
+            // ── Le losange doré sous le médaillon — un élément de la maquette JAMAIS construit ────
+            // Relevé sur `Tools/hud-topbar-reference-2560.png` : sous l'anneau (qui finit à y=141),
+            // un motif doré occupe **y 148..159** pour une barre de 104 — soit un ornement de 12 px,
+            // posé 7 px sous l'anneau, centré. Deux juges visuels l'ont signalé absent (« losange
+            // doré sous le manomètre : absent »).
+            // Il ferme le médaillon par le bas, comme une goutte de sceau. Construit avec le losange
+            // que le dépôt a déjà — un carré tourné de 45° — plutôt qu'un sprite neuf.
+            // ⚠️ ENFANT DU MÉDAILLON, PAS DE LA BARRE — et ce n'est pas un détail de rangement.
+            // `EffectiveBottomOverhangPx` mesure les bornes de `Manometre` ET DE SES ENFANTS
+            // (`CalculateRelativeRectTransformBounds` est récursive). Tout ce que le chrome laisse
+            // pendre sous la barre doit donc être DEDANS, sinon la propriété sous-déclare le débord
+            // et l'écran qui réserve sa place se fait chevaucher.
+            // Vécu en direct : posé d'abord en frère de la barre, le losange a fait rougir
+            // `NavF4_TitleClearsTopBar` — le titre du district calait sa hauteur sur un débord qui
+            // ignorait l'ornement. Une garde qui nomme UN objet ne voit pas ce qu'on accroche à côté.
+            GameObject losangeGo = new GameObject("BoitierLosange", typeof(RectTransform));
+            losangeGo.transform.SetParent(manoGo.transform, false);
+            RectTransform losangeRt = (RectTransform)losangeGo.transform;
+            losangeRt.anchorMin = losangeRt.anchorMax = new Vector2(0.5f, 0.5f);
+            losangeRt.pivot = new Vector2(0.5f, 0.5f);
+            float cote = ManometreDiameter * (12f / 128f) * 0.72f;   // 12/128 de l'anneau, minoré : un
+                                                                     // carré tourné couvre plus que sa
+                                                                     // hauteur nominale
+            losangeRt.sizeDelta = new Vector2(cote, cote);
+            // centre = bas de l'anneau (offset − rayon) − l'écart mesuré − la demi-diagonale
+            float ecartSousAnneau = ManometreDiameter * (7f / 128f);
+            // Position RELATIVE au médaillon désormais (son parent) : le centre du losange descend
+            // du rayon, plus l'écart mesuré, plus sa demi-diagonale.
+            losangeRt.anchoredPosition = new Vector2(0f,
+                -(ManometreDiameter * 0.5f + ecartSousAnneau + cote * 0.707f));
+            losangeRt.localEulerAngles = new Vector3(0f, 0f, 45f);
+            Image losangeImg = losangeGo.AddComponent<Image>();
+            losangeImg.color = DesignTokens.Current.hudHairlineGold;
+            losangeImg.raycastTarget = false;
 
             GameObject ringGo = new GameObject("BoitierRing", typeof(RectTransform));
             ringGo.transform.SetParent(manoGo.transform, false);
