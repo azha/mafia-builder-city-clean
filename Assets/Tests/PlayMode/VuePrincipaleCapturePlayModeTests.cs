@@ -169,5 +169,66 @@ namespace MafiaCleanCity.Capture.Tests
             for (int i = 0; i < 12; i++) yield return null;
             Debug.Log($"[CAPTURE] carte de ville — noeuds={noeuds} ecran={Screen.width}x{Screen.height}");
         }
+
+        // ── Capture de NUIT ───────────────────────────────────────────────────────────────────────
+        // Le quart du jour d'un fetch RÉEL dépend de `city_sim_clock.game_minute`, seedé au signup
+        // depuis `city_epoch` : il n'est PAS déterministe d'une exécution à l'autre. Forcer NIGHT
+        // après le fetch est le MÊME geste que font déjà C8F5 et C10F1 pour la même raison — isoler
+        // la propriété qu'on regarde. Ici on ne teste rien : on veut simplement pouvoir REGARDER
+        // l'écran dans son éclairage de nuit, que personne n'avait encore vu en jeu.
+        [UnityTest]
+        public IEnumerator Capture_VuePrincipale_Nuit()
+        {
+            var auth = new AuthClient { BaseUrl = BaseUrl };
+            string callsign = SeederSupport.SafeCallsign("nuit", ref seq);
+            string token = null, err = null;
+            yield return auth.SignUp(callsign, "nuit-capture-pw", t => token = t, e => err = e);
+            Assert.IsNull(err, $"signup errored: {err}");
+
+            var sessionClient = new SessionClient { BaseUrl = BaseUrl };
+            SessionOpenDto payload = null;
+            yield return sessionClient.OpenSession(token, "capture-nuit", dto => payload = dto,
+                (c, m) => Assert.Fail($"session/open failed: {c}: {m}"));
+            Assert.IsNotNull(payload, "session/open doit réussir — il octroie le kit de départ");
+
+            LogAssert.ignoreFailingMessages = true;
+            shellGo = new GameObject("VueNuitShell");
+            shell = shellGo.AddComponent<AppShell>();
+            shell.SetIdentity(callsign, "nuit-capture-pw");
+            yield return null;
+
+            float t0 = Time.realtimeSinceStartup;
+            while (string.IsNullOrEmpty(shell.Token) && Time.realtimeSinceStartup - t0 < 30f) yield return null;
+            Assert.IsFalse(string.IsNullOrEmpty(shell.Token), "le shell doit avoir acquis sa session");
+            for (int i = 0; i < 30; i++) yield return null;
+
+            shell.EnterDistrict(16);
+            var district = Object.FindFirstObjectByType<DistrictInteriorScreenController>();
+            t0 = Time.realtimeSinceStartup;
+            while (district == null && Time.realtimeSinceStartup - t0 < 20f)
+            {
+                yield return null;
+                district = Object.FindFirstObjectByType<DistrictInteriorScreenController>();
+            }
+            Assert.IsNotNull(district, "l'écran district doit être monté");
+            t0 = Time.realtimeSinceStartup;
+            while (district.LastFetch == null && district.LastErrorCode == 0
+                   && Time.realtimeSinceStartup - t0 < 30f) yield return null;
+            Assert.IsNotNull(district.LastFetch, "le payload district doit être arrivé");
+
+            district.LastFetch.day_phase = "NIGHT";
+            district.Render(district.LastFetch);
+            for (int i = 0; i < 20; i++) yield return null;
+
+            // Anti-mensonge : sans ces deux faits, l'image ne montrerait pas ce qu'elle prétend.
+            int batiments = district.LastFetch.buildings == null ? 0 : district.LastFetch.buildings.Length;
+            Assert.Greater(batiments, 0, "le kit de départ doit porter des bâtiments");
+            Transform fondT = district.ScreenRoot.Find("DistrictScene/DistrictBackgroundImage");
+            Assert.IsNotNull(fondT, "un fond de NUIT doit être monté — sinon la capture n'est pas de nuit");
+
+            ScreenCapture.CaptureScreenshot("Assets/Screenshots/vue_principale_nuit.png");
+            for (int i = 0; i < 12; i++) yield return null;
+            Debug.Log($"[CAPTURE] vue de nuit — batiments={batiments} ecran={Screen.width}x{Screen.height}");
+        }
     }
 }
