@@ -27,9 +27,22 @@ import sys
 from PIL import Image
 
 SEUIL_COEUR = 0.75   # luminance au-dessus de laquelle un pixel est du glyphe plein
-BANDE_MORTE = 2      # px ignorés autour du coeur : la frange d'anti-crénelage vit là
-EPAISSEUR_ANNEAU = 3 # px lus juste après la bande morte : le halo, s'il existe
+BANDE_MORTE = 1      # px ignorés autour du coeur : la frange d'anti-crénelage vit là
+EPAISSEUR_ANNEAU = 2 # px lus juste après la bande morte : le halo, s'il existe
 MARGE_ART = 9        # px au-delà desquels on est dans l'art, halo compris
+
+# ⚠️ BANDE MORTE RAMENÉE DE 2 À 1 PX LE 2026-08-22, ET C'EST UNE CINQUIÈME VERSION DE CET
+# INSTRUMENT. À 2 px de bande morte + 3 px d'anneau, il lisait la zone à distance 3..5 du glyphe —
+# or un juge indépendant a mesuré le PROFIL du halo livré :
+#     d=1 : +0,073   d=2 : +0,080   d=3 : +0,031   d=6 : +0,007   d=10 : 0,000
+# Le halo vit donc à d=1..2, c'est-à-dire ENTIÈREMENT DANS LA BANDE MORTE. L'instrument rendait
+# « anneau == art, écart +0,0000 » et j'ai failli en conclure une régression du code : il n'y en
+# avait pas, ma fenêtre regardait à côté.
+# ★ Et il y a pire, qu'il faut écrire : la mesure PRÉCÉDENTE (anneau 0,2223 contre art 0,3490,
+# « le halo mord ») était elle aussi fausse — le titre reposait alors à 65 % sur la bande sombre du
+# letterbox, et c'est CETTE bande que l'anneau échantillonnait, pas le halo. Deux mesures
+# successives, deux contaminations différentes, et la seconde m'avait CONFIRMÉ ce que je voulais.
+# ⇒ Régime à déclarer avec tout résultat de cet instrument : sur QUOI le titre repose.
 
 
 def luminance(c):
