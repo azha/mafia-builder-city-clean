@@ -246,3 +246,36 @@ sorties possibles, et aucune n'est technique :
 Non tranché — c'est un arbitrage produit, sur un élément que l'user a ratifié sur maquette. Ce qui
 est certain et mesuré : **le rendre plein et doré est le seul choix des trois qui affirme une
 valeur fausse.**
+
+---
+
+# Une conclusion du juge RÉFUTÉE par la mesure — le pan/zoom existe
+
+Le juge a écrit que la bande basse du rendu jamais visible (22,6 % de sa hauteur) est **définitive**,
+au motif que « l'écran intérieur n'a aucun gestionnaire de pan/zoom » — `grep -cE
+"IDragHandler|ScrollRect|OnDrag|OnScroll|Pinch"` sur `DistrictInteriorScreenController.cs` → **0**.
+
+Le compte est exact. La conclusion ne l'est pas, et il avait lui-même la pièce manquante sous les
+yeux : il note « 11 hits du même motif dans `DistrictMapNavigation.cs` » et conclut quand même
+depuis le zéro du contrôleur.
+
+Chaîne remontée jusqu'au bout, chaque maillon cité :
+
+| maillon | ancre | état |
+|---|---|---|
+| le composant est MONTÉ en production | `DistrictInteriorScreenController.cs:565` — `sceneGo.AddComponent<DistrictMapNavigation>()` | ✅ |
+| il est CONFIGURÉ avec le fond et le cadrage | `:576` — `MapNavigation.Configure(fondRt, initialFocus)` | ✅ |
+| il active le tactile | `DistrictMapNavigation.cs:266` — `OnEnable() => EnhancedTouchSupport.Enable()` | ✅ |
+| il LIT les doigts à chaque frame | `:276` `Update()`, `:285` `Touch.activeTouches` | ✅ |
+
+⇒ **La navigation ne s'appelle pas de l'extérieur : elle se pilote elle-même.** Chercher un appel
+à `PanBy`/`ZoomTo` dans le code de production rend bien 0 — et ce zéro ne prouve rien, parce que
+le mécanisme n'a pas d'appelant par conception.
+
+★ C'est exactement le piège que ce dépôt documente : *un balayage exact peut porter une lecture
+fausse, et un `grep` scopé au mauvais fichier rend un zéro parfaitement honnête*. La méthode qui
+tranche est la même que pour les chaînes mortes — **remonter la chaîne maillon par maillon jusqu'à
+un consommateur réel**, au lieu de conclure d'un compte.
+
+Conséquence pratique : la bande basse du rendu **est atteignable au doigt**. Le coût du cadrage
+reste compositionnel (la marge d'eau se réduit à l'ouverture), pas une perte de contenu.
