@@ -795,8 +795,20 @@ namespace MafiaCleanCity.CityMap
         // n'était identifiable que par sa lumière, donc un bâtiment possédé, en mauvais état et
         // inactif était indiscernable des 55 bâtiments d'ambiance du rendu. Le badge est posé pour
         // TOUT bâtiment reçu — `buildings[]` ne porte que ceux du joueur (prémisse §2).
-        private const float BadgeDiametreMinPx = 12f;
-        private const float BadgeDiametreMaxPx = 22f;
+        // ⛔ DIAMÈTRE CONSTANT, PLUS DE PLAGE (2026-08-22, verdict du juge visuel).
+        //
+        // La version d'avant dérivait le diamètre de l'empreinte du bâtiment
+        // (`footprintW * 0,10`, borné 12..22). Le juge a mesuré ce que ça produit à l'écran :
+        // **quatre badges de quatre diamètres différents** — 20, 17, 15 et 12 px — alors que
+        // les 60 parcelles de la carte d'ancrage portent TOUTES le même `largeur_px = 149,12`.
+        // Rien dans les données n'explique la variation, et elle DÉCROÎT quand y augmente,
+        // c'est-à-dire l'inverse d'un indice de profondeur. Un lecteur y cherche un sens qui
+        // n'existe pas.
+        // ⇒ Un badge dit « ce bâtiment est à vous ». Ça ne se dit pas plus fort sur un grand
+        // bâtiment. Le diamètre est donc une constante d'INTERFACE, comme une puce de liste.
+        // ★ Et il est désormais PLUS GRAND que le médaillon de lieutenant : le juge a relevé la
+        // hiérarchie inversée — le marqueur secondaire (24 px) écrasait le primaire (12 à 20).
+        private const float BadgeDiametrePx = 26f;
         private const int BadgeTextureResPx = 64;
 
         /// <summary>Le badge de la cellule, créé au premier besoin. Placé sur l'EMPREINTE mesurée du
@@ -808,7 +820,7 @@ namespace MafiaCleanCity.CityMap
             Transform deja = cell.Find("OwnershipBadge");
             if (deja != null) return (RectTransform)deja;
 
-            float d = Mathf.Clamp(footprintW * 0.10f, BadgeDiametreMinPx, BadgeDiametreMaxPx);
+            float d = BadgeDiametrePx;
             GameObject go = NewUI("OwnershipBadge", cell);
             var rt = (RectTransform)go.transform;
             rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0f);
@@ -816,7 +828,7 @@ namespace MafiaCleanCity.CityMap
             rt.sizeDelta = new Vector2(d, d);
             // Au-dessus de la rangée de lieutenants (elle occupe `socleH` + son propre diamètre).
             rt.anchoredPosition = new Vector2(footprintOffsetX,
-                footprintBottomMargin + cellH * 0.2f + MarqueurDiametreMaxPx * 1.15f);
+                footprintBottomMargin + cellH * 0.2f + MarqueurDiametrePx * 1.30f);
 
             // Même composition que le médaillon de lieutenant et que celui du bandeau : disque
             // sombre, anneau laiton. Texture générée GRANDE et affichée petite — un disque généré à
@@ -1064,8 +1076,12 @@ namespace MafiaCleanCity.CityMap
         /// plutôt que dispersée en `if` dans le corps du rendu.</summary>
         private const bool FondPorteDejaLesBatiments = true;
 
-        private const float MarqueurDiametreMinPx = 14f;
-        private const float MarqueurDiametreMaxPx = 26f;
+        // Le médaillon de lieutenant est SECONDAIRE : il précise une affectation sur un bâtiment
+        // dont la possession est déjà dite par le badge. Il est donc plus PETIT que lui (18 contre
+        // 26) — le juge avait mesuré l'inverse, 24 contre 12 à 20, et un marqueur secondaire plus
+        // gros que le primaire se lit comme une erreur de hiérarchie. Constante, pour la même
+        // raison que le badge : la taille d'une affordance ne dépend pas de celle du bâtiment.
+        private const float MarqueurDiametrePx = 18f;
         /// <summary>Résolution INTERNE des textures du médaillon — délibérément supérieure au
         /// diamètre affiché (14 à 26 px). Voir le commentaire au site d'usage : générer à la taille
         /// affichée rend un blob anguleux, défaut déjà payé par le manomètre du bandeau.</summary>
@@ -1114,9 +1130,8 @@ namespace MafiaCleanCity.CityMap
             // l'EMPREINTE RÉELLE du bâtiment — `footprintW`/`footprintOffsetX`, les mêmes valeurs
             // MESURÉES par type que le socle utilise déjà (`BuildingSpriteSlots.FootprintOverride`).
             // Un marqueur appartient au bâtiment, pas au rectangle de son fichier.
-            const float largeurRelative = 0.12f, ecartRelatif = 0.02f;
-            float marqueurW = footprintW * largeurRelative;
-            float ecart = footprintW * ecartRelatif;
+            float marqueurW = MarqueurDiametrePx;
+            float ecart = MarqueurDiametrePx * 0.25f;
             float rangeeW = n * marqueurW + (n - 1) * ecart;
             // Un bâtiment très peuplé ne doit pas voir sa rangée déborder de sa PROPRE empreinte :
             // on rétrécit plutôt que de sortir. Sans ce garde-fou, le défaut reviendrait à
@@ -1130,8 +1145,6 @@ namespace MafiaCleanCity.CityMap
             // bâtiment. Sans borne, le lab (empreinte large) en obtenait deux pavés de ~65px, ce que
             // la capture montrait comme deux rectangles flottants. Bornes choisies pour rester
             // lisibles au zoom ×1 sans écraser un petit bâtiment.
-            marqueurW = Mathf.Clamp(marqueurW, MarqueurDiametreMinPx, MarqueurDiametreMaxPx);
-            ecart = marqueurW * 0.25f;
             rangeeW = n * marqueurW + (n - 1) * ecart;
             float socleH = cellH * 0.2f;   // REUSE — la hauteur que `Socle` occupe juste en dessous
 

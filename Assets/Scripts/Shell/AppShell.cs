@@ -536,6 +536,34 @@ namespace MafiaCleanCity.Shell
             // `TabBarMask` PREMIER enfant (rendu SOUS tout le reste) et exclu du HorizontalLayoutGroup
             // ci-dessous (`LayoutElement.ignoreLayout` — sinon le HLG le traiterait comme un 6e
             // bouton et lui disputerait de la largeur).
+            // ── Fond d'assise : la barre ne doit RIEN laisser passer sous elle ────────────────────
+            // Mesuré au pixel sur la capture de livraison (verdict du juge visuel, 2026-08-22) :
+            // le panneau d'onglets occupait y 1546..1593 d'un écran de 1600, et les **6 dernières
+            // lignes** laissaient voir l'art du district — un liseré teal `(35,59,70)` sur toute la
+            // largeur, dont la couleur CHANGEAIT selon ce qu'il y avait derrière. Quatre lignes de
+            // plus passaient au-dessus du panneau, entre lui et le filet d'or.
+            // Deux causes cumulées, aucune fautive en soi : le masque à coins arrondis n'atteint pas
+            // les bords sur toute la largeur, et la barre est délibérément décalée au-dessus de la
+            // zone sûre système. L'interstice est donc VOULU — mais il doit montrer du CHROME, pas
+            // le décor du locataire.
+            // Ce panneau est un frère ANTÉRIEUR du masque (rendu dessous), étiré du haut de la barre
+            // jusqu'au bord BAS de l'écran, quelle que soit la zone sûre.
+            GameObject assiseGo = new GameObject("TabBarAssise", typeof(RectTransform), typeof(CanvasRenderer));
+            assiseGo.transform.SetParent(tabBarGo.transform, false);
+            RectTransform assiseRt = (RectTransform)assiseGo.transform;
+            assiseRt.anchorMin = new Vector2(0f, 0f);
+            assiseRt.anchorMax = new Vector2(1f, 1f);
+            assiseRt.offsetMin = new Vector2(0f, -(bottomSafeInset + 2f)); // jusqu'au bord bas, marge comprise
+            assiseRt.offsetMax = Vector2.zero;
+            Image assiseImg = assiseGo.AddComponent<Image>();
+            // REUSE du stop BAS du verre de barre (`hudBarGlassBottom`), forcé OPAQUE : le token
+            // porte un alpha de 0,847 pour le VERRE, mais une assise translucide laisserait
+            // justement passer ce qu'elle existe pour cacher — le monde dégénéré de ce correctif.
+            Color verre = DesignTokens.Current.hudBarGlassBottom;
+            assiseImg.color = new Color(verre.r, verre.g, verre.b, 1f);
+            assiseImg.raycastTarget = false;
+            assiseGo.AddComponent<LayoutElement>().ignoreLayout = true;
+
             GameObject maskGo = new GameObject("TabBarMask", typeof(RectTransform), typeof(CanvasRenderer));
             maskGo.transform.SetParent(tabBarGo.transform, false);
             Stretch((RectTransform)maskGo.transform, Vector2.zero, Vector2.zero);
