@@ -377,6 +377,8 @@ namespace MafiaCleanCity.CityMap
             RectTransform sceneRt = (RectTransform)sceneGo.transform;
             Stretch(sceneRt, Vector2.zero, Vector2.zero);
 
+            GameObject cellsGo;          // le calque des cellules — voir les deux branches ci-dessous
+            RectTransform cellsRt;
             DistrictBackgroundSlots bgSlots = DistrictBackgroundSlots.Current;
             DistrictBackgroundSlots.BackgroundEntry bg = bgSlots != null ? bgSlots.Resolve(dto.profile, mode) : null;
             DistrictBackgroundAnchorDto anchorMap = (bg != null && bg.ancre != null)
@@ -440,6 +442,24 @@ namespace MafiaCleanCity.CityMap
                 fondImg.raycastTarget = false; // pp-F6 — le fond est inerte : ni Button ni état.
                 // pp-F6 : le fond ne porte AUCUN enfant — bâtiments et calques d'état sont des
                 // FRÈRES sous DistrictScene (construits ci-dessous), jamais des enfants de fondGo.
+
+                // ── DistrictCells — le calque des bâtiments, CALQUÉ SUR LE FOND (2026-08-22) ──────
+                // Défaut qui l'a rendu nécessaire : le fond fait 1080 de large dans un viewport de
+                // 1200, donc deux bandes de 60 px, et du contenu de district y était DESSINÉ —
+                // 427 lignes mesurées jusqu'à x=0, dont un marqueur de lieutenant entièrement hors
+                // cadre. La garde qui existait (`JugeD2`) est structurellement AVEUGLE à ça : elle
+                // prouve que le backdrop est DERRIÈRE et COUVRE, jamais que le premier plan reste
+                // DEDANS.
+                //
+                // Ce nœud recopie EXACTEMENT le rect du fond — y compris son `anchoredPosition` LU
+                // APRÈS `SnapToScreenPixel`, jamais un delta recalculé. Le nœud du fond, lui, n'est
+                // pas touché : la bit-exactitude du transport est préservée par construction.
+                // Le `RectMask2D` est posé plus bas (chunk C3), après que les cellules existent.
+                cellsGo = NewUI("DistrictCells", sceneRt);
+                cellsRt = (RectTransform)cellsGo.transform;
+                cellsRt.anchorMin = cellsRt.anchorMax = cellsRt.pivot = new Vector2(0.5f, 0.5f);
+                cellsRt.sizeDelta = fondRt.sizeDelta;
+                cellsRt.anchoredPosition = fondRt.anchoredPosition;
             }
             else
             {
@@ -461,6 +481,15 @@ namespace MafiaCleanCity.CityMap
                 Image placeholderImg = placeholderGo.AddComponent<Image>();
                 placeholderImg.color = DesignTokens.Current.nightOutOfDistrictMuted;
                 placeholderImg.raycastTarget = false;
+
+                // Repli : `DistrictCells` existe quand même (le site de construction des cellules
+                // n'a pas à connaître de branche), mais en CLONE de DistrictScene et SANS masque —
+                // il n'y a aucun rect de fond à découper, donc rien à promettre. Conséquence voulue :
+                // son `anchoredPosition` y vaut (0,0), ce qui fait retomber la correction du cadrage
+                // ci-dessous sur sa valeur historique PAR LA FORMULE, sans branche.
+                cellsGo = NewUI("DistrictCells", sceneRt);
+                cellsRt = (RectTransform)cellsGo.transform;
+                Stretch(cellsRt, Vector2.zero, Vector2.zero);
             }
 
             // C8-F2 (amendée, §Deviations) : unité = le bloc, jointure bâtiment→bloc pour situer
@@ -493,9 +522,15 @@ namespace MafiaCleanCity.CityMap
                 {
                     if (!blockByBlockId.TryGetValue(building.block_id, out DistrictInteriorBlockDto block))
                         continue; // D2 garantit l'appartenance ; défensif.
-                    GameObject cell = BuildBuildingCell(sceneRt, block.x, block.y, building, anchorMap, scaleFactor);
+                    GameObject cell = BuildBuildingCell(cellsRt, block.x, block.y, building, anchorMap, scaleFactor);
                     RenderedBuildingCount++;
-                    playerBuildingLocalPositions.Add(((RectTransform)cell.transform).anchoredPosition);
+                    // `DistrictMapNavigation.Configure` attend ce point dans l'espace de DistrictScene ;
+                    // la cellule est désormais relative au centre de `DistrictCells`, c'est-à-dire au
+                    // centre du FOND. L'offset entre les deux repères est lu VIVANT sur `cellsRt` —
+                    // jamais recopié, jamais une constante. Dans la branche de repli il vaut (0,0) et
+                    // la somme retombe sur la valeur historique sans qu'aucune branche ne l'écrive.
+                    playerBuildingLocalPositions.Add(
+                        cellsRt.anchoredPosition + ((RectTransform)cell.transform).anchoredPosition);
                 }
             }
 
@@ -596,6 +631,9 @@ namespace MafiaCleanCity.CityMap
             float footprintOffsetX = footprint.centerOffsetPx / scaleFactor;
             float footprintBottomMargin = footprint.bottomMarginPx / scaleFactor;
 
+            // Même raison que le sprite ci-dessous : une ombre de contact sous un bâtiment que le
+            // fond peint déjà (avec SA propre ombre, cohérente avec la lumière du rendu) ne serait
+            // qu'une tache posée à côté de la vraie.
             GameObject socle = NewUI("Socle", cell.transform);
             RectTransform socleRt = (RectTransform)socle.transform;
             socleRt.anchorMin = socleRt.anchorMax = new Vector2(0.5f, 0f);
@@ -627,6 +665,7 @@ namespace MafiaCleanCity.CityMap
                 Image bimg = go.AddComponent<Image>();
                 bimg.color = new Color(socleTeinte.r, socleTeinte.g, socleTeinte.b, bande.aCouche);
                 bimg.raycastTarget = false;
+                bimg.enabled = !FondPorteDejaLesBatiments;  // le fond peint déjà SON ombre
             }
 
             // Sprite — pp-F3 : ZÉRO rescale, remplit SA propre ancre exactement (Cell est
@@ -635,6 +674,22 @@ namespace MafiaCleanCity.CityMap
             GameObject spriteGo = NewUI("BuildingSprite", cell.transform);
             RectTransform spriteRt = (RectTransform)spriteGo.transform;
             Image spriteImg = spriteGo.AddComponent<Image>();
+            // ⛔ ARBITRAGE USER (2026-08-22) — « tout doit être construit, on n'est pas un city
+            // builder », et plus tôt dans le même chantier : « garder la ville intacte, le sprite du
+            // joueur se pose PAR-DESSUS le bâtiment existant ».
+            //
+            // Le fond livré porte désormais le rendu COMPLET du district (bâtiments présents), et non
+            // plus la « plaque » dont `parcelles.py` avait retiré tout volume couvrant une parcelle.
+            // Le bâtiment d'une parcelle est donc DÉJÀ peint, avec la bonne lumière, la bonne ombre
+            // et le bon point de vue. Redessiner par-dessus un sprite re-rendu produisait deux
+            // bâtiments au même endroit — mesuré : 7,26 % de la zone de jeu différait du fond, tout
+            // entier concentré sur les 4 bâtiments du kit de départ.
+            //
+            // Ce que Unity dessine ici n'est donc plus le BÂTIMENT mais ce qui le qualifie :
+            // possession, état, affectation de lieutenant. Le nœud reste en place (les gardes
+            // structurelles le cherchent, et les calques d'état s'y accrochent) ; c'est son IMAGE
+            // qui s'efface.
+            spriteImg.enabled = !FondPorteDejaLesBatiments;
             if (baseSprite != null)
             {
                 spriteImg.sprite = baseSprite;
@@ -667,10 +722,13 @@ namespace MafiaCleanCity.CityMap
             // C9 (§3, §1.5 — U-10) : les 5 bindings lumineux. C10 (D10/§C2-bis) : les marqueurs de
             // lieutenant. INCHANGÉS par P3 — aucune des deux familles de falsifiables ne référence
             // CellSize/GridArea, seuls les comptes et l'appariement par nom `Cell_x_y` comptent.
-            BuildWindowLight(cell.transform, building);       // bindings 1+2 — possédé / raid-saisie
-            BuildRevenueSign(cell.transform, building);       // binding 3 — néon "ça rapporte" (D3)
-            BuildActivitySmoke(cell.transform, building);     // binding 4 — fumée "op active"
-            BuildMaintenanceFlicker(cell.transform, building); // binding 5 — grésillement "maintenance en retard"
+            // Les 4 mesures d'empreinte suivent : depuis que le fond porte les bâtiments, ces
+            // bindings ne peignent plus SUR le bâtiment, ils posent une pastille sur son badge — et
+            // un badge s'aligne sur le BÂTIMENT, pas sur le rectangle de son fichier de sprite.
+            BuildWindowLight(cell.transform, building, footprintW, footprintOffsetX, footprintBottomMargin, cellH);
+            BuildRevenueSign(cell.transform, building, footprintW, footprintOffsetX, footprintBottomMargin, cellH);
+            BuildActivitySmoke(cell.transform, building, footprintW, footprintOffsetX, footprintBottomMargin, cellH);
+            BuildMaintenanceFlicker(cell.transform, building, footprintW, footprintOffsetX, footprintBottomMargin, cellH);
             // Les 4 mesures d'empreinte sont passées : un marqueur s'aligne sur le BÂTIMENT, pas sur
             // le rectangle de son fichier de sprite (voir BuildLieutenantMarkers).
             BuildLieutenantMarkers(cell.transform, building,
@@ -702,6 +760,90 @@ namespace MafiaCleanCity.CityMap
         /// rendu de repli (rectangle token), jamais un trou silencieux. P3 : remplit SA cellule
         /// exactement (plus de `k` — la cellule EST déjà la taille native compensée du sprite de
         /// base, et les calques sont recadrés pixel-à-pixel sur ce même sprite).</summary>
+        // ── Le badge de possession et ses pastilles d'état (2026-08-22) ───────────────────────────
+        //
+        // POURQUOI ce dispositif remplace les couches d'art. Le fond porte désormais les bâtiments
+        // (`FondPorteDejaLesBatiments`). Les quatre bindings d'état étaient des calques recadrés
+        // PIXEL À PIXEL sur le sprite de base : sans ce sprite, le calque additif pose un VOILE BLANC
+        // sur le bâtiment que le rendu a peint (+38/+33/+29 de R/G/B, mesuré), et sa branche de repli
+        // pose un APLAT ORANGE en plein ciel — j'ai vu les deux sur la capture.
+        //
+        // ★ Ce qui NE change PAS, et c'est le point : le FAIT reste compté. Le commentaire de
+        // `BuildWindowLight` l'avait écrit d'avance — « C9-F2 mesure l'ÉGALITÉ fait↔compte, jamais la
+        // présence d'un objet précis ». Les compteurs (`RenderedWindowLightCount`, `RenderedNeonGlow
+        // Count`, `RenderedSmokeCount`…) sont la propriété ; le dessin est libre. Ces bindings
+        // changent donc de SUPPORT, pas de sémantique.
+        //
+        // ★★ Et le badge comble un manque que l'ancien dispositif masquait : un bâtiment POSSÉDÉ
+        // n'était identifiable que par sa lumière, donc un bâtiment possédé, en mauvais état et
+        // inactif était indiscernable des 55 bâtiments d'ambiance du rendu. Le badge est posé pour
+        // TOUT bâtiment reçu — `buildings[]` ne porte que ceux du joueur (prémisse §2).
+        private const float BadgeDiametreMinPx = 12f;
+        private const float BadgeDiametreMaxPx = 22f;
+        private const int BadgeTextureResPx = 64;
+
+        /// <summary>Le badge de la cellule, créé au premier besoin. Placé sur l'EMPREINTE mesurée du
+        /// bâtiment (mêmes valeurs que le socle et les marqueurs de lieutenant), au-dessus de la
+        /// rangée de lieutenants pour ne pas la recouvrir.</summary>
+        private RectTransform EnsureOwnershipBadge(Transform cell, float footprintW, float footprintOffsetX,
+            float footprintBottomMargin, float cellH)
+        {
+            Transform deja = cell.Find("OwnershipBadge");
+            if (deja != null) return (RectTransform)deja;
+
+            float d = Mathf.Clamp(footprintW * 0.10f, BadgeDiametreMinPx, BadgeDiametreMaxPx);
+            GameObject go = NewUI("OwnershipBadge", cell);
+            var rt = (RectTransform)go.transform;
+            rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0f);
+            rt.pivot = new Vector2(0.5f, 0f);
+            rt.sizeDelta = new Vector2(d, d);
+            // Au-dessus de la rangée de lieutenants (elle occupe `socleH` + son propre diamètre).
+            rt.anchoredPosition = new Vector2(footprintOffsetX,
+                footprintBottomMargin + cellH * 0.2f + MarqueurDiametreMaxPx * 1.15f);
+
+            // Même composition que le médaillon de lieutenant et que celui du bandeau : disque
+            // sombre, anneau laiton. Texture générée GRANDE et affichée petite — un disque généré à
+            // sa taille d'affichage rend un blob anguleux (défaut payé par le manomètre,
+            // `TopBarController.cs:829-833`).
+            Image disque = go.AddComponent<Image>();
+            disque.sprite = ProceduralUI.RadialDisc(BadgeTextureResPx,
+                DesignTokens.Current.hudGaugeFaceInner, DesignTokens.Current.hudGaugeFaceOuter);
+            disque.color = Color.white;
+            disque.raycastTarget = false;
+
+            GameObject anneauGo = NewUI("BadgeAnneau", go.transform);
+            Stretch((RectTransform)anneauGo.transform, Vector2.zero, Vector2.zero);
+            Image anneau = anneauGo.AddComponent<Image>();
+            anneau.sprite = ProceduralUI.Ring(BadgeTextureResPx, BadgeTextureResPx * 0.11f,
+                DesignTokens.Current.hudHairlineGold);
+            anneau.color = Color.white;
+            anneau.raycastTarget = false;
+            return rt;
+        }
+
+        /// <summary>Une pastille d'état sur le badge. `rang` la place sur un petit arc autour du
+        /// disque, pour que deux états simultanés restent DEUX objets distincts — même exigence que
+        /// les marqueurs de lieutenant (C10-F1 : jamais confondus en un seul).</summary>
+        private void BuildStatePip(Transform cell, string nom, int rang, Color teinte,
+            float footprintW, float footprintOffsetX, float footprintBottomMargin, float cellH)
+        {
+            RectTransform badge = EnsureOwnershipBadge(cell, footprintW, footprintOffsetX,
+                footprintBottomMargin, cellH);
+            float d = badge.sizeDelta.x;
+            GameObject go = NewUI(nom, badge);
+            var rt = (RectTransform)go.transform;
+            rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.sizeDelta = new Vector2(d * 0.30f, d * 0.30f);
+            // 4 positions cardinales : haut, droite, bas, gauche — déterministes par rang.
+            float r = d * 0.42f;
+            float a = Mathf.PI * 0.5f * rang + Mathf.PI * 0.5f;
+            rt.anchoredPosition = new Vector2(Mathf.Cos(a) * r, Mathf.Sin(a) * r);
+            Image img = go.AddComponent<Image>();
+            img.sprite = ProceduralUI.RadialDisc(BadgeTextureResPx, teinte, teinte);
+            img.color = Color.white;
+            img.raycastTarget = false;
+        }
+
         private Image TryBuildOverlay(Transform cell, string name, string opType, string couche, Color tint)
         {
             BuildingSpriteSlots slots = BuildingSpriteSlots.Current;
@@ -734,9 +876,17 @@ namespace MafiaCleanCity.CityMap
         // famille que le précédent `laverie` de ce dépôt.
         private static readonly HashSet<string> BakedLightingTemplates = new HashSet<string> { "lab", "stash" };
 
-        private void BuildWindowLight(Transform cell, DistrictInteriorBuildingDto building)
+        private void BuildWindowLight(Transform cell, DistrictInteriorBuildingDto building,
+            float footprintW, float footprintOffsetX, float footprintBottomMargin, float cellH)
         {
             if (building.condition_band != "SOUND") return; // éteinte — aucune lumière décorative (C9-F2)
+            if (FondPorteDejaLesBatiments)
+            {
+                BuildStatePip(cell, "WindowLight", 0, DesignTokens.Current.nightWindowLit,
+                    footprintW, footprintOffsetX, footprintBottomMargin, cellH);
+                RenderedWindowLightCount++;
+                return;
+            }
             Image ov = TryBuildOverlay(cell, "WindowLight", building.operational_type, "fen", Color.white);
             if (ov == null && !BakedLightingTemplates.Contains(building.operational_type))
             {
@@ -761,7 +911,8 @@ namespace MafiaCleanCity.CityMap
         /// (`revenue_chain == UNWIRED` — "le bâtiment lit comme un local occupé, pas comme un commerce
         /// éteint", D3). Seul le premier état compte comme une SOURCE lumineuse (C9-F2/F3 : "néon
         /// rendu" == binding 3 qui commande une lumière, pas une enseigne simplement présente).</summary>
-        private void BuildRevenueSign(Transform cell, DistrictInteriorBuildingDto building)
+        private void BuildRevenueSign(Transform cell, DistrictInteriorBuildingDto building,
+            float footprintW, float footprintOffsetX, float footprintBottomMargin, float cellH)
         {
             if (building.revenue_chain != "WIRED") return; // pas d'enseigne du tout (D3)
             bool earning = building.revenue_band == "EARNING";
@@ -769,6 +920,20 @@ namespace MafiaCleanCity.CityMap
             // (blanc chaud + halo) ; la teinte n'est plus qu'une INTENSITÉ — pleine si EARNING, blend
             // vers nightBase si IDLE (REUSE du patron FloorTint historique, R2.3).
             Color tint = earning ? Color.white : Color.Lerp(Color.white, DesignTokens.Current.nightBase, 0.75f);
+            if (FondPorteDejaLesBatiments)
+            {
+                // La pastille n'existe QUE pour l'enseigne allumée : une enseigne présente mais sombre
+                // est une ABSENCE de signal, et un badge n'a pas de place pour dire « rien ». Le
+                // compteur suit la même règle qu'avant (seul EARNING est une source, C9-F2/F3).
+                if (earning)
+                {
+                    BuildStatePip(cell, "RevenueSign", 1, DesignTokens.Current.nightNeonGlow,
+                        footprintW, footprintOffsetX, footprintBottomMargin, cellH);
+                    RenderedNeonGlowCount++;
+                    TryStartAmbientLoop(cell.Find("OwnershipBadge/RevenueSign").gameObject);
+                }
+                return;
+            }
             Image ov = TryBuildOverlay(cell, "RevenueSign", building.operational_type, "neon", tint);
             GameObject signGo;
             if (ov != null) signGo = ov.gameObject;
@@ -793,9 +958,18 @@ namespace MafiaCleanCity.CityMap
         /// <summary>Binding 4 (§1.5 ligne 4) — la fumée "op active". `activity_band == ACTIVE` seul
         /// commande cette lumière (D2 v2 MAJOR R4 : `IDLE` est le défaut honnête pour tout bâtiment, y
         /// compris les 6 types qui ne peuvent JAMAIS opérer).</summary>
-        private void BuildActivitySmoke(Transform cell, DistrictInteriorBuildingDto building)
+        private void BuildActivitySmoke(Transform cell, DistrictInteriorBuildingDto building,
+            float footprintW, float footprintOffsetX, float footprintBottomMargin, float cellH)
         {
             if (building.activity_band != "ACTIVE") return;
+            if (FondPorteDejaLesBatiments)
+            {
+                BuildStatePip(cell, "ActivitySmoke", 2, DesignTokens.Current.nightSmoke,
+                    footprintW, footprintOffsetX, footprintBottomMargin, cellH);
+                RenderedSmokeCount++;
+                TryStartAmbientLoop(cell.Find("OwnershipBadge/ActivitySmoke").gameObject);
+                return;
+            }
             Image ov = TryBuildOverlay(cell, "ActivitySmoke", building.operational_type, "actif", Color.white);
             GameObject smoke;
             if (ov != null) smoke = ov.gameObject;
@@ -823,10 +997,19 @@ namespace MafiaCleanCity.CityMap
         /// champ — voir Tools/w3u2-c9-notes.md § Deviations pour la mesure qui fonde ce choix (imprévu
         /// non bloquant, option conservatrice : un seul état binaire, jamais un 3ᵉ palier inventé sans
         /// token pour le porter).</summary>
-        private void BuildMaintenanceFlicker(Transform cell, DistrictInteriorBuildingDto building)
+        private void BuildMaintenanceFlicker(Transform cell, DistrictInteriorBuildingDto building,
+            float footprintW, float footprintOffsetX, float footprintBottomMargin, float cellH)
         {
             bool overdue = building.lapse_phase_bucket != "WITHIN_WINDOW";
             if (!overdue || building.maintenance_in_progress) return;
+            if (FondPorteDejaLesBatiments)
+            {
+                BuildStatePip(cell, "MaintenanceFlicker", 3, DesignTokens.Current.accentWarning,
+                    footprintW, footprintOffsetX, footprintBottomMargin, cellH);
+                RenderedMaintenanceFlickerCount++;   // le FAIT se compte, quelle que soit sa forme
+                TryStartAmbientLoop(cell.Find("OwnershipBadge/MaintenanceFlicker").gameObject);
+                return;
+            }
             GameObject flicker = NewUI("MaintenanceFlicker", cell);
             RectTransform rt = (RectTransform)flicker.transform;
             rt.anchorMin = new Vector2(0.7f, 0.78f);
@@ -850,6 +1033,20 @@ namespace MafiaCleanCity.CityMap
         /// <summary>Bornes du médaillon d'un marqueur. Un marqueur est une AFFORDANCE : il dit
         /// « un lieutenant est affecté ici ». Sa taille suit donc la lisibilité, pas la taille du
         /// bâtiment — sans borne, un gros bâtiment en obtenait un pavé et un petit un confetti.</summary>
+        /// <summary>Le fond pré-rendu porte-t-il DÉJÀ les bâtiments de parcelle ?
+        ///
+        /// Depuis le 2026-08-22 : OUI. Le fond livré est le rendu COMPLET du district, plus la
+        /// « plaque » dont l'atelier retirait tout volume couvrant une parcelle. Conséquence directe
+        /// du ruling user « tout doit être construit, on n'est pas un city builder » — et de
+        /// l'arbitrage plus ancien du même chantier, « garder la ville intacte, le sprite du joueur
+        /// se pose par-dessus le bâtiment existant ».
+        ///
+        /// Ce drapeau est une CONSTANTE et pas un réglage : il décrit une propriété de l'art livré,
+        /// pas un choix d'exécution. Le jour où un profil de district reviendrait à une plaque, c'est
+        /// l'art qui changerait, et cette constante avec — délibérément visible, à un seul endroit,
+        /// plutôt que dispersée en `if` dans le corps du rendu.</summary>
+        private const bool FondPorteDejaLesBatiments = true;
+
         private const float MarqueurDiametreMinPx = 14f;
         private const float MarqueurDiametreMaxPx = 26f;
         /// <summary>Résolution INTERNE des textures du médaillon — délibérément supérieure au

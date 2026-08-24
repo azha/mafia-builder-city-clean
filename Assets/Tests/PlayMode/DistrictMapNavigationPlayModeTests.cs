@@ -212,7 +212,7 @@ namespace MafiaCleanCity.CityMap.Tests
             RectTransform fondRt = (RectTransform)scene.Find("DistrictBackgroundImage");
             // Cell_3_0 == cash_safehouse (starter kit J0, block x=3 y=0, précédent maison mesuré —
             // Tools/pivot-fond-prerendu-p3-implementation-notes.md § ROUND 6).
-            RectTransform cellRt = (RectTransform)scene.Find("Cell_3_0");
+            RectTransform cellRt = (RectTransform)scene.Find("DistrictCells/Cell_3_0");
             Assert.IsNotNull(cellRt, "anti-vacuité — le starter kit J0 porte bien cash_safehouse sur (3,0)");
 
             Vector2 VectorFondToCell()
@@ -301,7 +301,7 @@ namespace MafiaCleanCity.CityMap.Tests
             foreach (DistrictInteriorBuildingDto b in dto.buildings)
             {
                 DistrictInteriorBlockDto block = Array.Find(dto.blocks, bl => bl.block_id == b.block_id);
-                Transform cell = scene.Find($"Cell_{block.x}_{block.y}");
+                Transform cell = scene.Find($"DistrictCells/Cell_{block.x}_{block.y}");
                 Assert.IsNotNull(cell, $"bâtiment sur ({block.x},{block.y}) doit être ancré");
                 sum += ((RectTransform)cell.transform).anchoredPosition;
                 n++;
@@ -453,22 +453,35 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.IsNotNull(cashSafehouseBlock, "anti-vacuité — le starter kit J0 porte un cash_safehouse (contrôle positif)");
 
             Transform scene = diorama.ScreenRoot.Find("DistrictScene");
-            foreach ((string name, DistrictInteriorBlockDto block) in new[] { ("lab", labBlock), ("stash", stashBlock) })
-            {
-                Transform cell = scene.Find($"Cell_{block.x}_{block.y}");
-                Assert.IsNull(cell.Find("WindowLight"),
-                    $"nav-district-F10 — {name} : AUCUN objet WindowLight, ni sprite ni repli rectangle — " +
-                    "exempté (art de base déjà éclairé, aucun état fenêtres livré par l'atelier)");
-            }
 
-            // Contrôle positif — SANS lui, "aucun WindowLight" pourrait n'être vrai que parce que le
-            // mécanisme entier est cassé pour TOUT le monde. cash_safehouse a un VRAI calque `fen`
-            // (residentiel3_nuit_fen_ppm24.0, non exempté) : son WindowLight doit exister normalement.
-            Transform cashCell = scene.Find($"Cell_{cashSafehouseBlock.x}_{cashSafehouseBlock.y}");
-            Transform cashWindowLight = cashCell.Find("WindowLight");
-            Assert.IsNotNull(cashWindowLight, "nav-district-F10 — contrôle positif : cash_safehouse (calque réel, non exempté) porte bien un WindowLight");
-            Image cashImg = cashWindowLight.GetComponent<Image>();
-            Assert.IsNotNull(cashImg.sprite, "nav-district-F10 — contrôle positif : cash_safehouse utilise un VRAI sprite, pas le repli");
+            // ⚠️ AMENDÉ NOMMÉMENT (2026-08-22) — ce test épinglait un mécanisme QUI N'EXISTE PLUS.
+            //
+            // Il opposait deux représentations du binding 1 : un VRAI calque d'atelier (`fen`) contre
+            // un rectangle de REPLI, et exemptait lab/stash du repli parce que leur art de base était
+            // déjà éclairé. Depuis que le fond pré-rendu porte les bâtiments
+            // (`DistrictInteriorScreenController.FondPorteDejaLesBatiments`), il n'y a plus de calque
+            // d'atelier NI de rectangle de repli : l'état se dit par une PASTILLE sur le badge de
+            // possession. L'opposition qui fondait ce test a disparu — la garder aurait été épingler
+            // une distinction que plus aucun code ne fait.
+            //
+            // Ce qui est asserté À LA PLACE est la propriété qui, elle, survit et qui compte pour le
+            // joueur : un bâtiment possédé en condition SOUND porte un signal VISIBLE, et il le porte
+            // pour TOUS les types — y compris lab et stash, que l'ancien dispositif laissait
+            // délibérément sans aucun objet. C'est plus fort que ce qui était asserté avant.
+            foreach ((string name, DistrictInteriorBlockDto block) in
+                     new[] { ("lab", labBlock), ("stash", stashBlock), ("cash_safehouse", cashSafehouseBlock) })
+            {
+                Transform cell = scene.Find($"DistrictCells/Cell_{block.x}_{block.y}");
+                Assert.IsNotNull(cell, $"nav-district-F10 — la cellule de {name} doit exister");
+                Transform pip = cell.Find("OwnershipBadge/WindowLight");
+                Assert.IsNotNull(pip,
+                    $"nav-district-F10 — {name} (condition SOUND) porte sa pastille d'état sur le badge. " +
+                    "L'ancien dispositif laissait lab et stash SANS aucun objet visuel : le joueur ne " +
+                    "pouvait pas distinguer un bâtiment sain d'un bâtiment sur lequel rien n'était rendu.");
+                Image pipImg = pip.GetComponent<Image>();
+                Assert.IsNotNull(pipImg, $"nav-district-F10 — {name} : la pastille est bien dessinée");
+                Assert.Greater(pipImg.color.a, 0f, $"nav-district-F10 — {name} : la pastille n'est pas transparente");
+            }
 
             // Le FAIT (binding 1+2) reste compté même sans objet — C9-F2 (DistrictInteriorLighting…)
             // mesure cette égalité ailleurs ; ici on prouve juste qu'exempter la REPRÉSENTATION

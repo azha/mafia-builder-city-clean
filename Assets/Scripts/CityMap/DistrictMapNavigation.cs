@@ -111,8 +111,16 @@ namespace MafiaCleanCity.CityMap
         /// <summary>Appelé une fois par `Render()` (DistrictInteriorScreenController), juste après
         /// que tous les `Cell_x_y` sont construits. `initialFocusLocal` est le barycentre des
         /// bâtiments du joueur (ou (0,0), le centre du fond, s'il n'en a aucun — livrable 4) en
-        /// unités locales de CETTE RectTransform (le même espace que `Cell_x_y.anchoredPosition`,
-        /// puisque ces cellules sont ses enfants directs).</summary>
+        /// unités locales de CETTE RectTransform.
+        ///
+        /// ⚠️ AMENDÉ le 2026-08-22 : cette clause disait « le même espace que
+        /// `Cell_x_y.anchoredPosition`, puisque ces cellules sont ses enfants directs ». La seconde
+        /// moitié a CESSÉ d'être vraie — les cellules sont désormais des descendants, sous
+        /// `DistrictCells` (le calque calqué sur le fond qui porte la découpe de gouttière). Leur
+        /// `anchoredPosition` est relatif au centre du FOND, pas à celui de la scène ; l'appelant
+        /// y ajoute `DistrictCells.anchoredPosition` avant d'appeler (site de collecte dans
+        /// `DistrictInteriorScreenController.Render`). Une prose laissée intacte dans un fichier
+        /// corrigé devient fausse dès que la correction déplace ce qu'elle référence.</summary>
         public void Configure(RectTransform fond, Vector2 initialFocusLocal)
         {
             sceneRt = (RectTransform)transform;

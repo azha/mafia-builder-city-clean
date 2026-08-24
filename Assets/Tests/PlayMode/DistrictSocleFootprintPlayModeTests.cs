@@ -127,7 +127,7 @@ namespace MafiaCleanCity.CityMap.Tests
 
                 DistrictInteriorBlockDto block = Array.Find(dto.blocks, b => b.block_id == building.block_id);
                 Assert.IsNotNull(block, $"{building.operational_type} — le bâtiment doit avoir un bloc");
-                Transform cell = scene.Find($"Cell_{block.x}_{block.y}");
+                Transform cell = scene.Find($"DistrictCells/Cell_{block.x}_{block.y}");
                 Assert.IsNotNull(cell, $"{building.operational_type} — la cellule doit exister");
                 Transform socleT = cell.Find("Socle");
                 Assert.IsNotNull(socleT, $"{building.operational_type} — le Socle doit exister");
@@ -181,7 +181,7 @@ namespace MafiaCleanCity.CityMap.Tests
             DistrictInteriorBlockDto labBlock = Array.Find(dto.blocks, b => b.block_id == labBuilding.block_id);
 
             Transform scene = diorama.ScreenRoot.Find("DistrictScene");
-            Transform cell = scene.Find($"Cell_{labBlock.x}_{labBlock.y}");
+            Transform cell = scene.Find($"DistrictCells/Cell_{labBlock.x}_{labBlock.y}");
             var socleRt = (RectTransform)cell.Find("Socle");
 
             Assert.Less(socleRt.sizeDelta.x, oldSocleW - 20f,

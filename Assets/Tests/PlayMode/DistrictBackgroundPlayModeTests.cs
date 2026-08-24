@@ -180,7 +180,7 @@ namespace MafiaCleanCity.CityMap.Tests
             {
                 DistrictInteriorBlockDto block = Array.Find(dto.blocks, b => b.block_id == building.block_id);
                 Assert.IsNotNull(block, $"building {building.building} references a real block (D2)");
-                Transform cell = scene.Find($"Cell_{block.x}_{block.y}");
+                Transform cell = scene.Find($"DistrictCells/Cell_{block.x}_{block.y}");
                 Assert.IsNotNull(cell, $"bâtiment sur bloc ({block.x},{block.y}) doit être ancré");
                 DistrictBackgroundParcelDto parcel = DistrictBackgroundAnchor.FindParcel(map, block.x, block.y);
                 // pp-F2 mondes dégénérés (§9) : comparé à une valeur LUE dans le JSON produit par
@@ -280,7 +280,7 @@ namespace MafiaCleanCity.CityMap.Tests
             foreach (DistrictInteriorBuildingDto building in dto.buildings)
             {
                 DistrictInteriorBlockDto block = Array.Find(dto.blocks, b => b.block_id == building.block_id);
-                Transform cell = scene.Find($"Cell_{block.x}_{block.y}");
+                Transform cell = scene.Find($"DistrictCells/Cell_{block.x}_{block.y}");
                 Transform spriteT = cell.Find("BuildingSprite");
                 Assert.IsNotNull(spriteT);
                 Image img = spriteT.GetComponent<Image>();

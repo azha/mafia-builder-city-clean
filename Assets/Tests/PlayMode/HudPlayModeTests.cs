@@ -602,7 +602,14 @@ namespace MafiaCleanCity.Shell.Tests
             "Shell/ExceptionQueuePanelController.cs",
             "ShellContracts/HeatBucketResolver.cs",
         };
-        private const int ExpectedSeverityTokenTotal = 32;
+        // AMENDÉ NOMMÉMENT 32 → 33 (2026-08-22) : `CityMap/DistrictInteriorScreenController.cs`
+        // (déjà sur l'allowlist ci-dessus, l'ENSEMBLE de fichiers ne change donc pas) gagne UN accès
+        // à `accentWarning`. Raison : depuis que le fond pré-rendu porte les bâtiments, le binding 5
+        // « maintenance en retard » ne peint plus un rectangle sur le bâtiment mais une PASTILLE sur
+        // le badge de possession — même token, même sémantique de sévérité, une occurrence de plus
+        // parce que l'ancienne branche subsiste pour le cas où le fond redeviendrait une plaque.
+        // ★ La garde a fait exactement son travail : elle a vu une occurrence apparaître et l'a dit.
+        private const int ExpectedSeverityTokenTotal = 33;
 
         // ── motif 2 — littéraux de bucket (ferme l'angle mort du motif 1, IMPORTANT-2) ──────
         private static readonly string[] BucketLiterals = { "\"COLD\"", "\"WARM\"", "\"HOT\"", "\"BURNING\"" };

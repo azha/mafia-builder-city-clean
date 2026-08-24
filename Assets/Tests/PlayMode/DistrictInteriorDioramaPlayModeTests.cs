@@ -167,7 +167,7 @@ namespace MafiaCleanCity.CityMap.Tests
             {
                 DistrictInteriorBlockDto block = Array.Find(dto.blocks, b => b.block_id == building.block_id);
                 Assert.IsNotNull(block, $"building {building.building} references a real block (D2)");
-                Transform cell = scene.Find($"Cell_{block.x}_{block.y}");
+                Transform cell = scene.Find($"DistrictCells/Cell_{block.x}_{block.y}");
                 Assert.IsNotNull(cell, $"cell at ({block.x},{block.y}) exists for building {building.building}");
                 Assert.IsNotNull(cell.Find("BuildingSprite"),
                     "a built cell carries its building sprite — chaque bâtiment se pose sur SA cellule (C8-F2)");
@@ -183,7 +183,12 @@ namespace MafiaCleanCity.CityMap.Tests
             foreach (DistrictInteriorBlockDto b in dto.blocks)
             {
                 if (ownedBlockIds.Contains(b.block_id)) continue;
-                Assert.IsNull(scene.Find($"Cell_{b.x}_{b.y}"),
+                // ⚠️ AMENDÉE 2026-08-22 — le chemin est passé par `DistrictCells` (les cellules ne sont
+                //    plus enfants directs de la scène). Un `IsNull` sur un chemin FAUX est vrai pour
+                //    TOUS les blocs : cette assertion serait devenue tautologique sans qu'aucun
+                //    compteur ne le dise. Le garde anti-vacuité qui la suit compte des itérations,
+                //    pas des recherches — il ne l'aurait pas rattrapée.
+                Assert.IsNull(scene.Find($"DistrictCells/Cell_{b.x}_{b.y}"),
                     $"C8-F4 (amendée) — le bloc non possédé ({b.x},{b.y}) n'a AUCUN objet Unity (silhouette baquée dans le fond)");
                 uncheckedEmpty++;
             }
