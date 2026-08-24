@@ -207,3 +207,42 @@ que je n'ai pas questionnée**. L'instrument est en v5 et déclare désormais sa
 
 L'option 2 est la plus cohérente avec « je veux une vue exactement comme ça », mais elle change la
 composition du bandeau, que l'user a ratifiée sur maquette. **Arbitrage remonté, pas tranché.**
+
+---
+
+# La « jauge d'argent » du bandeau — le soupçon du juge est CONFIRMÉ, par le CSS
+
+Le juge avait relevé que le trait doré sous le montant fait 68,3 % de la largeur du texte pendant
+que la maquette en remplit 68,2 % — « pour deux soldes différents », donc la signature d'un taux
+codé en dur. Il proposait une falsifiable coûtant une capture. **Le CSS de la maquette tranche
+sans capture** (`atelier3d-mafia/hud-brennar.html`) :
+
+```css
+.ratio   { display:block; width:74px; height:2px; background:#5a6376; border-radius:1px; overflow:hidden }
+.ratio i { display:block; height:100%; background:var(--or) }
+```
+```html
+<span class="ratio"><i style="width:68%"></i></span>
+```
+
+Deux faits, tous deux mesurés :
+
+1. **`.ratio` est la PISTE** — 74 px, acier `#5a6376` — et `.ratio i` est le **REMPLISSAGE** doré.
+   Notre implémentation (`TopBarController.cs:625-634`) dessine les 74 px **EN OR**, sans piste :
+   elle peint la largeur de la piste avec la couleur du remplissage. L'élément affirme donc
+   « 100 % » de quelque chose, en permanence. Le commentaire du code dit « REUSE exact —
+   hud-brennar.html:59 `.ratio{width:74px}` » : la ligne CSS a été lue, mais comme une largeur de
+   trait, pas comme une largeur de piste.
+2. **La maquette elle-même code 68 % EN DUR.** Ce n'est pas une jauge branchée : c'est un mock.
+   Rien dans la maquette ne dit de QUOI ce serait la proportion.
+
+⇒ Il n'y a donc pas de « taux perdu » à rebrancher, mais un élément de chrome mal lu. Trois
+sorties possibles, et aucune n'est technique :
+- **piste acier seule** (pas de remplissage) : honnête, mais lit « 0 % » ;
+- **piste + remplissage** branché sur une grandeur RÉELLE — la propreté du cash est le seul
+  candidat plausible à côté d'un montant, et le jeu la porte en paliers ;
+- **simple filet décoratif** en acier, en assumant que la maquette n'y mettait pas de sens.
+
+Non tranché — c'est un arbitrage produit, sur un élément que l'user a ratifié sur maquette. Ce qui
+est certain et mesuré : **le rendre plein et doré est le seul choix des trois qui affirme une
+valeur fausse.**
