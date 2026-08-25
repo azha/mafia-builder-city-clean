@@ -402,6 +402,87 @@ namespace MafiaCleanCity.Shell
             return Mathf.Clamp01(somme / poids);
         }
 
+        /// <summary>Une lueur radiale qui s'éteint — le `radial-gradient(…, transparent N%)` du CSS.
+        ///
+        /// `centreUV` place le foyer dans la texture (0,0 = bas-gauche, 0.5,1 = haut-centre) ;
+        /// `rayonX`/`rayonY` sont les demi-axes en fraction de la texture. Au-delà, alpha nul.
+        /// Sert au voile d'en-tête (`75% 150% at 50% 0%`) comme au halo d'un médaillon.</summary>
+        public static Sprite VoileRadial(int taillePx, Color teinte, Vector2 centreUV,
+                                         float rayonX, float rayonY, float finEnFraction = 1f)
+        {
+            string key = $"voile:{taillePx}:{ColorKey(teinte)}:{centreUV.x:F2},{centreUV.y:F2}:" +
+                         $"{rayonX:F2}:{rayonY:F2}:{finEnFraction:F2}";
+            if (cache.TryGetValue(key, out Sprite cached) && cached != null) return cached;
+
+            int d = Mathf.Max(8, taillePx);
+            var tex = NewTexture(d);
+            var pixels = new Color[d * d];
+            for (int y = 0; y < d; y++)
+            {
+                for (int x = 0; x < d; x++)
+                {
+                    float ux = ((x + 0.5f) / d - centreUV.x) / Mathf.Max(1e-4f, rayonX);
+                    float uy = ((y + 0.5f) / d - centreUV.y) / Mathf.Max(1e-4f, rayonY);
+                    float r = Mathf.Sqrt(ux * ux + uy * uy) / Mathf.Max(1e-4f, finEnFraction);
+                    Color c = teinte;
+                    c.a *= Mathf.Clamp01(1f - r);
+                    pixels[y * d + x] = c;
+                }
+            }
+            tex.SetPixels(pixels);
+            tex.Apply(false, false);
+            Sprite sp = Sprite.Create(tex, new Rect(0, 0, d, d), new Vector2(0.5f, 0.5f), 100f, 0,
+                SpriteMeshType.FullRect);
+            sp.hideFlags = HideFlags.HideAndDontSave;
+            cache[key] = sp;
+            return sp;
+        }
+
+        /// <summary>L'OMBRE PORTÉE d'un rectangle arrondi — `box-shadow: 0 Ypx Bpx couleur`.
+        ///
+        /// uGUI n'a pas de `box-shadow` : il faut la peindre. Le sprite est découpable en 9-slice
+        /// (`border` = rayon + flou), donc une seule texture sert à toutes les largeurs de panneau.
+        /// Le décalage vertical se fait en POSITIONNANT l'image, pas dans la texture — sinon il
+        /// faudrait une texture par décalage.</summary>
+        public static Sprite RoundedRectShadow(int cornerRadiusPx, int flouPx, Color couleur)
+        {
+            string key = $"roundshadow:{cornerRadiusPx}:{flouPx}:{ColorKey(couleur)}";
+            if (cache.TryGetValue(key, out Sprite cached) && cached != null) return cached;
+
+            int r = Mathf.Max(1, cornerRadiusPx);
+            int f = Mathf.Max(1, flouPx);
+            int marge = r + f;
+            int d = marge * 2 + 2;
+            var tex = NewTexture(d);
+            var pixels = new Color[d * d];
+            for (int y = 0; y < d; y++)
+            {
+                for (int x = 0; x < d; x++)
+                {
+                    float px = x + 0.5f, py = y + 0.5f;
+                    float qx = Mathf.Abs(px - d * 0.5f) - (d * 0.5f - marge);
+                    float qy = Mathf.Abs(py - d * 0.5f) - (d * 0.5f - marge);
+                    float dist = (qx > 0f && qy > 0f)
+                        ? Mathf.Sqrt(qx * qx + qy * qy) - r
+                        : Mathf.Max(qx, qy) - r;
+                    // `dist <= 0` : dans la forme. Au-delà, on s'éteint sur `f` pixels, en douceur
+                    // (courbe en cosinus — un dégradé linéaire laisse une arête visible).
+                    float t = Mathf.Clamp01(dist / f);
+                    float a = 0.5f * (1f + Mathf.Cos(Mathf.PI * t));
+                    Color c = couleur;
+                    c.a *= a;
+                    pixels[y * d + x] = c;
+                }
+            }
+            tex.SetPixels(pixels);
+            tex.Apply(false, false);
+            Sprite sp = Sprite.Create(tex, new Rect(0, 0, d, d), new Vector2(0.5f, 0.5f), 100f, 0,
+                SpriteMeshType.FullRect, new Vector4(marge, marge, marge, marge));
+            sp.hideFlags = HideFlags.HideAndDontSave;
+            cache[key] = sp;
+            return sp;
+        }
+
         public static Sprite RoundedRectMask(int cornerRadiusPx)
         {
             string key = $"roundmask:{cornerRadiusPx}";

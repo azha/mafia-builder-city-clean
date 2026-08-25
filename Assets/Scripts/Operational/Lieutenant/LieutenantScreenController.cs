@@ -1313,6 +1313,21 @@ namespace MafiaCleanCity.Operational.Lieutenant
             h.childForceExpandHeight = false;
             AddLayoutElement(tete, minHeight: FX(115), flexibleHeight: 0);  // séparateur à 115,3 u
 
+            // `radial-gradient(75% 150% at 50% 0%, rgba(217,171,78,.06), transparent 62%)` — un
+            // voile d'or qui descend du haut de l'écran. Mesuré ABSENT par le juge ⊥ : toutes ses
+            // sondes rendaient la couleur du fond, amplitude 0. C'est pourtant ce qui fait que
+            // l'en-tête « pèse » sans porter de trait.
+            GameObject voileTete = NewUI("VoileEnTete", tete.transform);
+            voileTete.AddComponent<LayoutElement>().ignoreLayout = true;
+            Stretch((RectTransform)voileTete.transform);
+            Image voileTeteImg = voileTete.AddComponent<Image>();
+            voileTeteImg.sprite = MafiaCleanCity.Shell.ProceduralUI.VoileRadial(128,
+                Css(DesignTokens.Current.hudMoneyGold, 0.06f, SurfaceBg),
+                new Vector2(0.5f, 1f), 0.75f, 1.5f, 0.62f);
+            voileTeteImg.color = Color.white;
+            voileTeteImg.raycastTarget = false;
+            voileTete.transform.SetAsFirstSibling();
+
             // Le retour rond. `ProceduralUI.RadialDisc` avec la MÊME couleur aux deux stops donne un
             // disque plat aux bords propres — la maquette le veut à peine plus clair que le fond
             // (#ffffff08), donc un voile, pas un bouton plein.
@@ -1493,6 +1508,49 @@ namespace MafiaCleanCity.Operational.Lieutenant
             rt.anchoredPosition = Vector2.zero;
             rt.sizeDelta = new Vector2(ArbreTicheLongueur, ArbreTraitEpaisseur);
             Image im = t.AddComponent<Image>();
+            im.color = teinte;
+            im.raycastTarget = false;
+        }
+
+        /// <summary>L'ombre portée d'un panneau — `box-shadow: 0 4px 12px #000a`.
+        ///
+        /// Enfant STRETCH du conteneur, débordant du flou de tous les côtés et descendue de 4.
+        /// ⚠️ La première version recopiait les ancres du PANNEAU — mais un panneau piloté par un
+        /// layout a des ancres PONCTUELLES, pas étirées : l'ombre se réduisait alors à une tache
+        /// ronde au milieu du rang. *Recopier des ancres n'a de sens que si l'on sait lesquelles.*</summary>
+        private void BuildOmbrePortee(Transform conteneur)
+        {
+            GameObject go = NewUI("Ombre", conteneur);
+            go.AddComponent<LayoutElement>().ignoreLayout = true;
+            RectTransform rt = (RectTransform)go.transform;
+            rt.anchorMin = Vector2.zero;
+            rt.anchorMax = Vector2.one;
+            rt.pivot = new Vector2(0.5f, 0.5f);
+            float flou = FXf(12f), descente = FXf(4f);
+            rt.offsetMin = new Vector2(-flou, -flou - descente);
+            rt.offsetMax = new Vector2(flou, flou - descente);
+            Image im = go.AddComponent<Image>();
+            im.sprite = MafiaCleanCity.Shell.ProceduralUI.RoundedRectShadow(
+                RayonPanneau, FX(12), Css(Color.black, 0.667f, SurfaceBg));   // #000a
+            im.type = Image.Type.Sliced;
+            im.color = Color.white;
+            im.raycastTarget = false;
+        }
+
+        /// <summary>Un liseré d'un pixel sur l'arête haute ou basse d'un panneau — le
+        /// `box-shadow: inset` du CSS, que uGUI ne connaît pas. Hors layout : c'est un ORNEMENT,
+        /// pas un item (la leçon des liserés changés en pastilles).</summary>
+        private void BuildBiseau(Transform parent, bool haut, Color teinte)
+        {
+            GameObject go = NewUI(haut ? "BiseauHaut" : "BiseauBas", parent);
+            go.AddComponent<LayoutElement>().ignoreLayout = true;
+            RectTransform rt = (RectTransform)go.transform;
+            rt.anchorMin = new Vector2(0f, haut ? 1f : 0f);
+            rt.anchorMax = new Vector2(1f, haut ? 1f : 0f);
+            rt.pivot = new Vector2(0.5f, haut ? 1f : 0f);
+            rt.anchoredPosition = Vector2.zero;
+            rt.sizeDelta = new Vector2(0f, FXf(1f));
+            Image im = go.AddComponent<Image>();
             im.color = teinte;
             im.raycastTarget = false;
         }
@@ -1719,29 +1777,41 @@ namespace MafiaCleanCity.Operational.Lieutenant
         /// (`lieutenantGlassTop`/`lieutenantGlassBottom`, posés par la passe DA et conservés).</summary>
         private GameObject BuildGlassPanel(Transform parent, string nom, Color bordure)
         {
+            // ⚠️ TROIS NIVEAUX, ET CHACUN EST IMPOSÉ PAR UN DÉFAUT MESURÉ.
+            //   `go`      — le conteneur, seul ITEM de layout. Il ne peint rien.
+            //   `Ombre`   — DEHORS du masque : une ombre portée doit déborder, or un masque coupe
+            //               tout ce qui vit sous lui. C'est le même piège qui avait déjà mangé
+            //               l'embranchement du rail. Et elle STRETCH sur `go` : la version
+            //               précédente recopiait les ancres d'un panneau piloté par le layout, donc
+            //               des ancres ponctuelles, et se réduisait à une tache ronde au milieu du
+            //               rang (visible sur capture).
+            //   `Panneau` — le masque en rectangle arrondi et tout ce qui doit le suivre.
+            // Le contenu du rang (médaillon, textes) est ajouté à `go` par l'appelant : il n'est
+            // donc PAS masqué, ce qui est correct — rien n'y déborde, et un masque de plus coûterait
+            // une passe de stencil pour rien.
             GameObject go = NewUI(nom, parent);
-            // La plaque est CLIPPÉE en rectangle arrondi. `VerticalGradientImage` peint un quad :
-            // sans masque, un panneau à `border-radius:22,4` rend des coins CARRÉS sous un liseré
-            // arrondi — visible sur capture, les angles du dégradé dépassaient du trait.
-            Image masque = go.AddComponent<Image>();
+            BuildOmbrePortee(go.transform);
+
+            GameObject panneau = NewUI("Panneau", go.transform);
+            Stretch((RectTransform)panneau.transform);
+            panneau.AddComponent<LayoutElement>().ignoreLayout = true;
+            Image masque = panneau.AddComponent<Image>();
             masque.sprite = MafiaCleanCity.Shell.ProceduralUI.RoundedRectMask(RayonPanneau);
             masque.type = Image.Type.Sliced;
             masque.color = Color.white;
             masque.raycastTarget = false;
-            Mask m = go.AddComponent<Mask>();
+            Mask m = panneau.AddComponent<Mask>();
             m.showMaskGraphic = false;
 
             // La plaque est un `Image` — donc un `MaskableGraphic`, donc CLIPPABLE. Elle a d'abord
             // été un `VerticalGradientImage` : celui-ci dérive de `Graphic` nu, n'implémente pas
-            // `IMaskable`, et **le masque ci-dessus ne l'atteignait pas** — coins carrés mesurés
-            // sur capture. Avant ça, le même objet ne dessinait RIEN du tout, faute de
-            // `CanvasRenderer` (un `AddComponent` à l'exécution n'honore pas le
-            // `[RequireComponent]` de `Graphic`, en silence) : les rangs rendaient exactement la
-            // couleur de la feuille, (22,22,28) des deux côtés. Deux défauts SUPERPOSÉS sur le
-            // même objet, tous deux muets, tous deux invisibles à une garde de paramètre.
-            GameObject fondGo = NewUI("Plaque", go.transform);
+            // `IMaskable`, et le masque ne l'atteignait pas — coins carrés mesurés sur capture.
+            // Avant ça, le même objet ne dessinait RIEN, faute de `CanvasRenderer` (un
+            // `AddComponent` à l'exécution n'honore pas le `[RequireComponent]` de `Graphic`, en
+            // silence) : les rangs rendaient (22,22,28), exactement la feuille, des deux côtés.
+            // Deux défauts SUPERPOSÉS sur le même objet, tous deux muets.
+            GameObject fondGo = NewUI("Plaque", panneau.transform);
             Stretch((RectTransform)fondGo.transform);
-            fondGo.AddComponent<LayoutElement>().ignoreLayout = true;
             Image fond = fondGo.AddComponent<Image>();
             fond.sprite = MafiaCleanCity.Shell.ProceduralUI.VerticalGradient(64,
                 DesignTokens.Current.lieutenantGlassTop, DesignTokens.Current.lieutenantGlassBottom);
@@ -1749,28 +1819,32 @@ namespace MafiaCleanCity.Operational.Lieutenant
             fond.color = Color.white;
             fond.raycastTarget = false;
 
-            // ⚠️ LA RÉFÉRENCE NE MET PAS DE BORDURE SUR TOUS LES PANNEAUX, et c'est ce qui
-            // distingue le Don de ses lieutenants. `.don-rang` porte `border:1px solid #d9ab4e44`
-            // — un trait d'or. `.rang`, lui, ne déclare qu'un `border-color` SANS `border` : en
-            // CSS ça ne dessine RIEN. Les rangs de lieutenants sont donc des surfaces PLEINES,
-            // sans contour ; leur relief vient du dégradé et des biseaux. Dessiner un trait
-            // dessus, c'est ce qui donnait à la capture son air de liste d'éléments encadrés là
-            // où la référence montre des plaques. Un `bordure.a` nul dit « pas de trait ».
-            if (bordure.a <= 0f) return go;
+            // LES DEUX BISEAUX DU « VERRE GRAVÉ », mesurés à ZÉRO par le juge ⊥ :
+            //   `inset 0 1px 0 rgba(255,255,255,.15)` sur l'arête haute
+            //   `inset 0 -1px 0 rgba(0,0,0,.5)`       sur l'arête basse
+            // ⚠️ Ils valent pour TOUS les rangs — y compris ceux SANS trait de bordure. La version
+            // précédente sortait de la méthode avant de les poser dès que la bordure était nulle,
+            // c'est-à-dire précisément sur les rangs de lieutenants, les plus nombreux.
+            BuildBiseau(panneau.transform, haut: true,
+                        Css(DesignTokens.Current.hudCreme, 0.15f, DesignTokens.Current.lieutenantGlassTop));
+            BuildBiseau(panneau.transform, haut: false,
+                        Css(Color.black, 0.5f, DesignTokens.Current.lieutenantGlassBottom));
 
-            GameObject liseré = NewUI("Lisere", go.transform);
-            Stretch((RectTransform)liseré.transform);
-            // ⚠️ SANS CECI LE PANNEAU S'EFFONDRE EN PASTILLE. Le rang porte un
-            // `HorizontalLayoutGroup` : sans `ignoreLayout`, le liseré est traité comme le PREMIER
-            // ITEM du rang, reçoit sa largeur minimale (2 × rayon = 24) et ses ancres de `Stretch`
-            // sont écrasées par le layout. Mesuré sur capture : un petit cercle à gauche du
-            // médaillon, et aucune bordure autour du rang.
-            liseré.AddComponent<LayoutElement>().ignoreLayout = true;
-            Image li = liseré.AddComponent<Image>();
-            li.sprite = MafiaCleanCity.Shell.ProceduralUI.RoundedRectOutline(RayonPanneau, FXf(1f), bordure);
-            li.type = Image.Type.Sliced;
-            li.color = Color.white;
-            li.raycastTarget = false;
+            // ⚠️ LA RÉFÉRENCE NE MET PAS DE TRAIT SUR TOUS LES PANNEAUX, et c'est ce qui distingue
+            // le Don de ses lieutenants. `.don-rang` porte `border:1px solid #d9ab4e44` — un trait
+            // d'or. `.rang` ne déclare qu'un `border-color` SANS `border` : en CSS ça ne dessine
+            // rien. Les rangs de lieutenants sont donc des surfaces PLEINES ; leur relief vient du
+            // dégradé et des biseaux. Un `bordure.a` nul dit « pas de trait ».
+            if (bordure.a > 0f)
+            {
+                GameObject liseré = NewUI("Lisere", panneau.transform);
+                Stretch((RectTransform)liseré.transform);
+                Image li = liseré.AddComponent<Image>();
+                li.sprite = MafiaCleanCity.Shell.ProceduralUI.RoundedRectOutline(RayonPanneau, FXf(1f), bordure);
+                li.type = Image.Type.Sliced;
+                li.color = Color.white;
+                li.raycastTarget = false;
+            }
             return go;
         }
 
@@ -1784,8 +1858,40 @@ namespace MafiaCleanCity.Operational.Lieutenant
             le.preferredWidth = MedaillonDiametre;
             le.preferredHeight = MedaillonDiametre;
 
+            // `.medl.don{box-shadow:0 0 14.93px #d9ab4e33}` — le SEUL autre marqueur de statut du
+            // Don, avec la couleur de son anneau. Mesuré ABSENT par le juge ⊥ : Δ=(0,0,0) sur les
+            // trois canaux, à toutes les distances de l'anneau. Le halo déborde du disque : il vit
+            // donc DERRIÈRE le médaillon, hors layout, et non dedans (le médaillon est masqué).
+            if (don)
+            {
+                GameObject halo = NewUI("Halo", go.transform);
+                halo.AddComponent<LayoutElement>().ignoreLayout = true;
+                RectTransform hrt = (RectTransform)halo.transform;
+                hrt.anchorMin = hrt.anchorMax = hrt.pivot = new Vector2(0.5f, 0.5f);
+                hrt.anchoredPosition = Vector2.zero;
+                float debord = FXf(15f);                              // 14,93px de flou
+                hrt.sizeDelta = new Vector2(MedaillonDiametre + 2f * debord,
+                                            MedaillonDiametre + 2f * debord);
+                Image himg = halo.AddComponent<Image>();
+                himg.sprite = MafiaCleanCity.Shell.ProceduralUI.VoileRadial(128,
+                    Css(DesignTokens.Current.hudMoneyGold, 0.2f, FondPlaque),
+                    new Vector2(0.5f, 0.5f), 0.5f, 0.5f);
+                himg.color = Color.white;
+                himg.raycastTarget = false;
+            }
+
+            // ⚠️ LE DISQUE MASQUÉ EST UN ENFANT, PAS LE CONTENEUR — et c'est le halo qui l'impose.
+            // Le masque de `overflow:hidden` coupe TOUT ce qui vit sous lui, halo compris ; or le
+            // halo doit justement DÉBORDER. Le médaillon est donc un conteneur nu (l'item de
+            // layout), le halo son premier enfant, et le disque masqué son second. Même famille que
+            // l'embranchement du rail coupé par le masque du rang : *un masque posé pour arrondir
+            // coupe aussi ce qu'on voulait laisser dépasser.*
+            GameObject disqueGo = NewUI("Disque", go.transform);
+            Stretch((RectTransform)disqueGo.transform);
+            disqueGo.AddComponent<LayoutElement>().ignoreLayout = true;
+
             Color rayon = DesignTokens.Current.hudCreme; rayon.a = 0.05f;   // rgba(255,255,255,.05)
-            Image disque = go.AddComponent<Image>();
+            Image disque = disqueGo.AddComponent<Image>();
             disque.sprite = MafiaCleanCity.Shell.ProceduralUI.MedallionFace(192,
                 DesignTokens.Current.hudGaugeFaceInner, DesignTokens.Current.hudGaugeFaceOuter, rayon);
             disque.color = Color.white;
@@ -1793,10 +1899,10 @@ namespace MafiaCleanCity.Operational.Lieutenant
             // `.medl{overflow:hidden}` : le buste repose sur le bord BAS du médaillon, donc ses
             // épaules sortent du disque. La référence les coupe au cercle ; sans masque elles
             // débordent en rectangle sur la plaque.
-            Mask coupe = go.AddComponent<Mask>();
+            Mask coupe = disqueGo.AddComponent<Mask>();
             coupe.showMaskGraphic = true;
 
-            GameObject anneauGo = NewUI("Anneau", go.transform);
+            GameObject anneauGo = NewUI("Anneau", disqueGo.transform);
             Stretch((RectTransform)anneauGo.transform);
             Image anneau = anneauGo.AddComponent<Image>();
             // Le Don porte l'or vif, les lieutenants le laiton — la maquette les distingue ainsi
@@ -1815,7 +1921,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
                 // REPOSE sur le bord bas du médaillon et en occupe 74 %. Centré à 62 %, il
                 // flottait au milieu du disque comme une pastille — la silhouette ne se lisait
                 // plus comme un buste.
-                GameObject bg = NewUI("Buste", go.transform);
+                GameObject bg = NewUI("Buste", disqueGo.transform);
                 RectTransform brt = (RectTransform)bg.transform;
                 brt.anchorMin = brt.anchorMax = new Vector2(0.5f, 0f);
                 brt.pivot = new Vector2(0.5f, 0f);
