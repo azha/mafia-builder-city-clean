@@ -208,7 +208,7 @@ namespace MafiaCleanCity.Operational.Tests
             b == "LOW" ? "Low" : b == "BROKE" ? "Broke" : b;
 
         private static string HeatLabelFor(string b) =>
-            b == "COLD" ? "Cold" : b == "WARM" ? "Warm" : b == "HOT" ? "Hot" : b == "BURNING" ? "Burning" : b;
+            MafiaCleanCity.Shell.HeatBucketResolver.Label(b);
 
         // ------------------------------------------------------------ the test --
 
@@ -277,7 +277,7 @@ namespace MafiaCleanCity.Operational.Tests
             // 4) nav buttons exist.
             Assert.IsTrue(texts.Any(t => t == "City Map"), "City Map nav button rendered");
             Assert.IsTrue(texts.Any(t => t == "Building Card"), "Building Card nav button rendered");
-            Assert.IsTrue(texts.Any(t => t == "Pipeline"), "Pipeline nav button rendered");
+            Assert.IsTrue(texts.Any(t => t == "Filière"), "le bouton de navigation Filière est rendu (libellé FR — ruling « i18n partout »)");
 
             // 5) NO raw scalar client-side: every rendered string is a band/label/glyph/bool —
             //    nothing should be a bare number (cents/heat-float/ticks). Assert no token is a

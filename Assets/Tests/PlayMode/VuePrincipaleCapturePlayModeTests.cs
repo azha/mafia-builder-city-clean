@@ -232,6 +232,16 @@ namespace MafiaCleanCity.Capture.Tests
             Debug.Log($"[CAPTURE] vue de nuit — batiments={batiments} ecran={Screen.width}x{Screen.height}");
         }
 
+        /// <summary>Cherche un descendant par nom, inactifs compris. `Transform.Find` ne
+        /// descend que d'un niveau par segment de chemin et exige le chemin exact ; ici on veut le
+        /// nom, où qu'il soit dans l'arbre du shell.</summary>
+        private static Transform TrouverEnfant(Transform racine, string nom)
+        {
+            foreach (Transform t in racine.GetComponentsInChildren<Transform>(true))
+                if (t.name == nom) return t;
+            return null;
+        }
+
         // ── Capture de l'écran des LIEUTENANTS (onglet Org) ───────────────────────────────────────
         // Cible : `Tools/family-organigramme-reference-1120.png` (« LA FAMILLE — l'organigramme »,
         // maquette ratifiée user). Cette capture existe pour MESURER l'écart, pas pour le certifier.
@@ -325,6 +335,38 @@ namespace MafiaCleanCity.Capture.Tests
                 "aucun graphique sous un masque : la garde ne mesure rien");
             Debug.Log($"[CAPTURE] lieutenants — {masques.Length} masques, " +
                       $"{graphiquesSousMasque} graphiques dessous, tous masquables");
+
+            // ⛔ GARDE D'I18N : aucun libellé de la CHROME À LARGEUR FIXE ne déborde de sa boîte.
+            //
+            // C'est le mode d'échec propre à une traduction : le texte grandit, la boîte non. Le
+            // dépôt portait le bon chiffre — « Burning tient à 41,06 px, largement sous ~49 » — mais
+            // comme une MESURE FAITE UNE FOIS, dans un commentaire. Un commentaire ne rougit jamais.
+            // « Brûlant », « Filière », « CHALEUR » sont passés depuis ; rien ne les surveillait.
+            //
+            // Scopée à la chrome à largeur CONTRAINTE (manomètre + onglets) : y étendre tout le
+            // texte de l'écran produirait des faux positifs sur ce qui a le droit de revenir à la
+            // ligne ou de s'auto-dimensionner.
+            int libellesVerifies = 0;
+            foreach (string nom in new[] { "GaugeValue", "GaugeCaption" })
+            {
+                // ⚠️ La racine est le BANDEAU, pas le shell : le bandeau se monte dans
+                // `TopBarSlot`, enfant du canvas du shell, pas du GameObject qui porte `AppShell`.
+                // La première version cherchait depuis `shell.transform` et ne trouvait rien — la
+                // garde a rougi au lieu de se déclarer verte à vide, ce pour quoi elle porte cette
+                // assertion de présence.
+                Transform t = TrouverEnfant(shell.TopBar.transform, nom);
+                Assert.IsNotNull(t, $"'{nom}' introuvable — la garde ne mesurerait rien");
+                var tmp = t.GetComponent<TMPro.TextMeshProUGUI>();
+                Assert.IsNotNull(tmp, $"'{nom}' ne porte pas de texte");
+                float boite = ((RectTransform)t).rect.width;
+                Assert.LessOrEqual(tmp.preferredWidth, boite + 0.5f,
+                    $"'{nom}' = «{tmp.text}» mesure {tmp.preferredWidth:F1} px pour une boîte de " +
+                    $"{boite:F1} px : le libellé déborde. Une traduction a allongé le texte sans " +
+                    "que la boîte suive.");
+                libellesVerifies++;
+            }
+            Assert.AreEqual(2, libellesVerifies, "les deux libellés du manomètre doivent être vus");
+            Debug.Log($"[CAPTURE] lieutenants — {libellesVerifies} libellés de chrome tiennent dans leur boîte");
 
             ScreenCapture.CaptureScreenshot("Assets/Screenshots/ecran_lieutenants.png");
             for (int i = 0; i < 12; i++) yield return null;

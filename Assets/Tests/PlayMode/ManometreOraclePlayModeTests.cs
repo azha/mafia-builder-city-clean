@@ -79,6 +79,9 @@ namespace MafiaCleanCity.Shell.Tests
             public float MedallionRadius; // demi-largeur du RectTransform Manometre (anneau inclus)
             public float BarTopY, BarBottomY; // bords de TopBarSlot, coordonnées ÉCRAN
             public float HairlineTopY, HairlineBottomY; // bords du filet bas de barre, coordonnées ÉCRAN
+            public Rect TextZone;         // union RÉELLE de GaugeValue+GaugeCaption, coordonnées ÉCRAN
+            public Rect[] ZonesExclues;   // TOUS les éléments légitimes qu'un balayage rencontrerait
+            public float ArcRadius;       // rayon MESURÉ de la piste d'arc (`ArcTrack`), coordonnées ÉCRAN
         }
 
         private static Geo MeasureGeo(TopBarController topBar, RectTransform topBarSlot)
@@ -106,8 +109,100 @@ namespace MafiaCleanCity.Shell.Tests
                 BarBottomY = bc[0].y, // bas de la barre
                 HairlineTopY = hc[1].y,
                 HairlineBottomY = hc[0].y,
+                TextZone = UnionMonde(manoT, "GaugeValue", "GaugeCaption"),
+                // ⚠️ LE TEXTE N'EST PAS LE SEUL ÉLÉMENT LÉGITIME SUR LE CHEMIN D'UN BALAYAGE.
+                // `BoitierLosange` — l'ornement doré suspendu SOUS le cadran — est du laiton, comme
+                // l'anneau : un balayage radial à 270° le compte comme un SECOND passage et conclut
+                // « anneau doublé ». L'ancienne fenêtre angulaire figée [210°,330°] le masquait par
+                // accident, en même temps que le texte. En la remplaçant par la boîte RÉELLE du
+                // texte — plus serrée, donc plus juste — l'ornement est ressorti. *Resserrer une
+                // exclusion révèle ce qu'elle couvrait sans le dire.*
+                ZonesExclues = new[]
+                {
+                    UnionMonde(manoT, "GaugeValue", "GaugeCaption"),
+                    UnionMonde(manoT, "BoitierLosange"),
+                },
+                ArcRadius = RayonMesure(manoT, "ArcTrack"),
             };
         }
+
+        /// <summary>Le rayon RÉEL d'un anneau enfant, mesuré sur son rectangle.
+        ///
+        /// ⚠️⚠️ REMPLACE `ArcRadiusRatio = 0.75f`, une constante dont le commentaire disait
+        /// « ArcDiameterPx(48) / ManometreDiameter(**64**) / 2 ». Le manomètre est passé à **68**
+        /// depuis, et personne n'est revenu relire : l'oracle échantillonnait à 25,5 là où l'arc
+        /// vit à 24 — **1,5 px trop loin, dans le laiton du boîtier**. Il a fini par y trouver un
+        /// pixel chaud (RGBA 0,122 0,106 0,102 contre un fond 0,051 0,067 0,102) et l'a rapporté
+        /// comme un résidu d'arc dans l'hémicycle inférieur. Un nombre DÉRIVÉ puis GELÉ est une
+        /// prose datée avec un `const` devant — et celui-ci portait sa propre péremption écrite
+        /// dans son commentaire, sous la forme d'un « 64 » qui n'était plus vrai.</summary>
+        private static float RayonMesure(Transform racine, string nom)
+        {
+            Transform t = null;
+            foreach (Transform c in racine.GetComponentsInChildren<Transform>(true))
+                if (c.name == nom) { t = c; break; }
+            Assert.IsNotNull(t, $"'{nom}' introuvable sous le manomètre — le rayon d'arc serait deviné");
+            var c4 = new Vector3[4];
+            ((RectTransform)t).GetWorldCorners(c4);
+            return (c4[2].x - c4[0].x) / 2f;
+        }
+
+        /// <summary>Union, en coordonnées ÉCRAN, des rectangles de plusieurs descendants nommés.</summary>
+        private static Rect UnionMonde(Transform racine, params string[] noms)
+        {
+            float x0 = float.MaxValue, y0 = float.MaxValue, x1 = float.MinValue, y1 = float.MinValue;
+            int vus = 0;
+            foreach (string nom in noms)
+            {
+                Transform t = null;
+                foreach (Transform c in racine.GetComponentsInChildren<Transform>(true))
+                    if (c.name == nom) { t = c; break; }
+                Assert.IsNotNull(t, $"'{nom}' introuvable sous le manomètre — la zone morte serait vide, " +
+                                    "et l'oracle accuserait le texte d'être un résidu d'arc");
+                var c4 = new Vector3[4];
+                ((RectTransform)t).GetWorldCorners(c4);
+                foreach (Vector3 p in c4)
+                {
+                    x0 = Mathf.Min(x0, p.x); y0 = Mathf.Min(y0, p.y);
+                    x1 = Mathf.Max(x1, p.x); y1 = Mathf.Max(y1, p.y);
+                }
+                vus++;
+            }
+            Assert.AreEqual(noms.Length, vus, "tous les libellés attendus doivent être vus");
+            return Rect.MinMaxRect(x0, y0, x1, y1);
+        }
+
+        /// <summary>Le point (r, angle) tombe-t-il DANS la boîte du texte ?
+        ///
+        /// ⚠️ REMPLACE UNE FENÊTRE ANGULAIRE FIGÉE (`[210°,330°]`). Celle-ci avait été CALCULÉE une
+        /// fois depuis les bornes du texte anglais (« HEAT », « Cold »), puis gelée en constante.
+        /// Le jour où les libellés sont passés au français — « CHALEUR », « Froid », plus larges —
+        /// le texte est sorti de la fenêtre par la gauche et l'oracle l'a signalé comme un résidu
+        /// d'arc dans l'hémicycle inférieur (`ang=185..203`). Un nombre DÉRIVÉ puis gelé est une
+        /// prose datée avec un `const` devant.
+        /// La boîte réelle est aussi STRICTEMENT PLUS SERRÉE qu'un coin de 120° : la garde y gagne
+        /// en portée au lieu d'en perdre — elle surveille désormais les ~40° que la fenêtre
+        /// excluait sans raison.</summary>
+        /// <summary>2 px de marge : l'encre d'un glyphe déborde de sa boîte par sa frange
+        /// d'anti-crénelage. Le point qui a fait rougir l'oracle était à **0,48 px** au-dessus du
+        /// bord de la boîte — dedans pour l'œil, dehors pour `Rect.Contains`.</summary>
+        private const float MargeZoneTextePx = 2f;
+
+        private static bool DansUneZone(Geo g, float r, float angleDeg, Rect[] zones)
+        {
+            float rad = angleDeg * Mathf.Deg2Rad;
+            var p = new Vector2(g.Cx + r * Mathf.Cos(rad), g.Cy + r * Mathf.Sin(rad));
+            foreach (Rect z in zones)
+                if (new Rect(z.xMin - MargeZoneTextePx, z.yMin - MargeZoneTextePx,
+                             z.width + 2f * MargeZoneTextePx, z.height + 2f * MargeZoneTextePx).Contains(p))
+                    return true;
+            return false;
+        }
+
+        /// <summary>Le texte SEUL — ce dont dépend le choix d'un fond de référence pour le cadran
+        /// (l'ornement, lui, vit hors du disque et ne peut pas polluer une base prise sur la face).</summary>
+        private static bool DansLaZoneDeTexte(Geo g, float r, float angleDeg)
+            => DansUneZone(g, r, angleDeg, new[] { g.TextZone });
 
         /// <summary>MESURÉ (2026-08-21, en fermant Oracle1) — le filet bas de barre (`Hairline`,
         /// pleine largeur, MÊME famille laiton que l'anneau en état calme ET en état alarme,
@@ -115,7 +210,7 @@ namespace MafiaCleanCity.Shell.Tests
         /// lui-même — `ManometreVerticalOffsetPx` le tient hors du DISQUE, §2.1) à deux fenêtres
         /// angulaires ÉTROITES et SYMÉTRIQUES autour de 270° (bas), parce que le filet est une ligne
         /// HORIZONTALE quasi tangente à la bande de recherche annulaire. Mesuré empiriquement (balayage
-        /// fin, 1°) : [201°,203°] et [336°,339°] — HORS de `TextZoneExcludeStartDeg/EndDeg` ([210,330],
+        /// fin, 1°) : [201°,203°] et [336°,339°] — HORS de la zone morte du texte (`DansLaZoneDeTexte`,
         /// dérivé UNIQUEMENT de GaugeCaption/GaugeValue, sans rapport avec le filet). Cette fonction
         /// DÉRIVE la fenêtre géométriquement (jamais un magic number recopié de la mesure) : pour les 2
         /// arêtes du filet (haut/bas) × les 2 bornes du rayon de recherche, le point de croisement
@@ -173,7 +268,8 @@ namespace MafiaCleanCity.Shell.Tests
         // PAR SA POSITION connue de TOUT balayage angulaire du disque de ce fichier (CHECK 1 et
         // CHECK 3 partagent le même angle mort) — jamais en élargissant la tolérance de couleur, qui
         // aurait pu cacher un vrai résidu au même endroit.
-        private const float TextZoneExcludeStartDeg = 210f, TextZoneExcludeEndDeg = 330f;
+        // (La fenêtre angulaire figée qui vivait ici a été remplacée par `DansLaZoneDeTexte`,
+        // qui lit la boîte RÉELLE des deux libellés. Voir le docblock de cette méthode.)
 
         // ══════════════════════════════════════════════════════════════════════════════════════
         // CHECK 1 — l'anneau est UNIQUE et laiton sur 360° : jamais rouge vif brut, jamais doublé.
@@ -322,7 +418,7 @@ namespace MafiaCleanCity.Shell.Tests
                 // Debug.Log injecté puis retiré, co-tenance HUDv31 reproduite) : le filet bas de barre
                 // (`Hairline`, MÊME famille laiton que l'anneau, `UpdateAlarmState` colore les DEUX
                 // identiquement) croise la bande de recherche à deux fenêtres ÉTROITES et SYMÉTRIQUES
-                // — mesuré [201°,203°] et [336°,339°], toutes deux HORS de `TextZoneExcludeStartDeg/
+                // — mesuré [201°,203°] et [336°,339°], toutes deux HORS de la zone morte du texte (`DansLaZoneDeTexte`/
                 // EndDeg` ([210,330], dérivé UNIQUEMENT du texte GaugeCaption/GaugeValue, sans rapport
                 // avec le filet). Ce n'est pas un anneau doublé : ce sont deux éléments CHROME
                 // DISTINCTS et INTENTIONNELS (voir le commentaire de CHECK 2 ci-dessous — l'overhang
@@ -345,7 +441,7 @@ namespace MafiaCleanCity.Shell.Tests
 
                 for (float ang = 0f; ang < 360f; ang += 6f)
                 {
-                    if (ang >= TextZoneExcludeStartDeg && ang <= TextZoneExcludeEndDeg) continue;
+                    if (DansUneZone(calmGeo, (rMin + rMax) * 0.5f, ang, calmGeo.ZonesExclues)) continue;
                     if (!InHairlineWindow(ang, leftWindowCalm, rightWindowCalm))
                     {
                         int runsCalm = CountRingRunsAtAngle(calmTexCopy, calmGeo.Cx, calmGeo.Cy, ang,
@@ -455,7 +551,7 @@ namespace MafiaCleanCity.Shell.Tests
         // CHECK 3 — l'arc couvre CHAQUE secteur du demi-cercle SUPÉRIEUR, et rien dans l'INFÉRIEUR.
         // ══════════════════════════════════════════════════════════════════════════════════════
 
-        private const float ArcRadiusRatio = 0.75f; // ArcDiameterPx(48) / ManometreDiameter(64) / 2 ≈ rayon relatif
+        // (`ArcRadiusRatio` a été retiré : le rayon se MESURE désormais sur `ArcTrack`. Voir `RayonMesure`.)
         private const float ArcSectorWidthDeg = 20f;
         // Référence à 270° (plein sud, hémicycle bas) : MÊME rayon que l'échantillon testé, sur la
         // MÊME image — jamais une couleur de fond EXTERNE (la face du cadran est un DÉGRADÉ radial,
@@ -467,10 +563,48 @@ namespace MafiaCleanCity.Shell.Tests
         private const float LowerReferenceAngleDeg = 270f;
         private const float ArcInkEpsilon = 0.05f;
 
-        private static bool DiffersFromRadialBaseline(Texture2D tex, float cx, float cy, float r, float angleDeg)
+        /// <summary>Un angle de l'hémicycle INFÉRIEUR, au rayon `r`, dont le point ne tombe PAS
+        /// dans la boîte des libellés.
+        ///
+        /// ⚠️ POURQUOI CETTE FONCTION EXISTE — et c'est le défaut le plus instructif de cet oracle.
+        /// La ligne de base était prise à **270° en dur**, c'est-à-dire DROIT EN BAS, au même rayon
+        /// que l'échantillon. Or à ce rayon, droit en bas, on est **au milieu de `GaugeCaption`**.
+        /// Avec « HEAT » (4 lettres) le centre du mot tombait dans un BLANC entre deux lettres, et
+        /// la ligne de base valait « fond ». Avec « CHALEUR » (7 lettres) il tombe **sur une
+        /// lettre** : la ligne de base est devenue de l'ENCRE, et tout point réellement vide s'est
+        /// mis à « différer de la base » — l'oracle accusait le vide d'être un résidu d'arc.
+        ///
+        /// Mesuré : base = RGBA(0,416 0,392 0,337) — du crème, pas du fond. Le point incriminé
+        /// valait RGBA(0,075 0,094 0,133), c'est-à-dire exactement le bleu nuit du disque.
+        ///
+        /// ⇒ **Une référence « fond » prise à un angle FIXE n'est une référence que tant que rien
+        /// n'est dessiné à cet angle.** Le rendre dépendant de la boîte réelle du texte le répare
+        /// pour toute longueur de libellé future, dans n'importe quelle langue.</summary>
+        /// <summary>⚠️ LA BASE DOIT ÊTRE AU MÊME RAYON, et c'est ce qui rend l'échec possible.
+        /// Le disque porte un dégradé RADIAL : comparer un échantillon à une base prise à un autre
+        /// rayon mesurerait le dégradé, pas l'encre. Or MESURÉ — à `arcR − 2,5`, la boîte des
+        /// libellés (51,6 × 21,6 px, centrée sous le pivot) recouvre **tout** l'hémicycle inférieur
+        /// à ce rayon. Il n'existe alors AUCUN fond auquel se comparer, et la réponse honnête est
+        /// de déclarer le rayon NON JUGEABLE — pas d'inventer une référence ailleurs.</summary>
+        private static bool TryAngleDeBaseHorsTexte(Geo g, float r, out float angle)
         {
-            Color sample = SamplePolar(tex, cx, cy, r, angleDeg);
-            Color baseline = SamplePolar(tex, cx, cy, r, LowerReferenceAngleDeg);
+            for (float delta = 0f; delta <= 80f; delta += 2f)
+            {
+                angle = LowerReferenceAngleDeg - delta;
+                if (!DansLaZoneDeTexte(g, r, angle)) return true;
+                angle = LowerReferenceAngleDeg + delta;
+                if (!DansLaZoneDeTexte(g, r, angle)) return true;
+            }
+            angle = LowerReferenceAngleDeg;
+            return false;
+        }
+
+        private static bool DiffersFromRadialBaseline(Texture2D tex, Geo g, float r, float angleDeg)
+        {
+            float aBase;
+            if (!TryAngleDeBaseHorsTexte(g, r, out aBase)) return false;  // rayon non jugeable
+            Color sample = SamplePolar(tex, g.Cx, g.Cy, r, angleDeg);
+            Color baseline = SamplePolar(tex, g.Cx, g.Cy, r, aBase);
             return ColorDistance(sample, baseline) > ArcInkEpsilon;
         }
 
@@ -486,32 +620,97 @@ namespace MafiaCleanCity.Shell.Tests
             Texture2D tex = ScreenCapture.CaptureScreenshotAsTexture();
             try
             {
-                float arcR = geo.MedallionRadius * ArcRadiusRatio;
+                float arcR = geo.ArcRadius;
 
                 var emptyUpperSectors = new List<string>();
+                // ⚠️ « NON JUGEABLE » N'EST PAS « PAS D'ENCRE ». Un rayon dont l'hémicycle inférieur
+                // est entièrement couvert par la boîte des libellés n'a AUCUN fond de référence à ce
+                // rayon (le disque porte un dégradé radial : une base prise à un autre rayon
+                // mesurerait le dégradé). Confondre les deux a produit un verdict UNIFORME — les 9
+                // secteurs déclarés vides d'un coup — c'est-à-dire la signature d'un instrument qui
+                // mesure autre chose. Ici on COMPTE les rayons jugeables et on ne conclut que sur eux.
+                Transform geoSource = topBar.transform.Find("Manometre");
+                int rayonsJugeables = 0;
+                for (float rr = arcR - 2.5f; rr <= arcR + 2.5f; rr += 1f)
+                {
+                    float ig;
+                    if (TryAngleDeBaseHorsTexte(geo, rr, out ig)) rayonsJugeables++;
+                }
+                Debug.Log($"[Oracle3] hémicycle supérieur : {rayonsJugeables} rayons sur 6 " +
+                          $"disposent d'un fond de référence (arcR={arcR:F1}, boîte texte={geo.TextZone})");
+                foreach (string nomT in new[] { "GaugeValue", "GaugeCaption" })
+                {
+                    Transform tt = null;
+                    foreach (Transform c in geoSource.GetComponentsInChildren<Transform>(true))
+                        if (c.name == nomT) { tt = c; break; }
+                    if (tt == null) continue;
+                    var tmpT = tt.GetComponent<TMPro.TextMeshProUGUI>();
+                    Debug.Log($"[Oracle3-TXT] {nomT} «{(tmpT != null ? tmpT.text : "?")}» " +
+                              $"boite={((RectTransform)tt).rect.width:F1} encre={(tmpT != null ? tmpT.preferredWidth : -1f):F1}");
+                }
+                Assert.Greater(rayonsJugeables, 0,
+                    "aucun rayon de la bande d'arc n'a de fond de référence : la boîte des libellés " +
+                    "couvre tout l'hémicycle inférieur à TOUS ces rayons. L'oracle ne peut plus rien " +
+                    "juger — c'est un défaut de DESIGN (le libellé est trop large pour ce cadran), " +
+                    "pas un défaut de l'arc.");
+
                 for (float sectorStart = 0f; sectorStart < 180f; sectorStart += ArcSectorWidthDeg)
                 {
                     bool anyInk = false;
                     for (float a = sectorStart; a < sectorStart + ArcSectorWidthDeg && !anyInk; a += 2f)
                         for (float r = arcR - 2.5f; r <= arcR + 2.5f && !anyInk; r += 1f)
-                            if (DiffersFromRadialBaseline(tex, geo.Cx, geo.Cy, r, a)) anyInk = true;
+                        {
+                            float ig2;
+                            if (!TryAngleDeBaseHorsTexte(geo, r, out ig2)) continue;
+                            if (DiffersFromRadialBaseline(tex, geo, r, a)) anyInk = true;
+                        }
                     if (!anyInk) emptyUpperSectors.Add($"[{sectorStart:F0},{sectorStart + ArcSectorWidthDeg:F0}]");
                 }
                 Assert.IsEmpty(emptyUpperSectors,
-                    "trou dans l'arc du demi-cercle SUPÉRIEUR (aucune encre track/cold/hot trouvée, comparé à " +
-                    "la référence au MÊME rayon, 270°) — secteurs : " + string.Join(", ", emptyUpperSectors));
+                    "trou dans l'arc du demi-cercle SUPÉRIEUR (aucune encre track/cold/hot trouvée, comparé " +
+                    "au fond du MÊME rayon pris hors de la boîte des libellés) — secteurs : "
+                    + string.Join(", ", emptyUpperSectors));
 
-                // Zone morte "texte" (`TextZoneExcludeStartDeg`/`EndDeg`, docblock au niveau classe)
+                // Zone morte "texte" (`DansLaZoneDeTexte` — boîte RÉELLE des libellés, pas un coin figé)
                 // — même angle mort que CHECK 1.
                 var offendingLowerSectors = new List<string>();
+                int paires = 0, paiuresTexte = 0, paireNonJugeable = 0;
                 for (float a = 185f; a < 355f; a += 2f) // évite 355-360/0-5 (chevauchement cold/hot mesuré au sommet) et 265-275 (la référence elle-même)
                 {
                     if (a > 265f && a < 275f) continue;
-                    if (a >= TextZoneExcludeStartDeg && a <= TextZoneExcludeEndDeg) continue;
                     for (float r = arcR - 2.5f; r <= arcR + 2.5f; r += 1f)
-                        if (DiffersFromRadialBaseline(tex, geo.Cx, geo.Cy, r, a))
-                            offendingLowerSectors.Add($"ang={a:F0} r={r - arcR:F1}");
+                    {
+                        if (DansLaZoneDeTexte(geo, r, a)) { paiuresTexte++; continue; }
+                        float ignore;
+                        if (!TryAngleDeBaseHorsTexte(geo, r, out ignore)) { paireNonJugeable++; continue; }
+                        paires++;
+                        if (DiffersFromRadialBaseline(tex, geo, r, a))
+                        {
+                            // ★ « Un compte nu ne dit pas ce qu'il compte » : l'angle seul ne
+                            // permet pas de savoir si le pixel trouvé est un vrai résidu d'arc, la
+                            // frange d'un bout d'arc, ou un ornement légitime. On rapporte donc la
+                            // COULEUR trouvée, celle du fond auquel elle a été comparée, et l'angle
+                            // de ce fond.
+                            float aB2; TryAngleDeBaseHorsTexte(geo, r, out aB2);
+                            Color vu = SamplePolar(tex, geo.Cx, geo.Cy, r, a);
+                            Color fond = SamplePolar(tex, geo.Cx, geo.Cy, r, aB2);
+                            offendingLowerSectors.Add(
+                                $"ang={a:F0} r={r - arcR:F1} vu={vu} fond={fond}@{aB2:F0}° " +
+                                $"d={ColorDistance(vu, fond):F3}");
+                        }
+                    }
                 }
+
+                // ⛔ ANTI-VACUITÉ. Deux raisons LÉGITIMES d'ignorer un point — il est sous le texte,
+                // ou son rayon n'a aucun fond de référence — et toutes deux grandissent quand les
+                // libellés s'allongent. Sans ce compte, une traduction plus verbeuse rendrait la
+                // garde VERTE en ne jugeant plus rien, et le compteur de la suite ne le dirait pas.
+                Debug.Log($"[Oracle3] hémicycle inférieur : {paires} paires jugées, " +
+                          $"{paiuresTexte} sous le texte, {paireNonJugeable} sans fond de référence");
+                Assert.Greater(paires, 100,
+                    $"seules {paires} paires (angle, rayon) ont pu être jugées dans l'hémicycle " +
+                    $"inférieur ({paiuresTexte} sous le texte, {paireNonJugeable} sans fond) — " +
+                    "la garde ne couvre plus assez de surface pour valoir quelque chose.");
                 Assert.IsEmpty(offendingLowerSectors,
                     "piste parasite détectée dans le demi-cercle INFÉRIEUR (devrait être aussi vide que la " +
                     "référence à 270°, même rayon — le track ne couvre QUE l'hémicycle supérieur) : " +
@@ -522,7 +721,8 @@ namespace MafiaCleanCity.Shell.Tests
                 for (float a = 80f; a <= 100f; a += 1f)
                     for (float r = arcR - 2.5f; r <= arcR + 2.5f; r += 1f)
                     {
-                        Color baseline = SamplePolar(tex, geo.Cx, geo.Cy, r, LowerReferenceAngleDeg);
+                        float aB; TryAngleDeBaseHorsTexte(geo, r, out aB);
+                        Color baseline = SamplePolar(tex, geo.Cx, geo.Cy, r, aB);
                         float rad = a * Mathf.Deg2Rad;
                         int px = Mathf.RoundToInt(geo.Cx + r * Mathf.Cos(rad));
                         int py = Mathf.RoundToInt(geo.Cy + r * Mathf.Sin(rad));
@@ -532,7 +732,7 @@ namespace MafiaCleanCity.Shell.Tests
                 bool sector80to100StillHasInk = false;
                 for (float a = 80f; a < 100f; a += 2f)
                     for (float r = arcR - 2.5f; r <= arcR + 2.5f; r += 1f)
-                        if (DiffersFromRadialBaseline(tex, geo.Cx, geo.Cy, r, a)) sector80to100StillHasInk = true;
+                        if (DiffersFromRadialBaseline(tex, geo, r, a)) sector80to100StillHasInk = true;
                 Assert.IsFalse(sector80to100StillHasInk,
                     "CONTRÔLE POSITIF : un secteur forcé à la couleur de référence (80°-100°) doit être vu comme VIDE");
 
@@ -558,7 +758,7 @@ namespace MafiaCleanCity.Shell.Tests
                 tex.Apply();
                 bool lowerProbeSeen = false;
                 for (float a = LowerProbeStartDeg; a < LowerProbeEndDeg; a += 2f)
-                    if (DiffersFromRadialBaseline(tex, geo.Cx, geo.Cy, arcInkR, a)) lowerProbeSeen = true;
+                    if (DiffersFromRadialBaseline(tex, geo, arcInkR, a)) lowerProbeSeen = true;
                 Assert.IsTrue(lowerProbeSeen,
                     $"CONTRÔLE POSITIF : une piste plantée sur le bas ({LowerProbeStartDeg:F0}°-{LowerProbeEndDeg:F0}°, " +
                     "couleur de l'arc réel) DOIT être détectée par la sonde du demi-cercle inférieur — sinon le " +

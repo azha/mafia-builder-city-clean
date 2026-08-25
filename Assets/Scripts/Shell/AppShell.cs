@@ -633,11 +633,11 @@ namespace MafiaCleanCity.Shell
             hlg.childForceExpandWidth = true;
             hlg.childForceExpandHeight = true;
 
-            AddTabButton(Tab.Home, "Home");
-            AddTabButton(Tab.City, "City");
-            AddTabButton(Tab.Org, "Org");
-            AddTabButton(Tab.Pipeline, "Pipeline");
-            AddTabButton(Tab.More, "More");
+            AddTabButton(Tab.Home, "Accueil");
+            AddTabButton(Tab.City, "Ville");
+            AddTabButton(Tab.Org, "Famille");
+            AddTabButton(Tab.Pipeline, "Filière");
+            AddTabButton(Tab.More, "Plus");
         }
 
         private void AddTabButton(Tab tab, string label)

@@ -133,7 +133,7 @@ namespace MafiaCleanCity.Operational.Tests
             b == "FLUSH" ? "Flush" : b == "HIGH" ? "High" : b == "MODERATE" ? "Moderate" :
             b == "LOW" ? "Low" : b == "BROKE" ? "Broke" : b;
         private static string HeatLabelFor(string b) =>
-            b == "COLD" ? "Cold" : b == "WARM" ? "Warm" : b == "HOT" ? "Hot" : b == "BURNING" ? "Burning" : b;
+            MafiaCleanCity.Shell.HeatBucketResolver.Label(b);
         private static string CleanlinessLabelFor(string b) =>
             b == "DIRTY" ? "Dirty" : b == "PARTIAL" ? "Partial" : b == "MOSTLY_CLEAN" ? "Mostly clean" :
             b == "CLEAN" ? "Clean" : b;
@@ -280,7 +280,7 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.IsTrue(nodeTexts.Any(t => t == "Deviation"), "Pipeline renders the deviation row");
             Assert.IsTrue(nodeTexts.Any(t => t == (liveDeviation ? "Audit pin active" : "Conforming")),
                 $"Pipeline renders the live deviation flag (live deviation={liveDeviation})");
-            AssertNoRawScalar(nodeTexts, "Pipeline");
+            AssertNoRawScalar(nodeTexts, "Filière");
 
             // ── SCREEN 4 — CITY MAP: the "where" — 18 districts + a live heat overlay. The City Map
             //    screen reads the citymap_demo player (its own demo creds), the heat-gradient demo

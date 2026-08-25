@@ -418,7 +418,7 @@ namespace MafiaCleanCity.Operational
 
             AddNavButton(navBar, "City Map", OpenCityMap);
             AddNavButton(navBar, "Building Card", OpenBuildingCard);
-            AddNavButton(navBar, "Pipeline", OpenPipeline);
+            AddNavButton(navBar, "Filière", OpenPipeline);
             AddNavButton(navBar, "Exceptions", OpenExceptions);
             AddNavButton(navBar, "Autonomy", OpenAutonomy);
         }

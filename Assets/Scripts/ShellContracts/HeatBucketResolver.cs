@@ -64,10 +64,14 @@ namespace MafiaCleanCity.Shell
         {
             switch (bucket)
             {
-                case "COLD": return "Cold";
-                case "WARM": return "Warm";
-                case "HOT": return "Hot";
-                case "BURNING": return "Burning";
+                // « i18n partout » (ruling user). Le RÉSOLVEUR est le seul endroit où cette
+                // correspondance existe : c'est ce qui rend la traduction possible en un point, et
+                // c'est la forme que le socle exige (une fonction nommée prenant la valeur du
+                // domaine — un commentaire ou un index de tableau ne s'asserte pas).
+                case "COLD": return "Froid";
+                case "WARM": return "Tiède";
+                case "HOT": return "Chaud";
+                case "BURNING": return "Brûlant";
                 default: return string.IsNullOrEmpty(bucket) ? "Unknown" : bucket;
             }
         }

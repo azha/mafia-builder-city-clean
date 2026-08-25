@@ -119,7 +119,14 @@ namespace MafiaCleanCity.Shell.Tests
                 "the rendered bucket EQUALS the live citywide_bucket — not merely 'a bar exists'");
             // The render CAPITALIZES the label (HeatLabel) — case-INSENSITIVE check; the exact-value
             // equality just above is what actually proves "rendered == received".
-            Assert.IsTrue(panel.RenderedTexts.Any(t => t.IndexOf(liveHeat.citywide_bucket, System.StringComparison.OrdinalIgnoreCase) >= 0));
+            // ⚠️ AMENDÉ (ruling « i18n partout ») : cette assertion cherchait la valeur BRUTE du
+            // bucket (« COLD ») DANS le texte rendu. Ça ne tenait que tant que le libellé était le
+            // mot anglais mis en casse de titre — une coïncidence de langue, pas une propriété. Elle
+            // lit désormais le RÉSOLVEUR, seul endroit où la correspondance existe, et survit donc à
+            // toute traduction future.
+            string libelleAttendu = MafiaCleanCity.Shell.HeatBucketResolver.Label(liveHeat.citywide_bucket);
+            Assert.IsTrue(panel.RenderedTexts.Any(t => t.IndexOf(libelleAttendu, System.StringComparison.OrdinalIgnoreCase) >= 0),
+                $"aucun texte rendu ne porte le libellé « {libelleAttendu} » attendu pour le bucket « {liveHeat.citywide_bucket} »");
         }
 
         // C6-F4 (la sonde de cohésion, à travers l'enveloppe — refaite en v4) — TROIS pièces :

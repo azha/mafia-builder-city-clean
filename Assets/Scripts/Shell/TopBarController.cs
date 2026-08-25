@@ -407,6 +407,9 @@ namespace MafiaCleanCity.Shell
             HeatNeedleAngleDegrees = HeatBucketResolver.NeedleAngleDegrees(bucket);
             heatNeedle.localEulerAngles = new Vector3(0f, 0f, HeatNeedleAngleDegrees);
             gaugeValueText.text = HeatBucketResolver.Label(bucket);
+            // Les quatre libellés n'ont pas la même largeur : la boîte suit le texte, sinon elle
+            // reste dimensionnée pour celui du premier rendu.
+            AjusterALEncre(gaugeValueText, ManometreDiameter - BoitierRingThicknessPx * 2f - 1f - 8f);
             UpdateAlarmState();
         }
 
@@ -963,12 +966,36 @@ namespace MafiaCleanCity.Shell
             gaugeValueText.font = DesignTokens.Current.hudSerifFont;
             gaugeValueText.enableAutoSizing = false;
             gaugeValueText.textWrappingMode = TextWrappingModes.NoWrap;
+            AjusterALEncre(gaugeValueText, faceDiameter - 8f);
 
-            NewText("GaugeCaption", "HEAT",
+            AjusterALEncre(NewText("GaugeCaption", "CHALEUR",
                 new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
                 new Vector2(0f, -21f), new Vector2(faceDiameter - 6f, 9f),
                 GaugeCaptionFontSizePx, TextAlignmentOptions.Center, DesignTokens.Current.hudCremeSecondary,
-                letterSpacing: 3f, parent: manoGo.transform);
+                letterSpacing: 3f, parent: manoGo.transform), faceDiameter - 6f);
+        }
+
+        /// <summary>Ramène la boîte d'un libellé du cadran à la largeur de son ENCRE.
+        ///
+        /// ⚠️ POURQUOI : les deux libellés du manomètre étaient dimensionnés sur le DISQUE
+        /// (`faceDiameter − 8` / `− 6`), pas sur leur texte. Mesuré — boîtes **53,0** et **55,0** px
+        /// pour une encre de **28,1** et **34,5**. Tant que le texte était court, personne ne l'a
+        /// vu ; le jour où l'oracle du cadran a dû savoir OÙ EST LE TEXTE pour ne pas le confondre
+        /// avec un résidu d'arc, il a lu ces boîtes surdimensionnées et a conclu que le texte
+        /// couvrait tout l'hémicycle inférieur — donc qu'aucun rayon n'avait de fond de référence.
+        /// **Une boîte plus grande que son contenu n'est pas neutre : c'est une fausse déclaration
+        /// d'occupation, et tout ce qui raisonne sur la géométrie la croit.**
+        ///
+        /// `preferredWidth` est valide dès que le maillage est à jour, d'où le `ForceMeshUpdate`.</summary>
+        private static void AjusterALEncre(TMP_Text texte, float largeurMax)
+        {
+            if (texte == null) return;
+            texte.ForceMeshUpdate();
+            var rt = (RectTransform)texte.transform;
+            // ⚠️ BORNÉE DES DEUX CÔTÉS. Un simple `Min` avec la largeur courante ne saurait que
+            // RÉTRÉCIR : la boîte resterait figée à la taille du premier libellé, et « Brûlant »
+            // (le plus long des quatre) reviendrait à la ligne après un passage par « Froid ».
+            rt.sizeDelta = new Vector2(Mathf.Min(largeurMax, texte.preferredWidth + 2f), rt.sizeDelta.y);
         }
 
         /// <summary>Un segment d'arc du cadran — `Image.FillMethod.Radial180` sur un sprite
