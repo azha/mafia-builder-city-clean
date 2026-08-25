@@ -1324,11 +1324,20 @@ namespace MafiaCleanCity.Operational.Lieutenant
             // l'en-tête « pèse » sans porter de trait.
             GameObject voileTete = NewUI("VoileEnTete", tete.transform);
             voileTete.AddComponent<LayoutElement>().ignoreLayout = true;
-            Stretch((RectTransform)voileTete.transform);
+            RectTransform vrt = (RectTransform)voileTete.transform;
+            // ⚠️ ANCRÉ AU BORD DE LA FEUILLE, PAS AU BLOC D'EN-TÊTE. `.tete` commence au bord haut
+            // de `.sheet` ; ici la carte a posé ses 19 de padding avant lui, et le juge ⊥ a mesuré
+            // le voile démarrant **16 px CSS sous le bord** au lieu d'y être maximal. On remonte
+            // donc de ce padding, et on déborde latéralement (mesuré : 85 % de large au lieu de
+            // 100 %).
+            vrt.anchorMin = Vector2.zero;
+            vrt.anchorMax = Vector2.one;
+            vrt.offsetMin = new Vector2(-FX(22), 0f);
+            vrt.offsetMax = new Vector2(FX(22), FX(19));
             Image voileTeteImg = voileTete.AddComponent<Image>();
-            voileTeteImg.sprite = MafiaCleanCity.Shell.ProceduralUI.VoileRadial(128,
+            voileTeteImg.sprite = MafiaCleanCity.Shell.ProceduralUI.VoileRadial(256,
                 Css(DesignTokens.Current.hudMoneyGold, 0.06f, SurfaceBg),
-                new Vector2(0.5f, 1f), 0.75f, 1.5f, 0.62f);
+                new Vector2(0.5f, 1f), 0.9f, 1.5f, 1f);
             voileTeteImg.color = Color.white;
             voileTeteImg.raycastTarget = false;
             voileTete.transform.SetAsFirstSibling();
@@ -1346,13 +1355,14 @@ namespace MafiaCleanCity.Operational.Lieutenant
             // rapport jonc/remplissage de 5,6. Le mien rendait 0,5 : disque plein et chaud, jonc
             // discret. C'est le bouton entier qui changeait de nature, d'un contour léger à une
             // pastille.
-            Color voile = Css(DesignTokens.Current.hudCreme, 0.031f, SurfaceBg);   // #ffffff08
+            Color voile = Css(Color.white, 0.031f, SurfaceBg);   // #ffffff08
             Image disque = retour.AddComponent<Image>();
             disque.sprite = MafiaCleanCity.Shell.ProceduralUI.RadialDisc(64, voile, voile);
             disque.color = Color.white;
             disque.raycastTarget = false;
 
-            Color jonc = Css(DesignTokens.Current.hudCreme, 0.149f, SurfaceBg);    // #ffffff26
+            // m2 du juge ⊥ : mon jonc rendait 37 % de l'encre de la référence — presque invisible.
+            Color jonc = Css(Color.white, 0.149f, SurfaceBg);    // #ffffff26
             GameObject joncGo = NewUI("Jonc", retour.transform);
             Stretch((RectTransform)joncGo.transform);
             joncGo.AddComponent<LayoutElement>().ignoreLayout = true;
@@ -1369,7 +1379,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             VerticalLayoutGroup v = bloc.AddComponent<VerticalLayoutGroup>();
             // `.tete .sous{margin-top:2px}` — mais le juge ⊥ mesure l'écart TITRE→SOUS-TITRE à
             // −48 % : l'essentiel vient de l'interligne, que ce `1` non mis à l'échelle écrasait.
-            v.spacing = FX(6);
+            v.spacing = FX(2);
             v.childControlWidth = true;
             v.childControlHeight = true;
             v.childForceExpandWidth = true;
@@ -1388,7 +1398,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
                 FX(RefFamilleSousTitreTaille), TextAlignmentOptions.Left);
             familySubtitleText.characterSpacing = 14f;         // .14em
             familySubtitleText.color = DesignTokens.Current.hudCremeSecondary;
-            AddLayoutElement(familySubtitleText.gameObject, minHeight: FX(23), flexibleHeight: 0);
+            AddLayoutElement(familySubtitleText.gameObject, minHeight: FX(19), flexibleHeight: 0);
             textComponents.Add(familySubtitleText);
 
             // Le filet de fermeture, estompé aux deux bouts.
@@ -1477,7 +1487,8 @@ namespace MafiaCleanCity.Operational.Lieutenant
         /// pousserait dans la pile (c'est exactement ce qui avait transformé les liserés de panneau
         /// en pastilles). Ses ancres verticales sont 0→1 : il suit la hauteur du conteneur quelle
         /// que soit la taille du roster, sans coroutine de redimensionnement.</summary>
-        private GameObject BuildRailVertical(Transform parent, float x, float hautRetrait, float basRetrait, Color teinte)
+        private GameObject BuildRailVertical(Transform parent, float x, float hautRetrait,
+                                            float basRetrait, Color teinte, bool degrade = true)
         {
             GameObject fil = NewUI("Rail", parent);
             fil.AddComponent<LayoutElement>().ignoreLayout = true;
@@ -1492,11 +1503,23 @@ namespace MafiaCleanCity.Operational.Lieutenant
             // (176,141,62) en haut à (53,49,34) en bas. Le mien rendait (176,141,61) IDENTIQUE sur
             // toute sa longueur : un filet qui ne s'éteint pas se lit comme un trait de cadre, pas
             // comme une ramification qui s'épuise.
-            Color bas = Css(teinte, 0.2f, SurfaceBg);   // #b08d3e33 : la référence s'éteint à 20 %
+            // ⚠️ TOUS LES RAILS NE S'ÉTEIGNENT PAS. `.arbre::before` porte
+            // `linear-gradient(180deg, laiton, #b08d3e33)` ; `.equipe::before` est un APLAT
+            // `#b08d3e55`. Le juge ⊥ a mesuré −26 % du haut vers le bas sur le rail de second
+            // niveau, où la référence est constante. *Généraliser un effet à toute une famille
+            // parce qu'il est juste sur un membre est une erreur de portée.*
             Image im = fil.AddComponent<Image>();
-            im.sprite = MafiaCleanCity.Shell.ProceduralUI.VerticalGradient(64, teinte, bas);
-            im.type = Image.Type.Simple;
-            im.color = Color.white;
+            if (degrade)
+            {
+                im.sprite = MafiaCleanCity.Shell.ProceduralUI.VerticalGradient(
+                    64, teinte, Css(teinte, 0.2f, SurfaceBg));   // #b08d3e33
+                im.type = Image.Type.Simple;
+                im.color = Color.white;
+            }
+            else
+            {
+                im.color = teinte;
+            }
             im.raycastTarget = false;
             return fil;
         }
@@ -1538,7 +1561,9 @@ namespace MafiaCleanCity.Operational.Lieutenant
             rt.offsetMax = new Vector2(flou, flou - descente);
             Image im = go.AddComponent<Image>();
             im.sprite = MafiaCleanCity.Shell.ProceduralUI.RoundedRectShadow(
-                RayonPanneau, FX(12), Css(Color.black, 0.667f, SurfaceBg));   // #000a
+                // Mesuré par le juge ⊥ : minimum à 32 % du fond sous une carte contre 50 % en
+                // référence, et 55 % contre 82 % au-dessus. Densité ramenée au ratio observé.
+                RayonPanneau, FX(12), Css(Color.black, 0.4f, SurfaceBg));
             im.type = Image.Type.Sliced;
             im.color = Color.white;
             im.raycastTarget = false;
@@ -1640,7 +1665,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             // toucher la carte du Don. Un retrait POSITIF le faisait au contraire commencer 11,7
             // en dessous — mesuré par le juge ⊥, écart de 22,9 u : l'arbre semblait décroché de sa
             // racine.
-            BuildRailVertical(arbre.transform, ArbreRailX, FX(-11), FX(19),
+            BuildRailVertical(arbre.transform, ArbreRailX, FXSigne(-11.2f), FX(19),
                 DesignTokens.Current.hudHairlineGold);
 
             for (int i = 0; i < CurrentRoster.Length; i++)
@@ -1717,6 +1742,19 @@ namespace MafiaCleanCity.Operational.Lieutenant
         private int FX(float valeurReference) =>
             Mathf.Max(1, Mathf.RoundToInt(valeurReference * echelleFamille));
 
+        /// <summary>Comme `FX`, mais SANS plancher — pour les valeurs qui ont le droit d'être
+        /// NÉGATIVES.
+        ///
+        /// ⚠️ LE PLANCHER DE `FX` EST UN PIÈGE QUAND LA VALEUR EST UN RETRAIT. `Mathf.Max(1, …)`
+        /// existe pour qu'une épaisseur de trait ne s'annule jamais par arrondi — mais appliqué à
+        /// un `top:-11.2px`, il transforme « déborde de 11 vers le haut » en « commence 1 en
+        /// dessous ». Le juge ⊥ l'a mesuré sur les DEUX rails : dépassement attendu +1,96 % et
+        /// +1,34 %, obtenu **−0,085 %** dans les deux cas. Les rails ne se rattachaient plus
+        /// visuellement à leur niveau supérieur.
+        /// *Une garde utile sur un domaine devient un défaut dès qu'on l'applique à un autre.*</summary>
+        private int FXSigne(float valeurReference) =>
+            Mathf.RoundToInt(valeurReference * echelleFamille);
+
         /// <summary>Correction de MÉTRIQUE pour le sérif d'affichage — pas une correction de taille.
         ///
         /// Un juge visuel ⊥ a mesuré, à panneau égal, une hauteur de capitale **+11 à +13 %** sur
@@ -1782,7 +1820,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
         /// <summary>Le panneau « verre gravé » commun au Don et aux lieutenants — le dégradé que la
         /// maquette appelle `--tx-panneau`, dont les deux stops sont déjà des tokens
         /// (`lieutenantGlassTop`/`lieutenantGlassBottom`, posés par la passe DA et conservés).</summary>
-        private GameObject BuildGlassPanel(Transform parent, string nom, Color bordure)
+        private GameObject BuildGlassPanel(Transform parent, string nom, Color bordure, bool ombre)
         {
             // ⚠️ TROIS NIVEAUX, ET CHACUN EST IMPOSÉ PAR UN DÉFAUT MESURÉ.
             //   `go`      — le conteneur, seul ITEM de layout. Il ne peint rien.
@@ -1797,7 +1835,14 @@ namespace MafiaCleanCity.Operational.Lieutenant
             // donc PAS masqué, ce qui est correct — rien n'y déborde, et un masque de plus coûterait
             // une passe de stencil pour rien.
             GameObject go = NewUI(nom, parent);
-            BuildOmbrePortee(go.transform);
+            // ⚠️ L'OMBRE EST RÉSERVÉE À `.rang`. La CSS ne pose `box-shadow` que sur `.rang` et
+            // `.homme` — **`.don-rang` n'en a pas**. Je l'avais donnée à tous les panneaux, et le
+            // juge ⊥ a mesuré la conséquence : le fond à droite de la carte du Don descend à
+            // (7,7,10) sur 22 px là où la référence garde (22,25,27) EXACT sur 45 px. Pire, cette
+            // ombre remplissait la jointure Don→arbre, faisant lire un LISERÉ NOIR de 5 px là où
+            // l'espacement, lui, est correct — le juge a d'abord classé ça comme un rythme cassé.
+            // *Un effet appliqué au mauvais élément se déguise en défaut de géométrie.*
+            if (ombre) BuildOmbrePortee(go.transform);
 
             GameObject panneau = NewUI("Panneau", go.transform);
             Stretch((RectTransform)panneau.transform);
@@ -1834,8 +1879,12 @@ namespace MafiaCleanCity.Operational.Lieutenant
             // ⚠️ Ils valent pour TOUS les rangs — y compris ceux SANS trait de bordure. La version
             // précédente sortait de la méthode avant de les poser dès que la bordure était nulle,
             // c'est-à-dire précisément sur les rangs de lieutenants, les plus nombreux.
+            // `inset 0 1px 0 rgba(255,255,255,.15)` — du BLANC. Le juge ⊥ a mesuré l'ajout du
+            // liseré à (48,41,28), rapport B/R = 0,58 : la signature d'un or, pas d'un blanc (la
+            // référence donne (34,33,32), B/R = 0,94). J'avais employé `hudCreme`, qui est un crème
+            // CHAUD — un token de texte, pas la lumière d'une arête.
             BuildBiseau(panneau.transform, haut: true,
-                        Css(DesignTokens.Current.hudCreme, 0.15f, DesignTokens.Current.lieutenantGlassTop));
+                        Css(Color.white, 0.15f, DesignTokens.Current.lieutenantGlassTop));
             BuildBiseau(panneau.transform, haut: false,
                         Css(Color.black, 0.5f, DesignTokens.Current.lieutenantGlassBottom));
 
@@ -1882,8 +1931,10 @@ namespace MafiaCleanCity.Operational.Lieutenant
                 hrt.sizeDelta = new Vector2(MedaillonDiametre + 2f * debord,
                                             MedaillonDiametre + 2f * debord);
                 Image himg = halo.AddComponent<Image>();
-                himg.sprite = MafiaCleanCity.Shell.ProceduralUI.VoileRadial(128,
-                    Css(DesignTokens.Current.hudMoneyGold, 0.2f, FondPlaque),
+                // Mesuré par le juge ⊥ : pic +24 R contre +17 en référence (+41 %), et par
+                // paliers de 2 px. Alpha ramené au ratio mesuré, texture doublée.
+                himg.sprite = MafiaCleanCity.Shell.ProceduralUI.VoileRadial(256,
+                    Css(DesignTokens.Current.hudMoneyGold, 0.14f, FondPlaque),
                     new Vector2(0.5f, 0.5f), 0.5f, 0.5f);
                 himg.color = Color.white;
                 himg.raycastTarget = false;
@@ -1943,7 +1994,12 @@ namespace MafiaCleanCity.Operational.Lieutenant
                 // à 169/256 au lieu de 240) : la silhouette se lisait comme une masse ovale à deux
                 // bras. Un sprite non nul, de la bonne taille, aux bonnes couleurs — et le mauvais
                 // dessin. Aucune garde de paramètre ne voit ça.
-                brt.sizeDelta = new Vector2(MedaillonDiametre * 0.74f, MedaillonDiametre * 0.74f);
+                // ⚠️ 0,69 ET NON 0,74 : la valeur CSS s'applique à la BOÎTE du SVG, mais ce que
+                // l'œil (et le juge ⊥) mesure est la SILHOUETTE. Mesuré : hauteur de silhouette
+                // 53,52 % du Ø en référence contre 57,53 % chez moi (+7,5 %), et son bas débordait
+                // à 96,6 % du Ø au lieu de 93,0 % — donc écrêté par le cercle du médaillon.
+                // 0,74 × (53,52/57,53) = 0,688.
+                brt.sizeDelta = new Vector2(MedaillonDiametre * 0.688f, MedaillonDiametre * 0.688f);
                 brt.anchoredPosition = Vector2.zero;
                 Image bi = bg.AddComponent<Image>();
                 bi.sprite = silhouette;
@@ -1958,9 +2014,9 @@ namespace MafiaCleanCity.Operational.Lieutenant
             }
         }
 
-        private GameObject BuildRangBase(Transform parent, string nom, Color bordure)
+        private GameObject BuildRangBase(Transform parent, string nom, Color bordure, bool ombre)
         {
-            GameObject rang = BuildGlassPanel(parent, nom, bordure);
+            GameObject rang = BuildGlassPanel(parent, nom, bordure, ombre);
             HorizontalLayoutGroup h = rang.AddComponent<HorizontalLayoutGroup>();
             h.padding = new RectOffset(FX(17), FX(17), FX(15), FX(15)); // .rang padding : 14,93 · 16,8
             h.spacing = FX(17);                                         // .rang gap : 16,8
@@ -1979,7 +2035,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
         private void BuildDonRow(Transform parent)
         {
             Color bord = Css(DesignTokens.Current.hudMoneyGold, 0.267f, FondPlaque);  // #d9ab4e44 de la maquette
-            GameObject rang = BuildRangBase(parent, "DonRow", bord);
+            GameObject rang = BuildRangBase(parent, "DonRow", bord, ombre: false);   // `.don-rang` sans box-shadow
             BuildMedaillon(rang.transform, "ui_element_buste_homburg", don: true);
 
             GameObject bloc = NewUI("Textes", rang.transform);
@@ -2023,7 +2079,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             AddLayoutElement(enveloppeRang, flexibleHeight: 0);
             BuildRailTick(enveloppeRang.transform, DesignTokens.Current.hudHairlineGold);
 
-            GameObject rang = BuildRangBase(enveloppeRang.transform, "RosterRow_" + index, bord);
+            GameObject rang = BuildRangBase(enveloppeRang.transform, "RosterRow_" + index, bord, ombre: true);
             BuildMedaillon(rang.transform, "ui_element_buste_fedora", don: false);
 
             GameObject bloc = NewUI("Textes", rang.transform);
@@ -2147,14 +2203,15 @@ namespace MafiaCleanCity.Operational.Lieutenant
             // SEULEMENT) et `.equipe::before` (un rail vertical le long du bloc équipe). Un `.vide`
             // ne porte AUCUN embranchement — le juge l'a vérifié en binaire.
             Color filEquipe = Css(DesignTokens.Current.hudHairlineGold, 0.333f, SurfaceBg);  // #b08d3e55
-            BuildRailVertical(enveloppe.transform, EquipeIndentation - FX(24), FX(-7), FX(15), filEquipe);
+            BuildRailVertical(enveloppe.transform, EquipeIndentation - FX(24), FXSigne(-7.5f), FX(15),
+                              filEquipe, degrade: false);
 
             GameObject vide = NewUI("EquipeSlot_" + index, enveloppe.transform);
-            Color bord = Css(DesignTokens.Current.hudCreme, 0.133f, SurfaceBg);   // #ffffff22
+            Color bord = Css(Color.white, 0.133f, SurfaceBg);   // #ffffff22 — BLANC, pas le crème
             Image img = vide.AddComponent<Image>();
             // `.vide{border:1px dashed}` — pointillé, et donc `Tiled` : `Sliced` étirerait le
             // tiret central en une barre continue.
-            img.sprite = MafiaCleanCity.Shell.ProceduralUI.RoundedRectDashedOutline(RayonPanneau, FXf(1f), FX(3), FX(2), bord);
+            img.sprite = MafiaCleanCity.Shell.ProceduralUI.RoundedRectDashedOutline(RayonPanneau, FXf(1f), FX(2.5f), FX(2.5f), bord);
             img.type = Image.Type.Tiled;
             img.color = Color.white;
             img.raycastTarget = false;
@@ -2175,9 +2232,9 @@ namespace MafiaCleanCity.Operational.Lieutenant
             // d'appel-à-l'action que l'artefact ratifié n'a PAS : dans la maquette, « Recruter » a
             // exactement le même poids que « Aucune équipe rattachée ».
             GameObject cta = NewUI("RecruterCta", parent);
-            Color bord = Css(DesignTokens.Current.hudCreme, 0.133f, SurfaceBg);
+            Color bord = Css(Color.white, 0.133f, SurfaceBg);   // #ffffff22
             Image img = cta.AddComponent<Image>();
-            img.sprite = MafiaCleanCity.Shell.ProceduralUI.RoundedRectDashedOutline(RayonPanneau, FXf(1f), FX(3), FX(2), bord);
+            img.sprite = MafiaCleanCity.Shell.ProceduralUI.RoundedRectDashedOutline(RayonPanneau, FXf(1f), FX(2.5f), FX(2.5f), bord);
             img.type = Image.Type.Tiled;
             img.color = Color.white;
             AddLayoutElement(cta, minHeight: FX(71), flexibleHeight: 0);

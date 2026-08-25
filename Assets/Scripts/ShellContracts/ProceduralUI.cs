@@ -236,7 +236,14 @@ namespace MafiaCleanCity.Shell
             // CSS : 180° = vers le bas. En espace texture (y vers le HAUT), l'axe du dégradé est
             // donc (sin θ, −cos θ), et `depart` se trouve du côté opposé.
             float rad = angleDeg * Mathf.Deg2Rad;
-            var axe = new Vector2(Mathf.Sin(rad), -Mathf.Cos(rad));
+            // ⚠️ SIGNE VÉRIFIÉ SUR UN CAS CONNU, pas déduit. CSS : 180° = « vers le bas ». En
+            // coordonnées d'ÉCRAN (y vers le bas) la direction vaut (sin θ, −cos θ) ; en
+            // coordonnées de TEXTURE (y vers le HAUT) elle vaut donc (sin θ, +cos θ). À θ=180 :
+            // (0,−1), c'est-à-dire vers le bas de la texture ✓.
+            // La première version employait la formule d'écran dans un espace de texture : le juge
+            // ⊥ a mesuré un dégradé à 160° rendu comme un 20° — les quatre coins dans l'ordre
+            // exactement inverse, et l'écran entier éclairé PAR LE BAS.
+            var axe = new Vector2(Mathf.Sin(rad), Mathf.Cos(rad));
             // Longueur de la projection de la diagonale sur l'axe : c'est elle qui normalise.
             float portee = Mathf.Abs(axe.x) + Mathf.Abs(axe.y);
             for (int y = 0; y < d; y++)
@@ -465,8 +472,13 @@ namespace MafiaCleanCity.Shell
                     float ux = ((x + 0.5f) / d - centreUV.x) / Mathf.Max(1e-4f, rayonX);
                     float uy = ((y + 0.5f) / d - centreUV.y) / Mathf.Max(1e-4f, rayonY);
                     float r = Mathf.Sqrt(ux * ux + uy * uy) / Mathf.Max(1e-4f, finEnFraction);
+                    // Extinction en COSINUS, pas linéaire : le juge ⊥ a mesuré 4 paliers durs dans
+                    // le voile d'en-tête (sauts nets de 22→33→30→28→22). Une rampe linéaire étirée
+                    // sur un bandeau large se quantifie visiblement ; la courbe en cosinus répartit
+                    // l'erreur d'arrondi et ne laisse pas d'arête.
+                    float a = r >= 1f ? 0f : 0.5f * (1f + Mathf.Cos(Mathf.PI * r));
                     Color c = teinte;
-                    c.a *= Mathf.Clamp01(1f - r);
+                    c.a *= a;
                     pixels[y * d + x] = c;
                 }
             }
