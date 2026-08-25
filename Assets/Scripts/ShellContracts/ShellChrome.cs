@@ -23,5 +23,27 @@ namespace MafiaCleanCity.Shell
         /// vue_principale_batiments_hud.png).
         /// </summary>
         public const float GutterX = 16f;
+
+        /// <summary>Hauteur que le chrome MANGE en haut : zone sûre + bandeau + ce qui pend sous le
+        /// bandeau (le médaillon du manomètre déborde par construction). Publiée par le shell,
+        /// lue par les locataires qui posent du texte lisible — un locataire qui étire un FOND
+        /// plein écran doit au contraire l'ignorer, c'est le sens de `ContentSlot` plein canvas.
+        ///
+        /// ⚠️ VAUT ZÉRO QUAND IL N'Y A PAS DE SHELL, et c'est correct : sans shell il n'y a pas de
+        /// barres. Ce n'est donc PAS un drapeau qu'aucune configuration ne pose — le shell l'écrit
+        /// à chaque montage de locataire, après la passe de layout qui rend les hauteurs valides.
+        /// Un locataire monté hors shell (tests isolés) lit 0 et remplit tout : le comportement
+        /// qu'il avait avant que ce champ existe.</summary>
+        public static float TopInsetPx { get; private set; }
+
+        /// <summary>Hauteur que le chrome mange en bas : zone sûre + barre d'onglets.</summary>
+        public static float BottomInsetPx { get; private set; }
+
+        /// <summary>Écrit par le shell UNIQUEMENT. Les locataires lisent.</summary>
+        public static void PublierInsets(float haut, float bas)
+        {
+            TopInsetPx = haut;
+            BottomInsetPx = bas;
+        }
     }
 }

@@ -363,6 +363,12 @@ namespace MafiaCleanCity.Shell
             // measured: an orphaned CityMapController's failed sign-in attributed a `Debug.LogError`
             // to an unconnected exceptions-panel test three fixtures later in the SAME PlayMode domain.
             host.transform.SetParent(ContentSlot, false);
+            // Le chrome publie ce qu'il MANGE avant que le locataire ne construise quoi que ce
+            // soit. Sans ça, un locataire qui veut poser du texte lisible n'a aucun moyen de savoir
+            // où commence la zone libre : `ContentSlot` couvre tout le canvas par conception (pour
+            // qu'un fond plein écran passe SOUS les barres), donc s'y étirer met le titre derrière
+            // le bandeau. Mesuré sur capture : « LA FAMILLE » chevauchait le filet du bandeau.
+            PublierInsetsDuChrome();
             T tenant = host.AddComponent<T>();
             // Synchronous, same frame as AddComponent — Start() (and therefore BuildLayout()) is
             // deferred to the NEXT frame, so this is always visible in time (design D2).
@@ -420,6 +426,21 @@ namespace MafiaCleanCity.Shell
         /// d'échelle est TOUJOURS `Screen.width / referenceResolution.x`, calculé DIRECTEMENT
         /// plutôt que lu sur `canvas.scaleFactor` (qui peut ne pas être encore à jour dans LA MÊME
         /// frame que la construction du Canvas — pas de dépendance de timing implicite).</summary>
+        /// <summary>Recalcule et publie les insets du chrome dans `ShellChrome`.
+        ///
+        /// ⚠️ LES HAUTEURS DE `rect` NE SONT VALIDES QU'APRÈS UNE PASSE DE LAYOUT. On force donc la
+        /// passe avant de lire — une valeur lue dans la frame de création rendrait un zéro
+        /// parfaitement plausible, exactement le piège du `Canvas.scaleFactor` lu trop tôt.</summary>
+        private void PublierInsetsDuChrome()
+        {
+            if (TopBarSlot == null || TabBarRoot == null) return;
+            Canvas.ForceUpdateCanvases();
+            (float topSafe, float bottomSafe) = SafeAreaInsetsLocal();
+            float debord = TopBar != null ? TopBar.EffectiveBottomOverhangPx : 0f;
+            ShellChrome.PublierInsets(topSafe + TopBarSlot.rect.height + debord,
+                                      bottomSafe + TabBarRoot.rect.height);
+        }
+
         private static (float top, float bottom) SafeAreaInsetsLocal()
         {
             Rect safeArea = SafeAreaProvider();

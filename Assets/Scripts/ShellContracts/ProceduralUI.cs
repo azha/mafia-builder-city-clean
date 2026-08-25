@@ -154,6 +154,152 @@ namespace MafiaCleanCity.Shell
 
         private static readonly Dictionary<string, Sprite> cacheFade = new Dictionary<string, Sprite>();
 
+        /// <summary>Un CONTOUR de rectangle arrondi, découpable en 9-slice.
+        ///
+        /// POURQUOI il fallait l'écrire : `Ring` produit un CERCLE. Découpé en 9-slice sur un
+        /// panneau large, il s'étire en **ELLIPSE** — c'est exactement ce que la première version
+        /// des panneaux de l'écran « LA FAMILLE » a rendu, et ça se voit au premier coup d'œil.
+        /// Un contour arrondi a besoin de bordures de découpe : le centre s'étire, les quatre coins
+        /// gardent leur rayon. `RoundedRectMask` fait ça pour une surface PLEINE ; ceci le fait pour
+        /// un TRAIT.
+        ///
+        /// Le sprite porte son `border` (r,r,r,r) : c'est lui qui dit à uGUI où découper. Sans lui,
+        /// `Image.Type.Sliced` se rabat silencieusement sur `Simple` et déforme.</summary>
+        public static Sprite RoundedRectOutline(int cornerRadiusPx, float thicknessPx, Color color)
+        {
+            string key = $"roundoutline:{cornerRadiusPx}:{thicknessPx:F2}:{ColorKey(color)}";
+            if (cache.TryGetValue(key, out Sprite cached) && cached != null) return cached;
+
+            int r = Mathf.Max(2, cornerRadiusPx);
+            int d = r * 2 + 3;
+            float t = Mathf.Max(1f, thicknessPx);
+            var tex = NewTexture(d);
+            var pixels = new Color[d * d];
+            for (int y = 0; y < d; y++)
+            {
+                for (int x = 0; x < d; x++)
+                {
+                    float px = x + 0.5f, py = y + 0.5f;
+                    // Distance SIGNÉE au bord du rectangle arrondi : négative dedans, nulle sur le
+                    // bord. On garde une bande d'épaisseur `t` juste à l'intérieur.
+                    float qx = Mathf.Abs(px - d * 0.5f) - (d * 0.5f - r);
+                    float qy = Mathf.Abs(py - d * 0.5f) - (d * 0.5f - r);
+                    float dist = (qx > 0f && qy > 0f)
+                        ? Mathf.Sqrt(qx * qx + qy * qy) - r
+                        : Mathf.Max(qx, qy) - r;
+                    // |dist + t/2| <= t/2  ⇔  la bande [-t, 0] autour du bord
+                    float bande = Mathf.Abs(dist + t * 0.5f);
+                    float alpha = Mathf.Clamp01(t * 0.5f - bande + 0.5f);
+                    Color c = color;
+                    c.a *= alpha;
+                    pixels[y * d + x] = c;
+                }
+            }
+            tex.SetPixels(pixels);
+            tex.Apply(false, false);
+            Sprite sp = Sprite.Create(tex, new Rect(0, 0, d, d), new Vector2(0.5f, 0.5f), 100f, 0,
+                SpriteMeshType.FullRect, new Vector4(r, r, r, r));
+            sp.hideFlags = HideFlags.HideAndDontSave;
+            cache[key] = sp;
+            return sp;
+        }
+
+        /// <summary>Un dégradé vertical à deux arrêts, sous forme de SPRITE (1 px de large,
+        /// `hauteurPx` de haut, étiré horizontalement par uGUI).
+        ///
+        /// POURQUOI PAS `VerticalGradientImage` : celui-ci dérive de `Graphic`, pas de
+        /// `MaskableGraphic` — il n'implémente donc **ni `IMaskable` ni `IClippable`**, et **aucun
+        /// masque ne l'atteint**. Mesuré le 2026-08-22 : la plaque d'un rang de l'organigramme,
+        /// posée sous un masque en rectangle arrondi, rendait des coins parfaitement CARRÉS.
+        /// (Le même point vaut pour les `maskGo` du bandeau et de la barre d'onglets — leur masque
+        /// ne mord pas non plus sur le dégradé ; c'est sans effet VISIBLE là-bas, les deux barres
+        /// étant des rectangles pleine largeur, mais le dispositif y est décoratif.)
+        /// Un `Image` porte le dégradé dans sa TEXTURE, est un `MaskableGraphic`, et se fait
+        /// clipper normalement.</summary>
+        public static Sprite VerticalGradient(int hauteurPx, Color haut, Color bas)
+        {
+            string key = $"vgrad:{hauteurPx}:{ColorKey(haut)}:{ColorKey(bas)}";
+            if (cache.TryGetValue(key, out Sprite cached) && cached != null) return cached;
+
+            int h = Mathf.Max(2, hauteurPx);
+            var tex = new Texture2D(1, h, TextureFormat.RGBA32, false)
+            {
+                filterMode = FilterMode.Bilinear,
+                wrapMode = TextureWrapMode.Clamp,
+                hideFlags = HideFlags.HideAndDontSave,
+            };
+            var pixels = new Color[h];
+            for (int y = 0; y < h; y++)
+            {
+                // y = 0 est le BAS de la texture (convention Unity).
+                pixels[y] = Color.Lerp(bas, haut, y / (float)(h - 1));
+            }
+            tex.SetPixels(pixels);
+            tex.Apply(false, false);
+            Sprite sp = Sprite.Create(tex, new Rect(0, 0, 1, h), new Vector2(0.5f, 0.5f), 100f, 0,
+                SpriteMeshType.FullRect);
+            sp.hideFlags = HideFlags.HideAndDontSave;
+            cache[key] = sp;
+            return sp;
+        }
+
+        /// <summary>Un contour de rectangle arrondi en POINTILLÉS, à utiliser en `Image.Type.Tiled`.
+        ///
+        /// La bascule qui rend ça possible est `Tiled` plutôt que `Sliced` : les deux respectent
+        /// le `border` du sprite et gardent les coins intacts, mais `Sliced` ÉTIRE la section
+        /// centrale — ce qui transformerait un tiret en une longue barre — tandis que `Tiled` la
+        /// RÉPÈTE. La section centrale porte donc exactement UNE période de pointillé, et la
+        /// répétition produit le tiret sur toute la longueur, à pas constant quelle que soit la
+        /// largeur du panneau.
+        ///
+        /// La référence l'écrit sur ses deux panneaux vides : `.vide{border:1px dashed #ffffff22}`.</summary>
+        public static Sprite RoundedRectDashedOutline(int cornerRadiusPx, float thicknessPx,
+                                                      int traitPx, int videPx, Color color)
+        {
+            int periode = Mathf.Max(2, traitPx + videPx);
+            string key = $"rounddash:{cornerRadiusPx}:{thicknessPx:F2}:{traitPx}:{videPx}:{ColorKey(color)}";
+            if (cache.TryGetValue(key, out Sprite cached) && cached != null) return cached;
+
+            int r = Mathf.Max(2, cornerRadiusPx);
+            int d = r * 2 + periode;          // centre = exactement une période
+            float t = Mathf.Max(1f, thicknessPx);
+            var tex = NewTexture(d);
+            var pixels = new Color[d * d];
+            for (int y = 0; y < d; y++)
+            {
+                for (int x = 0; x < d; x++)
+                {
+                    float px = x + 0.5f, py = y + 0.5f;
+                    float qx = Mathf.Abs(px - d * 0.5f) - (d * 0.5f - r);
+                    float qy = Mathf.Abs(py - d * 0.5f) - (d * 0.5f - r);
+                    float dist = (qx > 0f && qy > 0f)
+                        ? Mathf.Sqrt(qx * qx + qy * qy) - r
+                        : Mathf.Max(qx, qy) - r;
+                    float bande = Mathf.Abs(dist + t * 0.5f);
+                    float alpha = Mathf.Clamp01(t * 0.5f - bande + 0.5f);
+
+                    // Le pointillé ne s'applique QUE dans les sections répétées (le centre des
+                    // bords). Les coins restent pleins : c'est ce que fait un `dashed` CSS sur un
+                    // rayon, et ça évite un tiret coupé en plein virage.
+                    bool centreX = x >= r && x < d - r;
+                    bool centreY = y >= r && y < d - r;
+                    if (centreX && !centreY) alpha *= ((x - r) % periode) < traitPx ? 1f : 0f;
+                    else if (centreY && !centreX) alpha *= ((y - r) % periode) < traitPx ? 1f : 0f;
+
+                    Color c = color;
+                    c.a *= alpha;
+                    pixels[y * d + x] = c;
+                }
+            }
+            tex.SetPixels(pixels);
+            tex.Apply(false, false);
+            Sprite sp = Sprite.Create(tex, new Rect(0, 0, d, d), new Vector2(0.5f, 0.5f), 100f, 0,
+                SpriteMeshType.FullRect, new Vector4(r, r, r, r));
+            sp.hideFlags = HideFlags.HideAndDontSave;
+            cache[key] = sp;
+            return sp;
+        }
+
         public static Sprite RoundedRectMask(int cornerRadiusPx)
         {
             string key = $"roundmask:{cornerRadiusPx}";

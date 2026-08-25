@@ -10,6 +10,7 @@ using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.TestTools;
+using MafiaCleanCity.Operational;
 using MafiaCleanCity.Operational.Lieutenant;
 using Debug = UnityEngine.Debug;
 using Object = UnityEngine.Object;
@@ -387,10 +388,13 @@ namespace MafiaCleanCity.Operational.Tests
             yield return RecruitArchetype(controller, "COOK", labId, _ => { });
             yield return AuthorValidateAttach(controller, CookRule());
 
-            // Fresh recruit → tenure_bucket starts FRESH (no ticks accrued yet) + the rendered chip reads "Fresh".
+            // Fresh recruit → tenure_bucket starts FRESH (no ticks accrued yet) + the rendered chip reads the
+            // FRESH label. ⚠️ Ce libellé est FRANÇAIS depuis le ruling « i18n partout » : la valeur du
+            // domaine reste "FRESH", seul le mot affiché change. Il vient du résolveur nommé
+            // `FamilleLabels.Anciennete`, jamais d'un littéral recopié ici — sinon les deux dérivent.
             Assert.IsNotNull(controller.CurrentBands, "COOK bands projection parsed");
             Assert.AreEqual("FRESH", controller.CurrentBands.tenure_bucket, "a brand-new COOK starts FRESH (no accrual yet)");
-            Assert.AreEqual("Fresh", controller.TenureBucketShown, "the tenure_bucket chip rendered the FRESH label");
+            Assert.AreEqual(FamilleLabels.Anciennete("FRESH"), controller.TenureBucketShown, "the tenure_bucket chip rendered the FRESH label");
 
             // Fast-forward enough ticks to clear the ACCLIMATED threshold (default 3 streak-ticks). Advance generously (8) so
             // the promotion is robust against the threshold defaults; the bucket is monotone so it never regresses.
@@ -404,7 +408,7 @@ namespace MafiaCleanCity.Operational.Tests
             CollectionAssert.Contains(new[] { "ACCLIMATED", "SEASONED", "SENIOR", "ENTRENCHED" }, b.tenure_bucket,
                 $"the tenure_bucket promoted past FRESH after the accrual ticks (got '{b.tenure_bucket}')");
             Assert.AreNotEqual("FRESH", b.tenure_bucket, "the COOK is no longer FRESH after accruing tenure");
-            Assert.AreNotEqual("Fresh", controller.TenureBucketShown,
+            Assert.AreNotEqual(FamilleLabels.Anciennete("FRESH"), controller.TenureBucketShown,
                 $"the rendered tenure_bucket chip promoted past 'Fresh' (got '{controller.TenureBucketShown}')");
 
             // The 3 effect chips render as WORDED bands (their closed-domain labels appear in the rendered band corpus).
@@ -495,7 +499,7 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.IsNotNull(b, "the post-reassign bands re-projected");
             Assert.AreEqual("FRESH", b.tenure_bucket,
                 $"reassigning forfeits the accumulated tenure → tenure_bucket FRESH (got '{b.tenure_bucket}', outcome='{controller.LastOutcome}')");
-            Assert.AreEqual("Fresh", controller.TenureBucketShown, "the rendered tenure_bucket chip reset to 'Fresh'");
+            Assert.AreEqual(FamilleLabels.Anciennete("FRESH"), controller.TenureBucketShown, "the rendered tenure_bucket chip reset to the FRESH label");
             // The effect bands followed the reset to the FRESH row (the inert defaults).
             Assert.AreEqual("COST_1", b.script_revision_cost, "a FRESH lieutenant's re-script cost is the inert COST_1");
             Assert.AreEqual("BONUS_NONE", b.role_efficiency_bonus, "a FRESH lieutenant's yield bonus is the inert BONUS_NONE");

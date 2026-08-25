@@ -230,7 +230,11 @@ namespace MafiaCleanCity.Shell.Tests
         private static readonly string[] ProvenanceScopedFiles =
         {
             "Shell/TopBarController.cs",
-            "Shell/VerticalGradientImage.cs",
+            // AMENDÉ NOMMÉMENT (2026-08-22) — déménagé vers `ShellContracts` pour que l'écran des
+            // lieutenants (assembly `Operational`) puisse utiliser le dégradé « verre gravé » de sa
+            // maquette. Namespace inchangé, aucun site d'appel modifié ; seul le chemin bouge, et la
+            // propriété assertée (ce fichier reste sous contrôle de provenance des couleurs) tient.
+            "ShellContracts/VerticalGradientImage.cs",
             // AMENDÉ NOMMÉMENT (2026-08-22) — le fichier a DÉMÉNAGÉ vers `ShellContracts` (sans
             // changer de namespace, donc aucun site d'appel ne bouge) pour que `CityMap` puisse
             // s'en servir : le médaillon d'un marqueur de lieutenant en a besoin, et `Shell`

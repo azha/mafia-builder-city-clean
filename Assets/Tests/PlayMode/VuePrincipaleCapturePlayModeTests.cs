@@ -3,6 +3,7 @@ using System.Collections;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
+using UnityEngine.UI;
 using MafiaCleanCity.CityMap;
 using MafiaCleanCity.Shell;
 using MafiaCleanCity.Tests;
@@ -270,6 +271,60 @@ namespace MafiaCleanCity.Capture.Tests
             Assert.Greater(noeuds, 20,
                 $"l'écran lieutenants doit avoir construit son contenu (mesuré {noeuds} noeuds) — " +
                 "une capture d'un slot vide passerait sinon pour une réussite");
+
+            // ⛔ GARDE DE CLASSE : tout `VerticalGradientImage` de la scène porte un
+            // `CanvasRenderer`. `Graphic` le déclare en `[RequireComponent]`, mais un
+            // `AddComponent` à l'exécution ne l'ajoute PAS — et le Graphic ne dessine alors RIEN,
+            // SANS erreur console. Mesuré le 2026-08-22 sur cet écran : les plaques de verre des
+            // rangs (Don compris) rendaient exactement la couleur de la feuille, (22,22,28) des
+            // deux côtés — la plaque n'a jamais existé, seul le trait de bordure la simulait.
+            // Une garde qui aurait lu « le composant est là et SetColors a été appelé » aurait été
+            // VERTE : c'est une garde de PARAMÈTRE sur un défaut d'EFFET.
+            // Elle est ici, dans la capture, parce que c'est le seul point du dépôt où le shell
+            // ENTIER est monté — donc où les trois sites d'appel (bandeau, onglets, panneaux de la
+            // famille) sont tous vivants dans la même scène.
+            var degrades = Object.FindObjectsByType<MafiaCleanCity.Shell.VerticalGradientImage>(
+                FindObjectsInactive.Include, FindObjectsSortMode.None);
+            Assert.Greater(degrades.Length, 0,
+                "aucun VerticalGradientImage dans la scène : la garde ne mesure rien, et un écran " +
+                "sans plaque de verre la satisferait à vide");
+            foreach (var g in degrades)
+            {
+                Assert.IsNotNull(g.GetComponent<CanvasRenderer>(),
+                    $"'{g.name}' porte un VerticalGradientImage SANS CanvasRenderer : il ne dessine " +
+                    "aucun pixel, en silence. Construire son GameObject avec typeof(CanvasRenderer).");
+            }
+            Debug.Log($"[CAPTURE] lieutenants — {degrades.Length} plaques de verre, toutes rendues");
+
+            // ⛔ GARDE DE CLASSE, un cran au-dessus : TOUT `Graphic` vivant sous un `Mask` doit
+            // être MASQUABLE. `Graphic` nu n'implémente ni `IMaskable` ni `IClippable` : un masque
+            // posé autour de lui est un décor. Mesuré le 2026-08-22 — les deux barres du shell
+            // construisent un masque en rectangle arrondi (leur docstring l'appelle « écart (6) »)
+            // autour d'un `VerticalGradientImage` qui dérivait de `Graphic` : le masque existait,
+            // le sprite arrondi existait, aucun pixel n'était clippé. Le défaut était INVISIBLE
+            // là-bas (des barres pleine largeur n'ont pas de coin qui dépasse) et n'est apparu que
+            // sur un panneau étroit d'un autre écran.
+            // C'est la garde STRUCTURELLE de la famille : elle ne dépend d'aucune valeur de pixel,
+            // et elle couvre tout masque futur.
+            var masques = Object.FindObjectsByType<Mask>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            Assert.Greater(masques.Length, 0,
+                "aucun Mask dans la scène : la garde serait vraie à vide");
+            int graphiquesSousMasque = 0;
+            foreach (Mask mq in masques)
+            {
+                foreach (Graphic g in mq.GetComponentsInChildren<Graphic>(true))
+                {
+                    if (g.gameObject == mq.gameObject) continue;   // le graphique du masque lui-même
+                    graphiquesSousMasque++;
+                    Assert.IsInstanceOf<MaskableGraphic>(g,
+                        $"'{g.name}' ({g.GetType().Name}) vit sous le masque '{mq.name}' mais dérive " +
+                        "de Graphic nu : aucun masque ne peut le clipper. Dériver de MaskableGraphic.");
+                }
+            }
+            Assert.Greater(graphiquesSousMasque, 0,
+                "aucun graphique sous un masque : la garde ne mesure rien");
+            Debug.Log($"[CAPTURE] lieutenants — {masques.Length} masques, " +
+                      $"{graphiquesSousMasque} graphiques dessous, tous masquables");
 
             ScreenCapture.CaptureScreenshot("Assets/Screenshots/ecran_lieutenants.png");
             for (int i = 0; i < 12; i++) yield return null;
