@@ -8,10 +8,12 @@ using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
+using UnityEngine.UI;
 using MafiaCleanCity.CityMap;
 using MafiaCleanCity.Operational;
 using MafiaCleanCity.Operational.Autonomy;
 using MafiaCleanCity.Operational.Exceptions;
+using MafiaCleanCity.Operational.Lieutenant;
 using Object = UnityEngine.Object;
 
 namespace MafiaCleanCity.Shell.Tests
@@ -127,14 +129,123 @@ namespace MafiaCleanCity.Shell.Tests
             yield return null; // Start() d'AppShell : EnsureInitialized() y bâtit tout le chrome, synchrone.
         }
 
-        // Même signal robuste que AppShellPlayModeTests.WaitForHomeMounted : CurrentTab==Home est
+        // Même signal robuste que AppShellPlayModeTests.WaitForEmpireMounted : CurrentTab==Empire est
         // vrai sur les DEUX branches de AcquireSessionThenActivateHome (succès et repli-échec).
-        private static IEnumerator WaitForHomeMounted(AppShell shell)
+        // AMENDÉ (items 0.2/0.3, ruling 2026-08-25) : Empire fusionne l'ancien Home et l'ancien City.
+        private static IEnumerator WaitForEmpireMounted(AppShell shell)
         {
             float elapsed = 0f;
-            while (shell.CurrentTab != AppShell.Tab.Home && elapsed < 15f) { elapsed += Time.deltaTime; yield return null; }
-            Assert.AreEqual(AppShell.Tab.Home, shell.CurrentTab,
-                "acquisition de session propre du shell résolue (Home monté) — précondition avant d'exercer les gestes de production");
+            while (shell.CurrentTab != AppShell.Tab.Empire && elapsed < 15f) { elapsed += Time.deltaTime; yield return null; }
+            Assert.AreEqual(AppShell.Tab.Empire, shell.CurrentTab,
+                "acquisition de session propre du shell résolue (Empire monté) — précondition avant d'exercer les gestes de production");
+        }
+
+        // ─────────────────────────────────────────────────────────────────────────────────────────
+        // F0.3 — ITEM 0.3 de `front.md` (Tools/charpente-item0-2-3-design.md §1/§4). Avant ce lot,
+        // `ActivateTab(Tab.City)` n'avait qu'un appelant de production (`ExitToCityMap`, câblé
+        // SEULEMENT depuis l'intérieur d'un district) et `EnterDistrict` n'était abonné qu'au
+        // montage de l'onglet City : cycle fermé, `DistrictInteriorScreenController` injoignable
+        // depuis un shell en marche. Le ruling (Empire EST la carte) ne referme pas ce cycle par une
+        // route de navigation de plus — il le fait CESSER D'EXISTER : la première branche s'ouvre
+        // par le démarrage lui-même. Ce test le PROUVE, il ne l'affirme plus en prose.
+        //
+        // ⛔ Réachabilité, PAS rendu — aucun pixel mesuré ici.
+        // ⛔ Garde anti-tautologie (design §4) : ce test n'appelle JAMAIS `shell.EnterDistrict(...)`
+        // directement — ce serait prouver que la méthode existe, pas qu'un joueur y arrive. Il
+        // déclenche l'ÉVÉNEMENT DE PRODUCTION qu'un tap de district émet : sélection + clic RÉEL du
+        // bouton « Entrer » (`enterBtn.onClick.Invoke()`), exactement le chemin nav-F1
+        // (NavigationPlayModeTests.cs), rejoué ici depuis la scène du BUILD.
+        // ─────────────────────────────────────────────────────────────────────────────────────────
+        [UnityTest]
+        public IEnumerator F0_3_LIntérieurDeDistrict_EstAtteignable_ParDesGestesDeProductionDepuisLaCarteParDefaut()
+        {
+            yield return ChargerLaSceneDeDemarrageDuBuild();
+            AppShell shell = SondeShellDansLaScene(sceneDeDemarrage);
+            Assert.IsNotNull(shell, $"aucun AppShell dans la scène de démarrage du build ({sceneDeDemarrage.path})");
+            yield return WaitForEmpireMounted(shell);
+            yield return null; // CityMapController.Start()/BuildLayout tourne réellement ici
+            yield return null; // ... et ses propres coroutines démarrent réellement ici
+
+            // La porte : l'onglet PAR DÉFAUT EST déjà la carte — jamais un ActivateTab manuel
+            // (design §1 : « la première branche du cycle est ouverte par le démarrage lui-même »).
+            Assert.AreEqual(typeof(CityMapController), shell.MountedTenantType,
+                "l'onglet par défaut doit monter CityMapController — Empire EST la carte (ruling 2026-08-25)");
+            var cityMap = shell.MountedTenantGameObject != null
+                ? shell.MountedTenantGameObject.GetComponent<CityMapController>() : null;
+            Assert.IsNotNull(cityMap, "précondition : la carte doit être montée");
+
+            float elapsedAuth = 0f;
+            while (!cityMap.IsAuthenticated && cityMap.AuthError == null && elapsedAuth < 25f)
+            {
+                elapsedAuth += Time.deltaTime;
+                yield return null;
+            }
+            Assert.IsTrue(cityMap.IsAuthenticated,
+                $"la carte doit être authentifiée (authErr={cityMap.AuthError}) avant de pouvoir sélectionner un district");
+
+            const int districtId = 16; // verge-a — précédent maison doublement attesté (AppShell.HeatProbeDistrictId)
+            cityMap.SelectDistrict(districtId);
+            yield return null;
+
+            Transform enterBtnT = shell.ContentSlot.Find("DetailPanel")?.Find("Footer")?.Find("EnterButton");
+            Assert.IsNotNull(enterBtnT, "'Entrer' doit exister (Footer persistant, §3.2 nav-hud-design-v1.md)");
+            Button enterBtn = enterBtnT.GetComponent<Button>();
+            float elapsedInteractable = 0f;
+            while (!enterBtn.interactable && elapsedInteractable < 10f) { elapsedInteractable += Time.deltaTime; yield return null; }
+            Assert.IsTrue(enterBtn.interactable, "authentifié + district sélectionné ⇒ interactable");
+
+            // ⛔ LE GESTE DE PRODUCTION — jamais `shell.EnterDistrict(districtId)` appelé
+            // directement : l'événement qu'un tap RÉEL de district émet EST ce clic.
+            enterBtn.onClick.Invoke();
+
+            float elapsedEnter = 0f;
+            DistrictInteriorScreenController screen = null;
+            while (elapsedEnter < 20f)
+            {
+                if (shell.MountedTenantType == typeof(DistrictInteriorScreenController))
+                {
+                    screen = shell.MountedTenantGameObject.GetComponent<DistrictInteriorScreenController>();
+                    if (screen != null) break;
+                }
+                elapsedEnter += Time.deltaTime;
+                yield return null;
+            }
+            Assert.IsNotNull(screen,
+                "le clic RÉEL sur 'Entrer' doit monter un DistrictInteriorScreenController — réachabilité, pas rendu");
+            Assert.IsTrue(screen.transform.IsChildOf(shell.ContentSlot),
+                "le district monté doit être un descendant de ContentSlot — confinement, pas juste 'existe quelque part'");
+
+            Debug.Log($"[Charpente] F0.3 — district {districtId} atteint depuis la scène de démarrage du build, " +
+                      "par un clic réel sur 'Entrer', sans jamais appeler EnterDistrict directement.");
+        }
+
+        // ─────────────────────────────────────────────────────────────────────────────────────────
+        // F0.3-bis — ITEM 0.3-BIS de `front.md`. `AppShell.cs` portait un énoncé daté affirmant, en
+        // substance, que le district restait joignable même sans bulle dédiée dans le dock — motif
+        // désigné par INDEX (n°2 ; sa valeur EXACTE vit UNIQUEMENT dans la constante
+        // `MotifEnonceDateSurLaDestination` juste en dessous, jamais recopiée en prose ici — citer
+        // l'énoncé qu'on retire le réintroduit, socle CLAUDE.md, MINEUR m3 revue ⊥ round 2). Cet
+        // énoncé était FAUX à la mesure quand il a été écrit (le cycle fermé ci-dessus) et n'est
+        // redevenu vrai qu'APRÈS ce lot, pour une AUTRE raison (Empire EST la porte, pas « ← Carte »
+        // depuis un district déjà atteint autrement). Voir
+        // Tools/charpente-item0-2-3-implementation-notes.md pour le compte AVANT/APRÈS collé :
+        // mesuré sur le fichier INTACT (af9893b) — 1 occurrence, à l'ancienne ancre `:711-712`. Un 0
+        // avant édition aurait signalé un motif FAUX, pas un motif satisfait.
+        // ─────────────────────────────────────────────────────────────────────────────────────────
+        private const string MotifEnonceDateSurLaDestination = "elle ne prend simplement plus une bulle";
+
+        [Test]
+        public void F0_3bis_LEnonceDateSurLaDestinationAtteignable_NeReapparaitPlusDansAppShell()
+        {
+            string chemin = Path.Combine(Application.dataPath, "Scripts", "Shell", "AppShell.cs");
+            Assert.IsTrue(File.Exists(chemin), $"AppShell.cs introuvable à {chemin}");
+            string texte = File.ReadAllText(chemin);
+
+            int count = CompterOccurrencesLitterales(texte, MotifEnonceDateSurLaDestination);
+            Assert.AreEqual(0, count,
+                $"motif n°2 (l'énoncé daté retiré par l'item 0.3-bis) doit avoir disparu d'AppShell.cs — " +
+                $"trouvé {count} fois. AVANT ce lot (mesuré sur le fichier intact, af9893b) : 1 occurrence " +
+                "— un 0 avant édition aurait signalé un motif FAUX, pas un motif satisfait.");
         }
 
         // ─────────────────────────────────────────────────────────────────────────────────────────
@@ -149,13 +260,31 @@ namespace MafiaCleanCity.Shell.Tests
             AppShell shell = SondeShellDansLaScene(sceneDeDemarrage);
             Assert.IsNotNull(shell,
                 $"aucun AppShell dans la scène de démarrage du build ({sceneDeDemarrage.path})");
-            yield return WaitForHomeMounted(shell);
-            yield return null; // DashboardController.Start()/BuildLayout tourne réellement ici
+            yield return WaitForEmpireMounted(shell);
+            yield return null; // CityMapController.Start()/BuildLayout tourne réellement ici (Empire, items 0.2/0.3)
 
-            DashboardController dashboard = shell.MountedTenantGameObject != null
-                ? shell.MountedTenantGameObject.GetComponent<DashboardController>()
-                : null;
-            Assert.IsNotNull(dashboard, "Home ne monte pas DashboardController — précondition d'OpenNav");
+            // ⛔ MESURÉ (run réel de ce lot, corrigé sur constat) : Empire (l'onglet par DÉFAUT)
+            // monte lui-même un CityMapController. Le laisser actif pendant les gestes ci-dessous
+            // AJOUTE un second CityMapController (via OpenCityMap -> MonterLocataireEnSurimpression,
+            // qui ne touche jamais l'onglet courant) À CÔTÉ du premier — la population mesurée
+            // contenait alors DEUX CityMapController, sans rapport avec le défaut que ce test existe
+            // pour attraper. On bascule sur More (§0 hors périmètre, ne monte rien) pour repartir
+            // d'un ContentSlot VIDE avant d'exercer les gestes de production — ActivateTab
+            // démonte inconditionnellement le tenant courant, quel qu'il soit.
+            shell.ActivateTab(AppShell.Tab.More);
+            yield return null;
+
+            // AMENDÉ (items 0.2/0.3, ruling 2026-08-25) — `DashboardController` n'est plus monté par
+            // AUCUN onglet (débranché, dit et non masqué : sa destination future est l'ouverture de
+            // session, item 0.5). Ce test l'instancie donc ICI en pur HARNAIS, pour DÉCLENCHER
+            // `OpenNav` — le mécanisme de production (item 0.4) est INCHANGÉ :
+            // `ShellNavigatorLocator.Find()` trouve le shell par balayage de scène, peu importe d'où
+            // l'appel part, jamais par une référence tenue par l'appelant. Ce harnais n'est PAS un
+            // locataire monté PAR le shell (il n'est jamais passé par `ConstruireLocataire`) — il est
+            // détruit avant l'énumération finale, pour ne pas fausser la garde de containment avec un
+            // objet dont l'absence sous ContentSlot ne prouverait rien sur le défaut visé ici.
+            var dashboardHarnaisGo = new GameObject("F0_4a_DashboardHarnaisHorsShell");
+            DashboardController dashboard = dashboardHarnaisGo.AddComponent<DashboardController>();
 
             // ── Les gestes de PRODUCTION (design §3) : les 5 OpenNav du Dashboard... ──
             dashboard.OpenCityMap();
@@ -191,6 +320,12 @@ namespace MafiaCleanCity.Shell.Tests
             queue.OpenDetail(carteFabriquee);
             yield return null;
 
+            // Le harnais a fini son rôle (déclencher OpenNav/OpenDetail) — détruit AVANT
+            // l'énumération, sinon il polluerait la garde de containment ci-dessous : il n'est
+            // jamais passé par `ConstruireLocataire`, donc jamais parenté sous ContentSlot — un
+            // rouge sur LUI ne parlerait pas du défaut que ce test existe pour attraper.
+            Object.DestroyImmediate(dashboardHarnaisGo);
+
             // ── L'énumération, PAR BALAYAGE des objets vivants — jamais une liste écrite à la
             // main (design §3) : un locataire ajouté demain entre dans le compte tout seul.
             //
@@ -200,25 +335,23 @@ namespace MafiaCleanCity.Shell.Tests
             // slots, tout hôte de locataire) est créé dans la scène ACTIVE du domaine PlayMode
             // (celle du runner de tests), PAS dans `sceneDeDemarrage` (seul l'OBJET `AppShell`
             // lui-même, placé dans le fichier de scène, y appartient — c'est tout ce que
-            // F0.1/SondeShellDansLaScene mesurent). Un filtre `gameObject.scene == sceneDeDemarrage`
-            // ici aurait donc exclu TOUS les locataires, y compris Dashboard — mesuré : 0/2 avant
-            // ce correctif. Le SetUp de cette fixture (destruction de tout AppShell/Canvas résiduel)
-            // suffit à garantir qu'aucun tenant d'un autre test ne contamine ce balayage.
+            // F0.1/SondeShellDansLaScene mesurent). Le SetUp de cette fixture (destruction de tout
+            // AppShell/Canvas/IShellTenant résiduel) suffit à garantir qu'aucun tenant d'un autre
+            // test ne contamine ce balayage.
             var locataires = Object.FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Exclude, FindObjectsSortMode.None)
                 .OfType<IShellTenant>()
                 .ToList();
             var noms = locataires.Select(t => ((MonoBehaviour)t).name + " (" + t.GetType().Name + ")").OrderBy(n => n).ToList();
 
             // ⛔⛔ CORRIGÉ (revue ⊥ round 2, C2 — finding nommé sur CE test) : un PLANCHER
-            // (`>= 2`) reste VERT même si 5 des 6 gestes de production ci-dessus ne montent plus
-            // rien — un monde dégénéré où seul Dashboard (le tenant de l'onglet Home, jamais
-            // touché par ces gestes) et UN SEUL des 6 nav/detail survivent satisferait encore
-            // `Count >= 2`, sans que la garde de non-occlusion mesure les 5 autres. Le scénario
-            // ci-dessus monte EXACTEMENT 7 locataires nommés (Dashboard + les 5 OpenNav + le
-            // détail d'exception) : asserter l'ENSEMBLE des TYPES, pas un compte.
+            // (`>= 2`) reste VERT même si la plupart des gestes de production ci-dessus ne montent
+            // plus rien. AMENDÉ (items 0.2/0.3) : `DashboardController` n'entre plus dans cet
+            // ensemble — ce n'est plus un locataire monté PAR le shell (débranché, item 0.5), et il
+            // a été détruit juste au-dessus. Le scénario monte EXACTEMENT 6 locataires nommés (les 5
+            // OpenNav + le détail d'exception) : asserter l'ENSEMBLE des TYPES, pas un compte.
             var typesAttendus = new List<string>
             {
-                nameof(DashboardController), nameof(CityMapController), nameof(BuildingCardController),
+                nameof(CityMapController), nameof(BuildingCardController),
                 nameof(LaunderingController), nameof(ExceptionQueueController), nameof(AutonomyInboxController),
                 nameof(ExceptionDetailController),
             };
@@ -252,7 +385,7 @@ namespace MafiaCleanCity.Shell.Tests
             AppShell shell = SondeShellDansLaScene(sceneDeDemarrage);
             Assert.IsNotNull(shell,
                 $"aucun AppShell dans la scène de démarrage du build ({sceneDeDemarrage.path})");
-            yield return WaitForHomeMounted(shell);
+            yield return WaitForEmpireMounted(shell);
 
             float elapsedShellToken = 0f;
             while (string.IsNullOrEmpty(shell.Token) && elapsedShellToken < 20f)
@@ -437,6 +570,89 @@ namespace MafiaCleanCity.Shell.Tests
                 }
                 Object.Destroy(hostGo);
             }
+        }
+
+        // ─────────────────────────────────────────────────────────────────────────────────────────
+        // C7 (revue ⊥ round 2 du lot 0.2/0.3, MAJEUR M3) — `AppShell.Tab` vient d'être RE-FAÇONNÉ
+        // PAR CE LOT (fusion Home/City → Empire) et n'avait AUCUN détecteur : `Enum.GetValues(typeof
+        // (AppShell.Tab))` comptait 0 occurrence dans tout le dépôt avant ce test. Le `switch (tab)`
+        // d'`ActivateTab` (`AppShell.cs`) n'a pas de `default` — et côté C#, une `switch` STATEMENT
+        // sans `default` n'est PAS une erreur de compilation : CS0161 ne s'applique qu'à une méthode
+        // qui DOIT rendre une valeur (`ActivateTab` est `void`), et une `switch` EXPRESSION rendrait
+        // un avertissement CS8509 dont il y a 0 occurrence dans tout `Assets/Scripts`. Le seul
+        // détecteur possible est un TEST qui énumère les membres — MÊME mécanisme, MÊME correctif
+        // que C5 (`DashboardController.NavTarget`), un cran plus haut dans la même population.
+        //
+        // Balayage de la population « enums pilotés par un switch, dans la surface de ce lot + celle
+        // du lot 0.4 » (§ implementation-notes.md pour le détail) — UN SEUL AUTRE `switch` existe
+        // dans les 8 fichiers touchés par ce lot (`grep -c "switch *(" ` sur les 8 fichiers → 1, ici
+        // même, sur `tab`) : `DashboardController.NavTarget` (lot 0.4), déjà fermé par C5 ci-dessus.
+        // 2 enums dans le périmètre élargi, 2 détecteurs après ce test (0 avant, pour `Tab`).
+        //
+        // Un 5e membre ajouté à `Tab` ET à `DockRatifie` ferait déjà rougir F0.1-a/F0.2 (leurs
+        // constantes énumèrent 4 noms/libellés à la main) — pas besoin d'un détecteur de plus pour
+        // CE cas. Un 5e membre ajouté à L'ENUM SEUL (jamais à `DockRatifie`) est INVISIBLE à
+        // F0.1-a/F0.2 (aucun des deux ne dérive sa cardinalité attendue d'`Enum.GetValues`) :
+        // l'onglet existerait, `ActivateTab` l'accepterait sans erreur de compilation, mais aucun
+        // bouton ne le rendrait jamais atteignable — exactement la classe que ce lot existe pour
+        // fermer (F0.3), reproduite un cran plus haut, dans l'enum lui-même.
+        // ─────────────────────────────────────────────────────────────────────────────────────────
+        [UnityTest]
+        public IEnumerator C7_ToutMembreDeTab_AUnComportementNomme_MonteParLeDockOuDocumenteHorsDock()
+        {
+            yield return ChargerLaSceneDeDemarrageDuBuild();
+            AppShell shell = SondeShellDansLaScene(sceneDeDemarrage);
+            Assert.IsNotNull(shell, $"aucun AppShell dans la scène de démarrage du build ({sceneDeDemarrage.path})");
+            yield return WaitForEmpireMounted(shell);
+            yield return null; // CityMapController.Start()/BuildLayout tourne réellement ici
+
+            Array membres = Enum.GetValues(typeof(AppShell.Tab));
+            // Garde de PORTÉE de l'exhaustivité elle-même (même famille que C5) : si un 5e membre
+            // apparaît demain, ce test doit d'abord rougir ICI, pas passer silencieusement à côté
+            // d'un membre non couvert par la table ci-dessous.
+            Assert.AreEqual(4, membres.Length,
+                "AppShell.Tab a changé de taille — ce test doit être relu (table typeParTab + branche " +
+                "'destination vide') AVANT d'être considéré exhaustif sur le nouveau membre, ET " +
+                "DockRatifie/F0.1-a/F0.2 doivent être mis à jour pour que ce membre soit ATTEIGNABLE, " +
+                "pas seulement compté ici.");
+
+            // Table ÉCRITE ICI, indépendamment du corps du `switch (tab)` qu'elle vérifie
+            // (anti-tautologie, même patron que C5) : le type EXACTEMENT monté par chaque onglet.
+            var typeParTab = new Dictionary<AppShell.Tab, Type>
+            {
+                { AppShell.Tab.Empire, typeof(CityMapController) },
+                { AppShell.Tab.Org, typeof(LieutenantScreenController) },
+                { AppShell.Tab.Pipeline, typeof(LaunderingController) },
+                // Tab.More volontairement ABSENT de cette table : son comportement NOMMÉ est
+                // « destination vide ASSUMÉE » (design §0 hors périmètre / C1-F1) — vérifié par la
+                // branche else ci-dessous, jamais un type monté.
+            };
+
+            foreach (AppShell.Tab membre in membres)
+            {
+                shell.ActivateTab(membre);
+                yield return null;
+
+                if (membre == AppShell.Tab.More)
+                {
+                    Assert.IsNull(shell.MountedTenantType,
+                        "Tab.More doit avoir le comportement NOMMÉ « destination vide ASSUMÉE » : " +
+                        $"aucun type monté — trouvé {shell.MountedTenantType?.Name ?? "<rien>"}.");
+                }
+                else
+                {
+                    Assert.IsTrue(typeParTab.ContainsKey(membre),
+                        $"Tab.{membre} n'a ni entrée dans typeParTab ni traitement 'destination vide' " +
+                        "explicite — comportement NON NOMMÉ, exactement la classe que ce test existe " +
+                        "pour attraper (un membre ajouté à l'enum seul, jamais au dock).");
+                    Assert.AreEqual(typeParTab[membre], shell.MountedTenantType,
+                        $"Tab.{membre} doit monter EXACTEMENT {typeParTab[membre].Name} — trouvé " +
+                        $"{shell.MountedTenantType?.Name ?? "<rien>"}.");
+                }
+            }
+
+            Debug.Log($"[Charpente] C7 — les {membres.Length} membres de AppShell.Tab ont chacun un " +
+                      "comportement nommé (montage exact ou destination vide assumée).");
         }
     }
 }

@@ -60,7 +60,8 @@ namespace MafiaCleanCity.Capture.Tests
             yield return null;
 
             // 3. attendre que l'acquisition asynchrone du shell soit terminée (sinon son
-            //    ActivateTab(Home) tardif écraserait le district — course mesurée au lot HUD).
+            //    ActivateTab(Empire) tardif écraserait le district — course mesurée au lot HUD ;
+            //    items 0.2/0.3, Empire fusionne l'ancien Home et l'ancien City).
             float t0 = Time.realtimeSinceStartup;
             while (string.IsNullOrEmpty(shell.Token) && Time.realtimeSinceStartup - t0 < 30f) yield return null;
             Assert.IsFalse(string.IsNullOrEmpty(shell.Token), "le shell doit avoir acquis sa session");
@@ -168,7 +169,16 @@ namespace MafiaCleanCity.Capture.Tests
             while (string.IsNullOrEmpty(shell.Token) && Time.realtimeSinceStartup - t0 < 30f) yield return null;
             Assert.IsFalse(string.IsNullOrEmpty(shell.Token), "le shell doit avoir acquis sa session");
 
-            shell.ActivateTab(AppShell.Tab.City);
+            // Re-tap (idempotent-ish remount) : items 0.2/0.3 ont fusionné Tab.Home/Tab.City en
+            // Tab.Empire — c'est déjà l'onglet par défaut, ce second appel remonte un
+            // CityMapController FRAIS, exactement comme le faisait la bascule Home -> City.
+            // ⛔ CORRIGÉ (revue ⊥ round 2, m2) — `ActivateTab` détruit l'ancien tenant en DIFFÉRÉ
+            // (`Object.Destroy`, pas `DestroyImmediate`) : sans ce `yield`, l'ancien locataire
+            // marqué-pour-destruction coexiste UNE frame avec le neuf, et `FindFirstObjectByType`
+            // n'a AUCUN ordre garanti entre les deux — un `yield return null` laisse la frame de
+            // destruction s'exécuter avant que la sonde ne cherche le CityMapController survivant.
+            shell.ActivateTab(AppShell.Tab.Empire);
+            yield return null;
             var carte = Object.FindFirstObjectByType<CityMapController>();
             t0 = Time.realtimeSinceStartup;
             while (carte == null && Time.realtimeSinceStartup - t0 < 20f)

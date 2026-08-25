@@ -77,8 +77,8 @@ namespace MafiaCleanCity.Shell.Tests
         /// du patron `ManometreOraclePlayModeTests.BuildScaffold` (mêmes raisons : `SetCitywideHeatBucket`
         /// est un appel LOCAL, synchrone — zéro course réseau). MESURÉ (ce lot, 2 échecs consécutifs
         /// reproductibles à l'identique) : un `AppShell` réel signe SA PROPRE session ET monte un
-        /// tenant réel (`AcquireSessionThenActivateHome` → Home/City) dont le probe de heat PROPRE
-        /// (`DashboardController`/`CityMapController`, `PublishCitywideHeat`) peut écraser un
+        /// tenant réel (`AcquireSessionThenActivateHome` → Empire/CityMapController, items 0.2/0.3)
+        /// dont le probe de heat PROPRE (`CityMapController`, `PublishCitywideHeat`) peut écraser un
         /// `SetCitywideHeatBucket` explicite À TOUT MOMENT après coup — un stack de dev bien vivant
         /// rapportait "BURNING" de façon parfaitement déterministe (pas un coin-flip), pas un défaut,
         /// juste une course qu'aucune fenêtre de garde ne peut fermer depuis CE test. Contourné en ne
@@ -269,8 +269,10 @@ namespace MafiaCleanCity.Shell.Tests
             Assert.IsFalse(CloseTo(bg.color, DesignTokens.Current.hudHairlineGold),
                 $"le FOND du bouton actif ne doit jamais être teinté or (mesuré {bg.color}) — seul le filet l'est");
 
-            // Contrôle négatif — les onglets INACTIFS ne portent PAS le filet visible.
-            Transform inactiveBtn = shell.TabBarRoot.Find("Tab_Home");
+            // Contrôle négatif — les onglets INACTIFS ne portent PAS le filet visible. `Tab_Empire`
+            // (items 0.2/0.3 — fusion de l'ancien `Tab_Home`) est l'onglet par défaut au boot, donc
+            // le premier inactif dès qu'on bascule sur Org.
+            Transform inactiveBtn = shell.TabBarRoot.Find("Tab_Empire");
             Transform inactiveIndicator = inactiveBtn.Find("ActiveIndicator");
             Assert.IsFalse(inactiveIndicator.gameObject.activeSelf,
                 "contrôle négatif : un onglet INACTIF ne doit PAS afficher son filet — sinon la garde ci-dessus ne " +
