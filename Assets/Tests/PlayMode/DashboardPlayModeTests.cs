@@ -260,7 +260,7 @@ namespace MafiaCleanCity.Operational.Tests
             string expectWallet = WalletLabelFor(liveWalletBand);
             Assert.IsTrue(texts.Any(t => t == expectWallet),
                 $"rendered wallet band label '{expectWallet}' (live={liveWalletBand}) present in {Dump(texts)}");
-            Assert.IsTrue(texts.Any(t => t == "Wallet"), "wallet caption rendered");
+            Assert.IsTrue(texts.Any(t => t == "Portefeuille"), "wallet caption rendered");
 
             // The CITYWIDE HEAT band label is rendered (matches the live band) + escalation row.
             string expectHeat = HeatLabelFor(liveHeatBand);

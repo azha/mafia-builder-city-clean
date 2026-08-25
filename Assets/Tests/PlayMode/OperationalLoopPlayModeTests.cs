@@ -222,7 +222,7 @@ namespace MafiaCleanCity.Operational.Tests
             var dashTexts = dashboard.RenderedTexts;
             Assert.IsTrue(dashTexts.Any(t => t == WalletLabelFor(liveWalletBand)),
                 $"Dashboard renders the live wallet band label '{WalletLabelFor(liveWalletBand)}' in {Dump(dashTexts)}");
-            Assert.IsTrue(dashTexts.Any(t => t == "Wallet"), "Dashboard renders the Wallet caption");
+            Assert.IsTrue(dashTexts.Any(t => t == "Portefeuille"), "Dashboard renders the Wallet caption");
             Assert.IsTrue(dashTexts.Any(t => t == HeatLabelFor(liveHeatBand)),
                 $"Dashboard renders the live citywide heat band label '{HeatLabelFor(liveHeatBand)}' in {Dump(dashTexts)}");
             Assert.IsTrue(dashTexts.Any(t => t == "Citywide heat"), "Dashboard renders the citywide heat row");

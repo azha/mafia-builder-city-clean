@@ -168,9 +168,9 @@ namespace MafiaCleanCity.Operational
         {
             ClearRows();
 
-            titleText.text = "LAUNDERING PIPELINE";
+            titleText.text = "FILIÈRE DE BLANCHIMENT";
             // The chain length is conveyed in words (never a digit) so the R2.2 no-scalar guard stays pristine.
-            subtitleText.text = "Cash cleanliness rises stage by stage";
+            subtitleText.text = "L'argent se nettoie maillon par maillon";
             TrackText(titleText.text);
             TrackText(subtitleText.text);
 
@@ -188,7 +188,7 @@ namespace MafiaCleanCity.Operational
         private void RenderError()
         {
             ClearRows();
-            titleText.text = "LAUNDERING PIPELINE";
+            titleText.text = "FILIÈRE DE BLANCHIMENT";
             subtitleText.text = "Failed to load the pipeline. Check the seeder + stack.";
             TrackText(titleText.text);
             TrackText(subtitleText.text);
@@ -347,11 +347,11 @@ namespace MafiaCleanCity.Operational
             vlg.childForceExpandWidth = true;
             vlg.childForceExpandHeight = false;
 
-            titleText = NewText("Title", card.transform, "LAUNDERING PIPELINE", 22, TextAlignmentOptions.Left);
+            titleText = NewText("Title", card.transform, "FILIÈRE DE BLANCHIMENT", 22, TextAlignmentOptions.Left);
             titleText.fontStyle = FontStyles.Bold;
             AddLayoutElement(titleText.gameObject, minHeight: 30, flexibleHeight: 0);
 
-            subtitleText = NewText("Subtitle", card.transform, "Cash cleanliness rises stage by stage", 16, TextAlignmentOptions.Left);
+            subtitleText = NewText("Subtitle", card.transform, "L'argent se nettoie maillon par maillon", 16, TextAlignmentOptions.Left);
             subtitleText.color = DesignTokens.Current.onSurfaceDim;
             AddLayoutElement(subtitleText.gameObject, minHeight: 24, flexibleHeight: 0);
 

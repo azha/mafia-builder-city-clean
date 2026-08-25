@@ -319,7 +319,7 @@ namespace MafiaCleanCity.Operational
             // Optional header: handle (callsign) — identity only, never cash (R2.2).
             headerText.text = CurrentMe != null && !string.IsNullOrEmpty(CurrentMe.handle)
                 ? $"Boss {CurrentMe.handle}"
-                : "Boss";
+                : "Patron";
             TrackText(headerText, headerText.text);
 
             // ---- HEADLINE: the wallet band (the "encaisser" payoff). Large glyph + band label
@@ -330,7 +330,7 @@ namespace MafiaCleanCity.Operational
             walletGlyphText.color = wAccent;
             walletBandText.text = WalletLabel(band);
             walletBandText.color = wAccent;
-            walletCaptionText.text = "Wallet";
+            walletCaptionText.text = "Portefeuille";
             TrackText(walletGlyphText, walletGlyphText.text);
             TrackText(walletBandText, walletBandText.text);
             TrackText(walletCaptionText, walletCaptionText.text);
@@ -369,7 +369,7 @@ namespace MafiaCleanCity.Operational
         private void RenderError()
         {
             ClearRows();
-            headerText.text = "Boss";
+            headerText.text = "Patron";
             walletGlyphText.text = "[?]";
             walletGlyphText.color = TextSecondary;
             walletBandText.text = "Wallet unavailable";
@@ -403,7 +403,7 @@ namespace MafiaCleanCity.Operational
             Color accent = notes.Count > 0 ? AccentSevere : AccentMild;
             string glyph = notes.Count > 0 ? "[!]" : "[ok]";
 
-            string label = NewSectionLabel(statusRows, "ALERTS");
+            string label = NewSectionLabel(statusRows, "ALERTES");
             TrackText(null, label);
             AddStatusRow("Alerts", line, glyph, accent);
         }
@@ -413,7 +413,7 @@ namespace MafiaCleanCity.Operational
             for (int i = navBar.childCount - 1; i >= 0; i--)
                 Object.Destroy(navBar.GetChild(i).gameObject);
 
-            string label = NewSectionLabel(navBar, "GO TO");
+            string label = NewSectionLabel(navBar, "ALLER À");
             TrackText(null, label);
 
             AddNavButton(navBar, "City Map", OpenCityMap);
@@ -533,11 +533,11 @@ namespace MafiaCleanCity.Operational
             vlg.childForceExpandHeight = false;
 
             // Header (handle / callsign — identity only).
-            headerText = NewText("Header", card.transform, "Boss", 16, TextAlignmentOptions.Left);
+            headerText = NewText("Header", card.transform, "Patron", 16, TextAlignmentOptions.Left);
             headerText.color = TextSecondary;
             AddLayoutElement(headerText.gameObject, minHeight: 22, flexibleHeight: 0);
 
-            TextMeshProUGUI title = NewText("Title", card.transform, "HOME", 24, TextAlignmentOptions.Left);
+            TextMeshProUGUI title = NewText("Title", card.transform, "ACCUEIL", 24, TextAlignmentOptions.Left);
             title.fontStyle = FontStyles.Bold;
             AddLayoutElement(title.gameObject, minHeight: 32, flexibleHeight: 0);
             TrackText(title, title.text);
@@ -568,7 +568,7 @@ namespace MafiaCleanCity.Operational
             wtv.childForceExpandHeight = false;
             AddLayoutElement(walletText, flexibleWidth: 1);
 
-            walletCaptionText = NewText("WalletCaption", walletText.transform, "Wallet", 14, TextAlignmentOptions.BottomLeft);
+            walletCaptionText = NewText("WalletCaption", walletText.transform, "Portefeuille", 14, TextAlignmentOptions.BottomLeft);
             walletCaptionText.color = TextSecondary;
             AddLayoutElement(walletCaptionText.gameObject, minHeight: 18, flexibleHeight: 0);
 

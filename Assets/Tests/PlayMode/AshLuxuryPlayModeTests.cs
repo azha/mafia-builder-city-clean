@@ -135,7 +135,7 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.IsTrue(texts.Any(t => t == "Upgrade lab tier"), "Upgrade-tier button label rendered");
 
             // The refining-passes selector is shown (the Ash cook-start time↔purity lever).
-            Assert.IsTrue(texts.Any(t => t.StartsWith("REFINING PASSES")), "refining-passes selector section rendered");
+            Assert.IsTrue(texts.Any(t => t.StartsWith("PASSES DE RAFFINAGE")), "refining-passes selector section rendered");
 
             // R2.2: no raw scalar leaks client-side (no purity_score / cents / multiplier / ticks).
             AssertNoRawScalar(texts);

@@ -617,7 +617,7 @@ namespace MafiaCleanCity.Operational
 
             ClearRows();
 
-            titleText.text = "OPERATIONAL BUILDING";
+            titleText.text = "BÂTIMENT OPÉRATIONNEL";
             typeText.text = $"Type: {TypeLabel(card.operational_type)}";
             TrackText(titleText, titleText.text);
             TrackText(typeText, typeText.text);
@@ -831,7 +831,7 @@ namespace MafiaCleanCity.Operational
         private void RenderError()
         {
             ClearRows();
-            titleText.text = "OPERATIONAL BUILDING";
+            titleText.text = "BÂTIMENT OPÉRATIONNEL";
             typeText.text = "Failed to load building. Check the seeder + stack.";
             TrackText(titleText, titleText.text);
             TrackText(typeText, typeText.text);
@@ -1715,11 +1715,11 @@ namespace MafiaCleanCity.Operational
             vlg.childForceExpandHeight = false;
             cardContent = cardRt;
 
-            titleText = NewText("Title", card.transform, "OPERATIONAL BUILDING", 22, TextAlignmentOptions.Left);
+            titleText = NewText("Title", card.transform, "BÂTIMENT OPÉRATIONNEL", 22, TextAlignmentOptions.Left);
             titleText.fontStyle = FontStyles.Bold;
             AddLayoutElement(titleText.gameObject, minHeight: 30, flexibleHeight: 0);
 
-            typeText = NewText("Type", card.transform, "Type: —", 16, TextAlignmentOptions.Left);
+            typeText = NewText("Type", card.transform, "Type : —", 16, TextAlignmentOptions.Left);
             typeText.color = DesignTokens.Current.onSurfaceDim;
             AddLayoutElement(typeText.gameObject, minHeight: 24, flexibleHeight: 0);
 
@@ -1813,7 +1813,7 @@ namespace MafiaCleanCity.Operational
         private const int MaxRefiningPassesUi = 3; // mirrors the server's production.ash.max_refining_passes default (3).
         private void AddRefiningPassesSelector(Transform parent)
         {
-            string label = NewSectionLabel(parent, "REFINING PASSES (time ↔ purity)");
+            string label = NewSectionLabel(parent, "PASSES DE RAFFINAGE (temps ↔ pureté)");
             TrackText(null, label);
 
             GameObject row = NewUI("RefiningPassesRow", parent);
@@ -1862,7 +1862,7 @@ namespace MafiaCleanCity.Operational
         // on an idle grow_house (no active grow). More-vs-buy: planting is cheap-but-slow-and-hot vs ordering precursors.
         private void AddPlantSelector(Transform parent)
         {
-            string label = NewSectionLabel(parent, "PLANT — choose a crop");
+            string label = NewSectionLabel(parent, "PLANTER — choisir une culture");
             TrackText(null, label);
 
             GameObject row = NewUI("PlantSelectorRow", parent);
@@ -1914,7 +1914,7 @@ namespace MafiaCleanCity.Operational
                 : new[] { "FOOT" };
             if (System.Array.IndexOf(unlocked, SelectedVehicle) < 0) SelectedVehicle = unlocked[0];
 
-            string label = NewSectionLabel(parent, "DISPATCH VEHICLE (hub-gated)");
+            string label = NewSectionLabel(parent, "ENVOYER UN VÉHICULE (soumis au relais)");
             TrackText(null, label);
 
             GameObject row = NewUI("VehicleSelectorRow", parent);
@@ -1963,7 +1963,7 @@ namespace MafiaCleanCity.Operational
         // — the UI does NOT pre-decide; it surfaces the server verdict on the action.
         private void AddTransferAmountSelector(Transform parent)
         {
-            string label = NewSectionLabel(parent, "TRANSFER AMOUNT (server-checked)");
+            string label = NewSectionLabel(parent, "MONTANT DU TRANSFERT (vérifié serveur)");
             TrackText(null, label);
 
             GameObject row = NewUI("TransferAmountRow", parent);

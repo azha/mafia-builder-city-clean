@@ -203,10 +203,10 @@ namespace MafiaCleanCity.Operational
         {
             ClearRows();
 
-            titleText.text = "LAUNDERING PIPELINE";
+            titleText.text = "FILIÈRE DE BLANCHIMENT";
             // No bare digit in the rendered label — the R2.2 no-scalar guard is kept pristine
             // (the stage ordinal is conveyed in words, not a digit that the guard would flag).
-            subtitleText.text = "Front shop — first stage";
+            subtitleText.text = "Commerce-écran — premier maillon";
             TrackText(titleText, titleText.text);
             TrackText(subtitleText, subtitleText.text);
 
@@ -227,7 +227,7 @@ namespace MafiaCleanCity.Operational
         private void RenderError()
         {
             ClearRows();
-            titleText.text = "LAUNDERING PIPELINE";
+            titleText.text = "FILIÈRE DE BLANCHIMENT";
             subtitleText.text = "Failed to load the node. Check the seeder + stack.";
             TrackText(titleText, titleText.text);
             TrackText(subtitleText, subtitleText.text);
@@ -334,11 +334,11 @@ namespace MafiaCleanCity.Operational
             vlg.childForceExpandWidth = true;
             vlg.childForceExpandHeight = false;
 
-            titleText = NewText("Title", card.transform, "LAUNDERING PIPELINE", 22, TextAlignmentOptions.Left);
+            titleText = NewText("Title", card.transform, "FILIÈRE DE BLANCHIMENT", 22, TextAlignmentOptions.Left);
             titleText.fontStyle = FontStyles.Bold;
             AddLayoutElement(titleText.gameObject, minHeight: 30, flexibleHeight: 0);
 
-            subtitleText = NewText("Subtitle", card.transform, "Front shop — first stage", 16, TextAlignmentOptions.Left);
+            subtitleText = NewText("Subtitle", card.transform, "Commerce-écran — premier maillon", 16, TextAlignmentOptions.Left);
             subtitleText.color = DesignTokens.Current.onSurfaceDim;
             AddLayoutElement(subtitleText.gameObject, minHeight: 24, flexibleHeight: 0);
 

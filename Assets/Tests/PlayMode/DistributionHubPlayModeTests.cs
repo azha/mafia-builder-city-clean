@@ -141,7 +141,7 @@ namespace MafiaCleanCity.Operational.Tests
 
             // The dispatch vehicle selector is shown (the server-authoritative foot/bike/car picker).
             Assert.IsTrue(controller.VehicleSelectorShown, "the dispatch vehicle selector is shown on a hub card");
-            Assert.IsTrue(texts.Any(t => t.StartsWith("DISPATCH VEHICLE")), "vehicle selector section rendered");
+            Assert.IsTrue(texts.Any(t => t.StartsWith("ENVOYER UN VÉHICULE")), "vehicle selector section rendered");
 
             // R2.2: no raw scalar leaks client-side (no hub_tier int / shift count / cap / vehicle speed).
             AssertNoRawScalar(texts);

@@ -172,7 +172,7 @@ namespace MafiaCleanCity.Operational.Exceptions
 
             if (Cards.Length == 0)
             {
-                TextMeshProUGUI empty = NewText("Empty", rowsArea, "No exceptions waiting", 14, TextAlignmentOptions.Left);
+                TextMeshProUGUI empty = NewText("Empty", rowsArea, "Aucune exception en attente", 14, TextAlignmentOptions.Left);
                 empty.color = TextSecondary;
                 AddLayoutElement(empty.gameObject, minHeight: 24, flexibleHeight: 0);
                 TrackText(empty, empty.text);
@@ -187,7 +187,7 @@ namespace MafiaCleanCity.Operational.Exceptions
         {
             ClearRows();
             headerText.text = "EXCEPTIONS";
-            TextMeshProUGUI err = NewText("Error", rowsArea, "Queue unavailable — check the stack", 14, TextAlignmentOptions.Left);
+            TextMeshProUGUI err = NewText("Error", rowsArea, "File indisponible — vérifier la pile", 14, TextAlignmentOptions.Left);
             err.color = AccentSevere;
             AddLayoutElement(err.gameObject, minHeight: 24, flexibleHeight: 0);
             TrackText(headerText, headerText.text);
@@ -221,17 +221,17 @@ namespace MafiaCleanCity.Operational.Exceptions
             TrackText(bandText, bands);
 
             // Open affordance (≥44dp tap target, F2).
-            GameObject btn = NewUI("Open", row.transform);
+            GameObject btn = NewUI("Ouvrir", row.transform);
             Image img = btn.AddComponent<Image>();
             img.color = DesignTokens.Current.surfaceRaised;
             Button b = btn.AddComponent<Button>();
             b.targetGraphic = img;
             b.onClick.AddListener(() => OpenDetail(card));
             AddLayoutElement(btn, minHeight: 44, flexibleHeight: 0);
-            TextMeshProUGUI bt = NewText("Label", btn.transform, "Open", 14, TextAlignmentOptions.Center);
+            TextMeshProUGUI bt = NewText("Label", btn.transform, "Ouvrir", 14, TextAlignmentOptions.Center);
             bt.color = CtaColor;
             Stretch((RectTransform)bt.transform, new Vector2(10, 2), new Vector2(-10, -2));
-            TrackText(bt, "Open");
+            TrackText(bt, "Ouvrir");
         }
 
         // ---- band → glyph/accent (a11y F2: shape + label, never colour alone) ----

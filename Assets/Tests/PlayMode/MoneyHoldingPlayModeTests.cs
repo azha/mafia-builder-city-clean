@@ -169,7 +169,7 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.IsTrue(controller.WithdrawActionShown, "the withdraw-cash action is shown on a vault card");
             Assert.IsTrue(texts.Any(t => t == "Deposit cash"), "deposit button label rendered");
             Assert.IsTrue(texts.Any(t => t == "Withdraw cash"), "withdraw button label rendered");
-            Assert.IsTrue(texts.Any(t => t.StartsWith("TRANSFER AMOUNT")), "transfer-amount selector section rendered");
+            Assert.IsTrue(texts.Any(t => t.StartsWith("MONTANT DU TRANSFERT")), "transfer-amount selector section rendered");
 
             // R2.2: no raw scalar leaks client-side (no held cents / tier int / yield rate / tick / forfeiture tick).
             AssertNoRawScalar(texts);

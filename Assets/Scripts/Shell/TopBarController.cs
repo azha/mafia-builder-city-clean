@@ -186,6 +186,12 @@ namespace MafiaCleanCity.Shell
         // d'un conteneur avait fabriqué une phase d'un demi-pixel sur le fond pré-rendu.
         // 68 donne 121,4 % contre 123,1 % visé (70 donnerait 125,0 %) — c'est le pair le plus proche.
         private const float ManometreDiameter = 68f;
+        /// <summary>Les deux libellés de la pastille de notification. PUBLICS et NOMMÉS parce
+        /// que TROIS assertions, dans DEUX fichiers de test, les recopiaient en littéral — la même
+        /// correspondance en quatre exemplaires. Une traduction en faisait diverger trois.</summary>
+        public const string LibelleNotifActive = "[!] Nouveau";
+        public const string LibelleNotifCalme = "[ ] Calme";
+
         private const float BoitierRingThicknessPx = 3f;
         private const float ArcDiameterPx = 48f;
         private const float ArcThicknessPx = 5f;
@@ -303,7 +309,7 @@ namespace MafiaCleanCity.Shell
             renderedTexts.Clear();
 
             // 1) Callsign — identité, hook de données SCANNÉ (headless — écart (7), voir Deviations).
-            string callsign = CurrentMe != null && !string.IsNullOrEmpty(CurrentMe.handle) ? CurrentMe.handle : "Boss";
+            string callsign = CurrentMe != null && !string.IsNullOrEmpty(CurrentMe.handle) ? CurrentMe.handle : "Patron";
             callsignText.text = callsign;
             Track(callsignText.text, trackValue: true);
 
@@ -319,7 +325,7 @@ namespace MafiaCleanCity.Shell
 
             // 3) Notification point — la VALEUR suit `backlogBadge`, les deux polarités
             //    distinguables (design C2-F2). Hook de données SCANNÉ, headless (écart (4)).
-            notificationText.text = NotificationActive ? "[!] New" : "[ ] Clear";
+            notificationText.text = NotificationActive ? LibelleNotifActive : LibelleNotifCalme;
             Track(notificationText.text, trackValue: true);
 
             // 4) In-game time (design D3, la 12e clé) — chrome digit-bearing, EXCLU du scan (même
@@ -534,7 +540,7 @@ namespace MafiaCleanCity.Shell
             // Écart (7) — le callsign n'existe pas dans `.barre` de la maquette : reste un hook de
             // DONNÉES headless (R2.2 scan corpus, C2F4), zéro chrome visible (alpha 0). Ne dépend
             // plus du bouton leading — invisible, il n'a rien à éviter.
-            callsignText = NewText("Callsign", "Boss",
+            callsignText = NewText("Callsign", "Patron",
                 new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(0f, 0.5f),
                 new Vector2(BarPaddingX, 0f), new Vector2(220f, 40f),
                 15f, TextAlignmentOptions.Left, WithAlpha(DesignTokens.Current.onSurfacePrimary, 0f));
@@ -1032,7 +1038,7 @@ namespace MafiaCleanCity.Shell
         /// chrome visible).</summary>
         private void BuildNotificationHook()
         {
-            notificationText = NewText("Notification", "[ ] Clear",
+            notificationText = NewText("Notification", LibelleNotifCalme,
                 new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
                 Vector2.zero, new Vector2(10f, 10f),
                 10f, TextAlignmentOptions.Center, WithAlpha(DesignTokens.Current.onSurfacePrimary, 0f));

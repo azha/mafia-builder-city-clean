@@ -174,14 +174,14 @@ namespace MafiaCleanCity.Operational.Exceptions
             // ---- Resolved state: show outcome + Back, then return. ----
             if (!string.IsNullOrEmpty(LastOutcome))
             {
-                TextMeshProUGUI resolved = NewText("Resolved", body, "Resolved ✓", 16, TextAlignmentOptions.Left);
+                TextMeshProUGUI resolved = NewText("Resolved", body, "Résolu ✓", 16, TextAlignmentOptions.Left);
                 resolved.color = AccentMild;
                 resolved.fontStyle = FontStyles.Bold;
                 AddLayoutElement(resolved.gameObject, minHeight: 22, flexibleHeight: 0);
-                TrackText(resolved, "Resolved ✓");
+                TrackText(resolved, "Résolu ✓");
 
                 // Outcome — producer free text (enum value may carry letters but qualitative): CHROME, TextPrimary.
-                TextMeshProUGUI outcomeText = NewText("Outcome", body, "Outcome: " + LastOutcome, 14, TextAlignmentOptions.Left);
+                TextMeshProUGUI outcomeText = NewText("Outcome", body, "Issue : " + LastOutcome, 14, TextAlignmentOptions.Left);
                 outcomeText.color = TextPrimary;
                 AddLayoutElement(outcomeText.gameObject, minHeight: 20, flexibleHeight: 0);
                 // chrome — NOT tracked
@@ -236,13 +236,13 @@ namespace MafiaCleanCity.Operational.Exceptions
                     AddLayoutElement(labelText.gameObject, minHeight: 20, flexibleHeight: 0);
                     // chrome — NOT tracked
 
-                    // "★ Suggested" marker — CLOSED label, tracked.
+                    // "★ Suggéré" marker — CLOSED label, tracked.
                     if (isSuggested)
                     {
-                        TextMeshProUGUI sugMarker = NewText("Suggested", block.transform, "★ Suggested", 13, TextAlignmentOptions.Left);
+                        TextMeshProUGUI sugMarker = NewText("Suggested", block.transform, "★ Suggéré", 13, TextAlignmentOptions.Left);
                         sugMarker.color = CtaColor;
                         AddLayoutElement(sugMarker.gameObject, minHeight: 18, flexibleHeight: 0);
-                        TrackText(sugMarker, "★ Suggested");
+                        TrackText(sugMarker, "★ Suggéré");
                     }
 
                     // Projected consequence — producer free text (chrome).
@@ -257,7 +257,7 @@ namespace MafiaCleanCity.Operational.Exceptions
                     // DSL preview — producer free text (chrome), shown only when AddAsRule && teachable.
                     if (AddAsRule && isTeachable)
                     {
-                        TextMeshProUGUI dslText = NewText("DSL", block.transform, "Teaches: " + ca.add_rule_dsl, 12, TextAlignmentOptions.Left);
+                        TextMeshProUGUI dslText = NewText("DSL", block.transform, "Enseigne : " + ca.add_rule_dsl, 12, TextAlignmentOptions.Left);
                         dslText.color = AccentMild;
                         AddLayoutElement(dslText.gameObject, minHeight: 16, flexibleHeight: 0);
                         // chrome — NOT tracked

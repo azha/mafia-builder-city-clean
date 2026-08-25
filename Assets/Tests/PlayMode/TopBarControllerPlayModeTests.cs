@@ -101,13 +101,13 @@ namespace MafiaCleanCity.Shell.Tests
             yield return topBar.Load(token, backlogBadge: true, openedGameDay: 7);
             Assert.IsTrue(topBar.Loaded);
             Assert.IsTrue(topBar.NotificationActive);
-            Assert.IsTrue(topBar.RenderedTexts.Any(t => t == "[!] New"), "backlog TRUE renders the active state");
-            Assert.IsFalse(topBar.RenderedTexts.Any(t => t == "[ ] Clear"), "the inactive label is NOT also present");
+            Assert.IsTrue(topBar.RenderedTexts.Any(t => t == TopBarController.LibelleNotifActive), "backlog TRUE renders the active state");
+            Assert.IsFalse(topBar.RenderedTexts.Any(t => t == TopBarController.LibelleNotifCalme), "the inactive label is NOT also present");
 
             yield return topBar.Load(token, backlogBadge: false, openedGameDay: 7);
             Assert.IsFalse(topBar.NotificationActive);
-            Assert.IsTrue(topBar.RenderedTexts.Any(t => t == "[ ] Clear"), "backlog FALSE renders the inactive state");
-            Assert.IsFalse(topBar.RenderedTexts.Any(t => t == "[!] New"), "the active label is NOT also present");
+            Assert.IsTrue(topBar.RenderedTexts.Any(t => t == TopBarController.LibelleNotifCalme), "backlog FALSE renders the inactive state");
+            Assert.IsFalse(topBar.RenderedTexts.Any(t => t == TopBarController.LibelleNotifActive), "the active label is NOT also present");
         }
 
         // C2-F3 (à travers l'enveloppe) — le TopBar est alimenté par une VRAIE réponse de
@@ -167,7 +167,7 @@ namespace MafiaCleanCity.Shell.Tests
             Assert.IsFalse(topBar.RenderedTexts.Any(t => t == topBar.RenderedGameDayText), "game-day is EXCLUDED from the scan corpus");
 
             // At least one SUBMITTED element: callsign + notification ARE tracked.
-            Assert.IsTrue(topBar.RenderedTexts.Any(t => t == "[!] New"), "notification IS submitted to the scan corpus");
+            Assert.IsTrue(topBar.RenderedTexts.Any(t => t == TopBarController.LibelleNotifActive), "notification IS submitted to the scan corpus");
             Assert.IsTrue(topBar.RenderedTexts.Count >= 2, "the corpus is NOT empty — excluding everything would be the tempting degenerate case");
 
             // The R2.2 guard itself (VERBATIM regex, `DashboardPlayModeTests.cs:287`) — every text

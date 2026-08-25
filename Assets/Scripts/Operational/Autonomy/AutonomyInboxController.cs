@@ -179,13 +179,13 @@ namespace MafiaCleanCity.Operational.Autonomy
         private void Render()
         {
             ClearRows();
-            headerText.text = "AUTONOMY INBOX";
+            headerText.text = "RAPPORTS D'AUTONOMIE";
             TrackText(headerText, headerText.text);
 
             // Outcome line (CHROME — outcome is producer text, may carry any characters).
             if (!string.IsNullOrEmpty(LastOutcome))
             {
-                TextMeshProUGUI outcomeLine = NewText("Outcome", rowsArea, "Outcome: " + LastOutcome, 13, TextAlignmentOptions.Left);
+                TextMeshProUGUI outcomeLine = NewText("Outcome", rowsArea, "Issue : " + LastOutcome, 13, TextAlignmentOptions.Left);
                 outcomeLine.color = AccentMild;
                 AddLayoutElement(outcomeLine.gameObject, minHeight: 20, flexibleHeight: 0);
                 // CHROME: not TrackText'd — outcome is producer free text
@@ -202,7 +202,7 @@ namespace MafiaCleanCity.Operational.Autonomy
 
             if (Reports.Length == 0)
             {
-                TextMeshProUGUI empty = NewText("Empty", rowsArea, "No autonomy reports waiting", 14, TextAlignmentOptions.Left);
+                TextMeshProUGUI empty = NewText("Empty", rowsArea, "Aucun rapport d'autonomie en attente", 14, TextAlignmentOptions.Left);
                 empty.color = TextSecondary;
                 AddLayoutElement(empty.gameObject, minHeight: 24, flexibleHeight: 0);
                 TrackText(empty, empty.text);
@@ -216,8 +216,8 @@ namespace MafiaCleanCity.Operational.Autonomy
         private void RenderError()
         {
             ClearRows();
-            headerText.text = "AUTONOMY INBOX";
-            TextMeshProUGUI err = NewText("Error", rowsArea, "Autonomy inbox unavailable — check the stack", 14, TextAlignmentOptions.Left);
+            headerText.text = "RAPPORTS D'AUTONOMIE";
+            TextMeshProUGUI err = NewText("Error", rowsArea, "Boîte d'autonomie indisponible — vérifier la pile", 14, TextAlignmentOptions.Left);
             err.color = AccentSevere;
             AddLayoutElement(err.gameObject, minHeight: 24, flexibleHeight: 0);
             TrackText(headerText, headerText.text);
@@ -272,7 +272,7 @@ namespace MafiaCleanCity.Operational.Autonomy
             if (!string.IsNullOrEmpty(issue.decided))
             {
                 // Already decided — show closed label (TRACKED, digit-free).
-                TextMeshProUGUI decided = NewText("Decided", block.transform, "✓ Decided", 13, TextAlignmentOptions.Left);
+                TextMeshProUGUI decided = NewText("Decided", block.transform, "✓ Décidé", 13, TextAlignmentOptions.Left);
                 decided.color = AccentMild;
                 AddLayoutElement(decided.gameObject, minHeight: 18, flexibleHeight: 0);
                 TrackText(decided, decided.text);
@@ -387,8 +387,8 @@ namespace MafiaCleanCity.Operational.Autonomy
             vlg.childForceExpandWidth = true;
             vlg.childForceExpandHeight = false;
 
-            // Header — TRACKED ("AUTONOMY INBOX" is digit-free).
-            headerText = NewText("Header", card.transform, "AUTONOMY INBOX", 24, TextAlignmentOptions.Left);
+            // Header — TRACKED ("RAPPORTS D'AUTONOMIE" is digit-free).
+            headerText = NewText("Header", card.transform, "RAPPORTS D'AUTONOMIE", 24, TextAlignmentOptions.Left);
             headerText.fontStyle = FontStyles.Bold;
             AddLayoutElement(headerText.gameObject, minHeight: 32, flexibleHeight: 0);
 

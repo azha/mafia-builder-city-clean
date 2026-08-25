@@ -247,7 +247,7 @@ namespace MafiaCleanCity.Operational.Tests
             var reloaded = ctl.Reports.First(r => r.report_id == autonomyReportId);
             Assert.AreEqual("A", reloaded.issues.First(i => i.issue_id == "iss_demo_1").decided);
             Assert.IsTrue(string.IsNullOrEmpty(reloaded.issues.First(i => i.issue_id == "iss_demo_2").decided));
-            Assert.That(ctl.RenderedTexts, Does.Contain("✓ Decided"));
+            Assert.That(ctl.RenderedTexts, Does.Contain("✓ Décidé"));
 
             // 409 on the second resolve of the same issue — readable (F2).
             var ac = new AutonomyClient();

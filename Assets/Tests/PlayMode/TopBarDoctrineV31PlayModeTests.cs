@@ -346,7 +346,7 @@ namespace MafiaCleanCity.Shell.Tests
             yield return WaitTopBarLoaded(BootShell());
 
             Assert.IsTrue(shell.TopBar.Loaded);
-            Assert.IsTrue(shell.TopBar.RenderedTexts.Any(t => t == "[!] New" || t == "[ ] Clear"),
+            Assert.IsTrue(shell.TopBar.RenderedTexts.Any(t => t == TopBarController.LibelleNotifActive || t == TopBarController.LibelleNotifCalme),
                 "le corpus scanné contient toujours EXACTEMENT une des 2 formes canoniques du badge — inchangé par le restyle");
 
             // Resserrement NOMMÉ de C2F4 (qui épingle `>= 2`, "la tempting degenerate case" étant
