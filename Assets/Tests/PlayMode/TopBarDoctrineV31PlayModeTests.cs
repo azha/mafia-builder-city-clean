@@ -448,54 +448,177 @@ namespace MafiaCleanCity.Shell.Tests
             float radiusPx = (corners[2].x - corners[0].x) / 2f; // le médaillon (ring inclus) est carré
             Assert.Greater(radiusPx, 5f, "anti-vacuité : le médaillon doit avoir une taille réelle mesurée");
 
-            Texture2D tex = ScreenCapture.CaptureScreenshotAsTexture();
+            // ⛔⛔ CET ORACLE COMPARAIT L'ANNEAU DE CONTRÔLE À **UN SEUL PIXEL DE FOND**, pris à
+            // 60 px à gauche du médaillon, en supposant que tout l'anneau repose sur cette même
+            // couleur. L'hypothèse a tenu tant que le médaillon faisait 68 unités : l'anneau à
+            // 34+14 = 48 restait DANS une barre de 56, donc sur un aplat. Le bandeau est passé à
+            // l'échelle de la maquette (médaillon 64 px CSS ⇒ ~196 px de diamètre) : l'anneau
+            // sort maintenant très largement de la barre et croise le décor. Résultat : 127
+            // « débordements » signalés, tous à 201-204° — c'est-à-dire SOUS la barre — et pas un
+            // seul n'était du contenu de manomètre.
+            //   Relever la tolérance ou allonger `knownGood` avec les couleurs du décor aurait été
+            //   une rustine : la liste serait à rallonger à chaque écran, et l'oracle deviendrait
+            //   aveugle à un vrai débordement de la même teinte.
+            //   ⇒ LA PROPRIÉTÉ VOULUE NE PARLE PAS DU FOND : elle dit « aucun pixel HORS du cercle
+            //     inscrit n'appartient au manomètre ». On la mesure donc par une EXPÉRIENCE À UNE
+            //     VARIABLE — deux captures qui ne diffèrent QUE par la présence du médaillon.
+            //     Tout pixel de l'anneau qui change entre les deux EST du manomètre, quel que soit
+            //     ce qu'il y a derrière. Plus aucune hypothèse sur le décor, à aucune résolution.
+            Texture2D avec = ScreenCapture.CaptureScreenshotAsTexture();
+            Texture2D sans = null;
             try
             {
-                // Fond de référence : un point sur la barre, à bonne distance du médaillon (hors
-                // de tout halo/dégradé local), même hauteur Y. `knownGood` porte AUSSI le filet or
-                // du bas de barre (`hudHairlineGold`, REUSE le token — MESURÉ, revue ⊥ 2026-08-21 :
-                // le médaillon déborde légèrement sous la barre par construction, une partie de
-                // l'anneau de contrôle croise donc le filet, un élément DOCTRINE-LÉGITIME sans
-                // rapport avec le médaillon — voir le docblock de `CountOffendersOutsideCircle`).
-                Color bg = tex.GetPixel(Mathf.RoundToInt(cx - radiusPx - 60f), Mathf.RoundToInt(cy));
-                Color[] knownGood = { bg, DesignTokens.Current.hudHairlineGold };
-                const float colorEpsilon = 0.06f; // tolère l'anti-crénelage du bord du ring lui-même
-                const float marginPx = 14f; // fenêtre juste hors du médaillon où un débordement serait visible
+                manoT.gameObject.SetActive(false);
+                yield return new WaitForEndOfFrame();
+                sans = ScreenCapture.CaptureScreenshotAsTexture();
+                manoT.gameObject.SetActive(true);
 
-                var (offenders, sampled, examples) = CountOffendersOutsideCircle(tex, cx, cy, radiusPx, marginPx, knownGood, colorEpsilon);
+                Assert.AreEqual(avec.width, sans.width, "les deux captures doivent avoir la MÊME taille");
+                Assert.AreEqual(avec.height, sans.height, "les deux captures doivent avoir la MÊME taille");
+
+                // ⛔ LA BANDE MORTE ÉTAIT ABSOLUE (2,5 px), ET ELLE AVAIT ÉTÉ CALIBRÉE POUR UN
+                // MÉDAILLON DE 68 UNITÉS. Il en fait ~196 : son anneau, son ombre et son halo ont
+                // triplé avec lui, mais pas la bande. L'oracle mesurait donc l'ANTI-CRÉNELAGE et le
+                // halo de l'anneau lui-même — « le lissé entoure chaque forme, tout ce qui
+                // interroge le voisin le rencontre d'abord ». Les deux bornes sont désormais des
+                // FRACTIONS du rayon, donc vraies à toute échelle (2,5/34 = 7,4 % ; 14/34 = 41 %).
+                float bandeMorte = radiusPx * 0.074f;
+                float marginPx = radiusPx * 0.41f;
+                const float colorEpsilon = 0.06f; // tolère l'anti-crénelage du bord du ring lui-même
+
+                // ⛔ LE LOSANGE EST UNE EXCEPTION LÉGITIME, ET ELLE S'EXPRIME PAR SES BORNES, PAS
+                // PAR SA COULEUR. Le canon (`.losange`) pose un losange de sceau ~7 px SOUS l'anneau
+                // — deux juges visuels l'avaient signalé ABSENT avant qu'il soit construit. Il est
+                // donc, par dessin, hors du cercle inscrit.
+                //   L'ancien oracle ne le voyait pas : il mettait `hudHairlineGold` dans sa liste
+                //   blanche, or le losange porte EXACTEMENT ce laiton. Une garde qui blanchit une
+                //   COULEUR devient aveugle à tout ce qui la porte — y compris à un vrai débord.
+                //   ⇒ On exclut donc le losange par son IDENTITÉ et son rectangle MESURÉ, jamais
+                //     par sa teinte. Tout autre chrome hors du cercle reste un débord.
+                Rect exclusion = RectDeLEnfant(manoRect, "BoitierLosange");
+                var (offenders, sampled, examples) =
+                    CountRingDifferences(avec, sans, cx, cy, radiusPx + bandeMorte, marginPx, colorEpsilon, exclusion);
                 Assert.Greater(sampled, 100, "anti-vacuité : l'anneau de contrôle doit couvrir un nombre RÉEL de pixels");
                 Assert.AreEqual(0, offenders,
-                    $"du contenu du manomètre déborde du cercle inscrit ({offenders}/{sampled} pixels de l'anneau de " +
-                    "contrôle diffèrent du fond ET du filet, bg=" + bg + ") — doctrine : un ARC dans le disque, rien " +
-                    "ne dépasse. Exemples (jusqu'à 10) :\n" + string.Join("\n", examples));
+                    $"du contenu du manomètre déborde du cercle inscrit ({offenders}/{sampled} pixels de l'anneau " +
+                    "CHANGENT quand on masque le médaillon — donc ils lui appartiennent) — doctrine : un ARC dans " +
+                    "le disque, rien ne dépasse. Exemples (jusqu'à 10) :\n" + string.Join("\n", examples));
 
-                // Contrôle POSITIF (socle : un détecteur qui rend toujours 0 peut le faire pour la
-                // mauvaise raison) — une sonde synthétique DEHORS du cercle, sur la MÊME texture,
-                // DOIT être vue par le même balayage — MÊME avec le filet dans `knownGood` (magenta
-                // est loin des DEUX couleurs connues).
-                // AMENDÉ NOMMÉMENT (2026-08-21, même correctif que ci-dessus) — MESURÉ : la sonde à
-                // UN SEUL pixel ne survivait que par une COÏNCIDENCE d'arrondi entre son offset fixe
-                // (+6px) et la grille (ang,r) du balayage — décaler la grille (le correctif du rayon
-                // de départ, ci-dessus) l'a fait manquer silencieusement (contrôle positif tombé à 0
-                // offender, prouvant que ce n'était PAS un test robuste). Peindre un PETIT BLOC
-                // (5×5px) au lieu d'un pixel unique rend la sonde insensible à l'arrondi exact de la
-                // grille — n'importe quel point (ang,r) à ±2px de la cible la voit, quel que soit le
-                // pas radial choisi.
-                int probeCx = Mathf.RoundToInt(cx + radiusPx + 6f);
+                // Contrôle POSITIF — le détecteur DOIT voir une différence qu'on y plante. Sans lui,
+                // un oracle qui comparerait deux fois la MÊME texture rendrait 0 pour toujours, et
+                // le 0 ci-dessus ne prouverait rien. Un BLOC de 5×5 plutôt qu'un pixel : la grille
+                // (ang,r) du balayage ne tombe pas forcément sur un point donné, et un contrôle qui
+                // ne survit que par coïncidence d'arrondi a déjà été mesuré muet ici.
+                int probeCx = Mathf.RoundToInt(cx + radiusPx + bandeMorte + 6f);
                 int probeCy = Mathf.RoundToInt(cy);
                 for (int dx = -2; dx <= 2; dx++)
                     for (int dy = -2; dy <= 2; dy++)
-                        tex.SetPixel(probeCx + dx, probeCy + dy, Color.magenta);
-                tex.Apply();
-                var (probeOffenders, _, _) = CountOffendersOutsideCircle(tex, cx, cy, radiusPx, marginPx, knownGood, colorEpsilon);
+                        avec.SetPixel(probeCx + dx, probeCy + dy, Color.magenta);
+                avec.Apply();
+                var (probeOffenders, _, _) =
+                    CountRingDifferences(avec, sans, cx, cy, radiusPx + bandeMorte, marginPx, colorEpsilon, exclusion);
                 Assert.Greater(probeOffenders, 0,
-                    "contrôle positif : un pixel magenta planté juste hors du cercle DOIT être détecté — sinon " +
+                    "contrôle positif : un bloc magenta planté juste hors du cercle DOIT être détecté — sinon " +
                     "le balayage ne peut rien voir et le 0 ci-dessus ne prouve rien");
             }
             finally
             {
-                Object.Destroy(tex);
+                if (manoT != null) manoT.gameObject.SetActive(true);
+                Object.Destroy(avec);
+                if (sans != null) Object.Destroy(sans);
             }
+        }
+
+        /// <summary>Compte, sur un anneau juste HORS du cercle inscrit du médaillon, les pixels qui
+        /// DIFFÈRENT entre deux captures ne se distinguant que par la présence du médaillon.
+        ///
+        /// C'est la forme qui ne suppose RIEN du décor : un pixel qui change quand on masque le
+        /// médaillon lui appartient, un pixel qui ne change pas ne lui appartient pas. L'ancienne
+        /// forme comparait à une couleur de fond échantillonnée en UN point, et devenait fausse dès
+        /// que l'anneau cessait de reposer sur un aplat.</summary>
+        private static (int offenders, int sampled, System.Collections.Generic.List<string> examples)
+            CountRingDifferences(Texture2D avec, Texture2D sans, float cx, float cy,
+                                 float radiusPx, float marginPx, float epsilon, Rect exclusion)
+        {
+            int offenders = 0, sampled = 0;
+            var examples = new System.Collections.Generic.List<string>();
+            for (int angle = 0; angle < 360; angle += 3)
+            {
+                float rad = angle * Mathf.Deg2Rad;
+                for (float r = radiusPx + 2.5f; r <= radiusPx + marginPx; r += 2f)
+                {
+                    int px = Mathf.RoundToInt(cx + Mathf.Cos(rad) * r);
+                    int py = Mathf.RoundToInt(cy + Mathf.Sin(rad) * r);
+                    if (px < 0 || py < 0 || px >= avec.width || py >= avec.height) continue;
+                    if (exclusion.width > 0f && exclusion.Contains(new Vector2(px, py))) continue;
+                    sampled++;
+                    Color a = avec.GetPixel(px, py);
+                    Color b = sans.GetPixel(px, py);
+                    float d = Mathf.Abs(a.r - b.r) + Mathf.Abs(a.g - b.g) + Mathf.Abs(a.b - b.b);
+                    // ⚠️ « CHANGE » NE SUFFIT PAS : la doctrine dit « un ARC dans le disque, rien ne
+                    // dépasse » — elle interdit du CHROME DESSINÉ hors du cercle, pas l'ombre douce
+                    // que tout élément projette. Un halo qui assombrit le décor change bien les
+                    // pixels, et il est légitime. Le discriminant est donc la SATURATION : un arc,
+                    // un anneau, une aiguille sont des couleurs franches (laiton, or, teal, braise) ;
+                    // une ombre est un gris. Sans ce second terme, l'oracle comptait 19 « débords »
+                    // dont pas un n'était de l'arc.
+                    bool chromeDessine = EstChromeSature(a);
+                    // ⚠️ ET IL FAUT LE SECOND TERME, sinon on accuse le FILET DE LA BARRE. Mesuré :
+                    // 50 « débords », tous à 192-195° (donc à gauche, sur l'horizontale du filet
+                    // laiton), tous avec la MÊME paire de couleurs — avec le médaillon (176,141,61)
+                    // = `hudHairlineGold` exact, sans lui (200,126,66). Le filet TRAVERSE l'anneau
+                    // de contrôle par construction (le médaillon pend sous la barre), et le
+                    // médaillon ne fait qu'en retoucher la teinte là où il le recouvre.
+                    //   ⇒ Un débordement, c'est du chrome saturé LÀ OÙ IL N'Y EN AVAIT PAS. Si la
+                    //     capture SANS médaillon porte déjà du chrome au même pixel, la différence
+                    //     est une retouche de teinte sur un élément légitime, pas une fuite.
+                    //   ⇒ Le contrôle positif reste valide : le magenta est planté sur du fond
+                    //     NON saturé, donc il continue d'être vu.
+                    bool chromeDejaLa = EstChromeSature(b);
+                    if (d > epsilon && chromeDessine && !chromeDejaLa)
+                    {
+                        offenders++;
+                        if (examples.Count < 10)
+                            examples.Add($"ang={angle} r={r - radiusPx:F1}px-hors-cercle avec={a} sans={b} d={d:F3}");
+                    }
+                }
+            }
+            return (offenders, sampled, examples);
+        }
+
+        /// <summary>Le rectangle ÉCRAN d'un enfant nommé, ou un Rect vide s'il n'existe pas.
+        /// Mesuré sur l'objet réel — jamais recalculé depuis un ratio, qui suivrait la mémoire de
+        /// celui qui l'a écrit plutôt que la scène.</summary>
+        private static Rect RectDeLEnfant(RectTransform parent, string nom)
+        {
+            Transform t = parent.Find(nom);
+            if (t == null) return new Rect(0f, 0f, 0f, 0f);
+            var coins = new Vector3[4];
+            ((RectTransform)t).GetWorldCorners(coins);
+            // ⛔ LES QUATRE COINS, PAS DEUX. Prendre `coins[0]`/`coins[2]` en x et `coins[0]`/
+            // `coins[1]` en y suppose un rectangle ALIGNÉ SUR LES AXES. Le losange est un carré
+            // TOURNÉ À 45° — c'est ce qui en fait un losange —, et ses deux coins ignorés sont
+            // précisément ceux qui dépassent. Mesuré : l'exclusion ainsi calculée laissait 8 pixels
+            // du losange hors de sa propre boîte, et l'oracle les accusait.
+            float x0 = coins[0].x, x1 = coins[0].x, y0 = coins[0].y, y1 = coins[0].y;
+            for (int i = 1; i < 4; i++)
+            {
+                x0 = Mathf.Min(x0, coins[i].x); x1 = Mathf.Max(x1, coins[i].x);
+                y0 = Mathf.Min(y0, coins[i].y); y1 = Mathf.Max(y1, coins[i].y);
+            }
+            const float marge = 3f; // la frange d'anti-crénelage du losange lui-même
+            return new Rect(x0 - marge, y0 - marge, (x1 - x0) + 2f * marge, (y1 - y0) + 2f * marge);
+        }
+
+        /// <summary>Une couleur de CHROME DESSINÉ (laiton, or, teal, braise) par opposition à un
+        /// gris de décor ou à une ombre douce. Le discriminant est la saturation : les couleurs de
+        /// ce HUD sont franches, les ombres ne le sont jamais.</summary>
+        private static bool EstChromeSature(Color c)
+        {
+            float mx = Mathf.Max(c.r, Mathf.Max(c.g, c.b));
+            float mn = Mathf.Min(c.r, Mathf.Min(c.g, c.b));
+            float saturation = mx <= 0.001f ? 0f : (mx - mn) / mx;
+            return saturation > 0.35f && mx > 0.30f;
         }
 
         // ══════════════════════════════════════════════════════════════════════════════════════

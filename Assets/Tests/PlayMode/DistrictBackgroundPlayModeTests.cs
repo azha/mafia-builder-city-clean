@@ -480,11 +480,85 @@ namespace MafiaCleanCity.CityMap.Tests
         [Test]
         public void AmbF7_SealedTokenCountUnchanged()
         {
-            Assert.AreEqual(68, MafiaCleanCity.Theme.Tests.CanonPaletteComparator.ExpectedTokenCount,
-                "amb-F7 — le pivot fond pré-rendu n'ajoute AUCUNE teinte : les 68 clés de DesignTokens " +
+            Assert.AreEqual(74, MafiaCleanCity.Theme.Tests.CanonPaletteComparator.ExpectedTokenCount,
+                "amb-F7 — le pivot fond pré-rendu n'ajoute AUCUNE teinte : les 74 clés de DesignTokens " +
                 "restent fermées (51 + 11 hud* HUD v3.1 + 2 lieutenantGlass* + 2 lieutenantMedallion* " +
-                "+ 2 dockRond*, ces six derniers venant de l'écran La Famille et de la barre " +
-                "d'onglets, jamais du pivot)");
+                "+ 2 dockRond* + 6 fiche*, ces douze derniers venant de l'écran La Famille, du dock " +
+                "et de la fiche bâtiment, jamais du pivot)");
+        }
+
+        // ══════════════════════════════════════════════════════════════════════════════════════
+        // FICHE BÂTIMENT — la fiche doit SURVIVRE AU RENDU, pas seulement à sa construction
+        // ══════════════════════════════════════════════════════════════════════════════════════
+        // ⛔ LA CLASSE DE DÉFAUT QUE CETTE GARDE EXISTE POUR VOIR, ET POURQUOI UNE GARDE PLUS
+        // SIMPLE SERAIT RESTÉE VERTE. La fiche est construite UNE fois, avec la racine. Puis
+        // `ClearContent()` vidait TOUS les enfants de la racine à chaque rendu — la fiche
+        // comprise. `ficheRoot` devenait un objet DÉTRUIT, donc `null` au sens Unity, donc
+        // `OuvrirFiche` sortait à sa première ligne : un clic sur un bâtiment n'ouvrait RIEN,
+        // sans une seule erreur console.
+        //   ⇒ Une garde qui aurait construit puis ouvert (sans rendre) serait restée VERTE :
+        //     la fiche EXISTE à la construction. Le défaut ne vit qu'APRÈS un rendu.
+        //   ⇒ Une garde qui vérifie « la fiche existe dans l'arbre » resterait verte AUSSI dans
+        //     l'autre monde dégénéré : le rendu ajoute ses enfants APRÈS elle, donc une fiche
+        //     ouverte mais rendue sous le décor est présente, active, et INVISIBLE.
+        // C'est pourquoi cette garde (a) RÉGÉNÈRE deux fois, (b) épingle la VALEUR de
+        // `FicheOuverte` de part et d'autre de l'ouverture — false PUIS true, un delta sur la
+        // même grandeur, jamais une assertion d'existence —, et (c) mesure la POSITION de
+        // fratrie, seule propriété qui distingue « au-dessus » de « dessous ».
+        [UnityTest]
+        public IEnumerator FicheF1_FicheSurvitAuRenduEtSOuvreSurUnBatiment()
+        {
+            DistrictInteriorDto dto = null;
+            yield return FetchInterior("fichef1", d => dto = d);
+            dto.day_phase = "NIGHT";
+
+            bareHostGo = new GameObject("DistrictFiche_F1");
+            var diorama = bareHostGo.AddComponent<DistrictInteriorScreenController>();
+
+            // DEUX rendus : le premier construit la racine, le second est celui qui détruisait
+            // la fiche. Un seul rendu ne suffirait pas à départager les deux mondes.
+            diorama.Render(dto);
+            yield return null;
+            diorama.Render(dto);
+            yield return null;
+
+            Assert.Greater(dto.buildings.Length, 0,
+                "anti-vacuité — sans bâtiment, rien à ouvrir et la garde serait vraie à vide");
+
+            Transform fiche = diorama.ScreenRoot.Find("FicheBatiment");
+            Assert.IsNotNull(fiche, "la fiche doit AVOIR SURVÉCU aux deux rendus");
+
+            // (b) CONTRÔLE POSITIF sur la grandeur elle-même : au repos la fiche est FERMÉE.
+            //     Sans ce premier terme, un `FicheOuverte` constamment vrai satisferait
+            //     l'assertion suivante — la garde certifierait le défaut au lieu de le voir.
+            Assert.IsFalse(diorama.FicheOuverte,
+                "contrôle positif — au repos la fiche est fermée ; si ce terme est vrai, " +
+                "l'assertion d'ouverture ci-dessous ne prouve rien");
+
+            DistrictInteriorBuildingDto cible = dto.buildings[0];
+            diorama.OuvrirFiche(cible);
+            yield return null;
+
+            Assert.IsTrue(diorama.FicheOuverte, "après OuvrirFiche, la fiche doit être ouverte");
+            Assert.AreEqual(cible.building, diorama.FicheBuildingId,
+                "la fiche doit porter le bâtiment demandé, jamais un autre");
+
+            // (c) POSITION DE FRATRIE — « présente et active » ne veut pas dire « visible ».
+            Assert.AreEqual(diorama.ScreenRoot.childCount - 1, fiche.GetSiblingIndex(),
+                "la fiche doit être le DERNIER enfant de la racine, sinon le décor du rendu " +
+                "passe par-dessus et elle est ouverte, active, et invisible");
+
+            // Les TROIS actions du canon, comptées sur l'arbre réel.
+            int actions = 0;
+            foreach (Transform t in fiche.GetComponentsInChildren<Transform>(true))
+                if (t.name.StartsWith("Btn_")) actions++;
+            Assert.AreEqual(3, actions,
+                $"la fiche porte les TROIS actions du canon — trouvé {actions}");
+
+            diorama.FermerFiche();
+            yield return null;
+            Assert.IsFalse(diorama.FicheOuverte, "FermerFiche doit refermer");
+            Assert.IsNull(diorama.FicheBuildingId, "et lâcher le bâtiment qu'elle portait");
         }
     }
 }

@@ -609,7 +609,16 @@ namespace MafiaCleanCity.Shell.Tests
         // le badge de possession — même token, même sémantique de sévérité, une occurrence de plus
         // parce que l'ancienne branche subsiste pour le cas où le fond redeviendrait une plaque.
         // ★ La garde a fait exactement son travail : elle a vu une occurrence apparaître et l'a dit.
-        private const int ExpectedSeverityTokenTotal = 33;
+        // RE-AMENDÉ NOMMÉMENT 33 → 34 (2026-08-25) : `CityMap/DistrictInteriorScreenController.cs`
+        // (déjà sur l'allowlist, l'ENSEMBLE de fichiers ne change donc toujours pas) gagne UN accès
+        // à `accentDanger`. Raison : la FICHE BÂTIMENT, neuve, teinte sa troisième case (« ÉTAT »)
+        // en danger dès que `condition_band` n'est pas `SOUND` — même token, même sémantique de
+        // sévérité, sur une surface qui n'existait pas.
+        // ★ Deuxième fois que cette garde voit juste : elle a repéré une occurrence apparue dans un
+        //   fichier qu'elle surveillait déjà, là où un contrôle par ENSEMBLE DE FICHIERS seul serait
+        //   resté vert (le fichier était déjà dedans). C'est exactement pourquoi le TOTAL est gardé
+        //   en plus de l'ensemble : les deux ferment des angles morts différents.
+        private const int ExpectedSeverityTokenTotal = 34;
 
         // ── motif 2 — littéraux de bucket (ferme l'angle mort du motif 1, IMPORTANT-2) ──────
         private static readonly string[] BucketLiterals = { "\"COLD\"", "\"WARM\"", "\"HOT\"", "\"BURNING\"" };

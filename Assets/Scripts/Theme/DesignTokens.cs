@@ -134,6 +134,21 @@ namespace MafiaCleanCity.Theme
         public Color dockRondInner;   // #1d2635
         public Color dockRondOuter;   // #0d1420
 
+        // La FICHE BÂTIMENT de l'écran principal (`hud-brennar.html` l.88-104, `.fiche` / `.btn`).
+        // ⚠️ SIX JETONS DÉDIÉS, ET AUCUN N'EST UN VOISIN RÉUTILISÉ. Le verre de la fiche
+        // (#0c1320/#080d17, quasi opaque) N'EST PAS le verre de barre (#0b1122/#0d131e à 0,91/0,85)
+        // ni celui des panneaux de la Famille (#162135/#090e18 à 0,58/0,74) : la fiche est « plus
+        // sombre que la carte » par doctrine (note §5 du canon), c'est sa raison d'être.
+        // Et l'or du CTA est un DÉGRADÉ à deux stops avec sa propre bordure et sa propre encre —
+        // quatre valeurs qu'aucun or existant ne porte (`hudMoneyGold` est un texte, pas un fond).
+        // « Un token par consommateur mesuré » (gdd/14 §Asset pipeline).
+        public Color ficheGlassTop;      // rgba(12,19,32,.937) -> #0c1320
+        public Color ficheGlassBottom;   // rgba(8,13,23,.965)  -> #080d17
+        public Color ficheCtaOrHaut;     // #e9c56b
+        public Color ficheCtaOrBas;      // #c99a37
+        public Color ficheCtaOrBord;     // #8a611c
+        public Color ficheCtaOrEncre;    // #241804
+
         [Header("Dashboard")]
         public Color dashboardIconDim;     // (0.45,0.49,0.53)
 

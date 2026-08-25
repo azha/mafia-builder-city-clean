@@ -95,6 +95,45 @@ namespace MafiaCleanCity.Capture.Tests
             for (int i = 0; i < 12; i++) yield return null;
             Debug.Log($"[CAPTURE] vue principale — batiments={batiments} district={shell.CityTabDistrictId} " +
                       $"ecran={Screen.width}x{Screen.height}");
+
+            // ── L'ÉCRAN PRINCIPAL AVEC SA FICHE OUVERTE ────────────────────────────────────────
+            // Ruling user : « tant que tu n'as pas un screenshot 100% conforme avec les 3 actions
+            // quand on clique sur un bâtiment … tu continues l'écran principal ». Une capture au
+            // repos ne PROUVE pas l'interaction : elle montre exactement ce que montrait l'écran
+            // quand aucun bâtiment n'était cliquable. Celle-ci ouvre la fiche par le même chemin
+            // qu'un joueur — `OuvrirFiche`, ce que le `Button` de la cellule appelle.
+            DistrictInteriorBuildingDto premier = district.LastFetch.buildings[0];
+            district.OuvrirFiche(premier);
+            for (int i = 0; i < 8; i++) yield return null;
+
+            // ⛔ ANTI-MENSONGE : la fiche doit être OUVERTE, sur CE bâtiment, et porter ses TROIS
+            // actions. Sans ces trois assertions, une fiche restée masquée — ou vidée de ses
+            // boutons — produirait une capture parfaitement valide de l'écran d'avant.
+            Assert.IsTrue(district.FicheOuverte, "la fiche doit être ouverte au moment de la capture");
+            Assert.AreEqual(premier.building, district.FicheBuildingId,
+                "la fiche doit porter le bâtiment sur lequel on a cliqué, pas un autre");
+            Transform ficheT = TrouverEnfant(shell.ContentSlot, "FicheBatiment");
+            Assert.IsNotNull(ficheT, "la fiche doit exister dans l'arbre de l'écran");
+            int actions = 0;
+            foreach (Transform enf in ficheT.GetComponentsInChildren<Transform>(true))
+                if (enf.name.StartsWith("Btn_")) actions++;
+            Assert.AreEqual(3, actions,
+                $"la fiche doit porter les TROIS actions du canon (COLLECTER · BLANCHIR · AMÉLIORER) — trouvé {actions}");
+
+            // ⛔ LA RÉSOLUTION N'EST PAS UN DÉTAIL DE CAPTURE — ELLE FABRIQUE UN FAUX DÉFAUT.
+            // À 1200×1600 (le 3:4 de l'éditeur), le fond de district — posé à sa taille NATIVE et
+            // aligné au pixel, propriété certifiée bit-exacte — ne peut pas remplir l'écran :
+            // 1080 de large sur 1200 laisse 60 px de noir de chaque côté. J'ai failli traiter ces
+            // marges comme un défaut de mise en page et « corriger » en étirant l'art, ce qui
+            // aurait détruit exactement l'invariant que ce dépôt a payé le plus cher.
+            //   ⇒ Les fonds livrés sont en 1080×1920 (`Assets/Art/District/Backgrounds/`), et le
+            //     projet vise le portrait. On capture DANS ce repère.
+            // Et on capture à DEUX formats, parce qu'un seul ne prouve rien sur l'autre : 1080×1920
+            // (résolution native de l'art) et 1080×2400 (le téléphone 19,5:9 réellement visé).
+            yield return CapturerA(1080, 1920, "Assets/Screenshots/vue_principale_fiche.png");
+            yield return CapturerA(1080, 2400, "Assets/Screenshots/vue_principale_fiche_1080x2400.png");
+            Debug.Log($"[CAPTURE] fiche bâtiment — type={premier.operational_type} " +
+                      $"conversion={premier.conversion_band} actions={actions}");
         }
 
         // ── Capture de la CARTE DE VILLE (l'écran des 18 districts) ───────────────────────────────

@@ -121,7 +121,23 @@ namespace MafiaCleanCity.Shell
                 Bounds manoBounds = RectTransformUtility.CalculateRelativeRectTransformBounds(transform, (RectTransform)manoT);
                 float selfBottomY = selfRt.rect.yMin;
                 float manoBottomY = manoBounds.min.y;
-                return Mathf.Max(0f, selfBottomY - manoBottomY);
+                float debordLocal = Mathf.Max(0f, selfBottomY - manoBottomY);
+
+                // ⛔⛔ CETTE GRANDEUR TRAVERSE UN CHANGEMENT DE REPÈRE, ET ELLE DOIT SORTIR DANS
+                // CELUI DE L'ÉCRAN. Le bandeau est désormais autoré en px CSS de la maquette et
+                // porté à l'écran par un `localScale` sur son parent : le calcul ci-dessus est
+                // donc en unités de MAQUETTE, pas en unités de canvas.
+                //   J'ai d'abord converti au site d'appel — et j'en ai corrigé UN sur DEUX. Le
+                //   second réservait 32,2 unités là où le médaillon en occupe 98, et le titre du
+                //   district passait sous l'anneau. **Deux sites d'appel de la même valeur, un
+                //   seul corrigé** : c'est le mode d'échec le plus banal d'une conversion posée
+                //   chez l'appelant. Il y en a quatre au total (2 en production, 2 en test).
+                //   ⇒ La conversion vit ICI, une fois, chez celui qui CONNAÎT son échelle. Aucun
+                //     appelant ne peut plus l'oublier, et la propriété exposée a désormais la
+                //     même unité que le `rect.height` avec lequel tout le monde l'additionne.
+                float echelle = transform.lossyScale.y;
+                if (echelle <= 0.0001f) echelle = 1f;   // anti-vacuité : jamais une division/produit par 0
+                return debordLocal * echelle;
             }
         }
 
@@ -168,7 +184,13 @@ namespace MafiaCleanCity.Shell
         /// sites d'appel du bandeau ne changent pas — mais il n'y a plus qu'UNE définition, donc le
         /// bandeau et le titre de district ne peuvent plus diverger.</summary>
         private const float BarPaddingX = ShellChrome.GutterX;
-        private const float LeadingWidth = 90f;
+        // 36 et non 90. Le canon ne porte AUCUN bouton retour dans le bandeau : à sa place vit
+        // une volute décorative de 34×12 (`.volute g`). Le retour est fonctionnel ici (on est
+        // DANS un district, il faut pouvoir en sortir) mais il ne peut pas occuper 23 % de la
+        // largeur : à 90, il poussait l'aile ARGENT sous le médaillon et le montant sortait
+        // TRONQUÉ (mesuré sur capture : « $10,00 » coupé net par l'anneau du manomètre).
+        // 16 (marge) + 36 + 12 (écart) + 96 (aile) = 160 < 164, la gauche du médaillon.
+        private const float LeadingWidth = 36f;
         private const float LeadingHeight = 40f;
         // ⛔ RATIOS RE-MESURÉS CONTRE LA MAQUETTE (2026-08-22, demande user « traite le menu en haut
         // et en bas, en terme de ratio »). Tout est rapporté à la HAUTEUR DE BARRE, la seule grandeur
@@ -195,8 +217,12 @@ namespace MafiaCleanCity.Shell
         private const float BoitierRingThicknessPx = 3f;
         private const float ArcDiameterPx = 48f;
         private const float ArcThicknessPx = 5f;
-        private const float MoneyClusterWidth = 160f;
-        private const float ClockClusterWidth = 160f;
+        // 96 — `hud-brennar.html` : `.aile{min-width:96px}`, mesuré `.aile.gauche` 96,00 et
+        // `.aile.droite` 97,95. À 160 les deux ailes totalisaient 320 des 392 de large et se
+        // rejoignaient SOUS le médaillon (64 de large, centré) — 320 + 64 = 384 pour 392 moins
+        // 32 de marges = 360 disponibles. Le chevauchement était arithmétique.
+        private const float MoneyClusterWidth = 96f;
+        private const float ClockClusterWidth = 98f;
         private const float HairlineThicknessPx = 2f;
         private const float MoneyUnderlineWidthPx = 74f; // REUSE exact — hud-brennar.html:59 `.ratio{width:74px}`
         private const float ZoneRowWidth = 34f;
@@ -364,7 +390,16 @@ namespace MafiaCleanCity.Shell
         {
             switch (action)
             {
-                case LeadingAction.BackToMap: return "← Carte"; // "← Carte" — libellé littéral du design §3
+                // ⛔ « ← Carte » REVENAIT À LA LIGNE (« Cart » / « e » — mesuré sur capture portrait)
+                // depuis que le bandeau est à l'échelle du canon : le libellé littéral du design §3
+                // supposait un bouton de 90 unités, et 90 unités de maquette poussaient l'aile
+                // ARGENT sous le médaillon. Les deux ne peuvent pas être vrais ensemble.
+                // ⇒ La flèche seule. C'est ce dont le canon se rapproche le plus (il ne porte AUCUN
+                // bouton retour ici, juste une volute décorative de 34×12 au même endroit), et le
+                // geste reste découvrable : c'est le seul contrôle du coin gauche.
+                // *Un libellé de design écrit sous une contrainte de largeur fausse est daté par
+                // cette contrainte, pas par sa date.*
+                case LeadingAction.BackToMap: return "←";
                 default: return "";
             }
         }
@@ -515,7 +550,13 @@ namespace MafiaCleanCity.Shell
             leadingRect.anchoredPosition = new Vector2(BarPaddingX, 0f);
             leadingRect.sizeDelta = new Vector2(LeadingWidth, LeadingHeight);
             Image leadingImg = leadingGo.AddComponent<Image>();
-            leadingImg.color = DesignTokens.Current.surfaceRow; // REUSE — même famille que le chrome de la TabBar
+            // ⛔ PLUS D'APLAT. `surfaceRow` peignait un pavé gris-vert derrière « ← Carte » — le
+            // seul rectangle plein de tout l'écran, et le canon n'en porte aucun (le bandeau est
+            // un verre translucide, la fiche une plaque, le dock des ronds). L'Image reste, à
+            // alpha nul : c'est elle qui reçoit le clic, et une cible de clic sans Graphic ne
+            // reçoit rien.
+            Color leadingFond = DesignTokens.Current.surfaceRow; leadingFond.a = 0f;
+            leadingImg.color = leadingFond;
             Button leadingBtn = leadingGo.AddComponent<Button>();
             leadingBtn.targetGraphic = leadingImg;
             leadingBtn.onClick.AddListener(() => leadingOnClick?.Invoke());

@@ -246,6 +246,12 @@ namespace MafiaCleanCity.CityMap
             {
                 RenderNonHeroFallback();
             }
+
+            // La fiche survit au vidage (voir `ClearContent`), mais le rendu ajoute ses enfants
+            // APRÈS elle : sans ce rappel, le décor du tour suivant passerait PAR-DESSUS et la
+            // fiche serait ouverte, présente dans l'arbre, et invisible — la pire des trois
+            // (une garde d'existence resterait verte).
+            if (ficheRoot != null) ficheRoot.SetAsLastSibling();
         }
 
         /// <summary>D8/C8-F5, AMENDÉ (P4 puis JUGE-D1, périmètre écrit par le ⊥/le juge visuel) —
@@ -540,6 +546,22 @@ namespace MafiaCleanCity.CityMap
                     if (!blockByBlockId.TryGetValue(building.block_id, out DistrictInteriorBlockDto block))
                         continue; // D2 garantit l'appartenance ; défensif.
                     GameObject cell = BuildBuildingCell(cellsRt, block.x, block.y, building, anchorMap, scaleFactor);
+                    // ⚠️ AVANT CE LOT, AUCUN BÂTIMENT N'ÉTAIT CLIQUABLE — mesuré, zéro `Button` et
+                    // zéro `onClick` dans tout l'écran principal du jeu. Le badge de possession
+                    // était décoratif.
+                    // La capture, elle, est un `Image` transparent posé sur la cellule : c'est LUI
+                    // qui reçoit le toucher, parce que le fond pré-rendu est une seule image et que
+                    // les bâtiments n'y sont pas des objets séparés. La cellule EST donc la seule
+                    // géométrie qui sait où est ce bâtiment.
+                    DistrictInteriorBuildingDto capture = building;   // capture de boucle explicite
+                    Image zone = cell.AddComponent<Image>();
+                    Color invisible = Color.white; invisible.a = 0f;
+                    zone.color = invisible;
+                    zone.raycastTarget = true;
+                    Button tap = cell.AddComponent<Button>();
+                    tap.transition = Selectable.Transition.None;
+                    tap.targetGraphic = zone;
+                    tap.onClick.AddListener(() => OuvrirFiche(capture));
                     RenderedBuildingCount++;
                     // `DistrictMapNavigation.Configure` attend ce point dans l'espace de DistrictScene ;
                     // la cellule est désormais relative au centre de `DistrictCells`, c'est-à-dire au
@@ -1370,13 +1392,30 @@ namespace MafiaCleanCity.CityMap
             GameObject rootGo = NewUI("DistrictInteriorRoot", parent);
             root = (RectTransform)rootGo.transform;
             Stretch(root, Vector2.zero, Vector2.zero);
+
+            // La fiche est construite UNE fois, masquée, et vit au-dessus de tout le décor : elle
+            // est le DERNIER enfant de la racine. Construite ici plutôt qu'au premier clic, pour
+            // que sa géométrie soit prête avant qu'un joueur ne la demande — et pour qu'une
+            // falsifiable puisse l'inspecter sans avoir à simuler un toucher.
+            BuildFiche(root);
         }
 
         private void ClearContent()
         {
             if (root == null) return;
             for (int i = root.childCount - 1; i >= 0; i--)
-                Destroy(root.GetChild(i).gameObject);
+            {
+                Transform enfant = root.GetChild(i);
+                // ⛔ La fiche SURVIT au vidage du décor. Elle est construite UNE fois avec la
+                // racine ; sans cette exclusion, le premier rendu la détruisait et `ficheRoot`
+                // devenait un objet détruit — donc `OuvrirFiche` sortait en silence et un clic
+                // sur un bâtiment n'ouvrait RIEN. Mesuré : la garde de capture a rougi
+                // (« la fiche doit être ouverte ») là où l'écran, lui, ne signalait rien.
+                // L'exclusion porte sur l'IDENTITÉ de l'objet, jamais sur son nom : un nom se
+                // renomme, une référence non.
+                if (ficheRoot != null && enfant == (Transform)ficheRoot) continue;
+                Destroy(enfant.gameObject);
+            }
         }
 
         // --------------------------------------------------------------- helpers
@@ -1384,6 +1423,311 @@ namespace MafiaCleanCity.CityMap
         private void TrackText(TextMeshProUGUI t)
         {
             if (t != null && !string.IsNullOrEmpty(t.text)) renderedTexts.Add(t.text);
+        }
+
+
+        // ══════════════════════════════════════════════════════════════════════════════════════
+        // LA FICHE BÂTIMENT — `hud-brennar.html` §5 « Fiche — verre fumé, un seul CTA »
+        // ══════════════════════════════════════════════════════════════════════════════════════
+        // Note de doctrine du canon, verbatim : « Plus sombre que la carte, filet laiton haut, titre
+        // serif. Une seule action colorée : COLLECTER (l'or = l'argent) ; le reste en boutons-filets. »
+        //
+        // ⚠️ AVANT CE LOT, AUCUN BÂTIMENT N'ÉTAIT CLIQUABLE. Mesuré : zéro `Button`, zéro `onClick`
+        // dans tout cet écran — les badges de possession étaient purement décoratifs. L'écran
+        // principal du jeu n'avait donc AUCUNE interaction.
+        //
+        // ⚠️ ET CE QUE LA FICHE MONTRE N'EST PAS CE QUE LA MAQUETTE MONTRE, PARCE QUE LA DONNÉE
+        // N'EXISTE PAS. Le canon affiche « $ 2 400 / $ 180/h / 12% » — trois SCALAIRES BRUTS. Or
+        // (a) R2.2 les interdit en projection joueur, et (b) `DistrictInteriorBuildingDto` n'en
+        // porte aucun : ses champs sont TOUS des bandes qualitatives. Les inventer serait fabriquer
+        // de la donnée. Les trois cases gardent donc leur POSITION et leur RÔLE, et portent les
+        // bandes réelles — même geste que l'archétype en position de nom sur l'écran « LA FAMILLE ».
+        // ⛔ `300f` ÉTAIT UNE SUPPOSITION, PAS UNE LECTURE — et elle rendait la fiche 1,31× trop
+        // grande. La maquette dit `.tel{width:min(392px,92vw)}`. La référence vit désormais dans
+        // `EchelleMaquette`, UNE seule fois pour tout le client : le shell, lui, faisait la faute
+        // INVERSE (valeurs CSS recopiées telles quelles, donc 3,27× trop petit). Deux écrans
+        // voisins, deux échelles fausses en sens contraires — invisible à qui compare un élément
+        // à son homologue, évident dès qu'on compare l'écran ENTIER à l'écran entier.
+
+        /// <summary>Hauteur de `.fiche` MESURÉE sur la maquette (`getBoundingClientRect`), jamais
+        /// estimée depuis les paddings : 169,19 px CSS pour un téléphone de 392 × 696,875.</summary>
+        private const float FicheHauteurCss = 169.19f;
+
+        private RectTransform ficheRoot;
+        private TextMeshProUGUI ficheTitre, ficheType, ficheSortie;
+        private TextMeshProUGUI[] ficheStatValeurs = new TextMeshProUGUI[3];
+        private TextMeshProUGUI[] ficheStatLibelles = new TextMeshProUGUI[3];
+
+        /// <summary>Le bâtiment actuellement ouvert dans la fiche — `null` si elle est fermée.
+        /// Test hook : une falsifiable peut vérifier QUEL bâtiment est ouvert, pas seulement qu'une
+        /// fiche existe.</summary>
+        public string FicheBuildingId { get; private set; }
+        public bool FicheOuverte => ficheRoot != null && ficheRoot.gameObject.activeSelf;
+
+        /// <summary>Une dimension EN PX CSS DE LA MAQUETTE, ramenée en unités de canvas.
+        /// Délègue à `EchelleMaquette` — l'unique référence du client.</summary>
+        private float FD(float valeurMaquette) => MafiaCleanCity.Shell.EchelleMaquette.Px(valeurMaquette, root);
+
+        /// <summary>Variante planchée à 1, RÉSERVÉE aux traits et aux corps de texte.
+        /// ⛔ Jamais sur une grandeur qui peut être négative (retrait, débord) : le plancher en
+        /// retournerait le signe.</summary>
+        private int FDi(float v) => MafiaCleanCity.Shell.EchelleMaquette.PxTrait(v, root);
+
+        private void BuildFiche(Transform parent)
+        {
+            // `.fiche{margin:0 12px 12px}` — une feuille ANCRÉE EN BAS qui recouvre la ville, pas un
+            // panneau dans le flux. Elle vit au-dessus du décor et sous le dock.
+            GameObject go = NewUI("FicheBatiment", parent);
+            ficheRoot = (RectTransform)go.transform;
+            ficheRoot.anchorMin = new Vector2(0f, 0f);
+            ficheRoot.anchorMax = new Vector2(1f, 0f);
+            ficheRoot.pivot = new Vector2(0.5f, 0f);
+            ficheRoot.offsetMin = new Vector2(FD(12f), MafiaCleanCity.Shell.ShellChrome.BottomInsetPx + FD(12f));
+            ficheRoot.offsetMax = new Vector2(-FD(12f), 0f);
+            // ⛔ 112 ÉTAIT UNE ESTIMATION, ET ELLE COUPAIT LES BOUTONS. Mesuré au navigateur sur
+            // la maquette elle-même (`Tools/mesurer-maquette.py`, sortie commitée à côté) :
+            //   `.fiche` = 366,00 × 169,19 px CSS, posée à (13,00 · 424,52) dans un `.tel` de
+            //   392 × 696,875 — donc 34 % plus HAUTE que ce que j'avais posé. Les trois actions
+            //   dépassaient par le bas et le masque les tranchait net.
+            // *Une boîte plus PETITE que son contenu est le miroir de la boîte plus grande : l'une
+            // ment sur la place prise, l'autre ampute — et aucune des deux ne lève d'erreur.*
+            ficheRoot.sizeDelta = new Vector2(ficheRoot.sizeDelta.x, FD(FicheHauteurCss));
+
+            // `background:linear-gradient(180deg,#0c1320ef,#080d17f6)` + `border-radius:14px`
+            // La plaque est CLIPPÉE en rectangle arrondi (le dégradé peint un quad : sans masque,
+            // les angles dépassent — défaut mesuré et fermé sur l'écran « LA FAMILLE »).
+            Image masque = go.AddComponent<Image>();
+            masque.sprite = MafiaCleanCity.Shell.ProceduralUI.RoundedRectMask(FDi(14f));
+            masque.type = Image.Type.Sliced;
+            masque.color = Color.white;
+            Mask m = go.AddComponent<Mask>();
+            m.showMaskGraphic = false;
+
+            GameObject plaqueGo = NewUI("Plaque", go.transform);
+            Stretch((RectTransform)plaqueGo.transform, Vector2.zero, Vector2.zero);
+            Image plaque = plaqueGo.AddComponent<Image>();
+            plaque.sprite = MafiaCleanCity.Shell.ProceduralUI.VerticalGradient(64,
+                DesignTokens.Current.ficheGlassTop, DesignTokens.Current.ficheGlassBottom);
+            plaque.type = Image.Type.Simple;
+            plaque.color = Color.white;
+            plaque.raycastTarget = false;
+
+            // `.fiche::after` — le filet laiton du bord HAUT, qui s'estompe aux deux bouts
+            // (`transparent, laiton 30%, laiton 70%, transparent`), en retrait de 14 de chaque côté.
+            GameObject filetGo = NewUI("Filet", go.transform);
+            RectTransform filetRt = (RectTransform)filetGo.transform;
+            filetRt.anchorMin = new Vector2(0f, 1f);
+            filetRt.anchorMax = new Vector2(1f, 1f);
+            filetRt.pivot = new Vector2(0.5f, 1f);
+            filetRt.offsetMin = new Vector2(FD(14f), -FD(1f));
+            filetRt.offsetMax = new Vector2(-FD(14f), 0f);
+            Image filet = filetGo.AddComponent<Image>();
+            filet.sprite = MafiaCleanCity.Shell.ProceduralUI.HorizontalFade(256, 0.30f, 0f);
+            filet.color = DesignTokens.Current.hudHairlineGold;
+            filet.raycastTarget = false;
+
+            GameObject corps = NewUI("Corps", go.transform);
+            RectTransform corpsRt = (RectTransform)corps.transform;
+            corpsRt.anchorMin = Vector2.zero;
+            corpsRt.anchorMax = Vector2.one;
+            corpsRt.offsetMin = new Vector2(FD(16f), FD(14f));
+            corpsRt.offsetMax = new Vector2(-FD(16f), -FD(13f));   // `padding:13px 16px 14px`
+            VerticalLayoutGroup v = corps.AddComponent<VerticalLayoutGroup>();
+            v.spacing = 0f;
+            v.childControlWidth = true; v.childControlHeight = true;
+            v.childForceExpandWidth = true; v.childForceExpandHeight = false;
+
+            // ── titre ──────────────────────────────────────────────────────────────────────────
+            ficheTitre = NewText("Titre", corps.transform, "", FDi(16f), TextAlignmentOptions.Center);
+            ficheTitre.font = DesignTokens.Current.hudSerifFont;
+            ficheTitre.characterSpacing = 13f;                       // `.13em`
+            ficheTitre.color = DesignTokens.Current.hudMoneyGold;     // --or-vif
+            ficheTitre.fontFeatures.Clear();
+            AjouterHauteur(ficheTitre.gameObject, FD(20f));
+
+            ficheType = NewText("Type", corps.transform, "", FDi(9f), TextAlignmentOptions.Center);
+            ficheType.characterSpacing = 20f;                        // `.2em`
+            ficheType.color = DesignTokens.Current.hudCremeSecondary;
+            AjouterHauteur(ficheType.gameObject, FD(13f));
+
+            // ── les trois cases, séparées par des filets verticaux ────────────────────────────
+            GameObject stats = NewUI("Stats", corps.transform);
+            HorizontalLayoutGroup sh = stats.AddComponent<HorizontalLayoutGroup>();
+            sh.spacing = 0f;
+            sh.childControlWidth = true; sh.childControlHeight = true;
+            sh.childForceExpandWidth = true; sh.childForceExpandHeight = false;
+            sh.padding = new RectOffset(0, 0, FDi(10f), FDi(12f));    // `.stats{margin:10px 0 12px}`
+            AjouterHauteur(stats, FD(46f));
+
+            for (int i = 0; i < 3; i++)
+            {
+                GameObject caseGo = NewUI($"Stat{i}", stats.transform);
+                VerticalLayoutGroup cv = caseGo.AddComponent<VerticalLayoutGroup>();
+                cv.spacing = FD(2f);
+                cv.childControlWidth = true; cv.childControlHeight = true;
+                cv.childForceExpandWidth = true; cv.childForceExpandHeight = false;
+                cv.childAlignment = TextAnchor.MiddleCenter;
+
+                // `.stats>div{border-right:1px solid #ffffff10}` — sauf la dernière.
+                if (i < 2)
+                {
+                    GameObject sep = NewUI("Sep", caseGo.transform);
+                    sep.AddComponent<LayoutElement>().ignoreLayout = true;
+                    RectTransform sr = (RectTransform)sep.transform;
+                    sr.anchorMin = new Vector2(1f, 0f);
+                    sr.anchorMax = new Vector2(1f, 1f);
+                    sr.pivot = new Vector2(1f, 0.5f);
+                    sr.sizeDelta = new Vector2(FD(1f), 0f);
+                    sr.anchoredPosition = Vector2.zero;
+                    Image si = sep.AddComponent<Image>();
+                    Color sc = Color.white; sc.a = 0.063f;            // #ffffff10
+                    si.color = sc;
+                    si.raycastTarget = false;
+                }
+
+                ficheStatValeurs[i] = NewText("Valeur", caseGo.transform, "—", FDi(14.5f), TextAlignmentOptions.Center);
+                ficheStatValeurs[i].font = DesignTokens.Current.hudSerifFont;
+                ficheStatValeurs[i].color = DesignTokens.Current.hudCreme;
+                AjouterHauteur(ficheStatValeurs[i].gameObject, FD(18f));
+
+                ficheStatLibelles[i] = NewText("Libelle", caseGo.transform, "", FDi(8.5f), TextAlignmentOptions.Center);
+                ficheStatLibelles[i].characterSpacing = 14f;          // `.14em`
+                ficheStatLibelles[i].color = DesignTokens.Current.hudCremeSecondary;
+                AjouterHauteur(ficheStatLibelles[i].gameObject, FD(11f));
+            }
+
+            // ── les trois actions ─────────────────────────────────────────────────────────────
+            GameObject actions = NewUI("Actions", corps.transform);
+            HorizontalLayoutGroup ah = actions.AddComponent<HorizontalLayoutGroup>();
+            ah.spacing = FD(9f);                                      // `.actions{gap:9px}`
+            ah.childControlWidth = true; ah.childControlHeight = true;
+            ah.childForceExpandWidth = true; ah.childForceExpandHeight = true;
+            AjouterHauteur(actions, FD(34f));
+
+            BuildFicheBouton(actions.transform, "COLLECTER", or: true, action: () => ActionFiche("COLLECTER"));
+            BuildFicheBouton(actions.transform, "BLANCHIR", or: false, action: () => ActionFiche("BLANCHIR"));
+            BuildFicheBouton(actions.transform, "AMÉLIORER", or: false, action: () => ActionFiche("AMÉLIORER"));
+
+            ficheSortie = NewText("Sortie", corps.transform, "", FDi(9f), TextAlignmentOptions.Center);
+            ficheSortie.color = DesignTokens.Current.hudCremeSecondary;
+            AjouterHauteur(ficheSortie.gameObject, FD(12f));
+
+            go.SetActive(false);
+        }
+
+        private static void AjouterHauteur(GameObject go, float h)
+        {
+            LayoutElement le = go.GetComponent<LayoutElement>() ?? go.AddComponent<LayoutElement>();
+            le.minHeight = h; le.preferredHeight = h; le.flexibleHeight = 0f;
+        }
+
+        /// <summary>Un bouton de la fiche. `.btn.or` = le SEUL coloré (dégradé d'or, encre sombre) ;
+        /// `.btn.ligne` = un bouton-filet. Le canon insiste : « une seule action colorée ».</summary>
+        private void BuildFicheBouton(Transform parent, string libelle, bool or, UnityEngine.Events.UnityAction action)
+        {
+            GameObject go = NewUI($"Btn_{libelle}", parent);
+            Image fond = go.AddComponent<Image>();
+            if (or)
+            {
+                // `background:linear-gradient(180deg,#e9c56b,#c99a37); border:1px solid #8a611c`
+                fond.sprite = MafiaCleanCity.Shell.ProceduralUI.VerticalGradient(64,
+                    DesignTokens.Current.ficheCtaOrHaut, DesignTokens.Current.ficheCtaOrBas);
+                fond.type = Image.Type.Simple;
+                fond.color = Color.white;
+            }
+            else
+            {
+                // `.btn.ligne{background:#ffffff0a; border:1px solid #ffffff2a}`
+                Color voile = Color.white; voile.a = 0.039f;
+                fond.color = voile;
+            }
+
+            GameObject masqueGo = NewUI("Coins", go.transform);
+            Stretch((RectTransform)masqueGo.transform, Vector2.zero, Vector2.zero);
+            masqueGo.AddComponent<LayoutElement>().ignoreLayout = true;
+            Image trait = masqueGo.AddComponent<Image>();
+            Color bord = or ? DesignTokens.Current.ficheCtaOrBord : Color.white;
+            if (!or) bord.a = 0.165f;                                  // #ffffff2a
+            trait.sprite = MafiaCleanCity.Shell.ProceduralUI.RoundedRectOutline(FDi(9f), FD(1f), bord);
+            trait.type = Image.Type.Sliced;
+            trait.color = Color.white;
+            trait.raycastTarget = false;
+
+            TextMeshProUGUI t = NewText("Texte", go.transform, libelle, FDi(11.5f), TextAlignmentOptions.Center);
+            t.characterSpacing = 12f;                                  // `.12em`
+            t.fontStyle = FontStyles.Bold;                             // `font-weight:600`
+            t.color = or ? DesignTokens.Current.ficheCtaOrEncre : DesignTokens.Current.hudCreme;
+            Stretch((RectTransform)t.transform, Vector2.zero, Vector2.zero);
+            t.raycastTarget = false;
+
+            Button b = go.AddComponent<Button>();
+            b.transition = Selectable.Transition.None;
+            b.targetGraphic = fond;
+            b.onClick.AddListener(action);
+        }
+
+        /// <summary>Ouvre la fiche sur un bâtiment. Les trois cases gardent la POSITION et le RÔLE
+        /// du canon ; leur contenu est la bande RÉELLE, jamais un montant inventé.</summary>
+        public void OuvrirFiche(DistrictInteriorBuildingDto b)
+        {
+            if (ficheRoot == null || b == null) return;
+            FicheBuildingId = b.building;
+
+            ficheTitre.text = LibellesBatiment.Type(b.operational_type);
+            ficheType.text = LibellesBatiment.Conversion(b.conversion_band);
+
+            // `$ 2 400 / À COLLECTER` ⇒ la bande de revenu : le bâtiment rapporte-t-il ?
+            ficheStatValeurs[0].text = LibellesBatiment.Revenu(b.revenue_band);
+            ficheStatLibelles[0].text = "REVENU";
+            // `$ 180/h / REVENUS` ⇒ la chaîne est-elle raccordée ? (un bâtiment qui gagne sans
+            // chaîne ne verse rien — c'est l'information utile, pas un débit inventé)
+            ficheStatValeurs[1].text = LibellesBatiment.Chaine(b.revenue_chain);
+            ficheStatLibelles[1].text = "CHAÎNE";
+            // `12% / HEAT LOCAL` ⇒ ce DTO ne porte AUCUNE chaleur par bâtiment (mesuré : 13 champs,
+            // aucun heat). L'état de l'ouvrage est la bande qui décide vraiment de son sort.
+            ficheStatValeurs[2].text = LibellesBatiment.Etat(b.condition_band);
+            ficheStatLibelles[2].text = "ÉTAT";
+            ficheStatValeurs[2].color = b.condition_band == "SOUND"
+                ? DesignTokens.Current.hudCreme : DesignTokens.Current.accentDanger;
+
+            ficheSortie.text = "";
+            ficheRoot.gameObject.SetActive(true);
+        }
+
+        public void FermerFiche()
+        {
+            FicheBuildingId = null;
+            if (ficheRoot != null) ficheRoot.gameObject.SetActive(false);
+        }
+
+        /// <summary>⚠️ CE QUE CHAQUE ACTION FAIT VRAIMENT, MESURÉ AVANT D'ÊTRE CÂBLÉ.
+        ///   · COLLECTER  — `POST /v1/operational/dealer/:id/collect` EXISTE, joueur, sous
+        ///     `JwtAuthGuard`. Mais il prend un id de DEALER, pas de bâtiment ; la jointure
+        ///     bâtiment→dealer n'est pas projetée dans `DistrictInteriorBuildingDto`.
+        ///   · BLANCHIR   — `POST /v1/operational/laundering/inject` existe et est joueur, et rend
+        ///     **404 POUR TOUT LE MONDE, DANS TOUS LES ENVIRONNEMENTS** : rien ne crée jamais de
+        ///     ligne `safehouses` (0 écrivain dans `services/`, 0 dans les 147 migrations — chaîne
+        ///     morte TD-358). Le câbler livrerait un bouton qui échoue toujours.
+        ///   · AMÉLIORER  — l'upgrade de palier vit sur `BuildingCardController`, un autre écran.
+        /// ⇒ Tant qu'une action n'a pas son chemin PROUVÉ de bout en bout, elle DIT son état au lieu
+        /// de faire semblant. Un bouton qui ne fait rien est pire qu'un bouton absent — il promet
+        /// une action ; un bouton qui NOMME ce qui lui manque est honnête et se referme tout seul
+        /// le jour où le maillon arrive.</summary>
+        private void ActionFiche(string laquelle)
+        {
+            if (ficheSortie == null) return;
+            switch (laquelle)
+            {
+                case "COLLECTER":
+                    ficheSortie.text = "Collecte : ce bâtiment n'expose pas encore son vendeur.";
+                    break;
+                case "BLANCHIR":
+                    ficheSortie.text = "Blanchiment : aucune planque — la filière n'est pas ouverte.";
+                    break;
+                default:
+                    ficheSortie.text = "Amélioration : à ouvrir depuis la fiche opérationnelle.";
+                    break;
+            }
         }
 
         private static GameObject NewUI(string name, Transform parent)

@@ -279,10 +279,26 @@ namespace MafiaCleanCity.CityMap.Tests
                 // pas (la racine ne porte QUE des nœuds nommés, aucun nœud parasite) : seul le
                 // compte bouge, et il est ré-énuméré ci-dessous pour que le test dise QUELS nœuds
                 // il attend plutôt qu'un nombre nu.
-                Assert.AreEqual(3, diorama.ScreenRoot.childCount,
-                    $"{c.phase} — 3 nœuds nommés (backdrop/titre/scène), même forme que tout palier héros (pp-F5)");
-                Assert.IsNotNull(diorama.ScreenRoot.Find("DistrictSceneBackdrop"),
-                    $"{c.phase} — le backdrop plein-écran vit à la RACINE (hors de la scène mobile)");
+                // RE-AMENDÉ 2026-08-25 — ET LA FORME CHANGE, PAS SEULEMENT LE NOMBRE. C'est la
+                // DEUXIÈME fois que ce compte bouge pour une raison parfaitement légitime (2 → 3
+                // quand le backdrop est sorti de la scène mobile, 3 → 4 avec la fiche bâtiment).
+                // Un compte nu ne dit pas ce qu'il compte : il rougit aussi fort pour un nœud
+                // parasite que pour un nœud voulu, et il oblige à relever la constante sans
+                // réfléchir — au bout de deux fois, la garde ne surveille plus rien.
+                //   ⇒ La propriété réellement voulue n'a JAMAIS été « il y en a N » : c'est
+                //     « la racine ne porte QUE des nœuds NOMMÉS, aucun parasite ». On l'asserte
+                //     donc directement, par ÉGALITÉ D'ENSEMBLES sur les noms — jamais un `contains`
+                //     (qui resterait vert avec un intrus en plus), jamais un compte (qui reste vert
+                //     si un nœud attendu disparaît pendant qu'un intrus apparaît).
+                var attendus = new System.Collections.Generic.SortedSet<string>
+                    { "DistrictSceneBackdrop", "DistrictTitle", "DistrictScene", "FicheBatiment" };
+                var trouves = new System.Collections.Generic.SortedSet<string>();
+                for (int i = 0; i < diorama.ScreenRoot.childCount; i++)
+                    trouves.Add(diorama.ScreenRoot.GetChild(i).name);
+                Assert.AreEqual(string.Join(" · ", attendus), string.Join(" · ", trouves),
+                    $"{c.phase} — la racine ne porte QUE ses nœuds nommés (pp-F5). Un nom EN TROP " +
+                    "est un nœud parasite ; un nom MANQUANT est une partie de l'écran qui a disparu " +
+                    "— et un compte nu ne savait distinguer ni l'un ni l'autre.");
 
                 Transform fondT = sceneT.Find("DistrictBackgroundImage");
                 Assert.IsNotNull(fondT, $"{c.phase} — un fond réel est rendu (jamais de bare band ni de vide)");

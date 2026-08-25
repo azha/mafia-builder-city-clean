@@ -436,6 +436,9 @@ namespace MafiaCleanCity.Shell
             if (TopBarSlot == null || TabBarRoot == null) return;
             Canvas.ForceUpdateCanvases();
             (float topSafe, float bottomSafe) = SafeAreaInsetsLocal();
+            // `EffectiveBottomOverhangPx` sort désormais en unités d'ÉCRAN (la conversion vit
+            // chez le bandeau, qui connaît son échelle) — donc additionnable tel quel avec
+            // `rect.height`, sans qu'aucun appelant ait à s'en souvenir.
             float debord = TopBar != null ? TopBar.EffectiveBottomOverhangPx : 0f;
             ShellChrome.PublierInsets(topSafe + TopBarSlot.rect.height + debord,
                                       bottomSafe + TabBarRoot.rect.height);
@@ -499,21 +502,54 @@ namespace MafiaCleanCity.Shell
             TopBarSlot.anchorMin = new Vector2(0f, 1f);
             TopBarSlot.anchorMax = new Vector2(1f, 1f);
             TopBarSlot.pivot = new Vector2(0.5f, 1f);
-            TopBarSlot.sizeDelta = new Vector2(0, 56);
+            // ⛔⛔ LE BANDEAU ÉTAIT 3,27× TROP PETIT, POUR LA MÊME RAISON QUE LE DOCK : ses ~40
+            // constantes sont des px CSS de la maquette, posées telles quelles en unités de canvas.
+            // Mesuré au canon : `.medaillon` fait 64 px CSS sur un téléphone de 392 — soit 16,3 %
+            // de la largeur. Le manomètre livré en faisait 68 unités sur 1280, soit 5,3 %.
+            //
+            // ⇒ LE CORRECTIF N'ÉDITE AUCUNE DE CES 40 CONSTANTES, et c'est délibéré. Les retoucher
+            // une à une, c'est quarante occasions de casser un rapport interne — et le manomètre
+            // en porte plusieurs, déjà payés (l'arc échantillonné à un ratio périmé, la ligne de
+            // base sous le libellé). La forme retenue est STRUCTURELLE : le bandeau continue de
+            // vivre en COORDONNÉES DE MAQUETTE (392 de large), et un seul `localScale` le porte à
+            // l'écran. Toutes ses proportions internes sont préservées PAR CONSTRUCTION, et une
+            // seule variable change.
+            TopBarSlot.sizeDelta = new Vector2(0, Px(TopBarHauteurCss));
             // Zone sûre — décale la barre SOUS une encoche/caméra perforée (Screen.safeArea.yMax <
             // Screen.height). 0 sur tout appareil/éditeur SANS encoche (safeArea == plein écran) —
             // additif, jamais une refonte d'ancrage.
             (float topSafeInset, _) = SafeAreaInsetsLocal();
             TopBarSlot.anchoredPosition = new Vector2(0f, -topSafeInset);
-            topBarGo.AddComponent<Image>().color = DesignTokens.Current.surfaceCard;
+            // ⛔ TRANSPARENT. `surfaceCard` posait un aplat OPAQUE sous le bandeau, et il
+            // annulait exactement ce que le bandeau est : `.barre{background:linear-gradient(
+            // 180deg,#0b111be8,#0d131ed8)}` — un VERRE à 0,91/0,85 d'opacité, à travers lequel
+            // l'art se devine. Les tokens `hudBarGlassTop/Bottom` portaient déjà les bonnes
+            // valeurs : c'est l'aplat du dessous qui les rendait inopérantes.
+            // *Un dispositif correct peut être annulé par un voisin qui n'a rien à voir avec lui.*
+            Color fondBandeau = DesignTokens.Current.surfaceCard; fondBandeau.a = 0f;
+            topBarGo.AddComponent<Image>().color = fondBandeau;
             // W3.U1 C2 — TopBarController lives on a CHILD GameObject (never directly on TopBarSlot
             // itself): its own BuildLayout() stretches ITS OWN RectTransform to fill its parent
             // (design: "no Canvas discovery, builds into whatever RectTransform it's parented under")
             // — attaching it straight to TopBarSlot would have that self-stretch OVERWRITE the
             // top-strip anchors/size just set above. Built ONCE here, never touched by
             // ActivateTab/UnmountCurrentTenant (it is NOT a tenant — it survives every tab switch).
+            // Le nœud d'échelle : large de `TopBarLargeurCss` unités (la largeur du téléphone de la
+            // maquette), donc `TopBarController` — qui étire SA PROPRE rect pour remplir son parent
+            // — se retrouve à bâtir dans le repère exact où ses constantes ont un sens.
+            GameObject echelleGo = new GameObject("TopBarEchelle", typeof(RectTransform));
+            echelleGo.transform.SetParent(TopBarSlot, false);
+            RectTransform echelleRt = (RectTransform)echelleGo.transform;
+            echelleRt.anchorMin = new Vector2(0.5f, 0.5f);
+            echelleRt.anchorMax = new Vector2(0.5f, 0.5f);
+            echelleRt.pivot = new Vector2(0.5f, 0.5f);
+            echelleRt.sizeDelta = new Vector2(TopBarLargeurCss, TopBarHauteurCss);
+            echelleRt.anchoredPosition = Vector2.zero;
+            float k = FacteurEchelle();
+            echelleRt.localScale = new Vector3(k, k, 1f);
+
             GameObject topBarContentGo = new GameObject("TopBarContent", typeof(RectTransform));
-            topBarContentGo.transform.SetParent(TopBarSlot, false);
+            topBarContentGo.transform.SetParent(echelleGo.transform, false);
             TopBar = topBarContentGo.AddComponent<TopBarController>();
 
             // 3) TabBarRoot — the bottom nav strip, LAST sibling (topmost render order).
@@ -534,6 +570,19 @@ namespace MafiaCleanCity.Shell
         // retirer — un token sans consommateur peut redevenir un consommateur légitime demain) mais
         // n'est plus RÉFÉRENCÉ ici : l'onglet actif se signale par le laiton (filet haut + libellé
         // teinté), jamais par un pavé de couleur pleine (doctrine « l'or jamais en aplat »).
+        /// <summary>Largeur du repère dans lequel `TopBarController` est autoré : la largeur du
+        /// téléphone de la maquette. REUSE — c'est la même référence que `EchelleMaquette`.</summary>
+        private const float TopBarLargeurCss = EchelleMaquette.LargeurMaquetteCss;
+
+        /// <summary>Hauteur du bandeau, MESURÉE au canon : le filet laiton tombe à 51,0 px CSS
+        /// (`Tools/juge-visuel/ecran-principal/`, détection du laiton sur le rendu de référence).
+        /// Le manomètre DÉBORDE sous cette limite — c'est voulu, et c'est ce que
+        /// `EffectiveBottomOverhangPx` mesure.</summary>
+        private const float TopBarHauteurCss = 52f;   // `.barre{height:52px}` (mon relevé du filet : 51,0 — d'accord à 1 px près)
+
+        /// <summary>Le facteur unique px CSS de maquette → unités de canvas.</summary>
+        private float FacteurEchelle() => Px(1f);
+
         private const float TabBarCornerRadiusPx = 10f; // REUSE — même rayon que TopBarController.BarCornerRadiusPx
         private const float TabBarHairlineThicknessPx = 2f; // REUSE — même épaisseur que le filet du TopBar
         private const float TabActiveIndicatorThicknessPx = 3f;
@@ -549,96 +598,71 @@ namespace MafiaCleanCity.Shell
             // 76 et non 64 : le dock de la maquette empile un ROND et son libellé, là où l'ancien
             // bouton n'avait qu'un texte centré. Les insets du chrome suivent tout seuls — ils sont
             // dérivés de `TabBarRoot.rect.height`, jamais d'une constante recopiée.
-            TabBarRoot.sizeDelta = new Vector2(0, 72);
+            TabBarRoot.sizeDelta = new Vector2(0, Px(TabDockHauteurCss));
             // Zone sûre — décale la barre AU-DESSUS d'une barre de gestes système (Screen.safeArea
             // .yMin > 0). Même mécanisme que TopBarSlot ci-dessus, même provider.
             (_, float bottomSafeInset) = SafeAreaInsetsLocal();
             TabBarRoot.anchoredPosition = new Vector2(0f, bottomSafeInset);
 
-            // Verre fumé bleu nuit, coins arrondis — REUSE exact du patron
-            // `TopBarController.BuildBarBackground` (Mask+RoundedRectMask+VerticalGradientImage).
-            // `TabBarMask` PREMIER enfant (rendu SOUS tout le reste) et exclu du HorizontalLayoutGroup
-            // ci-dessous (`LayoutElement.ignoreLayout` — sinon le HLG le traiterait comme un 6e
-            // bouton et lui disputerait de la largeur).
-            // ── Fond d'assise : la barre ne doit RIEN laisser passer sous elle ────────────────────
-            // Mesuré au pixel sur la capture de livraison (verdict du juge visuel, 2026-08-22) :
-            // le panneau d'onglets occupait y 1546..1593 d'un écran de 1600, et les **6 dernières
-            // lignes** laissaient voir l'art du district — un liseré teal `(35,59,70)` sur toute la
-            // largeur, dont la couleur CHANGEAIT selon ce qu'il y avait derrière. Quatre lignes de
-            // plus passaient au-dessus du panneau, entre lui et le filet d'or.
-            // Deux causes cumulées, aucune fautive en soi : le masque à coins arrondis n'atteint pas
-            // les bords sur toute la largeur, et la barre est délibérément décalée au-dessus de la
-            // zone sûre système. L'interstice est donc VOULU — mais il doit montrer du CHROME, pas
-            // le décor du locataire.
-            // Ce panneau est un frère ANTÉRIEUR du masque (rendu dessous), étiré du haut de la barre
-            // jusqu'au bord BAS de l'écran, quelle que soit la zone sûre.
-            GameObject assiseGo = new GameObject("TabBarAssise", typeof(RectTransform), typeof(CanvasRenderer));
-            assiseGo.transform.SetParent(tabBarGo.transform, false);
-            RectTransform assiseRt = (RectTransform)assiseGo.transform;
-            assiseRt.anchorMin = new Vector2(0f, 0f);
-            assiseRt.anchorMax = new Vector2(1f, 1f);
-            assiseRt.offsetMin = new Vector2(0f, -(bottomSafeInset + 2f)); // jusqu'au bord bas, marge comprise
-            assiseRt.offsetMax = Vector2.zero;
-            Image assiseImg = assiseGo.AddComponent<Image>();
-            // REUSE du stop BAS du verre de barre (`hudBarGlassBottom`), forcé OPAQUE : le token
-            // porte un alpha de 0,847 pour le VERRE, mais une assise translucide laisserait
-            // justement passer ce qu'elle existe pour cacher — le monde dégénéré de ce correctif.
-            Color verre = DesignTokens.Current.hudBarGlassBottom;
-            assiseImg.color = new Color(verre.r, verre.g, verre.b, 1f);
-            assiseImg.raycastTarget = false;
-            assiseGo.AddComponent<LayoutElement>().ignoreLayout = true;
-
-            GameObject maskGo = new GameObject("TabBarMask", typeof(RectTransform), typeof(CanvasRenderer));
-            maskGo.transform.SetParent(tabBarGo.transform, false);
-            Stretch((RectTransform)maskGo.transform, Vector2.zero, Vector2.zero);
-            Image maskImg = maskGo.AddComponent<Image>();
-            maskImg.sprite = ProceduralUI.RoundedRectMask((int)TabBarCornerRadiusPx);
-            maskImg.type = Image.Type.Sliced;
-            maskImg.color = Color.white;
-            maskImg.raycastTarget = false;
-            maskGo.AddComponent<LayoutElement>().ignoreLayout = true;
-            Mask mask = maskGo.AddComponent<Mask>();
-            mask.showMaskGraphic = false;
-            maskGo.transform.SetAsFirstSibling();
-
-            GameObject bgGo = new GameObject("TabBarBackground", typeof(RectTransform), typeof(CanvasRenderer));
-            bgGo.transform.SetParent(maskGo.transform, false);
-            Stretch((RectTransform)bgGo.transform, Vector2.zero, Vector2.zero);
-            VerticalGradientImage barBackground = bgGo.AddComponent<VerticalGradientImage>();
-            barBackground.raycastTarget = false;
-            barBackground.SetColors(DesignTokens.Current.hudBarGlassTop, DesignTokens.Current.hudBarGlassBottom);
-
-            // Filet laiton — bord HAUT de la TabBar (la couture qui la sépare du contenu, symétrique
-            // du filet BAS du TopBar ; même token `hudHairlineGold`, jamais un second or).
-            GameObject hlGo = new GameObject("Hairline", typeof(RectTransform));
-            hlGo.transform.SetParent(tabBarGo.transform, false);
-            RectTransform hlRect = (RectTransform)hlGo.transform;
-            hlRect.anchorMin = new Vector2(0f, 1f);
-            hlRect.anchorMax = new Vector2(1f, 1f);
-            hlRect.pivot = new Vector2(0.5f, 1f);
-            hlRect.sizeDelta = new Vector2(0f, TabBarHairlineThicknessPx);
-            hlRect.anchoredPosition = Vector2.zero;
-            Image tabBarHairlineImg = hlGo.AddComponent<Image>();
-            tabBarHairlineImg.color = DesignTokens.Current.hudHairlineGold;
-            // Même fondu que le filet du bandeau haut (relevé sur la maquette : rampe linéaire sur
-            // les 20 % extrêmes, de ~0,10 à 1,00). Les deux barres se répondent : un filet qui meurt
-            // dans les marges des deux côtés de l'écran, jamais un trait qui le coupe en deux.
-            tabBarHairlineImg.sprite = ProceduralUI.HorizontalFade(256, 0.20f, 0f);
-            tabBarHairlineImg.type = Image.Type.Simple;
-            tabBarHairlineImg.raycastTarget = false;
-            hlGo.AddComponent<LayoutElement>().ignoreLayout = true;
+            // ⚠️⚠️ CE N'EST PLUS UNE BARRE — RULING USER (2026-08-25) : « tu vois bien que ce sont
+            // des BULLES et pas une barre ». Le canon le dit aussi, et je ne l'avais pas lu :
+            // `hud-brennar.html` l.107-108 donne au dock `background: linear-gradient(180deg,
+            // transparent, #070b12d8 40%)` — un simple assombrissement vers le bas. **Pas d'assise
+            // opaque, pas de verre à coins arrondis, pas de filet laiton.** Les ronds FLOTTENT
+            // au-dessus de la ville.
+            //
+            // Ce qui part, et pourquoi c'est justifié de le retirer :
+            //   · `TabBarAssise` — un panneau opaque posé après qu'un juge a mesuré l'art du
+            //     district fuyant par les 6 dernières lignes. Le dégradé du canon règle le même
+            //     problème autrement : il ne CACHE pas la ville, il l'assombrit. La fuite était un
+            //     liseré teal dont la couleur changeait selon le décor ; sous un dégradé qui va
+            //     jusqu'au bord, il n'y a plus d'interstice à faire fuir.
+            //   · `TabBarMask` + `TabBarBackground` + `Hairline` — la « symétrie avec le bandeau
+            //     haut » était NOTRE doctrine, écrite quand nous croyions que la maquette n'avait
+            //     aucune barre d'onglets. Elle en a une, et ce n'est pas une barre.
+            // *Un choix pris faute de canon se rouvre le jour où le canon apparaît.*
+            GameObject fonduGo = new GameObject("DockFondu", typeof(RectTransform), typeof(CanvasRenderer));
+            fonduGo.transform.SetParent(tabBarGo.transform, false);
+            RectTransform fonduRt = (RectTransform)fonduGo.transform;
+            fonduRt.anchorMin = new Vector2(0f, 0f);
+            fonduRt.anchorMax = new Vector2(1f, 1f);
+            // Jusqu'au bord BAS de l'écran, zone sûre comprise : un dégradé qui s'arrête avant le
+            // bord rouvrirait exactement l'interstice que l'assise fermait.
+            fonduRt.offsetMin = new Vector2(0f, -(bottomSafeInset + 2f));
+            fonduRt.offsetMax = Vector2.zero;
+            Image fonduImg = fonduGo.AddComponent<Image>();
+            // `linear-gradient(180deg, transparent, #070b12d8 40%)` : transparent en haut, opaque à
+            // 84,7 % dès 40 % de la hauteur — donc un plateau sur les 60 % du bas.
+            Color sombre = DesignTokens.Current.hudBarGlassBottom;
+            Color clair = sombre; clair.a = 0f;
+            fonduImg.sprite = ProceduralUI.VerticalGradient(64, clair, sombre);
+            fonduImg.type = Image.Type.Simple;
+            fonduImg.color = Color.white;
+            fonduImg.raycastTarget = false;
+            fonduGo.AddComponent<LayoutElement>().ignoreLayout = true;
+            fonduGo.transform.SetAsFirstSibling();
 
             HorizontalLayoutGroup hlg = tabBarGo.AddComponent<HorizontalLayoutGroup>();
-            hlg.padding = new RectOffset(8, 8, 7, 10);   // le compte ci-dessus : 7 + 36 + 7 + 11 + 10 = 71
-            hlg.spacing = 19;                            // `.dock{gap:22px}` × 0,864
+            hlg.padding = new RectOffset(0, 0,
+                Mathf.RoundToInt(Px(TabDockPadHautCss)), Mathf.RoundToInt(Px(TabDockPadBasCss)));
+            hlg.spacing = Px(TabDockEcartCss);            // `.dock{gap:22px}`
             hlg.childAlignment = TextAnchor.UpperCenter;
             hlg.childControlWidth = true;
             hlg.childControlHeight = true;
-            hlg.childForceExpandWidth = true;
+            // `.dock{justify-content:center}` — les bulles se GROUPENT au centre, elles ne se
+            // partagent pas la largeur. Étirées, ce ne sont plus des bulles mais des colonnes.
+            hlg.childForceExpandWidth = false;
             hlg.childForceExpandHeight = false;
 
+            // ⚠️ QUATRE BULLES, PAS CINQ — canon §6 : « Dock — 4 ronds gravés, SANS la Carte. On est
+            // déjà sur la carte : elle sort du dock. » Notre onglet `City` est cette Carte, et
+            // l'écran de district porte déjà « ← Carte » dans son bandeau : la destination reste
+            // atteignable, elle ne prend simplement plus une bulle.
+            // Les libellés du canon (Empire · Famille · Marché · Plus) désignent des écrans qui ne
+            // se recouvrent pas exactement avec les nôtres ; on garde les nôtres, qui pointent vers
+            // des écrans RÉELLEMENT montés — inventer « Marché » pour un écran qui n'existe pas
+            // serait un bouton qui ment.
             AddTabButton(Tab.Home, "Accueil");
-            AddTabButton(Tab.City, "Ville");
             AddTabButton(Tab.Org, "Famille");
             AddTabButton(Tab.Pipeline, "Filière");
             AddTabButton(Tab.More, "Plus");
@@ -652,11 +676,39 @@ namespace MafiaCleanCity.Shell
         //   7 (padding haut) + 36 (rond) + 7 (écart) + 11 (libellé) + 10 (padding bas) = 71 ≤ 72.
         // Un rond n'est un cercle que si RIEN ne le comprime : sa hauteur est la première victime
         // d'un conteneur trop court, et le défaut se lit comme un choix de forme.
-        private const float TabDockRondPx = 36f;
-        private const float TabDockGapPx = 7f;            // le tiret d'actif vit DANS cet écart
-        private const float TabDockLabelSizePx = 8f;
-        private const float TabDockLabelHeightPx = 11f;
-        private const float TabDockPointeWidthPx = 12f;   // 14 × 0,864
+        // ⛔⛔ CES VALEURS SONT EN PX CSS DE LA MAQUETTE, ET ELLES NE SONT PLUS RECOPIÉES
+        // TELLES QUELLES EN UNITÉS DE CANVAS. C'était le défaut, et il était systématique :
+        // `36f` était posé comme unité de canvas, donc rendu sur un écran de 1280 unités — soit
+        // 2,8 % de la largeur, là où le canon donne 46/392 = 11,7 %. **Le dock sortait 4,2× trop
+        // petit**, et c'est ce que l'user a vu (« ce sont des bulles et pas une barre » : à cette
+        // taille, une bulle est une pastille). Les valeurs ci-dessous sont désormais les valeurs
+        // EXACTES du canon, converties par `EchelleMaquette.Px` au moment de bâtir.
+        //   `hud-brennar.html` : `.dockb .rond{width:46px;height:46px}` · `.dockb{gap:5px;
+        //   font-size:8.5px}` · `.dockb .pointe{width:14px;height:2px;bottom:-4px}` ·
+        //   `.dock{gap:22px;padding:10px 0 16px}` · `.dockb .rond img{width:20px;height:20px}`
+        private const float TabDockRondCss = 46f;
+        private const float TabDockGapCss = 5f;            // `.dockb{gap:5px}` — rond → libellé
+        private const float TabDockLabelSizeCss = 8.5f;
+        // 13,17 et non 11 : la SOMME des termes doit rendre la hauteur MESURÉE du dock
+        // (`.dock` = 390 × 90,17 px CSS au navigateur). 90,17 − 10 − 46 − 5 − 16 = 13,17.
+        private const float TabDockLabelHeightCss = 13.17f;
+        private const float TabDockPointeWidthCss = 14f;
+        private const float TabDockPointeHeightCss = 2f;
+        private const float TabDockPointeBasCss = 4f;      // `bottom:-4px`
+        private const float TabDockEcartCss = 22f;         // `.dock{gap:22px}`
+        private const float TabDockPadHautCss = 10f;
+        private const float TabDockPadBasCss = 16f;
+        /// <summary>10 + 46 + 5 + 11 + 16 = 88 px CSS. Écrit comme une SOMME de ses termes plutôt
+        /// que comme un nombre : un rond comprimé devient une ellipse, et le premier symptôme
+        /// d'un conteneur trop court est une forme, pas une erreur.</summary>
+        private const float TabDockHauteurCss =
+            TabDockPadHautCss + TabDockRondCss + TabDockGapCss + TabDockLabelHeightCss + TabDockPadBasCss;
+
+        /// <summary>Px CSS de la maquette → unités de canvas, sur la racine PLEIN ÉCRAN du shell.
+        /// Passer autre chose que le canvas (un panneau, une barre) diviserait toute l'échelle
+        /// par un facteur muet — c'est la faute du « spacing corrigé sur le mauvais conteneur ».</summary>
+        private float Px(float css) =>
+            EchelleMaquette.Px(css, ShellCanvas != null ? (RectTransform)ShellCanvas.transform : null);
 
         /// <summary>Un `LayoutElement` de hauteur fixe — le pendant local de l'helper des écrans
         /// opérationnels, que le shell ne peut pas atteindre (il ne référence pas leurs assemblies).</summary>
@@ -686,7 +738,7 @@ namespace MafiaCleanCity.Shell
             invisible.a = 0f;
             img.color = invisible;
             VerticalLayoutGroup pile = btn.AddComponent<VerticalLayoutGroup>();
-            pile.spacing = TabDockGapPx;
+            pile.spacing = Px(TabDockGapCss);
             pile.padding = new RectOffset(0, 0, 0, 0);
             pile.childAlignment = TextAnchor.UpperCenter;
             // ⚠️ PAS D'EXPANSION HORIZONTALE — sinon le rond devient une ELLIPSE. Mesuré sur
@@ -712,8 +764,9 @@ namespace MafiaCleanCity.Shell
             GameObject rondGo = new GameObject("Rond", typeof(RectTransform));
             rondGo.transform.SetParent(btn.transform, false);
             LayoutElement leRond = rondGo.AddComponent<LayoutElement>();
-            leRond.preferredWidth = TabDockRondPx;
-            leRond.preferredHeight = TabDockRondPx;
+            float rondPx = Px(TabDockRondCss);
+            leRond.preferredWidth = rondPx;
+            leRond.preferredHeight = rondPx;
             leRond.flexibleWidth = 0f;
             Image rondImg = rondGo.AddComponent<Image>();
             rondImg.sprite = ProceduralUI.RadialDisc(128,
@@ -726,7 +779,8 @@ namespace MafiaCleanCity.Shell
             joncGo.transform.SetParent(rondGo.transform, false);
             Stretch((RectTransform)joncGo.transform, Vector2.zero, Vector2.zero);
             Image joncImg = joncGo.AddComponent<Image>();
-            joncImg.sprite = ProceduralUI.Ring(128, 128f / TabDockRondPx, jonc);
+            // `border:1px solid #ffffff22` — UN px CSS, donc mis à l'échelle comme le reste.
+            joncImg.sprite = ProceduralUI.Ring(128, 128f * (Px(1f) / rondPx), jonc);
             joncImg.color = Color.white;
             joncImg.raycastTarget = false;
 
@@ -742,11 +796,19 @@ namespace MafiaCleanCity.Shell
             indicatorRect.anchorMin = new Vector2(0.5f, 1f);
             indicatorRect.anchorMax = new Vector2(0.5f, 1f);
             indicatorRect.pivot = new Vector2(0.5f, 1f);
-            indicatorRect.sizeDelta = new Vector2(TabDockPointeWidthPx, TabActiveIndicatorThicknessPx);
+            indicatorRect.sizeDelta = new Vector2(Px(TabDockPointeWidthCss), Px(TabDockPointeHeightCss));
             // `.pointe{bottom:-4px}` — 3 sous le rond, DANS l'écart qui le sépare du libellé.
             // À 4 avec un écart de 4, il traversait le texte (mesuré sur capture : une barre d'or
             // au milieu de « ACCUEIL »).
-            indicatorRect.anchoredPosition = new Vector2(0f, -(TabDockRondPx + 3f));
+            // `.pointe{position:absolute;bottom:-4px}` est posé sur `.rond` (qui est
+            // `position:relative`) : « bottom:-4 » veut dire que le BAS du tiret est 4 px sous le
+            // bas du rond, donc le tiret occupe [rond+2 ; rond+4]. Le libellé, lui, commence à
+            // rond+5 (`.dockb{gap:5px}`) — les deux ne se touchent pas.
+            // ⛔ En posant le HAUT du tiret à rond+4, il empiétait sur le libellé : mesuré sur
+            // capture, une barre d'or au travers de « ACCUEIL ». C'est la même faute que le filet
+            // qui traversait le disque et coupait le texte en deux.
+            indicatorRect.anchoredPosition = new Vector2(0f,
+                -(rondPx + Px(TabDockPointeBasCss - TabDockPointeHeightCss)));
             Image indicatorImg = indicatorGo.AddComponent<Image>();
             indicatorImg.color = DesignTokens.Current.hudHairlineGold;
             indicatorImg.raycastTarget = false;
@@ -756,11 +818,11 @@ namespace MafiaCleanCity.Shell
             // `font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--creme-2)`
             GameObject textGo = new GameObject("Label", typeof(RectTransform));
             textGo.transform.SetParent(btn.transform, false);
-            AddLayoutElementLocal(textGo, TabDockLabelHeightPx);
+            AddLayoutElementLocal(textGo, Px(TabDockLabelHeightCss));
             TextMeshProUGUI t = textGo.AddComponent<TextMeshProUGUI>();
             t.font = DesignTokens.Current.primaryFont;
             t.text = label.ToUpperInvariant();
-            t.fontSize = TabDockLabelSizePx;
+            t.fontSize = Px(TabDockLabelSizeCss);
             t.characterSpacing = 16f;                                  // .16em
             t.alignment = TextAlignmentOptions.Top;
             t.color = DesignTokens.Current.hudCremeSecondary;           // --creme-2 #b9ad92
@@ -771,7 +833,12 @@ namespace MafiaCleanCity.Shell
 
         private void RefreshTabButtonVisuals()
         {
-            Tab[] order = { Tab.Home, Tab.City, Tab.Org, Tab.Pipeline, Tab.More };
+            // ⚠️ MÊME ORDRE QUE `BuildTabBar`, ET IL N'A PLUS QUE QUATRE ENTRÉES. `City` a quitté
+            // le dock (canon §6) ; le laisser ici décalerait tous les indices d'un cran et
+            // l'indicateur d'actif se poserait sur la mauvaise bulle.
+            // *Deux listes qui doivent rester parallèles sont une dette : celle-ci est bornée à
+            // quatre lignes et lit son ordre au même endroit que la construction.*
+            Tab[] order = { Tab.Home, Tab.Org, Tab.Pipeline, Tab.More };
             for (int i = 0; i < tabButtons.Count && i < order.Length; i++)
             {
                 bool active = order[i] == CurrentTab;

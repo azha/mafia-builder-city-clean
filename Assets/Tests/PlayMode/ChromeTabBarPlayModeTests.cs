@@ -139,11 +139,17 @@ namespace MafiaCleanCity.Shell.Tests
                 Color accentGoldOld = DesignTokens.Current.accentGold; // #ffd23f — l'ancien or vif à bannir du chrome
                 Color chromeTabActiveOld = DesignTokens.Current.chromeTabActive; // REUSE verbatim d'accentGold — même teinte
 
-                // Zone CHROME uniquement : Hairline+BoitierRing (TopBar, scaffold LÉGER, bucket forcé
-                // WARM) et Hairline (TabBar, jamais heat-dépendant — voir ci-dessus). Jamais les
-                // textes du cluster argent/horloge (hudMoneyGold/hudMoneyUnderlineGold — 2 AUTRES ors
-                // nommés de la même famille REUSE, hors périmètre de cette garde structurelle).
-                var chromeNames = new HashSet<string> { "Hairline", "BoitierRing" };
+                // Zone CHROME uniquement : Hairline + BoitierRing (TopBar, scaffold LÉGER, bucket
+                // forcé WARM) et ActiveIndicator (le dock). Jamais les textes du cluster
+                // argent/horloge (hudMoneyGold/hudMoneyUnderlineGold — 2 AUTRES ors nommés de la
+                // même famille REUSE, hors périmètre de cette garde structurelle).
+                //
+                // ⚠️ `Hairline` A DISPARU DU DOCK, et ce n'est pas une perte pour cette garde : le
+                // dock n'est plus une barre (ruling user + canon `hud-brennar.html` l.107-108, les
+                // ronds FLOTTENT sur un dégradé). Son élément d'or structurel est désormais le
+                // TIRET d'actif — `.pointe` du canon, 14×2 de laiton sous le rond. La garde suit
+                // donc l'objet qui porte l'or, pas le nom qu'il portait.
+                var chromeNames = new HashSet<string> { "Hairline", "BoitierRing", "ActiveIndicator" };
                 var goldImages = new List<(string path, Color color)>();
                 foreach (Image img in bareTopBar.GetComponentsInChildren<Image>(true))
                     if (chromeNames.Contains(img.gameObject.name)) goldImages.Add(("TopBar/" + PathOf(img.transform), img.color));
@@ -153,9 +159,14 @@ namespace MafiaCleanCity.Shell.Tests
                 // Anti-vacuité — le balayage doit VOIR des éléments chrome réels des DEUX barres,
                 // sinon "un seul or" serait vrai par absence de sujet : TopBar/Hairline,
                 // TopBar/BoitierRing, TabBar/Hairline — 3 éléments nommés minimum.
+                // Anti-vacuité — le balayage doit VOIR des éléments chrome réels des DEUX barres.
+                // Le dock en porte QUATRE (un tiret par bulle, un seul visible à la fois — la garde
+                // les scanne inactifs compris, ce qui est voulu : leur COULEUR doit être juste même
+                // masquée, sinon le défaut apparaîtrait au premier changement d'onglet).
                 Assert.GreaterOrEqual(goldImages.Count, 3,
-                    $"attendu au moins 3 éléments chrome nommés (TopBar Hairline+BoitierRing, TabBar Hairline) — " +
-                    $"trouvé {goldImages.Count} : {string.Join(", ", goldImages.Select(g => g.path))}");
+                    $"attendu au moins 3 éléments chrome nommés (TopBar Hairline + BoitierRing, " +
+                    $"les tirets d'actif du dock) — trouvé {goldImages.Count} : " +
+                    $"{string.Join(", ", goldImages.Select(g => g.path))}");
 
                 var offTokenChrome = new List<string>();
                 foreach (var (path, color) in goldImages)
@@ -222,11 +233,35 @@ namespace MafiaCleanCity.Shell.Tests
             Assert.IsNotNull(indicator, "l'onglet actif doit porter un ActiveIndicator");
             Assert.IsTrue(indicator.gameObject.activeSelf, "l'indicateur doit être VISIBLE sur l'onglet actif");
 
+            // ⛔ CE SEUIL ÉTAIT UN NOMBRE ABSOLU DANS UN MONDE QUI A CHANGÉ D'ÉCHELLE, et il a
+            // rougi sur un tiret PARFAITEMENT CONFORME : 2 px CSS du canon rendus à 6,12 px depuis
+            // que le dock est à la taille de la maquette. Le relever à 7 aurait été le pire des
+            // trois gestes possibles — la garde ne protégerait alors plus de rien à la prochaine
+            // résolution, et elle rougirait à nouveau au prochain changement d'échelle.
+            //   ⇒ La propriété voulue n'a jamais été « ≤ 4 px » : c'est « c'est un FILET, pas un
+            //     pavé ». Un filet se reconnaît à son ÉLANCEMENT et à sa petitesse RELATIVE au rond
+            //     qu'il souligne — deux grandeurs SANS UNITÉ, donc vraies à toute résolution.
+            //     Le canon donne `.pointe{width:14px;height:2px}` sur un `.rond` de 46 :
+            //     élancement 7,0 et épaisseur 4,3 % du rond.
             var indicatorRect = (RectTransform)indicator;
             float minDim = Mathf.Min(indicatorRect.rect.width, indicatorRect.rect.height);
-            Assert.LessOrEqual(minDim, ThinDimensionMaxPx,
-                $"l'indicateur d'onglet actif doit être un FILET (plus petite dimension <= {ThinDimensionMaxPx}px) " +
-                $"— mesuré {minDim}px : un pavé plein se serait glissé ici");
+            float maxDim = Mathf.Max(indicatorRect.rect.width, indicatorRect.rect.height);
+            Assert.Greater(minDim, 0f, "anti-vacuité — un indicateur de dimension nulle satisferait " +
+                "trivialement tout plafond d'épaisseur, et ne se verrait pas non plus");
+
+            float elancement = maxDim / minDim;
+            Assert.GreaterOrEqual(elancement, 4f,
+                $"l'indicateur doit être un FILET, pas un pavé : élancement mesuré {elancement:F2} " +
+                $"({maxDim:F1} × {minDim:F1}) — le canon donne 14×2, soit 7,0");
+
+            Transform rond = activeBtn.Find("Rond");
+            Assert.IsNotNull(rond, "le rond de la bulle doit exister — c'est le témoin d'échelle du filet");
+            float cote = ((RectTransform)rond).rect.height;
+            Assert.Greater(cote, 0f, "anti-vacuité — un rond de côté nul rendrait le rapport infini");
+            float partDuRond = minDim / cote;
+            Assert.LessOrEqual(partDuRond, 0.12f,
+                $"l'épaisseur du filet doit rester une FRACTION du rond qu'il souligne : mesuré " +
+                $"{partDuRond * 100f:F1} % ({minDim:F1} sur {cote:F1}) — le canon donne 2/46 = 4,3 %");
 
             // La couleur or (hudHairlineGold) ne doit apparaître QUE sur ce filet, jamais sur le fond
             // du bouton lui-même (le fond reste surfaceRow — DOCTRINE : "pas un pavé de couleur pleine").
@@ -253,31 +288,56 @@ namespace MafiaCleanCity.Shell.Tests
         {
             yield return WaitTopBarLoaded(BootShell());
 
-            Transform mask = shell.TabBarRoot.Find("TabBarMask");
-            Assert.IsNotNull(mask, "TabBarRoot doit porter un TabBarMask (verre, REUSE du patron TopBar)");
-            Assert.IsNotNull(mask.GetComponent<Mask>(), "TabBarMask doit porter un composant Mask (coins arrondis)");
-            Assert.IsNotNull(mask.Find("TabBarBackground")?.GetComponent<VerticalGradientImage>(),
-                "TabBarBackground doit porter un VerticalGradientImage (même verre fumé que le TopBar)");
+            // ⚠️⚠️ CETTE GARDE A CHANGÉ DE SUJET, SUR RULING USER (2026-08-25) : « tu vois bien que
+            // ce sont des BULLES et pas une barre ». Elle exigeait un verre à coins arrondis et un
+            // filet laiton, « par symétrie avec le bandeau haut » — une doctrine que NOUS avions
+            // écrite en croyant que la maquette n'avait aucune barre d'onglets. Elle en a une, et
+            // le canon (`hud-brennar.html` l.107-108) lui donne pour tout fond
+            // `linear-gradient(180deg, transparent, #070b12d8 40%)` : les ronds FLOTTENT.
+            //
+            // ⇒ Le socle est explicite sur ce cas : une garde qu'on ne peut satisfaire qu'en
+            // rétablissant le défaut ne s'assouplit pas, elle se REMPLACE par la propriété que le
+            // NOUVEAU dispositif garantit. Ici : le dock ne laisse RIEN voir du décor sous lui
+            // jusqu'au bord de l'écran — c'est ce que l'assise garantissait, et c'est la seule
+            // propriété qui comptait vraiment (un juge avait mesuré un liseré teal fuyant sur les
+            // 6 dernières lignes, dont la couleur changeait selon l'art derrière).
+            Transform fondu = shell.TabBarRoot.Find("DockFondu");
+            Assert.IsNotNull(fondu, "le dock doit porter son DockFondu (le dégradé du canon)");
+            var fonduRect = (RectTransform)fondu;
+            Assert.IsNotNull(fondu.GetComponent<UnityEngine.UI.Image>(), "DockFondu doit peindre");
+            Assert.LessOrEqual(fonduRect.offsetMin.y, 0f,
+                $"le dégradé du dock doit descendre JUSQU'AU BORD BAS (offsetMin.y = {fonduRect.offsetMin.y:F1}) — " +
+                "s'il s'arrête avant, il rouvre l'interstice par lequel le décor du district fuyait.");
+            Assert.AreEqual(0f, fonduRect.offsetMax.y, 0.01f, "et il part du haut du dock");
 
-            Transform hairline = shell.TabBarRoot.Find("Hairline");
-            Assert.IsNotNull(hairline, "TabBarRoot doit porter un Hairline");
-            var hairlineRect = (RectTransform)hairline;
-            Assert.AreEqual(1f, hairlineRect.anchorMin.y, 0.01f, "le filet de la TabBar est au bord HAUT (anchorMin.y=1)");
-            Assert.AreEqual(1f, hairlineRect.anchorMax.y, 0.01f, "le filet de la TabBar est au bord HAUT (anchorMax.y=1)");
+            // ⛔ ET CE QUI NE DOIT PLUS EXISTER — sinon on aurait ajouté le dégradé SANS retirer la
+            // barre, et l'écran porterait les deux.
+            Assert.IsNull(shell.TabBarRoot.Find("TabBarAssise"), "plus d'assise opaque : ce sont des bulles");
+            Assert.IsNull(shell.TabBarRoot.Find("TabBarMask"), "plus de verre à coins arrondis");
+            Assert.IsNull(shell.TabBarRoot.Find("Hairline"), "plus de filet laiton sur le dock");
 
-            // Le masque/filet ne doivent JAMAIS être traités comme un 6e bouton par le
-            // HorizontalLayoutGroup — LayoutElement.ignoreLayout=true sur les deux.
-            var maskLayout = mask.GetComponent<LayoutElement>();
-            var hairlineLayout = hairline.GetComponent<LayoutElement>();
-            Assert.IsTrue(maskLayout != null && maskLayout.ignoreLayout, "TabBarMask doit ignorer le HorizontalLayoutGroup");
-            Assert.IsTrue(hairlineLayout != null && hairlineLayout.ignoreLayout, "Hairline doit ignorer le HorizontalLayoutGroup");
+            // Le dégradé ne doit JAMAIS être traité comme une bulle de plus par le
+            // HorizontalLayoutGroup — `LayoutElement.ignoreLayout`.
+            var fonduLayout = fondu.GetComponent<LayoutElement>();
+            Assert.IsTrue(fonduLayout != null && fonduLayout.ignoreLayout,
+                "DockFondu doit ignorer le HorizontalLayoutGroup, sinon il compte comme une bulle");
 
-            // Anti-vacuité — les 5 boutons doivent TOUJOURS exister, non affectés par l'ajout du
-            // masque/filet (sinon "le HLG ne les traite pas comme un bouton" serait vrai par accident).
+            // ⛔ ANTI-VACUITÉ — QUATRE bulles, ni plus ni moins. Canon §6 : « 4 ronds gravés, sans
+            // la Carte ». Sans ce compte, retirer le dégradé de la mesure ci-dessus serait vrai
+            // par accident sur un dock vide.
             int tabButtonCount = 0;
             for (int i = 0; i < shell.TabBarRoot.childCount; i++)
                 if (shell.TabBarRoot.GetChild(i).name.StartsWith("Tab_")) tabButtonCount++;
-            Assert.AreEqual(5, tabButtonCount, "les 5 boutons d'onglet doivent toujours exister, inchangés par le restyle");
+            Assert.AreEqual(4, tabButtonCount,
+                "le dock porte QUATRE bulles (canon §6 : la Carte en sort, on est déjà dessus)");
+
+            // Et chaque bulle porte son ROND — sans lui, « 4 bulles » serait vrai pour 4 libellés nus.
+            for (int i = 0; i < shell.TabBarRoot.childCount; i++)
+            {
+                Transform b = shell.TabBarRoot.GetChild(i);
+                if (!b.name.StartsWith("Tab_")) continue;
+                Assert.IsNotNull(b.Find("Rond"), $"{b.name} doit porter son Rond (la bulle du canon)");
+            }
         }
     }
 }
