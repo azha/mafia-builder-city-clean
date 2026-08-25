@@ -546,7 +546,10 @@ namespace MafiaCleanCity.Shell
             TabBarRoot.anchorMin = new Vector2(0f, 0f);
             TabBarRoot.anchorMax = new Vector2(1f, 0f);
             TabBarRoot.pivot = new Vector2(0.5f, 0f);
-            TabBarRoot.sizeDelta = new Vector2(0, 64);
+            // 76 et non 64 : le dock de la maquette empile un ROND et son libellé, là où l'ancien
+            // bouton n'avait qu'un texte centré. Les insets du chrome suivent tout seuls — ils sont
+            // dérivés de `TabBarRoot.rect.height`, jamais d'une constante recopiée.
+            TabBarRoot.sizeDelta = new Vector2(0, 72);
             // Zone sûre — décale la barre AU-DESSUS d'une barre de gestes système (Screen.safeArea
             // .yMin > 0). Même mécanisme que TopBarSlot ci-dessus, même provider.
             (_, float bottomSafeInset) = SafeAreaInsetsLocal();
@@ -626,12 +629,13 @@ namespace MafiaCleanCity.Shell
             hlGo.AddComponent<LayoutElement>().ignoreLayout = true;
 
             HorizontalLayoutGroup hlg = tabBarGo.AddComponent<HorizontalLayoutGroup>();
-            hlg.padding = new RectOffset(8, 8, 6, 6);
-            hlg.spacing = 4;
+            hlg.padding = new RectOffset(8, 8, 7, 10);   // le compte ci-dessus : 7 + 36 + 7 + 11 + 10 = 71
+            hlg.spacing = 19;                            // `.dock{gap:22px}` × 0,864
+            hlg.childAlignment = TextAnchor.UpperCenter;
             hlg.childControlWidth = true;
             hlg.childControlHeight = true;
             hlg.childForceExpandWidth = true;
-            hlg.childForceExpandHeight = true;
+            hlg.childForceExpandHeight = false;
 
             AddTabButton(Tab.Home, "Accueil");
             AddTabButton(Tab.City, "Ville");
@@ -640,55 +644,126 @@ namespace MafiaCleanCity.Shell
             AddTabButton(Tab.More, "Plus");
         }
 
+        // Le dock de `hud-brennar.html` (l.107-117), ramené à la hauteur de barre de ce client.
+        // La maquette donne rond 46 · gap 5 · libellé 8,5 · paddings 10/16, soit ~88 de haut ; la
+        // barre d'onglets d'ici en fait 76. Facteur unique 76/88 = 0,864, appliqué à TOUT.
+        // ⚠️ LA SOMME DOIT TENIR DANS LA BARRE, sinon le layout COMPRIME et le rond devient une
+        // ellipse — mesuré sur capture, deux fois de suite. Le compte est explicite :
+        //   7 (padding haut) + 36 (rond) + 7 (écart) + 11 (libellé) + 10 (padding bas) = 71 ≤ 72.
+        // Un rond n'est un cercle que si RIEN ne le comprime : sa hauteur est la première victime
+        // d'un conteneur trop court, et le défaut se lit comme un choix de forme.
+        private const float TabDockRondPx = 36f;
+        private const float TabDockGapPx = 7f;            // le tiret d'actif vit DANS cet écart
+        private const float TabDockLabelSizePx = 8f;
+        private const float TabDockLabelHeightPx = 11f;
+        private const float TabDockPointeWidthPx = 12f;   // 14 × 0,864
+
+        /// <summary>Un `LayoutElement` de hauteur fixe — le pendant local de l'helper des écrans
+        /// opérationnels, que le shell ne peut pas atteindre (il ne référence pas leurs assemblies).</summary>
+        private static void AddLayoutElementLocal(GameObject go, float hauteur)
+        {
+            LayoutElement le = go.AddComponent<LayoutElement>();
+            le.minHeight = hauteur;
+            le.preferredHeight = hauteur;
+            le.flexibleHeight = 0f;
+        }
+
         private void AddTabButton(Tab tab, string label)
         {
             GameObject btn = new GameObject($"Tab_{tab}", typeof(RectTransform));
             btn.transform.SetParent(TabBarRoot, false);
+            // ⚠️ FOND TRANSPARENT, PAS UN PAVÉ. La maquette (`hud-brennar.html` l.107-117) ne
+            // dessine AUCUN rectangle d'onglet : chaque bouton est un ROND de 46 sur un dégradé
+            // radial bleu nuit, avec son libellé DESSOUS. J'avais construit cinq rectangles pleine
+            // largeur en `surfaceRow` — un gris-vert plat, mesuré (34,42,46) sur capture — et un
+            // soulignement doré. L'user l'a relevé : « les menus sont toujours mal faits, ils
+            // devraient être bleus ».
+            // L'Image reste (transparente) parce que c'est elle qui reçoit les clics et que la
+            // garde `ActiveTab_NeverFlatFill` lit sa couleur : un bouton sans Image la ferait
+            // tomber sur un null au lieu de mesurer.
             Image img = btn.AddComponent<Image>();
-            img.color = DesignTokens.Current.surfaceRow;
+            Color invisible = DesignTokens.Current.surfaceRow;
+            invisible.a = 0f;
+            img.color = invisible;
+            VerticalLayoutGroup pile = btn.AddComponent<VerticalLayoutGroup>();
+            pile.spacing = TabDockGapPx;
+            pile.padding = new RectOffset(0, 0, 0, 0);
+            pile.childAlignment = TextAnchor.UpperCenter;
+            // ⚠️ PAS D'EXPANSION HORIZONTALE — sinon le rond devient une ELLIPSE. Mesuré sur
+            // capture : les cinq « ronds » s'étiraient sur toute la largeur de leur onglet.
+            // `.dockb{align-items:center}` : les enfants gardent leur largeur et se centrent.
+            pile.childControlWidth = true; pile.childControlHeight = true;
+            pile.childForceExpandWidth = false; pile.childForceExpandHeight = false;
+
             Button b = btn.AddComponent<Button>();
             b.targetGraphic = img;
             b.onClick.AddListener(() => ActivateTab(tab));
 
-            // HUD v3.1 cohérence — l'indicateur d'onglet actif : un FILET laiton (3px), jamais un
-            // pavé de couleur pleine (voir BuildTabBar pour la doctrine complète).
-            //
-            // ⚠️ DÉPLACÉ DU BORD HAUT AU BORD BAS DU BOUTON (2026-08-22, verdict du juge visuel).
-            // Au bord HAUT, il tombait à 5 px sous le filet séparateur pleine largeur de la barre
-            // (mesuré : séparateur à y 1540-1541, indicateur à y 1546-1547) : **deux filets d'or
-            // parallèles à cinq pixels l'un de l'autre**, dont le second bégayait le premier au lieu
-            // de désigner quoi que ce soit. Au bord BAS il souligne l'onglet actif — le geste lit
-            // sans ambiguïté, et il ne concurrence plus le séparateur.
-            // ★ Vérifié avant de bouger : la maquette du bandeau (`hud-brennar.html`) ne contient
-            // AUCUNE barre d'onglets. Ce placement était donc notre choix, pas une ratification de
-            // l'user — sinon il aurait fallu remonter l'arbitrage au lieu de trancher.
-            // Enfant DIRECT du bouton (jamais nommé "Label" — `Find("ActiveIndicator")` en dépend,
-            // RefreshTabButtonVisuals ci-dessous). Masqué par défaut (SetActive) — mêmes idiome que
-            // `leadingGo`/`TopBarController.LeadingAction` : présence/absence NOMMÉE, jamais déduite
-            // d'une couleur.
+            // ⚠️ L'INDICATEUR N'EST PLUS UN SOULIGNEMENT PLEINE LARGEUR. Il l'était, déplacé du
+            // bord haut au bord bas du bouton après un verdict de juge visuel — mais c'était encore
+            // notre invention : la maquette du HUD ne contenait AUCUNE barre d'onglets quand ce
+            // choix a été fait, et je l'avais écrit ici même. Elle en contient une (`hud-brennar.html`
+            // l.107-117, `.dock`), et elle désigne l'actif par un TIRET de 14×2 sous le rond.
+            // *Un choix pris faute de canon doit être rouvert le jour où le canon apparaît.*
+
+            // ── LE ROND (`.dockb .rond`) ────────────────────────────────────────────────────
+            // `width:46;border-radius:50%;background:radial-gradient(circle at 38% 30%,#1d2635,#0d1420 65%);
+            //  border:1px solid #ffffff22; box-shadow: inset 0 1px 0 #ffffff1c, 0 4px 10px #000a`
+            GameObject rondGo = new GameObject("Rond", typeof(RectTransform));
+            rondGo.transform.SetParent(btn.transform, false);
+            LayoutElement leRond = rondGo.AddComponent<LayoutElement>();
+            leRond.preferredWidth = TabDockRondPx;
+            leRond.preferredHeight = TabDockRondPx;
+            leRond.flexibleWidth = 0f;
+            Image rondImg = rondGo.AddComponent<Image>();
+            rondImg.sprite = ProceduralUI.RadialDisc(128,
+                DesignTokens.Current.dockRondInner, DesignTokens.Current.dockRondOuter);
+            rondImg.color = Color.white;
+            rondImg.raycastTarget = false;
+
+            Color jonc = Color.white; jonc.a = 0.133f;                 // #ffffff22
+            GameObject joncGo = new GameObject("Jonc", typeof(RectTransform));
+            joncGo.transform.SetParent(rondGo.transform, false);
+            Stretch((RectTransform)joncGo.transform, Vector2.zero, Vector2.zero);
+            Image joncImg = joncGo.AddComponent<Image>();
+            joncImg.sprite = ProceduralUI.Ring(128, 128f / TabDockRondPx, jonc);
+            joncImg.color = Color.white;
+            joncImg.raycastTarget = false;
+
+            // ── L'INDICATEUR D'ACTIF (`.dockb .pointe`) ─────────────────────────────────────
+            // `width:14px;height:2px;background:var(--laiton);bottom:-4px` — un TIRET sous le rond,
+            // pas un soulignement pleine largeur. Enfant du ROND (donc centré sur lui), hors layout.
+            // ⚠️ Le nom `ActiveIndicator` est un CONTRAT : `RefreshTabButtonVisuals` et la garde
+            // `ActiveTab_NeverFlatFill_OnlyThinIndicator` le cherchent par ce nom sur le BOUTON.
             GameObject indicatorGo = new GameObject("ActiveIndicator", typeof(RectTransform));
             indicatorGo.transform.SetParent(btn.transform, false);
+            indicatorGo.AddComponent<LayoutElement>().ignoreLayout = true;
             RectTransform indicatorRect = (RectTransform)indicatorGo.transform;
-            indicatorRect.anchorMin = new Vector2(0f, 0f);
-            indicatorRect.anchorMax = new Vector2(1f, 0f);
-            indicatorRect.pivot = new Vector2(0.5f, 0f);
-            indicatorRect.sizeDelta = new Vector2(0f, TabActiveIndicatorThicknessPx);
-            indicatorRect.anchoredPosition = Vector2.zero;
+            indicatorRect.anchorMin = new Vector2(0.5f, 1f);
+            indicatorRect.anchorMax = new Vector2(0.5f, 1f);
+            indicatorRect.pivot = new Vector2(0.5f, 1f);
+            indicatorRect.sizeDelta = new Vector2(TabDockPointeWidthPx, TabActiveIndicatorThicknessPx);
+            // `.pointe{bottom:-4px}` — 3 sous le rond, DANS l'écart qui le sépare du libellé.
+            // À 4 avec un écart de 4, il traversait le texte (mesuré sur capture : une barre d'or
+            // au milieu de « ACCUEIL »).
+            indicatorRect.anchoredPosition = new Vector2(0f, -(TabDockRondPx + 3f));
             Image indicatorImg = indicatorGo.AddComponent<Image>();
             indicatorImg.color = DesignTokens.Current.hudHairlineGold;
             indicatorImg.raycastTarget = false;
             indicatorGo.SetActive(false);
 
+            // ── LE LIBELLÉ, SOUS LE ROND (`.dockb`) ────────────────────────────────────────
+            // `font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--creme-2)`
             GameObject textGo = new GameObject("Label", typeof(RectTransform));
             textGo.transform.SetParent(btn.transform, false);
-            RectTransform textRt = (RectTransform)textGo.transform;
-            Stretch(textRt, new Vector2(4, 2), new Vector2(-4, -2));
+            AddLayoutElementLocal(textGo, TabDockLabelHeightPx);
             TextMeshProUGUI t = textGo.AddComponent<TextMeshProUGUI>();
             t.font = DesignTokens.Current.primaryFont;
-            t.text = label;
-            t.fontSize = 13;
-            t.alignment = TextAlignmentOptions.Center;
-            t.color = DesignTokens.Current.onSurfaceSecondary;
+            t.text = label.ToUpperInvariant();
+            t.fontSize = TabDockLabelSizePx;
+            t.characterSpacing = 16f;                                  // .16em
+            t.alignment = TextAlignmentOptions.Top;
+            t.color = DesignTokens.Current.hudCremeSecondary;           // --creme-2 #b9ad92
             t.raycastTarget = false;
 
             tabButtons.Add(btn);
@@ -713,8 +788,15 @@ namespace MafiaCleanCity.Shell
                 // C5F2 — vu 2026-08-21, régression mesurée puis retirée dans le même lot).
                 Transform indicator = tabButtons[i].transform.Find("ActiveIndicator");
                 if (indicator != null) indicator.gameObject.SetActive(active);
+                // ⚠️ LE LIBELLÉ NE CHANGE PLUS DE COULEUR. La maquette (`hud-brennar.html` l.109-116)
+                // met TOUS les libellés en `--creme-2` et ne distingue l'actif QUE par `.pointe` —
+                // le tiret laiton sous le rond. Je teintais le libellé en plus : deux signaux d'or
+                // pour une seule information, et la doctrine « un seul or dans le chrome » s'en
+                // trouvait diluée.
+                // ★ Et c'est le bon choix d'accessibilité : l'état est porté par une FORME qui
+                // apparaît, pas par une teinte — un daltonien lit le tiret, pas la nuance.
                 TextMeshProUGUI t = tabButtons[i].GetComponentInChildren<TextMeshProUGUI>();
-                if (t != null) t.color = active ? DesignTokens.Current.hudHairlineGold : DesignTokens.Current.onSurfaceSecondary;
+                if (t != null) t.color = DesignTokens.Current.hudCremeSecondary;   // --creme-2
             }
         }
 

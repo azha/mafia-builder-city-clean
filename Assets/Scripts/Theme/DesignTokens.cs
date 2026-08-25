@@ -125,6 +125,15 @@ namespace MafiaCleanCity.Theme
         public Color lieutenantMedallionInner;  // #243048
         public Color lieutenantMedallionOuter;  // #0f1622
 
+        // Le ROND d'un bouton de la barre d'onglets (`.dockb .rond` de `hud-brennar.html` l.111 :
+        // `radial-gradient(circle at 38% 30%, #1d2635, #0d1420 65%)`).
+        // ⚠️ DEUX JETONS DÉDIÉS, et c'est la leçon du médaillon appliquée d'avance : ces valeurs
+        // sont PROCHES de `lieutenantMedallion*` (#243048/#0f1622) sans être les mêmes. Les
+        // confondre reproduirait exactement l'erreur qu'un juge ⊥ vient de chiffrer sur le
+        // médaillon. « Un token par consommateur mesuré » (gdd/14 §Asset pipeline).
+        public Color dockRondInner;   // #1d2635
+        public Color dockRondOuter;   // #0d1420
+
         [Header("Dashboard")]
         public Color dashboardIconDim;     // (0.45,0.49,0.53)
 

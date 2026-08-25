@@ -480,10 +480,11 @@ namespace MafiaCleanCity.CityMap.Tests
         [Test]
         public void AmbF7_SealedTokenCountUnchanged()
         {
-            Assert.AreEqual(66, MafiaCleanCity.Theme.Tests.CanonPaletteComparator.ExpectedTokenCount,
-                "amb-F7 — le pivot fond pré-rendu n'ajoute AUCUNE teinte : les 66 clés de DesignTokens " +
-                "restent fermées (51 + 11 hud* HUD v3.1 + 2 lieutenantGlass* + 2 lieutenantMedallion*, " +
-                "ces quatre derniers venant de l'écran La Famille, jamais du pivot)");
+            Assert.AreEqual(68, MafiaCleanCity.Theme.Tests.CanonPaletteComparator.ExpectedTokenCount,
+                "amb-F7 — le pivot fond pré-rendu n'ajoute AUCUNE teinte : les 68 clés de DesignTokens " +
+                "restent fermées (51 + 11 hud* HUD v3.1 + 2 lieutenantGlass* + 2 lieutenantMedallion* " +
+                "+ 2 dockRond*, ces six derniers venant de l'écran La Famille et de la barre " +
+                "d'onglets, jamais du pivot)");
         }
     }
 }

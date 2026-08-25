@@ -80,3 +80,5 @@ MonoBehaviour:
   lieutenantGlassBottom: {r: 0.035, g: 0.055, b: 0.094, a: 0.74}
   lieutenantMedallionInner: {r: 0.141, g: 0.188, b: 0.282, a: 1}
   lieutenantMedallionOuter: {r: 0.059, g: 0.086, b: 0.133, a: 1}
+  dockRondInner: {r: 0.114, g: 0.149, b: 0.208, a: 1}
+  dockRondOuter: {r: 0.051, g: 0.078, b: 0.125, a: 1}

@@ -47,7 +47,7 @@ namespace MafiaCleanCity.Theme.Tests
         // l'écran « LA FAMILLE ». Il empruntait les jetons du MANOMÈTRE ; un juge visuel ⊥ a
         // mesuré le disque 32 % plus sombre et son b−r divisé par deux. Deux surfaces
         // distinctes, deux jetons — « un token par consommateur mesuré » (gdd/14).
-        public const int ExpectedTokenCount = 66; // HUD v3.1 boucle ⊥ pixel-perfect (2026-08-21) : 51 -> 61
+        public const int ExpectedTokenCount = 68; // HUD v3.1 boucle ⊥ pixel-perfect (2026-08-21) : 51 -> 61
                                                     // (tour 1, +10 tokens hud* glass/gold/gauge/text) -> 62
                                                     // (tour 2, +1 hudMoneyUnderlineGold mesuré directement sur
                                                     // le rendu pixel) — gdd/14 @8c33ea3b.
