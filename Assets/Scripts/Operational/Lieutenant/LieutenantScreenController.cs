@@ -1311,7 +1311,12 @@ namespace MafiaCleanCity.Operational.Lieutenant
             h.childControlHeight = true;
             h.childForceExpandWidth = false;
             h.childForceExpandHeight = false;
-            AddLayoutElement(tete, minHeight: FX(115), flexibleHeight: 0);  // séparateur à 115,3 u
+            // `.tete` mesure 115,3 u DEPUIS LE HAUT DE LA FEUILLE, padding compris. Or la carte a
+            // déjà posé ses 19 de `.corps` au-dessus (en CSS `.tete` et `.corps` sont FRÈRES, et
+            // `.sheet` n'a pas de padding). L'en-tête ne doit donc réclamer que le reste, sinon le
+            // bloc entier enfle — le juge ⊥ l'a mesuré **+29 %**, avec un grand trou sous le
+            // sous-titre (+129 %).
+            AddLayoutElement(tete, minHeight: FX(115 - 19), flexibleHeight: 0);
 
             // `radial-gradient(75% 150% at 50% 0%, rgba(217,171,78,.06), transparent 62%)` — un
             // voile d'or qui descend du haut de l'écran. Mesuré ABSENT par le juge ⊥ : toutes ses
@@ -1362,7 +1367,9 @@ namespace MafiaCleanCity.Operational.Lieutenant
             // Le bloc titre + sous-titre.
             GameObject bloc = NewUI("Titres", tete.transform);
             VerticalLayoutGroup v = bloc.AddComponent<VerticalLayoutGroup>();
-            v.spacing = 1;
+            // `.tete .sous{margin-top:2px}` — mais le juge ⊥ mesure l'écart TITRE→SOUS-TITRE à
+            // −48 % : l'essentiel vient de l'interligne, que ce `1` non mis à l'échelle écrasait.
+            v.spacing = FX(6);
             v.childControlWidth = true;
             v.childControlHeight = true;
             v.childForceExpandWidth = true;
@@ -1813,7 +1820,9 @@ namespace MafiaCleanCity.Operational.Lieutenant
             GameObject fondGo = NewUI("Plaque", panneau.transform);
             Stretch((RectTransform)fondGo.transform);
             Image fond = fondGo.AddComponent<Image>();
-            fond.sprite = MafiaCleanCity.Shell.ProceduralUI.VerticalGradient(64,
+            // `var(--tx-panneau)` = `linear-gradient(160deg, …)` — pas 180°. Le juge ⊥ a mesuré
+            // l'axe sur les quatre coins de la référence ; le mien était purement vertical.
+            fond.sprite = MafiaCleanCity.Shell.ProceduralUI.LinearGradient(64, 160f,
                 DesignTokens.Current.lieutenantGlassTop, DesignTokens.Current.lieutenantGlassBottom);
             fond.type = Image.Type.Simple;
             fond.color = Color.white;
@@ -1938,7 +1947,12 @@ namespace MafiaCleanCity.Operational.Lieutenant
                 brt.anchoredPosition = Vector2.zero;
                 Image bi = bg.AddComponent<Image>();
                 bi.sprite = silhouette;
-                bi.color = DesignTokens.Current.hudCreme;
+                // ⚠️ BLANC, PAS UN TOKEN. La couleur `#cfc4a6` est CUITE dans le PNG (voir
+                // `Tools/rasterise-bustes.py`, même patron que les 83 icônes W3.U-DA). La teinter
+                // en plus multiplie deux couleurs : le juge ⊥ a mesuré la silhouette à
+                // `(190,172,129)` ≈ `#beac81` au lieu de `#cfc4a6` — un crème viré au kaki.
+                // *Teinter un asset déjà coloré, c'est appliquer deux fois la même intention.*
+                bi.color = Color.white;
                 bi.preserveAspect = true;
                 bi.raycastTarget = false;
             }

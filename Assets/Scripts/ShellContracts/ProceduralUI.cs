@@ -216,6 +216,47 @@ namespace MafiaCleanCity.Shell
         /// étant des rectangles pleine largeur, mais le dispositif y est décoratif.)
         /// Un `Image` porte le dégradé dans sa TEXTURE, est un `MaskableGraphic`, et se fait
         /// clipper normalement.</summary>
+        /// <summary>Un dégradé LINÉAIRE orienté — le `linear-gradient(Ndeg, …)` du CSS.
+        ///
+        /// `VerticalGradient` ne sait faire que 180°. La maquette écrit **160°** sur ses panneaux,
+        /// et le juge ⊥ l'a mesuré : en référence les quatre coins s'ordonnent
+        /// haut-gauche &gt; bas-gauche &gt; haut-droit &gt; bas-droit — la signature exacte d'une
+        /// projection à 160°. Dans le rendu vertical, haut-gauche = haut-droit : l'axe avait
+        /// disparu. Le coin le plus visible est le haut-droit, +41 % de luminance.
+        ///
+        /// Convention CSS : 0° monte, 180° descend, les degrés tournent dans le sens horaire.</summary>
+        public static Sprite LinearGradient(int taillePx, float angleDeg, Color depart, Color arrivee)
+        {
+            string key = $"lingrad:{taillePx}:{angleDeg:F1}:{ColorKey(depart)}:{ColorKey(arrivee)}";
+            if (cache.TryGetValue(key, out Sprite cached) && cached != null) return cached;
+
+            int d = Mathf.Max(4, taillePx);
+            var tex = NewTexture(d);
+            var pixels = new Color[d * d];
+            // CSS : 180° = vers le bas. En espace texture (y vers le HAUT), l'axe du dégradé est
+            // donc (sin θ, −cos θ), et `depart` se trouve du côté opposé.
+            float rad = angleDeg * Mathf.Deg2Rad;
+            var axe = new Vector2(Mathf.Sin(rad), -Mathf.Cos(rad));
+            // Longueur de la projection de la diagonale sur l'axe : c'est elle qui normalise.
+            float portee = Mathf.Abs(axe.x) + Mathf.Abs(axe.y);
+            for (int y = 0; y < d; y++)
+            {
+                for (int x = 0; x < d; x++)
+                {
+                    float ux = (x + 0.5f) / d - 0.5f, uy = (y + 0.5f) / d - 0.5f;
+                    float t = Mathf.Clamp01((ux * axe.x + uy * axe.y) / portee + 0.5f);
+                    pixels[y * d + x] = Color.Lerp(depart, arrivee, t);
+                }
+            }
+            tex.SetPixels(pixels);
+            tex.Apply(false, false);
+            Sprite sp = Sprite.Create(tex, new Rect(0, 0, d, d), new Vector2(0.5f, 0.5f), 100f, 0,
+                SpriteMeshType.FullRect);
+            sp.hideFlags = HideFlags.HideAndDontSave;
+            cache[key] = sp;
+            return sp;
+        }
+
         public static Sprite VerticalGradient(int hauteurPx, Color haut, Color bas)
         {
             string key = $"vgrad:{hauteurPx}:{ColorKey(haut)}:{ColorKey(bas)}";
