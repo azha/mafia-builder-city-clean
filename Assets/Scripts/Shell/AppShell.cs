@@ -633,7 +633,19 @@ namespace MafiaCleanCity.Shell
             Image fonduImg = fonduGo.AddComponent<Image>();
             // `linear-gradient(180deg, transparent, #070b12d8 40%)` : transparent en haut, opaque à
             // 84,7 % dès 40 % de la hauteur — donc un plateau sur les 60 % du bas.
+            // ⛔⛔ CE VOILE ÉTAIT DEUX FOIS TROP FAIBLE, ET C'EST UN BLOQUANT DE LISIBILITÉ.
+            // Mesuré par un juge visuel ⊥ à 1080×1920 : les libellés du dock tombaient à
+            // **3,49:1** de contraste, sous le plancher de 4,5:1 (le canon en donne 8,48:1), et
+            // le dock — bande la PLUS SOMBRE de la maquette — devenait la plus CLAIRE de la moitié
+            // basse de l'écran (L moyenne 29,7 → 82,1). Hiérarchie de valeurs verticale inversée.
+            //   Même cause que les voiles de la fiche : le navigateur compose en sRGB, le client en
+            //   linéaire, et l'écart croît avec le contraste encre/fond — ici une encre quasi noire
+            //   sur l'eau claire du port, donc le pire cas.
+            //   Le dock flotte sur l'ART ⇒ fond inconnu ⇒ ajustement d'opacité déclaré, avec son
+            //   résidu (mesuré 46,43 → 4,11 /255 sur les sept fonds de référence).
             Color sombre = DesignTokens.Current.hudBarGlassBottom;
+            float residuDock;
+            sombre.a = ProceduralUI.AlphaVoileSurFondQuelconque(sombre, sombre.a, out residuDock);
             Color clair = sombre; clair.a = 0f;
             fonduImg.sprite = ProceduralUI.VerticalGradient(64, clair, sombre);
             fonduImg.type = Image.Type.Simple;
@@ -829,6 +841,69 @@ namespace MafiaCleanCity.Shell
             t.raycastTarget = false;
 
             tabButtons.Add(btn);
+        }
+
+        /// <summary>Refait la mise à l'échelle du CHROME (bandeau + dock) pour la taille de canvas
+        /// courante, et reconstruit les bulles.
+        ///
+        /// ⛔⛔ MÊME DÉFAUT QUE LE FOND DE DISTRICT, ET IL A PRODUIT QUATRE FINDINGS POUR UNE SEULE
+        /// CAUSE. `Px()` lit la largeur du canvas au moment de BÂTIR. Une capture hors écran qui
+        /// bascule ensuite sur une cible d'une autre taille laisse tout le chrome à l'échelle
+        /// d'avant. Un juge visuel ⊥ a mesuré, sans savoir d'où ça venait : barre 367,7 pour 392
+        /// (0,938) · rond du dock 42,8 pour 46,0 (0,930) · chasse de « ARGENT » −16 % · position de
+        /// l'aile gauche. **0,9375 = 1080/1152**, le rapport des `scaleFactor` entre la cible et la
+        /// vue de jeu — pas quatre défauts de dessin, un seul défaut de MESURE.
+        ///   ★ Et le juge avait donné le signe qui le désigne : l'écart de chasse était SÉLECTIF —
+        ///     −16 % sur « ARGENT » dans le bandeau, −2 % sur « FAMILLE » dans le dock, même fonte,
+        ///     même écran. *Un défaut sélectif désigne son conteneur*, et les deux conteneurs
+        ///     n'avaient pas été bâtis au même moment.</summary>
+        public void RebatirChromePourResolutionCourante()
+        {
+            if (ShellCanvas == null || TopBarSlot == null || TabBarRoot == null) return;
+            Canvas.ForceUpdateCanvases();
+
+            float k = FacteurEchelle();
+            TopBarSlot.sizeDelta = new Vector2(0, Px(TopBarHauteurCss));
+            Transform echelle = TopBarSlot.Find("TopBarEchelle");
+            if (echelle != null)
+            {
+                var echelleRt = (RectTransform)echelle;
+                echelleRt.sizeDelta = new Vector2(TopBarLargeurCss, TopBarHauteurCss);
+                echelleRt.localScale = new Vector3(k, k, 1f);
+            }
+
+            (float topSafe, float bottomSafe) = SafeAreaInsetsLocal();
+            TopBarSlot.anchoredPosition = new Vector2(0f, -topSafe);
+            TabBarRoot.sizeDelta = new Vector2(0, Px(TabDockHauteurCss));
+            TabBarRoot.anchoredPosition = new Vector2(0f, bottomSafe);
+
+            HorizontalLayoutGroup hlg = TabBarRoot.GetComponent<HorizontalLayoutGroup>();
+            if (hlg != null)
+            {
+                hlg.padding = new RectOffset(0, 0,
+                    Mathf.RoundToInt(Px(TabDockPadHautCss)), Mathf.RoundToInt(Px(TabDockPadBasCss)));
+                hlg.spacing = Px(TabDockEcartCss);
+            }
+
+            // Les bulles se reconstruisent : leurs tailles sont posées à la construction (rond,
+            // écart, corps du libellé, tiret) et aucune ne se recalcule toute seule.
+            Transform fondu = TabBarRoot.Find("DockFondu");
+            for (int i = TabBarRoot.childCount - 1; i >= 0; i--)
+            {
+                Transform enf = TabBarRoot.GetChild(i);
+                if (fondu != null && enf == fondu) continue;
+                DestroyImmediate(enf.gameObject);
+            }
+            tabButtons.Clear();
+            AddTabButton(Tab.Home, "Accueil");
+            AddTabButton(Tab.Org, "Famille");
+            AddTabButton(Tab.Pipeline, "Filière");
+            AddTabButton(Tab.More, "Plus");
+            if (fondu != null) fondu.SetAsFirstSibling();
+            RefreshTabButtonVisuals();
+
+            Canvas.ForceUpdateCanvases();
+            PublierInsetsDuChrome();
         }
 
         private void RefreshTabButtonVisuals()

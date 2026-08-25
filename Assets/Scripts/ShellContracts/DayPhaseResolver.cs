@@ -36,10 +36,23 @@ namespace MafiaCleanCity.Shell
             if (string.IsNullOrEmpty(dayPhase)) return "—";
             switch (dayPhase)
             {
-                case "DAWN": return "Dawn";
-                case "DAY": return "Day";
-                case "DUSK": return "Dusk";
-                case "NIGHT": return "Night";
+                // ⛔ CES QUATRE LIBELLÉS ÉTAIENT EN ANGLAIS, ET C'EST UN JUGE VISUEL ⊥ QUI L'A
+                // CLASSÉ BLOQUANT — pas une relecture. « Dawn » s'affichait en grand, à la place
+                // de l'heure du canon, dans un écran dont TOUT le reste est français : REVENU ·
+                // CHAÎNE · ÉTAT · Au repos · Coupée · Sain · COLLECTER · BLANCHIR · AMÉLIORER ·
+                // ACCUEIL · FAMILLE · FILIÈRE · PLUS · Froid · CHALEUR · JOUR 1.
+                //   Le test qui gardait ce résolveur exigeait explicitement « LE MÊME MOT », au
+                //   motif que « la langue de l'interface est un arbitrage produit OUVERT ». Il ne
+                //   l'était plus : il avait été tranché **en pratique, partout ailleurs**, sans que
+                //   personne ne revienne ici. *Un énoncé daté qui se déclare ouvert n'est pas plus
+                //   fiable qu'un autre : il vieillit exactement pareil.*
+                // ⇒ « Plein jour » et non « Jour » : le libellé voisin est « JOUR 1 » (le compteur
+                //   de jours), et deux « JOUR » côte à côte se lisent comme une répétition.
+                //   « Soirée » est le mot du canon lui-même (`JOUR 12 · SOIRÉE`).
+                case "DAWN": return "Aube";
+                case "DAY": return "Plein jour";
+                case "DUSK": return "Soirée";
+                case "NIGHT": return "Nuit";
                 default: return dayPhase;
             }
         }

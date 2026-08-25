@@ -302,6 +302,33 @@ namespace MafiaCleanCity.Capture.Tests
             Canvas.ForceUpdateCanvases();
             yield return null;
 
+            // ⛔⛔ SANS CECI, LA CAPTURE MESURE L'ÉCRAN D'UNE AUTRE RÉSOLUTION.
+            // Le fond de district est posé à `taille_native / scaleFactor` — c'est ce qui garantit
+            // ses pixels natifs, propriété certifiée bit-exacte. Mais `scaleFactor` est lu à la
+            // CONSTRUCTION. Basculer ensuite le canvas sur une cible d'une autre taille change le
+            // facteur sans refaire la mise en page : le fond garde sa `sizeDelta` d'avant.
+            //   Mesuré : un juge visuel ⊥ a relevé l'art à **972 px sur 1080**, soit 0,9000 pile,
+            //   et l'a classé MAJEUR (« la ville n'est plus plein cadre »). Ce 0,9 n'était pas un
+            //   cadrage : c'est **0,84375 / 0,9375**, le rapport des `scaleFactor` entre la cible
+            //   (1080) et la vue de jeu (1200) où la mise en page avait été faite.
+            //   *Une capture est une mesure DATÉE : « sous quel état a-t-elle été prise ? », jamais
+            //   « qu'est-ce que le commit déclare ? ».*
+            // Le CHROME d'abord : les insets qu'il publie décident où le district se pose.
+            shell.RebatirChromePourResolutionCourante();
+            Canvas.ForceUpdateCanvases();
+            yield return null;
+
+            var districtCourant = Object.FindFirstObjectByType<DistrictInteriorScreenController>();
+            if (districtCourant != null && districtCourant.LastFetch != null)
+            {
+                districtCourant.RebatirPourResolutionCourante();
+                Canvas.ForceUpdateCanvases();
+                yield return null;
+                yield return null;           // la destruction différée de l'ancienne racine
+                Canvas.ForceUpdateCanvases();
+                yield return null;
+            }
+
             cam.Render();
             RenderTexture prev = RenderTexture.active;
             RenderTexture.active = rt;
@@ -319,6 +346,42 @@ namespace MafiaCleanCity.Capture.Tests
             Assert.Greater(clairs, largeur * hauteur / 20,
                 $"la capture {largeur}x{hauteur} est quasi NOIRE ({clairs} pixels) : le shell n'a pas " +
                 "été rendu dans la cible, et le fichier passerait pourtant pour une réussite.");
+
+            // ⛔⛔ GARDE DE MISE À L'ÉCHELLE — LA CLASSE DE DÉFAUT QUI A PRODUIT QUATRE FINDINGS.
+            // Toute la mise en page est posée à partir du `scaleFactor` lu à la CONSTRUCTION.
+            // Capturer à une autre résolution sans la refaire laisse chaque élément à l'échelle
+            // d'avant, dans un rapport parfaitement uniforme — et c'est ce qui rend le défaut
+            // indétectable à l'œil : rien n'a l'air cassé, tout est juste 6,25 % trop petit.
+            // Un juge visuel ⊥ l'a relevé quatre fois sans pouvoir nommer la cause (art à 0,9000 ·
+            // barre 0,938 · rond du dock 0,930 · chasse −16 %) ; les quatre valaient 0,84375/0,9375.
+            //   ⇒ La propriété qui les couvre TOUTES est structurelle et sans unité : **une bande
+            //     pleine largeur doit occuper toute la largeur**. Elle est vraie à toute résolution,
+            //     ne dépend d'aucune valeur de pixel, et rougit dès qu'un reflux est oublié.
+            //   ⇒ On la mesure sur la LIGNE DU BANDEAU, qui est la seule dont on sait qu'elle doit
+            //     aller d'un bord à l'autre (`.barre` du canon n'a ni marge ni arrondi).
+            Color fondNu = MafiaCleanCity.Theme.DesignTokens.Current.nightOutOfDistrictMuted;
+            int ligneBandeau = hauteur - 1 - Mathf.RoundToInt(hauteur * 0.03f); // ReadPixels : origine EN BAS
+            // ⚠️ ON MESURE LA PLAGE CONTIGUË À CHAQUE BORD, PAS UN COMPTE TOTAL. Écrite en compte,
+            // la garde a rougi à **2 pixels sur 1080** — l'anti-crénelage des deux colonnes
+            // extrêmes, sur une barre qui va réellement d'un bord à l'autre. *Le lissé entoure
+            // chaque forme ; tout ce qui interroge le bord le rencontre d'abord.* Et le défaut
+            // qu'on traque, lui, ne produit pas 2 pixels : à 0,9375 il découvre **34 px de chaque
+            // côté** à 1080. Les deux mondes sont donc séparés par deux ordres de grandeur — la
+            // grandeur qui discrimine est la PLAGE, le seuil se lit sur l'écart, il ne se choisit pas.
+            bool EstNu(int x)
+            {
+                Color c = tex.GetPixel(x, ligneBandeau);
+                return Mathf.Abs(c.r - fondNu.r) < 0.02f && Mathf.Abs(c.g - fondNu.g) < 0.02f
+                    && Mathf.Abs(c.b - fondNu.b) < 0.02f;
+            }
+            int nuGauche = 0; while (nuGauche < largeur && EstNu(nuGauche)) nuGauche++;
+            int nuDroite = 0; while (nuDroite < largeur && EstNu(largeur - 1 - nuDroite)) nuDroite++;
+            const int MargeAntiCrenelage = 4;
+            Debug.Log($"[ECHELLE] {largeur}x{hauteur} — fond nu au bord : {nuGauche} px à gauche, {nuDroite} px à droite");
+            Assert.LessOrEqual(Mathf.Max(nuGauche, nuDroite), MargeAntiCrenelage,
+                $"le chrome laisse {nuGauche}/{nuDroite} px de fond NU aux bords à {largeur}x{hauteur} : " +
+                "il ne va pas d'un bord à l'autre. Cause de loin la plus probable — la mise en page " +
+                "n'a pas été refaite pour cette résolution, et TOUT est alors à l'échelle d'une autre.");
 
             UnityEngine.Object.DestroyImmediate(tex);
             canvas.renderMode = modeAvant;

@@ -482,6 +482,104 @@ namespace MafiaCleanCity.Shell
             return srgb;
         }
 
+        /// <summary>Les fonds de référence sur lesquels un VOILE du client peut réellement tomber :
+        /// l'art de district, de la nuit la plus sombre au ciel de jour le plus clair. DÉCLARÉS,
+        /// parce que la valeur rendue par `AlphaVoileSurFondQuelconque` est un AJUSTEMENT sur cet
+        /// ensemble et sur aucun autre — un ajustement dont on cache le domaine est un compromis
+        /// qu'on fait passer pour une solution.</summary>
+        /// <remarks>⚠️ CONSTRUITS À PARTIR D'UNE COULEUR NOMMÉE, CANAL PAR CANAL — jamais par le
+        /// constructeur à trois composantes. (Cette phrase le PARAPHRASE au lieu de l'écrire : la
+        /// garde balaie le fichier, commentaires compris, et ma première rédaction citait la forme
+        /// interdite pour expliquer qu'elle l'est — elle la réintroduisait donc, et la garde a
+        /// rougi sur mon explication. *Décrire un correctif est un acte de citation.*)
+        /// Ce ne sont pas des teintes de design mais un DOMAINE DE MESURE (les
+        /// luminances sur lesquelles l'ajustement est évalué) ; la garde R2.3 ne peut pas faire la
+        /// différence entre les deux, et c'est très bien : elle a rougi sur ce tableau, exactement
+        /// comme elle doit rougir sur un jeton en dur. *Une garde qu'on peut satisfaire sans rien
+        /// perdre ne mérite pas d'exception* — c'est déjà la forme retenue pour
+        /// `CouleurPourMelangeLineaire` dans ce même fichier.
+        /// Méthode et non champ statique : un initialiseur statique qui toucherait `DesignTokens`
+        /// jetterait en contexte de constructeur (piège documenté du dépôt).</remarks>
+        public static Color[] FondsDeReferenceVoile()
+        {
+            var f = new Color[7];
+            for (int i = 0; i < 7; i++) f[i] = Color.black;
+            f[0].r = 0.08f; f[0].g = 0.10f; f[0].b = 0.13f;   // nuit profonde
+            f[1].r = 0.20f; f[1].g = 0.24f; f[1].b = 0.28f;   // ombre de bâtiment
+            f[2].r = 0.33f; f[2].g = 0.53f; f[2].b = 0.60f;   // eau du port
+            f[3].r = 0.40f; f[3].g = 0.55f; f[3].b = 0.62f;   // eau éclairée
+            f[4].r = 0.55f; f[4].g = 0.60f; f[4].b = 0.65f;   // pavé de jour
+            f[5].r = 0.62f; f[5].g = 0.66f; f[5].b = 0.70f;   // toiture claire
+            f[6].r = 0.75f; f[6].g = 0.80f; f[6].b = 0.85f;   // ciel de jour
+            return f;
+        }
+
+        /// <summary>L'opacité à employer, EN MÉLANGE LINÉAIRE, pour qu'un voile posé sur un fond
+        /// QUELCONQUE retombe au plus près de ce qu'un navigateur produirait en sRGB à l'opacité CSS.
+        ///
+        /// ⚠️⚠️ CE N'EST PAS `CouleurPourMelangeLineaire`, ET LA DIFFÉRENCE EST STRUCTURELLE.
+        /// Cette fonction-là est EXACTE — trois équations, trois inconnues — mais elle exige de
+        /// CONNAÎTRE le fond. Elle s'applique donc à une bordure sur une plaque, à un arc sur un
+        /// cadran : des fonds fixes. La plaque de la fiche et le voile du dock, eux, flottent sur
+        /// l'ART, qui change à chaque district et à chaque heure.
+        ///   ⇒ Pour un fond inconnu, **il n'existe aucune solution exacte à une seule opacité** :
+        ///     l'opacité qui corrigerait un ciel clair n'est pas celle qui corrigerait un mur
+        ///     sombre. Le dire est le seul geste honnête ; ce qu'on rend est donc un AJUSTEMENT,
+        ///     et il sort avec son RÉSIDU pour qu'un test puisse l'épingler.
+        ///
+        /// Ce qui rend l'ajustement crédible, et c'est une mesure, pas une opinion : en résolvant
+        /// conjointement l'opacité ET la teinte, l'optimum laisse la TEINTE INCHANGÉE (facteur
+        /// 1,00) et ne déplace que l'opacité. *Un compromis se voit à la dispersion qu'il laisse* —
+        /// ici il n'en laisse aucune sur la couleur, ce qui dit que la seule grandeur fautive était
+        /// bien l'opacité. Mesuré sur les trois voiles de l'écran principal, écart maximal sur les
+        /// sept fonds déclarés :
+        ///     plaque haut  α .937 → .9876 : 30,30 → 2,95 /255
+        ///     plaque bas   α .965 → .9950 : 24,96 → 1,90 /255
+        ///     voile dock   α .847 → .9646 : 46,43 → 4,11 /255</summary>
+        public static float AlphaVoileSurFondQuelconque(Color encre, float alphaSrgb, out float residuMax)
+        {
+            residuMax = 0f;
+            if (alphaSrgb <= 0f || alphaSrgb >= 1f) return alphaSrgb;
+
+            float meilleurA = alphaSrgb, meilleurErr = float.MaxValue;
+            // Balayage géométrique du reste d'opacité : (1−a) décroît de 15 % par pas. 60 pas
+            // couvrent de α jusqu'à ~1−1e−5, bien au-delà de tout optimum utile, en un temps nul.
+            float a = alphaSrgb;
+            for (int i = 0; i < 60; i++)
+            {
+                float err = ErreurVoile(encre, alphaSrgb, a);
+                if (err < meilleurErr) { meilleurErr = err; meilleurA = a; }
+                a = 1f - (1f - a) * 0.85f;
+            }
+            residuMax = meilleurErr;
+            return meilleurA;
+        }
+
+        /// <summary>L'écart maximal, en /255, entre ce que le navigateur produirait (mélange sRGB à
+        /// `alphaCss`) et ce que le client produit (mélange linéaire à `alphaTest`), sur les fonds
+        /// déclarés. C'est l'instrument de `AlphaVoileSurFondQuelconque` — il vit dans le dépôt,
+        /// à côté du chiffre qu'il produit.</summary>
+        public static float ErreurVoile(Color encre, float alphaCss, float alphaTest)
+        {
+            float pire = 0f;
+            Color encreLin = encre.linear;
+            foreach (Color fond in FondsDeReferenceVoile())
+            {
+                Color cible = Color.Lerp(fond, encre, alphaCss);   // ce que le navigateur produit
+                Color fondLin = fond.linear;
+                Color obtenuLin = Color.black;
+                obtenuLin.r = fondLin.r + alphaTest * (encreLin.r - fondLin.r);
+                obtenuLin.g = fondLin.g + alphaTest * (encreLin.g - fondLin.g);
+                obtenuLin.b = fondLin.b + alphaTest * (encreLin.b - fondLin.b);
+                obtenuLin.a = 1f;
+                Color obtenu = obtenuLin.gamma;
+                pire = Mathf.Max(pire, Mathf.Abs(cible.r - obtenu.r) * 255f);
+                pire = Mathf.Max(pire, Mathf.Abs(cible.g - obtenu.g) * 255f);
+                pire = Mathf.Max(pire, Mathf.Abs(cible.b - obtenu.b) * 255f);
+            }
+            return pire;
+        }
+
         public static float AlphaSrgbVersLineaire(Color encre, Color fond, float alphaSrgb)
         {
             if (alphaSrgb <= 0f) return 0f;

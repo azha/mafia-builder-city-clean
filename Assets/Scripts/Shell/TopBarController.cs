@@ -227,7 +227,15 @@ namespace MafiaCleanCity.Shell
         private const float MoneyUnderlineWidthPx = 74f; // REUSE exact — hud-brennar.html:59 `.ratio{width:74px}`
         private const float ZoneRowWidth = 34f;
         private const float ZoneRowHeight = 9f;
-        private const float BarCornerRadiusPx = 10f;
+        // ⛔ 0 ET NON 10. Le canon donne `.barre{height:52px;background:linear-gradient(...)}`
+        // — AUCUN `border-radius`, et la barre va d'un bord à l'autre : c'est `.hud` qui porte
+        // `padding:0 16px`, donc seul le CONTENU est en retrait. Un juge visuel ⊥ a relevé une
+        // « carte flottante à coins arrondis » là où la maquette a une bande, et noté que le
+        // filet laiton s'arrêtait 12 CSS avant les bords avec elle.
+        //   Le masque reste en place : à rayon nul il clippe au rectangle, donc il ne fait rien
+        //   — mais la STRUCTURE (un `Graphic` masquable sous un `Mask`) reste celle que les
+        //   gardes vérifient, et rétablir un arrondi un jour ne demandera pas de la refaire.
+        private const float BarCornerRadiusPx = 0f;
 
         // HUD v3.1 — correctif manomètre (2026-08-21, 5 défauts mesurés vs `Tools/hud-topbar-
         // reference-2560.png`) — géométrie REUSE exacte du SVG source (`hud-topbar-reference-

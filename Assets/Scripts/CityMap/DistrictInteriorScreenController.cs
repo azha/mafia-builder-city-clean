@@ -359,7 +359,15 @@ namespace MafiaCleanCity.CityMap
             // Aucun nœud ajouté : `DistrictTitle` reste le TextMeshProUGUI lui-même, donc le compte de
             // 3 enfants de root et l'ordre de fratrie (titre en DERNIER, nav-district-F8) sont
             // inchangés, et `anchoredPosition.y` reste byte-identique (nav-F5 le mesure).
-            TextMeshProUGUI title = NewText("DistrictTitle", root, dto.name_canonical, 20, TextAlignmentOptions.TopLeft);
+            // ⛔ `name_canonical` EST UN IDENTIFIANT, PAS UN NOM D'AFFICHAGE. Le DTO le dit
+            // lui-même (`// e.g. "Tidewater-1"`), et un juge visuel ⊥ l'a relevé : « chaîne à
+            // allure d'identifiant (casse mixte + tiret) ». Le back ne projette aucun libellé —
+            // c'est un trou de PROJECTION, la forme F. En attendant qu'il en porte un, on met en
+            // forme ce qu'on a : le tiret devient une espace, ce qui donne « Verge A » au lieu de
+            // « Verge-A ». On ne fabrique pas de donnée, on cesse d'afficher une clé technique.
+            string libelleDistrict = string.IsNullOrEmpty(dto.name_canonical)
+                ? "—" : dto.name_canonical.Replace('-', ' ');
+            TextMeshProUGUI title = NewText("DistrictTitle", root, libelleDistrict, 20, TextAlignmentOptions.TopLeft);
             title.font = DesignTokens.Current.hudSerifFont;
             title.characterSpacing = DistrictTitleCharacterSpacing;
             RectTransform titleRt = (RectTransform)title.transform;
@@ -368,7 +376,9 @@ namespace MafiaCleanCity.CityMap
             titleRt.pivot = new Vector2(0.5f, 1f);
             titleRt.sizeDelta = new Vector2(-2f * MafiaCleanCity.Shell.ShellChrome.GutterX, 32);
             titleRt.anchoredPosition = new Vector2(0, -(8f + safeInsetTop));
-            title.color = DesignTokens.Current.onSurfacePrimary;
+            // ⛔ `onSurfacePrimary` mesure (224,227,228) — un blanc froid HORS de la palette du
+            // HUD, relevé comme tel par un juge visuel ⊥. Tout le chrome de cet écran est en crème.
+            title.color = DesignTokens.Current.hudCreme;
             ApplyTitleShadow(title);
             TrackText(title);
 
@@ -1453,6 +1463,13 @@ namespace MafiaCleanCity.CityMap
         /// estimée depuis les paddings : 169,19 px CSS pour un téléphone de 392 × 696,875.</summary>
         private const float FicheHauteurCss = 169.19f;
 
+        /// <summary>Largeur de `.fiche` mesurée sur la maquette : 366,00 px CSS (392 − 2×13).</summary>
+        private const float FicheLargeurCss = 366f;
+
+        /// <summary>Retrait horizontal du contenu dans `.fiche` : 17,00 px CSS mesurés
+        /// (`padding:13px 16px 14px` + 1 px de bordure).</summary>
+        private const float FichePadX = 17f;
+
         private RectTransform ficheRoot;
         private TextMeshProUGUI ficheTitre, ficheType, ficheSortie;
         private TextMeshProUGUI[] ficheStatValeurs = new TextMeshProUGUI[3];
@@ -1506,8 +1523,25 @@ namespace MafiaCleanCity.CityMap
             GameObject plaqueGo = NewUI("Plaque", go.transform);
             Stretch((RectTransform)plaqueGo.transform, Vector2.zero, Vector2.zero);
             Image plaque = plaqueGo.AddComponent<Image>();
-            plaque.sprite = MafiaCleanCity.Shell.ProceduralUI.VerticalGradient(64,
-                DesignTokens.Current.ficheGlassTop, DesignTokens.Current.ficheGlassBottom);
+            // ⛔ LA PLAQUE LAISSAIT PASSER 7,4× TROP DE FOND (mesuré par un juge visuel ⊥ :
+            // transmittance apparente 0,029 au canon contre 0,214 en jeu). Trait d'identité perdu —
+            // « la fiche est une plaque de verre FUMÉ, plus sombre que la carte » — et l'art (grues,
+            // docks, eau) se lisait au travers.
+            //   Cause : le navigateur compose en sRGB, le client en linéaire, et le mélange linéaire
+            //   favorise la couleur claire. Ce n'est pas une erreur de valeur, c'est une erreur de
+            //   MODÈLE — d'où six symptômes pour une cause.
+            //   La plaque flotte sur l'ART, donc le fond est INCONNU : aucune solution exacte à une
+            //   seule opacité n'existe. On rend donc un AJUSTEMENT déclaré, sur des fonds déclarés,
+            //   avec son résidu — et ce qui rend l'ajustement crédible est une mesure : en résolvant
+            //   conjointement l'opacité ET la teinte, l'optimum laisse la TEINTE INCHANGÉE.
+            float residuHaut, residuBas;
+            Color plaqueHaut = DesignTokens.Current.ficheGlassTop;
+            Color plaqueBas = DesignTokens.Current.ficheGlassBottom;
+            plaqueHaut.a = MafiaCleanCity.Shell.ProceduralUI.AlphaVoileSurFondQuelconque(
+                plaqueHaut, plaqueHaut.a, out residuHaut);
+            plaqueBas.a = MafiaCleanCity.Shell.ProceduralUI.AlphaVoileSurFondQuelconque(
+                plaqueBas, plaqueBas.a, out residuBas);
+            plaque.sprite = MafiaCleanCity.Shell.ProceduralUI.VerticalGradient(64, plaqueHaut, plaqueBas);
             plaque.type = Image.Type.Simple;
             plaque.color = Color.white;
             plaque.raycastTarget = false;
@@ -1528,91 +1562,125 @@ namespace MafiaCleanCity.CityMap
 
             GameObject corps = NewUI("Corps", go.transform);
             RectTransform corpsRt = (RectTransform)corps.transform;
-            corpsRt.anchorMin = Vector2.zero;
-            corpsRt.anchorMax = Vector2.one;
-            corpsRt.offsetMin = new Vector2(FD(16f), FD(14f));
-            corpsRt.offsetMax = new Vector2(-FD(16f), -FD(13f));   // `padding:13px 16px 14px`
-            VerticalLayoutGroup v = corps.AddComponent<VerticalLayoutGroup>();
-            v.spacing = 0f;
-            v.childControlWidth = true; v.childControlHeight = true;
-            v.childForceExpandWidth = true; v.childForceExpandHeight = false;
+            corpsRt.anchorMin = new Vector2(0f, 1f);
+            corpsRt.anchorMax = new Vector2(1f, 1f);
+            corpsRt.pivot = new Vector2(0.5f, 1f);
+            corpsRt.offsetMin = new Vector2(FD(FichePadX), 0f);
+            corpsRt.offsetMax = new Vector2(-FD(FichePadX), 0f);
+            corpsRt.sizeDelta = new Vector2(corpsRt.sizeDelta.x, FD(FicheHauteurCss));
 
-            // ── titre ──────────────────────────────────────────────────────────────────────────
+            // ⛔⛔ PLUS AUCUN `VerticalLayoutGroup` ICI, ET C'EST LE CORRECTIF, PAS UN DÉTAIL.
+            // La pile était empilée par un layout avec des hauteurs ESTIMÉES (20 · 13 · 46 · 18 ·
+            // 11 · 34 · 12). Un juge visuel ⊥ a mesuré le résultat : toute la pile comprimée et
+            // calée en haut — filet→titre 20,7→16,3 · titre→sous-titre 10,6→5,9 · valeurs→libellés
+            // 8,9→**3,3** · libellés→boutons 16,0→**7,2** — et le déficit cumulé (22,5) retrouvé
+            // en bas, où **un quart de la plaque restait vide** (marge sous les boutons 15,0→42,9).
+            //   Un layout ne peut pas restituer un rythme qu'on ne lui a pas donné : il répartit ce
+            //   qu'on lui déclare. Les hauteurs déclarées étaient fausses, donc le rythme aussi.
+            // ⇒ Chaque partie est désormais POSÉE à l'offset MESURÉ sur la maquette
+            //   (`Tools/mesurer-maquette.py`, sortie commitée) :
+            //       .titre .serif   y  17,00  h 17,00
+            //       .titre .type    y  40,80  h 13,94
+            //       .stats          y  64,73  h 37,64   (valeurs y 67,73 h 16,00 · libellés y 89,20 h 13,17)
+            //       .actions        y 114,38  h 39,81
+            //       marge basse     169,19 − (114,38 + 39,81) = 15,00
+            //   Contrôle d'arithmétique du découpage : la somme rend la hauteur totale.
+
+            // ── titre (`.fiche .titre .serif`) ────────────────────────────────────────────────
             ficheTitre = NewText("Titre", corps.transform, "", FDi(16f), TextAlignmentOptions.Center);
             ficheTitre.font = DesignTokens.Current.hudSerifFont;
             ficheTitre.characterSpacing = 13f;                       // `.13em`
             ficheTitre.color = DesignTokens.Current.hudMoneyGold;     // --or-vif
             ficheTitre.fontFeatures.Clear();
-            AjouterHauteur(ficheTitre.gameObject, FD(20f));
+            PoserDansFiche((RectTransform)ficheTitre.transform, 17.00f, 17.00f);
 
             ficheType = NewText("Type", corps.transform, "", FDi(9f), TextAlignmentOptions.Center);
             ficheType.characterSpacing = 20f;                        // `.2em`
             ficheType.color = DesignTokens.Current.hudCremeSecondary;
-            AjouterHauteur(ficheType.gameObject, FD(13f));
+            PoserDansFiche((RectTransform)ficheType.transform, 40.80f, 13.94f);
 
-            // ── les trois cases, séparées par des filets verticaux ────────────────────────────
-            GameObject stats = NewUI("Stats", corps.transform);
-            HorizontalLayoutGroup sh = stats.AddComponent<HorizontalLayoutGroup>();
-            sh.spacing = 0f;
-            sh.childControlWidth = true; sh.childControlHeight = true;
-            sh.childForceExpandWidth = true; sh.childForceExpandHeight = false;
-            sh.padding = new RectOffset(0, 0, FDi(10f), FDi(12f));    // `.stats{margin:10px 0 12px}`
-            AjouterHauteur(stats, FD(46f));
-
+            // ── les trois cases, en TIERS ÉGAUX ──────────────────────────────────────────────
+            // ⛔ Elles étaient dimensionnées AU CONTENU (`childForceExpandWidth` sur des textes qui
+            // portent une largeur préférée) : mesuré 125,5 · 116,2 · 94,0 au lieu de trois fois
+            // 110,7, soit un rapport max/min de **1,34** — et la valeur centrale poussée à 16,3 CSS
+            // HORS de l'axe de l'écran. Le canon donne trois colonnes strictement égales ; on les
+            // pose donc par calcul, sans layout à convaincre.
+            float largeurContenu = FicheLargeurCss - 2f * FichePadX;   // 366 − 34 = 332
+            float colonne = largeurContenu / 3f;                        // 110,667
             for (int i = 0; i < 3; i++)
             {
-                GameObject caseGo = NewUI($"Stat{i}", stats.transform);
-                VerticalLayoutGroup cv = caseGo.AddComponent<VerticalLayoutGroup>();
-                cv.spacing = FD(2f);
-                cv.childControlWidth = true; cv.childControlHeight = true;
-                cv.childForceExpandWidth = true; cv.childForceExpandHeight = false;
-                cv.childAlignment = TextAnchor.MiddleCenter;
+                float x0 = i * colonne;
 
                 // `.stats>div{border-right:1px solid #ffffff10}` — sauf la dernière.
                 if (i < 2)
                 {
-                    GameObject sep = NewUI("Sep", caseGo.transform);
-                    sep.AddComponent<LayoutElement>().ignoreLayout = true;
+                    GameObject sep = NewUI("Sep", corps.transform);
                     RectTransform sr = (RectTransform)sep.transform;
-                    sr.anchorMin = new Vector2(1f, 0f);
-                    sr.anchorMax = new Vector2(1f, 1f);
-                    sr.pivot = new Vector2(1f, 0.5f);
-                    sr.sizeDelta = new Vector2(FD(1f), 0f);
-                    sr.anchoredPosition = Vector2.zero;
+                    sr.anchorMin = new Vector2(0f, 1f);
+                    sr.anchorMax = new Vector2(0f, 1f);
+                    sr.pivot = new Vector2(0f, 1f);
+                    sr.sizeDelta = new Vector2(FD(1f), FD(37.64f));
+                    sr.anchoredPosition = new Vector2(FD(x0 + colonne), -FD(64.73f));
                     Image si = sep.AddComponent<Image>();
-                    Color sc = Color.white; sc.a = 0.063f;            // #ffffff10
-                    si.color = sc;
+                    // `#ffffff10` sur la plaque — fond CONNU, donc résolution EXACTE par canal.
+                    Color blanc = Color.white; blanc.a = 1f;
+                    bool joignable;
+                    si.color = MafiaCleanCity.Shell.ProceduralUI.CouleurPourMelangeLineaire(
+                        blanc, DesignTokens.Current.ficheGlassTop, 0.063f, out joignable);
                     si.raycastTarget = false;
                 }
 
-                ficheStatValeurs[i] = NewText("Valeur", caseGo.transform, "—", FDi(14.5f), TextAlignmentOptions.Center);
+                ficheStatValeurs[i] = NewText("Valeur", corps.transform, "—", FDi(14.5f), TextAlignmentOptions.Center);
                 ficheStatValeurs[i].font = DesignTokens.Current.hudSerifFont;
-                ficheStatValeurs[i].color = DesignTokens.Current.hudCreme;
-                AjouterHauteur(ficheStatValeurs[i].gameObject, FD(18f));
+                PoserColonne((RectTransform)ficheStatValeurs[i].transform, x0, colonne, 67.73f, 16.00f);
 
-                ficheStatLibelles[i] = NewText("Libelle", caseGo.transform, "", FDi(8.5f), TextAlignmentOptions.Center);
+                ficheStatLibelles[i] = NewText("Libelle", corps.transform, "", FDi(8.5f), TextAlignmentOptions.Center);
                 ficheStatLibelles[i].characterSpacing = 14f;          // `.14em`
                 ficheStatLibelles[i].color = DesignTokens.Current.hudCremeSecondary;
-                AjouterHauteur(ficheStatLibelles[i].gameObject, FD(11f));
+                PoserColonne((RectTransform)ficheStatLibelles[i].transform, x0, colonne, 89.20f, 13.17f);
             }
 
             // ── les trois actions ─────────────────────────────────────────────────────────────
-            GameObject actions = NewUI("Actions", corps.transform);
-            HorizontalLayoutGroup ah = actions.AddComponent<HorizontalLayoutGroup>();
-            ah.spacing = FD(9f);                                      // `.actions{gap:9px}`
-            ah.childControlWidth = true; ah.childControlHeight = true;
-            ah.childForceExpandWidth = true; ah.childForceExpandHeight = true;
-            AjouterHauteur(actions, FD(34f));
+            // `.actions{gap:9px}` · `.btn{flex:1}` ⇒ (332 − 2×9) / 3 = 104,667 chacun.
+            float largeurBouton = (largeurContenu - 2f * 9f) / 3f;
+            BuildFicheBouton(corps.transform, "COLLECTER", or: true, action: () => ActionFiche("COLLECTER"),
+                             x: 0f, largeur: largeurBouton);
+            BuildFicheBouton(corps.transform, "BLANCHIR", or: false, action: () => ActionFiche("BLANCHIR"),
+                             x: largeurBouton + 9f, largeur: largeurBouton);
+            BuildFicheBouton(corps.transform, "AMÉLIORER", or: false, action: () => ActionFiche("AMÉLIORER"),
+                             x: 2f * (largeurBouton + 9f), largeur: largeurBouton);
 
-            BuildFicheBouton(actions.transform, "COLLECTER", or: true, action: () => ActionFiche("COLLECTER"));
-            BuildFicheBouton(actions.transform, "BLANCHIR", or: false, action: () => ActionFiche("BLANCHIR"));
-            BuildFicheBouton(actions.transform, "AMÉLIORER", or: false, action: () => ActionFiche("AMÉLIORER"));
-
+            // Le retour d'une action. Posé EN SURIMPRESSION de la rangée d'actions plutôt qu'à sa
+            // suite : dans le flux, il consommait de la hauteur en permanence pour un texte vide
+            // 99 % du temps — et cette hauteur manquait au rythme du reste.
             ficheSortie = NewText("Sortie", corps.transform, "", FDi(9f), TextAlignmentOptions.Center);
             ficheSortie.color = DesignTokens.Current.hudCremeSecondary;
-            AjouterHauteur(ficheSortie.gameObject, FD(12f));
+            PoserDansFiche((RectTransform)ficheSortie.transform, 155.0f, 14.0f);
 
             go.SetActive(false);
+        }
+
+        /// <summary>Pose une partie sur toute la largeur du corps, à l'offset vertical MESURÉ sur
+        /// la maquette (en px CSS depuis le haut de `.fiche`).</summary>
+        private void PoserDansFiche(RectTransform rt, float yCss, float hauteurCss)
+        {
+            rt.anchorMin = new Vector2(0f, 1f);
+            rt.anchorMax = new Vector2(1f, 1f);
+            rt.pivot = new Vector2(0.5f, 1f);
+            rt.offsetMin = new Vector2(0f, rt.offsetMin.y);
+            rt.offsetMax = new Vector2(0f, rt.offsetMax.y);
+            rt.sizeDelta = new Vector2(0f, FD(hauteurCss));
+            rt.anchoredPosition = new Vector2(0f, -FD(yCss));
+        }
+
+        /// <summary>Pose une partie dans UNE colonne de tiers, à l'offset vertical mesuré.</summary>
+        private void PoserColonne(RectTransform rt, float xCss, float largeurCss, float yCss, float hauteurCss)
+        {
+            rt.anchorMin = new Vector2(0f, 1f);
+            rt.anchorMax = new Vector2(0f, 1f);
+            rt.pivot = new Vector2(0f, 1f);
+            rt.sizeDelta = new Vector2(FD(largeurCss), FD(hauteurCss));
+            rt.anchoredPosition = new Vector2(FD(xCss), -FD(yCss));
         }
 
         private static void AjouterHauteur(GameObject go, float h)
@@ -1623,9 +1691,12 @@ namespace MafiaCleanCity.CityMap
 
         /// <summary>Un bouton de la fiche. `.btn.or` = le SEUL coloré (dégradé d'or, encre sombre) ;
         /// `.btn.ligne` = un bouton-filet. Le canon insiste : « une seule action colorée ».</summary>
-        private void BuildFicheBouton(Transform parent, string libelle, bool or, UnityEngine.Events.UnityAction action)
+        private void BuildFicheBouton(Transform parent, string libelle, bool or,
+                                      UnityEngine.Events.UnityAction action, float x, float largeur)
         {
             GameObject go = NewUI($"Btn_{libelle}", parent);
+            // `.actions` y=114,38 h=39,81 — mesuré au navigateur, posé, jamais réparti.
+            PoserColonne((RectTransform)go.transform, x, largeur, 114.38f, 39.81f);
             Image fond = go.AddComponent<Image>();
             if (or)
             {
@@ -1637,17 +1708,26 @@ namespace MafiaCleanCity.CityMap
             }
             else
             {
-                // `.btn.ligne{background:#ffffff0a; border:1px solid #ffffff2a}`
-                Color voile = Color.white; voile.a = 0.039f;
-                fond.color = voile;
+                // `.btn.ligne{background:#ffffff0a}` — le juge l'a mesuré **×4,78 trop fort**.
+                // Le fond est CONNU (la plaque de la fiche) ⇒ résolution EXACTE par canal, pas un
+                // ajustement : trois équations, trois inconnues.
+                bool atteignable;
+                fond.color = MafiaCleanCity.Shell.ProceduralUI.CouleurPourMelangeLineaire(
+                    Color.white, DesignTokens.Current.ficheGlassTop, 0.039f, out atteignable);
             }
 
             GameObject masqueGo = NewUI("Coins", go.transform);
             Stretch((RectTransform)masqueGo.transform, Vector2.zero, Vector2.zero);
             masqueGo.AddComponent<LayoutElement>().ignoreLayout = true;
             Image trait = masqueGo.AddComponent<Image>();
-            Color bord = or ? DesignTokens.Current.ficheCtaOrBord : Color.white;
-            if (!or) bord.a = 0.165f;                                  // #ffffff2a
+            Color bord = DesignTokens.Current.ficheCtaOrBord;
+            if (!or)
+            {
+                // `#ffffff2a` sur la plaque — mesuré ×2,11 trop fort. Fond connu ⇒ exact.
+                bool atteignableBord;
+                bord = MafiaCleanCity.Shell.ProceduralUI.CouleurPourMelangeLineaire(
+                    Color.white, DesignTokens.Current.ficheGlassTop, 0.165f, out atteignableBord);
+            }
             trait.sprite = MafiaCleanCity.Shell.ProceduralUI.RoundedRectOutline(FDi(9f), FD(1f), bord);
             trait.type = Image.Type.Sliced;
             trait.color = Color.white;
@@ -1677,6 +1757,14 @@ namespace MafiaCleanCity.CityMap
             ficheType.text = LibellesBatiment.Conversion(b.conversion_band);
 
             // `$ 2 400 / À COLLECTER` ⇒ la bande de revenu : le bâtiment rapporte-t-il ?
+            // ⛔ LES TROIS VALEURS ÉTAIENT DE LA MÊME COULEUR, et le juge l'a classé MAJEUR : le
+            // canon CODE l'information par la teinte — or = argent, crème = neutre, braise =
+            // danger. Rendues toutes crème, les trois cases ne portent plus aucun signal de
+            // gravité, et l'or quitte la fiche (il n'y restait que le titre et le CTA).
+            //   *Le remplacement des chiffres par des bandes est un écart ASSUMÉ ; la perte du
+            //   codage couleur ne l'est pas — elle ne découle pas de lui.*
+            ficheStatValeurs[0].color = DesignTokens.Current.hudMoneyGold;   // --or-vif : l'argent
+            ficheStatValeurs[1].color = DesignTokens.Current.hudCreme;       // neutre : la chaîne
             ficheStatValeurs[0].text = LibellesBatiment.Revenu(b.revenue_band);
             ficheStatLibelles[0].text = "REVENU";
             // `$ 180/h / REVENUS` ⇒ la chaîne est-elle raccordée ? (un bâtiment qui gagne sans
@@ -1692,6 +1780,43 @@ namespace MafiaCleanCity.CityMap
 
             ficheSortie.text = "";
             ficheRoot.gameObject.SetActive(true);
+        }
+
+        /// <summary>Refait TOUTE la mise en page pour la résolution courante, et rouvre la fiche
+        /// sur le bâtiment qu'elle portait.
+        ///
+        /// ⛔⛔ POURQUOI ÇA EXISTE, ET CE QUE ÇA RÉPARE — un défaut de MESURE, pas de rendu.
+        /// Le fond est posé à `taille_native / scaleFactor` : c'est ce qui garantit qu'il occupe
+        /// exactement ses pixels natifs, propriété certifiée bit-exacte. Mais `scaleFactor` est lu
+        /// UNE fois, à la construction. Une capture hors écran qui bascule ensuite le canvas sur
+        /// une cible d'une AUTRE taille change le `scaleFactor` sans refaire la mise en page :
+        /// le fond garde sa `sizeDelta` d'avant et se retrouve rendu à un facteur parasite.
+        ///   Mesuré : un juge visuel ⊥ a relevé l'art à **972 px de large sur 1080**, soit 0,9000
+        ///   exactement, et l'a classé MAJEUR (« la ville n'est plus plein cadre »). Le 0,9 n'était
+        ///   pas un choix de cadrage : c'est **0,84375 / 0,9375**, le rapport des `scaleFactor`
+        ///   entre la cible de capture (1080) et la vue de jeu (1200) où la mise en page avait été
+        ///   faite. *Une capture est une mesure DATÉE : la question n'est pas « que déclare le
+        ///   commit », c'est « sous quel état a-t-elle été prise ».*
+        /// ⇒ Toute capture à une résolution donnée doit REFAIRE la mise en page à cette
+        ///   résolution, sinon elle mesure l'écran d'une autre.</summary>
+        public void RebatirPourResolutionCourante()
+        {
+            string batiment = FicheBuildingId;
+            DistrictInteriorDto dto = LastFetch;
+            if (root != null)
+            {
+                Destroy(root.gameObject);
+                root = null;
+                ficheRoot = null;
+                ficheTitre = null; ficheType = null; ficheSortie = null;
+                for (int i = 0; i < 3; i++) { ficheStatValeurs[i] = null; ficheStatLibelles[i] = null; }
+            }
+            FicheBuildingId = null;
+            if (dto == null) return;
+            Render(dto);
+            if (!string.IsNullOrEmpty(batiment) && dto.buildings != null)
+                foreach (DistrictInteriorBuildingDto b in dto.buildings)
+                    if (b != null && b.building == batiment) { OuvrirFiche(b); break; }
         }
 
         public void FermerFiche()

@@ -723,9 +723,18 @@ namespace MafiaCleanCity.Shell.Tests
                     $"« {brut} » est rendu tel quel — c'est la valeur d'enum de la base qui arrive " +
                     "à l'écran, à côté d'un « JOUR 1 » déjà mis en forme");
                 Assert.IsNotEmpty(libelle, $"« {brut} » n'a pas de libellé");
-                StringAssert.AreEqualIgnoringCase(brut, libelle,
-                    $"le libellé de « {brut} » doit rester LE MÊME MOT — ce résolveur met en forme, " +
-                    "il ne traduit pas (la langue de l'interface est un arbitrage produit ouvert)");
+                // ⛔ CETTE ASSERTION EXIGEAIT « LE MÊME MOT » — ELLE INTERDISAIT DONC DE TRADUIRE,
+                // et elle est restée verte pendant que « Dawn » s'affichait en grand dans un écran
+                // intégralement français. Son motif (« la langue est un arbitrage produit OUVERT »)
+                // avait cessé d'être vrai : l'arbitrage était tranché partout ailleurs dans le
+                // client. Une garde dont la PRÉMISSE a péri certifie ce qu'elle devait surveiller.
+                // ⇒ La propriété voulue n'a jamais été « le même mot » : c'est « pas la valeur brute
+                //   de la base, et dans la langue de l'interface ». On l'asserte donc directement.
+                Assert.IsFalse(System.Text.RegularExpressions.Regex.IsMatch(libelle, "^[A-Z_]+$"),
+                    $"« {libelle} » a la FORME d'une valeur d'enum (majuscules et soulignés) — " +
+                    "une traduction qui ressemble à l'enum ne vaut pas mieux que l'enum");
+                Assert.IsTrue(libelle.Length >= 3,
+                    $"le libellé de « {brut} » est trop court pour être un mot ({libelle})");
             }
 
             // Une valeur inconnue passe TELLE QUELLE, délibérément : voir passer un quart inattendu
