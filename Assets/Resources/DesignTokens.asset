@@ -78,3 +78,5 @@ MonoBehaviour:
   hudCremeSecondary: {r: 0.725, g: 0.678, b: 0.573, a: 1}
   lieutenantGlassTop: {r: 0.086, g: 0.129, b: 0.208, a: 0.58}
   lieutenantGlassBottom: {r: 0.035, g: 0.055, b: 0.094, a: 0.74}
+  lieutenantMedallionInner: {r: 0.141, g: 0.188, b: 0.282, a: 1}
+  lieutenantMedallionOuter: {r: 0.059, g: 0.086, b: 0.133, a: 1}

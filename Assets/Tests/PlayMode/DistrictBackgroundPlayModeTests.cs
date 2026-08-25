@@ -466,12 +466,24 @@ namespace MafiaCleanCity.CityMap.Tests
         // (verre gravé des panneaux Don/lieutenant), propagation canon-first complète et vérifiée
         // aux 4 sources (gdd/14 note dédiée = 64 · `DesignTokens.cs`/`.asset` = 64 champs Color ·
         // `canon_palette_extract.json` = 64 tokens, `lieutenantGlassTop/Bottom` présents aux 3).
-        // Le pivot fond pré-rendu n'a de nouveau pas été touché — la propriété épinglée reste vraie.
+        // AMENDÉ (2026-08-25) : 64 -> 66, +2 tokens `lieutenantMedallionInner`/`Outer` — le DISQUE
+        // du médaillon de « LA FAMILLE ». Il empruntait `hudGaugeFace*`, la face du MANOMÈTRE ; un
+        // juge visuel ⊥ a mesuré le disque 32 % plus sombre et son bleu (b−r) DIVISÉ PAR DEUX.
+        // Deux surfaces distinctes, deux tokens — « un token par consommateur mesuré » (gdd/14).
+        // Propagation aux 4 sources vérifiée, comme les deux amendements précédents.
+        //
+        // ⚠️ CE QUE CETTE GARDE ÉPINGLE N'EST PAS LE NOMBRE, C'EST UNE PROPRIÉTÉ : *le pivot fond
+        // pré-rendu n'ajoute aucune teinte*. Le nombre en est le témoin, et il bouge chaque fois
+        // qu'un AUTRE lot ajoute légitimement un token. La monter est donc l'entretien normal de
+        // cette garde, à condition de NOMMER ce qui s'ajoute — sans quoi le compte devient une
+        // constante que l'on relève sans réfléchir, et la garde ne surveille plus rien.
         [Test]
         public void AmbF7_SealedTokenCountUnchanged()
         {
-            Assert.AreEqual(64, MafiaCleanCity.Theme.Tests.CanonPaletteComparator.ExpectedTokenCount,
-                "amb-F7 — le pivot fond pré-rendu n'ajoute AUCUNE teinte : les 64 clés de DesignTokens restent fermées (51 + 11 hud* HUD v3.1 + 2 lieutenantGlass* La Famille)");
+            Assert.AreEqual(66, MafiaCleanCity.Theme.Tests.CanonPaletteComparator.ExpectedTokenCount,
+                "amb-F7 — le pivot fond pré-rendu n'ajoute AUCUNE teinte : les 66 clés de DesignTokens " +
+                "restent fermées (51 + 11 hud* HUD v3.1 + 2 lieutenantGlass* + 2 lieutenantMedallion*, " +
+                "ces quatre derniers venant de l'écran La Famille, jamais du pivot)");
         }
     }
 }

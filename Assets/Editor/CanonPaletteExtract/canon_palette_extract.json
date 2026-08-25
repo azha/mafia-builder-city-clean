@@ -1,7 +1,7 @@
 {
   "backCommitSha": "5fc5b70b",
   "backCommitRepo": "azha/mafia-clean-city",
-  "canonSection": "projects/mafia_city_game/gdd/14_tunable_constants.md \u00a7Asset pipeline \u2014 palette & DA",
+  "canonSection": "projects/mafia_city_game/gdd/14_tunable_constants.md §Asset pipeline — palette & DA",
   "generatedAt": "2026-08-21T23:00:00+02:00",
   "roundingConvention": "demi-haut: floor(channel*255+0.5)",
   "tokens": [
@@ -516,6 +516,22 @@
       "b": 0.094,
       "a": 0.74,
       "hex": "#090e18"
+    },
+    {
+      "name": "lieutenantMedallionInner",
+      "r": 0.141,
+      "g": 0.188,
+      "b": 0.282,
+      "a": 1.0,
+      "hex": "#243048"
+    },
+    {
+      "name": "lieutenantMedallionOuter",
+      "r": 0.059,
+      "g": 0.086,
+      "b": 0.133,
+      "a": 1.0,
+      "hex": "#0f1622"
     }
   ]
 }

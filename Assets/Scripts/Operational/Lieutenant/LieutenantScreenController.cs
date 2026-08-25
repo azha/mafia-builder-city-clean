@@ -1085,6 +1085,11 @@ namespace MafiaCleanCity.Operational.Lieutenant
             rovlg.childControlHeight = true;
             rovlg.childForceExpandWidth = true;
             rovlg.childForceExpandHeight = false;
+            // `.corps{padding:18,67px …}` — mais dans cette structure l'en-tête et le corps sont
+            // FRÈRES de la carte, séparés par son `spacing` (14,93). Le juge ⊥ a mesuré exactement
+            // ça : 14,84 CSS entre le filet et la première carte au lieu de 19,0. Le complément se
+            // pose donc en padding du corps.
+            rovlg.padding = new RectOffset(0, 0, FX(19 - 15), 0);
             rosterSection = (RectTransform)roster.transform;
             AddLayoutElement(roster, flexibleHeight: 0);
             BuildRosterSection();
@@ -1305,7 +1310,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             // corps ayant déjà posé ses 22,4, l'en-tête ne doit ajouter que la DIFFÉRENCE, sinon il
             // se retrouve indenté de 48 et se désaligne visiblement de la colonne de cartes
             // (mesuré par le juge ⊥ : 48,0 u au lieu de 26,0).
-            h.padding = new RectOffset(FX(26 - 22), FX(26 - 22), FX(26 - 19), FX(19));
+            h.padding = new RectOffset(FX(26 - 22), FX(26 - 22), FX(26 - 19), FX(24));   // 24 : bas mesuré
             h.childAlignment = TextAnchor.MiddleLeft;
             h.childControlWidth = true;
             h.childControlHeight = true;
@@ -1316,7 +1321,10 @@ namespace MafiaCleanCity.Operational.Lieutenant
             // `.sheet` n'a pas de padding). L'en-tête ne doit donc réclamer que le reste, sinon le
             // bloc entier enfle — le juge ⊥ l'a mesuré **+29 %**, avec un grand trou sous le
             // sous-titre (+129 %).
-            AddLayoutElement(tete, minHeight: FX(115 - 19), flexibleHeight: 0);
+            // L'en-tête HUGE son contenu : sa hauteur est celle du bloc de texte plus ses paddings.
+            // Un `minHeight` figé le faisait flotter — +12,6 % de hauteur totale mesurés, tout le
+            // surplus tombant SOUS le sous-titre.
+            AddLayoutElement(tete, minHeight: 0, flexibleHeight: 0);
 
             // `radial-gradient(75% 150% at 50% 0%, rgba(217,171,78,.06), transparent 62%)` — un
             // voile d'or qui descend du haut de l'écran. Mesuré ABSENT par le juge ⊥ : toutes ses
@@ -1379,7 +1387,10 @@ namespace MafiaCleanCity.Operational.Lieutenant
             VerticalLayoutGroup v = bloc.AddComponent<VerticalLayoutGroup>();
             // `.tete .sous{margin-top:2px}` — mais le juge ⊥ mesure l'écart TITRE→SOUS-TITRE à
             // −48 % : l'essentiel vient de l'interligne, que ce `1` non mis à l'échelle écrasait.
-            v.spacing = FX(2);
+            // Le juge ⊥ mesure l'écart titre→sous-titre à **−53 %** et celui sous-titre→filet à
+            // **+96 %** : le bloc est serré puis flotte. Les boîtes de ligne étaient plus courtes
+            // que leur texte, donc l'espacement visuel ne suivait pas l'espacement de layout.
+            v.spacing = FX(9);
             v.childControlWidth = true;
             v.childControlHeight = true;
             v.childForceExpandWidth = true;
@@ -1400,14 +1411,14 @@ namespace MafiaCleanCity.Operational.Lieutenant
             titre.fontFeatures.Clear();             // pas de crénage : la maquette espace, elle ne serre pas
             titre.characterSpacing = 19f;           // .16em + les 17 % d'approche que le juge a comptés
             titre.color = DesignTokens.Current.hudMoneyGold;   // --or-vif #f2c96b
-            AddLayoutElement(titre.gameObject, minHeight: FX(20), flexibleHeight: 0);
+            AddLayoutElement(titre.gameObject, minHeight: FX(34), flexibleHeight: 0);   // boîte de ligne réelle
             TrackText(titre, "LA FAMILLE");
 
             familySubtitleText = NewText("SousTitre", bloc.transform, "",
                 FX(RefFamilleSousTitreTaille), TextAlignmentOptions.Left);
             familySubtitleText.characterSpacing = 14f;         // .14em
             familySubtitleText.color = DesignTokens.Current.hudCremeSecondary;
-            AddLayoutElement(familySubtitleText.gameObject, minHeight: FX(19), flexibleHeight: 0);
+            AddLayoutElement(familySubtitleText.gameObject, minHeight: FX(21), flexibleHeight: 0);
             textComponents.Add(familySubtitleText);
 
             // Le filet de fermeture, estompé aux deux bouts.
@@ -1565,9 +1576,20 @@ namespace MafiaCleanCity.Operational.Lieutenant
             rt.anchorMin = Vector2.zero;
             rt.anchorMax = Vector2.one;
             rt.pivot = new Vector2(0.5f, 0.5f);
-            float flou = FXf(12f), descente = FXf(4f);
-            rt.offsetMin = new Vector2(-flou, -flou - descente);
-            rt.offsetMax = new Vector2(flou, flou - descente);
+            // ⚠️ PLUS DE DESCENTE, ET C'EST LE CORRECTIF PRÉCÉDENT QUI L'IMPOSE. Depuis que la
+            // forme est DÉCOUPÉE hors de la boîte (pour ne plus transparaître à travers la plaque),
+            // le découpage suit le rectangle de l'OMBRE — décalé de 4 vers le bas. Il effaçait donc
+            // les 4 px d'ombre situés juste sous la carte : un juge ⊥ a mesuré **8 px de fond
+            // PARFAITEMENT PUR** entre le bas de la carte et le début de son ombre, sur les trois
+            // colonnes testées, et uniquement sur le bord bas — les trois autres restant jointifs.
+            // Le décalage de `0 4px` coûtait donc plus qu'il ne rendait : on lisait
+            // *carte → bande claire → barre sombre* au lieu d'une ombre.
+            // ⇒ Ombre CENTRÉE sur la carte. Le décalage vertical de la maquette est abandonné
+            // sciemment : il n'est pas exprimable ici sans une seconde texture asymétrique, et son
+            // absence est invisible là où son mauvais découpage était criant.
+            float flou = FXf(12f);
+            rt.offsetMin = new Vector2(-flou, -flou);
+            rt.offsetMax = new Vector2(flou, flou);
             Image im = go.AddComponent<Image>();
             im.sprite = MafiaCleanCity.Shell.ProceduralUI.RoundedRectShadow(
                 // Mesuré par le juge ⊥ : minimum à 32 % du fond sous une carte contre 50 % en
@@ -1978,8 +2000,14 @@ namespace MafiaCleanCity.Operational.Lieutenant
 
             Color rayon = DesignTokens.Current.hudCreme; rayon.a = 0.05f;   // rgba(255,255,255,.05)
             Image disque = disqueGo.AddComponent<Image>();
+            // ⚠️ LES JETONS DU MÉDAILLON, PAS CEUX DU MANOMÈTRE. `hudGaugeFace*` est la face du
+            // cadran du bandeau — une AUTRE surface, plus sombre et moins bleue. Le juge ⊥ l'a
+            // chiffré : disque 32 % plus sombre, b−r 25,8 → 12,7, et une chute bord/cœur passée de
+            // 0,81 à 0,65. *Emprunter le jeton d'un voisin qui « ressemble » est une erreur qui ne
+            // se voit qu'à la mesure.*
             disque.sprite = MafiaCleanCity.Shell.ProceduralUI.MedallionFace(192,
-                DesignTokens.Current.hudGaugeFaceInner, DesignTokens.Current.hudGaugeFaceOuter, rayon);
+                DesignTokens.Current.lieutenantMedallionInner,
+                DesignTokens.Current.lieutenantMedallionOuter, rayon);
             disque.color = Color.white;
             disque.raycastTarget = false;
             // `.medl{overflow:hidden}` : le buste repose sur le bord BAS du médaillon, donc ses
@@ -2064,7 +2092,12 @@ namespace MafiaCleanCity.Operational.Lieutenant
         /// fabriquer de la donnée. Le rôle « VOUS » passe donc en position dominante.</summary>
         private void BuildDonRow(Transform parent)
         {
-            Color bord = Css(DesignTokens.Current.hudMoneyGold, 0.267f, FondPlaque);  // #d9ab4e44 de la maquette
+            // ⚠️ `--or` ET NON `--or-vif`. La CSS écrit `border:1px solid #d9ab4e44` ; j'employais
+            // `hudMoneyGold` = `#f2c96b`, l'or VIF réservé au TITRE et au nom du Don. Le juge ⊥ a
+            // recomposé la bordure rendue et trouvé (80,73,55), qui colle à `#f2c96b` à α≈0,27,
+            // là où la référence donne (72,65,48), qui colle à `#d9ab4e`. Le jeton juste existe
+            // déjà : `hudMoneyUnderlineGold` vaut exactement `#d9ab4e`.
+            Color bord = Css(DesignTokens.Current.hudMoneyUnderlineGold, 0.267f, FondPlaque);  // #d9ab4e44
             GameObject rang = BuildRangBase(parent, "DonRow", bord, ombre: false);   // `.don-rang` sans box-shadow
             // `.don-rang{padding:14,93px 18,67px; gap:18,67px}` — PLUS large que `.rang` (16,8).
             // Le juge ⊥ a mesuré le médaillon du Don décalé de −0,49 pp alors que ceux des rangs

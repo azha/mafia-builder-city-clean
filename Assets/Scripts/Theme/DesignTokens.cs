@@ -116,6 +116,15 @@ namespace MafiaCleanCity.Theme
         public Color lieutenantGlassTop;    // rgba(22,33,53,.58) -> #162135
         public Color lieutenantGlassBottom; // rgba(9,14,24,.74) -> #090e18
 
+        // Le DISQUE du médaillon (`.medl` de la maquette : `radial-gradient(circle at 38% 30%,
+        // #243048, #0f1622 66%)`). ⚠️ DEUX JETONS DÉDIÉS, et c'est une leçon payée : le médaillon
+        // employait `hudGaugeFaceInner/Outer` — la face du MANOMÈTRE, une autre surface. Un juge ⊥
+        // l'a chiffré sans savoir d'où ça venait : disque **32 % plus sombre** et **b−r divisé par
+        // deux** (25,8 → 12,7), c'est-à-dire un marine devenu gris-bleu. Deux surfaces distinctes,
+        // deux jetons — la règle « un token par consommateur mesuré » de gdd/14 §Asset pipeline.
+        public Color lieutenantMedallionInner;  // #243048
+        public Color lieutenantMedallionOuter;  // #0f1622
+
         [Header("Dashboard")]
         public Color dashboardIconDim;     // (0.45,0.49,0.53)
 
