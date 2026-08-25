@@ -238,7 +238,7 @@ namespace MafiaCleanCity.Operational.Tests
 
             // ---- Tier 2: the SAME source now validates + attaches; the script round-trips. ----
             yield return ctl.ValidateRules();
-            Assert.AreEqual("Script valid ✓", ctl.LastOutcome);
+            Assert.AreEqual("Script valide ✓", ctl.LastOutcome);   // libellé FR — ruling « i18n partout »
             yield return ctl.AttachRules();
             Assert.IsNotNull(ctl.CurrentBands);
             StringAssert.Contains("AND_IF PEER_STATE(cook@same_building,heat,>=,0.5)", ctl.CurrentBands.script_source);
