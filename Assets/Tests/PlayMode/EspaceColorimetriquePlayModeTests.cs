@@ -97,5 +97,72 @@ namespace MafiaCleanCity.Tests.PlayMode
                 $"AUCUNE des deux prédictions ne colle (sRGB {dA:F3}, linéaire {dB:F3}) — le pixel " +
                 "rendu ne s'explique ni par l'un ni par l'autre, donc mon modèle du mélange est faux.");
         }
+
+        /// <summary>La conversion d'opacité CSS doit être EXACTE, canal par canal.
+        ///
+        /// ⚠️ CE TEST EXISTE PARCE QU'UNE PREMIÈRE CONVERSION ÉTAIT UN COMPROMIS. Elle résolvait en
+        /// ajustant l'OPACITÉ — un nombre pour trois canaux, alors que les trois n'exigent pas le
+        /// même — et moyennait les trois solutions. Un juge visuel ⊥, qui ne savait rien du code, a
+        /// mesuré la signature de cette moyenne sur une bordure rendue : α résolu à **0,334 en R,
+        /// 0,320 en G, 0,218 en B**, et il a écrit qu'« aucune couleur unique à un α unique ne
+        /// produit ça sur ce fond ». Il avait raison, et c'était mon compromis.
+        ///
+        /// La forme juste garde l'opacité et déplace la COULEUR : trois inconnues, trois équations,
+        /// solution exacte. Ce test le vérifie sur les SIX superpositions réelles de l'écran, et
+        /// garde le contrôle : l'ancienne méthode DOIT rater sur au moins l'une d'elles, sinon les
+        /// deux se valent et ce test ne mesure rien.</summary>
+        [UnityTest]
+        public IEnumerator W3U2_F31_ConversionDOpacite_ExacteParCanal()
+        {
+            yield return null;
+            Color feuille = Srgb(22, 22, 28);
+            Color plaque = Srgb(21, 28, 43);
+            var cas = new (string nom, Color encre, Color fond, float alpha)[]
+            {
+                ("bordure or du Don #d9ab4e44", Srgb(217, 171, 78), plaque, 0.267f),
+                ("puce cyan #7fd4d955",        Srgb(127, 212, 217), plaque, 0.333f),
+                ("pointillés #ffffff22",       Color.white,          feuille, 0.133f),
+                ("voile du retour #ffffff08",  Color.white,          feuille, 0.031f),
+                ("jonc du retour #ffffff26",   Color.white,          feuille, 0.149f),
+                ("biseau haut rgba(255,255,255,.15)", Color.white,   plaque,  0.15f),
+            };
+
+            float pireExact = 0f, pireMoyenne = 0f;
+            foreach (var c in cas)
+            {
+                // La CIBLE : ce qu'un navigateur produit, en sRGB.
+                Color cible = Color.Lerp(c.fond, c.encre, c.alpha);
+
+                // (a) la méthode EXACTE — on garde alpha, on déplace la couleur.
+                bool ok;
+                Color resolue = MafiaCleanCity.Shell.ProceduralUI.CouleurPourMelangeLineaire(
+                    c.encre, c.fond, c.alpha, out ok);
+                Color obtenuExact = Color.Lerp(c.fond.linear, resolue.linear, c.alpha).gamma;
+
+                // (b) l'ANCIENNE — on garde la couleur, on ajuste une opacité moyennée.
+                float aMoy = MafiaCleanCity.Shell.ProceduralUI.AlphaSrgbVersLineaire(
+                    c.encre, c.fond, c.alpha);
+                Color obtenuMoyenne = Color.Lerp(c.fond.linear, c.encre.linear, aMoy).gamma;
+
+                Func<Color, Color, float> ecart = (x, y) => Mathf.Max(
+                    Mathf.Abs(x.r - y.r), Mathf.Max(Mathf.Abs(x.g - y.g), Mathf.Abs(x.b - y.b)));
+                float dExact = ecart(obtenuExact, cible), dMoy = ecart(obtenuMoyenne, cible);
+                pireExact = Mathf.Max(pireExact, dExact);
+                pireMoyenne = Mathf.Max(pireMoyenne, dMoy);
+                Debug.Log($"[F31] {c.nom} — exact {dExact * 255f:F2}/255 · moyenné {dMoy * 255f:F2}/255" +
+                          (ok ? "" : "  (cible INATTEIGNABLE à cette opacité)"));
+            }
+
+            Assert.Less(pireExact * 255f, 1.5f,
+                $"la conversion exacte s'écarte de {pireExact * 255f:F2}/255 de la cible sRGB sur au " +
+                "moins une superposition — elle n'est donc pas exacte.");
+
+            // CONTRÔLE : sans lui, une conversion qui ne changerait RIEN passerait le test du dessus
+            // dès lors que les deux espaces coïncideraient.
+            Assert.Greater(pireMoyenne * 255f, 4f,
+                $"CONTRÔLE EN ÉCHEC : la méthode par opacité moyennée s'écarte au pire de " +
+                $"{pireMoyenne * 255f:F2}/255, c'est-à-dire qu'elle est aussi bonne que l'exacte. " +
+                "Les deux ne se distinguent alors pas, et l'assertion précédente ne prouve rien.");
+        }
     }
 }

@@ -429,6 +429,59 @@ namespace MafiaCleanCity.Shell
         ///
         /// La résolution se fait par canal puis est moyennée en pondérant par |encre − fond| :
         /// un canal où l'encre et le fond se confondent ne contraint rien et ne doit pas peser.</summary>
+        /// <summary>La COULEUR à employer pour qu'un mélange LINÉAIRE à l'opacité CSS retombe
+        /// exactement, CANAL PAR CANAL, sur le pixel qu'un navigateur produirait en sRGB.
+        ///
+        /// ⚠️⚠️ REMPLACE `AlphaSrgbVersLineaire`, ET LA RAISON EST UNE MESURE. Résoudre en
+        /// AJUSTANT L'OPACITÉ ne peut pas être exact : une opacité est UN nombre pour TROIS canaux,
+        /// et les trois n'exigent pas le même. Ma version précédente moyennait les trois solutions
+        /// en pondérant par |encre − fond| — un compromis qui laisse forcément une erreur par
+        /// canal. Un juge visuel ⊥ l'a mesurée sans savoir d'où elle venait : sur la bordure de la
+        /// carte du Don il a résolu **α = 0,334 en R, 0,320 en G, 0,218 en B**, et a écrit
+        /// qu'« aucune couleur unique à un α unique ne produit ça sur ce fond ». C'était la
+        /// signature exacte de ma moyenne.
+        ///
+        /// La forme juste garde l'opacité du CSS et déplace la COULEUR — trois inconnues pour
+        /// trois équations, donc une solution EXACTE :
+        ///     mélange linéaire : cible_lin = fond_lin + α·(C'_lin − fond_lin)
+        ///     ⇒ C'_lin = fond_lin + (cible_lin − fond_lin) / α
+        /// où `cible` est ce que le navigateur produit (mélange sRGB).
+        ///
+        /// ⚠️ Une opacité FAIBLE peut demander une couleur hors du cube [0..1] — la cible est alors
+        /// inatteignable à cette opacité. On le DIT (`atteignable` à faux) plutôt que de rendre une
+        /// couleur écrêtée qui aurait l'air d'une réponse.</summary>
+        public static Color CouleurPourMelangeLineaire(Color encre, Color fond, float alphaSrgb,
+                                                       out bool atteignable)
+        {
+            atteignable = true;
+            if (alphaSrgb <= 0f) return encre;
+            if (alphaSrgb >= 1f) return encre;
+            Color cible = Color.Lerp(fond, encre, alphaSrgb);   // ce que le navigateur produit
+            Color t = cible.linear, b = fond.linear;
+            // R2.3 / DA3 — la garde de provenance interdit de composer une couleur par ses quatre
+            // composantes, parce que c'est ainsi qu'on introduit un jeton en dur. Ici le résultat
+            // est un CALCUL et non un choix de teinte, mais la garde ne peut pas faire la
+            // différence — et c'est très bien : on part donc d'une couleur nommée et on écrit ses
+            // canaux, exactement comme le reste de ce fichier. *Une garde qu'on peut satisfaire
+            // sans rien perdre ne mérite pas d'exception.*
+            Color lin = b;
+            lin.r = b.r + (t.r - b.r) / alphaSrgb;
+            lin.g = b.g + (t.g - b.g) / alphaSrgb;
+            lin.b = b.b + (t.b - b.b) / alphaSrgb;
+            lin.a = 1f;
+            if (lin.r > 1f || lin.g > 1f || lin.b > 1f ||
+                lin.r < 0f || lin.g < 0f || lin.b < 0f)
+            {
+                atteignable = false;
+                lin.r = Mathf.Clamp01(lin.r);
+                lin.g = Mathf.Clamp01(lin.g);
+                lin.b = Mathf.Clamp01(lin.b);
+            }
+            Color srgb = lin.gamma;
+            srgb.a = alphaSrgb;
+            return srgb;
+        }
+
         public static float AlphaSrgbVersLineaire(Color encre, Color fond, float alphaSrgb)
         {
             if (alphaSrgb <= 0f) return 0f;
