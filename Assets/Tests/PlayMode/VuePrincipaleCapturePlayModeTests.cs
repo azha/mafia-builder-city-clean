@@ -232,6 +232,66 @@ namespace MafiaCleanCity.Capture.Tests
             Debug.Log($"[CAPTURE] vue de nuit — batiments={batiments} ecran={Screen.width}x{Screen.height}");
         }
 
+        /// <summary>Rend le shell dans une cible hors écran d'une taille donnée et l'enregistre.
+        ///
+        /// Le canvas passe temporairement en `ScreenSpaceCamera` sur une caméra qui vise une
+        /// `RenderTexture` : le `CanvasScaler` recalcule alors son facteur d'échelle depuis la
+        /// taille de la CIBLE, et toute la mise en page reflue pour de bon. On rend l'état
+        /// d'origine ensuite — un test qui laisse le shell dans un autre mode contaminerait tous
+        /// ses voisins du même processus.</summary>
+        private IEnumerator CapturerA(int largeur, int hauteur, string chemin)
+        {
+            Canvas canvas = shell.ShellCanvas;
+            Assert.IsNotNull(canvas, "le shell doit avoir un canvas pour être rendu hors écran");
+            RenderMode modeAvant = canvas.renderMode;
+            Camera cameraAvant = canvas.worldCamera;
+            float planAvant = canvas.planeDistance;
+
+            var rt = new RenderTexture(largeur, hauteur, 24, RenderTextureFormat.ARGB32);
+            var camGo = new GameObject("CaptureCam");
+            var cam = camGo.AddComponent<Camera>();
+            cam.targetTexture = rt;
+            cam.clearFlags = CameraClearFlags.SolidColor;
+            cam.backgroundColor = Color.black;
+            cam.orthographic = true;
+
+            canvas.renderMode = RenderMode.ScreenSpaceCamera;
+            canvas.worldCamera = cam;
+            canvas.planeDistance = 10f;
+            Canvas.ForceUpdateCanvases();
+            yield return null;               // laisser la passe de layout s'appliquer
+            Canvas.ForceUpdateCanvases();
+            yield return null;
+
+            cam.Render();
+            RenderTexture prev = RenderTexture.active;
+            RenderTexture.active = rt;
+            var tex = new Texture2D(largeur, hauteur, TextureFormat.RGB24, false);
+            tex.ReadPixels(new Rect(0, 0, largeur, hauteur), 0, 0);
+            tex.Apply();
+            RenderTexture.active = prev;
+            System.IO.File.WriteAllBytes(chemin, tex.EncodeToPNG());
+
+            // ⛔ ANTI-MENSONGE : une cible noire produirait un PNG parfaitement valide et vide.
+            int clairs = 0;
+            foreach (Color c in tex.GetPixels())
+                if (c.r + c.g + c.b > 0.15f) clairs++;
+            Debug.Log($"[CAPTURE] {largeur}x{hauteur} — {clairs} pixels non noirs sur {largeur * hauteur}");
+            Assert.Greater(clairs, largeur * hauteur / 20,
+                $"la capture {largeur}x{hauteur} est quasi NOIRE ({clairs} pixels) : le shell n'a pas " +
+                "été rendu dans la cible, et le fichier passerait pourtant pour une réussite.");
+
+            UnityEngine.Object.DestroyImmediate(tex);
+            canvas.renderMode = modeAvant;
+            canvas.worldCamera = cameraAvant;
+            canvas.planeDistance = planAvant;
+            UnityEngine.Object.DestroyImmediate(camGo);
+            rt.Release();
+            UnityEngine.Object.DestroyImmediate(rt);
+            Canvas.ForceUpdateCanvases();
+            yield return null;
+        }
+
         /// <summary>Cherche un descendant par nom, inactifs compris. `Transform.Find` ne
         /// descend que d'un niveau par segment de chemin et exige le chemin exact ; ici on veut le
         /// nom, où qu'il soit dans l'arbre du shell.</summary>
@@ -393,6 +453,17 @@ namespace MafiaCleanCity.Capture.Tests
             ScreenCapture.CaptureScreenshot("Assets/Screenshots/ecran_lieutenants.png");
             for (int i = 0; i < 12; i++) yield return null;
             Debug.Log($"[CAPTURE] lieutenants — noeuds={noeuds} ecran={Screen.width}x{Screen.height}");
+
+            // ⛔ UNE SECONDE RÉSOLUTION, ET C'EST UNE DETTE QUE TROIS JUGES ⊥ ONT NOMMÉE.
+            // Chacun a classé « une seule résolution » en TÊTE de ce qu'il n'avait pas pu vérifier,
+            // et le socle l'exige explicitement — le trou trouvé le 2026-08-21 était que 0 test du
+            // dépôt ne fixait de résolution. Une capture d'écran est prisonnière de la fenêtre de
+            // jeu ; on rend donc le MÊME shell dans une cible hors écran d'un autre format, ce qui
+            // force une VRAIE refonte de la mise en page (le `CanvasScaler` suit la taille de rendu
+            // du canvas, pas celle de l'écran).
+            // 1080×2400 = le format téléphone que le projet vise (19,5:9), très éloigné du 3:4 de
+            // la fenêtre d'éditeur : c'est là que les grandeurs qui dépendent du ratio se trahissent.
+            yield return CapturerA(1080, 2400, "Assets/Screenshots/ecran_lieutenants_1080x2400.png");
         }
     }
 }
