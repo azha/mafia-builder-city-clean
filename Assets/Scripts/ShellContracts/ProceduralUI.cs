@@ -520,8 +520,19 @@ namespace MafiaCleanCity.Shell
                         : Mathf.Max(qx, qy) - r;
                     // `dist <= 0` : dans la forme. Au-delà, on s'éteint sur `f` pixels, en douceur
                     // (courbe en cosinus — un dégradé linéaire laisse une arête visible).
-                    float t = Mathf.Clamp01(dist / f);
-                    float a = 0.5f * (1f + Mathf.Cos(Mathf.PI * t));
+                    // ⚠️⚠️ RIEN À L'INTÉRIEUR DE LA FORME, et c'est la spécification CSS, pas une
+                    // optimisation : une `box-shadow` non-`inset` est **découpée hors de la boîte
+                    // de bordure** — elle ne transparaît jamais à travers l'élément, même si le
+                    // fond de celui-ci est translucide.
+                    // La première version peignait l'intérieur en PLEIN. Or la plaque de verre des
+                    // panneaux est à α≈0,6 : l'ombre passait au travers et assombrissait la carte
+                    // entière. Un juge ⊥ a mesuré le remplissage **16 % plus sombre** que la
+                    // référence et a explicitement écrit ne pas pouvoir en expliquer la cause
+                    // depuis une image — la cause était ici, dans un pixel qui n'aurait jamais dû
+                    // être peint.
+                    // ★ Et c'est un défaut qu'un test de couleur sur le PANNEAU aurait attribué au
+                    // JETON du panneau : l'effet et sa victime ne sont pas au même endroit.
+                    float a = dist <= 0f ? 0f : 0.5f * (1f + Mathf.Cos(Mathf.PI * Mathf.Clamp01(dist / f)));
                     Color c = couleur;
                     c.a *= a;
                     pixels[y * d + x] = c;
