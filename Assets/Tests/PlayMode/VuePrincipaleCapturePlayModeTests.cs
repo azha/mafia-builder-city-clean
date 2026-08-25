@@ -230,5 +230,50 @@ namespace MafiaCleanCity.Capture.Tests
             for (int i = 0; i < 12; i++) yield return null;
             Debug.Log($"[CAPTURE] vue de nuit — batiments={batiments} ecran={Screen.width}x{Screen.height}");
         }
+
+        // ── Capture de l'écran des LIEUTENANTS (onglet Org) ───────────────────────────────────────
+        // Cible : `Tools/family-organigramme-reference-1120.png` (« LA FAMILLE — l'organigramme »,
+        // maquette ratifiée user). Cette capture existe pour MESURER l'écart, pas pour le certifier.
+        [UnityTest]
+        public IEnumerator Capture_EcranLieutenants_SousChromeV31()
+        {
+            var auth = new AuthClient { BaseUrl = BaseUrl };
+            string callsign = SeederSupport.SafeCallsign("lieut", ref seq);
+            string token = null, err = null;
+            yield return auth.SignUp(callsign, "lieut-capture-pw", t => token = t, e => err = e);
+            Assert.IsNull(err, $"signup errored: {err}");
+
+            var sessionClient = new SessionClient { BaseUrl = BaseUrl };
+            SessionOpenDto payload = null;
+            yield return sessionClient.OpenSession(token, "capture-lieut", dto => payload = dto,
+                (c, m) => Assert.Fail($"session/open failed: {c}: {m}"));
+            Assert.IsNotNull(payload, "session/open doit réussir — il octroie le kit de départ (2 lieutenants)");
+
+            LogAssert.ignoreFailingMessages = true;
+            shellGo = new GameObject("LieutenantsShell");
+            shell = shellGo.AddComponent<AppShell>();
+            shell.SetIdentity(callsign, "lieut-capture-pw");
+            yield return null;
+
+            float t0 = Time.realtimeSinceStartup;
+            while (string.IsNullOrEmpty(shell.Token) && Time.realtimeSinceStartup - t0 < 30f) yield return null;
+            Assert.IsFalse(string.IsNullOrEmpty(shell.Token), "le shell doit avoir acquis sa session");
+
+            shell.ActivateTab(AppShell.Tab.Org);
+            for (int i = 0; i < 90; i++) yield return null;
+
+            // Anti-mensonge : l'écran doit avoir monté SA racine dans le slot de contenu ET porté
+            // du contenu. La leçon de la carte de ville : compter les enfants du CONTRÔLEUR revient
+            // à compter le contrôleur — les écrans de ce shell montent leur propre racine.
+            Assert.IsNotNull(shell.TopBar, "le chrome haut doit exister sur la capture");
+            int noeuds = shell.ContentSlot.GetComponentsInChildren<Transform>(true).Length;
+            Assert.Greater(noeuds, 20,
+                $"l'écran lieutenants doit avoir construit son contenu (mesuré {noeuds} noeuds) — " +
+                "une capture d'un slot vide passerait sinon pour une réussite");
+
+            ScreenCapture.CaptureScreenshot("Assets/Screenshots/ecran_lieutenants.png");
+            for (int i = 0; i < 12; i++) yield return null;
+            Debug.Log($"[CAPTURE] lieutenants — noeuds={noeuds} ecran={Screen.width}x{Screen.height}");
+        }
     }
 }

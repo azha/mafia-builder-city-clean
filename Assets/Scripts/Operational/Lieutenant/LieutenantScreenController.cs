@@ -263,6 +263,16 @@ namespace MafiaCleanCity.Operational.Lieutenant
         private IEnumerator Boot()
         {
             yield return SignIn();
+
+            // ⛔ LE ROSTER NE SE CHARGEAIT JAMAIS TOUT SEUL (2026-08-22). `Boot()` ne faisait que
+            // `SignIn()`, et `RefreshRoster()` n'avait qu'UN appelant : le bouton « Refresh roster ».
+            // Conséquence mesurée sur la capture du chemin de production : l'écran s'ouvre sur
+            // « (no lieutenants — recruit one below) » pour un compte qui en possède DEUX — les mêmes
+            // que l'écran district affiche en médaillons sur son labo. Le joueur devait presser un
+            // bouton de mise au point pour voir sa propre organisation.
+            // ★ La garde qui a rendu ça visible n'est pas un test : c'est une CAPTURE prise sur le
+            //   chemin de production. Aucune falsifiable du dépôt n'assertait que le roster arrive.
+            if (IsAuthenticated) yield return RefreshRoster();
         }
 
         /// <summary>Sign in and acquire a Bearer (REUSE AuthClient). Idempotent.</summary>
