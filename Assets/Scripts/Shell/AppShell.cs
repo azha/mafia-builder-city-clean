@@ -39,7 +39,12 @@ namespace MafiaCleanCity.Shell
     // LaunderingController ("tuyau", "Vue pipeline de blanchiment" — le MÊME contrôleur que
     // `DashboardController.OpenPipeline()` ouvre déjà, précédent existant REUSE) ; More → sheet
     // vide assumée (screen_12, hors périmètre du design §0 — ses 7 destinations ne sont PAS ce lot).
-    public class AppShell : MonoBehaviour, IShellSessionSink
+    // AMENDÉ (item 0.4 de `front.md`, Tools/charpente-item0-4-design.md) — implémente désormais
+    // AUSSI `IShellNavigator` : les deux sites qui ouvraient un écran en créant une racine de
+    // scène nue (`DashboardController.OpenNav`, `ExceptionQueueController.OpenDetail`) montent
+    // maintenant PAR CE SHELL, en surimpression, confinés dans `ContentSlot` — voir
+    // `MonterLocataireEnSurimpression<T>` plus bas.
+    public class AppShell : MonoBehaviour, IShellSessionSink, IShellNavigator
     {
         public enum Tab { Home, City, Org, Pipeline, More }
 
@@ -176,11 +181,14 @@ namespace MafiaCleanCity.Shell
 
         /// <summary>nav-hud-design-v1.md §3.3 (chunk 2) — enters `districtId`, replacing whatever is
         /// currently mounted (only ever wired to fire while the City tab's CityMapController is
-        /// mounted — its own OnEnterDistrict subscription, above). Reuses EXACTLY MountTenant&lt;T&gt;'s
-        /// own body (§3.3 : ":111-129") for T = DistrictInteriorScreenController — NOT a second
-        /// mounting mechanism. `UnmountCurrentTenant()` is called here for the SAME reason
-        /// `ActivateTab` calls it before its own `MountTenant&lt;T&gt;` : `MountTenant&lt;T&gt;`'s body never
-        /// unmounts on its own, that's always the CALLER's job — "un seul locataire à la fois —
+        /// mounted — its own OnEnterDistrict subscription, above). CORRIGÉ (revue ⊥ round 2, C7 —
+        /// l'énoncé précédent citait un corps et une plage de lignes qui n'existaient déjà plus
+        /// après la fusion ci-dessous) : passe désormais par le MÊME corps privé partagé que
+        /// `MountTenant&lt;T&gt;` et `MonterLocataireEnSurimpression&lt;T&gt;` — `ConstruireLocataire&lt;T&gt;`,
+        /// plus bas — ni une copie ni un second mécanisme de montage. `UnmountCurrentTenant()` is
+        /// called here for the SAME reason `ActivateTab` calls it before its own `MountTenant&lt;T&gt;` :
+        /// `ConstruireLocataire&lt;T&gt;`'s body never unmounts on its own, that's always the CALLER's
+        /// job — "un seul locataire à la fois —
         /// entrer dans un district DÉTRUIT CityMapController" (§3.3 preamble). The bearer token
         /// comes from the CityMapController tenant being replaced (its OWN demo-auth token, §3.2) —
         /// the design's own EnterDistrict(int) signature carries no token parameter and never says
@@ -204,14 +212,18 @@ namespace MafiaCleanCity.Shell
 
             UnmountCurrentTenant();
 
-            // ── EXACTLY MountTenant<T>'s body (:111-129), T = DistrictInteriorScreenController ──
-            GameObject host = new GameObject($"Tenant_{typeof(DistrictInteriorScreenController).Name}");
-            host.transform.SetParent(ContentSlot, false);
-            DistrictInteriorScreenController tenant = host.AddComponent<DistrictInteriorScreenController>();
-            tenant.SetMountParent(ContentSlot);
+            // FUSIONNÉ (item 0.4, charpente-item0-4-design.md §1.6/§2.2) — n'est plus une copie
+            // verbatim du corps de `MountTenant<T>` : les DEUX appellent désormais
+            // `ConstruireLocataire<T>`, qui porte les 4 gestes une seule fois. Cette copie était
+            // d'ailleurs restée EN RETARD sur son original — ni `PublierInsetsDuChrome()` ni
+            // `SetToken` n'y avaient jamais été portés (mesuré : la version précédente de ce
+            // fichier ne les appelait pas ici) — la fusion les apporte, sans effet observable :
+            // `DistrictInteriorScreenController.SetToken` est un no-op (`IShellTenant.cs:24-28` —
+            // ce contrôleur reçoit sa donnée par `SetSession`, via la variable locale `token`
+            // ci-dessus, pas par ce canal).
+            DistrictInteriorScreenController tenant = ConstruireLocataire<DistrictInteriorScreenController>(out GameObject host);
             MountedTenantGameObject = host;
             MountedTenantType = typeof(DistrictInteriorScreenController);
-            // ── end MountTenant<T> body ──
 
             CityTabDistrictId = districtId;
             // §3.4 — AMENDÉ (2026-08-21, frontière avec le lot manomètre) : `TopBarSlot.rect.
@@ -351,9 +363,17 @@ namespace MafiaCleanCity.Shell
                 errMsg => Debug.LogWarning($"[AppShell] sonde heat (best-effort) échouée : {errMsg}"));
         }
 
-        private void MountTenant<T>() where T : MonoBehaviour, IShellTenant
+        /// <summary>LES QUATRE GESTES DE MONTAGE D'UN LOCATAIRE (design D2 ; item 0.4,
+        /// charpente-item0-4-design.md §1.6/§2.2), en un SEUL corps désormais partagé par les
+        /// TROIS appelants — `MountTenant<T>` (onglets), `EnterDistrict` (qui en portait une copie
+        /// verbatim, EN RETARD sur celle-ci), et `MonterLocataireEnSurimpression<T>`
+        /// (`IShellNavigator`, item 0.4 — un troisième site qui serait sinon né avec sa propre
+        /// copie). Ne s'occupe PAS de `MountedTenantGameObject`/`MountedTenantType` : ces deux
+        /// champs désignent l'écran de l'ONGLET courant, et seuls les appelants pour qui c'est vrai
+        /// les renseignent — un locataire monté EN SURIMPRESSION ne remplace pas l'onglet actif.</summary>
+        private T ConstruireLocataire<T>(out GameObject host) where T : MonoBehaviour, IShellTenant
         {
-            GameObject host = new GameObject($"Tenant_{typeof(T).Name}");
+            host = new GameObject($"Tenant_{typeof(T).Name}");
             // Parent the HOST itself under ContentSlot (lifecycle only — the tenant's OWN UI is a
             // SEPARATE set of GameObjects it builds and parents there itself, see IShellTenant's own
             // header). Without this, the host was an independent scene-root object: destroying the
@@ -382,8 +402,28 @@ namespace MafiaCleanCity.Shell
             // shell n'a pas encore résolu, ou a échoué) ⇒ repli inchangé — le locataire signe
             // lui-même (`IShellTenant.cs`).
             if (!string.IsNullOrEmpty(Token)) tenant.SetToken(Token);
+            return tenant;
+        }
+
+        private void MountTenant<T>() where T : MonoBehaviour, IShellTenant
+        {
+            T tenant = ConstruireLocataire<T>(out GameObject host);
             MountedTenantGameObject = host;
             MountedTenantType = typeof(T);
+        }
+
+        /// <summary>`IShellNavigator` (item 0.4, charpente-item0-4-design.md §2.1/§2.2) — monte `T`
+        /// en surimpression, PAR CE SHELL : mêmes 4 gestes que `MountTenant<T>`/`EnterDistrict`, via
+        /// `ConstruireLocataire`, rien de plus. « En surimpression » n'est pas de la décoration :
+        /// c'est la sémantique EXACTE d'aujourd'hui pour les deux appelants visés
+        /// (`DashboardController.OpenNav`, `ExceptionQueueController.OpenDetail`) — un écran ouvert
+        /// PAR-DESSUS le locataire courant, SANS le détruire (le détail d'exception doit retrouver
+        /// sa file encore vivante au retour). `MountedTenantGameObject`/`MountedTenantType` restent
+        /// donc INTOUCHÉS ici : 6 assertions existantes d'`AppShellPlayModeTests` les lisent avec
+        /// le sens précis « ce que l'ONGLET courant a monté ».</summary>
+        public T MonterLocataireEnSurimpression<T>() where T : MonoBehaviour, IShellTenant
+        {
+            return ConstruireLocataire<T>(out _);
         }
 
         private void UnmountCurrentTenant()

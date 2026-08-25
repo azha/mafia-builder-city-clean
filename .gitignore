@@ -49,3 +49,12 @@ Thumbs.db
 
 # ---- node (Tools/) ----
 node_modules/
+
+# ---- scratch du test runner Unity ----
+# Le Test Framework crée une scène jetable par run PlayMode et la supprime normalement en sortant ;
+# un run batchmode qui se termine par EditorApplication.Exit() (notre juge) ne la supprime PAS.
+# Mesuré le 2026-08-25 : 10 sur le disque après une journée de runs. Ce sont des artefacts, pas des
+# sources — mais 2 ont fini TRACKÉS par le passé, et ceux-là restent suivis (git ignore ce qui n'est
+# pas déjà suivi) : ils sont signalés, pas supprimés d'autorité.
+/[Aa]ssets/InitTestScene*.unity
+/[Aa]ssets/InitTestScene*.unity.meta

@@ -183,11 +183,16 @@ namespace MafiaCleanCity.CityMap
         // CityMapController.mountParent pour le mécanisme byte-identique).
         public void SetMountParent(Transform parent) => mountParent = parent;
 
-        // IShellTenant conformance (B1, hud-session-arbitrages-design.md §1.2) — NO-OP ici : ce
-        // contrôleur reçoit son jeton via `SetSession(bearer, districtId)`, appelé par
-        // `AppShell.EnterDistrict` (mécanisme PRÉEXISTANT, inchangé) — pas via cette injection
-        // générique de `MountTenant<T>` (`EnterDistrict` duplique le corps de `MountTenant<T>` sans
-        // appeler la méthode générique elle-même). Rien à sauter ici.
+        // IShellTenant conformance (B1, hud-session-arbitrages-design.md §1.2) — NO-OP ici, et sa
+        // RAISON a changé (revue ⊥ round 2, C7) : depuis la fusion (item 0.4,
+        // charpente-item0-4-design.md §1.6/§2.2), `EnterDistrict` appelle bien ce point
+        // d'injection générique, comme tout autre locataire (via `ConstruireLocataire<T>`, même
+        // corps que `MountTenant<T>`/`MonterLocataireEnSurimpression<T>`) — le jeton du shell est
+        // donc bien PASSÉ ici, et sciemment ignoré. Ce contrôleur reçoit sa donnée réelle par un
+        // canal SÉPARÉ, `SetSession(bearer, districtId)`, appelé par `EnterDistrictSequence` APRÈS
+        // le montage (le jeton qui y circule vient du locataire carte sortant, voir `EnterDistrict`
+        // ci-dessus — pas de ce point d'injection générique). Le no-op reste correct ; ce qui a
+        // changé, c'est pourquoi.
         public void SetToken(string token) { }
 
         private void Start() => EnsureInitialized();

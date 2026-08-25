@@ -292,12 +292,50 @@ namespace MafiaCleanCity.Operational
         /// <summary>Open the Autonomy Inbox screen (Phase-21 — AutonomyInboxController self-builds its Canvas).</summary>
         public void OpenAutonomy() => OpenNav(NavTarget.Autonomy);
 
-        // Open the target controller. Each target is a MonoBehaviour in this project that builds
-        // its own Canvas on Start(); a nav button creates a host GameObject + adds the component.
-        // We record the target + its GameObject as test hooks (proving the affordance is wired).
+        // Repli (hors shell) : la cible est un MonoBehaviour de ce projet qui bâtit son propre
+        // Canvas dès son Start() — un bouton de nav crée alors un hôte NU et y ajoute le
+        // composant, le geste d'origine. CORRIGÉ (revue ⊥ round 2, C7) : ce paragraphe ne décrit
+        // plus QUE cette branche de repli — sous un shell, c'est le navigateur qui monte (voir
+        // le paragraphe AMENDÉ juste dessous), pas ce geste.
+        // On enregistre la cible + son GameObject comme crochets de test (prouve que l'affordance est câblée).
+        //
+        // AMENDÉ (item 0.4 de `front.md`, Tools/charpente-item0-4-design.md §2.3) — un `AppShell`
+        // (`IShellNavigator`) trouvé monte désormais le locataire LUI-MÊME, en surimpression :
+        // confiné dans `ContentSlot`, jeton reçu — remplace la racine de scène nue d'avant (mesuré,
+        // design §1.1-§1.2 : elle RECOUVRAIT TabBar+TopBar, faute de `SetMountParent`). SINON (tout
+        // test PlayMode existant qui monte ce contrôleur SEUL, hors shell) : repli EXACT
+        // d'aujourd'hui, inchangé (design §2.3 — la branche reste le régime légitime hors shell).
         private void OpenNav(NavTarget target)
         {
             LastNavTarget = target;
+            if (target == NavTarget.None)
+            {
+                // C5 (revue ⊥ round 2, m4) — `NavTarget` compte 6 membres dont `None`
+                // (Enum.GetValues, voir CharpenteMontageLocatairesPlayModeTests
+                // .C5_ToutMembreDeNavTarget_AUnComportementNomme). AVANT ce garde, les deux
+                // branches ci-dessous divergeaient EN SILENCE sur ce membre : un `switch`
+                // STATEMENT C# sans `default` n'est PAS une erreur de compilation sur une méthode
+                // `void` (CS0161 ne s'applique qu'à une méthode qui DOIT rendre une valeur) — la
+                // branche shell ne montait rien SANS LE DIRE (LastNavGameObject inchangé),
+                // pendant que la branche de repli créait quand même un hôte VIDE (`Nav_None`,
+                // aucun composant) qui polluait la scène pour rien. `None` est maintenant un
+                // membre NOMMÉ : « aucune destination », identique dans les DEUX branches,
+                // jamais un hôte créé.
+                return;
+            }
+            MafiaCleanCity.Shell.IShellNavigator nav = MafiaCleanCity.Shell.ShellNavigatorLocator.Find();
+            if (nav != null)
+            {
+                switch (target)
+                {
+                    case NavTarget.CityMap: LastNavGameObject = nav.MonterLocataireEnSurimpression<CityMapController>().gameObject; break;
+                    case NavTarget.BuildingCard: LastNavGameObject = nav.MonterLocataireEnSurimpression<BuildingCardController>().gameObject; break;
+                    case NavTarget.Pipeline: LastNavGameObject = nav.MonterLocataireEnSurimpression<LaunderingController>().gameObject; break;
+                    case NavTarget.Exceptions: LastNavGameObject = nav.MonterLocataireEnSurimpression<ExceptionQueueController>().gameObject; break;
+                    case NavTarget.Autonomy: LastNavGameObject = nav.MonterLocataireEnSurimpression<AutonomyInboxController>().gameObject; break;
+                }
+                return;
+            }
             GameObject host = new GameObject($"Nav_{target}");
             switch (target)
             {

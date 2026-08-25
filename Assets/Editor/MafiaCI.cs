@@ -21,7 +21,17 @@ public static class MafiaCI
     // que les précédents, jamais un second juge.
     // W3.U2/C4 (2026-08-17) — ajoute "W3U2" : premier chunk Unity du lot "intérieur de district"
     // (diorama nocturne), même patron — élargir, jamais un second point d'entrée.
-    private static readonly string[] Categories = { "W4P4a", "W3UDA", "W3U1", "W3U2" };
+    // ITEM 0 / `front.md` (2026-08-25) — ajoute "Charpente" : les falsifiables STRUCTURELLES qui
+    // rendent vraie (ou fausse) la colonne « monté » des 49 écrans — la scène de démarrage du build,
+    // le montage des locataires par le shell. Même patron : on élargit ce filtre, jamais un second
+    // point d'entrée.
+    // ⚠️ CE FILTRE MATCHE PAR PRÉFIXE, et un préfixe inexact n'ERREUR PAS : il exécute un AUTRE jeu
+    // et le déclare vert (mesuré ici même le 2026-08-21 : `category_names: ["HUD"]` → 31/31 VERT
+    // avec le défaut réarmé exprès, parce que le seul test décisif portait une AUTRE catégorie).
+    // ⇒ après tout run qui doit DÉCIDER, relancer le test visé SEUL par son nom complet et vérifier
+    // qu'il est dans le compte. Ne jamais choisir un nom de catégorie de mémoire : le lire dans le
+    // fichier qui le porte.
+    private static readonly string[] Categories = { "W4P4a", "W3UDA", "W3U1", "W3U2", "Charpente" };
 
     public static void RunPlayModeTests()
     {

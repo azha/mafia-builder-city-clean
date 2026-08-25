@@ -114,12 +114,13 @@ namespace MafiaCleanCity.CityMap.Tests
             yield return null; // Home tenant's own Start()/BuildLayout actually runs
 
             // The diorama isn't one of AppShell's 5 registered tabs (§3.0 — C8 delivers U-9/U-15, not
-            // shell wiring) — mount it manually, replicating EXACTLY AppShell.MountTenant<T>'s own
-            // sequence (host parented under ContentSlot, THEN SetMountParent, same frame).
-            GameObject dioramaHost = new GameObject("Tenant_DistrictInteriorScreenController");
-            dioramaHost.transform.SetParent(shell.ContentSlot, false);
-            var diorama = dioramaHost.AddComponent<DistrictInteriorScreenController>();
-            diorama.SetMountParent(shell.ContentSlot);
+            // shell wiring) — mount it THROUGH THE SHELL'S OWN NAVIGATOR (revue ⊥ round 2, C3) :
+            // `IShellNavigator.MonterLocataireEnSurimpression<T>()` (item 0.4,
+            // charpente-item0-4-design.md §2.1/§2.2) does EXACTLY the 4 mount gestures, in the
+            // shared `ConstruireLocataire<T>` body — CORRIGÉ, ce test recopiait cette séquence À LA
+            // MAIN et l'avait laissée EN RETARD sur son original (ni `PublierInsetsDuChrome()` ni
+            // `SetToken`, le retard même que la fusion de ce lot a fermé dans `EnterDistrict`).
+            var diorama = shell.MonterLocataireEnSurimpression<DistrictInteriorScreenController>();
             yield return null;
 
             diorama.Render(MinimalNightDto()); // Render() builds the root lazily (any day_phase does)

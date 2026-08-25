@@ -151,14 +151,30 @@ namespace MafiaCleanCity.Operational.Exceptions
 
         /// <summary>Open one card's detail (OpenNav idiom: host GameObject + AddComponent + Init). The card travels
         /// in memory (the projection is self-contained); on Back the queue re-fetches (server = source of truth).</summary>
+        //
+        // AMENDÉ (item 0.4 de `front.md`, Tools/charpente-item0-4-design.md §2.3) — MÊME bascule
+        // que `DashboardController.OpenNav` : un `AppShell` (`IShellNavigator`) trouvé monte le
+        // détail LUI-MÊME, en surimpression (confiné dans `ContentSlot`) — ce qui préserve
+        // exactement la sémantique visée : la file (`this`) reste vivante et montée EN DESSOUS, son
+        // `onBack` la rappelle toujours (design §2.1). SINON : repli EXACT d'aujourd'hui.
         public void OpenDetail(ExceptionCardDto card)
         {
             if (card == null) return;
             // One detail at a time: a double-tap (or a second row) must not stack screens — the previous
             // detail still owns the shared canvas overlay (review I1).
             if (LastDetail != null && LastDetail) return;
-            LastNavGameObject = new GameObject("Nav_ExceptionDetail");
-            ExceptionDetailController detail = LastNavGameObject.AddComponent<ExceptionDetailController>();
+            MafiaCleanCity.Shell.IShellNavigator nav = MafiaCleanCity.Shell.ShellNavigatorLocator.Find();
+            ExceptionDetailController detail;
+            if (nav != null)
+            {
+                detail = nav.MonterLocataireEnSurimpression<ExceptionDetailController>();
+                LastNavGameObject = detail.gameObject;
+            }
+            else
+            {
+                LastNavGameObject = new GameObject("Nav_ExceptionDetail");
+                detail = LastNavGameObject.AddComponent<ExceptionDetailController>();
+            }
             detail.Init(card, Token, baseUrl, onBack: () => { if (!Destroyed) StartCoroutine(LoadQueue()); });
             LastDetail = detail;
         }
