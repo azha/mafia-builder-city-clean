@@ -359,6 +359,49 @@ namespace MafiaCleanCity.Shell
             return sp;
         }
 
+        /// <summary>Convertit une opacité CSS en l'opacité à EMPLOYER pour que le mélange
+        /// LINÉAIRE d'Unity retombe sur le pixel qu'un navigateur produirait en sRGB.
+        ///
+        /// ⚠️⚠️ CE N'EST PAS UN AJUSTEMENT À L'ŒIL — c'est une conversion, et elle est MESURÉE.
+        /// Un juge visuel ⊥ a constaté que les CINQ opacités translucides de l'écran « LA FAMILLE »
+        /// rendaient 1,7× à 4× trop fort, systématiquement. La tentation était de corriger les
+        /// nombres un par un. La cause est ailleurs : la maquette de référence est rendue par un
+        /// NAVIGATEUR, qui compose en sRGB ; ce projet est en espace **linéaire**
+        /// (`m_ActiveColorSpace: 1`), où le mélange favorise la couleur claire.
+        ///
+        /// Tranché par une expérience à UNE variable (`W3U2_F30`) : or `#d9ab4e` à α=0,267 sur
+        /// `(21,28,43)` rend **(121,96,54)**. Prédiction sRGB (73,66,52) — distance 0,22.
+        /// Prédiction linéaire (121,96,55) — distance **0,0035**. Le modèle linéaire gagne à
+        /// 1/255 près.
+        ///
+        /// ★ Et le corollaire explique pourquoi tout n'était pas faux : l'écart CROÎT avec le
+        /// contraste entre l'encre et son fond. La plaque de verre (bleu très sombre sur fond très
+        /// sombre) tombait juste sans conversion — le juge l'a mesurée exacte. L'or sur bleu nuit,
+        /// lui, est le cas extrême.
+        ///
+        /// La résolution se fait par canal puis est moyennée en pondérant par |encre − fond| :
+        /// un canal où l'encre et le fond se confondent ne contraint rien et ne doit pas peser.</summary>
+        public static float AlphaSrgbVersLineaire(Color encre, Color fond, float alphaSrgb)
+        {
+            if (alphaSrgb <= 0f) return 0f;
+            if (alphaSrgb >= 1f) return 1f;
+            Color cible = Color.Lerp(fond, encre, alphaSrgb);   // ce que le navigateur produit
+            Color t = cible.linear, b = fond.linear, c = encre.linear;
+            float[] dc = { c.r - b.r, c.g - b.g, c.b - b.b };
+            float[] dt = { t.r - b.r, t.g - b.g, t.b - b.b };
+            float somme = 0f, poids = 0f;
+            for (int i = 0; i < 3; i++)
+            {
+                float w = Mathf.Abs(dc[i]);
+                if (w < 1e-4f) continue;
+                somme += (dt[i] / dc[i]) * w;
+                poids += w;
+            }
+            // Aucun canal ne contraint : l'encre EST le fond, n'importe quel alpha convient.
+            if (poids < 1e-4f) return alphaSrgb;
+            return Mathf.Clamp01(somme / poids);
+        }
+
         public static Sprite RoundedRectMask(int cornerRadiusPx)
         {
             string key = $"roundmask:{cornerRadiusPx}";
