@@ -368,6 +368,28 @@ namespace MafiaCleanCity.Capture.Tests
             Assert.AreEqual(2, libellesVerifies, "les deux libellés du manomètre doivent être vus");
             Debug.Log($"[CAPTURE] lieutenants — {libellesVerifies} libellés de chrome tiennent dans leur boîte");
 
+            // ⛔ CE QUI DÉPASSE DOIT RESTER ATTEIGNABLE. Une capture ne montre que le haut : elle
+            // est donc incapable, par construction, de dire si le bas existe. Mesuré — à l'échelle
+            // du panneau, l'organigramme dépasse la hauteur d'écran dès DEUX lieutenants, et le
+            // bouton de recrutement se retrouvait sous la ligne de flottaison, définitivement hors
+            // de portée. La garde ne demande pas « y a-t-il un ScrollRect » (une garde de
+            // paramètre) : elle compare la HAUTEUR DU CONTENU à celle de la fenêtre, et n'exige un
+            // défilement que lorsqu'il y a effectivement quelque chose à atteindre.
+            var defilement = shell.ContentSlot.GetComponentInChildren<ScrollRect>(true);
+            Assert.IsNotNull(defilement, "l'écran lieutenants doit porter un ScrollRect");
+            Assert.IsNotNull(defilement.content, "le ScrollRect doit avoir un contenu");
+            Assert.IsNotNull(defilement.viewport, "le ScrollRect doit avoir une fenêtre");
+            float hContenu = defilement.content.rect.height;
+            float hFenetre = defilement.viewport.rect.height;
+            Debug.Log($"[CAPTURE] lieutenants — contenu {hContenu:F0} u dans une fenêtre {hFenetre:F0} u");
+            Assert.Greater(hContenu, 0f, "contenu de hauteur nulle : le ScrollRect ne défilerait rien");
+            if (hContenu > hFenetre)
+            {
+                Assert.IsTrue(defilement.vertical,
+                    $"le contenu ({hContenu:F0} u) dépasse la fenêtre ({hFenetre:F0} u) mais le " +
+                    "défilement vertical est désactivé : le bas de l'écran est inatteignable.");
+            }
+
             ScreenCapture.CaptureScreenshot("Assets/Screenshots/ecran_lieutenants.png");
             for (int i = 0; i < 12; i++) yield return null;
             Debug.Log($"[CAPTURE] lieutenants — noeuds={noeuds} ecran={Screen.width}x{Screen.height}");

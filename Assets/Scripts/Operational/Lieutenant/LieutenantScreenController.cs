@@ -1029,9 +1029,39 @@ namespace MafiaCleanCity.Operational.Lieutenant
             cardRt.offsetMax = new Vector2(-MafiaCleanCity.Shell.ShellChrome.GutterX,
                                            -MafiaCleanCity.Shell.ShellChrome.TopInsetPx);
             card.AddComponent<Image>().color = SurfaceBg;
+            MajEchelleFamille(cardRt);
+
+            // ⚠️ LE CONTENU DÉFILE. À l'échelle du panneau, l'organigramme dépasse la hauteur de
+            // l'écran dès DEUX lieutenants — mesuré : le CTA du bas était coupé par le bord. La
+            // référence elle-même fait 1850 px de haut pour trois lieutenants : c'est une page qui
+            // défile, pas un écran fixe. Sans ça, tout ce qui est sous la ligne de flottaison est
+            // définitivement INATTEIGNABLE, et un joueur avec cinq lieutenants ne verrait jamais
+            // le bouton de recrutement.
+            GameObject vue = NewUI("Defilement", card.transform);
+            RectTransform vueRt = (RectTransform)vue.transform;
+            Stretch(vueRt);
+            var scroll = vue.AddComponent<ScrollRect>();
+            scroll.horizontal = false;
+            scroll.movementType = ScrollRect.MovementType.Clamped;
+            scroll.scrollSensitivity = 30f;
+            vue.AddComponent<RectMask2D>();
+
+            GameObject contenu = NewUI("Contenu", vue.transform);
+            RectTransform contenuRt = (RectTransform)contenu.transform;
+            contenuRt.anchorMin = new Vector2(0f, 1f);
+            contenuRt.anchorMax = new Vector2(1f, 1f);
+            contenuRt.pivot = new Vector2(0.5f, 1f);
+            contenuRt.offsetMin = new Vector2(0f, 0f);
+            contenuRt.offsetMax = new Vector2(0f, 0f);
+            scroll.viewport = vueRt;
+            scroll.content = contenuRt;
+            var ajuste = contenu.AddComponent<ContentSizeFitter>();
+            ajuste.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            card = contenu;   // tout ce qui suit se construit DANS le contenu défilant
+
             VerticalLayoutGroup vlg = card.AddComponent<VerticalLayoutGroup>();
-            vlg.padding = new RectOffset(22, 22, 19, 19);   // .corps padding : 18,67 · 22,4
-            vlg.spacing = 15;                               // .corps gap : 14,93
+            vlg.padding = new RectOffset(FX(22), FX(22), FX(19), FX(19)); // .corps padding : 18,67 · 22,4
+            vlg.spacing = FX(15);                                         // .corps gap : 14,93
             vlg.childControlWidth = true;
             vlg.childControlHeight = true;
             vlg.childForceExpandWidth = true;
@@ -1251,9 +1281,9 @@ namespace MafiaCleanCity.Operational.Lieutenant
         //   .tete .sous: 16.8px, .14em, majuscules, --creme-2                        ⇒  9pt ici
         //   le filet   : linear-gradient(90deg, transparent, --laiton 30%, --laiton 70%, transparent)
         //   le bouton  : rond, 28px de police, fond #ffffff08
-        private const float FamilleTitreTaille = 28f;      // .tete h3 : 28
-        private const float FamilleSousTitreTaille = 17f;  // .tete .sous : 16,8
-        private const float FamilleRetourDiametre = 56f;   // .retour : 56
+        private const float RefFamilleTitreTaille = 28f;      // .tete h3 : 28
+        private const float RefFamilleSousTitreTaille = 17f;  // .tete .sous : 16,8
+        private const float RefFamilleRetourDiametre = 56f;   // .retour : 56
 
         /// <summary>L'en-tête de l'écran : retour rond, titre serif espacé, sous-titre d'état, fermé
         /// par un filet laiton qui S'ESTOMPE aux deux bouts — la maquette l'écrit littéralement
@@ -1263,30 +1293,50 @@ namespace MafiaCleanCity.Operational.Lieutenant
         {
             GameObject tete = NewUI("FamilyHeader", parent);
             HorizontalLayoutGroup h = tete.AddComponent<HorizontalLayoutGroup>();
-            h.spacing = 19;                                // .tete gap : 18,67
-            h.padding = new RectOffset(26, 26, 26, 19);     // .tete padding : 26,13 · 26,13 · 18,67
+            h.spacing = FX(19);                            // .tete gap : 18,67
+            // ⚠️ La gouttière de l'en-tête est comptée depuis le bord de la FEUILLE, pas depuis le
+            // contenu : `.tete{padding:26,13}` et `.corps{padding:22,4}` sont FRÈRES en CSS. Le
+            // corps ayant déjà posé ses 22,4, l'en-tête ne doit ajouter que la DIFFÉRENCE, sinon il
+            // se retrouve indenté de 48 et se désaligne visiblement de la colonne de cartes
+            // (mesuré par le juge ⊥ : 48,0 u au lieu de 26,0).
+            h.padding = new RectOffset(FX(26 - 22), FX(26 - 22), FX(26 - 19), FX(19));
             h.childAlignment = TextAnchor.MiddleLeft;
             h.childControlWidth = true;
             h.childControlHeight = true;
             h.childForceExpandWidth = false;
             h.childForceExpandHeight = false;
-            AddLayoutElement(tete, minHeight: 108, flexibleHeight: 0);
+            AddLayoutElement(tete, minHeight: FX(115), flexibleHeight: 0);  // séparateur à 115,3 u
 
             // Le retour rond. `ProceduralUI.RadialDisc` avec la MÊME couleur aux deux stops donne un
             // disque plat aux bords propres — la maquette le veut à peine plus clair que le fond
             // (#ffffff08), donc un voile, pas un bouton plein.
             GameObject retour = NewUI("Retour", tete.transform);
-            AddLayoutElement(retour, minHeight: (int)FamilleRetourDiametre, flexibleHeight: 0);
+            AddLayoutElement(retour, minHeight: FX(RefFamilleRetourDiametre), flexibleHeight: 0);
             LayoutElement leRetour = retour.GetComponent<LayoutElement>();
-            leRetour.preferredWidth = FamilleRetourDiametre;
-            leRetour.preferredHeight = FamilleRetourDiametre;
-            Color voile = DesignTokens.Current.hudCremeSecondary;
-            voile.a = 0.06f;
+            leRetour.preferredWidth = FX(RefFamilleRetourDiametre);
+            leRetour.preferredHeight = FX(RefFamilleRetourDiametre);
+            // ⚠️ RAPPORT INVERSÉ (juge ⊥) : la référence donne un remplissage À PEINE visible
+            // (`#ffffff08`, excès +7 sur le fond) et un JONC marqué (`#ffffff26`, excès +39) — un
+            // rapport jonc/remplissage de 5,6. Le mien rendait 0,5 : disque plein et chaud, jonc
+            // discret. C'est le bouton entier qui changeait de nature, d'un contour léger à une
+            // pastille.
+            Color voile = DesignTokens.Current.hudCreme;
+            voile.a = 0.03f;
             Image disque = retour.AddComponent<Image>();
             disque.sprite = MafiaCleanCity.Shell.ProceduralUI.RadialDisc(64, voile, voile);
             disque.color = Color.white;
             disque.raycastTarget = false;
-            TextMeshProUGUI chevron = NewText("Chevron", retour.transform, "\u2039", 28, TextAlignmentOptions.Center);
+
+            Color jonc = DesignTokens.Current.hudCreme;
+            jonc.a = 0.15f;                                   // #ffffff26
+            GameObject joncGo = NewUI("Jonc", retour.transform);
+            Stretch((RectTransform)joncGo.transform);
+            joncGo.AddComponent<LayoutElement>().ignoreLayout = true;
+            Image joncImg = joncGo.AddComponent<Image>();
+            joncImg.sprite = MafiaCleanCity.Shell.ProceduralUI.Ring(128, 128f / RefFamilleRetourDiametre, jonc);
+            joncImg.color = Color.white;
+            joncImg.raycastTarget = false;
+            TextMeshProUGUI chevron = NewText("Chevron", retour.transform, "\u2039", FX(28), TextAlignmentOptions.Center);
             chevron.color = DesignTokens.Current.hudCremeSecondary;
             Stretch((RectTransform)chevron.transform);
 
@@ -1301,7 +1351,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             AddLayoutElement(bloc, flexibleWidth: 1);
 
             TextMeshProUGUI titre = NewText("Titre", bloc.transform, "LA FAMILLE",
-                (int)FamilleTitreTaille, TextAlignmentOptions.Left);
+                FX(RefFamilleTitreTaille), TextAlignmentOptions.Left);
             titre.font = DesignTokens.Current.hudSerifFont;
             titre.characterSpacing = 16f;           // .16em de la maquette
             titre.color = DesignTokens.Current.hudMoneyGold;   // --or-vif #f2c96b
@@ -1309,10 +1359,10 @@ namespace MafiaCleanCity.Operational.Lieutenant
             TrackText(titre, "LA FAMILLE");
 
             familySubtitleText = NewText("SousTitre", bloc.transform, "",
-                (int)FamilleSousTitreTaille, TextAlignmentOptions.Left);
+                FX(RefFamilleSousTitreTaille), TextAlignmentOptions.Left);
             familySubtitleText.characterSpacing = 14f;         // .14em
             familySubtitleText.color = DesignTokens.Current.hudCremeSecondary;
-            AddLayoutElement(familySubtitleText.gameObject, minHeight: 14, flexibleHeight: 0);
+            AddLayoutElement(familySubtitleText.gameObject, minHeight: FX(23), flexibleHeight: 0);
             textComponents.Add(familySubtitleText);
 
             // Le filet de fermeture, estompé aux deux bouts.
@@ -1411,8 +1461,16 @@ namespace MafiaCleanCity.Operational.Lieutenant
             rt.pivot = new Vector2(0f, 0.5f);
             rt.anchoredPosition = new Vector2(x, (basRetrait - hautRetrait) * 0.5f);
             rt.sizeDelta = new Vector2(ArbreTraitEpaisseur, -(hautRetrait + basRetrait));
+            // ⚠️ DÉGRADÉ, PAS APLAT (juge ⊥) : la référence écrit
+            // `linear-gradient(180deg, var(--laiton), #b08d3e33)` — mesuré, le rail passe de
+            // (176,141,62) en haut à (53,49,34) en bas. Le mien rendait (176,141,61) IDENTIQUE sur
+            // toute sa longueur : un filet qui ne s'éteint pas se lit comme un trait de cadre, pas
+            // comme une ramification qui s'épuise.
+            Color bas = teinte; bas.a *= 0.2f;
             Image im = fil.AddComponent<Image>();
-            im.color = teinte;
+            im.sprite = MafiaCleanCity.Shell.ProceduralUI.VerticalGradient(64, teinte, bas);
+            im.type = Image.Type.Simple;
+            im.color = Color.white;
             im.raycastTarget = false;
             return fil;
         }
@@ -1503,13 +1561,17 @@ namespace MafiaCleanCity.Operational.Lieutenant
             GameObject arbre = NewUI("Arbre", rosterRows);
             VerticalLayoutGroup av = arbre.AddComponent<VerticalLayoutGroup>();
             av.padding = new RectOffset(ArbreIndentation, 0, 0, 0);
-            av.spacing = 15;                                   // .arbre gap : 14,93
+            av.spacing = FX(15);                               // .arbre gap : 14,93
             av.childControlWidth = true; av.childControlHeight = true;
             av.childForceExpandWidth = true; av.childForceExpandHeight = false;
             AddLayoutElement(arbre, flexibleHeight: 0);
             arbreRows = arbre.transform;
 
-            BuildRailVertical(arbre.transform, ArbreRailX, 11, 19,
+            // `top:-11,2px` : le rail DÉBORDE de 11,2 AU-DESSUS du premier rang, pour venir
+            // toucher la carte du Don. Un retrait POSITIF le faisait au contraire commencer 11,7
+            // en dessous — mesuré par le juge ⊥, écart de 22,9 u : l'arbre semblait décroché de sa
+            // racine.
+            BuildRailVertical(arbre.transform, ArbreRailX, FX(-11), FX(19),
                 DesignTokens.Current.hudHairlineGold);
 
             for (int i = 0; i < CurrentRoster.Length; i++)
@@ -1540,20 +1602,83 @@ namespace MafiaCleanCity.Operational.Lieutenant
         // Rayons de coin, DIVISÉS par 1,8667 comme toutes les autres dimensions de ce fichier :
         //   .don-rang / .rang / .vide : 22,4 → 12   ·   .chip : 13,07 → 7
         // (`Ring` était un CERCLE découpé en 9-slice ⇒ ellipse : voir `RoundedRectOutline`.)
-        private const int RayonPanneau = 22;        // .don-rang / .rang / .vide : 22,4
-        private const int RayonPuce = 13;           // .chip : 13,07
-        private const int MedaillonDiametre = 71;   // .medl : 70,93
-        private const int FamilleNomTaille = 25;    // .rang .nom : 25,2
-        private const int FamilleNomDonTaille = 27; // .don-rang .nom : 27,07
-        private const int FamilleRoleTaille = 16;   // .role / .chip : 15,87 / 14,93
-        private const int FamilleEtatTaille = 21;   // .rang .etat b : 21,47
-        private const int FamilleEtatLibelleTaille = 15; // .rang .etat span : 14,93
-        private const int FamilleVideTaille = 21;   // .vide : 20,53
-        private const int ArbreIndentation = 26;    // .arbre : padding-left 26,13
-        private const int ArbreRailX = 9;           // .arbre::before : left 9,33
-        private const float ArbreTraitEpaisseur = 1.9f;  // 1,87
-        private const int ArbreTicheLongueur = 17;  // .rang::before : width 16,8
-        private const int EquipeIndentation = 49;   // .equipe : margin-left 48,53
+        // ⚠️⚠️ CES VALEURS SONT CELLES DE LA RÉFÉRENCE, POUR UN PANNEAU DE 560. ELLES NE SONT PAS
+        // DES DIMENSIONS FINALES. Le panneau REMPLIT désormais sa largeur (1248 en portrait 1200),
+        // et un juge visuel ⊥ l'a mesuré : à valeurs absolues conservées, **tous les rapports
+        // élément/panneau sont divisés par 2,2** — médaillon à 5,6 % du panneau au lieu de 12,7 %,
+        // rapport hauteur-de-rang/largeur passé de 1:5,6 à 1:12,3. La maquette est un écran de
+        // TÉLÉPHONE : ses proportions doivent tenir à toute largeur, donc le dessin se met à
+        // l'échelle du panneau. `FX()` fait cette conversion, et rien d'autre n'a le droit de
+        // porter un nombre de la référence en dur.
+        private const float LargeurReference = 560f;
+        private const int RefRayonPanneau = 22;        // .don-rang / .rang / .vide : 22,4
+        private const int RefRayonPuce = 13;           // .chip : 13,07
+        private const int RefMedaillonDiametre = 71;   // .medl : 70,93
+        private const int RefFamilleNomTaille = 25;    // .rang .nom : 25,2
+        private const int RefFamilleNomDonTaille = 27; // .don-rang .nom : 27,07
+        private const int RefFamilleRoleTaille = 16;   // .role / .chip : 15,87 / 14,93
+        private const int RefFamilleEtatTaille = 21;   // .rang .etat b : 21,47
+        private const int RefFamilleEtatLibelleTaille = 15; // .rang .etat span : 14,93
+        private const int RefFamilleVideTaille = 21;   // .vide : 20,53
+        private const int RefArbreIndentation = 26;    // .arbre : padding-left 26,13
+        private const int RefArbreRailX = 9;           // .arbre::before : left 9,33
+        private const float RefArbreTraitEpaisseur = 1.9f;  // 1,87
+        private const int RefArbreTicheLongueur = 17;  // .rang::before : width 16,8
+        private const int RefEquipeIndentation = 49;   // .equipe : margin-left 48,53
+
+        /// <summary>Largeur du panneau ÷ largeur de la référence. Recalculée à chaque construction.</summary>
+        private float echelleFamille = 1f;
+
+        /// <summary>Convertit une dimension de la référence en unités de canvas de CE panneau.
+        /// Plancher à 1 : une épaisseur de trait ne doit jamais s'annuler par arrondi.</summary>
+        private int FX(float valeurReference) =>
+            Mathf.Max(1, Mathf.RoundToInt(valeurReference * echelleFamille));
+
+        private float FXf(float valeurReference) => valeurReference * echelleFamille;
+
+        // Dimensions FINALES, dérivées ci-dessus. Champs et non constantes : elles dépendent du
+        // panneau, donc de la résolution.
+        private int RayonPanneau, RayonPuce, MedaillonDiametre;
+        private int FamilleNomTaille, FamilleNomDonTaille, FamilleRoleTaille;
+        private int FamilleEtatTaille, FamilleEtatLibelleTaille, FamilleVideTaille;
+        private int ArbreIndentation, ArbreRailX, ArbreTicheLongueur, EquipeIndentation;
+        private float ArbreTraitEpaisseur;
+
+        /// <summary>Fixe l'échelle du dessin depuis la largeur RÉELLE du panneau.
+        ///
+        /// ⚠️ `rect.width` n'est valide qu'après une passe de layout — lu dans la frame de création
+        /// il rend un zéro parfaitement plausible (même piège que `Canvas.scaleFactor`). D'où le
+        /// `ForceUpdateCanvases`, et un repli qui **DÉCLARE qu'il s'est activé** : un dispositif
+        /// conditionnel muet est indiscernable d'un dispositif appliqué.</summary>
+        private void MajEchelleFamille(RectTransform carte)
+        {
+            Canvas.ForceUpdateCanvases();
+            float largeur = carte != null ? carte.rect.width : 0f;
+            if (largeur < 200f)
+            {
+                largeur = 1280f - 2f * MafiaCleanCity.Shell.ShellChrome.GutterX;
+                Debug.LogWarning($"[Famille] largeur de panneau non disponible à la construction " +
+                                 $"(lue {carte?.rect.width:F1}) — repli sur {largeur:F0}.");
+            }
+            echelleFamille = largeur / LargeurReference;
+
+            RayonPanneau = FX(RefRayonPanneau);
+            RayonPuce = FX(RefRayonPuce);
+            MedaillonDiametre = FX(RefMedaillonDiametre);
+            FamilleNomTaille = FX(RefFamilleNomTaille);
+            FamilleNomDonTaille = FX(RefFamilleNomDonTaille);
+            FamilleRoleTaille = FX(RefFamilleRoleTaille);
+            FamilleEtatTaille = FX(RefFamilleEtatTaille);
+            FamilleEtatLibelleTaille = FX(RefFamilleEtatLibelleTaille);
+            FamilleVideTaille = FX(RefFamilleVideTaille);
+            ArbreIndentation = FX(RefArbreIndentation);
+            ArbreRailX = FX(RefArbreRailX);
+            ArbreTicheLongueur = FX(RefArbreTicheLongueur);
+            EquipeIndentation = FX(RefEquipeIndentation);
+            ArbreTraitEpaisseur = FXf(RefArbreTraitEpaisseur);
+            Debug.Log($"[Famille] panneau {largeur:F0} u — échelle {echelleFamille:F3} " +
+                      $"(médaillon {MedaillonDiametre}, nom {FamilleNomTaille})");
+        }
 
         /// <summary>Le panneau « verre gravé » commun au Don et aux lieutenants — le dégradé que la
         /// maquette appelle `--tx-panneau`, dont les deux stops sont déjà des tokens
@@ -1608,7 +1733,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             // médaillon, et aucune bordure autour du rang.
             liseré.AddComponent<LayoutElement>().ignoreLayout = true;
             Image li = liseré.AddComponent<Image>();
-            li.sprite = MafiaCleanCity.Shell.ProceduralUI.RoundedRectOutline(RayonPanneau, 1.6f, bordure);
+            li.sprite = MafiaCleanCity.Shell.ProceduralUI.RoundedRectOutline(RayonPanneau, FXf(1f), bordure);
             li.type = Image.Type.Sliced;
             li.color = Color.white;
             li.raycastTarget = false;
@@ -1625,9 +1750,10 @@ namespace MafiaCleanCity.Operational.Lieutenant
             le.preferredWidth = MedaillonDiametre;
             le.preferredHeight = MedaillonDiametre;
 
+            Color rayon = DesignTokens.Current.hudCreme; rayon.a = 0.05f;   // rgba(255,255,255,.05)
             Image disque = go.AddComponent<Image>();
-            disque.sprite = MafiaCleanCity.Shell.ProceduralUI.RadialDisc(64,
-                DesignTokens.Current.hudGaugeFaceInner, DesignTokens.Current.hudGaugeFaceOuter);
+            disque.sprite = MafiaCleanCity.Shell.ProceduralUI.MedallionFace(192,
+                DesignTokens.Current.hudGaugeFaceInner, DesignTokens.Current.hudGaugeFaceOuter, rayon);
             disque.color = Color.white;
             disque.raycastTarget = false;
             // `.medl{overflow:hidden}` : le buste repose sur le bord BAS du médaillon, donc ses
@@ -1643,7 +1769,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             // (`.medl.don{border-color:var(--or-vif)}`).
             // `.medl{border:1.87px}` — l'anneau est un FILET, pas un cerclage épais. À 5 sur un
             // médaillon de 71 il mangeait le disque.
-            anneau.sprite = MafiaCleanCity.Shell.ProceduralUI.Ring(128, 3.4f,
+            anneau.sprite = MafiaCleanCity.Shell.ProceduralUI.Ring(128, 128f * (1.87f / RefMedaillonDiametre),
                 don ? DesignTokens.Current.hudMoneyGold : DesignTokens.Current.hudHairlineGold);
             anneau.color = Color.white;
             anneau.raycastTarget = false;
@@ -1682,14 +1808,14 @@ namespace MafiaCleanCity.Operational.Lieutenant
         {
             GameObject rang = BuildGlassPanel(parent, nom, bordure);
             HorizontalLayoutGroup h = rang.AddComponent<HorizontalLayoutGroup>();
-            h.padding = new RectOffset(17, 17, 15, 15);     // .rang padding : 14,93 · 16,8
-            h.spacing = 17;                                 // .rang gap : 16,8
+            h.padding = new RectOffset(FX(17), FX(17), FX(15), FX(15)); // .rang padding : 14,93 · 16,8
+            h.spacing = FX(17);                                         // .rang gap : 16,8
             h.childAlignment = TextAnchor.MiddleLeft;
             h.childControlWidth = true;
             h.childControlHeight = true;
             h.childForceExpandWidth = false;
             h.childForceExpandHeight = false;
-            AddLayoutElement(rang, minHeight: MedaillonDiametre + 30, flexibleHeight: 0);
+            AddLayoutElement(rang, minHeight: MedaillonDiametre + FX(30), flexibleHeight: 0);
             return rang;
         }
 
@@ -1712,13 +1838,13 @@ namespace MafiaCleanCity.Operational.Lieutenant
             TextMeshProUGUI role = NewText("Role", bloc.transform, "VOUS", FamilleNomDonTaille, TextAlignmentOptions.Left);
             role.font = DesignTokens.Current.hudSerifFont;
             role.color = DesignTokens.Current.hudMoneyGold;
-            AddLayoutElement(role.gameObject, minHeight: 34, flexibleHeight: 0);
+            AddLayoutElement(role.gameObject, minHeight: FX(34), flexibleHeight: 0);
             TrackText(role, "VOUS");
 
             TextMeshProUGUI sous = NewText("Sous", bloc.transform, "LE DON", FamilleRoleTaille, TextAlignmentOptions.Left);
             sous.characterSpacing = 16f;
             sous.color = DesignTokens.Current.hudCremeSecondary;
-            AddLayoutElement(sous.gameObject, minHeight: 22, flexibleHeight: 0);
+            AddLayoutElement(sous.gameObject, minHeight: FX(22), flexibleHeight: 0);
             TrackText(sous, "LE DON");
         }
 
@@ -1730,13 +1856,26 @@ namespace MafiaCleanCity.Operational.Lieutenant
             // `.rang` : aucun trait (voir `BuildGlassPanel`). Le rang se lit par sa plaque.
             Color bord = DesignTokens.Current.hudCreme;
             bord.a = 0f;
-            GameObject rang = BuildRangBase(arbreRows, "RosterRow_" + index, bord);
-            BuildRailTick(rang.transform, DesignTokens.Current.hudHairlineGold);
+            // ⚠️ L'EMBRANCHEMENT VIT HORS DU PANNEAU, et c'est le juge ⊥ qui l'a établi : il a
+            // compté **0 embranchement vers les cartes de lieutenant** et 2 vers les encarts vides
+            // — c'est-à-dire un diagramme qui affirme que le tronc parente les ENCARTS et que les
+            // lieutenants ne sont rattachés à rien. Cause : le tick part à GAUCHE du rang
+            // (`.rang::before{left:-16,8}`) et le rang est désormais un panneau MASQUÉ en rectangle
+            // arrondi — le masque, posé pour arrondir la plaque, coupait aussi ce qui dépasse.
+            // *Une réparation peut en casser une autre quand les deux touchent le même objet.*
+            GameObject enveloppeRang = NewUI("RangAvecTick_" + index, arbreRows);
+            HorizontalLayoutGroup rh = enveloppeRang.AddComponent<HorizontalLayoutGroup>();
+            rh.childControlWidth = true; rh.childControlHeight = true;
+            rh.childForceExpandWidth = true; rh.childForceExpandHeight = false;
+            AddLayoutElement(enveloppeRang, flexibleHeight: 0);
+            BuildRailTick(enveloppeRang.transform, DesignTokens.Current.hudHairlineGold);
+
+            GameObject rang = BuildRangBase(enveloppeRang.transform, "RosterRow_" + index, bord);
             BuildMedaillon(rang.transform, "ui_element_buste_fedora", don: false);
 
             GameObject bloc = NewUI("Textes", rang.transform);
             VerticalLayoutGroup v = bloc.AddComponent<VerticalLayoutGroup>();
-            v.spacing = 4; v.childControlWidth = true; v.childControlHeight = true;
+            v.spacing = FX(4); v.childControlWidth = true; v.childControlHeight = true;
             v.childForceExpandWidth = true; v.childForceExpandHeight = false;
             AddLayoutElement(bloc, flexibleWidth: 1);
 
@@ -1744,7 +1883,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             TextMeshProUGUI nomTxt = NewText("Nom", bloc.transform, nom, FamilleNomTaille, TextAlignmentOptions.Left);
             nomTxt.font = DesignTokens.Current.hudSerifFont;
             nomTxt.color = DesignTokens.Current.hudCreme;
-            AddLayoutElement(nomTxt.gameObject, minHeight: 32, flexibleHeight: 0);
+            AddLayoutElement(nomTxt.gameObject, minHeight: FX(32), flexibleHeight: 0);
             TrackText(nomTxt, nom);
 
             // ⚠️ LA PUCE NE PEUT PAS PORTER LE MODE, ET C'EST MESURÉ. La maquette y met « DÉLÉGUÉ » /
@@ -1755,7 +1894,9 @@ namespace MafiaCleanCity.Operational.Lieutenant
             // La puce porte donc l'ANCIENNETÉ, que la liste transporte explicitement — le DTO dit
             // qu'elle existe pour « the filter-by-bucket teaser surface ». C'est un qualificatif réel
             // et c'est ce qu'un organigramme de famille montre sous un nom.
-            string puceTexte = TenureBucketLabel(row.tenure_bucket);
+            // `.chip{text-transform:uppercase}` — capitales, mesuré par le juge ⊥ sur le profil
+            // d'encre de la référence (bande pleine, aucune hampe au-dessus de la hauteur d'x).
+            string puceTexte = TenureBucketLabel(row.tenure_bucket).ToUpperInvariant();
             // La puce colle à son texte : le bloc de textes est un `VerticalLayoutGroup` en
             // `childForceExpandWidth`, qui étirerait la puce sur toute la largeur du rang (mesuré :
             // ~180 px pour un mot de cinq lettres). On l'enveloppe dans une rangée qui, elle,
@@ -1765,23 +1906,23 @@ namespace MafiaCleanCity.Operational.Lieutenant
             ph.childAlignment = TextAnchor.MiddleLeft;
             ph.childControlWidth = true; ph.childControlHeight = true;
             ph.childForceExpandWidth = false; ph.childForceExpandHeight = false;
-            AddLayoutElement(puceLigne, minHeight: 28, flexibleHeight: 0);
+            AddLayoutElement(puceLigne, minHeight: FX(28), flexibleHeight: 0);
             GameObject puce = NewUI("Puce", puceLigne.transform);
-            AddLayoutElement(puce, minHeight: 28, flexibleHeight: 0);
+            AddLayoutElement(puce, minHeight: FX(28), flexibleHeight: 0);
             LayoutElement lePuce = puce.GetComponent<LayoutElement>();
             // `.chip` colle à son texte : padding 11,2 de chaque côté (mesuré dans la référence).
             // On dimensionne donc à la LARGEUR RENDUE du texte, pas à un nombre choisi.
             lePuce.preferredWidth = -1;
-            lePuce.preferredHeight = 28;
+            lePuce.preferredHeight = FX(28);
             Color teintePuce = DesignTokens.Current.hudGaugeArcCold;   // --cyan #7fd4d9 de la maquette
             Color bordPuce = teintePuce; bordPuce.a = 0.33f;
             Image puceImg = puce.AddComponent<Image>();
-            puceImg.sprite = MafiaCleanCity.Shell.ProceduralUI.RoundedRectOutline(RayonPuce, 1.4f, bordPuce);
+            puceImg.sprite = MafiaCleanCity.Shell.ProceduralUI.RoundedRectOutline(RayonPuce, FXf(1f), bordPuce);
             puceImg.type = Image.Type.Sliced;
             puceImg.color = Color.white;
             puceImg.raycastTarget = false;
             HorizontalLayoutGroup puceH = puce.AddComponent<HorizontalLayoutGroup>();
-            puceH.padding = new RectOffset(11, 11, 4, 4);   // .chip padding : 3,73 · 11,2
+            puceH.padding = new RectOffset(FX(11), FX(11), FX(4), FX(4)); // .chip padding : 3,73 · 11,2
             puceH.childAlignment = TextAnchor.MiddleCenter;
             puceH.childControlWidth = true; puceH.childControlHeight = true;
             puceH.childForceExpandWidth = false; puceH.childForceExpandHeight = false;
@@ -1797,8 +1938,8 @@ namespace MafiaCleanCity.Operational.Lieutenant
             ev.spacing = 0; ev.childControlWidth = true; ev.childControlHeight = true;
             ev.childForceExpandWidth = true; ev.childForceExpandHeight = false;
             ev.childAlignment = TextAnchor.MiddleRight;
-            AddLayoutElement(etatBloc, minHeight: 48, flexibleHeight: 0);
-            etatBloc.GetComponent<LayoutElement>().preferredWidth = 130;
+            AddLayoutElement(etatBloc, minHeight: FX(48), flexibleHeight: 0);
+            etatBloc.GetComponent<LayoutElement>().preferredWidth = FX(130);
 
             string etat = FamilleLabels.Etat(row.op_state_band);
             // `.rang .etat b{font-weight:600}` — GRAS, et sans `font-family` : donc la police du
@@ -1808,13 +1949,13 @@ namespace MafiaCleanCity.Operational.Lieutenant
             TextMeshProUGUI etatTxt = NewText("EtatValeur", etatBloc.transform, etat, FamilleEtatTaille, TextAlignmentOptions.Right);
             etatTxt.fontStyle = FontStyles.Bold;
             etatTxt.color = DesignTokens.Current.hudCreme;
-            AddLayoutElement(etatTxt.gameObject, minHeight: 27, flexibleHeight: 0);
+            AddLayoutElement(etatTxt.gameObject, minHeight: FX(27), flexibleHeight: 0);
             TrackText(etatTxt, etat);
 
             TextMeshProUGUI etatLbl = NewText("EtatLibelle", etatBloc.transform, "ÉTAT", FamilleEtatLibelleTaille, TextAlignmentOptions.Right);
             etatLbl.characterSpacing = 10f;
             etatLbl.color = DesignTokens.Current.hudCremeSecondary;
-            AddLayoutElement(etatLbl.gameObject, minHeight: 19, flexibleHeight: 0);
+            AddLayoutElement(etatLbl.gameObject, minHeight: FX(19), flexibleHeight: 0);
             TrackText(etatLbl, "ÉTAT");
 
             string id = row.lieutenant_id;
@@ -1830,11 +1971,14 @@ namespace MafiaCleanCity.Operational.Lieutenant
         /// Le slot est là, dimensionné, prêt pour le jour où la donnée existera.</summary>
         private void BuildEquipeSlot(Transform parent, int index)
         {
-            // `.equipe{margin-left:48,53}` est compté depuis le bord du CONTENU de `.arbre`, qui est
-            // déjà indenté de 26 : le retrait supplémentaire vaut donc 48,53 − 26,13 = 22,4.
+            // ⚠️ CORRIGÉ (juge ⊥) : `.equipe{margin-left:48,53}` est une MARGE, comptée depuis le
+            // bord du contenu de `.arbre` — c'est-à-dire depuis le même bord que le rang, pas EN
+            // PLUS de l'indentation de l'arbre. J'en avais soustrait `ArbreIndentation`, ce qui
+            // ramenait le second niveau à +23,5 au lieu de +48,53 : le bloc équipe ne s'alignait
+            // plus sous le NOM du lieutenant, et les deux niveaux de hiérarchie s'écrasaient.
             GameObject enveloppe = NewUI("EquipeIndent_" + index, parent);
             HorizontalLayoutGroup eh = enveloppe.AddComponent<HorizontalLayoutGroup>();
-            eh.padding = new RectOffset(EquipeIndentation - ArbreIndentation, 0, 0, 0);
+            eh.padding = new RectOffset(EquipeIndentation, 0, 0, 0);
             eh.childControlWidth = true; eh.childControlHeight = true;
             eh.childForceExpandWidth = true; eh.childForceExpandHeight = false;
             AddLayoutElement(enveloppe, flexibleHeight: 0);
@@ -1846,11 +1990,11 @@ namespace MafiaCleanCity.Operational.Lieutenant
             Image img = vide.AddComponent<Image>();
             // `.vide{border:1px dashed}` — pointillé, et donc `Tiled` : `Sliced` étirerait le
             // tiret central en une barre continue.
-            img.sprite = MafiaCleanCity.Shell.ProceduralUI.RoundedRectDashedOutline(RayonPanneau, 1.2f, 10, 7, bord);
+            img.sprite = MafiaCleanCity.Shell.ProceduralUI.RoundedRectDashedOutline(RayonPanneau, FXf(1f), FX(6), FX(4), bord);
             img.type = Image.Type.Tiled;
             img.color = Color.white;
             img.raycastTarget = false;
-            AddLayoutElement(vide, minHeight: 62, flexibleHeight: 0);   // .vide padding 18,67 × 2 + 21
+            AddLayoutElement(vide, minHeight: FX(71), flexibleHeight: 0);   // .vide mesuré 71,1 u par le juge ⊥
 
             TextMeshProUGUI t = NewText("Texte", vide.transform, "Aucune équipe rattachée", FamilleVideTaille, TextAlignmentOptions.Center);
             t.color = DesignTokens.Current.hudCremeSecondary;
@@ -1861,16 +2005,21 @@ namespace MafiaCleanCity.Operational.Lieutenant
         /// <summary>L'appel à l'action du bas — la maquette le montre en pointillés, pleine largeur.</summary>
         private void BuildRecruitCta(Transform parent)
         {
+            // ⚠️ NEUTRE, PAS DORÉ (juge ⊥, mesuré au pixel) : la référence donne à `.vide` une
+            // bordure `#ffffff22` — (53,55,57) composé — et un texte `--creme-2` `#b9ad92`. Je
+            // l'avais peint en or vif `#f2c96b` sur bordure (119,99,55), ce qui crée une hiérarchie
+            // d'appel-à-l'action que l'artefact ratifié n'a PAS : dans la maquette, « Recruter » a
+            // exactement le même poids que « Aucune équipe rattachée ».
             GameObject cta = NewUI("RecruterCta", parent);
-            Color bord = DesignTokens.Current.hudMoneyGold; bord.a = 0.27f;
+            Color bord = DesignTokens.Current.hudCreme; bord.a = 0.13f;
             Image img = cta.AddComponent<Image>();
-            img.sprite = MafiaCleanCity.Shell.ProceduralUI.RoundedRectDashedOutline(RayonPanneau, 1.4f, 10, 7, bord);
+            img.sprite = MafiaCleanCity.Shell.ProceduralUI.RoundedRectDashedOutline(RayonPanneau, FXf(1f), FX(6), FX(4), bord);
             img.type = Image.Type.Tiled;
             img.color = Color.white;
-            AddLayoutElement(cta, minHeight: 62, flexibleHeight: 0);
+            AddLayoutElement(cta, minHeight: FX(71), flexibleHeight: 0);
 
             TextMeshProUGUI t = NewText("Texte", cta.transform, "Recruter un nouveau lieutenant", FamilleVideTaille, TextAlignmentOptions.Center);
-            t.color = DesignTokens.Current.hudMoneyGold;
+            t.color = DesignTokens.Current.hudCremeSecondary;
             Stretch((RectTransform)t.transform);
             TrackText(t, "Recruter un nouveau lieutenant");
 

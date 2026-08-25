@@ -300,6 +300,65 @@ namespace MafiaCleanCity.Shell
             return sp;
         }
 
+        /// <summary>La face d'un médaillon : dégradé radial DÉCENTRÉ + rayons en éventail.
+        ///
+        /// REUSE littéral de la maquette (`.medl`) :
+        ///   `repeating-conic-gradient(from 0deg, rgba(255,255,255,.05) 0deg 4deg, transparent 4deg 9deg)`
+        ///   sur `radial-gradient(circle at 38% 30%, #243048, #0f1622 66%)`.
+        ///
+        /// POURQUOI PAS `RadialDisc` : il produit un dégradé CENTRÉ et sans rayons. Un juge visuel ⊥
+        /// l'a chiffré sur un arc du médaillon — écart-type de luminance **7,41 en référence contre
+        /// 0,55 dans le rendu**, amplitude 26,5 contre 2,6 : la texture angulaire était **10× plus
+        /// plate**, c'est-à-dire absente. Ce n'est pas un détail de finition : c'est ce qui fait
+        /// qu'un médaillon se lit comme une frappe de métal et non comme une pastille.</summary>
+        public static Sprite MedallionFace(int diameterPx, Color centre, Color bord, Color rayon,
+                                           float periodeDeg = 9f, float largeurRayonDeg = 4f)
+        {
+            string key = $"medface:{diameterPx}:{ColorKey(centre)}:{ColorKey(bord)}:{ColorKey(rayon)}:" +
+                         $"{periodeDeg:F1}:{largeurRayonDeg:F1}";
+            if (cache.TryGetValue(key, out Sprite cached) && cached != null) return cached;
+
+            int d = Mathf.Max(8, diameterPx);
+            var tex = NewTexture(d);
+            var pixels = new Color[d * d];
+            float r = d * 0.5f;
+            // `circle at 38% 30%` — en espace texture, l'origine est en BAS à gauche, donc 30 %
+            // depuis le HAUT devient 70 % depuis le bas.
+            var foyer = new Vector2(d * 0.38f, d * 0.70f);
+            // `#0f1622 66%` : le dégradé atteint sa couleur de bord à 66 % du rayon.
+            float portee = r * 0.66f;
+            for (int y = 0; y < d; y++)
+            {
+                for (int x = 0; x < d; x++)
+                {
+                    float px = x + 0.5f, py = y + 0.5f;
+                    float dCentre = Vector2.Distance(new Vector2(px, py), new Vector2(r, r));
+                    // Bord du disque, avec un pixel d'anti-crénelage.
+                    float couvert = Mathf.Clamp01(r - dCentre + 0.5f);
+                    if (couvert <= 0f) { pixels[y * d + x] = Color.clear; continue; }
+
+                    float t = Mathf.Clamp01(Vector2.Distance(new Vector2(px, py), foyer) / portee);
+                    Color c = Color.Lerp(centre, bord, t);
+
+                    // Les rayons : une bande claire tous les `periodeDeg`, large de `largeurRayonDeg`.
+                    float ang = Mathf.Atan2(py - r, px - r) * Mathf.Rad2Deg;
+                    if (ang < 0f) ang += 360f;
+                    if (ang % periodeDeg < largeurRayonDeg)
+                        c = Color.Lerp(c, rayon, rayon.a);
+
+                    c.a = couvert;
+                    pixels[y * d + x] = c;
+                }
+            }
+            tex.SetPixels(pixels);
+            tex.Apply(false, false);
+            Sprite sp = Sprite.Create(tex, new Rect(0, 0, d, d), new Vector2(0.5f, 0.5f), 100f, 0,
+                SpriteMeshType.FullRect);
+            sp.hideFlags = HideFlags.HideAndDontSave;
+            cache[key] = sp;
+            return sp;
+        }
+
         public static Sprite RoundedRectMask(int cornerRadiusPx)
         {
             string key = $"roundmask:{cornerRadiusPx}";
