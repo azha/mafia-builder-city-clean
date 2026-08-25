@@ -6,8 +6,9 @@ Le corps de l'écran — la fiche bâtiment, les boutons, le rythme, les jetons 
 géométrie du dock — est d'une fidélité remarquable (20 grandeurs mesurées ÉGALES, dont plusieurs
 au 1/255 et au 1/20ᵉ de px CSS) ; ce qui bloque, ce sont **quatre écarts MAJEURS** : à la
 résolution native de l'art (1080×1920), la barre haute est 2,06× plus claire et le dock 2,51×
-plus clair que le canon, **et les quatre libellés du dock tombent à 3,98–4,03:1, sous le plancher
-de 4,5:1 que la doctrine du projet fixe elle-même aux petits textes** ; et le médaillon central
+plus clair que le canon, et **les quatre libellés du dock tombent à 3,88–4,03:1** — mesuré par deux méthodes
+indépendantes —, sous le plancher de 4,5:1 que la doctrine du projet fixe elle-même aux petits
+textes ; et le médaillon central
 — trait d'identité de l'écran — a troqué son cerclage de laiton fin (1,67 CSS px, bord net)
 contre un anneau mou de 3,3–3,6 CSS px, avec un arc de cadran 53 % plus grand et nettement plus
 clair. **Aucun BLOQUANT.** Les deux premiers écarts n'existent pas à 1080×2400, où le chrome
@@ -97,7 +98,7 @@ sombres quoi qu'il y ait dessous. Dans la capture 1920, la barre monte à **67,3
 moyenne (canon 32,7) et le dock à **82,7** (canon 32,9) : le haut devient une dalle grise, le bas
 un champ bleu clair où les quatre ronds sombres se lisent comme des **trous percés** et non comme
 des médaillons gravés — l'anneau clair n'y a plus aucun maximum local, le profil est monotone. Le
-contraste des libellés du dock passe de 8,5:1 à **4,0:1**. À 1080×2400 le même chrome retombe sur
+contraste des libellés du dock passe de 8,5:1 à **3,9–4,0:1** (deux sondes indépendantes, scripts 27 et 34). À 1080×2400 le même chrome retombe sur
 le canon (32,1 et 38,5) : ce n'est donc pas un choix de couleur, c'est ce que la translucidité
 laisse passer quand l'art clair arrive juste dessous.
 
@@ -117,7 +118,7 @@ calme, au point exact où l'œil arrive en troisième.
 
 | # | partie (id) | classe | réf | jeu | delta | script | note |
 |---|---|---|---|---|---|---|---|
-| M1 | `dock.fond` + `dock.libellés` (**1080×1920 seulement**) | **MAJEUR** | luminance de zone 32,9 ; libellés à 7,80–8,51:1 | 82,7 ; **3,98–4,03:1** | ×2,51 ; contraste ÷2,1 | 20 · 27 · 30 | Sous le plancher **4,5:1** que la doctrine du projet fixe aux petits textes, mesuré sur l'art réel. Le canon porte un voile propre au dock (`background:linear-gradient(…,#070b12d8 40%)`) ⇒ lisible sur n'importe quel art. À 2400 : 7,85:1, conforme. |
+| M1 | `dock.fond` + `dock.libellés` (**1080×1920 seulement**) | **MAJEUR** | luminance de zone 32,9 ; libellés à 7,80–8,53:1 | 82,7 ; **3,88–4,03:1** | ×2,51 ; contraste ÷2,1 | 20 · 27 · **34** · 30 | Sous le plancher **4,5:1** que la doctrine du projet fixe aux petits textes, mesuré sur l'art réel. Le canon porte un voile propre au dock (`background:linear-gradient(…,#070b12d8 40%)`) ⇒ lisible sur n'importe quel art. À 2400 : 7,85:1, conforme. |
 | M2 | `barre.fond` (**1080×1920 seulement**) | **MAJEUR** | aplat `#111824`, luminance 32,7 ; textes 8,02–8,09:1 | `#373d48`, 67,3 ; 5,00–5,17:1 | ×2,06 | 5 · 21 · 29 · 30 | Même cause de classe que M1 : chrome translucide + fond de district non mis à l'échelle ⇒ à 1920 c'est le ciel clair qui passe dessous. Le « verre fumé charbon » devient une dalle grise. À 2400 : 32,1 — identique au canon. |
 | M3 | `medaillon.anneau` | **MAJEUR** | largeur totale du signal **1,67** CSS (FWHM 1,33), bord net, `#b08d3e` | **3,27 / 3,63** CSS (FWHM 1,81 / 2,90), rampe symétrique | ×2,0 à ×2,2 | 26 | Profil RADIAL (la ligne horizontale par le centre du médaillon est radiale). Même couleur de crête (R−B = 114 des deux côtés) : c'est l'**étalement**, pas la teinte. |
 | M4 | `medaillon.cadran` | **MAJEUR** | rayon médian de l'arc **14,6** ; cœur teal (65,98,109), braise (131,69,60) | **22,3** ; teal (108,149,153), braise (179,101,88) | +53 % ; **+28 à +51 par canal, même signe sur 6 mesures** | 28 · 29 | L'arc passe d'un liseré discret à une jauge qui frôle la jante (0,64 R contre 0,45 R). Le décalage de clarté est systématique — mais **rayon et clarté ont bougé ensemble**, la mesure ne départage pas le mécanisme (§6.5). |
@@ -320,6 +321,7 @@ contrôle ; les sorties sont celles collées ci-dessus dans les colonnes « réf
 | `30_global.py` | luminance de zone, débordement par cellule | — |
 | `31_filet_fiche_titre.py` | filet de la fiche, capitale du titre | exclut la pastille d'annotation n° 5 |
 | `33_heat_valeur.py` | hauteur de la valeur du manomètre | isole le « % » hors aiguille |
+| `34_verif_contraste_dock.py` | **re-mesure du contraste du dock par une 2ᵉ méthode** (fond pris dans un rectangle plein ENTRE deux libellés, encre = le jeton `#b9ad92`) | **positif** : le canon rend 8,52 / 8,53:1 · **négatif** : la capture 2400 rend 7,84:1 — la sonde n'est donc pas uniformément alarmante |
 
 Vignettes comparatives (canon / 1920 / 2400, ramenées à la même échelle) :
 `mesures/cmp-bandeau.png`, `mesures/cmp-fiche.png`, `mesures/cmp-dock.png`.

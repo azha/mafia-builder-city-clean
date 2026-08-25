@@ -1,0 +1,7 @@
+mafia-clean-city-traefik-1	Up 18 hours
+mafia-clean-city-game-back-1	Up About an hour (healthy)
+mafia-clean-city-bo-back-1	Up 18 hours (healthy)
+mafia-clean-city-pg-1	Up 18 hours (healthy)
+mafia-clean-city-redis-1	Up 18 hours (healthy)
+mafia-clean-city-docker-socket-shim-1	Up 18 hours
+mafia-clean-city-bo-front-1	Up 18 hours (healthy)
