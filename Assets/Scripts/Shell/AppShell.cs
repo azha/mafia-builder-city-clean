@@ -596,6 +596,11 @@ namespace MafiaCleanCity.Shell
             hlRect.anchoredPosition = Vector2.zero;
             Image tabBarHairlineImg = hlGo.AddComponent<Image>();
             tabBarHairlineImg.color = DesignTokens.Current.hudHairlineGold;
+            // Même fondu que le filet du bandeau haut (relevé sur la maquette : rampe linéaire sur
+            // les 20 % extrêmes, de ~0,10 à 1,00). Les deux barres se répondent : un filet qui meurt
+            // dans les marges des deux côtés de l'écran, jamais un trait qui le coupe en deux.
+            tabBarHairlineImg.sprite = ProceduralUI.HorizontalFade(256, 0.20f, 0f);
+            tabBarHairlineImg.type = Image.Type.Simple;
             tabBarHairlineImg.raycastTarget = false;
             hlGo.AddComponent<LayoutElement>().ignoreLayout = true;
 

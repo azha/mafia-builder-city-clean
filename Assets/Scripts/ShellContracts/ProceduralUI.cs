@@ -102,6 +102,58 @@ namespace MafiaCleanCity.Shell
         /// (`showMaskGraphic=false` — seul le canal ALPHA sert de stencil, jamais sa couleur) : le
         /// fond en dégradé (`VerticalGradientImage`, enfant de ce mask) se retrouve ainsi rogné aux 4
         /// coins. Blanc opaque partout SAUF les 4 quarts de cercle des coins (alpha 0 hors rayon).</summary>
+        /// <summary>Un filet horizontal qui S'ESTOMPE aux deux extrémités.
+        ///
+        /// Relevé sur la maquette du bandeau (`Tools/hud-topbar-reference-2560.png`, y=102), en
+        /// intensité relative par pas de 5 % de la largeur :
+        ///     0 % → 0,11 · 5 % → 0,35 · 10 % → 0,60 · 15 % → 0,85 · 20 % → 1,00 · … puis miroir.
+        /// C'est une **rampe linéaire sur les 20 % extrêmes de chaque côté**, partant de ~0,10.
+        /// (Le creux à 50 % du relevé est le médaillon qui recouvre le filet, pas un pli du fondu.)
+        ///
+        /// Notre filet était à pleine intensité d'un bord à l'autre : il coupait l'écran d'un trait
+        /// net au lieu de mourir dans les marges, et deux juges visuels l'ont relevé.
+        ///
+        /// La texture est générée LARGE (256) puis étirée : un ruban d'un pixel de haut interpolé
+        /// horizontalement donne une rampe lisse à n'importe quelle largeur d'écran, là où une
+        /// texture à la largeur exacte serait à refaire à chaque résolution.</summary>
+        public static Sprite HorizontalFade(int widthPx, float fadeFraction, float alphaAuBord)
+        {
+            string cle = "fade:" + widthPx + ":" + fadeFraction.ToString("F3") + ":" + alphaAuBord.ToString("F3");
+            if (cacheFade.TryGetValue(cle, out Sprite deja)) return deja;
+
+            var tex = new Texture2D(widthPx, 1, TextureFormat.RGBA32, false)
+            {
+                filterMode = FilterMode.Bilinear,
+                wrapMode = TextureWrapMode.Clamp,
+                hideFlags = HideFlags.HideAndDontSave,
+            };
+            var pixels = new Color32[widthPx];
+            float bordePx = Mathf.Max(1f, widthPx * fadeFraction);
+            for (int x = 0; x < widthPx; x++)
+            {
+                float depuisBord = Mathf.Min(x + 0.5f, widthPx - 0.5f - x);
+                float t = Mathf.Clamp01(depuisBord / bordePx);
+                float a = Mathf.Lerp(alphaAuBord, 1f, t);
+                // ⚠️ `Color.white` et NON un littéral (255,255,255) : la garde de provenance des
+                // couleurs (`DA3_NoRawColorLiterals_InTopBarDoctrineFiles`) a rougi sur ce fichier,
+                // et elle avait raison sur la FORME même si le fond est un masque — la teinte réelle
+                // vient de `Image.color`, donc d'un token. Écrire un triplet ici, c'est ouvrir la
+                // porte au prochain qui en écrira un vrai.
+                Color32 masque = Color.white;
+                masque.a = (byte)Mathf.RoundToInt(a * 255f);
+                pixels[x] = masque;
+            }
+            tex.SetPixels32(pixels);
+            tex.Apply(false, false);
+            Sprite sp = Sprite.Create(tex, new Rect(0, 0, widthPx, 1), new Vector2(0.5f, 0.5f), 100f, 0,
+                SpriteMeshType.FullRect);
+            sp.hideFlags = HideFlags.HideAndDontSave;
+            cacheFade[cle] = sp;
+            return sp;
+        }
+
+        private static readonly Dictionary<string, Sprite> cacheFade = new Dictionary<string, Sprite>();
+
         public static Sprite RoundedRectMask(int cornerRadiusPx)
         {
             string key = $"roundmask:{cornerRadiusPx}";

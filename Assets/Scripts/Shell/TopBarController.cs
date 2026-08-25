@@ -607,6 +607,18 @@ namespace MafiaCleanCity.Shell
             hairline = hlGo.AddComponent<Image>();
             hairline.raycastTarget = false;
             hairline.color = calmGoldColor;
+            // ⛔ LE FILET S'ESTOMPE AUX EXTRÉMITÉS (2026-08-22). Il était à pleine intensité d'un
+            // bord à l'autre — il coupait l'écran d'un trait net au lieu de mourir dans les marges.
+            // Relevé sur la maquette (y=102), intensité relative par pas de 5 % de la largeur :
+            //     0 % → 0,11 · 5 % → 0,35 · 10 % → 0,60 · 15 % → 0,85 · 20 % → 1,00 · … puis miroir
+            // soit une rampe LINÉAIRE sur les 20 % extrêmes, partant de ~0,10. Deux juges visuels
+            // l'ont signalé (« pleine intensité sur 96,2 % contre 59,1 % dans la maquette »).
+            // ⚠️ ALPHA DE BORD = 0, et non 0,10 comme mon premier jet. Le « 0,11 » du relevé est un
+            // RAPPORT DE ROUGE, pas un alpha : il inclut le fond de la maquette (19,23,39). Retiré de
+            // l'équation — a = (R − 19)/(176 − 19) — la rampe part bien de **zéro** :
+            //     0 % → 0,00 · 5 % → 0,27 · 10 % → 0,55 · 15 % → 0,83 · 20 % → 1,00. Linéaire.
+            hairline.sprite = ProceduralUI.HorizontalFade(256, 0.20f, 0f);
+            hairline.type = Image.Type.Simple;
         }
 
         /// <summary>Écart (1) — « L'argent, seul or de l'écran » (doctrine, hud-brennar.html annexe
