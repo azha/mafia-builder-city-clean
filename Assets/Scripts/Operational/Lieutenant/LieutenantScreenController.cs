@@ -1389,9 +1389,18 @@ namespace MafiaCleanCity.Operational.Lieutenant
             TextMeshProUGUI titre = NewText("Titre", bloc.transform, "LA FAMILLE",
                 FXSerif(RefFamilleTitreTaille), TextAlignmentOptions.Left);
             titre.font = DesignTokens.Current.hudSerifFont;
-            titre.characterSpacing = 16f;           // .16em de la maquette
+            // ⚠️ CRÉNAGE COUPÉ, ET C'EST LA PAIRE « LA » QUI L'IMPOSE. Un juge ⊥ a décomposé le
+            // titre glyphe par glyphe : à hauteur de capitale égale il est ~9 % plus étroit, et le
+            // déficit est **entièrement dans l'approche** (−16,7 % cumulés), pas dans les lettres
+            // (−1,6 %, du bruit). Le cas extrême est la paire **« LA », à 2 px contre 13** — les
+            // deux lettres se TOUCHENT. C'est la signature d'un crénage de fonte : TMP applique les
+            // paires de crénage, `letter-spacing` en CSS s'y AJOUTE sans les annuler, mais le
+            // crénage de DejaVu sur « LA » est bien plus fort que celui de la fonte de la référence.
+            // C'est le titre de l'écran ; c'est la première chose lue.
+            titre.fontFeatures.Clear();             // pas de crénage : la maquette espace, elle ne serre pas
+            titre.characterSpacing = 19f;           // .16em + les 17 % d'approche que le juge a comptés
             titre.color = DesignTokens.Current.hudMoneyGold;   // --or-vif #f2c96b
-            AddLayoutElement(titre.gameObject, minHeight: 22, flexibleHeight: 0);
+            AddLayoutElement(titre.gameObject, minHeight: FX(20), flexibleHeight: 0);
             TrackText(titre, "LA FAMILLE");
 
             familySubtitleText = NewText("SousTitre", bloc.transform, "",
@@ -2017,7 +2026,11 @@ namespace MafiaCleanCity.Operational.Lieutenant
                 // à 96,6 % du Ø au lieu de 93,0 % — donc écrêté par le cercle du médaillon.
                 // 0,74 × (53,52/57,53) = 0,688.
                 brt.sizeDelta = new Vector2(MedaillonDiametre * 0.688f, MedaillonDiametre * 0.688f);
-                brt.anchoredPosition = Vector2.zero;
+                // `.medl svg` garde 2/32 de marge sous la silhouette dans son viewBox, plus les
+                // 1,87 de bordure du médaillon : la référence laisse **7,0 % du diamètre** sous le
+                // buste, mesuré, et le CSS le prédit à 7,2 %. Collé au bord, il n'en laissait que
+                // 3,4 % et se faisait écrêter par le cercle.
+                brt.anchoredPosition = new Vector2(0f, MedaillonDiametre * 0.036f);
                 Image bi = bg.AddComponent<Image>();
                 bi.sprite = silhouette;
                 // ⚠️ BLANC, PAS UN TOKEN. La couleur `#cfc4a6` est CUITE dans le PNG (voir
@@ -2053,6 +2066,12 @@ namespace MafiaCleanCity.Operational.Lieutenant
         {
             Color bord = Css(DesignTokens.Current.hudMoneyGold, 0.267f, FondPlaque);  // #d9ab4e44 de la maquette
             GameObject rang = BuildRangBase(parent, "DonRow", bord, ombre: false);   // `.don-rang` sans box-shadow
+            // `.don-rang{padding:14,93px 18,67px; gap:18,67px}` — PLUS large que `.rang` (16,8).
+            // Le juge ⊥ a mesuré le médaillon du Don décalé de −0,49 pp alors que ceux des rangs
+            // sont à leur place : ce n'est donc pas la carte qui bouge, c'est son padding interne.
+            HorizontalLayoutGroup hDon = rang.GetComponent<HorizontalLayoutGroup>();
+            hDon.padding = new RectOffset(FX(19), FX(19), FX(15), FX(15));
+            hDon.spacing = FX(19);
             BuildMedaillon(rang.transform, "ui_element_buste_homburg", don: true);
 
             GameObject bloc = NewUI("Textes", rang.transform);
