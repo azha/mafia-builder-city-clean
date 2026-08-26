@@ -40,8 +40,10 @@ namespace MafiaCleanCity.Tests
     // AU DOIGT par l'un ou l'autre reste `IsActive()`/`IsInteractable()` VRAI, et ce helper clique
     // dessus quand même. ⇒ CE FICHIER FERME UNE MOITIÉ DE LA CLASSE (l'état d'activation du
     // `Selectable`), PAS L'AUTRE (le hit-testing) — la seconde moitié est fermée par une garde
-    // SÉPARÉE, `CharpenteMontageLocatairesPlayModeTests.F0_2c_...` (un `GraphicRaycaster.Raycast`
-    // RÉEL au centre de chaque bulle), PAS par ce helper : `ExecuteEvents.Execute` ne PEUT pas
+    // SÉPARÉE, `CharpenteMontageLocatairesPlayModeTests.F0_2c_...` (un `EventSystem.current.
+    // RaycastAll` RÉEL au centre de chaque bulle — round 6, PAS un appel direct sur le
+    // `GraphicRaycaster`, corrigé après que round 5 s'en contentait), PAS par ce helper :
+    // `ExecuteEvents.Execute` ne PEUT pas
     // couvrir le raycast tout en restant fidèle à l'idiome « trouver le bouton par nom, jamais par
     // une position d'écran » (ci-dessous) — les deux couvertures sont structurellement disjointes.
     //
@@ -67,7 +69,8 @@ namespace MafiaCleanCity.Tests
         /// observer l'ABSENCE d'effet (le mounted type qui ne change pas, l'écran qui ne monte
         /// pas), jamais supposer que l'appel a réussi. NE COUVRE PAS le hit-testing (raycastTarget /
         /// CanvasGroup.blocksRaycasts — § MAJEUR 1 ci-dessus) : cette moitié se prouve par
-        /// `F0_2c_...` (`GraphicRaycaster.Raycast` réel), jamais par ce helper.</summary>
+        /// `F0_2c_...` (`EventSystem.current.RaycastAll` réel, round 6 — jamais un appel direct
+        /// sur le `GraphicRaycaster`), jamais par ce helper.</summary>
         public static bool Click(Button bouton)
         {
             Assert.IsNotNull(bouton, "ProductionClickSupport.Click : bouton null — le site d'appel doit vérifier " +

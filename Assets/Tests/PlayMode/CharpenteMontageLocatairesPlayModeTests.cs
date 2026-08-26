@@ -6,7 +6,7 @@ using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
 using UnityEngine;
-using UnityEngine.EventSystems; // F0.2-c (round 5, MAJEUR 1) — GraphicRaycaster.Raycast réel
+using UnityEngine.EventSystems; // F0.2-c (round 6, BLOQUANT) — EventSystem.current.RaycastAll réel
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 using UnityEngine.UI;
@@ -890,15 +890,46 @@ namespace MafiaCleanCity.Shell.Tests
         // production construisent un `Canvas+GraphicRaycaster` de repli, dormants seulement parce
         // que `FindFirstObjectByType<Canvas>()` trouve celui du shell), EventSystem + module
         // d'entrée ❌ (`EventSystem.current != null` est une garde de PARAMÈTRE, pas d'EFFET).
-        // `EventSystem.current.RaycastAll` ferme les 3 cases manquantes d'un coup (participant, tri
-        // inter-canvas, module) — la référence `raycaster` reste une précondition d'EXISTENCE (le
-        // Canvas du shell DOIT porter un `GraphicRaycaster` pour qu'un doigt puisse jamais l'atteindre),
-        // le RAYCAST lui-même passe désormais par le point d'entrée que consulte un vrai tap.
+        // ⛔⛔ CORRIGÉ round 7 (revue ⊥, BLOQUANT 1) — cette section affirmait que
+        // `EventSystem.current.RaycastAll` fermait les TROIS cases manquantes d'un coup (participant,
+        // tri inter-canvas, module). **Faux, mesuré par le relecteur** : `RaycastAll`
+        // (`EventSystem.cs:266-281`, package `com.unity.ugui`) ne consulte QUE
+        // `RaycasterManager.GetRaycasters()` — il ne lit JAMAIS `currentInputModule`
+        // (`m_CurrentInputModule`, posé dans `Update()`, où `RaycastAll` n'entre jamais). Contrôle
+        // négatif exécuté (round 7) : `AppShell.EnsureEventSystem()` privée de son
+        // `AddComponent<InputSystemUIInputModule>()` ⇒ `passed=20 failed=0`, **inchangé** — aucun tap
+        // ne peut plus jamais être dispatché, et cette garde certifiait quand même. `RaycastAll` ferme
+        // donc SEULEMENT 2 des 3 cases (participant, tri inter-canvas) ; le MODULE est fermé
+        // séparément, ci-dessous, par une assertion DÉDIÉE sur `EventSystem.current.currentInputModule`
+        // — jamais en le déduisant de la présence de `RaycastAll`.
+        // Et c'est assertable : `AppShell.EnsureEventSystem()` (`AppShell.cs:1059-1065`) ne pose le
+        // module QUE `if (FindFirstObjectByType<EventSystem>() == null)` — un EventSystem HÉRITÉ (une
+        // scène antérieure, un test voisin qui en aurait laissé un) sans module supporté rouvre la
+        // porte, MUETTE : `EventSystem.current` existe, `RaycastAll` continue de rendre des résultats
+        // non vides (les raycasters restent enregistrés indépendamment du module), et rien ne bouge.
         // ⚠️ Ce qui reste LATENT, pas vivant : rien dans `Assets/Scripts` ne désactive de raycaster
-        // aujourd'hui, et `Boot.unity` n'en contient aucun — cette garde ferme une classe de défaut
-        // qui n'a PAS encore d'instance connue dans ce dépôt, exactement comme F0.2-c round 5 avant
-        // elle.
+        // NI ne laisse d'EventSystem sans module aujourd'hui, et `Boot.unity` n'en contient qu'un,
+        // posé par `EnsureEventSystem`. Cette garde ferme une classe de défaut qui n'a pas encore
+        // d'instance connue dans ce dépôt — exactement comme F0.2-c round 5 avant elle, et round 6
+        // avant elle.
         // ─────────────────────────────────────────────────────────────────────────────────────────
+        //
+        // round 7 — helper partagé entre l'assertion ci-dessous ET son contrôle négatif
+        // (F0_2c_ControleNegatif_..., fin de fichier) : ne lit JAMAIS `EventSystem.current`, prend
+        // l'instance en PARAMÈTRE — testable sur un EventSystem synthétique sans jamais devenir
+        // globalement "current" (m_EventSystems n'a d'importance que pour CE QU'IL RETOURNE, ici on
+        // lui passe l'instance directement).
+        private static bool HasActiveInputModule(EventSystem es, out string diagnostic)
+        {
+            if (es == null) { diagnostic = "EventSystem null"; return false; }
+            if (!es.isActiveAndEnabled) { diagnostic = "EventSystem existe mais n'est pas actif/enabled"; return false; }
+            BaseInputModule module = es.currentInputModule;
+            if (module == null) { diagnostic = "currentInputModule est null — aucun module d'entrée sélectionné"; return false; }
+            if (!module.isActiveAndEnabled) { diagnostic = $"{module.GetType().Name} existe mais n'est pas actif/enabled"; return false; }
+            diagnostic = $"{module.GetType().Name} actif";
+            return true;
+        }
+
         [UnityTest]
         public IEnumerator F0_2c_ChaqueBoutonDuDock_RepondAuHitTesting_UnRaycastAuCentreVisePileLaBulle()
         {
@@ -917,6 +948,19 @@ namespace MafiaCleanCity.Shell.Tests
                 "(AppShell.BuildLayout le pose sur ShellCanvas).");
             Assert.IsNotNull(EventSystem.current,
                 "aucun EventSystem.current — AppShell.EnsureEventSystem() doit avoir tourné.");
+            // round 7 (revue ⊥, BLOQUANT 1) — assertion DÉDIÉE : `RaycastAll` (ci-dessous) ne
+            // consulte JAMAIS le module d'entrée (voir le commentaire de méthode ci-dessus). Sans
+            // cette ligne, un EventSystem sans module actif laisserait ce test VERT — mesuré :
+            // `EnsureEventSystem` privée de son `AddComponent<InputSystemUIInputModule>()` ⇒
+            // passed=20 failed=0, inchangé, tant que cette assertion n'existait pas.
+            Assert.IsTrue(HasActiveInputModule(EventSystem.current, out string diagnosticModule),
+                "EventSystem.current n'a AUCUN module d'entrée actif (" + diagnosticModule + ") — " +
+                "EventSystem.RaycastAll (juste en dessous) ne le voit JAMAIS (EventSystem.cs:266-281 " +
+                "ne consulte que RaycasterManager.GetRaycasters()), donc ce test resterait VERT même " +
+                "si AUCUN tap ne pouvait jamais être dispatché en production. Voir " +
+                "AppShell.EnsureEventSystem (AppShell.cs:1059-1065) : elle ne pose le module QUE si " +
+                "aucun EventSystem n'existait déjà — un EventSystem hérité sans module supporté " +
+                "rouvre la porte, muette.");
 
             var membres = new[] { AppShell.Tab.Empire, AppShell.Tab.Org, AppShell.Tab.Pipeline, AppShell.Tab.More };
             foreach (AppShell.Tab membre in membres)
@@ -963,6 +1007,48 @@ namespace MafiaCleanCity.Shell.Tests
                       "chemin qu'un vrai doigt emprunte), pas seulement à un appel direct sur leur " +
                       "composant Button — ferme la moitié que ProductionClickSupport bypasse " +
                       "délibérément (round 5, MAJEUR 1).");
+        }
+
+        // ─────────────────────────────────────────────────────────────────────────────────────────
+        // round 7 (revue ⊥, BLOQUANT 1) — CONTRÔLE NÉGATIF PERMANENT du helper `HasActiveInputModule`
+        // ci-dessus, patron `probeGo`/`finally { Object.Destroy }` déjà établi dans ce dépôt
+        // (`TopBarDoctrineV31PlayModeTests.cs:203-212`, `ChromeTabBarPlayModeTests.cs`). Reproduit le
+        // monde dégénéré EXACT mesuré par le relecteur — un EventSystem SANS module d'entrée actif —
+        // SANS toucher à la production ni à la scène de démarrage : un EventSystem synthétique isolé.
+        //
+        // ⚠️ `DestroyImmediate`, PAS `Object.Destroy` (déviation du patron ci-dessus, consignée en
+        // Deviation) : `EventSystem.OnEnable` s'enregistre dans une liste STATIQUE partagée par TOUT
+        // le domaine PlayMode (`m_EventSystems` ; `EventSystem.current` en retourne le premier élément)
+        // — un `[Test]` synchrone ne fait tourner AUCUNE frame, donc la destruction DIFFÉRÉE
+        // d'`Object.Destroy` ne se serait PAS exécutée avant que NUnit n'enchaîne le test suivant :
+        // fuite possible d'un EventSystem synthétique vers un voisin qui lit `EventSystem.current`
+        // (exactement la classe de co-tenance que ce dépôt paie ailleurs). `DestroyImmediate` retire
+        // l'instance de la liste statique SYNCHRONEMENT, avant que ce test ne rende la main.
+        // ─────────────────────────────────────────────────────────────────────────────────────────
+        [Test]
+        public void F0_2c_ControleNegatif_EventSystemSansModule_NestPasDetectePar_HasActiveInputModule()
+        {
+            GameObject esGo = new GameObject("ControleNegatifEventSystemSansModule", typeof(EventSystem));
+            try
+            {
+                EventSystem esSansModule = esGo.GetComponent<EventSystem>();
+                // précondition du contrôle négatif : cet EventSystem synthétique ne porte AUCUN
+                // BaseInputModule — `currentInputModule` ne peut donc jamais être renseigné (posé
+                // dans `Update()`, jamais appelé ici, un `[Test]` ne tourne aucune frame).
+                Assert.IsNull(esSansModule.currentInputModule,
+                    "précondition : cet EventSystem synthétique ne doit porter AUCUN module — sinon " +
+                    "ce n'est pas le monde dégénéré visé par ce contrôle négatif.");
+
+                bool ok = HasActiveInputModule(esSansModule, out string diagnostic);
+                Assert.IsFalse(ok,
+                    "CONTRÔLE NÉGATIF : un EventSystem SANS module d'entrée DOIT être détecté comme " +
+                    "invalide par HasActiveInputModule — sinon l'assertion ajoutée à F0_2c (round 7, " +
+                    $"BLOQUANT 1) ne protège rien. diagnostic={diagnostic}");
+            }
+            finally
+            {
+                Object.DestroyImmediate(esGo);
+            }
         }
     }
 }

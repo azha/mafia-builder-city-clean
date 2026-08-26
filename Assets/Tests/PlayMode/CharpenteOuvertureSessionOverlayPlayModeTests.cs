@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -304,34 +303,43 @@ namespace MafiaCleanCity.Shell.Tests
         }
 
         // ═════════════════════════════════════════════════════════════════════════════════════════
-        // ⛔⛔ ÉCART AU RULING (ruling user 2026-08-25, ratifié, front.md §4) — LU EN TÊTE, PAS ENTERRÉ
-        // DANS UNE DEVIATION. Le ruling dit : « posée en surimpression au-dessus de l'Empire, PUIS ON
-        // TOMBE SUR LA VILLE. » CE LOT NE LIVRE QUE LA PREMIÈRE MOITIÉ — round 4 a trouvé que l'overlay
-        // Accueil ne pose AUCUNE affordance de fermeture dédiée, et le contrôleur a tranché
-        // (2026-08-26, en réponse à l'escalade round 4) : PAS de bouton dans ce lot de charpente.
-        // Raisons : (1) aucun mécanisme de démontage n'existe dans `IShellNavigator`/`IShellTenant` —
-        // `MonterLocataireEnSurimpression<T>` MONTE, rien ne DÉMONTE ; (2) le geste et sa copie ne
-        // sont spécifiés NULLE PART dans ce qui est consultable depuis ce dépôt ; (3) l'item 0.5
-        // construit PRÉCISÉMENT l'écran ④ (l'Accueil) — c'est SON chrome qui portera la sortie.
-        // Inventer un bouton ici aurait posé du produit non ratifié dans un lot de charpente.
+        // ⛔⛔ FERMETURE DE L'OVERLAY ACCUEIL — LIVRÉE round 7 (revue ⊥, BLOQUANT 2 : « je change de
+        // décision, et c'est la mesure qui me le fait faire »). Le ruling user 2026-08-25 (ratifié,
+        // front.md §4) dit : « posée en surimpression au-dessus de l'Empire, PUIS ON TOMBE SUR LA
+        // VILLE. » Rounds 4-6 ne livraient que la première moitié, sur la foi d'une raison mesurée
+        // FAUSSE : « aucun mécanisme de démontage n'existe dans `IShellNavigator`/`IShellTenant` ».
+        // Réfutée par TROIS artefacts DE CE LOT, déjà présents avant ce round : `AppShell.cs:298`
+        // (`ExitToCityMap() => ActivateTab(Tab.Empire)`), `Tools/charpente-item0-2-3-design.md:109`
+        // et `:146` (F0.3-bis : « l'action de tête du bandeau (« ← Carte ») ramène à la carte »), et
+        // F-A elle-même (ci-dessous), qui prouve depuis longtemps qu'une activation d'onglet détruit
+        // l'overlay — le RETOUR à la carte était déjà résolu pour le district, jamais rebranché ici.
         //
-        // Un aveu n'est pas une épingle. Ce que CE round livre à la place : DEUX falsifiables.
-        //   F-A (positive) — la ville reste atteignable en UN geste, par un mécanisme EXISTANT et
-        //                     non-dédié : ce n'est PAS un cul-de-sac aujourd'hui.
-        //   F-B (épingle)  — l'ABSENCE d'affordance DÉDIÉE est comptée, avec son mode d'emploi de
-        //                     péremption écrit dans l'assertion : elle rougira le jour où l'item 0.5
-        //                     pose la sortie propre de cet écran, et ce jour-là ELLE SE RETIRE.
+        // Geste, ZÉRO mécanisme neuf : `TopBar.SetLeadingAction(TopBarController.LeadingAction.
+        // BackToMap, ExitToCityMap)`, DEUX lignes, posées APRÈS `MonterLocataireEnSurimpression
+        // <DashboardController>()` sur les DEUX branches d'`AcquireSessionThenActivateHome`
+        // (`AppShell.cs`, branche repli-échec et branche succès) — APRÈS, parce qu'`ActivateTab`
+        // remet l'action de tête à `None` (son propre reset défensif) : la poser avant l'aurait
+        // fait écraser. La copie n'est pas inventée : « ← Carte » (le libellé rendu par `LabelFor`,
+        // TopBarController.cs) désigne exactement la destination, EXACTEMENT le même geste déjà
+        // câblé pour sortir d'un district.
+        //
+        // Ce que CE round livre : F-A (inchangée, toujours vraie — un SECOND chemin de sortie,
+        // générique, coexiste avec celui-ci) et F-B, REMPLACÉE : l'ancienne épingle documentait un
+        // trou qui vient d'être bouché — « on n'épingle pas ce qu'on vient de livrer » — par une
+        // falsifiable POSITIVE qui clique RÉELLEMENT l'action de tête et prouve la fermeture, sur
+        // les DEUX branches d'acquisition (succès et repli-échec).
         // ═════════════════════════════════════════════════════════════════════════════════════════
 
-        // F-A — LA VILLE EST ATTEIGNABLE EN UN GESTE DE PRODUCTION DEPUIS LE DÉMARRAGE, MALGRÉ
-        // L'ABSENCE D'AFFORDANCE DE FERMETURE DÉDIÉE. Mécanisme EXISTANT, pas neuf : `AppShell.
-        // UnmountCurrentTenant()` détruit TOUT enfant direct de `ContentSlot` avant de monter le
-        // nouveau tenant d'onglet — « ContentSlot est la source de vérité unique de ce qui est
-        // affiché maintenant » (son propre commentaire). L'overlay Dashboard (host + backdrop + sheet,
-        // tous parentés SOUS ContentSlot par `MonterLocataireEnSurimpression`, `root = mountParent =
-        // ContentSlot` dans `DashboardController.BuildLayout`) est donc DÉTRUIT par N'IMPORTE QUELLE
-        // activation d'onglet — y compris re-taper la bulle Empire déjà active (`ActivateTab` est
-        // « idempotent-ish : re-activating the SAME tab still remounts », son propre commentaire).
+        // F-A — LA VILLE EST ATTEIGNABLE EN UN GESTE DE PRODUCTION DEPUIS LE DÉMARRAGE, PAR UN
+        // SECOND CHEMIN, GÉNÉRIQUE ET NON DÉDIÉ, QUI COEXISTE DÉSORMAIS AVEC L'ACTION DE TÊTE DÉDIÉE
+        // (F-B, ci-dessous). Mécanisme EXISTANT, pas neuf : `AppShell.UnmountCurrentTenant()` détruit
+        // TOUT enfant direct de `ContentSlot` avant de monter le nouveau tenant d'onglet —
+        // « ContentSlot est la source de vérité unique de ce qui est affiché maintenant » (son propre
+        // commentaire). L'overlay Dashboard (host + backdrop + sheet, tous parentés SOUS ContentSlot
+        // par `MonterLocataireEnSurimpression`, `root = mountParent = ContentSlot` dans
+        // `DashboardController.BuildLayout`) est donc DÉTRUIT par N'IMPORTE QUELLE activation d'onglet
+        // — y compris re-taper la bulle Empire déjà active (`ActivateTab` est « idempotent-ish :
+        // re-activating the SAME tab still remounts », son propre commentaire).
         // Ce test le PROUVE par un geste RÉEL (le dock, jamais `shell.ActivateTab` direct), pas en le
         // déduisant du code.
         // ⛔ Assertion POSITIVE : preuve que ce n'est PAS un cul-de-sac, jamais une absence.
@@ -376,167 +384,119 @@ namespace MafiaCleanCity.Shell.Tests
 
             Debug.Log("[Charpente] F-A — la ville (CityMapController) est atteinte en UN clic de " +
                       "production sur Tab_Empire, l'overlay Accueil ayant réellement disparu de " +
-                      "ContentSlot ; PAS un cul-de-sac, malgré l'absence d'affordance de fermeture dédiée.");
+                      "ContentSlot ; un SECOND chemin, générique, qui coexiste désormais avec " +
+                      "l'action de tête dédiée (F-B, round 7, ci-dessous).");
         }
 
-        // F-B — L'ÉPINGLE QUI SE RETOURNERA (patron `toBe(404)` du socle CLAUDE.md : un test qui
-        // épingle un bug/trou RATIFIÉ, AVEC son mode d'emploi de péremption, et qui rougit le jour où
-        // le trou est refermé). Épingle une VALEUR PRÉSENTE — l'ENSEMBLE NOMMÉ des `Button` sous les
-        // DEUX racines que `DashboardController.BuildLayout` parente DIRECTEMENT sous `root`
-        // (`root = mountParent = ContentSlot` ; le host `DashboardController` lui-même n'a AUCUN
-        // enfant, son UI ENTIÈRE — fond ET carte — est parentée là) : `DashboardBackdrop` (le fond
-        // PLEIN ÉCRAN) ET `DashboardSheet` (la carte visible) — PAS LA SEULE CARTE (round 6, MAJEUR,
-        // voir la correction plus bas). JAMAIS une absence vague. Aujourd'hui : EXACTEMENT
-        // {Nav_CityMap, Nav_BuildingCard, Nav_Filière, Nav_Exceptions, Nav_Autonomy}, un par appel à
-        // `AddNavButton` (`DashboardController.BuildLayout`) — AUCUN n'est une affordance de
-        // FERMETURE, tous mènent à une destination nommée (`NewUI("Nav_" + label.Replace(" ",""), …)`
-        // — le NOM du GameObject porte le nom de la destination, pas un index).
+        // F-B — REMPLACÉE round 7 (revue ⊥, BLOQUANT 2) : « une épingle qui documente un trou
+        // devient inutile quand le trou est bouché — on n'épingle pas ce qu'on vient de livrer ».
+        // L'ancienne épingle (F-B, rounds 4-6) comptait l'ENSEMBLE NOMMÉ des `Button` sous
+        // `DashboardBackdrop`/`DashboardSheet` pour PROUVER qu'aucun n'était une fermeture — son
+        // propre mode d'emploi de péremption disait : « le jour où un Button neuf y ferme l'overlay,
+        // RETIRER ce test ». Ce jour est arrivé, PAR UN CHEMIN DIFFÉRENT de celui qu'elle guettait :
+        // pas un `Button` neuf sous `DashboardBackdrop`/`DashboardSheet` (aucun ajouté), mais
+        // l'action de tête du `TopBar` — hors du périmètre que F-B épinglait, donc son rouge
+        // n'aurait JAMAIS sonné (elle serait restée VERTE à travers l'événement qu'elle guettait,
+        // exactement le mode de défaillance qu'elle nommait pour un AUTRE angle round 6).
         //
-        // ⛔⛔ CORRIGÉ round 5 (revue ⊥, MAJEUR 2) — round 4 épinglait un COMPTE NU (`== 5`), avec un
-        // mode d'emploi qui prescrivait, SUR LE ROUGE LE PLUS PROBABLE, exactement le mauvais geste :
-        // « le compte a changé ⇒ TRÈS PROBABLEMENT l'item 0.5 a livré la sortie ⇒ retire ce test,
-        // coche le ruling ». Faux sur sa propre prémisse — CE DÉPÔT ANNONCE LUI-MÊME DEUX causes
-        // concurrentes, NI L'UNE NI L'AUTRE une affordance de fermeture, qui font TOUTES DEUX monter
-        // ce compte au-delà de 5 :
-        //   (1) le `ShortcutBar` que l'item 0.5 doit poser sur CET écran (le commentaire M1 de
-        //       `DashboardController.cs:42`, « the ShortcutBar … is still NOT built here ») — des
-        //       boutons de RACCOURCI, pas une sortie ;
-        //   (2) le libellé « Marché » prévu pour l'onglet Filière/Pipeline au jalon 4
-        //       (`AppShell.cs:776,795`, « pas avant que screen_b1 existe ») — si `screen_b1` gagne
-        //       SA PROPRE destination `AddNavButton` le jour où il existe, c'est un 6ᵉ `Nav_*`, pas
-        //       une sortie non plus.
-        // Un compte NU ne distingue AUCUNE de ces deux causes d'une vraie fermeture — c'est la MÊME
-        // classe « garde d'ENSEMBLE aveugle à la CORRESPONDANCE » que ce document a déjà été forcé de
-        // fermer au round 2 (F0.2, libellés) : la ferme ICI en épinglant l'ENSEMBLE NOMMÉ, pas le
-        // nombre — un rouge nomme alors EXACTEMENT ce qui est apparu/disparu.
-        // ⛔⛔ MODE D'EMPLOI DE PÉREMPTION, RÉÉCRIT ICI : SI CE TEST ROUGIT, LIRE LE DIFF DE NOMS QUE
-        // L'ASSERTION IMPRIME et distinguer, PAR LE NOM, LAQUELLE des causes possibles s'est
-        // produite AVANT de toucher au ruling :
-        //   (a) un nom NOUVEAU commençant par `Nav_`, SANS qu'aucun nom existant n'ait disparu
-        //       (une destination DE PLUS, p.ex. `Nav_Marche` si screen_b1 gagne son propre bouton
-        //       SANS que Filière perde le sien) ⇒ PAS une fermeture — ÉLARGIR l'ensemble attendu
-        //       ci-dessous pour l'INCLURE (ajouter), garder ce test ;
-        //   (a-bis) round 6 (revue ⊥, MINEUR 4) — un nom `Nav_*` NOUVEAU **ET** un nom `Nav_*`
-        //       EXISTANT disparu DANS LE MÊME rouge ⇒ RENOMMAGE, pas un ajout : l'ensemble est dérivé
-        //       du LIBELLÉ (`"Nav_" + label.Replace(" ", "")`, `DashboardController.cs:685`), et ce
-        //       fichier cite lui-même le cas connu (« Filière → Marché au jalon 4 », round 5
-        //       ci-dessus) — un renommage de libellé change le nom SIMULTANÉMENT, il ne l'AJOUTE pas.
-        //       ⇒ REMPLACER l'ancien nom par le nouveau dans `nomsAttendus` (jamais élargir en (a) :
-        //       appliqué à la lettre à un renommage, ÉLARGIR laisserait l'ancien nom, disparu pour de
-        //       bon, dans `nomsAttendus` — le test resterait ROUGE POUR TOUJOURS, un `nomsAttendus`
-        //       qui grossit sans jamais purger ce qui a disparu) ;
-        //   (b) un nom NOUVEAU sous un conteneur `ShortcutBar` (ou nommé explicitement autour d'un
-        //       raccourci) ⇒ PAS une fermeture — même geste que (a) ;
-        //   (c) un nom NOUVEAU dont l'intitulé désigne EXPLICITEMENT une fermeture/sortie (contient
-        //       « Close »/« Fermer »/« Dismiss »/« Exit » — à vérifier au cas par cas, cette liste
-        //       n'est pas un motif figé) ⇒ SEUL CE CAS est la seconde moitié du ruling livrée :
-        //       (1) relire cette note et § ÉCART AU RULING / Deviation 10 dans
-        //       `Tools/charpente-item0-2-3-implementation-notes.md`, (2) RETIRER ce test,
-        //       (3) cocher, dans front.md/le ruling, « puis on tombe sur la ville » comme livrée
-        //       PAR SON PROPRE bouton.
-        //   (d) round 6 (revue ⊥, MAJEUR) — un nom NOUVEAU trouvé sous `DashboardBackdrop` (le
-        //       fond, plutôt que sous `DashboardSheet`, la carte) — QUEL QUE SOIT LE NOM — est le
-        //       candidat structurellement LE PLUS PROBABLE pour la fermeture décrite au ruling
-        //       (« puis on tombe sur la ville ») : un tap-pour-fermer POSÉ SUR LE FOND n'a aucune
-        //       raison de porter Close/Fermer/Dismiss/Exit dans son nom (rien ne l'y oblige). Ne
-        //       PAS le classer automatiquement en (a)/(b) au seul motif que son nom ne matche pas
-        //       la liste littérale de (c) — LIRE d'abord son `OnClick`/handler AVANT de trancher.
-        // ⛔ Ne JAMAIS cocher le ruling ou retirer ce test sur la seule foi d'un rouge — le nom du
-        // delta décide, pas le fait qu'il y ait eu un delta.
-        //
-        // ⛔⛔ CORRIGÉ round 6 (revue ⊥, MAJEUR) — round 5 scopait l'épingle à la SEULE carte visible
-        // (`DashboardSheet`), aveugle à la fermeture la PLUS PROBABLE : `DashboardBackdrop` est un
-        // FRÈRE sous le MÊME `root` (`DashboardController.BuildLayout`, `root = ContentSlot`),
-        // PLEIN ÉCRAN, et DÉJÀ cible de raycast — `F0_2c` (`CharpenteMontageLocatairesPlayModeTests`)
-        // le touche EN PREMIER dès qu'une bulle du dock perd son `raycastTarget` (round 6, BLOQUANT,
-        // même revue). Le § ÉCART AU RULING des notes d'implémentation énumère lui-même les gestes
-        // candidats pour fermer l'item 0.5 (« libellé ? tap sur le fond ? un bouton ? ») : SI la
-        // fermeture choisie pose un `Button` sur le fond (tap-pour-fermer) — ou toute autre
-        // affordance hors de `DashboardSheet` — cette épingle restait VERTE À TRAVERS L'ÉVÉNEMENT
-        // EXACT qu'elle existe pour détecter (l'épingle ÉTAIT l'aveu). Fermé en épinglant l'UNION
-        // {DashboardBackdrop, DashboardSheet} — EXACTEMENT ce que `BuildLayout` parente sous `root`,
-        // JAMAIS `ContentSlot` en entier : Empire reste monté DESSOUS, EN SURIMPRESSION
-        // (`MonterLocataireEnSurimpression<T>` ne le démonte PAS — `AppShell.cs:484-486`, c'est la
-        // sémantique même de « surimpression ») — élargir à `ContentSlot` tout entier ferait entrer
-        // les propres `Button` de `CityMapController` (cellules de district, bouton d'entrée —
-        // `CityMapController.cs:316,419,505,542`) dans l'ensemble nommé, cassant l'épingle pour une
-        // raison SANS RAPPORT avec une fermeture.
+        // Deux falsifiables POSITIVES la remplacent — MÊME assertion, sur les DEUX branches
+        // d'acquisition d'`AcquireSessionThenActivateHome` (succès ci-dessous, repli-échec plus
+        // bas) : l'action de tête du `TopBar` est `BackToMap`, interactable, et un clic RÉEL dessus
+        // (`ProductionClickSupport.Click`, jamais `onClick.Invoke()` nu) démonte l'overlay Accueil
+        // et révèle `CityMapController` — MÊME assertion que F-A (overlay disparu, carte montée,
+        // confinement sous ContentSlot), MAIS déclenchée par le bouton DÉDIÉ, pas par le dock.
         [UnityTest]
-        public IEnumerator FB_AucuneAffordanceDeFermetureSousLOverlay_EpingleAvecSonModeDEmploiDePeremption()
+        public IEnumerator FB_LActionDeTeteFermeLOverlayEtRevelaLaVille_BrancheSucces()
         {
             yield return ChargerLaSceneDeDemarrageDuBuild();
             AppShell shell = SondeShellDansLaScene(sceneDeDemarrage);
             Assert.IsNotNull(shell, $"aucun AppShell dans la scène de démarrage du build ({sceneDeDemarrage.path})");
             yield return WaitForEmpireMounted(shell);
-            yield return null;
+            yield return null; // montage EN SURIMPRESSION du Dashboard, synchrone, même passe
 
-            DashboardController dashboard = shell.ContentSlot.GetComponentInChildren<DashboardController>(false);
-            Assert.IsNotNull(dashboard, "précondition : l'overlay Accueil doit être monté pour que ce compte ait un sens");
+            yield return VerifierFermetureParActionDeTete(shell, "BRANCHE SUCCÈS");
+        }
 
-            // ⛔ MESURÉ (pas déduit) : `BuildNav()` — qui pose les 5 boutons — n'est appelée QUE
-            // depuis `Render()`/`RenderError()` (après le chargement réseau du wallet), JAMAIS depuis
-            // `BuildLayout()` (synchrone). Sans cette attente, le compte est pris AVANT que `BuildNav`
-            // n'ait tourné — mesuré : 0 trouvé, faux négatif pur, pas le fait que ce test épingle.
-            float elapsedLoad = 0f;
-            while (!dashboard.DashboardLoaded && dashboard.WalletError == null && elapsedLoad < 30f)
+        // round 7 (revue ⊥, BLOQUANT 2) — MÊME garde, sur la branche REPLI-ÉCHEC
+        // d'`AcquireSessionThenActivateHome` : `ActivateTab(Tab.Empire)` + `MonterLocataireEnSurimpression
+        // <DashboardController>()` + `TopBar.SetLeadingAction(...)` sont posés IDENTIQUEMENT sur les
+        // DEUX branches (`AppShell.cs`) — round 3 avait déjà branché le Dashboard sur les deux ;
+        // round 7 ne fait qu'ajouter la MÊME ligne, à la MÊME place relative, sur celle-ci aussi. La
+        // preuve doit donc être répétée ici, PAS supposée par symétrie de code.
+        //
+        // ⛔ NE CHARGE PAS la scène de démarrage du build — son identité par défaut
+        // (`operational_demo`) RÉUSSIT, ce qui n'exercerait que la branche succès. Même idiome que
+        // `NavigationPlayModeTests.NavF3_...` (seul précédent de ce dépôt pour forcer la branche
+        // repli-échec) : un `AppShell` construit MANUELLEMENT, `SetIdentity` posée AVANT tout
+        // `yield return` (même fenêtre synchrone que `Start()`, qui lit ces champs différé d'une
+        // frame), avec des identifiants DÉLIBÉRÉMENT invalides.
+        [UnityTest]
+        public IEnumerator FB_LActionDeTeteFermeLOverlayEtRevelaLaVille_BrancheEchec()
+        {
+            GameObject shellGo = new GameObject("AppShell_ControleR7BrancheEchec");
+            AppShell shell = shellGo.AddComponent<AppShell>();
+            try
             {
-                elapsedLoad += Time.deltaTime;
-                yield return null;
+                shell.SetIdentity("charpente-r7-deliberement-invalide@example.test", "not-a-real-password");
+                LogAssert.ignoreFailingMessages = true; // signin délibérément raté : Error attendue
+
+                float bootElapsed = 0f;
+                while (shell.CurrentTab != AppShell.Tab.Empire && bootElapsed < 15f) { bootElapsed += Time.deltaTime; yield return null; }
+                Assert.AreEqual(AppShell.Tab.Empire, shell.CurrentTab,
+                    "acquisition (même ratée) du shell résolue avant toute vérification");
+                yield return null; // même marge d'une frame que la branche succès
+
+                yield return VerifierFermetureParActionDeTete(shell, "BRANCHE REPLI-ÉCHEC");
             }
-            Assert.IsTrue(dashboard.DashboardLoaded || dashboard.WalletError != null,
-                $"le Dashboard doit avoir résolu (chargé OU erreur) avant de compter ses boutons — " +
-                $"walletErr={dashboard.WalletError}");
-
-            Transform sheet = TrouverDescendant(shell.ContentSlot, "DashboardSheet");
-            Assert.IsNotNull(sheet, "'DashboardSheet' (la carte visible du Dashboard) doit exister sous ContentSlot");
-            // round 6 (revue ⊥, MAJEUR) — `DashboardBackdrop` est l'AUTRE racine que `BuildLayout`
-            // parente directement sous `root` (le fond PLEIN ÉCRAN, FRÈRE de `DashboardSheet`, DÉJÀ
-            // raycastable — voir la correction round 6 au-dessus du test). Une épingle scopée à la
-            // seule carte est aveugle à tout Button posé là.
-            Transform backdrop = TrouverDescendant(shell.ContentSlot, "DashboardBackdrop");
-            Assert.IsNotNull(backdrop, "'DashboardBackdrop' (le fond plein écran du Dashboard) doit exister sous ContentSlot");
-
-            // round 5 (revue ⊥, MAJEUR 2) — l'ENSEMBLE NOMMÉ, pas le compte : chaque `AddNavButton`
-            // nomme son GameObject `"Nav_" + label.Replace(" ", "")` (DashboardController.cs:685) —
-            // le nom PORTE la destination, jamais un index qu'un réordonnancement ferait dériver.
-            var nomsAttendus = new List<string>
+            finally
             {
-                "Nav_CityMap", "Nav_BuildingCard", "Nav_Filière", "Nav_Exceptions", "Nav_Autonomy",
-            };
-            // round 6 (revue ⊥, MAJEUR) — l'UNION {backdrop, sheet}, jamais `shell.ContentSlot` en
-            // entier : Empire reste monté DESSOUS en surimpression (`MonterLocataireEnSurimpression
-            // <T>` ne le démonte pas), et ses propres `Button` (cellules de district…) pollueraient
-            // cet ensemble nommé pour une raison sans rapport avec une fermeture.
-            List<string> nomsTrouves = backdrop.GetComponentsInChildren<Button>(true)
-                .Concat(sheet.GetComponentsInChildren<Button>(true))
-                .Select(b => b.gameObject.name).ToList();
+                // même patron que NavigationPlayModeTests.TearDown : AppShell découvre/crée SON
+                // PROPRE Canvas (jamais parenté sous shellGo) — ne détruire que shellGo le laisserait
+                // fuiter vers le test SUIVANT du même domaine PlayMode.
+                if (shell != null && shell.ShellCanvas != null) Object.Destroy(shell.ShellCanvas.gameObject);
+                if (shellGo != null) Object.Destroy(shellGo);
+            }
+        }
 
-            CollectionAssert.AreEquivalent(nomsAttendus, nomsTrouves,
-                "ÉPINGLE round 6 (corrige round 5, revue ⊥ — la fermeture la plus probable, un tap " +
-                "sur le fond, était hors scope) — aujourd'hui, les boutons sous DashboardBackdrop ∪ " +
-                $"DashboardSheet sont EXACTEMENT {{{string.Join(", ", nomsAttendus)}}}, AUCUN n'est " +
-                "une sortie/fermeture de l'écran d'accueil lui-même (le ruling 'puis on tombe sur la " +
-                "ville' n'a QUE le mécanisme générique de F-A ci-dessus, pas d'affordance dédiée). " +
-                $"SI CET ENSEMBLE A CHANGÉ (trouvé {{{string.Join(", ", nomsTrouves)}}}) : NE PAS " +
-                "cocher le ruling sur ce seul rouge — LIRE le mode d'emploi de péremption ci-dessus " +
-                "(cas (a)/(a-bis)/(b)/(c)/(d)) et distinguer PAR LE NOM ET PAR LA RACINE (backdrop ou sheet) " +
-                "laquelle des causes possibles s'est produite : (1) le ShortcutBar de l'item 0.5 " +
-                "(DashboardController.cs:42, commentaire M1) ajoute des boutons de RACCOURCI ; " +
-                "(2) le libellé 'Marché' au jalon 4 (AppShell.cs:776,795) peut faire gagner à " +
-                "screen_b1 sa propre destination Nav_Marche ; (3) un Button neuf trouvé SOUS " +
-                "DashboardBackdrop est le candidat le plus probable pour la fermeture du ruling — " +
-                "lire son handler avant de classer. Un nom NOUVEAU préfixé 'Nav_' (ou posé sous un " +
-                "conteneur de raccourcis) N'EST PAS une fermeture : ÉLARGIR nomsAttendus ci-dessus et " +
-                "garder ce test. SEUL un nom NOUVEAU désignant EXPLICITEMENT une fermeture/sortie " +
-                "(Close/Fermer/Dismiss/Exit), OU un Button neuf sous DashboardBackdrop dont le " +
-                "handler ferme l'overlay, justifie de (1) relire Tools/charpente-item0-2-3-" +
-                "implementation-notes.md (§ ÉCART AU RULING / Deviation 10), (2) RETIRER ce test, " +
-                "(3) cocher la seconde moitié du ruling comme livrée.");
+        // Corps PARTAGÉ des deux branches ci-dessus — la MÊME assertion positive que F-A (overlay
+        // disparu, carte montée, confinement sous ContentSlot), déclenchée par L'ACTION DE TÊTE
+        // dédiée plutôt que par le dock.
+        private static IEnumerator VerifierFermetureParActionDeTete(AppShell shell, string etiquetteBranche)
+        {
+            // ⛔ ANTI-VACUITÉ — sans cette précondition, un overlay jamais monté rendrait la
+            // fermeture vraie À VIDE (rien à démonter).
+            DashboardController overlayAvant = shell.ContentSlot.GetComponentInChildren<DashboardController>(false);
+            Assert.IsNotNull(overlayAvant,
+                $"précondition anti-vacuité ({etiquetteBranche}) : l'overlay Accueil doit être " +
+                "RÉELLEMENT monté AVANT le clic sur l'action de tête.");
 
-            Debug.Log($"[Charpente] F-B — {{{string.Join(", ", nomsTrouves)}}} épinglés sous " +
-                      "DashboardBackdrop ∪ DashboardSheet (ENSEMBLE NOMMÉ, round 6), aucune " +
-                      "affordance de fermeture dédiée — voir mode d'emploi de péremption dans le " +
-                      "commentaire du test.");
+            Assert.AreEqual(TopBarController.LeadingAction.BackToMap, shell.TopBar.CurrentLeadingAction,
+                $"round 7 (BLOQUANT 2, {etiquetteBranche}) — l'action de tête doit être BackToMap dès " +
+                "que l'overlay Accueil est monté (posée APRÈS ActivateTab, qui la remet sinon à None).");
+
+            Transform boutonTeteT = shell.TopBar.transform.Find("LeadingAction");
+            Assert.IsNotNull(boutonTeteT, $"l'action de tête ('LeadingAction') doit exister sous TopBarController ({etiquetteBranche})");
+            Button boutonTete = boutonTeteT.GetComponent<Button>();
+            Assert.IsNotNull(boutonTete, $"'LeadingAction' doit porter un Button ({etiquetteBranche})");
+            Assert.IsTrue(boutonTete.interactable, $"l'action de tête doit être interactable ({etiquetteBranche})");
+
+            // ⛔ LE GESTE DE PRODUCTION — jamais `shell.ExitToCityMap()` ni `.onClick.Invoke()` nu.
+            ProductionClickSupport.Click(boutonTete);
+            yield return null; // laisse le Object.Destroy déféré de UnmountCurrentTenant s'exécuter
+
+            DashboardController overlayApres = shell.ContentSlot.GetComponentInChildren<DashboardController>(true);
+            Assert.IsNull(overlayApres,
+                $"({etiquetteBranche}) après le clic RÉEL sur l'action de tête, l'overlay Accueil ne " +
+                "doit PLUS être sous ContentSlot (includeInactive:true — une survivance seulement " +
+                "DÉSACTIVÉE compterait encore comme un défaut de démontage, pas comme une réussite).");
+            Assert.AreEqual(typeof(CityMapController), shell.MountedTenantType,
+                $"({etiquetteBranche}) après le clic RÉEL sur l'action de tête, la carte doit être le locataire d'onglet monté");
+            Assert.IsNotNull(shell.MountedTenantGameObject, $"un GameObject de locataire doit exister ({etiquetteBranche})");
+            Assert.IsTrue(shell.MountedTenantGameObject.transform.IsChildOf(shell.ContentSlot),
+                $"({etiquetteBranche}) le locataire remonté doit être un descendant de ContentSlot — confinement, pas juste 'existe quelque part'.");
+
+            Debug.Log($"[Charpente] F-B (round 7, {etiquetteBranche}) — le clic RÉEL sur l'action de " +
+                      "tête ('←') ferme l'overlay Accueil et révèle CityMapController.");
         }
     }
 }

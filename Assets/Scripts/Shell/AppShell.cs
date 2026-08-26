@@ -362,6 +362,14 @@ namespace MafiaCleanCity.Shell
                 {
                     ActivateTab(Tab.Empire); // repli : le locataire signera lui-même
                     MonterLocataireEnSurimpression<DashboardController>();
+                    // ROUND 7 (revue ⊥, BLOQUANT 2 — je change de décision, la mesure me le fait
+                    // faire) — la seconde moitié du ruling (« puis on tombe sur la ville ») livrée
+                    // avec le mécanisme DÉJÀ câblé pour le district (`EnterDistrict`, plus haut) :
+                    // AUCUN mécanisme neuf. `ActivateTab` (ci-dessus) a DÉJÀ remis l'action de tête à
+                    // `None` (son propre corps, § reset défensif) — cette ligne DOIT donc venir
+                    // APRÈS `ActivateTab`, jamais avant, sur les DEUX branches (même ordre ici et
+                    // ci-dessous). `ExitToCityMap` désigne EXACTEMENT la destination : "← Carte".
+                    TopBar.SetLeadingAction(TopBarController.LeadingAction.BackToMap, ExitToCityMap);
                 }
                 yield break;
             }
@@ -409,6 +417,10 @@ namespace MafiaCleanCity.Shell
             {
                 ActivateTab(Tab.Empire);
                 MonterLocataireEnSurimpression<DashboardController>();
+                // ROUND 7 (revue ⊥, BLOQUANT 2) — même geste, même ordre, même raison que la branche
+                // d'échec ci-dessus : `ActivateTab` a déjà remis l'action de tête à `None`, cette
+                // ligne vient donc APRÈS lui et après le montage de l'overlay.
+                TopBar.SetLeadingAction(TopBarController.LeadingAction.BackToMap, ExitToCityMap);
             }
 
             // §6.2, AMENDÉ (B1, Deviation) — le chunk 5 sondait CONDITIONNELLEMENT ("seulement si le
