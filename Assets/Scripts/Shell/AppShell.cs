@@ -46,11 +46,23 @@ namespace MafiaCleanCity.Shell
     // design.md) — le dock ratifié est **Empire · Famille · Filière · Plus** : « on est déjà sur la
     // carte, elle sort du dock ». `Tab.Home` et `Tab.City` FUSIONNENT en **`Tab.Empire`**, qui monte
     // `CityMapController` — la branche City d'hier, déplacée, pas réécrite : Empire EST la carte.
-    // `DashboardController` n'est plus monté par AUCUN onglet (débranché, dit et non masqué — sa
-    // destination future est l'ouverture de session, item 0.5). Ceci ferme aussi le cycle fermé
-    // mesuré avant ce lot (`City` n'était atteignable QUE depuis un district, lui-même atteignable
-    // QUE depuis `City` — `DistrictInteriorScreenController` était donc injoignable depuis un shell
-    // en marche) : la première branche du cycle est désormais ouverte par le démarrage lui-même.
+    // `DashboardController` n'est plus monté par AUCUN onglet (débranché du DOCK, dit et non
+    // masqué). Ceci ferme aussi le cycle fermé mesuré avant ce lot (`City` n'était atteignable QUE
+    // depuis un district, lui-même atteignable QUE depuis `City` — `DistrictInteriorScreenController`
+    // était donc injoignable depuis un shell en marche) : la première branche du cycle est
+    // désormais ouverte par le démarrage lui-même.
+    // AMENDÉ ROUND 3 (revue ⊥, BLOQUANT 2, Tools/charpente-item0-2-3-implementation-notes.md
+    // § BLOQUANT 2) — débrancher `DashboardController` du dock l'avait aussi débranché de TOUTE
+    // production : ses 4 seuls appelants (`BuildingCardController`/`ExceptionQueueController`/
+    // `AutonomyInboxController` via `OpenNav`, `ExceptionDetailController` via
+    // `ExceptionQueueController.OpenDetail`) devenaient injoignables (forme C du socle). Décision B
+    // ratifiée (« l'Accueil devient l'ouverture de session, posée en surimpression au-dessus de
+    // l'Empire », front.md §4) branchée MINIMALEMENT dans `AcquireSessionThenActivateHome` : le
+    // shell monte désormais `DashboardController` EN SURIMPRESSION (`MonterLocataireEnSurimpression
+    // <T>`, item 0.4 — aucun mécanisme nouveau) juste après avoir activé Empire, SEULEMENT sur le
+    // chemin qui vient d'activer l'onglet par défaut (même sentinel `(Tab)(-1)` que ci-dessus —
+    // jamais sur un joueur qui a déjà navigué ailleurs). Toujours PAS un onglet du dock — son
+    // propre écran (les 4 panneaux orphelins) reste l'item 0.5, non repris ici.
     public class AppShell : MonoBehaviour, IShellSessionSink, IShellNavigator
     {
         public enum Tab { Empire, Org, Pipeline, More }
@@ -328,7 +340,29 @@ namespace MafiaCleanCity.Shell
                 // state, not a magic default") : ne forcer Empire que si RIEN n'a encore été activé —
                 // CETTE GARDE NE DOIT PAS SE PERDRE en changeant l'onglet par défaut (items 0.2/0.3) :
                 // payée deux fois, elle reste posée sur les DEUX branches, ici et ci-dessous.
-                if (CurrentTab == (Tab)(-1)) ActivateTab(Tab.Empire); // repli : le locataire signera lui-même
+                //
+                // ROUND 3 (revue ⊥, BLOQUANT 2, Tools/charpente-item0-2-3-implementation-notes.md
+                // § BLOQUANT 2) — décision B ratifiée (« l'Accueil devient l'ouverture de session,
+                // posée en surimpression au-dessus de l'Empire », front.md §4) branchée MINIMALEMENT :
+                // `DashboardController` était débranché de TOUT onglet par ce lot (§3.2 du design),
+                // ce qui a rendu injoignables ses 4 seuls appelants de production
+                // (`BuildingCardController`/`ExceptionQueueController`/`AutonomyInboxController` via
+                // `OpenNav`, et `ExceptionDetailController` via `ExceptionQueueController.OpenDetail`)
+                // — forme C du socle (les écrivains existent, l'APPELANT manque). Le mécanisme est
+                // celui DÉJÀ livré par l'item 0.4 (`MonterLocataireEnSurimpression<T>`, ci-dessous) —
+                // rien de plus. Gardé par LE MÊME sentinel que `ActivateTab(Tab.Empire)` (capturé
+                // AVANT l'activation, puisqu'après ActivateTab CurrentTab n'est plus le sentinel) :
+                // un joueur qui a DÉJÀ navigué pendant l'acquisition ne doit pas se voir recouvrir
+                // d'un écran d'accueil qu'il n'a pas demandé — même raison motif 6/6 qu'au-dessus.
+                // Les 4 panneaux orphelins de l'écran ④ (BuildingCard/ExceptionQueue/Autonomy/
+                // ExceptionDetail — leur PROPRE rendu, au-delà de leur seule atteignabilité) restent
+                // l'item 0.5 complet, non repris ici.
+                bool pasEncoreActiveEchec = CurrentTab == (Tab)(-1);
+                if (pasEncoreActiveEchec)
+                {
+                    ActivateTab(Tab.Empire); // repli : le locataire signera lui-même
+                    MonterLocataireEnSurimpression<DashboardController>();
+                }
                 yield break;
             }
 
@@ -364,7 +398,18 @@ namespace MafiaCleanCity.Shell
             // locataire qu'il vient d'ouvrir. `TopBar.Load` ci-dessus reste inconditionnel (le
             // TopBar est persistant, affiche l'identité du shell quel que soit l'onglet actif) —
             // seul le MONTAGE forcé d'Empire est gardé par le sentinel.
-            if (CurrentTab == (Tab)(-1)) ActivateTab(Tab.Empire);
+            //
+            // ROUND 3 (BLOQUANT 2) — MÊME branchement que la branche d'échec ci-dessus, MÊME
+            // garde : `DashboardController` monte EN SURIMPRESSION au-dessus d'Empire fraîchement
+            // monté, uniquement si c'est CE montage-ci qui vient d'activer l'onglet par défaut
+            // (jamais un joueur qui a déjà navigué ailleurs pendant l'acquisition). Capturé AVANT
+            // `ActivateTab` : après lui, `CurrentTab` n'est plus le sentinel `(Tab)(-1)`.
+            bool pasEncoreActive = CurrentTab == (Tab)(-1);
+            if (pasEncoreActive)
+            {
+                ActivateTab(Tab.Empire);
+                MonterLocataireEnSurimpression<DashboardController>();
+            }
 
             // §6.2, AMENDÉ (B1, Deviation) — le chunk 5 sondait CONDITIONNELLEMENT ("seulement si le
             // tenant monté n'est pas Dashboard"), un mécanisme conçu pour départager DEUX locataires

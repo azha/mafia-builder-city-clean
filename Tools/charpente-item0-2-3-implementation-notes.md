@@ -2,18 +2,22 @@
 
 Design : `Tools/charpente-item0-2-3-design.md`. Périmètre : le dock ratifié (Empire · Famille ·
 Filière · Plus), Empire = fusion de `Tab.Home`/`Tab.City` (EST la carte), la porte d'entrée du
-district, et le retrait paraphrasé de l'énoncé daté d'`AppShell.cs`.
+district, et le retrait paraphrasé de l'énoncé daté d'`AppShell.cs`. **Round 3** étend le périmètre,
+assumé par le contrôleur : la classe DESTINATION du dock (§ BLOQUANT 1) et le branchement minimal de
+l'ouverture de session (décision B, § BLOQUANT 2) — le RENDU de cet écran reste l'item 0.5.
 
-Logs bruts conservés hors du dépôt : `/tmp/charpente-0203/*.log` (round 1) et
-`/tmp/charpente-0203-r2/*.log` (round 2 — seul fichier neuf laissé dans `Tools/` : celui-ci + le
-design déjà déposé par le contrôleur).
+Logs bruts conservés hors du dépôt : `/tmp/charpente-0203/*.log` (round 1),
+`/tmp/charpente-0203-r2/*.log` (round 2) et `/tmp/charpente-r3/*.log` (round 3 — seul fichier neuf
+laissé dans `Tools/` ce round : `Tools/charpente-item0-2-3-implementation-notes.md` lui-même
+(modifié) + `Assets/Tests/PlayMode/CharpenteOuvertureSessionOverlayPlayModeTests.cs` (neuf) ; le
+design était déjà déposé par le contrôleur).
 
 Méthode de run, identique au précédent d'item 0 (round 2) : les runs de contrôle négatif et de
 vérification de correctif sont **scopés à la catégorie `Charpente` seule** (narrowing temporaire de
 `Assets/Editor/MafiaCI.cs:Categories` à `{ "Charpente" }`, restauré à `{ "W4P4a", "W3UDA", "W3U1",
 "W3U2", "Charpente" }` avant toute mesure finale). Le juge **complet** (5 catégories) a maintenant
-été lancé **TROIS fois** au total (round 1 : deux — préliminaire + clôture ; round 2 : une
-troisième, réconciliation § « Run complet du juge »).
+été lancé **QUATRE fois** au total (round 1 : deux — préliminaire + clôture ; round 2 : une
+troisième ; round 3 : une quatrième — réconciliation § « Run complet du juge »).
 
 ---
 
@@ -43,8 +47,17 @@ attestations trop larges. Section par section, ce round :
   détaillé § dédiée), mais plus qualifié de « MARGINAL/FLAKY » comme s'il était clos.
 - **MINEUR m1** : les numéros de ligne `:183`/`:221` (§ C-b) et `:669-672` (§ Désambiguïsation)
   n'ont jamais existé à ces valeurs — sortie `grep -n` lue via la couche d'affichage proxifiée.
-  Corrigés à l'oracle (`331`/`367` et `711-712`) ; TOUS les autres numéros de ligne de ce document
-  ont été re-vérifiés à l'oracle Python/`$( )` (aucun autre écart trouvé).
+  Corrigés à l'oracle (`331`/`367` et `711-712`).
+  ⛔⛔ **RÉFUTÉ round 3 (majeur + mineur m1 round 3)** : l'attestation qui suivait ici — « TOUS les
+  autres numéros de ligne de ce document ont été re-vérifiés à l'oracle Python/`$( )` (aucun autre
+  écart trouvé) » — était FAUSSE. Deux contre-exemples SURVIVAIENT dans le même document au moment
+  où elle a été écrite : (a) `Sortie réelle` du run C (§ « Run complet du juge ») collait `303`,
+  byte-différent du log qu'elle cite (`304`, `full-run-THIRD.log`) ; (b) `package.json:5` (§ F0.2
+  round 2) désignait la ligne `"unity": "2019.4"`, pas la ligne qui porte le fait cité (la
+  description NUnit 3.5, `:6`). Une attestation de re-vérification exhaustive n'est une preuve que
+  si l'exhaustivité a réellement eu lieu — ici elle ne l'avait pas. Les deux sont corrigés round 3
+  (§ MAJEUR round 3, § MINEUR m1 round 3) ; **tous les numéros de ligne de ce document ont été
+  RE-vérifiés à l'oracle Python round 3** (voir § Round 3 pour la méthode).
 - **MINEUR m2** (§ mineurs, VuePrincipaleCapturePlayModeTests.cs) : `yield return null;` ajouté
   entre le re-tap `ActivateTab(Tab.Empire)` et `FindFirstObjectByType<CityMapController>()`.
 - **MINEUR m3** : le littéral retiré par 0.3-bis était reproduit verbatim EN PROSE dans ce document
@@ -56,6 +69,68 @@ attestations trop larges. Section par section, ce round :
 « files are identical » sur `AppShell.cs` juste après une édition réelle — détecté uniquement parce
 que la vérification suivante utilisait un oracle Python. Toutes les vérifications de restauration
 de ce round ont donc été refaites via oracle Python, jamais via `diff` nu (détail § F0.2 Round 2).
+
+---
+
+## ⛔⛔ ROUND 3 — revue ⊥ NOT_APPROVED (2 bloquants, 1 majeur, 3 mineurs) — correctifs
+
+Les correctifs du round 2 tiennent tous (permutation, doublons, enum, honnêteté de portée,
+paraphrase, justification NUnit — TOUS reproduits par le relecteur). Ce qui bloquait ce round : deux
+CLASSES non fermées.
+
+- **BLOQUANT 1** (§ « BLOQUANT 1 — round 3 ») : `F0.2` (round 2) avait fermé la classe « aveugle à la
+  CORRESPONDANCE » sur l'attribut LIBELLÉ seul — l'attribut DESTINATION (l'`onClick` du bouton) était
+  resté ouvert, et c'est le SEUL qui décide de l'atteignabilité. Le relecteur l'a armé sur UNE
+  variable, UN site (`AppShell.cs:835` à l'époque, `b.onClick.AddListener(() => ActivateTab(tab))` →
+  `ActivateTab(Tab.Empire)`) : `Charpente` restait 15/0, juge complet inchangé. Nouveau test
+  `F0.2-b` : un CLIC RÉEL sur chaque bouton du dock, comparé à une table de destinations ÉCRITE
+  INDÉPENDAMMENT ; ferme AUSSI l'attribut ORDRE (jamais couvert par `F0.1-a`/`F0.2`,
+  `CollectionAssert.AreEquivalent` étant insensible à l'ordre). Population RE-FAITE sur la bonne
+  classe (« les correspondances que le DOCK transporte », pas « les assertions de test ») : 5
+  attributs recensés, 2 fermés ici, 2 déjà fermés (nom, libellé), 1 hors-classe consigné
+  (indicateur d'actif — style, pas atteignabilité). Contrôle négatif RÉ-ARMÉ à l'identique du
+  relecteur, ROUGIT en nommant `Tab_Org`, restauré (oracle Python, IDENTICAL), re-vert confirmé.
+- **BLOQUANT 2** (§ « BLOQUANT 2 — round 3 ») : débrancher `DashboardController` de TOUT onglet
+  (round 1) l'a aussi débranché de TOUTE production — ses 4 seuls appelants
+  (`BuildingCardController`/`ExceptionQueueController`/`AutonomyInboxController` via `OpenNav`,
+  `ExceptionDetailController` via `ExceptionQueueController.OpenDetail`) devenaient injoignables
+  (forme C du socle). Geste ASSUMÉ par le contrôleur (scope étendu, explicitement autorisé) : la
+  décision B déjà ratifiée par l'user (« l'Accueil devient l'ouverture de session, posée en
+  surimpression au-dessus de l'Empire ») branchée MINIMALEMENT — `AppShell.
+  AcquireSessionThenActivateHome` monte désormais `DashboardController` EN SURIMPRESSION
+  (`MonterLocataireEnSurimpression<T>`, item 0.4, AUCUN mécanisme nouveau) juste après avoir activé
+  Empire, sur les DEUX branches, gardé par LE MÊME sentinel `(Tab)(-1)` que `ActivateTab(Tab.Empire)`.
+  Nouveau fichier `CharpenteOuvertureSessionOverlayPlayModeTests.cs` : la chaîne ENTIÈRE (Dashboard
+  NON fabriqué par le test → 5 boutons nav → ExceptionQueue → ExceptionDetail sur une carte SEEDÉE)
+  atteinte par des gestes de production uniquement, anti-vacuité par liste NOMMÉE. Contrôle négatif
+  (les 2 sites de montage retirés, simulant l'état round 2) ROUGIT en nommant le Dashboard manquant,
+  restauré (oracle Python, IDENTICAL), re-vert confirmé. **Rendu propre des 4 panneaux orphelins
+  (l'écran ④ lui-même) reste l'item 0.5, non repris — seule leur ATTEIGNABILITÉ est ce lot.**
+- **MAJEUR** (§ « Run complet du juge », run C) : `Sortie réelle` collait `303`, byte-différent du
+  log qu'elle cite (`/tmp/charpente-0203-r2/full-run-THIRD.log`, qui dit `304` — re-lu à l'oracle
+  `grep -a`). Corrigé ; l'attestation « tous les numéros de ligne re-vérifiés, aucun écart » (round 2,
+  MINEUR m1) était donc FAUSSE — RETRACTÉE (§ MINEUR m1 ci-dessus) et refaite entièrement round 3.
+- **MINEUR m1** : `package.json:5` (§ F0.2 round 2) désignait `"unity": "2019.4"` — le fait cité
+  (NUnit 3.5) vit à `:6`. Corrigé.
+- **MINEUR m2** (§ « C7 — round 2 ») : le balayage `switch *(` collait `1` (mesuré round 2, AVANT
+  que la docstring de `C7` n'existe) ; ré-exécuté sur l'état LIVRÉ round 3, il rend `3` — 2 des 3
+  étant AUTO-RÉFÉRENTIELS (la docstring de `C7` cite verbatim `` `switch (tab)` `` deux fois pour
+  expliquer ce qu'elle ferme). Refait à la forme du socle : AVANT (`af9893b`, re-mesuré : 1) / APRÈS
+  (round 3, motif nu : 3, classé ligne par ligne) ; population RÉELLE (switch statements exécutables)
+  inchangée à 1. Vérifié en plus : aucun `if/else`/ternaire de production n'échappe au `switch`
+  unique (52 références `AppShell.Tab.<membre>` hors `AppShell.cs`, toutes en code de TEST).
+- **MINEUR m3** : `303 − 201 = 102` (§ C-γ) survit-il round 3 ? Re-mesuré sur le run complet réel :
+  `306 − 204 = 102` — les 3 tests ajoutés depuis (`C7`, `F0.2-b`, `BLOQUANT2_...`) sont TOUS
+  `[Category("Charpente")]`, donc dans le côté FILTRÉ, jamais dans les 102 exclus. Confirmé.
+
+★ **Le motif de méthode qui vaut plus que les deux BLOQUANT** : round 2 avait balayé « quelles
+AUTRES GARDES assertent des paires » (population = les assertions de test) et conclu 5 sites/1
+vulnérable — exact sur SA population, à côté de LA classe, qui porte sur « les correspondances que
+le DOCK transporte » (nom, libellé, ordre, destination, indicateur d'actif). Le même document
+applique par ailleurs la règle « anti-tautologie » à `EnterDistrict`/F0.3 (un geste RÉEL, jamais la
+méthode appelée directement) sans se l'appliquer À LUI-MÊME sur le dock — `C7` appelle
+`shell.ActivateTab(membre)`, exactement la forme qu'il proscrit ailleurs. Reconnu, corrigé, et la
+classe est désormais fermée sur SA population réelle, avec le compte collé § BLOQUANT 1.
 
 ---
 
@@ -205,7 +280,9 @@ CE MÊME bouton), formatées en une seule chaîne `"{nomBouton}={libelle}"` (pas
 par `CollectionAssert` — `com.unity.ext.nunit` embarqué ici est basé sur NUnit 3.5, antérieur au
 support `ValueTuple` de `NUnitEqualityComparer` ; mesuré en écrivant d'abord la forme tuple et en la
 gardant SEULEMENT après avoir vérifié la version du package — voir `Library/PackageCache/
-com.unity.ext.nunit@*/package.json:5`). Le libellé est lu SOUS le bouton `Tab_{tab}` qui le porte
+com.unity.ext.nunit@*/package.json:6` — CORRIGÉ round 3, MINEUR m1 : `:5` est la ligne `"unity":
+"2019.4"` ; `:6` porte la description citant NUnit 3.5, re-vérifiée à l'oracle Python). Le libellé
+est lu SOUS le bouton `Tab_{tab}` qui le porte
 (`GetComponentInChildren` scopé à cet enfant), jamais dans une liste à plat de tous les
 `TextMeshProUGUI` de la barre — cette dernière forme est exactement ce qui rendait la permutation
 invisible : un ensemble ne sait plus qui portait quoi. Anti-tautologie inchangée : la cible
@@ -435,6 +512,70 @@ demandé (« ce lot et le lot 0.4 ») — déjà fermé par `C5` (tour précéde
 **Compte : 2 enums pilotés par un `switch` dans le périmètre élargi (ce lot + lot 0.4), 2
 détecteurs après ce correctif (0 avant, pour `Tab` ; `C5` déjà présent, pour `NavTarget`).**
 
+⛔⛔ **CORRIGÉ round 3, MINEUR m2** — ré-exécuté MOT POUR MOT sur l'état LIVRÉ (round 3, oracle
+Python plutôt que le `grep -c "switch *("` en boucle shell d'origine — même motif, comptage
+indépendant) :
+```
+$ python3 -c "
+import re
+files = ['Assets/Scripts/Shell/AppShell.cs','Assets/Tests/PlayMode/AppShellPlayModeTests.cs',
+ 'Assets/Tests/PlayMode/NavigationPlayModeTests.cs','Assets/Tests/PlayMode/HudPlayModeTests.cs',
+ 'Assets/Tests/PlayMode/CharpenteBootScenePlayModeTests.cs',
+ 'Assets/Tests/PlayMode/CharpenteMontageLocatairesPlayModeTests.cs',
+ 'Assets/Tests/PlayMode/VuePrincipaleCapturePlayModeTests.cs',
+ 'Assets/Tests/PlayMode/ChromeTabBarPlayModeTests.cs']
+pat = re.compile(r'switch *\(')
+total = 0
+for f in files:
+    lines = open(f, encoding='utf-8').readlines()
+    hits = [(i+1, l.rstrip()) for i,l in enumerate(lines) if pat.search(l)]
+    total += len(hits)
+    if hits:
+        print(f, '->', len(hits))
+        for ln, txt in hits: print('   ', ln, ':', txt.strip()[:110])
+print('TOTAL:', total)
+"
+Assets/Scripts/Shell/AppShell.cs -> 1
+    183 : switch (tab)
+Assets/Tests/PlayMode/CharpenteMontageLocatairesPlayModeTests.cs -> 2
+    578 : // (AppShell.Tab))` comptait 0 occurrence dans tout le dépôt avant ce test. Le `switch (tab)`
+    619 : // Table ÉCRITE ICI, indépendamment du corps du `switch (tab)` qu'elle vérifie
+TOTAL: 3
+```
+Le motif nu rend désormais **3**, pas **1** — mais **ce n'est pas un régression de la CLASSE que ce
+balayage traque** : les 2 hits de plus sont dans le **bloc de commentaire de `C7` que ce correctif a
+lui-même écrit** (`:578`, `:619`) — la docstring de `C7` CITE `` `switch (tab)` `` verbatim pour
+expliquer ce que le test ferme, et un motif nu qui cherche « ce syntagme existe-t-il » le retrouve
+dans sa propre explication. Exactement la même classe que le piège d'anti-péremption du socle
+(citer un motif qu'on retire le réintroduit) — ici appliqué à un balayage de POPULATION, pas à un
+retrait de clause : **le contrôle a été lancé AVANT la rédaction de C7 (round 2, quand la docstring
+n'existait pas encore) ; la rédaction, ARRIVÉE APRÈS, invalide le compte sans que personne ne
+l'ait re-couru.**
+⇒ **Forme du socle appliquée** : valeur **attendue AVANT / APRÈS, RE-MESURÉE sur les DEUX bornes**
+(pas déduite) :
+```
+$ git show af9893b:Assets/Scripts/Shell/AppShell.cs | grep -n "switch \*("
+163:        switch (tab)
+```
+(les 7 autres fichiers ne contenaient AUCUN hit sur `af9893b` — `CharpenteMontageLocatairesPlayModeTests
+.cs` y existait déjà, sans encore la docstring de `C7`, écrite round 2). **AVANT : 1. APRÈS (round
+3, motif nu) : 3 — dont 2 auto-référentiels**, classés ligne par ligne ci-dessus, PAS par leur
+littéral dans cette prose. **La population RÉELLE (switch STATEMENTS exécutables) reste inchangée à
+1** — `AppShell.cs:183` (déplacé de `:163` à `:183` par les insertions de commentaires de ce lot,
+toujours le seul, toujours fermé
+par `C7`.
+⚠️ **Et la propriété visée, pas la syntaxe** (le relecteur : « un `if/else` ou une chaîne de
+ternaires sur `Tab` échappe à `switch *(` ») — balayage de TOUTE référence `AppShell.Tab.<membre>`
+hors d'`AppShell.cs` (52 hits, tous en code de TEST : attentes/assertions/tables anti-tautologie
+écrites indépendamment — aucun `if/else` ni ternaire de PRODUCTION dispatchant un type monté par
+membre) et, DANS `AppShell.cs`, de toute mention `Tab.<membre>` hors commentaire (17 lignes :
+le `switch` lui-même, `ExitToCityMap`, les 2 sites `ActivateTab(Tab.Empire)` du round 3 gardés par
+sentinel, `DockRatifie`, `OnEmptyMoreDestination = tab == Tab.More` — une comparaison à UN SEUL
+membre, jamais un dispatch multi-membres). **Aucune forme dérivée (if/else, ternaire) n'échappe au
+`switch` unique** — vérifié, pas supposé.
+**Compte final round 3 : 1 population réelle (inchangée), 1 détecteur (`C7`, inchangé) — le motif
+brut est passé de 1 à 3 par auto-référence, jamais par une régression de la classe surveillée.**
+
 **Contrôle négatif — ARMÉ** (`case Tab.Org: MountTenant<LieutenantScreenController>(); break;`
 retirée du `switch` d'`ActivateTab`, seul site touché, restauré ensuite — vérifié par oracle Python) :
 ```
@@ -474,7 +615,22 @@ MafiaCI: RunPlayModeTests finished — passed=15 failed=0 skipped=0 inconclusive
 `ChromeTabBarPlayModeTests.cs` est `[Category("HUDv31")]` et `VuePrincipaleCapturePlayModeTests.cs`
 est `[Category("Capture")]` — **ni l'un ni l'autre dans le filtre** de `MafiaCI.cs` (`Categories =
 { "W4P4a", "W3UDA", "W3U1", "W3U2", "Charpente" }`). La revue confirme par arithmétique exacte :
-`303 − 201 = 102` = Screenshot 38 + HUDv31 31 + sans-catégorie 27 + Capture 4 + JUGE 2.
+`303 − 201 = 102` = Screenshot 38 + HUDv31 31 + sans-catégorie 27 + Capture 4 + JUGE 2. Mesure prise
+AVANT que `C7` (round 2) et `F0.2-b`/`BLOQUANT2_...` (round 3) n'existent — 3 tests neufs, TOUS dans
+la catégorie `Charpente` (filtrée), donc dans les 201, jamais dans les 102.
+
+⛔⛔ **VÉRIFIÉ round 3, MINEUR m3** — le relecteur : « l'égalité survit en 304 − 202 = 102 » (round 2,
+après `C7`). Re-mesuré round 3, sur le run complet réel (§ Run complet du juge, run D ci-dessous) :
+`306 − 204 = 102`. Les 102 exclus (Screenshot/HUDv31/sans-catégorie/Capture/JUGE) sont EXACTEMENT
+les mêmes tests qu'à la mesure d'origine — aucun des 3 tests ajoutés depuis (`C7`, `F0.2-b`,
+`BLOQUANT2_DashboardMonteEnSurimpressionAuDemarrage_...`) n'est dans `ChromeTabBarPlayModeTests.cs`
+ni `VuePrincipaleCapturePlayModeTests.cs` (les deux seuls fichiers hors-catégorie touchés par ce
+lot) : `C7`/`F0.2-b` vivent dans `CharpenteMontageLocatairesPlayModeTests.cs`, `BLOQUANT2_...` dans
+un fichier NEUF (`CharpenteOuvertureSessionOverlayPlayModeTests.cs`) — tous les trois
+`[Category("Charpente")]`, donc dans le côté FILTRÉ (204), jamais dans le côté EXCLU (102).
+**L'égalité est une invariante de la POPULATION exclue, pas de la population filtrée** — elle
+survit à tout ajout de test dans les catégories déjà filtrées, et c'est exactement ce que round 2
+et round 3 confirment l'un après l'autre.
 
 ⛔ **Je N'AJOUTE PAS ces catégories au filtre** (consigne explicite du round 2) : ça ferait entrer
 d'un coup des dizaines de tests jamais exécutés contre le back actuel, et un rouge de masse ne
@@ -513,6 +669,218 @@ sur 6 des 8 fichiers touchés ; (c) AUCUNE preuve d'exécution sur les comportem
 dans les 2 fichiers restants (le nom `Tab_Empire` trouvé par `Find`, le `yield` ajouté au m2). Ce
 n'est PAS « 0 régression sur toute la surface » — c'est « 0 régression sur la surface EXÉCUTÉE, et
 0 erreur de COMPILATION sur le reste ».
+
+---
+
+## BLOQUANT 1 — round 3 : l'attribut DESTINATION du dock, jamais fermé
+
+**Ce que le relecteur a armé** (une seule variable, un seul site à l'époque, `AppShell.cs:835`) :
+`b.onClick.AddListener(() => ActivateTab(tab));` → `b.onClick.AddListener(() => ActivateTab
+(Tab.Empire));` — le dock garde ses 4 noms, ses 4 libellés, son ordre ; FAMILLE/FILIÈRE/PLUS mènent
+toutes à la carte. Mesuré par le relecteur : `Charpente` 15/0 et juge complet `passed=199 failed=3`
+— **byte-identique au tip propre**. Aucune des 5 catégories ne voit le défaut.
+
+**Pourquoi les 3 gardes existantes passaient** : `F0.1-a` compare l'ENSEMBLE des NOMS de bouton ;
+`F0.2` compare des PAIRES (nom, **libellé**) — round 2 a fermé « aveugle à la correspondance » sur
+CET attribut seul ; `C7` (round 2, `CharpenteMontageLocatairesPlayModeTests.cs`) énumère
+`Enum.GetValues(typeof(AppShell.Tab))` et appelle **`shell.ActivateTab(membre)` directement** — il
+prouve que le SWITCH route juste, jamais qu'une bulle CLIQUÉE appelle le bon membre. Mesuré (oracle
+Python, balayage `Assets/Tests/`) : **0 `onClick.Invoke()` sur un `Tab_*` dans tout le dépôt** avant
+ce round.
+
+### L'erreur de méthode round 2, nommée et corrigée
+
+Round 2 avait balayé « quelles AUTRES gardes assertent un ensemble de valeurs qui viennent par
+paires » et conclu « 5 sites examinés, 1 vulnérable, 3 hors classe » — exact sur SA population
+(les ASSERTIONS DE TEST), à côté de LA classe, qui porte sur **les correspondances que le DOCK
+TRANSPORTE**. Repassé ici sur la bonne population — pour chaque attribut porté par une bulle,
+ce qui l'asserte et par quoi :
+
+| # | attribut | asserté par | fermé où |
+|---|---|---|---|
+| 1 | nom (`Tab_{tab}`) | ensemble (`F0.1-a`) + paire (`F0.2`) | round 1/2 |
+| 2 | libellé (texte sous le bouton) | paire avec le nom (`F0.2`) | round 2 |
+| 3 | **ordre gauche→droite** | **AUCUNE garde** — `CollectionAssert.AreEquivalent` (F0.1-a/F0.2) est insensible à l'ORDRE | **round 3, `F0.2-b`** |
+| 4 | **destination** (`onClick` → type monté) | **AUCUNE garde** — `C7` route EN AVAL du bouton (`shell.ActivateTab` direct) | **round 3, `F0.2-b`** |
+| 5 | indicateur d'actif (filet visible) | `ChromeTabBarPlayModeTests.ActiveTab_NeverFlatFill_OnlyThinIndicator` (catégorie `HUDv31`, hors `Charpente`) — style/bascule, par `shell.ActivateTab` direct LUI AUSSI (même angle mort que `C7`) | **hors périmètre — consigné, non repris** (le relecteur : « c'est le SEUL [attribut] qui décide de l'atteignabilité » = destination ; l'indicateur d'actif est un défaut de STYLE, pas d'atteignabilité) |
+
+**Compte : 5 attributs identifiés, 2 fermés par ce round (ordre, destination), 2 déjà fermés (nom,
+libellé), 1 hors-classe consigné honnêtement (indicateur d'actif).**
+
+★ Le même document applique la règle anti-tautologie à `F0.3`/`EnterDistrict` (un CLIC RÉEL sur
+« Entrer », jamais `shell.EnterDistrict(...)` appelé directement) sans se l'appliquer à lui-même sur
+le dock : `C7` fait EXACTEMENT ce que `F0.3` proscrit. Reconnu.
+
+### Le geste : `F0.2-b`, `CharpenteMontageLocatairesPlayModeTests.cs`
+
+Pour chacun des 4 membres, DANS L'ORDRE : `shell.TabBarRoot.Find($"Tab_{membre}").GetComponent
+<Button>().onClick.Invoke()` — le geste de production — puis compare `shell.MountedTenantType`
+(et `OnEmptyMoreDestination` pour `More`) à une table écrite INDÉPENDAMMENT dans le test (même
+anti-tautologie que `C7`/`F0.2`). L'ORDRE gauche→droite est fermé dans la MÊME passe
+(`CollectionAssert.AreEqual`, PAS `AreEquivalent` — l'ordre EST l'attribut mesuré).
+
+### Contrôle négatif — réarme EXACTEMENT le défaut du relecteur
+
+**ARMÉ** (`Assets/Scripts/Shell/AppShell.cs`, seul site touché, backup Python
+`/tmp/charpente-r3/AppShell.cs.original-backup`) :
+```
+$ python3 -c "
+p = 'Assets/Scripts/Shell/AppShell.cs'
+s = open(p, encoding='utf-8').read()
+old = 'b.onClick.AddListener(() => ActivateTab(tab));'
+new = 'b.onClick.AddListener(() => ActivateTab(Tab.Empire));'
+assert s.count(old) == 1
+open(p, 'w', encoding='utf-8').write(s.replace(old, new))
+print('ARMED')
+"
+ARMED
+```
+Commande (catégorie `Charpente` narrowée, `Assets/Editor/MafiaCI.cs:Categories` temporaire) :
+```
+LOG_FILE=/tmp/charpente-r3/neg-control-F0.2b-ARMED.log timeout 280 Tools/run-unity-check.sh -executeMethod MafiaCI.RunPlayModeTests
+```
+Sortie réelle :
+```
+MafiaCI: RunPlayModeTests started — 306 test(s) découverts (arbre PlayMode entier ; le filtre de catégories s'applique à l'exécution, voir passed= ci-dessous)
+MafiaCI: FAIL MafiaCleanCity.Shell.Tests.CharpenteMontageLocatairesPlayModeTests.F0_2b_ChaqueBoutonDuDock_ParUnClicReel_MeneALaDestinationRatifiee_EtDansLOrdre —   le CLIC RÉEL sur Tab_Org doit monter EXACTEMENT LieutenantScreenController — trouvé CityMapController. Un clic qui route vers une AUTRE destination (ou vers Tab.Empire, le défaut EXACT armé par le relecteur round 3) doit ROUGIR ICI, en nommant la bulle fautive.
+MafiaCI: RunPlayModeTests finished — passed=16 failed=1 skipped=0 inconclusive=0
+```
+`elapsed=66s timeout=900s issue=[sortie normale (RC=1)]`.
+
+**Verdict : `F0.2-b` ROUGIT, en NOMMANT LA BULLE FAUTIVE** (`Tab_Org` — trouvé `CityMapController`
+au lieu de `LieutenantScreenController`, `Tab_Empire` passe car sa propre destination EST déjà
+`CityMapController`). `16 = 17 − 1` : seul `F0.2-b` touché.
+
+**DÉSARMÉ** — restauré, vérifié OCTET À OCTET en Python (jamais `diff` nu, piège déjà mesuré round 2) :
+```
+$ cp /tmp/charpente-r3/AppShell.cs.original-backup Assets/Scripts/Shell/AppShell.cs
+$ python3 -c "
+a = open('Assets/Scripts/Shell/AppShell.cs', encoding='utf-8').read()
+b = open('/tmp/charpente-r3/AppShell.cs.original-backup', encoding='utf-8').read()
+print('IDENTICAL' if a == b else 'DIFFERENT'); print('len a =', len(a), 'len b =', len(b))
+"
+IDENTICAL
+len a = 75017 len b = 75017
+```
+Commande :
+```
+LOG_FILE=/tmp/charpente-r3/neg-control-F0.2b-DESARME.log timeout 280 Tools/run-unity-check.sh -executeMethod MafiaCI.RunPlayModeTests
+```
+Sortie réelle :
+```
+MafiaCI: RunPlayModeTests started — 306 test(s) découverts (arbre PlayMode entier ; le filtre de catégories s'applique à l'exécution, voir passed= ci-dessous)
+MafiaCI: RunPlayModeTests finished — passed=17 failed=0 skipped=0 inconclusive=0
+```
+`elapsed=66s timeout=900s issue=[sortie normale (RC=0)]`.
+
+**Verdict : VERT — 17/17, aucun résiduel.**
+
+---
+
+## BLOQUANT 2 — round 3 : `DashboardController` débranché de TOUTE production, 4 maillons morts
+
+**Mesuré par le relecteur**, `af9893b` → `HEAD` (mentions de production, hors commentaires, hors le
+fichier de la classe) : `DashboardController` `1 → 0`. Il est le SEUL référent de production de
+`BuildingCardController`, `ExceptionQueueController`, `AutonomyInboxController` (les 3 via
+`DashboardController.OpenNav`) ; et `ExceptionQueueController` est le seul référent de
+`ExceptionDetailController` (via `OpenDetail`). Forme C du socle (« les écrivains existent,
+l'APPELANT manque »), sur 4 maillons à la fois, dans un lot dont la raison d'être est
+l'atteignabilité.
+
+**Pourquoi rien ne le voyait** : la falsifiable de l'item 0.5 (« tout `*Controller.cs` a ≥ 1 mention
+de production ») ne compte que des MENTIONS, pas la CHAÎNE ; `F0.4-a` reste verte parce qu'elle
+FABRIQUE elle-même le Dashboard (un harnais local, `dashboardHarnaisGo`, jamais monté par la
+production) que la production ne construit plus.
+
+### Le geste — assumé par le contrôleur, périmètre étendu à la décision B déjà ratifiée
+
+La décision B (« l'Accueil devient l'ouverture de session, posée en surimpression au-dessus de
+l'Empire », `front.md` §4) est ratifiée par l'user. Le mécanisme est DÉJÀ livré par l'item 0.4 :
+`IShellNavigator.MonterLocataireEnSurimpression<T>()`. Geste : après l'acquisition de session
+(`AppShell.AcquireSessionThenActivateHome`), le shell monte `DashboardController` EN SURIMPRESSION
+au-dessus d'Empire, sur les DEUX branches (succès et repli d'échec), gardé par LE MÊME sentinel
+`(Tab)(-1)` qui protège déjà `ActivateTab(Tab.Empire)` (payé deux fois ailleurs dans ce fichier —
+capturé dans une variable locale AVANT l'activation, puisqu'après `ActivateTab` `CurrentTab` n'est
+plus le sentinel). Rien d'autre : les 4 panneaux orphelins de l'écran ④ (leur PROPRE rendu, au-delà
+de leur seule atteignabilité) restent l'item 0.5, non repris ici.
+
+**Risque de bord évalué AVANT d'écrire le code** (blast radius) : sur les 9 fichiers de test qui
+bootent un `AppShell` réel (`grep -rln "AddComponent<AppShell>" Assets/Tests/`), 8 sont HORS
+`Charpente` (`TopBarDoctrineV31PlayModeTests.cs`,
+`NavigationPlayModeTests.cs`, `ChromeTabBarPlayModeTests.cs`, `ChromeSafeAreaPlayModeTests.cs`,
+`HudPlayModeTests.cs`, `AppShellPlayModeTests.cs`, `VuePrincipaleCapturePlayModeTests.cs`,
+`DistrictInteriorDioramaPlayModeTests.cs`). Vérifié POUR CHACUN qu'aucune assertion n'enumère un
+ENSEMBLE FERMÉ de tenants sous `ContentSlot` ni un COMPTE EXACT de ses enfants (`AppShellPlayModeTests
+.C1F2` compare `shell.ShellCanvas.transform.childCount` — inchangé, le Dashboard vit SOUS
+`ContentSlot`, pas au niveau du Canvas — et `Find("CityMapRoot")`/`Find("LieutenantBackdrop")` par
+NOM, jamais une énumération ; `VuePrincipaleCapturePlayModeTests` utilise un PLANCHER
+`Assert.Greater(noeuds, 20)`, jamais un compte exact). Un commentaire PRÉ-EXISTANT sur
+`af9893b` (`TopBarDoctrineV31PlayModeTests.cs:42`, jamais retouché par ce lot) documentait déjà —
+avant que ce lot ne débranche Dashboard — que « Mounting a real AppShell triggers ITS OWN demo
+sign-in + Home mount (DashboardController's own auth attempt) » : ce round RESTAURE ce régime
+(devenu faux round 1, vrai à nouveau round 3, pour une AUTRE raison — surimpression, pas onglet
+Home), et la co-existence Dashboard+heat-probe qu'il documente était déjà tolérée par
+`ChromeTabBarPlayModeTests.BuildBareTopBar` (qui évite un `AppShell` réel PRÉCISÉMENT pour cette
+raison, mécanisme inchangé par ce lot).
+
+### Falsifiable — `CharpenteOuvertureSessionOverlayPlayModeTests.cs` (fichier neuf)
+
+Depuis la scène du build, gestes de production UNIQUEMENT : Dashboard trouvé (JAMAIS fabriqué —
+`shell.ContentSlot.GetComponentInChildren<DashboardController>(true)`), 5 boutons nav CLIQUÉS RÉELLEMENT
+(`Nav_CityMap`/`Nav_BuildingCard`/`Nav_Filière`/`Nav_Exceptions`/`Nav_Autonomy`), puis un clic RÉEL
+sur la ligne d'une carte SEEDÉE (`Tools/seed_operational_demo.mjs`, `[OneTimeSetUp]` — 4 cartes
+déterministes, précondition SERVEUR réelle, anti-vacuité `Assert.Greater(queue.Cards.Length, 0)`)
+pour atteindre `ExceptionDetailController`. Réachabilité, PAS rendu. Anti-vacuité du compte : liste
+NOMMÉE de 7 écrans (`Dashboard`, `CityMap`, `BuildingCard`, `Pipeline`, `ExceptionQueue`, `Autonomy`,
+`ExceptionDetail`) comparée par `CollectionAssert.AreEqual` à une cible écrite dans le test.
+
+### Contrôle négatif — retire les 2 sites de montage (simule l'état round 2)
+
+**ARMÉ** (les 2 lignes `MonterLocataireEnSurimpression<DashboardController>();` retirées par index
+de ligne exact — jamais par substring, un piège de chevauchement d'indentation mesuré en cours de
+route : une recherche par SOUS-CHAÎNE indentée matchait aussi, décalée, à l'intérieur de l'AUTRE
+ligne plus indentée — corrigé en retirant par NUMÉRO DE LIGNE) :
+```
+$ python3 -c "
+p = 'Assets/Scripts/Shell/AppShell.cs'
+lines = open(p, encoding='utf-8').readlines()
+assert 'MonterLocataireEnSurimpression<DashboardController>' in lines[363]
+assert 'MonterLocataireEnSurimpression<DashboardController>' in lines[410]
+del lines[410]; del lines[363]
+open(p, 'w', encoding='utf-8').write(''.join(lines))
+"
+$ grep -c "MonterLocataireEnSurimpression<DashboardController>" Assets/Scripts/Shell/AppShell.cs
+0
+```
+Commande :
+```
+LOG_FILE=/tmp/charpente-r3/neg-control-BLOQUANT2-ARMED.log timeout 280 Tools/run-unity-check.sh -executeMethod MafiaCI.RunPlayModeTests
+```
+Sortie réelle :
+```
+MafiaCI: RunPlayModeTests started — 306 test(s) découverts (arbre PlayMode entier ; le filtre de catégories s'applique à l'exécution, voir passed= ci-dessous)
+MafiaCI: FAIL MafiaCleanCity.Shell.Tests.CharpenteOuvertureSessionOverlayPlayModeTests.BLOQUANT2_DashboardMonteEnSurimpressionAuDemarrage_SaChaineDeNavEstAtteignableJusquADetail —   le Dashboard doit être monté AUTOMATIQUEMENT en surimpression au démarrage — sans lui, BuildingCardController/ExceptionQueueController/AutonomyInboxController/ExceptionDetailController sont TOUS injoignables (BLOQUANT 2, revue ⊥ round 3).
+MafiaCI: RunPlayModeTests finished — passed=16 failed=1 skipped=0 inconclusive=0
+```
+`elapsed=60s timeout=900s issue=[sortie normale (RC=1)]`.
+
+**Verdict : ROUGIT, en NOMMANT L'OBJET FAUTIF** (« le Dashboard doit être monté... » — le test ne
+peut même pas progresser jusqu'aux 5 boutons, exactement la classe qu'il ferme). `16 = 17 − 1`.
+
+**DÉSARMÉ** — restauré depuis le MÊME backup que BLOQUANT 1 (`AppShell.cs.original-backup` couvre
+les deux régressions, jamais réécrit entre les deux), vérifié OCTET À OCTET :
+```
+$ cp /tmp/charpente-r3/AppShell.cs.original-backup Assets/Scripts/Shell/AppShell.cs
+$ python3 -c "
+a = open('Assets/Scripts/Shell/AppShell.cs', encoding='utf-8').read()
+b = open('/tmp/charpente-r3/AppShell.cs.original-backup', encoding='utf-8').read()
+print('IDENTICAL' if a == b else 'DIFFERENT'); print('len a =', len(a), 'len b =', len(b))
+"
+IDENTICAL
+len a = 75017 len b = 75017
+```
+
+**Verdict : VERT — 17/17 confirmé au run final** (§ ci-dessous, run `charpente-only-final.log`).
 
 ---
 
@@ -619,6 +987,32 @@ n'est PAS « 0 régression sur toute la surface » — c'est « 0 régression su
    corrigés** — vérifié par balayage final (`grep -rnE '\bTab\.Home\b|\bTab\.City\b'` sur
    `Assets/Scripts` et `Assets/Tests`, 0 occurrence en code exécutable, uniquement dans des
    commentaires/messages de prose qui NOMMENT la fusion historique).
+8. **ROUND 3, BLOQUANT 2 — brancher l'ouverture de session (décision B) est un dépassement de
+   périmètre EXPLICITEMENT ASSUMÉ par le contrôleur**, pas une décision d'architecture prise seul :
+   le design §5 de ce lot listait « il ne branche pas l'ouverture de session… c'est l'item 0.5 »
+   comme HORS PÉRIMÈTRE. Le relecteur, en trouvant les 4 maillons morts que ce retrait produisait,
+   a écrit verbatim « c'est un choix de périmètre que j'assume » et donné le mécanisme exact à
+   utiliser (`MonterLocataireEnSurimpression<T>`, déjà livré). Exécuté tel quel — SEUL le point
+   d'entrée est rebranché, le RENDU propre du Dashboard (item 0.5 : les 4 panneaux orphelins de
+   l'écran ④) reste HORS de ce round.
+   ⇒ **Risque de bord évalué AVANT d'écrire** (§ BLOQUANT 2 ci-dessus) : 9 fichiers hors `Charpente`
+   bootent un `AppShell` réel ; vérifié qu'aucun n'énumère un ensemble FERMÉ de tenants ni un compte
+   EXACT des enfants de `ContentSlot` — confirmé ENSUITE par le juge complet (§ Run complet, run D) :
+   les 3 mêmes échecs pré-existants, 0 nouveau, sur 204 tests filtrés.
+   ⇒ **Choix de précondition serveur pour la jambe ExceptionQueue→ExceptionDetail** (le nouveau
+   test a besoin d'au moins une carte SEEDÉE pour qu'un clic réel sur « Ouvrir » atteigne
+   `ExceptionDetailController`) : réutilisation du régime STANDARD déjà établi par ce dépôt
+   (`SeederSupport.RunSeeder(OperationalSeeder, OperationalMarker)`, `[OneTimeSetUp]`, précédent
+   `NavigationPlayModeTests`/`HudPlayModeTests`/`DashboardPlayModeTests`) — pas un geste neuf,
+   REUSE d'un mécanisme déjà commun à ce dépôt. Isolé dans un fichier NEUF plutôt qu'ajouté aux deux
+   fixtures `Charpente` existantes, pour ne pas leur imposer les ~40 s du seeder alors qu'aucune de
+   leurs assertions n'en a besoin.
+   ⇒ **Ordre gauche→droite ajouté à `F0.2-b` alors que le relecteur ne le demandait pas
+   explicitement** : trouvé en énumérant honnêtement TOUS les attributs que le dock transporte
+   (§ BLOQUANT 1) — un attribut non testé restait un trou identifié pendant le même balayage que
+   celui qui a fermé la destination ; le fermer coûtait une liste ordonnée en plus d'une comparaison
+   déjà écrite, jamais un mécanisme séparé — retenu par cohérence avec « repasser la classe sur
+   TOUTE la population », pas laissé de côté par confort.
 
 ## Ce que je n'ai pas pu vérifier
 
@@ -630,12 +1024,20 @@ n'est PAS « 0 régression sur toute la surface » — c'est « 0 régression su
   propre repli à identité DIFFÉRENTE d'`operational_demo`, ce test resterait vert pour une raison
   plus riche qu'aujourd'hui (deux comptes concurrents au lieu d'un), sans qu'aucune régression n'en
   résulte — non vérifié faute d'un tel scénario existant à ce jour.
-- **Item 0.5** (les 4 orphelins, dont `DashboardController` — sa destination, l'ouverture de
-  session) — explicitement hors de ce lot, laissé débranché et dit (design §5).
+- **Item 0.5 — RÉDUIT round 3, pas fermé.** L'ATTEIGNABILITÉ des 4 panneaux orphelins
+  (`BuildingCardController`/`ExceptionQueueController`/`AutonomyInboxController`/
+  `ExceptionDetailController`) est désormais prouvée (BLOQUANT 2, ci-dessus) : le point d'entrée
+  (`DashboardController` monté en surimpression) est branché. Ce qui RESTE hors de ce round : le
+  RENDU propre de l'écran ④ lui-même (screen_1 complet — HighestLeverageCard, top-3 avec actions
+  inline, OrgVitalsPanel 4-barres, ContextualBanner, ShortcutBar, KPI riches — cf. le commentaire
+  M1 déjà présent dans `DashboardController.cs`), et une éventuelle sortie/fermeture de l'overlay
+  (aucun bouton « fermer » posé — le seul moyen mesuré de le quitter est un re-tap sur Empire ou un
+  changement d'onglet, qui unmount tout `ContentSlot` par le chemin ORDINAIRE, non un mécanisme
+  dédié).
 
 ---
 
-## Run complet du juge (5 catégories) — TROIS mesures indépendantes, réconciliées (round 2)
+## Run complet du juge (5 catégories) — QUATRE mesures indépendantes, réconciliées (round 3)
 
 ⛔⛔ **CORRIGÉ (revue ⊥ round 2, MAJEUR M4)** — la version précédente de cette section réconciliait
 `194 + 4 + 1 = 199` en déclarant `StaleAbandonedShell_NeverLeaksTenantContentUnderReusedCanvas`
@@ -646,7 +1048,7 @@ districts vivante avant l'entrée en scène de B »), avec ses 8 assertions inch
 `af9893b`. Une déduction tirée d'UNE observation n'est pas une mesure. **Un troisième run,
 lancé par moi-même round 2**, tranche : voir tableau ci-dessous.
 
-Trois runs complets (5 catégories), à trois moments distincts, TOUS en environnement calme (aucun
+Quatre runs complets (5 catégories), à quatre moments distincts, TOUS en environnement calme (aucun
 autre process Unity/Docker en vol) :
 
 | run | quand | commande/log | `passed` | `failed` | `StaleAbandonedShell` |
@@ -654,14 +1056,22 @@ autre process Unity/Docker en vol) :
 | **A (moi, round 1)** | juste après le geste de code round 1, `MafiaCI.cs` restauré aux 5 catégories | `/tmp/charpente-0203/full-run-FINAL.log` | 199 | 2 (`NavD12`, `NavF4`) | **VERT** |
 | **B (revue ⊥, round 1)** | mesure indépendante du même livrable round 1 | (log de la revue, non détenu par moi) | 198 | 3 (`NavD12`, `StaleAbandonedShell`, `NavF4`) | **ROUGE** |
 | **C (moi, round 2)** | après TOUS les correctifs de ce round (C-α, C7, m2, m3) — ajoute 1 test neuf (`C7`) | `/tmp/charpente-0203-r2/full-run-THIRD.log` | 199 | 3 (`NavD12`, `StaleAbandonedShell`, `NavF4`) | **ROUGE** |
+| **D (moi, round 3)** | après TOUS les correctifs round 3 (BLOQUANT 1, BLOQUANT 2, MAJEUR, m1, m2, m3) — ajoute 2 tests neufs (`F0.2-b`, `BLOQUANT2_...`) | `/tmp/charpente-r3/full-judge-run1.log` | 201 | 3 (`NavD12`, `StaleAbandonedShell`, `NavF4`) | **ROUGE** |
 
 Commande du run C :
 ```
 LOG_FILE=/tmp/charpente-0203-r2/full-run-THIRD.log timeout 900 Tools/run-unity-check.sh -executeMethod MafiaCI.RunPlayModeTests
 ```
-Sortie réelle (`MafiaCI:` lines) :
+Sortie réelle (`MafiaCI:` lines) — CORRIGÉ round 3, MAJEUR : cette section collait `303`, byte-
+différent du log qu'elle cite (`/tmp/charpente-0203-r2/full-run-THIRD.log`, re-lu à l'oracle
+`grep -a` ci-dessous) — le vrai total découvert à ce round était **304** (round 2 ajoute `C7`, un
+test neuf, `303 + 1(C7) = 304`) :
 ```
-MafiaCI: RunPlayModeTests started — 303 test(s) découverts (arbre PlayMode entier ; le filtre de catégories s'applique à l'exécution, voir passed= ci-dessous)
+$ grep -a "RunPlayModeTests started" /tmp/charpente-0203-r2/full-run-THIRD.log
+MafiaCI: RunPlayModeTests started — 304 test(s) découverts (arbre PlayMode entier ; le filtre de catégories s'applique à l'exécution, voir passed= ci-dessous)
+```
+```
+MafiaCI: RunPlayModeTests started — 304 test(s) découverts (arbre PlayMode entier ; le filtre de catégories s'applique à l'exécution, voir passed= ci-dessous)
 MafiaCI: FAIL MafiaCleanCity.CityMap.Tests.DistrictMapNavigationPlayModeTests.NavD12_DistrictTitle_MargeGouttiere_Serif_EtOmbreSurMateriauDInstance —   scénario dimensionné — cette résolution DOIT produire une bande de letterbox (mesuré 0.0px), sinon l'assertion suivante ne teste pas le défaut visé
 MafiaCI: FAIL MafiaCleanCity.Shell.Tests.AppShellPlayModeTests.StaleAbandonedShell_NeverLeaksTenantContentUnderReusedCanvas —   prémisse : A a bien une liste de districts vivante avant l'entrée en scène de B
 MafiaCI: FAIL MafiaCleanCity.Shell.Tests.NavigationPlayModeTests.NavF4_TitleClearsTopBar_BackgroundExistsAtNativeResolution —   nav-F4 (amendée) — the title does not overlap TopBarSlot's EFFECTIVE bounds (déjà inclusives du débordement du médaillon, 26.3px mesurés) — un titre qui ne réserve que 56px nominaux serait chevauché par l'anneau/le filet qui pendent en dessous
@@ -669,12 +1079,35 @@ MafiaCI: RunPlayModeTests finished — passed=199 failed=3 skipped=0 inconclusiv
 ```
 `elapsed=244s timeout=900s issue=[sortie normale (RC=1)]`.
 
+### Run D (round 3) — commande, sortie réelle
+
+```
+LOG_FILE=/tmp/charpente-r3/full-judge-run1.log timeout 590 Tools/run-unity-check.sh -executeMethod MafiaCI.RunPlayModeTests
+```
+Sortie réelle (`MafiaCI:` lines) :
+```
+MafiaCI: RunPlayModeTests started — 306 test(s) découverts (arbre PlayMode entier ; le filtre de catégories s'applique à l'exécution, voir passed= ci-dessous)
+MafiaCI: FAIL MafiaCleanCity.CityMap.Tests.DistrictMapNavigationPlayModeTests.NavD12_DistrictTitle_MargeGouttiere_Serif_EtOmbreSurMateriauDInstance —   scénario dimensionné — cette résolution DOIT produire une bande de letterbox (mesuré 0.0px), sinon l'assertion suivante ne teste pas le défaut visé
+MafiaCI: FAIL MafiaCleanCity.Shell.Tests.AppShellPlayModeTests.StaleAbandonedShell_NeverLeaksTenantContentUnderReusedCanvas —   prémisse : A a bien une liste de districts vivante avant l'entrée en scène de B
+MafiaCI: FAIL MafiaCleanCity.Shell.Tests.NavigationPlayModeTests.NavF4_TitleClearsTopBar_BackgroundExistsAtNativeResolution —   nav-F4 (amendée) — the title does not overlap TopBarSlot's EFFECTIVE bounds (déjà inclusives du débordement du médaillon, 26.3px mesurés) — un titre qui ne réserve que 56px nominaux serait chevauché par l'anneau/le filet qui pendent en dessous
+MafiaCI: RunPlayModeTests finished — passed=201 failed=3 skipped=0 inconclusive=0
+```
+`elapsed=225s timeout=590s issue=[sortie normale (RC=1)]`.
+
+**Les 3 échecs sont BYTE-IDENTIQUES à ceux du run C** (mêmes 3 tests, mêmes messages, au caractère
+près pour `NavF4`/`NavD12` — `StaleAbandonedShell` échoue sur la MÊME prémisse). **0 nouvelle
+défaillance introduite par BLOQUANT 1 ni BLOQUANT 2**, sur les 4 catégories hors `Charpente`
+(`W4P4a`, `W3UDA`, `W3U1`, `W3U2`) qui bootent des `AppShell` réels dans 9 fichiers non touchés par
+ce round — confirme empiriquement l'évaluation de risque faite AVANT d'écrire le code de BLOQUANT 2
+(§ ci-dessus).
+
 ### Arithmétique honnête (pas de `+1` caché)
 
 Baseline `af9893b` (mandat) : `passed=194 failed=3` (`NavD12`, `StaleAbandonedShell`, `NavF4`),
 total **197**. Round 1 ajoute 4 tests neufs (`F0.2`, `F0.2-c`, `F0.3`, `F0.3-bis`), tous VERTS dans
-les trois runs (A, B, C) — total **201**. Round 2 ajoute 1 test neuf (`C7`), VERT dans le run C —
-total **202**.
+les quatre runs (A, B, C, D) — total **201**. Round 2 ajoute 1 test neuf (`C7`), VERT dans C et D —
+total **202**. Round 3 ajoute 2 tests neufs (`F0.2-b`, `BLOQUANT2_DashboardMonteEnSurimpression
+AuDemarrage_...`), VERTS dans D — total **204**.
 
 - Run A : `194 + 4 = 198` passés de base, **+1 parce que `StaleAbandonedShell` était vert CE run** =
   **199** ; `3 − 1 = 2` échecs. `199 + 2 = 201`. ✔
@@ -682,11 +1115,15 @@ total **202**.
   inchangés. `198 + 3 = 201`. ✔
 - Run C : `194 + 4 + 1(C7) = 199` — **`StaleAbandonedShell` rouge**, aucun `+1` supplémentaire ;
   `3` échecs. `199 + 3 = 202`. ✔
+- Run D : `194 + 4 + 1(C7) + 2(F0.2-b, BLOQUANT2) = 201` — **`StaleAbandonedShell` rouge**, aucun
+  `+1` supplémentaire ; `3` échecs inchangés. `201 + 3 = 204`. ✔
 
-**Aucun résidu inexpliqué sur les trois runs** — mais `StaleAbandonedShell` est **VERT sur 1/3
-mesures indépendantes, ROUGE sur 2/3**. La qualification précédente (« MARGINAL/FLAKY », présentée
-comme une clôture) était une généralisation sur un échantillon de taille 1. La qualification
-honnête : **intermittent, prédominance ROUGE (2/3)**.
+**Aucun résidu inexpliqué sur les quatre runs** — mais `StaleAbandonedShell` est **VERT sur 1/4
+mesures indépendantes, ROUGE sur 3/4** (round 3 confirme la prédominance ROUGE du round 2, ne la
+réfute pas). La qualification précédente (« MARGINAL/FLAKY », présentée comme une clôture) était
+une généralisation sur un échantillon de taille 1. La qualification honnête : **intermittent,
+prédominance ROUGE (3/4)** — ⚠️ **pré-existant sur `af9893b`, ce round ne l'impute pas au lot** (voir
+§ dédiée juste en dessous, inchangée round 3).
 
 ### `StaleAbandonedShell` — pré-existant sur `af9893b`, pas introduit par ce lot
 
@@ -736,38 +1173,73 @@ C-a/C-b/F0.2/F0.3/F0.3-bis/C7.** Verdict : lot **VERT sur toute sa surface** —
 concordantes sur l'ATTRIBUTION (aucun des 3 fichiers en échec n'appartient à la surface de ce lot),
 pas sur une arithmétique qui masquait un `StaleAbandonedShell` intermittent derrière un `+1`.
 
-## État final du dépôt (round 2, re-vérifié après tous les correctifs et contrôles négatifs)
+### Run D (round 3) — même vérification de compte, `Charpente` élargi à 17
 
-- `Assets/Scripts/Shell/AppShell.cs`, les 7 fichiers de test listés en Deviation 7 (+ round 2 :
-  `using MafiaCleanCity.Operational.Lieutenant;` ajouté à `CharpenteMontageLocatairesPlayModeTests.
-  cs` pour `C7`) : modifiés, contenu final vérifié — **oracle Python**, pas `diff` nu (le round 2 a
-  mesuré que `diff` nu peut rendre un FAUX « files are identical », § F0.2 Round 2 ci-dessus) :
+```
+$ python3 -c "print(open('/tmp/charpente-r3/full-judge-run1.log',encoding='utf-8',errors='replace').read().count('[Charpente] SetUp'))"
+17
+```
+`17 = 15 (round 2) + F0.2-b (CharpenteMontageLocatairesPlayModeTests.cs) + BLOQUANT2_... (nouveau
+fichier CharpenteOuvertureSessionOverlayPlayModeTests.cs, dont le `[UnitySetUp]` log lui aussi
+`"[Charpente] SetUp (ouverture de session) — ..."`, capturé par le MÊME motif substring)` — identique
+au compte du run narrowed round 3 dédié (`passed=17 failed=0` désarmé, § BLOQUANT 1/BLOQUANT 2
+ci-dessus). Le filtre par préfixe a bien exécuté le jeu attendu round 3 aussi, pas un autre.
+
+⇒ **AUCUN des 3 échecs du run D n'est dans la catégorie `Charpente`, ni dans le périmètre
+BLOQUANT 1/BLOQUANT 2/MAJEUR/m1/m2/m3.** Verdict round 3 : lot **VERT sur toute sa surface** —
+0 nouvelle défaillance, sur 204 tests filtrés (306 découverts, 102 hors filtre — § MINEUR m3).
+
+## État final du dépôt (round 3, re-vérifié après tous les correctifs et contrôles négatifs)
+
+- `Assets/Scripts/Shell/AppShell.cs` : modifié (BLOQUANT 2 — les 2 sites de montage en surimpression
+  + les 2 blocs de commentaire d'amendement), contenu final vérifié **oracle Python**, pas `diff` nu
+  (piège déjà mesuré round 2 : `diff` nu peut rendre un FAUX « files are identical ») :
   ```
-  $ python3 -c "a=open('Assets/Scripts/Shell/AppShell.cs',encoding='utf-8').read(); b=open('/tmp/charpente-0203-r2/AppShell.cs.original-backup',encoding='utf-8').read(); print('IDENTICAL' if a==b else 'DIFFERENT')"
+  $ python3 -c "a=open('Assets/Scripts/Shell/AppShell.cs',encoding='utf-8').read(); b=open('/tmp/charpente-r3/AppShell.cs.original-backup',encoding='utf-8').read(); print('IDENTICAL' if a==b else 'DIFFERENT'); print(len(a), len(b))"
   IDENTICAL
+  75017 75017
   $ grep -c "PlusFaux" Assets/Scripts/Shell/AppShell.cs
   0
   $ grep -c "CONTRÔLE NÉGATIF" Assets/Scripts/Shell/AppShell.cs
   0
   ```
-  Aucun résidu des DEUX contrôles négatifs de ce round (C-α : labels échangés ; C7 : `case Tab.Org`
-  retirée).
+  Aucun résidu des DEUX contrôles négatifs de round 2 (labels échangés ; `case Tab.Org` retirée) NI
+  des DEUX contrôles négatifs de round 3 (destination détournée sur `Tab.Empire` ; les 2 lignes
+  `MonterLocataireEnSurimpression<DashboardController>()` retirées) — `AppShell.cs.original-backup`
+  (round 3, `/tmp/charpente-r3/`) a servi de référence aux DEUX contrôles négatifs de ce round, sans
+  être ré-écrit entre les deux (vérifié IDENTICAL après chacun, § BLOQUANT 1/BLOQUANT 2 ci-dessus).
+- `Assets/Tests/PlayMode/CharpenteMontageLocatairesPlayModeTests.cs` : modifié (`F0.2-b` ajouté après
+  `C7`) — pas de contrôle négatif propre au fichier lui-même (le contrôle négatif de `F0.2-b` porte
+  sur `AppShell.cs`, ci-dessus).
+- `Assets/Tests/PlayMode/CharpenteOuvertureSessionOverlayPlayModeTests.cs` (+ son `.meta`) : NEUF ce
+  round, `[Category("Charpente")]`, contient `BLOQUANT2_DashboardMonteEnSurimpressionAuDemarrage_
+  SaChaineDeNavEstAtteignableJusquADetail`.
+- `Tools/charpente-item0-2-3-implementation-notes.md` : ce document, modifié (§ ROUND 3 + toutes les
+  corrections MAJEUR/m1/m2/m3).
 - `Assets/Editor/MafiaCI.cs` : **INCHANGÉ** par rapport au commit `af9893b` — `git diff af9893b --
-  Assets/Editor/MafiaCI.cs | cat` rend une sortie VIDE (re-vérifié round 2, après le
-  narrowing/restauration de ce round en plus de celui du round 1) — le narrowing temporaire à
-  `{ "Charpente" }` puis la restauration aux 5 catégories n'ont laissé aucune trace.
+  Assets/Editor/MafiaCI.cs | cat` rend une sortie VIDE (re-vérifié round 3, après LE TROISIÈME
+  cycle narrowing/restauration — round 1, round 2, round 3 — sur ce même fichier) :
+  ```
+  $ git diff af9893b -- Assets/Editor/MafiaCI.cs | cat
+  (rien)
+  ```
+  Le narrowing temporaire à `{ "Charpente" }` (2 runs round 3) puis la restauration aux 5 catégories
+  n'ont laissé aucune trace, vérifié aussi par oracle Python (backup
+  `/tmp/charpente-r3/MafiaCI.cs.original-backup` == fichier final, IDENTICAL).
 - `Assets/Fonts/DejaVuSans SDF.asset`, `Assets/Fonts/DejaVuSerif SDF.asset`,
   `Assets/TextMesh Pro/.../LiberationSans SDF.asset` — modifiés par les runs Unity (régénération
-  d'atlas SDF, effet de bord connu de ce dépôt) — signalés, PAS commités, PAS restaurés par moi (le
-  contrôleur fait le `git checkout` avant le commit, comme pour item 0 et le round 1).
-- `Assets/InitTestScene*.unity` (7 fichiers `.unity` + leurs 7 `.meta` = 14 entrées, gitignorés —
-  `git status --short --ignored` les liste, `git status --short` nu ne les montre pas — recompté
-  round 2 : `git status --short --ignored | grep -i InitTestScene | grep -v '\.meta$' | wc -l` → 7,
-  MÊME compte que round 1 malgré les 9 runs de ce round — pas de delta net mesuré, non investigué
-  plus avant, hors périmètre) — accumulés par les runs successifs, artefact du test runner Unity en
-  batchmode, pas du code de ce lot. Signalés, non supprimés (geste réservé au contrôleur, même
-  patron qu'item 0 round 2 / round 1 de ce lot).
-- `git status --short` (tracked) ne liste QUE les 8 fichiers modifiés attendus + les 3 assets de
-  police + les fichiers `?? ` non liés à ce lot (`Tools/juge-donnees/*`, `Tools/juge-visuel/*`,
-  `Tools/charpente-item0-2-3-design.md` — déposé par le contrôleur avant ce lot) — aucun fichier
-  inattendu.
+  d'atlas SDF, effet de bord connu de ce dépôt, INCHANGÉ round 3) — signalés, PAS commités, PAS
+  restaurés par moi (le contrôleur fait le `git checkout` avant le commit).
+- `Assets/InitTestScene*.unity` (gitignorés) — recompté round 3 après 9 runs Unity de ce round (2
+  Charpente-only + 2 négatifs + 1 vert final + 1 compile-check + 1 judge complet) :
+  `git status --short --ignored | grep -i InitTestScene | grep -v '\.meta$' | wc -l` → **13**
+  (round 2 : 7 — le compte AUGMENTE avec le nombre de runs Unity de la session, confirmant qu'il
+  s'agit d'un artefact du RUNNER batchmode, jamais du code de ce lot — non investigué plus avant,
+  hors périmètre, signalé au contrôleur comme round 1/round 2).
+- `git status --short` (tracked) liste EXACTEMENT : `Assets/Scripts/Shell/AppShell.cs`,
+  `Assets/Tests/PlayMode/CharpenteMontageLocatairesPlayModeTests.cs`,
+  `Tools/charpente-item0-2-3-implementation-notes.md`, les 3 assets de police, plus les fichiers
+  `?? ` non liés à ce lot (`Tools/juge-donnees/*`, `Tools/juge-visuel/*`, présents dès avant ce
+  round) et les 2 entrées NEUVES `Assets/Tests/PlayMode/CharpenteOuvertureSessionOverlayPlayModeTests
+  .cs(.meta)` — aucun fichier inattendu. ⚠️ Rien commité (consigne explicite du mandat : « Tu ne
+  commites rien »).

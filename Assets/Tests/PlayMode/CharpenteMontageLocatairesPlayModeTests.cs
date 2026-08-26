@@ -654,5 +654,119 @@ namespace MafiaCleanCity.Shell.Tests
             Debug.Log($"[Charpente] C7 — les {membres.Length} membres de AppShell.Tab ont chacun un " +
                       "comportement nommé (montage exact ou destination vide assumée).");
         }
+
+        // ─────────────────────────────────────────────────────────────────────────────────────────
+        // F0.2-b (revue ⊥ round 3, BLOQUANT 1) — la classe « aveugle à la CORRESPONDANCE » n'était
+        // fermée QUE sur l'attribut LIBELLÉ (F0.2, `CharpenteBootScenePlayModeTests.cs`, round 2). Le
+        // relecteur a armé la MÊME classe sur l'attribut DESTINATION — `AppShell.cs:835`,
+        // `b.onClick.AddListener(() => ActivateTab(tab))` → `ActivateTab(Tab.Empire)`, seul site
+        // touché — et mesuré que TOUTES les gardes existantes restaient VERTES (`Charpente` 15/0,
+        // juge complet inchangé) : F0.1-a/F0.2 lisent le NOM et le LIBELLÉ, jamais l'`onClick` ; C7
+        // ci-dessus prouve que `shell.ActivateTab` route juste, mais L'APPELLE LUI-MÊME, EN AVAL du
+        // bouton — il ne prouve jamais qu'une bulle CLIQUÉE appelle le bon membre. Mesuré : 0
+        // `onClick.Invoke()` sur un `Tab_*` dans tout `Assets/Tests` avant ce test.
+        //
+        // ★ L'erreur de méthode round 2 (consignée par le relecteur, pas seulement le résultat) :
+        // le balayage de classe de F0.2 avait pris pour POPULATION « les assertions de test qui
+        // comparent un ensemble de valeurs par paires », alors que la classe porte sur « les
+        // CORRESPONDANCES QUE LE DOCK TRANSPORTE ». Repassé ICI sur la bonne population — pour
+        // CHAQUE attribut porté par une bulle du dock, ce qui l'asserte et par quoi :
+        //   nom (GameObject `Tab_{tab}`)      → F0.1-a (ensemble) + F0.2 (paire avec le libellé)
+        //   libellé (texte SOUS le bouton)    → F0.2 (paire avec le nom, round 2)
+        //   ordre gauche→droite               → NI F0.1-a NI F0.2 (`CollectionAssert.AreEquivalent`
+        //                                        est insensible à l'ordre) — FERMÉ ICI (liste
+        //                                        ORDONNÉE, `CollectionAssert.AreEqual`)
+        //   destination (onClick → type monté)→ AUCUNE garde avant ce test (C7 route EN AVAL du
+        //                                        bouton, jamais PAR le bouton) — FERMÉ ICI
+        //   indicateur d'actif (filet visible)→ `ChromeTabBarPlayModeTests.
+        //                                        ActiveTab_NeverFlatFill_OnlyThinIndicator`
+        //                                        (catégorie HUDv31, hors `Charpente`) — style/
+        //                                        bascule, par `shell.ActivateTab` direct LUI AUSSI
+        //                                        (même angle mort que C7) — mais HORS du périmètre
+        //                                        de l'ATTEIGNABILITÉ (le relecteur : « c'est le SEUL
+        //                                        [attribut] qui décide de l'atteignabilité » —
+        //                                        destination) : consigné honnêtement, non repris ici.
+        // Compte : 5 attributs identifiés, 2 fermés par CE test (ordre, destination), 2 déjà fermés
+        // (nom, libellé), 1 hors-classe consigné (indicateur d'actif — style, pas atteignabilité).
+        //
+        // ⛔ LE GESTE DE PRODUCTION, pour CHAQUE membre, DANS L'ORDRE du dock : trouver le bouton RÉEL
+        // (`Find($"Tab_{membre}")`), prendre SON `Button`, `.onClick.Invoke()` — jamais
+        // `shell.ActivateTab(membre)` (exactement ce que C7 fait, et exactement ce que le relecteur a
+        // montré insuffisant). La liste d'ordre et la table de destinations sont ÉCRITES ICI,
+        // indépendamment de `AppShell.DockRatifie` (anti-tautologie, même patron que C7/F0.2).
+        // ─────────────────────────────────────────────────────────────────────────────────────────
+        [UnityTest]
+        public IEnumerator F0_2b_ChaqueBoutonDuDock_ParUnClicReel_MeneALaDestinationRatifiee_EtDansLOrdre()
+        {
+            yield return ChargerLaSceneDeDemarrageDuBuild();
+            AppShell shell = SondeShellDansLaScene(sceneDeDemarrage);
+            Assert.IsNotNull(shell, $"aucun AppShell dans la scène de démarrage du build ({sceneDeDemarrage.path})");
+            yield return WaitForEmpireMounted(shell);
+            yield return null; // CityMapController.Start()/BuildLayout tourne réellement ici
+
+            // L'ORDRE gauche→droite attendu, ÉCRIT ICI — indépendant de `AppShell.DockRatifie`.
+            var ordreAttendu = new List<AppShell.Tab>
+            {
+                AppShell.Tab.Empire, AppShell.Tab.Org, AppShell.Tab.Pipeline, AppShell.Tab.More,
+            };
+            var nomsAttendusDansLOrdre = ordreAttendu.Select(m => $"Tab_{m}").ToList();
+
+            // La DESTINATION attendue de chaque membre — table ÉCRITE ICI, MÊME anti-tautologie que
+            // C7 (`Tab.More` volontairement absent : sa destination NOMMÉE est « vide », vérifiée
+            // par `OnEmptyMoreDestination`, jamais par l'absence d'un type monté).
+            var typeParTab = new Dictionary<AppShell.Tab, Type>
+            {
+                { AppShell.Tab.Empire, typeof(CityMapController) },
+                { AppShell.Tab.Org, typeof(LieutenantScreenController) },
+                { AppShell.Tab.Pipeline, typeof(LaunderingController) },
+            };
+
+            // ── ordre gauche→droite (attribut jamais couvert par F0.1-a/F0.2). ──
+            var nomsDansLOrdre = new List<string>();
+            foreach (Transform enfant in shell.TabBarRoot)
+            {
+                if (!enfant.name.StartsWith("Tab_")) continue;
+                nomsDansLOrdre.Add(enfant.name);
+            }
+            CollectionAssert.AreEqual(nomsAttendusDansLOrdre, nomsDansLOrdre,
+                $"l'ordre gauche→droite du dock doit être EXACTEMENT {{{string.Join(", ", nomsAttendusDansLOrdre)}}} " +
+                $"— trouvé {{{string.Join(", ", nomsDansLOrdre)}}} (CollectionAssert.AreEqual, PAS AreEquivalent : " +
+                "l'ORDRE est l'attribut mesuré ici, jamais couvert par F0.1-a/F0.2).");
+
+            // ── destination : un CLIC RÉEL sur chaque bouton, dans l'ordre, jamais shell.ActivateTab
+            // appelé directement (exactement ce que C7 fait, et exactement ce que le relecteur a
+            // montré insuffisant : « C7 appelle shell.ActivateTab(membre) EN AVAL du bouton »). ──
+            foreach (AppShell.Tab membre in ordreAttendu)
+            {
+                Transform boutonT = shell.TabBarRoot.Find($"Tab_{membre}");
+                Assert.IsNotNull(boutonT, $"le bouton Tab_{membre} doit exister dans le dock");
+                Button bouton = boutonT.GetComponent<Button>();
+                Assert.IsNotNull(bouton, $"Tab_{membre} doit porter un Button");
+
+                bouton.onClick.Invoke(); // ⛔ LE GESTE DE PRODUCTION — jamais shell.ActivateTab(membre)
+                yield return null;
+
+                if (membre == AppShell.Tab.More)
+                {
+                    Assert.IsTrue(shell.OnEmptyMoreDestination,
+                        $"le CLIC RÉEL sur Tab_{membre} doit activer la destination vide NOMMÉE");
+                    Assert.IsNull(shell.MountedTenantType,
+                        $"le CLIC RÉEL sur Tab_{membre} ne doit monter AUCUN type — trouvé " +
+                        $"{shell.MountedTenantType?.Name ?? "<rien>"}");
+                }
+                else
+                {
+                    Assert.IsTrue(typeParTab.ContainsKey(membre), $"Tab.{membre} absent de la table de destinations — test à relire");
+                    Assert.AreEqual(typeParTab[membre], shell.MountedTenantType,
+                        $"le CLIC RÉEL sur Tab_{membre} doit monter EXACTEMENT {typeParTab[membre].Name} — trouvé " +
+                        $"{shell.MountedTenantType?.Name ?? "<rien>"}. Un clic qui route vers une AUTRE destination " +
+                        "(ou vers Tab.Empire, le défaut EXACT armé par le relecteur round 3) doit ROUGIR ICI, en " +
+                        "nommant la bulle fautive.");
+                }
+            }
+
+            Debug.Log($"[Charpente] F0.2-b — les {ordreAttendu.Count} bulles du dock, CLIQUÉES RÉELLEMENT dans " +
+                      "l'ordre gauche→droite, mènent chacune à sa destination ratifiée.");
+        }
     }
 }
