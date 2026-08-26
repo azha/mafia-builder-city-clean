@@ -16,9 +16,10 @@ Méthode de run, identique au précédent d'item 0 (round 2) : les runs de contr
 vérification de correctif sont **scopés à la catégorie `Charpente` seule** (narrowing temporaire de
 `Assets/Editor/MafiaCI.cs:Categories` à `{ "Charpente" }`, restauré à `{ "W4P4a", "W3UDA", "W3U1",
 "W3U2", "Charpente" }` avant toute mesure finale). Le juge **complet** (5 catégories) a maintenant
-été lancé **QUATRE fois** au total (round 1 : deux — préliminaire + clôture ; round 2 : une
+été lancé **SEPT fois** au total (round 1 : deux — préliminaire + clôture ; round 2 : une
 troisième ; round 3 : une quatrième — réconciliation § « Run complet du juge »). Round 4 en ajoute
-une **cinquième** (§ Run E) et une **sixième** (§ Run F, ci-dessous).
+une **cinquième** (§ Run E) et une **sixième** (§ Run F). Round 5 en ajoute une **septième**
+(§ Run G, ci-dessous).
 
 ---
 
@@ -287,6 +288,168 @@ d'inventer un second finding pour faire correspondre le compte — confirmé com
 
 Vérification finale round 4 : catégorie `Charpente` scopée, `passed=17 failed=0` (§ ci-dessus) ;
 juge complet 5 catégories relancé § « Run complet du juge ».
+
+---
+
+## ⛔⛔ ROUND 5 — revue ⊥ NOT_APPROVED (1 bloquant, 2 majeurs, 4 mineurs) — correctifs
+
+Logs bruts round 5, hors dépôt (consigne du contrôleur) : `/tmp/charpente-r5/*.log`.
+Méthode de run inchangée (narrowing temporaire `MafiaCI.Categories` → `{ "Charpente" }` pour toutes
+les mesures scopées ci-dessous, restauré aux 5 catégories AVANT toute mesure finale — vérifié
+byte-identique à `HEAD` par comparaison Python après chaque restauration).
+
+### BLOQUANT — `F0_2b` aveugle sur `Tab_Empire`
+
+`WaitForEmpireMounted` monte `CityMapController` AVANT que la boucle `F0_2b` ne commence ; la
+boucle clique ENSUITE sur `Tab_Empire` en premier et relit `MountedTenantType == CityMapController`
+— un champ DÉJÀ vrai avant même le clic. Un clic AVALÉ sur CETTE bulle précise est donc
+indiscernable d'un clic réussi, parce que le type monté ne change PAS de valeur dans ce cas
+particulier (il change dans les 3 autres). Round 4 ne l'a pas vu parce que ses deux contrôles
+négatifs armaient `Tab.Org`, jamais `Tab.Empire` — le silence sur Empire était gratuit dans son
+propre contrôle (a) et n'a jamais été relu.
+
+**Fermeture** : mémoriser `shell.MountedTenantGameObject` AVANT chaque clic (les 4 bulles, pas
+seulement Empire) et asserter qu'il est Unity-DESTROYED (`== null`, jamais seulement
+`activeSelf==false`) APRÈS — même patron que `NavigationPlayModeTests.cs:179`/`:193`
+(`previousDistrictHost == null`, 2 frames après le clic). `AppShell.ActivateTab` est
+« idempotent-ish » (docstring `AppShell.cs:159-160`, "re-activating the SAME tab still remounts —
+no special-cased no-op") : un clic RÉEL, même sur l'onglet DÉJÀ actif, détruit toujours le host
+précédent et en remonte un neuf ; un clic AVALÉ ne fait ni l'un ni l'autre.
+
+**Les 4 contrôles négatifs, une bulle armée à la fois** (`if (tab == Tab.<X>) b.interactable =
+false;` dans `AppShell.AddTabButton`, restauré après chaque run — comparaison Python `identical to
+HEAD: True` après CHAQUE restauration) :
+
+| bulle armée | log | `passed`/`failed` | qui rougit |
+|---|---|---|---|
+| `Tab.Empire` | `/tmp/charpente-r5/negcontrol-empire.log` | 18/2 | `F0_2b` (nommant `Tab_Empire`) **+ `FA_...`** (F-A, conséquence attendue et indépendante : Empire inatteignable rend aussi l'overlay Accueil injoignable par ce chemin) |
+| `Tab.Org` | `/tmp/charpente-r5/negcontrol-org.log` | 19/1 | `F0_2b` (nommant `Tab_Org`) |
+| `Tab.Pipeline` | `/tmp/charpente-r5/negcontrol-pipeline.log` | 19/1 | `F0_2b` (nommant `Tab_Pipeline`) |
+| `Tab.More` | `/tmp/charpente-r5/negcontrol-more.log` | 19/1 | `F0_2b` (nommant `Tab_More`) |
+
+Sortie réelle (cas Empire, le seul où round 4 était aveugle) :
+```
+MafiaCI: FAIL ...F0_2b_ChaqueBoutonDuDock_ParUnClicReel_MeneALaDestinationRatifiee_EtDansLOrdre —
+  le CLIC RÉEL sur Tab_Empire doit avoir DÉTRUIT (Unity-DESTROYED, == null) le locataire monté
+  AVANT ce clic — trouvé VIVANT. [...]
+```
+**Classe fermée sur SA population entière — 4/4 bulles, 4/4 rouges nommés correctement.**
+
+### MAJEUR 1 — la moitié « hit-testing » n'était gardée nulle part
+
+`ProductionClickSupport.cs` affirmait (avant correction) fermer « la CLASSE ». Mesuré, sur DEUX
+mécanismes distincts, chacun `Charpente` 19/0 AVANT ce round (donc invisibles à toutes les gardes
+existantes) : `img.raycastTarget = false` sur l'`Image` posée par `AppShell.AddTabButton` (l'UNIQUE
+surface de test de collision du dock — les 4 autres enfants de chaque bulle sont DÉJÀ
+`raycastTarget = false`) et `CanvasGroup.blocksRaycasts = false` sur `TabBarRoot`.
+`ExecuteEvents.Execute` route DIRECTEMENT sur `bouton.gameObject`, sans jamais consulter un
+`GraphicRaycaster` — bypass volontaire et documenté, cohérent avec l'idiome « bouton trouvé par nom,
+jamais par une position d'écran » — donc CE helper ne peut structurellement pas couvrir le raycast
+sans se contredire lui-même.
+
+**Choix, mesuré avant de choisir (option (a) du mandat)** : geste (a), une garde de COLLISION
+séparée — `F0_2c_ChaqueBoutonDuDock_RepondAuHitTesting_UnRaycastAuCentreVisePileLaBulle`
+(`CharpenteMontageLocatairesPlayModeTests.cs`), un `GraphicRaycaster.Raycast` RÉEL au centre écran
+de chaque bulle (`RectTransformUtility.WorldToScreenPoint(null, rect.position)` — Canvas
+`ScreenSpaceOverlay`, `camera: null` est la conversion correcte), qui doit rendre la bulle ELLE-MÊME
+comme premier résultat. Choisie plutôt que (b) parce que mesurée DÉTERMINISTE en batchmode :
+baseline verte, 4/4 bulles, aucune flakiness observée sur les runs ci-dessous.
+
+`ProductionClickSupport.cs` corrigé en parallèle (pas remplacé) : la revendication « ferme la
+CLASSE » est désormais scopée EXPLICITEMENT à la classe des deux gardes de `Button.Press()`
+(`IsActive()`/`IsInteractable()`), avec un paragraphe qui NOMME la classe non couverte
+(raycastTarget / CanvasGroup.blocksRaycasts) et pointe vers `F0_2c` comme fermeture de l'autre
+moitié — jamais « couvert, point final ».
+
+**Baseline positive** — `passed=20 failed=0` (`/tmp/charpente-r5/baseline1.log`, catégorie
+`Charpente` scopée, 19 tests round-4 + `F0_2c` neuf), `F0_2c` loggue les 4 bulles vérifiées.
+
+**Contrôles positifs (la garde DOIT rougir sur les deux mécanismes mesurés par le relecteur)**,
+chaque édition restaurée après coup (comparaison Python `identical to HEAD: True`) :
+
+| mécanisme armé (sur `Tab_Org` ou `TabBarRoot`) | log | `passed`/`failed` | qui rougit |
+|---|---|---|---|
+| `img.raycastTarget = false` (Tab_Org) | `/tmp/charpente-r5/negcontrol-raycasttarget-org.log` | 19/1 | `F0_2c` SEUL (nommant `Tab_Org`, trouve `DashboardBackdrop` en premier) — `F0_2b` reste VERT, confirmant que les deux gardes couvrent des propriétés DISJOINTES |
+| `CanvasGroup.blocksRaycasts = false` (TabBarRoot) | `/tmp/charpente-r5/negcontrol-blocksraycasts.log` | 19/1 | `F0_2c` SEUL (nommant `Tab_Empire`, premier bouton testé dans la boucle) |
+
+Les deux mécanismes cités par le relecteur ROUGISSENT bien sur la garde neuve, et AUCUN des deux ne
+touche `F0_2b` — la preuve que les deux moitiés (activation vs hit-testing) sont bien des classes
+séparées, chacune avec sa propre garde.
+
+**Mineurs 1-3, mêmes fichiers** :
+- **Mineur 1** — `ProductionClickSupport.Click` retourne désormais `bool` (le retour
+  d'`ExecuteEvents.Execute`, jeté round 4) et asserte dessus en interne (« aucun handler collecté »
+  ≠ silence). Ne prouve pas que `Button.Press()` a produit un effet — seulement qu'un handler a été
+  appelé — dit explicitement dans le message d'assertion et le docstring.
+- **Mineur 2** — le docstring de `Click` ne dit plus « par l'EventSystem » (rhétorique :
+  `ExecuteEvents` est un dispatcher statique, `EventSystem.current` ne remplit qu'un champ du
+  `PointerEventData`) mais « par `Button.Press()` », ce qui est le gain réel.
+  `Assert.IsNotNull(EventSystem.current)` conservée telle quelle (garde correcte).
+  - **Mineur 3** — consigné en commentaire : `position`/`pressPosition`/`clickCount` du
+  `PointerEventData` restent à leur défaut ; 0 consommateur aujourd'hui dans `Assets/Scripts`
+  (mesuré) ; à poser explicitement le jour où un handler les lit.
+
+### MAJEUR 2 — `F-B` épinglait un COMPTE NU
+
+`CollectionAssert`/`Assert.AreEqual(5, nombreDeBoutons, ...)` ne distingue pas « une sortie est
+apparue » de « une 6ᵉ destination de nav est apparue » — et le dépôt annonce LUI-MÊME deux causes
+concurrentes de faire monter ce compte SANS jamais poser de sortie : le `ShortcutBar` de l'item 0.5
+(`DashboardController.cs:42`, commentaire M1) et le libellé « Marché » du jalon 4
+(`AppShell.cs:776,795`, si `screen_b1` gagne un jour sa propre destination `Nav_Marche`). Le mode
+d'emploi round 4 prescrivait, sur le rouge le PLUS probable, exactement le mauvais geste : « c'est
+très probablement l'item 0.5, retire ce test, coche le ruling ».
+
+**Fermeture** : `CollectionAssert.AreEquivalent` sur l'ENSEMBLE NOMMÉ des `Button.gameObject.name`
+sous `DashboardSheet` — chaque `AddNavButton` nomme son GameObject `"Nav_" + label.Replace(" ",
+"")` (`DashboardController.cs:685`) — contre `{Nav_CityMap, Nav_BuildingCard, Nav_Filière,
+Nav_Exceptions, Nav_Autonomy}`. Même classe, même remède que F0.2 au round 2 (garde d'ensemble
+aveugle à la correspondance → paires/noms). Mode d'emploi réécrit pour énumérer les DEUX causes
+connues et exiger, avant tout geste sur le ruling, que le lecteur distingue par le NOM du delta
+— un `Nav_*` neuf ou un bouton posé sous un conteneur de raccourcis n'est PAS une fermeture ; seul
+un nom désignant EXPLICITEMENT Close/Fermer/Dismiss/Exit l'est.
+
+**Baseline positive** (`/tmp/charpente-r5/baseline1.log`) :
+```
+[Charpente] F-B — {Nav_CityMap, Nav_BuildingCard, Nav_Filière, Nav_Exceptions, Nav_Autonomy}
+épinglés sous DashboardSheet (ENSEMBLE NOMMÉ, round 5), aucune affordance de fermeture dédiée [...]
+```
+
+**Contrôle négatif** — un 6ᵉ bouton `AddNavButton(navBar, "Marche", OpenPipeline)` ajouté
+temporairement dans `DashboardController.BuildLayout` (édition restaurée après coup, comparaison
+Python `identical to HEAD: True`), `/tmp/charpente-r5/negcontrol-fb-6th-button.log`,
+`passed=19 failed=1` :
+```
+MafiaCI: FAIL ...FB_AucuneAffordanceDeFermetureSousLOverlay_EpingleAvecSonModeDEmploiDePeremption —
+  [...] SI CET ENSEMBLE A CHANGÉ (trouvé {Nav_CityMap, Nav_BuildingCard, Nav_Filière,
+  Nav_Exceptions, Nav_Autonomy, Nav_Marche}) : NE PAS cocher le ruling sur ce seul rouge [...]
+```
+Le rouge NOMME exactement le delta (`Nav_Marche`), et le message renvoie le lecteur à la
+distinction par le nom avant tout geste sur le ruling — exactement le defect que round 4 aurait
+laissé passer.
+
+### Mineur 4 — un compte que j'avais donné, faux, recompté
+
+`grep -rn "ProductionClickSupport\.Click(" Assets/Tests/` puis exclusion des lignes de commentaire
+(`//` en tête) : **8 sites d'appel réels, dans 4 fichiers** — `NavigationPlayModeTests.cs` (×2),
+`AppShellPlayModeTests.cs` (×1), `CharpenteOuvertureSessionOverlayPlayModeTests.cs` (×3),
+`CharpenteMontageLocatairesPlayModeTests.cs` (×2) — confirme EXACTEMENT le compte du relecteur
+(« 8 sites, 4 fichiers »), contre les « 19 appels sur 5 fichiers » que j'avais annoncés à tort
+(motif qui comptait aussi la définition du helper et des mentions en commentaire).
+`grep -rn "onClick\.Invoke(" Assets/Tests/` : les 11 hits sont TOUS dans des commentaires (aucune
+ligne de code réelle) — confirme le « 0 hors commentaires ».
+
+### Vérification finale round 5
+
+Catégorie `Charpente` scopée (après restauration de toutes les éditions temporaires,
+`Assets/Scripts/Shell/AppShell.cs`, `Assets/Scripts/Operational/Dashboard/DashboardController.cs`
+et `Assets/Editor/MafiaCI.cs` tous re-vérifiés `identical to HEAD: True`) : `passed=20 failed=0`
+(`/tmp/charpente-r5/baseline1.log`, déjà cité ci-dessus). Juge complet 5 catégories relancé
+ci-dessous, § « Run complet du juge », **Run G** — puis RE-relancé une seconde fois
+(`/tmp/charpente-r5/full-judge-round5-final.log`) après un correctif cosmétique post-Run-G (accord
+« une balayage » → « un balayage », commentaire de `F0_2c`, zéro effet sur le comportement) :
+`passed=204 failed=3`, LES 3 MÊMES rouges pré-existants — identique octet pour octet sur les
+compteurs. **`full-judge-round5-final.log` est la mesure qui fait foi** (état exact des fichiers
+livrés) ; `full-judge-round5.log` reste la première preuve, conservée pour la trace.
 
 ---
 
@@ -1316,8 +1479,10 @@ districts vivante avant l'entrée en scène de B »), avec ses 8 assertions inch
 `af9893b`. Une déduction tirée d'UNE observation n'est pas une mesure. **Un troisième run,
 lancé par moi-même round 2**, tranche : voir tableau ci-dessous.
 
-Quatre runs complets (5 catégories), à quatre moments distincts, TOUS en environnement calme (aucun
-autre process Unity/Docker en vol) :
+Sept runs complets (5 catégories) à ce jour, à sept moments distincts (A-G — ce compte est LUI-MÊME
+un correctif round 5 : la section disait encore « quatre » alors que E/F l'avaient déjà porté à
+six ; corrigé en ajoutant G), TOUS en environnement calme (aucun autre process Unity/Docker en
+vol) :
 
 | run | quand | commande/log | `passed` | `failed` | `StaleAbandonedShell` |
 |---|---|---|---|---|---|
@@ -1327,6 +1492,7 @@ autre process Unity/Docker en vol) :
 | **D (moi, round 3)** | après TOUS les correctifs round 3 (BLOQUANT 1, BLOQUANT 2, MAJEUR, m1, m2, m3) — ajoute 2 tests neufs (`F0.2-b`, `BLOQUANT2_...`) | `/tmp/charpente-r3/full-judge-run1.log` | 201 | 3 (`NavD12`, `StaleAbandonedShell`, `NavF4`) | **ROUGE** |
 | **E (moi, round 4)** | après le correctif BLOQUANT (`ProductionClickSupport`, 7 sites) + MAJEUR (4 ancres) + mineurs — AUCUN test neuf ajouté (mécanisme de clic changé, pas de méthode `[Test]`/`[UnityTest]` nouvelle) | `/tmp/charpente-r4/full-judge-round4.log` | 202 | 2 (`NavD12`, `NavF4`) | **VERT** |
 | **F (moi, round 4bis)** | après ajout de F-A/F-B (écart au ruling, décision contrôleur) — ajoute 2 tests neufs | `/tmp/charpente-r4/full-judge-round4-runF.log` | 203 | 3 (`NavD12`, `StaleAbandonedShell`, `NavF4`) | **ROUGE** |
+| **G (moi, round 5)** | après TOUS les correctifs round 5 (BLOQUANT — destroy-check F0.2-b, MAJEUR 1 — F0.2-c neuf + `ProductionClickSupport` re-scopé, MAJEUR 2 — F-B ensemble nommé, mineurs 1-4) — ajoute 1 test neuf (`F0.2-c`) | `/tmp/charpente-r5/full-judge-round5.log` | 204 | 3 (`NavD12`, `StaleAbandonedShell`, `NavF4`) | **ROUGE** — les 3 rouges sont les mêmes pré-existants connus (aucun n'est de ce lot ; réconciliation arithmétique : 203 (F) + 1 (`F0.2-c`) = 204, exact) |
 
 Commande du run C :
 ```

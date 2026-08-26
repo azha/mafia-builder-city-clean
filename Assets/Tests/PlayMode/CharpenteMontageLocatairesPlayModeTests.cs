@@ -6,6 +6,7 @@ using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.EventSystems; // F0.2-c (round 5, MAJEUR 1) — GraphicRaycaster.Raycast réel
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 using UnityEngine.UI;
@@ -706,6 +707,33 @@ namespace MafiaCleanCity.Shell.Tests
         // exactement ce que le relecteur a montré insuffisant). La liste d'ordre et la table de
         // destinations sont ÉCRITES ICI,
         // indépendamment de `AppShell.DockRatifie` (anti-tautologie, même patron que C7/F0.2).
+        //
+        // ⛔⛔ ROUND 5 (revue ⊥, BLOQUANT) — CE TEST ÉTAIT AVEUGLE SUR `Tab.Empire`, LA BULLE QU'IL
+        // EXISTE POUR GARANTIR. `WaitForEmpireMounted` (ci-dessus) a déjà monté `CityMapController`
+        // AVANT que la boucle ne commence ; la boucle CLIQUE ENSUITE sur `Tab_Empire` en premier et
+        // relit `MountedTenantType == CityMapController` — un champ DÉJÀ vrai. Mesuré par le
+        // relecteur, une seule variable (`if (tab == Tab.Empire) b.interactable = false;` dans
+        // `AppShell.AddTabButton`) : `Charpente` passe de 19/0 à `passed=18 failed=1`, et le SEUL
+        // rouge est `F-A` (fichier voisin) — `F0_2b` reste VERT, un clic AVALÉ sur la bulle n°1 est
+        // indiscernable d'un clic réussi, exactement parce que le type monté ne CHANGE pas de valeur
+        // dans ce cas précis.
+        // ★ Pourquoi round 4 ne l'a pas vu : ses DEUX contrôles négatifs armaient `Tab_Org`, jamais
+        // `Tab_Empire` — ils ont rougi EN NOMMANT la bulle fautive, donc le correctif a été déclaré
+        // clos SANS repasser la classe sur la population des 4 bulles. Le silence sur Empire, dans
+        // le propre contrôle (a), était le signe — et il était gratuit.
+        // ⇒ La propriété manquante n'est pas « quel type est monté » (un type peut rester
+        // identique d'une frame à l'autre par PURE coïncidence — ici parce qu'Empire est monté
+        // deux fois de suite) : c'est « le locataire PRÉCÉDENT a-t-il été DÉTRUIT, puis un locataire
+        // NEUF remonté ». Instrument déjà dans ce dépôt, déjà dans un fichier que ce lot a édité :
+        // `NavigationPlayModeTests.cs:179`/`:193`, `previousDistrictHost == null` — Unity-DESTROYED,
+        // jamais seulement `activeSelf==false`. `AppShell.ActivateTab` (docstring `:159-160`) est
+        // « idempotent-ish » : re-cliquer le MÊME onglet remonte quand même (pas de no-op spécial-
+        // casé) — donc un clic RÉEL sur Empire, MÊME quand Empire est DÉJÀ l'onglet actif, détruit
+        // TOUJOURS le host précédent et en remonte un neuf. Un clic AVALÉ, lui, ne fait NI l'un ni
+        // l'autre : le host précédent survit.
+        // ⇒ FERMÉ ICI en mémorisant `MountedTenantGameObject` AVANT chaque clic (les 4 bulles, pas
+        // seulement Empire — la classe, pas l'instance) et en assertant qu'il est DÉTRUIT après,
+        // EN PLUS de ce que `MountedTenantType` affiche déjà.
         // ─────────────────────────────────────────────────────────────────────────────────────────
         [UnityTest]
         public IEnumerator F0_2b_ChaqueBoutonDuDock_ParUnClicReel_MeneALaDestinationRatifiee_EtDansLOrdre()
@@ -755,6 +783,15 @@ namespace MafiaCleanCity.Shell.Tests
                 Button bouton = boutonT.GetComponent<Button>();
                 Assert.IsNotNull(bouton, $"Tab_{membre} doit porter un Button");
 
+                // ⛔⛔ round 5 (revue ⊥, BLOQUANT) — mémorisé AVANT le clic : c'est CET objet, pas
+                // celui que `shell.MountedTenantGameObject` pointera APRÈS (round 4 relisait
+                // exactement le même champ qu'il venait d'écrire, sur Tab.Empire — voir le
+                // commentaire ci-dessus, § ROUND 5).
+                GameObject locataireAvantLeClic = shell.MountedTenantGameObject;
+                Assert.IsNotNull(locataireAvantLeClic,
+                    $"précondition anti-vacuité avant Tab_{membre} : un locataire doit être monté " +
+                    "AVANT le clic pour que sa destruction ait un sens à observer.");
+
                 // ⛔ round 4 (revue ⊥, BLOQUANT) — `bouton.onClick.Invoke()` (round 3) N'ÉTAIT
                 // PAS le geste de production : cette UnityEvent court-circuite les DEUX gardes de
                 // `Button.Press()` (`IsActive()`/`IsInteractable()`). Mesuré par la revue :
@@ -765,6 +802,29 @@ namespace MafiaCleanCity.Shell.Tests
                 // bouton, et ce que le relecteur round 3 a montré insuffisant).
                 ProductionClickSupport.Click(bouton);
                 yield return null;
+                yield return null; // round 5 — laisse Object.Destroy (différé) traiter RÉELLEMENT
+                                    // la destruction du locataire précédent avant de le lire (même
+                                    // patron que NavigationPlayModeTests.NavF2, deux frames).
+
+                // ⛔⛔ round 5 (revue ⊥, BLOQUANT) — LA propriété qui décide qu'un clic a RÉELLEMENT
+                // porté : le locataire d'AVANT est Unity-DESTROYED (== null), jamais seulement
+                // `activeSelf==false` (même garde que `NavigationPlayModeTests.cs:179/:193`). Un
+                // clic AVALÉ (bulle inactive/non-interactable au doigt) laisse ce champ VIVANT —
+                // `ActivateTab` n'a alors JAMAIS tourné — indépendamment de ce que
+                // `shell.MountedTenantType` affiche déjà : sur `Tab.Empire`, ce type est DÉJÀ
+                // `CityMapController` AVANT même le premier clic de cette boucle
+                // (`WaitForEmpireMounted` plus haut), donc relire ce SEUL champ ne distingue pas
+                // « clic réussi, remonté » de « clic avalé, rien n'a bougé ». Vaut pour LES 4
+                // bulles, pas seulement Empire — `ActivateTab` est "idempotent-ish" (docstring
+                // `AppShell.cs:159-160`) : re-cliquer le MÊME onglet détruit quand même l'ancien
+                // host et en remonte un neuf, no-op spécial-casé absent.
+                Assert.IsTrue(locataireAvantLeClic == null,
+                    $"le CLIC RÉEL sur Tab_{membre} doit avoir DÉTRUIT (Unity-DESTROYED, == null) le " +
+                    "locataire monté AVANT ce clic — trouvé VIVANT. Un clic avalé (bulle non " +
+                    "interactable / masquée au doigt) laisse ce champ intact ET peut laisser " +
+                    "MountedTenantType inchangé sur la MÊME valeur qu'avant (cas Tab.Empire, round 5 " +
+                    "BLOQUANT) : c'est CETTE assertion, pas celle du type monté ci-dessous, qui " +
+                    "détecte un clic avalé sur la bulle déjà active.");
 
                 if (membre == AppShell.Tab.More)
                 {
@@ -787,6 +847,74 @@ namespace MafiaCleanCity.Shell.Tests
 
             Debug.Log($"[Charpente] F0.2-b — les {ordreAttendu.Count} bulles du dock, CLIQUÉES RÉELLEMENT dans " +
                       "l'ordre gauche→droite, mènent chacune à sa destination ratifiée.");
+        }
+
+        // ─────────────────────────────────────────────────────────────────────────────────────────
+        // F0.2-c (revue ⊥ round 5, MAJEUR 1) — `ProductionClickSupport` (round 4) ferme la classe
+        // « état d'activation du Selectable » (`IsActive()`/`IsInteractable()`, via `Button.
+        // Press()`) mais BYPASSE VOLONTAIREMENT LE RAYCAST — `ExecuteEvents.Execute` route
+        // directement sur `bouton.gameObject`, sans jamais consulter un `GraphicRaycaster`. Mesuré
+        // par le relecteur, sur DEUX mécanismes distincts, chacun `Charpente` 19/0 (donc VERT à
+        // travers) : `img.raycastTarget = false` sur l'`Image` posée par `AppShell.AddTabButton`
+        // (`AppShell.cs:861-863` — les 4 AUTRES enfants de chaque bulle sont DÉJÀ
+        // `raycastTarget = false` : cette `Image` est l'UNIQUE surface de test de collision du
+        // dock) et `CanvasGroup.blocksRaycasts = false` sur `TabBarRoot`. Un balayage confirme :
+        // ZÉRO test de ce dépôt ne fait de raycast réel avant celui-ci.
+        // ⇒ FERMÉ ICI, PAS en assouplissant `ProductionClickSupport` (qui doit rester fidèle à son
+        // idiome « trouver le bouton par nom, jamais par une position d'écran », § doc du
+        // fichier) : une garde de COLLISION séparée, un `GraphicRaycaster.Raycast` RÉEL au centre
+        // ÉCRAN de chaque bulle, qui doit rendre la bulle VISÉE comme PREMIER résultat.
+        // ─────────────────────────────────────────────────────────────────────────────────────────
+        [UnityTest]
+        public IEnumerator F0_2c_ChaqueBoutonDuDock_RepondAuHitTesting_UnRaycastAuCentreVisePileLaBulle()
+        {
+            yield return ChargerLaSceneDeDemarrageDuBuild();
+            AppShell shell = SondeShellDansLaScene(sceneDeDemarrage);
+            Assert.IsNotNull(shell, $"aucun AppShell dans la scène de démarrage du build ({sceneDeDemarrage.path})");
+            yield return WaitForEmpireMounted(shell);
+            yield return null;
+
+            GraphicRaycaster raycaster = shell.ShellCanvas.GetComponent<GraphicRaycaster>();
+            Assert.IsNotNull(raycaster,
+                "le Canvas du shell doit porter le GraphicRaycaster qu'un vrai doigt traverse " +
+                "(AppShell.BuildLayout le pose sur ShellCanvas).");
+            Assert.IsNotNull(EventSystem.current,
+                "aucun EventSystem.current — AppShell.EnsureEventSystem() doit avoir tourné.");
+
+            var membres = new[] { AppShell.Tab.Empire, AppShell.Tab.Org, AppShell.Tab.Pipeline, AppShell.Tab.More };
+            foreach (AppShell.Tab membre in membres)
+            {
+                Transform boutonT = shell.TabBarRoot.Find($"Tab_{membre}");
+                Assert.IsNotNull(boutonT, $"le bouton Tab_{membre} doit exister dans le dock");
+                var rect = (RectTransform)boutonT;
+
+                // Canvas ScreenSpaceOverlay (AppShell.cs:568) : `camera: null` est la conversion
+                // correcte, exactement celle que `EventSystem`/`GraphicRaycaster` utilisent en jeu.
+                Vector2 centreEcran = RectTransformUtility.WorldToScreenPoint(null, rect.position);
+
+                var donnees = new PointerEventData(EventSystem.current) { position = centreEcran };
+                var resultats = new List<RaycastResult>();
+                raycaster.Raycast(donnees, resultats);
+
+                Assert.IsTrue(resultats.Count > 0,
+                    $"un raycast au centre de Tab_{membre} ({centreEcran}) ne touche RIEN — la bulle " +
+                    "est invisible au hit-testing : exactement l'autre moitié de l'atteignabilité que " +
+                    "ProductionClickSupport ne couvre PAS (il route directement sur le GameObject, " +
+                    "jamais par une position d'écran — voir sa doc, § MAJEUR 1 round 5).");
+                Assert.AreEqual(boutonT.gameObject, resultats[0].gameObject,
+                    $"le PREMIER objet touché au centre de Tab_{membre} doit être la bulle ELLE-MÊME " +
+                    $"— trouvé {resultats[0].gameObject.name}. Si ce n'est PAS elle, la surface de " +
+                    "test de collision réelle du dock (l'Image posée par AddTabButton — la SEULE de " +
+                    "ses 4 enfants à porter raycastTarget=true) a cessé de couvrir la zone que tape " +
+                    "un joueur, et F0.2-b/F0.2-c resteraient VERTS l'un comme l'autre pour un dock " +
+                    "mort au doigt (round 4 l'a déjà mesuré pour IsActive()/IsInteractable() ; ceci " +
+                    "est le même défaut, sur le canal du RAYCAST).");
+            }
+
+            Debug.Log($"[Charpente] F0.2-c — les {membres.Length} bulles du dock répondent au " +
+                      "hit-testing RÉEL (GraphicRaycaster.Raycast au centre), pas seulement à un appel " +
+                      "direct sur leur composant Button — ferme la moitié que ProductionClickSupport " +
+                      "bypasse délibérément (round 5, MAJEUR 1).");
         }
     }
 }
