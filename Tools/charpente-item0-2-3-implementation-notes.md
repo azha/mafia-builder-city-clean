@@ -16,10 +16,10 @@ Méthode de run, identique au précédent d'item 0 (round 2) : les runs de contr
 vérification de correctif sont **scopés à la catégorie `Charpente` seule** (narrowing temporaire de
 `Assets/Editor/MafiaCI.cs:Categories` à `{ "Charpente" }`, restauré à `{ "W4P4a", "W3UDA", "W3U1",
 "W3U2", "Charpente" }` avant toute mesure finale). Le juge **complet** (5 catégories) a maintenant
-été lancé **SEPT fois** au total (round 1 : deux — préliminaire + clôture ; round 2 : une
+été lancé **HUIT fois** au total (round 1 : deux — préliminaire + clôture ; round 2 : une
 troisième ; round 3 : une quatrième — réconciliation § « Run complet du juge »). Round 4 en ajoute
 une **cinquième** (§ Run E) et une **sixième** (§ Run F). Round 5 en ajoute une **septième**
-(§ Run G, ci-dessous).
+(§ Run G) et round 6 une **huitième** (§ Run H, ci-dessous).
 
 ---
 
@@ -450,6 +450,164 @@ ci-dessous, § « Run complet du juge », **Run G** — puis RE-relancé une sec
 `passed=204 failed=3`, LES 3 MÊMES rouges pré-existants — identique octet pour octet sur les
 compteurs. **`full-judge-round5-final.log` est la mesure qui fait foi** (état exact des fichiers
 livrés) ; `full-judge-round5.log` reste la première preuve, conservée pour la trace.
+
+---
+
+## ⛔⛔ ROUND 6 — revue ⊥ NOT_APPROVED (1 bloquant, 1 majeur, 5 mineurs) — correctifs
+
+Logs bruts round 6, hors dépôt (consigne du contrôleur) : `/tmp/charpente-r6/*.log`. Méthode de run
+inchangée (narrowing temporaire `MafiaCI.Categories` → `{ "Charpente" }` pour toutes les mesures
+scopées ci-dessous, restauré aux 5 catégories AVANT la mesure finale — vérifié byte-identique à HEAD
+par comparaison Python après CHAQUE restauration, pas seulement à la fin).
+
+### BLOQUANT — `F0_2c` n'empruntait pas le chemin d'un doigt, et restait verte sur un client
+entièrement intouchable
+
+`raycaster.Raycast(donnees, resultats)` (round 5) appelait directement le `GraphicRaycaster` du
+shell — une référence déjà en main, jamais la liste des raycasters ENREGISTRÉS ET ACTIFS que
+consulte le seul chemin qu'un vrai doigt emprunte (`EventSystem.RaycastAll`,
+`BaseRaycaster.cs:83-86` désenregistre sur `OnDisable`, `EventSystem.cs:274` saute tout module dont
+`IsActive()` est faux). Un raycaster DÉSACTIVÉ — le client tout entier devenu intouchable au doigt —
+laissait la garde VERTE, en IMPRIMANT « hit-testing RÉEL ».
+
+**Fermeture** : `EventSystem.current.RaycastAll(donnees, resultats)` remplace l'appel direct sur
+`raycaster`, qui redevient une simple précondition d'EXISTENCE (le Canvas du shell DOIT porter un
+`GraphicRaycaster`). Un token de changement, qui ferme 3 des 4 cases manquantes recensées par le
+relecteur d'un coup (raycaster participant, tri inter-canvas, module EventSystem) — la 4ᵉ
+(`raycastTarget`/`blocksRaycasts`) était déjà couverte depuis round 5.
+
+**Les TROIS contrôles négatifs, sous la NOUVELLE forme, chacun édité puis restauré (comparaison
+Python `identical: True` après CHAQUE restauration)** :
+
+| mécanisme armé | log | `passed`/`failed` | qui rougit |
+|---|---|---|---|
+| `img.raycastTarget = false` (Tab_Org) | `/tmp/charpente-r6/negcontrol-raycasttarget-org.log` | 19/1 | `F0_2c` (nommant `Tab_Org`, trouve `DashboardBackdrop` en premier) — reprouvé sous `RaycastAll`, le relecteur ne l'avait mesuré que sous l'ancienne forme |
+| `CanvasGroup.blocksRaycasts = false` (TabBarRoot, `CanvasGroup` ajouté temporairement — aucun n'existe en production sur ce GameObject) | `/tmp/charpente-r6/negcontrol-blocksraycasts.log` | 19/1 | `F0_2c` (nommant `Tab_Empire`) — même reprevue |
+| **NEUF round 6** : `ShellCanvas.GetComponent<GraphicRaycaster>().enabled = false` | `/tmp/charpente-r6/negcontrol-raycaster-disabled.log` | 19/1 | `F0_2c` — message : « un raycast au centre de Tab_Empire (...) ne touche RIEN — la bulle est invisible au hit-testing (aucun raycaster enregistré et actif ne la voit) » |
+
+Sortie réelle du 3ᵉ contrôle (celui qui prouve exactement la fermeture du BLOQUANT — c'est le monde
+où la garde livrée round 5 restait VERTE) :
+```
+MafiaCI: FAIL ...F0_2c_ChaqueBoutonDuDock_RepondAuHitTesting_UnRaycastAuCentreVisePileLaBulle —
+  un raycast au centre de Tab_Empire ((236.73, 39.42)) ne touche RIEN — la bulle est invisible au
+  hit-testing (aucun raycaster enregistré et actif ne la voit) : [...]
+```
+**Classe fermée, contrôlée sur les 3 mécanismes qui la composent — les 3 rouges nomment
+correctement la bulle/le mécanisme.**
+
+⚠️ **Ce qui reste LATENT, pas vivant, dit explicitement dans le commentaire du test** : rien dans
+`Assets/Scripts` ne désactive de raycaster aujourd'hui, et `Boot.unity` n'en contient aucun — cette
+garde ferme une CLASSE de défaut sans instance connue à ce jour dans ce dépôt, même statut que
+`F0_2c` elle-même à sa naissance round 5.
+
+### MAJEUR — `F-B` était aveugle à la fermeture la plus probable
+
+L'épingle round 5 scopait `GetComponentsInChildren<Button>` à la seule `DashboardSheet` (la carte
+visible). `DashboardBackdrop` — le fond PLEIN ÉCRAN, FRÈRE de `DashboardSheet` sous le MÊME `root`
+(`DashboardController.BuildLayout`, `root = mountParent = ContentSlot`) — est DÉJÀ cible de raycast
+(`F0_2c` le trouve EN PREMIER dès qu'une bulle du dock perd son `raycastTarget`, voir tableau
+ci-dessus). Le § ÉCART AU RULING de ce même document énumère lui-même les gestes candidats pour
+fermer l'item 0.5 (« libellé ? tap sur le fond ? un bouton ? ») : si la fermeture choisie pose un
+`Button` sur le fond, l'épingle round 5 restait VERTE à travers l'événement exact qu'elle existe
+pour détecter — l'épingle ÉTAIT l'aveu.
+
+**Fermeture** : scanner l'UNION `{DashboardBackdrop, DashboardSheet}` — EXACTEMENT les deux racines
+que `BuildLayout` parente sous `root` — au lieu de la seule carte. **PAS** `shell.ContentSlot` en
+entier (l'autre option offerte par le relecteur) : Empire reste monté DESSOUS en surimpression
+(`MonterLocataireEnSurimpression<T>` ne le démonte pas, `AppShell.cs:484-486`), et ses propres
+`Button` (cellules de district `CityMapController.cs:419`, bouton d'entrée `:542`, etc.) auraient
+pollué l'ensemble nommé pour une raison SANS RAPPORT avec une fermeture — vérifié par lecture du
+code, pas supposé : `CityMapController` construit des `Button` à 4 sites (`:316,419,505,542`), tous
+parentés sous le même `ContentSlot` que le Dashboard (overlay, jamais démonté).
+
+Mode d'emploi de péremption complété : cas **(a-bis)** (un renommage de libellé fait DISPARAÎTRE un
+nom `Nav_*` ET en fait APPARAÎTRE un autre dans le MÊME rouge — REMPLACER dans `nomsAttendus`,
+jamais élargir à la lettre du cas (a), sinon le test reste rouge pour toujours) et cas **(d)** (un
+nom neuf trouvé sous `DashboardBackdrop`, quel que soit son nom, est le candidat structurellement le
+plus probable pour la fermeture du ruling — lire son handler avant de classer par nom seul).
+
+**Contrôle négatif** — un `Button` factice posé sur `DashboardBackdrop` (`backdrop.AddComponent
+<Button>()`, édition temporaire de `DashboardController.BuildLayout`, restaurée après coup,
+`identical: True`), `/tmp/charpente-r6/negcontrol-fb-button-on-backdrop.log`, `passed=19 failed=1` :
+```
+MafiaCI: FAIL ...FB_AucuneAffordanceDeFermetureSousLOverlay_EpingleAvecSonModeDEmploiDePeremption —
+  [...] SI CET ENSEMBLE A CHANGÉ (trouvé {DashboardBackdrop, Nav_CityMap, Nav_BuildingCard,
+  Nav_Filière, Nav_Exceptions, Nav_Autonomy}) : NE PAS cocher le ruling sur ce seul rouge [...]
+```
+Le rouge NOMME exactement le delta (`DashboardBackdrop`, un nom qui ne commence PAS par `Nav_`) —
+exactement le défaut que round 5 aurait laissé passer.
+
+### Mineur 1 — `ProductionClickSupport` affirmait une remontée aux parents qui n'existe pas
+
+`ExecuteEvents.Execute` (`:87` et `:95` du fichier) ne regarde QUE `bouton.gameObject` LUI-MÊME
+(`ExecuteEvents.cs:248-251` → `GetEventList<T>` → `:319-340`, `go.GetComponents(...)`) ; c'est
+`ExecuteHierarchy` (`:290-302`), jamais appelé dans ce helper, qui remonte les parents. Les deux
+occurrences de « ou/ni ses parents » corrigées, avec la citation exacte des lignes source
+justifiant le retrait plutôt qu'une simple suppression silencieuse (comportement inchangé —
+correction de PROSE seule, aucune assertion touchée).
+
+### Mineur 2 — deux sémantiques de `null` dans le même bloc
+
+`Assert.IsNotNull(locataireAvantLeClic, ...)` (`:791`) est une comparaison de RÉFÉRENCE NUnit :
+elle passe sur un GameObject déjà Unity-DESTROYED, exactement l'inverse de la charge utile
+(`locataireAvantLeClic == null`, l'opérateur UNITY, `:821`). La garde anti-vacuité ne gardait pas ce
+qu'elle nomme. Remplacée par `Assert.IsTrue(locataireAvantLeClic != null, ...)`, même opérateur que
+la charge utile.
+
+### Mineur 3 — la sonde visait le PIVOT, pas le centre
+
+`RectTransformUtility.WorldToScreenPoint(null, rect.position)` (`:893`) ne vise le centre visuel de
+la bulle QUE parce qu'`AddTabButton` ne touche jamais `pivot` aujourd'hui — un fait du code
+appelant, pas une propriété de `RectTransform`. Remplacé par `rect.TransformPoint(rect.rect.center)`
+: une grandeur qui existe comme objet se mesure SUR l'objet, jamais reconstruite depuis une
+hypothèse sur son pivot.
+
+### Mineur 4 — l'ensemble de `F-B` dérive de libellés, un renommage n'est pas un ajout
+
+Voir § MAJEUR ci-dessus : cas **(a-bis)** ajouté au mode d'emploi de péremption, distinct du cas (a)
+(« ÉLARGIR ») — un `Nav_*` qui remplace un autre (ex. `Nav_Filière` → `Nav_Marche` au jalon 4,
+`AppShell.cs:776,795`) doit être REMPLACÉ dans `nomsAttendus`, jamais seulement ajouté : élargir à
+la lettre laisserait l'ancien nom, disparu pour de bon, dans l'ensemble attendu — le test resterait
+ROUGE POUR TOUJOURS.
+
+### Mineur 5 — aucune garde de résolution ne tourne dans ce juge, et la seule existante est périmée
+
+Observation, pas une exigence de correctif. `ChromeMultiResolutionPlayModeTests.cs` porte
+`[Category("HUDv31")]` (`:38`) — absent des 5 catégories de `MafiaCI.Categories`
+(`Assets/Editor/MafiaCI.cs:34`), donc jamais exécuté par le juge qui certifie `Charpente`. Ce fichier
+est de surcroît PÉRIMÉ par ce lot même : `tabCount = 5` en littéral (`:160` et `:176`, DEUX
+occurrences, non lues par réflexion contrairement aux autres constantes du même fichier) alors que
+le dock est ratifié à **4** bulles depuis ce lot (Empire/Org/Pipeline/More, `DockRatifie`).
+
+**Décision (option qui change le moins de surface, consignée en Deviation 11 ci-dessous)** : NE PAS
+ajouter `"HUDv31"` au filtre — ce fichier n'est qu'UN test parmi « des dizaines » de la catégorie
+HUDv31 jamais exécutés par ce juge, et les élargir tous en même temps sortirait largement du
+périmètre de ce lot de charpente. Consignée, non corrigée.
+
+### Vérification finale round 6
+
+Catégorie `Charpente` scopée (après restauration de TOUTES les éditions temporaires —
+`Assets/Scripts/Shell/AppShell.cs` ×3 restaurations, `Assets/Scripts/Operational/Dashboard/
+DashboardController.cs` ×1, `Assets/Editor/MafiaCI.cs` narrowing/restore — tous re-vérifiés
+`identical: True` par comparaison Python après CHAQUE restauration, pas seulement à la fin) :
+`passed=20 failed=0` (`/tmp/charpente-r6/baseline2-post-controls.log`, 20 tests inchangés — aucune
+méthode `[Test]`/`[UnityTest]` neuve ce round, uniquement des corps et docstrings corrigés).
+
+Juge complet (5 catégories) relancé — **HUITIÈME mesure indépendante**, § « Run complet du juge »,
+**Run H** : `/tmp/charpente-r6/full-judge-round6.log`, `309 test(s) découverts`,
+`passed=204 failed=3`, LES 3 MÊMES rouges pré-existants (`NavD12`, `StaleAbandonedShell`, `NavF4`) —
+identique octet pour octet sur les compteurs à round 5 (`204/3`), zéro régression, zéro test neuf
+(round 6 ne fait que corriger des corps de tests existants). Réconciliation arithmétique : 204 (G,
+round 5) + 0 (aucun test ajouté round 6) = 204 (H, round 6), exact.
+
+Puis RE-relancé une seconde fois (`/tmp/charpente-r6/full-judge-round6-final.log`) après un
+correctif cosmétique post-Run-H sur `ProductionClickSupport.cs` (dénesting d'une parenthèse du
+commentaire Mineur 1 — lisibilité seule, zéro effet sur le comportement, vérifié par un run scopé
+`Charpente` intermédiaire, `/tmp/charpente-r6/baseline3-post-comment-cleanup.log`,
+`passed=20 failed=0`, AVANT de relancer le juge complet) : `passed=204 failed=3`, LES 3 MÊMES
+rouges — identique octet pour octet sur les compteurs. **`full-judge-round6-final.log` est la
+mesure qui fait foi** (état exact des fichiers livrés) ; `full-judge-round6.log` reste la première
+preuve, conservée pour la trace — même patron que round 5 (`full-judge-round5-final.log`).
 
 ---
 
@@ -1445,6 +1603,26 @@ len a = 75017 len b = 75017
     L'écart au ruling est désormais écrit EN TÊTE de ce document (§ ÉCART AU RULING), pas enterré
     ici — cette Deviation ne fait plus que porter l'historique de la décision.
 
+11. **ROUND 6, MINEUR 5 — `ChromeMultiResolutionPlayModeTests.cs` ([Category("HUDv31")]) est ABSENT
+    du filtre du juge et PÉRIMÉ par ce lot ; consigné, non corrigé (demande explicite du relecteur :
+    ne PAS ajouter la catégorie au filtre).** Mesuré : `Assets/Editor/MafiaCI.cs:34` porte
+    `{ "W4P4a", "W3UDA", "W3U1", "W3U2", "Charpente" }` — `"HUDv31"` n'y figure pas, donc AUCUN test
+    de ce fichier ne s'exécute dans le juge qui certifie `Charpente`. Ce fichier est de surcroît
+    PÉRIMÉ par ce lot lui-même : `tabCount = 5` en LITTÉRAL à `:160` et `:176` (deux occurrences,
+    non lues par réflexion contrairement aux autres constantes du même fichier), alors que le dock
+    est ratifié à **4** bulles depuis ce lot (`Empire`/`Org`/`Pipeline`/`More`, `DockRatifie`) — la
+    largeur de bouton d'onglet que ce test PRÉDIT ne correspond plus à ce que `AppShell.BuildTabBar`
+    construit réellement en production.
+    **Option retenue (change le moins de surface)** : ne PAS ajouter `"HUDv31"` au filtre — ce
+    fichier n'est qu'UN test parmi des dizaines de cette catégorie jamais exécutés par ce juge ;
+    les élargir toutes en même temps pour corriger CE seul fichier sortirait largement du périmètre
+    d'un lot de charpente et ferait entrer une population entière de tests jamais mesurée par ce
+    juge, avec un risque de rouges sans rapport. **Non corrigé** — la valeur `tabCount = 5` reste
+    fausse tant que ce fichier n'est pas repris, mais aucun juge de ce dépôt ne certifie
+    aujourd'hui sur cette valeur : latent, pas vivant, comme le raycaster désactivé du BLOQUANT
+    ci-dessus. À rattacher au lot qui touchera prochainement `ChromeMultiResolutionPlayModeTests.cs`
+    (probablement un futur passage HUDv31 sur le dock à 4 bulles) plutôt qu'à ce lot de charpente.
+
 ## Ce que je n'ai pas pu vérifier
 
 - **Que le clic RÉEL sur « Entrer » (F0.3) soit exercé par un joueur AUTREMENT que dans ce test** —
@@ -1493,6 +1671,7 @@ vol) :
 | **E (moi, round 4)** | après le correctif BLOQUANT (`ProductionClickSupport`, 7 sites) + MAJEUR (4 ancres) + mineurs — AUCUN test neuf ajouté (mécanisme de clic changé, pas de méthode `[Test]`/`[UnityTest]` nouvelle) | `/tmp/charpente-r4/full-judge-round4.log` | 202 | 2 (`NavD12`, `NavF4`) | **VERT** |
 | **F (moi, round 4bis)** | après ajout de F-A/F-B (écart au ruling, décision contrôleur) — ajoute 2 tests neufs | `/tmp/charpente-r4/full-judge-round4-runF.log` | 203 | 3 (`NavD12`, `StaleAbandonedShell`, `NavF4`) | **ROUGE** |
 | **G (moi, round 5)** | après TOUS les correctifs round 5 (BLOQUANT — destroy-check F0.2-b, MAJEUR 1 — F0.2-c neuf + `ProductionClickSupport` re-scopé, MAJEUR 2 — F-B ensemble nommé, mineurs 1-4) — ajoute 1 test neuf (`F0.2-c`) | `/tmp/charpente-r5/full-judge-round5.log` | 204 | 3 (`NavD12`, `StaleAbandonedShell`, `NavF4`) | **ROUGE** — les 3 rouges sont les mêmes pré-existants connus (aucun n'est de ce lot ; réconciliation arithmétique : 203 (F) + 1 (`F0.2-c`) = 204, exact) |
+| **H (moi, round 6)** | après TOUS les correctifs round 6 (BLOQUANT — `F0_2c` par `EventSystem.RaycastAll`, MAJEUR — `F-B` scopé à `DashboardBackdrop ∪ DashboardSheet`, mineurs 1-5) — AUCUN test neuf ajouté (corps/docstrings corrigés, pas de nouvelle méthode `[Test]`/`[UnityTest]`) | `/tmp/charpente-r6/full-judge-round6.log` | 204 | 3 (`NavD12`, `StaleAbandonedShell`, `NavF4`) | **ROUGE** — les 3 mêmes rouges pré-existants (réconciliation arithmétique : 204 (G) + 0 (aucun test ajouté) = 204, exact) |
 
 Commande du run C :
 ```

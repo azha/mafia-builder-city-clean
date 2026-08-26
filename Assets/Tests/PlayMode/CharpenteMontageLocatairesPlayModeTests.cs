@@ -788,7 +788,14 @@ namespace MafiaCleanCity.Shell.Tests
                 // exactement le même champ qu'il venait d'écrire, sur Tab.Empire — voir le
                 // commentaire ci-dessus, § ROUND 5).
                 GameObject locataireAvantLeClic = shell.MountedTenantGameObject;
-                Assert.IsNotNull(locataireAvantLeClic,
+                // round 6 (revue ⊥, MINEUR 2) — `Assert.IsNotNull` est une comparaison de RÉFÉRENCE
+                // NUnit : elle PASSE sur un GameObject déjà Unity-DESTROYED (== null au sens Unity,
+                // mais pas au sens C#), exactement l'inverse de la charge utile de ce test un peu
+                // plus bas (`locataireAvantLeClic == null`, l'opérateur UNITY). Deux sémantiques de
+                // `null` dans le même bloc : cette garde anti-vacuité ne gardait pas ce qu'elle
+                // nomme. `Assert.IsTrue(... != null, ...)` passe par le MÊME opérateur Unity que la
+                // charge utile.
+                Assert.IsTrue(locataireAvantLeClic != null,
                     $"précondition anti-vacuité avant Tab_{membre} : un locataire doit être monté " +
                     "AVANT le clic pour que sa destruction ait un sens à observer.");
 
@@ -864,6 +871,33 @@ namespace MafiaCleanCity.Shell.Tests
         // idiome « trouver le bouton par nom, jamais par une position d'écran », § doc du
         // fichier) : une garde de COLLISION séparée, un `GraphicRaycaster.Raycast` RÉEL au centre
         // ÉCRAN de chaque bulle, qui doit rendre la bulle VISÉE comme PREMIER résultat.
+        //
+        // ⛔⛔ CORRIGÉ round 6 (revue ⊥, BLOQUANT) — `raycaster.Raycast(...)` appelé DIRECTEMENT sur
+        // le `GraphicRaycaster` du shell (round 5, ci-dessus) N'EMPRUNTE PAS le chemin d'un vrai
+        // doigt. Le chemin réel est `EventSystem.RaycastAll`, qui ne consulte QUE les raycasters
+        // ENREGISTRÉS ET ACTIFS (`BaseRaycaster.cs:83-86` désenregistre sur `OnDisable` ;
+        // `EventSystem.cs:274` saute tout module dont `IsActive()` est faux ; `UIBehaviour.cs:26-29`).
+        // Appeler directement `Raycast()` sur une référence déjà en main contourne les DEUX filtres :
+        // un raycaster DÉSACTIVÉ (client entièrement intouchable au doigt) laissait ce test VERT
+        // ET son message IMPRIMAIT « hit-testing RÉEL » — mesuré par le relecteur, expérience à UNE
+        // variable (raycaster actif/désactivé croisé avec `raycaster.Raycast`/`EventSystem.
+        // RaycastAll`) : seule la forme `EventSystem.RaycastAll` rougit quand le raycaster est
+        // désactivé (19/1, message exact), les trois autres cases rendent 20/0 — y compris la
+        // combinaison livrée + raycaster désactivé, LE FAUX VERT le plus dégénéré possible.
+        // La CLASSE, recensée sur sa population (7 choses décident qu'un tap atteint un `Graphic`) :
+        // `raycastTarget` ✅ `blocksRaycasts` ✅ tri intra-canvas ✅ point dans le viewport ✅ —
+        // raycaster PARTICIPANT ❌, raycaster d'un AUTRE canvas gagnant le tri ❌ (10 sites de
+        // production construisent un `Canvas+GraphicRaycaster` de repli, dormants seulement parce
+        // que `FindFirstObjectByType<Canvas>()` trouve celui du shell), EventSystem + module
+        // d'entrée ❌ (`EventSystem.current != null` est une garde de PARAMÈTRE, pas d'EFFET).
+        // `EventSystem.current.RaycastAll` ferme les 3 cases manquantes d'un coup (participant, tri
+        // inter-canvas, module) — la référence `raycaster` reste une précondition d'EXISTENCE (le
+        // Canvas du shell DOIT porter un `GraphicRaycaster` pour qu'un doigt puisse jamais l'atteindre),
+        // le RAYCAST lui-même passe désormais par le point d'entrée que consulte un vrai tap.
+        // ⚠️ Ce qui reste LATENT, pas vivant : rien dans `Assets/Scripts` ne désactive de raycaster
+        // aujourd'hui, et `Boot.unity` n'en contient aucun — cette garde ferme une classe de défaut
+        // qui n'a PAS encore d'instance connue dans ce dépôt, exactement comme F0.2-c round 5 avant
+        // elle.
         // ─────────────────────────────────────────────────────────────────────────────────────────
         [UnityTest]
         public IEnumerator F0_2c_ChaqueBoutonDuDock_RepondAuHitTesting_UnRaycastAuCentreVisePileLaBulle()
@@ -874,6 +908,9 @@ namespace MafiaCleanCity.Shell.Tests
             yield return WaitForEmpireMounted(shell);
             yield return null;
 
+            // round 6 — précondition d'EXISTENCE seulement : le RAYCAST réel passe par
+            // `EventSystem.current.RaycastAll` ci-dessous (seul chemin qu'un vrai doigt emprunte),
+            // jamais par un appel direct sur cette référence (round 5, BLOQUANT round 6).
             GraphicRaycaster raycaster = shell.ShellCanvas.GetComponent<GraphicRaycaster>();
             Assert.IsNotNull(raycaster,
                 "le Canvas du shell doit porter le GraphicRaycaster qu'un vrai doigt traverse " +
@@ -888,19 +925,29 @@ namespace MafiaCleanCity.Shell.Tests
                 Assert.IsNotNull(boutonT, $"le bouton Tab_{membre} doit exister dans le dock");
                 var rect = (RectTransform)boutonT;
 
-                // Canvas ScreenSpaceOverlay (AppShell.cs:568) : `camera: null` est la conversion
-                // correcte, exactement celle que `EventSystem`/`GraphicRaycaster` utilisent en jeu.
-                Vector2 centreEcran = RectTransformUtility.WorldToScreenPoint(null, rect.position);
+                // round 6 (revue ⊥, MINEUR 3) — le PIVOT n'est pas garanti être le CENTRE (juste
+                // aujourd'hui parce qu'`AddTabButton` ne touche jamais `pivot`) : une grandeur qui
+                // existe comme objet (le rect de la bulle) se mesure SUR l'objet, jamais reconstruite
+                // depuis une hypothèse sur son pivot. `rect.rect.center` est le centre LOCAL réel,
+                // `TransformPoint` le porte en MONDE, `WorldToScreenPoint(null, …)` reste la
+                // conversion correcte pour un Canvas ScreenSpaceOverlay (AppShell.cs:568) —
+                // exactement celle que `EventSystem`/`GraphicRaycaster` utilisent en jeu.
+                Vector2 centreEcran = RectTransformUtility.WorldToScreenPoint(null, rect.TransformPoint(rect.rect.center));
 
                 var donnees = new PointerEventData(EventSystem.current) { position = centreEcran };
                 var resultats = new List<RaycastResult>();
-                raycaster.Raycast(donnees, resultats);
+                // round 6 (revue ⊥, BLOQUANT) — `EventSystem.current.RaycastAll`, PAS
+                // `raycaster.Raycast(...)` en direct : c'est le SEUL chemin qui consulte la liste des
+                // raycasters ENREGISTRÉS ET ACTIFS (voir le commentaire de méthode ci-dessus), donc
+                // le seul qui puisse jamais rougir si le raycaster du shell est désactivé.
+                EventSystem.current.RaycastAll(donnees, resultats);
 
                 Assert.IsTrue(resultats.Count > 0,
                     $"un raycast au centre de Tab_{membre} ({centreEcran}) ne touche RIEN — la bulle " +
-                    "est invisible au hit-testing : exactement l'autre moitié de l'atteignabilité que " +
-                    "ProductionClickSupport ne couvre PAS (il route directement sur le GameObject, " +
-                    "jamais par une position d'écran — voir sa doc, § MAJEUR 1 round 5).");
+                    "est invisible au hit-testing (aucun raycaster enregistré et actif ne la voit) : " +
+                    "exactement l'autre moitié de l'atteignabilité que ProductionClickSupport ne " +
+                    "couvre PAS (il route directement sur le GameObject, jamais par une position " +
+                    "d'écran ni par la liste des raycasters actifs — voir sa doc, § MAJEUR 1 round 5).");
                 Assert.AreEqual(boutonT.gameObject, resultats[0].gameObject,
                     $"le PREMIER objet touché au centre de Tab_{membre} doit être la bulle ELLE-MÊME " +
                     $"— trouvé {resultats[0].gameObject.name}. Si ce n'est PAS elle, la surface de " +
@@ -912,9 +959,10 @@ namespace MafiaCleanCity.Shell.Tests
             }
 
             Debug.Log($"[Charpente] F0.2-c — les {membres.Length} bulles du dock répondent au " +
-                      "hit-testing RÉEL (GraphicRaycaster.Raycast au centre), pas seulement à un appel " +
-                      "direct sur leur composant Button — ferme la moitié que ProductionClickSupport " +
-                      "bypasse délibérément (round 5, MAJEUR 1).");
+                      "hit-testing RÉEL (EventSystem.current.RaycastAll au centre, round 6 — le SEUL " +
+                      "chemin qu'un vrai doigt emprunte), pas seulement à un appel direct sur leur " +
+                      "composant Button — ferme la moitié que ProductionClickSupport bypasse " +
+                      "délibérément (round 5, MAJEUR 1).");
         }
     }
 }

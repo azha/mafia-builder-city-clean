@@ -381,15 +381,16 @@ namespace MafiaCleanCity.Shell.Tests
 
         // F-B — L'ÉPINGLE QUI SE RETOURNERA (patron `toBe(404)` du socle CLAUDE.md : un test qui
         // épingle un bug/trou RATIFIÉ, AVEC son mode d'emploi de péremption, et qui rougit le jour où
-        // le trou est refermé). Épingle une VALEUR PRÉSENTE — l'ENSEMBLE NOMMÉ des `Button` sous la
-        // racine VISIBLE du Dashboard (`DashboardSheet` — le host `DashboardController` lui-même n'a
-        // AUCUN enfant, son UI est parentée SOUS `ContentSlot` par `BuildLayout`,
-        // `root = mountParent = ContentSlot` ; `DashboardSheet` est son conteneur visible réel) —
-        // JAMAIS une absence vague. Aujourd'hui : EXACTEMENT {Nav_CityMap, Nav_BuildingCard,
-        // Nav_Filière, Nav_Exceptions, Nav_Autonomy}, un par appel à `AddNavButton`
-        // (`DashboardController.BuildLayout`) — AUCUN n'est une affordance de FERMETURE, tous
-        // mènent à une destination nommée (`NewUI("Nav_" + label.Replace(" ",""), …)` — le NOM du
-        // GameObject porte le nom de la destination, pas un index).
+        // le trou est refermé). Épingle une VALEUR PRÉSENTE — l'ENSEMBLE NOMMÉ des `Button` sous les
+        // DEUX racines que `DashboardController.BuildLayout` parente DIRECTEMENT sous `root`
+        // (`root = mountParent = ContentSlot` ; le host `DashboardController` lui-même n'a AUCUN
+        // enfant, son UI ENTIÈRE — fond ET carte — est parentée là) : `DashboardBackdrop` (le fond
+        // PLEIN ÉCRAN) ET `DashboardSheet` (la carte visible) — PAS LA SEULE CARTE (round 6, MAJEUR,
+        // voir la correction plus bas). JAMAIS une absence vague. Aujourd'hui : EXACTEMENT
+        // {Nav_CityMap, Nav_BuildingCard, Nav_Filière, Nav_Exceptions, Nav_Autonomy}, un par appel à
+        // `AddNavButton` (`DashboardController.BuildLayout`) — AUCUN n'est une affordance de
+        // FERMETURE, tous mènent à une destination nommée (`NewUI("Nav_" + label.Replace(" ",""), …)`
+        // — le NOM du GameObject porte le nom de la destination, pas un index).
         //
         // ⛔⛔ CORRIGÉ round 5 (revue ⊥, MAJEUR 2) — round 4 épinglait un COMPTE NU (`== 5`), avec un
         // mode d'emploi qui prescrivait, SUR LE ROUGE LE PLUS PROBABLE, exactement le mauvais geste :
@@ -411,9 +412,19 @@ namespace MafiaCleanCity.Shell.Tests
         // ⛔⛔ MODE D'EMPLOI DE PÉREMPTION, RÉÉCRIT ICI : SI CE TEST ROUGIT, LIRE LE DIFF DE NOMS QUE
         // L'ASSERTION IMPRIME et distinguer, PAR LE NOM, LAQUELLE des causes possibles s'est
         // produite AVANT de toucher au ruling :
-        //   (a) un nom NOUVEAU commençant par `Nav_` (une destination de plus, p.ex. `Nav_Marche`
-        //       si screen_b1 gagne son bouton) ⇒ PAS une fermeture — ÉLARGIR l'ensemble attendu
-        //       ci-dessous pour l'inclure, garder ce test ;
+        //   (a) un nom NOUVEAU commençant par `Nav_`, SANS qu'aucun nom existant n'ait disparu
+        //       (une destination DE PLUS, p.ex. `Nav_Marche` si screen_b1 gagne son propre bouton
+        //       SANS que Filière perde le sien) ⇒ PAS une fermeture — ÉLARGIR l'ensemble attendu
+        //       ci-dessous pour l'INCLURE (ajouter), garder ce test ;
+        //   (a-bis) round 6 (revue ⊥, MINEUR 4) — un nom `Nav_*` NOUVEAU **ET** un nom `Nav_*`
+        //       EXISTANT disparu DANS LE MÊME rouge ⇒ RENOMMAGE, pas un ajout : l'ensemble est dérivé
+        //       du LIBELLÉ (`"Nav_" + label.Replace(" ", "")`, `DashboardController.cs:685`), et ce
+        //       fichier cite lui-même le cas connu (« Filière → Marché au jalon 4 », round 5
+        //       ci-dessus) — un renommage de libellé change le nom SIMULTANÉMENT, il ne l'AJOUTE pas.
+        //       ⇒ REMPLACER l'ancien nom par le nouveau dans `nomsAttendus` (jamais élargir en (a) :
+        //       appliqué à la lettre à un renommage, ÉLARGIR laisserait l'ancien nom, disparu pour de
+        //       bon, dans `nomsAttendus` — le test resterait ROUGE POUR TOUJOURS, un `nomsAttendus`
+        //       qui grossit sans jamais purger ce qui a disparu) ;
         //   (b) un nom NOUVEAU sous un conteneur `ShortcutBar` (ou nommé explicitement autour d'un
         //       raccourci) ⇒ PAS une fermeture — même geste que (a) ;
         //   (c) un nom NOUVEAU dont l'intitulé désigne EXPLICITEMENT une fermeture/sortie (contient
@@ -423,8 +434,33 @@ namespace MafiaCleanCity.Shell.Tests
         //       `Tools/charpente-item0-2-3-implementation-notes.md`, (2) RETIRER ce test,
         //       (3) cocher, dans front.md/le ruling, « puis on tombe sur la ville » comme livrée
         //       PAR SON PROPRE bouton.
+        //   (d) round 6 (revue ⊥, MAJEUR) — un nom NOUVEAU trouvé sous `DashboardBackdrop` (le
+        //       fond, plutôt que sous `DashboardSheet`, la carte) — QUEL QUE SOIT LE NOM — est le
+        //       candidat structurellement LE PLUS PROBABLE pour la fermeture décrite au ruling
+        //       (« puis on tombe sur la ville ») : un tap-pour-fermer POSÉ SUR LE FOND n'a aucune
+        //       raison de porter Close/Fermer/Dismiss/Exit dans son nom (rien ne l'y oblige). Ne
+        //       PAS le classer automatiquement en (a)/(b) au seul motif que son nom ne matche pas
+        //       la liste littérale de (c) — LIRE d'abord son `OnClick`/handler AVANT de trancher.
         // ⛔ Ne JAMAIS cocher le ruling ou retirer ce test sur la seule foi d'un rouge — le nom du
         // delta décide, pas le fait qu'il y ait eu un delta.
+        //
+        // ⛔⛔ CORRIGÉ round 6 (revue ⊥, MAJEUR) — round 5 scopait l'épingle à la SEULE carte visible
+        // (`DashboardSheet`), aveugle à la fermeture la PLUS PROBABLE : `DashboardBackdrop` est un
+        // FRÈRE sous le MÊME `root` (`DashboardController.BuildLayout`, `root = ContentSlot`),
+        // PLEIN ÉCRAN, et DÉJÀ cible de raycast — `F0_2c` (`CharpenteMontageLocatairesPlayModeTests`)
+        // le touche EN PREMIER dès qu'une bulle du dock perd son `raycastTarget` (round 6, BLOQUANT,
+        // même revue). Le § ÉCART AU RULING des notes d'implémentation énumère lui-même les gestes
+        // candidats pour fermer l'item 0.5 (« libellé ? tap sur le fond ? un bouton ? ») : SI la
+        // fermeture choisie pose un `Button` sur le fond (tap-pour-fermer) — ou toute autre
+        // affordance hors de `DashboardSheet` — cette épingle restait VERTE À TRAVERS L'ÉVÉNEMENT
+        // EXACT qu'elle existe pour détecter (l'épingle ÉTAIT l'aveu). Fermé en épinglant l'UNION
+        // {DashboardBackdrop, DashboardSheet} — EXACTEMENT ce que `BuildLayout` parente sous `root`,
+        // JAMAIS `ContentSlot` en entier : Empire reste monté DESSOUS, EN SURIMPRESSION
+        // (`MonterLocataireEnSurimpression<T>` ne le démonte PAS — `AppShell.cs:484-486`, c'est la
+        // sémantique même de « surimpression ») — élargir à `ContentSlot` tout entier ferait entrer
+        // les propres `Button` de `CityMapController` (cellules de district, bouton d'entrée —
+        // `CityMapController.cs:316,419,505,542`) dans l'ensemble nommé, cassant l'épingle pour une
+        // raison SANS RAPPORT avec une fermeture.
         [UnityTest]
         public IEnumerator FB_AucuneAffordanceDeFermetureSousLOverlay_EpingleAvecSonModeDEmploiDePeremption()
         {
@@ -453,6 +489,12 @@ namespace MafiaCleanCity.Shell.Tests
 
             Transform sheet = TrouverDescendant(shell.ContentSlot, "DashboardSheet");
             Assert.IsNotNull(sheet, "'DashboardSheet' (la carte visible du Dashboard) doit exister sous ContentSlot");
+            // round 6 (revue ⊥, MAJEUR) — `DashboardBackdrop` est l'AUTRE racine que `BuildLayout`
+            // parente directement sous `root` (le fond PLEIN ÉCRAN, FRÈRE de `DashboardSheet`, DÉJÀ
+            // raycastable — voir la correction round 6 au-dessus du test). Une épingle scopée à la
+            // seule carte est aveugle à tout Button posé là.
+            Transform backdrop = TrouverDescendant(shell.ContentSlot, "DashboardBackdrop");
+            Assert.IsNotNull(backdrop, "'DashboardBackdrop' (le fond plein écran du Dashboard) doit exister sous ContentSlot");
 
             // round 5 (revue ⊥, MAJEUR 2) — l'ENSEMBLE NOMMÉ, pas le compte : chaque `AddNavButton`
             // nomme son GameObject `"Nav_" + label.Replace(" ", "")` (DashboardController.cs:685) —
@@ -461,30 +503,40 @@ namespace MafiaCleanCity.Shell.Tests
             {
                 "Nav_CityMap", "Nav_BuildingCard", "Nav_Filière", "Nav_Exceptions", "Nav_Autonomy",
             };
-            List<string> nomsTrouves = sheet.GetComponentsInChildren<Button>(true)
+            // round 6 (revue ⊥, MAJEUR) — l'UNION {backdrop, sheet}, jamais `shell.ContentSlot` en
+            // entier : Empire reste monté DESSOUS en surimpression (`MonterLocataireEnSurimpression
+            // <T>` ne le démonte pas), et ses propres `Button` (cellules de district…) pollueraient
+            // cet ensemble nommé pour une raison sans rapport avec une fermeture.
+            List<string> nomsTrouves = backdrop.GetComponentsInChildren<Button>(true)
+                .Concat(sheet.GetComponentsInChildren<Button>(true))
                 .Select(b => b.gameObject.name).ToList();
 
             CollectionAssert.AreEquivalent(nomsAttendus, nomsTrouves,
-                "ÉPINGLE round 5 (corrige round 4, décision contrôleur 2026-08-26, réponse à " +
-                "l'escalade 'overlay sans sortie') — aujourd'hui, les boutons sous DashboardSheet " +
-                $"sont EXACTEMENT {{{string.Join(", ", nomsAttendus)}}}, AUCUN n'est une sortie/" +
-                "fermeture de l'écran d'accueil lui-même (le ruling 'puis on tombe sur la ville' n'a " +
-                "QUE le mécanisme générique de F-A ci-dessus, pas d'affordance dédiée). " +
+                "ÉPINGLE round 6 (corrige round 5, revue ⊥ — la fermeture la plus probable, un tap " +
+                "sur le fond, était hors scope) — aujourd'hui, les boutons sous DashboardBackdrop ∪ " +
+                $"DashboardSheet sont EXACTEMENT {{{string.Join(", ", nomsAttendus)}}}, AUCUN n'est " +
+                "une sortie/fermeture de l'écran d'accueil lui-même (le ruling 'puis on tombe sur la " +
+                "ville' n'a QUE le mécanisme générique de F-A ci-dessus, pas d'affordance dédiée). " +
                 $"SI CET ENSEMBLE A CHANGÉ (trouvé {{{string.Join(", ", nomsTrouves)}}}) : NE PAS " +
-                "cocher le ruling sur ce seul rouge — DEUX causes connues et concurrentes changent " +
-                "cet ensemble SANS jamais poser de sortie : (1) le ShortcutBar de l'item 0.5 " +
+                "cocher le ruling sur ce seul rouge — LIRE le mode d'emploi de péremption ci-dessus " +
+                "(cas (a)/(a-bis)/(b)/(c)/(d)) et distinguer PAR LE NOM ET PAR LA RACINE (backdrop ou sheet) " +
+                "laquelle des causes possibles s'est produite : (1) le ShortcutBar de l'item 0.5 " +
                 "(DashboardController.cs:42, commentaire M1) ajoute des boutons de RACCOURCI ; " +
                 "(2) le libellé 'Marché' au jalon 4 (AppShell.cs:776,795) peut faire gagner à " +
-                "screen_b1 sa propre destination Nav_Marche. Un nom NOUVEAU préfixé 'Nav_' (ou posé " +
-                "sous un conteneur de raccourcis) N'EST PAS une fermeture : ÉLARGIR nomsAttendus " +
-                "ci-dessus et garder ce test. SEUL un nom NOUVEAU désignant EXPLICITEMENT une " +
-                "fermeture/sortie (Close/Fermer/Dismiss/Exit) justifie de (1) relire " +
-                "Tools/charpente-item0-2-3-implementation-notes.md (§ ÉCART AU RULING / Deviation " +
-                "10), (2) RETIRER ce test, (3) cocher la seconde moitié du ruling comme livrée.");
+                "screen_b1 sa propre destination Nav_Marche ; (3) un Button neuf trouvé SOUS " +
+                "DashboardBackdrop est le candidat le plus probable pour la fermeture du ruling — " +
+                "lire son handler avant de classer. Un nom NOUVEAU préfixé 'Nav_' (ou posé sous un " +
+                "conteneur de raccourcis) N'EST PAS une fermeture : ÉLARGIR nomsAttendus ci-dessus et " +
+                "garder ce test. SEUL un nom NOUVEAU désignant EXPLICITEMENT une fermeture/sortie " +
+                "(Close/Fermer/Dismiss/Exit), OU un Button neuf sous DashboardBackdrop dont le " +
+                "handler ferme l'overlay, justifie de (1) relire Tools/charpente-item0-2-3-" +
+                "implementation-notes.md (§ ÉCART AU RULING / Deviation 10), (2) RETIRER ce test, " +
+                "(3) cocher la seconde moitié du ruling comme livrée.");
 
             Debug.Log($"[Charpente] F-B — {{{string.Join(", ", nomsTrouves)}}} épinglés sous " +
-                      "DashboardSheet (ENSEMBLE NOMMÉ, round 5), aucune affordance de fermeture " +
-                      "dédiée — voir mode d'emploi de péremption dans l'assertion.");
+                      "DashboardBackdrop ∪ DashboardSheet (ENSEMBLE NOMMÉ, round 6), aucune " +
+                      "affordance de fermeture dédiée — voir mode d'emploi de péremption dans le " +
+                      "commentaire du test.");
         }
     }
 }
