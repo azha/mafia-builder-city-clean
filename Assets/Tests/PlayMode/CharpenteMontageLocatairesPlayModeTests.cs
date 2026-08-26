@@ -14,6 +14,7 @@ using MafiaCleanCity.Operational;
 using MafiaCleanCity.Operational.Autonomy;
 using MafiaCleanCity.Operational.Exceptions;
 using MafiaCleanCity.Operational.Lieutenant;
+using MafiaCleanCity.Tests; // ProductionClickSupport (round 4, BLOQUANT)
 using Object = UnityEngine.Object;
 
 namespace MafiaCleanCity.Shell.Tests
@@ -153,8 +154,9 @@ namespace MafiaCleanCity.Shell.Tests
         // ⛔ Garde anti-tautologie (design §4) : ce test n'appelle JAMAIS `shell.EnterDistrict(...)`
         // directement — ce serait prouver que la méthode existe, pas qu'un joueur y arrive. Il
         // déclenche l'ÉVÉNEMENT DE PRODUCTION qu'un tap de district émet : sélection + clic RÉEL du
-        // bouton « Entrer » (`enterBtn.onClick.Invoke()`), exactement le chemin nav-F1
-        // (NavigationPlayModeTests.cs), rejoué ici depuis la scène du BUILD.
+        // bouton « Entrer » (`ProductionClickSupport.Click(enterBtn)`, round 4 — PAS un
+        // `onClick.Invoke()` nu, qui court-circuiterait les gardes de `Button.Press()`), exactement
+        // le chemin nav-F1 (NavigationPlayModeTests.cs), rejoué ici depuis la scène du BUILD.
         // ─────────────────────────────────────────────────────────────────────────────────────────
         [UnityTest]
         public IEnumerator F0_3_LIntérieurDeDistrict_EstAtteignable_ParDesGestesDeProductionDepuisLaCarteParDefaut()
@@ -196,7 +198,10 @@ namespace MafiaCleanCity.Shell.Tests
 
             // ⛔ LE GESTE DE PRODUCTION — jamais `shell.EnterDistrict(districtId)` appelé
             // directement : l'événement qu'un tap RÉEL de district émet EST ce clic.
-            enterBtn.onClick.Invoke();
+            // ⛔ round 4 (revue ⊥, BLOQUANT) — pas non plus `enterBtn.onClick.Invoke()` : cette
+            // UnityEvent court-circuite les gardes IsActive()/IsInteractable() de Button.Press().
+            // `ProductionClickSupport.Click` passe PAR l'EventSystem, comme un doigt de joueur.
+            ProductionClickSupport.Click(enterBtn);
 
             float elapsedEnter = 0f;
             DistrictInteriorScreenController screen = null;
@@ -680,19 +685,26 @@ namespace MafiaCleanCity.Shell.Tests
         //                                        bouton, jamais PAR le bouton) — FERMÉ ICI
         //   indicateur d'actif (filet visible)→ `ChromeTabBarPlayModeTests.
         //                                        ActiveTab_NeverFlatFill_OnlyThinIndicator`
-        //                                        (catégorie HUDv31, hors `Charpente`) — style/
-        //                                        bascule, par `shell.ActivateTab` direct LUI AUSSI
-        //                                        (même angle mort que C7) — mais HORS du périmètre
-        //                                        de l'ATTEIGNABILITÉ (le relecteur : « c'est le SEUL
+        //                                        (catégorie `HUDv31`) — ⛔ MINEUR round 4 (revue ⊥) :
+        //                                        `HUDv31` n'est PAS dans `MafiaCI.Categories`
+        //                                        ({W4P4a, W3UDA, W3U1, W3U2, Charpente}) — « hors
+        //                                        Charpente » se lisait « couvert ailleurs », c'est
+        //                                        NULLE PART dans le juge. Ce test EXISTE dans le
+        //                                        dépôt, mais aucun gate ne l'exécute. Par
+        //                                        `shell.ActivateTab` direct LUI AUSSI (même angle
+        //                                        mort que C7) — mais HORS du périmètre de
+        //                                        l'ATTEIGNABILITÉ (le relecteur : « c'est le SEUL
         //                                        [attribut] qui décide de l'atteignabilité » —
         //                                        destination) : consigné honnêtement, non repris ici.
         // Compte : 5 attributs identifiés, 2 fermés par CE test (ordre, destination), 2 déjà fermés
         // (nom, libellé), 1 hors-classe consigné (indicateur d'actif — style, pas atteignabilité).
         //
         // ⛔ LE GESTE DE PRODUCTION, pour CHAQUE membre, DANS L'ORDRE du dock : trouver le bouton RÉEL
-        // (`Find($"Tab_{membre}")`), prendre SON `Button`, `.onClick.Invoke()` — jamais
-        // `shell.ActivateTab(membre)` (exactement ce que C7 fait, et exactement ce que le relecteur a
-        // montré insuffisant). La liste d'ordre et la table de destinations sont ÉCRITES ICI,
+        // (`Find($"Tab_{membre}")`), prendre SON `Button`, cliquer via `ProductionClickSupport.Click`
+        // (round 4 — PAS `.onClick.Invoke()` nu : voir sa doc, ça court-circuite les gardes de
+        // `Button.Press()`) — jamais `shell.ActivateTab(membre)` (exactement ce que C7 fait, et
+        // exactement ce que le relecteur a montré insuffisant). La liste d'ordre et la table de
+        // destinations sont ÉCRITES ICI,
         // indépendamment de `AppShell.DockRatifie` (anti-tautologie, même patron que C7/F0.2).
         // ─────────────────────────────────────────────────────────────────────────────────────────
         [UnityTest]
@@ -743,7 +755,15 @@ namespace MafiaCleanCity.Shell.Tests
                 Button bouton = boutonT.GetComponent<Button>();
                 Assert.IsNotNull(bouton, $"Tab_{membre} doit porter un Button");
 
-                bouton.onClick.Invoke(); // ⛔ LE GESTE DE PRODUCTION — jamais shell.ActivateTab(membre)
+                // ⛔ round 4 (revue ⊥, BLOQUANT) — `bouton.onClick.Invoke()` (round 3) N'ÉTAIT
+                // PAS le geste de production : cette UnityEvent court-circuite les DEUX gardes de
+                // `Button.Press()` (`IsActive()`/`IsInteractable()`). Mesuré par la revue :
+                // `b.interactable = false` sur UNE bulle laissait ce test VERT — un dock mort au
+                // doigt, certifié atteignable, sur la SEULE propriété que ce lot doit garantir.
+                // `ProductionClickSupport.Click` passe PAR l'EventSystem — jamais
+                // `shell.ActivateTab(membre)` non plus (exactement ce que C7 fait EN AVAL du
+                // bouton, et ce que le relecteur round 3 a montré insuffisant).
+                ProductionClickSupport.Click(bouton);
                 yield return null;
 
                 if (membre == AppShell.Tab.More)

@@ -192,7 +192,13 @@ namespace MafiaCleanCity.Shell.Tests
             // ⛔ NE FABRIQUE PAS LE DASHBOARD — il doit être monté PAR LA PRODUCTION
             // (`AcquireSessionThenActivateHome`), jamais construit par ce test (c'est exactement ce
             // qui a rendu F0.4-a aveugle à la classe que ce test ferme).
-            DashboardController dashboard = shell.ContentSlot.GetComponentInChildren<DashboardController>(true);
+            // ⛔ MINEUR round 4 (revue ⊥) — `includeInactive: false` (pas `true`) : un Dashboard
+            // monté mais INACTIF n'est PAS ce que ce test doit accepter comme « monté AU
+            // DÉMARRAGE » — avec `true`, un tel Dashboard passerait `IsNotNull` puis ferait échouer
+            // le test 30s plus tard sur `DashboardLoaded`, avec un message qui ACCUSE LE SERVEUR
+            // (walletErr=...) alors que la vraie cause est que l'objet n'a jamais tourné. `false`
+            // fait échouer ICI, tout de suite, en disant la bonne chose.
+            DashboardController dashboard = shell.ContentSlot.GetComponentInChildren<DashboardController>(false);
             Assert.IsNotNull(dashboard,
                 "le Dashboard doit être monté AUTOMATIQUEMENT en surimpression au démarrage — sans lui, " +
                 "BuildingCardController/ExceptionQueueController/AutonomyInboxController/ExceptionDetailController " +
@@ -215,7 +221,10 @@ namespace MafiaCleanCity.Shell.Tests
                 Assert.IsNotNull(boutonT, $"le bouton {nomBouton} du Dashboard doit exister dans ContentSlot");
                 Button bouton = boutonT.GetComponent<Button>();
                 Assert.IsNotNull(bouton, $"{nomBouton} doit porter un Button");
-                bouton.onClick.Invoke(); // ⛔ LE GESTE DE PRODUCTION — jamais dashboard.OpenXxx() appelé directement
+                // ⛔ round 4 (revue ⊥, BLOQUANT) — `.onClick.Invoke()` court-circuite les gardes
+                // IsActive()/IsInteractable() de Button.Press(). `ProductionClickSupport.Click`
+                // passe PAR l'EventSystem — jamais `dashboard.OpenXxx()` appelé directement non plus.
+                ProductionClickSupport.Click(bouton); // ⛔ LE GESTE DE PRODUCTION
             }
 
             CliquerBoutonNav("Nav_CityMap");
@@ -272,7 +281,10 @@ namespace MafiaCleanCity.Shell.Tests
             Assert.IsNotNull(boutonOuvrir, "chaque ligne de la file doit porter un bouton 'Ouvrir' (ExceptionQueueController.AddCardRow)");
             Button ouvrir = boutonOuvrir.GetComponent<Button>();
             Assert.IsNotNull(ouvrir, "'Ouvrir' doit porter un Button");
-            ouvrir.onClick.Invoke(); // ⛔ LE GESTE DE PRODUCTION — jamais queue.OpenDetail(card) appelé directement
+            // ⛔ round 4 (revue ⊥, BLOQUANT) — même correctif que CliquerBoutonNav ci-dessus :
+            // ProductionClickSupport.Click passe PAR l'EventSystem plutôt que d'invoquer la
+            // UnityEvent nue, jamais `queue.OpenDetail(card)` appelé directement non plus.
+            ProductionClickSupport.Click(ouvrir); // ⛔ LE GESTE DE PRODUCTION
             yield return null;
 
             Assert.IsNotNull(queue.LastDetail,
@@ -289,6 +301,144 @@ namespace MafiaCleanCity.Shell.Tests
 
             Debug.Log($"[Charpente] BLOQUANT 2 (round 3) — chaîne {string.Join(" → ", ecransAtteints)} " +
                       "atteinte par des gestes de production uniquement ; Dashboard NON fabriqué par ce test.");
+        }
+
+        // ═════════════════════════════════════════════════════════════════════════════════════════
+        // ⛔⛔ ÉCART AU RULING (ruling user 2026-08-25, ratifié, front.md §4) — LU EN TÊTE, PAS ENTERRÉ
+        // DANS UNE DEVIATION. Le ruling dit : « posée en surimpression au-dessus de l'Empire, PUIS ON
+        // TOMBE SUR LA VILLE. » CE LOT NE LIVRE QUE LA PREMIÈRE MOITIÉ — round 4 a trouvé que l'overlay
+        // Accueil ne pose AUCUNE affordance de fermeture dédiée, et le contrôleur a tranché
+        // (2026-08-26, en réponse à l'escalade round 4) : PAS de bouton dans ce lot de charpente.
+        // Raisons : (1) aucun mécanisme de démontage n'existe dans `IShellNavigator`/`IShellTenant` —
+        // `MonterLocataireEnSurimpression<T>` MONTE, rien ne DÉMONTE ; (2) le geste et sa copie ne
+        // sont spécifiés NULLE PART dans ce qui est consultable depuis ce dépôt ; (3) l'item 0.5
+        // construit PRÉCISÉMENT l'écran ④ (l'Accueil) — c'est SON chrome qui portera la sortie.
+        // Inventer un bouton ici aurait posé du produit non ratifié dans un lot de charpente.
+        //
+        // Un aveu n'est pas une épingle. Ce que CE round livre à la place : DEUX falsifiables.
+        //   F-A (positive) — la ville reste atteignable en UN geste, par un mécanisme EXISTANT et
+        //                     non-dédié : ce n'est PAS un cul-de-sac aujourd'hui.
+        //   F-B (épingle)  — l'ABSENCE d'affordance DÉDIÉE est comptée, avec son mode d'emploi de
+        //                     péremption écrit dans l'assertion : elle rougira le jour où l'item 0.5
+        //                     pose la sortie propre de cet écran, et ce jour-là ELLE SE RETIRE.
+        // ═════════════════════════════════════════════════════════════════════════════════════════
+
+        // F-A — LA VILLE EST ATTEIGNABLE EN UN GESTE DE PRODUCTION DEPUIS LE DÉMARRAGE, MALGRÉ
+        // L'ABSENCE D'AFFORDANCE DE FERMETURE DÉDIÉE. Mécanisme EXISTANT, pas neuf : `AppShell.
+        // UnmountCurrentTenant()` détruit TOUT enfant direct de `ContentSlot` avant de monter le
+        // nouveau tenant d'onglet — « ContentSlot est la source de vérité unique de ce qui est
+        // affiché maintenant » (son propre commentaire). L'overlay Dashboard (host + backdrop + sheet,
+        // tous parentés SOUS ContentSlot par `MonterLocataireEnSurimpression`, `root = mountParent =
+        // ContentSlot` dans `DashboardController.BuildLayout`) est donc DÉTRUIT par N'IMPORTE QUELLE
+        // activation d'onglet — y compris re-taper la bulle Empire déjà active (`ActivateTab` est
+        // « idempotent-ish : re-activating the SAME tab still remounts », son propre commentaire).
+        // Ce test le PROUVE par un geste RÉEL (le dock, jamais `shell.ActivateTab` direct), pas en le
+        // déduisant du code.
+        // ⛔ Assertion POSITIVE : preuve que ce n'est PAS un cul-de-sac, jamais une absence.
+        [UnityTest]
+        public IEnumerator FA_LaVilleEstAtteignableEnUnGesteDeProductionDepuisLeDemarrage_MalgreLAbsenceDeSortieDediee()
+        {
+            yield return ChargerLaSceneDeDemarrageDuBuild();
+            AppShell shell = SondeShellDansLaScene(sceneDeDemarrage);
+            Assert.IsNotNull(shell, $"aucun AppShell dans la scène de démarrage du build ({sceneDeDemarrage.path})");
+            yield return WaitForEmpireMounted(shell);
+            yield return null; // le montage EN SURIMPRESSION du Dashboard est SYNCHRONE, même passe
+
+            // ⛔ ANTI-VACUITÉ — sans cette précondition, un overlay qui ne se serait JAMAIS monté
+            // rendrait ce test vrai À VIDE (rien à démonter ⇒ « la ville est là » trivialement).
+            DashboardController overlayAvant = shell.ContentSlot.GetComponentInChildren<DashboardController>(false);
+            Assert.IsNotNull(overlayAvant,
+                "précondition anti-vacuité : l'overlay Accueil doit être RÉELLEMENT monté AVANT le " +
+                "clic — sans lui, l'assertion qui suit serait vraie à vide (rien à démonter).");
+
+            Transform boutonEmpireT = shell.TabBarRoot.Find("Tab_Empire");
+            Assert.IsNotNull(boutonEmpireT, "le bouton Tab_Empire doit exister dans le dock");
+            Button boutonEmpire = boutonEmpireT.GetComponent<Button>();
+            Assert.IsNotNull(boutonEmpire, "Tab_Empire doit porter un Button");
+
+            // ⛔ UN SEUL geste de production — le helper qui honore IsActive()/IsInteractable()
+            // (round 4, BLOQUANT). Jamais shell.ActivateTab(Tab.Empire) appelé directement : ce
+            // serait prouver que la méthode existe, pas qu'un joueur y arrive par le dock.
+            ProductionClickSupport.Click(boutonEmpire);
+            yield return null; // laisse le Object.Destroy déféré de UnmountCurrentTenant s'exécuter
+
+            DashboardController overlayApres = shell.ContentSlot.GetComponentInChildren<DashboardController>(true);
+            Assert.IsNull(overlayApres,
+                "après le clic RÉEL sur Tab_Empire, l'overlay Accueil ne doit PLUS être sous " +
+                "ContentSlot (includeInactive:true — une survivance seulement DÉSACTIVÉE compterait " +
+                "encore comme un défaut de démontage, pas comme une réussite).");
+            Assert.AreEqual(typeof(CityMapController), shell.MountedTenantType,
+                "après le clic RÉEL sur Tab_Empire, la carte doit être le locataire d'onglet monté");
+            Assert.IsNotNull(shell.MountedTenantGameObject, "un GameObject de locataire doit exister");
+            Assert.IsTrue(shell.MountedTenantGameObject.transform.IsChildOf(shell.ContentSlot),
+                "le locataire remonté doit être un descendant de ContentSlot — confinement, pas juste " +
+                "'existe quelque part'.");
+
+            Debug.Log("[Charpente] F-A — la ville (CityMapController) est atteinte en UN clic de " +
+                      "production sur Tab_Empire, l'overlay Accueil ayant réellement disparu de " +
+                      "ContentSlot ; PAS un cul-de-sac, malgré l'absence d'affordance de fermeture dédiée.");
+        }
+
+        // F-B — L'ÉPINGLE QUI SE RETOURNERA (patron `toBe(404)` du socle CLAUDE.md : un test qui
+        // épingle un bug/trou RATIFIÉ, AVEC son mode d'emploi de péremption, et qui rougit le jour où
+        // le trou est refermé). Épingle une VALEUR PRÉSENTE — le compte ACTUEL de `Button` sous la
+        // racine VISIBLE du Dashboard (`DashboardSheet` — le host `DashboardController` lui-même n'a
+        // AUCUN enfant, son UI est parentée SOUS `ContentSlot` par `BuildLayout`,
+        // `root = mountParent = ContentSlot` ; `DashboardSheet` est son conteneur visible réel) —
+        // JAMAIS une absence vague. Aujourd'hui : EXACTEMENT 5, un par appel à `AddNavButton`
+        // (`DashboardController.BuildLayout` : City Map / Building Card / Filière / Exceptions /
+        // Autonomy) — AUCUN n'est une affordance de FERMETURE, tous mènent à une destination nommée.
+        // ⛔⛔ MODE D'EMPLOI DE PÉREMPTION, ÉCRIT ICI : SI CE TEST ROUGIT PARCE QUE LE COMPTE A
+        // AUGMENTÉ, C'EST QUE L'ITEM 0.5 A LIVRÉ LA SORTIE DE L'ÉCRAN D'ACCUEIL — dans ce cas :
+        // (1) relire cette note et § ÉCART AU RULING / Deviation 10 dans
+        // `Tools/charpente-item0-2-3-implementation-notes.md`, (2) RETIRER ce test (le trou qu'il
+        // épingle est refermé), (3) cocher, dans front.md/le ruling, la seconde moitié « puis on
+        // tombe sur la ville » comme livrée PAR SON PROPRE bouton (pas seulement par le mécanisme
+        // générique de F-A ci-dessus). Un différé qui ne serait jamais repris ne serait plus un
+        // différé, ce serait un trou — ce test est ce qui empêche ça.
+        [UnityTest]
+        public IEnumerator FB_AucuneAffordanceDeFermetureSousLOverlay_EpingleAvecSonModeDEmploiDePeremption()
+        {
+            yield return ChargerLaSceneDeDemarrageDuBuild();
+            AppShell shell = SondeShellDansLaScene(sceneDeDemarrage);
+            Assert.IsNotNull(shell, $"aucun AppShell dans la scène de démarrage du build ({sceneDeDemarrage.path})");
+            yield return WaitForEmpireMounted(shell);
+            yield return null;
+
+            DashboardController dashboard = shell.ContentSlot.GetComponentInChildren<DashboardController>(false);
+            Assert.IsNotNull(dashboard, "précondition : l'overlay Accueil doit être monté pour que ce compte ait un sens");
+
+            // ⛔ MESURÉ (pas déduit) : `BuildNav()` — qui pose les 5 boutons — n'est appelée QUE
+            // depuis `Render()`/`RenderError()` (après le chargement réseau du wallet), JAMAIS depuis
+            // `BuildLayout()` (synchrone). Sans cette attente, le compte est pris AVANT que `BuildNav`
+            // n'ait tourné — mesuré : 0 trouvé, faux négatif pur, pas le fait que ce test épingle.
+            float elapsedLoad = 0f;
+            while (!dashboard.DashboardLoaded && dashboard.WalletError == null && elapsedLoad < 30f)
+            {
+                elapsedLoad += Time.deltaTime;
+                yield return null;
+            }
+            Assert.IsTrue(dashboard.DashboardLoaded || dashboard.WalletError != null,
+                $"le Dashboard doit avoir résolu (chargé OU erreur) avant de compter ses boutons — " +
+                $"walletErr={dashboard.WalletError}");
+
+            Transform sheet = TrouverDescendant(shell.ContentSlot, "DashboardSheet");
+            Assert.IsNotNull(sheet, "'DashboardSheet' (la carte visible du Dashboard) doit exister sous ContentSlot");
+
+            int nombreDeBoutons = sheet.GetComponentsInChildren<Button>(true).Length;
+            Assert.AreEqual(5, nombreDeBoutons,
+                "ÉPINGLE round 4 (décision contrôleur 2026-08-26, en réponse à l'escalade sur le MINEUR " +
+                "'overlay sans sortie') — aujourd'hui, les boutons sous DashboardSheet sont EXACTEMENT " +
+                "les 5 destinations de AddNavButton, AUCUN n'est une sortie/fermeture de l'écran " +
+                "d'accueil lui-même (le ruling 'puis on tombe sur la ville' n'a QUE le mécanisme " +
+                $"générique de F-A ci-dessus, pas d'affordance dédiée). SI CE COMPTE A CHANGÉ (trouvé " +
+                $"{nombreDeBoutons}) : c'est très probablement que l'item 0.5 a posé la sortie dédiée " +
+                "sur l'écran d'accueil — relire Tools/charpente-item0-2-3-implementation-notes.md " +
+                "(§ ÉCART AU RULING / Deviation 10), RETIRER ce test, et cocher la seconde moitié du " +
+                "ruling comme livrée.");
+
+            Debug.Log($"[Charpente] F-B — {nombreDeBoutons} boutons épinglés sous DashboardSheet, " +
+                      "aucune affordance de fermeture dédiée — voir mode d'emploi de péremption dans l'assertion.");
         }
     }
 }

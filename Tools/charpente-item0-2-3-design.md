@@ -10,7 +10,8 @@
 
 **`Empire · Famille · Filière · Plus`** — quatre bulles, aucune bulle « Carte », **parce que l'onglet
 Empire EST la carte**. L'Accueil cesse d'être un onglet et devient l'ouverture de session, en
-surimpression (item 0.5, hors de ce lot).
+surimpression — **branchée par ce lot au round 3** (voir §5) ; seuls les 4 panneaux de l'écran ④
+restent l'item 0.5.
 
 ⇒ **Le cycle fermé de l'item 0.3 ne se corrige pas : il cesse d'exister.** Mesuré avant :
 `ActivateTab(Tab.City)` n'avait qu'un appelant de production, `ExitToCityMap()`, câblé uniquement
@@ -95,10 +96,14 @@ constante. *Deux grandeurs différentes, sinon on teste le test.*
 
 - `Tab.City` et `Tab.Home` fusionnent en **`Tab.Empire`**, qui monte `CityMapController` **avec son
   abonnement `OnEnterDistrict`** — la branche City existante, déplacée, **pas réécrite**.
-- `DashboardController` **n'est plus monté par aucun onglet**. ⛔ Il n'est pas supprimé et son
-  contrôleur n'est pas touché : sa destination est l'ouverture de session (décision B), livrée par
-  l'item **0.5**. **Ce lot le laisse débranché et le DIT** — un déféré honnête, avec son détecteur :
-  l'item 0.5 le reprend.
+- `DashboardController` **n'est plus monté par aucun ONGLET** — ⚠️ **et au round 1 ce lot s'arrêtait
+  là, ce qui était un défaut** : il devenait alors le seul appelant manquant de 4 écrans, qui
+  passaient d'atteignables à injoignables. La ligne qui suivait ici promettait « un déféré honnête,
+  **avec son détecteur** : l'item 0.5 le reprend » — **le détecteur n'existait pas** : un plan de
+  reprise n'est pas un détecteur, et l'item 0.5 ne l'énumérait même pas.
+  ⇒ **Round 3** : le shell le monte **en surimpression** après l'acquisition de session (décision B,
+  ratifiée ; mécanisme `MonterLocataireEnSurimpression<T>()` livré par l'item 0.4), sur les deux
+  branches, sous le même sentinel de course.
 - `AcquireSessionThenActivateHome` active **`Tab.Empire`** sur ses deux branches, **sentinel
   `(Tab)(-1)` conservé à l'identique**.
 - `ExitToCityMap()` → `ActivateTab(Tab.Empire)`. Le nom « ← Carte » du bandeau reste juste.
@@ -150,8 +155,16 @@ Population : les sites qui énumèrent l'ordre du dock dans `AppShell.cs`.
 
 ## 5. Ce que ce lot ne fait PAS
 
-- **Il ne branche pas l'ouverture de session** (décision B) : c'est l'item 0.5, avec les 4 orphelins.
-  `DashboardController` reste débranché, **dit et non masqué**.
+- ~~**Il ne branche pas l'ouverture de session**~~ — ⚠️ **AMENDÉ au round 3, et ce document ne
+  l'avait pas suivi.** Le périmètre a changé parce qu'une revue ⊥ a mesuré que débrancher l'Accueil
+  du dock rendait **4 écrans injoignables** (`BuildingCard`, `ExceptionQueue`, `Autonomy`,
+  `ExceptionDetail`) — la forme C du socle, créée par un lot dont la raison d'être est
+  l'atteignabilité. ⇒ **Le lot branche donc l'ouverture de session**, minimalement : le shell monte
+  `DashboardController` en surimpression après l'acquisition de session, avec le mécanisme déjà
+  livré par l'item 0.4. **Seuls les 4 panneaux de l'écran ④ restent l'item 0.5.**
+  ★ *Ce paragraphe est resté faux pendant tout un round, dans le document qui DÉFINIT le périmètre
+  du gate* — un lecteur venu y chercher ce que le lot livre y lisait l'inverse du livré. C'est la
+  classe « texte inchangé dans un document corrigé », appliquée au document de périmètre lui-même.
 - **Il ne renomme pas « Filière » en « Marché »** : `screen_b1` n'existe pas, et un bouton qui ment
   est pire qu'un bouton absent.
 - **Il ne touche pas au rendu** : aucune capture, aucun pixel. Les items visuels des écrans ① ② ③

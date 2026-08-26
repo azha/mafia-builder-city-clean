@@ -6,6 +6,7 @@ using UnityEngine.UI;
 using MafiaCleanCity.CityMap;
 using MafiaCleanCity.Operational; // DashboardController + LaunderingController
 using MafiaCleanCity.Operational.Lieutenant;
+using MafiaCleanCity.Tests; // ProductionClickSupport (round 4, BLOQUANT)
 using Object = UnityEngine.Object;
 
 namespace MafiaCleanCity.Shell.Tests
@@ -285,7 +286,9 @@ namespace MafiaCleanCity.Shell.Tests
             float interactElapsed = 0f;
             while (!enterBtn.interactable && interactElapsed < 10f) { interactElapsed += Time.deltaTime; yield return null; }
             Assert.IsTrue(enterBtn.interactable, "'Entrer' interactable");
-            enterBtn.onClick.Invoke(); // le VRAI chemin de clic
+            // round 4 (revue ⊥, BLOQUANT) — `onClick.Invoke()` court-circuite les gardes
+            // IsActive()/IsInteractable() de Button.Press() ; ce helper passe par l'EventSystem.
+            ProductionClickSupport.Click(enterBtn); // le VRAI chemin de clic
 
             float enterElapsed = 0f;
             DistrictInteriorScreenController screen = null;

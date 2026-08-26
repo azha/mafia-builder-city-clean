@@ -112,7 +112,10 @@ namespace MafiaCleanCity.Shell.Tests
             Button enterBtn = enterBtnT.GetComponent<Button>();
             Assert.IsTrue(enterBtn.interactable, "authenticated + district selected ⇒ interactable (§3.2, 1st refresh point)");
 
-            enterBtn.onClick.Invoke(); // the REAL click path, not a shortcut
+            // round 4 (revue ⊥, BLOQUANT) — `onClick.Invoke()` court-circuite Button.Press()'s
+            // IsActive()/IsInteractable() gates; ProductionClickSupport.Click goes through the
+            // EventSystem instead, so it honors both like a real tap does.
+            ProductionClickSupport.Click(enterBtn); // the REAL click path, not a shortcut
 
             float elapsed = 0f;
             DistrictInteriorScreenController screen = null;
@@ -180,7 +183,9 @@ namespace MafiaCleanCity.Shell.Tests
             Button backBtn = backBtnT.GetComponent<Button>();
             Assert.IsTrue(backBtnT.gameObject.activeSelf, "leading button is VISIBLE while in a district");
 
-            backBtn.onClick.Invoke(); // the REAL click path
+            // round 4 (revue ⊥, BLOQUANT) — same fix as the "Entrer" site above: go through the
+            // EventSystem so Button.Press()'s IsActive()/IsInteractable() gates are honored.
+            ProductionClickSupport.Click(backBtn); // the REAL click path
             yield return null;
             yield return null; // let Object.Destroy's deferred destruction actually process
 

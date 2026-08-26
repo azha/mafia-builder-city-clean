@@ -17,7 +17,39 @@ vérification de correctif sont **scopés à la catégorie `Charpente` seule** (
 `Assets/Editor/MafiaCI.cs:Categories` à `{ "Charpente" }`, restauré à `{ "W4P4a", "W3UDA", "W3U1",
 "W3U2", "Charpente" }` avant toute mesure finale). Le juge **complet** (5 catégories) a maintenant
 été lancé **QUATRE fois** au total (round 1 : deux — préliminaire + clôture ; round 2 : une
-troisième ; round 3 : une quatrième — réconciliation § « Run complet du juge »).
+troisième ; round 3 : une quatrième — réconciliation § « Run complet du juge »). Round 4 en ajoute
+une **cinquième** (§ Run E) et une **sixième** (§ Run F, ci-dessous).
+
+---
+
+## ⛔⛔ ÉCART AU RULING — LU EN TÊTE, PAS ENTERRÉ DANS UNE DEVIATION (round 4, décision contrôleur 2026-08-26)
+
+Le ruling user 2026-08-25 (ratifié, `front.md` §4) dit : « posée en surimpression au-dessus de
+l'Empire, **PUIS ON TOMBE SUR LA VILLE**. » **Ce lot ne livre QUE la première moitié.** Round 4 a
+trouvé que l'overlay Accueil ne pose AUCUNE affordance de fermeture dédiée ; l'implémenteur a
+escaladé plutôt que d'inventer un bouton (STOP, conflit — pas un choix d'architecture à trancher
+seul). Le contrôleur a tranché : **PAS de geste de fermeture dans ce lot de charpente.** Raisons
+mesurées, pas devinées :
+1. Aucun mécanisme de démontage n'existe dans `IShellNavigator`/`IShellTenant` —
+   `MonterLocataireEnSurimpression<T>` MONTE, rien ne DÉMONTE.
+2. Le geste et sa copie (libellé ? tap sur le fond ? un bouton ?) ne sont spécifiés NULLE PART dans
+   ce qui est consultable depuis ce dépôt (`front.md` vit dans l'autre dépôt, hors périmètre).
+3. L'item 0.5 construit PRÉCISÉMENT l'écran ④ (l'Accueil) — c'est **SON** chrome qui portera la
+   sortie. Inventer un bouton ici aurait posé du produit non ratifié dans un lot de charpente.
+
+**Mais un aveu n'est pas une épingle.** Deux falsifiables livrées à la place d'une note honnête
+(§ Run F pour les deux, § Deviation 10 amendée pour le détail) :
+- **F-A** (positive, reste VERTE) : la ville reste atteignable en **UN** geste de production depuis
+  le démarrage — par un mécanisme EXISTANT et NON-DÉDIÉ (`UnmountCurrentTenant()` détruit tout
+  enfant de `ContentSlot`, overlay compris, à CHAQUE activation d'onglet). Preuve que ce n'est PAS
+  un cul-de-sac aujourd'hui.
+- **F-B** (épingle, patron `toBe(404)` du socle) : compte ACTUEL des boutons sous `DashboardSheet`
+  (**5**, mesuré) — AUCUN n'est une fermeture dédiée — avec son mode d'emploi de péremption écrit
+  dans l'assertion elle-même : elle ROUGIRA le jour où l'item 0.5 pose la sortie propre de l'écran,
+  et c'est CE JOUR-LÀ qu'elle se retire.
+
+⇒ **La seconde moitié du ruling reste due à l'item 0.5** — ce round ne la ferme pas, il refuse
+qu'elle reste un simple aveu en prose.
 
 ---
 
@@ -58,6 +90,38 @@ attestations trop larges. Section par section, ce round :
   si l'exhaustivité a réellement eu lieu — ici elle ne l'avait pas. Les deux sont corrigés round 3
   (§ MAJEUR round 3, § MINEUR m1 round 3) ; **tous les numéros de ligne de ce document ont été
   RE-vérifiés à l'oracle Python round 3** (voir § Round 3 pour la méthode).
+
+  ⛔⛔⛔ **RÉFUTÉ UNE SECONDE FOIS, round 4 (revue ⊥, MAJEUR)** — l'attestation ci-dessus était ELLE
+  AUSSI fausse. Quatre ancres (§ C-b : `AppShell.cs:331`/`:367` ; § F0.2 contrôle négatif :
+  `AppShell.cs:751` ; § F0.3 contrôle négatif : `AppShell.cs:177`) vivaient TOUTES dans des sections
+  à delta **ZÉRO octet** entre `535dd87` et `653acf8` — round 3 a inséré 45 lignes AILLEURS dans
+  `AppShell.cs` (extraction du sentinel en variable booléenne, branchement de l'overlay) qui les a
+  décalées, et la « re-vérification exhaustive round 3 » ne les a pas rouvertes PARCE QUE leur texte
+  n'avait pas changé. Même mécanisme que le socle CLAUDE.md « le défaut peut aussi vivre à la
+  jointure : un texte inchangé dans un document corrigé devient faux si la correction a bougé ce
+  qu'il référence » — ici appliqué à un NUMÉRO DE LIGNE plutôt qu'à une clause de prose. Les quatre
+  sont corrigées round 4 (§ C-b, § F0.2, § F0.3).
+
+  ⇒ **Attestation round 4, SCOPÉE ET DATÉE** (pas une nouvelle promesse d'exhaustivité globale —
+  précisément la forme que cette classe de faute a fait échouer deux fois) : les ancres numériques
+  des sections **§ C-b**, **§ F0.2 (contrôle négatif)** et **§ F0.3 (contrôle négatif)** de ce
+  document ont été vérifiées contre le blob `git show 653acf8:Assets/Scripts/Shell/AppShell.cs`
+  (commande + sortie collées dans chacune de ces trois sections), le **2026-08-26**. Aucune AUTRE
+  section de ce document n'a été rebalayée pour cette passe — une revue future qui s'appuierait sur
+  un AUTRE numéro de ligne cité ici doit le re-dériver lui-même contre le SHA courant plutôt que de
+  le tenir pour acquis depuis cette attestation.
+
+  ⇒ **Fermeture de la CLASSE (demandée par la revue)** : d'où vient le fait qu'une ancre se périme
+  sans qu'on le voie ? Une correction de round N ne relit QUE les sections dont LE TEXTE a changé
+  (diff non vide) — elle ne considère jamais qu'une section à delta ZÉRO peut citer un numéro de
+  ligne d'un FICHIER TIERS qui, lui, a bougé. Le dispositif qui fermerait la classe, structurellement
+  plutôt que par vigilance : **ne jamais citer un numéro de ligne nu dans ce document sans
+  l'accompagner de la commande qui l'a produit** (patron déjà appliqué en § C-a — `git show
+  <sha>:chemin | grep -n …` — mais jamais généralisé aux ARMÉs de contrôle négatif, qui citaient une
+  ligne en PROSE sans la commande à côté). Une ancre accompagnée de sa commande se RE-DÉRIVE en
+  ré-exécutant contre HEAD ; une ancre nue ne peut que se PÉRIMER en silence. Les trois corrections
+  ci-dessus appliquent désormais ce patron ; le reste du document ne l'a pas encore, et n'est donc
+  pas couvert par cette attestation.
 - **MINEUR m2** (§ mineurs, VuePrincipaleCapturePlayModeTests.cs) : `yield return null;` ajouté
   entre le re-tap `ActivateTab(Tab.Empire)` et `FindFirstObjectByType<CityMapController>()`.
 - **MINEUR m3** : le littéral retiré par 0.3-bis était reproduit verbatim EN PROSE dans ce document
@@ -134,6 +198,98 @@ classe est désormais fermée sur SA population réelle, avec le compte collé �
 
 ---
 
+## ⛔⛔ ROUND 4 — revue ⊥ NOT_APPROVED (1 bloquant, 2 majeurs, 4 mineurs) — correctifs
+
+Les correctifs des rounds 2-3 tiennent tous (contrôle négatif de destination reproduit et nommant
+`Tab_Org`, garde anti-tautologie F0.3 vérifiée sans `new GameObject`, rayon de l'overlay validé).
+Un seul défaut bloquait, et il était d'un cran plus bas que le round 3 : le GESTE de clic lui-même.
+
+⚠️ **« 2 MAJEURS » du titre ci-dessus, clarifié par le contrôleur** : le mandat transmis à
+l'implémenteur n'en détaillait qu'UN (l'attestation d'ancres périmée, § MAJEUR ci-dessous) — le
+second (contradiction entre le design et le livré) avait DÉJÀ été corrigé par le contrôleur dans
+`Tools/charpente-item0-2-3-design.md` avant dispatch. L'implémenteur a signalé l'écart plutôt que
+d'inventer un second finding pour faire correspondre le compte — confirmé comme le bon geste.
+
+- **BLOQUANT** (§ « ProductionClickSupport ») : `bouton.onClick.Invoke()` — utilisé par les 3 tests
+  écrits par ce lot ET par 4 tests pré-existants du dépôt — appelle directement la `UnityEvent`,
+  court-circuitant les DEUX gardes de `Button.Press()` (`IsActive()`/`IsInteractable()`). Mesuré par
+  la revue : `b.interactable = false` sur UNE bulle (`Tab.Org`) laissait `F0_2b` VERT — un dock mort
+  au doigt, certifié atteignable.
+
+  **Fermeture STRUCTURELLE** (choisie sciemment, pas deux assertions ajoutées à côté — raisonnement
+  dans le fichier lui-même) : nouveau fichier `Assets/Tests/PlayMode/ProductionClickSupport.cs`
+  (`MafiaCleanCity.Tests`, même précédent DRY que `SeederSupport.cs` — utilitaire PARTAGÉ entre
+  fichiers PRÉ-EXISTANTS et fichiers `Charpente`, contrairement au reste du chrome de scène/probe
+  qui se DUPLIQUE volontairement par fichier). `ProductionClickSupport.Click(Button)` invoque
+  `IPointerClickHandler.OnPointerClick` via `ExecuteEvents.Execute(..., ExecuteEvents.
+  pointerClickHandler)`, qui appelle `Button.Press()` — les DEUX gardes sont donc honorées PAR TOUT
+  appelant, y compris un site écrit demain qui oublierait de les vérifier à la main.
+
+  **Balayage de la CLASSE, population = tout site d'`Assets/Tests` qui « appuie » sur un `Button`**
+  (`grep -rn '\.Invoke(' Assets/Tests`, exclu les commentaires) :
+
+  | # | site | AVANT (round 3) | APRÈS (round 4) |
+  |---|---|---|---|
+  | 1 | `NavigationPlayModeTests.cs` (Entrer, nav-F1) | `enterBtn.onClick.Invoke()` (interactable déjà vérifié) | `ProductionClickSupport.Click(enterBtn)` |
+  | 2 | `NavigationPlayModeTests.cs` (← Carte, nav-F2) | `backBtn.onClick.Invoke()` (SEUL `activeSelf` vérifié, PAS `interactable`) | `ProductionClickSupport.Click(backBtn)` |
+  | 3 | `AppShellPlayModeTests.cs` (Entrer) | `enterBtn.onClick.Invoke()` (interactable déjà vérifié) | `ProductionClickSupport.Click(enterBtn)` |
+  | 4 | `CharpenteMontageLocatairesPlayModeTests.F0_3` (Entrer) | `enterBtn.onClick.Invoke()` (interactable déjà vérifié) | `ProductionClickSupport.Click(enterBtn)` |
+  | 5 | `CharpenteMontageLocatairesPlayModeTests.F0_2b` (dock, ×4) | `bouton.onClick.Invoke()` — **AUCUNE garde** | `ProductionClickSupport.Click(bouton)` — **LE BLOQUANT** |
+  | 6 | `CharpenteOuvertureSessionOverlayPlayModeTests` (5 boutons nav Dashboard) | `bouton.onClick.Invoke()` — **AUCUNE garde** | `ProductionClickSupport.Click(bouton)` |
+  | 7 | `CharpenteOuvertureSessionOverlayPlayModeTests` (Ouvrir, carte d'exception) | `ouvrir.onClick.Invoke()` — **AUCUNE garde** | `ProductionClickSupport.Click(ouvrir)` |
+
+  **Compte : 7 sites, 7 corrigés.** Un 8ᵉ site existe (`CharpenteMontageLocatairesPlayModeTests.cs`,
+  ~ligne 556, `openNav.Invoke(dash, …)`) mais c'est un appel de **réflexion** sur une `MethodInfo`
+  (`F0.4-a`, item 0.4 DÉJÀ CLOS) — le fichier le dit lui-même : « sur l'EFFET, JAMAIS sur l'appel »
+  — il ne prétend PAS prouver l'atteignabilité par un geste de joueur (il exerce le mécanisme de
+  `SetMountParent` sur des `DashboardController` nus, hors shell). HORS CLASSE, déjà auto-documenté ;
+  non touché.
+
+  **Contrôles négatifs, sur `AppShell.AddTabButton` (`Tab.Org`), restaurés après CHAQUE run
+  (`cp` depuis `/tmp/charpente-r4/AppShell.cs.original-backup`, comparaison octet à octet en Python,
+  `IDENTICAL` les deux fois)** :
+  - **(a) `b.interactable = false`** — `LOG_FILE=/tmp/charpente-r4/neg-control-A-ARMED.log timeout
+    600 Tools/run-unity-check.sh -executeMethod MafiaCI.RunPlayModeTests` → `RC=1`,
+    `passed=16 failed=1` :
+    ```
+    MafiaCI: FAIL ...F0_2b_ChaqueBoutonDuDock_ParUnClicReel_MeneALaDestinationRatifiee_EtDansLOrdre —
+      le CLIC RÉEL sur Tab_Org doit monter EXACTEMENT LieutenantScreenController — trouvé
+      CityMapController. Un clic qui route vers une AUTRE destination (ou vers Tab.Empire, le
+      défaut EXACT armé par le relecteur round 3) doit ROUGIR ICI, en nommant la bulle fautive.
+    ```
+    Rougit en nommant `Tab_Org`, exactement comme demandé.
+  - **(b) `btn.SetActive(false)`** — même commande (`neg-control-B-ARMED.log`) → `RC=1`,
+    `passed=16 failed=1`, **message IDENTIQUE** (même assertion, même bulle nommée `Tab_Org`).
+    Mesuré (pas déduit) : l'assertion d'ORDRE (`CollectionAssert.AreEqual` sur `nomsDansLOrdre`,
+    `foreach (Transform enfant in shell.TabBarRoot)`) reste VERTE malgré la bulle inactive — le
+    `foreach` sur un `Transform` énumère bien les enfants inactifs (confirmé par la revue,
+    DÉDUIT ; ici MESURÉ : `passed=16` pas `passed=15`, donc AUCUNE autre assertion de ce test n'a
+    rougi que la destination). Seule la destination (le clic, désormais gardé) le voit.
+  - Restauration finale : `cp /tmp/charpente-r4/AppShell.cs.original-backup
+    Assets/Scripts/Shell/AppShell.cs`, comparaison Python `IDENTICAL` (76820 octets des deux
+    côtés), puis re-run vert : `passed=17 failed=0`.
+
+- **MAJEUR** (§ C-b, § F0.2, § F0.3 ci-dessous) : 4 ancres (`AppShell.cs:331`/`:367`/`:751`/`:177`)
+  périmées par les 45 lignes insérées round 3, dans des sections à delta ZÉRO octet — donc jamais
+  rouvertes par l'attestation « tous les numéros re-vérifiés round 3 », ELLE-MÊME fausse pour la
+  2ᵉ fois. Les quatre corrigées à l'oracle (`git show 653acf8:...`, indépendant du working tree),
+  attestation RE-ÉMISE scopée et datée (§ C-b, motif de clôture de classe inclus).
+- **MINEUR (indicateur d'actif hors juge)** : le commentaire de `F0_2b` disait « catégorie HUDv31,
+  hors `Charpente` », lu comme « couvert ailleurs ». `HUDv31` n'est dans AUCUNE entrée de
+  `MafiaCI.Categories` — corrigé pour dire NULLE PART, explicitement.
+- **MINEUR (dock ment pendant l'overlay)** : consigné, non corrigé (Deviation 9 — item 0.5).
+- **MINEUR (`GetComponentInChildren<DashboardController>(true)`)** : `true` → `false` — un Dashboard
+  monté mais INACTIF doit faire échouer LE TEST tout de suite (`Assert.IsNotNull`), pas 30 s plus
+  tard sur `DashboardLoaded` avec un message qui accuse le serveur.
+- **MINEUR (overlay sans sortie)** : ESCALADE, non implémenté — Deviation 10, raisons détaillées
+  là-bas (mécanisme de démontage inexistant + geste exact non spécifié par le ruling consultable +
+  rattachement documenté à item 0.5 par ce lot lui-même).
+
+Vérification finale round 4 : catégorie `Charpente` scopée, `passed=17 failed=0` (§ ci-dessus) ;
+juge complet 5 catégories relancé § « Run complet du juge ».
+
+---
+
 ## C-a — TROIS listes parallèles → UNE (`DockRatifie`)
 
 **Population mesurée, sur le fichier INTACT (af9893b, commande + sortie réelle) :**
@@ -201,19 +357,33 @@ branches (succès `AppShell.cs` — repli d'échec), chacune toujours gardée pa
 
 ⛔ **CORRIGÉ (revue ⊥ round 2, MINEUR m1)** — les deux numéros de ligne ci-dessous (`183`, `221`)
 n'ont JAMAIS existé à ces valeurs : sortie `grep -n` lue via la couche d'affichage proxifiée du
-terminal (socle CLAUDE.md — la commande n'était pas dans un pipe/`$( )`). RE-MESURÉ à l'oracle
-(`$( )`, ci-dessous) : les vraies lignes sont `331` (repli) et `367` (succès) dans le worktree
-actuel ; sur `af9893b` (avant ce lot, `Tab.Home` pas encore renommé `Tab.Empire`), les mêmes
-positions sont `316` et `352` — confirmé par lecture directe du fichier aux deux révisions.
+terminal (socle CLAUDE.md — la commande n'était pas dans un pipe/`$( )`). RE-MESURÉ à l'oracle à
+l'époque (`$( )`) : `331` (repli) et `367` (succès).
+
+⛔⛔ **RE-CORRIGÉ round 4 (revue ⊥, MAJEUR)** — round 3 a inséré 45 lignes dans `AppShell.cs` AUX
+SITES MÊMES de ce sentinel (extraction du garde en variable booléenne nommée, `pasEncoreActiveEchec`/
+`pasEncoreActive`), décalant les deux ancres SANS que cette section (delta ZÉRO octet entre
+`535dd87` et `653acf8`) ne soit rouverte — l'attestation de re-vérification exhaustive round 3
+(ci-dessous) était donc fausse aussi POUR CETTE SECTION, en plus des deux déjà corrigées. RE-MESURÉ
+à l'oracle Python (`git show 653acf8:...`, indépendant de tout état de working tree), CROISÉ avec
+`grep -n` en `$( )` :
 ```
-$ OUT=$(grep -n 'ActivateTab(Tab.Empire)' Assets/Scripts/Shell/AppShell.cs | grep -E '^(331|367):'); echo "$OUT"
-331:                if (CurrentTab == (Tab)(-1)) ActivateTab(Tab.Empire); // repli : le locataire signera lui-même
-367:            if (CurrentTab == (Tab)(-1)) ActivateTab(Tab.Empire);
+$ OUT=$(grep -n 'CurrentTab == (Tab)(-1)' Assets/Scripts/Shell/AppShell.cs | grep -E '^(360|407):'); echo "$OUT"
+360:                bool pasEncoreActiveEchec = CurrentTab == (Tab)(-1);
+407:            bool pasEncoreActive = CurrentTab == (Tab)(-1);
+$ OUT=$(grep -n 'ActivateTab(Tab.Empire);' Assets/Scripts/Shell/AppShell.cs | grep -E '^(363|410):'); echo "$OUT"
+363:                    ActivateTab(Tab.Empire); // repli : le locataire signera lui-même
+410:                ActivateTab(Tab.Empire);
 ```
-Les deux occurrences (branche d'échec `:331`, branche de succès `:367`) portent le même garde,
-recopié tel quel — vérifié par lecture directe du diff (`git diff af9893b -- Assets/Scripts/Shell/
-AppShell.cs`, non collé ici pour éviter un pavé — la commande a été exécutée et relue en entier
-avant de continuer). Les tests qui dépendent de ce sentinel
+Les vraies lignes SUR `653acf8` : garde d'échec `:360` (guard) / `:363` (appel), garde de succès
+`:407` (guard) / `:410` (appel) — le sentinel occupe désormais DEUX lignes par branche (extraction
+en variable), plus une pour l'appel, là où il tenait sur une seule au round où `331`/`367` avaient
+été mesurées.
+
+Les deux occurrences (branche d'échec `:360-363`, branche de succès `:407-410`) portent le même
+garde, recopié tel quel — vérifié par lecture directe du diff (`git diff af9893b -- Assets/Scripts/
+Shell/AppShell.cs`, non collé ici pour éviter un pavé — la commande a été exécutée et relue en
+entier avant de continuer). Les tests qui dépendent de ce sentinel
 (`AppShellPlayModeTests.LateEmpireActivation_DoesNotOverride_PlayerNavigationDuringAcquisition`,
 renommé depuis `LateHomeActivation_...`, mécanisme inchangé, onglet-témoin changé de `City` à `Org`
 — voir Deviations) sont **verts** (voir § Juge complet).
@@ -230,9 +400,28 @@ EgaleLEnsembleRatifie_SurLesDeuxCheminsDeConstruction`. Lit les libellés RÉELL
 
 ### Contrôle négatif — F0.2 doit ROUGIR quand un libellé diverge
 
-**ARMÉ** — `AppShell.cs:751`, `(Tab.More, "Plus")` → `(Tab.More, "PlusFaux")` (seul site touché,
-restauré depuis `/tmp/charpente-0203/AppShell.cs.original-backup` ensuite, `diff` vérifié
-IDENTIQUE).
+**ARMÉ** — `AppShell.cs:751` **à l'époque (round 2, sur le fichier d'alors)** — restauré depuis
+`/tmp/charpente-0203/AppShell.cs.original-backup` ensuite, `diff` vérifié IDENTIQUE.
+
+⛔⛔ **CORRIGÉ round 4 (revue ⊥, MAJEUR)** — cette ancre n'a JAMAIS été mise à jour après round 3
+(45 lignes insérées ailleurs dans le fichier ont décalé tout ce qui suit), dans une section à
+delta ZÉRO octet entre `535dd87` et `653acf8` — exactement la classe que ce MAJEUR nomme. RE-MESURÉ
+à l'oracle sur `653acf8` (`git show`, indépendant du working tree) :
+```
+$ python3 -c "
+import subprocess
+out = subprocess.run(['git','show','653acf8:Assets/Scripts/Shell/AppShell.cs'], capture_output=True, text=True).stdout
+for i,l in enumerate(out.split(chr(10)), start=1):
+    if 'DockRatifie =' in l or '\"Plus\"' in l: print(i, repr(l))
+"
+791 '        private static readonly (Tab onglet, string libelle)[] DockRatifie ='
+796 '            (Tab.More,     "Plus"),'
+```
+Sur `653acf8` : la déclaration du tableau `DockRatifie` est à `:791`, et le littéral `(Tab.More,
+"Plus")` — la ligne EXACTEMENT touchée par cet ARMÉ — est à `:796` (5 lignes plus bas que le bloc
+qui le porte, à cause du commentaire de résumé `:787-790`). L'ancre correcte pour reproduire CET
+ARMÉ précis aujourd'hui est donc `AppShell.cs:796`, pas `:751` ni `:791` (le `:791` désigne le
+DÉBUT du tableau, pas la ligne éditée).
 
 Commande :
 ```
@@ -363,9 +552,26 @@ est monté sous `ContentSlot`.
 
 ### Contrôle négatif — F0.3 doit ROUGIR quand la porte est cassée
 
-**ARMÉ** — `AppShell.cs:177`, `case Tab.Empire: MountTenant<CityMapController>();` →
-`MountTenant<LieutenantScreenController>();` (un seul site touché — « l'onglet par défaut ne monte
-plus la carte », suggestion verbatim du mandat) ; restauré ensuite, `diff` vérifié IDENTIQUE.
+**ARMÉ** — `AppShell.cs:177` **à l'époque** (round 2, avant l'insertion round 3), `case Tab.Empire:
+MountTenant<CityMapController>();` → `MountTenant<LieutenantScreenController>();` (un seul site
+touché — « l'onglet par défaut ne monte plus la carte », suggestion verbatim du mandat) ; restauré
+ensuite, `diff` vérifié IDENTIQUE.
+
+⛔⛔ **CORRIGÉ round 4 (revue ⊥, MAJEUR)** — même classe que les deux corrections ci-dessus : cette
+section est à delta ZÉRO octet entre `535dd87` et `653acf8`, et l'ancre n'a pas suivi les 45 lignes
+insérées round 3. RE-MESURÉ sur `653acf8` (`git show`, indépendant du working tree) :
+```
+$ python3 -c "
+import subprocess
+out = subprocess.run(['git','show','653acf8:Assets/Scripts/Shell/AppShell.cs'], capture_output=True, text=True).stdout
+for i,l in enumerate(out.split(chr(10)), start=1):
+    if 'case Tab.Empire' in l or 'MountTenant<CityMapController>' in l: print(i, repr(l))
+"
+188 '                case Tab.Empire:'
+189 '                    MountTenant<CityMapController>();'
+```
+L'ancre correcte sur `653acf8` est `AppShell.cs:188-189` (le `case` à `:188`, l'appel à `:189`),
+pas `:177`.
 
 Commande :
 ```
@@ -1014,6 +1220,68 @@ len a = 75017 len b = 75017
    déjà écrite, jamais un mécanisme séparé — retenu par cohérence avec « repasser la classe sur
    TOUTE la population », pas laissé de côté par confort.
 
+9. **ROUND 4, MINEUR 3 — `RefreshTabButtonVisuals` allume l'indicateur d'Empire pendant que
+   l'overlay Dashboard recouvre la carte ; le dock ment sur ce qui est RÉELLEMENT à l'écran.**
+   Consigné, non corrigé ce round (demande explicite de la revue : « Consigne (item 0.5) »). Le
+   mécanisme : `AcquireSessionThenActivateHome` appelle `ActivateTab(Tab.Empire)` PUIS
+   `MonterLocataireEnSurimpression<DashboardController>()` — la première met le tiret d'actif sous
+   `Tab_Empire`, la seconde pose un backdrop plein écran PAR-DESSUS la carte. Un joueur au tout
+   premier écran voit donc un dock qui prétend « tu es sur Empire » alors que rien de la carte n'est
+   visible. Ce n'est PAS une régression de ce lot (le tiret d'actif existait déjà avant l'overlay) ;
+   c'est un effet de bord du BLOQUANT 2 round 3 (brancher l'overlay) qui n'avait pas été nommé.
+   Rattachement au bon item : le RENDU de l'écran d'accueil (savoir ce que le dock doit montrer
+   PENDANT que l'overlay est dessus) est une décision de present­ation qui appartient au « rendu
+   propre du Dashboard » — item 0.5, déjà le propriétaire nommé du reste du chrome de cet écran
+   (design §5, § BLOQUANT 2 round 3 ci-dessus).
+
+10. **ROUND 4, MINEUR 1 — l'overlay Accueil n'a AUCUN geste de sortie ; ESCALADÉ, PUIS TRANCHÉ PAR LE CONTRÔLEUR (voir § ÉCART AU RULING en tête de ce document).**
+    La revue demande de « rendre l'overlay quittable », avec sa falsifiable, OU d'expliciter que
+    c'est hors périmètre et de STOPPER plutôt que de trancher seul. Mesuré avant de décider :
+    - **Aucun mécanisme de « démontage d'un locataire en surimpression » n'existe** dans
+      `IShellNavigator`/`IShellTenant` — `MonterLocataireEnSurimpression<T>` MONTE, rien ne
+      DÉMONTE. Le seul précédent dans ce dépôt est `ExceptionDetailController.Back()` +
+      `OnDestroy()` (« BuildingCardController precedent », `ExceptionDetailController.cs:51-55,
+      146-149`) : un bouton labellisé, qui `Destroy(gameObject)` sur le HOST et tear-down
+      explicitement `backdropGo`/`sheetGo` (parentés sous `ContentSlot`, PAS sous le host —
+      mêmes ancrage que `DashboardController.BuildLayout`, `root = mountParent = ContentSlot`).
+    - **Mais le design de CE lot (§5) et le commentaire du BLOQUANT 2 round 3 nomment
+      explicitement « le RENDU PROPRE du Dashboard » comme le périmètre de l'item 0.5** — et un
+      geste de sortie sur l'écran d'accueil (bouton ? tap sur le fond ? quel libellé ?) EST une
+      pièce du rendu propre de cet écran, pas un branchement d'ouverture-de-session au sens du
+      BLOQUANT 2 (qui ne portait que sur les 4 PANNEAUX orphelins).
+    - **Le geste exact n'est écrit NULLE PART** dans le ruling cité (« puis on tombe sur la
+      ville ») ni dans front.md §4 (hors de ce dépôt, non consultable — ⛔ pas le dépôt back) :
+      bouton visible avec quel libellé, tap sur le backdrop, ou autre. Deviner ce choix serait
+      *deviner un choix d'architecture/produit à la place de l'auteur* — exactement l'unknown
+      « Conflit » de ce rôle, pas un « imprévu non bloquant ».
+    ⇒ **Décision : STOP et remonte, ne pas implémenter ce round.** Si le contrôleur tranche que
+    c'est dans le périmètre de CE lot plutôt que de l'item 0.5, le patron le moins risqué à suivre
+    est celui d'`ExceptionDetailController` ci-dessus (tracker `backdropGo`/`cardGo` en champs,
+    `OnDestroy()` qui les détruit, un bouton qui appelle `Destroy(gameObject)`), adapté au fait que
+    Dashboard n'a pas de `onBack` (rien n'attend son retour — c'est la racine de la session).
+
+    ⛔⛔ **RÉSOLU round 4 (décision contrôleur, 2026-08-26)** — l'escalade était juste, dit le
+    contrôleur : « merci de ne pas avoir tranché seul ». **Décision : PAS de geste de fermeture
+    dans ce lot.** Mêmes raisons que celles mesurées ci-dessus (aucun mécanisme de démontage
+    disponible, geste non spécifié, item 0.5 propriétaire du rendu de cet écran) — confirmées, pas
+    contredites. « Un aveu n'est pas une épingle » : le contrôleur a demandé DEUX falsifiables à la
+    place de cette note, livrées § Run F ci-dessous et dans
+    `CharpenteOuvertureSessionOverlayPlayModeTests.cs` :
+    - **F-A** — `FA_LaVilleEstAtteignableEnUnGesteDeProductionDepuisLeDemarrage_
+      MalgreLAbsenceDeSortieDediee` : assertion POSITIVE que la ville reste atteignable en UN
+      clic de production sur `Tab_Empire`, par le mécanisme EXISTANT `UnmountCurrentTenant()`
+      (détruit TOUT enfant de `ContentSlot` à chaque activation d'onglet, overlay compris — AUCUN
+      mécanisme neuf écrit). Anti-vacuité : précondition que l'overlay soit RÉELLEMENT monté avant
+      le clic (même détecteur, `GetComponentInChildren<DashboardController>(false)`, déjà prouvé
+      capable de rougir par le contrôle négatif de BLOQUANT 2 round 3).
+    - **F-B** — `FB_AucuneAffordanceDeFermetureSousLOverlay_EpingleAvecSonModeDEmploiDePeremption` :
+      épingle une VALEUR PRÉSENTE (le compte de `Button` sous `DashboardSheet`, **5** mesuré —
+      jamais une absence vague), avec son mode d'emploi de péremption écrit DANS le message
+      d'assertion elle-même (patron `toBe(404)` du socle) : « si ce compte a changé, c'est que
+      l'item 0.5 a livré la sortie — retire ce test, coche le ruling ».
+    L'écart au ruling est désormais écrit EN TÊTE de ce document (§ ÉCART AU RULING), pas enterré
+    ici — cette Deviation ne fait plus que porter l'historique de la décision.
+
 ## Ce que je n'ai pas pu vérifier
 
 - **Que le clic RÉEL sur « Entrer » (F0.3) soit exercé par un joueur AUTREMENT que dans ce test** —
@@ -1057,6 +1325,8 @@ autre process Unity/Docker en vol) :
 | **B (revue ⊥, round 1)** | mesure indépendante du même livrable round 1 | (log de la revue, non détenu par moi) | 198 | 3 (`NavD12`, `StaleAbandonedShell`, `NavF4`) | **ROUGE** |
 | **C (moi, round 2)** | après TOUS les correctifs de ce round (C-α, C7, m2, m3) — ajoute 1 test neuf (`C7`) | `/tmp/charpente-0203-r2/full-run-THIRD.log` | 199 | 3 (`NavD12`, `StaleAbandonedShell`, `NavF4`) | **ROUGE** |
 | **D (moi, round 3)** | après TOUS les correctifs round 3 (BLOQUANT 1, BLOQUANT 2, MAJEUR, m1, m2, m3) — ajoute 2 tests neufs (`F0.2-b`, `BLOQUANT2_...`) | `/tmp/charpente-r3/full-judge-run1.log` | 201 | 3 (`NavD12`, `StaleAbandonedShell`, `NavF4`) | **ROUGE** |
+| **E (moi, round 4)** | après le correctif BLOQUANT (`ProductionClickSupport`, 7 sites) + MAJEUR (4 ancres) + mineurs — AUCUN test neuf ajouté (mécanisme de clic changé, pas de méthode `[Test]`/`[UnityTest]` nouvelle) | `/tmp/charpente-r4/full-judge-round4.log` | 202 | 2 (`NavD12`, `NavF4`) | **VERT** |
+| **F (moi, round 4bis)** | après ajout de F-A/F-B (écart au ruling, décision contrôleur) — ajoute 2 tests neufs | `/tmp/charpente-r4/full-judge-round4-runF.log` | 203 | 3 (`NavD12`, `StaleAbandonedShell`, `NavF4`) | **ROUGE** |
 
 Commande du run C :
 ```
@@ -1101,6 +1371,100 @@ défaillance introduite par BLOQUANT 1 ni BLOQUANT 2**, sur les 4 catégories ho
 ce round — confirme empiriquement l'évaluation de risque faite AVANT d'écrire le code de BLOQUANT 2
 (§ ci-dessus).
 
+### Run E (round 4) — commande, sortie réelle
+
+```
+LOG_FILE=/tmp/charpente-r4/full-judge-round4.log timeout 900 Tools/run-unity-check.sh -executeMethod MafiaCI.RunPlayModeTests
+```
+Sortie réelle (`MafiaCI:` lines) :
+```
+MafiaCI: RunPlayModeTests started — 306 test(s) découverts (arbre PlayMode entier ; le filtre de catégories s'applique à l'exécution, voir passed= ci-dessous)
+MafiaCI: FAIL MafiaCleanCity.CityMap.Tests.DistrictMapNavigationPlayModeTests.NavD12_DistrictTitle_MargeGouttiere_Serif_EtOmbreSurMateriauDInstance —   scénario dimensionné — cette résolution DOIT produire une bande de letterbox (mesuré 0.0px), sinon l'assertion suivante ne teste pas le défaut visé
+MafiaCI: FAIL MafiaCleanCity.Shell.Tests.NavigationPlayModeTests.NavF4_TitleClearsTopBar_BackgroundExistsAtNativeResolution —   nav-F4 (amendée) — the title does not overlap TopBarSlot's EFFECTIVE bounds (déjà inclusives du débordement du médaillon, 26.3px mesurés) — un titre qui ne réserve que 56px nominaux serait chevauché par l'anneau/le filet qui pendent en dessous
+MafiaCI: RunPlayModeTests finished — passed=202 failed=2 skipped=0 inconclusive=0
+```
+`elapsed=226s timeout=900s issue=[sortie normale (RC=1)]`.
+
+**`StaleAbandonedShell` n'apparaît PAS dans ce run** (`grep -c StaleAbandonedShell` sur le log
+entier → `0`) — VERT round 4, cohérent avec l'intermittence déjà établie (round 3 : ROUGE ; les
+deux AUTRES échecs, `NavD12`/`NavF4`, sont BYTE-IDENTIQUES aux runs C et D, mêmes messages au
+caractère près). **306 découverts, identique à round 3** — le correctif BLOQUANT round 4 a changé
+le MÉCANISME de clic sur 7 sites existants, il n'a ajouté AUCUNE méthode `[Test]`/`[UnityTest]`
+neuve, donc le total de tests ne bouge pas.
+
+**Compte `Charpente` inclus dans ce run** :
+```
+$ python3 -c "print(open('/tmp/charpente-r4/full-judge-round4.log',encoding='utf-8',errors='replace').read().count('[Charpente] SetUp'))"
+17
+```
+Identique à round 3 (aucun test `Charpente` ajouté ni retiré ce round) — le filtre a exécuté le
+même jeu qu'avant, pas un autre.
+
+⇒ **AUCUN des 2 échecs du run E n'est dans la catégorie `Charpente`, ni dans le périmètre du
+BLOQUANT/MAJEUR/mineurs de ce round.** Verdict round 4 : lot **VERT sur toute sa surface** —
+0 nouvelle défaillance, sur 204 tests filtrés (inchangé), `StaleAbandonedShell` intermittent
+CONFIRME sa nature (round 3 rouge, round 4 vert, aucun changement de code sur son fichier entre les
+deux — le seul diff de `AppShellPlayModeTests.cs` ce round est l'ajout de `using MafiaCleanCity.
+Tests;` et le remplacement de `.onClick.Invoke()`, sans rapport avec sa prémisse réseau).
+
+### Run F (round 4, après F-A/F-B) — commande, sortie réelle
+
+Ajout des DEUX falsifiables demandées par le contrôleur en réponse à l'escalade (§ ÉCART AU RULING
+en tête de ce document, § Deviation 10 amendée) : `FA_...` (positive) et `FB_...` (épingle). Compile
+d'abord échoué (`CS1513 } expected` — la méthode `BLOQUANT2_...` avait perdu son accolade fermante
+dans le découpage du fichier ; corrigé, re-vérifié par compilation réussie AVANT toute mesure). F-B
+a d'abord ROUGI EN CONSTRUCTION (`trouvé 0` boutons) — MESURÉ, pas supposé : `DashboardController.
+BuildNav()` (qui pose les 5 boutons) n'est appelée QUE depuis `Render()`/`RenderError()`, APRÈS le
+chargement réseau du wallet, jamais depuis `BuildLayout()` (synchrone) — le test comptait AVANT que
+`BuildNav` n'ait tourné. Corrigé en attendant `dashboard.DashboardLoaded || dashboard.WalletError`
+(même patron que `BLOQUANT2_...`) avant de compter.
+
+```
+LOG_FILE=/tmp/charpente-r4/two-new-falsifiables-fixed.log timeout 600 Tools/run-unity-check.sh -executeMethod MafiaCI.RunPlayModeTests
+```
+Sortie réelle (scopé `Charpente` seul, narrowing temporaire vérifié restauré ensuite) :
+```
+MafiaCI: RunPlayModeTests started — 308 test(s) découverts (arbre PlayMode entier ; le filtre de catégories s'applique à l'exécution, voir passed= ci-dessous)
+MafiaCI: RunPlayModeTests finished — passed=19 failed=0 skipped=0 inconclusive=0
+```
+Lignes `[Charpente]` des deux nouveaux tests (sorties MESURÉES, pas des valeurs choisies à l'avance) :
+```
+[Charpente] F-A — la ville (CityMapController) est atteinte en UN clic de production sur Tab_Empire, l'overlay Accueil ayant réellement disparu de ContentSlot ; PAS un cul-de-sac, malgré l'absence d'affordance de fermeture dédiée.
+[Charpente] F-B — 5 boutons épinglés sous DashboardSheet, aucune affordance de fermeture dédiée — voir mode d'emploi de péremption dans l'assertion.
+```
+**Population de F-B, MESURÉE en amont** (`grep -n "AddComponent<Button>" Assets/Scripts/Operational/Dashboard/DashboardController.cs` → 1 seul site, à l'intérieur d'`AddNavButton`, appelée 5 fois par `BuildNav()` — `City Map`/`Building Card`/`Filière`/`Exceptions`/`Autonomy` ; `DashboardBackdrop` ne porte qu'un `Image`, `0` bouton) — la valeur ATTENDUE (5) a été dérivée du code AVANT d'écrire l'assertion, puis CONFIRMÉE par le run, pas l'inverse.
+
+**Anti-vacuité de F-A, réutilisée plutôt que réinventée** : la précondition
+`GetComponentInChildren<DashboardController>(false) != null` est le MÊME détecteur que celui du
+contrôle négatif de BLOQUANT 2 round 3 (§ ci-dessus), déjà prouvé capable de ROUGIR en nommant le
+Dashboard manquant quand les 2 sites de montage sont retirés — pas un nouveau détecteur non testé.
+
+Juge complet (5 catégories), après ajout de F-A/F-B :
+```
+LOG_FILE=/tmp/charpente-r4/full-judge-round4-runF.log timeout 900 Tools/run-unity-check.sh -executeMethod MafiaCI.RunPlayModeTests
+```
+Sortie réelle :
+```
+MafiaCI: RunPlayModeTests started — 308 test(s) découverts (arbre PlayMode entier ; le filtre de catégories s'applique à l'exécution, voir passed= ci-dessous)
+MafiaCI: FAIL MafiaCleanCity.CityMap.Tests.DistrictMapNavigationPlayModeTests.NavD12_DistrictTitle_MargeGouttiere_Serif_EtOmbreSurMateriauDInstance —   scénario dimensionné — cette résolution DOIT produire une bande de letterbox (mesuré 0.0px), sinon l'assertion suivante ne teste pas le défaut visé
+MafiaCI: FAIL MafiaCleanCity.Shell.Tests.AppShellPlayModeTests.StaleAbandonedShell_NeverLeaksTenantContentUnderReusedCanvas —   prémisse : A a bien une liste de districts vivante avant l'entrée en scène de B
+MafiaCI: FAIL MafiaCleanCity.Shell.Tests.NavigationPlayModeTests.NavF4_TitleClearsTopBar_BackgroundExistsAtNativeResolution —   nav-F4 (amendée) — the title does not overlap TopBarSlot's EFFECTIVE bounds (déjà inclusives du débordement du médaillon, 26.3px mesurés) — un titre qui ne réserve que 56px nominaux serait chevauché par l'anneau/le filet qui pendent en dessous
+MafiaCI: RunPlayModeTests finished — passed=203 failed=3 skipped=0 inconclusive=0
+```
+`elapsed=230s timeout=900s issue=[sortie normale (RC=1)]`. `StaleAbandonedShell` ROUGE ce run (3/6
+mesures indépendantes maintenant, § arithmétique ci-dessous) — les 3 échecs sont les 3 CONNUS,
+BYTE-IDENTIQUES aux runs précédents. **AUCUN dans `Charpente`, aucun dans le périmètre de F-A/F-B.**
+
+Compte `Charpente` inclus :
+```
+$ python3 -c "print(open('/tmp/charpente-r4/full-judge-round4-runF.log',encoding='utf-8',errors='replace').read().count('[Charpente] SetUp'))"
+19
+```
+`19 = 17 (round 4, § Run E) + F-A + F-B` — le filtre a exécuté le jeu attendu, pas un autre.
+
+⇒ **AUCUN des 3 échecs du run F n'est dans la catégorie `Charpente`, ni dans le périmètre de F-A/F-B.**
+Verdict : lot **VERT sur toute sa surface**, y compris les deux falsifiables de l'écart au ruling.
+
 ### Arithmétique honnête (pas de `+1` caché)
 
 Baseline `af9893b` (mandat) : `passed=194 failed=3` (`NavD12`, `StaleAbandonedShell`, `NavF4`),
@@ -1117,13 +1481,15 @@ AuDemarrage_...`), VERTS dans D — total **204**.
   `3` échecs. `199 + 3 = 202`. ✔
 - Run D : `194 + 4 + 1(C7) + 2(F0.2-b, BLOQUANT2) = 201` — **`StaleAbandonedShell` rouge**, aucun
   `+1` supplémentaire ; `3` échecs inchangés. `201 + 3 = 204`. ✔
+- Run E (round 4) : `194 + 4 + 1(C7) + 2(F0.2-b, BLOQUANT2) = 201` — **`StaleAbandonedShell` VERT
+  ce run**, `+1` : **202** ; `3 − 1 = 2` échecs (`StaleAbandonedShell` en sort). `202 + 2 = 204`. ✔
+- Run F (round 4bis) : `194 + 4 + 1(C7) + 2(F0.2-b, BLOQUANT2) + 2(F-A, F-B) = 203` —
+  **`StaleAbandonedShell` rouge**, aucun `+1` : **203** ; `3` échecs. `203 + 3 = 206`. ✔
 
-**Aucun résidu inexpliqué sur les quatre runs** — mais `StaleAbandonedShell` est **VERT sur 1/4
-mesures indépendantes, ROUGE sur 3/4** (round 3 confirme la prédominance ROUGE du round 2, ne la
-réfute pas). La qualification précédente (« MARGINAL/FLAKY », présentée comme une clôture) était
-une généralisation sur un échantillon de taille 1. La qualification honnête : **intermittent,
-prédominance ROUGE (3/4)** — ⚠️ **pré-existant sur `af9893b`, ce round ne l'impute pas au lot** (voir
-§ dédiée juste en dessous, inchangée round 3).
+**Aucun résidu inexpliqué sur les six runs** — et `StaleAbandonedShell` est maintenant **VERT sur
+2/6 mesures indépendantes, ROUGE sur 4/6** (A, E verts ; B, C, D, F rouges). La qualification honnête
+reste : **intermittent, prédominance ROUGE (4/6)** — ⚠️ **pré-existant sur `af9893b`, aucun round ne
+l'impute au lot** (voir § dédiée juste en dessous, inchangée depuis round 2).
 
 ### `StaleAbandonedShell` — pré-existant sur `af9893b`, pas introduit par ce lot
 
@@ -1243,3 +1609,55 @@ BLOQUANT 1/BLOQUANT 2/MAJEUR/m1/m2/m3.** Verdict round 3 : lot **VERT sur toute 
   round) et les 2 entrées NEUVES `Assets/Tests/PlayMode/CharpenteOuvertureSessionOverlayPlayModeTests
   .cs(.meta)` — aucun fichier inattendu. ⚠️ Rien commité (consigne explicite du mandat : « Tu ne
   commites rien »).
+
+
+## État final du dépôt (round 4, re-vérifié après le correctif BLOQUANT et les négatifs)
+
+- `Assets/Scripts/Shell/AppShell.cs` : **NON modifié** par ce round dans l'état final (les DEUX
+  contrôles négatifs — (a) `interactable=false`, (b) `SetActive(false)`, `Tab.Org` les deux fois —
+  ont chacun été restaurés IMMÉDIATEMENT après leur run, vérifiés octet à octet en Python) :
+  ```
+  $ python3 -c "
+  with open('/tmp/charpente-r4/AppShell.cs.original-backup','rb') as f: a = f.read()
+  with open('Assets/Scripts/Shell/AppShell.cs','rb') as f: b = f.read()
+  print('IDENTICAL' if a == b else 'DIFFERENT')
+  "
+  IDENTICAL
+  ```
+  Confirmé aussi par `git diff` (vide) — cohérent avec `git status --short` ci-dessous qui ne liste
+  PAS `AppShell.cs`.
+- `Assets/Editor/MafiaCI.cs` : **INCHANGÉ** par rapport au commit `af9893b`, comme aux rounds
+  précédents — narrowing à `{ "Charpente" }` (2 runs round 4) puis restauration aux 5 catégories,
+  `git diff af9893b -- Assets/Editor/MafiaCI.cs | cat` rend une sortie VIDE.
+- `Assets/Tests/PlayMode/ProductionClickSupport.cs` — **NEUF ce round** (`?? ` dans `git status`),
+  `MafiaCleanCity.Tests`, aucune méthode `[Test]`/`[UnityTest]` (c'est un HELPER, pas une suite —
+  d'où le total de tests inchangé, 306 découverts, § Run E).
+- `Assets/Tests/PlayMode/CharpenteMontageLocatairesPlayModeTests.cs`,
+  `CharpenteOuvertureSessionOverlayPlayModeTests.cs`, `AppShellPlayModeTests.cs`,
+  `NavigationPlayModeTests.cs` — modifiés (les 7 sites `.onClick.Invoke()` → `ProductionClickSupport
+  .Click(...)`, § BLOQUANT ; `includeInactive` `true`→`false` dans le 2ᵉ fichier, § MINEUR ;
+  commentaires mis à jour dans le 3ᵉ, § MINEUR indicateur d'actif).
+- `Tools/charpente-item0-2-3-implementation-notes.md` : ce document, modifié (§ ROUND 4 + les 3
+  corrections MAJEUR d'ancres + attestation re-émise + Deviations 9/10 + Run E).
+- `git status --short` (tracked, hors assets de police déjà connus et `charpente-item0-2-3-design.md`
+  — corrigé PAR LE CONTRÔLEUR avant ce round, pas par moi) liste EXACTEMENT les 4 fichiers `.cs`
+  ci-dessus + ce document ; `git status --short --ignored` (untracked non-meta) ajoute
+  `ProductionClickSupport.cs` — aucun fichier inattendu, `Tools/juge-donnees/*`/`Tools/juge-visuel/*`
+  déjà présents avant ce round (non liés à ce lot). ⚠️ Rien commité.
+
+
+## État final du dépôt (round 4bis, après F-A/F-B — re-vérifié)
+
+- `Assets/Scripts/Shell/AppShell.cs` : toujours **NON modifié** (aucun contrôle négatif nouveau ce
+  sous-round — F-A/F-B ne touchent que des fichiers de test).
+- `Assets/Editor/MafiaCI.cs` : toujours **INCHANGÉ** par rapport à `af9893b` — narrowing/restauration
+  répété une 3ᵉ et 4ᵉ fois ce round (baseline F-A/F-B, puis judge complet run F), `git diff af9893b --
+  Assets/Editor/MafiaCI.cs | cat` rend une sortie VIDE (re-vérifié ci-dessus, avant le run F).
+- `Assets/Tests/PlayMode/CharpenteOuvertureSessionOverlayPlayModeTests.cs` : modifié une seconde fois
+  ce round — ajout de `FA_...`/`FB_...` et du bloc de tête § ÉCART AU RULING.
+- `Tools/charpente-item0-2-3-implementation-notes.md` : ce document, modifié une seconde fois ce
+  round (§ ÉCART AU RULING en tête, Deviation 10 amendée avec la décision du contrôleur, § Run F).
+- `git status --short` (tracked) : inchangé dans sa LISTE de fichiers par rapport à l'État final
+  précédent (§ round 4) — seul le CONTENU de `CharpenteOuvertureSessionOverlayPlayModeTests.cs` et de
+  ce document a grossi. `git status --short --ignored` (untracked non-meta) : inchangé,
+  `ProductionClickSupport.cs` toujours la seule entrée neuve liée à ce lot. ⚠️ Rien commité.
