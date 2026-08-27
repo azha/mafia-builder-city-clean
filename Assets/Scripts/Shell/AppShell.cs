@@ -854,11 +854,40 @@ namespace MafiaCleanCity.Shell
         private const float TabDockHauteurCss =
             TabDockPadHautCss + TabDockRondCss + TabDockGapCss + TabDockLabelHeightCss + TabDockPadBasCss;
 
-        /// <summary>Px CSS de la maquette → unités de canvas, sur la racine PLEIN ÉCRAN du shell.
-        /// Passer autre chose que le canvas (un panneau, une barre) diviserait toute l'échelle
-        /// par un facteur muet — c'est la faute du « spacing corrigé sur le mauvais conteneur ».</summary>
-        private float Px(float css) =>
-            EchelleMaquette.Px(css, ShellCanvas != null ? (RectTransform)ShellCanvas.transform : null);
+        /// <summary>Px CSS de la maquette → unités de canvas, POUR LE CHROME que ce shell construit
+        /// lui-même (bandeau + dock).
+        ///
+        /// ⛔⛔ CORRIGÉ round 15 (revue ⊥ round 14, BLOQUANT — RÉEL EN PRODUCTION, mesuré, pas un
+        /// artefact de batchmode). Cette méthode LISAIT `ShellCanvas.transform.rect.width` via
+        /// `EchelleMaquette.Px` — MÊME DÉFAUT DE TIMING QUE `SafeAreaInsetsLocal` (docstring
+        /// juste au-dessus d'elle dans ce fichier), et il MORDAIT : `BuildLayout()` CRÉE le Canvas
+        /// (le bloc `if (ShellCanvas == null) { … new GameObject("Canvas", …) … }`) puis appelle
+        /// CETTE méthode dans LE MÊME appel synchrone (la pose de `TopBarSlot.sizeDelta`,
+        /// `FacteurEchelle()`, et tout `BuildTabBar`/`AddTabButton`) — AVANT tout `Canvas.
+        /// ForceUpdateCanvases()` ou toute frame écoulée. Le `CanvasScaler` n'a donc pas encore
+        /// tourné : `rect.width` rend `Screen.width` EN PIXELS D'ÉCRAN BRUTS, pas `1280`. Mesuré :
+        /// `TopBarEchelle.localScale.x = Screen.width/392` à la 6ᵉ décimale, au lieu de `1280/392` —
+        /// le chrome ENTIER (bandeau ET dock, tout passe par CETTE méthode) rendu à
+        /// `Screen.width/1280` de sa taille sur TOUT appareil (56 % à 720, 84 % à 1080, DÉBORDE à
+        /// 1440). La garde `> 100f` d'`EchelleMaquette.LargeurCanvas` ne l'attrape jamais : ces
+        /// valeurs sont toutes PLAUSIBLES, pas un `0`.
+        ///
+        /// Ce shell CONFIGURE lui-même `referenceResolution = (ReferenceResolutionWidth, 720)`
+        /// (dans `BuildLayout()`, sur le `CanvasScaler` neuf) sous `ScaleWithScreenSize` — la
+        /// largeur LOCALE du canvas, une fois stabilisée,
+        /// vaut donc TOUJOURS `ReferenceResolutionWidth`, quel que soit `Screen.width`
+        /// (`ChromeMultiResolutionPlayModeTests` l'assert déjà comme invariant). ⇒ calculer le
+        /// facteur DIRECTEMENT depuis cette constante — jamais lu sur le rect d'un Canvas qui peut
+        /// ne pas être à jour dans LA MÊME frame que sa construction — supprime la dépendance de
+        /// timing PLUTÔT que de la déplacer (un `Canvas.ForceUpdateCanvases()` isolé, sans frame
+        /// écoulée, n'est PAS garanti de suffire : le chemin de capture, lui, en pose DEUX avec un
+        /// `yield` entre les deux). Même patron que `SafeAreaInsetsLocal` — 3ᵉ fois sur ce lot que
+        /// ce patron existait déjà, dans ce même fichier, avant d'être appliqué ici.
+        ///
+        /// Passer autre chose que cette référence fixe (un panneau, une barre) diviserait toute
+        /// l'échelle par un facteur muet — c'est la faute du « spacing corrigé sur le mauvais
+        /// conteneur » ; ce n'est plus possible ici, il n'y a plus de racine à se tromper.</summary>
+        private float Px(float css) => css * (ReferenceResolutionWidth / TopBarLargeurCss);
 
         /// <summary>Un `LayoutElement` de hauteur fixe — le pendant local de l'helper des écrans
         /// opérationnels, que le shell ne peut pas atteindre (il ne référence pas leurs assemblies).</summary>
@@ -994,10 +1023,31 @@ namespace MafiaCleanCity.Shell
         ///   ★ Et le juge avait donné le signe qui le désigne : l'écart de chasse était SÉLECTIF —
         ///     −16 % sur « ARGENT » dans le bandeau, −2 % sur « FAMILLE » dans le dock, même fonte,
         ///     même écran. *Un défaut sélectif désigne son conteneur*, et les deux conteneurs
-        ///     n'avaient pas été bâtis au même moment.</summary>
+        ///     n'avaient pas été bâtis au même moment.
+        ///
+        /// ⛔⛔ ROUND 15 — CE QUE CETTE MÉTHODE FAIT ENCORE, ET CE QU'ELLE NE FAIT PLUS. `Px()` ne
+        /// lit plus AUCUNE géométrie de Canvas (voir son docstring) : elle rend désormais la MÊME
+        /// constante à CHAQUE appel, qu'on soit à la construction ou ici. ⇒ pour le CHROME
+        /// (`TopBarSlot`/`TabBarRoot`.sizeDelta, `echelleRt.localScale`, tous les paddings/tailles
+        /// du dock), cette méthode est devenue un NO-OP GÉOMÉTRIQUE — elle réécrit EXACTEMENT ce
+        /// que `BuildLayout()`/`BuildTabBar()` avaient déjà posé, jamais autre chose. Ce qu'elle
+        /// fait ENCORE réellement : republier `SafeAreaInsetsLocal()` (dépend de
+        /// `Screen.safeArea`/`Screen.height`, PAS de `Px()` — légitimement différent si l'appelant a
+        /// changé la cible de rendu depuis `BuildLayout()`) et RECONSTRUIRE les 4 bulles du dock
+        /// (utile si `CurrentTab` a changé entre-temps, via `RefreshTabButtonVisuals`). Un appelant
+        /// qui n'a besoin QUE de ça (le cas des deux sites de test connus, §0.4/`ce fichier`) peut
+        /// continuer à l'appeler sans risque : elle ne peut plus DIVERGER de `BuildLayout()`, elle
+        /// ne peut que la RÉPÉTER. ⇒ Se déclare à l'exécution (ligne ci-dessous) : un dispositif qui
+        /// continue de tourner sans plus rien réparer doit le DIRE, pas rester silencieusement
+        /// invoqué comme s'il réparait encore quelque chose (socle CLAUDE.md, « un dispositif
+        /// conditionnel doit imprimer s'il s'est activé »).</summary>
         public void RebatirChromePourResolutionCourante()
         {
             if (ShellCanvas == null || TopBarSlot == null || TabBarRoot == null) return;
+            Debug.Log("[Charpente] RebatirChromePourResolutionCourante() a tourné — depuis round 15, " +
+                       "Px() ne lit plus la géométrie du Canvas : la re-pose du chrome (bandeau/dock) " +
+                       "ci-dessous est un NO-OP géométrique (mêmes valeurs qu'à BuildLayout()). Ce qui " +
+                       "change réellement ici : les insets de zone sûre et l'état visuel des onglets.");
             Canvas.ForceUpdateCanvases();
 
             float k = FacteurEchelle();

@@ -692,35 +692,65 @@ namespace MafiaCleanCity.Shell.Tests
                 $"TopBarLargeurCss` ({largeurMaquetteAttendue}) — c'est CETTE largeur locale FIXE " +
                 "qui fait que `rect.width` du bouton de tête est une unité de MAQUETTE, jamais une " +
                 "unité d'écran.");
-            Assert.Greater(echelleRect.localScale.x, 0f,
-                $"({etiquetteBranche}) `TopBarEchelle.localScale.x` doit être STRICTEMENT positif " +
-                "— c'est lui qui porte la maquette à l'écran ; nul ou négatif, la zone tactile " +
-                "n'existe physiquement nulle part.");
+            // ⛔⛔ CORRIGÉ round 15 (revue ⊥ round 14, BLOQUANT) — `Assert.Greater(…, 0f)` (round
+            // 13) durcissait sur le SIGNE là où le défaut vivait dans la MAGNITUDE : la valeur
+            // FAUTIVE mesurée en production ce jour-là (`Screen.width/392 = 1,632653`) est
+            // STRICTEMENT POSITIVE — l'assertion serait restée VERTE à travers l'événement exact
+            // qu'elle prétendait détecter (socle CLAUDE.md, « l'aiguille inversée »). La MAGNITUDE
+            // attendue est `ReferenceResolutionWidth / TopBarLargeurCss`, lue PAR RÉFLEXION sur
+            // `AppShell` (jamais recopiée — un renommage doit rougir ce test, pas le rendre
+            // silencieusement inerte). Contrôle positif : `TopBarEchelle_LocalScaleMagnitude_
+            // PositiveControl_WrongFactorIsDetected`, plus bas dans ce fichier.
+            float referenceResolutionWidthAttendue =
+                ProductionClickSupport.GetPrivateConstFloat(typeof(AppShell), "ReferenceResolutionWidth");
+            float facteurEchelleAttendu = referenceResolutionWidthAttendue / largeurMaquetteAttendue;
+            Assert.AreEqual(facteurEchelleAttendu, echelleRect.localScale.x, 0.001f,
+                $"({etiquetteBranche}) `TopBarEchelle.localScale.x` doit valoir `AppShell." +
+                $"ReferenceResolutionWidth / AppShell.TopBarLargeurCss` = {facteurEchelleAttendu:F6} " +
+                $"— trouvé {echelleRect.localScale.x:F6}. Une valeur proche de `Screen.width/392` " +
+                "(round 14 en a mesuré 1,632653 à `Screen.width=640`) signale que `AppShell.Px()` a " +
+                "de nouveau lu la géométrie du Canvas au lieu de la constante de référence.");
 
-            // Conversion ALGÉBRIQUE (round 11, RE-VÉRIFIÉE fondée par la revue round 12 — voir
-            // journal) vers deux largeurs d'écran DE RÉFÉRENCE (jamais un pixel rendu) : 392 dp
-            // (`EchelleMaquette.LargeurHudBrennar`, le téléphone canon) et 360 dp (la largeur modale
-            // Android — la plus étroite couramment supportée). RESTAURÉE ici DÉLIBÉRÉMENT plutôt que
-            // remplacée par la mesure « traverse la chaîne » : cette dernière s'est avérée dépendre
-            // d'un état (`echelleRect.localScale`/`Screen.width`/`Canvas.scaleFactor`) dont ce round
-            // vient de découvrir qu'il diverge de ce que cette même algèbre suppose — corriger LA
-            // MESURE pour absorber cette divergence, sans comprendre sa cause, serait deviner une
-            // réponse architecturale (⊥ : jamais à la place de l'auteur). ÉPINGLÉ, pas masqué : cette
-            // zone est CONNUE sous le seuil de 48 dp physiques à 360 dp de large — remontée à l'user
-            // (arbitrage produit/DA, hors du geste de production borné à cette affordance), PAS
-            // silencieusement acceptée comme conforme. Si cette valeur bouge SANS que ce commentaire
-            // soit mis à jour, quelqu'un a touché la géométrie sans relire cette garde.
+            // ⛔⛔ CORRIGÉ round 15 (revue ⊥ round 14, BLOQUANT 1 + finding « le message livré à
+            // l'user est FAUX sur l'appareil »). Round 11 conservait ici une conversion ALGÉBRIQUE
+            // pure (`rectTete.rect.width × 360/392`, JAMAIS un pixel rendu) — round 13 avait tenté
+            // la mesure RÉELLE prescrite par round 12 (`GetWorldCorners` → `WorldToScreenPoint`), l'a
+            // trouvée EN DÉSACCORD avec l'algèbre (22,0 dp mesuré contre 44,1 dp algébrique) et a
+            // RESTAURÉ l'algèbre en attendant qu'un ⊥ frais tranche la divergence — CE round 14/15
+            // vient de le faire : la divergence était `AppShell.Px()` lisant `Screen.width` au lieu
+            // de `ReferenceResolutionWidth` (BLOQUANT ci-dessus, corrigé). L'algèbre ne mesurait
+            // qu'un PARAMÈTRE (`rectTete.rect.width`, une constante de maquette que `k` ne touche
+            // JAMAIS) — pas l'EFFET rendu (socle CLAUDE.md, « une garde sur les PARAMÈTRES d'un
+            // effet n'est pas une garde sur son EFFET ») ; c'est ce qui la rendait VRAIE EN THÉORIE
+            // et FAUSSE SUR L'APPAREIL tant que `k` restait cuit sur `Screen.width`.
+            // ⇒ La mesure RÉELLE round 12 est donc RESTAURÉE ici — et elle est désormais SÛRE :
+            // `k` n'étant plus lu sur le rect du Canvas, elle ne peut plus diverger de l'algèbre.
+            // Prédiction, vérifiée par le run de ce round (§ notes) : à `Screen.width=640`
+            // (batchmode), `48 × k_juste(3,265306) × scaleFactor(0,5) = 78,367 px` ⇒
+            // `78,367/640 × 360 = 44,08 dp` — CONVERGE avec l'algèbre round 11, et le calcul montre
+            // que cette convergence tient à N'IMPORTE QUEL `Screen.width` (le facteur s'annule :
+            // `k_juste × (Screen.width/1280) / Screen.width` ne dépend plus de `Screen.width`) —
+            // contrairement à AVANT ce round, où seule la coïncidence `Screen.width=1280` aurait
+            // fait converger les deux méthodes.
             const float LargeurEcranDpModale = 360f; // la plus étroite couramment supportée
-            float dpLargeurModale = rectTete.rect.width * (LargeurEcranDpModale / EchelleMaquette.LargeurHudBrennar);
-            float dpHauteurModale = rectTete.rect.height * (LargeurEcranDpModale / EchelleMaquette.LargeurHudBrennar);
-            Assert.AreEqual(44.1f, dpLargeurModale, 0.2f,
+            var coinsMondeTete = new Vector3[4];
+            rectTete.GetWorldCorners(coinsMondeTete); // [0]=bas-gauche, [2]=haut-droit (Unity, sens horaire)
+            Vector2 basGaucheEcranTete = RectTransformUtility.WorldToScreenPoint(null, coinsMondeTete[0]);
+            Vector2 hautDroitEcranTete = RectTransformUtility.WorldToScreenPoint(null, coinsMondeTete[2]);
+            float largeurEcranPxTete = Mathf.Abs(hautDroitEcranTete.x - basGaucheEcranTete.x);
+            float hauteurEcranPxTete = Mathf.Abs(hautDroitEcranTete.y - basGaucheEcranTete.y);
+            float dpLargeurModale = (largeurEcranPxTete / Screen.width) * LargeurEcranDpModale;
+            float dpHauteurModale = (hauteurEcranPxTete / Screen.width) * LargeurEcranDpModale;
+            Assert.AreEqual(44.1f, dpLargeurModale, 0.5f,
                 $"({etiquetteBranche}) ÉCART CONNU, REMONTÉ — à 360 dp de large (largeur modale " +
-                $"Android), la zone tactile ne mesure QUE {dpLargeurModale:F1} dp physiques " +
-                "(sous le seuil de 48). Cette assertion épingle la valeur ACTUELLE : si elle " +
-                "s'écarte de 44,1±0,2, la géométrie a changé sans que l'arbitrage user (grandir la " +
-                "zone) ait été rendu — corriger CETTE assertion seulement après ce ruling.");
-            Assert.AreEqual(44.1f, dpHauteurModale, 0.2f,
-                $"({etiquetteBranche}) même écart connu, sur la hauteur — trouvé {dpHauteurModale:F1} dp.");
+                $"Android), la zone tactile RENDUE (mesurée via GetWorldCorners/WorldToScreenPoint, " +
+                $"pas une algèbre sur un paramètre) ne mesure QUE {dpLargeurModale:F1} dp physiques " +
+                "(sous le seuil de 48). Cette assertion épingle la valeur RÉELLEMENT RENDUE : si " +
+                "elle s'écarte de 44,1±0,5, la géométrie a changé — soit l'arbitrage user (grandir " +
+                "la zone) a été rendu (corriger cette assertion), soit `AppShell.Px()` a régressé " +
+                "vers le défaut round 14 (NE PAS corriger cette assertion — corriger `Px()`).");
+            Assert.AreEqual(44.1f, dpHauteurModale, 0.5f,
+                $"({etiquetteBranche}) même écart connu, sur la hauteur, MESURÉ (pas algébrique) — trouvé {dpHauteurModale:F1} dp.");
 
             var coinsLocauxTete = new[]
             {
@@ -764,6 +794,57 @@ namespace MafiaCleanCity.Shell.Tests
 
             Debug.Log($"[Charpente] F-B (round 7, {etiquetteBranche}) — le clic RÉEL sur l'action de " +
                       "tête ('←') ferme l'overlay Accueil et révèle CityMapController.");
+        }
+
+        // ══════════════════════════════════════════════════════════════════════════════════════
+        // ROUND 15 (revue ⊥ round 14, BLOQUANT) — CONTRÔLE POSITIF de la garde de MAGNITUDE
+        // ci-dessus. Patron déjà établi par `ChromeMultiResolutionPlayModeTests.
+        // MultiRes_TopBarClusters_PositiveControl_DegenerateWidth_IsDetected` : ne PAS re-jouer
+        // Play Mode avec un Canvas dégénéré (coûteux, et la classe de défaut n'a pas besoin d'un
+        // Canvas réel pour être démontrée) — recalculer la MÊME comparaison, sur un jeu de valeurs
+        // qui REPRODUIT EXACTEMENT le défaut mesuré en production round 14 (`k = Screen.width/392`
+        // au lieu de `1280/392`), et prouver qu'elle NE PASSE PAS le seuil de tolérance. Sans ce
+        // test, rien ne prouve que la garde ci-dessus PEUT rougir — elle pourrait être aveugle par
+        // construction, exactement comme celle qu'elle remplace.
+        // ══════════════════════════════════════════════════════════════════════════════════════
+        [Test]
+        public void TopBarEchelle_LocalScaleMagnitude_PositiveControl_WrongFactorIsDetected()
+        {
+            float referenceResolutionWidth =
+                ProductionClickSupport.GetPrivateConstFloat(typeof(AppShell), "ReferenceResolutionWidth");
+            float largeurMaquette =
+                ProductionClickSupport.GetPrivateConstFloat(typeof(AppShell), "TopBarLargeurCss");
+            float facteurAttendu = referenceResolutionWidth / largeurMaquette;
+
+            // Le monde DÉGÉNÉRÉ à tuer : `k` calculé avec `Screen.width` (640, la valeur mesurée en
+            // batchmode round 14) AU LIEU de `ReferenceResolutionWidth` — c'est-à-dire EXACTEMENT
+            // le défaut round 14, rejoué en arithmétique pure plutôt qu'en Canvas réel.
+            const float ScreenWidthMesureRound14 = 640f;
+            float facteurFautifMesureRound14 = ScreenWidthMesureRound14 / largeurMaquette;
+
+            // `Assert.AreNotEqual` n'a pas d'overload à tolérance fiable pour des `float` — un
+            // écart calculé À LA MAIN, comparé à un plancher, évite toute ambiguïté de signature.
+            Assert.Greater(Mathf.Abs(facteurAttendu - facteurFautifMesureRound14), 0.5f,
+                "PRÉCONDITION du contrôle : le facteur fautif round 14 (1,632653) et le facteur " +
+                "juste (3,265306) doivent différer largement — sinon ce contrôle ne prouve rien.");
+
+            // La même assertion que `VerifierFermetureParActionDeTete`, appliquée à la valeur
+            // FAUTIVE : DOIT rougir (donc on l'enveloppe et on vérifie qu'elle lève).
+            Assert.Throws<AssertionException>(() =>
+                Assert.AreEqual(facteurAttendu, facteurFautifMesureRound14, 0.001f),
+                "CONTRÔLE POSITIF : la garde de magnitude DOIT rejeter le facteur fautif round 14 " +
+                "(1,632653, mesuré en production) — sinon le 0 sur `AppShell.Px()` réel ne prouve " +
+                "rien (la garde pourrait être aveugle à la classe de défaut qu'elle existe pour " +
+                "attraper, exactement comme `Assert.Greater(…, 0f)` qu'elle remplace).");
+
+            // Second monde dégénéré, à un autre point de la plage réelle (1080p, round 14 § BLOQUANT
+            // 1) — pour ne pas ne prouver la détection qu'à UNE seule valeur fautive.
+            const float ScreenWidth1080 = 1080f;
+            float facteurFautif1080 = ScreenWidth1080 / largeurMaquette;
+            Assert.Throws<AssertionException>(() =>
+                Assert.AreEqual(facteurAttendu, facteurFautif1080, 0.001f),
+                "CONTRÔLE POSITIF (1080p) : même garde, même exigence — le facteur fautif à " +
+                "Screen.width=1080 doit lui aussi être rejeté.");
         }
     }
 }

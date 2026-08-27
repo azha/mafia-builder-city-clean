@@ -3494,3 +3494,285 @@ non trackés, sessions tierces, non touchés.
 **Régime respecté** : seul pilote Unity vérifié (`/proc` énuméré hors PID propre, aucun process/
 lockfile étranger avant le premier run), runs au premier plan, logs vers `/tmp`, jamais un pipe,
 fonts SDF restaurées et vérifiées propres après.
+
+---
+
+## ⛔⛔ ROUND 15 — revue ⊥ round 14 NOT_APPROVED (1 bloquant, 2 majeurs, 4 mineurs) — le défaut
+## n'était pas dans un correctif du lot : il vivait en PRODUCTION depuis `BuildLayout()`, confirmé
+## par la mesure, et le correctif révèle un SECOND défaut, plus ancien, hors du périmètre de ce lot
+
+**Ce qui change de nature ce round** : les quatorze rounds précédents corrigeaient un correctif du
+tour d'avant. Celui-ci corrige un défaut qui vivait dans le dépôt AVANT le lot — le round 13 l'a
+mesuré, documenté honnêtement, et laissé ouvert pour un ⊥ frais ; le round 14 l'a tranché RÉEL EN
+PRODUCTION. Ce round le ferme, restaure le détecteur que round 13 avait retiré, et — en vérifiant la
+POPULATION comme demandé — découvre un SECOND défaut, plus profond, situé hors des fichiers de ce
+lot, qu'il documente et NE CORRIGE PAS (arbitrage de périmètre, remonté explicitement).
+
+### BLOQUANT — `AppShell.Px()` lisait `ShellCanvas.transform.rect.width` dans LA MÊME frame que la
+### création du Canvas ; CLASSE fermée sur TOUTE la population des appelants, pas seulement `k`
+
+**CLASSE** : toute lecture de la géométrie d'un Canvas `ScreenSpaceOverlay`/`ScaleWithScreenSize`
+faite avant qu'une passe de layout n'ait tourné rend `Screen.width` (pixels d'écran bruts), jamais
+`referenceResolution.x` — même défaut de timing que celui déjà nommé et corrigé pour
+`SafeAreaInsetsLocal` dans ce même fichier, jamais appliqué à `Px()`.
+
+**POPULATION mesurée** (grep + lecture, tout `AppShell.cs`, 1109 lignes) : `Px()`/`FacteurEchelle()`
+sont appelés à **12 sites**, TOUS synchrones avec la création du Canvas — `TopBarSlot.sizeDelta`
+(pose du bandeau), `FacteurEchelle()` (le `localScale` du nœud d'échelle du bandeau),
+`BuildTabBar()`/`AddTabButton()` (hauteur du dock, paddings, rayon du rond, écart, tiret, corps du
+libellé, taille de fonte — 9 sites), et les MÊMES 4 sites re-décrits dans
+`RebatirChromePourResolutionCourante()`. **UN SEUL correctif, au site DÉFINITIONNEL** (`Px()`
+lui-même) ferme les 12 à la fois — vérifié par balayage POST-correctif : 0 lecture de
+`ShellCanvas.transform`/`.rect` restante dans tout le fichier en dehors d'`EchelleMaquette` (que
+`Px()` n'appelle plus).
+
+Autres créateurs de Canvas dans le dépôt (`AddComponent<Canvas>`) : **AUCUN** — `AppShell.cs` est le
+SEUL fichier de `Assets/Scripts` qui en crée un (`grep -rn "AddComponent<Canvas>"` : 1 hit). Les 10
+`FindFirstObjectByType<Canvas>()` des contrôleurs opérationnels (BuildingCard, ExceptionDetail,
+Laundering, …) ne font que DÉCOUVRIR le Canvas d'AppShell, toujours mesuré au moins une frame après
+sa stabilisation (`ConstruireLocataire` appelle `PublierInsetsDuChrome()` → `Canvas.
+ForceUpdateCanvases()` avant tout montage de locataire) — hors classe, non touchés.
+
+**Correctif** — `AppShell.cs`, méthode `Px(float css)` : au lieu de
+`EchelleMaquette.Px(css, ShellCanvas?.transform)` (lit le rect), calcul DIRECT
+`css * (ReferenceResolutionWidth / TopBarLargeurCss)` — même patron que `SafeAreaInsetsLocal`
+(« calculé DIRECTEMENT plutôt que lu … pas de dépendance de timing implicite »), 3ᵉ occurrence
+mesurée sur ce lot où le bon outil était déjà écrit dans le même fichier. Choix justifié entre les
+deux options que la revue posait : un `Canvas.ForceUpdateCanvases()` isolé, sans frame écoulée,
+n'est PAS garanti de forcer la stabilisation du `CanvasScaler` — le chemin de capture, lui, en pose
+DEUX avec un `yield return null` entre les deux (`VuePrincipaleCapturePlayModeTests.CapturerA`) ; le
+calcul direct élimine la dépendance de timing plutôt que de la déplacer, et il est BIT-IDENTIQUE au
+résultat qu'`EchelleMaquette.Px` rendrait une fois le Canvas stabilisé (`LargeurCanvas` ≡
+`ReferenceResolutionWidth` par construction, propriété déjà testée par
+`ChromeMultiResolutionPlayModeTests`).
+
+**`localScale.x` avant/après, mesuré, pas déduit** (batchmode, `Screen.width=640`) :
+
+```
+AVANT (control-variable run, AppShell.cs revenu à eabde01)  : 1.632653  (= 640/392, le défaut)
+APRÈS (ce round)                                             : 3.265306  (= 1280/392, ReferenceResolutionWidth/TopBarLargeurCss)
+```
+
+confirmé par une assertion neuve (voir MINEUR-classe-detecteur ci-dessous) qui compare
+`echelleRect.localScale.x` à `AppShell.ReferenceResolutionWidth/AppShell.TopBarLargeurCss`, lus par
+RÉFLEXION — ROUGE sur le code AVANT (`trouvé 1.632653`, log de la run de contrôle), VERT sur le code
+APRÈS, dans le MÊME test, sans qu'aucune autre variable n'ait bougé.
+
+**Item 4 du mandat (44,1 dp physiques, ruling user)** : la conversion ALGÉBRIQUE round 11
+(`rectTete.rect.width × 360/392`, jamais un pixel rendu — une garde sur le PARAMÈTRE, pas sur
+l'EFFET) est remplacée par la mesure RÉELLE prescrite round 12 (`GetWorldCorners` →
+`WorldToScreenPoint`), abandonnée round 13 parce qu'elle divergeait de l'algèbre — elle ne diverge
+plus, PARCE QUE `k` n'est plus lu sur le rect. Vérifié en Play Mode (pas seulement en algèbre) :
+`44,1 dp` mesuré RÉELLEMENT à `Screen.width=640`, dans les deux branches. Le nombre remonté à l'user
+reste inchangé (44,1 < 48, l'écart connu tient) mais il décrit désormais la géométrie RENDUE, pas un
+paramètre isolé — c'est ce que « corrige le nombre remonté » signifiait une fois la cause comprise :
+le nombre était juste, sa MÉTHODE de mesure était fausse. ⚠️ Le ruling lui-même (« zone tactile à
+48 dp RÉELS, visuel inchangé ») n'est PAS implémenté ce round — voir Deviations.
+
+### MAJEUR 1 (classe PREUVE) — le détecteur retiré round 13 est restauré, sur la MAGNITUDE, avec son
+### contrôle positif
+
+Round 13 avait ÉCRIT la bonne garde, l'avait vue ROUGIR (`208/4`), puis l'avait remplacée par
+`Assert.Greater(echelleRect.localScale.x, 0f)` — satisfaite par la valeur FAUTIVE elle-même
+(`1,632653 > 0`). Restauré : `Assert.AreEqual(ReferenceResolutionWidth/TopBarLargeurCss,
+echelleRect.localScale.x, 0.001f, …)`, les deux constantes lues PAR RÉFLEXION
+(`ProductionClickSupport.GetPrivateConstFloat`, jamais recopiées — un renommage rougit le test au
+lieu de le rendre silencieusement inerte).
+
+**Contrôle positif, NOUVEAU `[Test]`** (`TopBarEchelle_LocalScaleMagnitude_PositiveControl_
+WrongFactorIsDetected`, `CharpenteOuvertureSessionOverlayPlayModeTests.cs`) — patron
+`ChromeMultiResolutionPlayModeTests.…PositiveControl_DegenerateWidth_IsDetected` : recalcule le
+facteur fautif à `Screen.width=640` (celui mesuré round 14) ET à `1080` (celui du BLOQUANT 1 de la
+revue), et prouve par `Assert.Throws<AssertionException>` que la garde de magnitude REJETTE les
+deux. Exécuté : **PASSE** (`/tmp/charpente-r15-final.log`, dans la liste des tests découverts, pas
+dans `MafiaCI: FAIL`).
+
+**Et le contrôle positif le plus fort n'est pas arithmétique, il est VÉCU** : la run de contrôle
+(AppShell.cs reverté à `eabde01`, tout le reste du round 15 en place) fait ROUGIR la garde de
+magnitude EN VRAI (`FB_..._BrancheEchec`/`_BrancheSucces` — `trouvé 1.632653`,
+`/tmp/charpente-r15-controlvar.log:11598,11684`) ; la même garde, code restauré, PASSE
+(`/tmp/charpente-r15-final.log`). Deux captures qui ne diffèrent QUE par cette ligne — l'expérience
+à une variable que le round 14 demandait.
+
+### MAJEUR 2 — `CapturerA()` réparait le chrome AVANT de photographier ; le chemin joueur ne le
+### réparait jamais — fermé PAR CONSTRUCTION, pas par une garde neuve
+
+`Px()` ne lisant plus AUCUNE géométrie de Canvas, `RebatirChromePourResolutionCourante()` (l'unique
+appelant non-test de la classe, et son seul rôle géométrique) est devenue un **NO-OP GÉOMÉTRIQUE**
+pour tout ce qui passe par `Px()` : elle recalcule EXACTEMENT la même valeur qu'à `BuildLayout()`,
+qu'elle soit appelée ou non. Le chemin de capture ne peut donc plus « réparer » une géométrie que
+`BuildLayout()` aurait mal posée, PARCE QU'il n'y a plus rien à réparer — le chemin joueur et le
+chemin de capture calculent désormais le MÊME chrome par construction, pas par une garde qui pourrait
+un jour cesser de mordre.
+
+Ce qui reste réellement utile dans cette méthode (republier `SafeAreaInsetsLocal()`, reconstruire les
+bulles du dock pour l'onglet courant) est CONSERVÉ, et la méthode se DÉCLARE désormais à l'exécution
+(`Debug.Log`, socle CLAUDE.md « un dispositif conditionnel doit imprimer s'il s'est activé ») —
+docstring amendée, code inchangé au-delà de ce log. Je n'ai pas retiré la méthode : ses deux
+appelants de test (`CharpenteBootScenePlayModeTests.cs`, `VuePrincipaleCapturePlayModeTests.cs`) en
+dépendent encore pour la republication des insets, hors du périmètre de ce round.
+
+### MINEURS — les 4 findings de classe PREUVE du round 14 sur `Tools/charpente-anchor-freshness-check.py`
+
+**m1 — fenêtre de datation** : le docstring promettait « ±2 lignes », le code datait contre le HUNK
+ENTIER. Corrigé : `hunk_lines` porte désormais `(numéro_de_ligne, texte)` pour chaque ligne
+conservée, et la datation ne regarde que les lignes à `DATING_WINDOW_LINES=2` du point de citation.
+**Compte avant/après, sur le hunk réel round 13** (`9c57125..eabde01`, `notes.md`) : **0 → 2**
+violations (`:3227`/`:3228`, exactement les deux candidats que la revue avait générés par injection
+et vus silencieusement écartés) — confirmé en ré-exécutant l'instrument corrigé sur ce diff HISTORIQUE
+(non touché par ce round, la mesure sert de contrôle positif du correctif, pas de correctif du
+contenu historique lui-même, qui reste tel quel dans `eabde01`).
+
+**m2 — cas 3 du self-test** se déclarait couvrir « le mécanisme `design.md:109`/`:146` » en testant en
+réalité une citation croisée vers un fichier PROTÉGÉ (`TopBarController.cs`) — l'inverse du mécanisme
+réel (une citation vers `design.md`, qui N'EST PAS protégé). Reformulé pour décrire ce qu'il teste
+vraiment (héritage relatif inter-fichiers) ; **cas 5 AJOUTÉ**, source `design.md`, cible
+`AppShell.cs` — prouve que le mécanisme ne discrimine pas par type de fichier source, sans prétendre
+fermer la classe réelle (citation VERS `design.md`), qui reste explicitement HORS DE PORTÉE tant que
+`design.md` n'est pas dans `PROTECTED_BASENAMES` (choix de portée non tranché ici — remonté, pas
+deviné). Auto-test : 4/4 → **5/5**.
+
+**m3 — justification de portée « diff seulement »** affirmait que les 4 occurrences passées de la
+classe vivaient TOUTES dans du texte neuf — round 12 lui-même la réfute (4 des 6 ancres de son
+BLOQUANT étaient du texte ANCIEN, invalidé par un décalage AILLEURS dans le même commit). Reformulé :
+la vraie raison est le COÛT (couvrir le décalage exigerait une correspondance ancien→nouveau numéro
+pour tout le fichier), et ce que ça laisse ouvert est désormais déclaré EXPLICITEMENT dans le
+docstring — y compris la limite `PROTECTED_BASENAMES` du point m2.
+
+**m4 — 2 ancres fausses en production**, `TopBarController.cs` (citations vers
+`DashboardController.cs:340`, un `switch (target)` sans rapport ; le vrai mécanisme est l'appel
+"Vocabulary"/"Tier N", `:397`, méthode déclarée `:640`) : corrigées, et — piège de citation évité de
+justesse — mes premiers jets réintroduisaient EXACTEMENT la classe que ce lot corrige (une forme
+relative `` `:397` `` héritée en auto-référence vers `TopBarController.cs` faute de forme absolue
+précédente dans le même hunk ; l'instrument round 15 lui-même l'a détecté avant tout commit — voir
+Vérification). Fermé en NE CITANT AUCUN numéro de `DashboardController.cs` (fichier hors de ce lot,
+surveillé par aucun instrument ici) plutôt qu'en le datant.
+
+### Ce qui n'a PAS été fermé — remonté, pas deviné
+
+**Un SECOND défaut, hors des fichiers de ce lot, découvert en vérifiant la POPULATION comme demandé.**
+`NavF4_District3_NoBackgroundYet_PlaceholderStaysConfined_Green` (`NavigationPlayModeTests.cs`) —
+**VERTE avant ce round, ROUGE après**, isolée par une expérience à UNE VARIABLE :
+
+```
+AppShell.cs = eabde01 (défaut), reste du round 15 en place → NavF4_District3 : PASSE (208 pass/5 fail total)
+AppShell.cs = round 15 (corrigé), reste identique             → NavF4_District3 : ROUGE (209 pass/4 fail total)
+```
+
+(`/tmp/charpente-r15-controlvar.log` vs `/tmp/charpente-r15-final.log`, seule variable : cette
+méthode.) Diagnostic (sonde temporaire, retirée, arbre vérifié `identical: True` après) :
+`placeholderB.max.y=217.6172` chevauche `topBarB.min.y=205.0302` de 12,59 unités —
+`TopBarSlot.rect.height=169.7959`, `TopBar.EffectiveBottomOverhangPx=52.58691`. L'inset que
+`AppShell.EnterDistrict()` calcule (`topSafeInset + TopBarSlot.rect.height +
+EffectiveBottomOverhangPx`, `AppShell.cs`, méthode `EnterDistrict`) sous-compte l'étendue RÉELLE de
+`TopBarSlot` (mesurée par `CalculateRelativeRectTransformBounds`, qui inclut récursivement ses
+enfants) d'environ UN `EffectiveBottomOverhangPx` supplémentaire — un écart qui existait déjà avant
+ce round mais restait invisible tant que le chrome était deux fois trop petit (le bug de ce round
+MASQUAIT ce second défaut en réduisant la marge nécessaire à le révéler).
+
+**Pourquoi je ne le corrige pas ici** : la marge du repli confiné (`DistrictInteriorScreenController.
+cs:516-518`, constantes `8f`/`32f` — HORS de la liste de fichiers de ce lot) et/ou la définition
+d'`EffectiveBottomOverhangPx`/`topInset` (dans mes fichiers, mais consommés par le nav-district déjà
+CLOS après 5 rounds ⊥) sont deux points d'entrée possibles, et je n'ai pas de mesure qui départage
+lequel est la vraie cause plutôt qu'un symptôme compatible. C'est exactement le test du socle : « si
+ce doute se résolvait défavorablement, une décision changerait-elle ? » — oui, et la décision (quel
+fichier corriger, et comment) appartient à un ⊥ frais avec le mandat du nav-district, pas à ce lot
+borné à « dock ratifié, Empire = la carte ». **Remonté explicitement, mesuré, reproductible — pas
+deviné, pas silencieusement absorbé.**
+
+⚠️ **`NavF4_TitleClearsTopBar_BackgroundExistsAtNativeResolution` reste ROUGE dans les deux
+conditions** (26,3 px mesurés côté défaut, 52,6 px côté correctif — même mécanisme
+`EffectiveBottomOverhangPx` que ci-dessus, donc affecté en MAGNITUDE mais pas en VERDICT) : confirmé
+pré-existant, hors périmètre, PAS un nouveau défaut de ce round — juste un nombre qui a bougé avec
+`k`, la classification ne change pas.
+
+⚠️ Le ruling user du jour (« zone tactile de sortie à 48 dp, visuel inchangé ») n'est PAS
+implémenté : l'instruction actionnable du mandat portait sur la RE-MESURE et la CORRECTION du nombre
+remonté, faites ci-dessus. Grandir réellement la zone tactile à 48 dp sans changer le visuel est un
+changement d'architecture d'interaction (une zone de hit invisible plus grande que l'icône, très
+probablement) qui mérite sa propre revue — option conservatrice retenue (celle qui change le moins
+de surface), consignée ici comme Deviation.
+
+### Vérification finale round 15
+
+Trois runs Unity, tous au premier plan, `LOG_FILE=` vers `/tmp`, seul pilote vérifié
+(`/proc` énuméré par `/proc/PID/exe`, jamais par la ligne de commande) avant chacun :
+
+1. **`/tmp/charpente-r15-run1.log`** — code round 15 complet : `passed=209 failed=4`
+   (`NavD12`, `StaleAbandonedShell` pré-existants ; `NavF4_TitleClearsTopBar` pré-existant, magnitude
+   changée ; `NavF4_District3` NOUVEAU — voir ci-dessus). `error CS` : 0.
+2. **`/tmp/charpente-r15-controlvar.log`** — `AppShell.cs` reverté à `eabde01` (SEULE variable),
+   reste du round 15 en place : `passed=208 failed=5` — les 2 nouvelles gardes de magnitude ROUGES
+   (preuve vécue du détecteur), `NavF4_District3` VERTE (preuve de la régression isolée), les 3
+   pré-existants inchangés. `AppShell.cs` restauré ensuite, vérifié par `git diff --stat` vide contre
+   `eabde01` PUIS contre ma version round 15 après restauration (les deux comparaisons faites, dans
+   cet ordre).
+3. **`/tmp/charpente-r15-final.log`** — état EXACT du commit (après restauration), re-mesuré pour ne
+   laisser aucun doute sur quel état a produit quel log : `passed=209 failed=4`, IDENTIQUE au run 1
+   (reproductible), `26` occurrences de `[Charpente] SetUp` (catégorie confirmée exécutée, pas un
+   filtre de préfixe qui aurait glissé), les deux `[Charpente] F-B (round 7, BRANCHE …)` présents et
+   absents de la liste `FAIL`, `error CS` : 0.
+
+Sonde temporaire de diagnostic (`NavigationPlayModeTests.cs`, un seul `Debug.Log`) ajoutée entre les
+runs 1 et final, PUIS RETIRÉE — `diff` contre `eabde01` : **identique**, confirmé avant le run final.
+
+**Arbre propre** : `git status --porcelain` après restauration des 3 atlas SDF (`DejaVuSans SDF`,
+`DejaVuSerif SDF`, `LiberationSans SDF`, dirtiés par CHACUN des 3 runs, restaurés après chacun) →
+4 fichiers modifiés (`AppShell.cs`, `TopBarController.cs`,
+`CharpenteOuvertureSessionOverlayPlayModeTests.cs`, `Tools/charpente-anchor-freshness-check.py`),
+0 fichier hors de cette liste, `Tools/juge-visuel/`/`Tools/juge-donnees/` non trackés = sessions
+tierces, non touchés.
+
+**Instrument Python — auto-test et contrôle positif historique, exécutés, sortie réelle** :
+
+```
+$ python3 Tools/charpente-anchor-freshness-check.py eabde01
+AUTO-TEST : 5/5 cas conformes (3 détections attendues-et-obtenues, 2 non-détections
+attendues-et-obtenues : datée / hors périmètre).
+…
+VERT — 0 citation par numéro non datée vers un fichier protégé dans les lignes touchées par ce diff.
+EXIT=0
+```
+
+(diff testé : `eabde01` → arbre de travail, c'est-à-dire EXACTEMENT ce que ce round ajoute — les 2
+ancres fausses corrigées au § MINEUR m4 ne réintroduisent RIEN, vérifié APRÈS correction, pas avant.)
+
+```
+$ python3 Tools/charpente-anchor-freshness-check.py 9c57125 eabde01
+… charpente-item0-2-3-implementation-notes.md : 2 violation(s) …
+ROUGE — 2 citation(s) … :3227 … :3228 …
+```
+
+(diff HISTORIQUE round 13, non touché par ce round — confirme que le correctif de fenêtre m1 mord
+exactement où la revue l'attendait, sans modifier le contenu déjà commité.)
+
+### État final du dépôt (round 15)
+
+**Fichiers modifiés** :
+- `Assets/Scripts/Shell/AppShell.cs` — BLOQUANT (`Px()` recalculé, docstring),
+  `RebatirChromePourResolutionCourante()` (déclaration d'activation, MAJEUR 2).
+- `Assets/Scripts/Shell/TopBarController.cs` — MINEUR m4 (2 ancres corrigées, sans numéro vers
+  `DashboardController.cs`).
+- `Assets/Tests/PlayMode/CharpenteOuvertureSessionOverlayPlayModeTests.cs` — MAJEUR 1 (garde de
+  magnitude + contrôle positif), mesure RÉELLE des 44,1 dp (item 4 du mandat).
+- `Tools/charpente-anchor-freshness-check.py` — MINEURS m1/m2/m3 (fenêtre ±2, self-test 5/5,
+  justification de portée honnête).
+- `Tools/charpente-item0-2-3-implementation-notes.md` — § ROUND 15 (ce bloc).
+
+**Aucun fichier hors ce périmètre touché** — en particulier PAS
+`Assets/Scripts/CityMap/DistrictInteriorScreenController.cs` ni
+`Assets/Tests/PlayMode/NavigationPlayModeTests.cs` (sonde de diagnostic ajoutée puis retirée,
+vérifiée `identical`).
+
+### Ce que je n'ai pas pu vérifier
+
+| point | commande / mesure qui tranche | ce qu'elle décide |
+|---|---|---|
+| Le mécanisme EXACT du sous-comptage `EffectiveBottomOverhangPx` (facteur 1× vs 2×, cf. Deviations) | instrumenter `CalculateRelativeRectTransformBounds` élément par élément (médaillon, anneau, filet) sous un ⊥ dédié au nav-district | décide QUEL fichier corriger (`DistrictInteriorScreenController.cs` ou `AppShell`/`TopBarController.cs`) |
+| Que le facteur corrigé se comporte identiquement sur un VRAI appareil (pas batchmode 640×480) | capture APK, `Debug.Log` de `Screen.width`/`TopBarEchelle.localScale.x` sur device réel | le modèle prédit un comportement résolution-INDÉPENDANT désormais (dérivation algébrique § BLOQUANT) — non mesuré sur device par ce round |
+| Les 99 citations relatives + 134 absolues restantes de `notes.md`/`design.md`/`Montage.cs` hors du diff de ce round | audit humain, ou extension future de l'instrument à `PROTECTED_BASENAMES ⊇ {design.md}` | non audité — différé légitime, déclaré au docstring du script (§ PORTÉE) |
+
+**Régime respecté** : seul pilote Unity vérifié par `/proc/PID/exe` avant chaque run (jamais par
+ligne de commande), runs au premier plan, `LOG_FILE=` vers `/tmp`, jamais un pipe, fonts SDF
+restaurées et vérifiées propres après CHAQUE run, `[Charpente] SetUp` compté (26) pour confirmer la
+catégorie réellement exécutée.

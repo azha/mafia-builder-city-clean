@@ -142,8 +142,12 @@ namespace MafiaCleanCity.Shell
         }
 
         /// <summary>Every SCANNED text (R2.2 corpus — design C2-F4). Excludes elements whose
-        /// `trackValue` is false (numeric UI chrome: cash, game-day — mirrors
-        /// `DashboardController.AddStatusRow(trackValue:false)`, `:340`).</summary>
+        /// `trackValue` is false (numeric UI chrome: cash, game-day — mirrors the "Vocabulary"/
+        /// "Tier N" row of `DashboardController.AddStatusRow`, corrigé round 15 [revue ⊥ round 14,
+        /// MAJEUR PREUVE] d'une ancre fausse vers `DashboardController.cs:340` [un `switch (target)`
+        /// sans rapport] — la citation par NUMÉRO de la méthode ELLE-MÊME est délibérément absente
+        /// ici : `DashboardController.cs` n'est PAS un fichier de ce lot, une ancre y périmerait
+        /// sans jamais être surveillée par `Tools/charpente-anchor-freshness-check.py`).</summary>
         public IReadOnlyList<string> RenderedTexts => renderedTexts;
         private readonly List<string> renderedTexts = new List<string>();
 
@@ -390,8 +394,11 @@ namespace MafiaCleanCity.Shell
 
             // 2) Cash — LOCALE-formatted, NO hard-coded currency symbol (design C2-F1). Digit-bearing
             //    UI chrome, EXCLUDED from the scan corpus (design C2-F4 / IMPORTANT-5) — the SAME
-            //    mechanism DashboardController already uses for "Tier N" (`:340`). Doctrine (1) :
-            //    « l'argent, seul or de l'écran » — serif, `hudMoneyGold`.
+            //    mechanism DashboardController already uses for its "Vocabulary"/"Tier N" row
+            //    (corrigé round 15 [revue ⊥ round 14] — une ancre pointait vers une ligne SANS
+            //    RAPPORT (un `switch (target)`) ; jamais de citation par NUMÉRO d'un fichier hors
+            //    de ce lot, `DashboardController.cs` n'étant surveillé par aucun instrument ici).
+            //    Doctrine (1) : « l'argent, seul or de l'écran » — serif, `hudMoneyGold`.
             string locale = CurrentMe != null ? CurrentMe.locale : null;
             string cashRaw = CurrentWallet != null ? CurrentWallet.cash_cents : null;
             RenderedCashText = FormatCash(cashRaw, locale);

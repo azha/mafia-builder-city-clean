@@ -20,16 +20,43 @@ PORTÉE (déclarée, pas implicite) — voir FILE_SCOPE / PROTECTED_BASENAMES ci
   - Ce que ce script NE vérifie PAS, délibérément : les citations déjà présentes AVANT ce commit,
     non touchées par lui. Auditer l'intégralité de l'historique (des centaines de citations dans
     `notes.md`, dont beaucoup sont légitimement DATÉES par leur propre section "## ROUND N") est un
-    problème de désambiguïsation de langage naturel hors de portée d'un script de ~100 lignes — et
-    hors de la classe que ce BLOQUANT nomme : LES 4 OCCURRENCES PASSÉES DE CE DÉFAUT VIVAIENT TOUTES
-    DANS LE TEXTE NEUF DU COMMIT QUI PRÉTENDAIT LES FERMER, jamais dans du texte ancien laissé
-    intact. Une garde de RÉGRESSION scopée au diff couvre exactement ce mécanisme, avec précision.
-    (Le round qui audite l'historique complet reste un geste humain, comme les 12 rounds précédents.)
+    problème de désambiguïsation de langage naturel hors de portée d'un script de ~100 lignes.
+    ⛔⛔ CORRIGÉ round 15 (revue ⊥ round 14, MAJEUR — CLASSE PREUVE) — la justification livrée round
+    13 ICI MÊME affirmait « LES 4 OCCURRENCES PASSÉES DE CE DÉFAUT VIVAIENT TOUTES DANS LE TEXTE
+    NEUF DU COMMIT QUI PRÉTENDAIT LES FERMER, jamais dans du texte ancien laissé intact » — FAUX,
+    et la mesure était déjà dans le round 12 cité par round 13 lui-même : 4 des 6 ancres de son
+    BLOQUANT 1 étaient du texte ANCIEN, non touché par le commit qui les a rendues fausses, rendu
+    faux PAR LES DÉCALAGES DE LIGNES introduits ailleurs dans le MÊME commit (round 12 l'écrivait
+    textuellement : « non touché ce round, invalidé par lui »). La VRAIE raison du scope diff-only
+    est plus modeste : couvrir le texte NEUF (ce que ce script fait) coûte ~100 lignes ; couvrir en
+    plus le DÉCALAGE d'ancres anciennes par des lignes ajoutées/retirées AILLEURS dans le fichier
+    coûterait de reconstruire une correspondance ancien-numéro → nouveau-numéro pour CHAQUE ligne du
+    fichier, hors de portée ici. ⇒ CE QUE CE SCRIPT LAISSE OUVERT, EXPLICITEMENT : toute ancre
+    ANCIENNE, non touchée par CE diff, mais rendue fausse par un décalage de lignes AILLEURS dans le
+    même fichier protégé — c'est EXACTEMENT le mécanisme du BLOQUANT (b)/(c) round 12, et il reste
+    un geste humain à chaque round (comme les 12 rounds précédents), PAS mécanisé ici.
+    ⚠️ AUTRE LIMITE DÉCLARÉE, distincte de la précédente : une citation dont la CIBLE n'est PAS dans
+    `PROTECTED_BASENAMES` (ex. `design.md`, `implementation-notes.md`) n'est JAMAIS vérifiée, même
+    si cette cible est elle-même rééditée à chaque round par ce lot — round 12's BLOQUANT (c) était
+    exactement une citation vers `design.md:109`/`:146` devenue fausse ; une RÉCURRENCE de ce même
+    mécanisme échapperait ENTIÈREMENT à cet instrument aujourd'hui. Étendre `PROTECTED_BASENAMES` à
+    ces fichiers est un choix de PORTÉE qui n'a pas été tranché ici (revue ⊥ round 14, MAJEUR 1,
+    sous-finding — non trancher un choix d'architecture à la place de l'auteur) : remonté, pas
+    deviné.
 
 DATATION — une citation numérique est exemptée si un jeton ressemblant à un SHA git
-(`[0-9a-f]{7,40}`) apparaît dans le même hunk, à proximité (fenêtre de ±2 lignes) — c'est la forme
-DÉJÀ établie dans ce dépôt (voir `CharpenteMontageLocatairesPlayModeTests.cs`, le commentaire
-"HEAD `fe00b0a`, mesuré au commit du design" à côté de `` `:211` ``/`` `:375` ``).
+(`[0-9a-f]{7,40}`) apparaît À PROXIMITÉ (fenêtre de ±DATING_WINDOW_LINES lignes DU FICHIER CIBLE,
+PAS du hunk entier) — c'est la forme DÉJÀ établie dans ce dépôt (voir
+`CharpenteMontageLocatairesPlayModeTests.cs`, le commentaire "HEAD `fe00b0a`, mesuré au commit du
+design" à côté de `` `:211` ``/`` `:375` ``).
+⛔⛔ CORRIGÉ round 15 (revue ⊥ round 14, MAJEUR — CLASSE PREUVE). La version livrée round 13 datait
+contre le HUNK ENTIER (`"\n".join(hunk_lines)`), pas contre une fenêtre de ±2 lignes comme ce
+docstring le promettait déjà à l'époque : un SEUL jeton ressemblant à un SHA N'IMPORTE OÙ dans un
+hunk de 291 lignes exemptait TOUTES les citations de ce hunk. Mesuré par la revue : 2 candidats
+authentiques générés par injection sur le hunk RÉEL de round 13 (`notes.md:3227`/`:3228`) ont été
+SILENCIEUSEMENT ÉCARTÉS par ce mécanisme. La fenêtre est maintenant calculée par DISTANCE DE LIGNE
+réelle dans le fichier CIBLE (chaque ligne conservée porte son propre numéro), jamais par
+appartenance au même hunk.
 
 RÉSOLUTION DE LA FORME RELATIVE (`` `:N` ``) — un `` `:N` `` hérite du DERNIER fichier cité en
 forme ABSOLUE sur la MÊME LIGNE (en amont) ou, à défaut, sur une ligne AJOUTÉE précédente DU MÊME
@@ -63,6 +90,11 @@ REL_RE = re.compile(r"`:(\d+)(?:[-–](\d+))?`")
 SHA_RE = re.compile(r"\b[0-9a-f]{7,40}\b")
 HUNK_HEADER_RE = re.compile(r"^@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@")
 
+# round 15 (revue ⊥ round 14, MAJEUR) — la fenêtre que le docstring promettait déjà round 13, mais
+# que le code n'implémentait pas (il datait contre le HUNK ENTIER). Distance en LIGNES DU FICHIER
+# CIBLE, jamais en position dans le hunk.
+DATING_WINDOW_LINES = 2
+
 
 def git_diff(base, target, path):
     """subprocess direct — jamais un pipe/redirection shell (piège documenté du dépôt)."""
@@ -81,11 +113,17 @@ def scan_diff_text(diff_text, filename_being_diffed):
     lines = diff_text.split("\n")
     new_lineno = None
     last_abs_target = None  # réinitialisé à chaque hunk
-    hunk_lines = []  # texte du hunk courant, pour la fenêtre de datation
+    # (numéro_de_ligne_ou_None, texte) pour CHAQUE ligne conservée (ajoutée OU contexte) du hunk
+    # courant — le numéro permet une fenêtre de datation par DISTANCE RÉELLE, pas par appartenance
+    # au hunk (round 15, revue ⊥ round 14, MAJEUR — voir DATATION ci-dessus).
+    hunk_lines = []
 
     def flush_hunk_dating_and_check(pending):
         for (lineno, target, text, kind) in pending:
-            window = "\n".join(hunk_lines)
+            window = "\n".join(
+                raw for (ln, raw) in hunk_lines
+                if ln is not None and abs(ln - lineno) <= DATING_WINDOW_LINES
+            )
             dated = bool(SHA_RE.search(window))
             if target in PROTECTED_BASENAMES and not dated:
                 violations.append((filename_being_diffed, lineno, target, text.strip(), kind))
@@ -105,7 +143,7 @@ def scan_diff_text(diff_text, filename_being_diffed):
         if raw.startswith("+++") or raw.startswith("---"):
             continue
         if raw.startswith("+"):
-            hunk_lines.append(raw)
+            hunk_lines.append((new_lineno, raw))
             content = raw[1:]
             # forme ABSOLUE — traitée en premier, dans l'ordre d'apparition sur la ligne
             abs_matches = list(ABS_RE.finditer(content))
@@ -131,7 +169,7 @@ def scan_diff_text(diff_text, filename_being_diffed):
         elif raw.startswith("-"):
             continue  # ligne retirée : ne compte pas dans la numérotation NOUVELLE
         else:
-            hunk_lines.append(raw)
+            hunk_lines.append((new_lineno, raw))
             if new_lineno is not None:
                 new_lineno += 1
 
@@ -166,8 +204,16 @@ def self_test():
     v2 = scan_diff_text(diff_good_dated, "TopBarController.cs")
     assert len(v2) == 0, f"AUTO-TEST ÉCHOUÉ (cas 2, citation datée) : attendu 0, obtenu {v2}"
 
-    # Cas 3 — citation ABSOLUE non datée vers un fichier PROTÉGÉ, depuis un AUTRE fichier (le
-    # mécanisme des ancres design.md:109/:146 round 11) : DOIT être détectée.
+    # Cas 3 — citation ABSOLUE non datée vers un fichier PROTÉGÉ, DEPUIS UN AUTRE FICHIER .cs (une
+    # citation croisée, PAS une auto-référence) : DOIT être détectée, avec sa forme relative héritée.
+    # ⛔⛔ CORRIGÉ round 15 (revue ⊥ round 14, MAJEUR — CLASSE PREUVE) — ce cas se déclarait « le
+    # mécanisme des ancres design.md:109/:146 round 11 ». FAUX SUR LES DEUX AXES : (a) la SOURCE
+    # diffée ici est un `.cs`, jamais `design.md` ; (b) et surtout, la CIBLE round 11 réelle ÉTAIT
+    # `design.md` — un fichier qui n'est PAS dans `PROTECTED_BASENAMES` — alors que ce cas cite
+    # `TopBarController.cs`, qui l'EST. Une citation vers `design.md` ne serait JAMAIS détectée par
+    # CE script, quel que soit le cas testé ici (voir PORTÉE, § limite déclarée). Ce cas prouve autre
+    # chose, réel et utile : l'HÉRITAGE d'une cible ABSOLUE par une forme RELATIVE suivante,
+    # FONCTIONNE aussi quand la source diffée n'est PAS le fichier protégé lui-même.
     diff_bad_cross = (
         "@@ -310,0 +311,2 @@\n"
         "+        // rend une FLÈCHE NUE pour cette action (`TopBarController.cs:999`), voir\n"
@@ -175,8 +221,9 @@ def self_test():
     )
     v3 = scan_diff_text(diff_bad_cross, "CharpenteOuvertureSessionOverlayPlayModeTests.cs")
     assert len(v3) == 2 and all(t[2] == "TopBarController.cs" for t in v3), (
-        f"AUTO-TEST ÉCHOUÉ (cas 3, ABS + REL hérité non datés) : attendu 2 violations sur "
-        f"TopBarController.cs (une absolue, une relative héritée), obtenu {v3}")
+        f"AUTO-TEST ÉCHOUÉ (cas 3, ABS + REL hérité non datés, depuis un AUTRE fichier .cs) : "
+        f"attendu 2 violations sur TopBarController.cs (une absolue, une relative héritée), "
+        f"obtenu {v3}")
 
     # Cas 4 — citation vers un fichier NON protégé (ex. EventSystem.cs, package tiers) : NE DOIT
     # JAMAIS être détectée, même non datée, même en forme relative qui la suit.
@@ -188,7 +235,22 @@ def self_test():
     v4 = scan_diff_text(diff_out_of_scope, "ProductionClickSupport.cs")
     assert len(v4) == 0, f"AUTO-TEST ÉCHOUÉ (cas 4, fichier hors périmètre) : attendu 0, obtenu {v4}"
 
-    print("AUTO-TEST : 4/4 cas conformes (2 détections attendues-et-obtenues, 2 non-détections "
+    # Cas 5 (round 15, NOUVEAU — comble PARTIELLEMENT ce que le cas 3 se déclarait couvrir sans le
+    # faire) — une citation ABSOLUE non datée vers un fichier PROTÉGÉ, DEPUIS `design.md` LUI-MÊME :
+    # DOIT être détectée. Ceci prouve que le mécanisme ne discrimine pas par TYPE de fichier SOURCE
+    # (`.md` scanné exactement comme un `.cs`) — mais NE PROUVE PAS, et ne peut PAS prouver, la
+    # classe réelle du BLOQUANT (c) round 11 (une citation VERS `design.md`, qui reste HORS DE
+    # PORTÉE de ce script tant que `design.md` n'est pas dans `PROTECTED_BASENAMES` — voir PORTÉE).
+    diff_from_design_md = (
+        "@@ -108,0 +109,2 @@\n"
+        "+   `AppShell.cs:999` construit le Canvas ; voir aussi `:1005` pour le détail du flux.\n"
+    )
+    v5 = scan_diff_text(diff_from_design_md, "charpente-item0-2-3-design.md")
+    assert len(v5) == 2 and all(t[2] == "AppShell.cs" for t in v5), (
+        f"AUTO-TEST ÉCHOUÉ (cas 5, citation depuis design.md vers un fichier PROTÉGÉ) : attendu "
+        f"2 violations sur AppShell.cs, obtenu {v5}")
+
+    print("AUTO-TEST : 5/5 cas conformes (3 détections attendues-et-obtenues, 2 non-détections "
           "attendues-et-obtenues : datée / hors périmètre).")
 
 
