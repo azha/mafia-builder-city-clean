@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.EventSystems; // round 8 (revue ⊥, MAJEUR 2) — garde de collision sur la sortie
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 using UnityEngine.UI;
@@ -319,9 +320,16 @@ namespace MafiaCleanCity.Shell.Tests
         // <DashboardController>()` sur les DEUX branches d'`AcquireSessionThenActivateHome`
         // (`AppShell.cs`, branche repli-échec et branche succès) — APRÈS, parce qu'`ActivateTab`
         // remet l'action de tête à `None` (son propre reset défensif) : la poser avant l'aurait
-        // fait écraser. La copie n'est pas inventée : « ← Carte » (le libellé rendu par `LabelFor`,
-        // TopBarController.cs) désigne exactement la destination, EXACTEMENT le même geste déjà
-        // câblé pour sortir d'un district.
+        // fait écraser. Aucune copie n'est inventée : c'est EXACTEMENT le geste déjà câblé pour
+        // sortir d'un district, réutilisé tel quel.
+        // ⚠️ CORRIGÉ round 8 (revue ⊥, MINEUR 2) — ce commentaire attribuait ici un libellé
+        // « retour vers la carte » à `LabelFor`, en s'appuyant sur le design du lot. `LabelFor`
+        // rend une FLÈCHE NUE pour cette action (`TopBarController.cs:410`), et le fichier
+        // documente à `:398-408` pourquoi le libellé à deux mots a été ABANDONNÉ : il revenait à la
+        // ligne depuis que le bandeau est à l'échelle du canon. ⇒ L'affordance montrée au joueur
+        // est une flèche sans destination écrite. *Un énoncé daté d'un design, périmé par un lot
+        // ultérieur, ressuscité comme preuve* — la découvrabilité repose sur le fait que c'est le
+        // seul contrôle du coin gauche, pas sur un mot qui n'est pas affiché.
         //
         // Ce que CE round livre : F-A (inchangée, toujours vraie — un SECOND chemin de sortie,
         // générique, coexiste avec celui-ci) et F-B, REMPLACÉE : l'ancienne épingle documentait un
@@ -444,6 +452,23 @@ namespace MafiaCleanCity.Shell.Tests
                 while (shell.CurrentTab != AppShell.Tab.Empire && bootElapsed < 15f) { bootElapsed += Time.deltaTime; yield return null; }
                 Assert.AreEqual(AppShell.Tab.Empire, shell.CurrentTab,
                     "acquisition (même ratée) du shell résolue avant toute vérification");
+
+                // ⛔⛔ LA PRÉMISSE, et sans elle ce test est un DOUBLON SILENCIEUX de la branche
+                // succès (revue ⊥ round 8, MAJEUR 3). `CurrentTab == Empire` est vrai sur les DEUX
+                // branches : rien, jusqu'ici, ne dit LAQUELLE a été empruntée. Le jour où cette
+                // identité cesse d'échouer — auto-signup côté back, stack absente, compte créé par
+                // mégarde — ce test glisserait sur la branche SUCCÈS, `AppShell.cs:372` cesserait
+                // d'être couverte, et LES DEUX TESTS RESTERAIENT VERTS à travers l'événement.
+                // Le précédent maison que ce test invoque asserte, lui, sa prémisse
+                // (`NavigationPlayModeTests.cs:247-248`) : on en copiait la forme, pas la garde.
+                // `Token` n'est renseigné que par un signin RÉUSSI (`AppShell.cs`, branche succès) —
+                // c'est donc la grandeur qui DISCRIMINE les deux chemins, pas l'onglet actif.
+                Assert.IsTrue(string.IsNullOrEmpty(shell.Token),
+                    "prémisse (BRANCHE REPLI-ÉCHEC) : le signin du shell doit avoir ÉCHOUÉ, donc " +
+                    $"`Token` reste vide — trouvé « {shell.Token} ». S'il est renseigné, l'identité " +
+                    "délibérément invalide a été ACCEPTÉE : ce test a glissé sur la branche succès " +
+                    "et ne couvre plus le repli. Réparer l'identité, pas l'assertion.");
+
                 yield return null; // même marge d'une frame que la branche succès
 
                 yield return VerifierFermetureParActionDeTete(shell, "BRANCHE REPLI-ÉCHEC");
@@ -479,6 +504,46 @@ namespace MafiaCleanCity.Shell.Tests
             Button boutonTete = boutonTeteT.GetComponent<Button>();
             Assert.IsNotNull(boutonTete, $"'LeadingAction' doit porter un Button ({etiquetteBranche})");
             Assert.IsTrue(boutonTete.interactable, $"l'action de tête doit être interactable ({etiquetteBranche})");
+
+            // ⛔⛔ GARDE DE COLLISION SUR LA SORTIE (revue ⊥ round 8, MAJEUR 2). Sans elle, ce lot
+            // livrait la moitié du ruling qui compte pour le joueur — « puis on tombe sur la ville » —
+            // par un bouton posé SOUS un overlay plein écran NEUF, en n'en prouvant que la moitié
+            // « Selectable ». `ProductionClickSupport` le dit lui-même dans sa docstring : il route
+            // directement sur le GameObject et NE COUVRE PAS le hit-testing. Mesuré avant ce round :
+            // `EventSystem.current.RaycastAll` n'apparaissait qu'UNE fois dans tout `Assets/Tests`,
+            // scopé aux 4 bulles du dock — la classe était fermée sur les INSTANCES, pas sur la
+            // POPULATION de ce sur quoi un joueur doit taper.
+            //
+            // ⇒ La propriété qui mord ici n'est pas « le bouton existe » : c'est que **le backdrop
+            // plein écran de l'overlay n'avale PAS le tap de sortie**. `DashboardBackdrop` est
+            // raycastable et couvre tout l'écran ; seul l'ordre de fratrie (ContentSlot < TopBarSlot)
+            // met l'action de tête au-dessus. Cette assertion est ce qui rougirait si cet ordre
+            // changeait — et l'ordre de fratrie, lui, est gardé ailleurs sans jamais tester CE tap.
+            var rectTete = (RectTransform)boutonTeteT;
+            Vector2 centreTete = RectTransformUtility.WorldToScreenPoint(
+                null, rectTete.TransformPoint(rectTete.rect.center));
+            var donneesTete = new PointerEventData(EventSystem.current) { position = centreTete };
+            var resultatsTete = new List<RaycastResult>();
+            EventSystem.current.RaycastAll(donneesTete, resultatsTete);
+
+            Assert.IsTrue(resultatsTete.Count > 0,
+                $"({etiquetteBranche}) un raycast au centre de l'action de tête ({centreTete}) ne " +
+                "touche RIEN : la sortie est invisible au hit-testing, donc INATTEIGNABLE au doigt " +
+                "même si son Button est interactable.");
+            GameObject touche = resultatsTete[0].gameObject;
+            Assert.IsTrue(touche == boutonTeteT.gameObject || touche.transform.IsChildOf(boutonTeteT),
+                $"({etiquetteBranche}) le PREMIER objet touché au centre de l'action de tête doit " +
+                $"être l'affordance elle-même (ou un de ses enfants graphiques) — trouvé " +
+                $"« {touche.name} » — quel qu'il soit, IL avale le tap de sortie et le joueur reste " +
+                "enfermé sur l'Accueil : la fermeture ne serait plus prouvée que par un clic routé " +
+                "en direct, qu'aucun doigt ne peut reproduire.\n" +
+                "DEUX avaleurs sont possibles et le contrôle négatif du round 8 a rencontré le " +
+                "SECOND, pas celui qu'on attendait : (a) `DashboardBackdrop`, le fond plein écran " +
+                "de l'overlay — c'est l'ordre de fratrie (ContentSlot < TopBarSlot) qui l'écarte ; " +
+                "(b) `TopBarSlot` LUI-MÊME, dont l'Image transparente est raycastable et couvre " +
+                "toute la barre — c'est le `raycastTarget` de l'affordance qui la fait gagner. " +
+                "Armer le (b) rend bien ce message avec « TopBarSlot ». Ne pas conclure du nom " +
+                "trouvé à la cause : les deux mondes produisent le même symptôme.");
 
             // ⛔ LE GESTE DE PRODUCTION — jamais `shell.ExitToCityMap()` ni `.onClick.Invoke()` nu.
             ProductionClickSupport.Click(boutonTete);
