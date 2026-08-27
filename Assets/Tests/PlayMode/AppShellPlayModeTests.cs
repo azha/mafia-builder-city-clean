@@ -6,6 +6,7 @@ using UnityEngine.UI;
 using MafiaCleanCity.CityMap;
 using MafiaCleanCity.Operational; // DashboardController + LaunderingController
 using MafiaCleanCity.Operational.Lieutenant;
+using MafiaCleanCity.Tests; // ProductionClickSupport (round 4, BLOQUANT)
 using Object = UnityEngine.Object;
 
 namespace MafiaCleanCity.Shell.Tests
@@ -49,37 +50,39 @@ namespace MafiaCleanCity.Shell.Tests
 
         // AMENDÉ (hud-session-arbitrages-design.md §1.2, B1) — `Start()` lance désormais
         // `AcquireSessionThenActivateHome` (le shell signe SA PROPRE session : signin+session/open+
-        // TopBar.Load) en tâche de fond, terminée par SON PROPRE `ActivateTab(Tab.Home)`. Un unique
-        // `yield return null;` (patron pré-B1) ne garantit plus que ce montage a eu lieu — MESURÉ :
-        // en lot (contention réseau), `MountedTenantType` était encore `null` au moment prévu pour
-        // `DashboardController`. `CurrentTab == Home` est le signal robuste (vrai sur SES DEUX
-        // branches, succès et repli-échec) — voir NavigationPlayModeTests.NavF3 pour le cas où la
-        // branche échoue délibérément.
-        private static IEnumerator WaitForHomeMounted(AppShell s)
+        // TopBar.Load) en tâche de fond, terminée par SON PROPRE `ActivateTab(Tab.Empire)` (items
+        // 0.2/0.3, ruling 2026-08-25 — Empire fusionne l'ancien Home et l'ancien City ; le nom de la
+        // coroutine ne change pas, désigné par le design). Un unique `yield return null;` (patron
+        // pré-B1) ne garantit plus que ce montage a eu lieu — MESURÉ : en lot (contention réseau),
+        // `MountedTenantType` était encore `null` au moment prévu pour `CityMapController`.
+        // `CurrentTab == Empire` est le signal robuste (vrai sur SES DEUX branches, succès et
+        // repli-échec) — voir NavigationPlayModeTests.NavF3 pour le cas où la branche échoue
+        // délibérément.
+        private static IEnumerator WaitForEmpireMounted(AppShell s)
         {
             float elapsed = 0f;
-            while (s.CurrentTab != AppShell.Tab.Home && elapsed < 15f) { elapsed += Time.deltaTime; yield return null; }
-            Assert.AreEqual(AppShell.Tab.Home, s.CurrentTab, "acquisition de session propre du shell résolue (Home monté)");
+            while (s.CurrentTab != AppShell.Tab.Empire && elapsed < 15f) { elapsed += Time.deltaTime; yield return null; }
+            Assert.AreEqual(AppShell.Tab.Empire, s.CurrentTab, "acquisition de session propre du shell résolue (Empire monté)");
         }
 
-        // C1-F1 (atteignabilité) — les 5 onglets activés successivement dans le MÊME test montent
-        // chacun le type attendu ; le 5e (More) est asserté PAR SA VALEUR (OnEmptyMoreDestination),
-        // jamais par l'absence d'un composant monté (sinon un shell qui ne monte JAMAIS rien passerait).
+        // C1-F1 (atteignabilité) — AMENDÉ (items 0.2/0.3, ruling 2026-08-25) : le dock ratifié
+        // compte désormais 4 onglets (Home et City ont fusionné en Empire), activés successivement
+        // dans le MÊME test, chacun montant le type attendu ; le 4e (More) est asserté PAR SA VALEUR
+        // (OnEmptyMoreDestination), jamais par l'absence d'un composant monté (sinon un shell qui ne
+        // monte JAMAIS rien passerait). ⛔ Ce test asserte le MÉCANISME (le shell monte bien un
+        // locataire par onglet) — c'est le FAIT « quel onglet démarre, et ce qu'il monte » que le
+        // ruling remplace : Empire mounts CityMapController, plus DashboardController (débranché,
+        // item 0.5) — jamais silencieusement, le test se met à jour au lieu de se relâcher.
         [UnityTest]
-        public IEnumerator C1F1_EachOfThe5Tabs_MountsExpectedType_FifthIsNamedEmptyState()
+        public IEnumerator C1F1_EachOfThe4Tabs_MountsExpectedType_FourthIsNamedEmptyState()
         {
             ExpectTenantOwnDemoAuthNoise();
             shellGo = new GameObject("AppShell");
             shell = shellGo.AddComponent<AppShell>();
-            yield return WaitForHomeMounted(shell);
+            yield return WaitForEmpireMounted(shell);
 
-            Assert.AreEqual(typeof(DashboardController), shell.MountedTenantType, "Home mounts DashboardController");
-            Assert.IsFalse(shell.OnEmptyMoreDestination, "Home is not the empty destination");
-
-            shell.ActivateTab(AppShell.Tab.City);
-            yield return null;
-            Assert.AreEqual(typeof(CityMapController), shell.MountedTenantType, "City mounts CityMapController");
-            Assert.IsFalse(shell.OnEmptyMoreDestination);
+            Assert.AreEqual(typeof(CityMapController), shell.MountedTenantType, "Empire mounts CityMapController (Empire IS the map)");
+            Assert.IsFalse(shell.OnEmptyMoreDestination, "Empire is not the empty destination");
 
             shell.ActivateTab(AppShell.Tab.Org);
             yield return null;
@@ -108,8 +111,8 @@ namespace MafiaCleanCity.Shell.Tests
             ExpectTenantOwnDemoAuthNoise();
             shellGo = new GameObject("AppShell");
             shell = shellGo.AddComponent<AppShell>();
-            yield return WaitForHomeMounted(shell);
-            yield return null; // DashboardController.Start()/BuildLayout actually runs here
+            yield return WaitForEmpireMounted(shell);
+            yield return null; // CityMapController.Start()/BuildLayout actually runs here (Empire IS the map, items 0.2/0.3)
 
             // The Canvas root NEVER gains a 4th child: only the shell's own 3 slots
             // (ContentSlot, TopBarSlot, TabBarRoot) live there — a tenant that stretched a fullscreen
@@ -120,33 +123,35 @@ namespace MafiaCleanCity.Shell.Tests
             // ⚠️ Revue ⊥ IMPORTANT-1 : `ContentSlot.childCount > 0` était vraie PAR CONSTRUCTION —
             // `AppShell.MountTenant<T>()` y parente lui-même le host du locataire (`AppShell.cs`,
             // `host.transform.SetParent(ContentSlot, false)`) AVANT que le locataire ne construise
-            // quoi que ce soit. Un `DashboardController.BuildLayout()` qui ne produirait plus rien
+            // quoi que ce soit. Un `CityMapController.BuildLayout()` qui ne produirait plus rien
             // laissait ce test entièrement vert. Correctif : asserter le PARENT EFFECTIF d'un objet
             // NOMMÉ que le locataire construit lui-même — c'est la « cible » littérale du design
             // (§3 C1-F2 : « cible : le parent effectif du locataire »), et ça échoue réellement si
             // `mountParent` est nul (le locataire découvre alors le Canvas et y construit son
-            // "DashboardBackdrop" directement, jamais sous ContentSlot).
-            Transform dashboardBackdrop = shell.ContentSlot.Find("DashboardBackdrop");
-            Assert.IsNotNull(dashboardBackdrop,
-                "the Home tenant's OWN named object ('DashboardBackdrop', DashboardController.BuildLayout) exists as a DIRECT child of ContentSlot");
-            Assert.AreEqual(shell.ContentSlot, dashboardBackdrop.parent,
+            // "CityMapRoot" directement, jamais sous ContentSlot).
+            Transform cityMapRoot = shell.ContentSlot.Find("CityMapRoot");
+            Assert.IsNotNull(cityMapRoot,
+                "the Empire tenant's OWN named object ('CityMapRoot', CityMapController.BuildLayout) exists as a DIRECT child of ContentSlot");
+            Assert.AreEqual(shell.ContentSlot, cityMapRoot.parent,
                 "the tenant's effective parent IS ContentSlot — not merely 'ContentSlot has some child' (which the host itself would already satisfy)");
-            Assert.AreNotEqual(shell.ShellCanvas.transform, dashboardBackdrop.parent,
+            Assert.AreNotEqual(shell.ShellCanvas.transform, cityMapRoot.parent,
                 "and NOT the Canvas root — the exact degenerate case an unset mountParent would produce");
 
             // Second tab change — proves it's not a one-shot fluke, and that unmount/remount actually
-            // swaps content rather than accumulating it forever inside ContentSlot.
-            shell.ActivateTab(AppShell.Tab.City);
+            // swaps content rather than accumulating it forever inside ContentSlot. Org (not Empire
+            // again — items 0.2/0.3 collapsed the former Home<->City pair into one tab) mounts
+            // LieutenantScreenController, whose own BuildLayout builds a "LieutenantBackdrop".
+            shell.ActivateTab(AppShell.Tab.Org);
             yield return null;
             yield return null;
             Assert.AreEqual(3, shell.ShellCanvas.transform.childCount,
                 "STILL exactly 3 Canvas children after a SECOND tenant — confinement holds across swaps");
-            Transform cityMapRoot = shell.ContentSlot.Find("CityMapRoot");
-            Assert.IsNotNull(cityMapRoot,
-                "the City tenant's OWN named object ('CityMapRoot', CityMapController.BuildLayout) exists as a DIRECT child of ContentSlot");
-            Assert.AreEqual(shell.ContentSlot, cityMapRoot.parent, "the City tenant's effective parent IS ContentSlot");
-            Assert.AreNotEqual(shell.ShellCanvas.transform, cityMapRoot.parent, "and NOT the Canvas root");
-            Assert.IsNull(shell.ContentSlot.Find("DashboardBackdrop"),
+            Transform lieutenantBackdrop = shell.ContentSlot.Find("LieutenantBackdrop");
+            Assert.IsNotNull(lieutenantBackdrop,
+                "the Org tenant's OWN named object ('LieutenantBackdrop', LieutenantScreenController.BuildLayout) exists as a DIRECT child of ContentSlot");
+            Assert.AreEqual(shell.ContentSlot, lieutenantBackdrop.parent, "the Org tenant's effective parent IS ContentSlot");
+            Assert.AreNotEqual(shell.ShellCanvas.transform, lieutenantBackdrop.parent, "and NOT the Canvas root");
+            Assert.IsNull(shell.ContentSlot.Find("CityMapRoot"),
                 "the FIRST tenant's object is genuinely gone — unmount/remount swaps, it doesn't accumulate");
 
             // Non-occlusion via SIBLING ORDER (design C1-F2 explicitly sanctions "ordre de frères OU
@@ -166,27 +171,34 @@ namespace MafiaCleanCity.Shell.Tests
 
         // IMPORTANT-1 (verdict ⊥ HUD v3.1, hud-session-arbitrages-design.md §1.2/B1) — un joueur qui
         // touche un AUTRE onglet pendant les 2-4 allers-retours réseau d'`AcquireSessionThenActivateHome`
-        // (la TabBar est cliquable dès `Start()`) ne doit PAS être ramené de force sur Home quand
+        // (la TabBar est cliquable dès `Start()`) ne doit PAS être ramené de force sur Empire quand
         // cette acquisition se termine, son locataire détruit. Fermé par le sentinel `(Tab)(-1)` de
-        // `CurrentTab` : `ActivateTab(Tab.Home)` (les DEUX branches, succès et échec) ne s'exécute
+        // `CurrentTab` : `ActivateTab(Tab.Empire)` (les DEUX branches, succès et échec) ne s'exécute
         // que si RIEN n'a encore été activé.
+        // ⛔ CETTE GARDE NE DOIT PAS SE PERDRE EN CHANGEANT L'ONGLET PAR DÉFAUT (items 0.2/0.3,
+        // Tools/charpente-item0-2-3-design.md §2/C-b) — d'où le choix d'`Org` ci-dessous, PAS
+        // `Empire` : Empire est désormais l'onglet que le boot activerait de toute façon, donc
+        // l'utiliser comme « onglet déjà touché » ne prouverait plus rien (aucune différence
+        // observable entre « le joueur a navigué » et « le boot n'a encore rien fait »). Le
+        // MÉCANISME testé (le sentinel) est inchangé ; seul le FAIT (quel onglet illustre « le
+        // joueur a déjà navigué ailleurs ») change.
         //
-        // Reproduction DÉTERMINISTE (pas dépendante du minutage réseau réel) : `ActivateTab(City)`
+        // Reproduction DÉTERMINISTE (pas dépendante du minutage réseau réel) : `ActivateTab(Org)`
         // appelé AVANT même que `Start()` ne tourne (fenêtre synchrone même-frame que
-        // `AddComponent<AppShell>()`) pose `CurrentTab=City` avant que l'acquisition asynchrone
+        // `AddComponent<AppShell>()`) pose `CurrentTab=Org` avant que l'acquisition asynchrone
         // n'ait la moindre chance de démarrer — exactement la condition que le sentinel doit
         // respecter, quel que soit le moment RÉEL où le joueur aurait tapé pendant la fenêtre réseau.
         [UnityTest]
-        public IEnumerator LateHomeActivation_DoesNotOverride_PlayerNavigationDuringAcquisition()
+        public IEnumerator LateEmpireActivation_DoesNotOverride_PlayerNavigationDuringAcquisition()
         {
             ExpectTenantOwnDemoAuthNoise();
             shellGo = new GameObject("AppShell");
             shell = shellGo.AddComponent<AppShell>();
-            shell.ActivateTab(AppShell.Tab.City); // AVANT Start() — le joueur "a déjà touché City"
-            Assert.AreEqual(AppShell.Tab.City, shell.CurrentTab, "prémisse : City est bien actif avant toute acquisition");
+            shell.ActivateTab(AppShell.Tab.Org); // AVANT Start() — le joueur "a déjà touché Famille (Org)"
+            Assert.AreEqual(AppShell.Tab.Org, shell.CurrentTab, "prémisse : Org est bien actif avant toute acquisition");
 
             // Laisse l'acquisition de session du shell (Start() -> AcquireSessionThenActivateHome)
-            // tourner à son terme (signin démo -> échec ou succès -> ActivateTab(Home) SEULEMENT si
+            // tourner à son terme (signin démo -> échec ou succès -> ActivateTab(Empire) SEULEMENT si
             // le sentinel le permet).
             float elapsed = 0f;
             while (elapsed < 15f)
@@ -195,10 +207,10 @@ namespace MafiaCleanCity.Shell.Tests
                 yield return null;
             }
 
-            Assert.AreEqual(AppShell.Tab.City, shell.CurrentTab,
-                "le montage tardif de Home NE DOIT PAS écraser la navigation du joueur — la course fermée en production, pas seulement en test");
-            Assert.AreEqual(typeof(CityMapController), shell.MountedTenantType,
-                "le locataire City doit rester monté — un ActivateTab(Home) forcé l'aurait détruit");
+            Assert.AreEqual(AppShell.Tab.Org, shell.CurrentTab,
+                "le montage tardif d'Empire NE DOIT PAS écraser la navigation du joueur — la course fermée en production, pas seulement en test");
+            Assert.AreEqual(typeof(LieutenantScreenController), shell.MountedTenantType,
+                "le locataire Org doit rester monté — un ActivateTab(Empire) forcé l'aurait détruit");
         }
 
         // Défaut MESURÉ (Tools/district-v2-reimport-implementation-notes.md § FILE D'ATTENTE,
@@ -237,8 +249,8 @@ namespace MafiaCleanCity.Shell.Tests
             GameObject shellAGo = new GameObject("AppShell_A_abandoned");
             AppShell shellA = shellAGo.AddComponent<AppShell>();
             shellA.SetIdentity("citymap_demo@example.test", "citymap-demo-pw");
-            yield return WaitForHomeMounted(shellA);
-            shellA.ActivateTab(AppShell.Tab.City);
+            yield return WaitForEmpireMounted(shellA);
+            shellA.ActivateTab(AppShell.Tab.Empire); // re-tap (idempotent-ish remount, items 0.2/0.3 — Empire IS the old City)
             yield return null;
             yield return null;
             Assert.AreEqual(typeof(CityMapController), shellA.MountedTenantType, "prémisse : A a bien monté CityMapController");
@@ -250,13 +262,14 @@ namespace MafiaCleanCity.Shell.Tests
             Assert.Greater(Object.FindObjectsByType<DistrictCellView>(FindObjectsInactive.Include, FindObjectsSortMode.None).Length, 0,
                 "prémisse : A a bien une liste de districts vivante avant l'entrée en scène de B");
 
-            // ---- shell B : le VRAI flux joueur, City -> district (via `shell`/`shellGo`, trackés
-            // par le TearDown de la fixture — A est nettoyé explicitement en fin de test). ----
+            // ---- shell B : le VRAI flux joueur, Empire (la carte) -> district (via `shell`/
+            // `shellGo`, trackés par le TearDown de la fixture — A est nettoyé explicitement en fin
+            // de test). ----
             shellGo = new GameObject("AppShell_B");
             shell = shellGo.AddComponent<AppShell>();
             shell.SetIdentity("citymap_demo@example.test", "citymap-demo-pw");
-            yield return WaitForHomeMounted(shell);
-            shell.ActivateTab(AppShell.Tab.City);
+            yield return WaitForEmpireMounted(shell);
+            shell.ActivateTab(AppShell.Tab.Empire); // re-tap (idempotent-ish remount, items 0.2/0.3)
             yield return null;
             yield return null;
             var cityMapB = shell.MountedTenantGameObject.GetComponent<CityMapController>();
@@ -273,7 +286,9 @@ namespace MafiaCleanCity.Shell.Tests
             float interactElapsed = 0f;
             while (!enterBtn.interactable && interactElapsed < 10f) { interactElapsed += Time.deltaTime; yield return null; }
             Assert.IsTrue(enterBtn.interactable, "'Entrer' interactable");
-            enterBtn.onClick.Invoke(); // le VRAI chemin de clic
+            // round 4 (revue ⊥, BLOQUANT) — `onClick.Invoke()` court-circuite les gardes
+            // IsActive()/IsInteractable() de Button.Press() ; ce helper passe par l'EventSystem.
+            ProductionClickSupport.Click(enterBtn); // le VRAI chemin de clic
 
             float enterElapsed = 0f;
             DistrictInteriorScreenController screen = null;

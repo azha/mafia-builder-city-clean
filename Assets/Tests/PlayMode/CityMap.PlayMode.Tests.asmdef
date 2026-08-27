@@ -11,7 +11,8 @@
         "Unity.TextMeshPro",
         "AssetLint",
         "Shell",
-        "ShellContracts"
+        "ShellContracts",
+        "Unity.InputSystem"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

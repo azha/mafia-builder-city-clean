@@ -43,30 +43,35 @@ namespace MafiaCleanCity.Shell.Tests
         {
             // hud-session-arbitrages-design.md §1.3 (B1) — « NavigationPlayModeTests.cs:25,59,122
             // reste vert en posant l'identité du shell sur le compte citymap via le champ sérialisé ».
-            // Sous B1 le shell signe UNE fois pour Home ET pour la City tab qu'il monte ensuite — ces
-            // falsifiables ont besoin du compte citymap_demo (seedé ci-dessus), pas du défaut Home
-            // (operational_demo). Même fenêtre synchrone que `SetToken`/`SetMountParent` : appelé
-            // AVANT le premier `yield return null` ci-dessous, donc AVANT que `Start()` (différé
-            // d'une frame) ne lise ces champs.
+            // AMENDÉ (items 0.2/0.3, ruling 2026-08-25) : `Tab.Home` et `Tab.City` ont fusionné en
+            // `Tab.Empire` (Empire EST la carte) — le shell signe donc UNE fois pour l'onglet PAR
+            // DÉFAUT lui-même, qui monte déjà CityMapController. Ces falsifiables ont besoin du
+            // compte citymap_demo (seedé ci-dessus), pas du défaut operational_demo. Même fenêtre
+            // synchrone que `SetToken`/`SetMountParent` : appelé AVANT le premier
+            // `yield return null` ci-dessous, donc AVANT que `Start()` (différé d'une frame) ne lise
+            // ces champs.
             s.SetIdentity("citymap_demo@example.test", "citymap-demo-pw");
-            LogAssert.ignoreFailingMessages = true; // Home's own DashboardController demo-auth noise (byte-identical rationale to AppShellPlayModeTests)
+            LogAssert.ignoreFailingMessages = true; // Empire's own CityMapController demo-auth noise (byte-identical rationale to AppShellPlayModeTests)
 
             // MESURÉ (course trouvée en lot W3U2, invisible en fichier isolé) : `AppShell.Start()`
             // lance `AcquireSessionThenActivateHome` (signin+session/open+TopBar.Load) en tâche de
-            // fond, qui se termine par SON PROPRE `ActivateTab(Tab.Home)`. Un unique
+            // fond, qui se termine par SON PROPRE `ActivateTab(Tab.Empire)`. Un unique
             // `yield return null;` ne garantit pas que cette séquence est terminée ; sous contention
             // (lot complet), elle peut encore être en vol quand ce test bascule manuellement vers
-            // City — son `ActivateTab(Home)` tardif ÉCRASE alors tout ce que le test a construit
+            // Empire — son `ActivateTab(Empire)` tardif ÉCRASE alors tout ce que le test a construit
             // depuis (CityTabDistrictId remis à -1, l'écran district démonté — reproduit :
             // `MissingReferenceException` sur des objets que le test croyait encore vivants). Fix :
-            // attendre `TopBar.Loaded` — `ActivateTab(Home)` s'exécute SYNCHRONE juste après, dans
-            // la MÊME passe de coroutine, donc le voir vrai garantit que le montage interne de Home
+            // attendre `TopBar.Loaded` — `ActivateTab(Empire)` s'exécute SYNCHRONE juste après, dans
+            // la MÊME passe de coroutine, donc le voir vrai garantit que le montage interne d'Empire
             // est déjà réglé avant toute bascule manuelle.
             float bootElapsed = 0f;
             while ((s.TopBar == null || !s.TopBar.Loaded) && bootElapsed < 15f) { bootElapsed += Time.deltaTime; yield return null; }
             Assert.IsTrue(s.TopBar != null && s.TopBar.Loaded, "acquisition de session propre du shell terminée avant toute bascule manuelle");
 
-            s.ActivateTab(AppShell.Tab.City);
+            // Re-tap (idempotent-ish remount, AppShell.ActivateTab) : Empire est déjà l'onglet par
+            // défaut — ce second appel remonte un CityMapController FRAIS avec sa PROPRE souscription
+            // OnEnterDistrict, exactement comme le faisait autrefois la bascule Home -> City.
+            s.ActivateTab(AppShell.Tab.Empire);
             yield return null; // CityMapController.Start()/BuildLayout deferred one frame
             yield return null; // ... and its own coroutines actually begin running here
         }
@@ -107,7 +112,10 @@ namespace MafiaCleanCity.Shell.Tests
             Button enterBtn = enterBtnT.GetComponent<Button>();
             Assert.IsTrue(enterBtn.interactable, "authenticated + district selected ⇒ interactable (§3.2, 1st refresh point)");
 
-            enterBtn.onClick.Invoke(); // the REAL click path, not a shortcut
+            // round 4 (revue ⊥, BLOQUANT) — `onClick.Invoke()` court-circuite Button.Press()'s
+            // IsActive()/IsInteractable() gates; ProductionClickSupport.Click goes through the
+            // EventSystem instead, so it honors both like a real tap does.
+            ProductionClickSupport.Click(enterBtn); // the REAL click path, not a shortcut
 
             float elapsed = 0f;
             DistrictInteriorScreenController screen = null;
@@ -175,7 +183,9 @@ namespace MafiaCleanCity.Shell.Tests
             Button backBtn = backBtnT.GetComponent<Button>();
             Assert.IsTrue(backBtnT.gameObject.activeSelf, "leading button is VISIBLE while in a district");
 
-            backBtn.onClick.Invoke(); // the REAL click path
+            // round 4 (revue ⊥, BLOQUANT) — same fix as the "Entrer" site above: go through the
+            // EventSystem so Button.Press()'s IsActive()/IsInteractable() gates are honored.
+            ProductionClickSupport.Click(backBtn); // the REAL click path
             yield return null;
             yield return null; // let Object.Destroy's deferred destruction actually process
 
@@ -217,16 +227,18 @@ namespace MafiaCleanCity.Shell.Tests
 
             // MESURÉ (course trouvée en lot, invisible seule) : même un signin DESTINÉ À ÉCHOUER
             // exige un aller-retour réseau RÉEL (>1 frame) — un unique `yield return null;` ne
-            // suffit pas, le test bascule alors vers City AVANT que la branche d'échec d'
-            // `AcquireSessionThenActivateHome` n'ait elle-même appelé `ActivateTab(Home)`, qui
+            // suffit pas, le test bascule alors vers Empire AVANT que la branche d'échec d'
+            // `AcquireSessionThenActivateHome` n'ait elle-même appelé `ActivateTab(Empire)`, qui
             // arrive ENSUITE et écrase le montage manuel (repro : `cityMap` == null en lot). Fix :
-            // attendre `CurrentTab == Home`, signal robuste aux DEUX branches (succès ET échec) —
+            // attendre `CurrentTab == Empire`, signal robuste aux DEUX branches (succès ET échec) —
             // plus précis que `TopBar.Loaded` (vrai seulement en cas de succès).
             float bootElapsed = 0f;
-            while (shell.CurrentTab != AppShell.Tab.Home && bootElapsed < 15f) { bootElapsed += Time.deltaTime; yield return null; }
-            Assert.AreEqual(AppShell.Tab.Home, shell.CurrentTab, "acquisition (même ratée) du shell résolue avant toute bascule manuelle");
+            while (shell.CurrentTab != AppShell.Tab.Empire && bootElapsed < 15f) { bootElapsed += Time.deltaTime; yield return null; }
+            Assert.AreEqual(AppShell.Tab.Empire, shell.CurrentTab, "acquisition (même ratée) du shell résolue avant toute bascule manuelle");
 
-            shell.ActivateTab(AppShell.Tab.City);
+            // Re-tap (idempotent-ish remount) : Empire est déjà l'onglet par défaut ; ce second appel
+            // remonte un CityMapController FRAIS, exactement comme le faisait la bascule Home -> City.
+            shell.ActivateTab(AppShell.Tab.Empire);
             yield return null;
             yield return null;
 

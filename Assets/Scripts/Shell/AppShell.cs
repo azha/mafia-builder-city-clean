@@ -32,29 +32,48 @@ namespace MafiaCleanCity.Shell
     // Un locataire qui étire un fond plein écran DANS ContentSlot reste donc toujours sous les deux
     // barres, quel que soit ce qu'il fait à l'intérieur de son propre parent.
     //
-    // Les 5 onglets sont ceux du canon, recopiés verbatim (`docs/tech/08_ui_screens/
-    // global_conventions_core.md:62-68` — Home/City/Org/Pipeline/More), PAS devinés : Home →
-    // DashboardController (screen_1) ; City → CityMapController ("carte", City Map isométrique) ;
-    // Org → LieutenantScreenController ("groupe", "Org chart + liste lieutenants") ; Pipeline →
-    // LaunderingController ("tuyau", "Vue pipeline de blanchiment" — le MÊME contrôleur que
-    // `DashboardController.OpenPipeline()` ouvre déjà, précédent existant REUSE) ; More → sheet
-    // vide assumée (screen_12, hors périmètre du design §0 — ses 7 destinations ne sont PAS ce lot).
+    // Les onglets étaient ceux du canon, recopiés verbatim (`docs/tech/08_ui_screens/
+    // global_conventions_core.md:62-68` — Home/City/Org/Pipeline/More) : Home → DashboardController
+    // (screen_1) ; City → CityMapController ("carte") ; Org → LieutenantScreenController ; Pipeline
+    // → LaunderingController (le MÊME contrôleur que `DashboardController.OpenPipeline()` ouvre déjà,
+    // précédent existant REUSE) ; More → sheet vide assumée (screen_12, hors périmètre).
     // AMENDÉ (item 0.4 de `front.md`, Tools/charpente-item0-4-design.md) — implémente désormais
     // AUSSI `IShellNavigator` : les deux sites qui ouvraient un écran en créant une racine de
     // scène nue (`DashboardController.OpenNav`, `ExceptionQueueController.OpenDetail`) montent
     // maintenant PAR CE SHELL, en surimpression, confinés dans `ContentSlot` — voir
     // `MonterLocataireEnSurimpression<T>` plus bas.
+    // AMENDÉ DE NOUVEAU (items 0.2/0.3/0.3-bis, ruling user 2026-08-25, Tools/charpente-item0-2-3-
+    // design.md) — le dock ratifié est **Empire · Famille · Filière · Plus** : « on est déjà sur la
+    // carte, elle sort du dock ». `Tab.Home` et `Tab.City` FUSIONNENT en **`Tab.Empire`**, qui monte
+    // `CityMapController` — la branche City d'hier, déplacée, pas réécrite : Empire EST la carte.
+    // `DashboardController` n'est plus monté par AUCUN onglet (débranché du DOCK, dit et non
+    // masqué). Ceci ferme aussi le cycle fermé mesuré avant ce lot (`City` n'était atteignable QUE
+    // depuis un district, lui-même atteignable QUE depuis `City` — `DistrictInteriorScreenController`
+    // était donc injoignable depuis un shell en marche) : la première branche du cycle est
+    // désormais ouverte par le démarrage lui-même.
+    // AMENDÉ ROUND 3 (revue ⊥, BLOQUANT 2, Tools/charpente-item0-2-3-implementation-notes.md
+    // § BLOQUANT 2) — débrancher `DashboardController` du dock l'avait aussi débranché de TOUTE
+    // production : ses 4 seuls appelants (`BuildingCardController`/`ExceptionQueueController`/
+    // `AutonomyInboxController` via `OpenNav`, `ExceptionDetailController` via
+    // `ExceptionQueueController.OpenDetail`) devenaient injoignables (forme C du socle). Décision B
+    // ratifiée (« l'Accueil devient l'ouverture de session, posée en surimpression au-dessus de
+    // l'Empire », front.md §4) branchée MINIMALEMENT dans `AcquireSessionThenActivateHome` : le
+    // shell monte désormais `DashboardController` EN SURIMPRESSION (`MonterLocataireEnSurimpression
+    // <T>`, item 0.4 — aucun mécanisme nouveau) juste après avoir activé Empire, SEULEMENT sur le
+    // chemin qui vient d'activer l'onglet par défaut (même sentinel `(Tab)(-1)` que ci-dessus —
+    // jamais sur un joueur qui a déjà navigué ailleurs). Toujours PAS un onglet du dock — son
+    // propre écran (les 4 panneaux orphelins) reste l'item 0.5, non repris ici.
     public class AppShell : MonoBehaviour, IShellSessionSink, IShellNavigator
     {
-        public enum Tab { Home, City, Org, Pipeline, More }
+        public enum Tab { Empire, Org, Pipeline, More }
 
         [Header("Backend")]
         [SerializeField] private string baseUrl = "http://localhost";
 
         // hud-session-arbitrages-design.md §1.2 (B1) — « le SHELL possède la session » : une
         // identité, portée par un [SerializeField] — LA migration déjà payée (un futur écran de
-        // login l'écrit, rien d'autre). Défaut = le compte démo Home (operational_demo), premier
-        // onglet activé par `Start()`. `SetIdentity` permet à un appelant (un test, un futur écran
+        // login l'écrit, rien d'autre). Défaut = le compte démo operational_demo, celui du premier
+        // onglet (Empire) activé par `Start()`. `SetIdentity` permet à un appelant (un test, un futur écran
         // de login) de la remplacer AVANT `Start()` — même fenêtre synchrone que `SetToken`/
         // `SetMountParent` reçus par un locataire.
         [Header("Identité de session (B1 — le shell signe UNE fois)")]
@@ -146,13 +165,16 @@ namespace MafiaCleanCity.Shell
             CurrentTab = tab;
             OnEmptyMoreDestination = tab == Tab.More;
 
-            // §3.3 — "re-tap City from a district brings back the map, by the ORDINARY remount
-            // path — no special-cased no-op". CityTabDistrictId resets to -1 for EVERY tab
-            // activation (not just City): the leading action is meaningless outside a district
-            // view, so any tab switch clears it defensively — EnterDistrict is the ONLY path that
-            // sets it back (§3.3 only names the City case explicitly; this chunk extends the SAME
-            // reset to the other 4 tabs so "← Carte" can never survive a jump straight to e.g. Home
-            // — an obvious-defect guard, not a design reinterpretation, consigned as a Deviation).
+            // §3.3 — "re-tap Empire from a district brings back the map, by the ORDINARY remount
+            // path — no special-cased no-op" (Empire IS the old City branch, items 0.2/0.3).
+            // CityTabDistrictId resets to -1 for EVERY tab activation (not just Empire): the
+            // leading action is meaningless outside a district view, so any tab switch clears it
+            // defensively — EnterDistrict is the ONLY path that sets it back (§3.3 only names the
+            // City case explicitly, before the fusion; this chunk extends the SAME reset to the
+            // other 3 tabs so the back-to-map leading action can never survive a jump straight to
+            // e.g. Org (round 11, revue ⊥ MINEUR m1 — PARAPHRASÉ, jamais cité : `LabelFor` ne rend
+            // qu'une flèche nue depuis round 8, aucun libellé à deux mots) — an obvious-defect
+            // guard, not a design reinterpretation, consigned as a Deviation).
             CityTabDistrictId = -1;
             TopBar.SetLeadingAction(TopBarController.LeadingAction.None, null);
             // §6.3 — hors district, état NOMMÉ ("—"), jamais la dernière valeur d'un district
@@ -162,8 +184,10 @@ namespace MafiaCleanCity.Shell
 
             switch (tab)
             {
-                case Tab.Home: MountTenant<DashboardController>(); break;
-                case Tab.City:
+                // Empire EST la carte (items 0.2/0.3, ruling 2026-08-25) — fusion de Tab.Home et
+                // Tab.City : la branche City d'hier, déplacée telle quelle, pas réécrite.
+                // DashboardController n'est plus monté par aucun onglet (débranché, item 0.5).
+                case Tab.Empire:
                     MountTenant<CityMapController>();
                     CityMapController cityMap = MountedTenantGameObject.GetComponent<CityMapController>();
                     if (cityMap != null) cityMap.OnEnterDistrict += EnterDistrict; // §3.3 — subscribed at mount time
@@ -180,8 +204,9 @@ namespace MafiaCleanCity.Shell
         }
 
         /// <summary>nav-hud-design-v1.md §3.3 (chunk 2) — enters `districtId`, replacing whatever is
-        /// currently mounted (only ever wired to fire while the City tab's CityMapController is
-        /// mounted — its own OnEnterDistrict subscription, above). CORRIGÉ (revue ⊥ round 2, C7 —
+        /// currently mounted (only ever wired to fire while the Empire tab's CityMapController is
+        /// mounted — its own OnEnterDistrict subscription, above; Empire is the old City branch,
+        /// items 0.2/0.3). CORRIGÉ (revue ⊥ round 2, C7 —
         /// l'énoncé précédent citait un corps et une plage de lignes qui n'existaient déjà plus
         /// après la fusion ci-dessous) : passe désormais par le MÊME corps privé partagé que
         /// `MountTenant&lt;T&gt;` et `MonterLocataireEnSurimpression&lt;T&gt;` — `ConstruireLocataire&lt;T&gt;`,
@@ -269,9 +294,10 @@ namespace MafiaCleanCity.Shell
             TopBar.SetDayPhase(tenant.LastFetch?.day_phase);
         }
 
-        /// <summary>§3.3 — "→ ActivateTab(Tab.City)" verbatim : no special branch, the ordinary
-        /// remount path resets CityTabDistrictId to -1 and clears the leading action.</summary>
-        public void ExitToCityMap() => ActivateTab(Tab.City);
+        /// <summary>§3.3 — "→ ActivateTab(Tab.Empire)" verbatim (Empire is the old City branch,
+        /// items 0.2/0.3) : no special branch, the ordinary remount path resets CityTabDistrictId
+        /// to -1 and clears the leading action.</summary>
+        public void ExitToCityMap() => ActivateTab(Tab.Empire);
 
         /// <summary>nav-hud-design-v1.md §6.1 — reçoit un jeton d'un locataire (DashboardController
         /// ou CityMapController) et ouvre la session côté shell si ce n'est pas déjà fait POUR CE
@@ -290,10 +316,11 @@ namespace MafiaCleanCity.Shell
         /// <summary>B1 (hud-session-arbitrages-design.md §1.2) — LE shell signe UNE fois (son
         /// identité, `demoIdentifier`/`demoPassword`, remplaçable via `SetIdentity` avant `Start()`),
         /// ouvre SA session (`SessionClient.OpenSession` → `TopBar.Load`), sonde citywide_bucket avec
-        /// SON jeton, PUIS active Home — dans cet ordre, pour que le premier montage trouve déjà
-        /// `Token` renseigné (`MountTenant<T>` l'injecte dans la MÊME fenêtre que `SetMountParent`).
-        /// Échec à N'IMPORTE quelle étape ⇒ Home est monté quand même : repli inchangé
-        /// (`IShellTenant.cs` — un locataire sans jeton signe lui-même, comme avant ce chunk).</summary>
+        /// SON jeton, PUIS active Empire (items 0.2/0.3 — l'ancien Home, fusionné avec City) — dans
+        /// cet ordre, pour que le premier montage trouve déjà `Token` renseigné (`MountTenant<T>`
+        /// l'injecte dans la MÊME fenêtre que `SetMountParent`). Échec à N'IMPORTE quelle étape ⇒
+        /// Empire est monté quand même : repli inchangé (`IShellTenant.cs` — un locataire sans
+        /// jeton signe lui-même, comme avant ce chunk).</summary>
         private IEnumerator AcquireSessionThenActivateHome()
         {
             var auth = new AuthClient { BaseUrl = baseUrl };
@@ -307,13 +334,50 @@ namespace MafiaCleanCity.Shell
                 // IMPORTANT-1 (verdict ⊥ HUD v3.1) — fermé en PRODUCTION, pas seulement côté tests :
                 // la TabBar est cliquable dès EnsureInitialized (Start()), donc un joueur peut avoir
                 // DÉJÀ touché un autre onglet pendant les 2-4 allers-retours réseau de cette
-                // acquisition. Un `ActivateTab(Tab.Home)` inconditionnel ici le RAMÈNERAIT de force,
+                // acquisition. Un `ActivateTab(Tab.Empire)` inconditionnel ici le RAMÈNERAIT de force,
                 // détruisant le locataire qu'il vient d'ouvrir — motif 6/6 pour la 2e fois dans ce
                 // chunk (round 1 : course à 2 comptes fermée par isolation ; round 2 : montage tardif
                 // fermé par attente ; les deux fois le mécanisme restait vivant EN PRODUCTION, fermé
                 // seulement côté test). Le remède est le sentinel `(Tab)(-1)` (`CurrentTab`, "a named
-                // state, not a magic default") : ne forcer Home que si RIEN n'a encore été activé.
-                if (CurrentTab == (Tab)(-1)) ActivateTab(Tab.Home); // repli : le locataire signera lui-même
+                // state, not a magic default") : ne forcer Empire que si RIEN n'a encore été activé —
+                // CETTE GARDE NE DOIT PAS SE PERDRE en changeant l'onglet par défaut (items 0.2/0.3) :
+                // payée deux fois, elle reste posée sur les DEUX branches, ici et ci-dessous.
+                //
+                // ROUND 3 (revue ⊥, BLOQUANT 2, Tools/charpente-item0-2-3-implementation-notes.md
+                // § BLOQUANT 2) — décision B ratifiée (« l'Accueil devient l'ouverture de session,
+                // posée en surimpression au-dessus de l'Empire », front.md §4) branchée MINIMALEMENT :
+                // `DashboardController` était débranché de TOUT onglet par ce lot (§3.2 du design),
+                // ce qui a rendu injoignables ses 4 seuls appelants de production
+                // (`BuildingCardController`/`ExceptionQueueController`/`AutonomyInboxController` via
+                // `OpenNav`, et `ExceptionDetailController` via `ExceptionQueueController.OpenDetail`)
+                // — forme C du socle (les écrivains existent, l'APPELANT manque). Le mécanisme est
+                // celui DÉJÀ livré par l'item 0.4 (`MonterLocataireEnSurimpression<T>`, ci-dessous) —
+                // rien de plus. Gardé par LE MÊME sentinel que `ActivateTab(Tab.Empire)` (capturé
+                // AVANT l'activation, puisqu'après ActivateTab CurrentTab n'est plus le sentinel) :
+                // un joueur qui a DÉJÀ navigué pendant l'acquisition ne doit pas se voir recouvrir
+                // d'un écran d'accueil qu'il n'a pas demandé — même raison motif 6/6 qu'au-dessus.
+                // Les 4 panneaux orphelins de l'écran ④ (BuildingCard/ExceptionQueue/Autonomy/
+                // ExceptionDetail — leur PROPRE rendu, au-delà de leur seule atteignabilité) restent
+                // l'item 0.5 complet, non repris ici.
+                bool pasEncoreActiveEchec = CurrentTab == (Tab)(-1);
+                if (pasEncoreActiveEchec)
+                {
+                    ActivateTab(Tab.Empire); // repli : le locataire signera lui-même
+                    MonterLocataireEnSurimpression<DashboardController>();
+                    // ROUND 7 (revue ⊥, BLOQUANT 2 — je change de décision, la mesure me le fait
+                    // faire) — la seconde moitié du ruling (« puis on tombe sur la ville ») livrée
+                    // avec le mécanisme DÉJÀ câblé pour le district (`EnterDistrict`, plus haut) :
+                    // AUCUN mécanisme neuf. `ActivateTab` (ci-dessus) a DÉJÀ remis l'action de tête à
+                    // `None` (son propre corps, § reset défensif) — cette ligne DOIT donc venir
+                    // APRÈS `ActivateTab`, jamais avant, sur les DEUX branches (même ordre ici et
+                    // ci-dessous). `ExitToCityMap` désigne EXACTEMENT la destination de cette action
+                    // de tête — round 9 (revue ⊥, MAJEUR 2) : ce commentaire attribuait ici un
+                    // libellé à deux mots au bandeau ; PARAPHRASÉ, jamais cité. Voir
+                    // `TopBarController.LabelFor` (round 8) : la flèche rendue N'A PAS de texte de
+                    // destination — la découvrabilité tient au fait que c'est le seul contrôle du
+                    // coin gauche, pas à un mot affiché.
+                    TopBar.SetLeadingAction(TopBarController.LeadingAction.BackToMap, ExitToCityMap);
+                }
                 yield break;
             }
 
@@ -335,7 +399,7 @@ namespace MafiaCleanCity.Shell
                 Debug.LogError($"[AppShell] session/open failed: {sessionErr}");
             }
 
-            // ActivateTab(Home) juste APRÈS TopBar.Load — mesuré (pas supposé) : un appelant qui
+            // ActivateTab(Empire) juste APRÈS TopBar.Load — mesuré (pas supposé) : un appelant qui
             // attend `TopBar.Loaded` (poll par frame) doit trouver `MountedTenantGameObject` déjà
             // renseigné dès que `Loaded` devient vrai ; la sonde heat ci-dessous est un aller-retour
             // réseau SUPPLÉMENTAIRE — la placer AVANT ce montage aurait laissé une fenêtre où
@@ -345,18 +409,33 @@ namespace MafiaCleanCity.Shell
             // TabBar est cliquable dès `Start()` (`EnsureInitialized`), donc les 2-4 allers-retours
             // réseau de CETTE branche (signin + session/open + TopBar.Load) laissent, EN
             // PRODUCTION, une fenêtre réelle où un joueur peut avoir déjà touché un AUTRE onglet.
-            // `ActivateTab(Tab.Home)` inconditionnel le ramènerait de force et détruirait le
+            // `ActivateTab(Tab.Empire)` inconditionnel le ramènerait de force et détruirait le
             // locataire qu'il vient d'ouvrir. `TopBar.Load` ci-dessus reste inconditionnel (le
             // TopBar est persistant, affiche l'identité du shell quel que soit l'onglet actif) —
-            // seul le MONTAGE forcé de Home est gardé par le sentinel.
-            if (CurrentTab == (Tab)(-1)) ActivateTab(Tab.Home);
+            // seul le MONTAGE forcé d'Empire est gardé par le sentinel.
+            //
+            // ROUND 3 (BLOQUANT 2) — MÊME branchement que la branche d'échec ci-dessus, MÊME
+            // garde : `DashboardController` monte EN SURIMPRESSION au-dessus d'Empire fraîchement
+            // monté, uniquement si c'est CE montage-ci qui vient d'activer l'onglet par défaut
+            // (jamais un joueur qui a déjà navigué ailleurs pendant l'acquisition). Capturé AVANT
+            // `ActivateTab` : après lui, `CurrentTab` n'est plus le sentinel `(Tab)(-1)`.
+            bool pasEncoreActive = CurrentTab == (Tab)(-1);
+            if (pasEncoreActive)
+            {
+                ActivateTab(Tab.Empire);
+                MonterLocataireEnSurimpression<DashboardController>();
+                // ROUND 7 (revue ⊥, BLOQUANT 2) — même geste, même ordre, même raison que la branche
+                // d'échec ci-dessus : `ActivateTab` a déjà remis l'action de tête à `None`, cette
+                // ligne vient donc APRÈS lui et après le montage de l'overlay.
+                TopBar.SetLeadingAction(TopBarController.LeadingAction.BackToMap, ExitToCityMap);
+            }
 
             // §6.2, AMENDÉ (B1, Deviation) — le chunk 5 sondait CONDITIONNELLEMENT ("seulement si le
             // tenant monté n'est pas Dashboard"), un mécanisme conçu pour départager DEUX locataires
             // qui publiaient chacun à un moment ARBITRAIRE (la course que B1 supprime). Sous B1 il
             // n'y a plus qu'UNE identité, acquise ICI avant tout montage : la sonder directement,
             // inconditionnellement, est plus SIMPLE et sans fenêtre de course. Best-effort, APRÈS le
-            // montage de Home — ne bloque pas l'affichage du TopBar/onglet sur ce round-trip de plus.
+            // montage d'Empire — ne bloque pas l'affichage du TopBar/onglet sur ce round-trip de plus.
             var world = new WorldApiClient { BaseUrl = baseUrl };
             yield return world.GetDistrictHeat(HeatProbeDistrictId, t,
                 heat => PublishCitywideHeat(heat.citywide_bucket),
@@ -476,9 +555,14 @@ namespace MafiaCleanCity.Shell
             if (TopBarSlot == null || TabBarRoot == null) return;
             Canvas.ForceUpdateCanvases();
             (float topSafe, float bottomSafe) = SafeAreaInsetsLocal();
-            // `EffectiveBottomOverhangPx` sort désormais en unités d'ÉCRAN (la conversion vit
-            // chez le bandeau, qui connaît son échelle) — donc additionnable tel quel avec
-            // `rect.height`, sans qu'aucun appelant ait à s'en souvenir.
+            // ⛔⛔⛔ CORRIGÉ round 17 (revue ⊥ round 16, BLOQUANT) — cette ligne affirmait
+            // « `EffectiveBottomOverhangPx` sort désormais en unités d'ÉCRAN » : FAUX, et c'était
+            // l'énoncé qui a fait passer le défaut (le docstring de la propriété exige, lui, la
+            // même unité que `rect.height` — les deux moitiés étaient vraies séparément et
+            // incompatibles ensemble). `EffectiveBottomOverhangPx` sort en unités de CANVAS (la
+            // conversion vit chez le bandeau, qui connaît son échelle ET divise par
+            // `canvas.scaleFactor`) — donc additionnable tel quel avec `rect.height`, sans
+            // qu'aucun appelant ait à s'en souvenir.
             float debord = TopBar != null ? TopBar.EffectiveBottomOverhangPx : 0f;
             ShellChrome.PublierInsets(topSafe + TopBarSlot.rect.height + debord,
                                       bottomSafe + TabBarRoot.rect.height);
@@ -707,18 +791,37 @@ namespace MafiaCleanCity.Shell
             hlg.childForceExpandHeight = false;
 
             // ⚠️ QUATRE BULLES, PAS CINQ — canon §6 : « Dock — 4 ronds gravés, SANS la Carte. On est
-            // déjà sur la carte : elle sort du dock. » Notre onglet `City` est cette Carte, et
-            // l'écran de district porte déjà « ← Carte » dans son bandeau : la destination reste
-            // atteignable, elle ne prend simplement plus une bulle.
-            // Les libellés du canon (Empire · Famille · Marché · Plus) désignent des écrans qui ne
-            // se recouvrent pas exactement avec les nôtres ; on garde les nôtres, qui pointent vers
-            // des écrans RÉELLEMENT montés — inventer « Marché » pour un écran qui n'existe pas
-            // serait un bouton qui ment.
-            AddTabButton(Tab.Home, "Accueil");
-            AddTabButton(Tab.Org, "Famille");
-            AddTabButton(Tab.Pipeline, "Filière");
-            AddTabButton(Tab.More, "Plus");
+            // déjà sur la carte : elle sort du dock. » `Tab.Empire` EST cette carte (items 0.2/0.3,
+            // ruling 2026-08-25 — fusion de l'ancien `Home` et de l'ancien `City`, la branche City
+            // déplacée telle quelle) ; l'écran de district porte déjà, dans le bandeau PARTAGÉ du
+            // shell (round 7), une action de sortie dédiée — round 9 (revue ⊥, MAJEUR 2) : ce
+            // commentaire attribuait ici un libellé à deux mots à ce bandeau ; PARAPHRASÉ, jamais
+            // cité (`TopBarController.LabelFor`, round 8, ne rend qu'une flèche nue) — et F0.3
+            // (Tools/charpente-item0-2-3-design.md) PROUVE cette porte atteignable par un
+            // geste de production plutôt que de l'affirmer en prose.
+            // Les libellés sont désormais ceux du canon EXACTEMENT (décision A tranchée) : Empire ·
+            // Famille · Filière · Plus (« Marché » au jalon 4 — pas avant que screen_b1 existe, un
+            // bouton qui ment étant pire qu'un bouton absent).
+            //
+            // UNE seule liste ordonnée (`DockRatifie`, design §3.1) : les TROIS sites qui en
+            // dépendaient — cette construction, `RebatirChromePourResolutionCourante`, et l'ordre
+            // que lit `RefreshTabButtonVisuals` — la LISENT désormais au lieu de la recopier chacun.
+            // « Deux listes qui doivent rester parallèles sont une dette » : il y en avait TROIS, et
+            // c'est ce qui rendait la 3e (`RefreshTabButtonVisuals`) capable de décaler tous les
+            // indices et de poser l'indicateur d'actif sur la mauvaise bulle si on en oubliait une.
+            foreach ((Tab onglet, string libelle) in DockRatifie) AddTabButton(onglet, libelle);
         }
+
+        /// <summary>L'ORDRE du dock, défini UNE FOIS (items 0.2/0.3, design §3.1). Les TROIS sites
+        /// qui en dépendaient — `BuildTabBar`, `RebatirChromePourResolutionCourante`, et l'ordre que
+        /// lit `RefreshTabButtonVisuals` — le LISENT, ils ne le recopient plus.</summary>
+        private static readonly (Tab onglet, string libelle)[] DockRatifie =
+        {
+            (Tab.Empire,   "Empire"),
+            (Tab.Org,      "Famille"),
+            (Tab.Pipeline, "Filière"),   // « Marché » au jalon 4 — pas avant que screen_b1 existe
+            (Tab.More,     "Plus"),
+        };
 
         // Le dock de `hud-brennar.html` (l.107-117), ramené à la hauteur de barre de ce client.
         // La maquette donne rond 46 · gap 5 · libellé 8,5 · paddings 10/16, soit ~88 de haut ; la
@@ -756,11 +859,40 @@ namespace MafiaCleanCity.Shell
         private const float TabDockHauteurCss =
             TabDockPadHautCss + TabDockRondCss + TabDockGapCss + TabDockLabelHeightCss + TabDockPadBasCss;
 
-        /// <summary>Px CSS de la maquette → unités de canvas, sur la racine PLEIN ÉCRAN du shell.
-        /// Passer autre chose que le canvas (un panneau, une barre) diviserait toute l'échelle
-        /// par un facteur muet — c'est la faute du « spacing corrigé sur le mauvais conteneur ».</summary>
-        private float Px(float css) =>
-            EchelleMaquette.Px(css, ShellCanvas != null ? (RectTransform)ShellCanvas.transform : null);
+        /// <summary>Px CSS de la maquette → unités de canvas, POUR LE CHROME que ce shell construit
+        /// lui-même (bandeau + dock).
+        ///
+        /// ⛔⛔ CORRIGÉ round 15 (revue ⊥ round 14, BLOQUANT — RÉEL EN PRODUCTION, mesuré, pas un
+        /// artefact de batchmode). Cette méthode LISAIT `ShellCanvas.transform.rect.width` via
+        /// `EchelleMaquette.Px` — MÊME DÉFAUT DE TIMING QUE `SafeAreaInsetsLocal` (docstring
+        /// juste au-dessus d'elle dans ce fichier), et il MORDAIT : `BuildLayout()` CRÉE le Canvas
+        /// (le bloc `if (ShellCanvas == null) { … new GameObject("Canvas", …) … }`) puis appelle
+        /// CETTE méthode dans LE MÊME appel synchrone (la pose de `TopBarSlot.sizeDelta`,
+        /// `FacteurEchelle()`, et tout `BuildTabBar`/`AddTabButton`) — AVANT tout `Canvas.
+        /// ForceUpdateCanvases()` ou toute frame écoulée. Le `CanvasScaler` n'a donc pas encore
+        /// tourné : `rect.width` rend `Screen.width` EN PIXELS D'ÉCRAN BRUTS, pas `1280`. Mesuré :
+        /// `TopBarEchelle.localScale.x = Screen.width/392` à la 6ᵉ décimale, au lieu de `1280/392` —
+        /// le chrome ENTIER (bandeau ET dock, tout passe par CETTE méthode) rendu à
+        /// `Screen.width/1280` de sa taille sur TOUT appareil (56 % à 720, 84 % à 1080, DÉBORDE à
+        /// 1440). La garde `> 100f` d'`EchelleMaquette.LargeurCanvas` ne l'attrape jamais : ces
+        /// valeurs sont toutes PLAUSIBLES, pas un `0`.
+        ///
+        /// Ce shell CONFIGURE lui-même `referenceResolution = (ReferenceResolutionWidth, 720)`
+        /// (dans `BuildLayout()`, sur le `CanvasScaler` neuf) sous `ScaleWithScreenSize` — la
+        /// largeur LOCALE du canvas, une fois stabilisée,
+        /// vaut donc TOUJOURS `ReferenceResolutionWidth`, quel que soit `Screen.width`
+        /// (`ChromeMultiResolutionPlayModeTests` l'assert déjà comme invariant). ⇒ calculer le
+        /// facteur DIRECTEMENT depuis cette constante — jamais lu sur le rect d'un Canvas qui peut
+        /// ne pas être à jour dans LA MÊME frame que sa construction — supprime la dépendance de
+        /// timing PLUTÔT que de la déplacer (un `Canvas.ForceUpdateCanvases()` isolé, sans frame
+        /// écoulée, n'est PAS garanti de suffire : le chemin de capture, lui, en pose DEUX avec un
+        /// `yield` entre les deux). Même patron que `SafeAreaInsetsLocal` — 3ᵉ fois sur ce lot que
+        /// ce patron existait déjà, dans ce même fichier, avant d'être appliqué ici.
+        ///
+        /// Passer autre chose que cette référence fixe (un panneau, une barre) diviserait toute
+        /// l'échelle par un facteur muet — c'est la faute du « spacing corrigé sur le mauvais
+        /// conteneur » ; ce n'est plus possible ici, il n'y a plus de racine à se tromper.</summary>
+        private float Px(float css) => css * (ReferenceResolutionWidth / TopBarLargeurCss);
 
         /// <summary>Un `LayoutElement` de hauteur fixe — le pendant local de l'helper des écrans
         /// opérationnels, que le shell ne peut pas atteindre (il ne référence pas leurs assemblies).</summary>
@@ -896,10 +1028,31 @@ namespace MafiaCleanCity.Shell
         ///   ★ Et le juge avait donné le signe qui le désigne : l'écart de chasse était SÉLECTIF —
         ///     −16 % sur « ARGENT » dans le bandeau, −2 % sur « FAMILLE » dans le dock, même fonte,
         ///     même écran. *Un défaut sélectif désigne son conteneur*, et les deux conteneurs
-        ///     n'avaient pas été bâtis au même moment.</summary>
+        ///     n'avaient pas été bâtis au même moment.
+        ///
+        /// ⛔⛔ ROUND 15 — CE QUE CETTE MÉTHODE FAIT ENCORE, ET CE QU'ELLE NE FAIT PLUS. `Px()` ne
+        /// lit plus AUCUNE géométrie de Canvas (voir son docstring) : elle rend désormais la MÊME
+        /// constante à CHAQUE appel, qu'on soit à la construction ou ici. ⇒ pour le CHROME
+        /// (`TopBarSlot`/`TabBarRoot`.sizeDelta, `echelleRt.localScale`, tous les paddings/tailles
+        /// du dock), cette méthode est devenue un NO-OP GÉOMÉTRIQUE — elle réécrit EXACTEMENT ce
+        /// que `BuildLayout()`/`BuildTabBar()` avaient déjà posé, jamais autre chose. Ce qu'elle
+        /// fait ENCORE réellement : republier `SafeAreaInsetsLocal()` (dépend de
+        /// `Screen.safeArea`/`Screen.height`, PAS de `Px()` — légitimement différent si l'appelant a
+        /// changé la cible de rendu depuis `BuildLayout()`) et RECONSTRUIRE les 4 bulles du dock
+        /// (utile si `CurrentTab` a changé entre-temps, via `RefreshTabButtonVisuals`). Un appelant
+        /// qui n'a besoin QUE de ça (le cas des deux sites de test connus, §0.4/`ce fichier`) peut
+        /// continuer à l'appeler sans risque : elle ne peut plus DIVERGER de `BuildLayout()`, elle
+        /// ne peut que la RÉPÉTER. ⇒ Se déclare à l'exécution (ligne ci-dessous) : un dispositif qui
+        /// continue de tourner sans plus rien réparer doit le DIRE, pas rester silencieusement
+        /// invoqué comme s'il réparait encore quelque chose (socle CLAUDE.md, « un dispositif
+        /// conditionnel doit imprimer s'il s'est activé »).</summary>
         public void RebatirChromePourResolutionCourante()
         {
             if (ShellCanvas == null || TopBarSlot == null || TabBarRoot == null) return;
+            Debug.Log("[Charpente] RebatirChromePourResolutionCourante() a tourné — depuis round 15, " +
+                       "Px() ne lit plus la géométrie du Canvas : la re-pose du chrome (bandeau/dock) " +
+                       "ci-dessous est un NO-OP géométrique (mêmes valeurs qu'à BuildLayout()). Ce qui " +
+                       "change réellement ici : les insets de zone sûre et l'état visuel des onglets.");
             Canvas.ForceUpdateCanvases();
 
             float k = FacteurEchelle();
@@ -935,10 +1088,10 @@ namespace MafiaCleanCity.Shell
                 DestroyImmediate(enf.gameObject);
             }
             tabButtons.Clear();
-            AddTabButton(Tab.Home, "Accueil");
-            AddTabButton(Tab.Org, "Famille");
-            AddTabButton(Tab.Pipeline, "Filière");
-            AddTabButton(Tab.More, "Plus");
+            // MÊME source que `BuildTabBar` (design §3.1) — jamais recopiée : c'est ce chemin de
+            // reconstruction (le second des deux que F0.2 doit couvrir) qui, avant la fusion en
+            // liste unique, pouvait diverger silencieusement de la construction initiale.
+            foreach ((Tab onglet, string libelle) in DockRatifie) AddTabButton(onglet, libelle);
             if (fondu != null) fondu.SetAsFirstSibling();
             RefreshTabButtonVisuals();
 
@@ -948,15 +1101,13 @@ namespace MafiaCleanCity.Shell
 
         private void RefreshTabButtonVisuals()
         {
-            // ⚠️ MÊME ORDRE QUE `BuildTabBar`, ET IL N'A PLUS QUE QUATRE ENTRÉES. `City` a quitté
-            // le dock (canon §6) ; le laisser ici décalerait tous les indices d'un cran et
-            // l'indicateur d'actif se poserait sur la mauvaise bulle.
-            // *Deux listes qui doivent rester parallèles sont une dette : celle-ci est bornée à
-            // quatre lignes et lit son ordre au même endroit que la construction.*
-            Tab[] order = { Tab.Home, Tab.Org, Tab.Pipeline, Tab.More };
-            for (int i = 0; i < tabButtons.Count && i < order.Length; i++)
+            // ⚠️ MÊME ORDRE QUE `BuildTabBar`, LU À LA MÊME SOURCE (`DockRatifie`, design §3.1) —
+            // plus recopié. C'était la 3e des trois listes parallèles que ce fichier dénonçait
+            // lui-même comme une dette : un membre laissé ici décalait tous les indices et posait
+            // l'indicateur d'actif sur la mauvaise bulle. Une seule liste, trois lecteurs.
+            for (int i = 0; i < tabButtons.Count && i < DockRatifie.Length; i++)
             {
-                bool active = order[i] == CurrentTab;
+                bool active = DockRatifie[i].onglet == CurrentTab;
                 // HUD v3.1 cohérence (2026-08-21, demandé par le contrôleur — voir BuildTabBar) :
                 // le fond du bouton reste `surfaceRow` dans LES DEUX états (jamais d'aplat coloré
                 // pour signaler l'actif — doctrine « l'or jamais en aplat », W3.U2/C5). L'actif se

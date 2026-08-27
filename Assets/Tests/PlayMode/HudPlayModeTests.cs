@@ -103,13 +103,15 @@ namespace MafiaCleanCity.Shell.Tests
             }
         }
 
-        // Mounting Home (DashboardController) sans jeton injecté déclenche SON PROPRE signin démo —
-        // sur une stack sans le seeder (aucun test de ce fichier ne lance celui de Dashboard), ce
-        // signin échouerait proprement et loggerait une Error (précédent AppShellPlayModeTests).
-        // Sous B1 (§1.2), le shell signe LUI-MÊME et injecte AVANT le montage : ce garde n'est
-        // normalement plus nécessaire (mesuré : operational_demo est authentifiable sur cette stack)
-        // — conservé en défense (harmless si inutile) contre une variabilité d'environnement.
-        private static void ExpectHomeOwnDemoAuthNoise() => LogAssert.ignoreFailingMessages = true;
+        // AMENDÉ (items 0.2/0.3, ruling 2026-08-25) : l'onglet PAR DÉFAUT est désormais Empire
+        // (Home et City ont fusionné, Empire EST la carte) — il monte CityMapController, pas
+        // DashboardController (débranché, item 0.5). Montage sans jeton injecté déclenche SON
+        // PROPRE signin démo — sur une stack sans le seeder CityMap, ce signin échouerait proprement
+        // et loguerait une Error (précédent AppShellPlayModeTests). Sous B1 (§1.2), le shell signe
+        // LUI-MÊME et injecte AVANT le montage : ce garde n'est normalement plus nécessaire (mesuré :
+        // operational_demo est authentifiable sur cette stack) — conservé en défense (harmless si
+        // inutile) contre une variabilité d'environnement.
+        private static void ExpectEmpireOwnDemoAuthNoise() => LogAssert.ignoreFailingMessages = true;
 
         private static void AssertColorApproximatelyEqual(Color a, Color b, string context)
         {
@@ -156,12 +158,14 @@ namespace MafiaCleanCity.Shell.Tests
             Assert.AreEqual(liveWallet.cash_cents, shell.TopBar.CurrentWallet.cash_cents,
                 "le TopBar (via le signin propre du shell -> session/open -> Load) porte le MÊME cash que la lecture indépendante");
 
-            // Le locataire monté (Home/DashboardController) a REÇU ce jeton par injection — il n'a
-            // pas signé lui-même (repli non emprunté ici, puisque le shell EN avait un).
-            var dashboard = shell.MountedTenantGameObject != null
-                ? shell.MountedTenantGameObject.GetComponent<DashboardController>() : null;
-            Assert.IsNotNull(dashboard, "Home doit monter DashboardController");
-            Assert.AreEqual(shell.Token, dashboard.Token,
+            // AMENDÉ (items 0.2/0.3, ruling 2026-08-25) : le locataire monté par défaut est
+            // désormais Empire/CityMapController (Home et City ont fusionné, DashboardController est
+            // débranché — item 0.5) — le MÉCANISME testé (injection du jeton du shell, sans repli)
+            // est inchangé, seul le FAIT « quel type est monté » change.
+            var cityMap = shell.MountedTenantGameObject != null
+                ? shell.MountedTenantGameObject.GetComponent<CityMapController>() : null;
+            Assert.IsNotNull(cityMap, "Empire doit monter CityMapController");
+            Assert.AreEqual(shell.Token, cityMap.Token,
                 "le locataire monté porte EXACTEMENT le jeton du shell — injecté, jamais re-signé");
         }
 
@@ -285,30 +289,33 @@ namespace MafiaCleanCity.Shell.Tests
         [UnityTest]
         public IEnumerator HudF5_OutsideDistrict_NamedStateAndDistrictIdMinusOne_SameAssertion()
         {
-            ExpectHomeOwnDemoAuthNoise();
+            ExpectEmpireOwnDemoAuthNoise();
             shellGo = new GameObject("HudF5Shell");
             shell = shellGo.AddComponent<AppShell>();
 
             // MESURÉ (course trouvée en lot, invisible seule) : `AcquireSessionThenActivateHome`
             // (signin+session/open+TopBar.Load) tourne en tâche de fond depuis Start() et se
-            // termine par SON PROPRE `ActivateTab(Tab.Home)`. Un unique `yield return null;` ne
-            // garantit PAS que cette séquence est terminée — sous contention réseau (lot de tests),
-            // elle peut encore être en vol quand ce test bascule manuellement vers City puis
-            // EnterDistrict ; son `ActivateTab(Home)` tardif ÉCRASE alors tout (CityTabDistrictId
-            // remis à -1, le district démonté) — reproduit : rouge en lot, vert seul, exactement la
-            // signature d'une course. Fix : attendre `TopBar.Loaded` (même patron que hud-F1/F7) —
-            // `ActivateTab(Home)` s'exécute SYNCHRONE juste après, dans la MÊME passe de coroutine,
-            // donc le voir vrai garantit que le montage de Home interne au shell est déjà réglé.
+            // termine par SON PROPRE `ActivateTab(Tab.Empire)` (items 0.2/0.3 — Empire fusionne
+            // l'ancien Home et l'ancien City). Un unique `yield return null;` ne garantit PAS que
+            // cette séquence est terminée — sous contention réseau (lot de tests), elle peut encore
+            // être en vol quand ce test bascule manuellement (re-tap) vers Empire puis EnterDistrict ;
+            // son `ActivateTab(Empire)` tardif ÉCRASE alors tout (CityTabDistrictId remis à -1, le
+            // district démonté) — reproduit : rouge en lot, vert seul, exactement la signature d'une
+            // course. Fix : attendre `TopBar.Loaded` (même patron que hud-F1/F7) —
+            // `ActivateTab(Empire)` s'exécute SYNCHRONE juste après, dans la MÊME passe de coroutine,
+            // donc le voir vrai garantit que le montage d'Empire interne au shell est déjà réglé.
             float bootElapsed = 0f;
             while ((shell.TopBar == null || !shell.TopBar.Loaded) && bootElapsed < 15f) { bootElapsed += Time.deltaTime; yield return null; }
             Assert.IsNotNull(shell.TopBar);
             Assert.IsTrue(shell.TopBar.Loaded, "acquisition de session propre du shell terminée avant toute bascule manuelle");
 
-            shell.ActivateTab(AppShell.Tab.City);
+            // Re-tap (idempotent-ish remount) : Empire est déjà l'onglet par défaut, ce second appel
+            // remonte un CityMapController FRAIS — exactement comme le faisait la bascule Home -> City.
+            shell.ActivateTab(AppShell.Tab.Empire);
             yield return null;
             yield return null;
             var cityMap = shell.MountedTenantGameObject.GetComponent<CityMapController>();
-            Assert.IsNotNull(cityMap, "City tab mounted a CityMapController");
+            Assert.IsNotNull(cityMap, "Empire mounted a CityMapController");
 
             float elapsed = 0f;
             while (!cityMap.IsAuthenticated && cityMap.AuthError == null && elapsed < 25f)
@@ -448,11 +455,20 @@ namespace MafiaCleanCity.Shell.Tests
         // (hud-session-arbitrages-design.md §1.4) — N'asserte PAS sur le cash seul (deux comptes
         // peuvent avoir le même solde, aveugle à la course) : asserte sur le CALLSIGN, unique par
         // compte (SIGNUP_CALLSIGN_TAKEN côté back). (1)+(2) garde de dimensionnement — lue AVANT
-        // toute alternance. (3) 3 alternances Home<->City avec quiescence. (4) à CHAQUE palier :
+        // toute alternance. (3) 3 alternances Empire<->Org avec quiescence. (4) à CHAQUE palier :
         // Loaded + cash != "—" + callsign == 1er palier. (5) cash comparé au wallet indépendant
         // POUR ce callsign.
+        //
+        // AMENDÉ (items 0.2/0.3, ruling 2026-08-25) : `Tab.Home` et `Tab.City` ont fusionné en
+        // `Tab.Empire` — il n'y a donc plus deux ONGLETS séparés portant chacun un locataire à
+        // identité démo différente. L'alternance devient Empire<->Org : Org (LieutenantScreenController)
+        // partage l'identité PAR DÉFAUT du shell (operational_demo, comme l'ancien Home) — c'est
+        // Empire (CityMapController) qui reste le SEUL locataire à porter une identité démo PROPRE
+        // et DIFFÉRENTE (citymap_demo, repli hors injection) ; alterner avec lui reproduit
+        // exactement la classe de course que ce test a été écrit pour fermer (deux comptes démo
+        // différents), le MÉCANISME est inchangé, seuls les onglets qui l'exercent ont changé.
         [UnityTest]
-        public IEnumerator HudF7_SameCallsign_AcrossThreeHomeCityAlternations_NeverTheOtherDemoAccount()
+        public IEnumerator HudF7_SameCallsign_AcrossThreeEmpireOrgAlternations_NeverTheOtherDemoAccount()
         {
             string operationalCallsign = null, citymapCallsign = null;
             yield return ReadCallsignIndependently("operational_demo@example.test", "operational-demo-pw", c => operationalCallsign = c);
@@ -462,7 +478,7 @@ namespace MafiaCleanCity.Shell.Tests
                 "avoir des callsigns DIFFÉRENTS, sinon le monde ne peut pas discriminer la course qu'il " +
                 "est censé détecter");
 
-            ExpectHomeOwnDemoAuthNoise();
+            ExpectEmpireOwnDemoAuthNoise();
             shellGo = new GameObject("HudF7Shell");
             shell = shellGo.AddComponent<AppShell>();
             // Identité par défaut d'AppShell = operational_demo (aucun SetIdentity ici).
@@ -470,14 +486,14 @@ namespace MafiaCleanCity.Shell.Tests
             string firstCallsign = null;
             var alternation = new[]
             {
-                AppShell.Tab.Home, AppShell.Tab.City, AppShell.Tab.Home,
-                AppShell.Tab.City, AppShell.Tab.Home, AppShell.Tab.City,
+                AppShell.Tab.Empire, AppShell.Tab.Org, AppShell.Tab.Empire,
+                AppShell.Tab.Org, AppShell.Tab.Empire, AppShell.Tab.Org,
             };
             for (int i = 0; i < alternation.Length; i++)
             {
                 if (i == 0)
                 {
-                    // Premier palier — laisse le flux réel (Start() -> acquisition -> ActivateTab(Home)) tourner.
+                    // Premier palier — laisse le flux réel (Start() -> acquisition -> ActivateTab(Empire)) tourner.
                     float elapsed = 0f;
                     while ((shell.TopBar == null || !shell.TopBar.Loaded) && elapsed < 15f) { elapsed += Time.deltaTime; yield return null; }
                 }
@@ -500,14 +516,15 @@ namespace MafiaCleanCity.Shell.Tests
 
                 // (verdict ⊥ HUD v3.1, geste 3) — CityMapController est le SEUL locataire dont le
                 // repli ressusciterait la course à 2 comptes AU NIVEAU TENANT (son propre signin
-                // démo, citymap_demo, si jamais il n'était PAS injecté) — ni hud-F1 (Dashboard) ni
-                // le reste de CE test (qui ne lit que le TopBar) ne le verraient. Vérifié à CHAQUE
-                // palier City : le jeton du locataire monté == EXACTEMENT celui du shell.
-                if (alternation[i] == AppShell.Tab.City)
+                // démo, citymap_demo, si jamais il n'était PAS injecté) — ni Org/LieutenantScreenController
+                // (même identité que le shell) ni le reste de CE test (qui ne lit que le TopBar) ne le
+                // verraient. Vérifié à CHAQUE palier Empire : le jeton du locataire monté ==
+                // EXACTEMENT celui du shell.
+                if (alternation[i] == AppShell.Tab.Empire)
                 {
                     var cityMapTenant = shell.MountedTenantGameObject != null
                         ? shell.MountedTenantGameObject.GetComponent<CityMapController>() : null;
-                    Assert.IsNotNull(cityMapTenant, $"palier {i} : City doit monter CityMapController");
+                    Assert.IsNotNull(cityMapTenant, $"palier {i} : Empire doit monter CityMapController");
                     Assert.AreEqual(shell.Token, cityMapTenant.Token,
                         $"palier {i} : CityMapController doit porter EXACTEMENT le jeton du shell — " +
                         "injecté, jamais re-signé avec citymap_demo (le repli ressusciterait la course à 2 comptes)");
@@ -515,7 +532,7 @@ namespace MafiaCleanCity.Shell.Tests
             }
 
             Assert.AreEqual(operationalCallsign, firstCallsign,
-                "l'identité PAR DÉFAUT du shell (Home, operational_demo) doit être celle observée au 1er palier");
+                "l'identité PAR DÉFAUT du shell (Empire, operational_demo) doit être celle observée au 1er palier");
 
             string finalToken = null;
             yield return SignIn("operational_demo@example.test", "operational-demo-pw", t => finalToken = t);

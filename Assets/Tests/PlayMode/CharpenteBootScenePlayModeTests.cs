@@ -1,10 +1,13 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
+using System.Text.RegularExpressions;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 using UnityEngine.UI;
+using TMPro;
 using Object = UnityEngine.Object;
 
 namespace MafiaCleanCity.Shell.Tests
@@ -167,20 +170,21 @@ namespace MafiaCleanCity.Shell.Tests
             // La barre d'onglets est PEUPLÉE — et EXACTEMENT de ce qu'elle doit porter.
             // ⛔ CORRIGÉ (revue ⊥ round 2, C2) : un PLANCHER (`onglets.Length > 0`) reste VERT
             // même si 3 des 4 boutons disparaissent demain — un monde où « Famille », « Filière »
-            // et « Plus » ont tous disparu et où seul « Accueil » survit satisfait encore
+            // et « Plus » ont tous disparu et où seul « Empire » survit satisfait encore
             // `Length > 0`, sans qu'aucune de leurs destinations ne soit atteignable. `front.md`
             // (item 0.2) le dit pour ce même défaut : « Pas un compte. Asserter QUELS, pas
             // seulement combien. » `AppShell.BuildTabBar` en construit EXACTEMENT 4 (canon §6 —
-            // Accueil/Famille/Filière/Plus, PAS Carte : « on est déjà sur la carte, elle sort du
-            // dock »). On n'asserte toujours pas les LIBELLÉS affichés ici (item 0.2, arbitrage
-            // user ouvert, i18n non tranché) — mais le NOM du GameObject de chaque bouton
-            // (`$"Tab_{tab}"`, posé par `AddTabButton`, indépendant du libellé) est une clé stable.
+            // Empire/Famille/Filière/Plus, PAS de bulle Carte séparée : « on est déjà sur la carte,
+            // elle sort du dock » — items 0.2/0.3, décision A TRANCHÉE le 2026-08-25).
+            // Ce test-ci n'asserte que le NOM du GameObject de chaque bouton (`$"Tab_{tab}"`, posé
+            // par `AddTabButton`, indépendant du libellé) — une clé stable. Les LIBELLÉS RÉELLEMENT
+            // affichés (le texte, désormais ratifié) sont la charge de F0.2 ci-dessous.
             Button[] onglets = shell.TabBarRoot.GetComponentsInChildren<Button>(true);
             var nomsOnglets = new List<string>();
             foreach (Button b in onglets) nomsOnglets.Add(b.gameObject.name);
             var ongletsAttendus = new List<string>
             {
-                $"Tab_{AppShell.Tab.Home}", $"Tab_{AppShell.Tab.Org}", $"Tab_{AppShell.Tab.Pipeline}", $"Tab_{AppShell.Tab.More}",
+                $"Tab_{AppShell.Tab.Empire}", $"Tab_{AppShell.Tab.Org}", $"Tab_{AppShell.Tab.Pipeline}", $"Tab_{AppShell.Tab.More}",
             };
             CollectionAssert.AreEquivalent(ongletsAttendus, nomsOnglets,
                 $"la barre d'onglets de la scène de démarrage doit porter EXACTEMENT {{{string.Join(", ", ongletsAttendus)}}} " +
@@ -218,6 +222,255 @@ namespace MafiaCleanCity.Shell.Tests
 
             AsyncOperation dechargement = SceneManager.UnloadSceneAsync(temoin);
             while (dechargement != null && !dechargement.isDone) yield return null;
+        }
+
+        // ─────────────────────────────────────────────────────────────────────────────────────────
+        // F0.2 — ITEM 0.2 de `front.md` (Tools/charpente-item0-2-3-design.md). Décision A TRANCHÉE
+        // le 2026-08-25 : le dock ratifié est l'ENSEMBLE {Empire, Famille, Filière, Plus}.
+        //
+        // ⛔⛔ CORRIGÉ (revue ⊥ round 2 du lot 0.2/0.3, M2 — EXÉCUTÉ, pas seulement argumenté) :
+        // la version précédente asserte l'ENSEMBLE des LIBELLÉS seuls (`CollectionAssert.
+        // AreEquivalent` sur une `List<string>`). La revue a permuté LES LIBELLÉS de deux entrées
+        // de `DockRatifie` (Empire ↔ Org) dans le code de production — F0.1-a (noms d'objets),
+        // F0.2 (ensemble de libellés) ET F0.2-c (ordre des membres d'enum dans le littéral) sont
+        // TOUS restés VERTS, parce qu'aucun des trois ne lit la PAIRE (quel bouton porte quel
+        // libellé) : un dock affichant « FAMILLE » sous la bulle Empire passait la garde. La
+        // grandeur qui discrimine n'est ni le NOM seul ni l'ENSEMBLE seul : c'est la PAIRE
+        // (nom du bouton, libellé rendu SOUS CE MÊME bouton) — le libellé (`Label`, enfant de
+        // `AddTabButton`) est lu SOUS le bouton `Tab_{tab}` qui le porte, jamais dans une liste à
+        // plat de tous les `TextMeshProUGUI` de la barre (cette dernière forme est exactement ce
+        // qui rendait la permutation invisible : un ensemble ne sait plus qui portait quoi).
+        //
+        // ⛔ Anti-tautologie (design §3.1, INCHANGÉ par ce correctif) : cette garde ne lit PAS
+        // `AppShell.DockRatifie` puis ne l'asserte pas contre elle-même (ce serait tester le test)
+        // — la cible (`pairesAttendues` ci-dessous) est écrite indépendamment du code de
+        // production, comme `ongletsAttendus` de F0.1-a (même idiome : `$"Tab_{AppShell.Tab.X}"`).
+        // ⛔ Les DEUX chemins de construction sont couverts (design §4) : `BuildTabBar` (au premier
+        // montage) ET `RebatirChromePourResolutionCourante` (la reconstruction) — sinon on corrige
+        // l'un et l'autre survit, exactement le défaut que ce lot ferme (C-a).
+        // ─────────────────────────────────────────────────────────────────────────────────────────
+        [UnityTest]
+        public IEnumerator F0_2_LEnsembleDesLibellesDuDock_EgaleLEnsembleRatifie_SurLesDeuxCheminsDeConstruction()
+        {
+            yield return ChargerLaSceneDeDemarrageDuBuild();
+            AppShell shell = SondeShellDansLaScene(sceneDeDemarrage);
+            Assert.IsNotNull(shell, $"aucun AppShell dans la scène de démarrage du build ({sceneDeDemarrage.path})");
+
+            // Cible ÉCRITE ICI, indépendamment de `AppShell.DockRatifie` — `AddTabButton` majuscule
+            // le libellé (`label.ToUpperInvariant()`), donc la cible le fait aussi, sinon un écart de
+            // CASSE serait lu comme un écart de PAIRE. Le nom de bouton (`$"Tab_{tab}"`) est la MÊME
+            // clé stable que F0.1-a — jamais un index de tableau, jamais `DockRatifie` recopié.
+            // ⚠️ Chaque PAIRE est formatée en UNE chaîne (`"{nomBouton}={libelle}"`), pas un
+            // `ValueTuple` comparé par `CollectionAssert` : `com.unity.ext.nunit` embarqué ici est
+            // basé sur NUnit 3.5 (`package.json`), antérieur au support ValueTuple de
+            // `NUnitEqualityComparer` — une chaîne composite est le format que CETTE version sait
+            // comparer sans ambiguïté, et le message d'échec reste tout aussi lisible.
+            var pairesAttendues = new List<string>
+            {
+                $"Tab_{AppShell.Tab.Empire}=EMPIRE",
+                $"Tab_{AppShell.Tab.Org}=FAMILLE",
+                $"Tab_{AppShell.Tab.Pipeline}=FILIÈRE",
+                $"Tab_{AppShell.Tab.More}=PLUS",
+            };
+
+            List<string> LirePairesReellementAffichees()
+            {
+                var paires = new List<string>();
+                foreach (Transform enfant in shell.TabBarRoot)
+                {
+                    // Filtre sur le PRÉFIXE de nom que `AddTabButton` pose (`$"Tab_{tab}"`) — exclut
+                    // `DockFondu`, seul autre enfant direct de `TabBarRoot` (le dégradé de fond).
+                    if (!enfant.name.StartsWith("Tab_")) continue;
+                    TextMeshProUGUI label = enfant.GetComponentInChildren<TextMeshProUGUI>(true);
+                    paires.Add($"{enfant.name}={(label != null ? label.text : "<AUCUN LABEL>")}");
+                }
+                return paires;
+            }
+
+            // ── chemin 1 : construction initiale (BuildTabBar, dans Start()/BuildLayout). ──
+            List<string> construction = LirePairesReellementAffichees();
+            CollectionAssert.AreEquivalent(pairesAttendues, construction,
+                $"la barre d'onglets de la scène de démarrage doit apparier EXACTEMENT " +
+                $"{{{string.Join(", ", pairesAttendues)}}} (construction initiale) — trouvé " +
+                $"{{{string.Join(", ", construction)}}}. Un libellé au mauvais bouton (deux entrées " +
+                "ÉCHANGÉES) doit ROUGIR ici en nommant la paire fautive, même si l'ENSEMBLE des " +
+                "libellés reste inchangé (M2, revue ⊥ round 2).");
+
+            // ── chemin 2 : reconstruction (RebatirChromePourResolutionCourante) — le second chemin
+            // que le design exige couvert, sinon corriger l'un laisse l'autre survivre. ──
+            shell.RebatirChromePourResolutionCourante();
+            yield return null;
+            List<string> reconstruction = LirePairesReellementAffichees();
+            CollectionAssert.AreEquivalent(pairesAttendues, reconstruction,
+                $"la barre d'onglets doit apparier EXACTEMENT {{{string.Join(", ", pairesAttendues)}}} " +
+                $"APRÈS reconstruction — trouvé {{{string.Join(", ", reconstruction)}}}.");
+
+            Debug.Log($"[Charpente] F0.2 — paires (bouton=libellé) du dock (construction) : " +
+                      $"{string.Join(", ", construction)} ; (reconstruction) : {string.Join(", ", reconstruction)}.");
+        }
+
+        // ─────────────────────────────────────────────────────────────────────────────────────────
+        // MAJEUR 3 (revue ⊥ round 16, classe PREUVE) — `RebatirChromePourResolutionCourante()` se
+        // DÉCLARE désormais par un `Debug.Log` (round 15) : « je suis devenue un NO-OP GÉOMÉTRIQUE
+        // depuis que Px() ne lit plus le Canvas ». C'est VRAI et VÉRIFIÉ (revue round 16, § « ce qui
+        // tient ») — mais un `Debug.Log` ne rougit JAMAIS : le jour où quelqu'un remet un geste
+        // géométrique divergent dans cette méthode (le mode d'échec qui a produit 15 rounds sur ce
+        // lot), rien ne le dit. Cette garde transforme « par construction » en propriété SURVEILLÉE :
+        // relever les 3 grandeurs géométriques que `Px()` alimente ici, appeler la méthode, asserter
+        // l'égalité. Classe EFFET (le résultat géométrique), pas PARAMÈTRE (une valeur de `Px()` en
+        // isolation) — le socle CLAUDE.md distingue les deux et seule la première mord.
+        // ─────────────────────────────────────────────────────────────────────────────────────────
+        [UnityTest]
+        public IEnumerator MAJEUR3_RebatirChromePourResolutionCourante_EstUnNoOpGeometrique_Asserte()
+        {
+            yield return ChargerLaSceneDeDemarrageDuBuild();
+            AppShell shell = SondeShellDansLaScene(sceneDeDemarrage);
+            Assert.IsNotNull(shell, $"aucun AppShell dans la scène de démarrage du build ({sceneDeDemarrage.path})");
+
+            Transform echelleT = shell.TopBarSlot.Find("TopBarEchelle");
+            Assert.IsNotNull(echelleT, "`TopBarEchelle` doit exister sous `TopBarSlot` — c'est le nœud que " +
+                "cette garde surveille (round 17, revue ⊥ round 16, BLOQUANT, même nœud).");
+            var echelleRt = (RectTransform)echelleT;
+
+            // ── relevé AVANT — les 3 grandeurs géométriques que `Px()`/`FacteurEchelle()` posent ──
+            Vector2 topBarSizeAvant = shell.TopBarSlot.sizeDelta;
+            Vector3 echelleScaleAvant = echelleRt.localScale;
+            Vector2 tabBarSizeAvant = shell.TabBarRoot.sizeDelta;
+
+            shell.RebatirChromePourResolutionCourante();
+            yield return null;
+
+            Assert.AreEqual(topBarSizeAvant, shell.TopBarSlot.sizeDelta,
+                "`TopBarSlot.sizeDelta` doit être IDENTIQUE avant/après `RebatirChromePourResolutionCourante()` " +
+                "— un écart signale qu'un geste géométrique divergent est revenu dans cette méthode (le " +
+                "docstring round 15 la déclare NO-OP géométrique ; cette garde le VÉRIFIE, le `Debug.Log` " +
+                "voisin ne le fait pas).");
+            Assert.AreEqual(echelleScaleAvant, echelleRt.localScale,
+                "`TopBarEchelle.localScale` doit être IDENTIQUE avant/après — c'est le nœud `k` du " +
+                "BLOQUANT round 16 ; une divergence ici referait courir la même classe de défaut.");
+            Assert.AreEqual(tabBarSizeAvant, shell.TabBarRoot.sizeDelta,
+                "`TabBarRoot.sizeDelta` doit être IDENTIQUE avant/après.");
+        }
+
+        [UnityTest]
+        public IEnumerator MAJEUR3_RebatirChromePourResolutionCourante_PositiveControl_MethodeDoitReellementEcrire()
+        {
+            // CONTRÔLE POSITIF : sans lui, le NO-OP mesuré ci-dessus pourrait être vrai parce que la
+            // méthode ne fait RIEN (un early-return silencieux, une exception avalée) plutôt que parce
+            // qu'elle recalcule authentiquement la MÊME géométrie. On sabote délibérément une valeur
+            // AVANT l'appel — si la méthode écrit réellement, la valeur sabotée ne doit PAS survivre.
+            yield return ChargerLaSceneDeDemarrageDuBuild();
+            AppShell shell = SondeShellDansLaScene(sceneDeDemarrage);
+            Assert.IsNotNull(shell, $"aucun AppShell dans la scène de démarrage du build ({sceneDeDemarrage.path})");
+
+            const float valeurSabotee = 999f;
+            shell.TopBarSlot.sizeDelta = new Vector2(0f, valeurSabotee);
+
+            shell.RebatirChromePourResolutionCourante();
+            yield return null;
+
+            Assert.AreNotEqual(valeurSabotee, shell.TopBarSlot.sizeDelta.y,
+                "CONTRÔLE POSITIF : `RebatirChromePourResolutionCourante()` DOIT réellement RÉÉCRIRE " +
+                "`TopBarSlot.sizeDelta` (pas un early-return silencieux) — sinon le NO-OP mesuré par la " +
+                "garde ci-dessus serait vrai par ABSENCE D'EXÉCUTION, pas par la propriété qu'elle " +
+                "prétend surveiller (même famille que le contrôle positif du BLOQUANT round 16).");
+        }
+
+        // ─────────────────────────────────────────────────────────────────────────────────────────
+        // BLOQUANT (revue ⊥ round 16, CLASSE PRODUCTION) — `TopBarController.EffectiveBottomOverhangPx`
+        // rendait des PIXELS D'ÉCRAN (`k × canvas.scaleFactor`) là où ses consommateurs de production
+        // (`AppShell.EnterDistrict`, `AppShell.PublierInsetsDuChrome` → `ShellChrome.TopInsetPx`) et
+        // son propre docstring exigent des UNITÉS DE CANVAS (`k` seul). La PROPRIÉTÉ que cette garde
+        // observe est l'UNITÉ, pas la valeur (socle CLAUDE.md, « durcir sur une autre grandeur que
+        // celle où vit le défaut ne l'atteint jamais ») : une grandeur en unités de CANVAS ne dépend
+        // PAS de `canvas.scaleFactor` — un écran plus ou moins dense ne change rien à une géométrie
+        // exprimée en unités de référence. Une garde de VALEUR (« > 0 », « proche de X ») resterait
+        // verte à travers ce défaut exactement comme le round 13 l'a montré pour la magnitude de
+        // `TopBarEchelle.localScale` (`Assert.Greater(…, 0f)`, satisfaite par la valeur FAUTIVE
+        // elle-même). ⇒ cette garde lit la MÊME propriété à DEUX `canvas.scaleFactor` différents et
+        // exige l'ÉGALITÉ : aucune valeur exprimée en pixels d'écran ne peut la satisfaire, quel que
+        // soit le nombre mesuré à la première lecture.
+        // ─────────────────────────────────────────────────────────────────────────────────────────
+        [UnityTest]
+        public IEnumerator BLOQUANT_EffectiveBottomOverhangPx_EstEnUnitesDeCanvas_InvariantAuScaleFactor()
+        {
+            yield return ChargerLaSceneDeDemarrageDuBuild();
+            AppShell shell = SondeShellDansLaScene(sceneDeDemarrage);
+            Assert.IsNotNull(shell, $"aucun AppShell dans la scène de démarrage du build ({sceneDeDemarrage.path})");
+            Assert.IsNotNull(shell.ShellCanvas, "le shell doit porter un Canvas pour que ce test ait un sujet");
+            Assert.IsNotNull(shell.TopBar, "le shell doit porter un TopBarController");
+
+            float scaleFactorOriginal = shell.ShellCanvas.scaleFactor;
+
+            // ── sf1 : le `scaleFactor` RÉEL de la scène de test ──
+            float overhangSf1 = shell.TopBar.EffectiveBottomOverhangPx;
+            Assert.Greater(overhangSf1, 4f,
+                "anti-vacuité : le médaillon doit réellement déborder sous la barre pour que ce test " +
+                "prouve quelque chose (même seuil que NavF4/NavF5).");
+
+            // ── sf2 : un `scaleFactor` DIFFÉRENT — SEULE variable qui change (expérience à UNE
+            // variable, socle CLAUDE.md — même patron que le run controlvar/final du round 15). ──
+            float scaleFactorAlternatif = scaleFactorOriginal * 2f;
+            shell.ShellCanvas.scaleFactor = scaleFactorAlternatif;
+            Assert.AreNotEqual(scaleFactorOriginal, shell.ShellCanvas.scaleFactor,
+                "PRÉCONDITION : le `scaleFactor` du Canvas doit avoir RÉELLEMENT changé — sinon ce " +
+                "test ne prouve rien.");
+            float overhangSf2 = shell.TopBar.EffectiveBottomOverhangPx;
+
+            // Restauration AVANT toute assertion qui pourrait lever — le Canvas est partagé par
+            // toute la scène de test le temps qu'elle reste chargée.
+            shell.ShellCanvas.scaleFactor = scaleFactorOriginal;
+
+            Debug.Log($"[Charpente] BLOQUANT round 16/17 — EffectiveBottomOverhangPx = {overhangSf1:F4} " +
+                      $"à scaleFactor={scaleFactorOriginal:F4} ; {overhangSf2:F4} à " +
+                      $"scaleFactor={scaleFactorAlternatif:F4} (INCONDITIONNEL — imprimé que le test " +
+                      "passe ou non, socle CLAUDE.md « un dispositif conditionnel doit imprimer s'il " +
+                      "s'est activé »).");
+
+            Assert.AreEqual(overhangSf1, overhangSf2, 0.05f,
+                $"EffectiveBottomOverhangPx doit être INVARIANT à `canvas.scaleFactor` (c'est une " +
+                $"unité de CANVAS) — trouvé {overhangSf1:F4} à scaleFactor={scaleFactorOriginal:F4} " +
+                $"puis {overhangSf2:F4} à scaleFactor={scaleFactorAlternatif:F4}. Un écart signale que " +
+                "la propriété est retombée en unités d'ÉCRAN (revue ⊥ round 16, BLOQUANT 1).");
+        }
+
+        // ─────────────────────────────────────────────────────────────────────────────────────────
+        // F0.2-c — UNE SEULE liste énumère l'ordre du dock dans AppShell.cs (design §3.1/§4).
+        //
+        // Population : tout endroit d'AppShell.cs qui écrit littéralement, dans cet ORDRE, la
+        // séquence Empire → Org → Pipeline → More (peu importe ce qui les sépare — labels, sauts de
+        // ligne, espaces). Motif n°1 (voir Tools/charpente-item0-2-3-implementation-notes.md pour le
+        // compte AVANT/APRÈS collé) : `Regex` plutôt qu'un `IndexOf` littéral, PARCE QUE la forme
+        // AVANT (2 blocs `AddTabButton` + un `Tab[] order`) et la forme APRÈS (une seule déclaration
+        // `DockRatifie`) n'ont pas la même syntaxe — seule la PROPRIÉTÉ (les 4 enum, dans cet ordre,
+        // à portée l'un de l'autre) est stable entre les deux.
+        //
+        // Mesuré sur le fichier INTACT (af9893b, avant ce lot, motif réécrit avec Tab.Home au lieu
+        // de Tab.Empire pour matcher l'ancien nom) : 3 correspondances, aux anciennes ancres
+        // `:717` (BuildTabBar), `:938` (RebatirChromePourResolutionCourante), `:956` (Tab[] order de
+        // RefreshTabButtonVisuals) — exactement les 3 sites que ce lot devait unifier.
+        // Attendu APRÈS (ce test, exécuté sur le fichier ÉDITÉ) : 1 — la seule déclaration restante,
+        // `DockRatifie` ; les trois sites qui en dépendaient la LISENT désormais au lieu de la
+        // recopier.
+        // ─────────────────────────────────────────────────────────────────────────────────────────
+        private static readonly Regex MotifOrdreDuDock = new Regex(
+            @"Tab\.Empire\W[\s\S]{0,200}?Tab\.Org\W[\s\S]{0,200}?Tab\.Pipeline\W[\s\S]{0,200}?Tab\.More\b");
+
+        [Test]
+        public void F0_2c_UneSeuleListeEnumereLOrdreDuDock_LesTroisSitesLaLisentDesormais()
+        {
+            string chemin = Path.Combine(Application.dataPath, "Scripts", "Shell", "AppShell.cs");
+            Assert.IsTrue(File.Exists(chemin), $"AppShell.cs introuvable à {chemin}");
+            string texte = File.ReadAllText(chemin);
+
+            int count = MotifOrdreDuDock.Matches(texte).Count;
+            Assert.AreEqual(1, count,
+                $"AppShell.cs doit énumérer l'ordre du dock (Empire→Org→Pipeline→More) à UN SEUL " +
+                $"endroit (DockRatifie) — trouvé {count} fois. AVANT ce lot (mesuré sur le fichier " +
+                "intact, motif réécrit avec l'ancien nom Tab.Home) : 3 (2 blocs AddTabButton + " +
+                "Tab[] order) — un compte de 3 signalerait une régression vers les listes parallèles ; " +
+                "un compte de 0 signalerait un motif devenu FAUX (DockRatifie renommé ou absent), pas " +
+                "un motif satisfait.");
         }
     }
 }

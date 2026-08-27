@@ -124,26 +124,52 @@ namespace MafiaCleanCity.Shell
                 float debordLocal = Mathf.Max(0f, selfBottomY - manoBottomY);
 
                 // ⛔⛔ CETTE GRANDEUR TRAVERSE UN CHANGEMENT DE REPÈRE, ET ELLE DOIT SORTIR DANS
-                // CELUI DE L'ÉCRAN. Le bandeau est désormais autoré en px CSS de la maquette et
-                // porté à l'écran par un `localScale` sur son parent : le calcul ci-dessus est
-                // donc en unités de MAQUETTE, pas en unités de canvas.
+                // CELUI DU CANVAS — jamais celui de l'écran (round 17 : voir plus bas, round 15
+                // avait ici l'inverse, écrit noir sur blanc, et c'était la classe même qui s'est
+                // révélée fautive). Le bandeau est autoré en px CSS de la maquette et porté au
+                // CANVAS par le `localScale` `k` du nœud d'échelle de son parent : le calcul
+                // ci-dessus (`debordLocal`) est donc en unités de MAQUETTE, et la conversion
+                // voulue est maquette→CANVAS — le repère de `TopBarSlot.rect.height`, avec lequel
+                // les consommateurs additionnent cette valeur.
                 //   J'ai d'abord converti au site d'appel — et j'en ai corrigé UN sur DEUX. Le
                 //   second réservait 32,2 unités là où le médaillon en occupe 98, et le titre du
                 //   district passait sous l'anneau. **Deux sites d'appel de la même valeur, un
                 //   seul corrigé** : c'est le mode d'échec le plus banal d'une conversion posée
                 //   chez l'appelant. Il y en a quatre au total (2 en production, 2 en test).
-                //   ⇒ La conversion vit ICI, une fois, chez celui qui CONNAÎT son échelle. Aucun
-                //     appelant ne peut plus l'oublier, et la propriété exposée a désormais la
-                //     même unité que le `rect.height` avec lequel tout le monde l'additionne.
-                float echelle = transform.lossyScale.y;
+                //   ⇒ La conversion vit ICI, une fois, chez celui qui CONNAÎT son échelle.
+                //
+                // ⛔⛔⛔ CORRIGÉ round 17 (revue ⊥ round 16, BLOQUANT — CLASSE PRODUCTION). Round 15
+                // posait `echelle = transform.lossyScale.y` — qui vaut `k × canvas.scaleFactor`
+                // sur cette hiérarchie (un Canvas ScreenSpaceOverlay porte son PROPRE `scaleFactor`
+                // SUR SON PROPRE `localScale`, mesuré `/tmp/charpente-r13-diag2.log` :
+                // `48 × 1.632653 × 0.5 = 39.183673`) — donc des PIXELS D'ÉCRAN, l'exact inverse de
+                // ce que ce docstring exige juste au-dessus. Démontré sans hypothèse à partir des
+                // nombres du round 15 (`chevauchement = V − R − 40` ⇒ `V = 105,174 = 2,0000 × R`,
+                // et le seul facteur de la chaîne qui vaut 2 à `Screen.width=640` est
+                // `1/canvas.scaleFactor`). Le facteur juste est `k` SEUL : diviser par
+                // `canvas.scaleFactor` retire exactement le terme en trop. MESURÉ SUR L'OBJET
+                // (`GetComponentInParent<Canvas>().scaleFactor`), jamais recalculé depuis une
+                // constante `EchelleMaquette` qui pourrait diverger silencieusement de la scène
+                // réelle (socle CLAUDE.md 2026-08-22 — « une grandeur qui existe comme OBJET se
+                // MESURE sur l'objet, jamais ne se recalcule depuis un ratio »).
+                Canvas canvasParent = GetComponentInParent<Canvas>();
+                float scaleFactor = (canvasParent != null && canvasParent.scaleFactor > 0.0001f)
+                    ? canvasParent.scaleFactor : 1f;   // anti-vacuité : jamais une division par 0
+                float echelle = transform.lossyScale.y / scaleFactor;
                 if (echelle <= 0.0001f) echelle = 1f;   // anti-vacuité : jamais une division/produit par 0
                 return debordLocal * echelle;
             }
         }
 
         /// <summary>Every SCANNED text (R2.2 corpus — design C2-F4). Excludes elements whose
-        /// `trackValue` is false (numeric UI chrome: cash, game-day — mirrors
-        /// `DashboardController.AddStatusRow(trackValue:false)`, `:340`).</summary>
+        /// `trackValue` is false (numeric UI chrome: cash, game-day — mirrors the "Vocabulary"/
+        /// "Tier N" row of `DashboardController.AddStatusRow`, corrigé round 15 [revue ⊥ round 14,
+        /// MAJEUR PREUVE] d'une ancre fausse vers une ligne SANS RAPPORT (un `switch (target)`) —
+        /// la citation par NUMÉRO, y compris de la ligne fautive elle-même, est délibérément
+        /// absente ici : `DashboardController.cs` n'est PAS un fichier de ce lot, une ancre y
+        /// périmerait sans jamais être surveillée par `Tools/charpente-anchor-freshness-check.py`
+        /// — round 17, revue ⊥ round 16, MINEUR m1 : la citation numérique précédente
+        /// réintroduisait exactement la classe que cette phrase interdit).</summary>
         public IReadOnlyList<string> RenderedTexts => renderedTexts;
         private readonly List<string> renderedTexts = new List<string>();
 
@@ -166,8 +192,16 @@ namespace MafiaCleanCity.Shell
         private TextMeshProUGUI callsignText;
         private TextMeshProUGUI notificationText;
 
-        // §3.1 — le bouton leading, construit UNE fois dans BuildLayout, premier enfant du
-        // HorizontalLayoutGroup, JAMAIS détruit ; seule sa visibilité (SetActive) suit l'état.
+        // §3.1 — le bouton leading, construit UNE fois dans BuildLayout, JAMAIS détruit ; seule sa
+        // visibilité (SetActive) suit l'état. ⚠️ CORRIGÉ round 11 (revue ⊥, MINEUR m3), ancres
+        // renumérotées en noms de SYMBOLES round 13 (revue ⊥, BLOQUANT — citation par numéro de
+        // ligne, classe déjà rouverte 4 fois par un correctif manuel) — cette ligne attribuait à
+        // `leadingGo` une position de fratrie qu'il n'a pas ; PARAPHRASÉ, jamais cité (citer
+        // l'énoncé qu'on retire le réintroduit). La description EXACTE vit dans le docstring de
+        // `BuildLayout()` : chaque enfant reçoit un ancrage EXPLICITE, aucun `HorizontalLayoutGroup`
+        // sur la racine — c'est ce qui garantit le manomètre EXACTEMENT au centre. `leadingGo` n'est
+        // pas non plus le premier ENFANT dans l'ordre de fratrie : `BarMask` est
+        // `SetAsFirstSibling()`, dans `BuildBarBackground()`.
         private GameObject leadingGo;
         private TextMeshProUGUI leadingText;
         private System.Action leadingOnClick;
@@ -189,9 +223,42 @@ namespace MafiaCleanCity.Shell
         // DANS un district, il faut pouvoir en sortir) mais il ne peut pas occuper 23 % de la
         // largeur : à 90, il poussait l'aile ARGENT sous le médaillon et le montant sortait
         // TRONQUÉ (mesuré sur capture : « $10,00 » coupé net par l'anneau du manomètre).
-        // 16 (marge) + 36 + 12 (écart) + 96 (aile) = 160 < 164, la gauche du médaillon.
+        // 16 (marge) + 36 + 12 (écart) + 96 (aile) = 160 < 162, la gauche du médaillon.
+        // ⚠️ CORRIGÉ round 11 (revue ⊥, MAJEUR 3) — citait « < 164 » (demi-largeur médaillon 64,
+        // pour un diamètre de 64) : `ManometreDiameter` ci-dessous vaut 68 depuis le re-calibrage
+        // au canon, donc la demi-largeur réelle est 34 et le bord gauche du médaillon est à
+        // 196−34=162, PAS 164. La marge réelle est 2, pas 4 — l'inégalité tient toujours
+        // (160 < 162), donc aucun défaut visible, mais le terme qui décide n'avait pas été rouvert
+        // quand le diamètre a changé. Même famille que le socle : un nombre dérivé puis gelé porte
+        // sa propre péremption dans son commentaire, et personne ne la relit.
         private const float LeadingWidth = 36f;
         private const float LeadingHeight = 40f;
+        // ⛔⛔ RULING USER 2026-08-27 (MAJEUR 4, round 9) — « la zone TACTILE passe à 48 dp ; le
+        // VISUEL ne bouge pas d'un pixel ». `LeadingWidth`/`LeadingHeight` ci-dessus restent
+        // INCHANGÉES : elles décrivent ce que l'œil voit (la DA est ratifiée par la contrainte du
+        // médaillon ci-dessus). Cette constante-ci gouverne SEULEMENT la zone de RAYCAST — un
+        // second rect, plus grand, invisible (son `Image` reste à alpha nul), qui reçoit le clic
+        // à la place du rect visuel. Re-mesuré ici (round 9) sur les 4 nombres du commentaire
+        // ci-dessus : marge=16 (`ShellChrome.GutterX`), écart=12 (littéral, `RepositionMoneyCluster`
+        // ci-dessous), aile=96 (`MoneyClusterWidth`), hauteur de barre=52 (`AppShell.
+        // TopBarHauteurCss`) — tous confirmés inchangés.
+        // ⇒ Ancrée au BORD GAUCHE (x=0, pas `BarPaddingX`) plutôt qu'élargie symétriquement : une
+        // zone de 48 couvre 0..48, qui tient ENTIÈREMENT dans marge(16)+bouton(36)=0..52 — elle
+        // n'atteint donc JAMAIS l'aile ARGENT (qui commence à 64), la contrainte du médaillon reste
+        // intacte. Verticalement, centrée comme le rect visuel (les deux partagent le même ancrage
+        // (0, 0.5) et la même `anchoredPosition.y` = 0) : 48 sur une barre de 52 laisse 2 UNITÉS DE
+        // MAQUETTE de marge de chaque côté.
+        // ⚠️⚠️ CORRIGÉ round 11 (revue ⊥, MAJEUR 1) — « 48 dp » et « minimum tactile Android »
+        // ci-dessous sont FAUX SANS RÉSERVE : cette valeur est en UNITÉS DE MAQUETTE (ce sous-arbre
+        // vit ENTIÈREMENT sous `echelleRt`/`localScale`, coordonnées de `EchelleMaquette.
+        // LargeurHudBrennar = 392f`), pas en dp d'appareil. 48 unités ≡ 48 dp PHYSIQUES uniquement
+        // sur un écran de 392 dp de large (le téléphone canon) ; sur 360 dp (la largeur modale
+        // Android, la plus étroite couramment supportée), la même zone mesure ≈44,1 dp — SOUS le
+        // seuil. Grandir cette constante est un arbitrage de DA/produit (elle grandirait aussi la
+        // zone à 392 dp, au-delà du minimum) : remonté à l'user, pas tranché ici — voir la garde
+        // `VerifierFermetureParActionDeTete` (épingle la valeur EXACTE, ne masque pas l'écart) et
+        // `Tools/charpente-item0-2-3-implementation-notes.md` § MAJEUR 1 round 11.
+        private const float LeadingTouchZoneDp = 48f; // UNITÉS DE MAQUETTE — PAS des dp, voir ci-dessus
         // ⛔ RATIOS RE-MESURÉS CONTRE LA MAQUETTE (2026-08-22, demande user « traite le menu en haut
         // et en bas, en terme de ratio »). Tout est rapporté à la HAUTEUR DE BARRE, la seule grandeur
         // comparable entre une maquette de 2560 px et un écran de 1200.
@@ -349,8 +416,11 @@ namespace MafiaCleanCity.Shell
 
             // 2) Cash — LOCALE-formatted, NO hard-coded currency symbol (design C2-F1). Digit-bearing
             //    UI chrome, EXCLUDED from the scan corpus (design C2-F4 / IMPORTANT-5) — the SAME
-            //    mechanism DashboardController already uses for "Tier N" (`:340`). Doctrine (1) :
-            //    « l'argent, seul or de l'écran » — serif, `hudMoneyGold`.
+            //    mechanism DashboardController already uses for its "Vocabulary"/"Tier N" row
+            //    (corrigé round 15 [revue ⊥ round 14] — une ancre pointait vers une ligne SANS
+            //    RAPPORT (un `switch (target)`) ; jamais de citation par NUMÉRO d'un fichier hors
+            //    de ce lot, `DashboardController.cs` n'étant surveillé par aucun instrument ici).
+            //    Doctrine (1) : « l'argent, seul or de l'écran » — serif, `hudMoneyGold`.
             string locale = CurrentMe != null ? CurrentMe.locale : null;
             string cashRaw = CurrentWallet != null ? CurrentWallet.cash_cents : null;
             RenderedCashText = FormatCash(cashRaw, locale);
@@ -537,8 +607,11 @@ namespace MafiaCleanCity.Shell
         // Chaque enfant reçoit un ancrage EXPLICITE (pas de HorizontalLayoutGroup sur la racine —
         // c'est ce qui garantit le manomètre EXACTEMENT au centre indépendamment de tout ce qui
         // l'entoure). `LeadingAction` et `Manometre` restent des enfants DIRECTS de ce transform
-        // (jamais nichés) — NavigationPlayModeTests.cs:89 et HudPlayModeTests.cs:333 font un `Find` À
-        // UN SEGMENT qui ne descend pas dans un sous-conteneur.
+        // (jamais nichés) — `NavigationPlayModeTests.LeadingButtonTransform` et
+        // `ManometreOraclePlayModeTests.MeasureGeo` font un `Find` À UN SEGMENT qui ne descend pas
+        // dans un sous-conteneur. ⚠️ round 13 (revue ⊥, MINEUR m2) — l'ancre précédente désignait un
+        // second fichier de test qui ne contenait aucun `Find` de cette forme (fausse à l'écriture,
+        // pas seulement décalée) ; remplacée par un exemple relu directement dans le fichier cité.
         private void BuildLayout()
         {
             RectTransform selfRt = GetComponent<RectTransform>();
@@ -549,20 +622,48 @@ namespace MafiaCleanCity.Shell
             BuildBarBackground();
             BuildHairline();
 
-            // §3.1 — le bouton leading (inchangé fonctionnellement ; ancrage explicite).
+            // §3.1 — le bouton leading. round 9 (revue ⊥, MAJEUR 4, ruling user 2026-08-27) —
+            // `leadingGo` EST DÉSORMAIS LA ZONE TACTILE (48×48 UNITÉS DE MAQUETTE, ancrée au bord
+            // gauche), PAS le rect visuel. ⚠️ round 11 (revue ⊥, MAJEUR 1) — « 48×48 dp » était
+            // FAUX : ce sous-arbre vit en coordonnées de maquette (`EchelleMaquette.
+            // LargeurHudBrennar = 392f`) ; 48 UNITÉS n'équivaut à 48 dp PHYSIQUES QUE sur un écran
+            // de 392 dp de large — à 360 dp (la largeur modale Android), la même zone mesure
+            // ≈44,1 dp, SOUS le minimum tactile. Remonté à l'user (non tranché ici, hors du geste
+            // de production borné à cette affordance) — voir la garde plus bas et
+            // `Tools/charpente-item0-2-3-implementation-notes.md` § MAJEUR 1 round 11. Le VISUEL
+            // (le glyphe rendu par `leadingText`) est repositionné en
+            // ABSOLU ci-dessous pour occuper EXACTEMENT le même rectangle qu'avant ce round —
+            // aucun pixel ne bouge. ⚠️ round 11 (MINEUR m4) — « seule la surface qui reçoit le clic
+            // grandit » est FAUX sur un bord : l'ancienne zone (avant round 9) couvrait aussi
+            // x∈]48,52] (dans ce même repère local), que celle-ci ne couvre plus — sans
+            // conséquence visible, le glyphe s'arrête à x=46, mais ce n'est PAS un sur-ensemble
+            // strict de l'ancienne zone.
             leadingGo = new GameObject("LeadingAction", typeof(RectTransform));
             leadingGo.transform.SetParent(transform, false);
             RectTransform leadingRect = (RectTransform)leadingGo.transform;
             leadingRect.anchorMin = leadingRect.anchorMax = new Vector2(0f, 0.5f);
             leadingRect.pivot = new Vector2(0f, 0.5f);
-            leadingRect.anchoredPosition = new Vector2(BarPaddingX, 0f);
-            leadingRect.sizeDelta = new Vector2(LeadingWidth, LeadingHeight);
+            // ⚠️ x=0, PAS `BarPaddingX` — la zone tactile mord dans la marge/gouttière gauche
+            // (voir le commentaire de `LeadingTouchZoneDp` ci-dessus pour l'arithmétique qui
+            // garde ça sans risque pour l'aile ARGENT).
+            // ⚠️ DÉCLARÉ, NON FERMÉ (round 11, revue ⊥ MINEUR m5) — `x=0` place le bord GAUCHE de
+            // cette zone au bord PHYSIQUE de l'écran, dans la bande d'exclusion de geste système
+            // Android (retour par glissement depuis le bord). Aucun retrait horizontal de zone
+            // sûre n'existe dans ce dépôt (`SafeAreaInsetsLocal()`, `AppShell.cs`, ne rend que
+            // top/bottom) — le risque est THÉORIQUE ici (le VISUEL, lui, reste à `BarPaddingX=16`,
+            // hors de cette bande sur tout appareil mesuré) : une surface de raycast BONUS,
+            // invisible, peut se faire voler par le geste système sur certains appareils/OEM. Pas
+            // fermé ce round (ajouter un inset horizontal est un changement plus large que cette
+            // affordance).
+            leadingRect.anchoredPosition = new Vector2(0f, 0f);
+            leadingRect.sizeDelta = new Vector2(LeadingTouchZoneDp, LeadingTouchZoneDp);
             Image leadingImg = leadingGo.AddComponent<Image>();
-            // ⛔ PLUS D'APLAT. `surfaceRow` peignait un pavé gris-vert derrière « ← Carte » — le
-            // seul rectangle plein de tout l'écran, et le canon n'en porte aucun (le bandeau est
+            // ⛔ PLUS D'APLAT. `surfaceRow` peignait un pavé gris-vert derrière l'action de tête —
+            // le seul rectangle plein de tout l'écran, et le canon n'en porte aucun (le bandeau est
             // un verre translucide, la fiche une plaque, le dock des ronds). L'Image reste, à
             // alpha nul : c'est elle qui reçoit le clic, et une cible de clic sans Graphic ne
-            // reçoit rien.
+            // reçoit rien. Sa taille (48×48, ci-dessus) n'a AUCUN effet visuel : alpha nul quelle
+            // que soit sa surface.
             Color leadingFond = DesignTokens.Current.surfaceRow; leadingFond.a = 0f;
             leadingImg.color = leadingFond;
             Button leadingBtn = leadingGo.AddComponent<Button>();
@@ -583,7 +684,22 @@ namespace MafiaCleanCity.Shell
             leadingText.alignment = TextAlignmentOptions.Center;
             leadingText.color = DesignTokens.Current.onSurfacePrimary;
             leadingText.raycastTarget = false;
-            Stretch((RectTransform)leadingText.transform, new Vector2(6, 2), new Vector2(-6, -2));
+            // ⛔⛔ round 9 (revue ⊥, MAJEUR 4) — PLUS un `Stretch()` relatif au parent : `leadingGo`
+            // (le parent) vient de grandir de 36×40 à 48×48 pour devenir la zone tactile, et un
+            // stretch en pourcentage aurait fait grandir le GLYPHE avec lui — exactement le pixel
+            // qui ne devait PAS bouger. Position ABSOLUE à la place, recalculée pour reproduire
+            // EXACTEMENT le rect que l'ancien `Stretch(leadingGo(36×40 à x=16), (6,2), (-6,-2))`
+            // produisait : X ∈ [16+6, 52-6] = [22, 46] (largeur 24), Y ∈ [-18, 18] (hauteur 36),
+            // en coordonnées ABSOLUES de `TopBarController`. Le nouveau parent partage le MÊME
+            // ancrage (0, 0.5) ET la même `anchoredPosition.y` (0) que l'ancien — seul son
+            // `anchoredPosition.x` a bougé (16 → 0) — donc reproduire ces bornes ABSOLUES demande
+            // seulement de décaler l'offset X de +16 (pour compenser le nouveau parent) et de
+            // garder l'offset Y identique.
+            RectTransform leadingLabelRect = (RectTransform)leadingLabelGo.transform;
+            leadingLabelRect.anchorMin = leadingLabelRect.anchorMax = new Vector2(0f, 0.5f);
+            leadingLabelRect.pivot = new Vector2(0f, 0.5f);
+            leadingLabelRect.anchoredPosition = new Vector2(BarPaddingX + 6f, 0f); // 16+6=22, ABSOLU inchangé
+            leadingLabelRect.sizeDelta = new Vector2(LeadingWidth - 12f, LeadingHeight - 4f); // 36-12=24, 40-4=36, INCHANGÉ
             leadingGo.SetActive(false);
 
             // Écart (7) — le callsign n'existe pas dans `.barre` de la maquette : reste un hook de
