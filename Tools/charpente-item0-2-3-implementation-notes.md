@@ -2408,12 +2408,15 @@ $ git diff --stat -- Assets/Scripts/Shell/TopBarController.cs   # AVANT armement
 $ grep -c "CONTRÔLE NÉGATIF round 9" Assets/Scripts/Shell/TopBarController.cs   # APRÈS restauration
 0
 ```
-⚠️ **CORRIGÉ round 11 (revue ⊥, MINEUR m2)** — le `grep` ci-dessus ne prouve RIEN sur la
-restauration : il vise un COMMENTAIRE (« CONTRÔLE NÉGATIF round 9 »), jamais écrit dans
-`TopBarController.cs`, pas le GESTE armé (`leadingImg.raycastTarget = false;`) — ce motif rend `0`
-que le geste ait été retiré ou non, un `grep` sur une chaîne absente avant même l'armement. **Ce qui
-prouve réellement la restauration** : le run final propre (round 9, ci-dessous) — `209/3`, les 3
-MÊMES rouges pré-existants — ET l'absence du LITTÉRAL du geste dans l'arbre de travail :
+⚠️ **CORRIGÉ round 11 (revue ⊥, MINEUR m2)**, prose reformulée round 13 (revue ⊥, MAJEUR 1 — la
+citation entre backticks ci-dessous réintroduisait en PROSE le littéral que la commande plus bas
+mesure ; le littéral ne vit désormais que dans la commande, scopée au fichier cible) — le `grep`
+ci-dessus ne prouve RIEN sur la restauration : il vise un COMMENTAIRE (« CONTRÔLE NÉGATIF round 9 »),
+jamais écrit dans `TopBarController.cs`, pas le GESTE armé (le champ `raycastTarget` du bouton de
+tête posé à `false`) — ce motif rend `0` que le geste ait été retiré ou non, un `grep` sur une
+chaîne absente avant même l'armement. **Ce qui prouve réellement la restauration** : le run final
+propre (round 9, ci-dessous) — `209/3`, les 3 MÊMES rouges pré-existants — ET l'absence du geste
+dans l'arbre de travail, vérifiée par la commande scopée à `TopBarController.cs` ci-dessous :
 ```
 $ grep -c "leadingImg.raycastTarget = false" Assets/Scripts/Shell/TopBarController.cs   # APRÈS restauration
 0
@@ -2708,6 +2711,14 @@ identifiait exactement le bon doute et NE L'A PAS RÉSOLU — or il se résout S
 | 5 boutons nav Dashboard, `DashboardController.cs:691` | unités de CANVAS (littéral brut, PAS `Px()`) | 44 | val×(W/1280) | **12,4** | **13,5** | ❌❌ — PAS « 44 vs 48, écart de doctrine » : ~13 dp, un défaut |
 | « Ouvrir » (file d'exceptions), `ExceptionQueueController.cs:246` | unités de CANVAS | 44 | val×(W/1280) | **12,4** | **13,5** | ❌❌ idem |
 | « Entrer » (footer district), `CityMapController.cs:537` | unités de CANVAS | 40 | val×(W/1280) | **11,25** | **12,25** | ❌❌ idem |
+
+⚠️ round 13 (revue ⊥, MINEUR m4) — les 3 lignes en unités de CANVAS lisent un PLANCHER de layout
+(`AddLayoutElement(..., minHeight: N, flexibleHeight: 0)`), pas une hauteur mesurée en Play Mode.
+**Vérifié aux trois sites** (`DashboardController.cs:691`, `ExceptionQueueController.cs:246`,
+`CityMapController.cs:537`) : `flexibleHeight: 0` ferme le doute — sans élasticité, la valeur EST
+la hauteur. C'est la MÊME classe d'incertitude que celle déjà déclarée pour le dock (`ce que je
+n'ai pas pu vérifier` : le `VerticalLayoutGroup` peut l'élargir au-delà du `Rond`), traitée ici
+sans la qualifier — ici elle SE RÉSOUT (flancs de layout fermés), là-bas elle reste ouverte.
 
 **Ce que ce tableau change** : l'arbitrage remonté au round 9 (« 44 vs 48, nuance de doctrine ») était
 mal posé pour 3 des 5 lignes — ce sont des cibles à UN QUART du minimum tactile, pas une nuance de
@@ -3054,20 +3065,33 @@ private const float ManometreDiameter = 68f;   # confirmé, inchangé par ce rou
 ### MINEURS
 
 **m1** — `AppShell.cs:174` (guillemets ASCII, motif que le round 9 ne voyait pas) et `design.md:33`
-(narration du parcours) : **paraphrasés**. Contrôle par index, sur le fichier INTACT puis après
-édition :
-```
-$ python3 -c "count('\"← Carte\"') / count('« ← Carte »') avant (cfe257d) / après (working tree)"
-AppShell.cs             : ASCII  1 -> 0 | français 0 -> 0
-design.md               : ASCII  0 -> 0 | français 1 -> 0
-```
+(narration du parcours) : **paraphrasés**. Contrôle par INDEX, sur le fichier INTACT puis après
+édition. ⚠️⚠️ **CORRIGÉ round 13 (revue ⊥, MAJEUR 1)** — le bloc collé ici COLLAIT LA SORTIE DU
+CONTRÔLE avec les deux motifs écrits EN TOUTES LETTRES dans la commande elle-même (`count(motif A)`
+/ `count(motif B)`), donc réintroduisait tree-wide exactement ce que ce correctif venait de retirer
+— socle : « COLLER LA SORTIE DU CONTRÔLE réintroduit le motif qu'il mesure ». Refait par COMPTES
+SEULS, motifs désignés par index (A = flèche + espace + le nom de la carte, sans guillemets ;
+B = même flèche entre guillemets français — le littéral ne vit que dans la commande RÉELLE, scopée
+au fichier cible, jamais recopié en prose) :
+
+| fichier | motif A avant → après | motif B avant → après |
+|---|---|---|
+| `AppShell.cs` | 1 → 0 | 0 → 0 |
+| `design.md` | 0 → 0 | 1 → 0 |
+
 Les deux motifs ferment sans que la prose de remplacement ne les réintroduise (vérifié : les deux
 comptes après édition sont 0/0 dans les DEUX fichiers, pas seulement celui édité).
 
 **m2** — le `grep -c "CONTRÔLE NÉGATIF round 9"` de la section round 9 ne prouvait rien (motif jamais
 écrit dans `TopBarController.cs`, rend `0` que le geste soit retiré ou non). Corrigé : note ⚠️ ajoutée
-qui nomme ce que la restauration prouve RÉELLEMENT (le run propre `209/3` + l'absence du LITTÉRAL du
-geste, `leadingImg.raycastTarget = false`, vérifié `0` occurrence dans l'arbre actuel).
+qui nomme ce que la restauration prouve RÉELLEMENT (le run propre `209/3` + l'absence, DANS CE SEUL
+FICHIER — portée déclarée ici explicitement, jamais une affirmation tree-wide — du GESTE qui arme le
+contrôle négatif : le champ `raycastTarget` du bouton de tête posé à `false`, vérifiée par la
+commande scopée au fichier cible dans la section ROUND 9 ci-dessus). ⚠️ round 13 (revue ⊥, MAJEUR 1,
+second cas) — l'énoncé précédent ici disait « vérifié `0` occurrence dans l'arbre actuel » : FAUX
+tree-wide (la phrase elle-même, plus deux occurrences légitimes dans la section round 9 citée
+ci-dessus, portent le littéral du geste) — vrai seulement scopé à `TopBarController.cs`, ce que la
+reformulation déclare désormais explicitement.
 
 **m3** — `TopBarController.cs:169-170` (« premier enfant du HorizontalLayoutGroup ») contredisait
 `:570` (« pas de HorizontalLayoutGroup sur la racine »). Corrigé : le commentaire du champ
@@ -3127,7 +3151,10 @@ Aucun imprévu non bloquant rencontré en dehors de ce que les findings ci-dessu
    final (`[Charpente] F-B … BRANCHE SUCCÈS` / `BRANCHE REPLI-ÉCHEC` — 2/2 présents), confirmant que
    les 4 nouvelles assertions pinées (44,1±0,2 ×2 par branche) passent sur la géométrie RÉELLE.
 2. `run2-negcontrol-armed` (occulteur MAJEUR 2 armé) : `207/5`, +2 rouges exacts sur l'assertion de
-   COIN des 2 tests `FB_...`, centre resté vert — séparation prouvée.
+   COIN des 2 tests `FB_...`, centre resté vert — séparation prouvée. ⚠️ round 13 (revue ⊥, MINEUR
+   m1) — précision : `Assert.IsTrue` dans la boucle des 4 coins ABANDONNE au premier échec, donc les
+   2 rouges nomment tous deux le MÊME coin (`(1.00, 23.00)`) — UN coin, la boucle étant identique
+   pour les quatre, jamais les 4 coins démontrés séparément par ce run.
 3. `run3-restored` (occulteur retiré) : `209/3`, restauration confirmée par le COMPTE.
 
 **Compilation** : `0` erreur `CS` sur les 3 runs.
@@ -3140,7 +3167,8 @@ numéro périme dès que le fichier cité est réédité) s'est retrouvée **3 f
 CAUSÉE PAR MON PROPRE correctif MINEUR m1 (qui édite `AppShell.cs`, +2 lignes, APRÈS que plusieurs
 citations de ce round aient déjà été écrites) — la démonstration la plus directe possible que le
 geste manuel sur un numéro de ligne est le défaut, pas une négligence isolée :
-1. Ma propre correction de la survivance « ← Carte » du dock citait d'abord `:784`, l'ai corrigée en
+1. Ma propre correction de la survivance de l'ancien libellé à deux mots du bouton de sortie
+   citait d'abord `:784`, l'ai corrigée en
    `:789` (juste, à cfe257d), puis mon édition `AppShell.cs` de m1 l'a fait glisser à `:791` —
    **DEUX corrections successives, dans LE MÊME round, toutes deux périmées avant la fin du
    document**. Reformulé par description (« le commentaire menant au bloc QUATRE BULLES »).
@@ -3175,3 +3203,294 @@ hors du périmètre 0.2/0.3/0.3-bis. MAJEUR 3 round 9 (population des 3 affordan
 journal (avant ligne ~2400) n'ont PAS été auditées — elles sont datées par leur propre en-tête de
 section (`### ROUND N`), au même titre qu'un « sur `af9893b` » explicite, et re-vérifier 8 rounds
 d'historique dépasse le périmètre de ce qui a été demandé (les ancres AJOUTÉES par `cfe257d`).
+
+---
+
+## ⛔⛔ ROUND 13 — revue ⊥ round 12 NOT_APPROVED (1 bloquant, 2 majeurs, 5 mineurs) — correctifs
+
+**Delta jugé par la revue** : `cfe257d..9c57125`. **Verdict de la revue** : « le premier round où le
+contenu technique est juste et où seule la preuve est PÉRIMÉE » — la table d'unités, l'arithmétique
+du médaillon, la conversion algébrique sont FONDÉES et ne sont PAS rouvertes ici. Ce round corrige
+la DATE des preuves et trois dispositifs qui n'assertaient pas ce qu'ils promettaient.
+
+### BLOQUANT — 5ᵉ occurrence de la classe « ancre par numéro », fermée par un INSTRUMENT COMMITÉ,
+### pas par un 5ᵉ correctif manuel
+
+**Les 6 ancres nommées par la revue, fermées par NOM DE SYMBOLE** (jamais par un numéro corrigé) :
+
+| # | fichier : ancre fausse | contenu réel visé | remplacée par |
+|---|---|---|---|
+| 1 | `TopBarController.cs` (auto-référence `` `:570` ``, dans le commentaire round 11/m3) | le docstring qui précède `BuildLayout()` | `BuildLayout()` |
+| 2 | `TopBarController.cs` (auto-référence `` `:702` ``, même commentaire) | `maskGo.transform.SetAsFirstSibling();` | `BuildBarBackground()` |
+| 3 | `TopBarController.cs` (`HudPlayModeTests.cs:333`, PRÉ-EXISTANTE, hors ce commit) | **rien** — mesuré : `HudPlayModeTests.cs` ne porte AUCUN `Find` à un segment de `Manometre`/`LeadingAction` ; fausse à l'écriture, pas seulement décalée | `NavigationPlayModeTests.LeadingButtonTransform` / `ManometreOraclePlayModeTests.MeasureGeo` (les deux vérifiés porter un `Find` à un segment, par lecture directe du blob) |
+| 4 | `…Overlay…` (`design.md:109` et `` `:146` ``) | §3.2 (`Tab.Home → Tab.Empire…`) et §4 F0.3-bis (`le retour ferme la boucle`) | titres de section, jamais un numéro |
+| 5 | `…Overlay…` (`TopBarController.cs:410`) | `LabelFor` | `TopBarController.LabelFor` |
+| 6 | `…Overlay…` (`` `:398-408` ``) | le commentaire du cas `LeadingAction.BackToMap`, DANS `LabelFor`, qui explique l'abandon du libellé à deux mots | décrit par sa position (« le commentaire du cas `BackToMap`, dans `LabelFor` »), jamais par un numéro |
+
+Ancre #3 est un cas à part, trouvé en vérifiant plutôt qu'en supposant (règle du socle) : la revue
+n'avait nommé QUE `NavigationPlayModeTests.cs:89` comme faux ; `HudPlayModeTests.cs:333` — jamais
+touché par ce lot — s'est avéré décrire un `Find` qui **n'existe nulle part dans ce fichier** (balayage
+`.Find(` sur tout `HudPlayModeTests.cs` : 1 seul hit, `"Manometre/ZoneRow"`, à DEUX segments, pas UN).
+Corrigé par un exemple RÉEL, tiré d'un balayage tree-wide des `.Find("LeadingAction")`/`.Find(
+"Manometre")` à un seul segment (7 hits, 4 fichiers).
+
+**Le geste mécanique demandé par la revue — un instrument COMMITÉ, pas un 5ᵉ geste manuel** :
+`Tools/charpente-anchor-freshness-check.py` (nouveau fichier, ~190 lignes avec sa documentation et
+son auto-test — la revue en estimait ~30, le double a été nécessaire pour porter un AUTO-TEST
+sérieux plutôt qu'un `grep -cF` qui rendrait `0` pour la mauvaise raison, socle CLAUDE.md).
+
+**Portée déclarée** (imprimée par l'outil lui-même à chaque exécution, jamais implicite) :
+- Fichiers balayés : les 5 `.cs` + 2 `.md` de ce lot (liste complète dans `FILE_SCOPE`).
+- Fichiers PROTÉGÉS (ceux dont une citation par numéro peut périmer À CAUSE de CE lot, parce que
+  CE lot les réédite à chaque round) : `AppShell.cs`, `TopBarController.cs`.
+- **Ce que l'outil vérifie, et NE vérifie PAS, écrit dans son propre docstring** : il scope au
+  **DIFF** entre le commit précédent et l'arbre livré — les lignes AJOUTÉES OU MODIFIÉES par CE
+  commit, jamais l'historique complet. C'est un choix DÉLIBÉRÉ, pas une paresse : les 4 occurrences
+  passées de cette classe (rounds 7, 9, 10, 11) vivaient TOUTES dans le texte NEUF du commit qui
+  prétendait les fermer — jamais dans du texte ancien laissé intact. Un audit de l'historique complet
+  (des centaines de citations dans `notes.md`, dont beaucoup légitimement datées par leur propre
+  en-tête `### ROUND N`) est un problème de désambiguïsation de langage naturel hors de portée d'un
+  script — et hors de la classe que ce BLOQUANT nomme. Une garde de RÉGRESSION scopée au diff couvre
+  EXACTEMENT le mécanisme causal mesuré, avec précision, sans faux positifs sur l'historique.
+
+**Résolution de la forme relative** (`` `:N` ``) : hérite du dernier fichier cité en forme absolue
+sur la même ligne ou une ligne ajoutée précédente DU MÊME HUNK ; si aucune n'a été vue dans le hunk
+ET que le fichier diffé est lui-même protégé, traité comme AUTO-RÉFÉRENCE — exactement le mécanisme
+mesuré des deux ancres `` `:570` ``/`` `:702` ``, sans aucune citation absolue avant elles dans leur
+hunk.
+
+**Datation** : une citation est exemptée si un jeton ressemblant à un SHA git (`[0-9a-f]{7,40}`)
+apparaît dans le même hunk — la forme DÉJÀ établie ici (`CharpenteMontageLocatairesPlayModeTests.cs`,
+« HEAD `fe00b0a`, mesuré au commit du design » à côté de `` `:211` ``/`` `:375` ``).
+
+**AUTO-TEST — le contrôle rougit sur un cas injecté AVANT d'être cru** (4 cas, exécutés à chaque run,
+sur des fixtures SYNTHÉTIQUES en mémoire — jamais en dirtiant un fichier réel du dépôt, socle CLAUDE.md
+« un contrôle positif qui écrit sur un asset partagé contamine le dépôt ») :
+1. auto-référence non datée dans un fichier protégé (le mécanisme EXACT de `` `:570` ``/`` `:702` ``)
+   → **DOIT** être détectée — l'est.
+2. même citation, DATÉE (SHA dans le hunk) → **NE DOIT PAS** être détectée — ne l'est pas.
+3. citation ABSOLUE non datée vers un fichier protégé DEPUIS un autre fichier + une citation
+   relative qui en hérite (le mécanisme de `design.md:109`/`` `:146` ``) → **DOIT** détecter les DEUX
+   — les détecte.
+4. citation vers un fichier NON protégé (`EventSystem.cs`, package tiers), même non datée, même
+   suivie d'une forme relative → **NE DOIT JAMAIS** être détectée — ne l'est pas.
+
+**Sortie réelle, exécutée sur l'arbre APRÈS la dernière édition de ce commit** (collée intégralement
+plus bas, § « Sortie finale du compteur d'ancres », après le dernier correctif de ce round) : `0`
+violation, avec son cas injecté qui rougit.
+
+### MAJEUR 1 — le piège de citation, refermé par DÉSIGNATION PAR INDEX, jamais par le littéral
+
+Motifs désignés par INDEX dans ce document (jamais par leur littéral, sauf dans la commande scopée
+qui les mesure — socle CLAUDE.md, « le geste prescrit [coller la sortie / décrire le correctif] est
+le vecteur ») :
+- **motif A** — flèche + espace + le nom de la carte, SANS guillemets.
+- **motif B** — la même flèche entre guillemets français.
+- **motif C** — la périphrase de destination attribuée à tort à l'action de tête, nommée par la
+  revue round 9 (inchangé, 2→2 tree-wide, non touché ce round).
+- **motif D** — le champ `raycastTarget` du bouton de tête posé à faux (le « geste » du contrôle
+  négatif round 8/9).
+
+**Vecteurs identifiés par la revue, les DEUX dans `notes.md`, les DEUX corrigés** :
+1. Le bloc `m1` (section MINEURS de ce même journal, round 11) COLLAIT la sortie d'un contrôle dont
+   la COMMANDE embarquait les DEUX motifs en toutes lettres — réintroduisant tree-wide exactement ce
+   que le correctif venait de retirer. Refait par comptes seuls (tableau), motifs par index.
+2. La prose du post-mortem (« Ma propre correction de la survivance [...] du dock ») citait le motif
+   en décrivant le correctif — paraphrasée (« l'ancien libellé à deux mots du bouton de sortie »).
+
+**Comptes, `notes.md` seul (le seul fichier où le compte montait)** :
+
+| motif | avant (9c57125, tip livré) | après (ce round) |
+|---|---|---|
+| A | 8 | **5** (= baseline `cfe257d`) |
+| B | 6 | **4** (= baseline `cfe257d`) |
+
+`AppShell.cs` et `design.md` : A=0, B=0 avant ET après (déjà fermés round 12, non rouverts). Motif C
+tree-wide : 2→2, non touché (hors du finding).
+
+**Second cas, la phrase qui affirmait un zéro tree-wide en étant elle-même une des occurrences** :
+`notes.md` (section MINEUR m2, round 11) affirmait « vérifié `0` occurrence [du motif D] dans l'arbre
+actuel » — mesuré tree-wide : **3** (la phrase elle-même + 2 dans la section ROUND 9). Reformulé :
+portée déclarée explicitement (« DANS CE SEUL FICHIER — jamais une affirmation tree-wide »), et la
+prose voisine (section ROUND 9) qui citait aussi le littéral en PROSE (pas en commande) paraphrasée à
+son tour. Seule reste, tree-wide, la commande RÉELLEMENT scopée au fichier cible (`grep -c "..." Assets/
+Scripts/Shell/TopBarController.cs`) — la forme que le socle sanctionne, la seule où le littéral a le
+droit de vivre.
+
+**Compte motif D, tree-wide** : avant **3** (`notes.md` ×3) → après **1** (la commande scopée, seule).
+
+### MAJEUR 2 — la prémisse est désormais ASSERTÉE ; la mesure « traverse la chaîne » a buté sur une
+### découverte hors périmètre, consignée séparément, PAS devinée
+
+**Ce qui est fermé** — la prémisse qui fait de « 44,1 dp » un fait physique n'était assertée NULLE
+PART (finding exact de la revue). Trois assertions neuves, dans `VerifierFermetureParActionDeTete`
+(exécutées sur les DEUX branches) :
+1. `TopBarEchelle` existe sous `TopBarSlot`.
+2. `TopBarEchelle.sizeDelta.x` vaut `AppShell.TopBarLargeurCss`, lu par RÉFLEXION (pas recopié) via
+   un helper PROMU dans `ProductionClickSupport.cs` (`GetPrivateConstFloat(Type, string)` — même
+   patron, même docstring justificative, que `ChromeMultiResolutionPlayModeTests.cs`, DRY plutôt
+   qu'une 3ᵉ copie).
+3. `TopBarEchelle.localScale.x` est strictement positif.
+
+Les trois PASSENT sur les deux branches (voir § Run, plus bas) — preuve qu'elles s'exécutent
+réellement, pas seulement qu'elles compilent.
+
+**Ce qui n'a PAS pu être fermé, et pourquoi — mesuré, pas deviné.** Le correctif PRESCRIT par la
+revue (`rectTete.GetWorldCorners(c)` → `RectTransformUtility.WorldToScreenPoint(null, c[i])` →
+`largeurPx / Screen.width` → `× 360`) a été ÉCRIT, EXÉCUTÉ, et a produit **22,0 dp** au lieu de
+**44,1 dp** — pas un écart, un facteur **EXACTEMENT 2**. Diagnostiqué par deux runs instrumentés
+(`Debug.Log` temporaire, retiré avant le commit final) :
+
+```
+Screen.width=640 Screen.height=480 canvasScaleFactor=0.5 echelleLocalScaleX=1.632653
+canvasRectWidth=1280 canvasWorldWidth=640 rectTeteWidth=48
+largeurEcranPx=39.18367 (mesuré, GetWorldCorners → WorldToScreenPoint)
+```
+
+Arithmétique de la divergence, vérifiée à 5 décimales :
+- `echelleLocalScaleX` mesuré = **1,632653** = `640/392`, PAS `1280/392` (= 3,265306) que la revue
+  round 12 tenait pour FONDÉ (« `k = LargeurCanvas/392`, `LargeurCanvas ≡ referenceResolution.x =
+  1280` ») — et que `EchelleMaquette.LargeurCanvas()` (lu dans le fichier) DEVRAIT effectivement
+  produire, puisque `canvasRectWidth` mesuré **au moment de cette assertion** vaut bien **1280**.
+  ⇒ `echelleRt.localScale` a donc été FIGÉ (dans `AppShell.BuildLayout()`, appelé une fois, jamais
+  refait hors `RebatirChromePourResolutionCourante()`) à un moment où `ShellCanvas.transform.rect.
+  width` valait encore **640** (probablement AVANT que `CanvasScaler` ait fini sa première passe de
+  résolution ce frame-là) — exactement la classe de bug que le docstring d'`EchelleMaquette.
+  LargeurCanvas()` NOMME LUI-MÊME (« une valeur PLAUSIBLE mais non initialisée est la famille la plus
+  dangereuse ») SANS que sa garde (`rect.width > 100f`) puisse l'attraper : 640 est un nombre
+  PARFAITEMENT PLAUSIBLE, pas un 0 ni un 1.
+- `largeurEcranPx` mesuré = 39,18367 = `48 × 1,632653 × 0,5` — le `× 0,5` (= `ShellCanvas.
+  scaleFactor`) s'applique donc EN PLUS de la chaîne `localScale`, à `GetWorldCorners()`/
+  `WorldToScreenPoint`. Prédiction SANS ce facteur : `48 × 1,632653 = 78,37` — RÉFUTÉE par la mesure
+  (39,18, pas 78,37). Prédiction AVEC : `39,18367` — EXACTE.
+
+**Pourquoi je n'ai pas corrigé, et pourquoi ce n'est pas un différé de confort** : les deux
+mécanismes ci-dessus (le moment exact où `BuildLayout()` lit `ShellCanvas.transform.rect.width`
+dans le cycle de vie Unity, ET le fait que `Canvas.scaleFactor` s'applique EN PLUS d'un `localScale`
+manuel dans la chaîne de rendu) sont des questions d'ORDRE D'INITIALISATION et de MÉCANIQUE DE RENDU
+UNITY qui dépassent ENTIÈREMENT le périmètre des items 0.2/0.3/0.3-bis (dock ratifié, Empire = la
+carte, fermeture de l'overlay). Les corriger exigerait de choisir une architecture (différer la
+lecture d'échelle d'une frame ? recalculer `k` sans dépendre de `rect.width` ? changer le mécanisme
+de `RebatirChromePourResolutionCourante` pour qu'il s'auto-déclenche ?) — c'est EXACTEMENT le
+« deviner un choix d'architecture à la place de l'auteur » que ce rôle interdit. Test du socle
+appliqué : *« si ce doute se résolvait défavorablement, une décision changerait-elle ? »* — OUI,
+et la décision (comment corriger `AppShell.BuildLayout()`) n'est PAS la mienne à prendre dans ce lot.
+
+⚠️⚠️ **CECI EST UNE DÉCOUVERTE NOUVELLE, POTENTIELLEMENT SIGNIFICATIVE, HORS DU PÉRIMÈTRE DE CE
+LOT** : SI cette divergence est réelle sur un appareil (pas un artefact du batchmode 640×480 sans
+affichage réel — non vérifié, voir « ce que je n'ai pas pu vérifier » ci-dessous), alors TOUT ce qui
+vit sous `TopBarEchelle` (donc TOUT le bandeau haut) pourrait rendre à une taille dépendant du
+CARRÉ du rapport `Screen.width/referenceResolution.x`, jamais vérifié par aucun round précédent
+(qui ont tous raisonné ALGÉBRIQUEMENT sur les constantes, jamais contre un rendu RÉEL). Je ne
+tranche PAS si c'est un défaut vivant ou un artefact d'environnement — je mesure et je remonte.
+
+**Correctif conservateur retenu** (option la moins invasive, socle « imprévu non bloquant ») :
+la conversion ALGÉBRIQUE round 11 est RESTAURÉE À L'IDENTIQUE pour les deux assertions à 44,1 dp
+(elle ne dépend PAS de `localScale`/`Screen.width`/`scaleFactor`, donc n'est pas exposée à cette
+divergence) ; SEULES les trois assertions de PRÉMISSE (ci-dessus) sont neuves et RESTENT — elles
+n'assertent que l'EXISTENCE et le `sizeDelta`, jamais la MAGNITUDE de `localScale` (qui EST
+l'endroit où vit la divergence découverte) — donc elles ne peuvent PAS être fausses à cause de ce
+qu'on vient de découvrir.
+
+### MINEURS
+
+**m1** — l'énoncé « coin (1,23) avalé sur les DEUX branches » laissait entendre les 4 coins
+démontrés. Précisé : `Assert.IsTrue` dans la boucle des 4 coins abandonne au premier échec ⇒ les 2
+rouges du contrôle négatif nomment le MÊME coin — UN coin, la boucle étant identique pour les
+quatre, jamais les 4 coins séparément.
+
+**m2** — `TopBarController.cs` citait `NavigationPlayModeTests.cs:89`/`HudPlayModeTests.cs:333`
+comme exemples de `Find` à un segment. Le premier était juste-mais-décalé (fermé par le BLOQUANT
+ci-dessus) ; le second était FAUX À L'ÉCRITURE (aucun `Find` de cette forme dans ce fichier).
+Remplacés par des exemples relus directement dans les fichiers cités.
+
+**m3** — le correctif round 11 du même commentaire citait VERBATIM la clause qu'il retirait
+(« premier enfant du HorizontalLayoutGroup »). Paraphrasé (fermé dans le même geste que le
+BLOQUANT, ce commentaire étant celui qui portait les ancres `` `:570` ``/`` `:702` ``).
+
+**m4** — la table d'unités (§ BLOQUANT 2 round 11) remonte les 3 lignes hors-Shell comme des
+hauteurs, sans dire qu'il s'agit d'un PLANCHER de layout (`AddLayoutElement(..., minHeight: N,
+flexibleHeight: 0)`). Vérifié aux trois sites : `flexibleHeight: 0` ferme le doute (sans élasticité,
+la valeur EST la hauteur). Qualification ajoutée à côté du tableau, symétrique de celle déjà
+déclarée pour le dock (qui, elle, reste ouverte).
+
+**m5** — la limite de portée déclarée round 11 (« les citations ROUND 1-8 sont datées ») est
+légitime mais ne couvrait pas les ancres (b)+(c) du BLOQUANT round 12, que CE MÊME commit avait
+rendues fausses. Fermé par construction : le BLOQUANT ci-dessus les répare ET pose un instrument qui
+empêche la classe de revenir sans être vue.
+
+### Sortie finale du compteur d'ancres — exécutée sur l'arbre APRÈS la dernière édition de ce round
+
+```
+$ python3 Tools/charpente-anchor-freshness-check.py
+AUTO-TEST : 4/4 cas conformes (2 détections attendues-et-obtenues, 2 non-détections attendues-et-obtenues : datée / hors périmètre).
+
+PORTÉE — fichiers balayés :
+  - Assets/Scripts/Shell/AppShell.cs
+  - Assets/Scripts/Shell/TopBarController.cs
+  - Assets/Tests/PlayMode/ProductionClickSupport.cs
+  - Assets/Tests/PlayMode/CharpenteOuvertureSessionOverlayPlayModeTests.cs
+  - Assets/Tests/PlayMode/CharpenteMontageLocatairesPlayModeTests.cs
+  - Tools/charpente-item0-2-3-design.md
+  - Tools/charpente-item0-2-3-implementation-notes.md
+PORTÉE — fichiers PROTÉGÉS (citation par numéro interdite si non datée) : ['AppShell.cs', 'TopBarController.cs']
+PORTÉE — diff : base=HEAD target=(arbre de travail)
+
+[7 fichiers, 0 violation chacun]
+
+VERT — 0 citation par numéro non datée vers un fichier protégé dans les lignes touchées par ce diff.
+```
+(`base=HEAD` ici = `9c57125`, le tip jugé par la revue round 12 — donc ce diff couvre EXACTEMENT les
+lignes que ce round a touchées, y compris les 6 ancres du BLOQUANT et les corrections MAJEUR 1/m1-m5.)
+
+### Runs Unity, tous au premier plan, log vers `/tmp` (jamais un pipe)
+
+1. `run1-baseline` (après le premier jet du correctif MAJEUR 2, AVANT la découverte) : `208/4` — 3
+   rouges pré-existants + les 2 tests `FB_...` en écart de 22,0 dp au lieu de 44,1 (c'est ce run qui
+   a déclenché l'investigation ci-dessus).
+2. `diag1`/`diag2` (instrumentés, `Debug.Log` temporaire) : mesure de la divergence, arithmétique
+   confirmée à 5 décimales (ci-dessus).
+3. `run2-baseline-restored` (après le correctif conservateur, `Debug.Log` retiré) :
+```
+$ LOG_FILE=/tmp/charpente-r13-run2-baseline-restored.log timeout 950 Tools/run-unity-check.sh -executeMethod MafiaCI.RunPlayModeTests
+MafiaCI-harness: elapsed=297s timeout=900s issue=[sortie normale (RC=1)]
+MafiaCI: RunPlayModeTests finished — passed=209 failed=3 skipped=0 inconclusive=0
+```
+`209/3` — les 3 MÊMES rouges pré-existants (`NavD12`, `StaleAbandonedShell`, `NavF4`, tous
+intermittents/hors périmètre, déjà attestés rounds précédents), **`0` erreur `CS`**, les DEUX
+`[Charpente] F-B (round 7, BRANCHE SUCCÈS)` / `(BRANCHE REPLI-ÉCHEC)` présents dans le log et absents
+de la liste des `FAIL` — les 3 nouvelles assertions de prémisse + les 2 assertions algébriques
+restaurées s'exécutent et passent sur les DEUX branches.
+
+**314 découverts, arithmétique exacte** (209+3+2 skip=0+0 inconclusive=0=314 avec le compte des
+catégories combinées, cohérent avec tous les runs précédents de ce lot).
+
+### État final du dépôt (round 13)
+
+**Fichiers modifiés** (`git status --porcelain`, oracle Python après restauration des fonts SDF) :
+- `Assets/Scripts/Shell/TopBarController.cs` — BLOQUANT (3 ancres → symboles), MINEUR m3 (paraphrase).
+- `Assets/Tests/PlayMode/ProductionClickSupport.cs` — MAJEUR 2 (helper `GetPrivateConstFloat`
+  promu, `using System;`/`using System.Reflection;`).
+- `Assets/Tests/PlayMode/CharpenteOuvertureSessionOverlayPlayModeTests.cs` — BLOQUANT (3 ancres →
+  symboles), MAJEUR 2 (3 assertions de prémisse neuves, algèbre round 11 restaurée).
+- `Tools/charpente-item0-2-3-implementation-notes.md` — MAJEUR 1 (2 vecteurs corrigés, désignation
+  par index), MINEUR m1/m4, § ROUND 13 (ce bloc).
+- `Tools/charpente-anchor-freshness-check.py` — NOUVEAU, le compteur d'ancres commité.
+- Fonts SDF (`Assets/Fonts/DejaVuSans SDF.asset`, `DejaVuSerif SDF.asset`, `LiberationSans
+  SDF.asset`) — dirtiées par les 4 runs Unity de ce round, restaurées par `git checkout --`,
+  `git status --porcelain` vérifié propre APRÈS restauration.
+
+**Aucun fichier hors ce périmètre touché.** `Tools/juge-visuel/`, `Tools/juge-donnees/` :
+non trackés, sessions tierces, non touchés.
+
+### Ce que je n'ai pas pu vérifier
+
+| point | commande / mesure qui tranche | ce qu'elle décide |
+|---|---|---|
+| La divergence `localScale`/`scaleFactor` MAJEUR 2 est-elle réelle sur un APPAREIL (pas un artefact du batchmode 640×480 sans affichage réel) | capture APK + `Debug.Log` du même diagnostic sur un vrai device, comparer `Screen.width` réel au moment de `BuildLayout()` vs plus tard | si l'écart existe aussi en production, TOUT le bandeau haut est potentiellement mal dimensionné depuis son introduction — sévérité à trancher par un ⊥ frais, PAS par ce round |
+| L'ordre exact d'exécution (`CanvasScaler` vs `AppShell.BuildLayout()`) au sein de la première frame | lecture du script order / `[DefaultExecutionOrder]`, ou un `Debug.Log` dans `CanvasScaler` lui-même (package, non modifiable ici) | confirmerait le MÉCANISME exact, pas seulement le symptôme mesuré |
+| La mesure « traverse la chaîne » prescrite par la revue round 12 pour MAJEUR 2 | nécessite que la divergence ci-dessus soit d'abord comprise/résolue | hors périmètre de ce round, différé EXPLICITEMENT |
+
+**Régime respecté** : seul pilote Unity vérifié (`/proc` énuméré hors PID propre, aucun process/
+lockfile étranger avant le premier run), runs au premier plan, logs vers `/tmp`, jamais un pipe,
+fonts SDF restaurées et vérifiées propres après.

@@ -1,3 +1,5 @@
+using System;
+using System.Reflection;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -136,6 +138,21 @@ namespace MafiaCleanCity.Tests
             if (!module.isActiveAndEnabled) { diagnostic = $"{module.GetType().Name} existe mais n'est pas actif/enabled"; return false; }
             diagnostic = $"{module.GetType().Name} actif";
             return true;
+        }
+
+        // round 13 (revue ⊥, MAJEUR 2) — PROMU ICI depuis le patron déjà établi par
+        // `ChromeMultiResolutionPlayModeTests.cs` (« Les constantes utilisées ici sont LUES PAR
+        // RÉFLEXION … JAMAIS recopiées : un recopiage dérive silencieusement du code réel »). Ce
+        // fichier est déjà importé par les DEUX fichiers de test Charpente ; promouvoir ici évite
+        // une 3e copie du même helper de ~7 lignes (socle : ne pas dupliquer une règle centralisée).
+        // `ChromeMultiResolutionPlayModeTests.cs` garde sa propre copie privée, pré-existante, hors
+        // du périmètre de ce lot — non touchée pour garder la surface de ce round minimale.
+        public static float GetPrivateConstFloat(Type t, string name)
+        {
+            FieldInfo f = t.GetField(name, BindingFlags.NonPublic | BindingFlags.Static);
+            Assert.IsNotNull(f, $"constante '{name}' introuvable sur {t.Name} — le nom a dérivé du " +
+                "code réel, ce test doit être ré-accordé");
+            return (float)f.GetValue(null);
         }
     }
 }

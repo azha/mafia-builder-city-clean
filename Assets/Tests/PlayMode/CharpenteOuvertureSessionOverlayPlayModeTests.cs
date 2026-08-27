@@ -311,14 +311,15 @@ namespace MafiaCleanCity.Shell.Tests
         // FAUSSE : « aucun mécanisme de démontage n'existe dans `IShellNavigator`/`IShellTenant` ».
         // Réfutée par TROIS artefacts DE CE LOT, déjà présents avant ce round : `AppShell.
         // ExitToCityMap()` (round 11, revue ⊥ BLOQUANT 1 : citation par numéro de ligne remplacée
-        // par un nom de symbole — `=> ActivateTab(Tab.Empire)`), `Tools/charpente-item0-2-3-design.md:109`
-        // et `:146` (F0.3-bis — le design NOMME DÉJÀ le geste de fermeture par l'action de tête du
-        // bandeau ; le libellé qu'il lui attribuait ALORS a depuis été abandonné, voir le correctif
-        // round 8 ci-dessous — ⛔ round 9, revue ⊥, MAJEUR 2 : ce commentaire CITAIT VERBATIM la
-        // clause que ce même correctif retire, le piège de citation refermé dans le bloc qui le
-        // décrit — PARAPHRASÉ ICI, jamais cité), et F-A elle-même (ci-dessous), qui prouve depuis
-        // longtemps qu'une activation d'onglet détruit l'overlay — le RETOUR à la carte était déjà
-        // résolu pour le district, jamais rebranché ici.
+        // par un nom de symbole — `=> ActivateTab(Tab.Empire)`), `Tools/charpente-item0-2-3-
+        // design.md` §3.2 et §4 F0.3-bis (round 13, revue ⊥ BLOQUANT — ancre par numéro remplacée
+        // par un titre de section : le design NOMME DÉJÀ le geste de fermeture par l'action de tête
+        // du bandeau ; le libellé qu'il lui attribuait ALORS a depuis été abandonné, voir le
+        // correctif round 8 ci-dessous — ⛔ round 9, revue ⊥, MAJEUR 2 : ce commentaire CITAIT
+        // VERBATIM la clause que ce même correctif retire, le piège de citation refermé dans le
+        // bloc qui le décrit — PARAPHRASÉ ICI, jamais cité), et F-A elle-même (ci-dessous), qui
+        // prouve depuis longtemps qu'une activation d'onglet détruit l'overlay — le RETOUR à la
+        // carte était déjà résolu pour le district, jamais rebranché ici.
         //
         // Geste, ZÉRO mécanisme neuf : `TopBar.SetLeadingAction(TopBarController.LeadingAction.
         // BackToMap, ExitToCityMap)`, DEUX lignes, posées APRÈS `MonterLocataireEnSurimpression
@@ -329,12 +330,13 @@ namespace MafiaCleanCity.Shell.Tests
         // sortir d'un district, réutilisé tel quel.
         // ⚠️ CORRIGÉ round 8 (revue ⊥, MINEUR 2) — ce commentaire attribuait ici un libellé
         // « retour vers la carte » à `LabelFor`, en s'appuyant sur le design du lot. `LabelFor`
-        // rend une FLÈCHE NUE pour cette action (`TopBarController.cs:410`), et le fichier
-        // documente à `:398-408` pourquoi le libellé à deux mots a été ABANDONNÉ : il revenait à la
-        // ligne depuis que le bandeau est à l'échelle du canon. ⇒ L'affordance montrée au joueur
-        // est une flèche sans destination écrite. *Un énoncé daté d'un design, périmé par un lot
-        // ultérieur, ressuscité comme preuve* — la découvrabilité repose sur le fait que c'est le
-        // seul contrôle du coin gauche, pas sur un mot qui n'est pas affiché.
+        // rend une FLÈCHE NUE pour cette action (`TopBarController.LabelFor`), et le commentaire du
+        // cas `LeadingAction.BackToMap`, DANS `LabelFor` (round 13 : ancre par numéro remplacée par
+        // un nom de symbole), documente pourquoi le libellé à deux mots a été ABANDONNÉ : il
+        // revenait à la ligne depuis que le bandeau est à l'échelle du canon. ⇒ L'affordance montrée
+        // au joueur est une flèche sans destination écrite. *Un énoncé daté d'un design, périmé par
+        // un lot ultérieur, ressuscité comme preuve* — la découvrabilité repose sur le fait que
+        // c'est le seul contrôle du coin gauche, pas sur un mot qui n'est pas affiché.
         //
         // Ce que CE round livre : F-A (inchangée, toujours vraie — un SECOND chemin de sortie,
         // générique, coexiste avec celui-ci) et F-B, REMPLACÉE : l'ancienne épingle documentait un
@@ -669,19 +671,48 @@ namespace MafiaCleanCity.Shell.Tests
                 $"({etiquetteBranche}) la zone tactile de l'action de tête doit mesurer ≥48 UNITÉS " +
                 $"DE MAQUETTE de haut — trouvé {rectTete.rect.height}.");
 
-            // Conversion algébrique vers deux largeurs d'écran DE RÉFÉRENCE (jamais un pixel rendu) :
-            // 392 dp (`EchelleMaquette.LargeurHudBrennar`, le téléphone canon) et 360 dp (la largeur
-            // modale Android — la plus étroite couramment supportée). ÉPINGLÉ, pas masqué : cette
-            // zone est CONNUE sous le seuil de 48 dp physiques à 360 — remontée à l'user (arbitrage
-            // produit/DA, hors du geste de production borné à cette affordance), PAS silencieusement
-            // acceptée comme conforme. Si cette valeur bouge SANS que ce commentaire soit mis à
-            // jour, quelqu'un a touché la géométrie sans relire cette garde.
+            // ⚠️⚠️ CORRIGÉ round 13 (revue ⊥, MAJEUR 2) — closure PARTIELLE, et le journal explique
+            // pourquoi (§ MAJEUR 2, « ce qui n'a pas pu être fermé »). Le correctif PRESCRIT
+            // (mesurer via `GetWorldCorners` → `WorldToScreenPoint` → fraction de `Screen.width`) a
+            // été ÉCRIT, EXÉCUTÉ, et a mis au jour une DIVERGENCE non liée à ce lot — hors périmètre
+            // 0.2/0.3/0.3-bis, consignée séparément, PAS devinée ni corrigée ici. Ce qui EST fermé,
+            // et c'est le cœur du MAJEUR 2 : la PRÉMISSE qui fait de « 44,1 dp » un fait physique
+            // (le nœud `TopBarEchelle` existe et porte la largeur locale attendue) est désormais
+            // ASSERTÉE — round 11 ne l'assertait nulle part.
+            Transform echelleT = shell.TopBarSlot.Find("TopBarEchelle");
+            Assert.IsNotNull(echelleT,
+                $"({etiquetteBranche}) `TopBarEchelle` doit exister sous `TopBarSlot` — c'est le " +
+                "SEUL nœud qui porte le `localScale` reliant les unités de maquette à l'écran ; " +
+                "sans lui, « dp physiques » ne décrit RIEN de physique.");
+            var echelleRect = (RectTransform)echelleT;
+            float largeurMaquetteAttendue =
+                ProductionClickSupport.GetPrivateConstFloat(typeof(AppShell), "TopBarLargeurCss");
+            Assert.AreEqual(largeurMaquetteAttendue, echelleRect.sizeDelta.x, 0.01f,
+                $"({etiquetteBranche}) `TopBarEchelle.sizeDelta.x` doit valoir `AppShell." +
+                $"TopBarLargeurCss` ({largeurMaquetteAttendue}) — c'est CETTE largeur locale FIXE " +
+                "qui fait que `rect.width` du bouton de tête est une unité de MAQUETTE, jamais une " +
+                "unité d'écran.");
+            Assert.Greater(echelleRect.localScale.x, 0f,
+                $"({etiquetteBranche}) `TopBarEchelle.localScale.x` doit être STRICTEMENT positif " +
+                "— c'est lui qui porte la maquette à l'écran ; nul ou négatif, la zone tactile " +
+                "n'existe physiquement nulle part.");
+
+            // Conversion ALGÉBRIQUE (round 11, RE-VÉRIFIÉE fondée par la revue round 12 — voir
+            // journal) vers deux largeurs d'écran DE RÉFÉRENCE (jamais un pixel rendu) : 392 dp
+            // (`EchelleMaquette.LargeurHudBrennar`, le téléphone canon) et 360 dp (la largeur modale
+            // Android — la plus étroite couramment supportée). RESTAURÉE ici DÉLIBÉRÉMENT plutôt que
+            // remplacée par la mesure « traverse la chaîne » : cette dernière s'est avérée dépendre
+            // d'un état (`echelleRect.localScale`/`Screen.width`/`Canvas.scaleFactor`) dont ce round
+            // vient de découvrir qu'il diverge de ce que cette même algèbre suppose — corriger LA
+            // MESURE pour absorber cette divergence, sans comprendre sa cause, serait deviner une
+            // réponse architecturale (⊥ : jamais à la place de l'auteur). ÉPINGLÉ, pas masqué : cette
+            // zone est CONNUE sous le seuil de 48 dp physiques à 360 dp de large — remontée à l'user
+            // (arbitrage produit/DA, hors du geste de production borné à cette affordance), PAS
+            // silencieusement acceptée comme conforme. Si cette valeur bouge SANS que ce commentaire
+            // soit mis à jour, quelqu'un a touché la géométrie sans relire cette garde.
             const float LargeurEcranDpModale = 360f; // la plus étroite couramment supportée
             float dpLargeurModale = rectTete.rect.width * (LargeurEcranDpModale / EchelleMaquette.LargeurHudBrennar);
             float dpHauteurModale = rectTete.rect.height * (LargeurEcranDpModale / EchelleMaquette.LargeurHudBrennar);
-            // À 392 dp (le téléphone canon), le facteur de conversion vaut 1 PAR CONSTRUCTION —
-            // la valeur en unités de maquette EST directement la valeur en dp physiques à cette
-            // largeur de référence, donc l'assertion (a) ci-dessus DOUBLE comme garde à 392 dp.
             Assert.AreEqual(44.1f, dpLargeurModale, 0.2f,
                 $"({etiquetteBranche}) ÉCART CONNU, REMONTÉ — à 360 dp de large (largeur modale " +
                 $"Android), la zone tactile ne mesure QUE {dpLargeurModale:F1} dp physiques " +

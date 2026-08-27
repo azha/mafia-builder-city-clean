@@ -167,12 +167,15 @@ namespace MafiaCleanCity.Shell
         private TextMeshProUGUI notificationText;
 
         // §3.1 — le bouton leading, construit UNE fois dans BuildLayout, JAMAIS détruit ; seule sa
-        // visibilité (SetActive) suit l'état. ⚠️ CORRIGÉ round 11 (revue ⊥, MINEUR m3) — cette
-        // ligne disait « premier enfant du HorizontalLayoutGroup », en CONTRADICTION avec `:570`
-        // (« pas de HorizontalLayoutGroup sur la racine — c'est ce qui garantit le manomètre
-        // EXACTEMENT au centre »), qui est la description EXACTE : chaque enfant reçoit un ancrage
-        // EXPLICITE, aucun `HorizontalLayoutGroup` sur la racine. `leadingGo` n'est pas non plus le
-        // premier ENFANT dans l'ordre de fratrie : `BarMask` est `SetAsFirstSibling()` (`:702`).
+        // visibilité (SetActive) suit l'état. ⚠️ CORRIGÉ round 11 (revue ⊥, MINEUR m3), ancres
+        // renumérotées en noms de SYMBOLES round 13 (revue ⊥, BLOQUANT — citation par numéro de
+        // ligne, classe déjà rouverte 4 fois par un correctif manuel) — cette ligne attribuait à
+        // `leadingGo` une position de fratrie qu'il n'a pas ; PARAPHRASÉ, jamais cité (citer
+        // l'énoncé qu'on retire le réintroduit). La description EXACTE vit dans le docstring de
+        // `BuildLayout()` : chaque enfant reçoit un ancrage EXPLICITE, aucun `HorizontalLayoutGroup`
+        // sur la racine — c'est ce qui garantit le manomètre EXACTEMENT au centre. `leadingGo` n'est
+        // pas non plus le premier ENFANT dans l'ordre de fratrie : `BarMask` est
+        // `SetAsFirstSibling()`, dans `BuildBarBackground()`.
         private GameObject leadingGo;
         private TextMeshProUGUI leadingText;
         private System.Action leadingOnClick;
@@ -575,8 +578,11 @@ namespace MafiaCleanCity.Shell
         // Chaque enfant reçoit un ancrage EXPLICITE (pas de HorizontalLayoutGroup sur la racine —
         // c'est ce qui garantit le manomètre EXACTEMENT au centre indépendamment de tout ce qui
         // l'entoure). `LeadingAction` et `Manometre` restent des enfants DIRECTS de ce transform
-        // (jamais nichés) — NavigationPlayModeTests.cs:89 et HudPlayModeTests.cs:333 font un `Find` À
-        // UN SEGMENT qui ne descend pas dans un sous-conteneur.
+        // (jamais nichés) — `NavigationPlayModeTests.LeadingButtonTransform` et
+        // `ManometreOraclePlayModeTests.MeasureGeo` font un `Find` À UN SEGMENT qui ne descend pas
+        // dans un sous-conteneur. ⚠️ round 13 (revue ⊥, MINEUR m2) — l'ancre précédente désignait un
+        // second fichier de test qui ne contenait aucun `Find` de cette forme (fausse à l'écriture,
+        // pas seulement décalée) ; remplacée par un exemple relu directement dans le fichier cité.
         private void BuildLayout()
         {
             RectTransform selfRt = GetComponent<RectTransform>();
