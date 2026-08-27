@@ -2408,8 +2408,16 @@ $ git diff --stat -- Assets/Scripts/Shell/TopBarController.cs   # AVANT armement
 $ grep -c "CONTRÔLE NÉGATIF round 9" Assets/Scripts/Shell/TopBarController.cs   # APRÈS restauration
 0
 ```
-Confirmé par un run final propre (round 9, ci-dessous) : `209/3`, les 3 MÊMES rouges pré-existants,
-`0` occurrence du geste d'armement dans l'arbre de travail.
+⚠️ **CORRIGÉ round 11 (revue ⊥, MINEUR m2)** — le `grep` ci-dessus ne prouve RIEN sur la
+restauration : il vise un COMMENTAIRE (« CONTRÔLE NÉGATIF round 9 »), jamais écrit dans
+`TopBarController.cs`, pas le GESTE armé (`leadingImg.raycastTarget = false;`) — ce motif rend `0`
+que le geste ait été retiré ou non, un `grep` sur une chaîne absente avant même l'armement. **Ce qui
+prouve réellement la restauration** : le run final propre (round 9, ci-dessous) — `209/3`, les 3
+MÊMES rouges pré-existants — ET l'absence du LITTÉRAL du geste dans l'arbre de travail :
+```
+$ grep -c "leadingImg.raycastTarget = false" Assets/Scripts/Shell/TopBarController.cs   # APRÈS restauration
+0
+```
 
 **Classe fermée, round 8 ET round 9 confondus** : la garde de collision sur l'affordance de sortie
 rougit sur le monde dégénéré exact qu'elle existe pour attraper, sur LES DEUX branches
@@ -2430,9 +2438,11 @@ Charpente) → **2** (`FB_..._BrancheSucces`, `FB_..._BrancheEchec`) — `Charpe
 PlayModeTests.cs` et `CharpenteBootScenePlayModeTests.cs` n'en portent AUCUN. **Avant** : 1/2
 gardée (l'échec, round 8). **Après** : 2/2 — `Assert.IsFalse(string.IsNullOrEmpty(shell.Token), ...)`
 ajouté dans `FB_..._BrancheSucces`, juste après `WaitForEmpireMounted`, symétrique de la garde
-`IsTrue` déjà posée sur l'échec. `Token` : écrivain UNIQUE `AppShell.cs:377`, APRÈS le signin,
-AVANT le montage — discrimine dans les deux sens (round 7 l'avait déjà établi pour l'échec ; le
-même fait vaut, à l'identique, pour le succès).
+`IsTrue` déjà posée sur l'échec. `Token` : écrivain UNIQUE — l'unique affectation `Token = t;`
+dans `AcquireSessionThenActivateHome()` (⚠️ CORRIGÉ round 11, revue ⊥ BLOQUANT 1 : citait
+`AppShell.cs:377` par numéro, décalé de +5 dans ce même commit — cité par symbole désormais), APRÈS
+le signin, AVANT le montage — discrimine dans les deux sens (round 7 l'avait déjà établi pour
+l'échec ; le même fait vaut, à l'identique, pour le succès).
 
 Le précédent `NavigationPlayModeTests.cs:247-248` (cité par le code comme modèle « asserte sa
 prémisse ») n'a jamais eu ce défaut — un seul chemin de repli y existe.
@@ -2518,6 +2528,29 @@ FAUSSE avant MÊME le décalage round 7 (rendait déjà `TabDockPointeWidthCss =
 Cible réelle vérifiée : `AppShell.cs:892` (contenu byte-identique au littéral cité). **3/3
 corrigées.**
 
+⚠️⚠️ **CORRIGÉ round 11 (revue ⊥, BLOQUANT 1)** — **CE MÊME COMMIT** (`cfe257d`, celui qui a écrit
+la section ci-dessus) insère `+5` lignes avant l'ancienne `AppShell.cs:372` et `+3` avant l'ancienne
+`:786` (la paraphrase de MAJEUR 2, plus bas dans ce même commit) — donc TOUTES les cibles « `+12`
+naïf » de la table ci-dessus (`580`, `873-875` ×2, `808`, `788`/`807`) **et** la cible `892` de m6
+**glissent à leur tour**, DANS LE COMMIT MÊME qui les corrigeait. Vérifié par oracle Python
+(`git show 255998a:… / cfe257d:…`, diffusé par `difflib`) : le contenu que la table ci-dessus décrit
+existe bien, mais **8 lignes plus bas** pour tout ce qui est ≥ l'ancienne `:786`, **5 lignes plus
+bas** pour le reste. La table ci-dessus reste un enregistrement HISTORIQUE correct de ce qui a été
+vérifié contre `255998a` — ce n'est PAS une nouvelle correction par numéro (la classe a déjà glissé
+deux fois par ce geste) : **la référence qui suit est par SYMBOLE**, immunisée contre tout futur
+décalage de ligne dans `AppShell.cs` :
+- table #1 (`ShellCanvas.renderMode = …`) → dans `AppShell.BuildLayout()`.
+- table #2/#3 (commentaire « L'Image reste… ») → dans `AppShell.AddTabButton(Tab, string)`.
+- table #4 (`(Tab.More, "Plus"),`) et #5 (commentaire « Marché » + `(Tab.Pipeline,"Filière")`) →
+  dans le littéral du champ `DockRatifie`.
+- m6 (`b.onClick.AddListener(() => ActivateTab(tab));`) → dans `AppShell.AddTabButton(Tab, string)`,
+  même méthode que #2/#3.
+- « L'équivalent ACTUEL » (déclaration `DockRatifie`, ses lecteurs) → `AppShell.BuildTabBar()`,
+  `AppShell.RebatirChromePourResolutionCourante()`, `AppShell.RefreshTabButtonVisuals()` (identique
+  au correctif appliqué dans `design.md` §2.1, même round).
+Les 4 ancres §6-10 (`design.md:46-48,113`, datées `af9893b`) ne bougent pas : elles décrivent un
+fichier ANTÉRIEUR au round 1 de ce lot, hors de portée du décalage `cfe257d`, et restent vérifiées.
+
 ### MAJEUR 2 — la classe « libellé à deux mots attribué à un helper qui ne le produit plus »,
 fermée sur les 4 survivances nommées par la revue
 
@@ -2536,8 +2569,14 @@ Contrôle exécuté sur le fichier INTACT d'abord (avant toute édition) — les
 déjà à 0/1/3 respectivement pour rien : chaque motif AVANT correspond exactement au compte que la
 revue avait mesuré (2, 1, 3).
 
-**4 survivances fermées, PARAPHRASÉES, jamais citées** : `AppShell.cs:371` (comment de `:372`,
-branche repli), `AppShell.cs:784` (commentaire dock « QUATRE BULLES »), `design.md:109` (§3.2),
+**4 survivances fermées, PARAPHRASÉES, jamais citées** : le commentaire qui
+précède `TopBar.SetLeadingAction` dans la branche repli d'`AcquireSessionThenActivateHome()`,
+le commentaire menant au bloc « QUATRE BULLES » dans `AppShell.BuildTabBar()` (⚠️ CORRIGÉ round 11,
+revue ⊥ BLOQUANT 1 : cette ENTRÉE DE JOURNAL elle-même citait d'abord `:784`, puis `:789` après un
+premier correctif — TOUS DEUX faux au tip final, le second décalé PAR MON PROPRE correctif MINEUR
+m1 du même round, à quelques paragraphes de distance dans ce même document. Cité par description
+désormais, plus jamais par numéro — la démonstration la plus directe de ce round que le geste
+manuel sur un numéro de ligne est le défaut, pas une négligence ponctuelle), `design.md:109` (§3.2),
 `design.md:146` (§4, F0.3-bis). Chacune remplacée par une description de la DESTINATION (inchangée)
 sans jamais nommer le libellé visuel — et chacune porte désormais une note ⚠️ CORRIGÉE round 9
 datée, qui ne cite PAS non plus la clause retirée (paraphrase de la paraphrase — pas de rechute).
@@ -2564,12 +2603,20 @@ garde d'ensemble, `Tab_Empire`, la sortie), 3 nues (« Entrer » du district, le
 Dashboard, « Ouvrir » d'une ligne de file).
 
 **Ce qui a été mesuré STATIQUEMENT, sans lancer Unity** (source, pas capture) :
-- `TopBarSlot` (`AppShell.cs:611-644`) : `anchorMin=(0,1)`, `anchorMax=(1,1)`, hauteur
+- `TopBarSlot` (construit dans `AppShell.BuildLayout()` — ⚠️ CORRIGÉ round 11, revue ⊥ BLOQUANT 1 :
+  citait `AppShell.cs:611-644` par numéro, décalé de +5 dans ce même commit, cité par symbole
+  désormais) : `anchorMin=(0,1)`, `anchorMax=(1,1)`, hauteur
   `Px(TopBarHauteurCss=52)`, sibling INDEX SUPÉRIEUR à `ContentSlot` (rendu au-dessus). Sur un
   canvas de 720 unités, `52 × 1280/392 ≈ 169,8` unités, soit **23,6 %** de la hauteur. Son `Image`
-  (`AppShell.cs:642`) N'A JAMAIS `raycastTarget = false` — CONFIRMÉ, `grep -n "raycastTarget"
-  Assets/Scripts/Shell/AppShell.cs` rend 5 occurrences, TOUTES sur des enfants décoratifs du dock
-  (`:765,:915,:925,:954,:969`), AUCUNE sur `TopBarSlot` lui-même.
+  (l'affectation `topBarGo.AddComponent<Image>().color = fondBandeau;`, MÊME méthode — citait
+  `AppShell.cs:642`, également décalé) N'A JAMAIS `raycastTarget = false` — CONFIRMÉ, oracle Python
+  direct (pas `grep` proxifié) sur le fichier au tip ACTUEL de ce round : 5 occurrences, TOUTES sur
+  des enfants décoratifs du dock, AUCUNE sur `TopBarSlot` lui-même. ⚠️ **DÉCOUVERT en vérifiant round
+  11 (au-delà des findings nommés)** : la liste de 5 numéros de ligne écrite par round 9 lui-même
+  (`:765,:915,:925,:954,:969`) était DÉJÀ décalée au moment où round 9 l'a écrite (elle datait d'un
+  état antérieur du fichier) et l'est plus encore après le correctif MINEUR m1 de CE round — les 5
+  lignes réelles, au tip actuel, sont `:772,:925,:935,:964,:979`. Corrigé ici parce que trouvé en
+  vérifiant, pas parce qu'un finding nommé le demandait (règle du socle : au moindre doute, corriger).
 - `ShellChrome.TopInsetPx` (le mécanisme prévu pour qu'un locataire s'écarte de cette bande) N'A
   QU'UN SEUL consommateur dans tout le dépôt : `LieutenantScreenController.cs:1030`. Ni
   `DashboardController` ni `CityMapController` ne le lisent.
@@ -2616,8 +2663,11 @@ Label). `leadingImg` (alpha nul, seule surface de raycast) grandit à 48×48 SAN
 (alpha=0 quelle que soit sa taille).
 
 **Garde** (`VerifierFermetureParActionDeTete`) : (a) GRANDEUR — `rectTete.rect.width/height ≥ 48`,
-LU sur le `RectTransform` lui-même (déjà en dp, ce sous-arbre vit en coordonnées de maquette,
-`AppShell.cs:617-628`, aucune conversion) ; (b) EFFET — raycast aux 4 coins (retrait de 1 unité
+LU sur le `RectTransform` lui-même (déjà en dp, ce sous-arbre vit en coordonnées de maquette —
+`AppShell.BuildLayout()`, le `localScale` posé sur `echelleRt` — ⚠️ CORRIGÉ round 11, revue ⊥
+BLOQUANT 1 : citait `AppShell.cs:617-628` par numéro, décalé de +5 dans ce même commit — MAIS voir
+aussi MAJEUR 1 round 11 : cette assertion est elle-même en unités de MAQUETTE, pas en dp Android,
+cf. section dédiée ci-dessous), aucune conversion) ; (b) EFFET — raycast aux 4 coins (retrait de 1 unité
 locale), chacun doit atteindre l'affordance ou un enfant, MÊME tolérance `IsChildOf` que le centre.
 Les deux assertions ensemble empêchent la garde décorative que le socle dénonce (« vérifier un
 PARAMÈTRE n'est pas vérifier un EFFET ») : une zone déclarée 48×48 mais recouverte ailleurs
@@ -2627,25 +2677,43 @@ PARAMÈTRE n'est pas vérifier un EFFET ») : une zone déclarée 48×48 mais re
 sur le run propre (`209/3`, ci-dessous) — les 2×(2 assertions de grandeur + 4 raycasts de coin) =
 12 assertions neuves n'ont PAS rougi, sur la géométrie de PRODUCTION réelle.
 
-**Population des affordances de ce lot, mesurée et NON corrigée hors de la sortie** (demande du
-contrôleur, mesure statique — ⚠️ pour les contrôleurs hors `Shell`, l'unité affichée est celle du
-CODE SOURCE, `dp` supposé sur la foi des commentaires « ≥44 dp »/« ≥44dp » qui s'y trouvent déjà ;
-NON reconvertie indépendamment faute de certitude sur le système de coordonnées de ces écrans une
-fois montés SOUS le shell) :
+**Population des affordances de ce lot, mesurée et NON corrigée hors de la sortie.**
 
-| affordance | fichier | dimension mesurée | verdict ≥48 dp | statut |
-|---|---|---|---|---|
-| Action de tête (sortie) | `TopBarController.cs` (`leadingGo`) | 48×48 dp | ✅ OK | **corrigé ce round** |
-| 4 bulles du dock (Empire/Org/Pipeline/More) | `AppShell.cs:863-971` (`AddTabButton`, l'`Image` sur `btn`) | largeur ≈46 dp (`TabDockRondCss`, borne INFÉRIEURE — la largeur EXACTE dépend de la résolution du `VerticalLayoutGroup` sur la largeur du libellé, non résolue sans Play Mode) · hauteur ≈64,17 dp (46+5+13,17) | largeur LIMITE/sous le seuil sur la borne mesurée (46<48) · hauteur OK | **non touché — remonté** |
-| « Entrer » (district, `CityMapController.cs:530-547`) | `Footer`, `AddLayoutElement(footer, minHeight: 40, ...)` | hauteur 40 dp (le bouton REMPLIT le footer, `childForceExpandHeight=true`) · largeur = pleine largeur du panneau | hauteur SOUS le seuil (40<48, et même <44) · largeur OK | **non touché — remonté** |
-| 5 boutons nav Dashboard (`DashboardController.cs:683-697`) | `AddNavButton`, `AddLayoutElement(btn, minHeight: 44, ...)` — commentaire du fichier : « ≥ 44 dp tap target (F2) » | hauteur 44 dp · largeur = pleine largeur de `navBar` | hauteur SOUS le seuil Android (44<48), ≥ seuil iOS (44) | **non touché — remonté** |
-| « Ouvrir » (file d'exceptions, `ExceptionQueueController.cs:240-246`) | `AddCardRow` — commentaire : « ≥44dp tap target, F2 » | hauteur 44 dp · largeur = pleine largeur de la ligne | hauteur SOUS le seuil Android (44<48), ≥ seuil iOS (44) | **non touché — remonté** |
+⚠️⚠️ **CORRIGÉ round 11 (revue ⊥, BLOQUANT 2) — la table ci-dessous, TELLE QUE LIVRÉE ce round, lisait
+des unités de CANVAS comme des dp, sans conversion, pour 3 des 5 lignes.** La réserve honnête
+écrite plus haut (« l'unité affichée est celle du CODE SOURCE… NON reconvertie faute de certitude »)
+identifiait exactement le bon doute et NE L'A PAS RÉSOLU — or il se résout STATIQUEMENT, en trois
+`grep` (mesuré par la revue, vérifié ici indépendamment) :
 
-⚠️ **Motif récurrent, remonté tel quel** : le précédent « F2 » (44 dp) apparaît 2 fois, cité comme
-un standard DÉJÀ établi dans ce dépôt, systématiquement 4 dp SOUS le seuil Android que ce round
-vient de ratifier à 48 pour la sortie. Ce n'est pas un défaut de CE lot (ces 2 boutons sont hors
-périmètre 0.2/0.3/0.3-bis) mais un écart de DOCTRINE qui mérite un arbitrage de la même nature que
-celui qui vient d'être tranché pour la sortie — **remonté à l'user, pas tranché ici.**
+- `DashboardController.cs`, `ExceptionQueueController.cs`, `CityMapController.cs` posent chacun
+  LEUR PROPRE `scaler.referenceResolution = new Vector2(1280, 720)` et n'appellent JAMAIS `Px()` ni
+  n'utilisent `EchelleMaquette` — leurs `AddLayoutElement(..., minHeight: N)` sont donc des
+  **littéraux bruts en UNITÉS DE CANVAS** (espace 1280×720), jamais des dp.
+- `AppShell` — l'affectation `tenant.SetMountParent(ContentSlot);`, dans la coroutine de montage —
+  parente le locataire sous `ContentSlot` **sans aucun nœud d'échelle** — le tenant hérite donc
+  directement de l'espace 1280-large du `ShellCanvas`.
+  ⇒ 1 unité de `ContentSlot` = **392/1280 dp** sur un écran de 392 dp de large, **360/1280 dp** sur
+  un écran de 360 dp de large (formule identique à celle de MAJEUR 1 ci-dessous, MÊME mécanisme).
+- Le dock et la sortie, eux, vivent en **UNITÉS DE MAQUETTE** (CSS-px-équivalent) — le dock via
+  `Px()` (`AppShell.AddTabButton`, `TabDockRondCss`), la sortie via `echelleRt`/`localScale`
+  (`TopBarController`) — leur valeur brute est directement un nombre de CSS-px, converti en dp par
+  `valeur × (largeurÉcranDp / 392)`, PAS par `/1280`.
+
+**Table corrigée — classe, valeur brute, REPÈRE, conversion aux deux largeurs de référence, verdict** :
+
+| affordance | classe / repère | valeur brute | formule | dp @360 | dp @392 | verdict ≥48 dp |
+|---|---|---|---|---|---|---|
+| Action de tête (sortie), `TopBarController` (`leadingGo`) | unités de MAQUETTE (`echelleRt`/`localScale`) | 48 | val×(W/392) | **44,1** | 48,0 | ❌ sous 392 dp (MAJEUR 1 round 11) |
+| 4 bulles du dock, `AppShell.AddTabButton` (`TabDockRondCss`, via `Px()`) | unités de MAQUETTE | 46 | val×(W/392) | **42,2** | 46,0 | ❌ (déjà sous le seuil à 392 dp) |
+| 5 boutons nav Dashboard, `DashboardController.cs:691` | unités de CANVAS (littéral brut, PAS `Px()`) | 44 | val×(W/1280) | **12,4** | **13,5** | ❌❌ — PAS « 44 vs 48, écart de doctrine » : ~13 dp, un défaut |
+| « Ouvrir » (file d'exceptions), `ExceptionQueueController.cs:246` | unités de CANVAS | 44 | val×(W/1280) | **12,4** | **13,5** | ❌❌ idem |
+| « Entrer » (footer district), `CityMapController.cs:537` | unités de CANVAS | 40 | val×(W/1280) | **11,25** | **12,25** | ❌❌ idem |
+
+**Ce que ce tableau change** : l'arbitrage remonté au round 9 (« 44 vs 48, nuance de doctrine ») était
+mal posé pour 3 des 5 lignes — ce sont des cibles à UN QUART du minimum tactile, pas une nuance de
+4 dp. Le 46 dp du dock, lui, reste correct tel quel (pas une conversion manquante, juste sous le
+seuil comme déjà noté). ⛔ **Aucun locataire n'est redimensionné par ce round** — c'est un arbitrage
+produit qui déborde le périmètre 0.2/0.3/0.3-bis, **remonté à l'user tel quel, pas tranché ici.**
 
 ### MAJEUR 5 — ce document
 
@@ -2759,3 +2827,351 @@ rouge, comportement connu, pas une régression).
 
 **Compilation** : `0` erreur `CS` sur les 4 runs de ce round (1 échec de compilation initial,
 `CS0234`, corrigé par la Deviation ci-dessus AVANT le premier run complet).
+
+---
+
+## ⛔⛔ ROUND 11 — revue ⊥ NOT_APPROVED (2 bloquants, 3 majeurs, 6 mineurs) — correctifs
+
+**Delta jugé** : `255998a..cfe257d`. **L'attribut du round : L'UNITÉ** — un nombre juste dans le
+repère où il a été écrit, faux dans le repère où il est lu, mesuré trois fois dans le commit qui
+prétendait fermer round 9.
+
+### BLOQUANT 1 — 13 ancres « corrigées » fausses AU TIP, décalées par l'édition du MÊME commit
+
+**Classe** : « une citation `Fichier.cs:N` par NUMÉRO DE LIGNE périme dès que le fichier cité est
+édité de nouveau — y compris DANS LE MÊME COMMIT qui l'a écrite ». 3ᵉ occurrence de cette classe sur
+ce lot (round 7 : +12 ; round 9 lui-même : +5/+8 sur ses propres corrections). **Deux corrections
+manuelles l'ont déjà rouverte** — le geste manuel est le défaut, pas l'ancre.
+
+**Décision** : **option (a) — abandon des numéros de ligne au profit de noms de SYMBOLES**, dans les
+3 fichiers `.cs` de ce lot (`ProductionClickSupport.cs`, `CharpenteOuvertureSessionOverlayPlayModeTests.cs`,
+`CharpenteMontageLocatairesPlayModeTests.cs`) — la forme structurelle, immunisée contre toute future
+insertion de ligne dans `AppShell.cs`. Justification du choix face à l'alternative (b, un instrument
+commité qui résout chaque ancre contre une empreinte de contenu) : (b) exige d'annoter CHAQUE citation
+d'un fragment de contenu attendu — travail équivalent à (a), en PLUS de maintenir un script — et cette
+classe a déjà glissé deux fois avec un correctif « plus de rigueur au numéro » ; un nom de méthode ne
+glisse jamais par insertion de ligne, un numéro glissera toujours tôt ou tard.
+
+**Population mesurée** (oracle Python, `git show 255998a:… / cfe257d:…`, `difflib` sur les lignes
+AJOUTÉES par `cfe257d` uniquement, dans les 5 fichiers touchés par ce commit) :
+
+```
+$ python3 -c "diff 255998a->cfe257d AppShell.cs, extraction des lignes ajoutées citant AppShell.cs:N"
+ProductionClickSupport.cs: 2 citations ajoutées, 2 fausses (873-875, 1071-1078)
+Overlay...cs:                8 citations ajoutées, 5 fausses (423, 377, 372, 1071-1078, 617-628)
+                              3 correctes (363-364, 110, 329 — toutes < 372, non affectées)
+Montage...cs:                6 citations ajoutées, 6 fausses (892, 873-875 ×2, 1071-1078 ×3, 580)
+design.md:                   7 citations ajoutées — 3 dans la section datée af9893b (déjà vérifiées
+                              FONDÉES par cette même revue), 4 dans « l'équivalent ACTUEL »
+                              (803-809, 797, 1029, 1043-1045) — toutes fausses (glissées de +5/+8)
+notes.md:                    27 citations ajoutées — la plupart DANS des tables/blocs historiques
+                              qui décrivent explicitement l'état à 255998a (légitimes, datées) ;
+                              7 asserties comme fait COURANT sans qualificatif (377 en BLOQUANT 1,
+                              892 en m6, 611-644, 642, 617-628, 863-971, 784) — toutes fausses
+```
+⇒ **13 ancres fausses dans les `.cs`** (2+5+6, exactement le compte de la revue), **0 correctes
+recomptées par erreur** — les 3 correctes (`:110`, `:329`, `:363-364`) laissées intactes.
+
+**Correctif** : chaque citation numérique fausse dans les 3 `.cs` remplacée par le nom de la méthode/
+du champ qui porte le contenu visé (`AppShell.BuildLayout()`, `AppShell.AddTabButton(Tab, string)`,
+`AppShell.EnsureEventSystem()`, l'affectation `Token = t;` dans `AcquireSessionThenActivateHome()`,
+le champ `DockRatifie`), vérifiées une par une contre le fichier RÉEL (pas contre une mémoire du
+décalage) :
+
+```
+$ python3 -c "grep de tous les symboles cités contre AppShell.cs, RE-MESURÉ APRÈS TOUS les correctifs
+  de ce round (y compris MINEUR m1, qui édite AppShell.cs et décale tout ce qui suit — voir la
+  remarque ci-dessous)"
+AppShell.BuildLayout()                -> Assets/Scripts/Shell/AppShell.cs:579
+AppShell.AddTabButton(Tab, string)    -> Assets/Scripts/Shell/AppShell.cs:873
+AppShell.EnsureEventSystem()          -> Assets/Scripts/Shell/AppShell.cs:1081
+DockRatifie (champ)                   -> Assets/Scripts/Shell/AppShell.cs:813
+BuildTabBar()                         -> Assets/Scripts/Shell/AppShell.cs:709
+RebatirChromePourResolutionCourante() -> Assets/Scripts/Shell/AppShell.cs:998
+RefreshTabButtonVisuals()             -> Assets/Scripts/Shell/AppShell.cs:1047
+```
+Les 7 symboles existent, uniques, vérifiés par lecture directe du fichier (pas par mémoire).
+★ **Ce tableau lui-même a été recalculé UNE fois pendant ce round** : une première mesure (avant le
+correctif MINEUR m1, qui ajoute 2 lignes à `AppShell.cs`) rendait `707/811/871/996/1045/1079` — DÉJÀ
+FAUX de 2 au moment d'écrire cette section. Aucune de ces valeurs n'est citée où que ce soit dans le
+CODE (uniquement dans ce paragraphe de journal, à titre de preuve de vérification) — mais c'est la
+démonstration la plus directe, dans ce round même, que le geste manuel sur des numéros de ligne EST
+le défaut : même en sachant EXACTEMENT ce qu'on cherche à éviter, un numéro collé dans une phrase
+peut périmer avant la fin du paragraphe qui le rapporte.
+
+**Contrôle — 0 citation numérique résiduelle dans les 3 `.cs`, hors les 4 correctes** :
+```
+$ python3 -c "oracle re.finditer(r'AppShell\.cs:(\d+)(?:[-–](\d+))?') sur les 3 fichiers"
+ProductionClickSupport.cs                              -> 0 hit
+CharpenteOuvertureSessionOverlayPlayModeTests.cs       -> 3 hits : 298, 110, 329 (toutes < 372, non
+                                                           affectées par le décalage, laissées telles
+                                                           quelles — vérifiées byte-exactes contre
+                                                           AppShell.cs au tip)
+CharpenteMontageLocatairesPlayModeTests.cs             -> 1 hit : 159-160 (< 372, idem)
+```
+⚠️ **Piège rencontré EN COURS DE CONTRÔLE, consigné** : `grep -n "AppShell.cs:"` (proxifié) a rendu
+`0 matches` sur les 3 fichiers alors que 4 citations correctes EXISTENT ENCORE — nouvelle occurrence
+du piège déjà au socle (`rg`/`grep` proxifié rend un résultat plausible et faux). Re-vérifié par
+oracle Python direct (`open().readlines()`), qui rend le compte exact ci-dessus.
+
+**Ce qui reste hors de ce correctif** : les citations DATÉES (« sur `af9893b` », « au tip `255998a` »)
+dans `design.md` §2.1/§3.3 et dans les tables historiques de `notes.md` (rounds 7-9) ne sont PAS
+renumérotées — elles décrivent un état PASSÉ, correctement daté, et corriger leur numéro reviendrait
+à faire mentir la date. Seules les citations présentées comme fait COURANT SANS qualificatif ont été
+fermées (dans `design.md`, converties en noms de symboles ; dans `notes.md`, une section « CORRIGÉ
+round 11 » dédiée les referme par symbole, sans toucher aux tables historiques qui les entourent).
+
+---
+
+### BLOQUANT 2 — les mesures remontées à l'arbitrage USER sont en unités de CANVAS, pas en dp
+
+**Classe** : « une valeur `AddLayoutElement(..., minHeight: N)` d'un contrôleur hors `Shell` est un
+LITTÉRAL EN UNITÉS DE CANVAS (espace 1280×720 du `CanvasScaler` racine), jamais un dp — sauf passage
+explicite par `Px()`/`EchelleMaquette` ». Vérifié, indépendamment de la revue :
+
+```
+$ python3 -c "grep minHeight/referenceResolution/Px( dans Dashboard/ExceptionQueue/CityMap Controller"
+DashboardController.cs:547     scaler.referenceResolution = new Vector2(1280, 720)
+DashboardController.cs:691     AddLayoutElement(btn, minHeight: 44, ...)          # 5 nav
+ExceptionQueueController.cs:283 scaler.referenceResolution = new Vector2(1280, 720)
+ExceptionQueueController.cs:246 AddLayoutElement(btn, minHeight: 44, ...)         # "Ouvrir"
+CityMapController.cs:247       scaler.referenceResolution = new Vector2(1280, 720)
+CityMapController.cs:537       AddLayoutElement(footer, minHeight: 40, ...)       # "Entrer"
+=> 0 hit sur Px(/EchelleMaquette dans les 3 fichiers.
+```
+⇒ **44/44/40 sont des unités de canvas (1280-large), converties en dp par `valeur × (largeurÉcranDp
+/ 1280)`** — PAS `/392`. Le dock et la sortie, eux, sont bien en unités de MAQUETTE (`Px()`/
+`echelleRt`), converties par `valeur × (largeurÉcranDp / 392)`.
+
+**Correctif** : la table remontée à l'user (§ « Population des affordances ») est réécrite avec, pour
+chaque ligne, la CLASSE/repère, la valeur brute, la formule, et la conversion aux deux largeurs de
+référence (392 dp canon, 360 dp modale Android) — voir table complète insérée dans la section MAJEUR
+4 round 9 ci-dessus (marquée « CORRIGÉ round 11 »). Résultat : les 3 lignes hors-Shell passent de
+« 44/40 dp, écart de 4-8 dp » à **12,4-13,5 dp** (5 nav Dashboard, Ouvrir) et **11,25-12,25 dp**
+(Entrer) — un quart du minimum, pas une nuance. **Aucun locataire redimensionné** — remonté tel quel.
+
+---
+
+### MAJEUR 1 — la garde de grandeur asserte des unités de MAQUETTE, promettait des dp Android
+
+**Décision, motivée** : sur 3 remèdes offerts par la revue (grandir à 52,3 unités pour tenir à
+360 dp ; asserter en dp d'appareil via `Screen.width`/densité ; écrire honnêtement le périmètre de
+392 dp et épingler l'écart connu à 360), **le 3ᵉ est retenu** — c'est le SEUL qui ne modifie AUCUNE
+géométrie de production (zéro risque de régression visuelle ou de débordement — grandir à 52,3 sur
+un rect DÉJÀ à 2 unités de la hauteur de barre (52) l'aurait fait déborder verticalement de la barre)
+et il répare exactement le défaut nommé (une assertion qui ment sur son unité), pas un symptôme
+voisin. Grandir la zone est un arbitrage DA qui reste remonté à l'user (§ BLOQUANT 2 ci-dessus).
+
+**Correctif** (`TopBarController.cs`, `CharpenteOuvertureSessionOverlayPlayModeTests.cs`) :
+1. `LeadingTouchZoneDp = 48f` — commentaire réécrit : ce n'est PAS des dp, ce sont des UNITÉS DE
+   MAQUETTE ; 48 ≡ 48 dp physiques SEULEMENT à 392 dp de large ; ≈44,1 dp à 360.
+2. La garde de grandeur (`rect.width/height >= 48f`) reste, message corrigé : « ≥48 UNITÉS DE
+   MAQUETTE », plus de promesse de dp.
+3. **Ajout** : conversion ALGÉBRIQUE (jamais un pixel rendu, même idiome que
+   `ChromeMultiResolutionPlayModeTests.cs` — API interne `GameViewSizes` délibérément non
+   commitée) vers 360 dp (largeur modale Android), avec une assertion PINÉE à la valeur ACTUELLE
+   (`44,1 ± 0,2`) : ni un test qui masque l'écart (assertion `>=48` qui rougirait pour toujours),
+   ni un commentaire qui ne rougit jamais — une VALEUR épinglée qui force quiconque change la
+   géométrie à revenir lire ce commentaire.
+4. Réponse à « l'aggravant » (aucun test Charpente ne fixe la résolution) : **il est démontré
+   algébriquement que `rect.width` ne PEUT PAS varier avec la résolution du Game View** — `echelleRt`
+   a une largeur locale FIXE de 392 par construction (le `localScale`, pas le rect, absorbe la
+   largeur réelle de l'écran) — donc AUCUN test à AUCUNE résolution ne ferait rougir un seuil « dp »
+   ici. Le remède n'est pas de faire varier la résolution (l'API pour le faire est délibérément
+   hors du dépôt), c'est de faire la conversion algébriquement, ce que ce correctif fait.
+
+**Preuve d'exécution** : run complet ci-dessous (`209/3`) — les 2 nouvelles assertions pinées
+(`44,1 ± 0,2` largeur ET hauteur, sur `BrancheSucces` ET `BrancheEchec`) n'ont PAS rougi : la valeur
+réelle mesurée par Unity est dans la tolérance de ma prédiction manuelle (44,08).
+
+---
+
+### MAJEUR 2 — contrôle négatif manquant pour la moitié « coins » de la garde de collision
+
+**Classe** : « une garde à deux moitiés (centre + coins) doit prouver que chaque moitié peut rougir
+INDÉPENDAMMENT de l'autre — sinon la seconde est un doublon de la première, jamais vu le prouver ».
+
+**Contrôle exécuté** (occulteur PARTIEL, TEMPORAIRE — armé, mesuré, PUIS RETIRÉ) : un `Image`
+raycastable de 48×10, alpha nul, posé en SIBLING de `leadingGo` (donc HORS de sa hiérarchie —
+un enfant de `leadingGo` aurait satisfait `IsChildOf` et n'aurait rien prouvé), après lui dans
+l'ordre de fratrie (gagne le raycast), couvrant `y∈[14,24]` — les 2 coins SUPÉRIEURS de la zone
+tactile 48×48, PAS le centre (`y=0`).
+
+```
+$ LOG_FILE=/tmp/charpente-r11-run2-negcontrol-armed.log timeout 950 Tools/run-unity-check.sh -executeMethod MafiaCI.RunPlayModeTests
+MafiaCI-harness: elapsed=221s timeout=900s issue=[sortie normale (RC=1)]
+```
+Sortie réelle (oracle Python sur le log) :
+```
+MafiaCI: RunPlayModeTests finished — passed=207 failed=5 skipped=0 inconclusive=0
+MafiaCI: FAIL …CharpenteOuvertureSessionOverlayPlayModeTests.FB_..._BrancheEchec —
+  (BRANCHE REPLI-ÉCHEC) le coin (1.00, 23.00) (local) de la zone tactile doit atteindre l'affordance
+  elle-même … — trouvé « ControleNegatifR11_OcculteurPartiel ».
+MafiaCI: FAIL …CharpenteOuvertureSessionOverlayPlayModeTests.FB_..._BrancheSucces —
+  (BRANCHE SUCCÈS) le coin (1.00, 23.00) (local) … — trouvé « ControleNegatifR11_OcculteurPartiel ».
+```
+`209−2=207`, `3+2=5` : **+2 rouges EXACTS**, les 2 MÊMES tests que le contrôle négatif de round 9
+(BrancheSucces/BrancheEchec) — mais cette fois sur l'assertion de COIN, PAS celle du centre (absente
+de la liste des rouges, donc restée VERTE). NUnit arrête la méthode au premier `Assert` qui rougit :
+seul le PREMIER coin testé (top-gauche) est rapporté — suffisant pour prouver la séparation, les 3
+autres coins et le centre n'ont simplement pas été réévalués après l'exception.
+
+⇒ **La moitié « coins » a un pouvoir de réfutation INDÉPENDANT du centre** : prouvé, pas supposé.
+
+**Restauration, vérifiée** :
+```
+$ python3 -c "count 'ControleNegatifR11' + 'OcculteurPartiel' dans TopBarController.cs"
+0 (les deux motifs)
+```
+**Run final propre, après restauration** :
+```
+$ LOG_FILE=/tmp/charpente-r11-run3-restored.log timeout 950 Tools/run-unity-check.sh -executeMethod MafiaCI.RunPlayModeTests
+MafiaCI-harness: elapsed=225s timeout=900s issue=[sortie normale (RC=1)]
+```
+```
+MafiaCI: RunPlayModeTests finished — passed=209 failed=3 skipped=0 inconclusive=0
+```
+`209/3`, les 3 MÊMES rouges pré-existants (`NavD12`, `StaleAbandonedShell`, `NavF4`) — restauration
+confirmée par le COMPTE, pas par un `grep` sur un commentaire (leçon MINEUR m2 ci-dessous,
+appliquée à moi-même dans le même round).
+
+---
+
+### MAJEUR 3 — le 5ᵉ terme de l'arithmétique (demi-largeur médaillon) était périmé
+
+`TopBarController.cs` — commentaire corrigé : `16+36+12+96=160 < 162` (pas `164`) — le médaillon a
+un diamètre de **68**, pas 64, depuis son recalibrage au canon (round antérieur) ; demi-largeur
+réelle 34, bord gauche à `196−34=162`. Marge réelle **2**, pas 4. L'inégalité tient toujours
+(160 < 162) — **aucun défaut visible**, le comportement de production est inchangé — mais le terme
+qui décide n'avait pas été rouvert quand le diamètre a changé. Vérifié :
+```
+$ python3 -c "lire TopBarController.cs autour de ManometreDiameter"
+private const float ManometreDiameter = 68f;   # confirmé, inchangé par ce round
+```
+
+---
+
+### MINEURS
+
+**m1** — `AppShell.cs:174` (guillemets ASCII, motif que le round 9 ne voyait pas) et `design.md:33`
+(narration du parcours) : **paraphrasés**. Contrôle par index, sur le fichier INTACT puis après
+édition :
+```
+$ python3 -c "count('\"← Carte\"') / count('« ← Carte »') avant (cfe257d) / après (working tree)"
+AppShell.cs             : ASCII  1 -> 0 | français 0 -> 0
+design.md               : ASCII  0 -> 0 | français 1 -> 0
+```
+Les deux motifs ferment sans que la prose de remplacement ne les réintroduise (vérifié : les deux
+comptes après édition sont 0/0 dans les DEUX fichiers, pas seulement celui édité).
+
+**m2** — le `grep -c "CONTRÔLE NÉGATIF round 9"` de la section round 9 ne prouvait rien (motif jamais
+écrit dans `TopBarController.cs`, rend `0` que le geste soit retiré ou non). Corrigé : note ⚠️ ajoutée
+qui nomme ce que la restauration prouve RÉELLEMENT (le run propre `209/3` + l'absence du LITTÉRAL du
+geste, `leadingImg.raycastTarget = false`, vérifié `0` occurrence dans l'arbre actuel).
+
+**m3** — `TopBarController.cs:169-170` (« premier enfant du HorizontalLayoutGroup ») contredisait
+`:570` (« pas de HorizontalLayoutGroup sur la racine »). Corrigé : le commentaire du champ
+`leadingGo` décrit désormais l'ancrage EXPLICITE réel, et note que `leadingGo` n'est pas non plus le
+premier ENFANT par ordre de fratrie (`BarMask.SetAsFirstSibling()`, `:702`).
+
+**m4** — « seule la surface qui reçoit le clic grandit » était faux sur le bord `x∈]48,52]`
+(tappable avant round 9, plus depuis). Corrigé : le commentaire au site de construction de
+`leadingGo` qualifie désormais explicitement cette perte (sans conséquence visuelle, le glyphe
+s'arrête à x=46) plutôt que d'affirmer un sur-ensemble strict qui n'existe pas.
+
+**m5** — déclaré, non fermé : `x=0` place le bord gauche de la zone tactile de sortie dans la bande
+d'exclusion de geste système Android ; aucun retrait horizontal de zone sûre n'existe dans ce dépôt
+(`SafeAreaInsetsLocal()` ne rend que top/bottom). Risque théorique (le VISUEL reste à `x=16`) —
+ajouter un inset horizontal est un changement plus large que cette seule affordance, non fait ce
+round, DÉCLARÉ dans le code au site exact.
+
+**m6** — `TopBarDoctrineV31PlayModeTests.cs:127` citait « 3600px² » pour la zone `LeadingAction »,
+jamais vrai (1440 avant round 9, 2304 depuis, `48×48`). Corrigé, sans effet sur le comportement du
+scan (`leadingImg` reste `surfaceRow` à alpha nul, jamais classé « or »).
+
+---
+
+### Deviation — aucune, ce round
+
+Aucun imprévu non bloquant rencontré en dehors de ce que les findings ci-dessus couvrent déjà.
+
+---
+
+### État final du dépôt (round 11)
+
+**Fichiers modifiés** (vérifié `git status --porcelain`, oracle Python) :
+- `Assets/Scripts/Shell/AppShell.cs` — MINEUR m1 (paraphrase).
+- `Assets/Scripts/Shell/TopBarController.cs` — MAJEUR 1 (garde + constante, commentaires),
+  MAJEUR 3 (arithmétique), MINEUR m3/m4/m5 (commentaires). Le contrôle négatif MAJEUR 2
+  (occulteur) a été ARMÉ PUIS RETIRÉ — 0 trace dans l'arbre final (vérifié par oracle Python,
+  pas par `git diff` proxifié).
+- `Assets/Tests/PlayMode/ProductionClickSupport.cs` — BLOQUANT 1 (2 ancres → symboles).
+- `Assets/Tests/PlayMode/CharpenteOuvertureSessionOverlayPlayModeTests.cs` — BLOQUANT 1 (5 ancres
+  → symboles), MAJEUR 1 (garde + conversion algébrique + assertions pinées).
+- `Assets/Tests/PlayMode/CharpenteMontageLocatairesPlayModeTests.cs` — BLOQUANT 1 (6 ancres →
+  symboles).
+- `Assets/Tests/PlayMode/TopBarDoctrineV31PlayModeTests.cs` — MINEUR m6.
+- `Tools/charpente-item0-2-3-design.md` — BLOQUANT 1 (4 ancres « équivalent ACTUEL » → symboles),
+  MINEUR m1 (paraphrase).
+- `Tools/charpente-item0-2-3-implementation-notes.md` — ce document : BLOQUANT 1 (section de
+  correction dédiée sur le journal round 9), BLOQUANT 2 (table d'unités réécrite), MINEUR m2,
+  § ROUND 11 (ce bloc).
+- `Assets/Fonts/DejaVuSans SDF.asset`, `Assets/Fonts/DejaVuSerif SDF.asset`,
+  `Assets/TextMesh Pro/.../LiberationSans SDF.asset` — dirtied par les 3 runs Unity de ce round
+  (effet de bord CONNU), restaurés par `git checkout` après les runs, `git status --porcelain`
+  vérifié propre APRÈS restauration (pas une empreinte prise dans la foulée).
+
+**3 runs Unity ce round, tous au premier plan, log vers `/tmp` (jamais un pipe)** :
+1. `run1-baseline` (après tous les correctifs, avant le contrôle négatif MAJEUR 2) : `209/3`, les 3
+   rouges pré-existants, `0` erreur `CS`, les 2 tests `FB_..._Branche*` atteignent leur `Debug.Log`
+   final (`[Charpente] F-B … BRANCHE SUCCÈS` / `BRANCHE REPLI-ÉCHEC` — 2/2 présents), confirmant que
+   les 4 nouvelles assertions pinées (44,1±0,2 ×2 par branche) passent sur la géométrie RÉELLE.
+2. `run2-negcontrol-armed` (occulteur MAJEUR 2 armé) : `207/5`, +2 rouges exacts sur l'assertion de
+   COIN des 2 tests `FB_...`, centre resté vert — séparation prouvée.
+3. `run3-restored` (occulteur retiré) : `209/3`, restauration confirmée par le COMPTE.
+
+**Compilation** : `0` erreur `CS` sur les 3 runs.
+
+### Post-vérification — 3 drifts SUPPLÉMENTAIRES trouvés en re-relisant ce document, corrigés,
+### un 4ᵉ run pour clore
+
+En re-balayant CE journal pour écrire la section ci-dessus, la classe BLOQUANT 1 (une citation par
+numéro périme dès que le fichier cité est réédité) s'est retrouvée **3 fois de plus**, cette fois
+CAUSÉE PAR MON PROPRE correctif MINEUR m1 (qui édite `AppShell.cs`, +2 lignes, APRÈS que plusieurs
+citations de ce round aient déjà été écrites) — la démonstration la plus directe possible que le
+geste manuel sur un numéro de ligne est le défaut, pas une négligence isolée :
+1. Ma propre correction de la survivance « ← Carte » du dock citait d'abord `:784`, l'ai corrigée en
+   `:789` (juste, à cfe257d), puis mon édition `AppShell.cs` de m1 l'a fait glisser à `:791` —
+   **DEUX corrections successives, dans LE MÊME round, toutes deux périmées avant la fin du
+   document**. Reformulé par description (« le commentaire menant au bloc QUATRE BULLES »).
+2. `AppShell.cs:472` (citation `MountTenant`/`ContentSlot`, BLOQUANT 2) avait glissé à `:474`.
+3. La liste de 5 lignes `raycastTarget` héritée TELLE QUELLE du texte de round 9
+   (`:765,:915,:925,:954,:969`) était déjà fausse à l'écriture de round 9 et l'est plus encore
+   maintenant (réelles : `:772,:925,:935,:964,:979`) — trouvée en vérifiant, pas demandée par un
+   finding nommé (règle du socle : au moindre doute, corriger).
+Et 2 citations dans `CharpenteOuvertureSessionOverlayPlayModeTests.cs` (`AppShell.cs:298` et
+`:329`, toutes deux < 174 mais après le point d'insertion réel — CORRECTION : elles sont > 174,
+donc décalées de +2 par m1) converties en symboles (`AppShell.ExitToCityMap()`, `AppShell.
+AcquireSessionThenActivateHome()`).
+
+**Run 4 — confirmatoire, après ces 5 derniers correctifs (commentaires uniquement, 0 ligne de
+code exécutable touchée)** :
+```
+$ LOG_FILE=/tmp/charpente-r11-run4-final.log timeout 950 Tools/run-unity-check.sh -executeMethod MafiaCI.RunPlayModeTests
+MafiaCI-harness: elapsed=220s timeout=900s issue=[sortie normale (RC=1)]
+```
+```
+MafiaCI: RunPlayModeTests finished — passed=209 failed=3 skipped=0 inconclusive=0
+```
+`209/3`, les 3 MÊMES rouges pré-existants, `0` erreur `CS`, `[Charpente] F-B` × 2 (les deux branches
+atteignent leur log final). Fonts SDF restaurées, `git status --porcelain` vérifié propre après.
+
+**Ce qui reste ouvert, remonté, pas tranché ici** : la table d'unités corrigée (BLOQUANT 2) et
+l'écart connu à 360 dp sur la zone de sortie (MAJEUR 1, épinglé à 44,1 dp) — arbitrage DA/produit,
+hors du périmètre 0.2/0.3/0.3-bis. MAJEUR 3 round 9 (population des 3 affordances nues) reste
+également ouvert, inchangé par ce round (hors de son scope).
+
+**Limite assumée de ce round** : les citations `AppShell.cs:N` des sections ROUNDS 1-8 de ce même
+journal (avant ligne ~2400) n'ont PAS été auditées — elles sont datées par leur propre en-tête de
+section (`### ROUND N`), au même titre qu'un « sur `af9893b` » explicite, et re-vérifier 8 rounds
+d'historique dépasse le périmètre de ce qui a été demandé (les ancres AJOUTÉES par `cfe257d`).

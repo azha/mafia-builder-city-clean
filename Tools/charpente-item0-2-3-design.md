@@ -30,7 +30,9 @@ bouton Carte, dit « *on est déjà sur la carte* ». Elle n'a de sens que si la
 donnée ne le fournit, et *jamais d'entité inventée pour scoper quoi que ce soit*.
 
 ⇒ Le parcours du jalon 1 devient : `démarrage → Empire (la carte) → tap d'un district → l'intérieur
-→ tap d'un bâtiment → la fiche → COLLECTER → « ← Carte »`.
+→ tap d'un bâtiment → la fiche → COLLECTER → l'action de tête ramène à la carte` (round 11, revue ⊥
+MINEUR m1 — PARAPHRASÉ, jamais cité : le libellé rendu est une flèche nue, `TopBarController.
+LabelFor`, aucun texte à deux mots depuis round 8).
 ⚠️ Le §4 de `front.md` écrit « l'Empire (le district) », ce qui se lit dans l'autre sens — **c'est une
 recommandation, pas un ruling**, et je la note comme telle. **Bascule = une ligne** (le type monté par
 `Tab.Empire`). Si l'user veut l'autre lecture, il faudra d'abord dire **quel** district.
@@ -57,11 +59,12 @@ par `DockRatifie` (§3.1) — elles ne sont donc PAS de simples ancres « décal
 l'insertion round 7 : le contenu qu'elles visaient a été RÉÉCRIT, pas déplacé, et un `+12` naïf
 pointe sur du texte SANS RAPPORT (vérifié : `AppShell.cs:729-732`/`:950-953`/`:968` au tip
 `255998a` parlent respectivement du dégradé du dock et de la couleur du libellé — aucun rapport
-avec les 3 listes ci-dessus). **L'équivalent ACTUEL** (au tip `255998a`) : la déclaration de
-`DockRatifie` est à `AppShell.cs:803-809`, lue par ses DEUX consommateurs
-`AppShell.cs:797` (`BuildTabBar`) et `AppShell.cs:1029` (`RebatirChromePourResolutionCourante`), et
-par `RefreshTabButtonVisuals` (`AppShell.cs:1043-1045`) — une seule source, trois lecteurs, exactement
-ce que §3.1 ci-dessous prescrit.
+avec les 3 listes ci-dessus). **L'équivalent ACTUEL** — cité par SYMBOLE, pas par numéro de ligne
+(round 11 — revue ⊥, BLOQUANT 1 : la citation par numéro « au tip 255998a » ci-dessus s'est révélée
+fausse au tip suivant DANS LE MÊME COMMIT qui l'écrivait ; un nom de méthode ne glisse pas) : la
+déclaration du champ `DockRatifie` est lue par ses DEUX consommateurs `AppShell.BuildTabBar()` et
+`AppShell.RebatirChromePourResolutionCourante()`, et par `AppShell.RefreshTabButtonVisuals()` — une
+seule source, trois lecteurs, exactement ce que §3.1 ci-dessous prescrit.
 
 ⇒ **Renommer les libellés à trois endroits est exactement la faute que ce lot doit ne pas commettre.**
 

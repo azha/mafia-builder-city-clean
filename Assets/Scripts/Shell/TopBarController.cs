@@ -166,8 +166,13 @@ namespace MafiaCleanCity.Shell
         private TextMeshProUGUI callsignText;
         private TextMeshProUGUI notificationText;
 
-        // §3.1 — le bouton leading, construit UNE fois dans BuildLayout, premier enfant du
-        // HorizontalLayoutGroup, JAMAIS détruit ; seule sa visibilité (SetActive) suit l'état.
+        // §3.1 — le bouton leading, construit UNE fois dans BuildLayout, JAMAIS détruit ; seule sa
+        // visibilité (SetActive) suit l'état. ⚠️ CORRIGÉ round 11 (revue ⊥, MINEUR m3) — cette
+        // ligne disait « premier enfant du HorizontalLayoutGroup », en CONTRADICTION avec `:570`
+        // (« pas de HorizontalLayoutGroup sur la racine — c'est ce qui garantit le manomètre
+        // EXACTEMENT au centre »), qui est la description EXACTE : chaque enfant reçoit un ancrage
+        // EXPLICITE, aucun `HorizontalLayoutGroup` sur la racine. `leadingGo` n'est pas non plus le
+        // premier ENFANT dans l'ordre de fratrie : `BarMask` est `SetAsFirstSibling()` (`:702`).
         private GameObject leadingGo;
         private TextMeshProUGUI leadingText;
         private System.Action leadingOnClick;
@@ -189,7 +194,14 @@ namespace MafiaCleanCity.Shell
         // DANS un district, il faut pouvoir en sortir) mais il ne peut pas occuper 23 % de la
         // largeur : à 90, il poussait l'aile ARGENT sous le médaillon et le montant sortait
         // TRONQUÉ (mesuré sur capture : « $10,00 » coupé net par l'anneau du manomètre).
-        // 16 (marge) + 36 + 12 (écart) + 96 (aile) = 160 < 164, la gauche du médaillon.
+        // 16 (marge) + 36 + 12 (écart) + 96 (aile) = 160 < 162, la gauche du médaillon.
+        // ⚠️ CORRIGÉ round 11 (revue ⊥, MAJEUR 3) — citait « < 164 » (demi-largeur médaillon 64,
+        // pour un diamètre de 64) : `ManometreDiameter` ci-dessous vaut 68 depuis le re-calibrage
+        // au canon, donc la demi-largeur réelle est 34 et le bord gauche du médaillon est à
+        // 196−34=162, PAS 164. La marge réelle est 2, pas 4 — l'inégalité tient toujours
+        // (160 < 162), donc aucun défaut visible, mais le terme qui décide n'avait pas été rouvert
+        // quand le diamètre a changé. Même famille que le socle : un nombre dérivé puis gelé porte
+        // sa propre péremption dans son commentaire, et personne ne la relit.
         private const float LeadingWidth = 36f;
         private const float LeadingHeight = 40f;
         // ⛔⛔ RULING USER 2026-08-27 (MAJEUR 4, round 9) — « la zone TACTILE passe à 48 dp ; le
@@ -205,9 +217,19 @@ namespace MafiaCleanCity.Shell
         // zone de 48 couvre 0..48, qui tient ENTIÈREMENT dans marge(16)+bouton(36)=0..52 — elle
         // n'atteint donc JAMAIS l'aile ARGENT (qui commence à 64), la contrainte du médaillon reste
         // intacte. Verticalement, centrée comme le rect visuel (les deux partagent le même ancrage
-        // (0, 0.5) et la même `anchoredPosition.y` = 0) : 48 sur une barre de 52 laisse 2 dp de
-        // marge de chaque côté.
-        private const float LeadingTouchZoneDp = 48f; // minimum tactile Android
+        // (0, 0.5) et la même `anchoredPosition.y` = 0) : 48 sur une barre de 52 laisse 2 UNITÉS DE
+        // MAQUETTE de marge de chaque côté.
+        // ⚠️⚠️ CORRIGÉ round 11 (revue ⊥, MAJEUR 1) — « 48 dp » et « minimum tactile Android »
+        // ci-dessous sont FAUX SANS RÉSERVE : cette valeur est en UNITÉS DE MAQUETTE (ce sous-arbre
+        // vit ENTIÈREMENT sous `echelleRt`/`localScale`, coordonnées de `EchelleMaquette.
+        // LargeurHudBrennar = 392f`), pas en dp d'appareil. 48 unités ≡ 48 dp PHYSIQUES uniquement
+        // sur un écran de 392 dp de large (le téléphone canon) ; sur 360 dp (la largeur modale
+        // Android, la plus étroite couramment supportée), la même zone mesure ≈44,1 dp — SOUS le
+        // seuil. Grandir cette constante est un arbitrage de DA/produit (elle grandirait aussi la
+        // zone à 392 dp, au-delà du minimum) : remonté à l'user, pas tranché ici — voir la garde
+        // `VerifierFermetureParActionDeTete` (épingle la valeur EXACTE, ne masque pas l'écart) et
+        // `Tools/charpente-item0-2-3-implementation-notes.md` § MAJEUR 1 round 11.
+        private const float LeadingTouchZoneDp = 48f; // UNITÉS DE MAQUETTE — PAS des dp, voir ci-dessus
         // ⛔ RATIOS RE-MESURÉS CONTRE LA MAQUETTE (2026-08-22, demande user « traite le menu en haut
         // et en bas, en terme de ratio »). Tout est rapporté à la HAUTEUR DE BARRE, la seule grandeur
         // comparable entre une maquette de 2560 px et un écran de 1200.
@@ -566,10 +588,21 @@ namespace MafiaCleanCity.Shell
             BuildHairline();
 
             // §3.1 — le bouton leading. round 9 (revue ⊥, MAJEUR 4, ruling user 2026-08-27) —
-            // `leadingGo` EST DÉSORMAIS LA ZONE TACTILE (48×48 dp, ancrée au bord gauche), PAS le
-            // rect visuel. Le VISUEL (le glyphe rendu par `leadingText`) est repositionné en
+            // `leadingGo` EST DÉSORMAIS LA ZONE TACTILE (48×48 UNITÉS DE MAQUETTE, ancrée au bord
+            // gauche), PAS le rect visuel. ⚠️ round 11 (revue ⊥, MAJEUR 1) — « 48×48 dp » était
+            // FAUX : ce sous-arbre vit en coordonnées de maquette (`EchelleMaquette.
+            // LargeurHudBrennar = 392f`) ; 48 UNITÉS n'équivaut à 48 dp PHYSIQUES QUE sur un écran
+            // de 392 dp de large — à 360 dp (la largeur modale Android), la même zone mesure
+            // ≈44,1 dp, SOUS le minimum tactile. Remonté à l'user (non tranché ici, hors du geste
+            // de production borné à cette affordance) — voir la garde plus bas et
+            // `Tools/charpente-item0-2-3-implementation-notes.md` § MAJEUR 1 round 11. Le VISUEL
+            // (le glyphe rendu par `leadingText`) est repositionné en
             // ABSOLU ci-dessous pour occuper EXACTEMENT le même rectangle qu'avant ce round —
-            // aucun pixel ne bouge, seule la surface qui reçoit le clic grandit.
+            // aucun pixel ne bouge. ⚠️ round 11 (MINEUR m4) — « seule la surface qui reçoit le clic
+            // grandit » est FAUX sur un bord : l'ancienne zone (avant round 9) couvrait aussi
+            // x∈]48,52] (dans ce même repère local), que celle-ci ne couvre plus — sans
+            // conséquence visible, le glyphe s'arrête à x=46, mais ce n'est PAS un sur-ensemble
+            // strict de l'ancienne zone.
             leadingGo = new GameObject("LeadingAction", typeof(RectTransform));
             leadingGo.transform.SetParent(transform, false);
             RectTransform leadingRect = (RectTransform)leadingGo.transform;
@@ -578,6 +611,15 @@ namespace MafiaCleanCity.Shell
             // ⚠️ x=0, PAS `BarPaddingX` — la zone tactile mord dans la marge/gouttière gauche
             // (voir le commentaire de `LeadingTouchZoneDp` ci-dessus pour l'arithmétique qui
             // garde ça sans risque pour l'aile ARGENT).
+            // ⚠️ DÉCLARÉ, NON FERMÉ (round 11, revue ⊥ MINEUR m5) — `x=0` place le bord GAUCHE de
+            // cette zone au bord PHYSIQUE de l'écran, dans la bande d'exclusion de geste système
+            // Android (retour par glissement depuis le bord). Aucun retrait horizontal de zone
+            // sûre n'existe dans ce dépôt (`SafeAreaInsetsLocal()`, `AppShell.cs`, ne rend que
+            // top/bottom) — le risque est THÉORIQUE ici (le VISUEL, lui, reste à `BarPaddingX=16`,
+            // hors de cette bande sur tout appareil mesuré) : une surface de raycast BONUS,
+            // invisible, peut se faire voler par le geste système sur certains appareils/OEM. Pas
+            // fermé ce round (ajouter un inset horizontal est un changement plus large que cette
+            // affordance).
             leadingRect.anchoredPosition = new Vector2(0f, 0f);
             leadingRect.sizeDelta = new Vector2(LeadingTouchZoneDp, LeadingTouchZoneDp);
             Image leadingImg = leadingGo.AddComponent<Image>();

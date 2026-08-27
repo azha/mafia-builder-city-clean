@@ -309,8 +309,9 @@ namespace MafiaCleanCity.Shell.Tests
         // front.md §4) dit : « posée en surimpression au-dessus de l'Empire, PUIS ON TOMBE SUR LA
         // VILLE. » Rounds 4-6 ne livraient que la première moitié, sur la foi d'une raison mesurée
         // FAUSSE : « aucun mécanisme de démontage n'existe dans `IShellNavigator`/`IShellTenant` ».
-        // Réfutée par TROIS artefacts DE CE LOT, déjà présents avant ce round : `AppShell.cs:298`
-        // (`ExitToCityMap() => ActivateTab(Tab.Empire)`), `Tools/charpente-item0-2-3-design.md:109`
+        // Réfutée par TROIS artefacts DE CE LOT, déjà présents avant ce round : `AppShell.
+        // ExitToCityMap()` (round 11, revue ⊥ BLOQUANT 1 : citation par numéro de ligne remplacée
+        // par un nom de symbole — `=> ActivateTab(Tab.Empire)`), `Tools/charpente-item0-2-3-design.md:109`
         // et `:146` (F0.3-bis — le design NOMME DÉJÀ le geste de fermeture par l'action de tête du
         // bandeau ; le libellé qu'il lui attribuait ALORS a depuis été abandonné, voir le correctif
         // round 8 ci-dessous — ⛔ round 9, revue ⊥, MAJEUR 2 : ce commentaire CITAIT VERBATIM la
@@ -436,10 +437,16 @@ namespace MafiaCleanCity.Shell.Tests
             // REPLI sans que rien ne le remarque : les six assertions de
             // `VerifierFermetureParActionDeTete` passent quand même (elles sont IDENTIQUES sur les
             // deux branches — `ActivateTab`/`MonterLocataireEnSurimpression`/`SetLeadingAction` sont
-            // posés au MÊME endroit relatif sur les deux, `AppShell.cs:363-364-372` et `:418-419-423`)
-            // et `AppShell.cs:423` (cette branche-ci) ne serait couverte par RIEN. `Token` est
-            // `public string Token { get; private set; }` (`AppShell.cs:110`), écrivain UNIQUE
-            // `AppShell.cs:377` — APRÈS le signin, AVANT ce montage — donc c'est la grandeur qui
+            // posés au MÊME endroit relatif sur les deux, dans `AppShell.
+            // AcquireSessionThenActivateHome()` (round 11 — revue ⊥, BLOQUANT 1 : citation PAR
+            // NUMÉRO DE LIGNE remplacée par un nom de symbole, cette classe ayant déjà glissé deux
+            // fois dans CE MÊME fichier) — branche repli (garde locale `pasEncoreActiveEchec`) et
+            // branche succès (garde locale `pasEncoreActive`)
+            // et le `SetLeadingAction` de LA BRANCHE SUCCÈS (cette branche-ci) ne serait couvert par
+            // RIEN. `Token` est
+            // `public string Token { get; private set; }` (`AppShell.cs:110`), écrivain UNIQUE —
+            // l'unique affectation `Token = t;` dans `AcquireSessionThenActivateHome()`
+            // — APRÈS le signin, AVANT ce montage — donc c'est la grandeur qui
             // DISCRIMINE les deux chemins, exactement symétrique à la garde `IsNullOrEmpty` que
             // round 8 a posée sur la branche repli-échec.
             Assert.IsFalse(string.IsNullOrEmpty(shell.Token),
@@ -492,12 +499,15 @@ namespace MafiaCleanCity.Shell.Tests
                 // succès (revue ⊥ round 8, MAJEUR 3). `CurrentTab == Empire` est vrai sur les DEUX
                 // branches : rien, jusqu'ici, ne dit LAQUELLE a été empruntée. Le jour où cette
                 // identité cesse d'échouer — auto-signup côté back, compte créé par mégarde — ce
-                // test glisserait sur la branche SUCCÈS, `AppShell.cs:372` cesserait
-                // d'être couverte, et LES DEUX TESTS RESTERAIENT VERTS à travers l'événement.
+                // test glisserait sur la branche SUCCÈS, le `SetLeadingAction` de LA BRANCHE REPLI
+                // (`AppShell.AcquireSessionThenActivateHome()`) cesserait
+                // d'être couvert, et LES DEUX TESTS RESTERAIENT VERTS à travers l'événement.
                 // ⚠️ CORRIGÉ round 9 (revue ⊥, MINEUR m1) — cette liste portait un 3ᵉ exemple FAUX,
                 // « stack absente » : une stack absente fait ÉCHOUER le signin
-                // (`AuthClient.SignIn` ne rend pas de jeton sans serveur, et `AppShell.cs:329`
-                // teste `string.IsNullOrEmpty(t)`) — elle RENFORCE la branche repli, elle ne la
+                // (`AuthClient.SignIn` ne rend pas de jeton sans serveur, et `AppShell.
+                // AcquireSessionThenActivateHome()` teste `string.IsNullOrEmpty(t)` juste après le
+                // signin — round 11, revue ⊥ BLOQUANT 1, citation par numéro remplacée par un nom
+                // de symbole) — elle RENFORCE la branche repli, elle ne la
                 // quitte JAMAIS. Retiré ; les deux exemples restants ci-dessus (auto-signup, compte
                 // créé par mégarde) sont les seuls qui font RÉUSSIR une identité délibérément invalide.
                 // Le précédent maison que ce test invoque asserte, lui, sa prémisse
@@ -580,7 +590,7 @@ namespace MafiaCleanCity.Shell.Tests
             // résultats de raycast NON VIDES quand même (les raycasters restent enregistrés
             // indépendamment du module) : la garde ci-dessous certifierait une sortie sur laquelle
             // AUCUN tap ne pourra jamais être dispatché. Le chemin est OUVERT : `AppShell.
-            // EnsureEventSystem()` (`AppShell.cs:1071-1078`) ne pose le module QUE si aucun
+            // EnsureEventSystem()` ne pose le module QUE si aucun
             // `EventSystem` n'existe déjà, et `FB_..._BrancheEchec` (ci-dessus) ne charge AUCUNE
             // scène — c'est le test qui a le plus besoin de cette précondition et qui en avait le
             // moins. `ProductionClickSupport.HasActiveInputModule` est PROMU (round 9) hors de
@@ -631,21 +641,55 @@ namespace MafiaCleanCity.Shell.Tests
             // Une garde qui vérifierait seulement que la zone tactile est DÉCLARÉE à ≥48 (un
             // paramètre) serait une garde sur le PARAMÈTRE, pas sur l'EFFET — socle CLAUDE.md,
             // « une garde sur les paramètres d'un effet n'est pas une garde sur son effet ».
-            // ⇒ Deux assertions, jamais une seule : (a) la GRANDEUR — la zone tactile mesure ≥48 dp
-            // sur les DEUX axes, lue sur `rectTete.rect` LUI-MÊME (jamais un pixel d'écran) : ce
-            // sous-arbre vit ENTIÈREMENT en coordonnées de maquette (`EchelleMaquette.
-            // LargeurHudBrennar = 392f`), un SEUL `localScale` le porte à l'écran
-            // (`AppShell.cs:617-628`), donc `rect.width`/`rect.height` LUS ICI sont déjà en dp,
-            // sans conversion ; (b) l'EFFET — un raycast à CHACUN des 4 coins de cette zone
+            // ⇒ Deux assertions, jamais une seule : (a) la GRANDEUR — la zone tactile mesure ≥48
+            // UNITÉS DE MAQUETTE sur les DEUX axes, lue sur `rectTete.rect` LUI-MÊME (jamais un
+            // pixel d'écran) : ce sous-arbre vit ENTIÈREMENT en coordonnées de maquette
+            // (`EchelleMaquette.LargeurHudBrennar = 392f`), un SEUL `localScale` le porte à
+            // l'écran — dans `AppShell.BuildLayout()`, l'affectation `echelleRt.localScale = new
+            // Vector3(k, k, 1f);` ; (b) l'EFFET — un raycast à CHACUN des 4 coins de cette zone
             // (retrait d'1 unité LOCALE pour ne jamais tomber pile sur la frontière) doit atterrir
             // sur l'affordance elle-même ou un de ses enfants — EXACTEMENT la même tolérance
             // `IsChildOf` que le centre ci-dessus.
+            //
+            // ⚠️⚠️ CORRIGÉ round 11 (revue ⊥, MAJEUR 1) — « (a) » ci-dessus écrivait « ≥48 dp … DANS
+            // LE REPÈRE DE LA MAQUETTE », une contradiction dans les termes : `rect.width`/`height`
+            // sont des UNITÉS DE MAQUETTE, JAMAIS des dp — elles ne le deviennent qu'après
+            // multiplication par (largeurÉcranDp / 392), ET `rect.width` NE PEUT PAS varier avec la
+            // résolution de test puisque `echelleRt` a une largeur locale FIXE de 392 (c'est le
+            // localScale, pas le rect local, qui absorbe la largeur réelle de l'écran) — aucune
+            // résolution de Game View ne peut donc faire rougir un seuil exprimé en dp ici, ce que
+            // la revue a nommé « aggravant ». La conversion est ALGÉBRIQUE (même idiome que
+            // `ChromeMultiResolutionPlayModeTests.cs` : invariants dérivés du modèle du
+            // `CanvasScaler`, jamais un re-rendu Play Mode par résolution — cette API interne est
+            // délibérément non commitée comme mécanisme de test permanent).
             Assert.GreaterOrEqual(rectTete.rect.width, 48f,
-                $"({etiquetteBranche}) la zone tactile de l'action de tête doit mesurer ≥48 dp de " +
-                $"large (minimum Android) DANS LE REPÈRE DE LA MAQUETTE — trouvé {rectTete.rect.width}.");
+                $"({etiquetteBranche}) la zone tactile de l'action de tête doit mesurer ≥48 UNITÉS " +
+                $"DE MAQUETTE de large — trouvé {rectTete.rect.width}.");
             Assert.GreaterOrEqual(rectTete.rect.height, 48f,
-                $"({etiquetteBranche}) la zone tactile de l'action de tête doit mesurer ≥48 dp de " +
-                $"haut (minimum Android) DANS LE REPÈRE DE LA MAQUETTE — trouvé {rectTete.rect.height}.");
+                $"({etiquetteBranche}) la zone tactile de l'action de tête doit mesurer ≥48 UNITÉS " +
+                $"DE MAQUETTE de haut — trouvé {rectTete.rect.height}.");
+
+            // Conversion algébrique vers deux largeurs d'écran DE RÉFÉRENCE (jamais un pixel rendu) :
+            // 392 dp (`EchelleMaquette.LargeurHudBrennar`, le téléphone canon) et 360 dp (la largeur
+            // modale Android — la plus étroite couramment supportée). ÉPINGLÉ, pas masqué : cette
+            // zone est CONNUE sous le seuil de 48 dp physiques à 360 — remontée à l'user (arbitrage
+            // produit/DA, hors du geste de production borné à cette affordance), PAS silencieusement
+            // acceptée comme conforme. Si cette valeur bouge SANS que ce commentaire soit mis à
+            // jour, quelqu'un a touché la géométrie sans relire cette garde.
+            const float LargeurEcranDpModale = 360f; // la plus étroite couramment supportée
+            float dpLargeurModale = rectTete.rect.width * (LargeurEcranDpModale / EchelleMaquette.LargeurHudBrennar);
+            float dpHauteurModale = rectTete.rect.height * (LargeurEcranDpModale / EchelleMaquette.LargeurHudBrennar);
+            // À 392 dp (le téléphone canon), le facteur de conversion vaut 1 PAR CONSTRUCTION —
+            // la valeur en unités de maquette EST directement la valeur en dp physiques à cette
+            // largeur de référence, donc l'assertion (a) ci-dessus DOUBLE comme garde à 392 dp.
+            Assert.AreEqual(44.1f, dpLargeurModale, 0.2f,
+                $"({etiquetteBranche}) ÉCART CONNU, REMONTÉ — à 360 dp de large (largeur modale " +
+                $"Android), la zone tactile ne mesure QUE {dpLargeurModale:F1} dp physiques " +
+                "(sous le seuil de 48). Cette assertion épingle la valeur ACTUELLE : si elle " +
+                "s'écarte de 44,1±0,2, la géométrie a changé sans que l'arbitrage user (grandir la " +
+                "zone) ait été rendu — corriger CETTE assertion seulement après ce ruling.");
+            Assert.AreEqual(44.1f, dpHauteurModale, 0.2f,
+                $"({etiquetteBranche}) même écart connu, sur la hauteur — trouvé {dpHauteurModale:F1} dp.");
 
             var coinsLocauxTete = new[]
             {

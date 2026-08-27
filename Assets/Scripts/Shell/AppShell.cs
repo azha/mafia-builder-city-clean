@@ -171,8 +171,10 @@ namespace MafiaCleanCity.Shell
             // leading action is meaningless outside a district view, so any tab switch clears it
             // defensively — EnterDistrict is the ONLY path that sets it back (§3.3 only names the
             // City case explicitly, before the fusion; this chunk extends the SAME reset to the
-            // other 3 tabs so "← Carte" can never survive a jump straight to e.g. Org — an
-            // obvious-defect guard, not a design reinterpretation, consigned as a Deviation).
+            // other 3 tabs so the back-to-map leading action can never survive a jump straight to
+            // e.g. Org (round 11, revue ⊥ MINEUR m1 — PARAPHRASÉ, jamais cité : `LabelFor` ne rend
+            // qu'une flèche nue depuis round 8, aucun libellé à deux mots) — an obvious-defect
+            // guard, not a design reinterpretation, consigned as a Deviation).
             CityTabDistrictId = -1;
             TopBar.SetLeadingAction(TopBarController.LeadingAction.None, null);
             // §6.3 — hors district, état NOMMÉ ("—"), jamais la dernière valeur d'un district

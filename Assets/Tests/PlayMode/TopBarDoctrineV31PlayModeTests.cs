@@ -124,7 +124,10 @@ namespace MafiaCleanCity.Shell.Tests
         // couverture RÉELLE échantillonnée de 500.0px² — le trou central le rend structurellement
         // non-aplat malgré sa boîte englobante carrée. Seuil posé à 900 : ~1.8x de marge au-dessus
         // du 500 mesuré, largement sous tout remplissage de badge/bouton réel de cette barre (le
-        // fond du badge Notification, non-or, fait 3024px² ; le bouton LeadingAction 3600px²) — donc
+        // fond du badge Notification, non-or, fait 3024px² ; la zone tactile LeadingAction fait
+        // 48×48=2304px² — ⚠️ CORRIGÉ round 11, revue ⊥ MINEUR m6 : citait 3600px², jamais vrai
+        // (36×40=1440 avant round 9, 48×48=2304 depuis — sans effet, `leadingImg` est en
+        // `surfaceRow` à alpha nul, jamais classé « or » par ce scan) — donc
         // aucun élément non-filet/non-anneau de la doctrine ne pourrait se glisser sous ce seuil par
         // accident. Contrôle négatif (ci-dessous) : un aplat or 80x40=3200px² DOIT être classé aplat.
         private const float FlatCoverageAreaMaxPx2 = 900f;

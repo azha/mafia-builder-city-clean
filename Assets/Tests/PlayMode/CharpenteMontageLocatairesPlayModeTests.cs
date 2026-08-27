@@ -665,9 +665,10 @@ namespace MafiaCleanCity.Shell.Tests
         // ─────────────────────────────────────────────────────────────────────────────────────────
         // F0.2-b (revue ⊥ round 3, BLOQUANT 1) — la classe « aveugle à la CORRESPONDANCE » n'était
         // fermée QUE sur l'attribut LIBELLÉ (F0.2, `CharpenteBootScenePlayModeTests.cs`, round 2). Le
-        // relecteur a armé la MÊME classe sur l'attribut DESTINATION — `AppShell.cs:892` (round 9,
-        // revue ⊥, MINEUR 6 : ancre corrigée — `:835` rendait déjà `TabDockPointeWidthCss` avant
-        // même le décalage round 7, une classe distincte de « décalée de +12 »),
+        // relecteur a armé la MÊME classe sur l'attribut DESTINATION — dans `AppShell.
+        // AddTabButton(Tab, string)` (round 9, revue ⊥, MINEUR 6 : ancre par NUMÉRO corrigée d'une
+        // classe distincte de « décalée de +12 » — round 11 retire le numéro de ligne pour la même
+        // raison, cette classe ayant déjà glissé deux fois dans ce fichier),
         // `b.onClick.AddListener(() => ActivateTab(tab))` → `ActivateTab(Tab.Empire)`, seul site
         // touché — et mesuré que TOUTES les gardes existantes restaient VERTES (`Charpente` 15/0,
         // juge complet inchangé) : F0.1-a/F0.2 lisent le NOM et le LIBELLÉ, jamais l'`onClick` ; C7
@@ -866,8 +867,8 @@ namespace MafiaCleanCity.Shell.Tests
         // directement sur `bouton.gameObject`, sans jamais consulter un `GraphicRaycaster`. Mesuré
         // par le relecteur, sur DEUX mécanismes distincts, chacun `Charpente` 19/0 (donc VERT à
         // travers) : `img.raycastTarget = false` sur l'`Image` posée par `AppShell.AddTabButton`
-        // (`AppShell.cs:873-875` — round 9 (revue ⊥, MAJEUR 1) : ancre corrigée de +12, décalée par
-        // l'insertion round 7 (`AppShell.cs:1071-1078`, EnsureEventSystem) — les 4 AUTRES enfants de chaque bulle sont DÉJÀ
+        // (round 11 — revue ⊥, BLOQUANT 1 : citation par numéro de ligne remplacée par un nom de
+        // symbole, cette classe ayant déjà glissé deux fois dans ce fichier) — les 4 AUTRES enfants de chaque bulle sont DÉJÀ
         // `raycastTarget = false` : cette `Image` est l'UNIQUE surface de test de collision du
         // dock) et `CanvasGroup.blocksRaycasts = false` sur `TabBarRoot`. Un balayage confirme :
         // ZÉRO test de ce dépôt ne fait de raycast réel avant celui-ci.
@@ -906,7 +907,7 @@ namespace MafiaCleanCity.Shell.Tests
         // donc SEULEMENT 2 des 3 cases (participant, tri inter-canvas) ; le MODULE est fermé
         // séparément, ci-dessous, par une assertion DÉDIÉE sur `EventSystem.current.currentInputModule`
         // — jamais en le déduisant de la présence de `RaycastAll`.
-        // Et c'est assertable : `AppShell.EnsureEventSystem()` (`AppShell.cs:1071-1078`) ne pose le
+        // Et c'est assertable : `AppShell.EnsureEventSystem()` ne pose le
         // module QUE `if (FindFirstObjectByType<EventSystem>() == null)` — un EventSystem HÉRITÉ (une
         // scène antérieure, un test voisin qui en aurait laissé un) sans module supporté rouvre la
         // porte, MUETTE : `EventSystem.current` existe, `RaycastAll` continue de rendre des résultats
@@ -958,7 +959,7 @@ namespace MafiaCleanCity.Shell.Tests
                 "EventSystem.RaycastAll (juste en dessous) ne le voit JAMAIS (EventSystem.cs:266-281 " +
                 "ne consulte que RaycasterManager.GetRaycasters()), donc ce test resterait VERT même " +
                 "si AUCUN tap ne pouvait jamais être dispatché en production. Voir " +
-                "AppShell.EnsureEventSystem (AppShell.cs:1071-1078) : elle ne pose le module QUE si " +
+                "AppShell.EnsureEventSystem() : elle ne pose le module QUE si " +
                 "aucun EventSystem n'existait déjà — un EventSystem hérité sans module supporté " +
                 "rouvre la porte, muette.");
 
@@ -974,9 +975,10 @@ namespace MafiaCleanCity.Shell.Tests
                 // existe comme objet (le rect de la bulle) se mesure SUR l'objet, jamais reconstruite
                 // depuis une hypothèse sur son pivot. `rect.rect.center` est le centre LOCAL réel,
                 // `TransformPoint` le porte en MONDE, `WorldToScreenPoint(null, …)` reste la
-                // conversion correcte pour un Canvas ScreenSpaceOverlay (AppShell.cs:580 — round 9,
-                // revue ⊥, MAJEUR 1 : ancre corrigée de +12, la plus coûteuse des 12 — elle vivait
-                // 68 lignes sous l'ancre `EnsureEventSystem` que round 8 avait déjà corrigée) —
+                // conversion correcte pour un Canvas ScreenSpaceOverlay — l'affectation
+                // `ShellCanvas.renderMode = RenderMode.ScreenSpaceOverlay;` dans `AppShell.
+                // BuildLayout()` (round 11 — revue ⊥, BLOQUANT 1 : citation par numéro de ligne
+                // remplacée par un nom de symbole, cette classe ayant déjà glissé deux fois) —
                 // exactement celle que `EventSystem`/`GraphicRaycaster` utilisent en jeu.
                 Vector2 centreEcran = RectTransformUtility.WorldToScreenPoint(null, rect.TransformPoint(rect.rect.center));
 

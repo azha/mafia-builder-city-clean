@@ -31,8 +31,9 @@ namespace MafiaCleanCity.Tests
     // se lisait « ferme LA CLASSE [de l'atteignabilité au clic] » — FAUX, mesuré sur DEUX
     // mécanismes distincts, chacun `Charpente` 19/0 (donc INVISIBLES à ce helper ET à toutes les
     // gardes qui l'utilisent) : `img.raycastTarget = false` sur l'`Image` posée par
-    // `AppShell.AddTabButton` (`AppShell.cs:873-875` — round 9 (revue ⊥, MAJEUR 1) : ancre corrigée
-    // de +12, décalée par l'insertion round 7 (`AppShell.cs:1071-1078`, EnsureEventSystem) —
+    // `AppShell.AddTabButton` (round 11 — revue ⊥, BLOQUANT 1 : ancre par NUMÉRO DE LIGNE
+    // remplacée par un nom de symbole, cette classe ayant déjà glissé deux fois — voir la
+    // méthode elle-même, pas un numéro) —
     // l'UNIQUE surface de test de collision du
     // dock : les 4 autres enfants de chaque bulle sont DÉJÀ `raycastTarget = false`) et
     // `CanvasGroup.blocksRaycasts = false` sur `TabBarRoot`. Bypass volontaire du RAYCAST
