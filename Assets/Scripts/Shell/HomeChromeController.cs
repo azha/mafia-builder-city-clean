@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using MafiaCleanCity.Operational.Exceptions; // REUSE ExceptionQueueController — cible du raccourci "Exceptions" (item 0.5 §2)
 using MafiaCleanCity.Theme;
 using TMPro;
 
@@ -10,6 +11,17 @@ namespace MafiaCleanCity.Shell
     // (`global_conventions_core.md:106-116`, recopiés verbatim : LoadingState / EmptyState /
     // ErrorState / PartialState / OfflineState). AUCUNE route consommée en propre — ce chunk rend
     // des clés que C3 a déjà obtenues (design §3.0, "l'exception défendue").
+    //
+    // ITEM 0.5 §2 (Tools/charpente-item05-design.md, (b)) — CORRIGÉ : le second raccourci
+    // (`Shortcut_Second`, libellé "Exceptions") ne portait AUCUN `onClick` — un bouton branché sur
+    // rien, invisible à la seule question "quelle route sert sa donnée" (défaut joueur, pas un
+    // détail). REUSE de `IShellNavigator` (même mécanisme que `DashboardController.OpenExceptions`) :
+    // `ExceptionQueueController` est déjà un `IShellTenant` monté par CE mécanisme ailleurs, donc
+    // aucun mécanisme neuf. Le PREMIER raccourci (`Shortcut_DailyReview`) reste au clic-compteur
+    // SEUL, DÉLIBÉRÉMENT : `DailyReviewScreenController` n'est PAS ENCORE un `IShellTenant`
+    // (`MonterLocataireEnSurimpression<T>` exige `where T : IShellTenant`) — la conversion est
+    // l'item 0.5 §3 (C4a), qui vient APRÈS ce chunk dans l'ordre du design (C2 → C4a → C3). Câbler
+    // ce raccourci identiquement à celui-ci fait partie de C4a, pas de C2 — consigné en Deviation.
     public class HomeChromeController : MonoBehaviour
     {
         // Les 5 états UI systématiques (canon, VERBATIM les noms de la table §States).
@@ -32,6 +44,9 @@ namespace MafiaCleanCity.Shell
         private bool initialized;
 
         public int DailyReviewShortcutClicks { get; private set; }
+        // ITEM 0.5 §2 — le raccourci "Exceptions", désormais câblé (voir le commentaire d'en-tête).
+        public int ExceptionsShortcutClicks { get; private set; }
+        public GameObject LastOpenedExceptions { get; private set; }
 
         private void Awake() => EnsureInitialized();
 
@@ -81,6 +96,20 @@ namespace MafiaCleanCity.Shell
         }
 
         public void ClickDailyReviewShortcut() => DailyReviewShortcutClicks++;
+
+        /// <summary>ITEM 0.5 §2 — REUSE `IShellNavigator` (même mécanisme que
+        /// `DashboardController.OpenExceptions`) : monte `ExceptionQueueController` en
+        /// surimpression, PAR LE SHELL qui a monté ce panneau. Hors shell (tout test qui construit
+        /// ce contrôleur seul, `NewBareChrome()`) : aucun `IShellNavigator` trouvé ⇒ no-op, le clic
+        /// est comptabilisé quand même (même repli que `IShellTenant`/`IShellSessionSink` : un test
+        /// qui monte ce composant seul ne doit jamais planter sur l'absence du shell).</summary>
+        public void ClickExceptionsShortcut()
+        {
+            ExceptionsShortcutClicks++;
+            IShellNavigator nav = ShellNavigatorLocator.Find();
+            if (nav != null)
+                LastOpenedExceptions = nav.MonterLocataireEnSurimpression<ExceptionQueueController>().gameObject;
+        }
 
         // --------------------------------------------------------------- render
 
@@ -160,6 +189,7 @@ namespace MafiaCleanCity.Shell
             secImg.color = DesignTokens.Current.surfaceRow;
             shortcutSecond = secondGo.AddComponent<Button>();
             shortcutSecond.targetGraphic = secImg;
+            shortcutSecond.onClick.AddListener(ClickExceptionsShortcut);
             TextMeshProUGUI secLabel = new GameObject("Label", typeof(RectTransform)).AddComponent<TextMeshProUGUI>();
             secLabel.transform.SetParent(secondGo.transform, false);
             secLabel.font = DesignTokens.Current.primaryFont;

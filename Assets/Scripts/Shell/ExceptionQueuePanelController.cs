@@ -27,6 +27,11 @@ namespace MafiaCleanCity.Shell
         public string LastResolveError { get; private set; }
         public string LastViewAllError { get; private set; }
         public ExceptionCardDto[] LastViewAllResult { get; private set; }
+        // ITEM 0.5 §2 (C2) — les cartes RÉELLEMENT rendues (jamais celles d'un `ViewAll` séparé) :
+        // sans ce test hook, un test qui veut désigner une ligne rendue par nom ("Row_" + id) devrait
+        // soit deviner un id, soit refaire un appel réseau — les DEUX contournent le fait que le
+        // panneau CONNAÎT déjà ses cartes.
+        public IReadOnlyList<ExceptionCardDto> CurrentCards => currentCards;
 
         public IReadOnlyList<string> RenderedSeverityLabels => renderedSeverityLabels;
         private readonly List<string> renderedSeverityLabels = new List<string>();

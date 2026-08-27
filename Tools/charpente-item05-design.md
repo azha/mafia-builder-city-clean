@@ -233,3 +233,197 @@ M5 `front.md:562` n'est valide que dans l'arbre de travail, **portée à déclar
 i18n du client est l'**inverse** de ce que suppose le déduit n°4 (**48 sites `.text = "littéral"`**),
 et le précédent de résolveur local est `FamilleLabels.cs:9-18` · M6-bis `AppShell.cs:359-361` nomme
 les **mauvais quatre** contrôleurs.
+
+---
+
+## C2 — LIVRÉ (implémentation, `coder`)
+
+**Correction d'un faux signal, pour mémoire** — un message reçu en cours de lot affirmait « Unity a
+CRASHÉ, ton run n'a jamais abouti », sur la foi d'un `mono_crash.mem.12410.1.blob` trouvé à la racine
+et de « 0 processus Unity en cours ». Re-vérifié, INDÉPENDAMMENT, avant d'écrire quoi que ce soit ici :
+le PID 12410 est l'éditeur INTERACTIF, orphelin, qui tenait le verrou du projet AVANT tout travail de
+ce chunk (mesuré : `Temp/UnityLockfile` verrouillé par lui, `w` montrant le bureau idle depuis le
+login, `Editor.log` sans activité au-delà d'un scan USB de routine) — terminé par SIGTERM (option
+conservatrice : signal propre, pas `-9`) au tout DÉBUT de ce chunk, pour libérer le SEUL pilote Unity.
+Horodatage du blob (23:38) concordant EXACTEMENT avec `scratchpad/probe-lock-c2.log` (23:37:28, la
+toute première sonde de ce chunk) — **24 minutes avant le premier run de juge, 34 avant le second**.
+Les DEUX runs de juge de ce chunk se terminent par une séquence d'arrêt Unity intégralement propre
+(`grep -ci 'crash\|SIGSEGV\|SIGABRT' → 0` sur les deux logs) et la ligne `MafiaCI-harness:
+elapsed=140s … issue=[sortie normale (RC=1)]` — « sortie normale », RC=1 uniquement parce que
+`EditorApplication.Exit(failed>0?1:0)` voit 1 échec **préexistant, nommé, non imputable** (voir plus
+bas). « 0 processus Unity maintenant » est l'état ATTENDU après tout run terminé, pas un signe de
+crash. Blob retiré de l'arbre (`rm`), jamais commité.
+
+### (a) / (b) / (c) — les 4 panneaux, mesurés avant d'écrire une ligne
+
+| Panneau | (a) donnée consommée / origine | (b) où mène chaque affordance | (c) rendu quand la donnée manque |
+|---|---|---|---|
+| `HighestLeverageCardController` | `hl_card` + `structural_budget` — LA MÊME réponse `POST /v1/session/open` que le shell détient déjà (`AppShell.LastSessionOpen`). I5 : **aucune route consommée pour LIRE la carte.** | `CommitButton` (LongPress) → `RequestCommit()` → `HlCardClient.Commit` (POST réel) ; `TypedConfirmButton` → `RequestCommitViaTypedConfirm` → même chemin ; `SkipButton` → `RequestSkip()` → `HlCardClient.Skip` (POST réel). **Les 3 mènent à une vraie requête serveur — zéro bouton mort.** | `CardState.NoCard`, état NOMMÉ — "No decision waiting" / "All clear" (`:29` défaut, `Render()` `:137-144`). |
+| `ExceptionQueuePanelController` | `queue` — LA MÊME réponse `session/open` (`SetQueue`) ; SEULE route propre : `GET /v1/exceptions/queue`, appelée UNIQUEMENT par "voir toutes". | Chaque ligne : bouton "Resolve" → `ResolveInline` → `ExceptionsClient.Resolve` (POST réel). "ViewAll" → `ViewAll()` → GET réel, résultat exposé via `LastViewAllResult` — **mais ne navigue nulle part visuellement aujourd'hui** (comportement PRÉ-EXISTANT à ce chunk, non nommé par le design, consigné en Deviation ci-dessous). | `RenderedEmptyState=true`, "No exceptions waiting" (`Render()` `:91-97`). |
+| `OrgVitalsPanelController` | Friction/Stress — `SetFrictionStress`, LA MÊME réponse `session/open` ; Heat — SA PROPRE requête (`GET /v1/city/district/:id/heat`) ; Cohesion — SA PROPRE requête (sonde D5). | Aucune affordance — 4 barres de texte, zéro bouton. | Cohesion : "Cohesion: Unavailable (no citywide aggregate)" — **TOUJOURS vrai** (D5, `RenderCohesionDeclaredUnavailable()` `:139-144`, rendu AU BUILD, indépendant de toute donnée) — le MODÈLE du trou déclaré, **imité, jamais "corrigé"**. Friction/Stress : "Unknown" (labels sur `null`). Heat : **aucun état nommé de repli** — reste BLANC tant que `FetchHeat` n'a pas résolu (gap PRÉ-EXISTANT, consigné). |
+| `HomeChromeController` | Bandeau — `SetCompressionGlance` ; Pression — `SetPressureBand` ; État générique — `SetLoadCircumstances` (dérivé de `hl_card`/`queue`) — TOUS depuis LA MÊME réponse `session/open`, aucune route propre. | `Shortcut_DailyReview` → `ClickDailyReviewShortcut()` → compte un clic, **ne navigue nulle part** (`DailyReviewScreenController` n'est pas encore `IShellTenant` — bloqué par l'ordre C2→C4a→C3, consigné). `Shortcut_Second` ("Exceptions") → **CORRIGÉ ce chunk** : `ClickExceptionsShortcut()` → `IShellNavigator.MonterLocataireEnSurimpression<ExceptionQueueController>()` — clic réel + raycast prouvés (voir falsifiable). | `LoadingState` (`:19`, jamais câblé) et la branche "tout chargé" (`:56`… décalé `:71` après édition) rendent LA MÊME valeur — **indiscriminant** (I6). `EmptyState` (`:54`… décalé `:69`) est la SEULE valeur assertable pour "pas de donnée". |
+
+### Gestes — CLASSE / POPULATION / compte avant→après / PORTÉE
+
+**Geste 1 — instancier les 4 panneaux orphelins dans l'Accueil.**
+CLASSE : « un des 4 panneaux nommés est instancié par un site de PRODUCTION (`AddComponent<T>()`),
+sous `ContentSlot` ». POPULATION mesurée : `grep -c` sur `AddComponent<HighestLeverageCardController>
+\|AddComponent<ExceptionQueuePanelController>\|AddComponent<OrgVitalsPanelController>\|
+AddComponent<HomeChromeController>` sur `Assets/Scripts/` à `619406f` → **0** (seuls les 4 hôtes de
+test `NewBarePanel`/`NewBareController`/`NewBareChrome`, dans `Assets/Tests/`, hors production).
+Compte avant→après : **0/4 → 4/4** (2 sites d'appel dans `AppShell.AcquireSessionThenActivateHome`,
+via `MonterPanneauxAccueil`). PORTÉE : `Assets/Scripts/Shell/AppShell.cs`.
+
+**Geste 2 — fermer `Shortcut_Second` ("Exceptions"), sans `onClick`.**
+CLASSE : « un `Button` créé par `AddComponent<Button>()` dans un des 4 fichiers panneaux, SANS
+`.onClick.AddListener` correspondant ». POPULATION mesurée (script Python, régime AVANT/APRÈS,
+appliqué au fichier INTACT `619406f` d'abord) : **6** `Button` locaux au total dans les 4 fichiers
+(`skipButton`, `typedConfirmButton`, `b` [Resolve], `vaBtn` [ViewAll], `shortcutDailyReview`,
+`shortcutSecond` — `CommitButton` est un `LongPressButton`, hors classe, wired via
+`OnLongPressCompleted`). AVANT (`619406f`) : **5/6 wired**, `shortcutSecond` seul à 0 listener. APRÈS
+(ce commit) : **6/6 wired**. PORTÉE : `Assets/Scripts/Shell/HomeChromeController.cs`.
+⚠️ `Shortcut_DailyReview` reste dans une CLASSE DIFFÉRENTE (listener PRÉSENT, handler no-op vis-à-vis
+de la navigation) — non fermé ici, bloqué par C4a (voir Deviations).
+
+**Geste 3 — piloter Heat+Cohesion depuis l'Accueil (les 2 seules routes propres des 4 panneaux).**
+CLASSE : « une méthode `Fetch*(token)` d'I/O propre à un panneau, zéro appelant de PRODUCTION ».
+POPULATION mesurée : **2** méthodes (`OrgVitalsPanelController.FetchHeat`/`.FetchCohesion`) — sur
+`619406f`, leurs SEULS appelants sont dans `OrgVitalsPanelControllerPlayModeTests.cs` (fichier de
+test). Compte avant→après : **0/2 appelants de production → 2/2** (nouvelle méthode
+`FetchHeatAndCohesion`, auto-pilotée — voir raison ci-dessous —, appelée par
+`AppShell.MonterPanneauxAccueil`). PORTÉE : `Assets/Scripts/Shell/OrgVitalsPanelController.cs`
+(nouvelle méthode) + `Assets/Scripts/Shell/AppShell.cs` (site d'appel).
+
+**Geste 4 — fermer le trou de sibling-order (`DashboardBackdrop` recouvrant les 4 panneaux).**
+⛔ TROUVÉ PAR LE JUGE, PAS PAR LA RELECTURE — round 1 du test a rougi : un raycast sur un coin de
+`Shortcut_Second` touchait `DashboardBackdrop`. CLASSE : « un panneau monté AVANT la frame où
+`DashboardController.BuildLayout()` (différée par le cycle `IShellTenant`) construit son fond plein
+écran devient un frère AÎNÉ de ce fond — recouvert au rendu ET au raycast, invisible à toute
+assertion qui ne lit que l'état C# ». POPULATION : **4/4** panneaux affectés (même `ContentSlot`,
+même classe de défaut — seul `Shortcut_Second` portait une assertion de raycast pour la révéler).
+Compte avant→après : round 1 (montage synchrone, même frame que `AddComponent<DashboardController>`)
+→ **1 rouge** (raycast, coin `(-317, -88.55)` → `DashboardBackdrop`) ; round 2 (montage différé d'UNE
+frame, après le `BuildLayout()` de Dashboard) → **0 rouge**. PORTÉE : `Assets/Scripts/Shell/
+AppShell.cs` (les 2 sites d'appel de `MonterPanneauxAccueil`, chacun précédé d'un `yield return
+null;`) + `Assets/Tests/PlayMode/CharpenteAccueilPanneauxPlayModeTests.cs` (le wait, passé d'un
+`yield return null` fixe à un POLLING borné 10 s — aucune hypothèse d'ordre relatif entre 2
+coroutines qui reprennent au même point de frame).
+
+### ⚠️ Point levé par la revue en cours de lot : `HighestLeverageCardController.cs` a un diff de ZÉRO
+**Mesuré, pas supposé** — `git diff 619406f -- Assets/Scripts/Shell/HighestLeverageCardController.cs`
+→ **0 ligne**. Ce n'est PAS un manque : c'est la conséquence directe de la colonne (b) ci-dessus —
+ses 3 affordances menaient DÉJÀ à une vraie requête serveur, et son état vide (`NoCard`) était DÉJÀ
+nommé, avant ce chunk. La SEULE chose qui manquait à ce contrôleur était d'être INSTANCIÉ — et ça,
+c'est un changement à l'APPELANT (`AppShell.MonterPanneauxAccueil` : `AddComponent<
+HighestLeverageCardController>` + `SetPayload(...)`), jamais au contrôleur lui-même. **Preuve, pas
+affirmation** : le test `C2_AccueilMonteLes4PanneauxNommes_SEEDE_OperationalDemo_
+ChacunDeclareSonMonde` asserte explicitement sur ce panneau (`RenderedState==Available`,
+`CurrentCard.card_id`==ground-truth, `CurrentCard.decision_type_key`==ground-truth,
+`RenderedTexts` porte la clé de décision) et est VERT dans le run final (217/1, aucun échec sur ce
+fichier) — si `HighestLeverageCardController` avait eu un défaut fonctionnel, CES assertions
+auraient rougi. 4 panneaux fermés, 1 seul avec un diff sur son propre fichier — le compte est
+complet, pas 3 sur 4.
+
+### Le monde que chaque test déclare (falsifiable §2, point 2)
+
+- **HighestLeverageCard** : MONDE RÉEL. `operational_demo` porte un report d'autonomie OUVERT, seedé
+  déterministe (`Tools/seed_operational_demo.mjs` §Phase-21, DELETE+INSERT à chaque run) →
+  `decision_type_key == "AUTONOMY_REPORTS_PENDING"`, `RenderedState == Available`. Comparé à un
+  ground-truth **INDÉPENDANT** (2ᵉ sign-in + 2ᵉ `POST /v1/session/open`, jamais recopié du shell).
+- **ExceptionQueue** : MONDE RÉEL. La file seedée (§Phase-20, même seeder) — `RenderedCardCount`
+  égale exactement `verite.queue.Length`, une ligne `Row_<id>` réellement rendue est retrouvée par
+  nom pour un `exception_id` du ground-truth. Anti-vacuité : `Assert.Greater(verite.queue.Length, 0)`
+  posée AVANT de chercher la ligne.
+- **OrgVitals** : Cohesion — état vide DÉCLARÉ (D5), TOUJOURS vrai, imité tel quel. Friction/Stress —
+  MONDE RÉEL, égalité stricte avec le ground-truth. Heat — MONDE RÉEL, attente bornée (15 s) de la
+  résolution de `FetchHeat` (best-effort, propre au panneau).
+- **HomeChrome** : bandeau/pression — MONDE RÉEL (égalité stricte avec le ground-truth, y compris la
+  polarité "pas de bandeau"). Machine à 5 états — **état vide DÉCLARÉ, exercé DIRECTEMENT** (I6) :
+  la branche "tout chargé" étant indiscriminante du défaut jamais câblé, AUCUNE assertion ne lit
+  `CurrentState` depuis le chemin réel — seule la branche `EmptyState`, obtenue par un appel direct
+  à `SetLoadCircumstances(false,false,false,false,false)` sur le MÊME panneau monté par la
+  production, est assertée.
+
+### Contrôle positif (falsifiable §2, point 6)
+`ControlePositif_HomeChromeDebranche_FaitRougirLaGardeDes4PanneauxNommes` — `Assert.Throws
+<AssertionException>` sur la MÊME comparaison d'ensembles (`CollectionAssert.AreEquivalent`)
+appliquée à un ensemble PRIVÉ de `HomeChromeController`, **nommé** dans le message. VERT dans les
+deux runs (215/3 et 217/1) : la garde d'ensemble N'EST PAS aveugle à un panneau manquant.
+
+### Raycast (falsifiable §2, point 7)
+`Shortcut_Second` : 4 tirs sur des points EN RETRAIT des coins (`xMin+1`/`xMax-1` ×
+`yMin+1`/`yMax-1`, jamais les coins exacts — `Rect.Contains` demi-ouvert), précédés d'une garde
+`HasActiveInputModule`. C'est CE contrôle, et lui seul, qui a trouvé le geste 4 ci-dessus — les
+assertions d'état C# (RenderedTexts, CurrentState, etc.) seraient toutes restées VERTES à travers ce
+défaut, exactement la classe que ce point de la falsifiable existe pour attraper.
+
+### Le juge — confronté à la référence `214/2`
+
+Deux compilations propres (`0 error CS`) précèdent chaque run de juge (4 au total sur ce chunk,
+`elapsed` 15-20 s chacune, `RC=0`).
+
+**Round 1** (avant la correction de sibling-order) :
+```
+MafiaCI: RunPlayModeTests finished — passed=215 failed=3 skipped=0 inconclusive=0
+MafiaCI-harness: elapsed=140s timeout=900s issue=[sortie normale (RC=1)]
+```
+3 rouges : `NavD12` (référence, préexistant) · `StaleAbandonedShell` (référence, préexistant) ·
+`CharpenteAccueilPanneauxPlayModeTests.C2_...` — **NOUVEAU, causé par ce chunk** (geste 4 ci-dessus).
+Diagnostiqué, corrigé (yield d'une frame + polling du test), PAS relancé à l'identique — corrigé puis
+re-jugé en entier.
+
+**Round 2** (après correction, DÉCISIF) :
+```
+MafiaCI: RunPlayModeTests finished — passed=217 failed=1 skipped=0 inconclusive=0
+MafiaCI-harness: elapsed=140s timeout=900s issue=[sortie normale (RC=1)]
+```
+1 seul rouge : `NavD12` (référence, préexistant, DA/visuel, sans rapport avec ce chunk — NI imputé,
+NI réparé, conformément au mandat). `StaleAbandonedShell` est VERT ce round (déjà noté flaky/
+dépendant d'une précondition dans le mandat de ce chunk — non attribuable à ce chunk).
+`[Charpente] SetUp` compté : **31** occurrences (log complet, `grep -c`), présentes dans les DEUX
+runs — le filtre de catégorie a bien exécuté `CharpenteAccueilPanneauxPlayModeTests` (vérifié aussi
+par la ligne de succès explicite `[Charpente] C2 — les 4 panneaux orphelins de l'Accueil sont montés
+PAR LA PRODUCTION…`, présente dans le log round 2 à la ligne 6916).
+Delta net vs référence `214/2` : **+2 tests** (le `[UnityTest]` C2 et son contrôle positif), les
+DEUX verts ; **0 régression** sur les 4 suites `[Category("W3U1")]` déjà existantes pour les 4
+panneaux (`HighestLeverageCardControllerPlayModeTests`, `ExceptionQueuePanelControllerPlayModeTests`,
+`OrgVitalsPanelControllerPlayModeTests`, `HomeChromeControllerPlayModeTests`) — toutes comprises dans
+les 217 verts.
+
+Après chaque run : `git status` confirme les 3 atlas SDF salis puis restaurés (`git checkout --`),
+jamais commités. Aucun conteneur Docker démarré par ce chunk ; le dev-stack `mafia-clean-city-*`
+(7 conteneurs) était déjà debout avant ce chunk et n'a pas été touché.
+
+### Ce qui n'est PAS fermé (Deviations)
+
+1. **`Shortcut_DailyReview`** (HomeChromeController) reste un clic-compteur SANS navigation — la
+   spec disait de fermer "un bouton branché sur rien" ; ce raccourci N'EST PAS "branché sur rien"
+   (son listener existe), il "mène nulle part" — classe différente, et sa fermeture exige que
+   `DailyReviewScreenController` devienne `IShellTenant`, ce qui est EXPLICITEMENT le travail de
+   C4a (item 0.5 §3), après ce chunk dans l'ordre du design. Option conservatrice : laissé tel quel,
+   consigné ici pour que C4a le câble IDENTIQUEMENT à `Shortcut_Second`.
+2. **"ViewAll"** (ExceptionQueuePanelController) fait une VRAIE requête mais ne navigue nulle part
+   visuellement — comportement PRÉ-EXISTANT (avant ce chunk), non nommé par le design comme un
+   défaut à fermer ici ; signalé honnêtement plutôt que masqué.
+3. **Heat sans état nommé de repli** (OrgVitalsPanelController) — si `FetchHeat` échoue ou ne résout
+   jamais, la barre reste BLANCHE (contrairement à Cohesion, D5). PRÉ-EXISTANT, non modifié par ce
+   chunk (hors de son diff).
+4. **Composition VISUELLE** de l'Accueil — les 4 panneaux occupent des bandes fractionnaires
+   égales (25 % chacune) de `ContentSlot`, un empilement STRUCTUREL (non-recouvrement prouvé par le
+   raycast) mais PAS une composition finale ; ils chevauchent partiellement `DashboardSheet` (le
+   panneau centré de `DashboardController`). Travail de DA/juge-visuel ultérieur, hors périmètre
+   charpente de ce chunk.
+5. **`front.md`** n'a pas été touché — la case à cocher pour l'item 0.5 (et sa réconciliation
+   éventuelle) revient au contrôleur après la revue ⊥ de ce chunk, comme pour C4a/C3 à venir.
+
+### Fichiers touchés
+- `Assets/Scripts/Shell/AppShell.cs` — `MonterPanneauxAccueil`/`NouveauPanneauAccueil`, 2 sites
+  d'appel (avec le frame de marge du geste 4), 3 commentaires anti-péremption corrigés.
+- `Assets/Scripts/Shell/OrgVitalsPanelController.cs` — `FetchHeatAndCohesion` (auto-pilotée).
+- `Assets/Scripts/Shell/HomeChromeController.cs` — `Shortcut_Second` câblé (`ClickExceptionsShortcut`,
+  REUSE `IShellNavigator`), 2 test hooks (`ExceptionsShortcutClicks`, `LastOpenedExceptions`).
+- `Assets/Scripts/Shell/ExceptionQueuePanelController.cs` — test hook `CurrentCards`.
+- `Assets/Tests/PlayMode/CharpenteAccueilPanneauxPlayModeTests.cs` — NOUVEAU, `[Category("Charpente")]`,
+  1 `[UnityTest]` + 1 `[Test]` (contrôle positif).
+- `Assets/Scripts/Shell/HighestLeverageCardController.cs` — **NON touché, mesuré et prouvé suffisant**
+  (voir encadré ci-dessus).

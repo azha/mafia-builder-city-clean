@@ -97,6 +97,21 @@ namespace MafiaCleanCity.Shell
                 code => LastCohesionErrorCode = code);
         }
 
+        /// <summary>Item 0.5 §2 (C2) — le mécanisme que l'Accueil déclenche : les DEUX requêtes que ce
+        /// panneau fait en propre (Heat + Cohesion, design C6-F3/F4), pilotées PAR CE COMPOSANT (jamais
+        /// par l'appelant qui le monte). Nécessaire précisément parce que ce panneau n'est PAS un
+        /// `IShellTenant` — rien d'autre ne relance ces deux coroutines. Auto-pilotées ⇒ si ce panneau
+        /// est détruit en vol (l'Accueil change d'onglet pendant la requête), Unity arrête ses
+        /// coroutines AVEC lui — jamais l'exception `MissingReferenceException` d'un appelant externe
+        /// qui continuerait d'écrire sur un `TextMeshProUGUI` déjà détruit (le mode d'échec réel d'un
+        /// `StartCoroutine` piloté par le MONTEUR plutôt que par le composant qu'il monte).</summary>
+        public void FetchHeatAndCohesion(string bearerToken)
+        {
+            EnsureInitialized();
+            StartCoroutine(FetchHeat(bearerToken));
+            StartCoroutine(FetchCohesion(bearerToken));
+        }
+
         // W3.U1 C6-F2 — the SAME reflection-based "citywide field" oracle applied to BOTH DTOs
         // (never two separate hand-written counters that could quietly diverge from each other).
         public static int CountCitywideFields(System.Type dtoType)

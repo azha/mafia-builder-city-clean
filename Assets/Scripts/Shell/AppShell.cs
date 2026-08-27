@@ -61,8 +61,9 @@ namespace MafiaCleanCity.Shell
     // shell monte désormais `DashboardController` EN SURIMPRESSION (`MonterLocataireEnSurimpression
     // <T>`, item 0.4 — aucun mécanisme nouveau) juste après avoir activé Empire, SEULEMENT sur le
     // chemin qui vient d'activer l'onglet par défaut (même sentinel `(Tab)(-1)` que ci-dessus —
-    // jamais sur un joueur qui a déjà navigué ailleurs). Toujours PAS un onglet du dock — son
-    // propre écran (les 4 panneaux orphelins) reste l'item 0.5, non repris ici.
+    // jamais sur un joueur qui a déjà navigué ailleurs). Toujours PAS un onglet du dock. CORRIGÉ
+    // (item 0.5 §2, C2) — l'énoncé précédent disait que son propre écran (les 4 panneaux orphelins)
+    // restait ENTIÈREMENT hors périmètre : FAUX depuis ce chunk — voir `MonterPanneauxAccueil`.
     public class AppShell : MonoBehaviour, IShellSessionSink, IShellNavigator
     {
         public enum Tab { Empire, Org, Pipeline, More }
@@ -356,9 +357,13 @@ namespace MafiaCleanCity.Shell
                 // AVANT l'activation, puisqu'après ActivateTab CurrentTab n'est plus le sentinel) :
                 // un joueur qui a DÉJÀ navigué pendant l'acquisition ne doit pas se voir recouvrir
                 // d'un écran d'accueil qu'il n'a pas demandé — même raison motif 6/6 qu'au-dessus.
-                // Les 4 panneaux orphelins de l'écran ④ (BuildingCard/ExceptionQueue/Autonomy/
-                // ExceptionDetail — leur PROPRE rendu, au-delà de leur seule atteignabilité) restent
-                // l'item 0.5 complet, non repris ici.
+                // CORRIGÉ (item 0.5 §2, C2) — l'énoncé précédent ici disait que les 4 panneaux
+                // orphelins de l'écran ④ restaient ENTIÈREMENT hors périmètre : FAUX depuis ce
+                // chunk. `MonterPanneauxAccueil` (plus bas) les instancie désormais SANS donnée de
+                // session (le sign-in lui-même a échoué ⇒ aucun `SessionOpenDto` n'a jamais été
+                // obtenu) : chacun rend son état vide NOMMÉ (§2, point (c)) — jamais "atteint et
+                // blanc". BuildingCard/ExceptionQueue(plein écran)/Autonomy/ExceptionDetail restent
+                // hors périmètre (ce ne sont pas des panneaux de l'Accueil).
                 bool pasEncoreActiveEchec = CurrentTab == (Tab)(-1);
                 if (pasEncoreActiveEchec)
                 {
@@ -377,6 +382,21 @@ namespace MafiaCleanCity.Shell
                     // destination — la découvrabilité tient au fait que c'est le seul contrôle du
                     // coin gauche, pas à un mot affiché.
                     TopBar.SetLeadingAction(TopBarController.LeadingAction.BackToMap, ExitToCityMap);
+                    // ITEM 0.5 §2 (C2) — CORRIGÉ (mesuré, pas supposé — garde de RAYCAST du
+                    // C2_AccueilMonteLes4Panneaux..., rouge à sa première version) : `DashboardController.
+                    // BuildLayout()` est différé d'une frame (`Start()`, IShellTenant) et parente SON
+                    // PROPRE fond plein écran opaque (`DashboardBackdrop`) DIRECTEMENT sous `ContentSlot`
+                    // (comme tout tenant hors confinement de son propre host). Monter les 4 panneaux
+                    // AVANT cette frame les rend PLUS TÔT dans l'ordre de fratrie de `ContentSlot` —
+                    // `DashboardBackdrop`, créé APRÈS eux, les recouvre TOUS au raycast ET au rendu, un
+                    // défaut invisible à toute assertion qui ne lit que l'état C# (RenderedTexts, etc.),
+                    // exactement le trou que §2 point 7 nomme. ⇒ Un seul frame de marge (même patron que
+                    // `CharpenteOuvertureSessionOverlayPlayModeTests.cs` : "le montage EN SURIMPRESSION
+                    // du Dashboard est SYNCHRONE ... un seul frame de marge suffit") suffit pour que
+                    // `DashboardBackdrop`/`DashboardSheet` existent déjà quand les panneaux sont montés
+                    // À LEUR TOUR — ils deviennent alors les frères CADETS, rendus PAR-DESSUS.
+                    yield return null;
+                    MonterPanneauxAccueil(null); // aucune session obtenue — les 4 rendent leur état vide NOMMÉ
                 }
                 yield break;
             }
@@ -428,6 +448,16 @@ namespace MafiaCleanCity.Shell
                 // d'échec ci-dessus : `ActivateTab` a déjà remis l'action de tête à `None`, cette
                 // ligne vient donc APRÈS lui et après le montage de l'overlay.
                 TopBar.SetLeadingAction(TopBarController.LeadingAction.BackToMap, ExitToCityMap);
+                // ITEM 0.5 §2 (C2) — les 4 panneaux orphelins de l'Accueil, nourris de LA MÊME
+                // réponse `session/open` que ce shell vient d'obtenir (`dto`, peut être null si
+                // cette étape a échoué alors que le sign-in a réussi — `MonterPanneauxAccueil` gère
+                // les deux : I5, revue ⊥ v4, "la source unique des quatre est CETTE réponse").
+                // CORRIGÉ (mesuré, même défaut et même correctif que la branche d'échec ci-dessus,
+                // voir son commentaire) : un frame de marge AVANT de monter les panneaux, pour qu'ils
+                // deviennent les frères CADETS de `DashboardBackdrop`/`DashboardSheet` (différés d'une
+                // frame par le cycle de vie `IShellTenant`), jamais recouverts par eux.
+                yield return null;
+                MonterPanneauxAccueil(dto);
             }
 
             // §6.2, AMENDÉ (B1, Deviation) — le chunk 5 sondait CONDITIONNELLEMENT ("seulement si le
@@ -503,6 +533,74 @@ namespace MafiaCleanCity.Shell
         public T MonterLocataireEnSurimpression<T>() where T : MonoBehaviour, IShellTenant
         {
             return ConstruireLocataire<T>(out _);
+        }
+
+        /// <summary>Item 0.5 §2 (Tools/charpente-item05-design.md) — les 4 panneaux orphelins de
+        /// l'Accueil (`HighestLeverageCardController`/`ExceptionQueuePanelController`/
+        /// `OrgVitalsPanelController`/`HomeChromeController`). Ce ne sont PAS des `IShellTenant`
+        /// (des panneaux DANS un écran, pas des locataires) : `MountTenant<T>`/`ConstruireLocataire<T>`
+        /// (tous deux `where T : IShellTenant`) ne s'appliquent pas — un `AddComponent<T>()` nu
+        /// suffit, et ce shell peut le faire directement (les 4 panneaux vivent dans CET assembly,
+        /// `Shell.asmdef` — mesuré, design §2 : aucun cycle).
+        /// I5 (revue ⊥ v4) — 3 des 4 ne consomment AUCUNE route : la source unique est `dto`, LA
+        /// réponse `session/open` que CE shell vient d'obtenir (ou `null` si l'acquisition a échoué
+        /// — voir les DEUX appelants). Seul `OrgVitalsPanelController` fait ses deux propres
+        /// requêtes (Heat + Cohesion, C6-F3/F4) — déclenchées ici avec le jeton du shell, jamais
+        /// attendues (best-effort, comme la sonde heat de ce shell juste en dessous).
+        /// Chaque panneau vit sur son PROPRE host GameObject (chacun pose sa propre
+        /// `VerticalLayoutGroup` etc. directement sur `gameObject` — deux panneaux sur le même hôte
+        /// entreraient en collision de composants), parenté directement sous `ContentSlot` — comme
+        /// tout host de locataire, donc recyclé GRATUITEMENT par `UnmountCurrentTenant` (qui vide
+        /// TOUT `ContentSlot` au prochain changement d'onglet) sans mécanisme de teardown dédié.</summary>
+        private void MonterPanneauxAccueil(SessionOpenDto dto)
+        {
+            // Sans anchors explicites, `new GameObject(nom, typeof(RectTransform))` pose un
+            // RectTransform PAR DÉFAUT (anchorMin=anchorMax=(0,0), sizeDelta=(100,100)) — les 4
+            // panneaux se superposeraient EXACTEMENT dans le même coin bas-gauche de `ContentSlot`,
+            // le dernier monté (HomeChrome) recouvrant les trois autres au raycast. `NouveauPanneauAccueil`
+            // reçoit donc une BANDE fractionnaire distincte par panneau — un empilement STRUCTUREL
+            // (chacun occupe toute la largeur, un quart de la hauteur), pas une composition visuelle
+            // finale (celle-ci reste un travail ultérieur, DA/juge-visuel — consigné en Deviation).
+            HighestLeverageCardController hlCard = NouveauPanneauAccueil<HighestLeverageCardController>("AccueilHlCard", 0.75f, 1.00f);
+            hlCard.SetPayload(Token, dto?.hl_card, dto?.structural_budget);
+
+            ExceptionQueuePanelController exceptions = NouveauPanneauAccueil<ExceptionQueuePanelController>("AccueilExceptionQueue", 0.50f, 0.75f);
+            exceptions.SetQueue(Token, dto?.queue);
+
+            OrgVitalsPanelController orgVitals = NouveauPanneauAccueil<OrgVitalsPanelController>("AccueilOrgVitals", 0.25f, 0.50f);
+            orgVitals.SetFrictionStress(dto?.friction_glance, dto?.compression_glance);
+            if (!string.IsNullOrEmpty(Token)) orgVitals.FetchHeatAndCohesion(Token); // best-effort — voir le docstring de la méthode
+
+            HomeChromeController homeChrome = NouveauPanneauAccueil<HomeChromeController>("AccueilHomeChrome", 0.00f, 0.25f);
+            homeChrome.SetCompressionGlance(dto?.compression_glance);
+            homeChrome.SetPressureBand(dto?.queue_pressure_band);
+            // Le générique "5 états" (design §2, I6 — la revue ⊥ v4) : `hasAnyData` reflète ce que
+            // CE MVP surface réellement sur l'Accueil (une carte à haut levier OU une file
+            // d'exceptions) — jamais un flag inventé. ⚠️ MESURÉ (I6) : quand une session/open RÉELLE
+            // porte l'un ou l'autre (le cas courant), cette ligne retombe dans la branche "tout est
+            // chargé" de `SetLoadCircumstances` (`HomeChromeController.cs:56`), qui rend LA MÊME
+            // valeur que son défaut jamais câblé (`:19`) — un défaut PRÉEXISTANT de ce contrôleur
+            // (C7, hors périmètre de C2), pas quelque chose que ce chunk introduit ou peut réparer
+            // par un choix de flag différent. ⇒ AUCUNE assertion de ce lot ne lit `CurrentState`
+            // depuis CE chemin — seule la branche EmptyState (déclarée, mesurée séparément) est
+            // testée (voir Tools/charpente-item05-design.md §2, I6).
+            bool hasCard = dto?.hl_card != null && !string.IsNullOrEmpty(dto.hl_card.card_id);
+            bool hasQueue = dto?.queue != null && dto.queue.Length > 0;
+            bool hasAnyData = hasCard || hasQueue;
+            homeChrome.SetLoadCircumstances(isLoading: false, hasError: dto == null, isOffline: false,
+                hasAnyData: hasAnyData, hasAllExpectedData: hasAnyData);
+        }
+
+        private T NouveauPanneauAccueil<T>(string nom, float yMin, float yMax) where T : Component
+        {
+            GameObject host = new GameObject(nom, typeof(RectTransform));
+            host.transform.SetParent(ContentSlot, false);
+            RectTransform rt = (RectTransform)host.transform;
+            rt.anchorMin = new Vector2(0f, yMin);
+            rt.anchorMax = new Vector2(1f, yMax);
+            rt.offsetMin = Vector2.zero;
+            rt.offsetMax = Vector2.zero;
+            return host.AddComponent<T>();
         }
 
         private void UnmountCurrentTenant()
