@@ -1799,10 +1799,10 @@ len a = 75017 len b = 75017
     (b) La consignation ne nommait que `tabCount` — **incomplet** : `ChromeMultiResolutionPlayModeTests.cs:158-159`
     recopie AUSSI `tabBarPadding = 8f` et `tabBarSpacing = 4f` en constantes LITTÉRALES (avec un
     commentaire qui les cite verbatim comme non lues par réflexion), alors que
-    `AppShell.BuildTabBar` (`AppShell.cs:758-767`) pose `hlg.padding = new RectOffset(0, 0, …, …)`
-    (padding **HORIZONTAL nul**, pas 8) et `hlg.spacing = Px(TabDockEcartCss)` avec
+    `AppShell.BuildTabBar` (`AppShell.cs:770`) pose `hlg.padding = new RectOffset(0, 0, …, …)`
+    (padding **HORIZONTAL nul**, pas 8) et `hlg.spacing = Px(TabDockEcartCss)` (`AppShell.cs:772`) avec
     `TabDockEcartCss = 22f` (soit `Px(22f)`, converti à l'échelle du canon — pas `4f` brut). Et
-    `hlg.childForceExpandWidth = false` (`AppShell.cs:766`) — les bulles ne se PARTAGENT plus la
+    `hlg.childForceExpandWidth = false` (`AppShell.cs:778`) — les bulles ne se PARTAGENT plus la
     largeur disponible (`.dock{justify-content:center}`, doctrine « les bulles se GROUPENT au
     centre ») : le modèle `ComputeTabButtonWidth(localWidth, padding, spacing, buttonCount) =>
     (localWidth − 2×padding − spacing×(buttonCount−1)) / buttonCount` de ce fichier suppose une
@@ -1849,10 +1849,18 @@ len a = 75017 len b = 75017
   (`DashboardController` monté en surimpression) est branché. Ce qui RESTE hors de ce round : le
   RENDU propre de l'écran ④ lui-même (screen_1 complet — HighestLeverageCard, top-3 avec actions
   inline, OrgVitalsPanel 4-barres, ContextualBanner, ShortcutBar, KPI riches — cf. le commentaire
-  M1 déjà présent dans `DashboardController.cs`), et une éventuelle sortie/fermeture de l'overlay
-  (aucun bouton « fermer » posé — le seul moyen mesuré de le quitter est un re-tap sur Empire ou un
-  changement d'onglet, qui unmount tout `ContentSlot` par le chemin ORDINAIRE, non un mécanisme
-  dédié).
+  M1 déjà présent dans `DashboardController.cs`).
+  ⚠️ **Ces trois lignes disaient encore, jusqu'au round 8, qu'aucune sortie n'existait** : elles
+  niaient l'existence d'une affordance de fermeture, réduisaient les moyens de quitter l'overlay au
+  re-tap d'onglet, et déclaraient qu'aucun dispositif dédié n'existait.
+  **Les trois clauses sont fausses depuis le round 7**, qui livre l'action de tête du bandeau, et
+  l'en-tête du MÊME document disait déjà l'inverse. Section à **delta ZÉRO** depuis `7151309` : le
+  correctif du round 7 avait fermé les instances NOMMÉES (§ tête, Deviation 10, deux renvois) sans
+  repasser la POPULATION des sections inchangées. **4ᵉ chute de cette classe sur ce lot.**
+  ⇒ Balayage refait, et c'est lui qui compte : **18 sections byte-identiques entre `1307c22` et
+  `c3247cf`, une seule portait une clause devenue fausse** — celle-ci. *Après toute correction :
+  diff par SECTION, et pour chaque section à delta zéro, demander si un nombre, une borne ou une
+  clause qu'elle porte vient d'être changé AILLEURS.*
 
 ---
 

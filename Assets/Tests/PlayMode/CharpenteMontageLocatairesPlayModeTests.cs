@@ -902,7 +902,7 @@ namespace MafiaCleanCity.Shell.Tests
         // donc SEULEMENT 2 des 3 cases (participant, tri inter-canvas) ; le MODULE est fermé
         // séparément, ci-dessous, par une assertion DÉDIÉE sur `EventSystem.current.currentInputModule`
         // — jamais en le déduisant de la présence de `RaycastAll`.
-        // Et c'est assertable : `AppShell.EnsureEventSystem()` (`AppShell.cs:1059-1065`) ne pose le
+        // Et c'est assertable : `AppShell.EnsureEventSystem()` (`AppShell.cs:1071-1078`) ne pose le
         // module QUE `if (FindFirstObjectByType<EventSystem>() == null)` — un EventSystem HÉRITÉ (une
         // scène antérieure, un test voisin qui en aurait laissé un) sans module supporté rouvre la
         // porte, MUETTE : `EventSystem.current` existe, `RaycastAll` continue de rendre des résultats
@@ -958,7 +958,7 @@ namespace MafiaCleanCity.Shell.Tests
                 "EventSystem.RaycastAll (juste en dessous) ne le voit JAMAIS (EventSystem.cs:266-281 " +
                 "ne consulte que RaycasterManager.GetRaycasters()), donc ce test resterait VERT même " +
                 "si AUCUN tap ne pouvait jamais être dispatché en production. Voir " +
-                "AppShell.EnsureEventSystem (AppShell.cs:1059-1065) : elle ne pose le module QUE si " +
+                "AppShell.EnsureEventSystem (AppShell.cs:1071-1078) : elle ne pose le module QUE si " +
                 "aucun EventSystem n'existait déjà — un EventSystem hérité sans module supporté " +
                 "rouvre la porte, muette.");
 
