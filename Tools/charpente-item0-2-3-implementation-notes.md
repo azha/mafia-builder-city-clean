@@ -3776,3 +3776,317 @@ vérifiée `identical`).
 ligne de commande), runs au premier plan, `LOG_FILE=` vers `/tmp`, jamais un pipe, fonts SDF
 restaurées et vérifiées propres après CHAQUE run, `[Charpente] SetUp` compté (26) pour confirmer la
 catégorie réellement exécutée.
+
+## ⛔⛔ ROUND 17 — revue ⊥ round 16 NOT_APPROVED (1 bloquant PRODUCTION, 3 majeurs PREUVE, 4 mineurs
+## PREUVE) — le bloquant était une UNITÉ (facteur `1/canvas.scaleFactor` en trop), fermé au site
+## DÉFINITIONNEL avec garde d'invariance + contrôle positif vécu ; les 2 NavF4 virent au VERT
+
+**Ce que le round 16 a tranché, et que ce round ne re-discute pas** (le périmètre était donné,
+pas à redécouvrir) : `TopBarController.EffectiveBottomOverhangPx` rendait `debordLocal × k ×
+canvas.scaleFactor` (des PIXELS D'ÉCRAN) là où ses trois consommateurs de production et son
+propre docstring exigent `debordLocal × k` (des UNITÉS DE CANVAS). L'erreur valait exactement
+`1/canvas.scaleFactor`. `DistrictInteriorScreenController.cs` est INNOCENT — le correctif est une
+expression, dans le corps du `get` de `TopBarController.EffectiveBottomOverhangPx` (jamais cité par
+numéro de ligne ici — c'est justement la règle que ce fichier existe pour faire tenir, et
+l'instrument `Tools/charpente-anchor-freshness-check.py` la vérifie mécaniquement sur ce diff).
+
+### BLOQUANT — fermé au site définitionnel : diviser par `canvas.scaleFactor`, MESURÉ SUR L'OBJET
+
+**Correctif** (`Assets/Scripts/Shell/TopBarController.cs`, `EffectiveBottomOverhangPx`) :
+
+```csharp
+Canvas canvasParent = GetComponentInParent<Canvas>();
+float scaleFactor = (canvasParent != null && canvasParent.scaleFactor > 0.0001f)
+    ? canvasParent.scaleFactor : 1f;   // anti-vacuité : jamais une division par 0
+float echelle = transform.lossyScale.y / scaleFactor;
+if (echelle <= 0.0001f) echelle = 1f;   // anti-vacuité : jamais une division/produit par 0
+return debordLocal * echelle;
+```
+
+Choix de forme (la revue en proposait trois, sans trancher) : **mesurer `canvas.scaleFactor` SUR
+L'OBJET** (`GetComponentInParent<Canvas>()`), jamais recalculer depuis une constante
+`EchelleMaquette` — socle CLAUDE.md 2026-08-22, « une grandeur qui existe comme OBJET dans la
+scène se MESURE sur l'objet, jamais ne se recalcule depuis un ratio » (c'est exactement le défaut
+de l'oracle `ArcRadiusRatio` cité par ce même paragraphe : un ratio gelé qui dérive silencieusement
+de la scène réelle). `canvas.scaleFactor` et `transform.lossyScale.y` sont lus au MÊME instant, sur
+le MÊME objet : aucune nouvelle fenêtre de timing n'est ouverte par rapport à l'ancien code, qui
+dépendait déjà implicitement de la synchronisation Canvas/`localScale` que ce fix rend explicite
+(voir « ce que je n'ai pas re-cassé » plus bas).
+
+**Comment n'a pas re-cassé le piège `Canvas.scaleFactor` lu trop tôt** (docstring de
+`AppShell.SafeAreaInsetsLocal`, caution PRÉEXISTANTE dans ce même fichier voisin — jamais citée par
+numéro de ligne ici, même règle) : les DEUX appelants de production sont hors de la fenêtre
+dangereuse — `AppShell.EnterDistrict()` n'est atteint que par un GESTE JOUEUR (clic sur un district
+dans la carte), des dizaines de frames après `BuildLayout()` ; `AppShell.PublierInsetsDuChrome()`
+appelle `Canvas.ForceUpdateCanvases()` juste avant de lire la propriété, ce qui traite les rebuilds
+de layout en attente — dont celui du `CanvasScaler` qui pose `canvas.scaleFactor`. Vérifié par
+ÉNUMÉRATION EXHAUSTIVE des call sites (`python3` sur tout `Assets/`, motif
+`EffectiveBottomOverhangPx` sans false-positive de commentaire) : **2 appelants de production, 0
+appel synchrone à la construction du Canvas.**
+
+### Population — `lossyScale` dans `Assets/Scripts`, comptée, pas devinée
+
+```
+$ python3 (oracle indépendant, git ls-tree HEAD Assets/Scripts, 65 fichiers .cs)
+AVANT ce round (motif `lossyScale`)  : 5 hits, 2 fichiers
+APRÈS ce round                        : 6 hits, 2 fichiers (+1 — le commentaire du correctif
+                                         lui-même cite le nom du symbole une fois de plus)
+```
+
+| fichier | hits | classe |
+|---|---|---|
+| `Shell/TopBarController.EffectiveBottomOverhangPx` (code + 1 commentaire, jamais cité par numéro) | 2 | **LE BLOQUANT — corrigé** (divise désormais par `canvas.scaleFactor`) |
+| `CityMap/DistrictInteriorScreenController.cs:1963,1974,1977,1978` (`SnapToScreenPixel`) | 4 | **INNOCENT, vérifié** |
+
+**Pourquoi `SnapToScreenPixel` est innocent, et ce n'est pas une supposition** : il calcule
+`deltaWorld = snapped_position − position` (un delta en repère MONDE, qui pour un Canvas
+`ScreenSpaceOverlay` coïncide avec l'écran) puis divise par `rt.lossyScale` — **le `lossyScale` DU
+MÊME `rt`** dont `deltaWorld` vient d'être mesuré. Numérateur et dénominateur portent donc
+TOUJOURS le même facteur d'échelle total (`k_local × canvas.scaleFactor` de CE transform précis),
+qui s'annule par construction quel que soit sa valeur — contrairement au bloquant, où le
+numérateur (`debordLocal`, en unités de MAQUETTE du `TopBarContent`) et le facteur de conversion
+voulu (`k` SEUL, sans le `canvas.scaleFactor`) ne portent PAS le même repère. **Auto-cohérent par
+construction ⇒ aucune classe d'erreur d'unité n'est possible ici**, peu importe où vit `rt` dans la
+hiérarchie. Balayage corroborant (`scaleFactor`, 46 hits, toute la population) : tous les AUTRES
+sites du dépôt qui convertissent écran→canvas le font par `X / scaleFactor` (même idiome que le
+correctif) — `DistrictInteriorScreenController.cs` ×7, `DistrictMapNavigation.cs`,
+`AppShell.SafeAreaInsetsLocal` — **aucun autre site ne multiplie par un `scaleFactor` en trop.**
+
+### La garde — l'UNITÉ, pas la valeur, avec contrôle positif VÉCU (pas seulement arithmétique)
+
+Nouveau `[UnityTest]`, `Assets/Tests/PlayMode/CharpenteBootScenePlayModeTests.cs`,
+`BLOQUANT_EffectiveBottomOverhangPx_EstEnUnitesDeCanvas_InvariantAuScaleFactor` : lit
+`EffectiveBottomOverhangPx` sur un shell RÉEL (scène de démarrage du build) à `canvas.scaleFactor`
+natif, force le Canvas à un `scaleFactor` DIFFÉRENT (`× 2`, seule variable qui change), relit, et
+exige l'ÉGALITÉ. La propriété observée est l'UNITÉ (canvas ⇒ invariant au `scaleFactor`), pas une
+magnitude — une garde de valeur (`> 0`, `proche de X`) resterait verte à travers CE défaut, comme
+`Assert.Greater(…, 0f)` l'a montré au round 13 pour un défaut voisin.
+
+**Contrôle positif — expérience à UNE variable, code réel, pas une simulation arithmétique** : la
+ligne `float echelle = transform.lossyScale.y / scaleFactor;` a été reportée à
+`transform.lossyScale.y` (l'expression fautive round 15, textuellement), le reste du round 17 en
+place, et le run relancé :
+
+```
+$ LOG_FILE=/tmp/charpente-r17/controlvar.log timeout 550 Tools/run-unity-check.sh -executeMethod MafiaCI.RunPlayModeTests
+MafiaCI: RunPlayModeTests started — 318 test(s) découverts
+MafiaCI: FAIL …NavD12_DistrictTitle_MargeGouttiere…                                    (pré-existant)
+MafiaCI: FAIL …StaleAbandonedShell_NeverLeaksTenantContentUnderReusedCanvas…            (pré-existant)
+MafiaCI: FAIL …CharpenteBootScenePlayModeTests.BLOQUANT_EffectiveBottomOverhangPx_EstEnUnitesDeCanvas_InvariantAuScaleFactor
+   —   EffectiveBottomOverhangPx doit être INVARIANT à `canvas.scaleFactor` — trouvé 52.5869 à
+       scaleFactor=0.5000 puis 105.1739 à scaleFactor=1.0000.
+MafiaCI: FAIL …NavigationPlayModeTests.NavF4_District3_NoBackgroundYet_PlaceholderStaysConfined_Green
+MafiaCI: FAIL …NavigationPlayModeTests.NavF4_TitleClearsTopBar_BackgroundExistsAtNativeResolution
+MafiaCI: RunPlayModeTests finished — passed=211 failed=5 skipped=0 inconclusive=0
+```
+
+**Les nombres CONFIRMENT la dérivation algébrique de la revue au dix-millième près** :
+`105.1739 / 52.5869 = 2.0000` — exactement le facteur `1/canvas.scaleFactor` (`sf=0,5` en
+batchmode) que le round 16 avait démontré SANS EXÉCUTER de code, à partir des quatre nombres de
+`notes.md:3664-3665`. Et **la valeur à `scaleFactor=1.0` (105.1739) EST la vérité canvas** : à
+`sf=1`, écran et canvas coïncident, donc même la formule FAUTIVE (`debordLocal × k × sf`) y rend la
+bonne réponse — c'est la mesure indépendante de `V = 105,174` que la revue avait dérivée par
+algèbre pure (§2 de son rapport), retrouvée ici par exécution réelle.
+
+**Restauration, vérifiée byte-identique** (pas un `diff` nu — socle CLAUDE.md sur les pièges de
+la couche d'affichage) :
+
+```python
+>>> import hashlib
+>>> a = open('/tmp/charpente-r17/TopBarController.cs.fixed.bak','rb').read()
+>>> b = open('Assets/Scripts/Shell/TopBarController.cs','rb').read()
+>>> len(a), len(b)
+(89019, 89019)
+>>> a == b
+True
+>>> hashlib.sha256(a).hexdigest() == hashlib.sha256(b).hexdigest()
+True   # 88e5d929…69122c1 des deux côtés
+```
+
+**Run final, code restauré** (deux exécutions indépendantes, reproductibles) :
+
+```
+$ LOG_FILE=/tmp/charpente-r17/final.log  … → passed=214 failed=2, error CS=0, SetUp=29
+$ LOG_FILE=/tmp/charpente-r17/final2.log … → passed=214 failed=2, error CS=0, SetUp=29
+   [Charpente] BLOQUANT round 16/17 — EffectiveBottomOverhangPx = 105.1738 à scaleFactor=0.5000 ;
+   105.1739 à scaleFactor=1.0000 (INCONDITIONNEL — imprimé que le test passe ou non).
+```
+
+**`EffectiveBottomOverhangPx`, avant/après, batchmode natif (`Screen.width=640`, `sf=0,5`)** :
+
+| | AVANT (round 15, le bug) | APRÈS (round 17) |
+|---|---|---|
+| valeur rendue | 52,5869 | **105,1738** (= V, invariant) |
+| à `scaleFactor` forcé à 1,0 | 105,1739 | 105,1739 (identique — CQFD invariance) |
+| dégagement du titre (nav-F4) | ROUGE (26,3→52,6 px selon le round) | **VERT** |
+
+**Les DEUX `NavF4` et `NavF5`, dans le log, pas dans la prose** — `grep -c "MafiaCI: FAIL"` sur
+`final.log`/`final2.log` : **2** (`NavD12`, `StaleAbandonedShell` — les 2 pré-existants, INCHANGÉS
+depuis round 15). `grep "NavF4\|NavF5"` sur ces mêmes logs : **0 occurrence** — ni l'un ni l'autre
+n'apparaît dans une ligne `MafiaCI: FAIL` (seul canal où ce harnais imprime un nom de test), donc
+les deux `NavF4` ET `NavF5` sont VERTS. Confirmé par arithmétique de comptage : `318` découverts
+(`315` + 3 tests neufs de ce round) `− 216` exécutés (`214` passés `+ 2` échoués) `=` la même marge
+de filtre de catégorie que les rounds précédents (non une régression de couverture).
+
+**Compte attendu vs obtenu** (le contrôleur l'avait écrit d'avance) : attendu `passed=215 failed=2`
+en supposant SEULEMENT les deux `NavF4` qui basculent (209+2=211) ; obtenu **`214`** parce que ce
+round ajoute AUSSI 3 tests neufs (la garde BLOQUANT + les 2 tests MAJEUR 3 ci-dessous), tous VERTS
+— `211 (basculement NavF4) + 3 (tests neufs) = 214`. **Le compte diffère de la prédiction pour une
+raison EXPLICABLE et vérifiée**, pas un signal d'alarme : la prédiction ne pouvait pas connaître le
+nombre de gardes que ce round allait ajouter.
+
+### MAJEUR 3 (revue ⊥ round 16, classe PREUVE) — `RebatirChromePourResolutionCourante()` ne se
+### déclarait QUE par un `Debug.Log` qui ne rougit jamais : posé, avec son propre contrôle positif
+
+Deux `[UnityTest]` ajoutés à `CharpenteBootScenePlayModeTests.cs` :
+
+1. `MAJEUR3_RebatirChromePourResolutionCourante_EstUnNoOpGeometrique_Asserte` — relève
+   `TopBarSlot.sizeDelta`, `TopBarEchelle.localScale`, `TabBarRoot.sizeDelta` AVANT l'appel, appelle
+   la méthode, exige l'ÉGALITÉ après. Classe EFFET (le résultat géométrique), pas PARAMÈTRE — la
+   forme que la revue demandait explicitement.
+2. `MAJEUR3_RebatirChromePourResolutionCourante_PositiveControl_MethodeDoitReellementEcrire` —
+   contrôle positif NÉCESSAIRE et non prescrit par la revue mais du même socle (« un contrôle
+   positif ne sert pas qu'à prouver qu'une garde peut rougir : il réfute le choix de la grandeur ») :
+   sabote `TopBarSlot.sizeDelta` à `999` AVANT l'appel, exige que la valeur sabotée NE SURVIVE PAS —
+   sinon le NO-OP mesuré par (1) serait vrai par ABSENCE D'EXÉCUTION (un early-return silencieux),
+   pas par la propriété réellement surveillée.
+
+Les deux PASSENT dans `final.log`/`final2.log` (absents de `MafiaCI: FAIL`, executés — `318`
+découverts en tient compte).
+
+### MAJEUR 2 (revue ⊥ round 16, classe PREUVE) — l'hypothèse que `Px()` porte (largeur locale du
+### canvas == `ReferenceResolutionWidth`) n'avait AUCUNE garde sur le VRAI canvas du shell
+
+Remède à 2 lignes appliqué EXACTEMENT comme prescrit par la revue, dans la jambe `FB_…` de
+`CharpenteOuvertureSessionOverlayPlayModeTests.cs` (qui tient déjà un shell vivant) :
+
+```csharp
+Assert.AreEqual(referenceResolutionWidthAttendue,
+    ((RectTransform)shell.ShellCanvas.transform).rect.width, 0.01f, …);
+```
+
+Passe dans les deux runs (`FB_…` non listée dans `MafiaCI: FAIL`).
+
+### MAJEUR 1 (revue ⊥ round 16, classe PREUVE) — re-vérifié INDÉPENDAMMENT, la conclusion de la
+### revue tient
+
+La revue avait mesuré 10 fichiers (hors `AppShell.cs`) créant un Canvas par l'idiome
+`new GameObject("Canvas", typeof(Canvas), …)`, tous guardés par
+`FindFirstObjectByType<Canvas>() == null` — donc structurellement inatteignables une fois
+`AppShell` démarré (aucune des 5 scènes n'en porte un). **Re-mesuré ici, oracle Python indépendant**
+(motif `AddComponent<Canvas>|typeof\(Canvas\)`, lignes non-commentaires, 65 fichiers `.cs`
+énumérés par `git ls-tree`) :
+
+```
+11 fichiers créent un Canvas : AppShell.cs (le SEUL réel) + 10 contrôleurs opérationnels
+(CityMapController, DistrictInteriorScreenController, AutonomyInboxController,
+BuildingCardController, DashboardController, ExceptionDetailController, ExceptionQueueController,
+LaunderingController, PipelineOverviewController, LieutenantScreenController)
+```
+
+**Compte IDENTIQUE à celui de la revue.** Aucun correctif de code nécessaire — la propriété qui
+protège ces 10 sites (garde de découverte, jamais atteinte en production) est structurelle et déjà
+en place ; ce que la revue demandait était une RE-MESURE, pas un changement.
+
+### MINEURS
+
+**m1 — fermé.** `TopBarController.cs`, docstring de `RenderedTexts` : la citation numérique
+`DashboardController.cs:340` (réintroduite en round 15 pour EXPLIQUER pourquoi on ne cite plus de
+numéro — le piège de citation exact que ce socle nomme : « décrire un correctif est un acte de
+citation ») est retirée, paraphrasée. Contrôle négatif — le motif de portée de l'instrument
+(`PROTECTED_BASENAMES`) reste inchangé, donc invisible à cette classe par construction ; c'est la
+LECTURE HUMAINE de la règle déclarée 250 lignes plus bas dans le même fichier qui fermait ce
+mineur, pas l'instrument.
+
+**m2 — NON fermé, consigné (déjà connu, sans impact sur ce delta).** `Tools/charpente-anchor-
+freshness-check.py` : `SHA_RE` accepte encore un nombre décimal de ≥7 chiffres et une décimale sur
+la ligne MÊME de la citation (mondes dégénérés B4/B5 de la table round 16, non refermés depuis le
+round 14). La revue elle-même l'a classé « sans impact sur ce delta » (le contrôle décisif —
+`SHA_RE` neutralisé — a montré que le VERT de ce lot ne dépend pas de cette faille). Non touché ce
+round : le script n'est PAS un fichier de ce lot au sens des trois fichiers édités
+(`TopBarController.cs`, `AppShell.cs`, `CharpenteBootScenePlayModeTests.cs`), et le corriger sans
+un ⊥ dédié à SES propres mondes dégénérés reproduirait le patron « correction qui déplace le défaut
+d'un cran » que ce socle documente abondamment. Option conservatrice (celle qui change le moins de
+surface) — voir Deviations.
+
+**m3 — corrigé PAR L'EVIDENCE de ce round, pas en réécrivant le round 15.** Le round 15 avait cité
+« dans la liste des tests découverts » comme preuve qu'un test neuf avait tourné — la revue a
+montré que cette liste n'existe pas dans le log. Ce round ne réécrit PAS le texte historique du
+round 15 (règle du fichier : un round documente, un round ultérieur corrige EN AJOUTANT, jamais en
+réécrivant l'historique) ; il applique la forme correcte à SA PROPRE preuve, partout ci-dessus :
+compte `découverts=N / exécutés=N / SetUp=N`, jamais une « liste » qui n'existe pas.
+
+**m4 — hors dépôt, NON touché, remonté.** La table d'ancres de `front.md` item 0.8
+(`/home/erutheone/project/mafia-clean-city/front.md:640-645`) vit dans le dépôt CONTRÔLEUR, pas
+dans `mafia-builder-city-clean` — hors du périmètre d'un commit sur `lot/charpente-0203`. Remonté
+tel quel pour le contrôleur/reviewer : 4 ancres `AppShell.cs` décalées de 2 lignes.
+
+### Deviations (round 17 — imprévus non bloquants, option conservatrice, consignés — liste
+### LOCALE à ce round, distincte de la liste numérotée 0-12 des rounds 2-7 ci-dessus)
+
+1. **m2 non fermé (`Tools/charpente-anchor-freshness-check.py`, `SHA_RE`).** La spec de ce round
+   (le rapport de revue round 16) classait m2 en MINEUR/PREUVE, « sans impact sur ce delta ».
+   Option conservatrice retenue (celle qui change le moins de surface) : NE PAS toucher
+   l'instrument hors d'une revue ⊥ dédiée à SES propres mondes dégénérés — étendre `SHA_RE` sans
+   un contre-échantillon complet reproduirait le patron déjà payé 4 fois sur ce lot
+   (« correction qui déplace le défaut d'un cran »). Quoi : les mondes B4 (7 chiffres isolés) et
+   B5 (décimale co-localisée) restent non détectés. Pourquoi : coût/risque d'un correctif non
+   revu supérieur au bénéfice sur un delta qui n'en dépend pas. Ce que la spec disait : « sans
+   impact sur ce delta » — confirmé par le contrôle `SHA_RE` neutralisé du round 16, VERT dans
+   les deux cas.
+2. **m4 non touché (`front.md`, dépôt `mafia-clean-city`).** Quoi : 4 ancres `AppShell.cs`
+   décalées de 2 lignes dans la table d'ancres de l'item 0.8. Pourquoi : ce fichier n'appartient
+   pas au dépôt `mafia-builder-city-clean` ni à la branche `lot/charpente-0203` — un commit de ce
+   lot ne peut pas le porter sans sortir de son périmètre déclaré (le mandat définit le
+   livrable comme « un commit sur lot/charpente-0203 »). Ce que la spec disait : la revue l'a
+   elle-même qualifié de « hors dépôt client, mais c'est le document qui GATE ce lot » — remonté
+   ici pour que le contrôleur/reviewer le corrige dans le bon dépôt, pas absorbé silencieusement.
+3. **Vérification device réelle non faite.** Comme aux rounds 14/15/16, la preuve
+   d'invariance au `scaleFactor` (§ BLOQUANT) est mesurée en Play Mode batchmode (deux valeurs de
+   `canvas.scaleFactor` forcées sur le MÊME process), pas sur un appareil physique 720p/1080p
+   portrait. Option conservatrice : le modèle est désormais démontré INVARIANT par construction
+   (l'expression ne contient plus `Screen.width` du tout, contrairement à avant), donc le risque
+   résiduel qu'un appareil réel diverge est structurellement plus faible qu'avant ce round — mais
+   ce n'est pas une mesure sur device, et je ne le prétends pas.
+
+### État final du dépôt (round 17)
+
+**Fichiers modifiés** :
+- `Assets/Scripts/Shell/TopBarController.cs` — BLOQUANT (division par `canvas.scaleFactor`,
+  docstring), MINEUR m1 (citation numérique retirée).
+- `Assets/Scripts/Shell/AppShell.cs` — correction de l'énoncé faux `:558-560` (« sort en unités
+  d'ÉCRAN » → « sort en unités de CANVAS »), même classe que le BLOQUANT.
+- `Assets/Tests/PlayMode/CharpenteBootScenePlayModeTests.cs` — 3 `[UnityTest]` neufs : la garde
+  BLOQUANT (invariance au `scaleFactor`) + les 2 tests MAJEUR 3 (no-op géométrique + son contrôle
+  positif).
+- `Assets/Tests/PlayMode/CharpenteOuvertureSessionOverlayPlayModeTests.cs` — MAJEUR 2 (assertion
+  2 lignes sur `shell.ShellCanvas` réel).
+- `Tools/charpente-item0-2-3-implementation-notes.md` — § ROUND 17 (ce bloc).
+
+**Aucun fichier hors ce périmètre touché** — en particulier PAS
+`Assets/Scripts/CityMap/DistrictInteriorScreenController.cs` (tranché INNOCENT par la revue et
+re-confirmé par le balayage de population ci-dessus) ni `Tools/charpente-anchor-freshness-
+check.py` (m2, différé). `git status --porcelain` : les 4 fichiers ci-dessus + les 3 atlas SDF
+dirtiés par les 3 runs, RESTAURÉS après chaque run (`git checkout` puis `git status` vide sur
+`Assets/Fonts`) ; `Tools/juge-visuel/`/`Tools/juge-donnees/` non trackés = sessions tierces.
+
+### Ce que je n'ai pas pu vérifier
+
+| point | commande / mesure qui tranche | ce qu'elle décide |
+|---|---|---|
+| Comportement sur un VRAI appareil (720/1080 portrait, pas batchmode 640×480) | APK + `adb logcat` sur `Screen.width`, `canvas.scaleFactor`, `EffectiveBottomOverhangPx` | le modèle prédit désormais un comportement INVARIANT à la résolution (démontré ici à deux `scaleFactor` en Play Mode réel, pas seulement par algèbre) — non mesuré sur device physique |
+| `Screen.safeArea` final à `BuildLayout()` sur Android (même famille que le MAJEUR 2 round 14, non couverte par ce round) | logger `Screen.safeArea` à `BuildLayout` puis 1 s plus tard, sur device | inchangé depuis round 15 — hors périmètre de ce round, qui portait sur l'UNITÉ, pas la fraîcheur de la zone sûre |
+| m2 (SHA_RE, 2 mondes dégénérés restants) | étendre `SHA_RE` pour rejeter un nombre décimal ≥7 chiffres isolé ET une décimale co-localisée avec la citation | différé, sans impact mesuré sur ce delta (contrôle `SHA_RE` neutralisé, § BLOQUANT du round 16) |
+| m4 (front.md, dépôt contrôleur) | corriger les 4 ancres `AppShell.cs` décalées de 2 dans `front.md:640-645` | hors périmètre d'un commit `mafia-builder-city-clean` — remonté au contrôleur |
+
+**Régime respecté** : seul pilote Unity vérifié par `/proc/PID/exe` (jamais par ligne de commande)
+avant CHAQUE des 3 runs — un `dotnet` sous `Unity/Hub/.../NetCoreRuntime` a été rencontré avant le
+2ᵉ run et identifié comme l'outillage C# de l'éditeur (pas un second pilote), confirmé par le run
+suivant terminant proprement avec les mêmes comptes que le 1ᵉʳ et le 3ᵉ. Runs au premier plan,
+`LOG_FILE=` vers `/tmp/charpente-r17/`, jamais un pipe pour les comptes qui décident (tout compte
+cité ici vient de `rtk proxy grep` ou d'un `wc -l` en aval d'un pipe, jamais d'une lecture terminale
+directe). Fonts SDF (`DejaVuSans SDF`, `DejaVuSerif SDF` — les 2 dirtiées après les runs 1/2 ;
+`LiberationSans SDF` s'y est ajoutée après le run final) restaurées par `git checkout` et
+vérifiées propres après CHAQUE run. `[Charpente] SetUp` compté (29 = 26 + 3 tests neufs dans
+`CharpenteBootScenePlayModeTests`, qui porte son propre `[UnitySetUp]`) pour confirmer la catégorie
+réellement exécutée. `error CS` : 0 sur les 3 runs.

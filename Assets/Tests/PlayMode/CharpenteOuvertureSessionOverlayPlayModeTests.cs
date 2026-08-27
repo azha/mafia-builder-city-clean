@@ -711,6 +711,20 @@ namespace MafiaCleanCity.Shell.Tests
                 "(round 14 en a mesuré 1,632653 à `Screen.width=640`) signale que `AppShell.Px()` a " +
                 "de nouveau lu la géométrie du Canvas au lieu de la constante de référence.");
 
+            // MAJEUR 2 (revue ⊥ round 16, classe PREUVE) — `Px()` (round 15) ne LIT plus la largeur
+            // du Canvas, elle la SUPPOSE égale à `ReferenceResolutionWidth` (vrai sous
+            // `ScaleWithScreenSize` + `matchWidthOrHeight=0`, mesuré une fois au DIAG round 13, mais
+            // jamais assertée sur le VRAI canvas du shell). `ChromeMultiResolutionPlayModeTests` ne
+            // couvre pas cette hypothèse : c'est de l'algèbre pure sur la constante elle-même, elle
+            // ne construit aucun shell. Remède à 2 lignes, sur le shell VIVANT déjà tenu ici :
+            Assert.AreEqual(referenceResolutionWidthAttendue,
+                ((RectTransform)shell.ShellCanvas.transform).rect.width, 0.01f,
+                $"({etiquetteBranche}) le Canvas RÉEL du shell doit avoir une largeur locale == " +
+                $"`AppShell.ReferenceResolutionWidth` ({referenceResolutionWidthAttendue}) — sinon " +
+                "l'hypothèse que `Px()` fait désormais (au lieu de la LIRE) est fausse pour CE canvas, " +
+                "et tout le chrome bâti dessus est faux sans qu'aucune garde de magnitude ci-dessus ne " +
+                "le voie (elles comparent `localScale` à un rapport de CONSTANTES, jamais au canvas).");
+
             // ⛔⛔ CORRIGÉ round 15 (revue ⊥ round 14, BLOQUANT 1 + finding « le message livré à
             // l'user est FAUX sur l'appareil »). Round 11 conservait ici une conversion ALGÉBRIQUE
             // pure (`rectTete.rect.width × 360/392`, JAMAIS un pixel rendu) — round 13 avait tenté

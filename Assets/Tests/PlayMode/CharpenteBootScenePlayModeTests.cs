@@ -310,6 +310,131 @@ namespace MafiaCleanCity.Shell.Tests
         }
 
         // ─────────────────────────────────────────────────────────────────────────────────────────
+        // MAJEUR 3 (revue ⊥ round 16, classe PREUVE) — `RebatirChromePourResolutionCourante()` se
+        // DÉCLARE désormais par un `Debug.Log` (round 15) : « je suis devenue un NO-OP GÉOMÉTRIQUE
+        // depuis que Px() ne lit plus le Canvas ». C'est VRAI et VÉRIFIÉ (revue round 16, § « ce qui
+        // tient ») — mais un `Debug.Log` ne rougit JAMAIS : le jour où quelqu'un remet un geste
+        // géométrique divergent dans cette méthode (le mode d'échec qui a produit 15 rounds sur ce
+        // lot), rien ne le dit. Cette garde transforme « par construction » en propriété SURVEILLÉE :
+        // relever les 3 grandeurs géométriques que `Px()` alimente ici, appeler la méthode, asserter
+        // l'égalité. Classe EFFET (le résultat géométrique), pas PARAMÈTRE (une valeur de `Px()` en
+        // isolation) — le socle CLAUDE.md distingue les deux et seule la première mord.
+        // ─────────────────────────────────────────────────────────────────────────────────────────
+        [UnityTest]
+        public IEnumerator MAJEUR3_RebatirChromePourResolutionCourante_EstUnNoOpGeometrique_Asserte()
+        {
+            yield return ChargerLaSceneDeDemarrageDuBuild();
+            AppShell shell = SondeShellDansLaScene(sceneDeDemarrage);
+            Assert.IsNotNull(shell, $"aucun AppShell dans la scène de démarrage du build ({sceneDeDemarrage.path})");
+
+            Transform echelleT = shell.TopBarSlot.Find("TopBarEchelle");
+            Assert.IsNotNull(echelleT, "`TopBarEchelle` doit exister sous `TopBarSlot` — c'est le nœud que " +
+                "cette garde surveille (round 17, revue ⊥ round 16, BLOQUANT, même nœud).");
+            var echelleRt = (RectTransform)echelleT;
+
+            // ── relevé AVANT — les 3 grandeurs géométriques que `Px()`/`FacteurEchelle()` posent ──
+            Vector2 topBarSizeAvant = shell.TopBarSlot.sizeDelta;
+            Vector3 echelleScaleAvant = echelleRt.localScale;
+            Vector2 tabBarSizeAvant = shell.TabBarRoot.sizeDelta;
+
+            shell.RebatirChromePourResolutionCourante();
+            yield return null;
+
+            Assert.AreEqual(topBarSizeAvant, shell.TopBarSlot.sizeDelta,
+                "`TopBarSlot.sizeDelta` doit être IDENTIQUE avant/après `RebatirChromePourResolutionCourante()` " +
+                "— un écart signale qu'un geste géométrique divergent est revenu dans cette méthode (le " +
+                "docstring round 15 la déclare NO-OP géométrique ; cette garde le VÉRIFIE, le `Debug.Log` " +
+                "voisin ne le fait pas).");
+            Assert.AreEqual(echelleScaleAvant, echelleRt.localScale,
+                "`TopBarEchelle.localScale` doit être IDENTIQUE avant/après — c'est le nœud `k` du " +
+                "BLOQUANT round 16 ; une divergence ici referait courir la même classe de défaut.");
+            Assert.AreEqual(tabBarSizeAvant, shell.TabBarRoot.sizeDelta,
+                "`TabBarRoot.sizeDelta` doit être IDENTIQUE avant/après.");
+        }
+
+        [UnityTest]
+        public IEnumerator MAJEUR3_RebatirChromePourResolutionCourante_PositiveControl_MethodeDoitReellementEcrire()
+        {
+            // CONTRÔLE POSITIF : sans lui, le NO-OP mesuré ci-dessus pourrait être vrai parce que la
+            // méthode ne fait RIEN (un early-return silencieux, une exception avalée) plutôt que parce
+            // qu'elle recalcule authentiquement la MÊME géométrie. On sabote délibérément une valeur
+            // AVANT l'appel — si la méthode écrit réellement, la valeur sabotée ne doit PAS survivre.
+            yield return ChargerLaSceneDeDemarrageDuBuild();
+            AppShell shell = SondeShellDansLaScene(sceneDeDemarrage);
+            Assert.IsNotNull(shell, $"aucun AppShell dans la scène de démarrage du build ({sceneDeDemarrage.path})");
+
+            const float valeurSabotee = 999f;
+            shell.TopBarSlot.sizeDelta = new Vector2(0f, valeurSabotee);
+
+            shell.RebatirChromePourResolutionCourante();
+            yield return null;
+
+            Assert.AreNotEqual(valeurSabotee, shell.TopBarSlot.sizeDelta.y,
+                "CONTRÔLE POSITIF : `RebatirChromePourResolutionCourante()` DOIT réellement RÉÉCRIRE " +
+                "`TopBarSlot.sizeDelta` (pas un early-return silencieux) — sinon le NO-OP mesuré par la " +
+                "garde ci-dessus serait vrai par ABSENCE D'EXÉCUTION, pas par la propriété qu'elle " +
+                "prétend surveiller (même famille que le contrôle positif du BLOQUANT round 16).");
+        }
+
+        // ─────────────────────────────────────────────────────────────────────────────────────────
+        // BLOQUANT (revue ⊥ round 16, CLASSE PRODUCTION) — `TopBarController.EffectiveBottomOverhangPx`
+        // rendait des PIXELS D'ÉCRAN (`k × canvas.scaleFactor`) là où ses consommateurs de production
+        // (`AppShell.EnterDistrict`, `AppShell.PublierInsetsDuChrome` → `ShellChrome.TopInsetPx`) et
+        // son propre docstring exigent des UNITÉS DE CANVAS (`k` seul). La PROPRIÉTÉ que cette garde
+        // observe est l'UNITÉ, pas la valeur (socle CLAUDE.md, « durcir sur une autre grandeur que
+        // celle où vit le défaut ne l'atteint jamais ») : une grandeur en unités de CANVAS ne dépend
+        // PAS de `canvas.scaleFactor` — un écran plus ou moins dense ne change rien à une géométrie
+        // exprimée en unités de référence. Une garde de VALEUR (« > 0 », « proche de X ») resterait
+        // verte à travers ce défaut exactement comme le round 13 l'a montré pour la magnitude de
+        // `TopBarEchelle.localScale` (`Assert.Greater(…, 0f)`, satisfaite par la valeur FAUTIVE
+        // elle-même). ⇒ cette garde lit la MÊME propriété à DEUX `canvas.scaleFactor` différents et
+        // exige l'ÉGALITÉ : aucune valeur exprimée en pixels d'écran ne peut la satisfaire, quel que
+        // soit le nombre mesuré à la première lecture.
+        // ─────────────────────────────────────────────────────────────────────────────────────────
+        [UnityTest]
+        public IEnumerator BLOQUANT_EffectiveBottomOverhangPx_EstEnUnitesDeCanvas_InvariantAuScaleFactor()
+        {
+            yield return ChargerLaSceneDeDemarrageDuBuild();
+            AppShell shell = SondeShellDansLaScene(sceneDeDemarrage);
+            Assert.IsNotNull(shell, $"aucun AppShell dans la scène de démarrage du build ({sceneDeDemarrage.path})");
+            Assert.IsNotNull(shell.ShellCanvas, "le shell doit porter un Canvas pour que ce test ait un sujet");
+            Assert.IsNotNull(shell.TopBar, "le shell doit porter un TopBarController");
+
+            float scaleFactorOriginal = shell.ShellCanvas.scaleFactor;
+
+            // ── sf1 : le `scaleFactor` RÉEL de la scène de test ──
+            float overhangSf1 = shell.TopBar.EffectiveBottomOverhangPx;
+            Assert.Greater(overhangSf1, 4f,
+                "anti-vacuité : le médaillon doit réellement déborder sous la barre pour que ce test " +
+                "prouve quelque chose (même seuil que NavF4/NavF5).");
+
+            // ── sf2 : un `scaleFactor` DIFFÉRENT — SEULE variable qui change (expérience à UNE
+            // variable, socle CLAUDE.md — même patron que le run controlvar/final du round 15). ──
+            float scaleFactorAlternatif = scaleFactorOriginal * 2f;
+            shell.ShellCanvas.scaleFactor = scaleFactorAlternatif;
+            Assert.AreNotEqual(scaleFactorOriginal, shell.ShellCanvas.scaleFactor,
+                "PRÉCONDITION : le `scaleFactor` du Canvas doit avoir RÉELLEMENT changé — sinon ce " +
+                "test ne prouve rien.");
+            float overhangSf2 = shell.TopBar.EffectiveBottomOverhangPx;
+
+            // Restauration AVANT toute assertion qui pourrait lever — le Canvas est partagé par
+            // toute la scène de test le temps qu'elle reste chargée.
+            shell.ShellCanvas.scaleFactor = scaleFactorOriginal;
+
+            Debug.Log($"[Charpente] BLOQUANT round 16/17 — EffectiveBottomOverhangPx = {overhangSf1:F4} " +
+                      $"à scaleFactor={scaleFactorOriginal:F4} ; {overhangSf2:F4} à " +
+                      $"scaleFactor={scaleFactorAlternatif:F4} (INCONDITIONNEL — imprimé que le test " +
+                      "passe ou non, socle CLAUDE.md « un dispositif conditionnel doit imprimer s'il " +
+                      "s'est activé »).");
+
+            Assert.AreEqual(overhangSf1, overhangSf2, 0.05f,
+                $"EffectiveBottomOverhangPx doit être INVARIANT à `canvas.scaleFactor` (c'est une " +
+                $"unité de CANVAS) — trouvé {overhangSf1:F4} à scaleFactor={scaleFactorOriginal:F4} " +
+                $"puis {overhangSf2:F4} à scaleFactor={scaleFactorAlternatif:F4}. Un écart signale que " +
+                "la propriété est retombée en unités d'ÉCRAN (revue ⊥ round 16, BLOQUANT 1).");
+        }
+
+        // ─────────────────────────────────────────────────────────────────────────────────────────
         // F0.2-c — UNE SEULE liste énumère l'ordre du dock dans AppShell.cs (design §3.1/§4).
         //
         // Population : tout endroit d'AppShell.cs qui écrit littéralement, dans cet ORDRE, la

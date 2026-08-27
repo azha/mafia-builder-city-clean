@@ -555,9 +555,14 @@ namespace MafiaCleanCity.Shell
             if (TopBarSlot == null || TabBarRoot == null) return;
             Canvas.ForceUpdateCanvases();
             (float topSafe, float bottomSafe) = SafeAreaInsetsLocal();
-            // `EffectiveBottomOverhangPx` sort désormais en unités d'ÉCRAN (la conversion vit
-            // chez le bandeau, qui connaît son échelle) — donc additionnable tel quel avec
-            // `rect.height`, sans qu'aucun appelant ait à s'en souvenir.
+            // ⛔⛔⛔ CORRIGÉ round 17 (revue ⊥ round 16, BLOQUANT) — cette ligne affirmait
+            // « `EffectiveBottomOverhangPx` sort désormais en unités d'ÉCRAN » : FAUX, et c'était
+            // l'énoncé qui a fait passer le défaut (le docstring de la propriété exige, lui, la
+            // même unité que `rect.height` — les deux moitiés étaient vraies séparément et
+            // incompatibles ensemble). `EffectiveBottomOverhangPx` sort en unités de CANVAS (la
+            // conversion vit chez le bandeau, qui connaît son échelle ET divise par
+            // `canvas.scaleFactor`) — donc additionnable tel quel avec `rect.height`, sans
+            // qu'aucun appelant ait à s'en souvenir.
             float debord = TopBar != null ? TopBar.EffectiveBottomOverhangPx : 0f;
             ShellChrome.PublierInsets(topSafe + TopBarSlot.rect.height + debord,
                                       bottomSafe + TabBarRoot.rect.height);

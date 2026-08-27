@@ -124,18 +124,38 @@ namespace MafiaCleanCity.Shell
                 float debordLocal = Mathf.Max(0f, selfBottomY - manoBottomY);
 
                 // ⛔⛔ CETTE GRANDEUR TRAVERSE UN CHANGEMENT DE REPÈRE, ET ELLE DOIT SORTIR DANS
-                // CELUI DE L'ÉCRAN. Le bandeau est désormais autoré en px CSS de la maquette et
-                // porté à l'écran par un `localScale` sur son parent : le calcul ci-dessus est
-                // donc en unités de MAQUETTE, pas en unités de canvas.
+                // CELUI DU CANVAS — jamais celui de l'écran (round 17 : voir plus bas, round 15
+                // avait ici l'inverse, écrit noir sur blanc, et c'était la classe même qui s'est
+                // révélée fautive). Le bandeau est autoré en px CSS de la maquette et porté au
+                // CANVAS par le `localScale` `k` du nœud d'échelle de son parent : le calcul
+                // ci-dessus (`debordLocal`) est donc en unités de MAQUETTE, et la conversion
+                // voulue est maquette→CANVAS — le repère de `TopBarSlot.rect.height`, avec lequel
+                // les consommateurs additionnent cette valeur.
                 //   J'ai d'abord converti au site d'appel — et j'en ai corrigé UN sur DEUX. Le
                 //   second réservait 32,2 unités là où le médaillon en occupe 98, et le titre du
                 //   district passait sous l'anneau. **Deux sites d'appel de la même valeur, un
                 //   seul corrigé** : c'est le mode d'échec le plus banal d'une conversion posée
                 //   chez l'appelant. Il y en a quatre au total (2 en production, 2 en test).
-                //   ⇒ La conversion vit ICI, une fois, chez celui qui CONNAÎT son échelle. Aucun
-                //     appelant ne peut plus l'oublier, et la propriété exposée a désormais la
-                //     même unité que le `rect.height` avec lequel tout le monde l'additionne.
-                float echelle = transform.lossyScale.y;
+                //   ⇒ La conversion vit ICI, une fois, chez celui qui CONNAÎT son échelle.
+                //
+                // ⛔⛔⛔ CORRIGÉ round 17 (revue ⊥ round 16, BLOQUANT — CLASSE PRODUCTION). Round 15
+                // posait `echelle = transform.lossyScale.y` — qui vaut `k × canvas.scaleFactor`
+                // sur cette hiérarchie (un Canvas ScreenSpaceOverlay porte son PROPRE `scaleFactor`
+                // SUR SON PROPRE `localScale`, mesuré `/tmp/charpente-r13-diag2.log` :
+                // `48 × 1.632653 × 0.5 = 39.183673`) — donc des PIXELS D'ÉCRAN, l'exact inverse de
+                // ce que ce docstring exige juste au-dessus. Démontré sans hypothèse à partir des
+                // nombres du round 15 (`chevauchement = V − R − 40` ⇒ `V = 105,174 = 2,0000 × R`,
+                // et le seul facteur de la chaîne qui vaut 2 à `Screen.width=640` est
+                // `1/canvas.scaleFactor`). Le facteur juste est `k` SEUL : diviser par
+                // `canvas.scaleFactor` retire exactement le terme en trop. MESURÉ SUR L'OBJET
+                // (`GetComponentInParent<Canvas>().scaleFactor`), jamais recalculé depuis une
+                // constante `EchelleMaquette` qui pourrait diverger silencieusement de la scène
+                // réelle (socle CLAUDE.md 2026-08-22 — « une grandeur qui existe comme OBJET se
+                // MESURE sur l'objet, jamais ne se recalcule depuis un ratio »).
+                Canvas canvasParent = GetComponentInParent<Canvas>();
+                float scaleFactor = (canvasParent != null && canvasParent.scaleFactor > 0.0001f)
+                    ? canvasParent.scaleFactor : 1f;   // anti-vacuité : jamais une division par 0
+                float echelle = transform.lossyScale.y / scaleFactor;
                 if (echelle <= 0.0001f) echelle = 1f;   // anti-vacuité : jamais une division/produit par 0
                 return debordLocal * echelle;
             }
@@ -144,10 +164,12 @@ namespace MafiaCleanCity.Shell
         /// <summary>Every SCANNED text (R2.2 corpus — design C2-F4). Excludes elements whose
         /// `trackValue` is false (numeric UI chrome: cash, game-day — mirrors the "Vocabulary"/
         /// "Tier N" row of `DashboardController.AddStatusRow`, corrigé round 15 [revue ⊥ round 14,
-        /// MAJEUR PREUVE] d'une ancre fausse vers `DashboardController.cs:340` [un `switch (target)`
-        /// sans rapport] — la citation par NUMÉRO de la méthode ELLE-MÊME est délibérément absente
-        /// ici : `DashboardController.cs` n'est PAS un fichier de ce lot, une ancre y périmerait
-        /// sans jamais être surveillée par `Tools/charpente-anchor-freshness-check.py`).</summary>
+        /// MAJEUR PREUVE] d'une ancre fausse vers une ligne SANS RAPPORT (un `switch (target)`) —
+        /// la citation par NUMÉRO, y compris de la ligne fautive elle-même, est délibérément
+        /// absente ici : `DashboardController.cs` n'est PAS un fichier de ce lot, une ancre y
+        /// périmerait sans jamais être surveillée par `Tools/charpente-anchor-freshness-check.py`
+        /// — round 17, revue ⊥ round 16, MINEUR m1 : la citation numérique précédente
+        /// réintroduisait exactement la classe que cette phrase interdit).</summary>
         public IReadOnlyList<string> RenderedTexts => renderedTexts;
         private readonly List<string> renderedTexts = new List<string>();
 
