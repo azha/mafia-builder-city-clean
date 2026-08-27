@@ -7,6 +7,7 @@ using System.Reflection;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.EventSystems; // F0.2-c (round 6, BLOQUANT) — EventSystem.current.RaycastAll réel
+using UnityEngine.InputSystem.UI; // round 9 (revue ⊥, MINEUR m5) — InputSystemUIInputModule, contrôles négatifs 4/4
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 using UnityEngine.UI;
@@ -664,7 +665,9 @@ namespace MafiaCleanCity.Shell.Tests
         // ─────────────────────────────────────────────────────────────────────────────────────────
         // F0.2-b (revue ⊥ round 3, BLOQUANT 1) — la classe « aveugle à la CORRESPONDANCE » n'était
         // fermée QUE sur l'attribut LIBELLÉ (F0.2, `CharpenteBootScenePlayModeTests.cs`, round 2). Le
-        // relecteur a armé la MÊME classe sur l'attribut DESTINATION — `AppShell.cs:835`,
+        // relecteur a armé la MÊME classe sur l'attribut DESTINATION — `AppShell.cs:892` (round 9,
+        // revue ⊥, MINEUR 6 : ancre corrigée — `:835` rendait déjà `TabDockPointeWidthCss` avant
+        // même le décalage round 7, une classe distincte de « décalée de +12 »),
         // `b.onClick.AddListener(() => ActivateTab(tab))` → `ActivateTab(Tab.Empire)`, seul site
         // touché — et mesuré que TOUTES les gardes existantes restaient VERTES (`Charpente` 15/0,
         // juge complet inchangé) : F0.1-a/F0.2 lisent le NOM et le LIBELLÉ, jamais l'`onClick` ; C7
@@ -863,7 +866,8 @@ namespace MafiaCleanCity.Shell.Tests
         // directement sur `bouton.gameObject`, sans jamais consulter un `GraphicRaycaster`. Mesuré
         // par le relecteur, sur DEUX mécanismes distincts, chacun `Charpente` 19/0 (donc VERT à
         // travers) : `img.raycastTarget = false` sur l'`Image` posée par `AppShell.AddTabButton`
-        // (`AppShell.cs:861-863` — les 4 AUTRES enfants de chaque bulle sont DÉJÀ
+        // (`AppShell.cs:873-875` — round 9 (revue ⊥, MAJEUR 1) : ancre corrigée de +12, décalée par
+        // l'insertion round 7 (`AppShell.cs:1071-1078`, EnsureEventSystem) — les 4 AUTRES enfants de chaque bulle sont DÉJÀ
         // `raycastTarget = false` : cette `Image` est l'UNIQUE surface de test de collision du
         // dock) et `CanvasGroup.blocksRaycasts = false` sur `TabBarRoot`. Un balayage confirme :
         // ZÉRO test de ce dépôt ne fait de raycast réel avant celui-ci.
@@ -919,16 +923,12 @@ namespace MafiaCleanCity.Shell.Tests
         // l'instance en PARAMÈTRE — testable sur un EventSystem synthétique sans jamais devenir
         // globalement "current" (m_EventSystems n'a d'importance que pour CE QU'IL RETOURNE, ici on
         // lui passe l'instance directement).
-        private static bool HasActiveInputModule(EventSystem es, out string diagnostic)
-        {
-            if (es == null) { diagnostic = "EventSystem null"; return false; }
-            if (!es.isActiveAndEnabled) { diagnostic = "EventSystem existe mais n'est pas actif/enabled"; return false; }
-            BaseInputModule module = es.currentInputModule;
-            if (module == null) { diagnostic = "currentInputModule est null — aucun module d'entrée sélectionné"; return false; }
-            if (!module.isActiveAndEnabled) { diagnostic = $"{module.GetType().Name} existe mais n'est pas actif/enabled"; return false; }
-            diagnostic = $"{module.GetType().Name} actif";
-            return true;
-        }
+        // ⛔⛔ round 9 (revue ⊥, BLOQUANT 2) — PROMU dans `ProductionClickSupport` (déjà importé ICI
+        // via `using MafiaCleanCity.Tests;`) : la garde de collision de sortie
+        // (`CharpenteOuvertureSessionOverlayPlayModeTests`, F-B round 8) en a besoin elle aussi, et
+        // le socle interdit la duplication (« deux exemplaires = corriger l'un laisse l'autre »).
+        // Le corps ne change pas — seul son propriétaire change ; voir `ProductionClickSupport.
+        // HasActiveInputModule` pour le corps et sa doc complète.
 
         [UnityTest]
         public IEnumerator F0_2c_ChaqueBoutonDuDock_RepondAuHitTesting_UnRaycastAuCentreVisePileLaBulle()
@@ -953,7 +953,7 @@ namespace MafiaCleanCity.Shell.Tests
             // cette ligne, un EventSystem sans module actif laisserait ce test VERT — mesuré :
             // `EnsureEventSystem` privée de son `AddComponent<InputSystemUIInputModule>()` ⇒
             // passed=20 failed=0, inchangé, tant que cette assertion n'existait pas.
-            Assert.IsTrue(HasActiveInputModule(EventSystem.current, out string diagnosticModule),
+            Assert.IsTrue(ProductionClickSupport.HasActiveInputModule(EventSystem.current, out string diagnosticModule),
                 "EventSystem.current n'a AUCUN module d'entrée actif (" + diagnosticModule + ") — " +
                 "EventSystem.RaycastAll (juste en dessous) ne le voit JAMAIS (EventSystem.cs:266-281 " +
                 "ne consulte que RaycasterManager.GetRaycasters()), donc ce test resterait VERT même " +
@@ -974,7 +974,9 @@ namespace MafiaCleanCity.Shell.Tests
                 // existe comme objet (le rect de la bulle) se mesure SUR l'objet, jamais reconstruite
                 // depuis une hypothèse sur son pivot. `rect.rect.center` est le centre LOCAL réel,
                 // `TransformPoint` le porte en MONDE, `WorldToScreenPoint(null, …)` reste la
-                // conversion correcte pour un Canvas ScreenSpaceOverlay (AppShell.cs:568) —
+                // conversion correcte pour un Canvas ScreenSpaceOverlay (AppShell.cs:580 — round 9,
+                // revue ⊥, MAJEUR 1 : ancre corrigée de +12, la plus coûteuse des 12 — elle vivait
+                // 68 lignes sous l'ancre `EnsureEventSystem` que round 8 avait déjà corrigée) —
                 // exactement celle que `EventSystem`/`GraphicRaycaster` utilisent en jeu.
                 Vector2 centreEcran = RectTransformUtility.WorldToScreenPoint(null, rect.TransformPoint(rect.rect.center));
 
@@ -1010,8 +1012,11 @@ namespace MafiaCleanCity.Shell.Tests
         }
 
         // ─────────────────────────────────────────────────────────────────────────────────────────
-        // round 7 (revue ⊥, BLOQUANT 1) — CONTRÔLE NÉGATIF PERMANENT du helper `HasActiveInputModule`
-        // ci-dessus, patron `probeGo`/`finally { Object.Destroy }` déjà établi dans ce dépôt
+        // round 7 (revue ⊥, BLOQUANT 1) — CONTRÔLE NÉGATIF PERMANENT du helper
+        // `ProductionClickSupport.HasActiveInputModule` (round 9 : promu hors de ce fichier, ce
+        // contrôle négatif RESTE ICI — il couvre la fonction PARTAGÉE, donc les DEUX consommateurs
+        // — le dock ici, la sortie dans `CharpenteOuvertureSessionOverlayPlayModeTests` — sans
+        // avoir besoin d'être dupliqué), patron `probeGo`/`finally { Object.Destroy }` déjà établi dans ce dépôt
         // (`TopBarDoctrineV31PlayModeTests.cs:203-212`, `ChromeTabBarPlayModeTests.cs`). Reproduit le
         // monde dégénéré EXACT mesuré par le relecteur — un EventSystem SANS module d'entrée actif —
         // SANS toucher à la production ni à la scène de démarrage : un EventSystem synthétique isolé.
@@ -1039,11 +1044,105 @@ namespace MafiaCleanCity.Shell.Tests
                     "précondition : cet EventSystem synthétique ne doit porter AUCUN module — sinon " +
                     "ce n'est pas le monde dégénéré visé par ce contrôle négatif.");
 
-                bool ok = HasActiveInputModule(esSansModule, out string diagnostic);
+                bool ok = ProductionClickSupport.HasActiveInputModule(esSansModule, out string diagnostic);
                 Assert.IsFalse(ok,
                     "CONTRÔLE NÉGATIF : un EventSystem SANS module d'entrée DOIT être détecté comme " +
-                    "invalide par HasActiveInputModule — sinon l'assertion ajoutée à F0_2c (round 7, " +
-                    $"BLOQUANT 1) ne protège rien. diagnostic={diagnostic}");
+                    "invalide par ProductionClickSupport.HasActiveInputModule — sinon l'assertion " +
+                    "ajoutée à F0_2c (round 7, BLOQUANT 1) ET celle de F-B (round 9, BLOQUANT 2) ne " +
+                    $"protègent rien, sur les DEUX consommateurs à la fois. diagnostic={diagnostic}");
+            }
+            finally
+            {
+                Object.DestroyImmediate(esGo);
+            }
+        }
+
+        // ⛔⛔ round 9 (revue ⊥, MINEUR m5) — les TROIS AUTRES branches de rejet de
+        // `HasActiveInputModule` : le contrôle négatif ci-dessus ne couvrait QUE `module == null`
+        // (la 3ᵉ des 4 branches du corps — `es == null` · `!es.isActiveAndEnabled` ·
+        // `module == null` · `!module.isActiveAndEnabled`). La revue ⊥ nomme la 4ᵉ **la
+        // PORTEUSE** : un module PRÉSENT mais DÉSACTIVÉ ne dispatche aucun tap, et c'était
+        // exactement le seul cas qu'aucun des trois contrôles précédents ne pouvait voir.
+
+        [Test]
+        public void F0_2c_ControleNegatif_EventSystemNull_NestPasDetectePar_HasActiveInputModule()
+        {
+            // Branche 1/4 : `es == null`. Aucun GameObject à créer ni détruire — rien ne fuit.
+            bool ok = ProductionClickSupport.HasActiveInputModule(null, out string diagnostic);
+            Assert.IsFalse(ok,
+                "CONTRÔLE NÉGATIF (1/4) : un EventSystem NULL doit être détecté comme invalide par " +
+                $"HasActiveInputModule. diagnostic={diagnostic}");
+        }
+
+        [Test]
+        public void F0_2c_ControleNegatif_EventSystemDesactive_NestPasDetectePar_HasActiveInputModule()
+        {
+            // Branche 2/4 : `!es.isActiveAndEnabled`. Un EventSystem PORTANT un module, mais dont
+            // le GameObject est désactivé — `isActiveAndEnabled` doit rejeter AVANT même de lire
+            // `currentInputModule`.
+            GameObject esGo = new GameObject("ControleNegatifEventSystemDesactive", typeof(EventSystem));
+            try
+            {
+                EventSystem es = esGo.GetComponent<EventSystem>();
+                es.gameObject.AddComponent<InputSystemUIInputModule>();
+                esGo.SetActive(false);
+                Assert.IsFalse(es.isActiveAndEnabled,
+                    "précondition : ce GameObject doit être désactivé — sinon ce n'est pas le monde " +
+                    "dégénéré visé par ce contrôle négatif.");
+
+                bool ok = ProductionClickSupport.HasActiveInputModule(es, out string diagnostic);
+                Assert.IsFalse(ok,
+                    "CONTRÔLE NÉGATIF (2/4) : un EventSystem DÉSACTIVÉ (même porteur d'un module) " +
+                    $"doit être détecté comme invalide par HasActiveInputModule. diagnostic={diagnostic}");
+            }
+            finally
+            {
+                Object.DestroyImmediate(esGo);
+            }
+        }
+
+        [Test]
+        public void F0_2c_ControleNegatif_ModuleDesactive_NestPasDetectePar_HasActiveInputModule()
+        {
+            // ⛔⛔ Branche 4/4, LA PORTEUSE (revue ⊥ round 9) : `!module.isActiveAndEnabled`. Un
+            // module PRÉSENT (`currentInputModule` non null) mais DÉSACTIVÉ ne dispatche AUCUN
+            // tap — et c'était le SEUL des 4 mondes dégénérés qu'aucun contrôle négatif de ce
+            // fichier ne couvrait avant ce round.
+            //
+            // ⛔ REFLEXION SUR LE CHAMP, PAS UN `yield return null` — `EventSystem.
+            // currentInputModule` (`com.unity.ugui`, `EventSystem.cs:84-87`) est un getter SANS
+            // SETTER (`{ get { return m_CurrentInputModule; } }`) : le champ `m_CurrentInputModule`
+            // n'est écrit que par `TickModules()`, dans `Update()`, qui commence par
+            // `if (current != this) return;` — dans un domaine PlayMode qui peut déjà porter un
+            // EventSystem résiduel d'un test voisin (m3 ci-dessus), RIEN ne garantit que CE
+            // synthétique devienne "current", donc un `[UnityTest]` qui yield une frame serait
+            // FLAKY, dépendant de l'ordre d'exécution. On pose le CHAMP PRIVÉ directement, comme le
+            // ferait `TickModules()`, sans dépendre de l'élection globale — l'instrument mesure
+            // alors EXACTEMENT ce que `HasActiveInputModule` LIT, rien de plus.
+            GameObject esGo = new GameObject("ControleNegatifModuleDesactive", typeof(EventSystem));
+            try
+            {
+                EventSystem es = esGo.GetComponent<EventSystem>();
+                InputSystemUIInputModule module = esGo.AddComponent<InputSystemUIInputModule>();
+                FieldInfo champCurrentInputModule = typeof(EventSystem).GetField(
+                    "m_CurrentInputModule", BindingFlags.NonPublic | BindingFlags.Instance);
+                Assert.IsNotNull(champCurrentInputModule,
+                    "EventSystem.m_CurrentInputModule doit exister — API Unity inattendue " +
+                    "(com.unity.ugui a peut-être changé son nom de champ interne).");
+                champCurrentInputModule.SetValue(es, module);
+                module.enabled = false;
+
+                Assert.IsNotNull(es.currentInputModule,
+                    "précondition : un module doit être PRÉSENT (sinon ce contrôle mesure la " +
+                    "branche `module == null`, déjà couverte, pas celle-ci).");
+                Assert.IsFalse(es.currentInputModule.isActiveAndEnabled,
+                    "précondition : ce module doit être désactivé — sinon ce n'est pas le monde " +
+                    "dégénéré visé par ce contrôle négatif.");
+
+                bool ok = ProductionClickSupport.HasActiveInputModule(es, out string diagnostic);
+                Assert.IsFalse(ok,
+                    "CONTRÔLE NÉGATIF (4/4, LA PORTEUSE) : un module PRÉSENT mais DÉSACTIVÉ doit " +
+                    $"être détecté comme invalide par HasActiveInputModule. diagnostic={diagnostic}");
             }
             finally
             {

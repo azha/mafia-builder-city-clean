@@ -156,7 +156,8 @@ CLASSES non fermées.
 - **BLOQUANT 1** (§ « BLOQUANT 1 — round 3 ») : `F0.2` (round 2) avait fermé la classe « aveugle à la
   CORRESPONDANCE » sur l'attribut LIBELLÉ seul — l'attribut DESTINATION (l'`onClick` du bouton) était
   resté ouvert, et c'est le SEUL qui décide de l'atteignabilité. Le relecteur l'a armé sur UNE
-  variable, UN site (`AppShell.cs:835` à l'époque, `b.onClick.AddListener(() => ActivateTab(tab))` →
+  variable, UN site (`AppShell.cs:835` à l'époque — **corrigé round 9, revue ⊥, MINEUR m6 : `:892`
+  au tip actuel `255998a`, contenu identique vérifié** —, `b.onClick.AddListener(() => ActivateTab(tab))` →
   `ActivateTab(Tab.Empire)`) : `Charpente` restait 15/0, juge complet inchangé. Nouveau test
   `F0.2-b` : un CLIC RÉEL sur chaque bouton du dock, comparé à une table de destinations ÉCRITE
   INDÉPENDAMMENT ; ferme AUSSI l'attribut ORDRE (jamais couvert par `F0.1-a`/`F0.2`,
@@ -405,7 +406,8 @@ séparées, chacune avec sa propre garde.
 apparue » de « une 6ᵉ destination de nav est apparue » — et le dépôt annonce LUI-MÊME deux causes
 concurrentes de faire monter ce compte SANS jamais poser de sortie : le `ShortcutBar` de l'item 0.5
 (`DashboardController.cs:42`, commentaire M1) et le libellé « Marché » du jalon 4
-(`AppShell.cs:776,795`, si `screen_b1` gagne un jour sa propre destination `Nav_Marche`). Le mode
+(`AppShell.cs:788,807` — round 9, revue ⊥, MAJEUR 1 : ancres corrigées de +12, décalées par
+l'insertion round 7, `AppShell.cs:1071-1078`, EnsureEventSystem —, si `screen_b1` gagne un jour sa propre destination `Nav_Marche`). Le mode
 d'emploi round 4 prescrivait, sur le rouge le PLUS probable, exactement le mauvais geste : « c'est
 très probablement l'item 0.5, retire ce test, coche le ruling ».
 
@@ -577,7 +579,7 @@ hypothèse sur son pivot.
 
 Voir § MAJEUR ci-dessus : cas **(a-bis)** ajouté au mode d'emploi de péremption, distinct du cas (a)
 (« ÉLARGIR ») — un `Nav_*` qui remplace un autre (ex. `Nav_Filière` → `Nav_Marche` au jalon 4,
-`AppShell.cs:776,795`) doit être REMPLACÉ dans `nomsAttendus`, jamais seulement ajouté : élargir à
+`AppShell.cs:788,807` — round 9, ancres corrigées de +12) doit être REMPLACÉ dans `nomsAttendus`, jamais seulement ajouté : élargir à
 la lettre laisserait l'ancien nom, disparu pour de bon, dans l'ensemble attendu — le test resterait
 ROUGE POUR TOUJOURS.
 
@@ -657,7 +659,7 @@ puis restaurée, comparaison Python `identical: True` après restauration :
 | état | log | `passed`/`failed` | qui rougit |
 |---|---|---|---|
 | désarmé | `/tmp/charpente-r7/negcontrol-bloquant1-module-disarmed.log` | 21/1 | `F0_2c_ChaqueBoutonDuDock_...` — SEUL rouge |
-| restauré | `/tmp/charpente-r7/run2-after-restore-verif.log` | 22/22 | aucun |
+| restauré | `/tmp/charpente-r7/run2-after-restore-verif.log` | 22/0 | aucun |
 
 Sortie réelle (extraite par oracle Python indépendant, pas par le grep proxifié du dépôt) :
 ```
@@ -699,7 +701,7 @@ ajoutées ce round, désarmées puis restaurées, `identical: True` après resta
 | état | log | `passed`/`failed` | qui rougit |
 |---|---|---|---|
 | désarmé | `/tmp/charpente-r7/negcontrol-bloquant2-leadingaction-disarmed.log` | 20/2 | les DEUX `FB_..._BrancheSucces` et `..._BrancheEchec` — F-A et le reste restent VERTS |
-| restauré | `/tmp/charpente-r7/run2-after-restore-verif.log` | 22/22 | aucun |
+| restauré | `/tmp/charpente-r7/run2-after-restore-verif.log` | 22/0 | aucun |
 
 Sortie réelle (oracle Python) :
 ```
@@ -901,8 +903,13 @@ for i,l in enumerate(out.split(chr(10)), start=1):
 Sur `653acf8` : la déclaration du tableau `DockRatifie` est à `:791`, et le littéral `(Tab.More,
 "Plus")` — la ligne EXACTEMENT touchée par cet ARMÉ — est à `:796` (5 lignes plus bas que le bloc
 qui le porte, à cause du commentaire de résumé `:787-790`). L'ancre correcte pour reproduire CET
-ARMÉ précis aujourd'hui est donc `AppShell.cs:796`, pas `:751` ni `:791` (le `:791` désigne le
+ARMÉ précis sur `653acf8` est donc `AppShell.cs:796`, pas `:751` ni `:791` (le `:791` désigne le
 DÉBUT du tableau, pas la ligne éditée).
+⚠️ **CORRIGÉ round 9 (revue ⊥, MAJEUR 1)** — « aujourd'hui » ci-dessus datait de peu après
+`653acf8` et est devenu FAUX : round 7 a inséré 12 lignes de plus AVANT ce point du fichier
+(`AppShell.cs:1071-1078`, EnsureEventSystem). **L'ancre correcte pour reproduire CET ARMÉ précis
+au tip ACTUEL (`255998a`) est `AppShell.cs:808`**, vérifiée à l'oracle (`git show 255998a:
+Assets/Scripts/Shell/AppShell.cs` ligne 808 = `(Tab.More,     "Plus"),`).
 
 Commande :
 ```
@@ -1159,6 +1166,32 @@ nouveau run Unity pour un gain de clarté cosmétique seulement — option conse
 
 ---
 
+## ⚠️ Désambiguïsation nécessaire — TROIS choses distinctes portent le nom « F0.2-c »
+
+**Round 9 (revue ⊥, MINEUR m5)** — même convention que la désambiguïsation « 0.3-bis » ci-dessus,
+appliquée ici à « F0.2-c », mentionné 7 fois dans `CharpenteMontageLocatairesPlayModeTests.cs` (le
+commentaire `using`, deux docstrings, un message d'assertion, un `Debug.Log`) mais qui désigne
+en réalité TROIS objets exécutables distincts :
+
+1. **`CharpenteBootScenePlayModeTests.F0_2c_UneSeuleListeEnumereLOrdreDuDock_
+   LesTroisSitesLaLisentDesormais`** (`:335`) — la propriété STRUCTURELLE du design §3.1/§4 : une
+   seule liste (`DockRatifie`) énumère l'ordre du dock, lue par ses trois consommateurs. Pur
+   balayage de texte, `[Test]` synchrone.
+2. **`CharpenteMontageLocatairesPlayModeTests.F0_2c_ChaqueBoutonDuDock_RepondAuHitTesting_
+   UnRaycastAuCentreVisePileLaBulle`** (`:933`) — la garde de COLLISION round 6/7 : un
+   `EventSystem.current.RaycastAll` réel au centre de chaque bulle du dock, `[UnityTest]`.
+3. **`CharpenteMontageLocatairesPlayModeTests.F0_2c_ControleNegatif_EventSystemSansModule_
+   NestPasDetectePar_HasActiveInputModule`** (`:1030`, PROMU round 9 sur
+   `ProductionClickSupport.HasActiveInputModule` — voir BLOQUANT 2, round 9) — le contrôle négatif
+   PERMANENT du n°2, `[Test]` synchrone.
+
+⇒ Les TROIS exigences sont fermées ; seuls les DEUX derniers (n°2, n°3) partagent en plus un
+préfixe de MÉTHODE identique (`F0_2c_`) dans le MÊME fichier. Consigné plutôt que renommé — même
+raison que « 0.3-bis » : un renommage n'aurait été qu'un gain de clarté cosmétique, au prix d'un
+nouveau run Unity complet pour le seul motif de renommer un test déjà vert.
+
+---
+
 ## C7 — round 2, MAJEUR M3 : `AppShell.Tab` re-façonné par ce lot, AUCUN détecteur avant ce test
 
 `Enum.GetValues(typeof(AppShell.Tab))` : **0 occurrence dans tout le dépôt** avant ce correctif. Le
@@ -1361,7 +1394,10 @@ n'est PAS « 0 régression sur toute la surface » — c'est « 0 régression su
 
 ## BLOQUANT 1 — round 3 : l'attribut DESTINATION du dock, jamais fermé
 
-**Ce que le relecteur a armé** (une seule variable, un seul site à l'époque, `AppShell.cs:835`) :
+**Ce que le relecteur a armé** (une seule variable, un seul site à l'époque, `AppShell.cs:835` —
+**corrigé round 9, revue ⊥, MINEUR m6 : `:892` au tip actuel `255998a`, contenu identique vérifié à
+l'oracle Python** — cette ancre était fausse AVANT MÊME le décalage round 7, une classe distincte
+de « décalée de +12 ») :
 `b.onClick.AddListener(() => ActivateTab(tab));` → `b.onClick.AddListener(() => ActivateTab
 (Tab.Empire));` — le dock garde ses 4 noms, ses 4 libellés, son ordre ; FAMILLE/FILIÈRE/PLUS mènent
 toutes à la carte. Mesuré par le relecteur : `Charpente` 15/0 et juge complet `passed=199 failed=3`
@@ -2292,3 +2328,434 @@ Ces 3 rouges portent sur `DistrictMapNavigationPlayModeTests`/`AppShellPlayModeT
 round (`AppShell.cs` seulement pour son changement de COMPORTEMENT, `CharpenteMontage...` et
 `CharpenteOuvertureSessionOverlay...` pour leurs tests). `StaleAbandonedShell` reste l'intermittent
 déjà nommé round 3-6.
+
+---
+
+## ⛔⛔ ROUND 8 — reconstruit rétroactivement (revue ⊥ round 9, MAJEUR 5)
+
+**Ce round n'a jamais été consigné dans ce journal** — commits `7e35574` (docs, partiel) et
+`255998a` (fix, complet), tip jugé par la revue ⊥ round 9. Reconstruit ici à partir des messages
+de commit et re-mesuré à l'oracle, avec un run RÉEL rejoué (round 9 ne pouvait pas reproduire round
+8 en isolation sans défaire le travail de round 9 — la reproduction ci-dessous est donc menée SUR
+LE MÉCANISME, au tip ACTUEL, ce qui est plus probant : elle prouve que le mécanisme de round 8
+tient TOUJOURS après les correctifs round 9, pas seulement qu'il tenait une fois, à un tip devenu
+obsolète).
+
+### Ce que round 8 a livré (`c3247cf..255998a`)
+
+1. **MAJEUR (classe fermée sur les INSTANCES, pas la POPULATION)** — `EventSystem.current.
+   RaycastAll` n'existait qu'à UN site avant ce round (les 4 bulles du dock, round 6/7). Round 8
+   ajoute la garde JUMELLE sur l'affordance de SORTIE (`VerifierFermetureParActionDeTete`,
+   `CharpenteOuvertureSessionOverlayPlayModeTests.cs`) — un raycast RÉEL au centre du bouton
+   `LeadingAction`, assertant que le premier objet touché est l'affordance elle-même ou un enfant.
+   Message d'assertion nommant les DEUX avaleurs possibles (`DashboardBackdrop` OU `TopBarSlot`)
+   sans conclure du nom trouvé à la cause.
+2. **MAJEUR (branche succès ne s'auto-distingue pas)** — `FB_..._BrancheEchec` n'assertait que
+   `CurrentTab == Empire`, vrai sur les DEUX branches. Round 8 ajoute
+   `Assert.IsTrue(string.IsNullOrEmpty(shell.Token), ...)` sur la branche ÉCHEC — **et seulement
+   elle** : c'est précisément la moitié manquante que la revue ⊥ round 9 a classée BLOQUANT 1
+   (ci-dessous), le correctif de round 8 ayant fermé l'instance qu'il venait de nommer sans
+   repasser la classe sur sa jumelle.
+3. **MINEUR (libellé attribué à un helper qui ne le produit pas)** — retrait de l'attribution
+   « retour vers la carte » à `LabelFor` dans un commentaire, `TopBarController.LabelFor` ne
+   rendant qu'une flèche nue. Round 9 a trouvé le PIÈGE DE CITATION refermé dans ce même bloc
+   (MAJEUR 2 ci-dessous) et 3 autres survivances de la même classe.
+4. **3 mineurs déclarés « restants »** dans le commit lui-même (cellule `22/22`, collision de nom
+   `F0.2-c`, contrôle négatif 1/4 branches) — reconduits tels quels au tip `255998a`, fermés
+   round 9 (m5 ci-dessous).
+
+Ce round n'ajoutait AUCUN test nouveau (juge complet inchangé en COMPTE : `passed=206 failed=3`
+sur `311` découverts, `22 Charpente` — identique à `c3247cf`), seulement des CORPS durcis.
+
+### Contrôle négatif — reproduit au tip ACTUEL (round 9), sur le MÊME mécanisme
+
+**Ce que le commit `255998a` affirme** : `raycastTarget = false` sur l'affordance ⇒ **204/5**,
+exactement +2 rouges, restauré ⇒ `206/3`, `TopBarController.cs` vérifié identique à l'octet — mais
+**sans commande ni log collés dans ce journal**, classé NON VÉRIFIÉ par la revue ⊥ round 9.
+
+**Rejoué round 9** (patron round 7, `identical: True` avant/après) : `leadingImg.raycastTarget =
+false;` ajouté juste après `leadingImg.color = leadingFond;` (`TopBarController.cs`), même geste
+que round 8.
+
+Commande :
+```
+LOG_FILE=/tmp/charpente-0203-r9/neg-control-armed.log timeout 400 Tools/run-unity-check.sh -executeMethod MafiaCI.RunPlayModeTests
+```
+Sortie réelle (oracle Python, `grep`/`wc` proxifiés jamais utilisés pour ce compte) :
+```
+MafiaCI: RunPlayModeTests started — 314 test(s) découverts (arbre PlayMode entier ; le filtre de catégories s'applique à l'exécution, voir passed= ci-dessous)
+MafiaCI: FAIL MafiaCleanCity.CityMap.Tests.DistrictMapNavigationPlayModeTests.NavD12_DistrictTitle_MargeGouttiere_Serif_EtOmbreSurMateriauDInstance —   scénario dimensionné — cette résolution DOIT produire une bande de letterbox (mesuré 0.0px), sinon l'assertion suivante ne teste pas le défaut visé
+MafiaCI: FAIL MafiaCleanCity.Shell.Tests.CharpenteOuvertureSessionOverlayPlayModeTests.FB_LActionDeTeteFermeLOverlayEtRevelaLaVille_BrancheEchec —   (BRANCHE REPLI-ÉCHEC) le PREMIER objet touché au centre de l'action de tête doit être l'affordance elle-même (ou un de ses enfants graphiques) — trouvé « TopBarSlot » — quel qu'il soit, IL avale le tap de sortie et le joueur reste enfermé sur l'Accueil : la fermeture ne serait plus prouvée que par un clic routé en direct, qu'aucun doigt ne peut reproduire.
+MafiaCI: FAIL MafiaCleanCity.Shell.Tests.CharpenteOuvertureSessionOverlayPlayModeTests.FB_LActionDeTeteFermeLOverlayEtRevelaLaVille_BrancheSucces —   (BRANCHE SUCCÈS) le PREMIER objet touché au centre de l'action de tête doit être l'affordance elle-même (ou un de ses enfants graphiques) — trouvé « TopBarSlot » — quel qu'il soit, IL avale le tap de sortie et le joueur reste enfermé sur l'Accueil : la fermeture ne serait plus prouvée que par un clic routé en direct, qu'aucun doigt ne peut reproduire.
+MafiaCI: FAIL MafiaCleanCity.Shell.Tests.NavigationPlayModeTests.NavF4_TitleClearsTopBar_BackgroundExistsAtNativeResolution —   nav-F4 (amendée) — the title does not overlap TopBarSlot's EFFECTIVE bounds (déjà inclusives du débordement du médaillon, 26.3px mesurés) — un titre qui ne réserve que 56px nominaux serait chevauché par l'anneau/le filet qui pendent en dessous
+MafiaCI: RunPlayModeTests finished — passed=208 failed=4 skipped=0 inconclusive=0
+```
+**`208/4`**, pas `204/5` — le total DIFFÈRE de celui du commit `255998a` (attendu : round 9 a
+ajouté 3 tests au dépôt, `311→314` découverts, et `StaleAbandonedShell` — l'intermittent connu,
+~4/6 rouge — est tombé VERT sur CE run précis, absent de la liste ci-dessus). **Le SIGNAL, lui, est
+IDENTIQUE et EXACT** : `+2` rouges PAR RAPPORT AU BASELINE de ce run précis (`209/3` avant armement,
+voir round 9 ci-dessous), les DEUX MÊMES tests nommés (`BrancheEchec` ET `BrancheSucces`), avec
+`« TopBarSlot »` nommé comme avaleur — EXACTEMENT l'avaleur (b) que le message d'assertion du code
+prédit texto (« Armer le (b) rend bien ce message avec « TopBarSlot » »). **Et le fait que les DEUX
+branches rougissent séparément, chacune avec son propre message, est LA preuve que BLOQUANT 1
+(ci-dessous) ferme réellement : avant son correctif, seule `BrancheEchec` portait une garde
+propre — ici les deux la portent, chacune indépendamment atteinte par ce contrôle.**
+
+Restauré, re-vérifié :
+```
+$ git diff --stat -- Assets/Scripts/Shell/TopBarController.cs   # AVANT armement (round 9 seul)
+ 1 file changed, 46 insertions(+), 7 deletions(-)
+$ grep -c "CONTRÔLE NÉGATIF round 9" Assets/Scripts/Shell/TopBarController.cs   # APRÈS restauration
+0
+```
+Confirmé par un run final propre (round 9, ci-dessous) : `209/3`, les 3 MÊMES rouges pré-existants,
+`0` occurrence du geste d'armement dans l'arbre de travail.
+
+**Classe fermée, round 8 ET round 9 confondus** : la garde de collision sur l'affordance de sortie
+rougit sur le monde dégénéré exact qu'elle existe pour attraper, sur LES DEUX branches
+d'acquisition, au tip actuel du dépôt.
+
+---
+
+## ⛔⛔ ROUND 9 — revue ⊥ NOT_APPROVED (2 bloquants, 5 majeurs, 6 mineurs) — correctifs
+
+Delta jugé par la revue : `c3247cf..255998a`. Correctifs livrés sur `255998a`, ce round.
+
+### BLOQUANT 1 — la prémisse manquait sur la branche SUCCÈS
+
+**Classe** : « tout test qui prétend exercer UNE branche nommée asserte la grandeur qui la
+discrimine ». **Population** : les tests de CE lot qui nomment une branche —
+`grep -rn "Branche" Assets/Tests/PlayMode/Charpente*PlayModeTests.cs` (portée : les 3 fichiers
+Charpente) → **2** (`FB_..._BrancheSucces`, `FB_..._BrancheEchec`) — `CharpenteMontageLocataires
+PlayModeTests.cs` et `CharpenteBootScenePlayModeTests.cs` n'en portent AUCUN. **Avant** : 1/2
+gardée (l'échec, round 8). **Après** : 2/2 — `Assert.IsFalse(string.IsNullOrEmpty(shell.Token), ...)`
+ajouté dans `FB_..._BrancheSucces`, juste après `WaitForEmpireMounted`, symétrique de la garde
+`IsTrue` déjà posée sur l'échec. `Token` : écrivain UNIQUE `AppShell.cs:377`, APRÈS le signin,
+AVANT le montage — discrimine dans les deux sens (round 7 l'avait déjà établi pour l'échec ; le
+même fait vaut, à l'identique, pour le succès).
+
+Le précédent `NavigationPlayModeTests.cs:247-248` (cité par le code comme modèle « asserte sa
+prémisse ») n'a jamais eu ce défaut — un seul chemin de repli y existe.
+
+**Preuve d'exécution** : voir le contrôle négatif ROUND 8 ci-dessus — c'est LUI qui a fait rougir
+`BrancheSucces` séparément de `BrancheEchec`, la première fois que ces deux tests divergent dans
+un log de ce dépôt.
+
+### BLOQUANT 2 — la garde de collision neuve ne portait pas la précondition de module
+
+**Classe** : « tout site qui conclut d'un `EventSystem.current.RaycastAll` doit d'abord prouver
+qu'un module d'entrée actif existe » (round 7). **Population** : sites qui appellent
+`EventSystem.current.RaycastAll` dans `Assets/Tests` —
+`grep -rn "EventSystem.current.RaycastAll" Assets/Tests/PlayMode/*.cs` → **2**
+(`CharpenteMontageLocatairesPlayModeTests.cs:987` — le dock ; `CharpenteOuvertureSessionOverlay
+PlayModeTests.cs` — la sortie, ce fichier). **Avant** : 1/2 gardé (le dock, round 7). **Après** :
+2/2 — les 3 préconditions du site du dock (`Assert.IsNotNull(raycaster)`,
+`Assert.IsNotNull(EventSystem.current)`, `Assert.IsTrue(HasActiveInputModule(...))`) recopiées
+dans `VerifierFermetureParActionDeTete`, AVANT le raycast.
+
+**Sans duplication** : `HasActiveInputModule` était `private static` dans
+`CharpenteMontageLocatairesPlayModeTests`. Promu en méthode PUBLIC de
+`ProductionClickSupport` (`Assets/Tests/PlayMode/ProductionClickSupport.cs`) — fichier déjà importé
+par les DEUX consommateurs (`using MafiaCleanCity.Tests;`). Corps byte-identique, un seul
+propriétaire. Le contrôle négatif permanent (`F0_2c_ControleNegatif_EventSystemSansModule_...`)
+reste dans `CharpenteMontageLocatairesPlayModeTests` — il couvre la fonction PARTAGÉE, donc les
+DEUX consommateurs, sans être dupliqué.
+
+**Preuve d'exécution** : `VerifierFermetureParActionDeTete` s'exécute jusqu'à son
+`Debug.Log("[Charpente] F-B (round 7, ...)")` final sur LES DEUX branches (voir § « Juge complet »
+ci-dessous, 2 occurrences comptées) — les 3 nouvelles assertions de précondition n'ont donc PAS
+rougi, sur un `EventSystem` réellement pourvu d'un module actif (chemin de production réel, jamais
+un monde synthétique ici).
+
+### MAJEUR 1 — 12 ancres décalées de +12 — CLASSE mesurée, PAS toutes relocalisées par « +12 »
+
+**Classe** : « une ancre `AppShell.cs:N` citée par un artefact du lot doit pointer sur le contenu
+qu'elle prétend citer ». **Population mesurée** (oracle Python, `Assets/` + `Tools/`, motif
+`AppShell\.cs:\d+`) : **71** ancres, dont **20** avec N ≥ 568 (le seuil round 7). Sur ces 20 :
+**5 déjà corrigées** par round 8, **12 visées par ce round**, **3 fausses pour une autre raison**
+(m6 ci-dessous — `AppShell.cs:835`, jamais un `+12`, une classe distincte).
+
+⚠️ **RÉFUTATION PARTIELLE, consignée** — la revue ⊥ a écrit « chacune vérifiée par « le texte visé
+se trouve à N+12 » » pour les 12. **Vérifié ICI, indépendamment, motif par motif** :
+
+| # | citant | ancre AVANT | +12 naïf | contenu à N+12 | verdict |
+|---|---|---|---|---|---|
+| 1 | `CharpenteMontageLocatairesPlayModeTests.cs:977` | `AppShell.cs:568` | `580` | `ShellCanvas.renderMode = RenderMode.ScreenSpaceOverlay;` | ✅ MATCH — corrigé |
+| 2 | `CharpenteMontageLocatairesPlayModeTests.cs:866` | `AppShell.cs:861-863` | `873-875` | commentaire « L'Image reste... » | ✅ MATCH — corrigé |
+| 3 | `ProductionClickSupport.cs:34` | `AppShell.cs:861-863` | `873-875` | idem #2 | ✅ MATCH — corrigé |
+| 4 | `notes.md` (F0.3, MAJEUR 2, `(Tab.More,"Plus")`) | `AppShell.cs:796` (sur `653acf8`) | `808` | `(Tab.More,     "Plus"),` | ✅ MATCH — corrigé (`653acf8`→`255998a`, deux « +12 » composés : round 7 seul, vérifié en amont par le doc lui-même sur `653acf8`) |
+| 5 | `notes.md` (MAJEUR 2, risque Filière→Marché, ×2 citations) | `AppShell.cs:776,795` | `788,807` | commentaire « Marché » jalon 4 (788) ET l'entrée `(Tab.Pipeline,"Filière")` elle-même, MÊME commentaire inline (807) | ✅ MATCH double — corrigé |
+| 6-9 | `design.md:46,47,48` (table §2.1, 3 lignes) | `AppShell.cs:717-720`/`938-941`/`956` | `729-732`/`950-953`/`968` | 3 fragments SANS RAPPORT (le dégradé « CE N'EST PLUS UNE BARRE », la position du tiret doré, la couleur du libellé) | ❌ MISMATCH — PAS un `+12` valide (voir ci-dessous) |
+| 10 | `design.md:113` (§3.3, énoncé daté 0.3-bis) | `AppShell.cs:711` | `723` | commentaire SANS RAPPORT (même bloc « CE N'EST PLUS UNE BARRE ») | ❌ MISMATCH — idem |
+
+**Pourquoi 6-10 cassent le modèle « +12 »** : `design.md` date EXPLICITEMENT son §2 « sur `af9893b`
+(dernier commit des fichiers cités) » — **avant le round 1 de CE lot**, quand `AppShell.Tab`
+portait encore **5** membres (`Home, City, Org, Pipeline, More`, §2.2 du document) et que le dock
+était construit par TROIS listes distinctes, pas `DockRatifie`. Round 1 a **RÉÉCRIT**, pas
+déplacé, tout ce périmètre — un `+12` mesuré entre `1307c22` et `c3247cf` (round 6→7, POST-round-1)
+ne peut pas s'appliquer à du texte qui date d'AVANT round 1 : l'écart réel dépasse largement 12
+lignes. *Un compte exact sur une population peut porter une règle fausse sur un SOUS-ENSEMBLE de
+cette population — même famille que le socle sur les précédents lus pour une seule propriété.*
+
+**Correctif appliqué** (`design.md` §2.1 et §3.3) : PAS un renumérotage silencieux vers du texte
+sans rapport — une note ⚠️ CORRIGÉE datée, qui (a) marque explicitement ces ancres comme décrivant
+`af9893b`/pré-round-1, (b) donne l'ÉQUIVALENT ACTUEL vérifié (`DockRatifie` : déclaration
+`AppShell.cs:803-809`, lue par `AppShell.cs:797` et `:1029`, et par `RefreshTabButtonVisuals`
+`:1043-1045` ; l'énoncé daté 0.3-bis : retiré, prouvé par
+`CharpenteMontageLocatairesPlayModeTests.F0_3bis_...`, jamais une ligne d'`AppShell.cs`).
+
+**Instrument** : les comptes ci-dessus proviennent d'un oracle Python (`repr(lines[i])` sur le
+fichier lu directement, jamais `grep`/`git diff` proxifiés) — reproductible :
+```python
+with open('Assets/Scripts/Shell/AppShell.cs') as f: lines = f.readlines()
+print(lines[579])   # → "                ShellCanvas.renderMode = RenderMode.ScreenSpaceOverlay;\n"
+print(lines[728])   # → "            //     problème autrement : il ne CACHE pas la ville..." (SANS rapport avec AddTabButton)
+```
+
+**MINEUR m6, même round** — `AppShell.cs:835` cité 3 fois (`CharpenteMontageLocatairesPlayModeTests.
+cs:667`, `notes.md` BLOQUANT-1-round-3 ×2) pour `b.onClick.AddListener(() => ActivateTab(tab))` —
+FAUSSE avant MÊME le décalage round 7 (rendait déjà `TabDockPointeWidthCss = 14f;` à `1307c22`).
+Cible réelle vérifiée : `AppShell.cs:892` (contenu byte-identique au littéral cité). **3/3
+corrigées.**
+
+### MAJEUR 2 — la classe « libellé à deux mots attribué à un helper qui ne le produit plus »,
+fermée sur les 4 survivances nommées par la revue
+
+**Classe** : « aucun artefact du lot n'attribue à l'action de tête le libellé à deux mots que
+`TopBarController.LabelFor` ne rend plus depuis round 8 (il ne rend qu'une flèche nue) ».
+**Population, motifs désignés par INDEX, jamais par leur littéral** (comptés AVANT édition, sur
+les 3 fichiers nommés par la revue — le littéral ne vit que dans la commande `grep -F`, scopée à
+chaque fichier, jamais reproduit dans cette prose) :
+
+```
+motif 1 — forme à guillemets DROITS du libellé, dans AppShell.cs    : AVANT 2  → APRÈS 1  (1 gardé, hors classe : shorthand anglais décrivant le RESET, jamais une affirmation de texte rendu)
+motif 2 — forme à guillemets FRANÇAIS du libellé, dans AppShell.cs  : AVANT 1  → APRÈS 0
+motif 3 — forme à guillemets FRANÇAIS du libellé, dans design.md    : AVANT 3  → APRÈS 1  (1 gardé, hors classe : narration du parcours joueur, pas une attribution à un composant)
+```
+Contrôle exécuté sur le fichier INTACT d'abord (avant toute édition) — les 3 motifs n'étaient PAS
+déjà à 0/1/3 respectivement pour rien : chaque motif AVANT correspond exactement au compte que la
+revue avait mesuré (2, 1, 3).
+
+**4 survivances fermées, PARAPHRASÉES, jamais citées** : `AppShell.cs:371` (comment de `:372`,
+branche repli), `AppShell.cs:784` (commentaire dock « QUATRE BULLES »), `design.md:109` (§3.2),
+`design.md:146` (§4, F0.3-bis). Chacune remplacée par une description de la DESTINATION (inchangée)
+sans jamais nommer le libellé visuel — et chacune porte désormais une note ⚠️ CORRIGÉE round 9
+datée, qui ne cite PAS non plus la clause retirée (paraphrase de la paraphrase — pas de rechute).
+
+**Piège de citation refermé DANS le bloc qui le décrit** —
+`CharpenteOuvertureSessionOverlayPlayModeTests.cs:314` citait VERBATIM, comme PREUVE, la clause de
+`design.md:146` que le correctif round 8 venait de retirer 11 lignes plus bas dans le MÊME fichier.
+Paraphrasé : le commentaire renvoie désormais à « §3.3 du design » sans reproduire son libellé.
+
+**TopBarController.cs — 3 mentions de ce libellé, NON touchées, décision consciente** : `:401`
+(docstring de `LabelFor`, décrit pourquoi le libellé à deux mots a été ABANDONNÉ — narration
+HISTORIQUE vraie, la source de vérité elle-même, sur un défaut de rendu déjà résolu), `:561` (même
+classe, décrit un aplat visuel PASSÉ derrière ce même libellé, déjà retiré par le correctif « PLUS
+D'APLAT » du même fichier), `:722` (note de mesure de ratio, shorthand pour désigner le bouton, pas
+une affirmation de texte rendu). Aucune n'attribue AU BANDEAU AUJOURD'HUI un libellé qu'il ne
+produit plus — la classe du MAJEUR 2 ne les couvre pas ; ce sont des narrations de leur propre
+passé, dans le fichier qui EST la source de vérité de ce qui est rendu.
+
+### MAJEUR 3 — population « ce sur quoi un joueur doit taper » — DÉCISION : CONSIGNATION EXPLICITE,
+pas une garde de collision, ce round
+
+**Mesuré, re-confirmé** : 6 affordances dans le périmètre du lot, 3 gardées (dock ×4 bulles = 1
+garde d'ensemble, `Tab_Empire`, la sortie), 3 nues (« Entrer » du district, les 5 boutons nav du
+Dashboard, « Ouvrir » d'une ligne de file).
+
+**Ce qui a été mesuré STATIQUEMENT, sans lancer Unity** (source, pas capture) :
+- `TopBarSlot` (`AppShell.cs:611-644`) : `anchorMin=(0,1)`, `anchorMax=(1,1)`, hauteur
+  `Px(TopBarHauteurCss=52)`, sibling INDEX SUPÉRIEUR à `ContentSlot` (rendu au-dessus). Sur un
+  canvas de 720 unités, `52 × 1280/392 ≈ 169,8` unités, soit **23,6 %** de la hauteur. Son `Image`
+  (`AppShell.cs:642`) N'A JAMAIS `raycastTarget = false` — CONFIRMÉ, `grep -n "raycastTarget"
+  Assets/Scripts/Shell/AppShell.cs` rend 5 occurrences, TOUTES sur des enfants décoratifs du dock
+  (`:765,:915,:925,:954,:969`), AUCUNE sur `TopBarSlot` lui-même.
+- `ShellChrome.TopInsetPx` (le mécanisme prévu pour qu'un locataire s'écarte de cette bande) N'A
+  QU'UN SEUL consommateur dans tout le dépôt : `LieutenantScreenController.cs:1030`. Ni
+  `DashboardController` ni `CityMapController` ne le lisent.
+- `DashboardSheet` (`DashboardController.cs:557-563`) : `anchorMin/Max=(0.5,1)`,
+  `anchoredPosition=(0,-28)` — son bord SUPÉRIEUR est donc à `720-28=692` sur un canvas de 720,
+  **À L'INTÉRIEUR** de la bande avalée `[550,720]`. **Ce que je n'ai PAS pu établir sans Play
+  Mode** : où tombent EXACTEMENT les 5 boutons `Nav_*` sous ce sommet (ils viennent après un
+  en-tête/status dont la hauteur cumulée n'est pas dérivable de la seule lecture du code — dépend
+  de `VerticalLayoutGroup`/`ContentSizeFitter` résolus à l'exécution).
+- « Entrer » (`CityMapController.cs:530-547`, Footer) : bas d'écran (Footer, dernier enfant de
+  `DetailPanel`), donc a priori LOIN de la bande haute — non vérifié par capture.
+- « Ouvrir » (`ExceptionQueueController.cs:240-250`, une ligne de file scrollable) : position
+  dépend du SCROLL et du nombre de cartes qui précèdent — non dérivable statiquement.
+
+⇒ **Décision** (option 2 du mandat, explicitement offerte par la revue) : PAS de garde de collision
+ajoutée ce round sur ces 3 sites — la mesure requise (position RÉELLE des boutons après
+`Canvas.ForceUpdateCanvases()`, en Play Mode) dépasse ce qu'une lecture de code peut établir, et le
+mandat borne le geste de production à la SEULE affordance de sortie. **Ouvert, nommé, avec
+l'instrument qui tranche** : dans un `[UnityTest]`, après `Canvas.ForceUpdateCanvases()`, pour
+chaque `Button` sous `ContentSlot` des 3 écrans concernés, `RaycastAll` à son centre et comparer
+`resultats[0]` au bouton — exactement l'instrument que la revue a proposé, non exécuté ce round.
+**Aucune affordance n'a été mesurée comme RÉELLEMENT avalée** — l'énoncé est « non prouvé, non
+réfuté », pas « défaut confirmé ».
+
+### MAJEUR 4 — DÉBLOQUÉ EN COURS DE ROUND (ruling user 2026-08-27) — la garde passe du POINT à
+l'AIRE, sur la SEULE affordance de sortie
+
+**Ruling reçu pendant l'implémentation** : la zone TACTILE passe à 48 dp ; `LeadingWidth`/
+`LeadingHeight` (36×40, le VISUEL) restent INCHANGÉES — vérifiées inchangées, diff confirmé
+(`TopBarController.cs:193-194`, aucune ligne touchée).
+
+**Les 4 nombres re-mesurés dans le code AVANT implémentation** (tous confirmés, aucun faux) :
+marge = `ShellChrome.GutterX` = **16** · écart = littéral dans `RepositionMoneyCluster` = **12** ·
+aile = `MoneyClusterWidth` = **96** · hauteur de barre = `AppShell.TopBarHauteurCss` = **52**.
+`16+36+12+96=160 < 164` (`196` centre médaillon `− 32` demi-largeur `64`) tient.
+
+**Geste** (`TopBarController.cs`) : `leadingGo` (« LeadingAction ») devient la ZONE TACTILE —
+`sizeDelta=(48,48)`, `anchoredPosition=(0,0)` (bord gauche, PAS `BarPaddingX` : mord dans la marge,
+`0..48 ⊂ 0..52`, n'atteint jamais l'aile qui commence à 64). Le VISUEL (`Label`, le glyphe rendu)
+est repositionné en ABSOLU (`anchoredPosition=(BarPaddingX+6, 0)`, `sizeDelta=(24,36)`) pour
+occuper EXACTEMENT le même rectangle qu'avant ce round (les deux parents partagent le même ancrage
+(0,0.5) et la même `anchoredPosition.y`=0 — seul `x` a bougé de 16 à 0, compensé dans l'offset du
+Label). `leadingImg` (alpha nul, seule surface de raycast) grandit à 48×48 SANS effet visuel
+(alpha=0 quelle que soit sa taille).
+
+**Garde** (`VerifierFermetureParActionDeTete`) : (a) GRANDEUR — `rectTete.rect.width/height ≥ 48`,
+LU sur le `RectTransform` lui-même (déjà en dp, ce sous-arbre vit en coordonnées de maquette,
+`AppShell.cs:617-628`, aucune conversion) ; (b) EFFET — raycast aux 4 coins (retrait de 1 unité
+locale), chacun doit atteindre l'affordance ou un enfant, MÊME tolérance `IsChildOf` que le centre.
+Les deux assertions ensemble empêchent la garde décorative que le socle dénonce (« vérifier un
+PARAMÈTRE n'est pas vérifier un EFFET ») : une zone déclarée 48×48 mais recouverte ailleurs
+échouerait quand même aux coins.
+
+**Preuve d'exécution** : `FB_..._BrancheSucces`/`BrancheEchec` atteignent leur `Debug.Log` final
+sur le run propre (`209/3`, ci-dessous) — les 2×(2 assertions de grandeur + 4 raycasts de coin) =
+12 assertions neuves n'ont PAS rougi, sur la géométrie de PRODUCTION réelle.
+
+**Population des affordances de ce lot, mesurée et NON corrigée hors de la sortie** (demande du
+contrôleur, mesure statique — ⚠️ pour les contrôleurs hors `Shell`, l'unité affichée est celle du
+CODE SOURCE, `dp` supposé sur la foi des commentaires « ≥44 dp »/« ≥44dp » qui s'y trouvent déjà ;
+NON reconvertie indépendamment faute de certitude sur le système de coordonnées de ces écrans une
+fois montés SOUS le shell) :
+
+| affordance | fichier | dimension mesurée | verdict ≥48 dp | statut |
+|---|---|---|---|---|
+| Action de tête (sortie) | `TopBarController.cs` (`leadingGo`) | 48×48 dp | ✅ OK | **corrigé ce round** |
+| 4 bulles du dock (Empire/Org/Pipeline/More) | `AppShell.cs:863-971` (`AddTabButton`, l'`Image` sur `btn`) | largeur ≈46 dp (`TabDockRondCss`, borne INFÉRIEURE — la largeur EXACTE dépend de la résolution du `VerticalLayoutGroup` sur la largeur du libellé, non résolue sans Play Mode) · hauteur ≈64,17 dp (46+5+13,17) | largeur LIMITE/sous le seuil sur la borne mesurée (46<48) · hauteur OK | **non touché — remonté** |
+| « Entrer » (district, `CityMapController.cs:530-547`) | `Footer`, `AddLayoutElement(footer, minHeight: 40, ...)` | hauteur 40 dp (le bouton REMPLIT le footer, `childForceExpandHeight=true`) · largeur = pleine largeur du panneau | hauteur SOUS le seuil (40<48, et même <44) · largeur OK | **non touché — remonté** |
+| 5 boutons nav Dashboard (`DashboardController.cs:683-697`) | `AddNavButton`, `AddLayoutElement(btn, minHeight: 44, ...)` — commentaire du fichier : « ≥ 44 dp tap target (F2) » | hauteur 44 dp · largeur = pleine largeur de `navBar` | hauteur SOUS le seuil Android (44<48), ≥ seuil iOS (44) | **non touché — remonté** |
+| « Ouvrir » (file d'exceptions, `ExceptionQueueController.cs:240-246`) | `AddCardRow` — commentaire : « ≥44dp tap target, F2 » | hauteur 44 dp · largeur = pleine largeur de la ligne | hauteur SOUS le seuil Android (44<48), ≥ seuil iOS (44) | **non touché — remonté** |
+
+⚠️ **Motif récurrent, remonté tel quel** : le précédent « F2 » (44 dp) apparaît 2 fois, cité comme
+un standard DÉJÀ établi dans ce dépôt, systématiquement 4 dp SOUS le seuil Android que ce round
+vient de ratifier à 48 pour la sortie. Ce n'est pas un défaut de CE lot (ces 2 boutons sont hors
+périmètre 0.2/0.3/0.3-bis) mais un écart de DOCTRINE qui mérite un arbitrage de la même nature que
+celui qui vient d'être tranché pour la sortie — **remonté à l'user, pas tranché ici.**
+
+### MAJEUR 5 — ce document
+
+Cette section, la section ROUND 8 ci-dessus, et les commandes/sorties qu'elles portent EN SONT la
+fermeture.
+
+### MINEURS
+
+- **m1** — le commentaire de round 8 citait « stack absente » comme monde qui ferait glisser la
+  branche échec vers le succès. FAUX (une stack absente ÉCHOUE le signin, renforce le repli).
+  Retiré, les 2 exemples restants (auto-signup, compte créé par mégarde) sont corrects.
+- **m2** — acquitté SANS action : la revue elle-même conclut « le chiffre tient ; la méthode
+  déclarée ne couvre pas la classe » et « je n'y ai trouvé aucune clause devenue fausse » après
+  avoir ouvert les 14 sous-sections `###` à delta zéro. Aucun défaut identifié à corriger.
+- **m3** — `FB_..._BrancheEchec` ne détruisait jamais l'`EventSystem` que son propre chemin fait
+  créer (`AppShell.EnsureEventSystem()`, aucune scène chargée par ce test). Corrigé : capture de
+  `EventSystem.current` AVANT construction, `DestroyImmediate` de l'instance NOUVELLE (si distincte
+  de celle d'avant) dans le `finally` — même patron que le contrôle négatif permanent de
+  `CharpenteMontageLocatairesPlayModeTests` (jamais l'instance PRÉ-EXISTANTE, qui pourrait
+  légitimement servir un test frère).
+- **m4** — absorbé par BLOQUANT 2 : les préconditions ajoutées (`Assert.IsNotNull(raycaster)`,
+  `Assert.IsNotNull(EventSystem.current)`) précèdent désormais le raycast, fermant l'exception
+  potentielle par la même garde que le site jumeau.
+- **m5** — cellule `22/22` → `22/0` (2 occurrences, sous l'en-tête `passed`/`failed`, où elle se
+  lisait « 22 échecs »). Section « ⚠️ Désambiguïsation nécessaire — TROIS choses distinctes portent
+  le nom « F0.2-c » » ajoutée (même convention que « 0.3-bis »). Contrôle négatif permanent de
+  `HasActiveInputModule` porté de 1/4 à **4/4** branches de rejet couvertes — 3 tests neufs
+  (`EventSystemNull`, `EventSystemDesactive`, `ModuleDesactive` — LA PORTEUSE, la seule qu'AUCUN
+  contrôle ne couvrait). `ModuleDesactive` pose le champ privé `m_CurrentInputModule` par
+  réflexion plutôt que d'attendre une frame : `Update()`/`TickModules()` commence par
+  `if (current != this) return;`, donc un synthétique NON élu "current" ne le peuplerait JAMAIS,
+  même après un `yield return null` — un `[UnityTest]` aurait été FLAKY, dépendant de l'ordre.
+- **m6** — voir MAJEUR 1 ci-dessus (3 citations de `AppShell.cs:835`, corrigées à `:892`).
+
+### Deviation — assembly manquante (imprévu non bloquant, corrigé en place)
+
+`CityMap.PlayMode.Tests.asmdef` ne référençait pas `Unity.InputSystem` : `using UnityEngine.
+InputSystem.UI;` (nécessaire pour promouvoir `HasActiveInputModule` avec son type de paramètre
+`InputSystemUIInputModule` utilisé par les nouveaux contrôles négatifs m5) faisait
+`CS0234 — The type or namespace name 'InputSystem' does not exist`. Corrigé : référence ajoutée
+(même nom que `Shell.asmdef`, qui compile déjà `UnityEngine.InputSystem.UI` avec succès). Additif
+seulement, aucune référence retirée.
+
+### Ce que je n'ai pas pu vérifier
+
+| point | pourquoi | commande qui trancherait |
+|---|---|---|
+| MAJEUR 3 — une affordance RÉELLE tombe-t-elle sous la bande avalée par `TopBarSlot` | dépend de la résolution runtime de `VerticalLayoutGroup`/scroll, non dérivable du code seul | `Canvas.ForceUpdateCanvases()` + `RaycastAll` par bouton, dans un `[UnityTest]` sur les 3 écrans nommés (non exécuté ce round, hors scope du mandat) |
+| MAJEUR 4 (population) — la largeur EXACTE de la surface de raycast des 4 bulles du dock | le `VerticalLayoutGroup` peut l'élargir au-delà du `Rond` (46) si un libellé est plus large — non résolu sans lecture du `RectTransform` en Play Mode | lire `btn.GetComponent<RectTransform>().rect.width` dans un `[UnityTest]`, sur les 4 bulles |
+| Le compte réel de tests exécutés hors catégories `MafiaCI` (~102 non couverts) | hors périmètre de ce delta, déjà consigné ailleurs | non ré-mesuré ce round |
+
+---
+
+## État final du dépôt (round 9, re-vérifié après les 2 BLOQUANT/5 MAJEUR/6 MINEUR et le contrôle négatif rejoué)
+
+- `Assets/Scripts/Shell/AppShell.cs` : `11 insertions(+), 3 deletions(-)` — MAJEUR 2 seulement
+  (paraphrase des 2 survivances du libellé attribué à tort, commentaires). Aucun changement de
+  COMPORTEMENT.
+- `Assets/Scripts/Shell/TopBarController.cs` : `46 insertions(+), 7 deletions(-)` — MAJEUR 4
+  (zone tactile 48×48, VISUEL byte-préservé). `LeadingWidth`/`LeadingHeight` INCHANGÉES (diff
+  confirmé). Contrôle négatif ARMÉ PUIS RESTAURÉ pendant ce round (voir § ROUND 8 ci-dessus),
+  `identical: True` après restauration, re-vérifié par un run final propre.
+- `Assets/Tests/PlayMode/CharpenteMontageLocatairesPlayModeTests.cs` : `118 insertions(+),
+  19 deletions(-)` — `HasActiveInputModule` promu (retiré d'ici), 3 nouveaux contrôles négatifs
+  (m5), 3 ancres corrigées (MAJEUR 1/m6), section de désambiguïsation « F0.2-c » ajoutée,
+  `using UnityEngine.InputSystem.UI;` ajouté.
+- `Assets/Tests/PlayMode/CharpenteOuvertureSessionOverlayPlayModeTests.cs` : `132 insertions(+),
+  5 deletions(-)` — BLOQUANT 1 (prémisse succès), BLOQUANT 2 (préconditions module), MAJEUR 2
+  (citation paraphrasée), MAJEUR 4 (garde d'aire + de grandeur), m1 (exemple faux retiré), m3
+  (fuite d'EventSystem fermée).
+- `Assets/Tests/PlayMode/ProductionClickSupport.cs` : `30 insertions(+), 1 deletion(-)` —
+  `HasActiveInputModule` promu ICI (BLOQUANT 2), 1 ancre corrigée (MAJEUR 1).
+- `Assets/Tests/PlayMode/CityMap.PlayMode.Tests.asmdef` : `2 insertions(+), 1 deletion(-)` —
+  référence `Unity.InputSystem` ajoutée (Deviation ci-dessus).
+- `Tools/charpente-item0-2-3-design.md` : modifié — MAJEUR 1 (§2.1, §3.3 : notes de correction
+  datées, sans renumérotage silencieux vers du texte sans rapport), MAJEUR 2 (§3.2, §4 :
+  paraphrase).
+- `Tools/charpente-item0-2-3-implementation-notes.md` : ce document — § ROUND 8 (reconstruit),
+  § ROUND 9 (ce round), cellule `22/22`→`22/0` (m5), désambiguïsation « F0.2-c » (m5), corrections
+  d'ancres notes.md (MAJEUR 1).
+- `Assets/Fonts/DejaVuSans SDF.asset`, `Assets/Fonts/DejaVuSerif SDF.asset`,
+  `Assets/TextMesh Pro/.../LiberationSans SDF.asset` — modifiés par les 4 runs Unity de ce round
+  (régénération d'atlas, effet de bord CONNU), restaurés par `git checkout` après CHAQUE run,
+  `identical: True` vérifié par comparaison Python à chaque fois (pas une empreinte prise dans la
+  foulée d'une sauvegarde — un `git diff --stat` après coup, séparément).
+- `Assets/InitTestScene*.unity` (gitignorées) : **4** artefacts, un par run Unity de ce round —
+  non investigué plus avant, même statut que les rounds précédents.
+- `git status --short` (tracked) liste EXACTEMENT les 8 fichiers `.cs`/`.asmdef`/`.md` ci-dessus —
+  aucun fichier inattendu, aucune entrée `Assets/Editor/MafiaCI.cs`, aucun fichier sous
+  `Tools/juge-visuel/`/`Tools/juge-donnees/` touché (non trackés, pas à moi).
+
+**Juge complet (non narrowé — `MafiaCI.RunPlayModeTests`, catégories `{W4P4a, W3UDA, W3U1, W3U2,
+Charpente}`)**, run final propre après restauration :
+```
+$ LOG_FILE=/tmp/charpente-0203-r9/full-run-final.log timeout 400 Tools/run-unity-check.sh -executeMethod MafiaCI.RunPlayModeTests
+MafiaCI-harness: elapsed=302s timeout=900s issue=[sortie normale (RC=1)]
+```
+Sortie réelle (oracle Python) :
+```
+MafiaCI: RunPlayModeTests started — 314 test(s) découverts (arbre PlayMode entier ; le filtre de catégories s'applique à l'exécution, voir passed= ci-dessous)
+MafiaCI: FAIL MafiaCleanCity.CityMap.Tests.DistrictMapNavigationPlayModeTests.NavD12_DistrictTitle_MargeGouttiere_Serif_EtOmbreSurMateriauDInstance —   scénario dimensionné — cette résolution DOIT produire une bande de letterbox (mesuré 0.0px), sinon l'assertion suivante ne teste pas le défaut visé
+MafiaCI: FAIL MafiaCleanCity.Shell.Tests.AppShellPlayModeTests.StaleAbandonedShell_NeverLeaksTenantContentUnderReusedCanvas —   prémisse : A a bien une liste de districts vivante avant l'entrée en scène de B
+MafiaCI: FAIL MafiaCleanCity.Shell.Tests.NavigationPlayModeTests.NavF4_TitleClearsTopBar_BackgroundExistsAtNativeResolution —   nav-F4 (amendée) — the title does not overlap TopBarSlot's EFFECTIVE bounds (déjà inclusives du débordement du médaillon, 26.3px mesurés) — un titre qui ne réserve que 56px nominaux serait chevauché par l'anneau/le filet qui pendent en dessous
+MafiaCI: RunPlayModeTests finished — passed=209 failed=3 skipped=0 inconclusive=0
+```
+`209/3`, `314` découverts (`311+3`, les 3 nouveaux contrôles négatifs m5) — **les 3 MÊMES rouges
+pré-existants** (`NavD12_...`, `StaleAbandonedShell_...`, `NavF4_...`), nommés à l'identique de
+round 7/8, AUCUN rapport avec les fichiers touchés ce round. `StaleAbandonedShell` reste
+l'intermittent déjà nommé rounds 3-8 (absent de la liste lors du run « armé » ci-dessus — ~4/6
+rouge, comportement connu, pas une régression).
+
+**Compilation** : `0` erreur `CS` sur les 4 runs de ce round (1 échec de compilation initial,
+`CS0234`, corrigé par la Deviation ci-dessus AVANT le premier run complet).

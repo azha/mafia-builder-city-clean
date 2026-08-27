@@ -368,7 +368,12 @@ namespace MafiaCleanCity.Shell
                     // AUCUN mécanisme neuf. `ActivateTab` (ci-dessus) a DÉJÀ remis l'action de tête à
                     // `None` (son propre corps, § reset défensif) — cette ligne DOIT donc venir
                     // APRÈS `ActivateTab`, jamais avant, sur les DEUX branches (même ordre ici et
-                    // ci-dessous). `ExitToCityMap` désigne EXACTEMENT la destination : "← Carte".
+                    // ci-dessous). `ExitToCityMap` désigne EXACTEMENT la destination de cette action
+                    // de tête — round 9 (revue ⊥, MAJEUR 2) : ce commentaire attribuait ici un
+                    // libellé à deux mots au bandeau ; PARAPHRASÉ, jamais cité. Voir
+                    // `TopBarController.LabelFor` (round 8) : la flèche rendue N'A PAS de texte de
+                    // destination — la découvrabilité tient au fait que c'est le seul contrôle du
+                    // coin gauche, pas à un mot affiché.
                     TopBar.SetLeadingAction(TopBarController.LeadingAction.BackToMap, ExitToCityMap);
                 }
                 yield break;
@@ -781,8 +786,11 @@ namespace MafiaCleanCity.Shell
             // ⚠️ QUATRE BULLES, PAS CINQ — canon §6 : « Dock — 4 ronds gravés, SANS la Carte. On est
             // déjà sur la carte : elle sort du dock. » `Tab.Empire` EST cette carte (items 0.2/0.3,
             // ruling 2026-08-25 — fusion de l'ancien `Home` et de l'ancien `City`, la branche City
-            // déplacée telle quelle) ; l'écran de district porte déjà « ← Carte » dans son bandeau,
-            // et F0.3 (Tools/charpente-item0-2-3-design.md) PROUVE cette porte atteignable par un
+            // déplacée telle quelle) ; l'écran de district porte déjà, dans le bandeau PARTAGÉ du
+            // shell (round 7), une action de sortie dédiée — round 9 (revue ⊥, MAJEUR 2) : ce
+            // commentaire attribuait ici un libellé à deux mots à ce bandeau ; PARAPHRASÉ, jamais
+            // cité (`TopBarController.LabelFor`, round 8, ne rend qu'une flèche nue) — et F0.3
+            // (Tools/charpente-item0-2-3-design.md) PROUVE cette porte atteignable par un
             // geste de production plutôt que de l'affirmer en prose.
             // Les libellés sont désormais ceux du canon EXACTEMENT (décision A tranchée) : Empire ·
             // Famille · Filière · Plus (« Marché » au jalon 4 — pas avant que screen_b1 existe, un

@@ -41,7 +41,7 @@ recommandation, pas un ruling**, et je la note comme telle. **Bascule = une lign
 
 ### 2.1 Le dock est gouverné par **TROIS** listes parallèles, pas deux
 
-| # | ancre | rôle |
+| # | ancre (sur `af9893b`, AVANT ce lot) | rôle |
 |---|---|---|
 | 1 | `AppShell.cs:717-720` | `AddTabButton` ×4 — construction initiale |
 | 2 | `AppShell.cs:938-941` | `AddTabButton` ×4 — reconstruction (changement de résolution) |
@@ -50,6 +50,18 @@ recommandation, pas un ruling**, et je la note comme telle. **Bascule = une lign
 Le fichier **le dit lui-même** à la 3ᵉ : *« Deux listes qui doivent rester parallèles sont une
 dette »* — et il en compte **trois**. La 3ᵉ porte en plus un avertissement explicite : un membre
 laissé là **décalerait tous les indices** et poserait l'indicateur d'actif sur la mauvaise bulle.
+
+⚠️ **CORRIGÉ round 9 (revue ⊥, MAJEUR 1)** — les 3 ancres ci-dessus décrivent le fichier `af9893b`,
+**AVANT le round 1 de ce lot** (5 membres dans `Tab`, 3 listes séparées). Round 1 les a REMPLACÉES
+par `DockRatifie` (§3.1) — elles ne sont donc PAS de simples ancres « décalées de +12 » par
+l'insertion round 7 : le contenu qu'elles visaient a été RÉÉCRIT, pas déplacé, et un `+12` naïf
+pointe sur du texte SANS RAPPORT (vérifié : `AppShell.cs:729-732`/`:950-953`/`:968` au tip
+`255998a` parlent respectivement du dégradé du dock et de la couleur du libellé — aucun rapport
+avec les 3 listes ci-dessus). **L'équivalent ACTUEL** (au tip `255998a`) : la déclaration de
+`DockRatifie` est à `AppShell.cs:803-809`, lue par ses DEUX consommateurs
+`AppShell.cs:797` (`BuildTabBar`) et `AppShell.cs:1029` (`RebatirChromePourResolutionCourante`), et
+par `RefreshTabButtonVisuals` (`AppShell.cs:1043-1045`) — une seule source, trois lecteurs, exactement
+ce que §3.1 ci-dessous prescrit.
 
 ⇒ **Renommer les libellés à trois endroits est exactement la faute que ce lot doit ne pas commettre.**
 
@@ -106,17 +118,31 @@ constante. *Deux grandeurs différentes, sinon on teste le test.*
   branches, sous le même sentinel de course.
 - `AcquireSessionThenActivateHome` active **`Tab.Empire`** sur ses deux branches, **sentinel
   `(Tab)(-1)` conservé à l'identique**.
-- `ExitToCityMap()` → `ActivateTab(Tab.Empire)`. Le nom « ← Carte » du bandeau reste juste.
+- `ExitToCityMap()` → `ActivateTab(Tab.Empire)`. La destination visée par l'action de tête du
+  bandeau reste juste.
+  ⚠️ **CORRIGÉ round 9 (revue ⊥, MAJEUR 2)** — cette ligne attribuait à cette action de tête un
+  libellé à deux mots ; PARAPHRASÉ, jamais cité. Round 8 a depuis réduit son libellé RENDU à une
+  flèche nue (`TopBarController.LabelFor`) — la destination, elle, n'a pas changé.
 
 ### 3.3 — 0.3-bis — le commentaire daté
 
-`AppShell.cs:711` porte encore l'énoncé qui affirme que la destination reste atteignable. **Faux à la
-mesure quand il a été écrit ; vrai à nouveau après ce lot, mais pour une AUTRE raison.**
+`AppShell.cs:711` (sur `af9893b`, AVANT ce lot) porte encore l'énoncé qui affirme que la destination
+reste atteignable. **Faux à la mesure quand il a été écrit ; vrai à nouveau après ce lot, mais pour
+une AUTRE raison.**
 ⛔ **Le PARAPHRASER, jamais le citer** — citer l'énoncé qu'on retire le réintroduit. Le contrôle va
 dans **le même commit** : `grep -cF` **scopé à ce seul fichier**, valeur **attendue AVANT et APRÈS**,
 et le jeu complet **exécuté sur le fichier intact d'abord** — un motif qui rend déjà `0` avant
 l'édition est un motif **faux**, pas un motif satisfait. Les comptes se collent ; les motifs se
 désignent **par index**, jamais par leur littéral.
+
+⚠️ **CORRIGÉ round 9 (revue ⊥, MAJEUR 1)** — `:711` décrit `af9893b`, PAS le tip `255998a` : ce
+n'est PAS une ancre « décalée de +12 » (le round 1 de ce lot a déjà RETIRÉ cet énoncé, bien avant
+l'insertion round 7) — un `+12` naïf pointerait sur `AppShell.cs:723`, qui n'a AUCUN rapport
+(vérifié : « CE N'EST PLUS UNE BARRE », la ruling sur le dock). **La source de vérité ACTUELLE
+n'est plus une ligne d'`AppShell.cs`** — l'énoncé a été retiré — **mais le test qui le prouve** :
+`CharpenteMontageLocatairesPlayModeTests.F0_3bis_LEnonceDateSurLaDestinationAtteignable_
+NeReapparaitPlusDansAppShell` (motif désigné par INDEX dans son propre fichier, `AppShell.cs`
+compté à `0` occurrence au tip `255998a`).
 
 ---
 
@@ -143,8 +169,11 @@ prétend franchir ne prouve pas le franchissement — elle le suppose.*
 
 ### F0.3-bis — le retour ferme la boucle
 
-Depuis l'intérieur, l'action de tête du bandeau (« ← Carte ») ramène à la carte : le locataire monté
+Depuis l'intérieur, l'action de tête du bandeau ramène à la carte : le locataire monté
 redevient `CityMapController` et `CityTabDistrictId` retombe à **−1**, l'état NOMMÉ.
+⚠️ **CORRIGÉ round 9 (revue ⊥, MAJEUR 2)** — cette ligne attribuait à cette action de tête un
+libellé à deux mots ; PARAPHRASÉ, jamais cité (le libellé RENDU est une flèche nue depuis round 8,
+`TopBarController.LabelFor` — la destination décrite ci-dessus n'a pas changé).
 
 ### F0.2-c — une seule liste
 

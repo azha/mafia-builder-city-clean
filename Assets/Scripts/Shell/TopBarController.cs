@@ -192,6 +192,22 @@ namespace MafiaCleanCity.Shell
         // 16 (marge) + 36 + 12 (écart) + 96 (aile) = 160 < 164, la gauche du médaillon.
         private const float LeadingWidth = 36f;
         private const float LeadingHeight = 40f;
+        // ⛔⛔ RULING USER 2026-08-27 (MAJEUR 4, round 9) — « la zone TACTILE passe à 48 dp ; le
+        // VISUEL ne bouge pas d'un pixel ». `LeadingWidth`/`LeadingHeight` ci-dessus restent
+        // INCHANGÉES : elles décrivent ce que l'œil voit (la DA est ratifiée par la contrainte du
+        // médaillon ci-dessus). Cette constante-ci gouverne SEULEMENT la zone de RAYCAST — un
+        // second rect, plus grand, invisible (son `Image` reste à alpha nul), qui reçoit le clic
+        // à la place du rect visuel. Re-mesuré ici (round 9) sur les 4 nombres du commentaire
+        // ci-dessus : marge=16 (`ShellChrome.GutterX`), écart=12 (littéral, `RepositionMoneyCluster`
+        // ci-dessous), aile=96 (`MoneyClusterWidth`), hauteur de barre=52 (`AppShell.
+        // TopBarHauteurCss`) — tous confirmés inchangés.
+        // ⇒ Ancrée au BORD GAUCHE (x=0, pas `BarPaddingX`) plutôt qu'élargie symétriquement : une
+        // zone de 48 couvre 0..48, qui tient ENTIÈREMENT dans marge(16)+bouton(36)=0..52 — elle
+        // n'atteint donc JAMAIS l'aile ARGENT (qui commence à 64), la contrainte du médaillon reste
+        // intacte. Verticalement, centrée comme le rect visuel (les deux partagent le même ancrage
+        // (0, 0.5) et la même `anchoredPosition.y` = 0) : 48 sur une barre de 52 laisse 2 dp de
+        // marge de chaque côté.
+        private const float LeadingTouchZoneDp = 48f; // minimum tactile Android
         // ⛔ RATIOS RE-MESURÉS CONTRE LA MAQUETTE (2026-08-22, demande user « traite le menu en haut
         // et en bas, en terme de ratio »). Tout est rapporté à la HAUTEUR DE BARRE, la seule grandeur
         // comparable entre une maquette de 2560 px et un écran de 1200.
@@ -549,20 +565,28 @@ namespace MafiaCleanCity.Shell
             BuildBarBackground();
             BuildHairline();
 
-            // §3.1 — le bouton leading (inchangé fonctionnellement ; ancrage explicite).
+            // §3.1 — le bouton leading. round 9 (revue ⊥, MAJEUR 4, ruling user 2026-08-27) —
+            // `leadingGo` EST DÉSORMAIS LA ZONE TACTILE (48×48 dp, ancrée au bord gauche), PAS le
+            // rect visuel. Le VISUEL (le glyphe rendu par `leadingText`) est repositionné en
+            // ABSOLU ci-dessous pour occuper EXACTEMENT le même rectangle qu'avant ce round —
+            // aucun pixel ne bouge, seule la surface qui reçoit le clic grandit.
             leadingGo = new GameObject("LeadingAction", typeof(RectTransform));
             leadingGo.transform.SetParent(transform, false);
             RectTransform leadingRect = (RectTransform)leadingGo.transform;
             leadingRect.anchorMin = leadingRect.anchorMax = new Vector2(0f, 0.5f);
             leadingRect.pivot = new Vector2(0f, 0.5f);
-            leadingRect.anchoredPosition = new Vector2(BarPaddingX, 0f);
-            leadingRect.sizeDelta = new Vector2(LeadingWidth, LeadingHeight);
+            // ⚠️ x=0, PAS `BarPaddingX` — la zone tactile mord dans la marge/gouttière gauche
+            // (voir le commentaire de `LeadingTouchZoneDp` ci-dessus pour l'arithmétique qui
+            // garde ça sans risque pour l'aile ARGENT).
+            leadingRect.anchoredPosition = new Vector2(0f, 0f);
+            leadingRect.sizeDelta = new Vector2(LeadingTouchZoneDp, LeadingTouchZoneDp);
             Image leadingImg = leadingGo.AddComponent<Image>();
-            // ⛔ PLUS D'APLAT. `surfaceRow` peignait un pavé gris-vert derrière « ← Carte » — le
-            // seul rectangle plein de tout l'écran, et le canon n'en porte aucun (le bandeau est
+            // ⛔ PLUS D'APLAT. `surfaceRow` peignait un pavé gris-vert derrière l'action de tête —
+            // le seul rectangle plein de tout l'écran, et le canon n'en porte aucun (le bandeau est
             // un verre translucide, la fiche une plaque, le dock des ronds). L'Image reste, à
             // alpha nul : c'est elle qui reçoit le clic, et une cible de clic sans Graphic ne
-            // reçoit rien.
+            // reçoit rien. Sa taille (48×48, ci-dessus) n'a AUCUN effet visuel : alpha nul quelle
+            // que soit sa surface.
             Color leadingFond = DesignTokens.Current.surfaceRow; leadingFond.a = 0f;
             leadingImg.color = leadingFond;
             Button leadingBtn = leadingGo.AddComponent<Button>();
@@ -583,7 +607,22 @@ namespace MafiaCleanCity.Shell
             leadingText.alignment = TextAlignmentOptions.Center;
             leadingText.color = DesignTokens.Current.onSurfacePrimary;
             leadingText.raycastTarget = false;
-            Stretch((RectTransform)leadingText.transform, new Vector2(6, 2), new Vector2(-6, -2));
+            // ⛔⛔ round 9 (revue ⊥, MAJEUR 4) — PLUS un `Stretch()` relatif au parent : `leadingGo`
+            // (le parent) vient de grandir de 36×40 à 48×48 pour devenir la zone tactile, et un
+            // stretch en pourcentage aurait fait grandir le GLYPHE avec lui — exactement le pixel
+            // qui ne devait PAS bouger. Position ABSOLUE à la place, recalculée pour reproduire
+            // EXACTEMENT le rect que l'ancien `Stretch(leadingGo(36×40 à x=16), (6,2), (-6,-2))`
+            // produisait : X ∈ [16+6, 52-6] = [22, 46] (largeur 24), Y ∈ [-18, 18] (hauteur 36),
+            // en coordonnées ABSOLUES de `TopBarController`. Le nouveau parent partage le MÊME
+            // ancrage (0, 0.5) ET la même `anchoredPosition.y` (0) que l'ancien — seul son
+            // `anchoredPosition.x` a bougé (16 → 0) — donc reproduire ces bornes ABSOLUES demande
+            // seulement de décaler l'offset X de +16 (pour compenser le nouveau parent) et de
+            // garder l'offset Y identique.
+            RectTransform leadingLabelRect = (RectTransform)leadingLabelGo.transform;
+            leadingLabelRect.anchorMin = leadingLabelRect.anchorMax = new Vector2(0f, 0.5f);
+            leadingLabelRect.pivot = new Vector2(0f, 0.5f);
+            leadingLabelRect.anchoredPosition = new Vector2(BarPaddingX + 6f, 0f); // 16+6=22, ABSOLU inchangé
+            leadingLabelRect.sizeDelta = new Vector2(LeadingWidth - 12f, LeadingHeight - 4f); // 36-12=24, 40-4=36, INCHANGÉ
             leadingGo.SetActive(false);
 
             // Écart (7) — le callsign n'existe pas dans `.barre` de la maquette : reste un hook de

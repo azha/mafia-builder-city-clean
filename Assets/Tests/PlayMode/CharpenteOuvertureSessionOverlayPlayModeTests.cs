@@ -311,9 +311,13 @@ namespace MafiaCleanCity.Shell.Tests
         // FAUSSE : « aucun mécanisme de démontage n'existe dans `IShellNavigator`/`IShellTenant` ».
         // Réfutée par TROIS artefacts DE CE LOT, déjà présents avant ce round : `AppShell.cs:298`
         // (`ExitToCityMap() => ActivateTab(Tab.Empire)`), `Tools/charpente-item0-2-3-design.md:109`
-        // et `:146` (F0.3-bis : « l'action de tête du bandeau (« ← Carte ») ramène à la carte »), et
-        // F-A elle-même (ci-dessous), qui prouve depuis longtemps qu'une activation d'onglet détruit
-        // l'overlay — le RETOUR à la carte était déjà résolu pour le district, jamais rebranché ici.
+        // et `:146` (F0.3-bis — le design NOMME DÉJÀ le geste de fermeture par l'action de tête du
+        // bandeau ; le libellé qu'il lui attribuait ALORS a depuis été abandonné, voir le correctif
+        // round 8 ci-dessous — ⛔ round 9, revue ⊥, MAJEUR 2 : ce commentaire CITAIT VERBATIM la
+        // clause que ce même correctif retire, le piège de citation refermé dans le bloc qui le
+        // décrit — PARAPHRASÉ ICI, jamais cité), et F-A elle-même (ci-dessous), qui prouve depuis
+        // longtemps qu'une activation d'onglet détruit l'overlay — le RETOUR à la carte était déjà
+        // résolu pour le district, jamais rebranché ici.
         //
         // Geste, ZÉRO mécanisme neuf : `TopBar.SetLeadingAction(TopBarController.LeadingAction.
         // BackToMap, ExitToCityMap)`, DEUX lignes, posées APRÈS `MonterLocataireEnSurimpression
@@ -422,6 +426,28 @@ namespace MafiaCleanCity.Shell.Tests
             yield return WaitForEmpireMounted(shell);
             yield return null; // montage EN SURIMPRESSION du Dashboard, synchrone, même passe
 
+            // ⛔⛔ LA PRÉMISSE — round 9 (revue ⊥, BLOQUANT 1). Sans elle, ce test est un DOUBLON
+            // SILENCIEUX de la branche repli-échec, exactement le miroir du BLOQUANT que round 8 a
+            // fermé sur l'AUTRE branche : `CurrentTab == Empire` est vrai sur les DEUX branches, et
+            // le monde le PLUS probable qui laisse cette garde verte à travers l'événement qu'elle
+            // devrait détecter est même plus facile à atteindre que celui déjà gardé — le signin
+            // d'`operational_demo` échoue (back arrêté, compte purgé, 401 transitoire pendant les
+            // 2-4 allers-retours réseau) et ce test, nommé « BRANCHE SUCCÈS », empruntait alors le
+            // REPLI sans que rien ne le remarque : les six assertions de
+            // `VerifierFermetureParActionDeTete` passent quand même (elles sont IDENTIQUES sur les
+            // deux branches — `ActivateTab`/`MonterLocataireEnSurimpression`/`SetLeadingAction` sont
+            // posés au MÊME endroit relatif sur les deux, `AppShell.cs:363-364-372` et `:418-419-423`)
+            // et `AppShell.cs:423` (cette branche-ci) ne serait couverte par RIEN. `Token` est
+            // `public string Token { get; private set; }` (`AppShell.cs:110`), écrivain UNIQUE
+            // `AppShell.cs:377` — APRÈS le signin, AVANT ce montage — donc c'est la grandeur qui
+            // DISCRIMINE les deux chemins, exactement symétrique à la garde `IsNullOrEmpty` que
+            // round 8 a posée sur la branche repli-échec.
+            Assert.IsFalse(string.IsNullOrEmpty(shell.Token),
+                "prémisse (BRANCHE SUCCÈS) : le signin du shell doit avoir RÉUSSI, donc `Token` doit " +
+                "être renseigné — trouvé vide. S'il est vide, l'identité de démo a ÉCHOUÉ à signer " +
+                "(back arrêté, compte purgé, 401 transitoire) : ce test a glissé sur la branche repli " +
+                "et ne couvre plus le succès. Réparer la précondition serveur, pas l'assertion.");
+
             yield return VerifierFermetureParActionDeTete(shell, "BRANCHE SUCCÈS");
         }
 
@@ -441,6 +467,15 @@ namespace MafiaCleanCity.Shell.Tests
         [UnityTest]
         public IEnumerator FB_LActionDeTeteFermeLOverlayEtRevelaLaVille_BrancheEchec()
         {
+            // round 9 (revue ⊥, MINEUR m3) — capturé AVANT toute construction : ce test ne charge
+            // AUCUNE scène, donc si aucun EventSystem n'existe déjà, `AppShell.EnsureEventSystem()`
+            // (appelée depuis `Start()`, dans la fenêtre synchrone d'`EnsureInitialized`) va en
+            // créer un NEUF que ni ce `finally` (avant ce correctif) ni le `[UnityTearDown]` de
+            // cette fixture (qui ne détruit que Canvas) ne nettoyaient — le vecteur EXACT du
+            // BLOQUANT 2 : `EventSystem.current` rend le PREMIER élément d'une liste STATIQUE
+            // partagée par tout le domaine PlayMode, et ce lot l'écrit lui-même
+            // (`CharpenteMontageLocatairesPlayModeTests.cs:1019-1021`).
+            EventSystem eventSystemAvant = EventSystem.current;
             GameObject shellGo = new GameObject("AppShell_ControleR7BrancheEchec");
             AppShell shell = shellGo.AddComponent<AppShell>();
             try
@@ -456,9 +491,15 @@ namespace MafiaCleanCity.Shell.Tests
                 // ⛔⛔ LA PRÉMISSE, et sans elle ce test est un DOUBLON SILENCIEUX de la branche
                 // succès (revue ⊥ round 8, MAJEUR 3). `CurrentTab == Empire` est vrai sur les DEUX
                 // branches : rien, jusqu'ici, ne dit LAQUELLE a été empruntée. Le jour où cette
-                // identité cesse d'échouer — auto-signup côté back, stack absente, compte créé par
-                // mégarde — ce test glisserait sur la branche SUCCÈS, `AppShell.cs:372` cesserait
+                // identité cesse d'échouer — auto-signup côté back, compte créé par mégarde — ce
+                // test glisserait sur la branche SUCCÈS, `AppShell.cs:372` cesserait
                 // d'être couverte, et LES DEUX TESTS RESTERAIENT VERTS à travers l'événement.
+                // ⚠️ CORRIGÉ round 9 (revue ⊥, MINEUR m1) — cette liste portait un 3ᵉ exemple FAUX,
+                // « stack absente » : une stack absente fait ÉCHOUER le signin
+                // (`AuthClient.SignIn` ne rend pas de jeton sans serveur, et `AppShell.cs:329`
+                // teste `string.IsNullOrEmpty(t)`) — elle RENFORCE la branche repli, elle ne la
+                // quitte JAMAIS. Retiré ; les deux exemples restants ci-dessus (auto-signup, compte
+                // créé par mégarde) sont les seuls qui font RÉUSSIR une identité délibérément invalide.
                 // Le précédent maison que ce test invoque asserte, lui, sa prémisse
                 // (`NavigationPlayModeTests.cs:247-248`) : on en copiait la forme, pas la garde.
                 // `Token` n'est renseigné que par un signin RÉUSSI (`AppShell.cs`, branche succès) —
@@ -480,6 +521,16 @@ namespace MafiaCleanCity.Shell.Tests
                 // fuiter vers le test SUIVANT du même domaine PlayMode.
                 if (shell != null && shell.ShellCanvas != null) Object.Destroy(shell.ShellCanvas.gameObject);
                 if (shellGo != null) Object.Destroy(shellGo);
+                // round 9 (revue ⊥, MINEUR m3) — même patron que le contrôle négatif de
+                // `CharpenteMontageLocatairesPlayModeTests.F0_2c_ControleNegatif_...`
+                // (`DestroyImmediate` choisi NOMMÉMENT pour retirer l'instance de la liste
+                // STATIQUE `m_EventSystems` SYNCHRONEMENT, avant qu'un [UnityTest] voisin ne
+                // rende la main) : ne détruire QUE l'EventSystem que CE test a fait naître — un
+                // EventSystem qui existait déjà AVANT (`eventSystemAvant`) n'est pas à nous, et
+                // pourrait être légitimement utilisé par un test frère dans le même domaine.
+                EventSystem eventSystemApres = EventSystem.current;
+                if (eventSystemApres != null && eventSystemApres != eventSystemAvant)
+                    Object.DestroyImmediate(eventSystemApres.gameObject);
             }
         }
 
@@ -519,6 +570,33 @@ namespace MafiaCleanCity.Shell.Tests
             // raycastable et couvre tout l'écran ; seul l'ordre de fratrie (ContentSlot < TopBarSlot)
             // met l'action de tête au-dessus. Cette assertion est ce qui rougirait si cet ordre
             // changeait — et l'ordre de fratrie, lui, est gardé ailleurs sans jamais tester CE tap.
+            //
+            // ⛔⛔ round 9 (revue ⊥, BLOQUANT 2) — LA PRÉCONDITION DE MODULE, qui manquait ICI alors
+            // que le round 7 l'a rendue OBLIGATOIRE pour cette forme EXACTE (`EventSystem.current.
+            // RaycastAll`) sur le site JUMEAU du dock (`CharpenteMontageLocatairesPlayModeTests.
+            // cs:945-963`). Mesuré par le round 7 : `RaycastAll` (`EventSystem.cs:266-281`) ne
+            // consulte QUE `RaycasterManager.GetRaycasters()` — il ne lit JAMAIS
+            // `currentInputModule`. Un `EventSystem` sans module d'entrée actif rend donc des
+            // résultats de raycast NON VIDES quand même (les raycasters restent enregistrés
+            // indépendamment du module) : la garde ci-dessous certifierait une sortie sur laquelle
+            // AUCUN tap ne pourra jamais être dispatché. Le chemin est OUVERT : `AppShell.
+            // EnsureEventSystem()` (`AppShell.cs:1071-1078`) ne pose le module QUE si aucun
+            // `EventSystem` n'existe déjà, et `FB_..._BrancheEchec` (ci-dessus) ne charge AUCUNE
+            // scène — c'est le test qui a le plus besoin de cette précondition et qui en avait le
+            // moins. `ProductionClickSupport.HasActiveInputModule` est PROMU (round 9) hors de
+            // `CharpenteMontageLocatairesPlayModeTests` pour être partagé ICI sans dupliquer.
+            GraphicRaycaster raycasterSortie = shell.ShellCanvas.GetComponent<GraphicRaycaster>();
+            Assert.IsNotNull(raycasterSortie,
+                $"({etiquetteBranche}) le Canvas du shell doit porter le GraphicRaycaster qu'un vrai " +
+                "doigt traverse (AppShell.BuildLayout le pose sur ShellCanvas).");
+            Assert.IsNotNull(EventSystem.current,
+                $"({etiquetteBranche}) aucun EventSystem.current — AppShell.EnsureEventSystem() doit avoir tourné.");
+            Assert.IsTrue(ProductionClickSupport.HasActiveInputModule(EventSystem.current, out string diagnosticModuleSortie),
+                $"({etiquetteBranche}) EventSystem.current n'a AUCUN module d'entrée actif " +
+                $"({diagnosticModuleSortie}) — EventSystem.RaycastAll (juste en dessous) ne le voit " +
+                "JAMAIS, donc cette garde de collision resterait VERTE même si AUCUN tap ne pouvait " +
+                "jamais être dispatché en production (round 7, BLOQUANT 1, sur le site jumeau).");
+
             var rectTete = (RectTransform)boutonTeteT;
             Vector2 centreTete = RectTransformUtility.WorldToScreenPoint(
                 null, rectTete.TransformPoint(rectTete.rect.center));
@@ -544,6 +622,55 @@ namespace MafiaCleanCity.Shell.Tests
                 "toute la barre — c'est le `raycastTarget` de l'affordance qui la fait gagner. " +
                 "Armer le (b) rend bien ce message avec « TopBarSlot ». Ne pas conclure du nom " +
                 "trouvé à la cause : les deux mondes produisent le même symptôme.");
+
+            // ⛔⛔ ruling user 2026-08-27 (MAJEUR 4 débloqué, scope borné à CETTE affordance de
+            // SORTIE) — LA GARDE PASSE DU POINT À L'AIRE. Un raycast au CENTRE (ci-dessus) reste
+            // vrai quand les BORDS de la zone tactile sont avalés — c'est très exactement ce que
+            // round 9 a nommé MAJEUR 4 : une garde qui prouve qu'un point mathématique atteint
+            // l'affordance ne prouve jamais qu'un DOIGT (qui a une AIRE, pas un point) l'atteint.
+            // Une garde qui vérifierait seulement que la zone tactile est DÉCLARÉE à ≥48 (un
+            // paramètre) serait une garde sur le PARAMÈTRE, pas sur l'EFFET — socle CLAUDE.md,
+            // « une garde sur les paramètres d'un effet n'est pas une garde sur son effet ».
+            // ⇒ Deux assertions, jamais une seule : (a) la GRANDEUR — la zone tactile mesure ≥48 dp
+            // sur les DEUX axes, lue sur `rectTete.rect` LUI-MÊME (jamais un pixel d'écran) : ce
+            // sous-arbre vit ENTIÈREMENT en coordonnées de maquette (`EchelleMaquette.
+            // LargeurHudBrennar = 392f`), un SEUL `localScale` le porte à l'écran
+            // (`AppShell.cs:617-628`), donc `rect.width`/`rect.height` LUS ICI sont déjà en dp,
+            // sans conversion ; (b) l'EFFET — un raycast à CHACUN des 4 coins de cette zone
+            // (retrait d'1 unité LOCALE pour ne jamais tomber pile sur la frontière) doit atterrir
+            // sur l'affordance elle-même ou un de ses enfants — EXACTEMENT la même tolérance
+            // `IsChildOf` que le centre ci-dessus.
+            Assert.GreaterOrEqual(rectTete.rect.width, 48f,
+                $"({etiquetteBranche}) la zone tactile de l'action de tête doit mesurer ≥48 dp de " +
+                $"large (minimum Android) DANS LE REPÈRE DE LA MAQUETTE — trouvé {rectTete.rect.width}.");
+            Assert.GreaterOrEqual(rectTete.rect.height, 48f,
+                $"({etiquetteBranche}) la zone tactile de l'action de tête doit mesurer ≥48 dp de " +
+                $"haut (minimum Android) DANS LE REPÈRE DE LA MAQUETTE — trouvé {rectTete.rect.height}.");
+
+            var coinsLocauxTete = new[]
+            {
+                new Vector2(rectTete.rect.xMin + 1f, rectTete.rect.yMin + 1f),
+                new Vector2(rectTete.rect.xMax - 1f, rectTete.rect.yMin + 1f),
+                new Vector2(rectTete.rect.xMin + 1f, rectTete.rect.yMax - 1f),
+                new Vector2(rectTete.rect.xMax - 1f, rectTete.rect.yMax - 1f),
+            };
+            foreach (Vector2 coinLocal in coinsLocauxTete)
+            {
+                Vector2 coinEcran = RectTransformUtility.WorldToScreenPoint(null, rectTete.TransformPoint(coinLocal));
+                var donneesCoin = new PointerEventData(EventSystem.current) { position = coinEcran };
+                var resultatsCoin = new List<RaycastResult>();
+                EventSystem.current.RaycastAll(donneesCoin, resultatsCoin);
+                Assert.IsTrue(resultatsCoin.Count > 0,
+                    $"({etiquetteBranche}) un raycast au coin {coinLocal} (local) de la zone tactile " +
+                    $"de l'action de tête (écran {coinEcran}) ne touche RIEN — les BORDS de la zone " +
+                    "sont avalés même si son CENTRE est atteignable.");
+                GameObject toucheCoin = resultatsCoin[0].gameObject;
+                Assert.IsTrue(toucheCoin == boutonTeteT.gameObject || toucheCoin.transform.IsChildOf(boutonTeteT),
+                    $"({etiquetteBranche}) le coin {coinLocal} (local) de la zone tactile doit " +
+                    $"atteindre l'affordance elle-même (ou un de ses enfants graphiques) — trouvé " +
+                    $"« {toucheCoin.name} ». Un coin avalé est un doigt qui rate la cible alors " +
+                    "qu'un raycast au centre seul la certifierait quand même.");
+            }
 
             // ⛔ LE GESTE DE PRODUCTION — jamais `shell.ExitToCityMap()` ni `.onClick.Invoke()` nu.
             ProductionClickSupport.Click(boutonTete);

@@ -31,7 +31,9 @@ namespace MafiaCleanCity.Tests
     // se lisait « ferme LA CLASSE [de l'atteignabilité au clic] » — FAUX, mesuré sur DEUX
     // mécanismes distincts, chacun `Charpente` 19/0 (donc INVISIBLES à ce helper ET à toutes les
     // gardes qui l'utilisent) : `img.raycastTarget = false` sur l'`Image` posée par
-    // `AppShell.AddTabButton` (`AppShell.cs:861-863` — l'UNIQUE surface de test de collision du
+    // `AppShell.AddTabButton` (`AppShell.cs:873-875` — round 9 (revue ⊥, MAJEUR 1) : ancre corrigée
+    // de +12, décalée par l'insertion round 7 (`AppShell.cs:1071-1078`, EnsureEventSystem) —
+    // l'UNIQUE surface de test de collision du
     // dock : les 4 autres enfants de chaque bulle sont DÉJÀ `raycastTarget = false`) et
     // `CanvasGroup.blocksRaycasts = false` sur `TabBarRoot`. Bypass volontaire du RAYCAST
     // (ci-dessous) : `ExecuteEvents.Execute` route DIRECTEMENT sur `bouton.gameObject`, sans
@@ -106,6 +108,33 @@ namespace MafiaCleanCity.Tests
                 "qu'un handler existe et a été invoqué ; l'ABSENCE d'effet (IsActive()/" +
                 "IsInteractable() faux) reste au site d'appel de l'observer.");
             return handlerAtteint;
+        }
+
+        // ⛔⛔ round 9 (revue ⊥, BLOQUANT 2) — PROMU ICI depuis
+        // `CharpenteMontageLocatairesPlayModeTests` (où il était `private static`, round 7) : la
+        // garde de collision neuve de `CharpenteOuvertureSessionOverlayPlayModeTests` (F-B, round
+        // 8) en a besoin elle aussi, et le socle est explicite — « ne le duplique pas : deux
+        // exemplaires = corriger l'un laisse l'autre ». Ce fichier est déjà importé par LES DEUX
+        // fichiers de test Charpente (`using MafiaCleanCity.Tests;`), donc promouvoir ici ne
+        // change AUCUNE surface d'import.
+        //
+        // round 7 (revue ⊥, BLOQUANT 1, sur le fichier d'origine) — `EventSystem.RaycastAll`
+        // (`EventSystem.cs:266-281`, package `com.unity.ugui`) ne consulte QUE
+        // `RaycasterManager.GetRaycasters()` — il ne lit JAMAIS `currentInputModule`. Un
+        // `EventSystem` sans module d'entrée actif rend donc des résultats de raycast NON VIDES
+        // quand même (les raycasters restent enregistrés indépendamment du module) : un tap ne
+        // sera jamais dispatché, et un test qui ne vérifie que `RaycastAll` certifierait cette
+        // sortie quand même. Ne lit JAMAIS `EventSystem.current` — prend l'instance en PARAMÈTRE,
+        // testable sur un `EventSystem` synthétique sans jamais devenir globalement "current".
+        public static bool HasActiveInputModule(EventSystem es, out string diagnostic)
+        {
+            if (es == null) { diagnostic = "EventSystem null"; return false; }
+            if (!es.isActiveAndEnabled) { diagnostic = "EventSystem existe mais n'est pas actif/enabled"; return false; }
+            BaseInputModule module = es.currentInputModule;
+            if (module == null) { diagnostic = "currentInputModule est null — aucun module d'entrée sélectionné"; return false; }
+            if (!module.isActiveAndEnabled) { diagnostic = $"{module.GetType().Name} existe mais n'est pas actif/enabled"; return false; }
+            diagnostic = $"{module.GetType().Name} actif";
+            return true;
         }
     }
 }
