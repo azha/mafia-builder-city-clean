@@ -44,6 +44,14 @@ namespace MafiaCleanCity.Shell
         private bool initialized;
 
         public int DailyReviewShortcutClicks { get; private set; }
+        // m5 (revue ⊥ item05-C2, mineur — détecteur de péremption) : miroir de `LastOpenedExceptions`
+        // ci-dessous, TOUJOURS null aujourd'hui — `ClickDailyReviewShortcut` ne fait qu'incrémenter
+        // un compteur (Deviation 1, `DailyReviewScreenController` n'est pas encore `IShellTenant`,
+        // C4a). Épingle la VALEUR, pas l'absence : le jour où C4a câble ce raccourci comme
+        // `ClickExceptionsShortcut` (posant ce champ), une assertion `IsNull` sur ce champ ROUGIRA —
+        // le `toBe(404)` dans le bon sens (socle : « un différé consigné qui n'est jamais repris
+        // n'est plus un différé, c'est un trou »).
+        public GameObject LastOpenedDailyReview { get; private set; }
         // ITEM 0.5 §2 — le raccourci "Exceptions", désormais câblé (voir le commentaire d'en-tête).
         public int ExceptionsShortcutClicks { get; private set; }
         public GameObject LastOpenedExceptions { get; private set; }

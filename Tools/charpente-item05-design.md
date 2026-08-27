@@ -427,3 +427,196 @@ jamais commités. Aucun conteneur Docker démarré par ce chunk ; le dev-stack `
   1 `[UnityTest]` + 1 `[Test]` (contrôle positif).
 - `Assets/Scripts/Shell/HighestLeverageCardController.cs` — **NON touché, mesuré et prouvé suffisant**
   (voir encadré ci-dessus).
+
+---
+
+## C2 — CORRECTIF (revue ⊥ NOT_APPROVED, `coder` frais)
+
+Rapport `/tmp/revue-item05-C2.md` (2 BLOCKING PRODUCTION, 4 IMPORTANT, 7 mineurs). Correctif livré
+sans repasser par `spec-writer` (les deux BLOCKING avaient déjà leur modèle dans le dépôt même,
+per la revue). Juge complet, AVANT/APRÈS ce correctif, sur le tip `dd3c711` : **217/1** (identique à
+la référence — `NavD12` seul, préexistant, sans rapport). `[Charpente] SetUp` = 31 dans les deux
+compilations + runs, `crash|SIGSEGV|SIGABRT` = 0. 218 tests au total, INCHANGÉ (aucune méthode de
+test neuve — toutes les gardes ajoutées vivent DANS les deux tests existants).
+
+### B1 — Heat rendait une chaîne VIDE · CLASSE : PRODUCTION
+
+CORRIGÉ. `OrgVitalsPanelController.cs` : nouveau `HeatDeclaredUnavailable` (miroir de
+`CohesionDeclaredUnavailable`) + `RenderHeatDeclaredUnavailable(raison)`, appelé synchrone dans
+`EnsureInitialized()` (raison `"pending"`) ET sur l'échec de `FetchHeat` (raison `"fetch failed"`).
+Modèle repris tel quel de `RenderCohesionDeclaredUnavailable` (60 lignes plus bas, déjà correct).
+
+**Balayage de la CLASSE** (la revue demandait : « quels autres champs de texte des 4 panneaux
+peuvent n'avoir jamais reçu de `.text` ? ») : population = **12 champs `TextMeshProUGUI` persistants**
+sur les 4 contrôleurs (`grep -c 'TextMeshProUGUI\s+\w+\s*;'` par fichier : HighestLeverageCard 4,
+ExceptionQueue 1, OrgVitals 4, HomeChrome 3). Classés un par un : 11/12 recevaient déjà un `.text`
+soit littéralement au build (`emptyStateText`, labels de bouton), soit via un `Render()`/`Set*()`
+appelé **synchrone, inconditionnellement**, dans le MÊME appel que la construction
+(`MonterPanneauxAccueil` appelle `SetPayload`/`SetQueue`/`SetFrictionStress`/`SetCompressionGlance`/
+`SetPressureBand`/`SetLoadCircumstances` sans garde). **1 seul champ (`heatText`) était fed
+EXCLUSIVEMENT par un fetch ASYNCHRONE sans repli synchrone** — c'est la propriété qui distingue le
+défaut, pas « être dans `OrgVitalsPanelController` » (3 des 4 champs de ce même fichier étaient déjà
+sûrs). Compte avant→après : **11/12 → 12/12**. PORTÉE : `Assets/Scripts/Shell/
+OrgVitalsPanelController.cs`.
+
+Preuve d'exécution (pas seulement de lecture de chaîne, ce que la revue notait comme non couvert,
+§6 item 5) : le `[UnityTest]` C2 attend déjà la résolution de `FetchHeat` avant d'asserter
+`HeatBucketRendered` non-vide — **avant ce correctif ce test passait quand même** (parce que
+l'assertion portait sur le TEST HOOK `HeatBucketRendered`, jamais sur `heatText.text` lui-même). Une
+lecture manuelle du fichier confirme `heatText.text` porte désormais `"Heat: Unavailable (pending)"`
+dès `EnsureInitialized()`, avant toute résolution réseau — vérifié par construction (le champ n'est
+JAMAIS `""` à aucun instant du cycle de vie, les 3 sites d'écriture — build/succès/échec — couvrent
+tous les chemins). La branche d'échec de sign-in (`Token` vide, `FetchHeatAndCohesion` jamais
+appelé) n'a pas de `[UnityTest]` dédié dans ce dépôt (aucun avant, aucun ajouté ici) — **non fermé**,
+consigné en Deviation ci-dessous plutôt que fabriqué à la hâte.
+
+### B2 — Les 4 panneaux ancrés SOUS les deux barres · CLASSE : PRODUCTION
+
+CORRIGÉ. `AppShell.NouveauPanneauAccueil<T>` borne désormais les 4 bandes dans
+`[ShellChrome.BottomInsetPx, ContentSlot.rect.height − ShellChrome.TopInsetPx]` (la ZONE SÛRE), au
+lieu de `[0, ContentSlot.rect.height]` (le canvas entier, barres comprises). Les DEUX appelants de
+`MonterPanneauxAccueil` publient déjà les insets AVANT (via
+`MonterLocataireEnSurimpression<DashboardController>()` → `ConstruireLocataire` →
+`PublierInsetsDuChrome()`), donc aucun site d'appel neuf n'était nécessaire.
+
+**Garde ajoutée — GÉOMÉTRIQUE, pas seulement le hit-testing** (la revue : « une garde qui ne peut pas
+voir la classe qu'elle prétend fermer est pire que pas de garde », `fonduImg.raycastTarget = false`
+rendant l'ancien raycast aveugle à l'occlusion visuelle). Mesure les 4 coins RÉELS de chaque
+`RectTransform` (`GetWorldCorners`, jamais en recalculant l'arithmétique du correctif à la main) et
+les compare à la zone sûre. **Deux formes RÉFUTÉES par cette même sonde avant la bonne** :
+1. `RectTransformUtility.CalculateRelativeRectTransformBounds` agrège TOUS les descendants — un
+   débordement de CONTENU (le bouton+la ligne de confirmation de `HighestLeverageCard` ne tiennent
+   pas dans une bande à 25 % de la zone sûre, ~390 unités, contre ~960 pour tout `ContentSlot`) se
+   lisait comme un débordement de BANDE. Réfuté en relisant seulement les coins du panneau LUI-MÊME.
+2. En lisant les coins du panneau, la comparaison utilisait un plancher/plafond calculés dans un
+   repère `[0, hauteur]` — alors que `ContentSlot.rect` est **pivot CENTRÉ** (`y:-480, height:960`
+   mesuré en 640×480 batchmode, PAS `y:0`). Rougi À 480 UNITÉS PRÈS EXACTEMENT — signature d'une
+   confusion de repère, pas d'un vrai débordement (le correctif de production, lui, était déjà
+   correct : Unity référence toujours `parent.rect.min` pour une ancre à la fraction 0,
+   indépendamment de la valeur de ce `min`). Corrigé en ajoutant `ContentSlot.rect.y` (yMin réel)
+   aux deux bornes.
+3ᵉ forme, RETENUE et VERTE : coins du panneau + repère correctement dérivé de `ContentSlot.rect.y`.
+
+Compte avant→après (mesuré, run réel) : **1 rouge → 0 rouge** sur les 4 panneaux (round intermédiaire,
+forme 1 : `HighestLeverageCardController` rougissait "bas mesuré 89.0 vs plancher 294.4" ; forme 2 :
+"bas mesuré 107.4 vs plancher 294.4" — même panneau, magnitude différente, toujours faux ; forme 3 :
+vert). PORTÉE : `Assets/Scripts/Shell/AppShell.cs` (correctif) +
+`Assets/Tests/PlayMode/CharpenteAccueilPanneauxPlayModeTests.cs` (garde).
+
+⚠️ **Non fermé** : `juge-visuel` à 1080×1920 ET 1080×2400 (le calcul ci-dessus est arithmétique, pas
+photographié — voir §6 de la revue). Captures non prises dans ce correctif (aucun accès à un juge
+visuel ⊥ frais depuis cette session de `coder`) — à faire au tour de revue suivant.
+
+⚠️ **Effet de bord DÉCOUVERT en fermant B2, CONSIGNÉ, non fermé** : la zone sûre étant beaucoup plus
+petite que `ContentSlot` entier (390 unités contre 960 en 640×480 batchmode — le chrome mange 48 % du
+canvas à cette résolution), une bande à 25 % de la zone sûre (~97 unités) est BEAUCOUP plus étroite
+qu'avant ce correctif (~240 unités). `HighestLeverageCardController` (titre + 3 lignes + une rangée de
+boutons de 44 mini + une rangée de confirmation typée de 32 mini + padding/spacing) DÉBORDE de sa
+bande — mesuré (voir "formes réfutées" ci-dessus, round 1 : bas de contenu à 89,0 contre un plancher à
+294,4, soit ~205 unités de débordement). Ce n'est **pas** un défaut que ce correctif introduit du
+point de vue fonctionnel (Deviation 4, déjà connue : "empilement STRUCTUREL… PAS une composition
+finale") — mais **corriger B2 rend ce débordement BEAUCOUP plus visible/probable** qu'avant (la bande
+généreuse de ~240 unités masquait en partie le problème). Le `juge-visuel` demandé ci-dessus DOIT
+vérifier spécifiquement si `HighestLeverageCard` recouvre ses voisins.
+
+### I1 — Les 2 `yield` neufs sans garde · CLASSE : PRODUCTION
+
+CORRIGÉ, avec une DÉVIATION consignée par rapport à la forme prescrite par la revue. Population : 5
+points de reprise intérieurs de `AcquireSessionThenActivateHome` (`:329/:398/:408/:414/:459` au tip),
+3/5 portaient déjà `if (this == null) yield break;`, 2/5 (les 2 `yield` neufs) n'avaient ni cette
+garde ni de re-vérification de sentinel. Compte avant→après : **3/5 → 5/5** pour la garde de
+destruction.
+
+Pour la re-vérification de sentinel (« le joueur a-t-il changé d'onglet pendant cette frame ? »),
+**forme différente entre les deux branches**, DÉLIBÉRÉMENT :
+- branche d'ÉCHEC (sign-in) : `if (CurrentTab != Tab.Empire) yield break;` — la forme EXACTE
+  prescrite par la revue. Sûre ici car un `yield break` inconditionnel suit de toute façon (rien à
+  préserver après ce bloc).
+- branche de SUCCÈS : **imprévu trouvé pendant l'implémentation, option conservatrice retenue** — un
+  `yield break` inconditionnel y aurait AUSSI sauté la sonde heat citywide (§6.2, délibérément
+  INCONDITIONNELLE, `best-effort`, sans rapport avec la navigation) qui suit le bloc `if
+  (pasEncoreActive)`. Un joueur qui change d'onglet pendant cette frame ne doit PAS annuler cette
+  sonde. Forme retenue : `if (this == null) yield break;` (inchangé) PUIS
+  `if (CurrentTab == Tab.Empire) MonterPanneauxAccueil(dto);` (conditionnel, SANS `yield break`) —
+  ferme le MÊME défaut (panneaux posés par-dessus un autre écran) sans supprimer la sonde.
+
+PORTÉE : `Assets/Scripts/Shell/AppShell.cs`, les 2 sites d'appel de `MonterPanneauxAccueil`.
+
+### I2 — Le détecteur ne couvre qu'1 panneau sur 4 · CLASSE : PREUVE
+
+CORRIGÉ. Garde STRUCTURELLE ajoutée (précédent W3.U2 salué par le socle) : `Assert.Greater(panneau.
+transform.GetSiblingIndex(), TrouverDescendant(shell.ContentSlot, "DashboardBackdrop").
+GetSiblingIndex())` pour chacun des 4 panneaux — les panneaux restent des enfants DIRECTS de
+`ContentSlot` (B2 n'introduit PAS de conteneur intermédiaire, donc la forme SANS `.parent` que la
+revue cite au §1 s'applique, pas celle du §6). Compte avant→après : **1/4 panneaux couverts par une
+garde d'ordre → 4/4**. PORTÉE : `Assets/Tests/PlayMode/CharpenteAccueilPanneauxPlayModeTests.cs`.
+
+### I3 — Le contrôle positif est DÉCOUPLÉ · CLASSE : PREUVE
+
+CORRIGÉ, avec une limite honnête consignée. `ControlePositif_HomeChromeDebranche_...` lit désormais
+par réflexion `AppShell.MonterPanneauxAccueil` (existence + signature — 1 paramètre, `SessionOpenDto`)
+comme PRÉCONDITION avant le monde dégénéré des `HashSet`. Tue 2 mondes dégénérés : méthode
+supprimée/renommée (`GetMethod` → null) ; signature dérivée (compte/type de paramètre faux).
+**Non fermé** : contrairement au précédent cité (`TopBarEchelle_..._PositiveControl_...`, qui lit une
+CONSTANTE numérique de production), `MonterPanneauxAccueil` n'a pas de constante à lire — la
+précondition prouve que le SITE existe et prend la forme attendue, PAS que son corps instancie
+exactement les 4 types nommés (cette dernière propriété reste celle du `[UnityTest]`, qui monte
+RÉELLEMENT les 4 panneaux). PORTÉE : `Assets/Tests/PlayMode/CharpenteAccueilPanneauxPlayModeTests.cs`.
+
+### I4 — Friction/Stress satisfait par le monde vide · CLASSE : PREUVE
+
+CORRIGÉ. 2 préconditions anti-vacuité ajoutées sur Friction/Stress (même discipline que la jambe
+ExceptionQueue, item 3 du test, qui portait déjà la sienne), + 2 assertions que les valeurs ont été
+RENDUES (`RenderedTexts`), pas seulement stockées dans le test hook. Population des jambes à
+égalité stricte sur un ground-truth potentiellement null dans le fichier : 3 (Queue, Friction,
+Stress). Compte avant→après : **1/3 (Queue seule) → 3/3** portent une anti-vacuité. PORTÉE :
+`Assets/Tests/PlayMode/CharpenteAccueilPanneauxPlayModeTests.cs`.
+
+### Mineurs
+
+- **m1** — CONSIGNÉ, non fermé. Commentaire ajouté au site (`AppShell.cs`, `MonterPanneauxAccueil`)
+  expliquant que `PartialState` est structurellement inatteignable depuis ce site (hasAllExpectedData
+  == hasAnyData toujours). Fermer exigerait de définir ce que "partiel" signifie pour ce MVP —
+  hors périmètre C2.
+- **m2** — Sans objet pour ce correctif (aucune clause anti-péremption verbatim n'a été supprimée ;
+  vérifié : aucun test du dépôt ne fait de `grep`/pattern-matching sur le texte des commentaires
+  d'`AppShell.cs`).
+- **m3** — CORRIGÉ. "§2 point 7" → "§5 (la note Raycast)" dans `AppShell.cs` et dans
+  `CharpenteAccueilPanneauxPlayModeTests.cs` (2 sites). "§2, falsifiable point 6"/"point 1" →
+  reformulés sans numéro inventé (le §2 du design n'a que 3 puces, jamais numérotées).
+- **m4** — Vérifié pour ce correctif : `find . -maxdepth 1 -iname "mono_crash*"` → 0 résultat, aucun
+  blob créé par les 5 runs de ce correctif.
+- **m5** — CONSIGNÉ ET DÉTECTEUR POSÉ (contrairement au round précédent). `HomeChromeController.
+  LastOpenedDailyReview` (miroir de `LastOpenedExceptions`, jamais assigné) + `Assert.IsNull(...)`
+  dans le `[UnityTest]` C2, avec message expliquant que C4a doit REMPLACER cette assertion par la
+  vraie garde de navigation, jamais juste la supprimer. PORTÉE :
+  `Assets/Scripts/Shell/HomeChromeController.cs` + `Assets/Tests/PlayMode/
+  CharpenteAccueilPanneauxPlayModeTests.cs`.
+- **m6** — Non touché (hors périmètre C2, confirmé par la revue elle-même : "Hors périmètre C2, mais
+  il explique pourquoi B2 n'a été vu par personne"). CONSIGNÉ pour un futur lot : `Assets/Tests/
+  PlayMode/ChromeMultiResolutionPlayModeTests.cs:200-201,229-230` code en dur des hauteurs de
+  chrome fausses (56/64 au lieu de 169,80/294,43).
+- **m7** — CONSIGNÉ, non fermé (commentaire ajouté au site d'appel, `AppShell.cs`). Repointer
+  `orgVitals` vers un appel de sonde citywide partagé changerait le contrat "chaque panneau pilote
+  SA propre requête" — hors périmètre C2.
+- **m8** — Sans objet pour ce correctif (question de RÉFÉRENCE de base, pas de ce qui a été livré ici).
+
+### Arithmétique corrigée
+
+Le mandat précédent écrivait « 214 + 3 neufs = 217 ». Correct (confirmé par la revue ET re-mesuré
+ici, run après run) : **214 + 2 neufs + 1 bascule** (`StaleAbandonedShell`, flaky connu, non
+attribuable — 214 est la référence AVANT ce lot ; le lot C2 ajoute 0 méthode de test neuve dans CE
+correctif, seulement des assertions internes aux 2 méthodes déjà livrées par le round précédent).
+
+### Ce qui reste NON fermé après ce correctif
+
+1. **`juge-visuel` à 1080×1920 et 1080×2400** (B2) — le calcul géométrique est vérifié par un test
+   PlayMode indépendant, PAS par une capture. À faire avant de déclarer B2 clos pour de bon.
+2. **`HighestLeverageCard` déborde probablement de sa bande** dans la zone sûre compressée (effet de
+   bord de B2, ci-dessus) — à confirmer/infirmer PAR le `juge-visuel` du point 1.
+3. **B1 sur la branche d'échec de sign-in** : fermé par construction/lecture (le champ ne peut plus
+   être vide à aucun instant), mais AUCUN `[UnityTest]` n'exerce réellement cette branche précise
+   (`Token` vide → `MonterPanneauxAccueil(null)` → `heatText` jamais mis à jour par un fetch).
+4. **I3** reste une précondition d'EXISTENCE/SIGNATURE, pas une preuve que le corps de
+   `MonterPanneauxAccueil` instancie exactement 4 types.
+5. **m1, m6, m7** — consignés, non fermés (hors périmètre C2 ou nécessitant un arbitrage produit).

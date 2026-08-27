@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -205,7 +206,8 @@ namespace MafiaCleanCity.Shell.Tests
                 yield return null;
             }
 
-            // ── 1. Les 4, NOMMÉS — égalité d'ENSEMBLES, jamais un compte (§2, falsifiable point 1). ──
+            // ── 1. Les 4, NOMMÉS — égalité d'ENSEMBLES, jamais un compte (§2, 1ère puce de la
+            //      falsifiable : « l'Accueil monte les 4, nommés »). ──
             // ⛔ NE FABRIQUE AUCUN panneau — ils doivent être trouvés MONTÉS PAR LA PRODUCTION.
 
             var attendus = new HashSet<string>
@@ -221,6 +223,94 @@ namespace MafiaCleanCity.Shell.Tests
             CollectionAssert.AreEquivalent(attendus, trouves,
                 $"l'Accueil doit monter les 4 panneaux NOMMÉS — trouvé {{{string.Join(", ", trouves)}}} sur " +
                 $"{{{string.Join(", ", attendus)}}}.");
+
+            // ── I2 (revue ⊥ item05-C2, IMPORTANT-PREUVE) — garde STRUCTURELLE d'ordre de fratrie,
+            //      précédent maison (W3.U2 : « le SEUL tour sans BLOCKING est celui dont le
+            //      correctif porte sa garde STRUCTURELLE — un ordre de fratrie testable SANS
+            //      pixel »). Le raycast du §6 plus bas ne couvre qu'1 panneau sur 4
+            //      (Shortcut_Second) : un occultant PARTIEL créé APRÈS les panneaux (ex.
+            //      DashboardSheet, 560×560, ancré HAUT, `Image` opaque) recouvrirait 3 panneaux sur
+            //      4 sans jamais toucher les 4 coins de Shortcut_Second — cette garde-là resterait
+            //      VERTE à travers ce défaut. La garde d'ordre ci-dessous ferme la CLASSE (peu
+            //      importe la forme/taille de l'occultant) : les 4 panneaux doivent être des frères
+            //      CADETS de DashboardBackdrop dans ContentSlot, jamais des aînés. ──
+            Transform dashboardBackdrop = TrouverDescendant(shell.ContentSlot, "DashboardBackdrop");
+            Assert.IsNotNull(dashboardBackdrop,
+                "précondition de la garde d'ordre : DashboardBackdrop doit exister sous ContentSlot " +
+                "(posé par DashboardController.BuildLayout(), monté en surimpression AVANT les " +
+                "panneaux) — sinon cette garde ne défend rien.");
+            int indexBackdrop = dashboardBackdrop.GetSiblingIndex();
+            foreach ((string nomPanneau, Transform hote) in new[]
+                     {
+                         (nameof(HighestLeverageCardController), hlCard.transform),
+                         (nameof(ExceptionQueuePanelController), exceptionQueue.transform),
+                         (nameof(OrgVitalsPanelController), orgVitals.transform),
+                         (nameof(HomeChromeController), homeChrome.transform),
+                     })
+            {
+                Assert.Greater(hote.GetSiblingIndex(), indexBackdrop,
+                    $"{nomPanneau} doit être un frère CADET de DashboardBackdrop sous ContentSlot " +
+                    "(rendu ET raycasté PAR-DESSUS lui) — sinon un occultant plein écran créé " +
+                    "entre-temps le recouvre, invisible à toute assertion qui ne lit que l'état C#.");
+            }
+
+            // ── B2 (revue ⊥ item05-C2, BLOQUANT-PRODUCTION) — garde GÉOMÉTRIQUE, pas seulement le
+            //      hit-testing du raycast (§6 plus bas, qui ne couvre que 4 points d'UN panneau) :
+            //      la BANDE de chaque panneau (son PROPRE RectTransform, pas ses descendants) doit
+            //      tenir DANS la zone sûre que le shell PUBLIE (`ShellChrome.Top/BottomInsetPx`),
+            //      mesurée par un canal INDÉPENDANT de l'arithmétique du correctif
+            //      (`AppShell.NouveauPanneauAccueil`) : les 4 coins RÉELS du RectTransform,
+            //      résolus par Unity (`GetWorldCorners`, jamais en recalculant `yMin*safeHeight` à
+            //      la main — ce qui ne testerait que "le correctif est d'accord avec lui-même").
+            //      ⚠️ DEUX FORMES ANTÉRIEURES RÉFUTÉES PAR CETTE MÊME SONDE (elle mesurait la
+            //      grandeur voisine, pas la bonne, deux fois de suite) :
+            //      (1) `RectTransformUtility.CalculateRelativeRectTransformBounds(ContentSlot,
+            //          hote)` agrège TOUS les descendants — le débordement de CONTENU d'un panneau
+            //          (une bande à 25 % de la zone sûre, ~390 unités, est bien plus étroite qu'à
+            //          25 % de tout `ContentSlot`, 960 — Deviation 4, "empilement STRUCTUREL, pas
+            //          une composition finale") se lisait comme un débordement de BANDE.
+            //      (2) en lisant les coins du panneau LUI-MÊME (au lieu de ses descendants), le test
+            //          comparait la position MESURÉE (dans l'espace local de `ContentSlot`, qui
+            //          n'est PAS [0, hauteur] mais [`ContentSlot.rect.yMin`, `ContentSlot.rect.
+            //          yMax`] — mesuré : `rect=(y:-480.00, height:960.00)`, un pivot CENTRÉ, pas
+            //          coin bas-gauche) à un plancher/plafond calculés dans un repère [0, hauteur].
+            //          Contrôle positif involontaire : ça a rougi À 480 UNITÉS PRÈS EXACTEMENT — la
+            //          signature d'une confusion de REPÈRE, pas d'un vrai débordement (Unity, lui,
+            //          référence TOUJOURS `parent.rect.min` pour une ancre à la fraction 0 : le
+            //          correctif de production (`NouveauPanneauAccueil`) était donc déjà CORRECT,
+            //          seul ce test comparait deux repères différents). ──
+            float contentSlotYMin = shell.ContentSlot.rect.y; // Rect.y == yMin, PAS 0 (pivot centré)
+            float contentSlotYMax = contentSlotYMin + shell.ContentSlot.rect.height;
+            float plafondZoneSure = contentSlotYMax - ShellChrome.TopInsetPx;
+            float plancherZoneSure = contentSlotYMin + ShellChrome.BottomInsetPx;
+            var coinsMonde = new Vector3[4];
+            foreach ((string nomPanneau, RectTransform hote) in new[]
+                     {
+                         (nameof(HighestLeverageCardController), (RectTransform)hlCard.transform),
+                         (nameof(ExceptionQueuePanelController), (RectTransform)exceptionQueue.transform),
+                         (nameof(OrgVitalsPanelController), (RectTransform)orgVitals.transform),
+                         (nameof(HomeChromeController), (RectTransform)homeChrome.transform),
+                     })
+            {
+                hote.GetWorldCorners(coinsMonde);
+                float bandeYMin = float.MaxValue, bandeYMax = float.MinValue;
+                foreach (Vector3 coin in coinsMonde)
+                {
+                    float yLocal = shell.ContentSlot.InverseTransformPoint(coin).y;
+                    bandeYMin = Mathf.Min(bandeYMin, yLocal);
+                    bandeYMax = Mathf.Max(bandeYMax, yLocal);
+                }
+                Assert.LessOrEqual(bandeYMax, plafondZoneSure + 0.5f,
+                    $"{nomPanneau} : sa BANDE déborde AU-DESSUS de la zone sûre publiée par le " +
+                    $"shell — haut mesuré {bandeYMax:F1}, plafond {plafondZoneSure:F1} " +
+                    $"(ContentSlot.rect.yMax={contentSlotYMax:F1} − " +
+                    $"ShellChrome.TopInsetPx={ShellChrome.TopInsetPx:F1}) — le bandeau recouvrirait ce panneau.");
+                Assert.GreaterOrEqual(bandeYMin, plancherZoneSure - 0.5f,
+                    $"{nomPanneau} : sa BANDE déborde SOUS la zone sûre publiée par le shell — bas " +
+                    $"mesuré {bandeYMin:F1}, plancher {plancherZoneSure:F1} " +
+                    $"(ContentSlot.rect.yMin={contentSlotYMin:F1} + " +
+                    $"ShellChrome.BottomInsetPx={ShellChrome.BottomInsetPx:F1}) — le dock recouvrirait ce panneau.");
+            }
 
             // ── Ground-truth INDÉPENDANT (C6F3/C6F4-style) — jamais recopié depuis le shell lui-même. ──
             SessionOpenDto verite = null;
@@ -274,11 +364,34 @@ namespace MafiaCleanCity.Shell.Tests
                 "du trou déclaré que ce chunk imite pour les 3 autres panneaux.");
             Assert.IsTrue(orgVitals.RenderedTexts.Any(t => t.Contains("Unavailable")));
 
+            // I4 (revue ⊥ item05-C2, IMPORTANT-PREUVE) — ANTI-VACUITÉ D'ABORD : sans elle, un
+            // ground-truth qui rendrait ces deux clés null satisferait l'égalité ci-dessous À VIDE
+            // (null==null), pendant que le test DÉCLARE "MONDE RÉEL". Mesuré côté back (revue ⊥) :
+            // ce n'est PAS vide aujourd'hui — session-open-sequence.service.ts:412 rend
+            // `{ friction_bucket: 'light', penalty_active: false }` PAR DÉFAUT — même discipline que
+            // l'anti-vacuité déjà posée sur la jambe ExceptionQueue (`Assert.Greater(verite.queue?.
+            // Length ?? 0, 0, …)` ci-dessus).
+            Assert.IsFalse(string.IsNullOrEmpty(verite.friction_glance?.friction_bucket),
+                "PRÉCONDITION du ground-truth : session/open doit porter un friction_bucket non-vide " +
+                "— sans lui cette jambe serait vraie À VIDE (null==null) alors que le test déclare " +
+                "MONDE RÉEL.");
+            Assert.IsFalse(string.IsNullOrEmpty(verite.compression_glance?.stress_bucket),
+                "PRÉCONDITION du ground-truth : idem pour stress_bucket.");
+
             Assert.AreEqual(verite.friction_glance?.friction_bucket, orgVitals.FrictionBucketRendered,
                 "Friction vient du MÊME payload session/open que ce shell a reçu (design : \"Friction et " +
                 "Stress viennent, eux, du payload que C3 fournit\") — comparé au ground-truth, jamais " +
                 "supposé stable d'une exécution à l'autre.");
             Assert.AreEqual(verite.compression_glance?.stress_bucket, orgVitals.StressBucketRendered);
+            // I4 — et le test hook n'est pas le RENDU : sans ça, un panneau qui stockerait la valeur
+            // sans jamais l'écrire dans un TextMeshProUGUI passerait quand même (précédent maison :
+            // l'assertion équivalente sur HighestLeverageCard, plus haut, "le texte RENDU doit
+            // porter…", pas seulement le test hook).
+            Assert.IsTrue(orgVitals.RenderedTexts.Any(t => t.StartsWith("Friction:")),
+                "Friction doit avoir été RENDU (un TextMeshProUGUI assigné), pas seulement stocké " +
+                "dans le test hook FrictionBucketRendered.");
+            Assert.IsTrue(orgVitals.RenderedTexts.Any(t => t.StartsWith("Stress:")),
+                "Stress doit avoir été RENDU, pas seulement stocké dans le test hook StressBucketRendered.");
 
             float ecoule = 0f;
             while (orgVitals.HeatBucketRendered == null && orgVitals.LastHeatError == null && ecoule < 15f)
@@ -307,6 +420,20 @@ namespace MafiaCleanCity.Shell.Tests
                 "le bandeau doit refléter EXACTEMENT compression_glance du ground-truth (forced OU " +
                 "week_state != 'none') — jamais une valeur supposée à l'avance.");
 
+            // m5 (revue ⊥ item05-C2, mineur — détecteur de péremption, "le toBe(404) dans le bon
+            //      sens") : Deviation 1 (Shortcut_DailyReview, C4a) n'a JAMAIS été asserté nulle
+            //      part — épingle la VALEUR actuelle plutôt que de la laisser filer sans détecteur.
+            //      Ce panneau EST monté PAR LA PRODUCTION (ci-dessus), donc c'est le bon objet à
+            //      épingler. Le jour où C4a câble Shortcut_DailyReview identiquement à
+            //      Shortcut_Second (posant LastOpenedDailyReview), CETTE assertion ROUGIRA — signal
+            //      qu'il faut alors écrire la vraie garde de navigation pour ce raccourci, pas
+            //      supprimer une assertion qui n'a plus de sens. ──
+            Assert.IsNull(homeChrome.LastOpenedDailyReview,
+                "Deviation 1 (Tools/charpente-item05-design.md) : Shortcut_DailyReview ne navigue " +
+                "PAS encore (C4a, hors périmètre C2) — si ceci ROUGIT, C4a a câblé ce raccourci : " +
+                "écrire ici la même garde de clic+raycast que Shortcut_Second ci-dessous, ne pas " +
+                "juste retirer cette ligne.");
+
             // ── I6 (revue ⊥ v4) — la machine à 5 états : la branche "tout est chargé" rend LA MÊME
             //      valeur que le défaut jamais câblé (`:19`/`:56`, indiscriminante) — on ne l'asserte
             //      donc JAMAIS depuis le chemin réel. On DÉCLARE et exerce DIRECTEMENT la SEULE
@@ -326,8 +453,9 @@ namespace MafiaCleanCity.Shell.Tests
             Assert.IsTrue(ProductionClickSupport.HasActiveInputModule(EventSystem.current, out string diagModule),
                 $"EventSystem.current n'a AUCUN module d'entrée actif ({diagModule}) — un tap réel ne serait " +
                 "jamais dispatché, et un raycast seul certifierait quand même une cible morte au doigt.");
-            // ⚠️ Rect.Contains est DEMI-OUVERT : tirer sur les 4 coins EXACTS en rate 3 sur 4 (§2,
-            // point 7). On tire sur des points EN RETRAIT des coins.
+            // ⚠️ Rect.Contains est DEMI-OUVERT : tirer sur les 4 coins EXACTS en rate 3 sur 4 (m3,
+            // revue ⊥ item05-C2 : cette note vit au §5 du design, pas "§2 point 7" — corrigé). On
+            // tire sur des points EN RETRAIT des coins.
             var coinsLocaux = new[]
             {
                 new Vector2(rectRaccourci.rect.xMin + 1f, rectRaccourci.rect.yMin + 1f),
@@ -368,16 +496,47 @@ namespace MafiaCleanCity.Shell.Tests
         }
 
         // ══════════════════════════════════════════════════════════════════════════════════════
-        // CONTRÔLE POSITIF (§2, falsifiable point 6) — débrancher DÉLIBÉRÉMENT un panneau (nommé)
-        // doit faire ROUGIR la garde des 4 NOMMÉS ci-dessus. Recalcule la MÊME comparaison
-        // (`CollectionAssert.AreEquivalent`) sur un ensemble PRIVÉ d'un membre — patron déjà établi
-        // par `CharpenteOuvertureSessionOverlayPlayModeTests.TopBarEchelle_..._PositiveControl_...`
-        // (round 15) : pas besoin de rejouer Play Mode, la classe de défaut (un ensemble incomplet)
-        // ne dépend pas d'un Canvas réel pour être démontrée.
+        // CONTRÔLE POSITIF (§2 : "l'Accueil monte les 4, nommés") — débrancher DÉLIBÉRÉMENT un
+        // panneau (nommé) doit faire ROUGIR la garde des 4 NOMMÉS ci-dessus. Recalcule la MÊME
+        // comparaison (`CollectionAssert.AreEquivalent`) sur un ensemble PRIVÉ d'un membre — patron
+        // déjà établi par `CharpenteOuvertureSessionOverlayPlayModeTests.TopBarEchelle_..._
+        // PositiveControl_...` (round 15) : pas besoin de rejouer Play Mode, la classe de défaut
+        // (un ensemble incomplet) ne dépend pas d'un Canvas réel pour être démontrée.
+        //
+        // I3 (revue ⊥ item05-C2, IMPORTANT-PREUVE, CORRIGÉ) — AVANT ce correctif, cette méthode ne
+        // touchait ni `MonterPanneauxAccueil`, ni `ContentSlot`, ni un `AppShell` : supprimer
+        // INTÉGRALEMENT `MonterPanneauxAccueil` de `AppShell.cs` la laissait VERTE — elle prouvait
+        // une propriété de NUnit (`CollectionAssert.AreEquivalent` sait détecter un ensemble
+        // incomplet), pas une propriété de la garde qu'elle prétend défendre. Le précédent qu'elle
+        // cite (`TopBarEchelle_..._PositiveControl_...`) lit les constantes de PRODUCTION par
+        // réflexion et pose une PRÉCONDITION explicite ("sinon ce contrôle ne prouve rien") avant
+        // le monde dégénéré. RECOUPLÉ ici avec la même discipline : `MonterPanneauxAccueil` n'a pas
+        // de constante numérique à lire (4 `AddComponent<T>()` inlinés, pas un tableau déclaré) —
+        // la précondition disponible est l'EXISTENCE et la SIGNATURE de la méthode elle-même.
+        // ⚠️ Limite honnête (non fermée) : ceci prouve que le SITE existe et prend la forme
+        // attendue — PAS que son corps instancie exactement les 4 types nommés. Cette dernière
+        // propriété reste celle du `[UnityTest]` ci-dessus (montage RÉEL, par la production).
         // ══════════════════════════════════════════════════════════════════════════════════════
         [Test]
         public void ControlePositif_HomeChromeDebranche_FaitRougirLaGardeDes4PanneauxNommes()
         {
+            // Monde dégénéré n°1 (I3) : la méthode que ce contrôle prétend défendre a disparu
+            // (supprimée ou renommée) — sans cette précondition, le contrôle restait vert.
+            MethodInfo methodeMontage = typeof(AppShell).GetMethod(
+                "MonterPanneauxAccueil", BindingFlags.NonPublic | BindingFlags.Instance);
+            Assert.IsNotNull(methodeMontage,
+                "PRÉCONDITION du contrôle : AppShell.MonterPanneauxAccueil doit exister — sinon ce " +
+                "contrôle positif ne défend rien de réel, seulement une propriété de NUnit.");
+
+            // Monde dégénéré n°2 (I3) : la signature a dérivé (ex. un lot futur qui la ferait
+            // prendre 2 panneaux au lieu de 4 devrait D'ABORD rougir ici, pas seulement dans le
+            // [UnityTest] coûteux).
+            ParameterInfo[] parametres = methodeMontage.GetParameters();
+            Assert.AreEqual(1, parametres.Length,
+                "PRÉCONDITION : MonterPanneauxAccueil doit prendre EXACTEMENT le DTO de session/open " +
+                "— une signature qui a dérivé doit rougir ICI avant d'être découverte ailleurs.");
+            Assert.AreEqual(typeof(SessionOpenDto), parametres[0].ParameterType);
+
             var attendus = new HashSet<string>
             {
                 nameof(HighestLeverageCardController), nameof(ExceptionQueuePanelController),

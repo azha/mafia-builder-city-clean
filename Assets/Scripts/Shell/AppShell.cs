@@ -390,12 +390,25 @@ namespace MafiaCleanCity.Shell
                     // AVANT cette frame les rend PLUS TÔT dans l'ordre de fratrie de `ContentSlot` —
                     // `DashboardBackdrop`, créé APRÈS eux, les recouvre TOUS au raycast ET au rendu, un
                     // défaut invisible à toute assertion qui ne lit que l'état C# (RenderedTexts, etc.),
-                    // exactement le trou que §2 point 7 nomme. ⇒ Un seul frame de marge (même patron que
-                    // `CharpenteOuvertureSessionOverlayPlayModeTests.cs` : "le montage EN SURIMPRESSION
-                    // du Dashboard est SYNCHRONE ... un seul frame de marge suffit") suffit pour que
-                    // `DashboardBackdrop`/`DashboardSheet` existent déjà quand les panneaux sont montés
-                    // À LEUR TOUR — ils deviennent alors les frères CADETS, rendus PAR-DESSUS.
+                    // exactement le trou que §5 (la note Raycast) nomme. ⇒ Un seul frame de marge (même
+                    // patron que `CharpenteOuvertureSessionOverlayPlayModeTests.cs` : "le montage EN
+                    // SURIMPRESSION du Dashboard est SYNCHRONE ... un seul frame de marge suffit") suffit
+                    // pour que `DashboardBackdrop`/`DashboardSheet` existent déjà quand les panneaux sont
+                    // montés À LEUR TOUR — ils deviennent alors les frères CADETS, rendus PAR-DESSUS.
                     yield return null;
+                    // I1 (revue ⊥ item05-C2, IMPORTANT-PRODUCTION) — des 5 reprises intérieures de
+                    // cette coroutine, les 2 `yield return null;` neufs de ce chunk étaient les
+                    // SEULES à n'avoir ni la garde de destruction ni une re-vérification de sentinel.
+                    // (a) shell détruit pendant l'attente ⇒ `MonterPanneauxAccueil` parenterait sur un
+                    // `ContentSlot` détruit — même invariant que `:330`/`:409`/`:415` ("shell torn
+                    // down mid-fetch"). (b) joueur qui touche un AUTRE onglet PENDANT cette frame ⇒
+                    // `ActivateTab` (ci-dessus) a déjà vidé `ContentSlot` et monté l'écran demandé ;
+                    // sans re-vérification, les 4 panneaux de l'Accueil se poseraient PAR-DESSUS lui —
+                    // nommément la classe "IMPORTANT-1 (verdict ⊥ HUD v3.1)" citée 24 lignes plus haut
+                    // ("payée deux fois"), ici une TROISIÈME. La sentinelle `(Tab)(-1)` ne peut plus
+                    // être relue telle quelle : `ActivateTab` vient de la remplacer par `Tab.Empire`.
+                    if (this == null) yield break; // shell torn down mid-fetch
+                    if (CurrentTab != Tab.Empire) yield break; // joueur déjà parti vers un autre onglet pendant ce frame
                     MonterPanneauxAccueil(null); // aucune session obtenue — les 4 rendent leur état vide NOMMÉ
                 }
                 yield break;
@@ -457,7 +470,18 @@ namespace MafiaCleanCity.Shell
                 // deviennent les frères CADETS de `DashboardBackdrop`/`DashboardSheet` (différés d'une
                 // frame par le cycle de vie `IShellTenant`), jamais recouverts par eux.
                 yield return null;
-                MonterPanneauxAccueil(dto);
+                // I1 (revue ⊥ item05-C2, IMPORTANT-PRODUCTION) — mêmes DEUX modes d'échec que la
+                // branche d'échec ci-dessus (shell détruit / joueur déjà parti vers un autre onglet
+                // pendant cette frame), mais fermés ICI d'une forme légèrement différente et DÉLIBÉRÉE
+                // (déviation consignée, implementation-notes) : la branche d'échec `yield break`
+                // directement parce qu'un `yield break` inconditionnel la suit de toute façon (rien
+                // à préserver après). ICI, la sonde heat citywide (juste en dessous, §6.2) est
+                // délibérément INCONDITIONNELLE — elle ne doit PAS être sautée par un simple aléa de
+                // navigation vers un autre onglet. `this == null` reste un `yield break` immédiat
+                // (objet détruit ⇒ toucher `PublishCitywideHeat`/`t` plus bas serait unsafe) ; le
+                // sentinel de navigation, lui, ne garde QUE le montage des panneaux.
+                if (this == null) yield break; // shell torn down mid-fetch
+                if (CurrentTab == Tab.Empire) MonterPanneauxAccueil(dto);
             }
 
             // §6.2, AMENDÉ (B1, Deviation) — le chunk 5 sondait CONDITIONNELLEMENT ("seulement si le
@@ -569,6 +593,13 @@ namespace MafiaCleanCity.Shell
 
             OrgVitalsPanelController orgVitals = NouveauPanneauAccueil<OrgVitalsPanelController>("AccueilOrgVitals", 0.25f, 0.50f);
             orgVitals.SetFrictionStress(dto?.friction_glance, dto?.compression_glance);
+            // m7 (revue ⊥ item05-C2, mineur — CONSIGNÉ, non fermé ici) : ce shell interroge DÉJÀ
+            // `GET /v1/city/district/16/heat` plus bas (sonde citywide, §6.2) et `DashboardController`
+            // aussi (`:232`) — celui-ci ferait un 3ᵉ appelant simultané au démarrage, alors que
+            // `DashboardController.cs:236-238` s'interdit VERBATIM un "3e appelant" en réutilisant
+            // CET appel-là plutôt que d'en refaire un. Non fermé ici (repointer `orgVitals` vers un
+            // appel partagé changerait le contrat "chaque panneau pilote SA propre requête" — hors
+            // périmètre C2) : ouvert pour un futur lot de partage de sonde citywide.
             if (!string.IsNullOrEmpty(Token)) orgVitals.FetchHeatAndCohesion(Token); // best-effort — voir le docstring de la méthode
 
             HomeChromeController homeChrome = NouveauPanneauAccueil<HomeChromeController>("AccueilHomeChrome", 0.00f, 0.25f);
@@ -587,6 +618,16 @@ namespace MafiaCleanCity.Shell
             bool hasCard = dto?.hl_card != null && !string.IsNullOrEmpty(dto.hl_card.card_id);
             bool hasQueue = dto?.queue != null && dto.queue.Length > 0;
             bool hasAnyData = hasCard || hasQueue;
+            // m1 (revue ⊥ item05-C2, mineur, frontière PRODUCTION/PREUVE — CONSIGNÉ, non fermé ici) —
+            // `hasAllExpectedData` vaut toujours `hasAnyData` ⇒ dans `HomeChromeController.
+            // SetLoadCircumstances` (`!hasAnyData → EmptyState`, sinon `!hasAllExpectedData` est
+            // TOUJOURS faux) le 5ᵉ état canonique `PartialState` devient structurellement
+            // INATTEIGNABLE depuis CE site — la machine à 5 états n'en produit que 3 (Empty/Error/
+            // Offline + la branche "chargé" indiscriminante, I6). Aucun joueur ne perd de fonction
+            // aujourd'hui (ce MVP ne surface qu'UNE carte OU une file, jamais un sous-ensemble
+            // partiel des deux à distinguer) — mais un état du canon meurt en silence. Option
+            // conservatrice : laissé tel quel (le fermer exigerait de définir ce que "partiel"
+            // signifie pour CE panneau, hors périmètre C2) — ouvert pour l'écran/juge-donnees.
             homeChrome.SetLoadCircumstances(isLoading: false, hasError: dto == null, isOffline: false,
                 hasAnyData: hasAnyData, hasAllExpectedData: hasAnyData);
         }
@@ -596,10 +637,31 @@ namespace MafiaCleanCity.Shell
             GameObject host = new GameObject(nom, typeof(RectTransform));
             host.transform.SetParent(ContentSlot, false);
             RectTransform rt = (RectTransform)host.transform;
-            rt.anchorMin = new Vector2(0f, yMin);
-            rt.anchorMax = new Vector2(1f, yMax);
-            rt.offsetMin = Vector2.zero;
-            rt.offsetMax = Vector2.zero;
+            // B2 (revue ⊥ item05-C2, BLOQUANT-PRODUCTION) — `ContentSlot` couvre TOUT le canvas PAR
+            // CONCEPTION (un fond plein écran de tenant doit s'y étirer, voir le commentaire de
+            // `ConstruireLocataire` plus haut). Un panneau qui pose du TEXTE doit au contraire
+            // respecter ce que le chrome MANGE — le MÊME contrat que `ConstruireLocataire` publie
+            // pour tout `IShellTenant` (`ShellChrome.TopInsetPx`/`BottomInsetPx`), déjà consommé par
+            // `LieutenantScreenController`/`DistrictInteriorScreenController`. AVANT ce correctif,
+            // les 4 bandes fractionnaires (yMin/yMax) étaient réparties sur TOUTE la hauteur de
+            // `ContentSlot`, barres comprises — mesuré (revue ⊥, arithmétique sur les constantes du
+            // dépôt) : jusqu'à 100 % de HomeChrome sous le dock en 640×480 (le batchmode du juge),
+            // 51,8 % en 1080×1920, 41,4 % en 1080×2400. Les insets SONT déjà publiés ici : les DEUX
+            // appelants de `MonterPanneauxAccueil` passent par `MonterLocataireEnSurimpression<
+            // DashboardController>()` → `ConstruireLocataire` → `PublierInsetsDuChrome()` avant le
+            // `yield return null;` qui précède ce montage. Hors shell (tenu par le repli documenté
+            // sur `ShellChrome`), les deux insets valent 0 : la bande retombe sur `ContentSlot`
+            // entier, comportement inchangé pour tout test qui construit ce panneau seul.
+            float hauteurTotale = ContentSlot.rect.height;
+            float zoneSureBas = ShellChrome.BottomInsetPx;
+            float zoneSureHaut = Mathf.Max(zoneSureBas, hauteurTotale - ShellChrome.TopInsetPx);
+            float zoneSureHauteur = zoneSureHaut - zoneSureBas;
+            float yBas = zoneSureBas + yMin * zoneSureHauteur;
+            float yHaut = zoneSureBas + yMax * zoneSureHauteur;
+            rt.anchorMin = new Vector2(0f, 0f);
+            rt.anchorMax = new Vector2(1f, 0f); // point-anchor en Y : offsetMin/offsetMax mesurent alors TOUS DEUX depuis le bas de ContentSlot
+            rt.offsetMin = new Vector2(0f, yBas);
+            rt.offsetMax = new Vector2(0f, yHaut);
             return host.AddComponent<T>();
         }
 

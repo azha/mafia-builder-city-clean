@@ -22,6 +22,10 @@ namespace MafiaCleanCity.Shell
 
         // ---- test hooks ------------------------------------------------------
         public string HeatBucketRendered { get; private set; }
+        // B1 (revue ⊥ item05-C2, BLOQUANT-PRODUCTION) — miroir de `CohesionDeclaredUnavailable`,
+        // avec une différence : Heat PEUT réussir, donc ce drapeau REDEVIENT faux une fois
+        // `RenderHeat()` atteint (contrairement à Cohesion, toujours vraie par D5).
+        public bool HeatDeclaredUnavailable { get; private set; } = true;
         public string FrictionBucketRendered { get; private set; }
         public string StressBucketRendered { get; private set; }
         public bool CohesionDeclaredUnavailable { get; private set; } = true; // named state, always true (D5) once rendered
@@ -53,6 +57,17 @@ namespace MafiaCleanCity.Shell
             world = new WorldApiClient { BaseUrl = baseUrl };
             projections = new CityProjectionsClient { BaseUrl = baseUrl };
             BuildLayout();
+            // B1 (revue ⊥ item05-C2, BLOQUANT-PRODUCTION) — AVANT ce correctif, `heatText.text`
+            // n'était JAMAIS assigné tant que `FetchHeat` n'avait pas résolu : sur la branche
+            // d'échec de sign-in du shell (Token vide), `FetchHeatAndCohesion` n'est JAMAIS appelé
+            // (AppShell.cs, gardé par `!string.IsNullOrEmpty(Token)`) et la barre restait une
+            // CHAÎNE VIDE POUR TOUJOURS — exactement le mode d'échec "v1 : atteint et blanc" que le
+            // design (Tools/charpente-item05-design.md §5) met en tête de ce que 4 versions ont
+            // appris, et que son §2 (c) érige en premier travail : "un panneau sans donnée rend un
+            // état vide NOMMÉ". Un commentaire de production affirmait le contraire
+            // (`AppShell.cs`, branche d'échec : "chacun rend son état vide NOMMÉ… jamais atteint et
+            // blanc") — vrai désormais pour les 4 panneaux, plus seulement 3.
+            RenderHeatDeclaredUnavailable("pending");
             RenderCohesionDeclaredUnavailable();
         }
 
@@ -80,6 +95,13 @@ namespace MafiaCleanCity.Shell
             {
                 HeatBucketRendered = LastHeatFetch.citywide_bucket;
                 RenderHeat();
+            }
+            else
+            {
+                // B1 — un échec de fetch doit AUSSI porter un état nommé, jamais laisser le
+                // "pending" posé au build devenir un mensonge silencieux (une requête qui a déjà
+                // échoué n'est plus "en attente").
+                RenderHeatDeclaredUnavailable("fetch failed");
             }
         }
 
@@ -128,6 +150,7 @@ namespace MafiaCleanCity.Shell
 
         private void RenderHeat()
         {
+            HeatDeclaredUnavailable = false;
             RenderBar(heatText, "Heat", HeatBucketRendered, HeatLabel(HeatBucketRendered));
         }
         private void RenderFriction()
@@ -155,6 +178,17 @@ namespace MafiaCleanCity.Shell
         {
             CohesionDeclaredUnavailable = true;
             cohesionText.text = "Cohesion: Unavailable (no citywide aggregate)";
+            RebuildTrackedTexts();
+        }
+
+        // B1 (revue ⊥ item05-C2) — le MODÈLE est `RenderCohesionDeclaredUnavailable` ci-dessus,
+        // repris pour Heat : une VALEUR nommée, posée AU BUILD (jamais l'absence d'assignation).
+        // La raison varie ("pending" au build, "fetch failed" sur échec réseau) — Heat, contrairement
+        // à Cohesion, PEUT réussir, donc cet état n'est pas permanent (voir RenderHeat()).
+        private void RenderHeatDeclaredUnavailable(string raison)
+        {
+            HeatDeclaredUnavailable = true;
+            heatText.text = $"Heat: Unavailable ({raison})";
             RebuildTrackedTexts();
         }
 
