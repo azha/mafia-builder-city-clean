@@ -1,0 +1,7 @@
+city/district/0/inspection -> 422 VALIDATION_FAILED
+city/district/19/inspection -> 422 VALIDATION_FAILED
+city/district/abc/inspection -> 422 VALIDATION_FAILED
+city/precinct/0/belief -> 422 VALIDATION_FAILED
+city/precinct/7/belief -> 422 VALIDATION_FAILED
+city/precinct/abc/patrol -> 422 VALIDATION_FAILED
+sans token city/district/16/inspection -> 401

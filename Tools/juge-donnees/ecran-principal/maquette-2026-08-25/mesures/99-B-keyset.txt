@@ -1,0 +1,110 @@
+POST /v1/session/open                       42  ['backlog_badge', 'compression_glance', 'compression_glance.forced', 'compression_glance.stress_bucket', 'compression_glance.week_state', 'flag_review', 'flag_review.auto_open', 'flag_review.pending_review_count', 'friction_glance', 'friction_glance.friction_bucket', 'friction_glance.penalty_active', 'hl_card', 'onboarding', 'onboarding.first_decision_recorded', 'onboarding.funnel_step', 'opened_game_day', 'queue', 'queue[].candidate_actions', 'queue[].candidate_actions[].add_rule_dsl', 'queue[].candidate_actions[].id', 'queue[].candidate_actions[].label', 'queue[].candidate_actions[].projected_consequence', 'queue[].confidence_band', 'queue[].event_descriptor', 'queue[].exception_id', 'queue[].lieutenant_id', 'queue[].priority_band', 'queue[].resolution_status', 'queue[].severity_band', 'queue[].suggested_action', 'queue[].suggested_action.add_rule_dsl', 'queue[].suggested_action.id', 'queue[].suggested_action.label', 'queue[].suggested_action.projected_consequence', 'queue_pressure_band', 'session_id', 'settling_glance', 'settling_glance.all_clear', 'settling_glance.settling_count', 'structural_budget', 'structural_budget.cap_reached', 'structural_budget.used']
+GET /v1/me                                   5  ['account_id', 'email', 'handle', 'lifecycle_state', 'locale']
+GET /v1/economy/wallet                       3  ['cash_cents', 'player_id', 'wallet_band']
+GET /v1/city/district/16/interior           26  ['bank_side', 'blocks', 'blocks[].block_id', 'blocks[].x', 'blocks[].y', 'buildings', 'buildings[].activity_band', 'buildings[].block_id', 'buildings[].building', 'buildings[].condition_band', 'buildings[].conversion_band', 'buildings[].lapse_phase_bucket', 'buildings[].lieutenant_ids', 'buildings[].maintenance_in_progress', 'buildings[].operational_type', 'buildings[].revenue_band', 'buildings[].revenue_chain', 'buildings[].shell_state', 'day_phase', 'district', 'district_id', 'grid', 'grid.height', 'grid.width', 'name_canonical', 'profile']
+GET /v1/city/district/16/heat                7  ['buildings', 'buildings[].building', 'buildings[].heat_bucket', 'citywide_bucket', 'district', 'district_bucket', 'escalated']
+GET /v1/world/districts                      8  ['districts', 'districts[].bank_side', 'districts[].block_count', 'districts[].control_state', 'districts[].id', 'districts[].index', 'districts[].name_canonical', 'districts[].profile']
+GET /v1/exceptions/queue                    22  ['backlog_badge', 'exceptions', 'exceptions[].candidate_actions', 'exceptions[].candidate_actions[].add_rule_dsl', 'exceptions[].candidate_actions[].id', 'exceptions[].candidate_actions[].label', 'exceptions[].candidate_actions[].projected_consequence', 'exceptions[].candidate_actions[].source', 'exceptions[].confidence_band', 'exceptions[].event_descriptor', 'exceptions[].exception_id', 'exceptions[].lieutenant_id', 'exceptions[].priority_band', 'exceptions[].resolution_status', 'exceptions[].severity_band', 'exceptions[].suggested_action', 'exceptions[].suggested_action.add_rule_dsl', 'exceptions[].suggested_action.id', 'exceptions[].suggested_action.label', 'exceptions[].suggested_action.projected_consequence', 'exceptions[].suggested_action.source', 'queue_pressure_band']
+GET /v1/ambient/feed                        10  ['events', 'events[].channel', 'events[].descriptor_i18n_key', 'events[].district', 'events[].event_id', 'events[].kind', 'events[].recency_band', 'limit', 'offset', 'total']
+GET /v1/lieutenants                          6  ['lieutenants', 'lieutenants[].archetype', 'lieutenants[].lieutenant_id', 'lieutenants[].op_state_band', 'lieutenants[].rule_count_band', 'lieutenants[].tenure_bucket']
+GET /v1/me/iap/balance                       1  ['marks_balance']
+
+TOTAL clés (chemins distincts, toutes routes) = 130
+TOTAL informations distinctes (dédupliquées par nom de feuille) = 96
+
+account_id                     GET /v1/me                               account_id
+activity_band                  GET /v1/city/district/16/interior        buildings[].activity_band
+add_rule_dsl                   POST /v1/session/open                    queue[].candidate_actions[].add_rule_dsl
+all_clear                      POST /v1/session/open                    settling_glance.all_clear
+archetype                      GET /v1/lieutenants                      lieutenants[].archetype
+auto_open                      POST /v1/session/open                    flag_review.auto_open
+backlog_badge                  POST /v1/session/open                    backlog_badge
+bank_side                      GET /v1/city/district/16/interior        bank_side
+block_count                    GET /v1/world/districts                  districts[].block_count
+block_id                       GET /v1/city/district/16/interior        blocks[].block_id
+blocks                         GET /v1/city/district/16/interior        blocks
+building                       GET /v1/city/district/16/interior        buildings[].building
+buildings                      GET /v1/city/district/16/interior        buildings
+candidate_actions              POST /v1/session/open                    queue[].candidate_actions
+cap_reached                    POST /v1/session/open                    structural_budget.cap_reached
+cash_cents                     GET /v1/economy/wallet                   cash_cents
+channel                        GET /v1/ambient/feed                     events[].channel
+citywide_bucket                GET /v1/city/district/16/heat            citywide_bucket
+compression_glance             POST /v1/session/open                    compression_glance
+condition_band                 GET /v1/city/district/16/interior        buildings[].condition_band
+confidence_band                POST /v1/session/open                    queue[].confidence_band
+control_state                  GET /v1/world/districts                  districts[].control_state
+conversion_band                GET /v1/city/district/16/interior        buildings[].conversion_band
+day_phase                      GET /v1/city/district/16/interior        day_phase
+descriptor_i18n_key            GET /v1/ambient/feed                     events[].descriptor_i18n_key
+district                       GET /v1/city/district/16/interior        district
+district_bucket                GET /v1/city/district/16/heat            district_bucket
+district_id                    GET /v1/city/district/16/interior        district_id
+districts                      GET /v1/world/districts                  districts
+email                          GET /v1/me                               email
+escalated                      GET /v1/city/district/16/heat            escalated
+event_descriptor               POST /v1/session/open                    queue[].event_descriptor
+event_id                       GET /v1/ambient/feed                     events[].event_id
+events                         GET /v1/ambient/feed                     events
+exception_id                   POST /v1/session/open                    queue[].exception_id
+exceptions                     GET /v1/exceptions/queue                 exceptions
+first_decision_recorded        POST /v1/session/open                    onboarding.first_decision_recorded
+flag_review                    POST /v1/session/open                    flag_review
+forced                         POST /v1/session/open                    compression_glance.forced
+friction_bucket                POST /v1/session/open                    friction_glance.friction_bucket
+friction_glance                POST /v1/session/open                    friction_glance
+funnel_step                    POST /v1/session/open                    onboarding.funnel_step
+grid                           GET /v1/city/district/16/interior        grid
+handle                         GET /v1/me                               handle
+heat_bucket                    GET /v1/city/district/16/heat            buildings[].heat_bucket
+height                         GET /v1/city/district/16/interior        grid.height
+hl_card                        POST /v1/session/open                    hl_card
+id                             POST /v1/session/open                    queue[].candidate_actions[].id
+index                          GET /v1/world/districts                  districts[].index
+kind                           GET /v1/ambient/feed                     events[].kind
+label                          POST /v1/session/open                    queue[].candidate_actions[].label
+lapse_phase_bucket             GET /v1/city/district/16/interior        buildings[].lapse_phase_bucket
+lieutenant_id                  POST /v1/session/open                    queue[].lieutenant_id
+lieutenant_ids                 GET /v1/city/district/16/interior        buildings[].lieutenant_ids
+lieutenants                    GET /v1/lieutenants                      lieutenants
+lifecycle_state                GET /v1/me                               lifecycle_state
+limit                          GET /v1/ambient/feed                     limit
+locale                         GET /v1/me                               locale
+maintenance_in_progress        GET /v1/city/district/16/interior        buildings[].maintenance_in_progress
+marks_balance                  GET /v1/me/iap/balance                   marks_balance
+name_canonical                 GET /v1/city/district/16/interior        name_canonical
+offset                         GET /v1/ambient/feed                     offset
+onboarding                     POST /v1/session/open                    onboarding
+op_state_band                  GET /v1/lieutenants                      lieutenants[].op_state_band
+opened_game_day                POST /v1/session/open                    opened_game_day
+operational_type               GET /v1/city/district/16/interior        buildings[].operational_type
+penalty_active                 POST /v1/session/open                    friction_glance.penalty_active
+pending_review_count           POST /v1/session/open                    flag_review.pending_review_count
+player_id                      GET /v1/economy/wallet                   player_id
+priority_band                  POST /v1/session/open                    queue[].priority_band
+profile                        GET /v1/city/district/16/interior        profile
+projected_consequence          POST /v1/session/open                    queue[].candidate_actions[].projected_consequence
+queue                          POST /v1/session/open                    queue
+queue_pressure_band            POST /v1/session/open                    queue_pressure_band
+recency_band                   GET /v1/ambient/feed                     events[].recency_band
+resolution_status              POST /v1/session/open                    queue[].resolution_status
+revenue_band                   GET /v1/city/district/16/interior        buildings[].revenue_band
+revenue_chain                  GET /v1/city/district/16/interior        buildings[].revenue_chain
+rule_count_band                GET /v1/lieutenants                      lieutenants[].rule_count_band
+session_id                     POST /v1/session/open                    session_id
+settling_count                 POST /v1/session/open                    settling_glance.settling_count
+settling_glance                POST /v1/session/open                    settling_glance
+severity_band                  POST /v1/session/open                    queue[].severity_band
+shell_state                    GET /v1/city/district/16/interior        buildings[].shell_state
+source                         GET /v1/exceptions/queue                 exceptions[].candidate_actions[].source
+stress_bucket                  POST /v1/session/open                    compression_glance.stress_bucket
+structural_budget              POST /v1/session/open                    structural_budget
+suggested_action               POST /v1/session/open                    queue[].suggested_action
+tenure_bucket                  GET /v1/lieutenants                      lieutenants[].tenure_bucket
+total                          GET /v1/ambient/feed                     total
+used                           POST /v1/session/open                    structural_budget.used
+wallet_band                    GET /v1/economy/wallet                   wallet_band
+week_state                     POST /v1/session/open                    compression_glance.week_state
+width                          GET /v1/city/district/16/interior        grid.width
+x                              GET /v1/city/district/16/interior        blocks[].x
+y                              GET /v1/city/district/16/interior        blocks[].y

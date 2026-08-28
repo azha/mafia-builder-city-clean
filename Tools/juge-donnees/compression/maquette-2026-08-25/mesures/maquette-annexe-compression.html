@@ -1,0 +1,27 @@
+<aside class="annexes">
+  <h2>Ce que la Semaine de compression fixe — et d'où vient chaque ligne</h2>
+  <ul>
+    <li><b>Deux routes de lecture, trois de geste</b> : <code>GET /v1/compression/state</code> rend trois clés —
+      <code>stress_bucket</code> (<i>calme · montante · écrasante · semaine en cours</i>), <code>week_state</code>
+      (<i>aucune · annoncée · en cours</i>), <code>deferral_available</code> — et c'est tout ce que les cadres « au calme » et
+      « s'annonce » dessinent. <code>GET /v1/compression/board</code> (404 tant qu'aucune semaine n'est en cours, mesuré) rend
+      les problèmes et le budget. Les gestes : <code>POST …/engage</code> (ouvrir — exige une semaine annoncée),
+      <code>POST …/defer</code> (reporter — une fois par cycle, refusé au-delà du seuil de tension), <code>POST
+      …/board/problems/:id/decide</code> avec <code>{ choice: skip | resolve | dismiss }</code>.</li>
+    <li><b>Un problème, c'est une source, un palier, une cible, un état</b> : <code>source_kind</code> (neuf familles rendues en
+      phrase : exception qui attend, signalement non tranché, nœud qui sature, tournée coupée, tronçon fatigué, créneau raté,
+      cascade d'exceptions, trop de changements en reprise, friction qui pénalise), <code>tier</code> (<i>légère · modérée ·
+      grave</i> — la barre au bord), <code>target_ref</code> (<i>lieutenant · signalement · bâtiment · tournée · tronçon ·
+      créneau</i>, sans nom), <code>addressed</code> (réglée ou passée). ⚠️ <b>Cinq familles se règlent d'ici</b> (exception,
+      cascade, signalement, tronçon, friction) ; les quatre autres n'acceptent que « Passer » — leur remède est ailleurs, et la
+      carte le dit.</li>
+    <li><b>Le budget est un compte, pas une bande</b> : <code>decisions_used</code> et <code>decisions_remaining</code> (le plafond
+      vaut 5 par défaut, jamais projeté — la maquette le déduit de la somme). Chaque geste en coûte une ; à zéro, le back refuse
+      (<code>COMPRESSION_BUDGET_EXHAUSTED</code>) et la semaine se termine (<code>finalized</code>).</li>
+    <li><b>Ce que la maquette ne dessine pas — le canon le veut, le back ne le sert pas</b> : l'échéance (« 2 jours ») —
+      aucune clé de deadline ; le descripteur précis du problème (« Conflit LT / Tovah ») — la carte ne porte qu'une famille et
+      un identifiant ; le problème secondaire révélé (<code>revealed_secondary</code> revient après un geste, la maquette ne le
+      met en scène pas).</li>
+    <li><b>Ce qui n'a pas été observé</b> : la semaine annoncée et le tableau en cours — sur compte frais tout est calme (mesuré :
+      <code>calm · none · false</code>, board 404). Les cadres 19 et 20 dessinent des états lus dans le code, pas vus en vie.</li>
+  </ul>

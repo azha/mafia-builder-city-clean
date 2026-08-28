@@ -1,0 +1,16 @@
+=== ENSEMBLES DE CLÉS MESURÉS (compte frais jd-rec-1787684414, 2026-08-25) ===
+R1 GET /v1/recruitment/candidates -> data.candidates[i] : 9 clés
+  ['candidate_id', 'citizen_id', 'expires_at_game_day', 'player_id', 'pool', 'profile', 'source_rival_key', 'status', 'surfaced_at_game_day']
+  profile : 4 clés
+  ['ask_band', 'district_familiarity', 'experience', 'name']
+R2/R3/R4/R5 QuestProjection : 11 clés
+  ['candidate_id', 'current_step', 'decisions', 'final_gated_step', 'next_session_ready_at_game_minute', 'outcome', 'pool', 'quest_id', 'session_ready', 'sessions_consumed', 'steps_total']
+  decisions[] (entrée trial_task) : 5 clés  ['at_game_minute', 'decision_type', 'decision_value', 'revealed_axis', 'step']
+R6 POST .../hire : 5 clés
+  ['hire_quality_bucket', 'lieutenant_id', 'loyalty_seed_bucket', 'outcome', 'quest_id']
+R7 POST .../abandon : 2 clés
+  ['outcome', 'quest_id']
+Refus 409 advance : error.payload_vars = ['elapsed_game_minutes', 'required_game_minutes']
+Refus 409 hire    : error.payload_vars = ['elapsed_game_minutes', 'required_game_minutes']
+Voisinage POST /v1/session/open : 12 clés (dont opened_game_day=3)
+  ['backlog_badge', 'compression_glance', 'flag_review', 'friction_glance', 'hl_card', 'onboarding', 'opened_game_day', 'queue', 'queue_pressure_band', 'session_id', 'settling_glance', 'structural_budget']

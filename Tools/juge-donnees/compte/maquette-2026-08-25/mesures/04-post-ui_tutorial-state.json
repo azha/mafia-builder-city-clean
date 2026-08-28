@@ -1,0 +1,1 @@
+{"response_meta":{"request_id_echo":"311937d0-bbd7-4f25-9307-9e318030dbf9","server_processed_at":"2026-08-25T19:29:42.585Z","api_version":1,"correlation_id_echo":null},"payload":{"data":{"tutorials_opt_out":false,"shown_tutorial_ids":[],"eligible_tutorial_ids":["tutorial.exception_card.onboarding_preseed"],"next_tutorial_id":null}}}

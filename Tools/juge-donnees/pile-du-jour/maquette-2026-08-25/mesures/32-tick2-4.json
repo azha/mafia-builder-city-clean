@@ -1,0 +1,1 @@
+{"response_meta":{"request_id_echo":"87dce185-300b-49bc-b66c-f30c291a1ae4","server_processed_at":"2026-08-25T19:16:31.809Z","api_version":1,"correlation_id_echo":null},"payload":{"data":{"fired":true,"cueStackId":"a6ebc4c6-eb0a-4f7c-8961-755cf93eb10b","slotId":"f4ba55a3-e829-482f-847f-5a9c06884a3e","slotType":"MAINTENANCE_BATCH","status":"done","resolved":false}}}

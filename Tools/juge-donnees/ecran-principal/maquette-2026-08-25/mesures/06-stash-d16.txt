@@ -1,0 +1,2 @@
+{"response_meta":{"request_id_echo":"678928c1-5ab3-4ae1-80dd-71db5a77163b","server_processed_at":"2026-08-25T18:48:02.147Z","api_version":1,"correlation_id_echo":null},"payload":{"data":{"district":"district-16","district_blocking_band":"LOW","any_high_blocking_alert":false,"safehouses":[]}}}
+HTTP:200

@@ -1,0 +1,8 @@
+district 1 heat -> 200  {"response_meta":{"request_id_echo":"3cdd054a-260a-43db-9dd6-e179148acd5f","server_processed_at":"2026-08-25T18:51:09.011Z","api_version":1,"correlation_id_echo
+district 2 heat -> 200  {"response_meta":{"request_id_echo":"64015d99-e884-45a4-814c-ef9c2a0b1a04","server_processed_at":"2026-08-25T18:51:09.197Z","api_version":1,"correlation_id_echo
+district 3 heat -> 200  {"response_meta":{"request_id_echo":"5afbfc27-054a-4bae-a3d0-0f1662cfbd6c","server_processed_at":"2026-08-25T18:51:09.391Z","api_version":1,"correlation_id_echo
+district 4 heat -> 200  {"response_meta":{"request_id_echo":"a87b60a5-0d75-49d2-b45b-525d04460e31","server_processed_at":"2026-08-25T18:51:09.597Z","api_version":1,"correlation_id_echo
+district 5 heat -> 200  {"response_meta":{"request_id_echo":"e8ba130a-cc23-42e1-96dc-9ffc9849acdd","server_processed_at":"2026-08-25T18:51:09.782Z","api_version":1,"correlation_id_echo
+district 6 heat -> 200  {"response_meta":{"request_id_echo":"5b54fa44-611c-4680-a310-25c1890f10c0","server_processed_at":"2026-08-25T18:51:09.975Z","api_version":1,"correlation_id_echo
+district 7 heat -> 200  {"response_meta":{"request_id_echo":"d9141906-b3a3-41af-9eed-4ace95513b7d","server_processed_at":"2026-08-25T18:51:10.163Z","api_version":1,"correlation_id_echo
+district 8 heat -> 200  {"response_meta":{"request_id_echo":"9257e120-285e-4b43-9e29-95c720dfe315","server_processed_at":"2026-08-25T18:51:10.349Z","api_version":1,"correlation_id_echo

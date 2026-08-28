@@ -1,0 +1,8 @@
+NAMES                                   STATUS                  PORTS
+mafia-clean-city-traefik-1              Up 23 hours             0.0.0.0:80->80/tcp, [::]:80->80/tcp
+mafia-clean-city-game-back-1            Up 7 hours (healthy)    3000/tcp
+mafia-clean-city-bo-back-1              Up 23 hours (healthy)   3000/tcp
+mafia-clean-city-pg-1                   Up 23 hours (healthy)   5432/tcp
+mafia-clean-city-redis-1                Up 23 hours (healthy)   6379/tcp
+mafia-clean-city-docker-socket-shim-1   Up 23 hours             80/tcp
+mafia-clean-city-bo-front-1             Up 23 hours (healthy)   8080/tcp

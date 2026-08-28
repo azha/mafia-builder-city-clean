@@ -1,0 +1,88 @@
+### POST /v1/session/open  -> 33 feuilles
+    backlog_badge
+    compression_glance.forced
+    compression_glance.stress_bucket
+    compression_glance.week_state
+    flag_review.auto_open
+    flag_review.pending_review_count
+    friction_glance.friction_bucket
+    friction_glance.penalty_active
+    hl_card
+    onboarding.first_decision_recorded
+    onboarding.funnel_step
+    opened_game_day
+    queue[].candidate_actions[].add_rule_dsl
+    queue[].candidate_actions[].id
+    queue[].candidate_actions[].label
+    queue[].candidate_actions[].projected_consequence
+    queue[].confidence_band
+    queue[].event_descriptor
+    queue[].exception_id
+    queue[].lieutenant_id
+    queue[].priority_band
+    queue[].resolution_status
+    queue[].severity_band
+    queue[].suggested_action.add_rule_dsl
+    queue[].suggested_action.id
+    queue[].suggested_action.label
+    queue[].suggested_action.projected_consequence
+    queue_pressure_band
+    session_id
+    settling_glance.all_clear
+    settling_glance.settling_count
+    structural_budget.cap_reached
+    structural_budget.used
+### GET /v1/cue-stack/current (stack pending, 5 slots réels)  -> 14 feuilles
+    committed_at
+    cue_stack_id
+    slots[].dependencies[] (vide — non observé)
+    slots[].dependency_conflict_bucket
+    slots[].drag_order
+    slots[].estimated_time_bucket
+    slots[].outcome
+    slots[].prerequisite_satisfaction_bucket
+    slots[].slot_id
+    slots[].slot_type
+    slots[].status
+    slots[].target_ref.id
+    slots[].target_ref.kind
+    state
+### GET /v1/flag-review  -> 3 feuilles
+    batch_confirm_available
+    cards[] (vide — non observé)
+    routine_pending_count
+### GET /v1/recruitment/quests?status=active (1 quête réelle)  -> 11 feuilles
+    quests[].candidate_id
+    quests[].current_step
+    quests[].decisions[] (vide — non observé)
+    quests[].final_gated_step
+    quests[].next_session_ready_at_game_minute
+    quests[].outcome
+    quests[].pool
+    quests[].quest_id
+    quests[].session_ready
+    quests[].sessions_consumed
+    quests[].steps_total
+### GET /v1/compression/state  -> 3 feuilles
+    deferral_available
+    stress_bucket
+    week_state
+### GET /v1/me  -> 5 feuilles
+    account_id
+    email
+    handle
+    lifecycle_state
+    locale
+### GET /v1/i18n/bundle  -> 2 feuilles
+    locale
+    messages
+### GET /v1/annealing/rolling-queue  -> 4 feuilles
+    lieutenants_settling[] (vide — non observé)
+    settling[] (vide — non observé)
+    touchable[].id
+    touchable[].kind
+### GET /v1/friction/state  -> 3 feuilles
+    friction_bucket
+    friction_node_count
+    penalty_active
+TOTAL feuilles mesurées = 78
