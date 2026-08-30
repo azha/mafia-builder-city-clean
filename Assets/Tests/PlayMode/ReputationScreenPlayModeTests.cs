@@ -473,8 +473,34 @@ namespace MafiaCleanCity.Operational.Tests
             // Garde de PRÉMISSE : la cible doit avoir la taille demandée avant qu'on y rende.
             // Un canvas resté à 640 produirait une image « valide » et fausse.
             RectTransform crt = (RectTransform)canvas.transform;
+            // ⛔ DIAGNOSTIC DE PRÉMISSE — on ne devine pas pourquoi une image est noire, on
+            // demande à la scène ce qu'elle contient. Chaque grandeur ici a tué une hypothèse
+            // lors du débogage : la taille du canvas (bonne), le nombre de Graphic (l'écran
+            // est-il là ?), leur visibilité effective, et la géométrie de la caméra (le canvas
+            // est-il DANS le champ ?).
+            int nbGraphic = 0, nbActifs = 0;
+            foreach (Graphic g in canvas.GetComponentsInChildren<Graphic>(true))
+            {
+                nbGraphic++;
+                if (g.isActiveAndEnabled && g.canvasRenderer != null && g.canvasRenderer.GetAlpha() > 0f) nbActifs++;
+            }
             Debug.Log($"[CAPTURE b3] AVANT rendu {largeur}x{hauteur} · canvas rect=" +
-                      $"{crt.rect.width:F0}x{crt.rect.height:F0} · scaleFactor={canvas.scaleFactor:F3}");
+                      $"{crt.rect.width:F0}x{crt.rect.height:F0} · scaleFactor={canvas.scaleFactor:F3} · " +
+                      $"graphics={nbGraphic} actifs={nbActifs} · canvasPos={crt.position} · " +
+                      $"camPos={cam.transform.position} orthoSize={cam.orthographicSize:F1} " +
+                      $"cull={cam.cullingMask} · racineActive={racine.activeInHierarchy}");
+
+            // ⛔⛔ LA CAUSE DE L'IMAGE NOIRE, TROUVÉE PAR LE DIAGNOSTIC CI-DESSUS ET NON DEVINÉE.
+            // Il disait : « graphics=68 actifs=65 » (l'écran EST construit et visible),
+            // « canvas rect=1280x2276 » … et « orthoSize=5.0 ». Une caméra orthographique voit
+            // 2 × orthographicSize unités de haut, soit DIX unités — pour un canvas qui en fait
+            // 2276. Elle cadrait donc 0,4 % de l'écran, dans une zone vide.
+            // ⇒ Le frustum doit couvrir le canvas : demi-hauteur = rect.height / 2.
+            // ⚠️ Et c'est mesuré sur le rect RÉEL après rebuild, jamais calculé depuis la
+            // résolution demandée : le canvas porte un CanvasScaler, donc ses unités ne sont pas
+            // les pixels de la cible (ici 1280 unités pour 1080 px, scaleFactor 0,844).
+            cam.orthographicSize = crt.rect.height / 2f;
+            cam.aspect = crt.rect.width / crt.rect.height;
 
             cam.Render();
             RenderTexture prev = RenderTexture.active;
