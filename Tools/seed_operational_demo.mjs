@@ -45,9 +45,14 @@ const BASE_URL = process.env.STACK_BASE_URL ?? 'http://localhost';
 // BURNING + escalated, whose heat PROPAGATES across districts and would wash the City Map seeder's
 // exact d3/d7/d11 gradient if both ran on one player. Giving the operational concern its OWN player
 // makes the full PlayMode suite ORDER-INDEPENDENT — neither seeder mutates the other's player.
-const EMAIL = 'operational_demo@example.test';
-const CALLSIGN = 'operational_demo';
-const PASSWORD = 'operational-demo-pw';
+// Surcharge par variable d'environnement (2026-08-30, identité de démo par éditeur — deux éditeurs
+// Unity en parallèle, un second worktree `~/project/mafia-unity-B` / branche `pilote-B`, ne doivent
+// PLUS partager CE compte : voir Assets/Scripts/CityMap/DemoIdentityResolver.cs côté client, MÊMES
+// NOMS de variable des deux côtés). Additif — défaut INCHANGÉ quand la variable est absente ou vide
+// (`||` retombe sur le littéral pour `undefined` ET `''`).
+const EMAIL = process.env.MAFIA_DEMO_IDENTIFIER || 'operational_demo@example.test';
+const CALLSIGN = EMAIL.split('@')[0]; // dérivé de EMAIL — rend 'operational_demo' au défaut (inchangé).
+const PASSWORD = process.env.MAFIA_DEMO_PASSWORD || 'operational-demo-pw';
 
 // The Verge district the operational buildings live in — far from the City Map heat-gradient blocks (districts 3/7/11).
 const OP_DISTRICT = 16;

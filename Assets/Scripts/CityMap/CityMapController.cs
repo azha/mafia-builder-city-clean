@@ -130,7 +130,9 @@ namespace MafiaCleanCity.CityMap
             var auth = new AuthClient { BaseUrl = baseUrl };
             string token = null;
             string err = null;
-            yield return auth.SignIn(demoIdentifier, demoPassword, t => token = t, e => err = e);
+            yield return DemoIdentityResolver.ResolveAndSignIn(auth,
+                DemoIdentityResolver.CityMapIdentifierEnvVar, DemoIdentityResolver.CityMapPasswordEnvVar,
+                demoIdentifier, demoPassword, t => token = t, e => err = e);
 
             if (err != null || string.IsNullOrEmpty(token))
             {

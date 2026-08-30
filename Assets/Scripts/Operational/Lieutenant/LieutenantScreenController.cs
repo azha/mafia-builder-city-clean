@@ -281,7 +281,9 @@ namespace MafiaCleanCity.Operational.Lieutenant
             EnsureInitialized();
             if (IsAuthenticated) yield break;
             string token = null, err = null;
-            yield return auth.SignIn(demoIdentifier, demoPassword, t => token = t, e => err = e);
+            yield return DemoIdentityResolver.ResolveAndSignIn(auth,
+                DemoIdentityResolver.OperationalIdentifierEnvVar, DemoIdentityResolver.OperationalPasswordEnvVar,
+                demoIdentifier, demoPassword, t => token = t, e => err = e);
             if (err != null || string.IsNullOrEmpty(token))
             {
                 AuthError = err ?? "sign-in returned no token";

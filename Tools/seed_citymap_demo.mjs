@@ -23,9 +23,13 @@ const PG_USER = process.env.POSTGRES_USER ?? 'mafia';
 const PG_DB = process.env.POSTGRES_DB ?? 'mafia_clean_city';
 const BASE_URL = process.env.STACK_BASE_URL ?? 'http://localhost';
 
-const EMAIL = 'citymap_demo@example.test';
-const CALLSIGN = 'citymap_demo';
-const PASSWORD = 'citymap-demo-pw';
+// Surcharge par variable d'environnement (2026-08-30, ajoutée pour SYMÉTRIE avec
+// seed_operational_demo.mjs — identité de démo par éditeur, MÊME NOM que
+// DemoIdentityResolver.CityMapIdentifierEnvVar/CityMapPasswordEnvVar côté client Unity). Additif —
+// défaut INCHANGÉ quand la variable est absente ou vide.
+const EMAIL = process.env.MAFIA_CITYMAP_IDENTIFIER || 'citymap_demo@example.test';
+const CALLSIGN = EMAIL.split('@')[0]; // dérivé de EMAIL — rend 'citymap_demo' au défaut (inchangé).
+const PASSWORD = process.env.MAFIA_CITYMAP_PASSWORD || 'citymap-demo-pw';
 
 // Advance to at least this game-minute so nightly (1440) + 12h (720) + 30-min cadences fire.
 const TARGET_MINUTE = 1500;

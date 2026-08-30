@@ -333,7 +333,9 @@ namespace MafiaCleanCity.Shell
         {
             var auth = new AuthClient { BaseUrl = baseUrl };
             string t = null, authErr = null;
-            yield return auth.SignIn(demoIdentifier, demoPassword, x => t = x, e => authErr = e);
+            yield return DemoIdentityResolver.ResolveAndSignIn(auth,
+                DemoIdentityResolver.OperationalIdentifierEnvVar, DemoIdentityResolver.OperationalPasswordEnvVar,
+                demoIdentifier, demoPassword, x => t = x, e => authErr = e);
             if (this == null) yield break; // shell torn down mid-fetch
 
             if (string.IsNullOrEmpty(t))
