@@ -40,6 +40,29 @@ namespace MafiaCleanCity.Theme
                     {
                         Debug.LogError("DesignTokens.Current: Resources.Load(\"DesignTokens\") a renvoyé null — " +
                                         "Assets/Resources/DesignTokens.asset est-il présent et importé ?");
+
+                        // ⛔⛔⛔ TRACE DE DIAGNOSTIC — TEMPORAIRE, À RETIRER AVANT TOUT GATE ⛔⛔⛔
+                        //
+                        // Pourquoi elle existe : ce `null` fait tomber ~51 % des échecs de la suite
+                        // PlayMode (65 tests sur 119 au dernier run, 18 fixtures livrées), et
+                        // DEUX sessions ont éliminé ~16 causes SANS trouver la sienne — asset
+                        // présent et non corrompu (74 champs / 74 valeurs), `.meta` sain, GUID
+                        // concordant, aucune collision sur 994 `.meta`, assembly compilée, classe
+                        // bien `ScriptableObject`, aucun homonyme, aucun initialiseur statique
+                        // impatient (66 paresseux, 0 impatient), ni charge, ni scope, ni ordre.
+                        // ⇒ Le défaut n'est PAS diagnosticable statiquement : la seule chose que
+                        // personne n'a pu observer est le CONTEXTE d'où part l'appel qui échoue.
+                        //
+                        // ⚠️ CONDITIONS DE VIE DE CETTE LIGNE, écrites ici pour qu'elles voyagent
+                        // avec elle plutôt que dans un message de commit que personne ne relira :
+                        //   · branche `pilote-B` UNIQUEMENT, jamais `main` ;
+                        //   · RETIRÉE avant tout gate — un diff qui la contient ne doit pas passer ;
+                        //   · JAMAIS permanente : `DesignTokens.Current` est lu 343 fois dans
+                        //     l'arbre ; une trace laissée ici est une régression de performance,
+                        //     pas un diagnostic.
+                        // Elle n'imprime QUE dans la branche d'échec — donc zéro coût le jour où
+                        // le chargement réussit, ce qui est aussi le jour où elle doit disparaître.
+                        Debug.LogError("DesignTokens-DIAG pile d'appel :\n" + System.Environment.StackTrace);
                     }
                 }
                 return _current;
