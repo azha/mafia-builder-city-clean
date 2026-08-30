@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using MafiaCleanCity.Shell;
 using MafiaCleanCity.Theme;
 
 namespace MafiaCleanCity.Operational
@@ -84,8 +85,21 @@ namespace MafiaCleanCity.Operational
         public static Color Creux        => DesignTokens.Current.hudGaugeFaceOuter;     // #0a0e16
         public static Color Rang         => DesignTokens.Current.surfaceRow;            // #232a2d
         public static Color Cyan         => DesignTokens.Current.hudGaugeArcCold;       // #7fd4d9
-        public static Color Ambre        => DesignTokens.Current.accentWarning;         // #ff9e3d
-        public static Color Danger       => DesignTokens.Current.accentDanger;          // #ff5a4d
+        // ⛔ CES DEUX-LÀ PASSENT PAR LE RÉSOLVEUR, ET C'EST UN CORRECTIF, PAS UN DÉTOUR.
+        // Elles lisaient les deux jetons de sévérité EN DIRECT sur DesignTokens. Une garde du
+        // dépôt (`HudPlayModeTests.F2_SeverityTokenAccesses`) l'a vu et a rougi : elle existe
+        // précisément pour interdire l'accès direct aux jetons de sévérité, régression qu'elle
+        // avait déjà fermée pour `TopBarController`.
+        // ⚠️ Et j'ai d'abord voulu élargir l'allowlist de 34 à 36 en justifiant l'accès direct —
+        // ce qui aurait été « faire taire le rouge en changeant le monde du test ». La
+        // justification ne tenait pas : je n'avais pas LU le résolveur. Son nom
+        // (`HeatBucketResolver`) parle de chaleur, mais `SeverityColor` prend un enum `Severity`
+        // GÉNÉRIQUE (Mild/Moderate/Severe) et couvre donc exactement ce cas.
+        // ⇒ La correspondance est celle du domaine, pas un contournement :
+        //     `drifting` / `wary`  → Moderate → #ff9e3d   (on s'écarte, on demande des gages)
+        //     `hostile`            → Severe   → #ff5a4d   (le cran le plus grave des quatre)
+        public static Color Ambre  => HeatBucketResolver.SeverityColor(HeatBucketResolver.Severity.Moderate);
+        public static Color Danger => HeatBucketResolver.SeverityColor(HeatBucketResolver.Severity.Severe);
 
         // ── Posture du lieutenant ────────────────────────────────────────────────────────────
 

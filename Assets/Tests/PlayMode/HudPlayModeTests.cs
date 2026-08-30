@@ -615,7 +615,6 @@ namespace MafiaCleanCity.Shell.Tests
             "Operational/Laundering/LaunderingController.cs",
             "Operational/Laundering/PipelineOverviewController.cs",
             "Operational/Lieutenant/LieutenantScreenController.cs",
-            "Operational/Reputation/ReputationResolvers.cs",
             "Shell/DailyReviewScreenController.cs",
             "Shell/ExceptionQueuePanelController.cs",
             "ShellContracts/HeatBucketResolver.cs",
@@ -636,21 +635,7 @@ namespace MafiaCleanCity.Shell.Tests
         //   fichier qu'elle surveillait déjà, là où un contrôle par ENSEMBLE DE FICHIERS seul serait
         //   resté vert (le fichier était déjà dedans). C'est exactement pourquoi le TOTAL est gardé
         //   en plus de l'ensemble : les deux ferment des angles morts différents.
-        // RE-AMENDÉ NOMMÉMENT 34 → 36 (2026-08-31) : `Operational/Reputation/ReputationResolvers.cs`
-        // — un fichier NEUF, donc l'ENSEMBLE de fichiers change AUSSI cette fois (les deux
-        // amendements précédents portaient sur des fichiers déjà listés). L'écran ㊲ « La
-        // réputation » accède à DEUX tokens de sévérité, un par résolveur nommé :
-        //   · `accentWarning` — la cohérence `drifting` (« vous vous écartez de vos propres
-        //     règles ») et l'offre `wary` : même sémantique d'avertissement que partout ailleurs ;
-        //   · `accentDanger`  — la posture `hostile` du lieutenant, le cran le plus grave des
-        //     quatre. `accentSuccess` n'est PAS employé (le vert de cet écran est `--vert`
-        //     #7db36a, un jeton d'atelier local, distinct d'accentSuccess #43e0c0 — voir
-        //     ReputationResolvers, bloc « palette LOCALE »).
-        // ★ TROISIÈME fois que cette garde voit juste, et la première où c'est un fichier NEUF :
-        //   j'ai d'abord classé ce rouge comme « pas à moi » avant de compter mes propres accès —
-        //   2 exactement, soit le delta 34 → 36. Un échec attribué au voisin par défaut est un
-        //   échec qu'on ne corrige jamais.
-        private const int ExpectedSeverityTokenTotal = 36;
+        private const int ExpectedSeverityTokenTotal = 34;
 
         // ── motif 2 — littéraux de bucket (ferme l'angle mort du motif 1, IMPORTANT-2) ──────
         private static readonly string[] BucketLiterals = { "\"COLD\"", "\"WARM\"", "\"HOT\"", "\"BURNING\"" };
