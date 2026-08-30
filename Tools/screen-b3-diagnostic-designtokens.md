@@ -30,30 +30,72 @@ l'interdit : *ne jamais accuser le code avant une reproduction scopée*. J'ai do
 base aurait modifié du code sain pour un symptôme dont la cause est ailleurs — et il serait parti
 avec l'autorité d'une mesure.
 
-## La classe, déjà nommée au socle
+## ⛔ L'EXPLICATION QUE J'AVAIS DONNÉE ÉTAIT FAUSSE — rétractée le 2026-08-30 à 23:30
 
-> « 65 `static readonly Color = DesignTokens.Current.*` étaient VERTS en run complet (un test
-> antérieur chauffait le cache) et ROUGES en run scopé à froid — l'initialiseur statique tombe en
-> contexte constructeur où `Resources.Load` jette. **L'ordre des voisins peut fabriquer un vert,
-> exactement comme la co-tenance fabrique un rouge.** »
+J'avais rattaché ce rouge à une entrée du socle :
 
-Mes deux runs étaient **scopés à un seul fixture**, donc à froid. C'est la configuration exacte
-que cette entrée décrit.
+> « 65 `static readonly Color = DesignTokens.Current.*` étaient VERTS en run complet et ROUGES en
+> run scopé à froid — l'initialiseur statique tombe en contexte constructeur où `Resources.Load`
+> jette. »
+
+**Deux vérifications, faites après coup, la démolissent** — et c'est la session 98 qui a ouvert la
+question, pas moi :
+
+    Assets/Resources/DesignTokens.asset          PRÉSENT, 4573 o, .meta présent, chemin exact
+    static readonly … = DesignTokens.Current     4 sites — TOUS dans Assets/Tests/PlayMode
+                                                 (ChromeTabAccentAllowlist ×2, Hud, TopBarDoctrine)
+    dans Assets/Scripts/Operational/Reputation/  **0**  (contrôle positif : 4 `static readonly`
+                                                 tout court — le motif mord)
+
+1. **L'énoncé du socle est PÉRIMÉ** : il annonce 65 sites, il y en a **4**. Le lot qui a payé ce
+   défaut les a supprimés depuis. J'ai repris un nombre daté sans le recompter — *un nombre repris
+   d'un rapport sans être recompté est un fait DÉDUIT*, y compris quand il vient du socle.
+2. **La classe ne s'applique pas à mon code.** Mon écran n'a AUCUN initialiseur statique touchant
+   `DesignTokens` : ses 4 `static readonly` sont les couleurs locales (`Encre`, `Panneau`,
+   `Lisere`, `Vert`), qui ne lisent rien. Les 15 jetons canon passent par des **propriétés**
+   (`=> DesignTokens.Current.x`), évaluées à l'appel. Mon rouge vient donc d'un appel à
+   **l'exécution** (`BuildLayout` → `NouveauTexte` → `.primaryFont`), pas d'un initialiseur.
+
+⇒ *Ouvrir un précédent pour une propriété ne le classe pas sur les autres.* J'ai reconnu le nom
+« DesignTokens.Current » et l'ai rangé dans le tiroir d'une entrée existante, sans vérifier que la
+forme correspondait. **L'explication était confortable et fausse.**
+
+## Ce qui TIENT, et pourquoi ce n'est pas la même chose
+
+Le FAIT reste entier, parce qu'il repose sur une mesure indépendante et non sur cette explication :
+**un fixture livré, sans rapport avec ce lot, échoue 3/3 avec la même cause.** Le rouge n'est donc
+pas dans mon code. C'est l'EXPLICATION de sa cause qui est retirée, pas le constat.
+
+⇒ La piste qui reste, et elle est cohérente avec un asset PRÉSENT qui se charge en `null` : la
+**base d'assets n'était pas prête** à cet instant. Mes deux runs sont tombés pendant le démarrage
+d'un plancher E2E **et** pendant que deux éditeurs importaient. Un `Resources.Load` null n'est pas
+un symptôme de charge CPU — c'en est un d'`AssetDatabase` non prête, ce que produit exactement un
+import concurrent.
 
 ## Ce qui reste NON TRANCHÉ, et la mesure qui trancherait
 
 Deux hypothèses restent ouvertes, et elles n'appellent pas le même geste :
 
-1. **Artefact de run scopé** — l'asset est présent et importé, mais `Resources.Load` échoue dans ce
-   contexte d'exécution. ⇒ un run PLUS LARGE (toute la catégorie, ou la suite complète) le
-   rendrait vert, et il n'y a rien à corriger dans le code.
-2. **L'asset n'est réellement pas importé** — le refresh de 23:20 a recompilé les scripts mais
-   peut ne pas avoir réimporté `Assets/Resources/DesignTokens.asset`. ⇒ un réimport explicite le
-   réglerait, et ce serait un fait sur l'ÉTAT de l'éditeur, pas sur le code.
+1. **Base d'assets non prête au moment du run** — deux éditeurs importaient et un plancher
+   démarrait. ⇒ le même fixture témoin devient VERT sur machine calme, sans qu'une ligne change.
+2. **L'asset n'est pas réimporté dans CET éditeur** — le refresh de 23:20 a recompilé les scripts
+   sans forcément réimporter `Assets/Resources/DesignTokens.asset`. ⇒ un réimport explicite le
+   règle, et c'est un fait sur l'ÉTAT de l'éditeur, jamais sur le code.
+3. **Ordre d'exécution** — un voisin « chauffe » quelque chose que le run scopé n'a pas.
+   ⚠️ À nommer correctement si c'est le cas : *ordre d'exécution*, **pas** « DesignTokens cassé »,
+   et **pas** « initialiseur statique » puisqu'il n'y en a aucun sur ce chemin.
 
-**La mesure qui départage** : relancer `DesignTokensPlayModeTests` — le fixture témoin, pas le
-mien — après un run large ou un réimport. S'il devient vert sans qu'aucune ligne n'ait changé,
-c'est (1). S'il reste rouge, c'est (2).
+**Réponse à la question qui départage** : **mes deux runs étaient SCOPÉS** — le premier à un seul
+test (`test_names: ["…B3P1_…"]`), le second à un seul fixture (`DesignTokensPlayModeTests`).
+Aucun run complet n'a été fait.
+
+**La mesure qui tranche**, dans cet ordre, et sur machine calme (7 conteneurs) :
+1. relancer le fixture **témoin** seul → vert ⇒ (1), la charge/l'import concurrent suffisait ;
+2. s'il reste rouge, un **réimport** de `Assets/Resources/` puis re-run → vert ⇒ (2) ;
+3. s'il reste rouge, un run **complet** → vert ⇒ (3), et c'est un vrai défaut d'ordre à consigner.
+
+⇒ Le témoin est l'instrument, pas mon test : il est livré, il ne dépend pas de ce lot, et son
+verdict est donc opposable.
 
 ⛔ **Ni l'un ni l'autre ne se mesure maintenant** : un plancher E2E occupe la machine depuis 23:20
 (22 conteneurs, charge 10,7). Mes deux runs de 6 secondes sont eux-mêmes tombés pendant son
