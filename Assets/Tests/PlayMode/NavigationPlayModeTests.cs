@@ -50,7 +50,22 @@ namespace MafiaCleanCity.Shell.Tests
             // synchrone que `SetToken`/`SetMountParent` : appelé AVANT le premier
             // `yield return null` ci-dessous, donc AVANT que `Start()` (différé d'une frame) ne lise
             // ces champs.
-            s.SetIdentity("citymap_demo@example.test", "citymap-demo-pw");
+            //
+            // RONDE 3 (revue ⊥ r2, classe B) — ce site posait le littéral "citymap_demo@example.test"
+            // EN DUR : depuis B2 (ronde 2), `SetIdentity` marque `identityExplicitlySet = true`, qui
+            // désactive la surcharge d'environnement pour le shell — un littéral en dur ÉPINGLE donc
+            // ce test (et son fan-out, 5 [UnityTest] via ce helper) au compte PARTAGÉ citymap_demo,
+            // sans qu'AUCUNE variable ne puisse plus l'en décaler. C'est exactement la collision que
+            // ce lot existe pour supprimer. Fix : résoudre via la paire d'environnement CITYMAP
+            // (`MAFIA_CITYMAP_IDENTIFIER`/`MAFIA_CITYMAP_PASSWORD`) AVANT l'appel explicite — le
+            // littéral ne reste qu'un FALLBACK (défaut inchangé si la variable n'est pas posée), et un
+            // second éditeur qui pose ces deux variables décale ce test vers son propre compte citymap,
+            // seedé séparément par CE MÊME environnement (`Tools/seed_citymap_demo.mjs` hérite du
+            // process Unity — `SeederSupport.RunSeeder` ne surcharge que PATH).
+            (string citymapIdentifier, string citymapPassword) = DemoIdentityResolver.Resolve(
+                DemoIdentityResolver.CityMapIdentifierEnvVar, DemoIdentityResolver.CityMapPasswordEnvVar,
+                "citymap_demo@example.test", "citymap-demo-pw");
+            s.SetIdentity(citymapIdentifier, citymapPassword);
             LogAssert.ignoreFailingMessages = true; // Empire's own CityMapController demo-auth noise (byte-identical rationale to AppShellPlayModeTests)
 
             // MESURÉ (course trouvée en lot W3U2, invisible en fichier isolé) : `AppShell.Start()`

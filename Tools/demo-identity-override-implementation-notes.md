@@ -256,6 +256,148 @@ tout cela n'a été affirmé "vert" — seule la sanity de syntaxe (balance acco
 crochets par oracle Python, 0 partout sur les 5 fichiers `.cs` touchés) et la réplique EXACTE du
 scanner de garde (B1, ci-dessus) ont servi de filet.
 
+## RONDE 3 — remédiation revue ⊥ r2 (2026-08-30, NOT_APPROVED 1 BLOCKING / 3 IMPORTANT / 4 MINOR)
+
+Rapports : `/tmp/revue-demo-identity-r2.md` (ronde 2, cette remédiation) et `/tmp/revue-demo-identity.md`
+(ronde 1, pour contexte). Contrainte machine RE-VÉRIFIÉE avant d'écrire une ligne, PUIS RE-RE-VÉRIFIÉE
+juste avant ce commit : `docker ps -aq | wc -l` → 7 (base de dev seule, aucun gate) ; mais
+l'énumération `/proc/<pid>/exe` trouve TOUJOURS l'éditeur Unity ouvert sur CE dépôt
+(`-projectpath /home/erutheone/project/mafia-builder-city-clean`, PID 2643750 + ses 2 AssetImportWorker)
+— donc, comme aux deux rondes précédentes : ÉCRIT + COMMITÉ, **RIEN LANCÉ** (aucune compilation
+Unity, aucun run NUnit/PlayMode). Filet : oracles Python (réplique EXACTE des scanners C# livrés,
+jamais une approximation) + sanity de balance `{}` (0 partout sur les 6 fichiers `.cs` touchés —
+`(`/`)` bruts ne sont PAS un oracle fiable en présence de prose entre parenthèses dans les
+commentaires, y compris sur `AppShell.cs` intact depuis la ronde 1 : diff pré-existant, non introduit
+ici, vérifié par `git show HEAD:…`).
+
+### LE BLOQUANT — reclassification COMPLÈTE des 11 sites `SetIdentity`, refaite ici (pas recopiée)
+
+Réplique Python de `ScanDirectory`/`CountLiteralOccurrences` sur `.SetIdentity(` (même convention que
+`.SignIn(`/`.SignUp(` — un point immédiatement suivi du nom, exclut structurellement la déclaration
+`public void SetIdentity(…)`, précédée d'un espace) :
+
+```
+AVANT (HEAD 69b8afb, ronde 2) — Assets/Tests, RAW :
+  TotalOccurrences=11, 6 fichiers :
+    AccueilPanneauxGeometriePhotoPlayModeTests.cs: 1
+    AppShellPlayModeTests.cs: 2
+    CharpenteOuvertureSessionOverlayPlayModeTests.cs: 1
+    HudPlayModeTests.cs: 1
+    NavigationPlayModeTests.cs: 2
+    VuePrincipaleCapturePlayModeTests.cs: 4
+```
+
+Chaque site OUVERT et classé un par un (jamais recopié depuis le rapport ⊥) :
+
+| classe | population | sites | verdict | geste |
+|---|---|---|---|---|
+| **A** — identité délibérément INVALIDE | 2 | `CharpenteOuvertureSessionOverlayPlayModeTests.cs:492`, `NavigationPlayModeTests.cs` (NavF3, ex-`:225`) | ✅ correct, inchangé | rien à faire — l'échec voulu survit à tout environnement (rang 1 > rang 2) |
+| **C** — compte FRAIS créé par le test lui-même (signup) | 5 | `HudPlayModeTests.cs:149`, `VuePrincipaleCapturePlayModeTests.cs:59,165,247,438` | ✅ correct, inchangé | rien à faire — un compte unique par run n'a aucun risque de collision, et l'explicite doit y battre l'environnement |
+| **B** — compte de démo PARTAGÉ "citymap_demo", en DUR | 3 | `NavigationPlayModeTests.cs` (`MountShellAtCityTab`, fan-out **5** `[UnityTest]`), `AppShellPlayModeTests.cs` (2 shells, 1 test) | ❌ ÉPINGLÉ — corrigé | routage par `DemoIdentityResolver.Resolve(CityMapIdentifierEnvVar, CityMapPasswordEnvVar, "citymap_demo@example.test", "citymap-demo-pw")` **avant** `SetIdentity` — le littéral ne reste qu'un fallback |
+| **B (no-op)** — défaut sérialisé recopié OCTET POUR OCTET | 1 | `AccueilPanneauxGeometriePhotoPlayModeTests.cs:341` | ❌ no-op devenu désactivation silencieuse — corrigé | **appel RETIRÉ** (pas reclassé) — voir raisonnement ci-dessous |
+
+Compte : 2 + 5 + 3 + 1 = 11. ✅ (le rapport ⊥ comptait 2+5+4 en fusionnant B et le no-op ; ici
+distingués parce que leur RÉPARATION diffère : les 3 premiers gagnent une résolution, le 4ᵉ disparaît.)
+
+**Pourquoi retirer plutôt que router `Accueil:341`** : le test seed `operational_demo` via
+`SeederSupport.RunSeeder(SeederSupport.OperationalSeeder, …)`, qui lance `Tools/seed_operational_demo.mjs`
+en sous-processus **héritant de l'environnement OS du process Unity** (`SeederSupport.RunSeeder` ne
+surcharge que `PATH`, `ProcessStartInfo.EnvironmentVariables` copie le reste). Ce seeder lit
+`MAFIA_DEMO_IDENTIFIER`/`MAFIA_DEMO_PASSWORD` — EXACTEMENT les mêmes variables que
+`AppShell.AcquireSessionThenActivateHome` résout nativement pour l'identité "operational" (rang 2,
+`allowEnvironmentOverride` par défaut = `true` tant que `SetIdentity` n'est pas appelé). En NE
+posant PAS `SetIdentity`, ce test reste donc TOUJOURS en phase avec ce que le seeder vient de peupler
+— par défaut ET sous surcharge — sans code de plus. Router au lieu de retirer aurait ajouté un appel
+`Resolve` inutile pour reproduire un comportement que `AppShell` fournit déjà nativement dès qu'on
+NE l'empêche pas. Les deux constantes `OperationalEmail`/`OperationalPassword` (devenues sans autre
+lecteur) sont retirées avec l'appel.
+
+### Le monde dégénéré NEUF (I3 du rapport ⊥) — garde d'ensemble sur « qui désactive la surcharge »
+
+`.SignIn(`/`.SignUp(` pincent QUI atteint le réseau — pas QUI rend la surcharge INERTE pour un shell
+(zéro appel réseau direct, donc invisible aux deux gardes). Nouveau motif `.SetIdentity(`, MÊME
+patron (contrôles positif+négatif, allowlist d'ENSEMBLE, portée déclarée), dans
+`DemoIdentityResolverPlayModeTests.cs` :
+
+```
+APRÈS (arbre livré) — Assets/Tests, motif .SetIdentity( :
+  RAW (avec le scanner lui-même, ses [TestCase] fabriquent le motif) : 23, 6 fichiers
+  APRÈS EXCLUSION du fichier hébergeant le scanner (ScanDirectoryExcludingFile, portée = UN
+  fichier nommé, jamais un répertoire — un vrai contournement ailleurs sous Assets/Tests resterait vu) :
+    TotalOccurrences=10, 5 fichiers :
+      AppShellPlayModeTests.cs: 2 · CharpenteOuvertureSessionOverlayPlayModeTests.cs: 1 ·
+      HudPlayModeTests.cs: 1 · NavigationPlayModeTests.cs: 2 · VuePrincipaleCapturePlayModeTests.cs: 4
+```
+
+⚠️ Piège trouvé EN ÉCRIVANT cette garde (même famille que B1) : les `[TestCase]` de CE fichier qui
+FABRIQUENT `.SetIdentity(` pour prouver que le scanner le détecte se comptent ELLES-MÊMES si la
+portée n'exclut pas leur propre fichier — mesuré : 10 → 20 sans l'exclusion. `.SignIn(`/`.SignUp(`
+n'ont jamais ce problème (portée = `Assets/Scripts`, hors de leur propre fichier de test) ; celui-ci
+en a besoin car sa portée RÉELLE recouvre `Assets/Tests` tout entier. Fermé par
+`ScanDirectoryExcludingFile` (exclusion NOMMÉE, un seul fichier — pas un répertoire, contrôlé par
+`Scan_SelfExclusion_DoesNotBlindRealCallsElsewhere`, qui prouve qu'un vrai contournement écrit dans
+un AUTRE fichier reste détecté).
+
+`ExpectedExplicitIdentitySites` = les 5 fichiers de la table ci-dessus (Accueil n'y figure plus,
+puisqu'il n'appelle plus `SetIdentity`). Elle rougirait AUJOURD'HUI si un 6ᵉ fichier apparaissait —
+c'est le point.
+
+### IMPORTANT — I1 : justification de m7 remplacée (pas la décision, sa MOTIVATION était fausse)
+
+`DemoIdentityResolver.cs` (précédence, § "Les DEUX variables…") ne dit plus « le back refuse
+BRUYAMMENT (401) » — RÉFUTÉ par les seeders du lot lui-même : `seed_operational_demo.mjs:53,55` et
+`seed_citymap_demo.mjs:30,32` retombent sur les MÊMES constantes, indépendamment, comme le résolveur.
+Le vrai mode d'échec : un `MAFIA_DEMO_IDENTIFIER` TOMBÉ (variable non posée) résout vers
+`('operational_demo@example.test', 'operational-demo-pw')` — un compte RÉEL, SEEDÉ, qui authentifie
+SANS ERREUR. Éditeur B silencieusement de retour sur le compte de A. La décision (ne pas forcer les
+deux variables d'une paire ensemble) reste correcte — forcer la paire n'aurait pas fermé CE mode
+d'échec (l'absence TOTALE des deux resterait valide) — mais pour la bonne raison : ce n'est pas une
+validation qui manquait, c'est l'OBSERVABILITÉ (→ I2).
+
+### IMPORTANT — I2 : le résolveur DÉCLARE désormais ce qu'il a résolu
+
+`ResolveAndSignIn` imprime `[DemoIdentityResolver] régime=… identité=…` (jamais le mot de passe)
+juste avant `auth.SignIn(...)`. Régime = "explicite" (`!allowEnvironmentOverride`), "env" (variable
+non blanche lue), ou "défaut" (fallback). C'est le détecteur réel de I1 : un repli silencieux sur le
+compte partagé s'imprime désormais comme `régime=défaut identité=operational_demo@example.test`, au
+lieu d'être indiscernable d'un fonctionnement normal.
+
+### IMPORTANT — I2 (MafiaCI) : la conséquence de la ronde 2 est maintenant ANNONCÉE
+
+Ajouter `"DemoIdentity"` à `MafiaCI.Categories` (fait en ronde 2) fait entrer 3 classes sous CE juge
+pour la PREMIÈRE FOIS. `Assets/Editor/MafiaCI.cs` porte désormais la clause explicite : un rouge au
+premier run n'est PAS une régression de ce lot, c'est un défaut DORMANT jamais observé avant — son
+diagnostic commence par déterminer s'il préexistait déjà, pas par accuser ce lot.
+
+### IMPORTANT — m3 : le message d'échec de la garde `.SignIn(` nomme désormais DEUX causes
+
+`RealNetworkSignInCalls_LiveOnlyInsideTheResolver_ScopedToAssetsScripts` ne pousse plus seulement
+vers « élargir l'allowlist » : le message nomme aussi « un commentaire cite le motif littéralement »
+(la cause RÉELLE du dernier rouge de cette garde, B1 ronde 2) et prévient qu'élargir l'allowlist sur
+CE diagnostic certifierait la seconde cause au lieu de la corriger.
+
+### MINOR
+
+- **m1** — `DemoIdentityResolver.cs` § précédence, rang 1 : la portée du superlatif est désormais
+  déclarée (« SEULE DÉCLARATION … portée de CETTE mesure, pas des APPELS ») — les 10 sites d'appel
+  vivent tous dans `Assets/Tests`, jamais `Assets/Scripts`.
+- **m2** — pas de correctif code ; consigné pour CE commit : la classe/population/compte sont collés
+  ci-dessus, pas résumés en une phrase qui pourrait sur-déclarer (leçon de la ronde 2 elle-même).
+- **m3** — voir IMPORTANT ci-dessus (le rapport le classe MINOR, traité ici avec la rigueur d'un
+  IMPORTANT parce qu'il ferme définitivement le piège de citation de B1).
+- **m4** — 3ᵉ motif de garde `SigninUrl`/`SignupUrl`, portée `Assets/Scripts`, allowlist
+  `{CityMap/AuthClient.cs}` (3/3 mesuré, contrôle positif dédié
+  `Scan_NewDirectUrlAccessSite_IsDetected`). Ferme le monde dégénéré n°3 du rapport ronde 1/2.
+
+### Ce qui reste NON EXÉCUTÉ après cette ronde (identique aux rondes 1 et 2, contrainte inchangée)
+
+Compilation Unity réelle ; les 6 nouveaux tests `[Test]` purs de cette ronde (aucun réseau — mêmes
+garanties que la ronde 2 : logique pure ou scan de fichiers, zéro I/O réseau, zéro risque de
+contamination d'un compte réel) ; la garde d'ensemble et les tests de comportement du résolveur déjà
+écrits en ronde 1/2 ; la falsifiable §4 et la garde de capacité I1 contre le back réel. Filet :
+oracles Python répliquant EXACTEMENT chaque scanner livré (voir les blocs ci-dessus), exécutés sur
+l'arbre FINAL de cette ronde, jamais sur un brouillon intermédiaire.
+
 ## Ce qui n'a pas été fermé
 
 - Aucune compilation Unity réelle n'a eu lieu (interdite pour cette session) — la sanity de syntaxe

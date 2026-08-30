@@ -61,9 +61,6 @@ namespace MafiaCleanCity.Shell.Tests
     [Category("Charpente")]
     public class AccueilPanneauxGeometriePhotoPlayModeTests
     {
-        private const string OperationalEmail = "operational_demo@example.test";
-        private const string OperationalPassword = "operational-demo-pw";
-
         private Scene sceneDeDemarrage;
 
         [OneTimeSetUp]
@@ -338,7 +335,18 @@ namespace MafiaCleanCity.Shell.Tests
 
             GameObject shellGo = new GameObject("AccueilNatifShell");
             AppShell shell = shellGo.AddComponent<AppShell>();
-            shell.SetIdentity(OperationalEmail, OperationalPassword);
+            // RONDE 3 (revue ⊥ r2, classe B) — NE PAS appeler SetIdentity ici. Un AppShell fraîchement
+            // AddComponent porte déjà le défaut sérialisé "operational_demo@example.test"/
+            // "operational-demo-pw" (voir AppShell.cs:91-92) — IDENTIQUE au compte que SeedOperationalDemo()
+            // vient de seeder ci-dessus, donc l'ancien appel `SetIdentity(OperationalEmail,
+            // OperationalPassword)` était un NO-OP octet pour octet. Depuis B2 (ronde 2), SetIdentity pose
+            // aussi `identityExplicitlySet = true`, qui DÉSACTIVE la surcharge d'environnement pour ce
+            // shell — l'appeler ici aurait épinglé ce test au compte partagé operational_demo pour
+            // toujours, exactement la collision que ce lot existe pour supprimer. En NE l'appelant PAS,
+            // ce shell suit le rang 2 (variable d'environnement) nativement, comme AppShell le fait sans
+            // aide — et reste EN PHASE avec SeedOperationalDemo() : son sous-processus node HÉRITE du
+            // même environnement OS (SeederSupport.RunSeeder ne surcharge que PATH), donc le seeder et
+            // ce shell résolvent TOUJOURS la même identité, par défaut ou sous surcharge, sans code de plus.
             yield return null; // Start() construit le chrome DANS ce canvas déjà à la bonne taille
 
             Assert.AreSame(canvas, shell.ShellCanvas,

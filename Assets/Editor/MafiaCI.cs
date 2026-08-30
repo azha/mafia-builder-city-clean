@@ -35,6 +35,11 @@ public static class MafiaCI
     // entrée, les 3 classes de `DemoIdentityResolverPlayModeTests.cs` /
     // `DemoIdentityTwoAccountsPlayModeTests.cs` ne tournaient sous AUCUN juge — une garde qui n'a
     // jamais tourné n'est pas une garde. Même patron : on élargit, jamais un second point d'entrée.
+    // ⚠️ CONSÉQUENCE ANNONCÉE (revue ⊥ ronde 2, non exécutée avant cette ronde) : cet ajout fait
+    // entrer 3 classes sous CE juge POUR LA PREMIÈRE FOIS. Un rouge qui apparaîtrait au premier run
+    // n'est donc PAS une régression de ce lot — c'est un défaut DORMANT qui n'a simplement jamais
+    // été observé avant, et son diagnostic commence par déterminer s'il préexistait déjà au code
+    // qu'il touche. Voir `Tools/demo-identity-override-implementation-notes.md` § RONDE 3.
     private static readonly string[] Categories = { "W4P4a", "W3UDA", "W3U1", "W3U2", "Charpente", "DemoIdentity" };
 
     public static void RunPlayModeTests()

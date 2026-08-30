@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using UnityEngine;
 
 namespace MafiaCleanCity.CityMap
 {
@@ -21,8 +22,13 @@ namespace MafiaCleanCity.CityMap
     // PRÉCÉDENCE (revue ⊥ B2, corrigée le 2026-08-30 — voir `allowEnvironmentOverride` plus bas).
     // Trois sources concurrentes, mesurées sur TOUT `Assets/Scripts` :
     //   1. Appel EXPLICITE — `AppShell.SetIdentity(...)`, posé AVANT `Start()` par un appelant qui a
-    //      une opinion (un test, un futur écran de login). SEUL site de ce type dans tout le dépôt
-    //      (`grep -rln "SetIdentity" Assets/Scripts` → `Shell/AppShell.cs`, un seul fichier).
+    //      une opinion (un test, un futur écran de login). SEULE DÉCLARATION de ce type dans
+    //      `Assets/Scripts` (`grep -rln "SetIdentity" Assets/Scripts` → `Shell/AppShell.cs`, un seul
+    //      fichier) — portée de CETTE mesure, pas des APPELS : les 10 sites qui invoquent
+    //      `SetIdentity` vivent tous dans `Assets/Tests` (m1, revue ⊥ ronde 2 : « la commande citée
+    //      prouve elle-même que la portée est Assets/Scripts, qui contient 0 des sites d'appel »).
+    //      Population des appelants et sa garde d'ensemble : voir `ExpectedExplicitIdentitySites`
+    //      dans `DemoIdentityResolverPlayModeTests.cs`.
     //   2. Variable d'ENVIRONNEMENT — configuration de POSTE (quel éditeur, quel compte).
     //   3. Défaut `[SerializeField]` SÉRIALISÉ — le cas nominal, aucun appelant n'a d'opinion. Seule
     //      scène qui le sérialise : `Assets/Scenes/Boot.unity:416-417`, valeur = le défaut C#
@@ -62,10 +68,24 @@ namespace MafiaCleanCity.CityMap
     // sous la réserve ci-dessus pour la paire citymap.
     //   ⚠️ Les DEUX variables d'une paire retombent INDÉPENDAMMENT (identifiant et mot de passe
     //   séparément) — un environnement à moitié posé (ex. identifiant surchargé, mot de passe resté
-    //   au défaut) produit une identité MIXTE. Décision (revue ⊥ m7) : gardé tel quel, DÉLIBÉRÉMENT
-    //   — le back refuse BRUYAMMENT (401, jamais un succès sur la mauvaise combinaison), donc aucun
-    //   faux positif silencieux ; forcer les deux variables d'une paire à être posées ENSEMBLE
-    //   ajouterait une validation pour un cas déjà sans risque de ce genre.
+    //   au défaut) produit une identité MIXTE. Décision (revue ⊥ m7) : gardé tel quel, DÉLIBÉRÉMENT.
+    //   ⚠️⚠️ JUSTIFICATION CORRIGÉE (revue ⊥ ronde 2, I1) — l'ancienne motivation (« le back refuse
+    //   BRUYAMMENT, 401, sur la mauvaise combinaison ») est RÉFUTÉE par les seeders de CE lot :
+    //   `Tools/seed_operational_demo.mjs:53,55` et `Tools/seed_citymap_demo.mjs:30,32` retombent sur
+    //   les MÊMES constantes, INDÉPENDAMMENT, exactement comme ce résolveur — donc dans la
+    //   configuration MINIMALE d'un second éditeur (poser SEULEMENT `MAFIA_DEMO_IDENTIFIER`, le
+    //   callsign se dérive de l'e-mail côté seeder), les deux comptes partagent le mot de passe par
+    //   défaut : une paire « mixte » n'est PAS refusée, elle est juste une coïncidence sans risque.
+    //   Le VRAI mode d'échec n'est pas la mixité : c'est le REPLI TOTAL SILENCIEUX. Si
+    //   `MAFIA_DEMO_IDENTIFIER` tombe (variable non posée — un `export` oublié dans un shell), le
+    //   résolveur rend `('operational_demo@example.test', 'operational-demo-pw')` — un compte RÉEL,
+    //   SEEDÉ, qui authentifie sans erreur : l'éditeur B repart silencieusement sur le compte
+    //   PARTAGÉ de A, zéro 401, zéro log, l'incident du 2026-08-21 de retour. Forcer les deux
+    //   variables d'une paire à être posées ENSEMBLE ne fermerait PAS ce mode d'échec (l'absence
+    //   TOTALE des deux resterait valide sous une règle « ensemble ou aucune ») — la décision de
+    //   garder l'indépendance des deux variables reste donc correcte, mais pour une raison
+    //   DIFFÉRENTE : ce n'est pas la validation qui manquait, c'est l'OBSERVABILITÉ. Voir le log de
+    //   `ResolveAndSignIn` ci-dessous (revue ⊥ I2) — c'est le détecteur réel de ce mode d'échec.
     //
     // ⛔ GARDE D'ENSEMBLE (DemoIdentityResolverGuardPlayModeTests, portée Assets/Scripts) : ce
     // fichier est le SEUL endroit autorisé à invoquer directement la méthode d'instance de sign-in
@@ -118,7 +138,10 @@ namespace MafiaCleanCity.CityMap
         /// méthode qu'il enveloppe : aucun site d'appel existant ne change de forme `yield return`,
         /// seulement QUI il appelle. <paramref name="allowEnvironmentOverride"/> — voir
         /// `Resolve` ci-dessus ; par défaut vrai, comportement inchangé pour les appelants qui ne le
-        /// passent pas.</summary>
+        /// passent pas. RONDE 3 (revue ⊥ ronde 2, I2) : imprime le RÉGIME résolu (explicite/env/défaut) et
+        /// l'IDENTIFIANT — jamais le mot de passe — avant de signer. Sans cette ligne, un repli
+        /// silencieux sur le compte partagé (voir la réserve m7/I1 ci-dessus) est indiscernable d'un
+        /// fonctionnement normal : ni erreur, ni log, ni différence de comportement observable.</summary>
         public static IEnumerator ResolveAndSignIn(AuthClient auth,
             string identifierEnvVar, string passwordEnvVar,
             string fallbackIdentifier, string fallbackPassword,
@@ -128,7 +151,21 @@ namespace MafiaCleanCity.CityMap
             (string identifier, string password) = Resolve(
                 identifierEnvVar, passwordEnvVar, fallbackIdentifier, fallbackPassword,
                 allowEnvironmentOverride);
+            Debug.Log($"[DemoIdentityResolver] régime={DescribeRegime(identifierEnvVar, allowEnvironmentOverride)} identité={identifier}");
             yield return auth.SignIn(identifier, password, onSuccess, onError);
+        }
+
+        /// <summary>RONDE 3 (revue ⊥ ronde 2, I2) — nomme laquelle des 3 sources de la précédence (tête de
+        /// fichier) a effectivement gagné, pour LE MÊME appel que celui qui va signer (relit
+        /// <paramref name="identifierEnvVar"/> une seconde fois plutôt que de faire porter un 3e
+        /// élément au tuple de <see cref="Resolve"/>, qui resterait alors identique pour les 5
+        /// appelants qui le testent directement). Jamais le mot de passe — seul l'identifiant est
+        /// journalisé.</summary>
+        private static string DescribeRegime(string identifierEnvVar, bool allowEnvironmentOverride)
+        {
+            if (!allowEnvironmentOverride) return "explicite";
+            string env = Environment.GetEnvironmentVariable(identifierEnvVar);
+            return string.IsNullOrWhiteSpace(env) ? "défaut" : "env";
         }
     }
 }

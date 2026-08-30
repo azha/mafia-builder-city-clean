@@ -270,6 +270,29 @@ namespace MafiaCleanCity.CityMap.Tests
             return new ScanResult(total, files);
         }
 
+        /// <summary>Comme <see cref="ScanDirectory"/>, MOINS un fichier (chemin relatif à
+        /// <paramref name="rootDirectory"/>, mêmes séparateurs '/' que <see cref="ScanResult"/>).
+        /// Nécessaire au SEUL motif de ce fichier dont la portée RÉELLE recouvre `Assets/Tests` tout
+        /// entier (`.SetIdentity(`, ci-dessous — contrairement à `.SignIn(`/`.SignUp(`, scopés à
+        /// `Assets/Scripts`) : les `[TestCase]` et fichiers fabriqués de CE fichier FABRIQUENT le
+        /// motif pour prouver que le scanner le détecte (Scan_DetectsExplicitOverrideAliasedReceiverForms,
+        /// Scan_NewExplicitOverrideSite_…) — sans cette exclusion, ce fichier se compterait
+        /// LUI-MÊME, exactement le piège de citation du socle, version code plutôt que docstring.
+        /// Portée volontairement étroite : exclut UN fichier nommé, jamais un répertoire entier —
+        /// une vraie invocation de production écrite ailleurs sous Assets/Tests reste vue.</summary>
+        private static ScanResult ScanDirectoryExcludingFile(string rootDirectory, string literal, string excludeRelativePath)
+        {
+            ScanResult raw = ScanDirectory(rootDirectory, literal);
+            if (!raw.FilesWithHits.Contains(excludeRelativePath)) return raw;
+
+            string excludedFullPath = Path.Combine(rootDirectory,
+                excludeRelativePath.Replace('/', Path.DirectorySeparatorChar));
+            int excludedHits = CountLiteralOccurrences(File.ReadAllText(excludedFullPath), literal);
+            var files = new HashSet<string>(raw.FilesWithHits);
+            files.Remove(excludeRelativePath);
+            return new ScanResult(raw.TotalOccurrences - excludedHits, files);
+        }
+
         // ── Robustesse à l'ALIAS du receveur — le motif vise la PROPRIÉTÉ (un appel réseau, quel
         // que soit le nom de la variable qui le porte), pas la tournure vue une seule fois dans le
         // code d'aujourd'hui. Les 9 sites mesurés utilisaient tous `auth`, mais un futur appelant
@@ -446,8 +469,12 @@ namespace MafiaCleanCity.CityMap.Tests
 
             Assert.AreEqual(ExpectedRealNetworkSignInSites.Count, scan.TotalOccurrences,
                 $"attendu {ExpectedRealNetworkSignInSites.Count} appel(s) réseau réel(s) " +
-                $"(`.SignIn(`), trouvé {scan.TotalOccurrences} — un appelant a contourné " +
-                "DemoIdentityResolver.ResolveAndSignIn sans mettre à jour cette allowlist.");
+                $"(`.SignIn(`), trouvé {scan.TotalOccurrences} — DEUX causes possibles (m3, revue ⊥ " +
+                "ronde 2, ne pas se précipiter sur la première) : (a) un appelant a contourné " +
+                "DemoIdentityResolver.ResolveAndSignIn sans mettre à jour cette allowlist, ou (b) un " +
+                "COMMENTAIRE/docstring cite le motif `.SignIn(` littéralement quelque part sous " +
+                "Assets/Scripts (c'est la cause RÉELLE de la dernière fois que cette garde a rougi — " +
+                "voir B1, ronde 2) — élargir l'allowlist ne corrige QUE (a) et certifierait (b).");
             CollectionAssert.AreEquivalent(ExpectedRealNetworkSignInSites, scan.FilesWithHits,
                 "l'ENSEMBLE des fichiers appelant `.SignIn(` directement a divergé de l'allowlist " +
                 "déclarée — soit un nouveau contournement, soit le résolveur a été déplacé/renommé " +
@@ -473,6 +500,243 @@ namespace MafiaCleanCity.CityMap.Tests
                 "SignUp directement (voir Scan_NewSignUpCallOutsideResolver_IsDetected pour la " +
                 "preuve que ce motif SAIT détecter ce cas — ce zéro n'est donc pas un zéro aveugle).");
             CollectionAssert.IsEmpty(scan.FilesWithHits);
+        }
+
+        // ── RONDE 3 (revue ⊥ ronde 1 m4 puis ronde 2 m4 — 3ᵉ motif du monde dégénéré n°3) ───────
+        //
+        // `.SignIn(`/`.SignUp(` visent le POINT D'ACCÈS réseau ; ils ne voient pas un appelant qui
+        // construit sa PROPRE requête vers `auth.SigninUrl`/`auth.SignupUrl` (les deux propriétés
+        // sont PUBLIQUES, `AuthClient.cs:19-20`) — `new UnityWebRequest(auth.SigninUrl, …)`
+        // obtiendrait un jeton sans jamais écrire `.SignIn(`/`.SignUp(`, invisible aux deux gardes
+        // ci-dessus. Mesuré 2026-08-30 (oracle Python, substring littérale, portée Assets/Scripts) :
+        // `SigninUrl` = 3/3 dans `CityMap/AuthClient.cs` (déclaration + son propre usage interne),
+        // `SignupUrl` = 3/3, idem — 0 lecteur externe aujourd'hui : la porte est ouverte, personne ne
+        // l'a franchie. Ce motif la ferme AVANT qu'elle ne serve, même patron que `.SignUp(` (m4).
+        private const string SigninUrlToken = "SigninUrl";
+        private const string SignupUrlToken = "SignupUrl";
+
+        private static readonly HashSet<string> ExpectedDirectUrlAccessSites = new HashSet<string>
+        {
+            "CityMap/AuthClient.cs",
+        };
+
+        [Test]
+        public void Scan_NewDirectUrlAccessSite_IsDetected()
+        {
+            // Contrôle positif — répertoire FABRIQUÉ, jamais Assets/Scripts réel.
+            string tempDir = Path.Combine(Path.GetTempPath(), $"demo_identity_url_scan_{Guid.NewGuid():N}");
+            Directory.CreateDirectory(tempDir);
+            try
+            {
+                ScanResult empty = ScanDirectory(tempDir, SigninUrlToken);
+                Assert.AreEqual(0, empty.TotalOccurrences, "un répertoire vide ne doit rien compter.");
+
+                string rogueFile = Path.Combine(tempDir, "RogueUrlController.cs");
+                File.WriteAllText(rogueFile,
+                    "using (var req = new UnityWebRequest(auth.SigninUrl, UnityWebRequest.kHttpVerbPOST)) " +
+                    "{ /* contourne .SignIn( entièrement */ }\n");
+
+                ScanResult withRogue = ScanDirectory(tempDir, SigninUrlToken);
+                Assert.AreEqual(1, withRogue.TotalOccurrences,
+                    "un accès direct à `SigninUrl` HORS AuthClient.cs doit être détecté — c'est " +
+                    "exactement le contournement que `.SignIn(` seul ne peut pas voir.");
+                CollectionAssert.AreEquivalent(new[] { "RogueUrlController.cs" }, withRogue.FilesWithHits);
+            }
+            finally
+            {
+                Directory.Delete(tempDir, recursive: true);
+            }
+        }
+
+        [Test]
+        public void DirectUrlAccess_NeverOccursOutsideAuthClient_ScopedToAssetsScripts()
+        {
+            Assert.IsNotEmpty(ExpectedDirectUrlAccessSites);
+
+            string scriptsRoot = Path.Combine(Application.dataPath, "Scripts");
+            Assert.IsTrue(Directory.Exists(scriptsRoot), $"Assets/Scripts introuvable à {scriptsRoot}");
+
+            foreach (string token in new[] { SigninUrlToken, SignupUrlToken })
+            {
+                ScanResult scan = ScanDirectory(scriptsRoot, token);
+                CollectionAssert.AreEquivalent(ExpectedDirectUrlAccessSites, scan.FilesWithHits,
+                    $"l'ENSEMBLE des fichiers référençant `{token}` a divergé de l'allowlist déclarée " +
+                    "— un appelant construit sa propre requête vers cette URL sans passer par " +
+                    "`.SignIn(`/`.SignUp(`, invisible aux deux gardes précédentes (m4).");
+            }
+        }
+
+        // ── RONDE 3 (revue ⊥ ronde 2, I3 — « le monde dégénéré NEUF ») ──────────────────────────
+        //
+        // Les DEUX gardes ci-dessus pincent QUI atteint le réseau. Elles ne pincent PAS qui rend la
+        // surcharge d'environnement INERTE pour un shell donné — un site qui appelle `SetIdentity`
+        // (ou passe `allowEnvironmentOverride: false`) écrit zéro `.SignIn(`/`.SignUp(` HORS
+        // résolveur : les deux gardes ci-dessus restent VERTES pendant que la surcharge ne mord
+        // plus pour ce shell. C'est le mécanisme exact qui a fait entrer
+        // `AccueilPanneauxGeometriePhotoPlayModeTests.cs:341` dans l'ensemble « désactive la
+        // surcharge » SANS que personne s'en aperçoive (l'appel y était un NO-OP octet pour octet
+        // AVANT B2 — fermé en ronde 3 en le retirant, voir le fichier).
+        //
+        // Motif : `.SetIdentity(` — même convention que `.SignIn(`/`.SignUp(` (un point IMMÉDIATEMENT
+        // suivi du nom de la méthode ⇒ exclut structurellement la DÉCLARATION `public void
+        // SetIdentity(string identifier, string password)` dans AppShell.cs, précédée d'un espace,
+        // jamais d'un point). Portée : `Assets/Tests` — c'est là que vivent TOUS les appels
+        // (`AppShell.SetIdentity` n'est invoqué par AUCUN contrôleur de production ; seule sa
+        // DÉCLARATION vit sous `Assets/Scripts`, hors de la portée de cette garde, comme pour
+        // `.SignIn(`/`.SignUp(`).
+        private const string ExplicitIdentityOverride = ".SetIdentity(";
+
+        private static int CountExplicitIdentityOverride(string text) =>
+            CountLiteralOccurrences(text, ExplicitIdentityOverride);
+
+        [Test]
+        public void Scan_DeclarationSite_IsNotMistakenForAnExplicitOverrideCall()
+        {
+            // Contrôle NÉGATIF : la déclaration dans AppShell.cs — un espace précède `SetIdentity`,
+            // jamais un point — ne doit pas compter.
+            string declaration = "public void SetIdentity(string identifier, string password)";
+            Assert.AreEqual(0, CountExplicitIdentityOverride(declaration),
+                "une DÉCLARATION de méthode n'est pas un APPEL — le motif ne doit pas la compter.");
+        }
+
+        [TestCase("s.SetIdentity(\"citymap_demo@example.test\", \"citymap-demo-pw\");",
+            TestName = "SetIdentity forme (i) — variable locale nommée `s`")]
+        [TestCase("shell.SetIdentity(callsign, password);",
+            TestName = "SetIdentity forme (ii) — variable locale nommée `shell`")]
+        [TestCase("shellA.SetIdentity(citymapIdentifier, citymapPassword);",
+            TestName = "SetIdentity forme (iii) — variable renommée `shellA`")]
+        public void Scan_DetectsExplicitOverrideAliasedReceiverForms(string sourceLine)
+        {
+            Assert.AreEqual(1, CountExplicitIdentityOverride(sourceLine),
+                $"la forme '{sourceLine}' aurait dû être détectée exactement une fois — le motif " +
+                "vise le POINT-D'ACCÈS (`.SetIdentity(`), indépendant du nom du receveur.");
+        }
+
+        [Test]
+        public void Scan_NewExplicitOverrideSite_BreaksTheSet_ThenRemovalRestoresIt()
+        {
+            // Contrôle positif — sur un répertoire FABRIQUÉ, jamais sur Assets/Tests réel (même
+            // rationale que Scan_NewCallOutsideResolver_BreaksTheSet_ThenRemovalRestoresIt).
+            string tempDir = Path.Combine(Path.GetTempPath(), $"demo_identity_override_scan_{Guid.NewGuid():N}");
+            Directory.CreateDirectory(tempDir);
+            try
+            {
+                string reviewedFile = Path.Combine(tempDir, "ReviewedTest.cs");
+                File.WriteAllText(reviewedFile, "shell.SetIdentity(callsign, password);\n");
+
+                ScanResult baseline = ScanDirectory(tempDir, ExplicitIdentityOverride);
+                Assert.AreEqual(1, baseline.TotalOccurrences);
+                CollectionAssert.AreEquivalent(new[] { "ReviewedTest.cs" }, baseline.FilesWithHits);
+
+                // Site NEUF, NON REVU — précisément ce que la garde d'ensemble doit attraper : un
+                // futur test qui pose une identité en dur (ou un no-op comme Accueil:341 hier) sans
+                // passer par cette allowlist.
+                string newFile = Path.Combine(tempDir, "NewUnreviewedTest.cs");
+                File.WriteAllText(newFile, "shell.SetIdentity(\"some@example.test\", \"pw\"); // pas encore revu\n");
+
+                ScanResult withNew = ScanDirectory(tempDir, ExplicitIdentityOverride);
+                Assert.AreEqual(2, withNew.TotalOccurrences,
+                    "le site neuf aurait dû être compté (rouge attendu sur l'égalité d'ensembles de " +
+                    "la mesure réelle).");
+                CollectionAssert.AreNotEquivalent(baseline.FilesWithHits.ToList(), withNew.FilesWithHits.ToList(),
+                    "l'ensemble des fichiers porteurs doit changer quand un site neuf apparaît — " +
+                    "sinon l'assertion d'égalité d'ensembles ne rougirait jamais.");
+
+                File.Delete(newFile);
+                ScanResult afterRemoval = ScanDirectory(tempDir, ExplicitIdentityOverride);
+                Assert.AreEqual(baseline.TotalOccurrences, afterRemoval.TotalOccurrences);
+                CollectionAssert.AreEquivalent(baseline.FilesWithHits, afterRemoval.FilesWithHits);
+            }
+            finally
+            {
+                Directory.Delete(tempDir, recursive: true);
+            }
+        }
+
+        // Population RÉELLE, mesurée par oracle Python répliquant ce scanner EXACTEMENT, sur
+        // l'arbre livré de cette ronde (voir le commit pour le compte AVANT/APRÈS) : 10 appels
+        // `.SetIdentity(` répartis sur 5 fichiers, classés un par un (jamais seulement comptés) :
+        //   A — identité délibérément INVALIDE (l'échec voulu doit survivre à tout environnement) :
+        //       CharpenteOuvertureSessionOverlayPlayModeTests.cs (1), NavigationPlayModeTests.cs (1,
+        //       NavF3).
+        //   B — compte de démo PARTAGÉ "citymap_demo", désormais résolu via
+        //       `DemoIdentityResolver.Resolve(CityMapIdentifierEnvVar, CityMapPasswordEnvVar, …)`
+        //       AVANT l'appel explicite (ronde 3 — le littéral ne reste qu'un fallback, décalable
+        //       par un second éditeur) : NavigationPlayModeTests.cs (1, MountShellAtCityTab, fan-out
+        //       5 [UnityTest]), AppShellPlayModeTests.cs (2, shells A et B du même test).
+        //   C — compte FRAIS créé par le test lui-même (signup, jetable, zéro risque de collision) :
+        //       HudPlayModeTests.cs (1), VuePrincipaleCapturePlayModeTests.cs (4).
+        // Un 4ᵉ site (Accueil:341, ronde 2) posait le défaut sérialisé OCTET POUR OCTET — un no-op
+        // devenu, sous B2, une désactivation silencieuse de la surcharge — RETIRÉ en ronde 3 plutôt
+        // que reclassé : AccueilPanneauxGeometriePhotoPlayModeTests.cs n'appelle donc plus
+        // `SetIdentity` du tout, et n'a pas sa place dans cette allowlist.
+        private static readonly HashSet<string> ExpectedExplicitIdentitySites = new HashSet<string>
+        {
+            "PlayMode/NavigationPlayModeTests.cs",
+            "PlayMode/AppShellPlayModeTests.cs",
+            "PlayMode/CharpenteOuvertureSessionOverlayPlayModeTests.cs",
+            "PlayMode/HudPlayModeTests.cs",
+            "PlayMode/VuePrincipaleCapturePlayModeTests.cs",
+        };
+
+        private const int ExpectedExplicitIdentityOverrideCount = 10;
+
+        // Chemin, relatif à Assets/Tests, du fichier hébergeant CE scanner et ses `[TestCase]`
+        // fabriqués — voir ScanDirectoryExcludingFile ci-dessus.
+        private const string SelfFileRelativePath = "PlayMode/DemoIdentityResolverPlayModeTests.cs";
+
+        [Test]
+        public void Scan_SelfExclusion_DoesNotBlindRealCallsElsewhere()
+        {
+            // Contrôle — l'exclusion est nommée (UN fichier), pas un répertoire : un vrai appel
+            // écrit dans un AUTRE fichier sous Assets/Tests reste détecté malgré l'exclusion.
+            string tempDir = Path.Combine(Path.GetTempPath(), $"demo_identity_self_exclusion_{Guid.NewGuid():N}");
+            Directory.CreateDirectory(tempDir);
+            try
+            {
+                string selfDir = Path.Combine(tempDir, "PlayMode");
+                Directory.CreateDirectory(selfDir);
+                File.WriteAllText(Path.Combine(selfDir, "DemoIdentityResolverPlayModeTests.cs"),
+                    "\"shell.SetIdentity(callsign, password);\" // fixture du scanner, s'auto-cite\n");
+                string otherFile = Path.Combine(selfDir, "SomeOtherRealTest.cs");
+                File.WriteAllText(otherFile, "shell.SetIdentity(realCallsign, realPassword);\n");
+
+                ScanResult excluded = ScanDirectoryExcludingFile(tempDir, ExplicitIdentityOverride, SelfFileRelativePath);
+
+                Assert.AreEqual(1, excluded.TotalOccurrences,
+                    "le hit du fichier EXCLU doit disparaître, celui de l'AUTRE fichier doit rester.");
+                CollectionAssert.AreEquivalent(new[] { "PlayMode/SomeOtherRealTest.cs" }, excluded.FilesWithHits);
+            }
+            finally
+            {
+                Directory.Delete(tempDir, recursive: true);
+            }
+        }
+
+        [Test]
+        public void ExplicitIdentityOverrides_MatchTheReviewedAllowlist_ScopedToAssetsTests()
+        {
+            // Anti-vacuité : l'allowlist elle-même n'est pas vide.
+            Assert.IsNotEmpty(ExpectedExplicitIdentitySites);
+
+            string testsRoot = Path.Combine(Application.dataPath, "Tests");
+            Assert.IsTrue(Directory.Exists(testsRoot), $"Assets/Tests introuvable à {testsRoot}");
+
+            ScanResult scan = ScanDirectoryExcludingFile(testsRoot, ExplicitIdentityOverride, SelfFileRelativePath);
+
+            Assert.AreEqual(ExpectedExplicitIdentityOverrideCount, scan.TotalOccurrences,
+                $"attendu {ExpectedExplicitIdentityOverrideCount} appel(s) `.SetIdentity(` sous " +
+                $"Assets/Tests, trouvé {scan.TotalOccurrences} — un site NEUF pose une identité " +
+                "explicite (donc désactive la surcharge d'environnement, allowEnvironmentOverride: " +
+                "!identityExplicitlySet) sans avoir été REVU : soit il a une raison réelle (identité " +
+                "délibérément invalide, ou compte frais créé par LE TEST lui-même) et rejoint " +
+                "l'allowlist ci-dessous avec sa classe documentée, soit c'est un no-op comme " +
+                "Accueil:341 hier et il doit être RETIRÉ, jamais laissé muet.");
+            CollectionAssert.AreEquivalent(ExpectedExplicitIdentitySites, scan.FilesWithHits,
+                "l'ENSEMBLE des FICHIERS qui désactivent la surcharge d'environnement a divergé de " +
+                "l'allowlist revue — même mécanisme que la garde `.SignIn(`/`.SignUp(` ci-dessus, " +
+                "appliqué cette fois à la population « qui neutralise la surcharge » plutôt qu'à " +
+                "« qui contourne le résolveur ».");
         }
     }
 }

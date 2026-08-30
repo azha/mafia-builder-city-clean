@@ -244,11 +244,23 @@ namespace MafiaCleanCity.Shell.Tests
         {
             ExpectTenantOwnDemoAuthNoise();
 
+            // RONDE 3 (revue ⊥ r2, classe B) — les DEUX SetIdentity ci-dessous posaient le littéral
+            // "citymap_demo@example.test" EN DUR : depuis B2 (ronde 2), `SetIdentity` marque
+            // `identityExplicitlySet = true`, qui désactive la surcharge d'environnement pour le
+            // shell — un littéral en dur ÉPINGLE donc ce test au compte PARTAGÉ citymap_demo, sans
+            // qu'aucune variable ne puisse l'en décaler. Résolu UNE fois pour les deux shells (A et B
+            // veulent délibérément le MÊME compte — c'est le scénario du test, deux shells sur un
+            // Canvas partagé) via la paire d'environnement CITYMAP ; le littéral ne reste qu'un
+            // fallback.
+            (string citymapIdentifier, string citymapPassword) = DemoIdentityResolver.Resolve(
+                DemoIdentityResolver.CityMapIdentifierEnvVar, DemoIdentityResolver.CityMapPasswordEnvVar,
+                "citymap_demo@example.test", "citymap-demo-pw");
+
             // ---- shell A : jamais détruit — l'abandon EST le scénario testé (repro d'un
             // teardown de test/capture incomplet, cf. commentaire de TearDown ci-dessus). ----
             GameObject shellAGo = new GameObject("AppShell_A_abandoned");
             AppShell shellA = shellAGo.AddComponent<AppShell>();
-            shellA.SetIdentity("citymap_demo@example.test", "citymap-demo-pw");
+            shellA.SetIdentity(citymapIdentifier, citymapPassword);
             yield return WaitForEmpireMounted(shellA);
             shellA.ActivateTab(AppShell.Tab.Empire); // re-tap (idempotent-ish remount, items 0.2/0.3 — Empire IS the old City)
             yield return null;
@@ -267,7 +279,7 @@ namespace MafiaCleanCity.Shell.Tests
             // de test). ----
             shellGo = new GameObject("AppShell_B");
             shell = shellGo.AddComponent<AppShell>();
-            shell.SetIdentity("citymap_demo@example.test", "citymap-demo-pw");
+            shell.SetIdentity(citymapIdentifier, citymapPassword);
             yield return WaitForEmpireMounted(shell);
             shell.ActivateTab(AppShell.Tab.Empire); // re-tap (idempotent-ish remount, items 0.2/0.3)
             yield return null;
