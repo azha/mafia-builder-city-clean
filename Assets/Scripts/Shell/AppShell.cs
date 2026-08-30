@@ -77,9 +77,20 @@ namespace MafiaCleanCity.Shell
         // onglet (Empire) activé par `Start()`. `SetIdentity` permet à un appelant (un test, un futur écran
         // de login) de la remplacer AVANT `Start()` — même fenêtre synchrone que `SetToken`/
         // `SetMountParent` reçus par un locataire.
+        //
+        // AMENDÉ (revue ⊥ B2, 2026-08-30) — `identityExplicitlySet` distingue « ce champ porte le
+        // défaut sérialisé, personne n'a d'opinion » (rang 3 de la précédence documentée dans
+        // `DemoIdentityResolver.cs`) de « ce champ porte un appel EXPLICITE » (rang 1). Sans cette
+        // distinction, `DemoIdentityResolver.ResolveAndSignIn` ne pouvait pas voir la différence entre
+        // les deux et la variable d'ENVIRONNEMENT (rang 2) battait toujours `SetIdentity` — exactement
+        // l'inverse de l'intention : `CharpenteOuvertureSessionOverlayPlayModeTests.cs:492` et
+        // `NavigationPlayModeTests.cs:225` posent une identité DÉLIBÉRÉMENT invalide pour exercer la
+        // branche de repli-échec, et rougissaient dès qu'un éditeur voisin posait
+        // `MAFIA_DEMO_IDENTIFIER` — la configuration même que ce lot existe pour permettre.
         [Header("Identité de session (B1 — le shell signe UNE fois)")]
         [SerializeField] private string demoIdentifier = "operational_demo@example.test";
         [SerializeField] private string demoPassword = "operational-demo-pw";
+        private bool identityExplicitlySet;
 
         // ---- test hooks --------------------------------------------------
         public Tab CurrentTab { get; private set; } = (Tab)(-1); // "no tab activated yet" — a named state, not a magic default
@@ -141,11 +152,15 @@ namespace MafiaCleanCity.Shell
         /// `AddComponent&lt;AppShell&gt;()`, avant que `Start()` (différé d'une frame) ne lise ces
         /// champs. §1.3 : « le champ sérialisé est la migration déjà payée » — ce setter est son
         /// point d'entrée pour un appelant qui doit poser une AUTRE identité que le défaut Home
-        /// (ex. `NavigationPlayModeTests.cs`, identité citymap_demo).</summary>
+        /// (ex. `NavigationPlayModeTests.cs`, identité citymap_demo). AMENDÉ (revue ⊥ B2) : marque
+        /// aussi `identityExplicitlySet`, pour que le résolveur ignore une variable d'environnement
+        /// concurrente — un appel explicite exprime une intention, il doit battre une configuration
+        /// de poste (voir la précédence documentée dans `DemoIdentityResolver.cs`).</summary>
         public void SetIdentity(string identifier, string password)
         {
             demoIdentifier = identifier;
             demoPassword = password;
+            identityExplicitlySet = true;
         }
 
         // Defensive: whenever the SHELL itself is torn down (a test destroying its host GameObject,
@@ -328,14 +343,18 @@ namespace MafiaCleanCity.Shell
         /// cet ordre, pour que le premier montage trouve déjà `Token` renseigné (`MountTenant<T>`
         /// l'injecte dans la MÊME fenêtre que `SetMountParent`). Échec à N'IMPORTE quelle étape ⇒
         /// Empire est monté quand même : repli inchangé (`IShellTenant.cs` — un locataire sans
-        /// jeton signe lui-même, comme avant ce chunk).</summary>
+        /// jeton signe lui-même, comme avant ce chunk). AMENDÉ (revue ⊥ B2) : `allowEnvironmentOverride:
+        /// !identityExplicitlySet` — quand `SetIdentity` a été appelé, la variable d'environnement de
+        /// l'identité "operational" est IGNORÉE, l'appel explicite gagne toujours (rang 1 > rang 2 de
+        /// la précédence documentée dans `DemoIdentityResolver.cs`).</summary>
         private IEnumerator AcquireSessionThenActivateHome()
         {
             var auth = new AuthClient { BaseUrl = baseUrl };
             string t = null, authErr = null;
             yield return DemoIdentityResolver.ResolveAndSignIn(auth,
                 DemoIdentityResolver.OperationalIdentifierEnvVar, DemoIdentityResolver.OperationalPasswordEnvVar,
-                demoIdentifier, demoPassword, x => t = x, e => authErr = e);
+                demoIdentifier, demoPassword, x => t = x, e => authErr = e,
+                allowEnvironmentOverride: !identityExplicitlySet);
             if (this == null) yield break; // shell torn down mid-fetch
 
             if (string.IsNullOrEmpty(t))

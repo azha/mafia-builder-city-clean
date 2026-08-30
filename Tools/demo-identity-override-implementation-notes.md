@@ -134,6 +134,128 @@ district).
    garde d'ensemble + les tests de comportement du résolveur (même catégorie) — ces derniers ne
    touchent pas le réseau et devraient être quasi instantanés.
 
+## RONDE 2 — remédiation revue ⊥ (2026-08-30, NOT_APPROVED 2 BLOCKING / 3 IMPORTANT / 7 MINOR)
+
+Rapport : `/tmp/revue-demo-identity.md`. Contrainte machine RE-VÉRIFIÉE avant d'écrire une ligne :
+`docker ps -aq | wc -l` → 7 (base de dev seule, aucun gate) ; mais l'énumération `/proc/<pid>/exe`
+trouve PLUSIEURS processus `.../Unity/Hub/Editor/6000.4.6f1/Editor/Unity` actifs ⇒ **l'éditeur est
+ouvert**. Donc : ÉCRIT + COMMITÉ, **RIEN LANCÉ, aucune exécution de la seconde phase cette fois non
+plus** — à l'exception du réplica Python du scanner (ce n'est pas Unity, ça ne touche pas
+l'éditeur), exécuté sur l'arbre final réel (voir B1).
+
+### B1 (BLOCKING, PREUVE) — la garde était ROUGE sur l'arbre livré
+
+Fermé en paraphrasant les deux citations littérales du docstring de `DemoIdentityResolver.cs`
+(jamais en strippant les commentaires du scanner — l'instrument de MESURE originel était en Python
+à commentaires stripés, mais l'instrument de la GARDE livrée est en C# à texte brut ; c'est le texte
+brut qu'il fallait rendre exempt de citation, pas l'inverse, pour ne pas diverger encore une fois de
+ce que la garde exécute réellement). Réplique EXACTE du scanner (`CountLiteralOccurrences` +
+`ScanDirectory`, même logique, portée `Assets/Scripts`) en Python, exécutée sur l'arbre FINAL (après
+tous les correctifs de cette ronde) :
+
+```
+$ python3 …   # os.walk('Assets/Scripts'), substring count, ordinal
+motif '.SignIn(' : TotalOccurrences = 1, FilesWithHits = {'CityMap/DemoIdentityResolver.cs': 1}
+motif '.SignUp(' : TotalOccurrences = 0, FilesWithHits = {}
+```
+
+`AreEqual(1, scan.TotalOccurrences)` pour `.SignIn(` est désormais VRAI sur l'arbre livré — le
+docstring ne cite plus le motif, il le PARAPHRASE et explique explicitement pourquoi (« le citer ici
+le réintroduirait dans ce fichier »).
+
+### B2 (BLOCKING, PRODUCTION) — la surcharge écrasait l'appel explicite `SetIdentity()`
+
+CLASSE : « toute source d'identité concurrente du résolveur ». Population mesurée sur
+`Assets/Scripts` :
+1. **Appel explicite** — `AppShell.SetIdentity` (`grep -rln "SetIdentity" Assets/Scripts` → 1 seul
+   fichier). C'était l'instance fautive : son fallback était lu par `ResolveAndSignIn` avec
+   `allowEnvironmentOverride` implicitement vrai, donc TOUJOURS battu par une variable
+   d'environnement posée — l'inverse de l'intention.
+2. **Défaut `[SerializeField]` sérialisé** — 1 site vivant (`Assets/Scenes/Boot.unity:416-417`),
+   valeur = défaut C#, aucune divergence. Rang le plus faible, correctement inchangé.
+3. **`AuthClient.SignUp`** — pas une question de précédence mais de CONTOURNEMENT total du
+   résolveur (monde dégénéré n°1 du rapport ⊥). 0 occurrence en production aujourd'hui ; fermé par
+   un second motif de garde (voir plus bas), pas par une précédence — rien à hiérarchiser puisque
+   personne ne l'appelle.
+
+Correctif : `DemoIdentityResolver.Resolve`/`ResolveAndSignIn` gagnent un paramètre
+`allowEnvironmentOverride = true` (défaut inchangé pour les 9 sites qui ne le passent pas).
+`AppShell` gagne un champ `identityExplicitlySet`, posé à `true` dans `SetIdentity()`, et passe
+`allowEnvironmentOverride: !identityExplicitlySet` à son unique appel de `ResolveAndSignIn`
+(l'identité "operational"). Précédence livrée, écrite noir sur blanc dans
+`DemoIdentityResolver.cs` : **appel explicite (1) > variable d'environnement (2) > défaut sérialisé
+(3)**.
+
+Recompte des 11 sites `SetIdentity` (revue ⊥) : les 2 qui rougissaient déterministiquement
+(`CharpenteOuvertureSessionOverlayPlayModeTests.cs:492`, `NavigationPlayModeTests.cs:225` — identité
+délibérément invalide, censée faire échouer le sign-in) retrouvent leur comportement voulu sous
+surcharge : l'identité invalide explicite gagne, l'échec attendu se produit, quel que soit
+l'environnement. Les 9 autres (qui posaient une identité VALIDE mais différente du défaut) cessent
+de silencieusement tourner sur le compte d'un éditeur voisin — même correction, même mécanisme.
+
+Guard-scope (fermeture PARTIELLE de la classe « contournement total », pas seulement la précédence
+de #1) : ajout d'un second motif `.SignUp(` à `DemoIdentityResolverGuardPlayModeTests`, avec ses
+propres 4 formes d'alias, ses 2 contrôles négatifs et son contrôle positif dédié
+(`Scan_NewSignUpCallOutsideResolver_IsDetected`) prouvant que le motif SAIT détecter — sinon
+l'allowlist vide attendue serait un zéro aveugle. Réplique Python confirmée ci-dessus : 0/0.
+
+### I1 (IMPORTANT, PREUVE) — falsifiable inter-comptes non dimensionnée
+
+Ajout de `SameAccount_SecondStructuralDecisionInSameSession_Gets409` : même compte, une session,
+DEUX achats. La première décision structurelle DOIT réussir, la seconde DOIT recevoir 409
+STRUCTURAL_CAP_EXHAUSTED. Dimensionné par lecture directe de la formule du back
+(`0016_world_geography_seed.sql` D2 : `block_count = 30 + ((district_id*7) % 51)`, district 16 ⇒
+40 blocs, 4 pris par le kit de départ, 36 libres — largement assez pour deux achats consécutifs).
+NON EXÉCUTÉ (même contrainte machine).
+
+### I2 (IMPORTANT, PREUVE) — les 3 classes ne tournaient sous aucun juge
+
+`Assets/Editor/MafiaCI.cs:34` (désormais `:36`) — `"DemoIdentity"` ajouté au tableau `Categories`,
+même patron que les entrées précédentes (élargir, jamais un second point d'entrée).
+
+### I3 (IMPORTANT, PRODUCTION) — la paire citymap est inerte sur le chemin nominal
+
+Corrigé le docstring (pas le code — décision consciente, la propriété qui compterait
+("préférer citymap au jeton du shell") est un choix produit hors du périmètre de ce lot) :
+`DemoIdentityResolver.cs` porte désormais explicitement la réserve, avec le mécanisme exact
+(`CityMapController.AuthThenHeat` sort tôt sur `IsAuthenticated` avant de lire sa propre paire
+d'environnement) et sa conséquence pour un éditeur qui ne poserait QUE `MAFIA_CITYMAP_*`.
+
+### MINOR
+
+- **m1** — les 3 `.meta` sont générés (format minimal `fileFormatVersion: 2` + `guid` 32-hex,
+  identique à `AuthClient.cs.meta` et aux ~135 autres scripts du dépôt — vérifié par comptage de
+  lignes, pas de bloc `MonoImporter` ici car aucune de ces classes n'a de réglage spécial) et
+  commités avec de nouveaux GUID vérifiés non-collisionnants contre tous les GUID existants du
+  projet.
+- **m2** — ancre `structural-decision-governor.service.ts:88-92` → `:86` (les deux citations,
+  `DemoIdentityResolver.cs` et `DemoIdentityTwoAccountsPlayModeTests.cs:31`).
+- **m3** — `onboarding-grant.service.ts:322-323` → `:323-324` ; `real-estate.service.ts:241` →
+  `:242`.
+- **m4** — `conversion-tunables.ts` cité désormais avec son répertoire complet
+  (`operational/real_estate/conversion-tunables.ts`).
+- **m5** — non touché dans le CODE (les ancres exactes `:53-55`/`:30-32` étaient déjà correctes
+  dans les seeders eux-mêmes ; l'écart ne vivait que dans CES notes, ci-dessus au §1/§2, dont les
+  plages citées sont maintenant `Tools/seed_operational_demo.mjs:53-55` /
+  `Tools/seed_citymap_demo.mjs:30-32`).
+- **m6** — `Resolve()` durci de `string.IsNullOrEmpty` à `string.IsNullOrWhiteSpace` (identifiant/
+  mot de passe réduits à des espaces retombent désormais sur le fallback aussi). Nouveau test
+  `Resolve_EnvVarWhitespaceOnly_FallsBack`.
+- **m7** — DÉCIDÉ ET DÉCLARÉ (pas corrigé) : les deux variables d'une paire retombent
+  INDÉPENDAMMENT, donc une identité MIXTE reste possible si un environnement n'est configuré qu'à
+  moitié. Gardé tel quel — le back refuse bruyamment (401, jamais un faux succès), et forcer les
+  deux variables d'une paire à être posées ENSEMBLE ajouterait une validation pour un cas déjà sans
+  risque de succès silencieux sur la mauvaise combinaison. Documenté explicitement dans
+  `DemoIdentityResolver.cs`.
+
+### Ce qui reste NON EXÉCUTÉ après cette ronde (identique à la ronde 1, contrainte inchangée)
+
+Compilation Unity réelle, la garde d'ensemble et les tests de comportement du résolveur sous NUnit,
+la falsifiable §4 (2 comptes) et la nouvelle garde de capacité (I1) contre le back réel. Rien de
+tout cela n'a été affirmé "vert" — seule la sanity de syntaxe (balance accolades/parenthèses/
+crochets par oracle Python, 0 partout sur les 5 fichiers `.cs` touchés) et la réplique EXACTE du
+scanner de garde (B1, ci-dessus) ont servi de filet.
+
 ## Ce qui n'a pas été fermé
 
 - Aucune compilation Unity réelle n'a eu lieu (interdite pour cette session) — la sanity de syntaxe

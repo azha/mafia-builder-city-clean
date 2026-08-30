@@ -31,7 +31,11 @@ public static class MafiaCI
     // ⇒ après tout run qui doit DÉCIDER, relancer le test visé SEUL par son nom complet et vérifier
     // qu'il est dans le compte. Ne jamais choisir un nom de catégorie de mémoire : le lire dans le
     // fichier qui le porte.
-    private static readonly string[] Categories = { "W4P4a", "W3UDA", "W3U1", "W3U2", "Charpente" };
+    // SURCHARGE D'IDENTITÉ DE DÉMO (revue ⊥ I2, 2026-08-30) — ajoute "DemoIdentity" : sans cette
+    // entrée, les 3 classes de `DemoIdentityResolverPlayModeTests.cs` /
+    // `DemoIdentityTwoAccountsPlayModeTests.cs` ne tournaient sous AUCUN juge — une garde qui n'a
+    // jamais tourné n'est pas une garde. Même patron : on élargit, jamais un second point d'entrée.
+    private static readonly string[] Categories = { "W4P4a", "W3UDA", "W3U1", "W3U2", "Charpente", "DemoIdentity" };
 
     public static void RunPlayModeTests()
     {
