@@ -40,6 +40,54 @@ outils Unity, indisponibles tant que le MCP n'est pas rechargé (geste user). **
 écrit dans `Assets/`** — écrire un `.cs` déclencherait précisément la recompilation que la sonde 1
 doit OBSERVER, et l'observer après coup ne prouve rien.
 
+## 1-bis. Les deux sondes du brief — ce que la STRUCTURE répond déjà, et ce qui reste dû
+
+Les deux sondes demandent une **expérience provoquée** (recompiler / réimporter ici, observer
+l'éditeur A). Elle exige les outils Unity, indisponibles. Mais une partie de la question se
+tranche sans rien provoquer — et par un mécanisme plus fort, puisqu'il ne dépend d'aucun instant
+d'observation.
+
+**Sonde 2 (le cache d'import global) — RÉPONDUE PAR LA CONFIGURATION.** Le brief soupçonne
+`~/.cache/unity3d` et « l'Asset Import Worker / Accelerator s'il est activé ». Mesuré :
+
+    ProjectSettings/EditorSettings.asset — LES DEUX projets, valeurs IDENTIQUES :
+      m_AssetPipelineMode: 1 · m_CacheServerMode: 0 · m_CacheServerEndpoint: (vide)
+
+`m_CacheServerMode: 0` ne signifie pas « désactivé » : il signifie **« hériter des préférences
+globales »** — un pointeur, pas une valeur. Suivi jusqu'au bout (socle : *un renvoi qui aboutit
+sur un autre renvoi n'est pas une définition*) : `~/.config/unity3d/prefs` porte **11 clés**,
+**énumérées une à une** plutôt que filtrées — la population est trop petite pour qu'un `grep`
+mérite qu'on lui fasse confiance :
+
+    unity.player_session_count · unity_connect.mega_session_id · ToolchainAutomaticallyInstallPackage
+    unity.player_sessionid · unity.cloud_userid · unity_connect.session_id · UnityGraphicsQuality
+    unity_connect.installation_id · PT_Run · PT_Settings · MCPForUnity.AutoStartOnLoad
+
+**Aucune clé de Cache Server ni d'Accelerator, nulle part.** ⇒ **Il n'existe aucun mécanisme
+configuré de partage d'import entre les deux projets.** Le canal reste `~/.cache/unity3d`
+(261 Mo — `bee/` 373 entrées, `GiCache/`, `CurlRequestCache.db`), dont les clés sont des **hashes
+de contenu** (`005702e69be3be1d70c22cdf6d6df155…0006`) : un cache adressé par contenu est
+**additif** — on y ajoute, on n'y écrase pas.
+⚠️ Cette dernière phrase est une propriété **DÉDUITE** du fonctionnement de Bee, pas mesurée ici.
+Elle ne porte aucune décision : ce qui décide est l'absence de configuration ci-dessus.
+
+**Sonde 1 (le rechargement de domaine) — OBSERVATION NATURELLE, concordante, non concluante.**
+Sans rien provoquer :
+
+    Library/ScriptAssemblies (B, ce worktree)        mtime = 2026-08-30 21:14:55
+    Library/ScriptAssemblies (A, builder-city-clean)  mtime = 2026-08-30 18:39:30
+
+**2 h 35 d'écart**, deux répertoires distincts de 30 Mo chacun. Si les deux éditeurs partageaient
+leurs rechargements de domaine, ces mtimes seraient couplées ; elles ne le sont pas.
+
+⛔ **Ce que cette observation ne prouve PAS, et il faut l'écrire** : elle montre que A n'a pas
+recompilé au moment où B l'a fait, elle ne montre pas qu'une compilation de B **ne peut pas**
+déclencher A. Une absence observée n'est pas une impossibilité — et je n'ai pas provoqué
+l'événement, donc je n'ai pas exercé le chemin. **L'expérience provoquée reste due**, et elle
+sera quasi gratuite dès que le canal MCP sera rétabli : elle coûte un espace dans un `.cs`.
+⇒ D'ici là, le statut honnête est : **rien ne contredit l'isolation, rien ne l'a encore
+établie.**
+
 ## 2. L'échelle de la maquette — mesurée sur les PNG, pas recopiée du générateur
 
 Instrument : `Tools/mesure-geometrie-reputation.py` (commité avec ce relevé). Sortie :
