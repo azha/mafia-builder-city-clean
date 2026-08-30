@@ -28,6 +28,20 @@ namespace MafiaCleanCity.CityMap.Tests
     // l'instrument de la mesure et l'instrument de la garde sont désormais LE MÊME code, donc ne
     // peuvent plus diverger.
     //
+    // RONDE 3 (revue ⊥ ronde 2, NOT_APPROVED 1 BLOCKING/3 IMPORTANT/4 MINOR) — MÊME CONTRAINTE
+    // MACHINE, re-vérifiée avant et après : toujours aucun run possible. +268 lignes / 6 tests
+    // neufs dans ce fichier (reclassification des 11 sites `SetIdentity`, garde d'ensemble sur le
+    // second mécanisme de neutralisation, motifs `SigninUrl`/`SignupUrl`) — voir le commit et
+    // `Tools/demo-identity-override-implementation-notes.md` § RONDE 3 pour le détail complet.
+    //
+    // RONDE 4 (commit de résidus après revue ⊥ ronde 3, APPROVED 0 BLOCKING/3 IMPORTANT/4 MINOR) —
+    // MÊME CONTRAINTE MACHINE, re-vérifiée une 4ᵉ fois (verrou toujours tenu par l'éditeur de
+    // l'user, même PID) : toujours aucun run possible. Résidus fermés ici, tous en classe et non en
+    // défaut livré : épingle sur le compte PROPRE du fichier de garde (I2 — le trou d'exclusion),
+    // 6ᵉ motif `allowEnvironmentOverride` (I3 — le second mécanisme qui neutralise la surcharge),
+    // contrôle positif dédié pour `SignupUrl` (m4). Voir le commit et
+    // `Tools/demo-identity-override-implementation-notes.md` § RONDE 4 pour le détail complet.
+    //
     // ── Portée déclarée : Resolve() est de la LOGIQUE PURE (pas de réseau, pas de Unity API) — ces
     // tests l'exercent directement, indépendamment de tout compte réel. Les noms de variable
     // d'environnement utilisés ici sont FABRIQUÉS pour le test (jamais MAFIA_DEMO_IDENTIFIER /
@@ -520,26 +534,31 @@ namespace MafiaCleanCity.CityMap.Tests
             "CityMap/AuthClient.cs",
         };
 
-        [Test]
-        public void Scan_NewDirectUrlAccessSite_IsDetected()
+        [TestCase(SigninUrlToken, TestName = "Scan_NewDirectUrlAccessSite_IsDetected — SigninUrl")]
+        [TestCase(SignupUrlToken, TestName = "Scan_NewDirectUrlAccessSite_IsDetected — SignupUrl")]
+        public void Scan_NewDirectUrlAccessSite_IsDetected(string token)
         {
-            // Contrôle positif — répertoire FABRIQUÉ, jamais Assets/Scripts réel.
+            // Contrôle positif — répertoire FABRIQUÉ, jamais Assets/Scripts réel. RONDE 4 (revue ⊥
+            // ronde 3, m4) : paramétré sur les DEUX tokens — seul `SigninUrl` avait jusqu'ici un
+            // contrôle positif dédié, l'asymétrie avec `SignupUrl` n'était dite nulle part (le motif
+            // `SignupUrl` n'était pas FAUX pour autant : il rend 3 sur l'arbre réel et partage le
+            // même `ScanDirectory` déjà contrôlé par ce test — c'est sa preuve DÉDIÉE qui manquait).
             string tempDir = Path.Combine(Path.GetTempPath(), $"demo_identity_url_scan_{Guid.NewGuid():N}");
             Directory.CreateDirectory(tempDir);
             try
             {
-                ScanResult empty = ScanDirectory(tempDir, SigninUrlToken);
+                ScanResult empty = ScanDirectory(tempDir, token);
                 Assert.AreEqual(0, empty.TotalOccurrences, "un répertoire vide ne doit rien compter.");
 
                 string rogueFile = Path.Combine(tempDir, "RogueUrlController.cs");
                 File.WriteAllText(rogueFile,
-                    "using (var req = new UnityWebRequest(auth.SigninUrl, UnityWebRequest.kHttpVerbPOST)) " +
-                    "{ /* contourne .SignIn( entièrement */ }\n");
+                    $"using (var req = new UnityWebRequest(auth.{token}, UnityWebRequest.kHttpVerbPOST)) " +
+                    "{ /* contourne le résolveur entièrement */ }\n");
 
-                ScanResult withRogue = ScanDirectory(tempDir, SigninUrlToken);
+                ScanResult withRogue = ScanDirectory(tempDir, token);
                 Assert.AreEqual(1, withRogue.TotalOccurrences,
-                    "un accès direct à `SigninUrl` HORS AuthClient.cs doit être détecté — c'est " +
-                    "exactement le contournement que `.SignIn(` seul ne peut pas voir.");
+                    $"un accès direct à `{token}` HORS AuthClient.cs doit être détecté — c'est " +
+                    "exactement le contournement que les motifs réseau seuls ne peuvent pas voir.");
                 CollectionAssert.AreEquivalent(new[] { "RogueUrlController.cs" }, withRogue.FilesWithHits);
             }
             finally
@@ -684,7 +703,6 @@ namespace MafiaCleanCity.CityMap.Tests
         // Chemin, relatif à Assets/Tests, du fichier hébergeant CE scanner et ses `[TestCase]`
         // fabriqués — voir ScanDirectoryExcludingFile ci-dessus.
         private const string SelfFileRelativePath = "PlayMode/DemoIdentityResolverPlayModeTests.cs";
-
         [Test]
         public void Scan_SelfExclusion_DoesNotBlindRealCallsElsewhere()
         {
@@ -713,6 +731,33 @@ namespace MafiaCleanCity.CityMap.Tests
             }
         }
 
+        // I2 (revue ⊥ ronde 3) : le test ci-dessus prouve que ScanDirectoryExcludingFile ne rend
+        // PAS aveugle aux VRAIS contournements écrits AILLEURS sous Assets/Tests — il ne prouve PAS,
+        // et ne peut pas prouver, que ce fichier-ci (celui que l'exclusion efface) est lui-même
+        // couvert : par construction, il ne l'est pas. Seule une épingle sur le compte PROPRE de ce
+        // fichier ferme ce trou en classe.
+
+        [Test]
+        public void ExplicitIdentityOverride_SelfFileOwnCount_IsPinned()
+        {
+            // I2 (revue ⊥ ronde 3) : voir le commentaire juste au-dessus. Recompté ligne par ligne
+            // (jamais repris d'un rapport ⊥, jamais du message du commit qui l'introduit) : ce
+            // fichier porte aujourd'hui exactement 13 occurrences du motif surveillé par
+            // ExplicitIdentityOverride — toutes dans des chaînes/[TestCase] FABRIQUÉS ou des
+            // citations en commentaire entre backticks, jamais un vrai appel réseau. Un 14ᵉ (ou un
+            // compte qui bouge, dans un sens ou l'autre) fait ROUGIR cette assertion, même si les
+            // deux gardes précédentes (l'ensemble et l'auto-exclusion) restent vertes.
+            string selfPath = Path.Combine(Application.dataPath, "Tests",
+                SelfFileRelativePath.Replace('/', Path.DirectorySeparatorChar));
+            Assert.IsTrue(File.Exists(selfPath), $"fichier de garde introuvable à {selfPath}");
+
+            Assert.AreEqual(13, CountExplicitIdentityOverride(File.ReadAllText(selfPath)),
+                "le compte PROPRE du fichier de garde est épinglé — c'est le seul dispositif qui " +
+                "couvre le trou d'exclusion (I2, revue ⊥ ronde 3) : ScanDirectoryExcludingFile " +
+                "efface ce fichier de la mesure d'ensemble par construction, donc un vrai appel " +
+                "écrit ICI ne serait sinon jamais vu, ni ici ni ailleurs.");
+        }
+
         [Test]
         public void ExplicitIdentityOverrides_MatchTheReviewedAllowlist_ScopedToAssetsTests()
         {
@@ -737,6 +782,76 @@ namespace MafiaCleanCity.CityMap.Tests
                 "l'allowlist revue — même mécanisme que la garde `.SignIn(`/`.SignUp(` ci-dessus, " +
                 "appliqué cette fois à la population « qui neutralise la surcharge » plutôt qu'à " +
                 "« qui contourne le résolveur ».");
+        }
+
+        // ── RONDE 4 (revue ⊥ ronde 3, I3 — « le commentaire nomme DEUX mécanismes, le motif n'en
+        // voyait qu'UN ») ────────────────────────────────────────────────────────────────────────
+        //
+        // Le motif ExplicitIdentityOverride (ci-dessus) ne voit que le PREMIER des deux mécanismes
+        // documentés par ResolveAndSignIn (docstring de DemoIdentityResolver.cs) qui neutralisent la
+        // surcharge d'environnement pour un shell donné : un site qui invoque la méthode d'instance
+        // explicitement, OU un site qui passe directement `allowEnvironmentOverride: false` à
+        // ResolveAndSignIn SANS l'appeler — une ligne comme `DemoIdentityResolver.ResolveAndSignIn(
+        // auth, …, allowEnvironmentOverride: false)` désactive la surcharge tout aussi silencieusement
+        // et n'écrit AUCUN des cinq motifs surveillés par ce fichier (mesuré 2026-08-30, revue ⊥
+        // ronde 3 : les cinq rendent zéro sur cette ligne). Ce 6ᵉ motif ferme le second mécanisme —
+        // même forme, même ScanDirectory, que la garde `SigninUrl`/`SignupUrl` ci-dessus.
+        //
+        // Population RÉELLE mesurée (oracle Python, substring littérale, identifiant complet
+        // `allowEnvironmentOverride`, portée Assets/Scripts) : 13 au total — CityMap/
+        // DemoIdentityResolver.cs (11, la déclaration du paramètre et son usage interne),
+        // Shell/AppShell.cs (2, le seul passeur de production, en accord avec
+        // `!identityExplicitlySet`). Assets/Editor : 0.
+        private const string AllowEnvironmentOverrideToken = "allowEnvironmentOverride";
+
+        private static readonly HashSet<string> ExpectedAllowEnvironmentOverrideSites = new HashSet<string>
+        {
+            "CityMap/DemoIdentityResolver.cs",
+            "Shell/AppShell.cs",
+        };
+
+        [Test]
+        public void Scan_NewAllowEnvironmentOverrideSite_IsDetected()
+        {
+            // Contrôle positif — répertoire FABRIQUÉ, jamais Assets/Scripts réel.
+            string tempDir = Path.Combine(Path.GetTempPath(), $"demo_identity_allowoverride_scan_{Guid.NewGuid():N}");
+            Directory.CreateDirectory(tempDir);
+            try
+            {
+                ScanResult empty = ScanDirectory(tempDir, AllowEnvironmentOverrideToken);
+                Assert.AreEqual(0, empty.TotalOccurrences, "un répertoire vide ne doit rien compter.");
+
+                string rogueFile = Path.Combine(tempDir, "RogueBypassController.cs");
+                File.WriteAllText(rogueFile,
+                    "yield return DemoIdentityResolver.ResolveAndSignIn(auth, idVar, pwVar, id, pw, " +
+                    "onOk, onErr, allowEnvironmentOverride: false); // contourne la surcharge par le second mécanisme\n");
+
+                ScanResult withRogue = ScanDirectory(tempDir, AllowEnvironmentOverrideToken);
+                Assert.AreEqual(1, withRogue.TotalOccurrences,
+                    "un site neuf hors allowlist qui neutralise la surcharge par ce second " +
+                    "mécanisme doit être détecté — c'est exactement le contournement que la garde " +
+                    "sur l'appel explicite ne peut pas voir.");
+                CollectionAssert.AreEquivalent(new[] { "RogueBypassController.cs" }, withRogue.FilesWithHits);
+            }
+            finally
+            {
+                Directory.Delete(tempDir, recursive: true);
+            }
+        }
+
+        [Test]
+        public void AllowEnvironmentOverrideSites_MatchTheReviewedAllowlist_ScopedToAssetsScripts()
+        {
+            Assert.IsNotEmpty(ExpectedAllowEnvironmentOverrideSites);
+
+            string scriptsRoot = Path.Combine(Application.dataPath, "Scripts");
+            Assert.IsTrue(Directory.Exists(scriptsRoot), $"Assets/Scripts introuvable à {scriptsRoot}");
+
+            ScanResult scan = ScanDirectory(scriptsRoot, AllowEnvironmentOverrideToken);
+            CollectionAssert.AreEquivalent(ExpectedAllowEnvironmentOverrideSites, scan.FilesWithHits,
+                "l'ENSEMBLE des fichiers référençant ce paramètre a divergé de l'allowlist déclarée " +
+                "— un site neuf neutralise la surcharge par le second mécanisme (I3, revue ⊥ " +
+                "ronde 3), invisible à la garde ExplicitIdentityOverride ci-dessus.");
         }
     }
 }

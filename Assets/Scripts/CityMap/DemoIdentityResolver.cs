@@ -82,10 +82,32 @@ namespace MafiaCleanCity.CityMap
     //   SEEDÉ, qui authentifie sans erreur : l'éditeur B repart silencieusement sur le compte
     //   PARTAGÉ de A, zéro 401, zéro log, l'incident du 2026-08-21 de retour. Forcer les deux
     //   variables d'une paire à être posées ENSEMBLE ne fermerait PAS ce mode d'échec (l'absence
-    //   TOTALE des deux resterait valide sous une règle « ensemble ou aucune ») — la décision de
-    //   garder l'indépendance des deux variables reste donc correcte, mais pour une raison
-    //   DIFFÉRENTE : ce n'est pas la validation qui manquait, c'est l'OBSERVABILITÉ. Voir le log de
-    //   `ResolveAndSignIn` ci-dessous (revue ⊥ I2) — c'est le détecteur réel de ce mode d'échec.
+    //   TOTALE des deux resterait valide sous une règle « ensemble ou aucune »).
+    //   ⚠️⚠️⚠️ CONCLUSION CORRIGÉE (revue ⊥ ronde 3, I1) — la phrase ci-dessus est VRAIE pour le
+    //   REPLI TOTAL, mais elle a servi à écarter l'appariement EN GÉNÉRAL alors que le demi-posé a
+    //   une SECONDE direction qu'elle ne couvre pas : `MAFIA_DEMO_PASSWORD` posé SEUL, identifiant
+    //   oublié. Mesuré : `Tools/seed_operational_demo.mjs:216-220` (même forme,
+    //   `Tools/seed_citymap_demo.mjs:72,76`) — quand le compte existe déjà, le seeder exécute
+    //   `UPDATE account_credential SET password_hash = hash(PASSWORD) WHERE account_id = …`, trouvé
+    //   par EMAIL. `EMAIL` retombe alors sur le défaut (le compte PARTAGÉ de A), `PASSWORD` vaut
+    //   celui de B ⇒ le seeder RÉÉCRIT le hash du compte de A avec le mot de passe de B. L'éditeur
+    //   A, sans variable, résout les deux défauts et prend un 401 — jusqu'à ce que quelqu'un relance
+    //   le seeder sans la variable. Et L'APPARIEMENT FERMERAIT PRÉCISÉMENT CETTE DIRECTION-LÀ — ce
+    //   que la conclusion initiale ne pouvait pas dire puisqu'elle n'avait mesuré que l'AUTRE.
+    //   ⇒ DÉCISION (revue ⊥ ronde 3) : ne pas apparier par VALIDATION (refuser/bloquer une paire à
+    //   moitié posée) — la mutation dangereuse vit DANS LES SEEDERS (deux scripts Node séparés,
+    //   lancés dans un process séparé, qui lisent ces mêmes noms de variable INDÉPENDAMMENT de ce
+    //   résolveur C#) : apparier `Resolve` seul ne changerait rien à ce que les seeders écrivent en
+    //   base, et la garde structurelle de cette direction vivrait dans les deux scripts `.mjs`, hors
+    //   du périmètre de ce lot (ni l'un ni l'autre n'est touché ici). À la place : `Resolve` émet un
+    //   `Debug.LogWarning` dès qu'EXACTEMENT une des deux variables d'une paire est posée (voir
+    //   ci-dessous) — cohérent avec le choix déjà fait pour le repli total juste au-dessus : ce
+    //   n'est pas la validation qui manque, c'est l'OBSERVABILITÉ, et elle ne change AUCUNE valeur
+    //   de retour (comportement inchangé, revue ⊥ m7). Ce qui atténue ce résidu, et pourquoi il
+    //   reste IMPORTANT et non BLOCKING : le mode d'échec est BRUYANT, pas silencieux — 401 côté
+    //   client + `Debug.LogError` (`AppShell.cs:362`), diagnosticable même sans le warning.
+    //   Voir le log de `ResolveAndSignIn` ci-dessous (revue ⊥ I2) — c'est le détecteur réel du repli
+    //   TOTAL ; le `Debug.LogWarning` de `Resolve` est le détecteur réel de CETTE direction-ci.
     //
     // ⛔ GARDE D'ENSEMBLE (DemoIdentityResolverGuardPlayModeTests, portée Assets/Scripts) : ce
     // fichier est le SEUL endroit autorisé à invoquer directement la méthode d'instance de sign-in
@@ -118,7 +140,13 @@ namespace MafiaCleanCity.CityMap
         /// IGNORÉE et le fallback gagne toujours : une intention délibérée bat une configuration de
         /// poste. `string.IsNullOrWhiteSpace` (durci depuis `IsNullOrEmpty`, revue ⊥ m6) traite comme
         /// "absente" une variable non posée, vidée, ou réduite à des espaces — les trois retombent
-        /// sur le fallback, jamais une valeur blanche envoyée au back.</summary>
+        /// sur le fallback, jamais une valeur blanche envoyée au back. RONDE 4 (revue ⊥ ronde 3, I1) :
+        /// quand EXACTEMENT une des deux variables de la paire est posée (l'autre absente/blanche),
+        /// un `Debug.LogWarning` signale la paire à MOITIÉ posée — voir « CONCLUSION CORRIGÉE » en
+        /// tête de fichier pour le mode d'échec exact que ça rend observable. Ce n'est PAS une
+        /// validation : les valeurs de retour restent celles de la règle « chaque variable retombe
+        /// indépendamment » (revue ⊥ m7) — comportement de retour INCHANGÉ, seule l'observabilité
+        /// change.</summary>
         public static (string identifier, string password) Resolve(
             string identifierEnvVar, string passwordEnvVar,
             string fallbackIdentifier, string fallbackPassword,
@@ -128,8 +156,22 @@ namespace MafiaCleanCity.CityMap
 
             string envIdentifier = Environment.GetEnvironmentVariable(identifierEnvVar);
             string envPassword = Environment.GetEnvironmentVariable(passwordEnvVar);
-            string identifier = string.IsNullOrWhiteSpace(envIdentifier) ? fallbackIdentifier : envIdentifier;
-            string password = string.IsNullOrWhiteSpace(envPassword) ? fallbackPassword : envPassword;
+            bool identifierIsSet = !string.IsNullOrWhiteSpace(envIdentifier);
+            bool passwordIsSet = !string.IsNullOrWhiteSpace(envPassword);
+            if (identifierIsSet != passwordIsSet)
+            {
+                // RONDE 4 (revue ⊥ ronde 3, I1) : paire à MOITIÉ posée — voir « CONCLUSION CORRIGÉE »
+                // en tête de fichier pour la direction dangereuse (mot de passe seul posé, identifiant
+                // oublié) que ceci rend observable AVANT le 401 qui la signale déjà côté client.
+                Debug.LogWarning(
+                    $"[DemoIdentityResolver] paire à moitié posée : '{identifierEnvVar}' " +
+                    $"{(identifierIsSet ? "posée" : "absente")}, '{passwordEnvVar}' " +
+                    $"{(passwordIsSet ? "posée" : "absente")} — les deux variables d'une paire " +
+                    "retombent indépendamment (revue ⊥ m7) ; une identité MIXTE ou un repli partiel " +
+                    "en résultera.");
+            }
+            string identifier = identifierIsSet ? envIdentifier : fallbackIdentifier;
+            string password = passwordIsSet ? envPassword : fallbackPassword;
             return (identifier, password);
         }
 
@@ -155,12 +197,19 @@ namespace MafiaCleanCity.CityMap
             yield return auth.SignIn(identifier, password, onSuccess, onError);
         }
 
-        /// <summary>RONDE 3 (revue ⊥ ronde 2, I2) — nomme laquelle des 3 sources de la précédence (tête de
-        /// fichier) a effectivement gagné, pour LE MÊME appel que celui qui va signer (relit
-        /// <paramref name="identifierEnvVar"/> une seconde fois plutôt que de faire porter un 3e
-        /// élément au tuple de <see cref="Resolve"/>, qui resterait alors identique pour les 5
-        /// appelants qui le testent directement). Jamais le mot de passe — seul l'identifiant est
-        /// journalisé.</summary>
+        /// <summary>RONDE 3 (revue ⊥ ronde 2, I2) — nomme la source qui l'a emporté POUR
+        /// L'IDENTIFIANT SEUL (une des 3 sources de la précédence, tête de fichier), pour LE MÊME
+        /// appel que celui qui va signer (relit <paramref name="identifierEnvVar"/> une seconde
+        /// fois plutôt que de faire porter un 3e élément au tuple de <see cref="Resolve"/>, qui
+        /// resterait alors identique pour les 5 appelants qui le testent directement).
+        /// ⚠️ RONDE 4 (revue ⊥ ronde 3, m3) — PORTÉE CORRIGÉE : ne décrit QUE l'identifiant, jamais
+        /// le mot de passe ni « la paire » — sous un environnement à moitié posé (m7, voir aussi le
+        /// `Debug.LogWarning` de <see cref="Resolve"/>), les deux peuvent venir de sources
+        /// DIFFÉRENTES, et ce régime-ci ne renseigne alors QUE sur l'identifiant, la donnée
+        /// actionnable pour diagnostiquer I1. `Resolve` et cette méthode utilisent tous deux
+        /// `IsNullOrWhiteSpace` (même seuil, vérifié) — donc aucune divergence entre la valeur
+        /// résolue et le régime annoncé SUR L'IDENTIFIANT. Jamais le mot de passe — seul
+        /// l'identifiant est journalisé.</summary>
         private static string DescribeRegime(string identifierEnvVar, bool allowEnvironmentOverride)
         {
             if (!allowEnvironmentOverride) return "explicite";

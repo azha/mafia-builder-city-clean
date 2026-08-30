@@ -331,7 +331,10 @@ APRÈS (arbre livré) — Assets/Tests, motif .SetIdentity( :
 
 ⚠️ Piège trouvé EN ÉCRIVANT cette garde (même famille que B1) : les `[TestCase]` de CE fichier qui
 FABRIQUENT `.SetIdentity(` pour prouver que le scanner le détecte se comptent ELLES-MÊMES si la
-portée n'exclut pas leur propre fichier — mesuré : 10 → 20 sans l'exclusion. `.SignIn(`/`.SignUp(`
+portée n'exclut pas leur propre fichier — mesuré : 10 → 23 sans l'exclusion (13 dans ce fichier +
+10 ailleurs ; corrigé en RONDE 4, m1 — le message du commit `bef6ae4` avait collé `10 → 20`, un
+chiffre de brouillon contredit par le bloc RAW juste au-dessus dans CES MÊMES notes, qui disait déjà
+23 correctement). `.SignIn(`/`.SignUp(`
 n'ont jamais ce problème (portée = `Assets/Scripts`, hors de leur propre fichier de test) ; celui-ci
 en a besoin car sa portée RÉELLE recouvre `Assets/Tests` tout entier. Fermé par
 `ScanDirectoryExcludingFile` (exclusion NOMMÉE, un seul fichier — pas un répertoire, contrôlé par
@@ -397,6 +400,117 @@ contamination d'un compte réel) ; la garde d'ensemble et les tests de comportem
 écrits en ronde 1/2 ; la falsifiable §4 et la garde de capacité I1 contre le back réel. Filet :
 oracles Python répliquant EXACTEMENT chaque scanner livré (voir les blocs ci-dessus), exécutés sur
 l'arbre FINAL de cette ronde, jamais sur un brouillon intermédiaire.
+
+## RONDE 4 — commit de résidus après revue ⊥ ronde 3 (2026-08-30, APPROVED 0 BLOCKING / 3 IMPORTANT / 4 MINOR)
+
+Rapport : `/tmp/revue-demo-identity-r3.md`. Verdict **APPROVED** — les trois IMPORTANT sont, au mot du
+relecteur, « des résidus en classe, pas des défauts livrés » : ils se ferment ici, dans le commit
+suivant, jamais en rouvrant un 4ᵉ tour de gate sur ce qui est déjà approuvé (classification des 11
+sites, retrait du no-op, paire `CityMap*EnvVar`, les 5 motifs verts, B1, le log sans mot de passe,
+0 `.cs` sans `.meta` — tout ça INTACT, non reconsidéré).
+
+Contrainte machine RE-VÉRIFIÉE une 4ᵉ fois avant d'écrire une ligne : `Temp/UnityLockfile` toujours
+présent (mtime 20:52:32, INCHANGÉ), `/proc/<pid>/exe` trouve TOUJOURS l'éditeur Unity ouvert sur CE
+dépôt (PID 2643750, même PID que les rondes 2 et 3, `cwd=/home/erutheone/project/
+mafia-builder-city-clean`) — donc, comme aux trois rondes précédentes : ÉCRIT + COMMITÉ, **RIEN
+LANCÉ** (aucune compilation Unity, aucun run NUnit/PlayMode). Machine par ailleurs libre
+(`docker ps -a -q | wc -l` = 7, aucun gate ; `/proc/loadavg` ≈ 4.5) — la contrainte est le VERROU de
+l'éditeur, pas la charge. Filet : oracles Python répliquant EXACTEMENT chaque scanner C# livré,
+exécutés sur l'arbre final de ce commit (jamais un brouillon), comptes collés ci-dessous.
+
+### IMPORTANT — I1 : la conclusion du demi-posé corrigée, pas son axe
+
+La justification remplacée en ronde 3 (« le vrai mode d'échec est le REPLI TOTAL, pas la mixité »)
+est restée VRAIE, mais sa conclusion (« forcer les deux variables ensemble ne fermerait pas ce mode
+d'échec ») a servi à écarter l'appariement EN GÉNÉRAL. Le relecteur a mesuré l'AUTRE direction du
+demi-posé, restée non couverte : `Tools/seed_operational_demo.mjs:216-220` et
+`Tools/seed_citymap_demo.mjs:72,76` — quand le compte existe déjà, `UPDATE account_credential SET
+password_hash = hash(PASSWORD) WHERE account_id = …`, trouvé par EMAIL. `MAFIA_DEMO_PASSWORD` posé
+SEUL (identifiant oublié) ⇒ `EMAIL` retombe sur le compte PARTAGÉ de A, `PASSWORD` vaut celui de B ⇒
+le seeder RÉÉCRIT le hash du compte de A avec le mot de passe de B ⇒ 401 pour A. L'appariement
+fermerait précisément CETTE direction-là.
+
+Décision (pas recopiée du rapport — tranchée ici) : NE PAS apparier par VALIDATION. La mutation
+dangereuse vit DANS LES SEEDERS (deux scripts Node séparés, process séparé, lisant ces mêmes noms de
+variable indépendamment du résolveur C#) — apparier `Resolve()` seul ne changerait rien à ce que les
+seeders écrivent en base ; la garde structurelle de cette direction vivrait dans les deux `.mjs`,
+hors du périmètre de ce lot (non touchés). À la place, `DemoIdentityResolver.Resolve` émet un
+`Debug.LogWarning` dès qu'EXACTEMENT une des deux variables d'une paire est posée — cohérent avec le
+choix déjà fait pour le repli total (observabilité, pas validation ; comportement de retour
+INCHANGÉ). Ce qui atténue ce résidu : le mode d'échec reste BRUYANT — 401 côté client +
+`Debug.LogError` (`AppShell.cs:362`) — même sans le warning. `DemoIdentityResolver.cs` porte la
+conclusion corrigée en tête de fichier, distinguant les deux directions.
+
+### IMPORTANT — I2 : le trou de l'exclusion fermé par une épingle sur le compte propre
+
+`ScanDirectoryExcludingFile` efface le fichier de garde par construction — un vrai appel écrit DANS
+ce fichier ne serait jamais vu (monde (C) du rapport ⊥ : scan RAW sans exclusion = 24, le hit existe,
+l'exclusion l'efface). Fermé par une assertion nouvelle,
+`ExplicitIdentityOverride_SelfFileOwnCount_IsPinned` : recompté ligne par ligne (jamais repris du
+rapport), le fichier de garde porte exactement **13** occurrences du motif surveillé — épinglées.
+Un 14ᵉ (ou un compte qui bouge, dans un sens ou l'autre) fait rougir CETTE assertion précise, même si
+les deux gardes précédentes (ensemble + auto-exclusion) restent vertes.
+
+### IMPORTANT — I3 : 6ᵉ motif de garde sur le second mécanisme de neutralisation
+
+Le commentaire de `ResolveAndSignIn` nomme DEUX mécanismes qui neutralisent la surcharge pour un
+shell (appel explicite type `SetIdentity`, OU `allowEnvironmentOverride: false` passé directement) ;
+le motif `ExplicitIdentityOverride` n'en surveillait qu'UN. Mesuré : sur la ligne qu'un 8ᵉ contrôleur
+écrirait pour contourner le résolveur par le second chemin, les CINQ motifs existants rendent 0.
+Fermé par un 6ᵉ motif, `allowEnvironmentOverride`, portée `Assets/Scripts` (même patron que la garde
+`SigninUrl`) — population mesurée : 13 au total, `CityMap/DemoIdentityResolver.cs` (11) +
+`Shell/AppShell.cs` (2, le seul passeur de production), `Assets/Editor` = 0. Nouveaux tests
+`Scan_NewAllowEnvironmentOverrideSite_IsDetected` (contrôle positif) et
+`AllowEnvironmentOverrideSites_MatchTheReviewedAllowlist_ScopedToAssetsScripts` (garde d'ensemble).
+
+### MINOR
+
+- **m1** — le message de commit de `bef6ae4` collait `10 → 20` là où l'arbre livré rend `10 → 23`
+  (13 dans le fichier de garde + 10 ailleurs). Les notes elles-mêmes se contredisaient (bloc RAW
+  disant déjà 23, prose disant 20 trois paragraphes plus bas) — corrigé ci-dessus, § RONDE 3. On ne
+  réécrit pas l'historique : la correction explicite est ce paragraphe, avec les deux comptes et
+  leur base (13 = épinglé par `ExplicitIdentityOverride_SelfFileOwnCount_IsPinned`, ci-dessus ;
+  10 = `ExpectedExplicitIdentityOverrideCount`, inchangé ; 23 = leur somme, RAW avant exclusion).
+- **m2** — l'en-tête de non-exécution de `DemoIdentityResolverPlayModeTests.cs` (lignes 18-29)
+  s'arrêtait à la RONDE 2 alors que la RONDE 3 y avait ajouté +268 lignes/6 tests. Ajouté : un
+  paragraphe RONDE 3 et un paragraphe RONDE 4, chacun avec son propre re-contrôle de la contrainte
+  machine (PID de l'éditeur re-vérifié à chaque round).
+- **m3** — `DescribeRegime` promettait de nommer laquelle des 3 sources de précédence « a gagné »
+  sans qualifier : sous une paire à moitié posée, l'identifiant et le mot de passe peuvent avoir des
+  régimes différents, et la méthode ne lit que l'identifiant. Portée de la promesse corrigée dans le
+  docstring (« POUR L'IDENTIFIANT SEUL ») plutôt que le comportement — le log reste vrai sur ce qu'il
+  imprime, il promettait plus que ça.
+- **m4** — `Scan_NewDirectUrlAccessSite_IsDetected` n'exerçait que `SigninUrl` ; paramétré en
+  `[TestCase]` sur les DEUX tokens (`SigninUrlToken`, `SignupUrlToken`). `SignupUrl` n'était pas un
+  motif FAUX (3/3 mesuré, même `ScanDirectory` déjà contrôlé) — seule sa preuve DÉDIÉE manquait.
+
+### Vérification (oracles Python répliquant les scanners C#, sur l'arbre final de ce commit)
+
+```
+Assets/Scripts :
+  .SignIn(                    : 1  {CityMap/DemoIdentityResolver.cs}
+  .SignUp(                    : 0  {}
+  SigninUrl                   : 3  {CityMap/AuthClient.cs}
+  SignupUrl                   : 3  {CityMap/AuthClient.cs}
+  allowEnvironmentOverride    : 13 {CityMap/DemoIdentityResolver.cs: 11, Shell/AppShell.cs: 2}
+Assets/Editor :
+  allowEnvironmentOverride    : 0  {}
+Assets/Tests, motif .SetIdentity( :
+  RAW (avec le fichier de garde)         : 23, 6 fichiers
+  fichier de garde SEUL (épinglé, I2)    : 13
+  APRÈS EXCLUSION (allowlist, inchangée) : 10, 5 fichiers
+Ligne de contournement par le 2e mécanisme (I3), les SIX motifs :
+  .SignIn(=0 · .SignUp(=0 · SigninUrl=0 · SignupUrl=0 · .SetIdentity(=0 · allowEnvironmentOverride=1
+```
+Balance `{}`/`()`/`[]` par oracle Python (commentaires/chaînes stripés) : 0 partout sur les 2 fichiers
+`.cs` touchés (`DemoIdentityResolver.cs`, `DemoIdentityResolverPlayModeTests.cs`).
+
+### Ce qui reste NON EXÉCUTÉ après cette ronde (identique aux trois précédentes, contrainte inchangée)
+
+Compilation Unity réelle ; les 3 nouveaux tests `[Test]` purs de cette ronde (logique pure ou scan de
+fichiers, zéro I/O réseau) ; tout ce qui était déjà NON EXÉCUTÉ aux rondes 1-3. Le gate réel qui
+reste dû n'est pas une revue de plus, c'est le premier compile et le premier run NUnit/PlayMode —
+au mot du relecteur de la ronde 3.
 
 ## Ce qui n'a pas été fermé
 
