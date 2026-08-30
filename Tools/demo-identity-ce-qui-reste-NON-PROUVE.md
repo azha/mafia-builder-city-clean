@@ -80,3 +80,63 @@ toute seule.
 
 ⇒ **Tant que le §3 n'est pas rayé, tout document qui cite ce lot écrit « approuvé, non
 exécuté », jamais « livré ».**
+
+---
+
+## N9 — la portée des gardes, et ce qu'elle ne voit pas
+
+**Ajouté le 2026-08-31**, sur une règle venue d'une session voisine :
+
+> **Une falsifiable dont le total est dérivé de la table qu'elle vérifie ne peut mesurer que
+> l'EXACTITUDE, jamais la COUVERTURE.**
+
+Mon épingle `13 = {DemoIdentityResolver 11, AppShell 2}` est **exacte**. Elle est aussi
+**scopée à `Assets/Scripts`**, et l'exactitude sur une portée ne dit rien de ce qui vit
+dehors. Population réelle de ce que le système compile :
+
+| racine | fichiers | couverte par une garde ? |
+|---|---|---|
+| `Assets/Scripts` | 66 | **oui** — les 6 motifs |
+| `Assets/Tests` | 70 | **exclue exprès**, mais pas nue (`…ScopedToAssetsTests`) |
+| `Assets/Editor` | 8 | **NON — aucune garde** |
+| `Assets/TutorialInfo` | 2 | non (gabarit Unity) |
+
+**Mais le trou réel n'est pas de 8 fichiers : il est de DEUX**, et la raison est structurelle.
+
+| fichier | assembly | voit `Shell`/`CityMap` ? |
+|---|---|---|
+| `AssetLint/` (6 fichiers) | `AssetLint` (`references: []`, `includePlatforms: ["Editor"]`) | **non — fermé par construction** |
+| `MafiaCI.cs` | `Assembly-CSharp-Editor` (prédéfinie) | **oui** |
+| `W4P4aArtImportPostprocessor.cs` | `Assembly-CSharp-Editor` (prédéfinie) | **oui** |
+
+Une assembly **prédéfinie** référence automatiquement toute `asmdef` dont
+`autoReferenced` est vrai — et les **cinq** assemblies de production le sont
+(`Shell`, `CityMap`, `Operational`, `Theme`, `ShellContracts`). Ces deux fichiers
+**peuvent donc appeler `DemoIdentityResolver`**, et **aucun balayage ne les lit**.
+
+★ **Et l'ironie désigne le geste** : `MafiaCI.cs` est le point d'entrée du **juge**
+lui-même — le fichier qui décide quelles catégories tournent. Un appel d'identité placé
+là vivrait dans le seul fichier qui exécute les gardes, invisible à toutes.
+
+**État de l'énoncé** : les deux fichiers portent **0 occurrence** des six motifs
+surveillés aujourd'hui (vérifié aussi sur `GetEnvironmentVariable` et `MAFIA_*`).
+★ **Contrôle positif, sans lequel ce zéro ne vaudrait rien** : le même instrument
+trouve **36 `using` dans `Assets/Editor`** et 711 dans `Assets/Tests` — verdict **non
+uniforme**, donc il lit vraiment ces fichiers. *Un balayage uniformément à zéro est le
+premier signe qu'on mesure autre chose.*
+
+⇒ **Donc « rien aujourd'hui », pas « rien par construction » : une prose datée.** Le geste
+qui ferme N9 est d'**élargir la portée** des trois balayages à `Assets/Editor` — jamais
+d'ajouter un second point d'entrée (le patron maison : on élargit, on ne duplique pas).
+
+## N10 — mes gardes de compte comptent des OCCURRENCES, pas des AFFECTATIONS
+
+Mesuré le même soir sur un chiffre voisin, et la classe vaut pour toutes mes épingles de
+compte. L'item 0.9 de `front.md` établissait « **2** `localScale` dans `Assets/Scripts/Shell`,
+tous deux le bandeau ». Re-mesuré : le `grep` brut rend **8** — **2 affectations réelles**
+(`AppShell.cs:947`, `:1339`, les deux le bandeau : la conclusion tient) et **6 commentaires**
+ajoutés depuis par le lot charpente.
+
+⇒ **Une garde bâtie sur ce compte rougirait sur un commentaire, c'est-à-dire sur rien.**
+Toute épingle de compte de ce lot — à commencer par le **13** — doit dire si elle compte des
+**affectations/appels** ou des **occurrences de texte**, et compter la première.
