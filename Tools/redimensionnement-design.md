@@ -1,4 +1,4 @@
-# Lot « redimensionnement » — **v7** — le client survit à un changement de taille en cours de vie
+# Lot « redimensionnement » — **v8** — le client survit à un changement de taille en cours de vie
 
 > **Ruling user 2026-08-30** : « supporter le redimensionnement pour de vrai ».
 > **v1 NOT_APPROVED** (5B/7M/4m) · **v2 NOT_APPROVED** (3B/5M/5m) · **v3 NOT_APPROVED** (2B/4M/6m) ·
@@ -117,9 +117,49 @@ pas deviner.*
 publié tout en publiant, une rangée plus bas, la bande d'Accueil — **qui EST P2**. Un lecteur ne
 pouvait pas savoir s'il y avait 2 ou 3 trous. Il y en a **2** : P4 et P5.
 ⇒ **`:1807` est l'unique hook de CINQ clusters.** C'est le fait qui tranche §3.
-⛔ **R1 publie les 11 TRANSIENT avec ancre**, re-vérifiés dans le corps — *un fait rapporté reste
-DÉDUIT tant qu'on n'a pas lu le corps*. Deux (`MajEchelleFamille:1841`,
-`EchelleMaquette.LargeurCanvas:114`) sont innocentés **par l'invariance de la largeur logique**.
+⛔⛔ **LE CRITÈRE D'APPARTENANCE À UN « CLUSTER » N'A JAMAIS ÉTÉ ÉCRIT — trouvé par R1, sept
+versions et quatre revues ⊥ après la première publication du compte.** Le document annonce
+**20 = 9 PERSIST + 11 TRANSIENT** depuis la v1 et **ne dit nulle part ce qui fait qu'un cluster
+est un cluster**. ⇒ Les trois nombres ne sont **pas reproductibles**, et personne — ni R1, ni une
+revue — ne peut « re-vérifier » une table dont l'appartenance n'est pas définie.
+
+**Deux critères MÉCANIQUES ont été essayés, et les deux échouent** (mesuré, portée
+`Assets/Scripts/{Shell,CityMap,Operational,ShellContracts}`) :
+
+| critère essayé | définition | rend |
+|---|---|---|
+| **A** — par état persisté | un champ/propriété qui STOCKE une valeur dérivée de la résolution | **1** |
+| **B** — par site de reconstruction | un groupe d'écritures restauré par UN appel de hook | **3** |
+
+⇒ **Ni 1 ni 3 n'approchent 20.** Aucun critère mécanique simple ne rend ce compte.
+
+⇒ **CONCLUSION, et elle change la nature de ②** : le découpage en clusters est **SÉMANTIQUE et
+fait à la main** — chaque rangée nomme *une pièce de géométrie que le joueur perçoit comme une
+chose* (les paliers de zoom, la bande de panneaux, la feuille de l'écran Famille, la letterbox du
+titre…), pas une classe syntaxique. **Ce n'est pas un défaut en soi** : un inventaire à la main
+est légitime. Le défaut est de l'avoir présenté comme un **compte**, donc comme quelque chose
+d'opposable, alors qu'il n'est **vérifiable qu'article par article**.
+
+⇒ **RÈGLE D'APPARTENANCE, écrite ici pour la première fois** : *un cluster est une pièce de
+géométrie ou d'état dérivé qui (i) dépend d'une grandeur liée à la résolution, (ii) est LUE après
+la frame qui l'a écrite, et (iii) a un nom que le joueur ou la maquette reconnaît comme UNE
+chose.* **PERSIST** si sa valeur survit à un changement de résolution sans être recalculée
+(⇒ elle est fausse et doit être rebâtie) ; **TRANSIENT** si elle est recalculée à chaque lecture
+(⇒ elle se répare toute seule).
+⇒ **② devient donc une tâche BORNÉE et non la reproduction d'un nombre** : vérifier dans le corps
+les **9 PERSIST nommées** (chacune a son ancre, elles sont vérifiables une par une), et énumérer
+les TRANSIENT **par la même règle**, en publiant chaque nom avec son ancre. **Le compte tombe à la
+fin ; il n'est pas la preuve.**
+⚠️ Deux TRANSIENT déjà innocentées (`MajEchelleFamille`, `EchelleMaquette.LargeurCanvas`) le sont
+**par l'invariance de la largeur logique**, pas par le critère « recalculé à chaque appel » — le
+dire, sinon la règle a l'air de les couvrir et ne les couvre pas.
+
+⚠️⚠️ **PIÈGE ÉVITÉ EN MESURANT CECI, et il aurait été convaincant** : un balayage des sites de
+géométrie rend **20 sites « cuits »** — un nombre qui **coïncide exactement** avec les 20 clusters.
+Ce n'est **pas la même grandeur** : un cluster GROUPE plusieurs sites. Écrire « les 20 se
+retrouvent » aurait été une **forme E** — deux quantités comparées sans être mesurées dans la même
+unité — rendue crédible par une coïncidence numérique. ⇒ ***Le nombre qui tombe juste est le
+moment de vérifier l'UNITÉ, pas de conclure.***
 
 ## 3. La reconstruction — et la garde de cadrage, RÉÉCRITE
 
@@ -479,7 +519,7 @@ annulé par le §5, sans quoi la dépendance zone-sûre de P4/P5 n'est exercée 
 
 | chunk | livrables | falsifiable | gate |
 |---|---|---|---|
-| **R1 — mesures et publications** | ① re-mesurer les ancres @HEAD, **par fichier** (§2) · ② publier les 11 TRANSIENT vérifiés dans le corps · ④ **déclarer l'unité et la portée** de chaque compte du §7 *(et NON « retirer le 19 », cf. B6)* · ⑤ imprimer les insets **après** bascule · ㉔ **commiter le log** qui porte la mesure du §5 (aujourd'hui dans `scratchpad/`, non tracké ⇒ non re-dérivable) · ⑥ écrire prédicat + commande + portée + **contrôle positif par motif** du contrôle §0 · ⑱ écrire la **règle de clôture** de l'ensemble de fichiers du §0 | chaque publication porte **commande + sortie collée + unité + portée** ; contrôle positif ET négatif | revue ⊥ |
+| **R1 — mesures et publications** | ① re-mesurer les ancres @HEAD, **par fichier** (§2) · ② énumérer les TRANSIENT **par la règle d'appartenance** (§2), nom + ancre — le compte tombe à la fin, il n'est pas la preuve · ④ **déclarer l'unité et la portée** de chaque compte du §7 *(et NON « retirer le 19 », cf. B6)* · ⑤ imprimer les insets **après** bascule · ㉔ **commiter le log** qui porte la mesure du §5 (aujourd'hui dans `scratchpad/`, non tracké ⇒ non re-dérivable) · ⑥ écrire prédicat + commande + portée + **contrôle positif par motif** du contrôle §0 · ⑱ écrire la **règle de clôture** de l'ensemble de fichiers du §0 | chaque publication porte **commande + sortie collée + unité + portée** ; contrôle positif ET négatif | revue ⊥ |
 | **R2 — production** | ⑦ l'émetteur sur le couple, mécanisme complet · ⑧ le chemin de restauration (rôle → valeur → tolérance) · ⑨ le retrait des deux énoncés datés, **avec le contrôle de retrait de R1 dans le MÊME commit** *(un numéro cerclé ne vit que dans la cellule qui le POSSÈDE — une référence croisée se nomme en toutes lettres, sinon l'oracle d'arithmétique compte une possession)* · ⑲ **écrire la conversion d'unités** des deux termes du couple (§4) · ㉓ **l'ordre de reconstruction district↔panneaux**, mesuré ou assumé (§3, m2) | ⑩ non-émission fenêtre-à-l'attachement + `1` en aval, **même scénario** · ⑪ (a) et (b) dans **deux scénarios distincts** · ⑫ anti-vacuité du cadrage par **S1 et S2 nommés** (non disjonctive) | revue ⊥ |
 | **R3 — le juge** | ⑬ choisir la catégorie, l'ajouter, **et couvrir `ChromeSafeAreaPlayModeTests` + `ChromeMultiResolutionPlayModeTests`** (cf. I2) · ⑭ publier le compte des rallumés et **classer chaque rouge** démasqué / régression · ⑮ la seconde largeur de capture · ③ publier la table des 30 non joués · ⑯ le contrôle positif de sabotage, ancré · ⑳ **zone sûre à valeurs DISTINCTES aux deux points, via le seam** (§6.2) · ㉑ **ASSERTER le débordement**, jamais l'imprimer (§6.3) | ⑰ le test visé **relancé seul par son nom complet** · ㉒ anti-vacuité : **nombre d'écrans éprouvés > 0 et nommé** (§6.5) | revue ⊥ |
 
@@ -501,7 +541,7 @@ l'autre membre, et les deux sont désormais construits séparément) :
 | 1 | §0 fin | prédicat + commande + portée + contrôle positif par motif | R1 ⑥ |
 | 2 | §0 fin | règle de clôture de l'ensemble de fichiers | R1 ⑱ |
 | 3 | §2 | re-mesurer les ancres, base déclarée par ancre | R1 ① |
-| 4 | §2 | publier les 11 TRANSIENT vérifiés dans le corps | R1 ② |
+| 4 | §2 | énumérer les TRANSIENT **par la règle d'appartenance du §2**, chacune avec son nom et son ancre | R1 ② |
 | 5 | §3 | chemin de restauration : rôle → valeur → tolérance | R2 ⑧ |
 | 6 | §3 | ordre de reconstruction district↔panneaux, mesuré ou assumé | R2 **㉓** |
 | 7 | §3 | S1/S2 avec conditions de monde et gardes de capacité | R2 ⑫ |
