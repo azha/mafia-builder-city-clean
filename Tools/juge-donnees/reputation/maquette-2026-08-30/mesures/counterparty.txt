@@ -1,0 +1,1 @@
+counterparty_uuid_inexistant=d215e4a5-877c-46f8-8863-2cabb572cf12

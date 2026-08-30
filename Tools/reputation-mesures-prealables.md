@@ -108,12 +108,53 @@ Correspondance hex ↔ champ établie sur `Assets/Resources/DesignTokens.asset` 
 sérialisé, seule source des valeurs — `DesignTokens.cs:18`), pas sur les commentaires du `.cs`.
 Contrôle : les 74 champs `Color` déclarés sont **tous** présents dans l'asset (0 manquant).
 
-⇒ **Conséquence pour la construction** : les 4 couleurs manquantes ne peuvent pas être écrites en
-dur — ce serait « inventer une couleur quand elle existe déjà », le défaut que `chassis6.py`
-existe pour rendre impossible. Elles doivent rejoindre `DesignTokens.asset`, **un asset partagé
-par six écrans** : geste transverse, signalé à la session orchestratrice avant d'être fait.
-⚠️ Et `#0b1016` (`--encre`) est **distinct** de `surfaceBase` `#0d0f10` : proches, pas égaux —
-les substituer serait un écart que le juge visuel mesurerait.
+### 3-bis. La mesure qui décide est sur l'ASSET, pas sur le `.cs` — refaite
+
+Le balayage `grep -ric` ci-dessus porte sur `DesignTokens.cs` (le **code**). Le pont de palette,
+lui, compare **l'asset sérialisé** au canon — et les deux peuvent diverger. La mesure a donc été
+refaite sur `Assets/Resources/DesignTokens.asset`, par distance max-canal avec tolérance 1,5/255,
+**trois contrôles positifs inclus** :
+
+    champs Color lus dans l'ASSET : 74
+      #0b1016 --encre                      ABSENT — plus proche: hudGaugeFaceOuter        à  2.0/255
+      #111823 --panneau                    ABSENT — plus proche: lieutenantMedallionOuter à  2.1/255
+      #2a3648 --lisere                     ABSENT — plus proche: hudGaugeFaceInner        à  6.0/255
+      #7db36a --vert                       ABSENT — plus proche: controlUncontested       à 41.9/255
+      #f2c96b CONTROLE POSITIF or_vif      PRESENT (hudMoneyGold)
+      #eae0c8 CONTROLE POSITIF creme       PRESENT (hudCreme)
+      #0d0f10 CONTROLE POSITIF surfaceBase PRESENT (surfaceBase)
+
+⚠️⚠️ **Et c'est le voisinage qui est le vrai piège, pas l'absence.** Trois des quatre ont un
+voisin à **≤ 6/255** — assez proche pour qu'on les substitue de bonne foi (« c'est la même »),
+assez loin pour qu'un juge visuel le mesure. Et le voisin le plus proche de `--encre` est
+`hudGaugeFaceOuter` : le fond d'un **cadran de manomètre**, employé comme fond d'écran — un jeton
+pris pour ce qu'il n'est pas. Seul `--vert` est franchement isolé (41,9/255) : aucune substitution
+n'y est même tentante.
+
+### 3-ter. Pourquoi ces 4 champs ne peuvent PAS être simplement ajoutés
+
+`CanonPaletteBridgePlayModeTests` exige une **bijection dans les deux sens** plus une arité
+épinglée — mesuré aujourd'hui : `74 tokens canon = 74 champs runtime`, **0 orphelin des deux
+côtés** (`canon_palette_extract.json`, `backCommitSha: 5fc5b70b`).
+
+- `:146-152` — tout champ `Color` runtime absent de l'extrait est une erreur « **orphelin
+  RUNTIME** » ; `:50` — `ExpectedTokenCount = 74` en dur ; le test asserte `IsEmpty(errors)`.
+- ⇒ ajouter 4 champs au runtime **seul** produit **4 erreurs** et fait rougir le test. Mesuré
+  indépendamment par la session 98, qui ajoute que ce test porte `[Category("W3UDA")]`, catégorie
+  **présente dans `MafiaCI.Categories`** — donc il **tourne sous le juge**.
+
+⇒ Le geste complet n'est pas « ajouter 4 champs » : c'est ajouter 4 entrées **au canon back**
+(`projects/mafia_city_game/gdd/14_tunable_constants.md §Asset pipeline — palette & DA`, ligne
+5829 du dépôt principal), régénérer l'extrait, ajouter les 4 champs au runtime, **et** porter
+`ExpectedTokenCount` de 74 à 78. Quatre endroits, dont le canon d'un autre dépôt.
+
+⇒ **Arbitrage tranché (session 98, 2026-08-30) : option 3 — construire l'écran avec des couleurs
+LOCALES et consigner l'écart en dette.** Raison de fond, et elle est au socle : le `:root` de
+`ecrans-brennar-6.html` et `DesignTokens.asset` sont **deux sources pour la même chose** — la
+configuration exacte qui a déjà produit ici « 32 références, 0 définition ». Décider si ces 4
+couleurs deviennent du canon est un **arbitrage DA, donc user** ; la session 98 le lui remonte.
+⛔ Et la consigne qui va avec : **ne pas substituer** un jeton voisin (voir 3-bis) — une couleur
+locale assumée vaut mieux qu'un jeton canon employé pour ce qu'il n'est pas.
 
 ## 4. Le contrat back, lu à la source
 
