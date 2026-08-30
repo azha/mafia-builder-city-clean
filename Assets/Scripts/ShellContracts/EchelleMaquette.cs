@@ -49,6 +49,24 @@ namespace MafiaCleanCity.Shell
         /// Le Coffre, Le Marché.</summary>
         public const float LargeurEcransBrennar = 300f;
 
+        /// <summary>`ecrans-brennar-6.html` — `.tel{width:min(300px,88vw);aspect-ratio:9/17.5}`.
+        /// La série 6 : ㊲ La réputation, et ses voisins de la même planche.
+        ///
+        /// ⚠️ Vaut le MÊME nombre que <see cref="LargeurEcransBrennar"/>, et c'est précisément
+        /// pourquoi elle existe séparément : ce sont DEUX FICHIERS de maquette distincts. Les
+        /// confondre marcherait aujourd'hui et casserait en silence le jour où l'un des deux
+        /// change de largeur — le défaut que ce fichier entier existe pour rendre impossible
+        /// (voir son en-tête : un `300` « recopié de la mauvaise maquette », un nombre juste pour
+        /// un AUTRE écran).
+        ///
+        /// Mesuré le 2026-08-30, deux fois plutôt qu'une : à la source
+        /// (`ecrans-brennar-6.html:24`) ET sur les six PNG livrés, par un instrument commité
+        /// (`Tools/mesure-geometrie-reputation.py` — échelle 3,000× exactement, corps de l'écran
+        /// à 463,7 px CSS contre 462 déclarés, 6/6 cadres à ±6 px, avec des comptes de frontières
+        /// NON uniformes qui prouvent que l'instrument discriminait au lieu de mesurer un
+        /// artefact constant).</summary>
+        public const float LargeurEcransBrennar6 = 300f;
+
         /// <summary>`palettes-ecrans.html` — `.tel{width:min(252px,86vw)}`.</summary>
         public const float LargeurPalettesEcrans = 252f;
 
