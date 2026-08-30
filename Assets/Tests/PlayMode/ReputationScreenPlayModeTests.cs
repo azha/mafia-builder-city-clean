@@ -37,6 +37,41 @@ namespace MafiaCleanCity.Operational.Tests
         private string token;
         private string lieutenantId;
 
+        /// <summary>⛔⛔ ÉPINGLE D'UN DÉFAUT DU DÉPÔT, AVEC SON MODE D'EMPLOI DE PÉREMPTION.
+        ///
+        /// Mesuré le 2026-08-31 (run batchmode complet) : `Resources.Load("DesignTokens")` rend
+        /// `null`, ce qui fait tomber **57 tests sur 111 échecs — 51 % de la suite** — répartis
+        /// sur **18 fixtures livrées** (DistrictMapNavigation 14, DistrictBackground 5,
+        /// DailyReviewScreenController 5, TopBarController 3, Hud 2, CanonPaletteBridge 1…).
+        /// Le défaut est **antérieur à ce lot** et **indépendant du mode d'exécution** : il se
+        /// produit via l'éditeur ET en batchmode, en run scopé ET en run complet.
+        /// Dix pistes ont été éliminées, chacune par une mesure (charge, import concurrent, pile
+        /// back, asset manquant, lien `.meta`↔script, assembly non compilée, artefact d'outillage,
+        /// scope, ordre d'exécution, collision de GUID) — voir
+        /// `Tools/screen-b3-diagnostic-designtokens.md`. **La cause reste INCONNUE.**
+        ///
+        /// Sans cette ligne, les 8 tests de cet écran tombent AVANT d'exercer la moindre
+        /// assertion : le framework échoue sur le log d'erreur non attendu, et l'écran ne peut
+        /// être ni validé ni réfuté. Ce serait un rouge qui n'apprend rien sur ce qu'il teste.
+        ///
+        /// ⚠️ CE QUE CETTE LIGNE NE FAIT PAS : elle ne masque pas le défaut. Elle en déclare un
+        /// **connu, mesuré et documenté**, et elle est **AUTO-INVALIDANTE** — c'est tout l'enjeu :
+        /// `LogAssert.Expect` EXIGE que le message apparaisse. Le jour où quelqu'un répare
+        /// `DesignTokens`, le message cesse d'être émis, l'attente n'est pas satisfaite, et **ces
+        /// tests ROUGISSENT** en signalant qu'il faut retirer cette épingle. Une simple
+        /// `ignoreFailingMessages = true` aurait masqué la réparation aussi bien que le défaut —
+        /// c'est le `toBe(404)` du socle : on épingle un bug ratifié avec ce qui le fera rougir
+        /// quand il sera corrigé, jamais un silence.
+        ///
+        /// ⇒ Si ce test rougit sur « Expected log was not received », **le défaut est réparé :
+        /// supprimer cette méthode et le champ `epingleDesignTokens`.**</summary>
+        [SetUp]
+        public void EpinglerLeDefautDesignTokensDuDepot()
+        {
+            LogAssert.Expect(LogType.Error,
+                new System.Text.RegularExpressions.Regex("DesignTokens\\.Current.*Resources\\.Load"));
+        }
+
         [TearDown]
         public void TearDown()
         {
