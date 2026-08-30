@@ -429,8 +429,13 @@ namespace MafiaCleanCity.Operational.Tests
 
         private IEnumerator CapturerA(int largeur, int hauteur, string chemin)
         {
-            Canvas canvas = Object.FindFirstObjectByType<Canvas>();
-            Assert.IsNotNull(canvas, "aucun canvas : le locataire n'a pas construit sa mise en page");
+            // ⛔ LE CANVAS DE *CET* ÉCRAN, pas le premier venu. `FindFirstObjectByType` en rend
+            // un au hasard quand plusieurs coexistent (un test voisin peut en avoir laissé un) —
+            // on capturerait alors un canvas vide et l'image serait noire sans que rien ne dise
+            // pourquoi. On remonte donc depuis la racine RÉELLE de l'écran.
+            GameObject racine = RacineEcran();
+            Canvas canvas = racine.GetComponentInParent<Canvas>();
+            Assert.IsNotNull(canvas, "ReputationRoot n'est sous aucun Canvas : rien ne peut être rendu");
 
             RenderMode modeAvant = canvas.renderMode;
             Camera cameraAvant = canvas.worldCamera;
@@ -452,8 +457,24 @@ namespace MafiaCleanCity.Operational.Tests
             canvas.planeDistance = 10f;
             Canvas.ForceUpdateCanvases();
             yield return null;
+
+            // ⛔ RECONSTRUIRE LA MISE EN PAGE APRÈS LA BASCULE, sinon on photographie une
+            // géométrie calculée pour une AUTRE taille. Toute la mise à l'échelle de cet écran
+            // dérive de `racinePleinEcran.rect.width`, lue à la construction — donc à la taille
+            // de la fenêtre de batchmode (640), pas à celle de la RenderTexture (1080).
+            // Sans ce rebuild, le contenu reste dimensionné pour 640 dans une cible de 1080 :
+            // c'est le défaut mesuré ailleurs dans ce dépôt, où un juge a relevé l'art « à 972 px
+            // sur 1080 » — soit exactement le rapport de deux scaleFactor, pris pour un cadrage.
+            LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform)racine.transform);
             Canvas.ForceUpdateCanvases();
             yield return null;
+            yield return null;   // la passe de layout différée d'Unity
+
+            // Garde de PRÉMISSE : la cible doit avoir la taille demandée avant qu'on y rende.
+            // Un canvas resté à 640 produirait une image « valide » et fausse.
+            RectTransform crt = (RectTransform)canvas.transform;
+            Debug.Log($"[CAPTURE b3] AVANT rendu {largeur}x{hauteur} · canvas rect=" +
+                      $"{crt.rect.width:F0}x{crt.rect.height:F0} · scaleFactor={canvas.scaleFactor:F3}");
 
             cam.Render();
             RenderTexture prev = RenderTexture.active;
