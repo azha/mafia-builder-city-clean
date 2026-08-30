@@ -38,85 +38,9 @@ namespace MafiaCleanCity.Operational.Tests
         private string token;
         private string lieutenantId;
 
-        /// <summary>⛔⛔ ÉPINGLE D'UN DÉFAUT DU DÉPÔT, AVEC SON MODE D'EMPLOI DE PÉREMPTION.
-        ///
-        /// Mesuré le 2026-08-31 (run batchmode complet) : `Resources.Load("DesignTokens")` rend
-        /// `null`, ce qui fait tomber **57 tests sur 111 échecs — 51 % de la suite** — répartis
-        /// sur **18 fixtures livrées** (DistrictMapNavigation 14, DistrictBackground 5,
-        /// DailyReviewScreenController 5, TopBarController 3, Hud 2, CanonPaletteBridge 1…).
-        /// Le défaut est **antérieur à ce lot** et **indépendant du mode d'exécution** : il se
-        /// produit via l'éditeur ET en batchmode, en run scopé ET en run complet.
-        /// Dix pistes ont été éliminées, chacune par une mesure (charge, import concurrent, pile
-        /// back, asset manquant, lien `.meta`↔script, assembly non compilée, artefact d'outillage,
-        /// scope, ordre d'exécution, collision de GUID) — voir
-        /// `Tools/screen-b3-diagnostic-designtokens.md`. **La cause reste INCONNUE.**
-        ///
-        /// Sans cette ligne, les 8 tests de cet écran tombent AVANT d'exercer la moindre
-        /// assertion : le framework échoue sur le log d'erreur non attendu, et l'écran ne peut
-        /// être ni validé ni réfuté. Ce serait un rouge qui n'apprend rien sur ce qu'il teste.
-        ///
-        /// ⚠️ CE QUE CETTE ÉPINGLE FAIT, ET COMMENT — la mécanique a CHANGÉ au run 6, ce
-        /// paragraphe décrit celle qui est en place, pas celle qui a échoué :
-        ///  · `ignoreFailingMessages` neutralise le log, qui est ré-émis à chaque lecture et ne
-        ///    peut donc pas être couvert par un `LogAssert.Expect` (il n'en consomme qu'un) ;
-        ///  · une assertion sur la VALEUR (`DesignTokens.Current` est null) la rend
-        ///    AUTO-INVALIDANTE. C'est elle qui porte la péremption, pas le log.
-        ///
-        /// ⛔ La première version épinglait le LOG via `LogAssert.Expect` posé en `[SetUp]`.
-        /// Unity vérifie les attentes **à la fin de chaque phase** : l'attente était donc
-        /// contrôlée avant que le test n'appelle quoi que ce soit, et les 8 tests échouaient sur
-        /// « Expected log did not appear » — un rouge qui annonçait la DISPARITION du défaut
-        /// alors qu'il était toujours là (171 occurrences, 65 échecs dans le MÊME run).
-        /// ⇒ *Le correctif reproduisait le défaut un cran plus bas* : au run 5 les tests
-        /// tombaient sur le log non attendu, au run 6 sur l'attente non satisfaite — dans les
-        /// deux cas sans exercer une seule assertion de l'écran.
-        ///
-        /// ⇒ Si ces tests rougissent sur « DesignTokens.Current n'est plus null », **le défaut du
-        /// dépôt est réparé** : supprimer cette méthode et ses 8 appels, puis relancer — les
-        /// assertions de cet écran n'auront alors JAMAIS été exercées sous un DesignTokens sain.
-        /// supprimer cette méthode et le champ `epingleDesignTokens`.**</summary>
-        /// ⚠️ CORRECTIF DE L'ÉPINGLE ELLE-MÊME (run 6) — elle était en `[SetUp]`, et c'était FAUX.
-        /// Unity vérifie les attentes de log **à la fin de chaque phase** : posée en `[SetUp]`,
-        /// l'attente était contrôlée avant que le corps du test n'ait appelé quoi que ce soit, et
-        /// les 8 tests échouaient sur « Expected log did not appear » — un rouge qui accusait la
-        /// disparition du défaut alors que le défaut était toujours là (171 occurrences et 65
-        /// échecs dans le MÊME run).
-        /// ⇒ *Le correctif reproduisait le défaut un cran plus bas* : au run 5 les tests
-        /// tombaient sur le log non attendu, au run 6 sur l'attente non satisfaite — dans les
-        /// deux cas sans exercer une seule assertion.
-        /// ⇒ L'attente est donc posée DANS le flux du test, juste avant l'appel qui déclenche le
-        /// chargement (`MonterEcran` → `Awake` → `BuildLayout` → `DesignTokens.Current`).
-        private void EpinglerLeDefautDesignTokensDuDepot()
-        {
-            // Le message est ré-émis à CHAQUE lecture tant que le chargement échoue
-            // (`DesignTokens.cs:36-43` : le champ reste `null`, la branche d'erreur est donc
-            // reprise à chaque appel). `LogAssert.Expect` n'en consomme qu'UNE — il ne peut pas
-            // couvrir un nombre d'émissions inconnu d'avance.
-            LogAssert.ignoreFailingMessages = true;
-
-            // ⛔⛔ ET VOICI CE QUI REND L'ÉPINGLE AUTO-INVALIDANTE — sans cette ligne,
-            // `ignoreFailingMessages` serait un SILENCE : il masquerait la réparation du défaut
-            // aussi bien que le défaut lui-même, et ces tests resteraient verts pour toujours en
-            // ignorant des erreurs qui, un jour, seront les MIENNES.
-            //
-            // On épingle donc la VALEUR, pas le log : `DesignTokens.Current` DOIT être null tant
-            // que le défaut du dépôt existe. C'est la règle du socle — *épingler la valeur d'une
-            // clé présente, jamais l'absence d'un message* : le jour où quelqu'un répare
-            // (l'accesseur rendant enfin l'asset), cette assertion ROUGIT et désigne exactement
-            // quoi retirer.
-            Assert.IsNull(DesignTokens.Current,
-                "DesignTokens.Current n'est plus null : LE DÉFAUT DU DÉPÔT EST RÉPARÉ. " +
-                "⇒ Retirer EpinglerLeDefautDesignTokensDuDepot() et ses appels, puis relancer : " +
-                "les assertions de cet écran n'ont jamais été exercées sous un DesignTokens sain.");
-        }
-
         [TearDown]
         public void TearDown()
         {
-            // ⚠️ `ignoreFailingMessages` est STATIQUE et GLOBAL : le laisser à true
-            // contaminerait les fixtures suivantes du même run, qui verraient leurs
-            // propres erreurs avalées. Remis à false quoi qu'il arrive.
-            LogAssert.ignoreFailingMessages = false;
             if (hostGo != null) Object.Destroy(hostGo);
             hostGo = null;
         }
@@ -202,7 +126,6 @@ namespace MafiaCleanCity.Operational.Tests
         [UnityTest]
         public IEnumerator B3S1_ToutGraphic_PorteSonCanvasRenderer()
         {
-            EpinglerLeDefautDesignTokensDuDepot();
             yield return OuvrirJoueurFrais();
             var ecran = MonterEcran();
             yield return ecran.Charger(lieutenantId);
@@ -242,7 +165,6 @@ namespace MafiaCleanCity.Operational.Tests
         [UnityTest]
         public IEnumerator B3S2_ConventionDeFratrie_ChaqueContourEstPremierEnfant()
         {
-            EpinglerLeDefautDesignTokensDuDepot();
             yield return OuvrirJoueurFrais();
             var ecran = MonterEcran();
             yield return ecran.Charger(lieutenantId);
@@ -286,7 +208,6 @@ namespace MafiaCleanCity.Operational.Tests
         [UnityTest]
         public IEnumerator B3P1_PolariteDesTells_VierteZero_EtControlePositifQuatre()
         {
-            EpinglerLeDefautDesignTokensDuDepot();
             yield return OuvrirJoueurFrais();
             var ecran = MonterEcran();
 
@@ -329,7 +250,6 @@ namespace MafiaCleanCity.Operational.Tests
         [UnityTest]
         public IEnumerator B3T1_CompteurEnfreintes_NAfficheJamaisUnZero()
         {
-            EpinglerLeDefautDesignTokensDuDepot();
             yield return OuvrirJoueurFrais();
             var ecran = MonterEcran();
             yield return ecran.Charger(lieutenantId);
@@ -362,7 +282,6 @@ namespace MafiaCleanCity.Operational.Tests
         [UnityTest]
         public IEnumerator B3T3_LesRuleIdSontAffichesEnClair_EtTousAffiches()
         {
-            EpinglerLeDefautDesignTokensDuDepot();
             yield return OuvrirJoueurFrais();
             var ecran = MonterEcran();
 
@@ -397,7 +316,6 @@ namespace MafiaCleanCity.Operational.Tests
         [UnityTest]
         public IEnumerator B3T2_RestraintOmise_EstDetectee_SansCounterparty()
         {
-            EpinglerLeDefautDesignTokensDuDepot();
             yield return OuvrirJoueurFrais();
             var ecran = MonterEcran();
             yield return ecran.Charger(lieutenantId); // aucun counterparty_id
@@ -425,7 +343,6 @@ namespace MafiaCleanCity.Operational.Tests
         [UnityTest]
         public IEnumerator B3E1_EchecDeLecture_DonneUnEtatNomme_PasUneException()
         {
-            EpinglerLeDefautDesignTokensDuDepot();
             yield return OuvrirJoueurFrais();
             var ecran = MonterEcran();
 
@@ -461,7 +378,6 @@ namespace MafiaCleanCity.Operational.Tests
         [UnityTest, Category("Capture")]
         public IEnumerator B3C1_CapturerPourLeJugeVisuel_DeuxResolutions()
         {
-            EpinglerLeDefautDesignTokensDuDepot();
             yield return OuvrirJoueurFrais();
             var ecran = MonterEcran();
             yield return ecran.Charger(lieutenantId);
