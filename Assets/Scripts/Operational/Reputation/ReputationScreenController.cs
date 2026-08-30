@@ -213,13 +213,10 @@ namespace MafiaCleanCity.Operational
             int absorbe = tells != null ? tells.CompteAbsorbe() : 0;
             int declarees = bm != null && bm.declared_rules != null ? bm.declared_rules.Length : 0;
 
-            // Le sous-titre NOMME l'état, il ne le décore pas. `indeterminate` a le sien : ce
-            // n'est pas « moyen », c'est « pas encore assez vu ».
-            sousTitre.text = bm != null && ReputationResolvers.CoherenceEstIndeterminee(bm.consistency_cue)
-                ? (absorbe == 0
-                    ? "UN LIEUTENANT NEUF N'A ENCORE RIEN ABSORBÉ"
-                    : "PERSONNE NE VOUS A ENCORE JUGÉ")
-                : "CE QU'IL A PRIS DE VOUS SE VOIT SUR LUI";
+            // Le sous-titre et le panneau NOMMENT l'état, ils ne le décorent pas. Trois états
+            // distincts, un par valeur de `consistency_cue` — et `indeterminate` n'est pas le
+            // cran du milieu, c'est « pas encore assez vu ».
+            AppliquerEtat(bm != null ? bm.consistency_cue : null, absorbe);
 
             MajCompteur(0, declarees.ToString("00"), null, "RÈGLES DONNÉES");
             MajCompteur(1, absorbe.ToString("00"), "/4", "ABSORBÉES");
@@ -247,6 +244,58 @@ namespace MafiaCleanCity.Operational
             }
         }
 
+        /// <summary>L'état de l'écran, dérivé de `consistency_cue` — sous-titre ET panneau de
+        /// prose ensemble, parce qu'ils disent la MÊME chose et que les séparer les laisserait
+        /// diverger.
+        ///
+        /// ⛔ POURQUOI `drifting` A SON PROPRE ÉTAT, ET CE N'EST PAS UN DÉTAIL DE TEXTE. C'est le
+        /// moment dramatique de l'écran : le joueur a laissé passer ce qu'il avait lui-même
+        /// interdit. La maquette lui consacre un cadre entier, avec un panneau en AMBRE. Le
+        /// traiter comme le cas ordinaire — ce que faisait la première version de ce contrôleur,
+        /// où `drifting` n'apparaissait nulle part — revient à taire l'information que le joueur
+        /// est précisément venu chercher.
+        ///
+        /// ⚠️ Et ce que l'écran ne peut PAS dire, il le dit : le serveur signale QUE vous dérivez,
+        /// jamais SUR QUELLE RÈGLE (le `rule_id` fautif est en base, jamais projeté — forme F,
+        /// lot back S13-k). Le texte de dérive le mentionne au lieu de laisser croire à un choix
+        /// de mise en page.</summary>
+        private void AppliquerEtat(string cue, int absorbe)
+        {
+            if (ReputationResolvers.CoherenceEstIndeterminee(cue))
+            {
+                sousTitre.text = absorbe == 0
+                    ? "UN LIEUTENANT NEUF N'A ENCORE RIEN ABSORBÉ"
+                    : "PERSONNE NE VOUS A ENCORE JUGÉ";
+                MajPanneau("« PAS JUGEABLE » N'EST PAS « MOYEN »",
+                    "Rien n'a encore déteint",
+                    "ses quatre voyants sont éteints parce qu'il n'a rien pris de vous — pas " +
+                    "parce qu'il est médiocre. Et le serveur refuse de juger votre constance " +
+                    "tant qu'il n'a pas assez vu : indéterminé, jamais au milieu d'une jauge.",
+                    ReputationResolvers.Creme);
+                return;
+            }
+
+            if (cue == "drifting")
+            {
+                sousTitre.text = "VOUS VOUS ÉCARTEZ DE VOS PROPRES RÈGLES";
+                MajPanneau("CE QUI A CHANGÉ",
+                    "Une règle donnée, une règle enfreinte",
+                    "vous avez laissé passer ce que vous aviez interdit. Les deux cercles " +
+                    "l'enregistrent — le vôtre et le sien. Le serveur dit que vous dérivez, " +
+                    "jamais sur quelle règle : c'est un maillon manquant, pas un choix d'écran.",
+                    ReputationResolvers.Ambre);
+                return;
+            }
+
+            sousTitre.text = "CE QU'IL A PRIS DE VOUS SE VOIT SUR LUI";
+            MajPanneau("LA RÈGLE DU JEU",
+                "Vous vous lisez sur lui",
+                "chaque vertu qu'il vous voit tenir finit sur sa tenue — col, manches, montre, " +
+                "gants. Une règle déclarée tient jusqu'à ce que vous la retiriez publiquement : " +
+                "la donner, c'est se donner une corde.",
+                ReputationResolvers.Creme);
+        }
+
         /// <summary>Repli NOMMÉ quand la récupération échoue — jamais une exception, jamais un
         /// écran noir. Mesuré sur un autre écran de ce dépôt : `Render(null)` levait une
         /// NullReferenceException à la première ligne qui lisait le payload, et l'écran plantait
@@ -256,6 +305,15 @@ namespace MafiaCleanCity.Operational
             AAfficheEtatVide = true;
             VoyantsAllumes = 0;
             sousTitre.text = "LE MIROIR EST INDISPONIBLE";
+            // Le panneau AUSSI — sinon il garderait la prose du chargement précédent (« vous vous
+            // écartez de vos propres règles ») sur un écran qui annonce ne rien savoir. Même
+            // défaut que des voyants restés allumés ou qu'une liste de règles non vidée : chaque
+            // chemin d'échec doit remettre TOUT ce qu'il a pu laisser derrière lui.
+            MajPanneau("CE QUE L'ON NE SAIT PAS",
+                "Le miroir ne répond pas",
+                "impossible de lire ce que votre lieutenant a retenu de vous. Ce n'est pas un " +
+                "verdict neutre : c'est une absence de verdict.",
+                ReputationResolvers.Muet);
             MajCompteur(0, "—", null, "RÈGLES DONNÉES");
             MajCompteur(1, "—", "/4", "ABSORBÉES");
             MajCompteur(2, "—", null, "ENFREINTES");
@@ -452,6 +510,21 @@ namespace MafiaCleanCity.Operational
 
         private RectTransform listeReglesRoot;
         private TextMeshProUGUI listeReglesVide;
+        private TextMeshProUGUI pannSurTitre, pannTitre, pannTexte;
+
+        /// <summary>Le sur-titre du panneau, tel qu'il est AFFICHÉ — crochet de test. C'est lui
+        /// qui distingue les trois états ; l'asserter sur la sortie plutôt que sur la valeur
+        /// d'entrée évite une garde tautologique (« l'état vaut ce que je viens de lui donner »).</summary>
+        public string PanneauSurTitreAffiche => pannSurTitre != null ? pannSurTitre.text : null;
+
+        private void MajPanneau(string surTitre, string titre, string texte, Color couleurTitre)
+        {
+            if (pannSurTitre == null) return;
+            pannSurTitre.text = surTitre;
+            pannTitre.text = titre;
+            pannTitre.color = couleurTitre;
+            pannTexte.text = texte;
+        }
 
         /// <summary>La liste des règles que le joueur a déclarées — le cadre `regles` de la
         /// maquette.
@@ -552,14 +625,16 @@ namespace MafiaCleanCity.Operational
             AjouterFond(go, ReputationResolvers.Panneau);
             Contour(go, ReputationResolvers.Lisere);
 
-            NouveauTexte(go.transform, "SurTitre", "LA RÈGLE DU JEU", CssPannSurTitre,
-                ReputationResolvers.Muet, DesignTokens.Current.primaryFont).characterSpacing = 19f;
-            NouveauTexte(go.transform, "Titre", "Vous vous lisez sur lui", CssPannTitre,
+            // Les trois textes sont MÉMORISÉS : le panneau change avec l'état (`AppliquerEtat`),
+            // il n'est pas figé à la construction. Un panneau figé afficherait « la règle du
+            // jeu » à un joueur en train de dériver — au moment précis où l'écran doit lui dire
+            // autre chose.
+            pannSurTitre = NouveauTexte(go.transform, "SurTitre", "", CssPannSurTitre,
+                ReputationResolvers.Muet, DesignTokens.Current.primaryFont);
+            pannSurTitre.characterSpacing = 19f;
+            pannTitre = NouveauTexte(go.transform, "Titre", "", CssPannTitre,
                 ReputationResolvers.Creme, DesignTokens.Current.hudSerifFont);
-            NouveauTexte(go.transform, "Texte",
-                "chaque vertu qu'il vous voit tenir finit sur sa tenue — col, manches, montre, " +
-                "gants. Une règle déclarée tient jusqu'à ce que vous la retiriez publiquement : " +
-                "la donner, c'est se donner une corde.",
+            pannTexte = NouveauTexte(go.transform, "Texte", "",
                 CssPannTexte, ReputationResolvers.Creme2, DesignTokens.Current.primaryFont);
 
             EmpilerVertical(go, Px(CssPannPadY), Px(4f), Px(CssPannPadX));
