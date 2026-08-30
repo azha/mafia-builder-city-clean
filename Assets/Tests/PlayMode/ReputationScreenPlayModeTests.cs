@@ -356,6 +356,107 @@ namespace MafiaCleanCity.Operational.Tests
                 "d'un AUTRE lieutenant, celui d'avant");
         }
 
+        // ═══ 5. LES CAPTURES POUR LE JUGE VISUEL ⊥ ══════════════════════════════════════════
+
+        /// <summary>Produit les captures que le juge visuel ⊥ recevra — à DEUX résolutions, et
+        /// c'est une obligation, pas un confort : le trou trouvé le 2026-08-21 était que zéro
+        /// test du dépôt ne fixait de résolution, tout étant certifié en 1280×720 paysage alors
+        /// que le projet est configuré en PORTRAIT.
+        ///
+        /// ⛔ SANS SHELL, et c'est structurel ici : monter `AppShell` ferait signer le compte de
+        /// démo partagé avec les fixtures d'autres sessions. Le locataire est donc capturé seul,
+        /// sur un canvas que ce test possède — ce qui est exactement le contrat `IShellTenant`
+        /// hors shell (personne n'appelle `SetMountParent`, le locataire découvre son canvas et
+        /// remplit tout). ⚠️ Écart ASSUMÉ à écrire au dossier du juge : les captures ne portent
+        /// donc NI le bandeau du haut NI le dock, que la maquette montre. Le juge doit le
+        /// recevoir écrit, sinon il classera leur absence en défaut.
+        ///
+        /// ⚠️ `Canvas.scaleFactor` lu la frame de la création rend 1,0 — une valeur PLAUSIBLE et
+        /// fausse. D'où les `yield return null` avant tout rendu : sans eux la capture mesure une
+        /// mise en page qui n'a jamais eu lieu.</summary>
+        [UnityTest, Category("Capture")]
+        public IEnumerator B3C1_CapturerPourLeJugeVisuel_DeuxResolutions()
+        {
+            yield return OuvrirJoueurFrais();
+            var ecran = MonterEcran();
+            yield return ecran.Charger(lieutenantId);
+
+            yield return CapturerA(1080, 1920, "Assets/Screenshots/screen_b3_reputation_1080x1920.png");
+            yield return CapturerA(1080, 2400, "Assets/Screenshots/screen_b3_reputation_1080x2400.png");
+        }
+
+        private IEnumerator CapturerA(int largeur, int hauteur, string chemin)
+        {
+            Canvas canvas = hostGo.GetComponentInChildren<Canvas>(true)
+                            ?? Object.FindFirstObjectByType<Canvas>();
+            Assert.IsNotNull(canvas, "aucun canvas : le locataire n'a pas construit sa mise en page");
+
+            RenderMode modeAvant = canvas.renderMode;
+            Camera cameraAvant = canvas.worldCamera;
+            float planAvant = canvas.planeDistance;
+
+            var rt = new RenderTexture(largeur, hauteur, 24, RenderTextureFormat.ARGB32);
+            var camGo = new GameObject("CaptureCamB3");
+            var cam = camGo.AddComponent<Camera>();
+            cam.targetTexture = rt;
+            cam.clearFlags = CameraClearFlags.SolidColor;
+            cam.backgroundColor = Color.black;
+            cam.orthographic = true;
+
+            // `-screen-width` est IGNORÉ en batchmode (Screen.width reste bloqué à 640) : la
+            // bascule en ScreenSpaceCamera sur une RenderTexture de la taille cible est ce qui
+            // permet de capturer une résolution qu'on n'a pas.
+            canvas.renderMode = RenderMode.ScreenSpaceCamera;
+            canvas.worldCamera = cam;
+            canvas.planeDistance = 10f;
+            Canvas.ForceUpdateCanvases();
+            yield return null;
+            Canvas.ForceUpdateCanvases();
+            yield return null;
+
+            cam.Render();
+            RenderTexture prev = RenderTexture.active;
+            RenderTexture.active = rt;
+            var tex = new Texture2D(largeur, hauteur, TextureFormat.RGB24, false);
+            tex.ReadPixels(new Rect(0, 0, largeur, hauteur), 0, 0);
+            tex.Apply();
+            RenderTexture.active = prev;
+            System.IO.File.WriteAllBytes(chemin, tex.EncodeToPNG());
+
+            // ⛔ ANTI-MENSONGE — une cible noire produit un PNG parfaitement valide et VIDE, qui
+            // passerait pour une réussite. On n'asserte que ce qui rendrait l'image MENSONGÈRE.
+            int clairs = 0;
+            foreach (Color c in tex.GetPixels())
+                if (c.r + c.g + c.b > 0.15f) clairs++;
+            Assert.Greater(clairs, largeur * hauteur / 40,
+                $"capture {largeur}x{hauteur} quasi NOIRE ({clairs} px) : l'écran n'a pas été rendu");
+
+            // ⛔ Et une seconde garde, sur une autre PROPRIÉTÉ : des pixels clairs prouvent qu'on
+            // a rendu QUELQUE CHOSE, pas qu'on a rendu CET écran. Les voyants sont le contenu que
+            // seul cet écran produit.
+            Assert.Greater(ecranVoyants(), 0,
+                "aucun voyant construit : l'image montre autre chose que l'écran de réputation");
+
+            // Le RECT IMPRIMÉ va au dossier du juge — un nombre revendiqué voyage avec sa capture.
+            RectTransform rrt = (RectTransform)canvas.transform;
+            Debug.Log($"[CAPTURE b3] {largeur}x{hauteur} · scaleFactor={canvas.scaleFactor:F4} · " +
+                      $"rect={rrt.rect.width:F1}x{rrt.rect.height:F1} · clairs={clairs} · {chemin}");
+
+            canvas.renderMode = modeAvant;
+            canvas.worldCamera = cameraAvant;
+            canvas.planeDistance = planAvant;
+            Object.Destroy(camGo);
+            rt.Release();
+            yield return null;
+        }
+
+        private int ecranVoyants()
+        {
+            int n = 0;
+            foreach (TellVoyant v in hostGo.GetComponentsInChildren<TellVoyant>(true)) { n++; }
+            return n;
+        }
+
         // ═══ Utilitaire ══════════════════════════════════════════════════════════════════════
 
         private static string CheminDe(Transform t)
