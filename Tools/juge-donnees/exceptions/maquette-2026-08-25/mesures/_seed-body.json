@@ -1,0 +1,7 @@
+{"playerId":"01a03a4f-f584-7fc1-ac7e-a6c0e5349617","lieutenantId":"01a03a4f-f5c0-7b8b-aa15-9c5353ad9c6d","severity":75,"confidence":0.3,
+ "eventDescriptor":"Product is piling up at the source — the lieutenant has no dispatch rule.",
+ "candidateActions":[
+   {"id":"repair","label":"Repair the building","projected_consequence":"Pay to restore the building to operational over time.","add_rule_dsl":null,"effect":{"type":"REPAIR","target_building_id":"11111111-1111-1111-1111-111111111111"}},
+   {"id":"add_rule","label":"Teach: auto-handle a raided building","projected_consequence":"The lieutenant handles a raided building on its own from now on.","add_rule_dsl":"WHEN STATE(building_damaged,==,true) THEN EXECUTE_DEFAULT @100;","effect":{"type":"ADD_RULE"}},
+   {"id":"escalate","label":"Escalate","projected_consequence":"Archive this card for later review.","add_rule_dsl":null,"effect":{"type":"ESCALATE"}}],
+ "suggestedAction":{"id":"repair","label":"Repair the building","projected_consequence":"Pay to restore the building to operational over time.","add_rule_dsl":null,"effect":{"type":"REPAIR","target_building_id":"11111111-1111-1111-1111-111111111111"}}}

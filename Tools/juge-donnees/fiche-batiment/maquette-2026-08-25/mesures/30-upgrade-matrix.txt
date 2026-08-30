@@ -1,0 +1,16 @@
+lab             upgrade-tier                -> RESOURCE_STATE_CONFLICT | building 0aae985f-d77d-4335-8489-083f06aafc60 is not a specialized_lab (ope
+lab             upgrade-hub-tier            -> RESOURCE_STATE_CONFLICT | building 0aae985f-d77d-4335-8489-083f06aafc60 is not a distribution_hub (op
+lab             upgrade-equipment-tier      -> RESOURCE_STATE_CONFLICT | Insufficient cash to cover the equipment-tier upgrade cost.
+lab             upgrade-money-holding-tier  -> RESOURCE_STATE_CONFLICT | building 0aae985f-d77d-4335-8489-083f06aafc60 is not a money_holding (opera
+stash           upgrade-tier                -> RESOURCE_STATE_CONFLICT | building 27c74026-b52a-4f5a-8777-44198cb65230 is not a specialized_lab (ope
+stash           upgrade-hub-tier            -> RESOURCE_STATE_CONFLICT | building 27c74026-b52a-4f5a-8777-44198cb65230 is not a distribution_hub (op
+stash           upgrade-equipment-tier      -> RESOURCE_STATE_CONFLICT | building 27c74026-b52a-4f5a-8777-44198cb65230 is a 'stash' — equipment_tier
+stash           upgrade-money-holding-tier  -> RESOURCE_STATE_CONFLICT | building 27c74026-b52a-4f5a-8777-44198cb65230 is not a money_holding (opera
+front_shop      upgrade-tier                -> RESOURCE_STATE_CONFLICT | building 33ec0f6f-457a-4a40-a5bd-a5e91f627c9e is not a specialized_lab (ope
+front_shop      upgrade-hub-tier            -> RESOURCE_STATE_CONFLICT | building 33ec0f6f-457a-4a40-a5bd-a5e91f627c9e is not a distribution_hub (op
+front_shop      upgrade-equipment-tier      -> RESOURCE_STATE_CONFLICT | building 33ec0f6f-457a-4a40-a5bd-a5e91f627c9e is a 'front_shop' — equipment
+front_shop      upgrade-money-holding-tier  -> RESOURCE_STATE_CONFLICT | building 33ec0f6f-457a-4a40-a5bd-a5e91f627c9e is not a money_holding (opera
+cash_safehouse  upgrade-tier                -> RESOURCE_STATE_CONFLICT | building d8aec6c0-bb0b-4069-bf32-bfd27d502616 is not a specialized_lab (ope
+cash_safehouse  upgrade-hub-tier            -> RESOURCE_STATE_CONFLICT | building d8aec6c0-bb0b-4069-bf32-bfd27d502616 is not a distribution_hub (op
+cash_safehouse  upgrade-equipment-tier      -> RESOURCE_STATE_CONFLICT | building d8aec6c0-bb0b-4069-bf32-bfd27d502616 is a 'cash_safehouse' — equip
+cash_safehouse  upgrade-money-holding-tier  -> RESOURCE_STATE_CONFLICT | building d8aec6c0-bb0b-4069-bf32-bfd27d502616 is not a money_holding (opera

@@ -1,0 +1,1 @@
+{"response_meta":{"request_id_echo":"e10a5369-249a-4652-ac59-2f3f726b1812","server_processed_at":"2026-08-25T19:21:08.898Z","api_version":1,"correlation_id_echo":null},"payload":{"data":{"decided":true,"choice":"skip","decisions_used":2,"decisions_remaining":3,"revealed_secondary":false,"finalized":true}}}

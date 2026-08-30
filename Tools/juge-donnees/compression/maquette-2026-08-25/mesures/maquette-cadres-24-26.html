@@ -1,0 +1,95 @@
+
+<style>
+/* ── SÉRIE 2 : LA SEMAINE DE COMPRESSION (screen_13 — GET compression/state, board ; POST engage, defer, board/problems/:id/decide) ── */
+.chip.ten-c{color:var(--vert);border-color:#7db36a66}
+.chip.ten-m{color:var(--or);border-color:#d9ab4e66}
+.chip.ten-e{color:var(--braise);border-color:#e0664a66}
+.chip.ten-a{color:var(--or-vif);border-color:#f2c96b88;background:#d9ab4e14}
+.exc .actes .btn-filet.regler{border-color:#b08d3e88;color:var(--or-vif);background:#d9ab4e12}
+.exc .actes .btn-filet.ecarter{flex:0 0 58px}
+.exc.regle{opacity:.6}
+.exc.regle .titre{text-decoration:line-through;text-decoration-color:#7db36a88;text-decoration-thickness:1px}
+.exc .qui small.ailleurs{font-style:italic}
+.budget .quoi b.n{font-family:Georgia,serif;font-size:13px;letter-spacing:0;text-transform:none;color:var(--or-vif)}
+</style>
+
+<div class="rangee">
+  <!-- ÉCRAN 24 : LA SEMAINE DE COMPRESSION — elle s'annonce (state : stress_bucket mounting, week_state warning, deferral_available true ; engage exige un cycle 'warning' ouvert, defer est refusé FORCED_ENGAGEMENT au-delà du seuil ou DEFERRAL_EXHAUSTED s'il a déjà servi) -->
+  <div class="cadre"><div class="etiquette">Compression — la semaine s'annonce</div>
+  <div class="tel"><div class="ville fond-ville"></div><div class="voile"></div>
+    <div class="ecran">
+      <div class="tete"><div class="retour">‹</div><div><h3>La Compression</h3><span class="sous">Jour 30 · tension <b>montante</b> · semaine annoncée</span></div></div>
+      <div class="corps">
+        <div class="dec">
+          <div class="kicker">Ce qui vient</div>
+          <div class="titre">Vos problèmes s'accumulent — la semaine de compression va s'ouvrir</div>
+          <div class="bandes"><span class="chip ten-m">Tension · montante</span><span class="chip ten-a">Semaine · annoncée</span><span class="chip q-h">Report · disponible</span></div>
+          <div class="note">Une fois ouverte, tout ce qui traîne est mis sur la table, et vous n'aurez que <b>quelques décisions</b> pour y répondre.</div>
+        </div>
+        <div class="pipeline issues"><h4>Les deux issues</h4>
+          <div class="etape"><div class="issue-n">A</div><div class="quoi">Ouvrir la semaine maintenant<small>le tableau des problèmes s'ouvre, le budget de décisions avec</small></div></div>
+          <div class="etape"><div class="issue-n attente">B</div><div class="quoi">Reporter d'un cycle<small>une seule fois — et refusé si la tension est trop haute</small></div></div>
+        </div>
+        <div class="cta">OUVRIR LA SEMAINE<small>appui long — on ne referme pas une semaine ouverte</small></div>
+        <div class="cta secondaire">Reporter d'un cycle<small>appui long — la tension montera d'autant</small></div>
+      </div>
+    </div></div></div>
+
+  <!-- ÉCRAN 25 : LA SEMAINE DE COMPRESSION — le tableau des problèmes (week_state active ; board {entries[{id, source_kind, tier, target_ref, addressed}], decisions_used, decisions_remaining} ; 5 des 9 source_kind acceptent 'resolve', les autres 'skip' seulement ; decide {choice: skip|resolve|dismiss}) -->
+  <div class="cadre"><div class="etiquette">Compression — le tableau des problèmes</div>
+  <div class="tel"><div class="ville fond-ville"></div><div class="voile"></div>
+    <div class="ecran">
+      <div class="tete"><div class="retour">‹</div><div><h3>La Compression</h3><span class="sous">Jour 31 · <b>3</b> décisions restantes · semaine en cours</span></div></div>
+      <div class="corps serre">
+        <div class="budget"><div class="pt pris"></div><div class="quoi">Vos décisions de la semaine<small>2 prises sur 5 — chaque geste en coûte une</small></div><b class="n">3</b></div>
+        <div class="exc grave">
+          <div class="haut"><div class="bandes"><span class="chip sev-g">Grave</span></div></div>
+          <div class="titre">Une exception attend depuis trop longtemps</div>
+          <div class="qui">sur <b>un lieutenant</b></div>
+          <div class="actes"><div class="btn-filet regler">Régler</div><div class="btn-filet">Passer</div><div class="btn-filet ecarter">Écarter</div></div>
+        </div>
+        <div class="exc moyen">
+          <div class="haut"><div class="bandes"><span class="chip sev-m">Modérée</span></div></div>
+          <div class="titre">Un nœud de la chaîne sature</div>
+          <div class="qui">sur <b>un bâtiment</b> · <small class="ailleurs">se règle sur la chaîne, pas ici</small></div>
+          <div class="actes"><div class="btn-filet">Passer</div></div>
+        </div>
+        <div class="exc moyen">
+          <div class="haut"><div class="bandes"><span class="chip sev-m">Modérée</span></div></div>
+          <div class="titre">Un tronçon fatigue faute d'entretien</div>
+          <div class="qui">sur <b>un tronçon</b> de la chaîne</div>
+          <div class="actes"><div class="btn-filet regler">Régler</div><div class="btn-filet">Passer</div><div class="btn-filet ecarter">Écarter</div></div>
+        </div>
+        <div class="exc leger regle">
+          <div class="haut"><div class="bandes"><span class="chip sev-l">Légère</span><span class="chip st-done">réglée</span></div></div>
+          <div class="titre">Un signalement n'a pas été tranché</div>
+          <div class="qui">sur <b>un signalement</b></div>
+        </div>
+        <div class="exc leger regle">
+          <div class="haut"><div class="bandes"><span class="chip sev-l">Légère</span><span class="chip st-pend">passée</span></div></div>
+          <div class="titre">Un créneau de la pile a raté</div>
+          <div class="qui">sur <b>un créneau</b> de la pile</div>
+        </div>
+      </div>
+    </div></div></div>
+
+  <!-- ÉCRAN 26 : LA SEMAINE DE COMPRESSION — au calme (state mesuré sur compte frais : stress_bucket calm, week_state none, deferral_available false ; board → 404) -->
+  <div class="cadre"><div class="etiquette">Compression — au calme</div>
+  <div class="tel"><div class="ville fond-ville"></div><div class="voile"></div>
+    <div class="ecran">
+      <div class="tete"><div class="retour">‹</div><div><h3>La Compression</h3><span class="sous">Jour 1 · tension <b>calme</b> · aucune semaine</span></div></div>
+      <div class="corps">
+        <div class="dec">
+          <div class="kicker">Où en est la tension</div>
+          <div class="titre">Rien ne presse — vos affaires respirent</div>
+          <div class="bandes"><span class="chip ten-c">Tension · calme</span><span class="chip q-b">Semaine · aucune</span></div>
+          <div class="note">La tension monte quand les problèmes s'accumulent sans réponse ; <b>montante</b>, puis <b>écrasante</b> — et la semaine s'ouvre.</div>
+        </div>
+        <div class="vide milieu">Aucune semaine de compression en vue</div>
+      </div>
+    </div></div></div>
+</div>
+
+
+<style>
+/* ── SÉRIE 2 : PLUS (screen_12 More menu — la liste des destinations, chaque compteur dérivé d'une liste déjà servie) ── */

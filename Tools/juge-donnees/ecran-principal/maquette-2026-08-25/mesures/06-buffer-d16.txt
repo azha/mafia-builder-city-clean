@@ -1,0 +1,2 @@
+{"response_meta":{"request_id_echo":"c1dea3aa-6d44-4184-854f-d32d9d22d9ed","server_processed_at":"2026-08-25T18:48:02.303Z","api_version":1,"correlation_id_echo":null},"payload":{"data":{"district":"district-16","district_load_band":"EMPTY","district_tail_band":"LOW","tail_risk_panel_visible":false,"any_overflow":false,"nodes":[]}}}
+HTTP:200

@@ -1,0 +1,2 @@
+{"response_meta":{"request_id_echo":"30027d12-7c82-47f2-8473-2906ce42b88b","server_processed_at":"2026-08-25T18:48:02.271Z","api_version":1,"correlation_id_echo":null},"payload":{"data":{"district":"district-16","audit_pin_presence":"NONE","buildings":[]}}}
+HTTP:200

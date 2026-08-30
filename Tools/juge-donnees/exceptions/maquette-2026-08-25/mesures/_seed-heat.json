@@ -1,0 +1,7 @@
+{"playerId":"01a03a4f-f584-7fc1-ac7e-a6c0e5349617","lieutenantId":null,"severity":70,"confidence":0.9,
+ "eventDescriptor":"Citywide heat is high — your operations are under pressure.",
+ "candidateActions":[
+  {"id":"acknowledge","label":"Acknowledge the pressure","projected_consequence":"You note the heat; no automatic action is taken.","add_rule_dsl":null,"source":"HEAT_PRESSURE"},
+  {"id":"escalate","label":"Escalate for review","projected_consequence":"The card is archived for later review.","add_rule_dsl":null,"source":"HEAT_PRESSURE"},
+  {"id":"lay_low","label":"Lay low across all operations","projected_consequence":"You reduce exposure across the board; a one-shot mitigation, no standing rule.","add_rule_dsl":null,"source":"HEAT_PRESSURE"}],
+ "suggestedAction":{"id":"acknowledge","label":"Acknowledge the pressure","projected_consequence":"You note the heat; no automatic action is taken.","add_rule_dsl":null,"source":"HEAT_PRESSURE"}}

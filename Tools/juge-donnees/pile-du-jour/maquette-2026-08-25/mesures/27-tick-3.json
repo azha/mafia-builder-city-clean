@@ -1,0 +1,1 @@
+{"response_meta":{"request_id_echo":"25cd4d09-1517-4b5e-83ea-27e87e6e2905","server_processed_at":"2026-08-25T19:15:19.721Z","api_version":1,"correlation_id_echo":null},"payload":{"data":{"fired":true,"cueStackId":"1957c775-ba51-4d4c-9501-55f66df903fa","slotId":"b69ba0c4-55aa-45cc-87ff-4c2a14f75569","slotType":"DISTRIBUTION_RUN","status":"done","resolved":false}}}

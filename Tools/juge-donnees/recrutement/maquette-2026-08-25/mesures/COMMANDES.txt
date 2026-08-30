@@ -1,0 +1,45 @@
+# Juge données ⊥ — Recrutement — commandes (stack locale dev, Traefik http://localhost)
+# Compte FRAIS uniquement. Le compte de démo operational_demo@example.test n'a jamais été touché.
+# Aucun conteneur monté, redémarré ni arrêté. Le dépôt principal n'a rien reçu.
+
+CS="jd-rec-$(date +%s)"
+KEY=$(python3 -c 'import uuid;print(uuid.uuid4())')
+curl -s -X POST http://localhost/v1/auth/signup -H 'Content-Type: application/json' \
+  -H "Idempotency-Key: $KEY" -d "{\"callsign\":\"$CS\",\"password\":\"pw-$CS\"}" > 01-signup.json
+TOKEN=$(python3 -c "import json;print(json.load(open('01-signup.json'))['payload']['data']['access_token'])")
+curl -s -X POST http://localhost/v1/session/open -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' -d '{"client_version":"juge-donnees-1.0"}' > 02-session-open.json
+curl -s -H "Authorization: Bearer $TOKEN" http://localhost/v1/economy/wallet > 04-wallet.json   # -> player_id
+PID=$(python3 -c "import json;print(json.load(open('04-wallet.json'))['payload']['data']['player_id'])")
+
+# DIMENSIONNEMENT (le corps frais rend [] — cf. 03-fresh-*.json)
+curl -s -X POST http://localhost/v1/_test/recruitment/run-availability-tick \
+  -H 'Content-Type: application/json' -d "{\"player_id\":\"$PID\"}" > 05-availability-tick.json
+# horloge : advancePlayer, le chemin de PRODUCTION (city_sim_scheduler.service.ts), ~56 s les 730 min
+curl -s -X POST "http://localhost/v1/_test/citysim/advance?ticks=730&player_id=$PID" > 12-advance-clock-1.json
+
+# LECTURES joueur (toutes sous Bearer)
+curl -s -H "Authorization: Bearer $TOKEN" http://localhost/v1/recruitment/candidates          > 06-candidates.json
+curl -s -H "Authorization: Bearer $TOKEN" "http://localhost/v1/recruitment/quests"            > 09-quests-active.json
+curl -s -H "Authorization: Bearer $TOKEN" "http://localhost/v1/recruitment/quests?status=history" > 29-quests-history.json
+curl -s -H "Authorization: Bearer $TOKEN" "http://localhost/v1/recruitment/quests/$QID"       > 24-quest-hireable.json
+
+# GESTES joueur (Idempotency-Key sur chaque POST mutant)
+#   POST /v1/recruitment/quests                    {candidate_id, quest_type}     -> 07,30,39,48
+#   POST /v1/recruitment/quests/:id/advance        {decision_type,decision_value} -> 14,16,18,49,50
+#   POST /v1/recruitment/quests/:id/hire           {archetype,assigned_building_id} -> 28
+#   POST /v1/recruitment/quests/:id/abandon        {}                             -> 32
+
+# SONDES DE REFUS (ce qui fonde D1/D2/D3/D5 et E6/E7)
+curl -s -H "Authorization: Bearer $TOKEN" "http://localhost/v1/recruitment/candidates?pool=bogus"   > 34-pool-bogus.json   # 500
+curl -s -H "Authorization: Bearer $TOKEN" "http://localhost/v1/recruitment/quests/not-a-uuid"       > 36-quest-nonuuid.json # 500
+# advance avec decision_type '__probe__' -> 422 qui NOMME le type attendu de l'étape (41,42,51)
+
+# LECTURES EN BASE (SELECT seulement, jamais d'écriture)
+docker exec mafia-clean-city-pg-1 psql -U mafia -d mafia_clean_city -tAc \
+  "select b.building_id,b.building_type,b.block_id,bl.district_id from buildings b
+   left join blocks bl on bl.id=b.block_id where b.player_id='$PID' order by 4,1"
+docker exec mafia-clean-city-pg-1 psql -U mafia -d mafia_clean_city -tAc \
+  "select quest_type,current_step,hire_quality_bucket,expected_outcome,outcome
+   from recruitment_quests where player_id='$PID' order by started_at"
+docker exec mafia-clean-city-game-back-1 sh -c 'echo "$CITYSIM_CONTINUOUS_LOOPS"'   # -> vide

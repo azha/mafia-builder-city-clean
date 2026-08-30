@@ -1,0 +1,2 @@
+{"response_meta":{"request_id_echo":"ef70e5a6-7651-4f10-86fb-7cb3d33817e0","server_processed_at":"2026-08-25T18:48:02.228Z","api_version":1,"correlation_id_echo":null},"payload":{"data":{"district":"district-16","exposure_band":"MINIMAL","network_cleanliness":"CLEAN","nodes":[]}}}
+HTTP:200

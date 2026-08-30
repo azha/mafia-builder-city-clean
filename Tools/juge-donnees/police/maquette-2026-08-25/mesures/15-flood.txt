@@ -1,0 +1,8 @@
+report#2 -> {"report_id": "fbf69111-3a6d-49d7-8fff-d1ee0057636d", "entry_type": "FALSE_REPORT", "cost_resolved": 50, "backlash_triggered": false}
+report#3 -> {"report_id": "31bac7a8-f8cd-4389-9e8e-d3918ba35313", "entry_type": "FALSE_REPORT", "cost_resolved": 50, "backlash_triggered": false}
+report#4 -> {"report_id": "7c230ae3-c8f8-413c-97c3-3cce3b25a3fb", "entry_type": "FALSE_REPORT", "cost_resolved": 50, "backlash_triggered": false}
+report#5 -> {"report_id": "199ecc91-758b-4db3-ba90-90c70d22aa92", "entry_type": "FALSE_REPORT", "cost_resolved": 50, "backlash_triggered": false}
+report#6 -> {"report_id": "4c8a3248-d2a2-4ec3-97e9-c714524798a9", "entry_type": "FALSE_REPORT", "cost_resolved": 50, "backlash_triggered": false}
+report#7 -> {"report_id": "0940082a-7349-42e0-a3bb-cb45bace5d67", "entry_type": "FALSE_REPORT", "cost_resolved": 50, "backlash_triggered": false}
+report#8 -> {"report_id": "442753a2-80f3-47b8-80ac-f661de282dea", "entry_type": "FALSE_REPORT", "cost_resolved": 50, "backlash_triggered": true}
+report#9 -> {"report_id": "2f81650b-aa29-4da5-8b54-361aeabef315", "entry_type": "FALSE_REPORT", "cost_resolved": 50, "backlash_triggered": false}

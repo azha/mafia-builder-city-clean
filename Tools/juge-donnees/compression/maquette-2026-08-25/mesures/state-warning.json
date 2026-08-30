@@ -1,0 +1,1 @@
+{"response_meta":{"request_id_echo":"2f8038fe-27ae-47cb-b1a7-2b4325fd72e5","server_processed_at":"2026-08-25T19:19:37.879Z","api_version":1,"correlation_id_echo":null},"payload":{"data":{"stress_bucket":"mounting","week_state":"warning","deferral_available":true}}}
