@@ -84,3 +84,46 @@ qu'on cherche ne dirait jamais qu'on cherchait au mauvais moment.
 
 **Instrument** : `Tools/sonde-isolation-editeurs.sh` (modes `--avant` / `--apres` / `--attendre` /
 `--journal`). **Données brutes** : `sonde-isolation-journal.tsv`, à côté de ce rapport.
+
+---
+
+## ★ PREUVE SUPPLÉMENTAIRE, NON PLANIFIÉE : mon éditeur a CRASHÉ et le voisin n'a rien vu (23:58)
+
+Pendant le run PlayMode complet, **l'éditeur B est mort** — vidage mémoire Mono de 10 000 001
+octets (`mono_crash.mem.2820458.1.blob`, 23:58). Vérifié par mes propres mesures, pas sur parole :
+
+    /proc/2820458                  ABSENT            ⇒ éditeur B MORT
+    mono_crash.mem.2820458.1.blob  10 000 001 o, 23:58
+    Temp/UnityLockfile             PRÉSENT, 21:15:12 ⇒ verrou ORPHELIN (détenteur mort)
+    /proc/2643750                  présent           ⇒ éditeur A VIVANT
+    A Library/ScriptAssemblies     mtime 1788107970  ⇒ EXACTEMENT la référence de la sonde
+
+⇒ **Un crash complet est l'événement le plus violent qu'un processus puisse produire.** L'éditeur
+voisin ne l'a pas vu : son mtime est resté identique à celui pris avant la sonde, deux heures plus
+tôt. La sonde mesurait l'isolation sur une recompilation ; l'accident l'a mesurée sur une mort.
+**C'est une preuve plus forte que celle que je cherchais, et je ne l'ai pas provoquée.**
+
+⚠️ Ce que ça n'établit toujours pas : rien sur la CHARGE. Voir la section « Conséquences ».
+
+## Conséquence pratique du crash : le verrou est ORPHELIN
+
+`Temp/UnityLockfile` porte encore l'horodatage de 21:15:12 alors que son détenteur n'existe plus.
+Un verrou détenu bloque ; un verrou résiduel se supprime. ⇒ **La seconde porte devant le batchmode
+— celle que j'avais mal mesurée en cherchant dans `Library/` au lieu de `Temp/` — est désormais
+ouverte**, et `Tools/run-unity-check.sh` redevient possible sans éditeur interactif.
+
+⚠️ **Mais un run batchmode n'est PAS le même contexte d'exécution qu'un run via l'éditeur.** Si son
+résultat diffère de mes trois runs scopés, la différence peut venir de là et non de l'ordre
+d'exécution. ⇒ **Écrire le MODE d'exécution à côté du résultat**, sinon on obtient un quatrième run
+non comparable aux trois autres — et une comparaison entre deux grandeurs mesurées différemment
+est exactement la forme E du socle.
+
+## Ce que le crash coûte, et ce qu'il ne coûte pas
+
+- **Le run complet est PERDU** : il était à 129/332 à 23:55 (25 échecs, aucun dans `DesignTokens`
+  ni dans le lot ㊲), le fixture `Theme` n'avait pas encore été atteint. **Aucune conclusion n'en
+  sort** — ni sur l'hypothèse d'ordre d'exécution, ni sur mon écran.
+- **Le blob de crash est CONSERVÉ** hors du worktree (10 Mo, non commitable) : c'est la seule trace
+  de ce qui a tué l'éditeur, et ça peut se reproduire pendant un juge visuel.
+- **La cause du crash n'est pas établie.** Corrélation notée sans en faire une piste : il survient
+  pendant un run PlayMode complet de 332 tests, à environ 12 minutes. Je n'ai pas ouvert le blob.
