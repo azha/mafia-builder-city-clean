@@ -264,6 +264,51 @@ namespace MafiaCleanCity.Operational.Tests
                 "porte — un zéro inventé est un mensonge d'écran, pas un état vide");
         }
 
+        /// <summary>⛔ LES `rule_id` DÉCLARÉS SONT AFFICHÉS EN CLAIR, ET AUTANT QU'IL Y EN A.
+        ///
+        /// Le brief du lot est explicite : aucun libellé de règle n'existe (bundle i18n mesuré :
+        /// 67 clés, zéro pour ce domaine), l'identifiant se montre tel quel, on ne masque pas le
+        /// trou. La garde vise donc DEUX propriétés que l'on peut perdre séparément :
+        ///   · le COMPTE affiché égale le compte reçu — c'est le détecteur de « disponible et
+        ///     pourtant non affiché », la classe de défaut que le juge données traque ;
+        ///   · le TEXTE contient l'identifiant réel — c'est le détecteur de la table de libellés
+        ///     qu'un futur contributeur aura envie d'écrire pour faire joli, et qui remplacerait
+        ///     un identifiant vrai par un libellé inventé.
+        ///
+        /// ⚠️ Le scénario est DIMENSIONNÉ : on déclare deux règles, pas une. Avec une seule, un
+        /// rendu qui n'afficherait jamais que la première serait vert — la garde passerait à
+        /// travers le défaut qu'elle existe pour voir.</summary>
+        [UnityTest]
+        public IEnumerator B3T3_LesRuleIdSontAffichesEnClair_EtTousAffiches()
+        {
+            yield return OuvrirJoueurFrais();
+            var ecran = MonterEcran();
+
+            string r1 = "rule.no_families_" + System.Guid.NewGuid().ToString("N").Substring(0, 6);
+            string r2 = "rule.no_sunday_"   + System.Guid.NewGuid().ToString("N").Substring(0, 6);
+            yield return ecran.DeclarerRegle(r1);
+            yield return ecran.DeclarerRegle(r2);
+            yield return ecran.Charger(lieutenantId);
+
+            Assert.IsNotNull(ecran.DernierChargement, "corps non chargé");
+            int recues = ecran.DernierChargement.boss_mirror.declared_rules.Length;
+            Assert.GreaterOrEqual(recues, 2,
+                "le serveur devrait porter au moins les 2 règles déclarées — sinon la garde " +
+                "suivante serait vraie pour la mauvaise raison (scénario sous-dimensionné)");
+            Assert.AreEqual(recues, ecran.ReglesAffichees,
+                $"le corps porte {recues} règles et l'écran en dessine {ecran.ReglesAffichees} : " +
+                "« disponible, dessiné nulle part » est un DÉFAUT, pas un choix de mise en page");
+
+            // Le texte réel, pas seulement le compte : un libellé inventé passerait le test ci-dessus.
+            var textes = new List<string>();
+            foreach (TMPro.TextMeshProUGUI t in hostGo.GetComponentsInChildren<TMPro.TextMeshProUGUI>(true))
+                textes.Add(t.text);
+            CollectionAssert.Contains(textes, r1,
+                $"l'identifiant « {r1} » n'apparaît nulle part : il a été masqué ou remplacé par " +
+                "un libellé fabriqué côté client — or aucun libellé n'existe pour ce domaine");
+            CollectionAssert.Contains(textes, r2, $"l'identifiant « {r2} » n'apparaît nulle part");
+        }
+
         /// <summary>`restraint` est OMISE du corps sans `counterparty_id` — et le discriminant
         /// doit le voir. ⚠️ Un `!= null` ne suffirait pas : `JsonUtility` peut fabriquer l'objet.
         /// La garde porte donc sur la PRÉSENCE D'UNE VALEUR.</summary>

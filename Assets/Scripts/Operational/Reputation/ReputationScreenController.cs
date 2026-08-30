@@ -212,6 +212,8 @@ namespace MafiaCleanCity.Operational
             MajCompteur(1, absorbe.ToString("00"), "/4", "ABSORBÉES");
             MajCompteur(2, "—", null, "ENFREINTES"); // ⛔ voir la note ENFREINTES plus bas
 
+            RendreListeDesRegles(bm != null ? bm.declared_rules : null);
+
             if (bm != null)
             {
                 portrait.Appliquer(tells, bm.portrait_posture);
@@ -244,6 +246,10 @@ namespace MafiaCleanCity.Operational
             MajCompteur(0, "—", null, "RÈGLES DONNÉES");
             MajCompteur(1, "—", "/4", "ABSORBÉES");
             MajCompteur(2, "—", null, "ENFREINTES");
+            // La liste est VIDÉE, pas laissée telle quelle : garder les règles du chargement
+            // précédent afficherait celles d'un AUTRE lieutenant sur un écran qui annonce ne
+            // rien savoir — même défaut que des voyants restés allumés.
+            RendreListeDesRegles(null);
             portrait.Eteindre();
             int i = 0;
             foreach (UniformTellsDto.Pose pose in ReputationResolvers.PosesDansLOrdre())
@@ -301,6 +307,7 @@ namespace MafiaCleanCity.Operational
             ConstruireEnseigne(corpsGo.transform);
             ConstruireCompteurs(corpsGo.transform);
             ConstruireMiroir(corpsGo.transform);
+            ConstruireListeDesRegles(corpsGo.transform);
             ConstruirePanneau(corpsGo.transform);
             ConstruirePied(corpsGo.transform);
         }
@@ -428,6 +435,101 @@ namespace MafiaCleanCity.Operational
 
             for (int i = 0; i < 4; i++)
                 voyants[i] = TellVoyant.Construire(lect.transform, this);
+        }
+
+        private RectTransform listeReglesRoot;
+        private TextMeshProUGUI listeReglesVide;
+
+        /// <summary>La liste des règles que le joueur a déclarées — le cadre `regles` de la
+        /// maquette.
+        ///
+        /// ⛔⛔ ET C'EST ICI QUE SE JOUE LA CONSIGNE LA PLUS EXPLICITE DU LOT : `rule_id` EST
+        /// AFFICHÉ EN CLAIR. Le serveur ne rend que cet identifiant — il est écrit par le joueur
+        /// lui-même (`reputation.controller.ts:84-86`, « free-form, player-authored ») et AUCUN
+        /// libellé n'existe nulle part : le bundle i18n mesuré rend 67 clés, 63 `error.*` et
+        /// 4 `game.*`, zéro pour ce domaine. Écrire une table de correspondance côté client
+        /// fabriquerait du contenu que le back ne connaît pas, et le premier `rule_id` inattendu
+        /// tomberait dans un « (règle inconnue) ».
+        /// ⇒ On montre l'identifiant tel quel. **Le trou se montre, il ne se masque pas** — c'est
+        /// la même règle que le compteur d'enfreintes à « — » et que la mention
+        /// « lieutenant.name — non projeté » sous le portrait.
+        ///
+        /// ⚠️ Et il n'y a AUCUN bouton de retrait, volontairement : `retractRule` existe côté
+        /// serveur mais n'a qu'un appelant, de test — zéro en production. Le canon dit qu'une
+        /// règle tient jusqu'à retrait public ; tant que ce maillon manque, une règle donnée est
+        /// définitive, et l'écran le DIT au lieu d'offrir un geste qui échouerait.</summary>
+        private void ConstruireListeDesRegles(Transform parent)
+        {
+            GameObject go = NouveauUI("ListeDesRegles", parent);
+            AjouterFond(go, ReputationResolvers.Fond2);
+            Contour(go, ReputationResolvers.Lisere);
+
+            NouveauTexte(go.transform, "SurTitre", "LES RÈGLES QUE VOUS AVEZ DONNÉES",
+                CssPannSurTitre, ReputationResolvers.Muet,
+                DesignTokens.Current.primaryFont).characterSpacing = 19f;
+
+            GameObject lignes = NouveauUI("Lignes", go.transform);
+            listeReglesRoot = (RectTransform)lignes.transform;
+            VerticalLayoutGroup v = lignes.AddComponent<VerticalLayoutGroup>();
+            v.spacing = Px(3f);
+            v.childControlWidth = true; v.childControlHeight = true;
+            v.childForceExpandWidth = true; v.childForceExpandHeight = false;
+
+            listeReglesVide = NouveauTexte(go.transform, "Vide",
+                "vous n'avez encore donné aucune règle — rien ne peut donc être enfreint",
+                CssPannTexte, ReputationResolvers.Eteint, DesignTokens.Current.primaryFont);
+
+            EmpilerVertical(go, Px(CssPannPadY), Px(4f), Px(CssPannPadX));
+        }
+
+        /// <summary>Combien de règles la liste affiche RÉELLEMENT — crochet de test. Distinct du
+        /// compteur « RÈGLES DONNÉES » de l'en-tête : celui-ci compte ce que le corps porte,
+        /// celui-là compte ce qui est DESSINÉ. Les confondre masquerait exactement le défaut
+        /// qu'on veut voir (« disponible, et pourtant non affiché »).</summary>
+        public int ReglesAffichees { get; private set; }
+
+        private void RendreListeDesRegles(DeclaredRuleDto[] regles)
+        {
+            for (int i = listeReglesRoot.childCount - 1; i >= 0; i--)
+                Object.Destroy(listeReglesRoot.GetChild(i).gameObject);
+
+            ReglesAffichees = 0;
+            bool vide = regles == null || regles.Length == 0;
+            listeReglesVide.gameObject.SetActive(vide);
+            if (vide) return;
+
+            foreach (DeclaredRuleDto regle in regles)
+            {
+                if (regle == null || string.IsNullOrEmpty(regle.rule_id)) continue;
+
+                GameObject ligne = NouveauUI("Regle_" + regle.rule_id, listeReglesRoot);
+                AjouterFond(ligne, ReputationResolvers.Panneau);
+                HorizontalLayoutGroup h = ligne.AddComponent<HorizontalLayoutGroup>();
+                h.spacing = Px(7f);
+                h.padding = new RectOffset(PxTrait(8f), PxTrait(8f), PxTrait(5f), PxTrait(5f));
+                h.childControlWidth = true; h.childControlHeight = true;
+                h.childForceExpandWidth = false;
+                h.childAlignment = TextAnchor.MiddleLeft;
+
+                // Le liseré vertical. ⚠️ Il est NEUTRE, et c'est une décision : la maquette le
+                // colore en vert (tenue) ou ambre (enfreinte), mais AUCUNE clé du corps ne dit
+                // quelle règle est enfreinte — le `rule_id` fautif est écrit en base
+                // (`boss_mirror_violation_ring.violation_slots[]`) et jamais projeté. Colorer au
+                // hasard inventerait l'information la plus lourde de l'écran.
+                GameObject sc = NouveauUI("Liseré", ligne.transform);
+                AjouterFond(sc, ReputationResolvers.Lisere);
+                LayoutElement scle = sc.AddComponent<LayoutElement>();
+                scle.preferredWidth = PxTrait(3f);
+                scle.flexibleWidth = 0f;
+
+                // L'identifiant, EN CLAIR. Pas de table de libellés : il n'en existe aucune.
+                TextMeshProUGUI id = NouveauTexte(ligne.transform, "RuleId", regle.rule_id,
+                    CssVoyantTitre, ReputationResolvers.Creme, DesignTokens.Current.primaryFont);
+                LayoutElement idle = id.gameObject.AddComponent<LayoutElement>();
+                idle.flexibleWidth = 1f;
+
+                ReglesAffichees++;
+            }
         }
 
         private void ConstruirePanneau(Transform parent)
