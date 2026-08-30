@@ -64,6 +64,31 @@ portait ont justement été corrigés par la v2.
 - **Commit du client au moment des captures** : **À REMPLIR** — les prendre APRÈS le dernier
   correctif ; une capture est une mesure DATÉE, pas une propriété du commit.
 
+## ⚠️ LES RÉSOLUTIONS — et le fait qui décide de la lecture de TOUT écart vertical
+
+**Aucune des deux captures n'a le ratio de la maquette.** Mesuré :
+
+    maquette v2   300 × 583,33 CSS   ratio 1,944  (9/17.5, lu à la source)
+    capture A     1080 × 1920        ratio 1,778  ← plus LARGE que la maquette
+    capture B     1080 × 2400        ratio 2,222  ← plus HAUTE que la maquette
+
+⇒ **La maquette tombe pile ENTRE les deux**, et c'est délibéré : les deux captures l'ENCADRENT.
+Le juge voit donc comment l'écran se comporte des deux côtés du ratio de référence, au lieu de le
+voir à un seul point qui n'est de toute façon pas celui de la maquette.
+
+⛔ **Conséquence pour le jugement, et elle est structurelle** : une comparaison pixel à pixel de la
+hauteur des blocs est IMPOSSIBLE — la zone élastique (le miroir) absorbe la différence de ratio par
+construction. Un bloc plus haut en 1080×2400 qu'en 1080×1920 n'est pas un défaut, c'est la
+définition d'un élastique. **Ce qui se compare, ce sont les grandeurs invariantes** : les rapports
+horizontaux, les corps de texte relatifs à la largeur, l'ordre de lecture, les couleurs, les
+espacements des blocs à hauteur FIXE (enseigne, compteurs, panneau, pied).
+
+⇒ Le pourquoi de ces deux valeurs plutôt que d'autres : ce sont les **seules** employées par les
+captures existantes du dépôt (mesuré : 3 occurrences chacune, aucune autre), et le projet est
+configuré **portrait** (`defaultScreenOrientation: 0`, `allowedAutorotateToPortrait: 1`). Le trou
+historique de ce dépôt était d'avoir tout certifié en 1280×720 **paysage** ; y ajouter une
+troisième résolution de confort n'aurait pas fermé ce trou mieux que l'encadrement ci-dessus.
+
 ## Règles de doctrine applicables
 
 - **portrait seul** — le projet est configuré portrait ; juger les deux résolutions, pas une.
