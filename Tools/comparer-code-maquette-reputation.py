@@ -21,7 +21,11 @@ from pathlib import Path
 
 RACINE = Path(__file__).resolve().parent.parent
 ATELIER = Path.home() / "project" / "atelier3d-mafia"
-CODE = RACINE / "Tools" / "prepare-screen-b3"
+# ⚠️ Chemin mis à jour après le `git mv` du 2026-08-30 (les fichiers ont quitté leur
+# stationnement `Tools/prepare-screen-b3/` pour `Assets/`). L'instrument sort en ERREUR si le
+# répertoire manque, au lieu de rendre « 0 écart » sur un corpus vide — un comparateur qui ne
+# trouve rien à comparer doit crier, jamais réussir.
+CODE = RACINE / "Assets" / "Scripts" / "Operational" / "Reputation"
 
 GEN = ATELIER / "generateur-reputation.py"
 CHASSIS = ATELIER / "chassis6.py"
@@ -71,6 +75,24 @@ def cs_const(src, nom):
     return float(m.group(1)) if m else None
 
 
+def cs_const_est_employee(sources, nom):
+    """⛔ UNE CONSTANTE JUSTE MAIS INEMPLOYÉE EST UNE VALEUR MORTE, ET LA VALIDER EST PIRE QUE
+    DE NE RIEN VALIDER — c'est le « tunable sans consommateur » du socle, retourné contre
+    l'instrument censé le détecter.
+
+    Mesuré ici même le 2026-08-30 : cinq constantes (`CssVoyantSens`, `CssVoyantDiam`,
+    `CssVoyantPadY`, `CssVoyantPadX`, `CssEcartBloc`) étaient déclarées avec la BONNE valeur,
+    validées « concordantes » par ce comparateur… et employées NULLE PART. Le rendu réel
+    utilisait les mêmes nombres EN DUR dans une autre classe, que la garde ne regardait pas.
+    Deux sources pour une valeur : le jour où la maquette bouge, l'une suit et l'autre pas.
+
+    ⇒ On compte les occurrences sur TOUT le code de l'écran, pas seulement le fichier qui
+    déclare : une constante peut légitimement être employée par une classe voisine. Le seuil
+    est 2 — une seule occurrence, c'est la déclaration qui se regarde elle-même."""
+    total = sum(len(re.findall(r'\b%s\b' % re.escape(nom), s)) for s in sources)
+    return total >= 2, total
+
+
 def main():
     gen = lire(GEN)
     chassis = lire(CHASSIS)
@@ -95,6 +117,7 @@ def main():
         ("CssPannTexte",      "%(p)s .pann small",  "le texte du panneau"),
         ("CssCtaCorps",       "%(p)s .cta6",        "le libellé du CTA"),
     ]
+    toutes_sources = [ctrl, resolvers, portrait]
     for nom, sel, quoi in tailles:
         attendu = font_size(css, sel.replace("%(p)s ", "").replace(">", ">"))
         obtenu = cs_const(ctrl, nom)
@@ -105,7 +128,27 @@ def main():
         elif abs(attendu - obtenu) > 0.01:
             ecarts.append(f"{nom} ({quoi}) : code {obtenu}px ≠ maquette {attendu}px")
         else:
-            ok.append(f"{nom} = {obtenu}px")
+            employee, n = cs_const_est_employee(toutes_sources, nom)
+            if not employee:
+                ecarts.append(f"{nom} ({quoi}) : valeur JUSTE ({obtenu}px) mais INEMPLOYÉE "
+                              f"({n} occurrence) — le rendu utilise donc autre chose, "
+                              "et cette concordance ne certifie rien")
+            else:
+                ok.append(f"{nom} = {obtenu}px (employée {n}×)")
+
+    # Les constantes de MESURE (pas de corps de texte) : mêmes règles, mais leur valeur se lit
+    # dans une propriété CSS et non dans un `font:`. On ne vérifie ici que l'EMPLOI — leur valeur
+    # est contrôlée à la lecture du CSS par les blocs plus bas.
+    for nom in ("CssVoyantPadY", "CssVoyantPadX", "CssVoyantDiam", "CssVoyantEcart",
+                "CssPortraitLarg", "CssMargeH", "CssPannPadX", "CssPannPadY", "CssCtaPad"):
+        if cs_const(ctrl, nom) is None:
+            continue
+        employee, n = cs_const_est_employee(toutes_sources, nom)
+        if not employee:
+            ecarts.append(f"{nom} : constante de mesure INEMPLOYÉE ({n} occurrence) — "
+                          "une valeur morte à côté d'un littéral vivant")
+        else:
+            ok.append(f"{nom} employée {n}×")
 
     # ═══ 2. LES COULEURS ══════════════════════════════════════════════════════════════════
     # Toute couleur du code doit venir de la palette de la maquette (T de chassis6).

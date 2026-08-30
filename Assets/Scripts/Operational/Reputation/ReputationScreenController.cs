@@ -83,11 +83,24 @@ namespace MafiaCleanCity.Operational
         private const float CssCompteurNombre = 14f;  // .fen b
         private const float CssCompteurLib   = 5.4f;  // .fen > span
         private const float CssPortraitLarg  = 118f;  // .prt{width:118px}
-        private const float CssVoyantPadY    = 5f;    // .tl{padding:5px 8px}
-        private const float CssVoyantPadX    = 8f;
-        private const float CssVoyantDiam    = 7f;    // .tl .lum
-        private const float CssVoyantTitre   = 7.4f;  // .tl b
-        private const float CssVoyantSens    = 5.4f;  // .tl small
+
+        // ⛔ CES CINQ-LÀ SONT `internal`, ET C'EST UN CORRECTIF, PAS UN DÉTAIL DE PORTÉE.
+        // Elles décrivent le voyant, que `TellVoyant` construit — une AUTRE classe. Tant qu'elles
+        // étaient `private`, TellVoyant ne pouvait pas les lire et portait les mêmes nombres EN
+        // DUR (7.4f, 5.4f, 7f, 8f, 5f). Deux sources pour une seule valeur : le jour où la
+        // maquette bouge, on corrige ici et le voyant garde l'ancienne, en silence.
+        // ⚠️ Et le pire est ce que ça faisait à la GARDE : `comparer-code-maquette-reputation.py`
+        // validait « CssVoyantSens = 5.4px, concordant avec .tl small » sur une constante que
+        // RIEN N'EMPLOYAIT. La garde certifiait une valeur inerte pendant que le rendu réel
+        // utilisait un littéral qu'elle ne regardait pas. C'est le « tunable sans consommateur »
+        // du socle, retourné contre l'instrument qui devait le détecter.
+        // ⇒ Le comparateur exige désormais l'USAGE (≥ 2 occurrences), pas la seule déclaration.
+        internal const float CssVoyantPadY    = 5f;    // .tl{padding:5px 8px}
+        internal const float CssVoyantPadX    = 8f;
+        internal const float CssVoyantDiam    = 7f;    // .tl .lum{width:7px;height:7px}
+        internal const float CssVoyantTitre   = 7.4f;  // .tl b
+        internal const float CssVoyantSens    = 5.4f;  // .tl small
+        internal const float CssVoyantEcart   = 7f;    // .tl{gap:7px}
         private const float CssPannPadX      = 10f;
         private const float CssPannPadY      = 8f;
         private const float CssPannSurTitre  = 5.6f;

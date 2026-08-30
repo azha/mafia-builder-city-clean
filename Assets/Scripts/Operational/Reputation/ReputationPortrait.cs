@@ -311,10 +311,15 @@ namespace MafiaCleanCity.Operational
             contour.color = ReputationResolvers.Lisere;
             contour.raycastTarget = false;
 
+            // Les mesures viennent des constantes du contrôleur, jamais de littéraux recopiés :
+            // deux sources pour une même valeur, c'est la garantie qu'elles divergeront.
             HorizontalLayoutGroup h = gameObject.AddComponent<HorizontalLayoutGroup>();
-            h.spacing = ecran.PxPublic(7f);
-            h.padding = new RectOffset(ecran.PxTraitPublic(8f), ecran.PxTraitPublic(8f),
-                                       ecran.PxTraitPublic(5f), ecran.PxTraitPublic(5f));
+            h.spacing = ecran.PxPublic(ReputationScreenController.CssVoyantEcart);
+            h.padding = new RectOffset(
+                ecran.PxTraitPublic(ReputationScreenController.CssVoyantPadX),
+                ecran.PxTraitPublic(ReputationScreenController.CssVoyantPadX),
+                ecran.PxTraitPublic(ReputationScreenController.CssVoyantPadY),
+                ecran.PxTraitPublic(ReputationScreenController.CssVoyantPadY));
             h.childControlWidth = true; h.childControlHeight = true;
             h.childForceExpandWidth = false;
             h.childAlignment = TextAnchor.MiddleLeft;
@@ -322,7 +327,7 @@ namespace MafiaCleanCity.Operational
             GameObject lum = new GameObject("Lumiere", typeof(RectTransform), typeof(CanvasRenderer));
             lum.transform.SetParent(transform, false);
             lumiere = lum.AddComponent<Image>();
-            int d = ecran.PxTraitPublic(7f);
+            int d = ecran.PxTraitPublic(ReputationScreenController.CssVoyantDiam);
             lumiere.sprite = ProceduralUI.RadialDisc(d, Color.white, Color.white);
             lumiere.color = ReputationResolvers.Lisere;
             lumiere.raycastTarget = false;
@@ -339,9 +344,9 @@ namespace MafiaCleanCity.Operational
             LayoutElement cle = colonne.AddComponent<LayoutElement>();
             cle.flexibleWidth = 1f;
 
-            titre = Texte(colonne.transform, "Titre", ecran.PxTraitPublic(7.4f),
+            titre = Texte(colonne.transform, "Titre", ecran.PxTraitPublic(ReputationScreenController.CssVoyantTitre),
                           ReputationResolvers.Creme2);
-            sens = Texte(colonne.transform, "Sens", ecran.PxTraitPublic(5.4f),
+            sens = Texte(colonne.transform, "Sens", ecran.PxTraitPublic(ReputationScreenController.CssVoyantSens),
                          ReputationResolvers.Eteint);
         }
 
