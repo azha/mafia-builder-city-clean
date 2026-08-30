@@ -38,9 +38,37 @@ namespace MafiaCleanCity.Operational.Tests
         private string token;
         private string lieutenantId;
 
+
+        /// <summary>⛔ LA RACINE RÉELLE DE L'ÉCRAN N'EST PAS `hostGo`, et c'est le patron maison.
+        ///
+        /// Hors shell, personne n'appelle `SetMountParent` : le contrôleur découvre alors un
+        /// `Canvas` et bâtit dessous (`ReputationScreenController:356`). C'est exactement ce que
+        /// font les 9 autres écrans du dépôt — `AutonomyInbox`, `ExceptionQueue`,
+        /// `BuildingCard`… découvrent tous leur Canvas de la même façon. Le composant vit sur
+        /// `hostGo`, sa mise en page vit ailleurs.
+        ///
+        /// ⇒ Interroger `RacineEcran().GetComponentsInChildren` rend donc ZÉRO, et mes gardes
+        /// anti-vacuité l'ont attrapé au premier run réel : « seulement 0 Graphic dans l'arbre —
+        /// l'écran n'a pas été construit ». C'était un défaut de MES TESTS, pas du contrôleur :
+        /// sans le plancher anti-vacuité, `Assert.IsEmpty(sansRenderer)` aurait été VERT sur un
+        /// arbre vide et j'aurais livré un écran jamais vérifié.</summary>
+        private GameObject RacineEcran()
+        {
+            GameObject r = GameObject.Find("ReputationRoot");
+            Assert.IsNotNull(r, "ReputationRoot introuvable : le contrôleur n'a pas construit sa " +
+                                "mise en page (ni sous le mountParent, ni sous un Canvas découvert)");
+            return r;
+        }
+
         [TearDown]
         public void TearDown()
         {
+            // ⚠️ La mise en page vit sous le Canvas, PAS sous hostGo : la détruire séparément.
+            // Sans ça, deux « ReputationRoot » coexistent au test suivant et `GameObject.Find`
+            // en rend un au hasard — une contamination qui rendrait les verdicts non
+            // reproductibles sans jamais lever d'erreur.
+            GameObject reste = GameObject.Find("ReputationRoot");
+            while (reste != null) { Object.DestroyImmediate(reste); reste = GameObject.Find("ReputationRoot"); }
             if (hostGo != null) Object.Destroy(hostGo);
             hostGo = null;
         }
@@ -132,7 +160,7 @@ namespace MafiaCleanCity.Operational.Tests
 
             var sansRenderer = new List<string>();
             int comptes = 0;
-            foreach (Graphic g in hostGo.GetComponentsInChildren<Graphic>(true))
+            foreach (Graphic g in RacineEcran().GetComponentsInChildren<Graphic>(true))
             {
                 comptes++;
                 if (g.GetComponent<CanvasRenderer>() == null)
@@ -170,7 +198,7 @@ namespace MafiaCleanCity.Operational.Tests
             yield return ecran.Charger(lieutenantId);
 
             int contours = 0;
-            foreach (Transform t in hostGo.GetComponentsInChildren<Transform>(true))
+            foreach (Transform t in RacineEcran().GetComponentsInChildren<Transform>(true))
             {
                 if (t.name != "Contour") continue;
                 contours++;
@@ -255,7 +283,7 @@ namespace MafiaCleanCity.Operational.Tests
             yield return ecran.Charger(lieutenantId);
 
             TMPro.TextMeshProUGUI cible = null;
-            foreach (TMPro.TextMeshProUGUI t in hostGo.GetComponentsInChildren<TMPro.TextMeshProUGUI>(true))
+            foreach (TMPro.TextMeshProUGUI t in RacineEcran().GetComponentsInChildren<TMPro.TextMeshProUGUI>(true))
                 if (t.text == "ENFREINTES" && t.transform.parent != null)
                     cible = t.transform.parent.Find("Nombre")?.GetComponent<TMPro.TextMeshProUGUI>();
 
@@ -302,7 +330,7 @@ namespace MafiaCleanCity.Operational.Tests
 
             // Le texte réel, pas seulement le compte : un libellé inventé passerait le test ci-dessus.
             var textes = new List<string>();
-            foreach (TMPro.TextMeshProUGUI t in hostGo.GetComponentsInChildren<TMPro.TextMeshProUGUI>(true))
+            foreach (TMPro.TextMeshProUGUI t in RacineEcran().GetComponentsInChildren<TMPro.TextMeshProUGUI>(true))
                 textes.Add(t.text);
             CollectionAssert.Contains(textes, r1,
                 $"l'identifiant « {r1} » n'apparaît nulle part : il a été masqué ou remplacé par " +
@@ -401,8 +429,7 @@ namespace MafiaCleanCity.Operational.Tests
 
         private IEnumerator CapturerA(int largeur, int hauteur, string chemin)
         {
-            Canvas canvas = hostGo.GetComponentInChildren<Canvas>(true)
-                            ?? Object.FindFirstObjectByType<Canvas>();
+            Canvas canvas = Object.FindFirstObjectByType<Canvas>();
             Assert.IsNotNull(canvas, "aucun canvas : le locataire n'a pas construit sa mise en page");
 
             RenderMode modeAvant = canvas.renderMode;
@@ -467,7 +494,7 @@ namespace MafiaCleanCity.Operational.Tests
         private int ecranVoyants()
         {
             int n = 0;
-            foreach (TellVoyant v in hostGo.GetComponentsInChildren<TellVoyant>(true)) { n++; }
+            foreach (TellVoyant v in RacineEcran().GetComponentsInChildren<TellVoyant>(true)) { n++; }
             return n;
         }
 
