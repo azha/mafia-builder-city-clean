@@ -88,6 +88,32 @@ sera quasi gratuite dès que le canal MCP sera rétabli : elle coûte un espace 
 ⇒ D'ici là, le statut honnête est : **rien ne contredit l'isolation, rien ne l'a encore
 établie.**
 
+## 1-ter. Une BONNE décision prise sur une prémisse FAUSSE — et rien ne l'aurait signalée
+
+J'ai renoncé à lancer un Unity en batchmode sur ce worktree, et c'était la bonne conduite. Mais je
+l'ai écrit ainsi : « *pas de UnityLockfile visible, donc rien ne m'aurait arrêté* ». **C'est faux.**
+
+    absent   mafia-unity-B/Library/UnityLockfile          ← ce que j'avais interrogé
+    PRÉSENT  mafia-unity-B/Temp/UnityLockfile             (depuis 21:15:12, l'ouverture de mon éditeur)
+    PRÉSENT  mafia-builder-city-clean/Temp/UnityLockfile  (depuis 20:52:32)
+
+Le verrou vit dans `Temp/`, pas dans `Library/`. Mon batchmode aurait donc **échoué**, pas réussi.
+★ Et le détail qui rend le cas exemplaire : `ls Library/ | grep -i lock` rend **2 résultats** — il
+y a bien des fichiers « lock » dans `Library/`, simplement pas celui-là. Mon `ls
+Library/UnityLockfile` a donc répondu « pas de lockfile » **en toute bonne foi, sur un chemin qui
+n'existe pas**, et l'absence a été lue comme une information alors qu'elle n'en était pas une.
+
+⇒ **Une bonne décision fondée sur une prémisse fausse ne se corrige jamais toute seule, parce que
+rien ne rougit.** J'avais renoncé pour la vraie raison (deux processus Unity sur le MÊME arbre est
+un cran pire que la co-tenance que le socle interdit déjà) — le raisonnement tenait, la mesure
+qui l'accompagnait était fausse, et seule une relecture extérieure l'a vu.
+⇒ La question du socle, à poser AVANT d'écrire « il n'y a rien » : *quelle forme aurait échappé à
+mon motif ?* Ici : un autre répertoire.
+
+⇒ **Conséquence pratique : il y a DEUX portes, indépendantes**, devant tout run Unity hors éditeur.
+La charge machine (Docker, gate) n'est que la première ; le **verrou de projet** est la seconde, et
+elle reste FERMÉE tant que l'éditeur interactif est ouvert — quel que soit l'état de Docker.
+
 ## 2. L'échelle de la maquette — mesurée sur les PNG, pas recopiée du générateur
 
 Instrument : `Tools/mesure-geometrie-reputation.py` (commité avec ce relevé). Sortie :
