@@ -1,8 +1,8 @@
-# Lot « redimensionnement » — **v5** — le client survit à un changement de taille en cours de vie
+# Lot « redimensionnement » — **v6** — le client survit à un changement de taille en cours de vie
 
 > **Ruling user 2026-08-30** : « supporter le redimensionnement pour de vrai ».
 > **v1 NOT_APPROVED** (5B/7M/4m) · **v2 NOT_APPROVED** (3B/5M/5m) · **v3 NOT_APPROVED** (2B/4M/6m) ·
-> **v4 NOT_APPROVED** (4B/6M/6m). Rapports hors dépôt : `/tmp/revue-redimensionnement-design{,-v2,-v3,-v4}.md`.
+> **v4 NOT_APPROVED** (4B/6M/6m) · **v5 NOT_APPROVED** (6B/8I/4m). Rapports hors dépôt : `/tmp/revue-redimensionnement-design{,-v2,-v3,-v4}.md`.
 > *(v3 était omis de l'en-tête de la v4 — un document dont la thèse est la comptabilité honnête ne
 > peut pas escamoter un de ses propres verdicts. Corrigé ici : quatre versions, quatre refus.)*
 >
@@ -76,9 +76,18 @@ pas le motif.*
 
 ## 2. Les 20 clusters — PUBLIÉS
 
-⚠️ **Toutes les ancres de ce document sont datées de `5768e3d`** et **`AppShell.cs` a pris +21
-lignes depuis** (1417 → 1438, 6 commits). Elles étaient exactes à leur commit et sont **toutes
-fausses à HEAD**. ⇒ **R1 les re-mesure à son ouverture**, par symbole quand c'est possible, jamais
+⚠️ **Les ancres de ce document sont datées de `5768e3d`.** ⛔ **I1 de la v5 — « toutes fausses à
+HEAD » était un verdict UNIFORME, et il est faux pour la majorité.** *Un résultat uniforme est le
+premier signe qu'on mesure autre chose que ce qu'on croit.* Mesuré par empreinte de blob :
+
+```
+DistrictMapNavigation.cs             IDENTIQUE  ⇒ ancres exactes à HEAD aussi
+DistrictInteriorScreenController.cs  IDENTIQUE  ⇒ idem
+LieutenantScreenController.cs        DIFFÉRENT  (P5 glisse de +2)
+AppShell.cs                          DIFFÉRENT  (1417 → 1438, +21 ; seules les ancres ≥ 80 glissent)
+```
+⇒ Toutes les ancres du §3 (`:79-86`, `:90-96`, `:102`, `:177-181`), P1, P6, P7, P8, P9 et le hook
+`:1807` sont **exactes aux deux commits**. ⇒ **R1 les re-mesure à son ouverture**, par symbole quand c'est possible, jamais
 par numéro recopié. *Un décalage uniforme de quelques lignes est précisément ce qu'un coder ne peut
 pas deviner.*
 
@@ -128,14 +137,41 @@ appliqué à lui-même :
 | **c2** | la restauration est un no-op silencieux | `:177-181` : `ZoomTo` **retourne immédiatement** si le rang demandé est celui en cours. Un joueur au palier de référence qui a **pané** ne voit jamais son pan restauré, et l'assertion sur le rang est verte puisque le rang n'a pas changé |
 | **c3** | le rang restauré est hors bornes | le tableau passe de longueur 3 à 4 selon la résolution ; `:180` **clampe** en silence ⇒ atterrissage sur un autre palier, assertion verte |
 
-⇒ **ASSERTIONS DE CADRAGE, RÉÉCRITES SUR DES GRANDEURS INVARIANTES :**
-1. **`CurrentScale`** — la **grandeur** du zoom (`:102`), jamais son rang.
+⇒ **ASSERTIONS DE CADRAGE — v6, après DEUX bloquants sur la v5 :**
+
+⛔⛔ **B2 de la v5 — `CurrentScale` N'EST PAS UNE GRANDEUR INVARIANTE.** La v5 l'a choisie « la
+grandeur du zoom, jamais son rang » : **c'est `ZoomLevels[ZoomIndex]`**, un élément du tableau
+**MÊME** que la reconstruction rebâtit, lu un cran plus bas. Et l'unique mutateur d'échelle prend
+un **rang** (`ZoomTo(int newIndex, …)`), donc l'ensemble atteignable de `CurrentScale` **est
+exactement `ZoomLevels`**, reconstruit. Dès que la valeur d'avant sort du tableau d'après — le
+palier `contain`, que le docstring `DistrictMapNavigation.cs:79-86` chiffre à ≈1,333 à 1440×3200
+et ≈0,375 à 1280×720 contre `{1,2,3}` à 1080×1920 — **l'assertion est insatisfaisable par la
+surface publique**. La rendre satisfaisable exigerait un setter d'échelle continue, qui casserait
+l'invariant `CurrentScale == ZoomLevels[ZoomIndex]` dont dépendent `ZoomTo:183-195` et
+`PanBy:170` ; ou de choisir des résolutions où le tableau ne bouge pas, c'est-à-dire **éviter le
+monde que l'assertion existe pour détecter** — et contredire §6.1 qui impose une seconde largeur.
+⇒ *Une garde qu'on ne peut satisfaire qu'en cassant ce qu'elle protège se remplace.*
+
+⇒ **LA GRANDEUR QUI SURVIT EST LE RÔLE DU PALIER**, et la v5 ne l'a jamais envisagée : *contain
+reste contain, ×1 reste ×1*. La règle de restauration s'écrit donc en trois temps —
+**rôle → valeur atteignable à la nouvelle résolution → tolérance NOMMÉE** (la même exigence que
+§4.3 pose déjà pour le delta de l'émetteur). **C'est CETTE règle qu'on asserte**, pas une valeur.
+
+1. **le rôle du palier** est celui d'avant (contain / ×1 / ×2 / ×3).
 2. **le point de carte sous le centre du viewport** — invariant de résolution, contrairement à
    `anchoredPosition`.
-3. **garde anti-vacuité obligatoire** : asserter que l'état d'AVANT **diffère de l'état par
-   défaut** (`CurrentScale != ZoomLevels[rang de référence]` **ou** point de carte ≠ focus
-   initial). Le mot « délibéré » de la v4 n'est pas une assertion : rien n'exigeait que l'état
-   d'avant fût non-défaut, donc la garde était satisfaite par un scénario qui ne panne pas.
+3. ⛔⛔ **B1 de la v5 — L'ANTI-VACUITÉ DISJONCTIVE EXCLUAIT LE MONDE QU'ELLE DEVAIT COUVRIR.**
+   La v5 écrivait « `CurrentScale != ZoomLevels[rang de référence]` **OU** point ≠ focus initial ».
+   Or `1f` est **toujours** dans le tableau (`:90`), donc `ZoomLevels[rang de référence] == 1f` à
+   toute résolution : le premier disjoint signifie *« le joueur n'est PAS au palier de
+   référence »*. **Et c2 exige littéralement l'inverse** — *un joueur AU palier de référence qui a
+   pané*, dont la cause est le retour anticipé `DistrictMapNavigation.cs:181`. Un scénario qui satisfait la garde par le
+   disjoint 1 **ne peut pas, par construction, exercer `:181`** : les deux assertions sont vertes
+   et c2 vit en production. *La garde certifie le défaut, 6ᵉ occurrence.*
+   ⇒ **DEUX SCÉNARIOS NOMMÉS, chacun avec le monde dégénéré qu'il tue** :
+   - **S1 — épinglé au palier de référence, AVEC un pan.** Tue **c2** (le no-op de `:181`).
+   - **S2 — hors palier de référence.** Tue **c1** (même rang, autre zoom) et **c3** (rang clampé).
+   *Une disjonction laisse le scénario choisir lequel il satisfait ; deux scénarios ne le laissent pas.*
 
 ⛔⛔ **ET LE POINT QUE LA v4 A RETOURNÉ À L'ENVERS — il commande le découpage.** Elle a écrit que
 l'état est « lisible sans accesseur neuf, donc ce n'est pas un différé ». **Lisible n'est pas
@@ -149,7 +185,11 @@ celle que le §4 nomme pour l'émetteur et que la v4 n'a pas appliquée à son p
 ordre, avec quelle conversion d'unités), et il porte donc sa propre garde. **C'est un livrable, il
 a un propriétaire au §11.**
 ⚠️ La destruction est **différée** ⇒ **double `yield`**, et **l'ORDRE est imposé** : chrome →
-panneaux → district (`AppShell.cs:736-740`), les deux derniers lisant les insets que le chrome publie.
+panneaux → district. ⚠️ **m2 : l'ancre ne l'établit qu'à MOITIÉ.** `AppShell.cs:736-740` dit
+« après `RebatirChromePourResolutionCourante()`, jamais avant » — donc **chrome → panneaux**, et
+**rien sur la position du district** relativement aux panneaux. Les deux lectures sont sûres (les
+deux lisent les insets du chrome), mais l'ordre district↔panneaux est **prescrit sans ancre** :
+R2 le mesure ou l'écrit comme un choix assumé.
 
 ## 4. L'émetteur — la grandeur ET, pour la première fois, le MÉCANISME
 
@@ -174,14 +214,36 @@ reconstruction parasite **converge vers ce même montage natif** ; (b) ne le voi
 parasite tombe après le pan, ce qui est un hasard d'ordonnancement.
 
 ⇒ **MÉCANISME, ÉCRIT :**
-1. **Déclencheur** : `OnRectTransformDimensionsChange` (existence mesurée §1) sur un composant porté
-   par le nœud racine du canvas — **pas** un sondage par frame.
+1. **Déclencheur du PREMIER terme** : `OnRectTransformDimensionsChange` (existence mesurée §1) sur
+   un composant porté par le nœud racine du canvas — **pas** un sondage par frame.
+   ⛔⛔ **B3 de la v5 — CE DÉCLENCHEUR NE PEUT PAS OBSERVER LE SECOND TERME.** Il ne se déclenche
+   que sur un changement de dimensions du RectTransform. Or `androidRenderOutsideSafeArea: 1`
+   (§0) : l'app dessine **sous** l'encoche, donc la surface couvre l'affichage et **la zone sûre
+   peut changer sans que le rect bouge** (barres système, régime de découpe) ⇒ aucun événement ⇒
+   le second terme n'est **jamais relu**, et il est inerte. La grandeur avait été choisie en v3
+   précisément pour cette classe ; le mécanisme de la v5 rétablissait l'aveuglement une couche
+   plus bas, **et le § ne disait nulle part QUAND le second terme est échantillonné.**
+   ⇒ **Règle d'échantillonnage du SECOND terme, écrite** : relu à chaque rappel de rect **ET** sur
+   `OnApplicationFocus` / `OnApplicationPause` — les deux moments où le système peut changer la
+   découpe sans toucher la taille. Ce n'est pas un sondage par frame et la cadence est nommée.
+   ⚠️ **Non vérifiable statiquement** : que ces rappels couvrent réellement toutes les transitions
+   de zone sûre d'Android. Si R2 mesure qu'ils ne suffisent pas, le repli est un sondage à cadence
+   **écrite**, jamais un sondage implicite.
 2. **Amorçage** : la référence est semée **après `Canvas.ForceUpdateCanvases()` ET une frame
    écoulée**. Jamais dans la frame de création. *C'est le piège du facteur d'échelle lu trop tôt,
    qui rend une valeur PLAUSIBLE et non une erreur.*
 3. **Delta** : tolérance **nommée en pixels**, jamais l'égalité flottante nue.
-4. **Non-émission** : monter, laisser passer **N frames sans rien changer**, asserter **0
-   reconstruction** — avec **contrôle positif** prouvant que le compteur sait monter.
+4. **Non-émission** — ⛔⛔ **B4 de la v5 : SA FENÊTRE S'OUVRAIT APRÈS LES FRAMES OÙ VIT LE
+   DÉFAUT.** Le monde dégénéré est un faux positif *à la frame qui suit le semis*, et le semis a
+   lieu **pendant** la séquence de montage (§4.2) ; ouvrir le compteur « après le montage » le
+   laisse donc hors fenêtre ⇒ `0` ⇒ **vert sur le défaut exact**. Et un contrôle positif dans un
+   scénario **séparé** prouve que le compteur sait monter, jamais que dans CE scénario l'émetteur
+   était attaché, abonné, et observait le bon objet — composant absent ou objet désactivé rendent
+   `0` aussi.
+   ⇒ **Forme corrigée, en deux temps dans LE MÊME scénario** : (i) ouvrir la fenêtre **à
+   l'attachement, avant le semis**, et asserter `0` sur **montage + N frames** ; (ii) **en aval des
+   N frames**, changer la taille et asserter **`1`**. Le zéro et le un sortent alors du **même
+   instrument armé** — c'est ça, l'anti-vacuité, et non un contrôle positif ailleurs.
 
 ## 5. P4/P5 — ils sont DÉJÀ observables ; le changement de production prescrit en v4 est ANNULÉ
 
@@ -198,6 +260,15 @@ Or P4 et P5 consomment **la somme** (`insets de zone sûre + hauteur de barre + 
 seul terme de zone sûre. ⇒ **Le terme est invariant, la somme ne l'est pas, et c'est la somme
 qu'ils lisent.** P4/P5 sont donc **déjà observables dans le harnais, sans aucun changement de
 production**.
+⚠️ **I8 — MAIS OBSERVABLES SUR QUELLE CLASSE ?** Les deux points de mesure sont `Screen=640x480` et
+un montage natif 1080×1920 ; **dans l'éditeur la zone sûre vaut le plein écran, donc son terme est
+0 aux DEUX points.** Les 104,7 de variance viennent **entièrement** de la hauteur de barre et du
+débord. ⇒ P4/P5 sont observables **comme clusters de GÉOMÉTRIE**, et leur dépendance
+**ZONE SÛRE** ne l'est toujours pas — c'est exactement l'objet de ⑳, le livrable qui n'avait aucun
+propriétaire dans la v5. *La boucle se referme là, et il faut l'écrire plutôt que la laisser
+implicite.*
+⚠️ Et la donnée qui porte cette annulation **n'est pas dans le dépôt** (`scratchpad/` non tracké) :
+aucun lecteur futur ne peut la re-dériver. **R1 commite le log, ou un extrait réduit, avec ⑤.**
 
 ⇒ **DÉCISION ANNULÉE.** Le changement prescrit par la v4 était, mesuré : **(i)** non nécessaire ;
 **(ii)** non compilable tel qu'écrit — la méthode visée est `static`, le canvas est d'instance, donc
@@ -231,7 +302,7 @@ alors écrire le refactor `static`→instance ET la conversion d'unités.
    un propriétaire au §11.
 2. **Zone sûre à valeurs DISTINCTES entre les deux points** (§5), via le seam — pas seulement non nulle.
 3. **ASSERTER**, jamais imprimer : le test de montage natif porte **7 assertions et aucune sur le
-   débordement** (recompté au commit du design, corps `:315-431`). *Monde dégénéré : tous.*
+   débordement** (recompté au commit du design, corps `AccueilPanneauxGeometriePhotoPlayModeTests.cs:315-431`). *Monde dégénéré : tous.*
 4. **Contrôle positif** : saboter la reconstruction doit rougir **en nommant l'écran**.
    ⚠️ **Ancre du patron, due depuis 4 versions et enfin fournie** :
    `Tools/charpente-item05-C3-implementation-notes.md:95` (`passed=221 failed=1`) et `:131`
@@ -240,8 +311,12 @@ alors écrire le refactor `static`→instance ET la conversion d'unités.
 5. **Anti-vacuité** : nombre d'écrans éprouvés > 0 et **nommé**.
 6. ⛔ **LA CATÉGORIE DU JUGE — et la classe est plus large que l'instance.** Mesuré au commit du
    design : **30 fichiers sur 68 ne sont joués par aucun juge** (18 hors-catégorie + 12 sans
-   catégorie). Le fichier qui porte l'instrument de capture de ce lot est dans une catégorie
-   **absente du filtre** : *l'instrument même de ce lot n'a jamais tourné sous le juge.*
+   catégorie). ⛔ **I3 : la v5 disait « le fichier qui porte l'instrument de ce lot est hors filtre » sans le
+   nommer, et c'était FAUX pour l'instrument qu'elle utilise.** Les lignes de diagnostic dont sort
+   la mesure du §5 **et** les 7 assertions du §6.3 vivent dans
+   `AccueilPanneauxGeometriePhotoPlayModeTests.cs`, `[Category("Charpente")]` — **dans le filtre
+   aux deux commits**. Le fichier réellement hors filtre est `VuePrincipaleCapturePlayModeTests.cs`
+   (`[Category("Capture")]`), que la v5 ne nommait pas non plus alors que la phrase décide ⑬ et ⑮.
    ⇒ **Deux catégories déjà dans le filtre conviennent** et sont mesurables sur place : `Charpente`
    et `W3U2`. **R3 en choisit une, l'ajoute si besoin, et publie le compte des fichiers rallumés**
    — en s'attendant à des **rouges dormants, qui sont une information et non une régression**.
@@ -253,15 +328,35 @@ alors écrire le refactor `static`→instance ET la conversion d'unités.
 compte collé sans sa commande est un témoignage.** La règle s'applique d'abord au document qui la
 pose. Statut honnête de chacun :
 
-| compte | valeur | statut |
-|---|---|---|
-| locataires implémentant le contrat | **10** | ✅ reproduit par la revue ⊥ |
-| chemins de reconstruction | **1** | ✅ reproduit |
-| sites prod sur les insets publiés | **12** | ✅ reproduit |
-| sites **test** sur les mêmes | v4 annonçait 19 | ⛔ **NE SE REPRODUIT PAS** — 13 en test, ou 17 avec les commentaires. **Aucune classification ne rend 19.** R1 le recompte ou le retire |
-| écritures de géométrie dans les 8 autres locataires | 72 → 82 | ⛔ ne se reproduit pas ; **mais « 0 non constante » est confirmé par sonde indépendante** — la conclusion tient, le compte non |
-| occurrences du compte de démo | 26 → **16 / 8 fichiers** | ✅ corrigé : je comptais les commentaires |
-| `matchWidthOrHeight` | 5, **toutes en commentaire** · 0 sérialisé sur 42 scènes | ✅ ⇒ la largeur logique est bien invariante |
+⛔⛔ **B6 de la v5 — MA « RÉFUTATION » DU COMPTE DE LA v4 ÉTAIT FAUSSE, ET ELLE PRESCRIVAIT DE
+SUPPRIMER UN COMPTE JUSTE.** La v5 écrivait « *aucune classification ne rend 19* ». Recompté
+(oracle python, population `Assets/**/*.cs`, motif `TopInsetPx|BottomInsetPx`) :
+
+```
+PROD : occurrences=12  lignes=11  occ.hors-comm=9   lignes.hors-comm=9
+TEST : occurrences=19  lignes=16  occ.hors-comm=13  lignes.hors-comm=10
+```
+⇒ **Le « 12 » que la v5 ACCEPTE en prod est un compte d'occurrences, commentaires COMPRIS. La MÊME
+règle appliquée aux tests rend exactement 19.** Le compte de la v4 reproduisait ; c'est ma
+réfutation qui ne tenait pas. **Deux lignes du même tableau étaient comptées dans deux unités
+différentes, aucune déclarée**, et l'écart était imputé au prédécesseur puis converti en livrable
+— un coder l'exécutant aurait **supprimé un compte correct**.
+⇒ *Une correction est plus dangereuse que l'erreur qu'elle corrige : elle arrive avec l'autorité
+d'une mesure.* Et c'est arrivé dans le paragraphe qui écrit que la règle s'applique d'abord au
+document qui la pose.
+⇒ **RÈGLE : chaque compte déclare son UNITÉ et sa PORTÉE** — les clauses (ii)+(iii) du §0,
+appliquées ici.
+
+| compte | valeur | unité · portée | statut |
+|---|---|---|---|
+| locataires implémentant le contrat | **10** | classes · arbre | ✅ reproduit deux fois |
+| chemins de reconstruction | **3** | points d'entrée publics · arbre | ⚠️ **corrigé** : la v5 disait « 1 », vrai du seul district (`DistrictInteriorScreenController.cs:1807`) ; il y a aussi `AppShell.cs:771` et `:1323`, que le §3 énumère lui-même |
+| sites sur les insets publiés — **prod** | **12** | occurrences, commentaires compris · `Assets/Scripts` | ✅ |
+| sites sur les insets publiés — **test** | **19** | occurrences, commentaires compris · `Assets/Tests` | ✅ **la v4 avait raison** |
+| écritures de géométrie, 8 autres locataires | 72 → 82 | non déclarée | ⛔ ne se reproduit pas ; **mais « 0 non constante » est confirmé par sonde indépendante** — la conclusion tient, le compte non |
+| occurrences du compte de démo | **16 / 8 fichiers** | littéraux · arbre | ✅ corrigé (26 comptait les commentaires) |
+| `matchWidthOrHeight` | **5**, toutes en commentaire | occurrences · arbre | ✅ |
+| scènes sans `CanvasScaler` sérialisé | **5** `.unity`, dont 0 sérialisé | fichiers `.unity` · arbre | ⚠️ **corrigé** : la v5 disait « 42 scènes » — le dépôt en porte **5**, et 42 ne reproduit sous aucune lecture (`.asset`=40, `.unity+.prefab+.asset`=45). La conclusion (largeur logique invariante) tient |
 
 ## 8. DÉDUITS restants — chacun avec son option conservatrice
 
@@ -311,20 +406,33 @@ section ne disait ce que chacun livre, dans quel ordre, avec quelle falsifiable.
 ⇒ C'est le `somme ≠ total` que ce document reproche aux autres depuis la v1, **sur son propre
 découpage**, et c'est un BLOQUANT de sa revue.
 
+⛔⛔ **B5 de la v5 — « 6+6+5 = 17 = plancher ✅ » ÉTAIT UNE TAUTOLOGIE.** Le plancher avait été lu
+**sur la table qu'il validait** : ses deux membres venaient de la même liste, donc le contrôle est
+resté **VERT sur le défaut qu'il existe pour attraper**. C'est mot pour mot le reproche que ce §
+adresse aux v1–v4, reproduit un cran plus bas — et c'est la 3ᵉ fois que ce document commet la
+faute qu'il dénonce dans le paragraphe où il la dénonce.
+⇒ **Le plancher se dérive du CORPS par un prédicat énumérable** : *tout impératif non conditionnel
+des §0 à §8*. Énumération publiée avec ses ancres, PUIS assignation. **Quatre obligations
+n'avaient aucun propriétaire** dans la v5 — dont le remplacement exact du changement de production
+annulé par le §5, sans quoi la dépendance zone-sûre de P4/P5 n'est exercée par rien.
+
 | chunk | livrables | falsifiable | gate |
 |---|---|---|---|
-| **R1 — mesures et publications** | ① re-mesurer TOUTES les ancres @HEAD (§2) · ② publier les 11 TRANSIENT vérifiés dans le corps · ③ publier la table des 30 fichiers non joués (§6.6) · ④ recompter ou retirer le compte non reproduit du §7 · ⑤ imprimer les insets **après** bascule (déduit 4) · ⑥ écrire le prédicat + la commande + la portée du contrôle du §0, exécuté d'abord sur les fichiers INTACTS | chaque publication porte **commande + sortie collée + portée** ; contrôle positif sur un cas connu | revue ⊥ |
-| **R2 — production** | ⑦ l'émetteur sur le couple, avec **mécanisme complet** (§4 : déclencheur, amorçage, delta) · ⑧ le **chemin de restauration du cadrage** (§3), mécanisme neuf, avec sa conversion d'unités · ⑨ le retrait des deux énoncés datés du §0, par index | ⑩ **assertion de non-émission** (N frames, 0 reconstruction) + contrôle positif · ⑪ assertions (a) et (b) du §6 dans **deux scénarios distincts** · ⑫ garde anti-vacuité sur la non-défaultitude du cadrage d'avant | revue ⊥ |
-| **R3 — le juge** | ⑬ choisir la catégorie (§6.6), l'ajouter au filtre · ⑭ publier le compte des fichiers rallumés et **classer chaque rouge dormant** démasqué / régression · ⑮ la **seconde largeur** de capture (§6.1) · ⑯ le contrôle positif de sabotage, ancré | ⑰ le test visé **relancé seul par son nom complet** — un filtre de catégorie inexact exécute un autre jeu et le déclare vert | revue ⊥ |
+| **R1 — mesures et publications** | ① re-mesurer les ancres @HEAD, **par fichier** (§2) · ② publier les 11 TRANSIENT vérifiés dans le corps · ③ publier la table des 30 non joués · ④ **déclarer l'unité et la portée** de chaque compte du §7 *(et NON « retirer le 19 », cf. B6)* · ⑤ imprimer les insets **après** bascule · ⑥ écrire prédicat + commande + portée + **contrôle positif par motif** du contrôle §0 · ⑱ écrire la **règle de clôture** de l'ensemble de fichiers du §0 | chaque publication porte **commande + sortie collée + unité + portée** ; contrôle positif ET négatif | revue ⊥ |
+| **R2 — production** | ⑦ l'émetteur sur le couple, mécanisme complet · ⑧ le chemin de restauration (rôle → valeur → tolérance) · ⑨ le retrait des deux énoncés datés **avec le contrôle ⑥ dans le MÊME commit** · ⑲ **écrire la conversion d'unités** des deux termes du couple (§4) | ⑩ non-émission fenêtre-à-l'attachement + `1` en aval, **même scénario** · ⑪ (a) et (b) dans **deux scénarios distincts** · ⑫ anti-vacuité du cadrage par **S1 et S2 nommés** (non disjonctive) | revue ⊥ |
+| **R3 — le juge** | ⑬ choisir la catégorie, l'ajouter, **et couvrir `ChromeSafeAreaPlayModeTests` + `ChromeMultiResolutionPlayModeTests`** (cf. I2) · ⑭ publier le compte des rallumés et **classer chaque rouge** démasqué / régression · ⑮ la seconde largeur de capture · ⑯ le contrôle positif de sabotage, ancré · ⑳ **zone sûre à valeurs DISTINCTES aux deux points, via le seam** (§6.2) · ㉑ **ASSERTER le débordement**, jamais l'imprimer (§6.3) | ⑰ le test visé **relancé seul par son nom complet** · ㉒ anti-vacuité : **nombre d'écrans éprouvés > 0 et nommé** (§6.5) | revue ⊥ |
 
-**Arithmétique** : livrables établis par le corps de ce document = **17**. Assignés : R1 = 6,
-R2 = 6, R3 = 5. **6 + 6 + 5 = 17 = plancher.** ✅
-⚠️ **Ce contrôle est une falsifiable du DÉCOUPAGE lui-même** : si une révision de ce document ajoute
-une obligation sans l'assigner, la somme cesse d'égaler le plancher. **Le recompter à chaque
-version.**
+**Arithmétique, dérivée du CORPS et non de la table** : impératifs non conditionnels énumérés aux
+§0–§8 = **22**. Assignés : R1 = 7, R2 = 4+3 = 7, R3 = 6+2 = 8. **7 + 7 + 8 = 22.** ✅
+⚠️ **Ce contrôle ne vaut que parce que ses deux membres viennent de sources DIFFÉRENTES** — le
+plancher du corps, la somme de la table. Un contrôle dont les deux membres sortent de la même
+liste ne peut rien attraper. **Le recompter à chaque version, depuis le corps.**
+⚠️ **Contrôle de cohérence de propriétaire** (absent de la v5, qui disait « R3 publie la table des
+30 » dans le corps et l'assignait à R1 dans la table) : tout « R\<i\> fait X » du corps doit
+désigner le même chunk que la cellule qui porte X. Vérifié à cette version.
 
 **Ordre imposé** : R1 → R2 → R3. R2 dépend des ancres re-mesurées de R1 ; R3 rallume des tests qui
 doivent d'abord passer sous R2.
 ⛔ **Aucun chunk ne se livre sans sa revue ⊥, et la petitesse d'un delta n'est jamais un motif de
-la sauter** — sur ce lot, 4 versions ont donné 14 BLOQUANTS fondés et zéro réfuté, et les deux
-derniers deltas d'un lot voisin faisaient *un mot* et *un nombre* en portant chacun un BLOQUANT.
+la sauter** — cinq versions, **20 BLOQUANTS fondés, zéro réfuté**, et à chaque tour le défaut
+vivait dans le correctif du tour précédent.
