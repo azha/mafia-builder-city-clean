@@ -177,3 +177,26 @@ produit une classification qui a l'air mesurée*, et c'est la **quatrième** foi
 ⇒ **Sur une population de 23, LIRE les corps coûte moins cher que réparer trois fois un
 classifieur** — et c'est la lecture qui a donné la vraie réponse (l'attendu non vide), qu'aucun
 de mes trois motifs n'avait vue.
+
+### N11-bis — la LISTE des dénominateurs à poser, écrite maintenant pour ne pas être reconstruite
+
+À faire **au premier run vert**, pas avant (voir N11 : ne pas durcir à l'aveugle du code jamais
+exécuté). Forme imposée : **« 0 violation sur N sites examinés »**, où **N compte ce qui POUVAIT
+faire rougir**, jamais « N fichiers ouverts ».
+
+**12 gardes balaient un corpus existant** — ce sont exactement celles que la classe vise :
+
+| garde | ce que N doit compter |
+|---|---|
+| `RealNetworkSignInCalls_LiveOnlyInsideTheResolver_…` | fichiers `.cs` lus sous `Assets/Scripts` |
+| `RealNetworkSignUpCalls_NeverOccurOutsideTests_…` | idem |
+| `DirectUrlAccess_NeverOccursOutsideAuthClient_…` | idem |
+| `ExplicitIdentityOverrides_MatchTheReviewedAllowlist_…` | fichiers lus sous `Assets/Tests` |
+| `AllowEnvironmentOverrideSites_MatchTheReviewedAllowlist_…` | fichiers lus sous `Assets/Scripts` |
+| `ExplicitIdentityOverride_SelfFileOwnCount_IsPinned` | occurrences examinées dans le fichier épinglé |
+| `Scan_SelfExclusion_DoesNotBlindRealCallsElsewhere` | fichiers lus, **hors** celui qui est exclu |
+| les 5 `Scan_New*_IsDetected` / `_BreaksTheSet_…` | *(immunisées : elles FABRIQUENT leur site — le dénominateur y est facultatif, mais l'imprimer coûte une ligne et rend la lecture uniforme)* |
+
+⚠️ **Et le compte « 12 » lui-même porte la réserve de N11** : mon balayage rend **13**, dont
+`SignIn` qui est une **méthode utilitaire**, pas un test. *Cinquième instrument d'étiquetage à
+corriger cette nuit.* Le chiffre opposable est **12**, obtenu en lisant, pas en grepant.
