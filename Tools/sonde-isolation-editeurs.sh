@@ -43,6 +43,7 @@ set -uo pipefail
 A="${A_PROJET:-/home/erutheone/project/mafia-builder-city-clean}"
 B="${B_PROJET:-/home/erutheone/project/mafia-unity-B}"
 ETAT="${ETAT_FICHIER:-$B/Tools/.sonde-isolation-etat}"
+JOURNAL="${JOURNAL_FICHIER:-$B/Tools/.sonde-isolation-journal.tsv}"
 LOG_B="${LOG_B:-$HOME/.config/unity3d/Editor.log}"
 BASE_DEV=7
 
@@ -124,10 +125,44 @@ case "${1:---apres}" in
       echo "✓ VERDICT : ISOLATION CONFIRMÉE — B a recompilé, A n'a pas bougé d'un octet."
       exit 0
     fi
-    echo "✗ VERDICT : LES DEUX ÉDITEURS NE SONT PAS ISOLÉS — A a recompilé aussi."
-    echo "  ⇒ Arrêter le travail à deux éditeurs et le remonter : le dispositif est faux."
+
+    # ⛔⛔ A A BOUGÉ — ET C'EST ICI QUE LA SONDE PEUT PRODUIRE SON PIRE RÉSULTAT : UN FAUX POSITIF
+    # DE NON-ISOLATION. « A a recompilé » ne veut pas dire « A a recompilé À CAUSE DE B ». Une
+    # autre session pilote l'éditeur A et peut le faire compiler pour SA propre raison, exactement
+    # pendant ma fenêtre de mesure. Conclure « le dispositif est faux » sur cette seule base
+    # ferait arrêter un travail à deux éditeurs qui fonctionne peut-être très bien.
+    #
+    # ⇒ On ne tranche pas : on rend une CORRÉLATION à examiner, avec ce qu'il faut pour
+    # l'attribuer. Le journal latéral (--journal) porte l'heure de chaque relevé ; si A a bougé à
+    # un instant SANS rapport avec la recompilation de B, ça se voit. C'est le réflexe que f1
+    # vient de payer sur son propre log : un rouge sans horodatage est incorrélable avec tout
+    # événement extérieur.
+    echo "⚠️ A A BOUGÉ — mais ce n'est PAS un verdict de non-isolation."
+    echo "   mtime A : $A_MT → $amt   (Δ $((amt - A_MT)) s)"
+    echo "   Ce qu'il faut écarter AVANT de conclure :"
+    echo "     · une autre session pilote-t-elle l'éditeur A ? (elle peut le compiler elle-même)"
+    echo "     · l'instant du changement coïncide-t-il avec la recompilation de B ? → $JOURNAL"
+    echo "   ⇒ Si les deux recompilations sont simultanées ET qu'aucune session ne pilotait A,"
+    echo "      ALORS le dispositif est faux et il faut arrêter le travail à deux éditeurs."
     exit 4
     ;;
+  --journal)
+    # Journal latéral horodaté — à lancer EN FOND pendant l'attente du focus.
+    # ⛔ Sans lui, on sait que A a bougé, jamais QUAND : « A n'a pas bougé » devient
+    # indistinguable de « A a bougé avant que je regarde », et une recompilation de A due à une
+    # AUTRE session serait imputée à la mienne. Un relevé sans heure est incorrélable avec tout
+    # événement extérieur — réflexe payé par f1 sur son propre log de run, qui n'en portait aucun.
+    echo -e "heure\tA_mtime\tA_somme\tB_mtime\tB_somme\tcharge\tconteneurs" > "$JOURNAL"
+    echo "journal ouvert : $JOURNAL (Ctrl-C pour arrêter)"
+    while true; do
+      read -r amt _ asom <<< "$(empreinte "$A")"
+      read -r bmt _ bsom <<< "$(empreinte "$B")"
+      printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\n' "$(date '+%H:%M:%S')" "$amt" "$asom" \
+        "$bmt" "$bsom" "$(cut -d' ' -f1 /proc/loadavg)" "$(docker ps -q 2>/dev/null | wc -l)" \
+        >> "$JOURNAL"
+      sleep 5
+    done
+    ;;
   *)
-    echo "usage: $0 [--avant|--apres|--attendre]"; exit 2;;
+    echo "usage: $0 [--avant|--apres|--attendre|--journal]"; exit 2;;
 esac
