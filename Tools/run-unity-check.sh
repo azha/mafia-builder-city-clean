@@ -64,7 +64,9 @@ fi
 # valeur mesurée) plutôt que splitté : aucun signe que la durée croît avec le NOMBRE de tests
 # (elle est dominée par le shutdown natif, constant), donc scinder les catégories n'aurait pas
 # réduit ce risque — seul monter le plafond le fait.
-TIMEOUT_S=900
+: "${TIMEOUT_S:=900}"   # surchargeable par l'environnement (voir la note ci-dessus) : une
+                        # affectation DURE ici a déjà fait croire à un appelant qu'il avait relevé le
+                        # plafond alors que sa variable était écrasée en silence.
 SECONDS=0                              # bash : compteur d'écoulé, remis à 0 ici
 timeout "$TIMEOUT_S" "$UNITY" -batchmode "${EXTRA_ARGS[@]}" -projectPath "$WT" -logFile "$LOG" "$@"
 RC=$?                                  # capturé AVANT tout pipe
