@@ -107,3 +107,42 @@ Il ne dit pas que mon écran est correct — il dit que **ce rouge-ci** ne le co
 assertions du lot n'ont pas encore été exercées : le test s'est arrêté sur le log avant de rendre
 son verdict. Tant que le fixture témoin est rouge, **aucun run de ce lot n'est concluant**, ni
 dans un sens ni dans l'autre.
+
+---
+
+## Ce que la re-mesure sur machine CALME a éliminé (23:47)
+
+Le fixture témoin relancé dans les conditions idéales — 7 conteneurs, **0 shard e2e**, charge
+**1,39**, pile remontée et `http://localhost/` à 200 — échoue **exactement pareil : 3/3, mêmes
+messages**.
+
+⇒ **Hypothèse (1) RÉFUTÉE** : ce n'était ni la charge ni l'import concurrent. Les conditions de
+23:21 n'expliquent rien.
+
+Quatre autres pistes fermées dans la foulée, chacune par une mesure :
+
+| piste | mesure | verdict |
+|---|---|---|
+| l'asset manque | `manage_asset get_info` → `guid cf45399f81ed441f38e571ae3eb6fcf6` | Unity le VOIT |
+| le lien script est cassé | `.meta` du script = `eda4e673ff741ff16852a60e329a6a03` · l'asset référence ce guid exact | **CONCORDANTS** |
+| le type n'existe pas | `Library/ScriptAssemblies/Theme.dll` présente (7680 o), et les 4 autres assemblies aussi | compilé |
+| le back manquait | `DesignTokensPlayModeTests` ne contient aucun `AuthClient\|SignUp\|localhost\|UnityWebRequest` (0) | **indépendant de la pile** |
+
+## ⛔ ÉTAT HONNÊTE : JE N'AI PAS LA CAUSE
+
+Ce n'est ni la charge, ni la pile, ni un asset absent, ni un lien de script rompu, ni une assembly
+manquante. **L'hypothèse (2) « asset non importé » est morte avec les deux lignes du tableau
+ci-dessus.** Reste (3), l'ordre d'exécution — et elle se teste par un **run COMPLET**, jamais fait
+à ce jour.
+
+⚠️ **Un détail à ne PAS sur-interpréter, et c'est délibéré de l'écrire ainsi** : `get_info` rend
+`assetType: "Unknown"`. Ce peut être un vrai symptôme (Unity ne résout pas le type du
+ScriptableObject) **ou** une simple limite de l'outil MCP, qui ne sait pas nommer un type custom.
+**Je ne sais pas trancher**, et je refuse d'en faire une piste que quelqu'un poursuivrait à mes
+frais : j'ai déjà rétracté une explication ce soir pour avoir rangé un symptôme dans un tiroir
+existant sans vérifier qu'il y entrait. La mesure qui trancherait : appeler `get_info` sur un
+**autre** ScriptableObject connu du projet (`BuildingSpriteSlots.asset`, `DistrictBackgroundSlots.asset`)
+— s'il rend aussi `Unknown`, c'est l'outil ; sinon, c'est l'asset.
+
+**Prochaine mesure due**, dès qu'un créneau machine est libre : le run COMPLET du fixture témoin.
+Vert ⇒ ordre d'exécution, à nommer ainsi. Rouge ⇒ vrai défaut, à consigner en dette.
