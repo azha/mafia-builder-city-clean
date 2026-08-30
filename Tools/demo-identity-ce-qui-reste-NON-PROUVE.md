@@ -140,3 +140,40 @@ ajoutés depuis par le lot charpente.
 ⇒ **Une garde bâtie sur ce compte rougirait sur un commentaire, c'est-à-dire sur rien.**
 Toute épingle de compte de ce lot — à commencer par le **13** — doit dire si elle compte des
 **affectations/appels** ou des **occurrences de texte**, et compter la première.
+
+## N11 — la vacuité par réparation : la classe s'applique, l'exposition est FAIBLE, et le message ne le dirait pas
+
+**Classe reçue d'une session voisine le 2026-08-31** :
+
+> **Corriger le défaut qu'une garde surveille peut rendre cette garde VIDE — et rien ne le
+> signale, le compte reste flatteur.** Le remède est un **dénominateur imprimé**, comptant
+> *ce qui pouvait faire rougir*. La seule forme immunisée est le **scénario qui fabrique sa
+> population** ; un balayage d'un corpus existant est exposé par construction.
+
+**Appliquée à mes 23 gardes — et le résultat est rassurant pour une raison de FORME, pas de
+chance** : mes balayages assertent une **égalité d'ENSEMBLES contre un attendu NON VIDE**
+(`CollectionAssert.AreEquivalent(allowlistNonVide, scan.FilesWithHits)`), et l'allowlist porte
+`Assert.IsNotEmpty`. ⇒ **Un corpus vidé fait ROUGIR l'égalité, il ne la satisfait pas.** Et les
+`Scan_New*_IsDetected` **fabriquent leur site** avant de l'observer : c'est nommément la forme
+immunisée. ⇒ **Exposition faible.**
+
+⚠️ **Ce qui reste vrai malgré tout, et c'est N11** : **aucune de ces gardes n'imprime de
+dénominateur.** Si l'une devenait vide pour une raison que je n'ai pas prévue — racine
+introuvable, jeton renommé, portée déplacée — **son message ne le dirait pas**. Le remède
+(« 0 violation sur **N sites examinés** ») est juste et n'est pas appliqué.
+
+⛔ **Pourquoi je ne le corrige PAS maintenant, et c'est une décision, pas un oubli** : ce
+fichier n'a **jamais compilé ni tourné**. Ajouter du code non exécuté pour durcir du code non
+exécuté augmente N1..N10 sans rien mesurer. ⇒ **À faire au PREMIER run vert**, quand le
+dénominateur imprimé pourra être *lu* et donc *vérifié*. Le noter ici est le geste honnête ;
+l'écrire à l'aveugle serait le geste rassurant.
+
+★★ **Et la leçon de méthode de cette passe vaut plus que le finding** : j'ai voulu classer mes
+23 gardes par un motif, **trois fois de suite, et les trois classifications étaient fausses** —
+d'abord parce que le motif lisait des **blocs de commentaire**, puis parce qu'il attrapait des
+**méthodes utilitaires** (`SignIn`, `SetIdentity`) prises pour des tests, puis parce qu'il
+comptait les **contrôles positifs** comme des gardes exposées. *Un instrument d'étiquetage faux
+produit une classification qui a l'air mesurée*, et c'est la **quatrième** fois cette nuit.
+⇒ **Sur une population de 23, LIRE les corps coûte moins cher que réparer trois fois un
+classifieur** — et c'est la lecture qui a donné la vraie réponse (l'attendu non vide), qu'aucun
+de mes trois motifs n'avait vue.
