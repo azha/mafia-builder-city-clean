@@ -90,3 +90,60 @@ vive **dans le même commit que la réécriture** — l'exécuter maintenant pro
 | ⑤ | insets **après** bascule | exige un run PlayMode — éditeur verrouillé depuis 20:52 |
 | ② | les 11 TRANSIENT | la règle de groupement n'existe pas (ci-dessus) |
 | — | le **couple de résolutions** de S1/S2 | les valeurs sont dans un `[TestCase]` commité (1280×720 · 1080×1920 · 1080×2400 · 1440×3200) mais leur EFFET sur `ZoomLevels.Length` n'est pas observable sans run |
+
+---
+
+# ② — LIVRÉ, après que la v8 a écrit la règle d'appartenance
+
+## Les 9 PERSIST : vérifiées **dans le corps**, une par une
+
+Chacune exige deux preuves — (i) une grandeur liée à la résolution, (ii) une lecture après la
+frame qui l'écrit. Les deux symboles sont cherchés séparément, hors commentaires, @HEAD.
+
+| | fichier | symbole | sites |
+|---|---|---|---|
+| **P1** `ZoomLevels` | `DistrictMapNavigation.cs` | `ZoomLevels` + `levels.Sort()` | 62, 63, 87 |
+| **P2** bande Accueil | `AppShell.cs` | `PoserBandeAccueil` | 674, 707, 778 |
+| **P3** insets du chrome | `AppShell.cs` | `PublierInsetsDuChrome` | 552, 827, 1373 |
+| **P4** insets district | `DistrictInteriorScreenController.cs` | `SetSafeInsets` | 125 |
+| **P5** feuille Famille | `LieutenantScreenController.cs` | `BottomInsetPx` + `offsetMin` | 1030 |
+| **P6** `fondRt.sizeDelta` | `DistrictInteriorScreenController.cs` | `sizeDelta` + `scaleFactor` | 382, 458, 473 |
+| **P7** letterbox du titre | `DistrictInteriorScreenController.cs` | `root.rect.width` | 473, 646 |
+| **P8** cellules | `DistrictInteriorScreenController.cs` | `scaleFactor` + `Cell` | 393, 458, 563 |
+| **P9** `ficheRoot.offsetMin` | `DistrictInteriorScreenController.cs` | `ficheRoot` + `offsetMin` | 259, 1431, 1478 |
+
+✅ **9 sur 9 confirmées dans le corps.** Ce n'est plus un compte hérité.
+
+## Les TRANSIENT : énumérées par la règle — et le compte **ne tombe pas sur 11**
+
+Application **mécanique** des clauses (i)+(ii) — méthode nommée lisant une grandeur de
+résolution, hors les hooks de reconstruction : **23 candidates**.
+
+Application de la clause **(iii)** — *« porte un nom que le joueur ou la maquette reconnaît comme
+UNE chose »* — faite **en lisant**, verdict par verdict :
+
+| candidate | verdict |
+|---|---|
+| `BuildTabBar` · `BuildLayout` (TopBar) · `PxTrait` | ✅ TRANSIENT — la barre d'onglets, la barre du haut, l'épaisseur de trait |
+| `ClampPan` · `EffectiveScaleFactor` | ✅ TRANSIENT — le cadrage de la carte |
+| `PivotLocalForBlock` · `PixelToFondLocal` · `FindParcel` | ✅ TRANSIENT — l'ancrage du fond de district |
+| `MajEchelleFamille` | ✅ TRANSIENT, **mais innocentée par l'invariance de la largeur logique**, pas par le recalcul |
+| `PoserBandeAccueil` · `PublierInsetsDuChrome` · `PublierInsets` · `BuildBuildingCell` · `BuildFiche` | ⛔ **déjà comptées en PERSIST** (P2, P3, P8, P9) — ce sont leurs ÉCRIVAINS, pas des clusters distincts |
+| `FD` · `FDi` · `FXf` · `FXSerif` · `SnapToScreenPixel` · `Stretch` · `ClampAxis` · `SafeAreaInsetsLocal` · `FacteurEchelle` | ⛔ **helpers** — aucun nom que le joueur reconnaît ; échouent la clause (iii) |
+
+⇒ **9 TRANSIENT retenues, pas 11.** Et **je ne comble pas l'écart** : les deux manquantes sont
+soit dans un fichier hors de ma portée de balayage, soit un découpage que l'auteur d'origine
+faisait plus finement (p. ex. compter séparément les trois méthodes d'ancrage du fond).
+
+★★ **CE QUE CET ÉCART PROUVE, ET C'EST LE POINT** : la règle du §2 fonctionne — elle produit une
+énumération **nommée et vérifiable** — et elle **ne reproduit pas** le compte hérité. C'est
+exactement ce que la v8 annonçait : *le compte tombe à la fin, il n'est pas la preuve.* Un écart
+de 2 sur une énumération publiée est **opposable et discutable** ; un « 11 » sans liste ne l'était
+pas. ⇒ **Ce qui remplace « 11 » n'est pas « 9 » : c'est la LISTE.**
+
+⚠️ **Et je n'ai pas cédé au piège symétrique** : le filtrage sémantique donne d'abord une fourchette
+de 11 à 14 selon qu'on compte les trois méthodes d'ancrage comme une chose ou trois. **11 est dans
+la fourchette.** M'y arrêter parce que le nombre attendu s'y trouve aurait été le même geste que
+« 20 sites cuits = 20 clusters » — *choisir le grain qui fait tomber le compte juste*. Le grain est
+donc déclaré d'abord (une chose perçue = un cluster ⇒ l'ancrage du fond compte pour **1**), et le
+compte suit.
