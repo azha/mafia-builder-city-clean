@@ -43,10 +43,21 @@ namespace MafiaCleanCity.Shell.Tests
     // `ScreenSpaceCamera` sur une caméra visant une `RenderTexture` de la taille cible — c'est ce
     // qui contourne `-screen-width` IGNORÉ en batchmode, `Screen.width` restant bloqué à 640) —
     // jamais réinventé, mais SANS l'appel `DistrictInteriorScreenController.RebatirPourResolution
-    // Courante()` (hors sujet ici) et AVEC un contrôle explicite, AVANT de faire confiance à quoi
-    // que ce soit : `RebatirChromePourResolutionCourante()` est-il TOUJOURS le no-op géométrique
-    // que son propre docstring promet (round 15) ? Si NON, cette capture (et par ricochet celles de
-    // `VuePrincipaleCapturePlayModeTests`, qui appelle la MÊME méthode) mesurerait un monde fictif.
+    // Courante()` (hors sujet ici — aucun district n'est entré par ce test) et AVEC un contrôle
+    // explicite, AVANT de faire confiance à quoi que ce soit : `RebatirChromePourResolutionCourante()`
+    // est-il TOUJOURS le no-op géométrique que son propre docstring promet (round 15) ? Si NON,
+    // cette capture (et par ricochet celles de `VuePrincipaleCapturePlayModeTests`, qui appelle la
+    // MÊME méthode) mesurerait un monde fictif.
+    //
+    // ⛔⛔ AMENDÉ (C3, Tools/charpente-item05-C3-implementation-notes.md) — LE PARAGRAPHE CI-DESSUS
+    // ÉTAIT EXACT JUSQU'À CE CHUNK ET NE L'EST PLUS SUR UN POINT : « SANS l'appel … Courante() »
+    // ne visait que le district (« hors sujet ici »), mais ce fichier n'avait effectivement AUCUN
+    // équivalent pour les 4 panneaux de l'Accueil — c'est le confound que documente le § « CONTRÔLE
+    // DU CONFOUND » plus bas (« rien ne rejoue NouveauPanneauAccueil après la bascule … contrairement
+    // au district, qui a SA PROPRE méthode dédiée »). `MesurerEtCapturer` appelle désormais AUSSI
+    // `AppShell.RebatirPanneauxAccueilPourResolutionCourante()`, juste après
+    // `RebatirChromePourResolutionCourante()` (dont elle dépend — voir l'ordre d'appel imposé par
+    // le docstring de la méthode) : le trou est FERMÉ, pas seulement documenté.
     [Category("Charpente")]
     public class AccueilPanneauxGeometriePhotoPlayModeTests
     {
@@ -291,6 +302,15 @@ namespace MafiaCleanCity.Shell.Tests
         // vrai défaut de dimensionnement (le contenu ne tient pas dans SA bande, quelle que soit la
         // résolution). S'il DISPARAÎT, le test précédent mesurait un artefact de méthode (bande
         // jamais reconstruite après un redimensionnement que la production ne fait jamais subir).
+        //
+        // ⛔⛔ AMENDÉ (C3) — « RIEN ne rejoue `NouveauPanneauAccueil` après la bascule » (plus haut
+        // dans ce paragraphe) décrivait le test ci-dessus AVANT `AppShell.RebatirPanneauxAccueil
+        // PourResolutionCourante()` : `MesurerEtCapturer` le rejoue désormais, donc le confound
+        // qu'énumère ce paragraphe est fermé au lieu de courir. Ce test-CI reste néanmoins la bonne
+        // expérience à une seule variable (il ne dépend d'AUCUN rebuild pour être correct — le
+        // montage est natif dès la frame 1) : les DEUX tests doivent maintenant converger vers 0,00 %
+        // de débordement ; s'ils divergent, c'est que le hook C3 ne ferme pas la cause qu'il prétend
+        // fermer, et ça se lit ici avant même d'ouvrir les logs de l'autre.
         [UnityTest]
         public IEnumerator MesureGeometrie_AccueilPanneaux_MontageNatif1080x1920_SEEDE_OperationalDemo()
         {
@@ -472,6 +492,21 @@ namespace MafiaCleanCity.Shell.Tests
                 "appelle la MÊME méthode) mesure un monde que le docstring ne décrit plus.");
             Assert.IsTrue(tabBarNoOp,
                 $"idem pour TabBarRoot à {largeur}x{hauteur} ({tabBarAvant} -> {tabBarApres}).");
+
+            // ── C3 (Tools/charpente-item05-C3-implementation-notes.md) — LA CAUSE, pas un
+            // ajustement de seuil. Le patron `CapturerA` (dont ce helper est une copie assumée,
+            // voir le commentaire de classe) rejoue déjà `RebatirPourResolutionCourante()` pour le
+            // district ; il n'existait rien d'équivalent pour les 4 panneaux de l'Accueil avant ce
+            // chunk — c'est EXACTEMENT le confound que ce fichier documentait. Après
+            // `RebatirChromePourResolutionCourante()` (qui vient de republier
+            // `ShellChrome.Top/BottomInsetPx`, dont dépend la géométrie des panneaux — voir l'ordre
+            // d'appel imposé par son propre docstring), on recuit leur bande pour la résolution
+            // ACTUELLE. Sans destruction en jeu (contrairement au district) : un seul
+            // `ForceUpdateCanvases` + une frame suffisent pour que les LayoutGroups internes
+            // se recalent. No-op si l'onglet monté n'est pas l'Accueil (liste vide).
+            shell.RebatirPanneauxAccueilPourResolutionCourante();
+            Canvas.ForceUpdateCanvases();
+            yield return null;
 
             cam.Render();
             RenderTexture prev = RenderTexture.active;

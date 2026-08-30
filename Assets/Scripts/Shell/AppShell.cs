@@ -121,6 +121,13 @@ namespace MafiaCleanCity.Shell
         private const int HeatProbeDistrictId = 16;
 
         private readonly List<GameObject> tabButtons = new List<GameObject>();
+        // Item 0.5 §C3 (Tools/charpente-item05-C3-implementation-notes.md) — la bande (yMin/yMax)
+        // de CHAQUE panneau posé par `NouveauPanneauAccueil`, mémorisée pour que
+        // `RebatirPanneauxAccueilPourResolutionCourante()` puisse la RECUIRE depuis
+        // `ContentSlot.rect.height` COURANT plutôt que de rester figée sur celui du montage — voir
+        // le docstring de cette méthode pour ce que « figée » a coûté, mesuré par la photo (C2).
+        private readonly List<(RectTransform rt, float yMin, float yMax)> panneauxAccueilBandes =
+            new List<(RectTransform rt, float yMin, float yMax)>();
         private bool initialized;
 
         private void Start()
@@ -578,6 +585,12 @@ namespace MafiaCleanCity.Shell
         /// TOUT `ContentSlot` au prochain changement d'onglet) sans mécanisme de teardown dédié.</summary>
         private void MonterPanneauxAccueil(SessionOpenDto dto)
         {
+            // Défensif (jamais exercé en production — `MonterPanneauxAccueil` n'est appelée
+            // qu'UNE fois par vie de shell, gardée par le sentinel `(Tab)(-1)` des deux appelants) :
+            // si jamais elle l'était deux fois sur LA MÊME instance, la liste ne doit pas
+            // accumuler des bandes d'un montage précédent déjà détruit.
+            panneauxAccueilBandes.Clear();
+
             // Sans anchors explicites, `new GameObject(nom, typeof(RectTransform))` pose un
             // RectTransform PAR DÉFAUT (anchorMin=anchorMax=(0,0), sizeDelta=(100,100)) — les 4
             // panneaux se superposeraient EXACTEMENT dans le même coin bas-gauche de `ContentSlot`,
@@ -637,21 +650,41 @@ namespace MafiaCleanCity.Shell
             GameObject host = new GameObject(nom, typeof(RectTransform));
             host.transform.SetParent(ContentSlot, false);
             RectTransform rt = (RectTransform)host.transform;
-            // B2 (revue ⊥ item05-C2, BLOQUANT-PRODUCTION) — `ContentSlot` couvre TOUT le canvas PAR
-            // CONCEPTION (un fond plein écran de tenant doit s'y étirer, voir le commentaire de
-            // `ConstruireLocataire` plus haut). Un panneau qui pose du TEXTE doit au contraire
-            // respecter ce que le chrome MANGE — le MÊME contrat que `ConstruireLocataire` publie
-            // pour tout `IShellTenant` (`ShellChrome.TopInsetPx`/`BottomInsetPx`), déjà consommé par
-            // `LieutenantScreenController`/`DistrictInteriorScreenController`. AVANT ce correctif,
-            // les 4 bandes fractionnaires (yMin/yMax) étaient réparties sur TOUTE la hauteur de
-            // `ContentSlot`, barres comprises — mesuré (revue ⊥, arithmétique sur les constantes du
-            // dépôt) : jusqu'à 100 % de HomeChrome sous le dock en 640×480 (le batchmode du juge),
-            // 51,8 % en 1080×1920, 41,4 % en 1080×2400. Les insets SONT déjà publiés ici : les DEUX
-            // appelants de `MonterPanneauxAccueil` passent par `MonterLocataireEnSurimpression<
-            // DashboardController>()` → `ConstruireLocataire` → `PublierInsetsDuChrome()` avant le
-            // `yield return null;` qui précède ce montage. Hors shell (tenu par le repli documenté
-            // sur `ShellChrome`), les deux insets valent 0 : la bande retombe sur `ContentSlot`
-            // entier, comportement inchangé pour tout test qui construit ce panneau seul.
+            PoserBandeAccueil(rt, yMin, yMax);
+            // C3 (Tools/charpente-item05-C3-implementation-notes.md) — mémorisée pour que
+            // `RebatirPanneauxAccueilPourResolutionCourante()` puisse rejouer CETTE formule quand
+            // `ContentSlot.rect.height` a changé depuis ce montage (voir son docstring) — jamais
+            // une seconde copie de `yMin`/`yMax`, la même paire que celle passée ci-dessus.
+            panneauxAccueilBandes.Add((rt, yMin, yMax));
+            return host.AddComponent<T>();
+        }
+
+        /// <summary>La géométrie d'UNE bande — PARTAGÉE entre le montage initial
+        /// (`NouveauPanneauAccueil`) et la reconstruction (`RebatirPanneauxAccueilPourResolutionCourante`).
+        /// UNE seule formule : c'est ce qui empêche les deux chemins de diverger silencieusement
+        /// (même patron que `DockRatifie`, items 0.2/0.3 — « deux copies qui doivent rester
+        /// parallèles sont une dette »).
+        ///
+        /// B2 (revue ⊥ item05-C2, BLOQUANT-PRODUCTION) — `ContentSlot` couvre TOUT le canvas PAR
+        /// CONCEPTION (un fond plein écran de tenant doit s'y étirer, voir le commentaire de
+        /// `ConstruireLocataire` plus haut). Un panneau qui pose du TEXTE doit au contraire
+        /// respecter ce que le chrome MANGE — le MÊME contrat que `ConstruireLocataire` publie
+        /// pour tout `IShellTenant` (`ShellChrome.TopInsetPx`/`BottomInsetPx`), déjà consommé par
+        /// `LieutenantScreenController`/`DistrictInteriorScreenController`. AVANT ce correctif,
+        /// les 4 bandes fractionnaires (yMin/yMax) étaient réparties sur TOUTE la hauteur de
+        /// `ContentSlot`, barres comprises — mesuré (revue ⊥, arithmétique sur les constantes du
+        /// dépôt) : jusqu'à 100 % de HomeChrome sous le dock en 640×480 (le batchmode du juge),
+        /// 51,8 % en 1080×1920, 41,4 % en 1080×2400. Les insets SONT déjà publiés au moment où
+        /// `NouveauPanneauAccueil` appelle ceci (les DEUX appelants de `MonterPanneauxAccueil`
+        /// passent par `MonterLocataireEnSurimpression<DashboardController>()` → `ConstruireLocataire`
+        /// → `PublierInsetsDuChrome()` avant le `yield return null;` qui précède ce montage), et à
+        /// nouveau au moment où `RebatirPanneauxAccueilPourResolutionCourante()` la rappelle (elle
+        /// n'est appelée qu'APRÈS `RebatirChromePourResolutionCourante()`, qui republie les deux
+        /// insets à sa toute fin — voir son propre docstring). Hors shell (tenu par le repli
+        /// documenté sur `ShellChrome`), les deux insets valent 0 : la bande retombe sur
+        /// `ContentSlot` entier, comportement inchangé pour tout test qui construit ce panneau seul.</summary>
+        private void PoserBandeAccueil(RectTransform rt, float yMin, float yMax)
+        {
             float hauteurTotale = ContentSlot.rect.height;
             float zoneSureBas = ShellChrome.BottomInsetPx;
             float zoneSureHaut = Mathf.Max(zoneSureBas, hauteurTotale - ShellChrome.TopInsetPx);
@@ -662,7 +695,67 @@ namespace MafiaCleanCity.Shell
             rt.anchorMax = new Vector2(1f, 0f); // point-anchor en Y : offsetMin/offsetMax mesurent alors TOUS DEUX depuis le bas de ContentSlot
             rt.offsetMin = new Vector2(0f, yBas);
             rt.offsetMax = new Vector2(0f, yHaut);
-            return host.AddComponent<T>();
+        }
+
+        /// <summary>Refait la géométrie des 4 panneaux de l'Accueil pour la résolution COURANTE —
+        /// le PENDANT, pour ces panneaux, de
+        /// `DistrictInteriorScreenController.RebatirPourResolutionCourante()` (lire SON docstring
+        /// d'abord : même classe de défaut, même origine — un `rect` lu une seule fois au montage).
+        ///
+        /// ⛔⛔ POURQUOI ÇA EXISTE — un défaut de MESURE, pas un bug joueur d'aujourd'hui.
+        /// `PoserBandeAccueil` cuit chaque bande comme un DÉCALAGE ABSOLU (`offsetMin`/`offsetMax`,
+        /// point-anchor en Y) dérivé de `ContentSlot.rect.height` LU au moment de l'appel. En
+        /// montage NATIF (le chemin joueur : le canvas est déjà à sa taille finale dès la frame 1,
+        /// et ce montage a lieu à l'ouverture de session — `Screen.width` ne change plus jamais
+        /// ensuite, portrait verrouillé), cette valeur est la bonne pour toujours : MESURÉ, 0,00 %
+        /// de débordement aux deux résolutions natives testées
+        /// (`Tools/charpente-item05-C2-photo-implementation-notes.md`). Le défaut ne mord QUE si
+        /// `ContentSlot.rect.height` change APRÈS ce montage sans que rien ne recuise la bande —
+        /// ce qu'aucun joueur ne provoque, mais ce que le patron de capture `CapturerA`/
+        /// `MesurerEtCapturer` FAIT systématiquement (montage à 640×480 en batchmode, PUIS
+        /// bascule du canvas vers la cible) : MESURÉ sur la même photo,
+        /// `HighestLeverageCardController` **+18,8 %**, `ExceptionQueuePanelController` **+73,1 %**
+        /// de débordement, texte superposé et illisible. Cette méthode répare l'INSTRUMENT et
+        /// supprime un décalage LATENT ; elle ne ferme aucune régression jouée aujourd'hui.
+        ///
+        /// ⚠️ CE QUE ÇA NE FAIT PAS, ET POURQUOI PAS — option conservatrice, pas une omission.
+        /// Le précédent du district DÉTRUIT et REBÂTIT tout son arbre, parce que `Render(dto)`
+        /// relit `root.rect.width` à PLUSIEURS endroits de sa construction. Ici, la SEULE grandeur
+        /// dépendante de la résolution est la bande externe de chaque panneau (yMin/yMax →
+        /// offsets) : le CONTENU des 4 panneaux vient de setters (`SetPayload`/`SetQueue`/
+        /// `SetFrictionStress`/`SetCompressionGlance`/`SetPressureBand`/`SetLoadCircumstances`) qui
+        /// ne dépendent d'AUCUNE géométrie de canvas. Détruire/recréer rejouerait ces setters ET
+        /// redéclencherait `OrgVitalsPanelController.FetchHeatAndCohesion` — un VRAI aller-retour
+        /// réseau — pour un correctif qui n'a besoin de toucher QUE la position. ⇒ repositionnement
+        /// SEUL (`PoserBandeAccueil`, la MÊME formule qu'au montage) : la `VerticalLayoutGroup`
+        /// interne de chaque panneau se recale toute seule sur son nouveau `rect` via
+        /// `Canvas.ForceUpdateCanvases()` — aucune destruction en jeu, donc pas besoin du double
+        /// `yield` que la destruction DIFFÉRÉE impose côté district (son propre commentaire,
+        /// « la destruction différée de l'ancienne racine »).
+        ///
+        /// ⚠️ ORDRE D'APPEL, OBLIGATOIRE — après `RebatirChromePourResolutionCourante()`, jamais
+        /// avant : celui-ci republie `ShellChrome.Top/BottomInsetPx` (`PublierInsetsDuChrome()`, à
+        /// sa toute fin) dont `PoserBandeAccueil` dépend — exactement le même ordre qu'au montage
+        /// initial (`ConstruireLocataire` publie les insets AVANT que `MonterPanneauxAccueil` ne
+        /// les lise).
+        ///
+        /// Sans appelant de production — comme son précédent district, et pour la MÊME raison :
+        /// la production ne change jamais de résolution après montage (voir plus haut). Un hook
+        /// sans appelant de production N'EST décoratif que s'il PRÉTEND fermer un défaut qui mord
+        /// en production ; celui-ci ne le prétend pas (docstring ci-dessus) — il ferme un défaut
+        /// de MESURE, et son seul consommateur légitime est le chemin qui refait cette mesure :
+        /// `AccueilPanneauxGeometriePhotoPlayModeTests.MesurerEtCapturer` (MÊME patron que
+        /// `VuePrincipaleCapturePlayModeTests.CapturerA`, qui n'a lui-même jamais mesuré l'Accueil
+        /// — `EnterDistrict`/`ActivateTab` y détruisent ces panneaux avant toute capture).</summary>
+        public void RebatirPanneauxAccueilPourResolutionCourante()
+        {
+            if (ContentSlot == null) return;
+            for (int i = 0; i < panneauxAccueilBandes.Count; i++)
+            {
+                (RectTransform rt, float yMin, float yMax) bande = panneauxAccueilBandes[i];
+                if (bande.rt == null) continue; // démonté depuis (changement d'onglet) — rien à refaire
+                PoserBandeAccueil(bande.rt, bande.yMin, bande.yMax);
+            }
         }
 
         private void UnmountCurrentTenant()

@@ -555,5 +555,197 @@ namespace MafiaCleanCity.Shell.Tests
                 "garde d'ensemble des 4 panneaux — sinon elle ne détecterait pas un panneau manquant, " +
                 "et certifierait le défaut qu'elle existe pour attraper.");
         }
+
+        // ══════════════════════════════════════════════════════════════════════════════════════
+        // C3 (Tools/charpente-item05-C3-implementation-notes.md) — GARDE STRUCTURELLE contre le
+        // retour de la classe fermée par ce chunk : une bande de panneau cuite comme un décalage
+        // ABSOLU depuis `ContentSlot.rect.height` LU UNE FOIS au montage, sans hook de
+        // reconstruction (voir le docstring d'`AppShell.RebatirPanneauxAccueilPourResolutionCourante`
+        // — même classe que celle DÉJÀ fermée par `DistrictInteriorScreenController.
+        // RebatirPourResolutionCourante`, cité là comme précédent).
+        //
+        // ⚠️ GARDE DE PROPORTION, PAS DE VALEUR À UNE RÉSOLUTION DONNÉE (socle CLAUDE.md : « durcir
+        // sur une autre grandeur que celle où vit le défaut ne l'atteint jamais » — le miroir vaut
+        // ici : une garde qui épinglerait un pixel absolu à UNE résolution ne détecterait qu'UN
+        // symptôme). La grandeur qui doit rester INVARIANTE est la FRACTION de la zone sûre
+        // qu'occupe chaque panneau (son yMin/yMax, jamais recopié depuis `AppShell` — relu depuis
+        // les 4 coins RÉELS du RectTransform, MÊME idiome que la garde B2 ci-dessus, appliqué
+        // AVANT et APRÈS un changement RÉEL de résolution + reconstruction).
+        // ══════════════════════════════════════════════════════════════════════════════════════
+        [UnityTest]
+        public IEnumerator C3_RebatirPanneauxAccueil_ReprendLaMemeFractionDeZoneSure_ApresUnVraiChangementDeHauteur()
+        {
+            yield return ChargerLaSceneDeDemarrageDuBuild();
+            AppShell shell = SondeShellDansLaScene(sceneDeDemarrage);
+            Assert.IsNotNull(shell, $"aucun AppShell dans la scène de démarrage du build ({sceneDeDemarrage.path})");
+            yield return WaitForEmpireMounted(shell);
+
+            HighestLeverageCardController hlCard = null;
+            ExceptionQueuePanelController exceptionQueue = null;
+            OrgVitalsPanelController orgVitals = null;
+            HomeChromeController homeChrome = null;
+            float ecouleMontage = 0f;
+            while (ecouleMontage < 10f &&
+                   (hlCard == null || exceptionQueue == null || orgVitals == null || homeChrome == null))
+            {
+                hlCard = shell.ContentSlot.GetComponentInChildren<HighestLeverageCardController>(false);
+                exceptionQueue = shell.ContentSlot.GetComponentInChildren<ExceptionQueuePanelController>(false);
+                orgVitals = shell.ContentSlot.GetComponentInChildren<OrgVitalsPanelController>(false);
+                homeChrome = shell.ContentSlot.GetComponentInChildren<HomeChromeController>(false);
+                ecouleMontage += Time.deltaTime;
+                yield return null;
+            }
+            Assert.IsNotNull(hlCard, "HighestLeverageCardController doit être monté avant de le mesurer");
+            Assert.IsNotNull(exceptionQueue, "ExceptionQueuePanelController doit être monté avant de le mesurer");
+            Assert.IsNotNull(orgVitals, "OrgVitalsPanelController doit être monté avant de le mesurer");
+            Assert.IsNotNull(homeChrome, "HomeChromeController doit être monté avant de le mesurer");
+
+            var panneaux = new (string nom, RectTransform rt)[]
+            {
+                (nameof(HighestLeverageCardController), (RectTransform)hlCard.transform),
+                (nameof(ExceptionQueuePanelController), (RectTransform)exceptionQueue.transform),
+                (nameof(OrgVitalsPanelController), (RectTransform)orgVitals.transform),
+                (nameof(HomeChromeController), (RectTransform)homeChrome.transform),
+            };
+
+            // MÊME idiome que la garde B2 plus haut (`GetWorldCorners` + `InverseTransformPoint`,
+            // JAMAIS un recalcul à la main de `yMin * safeHeight` — ce qui ne testerait que "le
+            // correctif est d'accord avec lui-même") — étendu en FRACTION de la zone sûre, pour
+            // rester comparable entre DEUX résolutions différentes.
+            (float fracMin, float fracMax) MesurerFraction(RectTransform rt)
+            {
+                float contentSlotYMin = shell.ContentSlot.rect.y; // Rect.y == yMin, PAS 0 (pivot centré)
+                float hauteurTotale = shell.ContentSlot.rect.height;
+                float plancherZoneSure = contentSlotYMin + ShellChrome.BottomInsetPx;
+                float plafondZoneSure = contentSlotYMin + hauteurTotale - ShellChrome.TopInsetPx;
+                float zoneSureHauteur = Mathf.Max(1f, plafondZoneSure - plancherZoneSure);
+                var coinsMonde = new Vector3[4];
+                rt.GetWorldCorners(coinsMonde);
+                float bandeYMin = float.MaxValue, bandeYMax = float.MinValue;
+                foreach (Vector3 coin in coinsMonde)
+                {
+                    float yLocal = shell.ContentSlot.InverseTransformPoint(coin).y;
+                    bandeYMin = Mathf.Min(bandeYMin, yLocal);
+                    bandeYMax = Mathf.Max(bandeYMax, yLocal);
+                }
+                return ((bandeYMin - plancherZoneSure) / zoneSureHauteur, (bandeYMax - plancherZoneSure) / zoneSureHauteur);
+            }
+
+            var fractionsAvant = new Dictionary<string, (float min, float max)>();
+            float hauteurAvant = shell.ContentSlot.rect.height;
+            foreach ((string nom, RectTransform rt) in panneaux) fractionsAvant[nom] = MesurerFraction(rt);
+
+            // ── un VRAI changement de `ContentSlot.rect.height` — MÊME technique que `CapturerA`/
+            //    `MesurerEtCapturer` (canvas basculé en `ScreenSpaceCamera` sur une cible d'une
+            //    AUTRE taille), jamais réinventée. Aucune capture de pixels nécessaire ici : seule
+            //    la GÉOMÉTRIE nous intéresse, pas l'image. ──
+            Canvas canvas = shell.ShellCanvas;
+            Assert.IsNotNull(canvas, "le shell doit avoir un canvas");
+            RenderMode modeAvant = canvas.renderMode;
+            Camera cameraAvant = canvas.worldCamera;
+            float planAvant = canvas.planeDistance;
+            var rtCible = new RenderTexture(1080, 2400, 24, RenderTextureFormat.ARGB32);
+            var camGo = new GameObject("GardeC3Cam");
+            var cam = camGo.AddComponent<Camera>();
+            cam.targetTexture = rtCible;
+            cam.orthographic = true;
+            canvas.renderMode = RenderMode.ScreenSpaceCamera;
+            canvas.worldCamera = cam;
+            canvas.planeDistance = 10f;
+            Canvas.ForceUpdateCanvases();
+            yield return null;
+            Canvas.ForceUpdateCanvases();
+            yield return null;
+
+            float hauteurApresBascule = shell.ContentSlot.rect.height;
+            // Anti-vacuité : sans un VRAI changement de hauteur, cette garde ne prouverait rien —
+            // elle serait satisfaite MÊME par une bande jamais reconstruite (l'ancienne et la
+            // "nouvelle" géométrie seraient la même valeur, par coïncidence plutôt que par preuve).
+            Assert.Greater(Mathf.Abs(hauteurApresBascule - hauteurAvant), 50f,
+                $"PRÉCONDITION anti-vacuité : ce test exige un changement RÉEL de ContentSlot.rect." +
+                $"height (avant={hauteurAvant:F1}, après bascule={hauteurApresBascule:F1}) — sans " +
+                "lui, cette garde ne distingue pas une bande RECONSTRUITE d'une bande restée FIGÉE " +
+                "sur l'ancienne valeur.");
+
+            shell.RebatirChromePourResolutionCourante(); // republie ShellChrome.Top/BottomInsetPx D'ABORD
+            Canvas.ForceUpdateCanvases();
+            yield return null;
+            shell.RebatirPanneauxAccueilPourResolutionCourante();
+            Canvas.ForceUpdateCanvases();
+            yield return null;
+
+            var constats = new List<string>();
+            foreach ((string nom, RectTransform rt) in panneaux)
+            {
+                (float fracMin, float fracMax) apres = MesurerFraction(rt);
+                (float min, float max) avant = fractionsAvant[nom];
+                if (Mathf.Abs(avant.min - apres.fracMin) > 0.01f)
+                    constats.Add($"{nom} : fraction BASSE avant={avant.min:F4} après={apres.fracMin:F4}");
+                if (Mathf.Abs(avant.max - apres.fracMax) > 0.01f)
+                    constats.Add($"{nom} : fraction HAUTE avant={avant.max:F4} après={apres.fracMax:F4}");
+            }
+
+            Object.DestroyImmediate(camGo);
+            canvas.renderMode = modeAvant;
+            canvas.worldCamera = cameraAvant;
+            canvas.planeDistance = planAvant;
+            rtCible.Release();
+            Object.DestroyImmediate(rtCible);
+            Canvas.ForceUpdateCanvases();
+            yield return null;
+
+            Assert.IsEmpty(constats,
+                $"{constats.Count} panneau(x) dont la fraction de zone sûre a changé après " +
+                $"RebatirPanneauxAccueilPourResolutionCourante() (hauteur {hauteurAvant:F1} -> " +
+                $"{hauteurApresBascule:F1}) — un écart signale que la bande n'a PAS été recuite " +
+                "depuis ContentSlot.rect.height COURANT (la classe que ce chunk ferme) :\n" +
+                string.Join("\n", constats));
+        }
+
+        // ══════════════════════════════════════════════════════════════════════════════════════
+        // CONTRÔLE POSITIF (C3, même patron que `CharpenteBootScenePlayModeTests.MAJEUR3_..._
+        // PositiveControl_MethodeDoitReellementEcrire`, round 15) — sans lui, la garde de
+        // PROPORTION ci-dessus pourrait rester verte pour la MAUVAISE raison : un early-return
+        // silencieux, une liste `panneauxAccueilBandes` jamais peuplée (ex. un futur refactor qui
+        // romprait l'appel à `.Add(...)` dans `NouveauPanneauAccueil` sans lever d'erreur) — une
+        // valeur JAMAIS TOUCHÉE reste par définition identique à elle-même. On sabote
+        // délibérément UN panneau AVANT l'appel : si la méthode écrit réellement, la valeur
+        // sabotée ne doit PAS survivre.
+        // ══════════════════════════════════════════════════════════════════════════════════════
+        [UnityTest]
+        public IEnumerator C3_RebatirPanneauxAccueil_PositiveControl_MethodeDoitReellementEcrire()
+        {
+            yield return ChargerLaSceneDeDemarrageDuBuild();
+            AppShell shell = SondeShellDansLaScene(sceneDeDemarrage);
+            Assert.IsNotNull(shell, $"aucun AppShell dans la scène de démarrage du build ({sceneDeDemarrage.path})");
+            yield return WaitForEmpireMounted(shell);
+
+            HomeChromeController homeChrome = null;
+            float ecouleMontage = 0f;
+            while (ecouleMontage < 10f && homeChrome == null)
+            {
+                homeChrome = shell.ContentSlot.GetComponentInChildren<HomeChromeController>(false);
+                ecouleMontage += Time.deltaTime;
+                yield return null;
+            }
+            Assert.IsNotNull(homeChrome, "HomeChromeController doit être monté avant de le saboter");
+            var rt = (RectTransform)homeChrome.transform;
+
+            const float valeurSaboteeMin = 999f;
+            const float valeurSaboteeMax = 1000f;
+            rt.offsetMin = new Vector2(rt.offsetMin.x, valeurSaboteeMin);
+            rt.offsetMax = new Vector2(rt.offsetMax.x, valeurSaboteeMax);
+
+            shell.RebatirPanneauxAccueilPourResolutionCourante();
+            yield return null;
+
+            Assert.AreNotEqual(valeurSaboteeMin, rt.offsetMin.y,
+                "CONTRÔLE POSITIF : RebatirPanneauxAccueilPourResolutionCourante() DOIT réellement " +
+                "RÉÉCRIRE offsetMin.y du panneau tracké (pas un early-return silencieux, pas une " +
+                "liste vide) — sinon la garde de proportion ci-dessus serait verte par ABSENCE " +
+                "D'EXÉCUTION, pas par la propriété qu'elle prétend surveiller.");
+            Assert.AreNotEqual(valeurSaboteeMax, rt.offsetMax.y,
+                "idem pour offsetMax.y.");
+        }
     }
 }
