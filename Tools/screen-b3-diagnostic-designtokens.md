@@ -193,3 +193,68 @@ confortable au moment où il ne restait qu'un test à faire.** Une explication q
 est structurellement plus dangereuse qu'une erreur qui coûte du travail — parce que personne ne
 re-mesure une explication qui arrange. Nous sommes deux à l'avoir commise ce soir, indépendamment,
 sur la même entrée périmée du socle.
+
+---
+
+## ⛔ VERDICT (00:20) — CE N'EST NI LE SCOPE NI L'ORDRE. C'EST UN VRAI DÉFAUT, ET IL EST MASSIF
+
+Run **COMPLET**, en **BATCHMODE** (`Tools/run-unity-check.sh -executeMethod MafiaCI.RunPlayModeTests`),
+lancé à 00:06:43. Conditions écrites avant le résultat : 7 conteneurs et charge 1,85 au lancement,
+montée à 13,7 quand le plancher r14 a démarré en parallèle.
+
+    occurrences « Resources.Load("DesignTokens") a renvoyé null » : 171
+    tests FAIL à cause de ça : 57
+    tests FAIL au total      : 111        ⇒ 51 % DES ÉCHECS DE LA SUITE
+    fixtures touchées        : 18, toutes LIVRÉES, aucune du lot ㊲
+
+    DistrictMapNavigation 14 · DistrictBackground 5 · DailyReviewScreenController 5 ·
+    DistrictInteriorLighting 4 · DistrictInteriorLieutenantMarkers 4 · DistrictInteriorDiorama 4 ·
+    TopBarController 3 · DistrictInteriorAmbientLoops 3 · DesignTokensPlayModeTests 3 ·
+    OrgVitalsPanel 2 · Hud 2 · HighestLeverageCard 2 · Navigation 1 · HomeChrome 1 ·
+    ExceptionQueuePanel 1 · CharpenteMontageLocataires 1 · CanonPaletteBridge 1 ·
+    AccueilPanneauxGeometriePhoto 1
+
+⇒ **Hypothèse (3) « ordre d'exécution » RÉFUTÉE** : le run est complet, et il n'y a rien à
+« chauffer » — 171 occurrences réparties sur toute la suite.
+
+## La liste complète de ce qui est ÉLIMINÉ, et ce qui reste
+
+| cause envisagée | comment elle est tombée |
+|---|---|
+| charge / import concurrent | témoin rouge à l'identique sur machine calme (7 conteneurs, charge 1,39) |
+| pile back absente | le fixture témoin ne touche pas le back (0 occurrence réseau) |
+| asset manquant | `get_info` le voit, 4573 o, `.meta` présent |
+| lien `.meta` ↔ script rompu | GUID `eda4e673…` identique des deux côtés |
+| assembly non compilée | `Theme.dll` présente (7680 o) |
+| artefact d'outillage (`Unknown`) | l'outil nomme les 2 autres ScriptableObjects du même dossier |
+| scope du run | run **complet** : même résultat |
+| ordre d'exécution | run **complet** : même résultat |
+| initialiseur statique (socle) | **retiré** — le fixture n'en a aucun, il lit dans le corps (:17/:28/:39) |
+
+⇒ **LA CAUSE RESTE INCONNUE.** Neuf pistes éliminées, aucune n'explique. Ce qui est établi :
+le défaut est **réel**, **massif**, **antérieur au lot ㊲**, et **indépendant du mode d'exécution**
+(il se produit via l'éditeur ET en batchmode).
+
+## Ce que ça coûte à TOUT LE MONDE, et pourquoi c'est le point le plus urgent
+
+**Tout run PlayMode de ce dépôt porte actuellement ~57 rouges qui n'appartiennent à personne.**
+Quiconque lance une suite et lit ses rouges accusera son propre code — et deux des fixtures
+touchées (`CanonPaletteBridge`, `AccueilPanneauxGeometriePhoto`) sont dans le périmètre d'une
+autre session. Remonté immédiatement à l'orchestratrice pour cette raison.
+
+## ⚠️ Ce que ce run NE dit PAS sur le lot ㊲
+
+**0 échec dans mes tests — et ça n'innocente rien.** `ScreenB3` n'était pas dans
+`MafiaCI.Categories` au moment du lancement, donc mes 6 tests et ma capture **n'ont pas tourné**.
+Le zéro est un zéro d'ABSENCE, pas de succès. Corrigé depuis (la catégorie est ajoutée), mais
+après le lancement : **mon écran n'est ni innocenté ni accusé par ces chiffres.**
+
+## Sur la fin de ce run
+
+Le wrapper porte un `timeout 900` calibré sur machine calme ; sous charge 13,7 il peut tuer le
+processus avant la ligne `TOTAL:`. ⇒ **Écrit AVANT que ça n'arrive : tout arrêt de ce run sans
+`TOTAL:` est un TIMEOUT DU WRAPPER, pas un crash de l'éditeur.** La distinction compte doublement
+cette nuit, puisqu'un vrai crash a eu lieu à 23:58 (blob Mono de 10 Mo, conservé) et que les deux
+se ressemblent trait pour trait.
+⇒ Et laisser courir est le bon choix ici parce que **le résultat attendu est déjà obtenu** : 171
+occurrences et 57 tests tranchent, la fin n'ajouterait qu'un compte.
