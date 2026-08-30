@@ -258,3 +258,52 @@ cette nuit, puisqu'un vrai crash a eu lieu à 23:58 (blob Mono de 10 Mo, conserv
 se ressemblent trait pour trait.
 ⇒ Et laisser courir est le bon choix ici parce que **le résultat attendu est déjà obtenu** : 171
 occurrences et 57 tests tranchent, la fin n'ajouterait qu'un compte.
+
+---
+
+## ⛔ TROISIÈME RÉTRACTATION (01:05) — « dll périmée » n'était PAS le mécanisme
+
+Le défaut a bel et bien disparu — ça, c'est mesuré et ça tient :
+
+    run 5 : « a renvoyé null » 181 · FAIL 121
+    run 6 : « a renvoyé null » 171 · FAIL 119
+    run 7 : « a renvoyé null »   0 · FAIL   9      ⇐ 110 tests réparés
+
+Mais **l'explication que j'en ai donnée est fausse.** J'avais écrit que `Theme.dll` était périmée
+parce qu'elle datait de 21:08 quand les autres assemblies dataient de 23:20. **C'est une mauvaise
+comparaison** : l'âge d'une dll par rapport à une AUTRE dll ne dit rien. Par ce critère, toute
+assembly stable est éternellement suspecte.
+
+**Le seul oracle valable est la dll contre SES PROPRES sources.** Mesuré (par git, le fichier ayant
+changé depuis) :
+
+    dernière modification de `Assets/Scripts/Theme/` avant cette nuit : commit c7595e4, 08-25 14:13
+    `Theme.dll` au moment des runs 4/5/6                              : 08-30 21:08:14
+    ⇒ POSTÉRIEURE de CINQ JOURS ⇒ **À JOUR**
+
+⇒ **La recompilation a été le REMÈDE sans être le DIAGNOSTIC.** On sait que le défaut est parti ;
+on ne sait toujours pas de quoi il souffrait. La classe n'est **pas** fermée, et il peut revenir
+sous une autre forme (état de domaine incohérent, cache de types, résolution d'assembly).
+
+★ Troisième rétractation sur ce même défaut, et le motif est constant : **les trois explications
+étaient CONFORTABLES et épargnaient une mesure.**
+
+| explication | d'où elle venait | ce qui l'a tuée |
+|---|---|---|
+| initialiseur statique | reprise du socle sans vérifier qu'elle s'appliquait | le fixture n'en a aucun ; le socle annonçait 65 sites, il y en a 0 d'impatients |
+| base d'assets non prête | plausible, expliquait la charge | témoin rouge à l'identique sur machine calme |
+| dll périmée | comparaison entre dll | dll postérieure à SES sources de 5 jours |
+
+⇒ La règle qui aurait évité les trois : *une explication qui épargne une mesure est plus dangereuse
+qu'une erreur qui en coûte une* — personne ne re-mesure ce qui arrange. Ce qui m'a rattrapé chaque
+fois n'est pas ma vigilance : c'est une question posée par quelqu'un d'autre.
+
+## ⚠️ ET L'OUTIL QUI VA ARRIVER NE FERME PAS LA CLASSE
+
+Une autre session a commité `Tools/assemblies-perimees.py` — il compare chaque dll à ses propres
+sources, avec contrôle positif ET négatif. C'est le bon oracle et il attrapera le cas « périmée ».
+
+⛔ **Mais il n'aurait PAS attrapé ce défaut-ci**, puisque la dll était à jour. Sa présence ne doit
+donc pas faire croire la classe fermée : si le null réapparaît alors que l'oracle est vert,
+l'hypothèse « état compilé » tombe entièrement et il faut chercher du côté du chargement de
+domaine. **Un dispositif qui couvre une cause voisine de la vraie est le plus trompeur de tous.**
