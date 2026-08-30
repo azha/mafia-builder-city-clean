@@ -16,8 +16,16 @@
 # (mauvais types de retour, méthode inexistante) et EXIGE qu'elles rougissent. Si elles ne
 # rougissent pas, la passe normale ne prouve rien et le script le dit.
 #
+# ⚠️ ET LE TROU QUE CE SCRIPT A EU LUI-MÊME PENDANT UNE HEURE : il ne compilait QUE le code de
+# jeu, jamais `Assets/Tests/PlayMode`. Une suite de tests fraîchement écrite pouvait donc être
+# déclarée « le code compile » alors que RIEN ne l'avait jamais compilée — un vert qui répond à
+# une autre question que celle qu'on lui pose. Le mode `--tests` ferme ce trou ; il tire aussi
+# `Assets/Editor/AssetLint` (les tests en dépendent) et définit `UNITY_INCLUDE_TESTS`, sans quoi
+# l'assembly de tests est exclue par sa propre contrainte de define.
+#
 # usage :
-#   Tools/verifier-compilation-sans-unity.sh                    # la passe (EXIT 0 = compile)
+#   Tools/verifier-compilation-sans-unity.sh                    # le code de jeu
+#   Tools/verifier-compilation-sans-unity.sh --tests            # code de jeu + suites PlayMode
 #   Tools/verifier-compilation-sans-unity.sh --controle-positif # la faute injectée DOIT rougir
 set -uo pipefail
 
@@ -34,11 +42,21 @@ trap 'rm -rf "$TMP"' EXIT
 cd "$RACINE"
 [[ -f Operational.csproj ]] || { echo "Operational.csproj absent — ouvrir l'IDE une fois pour le générer"; exit 2; }
 
+MODE="${1:-}"
+CSPROJ="Operational.csproj"
+[[ "$MODE" == "--tests" ]] && CSPROJ="CityMap.PlayMode.Tests.csproj"
+[[ -f "$CSPROJ" ]] || { echo "$CSPROJ absent — ouvrir l'IDE une fois pour le générer"; exit 2; }
+
 # Les références : lues dans le csproj généré par Unity, jamais listées à la main.
-python3 - "$TMP" <<'PY'
+# ⚠️ On ÉCARTE les .dll de nos propres assemblies : elles sont compilées depuis leurs sources
+# juste après. Sinon une constante ajoutée aujourd'hui serait absente de la dll d'hier, et
+# l'échec accuserait le code pour une raison sans rapport.
+python3 - "$TMP" "$CSPROJ" <<'PY'
 import re, sys
-tmp = sys.argv[1]
-refs = re.findall(r'<HintPath>([^<]+)</HintPath>', open('Operational.csproj').read())
+tmp, csproj = sys.argv[1], sys.argv[2]
+refs = re.findall(r'<HintPath>([^<]+)</HintPath>', open(csproj).read())
+refs = [r for r in refs if not re.search(
+    r'/(Operational|ShellContracts|Theme|CityMap|Shell|AssetLint)\.dll$', r.replace('\\', '/'))]
 # ⚠️ Le '\n' FINAL n'est pas cosmétique : sans lui, la dernière référence et l'option qui suit
 # se retrouvent sur la MÊME ligne du fichier-réponse, et Roslyn cherche un fichier nommé
 # « UnityEngine.UI.dll/target:library ». Le message d'erreur parle alors d'un fichier
@@ -50,14 +68,21 @@ PY
 # Les sources : les assemblies de gameplay, compilées DEPUIS LEURS SOURCES et non depuis leurs
 # .dll — sinon une constante ajoutée aujourd'hui (p. ex. EchelleMaquette.LargeurEcransBrennar6)
 # serait absente de la dll d'hier et le contrôle échouerait pour une raison sans rapport.
-find Assets/Scripts/Operational Assets/Scripts/ShellContracts Assets/Scripts/Theme \
-     Assets/Scripts/CityMap Assets/Scripts/Shell -name '*.cs' > "$TMP/srcs.txt"
+if [[ "$MODE" == "--tests" ]]; then
+  find Assets/Scripts Assets/Tests/PlayMode Assets/Editor/AssetLint -name '*.cs' > "$TMP/srcs.txt"
+else
+  find Assets/Scripts/Operational Assets/Scripts/ShellContracts Assets/Scripts/Theme \
+       Assets/Scripts/CityMap Assets/Scripts/Shell -name '*.cs' > "$TMP/srcs.txt"
+fi
 
 sed 's|^|/r:|' "$TMP/refs.txt" > "$TMP/rsp.txt"
 printf '/target:library\n/out:%s/verif.dll\n/nostdlib+\n/langversion:9.0\n' "$TMP" >> "$TMP/rsp.txt"
+# UNITY_INCLUDE_TESTS : sans lui, l'assembly de tests est écartée par sa propre
+# `defineConstraints` et le run compilerait 0 test en rendant EXIT=0 — un vert de non-exécution.
+[[ "$MODE" == "--tests" ]] && echo '/define:UNITY_INCLUDE_TESTS' >> "$TMP/rsp.txt"
 cat "$TMP/srcs.txt" >> "$TMP/rsp.txt"
 
-if [[ "${1:-}" == "--controle-positif" ]]; then
+if [[ "$MODE" == "--controle-positif" ]]; then
   cat > "$TMP/ControlePositif.cs" <<'CS'
 using MafiaCleanCity.Operational;
 public class ControlePositifSonde
