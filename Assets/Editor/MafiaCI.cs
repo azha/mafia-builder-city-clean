@@ -31,7 +31,24 @@ public static class MafiaCI
     // ⇒ après tout run qui doit DÉCIDER, relancer le test visé SEUL par son nom complet et vérifier
     // qu'il est dans le compte. Ne jamais choisir un nom de catégorie de mémoire : le lire dans le
     // fichier qui le porte.
-    private static readonly string[] Categories = { "W4P4a", "W3UDA", "W3U1", "W3U2", "Charpente" };
+    // ⛔ CETTE LISTE EST UN FILTRE, ET UN TEST HORS LISTE NE TOURNE JAMAIS — sans que rien ne le
+    // signale. Le run rend son `TOTAL:` et son exit 0 en ayant exécuté un AUTRE jeu que celui
+    // qu'on croyait. Ce dépôt a déjà payé exactement ça : `category_names: ["HUD"]` a rendu
+    // **31/31 VERT avec le défaut réarmé exprès**, parce qu'aucune catégorie « HUD » n'existe et
+    // que le filtre matche par préfixe.
+    //
+    // ⇒ Toute catégorie neuve doit être AJOUTÉE ICI le jour où elle est créée, sinon la suite qui
+    // la porte est invisible au juge — verte par absence, ce qui ressemble trait pour trait à
+    // verte par succès.
+    //
+    // `ScreenB3` ajoutée le 2026-08-31 : l'écran ㊲ (La réputation). Mesuré au moment de
+    // l'ajouter — les catégories réellement portées par la suite sont W3U2 (17), Screenshot (11),
+    // W3U1 (10), HUDv31 (5), Charpente (5), W4P4a (3), W3UDA (3), ScreenB3 (1), JUGE (1),
+    // Capture (1). Quatre d'entre elles restent DÉLIBÉRÉMENT hors filtre — `Screenshot`,
+    // `Capture`, `JUGE`, `HUDv31` produisent des images ou des rapports et coûtent cher ; elles se
+    // lancent nommément, pas dans le run de vérification.
+    private static readonly string[] Categories =
+        { "W4P4a", "W3UDA", "W3U1", "W3U2", "Charpente", "ScreenB3" };
 
     public static void RunPlayModeTests()
     {
