@@ -383,6 +383,19 @@ namespace MafiaCleanCity.Operational.Tests
 
             yield return CapturerA(1080, 1920, "Assets/Screenshots/screen_b3_reputation_1080x1920.png");
             yield return CapturerA(1080, 2400, "Assets/Screenshots/screen_b3_reputation_1080x2400.png");
+
+            // ⛔⛔ LA PAIRE T / T+1 s — EXIGÉE PAR LA DOCTRINE, PAS UN SUPPLÉMENT.
+            // Ruling user 2026-08-27 : AUCUNE animation sur un écran neuf. Le juge visuel le
+            // vérifie en comparant deux captures du MÊME état à une seconde d'intervalle et en
+            // exigeant 0 pixel différent. Sans cette paire, il ne peut pas trancher et classera
+            // la question en « non vérifié ».
+            // ⚠️ La maquette, elle, ANIME : `.veille6` fait pulser une luminosité et
+            // `.elast::after` fait descendre une ligne de scan toutes les 7,5 s. Ne pas les
+            // porter est donc une DÉCISION conforme au ruling, pas un oubli — et cette paire est
+            // ce qui le prouve au lieu de l'affirmer.
+            yield return new WaitForSeconds(1f);
+            yield return CapturerA(1080, 1920,
+                "Assets/Screenshots/screen_b3_reputation_1080x1920_t1s.png");
         }
 
         private IEnumerator CapturerA(int largeur, int hauteur, string chemin)
