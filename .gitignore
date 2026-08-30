@@ -58,3 +58,9 @@ node_modules/
 # pas déjà suivi) : ils sont signalés, pas supprimés d'autorité.
 /[Aa]ssets/InitTestScene*.unity
 /[Aa]ssets/InitTestScene*.unity.meta
+
+# ⛔ La règle [Bb]uild/ ci-dessus (sorties de build Unity) avalait AUSSI un dossier de CODE
+# SOURCE du paquet MCP embarqué — Editor/Tools/Build/ : 4 fichiers .cs jamais commitables,
+# tout checkout frais (clone, worktree) ouvrait en Safe Mode avec CS0234. Mesuré le 2026-08-30
+# sur le worktree pilote-B. Exception :
+!Packages/com.coplaydev.unity-mcp/**/[Bb]uild/
