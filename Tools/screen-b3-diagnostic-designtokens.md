@@ -1,4 +1,10 @@
-# Le rouge de `DesignTokens.Current` — un défaut d'ENVIRONNEMENT, pas du lot ㊲
+# Le rouge de `DesignTokens.Current` — PAS le lot ㊲, et la cause reste INCONNUE
+
+> ⚠️ Ce document a été écrit en trois passes et **deux de ses affirmations ont été retirées**
+> par des mesures ultérieures. Elles sont conservées barrées plutôt que supprimées : une
+> explication qu'on efface revient toujours, une explication qu'on garde avec sa réfutation
+> ne revient pas. Lire jusqu'au bout avant d'agir — **la seule chose établie est ce que ce
+> rouge N'EST PAS.**
 
 Mesuré le 2026-08-30 à 23:22, au premier run PlayMode du lot.
 
@@ -66,11 +72,11 @@ Le FAIT reste entier, parce qu'il repose sur une mesure indépendante et non sur
 **un fixture livré, sans rapport avec ce lot, échoue 3/3 avec la même cause.** Le rouge n'est donc
 pas dans mon code. C'est l'EXPLICATION de sa cause qui est retirée, pas le constat.
 
-⇒ La piste qui reste, et elle est cohérente avec un asset PRÉSENT qui se charge en `null` : la
-**base d'assets n'était pas prête** à cet instant. Mes deux runs sont tombés pendant le démarrage
-d'un plancher E2E **et** pendant que deux éditeurs importaient. Un `Resources.Load` null n'est pas
-un symptôme de charge CPU — c'en est un d'`AssetDatabase` non prête, ce que produit exactement un
-import concurrent.
+~~⇒ La piste qui reste : la base d'assets n'était pas prête, deux éditeurs important pendant un
+démarrage de plancher.~~ **RÉFUTÉE à 23:47** — le fixture témoin échoue à l'identique sur machine
+calme (7 conteneurs, 0 shard, charge 1,39, pile à 200). Voir la section de re-mesure plus bas.
+⇒ Je laisse la phrase barrée parce qu'elle était *plausible* : c'est précisément le genre
+d'explication qui épargne une mesure, et qu'on ne re-mesure jamais parce qu'elle arrange.
 
 ## Ce qui reste NON TRANCHÉ, et la mesure qui trancherait
 
@@ -146,3 +152,44 @@ existant sans vérifier qu'il y entrait. La mesure qui trancherait : appeler `ge
 
 **Prochaine mesure due**, dès qu'un créneau machine est libre : le run COMPLET du fixture témoin.
 Vert ⇒ ordre d'exécution, à nommer ainsi. Rouge ⇒ vrai défaut, à consigner en dette.
+
+---
+
+## `assetType: "Unknown"` — TRANCHÉ, et ce n'est PAS une limite de l'outil (23:49)
+
+Je refusais d'en faire une piste faute de savoir départager « vrai symptôme » et « l'outil MCP ne
+sait pas nommer un type custom ». La mesure que j'avais écrite comme départage a été faite :
+`get_info` sur deux **autres** ScriptableObjects du même dossier `Resources/`.
+
+    BuildingSpriteSlots.asset       assetType = MafiaCleanCity.CityMap.BuildingSpriteSlots   instanceID = 49228
+    DistrictBackgroundSlots.asset   assetType = MafiaCleanCity.CityMap.DistrictBackgroundSlots instanceID = 49738
+    DesignTokens.asset              assetType = Unknown                                       instanceID = 0
+
+⇒ **L'outil SAIT nommer les types custom** — il le fait pour les deux autres. `Unknown` est donc un
+**vrai symptôme**, et `instanceID = 0` le confirme par un second canal : l'objet n'est **pas chargé
+en mémoire**, là où ses deux voisins le sont.
+
+⇒ Ce que ça élimine : « c'est un artefact d'outillage ». Ce que ça n'établit **pas** : la cause.
+Un asset présent, au bon chemin, avec un `.meta` valide et un `m_Script` pointant un GUID
+concordant vers une assembly compilée — et pourtant non chargé. **Je n'ai pas d'explication qui
+tienne, et je n'en propose pas.**
+
+⚠️ Une différence observée, notée SANS en faire une piste : les deux assets qui se chargent sont
+typés dans l'assembly `CityMap` ; celui qui échoue l'est dans `Theme`, dont la dll est la seule à
+ne pas avoir été recompilée à 23:20 (elle date de 21:08:14 — normal, rien ne l'a modifiée). C'est
+une **corrélation à deux points**, ce qui ne vaut rien : je l'écris pour qui reprendra, pas comme
+une hypothèse. La départager demanderait un troisième ScriptableObject typé dans `Theme` — il n'y
+en a pas.
+
+## Pourquoi ce document garde ses erreurs barrées
+
+Deux explications y ont été retirées : « initialiseur statique » (le mécanisme du socle, qui ne
+s'applique pas — le fixture témoin n'a AUCUN initialiseur statique, ses trois lectures sont dans le
+CORPS des tests) et « base d'assets non prête » (réfutée sur machine calme).
+
+★ Et la leçon que la session f1 a formulée en retirant la même explication que moi, le même soir,
+sur le même symbole : **le tort n'est pas d'avoir eu tort, c'est d'avoir offert une sortie
+confortable au moment où il ne restait qu'un test à faire.** Une explication qui ÉPARGNE une mesure
+est structurellement plus dangereuse qu'une erreur qui coûte du travail — parce que personne ne
+re-mesure une explication qui arrange. Nous sommes deux à l'avoir commise ce soir, indépendamment,
+sur la même entrée périmée du socle.
