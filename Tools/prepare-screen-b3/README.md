@@ -60,6 +60,29 @@ pour qu'aucun site d'appel futur ne les repaie :
 - **`counterparty_id` non-UUID ⇒ 500**, pas 404 (défaut back consigné S13-i) : le client ne passe
   ce paramètre que s'il tient un identifiant **venant du serveur**.
 
+## Vérification statique — ce qui a pu être contrôlé SANS compiler
+
+Six fichiers écrits sans jamais pouvoir compiler, c'est six fichiers dont on ne sait rien. Une
+passe de contrôle a donc été faite sur tout ce qui est vérifiable par lecture — chaque erreur
+trouvée ici est un cycle de compilation économisé plus tard :
+
+| ce qui a été contrôlé | méthode | résultat |
+|---|---|---|
+| les 16 membres `DesignTokens.Current.*` appelés | extraits du code, confrontés aux champs déclarés | **16/16 existent**, 0 manquant |
+| `ProceduralUI.RadialDisc` · `RoundedRectOutline` · `RoundedRectMask` | signatures relues à la source | conformes aux appels |
+| `AuthClient.SignUp(callsign, password, onOk, onErr)` | signature relue à la source | conforme |
+| références d'assembly | `Operational.asmdef` → `ShellContracts`, `Theme`, `Unity.TextMeshPro`, `UnityEngine.UI` ; `CityMap.PlayMode.Tests.asmdef` → `Operational` | **pas de cycle**, tout est joignable |
+| namespaces | `EchelleMaquette`, `ShellChrome`, `IShellTenant`, `ProceduralUI` sont tous dans `MafiaCleanCity.Shell` ; le `using` est présent | conforme |
+| aucune géométrie depuis `Screen.*` | balayage des 5 fichiers de code, **avec contrôle positif** (le motif `EchelleMaquette` sort 6 et 3 sur les deux fichiers de géométrie) | **0**, et le zéro est un vrai zéro |
+
+**Un seul symbole manque volontairement** : `EchelleMaquette.LargeurEcransBrennar6`, fourni par
+`PATCH-EchelleMaquette.md`. Si le patch n'est pas appliqué, ça ne compile pas — c'est le
+comportement voulu.
+
+⚠️ Ce que cette passe NE dit PAS : que le code compile. Elle contrôle les symboles externes et les
+frontières d'assembly, pas la syntaxe ni les conversions de type. **La première compilation reste
+due**, et elle rendra probablement des erreurs — c'est normal et c'est prévu.
+
 ## Ce qu'ils ne portent PAS, volontairement
 
 Le contrôleur d'écran et sa mise en page. Deux avertissements de construction s'y appliquent, tous
