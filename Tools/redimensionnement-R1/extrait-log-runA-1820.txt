@@ -1,0 +1,13 @@
+# Extrait réduit de scratchpad/runA-1820.log — les lignes dont dépend la décision du §5
+# Source : run PlayMode du 2026-08-30 18:28, 19667 lignes, 2,8 Mo (non tracké, hors dépôt).
+# Commité en extrait parce qu'une DÉCISION du design repose dessus et qu'aucun lecteur
+# futur ne pouvait la re-dériver. Les deux lignes sont copiées VERBATIM.
+
+891:[GEOM diag] AVANT bascule — ContentSlot.rect=(x:-640.00, y:-480.00, width:1280.00, height:960.00) ShellChrome.Top=275.0 ShellChrome.Bottom=294.4 Screen=640x480 canvas.scaleFactor=0.5000
+1265:[GEOM diag NATIF 1080x1920] ContentSlot.rect=(x:-640.00, y:-1137.78, width:1280.00, height:2275.56) canvas.scaleFactor=0.8438 ShellChrome.Top=170.3 ShellChrome.Bottom=294.4
+
+# Lecture : Top varie de 275,0 à 170,3 (104,7) ; Bottom est invariante à 294,4.
+# ⇒ le terme de zone sûre est invariant, la SOMME ne l'est pas, et P4/P5 lisent la somme.
+# ⚠️ MAIS : aux deux points, Screen.safeArea vaut le plein écran dans l'éditeur, donc le
+#    terme de zone sûre est 0 des DEUX côtés. La variance vient de la hauteur de barre et
+#    du débord. ⇒ observable comme GÉOMÉTRIE, pas sur la dépendance zone-sûre (§5, I8).
