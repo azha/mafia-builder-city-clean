@@ -12,6 +12,23 @@ de 1 min 47 s, et porte les 74 champs de la source. Elle n'était pas périmée.
    Adopter « les vieilles dll sont suspectes » produit un faux positif permanent sur
    toute assembly stable, et noie les vraies.
 
+⛔⛔ CE QUE CET ORACLE NE DÉTECTE PAS — À LIRE AVANT DE LE CROIRE (2026-08-31).
+Il détecte UNE chose : une dll ANTÉRIEURE à ses sources. Il n'attrape PAS le défaut
+qui a motivé son écriture. Ce soir-là, `Resources.Load<DesignTokens>` a rendu `null`
+171 fois sur une suite (51 % de ses échecs) alors que `Theme.dll` était POSTÉRIEURE de
+CINQ JOURS à son dernier commit source — donc parfaitement à jour. Une recompilation
+forcée a tout réparé (171 → 0), mais elle a été le REMÈDE sans être le DIAGNOSTIC :
+la cause reste INCONNUE (état de domaine, cache de types, résolution d'assembly ?).
+
+⇒ Un vert de ce script ne dit RIEN sur cette classe-là. Ne pas le lire comme
+   « l'état compilé est sain » : il dit seulement « aucune dll n'est en retard sur ses
+   sources ». Le piège serait de vérifier que cet oracle existe, de le trouver, et de
+   conclure — c'est le mode d'échec le plus courant d'un dispositif qui nomme un
+   mécanisme réel.
+⇒ PROCHAIN TEST, gratuit, si le défaut réapparaît APRÈS une recompilation forcée :
+   l'hypothèse « état compilé » tombe à son tour, et il faut chercher du côté du
+   CHARGEMENT DE DOMAINE.
+
 Usage : python3 Tools/assemblies-perimees.py [racine-projet]
 Sortie : code 1 si au moins une assembly est périmée (utilisable en garde de pré-run).
 """
