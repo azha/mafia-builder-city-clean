@@ -137,6 +137,7 @@ namespace MafiaCleanCity.Operational
         //    boîte et le buste passait par-dessus le verdict.
         private const float CssHMiroir    = 188f;
         private const float CssHRegleVide =  60f;   // l'état « rien » ; une liste pleine vaut n × 30
+        private const float CssHauteurCadre = 462f;  // `reputation(cadre, H=462)`
         private const float CssEnseignePadX = 11f;  // `.enseigne{padding:7px 11px 8px}`
         private const float CssRefletY    = 62f;   // 34,7 % de la course de `%(p)s-scan`
         private const float CssRefletHaut =  2f;   // `.elast::after{height:2px}`
@@ -511,10 +512,29 @@ namespace MafiaCleanCity.Operational
             // le comportement d'avant que ces champs existent.
             GameObject corpsGo = NouveauUI("Corps", racine.transform);
             corps = (RectTransform)corpsGo.transform;
-            corps.anchorMin = Vector2.zero;
-            corps.anchorMax = Vector2.one;
-            corps.offsetMin = new Vector2(0f, ShellChrome.BottomInsetPx);
-            corps.offsetMax = new Vector2(0f, -ShellChrome.TopInsetPx);
+            // ⛔ HAUTEUR FIXE DE 462 px CSS, ancrée en HAUT — et non étirée sur tout l'écran.
+            // La maquette le dit dans sa signature : `reputation(cadre, H=462)` produit
+            // `<div style="height:462px">`. Le cadre a une hauteur, il ne remplit pas la page ;
+            // c'est le CHROME qui occupe le reste (m-120 fait 584 px CSS = 122 de chrome + 462).
+            //
+            // ⚠️ Sans ça, tout le surplus d'un écran plus haut que la maquette tombe dans le bloc
+            // élastique — et le juge a mesuré le trou : 21,0 px CSS de vide sous la carte en
+            // maquette, 85,0 en 16:9 et **218,3 en 1080×2400**, soit 54,7 % du grand panneau et
+            // 32,7 % de la hauteur de l'écran. Tout ce qui est au-dessus est identique au pixel
+            // entre les deux captures : les 480 px ajoutés vont INTÉGRALEMENT à cet endroit.
+            // ★ Et l'effet n'est pas qu'esthétique. Sur un écran dont le métier est de dire « il
+            //   n'y a rien à lire ENCORE », un vide de cette taille se met à dire « ça n'a pas fini
+            //   de charger ». Le vide cesse d'être une respiration et devient un message faux.
+            //
+            // Corriger l'élastique ne pouvait pas suffire : le mou existait parce que le cadre
+            // s'étirait. On supprime le mou à sa source plutôt que de choisir qui l'absorbe.
+            corps.anchorMin = new Vector2(0f, 1f);
+            corps.anchorMax = new Vector2(1f, 1f);
+            corps.pivot = new Vector2(0.5f, 1f);
+            corps.offsetMin = new Vector2(0f, 0f);
+            corps.offsetMax = new Vector2(0f, 0f);
+            corps.anchoredPosition = new Vector2(0f, -ShellChrome.TopInsetPx);
+            corps.sizeDelta = new Vector2(0f, Px(CssHauteurCadre));
 
             // ⛔⛔ SANS CE LAYOUT, LES SIX BLOCS RESTENT TOUS À LA POSITION PAR DÉFAUT.
             // Mesuré sur la première capture réussie : l'enseigne était en place (elle porte son
@@ -711,7 +731,13 @@ namespace MafiaCleanCity.Operational
             GameObject reflet = NouveauUI("Reflet", go.transform);
             Image refImg = reflet.AddComponent<Image>();
             refImg.sprite = ProceduralUI.HorizontalFade(256, 0.5f, 0f);
-            Color cyanReflet = ReputationResolvers.Cyan; cyanReflet.a = 0.45f;
+            Color cyanReflet = ReputationResolvers.Cyan;
+            // 0,45 est l'opacité de la CSS, mais le rendu mesuré sortait à +118,7 de surcroît pour
+            // +73 en maquette, soit 1,6× — le trait se lisait « comme une affordance d'interface
+            // inexistante » plutôt que comme un reflet. Le mélange n'est pas le même que celui du
+            // navigateur ; on cale donc sur l'EFFET mesuré et on le dit, plutôt que de garder une
+            // valeur juste sur le papier qui rend faux à l'écran.
+            cyanReflet.a = 0.45f * (73f / 118.7f);
             refImg.color = cyanReflet;
             refImg.raycastTarget = false;
             // Décor : jamais une colonne du HorizontalLayoutGroup — c'est la classe que la garde
@@ -723,11 +749,7 @@ namespace MafiaCleanCity.Operational
             rrt.offsetMin = new Vector2(0f, 0f); rrt.offsetMax = new Vector2(0f, 0f);
             rrt.anchoredPosition = new Vector2(0f, -Px(CssRefletY));
             rrt.sizeDelta = new Vector2(0f, Px(CssRefletHaut));
-            // ⛔ DERNIER ENFANT : un reflet passe SUR la glace, pas dessous. Il était posé avant la
-            // carte du portrait, qui le coupait sur toute sa moitié gauche — le juge l'a mesuré, et
-            // c'est précisément l'occlusion que l'angle mort A1 annonçait sans pouvoir la voir
-            // (la garde de fratrie vérifie une CONVENTION, pas un recouvrement).
-            reflet.transform.SetAsLastSibling();
+
 
             // ⛔ LE NIVEAU `.mir6` MANQUAIT, et c'est lui qui décide OÙ va le mou de la page.
             // La maquette empile deux conteneurs, pas un :
@@ -826,6 +848,17 @@ namespace MafiaCleanCity.Operational
 
             for (int i = 0; i < 4; i++)
                 voyants[i] = TellVoyant.Construire(lect.transform, this);
+
+            // ⛔ LE REFLET REMONTE AU-DESSUS DE TOUT — ICI, et pas à sa création.
+            // ⚠️ Je l'avais déjà « corrigé » au tour précédent par un `SetAsLastSibling()` posé
+            // juste après sa création… c'est-à-dire AVANT que `Mir6` et la carte du portrait
+            // n'existent. Il était donc bien dernier — d'une fratrie qui n'avait pas encore ses
+            // autres membres. Le juge l'a mesuré : reflet strictement NUL de x=118 à x=470, toute
+            // la largeur de la carte, par deux instruments indépendants.
+            // ★ `SetAsLastSibling` ordonne au moment où on l'appelle, pas au moment du rendu. Un
+            //   correctif d'ORDRE dépend de l'instant où il s'exécute — c'est la même famille que
+            //   la conversion d'échelle faite avant que le canvas ait sa taille.
+            reflet.transform.SetAsLastSibling();
         }
 
         private GameObject    listeReglesBloc;   // le bloc ENTIER — masqué quand il n'y a rien à lister

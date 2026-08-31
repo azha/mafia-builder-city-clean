@@ -287,12 +287,31 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.Greater(court, 0f, "bloc « Miroir » introuvable : la garde ne mesure rien");
             Assert.Greater(haute, 0f, "bloc « Miroir » introuvable à 2400 : la garde ne mesure rien");
 
-            float gagne = haute - court;
-            Assert.Greater(gagne, (2400f - 1920f) * 0.5f,
-                $"le bloc élastique n'absorbe pas la hauteur ajoutée : {court:F0} → {haute:F0} " +
-                $"unités pour +480 px de canvas. Un écart quasi nul signifie que TOUTE la hauteur " +
-                "supplémentaire part en vide — c'est le bloquant B2 du juge r1, mesuré alors à " +
-                "0,10 % de pixels différents entre les deux résolutions.");
+            // ⛔ CE QUE CETTE GARDE VÉRIFIE A CHANGÉ, ET L'ANCIENNE VERSION ÉTAIT FAUSSE.
+            // Elle exigeait que le bloc miroir GRANDISSE avec le canvas. C'était ma lecture, pas
+            // celle de la maquette : `reputation(cadre, H=462)` donne au cadre une HAUTEUR FIXE,
+            // et c'est le chrome qui occupe le reste de la page. Une garde bâtie sur une
+            // supposition a donc « validé » un écran faux pendant deux tours, puis refusé le vrai
+            // correctif quand il est arrivé.
+            // ★ Une garde ne vaut que sa lecture de la source. Verte, elle ne dit pas « c'est
+            //   juste » — elle dit « c'est conforme à ce que j'ai compris ».
+            //
+            // Ce qu'elle vérifie maintenant est ce qu'un joueur voit, et ce que le juge a mesuré :
+            // le VIDE sous le contenu du miroir reste petit, AUX DEUX RÉSOLUTIONS. La maquette en
+            // laisse 21,0 px CSS ; l'écran en avait 85,0 en 16:9 et 218,3 en 20:9 — 54,7 % du
+            // panneau, un trou noir dans lequel tombaient les 480 px ajoutés.
+            float videCourt = c.bloc - c.contenu;
+            float videHaut  = g.bloc - g.contenu;
+            float plafond   = 60f * (1280f / 300f);   // 60 px CSS : large, mais loin des 218 mesurés
+
+            Assert.Less(videCourt, plafond,
+                $"1080x1920 : {videCourt:F0} unités de vide sous le contenu du miroir " +
+                $"({videCourt / (1280f / 300f):F0} px CSS) — la maquette en laisse 21");
+            Assert.Less(videHaut, plafond,
+                $"1080x2400 : {videHaut:F0} unités de vide sous le contenu du miroir " +
+                $"({videHaut / (1280f / 300f):F0} px CSS). C'est la résolution CIBLE, et c'est là " +
+                "que le défaut se voit : sur un écran qui dit « il n'y a rien à lire encore », un " +
+                "vide de cette taille se met à dire « ça n'a pas fini de charger ».");
 
             // ⛔ ET LE CONTENU, LUI, NE BOUGE PAS. C'est la moitié qui manquait, et son absence a
             // laissé cette garde VERTE sur un écran faux pendant un tour entier : le bloc absorbait

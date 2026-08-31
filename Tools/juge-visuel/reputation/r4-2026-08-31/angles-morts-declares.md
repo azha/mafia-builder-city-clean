@@ -46,18 +46,18 @@ et les 8 sont écrits ici pour que le prochain lecteur les cherche au lieu de le
 
 ## ⚠️ Ce qui a bougé depuis que cette liste a été écrite
 
-- **A3 est FERMÉE par une garde** (`B3S4`), pas seulement corrigée. Elle vérifie une PROPRIÉTÉ — le
-  bloc élastique absorbe la hauteur ajoutée — et non une valeur, donc elle survit à un changement
-  de maquette. Elle est exercée et verte.
-- **A7 a été retravaillée** mais reste ouverte : les formes du portrait ont été redessinées d'après
-  le SVG source, et **aucune garde ne lit une forme**. C'est toujours le juge qui doit le regarder.
+- **A3 n'est PAS fermé**, et je l'ai écrit deux fois à tort. `B3S4` couvre deux hauteurs — celle du
+  bloc élastique et celle de son contenu — et rien d'autre. Contrôle négatif exécuté : la garde
+  rougit bien quand on réintroduit le défaut qu'elle vise. Mais elle ne vise que celui-là.
+- **A7 a été retravaillée** (formes redessinées d'après le SVG, liserés posés) et reste ouverte :
+  aucune garde ne lit une forme.
 - Les autres entrées sont inchangées.
 
-**Le rapport n'est plus 15 contre 8.** Il est 16 gardes (dont une qui ferme un angle mort déclaré)
-contre 7 angles morts restants. Ce qui compte n'est pas le ratio : c'est que la liste soit à jour,
-parce qu'une entrée périmée envoie le lecteur chercher un défaut qui n'existe plus pendant qu'un
-autre passe.
-
+⚠️ **Et ce fichier s'était contredit lui-même.** Le tableau ci-dessus disait « partiellement
+couvert » pendant que cette section disait « FERMÉE ». J'avais corrigé l'un sans l'autre, par un
+remplacement automatique sans vérification — un juge a lu la mauvaise moitié et me l'a signalée.
+★ Une déclaration d'angles morts qui se contredit est pire qu'une absente : elle donne au lecteur
+  le choix de la version qui l'arrange, et il prendra celle qui le rassure.
 
 ## ⚠️ Ce que `B3S4` ne couvre toujours pas
 
