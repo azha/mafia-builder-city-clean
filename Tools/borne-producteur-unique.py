@@ -9,8 +9,16 @@
    ⇒ La v15 est passée à UNE définition + QUATRE citations. Mais une définition unique ne
    tient que tant que personne ne REDIT la valeur — et le sixième exemplaire arriverait par
    le geste le plus naturel : quelqu'un qui trouve la citation indirecte et « clarifie » en
-   recopiant. **Réduire la population n'est pas fermer la classe.** Ce détecteur la ferme par une ANCRE
-   EXPLICITE, jamais par un motif sur la prose — la v1, qui essayait, attrapait 1 formulation sur 6.
+   recopiant. **Réduire la population n'est pas fermer la classe — ET CE DÉTECTEUR NE LA FERME PAS
+   NON PLUS.** Mesuré : sur SIX paraphrases de la borne écrites SANS marqueur, il en détecte
+   **ZÉRO** (contrôle positif sur le même harnais : 2ᵉ marqueur ⇒ exit 1 ; marqueur retiré ⇒ exit 1).
+   Sa v1 en attrapait 1 sur 6 par un motif de prose ; celle-ci en attrape 0 sur 6 — mais elle décide
+   sans ambiguïté sur ce qu'elle observe.
+   ⇒ **CE QU'IL FERME** : le sous-cas « le marqueur est dupliqué, absent ou renommé ».
+   ⇒ **CE QU'IL NE FERME PAS** : une redite SANS marqueur. **La classe reste ARBITRÉE EN REVUE.**
+   ⚠️ Et mes « trois contrôles » (marqueur présent / dupliqué / absent) sont trois variations du
+   PRÉDICAT, pas de la propriété : *un contrôle qui recopie le prédicat teste l'identité, pas la
+   couverture*. Le seul qui morde — un producteur SANS marqueur — rend 0/6.
 
 Sortie 1 si la définition est dupliquée, 2 si l'instrument ne peut pas mesurer.
 """
@@ -31,7 +39,8 @@ except OSError as e:
 #    ★ Mon contrôle négatif n'avait testé que la tournure IDENTIQUE : il prouvait que le motif se
 #      reconnaît lui-même, jamais qu'il attrape la classe. *Un contrôle positif qui recopie le
 #      prédicat ne peut pas trouver le défaut qu'il existe pour trouver.*
-# ⇒ LA FORME QUI FERME : une ANCRE EXPLICITE, que la paraphrase ne peut pas produire par accident.
+# ⇒ LA FORME QUI ARBITRE (et n'est PAS une forme qui ferme) : une ANCRE EXPLICITE, que la
+#    paraphrase ne peut pas produire par accident.
 #    Un auteur qui redit la borne n'écrira pas le marqueur ; s'il le copie, c'est un geste
 #    délibéré et visible en revue. On ne devine plus l'intention à partir des mots.
 MARKER = '<!-- BORNE:DEF -->'
@@ -58,11 +67,13 @@ if len(defs) == 0:
 if len(defs) > 1:
     print(f'\n  ⇒ ⛔ {len(defs)} marqueurs — la classe se rouvre.')
     sys.exit(1)
-EXPECTED_SIGNAL = 2   # PLANCHER IRRÉDUCTIBLE, mesuré : 1 définition + 1 RÉCIT de la faute d'unité.
-# ⚠️ Le récit ne peut PAS descendre à 0 : expliquer une erreur d'unité exige d'énoncer l'unité —
-#    c'est le piège de citation du socle (« décrire un correctif est un acte de citation »), et il
-#    est ici IRRÉDUCTIBLE, pas négligé. Un signal > 2 mérite qu'on aille voir ; un signal de 2 est
-#    l'état sain. On l'écrit plutôt que de laisser un lecteur croire que 0 serait l'objectif.
+EXPECTED_SIGNAL = 1   # la DÉFINITION seule.
+# ⛔ MON PLANCHER À 2 ÉTAIT UNE ALLOWLIST, pas une irréductibilité (revue ⊥ v16). Je justifiais le
+#    2ᵉ par « expliquer une erreur d'unité exige d'énoncer l'unité ». L'argument porte sur la
+#    MAUVAISE MOITIÉ : le signal ne se déclenche pas sur l'unité FAUSSE (`/fond`, que le motif ne
+#    matche pas) mais sur l'unité JUSTE (`fond×s`) — et raconter la faute n'exige PAS d'énoncer la
+#    bonne unité, il suffit de la citer. ⇒ Le plancher redescend à 1 : si le compte ne descend pas,
+#    c'est qu'un producteur survit, et c'est exactement l'information qu'on veut.
 if len(signals) > EXPECTED_SIGNAL:
     print(f'\n  ⚠️  {len(signals)} énoncés d unité (plancher {EXPECTED_SIGNAL}) — un producteur a pu réapparaître.')
     print('     Ce script NE DÉCIDE PAS là-dessus : il signale. Aller lire.')
