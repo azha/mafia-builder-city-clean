@@ -51,31 +51,49 @@ UNITE = re.compile(r'(PAR\s+AXE|en\s+X\s+et\s+en\s+Y).{0,600}?(échelle\s+du\s+p
 CONTROL = re.compile(r'atteignab', re.I)
 
 defs = [MARKER] * text.count(MARKER)
-signals = UNITE.findall(re.sub(r'\s+', ' ', text))
 ctrl = CONTROL.findall(text)
 
+# ⛔ LE COMPTE NU ÉTAIT UNE ALLOWLIST (revue ⊥ v17, reproduit) : `EXPECTED_SIGNAL = 1` portait sur
+#    le DOCUMENT ENTIER, donc l'état « la définition est devenue invisible au motif + un producteur
+#    survit ailleurs » se rapportait EXACTEMENT comme « la définition seule ». Mesuré : en écrivant
+#    « sur chaque axe » dans la définition — marqueur, unité et formule INTACTS — le signal tombe
+#    à 0 et l'instrument reste vert.
+# ⇒ Le compte devient POSITIONNEL : DANS le paragraphe qui porte le marqueur, et HORS de lui.
+#    DEDANS on exige exactement 1 (sinon le motif ne voit plus sa cible ⇒ exit 2, pas un vert) ;
+#    DEHORS on exige 0. Un compte nu ne peut pas distinguer ces deux mondes ; un compte ancré si.
+para_in, para_out = '', text
+if defs:
+    i = text.index(MARKER)
+    start = text.rfind('\n', 0, i) + 1
+    end = text.find('\n', i)
+    end = len(text) if end == -1 else end
+    para_in = text[start:end]
+    para_out = text[:start] + text[end:]
+sig_in = UNITE.findall(re.sub(r'\s+', ' ', para_in))
+sig_out = UNITE.findall(re.sub(r'\s+', ' ', para_out))
+
 print(f'  marqueurs {MARKER} .......... {len(defs)}  (LA décision)')
-print(f'  énoncés d unité repérés ..... {len(signals)}  (signal, ne décide pas)')
+print(f'  énoncé d unité DANS la déf .. {len(sig_in)}  (exactement 1 attendu)')
+print(f'  énoncés d unité HORS la déf . {len(sig_out)}  (0 attendu — signal, ne décide pas)')
 print(f'  contrôle positif ............ {len(ctrl)} occurrences de « atteignab » '
       f'({"l instrument LIT" if ctrl else "RIEN LU"})')
 
 if not ctrl:
     print('⛔ contrôle positif MUET.'); sys.exit(2)
 if len(defs) == 0:
-    print(f'\n  ⇒ ⛔ AUCUN marqueur : la définition unique n existe pas ou a été renommée.')
+    print('\n  ⇒ ⛔ AUCUN marqueur : la définition unique n existe pas ou a été renommée.')
     sys.exit(1)
 if len(defs) > 1:
     print(f'\n  ⇒ ⛔ {len(defs)} marqueurs — la classe se rouvre.')
     sys.exit(1)
-EXPECTED_SIGNAL = 1   # la DÉFINITION seule.
-# ⛔ MON PLANCHER À 2 ÉTAIT UNE ALLOWLIST, pas une irréductibilité (revue ⊥ v16). Je justifiais le
-#    2ᵉ par « expliquer une erreur d'unité exige d'énoncer l'unité ». L'argument porte sur la
-#    MAUVAISE MOITIÉ : le signal ne se déclenche pas sur l'unité FAUSSE (`/fond`, que le motif ne
-#    matche pas) mais sur l'unité JUSTE (`fond×s`) — et raconter la faute n'exige PAS d'énoncer la
-#    bonne unité, il suffit de la citer. ⇒ Le plancher redescend à 1 : si le compte ne descend pas,
-#    c'est qu'un producteur survit, et c'est exactement l'information qu'on veut.
-if len(signals) > EXPECTED_SIGNAL:
-    print(f'\n  ⚠️  {len(signals)} énoncés d unité (plancher {EXPECTED_SIGNAL}) — un producteur a pu réapparaître.')
+if len(sig_in) != 1:
+    print(f'\n  ⇒ ⛔ {len(sig_in)} énoncé(s) d unité DANS la définition (1 attendu) : le motif ne voit')
+    print('     plus sa cible. Ce n est PAS un vert — c est un instrument qui a perdu son objet.')
+    sys.exit(2)
+if sig_out:
+    print(f'\n  ⇒ ⚠️  {len(sig_out)} énoncé(s) d unité HORS la définition — un producteur a pu réapparaître.')
     print('     Ce script NE DÉCIDE PAS là-dessus : il signale. Aller lire.')
-print(f'\n  ⇒ ✅ UN marqueur. ⚠️ Et {len(signals)} énoncés d unité subsistent en prose : ce script')
-print('     NE PEUT PAS dire s ils citent ou redisent — il décide sur le MARQUEUR, pas sur les mots.')
+print('\n  ⇒ ✅ UN marqueur, UN énoncé d unité dans la définition.')
+print('     ⚠️ Une redite SANS marqueur reste indétectable (0/6 mesuré) : la classe est ARBITRÉE,')
+print('        pas fermée — voir la docstring.')
+sys.exit(0)
