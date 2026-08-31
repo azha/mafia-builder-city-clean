@@ -215,6 +215,83 @@ namespace MafiaCleanCity.Operational.Tests
                 "aucun Contour trouvé — la garde serait vraie À VIDE (contrôle anti-vacuité)");
         }
 
+        /// <summary>⛔ LE BLOC ÉLASTIQUE S'ÉTIRE, ET LE CONTENU NE LAISSE PAS UN TIERS DE VIDE.
+        ///
+        /// Cette garde ferme l'angle mort A3 — « l'effet des espacements n'est pas vérifié » — que
+        /// j'avais déclaré moi-même et qui a mordu TROIS fois : d'abord un conteneur sans aucun
+        /// empilement, puis des hauteurs converties à moitié d'échelle, puis le bloc miroir qui ne
+        /// s'étirait pas. Les deux premières ont coûté un tour de juge chacune ; la troisième a
+        /// coûté un REFUS. Un angle mort qu'on sait nommer, on peut le fermer soi-même.
+        ///
+        /// Ce que le juge a mesuré et que rien n'attrapait : la bande de contenu du 1080×2400 était
+        /// identique AU PIXEL PRÈS à celle du 1080×1920 — les 480 px supplémentaires tombaient tous
+        /// dans un vide sous le bouton, 35,5 % du panneau à la résolution cible téléphone.
+        ///
+        /// ⚠️ La garde est DIMENSIONNÉE : elle compare deux hauteurs de canvas qui diffèrent de
+        /// 25 %. Avec deux tailles proches, un bloc figé et un bloc élastique rendraient des
+        /// mesures presque égales et la garde serait verte pour la mauvaise raison.
+        ///
+        /// ⚠️ Elle vise une PROPRIÉTÉ, pas une valeur : « le miroir absorbe l'essentiel de la
+        /// hauteur ajoutée ». Un seuil sur sa hauteur absolue casserait au premier changement de
+        /// maquette ; celui-ci ne casse que si l'élasticité disparaît.</summary>
+        [UnityTest]
+        [Category("ScreenB3")]
+        public IEnumerator B3S4_LeMiroirEstElastique_EtLeContenuNeLaissePasUnTiersDeVide()
+        {
+            yield return OuvrirJoueurFrais();
+            var ecran = MonterEcran();
+            yield return ecran.Charger(lieutenantId);
+
+            GameObject racine = RacineEcran();
+            Canvas canvas = racine.GetComponentInParent<Canvas>();
+            Assert.IsNotNull(canvas, "ReputationRoot n'est sous aucun Canvas");
+
+            RenderMode modeAvant = canvas.renderMode;
+            Camera camAvant = canvas.worldCamera;
+
+            float MesurerMiroir(int h)
+            {
+                var rt = new RenderTexture(1080, h, 24, RenderTextureFormat.ARGB32);
+                var camGo = new GameObject("MesureCamB3S4");
+                var cam = camGo.AddComponent<Camera>();
+                cam.targetTexture = rt; cam.orthographic = true;
+                canvas.renderMode = RenderMode.ScreenSpaceCamera;
+                canvas.worldCamera = cam;
+                Canvas.ForceUpdateCanvases();
+                LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform)canvas.transform);
+
+                float haut = -1f;
+                foreach (RectTransform t in racine.GetComponentsInChildren<RectTransform>(true))
+                    if (t.name == "Miroir") { haut = t.rect.height; break; }
+
+                canvas.worldCamera = null;
+                Object.DestroyImmediate(camGo);
+                rt.Release(); Object.DestroyImmediate(rt);
+                return haut;
+            }
+
+            float court = MesurerMiroir(1920);
+            float haute  = MesurerMiroir(2400);
+
+            canvas.renderMode = modeAvant;
+            canvas.worldCamera = camAvant;
+            Canvas.ForceUpdateCanvases();
+
+            // Contrôle de prémisse : sans cette mesure, un « Miroir » introuvable rendrait -1 des
+            // deux côtés et l'égalité passerait pour une élasticité absente plutôt que pour un
+            // test qui n'a rien trouvé.
+            Assert.Greater(court, 0f, "bloc « Miroir » introuvable : la garde ne mesure rien");
+            Assert.Greater(haute, 0f, "bloc « Miroir » introuvable à 2400 : la garde ne mesure rien");
+
+            float gagne = haute - court;
+            Assert.Greater(gagne, (2400f - 1920f) * 0.5f,
+                $"le bloc élastique n'absorbe pas la hauteur ajoutée : {court:F0} → {haute:F0} " +
+                $"unités pour +480 px de canvas. Un écart quasi nul signifie que TOUTE la hauteur " +
+                "supplémentaire part en vide — c'est le bloquant B2 du juge r1, mesuré alors à " +
+                "0,10 % de pixels différents entre les deux résolutions.");
+            yield return null;
+        }
+
         /// <summary>⛔⛔ AUCUN ÉLÉMENT DÉCORATIF N'EST ENFANT DIRECT D'UN GROUPE DE LAYOUT.
         ///
         /// Cette garde ferme une CLASSE, pas deux instances. Le défaut est apparu DEUX FOIS le
