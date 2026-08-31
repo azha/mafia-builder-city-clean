@@ -150,3 +150,59 @@ troisième résolution de confort n'aurait pas fermé ce trou mieux que l'encadr
   la maquette et dans la table ci-dessus ;
 - toute capture « avant » — sauf la paire T / T+1 s listée plus haut, où **une seule variable
   change** (le temps).
+
+---
+
+# ⚠️ ÉCHELLE — à lire AVANT toute mesure de taille
+
+Sur un écran précédent (Famille), l'échelle a été **la cause de presque tous les écarts remontés**.
+Elle est donc donnée ici, mesurée, et non laissée à deviner.
+
+| | largeur en px | largeur CSS déclarée | facteur |
+|---|---|---|---|
+| **référence** `m-119.png` … `m-124.png` | 900 | 300 | **×3,0** |
+| **capture en jeu** `screen_b3_reputation_1080x1920.png` | 1080 | 300 | **×3,6** |
+
+⇒ **La capture est 1,2× plus grande que la référence, et c'est NORMAL.** Un bloc de 13 px CSS
+mesure 39 px dans la référence et 46,8 px dans la capture. Les deux sont justes.
+
+⇒ **Comment comparer sans se tromper** : ramener toute mesure en **px CSS** (diviser par 3,0 sur la
+référence, par 3,6 sur la capture) avant de conclure à un écart. Un écart n'est réel que s'il
+subsiste APRÈS cette normalisation. Un rapport qui remonte « tout est 20 % trop grand » aura mesuré
+l'échelle, pas un défaut.
+
+⚠️ **Ce que cette normalisation ne couvre PAS** : les rapports INTERNES (un bloc deux fois trop haut
+par rapport à son voisin) sont invariants d'échelle et restent des défauts réels. Ce sont eux qui
+comptent, et cet écran en a déjà eu deux — voir `angles-morts-declares.md`, section A3.
+
+# Résolutions capturées
+
+| fichier | résolution | ce qu'il montre |
+|---|---|---|
+| `Assets/Screenshots/screen_b3_reputation_1080x1920.png` | 1080×1920 (16:9) | l'état d'un compte neuf |
+| `Assets/Screenshots/screen_b3_reputation_1080x2400.png` | 1080×2400 (20:9, cible téléphone) | le même état, format allongé |
+| `Assets/Screenshots/screen_b3_reputation_1080x1920_t1s.png` | 1080×1920 à T+1 s | contrôle de stabilité : doit être identique au premier |
+
+**Un seul état est capturé** (compte neuf : 0 règle donnée, 0 absorbée, `indeterminate`) parce que
+c'est le seul que le back sait produire aujourd'hui par un chemin joueur. Les états `drifting`,
+`hostile` et `wary` existent dans le code et ne sont atteints par aucun test — dette déclarée,
+pas couverture (angle mort A5).
+
+# Écarts ASSUMÉS — à classer ASSUMÉ, pas à remonter comme défauts
+
+Le juge les inventorie quand même et vérifie qu'ils sont rendus PROPREMENT ; il ne les compte pas
+comme des écarts au dossier.
+
+| ce qu'on voit | pourquoi | statut |
+|---|---|---|
+| « Salvatore » comme nom du lieutenant | le back ne projette pas `lieutenant.name` — l'écran le DIT à l'écran (« lieutenant.name — non projeté (L0.4) ») plutôt que de le masquer | mesuré, assumé |
+| aucune contrepartie / bloc `restraint` absent | aucune route ne liste les contreparties : `counterparty_id` n'est pas obtenable par un chemin joueur | mesuré, assumé |
+| compteur ENFREINTES affichant « — » et non « 00 » | le back ne renvoie pas ce compte ; un « 00 » serait un chiffre INVENTÉ. Un tiret dit « pas de source », un zéro dirait « mesuré à zéro » | choix délibéré |
+| 4 couleurs hors `DesignTokens` | `Encre`, `Panneau`, `Liseré`, `Vert` n'existent pas dans les tokens ; arbitrage DA escaladé à l'user, non tranché à ce jour | dette ouverte |
+
+# Ce qui N'EST PAS fourni — et ne doit pas être cherché
+
+- `Assets/Scripts` et tout le code du client : le juge constate ce qu'il VOIT ;
+- les notes d'implémentation du chantier ;
+- les rapports de juges précédents (celui-ci est le premier tour sur cet écran) ;
+- tout « choix » non écrit dans la table ci-dessus : s'il n'y est pas, il n'existe pas.

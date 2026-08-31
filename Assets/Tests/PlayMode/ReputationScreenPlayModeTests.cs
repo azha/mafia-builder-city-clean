@@ -543,6 +543,44 @@ namespace MafiaCleanCity.Operational.Tests
                       $"camPos={cam.transform.position} orthoSize={cam.orthographicSize:F1} " +
                       $"cull={cam.cullingMask} · racineActive={racine.activeInHierarchy}");
 
+            // ⚠️ Les HAUTEURS RÉELLEMENT RENDUES, bloc par bloc, ramenées en px CSS de la maquette.
+            // Ajouté après avoir tenté de les déduire de l'image capturée : j'y lisais un facteur 2
+            // uniforme et j'ai bâti deux hypothèses successives dessus (racine trop étroite, repli
+            // d'échelle) — toutes deux fausses, parce qu'un contour, un padding et un liseré
+            // déplacent les frontières que l'œil prend pour les bords d'un bloc. La scène sait sa
+            // géométrie ; la lui demander coûte trois lignes et ne se trompe pas.
+            Transform corps = null;
+            foreach (RectTransform t in racine.GetComponentsInChildren<RectTransform>(true))
+                if (t.name == "Corps") { corps = t; break; }
+            if (corps != null)
+            {
+                float uParCss = crt.rect.width / 300f;   // 300 = la largeur CSS DÉCLARÉE de cette maquette
+                var sb = new System.Text.StringBuilder("[GEOM b3] uParCss=" + uParCss.ToString("F2"));
+                foreach (RectTransform b in corps.GetComponentsInChildren<RectTransform>(false))
+                {
+                    if (b.parent != corps) continue;
+                    LayoutElement el = b.GetComponent<LayoutElement>();
+                    if (el != null && el.ignoreLayout) continue;
+                    sb.Append($" · {b.name}={(b.rect.height / uParCss):F0}css");
+                    if (el != null && el.preferredHeight > 0f)
+                        sb.Append($"(voulu {(el.preferredHeight / uParCss):F0})");
+                }
+                Debug.Log(sb.ToString());
+
+                // Le PORTRAIT, en unités canvas : qui déborde de qui. Une forme qui sort de son
+                // cadre ne se voit dans aucun compteur — seulement à l'œil, ou ici.
+                var sp = new System.Text.StringBuilder("[PRT b3]");
+                foreach (RectTransform t in racine.GetComponentsInChildren<RectTransform>(true))
+                    if (t.name == "Portrait" || t.name == "Dessin" || t.name == "Buste"
+                        || t.name == "Epaules" || t.name == "Tete")
+                    {
+                        sp.Append($" · {t.name} {t.rect.width:F0}x{t.rect.height:F0}"
+                                  + $"@{t.anchoredPosition.x:F0},{t.anchoredPosition.y:F0}"
+                                  + $" rot={t.localEulerAngles.z:F0} piv={t.pivot.x:F2},{t.pivot.y:F2}");
+                    }
+                Debug.Log(sp.ToString());
+            }
+
             // ⛔⛔ LA CAUSE DE L'IMAGE NOIRE, TROUVÉE PAR LE DIAGNOSTIC CI-DESSUS ET NON DEVINÉE.
             // Il disait : « graphics=68 actifs=65 » (l'écran EST construit et visible),
             // « canvas rect=1280x2276 » … et « orthoSize=5.0 ». Une caméra orthographique voit

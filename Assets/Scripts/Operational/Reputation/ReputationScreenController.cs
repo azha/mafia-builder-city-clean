@@ -121,7 +121,32 @@ namespace MafiaCleanCity.Operational
         private const float CssHCompteurs = 42f;
         private const float CssHPann      = 74f;
         private const float CssHPied      = 52f;
-        private const float CssHMiroir    = 172f;   // la zone ÉLASTIQUE : plancher, pas plafond
+        // ⚠️ 188 et non 172 : `verifier()` compte la zone du miroir comme `H_MIROIR + H_ENTOUR`
+        //    (172 + 16, generateur-reputation.py:280 et 292). J'avais pris `H_MIROIR` seul parce que
+        //    c'est la constante qui PORTE le nom du bloc — mais le nom désigne le dessin, pas la
+        //    zone qui le contient. Vérifié sur la somme que la maquette contraint :
+        //    51 + 42 + 188 + 74 + 52 = 407, + 34 = 441 ≤ 462. Avec 172, le contenu du portrait
+        //    (8 + 12,3 + 119 + 16,75 + 8,25 + 9 = 173,3 px CSS) ne rentrait pas dans sa propre
+        //    boîte et le buste passait par-dessus le verdict.
+        private const float CssHMiroir    = 188f;
+        private const float CssHRegleVide =  60f;   // l'état « rien » ; une liste pleine vaut n × 30
+        private const float CssHRegle       = 30f;  // H_REGLE — la hauteur d'UNE règle listée
+        private const float CssVerdictTitre   = 10f;   // `.verdict b`  — serif 700
+        private const float CssVerdictLegende = 6.4f;  // `.verdict span`
+        private const float CssVerdictEcart   = 8f;    // `.verdict` gap
+        private const float CssHRegleEntour = 16f;  // H_ENTOUR — le sur-titre et les marges du bloc
+
+        // ⚠️ AUCUN de ces blocs n'est élastique, et c'est la maquette qui le dit, pas moi.
+        //    `verifier()` (generateur-reputation.py:291-294) contraint la SOMME —
+        //        fixe + corps + 34 <= 462
+        //    — où `corps` vaut H_MIROIR (172) pour la vue miroir, ou `nb_règles × H_REGLE` (30)
+        //    pour la vue liste, ou 60 pour l'état « rien ». Une somme plafonnée décrit un empilement
+        //    qui se pose EN HAUT et laisse du vide en bas ; elle ne décrit pas un remplissage.
+        // ⛔ J'avais d'abord mis flexibleHeight=1 sur le miroir en le qualifiant de « zone
+        //    élastique ». C'était une invention : aucune ligne de la maquette ne parle d'élasticité.
+        //    Résultat mesuré sur la capture du run 19 — le miroir absorbait tout l'espace libre et
+        //    ouvrait un vide de plus de 500 px sous le portrait. Le défaut n'était pas la valeur
+        //    172, qui était juste ; il était dans le mot que j'avais mis autour.
 
         /// <summary>Convertit une valeur en px CSS de LA maquette de cet écran. Passe par la
         /// largeur DÉCLARÉE (`LargeurEcransBrennar6`) : jamais le repli implicite, jamais la
@@ -233,7 +258,25 @@ namespace MafiaCleanCity.Operational
 
             MajCompteur(0, declarees.ToString("00"), null, "RÈGLES DONNÉES");
             MajCompteur(1, absorbe.ToString("00"), "/4", "ABSORBÉES");
-            MajCompteur(2, "—", null, "ENFREINTES"); // ⛔ voir la note ENFREINTES plus bas
+            // ⛔ ENFREINTES : TOUJOURS un tiret. Voir la note ENFREINTES plus bas.
+            //
+            // ⚠️ RÉTRACTÉ le 2026-08-31, et la garde B3T1 a mordu avant moi. J'avais mis « 00 »
+            // quand `declarees == 0`, en le justifiant ainsi : « sans règle déclarée, rien ne peut
+            // être enfreint, donc le zéro est DÉDUIT et non inventé ». C'est faux, et la maquette
+            // porte elle-même la réfutation : une règle déclarée tient « jusqu'à ce que vous la
+            // retiriez publiquement ». Une règle déclarée, enfreinte, puis retirée laisse
+            // `declared_rules` VIDE et une enfreinte bien réelle. `declarees == 0` ne prouve donc
+            // rien sur le nombre d'enfreintes — ma déduction n'était pas une déduction.
+            // ★ Ce que je retiens : j'ai reconnu la maquette comme autorité pour lui emprunter son
+            //   « 00 », et ignoré la phrase, deux blocs plus loin dans le MÊME fichier, qui le
+            //   contredisait. On ne cite pas une source en choisissant la ligne qui arrange.
+            MajCompteur(2, "—", null, "ENFREINTES");
+
+            // Le pied nomme le PREMIER geste tant qu'aucune règle n'existe — `reputation()` donne
+            // « DONNER UNE PREMIÈRE RÈGLE » à la seule vue vierge (ligne 211) et « DONNER UNE
+            // RÈGLE » partout ailleurs (200, 222, 237).
+            if (ctaLibelle != null)
+                ctaLibelle.text = declarees == 0 ? "DONNER UNE PREMIÈRE RÈGLE" : "DONNER UNE RÈGLE";
 
             RendreListeDesRegles(bm != null ? bm.declared_rules : null);
 
@@ -279,6 +322,7 @@ namespace MafiaCleanCity.Operational
                 sousTitre.text = absorbe == 0
                     ? "UN LIEUTENANT NEUF N'A ENCORE RIEN ABSORBÉ"
                     : "PERSONNE NE VOUS A ENCORE JUGÉ";
+                MajVerdict("Pas encore jugeable", ReputationResolvers.Muet);
                 MajPanneau("« PAS JUGEABLE » N'EST PAS « MOYEN »",
                     "Rien n'a encore déteint",
                     "ses quatre voyants sont éteints parce qu'il n'a rien pris de vous — pas " +
@@ -291,6 +335,7 @@ namespace MafiaCleanCity.Operational
             if (cue == "drifting")
             {
                 sousTitre.text = "VOUS VOUS ÉCARTEZ DE VOS PROPRES RÈGLES";
+                MajVerdict("Vous vous en écartez", ReputationResolvers.Ambre);
                 MajPanneau("CE QUI A CHANGÉ",
                     "Une règle donnée, une règle enfreinte",
                     "vous avez laissé passer ce que vous aviez interdit. Les deux cercles " +
@@ -301,12 +346,28 @@ namespace MafiaCleanCity.Operational
             }
 
             sousTitre.text = "CE QU'IL A PRIS DE VOUS SE VOIT SUR LUI";
+            MajVerdict("Vous vous y tenez", ReputationResolvers.Vert);
             MajPanneau("LA RÈGLE DU JEU",
                 "Vous vous lisez sur lui",
                 "chaque vertu qu'il vous voit tenir finit sur sa tenue — col, manches, montre, " +
                 "gants. Une règle déclarée tient jusqu'à ce que vous la retiriez publiquement : " +
                 "la donner, c'est se donner une corde.",
                 ReputationResolvers.Creme);
+        }
+
+        /// <summary>Écrit le verdict de cohérence et sa couleur. Les trois libellés viennent de la
+        /// table `COHERENCE` de la maquette (generateur-reputation.py:57-61) et sont écrits ici tels
+        /// quels — « vous vous y tenez » / « vous vous en écartez » / « pas encore jugeable ».
+        ///
+        /// ⚠️ Les trois appelants sont les trois branches d'`AppliquerEtat`, et il n'existe pas de
+        /// quatrième chemin : un état qui oublierait d'appeler cette méthode laisserait la colonne
+        /// SANS titre, ce qui est exactement le défaut qu'on vient de corriger. Une couleur nulle
+        /// est refusée bruyamment plutôt que rendue en blanc par défaut.</summary>
+        private void MajVerdict(string libelle, Color couleur)
+        {
+            if (verdictTitre == null) return;   // écran pas encore construit — pas une erreur
+            verdictTitre.text = libelle;
+            verdictTitre.color = couleur;
         }
 
         /// <summary>Repli NOMMÉ quand la récupération échoue — jamais une exception, jamais un
@@ -376,6 +437,29 @@ namespace MafiaCleanCity.Operational
             racinePleinEcran = (RectTransform)racine.transform;
             Etirer(racinePleinEcran);
             AjouterFond(racine, ReputationResolvers.Encre);
+
+            // ⛔ L'ÉCHELLE AVANT TOUT — un RectTransform qui vient d'être étiré n'a PAS encore son
+            // `rect` résolu, et `Px()` le lit dès la première constante convertie. Mesuré sur cet
+            // écran (run 21, log `[GEOM b3]`) : les six blocs rendaient EXACTEMENT la hauteur qu'ils
+            // demandaient — `Miroir=86css(voulu 86)` — mais chaque « voulu » valait la MOITIÉ de sa
+            // constante (51→26, 42→21, 172→86, 60→30, 74→37, 52→26). Le layout était juste ; c'est
+            // la conversion qui s'était faite contre une largeur de canvas de 640 au lieu de 1280.
+            //
+            // ⚠️ Le garde-fou du socle ne l'attrape pas : `LargeurCanvas` accepte toute largeur
+            // `> 100f`, ce qui écarte un zéro mais pas une valeur PLAUSIBLE ET FAUSSE. Un repli qui
+            // ne teste que la vacuité laisse passer la moitié exacte de la bonne réponse — et une
+            // échelle divisée par deux ne ressemble pas à un bug, elle ressemble à un écran sobre.
+            Canvas.ForceUpdateCanvases();
+            float largeurLue = racinePleinEcran.rect.width;
+            if (largeurLue < EchelleMaquette.LargeurCanvasParDefaut * 0.9f)
+            {
+                // On le DIT plutôt que de le corriger en silence : si la racine n'est toujours pas
+                // résolue après un ForceUpdateCanvases, l'échelle qui suit est une supposition, et
+                // le prochain lecteur doit l'apprendre du log et non d'une capture qui a l'air bien.
+                Debug.LogWarning($"[ECHELLE b3] racine non résolue : rect.width={largeurLue:F0} < "
+                                 + $"{EchelleMaquette.LargeurCanvasParDefaut:F0} attendu. Toutes les "
+                                 + "conversions px CSS de cet écran seront proportionnellement fausses.");
+            }
 
             // Le corps vit SOUS le chrome : le bandeau et le dock mangent leur part, publiée par
             // le shell. Hors shell (test isolé) les insets valent 0 et l'écran remplit tout —
@@ -525,7 +609,7 @@ namespace MafiaCleanCity.Operational
             LayoutElement hle = go.AddComponent<LayoutElement>();
             hle.minHeight = Px(CssHMiroir);
             hle.preferredHeight = Px(CssHMiroir);
-            hle.flexibleHeight = 1f;   // SEUL bloc élastique : il absorbe le reste
+            hle.flexibleHeight = 0f;   // ⚠️ PAS élastique — voir la note ci-dessous
             zoneElastique = (RectTransform)go.transform;
             AjouterFond(go, ReputationResolvers.Fond2);
             Contour(go, ReputationResolvers.Lisere);
@@ -541,6 +625,17 @@ namespace MafiaCleanCity.Operational
             AjouterFond(prtGo, ReputationResolvers.Panneau);
             Contour(prtGo, ReputationResolvers.OrFilet);
             LayoutElement le = prtGo.AddComponent<LayoutElement>();
+            // ⛔ `minWidth` AUTANT que `preferredWidth` — la maquette dit `flex:none` (.prt, ligne
+            // 71), ce qui interdit à ce cadre de rétrécir, pas seulement de grandir.
+            // ⚠️ Mesuré avant correction (log `[PRT b3]`, run 26) : le cadre rendait 369 unités
+            // au lieu des 503 demandées, soit 86 px CSS pour 118 déclarés — la colonne de lecture,
+            // elle sans largeur plancher, réclamait la place et Unity comprimait le portrait
+            // jusqu'à son `minWidth` implicite de ZÉRO. `preferredWidth` seul n'est qu'un souhait.
+            // Le débordement du buste en découlait : le dessin calcule son échelle sur les 96 px
+            // CSS VOULUS, si bien que les épaules faisaient 330 unités dans une zone devenue large
+            // de 301. La forme ne débordait pas parce qu'elle était mal dessinée, mais parce que
+            // son cadre avait rétréci sous elle.
+            le.minWidth = Px(CssPortraitLarg);
             le.preferredWidth = Px(CssPortraitLarg);
             le.flexibleWidth = 0f;
             portrait = prtGo.AddComponent<ReputationPortrait>();
@@ -553,13 +648,47 @@ namespace MafiaCleanCity.Operational
             v.childControlWidth = true; v.childControlHeight = true;
             v.childForceExpandHeight = false;
 
+            // ⛔ LE VERDICT — le titre de la colonne, et il MANQUAIT. Mon commentaire ci-dessus
+            // annonçait « le verdict de cohérence, puis les quatre voyants » depuis le début, et
+            // seuls les voyants existaient : un commentaire décrivait une intention que le code ne
+            // réalisait pas, ce qui est pire qu'un commentaire absent — il m'a fait relire cette
+            // fonction plusieurs fois sans voir le trou, puisqu'elle DISAIT contenir le verdict.
+            // Trouvé en comparant la capture à `m-120.png`, pas en relisant le code.
+            //
+            // Mesuré à la source (`.verdict`, generateur-reputation.py:88-90) : serif 700 à 10 px
+            // pour le verdict, sans-serif 6,4 px `muet` pour la légende, alignés sur la LIGNE DE
+            // BASE avec 8 px d'écart — d'où l'alignement horizontal plutôt qu'une pile.
+            GameObject verdictGo = NouveauUI("Verdict", lect.transform);
+            HorizontalLayoutGroup hv = verdictGo.AddComponent<HorizontalLayoutGroup>();
+            hv.spacing = Px(CssVerdictEcart);
+            hv.childControlWidth = true; hv.childControlHeight = true;
+            hv.childForceExpandWidth = false; hv.childForceExpandHeight = false;
+            hv.childAlignment = TextAnchor.LowerLeft;   // `align-items:baseline`, au plus près
+
+            verdictTitre = NouveauTexte(verdictGo.transform, "Titre", "",
+                CssVerdictTitre, ReputationResolvers.Muet, DesignTokens.Current.hudSerifFont);
+            verdictTitre.fontStyle = TMPro.FontStyles.Bold;
+
+            // La légende ne dépend d'AUCUN état : c'est la même phrase dans les six vues de la
+            // maquette. La poser une fois ici, plutôt que dans `AppliquerEtat`, évite qu'un état
+            // futur oublie de la réécrire et laisse une colonne sans son explication.
+            NouveauTexte(verdictGo.transform, "Legende", "ce qu'il a absorbé de vos règles",
+                CssVerdictLegende, ReputationResolvers.Muet, DesignTokens.Current.primaryFont);
+
             for (int i = 0; i < 4; i++)
                 voyants[i] = TellVoyant.Construire(lect.transform, this);
         }
 
+        private GameObject    listeReglesBloc;   // le bloc ENTIER — masqué quand il n'y a rien à lister
+        private LayoutElement listeReglesHauteur; // sa hauteur suit le NOMBRE de règles (n × 30 CSS)
         private RectTransform listeReglesRoot;
         private TextMeshProUGUI listeReglesVide;
         private TextMeshProUGUI pannSurTitre, pannTitre, pannTexte;
+        private TextMeshProUGUI verdictTitre;
+        private TextMeshProUGUI ctaLibelle;
+
+        /// <summary>Le verdict de cohérence tel qu'il est AFFICHÉ — crochet de test.</summary>
+        public string VerdictAffiche => verdictTitre != null ? verdictTitre.text : null;
 
         /// <summary>Le sur-titre du panneau, tel qu'il est AFFICHÉ — crochet de test. C'est lui
         /// qui distingue les trois états ; l'asserter sur la sortie plutôt que sur la valeur
@@ -596,6 +725,12 @@ namespace MafiaCleanCity.Operational
         private void ConstruireListeDesRegles(Transform parent)
         {
             GameObject go = NouveauUI("ListeDesRegles", parent);
+            listeReglesBloc = go;
+            LayoutElement hle = go.AddComponent<LayoutElement>();
+            listeReglesHauteur = hle;
+            hle.minHeight = Px(CssHRegleVide);
+            hle.preferredHeight = Px(CssHRegleVide);
+            hle.flexibleHeight = 0f;
             AjouterFond(go, ReputationResolvers.Fond2);
             Contour(go, ReputationResolvers.Lisere);
 
@@ -630,8 +765,24 @@ namespace MafiaCleanCity.Operational
 
             ReglesAffichees = 0;
             bool vide = regles == null || regles.Length == 0;
-            listeReglesVide.gameObject.SetActive(vide);
+
+            // ⛔ VIDE ⇒ LE BLOC ENTIER DISPARAÎT, il ne se contente pas d'afficher « aucune règle ».
+            // La maquette ne laisse pas le choix : `reputation()` (generateur-reputation.py:200-211)
+            // construit la vue `vierge` avec l'enseigne, les compteurs, LE MIROIR, le panneau et le
+            // pied — et rien d'autre. La liste appartient à une vue SÉPARÉE (`rg6`), et `verifier()`
+            // les traite en `if/elif` : jamais les deux dans le même cadre.
+            // ⚠️ Mesuré en comparant ma capture à la référence `m-120.png` : j'affichais un sixième
+            // bloc que la maquette ne montre nulle part dans cet état. Il ne venait d'aucune source
+            // — je l'avais construit parce que l'écran « devait bien » lister les règles.
+            listeReglesBloc.SetActive(!vide);
+            listeReglesVide.gameObject.SetActive(false);
             if (vide) return;
+
+            // La hauteur est un COMPTE, pas une constante : `H_REGLE = 30` par règle (ligne 280),
+            // plus l'entourage. Une hauteur figée tronquerait la 3ᵉ règle ou laisserait un vide.
+            float haut = regles.Length * CssHRegle + CssHRegleEntour;
+            listeReglesHauteur.minHeight = Px(haut);
+            listeReglesHauteur.preferredHeight = Px(haut);
 
             foreach (DeclaredRuleDto regle in regles)
             {
@@ -710,11 +861,11 @@ namespace MafiaCleanCity.Operational
             CtaDonnerRegle = cta.AddComponent<Button>();
             CtaDonnerRegle.targetGraphic = fond;
 
-            TextMeshProUGUI lbl = NouveauTexte(cta.transform, "Libelle", "DONNER UNE RÈGLE",
+            ctaLibelle = NouveauTexte(cta.transform, "Libelle", "DONNER UNE RÈGLE",
                 CssCtaCorps, ReputationResolvers.OrVif, DesignTokens.Current.primaryFont);
-            lbl.alignment = TextAlignmentOptions.Center;
-            lbl.characterSpacing = 11f;
-            RectTransform lrt = (RectTransform)lbl.transform;
+            ctaLibelle.alignment = TextAlignmentOptions.Center;
+            ctaLibelle.characterSpacing = 11f;
+            RectTransform lrt = (RectTransform)ctaLibelle.transform;
             Etirer(lrt, Px(CssCtaPad));
 
             LayoutElement le = cta.AddComponent<LayoutElement>();

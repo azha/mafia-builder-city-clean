@@ -58,7 +58,15 @@ namespace MafiaCleanCity.Operational
             GameObject zone = Nouveau("Dessin", transform);
             zoneDessin = (RectTransform)zone.transform;
             LayoutElement le = zone.AddComponent<LayoutElement>();
+            // ⛔ `min` AUTANT que `preferred`, en largeur ET en hauteur. Sans plancher, le layout
+            // comprime cette zone quand la place manque, mais les formes qu'elle contient sont
+            // dessinées à l'échelle VOULUE : elles débordent alors de leur propre cadre.
+            // ⚠️ Mesuré (log `[PRT b3]`) : zone rendue 301 unités de large pour des épaules de 330,
+            // puis 424 de haut pour un dessin de 516 — le buste passait par-dessus le verdict.
+            // Un `preferredSize` sans `minSize` n'est pas une taille, c'est une préférence.
+            le.minWidth = ech * VbL;
             le.preferredWidth = ech * VbL;
+            le.minHeight = ech * VbH;
             le.preferredHeight = ech * VbH;
             le.flexibleWidth = 0f; le.flexibleHeight = 0f;
 

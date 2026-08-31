@@ -50,11 +50,32 @@ public static class MafiaCI
     private static readonly string[] Categories =
         { "W4P4a", "W3UDA", "W3U1", "W3U2", "Charpente", "ScreenB3" };
 
+    // ⚠️ `MAFIA_CI_CATEGORIES` (liste séparée par des virgules) REMPLACE le filtre par défaut.
+    // Ajouté le 2026-08-31 pour une raison précise et vérifiable : le log ne NOMME que les tests
+    // qui échouent, donc « 0 échec sur ma catégorie » ne distingue pas « tout est vert » de
+    // « le filtre n'a rien matché » — le zéro d'ABSENCE, déjà payé une fois sur cet écran quand
+    // `ScreenB3` manquait dans `Categories` et que 8 tests n'ont jamais tourné en se déclarant verts.
+    // Le compteur global ne le dit pas non plus : mesuré, il vaut 231 tests exécutés AVANT comme
+    // APRÈS l'ajout de mes 9 tests. Un run filtré sur une seule catégorie rend `passed=N` pour
+    // CETTE catégorie, et N est alors une preuve d'exécution, pas une absence d'échec.
+    // ⛔ Non posée, la variable laisse le comportement BYTE-IDENTIQUE pour tout appelant existant.
     public static void RunPlayModeTests()
     {
+        string[] cats = Categories;
+        string surcharge = System.Environment.GetEnvironmentVariable("MAFIA_CI_CATEGORIES");
+        if (!string.IsNullOrWhiteSpace(surcharge))
+        {
+            cats = surcharge.Split(',');
+            for (int i = 0; i < cats.Length; i++) cats[i] = cats[i].Trim();
+            cats = System.Array.FindAll(cats, c => c.Length > 0);
+            // Imprimé pour que le filtre EFFECTIVEMENT appliqué soit lisible dans le log — un
+            // filtre qu'on croit posé et qui ne l'est pas est exactement le piège qu'on ferme ici.
+            UnityEngine.Debug.Log("MafiaCI: filtre SURCHARGÉ par MAFIA_CI_CATEGORIES = ["
+                                  + string.Join(", ", cats) + "]");
+        }
         var api = ScriptableObject.CreateInstance<TestRunnerApi>();
         api.RegisterCallbacks(new Callbacks());
-        api.Execute(new ExecutionSettings(new Filter { testMode = TestMode.PlayMode, categoryNames = Categories }));
+        api.Execute(new ExecutionSettings(new Filter { testMode = TestMode.PlayMode, categoryNames = cats }));
     }
 
     private class Callbacks : ICallbacks
