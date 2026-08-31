@@ -1,13 +1,13 @@
-# Lot « redimensionnement » — **v9** — le client survit à un changement de taille en cours de vie
+# Lot « redimensionnement » — **v10** — le client survit à un changement de taille en cours de vie
 
 > **Ruling user 2026-08-30** : « supporter le redimensionnement pour de vrai ».
 > **v1 NOT_APPROVED** (5B/7M/4m) · **v2 NOT_APPROVED** (3B/5M/5m) · **v3 NOT_APPROVED** (2B/4M/6m) ·
 > **v4 NOT_APPROVED** (4B/6M/6m) · **v5 NOT_APPROVED** (6B/8I/4m) · **v6 NOT_APPROVED** (4B/8I/6m) ·
-> **v7 NOT_APPROVED** (4B/8I/6m) · **v8 NOT_APPROVED** (5B/5I/4m).
+> **v7 NOT_APPROVED** (4B/8I/6m) · **v8 NOT_APPROVED** (5B/5I/4m) · **v9 NOT_APPROVED** (4B/5I/3m).
 > ⛔ **CE BLOC SE TIENT PAR VERSION, JAMAIS PAR UN TOTAL RECOPIÉ** — un total se périme en silence
 > à chaque tour, et il l'a fait DEUX fois (m1 en v7, B6 en v8 : le correctif de m1 n'a pas survécu
 > à une version). **Ajouter une version OBLIGE à ajouter sa ligne** ; c'est la seule forme qui ne
-> peut pas mentir par omission. ⇒ **8 versions, 8 refus.** Rapports hors dépôt : `/tmp/revue-redimensionnement-design{,-v2,-v3,-v4}.md`.
+> peut pas mentir par omission. ⇒ **9 versions, 9 refus.** Rapports hors dépôt : `/tmp/revue-redimensionnement-design{,-v2,-v3,-v4}.md`.
 > *(v3 était omis de l'en-tête de la v4 — un document dont la thèse est la comptabilité honnête ne
 > peut pas escamoter un de ses propres verdicts. Corrigé ici : quatre versions, quatre refus.)*
 >
@@ -17,8 +17,9 @@
 > voit pas · **v4 une falsifiable de cadrage qui asserte sur les deux grandeurs que le §3 de la
 > MÊME version démontre, six lignes plus haut, ne pas survivre.**
 > ⚠️ **m1 : ce bloc n'avait pas été rouvert depuis la v4 et sous-comptait ses propres refus.**
-> ⇒ Ce n'est plus une observation, c'est un **taux** : **6 versions, 6 refus, 24 BLOQUANTS, zéro
-> réfuté**, et à chaque tour le défaut vivait dans le correctif du tour précédent. La conséquence
+> ⇒ Ce n'est plus une observation, c'est un **taux** — **et il se lit sur la liste par version ci-dessus, jamais sur un total
+> recopié ici** *(I1 de la v9 : deux totaux avaient survécu DANS le bloc qui venait de les
+> interdire — le correctif d'un total recopié n'est pas d'en écrire un autre)*, et à chaque tour le défaut vivait dans le correctif du tour précédent. La conséquence
 > opérationnelle est écrite au §11 : **aucun chunk de ce lot ne se livre sans sa revue ⊥**, et la
 > petitesse d'un delta n'est jamais un motif de la sauter.
 
@@ -247,7 +248,7 @@ reste contain, ×1 reste ×1*. La règle de restauration s'écrit donc en trois 
    disjoint 1 **ne peut pas, par construction, exercer `:181`** : les deux assertions sont vertes
    et c2 vit en production. *La garde certifie le défaut, 6ᵉ occurrence.*
    ⇒ **DEUX SCÉNARIOS NOMMÉS, chacun avec le monde dégénéré qu'il tue** :
-   - **S1 — épinglé au palier de référence, AVEC un pan.** Tue **c2** (le no-op de `:181`).
+   - ~~**S1**~~ — **SUPPRIMÉ en v10** : le monde qu'il visait (c2) est **inatteignable** au corpus disponible. Voir le bloc B2 ci-dessous et le §8.
    - **S2 — hors palier de référence.** Tue **c1** (même rang, autre zoom). ⚠️ **PAS c3** — voir ci-dessous : c3 n'est atteignable à aucun couple disponible.
    *Une disjonction laisse le scénario choisir lequel il satisfait ; deux scénarios ne le laissent pas.*
 
@@ -267,7 +268,25 @@ reste contain, ×1 reste ×1*. La règle de restauration s'écrit donc en trois 
    ⇒ **CONDITIONS DE MONDE, écrites — et les valeurs sont déjà dans un `[TestCase]` commité** :
    | | condition de monde | couple de résolutions | garde de capacité |
    |---|---|---|---|
-   | **S1** | ⛔ **B4 de la v8 : la condition était du MAUVAIS CÔTÉ de la transition.** c2 exige un pan **À RESTAURER**, donc `contain < 1` **À L'ARRIVÉE**, pas au départ | **portrait → 1280×720** *(l'inverse exact de ce que la v8 prescrivait)* | asserter `PanPosition != Vector2.zero` **APRÈS** la reconstruction |
+   ⛔⛔ **B2 de la v9 — S1 EST SUPPRIMÉ, et l'inversion de la v9 était un NON-SEQUITUR.**
+   La v9 raisonnait : *« c2 exige un pan À RESTAURER, donc `contain < 1` À L'ARRIVÉE »*. **Faux** —
+   un pan à restaurer doit exister **là où il est SAUVEGARDÉ**, donc **au DÉPART**. Et la table
+   ci-dessous établit qu'au départ portrait, au palier de référence, **il n'existe aucun pan**.
+   ⇒ Le nom même de la ligne — « épinglé au palier de référence, **AVEC un pan** » — décrivait un
+   monde que sa propre condition interdisait.
+   ⇒ **Et le défaut avait migré de l'assertion vers la GARDE DE CAPACITÉ.** « Asserter
+   `PanPosition != zero` APRÈS la reconstruction » est **satisfaite par c2** — qui ne restaure rien
+   et laisse en place le cadrage de `Configure:149` — et **ROUGE sur le correctif juste**, qui
+   restaure `(0,0)`. *Le monde le plus dégénéré qui rend la garde VRAIE est le défaut lui-même.*
+   ⇒ **c2 exige `contain < 1` AUX DEUX BOUTS** ; une seule des quatre résolutions l'a. **c2 est donc
+   INATTEIGNABLE au corpus disponible, exactement comme c3**, et rejoint le §8 avec son détecteur
+   plutôt qu'un scénario incapable de le rencontrer. *C'est le statut que la v9 avait donné à c3 et
+   refusé à c2 — la classe fermée sur une instance, jamais repassée sur la population.*
+   ⚠️ **Et une condition de DONNÉE, jamais écrite, l'aurait rendu aveugle même au bon couple** :
+   `DistrictInteriorScreenController.cs:606-611` pose `initialFocus = Vector2.zero` en l'absence de
+   bâtiment joueur ⇒ sans bâtiment, ou avec un barycentre centré en Y, **les deux mondes rendent
+   `(0,0)`**. Une condition de monde qui couvre la RÉSOLUTION et pas la DONNÉE est incomplète.
+
    | **S2** | les deux points doivent rendre des `ZoomLevels` de **longueurs différentes** | **1080×1920 ↔ 1440×3200** (`contain` 1 vs 1,3333 ⇒ 3 vs 4 paliers) | asserter `ZoomLevels.Length` **différent** aux deux points |
 
    **La mesure qui fonde ces deux couples — refaite en VALEURS, pas en prose** (`ClampAxis` rend
@@ -416,7 +435,7 @@ remplaçable, exercé par une suite du dépôt. **Deux valeurs de provider aux d
 donnent la distinction que §6.2 exige, **sans toucher la production**.
 ⚠️ **I6 : cette décision était assignée à R1 alors que son instrument (⑳) appartient à R3, qui court
 en DERNIER.** Si le verdict était « le seam ne suffit pas », le refactor tomberait dans R2 — déjà
-passé. ⇒ **Une sonde réduite du seam remonte en R1 (⑤)**, et le refactor éventuel devient un
+passé. ⇒ **Une sonde réduite du seam remonte en R1 (㉕**, et non ⑤ qui est « imprimer les insets après bascule » — I2 de la v9 : le correctif de B3 avait atteint la table et pas la ligne du corps qui ASSIGNE**), et le refactor éventuel devient un
 **R4 conditionnel** — et **défini ici**, parce que la v8 l'invoquait sans le définir, ce qui est
 mot pour mot le BLOQUANT que le §11 adresse aux v1–v4 (« *invoquaient R1/R2/R3 sans jamais les
 DÉFINIR* ») : **classe fermée sur trois instances et rouverte sur la quatrième, dans le même
@@ -523,6 +542,8 @@ appliquées ici.
 | 4 | la valeur des insets **après** bascule (le log ne l'imprime qu'aux deux montages) | R1 l'imprime ; le §5 tient déjà sur la variance entre montages |
 | 5 | ⚠️ **NEUF (I5)** — `OnApplicationFocus`/`OnApplicationPause` couvrent-ils toutes les transitions de zone sûre d'Android ? | repli **écrit** : sondage à cadence nommée. *Le §4 créait ce déduit et le §8, byte-identique depuis la v5, ne le portait pas — un registre « restants » qui n'est pas rouvert par la section qui en crée un est faux dès la ligne suivante.* |
 | 6 | ⚠️ **NEUF (I7)** — un redimensionnement OS produit-il UN rappel de dimensions ou N ? | l'assertion devient `≥ 1` **avec la raison écrite**, jamais un seuil ajusté après coup |
+| 7 | ⛔ **c3 — un rang clampé atterrit sur un AUTRE rôle : INATTEIGNABLE** tant que `contain < 3`. **B1 de la v9 : elle annonçait « porté au §8 avec son détecteur » et ne l'avait fait NI ici NI dans une cellule — le livrable oublié des DEUX côtés, que la bijection ne peut pas voir.** | **détecteur ㉖** : asserter `ZoomLevels[Length-1] == 3f` aux 4 résolutions. VERT aujourd'hui, **ROUGE dès qu'une résolution rend `contain ≥ 3`** — une épingle sur une VALEUR PRÉSENTE, jamais sur une absence |
+| 8 | ⛔ **c2 — le no-op de `ZoomTo:181` : INATTEIGNABLE**, il exige `contain < 1` **aux deux bouts** et une seule des 4 résolutions l'a (B2) | **détecteur ㉗** : asserter qu'**exactement une** des résolutions rend `contain < 1`. Rouge dès qu'une seconde apparaît — c'est-à-dire dès que c2 devient testable |
 
 ## 9. Hors périmètre — ÉNONCÉ PÉRIMÉ, corrigé
 
@@ -583,7 +604,7 @@ annulé par le §5, sans quoi la dépendance zone-sûre de P4/P5 n'est exercée 
 
 | chunk | livrables | falsifiable | gate |
 |---|---|---|---|
-| **R1 — mesures et publications** | ① re-mesurer les ancres @HEAD, **par fichier** (§2) · ② **(a)** vérifier dans le corps les **9 PERSIST nommées** ET **(b)** énumérer les TRANSIENT par la règle d'appartenance (§2), nom + ancre, **au grain déclaré** — le compte tombe à la fin, il n'est pas la preuve *(la v8 avait perdu la moitié (a) : le corps l'assignait, la cellule ne la demandait pas — I1)* · ④ **déclarer l'unité et la portée** de chaque compte du §7 *(et NON « retirer le 19 », cf. B6)* · ⑤ imprimer les insets **après** bascule · ㉕ **la sonde réduite du seam** (§5 — sans elle, la décision « ne toucher au calcul d'insets QUE si le seam ne suffit pas » dépend d'un instrument qu'aucun chunk ne possède : forme C dans le découpage) · ㉔ **commiter le log** qui porte la mesure du §5 (aujourd'hui dans `scratchpad/`, non tracké ⇒ non re-dérivable) · ⑥ écrire prédicat + commande + portée + **contrôle positif par motif** du contrôle §0 · ⑱ écrire la **règle de clôture** de l'ensemble de fichiers du §0 | chaque publication porte **commande + sortie collée + unité + portée** ; contrôle positif ET négatif | revue ⊥ |
+| **R1 — mesures et publications** | ① re-mesurer les ancres @HEAD, **par fichier** (§2) · ② **(a)** vérifier dans le corps les **9 PERSIST nommées** ET **(b)** énumérer les TRANSIENT par la règle d'appartenance (§2), nom + ancre, **au grain déclaré** — le compte tombe à la fin, il n'est pas la preuve *(la v8 avait perdu la moitié (a) : le corps l'assignait, la cellule ne la demandait pas — I1)* · ④ **déclarer l'unité et la portée** de chaque compte du §7 *(et NON « retirer le 19 », cf. B6)* · ⑤ imprimer les insets **après** bascule · ㉖ **détecteur de c3** · ㉗ **détecteur de c2** (§8 — les deux mondes inatteignables portent une épingle qui rougit le jour où ils deviennent testables) · ㉕ **la sonde réduite du seam** (§5 — sans elle, la décision « ne toucher au calcul d'insets QUE si le seam ne suffit pas » dépend d'un instrument qu'aucun chunk ne possède : forme C dans le découpage) · ㉔ **commiter le log** qui porte la mesure du §5 (aujourd'hui dans `scratchpad/`, non tracké ⇒ non re-dérivable) · ⑥ écrire prédicat + commande + portée + **contrôle positif par motif** du contrôle §0 · ⑱ écrire la **règle de clôture** de l'ensemble de fichiers du §0 | chaque publication porte **commande + sortie collée + unité + portée** ; contrôle positif ET négatif | revue ⊥ |
 | **R2 — production** | ⑦ l'émetteur sur le couple, mécanisme complet · ⑧ le chemin de restauration (rôle → valeur → tolérance) · ⑨ le retrait des deux énoncés datés, **avec le contrôle de retrait de R1 dans le MÊME commit** *(un numéro cerclé ne vit que dans la cellule qui le POSSÈDE — une référence croisée se nomme en toutes lettres, sinon l'oracle d'arithmétique compte une possession)* · ⑲ **écrire la conversion d'unités** des deux termes du couple (§4) · ㉓ **l'ordre de reconstruction district↔panneaux**, mesuré ou assumé (§3, m2) | ⑩ non-émission fenêtre-à-l'attachement + `1` en aval, **même scénario** · ⑪ (a) et (b) dans **deux scénarios distincts** · ⑫ anti-vacuité du cadrage par **S1 et S2 nommés** (non disjonctive) | revue ⊥ |
 | **R3 — le juge** | ⑬ choisir la catégorie, l'ajouter, **et couvrir `ChromeSafeAreaPlayModeTests` + `ChromeMultiResolutionPlayModeTests`** (cf. I2) · ⑭ publier le compte des rallumés et **classer chaque rouge** démasqué / régression · ⑮ la seconde largeur de capture · ③ publier la table des 30 non joués · ⑯ le contrôle positif de sabotage, ancré · ⑳ **zone sûre à valeurs DISTINCTES aux deux points, via le seam** (§6.2) · ㉑ **ASSERTER le débordement**, jamais l'imprimer (§6.3) | ⑰ le test visé **relancé seul par son nom complet** · ㉒ anti-vacuité : **nombre d'écrans éprouvés > 0 et nommé** (§6.5) | revue ⊥ |
 
@@ -615,6 +636,8 @@ l'autre membre, et les deux sont désormais construits séparément) :
 | 11 | §5 | imprimer les insets après bascule | R1 ⑤ |
 | 12 | §5 | commiter le log qui porte la mesure du §5 | R1 **㉔** |
 | 25 | §5 | **la sonde réduite du seam** — l'instrument dont dépend la décision d'annulation | R1 **㉕** |
+| 26 | §8 | **détecteur de c3** — `ZoomLevels[Length-1] == 3f` aux 4 résolutions | R1 **㉖** |
+| 27 | §8 | **détecteur de c2** — exactement une résolution à `contain < 1` | R1 **㉗** |
 | 13 | §5 | zone sûre à valeurs distinctes via le seam | R3 ⑳ |
 | 14 | §6 | (a) et (b) dans deux scénarios distincts | R2 ⑪ |
 | 15 | §6.1 | seconde largeur de capture | R3 ⑮ |
@@ -651,5 +674,5 @@ désigner le même chunk que la cellule qui porte X. Vérifié à cette version.
 **Ordre imposé** : R1 → R2 → R3. R2 dépend des ancres re-mesurées de R1 ; R3 rallume des tests qui
 doivent d'abord passer sous R2.
 ⛔ **Aucun chunk ne se livre sans sa revue ⊥, et la petitesse d'un delta n'est jamais un motif de
-la sauter** — cinq versions, **20 BLOQUANTS fondés, zéro réfuté**, et à chaque tour le défaut
+la sauter** — **zéro BLOQUANT réfuté sur neuf versions** *(le compte se lit en tête, I1)*, et à chaque tour le défaut
 vivait dans le correctif du tour précédent.

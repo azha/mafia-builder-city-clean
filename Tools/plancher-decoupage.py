@@ -15,14 +15,30 @@
 """
 import re, sys
 
-CIRCLED = '①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳㉑㉒㉓㉔㉕'
+CIRCLED = '①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳㉑㉒㉓㉔㉕㉖㉗'
 path = sys.argv[1] if len(sys.argv) > 1 else 'Tools/redimensionnement-design.md'
 t = open(path, encoding='utf-8').read()
 
 if '## 11.' not in t:
     print('⛔ §11 introuvable'); sys.exit(2)
 tbl = t.split('## 11.')[1]
-enum = tbl[tbl.index('| # | ancre du corps'):tbl.index('**Plancher dérivé')]
+
+# ⛔ UN CONTRÔLE QUI NE TROUVE PAS SON TEXTE NE DOIT PAS POUVOIR MOURIR EN SILENCE (mesuré
+#    2026-08-31) : la borne de fin de la v8 était la chaîne « **Plancher dérivé », que la v9 a
+#    supprimée. Le script levait une ValueError, le document continuait d'afficher « 25 = 25 » en
+#    citant cet instrument, et un lecteur vérifiait qu'il EXISTE. Un instrument commité et INERTE
+#    est plus dangereux qu'un instrument absent : il nomme un mécanisme réel.
+#    ⇒ Ancres multiples, et sortie 2 EXPLICITE si aucune ne mord.
+START = '| # | ancre du corps'
+ENDS = ('**Plancher dérivé', '**Bijection cellules', '⛔⛔ **B2 de la v8')
+if START not in tbl:
+    print(f'⛔ ancre de début introuvable ({START!r}) — le contrôle NE S EST PAS EXÉCUTÉ')
+    sys.exit(2)
+end = next((e for e in ENDS if e in tbl), None)
+if end is None:
+    print(f'⛔ aucune ancre de fin trouvée parmi {ENDS} — le contrôle NE S EST PAS EXÉCUTÉ')
+    sys.exit(2)
+enum = tbl[tbl.index(START):tbl.index(end)]
 cells = tbl[tbl.index('| chunk | livrables'):]
 
 in_enum = {c for c in enum if c in CIRCLED}
