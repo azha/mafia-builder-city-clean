@@ -1,0 +1,21 @@
+--- hauteur de capitale : le « L » de « Le miroir » ---
+  REF L [m-120.png 900x1752] y 428..465  h=38 px = 12.7 CSS
+  CAP L [screen_b3_reputation_1080x1920.png 1080x1920] y 84..128  h=45 px = 12.5 CSS
+
+--- hauteur de capitale : le « R » de « RÈGLES DONNÉES » (compteur 1) ---
+  REF R [m-120.png 900x1752] y 650..664  h=15 px = 5.0 CSS
+  CAP R [screen_b3_reputation_1080x1920.png 1080x1920] y 346..364  h=19 px = 5.3 CSS
+
+--- hauteur des chiffres « 00 » du 1er compteur ---
+  REF 00 [m-120.png 900x1752] y 603..635  h=33 px = 11.0 CSS
+  CAP 00 [screen_b3_reputation_1080x1920.png 1080x1920] y 286..324  h=39 px = 10.8 CSS
+
+--- EMPHASES du paragraphe explicatif ---
+  (contrôle positif : l'or existe des deux côtés, mesuré sur le liseré du CTA)
+  REF or (liseré CTA) [m-120.png 900x1752] : 8 px proches de (176, 141, 62) (tol 40)
+  CAP or (liseré CTA) [screen_b3_reputation_1080x1920.png 1080x1920] : 10 px proches de (176, 141, 62) (tol 40)
+  paragraphe :
+  REF or dans le paragraphe [m-120.png 900x1752] : 2170 px proches de (176, 141, 62) (tol 45)
+  CAP or dans le paragraphe [screen_b3_reputation_1080x1920.png 1080x1920] : 452 px proches de (176, 141, 62) (tol 45)
+  REF clair (gras) dans le paragraphe [m-120.png 900x1752] : 0 px proches de (232, 236, 241) (tol 30)
+  CAP clair (gras) dans le paragraphe [screen_b3_reputation_1080x1920.png 1080x1920] : 0 px proches de (232, 236, 241) (tol 30)

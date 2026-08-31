@@ -1,0 +1,49 @@
+(a) VOYANT de la 1re carte — rond (ratio 1) ou ovale ?
+  [m-120.png (900, 1752)]
+    REF vertical  x=490 : (866, 886, 21)
+    REF horizontal y=876 : (480, 500, 21)
+  [screen_b3_reputation_1080x1920.png (1080, 1920)]
+    CAP vertical  x=566 : (595, 662, 68)
+    CAP vertical  x=570 : (590, 662, 73)
+    CAP vertical  x=574 : (589, 662, 74)
+    CAP vertical  x=578 : (591, 662, 72)
+    CAP vertical  x=582 : (598, 662, 65)
+    CAP horizontal y=600 : (564, 583, 20)
+    CAP horizontal y=616 : (562, 585, 24)
+    CAP horizontal y=630 : (563, 583, 21)
+
+(b) MONTRE — largeur à trois hauteurs (constante = rectangle)
+  [m-120.png (900, 1752)]
+    REF y=1155 : (141, 167, 27)
+    REF y=1161 : (139, 178, 40)
+    REF y=1168 : (143, 174, 32)
+  [screen_b3_reputation_1080x1920.png (1080, 1920)]
+    CAP y=960 : (139, 194, 56)
+    CAP y=970 : (139, 194, 56)
+    CAP y=980 : (139, 194, 56)
+
+(c) CARTES DE RÈGLES — extension verticale (liseré gauche)
+  [m-120.png (900, 1752)]
+    REF : [(834, 904), (931, 1015), (1028, 1112), (1125, 1209)]  -> hauteurs CSS [23.7, 28.3, 28.3, 28.3]
+  [screen_b3_reputation_1080x1920.png (1080, 1920)]
+    CAP : [(573, 659), (680, 767), (787, 874), (895, 981)]  -> hauteurs CSS [24.2, 24.4, 24.4, 24.2]
+
+(d) EMPHASES du paragraphe — pixels OR (242,201,107)
+  [m-120.png (900, 1752)]
+    or dans (72, 1480, 830, 1590) : 1212 px
+  [screen_b3_reputation_1080x1920.png (1080, 1920)]
+    or dans (80, 1285, 1000, 1375) : 0 px
+
+(e) GRAISSE des titres — densité d'encre à hauteur de capitale égale
+  [m-120.png (900, 1752)]
+    REF « Il vous écoute »: l=  66.7 CSS  h(cap)=  7.3 CSS  encre= 1688 px  densité= 38.4 %
+    REF « Le miroir »      : l= 115.7 CSS  h(cap)= 13.3 CSS  encre= 4025 px  densité= 29.0 %
+    REF titre de la note   : l= 170.7 CSS  h(cap)= 11.0 CSS  encre= 6550 px  densité= 38.8 %
+  [screen_b3_reputation_1080x1920.png (1080, 1920)]
+    JEU « Il vous écoute »: l=  60.6 CSS  h(cap)=  7.2 CSS  encre= 1820 px  densité= 32.1 %
+    JEU « Le miroir »      : l= 106.4 CSS  h(cap)= 12.8 CSS  encre= 3525 px  densité= 20.0 %
+    JEU titre de la note   : l= 151.7 CSS  h(cap)= 10.8 CSS  encre= 6373 px  densité= 29.9 %
+
+(f) AXE du portrait — centres (px, puis en % de la largeur d'image)
+    [m-120.png] carte=245.5  visage=245.5  cou=245.5  revers=245.5   revers-cou = +0.00 %L   visage-carte = +0.00 %L
+    [screen_b3_reputation_1080x1920.png] carte=284.0  visage=273.0  cou=272.5  revers=289.5   revers-cou = +1.57 %L   visage-carte = -1.02 %L

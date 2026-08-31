@@ -1,0 +1,45 @@
+(contrôle négatif) contraste d'une couleur avec elle-même : 1.00
+
+--- couche globale : CORPS de l'écran (réf sous le chrome, capture entière) ---
+  [m-120.png (900, 1752)] palette de (18, 376, 882, 1732) :
+      (17, 24, 35)  30.33 %
+      (11, 14, 18)  16.85 %
+      (15, 21, 30)  16.39 %
+      (24, 27, 31)   8.70 %
+      (20, 24, 30)   8.26 %
+      (119, 115, 94)   8.21 %
+      (13, 17, 22)   8.08 %
+      (15, 24, 32)   3.17 %
+      fond dominant=(17, 24, 35)  luminance moyenne=0.0377  densité d'encre=39.99 %
+  [screen_b3_reputation_1080x1920.png (1080, 1920)] palette de (18, 18, 1062, 1902) :
+      (13, 22, 34)  39.67 %
+      (13, 13, 22)  36.85 %
+      (13, 13, 13)  10.45 %
+      (121, 114, 93)   6.72 %
+      (22, 22, 28)   6.24 %
+      (14, 13, 22)   0.06 %
+      (13, 13, 23)   0.01 %
+      (15, 15, 22)   0.01 %
+      fond dominant=(13, 13, 22)  luminance moyenne=0.0285  densité d'encre=46.77 %
+
+--- emphases : couleurs claires du paragraphe explicatif ---
+  [m-120.png (900, 1752)] couleurs claires distinctes dans (72, 1480, 830, 1590) : 6
+      (185, 173, 146)  n=978  luminance=0.423
+      (242, 201, 107)  n=943  luminance=0.617
+      (185, 173, 139)  n=206  luminance=0.421
+      (185, 173, 142)  n=198  luminance=0.422
+      (174, 173, 146)  n=176  luminance=0.410
+      (179, 173, 146)  n=152  luminance=0.415
+  [screen_b3_reputation_1080x1920.png (1080, 1920)] couleurs claires distinctes dans (80, 1285, 1000, 1375) : 6
+      (185, 173, 146)  n=3126  luminance=0.423
+      (175, 164, 138)  n=202  luminance=0.375
+      (156, 146, 123)  n=188  luminance=0.291
+      (183, 171, 144)  n=184  luminance=0.412
+      (174, 163, 137)  n=156  luminance=0.370
+      (162, 152, 128)  n=150  luminance=0.317
+
+--- contrastes texte / fond RÉEL ---
+  REF corps du paragraphe: 13.57 : 1
+  CAP corps du paragraphe: 8.19 : 1
+  REF titre « Le miroir » (or): 11.88 : 1
+  (échantillons de titre) REF (300,445) = (13, 19, 29)  CAP (369,105) = (13, 22, 34)

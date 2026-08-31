@@ -1,0 +1,21 @@
+
+=== REFERENCE m-120 (x3,0) : /home/erutheone/project/mafia-unity-B/Tools/juge-visuel/reputation/r1-2026-08-30/reference/m-120.png
+    taille = (900, 1752)  (contrôle positif largeur)
+    fond dominant = (17, 24, 35)
+    lignes quasi-vides = 0 / 1752  (contrôle négatif : != 0 et != tout)
+    segments d'encre (y0,y1,hauteur px,hauteur CSS) :
+          0  1751  h= 1752 px      584.0 CSS
+
+=== CAPTURE 1080x1920 (x3,6) : /home/erutheone/project/mafia-unity-B/Assets/Screenshots/screen_b3_reputation_1080x1920.png
+    taille = (1080, 1920)  (contrôle positif largeur)
+    fond dominant = (13, 13, 22)
+    lignes quasi-vides = 36 / 1920  (contrôle négatif : != 0 et != tout)
+    segments d'encre (y0,y1,hauteur px,hauteur CSS) :
+         18  1901  h= 1884 px      523.3 CSS
+
+=== CAPTURE 1080x2400 (x3,6) : /home/erutheone/project/mafia-unity-B/Assets/Screenshots/screen_b3_reputation_1080x2400.png
+    taille = (1080, 2400)  (contrôle positif largeur)
+    fond dominant = (13, 13, 22)
+    lignes quasi-vides = 36 / 2400  (contrôle négatif : != 0 et != tout)
+    segments d'encre (y0,y1,hauteur px,hauteur CSS) :
+         18  2381  h= 2364 px      656.7 CSS

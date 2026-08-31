@@ -1,0 +1,14 @@
+tailles : /home/erutheone/project/mafia-unity-B/Assets/Screenshots/screen_b3_reputation_1080x1920.png (1080, 1920) | /home/erutheone/project/mafia-unity-B/Assets/Screenshots/screen_b3_reputation_1080x1920_t1s.png (1080, 1920) | /home/erutheone/project/mafia-unity-B/Assets/Screenshots/screen_b3_reputation_1080x2400.png (1080, 2400) | /home/erutheone/project/mafia-unity-B/Tools/juge-visuel/reputation/r1-2026-08-30/reference/m-120.png (900, 1752)
+
+(contrôle positif) 1920 vs lui-même :
+  auto-diff: 0 px différents / 2073600 (0.0000 %), écart max canal = 0
+
+(a) stabilité T vs T+1 s :
+  1920 vs 1920_t1s: 0 px différents / 2073600 (0.0000 %), écart max canal = 0
+
+(b) reflux : bandes de contenu 1080x2400 vs 1080x1920
+    (0..1541 = du haut du panneau au bas du CTA, mesuré par m02)
+  bande 0..1542: 1712 px différents / 1665360 (0.1028 %), écart max canal = 3
+
+(contrôle négatif) 1920 vs référence redimensionnée à 1080x1920 :
+  1920 vs ref: 2073552 px différents / 2073600 (99.9977 %), écart max canal = 242
