@@ -508,7 +508,7 @@ alors écrire le refactor `static`→instance ET la conversion d'unités.
   le texte que la correction devait rouvrir et n'a pas rouvert.*
   ⇒ **Ce qui est asserté, et rien d'autre** : la règle **rôle → valeur atteignable → tolérance
   nommée** (§3), dans les **deux scénarios S1 et S2** avec leurs conditions de monde (§3), chacun
-  portant sa **garde de capacité AU DÉPART et sa borne d'ATTEIGNABILITÉ (㉘)** *(I4 de la v11 : ce §,
+  portant sa **garde de capacité AU DÉPART et sa borne d'ATTEIGNABILITÉ PAR AXE, publiée par R1** *(I4 de la v11 : ce §,
   seule occurrence PRESCRIPTIVE du document, était resté à 0 delta pendant que ⑫ et la ligne 7
   changeaient — le texte que la correction devait rouvrir et n'a pas rouvert)*. Ni `CurrentScale` nu, ni le rang, ni la position brute, ni la
   garde de non-défaultitude — les quatre sont réfutés au §3.

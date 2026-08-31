@@ -5,7 +5,14 @@
    Il prouve la BIJECTION entre les numéros cerclés des cellules R1/R2/R3 et les lignes de
    l'énumération : aucun orphelin dans un sens ni dans l'autre. C'est réel et ça a déjà attrapé
    deux défauts (deux obligations sous un seul numéro ; un numéro possédé par deux chunks).
-   ⚠️ Il NE prouve PAS que le plancher est dérivé du CORPS indépendamment de la table. Les deux
+   ⚠️ Il NE prouve PAS que le plancher est dérivé du CORPS indépendamment de la table.
+   ⚠️ ET SA PORTÉE EST LE §11 SEUL (mesuré 2026-08-31) : 11 numéros cerclés vivent dans le CORPS,
+   hors §11, et lui sont INVISIBLES. En cellule, un numéro signifie POSSESSION ; en prose, il n'est
+   qu'une référence — mais rien ici ne distingue les deux, donc une PRESCRIPTION écrite en prose
+   avec un numéro cerclé échappe au contrôle de possession. La règle (v10) reste : dans une
+   CELLULE, un numéro cerclé ne vit que là où il est POSSÉDÉ ; une référence croisée se nomme en
+   toutes lettres. ⇒ Ne pas lire un « bijection ✅ » comme « la propriété est bien assignée
+   partout » : il dit seulement « aucun orphelin ENTRE la table et l'énumération ». Les deux
    membres sont écrits dans le même §11, donc un livrable oublié DES DEUX CÔTÉS reste invisible.
    C'est le BLOQUANT B2 de la revue v8, et il n'est pas fermé par cet instrument — le dire plutôt
    que de laisser un ✅ le suggérer.
