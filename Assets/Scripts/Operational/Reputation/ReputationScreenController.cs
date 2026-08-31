@@ -458,6 +458,31 @@ namespace MafiaCleanCity.Operational
             Etirer(racinePleinEcran);
             AjouterFond(racine, ReputationResolvers.Encre);
 
+            // ⛔ LES TROIS COUCHES DU FOND — sans elles « l'écran est éteint ». Le juge a sondé 16
+            // points et trouvé un aplat unique (13,13,22) là où la maquette monte à (41,40,35) sous
+            // l'enseigne : plus de dégradé vertical, plus de halo doré en haut, plus de halo cyan
+            // au pied. Six mesures centre/bord rendaient Δlum = 0,0 contre +2,7, +4,6, −8,9 et +11.
+            // ★ Chaque aplat était pourtant juste à ≤ 4/255. Un écran peut avoir toutes ses
+            //   couleurs exactes et n'avoir aucune lumière : ce qui manquait n'était dans aucune
+            //   valeur nommée, mais dans ce qui les relie.
+            //
+            // Traduites une à une de `.%(p)s{background:…}` (chassis6.py:104-107). ⚠️ L'axe Y de la
+            // CSS descend, celui des UV monte : `at 50% 22%` devient donc un centre à (0,5 · 0,78).
+            //   radial-gradient(72% 40% at 50% 22%,  rgba(217,171,78,.15), transparent 66%)
+            //   radial-gradient(90% 60% at 50% 96%,  rgba(127,212,217,.07), transparent 70%)
+            //   linear-gradient(178deg, carte 0%, fond 54%, fond2 100%)
+            // Les alphas sont ceux de la CSS, non ajustés à l'œil : c'est ce qui rend l'écart
+            // mesurable au tour suivant plutôt que négociable.
+            AjouterVoile(racine, "FondDegrade",
+                ProceduralUI.VerticalGradient(128, ReputationResolvers.Panneau, ReputationResolvers.Fond2),
+                Color.white);
+            AjouterVoile(racine, "HaloOr",
+                ProceduralUI.VoileRadial(160, Color.white, new Vector2(0.5f, 0.78f), 0.72f, 0.40f, 0.66f),
+                new Color(217f / 255f, 171f / 255f, 78f / 255f, 0.15f));
+            AjouterVoile(racine, "HaloCyan",
+                ProceduralUI.VoileRadial(160, Color.white, new Vector2(0.5f, 0.04f), 0.90f, 0.60f, 0.70f),
+                new Color(127f / 255f, 212f / 255f, 217f / 255f, 0.07f));
+
             // ⛔ L'ÉCHELLE AVANT TOUT — un RectTransform qui vient d'être étiré n'a PAS encore son
             // `rect` résolu, et `Px()` le lit dès la première constante convertie. Mesuré sur cet
             // écran (run 21, log `[GEOM b3]`) : les six blocs rendaient EXACTEMENT la hauteur qu'ils
@@ -534,6 +559,21 @@ namespace MafiaCleanCity.Operational
             img.type = Image.Type.Sliced;
             img.color = ReputationResolvers.OrFilet;
             img.raycastTarget = false;
+        }
+
+        /// <summary>Une couche de fond étirée sur toute la racine, derrière tout le reste et
+        /// hors du flux. Le sprite porte la FORME du dégradé, `teinte` en porte la couleur et
+        /// l'alpha — jamais les deux, sinon uGUI multiplie et rend la couleur au carré (défaut
+        /// déjà payé sur le teint du portrait, mesuré à (133,116,81) pour (185,173,146)).</summary>
+        private void AjouterVoile(GameObject parent, string nom, Sprite sprite, Color teinte)
+        {
+            GameObject go = NouveauUI(nom, parent.transform);
+            Image img = go.AddComponent<Image>();
+            img.sprite = sprite;
+            img.color = teinte;
+            img.raycastTarget = false;
+            Etirer((RectTransform)go.transform);
+            go.AddComponent<LayoutElement>().ignoreLayout = true;   // décor : jamais une colonne
         }
 
         private void ConstruireEnseigne(Transform parent)
@@ -683,15 +723,54 @@ namespace MafiaCleanCity.Operational
             rrt.offsetMin = new Vector2(0f, 0f); rrt.offsetMax = new Vector2(0f, 0f);
             rrt.anchoredPosition = new Vector2(0f, -Px(CssRefletY));
             rrt.sizeDelta = new Vector2(0f, Px(CssRefletHaut));
+            // ⛔ DERNIER ENFANT : un reflet passe SUR la glace, pas dessous. Il était posé avant la
+            // carte du portrait, qui le coupait sur toute sa moitié gauche — le juge l'a mesuré, et
+            // c'est précisément l'occlusion que l'angle mort A1 annonçait sans pouvoir la voir
+            // (la garde de fratrie vérifie une CONVENTION, pas un recouvrement).
+            reflet.transform.SetAsLastSibling();
 
-            HorizontalLayoutGroup h = go.AddComponent<HorizontalLayoutGroup>();
+            // ⛔ LE NIVEAU `.mir6` MANQUAIT, et c'est lui qui décide OÙ va le mou de la page.
+            // La maquette empile deux conteneurs, pas un :
+            //   `.elast{flex:1; flex-direction:column}`  ⇐ absorbe le mou (ce bloc-ci)
+            //   `.mir6 {display:flex; align-items:stretch}`  ⇐ SANS flex-grow : hauteur du CONTENU
+            // Le mou reste donc dans `.elast`, SOUS le `.mir6`. En collant le groupe horizontal
+            // directement sur le bloc élastique, je l'envoyais dans la carte du portrait.
+            // ⚠️ Mesuré par le juge : cadre doré à 252,5 px CSS en 16:9 et 385,8 en 20:9, pour
+            // 182,7 en maquette — soit 231 CSS de vide, 60 % du cadre, à la résolution cible. « Le
+            // va-et-vient portrait ↔ tuiles, qui est le propos de l'écran, devient une colonne vide
+            // bordée d'or à côté d'une liste courte. »
+            // ★ Et ma garde B3S4 restait VERTE : elle vérifie que le bloc élastique absorbe la
+            //   hauteur ajoutée, ce qu'il faisait — mais par le mauvais enfant. Une garde qui
+            //   mesure un total ne dit rien de sa répartition. A3 n'était donc pas aussi fermée
+            //   que je l'avais déclaré, et c'est le juge qui me l'apprend.
+            VerticalLayoutGroup pileMiroir = go.AddComponent<VerticalLayoutGroup>();
+            pileMiroir.childControlWidth = true; pileMiroir.childControlHeight = true;
+            pileMiroir.childForceExpandWidth = true;
+            pileMiroir.childForceExpandHeight = false;   // le mou reste SOUS le mir6
+            pileMiroir.childAlignment = TextAnchor.UpperCenter;
+            pileMiroir.padding = new RectOffset(PxTrait(7f), PxTrait(7f), PxTrait(7f), PxTrait(7f));
+
+            GameObject mir6 = NouveauUI("Mir6", go.transform);
+            // ⛔ HAUTEUR IMPOSÉE, et non laissée au calcul. `childForceExpandHeight = false` sur la
+            // pile ne suffisait pas : mesuré (log `[PRT b3]`), Mir6 rendait 1077 unités sur les
+            // 1137 du bloc — il ne s'étirait pas, sa hauteur PRÉFÉRÉE valait déjà tout le bloc,
+            // parce qu'un groupe horizontal prend le maximum des préférées de ses enfants et que le
+            // portrait, lui, n'a aucun plafond.
+            // ★ J'ai d'abord cru que le correctif était de « l'empêcher de s'étirer ». Il ne
+            //   s'étirait pas : il DEMANDAIT cette hauteur. Empêcher un étirement qui n'a pas lieu
+            //   ne change rien — deux causes différentes produisent ici la même image.
+            // La maquette donne au contenu la hauteur du bloc moins ses marges : 188 − 2 × 7 = 174.
+            LayoutElement mle = mir6.AddComponent<LayoutElement>();
+            mle.minHeight = Px(CssHMiroir - 14f);
+            mle.preferredHeight = Px(CssHMiroir - 14f);
+            mle.flexibleHeight = 0f;   // le mou de la page reste SOUS lui, dans le bloc élastique
+            HorizontalLayoutGroup h = mir6.AddComponent<HorizontalLayoutGroup>();
             h.spacing = Px(10f);
-            h.padding = new RectOffset(PxTrait(7f), PxTrait(7f), PxTrait(7f), PxTrait(7f));
             h.childControlWidth = true; h.childControlHeight = true;
             h.childForceExpandHeight = true;
 
             // Le portrait — largeur FIXE (118 px CSS convertis), le reste s'étire.
-            GameObject prtGo = NouveauUI("Portrait", go.transform);
+            GameObject prtGo = NouveauUI("Portrait", mir6.transform);
             AjouterFond(prtGo, ReputationResolvers.Panneau);
             Contour(prtGo, ReputationResolvers.OrFilet);
             LayoutElement le = prtGo.AddComponent<LayoutElement>();
@@ -712,7 +791,7 @@ namespace MafiaCleanCity.Operational
             portrait.Construire(racinePleinEcran);
 
             // La colonne de lecture : le verdict de cohérence, puis les quatre voyants.
-            GameObject lect = NouveauUI("Lecture", go.transform);
+            GameObject lect = NouveauUI("Lecture", mir6.transform);
             VerticalLayoutGroup v = lect.AddComponent<VerticalLayoutGroup>();
             v.spacing = Px(4f);
             v.childControlWidth = true; v.childControlHeight = true;

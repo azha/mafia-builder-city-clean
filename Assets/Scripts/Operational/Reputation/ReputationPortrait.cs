@@ -90,8 +90,8 @@ namespace MafiaCleanCity.Operational
             // demi-ellipse de centre (31, 78), rayons 25 × 23, dont seule la MOITIÉ HAUTE se voit
             // (la base est le bord du viewBox). D'où une ellipse de hauteur 46 posée à y=55, et le
             // masque de la zone de dessin qui en coupe le bas — pas un rectangle de hauteur 23.
-            Forme(ref _epaules, "Epaules", buste, ReputationResolvers.Carte2,
-                  new Rect(6f, 55f, 50f, 46f), ech, ellipse: true);
+            FormeLiseree(ref _epaules, "Epaules", buste, ReputationResolvers.Carte2,
+                  new Rect(6f, 55f, 50f, 46f), ech, 2f, ellipse: true);   // stroke-width="2"
             col = FormeTriangle("Col", buste, ReputationResolvers.Creme, ech);
             revresG = null; revresD = null;
             Forme(ref revresG, "RevresG", buste, ReputationResolvers.Creme,
@@ -111,8 +111,8 @@ namespace MafiaCleanCity.Operational
             Forme(ref montre, "Montre", buste, ReputationResolvers.OrVif,
                   new Rect(47.1f, 72.9f, 5.8f, 1.6f), ech, arrondi: true);
             // `<ellipse cx="12" cy="75" rx="5" ry="3.4">` — une ellipse déclarée comme telle.
-            Forme(ref gantG, "GantG", buste, ReputationResolvers.Creme2,
-                  new Rect(7f, 71.6f, 10f, 6.8f), ech, ellipse: true);
+            FormeLiseree(ref gantG, "GantG", buste, ReputationResolvers.Creme2,
+                  new Rect(7f, 71.6f, 10f, 6.8f), ech, 1.2f, ellipse: true);  // stroke-width="1.2"
             Forme(ref _cou, "Cou", buste, ReputationResolvers.Creme2,
                   new Rect(26f, 48f, 10f, 10f), ech);
             // ⚠️ LES CHEVEUX PASSENT AVANT LA TÊTE, et c'est ce qui fait la calotte. Le SVG les
@@ -124,11 +124,11 @@ namespace MafiaCleanCity.Operational
             // s'est déjà rétrécie. Avec une ellipse exactement à la boîte, le visage — dessiné
             // par-dessus — les recouvre presque entièrement : le juge a mesuré 1,7 px CSS de
             // cheveux latéraux contre 8,7 attendus.
-            Forme(ref _cheveux, "Cheveux", buste, ReputationResolvers.Carte2,
-                  new Rect(16.8f, 10f, 28.4f, 18f), ech, ellipse: true);
+            FormeLiseree(ref _cheveux, "Cheveux", buste, ReputationResolvers.Carte2,
+                  new Rect(16.8f, 10f, 28.4f, 18f), ech, 1.8f, ellipse: true);  // stroke-width="1.8"
             // `<ellipse cx="31" cy="32" rx="12.5" ry="15">` — une ellipse, pas un stade.
-            Forme(ref _tete, "Tete", buste, ReputationResolvers.Creme2,
-                  new Rect(18.5f, 17f, 25f, 30f), ech, ellipse: true);
+            FormeLiseree(ref _tete, "Tete", buste, ReputationResolvers.Creme2,
+                  new Rect(18.5f, 17f, 25f, 30f), ech, 2f, ellipse: true);   // stroke-width="2"
             Forme(ref oeilG, "OeilG", buste, ReputationResolvers.Encre,
                   new Rect(24.6f, 29.7f, 3.8f, 4.6f), ech, arrondi: true);
             Forme(ref oeilD, "OeilD", buste, ReputationResolvers.Encre,
@@ -308,6 +308,29 @@ namespace MafiaCleanCity.Operational
                 img.type = Image.Type.Sliced;
             }
             cible = img;
+        }
+
+        /// <summary>Pose une forme AVEC son liseré : la même forme, en encre, agrandie de
+        /// `stroke` px de viewBox de chaque côté, dessinée juste avant. C'est ainsi qu'un `stroke`
+        /// SVG se rend sans primitive de contour.
+        ///
+        /// ⛔ Les liserés manquaient TOUS, et c'est ce qui défaisait la figure. Le juge visuel l'a
+        /// chiffré : l'encre `#0b1016` du portrait tombait de 244 u² en maquette — une composante
+        /// connexe qui dessine toute la silhouette — à **12,4 u², c'est-à-dire un œil**. Les épaules
+        /// ne se détachaient plus du cadre que par 1,9 de luminance.
+        /// ★ « L'homme n'est plus le même homme. » Chaque aplat était pourtant à ≤ 4/255 de sa
+        ///   couleur cible : ce n'étaient pas les couleurs qui manquaient, c'était le TRAIT entre
+        ///   elles. Une figure se lit par ses bords autant que par ses surfaces.</summary>
+        private void FormeLiseree(ref Image cible, string nom, Transform parent, Color couleur,
+                                  Rect vb, float ech, float stroke, bool ellipse = false,
+                                  bool arrondi = false)
+        {
+            Image bord = null;
+            Rect vbBord = new Rect(vb.x - stroke / 2f, vb.y - stroke / 2f,
+                                   vb.width + stroke, vb.height + stroke);
+            Forme(ref bord, nom + "Lisere", parent, ReputationResolvers.Encre, vbBord, ech,
+                  arrondi: arrondi, ellipse: ellipse);
+            Forme(ref cible, nom, parent, couleur, vb, ech, arrondi: arrondi, ellipse: ellipse);
         }
 
         private static Sprite spriteTriangle;

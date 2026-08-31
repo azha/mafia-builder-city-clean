@@ -648,7 +648,7 @@ namespace MafiaCleanCity.Operational.Tests
                 // cadre ne se voit dans aucun compteur — seulement à l'œil, ou ici.
                 var sp = new System.Text.StringBuilder("[PRT b3]");
                 foreach (RectTransform t in racine.GetComponentsInChildren<RectTransform>(true))
-                    if (t.name == "Portrait" || t.name == "Dessin" || t.name == "Buste"
+                    if (t.name == "Miroir" || t.name == "Mir6" || t.name == "Portrait" || t.name == "Dessin" || t.name == "Buste"
                         || t.name == "Epaules" || t.name == "Tete")
                     {
                         sp.Append($" · {t.name} {t.rect.width:F0}x{t.rect.height:F0}"
