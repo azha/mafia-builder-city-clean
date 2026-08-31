@@ -374,6 +374,24 @@ namespace MafiaCleanCity.Operational
             corps.offsetMin = new Vector2(0f, ShellChrome.BottomInsetPx);
             corps.offsetMax = new Vector2(0f, -ShellChrome.TopInsetPx);
 
+            // ⛔⛔ SANS CE LAYOUT, LES SIX BLOCS RESTENT TOUS À LA POSITION PAR DÉFAUT.
+            // Mesuré sur la première capture réussie : l'enseigne était en place (elle porte son
+            // propre ancrage), et les cinq autres blocs s'empilaient au CENTRE, superposés, les
+            // textes rendus en colonne d'une lettre faute de largeur. `corps` recevait bien ses
+            // enfants, mais rien ne leur disait où aller.
+            // ⇒ C'est mon angle mort A3, déclaré une heure plus tôt : « les constantes sont
+            //   vérifiées contre la maquette (42 concordances), leur EFFET ne l'est pas ». Le
+            //   comparateur code↔maquette était vert, et l'écran était illisible. Une valeur juste
+            //   dans un conteneur sans layout ne produit rien.
+            // Marges de la maquette : `.enseigne{margin:13px 13px 0}` puis `margin-top:9px` entre
+            // blocs successifs (chassis6.py), converties par EchelleMaquette.
+            VerticalLayoutGroup pile = corpsGo.AddComponent<VerticalLayoutGroup>();
+            pile.spacing = Px(CssEcartBloc);
+            pile.padding = new RectOffset(PxTrait(CssMargeH), PxTrait(CssMargeH),
+                                          PxTrait(CssEnseigneHaut), PxTrait(CssPiedHaut));
+            pile.childControlWidth = true;  pile.childControlHeight = true;
+            pile.childForceExpandWidth = true; pile.childForceExpandHeight = false;
+
             ConstruireCerne(corpsGo.transform);
             ConstruireEnseigne(corpsGo.transform);
             ConstruireCompteurs(corpsGo.transform);
@@ -388,6 +406,8 @@ namespace MafiaCleanCity.Operational
         {
             GameObject go = NouveauUI("Cerne", parent);
             RectTransform rt = (RectTransform)go.transform;
+            // Le cerne ENCADRE l'écran, il ne s'empile pas avec les blocs : on l'exclut du layout.
+            go.AddComponent<LayoutElement>().ignoreLayout = true;
             float inset = Px(CssCernInset);
             rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one;
             rt.offsetMin = new Vector2(inset, inset);
@@ -402,8 +422,9 @@ namespace MafiaCleanCity.Operational
         private void ConstruireEnseigne(Transform parent)
         {
             GameObject go = NouveauUI("Enseigne", parent);
-            RectTransform rt = (RectTransform)go.transform;
-            AncrerHaut(rt, Px(CssEnseigneHaut), Px(CssMargeH));
+            // ⚠️ PLUS D'ANCRAGE MANUEL ICI : le VerticalLayoutGroup de `corps` place ce bloc.
+            // Les deux mécanismes se contredisent — un ancrage haut + un layout parent donnent
+            // une position que ni l'un ni l'autre ne décrit.
             AjouterFond(go, ReputationResolvers.Panneau);
 
             // Le filet doré du bas (`border-bottom:2px solid --laiton`) — un enfant, pas une
