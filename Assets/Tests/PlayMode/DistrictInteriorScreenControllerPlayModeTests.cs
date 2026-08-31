@@ -1,28 +1,4 @@
-            // Contrôle positif obligatoire (socle : « un zéro mesuré sur le mauvais chemin est le plus
-            // crédible des faux ») — le MÊME motif doit retrouver un site d'auto-signin CONNU ailleurs
-            // dans Assets/Scripts, sinon le zéro ci-dessus ne prouve que l'impuissance du motif.
-            //
-            // ⛔⛔ AMENDÉ LE 2026-08-31 — 9 -> 1, ET CE N'EST PAS UNE DÉRIVE À CORRIGER. Le lot
-            //    « surcharge d'identité de démo » a fait exactement ce qu'il promettait : canaliser
-            //    TOUT sign-in par un résolveur unique (`DemoIdentityResolver.ResolveAndSignIn`). La
-            //    population de ce contrôle positif est donc passée de 9 sites à UN SEUL — le résolveur.
-            //    ⇒ C'est la classe « corriger le défaut qu'une garde surveille peut VIDER cette garde ».
-            //    Elle a rougi au lieu de passer en silence, parce qu'elle assertait un attendu NON NUL :
-            //    c'est le bon mode d'échec, et c'est pour ça qu'on le lit ici plutôt que jamais.
-            // ⇒ On asserte désormais l'ENSEMBLE, pas un compte : un site neuf ailleurs rouvre le débat
-            //    (et rougit), au lieu de faire dériver un nombre que personne ne re-mesure.
-            var scriptsRoot = Path.Combine(Application.dataPath, "Scripts");
-            var csFiles = Directory.GetFiles(scriptsRoot, "*.cs", SearchOption.AllDirectories);
-            Assert.IsTrue(csFiles.Length > 0, "anti-vacuité : 0 fichier .cs balayé sous Assets/Scripts.");
-            var porteurs = csFiles.Where(f => File.ReadAllText(f).Contains(".SignIn("))
-                                  .Select(f => Path.GetFileName(f)).OrderBy(n => n).ToArray();
-            Assert.IsNotEmpty(porteurs,
-                "contrôle positif ÉTEINT : le motif '.SignIn(' ne trouve plus RIEN sous Assets/Scripts. " +
-                "Le zéro asserté plus haut ne prouverait alors que l'impuissance du motif, pas l'absence " +
-                "d'auto-signin dans le diorama.");
-            CollectionAssert.AreEquivalent(new[] { "DemoIdentityResolver.cs" }, porteurs,
-                "l'ENSEMBLE des fichiers appelant '.SignIn(' a divergé du résolveur unique. Un site neuf " +
-                "contourne la surcharge d'identité de démo ; un site en moins éteint ce contrôle positif.");using System;
+using System;
 using System.Collections;
 using System.IO;
 using System.Linq;
@@ -102,10 +78,22 @@ namespace MafiaCleanCity.CityMap.Tests
             var scriptsRoot = Path.Combine(Application.dataPath, "Scripts");
             var csFiles = Directory.GetFiles(scriptsRoot, "*.cs", SearchOption.AllDirectories);
             Assert.IsTrue(csFiles.Length > 0, "anti-vacuité : 0 fichier .cs balayé sous Assets/Scripts.");
-            int hits = csFiles.Count(f => File.ReadAllText(f).Contains(".SignIn("));
-            Assert.AreEqual(9, hits,
-                "contrôle positif : le motif '.SignIn(' doit retrouver les 9 sites d'auto-signin connus " +
-                "(8 pré-B1 + AppShell.cs, B1 §1.2) ailleurs dans Assets/Scripts.");
+            // ⛔⛔ AMENDÉ LE 2026-08-31 — 9 -> 1, ET CE N'EST PAS UNE DÉRIVE À CORRIGER. Le lot
+            //    « surcharge d'identité de démo » a fait exactement ce qu'il promettait : canaliser
+            //    TOUT sign-in par un résolveur unique (DemoIdentityResolver.ResolveAndSignIn). La
+            //    population de ce contrôle positif est passée de 9 sites à UN SEUL : le résolveur.
+            //    ⇒ Classe « corriger le défaut qu'une garde surveille peut VIDER cette garde ». Elle a
+            //    ROUGI au lieu de passer en silence, parce qu'elle assertait un attendu NON NUL — le
+            //    bon mode d'échec, et la raison pour laquelle on le lit ici plutôt que jamais.
+            // ⇒ On asserte l'ENSEMBLE, jamais un compte : un site neuf rouvre le débat et rougit, au
+            //    lieu de faire dériver un nombre que personne ne re-mesure.
+            string[] porteurs = csFiles.Where(f => File.ReadAllText(f).Contains(".SignIn("))
+                                       .Select(f => Path.GetFileName(f)).OrderBy(n => n).ToArray();
+            Assert.IsNotEmpty(porteurs,
+                "contrôle positif ÉTEINT : '.SignIn(' ne trouve plus RIEN sous Assets/Scripts — le zéro " +
+                "asserté plus haut ne prouverait que l'impuissance du motif, pas l'absence d'auto-signin.");
+            CollectionAssert.AreEquivalent(new[] { "DemoIdentityResolver.cs" }, porteurs,
+                "l'ENSEMBLE des fichiers appelant '.SignIn(' a divergé du résolveur unique.");
         }
 
         [Test]
