@@ -305,6 +305,55 @@ contrôles.
 | `17_montre.py` | aiguilles du cadran | + maquette 17,7 % · − jeu 0,0 % |
 | `18_bande_basse.py` | hauteur et luminance de la bande basse | + panneau verdict à −1,44/255 |
 
+**Sorties collées** : `mesures/sorties.txt` — les 19 scripts exécutés à la suite, dans
+l'ordre, avec leurs contrôles (1 097 lignes). Régénérable par
+`for f in mesures/[0-9][0-9]_*.py; do python3 $f; done`.
+
+Les trois sorties décisives, collées ici :
+
+```
+########## 16_bilan_vertical.py
+  m-120.png (900, 1752)
+  screen_b3_reputation_1080x1920.png (1080, 1920)
+
+bloc                                    REF h    JEU h    delta      rel
+--------------------------------------------------------------------------
+  (gouttiere)                            8.00     7.78    -0.22    -2.7%
+bandeau enseigne (titre)                52.67    51.11    -1.56    -3.0%
+  (gouttiere)                            9.00     8.89    -0.11    -1.2%
+tuiles compteurs                        32.00    32.22    +0.22    +0.7%
+  (gouttiere)                            9.00     8.89    -0.11    -1.2%
+grand panneau (portrait + liste)       211.66   195.28   -16.38    -7.7%
+  (gouttiere)                            9.00     8.89    -0.11    -1.2%
+panneau verdict                         76.34    74.16    -2.18    -2.9%
+  (gouttiere)                            9.00     8.89    -0.11    -1.2%
+CTA                                     26.33    24.45    -1.88    -7.1%
+  VIDE sous le CTA, dans le cadre        9.00    31.38   +22.38  +248.7%   <===
+--------------------------------------------------------------------------
+somme                                  452.00   451.94
+hauteur du cadre (script 00)           452.00   451.94
+CONTROLE : ecart de bouclage             0.00     0.00   (doit valoir 0.00)
+
+########## 17_montre.py
+--- REF m-120.png (900, 1752)   corps du boitier (35, 42, 45)
+    BOITIER : 628 px, bbox px x 139..178 y 1149..1173 = 13.33 x 8.33 CSS
+    pixels plus SOMBRES que le boitier et ENTOURES par lui : 111 (17.7 % de l'aire du boitier)
+      bbox du detail : x 144..176 y 1155..1165 = 11.00 x 3.67 CSS
+      tons : [((15, 21, 26), 75), ((25, 31, 35), 4), ((19, 25, 30), 3)]
+
+--- CAP screen_b3_reputation_1080x1920.png (1080, 1920)   corps du boitier (34, 42, 46)
+    BOITIER : 1517 px, bbox px x 140..193 y 915..949 = 15.00 x 9.72 CSS
+    pixels plus SOMBRES que le boitier et ENTOURES par lui : 0 (0.0 % de l'aire du boitier)
+      -> boitier UNI : aucune aiguille, aucun cadran
+
+########## 12_stabilite_et_2400.py  (extrait)
+=== (a) CONTROLE POSITIF : 1080x1920 contre elle-meme ===
+    zone comparee 1080x1920 = 2073600 px  |  pixels differents : 0 (0.0000 %)  |  ecart max 0/255
+=== (a) STABILITE : T contre T+1 s ===
+    zone comparee 1080x1920 = 2073600 px  |  pixels differents : 1 (0.0000 %)  |  ecart max 1/255
+    1er pixel different : (389, 162, (150, 141, 119), (150, 140, 119))
+```
+
 **Deux instruments écartés en cours de route, et pourquoi.** (a) Une première sonde du
 visage lisait en fait la cravate : elle donnait un écart de couleur de 31/255 parfaitement
 reproductible et parfaitement faux — corrigée, la couleur du visage sort à **0/255**.
