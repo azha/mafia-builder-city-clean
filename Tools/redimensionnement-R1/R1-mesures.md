@@ -32,11 +32,23 @@ ici : le citer pour expliquer qu'on le retire le remet dans le fichier — et un
 
 **10 livrés · 4 bloqués.** Les quatre bloqués le sont par la MÊME cause, et elle est vérifiable :
 
-> ⛔ **`UnityMCP` refuse la connexion** (`ConnectionRefused`) au 2026-08-31. Les quatre livrables
-> restants exigent un rendu réel, pas un calcul.
-> ⚠️ **MODE D'EMPLOI DE PÉREMPTION DE CET ÉNONCÉ** — il est daté, donc il porte comment le tuer :
-> il cesse d'être vrai dès que `ListAgents`/le serveur MCP répond, ou qu'un run PlayMode aboutit.
-> **Le vérifier, jamais le recopier.** *(La v1 de ce fichier écrivait « l'éditeur est verrouillé
+> ⛔ **L'ÉDITEUR EST VIVANT, ET IL N'EST PAS À MOI** (mesuré 2026-08-31). Le point de terminaison
+> configuré pour cette session refuse la connexion — mais c'est un fait sur MA configuration, pas sur
+> l'éditeur : le serveur écoute sur `127.0.0.1:8081` et il est **scopé à `~/project/mafia-unity-B`,
+> branche `pilote-B`** — le MÊME dépôt (`mafia-builder-city-clean.git`), un AUTRE arbre de travail,
+> piloté par une autre session.
+> ⇒ **La règle dure du socle s'applique : un seul éditeur ⇒ un seul pilote.** Le découpage par
+> fichiers ne protège pas d'un runtime partagé — recompilations et rechargements de domaine
+> traversent les arbres. Ces quatre livrables ne sont donc pas « bloqués par une panne » : ils
+> **attendent le créneau**, et les prendre serait un défaut, pas de l'initiative.
+> ⚠️ **MODE D'EMPLOI DE PÉREMPTION** — l'énoncé est daté, donc il porte comment le tuer :
+> `mcp_http_8081.pid` sous `<arbre>/Library/MCPForUnity/RunState/` nomme l'arbre servi. **Le lire,
+> jamais recopier celui-ci.**
+> ★ **Pourquoi cette correction est écrite plutôt que le constat d'origine** : j'avais d'abord noté
+> « le serveur refuse la connexion », ce qui est vrai de mon point de terminaison et **faux de
+> l'éditeur** — et faux dans le sens qui m'arrangeait, puisqu'une panne excuse là où une file
+> d'attente oblige à attendre. Cette machine porte **cinq** arbres Unity, deux de ce programme :
+> *un artefact se reconnaît à son remote et à ce qui le sert, jamais à sa présence sur le disque.* *(La v1 de ce fichier écrivait « l'éditeur est verrouillé
 > depuis 20:52 » — un énoncé daté sans mode d'emploi, exactement ce que le socle interdit : il
 > serait resté vrai en apparence pour toujours.)*
 
