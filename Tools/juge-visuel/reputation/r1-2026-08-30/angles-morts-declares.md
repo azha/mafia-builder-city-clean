@@ -23,7 +23,30 @@ propre à cet écran, paire T/T+1 s, garde de prémisse sur la taille du canvas)
 | A5 | **Les états `derive` / `gages` / `vide`** | les tests exercent l'état d'un compte frais (`indeterminate`, 0 règle). `drifting`, `hostile`, `wary` et la liste pleine ne sont atteints par AUCUN test — leur code existe et n'est jamais exécuté. | un scénario qui déclare 4 règles et provoque une violation, ou un seed |
 | A6 | **`restraint` présente** | jamais exercée : aucune route ne liste les contreparties, donc `counterparty_id` n'est pas obtenable par un chemin joueur. La branche est du code mort côté test. | le lot back L5 (sélecteur des rappelés) |
 | A7 | **Le portrait lui-même** | les gardes comptent des voyants et des textes ; personne ne vérifie que les cinq traits du portrait (buste incliné, col, revers, montre, gants) correspondent aux clés. | le juge visuel — c'est précisément ce qu'il sait faire |
-| A8 | **La 2ᵉ et la 3ᵉ capture** | `B3C1` échoue au premier `Assert` : si 1080×1920 tombe, 1080×2400 et la paire T+1 s ne sont jamais produites. Une seule résolution garantie tant que la première n'est pas verte. | rendre les trois indépendantes (ou les asserter à la fin) |
+| A8 | **La 2ᵉ et la 3ᵉ capture** (⚠️ sans conséquence observée : les 3 lignes `[CAPTURE b3]` sont bien sorties au run 17 — le risque est structurel, il ne s'est pas réalisé) | `B3C1` échoue au premier `Assert` : si 1080×1920 tombe, 1080×2400 et la paire T+1 s ne sont jamais produites. Une seule résolution garantie tant que la première n'est pas verte. | rendre les trois indépendantes (ou les asserter à la fin) |
+
+## ⚠️ A3 s'est RÉALISÉ — deux fois, et c'est la même cause
+
+Un angle mort déclaré n'est pas une précaution rhétorique : celui-là a mordu, deux fois, entre
+l'écriture de ce tableau et la capture qu'on donne au juge.
+
+1. **Première fois** — le conteneur `corps` n'avait aucun `LayoutGroup` : les cinq blocs se
+   superposaient au centre. Des constantes d'espacement justes, un rendu faux.
+2. **Seconde fois** — le `LayoutGroup` posé, les blocs à hauteur FIXE s'étiraient quand même,
+   faute de `LayoutElement` : mesuré sur la capture du run 17, les compteurs faisaient plus du
+   double de leur hauteur de maquette et le bloc portrait laissait un grand vide sous lui.
+   Corrigé en lisant `H_FIXE` / `H_MIROIR` à la source du générateur (lignes 279-280) au lieu de
+   les réinventer à l'œil.
+
+**Aucune des 15 gardes n'a rougi dans les deux cas.** Elles vérifiaient que les éléments
+existaient, dans le bon ordre, avec les bonnes valeurs — et c'était vrai les deux fois. Ce qui
+était faux, c'est ce que ces valeurs PRODUISAIENT à l'écran, et cela ne se voit qu'en regardant
+l'image. C'est l'argument le plus concret que j'aie pour dire qu'un juge visuel n'est pas une
+formalité de fin de chantier.
+
+⚠️ **Ce que le juge doit en conclure pour son propre travail** : les défauts de cette famille sont
+ceux que j'ai le moins de moyens de voir seul. Qu'il regarde les hauteurs et les vides AVANT les
+couleurs et les libellés — c'est là que cet écran a déjà menti deux fois.
 
 ## Ce que ces angles morts ont en commun
 

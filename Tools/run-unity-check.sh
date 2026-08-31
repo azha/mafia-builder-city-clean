@@ -35,7 +35,21 @@
 set -uo pipefail
 
 : "${UNITY:=/home/erutheone/Unity/Hub/Editor/6000.4.6f1/Editor/Unity}"
-: "${WT:=/home/erutheone/project/mafia-builder-city-clean}"
+# ⚠️ CORRECTIF WORKTREE (mesuré 2026-08-31, session pilote-B) : ce défaut était le chemin EN DUR
+# du dépôt principal, alors que le commentaire d'en-tête (ligne 5) promet « sur CE projet ». Dans
+# un worktree les deux divergent, et le script visait silencieusement l'arbre d'une AUTRE session.
+# Mesuré : le run 18 a été lancé sans `WT=` sur sa ligne (chaque appel shell est neuf, un export
+# posé au run précédent ne survit pas) et Unity a répondu
+#   « another Unity instance is running with this project open. Project: …/mafia-builder-city-clean »
+# — il a donc été arrêté par le VERROU DE L'ÉDITEUR VOISIN, pas par une garde de ce script. Se
+# reposer sur le verrou d'autrui n'est pas une protection : si cet éditeur avait été fermé, un
+# batchmode complet serait parti sur le projet d'une autre session.
+# Le défaut est désormais la racine du dépôt qui CONTIENT ce script, donc toujours l'arbre appelant.
+if [[ -z "${WT:-}" ]]; then
+  WT=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && git rev-parse --show-toplevel 2>/dev/null) \
+    || { echo "run-unity-check: impossible de résoudre la racine du dépôt" >&2; exit 2; }
+  [[ -n "$WT" ]] || { echo "run-unity-check: racine du dépôt vide" >&2; exit 2; }
+fi
 : "${LOG_FILE:=}"
 
 EXTRA_ARGS=(-quit)

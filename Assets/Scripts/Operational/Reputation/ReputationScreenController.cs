@@ -110,6 +110,19 @@ namespace MafiaCleanCity.Operational
         private const float CssCtaCorps      = 8.5f;
         private const float CssPiedHaut      = 9f;
 
+        // ── HAUTEURS DE BLOC, lues à la source : `H_FIXE` et `H_MIROIR` de
+        //    generateur-reputation.py:279-280. Ce ne sont PAS des valeurs choisies à l'œil.
+        // ⛔ Sans elles, le VerticalLayoutGroup de `corps` calcule la hauteur de chaque bloc
+        //    depuis ses enfants et les étire : mesuré sur la capture du run 17, les compteurs
+        //    faisaient plus du double de leur hauteur et le bloc portrait laissait un grand vide.
+        //    Une garde structurelle ne voit pas ça — c'est l'angle mort A3, « l'effet des
+        //    espacements n'est pas vérifié », et il ressort une deuxième fois.
+        private const float CssHEnseigne  = 51f;
+        private const float CssHCompteurs = 42f;
+        private const float CssHPann      = 74f;
+        private const float CssHPied      = 52f;
+        private const float CssHMiroir    = 172f;   // la zone ÉLASTIQUE : plancher, pas plafond
+
         /// <summary>Convertit une valeur en px CSS de LA maquette de cet écran. Passe par la
         /// largeur DÉCLARÉE (`LargeurEcransBrennar6`) : jamais le repli implicite, jamais la
         /// constante d'une maquette voisine qui vaut le même nombre aujourd'hui.</summary>
@@ -422,6 +435,10 @@ namespace MafiaCleanCity.Operational
         private void ConstruireEnseigne(Transform parent)
         {
             GameObject go = NouveauUI("Enseigne", parent);
+            LayoutElement hle = go.AddComponent<LayoutElement>();
+            hle.minHeight = Px(CssHEnseigne);
+            hle.preferredHeight = Px(CssHEnseigne);
+            hle.flexibleHeight = 0f;   // hauteur FIXE : ne s'étire pas
             // ⚠️ PLUS D'ANCRAGE MANUEL ICI : le VerticalLayoutGroup de `corps` place ce bloc.
             // Les deux mécanismes se contredisent — un ancrage haut + un layout parent donnent
             // une position que ni l'un ni l'autre ne décrit.
@@ -459,6 +476,10 @@ namespace MafiaCleanCity.Operational
         private void ConstruireCompteurs(Transform parent)
         {
             GameObject go = NouveauUI("Compteurs", parent);
+            LayoutElement hle = go.AddComponent<LayoutElement>();
+            hle.minHeight = Px(CssHCompteurs);
+            hle.preferredHeight = Px(CssHCompteurs);
+            hle.flexibleHeight = 0f;   // hauteur FIXE : ne s'étire pas
             compteursRoot = (RectTransform)go.transform;
             HorizontalLayoutGroup h = go.AddComponent<HorizontalLayoutGroup>();
             h.spacing = Px(6f);
@@ -501,6 +522,10 @@ namespace MafiaCleanCity.Operational
         private void ConstruireMiroir(Transform parent)
         {
             GameObject go = NouveauUI("Miroir", parent);
+            LayoutElement hle = go.AddComponent<LayoutElement>();
+            hle.minHeight = Px(CssHMiroir);
+            hle.preferredHeight = Px(CssHMiroir);
+            hle.flexibleHeight = 1f;   // SEUL bloc élastique : il absorbe le reste
             zoneElastique = (RectTransform)go.transform;
             AjouterFond(go, ReputationResolvers.Fond2);
             Contour(go, ReputationResolvers.Lisere);
@@ -645,6 +670,10 @@ namespace MafiaCleanCity.Operational
         private void ConstruirePanneau(Transform parent)
         {
             GameObject go = NouveauUI("Panneau", parent);
+            LayoutElement hle = go.AddComponent<LayoutElement>();
+            hle.minHeight = Px(CssHPann);
+            hle.preferredHeight = Px(CssHPann);
+            hle.flexibleHeight = 0f;   // hauteur FIXE : ne s'étire pas
             panneauProse = (RectTransform)go.transform;
             AjouterFond(go, ReputationResolvers.Panneau);
             Contour(go, ReputationResolvers.Lisere);
@@ -669,6 +698,10 @@ namespace MafiaCleanCity.Operational
         private void ConstruirePied(Transform parent)
         {
             GameObject go = NouveauUI("Pied", parent);
+            LayoutElement hle = go.AddComponent<LayoutElement>();
+            hle.minHeight = Px(CssHPied);
+            hle.preferredHeight = Px(CssHPied);
+            hle.flexibleHeight = 0f;   // hauteur FIXE : ne s'étire pas
             GameObject cta = NouveauUI("CtaDonnerRegle", go.transform);
             Image fond = AjouterImage(cta);
             fond.color = ReputationResolvers.Carte2;
