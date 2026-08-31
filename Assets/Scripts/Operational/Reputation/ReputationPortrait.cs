@@ -266,7 +266,16 @@ namespace MafiaCleanCity.Operational
                 // reste plein. Mesuré par le juge visuel sur les cheveux — remplissage 88,9 % en
                 // jeu contre 35,5 % en maquette : une calotte était devenue un bloc.
                 // Un disque plein étiré en `Simple` donne l'ellipse que le SVG dessine.
-                img.sprite = ProceduralUI.RadialDisc(64, couleur, couleur);
+                // ⛔ LE SPRITE EST BLANC, la teinte vient de `img.color` posé plus haut. Un
+                // sprite déjà coloré serait MULTIPLIÉ par cette teinte et rendrait la couleur au
+                // carré. Mesuré sur ma propre capture avant correction : teint du visage rendu à
+                // (133, 116, 81) pour (185, 173, 146) voulu — et (185/255)² × 255 = 134. La
+                // correspondance à une unité près prouve la double application ; ce n'était pas une
+                // hypothèse sur un rendu « un peu sombre ».
+                // ★ La pastille des voyants passait déjà `Color.white` pour cette raison, six lignes
+                //   plus bas. J'ai écrit la même primitive sans relire l'appel voisin qui la faisait
+                //   déjà correctement.
+                img.sprite = ProceduralUI.RadialDisc(64, Color.white, Color.white);
                 img.type = Image.Type.Simple;
             }
             else if (arrondi)
