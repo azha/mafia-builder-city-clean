@@ -1,9 +1,12 @@
 # Dossier du juge visuel — ㊲ La réputation (`screen_b3`) — r1 — 2026-08-30
 
-> ⛔ **CE DOSSIER N'EST PAS COMPLET ET NE DOIT PAS ÊTRE LANCÉ EN L'ÉTAT.** Les captures en jeu
-> n'existent pas encore : le PlayMode est gelé tant qu'un plancher E2E occupe la machine, et le
-> test qui les produit n'a jamais tourné. Les lignes marquées **À REMPLIR** sont les seules qui
-> manquent ; tout le reste est mesuré. Un juge lancé maintenant jugerait des images absentes.
+> ⛔ **CE DOSSIER N'EST PAS ENCORE PRÊT — mais pour une autre raison qu'au moment où ces lignes
+> ont été écrites la première fois.** Les captures EXISTENT désormais (trois, produites par le
+> run 13, avec leur rect imprimé) — mais elles sont **ANTÉRIEURES au correctif de mise en page**
+> (commit `c4650b5`, 03:21:06) et montrent l'écran cassé : les blocs y sont empilés au centre,
+> faute d'un layout sur le conteneur. **Lancer le juge dessus lui ferait remonter un défaut déjà
+> corrigé** — et lui faire perdre un tour entier.
+> ⇒ Il manque UNE chose : re-capturer après le correctif. Tout le reste est mesuré et à jour.
 
 ## L'écran
 
@@ -72,9 +75,18 @@ par la v2, et un juge qui lirait la v1 remonterait des défauts déjà réparés
   une **décision conforme au ruling du 2026-08-27**, pas un oubli. Vérifié côté code : zéro
   `Update`, `Time.time`, `Mathf.Sin`, `Animator` ou `InvokeRepeating` dans les 5 fichiers de
   l'écran (balayage avec contrôle positif — `void` sort 29, donc le motif mord).
-- **Gardes anti-mensonge du test**, deux, sur deux propriétés distinctes : ≥ 2,5 % de pixels non
-  noirs (une cible noire produit un PNG valide et vide) **et** au moins un voyant construit (des
-  pixels clairs prouvent qu'on a rendu *quelque chose*, pas qu'on a rendu *cet* écran).
+- **Gardes anti-mensonge du test**, trois, sur trois propriétés distinctes — et la première a été
+  REFAITE parce qu'elle était décorative :
+    · **variété** : > 1 % des pixels doivent DIFFÉRER de la couleur dominante, et l'image porter
+      > 8 teintes. ⚠️ L'ancienne version comptait les pixels « non noirs » (somme RGB > 0,15) — or
+      le fond de cet écran (#0b1016) vaut **0,192** et franchissait le seuil tout seul : une image
+      ne contenant QUE le fond la satisfaisait à 100 %, ce qui est exactement le cas qu'elle devait
+      attraper. Vérifiée depuis dans les deux sens (capture réelle : 109 979 px hors fond,
+      445 teintes → passe ; image uniformément remplie du fond → rougit).
+    · **contenu propre à CET écran** : au moins un voyant construit — de la variété prouve qu'on a
+      rendu *quelque chose*, pas qu'on a rendu *cet* écran-ci.
+    · **prémisse de taille** : le rect du canvas et son scaleFactor sont imprimés AVANT le rendu,
+      pour qu'un canvas resté à la mauvaise taille ne produise pas une image « valide » et fausse.
 - **Commit du client au moment des captures** : **À REMPLIR** — les prendre APRÈS le dernier
   correctif ; une capture est une mesure DATÉE, pas une propriété du commit.
 
