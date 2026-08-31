@@ -228,10 +228,17 @@ namespace MafiaCleanCity.CityMap.Tests
             public readonly int TotalOccurrences;
             public readonly HashSet<string> FilesWithHits; // chemins relatifs, '/'
 
-            public ScanResult(int total, HashSet<string> files)
+            /// <summary>⛔ LE DÉNOMINATEUR — nombre de fichiers .cs RÉELLEMENT LUS par le balayage.
+            /// Sans lui, « 0 violation » est indiscernable de « 0 fichier regardé » : corriger le
+            /// défaut qu'une garde surveille peut VIDER sa population, et le compte reste flatteur.
+            /// La forme qui mord énonce « 0 sur N EXAMINÉS », jamais « 0 sur N fichiers ».</summary>
+            public readonly int FilesExamined;
+
+            public ScanResult(int total, HashSet<string> files, int filesExamined)
             {
                 TotalOccurrences = total;
                 FilesWithHits = files;
+                FilesExamined = filesExamined;
             }
         }
 
@@ -269,10 +276,12 @@ namespace MafiaCleanCity.CityMap.Tests
         {
             int total = 0;
             var files = new HashSet<string>();
-            if (!Directory.Exists(rootDirectory)) return new ScanResult(0, files);
+            if (!Directory.Exists(rootDirectory)) return new ScanResult(0, files, 0);
 
+            int examined = 0;
             foreach (string path in Directory.GetFiles(rootDirectory, "*.cs", SearchOption.AllDirectories))
             {
+                examined++;
                 int hits = CountLiteralOccurrences(File.ReadAllText(path), literal);
                 if (hits <= 0) continue;
                 total += hits;
@@ -281,7 +290,7 @@ namespace MafiaCleanCity.CityMap.Tests
                     .Replace('\\', '/');
                 files.Add(rel);
             }
-            return new ScanResult(total, files);
+            return new ScanResult(total, files, examined);
         }
 
         /// <summary>Comme <see cref="ScanDirectory"/>, MOINS un fichier (chemin relatif à
@@ -304,7 +313,7 @@ namespace MafiaCleanCity.CityMap.Tests
             int excludedHits = CountLiteralOccurrences(File.ReadAllText(excludedFullPath), literal);
             var files = new HashSet<string>(raw.FilesWithHits);
             files.Remove(excludeRelativePath);
-            return new ScanResult(raw.TotalOccurrences - excludedHits, files);
+            return new ScanResult(raw.TotalOccurrences - excludedHits, files, raw.FilesExamined);
         }
 
         // ── Robustesse à l'ALIAS du receveur — le motif vise la PROPRIÉTÉ (un appel réseau, quel
@@ -848,10 +857,58 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.IsTrue(Directory.Exists(scriptsRoot), $"Assets/Scripts introuvable à {scriptsRoot}");
 
             ScanResult scan = ScanDirectory(scriptsRoot, AllowEnvironmentOverrideToken);
+            Assert.Greater(scan.FilesExamined, 0,
+                $"dénominateur NUL : le balayage n'a lu AUCUN fichier sous {scriptsRoot}. Toute " +
+                "conclusion d'ensemble tirée d'ici serait vraie à vide (N11).");
             CollectionAssert.AreEquivalent(ExpectedAllowEnvironmentOverrideSites, scan.FilesWithHits,
+                $"[{scan.FilesExamined} fichiers EXAMINÉS] " +
                 "l'ENSEMBLE des fichiers référençant ce paramètre a divergé de l'allowlist déclarée " +
                 "— un site neuf neutralise la surcharge par le second mécanisme (I3, revue ⊥ " +
                 "ronde 3), invisible à la garde ExplicitIdentityOverride ci-dessus.");
+        }
+
+        /// <summary>N9 — LA PORTÉE. Les gardes ci-dessus balaient `Assets/Scripts` et SONT AVEUGLES
+        /// hors de lui. Or `Assets/Editor` COMPILE aussi : ses fichiers hors `AssetLint/` tombent dans
+        /// l'assembly prédéfinie `Assembly-CSharp-Editor`, qui référence automatiquement les cinq
+        /// asmdef de production (toutes `autoReferenced`). Ils PEUVENT donc appeler le résolveur, et
+        /// aucun balayage ne les lisait. Mesuré le 2026-08-31 : 8 fichiers, 0 occurrence — « rien
+        /// aujourd'hui », pas « rien par construction », donc une prose datée tant que rien ne la garde.
+        /// ★ L'ironie qui désigne le geste : `MafiaCI.cs` est le point d'entrée du JUGE lui-même. Un
+        /// appel d'identité posé là vivrait dans le seul fichier qui exécute les gardes.</summary>
+        [Test]
+        public void IdentityAccess_NeverOccursUnderAssetsEditor_WhichCompilesAndSeesProduction()
+        {
+            string editorRoot = Path.Combine(Application.dataPath, "Editor");
+            Assert.IsTrue(Directory.Exists(editorRoot), $"Assets/Editor introuvable à {editorRoot}");
+
+            foreach (string motif in new[] { RealNetworkSignInAccess, RealNetworkSignUpAccess,
+                                             AllowEnvironmentOverrideToken })
+            {
+                ScanResult scan = ScanDirectory(editorRoot, motif);
+                Assert.Greater(scan.FilesExamined, 0,
+                    $"dénominateur NUL sur '{motif}' : 0 fichier lu sous Assets/Editor. Un zéro " +
+                    "obtenu en n'ayant rien regardé est le faux le plus crédible de ce dépôt.");
+                CollectionAssert.IsEmpty(scan.FilesWithHits,
+                    $"[{scan.FilesExamined} fichiers EXAMINÉS] '{motif}' apparaît sous Assets/Editor — " +
+                    "du code d'éditeur contournerait le résolveur, invisible aux gardes scopées à " +
+                    "Assets/Scripts. S'il est légitime, l'ajouter EXPLICITEMENT à une allowlist ici.");
+            }
+        }
+
+        /// <summary>Contrôle POSITIF de la garde ci-dessus : le même balayage, sur le même répertoire,
+        /// DOIT trouver un motif dont on SAIT qu'il y est. Sans lui, les trois zéros ci-dessus peuvent
+        /// être des zéros pour la mauvaise raison (mauvais chemin, motif mort, lecture vide) — et un
+        /// balayage uniformément à zéro est le premier signe qu'on mesure autre chose.</summary>
+        [Test]
+        public void AssetsEditorScan_PositiveControl_FindsAKnownLiteralThere()
+        {
+            string editorRoot = Path.Combine(Application.dataPath, "Editor");
+            ScanResult control = ScanDirectory(editorRoot, "using ");
+            Assert.Greater(control.FilesExamined, 0, "0 fichier lu sous Assets/Editor.");
+            Assert.IsNotEmpty(control.FilesWithHits,
+                $"[{control.FilesExamined} fichiers EXAMINÉS] l'instrument ne trouve même pas " +
+                "'using ' sous Assets/Editor : il ne LIT pas, et les zéros de la garde N9 ne " +
+                "prouveraient rien.");
         }
     }
 }
