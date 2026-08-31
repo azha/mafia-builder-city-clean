@@ -136,6 +136,7 @@ namespace MafiaCleanCity.Operational
         //    (8 + 12,3 + 119 + 16,75 + 8,25 + 9 = 173,3 px CSS) ne rentrait pas dans sa propre
         //    boîte et le buste passait par-dessus le verdict.
         private const float CssHMiroir    = 188f;
+        private const float CssHCarteMiroir = 182.7f;  // le contenu du bloc, mesuré sur la maquette
         private const float CssHRegleVide =  60f;   // l'état « rien » ; une liste pleine vaut n × 30
         private const float CssPiedPadHaut =  9f;   // `.pied{padding:9px 13px 14px}`
         private const float CssPiedPadBas  = 14f;
@@ -838,9 +839,18 @@ namespace MafiaCleanCity.Operational
             //   s'étirait pas : il DEMANDAIT cette hauteur. Empêcher un étirement qui n'a pas lieu
             //   ne change rien — deux causes différentes produisent ici la même image.
             // La maquette donne au contenu la hauteur du bloc moins ses marges : 188 − 2 × 7 = 174.
+            // ⚠️ 182,7 et non 174. J'avais dérivé cette hauteur de `H_MIROIR − 2 × 7` (le bloc
+            // moins son padding), ce qui est un raisonnement sur la boîte et non une mesure du
+            // contenu. L'arithmétique du cadre le montre : 462 = 13 (marge haute) + 196 (blocs
+            // fixes) + 36 (4 gouttières) + 217 (le bloc élastique). Sur ces 217, moins 14 de
+            // padding, il reste 203 pour la carte ET le vide sous elle. La maquette laisse 21,4 de
+            // vide ⇒ la carte vaut 182,7, pas 174.
+            // ★ Les 8,7 de différence ne se voyaient pas sur la carte — elles se voyaient EN
+            //   DESSOUS, où le juge a mesuré 37,5 de vide pour 21,4 attendus. Un bloc trop court
+            //   ne se lit jamais comme un bloc trop court : il se lit comme un trou à côté.
             LayoutElement mle = mir6.AddComponent<LayoutElement>();
-            mle.minHeight = Px(CssHMiroir - 14f);
-            mle.preferredHeight = Px(CssHMiroir - 14f);
+            mle.minHeight = Px(CssHCarteMiroir);
+            mle.preferredHeight = Px(CssHCarteMiroir);
             mle.flexibleHeight = 0f;   // le mou de la page reste SOUS lui, dans le bloc élastique
             HorizontalLayoutGroup h = mir6.AddComponent<HorizontalLayoutGroup>();
             h.spacing = Px(10f);

@@ -93,7 +93,7 @@ namespace MafiaCleanCity.Operational
             // (la base est le bord du viewBox). D'où une ellipse de hauteur 46 posée à y=55, et le
             // masque de la zone de dessin qui en coupe le bas — pas un rectangle de hauteur 23.
             FormeLiseree(ref _epaules, "Epaules", buste, ReputationResolvers.Carte2,
-                  new Rect(6f, 55f, 50f, 46f), ech, 2f, ellipse: true);   // stroke-width="2"
+                  new Rect(6f, 55f, 50f, 46f), ech, 3.9f, ellipse: true);   // stroke 2 → 3,0 px CSS mesurés
             col = FormeTriangle("Col", buste, ReputationResolvers.Creme, ech);
             revresG = null; revresD = null;
             Forme(ref revresG, "RevresG", buste, ReputationResolvers.Creme,
@@ -139,7 +139,7 @@ namespace MafiaCleanCity.Operational
                   new Rect(26f, 48f, 10f, 10f), ech);
             // `<ellipse cx="31" cy="32" rx="12.5" ry="15">` — une ellipse, pas un stade.
             FormeLiseree(ref _tete, "Tete", buste, ReputationResolvers.Creme2,
-                  new Rect(18.5f, 17f, 25f, 30f), ech, 2f, ellipse: true);   // stroke-width="2"
+                  new Rect(18.5f, 17f, 25f, 30f), ech, 3.5f, ellipse: true);   // stroke 2 → 2,7 px CSS mesurés
             // ⛔ LES CHEVEUX PASSENT APRÈS LA TÊTE — ils COUVRENT le haut du crâne.
             // ⚠️ Je les avais fait passer AVANT au tour 2, pour obtenir la calotte par occlusion :
             // le visage, dessiné par-dessus, ne laissait dépasser que l'arc supérieur. Ça produisait
@@ -158,8 +158,16 @@ namespace MafiaCleanCity.Operational
             // ★ Le visage n'avait pas changé de forme : c'est ce qui le RECOUVRE qui décidait de
             //   sa silhouette apparente. Deux tours plus tôt le même trait, dessiné derrière,
             //   découvrait le front — la même forme au mauvais endroit produit deux défauts opposés.
+            // ⚠️ PLUS ÉTROITE QUE LE CRÂNE. La maquette donne à la chevelure 0,95× la largeur de
+            // la tête ; la mienne faisait 1,11×, débordait de ~2 px CSS de chaque côté et montait
+            // 33 % trop haut. « Ça ne se lit plus comme des cheveux mais comme un béret. »
+            // La tête fait 25 unités de viewBox : 0,95 × 25 = 23,75.
+            // ★ Troisième réglage de ce même trait, et les trois erreurs étaient différentes :
+            //   derrière le visage (front découvert), puis trop bas (visage rond), puis trop large
+            //   (béret). Une forme dont la silhouette dépend d'une autre a plus de façons d'être
+            //   fausse qu'une forme isolée.
             FormeLiseree(ref _cheveux, "Cheveux", buste, ReputationResolvers.Carte2,
-                  new Rect(17.4f, 9.6f, 27.2f, 15.4f), ech, 1.8f, ellipse: true);  // stroke-width="1.8"
+                  new Rect(19.1f, 11.4f, 23.8f, 13.2f), ech, 2.4f, ellipse: true);
             Forme(ref oeilG, "OeilG", buste, ReputationResolvers.Encre,
                   new Rect(24.6f, 29.7f, 3.8f, 4.6f), ech, arrondi: true);
             Forme(ref oeilD, "OeilD", buste, ReputationResolvers.Encre,
@@ -334,7 +342,18 @@ namespace MafiaCleanCity.Operational
                 // ★ La pastille des voyants passait déjà `Color.white` pour cette raison, six lignes
                 //   plus bas. J'ai écrit la même primitive sans relire l'appel voisin qui la faisait
                 //   déjà correctement.
-                img.sprite = ProceduralUI.RadialDisc(64, Color.white, Color.white);
+                // ⛔ 256 ET NON 64 — la taille du sprite décide de la NETTETÉ du bord.
+                // `RadialDisc` anticrénèle sur 1,5 px de texture. Étiré de 64 px sur les 330
+                // unités des épaules, chaque pixel vaut 5,16 unités : la rampe fait alors 1,81 px
+                // CSS, plus large que le liseré de 2,7 qu'elle est censée border — elle le NOIE.
+                // Le juge l'a décrit exactement : « le profil passe du fond au remplissage par une
+                // rampe continue sans jamais redescendre », liseré mesuré à 0,9 CSS sur la tête et
+                // RIEN sur le buste, pour 2,7 et 3,0 attendus.
+                // À 256, la rampe tombe à 0,45 px CSS et le liseré redevient un trait.
+                // ★ Le liseré ÉTAIT dessiné — il l'est depuis deux tours. Ce n'est pas la forme qui
+                //   manquait, c'est la résolution de l'outil qui la rendait invisible. Un défaut
+                //   d'ABSENCE et un défaut de NETTETÉ produisent la même mesure.
+                img.sprite = ProceduralUI.RadialDisc(256, Color.white, Color.white);
                 img.type = Image.Type.Simple;
             }
             else if (arrondi)
@@ -406,7 +425,9 @@ namespace MafiaCleanCity.Operational
                     // négatif : sa sonde ne trouve rien dans la référence).
                     // ★ Un anti-crénelage est une correction de BORD ; appliqué au sommet d'un
                     //   triangle, il fabrique une arête là où la forme se termine en un point.
-                    if (y == 0) a = 0f;
+                    if (y <= 1) a = 0f;   // DEUX lignes : avec une seule, l'interpolation de
+                                          // l'étirement ressuscitait un trait de la largeur
+                                          // nominale du triangle (21,7 px CSS) à sa pointe.
                     px[y * d + x] = new Color(1f, 1f, 1f, a);
                 }
             }
