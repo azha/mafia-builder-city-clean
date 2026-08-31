@@ -249,7 +249,7 @@ namespace MafiaCleanCity.Operational.Tests
             RenderMode modeAvant = canvas.renderMode;
             Camera camAvant = canvas.worldCamera;
 
-            float MesurerMiroir(int h)
+            (float bloc, float contenu) MesurerMiroir(int h)
             {
                 var rt = new RenderTexture(1080, h, 24, RenderTextureFormat.ARGB32);
                 var camGo = new GameObject("MesureCamB3S4");
@@ -260,18 +260,22 @@ namespace MafiaCleanCity.Operational.Tests
                 Canvas.ForceUpdateCanvases();
                 LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform)canvas.transform);
 
-                float haut = -1f;
+                float haut = -1f, dedans = -1f;
                 foreach (RectTransform t in racine.GetComponentsInChildren<RectTransform>(true))
-                    if (t.name == "Miroir") { haut = t.rect.height; break; }
+                {
+                    if (t.name == "Miroir") haut = t.rect.height;
+                    if (t.name == "Mir6")   dedans = t.rect.height;
+                }
 
                 canvas.worldCamera = null;
                 Object.DestroyImmediate(camGo);
                 rt.Release(); Object.DestroyImmediate(rt);
-                return haut;
+                return (haut, dedans);
             }
 
-            float court = MesurerMiroir(1920);
-            float haute  = MesurerMiroir(2400);
+            var c = MesurerMiroir(1920);
+            var g = MesurerMiroir(2400);
+            float court = c.bloc, haute = g.bloc;
 
             canvas.renderMode = modeAvant;
             canvas.worldCamera = camAvant;
@@ -289,6 +293,22 @@ namespace MafiaCleanCity.Operational.Tests
                 $"unités pour +480 px de canvas. Un écart quasi nul signifie que TOUTE la hauteur " +
                 "supplémentaire part en vide — c'est le bloquant B2 du juge r1, mesuré alors à " +
                 "0,10 % de pixels différents entre les deux résolutions.");
+
+            // ⛔ ET LE CONTENU, LUI, NE BOUGE PAS. C'est la moitié qui manquait, et son absence a
+            // laissé cette garde VERTE sur un écran faux pendant un tour entier : le bloc absorbait
+            // bien la hauteur ajoutée, mais par le mauvais enfant — la carte du portrait s'étirait
+            // et devenait une colonne vide bordée d'or (mesuré par le juge : 60 % de vide à la
+            // résolution cible, pour le bloc qui porte le PROPOS de l'écran).
+            // ★ Une garde qui mesure un TOTAL ne dit rien de sa RÉPARTITION. « Le bloc a bien
+            //   absorbé les 480 px » et « les 480 px sont allés au bon endroit » sont deux
+            //   propriétés distinctes, et seule la seconde décrit ce qu'un joueur voit.
+            Assert.Greater(c.contenu, 0f, "bloc « Mir6 » introuvable : la garde ne mesure rien");
+            Assert.Greater(g.contenu, 0f, "bloc « Mir6 » introuvable à 2400 : la garde ne mesure rien");
+            Assert.AreEqual(c.contenu, g.contenu, 1.0f,
+                $"le CONTENU du miroir doit garder la même hauteur aux deux résolutions " +
+                $"({c.contenu:F0} → {g.contenu:F0} unités) : la maquette lui donne la hauteur de ce " +
+                "qu'il contient (`.mir6` n'a pas de flex-grow) et laisse le mou SOUS lui, dans le " +
+                "bloc élastique. S'il grandit, c'est la carte du portrait qui se vide.");
             yield return null;
         }
 
