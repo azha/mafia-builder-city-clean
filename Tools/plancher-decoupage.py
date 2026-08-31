@@ -1,0 +1,58 @@
+#!/usr/bin/env python3
+"""Contrôle d'arithmétique du découpage de `Tools/redimensionnement-design.md`.
+
+⛔ CE QUE CE SCRIPT PROUVE, ET CE QU'IL NE PROUVE PAS.
+   Il prouve la BIJECTION entre les numéros cerclés des cellules R1/R2/R3 et les lignes de
+   l'énumération : aucun orphelin dans un sens ni dans l'autre. C'est réel et ça a déjà attrapé
+   deux défauts (deux obligations sous un seul numéro ; un numéro possédé par deux chunks).
+   ⚠️ Il NE prouve PAS que le plancher est dérivé du CORPS indépendamment de la table. Les deux
+   membres sont écrits dans le même §11, donc un livrable oublié DES DEUX CÔTÉS reste invisible.
+   C'est le BLOQUANT B2 de la revue v8, et il n'est pas fermé par cet instrument — le dire plutôt
+   que de laisser un ✅ le suggérer.
+
+⚠️ Jeu de symboles EXPLICITE, jamais une plage : `[①-㉓]` s'étend de U+2460 à U+3253 et avale
+   ⚠ (U+26A0), ⛔ (U+26D4), ✅ (U+2705) — mesuré, il rendait 26 numéros là où il y en avait 24.
+"""
+import re, sys
+
+CIRCLED = '①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳㉑㉒㉓㉔㉕'
+path = sys.argv[1] if len(sys.argv) > 1 else 'Tools/redimensionnement-design.md'
+t = open(path, encoding='utf-8').read()
+
+if '## 11.' not in t:
+    print('⛔ §11 introuvable'); sys.exit(2)
+tbl = t.split('## 11.')[1]
+enum = tbl[tbl.index('| # | ancre du corps'):tbl.index('**Plancher dérivé')]
+cells = tbl[tbl.index('| chunk | livrables'):]
+
+in_enum = {c for c in enum if c in CIRCLED}
+in_cells = {c for c in cells if c in CIRCLED}
+rows = len(re.findall(r'^\| [0-9]+ \|', enum, re.M))
+
+# contrôle POSITIF : le jeu doit reconnaître son premier et son dernier symbole
+assert '①' in CIRCLED and '㉕' in CIRCLED, 'jeu de symboles incomplet'
+
+per_chunk = {}
+for name in ('R1', 'R2', 'R3'):
+    key = f'**{name} —'
+    if key not in cells: continue
+    seg = cells.split(key)[1].split('| revue ⊥ |')[0]
+    per_chunk[name] = {c for c in seg if c in CIRCLED}
+
+print(f'  lignes énumérées ......... {rows}')
+print(f'  numéros énumérés ......... {len(in_enum)}')
+print(f'  numéros en cellule ....... {len(in_cells)}')
+for n, v in per_chunk.items():
+    print(f'    {n} : {len(v)}')
+tot = sum(len(v) for v in per_chunk.values())
+print(f'  somme des chunks ......... {tot}')
+print(f'  en cellule non énuméré ... {sorted(in_cells - in_enum) or "aucun"}')
+print(f'  énuméré non en cellule ... {sorted(in_enum - in_cells) or "aucun"}')
+for a in per_chunk:
+    for b in per_chunk:
+        if a < b and (dup := per_chunk[a] & per_chunk[b]):
+            print(f'  ⛔ {a} ET {b} possèdent : {sorted(dup)}')
+
+ok = (rows == len(in_enum) == len(in_cells) == tot) and not (in_cells ^ in_enum)
+print(f'\n  ⇒ bijection {"✅" if ok else "⛔"}   (et ce script ne dit RIEN de plus — voir la docstring)')
+sys.exit(0 if ok else 1)

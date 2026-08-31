@@ -1,8 +1,13 @@
-# Lot « redimensionnement » — **v8** — le client survit à un changement de taille en cours de vie
+# Lot « redimensionnement » — **v9** — le client survit à un changement de taille en cours de vie
 
 > **Ruling user 2026-08-30** : « supporter le redimensionnement pour de vrai ».
 > **v1 NOT_APPROVED** (5B/7M/4m) · **v2 NOT_APPROVED** (3B/5M/5m) · **v3 NOT_APPROVED** (2B/4M/6m) ·
-> **v4 NOT_APPROVED** (4B/6M/6m) · **v5 NOT_APPROVED** (6B/8I/4m) · **v6 NOT_APPROVED** (4B/8I/6m). Rapports hors dépôt : `/tmp/revue-redimensionnement-design{,-v2,-v3,-v4}.md`.
+> **v4 NOT_APPROVED** (4B/6M/6m) · **v5 NOT_APPROVED** (6B/8I/4m) · **v6 NOT_APPROVED** (4B/8I/6m) ·
+> **v7 NOT_APPROVED** (4B/8I/6m) · **v8 NOT_APPROVED** (5B/5I/4m).
+> ⛔ **CE BLOC SE TIENT PAR VERSION, JAMAIS PAR UN TOTAL RECOPIÉ** — un total se périme en silence
+> à chaque tour, et il l'a fait DEUX fois (m1 en v7, B6 en v8 : le correctif de m1 n'a pas survécu
+> à une version). **Ajouter une version OBLIGE à ajouter sa ligne** ; c'est la seule forme qui ne
+> peut pas mentir par omission. ⇒ **8 versions, 8 refus.** Rapports hors dépôt : `/tmp/revue-redimensionnement-design{,-v2,-v3,-v4}.md`.
 > *(v3 était omis de l'en-tête de la v4 — un document dont la thèse est la comptabilité honnête ne
 > peut pas escamoter un de ses propres verdicts. Corrigé ici : quatre versions, quatre refus.)*
 >
@@ -75,7 +80,9 @@ trop étroit (`UnityEngine.UI.dll` vit dans `Library/PackageCache`). ⇒ *Un bal
 « aucun » exige qu'on demande d'abord quelle forme aurait échappé — et ici c'était le PÉRIMÈTRE,
 pas le motif.*
 
-## 2. Les 20 clusters — PUBLIÉS
+## 2. Les clusters — la RÈGLE, et une liste qui remplace un compte
+
+⚠️ *(Titre corrigé en v9 : « Les 20 clusters — PUBLIÉS » était devenu faux au moment même où le corps établissait que 20 n'est pas reproductible et que les TRANSIENT sont un livrable À publier — B6, section restée à 0 delta pendant que le corps changeait sous elle.)*
 
 ⚠️ **Les ancres de ce document sont datées de `5768e3d`.** ⛔ **I1 de la v5 — « toutes fausses à
 HEAD » était un verdict UNIFORME, et il est faux pour la majorité.** *Un résultat uniforme est le
@@ -140,12 +147,35 @@ titre…), pas une classe syntaxique. **Ce n'est pas un défaut en soi** : un in
 est légitime. Le défaut est de l'avoir présenté comme un **compte**, donc comme quelque chose
 d'opposable, alors qu'il n'est **vérifiable qu'article par article**.
 
-⇒ **RÈGLE D'APPARTENANCE, écrite ici pour la première fois** : *un cluster est une pièce de
-géométrie ou d'état dérivé qui (i) dépend d'une grandeur liée à la résolution, (ii) est LUE après
-la frame qui l'a écrite, et (iii) a un nom que le joueur ou la maquette reconnaît comme UNE
-chose.* **PERSIST** si sa valeur survit à un changement de résolution sans être recalculée
-(⇒ elle est fausse et doit être rebâtie) ; **TRANSIENT** si elle est recalculée à chaque lecture
-(⇒ elle se répare toute seule).
+⛔⛔ **B1 de la v8 — LA RÈGLE DE LA v8 SE CONTREDISAIT, ET SON SEUL UTILISATEUR L'A REMPLACÉE POUR
+S'EN SERVIR.** Elle exigeait qu'un cluster soit « **LU après la frame qui l'a écrite** » puis
+définissait TRANSIENT comme « **recalculé à chaque lecture** » — **mutuellement exclusifs** :
+une valeur recalculée à chaque lecture n'est jamais lue *après* la frame qui l'écrit, l'écriture et
+la lecture sont le même acte. ⇒ Lecture littérale : **TRANSIENT est vide**. Lecture large : la
+clause **ne filtre rien**. ★ Et ce n'est pas une hypothèse : R1 a appliqué (ii) **littéralement**
+pour les PERSIST et l'a **remplacée** par « méthode nommée lisant une grandeur de résolution » pour
+les TRANSIENT — *la même clause avec deux sens dans le même rapport, donc deux moitiés de compte
+qui ne sont pas dans la même unité.* **La forme E, appliquée à notre propre règle.**
+⇒ **Et elle ne portait pas les critères qui font l'essentiel du filtrage** : sur les 23 candidates
+de R1, la clause (iii) en retire 9, mais **la déduplication** (−5) et **le grain** (9 → 6) viennent
+de critères que la règle ne contenait pas. **Quatre nombres — 14, 11-14, 9, 6 — du même corpus.**
+Le nom du défaut était déjà au §11 : *« un prédicat énumérable SANS RÈGLE DE GRAIN rend n'importe
+quel nombre »* — écrit pour les livrables, jamais repassé sur le §2 qui venait d'en créer un.
+
+⇒ **RÈGLE D'APPARTENANCE — v9, en QUATRE pièces, dont trois que R1 a dû inventer sur le terrain :**
+1. **Appartenance** : *une **méthode ou un champ NOMMÉ** qui lit une grandeur liée à la résolution.*
+   *(remplace « lue après la frame qui l'écrit », qui n'a jamais servi à ça)*
+2. **Déduplication** : *un **ÉCRIVAIN** d'un cluster déjà compté n'est pas un cluster distinct.*
+   *(R1 a dû l'appliquer pour retirer 5 candidates ; elle n'était écrite nulle part)*
+3. **Perception** : *porte un nom que le joueur ou la maquette reconnaît comme UNE chose.*
+4. **Grain** : ***une chose perçue = un cluster***, quel que soit le nombre de méthodes qui la
+   servent. ⇒ l'ancrage du fond compte pour **1**, pas 3.
+⇒ **PERSIST / TRANSIENT n'est PAS un critère d'appartenance, c'est le DISCRIMINANT qu'on applique
+après** : **PERSIST** si la valeur survit à un changement de résolution **sans être recalculée**
+(⇒ fausse, à rebâtir) ; **TRANSIENT** si elle est **recalculée à chaque lecture** (⇒ se répare
+seule). *C'est là que « lue après la frame qui l'écrit » a un sens, et nulle part ailleurs.*
+⚠️ **Conséquence assumée : sous la règle de grain (4), R1 publie 9 méthodes pour 6 CHOSES perçues.**
+Le compte à retenir est **6**, et la LISTE reste ce qui fait foi. R1 doit republier au grain déclaré.
 ⇒ **② devient donc une tâche BORNÉE et non la reproduction d'un nombre** : vérifier dans le corps
 les **9 PERSIST nommées** (chacune a son ancre, elles sont vérifiables une par une), et énumérer
 les TRANSIENT **par la même règle**, en publiant chaque nom avec son ancre. **Le compte tombe à la
@@ -218,7 +248,7 @@ reste contain, ×1 reste ×1*. La règle de restauration s'écrit donc en trois 
    et c2 vit en production. *La garde certifie le défaut, 6ᵉ occurrence.*
    ⇒ **DEUX SCÉNARIOS NOMMÉS, chacun avec le monde dégénéré qu'il tue** :
    - **S1 — épinglé au palier de référence, AVEC un pan.** Tue **c2** (le no-op de `:181`).
-   - **S2 — hors palier de référence.** Tue **c1** (même rang, autre zoom) et **c3** (rang clampé).
+   - **S2 — hors palier de référence.** Tue **c1** (même rang, autre zoom). ⚠️ **PAS c3** — voir ci-dessous : c3 n'est atteignable à aucun couple disponible.
    *Une disjonction laisse le scénario choisir lequel il satisfait ; deux scénarios ne le laissent pas.*
 
    ⛔⛔ **B3 de la v6 — ET LES DEUX SCÉNARIOS ÉTAIENT VIDES, parce qu'ils contraignaient l'ÉTAT DU
@@ -237,8 +267,33 @@ reste contain, ×1 reste ×1*. La règle de restauration s'écrit donc en trois 
    ⇒ **CONDITIONS DE MONDE, écrites — et les valeurs sont déjà dans un `[TestCase]` commité** :
    | | condition de monde | couple de résolutions | garde de capacité |
    |---|---|---|---|
-   | **S1** | l'état d'AVANT doit être pris là où `contain < 1` (fond plus grand que le viewport) | **1280×720 → portrait** — le seul des quatre mesurés, donc un scénario **paysage → portrait** | asserter `PanPosition != Vector2.zero` **avant** le redimensionnement |
+   | **S1** | ⛔ **B4 de la v8 : la condition était du MAUVAIS CÔTÉ de la transition.** c2 exige un pan **À RESTAURER**, donc `contain < 1` **À L'ARRIVÉE**, pas au départ | **portrait → 1280×720** *(l'inverse exact de ce que la v8 prescrivait)* | asserter `PanPosition != Vector2.zero` **APRÈS** la reconstruction |
    | **S2** | les deux points doivent rendre des `ZoomLevels` de **longueurs différentes** | **1080×1920 ↔ 1440×3200** (`contain` 1 vs 1,3333 ⇒ 3 vs 4 paliers) | asserter `ZoomLevels.Length` **différent** aux deux points |
+
+   **La mesure qui fonde ces deux couples — refaite en VALEURS, pas en prose** (`ClampAxis` rend
+   `0` dès que le contenu tient dans le viewport, `DistrictMapNavigation.cs:227-229`) :
+```
+   1280x720   contain=0,3750   contenu > viewport : Y   ⇒ pan possible à ×1 : OUI
+   1080x1920  contain=1,0000   ni X ni Y               ⇒ pan FORCÉ à (0,0)
+   1080x2400  contain=1,0000   ni X ni Y               ⇒ pan FORCÉ à (0,0)
+   1440x3200  contain=1,3333   ni X ni Y               ⇒ pan FORCÉ à (0,0)
+```
+   ⇒ **Aux trois formats portrait, au palier de référence, il n'existe AUCUN pan.** Le couple de la
+   v8 (`1280×720 → portrait`) mettait donc le pan **au départ** et l'interdisait **à l'arrivée** :
+   son assertion « le point de carte sous le centre est préservé » aurait **rougi sur le correctif
+   JUSTE**, et les deux mondes — restauration correcte, et c2 qui ne restaure rien — rendaient le
+   **même observable `(0,0)`**. *Aveugle au défaut qu'elle existe pour voir, ET fausse sur le bon
+   code.* ⇒ **Inversé.**
+
+   ⛔⛔ **B5 de la v8 — ET c3 N'EST ATTEIGNABLE À AUCUN COUPLE DES QUATRE RÉSOLUTIONS MESURÉES.**
+   c3 veut un rang clampé qui atterrisse sur un **autre rôle**. Or `contain` vaut au plus **1,3333**
+   sur tout le jeu, donc le palier supplémentaire s'insère **toujours avant ×3** ⇒ `Length-1` est
+   **toujours ×3** des deux côtés ⇒ clamper le seul rang hors bornes retombe **toujours sur ×3**.
+   **c3 est indétectable par construction ici**, et le resterait pour toute résolution où
+   `contain < 3`.
+   ⇒ **C'est un DÉDUIT, pas un scénario** : porté au §8 avec son détecteur, et **S2 ne prétend plus
+   le tuer** — elle ne tue que **c1**. *Le dire, comme la v8 l'a bien fait pour c2 en portrait→
+   portrait : un scénario qui ne peut pas rencontrer son monde ne le rate pas par malchance.*
    ⚠️ **Et le dire** : c2 n'est **pas atteignable** dans le sens portrait → portrait. Un scénario
    qui l'ignore ne le rate pas par malchance, il ne peut pas le rencontrer.
    ★ *Le design avait ouvert ce fichier pour `PanBy:170`, afin d'établir un invariant — et n'a
@@ -362,7 +417,16 @@ donnent la distinction que §6.2 exige, **sans toucher la production**.
 ⚠️ **I6 : cette décision était assignée à R1 alors que son instrument (⑳) appartient à R3, qui court
 en DERNIER.** Si le verdict était « le seam ne suffit pas », le refactor tomberait dans R2 — déjà
 passé. ⇒ **Une sonde réduite du seam remonte en R1 (⑤)**, et le refactor éventuel devient un
-**R4 conditionnel**, écrit comme tel plutôt que glissé dans un chunk clos.
+**R4 conditionnel** — et **défini ici**, parce que la v8 l'invoquait sans le définir, ce qui est
+mot pour mot le BLOQUANT que le §11 adresse aux v1–v4 (« *invoquaient R1/R2/R3 sans jamais les
+DÉFINIR* ») : **classe fermée sur trois instances et rouverte sur la quatrième, dans le même
+document** (I4).
+> **R4 — refactor du calcul d'insets. CONDITIONNEL** : ouvert **uniquement** si la sonde ㉕ de R1
+> montre que le seam ne suffit pas. Livrables : le passage `static` → instance de
+> `SafeAreaInsetsLocal`, **et** la conversion d'unités écran ↔ cible. Falsifiable : la zone sûre
+> rend des valeurs distinctes aux deux points de mesure. Gate : revue ⊥.
+> ⚠️ **Hors plancher tant qu'il est conditionnel** — mais il a un paragraphe, ce qui est
+> précisément ce qui manquait.
 ⇒ **Ne toucher au calcul d'insets QUE si cette sonde montre que le seam ne suffit pas** — et
 alors écrire le refactor `static`→instance ET la conversion d'unités.
 
@@ -455,7 +519,7 @@ appliquées ici.
 |---|---|---|
 | 1 | `renderingDisplaySize` suit-elle un redimensionnement de fenêtre **OS** ? | **statiquement prouvée** sur la bascule de cible (3 maillons) ; **non exécutée** sur l'OS. Repli : comparer `(rect, facteur)` |
 | 2 | le split-screen réel | **couche 4, non substituable** |
-| 3 | les 11 TRANSIENT | R1 les publie et les re-vérifie |
+| 3 | les TRANSIENT — **combien de CHOSES perçues** (le « 11 » de la v1 est abandonné, cf. §2) | R1 les publie **au grain déclaré** et les re-vérifie |
 | 4 | la valeur des insets **après** bascule (le log ne l'imprime qu'aux deux montages) | R1 l'imprime ; le §5 tient déjà sur la variance entre montages |
 | 5 | ⚠️ **NEUF (I5)** — `OnApplicationFocus`/`OnApplicationPause` couvrent-ils toutes les transitions de zone sûre d'Android ? | repli **écrit** : sondage à cadence nommée. *Le §4 créait ce déduit et le §8, byte-identique depuis la v5, ne le portait pas — un registre « restants » qui n'est pas rouvert par la section qui en crée un est faux dès la ligne suivante.* |
 | 6 | ⚠️ **NEUF (I7)** — un redimensionnement OS produit-il UN rappel de dimensions ou N ? | l'assertion devient `≥ 1` **avec la raison écrite**, jamais un seuil ajusté après coup |
@@ -519,7 +583,7 @@ annulé par le §5, sans quoi la dépendance zone-sûre de P4/P5 n'est exercée 
 
 | chunk | livrables | falsifiable | gate |
 |---|---|---|---|
-| **R1 — mesures et publications** | ① re-mesurer les ancres @HEAD, **par fichier** (§2) · ② énumérer les TRANSIENT **par la règle d'appartenance** (§2), nom + ancre — le compte tombe à la fin, il n'est pas la preuve · ④ **déclarer l'unité et la portée** de chaque compte du §7 *(et NON « retirer le 19 », cf. B6)* · ⑤ imprimer les insets **après** bascule · ㉔ **commiter le log** qui porte la mesure du §5 (aujourd'hui dans `scratchpad/`, non tracké ⇒ non re-dérivable) · ⑥ écrire prédicat + commande + portée + **contrôle positif par motif** du contrôle §0 · ⑱ écrire la **règle de clôture** de l'ensemble de fichiers du §0 | chaque publication porte **commande + sortie collée + unité + portée** ; contrôle positif ET négatif | revue ⊥ |
+| **R1 — mesures et publications** | ① re-mesurer les ancres @HEAD, **par fichier** (§2) · ② **(a)** vérifier dans le corps les **9 PERSIST nommées** ET **(b)** énumérer les TRANSIENT par la règle d'appartenance (§2), nom + ancre, **au grain déclaré** — le compte tombe à la fin, il n'est pas la preuve *(la v8 avait perdu la moitié (a) : le corps l'assignait, la cellule ne la demandait pas — I1)* · ④ **déclarer l'unité et la portée** de chaque compte du §7 *(et NON « retirer le 19 », cf. B6)* · ⑤ imprimer les insets **après** bascule · ㉕ **la sonde réduite du seam** (§5 — sans elle, la décision « ne toucher au calcul d'insets QUE si le seam ne suffit pas » dépend d'un instrument qu'aucun chunk ne possède : forme C dans le découpage) · ㉔ **commiter le log** qui porte la mesure du §5 (aujourd'hui dans `scratchpad/`, non tracké ⇒ non re-dérivable) · ⑥ écrire prédicat + commande + portée + **contrôle positif par motif** du contrôle §0 · ⑱ écrire la **règle de clôture** de l'ensemble de fichiers du §0 | chaque publication porte **commande + sortie collée + unité + portée** ; contrôle positif ET négatif | revue ⊥ |
 | **R2 — production** | ⑦ l'émetteur sur le couple, mécanisme complet · ⑧ le chemin de restauration (rôle → valeur → tolérance) · ⑨ le retrait des deux énoncés datés, **avec le contrôle de retrait de R1 dans le MÊME commit** *(un numéro cerclé ne vit que dans la cellule qui le POSSÈDE — une référence croisée se nomme en toutes lettres, sinon l'oracle d'arithmétique compte une possession)* · ⑲ **écrire la conversion d'unités** des deux termes du couple (§4) · ㉓ **l'ordre de reconstruction district↔panneaux**, mesuré ou assumé (§3, m2) | ⑩ non-émission fenêtre-à-l'attachement + `1` en aval, **même scénario** · ⑪ (a) et (b) dans **deux scénarios distincts** · ⑫ anti-vacuité du cadrage par **S1 et S2 nommés** (non disjonctive) | revue ⊥ |
 | **R3 — le juge** | ⑬ choisir la catégorie, l'ajouter, **et couvrir `ChromeSafeAreaPlayModeTests` + `ChromeMultiResolutionPlayModeTests`** (cf. I2) · ⑭ publier le compte des rallumés et **classer chaque rouge** démasqué / régression · ⑮ la seconde largeur de capture · ③ publier la table des 30 non joués · ⑯ le contrôle positif de sabotage, ancré · ⑳ **zone sûre à valeurs DISTINCTES aux deux points, via le seam** (§6.2) · ㉑ **ASSERTER le débordement**, jamais l'imprimer (§6.3) | ⑰ le test visé **relancé seul par son nom complet** · ㉒ anti-vacuité : **nombre d'écrans éprouvés > 0 et nommé** (§6.5) | revue ⊥ |
 
@@ -550,6 +614,7 @@ l'autre membre, et les deux sont désormais construits séparément) :
 | 10 | §4 | assertion de non-émission, fenêtre à l'attachement | R2 ⑩ |
 | 11 | §5 | imprimer les insets après bascule | R1 ⑤ |
 | 12 | §5 | commiter le log qui porte la mesure du §5 | R1 **㉔** |
+| 25 | §5 | **la sonde réduite du seam** — l'instrument dont dépend la décision d'annulation | R1 **㉕** |
 | 13 | §5 | zone sûre à valeurs distinctes via le seam | R3 ⑳ |
 | 14 | §6 | (a) et (b) dans deux scénarios distincts | R2 ⑪ |
 | 15 | §6.1 | seconde largeur de capture | R3 ⑮ |
@@ -563,23 +628,22 @@ l'autre membre, et les deux sont désormais construits séparément) :
 | 23 | §7 | déclarer unité et portée de chaque compte | R1 ④ |
 | 24 | §0/§2 | retrait des deux énoncés datés, contrôle dans le MÊME commit | R2 ⑨ |
 
-**Plancher dérivé du corps = 24. Somme de la table : R1 = 7, R2 = 8, R3 = 9 ⇒ 24.** ✅
-```
-contrôle EXÉCUTÉ (instrument : jeu EXPLICITE des 24 numéros, jamais une plage Unicode)
-   lignes d'énumération .......... 24
-   numéros distincts en cellule ... 24
-   en cellule non énuméré ......... aucun
-   énuméré non en cellule ......... aucun
-```
-⚠️ **Et l'instrument a menti d'abord** : ma première version employait la plage `[①-㉓]`, qui
-s'étend de U+2460 à U+3253 et **avale `⚠` (U+26A0), `⛔` (U+26D4) et `✅` (U+2705)** — elle rendait
-26 numéros là où il y en a 24. *Un instrument d'étiquetage faux produit une classification qui a
-l'air mesurée.* Le contrôle n'a trouvé le vrai écart (deux obligations sous un seul numéro)
-**qu'après** avoir été réparé. ⇒ **Un contrôle d'arithmétique se pose son propre contrôle positif :
-il doit rendre le nombre attendu sur un cas connu avant qu'on le croie sur un cas inconnu.**
-⚠️ **Ce contrôle ne vaut que parce que ses deux membres viennent de sources DIFFÉRENTES** — le
-plancher du corps, la somme de la table. Un contrôle dont les deux membres sortent de la même
-liste ne peut rien attraper. **Le recompter à chaque version, depuis le corps.**
+**Bijection cellules ↔ énumération : 25 = 25, R1 8 · R2 8 · R3 9, aucun orphelin.** Instrument
+commité : `Tools/plancher-decoupage.py` (m3 — *un chiffre dont l'instrument n'est pas dans le
+dépôt est un témoignage*), avec son jeu de symboles **EXPLICITE** et non une plage Unicode.
+
+⛔⛔ **B2 de la v8 — ET CE CONTRÔLE NE FERME PAS LA CLASSE QU'IL A L'AIR DE FERMER.** La v8
+affirmait que ses deux membres venaient de « sources DIFFÉRENTES ». **C'est faux** : l'énumération
+et la table sont écrites dans le même §11, à la suite, par la même main. Un livrable oublié **des
+DEUX côtés** reste invisible — et la revue en a trouvé un (la sonde du seam, B3, désormais ㉕).
+⇒ **Ce que la bijection prouve** : aucun numéro orphelin, aucun numéro possédé deux fois. **Ce
+qu'elle ne prouve pas** : que le plancher soit complet. *Un dispositif qui nomme un mécanisme réel
+est le plus dangereux de sa famille — un lecteur vérifie qu'il existe, le trouve vert, et conclut.*
+⇒ **Le geste qui fermerait vraiment B2** — et il n'est PAS fait : dériver l'énumération du corps
+par un **balayage exécutable** (tout impératif non conditionnel des §0–§8), publier sa sortie, et
+la comparer à la table. Tant qu'il n'existe pas, **le plancher est déclaré, pas mesuré**, et cette
+ligne le dit à la place d'un ✅.
+
 ⚠️ **Contrôle de cohérence de propriétaire** (absent de la v5, qui disait « R3 publie la table des
 30 » dans le corps et l'assignait à R1 dans la table) : tout « R\<i\> fait X » du corps doit
 désigner le même chunk que la cellule qui porte X. Vérifié à cette version.
