@@ -215,6 +215,59 @@ namespace MafiaCleanCity.Operational.Tests
                 "aucun Contour trouvé — la garde serait vraie À VIDE (contrôle anti-vacuité)");
         }
 
+        /// <summary>⛔⛔ AUCUN ÉLÉMENT DÉCORATIF N'EST ENFANT DIRECT D'UN GROUPE DE LAYOUT.
+        ///
+        /// Cette garde ferme une CLASSE, pas deux instances. Le défaut est apparu DEUX FOIS le
+        /// même soir, à deux endroits différents :
+        ///   · le `Cerne` (le liseré qui encadre l'écran) comptait comme un bloc empilé par le
+        ///     `VerticalLayoutGroup` de `corps` ;
+        ///   · un `Contour` comptait comme une COLONNE par le `HorizontalLayoutGroup` du miroir —
+        ///     et cela se voyait à l'écran : une colonne vide large comme un tiers du bloc.
+        /// J'ai corrigé le premier sans repasser la classe sur la population, et le second est
+        /// apparu une heure plus tard. Deux occurrences ⇒ ce n'est plus un accident, c'est une
+        /// propriété de cette hiérarchie.
+        ///
+        /// ⇒ La règle : un cadre se SUPERPOSE, il ne s'empile pas. Tout enfant décoratif d'un
+        /// groupe de layout doit porter `ignoreLayout`.
+        /// ⚠️ Garde STRUCTURELLE : elle ne lit aucun pixel, donc elle vaut à toute résolution et
+        /// ne peut pas être satisfaite par hasard. Ce sont les seules qui ont fermé des classes
+        /// dans ce dépôt — quatre tours de gardes de valeur n'avaient pas vu l'occlusion par
+        /// fratrie, une garde d'ordre l'a fermée en douze lignes.</summary>
+        [UnityTest]
+        public IEnumerator B3S3_AucunDecoratif_EnfantDirectDUnLayoutGroup()
+        {
+            yield return OuvrirJoueurFrais();
+            var ecran = MonterEcran();
+            yield return ecran.Charger(lieutenantId);
+
+            // Les noms des éléments purement décoratifs de cet écran : ils dessinent un cadre ou
+            // un filet, ils ne participent jamais au flux.
+            var decoratifs = new HashSet<string> { "Cerne", "Contour", "FiletBas" };
+            var fautifs = new List<string>();
+            int examines = 0;
+
+            foreach (Transform t in RacineEcran().GetComponentsInChildren<Transform>(true))
+            {
+                if (!decoratifs.Contains(t.name)) continue;
+                Transform parent = t.parent;
+                if (parent == null || parent.GetComponent<LayoutGroup>() == null) continue;
+                examines++;   // enfant décoratif SOUS un layout : le seul cas qui nous intéresse
+                LayoutElement le = t.GetComponent<LayoutElement>();
+                if (le == null || !le.ignoreLayout)
+                    fautifs.Add($"{t.name} sous {parent.name} ({parent.GetComponent<LayoutGroup>().GetType().Name})");
+            }
+
+            // ⛔ Plancher anti-vacuité, et il compte les CAS EXAMINÉS, pas les fichiers : sans lui,
+            // « 0 fautif » serait vrai sur un écran qui ne contient aucun décoratif — donc vrai
+            // pour la mauvaise raison.
+            Assert.Greater(examines, 0,
+                "aucun élément décoratif sous un LayoutGroup n'a été examiné : la garde serait " +
+                "verte À VIDE. Soit la hiérarchie a changé, soit les noms surveillés sont périmés.");
+            Assert.IsEmpty(fautifs,
+                $"éléments décoratifs comptés comme des blocs par leur layout parent (sur {examines} " +
+                $"examinés) : {string.Join(", ", fautifs)}. Un cadre se superpose, il ne s'empile pas.");
+        }
+
         // ═══ 2. LA POLARITÉ — la garde qui compte, avec son contrôle positif ════════════════
 
         /// <summary>⛔⛔ UN LIEUTENANT VIERGE ALLUME ZÉRO VOYANT — et le contrôle positif est ce
