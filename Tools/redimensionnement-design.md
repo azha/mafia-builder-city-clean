@@ -1,13 +1,14 @@
-# Lot « redimensionnement » — **v10** — le client survit à un changement de taille en cours de vie
+# Lot « redimensionnement » — **v11** — le client survit à un changement de taille en cours de vie
 
 > **Ruling user 2026-08-30** : « supporter le redimensionnement pour de vrai ».
 > **v1 NOT_APPROVED** (5B/7M/4m) · **v2 NOT_APPROVED** (3B/5M/5m) · **v3 NOT_APPROVED** (2B/4M/6m) ·
 > **v4 NOT_APPROVED** (4B/6M/6m) · **v5 NOT_APPROVED** (6B/8I/4m) · **v6 NOT_APPROVED** (4B/8I/6m) ·
-> **v7 NOT_APPROVED** (4B/8I/6m) · **v8 NOT_APPROVED** (5B/5I/4m) · **v9 NOT_APPROVED** (4B/5I/3m).
+> **v7 NOT_APPROVED** (4B/8I/6m) · **v8 NOT_APPROVED** (5B/5I/4m) · **v9 NOT_APPROVED** (4B/5I/3m) ·
+> **v10 NOT_APPROVED** (4B/4I/4m).
 > ⛔ **CE BLOC SE TIENT PAR VERSION, JAMAIS PAR UN TOTAL RECOPIÉ** — un total se périme en silence
 > à chaque tour, et il l'a fait DEUX fois (m1 en v7, B6 en v8 : le correctif de m1 n'a pas survécu
 > à une version). **Ajouter une version OBLIGE à ajouter sa ligne** ; c'est la seule forme qui ne
-> peut pas mentir par omission. ⇒ **9 versions, 9 refus.** Rapports hors dépôt : `/tmp/revue-redimensionnement-design{,-v2,-v3,-v4}.md`.
+> peut pas mentir par omission. ⇒ **10 versions, 10 refus.** Rapports hors dépôt : `/tmp/revue-redimensionnement-design{,-v2,-v3,-v4}.md`.
 > *(v3 était omis de l'en-tête de la v4 — un document dont la thèse est la comptabilité honnête ne
 > peut pas escamoter un de ses propres verdicts. Corrigé ici : quatre versions, quatre refus.)*
 >
@@ -248,7 +249,7 @@ reste contain, ×1 reste ×1*. La règle de restauration s'écrit donc en trois 
    disjoint 1 **ne peut pas, par construction, exercer `:181`** : les deux assertions sont vertes
    et c2 vit en production. *La garde certifie le défaut, 6ᵉ occurrence.*
    ⇒ **DEUX SCÉNARIOS NOMMÉS, chacun avec le monde dégénéré qu'il tue** :
-   - ~~**S1**~~ — **SUPPRIMÉ en v10** : le monde qu'il visait (c2) est **inatteignable** au corpus disponible. Voir le bloc B2 ci-dessous et le §8.
+   - **S1 — RÉTABLI en v11, sur un couple PAYSAGE.** Tue **c2** (le retour anticipé de `ZoomTo`).
    - **S2 — hors palier de référence.** Tue **c1** (même rang, autre zoom). ⚠️ **PAS c3** — voir ci-dessous : c3 n'est atteignable à aucun couple disponible.
    *Une disjonction laisse le scénario choisir lequel il satisfait ; deux scénarios ne le laissent pas.*
 
@@ -268,26 +269,38 @@ reste contain, ×1 reste ×1*. La règle de restauration s'écrit donc en trois 
    ⇒ **CONDITIONS DE MONDE, écrites — et les valeurs sont déjà dans un `[TestCase]` commité** :
    | | condition de monde | couple de résolutions | garde de capacité |
    |---|---|---|---|
-   ⛔⛔ **B2 de la v9 — S1 EST SUPPRIMÉ, et l'inversion de la v9 était un NON-SEQUITUR.**
-   La v9 raisonnait : *« c2 exige un pan À RESTAURER, donc `contain < 1` À L'ARRIVÉE »*. **Faux** —
-   un pan à restaurer doit exister **là où il est SAUVEGARDÉ**, donc **au DÉPART**. Et la table
-   ci-dessous établit qu'au départ portrait, au palier de référence, **il n'existe aucun pan**.
-   ⇒ Le nom même de la ligne — « épinglé au palier de référence, **AVEC un pan** » — décrivait un
-   monde que sa propre condition interdisait.
-   ⇒ **Et le défaut avait migré de l'assertion vers la GARDE DE CAPACITÉ.** « Asserter
-   `PanPosition != zero` APRÈS la reconstruction » est **satisfaite par c2** — qui ne restaure rien
-   et laisse en place le cadrage de `Configure:149` — et **ROUGE sur le correctif juste**, qui
-   restaure `(0,0)`. *Le monde le plus dégénéré qui rend la garde VRAIE est le défaut lui-même.*
-   ⇒ **c2 exige `contain < 1` AUX DEUX BOUTS** ; une seule des quatre résolutions l'a. **c2 est donc
-   INATTEIGNABLE au corpus disponible, exactement comme c3**, et rejoint le §8 avec son détecteur
-   plutôt qu'un scénario incapable de le rencontrer. *C'est le statut que la v9 avait donné à c3 et
-   refusé à c2 — la classe fermée sur une instance, jamais repassée sur la population.*
-   ⚠️ **Et une condition de DONNÉE, jamais écrite, l'aurait rendu aveugle même au bon couple** :
-   `DistrictInteriorScreenController.cs:606-611` pose `initialFocus = Vector2.zero` en l'absence de
-   bâtiment joueur ⇒ sans bâtiment, ou avec un barycentre centré en Y, **les deux mondes rendent
-   `(0,0)`**. Une condition de monde qui couvre la RÉSOLUTION et pas la DONNÉE est incomplète.
+   ⛔⛔⛔ **B3 de la v10 — SUPPRIMER S1 ÉTAIT UNE CAPITULATION, ET « INATTEIGNABLE » QUALIFIAIT
+   MON CORPUS DE TEST, PAS LE MONDE.** La v10 a écrit : *« c2 exige `contain < 1` aux deux bouts ;
+   une seule des QUATRE RÉSOLUTIONS l'a »* — et ces quatre résolutions sont un `[TestCase]` que **ce
+   lot est déjà en train d'étendre** (⑮). Pendant ce temps le §0, **à 0 delta depuis des versions**,
+   établit le monde de production :
+```
+   androidResizeableActivity: 1        ⇒ multi-fenêtres AUTORISÉ
+   androidDefaultWindowWidth : 1920
+   androidDefaultWindowHeight: 1080    ⇒ la fenêtre par défaut est PAYSAGE
 
-   | **S2** | les deux points doivent rendre des `ZoomLevels` de **longueurs différentes** | **1080×1920 ↔ 1440×3200** (`contain` 1 vs 1,3333 ⇒ 3 vs 4 paliers) | asserter `ZoomLevels.Length` **différent** aux deux points |
+   fond 1080×1920 :  1920×1080 → contain 0,5625 < 1      ⇐ un pan EXISTE
+                     1920×600  → contain 0,3125 < 1      ⇐ après glissement du séparateur
+```
+   ⇒ **c2 mord un joueur réel, sur le geste même que ce lot existe pour supporter** : il glisse le
+   séparateur, et son cadrage disparaît en silence. **J'ai supprimé le scénario qui teste un défaut
+   de PRODUCTION parce que mon corpus de TEST ne contenait pas son monde.**
+   ⇒ ***« Inatteignable » est une propriété du corpus ; « n'arrive pas » est une propriété du monde.
+   Les confondre transforme un trou de couverture en démonstration d'impossibilité.***
+
+   ⇒ **Et le correctif juste était écrit dans le bloc qui a servi à supprimer.** La v10 y démontrait :
+   *« un pan à restaurer doit exister là où il est SAUVEGARDÉ, donc au DÉPART »*. **C'est la garde de
+   capacité correcte** — asserter `PanPosition != Vector2.zero` **AVANT** la reconstruction. Elle est
+   verte pour c2 comme pour le correctif juste (les deux ont un pan au départ), donc elle **ne
+   certifie rien** ; et l'assertion, elle, **discrimine** : c2 rend `initialFocus`, le correctif rend
+   le pan sauvegardé. *Le document avait trouvé la réparation et s'en est servi pour justifier une
+   suppression.*
+
+   | | condition de monde | couple | garde de capacité |
+   |---|---|---|---|
+   | **S1** | `contain < 1` **AUX DEUX BOUTS** — le monde du multi-fenêtres paysage, celui du §0 | **1920×1080 → 1280×720** *(0,5625 et 0,3750 — les deux < 1 ; `1280×720` est déjà dans le `[TestCase]`, `1920×1080` est la fenêtre par défaut déclarée par `ProjectSettings`)* | asserter `PanPosition != Vector2.zero` **AVANT** la reconstruction **ET** `initialFocus != Vector2.zero` (≥ 1 bâtiment joueur, barycentre décentré en Y) |
+
+   | **S2** | les deux points doivent rendre des `ZoomLevels` de **longueurs différentes** | **1080×1920 ↔ 1440×3200** (`contain` 1 vs 1,3333 ⇒ 3 vs 4 paliers) | ⛔ **B4 de la v10 — la garde ne portait que sur `ZoomLevels.Length`, donc sur le RÔLE.** Rien ne garantissait qu'un pan existe, donc la seconde assertion (le point de carte) ne mesurait rien : aux formats portrait `ClampAxis` force `(0,0)`, et `initialFocus` retombe à `zero` sans bâtiment joueur ⇒ **les deux mondes rendent le même observable**. ⇒ Garde complétée : `ZoomLevels.Length` différent **ET** `PanPosition != zero` au départ **ET** `initialFocus != zero` (≥ 1 bâtiment joueur, barycentre décentré) |
 
    **La mesure qui fonde ces deux couples — refaite en VALEURS, pas en prose** (`ClampAxis` rend
    `0` dès que le contenu tient dans le viewport, `DistrictMapNavigation.cs:227-229`) :
@@ -604,8 +617,8 @@ annulé par le §5, sans quoi la dépendance zone-sûre de P4/P5 n'est exercée 
 
 | chunk | livrables | falsifiable | gate |
 |---|---|---|---|
-| **R1 — mesures et publications** | ① re-mesurer les ancres @HEAD, **par fichier** (§2) · ② **(a)** vérifier dans le corps les **9 PERSIST nommées** ET **(b)** énumérer les TRANSIENT par la règle d'appartenance (§2), nom + ancre, **au grain déclaré** — le compte tombe à la fin, il n'est pas la preuve *(la v8 avait perdu la moitié (a) : le corps l'assignait, la cellule ne la demandait pas — I1)* · ④ **déclarer l'unité et la portée** de chaque compte du §7 *(et NON « retirer le 19 », cf. B6)* · ⑤ imprimer les insets **après** bascule · ⑮ **la seconde largeur de capture** *(remontée de R3 en v10 — I4 : S2 en a besoin et R2 courait AVANT R3 qui la possédait. C'est la forme C dans le découpage, fermée pour la sonde du seam et jamais repassée sur la population)* · ㉖ **détecteur de c3** · ㉗ **détecteur de c2** (§8 — les deux mondes inatteignables portent une épingle qui rougit le jour où ils deviennent testables) · ㉕ **la sonde réduite du seam** (§5 — sans elle, la décision « ne toucher au calcul d'insets QUE si le seam ne suffit pas » dépend d'un instrument qu'aucun chunk ne possède : forme C dans le découpage) · ㉔ **commiter le log** qui porte la mesure du §5 (aujourd'hui dans `scratchpad/`, non tracké ⇒ non re-dérivable) · ⑥ écrire prédicat + commande + portée + **contrôle positif par motif** du contrôle §0 · ⑱ écrire la **règle de clôture** de l'ensemble de fichiers du §0 | chaque publication porte **commande + sortie collée + unité + portée** ; contrôle positif ET négatif | revue ⊥ |
-| **R2 — production** | ⑦ l'émetteur sur le couple, mécanisme complet · ⑧ le chemin de restauration (rôle → valeur → tolérance) · ⑨ le retrait des deux énoncés datés, **avec le contrôle de retrait de R1 dans le MÊME commit** *(un numéro cerclé ne vit que dans la cellule qui le POSSÈDE — une référence croisée se nomme en toutes lettres, sinon l'oracle d'arithmétique compte une possession)* · ⑲ **écrire la conversion d'unités** des deux termes du couple (§4) · ㉓ **l'ordre de reconstruction district↔panneaux**, mesuré ou assumé (§3, m2) | ⑩ non-émission fenêtre-à-l'attachement + `1` en aval, **même scénario** · ⑪ (a) et (b) dans **deux scénarios distincts** · ⑫ anti-vacuité du cadrage par **S1 et S2 nommés** (non disjonctive) | revue ⊥ |
+| **R1 — mesures et publications** | ① re-mesurer les ancres @HEAD, **par fichier** (§2) · ② **(a)** vérifier dans le corps les **9 PERSIST nommées** ET **(b)** énumérer les TRANSIENT par la règle d'appartenance (§2), nom + ancre, **au grain déclaré** — le compte tombe à la fin, il n'est pas la preuve *(la v8 avait perdu la moitié (a) : le corps l'assignait, la cellule ne la demandait pas — I1)* · ④ **déclarer l'unité et la portée** de chaque compte du §7 *(et NON « retirer le 19 », cf. B6)* · ⑤ imprimer les insets **après** bascule · ㉘ **la condition de DONNÉE** de S1/S2 · ⑮ **la seconde largeur de capture** *(remontée de R3 en v10 — I4 : S2 en a besoin et R2 courait AVANT R3 qui la possédait. C'est la forme C dans le découpage, fermée pour la sonde du seam et jamais repassée sur la population)* · ㉖ **détecteur de c3** · ㉗ **détecteur de c2** (§8 — les deux mondes inatteignables portent une épingle qui rougit le jour où ils deviennent testables) · ㉕ **la sonde réduite du seam** (§5 — sans elle, la décision « ne toucher au calcul d'insets QUE si le seam ne suffit pas » dépend d'un instrument qu'aucun chunk ne possède : forme C dans le découpage) · ㉔ **commiter le log** qui porte la mesure du §5 (aujourd'hui dans `scratchpad/`, non tracké ⇒ non re-dérivable) · ⑥ écrire prédicat + commande + portée + **contrôle positif par motif** du contrôle §0 · ⑱ écrire la **règle de clôture** de l'ensemble de fichiers du §0 | chaque publication porte **commande + sortie collée + unité + portée** ; contrôle positif ET négatif | revue ⊥ |
+| **R2 — production** | ⑦ l'émetteur sur le couple, mécanisme complet · ⑧ le chemin de restauration (rôle → valeur → tolérance) · ⑨ le retrait des deux énoncés datés, **avec le contrôle de retrait de R1 dans le MÊME commit** *(un numéro cerclé ne vit que dans la cellule qui le POSSÈDE — une référence croisée se nomme en toutes lettres, sinon l'oracle d'arithmétique compte une possession)* · ⑲ **écrire la conversion d'unités** des deux termes du couple (§4) · ㉓ **l'ordre de reconstruction district↔panneaux**, mesuré ou assumé (§3, m2) | ⑩ non-émission fenêtre-à-l'attachement + `1` en aval, **même scénario** · ⑪ (a) et (b) dans **deux scénarios distincts** · ⑫ anti-vacuité du cadrage par **S1 et S2 nommés** (non disjonctive), **chacun avec sa garde de capacité au DÉPART et sa condition de DONNÉE** (§3) | revue ⊥ |
 | **R3 — le juge** | ⑬ choisir la catégorie, l'ajouter, **et couvrir `ChromeSafeAreaPlayModeTests` + `ChromeMultiResolutionPlayModeTests`** (cf. I2) · ⑭ publier le compte des rallumés et **classer chaque rouge** démasqué / régression · ③ publier la table des 30 non joués · ⑯ le contrôle positif de sabotage, ancré · ⑳ **zone sûre à valeurs DISTINCTES aux deux points, via le seam** (§6.2) · ㉑ **ASSERTER le débordement**, jamais l'imprimer (§6.3) | ⑰ le test visé **relancé seul par son nom complet** · ㉒ anti-vacuité : **nombre d'écrans éprouvés > 0 et nommé** (§6.5) | revue ⊥ |
 
 ⛔⛔ **B4 de la v6 — L'ÉNUMÉRATION ÉTAIT ANNONCÉE ET JAMAIS PUBLIÉE, donc les deux membres du
@@ -629,7 +642,8 @@ l'autre membre, et les deux sont désormais construits séparément) :
 | 4 | §2 | énumérer les TRANSIENT **par la règle d'appartenance du §2**, chacune avec son nom et son ancre | R1 ② |
 | 5 | §3 | chemin de restauration : rôle → valeur → tolérance | R2 ⑧ |
 | 6 | §3 | ordre de reconstruction district↔panneaux, mesuré ou assumé | R2 **㉓** |
-| 7 | §3 | S1/S2 avec conditions de monde et gardes de capacité | R2 ⑫ |
+| 7 | §3 | S1/S2 avec conditions de monde, gardes de capacité **au départ**, et **condition de DONNÉE** (≥ 1 bâtiment joueur, barycentre décentré) | R2 ⑫ |
+| 28 | §3 | **la condition de DONNÉE elle-même** — le monde où `initialFocus != zero` — mesurée avant d'être assertée *(B4 de la v10 : livrable créé par le §3 et absent des DEUX côtés du §11, le trou que la bijection ne peut pas voir)* | R1 **㉘** |
 | 8 | §4 | émetteur sur le couple, mécanisme complet | R2 ⑦ |
 | 9 | §4 | conversion d'unités des deux termes | R2 ⑲ |
 | 10 | §4 | assertion de non-émission, fenêtre à l'attachement | R2 ⑩ |
@@ -651,8 +665,16 @@ l'autre membre, et les deux sont désormais construits séparément) :
 | 23 | §7 | déclarer unité et portée de chaque compte | R1 ④ |
 | 24 | §0/§2 | retrait des deux énoncés datés, contrôle dans le MÊME commit | R2 ⑨ |
 
-**Bijection cellules ↔ énumération : 25 = 25, R1 8 · R2 8 · R3 9, aucun orphelin.** Instrument
-commité : `Tools/plancher-decoupage.py` (m3 — *un chiffre dont l'instrument n'est pas dans le
+⛔⛔ **B1 de la v10 — LE DOCUMENT AFFIRMAIT « 25 = 25 » PENDANT QUE SON PROPRE INSTRUMENT, RÉPARÉ
+DANS LE MÊME LOT, RENDAIT 27.** La v10 a durci l'instrument *parce qu'il était inerte*, et **n'a
+jamais recopié sa sortie** : la phrase était verbatim celle de la v9. ⇒ ***Un instrument réparé
+dont on ne recopie pas la sortie vaut exactement l'instrument inerte qu'il remplace.***
+⇒ **Correctif de FORME, pour que ce nombre ne puisse plus mentir** : cette ligne ne porte plus de
+compte recopié. **Le compte se lit en exécutant la commande** :
+```
+python3 Tools/plancher-decoupage.py Tools/redimensionnement-design.md
+```
+Instrument commité : `Tools/plancher-decoupage.py` (m3 — *un chiffre dont l'instrument n'est pas dans le
 dépôt est un témoignage*), avec son jeu de symboles **EXPLICITE** et non une plage Unicode.
 
 ⛔⛔ **B2 de la v8 — ET CE CONTRÔLE NE FERME PAS LA CLASSE QU'IL A L'AIR DE FERMER.** La v8
