@@ -291,6 +291,30 @@ async function main() {
   psql(`DELETE FROM safehouses WHERE player_id='${playerId}';`);
   psql(`DELETE FROM deal_leks WHERE player_id='${playerId}';`);
   psql(`DELETE FROM building_operational_state WHERE building_id IN (${opBuildingsSubq});`);
+  // ⛔ GARDE DE COURSE — le DELETE ci-dessous échoue par FK si un lieutenant référence encore un de
+  // ces bâtiments. Les lieutenants du joueur sont supprimés PLUS HAUT et dans le bon ordre (voir le
+  // commentaire du wipe lieutenant), donc un échec ici ne peut avoir que deux causes, et elles
+  // demandent des correctifs opposés :
+  //   (a) un lieutenant a été RECRÉÉ entre les deux DELETE — par le back, par un test PlayMode
+  //       concurrent, par un second seeder. C'est une COURSE : le reset n'est pas atomique.
+  //   (b) une autre FK que celle du lieutenant bloque. Il y en a 23 vers `buildings`, mesurées le
+  //       2026-08-31 — et `lieutenant`, `route` et `supply_chain_legs` en portent DEUX chacune, ce
+  //       qu'un balayage par nom de table rate.
+  // Sans ce compte, le message de Postgres nomme UNE contrainte et laisse croire à un défaut
+  // d'ordre — trois diagnostics successifs s'y sont trompés le 2026-08-31, et le correctif proposé
+  // (détacher les lieutenants avant le wipe) était redondant avec du code existant : 0 assignation
+  // croisée en base, 0 bâtiment sans état opérationnel. Le compte ci-dessous départage (a) de (b)
+  // en une ligne, et il est DATÉ dans le log.
+  const ltRestants = psql(`SELECT count(*) FROM lieutenant WHERE player_id='${playerId}';`);
+  if (ltRestants !== '0') {
+    throw new Error(
+      `[seed] COURSE DÉTECTÉE : ${ltRestants} lieutenant(s) du joueur de démo existent ENCORE juste ` +
+        `avant le wipe des bâtiments, alors qu'ils viennent d'être supprimés. Quelqu'un les a recréés ` +
+        `entre les deux DELETE (back en cours d'exécution, test PlayMode concurrent, second seeder). ` +
+        `Le reset n'est pas atomique : arrêtez l'écrivain concurrent avant de rejouer. ` +
+        `⚠️ Ce n'est PAS un défaut d'ordre — l'ordre est correct et vérifié.`,
+    );
+  }
   psql(`DELETE FROM buildings WHERE player_id='${playerId}' AND block_id IN (SELECT id FROM blocks WHERE district_id=${OP_DISTRICT});`);
   // Phase-2c (Ash): the specialized_lab lives in a GLASS district (not district 16), so wipe any prior specialized_lab
   // this player owns directly. The "specialized_lab" marker is the operational TYPE (building_operational_state.
