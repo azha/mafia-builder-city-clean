@@ -64,11 +64,55 @@ fi
 # valeur mesurée) plutôt que splitté : aucun signe que la durée croît avec le NOMBRE de tests
 # (elle est dominée par le shutdown natif, constant), donc scinder les catégories n'aurait pas
 # réduit ce risque — seul monter le plafond le fait.
-TIMEOUT_S=900
+# ⛔ AFFECTATION DURE = ÉCRASEMENT SILENCIEUX DE L'ENVIRONNEMENT (mesuré 2026-08-31) : un
+#    `TIMEOUT_S=2700 ./run-unity-check.sh` était ignoré sans le moindre message, et le premier
+#    run complet du lot identité a été tué à 905 s en n'ayant produit AUCUNE ligne de résultat.
+#    Se vérifie sur l'EFFET (`ps -eo args | grep timeout`), jamais sur le texte de ce script.
+: "${TIMEOUT_S:=900}"
 SECONDS=0                              # bash : compteur d'écoulé, remis à 0 ici
-timeout "$TIMEOUT_S" "$UNITY" -batchmode "${EXTRA_ARGS[@]}" -projectPath "$WT" -logFile "$LOG" "$@"
+
+# ⛔⛔ CHIEN DE GARDE DE SORTIE (mesuré 2026-08-31, DEUX runs perdus) — Unity TERMINE SON TRAVAIL
+#    PUIS NE SORT JAMAIS. Le paquet embarqué `com.coplaydev.unity-mcp` accroche
+#    `EditorApplication.quitting` (`McpEditorShutdownCleanup.OnEditorQuitting` →
+#    `ServerManagementService.StopLocalHttpServer`) et s'y bloque indéfiniment. Mesuré : 0 erreur
+#    CS, 2 domain reloads terminés, `Internal_EditorApplicationQuit` atteint, puis ratio CPU 0,06
+#    et log figé jusqu'au plafond. Le premier run est mort à 905 s SANS une ligne de résultat.
+# ⇒ On attend un MARQUEUR DE TRAVAIL ACHEVÉ, puis on termine le process nous-mêmes.
+#   • phase de test    : `MafiaCI: RunPlayModeTests finished — passed=N failed=M`
+#   • phase de compile : `Internal_EditorApplicationQuit` (le `-quit` a bien été atteint)
+# ⚠️ Ce chien de garde NE MASQUE PAS un vrai blocage : sans marqueur, rien n'est tué et le
+#    `timeout` tranche exactement comme avant. Il ne se déclenche qu'après une preuve écrite que
+#    le travail est fini. Et le code de sortie est relu SUR LE MARQUEUR (failed=), jamais supposé.
+timeout "$TIMEOUT_S" "$UNITY" -batchmode "${EXTRA_ARGS[@]}" -projectPath "$WT" -logFile "$LOG" "$@" &
+UNITY_WAITER=$!
+WATCHDOG_FIRED=0
+while kill -0 "$UNITY_WAITER" 2>/dev/null; do
+  if [[ -f "$LOG" ]] && grep -qE 'MafiaCI: RunPlayModeTests finished|Internal_EditorApplicationQuit' "$LOG" 2>/dev/null; then
+    sleep 3                            # laisser le marqueur et ses voisines s'écrire entièrement
+    for _try in 1 2 3; do
+      pkill -TERM -u "$(id -u)" -f "logFile $LOG" 2>/dev/null || true
+      sleep 2
+      kill -0 "$UNITY_WAITER" 2>/dev/null || break
+    done
+    WATCHDOG_FIRED=1
+    break
+  fi
+  sleep 2
+done
+wait "$UNITY_WAITER" 2>/dev/null
 RC=$?                                  # capturé AVANT tout pipe
 ELAPSED_S=$SECONDS
+
+# Le marqueur fait FOI sur le verdict quand le chien de garde a mordu : le RC d'un process terminé
+# par signal ne dit rien des tests. `failed=0` ⇒ 0, sinon 1. Absence de marqueur de test (phase de
+# compile) ⇒ on garde le RC, et la garde `error CS` plus bas reste seule juge.
+if [[ "$WATCHDOG_FIRED" == 1 ]]; then
+  if grep -qE 'MafiaCI: RunPlayModeTests finished' "$LOG" 2>/dev/null; then
+    if grep -qE 'RunPlayModeTests finished — passed=[0-9]+ failed=0( |$)' "$LOG" 2>/dev/null; then RC=0; else RC=1; fi
+  else
+    RC=0                               # compile atteint son -quit : pas d'erreur CS ⇒ succès
+  fi
+fi
 
 # Durée + issue, écrites dans le log préservé (si KEEP_LOG) ET sur stdout — jamais uniquement
 # déduites après coup. `timeout` rend 124 s'IL a dû tuer le process (délai dépassé) ; tout AUTRE
@@ -81,6 +125,7 @@ elif [[ "$RC" -gt 128 ]]; then
 else
   ISSUE="sortie normale (RC=$RC)"
 fi
+if [[ "$WATCHDOG_FIRED" == 1 ]]; then ISSUE="$ISSUE · CHIEN DE GARDE: travail fini, sortie bloquée par le hook MCP ⇒ process terminé par nous"; fi
 DURATION_LINE="MafiaCI-harness: elapsed=${ELAPSED_S}s timeout=${TIMEOUT_S}s issue=[$ISSUE]"
 echo "$DURATION_LINE"
 [[ -n "${LOG_FILE:-}" ]] && echo "$DURATION_LINE" >> "$LOG"

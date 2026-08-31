@@ -204,6 +204,34 @@ namespace MafiaCleanCity.CityMap.Tests
         /// D9) → découvre un bloc libre POUR CE JOUEUR dans son district de départ (Verge-A) →
         /// tente UNE décision structurelle (achat). `onOutcome` reçoit (succès, code HTTP —
         /// -1 si succès réseau franc).</summary>
+        // ⛔⛔ `client_version` EST UN varchar(32) CÔTÉ BACK (sessions_and_audit.ts:47) — et le back
+        //    répond 500 UNHANDLED, pas 400, quand on le dépasse. Mesuré le 2026-08-31, au tout
+        //    premier run de ce lot : `"e2e-demo-identity-one-session-cap"` fait **33** caractères,
+        //    un de trop, et le test échouait sur `session/open failed: 500` — un message qui ne
+        //    nomme NI la colonne NI la longueur. Les 20 autres sites d'appel du dépôt tiennent tous
+        //    sous 30, donc rien ne l'avait jamais révélé.
+        // ⇒ La garde ci-dessous vise la PROPRIÉTÉ (toute étiquette envoyée par ce fichier tient dans
+        //    la colonne), jamais l'instance corrigée — sinon la prochaine étiquette la rouvrira.
+        private const int ClientVersionMaxLen = 32;   // = varchar(32), back sessions_and_audit.ts:47
+
+        [Test]
+        public void ClientVersionLabels_FitTheBackColumn_ElseSessionOpenReturns500Unhandled()
+        {
+            string src = System.IO.File.ReadAllText(System.IO.Path.Combine(
+                UnityEngine.Application.dataPath, "Tests/PlayMode/DemoIdentityTwoAccountsPlayModeTests.cs"));
+            var labels = System.Text.RegularExpressions.Regex.Matches(src, @"OpenSession\([^,]+,\s*""([^""]+)""");
+            Assert.Greater(labels.Count, 0,
+                "anti-vacuité : si ce motif ne trouve plus aucune étiquette, la garde ne mesure RIEN " +
+                "et resterait verte quelle que soit leur longueur.");
+            foreach (System.Text.RegularExpressions.Match m in labels)
+            {
+                string label = m.Groups[1].Value;
+                Assert.LessOrEqual(label.Length, ClientVersionMaxLen,
+                    $"'{label}' fait {label.Length} caractères — la colonne client_version en accepte " +
+                    $"{ClientVersionMaxLen}. Le back rend 500 UNHANDLED (pas 400) au-delà.");
+            }
+        }
+
         private static IEnumerator OpenSessionThenOneStructuralDecision(string tag, string token,
             Action<bool, long> onOutcome)
         {
@@ -308,7 +336,7 @@ namespace MafiaCleanCity.CityMap.Tests
             var sessionClient = new SessionClient { BaseUrl = BaseUrl };
             SessionOpenDto sessionDto = null;
             string sessionErr = null;
-            yield return sessionClient.OpenSession(token, "e2e-demo-identity-one-session-cap",
+            yield return sessionClient.OpenSession(token, "e2e-demo-id-one-session-cap",
                 dto => sessionDto = dto, (c, m) => sessionErr = $"{c}: {m}");
             Assert.IsNull(sessionErr, $"[{tag}] session/open failed: {sessionErr}");
             Assert.IsNotNull(sessionDto,
