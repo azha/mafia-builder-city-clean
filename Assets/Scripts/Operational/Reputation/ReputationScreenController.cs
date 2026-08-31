@@ -607,6 +607,16 @@ namespace MafiaCleanCity.Operational
             // Les deux mécanismes se contredisent — un ancrage haut + un layout parent donnent
             // une position que ni l'un ni l'autre ne décrit.
             AjouterFond(go, ReputationResolvers.Panneau);
+            // ⛔ LE CADRE DE L'ENSEIGNE — `.enseigne{border:1px solid lisere}` (chassis6.py:113),
+            // le `border-bottom` doré n'en étant que le quatrième côté. Il manquait entièrement :
+            // le juge a balayé toute la bande et trouvé ZÉRO arête, alors que le même balayage
+            // trouve bien les arêtes dorées du panneau — son contrôle négatif est passé.
+            // ⚠️ C'est un écart SÉLECTIF : `.fen`, `.tl` et `.pann` ont tous leur contour dans ce
+            // fichier, l'enseigne seule ne l'avait pas. Un défaut qui frappe UNE instance d'une
+            // famille dont les autres membres sont corrects n'est pas une règle mal comprise,
+            // c'est une ligne oubliée — et c'est précisément ce qu'une relecture ne voit pas,
+            // puisque tout autour est juste.
+            Contour(go, ReputationResolvers.Lisere);
 
             // Le filet doré du bas (`border-bottom:2px solid --laiton`) — un enfant, pas une
             // bordure : Unity n'a pas de border-bottom, et le simuler par une image 9-slice
