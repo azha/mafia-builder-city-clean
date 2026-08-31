@@ -22,7 +22,7 @@
 """
 import re, sys
 
-CIRCLED = '①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳㉑㉒㉓㉔㉕㉖㉘㉙'
+CIRCLED = '①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳㉑㉒㉓㉔㉕㉖㉘㉙㉚'
 path = sys.argv[1] if len(sys.argv) > 1 else 'Tools/redimensionnement-design.md'
 t = open(path, encoding='utf-8').read()
 
