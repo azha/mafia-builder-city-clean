@@ -49,14 +49,22 @@ Répertoire : `/home/erutheone/project/mafia-unity-B/Assets/Screenshots/`
 
 | fichier | résolution | rect du canvas | scaleFactor |
 |---|---|---|---|
-| `screen_b3_reputation_1080x1920.png` | 1080×1920 (16:9) | À REMPLIR APRÈS RECAPTURE | À REMPLIR |
-| `screen_b3_reputation_1080x2400.png` | 1080×2400 (20:9, **cible téléphone**) | À REMPLIR APRÈS RECAPTURE | À REMPLIR |
+| `screen_b3_reputation_1080x1920.png` | 1080×1920 (16:9) | 1280,0 × 2275,6 | 0,8438 |
+| `screen_b3_reputation_1080x2400.png` | 1080×2400 (20:9, **cible téléphone**) | 1280,0 × 2844,4 | 0,8438 |
 | `screen_b3_reputation_1080x1920_t1s.png` | 1080×1920 à T+1 s | idem 16:9 | idem |
 
 La troisième est un **contrôle de stabilité** : elle doit être identique à la première. Toute
 différence est un défaut (cet écran ne porte aucune animation).
 
-**SHA du client au moment des captures** : À REMPLIR APRÈS RECAPTURE
+**SHA du client au moment des captures** : `94f8a88` · suite PlayMode : **10/10** sur la catégorie
+`ScreenB3` seule (`passed=10 failed=0 skipped=0`, filtre imprimé dans le log — un compte, pas une
+absence d'échec).
+
+⚠️ **Les captures ont été prises APRÈS ce commit et sous deux conditions vérifiées** : la pile
+répondait `200` sur `/health`, et aucun autre batchmode ne tournait. C'est dit parce qu'un run
+précédent, lancé pendant qu'une pile voisine redémarrait, a écrit trois captures parfaitement
+valides d'apparence alors que l'écran affichait son état de repli. Une capture ne porte aucune
+trace de la panne pendant laquelle elle a été prise.
 
 ⚠️ **Les captures sont prises SANS le chrome du jeu** — le bandeau haut (ARGENT / HEAT / JOUR) que
 tu vois sur la référence, et le dock du bas. C'est délibéré et documenté : monter le shell exigerait
