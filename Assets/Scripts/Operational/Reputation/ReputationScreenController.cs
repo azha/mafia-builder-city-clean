@@ -683,6 +683,15 @@ namespace MafiaCleanCity.Operational
 
             LayoutElement le = cta.AddComponent<LayoutElement>();
             le.minHeight = Px(CssCtaCorps + 2f * CssCtaPad);
+            le.preferredHeight = Px(CssCtaCorps + 2f * CssCtaPad);
+            // Le PIED lui-même doit réserver sa hauteur au layout de `corps`, sinon il se réduit
+            // à zéro et le CTA déborde hors du cadre — mesuré sur la capture du run 14.
+            LayoutElement pied = go.AddComponent<LayoutElement>();
+            pied.minHeight = Px(CssCtaCorps + 2f * CssCtaPad + CssPiedHaut);
+            pied.preferredHeight = pied.minHeight;
+            VerticalLayoutGroup vp = go.AddComponent<VerticalLayoutGroup>();
+            vp.childControlWidth = true; vp.childControlHeight = true;
+            vp.childForceExpandWidth = true; vp.childForceExpandHeight = false;
         }
 
         // ═══ Primitives ══════════════════════════════════════════════════════════════════════
@@ -727,6 +736,13 @@ namespace MafiaCleanCity.Operational
         {
             GameObject b = NouveauUI("Contour", go.transform);
             Etirer((RectTransform)b.transform);
+            // ⛔ MÊME DÉFAUT QUE LE CERNE, ET IL ÉTAIT VISIBLE À L'ÉCRAN : un `Contour` est un
+            // ENFANT du bloc qu'il borde, donc un LayoutGroup parent le compte comme un ÉLÉMENT.
+            // Mesuré sur la capture du run 14 : une COLONNE VIDE à gauche du portrait, large
+            // comme un tiers du miroir — c'était le contour, aligné par le HorizontalLayoutGroup
+            // au même titre que le portrait et la colonne de lecture.
+            // ⇒ Un cadre ne s'empile pas : il se superpose. `ignoreLayout` le dit au layout.
+            b.AddComponent<LayoutElement>().ignoreLayout = true;
             Image img = AjouterImage(b);
             img.sprite = ProceduralUI.RoundedRectOutline(PxTrait(2f), PxTrait(1f), Color.white);
             img.type = Image.Type.Sliced;

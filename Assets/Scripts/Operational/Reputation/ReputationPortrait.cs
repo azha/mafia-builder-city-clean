@@ -313,6 +313,18 @@ namespace MafiaCleanCity.Operational
 
             // Les mesures viennent des constantes du contrôleur, jamais de littéraux recopiés :
             // deux sources pour une même valeur, c'est la garantie qu'elles divergeront.
+            // ⛔ SANS HAUTEUR PRÉFÉRÉE, LES QUATRE VOYANTS SE PARTAGENT TOUTE LA COLONNE.
+            // Mesuré sur la capture du run 14 : chaque voyant occupait ~200 px de haut là où la
+            // maquette lui en donne ~24 (`.tl{padding:5px 8px}` autour d'un titre de 7,4 px et
+            // d'un sens de 5,4 px). Le texte flottait alors au milieu d'un bloc vide, et la
+            // pastille ronde s'étirait en ovale vertical.
+            LayoutElement leV = gameObject.AddComponent<LayoutElement>();
+            leV.minHeight = ecran.PxPublic(ReputationScreenController.CssVoyantTitre
+                                         + ReputationScreenController.CssVoyantSens
+                                         + 2f * ReputationScreenController.CssVoyantPadY + 3f);
+            leV.preferredHeight = leV.minHeight;
+            leV.flexibleHeight = 0f;
+
             HorizontalLayoutGroup h = gameObject.AddComponent<HorizontalLayoutGroup>();
             h.spacing = ecran.PxPublic(ReputationScreenController.CssVoyantEcart);
             h.padding = new RectOffset(
@@ -333,7 +345,11 @@ namespace MafiaCleanCity.Operational
             lumiere.raycastTarget = false;
             LayoutElement lle = lum.AddComponent<LayoutElement>();
             lle.preferredWidth = d; lle.preferredHeight = d;
-            lle.flexibleWidth = 0f;
+            lle.minWidth = d; lle.minHeight = d;
+            // ⛔ `flexibleHeight = 0` AUSSI : sans lui la pastille suit la hauteur de la ligne et
+            // le disque devient un OVALE vertical — mesuré sur la capture du run 14. Une pastille
+            // est CARRÉE par définition ; c'est une contrainte de forme, pas de taille.
+            lle.flexibleWidth = 0f; lle.flexibleHeight = 0f;
 
             GameObject colonne = new GameObject("Textes", typeof(RectTransform));
             colonne.transform.SetParent(transform, false);
