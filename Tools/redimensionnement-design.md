@@ -1,15 +1,16 @@
-# Lot « redimensionnement » — **v15** — le client survit à un changement de taille en cours de vie
+# Lot « redimensionnement » — **v16** — le client survit à un changement de taille en cours de vie
 
 > **Ruling user 2026-08-30** : « supporter le redimensionnement pour de vrai ».
 > **v1 NOT_APPROVED** (5B/7M/4m) · **v2 NOT_APPROVED** (3B/5M/5m) · **v3 NOT_APPROVED** (2B/4M/6m) ·
 > **v4 NOT_APPROVED** (4B/6M/6m) · **v5 NOT_APPROVED** (6B/8I/4m) · **v6 NOT_APPROVED** (4B/8I/6m) ·
 > **v7 NOT_APPROVED** (4B/8I/6m) · **v8 NOT_APPROVED** (5B/5I/4m) · **v9 NOT_APPROVED** (4B/5I/3m) ·
 > **v10 NOT_APPROVED** (4B/4I/4m) · **v11 NOT_APPROVED** (3B/7I/3m) ·
-> **v12 NOT_APPROVED** (3B/6I/5m) · **v13 NOT_APPROVED** (3B/4I/4m).
+> **v12 NOT_APPROVED** (3B/6I/5m) · **v13 NOT_APPROVED** (3B/4I/4m) ·
+> **v15 NOT_APPROVED** (4B/6I/6m). *(la v14 n'a pas été routée séparément — son delta est entré dans la v15.)*
 > ⛔ **CE BLOC SE TIENT PAR VERSION, JAMAIS PAR UN TOTAL RECOPIÉ** — un total se périme en silence
 > à chaque tour, et il l'a fait DEUX fois (m1 en v7, B6 en v8 : le correctif de m1 n'a pas survécu
 > à une version). **Ajouter une version OBLIGE à ajouter sa ligne** ; c'est la seule forme qui ne
-> peut pas mentir par omission. ⇒ **13 versions, 13 refus.** Rapports hors dépôt : `/tmp/revue-redimensionnement-design{,-v2,-v3,-v4}.md`.
+> peut pas mentir par omission. ⇒ **15 refus prononcés sur les versions listées ci-dessus.** *(compte lu sur la LISTE, jamais recopié — I4 de la v15 : l'en-tête s'était arrêté à la v13 en affirmant un total, quatrième péremption de ce même total.)* Rapports hors dépôt : `/tmp/revue-redimensionnement-design{,-v2,-v3,-v4}.md`.
 > *(v3 était omis de l'en-tête de la v4 — un document dont la thèse est la comptabilité honnête ne
 > peut pas escamoter un de ses propres verdicts. Corrigé ici : quatre versions, quatre refus.)*
 >
