@@ -215,6 +215,71 @@ namespace MafiaCleanCity.Operational.Tests
                 "aucun Contour trouvé — la garde serait vraie À VIDE (contrôle anti-vacuité)");
         }
 
+        /// <summary>⛔ LES TROIS ÉTATS QUE LE BACK NE SAIT PAS PRODUIRE SONT QUAND MÊME RENDUS.
+        ///
+        /// Ferme la moitié RENDU de l'angle mort A5. `drifting`, `hostile` et `wary` ont du code
+        /// écrit depuis le premier jour et jamais exécuté : aucune route ne les produit par un
+        /// chemin joueur, donc aucun test ne les traversait et aucun juge visuel n'a jamais pu en
+        /// voir une image. Un code jamais exécuté n'est pas « probablement bon » — il est inconnu.
+        ///
+        /// ⚠️ CE QUE CETTE GARDE NE PROUVE PAS, et il faut le lire avant de la croire : le corps
+        /// est FABRIQUÉ ici. Elle ne dit rien de ce que le serveur émet, ni qu'il émettra ces
+        /// valeurs sous cette forme. Elle vérifie ce que l'écran FAIT d'un corps supposé.
+        /// ⇒ La dette de CONTRAT reste entière et déclarée ; seule la dette de RENDU se ferme.
+        ///
+        /// Elle vise trois propriétés qu'un état muet perdrait séparément — le verdict change de
+        /// texte, il change de couleur, et le panneau change de titre. Un état qui n'écrirait que
+        /// le texte passerait une garde qui ne regarderait que lui.</summary>
+        [UnityTest]
+        [Category("ScreenB3")]
+        public IEnumerator B3S5_LesTroisEtatsNonProduitsParLeBack_SontRendusEtDistincts()
+        {
+            yield return OuvrirJoueurFrais();
+            var ecran = MonterEcran();
+
+            var vus = new List<string>();
+            var couleurs = new List<Color>();
+            var titres = new List<string>();
+
+            foreach (string cue in new[] { "indeterminate", "drifting", "aligned" })
+            {
+                ecran.RendrePourTest(new ReputationSurfaceDto
+                {
+                    boss_mirror = new BossMirrorDto
+                    {
+                        consistency_cue = cue,
+                        declared_rules = new DeclaredRuleDto[0],
+                        portrait_posture = "attentive",
+                    },
+                });
+                yield return null;
+
+                string v = ecran.VerdictAffiche;
+                Assert.IsFalse(string.IsNullOrEmpty(v),
+                    $"état « {cue} » : le verdict est VIDE — la colonne de lecture n'a pas de titre");
+                vus.Add(v);
+                titres.Add(ecran.PanneauSurTitreAffiche);
+                foreach (TMPro.TextMeshProUGUI t in RacineEcran().GetComponentsInChildren<TMPro.TextMeshProUGUI>(true))
+                    if (t.text == v) { couleurs.Add(t.color); break; }
+            }
+
+            // Les trois verdicts diffèrent DEUX À DEUX : un état qui retomberait sur le libellé
+            // d'un autre serait invisible pour un test qui ne compterait que « non vide ».
+            CollectionAssert.AllItemsAreUnique(vus,
+                "les trois états doivent écrire trois verdicts DIFFÉRENTS — " +
+                $"obtenu : {string.Join(" · ", vus)}");
+            CollectionAssert.AllItemsAreUnique(titres,
+                "les trois états doivent écrire trois sur-titres de panneau DIFFÉRENTS — " +
+                $"obtenu : {string.Join(" · ", titres)}");
+            Assert.AreEqual(3, couleurs.Count, "une couleur de verdict n'a pas été relevée");
+            Assert.AreNotEqual(couleurs[0], couleurs[1],
+                "« indéterminé » et « dérive » doivent se distinguer aussi par la COULEUR : " +
+                "un joueur lit la teinte avant le libellé");
+            Assert.AreNotEqual(couleurs[1], couleurs[2],
+                "« dérive » et « aligné » doivent se distinguer par la couleur");
+            yield return null;
+        }
+
         /// <summary>⛔ LE BLOC ÉLASTIQUE S'ÉTIRE, ET LE CONTENU NE LAISSE PAS UN TIERS DE VIDE.
         ///
         /// Cette garde ferme l'angle mort A3 — « l'effet des espacements n'est pas vérifié » — que

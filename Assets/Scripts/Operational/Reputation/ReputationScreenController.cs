@@ -260,6 +260,24 @@ namespace MafiaCleanCity.Operational
 
         // ═══ Rendu ═══════════════════════════════════════════════════════════════════════════
 
+        /// <summary>Rend un corps FABRIQUÉ, sans passer par le réseau — réservé aux tests.
+        ///
+        /// ⛔ Ce n'est pas un raccourci de confort : c'est le seul moyen d'exercer les états que le
+        /// back ne sait pas produire par un chemin joueur aujourd'hui. `drifting`, `hostile` et
+        /// `wary` ont du code écrit et JAMAIS exécuté — c'est l'angle mort A5, déclaré depuis le
+        /// premier jour et signalé « non vérifiable » par chaque juge visuel, faute d'image.
+        ///
+        /// ⚠️ Ce que ce point d'entrée NE prouve pas, et qu'il ne faut pas lui faire dire : que le
+        /// back émette un jour ces valeurs, ni qu'il les émette sous cette forme. Il exerce le
+        /// RENDU d'un corps supposé, pas le contrat. Un test qui fabrique son entrée ne vérifie
+        /// jamais que l'entrée existe — il vérifie ce qu'on en fait si elle arrive.
+        /// ⇒ La dette de contrat reste entière et reste déclarée ; seule la dette de RENDU se ferme.
+        public void RendrePourTest(ReputationSurfaceDto dto)
+        {
+            EnsureInitialized();
+            Rendre(dto);
+        }
+
         private void Rendre(ReputationSurfaceDto dto)
         {
             AAfficheEtatVide = false;
