@@ -21,7 +21,7 @@
 
 | fichier | rôle | taille px | facteur de rendu | largeur CSS ↔ largeur Unity |
 |---|---|---|---|---|
-| `~/project/mafia-builder-city-clean/Tools/juge-visuel/v6/m-119.png` … `m-124.png` | rendus **v2**, ratifiables | 900×1752 | **×3,000** (mesuré, pas déclaré) | 300 px CSS = la largeur du téléphone |
+| `reference/m-119.png` … `m-124.png` (COPIÉES dans ce dossier) | rendus **v2**, ratifiables | 900×1752 | **×3,000** (mesuré, pas déclaré) | 300 px CSS = la largeur du téléphone |
 | `~/project/atelier3d-mafia/ecrans-brennar-6.html` (section « LA RÉPUTATION », l. 5974) + `generateur-reputation.py` v2 | source HTML/CSS — aide de lecture, ne prime jamais sur l'image | — | — | — |
 
 ⛔⛔ **IDENTIFIER LES CADRES PAR LEUR ÉTIQUETTE, JAMAIS PAR LEUR NUMÉRO.** Les cadres ont été
@@ -30,19 +30,33 @@
 écrans différents. Les six étiquettes de la v2, dans l'ordre : `canon` (ce qu'il a pris de vous se
 voit sur lui) · `vierge` · `derive` · `regles` · `gages` · `lots`.
 
-⚠️ **Les PNG de CE worktree (`Tools/juge-visuel/v6/`) sont la v1 — périmée.** La v2 vit dans
-l'arbre principal, chemin ci-dessus. Ne pas les confondre : les trois écarts structurels que la v1
-portait ont justement été corrigés par la v2.
+⚠️ **Les PNG de `Tools/juge-visuel/v6/` (à la racine de ce worktree) sont la v1 — PÉRIMÉE.** Les
+images de référence de ce dossier sont dans `reference/`, copiées depuis l'arbre principal et
+vérifiées par empreinte : `m-119` copiée = `5d449be164e8` = la v2 source, ≠ `23831ab583c2` = la v1.
+Ne pas les confondre : les trois écarts structurels que la v1 portait ont justement été corrigés
+par la v2, et un juge qui lirait la v1 remonterait des défauts déjà réparés.
 
 - **Échelle, mesurée et non recopiée** : `Tools/mesure-geometrie-reputation.py` — échelle 3,000×
   exactement, chrome du shell 120,3 px CSS, corps de l'écran 463,7 px CSS (le générateur déclare
   462), **6/6 cadres à ±6 px**, avec des comptes de frontières NON uniformes (99/74/53 · 106/114/48
   · …) qui prouvent que l'instrument discriminait au lieu de mesurer un artefact constant.
-- **Polices — ce qui a RÉELLEMENT rendu** : **À REMPLIR** (`fc-match` sur la machine du rendu, pour
-  chaque `font-family` de la CSS : `DejaVu Sans` et `DejaVu Serif` sont demandées nommément par le
-  générateur). Le client embarque **DejaVu Sans SDF** et **DejaVu Serif SDF**
-  (`DesignTokens.primaryFont` / `hudSerifFont`). ⇒ Un écart de FAMILLE de police est un
-  **arbitrage**, jamais un défaut du client.
+- **Polices — MESURÉ, et il n'y a PAS de substitution ici** :
+
+      DejaVu Sans   → DejaVuSans.ttf   "DejaVu Sans"  "Book"
+      DejaVu Serif  → DejaVuSerif.ttf  "DejaVu Serif" "Book"
+
+  La maquette les demande **nommément** (`font:… 'DejaVu Sans'`), pas via les génériques — et
+  `fc-match` les résout exactement. Le client embarque les mêmes : `DejaVuSans SDF` et
+  `DejaVuSerif SDF` (`DesignTokens.primaryFont` / `hudSerifFont`).
+  ⇒ **Contrairement au cas historique de ce dépôt** (une maquette demandait `Georgia`, la machine
+  rendait `Noto Serif`, et deux juges ont classé MAJEUR un écart typographique qui n'était qu'une
+  substitution système), **il n'y a ici aucun arbitrage de police à faire** : les deux côtés
+  emploient la même famille. Un écart de forme des glyphes serait donc un vrai défaut, pas une
+  substitution — et c'est une information que le juge doit avoir AVANT de mesurer, sans quoi il
+  passera du temps à chercher un mécanisme qui n'existe pas.
+  ⚠️ Pour mémoire, les génériques résolvent ailleurs sur cette machine (`sans-serif` → Noto Sans,
+  `serif` → Noto Serif) : si un futur cadre de la maquette employait un générique, la substitution
+  reviendrait.
 
 ## Captures en jeu (Play Mode réel, locataire réel)
 
