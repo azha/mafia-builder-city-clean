@@ -511,13 +511,40 @@ namespace MafiaCleanCity.Operational.Tests
             RenderTexture.active = prev;
             System.IO.File.WriteAllBytes(chemin, tex.EncodeToPNG());
 
-            // ⛔ ANTI-MENSONGE — une cible noire produit un PNG parfaitement valide et VIDE, qui
-            // passerait pour une réussite. On n'asserte que ce qui rendrait l'image MENSONGÈRE.
-            int clairs = 0;
-            foreach (Color c in tex.GetPixels())
-                if (c.r + c.g + c.b > 0.15f) clairs++;
-            Assert.Greater(clairs, largeur * hauteur / 40,
-                $"capture {largeur}x{hauteur} quasi NOIRE ({clairs} px) : l'écran n'a pas été rendu");
+            // ⛔⛔ CETTE GARDE A ÉTÉ REFAITE, ET L'ANCIENNE ÉTAIT DÉCORATIVE.
+            // Elle comptait les pixels dont la somme RGB dépasse 0,15 et exigeait 2,5 % de la
+            // cible. Or le FOND de cet écran (`--encre` #0b1016) a une somme de **0,192** : il
+            // franchit le seuil tout seul. Mesuré sur la capture réelle : `clairs=2073600` sur
+            // 2073600, soit 100 % — la garde comptait le fond nu comme du contenu.
+            // ⇒ Une image ne contenant QUE le fond l'aurait satisfaite ENTIÈREMENT. Elle
+            //   prétendait détecter une capture vide et validait exactement ce cas : c'est une
+            //   garde qui CERTIFIE le défaut qu'elle existe pour attraper.
+            //
+            // ⇒ LA PROPRIÉTÉ QUI DÉGÉNÈRE N'EST PAS LA LUMINOSITÉ, C'EST LA VARIÉTÉ. Une capture
+            //   ratée est UNIFORME — peu importe sa couleur. On compte donc les pixels qui
+            //   DIFFÈRENT du fond dominant, ce qui reste juste si le fond change demain.
+            Color[] pixels = tex.GetPixels();
+            var histo = new Dictionary<int, int>();
+            foreach (Color c in pixels)
+            {
+                int k = (Mathf.RoundToInt(c.r * 31) << 10) | (Mathf.RoundToInt(c.g * 31) << 5) | Mathf.RoundToInt(c.b * 31);
+                histo.TryGetValue(k, out int n); histo[k] = n + 1;
+            }
+            int dominant = 0;
+            foreach (var kv in histo) if (kv.Value > dominant) dominant = kv.Value;
+            int horsFond = pixels.Length - dominant;
+
+            Assert.Greater(horsFond, pixels.Length / 100,
+                $"capture {largeur}x{hauteur} quasi UNIFORME : {horsFond} px seulement diffèrent " +
+                $"de la couleur dominante (sur {pixels.Length}). L'écran n'a pas été rendu — et " +
+                "un fond nu ne compte pas comme du contenu.");
+            // Contrôle de FORME, distinct du précédent : une image réellement rendue porte
+            // plusieurs dizaines de teintes (texte, or, crème, voyants). Un dégradé uni en
+            // porterait aussi beaucoup, d'où les DEUX assertions plutôt qu'une.
+            Assert.Greater(histo.Count, 8,
+                $"capture {largeur}x{hauteur} : seulement {histo.Count} teintes distinctes — " +
+                "trop peu pour un écran qui porte du texte, de l'or et quatre voyants");
+            int clairs = horsFond;
 
             // ⛔ Et une seconde garde, sur une autre PROPRIÉTÉ : des pixels clairs prouvent qu'on
             // a rendu QUELQUE CHOSE, pas qu'on a rendu CET écran. Les voyants sont le contenu que
