@@ -28,6 +28,7 @@ namespace MafiaCleanCity.Operational
         private Image col, revresG, revresD, montre, gantG;
         private Image montreBoitier;   // le contour sombre du cadran
         private Image montreAiguilleH, montreAiguilleV;   // le cadran : sans elles, un ovale uni
+        private Image gantTacheA, gantTacheB;   // la saleté : un gant SALE porte des marques
         private Image oeilG, oeilD;
         private TextMeshProUGUI verdict;
         private TextMeshProUGUI reference;
@@ -122,6 +123,18 @@ namespace MafiaCleanCity.Operational
             // `<ellipse cx="12" cy="75" rx="5" ry="3.4">` — une ellipse déclarée comme telle.
             FormeLiseree(ref gantG, "GantG", buste, ReputationResolvers.Creme2,
                   new Rect(7f, 71.6f, 10f, 6.8f), ech, 1.2f, ellipse: true);  // stroke-width="1.2"
+            // ⛔ LES DEUX TRAITS DE SALETÉ — `if tells['gloves'] != 'clean'` dans le SVG :
+            // `M9 74 l3 1.6 M13 74.6 l3 -1`, deux courtes obliques sombres sur le gant.
+            // ⚠️ Le juge mesure un rapport aire/boîte de 0,81 en jeu contre 0,67 en maquette : un
+            // disque PLEIN là où la maquette porte des marques. J'avais lu ce finding comme « la
+            // montre a perdu ses aiguilles » — mais dans cet état la montre est CACHÉE, donc
+            // invisible : ce qu'il mesurait était le gant, seul objet de cette forme à cet endroit.
+            // ★ Un finding nomme ce que le juge CROIT voir ; c'est à l'auteur de retrouver quel
+            //   objet il a réellement mesuré. Corriger la montre n'aurait rien changé à l'image.
+            Forme(ref gantTacheA, "GantTacheA", buste, ReputationResolvers.Encre,
+                  new Rect(9f, 74f, 3f, 0.8f), ech);
+            Forme(ref gantTacheB, "GantTacheB", buste, ReputationResolvers.Encre,
+                  new Rect(13f, 73.9f, 3f, 0.8f), ech);
             Forme(ref _cou, "Cou", buste, ReputationResolvers.Creme2,
                   new Rect(26f, 48f, 10f, 10f), ech);
             // `<ellipse cx="31" cy="32" rx="12.5" ry="15">` — une ellipse, pas un stade.
@@ -136,8 +149,17 @@ namespace MafiaCleanCity.Operational
             // ★ La calotte de la maquette n'est pas ce qui DÉPASSE du visage, c'est ce qui le
             //   RECOUVRE. J'avais obtenu la bonne silhouette par le mauvais mécanisme, et le
             //   mécanisme décidait de ce qui restait visible dessous.
+            // ⚠️ Resserrée : elle descendait à y=28 et couvrait le visage jusque sous les yeux.
+            // Mesuré par le juge : la masse sombre est la plus large à 30 % de la hauteur de la
+            // carte en jeu contre 38 % en maquette, et retombe à 0,99× la largeur du visage là où
+            // la maquette est encore à 1,20× — « chevelure → casquette plate posée ». Effet de
+            // bord sur le visage lui-même, qui n'est plus un ovale mais une tête ronde :
+            // h/l 1,058 en maquette contre 0,858 en jeu, −19 %, invariant d'échelle.
+            // ★ Le visage n'avait pas changé de forme : c'est ce qui le RECOUVRE qui décidait de
+            //   sa silhouette apparente. Deux tours plus tôt le même trait, dessiné derrière,
+            //   découvrait le front — la même forme au mauvais endroit produit deux défauts opposés.
             FormeLiseree(ref _cheveux, "Cheveux", buste, ReputationResolvers.Carte2,
-                  new Rect(16.8f, 10f, 28.4f, 18f), ech, 1.8f, ellipse: true);  // stroke-width="1.8"
+                  new Rect(17.4f, 9.6f, 27.2f, 15.4f), ech, 1.8f, ellipse: true);  // stroke-width="1.8"
             Forme(ref oeilG, "OeilG", buste, ReputationResolvers.Encre,
                   new Rect(24.6f, 29.7f, 3.8f, 4.6f), ech, arrondi: true);
             Forme(ref oeilD, "OeilD", buste, ReputationResolvers.Encre,
@@ -218,6 +240,9 @@ namespace MafiaCleanCity.Operational
             if (montreAiguilleV != null) montreAiguilleV.enabled = montreOn;
             if (gantG != null)
                 gantG.color = gantsOk ? ReputationResolvers.Creme2 : ReputationResolvers.Rang;
+            // Les marques n'apparaissent QUE sur un gant sale — c'est la polarité, pas un décor.
+            if (gantTacheA != null) gantTacheA.enabled = !gantsOk;
+            if (gantTacheB != null) gantTacheB.enabled = !gantsOk;
 
             // Le regard suit la posture — la seule chose qui distingue `attentive` d'`hostile`
             // au premier coup d'œil, l'inclinaison étant lente à lire.

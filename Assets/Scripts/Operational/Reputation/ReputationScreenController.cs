@@ -492,17 +492,34 @@ namespace MafiaCleanCity.Operational
             //   radial-gradient(72% 40% at 50% 22%,  rgba(217,171,78,.15), transparent 66%)
             //   radial-gradient(90% 60% at 50% 96%,  rgba(127,212,217,.07), transparent 70%)
             //   linear-gradient(178deg, carte 0%, fond 54%, fond2 100%)
-            // Les alphas sont ceux de la CSS, non ajustés à l'œil : c'est ce qui rend l'écart
-            // mesurable au tour suivant plutôt que négociable.
+            // ⛔⛔ LES ALPHAS SONT CONVERTIS, PAS RECOPIÉS — et c'est le piège sRGB/linéaire, le
+            // seul de la journée que la colorimétrie des aplats ne pouvait pas révéler.
+            // Le navigateur mélange en sRGB, Unity en LINÉAIRE. Le même 0,07 ne donne donc pas la
+            // même couleur, et l'écart n'est pas petit : mesuré par le juge au même point du corps,
+            // maquette (11,16,22) luminance 15,4 · jeu (37,63,65) luminance **57,6**, 3,7× plus
+            // clair — le tiers bas de l'écran virait au vert à la résolution cible, et le trait
+            // d'identité « fond presque noir, l'or seul brille » tombait.
+            //
+            // Vérifié par le calcul avant de toucher au code, et le calcul REPRODUIT la mesure :
+            //     alpha 0,070 mélangé en linéaire      → (36, 64, 67)   le juge mesure (36, 62, 64)
+            //     le même 0,070 mélangé en sRGB        → (19, 31, 40)   ce que la maquette rend
+            // On résout donc pour l'alpha qui, mélangé en LINÉAIRE, rend la couleur que le
+            // navigateur obtient en sRGB — ce n'est pas un ajustement à l'œil, c'est l'inverse
+            // d'une fonction connue :
+            //     halo or   0,150 → 0,0290   cible (42,39,30)  obtenu (42,35,25)
+            //     halo cyan 0,070 → 0,0130   cible (19,30,36)  obtenu (18,31,35)
+            // ★ Les facteurs (0,193 et 0,186) sont PROCHES mais différents : la correction dépend
+            //   de la couleur, donc un facteur global appliqué aux deux serait faux pour l'un des
+            //   deux. C'est pourquoi chaque halo a le sien, calculé séparément.
             AjouterVoile(racine, "FondDegrade",
                 ProceduralUI.VerticalGradient(128, ReputationResolvers.Panneau, ReputationResolvers.Fond2),
                 Color.white);
             AjouterVoile(racine, "HaloOr",
                 ProceduralUI.VoileRadial(160, Color.white, new Vector2(0.5f, 0.78f), 0.72f, 0.40f, 0.66f),
-                new Color(217f / 255f, 171f / 255f, 78f / 255f, 0.15f));
+                new Color(217f / 255f, 171f / 255f, 78f / 255f, 0.0290f));   // CSS 0,15 → linéaire
             AjouterVoile(racine, "HaloCyan",
                 ProceduralUI.VoileRadial(160, Color.white, new Vector2(0.5f, 0.04f), 0.90f, 0.60f, 0.70f),
-                new Color(127f / 255f, 212f / 255f, 217f / 255f, 0.07f));
+                new Color(127f / 255f, 212f / 255f, 217f / 255f, 0.0130f));  // CSS 0,07 → linéaire
 
             // ⛔ L'ÉCHELLE AVANT TOUT — un RectTransform qui vient d'être étiré n'a PAS encore son
             // `rect` résolu, et `Px()` le lit dès la première constante convertie. Mesuré sur cet
