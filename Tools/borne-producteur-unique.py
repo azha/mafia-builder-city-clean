@@ -1,28 +1,35 @@
 #!/usr/bin/env python3
 """Asserte que la BORNE d'atteignabilité n'est DÉFINIE qu'à un seul endroit.
 
-⛔ POURQUOI CE SCRIPT EXISTE (mesuré v11→v15, quatre tours) : la borne était publiée en
-   CINQ exemplaires. Quatre tours de suite, un correctif en a mis un à jour et laissé les
-   autres — arrivée/sauvegarde, consommateur/producteur, 2D/1D. Le compte le disait déjà
-   (5 mentions, 3 justes, 2 fausses) : ce chiffre ne descend pas en corrigeant 2, il
-   descend en passant de 5 à 1.
-   ⇒ La v15 est passée à UNE définition + QUATRE citations. Mais une définition unique ne
-   tient que tant que personne ne REDIT la valeur — et le sixième exemplaire arriverait par
-   le geste le plus naturel : quelqu'un qui trouve la citation indirecte et « clarifie » en
-   recopiant. **Réduire la population n'est pas fermer la classe — ET CE DÉTECTEUR NE LA FERME PAS
-   NON PLUS.** Mesuré : sur SIX paraphrases de la borne écrites SANS marqueur, il en détecte
-   **ZÉRO** (contrôle positif sur le même harnais : 2ᵉ marqueur ⇒ exit 1 ; marqueur retiré ⇒ exit 1).
-   Sa v1 en attrapait 1 sur 6 par un motif de prose ; celle-ci en attrape 0 sur 6 — mais elle décide
-   sans ambiguïté sur ce qu'elle observe.
-   ⇒ **CE QU'IL FERME** : le sous-cas « le marqueur est dupliqué, absent ou renommé ».
-   ⇒ **CE QU'IL NE FERME PAS** : une redite SANS marqueur. **La classe reste ARBITRÉE EN REVUE.**
-   ⚠️ Et mes « trois contrôles » (marqueur présent / dupliqué / absent) sont trois variations du
-   PRÉDICAT, pas de la propriété : *un contrôle qui recopie le prédicat teste l'identité, pas la
-   couverture*. Le seul qui morde — un producteur SANS marqueur — rend 0/6.
+⛔ POURQUOI CE SCRIPT EXISTE (mesuré v11→v15, quatre tours) : la borne était publiée en CINQ
+   exemplaires. Quatre tours de suite, un correctif en a mis un à jour et laissé les autres —
+   arrivée/sauvegarde, consommateur/producteur, 2D/1D. Le compte le disait déjà (5 mentions,
+   3 justes, 2 fausses) : ce chiffre ne descend pas en corrigeant 2, il descend en passant de 5 à 1.
+   ⇒ La v15 est passée à UNE définition + QUATRE citations. Mais une définition unique ne tient
+   que tant que personne ne REDIT la valeur — et le sixième exemplaire arriverait par le geste le
+   plus naturel : quelqu'un qui trouve la citation indirecte et « clarifie » en recopiant.
 
-Sortie 1 si la définition est dupliquée, 2 si l'instrument ne peut pas mesurer.
+⛔⛔ CE QUE LA v3 FAISAIT DE TROP, ET POURQUOI C'ÉTAIT PIRE (mesuré 2026-08-31, revue ⊥).
+   Elle découpait le paragraphe du marqueur par `rfind`/`find` et comptait un motif de prose
+   DEDANS et DEHORS. Vingt lignes d'appareil positionnel — pour une propriété que DEUX comptes
+   littéraux tranchent. Et l'appareil était plus FAIBLE : sur un second producteur écrit dans une
+   forme que le motif attrape, il rendait ⚠️ **et** ✅ **et** exit 0, alors que son propre
+   commentaire disait « DEHORS on exige 0 ». *Une garde qui signale sans décider est une garde qui
+   certifie.* ⇒ Le littéral d'unité est compté DANS LE DOCUMENT ENTIER (il doit valoir 1) et SUR LA
+   LIGNE DU MARQUEUR (il doit valoir 1). Un second producteur VISIBLE fait passer le total à 2 : rouge.
+
+   ⇒ **CE QU'IL FERME** : le marqueur dupliqué, absent ou renommé ; la définition qui perd son
+      littéral ; et un second producteur qui RECOPIE le littéral — le geste que la docstring
+      donnait comme raison d'exister, et que la v3 laissait passer.
+   ⇒ **CE QU'IL NE FERME PAS** : une redite PARAPHRASÉE. Mesuré sur six paraphrases écrites sans
+      marqueur ni littéral : il en détecte ZÉRO. **La classe reste ARBITRÉE EN REVUE.**
+   ⚠️ Et des contrôles « marqueur présent / dupliqué / absent » sont trois variations du PRÉDICAT,
+      pas de la propriété : *un contrôle qui recopie le prédicat teste l'identité, pas la
+      couverture*. Le seul qui morde — un producteur sans marqueur ni littéral — rend 0/6.
+
+Sortie 1 si la définition est dupliquée ou redite, 2 si l'instrument ne peut pas mesurer.
 """
-import sys, re
+import sys
 
 path = sys.argv[1] if len(sys.argv) > 1 else 'Tools/redimensionnement-design.md'
 try:
@@ -30,70 +37,42 @@ try:
 except OSError as e:
     print(f'⛔ illisible : {e}'); sys.exit(2)
 
-# ⛔⛔ CE QUE LA v1 DE CET INSTRUMENT FAISAIT DE FAUX (mesuré par une revue ⊥, 2026-08-31) :
-#    elle matchait une TOURNURE (« PAR AXE » … « échelle du palier » à moins de 400 caractères) et
-#    la docstring annonçait une garde sur la PROPRIÉTÉ. Testée sur SIX formulations de la même
-#    proposition, elle en attrapait UNE — la sienne. Et DEUX producteurs vivaient déjà dans le
-#    fichier qu'elle déclarait propre : l'un coupé par un retour à la ligne, l'autre à 1187
-#    caractères du « PAR AXE » le plus proche.
-#    ★ Mon contrôle négatif n'avait testé que la tournure IDENTIQUE : il prouvait que le motif se
-#      reconnaît lui-même, jamais qu'il attrape la classe. *Un contrôle positif qui recopie le
-#      prédicat ne peut pas trouver le défaut qu'il existe pour trouver.*
-# ⇒ LA FORME QUI ARBITRE (et n'est PAS une forme qui ferme) : une ANCRE EXPLICITE, que la
-#    paraphrase ne peut pas produire par accident.
-#    Un auteur qui redit la borne n'écrira pas le marqueur ; s'il le copie, c'est un geste
-#    délibéré et visible en revue. On ne devine plus l'intention à partir des mots.
-MARKER = '<!-- BORNE:DEF -->'
-# Signal SECONDAIRE, tolérant aux blancs et aux tournures : il ne DÉCIDE pas, il SIGNALE, parce
-# qu'aucun motif sur de la prose ne peut prétendre couvrir la classe (c'est la leçon ci-dessus).
-UNITE = re.compile(r'(PAR\s+AXE|en\s+X\s+et\s+en\s+Y).{0,600}?(échelle\s+du\s+palier|fond\s*[·×]\s*s)',
-                   re.S | re.I)
-CONTROL = re.compile(r'atteignab', re.I)
+# ⇒ LA FORME QUI ARBITRE : une ANCRE EXPLICITE, que la paraphrase ne peut pas produire par
+#    accident. Un auteur qui redit la borne n'écrira pas le marqueur ; s'il le copie, c'est un
+#    geste délibéré et visible en revue. On ne devine plus l'intention à partir des mots.
+MARQUEUR = '<!-- BORNE:DEF -->'
+# Le littéral qui PORTE l'unité. Il ne vit que dans cette commande — jamais dans la prose d'un
+# rapport, sinon le rapport devient le second producteur (piège de citation, socle §7).
+UNITE = 'PAR AXE (X et Y)'
+CONTROLE = 'atteignab'
 
-defs = [MARKER] * text.count(MARKER)
-ctrl = CONTROL.findall(text)
+n_marq = text.count(MARQUEUR)
+n_unite = text.count(UNITE)
+ligne_def = next((l for l in text.splitlines() if MARQUEUR in l), '')
+n_unite_def = ligne_def.count(UNITE)
+n_ctrl = text.count(CONTROLE)
 
-# ⛔ LE COMPTE NU ÉTAIT UNE ALLOWLIST (revue ⊥ v17, reproduit) : `EXPECTED_SIGNAL = 1` portait sur
-#    le DOCUMENT ENTIER, donc l'état « la définition est devenue invisible au motif + un producteur
-#    survit ailleurs » se rapportait EXACTEMENT comme « la définition seule ». Mesuré : en écrivant
-#    « sur chaque axe » dans la définition — marqueur, unité et formule INTACTS — le signal tombe
-#    à 0 et l'instrument reste vert.
-# ⇒ Le compte devient POSITIONNEL : DANS le paragraphe qui porte le marqueur, et HORS de lui.
-#    DEDANS on exige exactement 1 (sinon le motif ne voit plus sa cible ⇒ exit 2, pas un vert) ;
-#    DEHORS on exige 0. Un compte nu ne peut pas distinguer ces deux mondes ; un compte ancré si.
-para_in, para_out = '', text
-if defs:
-    i = text.index(MARKER)
-    start = text.rfind('\n', 0, i) + 1
-    end = text.find('\n', i)
-    end = len(text) if end == -1 else end
-    para_in = text[start:end]
-    para_out = text[:start] + text[end:]
-sig_in = UNITE.findall(re.sub(r'\s+', ' ', para_in))
-sig_out = UNITE.findall(re.sub(r'\s+', ' ', para_out))
+print(f'  marqueurs .................... {n_marq}   (1 attendu — LA décision)')
+print(f'  littéral d unité, document ... {n_unite}   (1 attendu — un 2ᵉ producteur le ferait monter)')
+print(f'  littéral d unité, ligne déf .. {n_unite_def}   (1 attendu — sinon la déf a perdu son objet)')
+print(f'  contrôle positif ............. {n_ctrl} occurrences du témoin '
+      f'({"l instrument LIT" if n_ctrl else "RIEN LU"})')
 
-print(f'  marqueurs {MARKER} .......... {len(defs)}  (LA décision)')
-print(f'  énoncé d unité DANS la déf .. {len(sig_in)}  (exactement 1 attendu)')
-print(f'  énoncés d unité HORS la déf . {len(sig_out)}  (0 attendu — signal, ne décide pas)')
-print(f'  contrôle positif ............ {len(ctrl)} occurrences de « atteignab » '
-      f'({"l instrument LIT" if ctrl else "RIEN LU"})')
-
-if not ctrl:
-    print('⛔ contrôle positif MUET.'); sys.exit(2)
-if len(defs) == 0:
-    print('\n  ⇒ ⛔ AUCUN marqueur : la définition unique n existe pas ou a été renommée.')
-    sys.exit(1)
-if len(defs) > 1:
-    print(f'\n  ⇒ ⛔ {len(defs)} marqueurs — la classe se rouvre.')
-    sys.exit(1)
-if len(sig_in) != 1:
-    print(f'\n  ⇒ ⛔ {len(sig_in)} énoncé(s) d unité DANS la définition (1 attendu) : le motif ne voit')
-    print('     plus sa cible. Ce n est PAS un vert — c est un instrument qui a perdu son objet.')
+if not n_ctrl:
+    print('\n  ⇒ ⛔ contrôle positif MUET : l instrument ne lit pas ce fichier.'); sys.exit(2)
+if n_marq == 0:
+    print('\n  ⇒ ⛔ AUCUN marqueur : la définition unique n existe pas ou a été renommée.'); sys.exit(1)
+if n_marq > 1:
+    print(f'\n  ⇒ ⛔ {n_marq} marqueurs — la classe se rouvre.'); sys.exit(1)
+if n_unite_def != 1:
+    print(f'\n  ⇒ ⛔ la ligne du marqueur porte {n_unite_def} littéral d unité (1 attendu) : la')
+    print('     définition a perdu son objet. Ce n est PAS un vert — c est un instrument sans cible.')
     sys.exit(2)
-if sig_out:
-    print(f'\n  ⇒ ⚠️  {len(sig_out)} énoncé(s) d unité HORS la définition — un producteur a pu réapparaître.')
-    print('     Ce script NE DÉCIDE PAS là-dessus : il signale. Aller lire.')
-print('\n  ⇒ ✅ UN marqueur, UN énoncé d unité dans la définition.')
-print('     ⚠️ Une redite SANS marqueur reste indétectable (0/6 mesuré) : la classe est ARBITRÉE,')
+if n_unite > 1:
+    print(f'\n  ⇒ ⛔ {n_unite} littéraux d unité pour UNE définition : un second producteur a')
+    print('     réapparu, exactement par le geste que cet instrument existe pour attraper.')
+    sys.exit(1)
+print('\n  ⇒ ✅ UN marqueur, UN littéral d unité, et il est dans la définition.')
+print('     ⚠️ Une redite PARAPHRASÉE reste indétectable (0/6 mesuré) : la classe est ARBITRÉE,')
 print('        pas fermée — voir la docstring.')
 sys.exit(0)

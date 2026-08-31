@@ -1,4 +1,4 @@
-# Lot « redimensionnement » — **v18** — le client survit à un changement de taille en cours de vie
+# Lot « redimensionnement » — **v19** — le client survit à un changement de taille en cours de vie
 
 > **Ruling user 2026-08-30** : « supporter le redimensionnement pour de vrai ».
 > **v1 NOT_APPROVED** (5B/7M/4m) · **v2 NOT_APPROVED** (3B/5M/5m) · **v3 NOT_APPROVED** (2B/4M/6m) ·
@@ -6,7 +6,8 @@
 > **v7 NOT_APPROVED** (4B/8I/6m) · **v8 NOT_APPROVED** (5B/5I/4m) · **v9 NOT_APPROVED** (4B/5I/3m) ·
 > **v10 NOT_APPROVED** (4B/4I/4m) · **v11 NOT_APPROVED** (3B/7I/3m) ·
 > **v12 NOT_APPROVED** (3B/6I/5m) · **v13 NOT_APPROVED** (3B/4I/4m) ·
-> **v15 NOT_APPROVED** (4B/6I/6m) · **v16 NOT_APPROVED** (4B/5I/3m) · **v17 NOT_APPROVED** (4B/4I/4m). *(la v14 n'a pas été routée séparément — son delta est entré dans la v15.)*
+> **v15 NOT_APPROVED** (4B/6I/6m) · **v16 NOT_APPROVED** (4B/5I/3m) · **v17 NOT_APPROVED** (4B/4I/4m) ·
+> **v18 NOT_APPROVED** (3B/7I/4m). *(la v14 n'a pas été routée séparément — son delta est entré dans la v15.)*
 > ⛔ **CE BLOC SE TIENT PAR VERSION, JAMAIS PAR UN TOTAL RECOPIÉ** — un total se périme en silence
 > à chaque tour, et il l'a fait DEUX fois (m1 en v7, B6 en v8 : le correctif de m1 n'a pas survécu
 > à une version). **Ajouter une version OBLIGE à ajouter sa ligne** ; c'est la seule forme qui ne
@@ -130,8 +131,9 @@ pouvait pas savoir s'il y avait 2 ou 3 trous. Il y en a **2** : P4 et P5.
 ⇒ **`:1807` est l'unique hook de CINQ clusters.** C'est le fait qui tranche §3.
 ⛔⛔ **LE CRITÈRE D'APPARTENANCE À UN « CLUSTER » N'A JAMAIS ÉTÉ ÉCRIT — trouvé par R1, sept
 versions et quatre revues ⊥ après la première publication du compte.** Le document annonce
-**20 = 9 PERSIST + 11 TRANSIENT** depuis la v1 et **ne dit nulle part ce qui fait qu'un cluster
-est un cluster**. ⇒ Les trois nombres ne sont **pas reproductibles**, et personne — ni R1, ni une
+un découpage en clusters depuis la v1 — **les valeurs, leur unité et leur portée sont publiées
+par `Tools/redimensionnement-R1/R1-mesures.md`, leur producteur unique** — et **ne dit nulle part ce
+qui fait qu'un cluster est un cluster**. ⇒ Les trois nombres ne sont **pas reproductibles**, et personne — ni R1, ni une
 revue — ne peut « re-vérifier » une table dont l'appartenance n'est pas définie.
 
 **Deux critères MÉCANIQUES ont été essayés, et les deux échouent** (mesuré, portée
@@ -188,12 +190,13 @@ fin ; il n'est pas la preuve.**
 **par l'invariance de la largeur logique**, pas par le critère « recalculé à chaque appel » — le
 dire, sinon la règle a l'air de les couvrir et ne les couvre pas.
 
-⚠️⚠️ **PIÈGE ÉVITÉ EN MESURANT CECI, et il aurait été convaincant** : un balayage des sites de
-géométrie rend **20 sites « cuits »** — un nombre qui **coïncide exactement** avec les 20 clusters.
-Ce n'est **pas la même grandeur** : un cluster GROUPE plusieurs sites. Écrire « les 20 se
-retrouvent » aurait été une **forme E** — deux quantités comparées sans être mesurées dans la même
-unité — rendue crédible par une coïncidence numérique. ⇒ ***Le nombre qui tombe juste est le
-moment de vérifier l'UNITÉ, pas de conclure.***
+⚠️⚠️ **PIÈGE ÉVITÉ EN MESURANT CECI** : deux comptes de ce lot coïncident sans être la même
+grandeur, et la coïncidence rendait la confusion convaincante. **La mesure, son unité et sa portée
+vivent dans `Tools/redimensionnement-R1/R1-mesures.md`, son producteur unique** — le §7 exige unité
+et portée, et c'est ce rapport qui les porte ; ce document n'en recopie pas les nombres.
+*(B3 de la v18 : la v18 a énuméré TROIS claims vivant en double, en a fermé deux, et a laissé
+celle-ci — dont les deux copies avaient déjà divergé, la version sans portée étant ici. Le correctif
+avait été scopé aux instances que le relecteur nommait, pas à la population qu'il énumérait.)*
 
 ## 3. La reconstruction — et la garde de cadrage, RÉÉCRITE
 
@@ -550,7 +553,7 @@ alors écrire le refactor `static`→instance ET la conversion d'unités.
    `scratchpad/runA-1820.log:19530`. *Sans ancre, c'était un témoignage.*
 5. **Anti-vacuité** : nombre d'écrans éprouvés > 0 et **nommé**.
 6. ⛔ **LA CATÉGORIE DU JUGE — et la classe est plus large que l'instance.** Mesuré au commit du
-   design : **30 fichiers sur **70** ne sont joués par aucun juge** (18 hors-catégorie + 12 sans
+   design : **30 fichiers sur 70** ne sont joués par aucun juge (18 hors-catégorie + 12 sans
    catégorie). ⛔ **I3 : la v5 disait « le fichier qui porte l'instrument de ce lot est hors filtre » sans le
    nommer, et c'était FAUX pour l'instrument qu'elle utilise.** Les lignes de diagnostic dont sort
    la mesure du §5 **et** les 7 assertions du §6.3 vivent dans
@@ -670,9 +673,9 @@ annulé par le §5, sans quoi la dépendance zone-sûre de P4/P5 n'est exercée 
 
 | chunk | livrables | falsifiable | gate |
 |---|---|---|---|
-| **R1 — mesures et publications** | ① re-mesurer les ancres @HEAD, **par fichier** (§2) · ② **(a)** vérifier dans le corps les **9 PERSIST nommées** ET **(b)** énumérer les TRANSIENT par la règle d'appartenance (§2), nom + ancre, **au grain déclaré** — le compte tombe à la fin, il n'est pas la preuve *(la v8 avait perdu la moitié (a) : le corps l'assignait, la cellule ne la demandait pas — I1)* · ④ **déclarer l'unité et la portée** de chaque compte du §7 *(et NON « retirer le 19 », cf. B6)* · ⑤ imprimer les insets **après** bascule · ㉘ **la borne d'atteignabilité de S1/S2, telle que définie à la ligne 28 du plancher** *(citation — cette cellule ne REDIT plus la définition)* *(B1 de la v13 : la v13 avait corrigé les TROIS textes du CONSOMMATEUR et laissé les DEUX du PRODUCTEUR — or R1 court en PREMIER et c'est lui qui publie. Miroir exact du B1 de la v12, côtés échangés)* · ㉛ **la cadence : deux frames** · ㉚ **la conversion d'unités du cadrage** · ㉙ **les DEUX points rendus de S1** (`1920×1080` et `1280×720`) · ⑮ **la seconde largeur de capture** *(remontée de R3 en v10 — I4 : S2 en a besoin et R2 courait AVANT R3 qui la possédait. C'est la forme C dans le découpage, fermée pour la sonde du seam et jamais repassée sur la population)* · ㉖ **détecteur de c3** (§8 — les deux mondes inatteignables portent une épingle qui rougit le jour où ils deviennent testables) · ㉕ **la sonde réduite du seam** (§5 — sans elle, la décision « ne toucher au calcul d'insets QUE si le seam ne suffit pas » dépend d'un instrument qu'aucun chunk ne possède : forme C dans le découpage) · ㉔ **commiter le log** qui porte la mesure du §5 (aujourd'hui dans `scratchpad/`, non tracké ⇒ non re-dérivable) · ⑥ écrire prédicat + commande + portée + **contrôle positif par motif** du contrôle §0 · ⑱ écrire la **règle de clôture** de l'ensemble de fichiers du §0 | chaque publication porte **commande + sortie collée + unité + portée** ; contrôle positif ET négatif | revue ⊥ |
-| **R2 — production** | ⑦ l'émetteur sur le couple, mécanisme complet · ⑧ le chemin de restauration (rôle → valeur → tolérance) · ⑨ le retrait des deux énoncés datés, **avec le contrôle de retrait de R1 dans le MÊME commit** *(un numéro cerclé ne vit que dans la cellule qui le POSSÈDE — une référence croisée se nomme en toutes lettres, sinon l'oracle d'arithmétique compte une possession)* · ⑲ **écrire la conversion d'unités** des deux termes du couple (§4) · ㉓ **l'ordre de reconstruction district↔panneaux**, mesuré ou assumé (§3, m2) | ⑩ non-émission fenêtre-à-l'attachement + `1` en aval, **même scénario** · ⑪ (a) et (b) dans **deux scénarios distincts** · ⑫ anti-vacuité du cadrage par **S1 et S2 nommés** (non disjonctive), **la garde de capacité PAR SCÉNARIO** — **S1** : `PanPosition != p0` (garde de DELTA, §3 ; `!= Vector2.zero` y est **mesurée verte sous c2**, elle certifie le défaut) · **S2** : `PanPosition != Vector2.zero` **ET la borne telle que définie à la ligne 28 du plancher** *(citation)* *(référence croisée nommée en toutes lettres — un numéro cerclé ne vit que dans la cellule qui le POSSÈDE, règle posée en v10 et que je viens de re-violer ; l'instrument l'a vu, pas moi)* *(B1 de la v12 : cette cellule et la ligne 7 prescrivaient encore la « condition de DONNÉE » que la ligne 28 déclare INERTE huit lignes plus bas — j'avais rouvert le §6(b) et laissé les DEUX textes que R2 exécute réellement)* | revue ⊥ |
-| **R3 — le juge** | ⑬ choisir la catégorie, l'ajouter, **et couvrir `ChromeSafeAreaPlayModeTests` + `ChromeMultiResolutionPlayModeTests`** (cf. I2) · ⑭ publier le compte des rallumés et **classer chaque rouge** démasqué / régression · ③ publier la table des 30 non joués · ⑯ le contrôle positif de sabotage, ancré · ⑳ **zone sûre à valeurs DISTINCTES aux deux points, via le seam** (§6.2) · ㉑ **ASSERTER le débordement**, jamais l'imprimer (§6.3) | ⑰ le test visé **relancé seul par son nom complet** · ㉒ anti-vacuité : **nombre d'écrans éprouvés > 0 et nommé** (§6.5) | revue ⊥ |
+| **R1 — mesures et publications** | ① re-mesurer les ancres @HEAD, **au grain du §2 — par symbole quand c'est possible, sinon par ancre**, base déclarée par ancre *(I6 de la v18 : « par fichier » ici, « par ancre » dans l'énumération, « par symbole » dans le corps — trois granularités pour une obligation, et la cellule portait la plus grossière alors que c'est elle qu'un coder exécute)* · ② **(a)** vérifier dans le corps les **9 PERSIST nommées** ET **(b)** énumérer les TRANSIENT par la règle d'appartenance (§2), nom + ancre, **au grain déclaré**, sous la règle de preuve du §2 *(citation — cette cellule ne la REDIT plus ; balayage `Tools/claims-partagees.py`)* *(la v8 avait perdu la moitié (a) : le corps l'assignait, la cellule ne la demandait pas — I1)* · ④ **déclarer l'unité et la portée** de chaque compte du §7 *(et NON « retirer le 19 », cf. B6)* · ⑤ imprimer les insets **après** bascule · ㉘ **la borne d'atteignabilité de S1/S2, telle que définie à la ligne 28 du plancher** *(citation — cette cellule ne REDIT plus la définition)* *(B1 de la v13 : la v13 avait corrigé les TROIS textes du CONSOMMATEUR et laissé les DEUX du PRODUCTEUR — or R1 court en PREMIER et c'est lui qui publie. Miroir exact du B1 de la v12, côtés échangés)*  · ㉚ **la conversion d'unités du cadrage** · ㉙ **les DEUX points rendus de S1** (`1920×1080` et `1280×720`) · ⑮ **la seconde largeur de capture** *(remontée de R3 en v10 — I4 : S2 en a besoin et R2 courait AVANT R3 qui la possédait. C'est la forme C dans le découpage, fermée pour la sonde du seam et jamais repassée sur la population)* · ㉖ **détecteur de c3** (§8 — les deux mondes inatteignables portent une épingle qui rougit le jour où ils deviennent testables) · ㉕ **la sonde réduite du seam** (§5 — sans elle, la décision « ne toucher au calcul d'insets QUE si le seam ne suffit pas » dépend d'un instrument qu'aucun chunk ne possède : forme C dans le découpage) · ㉔ **commiter le log** qui porte la mesure du §5 (aujourd'hui dans `scratchpad/`, non tracké ⇒ non re-dérivable) · ⑥ écrire prédicat + commande + portée + **contrôle positif par motif** du contrôle §0 · ⑱ écrire la **règle de clôture** de l'ensemble de fichiers du §0 · ㉜ **le balayage exécutable qui dérive l'énumération du CORPS** (§11 — sans lui le plancher est déclaré, pas mesuré) | chaque publication porte **commande + sortie collée + unité + portée** ; contrôle positif ET négatif | revue ⊥ |
+| **R2 — production** | ⑦ l'émetteur sur le couple, mécanisme complet · ⑧ le chemin de restauration (rôle → valeur → tolérance) · ⑨ le retrait des deux énoncés datés, **avec le contrôle de retrait de R1 dans le MÊME commit** *(un numéro cerclé ne vit que dans la cellule qui le POSSÈDE — une référence croisée se nomme en toutes lettres, sinon l'oracle d'arithmétique compte une possession)* · ⑲ **écrire la conversion d'unités** des deux termes du couple (§4) · ㉓ **l'ordre de reconstruction district↔panneaux**, mesuré ou assumé (§3, m2) · ㉛ **la cadence : DEUX frames franchies** (§3 — même phrase que ㉓, même chunk : la destruction différée est un mécanisme de production) | ⑩ non-émission fenêtre-à-l'attachement + `1` en aval, **même scénario** · ⑪ (a) et (b) dans **deux scénarios distincts** · ⑫ anti-vacuité du cadrage par **S1 et S2 nommés** (non disjonctive), **la garde de capacité PAR SCÉNARIO** — **S1** : `PanPosition != p0` (garde de DELTA, §3 ; `!= Vector2.zero` y est **mesurée verte sous c2**, elle certifie le défaut) · **S2** : `PanPosition != Vector2.zero` **ET la borne telle que définie à la ligne 28 du plancher** *(citation)* *(référence croisée nommée en toutes lettres — un numéro cerclé ne vit que dans la cellule qui le POSSÈDE, règle posée en v10 et que je viens de re-violer ; l'instrument l'a vu, pas moi)* *(B1 de la v12 : cette cellule et la ligne 7 prescrivaient encore la « condition de DONNÉE » que la ligne 28 déclare INERTE huit lignes plus bas — j'avais rouvert le §6(b) et laissé les DEUX textes que R2 exécute réellement)* | revue ⊥ |
+| **R3 — le juge** | ⑬ choisir la catégorie, l'ajouter, **et couvrir les fichiers que ③ publie comme hors filtre** — la population est celle du §6.6, pas un compte écrit ici (cf. I3) *(I5 de la v18 : ⑬ portait TROIS populations — « 5 fichiers » dans l'énumération sans AUCUNE source depuis la v7, « 2 fichiers » nommés ici et nulle part dans le corps, « 30 » dans le §6.6. Onze versions, onze revues ⊥. ⇒ Un livrable ne nomme plus sa population : il POINTE celui qui la publie.)* · ⑭ publier le compte des rallumés et **classer chaque rouge** démasqué / régression · ③ publier la table des 30 non joués · ⑯ le contrôle positif de sabotage, ancré · ⑳ **zone sûre à valeurs DISTINCTES aux deux points, via le seam** (§6.2) · ㉑ **ASSERTER le débordement**, jamais l'imprimer (§6.3) | ⑰ le test visé **relancé seul par son nom complet** · ㉒ anti-vacuité : **nombre d'écrans éprouvés > 0 et nommé** (§6.5) | revue ⊥ |
 
 ⛔⛔ **B4 de la v6 — L'ÉNUMÉRATION ÉTAIT ANNONCÉE ET JAMAIS PUBLIÉE, donc les deux membres du
 contrôle sortaient ENCORE de la table.** La seule dérivation re-faisable de « 22 » était de compter
@@ -685,7 +688,8 @@ nombre, et le contrôle est décoratif dans les deux sens.*
 juger seule*. Les sous-clauses d'un même mécanisme (les 4 du §4, les 5 du §0) comptent pour **un**.
 
 **ÉNUMÉRATION PUBLIÉE — dérivée du CORPS, ancre par ancre** (c'est elle le plancher ; la table est
-l'autre membre, et les deux sont désormais construits séparément) :
+l'autre membre — et **ils ne sont PAS construits indépendamment** : voir la docstring de
+`plancher-decoupage.py`, qui en est le producteur unique) :
 
 | # | ancre du corps | obligation | chunk |
 |---|---|---|---|
@@ -699,7 +703,7 @@ l'autre membre, et les deux sont désormais construits séparément) :
 | 31 | §3 | **la CADENCE de reconstruction : DEUX frames franchies**, la destruction étant différée *(B4 de la v17 : « double `yield` » était établi au corps et absent des DEUX côtés du §11 — la seconde moitié de la phrase avait reçu son numéro (㉓, l'ordre), la première non. Huitième revue d'affilée à trouver un livrable orphelin.)* | R2 **㉛** |
 | 30 | §3 | **la CONVERSION d'unités du cadrage** — chaque membre normalisé par son propre `fondRt.rect.size × s`, mesuré aux deux bouts *(le §3 l'exigeait — « avec quelle conversion d'unités » — et aucun chunk ne la possédait ; ⑲ est celle du §4)* | R1 **㉚** |
 | 29 | §6.1 | **les DEUX points de S1, RENDUS** : `1920×1080` **et** `1280×720` *(B3 de la v12 : ㉙ n'en nommait qu'un, et « second aspect » ne force pas le second — 1920×1080 et 1280×720 ont le MÊME aspect 16:9. ⑮ ne le couvre pas non plus, il n'est justifié que par S2)* — ⑮ ne couvre que la LARGEUR et n'est justifié que par S2 ; l'obligation « DEUX LARGEURS **ET** DEUX ASPECTS » du §6.1 n'avait **aucun propriétaire**. **Troisième instance de la forme C**, ouverte par la version qui écrit que la classe « n'a jamais été repassée sur la population » | R1 **㉙** |
-| 28 | §3 | ⛔⛔ **DÉFINITION UNIQUE DE LA BORNE — tout autre endroit du document la CITE, aucun ne la REDIT.** *(v15 : quatre tours de suite, un correctif de côté a laissé le défaut de l'autre côté — arrivée/sauvegarde, consommateur/producteur, 2D/1D. Mesuré : **5 exemplaires, 0 citation**, chacun périssable indépendamment. Le correctif qui ferme la classe n'est pas un côté de plus, c'est **UN SEUL PRODUCTEUR** : une redite peut se périmer, une citation ne le peut pas. Même remède que le socle pour les types homonymes — ré-exporter depuis une source unique plutôt que corriger les deux.)* ⇒ **ET CE N'EST PAS QU'UNE CONVENTION : `Tools/borne-producteur-unique.py` l'ASSERTE.** Réduire cinq exemplaires à un ne ferme pas la classe — rien n'empêcherait un sixième, écrit par le geste le plus naturel du monde : quelqu'un qui trouve la citation indirecte et « clarifie » en recopiant. ⛔⛔ **CE QUE CE DÉTECTEUR FERME ET NE FERME PAS : voir sa propre docstring, qui en est le PRODUCTEUR UNIQUE** (`Tools/borne-producteur-unique.py`). Ce document **CITE**, il ne redit pas — *y compris pour les chiffres de couverture, que le script seul publie.* ⛔ **B2 de la v17 : cette clause les REDISAIT dans la phrase où elle jure ne pas les redire.** ★ **Pourquoi cette phrase est écrite ainsi** : trois fois de suite — v12, v14, et jusque dans ma RÉTRACTATION de la v16 — j'ai corrigé le CONSOMMATEUR en laissant le PRODUCTEUR. La cause structurelle n'est pas l'inattention : **je corrige là où le relecteur pointe**, donc le correctif est scopé au FINDING et non à la PROPRIÉTÉ. ⇒ *Le geste qui ferme n'est pas un quatrième correctif de côté : c'est d'ÉNUMÉRER LES ARTEFACTS QUI PORTENT LA CLAIM AVANT D'ÉCRIRE* — comme les cinq exemplaires de la borne ont été énumérés avant d'être réduits à un. ⛔ **Et mon « balayage » était FAUX** : j'annonçais « une seule vivait des deux côtés » ; la revue en a mesuré **TROIS** (les chiffres de couverture ci-dessus · le « ce que la bijection prouve/ne prouve pas » de `plancher-decoupage.py`, dont les deux copies **ont déjà divergé** · le piège « 20 cuits = 20 clusters » partagé avec `R1-mesures.md`). ⇒ **La cause structurelle que ce paragraphe diagnostique s'est rejouée DANS le paragraphe qui la diagnostique** : j'ai appliqué la forme au détecteur que le relecteur nommait, et à aucun autre. ⇒ **Ce que la bijection prouve et ne prouve pas est désormais produit par la docstring de `plancher-decoupage.py` ; ce document la CITE.** <!-- BORNE:DEF --> **LA BORNE** = l'atteignable **PAR AXE (X et Y)**, aux deux bouts de chaque scénario, publiée en valeurs, **en fraction de la dimension de CONTENU à l'échelle du palier** (`p/(fond·s)`) *(remplace la « condition de DONNÉE » de la v11 : **㉘ était INERTE** — `ClampPan` annule `initialFocus` à ×1 dans les deux formats portrait, donc un barycentre décentré ne produit **aucun** observable ; et `initialFocus` est une **variable locale sans accesseur**, donc non assertable sans changement de production)* | R1 **㉘** |
+| 28 | §3 | ⛔⛔ **DÉFINITION UNIQUE DE LA BORNE — tout autre endroit du document la CITE, aucun ne la REDIT.** *(v15 : quatre tours de suite, un correctif de côté a laissé le défaut de l'autre côté — arrivée/sauvegarde, consommateur/producteur, 2D/1D. Mesuré : **5 exemplaires, 0 citation**, chacun périssable indépendamment. Le correctif qui ferme la classe n'est pas un côté de plus, c'est **UN SEUL PRODUCTEUR** : une redite peut se périmer, une citation ne le peut pas. Même remède que le socle pour les types homonymes — ré-exporter depuis une source unique plutôt que corriger les deux.)* ⇒ **ET CE N'EST PAS QU'UNE CONVENTION : `Tools/borne-producteur-unique.py` l'ASSERTE.** Réduire cinq exemplaires à un ne ferme pas la classe, et **le geste par lequel un sixième arriverait est NOMMÉ par la docstring de l'instrument, son producteur unique — ce paragraphe ne le redit plus**. *(Balayage mécanique du 2026-08-31 : cette phrase vivait mot pour mot dans les deux artefacts. La v19 corrigeait B2 huit lignes plus haut au moment même où elle laissait cette instance-ci — le motif que B2 diagnostique, dans le correctif de B2.)* ⛔⛔ **CE QUE CE DÉTECTEUR FERME ET NE FERME PAS : voir sa propre docstring, qui en est le PRODUCTEUR UNIQUE** (`Tools/borne-producteur-unique.py`). Ce document **CITE**, il ne redit pas — *y compris pour les chiffres de couverture, que le script seul publie.* ⛔ **B2 de la v17 : cette clause les REDISAIT dans la phrase où elle jure ne pas les redire.** ★ **Pourquoi cette phrase est écrite ainsi** : trois fois de suite — v12, v14, et jusque dans ma RÉTRACTATION de la v16 — j'ai corrigé le CONSOMMATEUR en laissant le PRODUCTEUR. La cause structurelle n'est pas l'inattention : **je corrige là où le relecteur pointe**, donc le correctif est scopé au FINDING et non à la PROPRIÉTÉ. ⇒ *Le geste qui ferme n'est pas un quatrième correctif de côté : c'est d'ÉNUMÉRER LES ARTEFACTS QUI PORTENT LA CLAIM AVANT D'ÉCRIRE* — comme les cinq exemplaires de la borne ont été énumérés avant d'être réduits à un. ⛔ **Et mon « balayage » était FAUX** : j'annonçais « une seule vivait des deux côtés » ; la revue en a mesuré **TROIS** (les chiffres de couverture ci-dessus · le « ce que la bijection prouve/ne prouve pas » de `plancher-decoupage.py`, dont les deux copies **ont déjà divergé** · le piège « 20 cuits = 20 clusters » partagé avec `R1-mesures.md`). ⇒ **La cause structurelle que ce paragraphe diagnostique s'est rejouée DANS le paragraphe qui la diagnostique** : j'ai appliqué la forme au détecteur que le relecteur nommait, et à aucun autre. ⇒ **Ce que la bijection prouve et ne prouve pas est désormais produit par la docstring de `plancher-decoupage.py` ; ce document la CITE.** <!-- BORNE:DEF --> **LA BORNE** = l'atteignable **PAR AXE (X et Y)**, aux deux bouts de chaque scénario, publiée en valeurs, **en fraction de la dimension de CONTENU à l'échelle du palier** (`p/(fond·s)`) *(remplace la « condition de DONNÉE » de la v11 : **㉘ était INERTE** — `ClampPan` annule `initialFocus` à ×1 dans les deux formats portrait, donc un barycentre décentré ne produit **aucun** observable ; et `initialFocus` est une **variable locale sans accesseur**, donc non assertable sans changement de production)* | R1 **㉘** |
 | 8 | §4 | émetteur sur le couple, mécanisme complet | R2 ⑦ |
 | 9 | §4 | conversion d'unités des deux termes | R2 ⑲ |
 | 10 | §4 | assertion de non-émission, fenêtre à l'attachement | R2 ⑩ |
@@ -713,12 +717,13 @@ l'autre membre, et les deux sont désormais construits séparément) :
 | 16 | §6.3 | ASSERTER le débordement | R3 ㉑ |
 | 17 | §6.4 | contrôle positif de sabotage, ancré | R3 ⑯ |
 | 18 | §6.5 | anti-vacuité : écrans éprouvés > 0 et nommé | R3 ㉒ |
-| 19 | §6.6 | choisir la catégorie, l'ajouter, couvrir les 5 fichiers hors filtre | R3 ⑬ |
+| 19 | §6.6 | choisir la catégorie, l'ajouter, couvrir les fichiers hors filtre **que ③ publie** | R3 ⑬ |
 | 20 | §6.6 | publier la table des 30 | R3 ③ |
 | 21 | §6.6 | publier les rallumés et classer chaque rouge | R3 ⑭ |
 | 22 | §6.6 | relancer le test visé seul par son nom complet | R3 ⑰ |
 | 23 | §7 | déclarer unité et portée de chaque compte | R1 ④ |
 | 24 | §0/§2 | retrait des deux énoncés datés, contrôle dans le MÊME commit | R2 ⑨ |
+| 32 | §11 | **balayage exécutable dérivant l'énumération du CORPS**, sortie publiée et comparée à la table | R1 **㉜** |
 
 ⛔⛔ **B1 de la v10 — LE DOCUMENT AFFIRMAIT « 25 = 25 » PENDANT QUE SON PROPRE INSTRUMENT, RÉPARÉ
 DANS LE MÊME LOT, RENDAIT 27.** La v10 a durci l'instrument *parce qu'il était inerte*, et **n'a
@@ -734,14 +739,21 @@ dépôt est un témoignage*), avec son jeu de symboles **EXPLICITE** et non une 
 
 ⛔⛔ **B2 de la v8 — ET CE CONTRÔLE NE FERME PAS LA CLASSE QU'IL A L'AIR DE FERMER.** La v8
 affirmait que ses deux membres venaient de « sources DIFFÉRENTES ». **C'est faux** : l'énumération
-et la table sont écrites dans le même §11, à la suite, par la même main. Un livrable oublié **des
-DEUX côtés** reste invisible — et la revue en a trouvé un (la sonde du seam, B3, désormais ㉕).
+et la table sortent du même §11. **Ce que cela empêche l'instrument de prouver est écrit dans sa
+docstring, son producteur unique** — et la revue l'a payé une fois (la sonde du seam, B3, désormais ㉕).
+*(B2 de la v18 : la v18 avait retiré la phrase ÉTIQUETÉE « ce que la bijection prouve » et laissé, deux
+lignes plus haut, la phrase PORTEUSE de la même proposition. Le geste avait déplacé l'étiquette, pas le
+producteur.)*
 ⇒ **Ce que la bijection prouve et ne prouve pas : voir la docstring de `plancher-decoupage.py`, son PRODUCTEUR UNIQUE.** *(B2 de la v17 : les deux copies de cette affirmation avaient DÉJÀ DIVERGÉ — « complet » ici, « dérivé du corps indépendamment de la table » là-bas, qui ne sont pas la même proposition.)* *Un dispositif qui nomme un mécanisme réel
 est le plus dangereux de sa famille — un lecteur vérifie qu'il existe, le trouve vert, et conclut.*
-⇒ **Le geste qui fermerait vraiment B2** — et il n'est PAS fait : dériver l'énumération du corps
-par un **balayage exécutable** (tout impératif non conditionnel des §0–§8), publier sa sortie, et
-la comparer à la table. Tant qu'il n'existe pas, **le plancher est déclaré, pas mesuré**, et cette
+⇒ **Le geste qui ferme vraiment B2 est désormais un LIVRABLE — ㉜, à R1** : dériver l'énumération du
+corps par un **balayage exécutable** (tout impératif non conditionnel des §0–§8), publier sa sortie, et
+la comparer à la table. Tant qu'il n'est pas livré, **le plancher est déclaré, pas mesuré**, et cette
 ligne le dit à la place d'un ✅.
+*(I7 de la v18 : cette obligation avait son prédicat, sa sortie attendue et sa comparaison — et zéro
+numéro, zéro ligne d'énumération, zéro cellule. **QUATRIÈME instance de la forme C**, dans le paragraphe
+qui ferme le bloquant le plus ancien du document. Le §5 possédait déjà la forme — « hors plancher tant
+qu'il est conditionnel, mais il a un paragraphe » — et ne se l'était pas appliquée.)*
 
 ⚠️ **Contrôle de cohérence de propriétaire** (absent de la v5, qui disait « R3 publie la table des
 30 » dans le corps et l'assignait à R1 dans la table) : tout « R\<i\> fait X » du corps doit
