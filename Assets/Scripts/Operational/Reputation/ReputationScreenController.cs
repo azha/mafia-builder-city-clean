@@ -137,6 +137,8 @@ namespace MafiaCleanCity.Operational
         //    boîte et le buste passait par-dessus le verdict.
         private const float CssHMiroir    = 188f;
         private const float CssHRegleVide =  60f;   // l'état « rien » ; une liste pleine vaut n × 30
+        private const float CssPiedPadHaut =  9f;   // `.pied{padding:9px 13px 14px}`
+        private const float CssPiedPadBas  = 14f;
         private const float CssHauteurCadre = 462f;  // `reputation(cadre, H=462)`
         private const float CssEnseignePadX = 11f;  // `.enseigne{padding:7px 11px 8px}`
         private const float CssRefletY    = 62f;   // 34,7 % de la course de `%(p)s-scan`
@@ -567,8 +569,17 @@ namespace MafiaCleanCity.Operational
             // blocs successifs (chassis6.py), converties par EchelleMaquette.
             VerticalLayoutGroup pile = corpsGo.AddComponent<VerticalLayoutGroup>();
             pile.spacing = Px(CssEcartBloc);
+            // ⛔ AUCUNE MARGE BASSE SUR LE CADRE. Tous les blocs de la maquette portent
+            // `margin:<n>px 13px 0` — une marge HAUTE et zéro en bas (chassis6.py:111/118/126/132) ;
+            // l'espace sous le bouton vient du `padding-bottom:14px` du pied, pas du cadre.
+            // ⚠️ J'y ajoutais 9 px CSS, et ils se voyaient : bande sous le bouton mesurée à 31,39
+            // px CSS pour 9,00 en maquette, puis 18,06 après avoir garni le pied — l'écart résiduel
+            // valait exactement le padding de trop.
+            // ★ Une marge basse est invisible tant qu'un bloc élastique la mange. Ici le cadre a
+            //   une hauteur fixe : chaque padding se paie, et se voit à l'endroit le plus visible
+            //   de l'écran — sous le bouton d'action.
             pile.padding = new RectOffset(PxTrait(CssMargeH), PxTrait(CssMargeH),
-                                          PxTrait(CssEnseigneHaut), PxTrait(CssPiedHaut));
+                                          PxTrait(CssEnseigneHaut), 0);
             pile.childControlWidth = true;  pile.childControlHeight = true;
             pile.childForceExpandWidth = true; pile.childForceExpandHeight = false;
 
@@ -1075,10 +1086,9 @@ namespace MafiaCleanCity.Operational
         private void ConstruirePied(Transform parent)
         {
             GameObject go = NouveauUI("Pied", parent);
-            LayoutElement hle = go.AddComponent<LayoutElement>();
-            hle.minHeight = Px(CssHPied);
-            hle.preferredHeight = Px(CssHPied);
-            hle.flexibleHeight = 0f;   // hauteur FIXE : ne s'étire pas
+            // ⚠️ UN SEUL LayoutElement — il y en avait DEUX sur ce même GameObject, l'un posé à
+            // 52 px CSS et l'autre à la hauteur du bouton. Deux composants de layout sur un objet
+            // ne se moyennent pas : l'un gagne, et lequel ne se lit nulle part dans le code.
             GameObject cta = NouveauUI("CtaDonnerRegle", go.transform);
             Image fond = AjouterImage(cta);
             fond.color = ReputationResolvers.Carte2;
@@ -1100,10 +1110,20 @@ namespace MafiaCleanCity.Operational
             le.preferredHeight = Px(CssCtaCorps + 2f * CssCtaPad);
             // Le PIED lui-même doit réserver sa hauteur au layout de `corps`, sinon il se réduit
             // à zéro et le CTA déborde hors du cadre — mesuré sur la capture du run 14.
+            // ⛔ LE PADDING DU PIED EST ASYMÉTRIQUE : `.pied{padding:9px 13px 14px}` — 9 au-dessus
+            // du bouton, 14 en dessous. Je n'en posais aucun, donc le bouton se collait en haut de
+            // son bloc et tout le reste s'ouvrait sous lui.
+            // ⚠️ Mesuré des deux côtés avec le même instrument : la bande entre le bas du bouton et
+            // le bas du cadre vaut 9,00 px CSS en maquette et 31,39 en jeu — ×3,5. Un bandeau vide
+            // et clair barrait le bas du cadre doré, et le bouton n'ancrait plus rien.
+            // ★ Le bloc avait pourtant la BONNE hauteur (52). C'est sa garniture interne qui
+            //   manquait — une hauteur juste ne dit rien de ce qui se passe à l'intérieur.
             LayoutElement pied = go.AddComponent<LayoutElement>();
-            pied.minHeight = Px(CssCtaCorps + 2f * CssCtaPad + CssPiedHaut);
+            pied.minHeight = Px(CssPiedPadHaut + CssCtaCorps + 2f * CssCtaPad + CssPiedPadBas);
             pied.preferredHeight = pied.minHeight;
+            pied.flexibleHeight = 0f;
             VerticalLayoutGroup vp = go.AddComponent<VerticalLayoutGroup>();
+            vp.padding = new RectOffset(0, 0, PxTrait(CssPiedPadHaut), PxTrait(CssPiedPadBas));
             vp.childControlWidth = true; vp.childControlHeight = true;
             vp.childForceExpandWidth = true; vp.childForceExpandHeight = false;
         }

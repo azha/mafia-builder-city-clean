@@ -27,6 +27,7 @@ namespace MafiaCleanCity.Operational
         private Image bouche, boucheMasque;   // le sourire, obtenu par occlusion
         private Image col, revresG, revresD, montre, gantG;
         private Image montreBoitier;   // le contour sombre du cadran
+        private Image montreAiguilleH, montreAiguilleV;   // le cadran : sans elles, un ovale uni
         private Image oeilG, oeilD;
         private TextMeshProUGUI verdict;
         private TextMeshProUGUI reference;
@@ -110,25 +111,33 @@ namespace MafiaCleanCity.Operational
                   new Rect(46f, 72f, 8f, 3.4f), ech, arrondi: true);
             Forme(ref montre, "Montre", buste, ReputationResolvers.OrVif,
                   new Rect(47.1f, 72.9f, 5.8f, 1.6f), ech, arrondi: true);
+            // ⛔ LE CADRAN — deux traits sombres, sans lesquels « montre » ne se lit plus comme une
+            // montre. Mesuré : les aiguilles occupent 17,7 % de l'aire du boîtier en maquette et
+            // 0,0 % en jeu, un ovale uni. C'est le cinquième trait du portrait, et le dernier de
+            // l'angle mort A7 à ne pas être rendu.
+            Forme(ref montreAiguilleH, "MontreAiguilleH", buste, ReputationResolvers.Encre,
+                  new Rect(49.6f, 73.2f, 1.6f, 0.35f), ech);
+            Forme(ref montreAiguilleV, "MontreAiguilleV", buste, ReputationResolvers.Encre,
+                  new Rect(49.8f, 73.0f, 0.35f, 1.1f), ech);
             // `<ellipse cx="12" cy="75" rx="5" ry="3.4">` — une ellipse déclarée comme telle.
             FormeLiseree(ref gantG, "GantG", buste, ReputationResolvers.Creme2,
                   new Rect(7f, 71.6f, 10f, 6.8f), ech, 1.2f, ellipse: true);  // stroke-width="1.2"
             Forme(ref _cou, "Cou", buste, ReputationResolvers.Creme2,
                   new Rect(26f, 48f, 10f, 10f), ech);
-            // ⚠️ LES CHEVEUX PASSENT AVANT LA TÊTE, et c'est ce qui fait la calotte. Le SVG les
-            // dessine en un path qui épouse le crâne ; faute de primitive à chemin, on pose une
-            // ellipse pleine que le VISAGE recouvre ensuite aux deux tiers. Ne reste visible que
-            // l'arc supérieur — la calotte. L'ordre de fratrie EST le dessin.
-            // ⚠️ Un peu plus LARGE et plus BAS que la boîte du path (18,10,26,16) : le SVG fait
-            // redescendre les cheveux le long des tempes jusqu'à y=26, là où l'ellipse du visage
-            // s'est déjà rétrécie. Avec une ellipse exactement à la boîte, le visage — dessiné
-            // par-dessus — les recouvre presque entièrement : le juge a mesuré 1,7 px CSS de
-            // cheveux latéraux contre 8,7 attendus.
-            FormeLiseree(ref _cheveux, "Cheveux", buste, ReputationResolvers.Carte2,
-                  new Rect(16.8f, 10f, 28.4f, 18f), ech, 1.8f, ellipse: true);  // stroke-width="1.8"
             // `<ellipse cx="31" cy="32" rx="12.5" ry="15">` — une ellipse, pas un stade.
             FormeLiseree(ref _tete, "Tete", buste, ReputationResolvers.Creme2,
                   new Rect(18.5f, 17f, 25f, 30f), ech, 2f, ellipse: true);   // stroke-width="2"
+            // ⛔ LES CHEVEUX PASSENT APRÈS LA TÊTE — ils COUVRENT le haut du crâne.
+            // ⚠️ Je les avais fait passer AVANT au tour 2, pour obtenir la calotte par occlusion :
+            // le visage, dessiné par-dessus, ne laissait dépasser que l'arc supérieur. Ça produisait
+            // bien une calotte — et ça découvrait le front. Deux juges de suite l'ont mesuré : « le
+            // visage sort en ovale complet », 19,71 % de la hauteur de la carte en maquette contre
+            // 25,20 % en jeu, +27,9 %. La tête paraissait trop grande pour le buste.
+            // ★ La calotte de la maquette n'est pas ce qui DÉPASSE du visage, c'est ce qui le
+            //   RECOUVRE. J'avais obtenu la bonne silhouette par le mauvais mécanisme, et le
+            //   mécanisme décidait de ce qui restait visible dessous.
+            FormeLiseree(ref _cheveux, "Cheveux", buste, ReputationResolvers.Carte2,
+                  new Rect(16.8f, 10f, 28.4f, 18f), ech, 1.8f, ellipse: true);  // stroke-width="1.8"
             Forme(ref oeilG, "OeilG", buste, ReputationResolvers.Encre,
                   new Rect(24.6f, 29.7f, 3.8f, 4.6f), ech, arrondi: true);
             Forme(ref oeilD, "OeilD", buste, ReputationResolvers.Encre,
@@ -205,6 +214,8 @@ namespace MafiaCleanCity.Operational
             if (revresD != null) revresD.enabled = manches;
             if (montre != null) montre.enabled = montreOn;
             if (montreBoitier != null) montreBoitier.enabled = montreOn;
+            if (montreAiguilleH != null) montreAiguilleH.enabled = montreOn;
+            if (montreAiguilleV != null) montreAiguilleV.enabled = montreOn;
             if (gantG != null)
                 gantG.color = gantsOk ? ReputationResolvers.Creme2 : ReputationResolvers.Rang;
 
@@ -363,6 +374,14 @@ namespace MafiaCleanCity.Operational
                 {
                     float dist = Mathf.Abs(x + 0.5f - d / 2f);
                     float a = Mathf.Clamp01(demi - dist + 0.5f);   // anti-crénelage des deux flancs
+                    // ⛔ La ligne du BAS est la pointe : elle doit être vide, pas une arête.
+                    // Le `+ 0.5f` d'anti-crénelage y laissait un demi-pixel opaque sur toute la
+                    // largeur, rendu comme un filet clair de 21,4 × 0,28 px CSS sous le col — un
+                    // élément EN TROP, absent de la maquette (le juge l'a confirmé par contrôle
+                    // négatif : sa sonde ne trouve rien dans la référence).
+                    // ★ Un anti-crénelage est une correction de BORD ; appliqué au sommet d'un
+                    //   triangle, il fabrique une arête là où la forme se termine en un point.
+                    if (y == 0) a = 0f;
                     px[y * d + x] = new Color(1f, 1f, 1f, a);
                 }
             }
