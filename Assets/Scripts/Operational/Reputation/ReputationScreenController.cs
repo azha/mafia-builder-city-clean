@@ -1136,11 +1136,18 @@ namespace MafiaCleanCity.Operational
             // ★ Le bloc avait pourtant la BONNE hauteur (52). C'est sa garniture interne qui
             //   manquait — une hauteur juste ne dit rien de ce qui se passe à l'intérieur.
             LayoutElement pied = go.AddComponent<LayoutElement>();
-            pied.minHeight = Px(CssPiedPadHaut + CssCtaCorps + 2f * CssCtaPad + CssPiedPadBas);
+            pied.minHeight = Px(CssCtaCorps + 2f * CssCtaPad + CssPiedPadBas);
             pied.preferredHeight = pied.minHeight;
             pied.flexibleHeight = 0f;
             VerticalLayoutGroup vp = go.AddComponent<VerticalLayoutGroup>();
-            vp.padding = new RectOffset(0, 0, PxTrait(CssPiedPadHaut), PxTrait(CssPiedPadBas));
+            // ⛔ PADDING HAUT À ZÉRO : la gouttière du VerticalLayoutGroup fait DÉJÀ les 9 px CSS.
+            // Dans la maquette, `.pied` est le seul bloc sans `margin-top` — son `padding:9px`
+            // REMPLACE la marge, il ne s'y ajoute pas. En posant les deux, j'empilais 9 + 9.
+            // ⚠️ Mesuré par le juge : 18,3 px CSS au-dessus du bouton pour 9,4 en maquette, +95 %.
+            // ★ Traduire une règle CSS composant par composant fait perdre ce que la cascade
+            //   arbitrait : ici, que ce bloc-ci prend son espace par le padding et les autres par
+            //   la marge. Deux mécanismes pour un même espacement, et j'ai appliqué les deux.
+            vp.padding = new RectOffset(0, 0, 0, PxTrait(CssPiedPadBas));
             vp.childControlWidth = true; vp.childControlHeight = true;
             vp.childForceExpandWidth = true; vp.childForceExpandHeight = false;
         }
