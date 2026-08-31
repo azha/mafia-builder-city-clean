@@ -58,5 +58,13 @@ if len(defs) == 0:
 if len(defs) > 1:
     print(f'\n  ⇒ ⛔ {len(defs)} marqueurs — la classe se rouvre.')
     sys.exit(1)
+EXPECTED_SIGNAL = 2   # PLANCHER IRRÉDUCTIBLE, mesuré : 1 définition + 1 RÉCIT de la faute d'unité.
+# ⚠️ Le récit ne peut PAS descendre à 0 : expliquer une erreur d'unité exige d'énoncer l'unité —
+#    c'est le piège de citation du socle (« décrire un correctif est un acte de citation »), et il
+#    est ici IRRÉDUCTIBLE, pas négligé. Un signal > 2 mérite qu'on aille voir ; un signal de 2 est
+#    l'état sain. On l'écrit plutôt que de laisser un lecteur croire que 0 serait l'objectif.
+if len(signals) > EXPECTED_SIGNAL:
+    print(f'\n  ⚠️  {len(signals)} énoncés d unité (plancher {EXPECTED_SIGNAL}) — un producteur a pu réapparaître.')
+    print('     Ce script NE DÉCIDE PAS là-dessus : il signale. Aller lire.')
 print(f'\n  ⇒ ✅ UN marqueur. ⚠️ Et {len(signals)} énoncés d unité subsistent en prose : ce script')
 print('     NE PEUT PAS dire s ils citent ou redisent — il décide sur le MARQUEUR, pas sur les mots.')

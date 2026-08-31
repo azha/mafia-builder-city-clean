@@ -321,8 +321,7 @@ reste contain, ×1 reste ×1*. La règle de restauration s'écrit donc en trois 
    AXE plus loin. *J'ai écrit la propriété en 2D et je l'ai publiée en 1D.*
 
    **ATTEIGNABLE NORMALISÉ, PAR AXE** — ⛔ **B3 de la v13 : mon libellé était FAUX D'UN FACTEUR `s`.**
-   Il disait « fraction de la dimension du **fond** » ; le diviseur réel est le contenu **À L'ÉCHELLE
-   DU PALIER** (`fond × s`). Mesuré à `1080×1920` ×2 : borne locale `[640,00 ; 1137,78]` ⇒ `/fond` =
+   Il disait « fraction de la dimension du **fond** » ; le diviseur réel est celui que **définit la rangée `BORNE:DEF`** *(récit de la faute — la valeur du diviseur n'est PAS redite ici, sinon ce paragraphe redeviendrait un producteur)*. Mesuré à `1080×1920` ×2 : borne locale `[640,00 ; 1137,78]` ⇒ `/fond` =
    **0,5000**, `/(fond×s)` = **0,2500** — et c'est **0,2500** que la table publie. ⚠️ **À ×1 les deux lectures coïncident**, donc l'erreur est invisible exactement là où on la
    vérifierait d'abord. ⇒ ***COROLLAIRE, à appliquer à toute vérification d'unité de ce lot : la
    contrôler à un palier où le facteur DIFFÈRE DE 1.*** Le point de contrôle naturel — le palier de
@@ -332,7 +331,7 @@ reste contain, ×1 reste ×1*. La règle de restauration s'écrit donc en trois 
    ⇒ **Et la comparaison exige une CONVERSION** : `p_départ` est en unités locales de DÉPART,
    `A_arrivée` une fraction. Chaque membre se normalise **par son propre `fondRt.rect.size × s`,
    mesuré à son bout, jamais recopié** — livrable **㉚**.
-   (unité : fraction de la dimension de CONTENU à l'échelle du palier, `p/(fond·s)`) :
+   (unité : **celle que définit la rangée `BORNE:DEF` du plancher** — cette étiquette CITE, elle ne redit pas) :
 ```
    viewport          X ×1      Y ×1      X ×2      Y ×2
    1920×1080       0,0000    0,2188    0,0556    0,3594
