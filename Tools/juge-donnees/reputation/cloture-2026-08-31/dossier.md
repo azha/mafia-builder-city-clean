@@ -58,7 +58,7 @@ mafia-clean-city-bo-front-1  Up 10 minutes (healthy)
 - **Rapport `juge-visuel` APPROUVÉ** : ⏳ **NON FOURNI À CETTE HEURE** — le juge visuel n'a pas
   encore rendu. Ce dossier est monté d'avance ; il ne doit pas être instruit tant que cette ligne
   n'est pas remplacée par un chemin réel. Le mode clôture EXIGE l'approbation visuelle en amont.
-- **SHA du client** : `d2fb5ba` · suite PlayMode ScreenB3 : **9/9** au run 28, filtre `MAFIA_CI_CATEGORIES=ScreenB3`
+- **SHA du client** : `603c6f9` · suite PlayMode ScreenB3 : **9/9** au run 28, filtre `MAFIA_CI_CATEGORIES=ScreenB3`
   imprimé dans le log (`passed=9 failed=0 skipped=0`) — un compte, pas une absence d'échec.
 
 ## Écarts ASSUMÉS déjà connus (le juge les re-vérifie, il ne les recopie pas)
@@ -69,6 +69,34 @@ mafia-clean-city-bo-front-1  Up 10 minutes (healthy)
 | `restraint` absente | la branche existe mais aucune route ne liste les contreparties : `counterparty_id` n'est pas obtenable par un chemin joueur | angle mort A6 |
 | 4 couleurs locales | `Encre`, `Panneau`, `Liseré`, `Vert` n'existent pas dans `DesignTokens` ; arbitrage DA escaladé à l'user, non tranché | `Tools/screen-b3-diagnostic-designtokens.md` |
 | états `drifting`/`hostile`/`wary` | code écrit, JAMAIS exécuté par un test — dette assumée et déclarée, pas couverture | angle mort A5 |
+
+## ⚠️ LA PILE EST PARTAGÉE — épingle tes comptes sur TON joueur
+
+Trois autres sessions travaillent sur cette machine et cette base. Ton compte fraîchement créé n'y
+gêne personne, mais **tout dénombrement doit être filtré sur le `player_id` que TU viens de créer**,
+jamais pris sur une table entière.
+
+⛔ `SELECT count(*) FROM <table>` répond sur ce que TOUTES les sessions y ont laissé. Un tel chiffre
+est vrai et ne dit rien de cet écran. Cette base porte par exemple plus de 36 000 bâtiments, dont
+treize seulement appartiennent au joueur de démonstration.
+
+★ Le motif a déjà coûté cher ici aujourd'hui : une requête dérivée d'une autre avait perdu la moitié
+de son scope — le `DELETE` filtrait sur `player_id` ET sur le district, la requête dérivée n'avait
+gardé que le district, et elle aurait touché 17 751 lignes appartenant à d'autres joueurs au lieu
+de 3. **Un scope à moitié recopié ressemble exactement à un scope entier.**
+
+⇒ Et si tu comptes des lignes affectées par une écriture, **déclare le compte attendu et vérifie-le**
+(`attendu 3, obtenu 3`) : une divergence doit arrêter la mesure, pas la laisser passer.
+
+## ⚠️ Ce que les huit tours de juge visuel ont établi, et que tu n'as PAS à re-mesurer
+
+Le juge visuel a certifié l'IMAGE : couleurs au jeton près, hauteurs, positions, stabilité entre
+T et T+1 s, tenue aux deux résolutions. **Ton périmètre est différent et complémentaire** : ce que
+le back PORTE, ce que la maquette MONTRE, ce que le front AFFICHE — et les trous entre les trois.
+
+⇒ Ne re-juge pas l'esthétique. Cherche les défauts de COUVERTURE : une clé disponible dans le corps
+de réponse et dessinée nulle part · une valeur affichée qui ne vient d'aucune source · un libellé
+inventé là où le serveur ne projette rien.
 
 ## Ce qui N'EST PAS fourni — et ne doit pas être cherché
 
