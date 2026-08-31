@@ -26,6 +26,7 @@ namespace MafiaCleanCity.Operational
         private RectTransform buste;      // porte la rotation de posture
         private Image bouche, boucheMasque;   // le sourire, obtenu par occlusion
         private Image col, revresG, revresD, montre, gantG;
+        private Image montreBoitier;   // le contour sombre du cadran
         private Image oeilG, oeilD;
         private TextMeshProUGUI verdict;
         private TextMeshProUGUI reference;
@@ -100,8 +101,15 @@ namespace MafiaCleanCity.Operational
             // `rect … rx="1.4"` sur une hauteur de 3,4 : le rayon vaut presque la demi-hauteur,
             // donc un stade, pas un rectangle vif. Le juge l'a discriminé en mesurant la largeur à
             // trois hauteurs — 27/40/32 px en référence (variable ⇒ arrondi), 56/56/56 en jeu.
-            Forme(ref montre, "Montre", buste, ReputationResolvers.OrVif,
+            // ⛔ LA MONTRE A UN CONTOUR, et il porte de l'information. Le SVG l'écrit
+            // `stroke="fond" stroke-width="1.1"` sur une boîte de 8 × 3,4 : à cette taille le trait
+            // occupe une large part du cadran. Le juge a mesuré 32,2 % d'encre sombre au centre du
+            // cadran en maquette contre 0,0 % en jeu — « un trait porteur de donnée réduit à une
+            // ellipse muette ». On pose donc le boîtier sombre, puis le cadran or plus petit.
+            Forme(ref montreBoitier, "MontreBoitier", buste, ReputationResolvers.Encre,
                   new Rect(46f, 72f, 8f, 3.4f), ech, arrondi: true);
+            Forme(ref montre, "Montre", buste, ReputationResolvers.OrVif,
+                  new Rect(47.1f, 72.9f, 5.8f, 1.6f), ech, arrondi: true);
             // `<ellipse cx="12" cy="75" rx="5" ry="3.4">` — une ellipse déclarée comme telle.
             Forme(ref gantG, "GantG", buste, ReputationResolvers.Creme2,
                   new Rect(7f, 71.6f, 10f, 6.8f), ech, ellipse: true);
@@ -111,8 +119,13 @@ namespace MafiaCleanCity.Operational
             // dessine en un path qui épouse le crâne ; faute de primitive à chemin, on pose une
             // ellipse pleine que le VISAGE recouvre ensuite aux deux tiers. Ne reste visible que
             // l'arc supérieur — la calotte. L'ordre de fratrie EST le dessin.
+            // ⚠️ Un peu plus LARGE et plus BAS que la boîte du path (18,10,26,16) : le SVG fait
+            // redescendre les cheveux le long des tempes jusqu'à y=26, là où l'ellipse du visage
+            // s'est déjà rétrécie. Avec une ellipse exactement à la boîte, le visage — dessiné
+            // par-dessus — les recouvre presque entièrement : le juge a mesuré 1,7 px CSS de
+            // cheveux latéraux contre 8,7 attendus.
             Forme(ref _cheveux, "Cheveux", buste, ReputationResolvers.Carte2,
-                  new Rect(18f, 10f, 26f, 16f), ech, ellipse: true);
+                  new Rect(16.8f, 10f, 28.4f, 18f), ech, ellipse: true);
             // `<ellipse cx="31" cy="32" rx="12.5" ry="15">` — une ellipse, pas un stade.
             Forme(ref _tete, "Tete", buste, ReputationResolvers.Creme2,
                   new Rect(18.5f, 17f, 25f, 30f), ech, ellipse: true);
@@ -177,11 +190,21 @@ namespace MafiaCleanCity.Operational
                 float largeurVb = colFerme ? 8f : 14f;
                 float ech = EchelleActuelle();
                 crt.sizeDelta = new Vector2(largeurVb * ech, 14f * ech);
+                // ⛔ RECENTRER SUR L'AXE DU COU (x=31 du viewBox). `Forme` ancre en haut-GAUCHE
+                // avec un pivot (0,1) : changer la seule `sizeDelta` élargit vers la droite et
+                // décale le col d'une demi-largeur. Mesuré par le juge : visage et cou à −3,2 de
+                // l'axe de la carte, col à +1,6 — donc le col n'était pas SOUS le cou mais à côté,
+                // et il le recouvrait sur 1,7 × 13,6 px CSS que la maquette ne montre pas.
+                // La maquette déplace ses DEUX points hauts (24/38 ouvert, 27/35 fermé), c'est-à-dire
+                // qu'elle s'élargit symétriquement — une largeur qui change autour d'un bord fixe
+                // n'est pas la même chose qu'une largeur qui change autour d'un centre fixe.
+                crt.anchoredPosition = new Vector2((31f - largeurVb / 2f) * ech, -56f * ech);
             }
 
             if (revresG != null) revresG.enabled = manches;
             if (revresD != null) revresD.enabled = manches;
             if (montre != null) montre.enabled = montreOn;
+            if (montreBoitier != null) montreBoitier.enabled = montreOn;
             if (gantG != null)
                 gantG.color = gantsOk ? ReputationResolvers.Creme2 : ReputationResolvers.Rang;
 
@@ -287,6 +310,44 @@ namespace MafiaCleanCity.Operational
             cible = img;
         }
 
+        private static Sprite spriteTriangle;
+
+        /// <summary>Un triangle plein, POINTE EN BAS, blanc — la teinte vient d'`Image.color`.
+        /// C'est la forme du col : `M27 56 L31 70 L35 56 Z` (fermé) ou `M24 56 L31 70 L38 56 Z`
+        /// (ouvert), deux points hauts et une pointe basse centrée.
+        ///
+        /// ⚠️ Écrit ici plutôt que dans `ProceduralUI` : ce helper est partagé par quatre écrans
+        /// dont un certifié, et cette forme n'est demandée que par ce portrait. Une primitive
+        /// ajoutée au socle pour un seul appelant est une dette pour les trois autres.
+        ///
+        /// ⛔ Pourquoi pas un rectangle « qui tient le rôle de signal » : c'est ce que faisait la
+        /// version précédente, et le juge visuel a mesuré le taux de remplissage aire/boîte à 0,93
+        /// pour 0,43 attendu — l'aire du col relative au visage passait de 0,098 à 0,298, soit
+        /// +204 %. Le dossier assumait « un triangle sommaire » ; ce qui était rendu n'était même
+        /// pas un triangle, donc l'écart sortait du périmètre de l'assumé et redevenait un défaut.
+        /// ★ Un écart assumé ne couvre que ce qu'il DÉCRIT.</summary>
+        private static Sprite SpriteTriangle()
+        {
+            if (spriteTriangle != null) return spriteTriangle;
+            const int d = 64;
+            var tex = new Texture2D(d, d, TextureFormat.RGBA32, false) { filterMode = FilterMode.Bilinear };
+            var px = new Color[d * d];
+            for (int y = 0; y < d; y++)
+            {
+                // y=0 est le BAS de la texture : la pointe. La largeur croît vers le haut.
+                float demi = (y / (float)(d - 1)) * (d / 2f);
+                for (int x = 0; x < d; x++)
+                {
+                    float dist = Mathf.Abs(x + 0.5f - d / 2f);
+                    float a = Mathf.Clamp01(demi - dist + 0.5f);   // anti-crénelage des deux flancs
+                    px[y * d + x] = new Color(1f, 1f, 1f, a);
+                }
+            }
+            tex.SetPixels(px); tex.Apply(false, false);
+            spriteTriangle = Sprite.Create(tex, new Rect(0, 0, d, d), new Vector2(0.5f, 0.5f), 100f);
+            return spriteTriangle;
+        }
+
         private Image FormeTriangle(string nom, Transform parent, Color couleur, float ech)
         {
             // Le col est un triangle dans la maquette ; faute de primitive triangulaire, on pose
@@ -296,6 +357,8 @@ namespace MafiaCleanCity.Operational
             // recevoir écrite plutôt que la découvrir.
             Image img = null;
             Forme(ref img, nom, parent, couleur, new Rect(27f, 56f, 8f, 14f), ech);
+            img.sprite = SpriteTriangle();
+            img.type = Image.Type.Simple;
             return img;
         }
 

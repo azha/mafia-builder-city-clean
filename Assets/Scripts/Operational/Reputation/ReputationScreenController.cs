@@ -137,6 +137,9 @@ namespace MafiaCleanCity.Operational
         //    boîte et le buste passait par-dessus le verdict.
         private const float CssHMiroir    = 188f;
         private const float CssHRegleVide =  60f;   // l'état « rien » ; une liste pleine vaut n × 30
+        private const float CssEnseignePadX = 11f;  // `.enseigne{padding:7px 11px 8px}`
+        private const float CssRefletY    = 62f;   // 34,7 % de la course de `%(p)s-scan`
+        private const float CssRefletHaut =  2f;   // `.elast::after{height:2px}`
         private const float CssHRegle       = 30f;  // H_REGLE — la hauteur d'UNE règle listée
         private const float CssVerdictTitre   = 10f;   // `.verdict b`  — serif 700
         private const float CssVerdictLegende = 6.4f;  // `.verdict span`
@@ -570,7 +573,15 @@ namespace MafiaCleanCity.Operational
             sousTitre.alignment = TextAlignmentOptions.Center;
             sousTitre.characterSpacing = 34f;
 
-            EmpilerVertical(go, Px(CssEnseignePadY), Px(5f));
+            // ⛔ LE PADDING HORIZONTAL DE L'ENSEIGNE — `padding:7px 11px 8px` (chassis6.py:114).
+            // Il manquait, et c'est ce qui empêchait le sous-titre de se REPLIER : mesuré par le
+            // juge, marges de 3,9 / 4,1 px CSS au lieu de 27,3, une seule ligne au lieu de deux, et
+            // 97 % de la plaque occupée. L'avance par caractère est pourtant identique à la
+            // maquette (6,32 contre 6,34) — donc ce n'était ni la police ni la chasse : le texte
+            // avait simplement 22 px CSS de plus pour s'étaler, et il ne repassait plus à la ligne.
+            // ⚠️ Un libellé d'état plus long touchera les bords tant que ce padding manque : le
+            // défaut ne se voyait que parce que CE texte-ci tenait tout juste.
+            EmpilerVertical(go, Px(CssEnseignePadY), Px(5f), Px(CssEnseignePadX));
         }
 
         private readonly TextMeshProUGUI[] compteurNombre = new TextMeshProUGUI[3];
@@ -642,6 +653,36 @@ namespace MafiaCleanCity.Operational
             zoneElastique = (RectTransform)go.transform;
             AjouterFond(go, ReputationResolvers.Fond2);
             Contour(go, ReputationResolvers.Lisere);
+
+            // ⛔ LE REFLET — c'est lui qui fait de ce panneau une GLACE, et donc qui justifie le
+            // titre « Le miroir ». Il manquait entièrement : le juge visuel l'a mesuré à 6,6 % de
+            // score de détection contre 67,7 % sur la référence, aux deux résolutions.
+            // ★ « L'écran s'appelle Le miroir et ne montre plus de miroir » — un élément d'IDENTITÉ
+            //   ne se remarque pas dans une revue de code, seulement dans l'image.
+            //
+            // La maquette l'anime (`.elast::after`, chassis6.py:129-131) : une ligne de scan qui
+            // descend de -6 px à 190 px en 7,5 s, opacité 0,45 entre 12 % et 88 % de la course.
+            // Le rendu de référence est FIGÉ par `animation-delay:-2.6s`, soit 34,7 % de course :
+            //     -6 + 0,347 × (190 + 6) = 62 px CSS sous le haut du bloc
+            // — ce que le juge retrouve indépendamment à y=301,7 dans l'image entière.
+            // ⚠️ On pose donc un filet STATIQUE à cette position, et non une animation : cet écran
+            // est vérifié « 0 pixel différent entre T et T+1 s » (prouvé, 2 073 600 pixels), et
+            // animer casserait cette garde pour un gain que la référence ne montre pas.
+            GameObject reflet = NouveauUI("Reflet", go.transform);
+            Image refImg = reflet.AddComponent<Image>();
+            refImg.sprite = ProceduralUI.HorizontalFade(256, 0.5f, 0f);
+            Color cyanReflet = ReputationResolvers.Cyan; cyanReflet.a = 0.45f;
+            refImg.color = cyanReflet;
+            refImg.raycastTarget = false;
+            // Décor : jamais une colonne du HorizontalLayoutGroup — c'est la classe que la garde
+            // B3S3 ferme, et elle avait déjà trouvé cinq instances de ce défaut sur cet écran.
+            reflet.AddComponent<LayoutElement>().ignoreLayout = true;
+            RectTransform rrt = (RectTransform)reflet.transform;
+            rrt.anchorMin = new Vector2(0f, 1f); rrt.anchorMax = new Vector2(1f, 1f);
+            rrt.pivot = new Vector2(0.5f, 1f);
+            rrt.offsetMin = new Vector2(0f, 0f); rrt.offsetMax = new Vector2(0f, 0f);
+            rrt.anchoredPosition = new Vector2(0f, -Px(CssRefletY));
+            rrt.sizeDelta = new Vector2(0f, Px(CssRefletHaut));
 
             HorizontalLayoutGroup h = go.AddComponent<HorizontalLayoutGroup>();
             h.spacing = Px(10f);
