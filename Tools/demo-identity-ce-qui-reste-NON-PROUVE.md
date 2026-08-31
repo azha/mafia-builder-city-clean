@@ -200,3 +200,53 @@ faire rougir**, jamais « N fichiers ouverts ».
 ⚠️ **Et le compte « 12 » lui-même porte la réserve de N11** : mon balayage rend **13**, dont
 `SignIn` qui est une **méthode utilitaire**, pas un test. *Cinquième instrument d'étiquetage à
 corriger cette nuit.* Le chiffre opposable est **12**, obtenu en lisant, pas en grepant.
+
+---
+
+# ✅ CLÔTURE — 2026-08-31, 03:45. Le lot a été EXÉCUTÉ.
+
+Le §5 de ce document disait : *« cette page ment à partir du moment où le premier run vert
+existe »*, et prescrivait trois gestes. Ils sont faits. Voici les huit énoncés, **rayés un par
+un avec leur sortie**, jamais en bloc.
+
+| # | énoncé | verdict | preuve |
+|---|---|---|---|
+| **N1** | le lot **compile** | ✅ | `0 erreur CS`, 2 domain reloads, RC=0 |
+| **N2** | les gardes du resolver **passent** | ✅ | run isolé `DemoIdentity` : **37 cas, 0 échec** |
+| **N3** | les gardes deux-comptes passent — **l'OBJET du lot** | ✅ | `passed=258 failed=1`, le seul rouge étant antérieur au lot |
+| **N4** | l'ajout au juge ne fait **pas** rougir | ⚠️ **RÉFUTÉ, et c'était prévu** | il a fait rougir **C7F3**, un défaut **DÉMASQUÉ** — voir ci-dessous |
+| **N5** | le `LogWarning` ne change pas le retour de `Resolve()` | ✅ | les 5 `Resolve_*` passent |
+| **N6** | les 4 variables d'env sont **réellement lues** | ✅ | `[DemoIdentityResolver] régime=env` **×50** au run complet |
+| **N7** | `ResolveAndSignIn` **atteint** le back | ✅ | `régime=env` puis `session/open` réel ; l'unique échec venait du back (500), pas du résolveur |
+| **N8** | les 6 motifs de garde **mordent** sur du C# réel | ✅ | ils ont mordu : C7F3 a rougi exactement sur la population que le lot a vidée |
+
+## Ce que le premier run a trouvé, et que trois revues ⊥ n'avaient pas vu
+
+1. **Un défaut à moi** — `client_version` est un `varchar(32)` et mon étiquette faisait **33**
+   caractères. Le back répond **500 UNHANDLED**, pas 400, avec un message qui ne nomme ni la
+   colonne ni la longueur. Les 20 autres sites du dépôt tiennent sous 30 : rien ne l'avait
+   jamais révélé. ⇒ corrigé, **et gardé sur la PROPRIÉTÉ** (toute étiquette de ce fichier tient
+   dans la colonne), jamais sur l'instance.
+2. **N4, réfuté comme annoncé** — `C7F3` attendait 9 sites `.SignIn(` ; le lot les a canalisés
+   en **1**. C'est **N11 arrivé en vrai quelques heures après avoir été écrit** : *corriger le
+   défaut qu'une garde surveille peut vider cette garde.* ★ Elle a **ROUGI** au lieu de passer
+   en silence, parce qu'elle assertait un attendu **NON NUL**. C'est le bon mode d'échec, et
+   c'est la seule raison pour laquelle on l'a lu.
+3. **Deux rouges non reproductibles** (253/5 → 255/3 sur le même code) ⇒ la raison « pression
+   machine », écrite **avant** le run, a servi exactement à ce pour quoi elle existait.
+4. **Un fichier qui ne compilait pas**, produit par ma propre correction : `rfind` a rendu `-1`
+   et le patch a atterri devant les `using`. **Le compilateur l'a trouvé en 90 s** là où trois
+   revues et mes relectures étaient passées à côté.
+
+## Ce qui reste ouvert, et n'est pas à ce lot
+
+- `NavD12` (letterbox 0,0 px) — **antérieur**, déjà dans la ligne de base 221/1.
+- Le back rend **500 au lieu de 400** sur un `client_version` trop long — défaut de robustesse
+  côté back, à remonter.
+- **N9** (portée `Assets/Editor`), **N10** (occurrences vs affectations), **N11-bis** (les 12
+  dénominateurs) : toujours dus, et **maintenant faisables**, puisque le run existe.
+
+★★ **La leçon du lot, et elle est chère** : trois revues ⊥ ont approuvé du code qui **ne
+compilait pas**. Elles ont trouvé de vrais défauts — un motif de garde qui aurait certifié le
+sien —, mais *aucune analyse statique ne remplace une exécution*, et ce document a existé
+pendant vingt heures pour dire exactement ça. **Il ne ment plus : il est rayé.**
