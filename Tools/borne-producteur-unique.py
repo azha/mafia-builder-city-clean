@@ -9,7 +9,8 @@
    ⇒ La v15 est passée à UNE définition + QUATRE citations. Mais une définition unique ne
    tient que tant que personne ne REDIT la valeur — et le sixième exemplaire arriverait par
    le geste le plus naturel : quelqu'un qui trouve la citation indirecte et « clarifie » en
-   recopiant. **Réduire la population n'est pas fermer la classe ; ce détecteur la ferme.**
+   recopiant. **Réduire la population n'est pas fermer la classe.** Ce détecteur la ferme par une ANCRE
+   EXPLICITE, jamais par un motif sur la prose — la v1, qui essayait, attrapait 1 formulation sur 6.
 
 Sortie 1 si la définition est dupliquée, 2 si l'instrument ne peut pas mesurer.
 """
@@ -21,30 +22,41 @@ try:
 except OSError as e:
     print(f'⛔ illisible : {e}'); sys.exit(2)
 
-# La SIGNATURE de la définition — ce qui fait qu'un texte DÉFINIT au lieu de citer.
-# Motif large sur la PROPRIÉTÉ (par axe + unité), jamais sur une tournure vue une fois :
-# deux formulations du même faux exigent deux motifs, donc on vise ce qui ne peut pas
-# être dit autrement — la conjonction « par axe » ET « échelle du palier ».
-DEFN = re.compile(r'PAR AXE.{0,400}?échelle du palier', re.S | re.I)
-# Contrôle POSITIF, sur LA MÊME POPULATION que le motif surveillé (le fichier entier) :
-# un terme dont on SAIT qu'il y est. Sans lui, un `0` ne distingue pas « rien ne matche »
-# de « rien n'a été lu ».
+# ⛔⛔ CE QUE LA v1 DE CET INSTRUMENT FAISAIT DE FAUX (mesuré par une revue ⊥, 2026-08-31) :
+#    elle matchait une TOURNURE (« PAR AXE » … « échelle du palier » à moins de 400 caractères) et
+#    la docstring annonçait une garde sur la PROPRIÉTÉ. Testée sur SIX formulations de la même
+#    proposition, elle en attrapait UNE — la sienne. Et DEUX producteurs vivaient déjà dans le
+#    fichier qu'elle déclarait propre : l'un coupé par un retour à la ligne, l'autre à 1187
+#    caractères du « PAR AXE » le plus proche.
+#    ★ Mon contrôle négatif n'avait testé que la tournure IDENTIQUE : il prouvait que le motif se
+#      reconnaît lui-même, jamais qu'il attrape la classe. *Un contrôle positif qui recopie le
+#      prédicat ne peut pas trouver le défaut qu'il existe pour trouver.*
+# ⇒ LA FORME QUI FERME : une ANCRE EXPLICITE, que la paraphrase ne peut pas produire par accident.
+#    Un auteur qui redit la borne n'écrira pas le marqueur ; s'il le copie, c'est un geste
+#    délibéré et visible en revue. On ne devine plus l'intention à partir des mots.
+MARKER = '<!-- BORNE:DEF -->'
+# Signal SECONDAIRE, tolérant aux blancs et aux tournures : il ne DÉCIDE pas, il SIGNALE, parce
+# qu'aucun motif sur de la prose ne peut prétendre couvrir la classe (c'est la leçon ci-dessus).
+UNITE = re.compile(r'(PAR\s+AXE|en\s+X\s+et\s+en\s+Y).{0,600}?(échelle\s+du\s+palier|fond\s*[·×]\s*s)',
+                   re.S | re.I)
 CONTROL = re.compile(r'atteignab', re.I)
 
-defs = DEFN.findall(text)
+defs = [MARKER] * text.count(MARKER)
+signals = UNITE.findall(re.sub(r'\s+', ' ', text))
 ctrl = CONTROL.findall(text)
 
-print(f'  définitions trouvées ..... {len(defs)}')
-print(f'  contrôle positif ......... {len(ctrl)} occurrences de « atteignab » '
-      f'({"l instrument LIT" if ctrl else "⛔ RIEN LU"})')
+print(f'  marqueurs {MARKER} .......... {len(defs)}  (LA décision)')
+print(f'  énoncés d unité repérés ..... {len(signals)}  (signal, ne décide pas)')
+print(f'  contrôle positif ............ {len(ctrl)} occurrences de « atteignab » '
+      f'({"l instrument LIT" if ctrl else "RIEN LU"})')
 
 if not ctrl:
-    print('⛔ contrôle positif MUET — le zéro ci-dessus ne prouverait rien.')
-    sys.exit(2)
-if len(defs) == 1:
-    print('\n  ⇒ ✅ UNE seule définition. Les autres mentions doivent CITER, jamais redire.')
-    sys.exit(0)
-print(f'\n  ⇒ ⛔ {len(defs)} définitions — la classe se rouvre. Extraits :')
-for d in defs:
-    print(f'      …{" ".join(d.split())[:100]}…')
-sys.exit(1)
+    print('⛔ contrôle positif MUET.'); sys.exit(2)
+if len(defs) == 0:
+    print(f'\n  ⇒ ⛔ AUCUN marqueur : la définition unique n existe pas ou a été renommée.')
+    sys.exit(1)
+if len(defs) > 1:
+    print(f'\n  ⇒ ⛔ {len(defs)} marqueurs — la classe se rouvre.')
+    sys.exit(1)
+print(f'\n  ⇒ ✅ UN marqueur. ⚠️ Et {len(signals)} énoncés d unité subsistent en prose : ce script')
+print('     NE PEUT PAS dire s ils citent ou redisent — il décide sur le MARQUEUR, pas sur les mots.')
