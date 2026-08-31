@@ -58,7 +58,8 @@ mafia-clean-city-bo-front-1  Up 10 minutes (healthy)
 - **Rapport `juge-visuel` APPROUVÉ** : ⏳ **NON FOURNI À CETTE HEURE** — le juge visuel n'a pas
   encore rendu. Ce dossier est monté d'avance ; il ne doit pas être instruit tant que cette ligne
   n'est pas remplacée par un chemin réel. Le mode clôture EXIGE l'approbation visuelle en amont.
-- **SHA du client** : `76844da` · suite PlayMode ScreenB3 : 9/9 au run 17.
+- **SHA du client** : `d2fb5ba` · suite PlayMode ScreenB3 : **9/9** au run 28, filtre `MAFIA_CI_CATEGORIES=ScreenB3`
+  imprimé dans le log (`passed=9 failed=0 skipped=0`) — un compte, pas une absence d'échec.
 
 ## Écarts ASSUMÉS déjà connus (le juge les re-vérifie, il ne les recopie pas)
 
