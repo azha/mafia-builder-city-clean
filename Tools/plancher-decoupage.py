@@ -45,6 +45,18 @@ in_enum = {c for c in enum if c in CIRCLED}
 in_cells = {c for c in cells if c in CIRCLED}
 rows = len(re.findall(r'^\| [0-9]+ \|', enum, re.M))
 
+# ⛔ COMPTER N'EST PAS EXTRAIRE (leçon d'une session voisine, 2026-08-31) : `rows` et `in_enum`
+#    dérivent tous deux de la MÊME tranche `enum`. Une tranche TRONQUÉE les réduirait ENSEMBLE, ils
+#    coïncideraient quand même, et le compte serait juste pendant que l'extraction est incomplète.
+#    ⇒ Grandeur INDÉPENDANTE de la tranche : compter les lignes d'énumération sur le document
+#    ENTIER. Si les deux diffèrent, la tranche a perdu des lignes — le mode d'échec que la
+#    coïncidence interne ne peut pas voir.
+rows_whole_doc = len(re.findall(r'^\| [0-9]+ \| §', t, re.M))
+if rows_whole_doc != rows:
+    print(f'⛔ TRANCHE TRONQUÉE : {rows} ligne(s) dans la tranche, {rows_whole_doc} dans le document.')
+    print('   Le compte interne coïnciderait quand même — c est pour ça que ce contrôle existe.')
+    sys.exit(3)
+
 # contrôle POSITIF : le jeu doit reconnaître son premier et son dernier symbole
 assert '①' in CIRCLED and '㉕' in CIRCLED, 'jeu de symboles incomplet'
 
