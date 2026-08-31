@@ -1,14 +1,15 @@
-# Lot « redimensionnement » — **v12** — le client survit à un changement de taille en cours de vie
+# Lot « redimensionnement » — **v13** — le client survit à un changement de taille en cours de vie
 
 > **Ruling user 2026-08-30** : « supporter le redimensionnement pour de vrai ».
 > **v1 NOT_APPROVED** (5B/7M/4m) · **v2 NOT_APPROVED** (3B/5M/5m) · **v3 NOT_APPROVED** (2B/4M/6m) ·
 > **v4 NOT_APPROVED** (4B/6M/6m) · **v5 NOT_APPROVED** (6B/8I/4m) · **v6 NOT_APPROVED** (4B/8I/6m) ·
 > **v7 NOT_APPROVED** (4B/8I/6m) · **v8 NOT_APPROVED** (5B/5I/4m) · **v9 NOT_APPROVED** (4B/5I/3m) ·
-> **v10 NOT_APPROVED** (4B/4I/4m) · **v11 NOT_APPROVED** (3B/7I/3m).
+> **v10 NOT_APPROVED** (4B/4I/4m) · **v11 NOT_APPROVED** (3B/7I/3m) ·
+> **v12 NOT_APPROVED** (3B/6I/5m).
 > ⛔ **CE BLOC SE TIENT PAR VERSION, JAMAIS PAR UN TOTAL RECOPIÉ** — un total se périme en silence
 > à chaque tour, et il l'a fait DEUX fois (m1 en v7, B6 en v8 : le correctif de m1 n'a pas survécu
 > à une version). **Ajouter une version OBLIGE à ajouter sa ligne** ; c'est la seule forme qui ne
-> peut pas mentir par omission. ⇒ **11 versions, 11 refus.** Rapports hors dépôt : `/tmp/revue-redimensionnement-design{,-v2,-v3,-v4}.md`.
+> peut pas mentir par omission. ⇒ **12 versions, 12 refus.** Rapports hors dépôt : `/tmp/revue-redimensionnement-design{,-v2,-v3,-v4}.md`.
 > *(v3 était omis de l'en-tête de la v4 — un document dont la thèse est la comptabilité honnête ne
 > peut pas escamoter un de ses propres verdicts. Corrigé ici : quatre versions, quatre refus.)*
 >
@@ -302,16 +303,29 @@ reste contain, ×1 reste ×1*. La règle de restauration s'écrit donc en trois 
 
    | **S2** | `ZoomLevels` de **longueurs différentes** **ET** atteignable d'arrivée ⊇ atteignable de départ | ⛔ **`1080×1920 → 1440×3200` VIOLE le contenant à ×2** (0,2500 → 0,0833). **Sens inversé : `1440×3200 → 1080×1920`** (0,0833 → 0,2500 ⊇) | ⛔⛔ **B1+B3 de la v11 — J'AI DURCI SUR LA NON-NULLITÉ ; LA PROPRIÉTÉ QUI DÉCIDE EST LE CONTENANT.** `PanPosition != zero` au départ n'est satisfaisable en portrait qu'**au-delà** du palier de référence ⇒ S2 tourne à ×2. Et à ×2 l'atteignable **rétrécit d'un facteur 3** entre les deux bouts ⇒ un joueur pané jusqu'à la borne au départ **ne peut pas être restauré**, `ClampAxis` le rabat, et **l'assertion rougit sur le correctif JUSTE**. *La v11 a durci la force de la garde sans changer la GRANDEUR qu'elle observe.* ⇒ **Garde de capacité, v12 — l'ATTEIGNABLE D'ARRIVÉE DOIT CONTENIR CELUI DU DÉPART**, mesuré et publié : |
 
-   **ATTEIGNABLE NORMALISÉ (fraction de la hauteur du fond) — la grandeur qui décide, mesurée :**
+   ⛔⛔ **B2 de la v12 — `ClampPan` BORNE DEUX AXES INDÉPENDAMMENT, ET J'AI PUBLIÉ UN SEUL.**
+   `DistrictMapNavigation.cs:218-220` clampe `x` et `y` **séparément** ; la grandeur assertée (règle 2)
+   est un `Vector2` ; et ma table disait « fraction de la **hauteur** du fond ». ⇒ **L'instrument que
+   R2 consomme ne mesurait que Y.** Contre-exemple mesuré : `1080×1920 → 1920×1080` à ×2 satisfait la
+   condition écrite (longueurs de `ZoomLevels` différentes) **et** le contenant en Y (0,2500 ⊂ 0,3594),
+   **en violant X** (0,2500 ⊄ 0,0556) ⇒ un joueur pané jusqu'à la borne en X n'est pas restaurable, et
+   **l'assertion rougit sur le correctif juste** — le mode d'échec que la v12 existe pour fermer, un
+   AXE plus loin. *J'ai écrit la propriété en 2D et je l'ai publiée en 1D.*
+
+   **ATTEIGNABLE NORMALISÉ, PAR AXE** (fraction de la dimension correspondante du fond) :
 ```
-   viewport            ×1        ×2      (ClampAxis: DistrictMapNavigation.cs:223-229)
-   1920×1080       0,2188    0,3594
-   1280×720        0,3125    0,4062
-   1080×1920       0,0000    0,2500
-   1440×3200       0,0000    0,0833
-   S1  1920×1080 → 1280×720  à ×1 :  0,2188 ⊂ 0,3125   ✅ contenu
-   S2  1440×3200 → 1080×1920 à ×2 :  0,0833 ⊂ 0,2500   ✅ contenu (sens INVERSÉ par la v12)
+   viewport          X ×1      Y ×1      X ×2      Y ×2
+   1920×1080       0,0000    0,2188    0,0556    0,3594
+   1280×720        0,0000    0,3125    0,2037    0,4062
+   1080×1920       0,0000    0,0000    0,2500    0,2500
+   1440×3200       0,0000    0,0000    0,1667    0,0833
+
+   S1  1920×1080 → 1280×720  à ×1 :  X 0,0000 ⊆ 0,0000 · Y 0,2188 ⊆ 0,3125   ✅ sur LES DEUX AXES
+   S2  1440×3200 → 1080×1920 à ×2 :  X 0,1667 ⊆ 0,2500 · Y 0,0833 ⊆ 0,2500   ✅ sur LES DEUX AXES
 ```
+   ⇒ **La propriété est une INCLUSION DE BOÎTES**, jamais un scalaire :
+   `|p_départ|ₓ ≤ A_arrivée,ₓ` **ET** `|p_départ|ᵧ ≤ A_arrivée,ᵧ`.
+
    ⚠️ **Et la condition de monde s'écrit désormais comme une PROPRIÉTÉ, pas comme un couple** :
    *« l'atteignable d'arrivée contient celui du départ, au palier où le scénario tourne »*. Le couple
    nommé n'est qu'un témoin ; la v11 fermait l'instance et laissait la classe (I1) — un autre couple
@@ -634,8 +648,8 @@ annulé par le §5, sans quoi la dépendance zone-sûre de P4/P5 n'est exercée 
 
 | chunk | livrables | falsifiable | gate |
 |---|---|---|---|
-| **R1 — mesures et publications** | ① re-mesurer les ancres @HEAD, **par fichier** (§2) · ② **(a)** vérifier dans le corps les **9 PERSIST nommées** ET **(b)** énumérer les TRANSIENT par la règle d'appartenance (§2), nom + ancre, **au grain déclaré** — le compte tombe à la fin, il n'est pas la preuve *(la v8 avait perdu la moitié (a) : le corps l'assignait, la cellule ne la demandait pas — I1)* · ④ **déclarer l'unité et la portée** de chaque compte du §7 *(et NON « retirer le 19 », cf. B6)* · ⑤ imprimer les insets **après** bascule · ㉘ **la borne d'ATTEIGNABILITÉ** de S1/S2, publiée en valeurs · ㉙ **le second ASPECT + le point paysage rendu** · ⑮ **la seconde largeur de capture** *(remontée de R3 en v10 — I4 : S2 en a besoin et R2 courait AVANT R3 qui la possédait. C'est la forme C dans le découpage, fermée pour la sonde du seam et jamais repassée sur la population)* · ㉖ **détecteur de c3** (§8 — les deux mondes inatteignables portent une épingle qui rougit le jour où ils deviennent testables) · ㉕ **la sonde réduite du seam** (§5 — sans elle, la décision « ne toucher au calcul d'insets QUE si le seam ne suffit pas » dépend d'un instrument qu'aucun chunk ne possède : forme C dans le découpage) · ㉔ **commiter le log** qui porte la mesure du §5 (aujourd'hui dans `scratchpad/`, non tracké ⇒ non re-dérivable) · ⑥ écrire prédicat + commande + portée + **contrôle positif par motif** du contrôle §0 · ⑱ écrire la **règle de clôture** de l'ensemble de fichiers du §0 | chaque publication porte **commande + sortie collée + unité + portée** ; contrôle positif ET négatif | revue ⊥ |
-| **R2 — production** | ⑦ l'émetteur sur le couple, mécanisme complet · ⑧ le chemin de restauration (rôle → valeur → tolérance) · ⑨ le retrait des deux énoncés datés, **avec le contrôle de retrait de R1 dans le MÊME commit** *(un numéro cerclé ne vit que dans la cellule qui le POSSÈDE — une référence croisée se nomme en toutes lettres, sinon l'oracle d'arithmétique compte une possession)* · ⑲ **écrire la conversion d'unités** des deux termes du couple (§4) · ㉓ **l'ordre de reconstruction district↔panneaux**, mesuré ou assumé (§3, m2) | ⑩ non-émission fenêtre-à-l'attachement + `1` en aval, **même scénario** · ⑪ (a) et (b) dans **deux scénarios distincts** · ⑫ anti-vacuité du cadrage par **S1 et S2 nommés** (non disjonctive), **chacun avec sa garde de capacité au DÉPART et sa condition de DONNÉE** (§3) | revue ⊥ |
+| **R1 — mesures et publications** | ① re-mesurer les ancres @HEAD, **par fichier** (§2) · ② **(a)** vérifier dans le corps les **9 PERSIST nommées** ET **(b)** énumérer les TRANSIENT par la règle d'appartenance (§2), nom + ancre, **au grain déclaré** — le compte tombe à la fin, il n'est pas la preuve *(la v8 avait perdu la moitié (a) : le corps l'assignait, la cellule ne la demandait pas — I1)* · ④ **déclarer l'unité et la portée** de chaque compte du §7 *(et NON « retirer le 19 », cf. B6)* · ⑤ imprimer les insets **après** bascule · ㉘ **la borne d'ATTEIGNABILITÉ** de S1/S2, publiée en valeurs · ㉙ **les DEUX points rendus de S1** (`1920×1080` et `1280×720`) · ⑮ **la seconde largeur de capture** *(remontée de R3 en v10 — I4 : S2 en a besoin et R2 courait AVANT R3 qui la possédait. C'est la forme C dans le découpage, fermée pour la sonde du seam et jamais repassée sur la population)* · ㉖ **détecteur de c3** (§8 — les deux mondes inatteignables portent une épingle qui rougit le jour où ils deviennent testables) · ㉕ **la sonde réduite du seam** (§5 — sans elle, la décision « ne toucher au calcul d'insets QUE si le seam ne suffit pas » dépend d'un instrument qu'aucun chunk ne possède : forme C dans le découpage) · ㉔ **commiter le log** qui porte la mesure du §5 (aujourd'hui dans `scratchpad/`, non tracké ⇒ non re-dérivable) · ⑥ écrire prédicat + commande + portée + **contrôle positif par motif** du contrôle §0 · ⑱ écrire la **règle de clôture** de l'ensemble de fichiers du §0 | chaque publication porte **commande + sortie collée + unité + portée** ; contrôle positif ET négatif | revue ⊥ |
+| **R2 — production** | ⑦ l'émetteur sur le couple, mécanisme complet · ⑧ le chemin de restauration (rôle → valeur → tolérance) · ⑨ le retrait des deux énoncés datés, **avec le contrôle de retrait de R1 dans le MÊME commit** *(un numéro cerclé ne vit que dans la cellule qui le POSSÈDE — une référence croisée se nomme en toutes lettres, sinon l'oracle d'arithmétique compte une possession)* · ⑲ **écrire la conversion d'unités** des deux termes du couple (§4) · ㉓ **l'ordre de reconstruction district↔panneaux**, mesuré ou assumé (§3, m2) | ⑩ non-émission fenêtre-à-l'attachement + `1` en aval, **même scénario** · ⑪ (a) et (b) dans **deux scénarios distincts** · ⑫ anti-vacuité du cadrage par **S1 et S2 nommés** (non disjonctive), chacun avec sa **garde de capacité au DÉPART** (`PanPosition != Vector2.zero`) **ET la borne d'ATTEIGNABILITÉ PAR AXE que R1 publie** *(référence croisée nommée en toutes lettres — un numéro cerclé ne vit que dans la cellule qui le POSSÈDE, règle posée en v10 et que je viens de re-violer ; l'instrument l'a vu, pas moi)* *(B1 de la v12 : cette cellule et la ligne 7 prescrivaient encore la « condition de DONNÉE » que la ligne 28 déclare INERTE huit lignes plus bas — j'avais rouvert le §6(b) et laissé les DEUX textes que R2 exécute réellement)* | revue ⊥ |
 | **R3 — le juge** | ⑬ choisir la catégorie, l'ajouter, **et couvrir `ChromeSafeAreaPlayModeTests` + `ChromeMultiResolutionPlayModeTests`** (cf. I2) · ⑭ publier le compte des rallumés et **classer chaque rouge** démasqué / régression · ③ publier la table des 30 non joués · ⑯ le contrôle positif de sabotage, ancré · ⑳ **zone sûre à valeurs DISTINCTES aux deux points, via le seam** (§6.2) · ㉑ **ASSERTER le débordement**, jamais l'imprimer (§6.3) | ⑰ le test visé **relancé seul par son nom complet** · ㉒ anti-vacuité : **nombre d'écrans éprouvés > 0 et nommé** (§6.5) | revue ⊥ |
 
 ⛔⛔ **B4 de la v6 — L'ÉNUMÉRATION ÉTAIT ANNONCÉE ET JAMAIS PUBLIÉE, donc les deux membres du
@@ -659,8 +673,8 @@ l'autre membre, et les deux sont désormais construits séparément) :
 | 4 | §2 | énumérer les TRANSIENT **par la règle d'appartenance du §2**, chacune avec son nom et son ancre | R1 ② |
 | 5 | §3 | chemin de restauration : rôle → valeur → tolérance | R2 ⑧ |
 | 6 | §3 | ordre de reconstruction district↔panneaux, mesuré ou assumé | R2 **㉓** |
-| 7 | §3 | S1/S2 avec conditions de monde, gardes de capacité **au départ**, et **condition de DONNÉE** (≥ 1 bâtiment joueur, barycentre décentré) | R2 ⑫ |
-| 29 | §6.1 | **le second ASPECT de capture ET le point PAYSAGE rendu** (`1920×1080`) — ⑮ ne couvre que la LARGEUR et n'est justifié que par S2 ; l'obligation « DEUX LARGEURS **ET** DEUX ASPECTS » du §6.1 n'avait **aucun propriétaire**. **Troisième instance de la forme C**, ouverte par la version qui écrit que la classe « n'a jamais été repassée sur la population » | R1 **㉙** |
+| 7 | §3 | S1/S2 avec conditions de monde, gardes de capacité **au départ**, et **borne d'atteignabilité PAR AXE** (publiée par R1) — *plus de condition de donnée : elle est inerte, cf. ligne 28* | R2 ⑫ |
+| 29 | §6.1 | **les DEUX points de S1, RENDUS** : `1920×1080` **et** `1280×720` *(B3 de la v12 : ㉙ n'en nommait qu'un, et « second aspect » ne force pas le second — 1920×1080 et 1280×720 ont le MÊME aspect 16:9. ⑮ ne le couvre pas non plus, il n'est justifié que par S2)* — ⑮ ne couvre que la LARGEUR et n'est justifié que par S2 ; l'obligation « DEUX LARGEURS **ET** DEUX ASPECTS » du §6.1 n'avait **aucun propriétaire**. **Troisième instance de la forme C**, ouverte par la version qui écrit que la classe « n'a jamais été repassée sur la population » | R1 **㉙** |
 | 28 | §3 | **la BORNE D'ATTEIGNABILITÉ** aux deux bouts de chaque scénario, publiée en valeurs *(remplace la « condition de DONNÉE » de la v11 : **㉘ était INERTE** — `ClampPan` annule `initialFocus` à ×1 dans les deux formats portrait, donc un barycentre décentré ne produit **aucun** observable ; et `initialFocus` est une **variable locale sans accesseur**, donc non assertable sans changement de production)* | R1 **㉘** |
 | 8 | §4 | émetteur sur le couple, mécanisme complet | R2 ⑦ |
 | 9 | §4 | conversion d'unités des deux termes | R2 ⑲ |
