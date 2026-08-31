@@ -1,0 +1,97 @@
+# Dossier du juge visuel ⊥ — ㊲ LA RÉPUTATION (`screen_b3`) — tour r2 — 2026-08-31
+
+> ⚠️ **Ce dossier est complet et instruisable.** Aucun champ « à remplir » ne subsiste : si tu en
+> trouves un, c'est un défaut du dossier et il faut le dire dans ton rapport.
+
+## L'écran, en une phrase de produit
+
+« Le miroir ». On y vient lire ce que son lieutenant a **absorbé** des règles qu'on lui a données —
+pas ce qu'on lui a dit, ce qu'il en a retenu. L'écran est un miroir au sens propre : il montre le
+joueur à travers la tenue et la posture de quelqu'un d'autre.
+
+## ⚠️ ÉCHELLE — à lire AVANT toute mesure de taille
+
+| | largeur en px | largeur CSS déclarée | facteur |
+|---|---|---|---|
+| **référence** `m-119.png` … `m-124.png` | 900 | 300 | **×3,0** |
+| **capture en jeu** `…_1080x1920.png` | 1080 | 300 | **×3,6** |
+
+⇒ **La capture est 1,2× plus grande que la référence, et c'est NORMAL.** Un bloc de 13 px CSS
+mesure 39 px dans la référence et 46,8 px dans la capture. Les deux sont justes.
+
+⇒ **Ramène toute mesure en px CSS** (diviser par 3,0 sur la référence, par 3,6 sur la capture)
+avant de conclure à un écart. Un rapport qui remonte « tout est 20 % trop grand » aura mesuré
+l'instrument, pas un défaut.
+
+⚠️ **Ce que la normalisation ne couvre PAS** : les rapports INTERNES (un bloc deux fois trop haut
+par rapport à son voisin, une rangée dont les tuiles sont inégales) sont invariants d'échelle et
+restent des défauts réels. Ce sont eux qui comptent.
+
+## La référence
+
+| fichier | ce que c'est |
+|---|---|
+| `reference/m-120.png` | ⇐ **TA RÉFÉRENCE PRINCIPALE** — l'état VIERGE (compte neuf, 0 règle donnée, 0 absorbée), le seul état que la capture montre |
+| `reference/m-119.png` | l'état « canon » (3 règles, 2 absorbées) — utile pour comprendre l'écran plein, **ne compare pas la capture à celui-là** |
+| `reference/m-121.png` … `m-124.png` | les autres états (dérive, liste de règles, gages, lots) — pour l'intention d'ensemble |
+
+Source : `/home/erutheone/project/atelier3d-mafia/generateur-reputation.py`, et le châssis commun
+`/home/erutheone/project/atelier3d-mafia/chassis6.py` (⚠️ **les deux** : plusieurs classes posées
+par le générateur ne sont DÉFINIES que dans le châssis — `.elast`, `.enseigne`, `.fen`, `.pann`,
+`.cta6`. Chercher une règle dans le seul générateur donne une absence trompeuse).
+
+La CSS sert à NOMMER les valeurs voulues. **L'image ratifiée fait autorité** ; si les deux
+divergent, c'est l'image qui gagne et l'écart est un arbitrage, pas un défaut du client.
+
+## Les captures en jeu
+
+Répertoire : `/home/erutheone/project/mafia-unity-B/Assets/Screenshots/`
+
+| fichier | résolution | rect du canvas | scaleFactor |
+|---|---|---|---|
+| `screen_b3_reputation_1080x1920.png` | 1080×1920 (16:9) | À REMPLIR APRÈS RECAPTURE | À REMPLIR |
+| `screen_b3_reputation_1080x2400.png` | 1080×2400 (20:9, **cible téléphone**) | À REMPLIR APRÈS RECAPTURE | À REMPLIR |
+| `screen_b3_reputation_1080x1920_t1s.png` | 1080×1920 à T+1 s | idem 16:9 | idem |
+
+La troisième est un **contrôle de stabilité** : elle doit être identique à la première. Toute
+différence est un défaut (cet écran ne porte aucune animation).
+
+**SHA du client au moment des captures** : À REMPLIR APRÈS RECAPTURE
+
+⚠️ **Les captures sont prises SANS le chrome du jeu** — le bandeau haut (ARGENT / HEAT / JOUR) que
+tu vois sur la référence, et le dock du bas. C'est délibéré et documenté : monter le shell exigerait
+de signer un compte partagé, ce que cette session n'a pas le droit de faire. Ne compte donc pas
+l'absence du bandeau comme un écart — mais **dis explicitement ce que cette absence t'empêche de
+vérifier** (par exemple : que rien ne passe sous le bandeau, que rien ne touche le dock).
+
+## Écarts ASSUMÉS — à classer ASSUMÉ, pas à remonter comme défauts
+
+Inventorie-les quand même et vérifie qu'ils sont rendus PROPREMENT ; ne les compte pas comme écarts.
+
+| ce qu'on voit | pourquoi | statut |
+|---|---|---|
+| « Salvatore » comme nom du lieutenant | le back ne projette pas `lieutenant.name` ; l'écran le DIT à l'écran (« lieutenant.name — non projeté (L0.4) ») plutôt que de le masquer | mesuré |
+| compteur ENFREINTES à « — » et non « 00 » | aucune clé du corps ne porte ce compte. Un « 00 » dirait « aucune enfreinte » là où la vérité est « le serveur ne le dit pas » | délibéré |
+| le col rendu par un triangle sommaire | pas de primitive de chemin dans le client ; la forme tient le rôle de signal (ouvert / fermé) | limite technique |
+| 4 couleurs hors `DesignTokens` | `Encre`, `Panneau`, `Liseré`, `Vert` n'existent pas dans les tokens ; arbitrage DA escaladé à l'user, non tranché | dette ouverte |
+
+## Deux points où l'auteur déclare ses propres trous
+
+Lis `angles-morts-declares.md` (même répertoire). Ce n'est **pas** un rapport de juge — il n'y en a
+aucun dans ce dossier — c'est la déclaration de l'auteur sur ce que ses gardes automatiques ne
+couvrent pas. Deux méritent ton attention en priorité :
+
+1. **Les hauteurs, les vides et les rapports entre blocs.** C'est la famille de défauts que les
+   gardes structurelles ne voient pas : elles vérifient que les éléments existent, dans le bon
+   ordre, avec les bonnes valeurs — ce qui peut être vrai pendant que le rendu est faux.
+2. **Le portrait du lieutenant.** Cinq traits (posture du buste, col, revers, montre, gants) sont
+   censés correspondre à des clés de données. Leur ressemblance à la maquette n'est vérifiée par
+   aucune garde.
+
+## Ce qui N'EST PAS fourni — et ne doit pas être cherché
+
+- `Assets/Scripts` et tout le code du client : tu constates ce que tu VOIS ;
+- les notes d'implémentation du chantier ;
+- **les rapports de juges précédents** — il n'y en a aucun dans ce répertoire, et c'est délibéré :
+  un juge qui hérite du contexte hérite des angles morts ;
+- tout « choix » non écrit dans la table des écarts assumés : s'il n'y est pas, il n'existe pas.
