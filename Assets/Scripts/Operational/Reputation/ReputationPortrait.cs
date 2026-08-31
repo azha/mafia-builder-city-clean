@@ -310,6 +310,13 @@ namespace MafiaCleanCity.Operational
             contour.type = Image.Type.Sliced;
             contour.color = ReputationResolvers.Lisere;
             contour.raycastTarget = false;
+            // ⛔ TROISIÈME À SIXIÈME INSTANCE DE LA MÊME CLASSE, trouvées par la garde B3S3.
+            // J'avais corrigé le cerne, puis le contour du contrôleur — sans voir que `TellVoyant`
+            // construit SON PROPRE contour, dans une autre classe. Le HorizontalLayoutGroup de la
+            // ligne le comptait donc comme une colonne, aux côtés de la pastille et des textes.
+            // ⇒ C'est précisément ce qu'une garde de CLASSE attrape et qu'un correctif d'instance
+            //   laisse passer : deux corrections à la main, quatre occurrences encore vivantes.
+            bord.AddComponent<LayoutElement>().ignoreLayout = true;
 
             // Les mesures viennent des constantes du contrôleur, jamais de littéraux recopiés :
             // deux sources pour une même valeur, c'est la garantie qu'elles divergeront.

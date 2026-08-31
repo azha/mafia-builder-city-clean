@@ -436,6 +436,9 @@ namespace MafiaCleanCity.Operational
             frt.pivot = new Vector2(0.5f, 0f);
             frt.sizeDelta = new Vector2(0f, PxTrait(2f));
             AjouterFond(filet, ReputationResolvers.OrFilet);
+            // Même classe : un filet est un DÉCOR, il ne s'empile pas avec le titre et le
+            // sous-titre. Sans ça, le VerticalLayoutGroup de l'enseigne lui réserve une ligne.
+            filet.AddComponent<LayoutElement>().ignoreLayout = true;
 
             TextMeshProUGUI titre = NouveauTexte(go.transform, "Titre", "Le miroir",
                 CssTitreCorps, ReputationResolvers.OrVif, DesignTokens.Current.hudSerifFont);
