@@ -118,7 +118,14 @@ namespace MafiaCleanCity.Operational
         //    Une garde structurelle ne voit pas ça — c'est l'angle mort A3, « l'effet des
         //    espacements n'est pas vérifié », et il ressort une deuxième fois.
         private const float CssHEnseigne  = 51f;
-        private const float CssHCompteurs = 42f;
+        // ⚠️ 32 et non 42, et c'est l'IMAGE qui tranche, pas la constante. `H_FIXE['compteurs']`
+        //    vaut 42, mais le juge visuel a mesuré la rangée à 32,0 px CSS sur la référence pour
+        //    42,2 en jeu (+31,9 %), avec un padding bas de 13,6 contre 5,3 — la signature d'un bloc
+        //    étiré et non d'un bloc plus garni. La doctrine du juge est explicite : l'image de
+        //    référence fait autorité, la source sert à NOMMER les valeurs voulues, jamais à
+        //    contredire ce que le rendu montre. Les 10 px d'écart sont la marge que `verifier()`
+        //    compte dans sa somme et que le bloc ne porte pas lui-même.
+        private const float CssHCompteurs = 32f;
         private const float CssHPann      = 74f;
         private const float CssHPied      = 52f;
         // ⚠️ 188 et non 172 : `verifier()` compte la zone du miroir comme `H_MIROIR + H_ENTOUR`
@@ -136,17 +143,25 @@ namespace MafiaCleanCity.Operational
         private const float CssVerdictEcart   = 8f;    // `.verdict` gap
         private const float CssHRegleEntour = 16f;  // H_ENTOUR — le sur-titre et les marges du bloc
 
-        // ⚠️ AUCUN de ces blocs n'est élastique, et c'est la maquette qui le dit, pas moi.
-        //    `verifier()` (generateur-reputation.py:291-294) contraint la SOMME —
-        //        fixe + corps + 34 <= 462
-        //    — où `corps` vaut H_MIROIR (172) pour la vue miroir, ou `nb_règles × H_REGLE` (30)
-        //    pour la vue liste, ou 60 pour l'état « rien ». Une somme plafonnée décrit un empilement
-        //    qui se pose EN HAUT et laisse du vide en bas ; elle ne décrit pas un remplissage.
-        // ⛔ J'avais d'abord mis flexibleHeight=1 sur le miroir en le qualifiant de « zone
-        //    élastique ». C'était une invention : aucune ligne de la maquette ne parle d'élasticité.
-        //    Résultat mesuré sur la capture du run 19 — le miroir absorbait tout l'espace libre et
-        //    ouvrait un vide de plus de 500 px sous le portrait. Le défaut n'était pas la valeur
-        //    172, qui était juste ; il était dans le mot que j'avais mis autour.
+        // ⚠️ LE BLOC MIROIR EST LE SEUL ÉLASTIQUE — `.elast{flex:1;min-height:0}`, défini dans
+        //    chassis6.py:126 (le châssis COMMUN), pas dans generateur-reputation.py. Les hauteurs
+        //    ci-dessus sont donc des PLANCHERS pour lui, et des tailles fixes pour les autres.
+        //
+        // ⛔ J'ai fait l'aller-retour, et je consigne les deux erreurs parce que la seconde est la
+        //    plus instructive. (1) J'ai d'abord mis flexibleHeight=1 en qualifiant ce bloc de
+        //    « zone élastique » — juste, mais SANS SOURCE : je l'avais deviné. (2) Puis je l'ai
+        //    RETIRÉ en écrivant « aucune ligne de la maquette ne parle d'élasticité », après avoir
+        //    cherché `elast` dans le seul generateur-reputation.py, où la classe est POSÉE sur le
+        //    div (ligne 160) mais jamais DÉFINIE. J'ai lu une absence dans un fichier comme une
+        //    absence tout court, et j'ai troqué une intuition juste contre une déduction fausse.
+        //    Le juge visuel l'a mesuré : 0,10 % de pixels différents entre 1080×1920 et 1080×2400,
+        //    les 480 px supplémentaires partant intégralement au vide — « l'élastique n'est pas
+        //    élastique », 35,5 % de la plaque vide sur la cible téléphone.
+        // ★ Une classe s'appelait `elast`. Le nom disait la réponse, et je l'ai écarté parce que
+        //    je n'avais pas trouvé sa règle dans le fichier où je regardais.
+        //
+        //    `verifier()` (generateur-reputation.py:291-294) contraint la somme à 462 : c'est une
+        //    garde de DÉBORDEMENT sur le contenu minimum, pas une description du remplissage.
 
         /// <summary>Convertit une valeur en px CSS de LA maquette de cet écran. Passe par la
         /// largeur DÉCLARÉE (`LargeurEcransBrennar6`) : jamais le repli implicite, jamais la
@@ -320,14 +335,15 @@ namespace MafiaCleanCity.Operational
             if (ReputationResolvers.CoherenceEstIndeterminee(cue))
             {
                 sousTitre.text = absorbe == 0
-                    ? "UN LIEUTENANT NEUF N'A ENCORE RIEN ABSORBÉ"
+                    ? "UN LIEUTENANT NEUF N’A ENCORE RIEN ABSORBÉ"
                     : "PERSONNE NE VOUS A ENCORE JUGÉ";
                 MajVerdict("Pas encore jugeable", ReputationResolvers.Muet);
-                MajPanneau("« PAS JUGEABLE » N'EST PAS « MOYEN »",
-                    "Rien n'a encore déteint",
-                    "ses quatre voyants sont éteints parce qu'il n'a rien pris de vous — pas " +
-                    "parce qu'il est médiocre. Et le serveur refuse de juger votre constance " +
-                    "tant qu'il n'a pas assez vu : indéterminé, jamais au milieu d'une jauge.",
+                MajPanneau("« PAS JUGEABLE » N’EST PAS « MOYEN »",
+                    "Rien n’a encore déteint",
+                    "ses quatre voyants sont éteints parce qu’il n’a " + Or("rien pris de vous") +
+                    " — pas parce qu’il est médiocre. Et le serveur refuse de juger votre " +
+                    "constance tant qu’il n’a pas assez vu : " + Or("indéterminé") +
+                    ", jamais au milieu d’une jauge.",
                     ReputationResolvers.Creme);
                 return;
             }
@@ -339,19 +355,20 @@ namespace MafiaCleanCity.Operational
                 MajPanneau("CE QUI A CHANGÉ",
                     "Une règle donnée, une règle enfreinte",
                     "vous avez laissé passer ce que vous aviez interdit. Les deux cercles " +
-                    "l'enregistrent — le vôtre et le sien. Le serveur dit que vous dérivez, " +
-                    "jamais sur quelle règle : c'est un maillon manquant, pas un choix d'écran.",
+                    "l’enregistrent — le vôtre et le sien. Le serveur dit " + Or("que") +
+                    " vous dérivez, jamais " + Or("sur quelle règle") +
+                    " : c’est un maillon manquant, pas un choix d’écran.",
                     ReputationResolvers.Ambre);
                 return;
             }
 
-            sousTitre.text = "CE QU'IL A PRIS DE VOUS SE VOIT SUR LUI";
+            sousTitre.text = "CE QU’IL A PRIS DE VOUS SE VOIT SUR LUI";
             MajVerdict("Vous vous y tenez", ReputationResolvers.Vert);
             MajPanneau("LA RÈGLE DU JEU",
                 "Vous vous lisez sur lui",
-                "chaque vertu qu'il vous voit tenir finit sur sa tenue — col, manches, montre, " +
-                "gants. Une règle déclarée tient jusqu'à ce que vous la retiriez publiquement : " +
-                "la donner, c'est se donner une corde.",
+                "chaque vertu qu’il vous voit tenir finit sur sa tenue — col, manches, montre, " +
+                "gants. Une règle déclarée tient " + Or("jusqu’à ce que vous la retiriez publiquement") +
+                " : la donner, c’est se donner une corde.",
                 ReputationResolvers.Creme);
         }
 
@@ -383,10 +400,10 @@ namespace MafiaCleanCity.Operational
             // écartez de vos propres règles ») sur un écran qui annonce ne rien savoir. Même
             // défaut que des voyants restés allumés ou qu'une liste de règles non vidée : chaque
             // chemin d'échec doit remettre TOUT ce qu'il a pu laisser derrière lui.
-            MajPanneau("CE QUE L'ON NE SAIT PAS",
+            MajPanneau("CE QUE L’ON NE SAIT PAS",
                 "Le miroir ne répond pas",
-                "impossible de lire ce que votre lieutenant a retenu de vous. Ce n'est pas un " +
-                "verdict neutre : c'est une absence de verdict.",
+                "impossible de lire ce que votre lieutenant a retenu de vous. Ce n’est pas un " +
+                "verdict neutre : c’est une absence de verdict.",
                 ReputationResolvers.Muet);
             MajCompteur(0, "—", null, "RÈGLES DONNÉES");
             MajCompteur(1, "—", "/4", "ABSORBÉES");
@@ -543,11 +560,13 @@ namespace MafiaCleanCity.Operational
 
             TextMeshProUGUI titre = NouveauTexte(go.transform, "Titre", "Le miroir",
                 CssTitreCorps, ReputationResolvers.OrVif, DesignTokens.Current.hudSerifFont);
+            titre.fontStyle = TMPro.FontStyles.Bold;   // maquette : .enseigne b, 700 17px
             titre.alignment = TextAlignmentOptions.Center;
             titre.characterSpacing = 20f; // letter-spacing:.2em
 
             sousTitre = NouveauTexte(go.transform, "SousTitre", "", CssSousTitre,
                 ReputationResolvers.Creme2, DesignTokens.Current.primaryFont);
+            sousTitre.fontStyle = TMPro.FontStyles.Bold;   // maquette : sous-titre de l’enseigne (.enseigne i, 700 6.4px)
             sousTitre.alignment = TextAlignmentOptions.Center;
             sousTitre.characterSpacing = 34f;
 
@@ -573,15 +592,25 @@ namespace MafiaCleanCity.Operational
             for (int i = 0; i < 3; i++)
             {
                 GameObject fen = NouveauUI("Fenetre" + i, go.transform);
+                // ⛔ TROIS TIERS ÉGAUX, et c'est `preferredWidth = 0` qui l'obtient. Sans lui, la
+                // largeur préférée de chaque tuile vient de son CONTENU : « RÈGLES DONNÉES » est
+                // plus long que « ABSORBÉES », donc la 1ʳᵉ tuile prend plus de place, et
+                // `childForceExpandWidth` ne répartit également que le RESTE. Mesuré par le juge :
+                // 33,70 / 26,57 / 27,22 %L au lieu de trois fois 28,56 — la première est 27 % plus
+                // large que la deuxième, dans une rangée que la maquette veut régulière.
+                LayoutElement tle = fen.AddComponent<LayoutElement>();
+                tle.minWidth = 0f; tle.preferredWidth = 0f; tle.flexibleWidth = 1f;
                 AjouterFond(fen, ReputationResolvers.Creux);
                 Contour(fen, ReputationResolvers.Lisere);
 
                 compteurNombre[i] = NouveauTexte(fen.transform, "Nombre", "—",
                     CssCompteurNombre, ReputationResolvers.Cyan, DesignTokens.Current.primaryFont);
+                compteurNombre[i].fontStyle = TMPro.FontStyles.Bold;   // maquette : le chiffre du compteur (.fen, 700 14px)
                 compteurNombre[i].alignment = TextAlignmentOptions.Center;
 
                 compteurLibelle[i] = NouveauTexte(fen.transform, "Libelle", "",
                     CssCompteurLib, ReputationResolvers.Muet, DesignTokens.Current.primaryFont);
+                compteurLibelle[i].fontStyle = TMPro.FontStyles.Bold;   // maquette : le libellé du compteur (.fen>span, 700 5.4px)
                 compteurLibelle[i].alignment = TextAlignmentOptions.Center;
                 compteurLibelle[i].characterSpacing = 16f;
 
@@ -609,7 +638,7 @@ namespace MafiaCleanCity.Operational
             LayoutElement hle = go.AddComponent<LayoutElement>();
             hle.minHeight = Px(CssHMiroir);
             hle.preferredHeight = Px(CssHMiroir);
-            hle.flexibleHeight = 0f;   // ⚠️ PAS élastique — voir la note ci-dessous
+            hle.flexibleHeight = 1f;   // ⚠️ ÉLASTIQUE — `.elast{flex:1}`, voir la note ci-dessous
             zoneElastique = (RectTransform)go.transform;
             AjouterFond(go, ReputationResolvers.Fond2);
             Contour(go, ReputationResolvers.Lisere);
@@ -667,12 +696,12 @@ namespace MafiaCleanCity.Operational
 
             verdictTitre = NouveauTexte(verdictGo.transform, "Titre", "",
                 CssVerdictTitre, ReputationResolvers.Muet, DesignTokens.Current.hudSerifFont);
-            verdictTitre.fontStyle = TMPro.FontStyles.Bold;
+            verdictTitre.fontStyle = TMPro.FontStyles.Bold;   // maquette : .verdict b, 700 10px
 
             // La légende ne dépend d'AUCUN état : c'est la même phrase dans les six vues de la
             // maquette. La poser une fois ici, plutôt que dans `AppliquerEtat`, évite qu'un état
             // futur oublie de la réécrire et laisse une colonne sans son explication.
-            NouveauTexte(verdictGo.transform, "Legende", "ce qu'il a absorbé de vos règles",
+            NouveauTexte(verdictGo.transform, "Legende", "ce qu’il a absorbé de vos règles",
                 CssVerdictLegende, ReputationResolvers.Muet, DesignTokens.Current.primaryFont);
 
             for (int i = 0; i < 4; i++)
@@ -694,6 +723,20 @@ namespace MafiaCleanCity.Operational
         /// qui distingue les trois états ; l'asserter sur la sortie plutôt que sur la valeur
         /// d'entrée évite une garde tautologique (« l'état vaut ce que je viens de lui donner »).</summary>
         public string PanneauSurTitreAffiche => pannSurTitre != null ? pannSurTitre.text : null;
+
+        /// <summary>L'emphase du corps de texte, telle que la maquette la définit : `<u>` y est
+        /// redéfini en `text-decoration:none; color:or_vif; font-weight:700` (chassis6.py:138 et
+        /// 146). Ce n'est donc PAS un souligné — c'est un mot en or gras.
+        ///
+        /// ⚠️ Ces emphases avaient disparu du rendu, et le juge visuel l'a chiffré : 0 pixel d'or
+        /// dans le paragraphe contre 1 212 en maquette. « rien pris de vous » et « indéterminé »
+        /// sont les deux mots qui PORTENT l'écran — l'un dit que le lieutenant n'a rien absorbé,
+        /// l'autre que le serveur refuse de juger — et ils se lisaient comme du texte courant.
+        /// ⛔ Passer par cette méthode, jamais par un balisage recopié : cinq copies d'une couleur
+        /// littérale divergeraient au premier changement de palette.</summary>
+        private static string Or(string mot) =>
+            "<b><color=#" + ColorUtility.ToHtmlStringRGB(ReputationResolvers.OrVif) + ">"
+            + mot + "</color></b>";
 
         private void MajPanneau(string surTitre, string titre, string texte, Color couleurTitre)
         {
@@ -746,7 +789,7 @@ namespace MafiaCleanCity.Operational
             v.childForceExpandWidth = true; v.childForceExpandHeight = false;
 
             listeReglesVide = NouveauTexte(go.transform, "Vide",
-                "vous n'avez encore donné aucune règle — rien ne peut donc être enfreint",
+                "vous n’avez encore donné aucune règle — rien ne peut donc être enfreint",
                 CssPannTexte, ReputationResolvers.Eteint, DesignTokens.Current.primaryFont);
 
             EmpilerVertical(go, Px(CssPannPadY), Px(4f), Px(CssPannPadX));
@@ -835,9 +878,11 @@ namespace MafiaCleanCity.Operational
             // autre chose.
             pannSurTitre = NouveauTexte(go.transform, "SurTitre", "", CssPannSurTitre,
                 ReputationResolvers.Muet, DesignTokens.Current.primaryFont);
+            pannSurTitre.fontStyle = TMPro.FontStyles.Bold;   // maquette : le sur-titre du panneau (.pann, 700 5.6px)
             pannSurTitre.characterSpacing = 19f;
             pannTitre = NouveauTexte(go.transform, "Titre", "", CssPannTitre,
                 ReputationResolvers.Creme, DesignTokens.Current.hudSerifFont);
+            pannTitre.fontStyle = TMPro.FontStyles.Bold;   // maquette : le titre du panneau (.pann, 700 13px)
             pannTexte = NouveauTexte(go.transform, "Texte", "",
                 CssPannTexte, ReputationResolvers.Creme2, DesignTokens.Current.primaryFont);
 
@@ -863,6 +908,7 @@ namespace MafiaCleanCity.Operational
 
             ctaLibelle = NouveauTexte(cta.transform, "Libelle", "DONNER UNE RÈGLE",
                 CssCtaCorps, ReputationResolvers.OrVif, DesignTokens.Current.primaryFont);
+            ctaLibelle.fontStyle = TMPro.FontStyles.Bold;   // maquette : .cta6, 700 8.5px
             ctaLibelle.alignment = TextAlignmentOptions.Center;
             ctaLibelle.characterSpacing = 11f;
             RectTransform lrt = (RectTransform)ctaLibelle.transform;

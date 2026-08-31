@@ -24,6 +24,7 @@ namespace MafiaCleanCity.Operational
     {
         private RectTransform racinePleinEcran;
         private RectTransform buste;      // porte la rotation de posture
+        private Image bouche, boucheMasque;   // le sourire, obtenu par occlusion
         private Image col, revresG, revresD, montre, gantG;
         private Image oeilG, oeilD;
         private TextMeshProUGUI verdict;
@@ -53,6 +54,7 @@ namespace MafiaCleanCity.Operational
                                           ReputationResolvers.Muet, transform);
             titre.alignment = TextAlignmentOptions.Center;
             titre.characterSpacing = 14f;
+            titre.fontStyle = TMPro.FontStyles.Bold;   // maquette : .prt i, 700 5.6px
 
             // La zone de dessin : un rectangle aux proportions du viewBox.
             GameObject zone = Nouveau("Dessin", transform);
@@ -71,6 +73,10 @@ namespace MafiaCleanCity.Operational
             le.flexibleWidth = 0f; le.flexibleHeight = 0f;
 
             // Le buste porte la ROTATION — c'est lui qui s'incline, pas les traits séparément.
+            // Le dôme d'épaules descend SOUS le bas du viewBox (ellipse de centre y=78) : sans
+            // masque il déborderait dans le verdict, comme le buste l'a déjà fait une fois.
+            zone.AddComponent<RectMask2D>();
+
             GameObject bu = Nouveau("Buste", zone.transform);
             buste = (RectTransform)bu.transform;
             Etirer(buste);
@@ -79,33 +85,61 @@ namespace MafiaCleanCity.Operational
             // propriété STRUCTURELLE, testable sans lire un pixel — et c'est ce type de garde
             // qui a fermé ici une classe entière de défauts d'occlusion que quatre tours de
             // gardes pixel n'avaient pas vue.
+            // ⛔ LE DÔME D'ÉPAULES — `M6 78 C6 62 16 55 31 55 C46 55 56 62 56 78 Z` : une
+            // demi-ellipse de centre (31, 78), rayons 25 × 23, dont seule la MOITIÉ HAUTE se voit
+            // (la base est le bord du viewBox). D'où une ellipse de hauteur 46 posée à y=55, et le
+            // masque de la zone de dessin qui en coupe le bas — pas un rectangle de hauteur 23.
             Forme(ref _epaules, "Epaules", buste, ReputationResolvers.Carte2,
-                  new Rect(6f, 55f, 50f, 23f), ech);
+                  new Rect(6f, 55f, 50f, 46f), ech, ellipse: true);
             col = FormeTriangle("Col", buste, ReputationResolvers.Creme, ech);
             revresG = null; revresD = null;
             Forme(ref revresG, "RevresG", buste, ReputationResolvers.Creme,
                   new Rect(9f, 66f, 7f, 5f), ech);
             Forme(ref revresD, "RevresD", buste, ReputationResolvers.Creme,
                   new Rect(47f, 66f, 7f, 5f), ech);
+            // `rect … rx="1.4"` sur une hauteur de 3,4 : le rayon vaut presque la demi-hauteur,
+            // donc un stade, pas un rectangle vif. Le juge l'a discriminé en mesurant la largeur à
+            // trois hauteurs — 27/40/32 px en référence (variable ⇒ arrondi), 56/56/56 en jeu.
             Forme(ref montre, "Montre", buste, ReputationResolvers.OrVif,
-                  new Rect(46f, 72f, 8f, 3.4f), ech);
+                  new Rect(46f, 72f, 8f, 3.4f), ech, arrondi: true);
+            // `<ellipse cx="12" cy="75" rx="5" ry="3.4">` — une ellipse déclarée comme telle.
             Forme(ref gantG, "GantG", buste, ReputationResolvers.Creme2,
-                  new Rect(7f, 71.6f, 10f, 6.8f), ech);
+                  new Rect(7f, 71.6f, 10f, 6.8f), ech, ellipse: true);
             Forme(ref _cou, "Cou", buste, ReputationResolvers.Creme2,
                   new Rect(26f, 48f, 10f, 10f), ech);
-            Forme(ref _tete, "Tete", buste, ReputationResolvers.Creme2,
-                  new Rect(18.5f, 17f, 25f, 30f), ech, arrondi: true);
+            // ⚠️ LES CHEVEUX PASSENT AVANT LA TÊTE, et c'est ce qui fait la calotte. Le SVG les
+            // dessine en un path qui épouse le crâne ; faute de primitive à chemin, on pose une
+            // ellipse pleine que le VISAGE recouvre ensuite aux deux tiers. Ne reste visible que
+            // l'arc supérieur — la calotte. L'ordre de fratrie EST le dessin.
             Forme(ref _cheveux, "Cheveux", buste, ReputationResolvers.Carte2,
-                  new Rect(18f, 10f, 26f, 16f), ech, arrondi: true);
+                  new Rect(18f, 10f, 26f, 16f), ech, ellipse: true);
+            // `<ellipse cx="31" cy="32" rx="12.5" ry="15">` — une ellipse, pas un stade.
+            Forme(ref _tete, "Tete", buste, ReputationResolvers.Creme2,
+                  new Rect(18.5f, 17f, 25f, 30f), ech, ellipse: true);
             Forme(ref oeilG, "OeilG", buste, ReputationResolvers.Encre,
                   new Rect(24.6f, 29.7f, 3.8f, 4.6f), ech, arrondi: true);
             Forme(ref oeilD, "OeilD", buste, ReputationResolvers.Encre,
                   new Rect(33.6f, 29.7f, 3.8f, 4.6f), ech, arrondi: true);
+            // ⛔ LA BOUCHE — elle était purement ABSENTE, et le juge l'a relevé : « le visage passe
+            // de souriant à inexpressif alors que le libellé dit Il vous écoute ». La maquette
+            // trace un arc (`M27 40,5 Q31 42,5 36 40,5`), courbé vers le BAS = un sourire.
+            // Faute de primitive à chemin, on le construit par occlusion : une ellipse sombre,
+            // puis une ellipse couleur peau posée par-dessus et décalée VERS LE HAUT — il ne reste
+            // que le croissant inférieur, qui est l'arc du sourire.
+            // ⚠️ La forme dépend de la posture dans la maquette (`hostile` courbe vers le haut,
+            // `withdrawn` est un trait droit) ; seul le sourire par défaut est posé ici, les deux
+            // autres postures n'étant atteintes par aucun test (angle mort A5, déclaré).
+            Forme(ref bouche, "Bouche", buste, ReputationResolvers.Encre,
+                  new Rect(27f, 39.4f, 9f, 3.6f), ech, ellipse: true);
+            Forme(ref boucheMasque, "BoucheMasque", buste, ReputationResolvers.Creme2,
+                  new Rect(26.6f, 38.1f, 9.8f, 3.6f), ech, ellipse: true);
+
             baseOeilGX = ((RectTransform)oeilG.transform).anchoredPosition.x;
             baseOeilDX = ((RectTransform)oeilD.transform).anchoredPosition.x;
 
             verdict = Texte("Verdict", "", 8.6f, ReputationResolvers.Creme, transform);
             verdict.alignment = TextAlignmentOptions.Center;
+            verdict.fontStyle = TMPro.FontStyles.Bold;   // maquette : .prt b, 700 8.6px
             verdict.font = DesignTokens.Current.hudSerifFont;
 
             // ⛔ LE TROU, ÉCRIT À L'ÉCRAN PLUTÔT QUE MASQUÉ. « Salvatore » est une FICTION de
@@ -211,7 +245,7 @@ namespace MafiaCleanCity.Operational
             rt.anchoredPosition = new Vector2(x, rt.anchoredPosition.y);
 
         private void Forme(ref Image cible, string nom, Transform parent, Color couleur,
-                           Rect vb, float ech, bool arrondi = false)
+                           Rect vb, float ech, bool arrondi = false, bool ellipse = false)
         {
             GameObject go = Nouveau(nom, parent);
             RectTransform rt = (RectTransform)go.transform;
@@ -225,7 +259,17 @@ namespace MafiaCleanCity.Operational
             Image img = go.AddComponent<Image>();
             img.color = couleur;
             img.raycastTarget = false;
-            if (arrondi)
+            if (ellipse)
+            {
+                // ⛔ ELLIPSE VRAIE, et non « rectangle à coins très arrondis ». La différence n'est
+                // pas cosmétique : `RoundedRectMask` est un 9-slice, donc son CENTRE est étiré et
+                // reste plein. Mesuré par le juge visuel sur les cheveux — remplissage 88,9 % en
+                // jeu contre 35,5 % en maquette : une calotte était devenue un bloc.
+                // Un disque plein étiré en `Simple` donne l'ellipse que le SVG dessine.
+                img.sprite = ProceduralUI.RadialDisc(64, couleur, couleur);
+                img.type = Image.Type.Simple;
+            }
+            else if (arrondi)
             {
                 img.sprite = ProceduralUI.RoundedRectMask(
                     Mathf.Max(1, Mathf.RoundToInt(Mathf.Min(vb.width, vb.height) * ech * 0.5f)));
@@ -349,6 +393,18 @@ namespace MafiaCleanCity.Operational
                 ecran.PxTraitPublic(ReputationScreenController.CssVoyantPadY));
             h.childControlWidth = true; h.childControlHeight = true;
             h.childForceExpandWidth = false;
+            // ⛔ `childForceExpandHeight = false` — sa valeur PAR DÉFAUT est `true`, et elle étire
+            // la pastille sur toute la hauteur de la ligne MALGRÉ ses quatre contraintes de taille.
+            // ⚠️ Le commentaire ci-dessus affirmait ce défaut corrigé depuis le run 14 : les
+            // min/preferred/flexible étaient bien posés sur la pastille, mais un `forceExpand`
+            // ajoute du flexible PAR-DESSUS, donc `flexibleHeight = 0` sur l'enfant ne suffit pas.
+            // Le juge visuel l'a chiffré : ovale de 6,7 × 20,6 px CSS, ratio h/l = 3,08 pour un
+            // disque qui doit valoir 1,000 (`.tl .lum{width:7px;height:7px;border-radius:50%}`),
+            // occupant 85 % de la hauteur de sa carte au lieu de 25 %.
+            // ★ Un défaut qu'on croit corrigé parce qu'on a corrigé l'enfant : la contrainte vivait
+            //   chez le PARENT, et un réglage par défaut qu'on n'écrit pas est un réglage quand même.
+            h.childForceExpandHeight = false;
+            h.childAlignment = TextAnchor.MiddleLeft;
             h.childAlignment = TextAnchor.MiddleLeft;
 
             GameObject lum = new GameObject("Lumiere", typeof(RectTransform), typeof(CanvasRenderer));
@@ -377,6 +433,7 @@ namespace MafiaCleanCity.Operational
 
             titre = Texte(colonne.transform, "Titre", ecran.PxTraitPublic(ReputationScreenController.CssVoyantTitre),
                           ReputationResolvers.Creme2);
+            titre.fontStyle = TMPro.FontStyles.Bold;   // maquette : .tl (le libellé de la pose), 700 7.4px
             sens = Texte(colonne.transform, "Sens", ecran.PxTraitPublic(ReputationScreenController.CssVoyantSens),
                          ReputationResolvers.Eteint);
         }
