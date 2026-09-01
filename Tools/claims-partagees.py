@@ -64,6 +64,14 @@ def population():
         out = subprocess.run(['git','-C',str(DEPOT),'show','--name-only','--format=',sha],
                              capture_output=True,text=True).stdout
         vus.update(l.strip() for l in out.splitlines() if l.strip())
+    # ⛔⛔ QUATRIÈME FORME, MESURÉE AVANT D'ÊTRE PROMISE (2026-09-01). Le critère « modifié dans les
+    #    mêmes commits que le design » prouve qu'un artefact a UN commit, jamais que ce commit
+    #    touche AUSSI le design. Mesuré sur l'historique réel : **un artefact du lot y échappait
+    #    déjà** — le log commité pour ㉔, livré seul. La quatrième forme n'attendait pas un commit
+    #    futur : elle était vivante dans le commit qui « corrigeait » la troisième.
+    #    ⇒ UNION avec le répertoire que le lot POSSÈDE — un critère de propriété, pas de nommage.
+    for f in list(DEPOT.glob('Tools/redimensionnement*')) + list(DEPOT.glob('Tools/redimensionnement-R1/*')):
+        if f.is_file(): vus.add(str(f.relative_to(DEPOT)))
     fichiers = {}
     for rel in sorted(vus):
         f = DEPOT / rel
@@ -102,6 +110,9 @@ def blocs_maximaux(a, b):
         else: i += 1
     return out
 
+print(f'  population : union « commits du design » + « répertoire du lot » — voir population()')
+print(f'  ⚠️ ÉCHAPPE ENCORE : un artefact vivant HORS de ce répertoire ET commité SEUL. Aucun')
+print(f'     aujourd hui, mais c est une propriété DATÉE de l historique, pas de la dérivation.')
 print(f'  artefacts balayés : {len(textes)}  ({", ".join(f"{k}={v} mots" for k, v in mots.items())})')
 print(f'  séquence minimale : {N} mots normalisés\n')
 
