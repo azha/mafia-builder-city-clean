@@ -34,6 +34,16 @@ namespace MafiaCleanCity.Capture.Tests
         }
 
         [UnityTest]
+        // ⛔ CATÉGORIE PROPRE, EN PLUS de celle de la classe (NUnit les CUMULE, il n'y a rien à
+        //    retirer) — et c'est une contrainte de STABILITÉ, pas de rangement. Mesuré par une
+        //    session voisine : SIGSEGV reproduit DEUX fois dans le pilote graphique
+        //    (`RenderManager::RenderOffscreenCameras` -> `GfxDeviceGLES::DrawBufferRanges`, Mesa
+        //    Intel 25.2.8) en lançant la catégorie `Capture` ENTIÈRE, et JAMAIS en lançant une
+        //    capture seule (3 verts). ⇒ *Une catégorie par capture* : sans elle, cette capture-ci
+        //    n'est pas lançable du tout, puisque ses voisines emportent l'éditeur avant son tour.
+        //    ⚠️ Et un run qui MEURT réécrit les PNG déjà produits — d'où le `git checkout` des
+        //    captures non voulues après tout run interrompu, avant tout commit.
+        [Category("CaptureDistrict")]
         public IEnumerator Capture_VuePrincipale_DistrictAvecBatiments_SousChromeV31()
         {
             // 1. compte FRAIS : session/open octroie le kit de départ (4 bâtiments J0).
