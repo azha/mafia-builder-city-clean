@@ -121,3 +121,21 @@ inventé là où le serveur ne projette rien.
 - les notes d'implémentation du chantier ;
 - les rapports de juges précédents (visuels ou données) ;
 - les « choix » non sourcés : s'ils ne sont pas dans la table ci-dessus, ils n'existent pas.
+
+---
+
+## ⚠️ AMENDEMENT 2026-09-02 — une mesure de ce dossier enregistre un 404 comme des données vides
+
+`mesures/04-buildings.json` a été capturé sur `GET /v1/me/buildings`. **Cette route n'existe pas** :
+elle rend `404 RESOURCE_NOT_FOUND`. Le fichier contient donc un corps d'ERREUR, et il a été lu
+comme un domaine vide.
+
+La mesure n'est pas réécrite — elle est exacte en tant qu'enregistrement de ce que le serveur a
+répondu. C'est son INTERPRÉTATION qui était fausse, et le rapport n'en dépend pour aucune de ses
+conclusions.
+
+★ **Un 404 dont on ne lit que le corps ressemble à une réponse vide.** Deux instruments
+indépendants s'y sont trompés de la même façon à une semaine d'écart — celui-ci, et le test de
+capture de l'écran ② qui cherchait un identifiant dans le corps, ne le trouvait pas, et concluait
+« liste vide ». ⇒ **Lire le CODE avant le corps**, sinon « absent » et « vide » deviennent le même
+mot, et un maillon manquant se déguise en domaine vide.
