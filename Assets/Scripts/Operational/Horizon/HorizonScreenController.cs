@@ -258,16 +258,34 @@ namespace MafiaCleanCity.Operational
 
         /// <summary>Un contour, posé en PREMIER enfant — la convention de fratrie du dépôt : un
         /// décor ne s'empile pas avec le contenu, et il ignore le layout.</summary>
+        /// <summary>Un liseré : QUATRE arêtes d'un px de trait, jamais un rectangle plein.
+        ///
+        /// ⛔ La version précédente posait UN enfant plein cadre couleur liseré et l'envoyait en
+        /// `SetAsFirstSibling`, en croyant le glisser derrière le fond. Mesuré sur la capture de
+        /// l'état vide : **82,5 % de l'écran en or plein** — les quatre blocs entièrement remplis.
+        /// La cause n'est pas l'ordre des frères : `AjouterFond` pose son `Image` SUR le bloc
+        /// lui-même, et un enfant est TOUJOURS rendu après le graphique de son parent. Aucun rang
+        /// de fratrie ne fait passer un enfant derrière son propre parent.
+        /// ★ La garde structurelle voyait un `Contour` présent, avec la bonne couleur, au bon
+        ///   endroit de l'arbre — et l'écran était illisible. Une garde qui vérifie qu'un élément
+        ///   EXISTE ne dit rien de ce qu'il RECOUVRE : il a fallu une image pour le voir.</summary>
         private void Contour(GameObject cible, Color couleur)
         {
-            GameObject b = NouveauUI("Contour", cible.transform);
-            b.transform.SetAsFirstSibling();
-            Image i = b.AddComponent<Image>();
-            i.color = couleur; i.raycastTarget = false;
-            RectTransform rt = (RectTransform)b.transform;
-            rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one;
-            rt.offsetMin = Vector2.zero; rt.offsetMax = Vector2.zero;
-            b.AddComponent<LayoutElement>().ignoreLayout = true;
+            void Arete(string nom, Vector2 aMin, Vector2 aMax, Vector2 oMin, Vector2 oMax)
+            {
+                GameObject b = NouveauUI(nom, cible.transform);
+                Image i = b.AddComponent<Image>();
+                i.color = couleur; i.raycastTarget = false;
+                RectTransform rt = (RectTransform)b.transform;
+                rt.anchorMin = aMin; rt.anchorMax = aMax;
+                rt.offsetMin = oMin; rt.offsetMax = oMax;
+                b.AddComponent<LayoutElement>().ignoreLayout = true;
+            }
+            float e = PxTrait(1f);
+            Arete("LisereHaut",   new Vector2(0f, 1f), Vector2.one,        new Vector2(0f, -e), Vector2.zero);
+            Arete("LisereBas",    Vector2.zero,        new Vector2(1f, 0f), Vector2.zero,       new Vector2(0f, e));
+            Arete("LisereGauche", Vector2.zero,        new Vector2(0f, 1f), Vector2.zero,       new Vector2(e, 0f));
+            Arete("LisereDroite", new Vector2(1f, 0f), Vector2.one,        new Vector2(-e, 0f), Vector2.zero);
         }
 
         /// <summary>Un compteur. `valeur < 0` ⇒ « — » : le trou se montre, il ne se comble pas

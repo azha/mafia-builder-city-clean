@@ -428,23 +428,31 @@ namespace MafiaCleanCity.Capture.Tests
         // Cible : `Tools/family-organigramme-reference-1120.png` (« LA FAMILLE — l'organigramme »,
         // maquette ratifiée user). Cette capture existe pour MESURER l'écart, pas pour le certifier.
         [UnityTest]
+        
         /// <summary>② Building Card, avec sa ligne d'entretien — la seule valeur numérique que
         /// cette fiche a le droit d'afficher. Capture hors shell : ② est « NAV-HORS-SHELL » comme
         /// ⑨, et le shell vide son slot à chaque changement d'onglet (défaut connu, routé).</summary>
         [Category("Capture")]
         public IEnumerator Capture_FicheBatiment()
         {
+            // ⛔ LE COMPTE DE DÉMO, PAS UN SIGNUP FRAIS. Mesuré au tour précédent :
+            // `GET /v1/me/buildings` rend une liste VIDE sur un compte neuf — le kit octroyé par
+            // `session/open` porte des lieutenants, pas des bâtiments. Une fiche de bâtiment n'a
+            // alors rien à montrer, et la capture serait un cadre vide parfaitement valide.
+            // ⚠️ On se CONNECTE au compte de démo, on ne le RESEEDE pas : le seeder remet son monde
+            // à zéro et effacerait le travail des autres sessions qui s'y appuient.
             var auth = new AuthClient { BaseUrl = BaseUrl };
-            string callsign = SeederSupport.SafeCallsign("fiche", ref seq);
             string token = null, err = null;
-            yield return auth.SignUp(callsign, "fiche-capture-pw", t => token = t, e => err = e);
-            Assert.IsNull(err, $"signup errored: {err}");
+            yield return auth.SignIn("operational_demo@example.test", "operational-demo-pw",
+                                     t => token = t, e => err = e);
+            Assert.IsNull(err, $"connexion au compte de démo échouée : {err}");
+            Assert.IsFalse(string.IsNullOrEmpty(token), "le compte de démo doit rendre un jeton");
 
             var sessionClient = new SessionClient { BaseUrl = BaseUrl };
             SessionOpenDto payload = null;
             yield return sessionClient.OpenSession(token, "capture-fiche", dto => payload = dto,
                 (c, m) => Assert.Fail($"session/open failed: {c}: {m}"));
-            Assert.IsNotNull(payload, "session/open doit réussir — il octroie le kit de départ");
+            Assert.IsNotNull(payload, "session/open doit réussir");
 
             LogAssert.ignoreFailingMessages = true;
 
