@@ -351,7 +351,21 @@ namespace MafiaCleanCity.Operational
 
         // ---- points d'injection du shell (IShellTenant) -----------------------------------
         private Transform mountParent;
-        public void SetMountParent(Transform parent) => mountParent = parent;
+        /// <summary>⛔ CE POINT D'INJECTION CONSTRUIT — ET C'EST LE CORRECTIF (mesuré 2026-09-02).
+        /// Le gabarit appelait <c>EnsureInitialized()</c> depuis <c>Awake()</c>. Or <c>Awake</c>
+        /// s'exécute SYNCHRONEMENT DANS <c>AddComponent&lt;T&gt;()</c>, donc AVANT que l'appelant
+        /// ait pu poser le parent : la racine n'a pas encore de largeur, et <c>BuildLayout()</c>
+        /// mesure zéro. Symptôme observé sur un écran réel : textes empilés au centre, ce qui
+        /// ressemble à un défaut de mise en page alors que c'est un défaut d'ORDRE.
+        /// ⇒ *Le shell, lui, fait déjà le bon ordre à ses trois sites de montage (parent, puis
+        /// géométrie, puis <c>AddComponent</c> en DERNIER) — le défaut n'était pas chez lui, il
+        /// était dans ce gabarit, donc dans les 46 écrans qu'il reste à générer.*
+        /// La construction se déclenche donc quand le parent est CONNU, pas quand l'objet naît.</summary>
+        public void SetMountParent(Transform parent)
+        {{
+            mountParent = parent;
+            EnsureInitialized();
+        }}
 
         private string token;
         public void SetToken(string t) => token = t;
@@ -370,7 +384,12 @@ namespace MafiaCleanCity.Operational
         private int PxTrait(float css) =>
             EchelleMaquette.PxTrait(css, racinePleinEcran, EchelleMaquette.LargeurEcransBrennar);
 
-        private void Awake() => EnsureInitialized();
+        // ⚠️ PAS d'appel depuis `Awake()` : il court dans `AddComponent`, avant tout parentage.
+        // `Start()` est le filet — il s'exécute après que l'appelant a eu sa frame pour injecter le
+        // parent, et `EnsureInitialized` est idempotent, donc le premier des deux qui arrive gagne
+        // sans que le second ne reconstruise. Sans ce filet, un écran monté sans `SetMountParent`
+        // ni `Charger()` ne se construirait JAMAIS — un vert par absence, pas une économie.
+        private void Start() => EnsureInitialized();
 
         private void EnsureInitialized()
         {{
