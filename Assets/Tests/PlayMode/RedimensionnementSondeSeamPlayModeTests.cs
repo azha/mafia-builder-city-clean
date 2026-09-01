@@ -79,35 +79,41 @@ namespace MafiaCleanCity.Shell.Tests
             AppShell.SafeAreaProvider = () => new Rect(0f, gestureBarPx, screenW,
                                                        screenH - notchPx - gestureBarPx);
 
-            // Sentinelle : la valeur statique AVANT tout montage. Si elle ne bouge pas, rien n'a
-            // été publié et toute lecture ultérieure est celle d'un test voisin.
-            float avantTop = ShellChrome.TopInsetPx, avantBottom = ShellChrome.BottomInsetPx;
+            AppShell inst = BootShell();
 
-            BootShell();
+            // ⛔⛔ ON NE LIT PLUS LE STATIQUE — r2 a prouvé qu'il ne bouge JAMAIS sous un montage nu
+            //    (240 frames, zéro delta) : `PublierInsetsDuChrome()` vit sur des chemins de
+            //    session/reconstruction (`AppShell.cs:552`, `:1373`) qu'une sonde ne déclenche pas,
+            //    et `ShellChrome.*InsetPx` est STATIQUE, donc pollué par les 260 autres tests.
+            //    ⇒ On lit la grandeur d'INSTANCE que le seul test du dépôt exerçant ce seam lit
+            //      déjà (`ChromeSafeAreaPlayModeTests`) : la position ancrée des deux barres. Elle
+            //      appartient au shell qu'on vient de monter ⇒ **structurellement** immunisée
+            //      contre la pollution, et peuplée une frame après le montage.
+            //    ★ Ce dispositif existait dans le dépôt avant que j'écrive le mien. Deuxième fois
+            //      ce soir : *avant d'écrire un instrument, chercher qui exerce déjà la couture.*
+            yield return null; // BuildLayout() est synchrone dans Start() — une frame suffit ICI
 
-            // Attente BORNÉE d'une publication réelle. Une frame ne suffit pas : la republication
-            // des insets suit l'acquisition de session, qui est asynchrone.
-            const int framesMax = 240;
-            int frames = 0;
-            while (frames < framesMax
-                   && Mathf.Approximately(ShellChrome.TopInsetPx, avantTop)
-                   && Mathf.Approximately(ShellChrome.BottomInsetPx, avantBottom))
-            {
-                frames++;
-                yield return null;
-            }
+            Assert.IsNotNull(inst.TopBarSlot, "TopBarSlot absent : le shell n'a pas construit son layout");
+            Assert.IsNotNull(inst.TabBarRoot, "TabBarRoot absent : le shell n'a pas construit son layout");
+            Assert.IsNotNull(inst.ShellCanvas, "aucun canvas : rien n'a été monté, la lecture serait vide");
 
-            Debug.Log($"[㉕] montage notch={notchPx} gestes={gestureBarPx} : publication après " +
-                      $"{frames} frame(s) — avant=({avantTop:F3},{avantBottom:F3}) " +
-                      $"après=({ShellChrome.TopInsetPx:F3},{ShellChrome.BottomInsetPx:F3})");
+            // Convention de signe lue sur le test existant : la barre du haut descend (y négatif),
+            // celle du bas monte (y positif). L'inset est donc la valeur absolue de chacune.
+            float top = -inst.TopBarSlot.anchoredPosition.y;
+            float bottom = inst.TabBarRoot.anchoredPosition.y;
 
-            Assert.Less(frames, framesMax,
-                $"AUCUNE publication d'insets en {framesMax} frames sous ce provider : la sonde n'a " +
-                "pas observé son propre montage. Ce n'est PAS « le seam ne suffit pas » — c'est une " +
-                "mesure qui n'a pas eu lieu, et la distinguer des deux est tout l'objet de cette garde.");
+            Debug.Log($"[㉕] notch={notchPx} gestes={gestureBarPx} -> topLocal={top:F3} bottomLocal={bottom:F3} " +
+                      $"(Screen={Screen.width}x{Screen.height}, canvas.scaleFactor={inst.ShellCanvas.scaleFactor:F4})");
 
-            rendu(ShellChrome.TopInsetPx, ShellChrome.BottomInsetPx);
+            rendu(top, bottom);
+
+            // ⛔ `Object.Destroy` est DIFFÉRÉ à la fin de frame. Sans cette frame, le montage
+            //    SUIVANT trouve le canvas du précédent via `FindFirstObjectByType<Canvas>()`, s'y
+            //    lie, puis le voit disparaître ⇒ `MissingReferenceException` au point B (mesuré au
+            //    run r3 : le point A avait rendu sa mesure, le point B est mort sur l'objet détruit
+            //    du point A). *Une destruction demandée n'est pas une destruction faite.*
             TearDown();
+            yield return null;
         }
 
         [UnityTest]
