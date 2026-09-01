@@ -55,10 +55,13 @@ mafia-clean-city-bo-front-1  Up 10 minutes (healthy)
 | `Assets/Scripts/Operational/Reputation/ReputationResolvers.cs` | valeur → libellé, valeur → couleur |
 | `Assets/Scripts/Operational/Reputation/ReputationPortrait.cs` | portrait + voyants |
 
-- **Rapport `juge-visuel` APPROUVÉ** : ⏳ **NON FOURNI À CETTE HEURE** — le juge visuel n'a pas
+- **Rapport `juge-visuel` APPROUVÉ** : `Tools/juge-visuel/reputation/r8-2026-08-31/rapport.md`
+  — verdict **APPROUVÉ SOUS RÉSERVE** au 8ᵉ tour (0 bloquant ; les 2 findings classés
+  `EMPÊCHE` ont été levés, commit `2af4343` ; les 6 `RAFFINEMENT` sont consignés en dette,
+  voir `…/r8-2026-08-31/reserves.md`). ⛔ ANCIENNE MENTION, désormais fausse : — le juge visuel n'a pas
   encore rendu. Ce dossier est monté d'avance ; il ne doit pas être instruit tant que cette ligne
   n'est pas remplacée par un chemin réel. Le mode clôture EXIGE l'approbation visuelle en amont.
-- **SHA du client** : `603c6f9` · suite PlayMode ScreenB3 : **9/9** au run 28, filtre `MAFIA_CI_CATEGORIES=ScreenB3`
+- **SHA du client** : `b728923` · suite PlayMode ScreenB3 : **9/9** au run 28, filtre `MAFIA_CI_CATEGORIES=ScreenB3`
   imprimé dans le log (`passed=9 failed=0 skipped=0`) — un compte, pas une absence d'échec.
 
 ## Écarts ASSUMÉS déjà connus (le juge les re-vérifie, il ne les recopie pas)
@@ -69,6 +72,22 @@ mafia-clean-city-bo-front-1  Up 10 minutes (healthy)
 | `restraint` absente | la branche existe mais aucune route ne liste les contreparties : `counterparty_id` n'est pas obtenable par un chemin joueur | angle mort A6 |
 | 4 couleurs locales | `Encre`, `Panneau`, `Liseré`, `Vert` n'existent pas dans `DesignTokens` ; arbitrage DA escaladé à l'user, non tranché | `Tools/screen-b3-diagnostic-designtokens.md` |
 | états `drifting`/`hostile`/`wary` | code écrit, JAMAIS exécuté par un test — dette assumée et déclarée, pas couverture | angle mort A5 |
+
+## ⛔ TON COMPTE EST À TOI, ET TU FERMES TA SESSION EN SORTANT
+
+**Crée ton propre compte par `POST /v1/auth/signup` (Idempotency-Key requis) — jamais le compte de
+démonstration `operational_demo@example.test`.** Et termine par un `POST /v1/session/close`
+EXPLICITE, pas par un abandon.
+
+⚠️ Ce n'est pas de l'hygiène : c'est un défaut mesuré sur ce dépôt, et il ne se voit pas d'où tu
+regardes. **Le gouverneur de décisions structurelles ne mord que si une session active existe**, et
+il s'appuie sur le COMPTE, pas sur les tables que tu interroges. Un lot voisin a fait tomber
+**59 tests** et un seeder inchangé depuis des semaines, uniquement en laissant une session ouverte
+sur le compte de démonstration.
+
+★ Une fixture doit RÉTABLIR son propre régime, jamais le supposer hérité. Ce que tu laisses ouvert
+derrière toi devient la prémisse d'une autre session, et elle n'aura aucun moyen de savoir que ça
+vient de toi.
 
 ## ⚠️ LA PILE EST PARTAGÉE — épingle tes comptes sur TON joueur
 
