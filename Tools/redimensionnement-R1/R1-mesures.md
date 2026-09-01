@@ -175,6 +175,29 @@ Sept des huit comptes du §7 portent leur colonne unité · portée. Le huitièm
 Balayage du §0 : **zéro** mention d'une règle de clôture. Ce n'est pas une prose insuffisante, c'est
 une **absence**. ⇒ ⑱ est **NON LIVRÉ**, et il l'était déjà quand le rapport le déclarait acquis.
 
+## ⛔ RÉ-ATTRIBUTION — l'image du back datait de 22:43, 21 commits derrière `main`
+
+Signalé le 2026-09-02 vers 02:00 : la pile de dev tournait sur une image construite à **22:43**,
+**21 commits en retard**. ⇒ **Tout 404 mesuré depuis 00:10 est suspect**, et mes runs sont dans
+cette fenêtre. Je reclasse au lieu de laisser mes conclusions telles quelles.
+
+| ce que j'ai mesuré | attribuable ? | pourquoi |
+|---|---|---|
+| les 3 gardes `Tab.More` rouges | **OUI** | le message d'échec NOMME le type trouvé (`ReputationScreenController`) — c'est une assertion de MONTAGE, qu'aucun état du back ne produit |
+| `NavD12` — letterbox mesuré 0,0 px | **NON** | une géométrie non dimensionnée faute de données rend la MÊME mesure qu'un défaut de letterbox |
+| ㉕ r2 — « aucune publication d'insets en 240 frames » | **NON** | un back périmé explique aussi bien l'acquisition qui n'aboutit pas |
+
+⚠️ **CE QUE ÇA CHANGE POUR ㉕, ET C'EST LE POINT** : mon diagnostic — *« `PublierInsetsDuChrome()`
+n'est pas sur le chemin d'un montage nu »* — reposait sur l'observation que le sentinel restait à
+sa valeur initiale après 240 frames. **Un back qui ne répond pas produit exactement cette
+observation.** Le diagnostic n'est donc pas réfuté, il est **NON ÉTABLI** : il faut le rejouer
+contre une pile à jour avant de s'en servir.
+⇒ *Un rouge mesuré dans une fenêtre où l'environnement était faux ne prouve rien — et il ne
+devient pas vrai parce qu'il est cohérent avec une hypothèse que j'avais déjà.* C'est l'inverse
+exact du raisonnement qui m'aurait arrangée.
+★ Ce qui SURVIT sans réserve : la mesure du point A de ㉕ (`120,000` / `80,000` contre `60/0,5`
+et `40/0,5`), parce qu'elle ne dépend d'aucune route — le provider est injecté par le test.
+
 ## ㉕ — sonde du seam : DEUX runs réels, et aucun n'a encore mesuré le seam
 
 **État : NON LIVRÉ.** Deux runs batchmode (427 s et 423 s, `passed=260 failed=2` les deux fois).
