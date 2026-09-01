@@ -64,6 +64,31 @@ for m in re.finditer(r'\*\*([^*\n][^*]{18,220})\*\*', corps):
 # ── LA TABLE, lue SÉPARÉMENT et seulement pour la comparaison finale.
 tbl = t.split('## 11.')[1]
 enum_txt = tbl[tbl.index('| # | ancre du corps'):]
+
+# ⛔⛔ L'OBSERVABLE QUI REND LE RATIO NON DÉCISIF (BLOCKING B1, revue ⊥ du 2026-09-01).
+#    La v1 décidait par un ratio de vocabulaire à 0,62 — un seuil choisi, non dérivé, sans coude
+#    dans sa courbe, et qui déclarait « couvertes » 3 obligations réelles sur 7 (dont une à 1,000).
+#    Pire : la liste de verbes en amont étranglait le §6 à ZÉRO candidat, alors que le §6 possède
+#    DIX des 31 lignes du plancher — **un tiers du plancher était structurellement hors de portée**,
+#    et la sortie n'imprimait que des totaux globaux, donc rien ne le disait.
+#    ⇒ Le § est DÉJÀ calculé des deux côtés : sur les candidats (ancre de section) et sur chaque
+#    ligne de table (colonne 2). **Un compte par §, sans lexing ni seuil, publie la PORTÉE RÉELLE
+#    du balayage** — ce qu'aucun ratio ne fait. Il ne remplace pas le tri, il le rend honnête.
+import collections
+
+def cle_section(brut):
+    """Ramène les DEUX côtés à la même clé — sinon la comparaison est vide et UNIFORME.
+
+    ⚠️ Piège rencontré en écrivant ce contrôle : les candidats portent le titre du corps
+    (« 3. La reconstruction — … ») et la table porte « §3 ». Aucun ne matche l'autre ⇒ TOUTES les
+    sections ressortaient « muettes », un verdict d'apparence catastrophique et entièrement faux.
+    *Un instrument qui rend un résultat UNIFORME mesure autre chose que ce qu'on croit.*
+    """
+    m = re.search(r'(\d+(?:\.\d+)?)', brut or '')
+    return f'§{m.group(1)}' if m else '(hors §)'
+
+lignes_par_section = collections.Counter(
+    cle_section(m.group(1)) for m in re.finditer(r'^\| [0-9]+ \| (§[^|]*) \|', enum_txt, re.M))
 mots_table = set(re.sub(r'[^a-zà-ÿ0-9 ]', '', re.sub(r'\s+', ' ', enum_txt.lower())).split())
 
 def couvert(txt):
@@ -81,14 +106,47 @@ if not cands:
 if len(mots_table) < 100:
     print(f'⛔ table illisible ({len(mots_table)} mots) — la comparaison serait vide et VERTE')
     sys.exit(2)
-# contrôle NÉGATIF : un livrable connu de la table DOIT ressortir couvert.
-temoin = "publier la table des 30 non joués par un juge"
-assert couvert(temoin), 'le critère de couverture ne reconnaît pas un livrable pourtant énuméré'
+# ⛔ CONTRÔLES SUR FIXTURES INERTES, DANS LES DEUX SENS (BLOCKING B1-c). La v1 assertait qu'un
+#    libellé VIVANT du document ressortait « couvert » — et il le restait après RETRAIT de sa ligne
+#    de la table : il ne testait pas l'énumération, il testait que trois mots existent quelque part
+#    dans dix kilo-octets de prose. *Une garde qui certifie le défaut.* ⇒ Deux fixtures embarquées,
+#    l'une dont le vocabulaire est dans la table, l'autre garantie étrangère.
+_MOTS_TABLE = [w for w in sorted(mots_table) if len(w) > 4][:12]
+if len(_MOTS_TABLE) < 8:
+    print('⛔ table trop pauvre pour construire un contrôle — abandon'); sys.exit(2)
+_FIXT_COUVERTE = ' '.join(_MOTS_TABLE)
+_FIXT_ETRANGERE = 'xyzzy plugh frobnitz quuxly blorptastic zorkmid grueish thaumaturgy'
+if not couvert(_FIXT_COUVERTE):
+    print('⛔ CONTRÔLE POSITIF MUET : du vocabulaire pris DANS la table est classé non couvert.'); sys.exit(2)
+if couvert(_FIXT_ETRANGERE):
+    print('⛔ CONTRÔLE NÉGATIF ROUGE : du vocabulaire étranger est classé couvert.'); sys.exit(2)
 
+par_section = collections.Counter(cle_section(a) for a, _ in cands)
+# contrôle : les deux côtés doivent parler le même alphabet de clés, sinon la comparaison est vide.
+if not (set(par_section) & set(lignes_par_section)):
+    print('⛔ AUCUNE clé de section commune aux deux côtés — la comparaison serait UNIFORME et fausse.')
+    sys.exit(2)
 print(f'  portée ................... §0–§8 ({len(corps)} caractères, le §11 EXCLU)')
 print(f'  candidats du corps ....... {len(cands)}')
 print(f'  déjà couverts par la table {len(cands) - len(retenus)}')
 print(f'  ⇒ À TRANCHER ............. {len(retenus)}\n')
+print('  ⇒ PORTÉE RÉELLE, PAR SECTION — c est ici que se lit ce que le balayage NE VOIT PAS :')
+print(f'      {"section du corps":30} {"candidats":>10} {"lignes de table":>16}')
+muettes = []
+def tri(k):
+    m = re.match(r'§(\d+)(?:\.(\d+))?', k)
+    return (int(m.group(1)), int(m.group(2) or 0)) if m else (999, 0)
+for sec in sorted(set(par_section) | set(lignes_par_section), key=tri):
+    nc = par_section.get(sec, 0)
+    nt = lignes_par_section.get(sec, 0)
+    marque = ''
+    if nc == 0 and nt > 0:
+        marque = '  ⛔ MUETTE — le balayage ne peut RIEN y trouver'; muettes.append((sec, nt))
+    print(f'      {sec[:30]:30} {nc:>10} {nt:>16}{marque}')
+if muettes:
+    perdu = sum(n for _, n in muettes)
+    print(f'\n  ⛔ {len(muettes)} section(s) MUETTE(s) portant {perdu} ligne(s) de plancher : le balayage')
+    print('     est aveugle sur cette part. Ce n est PAS « aucun orphelin » — c est « non regardé ».\n')
 for i, (a, x) in enumerate(retenus, 1):
     print(f'   [{i:2}] {a:26} «{x[:64]}…»')
 print(f'\n  ⚠️ Couverture PARTIELLE par construction : seules les prescriptions EN GRAS sous un')

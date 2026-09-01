@@ -26,13 +26,25 @@
 """
 import pathlib, re, sys, itertools
 
-ARTEFACTS = {
-    'design':      'Tools/redimensionnement-design.md',
-    'R1-mesures':  'Tools/redimensionnement-R1/R1-mesures.md',
-    'plancher.py': 'Tools/plancher-decoupage.py',
-    'borne.py':    'Tools/borne-producteur-unique.py',
-    'claims.py':   'Tools/claims-partagees.py',
-}
+# ⛔⛔ LA POPULATION EST DÉRIVÉE, PLUS JAMAIS ÉNUMÉRÉE (BLOCKING B2, revue ⊥ du 2026-09-01).
+#    La v1 portait une liste de 5 fichiers écrite à la main. Le lot en a SEPT — et les deux
+#    manquants étaient exactement ceux arrivés avec la version qui commitait ce script. Mesuré :
+#    l'instrument publiait 3 claims partagées ; la population complète en porte 17, dont NEUF entre
+#    un rapport et l'instrument qui produit ses nombres.
+#    ⇒ **C'est le défaut que le script frère énonce dans sa propre docstring** — « un jeu explicite
+#    est une allowlist, et son trou tombe là où le document bouge » — reproduit un instrument plus
+#    loin, DANS LE MÊME COMMIT. Écrire la règle ne l'installe pas chez son auteur ; seule une
+#    dérivation la tient.
+RACINE = pathlib.Path(__file__).resolve().parent
+def population():
+    """Tout artefact du lot : les documents et les instruments, découverts et non listés."""
+    vus = {}
+    for motif in ('redimensionnement*.md', 'redimensionnement-R1/*.md',
+                  'redimensionnement-R1/*.py', 'plancher-*.py', 'borne-*.py', 'claims-*.py'):
+        for f in RACINE.glob(motif):
+            if f.is_file(): vus[f.stem if f.stem not in vus else str(f)] = f
+    return dict(sorted(vus.items()))
+
 N = 9  # longueur de séquence : en dessous, la prose technique produit du bruit ; mesuré sur ce lot.
 
 strict = '--strict' in sys.argv
@@ -40,11 +52,7 @@ strict = '--strict' in sys.argv
 def norm(s):
     return re.sub(r'[^a-zà-ÿ0-9 ]', '', re.sub(r'\s+', ' ', s.lower())).strip()
 
-textes, absents = {}, []
-for k, v in ARTEFACTS.items():
-    p = pathlib.Path(v)
-    if p.exists(): textes[k] = p.read_text(encoding='utf-8')
-    else: absents.append(v)
+textes = {k: f.read_text(encoding='utf-8') for k, f in population().items()}
 
 # contrôle POSITIF : deux artefacts au moins, et le balayage doit voir du texte.
 if len(textes) < 2:
@@ -65,7 +73,6 @@ def blocs_maximaux(a, b):
         else: i += 1
     return out
 
-if absents: print(f'  ⚠️ non lus : {absents}')
 print(f'  artefacts balayés : {len(textes)}  ({", ".join(f"{k}={v} mots" for k, v in mots.items())})')
 print(f'  séquence minimale : {N} mots normalisés\n')
 
@@ -79,11 +86,29 @@ for a, b in itertools.combinations(textes, 2):
     for i, w in enumerate(bl, 1):
         print(f'      claim {i} : {len(w)} mots · repère «{" ".join(w[:6])}…»')
 
-# contrôle NÉGATIF : le motif doit trouver un artefact dans lui-même (sinon il ne mord sur rien).
-temoin = blocs_maximaux(textes[next(iter(textes))], textes[next(iter(textes))])
-if not temoin:
-    print('\n⛔ contrôle négatif MUET : le motif ne se reconnaît pas lui-même.'); sys.exit(2)
+# ⛔ CONTRÔLES SUR FIXTURES INERTES (IMPORTANT I1, revue ⊥ du 2026-09-01). La v1 comparait un
+#    texte À LUI-MÊME : tout texte de >= N mots le satisfaisait, et le script garantit ce minimum
+#    dix lignes plus haut. **Le contrôle était impossible à faire échouer** — « un contrôle qui
+#    recopie le prédicat teste l'identité, pas la couverture », la faute que la docstring du script
+#    frère énonce correctement pour elle-même.
+#    ⇒ Deux fixtures EMBARQUÉES (jamais un fichier que quelqu'un a le droit d'éditer : la cible
+#    d'un contrôle doit être INERTE) — l'une porte une séquence plantée dans les deux, l'autre est
+#    garantie disjointe. Le contrôle exige les DEUX réponses, donc il peut rougir dans les deux sens.
+_PLANTE = 'alpha beta gamma delta epsilon zeta eta theta iota'
+_FIXT_A = f'ouverture quelconque {_PLANTE} fermeture quelconque'
+_FIXT_B = f'autre ouverture totalement differente {_PLANTE} autre fermeture'
+_FIXT_C = 'aucun mot commun ici seulement du remplissage sans rapport aucun avec ce qui precede vraiment'
+pos = blocs_maximaux(_FIXT_A, _FIXT_B)
+neg = blocs_maximaux(_FIXT_A, _FIXT_C)
+if not pos:
+    print('\n⛔ CONTRÔLE POSITIF MUET : le motif ne voit pas une séquence plantée dans deux textes.')
+    sys.exit(2)
+if neg:
+    print(f'\n⛔ CONTRÔLE NÉGATIF ROUGE : {len(neg)} bloc(s) entre deux textes disjoints — faux positif.')
+    sys.exit(2)
+temoin = pos
 
-print(f'\n  ⇒ {total} claim(s) partagée(s) à arbitrer  (contrôle négatif : le motif MORD, {len(temoin)} blocs sur un artefact contre lui-même)')
+print(f'\n  ⇒ {total} claim(s) partagée(s) à arbitrer')
+print(f'     contrôles sur fixtures inertes : positif {len(temoin)} bloc(s) ✅ · négatif 0 bloc ✅')
 print('     ⚠️ Une claim PARAPHRASÉE reste indétectable : la classe est ARBITRÉE, pas fermée.')
 sys.exit(1 if (strict and total) else 0)
