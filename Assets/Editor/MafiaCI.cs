@@ -143,14 +143,28 @@ public static class MafiaCI
             EditorApplication.Exit(failed > 0 || tronquee ? 1 : 0);
         }
 
-        public void TestStarted(ITestAdaptor test) { }
+        // ⛔⛔ UNE LIGNE PAR TEST, ET CE N'EST PAS DU CONFORT (mesuré 2026-09-02).
+        //    Cette classe n'imprimait QUE les `FAIL`. Conséquence : quand l'éditeur meurt EN PLEIN
+        //    test — SIGSEGV reproduit deux fois dans le pilote graphique, `RenderOffscreenCameras`
+        //    → `DrawBufferRanges`, Mesa Intel 25.2.8 — le log ne porte AUCUNE trace du test en
+        //    cours, et la panne ressemble à « crash AVANT tout test ». On cherche alors la cause
+        //    dans le démarrage, jamais dans le test qui l'a déclenchée.
+        //    ⇒ `RUN`/`PASS` par test est le SEUL moyen de situer un crash : le dernier `RUN` sans
+        //    `PASS` NOMME le coupable. Sans lui, un mort silencieux est indiscernable d'un mort-né.
+        //    ⚠️ Et c'est complémentaire du dénominateur ci-dessus, ça ne le remplace pas : le
+        //    dénominateur dit COMBIEN manquent, `RUN`/`PASS` dit LEQUEL a emporté la suite.
+        public void TestStarted(ITestAdaptor test)
+        {
+            if (!test.IsSuite) Debug.Log($"MafiaCI: RUN {test.FullName}");
+        }
 
         public void TestFinished(ITestResultAdaptor result)
         {
-            if (result.TestStatus == TestStatus.Failed && !result.HasChildren)
-            {
+            if (result.HasChildren) return;
+            if (result.TestStatus == TestStatus.Failed)
                 Debug.LogError($"MafiaCI: FAIL {result.FullName} — {result.Message}");
-            }
+            else
+                Debug.Log($"MafiaCI: {result.TestStatus.ToString().ToUpperInvariant()} {result.FullName}");
         }
     }
 }
