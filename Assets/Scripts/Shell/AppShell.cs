@@ -218,9 +218,11 @@ namespace MafiaCleanCity.Shell
                 case Tab.Org: MountTenant<LieutenantScreenController>(); break;
                 case Tab.Pipeline: MountTenant<LaunderingController>(); break;
                 case Tab.More:
-                    // Destination vide ASSUMÉE (design §0 hors périmètre / C1-F1) — rien à monter.
-                    MountedTenantGameObject = null;
-                    MountedTenantType = null;
+                    // ⑯ La Revue du jour — la destination n'est plus vide (régime écrans du
+                    // 2026-09-01). L'écran existait depuis W3.U1 et n'était monté par PERSONNE :
+                    // 0 mention externe dans `Assets/Scripts`, 1 seul montage en test. Un écran
+                    // livré qu'aucun onglet ne monte est un écran que le joueur n'a jamais vu.
+                    MountTenant<DailyReviewScreenController>();
                     break;
             }
             RefreshTabButtonVisuals();

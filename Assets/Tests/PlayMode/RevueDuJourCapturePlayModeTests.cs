@@ -1,0 +1,159 @@
+using System.Collections;
+using NUnit.Framework;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+using UnityEngine.TestTools;
+using UnityEngine.UI;
+
+namespace MafiaCleanCity.Shell.Tests
+{
+    // ⑯ LA REVUE DU JOUR — capture du chemin de PRODUCTION, régime « full prod » du 2026-09-01.
+    //
+    // Ce n'est pas une suite : c'est le « test simple » que le ruling autorise — compile + UNE
+    // capture, et le critère de fini est « c'est bien ce qu'on veut », montré à l'user.
+    //
+    // ⚠️ Une capture est un chemin d'intégration exécuté de bout en bout (signup, session,
+    // montage, rendu). À ce titre elle porte les gardes qui rendraient l'image MENSONGÈRE, et
+    // elles seulement : l'onglet est réellement entré, le contrôleur est réellement monté, et
+    // l'image n'est pas noire. Sans elles, une capture d'écran vide passe pour une réussite.
+    public class RevueDuJourCapturePlayModeTests
+    {
+        private Scene sceneDeDemarrage;
+
+        private IEnumerator ChargerLaSceneDeDemarrageDuBuild()
+        {
+            LogAssert.ignoreFailingMessages = true;
+            Assert.GreaterOrEqual(SceneManager.sceneCountInBuildSettings, 1,
+                "Build Settings vides : aucune scène de démarrage ⇒ un build ne montrerait AUCUN écran.");
+            string chemin = SceneUtility.GetScenePathByBuildIndex(0);
+            Assert.IsNotEmpty(chemin, "la scène d'index de build 0 n'a pas de chemin");
+            AsyncOperation chargement = SceneManager.LoadSceneAsync(chemin, LoadSceneMode.Single);
+            while (chargement != null && !chargement.isDone) yield return null;
+            yield return null;
+            sceneDeDemarrage = SceneManager.GetActiveScene();
+        }
+
+        private static AppShell SondeShellDansLaScene(Scene scene)
+        {
+            if (!scene.IsValid() || !scene.isLoaded) return null;
+            foreach (GameObject racine in scene.GetRootGameObjects())
+            {
+                AppShell trouve = racine.GetComponentInChildren<AppShell>(true);
+                if (trouve != null) return trouve;
+            }
+            return null;
+        }
+
+        [UnityTest]
+        public IEnumerator Capture_RevueDuJour_1080x2400()
+        {
+            const int Largeur = 1080, Hauteur = 2400;
+            const string Chemin = "Assets/Screenshots/revue_du_jour_1080x2400.png";
+
+            yield return ChargerLaSceneDeDemarrageDuBuild();
+            AppShell shell = SondeShellDansLaScene(sceneDeDemarrage);
+            Assert.IsNotNull(shell, "aucun AppShell dans la scène de démarrage du build");
+
+            // L'acquisition de session du shell doit être RÉSOLUE avant de changer d'onglet :
+            // elle rappelle l'onglet par défaut quand elle aboutit, et ramènerait de force la vue
+            // ailleurs au milieu de la capture (course mesurée sur ce shell le 2026-08-21).
+            float attente = 0f;
+            while (shell.CurrentTab != AppShell.Tab.Empire && attente < 20f)
+            {
+                attente += Time.deltaTime;
+                yield return null;
+            }
+            Assert.AreEqual(AppShell.Tab.Empire, shell.CurrentTab,
+                "acquisition de session du shell non résolue — toute capture prise ici serait celle d'un autre écran");
+
+            shell.ActivateTab(AppShell.Tab.More);
+            DailyReviewScreenController revue = null;
+            float montage = 0f;
+            while (montage < 15f && revue == null)
+            {
+                revue = shell.ContentSlot.GetComponentInChildren<DailyReviewScreenController>(false);
+                montage += Time.deltaTime;
+                yield return null;
+            }
+            Assert.IsNotNull(revue,
+                "DailyReviewScreenController non monté sous l'onglet More — la capture montrerait une destination vide");
+
+            // Laisser le chargement (signin → review → roster) aboutir : une capture prise avant
+            // rendrait un comptoir vide et l'écran aurait l'air correct.
+            float charge = 0f;
+            while (charge < 20f && revue.LastLoadedReview == null)
+            {
+                charge += Time.deltaTime;
+                yield return null;
+            }
+            Canvas.ForceUpdateCanvases();
+            yield return null;
+            yield return null;
+
+            // ⚠️ `FindFirstObjectByType<Canvas>` rend le PREMIER canvas de la scène, pas celui qui
+            // porte l'écran : basculer celui-là en mode caméra ne rendrait rien de ce qu'on veut
+            // capturer. On remonte donc depuis l'écran monté jusqu'à SON canvas racine — la seule
+            // relation qui garantit qu'on bascule le bon.
+            Canvas canvas = revue.GetComponentInParent<Canvas>();
+            if (canvas != null) canvas = canvas.rootCanvas;
+            Assert.IsNotNull(canvas, "l'écran monté n'est sous AUCUN canvas — rien ne serait rendu");
+            Debug.Log($"[CAPTURE diag] canvas={canvas.name} mode={canvas.renderMode} " +
+                      $"contentSlot.parentCanvas={(shell.ContentSlot.GetComponentInParent<Canvas>() != null ? shell.ContentSlot.GetComponentInParent<Canvas>().name : "AUCUN")} " +
+                      $"revue.parent={(revue.transform.parent != null ? revue.transform.parent.name : "AUCUN")}");
+
+            // ⛔ UN CANVAS EN *SCREEN SPACE OVERLAY* N'EST PAS RENDU PAR UNE CAMÉRA — il est composé
+            // directement sur l'écran, APRÈS toutes les caméras. Une capture par `targetTexture`
+            // rend donc le fond de la caméra, et rien d'autre : ma première image était un GRIS
+            // UNIFORME, et ma garde « pas noire » l'a laissée passer sans broncher.
+            // ⇒ On bascule le canvas en *Screen Space Camera* le temps du rendu, puis on rétablit.
+            RenderMode modePrecedent = canvas.renderMode;
+            Camera cameraPrecedente = canvas.worldCamera;
+            float planPrecedent = canvas.planeDistance;
+
+            GameObject camGo = new GameObject("CaptureRevueCam");
+            Camera cam = camGo.AddComponent<Camera>();
+            cam.clearFlags = CameraClearFlags.SolidColor;
+            cam.backgroundColor = Color.black;
+            cam.orthographic = true;
+            var rt = new RenderTexture(Largeur, Hauteur, 24, RenderTextureFormat.ARGB32);
+            cam.targetTexture = rt;
+
+            canvas.renderMode = RenderMode.ScreenSpaceCamera;
+            canvas.worldCamera = cam;
+            canvas.planeDistance = 10f;
+            Canvas.ForceUpdateCanvases();
+            yield return null;
+            cam.Render();
+
+            RenderTexture prev = RenderTexture.active;
+            RenderTexture.active = rt;
+            var tex = new Texture2D(Largeur, Hauteur, TextureFormat.RGB24, false);
+            tex.ReadPixels(new Rect(0, 0, Largeur, Hauteur), 0, 0);
+            tex.Apply();
+            RenderTexture.active = prev;
+            canvas.renderMode = modePrecedent;
+            canvas.worldCamera = cameraPrecedente;
+            canvas.planeDistance = planPrecedent;
+
+            System.IO.File.WriteAllBytes(Chemin, tex.EncodeToPNG());
+            // ⛔ « PAS NOIRE » EST LA MAUVAISE PROPRIÉTÉ, et un gris uniforme la satisfait — c'est
+            // exactement ce qui est arrivé au premier essai : 2 592 000 pixels sur 2 592 000
+            // déclarés « non noirs », pour une image ENTIÈREMENT VIDE. La propriété qui discrimine
+            // est la VARIÉTÉ : un écran rendu porte des dizaines de teintes, un fond de caméra une
+            // seule. On compte donc les couleurs DISTINCTES, pas la luminosité.
+            var teintes = new System.Collections.Generic.HashSet<int>();
+            Color[] pixels = tex.GetPixels();
+            foreach (Color c in pixels)
+            {
+                teintes.Add((Mathf.RoundToInt(c.r * 31) << 10) | (Mathf.RoundToInt(c.g * 31) << 5) | Mathf.RoundToInt(c.b * 31));
+            }
+            Debug.Log($"[CAPTURE] {Chemin} {Largeur}x{Hauteur} — {teintes.Count} teintes distinctes · " +
+                      $"cartes={revue.RenderedCardCount} vide={revue.RenderedEmptyState}");
+            Assert.Greater(teintes.Count, 12,
+                $"{Chemin} ne porte que {teintes.Count} teintes — c'est un fond, pas un écran rendu.");
+
+            if (camGo != null) Object.Destroy(camGo);
+            Object.Destroy(rt);
+        }
+    }
+}

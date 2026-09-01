@@ -3,16 +3,37 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using MafiaCleanCity.Theme;
+using MafiaCleanCity.Operational.Lieutenant;
 using TMPro;
 
 namespace MafiaCleanCity.Shell
 {
-    // W3.U1 C8 (design §3 C8, D6) — `DailyReviewScreen`. Zones B et C entières sur leurs 4 routes
-    // réelles ; Zone A réduite (D6 — les tendances de cycle sont MORTES, forme A, non simulées).
-    // Ouverture automatique pilotée par le booléen `flag_review.auto_open` DÉJÀ CALCULÉ côté serveur
-    // (clé de `session/open`, via C3) — ce contrôleur ne recalcule PAS la règle "première session du
-    // jour", il se contente de la LIRE (design : "le client ne recalcule pas la règle").
-    public class DailyReviewScreenController : MonoBehaviour
+    // ⑯ LA REVUE DU JOUR — « le matin au Verge d'Or ».
+    //
+    // Référence RATIFIÉE par l'user (« nickel », 2026-08-25) : série 4, `ecrans-brennar-4.html`,
+    // cadres « trois jetons sur le zinc » / « personne au comptoir » / « après vos verdicts ».
+    // La scène : le patron passe derrière le zinc avant l'ouverture. Un signalement, c'est un
+    // homme qui a DÉPENSÉ UN JETON DE CONFIANCE pour poser une question — il est accoudé, son
+    // jeton posé devant lui. Le titre (`descriptor.key`) est sa phrase, le motif
+    // (`flag_reason.key`) sa seconde moitié en italique : c'est LUI qui parle, pas une fiche.
+    //
+    // LE JETON EST LE GESTE : le toucher = le lui rendre (`validate`) ; le GARDER en appui long =
+    // `dismiss`, irréversible — donc le même geste que le tampon du registre (arbitrage E5 : le
+    // canon voulait une feuille de confirmation, l'appui long EST la confirmation).
+    //
+    // ÉCHELLE — la maquette est un téléphone de 300 px CSS, le canvas du shell fait 1280 unités de
+    // large (`AppShell.ReferenceResolutionWidth`, `matchWidthOrHeight=0`). Toute dimension de la
+    // référence est donc multipliée par 1280/300 = 4,2667, jamais recopiée telle quelle.
+    // ⚠️ Et toute OPACITÉ reprise de la maquette est exprimée dans l'espace du NAVIGATEUR (sRGB)
+    // alors que ce projet rend en LINÉAIRE (`m_ActiveColorSpace: 1`) : les voiles passent par
+    // `ProceduralUI.CouleurPourMelangeLineaire`, jamais par une recopie de l'alpha CSS.
+    //
+    // Ouverture automatique pilotée par `flag_review.auto_open` DÉJÀ CALCULÉ côté serveur — ce
+    // contrôleur ne recalcule PAS la règle « première session du jour », il la LIT.
+    //
+    // ⛔ NON REVU — jalon 2026-09-05 (régime « full prod » du ruling user 2026-09-01 : aucun juge
+    // ⊥, aucune suite complète ; test simple = typecheck + compile + une capture).
+    public class DailyReviewScreenController : MonoBehaviour, IShellTenant
     {
         [Header("Backend")]
         [SerializeField] private string baseUrl = "http://localhost";
@@ -34,6 +55,12 @@ namespace MafiaCleanCity.Shell
 
         private RectTransform rowsRoot;
         private TextMeshProUGUI emptyStateText;
+        private TextMeshProUGUI registreCompte;
+        private GameObject tamponRoot;
+        private TextMeshProUGUI tamponLibelle;
+        private TextMeshProUGUI tamponSous;
+        private RosterRow[] roster;
+        private Transform mountParent;
         private DailyReviewClient client;
         private string token;
         private bool initialized;
@@ -46,6 +73,33 @@ namespace MafiaCleanCity.Shell
             initialized = true;
             client = new DailyReviewClient { BaseUrl = baseUrl };
             BuildLayout();
+        }
+
+        // ⛔ SANS DÉCLENCHEUR, L'ÉCRAN S'OUVRE VIDE — et c'est un précédent MESURÉ de ce dépôt, pas
+        // une précaution : `LieutenantScreenController` a livré un écran affichant « aucun
+        // lieutenant » à un compte qui en possédait DEUX, parce que le chargement du roster n'avait
+        // qu'un seul appelant — un bouton de mise au point. Ici, `LoadReview` et `LoadRoster`
+        // n'avaient AUCUN appelant de production : l'écran se serait monté sur un comptoir vide et
+        // aurait eu l'air correct.
+        //
+        // ⇒ Le déclencheur est le CONTRAT DU SHELL, pas une seconde authentification. `AppShell`
+        // tient déjà le jeton et le remet à chaque locataire par `IShellTenant.SetToken` — ma
+        // première version rouvrait un `signin` à elle, c'est-à-dire un second chemin d'auth pour
+        // un jeton déjà acquis. Et ne pas implémenter cette interface était une ERREUR DE
+        // COMPILATION, pas un oubli silencieux : `MountTenant<T>` la contraint.
+        public void SetMountParent(Transform parent) => mountParent = parent;
+
+        public void SetToken(string bearer)
+        {
+            EnsureInitialized();
+            token = bearer;
+            if (!string.IsNullOrEmpty(bearer)) StartCoroutine(Charger(bearer));
+        }
+
+        private IEnumerator Charger(string bearer)
+        {
+            yield return LoadReview(bearer);
+            yield return LoadRoster(bearer);
         }
 
         /// <summary>Design C8-F3 — the screen opens WHEN the server boolean is true, and stays
@@ -95,16 +149,49 @@ namespace MafiaCleanCity.Shell
 
         // --------------------------------------------------------------- render
 
+        // Toutes les dimensions ci-dessous sont celles de la RÉFÉRENCE (px CSS du téléphone de
+        // 300), multipliées par ce facteur. Les écrire en dur, converties, ferait perdre le lien
+        // avec la maquette — et c'est ce lien qui permet de rejuger sans re-deviner.
+        private const float K = 1280f / 300f;
+        private static float Px(float cssPx) => cssPx * K;
+
+        private static readonly Color Creme     = Hex("#eae0c8");
+        private static readonly Color Creme2    = Hex("#b9ad92");
+        private static readonly Color Or        = Hex("#d9ab4e");
+        private static readonly Color OrVif     = Hex("#f2c96b");
+        private static readonly Color Laiton    = Hex("#b08d3e");
+        private static readonly Color Braise    = Hex("#e0664a");
+        private static readonly Color Cyan      = Hex("#7fd4d9");
+        private static readonly Color Vert      = Hex("#7db36a");
+        private static readonly Color PapierHaut = Hex("#efe4c6");
+        private static readonly Color PapierBas  = Hex("#dccfa9");
+        private static readonly Color EncrePapier = Hex("#2b1d0e");
+        private static readonly Color EncrePapier2 = Hex("#5a4629");
+        private static readonly Color Rouge     = Hex("#93402c");
+        private static readonly Color VertCachet = Hex("#4f7f3f");
+
+        private static Color Hex(string h)
+        {
+            ColorUtility.TryParseHtmlString(h, out Color c);
+            return c;
+        }
+
         private void Render(FlagCardDto[] cards)
         {
             for (int i = rowsRoot.childCount - 1; i >= 0; i--) UnityEngine.Object.Destroy(rowsRoot.GetChild(i).gameObject);
+
+            int enAttente = LastLoadedReview != null ? LastLoadedReview.routine_pending_count : 0;
+            bool tamponDisponible = LastLoadedReview != null && LastLoadedReview.batch_confirm_available;
 
             if (cards == null || cards.Length == 0)
             {
                 RenderedEmptyState = true;
                 RenderedCardCount = 0;
                 emptyStateText.gameObject.SetActive(true);
-                emptyStateText.text = "No flags to review today";
+                // « Personne au comptoir » — trois tabourets vides, le registre seul. Le texte est
+                // la scène, pas un état d'erreur : c'est une bonne nouvelle, pas un vide technique.
+                emptyStateText.text = "Personne au comptoir ce matin.";
+                MajRegistre(enAttente, tamponDisponible, 0);
                 return;
             }
 
@@ -112,55 +199,307 @@ namespace MafiaCleanCity.Shell
             emptyStateText.gameObject.SetActive(false);
             RenderedCardCount = cards.Length;
             foreach (FlagCardDto card in cards) AddRow(card);
+            MajRegistre(enAttente, tamponDisponible, cards.Length);
         }
 
+        /// <summary>Le registre et son tampon. « tenue sans vous · N » est `routine_pending_count`
+        /// EN ENTIER (arbitrage JD-E3, ratifié tel que dessiné) ; le tampon n'existe que si
+        /// `batch_confirm_available` — son absence n'est pas un bouton grisé, c'est un objet qui
+        /// n'est pas sur le zinc.</summary>
+        private void MajRegistre(int enAttente, bool tamponDisponible, int signalements)
+        {
+            if (registreCompte != null) registreCompte.text = enAttente.ToString();
+            if (tamponRoot != null)
+            {
+                tamponRoot.SetActive(tamponDisponible);
+                if (tamponLibelle != null) tamponLibelle.text = "CONFIRMER LA ROUTINE · " + enAttente;
+                if (tamponSous != null)
+                    tamponSous.text = signalements > 0
+                        ? "appui long — les " + signalements + " signalements restent à votre main"
+                        : "appui long";
+            }
+        }
+
+        /// <summary>Un « billet » : le médaillon du buste, la bulle où il parle, la colonne du
+        /// jeton. Le nom vient de la maquette — c'est ce qu'on pose sur un zinc.</summary>
         private void AddRow(FlagCardDto card)
         {
-            GameObject row = new GameObject("FlagRow_" + card.flag_id, typeof(RectTransform));
-            row.transform.SetParent(rowsRoot, false);
-            row.AddComponent<Image>().color = DesignTokens.Current.surfaceRow;
-            HorizontalLayoutGroup hlg = row.AddComponent<HorizontalLayoutGroup>();
-            hlg.spacing = 6;
+            GameObject billet = new GameObject("Billet_" + card.flag_id, typeof(RectTransform));
+            billet.transform.SetParent(rowsRoot, false);
+            HorizontalLayoutGroup hlg = billet.AddComponent<HorizontalLayoutGroup>();
+            hlg.spacing = Px(7f);
             hlg.childControlWidth = true;
             hlg.childControlHeight = true;
-            LayoutElement rowLe = row.AddComponent<LayoutElement>();
-            rowLe.minHeight = 32;
+            hlg.childForceExpandWidth = false;
+            hlg.childForceExpandHeight = false;
+            hlg.childAlignment = TextAnchor.LowerLeft;
 
-            GameObject validateGo = new GameObject("Validate", typeof(RectTransform));
-            validateGo.transform.SetParent(row.transform, false);
-            Image vImg = validateGo.AddComponent<Image>();
-            vImg.color = DesignTokens.Current.accentSuccess;
-            Button vBtn = validateGo.AddComponent<Button>();
-            vBtn.targetGraphic = vImg;
-            vBtn.onClick.AddListener(() => StartCoroutine(ValidateFlag(card.flag_id)));
+            // ── le buste ─────────────────────────────────────────────────────────────────────
+            GameObject medl = new GameObject("Medaillon", typeof(RectTransform));
+            medl.transform.SetParent(billet.transform, false);
+            Image medlImg = medl.AddComponent<Image>();
+            medlImg.sprite = ProceduralUI.MedallionFace((int)Px(40f),
+                DesignTokens.Current.lieutenantMedallionInner,
+                DesignTokens.Current.lieutenantMedallionOuter,
+                Laiton);
+            medlImg.type = Image.Type.Simple;
+            LayoutElement medlLe = medl.AddComponent<LayoutElement>();
+            medlLe.preferredWidth = Px(40f);
+            medlLe.preferredHeight = Px(40f);
+            medlLe.flexibleWidth = 0f;
 
-            GameObject dismissGo = new GameObject("Dismiss", typeof(RectTransform));
-            dismissGo.transform.SetParent(row.transform, false);
-            Image dImg = dismissGo.AddComponent<Image>();
-            dImg.color = DesignTokens.Current.accentDanger;
-            Button dBtn = dismissGo.AddComponent<Button>();
-            dBtn.targetGraphic = dImg;
-            dBtn.onClick.AddListener(() => StartCoroutine(DismissFlag(card.flag_id)));
+            // ── la bulle : c'est LUI qui parle ───────────────────────────────────────────────
+            GameObject bulle = new GameObject("Bulle", typeof(RectTransform));
+            bulle.transform.SetParent(billet.transform, false);
+            Image bulleFond = bulle.AddComponent<Image>();
+            bulleFond.sprite = ProceduralUI.RoundedRectOutline((int)Px(12f), Px(1f), Hex("#ffffff2a"));
+            bulleFond.type = Image.Type.Sliced;
+            bulleFond.color = Color.white;
+            GameObject bulleVerre = new GameObject("Verre", typeof(RectTransform));
+            bulleVerre.transform.SetParent(bulle.transform, false);
+            RectTransform bvRt = (RectTransform)bulleVerre.transform;
+            bvRt.anchorMin = Vector2.zero; bvRt.anchorMax = Vector2.one;
+            bvRt.offsetMin = Vector2.zero; bvRt.offsetMax = Vector2.zero;
+            Image bvImg = bulleVerre.AddComponent<Image>();
+            bvImg.sprite = ProceduralUI.VerticalGradient((int)Px(60f),
+                DesignTokens.Current.lieutenantGlassTop, DesignTokens.Current.lieutenantGlassBottom);
+            bvImg.type = Image.Type.Sliced;
+            bulleVerre.transform.SetAsFirstSibling();
+
+            VerticalLayoutGroup bvlg = bulle.AddComponent<VerticalLayoutGroup>();
+            bvlg.padding = new RectOffset((int)Px(9f), (int)Px(9f), (int)Px(6f), (int)Px(7f));
+            bvlg.spacing = Px(2f);
+            bvlg.childControlWidth = true;
+            bvlg.childControlHeight = true;
+            bvlg.childForceExpandWidth = true;
+            bvlg.childForceExpandHeight = false;
+            LayoutElement bulleLe = bulle.AddComponent<LayoutElement>();
+            bulleLe.flexibleWidth = 1f;
+
+            // ligne « qui » : le nom, ses chips, le jour poussé à droite
+            GameObject qui = new GameObject("Qui", typeof(RectTransform));
+            qui.transform.SetParent(bulle.transform, false);
+            HorizontalLayoutGroup qhlg = qui.AddComponent<HorizontalLayoutGroup>();
+            qhlg.spacing = Px(5f);
+            qhlg.childControlWidth = true;
+            qhlg.childControlHeight = true;
+            qhlg.childForceExpandWidth = false;
+            qhlg.childAlignment = TextAnchor.MiddleLeft;
+
+            string nom = card.lieutenant != null && !string.IsNullOrEmpty(card.lieutenant.name)
+                ? card.lieutenant.name
+                : "—";
+            Texte(qui.transform, "Nom", nom, Px(11.5f), OrVif, DesignTokens.Current.hudSerifFont);
+
+            // Les deux chips viennent de la JOINTURE client sur `GET /v1/lieutenants` (`tenure_bucket`).
+            // ⚠️ `flag_frequency_band` n'est PAS dans `RosterRow` : la chip « signale rarement /
+            // souvent » de la maquette n'a pas de source ici — non dessinée plutôt que fabriquée.
+            string anciennete = AncienneteChip(card.lieutenant != null ? card.lieutenant.id : null);
+            if (!string.IsNullOrEmpty(anciennete)) Chip(qui.transform, anciennete, Cyan);
+
+            GameObject espace = new GameObject("Espace", typeof(RectTransform));
+            espace.transform.SetParent(qui.transform, false);
+            espace.AddComponent<LayoutElement>().flexibleWidth = 1f;
+
+            Chip(qui.transform, "J" + card.flagged_game_day, Creme2);
+
+            // sa phrase : le titre, puis le motif en italique
+            GameObject phraseGo = new GameObject("Phrase", typeof(RectTransform));
+            phraseGo.transform.SetParent(bulle.transform, false);
+            TextMeshProUGUI phrase = phraseGo.AddComponent<TextMeshProUGUI>();
+            phrase.font = DesignTokens.Current.hudSerifFont;
+            phrase.fontSize = Px(10.5f);
+            phrase.color = Creme;
+            phrase.lineSpacing = -8f;
+            phrase.enableWordWrapping = true;
+            string titre = card.descriptor != null ? card.descriptor.key : "";
+            string motif = card.flag_reason != null ? card.flag_reason.key : "";
+            phrase.text = string.IsNullOrEmpty(motif)
+                ? titre
+                : titre + "<i><color=#b9ad92> — " + motif + "</color></i>";
+
+            // ── la colonne du jeton : le geste ───────────────────────────────────────────────
+            GameObject col = new GameObject("JetonCol", typeof(RectTransform));
+            col.transform.SetParent(billet.transform, false);
+            VerticalLayoutGroup cvlg = col.AddComponent<VerticalLayoutGroup>();
+            cvlg.spacing = Px(1f);
+            cvlg.childControlWidth = true;
+            cvlg.childControlHeight = true;
+            cvlg.childForceExpandWidth = true;
+            cvlg.childForceExpandHeight = false;
+            cvlg.childAlignment = TextAnchor.MiddleCenter;
+            LayoutElement colLe = col.AddComponent<LayoutElement>();
+            colLe.preferredWidth = Px(50f);
+            colLe.flexibleWidth = 0f;
+
+            GameObject jeton = new GameObject("Jeton", typeof(RectTransform));
+            jeton.transform.SetParent(col.transform, false);
+            Image jetonImg = jeton.AddComponent<Image>();
+            jetonImg.sprite = ProceduralUI.RadialDisc((int)Px(34f), Hex("#f2d9a0"), Hex("#7a5a14"));
+            LayoutElement jetonLe = jeton.AddComponent<LayoutElement>();
+            jetonLe.preferredWidth = Px(34f);
+            jetonLe.preferredHeight = Px(34f);
+            Texte(jeton.transform, "Coche", "✓", Px(13f), Hex("#3a2a12"), DesignTokens.Current.primaryFont,
+                  TextAlignmentOptions.Center, true);
+
+            // LE GESTE, et il porte les deux verdicts sur le MÊME objet — c'est la maquette :
+            // toucher = rendre, garder = passer outre. `LongPressButton` n'expose que la
+            // complétion ; le `Button` tirerait AUSSI au relâchement d'un appui long, donc on
+            // consomme le geste explicitement plutôt que de laisser les deux partir.
+            LongPressButton garder = jeton.AddComponent<LongPressButton>();
+            bool consomme = false;
+            garder.OnLongPressCompleted += () =>
+            {
+                consomme = true;
+                StartCoroutine(DismissFlag(card.flag_id));
+            };
+            Button rendre = jeton.AddComponent<Button>();
+            rendre.targetGraphic = jetonImg;
+            rendre.onClick.AddListener(() =>
+            {
+                if (consomme) { consomme = false; return; }
+                StartCoroutine(ValidateFlag(card.flag_id));
+            });
+
+            Texte(col.transform, "Rendre", "RENDRE", Px(7.5f), OrVif, DesignTokens.Current.primaryFont,
+                  TextAlignmentOptions.Center);
+            Texte(col.transform, "Garder", "garder · appui long", Px(6.3f), Creme2,
+                  DesignTokens.Current.primaryFont, TextAlignmentOptions.Center);
+
+            // la réserve — `trust_budget_bucket`, trois pastilles
+            GameObject reserve = new GameObject("Reserve", typeof(RectTransform));
+            reserve.transform.SetParent(col.transform, false);
+            HorizontalLayoutGroup rhlg = reserve.AddComponent<HorizontalLayoutGroup>();
+            rhlg.spacing = Px(2f);
+            rhlg.childControlWidth = true;
+            rhlg.childControlHeight = true;
+            rhlg.childForceExpandWidth = false;
+            rhlg.childAlignment = TextAnchor.MiddleCenter;
+            int allumees = ReservePastilles(card.trust_budget_bucket);
+            for (int k = 0; k < 3; k++)
+            {
+                GameObject pip = new GameObject("Pip" + k, typeof(RectTransform));
+                pip.transform.SetParent(reserve.transform, false);
+                Image pi = pip.AddComponent<Image>();
+                pi.sprite = k < allumees
+                    ? ProceduralUI.RadialDisc((int)Px(9f), Hex("#f2d9a0"), Hex("#7a5a14"))
+                    : ProceduralUI.Ring((int)Px(9f), Px(1f), Hex("#ffffff22"));
+                LayoutElement pl = pip.AddComponent<LayoutElement>();
+                pl.preferredWidth = Px(9f);
+                pl.preferredHeight = Px(9f);
+            }
+            Texte(col.transform, "ReserveLib", "RÉSERVE · " + ReserveLibelle(card.trust_budget_bucket),
+                  Px(5.8f), Creme2, DesignTokens.Current.primaryFont, TextAlignmentOptions.Center);
+        }
+
+        private static int ReservePastilles(string bucket)
+        {
+            switch (bucket)
+            {
+                case "high": return 3;
+                case "normal": return 2;
+                case "low": return 1;
+                default: return 0;
+            }
+        }
+
+        private static string ReserveLibelle(string bucket)
+        {
+            switch (bucket)
+            {
+                case "high": return "ÉLEVÉE";
+                case "normal": return "NORMALE";
+                case "low": return "FAIBLE";
+                default: return "—";
+            }
+        }
+
+        /// <summary>Jointure client sur `GET /v1/lieutenants` (`tenure_bucket`) — la maquette la
+        /// pose explicitement comme faisable SANS lot back. Rendue vide tant que le roster n'est
+        /// pas chargé : une chip absente vaut mieux qu'une chip inventée.</summary>
+        private string AncienneteChip(string lieutenantId)
+        {
+            if (string.IsNullOrEmpty(lieutenantId) || roster == null) return null;
+            foreach (RosterRow r in roster)
+            {
+                if (r != null && r.lieutenant_id == lieutenantId && r.tenure_bucket == "new") return "NOUVELLE";
+            }
+            return null;
+        }
+
+        private static TextMeshProUGUI Texte(Transform parent, string nom, string valeur, float taille,
+            Color couleur, TMP_FontAsset police,
+            TextAlignmentOptions alignement = TextAlignmentOptions.Left, bool etendre = false)
+        {
+            GameObject go = new GameObject(nom, typeof(RectTransform));
+            go.transform.SetParent(parent, false);
+            if (etendre)
+            {
+                RectTransform rt = (RectTransform)go.transform;
+                rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one;
+                rt.offsetMin = Vector2.zero; rt.offsetMax = Vector2.zero;
+            }
+            TextMeshProUGUI t = go.AddComponent<TextMeshProUGUI>();
+            t.font = police;
+            t.fontSize = taille;
+            t.color = couleur;
+            t.text = valeur;
+            t.alignment = alignement;
+            t.enableWordWrapping = false;
+            return t;
+        }
+
+        private static void Chip(Transform parent, string libelle, Color couleur)
+        {
+            GameObject go = new GameObject("Chip", typeof(RectTransform));
+            go.transform.SetParent(parent, false);
+            Image bord = go.AddComponent<Image>();
+            bord.sprite = ProceduralUI.RoundedRectOutline((int)Px(7f), Px(1f), new Color(couleur.r, couleur.g, couleur.b, 0.35f));
+            bord.type = Image.Type.Sliced;
+            HorizontalLayoutGroup h = go.AddComponent<HorizontalLayoutGroup>();
+            h.padding = new RectOffset((int)Px(5f), (int)Px(5f), (int)Px(1f), (int)Px(1f));
+            h.childControlWidth = true;
+            h.childControlHeight = true;
+            h.childForceExpandWidth = false;
+            h.childAlignment = TextAnchor.MiddleCenter;
+            TextMeshProUGUI t = Texte(go.transform, "Lib", libelle, Px(6.3f), couleur,
+                                      DesignTokens.Current.primaryFont, TextAlignmentOptions.Center);
+            t.characterSpacing = 8f;
         }
 
         // --------------------------------------------------------------- UI build
 
+        /// <summary>Le comptoir : les billets en haut, le registre, le tampon. `margin-top:auto`
+        /// de la maquette devient un `childAlignment` bas — la scène est ancrée au zinc, pas au
+        /// haut de l'écran, et c'est ce qui la fait lire comme un comptoir.</summary>
         private void BuildLayout()
         {
             RectTransform selfRt = GetComponent<RectTransform>();
             if (selfRt == null) selfRt = gameObject.AddComponent<RectTransform>();
+            // Le shell donne son emplacement AVANT `Start()` : on s'y parente plutôt que de
+            // découvrir un Canvas, sinon l'écran se monte à côté de la zone de contenu.
+            if (mountParent != null)
+            {
+                transform.SetParent(mountParent, false);
+                selfRt.anchorMin = Vector2.zero;
+                selfRt.anchorMax = Vector2.one;
+                selfRt.offsetMin = Vector2.zero;
+                selfRt.offsetMax = Vector2.zero;
+            }
 
             VerticalLayoutGroup vlg = gameObject.AddComponent<VerticalLayoutGroup>();
-            vlg.spacing = 4;
+            vlg.padding = new RectOffset((int)Px(10f), (int)Px(10f), 0, (int)Px(10f));
+            vlg.spacing = Px(8f);
             vlg.childControlWidth = true;
             vlg.childControlHeight = true;
             vlg.childForceExpandWidth = true;
             vlg.childForceExpandHeight = false;
+            vlg.childAlignment = TextAnchor.LowerCenter;
 
             GameObject rowsGo = new GameObject("FlagRows", typeof(RectTransform));
             rowsGo.transform.SetParent(transform, false);
             VerticalLayoutGroup rvlg = rowsGo.AddComponent<VerticalLayoutGroup>();
-            rvlg.spacing = 4;
+            rvlg.spacing = Px(8f);
             rvlg.childControlWidth = true;
             rvlg.childControlHeight = true;
             rvlg.childForceExpandWidth = true;
@@ -170,29 +509,100 @@ namespace MafiaCleanCity.Shell
             GameObject emptyGo = new GameObject("EmptyState", typeof(RectTransform));
             emptyGo.transform.SetParent(transform, false);
             emptyStateText = emptyGo.AddComponent<TextMeshProUGUI>();
-            emptyStateText.font = DesignTokens.Current.primaryFont;
-            emptyStateText.fontSize = 14;
-            emptyStateText.color = DesignTokens.Current.onSurfacePrimary;
+            emptyStateText.font = DesignTokens.Current.hudSerifFont;
+            emptyStateText.fontSize = Px(11f);
+            emptyStateText.color = Creme2;
+            emptyStateText.alignment = TextAlignmentOptions.Center;
             emptyStateText.gameObject.SetActive(false);
 
-            GameObject batchGo = new GameObject("BatchConfirmButton", typeof(RectTransform));
-            batchGo.transform.SetParent(transform, false);
-            Image batchImg = batchGo.AddComponent<Image>();
-            batchImg.color = DesignTokens.Current.accentGold;
-            BatchConfirmButton = batchGo.AddComponent<LongPressButton>();
+            BuildRegistre();
+            BuildTampon();
+        }
+
+        /// <summary>Le registre — un papier, pas un panneau : c'est le seul objet clair de l'écran,
+        /// et c'est ce qui le fait lire comme un cahier posé sur le zinc.</summary>
+        private void BuildRegistre()
+        {
+            GameObject reg = new GameObject("Registre", typeof(RectTransform));
+            reg.transform.SetParent(transform, false);
+            Image papier = reg.AddComponent<Image>();
+            papier.sprite = ProceduralUI.VerticalGradient((int)Px(40f), PapierHaut, PapierBas);
+            papier.type = Image.Type.Sliced;
+
+            HorizontalLayoutGroup h = reg.AddComponent<HorizontalLayoutGroup>();
+            h.padding = new RectOffset((int)Px(10f), (int)Px(10f), (int)Px(8f), (int)Px(8f));
+            h.spacing = Px(8f);
+            h.childControlWidth = true;
+            h.childControlHeight = true;
+            h.childForceExpandWidth = false;
+            h.childAlignment = TextAnchor.MiddleLeft;
+
+            GameObject pt = new GameObject("Pastille", typeof(RectTransform));
+            pt.transform.SetParent(reg.transform, false);
+            pt.AddComponent<Image>().sprite = ProceduralUI.RadialDisc((int)Px(10f), VertCachet, VertCachet);
+            LayoutElement ptLe = pt.AddComponent<LayoutElement>();
+            ptLe.preferredWidth = Px(10f);
+            ptLe.preferredHeight = Px(10f);
+
+            GameObject quoi = new GameObject("Quoi", typeof(RectTransform));
+            quoi.transform.SetParent(reg.transform, false);
+            VerticalLayoutGroup qv = quoi.AddComponent<VerticalLayoutGroup>();
+            qv.childControlWidth = true;
+            qv.childControlHeight = true;
+            qv.childForceExpandWidth = true;
+            qv.childForceExpandHeight = false;
+            quoi.AddComponent<LayoutElement>().flexibleWidth = 1f;
+            Texte(quoi.transform, "Titre", "La routine, tenue sans vous", Px(11.5f), EncrePapier,
+                  DesignTokens.Current.hudSerifFont);
+            Texte(quoi.transform, "Sous", "rien n'a dévié", Px(8f), EncrePapier2,
+                  DesignTokens.Current.primaryFont);
+
+            registreCompte = Texte(reg.transform, "Compte", "0", Px(18f), Rouge,
+                                   DesignTokens.Current.hudSerifFont, TextAlignmentOptions.Right);
+        }
+
+        /// <summary>Le tampon — le MÊME geste que le jeton gardé : appui long. L'arbitrage JD-E5
+        /// (ratifié) supprime la feuille de confirmation du canon : l'appui long EST la
+        /// confirmation. Un tampon qu'on peut poser d'un doigt distrait ne serait pas un tampon.</summary>
+        private void BuildTampon()
+        {
+            tamponRoot = new GameObject("Tampon", typeof(RectTransform));
+            tamponRoot.transform.SetParent(transform, false);
+            Image fond = tamponRoot.AddComponent<Image>();
+            fond.sprite = ProceduralUI.RoundedRectOutline((int)Px(11f), Px(2f), Rouge);
+            fond.type = Image.Type.Sliced;
+            fond.color = Hex("#d9cca9");
+
+            VerticalLayoutGroup v = tamponRoot.AddComponent<VerticalLayoutGroup>();
+            v.padding = new RectOffset((int)Px(12f), (int)Px(12f), (int)Px(10f), (int)Px(10f));
+            v.spacing = Px(2f);
+            v.childControlWidth = true;
+            v.childControlHeight = true;
+            v.childForceExpandWidth = true;
+            v.childForceExpandHeight = false;
+            v.childAlignment = TextAnchor.MiddleCenter;
+
+            tamponLibelle = Texte(tamponRoot.transform, "Libelle", "CONFIRMER LA ROUTINE", Px(12f),
+                                  Rouge, DesignTokens.Current.primaryFont, TextAlignmentOptions.Center);
+            tamponLibelle.characterSpacing = 22f;
+            tamponLibelle.fontStyle = FontStyles.Bold;
+            tamponSous = Texte(tamponRoot.transform, "Sous", "appui long", Px(8.5f), Rouge,
+                               DesignTokens.Current.primaryFont, TextAlignmentOptions.Center);
+
+            BatchConfirmButton = tamponRoot.AddComponent<LongPressButton>();
             BatchConfirmButton.OnLongPressCompleted += () => StartCoroutine(RequestBatchConfirm());
-            LayoutElement batchLe = batchGo.AddComponent<LayoutElement>();
-            batchLe.minHeight = 40;
-            TextMeshProUGUI batchLabel = new GameObject("Label", typeof(RectTransform)).AddComponent<TextMeshProUGUI>();
-            batchLabel.transform.SetParent(batchGo.transform, false);
-            RectTransform batchLabelRt = (RectTransform)batchLabel.transform;
-            batchLabelRt.anchorMin = Vector2.zero; batchLabelRt.anchorMax = Vector2.one;
-            batchLabelRt.offsetMin = new Vector2(6, 2); batchLabelRt.offsetMax = new Vector2(-6, -2);
-            batchLabel.font = DesignTokens.Current.primaryFont;
-            batchLabel.text = "Confirm all (hold)";
-            batchLabel.fontSize = 14;
-            batchLabel.color = DesignTokens.Current.surfaceBase;
-            batchLabel.alignment = TextAlignmentOptions.Center;
+            tamponRoot.SetActive(false);
+        }
+
+        /// <summary>Jointure client — `tenure_bucket` par lieutenant, la maquette la pose comme
+        /// faisable sans lot back. Non bloquante : si le roster ne répond pas, les chips
+        /// disparaissent, l'écran reste lisible.</summary>
+        public IEnumerator LoadRoster(string bearerToken)
+        {
+            EnsureInitialized();
+            yield return new LieutenantClient { BaseUrl = baseUrl }
+                .ListLieutenants(bearerToken, rows => roster = rows, (c, m) => { });
+            if (LastLoadedReview != null) Render(LastLoadedReview.cards);
         }
     }
 }
