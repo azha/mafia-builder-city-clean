@@ -1,0 +1,3 @@
+callsign=jd-rep-1788286842
+token_len=423
+lieutenant_id=01a05e33-b797-74d5-b622-986fa7a09869
