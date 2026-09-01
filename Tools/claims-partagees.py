@@ -79,7 +79,11 @@ def population():
         if f.suffix.lower() in {'.png','.jpg','.jpeg','.gif','.meta','.asset'}: continue
         try: f.read_text(encoding='utf-8')
         except (UnicodeDecodeError, OSError): continue
-        fichiers[f.stem] = f
+        # ⚠️ clé par CHEMIN, jamais par radical (MINEUR m1) : deux artefacts de même nom dans
+        #    deux répertoires s'écraseraient en silence — le dénominateur baisserait sans un mot,
+        #    exactement la classe que cette fonction existe pour fermer. 0 collision aujourd'hui,
+        #    mais une propriété DATÉE de l'arborescence n'est pas une garde.
+        fichiers[rel] = f
     return dict(sorted(fichiers.items()))
 
 N = 9  # longueur de séquence : en dessous, la prose technique produit du bruit ; mesuré sur ce lot.
@@ -113,7 +117,7 @@ def blocs_maximaux(a, b):
 print(f'  population : union « commits du design » + « répertoire du lot » — voir population()')
 print(f'  ⚠️ ÉCHAPPE ENCORE : un artefact vivant HORS de ce répertoire ET commité SEUL. Aucun')
 print(f'     aujourd hui, mais c est une propriété DATÉE de l historique, pas de la dérivation.')
-print(f'  artefacts balayés : {len(textes)}  ({", ".join(f"{k}={v} mots" for k, v in mots.items())})')
+print(f'  artefacts balayés : {len(textes)}  ({", ".join(f"{k.split(chr(47))[-1]}={v} mots" for k, v in mots.items())})')
 print(f'  séquence minimale : {N} mots normalisés\n')
 
 total = 0

@@ -115,9 +115,19 @@ qui a servi à signaler le problème était lui-même **déduit** (une soustract
 à un seul répertoire ; il en couvrait treize. *Un chiffre qu'on se rapporte à soi-même dans un
 signalement de bonne foi reste un chiffre déduit* — la commande qui tranche tenait en une ligne.
 
-## ① — Ancres re-mesurées @HEAD, **par symbole**
+## ① — Ancres re-mesurées, **par symbole**, épinglées à un SHA FIXE
 
 Le §2 impose le grain le plus fin possible. Fait : aucun numéro n'est recopié.
+**Base : `3a0f04c`** — un SHA fixe, jamais `HEAD` *(⚠️ la v1 déclarait une base MOBILE : le socle
+exige un SHA fixe pour épingler un état git, sinon l'énoncé change de sens sans que rien ne bouge
+dans le document. Les 10 ancres étaient exactes à la vérification, mais elles l'étaient **par
+chance de calendrier**.)*
+**Unité : numéro de ligne · portée : le fichier nommé sur chaque ligne, hors commentaires.**
+⚠️ **Rectifié le 2026-09-01 (I2 de la r21)** : la ligne des insets locaux publiait **2 des 5 sites
+d'appel** sous une forme qui se lisait exhaustive, et **sans déclarer sa portée** — dans le rapport
+dont le livrable frère ④ rend cette déclaration obligatoire. Recompté et classé : **1 déclaration,
+5 appels, 3 mentions en commentaire**. ★ Et l'avertissement que ce comptage violait est écrit
+**quatre lignes plus bas dans cette même section**.
 
 | ce qu'on cherche | fichier | symbole | @HEAD |
 |---|---|---|---|
@@ -125,7 +135,7 @@ Le §2 impose le grain le plus fin possible. Fait : aucun numéro n'est recopié
 | hook panneaux | `AppShell.cs` | `public void RebatirPanneauxAccueilPourResolutionCourante` | **771** |
 | hook chrome | `AppShell.cs` | `public void RebatirChromePourResolutionCourante` | **1323** |
 | seam zone sûre (§5) | `AppShell.cs` | `SafeAreaProvider =` | **814** |
-| insets locaux, `static` (§5) | `AppShell.cs` | `SafeAreaInsetsLocal()` | 287 · 831 · **845** (décl.) |
+| insets locaux, `static` (§5) | `AppShell.cs` | `SafeAreaInsetsLocal()` | **845** (décl.) · appels **287 · 831 · 919 · 1002 · 1342** |
 | ordre obligatoire (§3) | `AppShell.cs` | `ORDRE D'APPEL, OBLIGATOIRE` | **757** |
 | P5 feuille Famille | `LieutenantScreenController.cs` | `BottomInsetPx` | **1030** |
 | `ClampAxis` (B3) | `DistrictMapNavigation.cs` | `private static float ClampAxis` | **223** |
