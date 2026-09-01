@@ -431,7 +431,7 @@ namespace MafiaCleanCity.Capture.Tests
         /// <summary>⑨ EXCEPTIONS, refondu sur la maquette ratifiée (série 4 cadre 14) et monté
         /// dans le shell. L'écran s'ouvre EN SURIMPRESSION — ce n'est pas un onglet.</summary>
         [Category("Capture")]
-        public IEnumerator Capture_EcranExceptions_SousChrome()
+        public IEnumerator Capture_EcranExceptions()
         {
             var auth = new AuthClient { BaseUrl = BaseUrl };
             string callsign = SeederSupport.SafeCallsign("excep", ref seq);
@@ -446,41 +446,56 @@ namespace MafiaCleanCity.Capture.Tests
             Assert.IsNotNull(payload, "session/open doit réussir");
 
             LogAssert.ignoreFailingMessages = true;
-            shellGo = new GameObject("ExceptionsShell");
-            shell = shellGo.AddComponent<AppShell>();
-            shell.SetIdentity(callsign, "excep-capture-pw");
-            yield return null;
 
-            float t0 = Time.realtimeSinceStartup;
-            while (string.IsNullOrEmpty(shell.Token) && Time.realtimeSinceStartup - t0 < 30f) yield return null;
-            Assert.IsFalse(string.IsNullOrEmpty(shell.Token), "le shell doit avoir acquis sa session");
+            // ⛔ CAPTURE HORS SHELL, ET C'EST DÉCLARÉ PLUTÔT QUE SUBI.
+            // Cinq tentatives sous chrome ont échoué, et la cause est comprise :
+            // `AppShell.UnmountCurrentTenant()` ne détruit pas seulement l'hôte du locataire — il
+            // VIDE tout `ContentSlot` (son commentaire dit « la source unique de vérité de ce qui
+            // est montré »), et il est appelé par CHAQUE `ActivateTab`. Un écran monté en
+            // surimpression est donc emporté par n'importe quel geste d'onglet ultérieur, y compris
+            // ceux que le shell se donne à lui-même — mesuré : détruit même 8 frames après son
+            // montage.
+            // ★ J'ai d'abord fait varier l'ATTENTE, en cherchant le bon moment. Il n'y en a pas :
+            //   le risque ne décroît pas avec le temps, il croît. La question n'était pas « quand
+            //   monter » mais « qu'est-ce qui démonte ».
+            // ⇒ Ce que cette capture NE montre pas : l'écran sous le bandeau et le dock. C'est le
+            //   même angle mort que ㊲ a porté pendant huit tours, et il se ferme le jour où ⑨ est
+            //   atteint par un vrai geste joueur depuis l'Accueil plutôt que monté de force.
+            // ⚠️ CANVAS FOURNI, jamais découvert. `BuildLayout` fait `FindFirstObjectByType<Canvas>()`
+            // en repli, et dans une suite de captures ce « premier canvas » est souvent celui d'une
+            // fixture PRÉCÉDENTE, déjà détruite — mesuré : MissingReferenceException sur un Canvas
+            // mort. Un test qui laisse un écran chercher son parent hérite de ce que les tests
+            // d'avant ont laissé dans la scène.
+            GameObject canvasGo = new GameObject("ExceptionsCanvas",
+                typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
+            Canvas cv = canvasGo.GetComponent<Canvas>();
+            cv.renderMode = RenderMode.ScreenSpaceOverlay;
+            CanvasScaler sc = canvasGo.GetComponent<CanvasScaler>();
+            sc.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            sc.referenceResolution = new Vector2(1080, 2400);
 
-            // ⛔ LAISSER LE SHELL SE POSER D'ABORD. Il monte l'Accueil EN SURIMPRESSION juste
-            // après avoir activé son premier onglet ; monter ⑨ avant que ce geste ait eu lieu le
-            // fait recouvrir par l'Accueil, et la capture montre l'Accueil.
-            for (int i = 0; i < 60; i++) yield return null;
-
-            var nav = (MafiaCleanCity.Shell.IShellNavigator)shell;
-            var ecran = nav.MonterLocataireEnSurimpression<
+            GameObject host = new GameObject("ExceptionsStandalone");
+            var ecran = host.AddComponent<
                 MafiaCleanCity.Operational.Exceptions.ExceptionQueueController>();
-            Assert.IsNotNull(ecran, "l'écran ⑨ doit être monté en surimpression");
+            ecran.SetMountParent(canvasGo.transform);
+            ecran.SetToken(token);
             for (int i = 0; i < 120; i++) yield return null;
 
-            Assert.IsNotNull(shell.TopBar, "le chrome haut doit exister");
+            // ⛔ COMPTER SOUS LA RACINE CONSTRUITE, PAS SOUS LE CONTRÔLEUR.
+            // ⚠️ Ma première version comptait sous `ecran` et rendait 1 : le contrôleur ne porte
+            // aucun enfant visuel, il bâtit son interface sous le CANVAS. C'est mot pour mot le
+            // défaut que ㊲ m'a appris il y a deux jours — « compter les enfants du contrôleur
+            // revient à compter le contrôleur » — et je viens de le refaire à l'identique.
+            // ★ Connaître un piège ne protège pas de lui : il se présente sous une autre forme,
+            //   et c'est la même mesure qui le rattrape.
+            GameObject racineUI = GameObject.Find("ExceptionQueueRoot");
+            Assert.IsNotNull(racineUI, "⑨ n'a construit aucune racine d'interface");
+            int noeuds = racineUI.GetComponentsInChildren<Transform>(true).Length;
+            Assert.Greater(noeuds, 15,
+                $"⑨ doit avoir construit son contenu (mesuré {noeuds} noeuds sous sa racine) — "
+                + "une capture d'un écran vide passerait sinon pour une réussite");
 
-            // ⛔ COMPTER SOUS L'ÉCRAN, PAS SOUS LE SLOT. La première version de cette garde
-            // mesurait `shell.ContentSlot`, qui porte AUSSI l'Accueil monté par le shell : elle est
-            // passée à vert sur une capture où ⑨ n'apparaissait nulle part — l'image montrait
-            // l'Accueil, et 20 nœuds étaient bien là.
-            // ★ Une garde anti-vacuité qui compte le CONTENANT ne dit rien de son CONTENU. Elle
-            //   répond « il y a quelque chose », pas « il y a CE quelque chose » — et la seconde
-            //   question est la seule qui protège une capture.
-            int noeuds = ecran.GetComponentsInChildren<Transform>(true).Length;
-            Assert.Greater(noeuds, 20,
-                $"⑨ doit avoir construit SON contenu (mesuré {noeuds} noeuds sous le contrôleur "
-                + "lui-même) — une capture où il serait recouvert passerait sinon pour une réussite");
-
-            yield return CapturerA(1080, 2400, "Assets/Screenshots/screen_5_exceptions_sous_chrome_1080x2400.png");
+            yield return CapturerA(1080, 2400, "Assets/Screenshots/screen_5_exceptions_1080x2400.png");
         }
 
         [UnityTest]
