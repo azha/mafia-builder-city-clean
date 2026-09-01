@@ -418,6 +418,59 @@ namespace MafiaCleanCity.Capture.Tests
         // Cible : `Tools/family-organigramme-reference-1120.png` (« LA FAMILLE — l'organigramme »,
         // maquette ratifiée user). Cette capture existe pour MESURER l'écart, pas pour le certifier.
         [UnityTest]
+        /// <summary>㊲ LA RÉPUTATION, montée dans le shell — la seule chose qu'aucun des huit tours
+        /// de juge n'a pu vérifier : l'écran sous le bandeau et le dock.
+        ///
+        /// ⚠️ L'arithmétique du dossier de clôture annonce un risque PRÉCIS, et c'est lui qu'on
+        /// vient voir : 122 px CSS de chrome + 462 de cadre = 584, pour 533 disponibles en 16:9 —
+        /// 51 manquants, soit la hauteur du bouton d'action. En 20:9, la cible, le compte passe.
+        /// C'est pourquoi la capture est prise à 1080×2400 et pas ailleurs.
+        /// ⇒ Si le bouton est coupé ou passe sous le dock, ça se verra ICI et nulle part ailleurs.
+        ///
+        /// Les gardes anti-mensonge sont celles du patron voisin : un slot vide produit un PNG
+        /// parfaitement valide, et une capture d'écran vide ressemble à une capture.</summary>
+        [Category("Capture")]
+        public IEnumerator Capture_EcranReputation_SousChrome()
+        {
+            var auth = new AuthClient { BaseUrl = BaseUrl };
+            string callsign = SeederSupport.SafeCallsign("reput", ref seq);
+            string token = null, err = null;
+            yield return auth.SignUp(callsign, "reput-capture-pw", t => token = t, e => err = e);
+            Assert.IsNull(err, $"signup errored: {err}");
+
+            var sessionClient = new SessionClient { BaseUrl = BaseUrl };
+            SessionOpenDto payload = null;
+            yield return sessionClient.OpenSession(token, "capture-reput", dto => payload = dto,
+                (c, m) => Assert.Fail($"session/open failed: {c}: {m}"));
+            Assert.IsNotNull(payload, "session/open doit réussir — il octroie le kit de départ");
+
+            LogAssert.ignoreFailingMessages = true;
+            shellGo = new GameObject("ReputationShell");
+            shell = shellGo.AddComponent<AppShell>();
+            shell.SetIdentity(callsign, "reput-capture-pw");
+            yield return null;
+
+            float t0 = Time.realtimeSinceStartup;
+            while (string.IsNullOrEmpty(shell.Token) && Time.realtimeSinceStartup - t0 < 30f) yield return null;
+            Assert.IsFalse(string.IsNullOrEmpty(shell.Token), "le shell doit avoir acquis sa session");
+
+            // ㊲ vit sous l'onglet More depuis le 2026-09-02 — il y était la destination VIDE.
+            shell.ActivateTab(AppShell.Tab.More);
+            for (int i = 0; i < 90; i++) yield return null;
+
+            Assert.IsNotNull(shell.TopBar, "le chrome haut doit exister — c'est TOUT l'objet de cette capture");
+            Assert.AreEqual(typeof(MafiaCleanCity.Operational.ReputationScreenController),
+                shell.MountedTenantType, "l'onglet More doit avoir monté ㊲");
+            int noeuds = shell.ContentSlot.GetComponentsInChildren<Transform>(true).Length;
+            Assert.Greater(noeuds, 20,
+                $"㊲ doit avoir construit son contenu dans le slot (mesuré {noeuds} noeuds) — " +
+                "une capture d'un slot vide passerait sinon pour une réussite");
+
+            yield return CapturerA(1080, 2400, "Assets/Screenshots/screen_b3_reputation_sous_chrome_1080x2400.png");
+        }
+
+        [UnityTest]
+        
         public IEnumerator Capture_EcranLieutenants_SousChromeV31()
         {
             var auth = new AuthClient { BaseUrl = BaseUrl };

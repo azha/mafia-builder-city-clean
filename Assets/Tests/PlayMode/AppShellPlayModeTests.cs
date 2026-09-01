@@ -96,9 +96,19 @@ namespace MafiaCleanCity.Shell.Tests
 
             shell.ActivateTab(AppShell.Tab.More);
             yield return null;
-            Assert.IsTrue(shell.OnEmptyMoreDestination,
-                "More is the EMPTY destination — asserted BY VALUE, not by component absence");
-            Assert.IsNull(shell.MountedTenantType, "More mounts nothing (consistent WITH the named state, not a substitute for it)");
+            // ⚠️ MISE À JOUR 2026-09-02 : `Tab.More` N'EST PLUS la destination vide — il monte ㊲
+            // (La réputation), premier écran du programme atteignable par un chemin joueur.
+            // L'assertion précédente affirmait l'inverse ; la laisser aurait produit un test rouge
+            // qui décrit fidèlement un monde qui n'existe plus, et le réflexe aurait été de le
+            // neutraliser plutôt que de le relire.
+            // ★ Un test qui contredit un changement VOULU n'est pas un obstacle à contourner :
+            //   c'est l'endroit exact où la nouvelle vérité doit être réécrite.
+            Assert.IsFalse(shell.OnEmptyMoreDestination,
+                "More monte désormais ㊲ — plus aucune destination n'est vide, et on l'affirme PAR "
+                + "VALEUR, jamais par la présence d'un composant monté");
+            Assert.AreEqual(typeof(MafiaCleanCity.Operational.ReputationScreenController),
+                shell.MountedTenantType,
+                "l'onglet More doit monter le contrôleur de ㊲, pas seulement « quelque chose »");
         }
 
         // C1-F2 (NON-OCCLUSION — remplace l'assertion d'identité de la v1) — le locataire monte DANS

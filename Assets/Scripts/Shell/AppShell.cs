@@ -171,7 +171,13 @@ namespace MafiaCleanCity.Shell
             EnsureInitialized();
             UnmountCurrentTenant();
             CurrentTab = tab;
-            OnEmptyMoreDestination = tab == Tab.More;
+            // ⚠️ PLUS AUCUNE destination vide : `Tab.More` monte ㊲ (La réputation) depuis ce
+            // commit. Le drapeau est CONSERVÉ plutôt que supprimé — il est la façon dont l'écran
+            // vide s'affirme PAR VALEUR et non par l'absence d'un composant monté, et un futur
+            // onglet sans destination en aura besoin. Le mettre à `false` ici dit « aucune
+            // destination n'est vide aujourd'hui », ce qui est vrai et vérifiable ; le supprimer
+            // dirait « la question ne se pose plus », ce qui est faux.
+            OnEmptyMoreDestination = false;
 
             // §3.3 — "re-tap Empire from a district brings back the map, by the ORDINARY remount
             // path — no special-cased no-op" (Empire IS the old City branch, items 0.2/0.3).
@@ -203,9 +209,10 @@ namespace MafiaCleanCity.Shell
                 case Tab.Org: MountTenant<LieutenantScreenController>(); break;
                 case Tab.Pipeline: MountTenant<LaunderingController>(); break;
                 case Tab.More:
-                    // Destination vide ASSUMÉE (design §0 hors périmètre / C1-F1) — rien à monter.
-                    MountedTenantGameObject = null;
-                    MountedTenantType = null;
+                    // ㊲ LA RÉPUTATION — premier écran du programme atteignable par un chemin joueur.
+                    // Cet onglet était la destination VIDE assumée (design §0 hors périmètre / C1-F1) ;
+                    // il ne l'est plus, et le drapeau `OnEmptyMoreDestination` le dit désormais.
+                    MountTenant<ReputationScreenController>();
                     break;
             }
             RefreshTabButtonVisuals();

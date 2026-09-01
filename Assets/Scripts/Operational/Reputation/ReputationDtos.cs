@@ -208,7 +208,6 @@ namespace MafiaCleanCity.Operational
     [Serializable] public class DeclareRuleResponseDto { public bool declared; }
     [Serializable] public class DeclareRulePayload { public DeclareRuleResponseDto data; }
     [Serializable] public class DeclareRuleEnvelope { public DeclareRulePayload payload; }
-}
 
     /// <summary>La fiche renvoyée par `GET /v1/lieutenants/:id`. On n'y déclare que ce qu'on
     /// CONSOMME — `name`. Les 17 autres clés existent et sont listées comme « passé à côté ? »
@@ -218,5 +217,29 @@ namespace MafiaCleanCity.Operational
     public class LieutenantFicheDto
     {
         public string name;
-    
+    }
+
+    /// <summary>⛔ LES DEUX ROUTES LIEUTENANT SONT ENVELOPPÉES, comme toutes celles de ce dépôt :
+    /// `{response_meta, payload:{data:{…}}}`. Le corps n'est JAMAIS le tableau nu.
+    ///
+    /// ⚠️ J'avais ré-emballé la réponse en `{"items": …}` en supposant un tableau racine — et
+    /// l'écran est resté vide sous le shell, sans erreur réseau : ma propre garde a rendu « liste
+    /// indisponible (HTTP 0) », c'est-à-dire mon code pour « aucun lieutenant ». Le compte en avait
+    /// deux ; c'est la lecture qui était fausse.
+    /// ★ L'idiome enveloppe/payload/data était DÉJÀ suivi vingt lignes plus haut dans le même
+    ///   fichier de client, pour la route de réputation. J'ai écrit deux routes neuves sans relire
+    ///   celle qui marchait à côté — troisième fois aujourd'hui que la réponse était dans le
+    ///   voisinage immédiat du code que j'écrivais.</summary>
+    [System.Serializable] public class ListeLieutenantsData { public LieutenantIdDto[] lieutenants; }
+    [System.Serializable] public class ListeLieutenantsPayload { public ListeLieutenantsData data; }
+    [System.Serializable] public class ListeLieutenantsEnvelope { public ListeLieutenantsPayload payload; }
+
+    [System.Serializable] public class LieutenantFichePayload { public LieutenantFicheDto data; }
+    [System.Serializable] public class LieutenantFicheEnvelope { public LieutenantFichePayload payload; }
+
+    [System.Serializable]
+    public class LieutenantIdDto
+    {
+        public string lieutenant_id;
+    }
 }

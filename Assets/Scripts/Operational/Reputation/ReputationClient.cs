@@ -84,6 +84,32 @@ namespace MafiaCleanCity.Operational
         /// qu'une règle tient « jusqu'à ce qu'elle soit publiquement retirée ». L'écran affiche
         /// donc un geste sans retour possible, et le dit — il ne dessine pas un bouton de
         /// retrait qui n'existe pas.</summary>
+        /// <summary>`GET /v1/lieutenants` → la liste, dont on ne retient que le premier
+        /// identifiant. ㊲ parle d'UN lieutenant ; le shell ne lui en désigne aucun, et le contrat
+        /// `IShellTenant` ne porte que `SetMountParent` et `SetToken`.
+        ///
+        /// ⚠️ « Le premier » est un choix par DÉFAUT, pas une règle de produit : le jour où
+        /// l'écran est atteint depuis une fiche de lieutenant, c'est cet identifiant-là qu'il
+        /// faudra passer, et ce chemin-ci restera pour l'entrée directe par l'onglet.
+        public IEnumerator GetPremierLieutenantId(string bearer, System.Action<string> onId,
+                                                  System.Action<long> onErr)
+        {
+            using (UnityWebRequest req = UnityWebRequest.Get(BaseUrl.TrimEnd('/') + "/v1/lieutenants"))
+            {
+                if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
+                yield return req.SendWebRequest();
+                if (req.result != UnityWebRequest.Result.Success) { onErr?.Invoke(req.responseCode); yield break; }
+                var liste = JsonUtility.FromJson<ListeLieutenantsEnvelope>(
+                                req.downloadHandler.text)?.payload?.data;
+                if (liste == null || liste.lieutenants == null || liste.lieutenants.Length == 0)
+                {
+                    onErr?.Invoke(0);   // pas d'erreur réseau : le joueur n'a simplement aucun lieutenant
+                    yield break;
+                }
+                onId?.Invoke(liste.lieutenants[0].lieutenant_id);
+            }
+        }
+
         /// <summary>`GET /v1/lieutenants/:id` → la fiche du lieutenant, dont sa clé `name`.
         ///
         /// ⛔ Ajoutée parce que l'écran INVENTAIT le nom (« SALVATORE » en dur) tout en affichant
@@ -110,7 +136,8 @@ namespace MafiaCleanCity.Operational
                     onErr?.Invoke(req.responseCode);
                     yield break;
                 }
-                var fiche = JsonUtility.FromJson<LieutenantFicheDto>(req.downloadHandler.text);
+                var fiche = JsonUtility.FromJson<LieutenantFicheEnvelope>(
+                                req.downloadHandler.text)?.payload?.data;
                 onNom?.Invoke(fiche != null ? fiche.name : null);
             }
         }

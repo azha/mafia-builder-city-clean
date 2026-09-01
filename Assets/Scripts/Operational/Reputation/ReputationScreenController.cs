@@ -182,7 +182,48 @@ namespace MafiaCleanCity.Operational
         private int PxTrait(float css) =>
             EchelleMaquette.PxTrait(css, racinePleinEcran, EchelleMaquette.LargeurEcransBrennar6);
 
-        private void Awake() => EnsureInitialized();
+        // ⛔ LA CONSTRUCTION A LIEU DANS `Start`, PAS DANS `Awake` — et c'est le shell qui l'impose.
+        // `ConstruireLocataire` fait `host.AddComponent<T>()`, ce qui déclenche `Awake` IMMÉDIATEMENT,
+        // puis appelle `SetMountParent` à la ligne suivante. Un écran qui construit dans `Awake` se
+        // bâtit donc AVANT de savoir où : il retombe sur sa racine de repli et n'atteint jamais le
+        // slot de contenu. Le commentaire du shell le dit pour les autres locataires — « Start() et
+        // donc BuildLayout() sont différés à la frame suivante ».
+        //
+        // ⚠️ Mesuré au premier montage réel (2026-09-02) : le slot de contenu portait 2 nœuds au
+        // lieu de la vingtaine attendue. La garde anti-vacuité de la capture l'a arrêté — sans elle,
+        // le PNG d'un écran VIDE serait parti comme « premier écran atteignable du programme ».
+        // ★ L'écran était juste depuis huit tours de juge ; c'est son MOMENT de construction qui
+        //   était faux, et rien hors du shell ne pouvait le révéler. Un composant testé isolément
+        //   ne prouve rien de l'ordre dans lequel son hôte l'assemble.
+        private void Start()
+        {
+            EnsureInitialized();
+            StartCoroutine(Amorcer());
+        }
+
+        /// <summary>⛔ L'ÉCRAN SE CHARGE LUI-MÊME AU MONTAGE. Sans ça il se construit et reste VIDE :
+        /// le shell monte le locataire et lui passe un jeton, mais n'appelle jamais `Charger`.
+        ///
+        /// ⚠️ Mesuré à la première capture sous chrome (2026-09-02) : la charpente était là — cadre,
+        /// blocs, portrait, bouton — et TOUS les textes issus des données étaient vides. Compteurs
+        /// sans chiffres ni libellés, verdict absent, voyants sans nom, panneau vide. L'écran
+        /// paraissait construit, il n'était pas rempli.
+        /// ★ Huit tours de juge ne pouvaient pas le voir : mes tests appellent `Charger` eux-mêmes,
+        ///   donc ils fournissaient l'amorce que le produit n'avait pas. **Un test qui déclenche
+        ///   lui-même ce qu'il vérifie ne prouve rien du déclencheur.**
+        ///
+        /// Le contrat `IShellTenant` ne porte que `SetMountParent` et `SetToken` : le shell ne
+        /// désigne aucun lieutenant, l'écran doit donc en choisir un — le premier de la liste.
+        private IEnumerator Amorcer()
+        {
+            if (string.IsNullOrEmpty(token)) yield break;   // monté hors session : rien à charger
+            string id = null;
+            yield return client.GetPremierLieutenantId(token, v => id = v,
+                code => Debug.LogWarning($"[b3] liste des lieutenants indisponible (HTTP {code}) — "
+                                         + "l'écran reste sur son état vide nommé"));
+            if (string.IsNullOrEmpty(id)) yield break;
+            yield return Charger(id);
+        }
 
         private void EnsureInitialized()
         {
