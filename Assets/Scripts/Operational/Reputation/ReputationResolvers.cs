@@ -244,6 +244,34 @@ namespace MafiaCleanCity.Operational
 
         // ── Offre ────────────────────────────────────────────────────────────────────────────
 
+        // ══════════════════════════════════════════════════════════════════════════════════════
+        // ⛔ LES TROIS RÉSOLVEURS CI-DESSOUS ONT ZÉRO APPELANT, ET C'EST MESURÉ, PAS SUPPOSÉ.
+        //
+        // `OffrePhrase`, `OffreCouleur` et `ReglementLibelle` servent le groupe `restraint` du
+        // corps de réponse. Ce groupe est bien REÇU et jamais affiché — non par oubli, mais parce
+        // que la section n'est jamais DEMANDÉE : `GET /v1/me/reputation` omet `restraint` sans
+        // `counterparty_id`, et aucun chemin joueur ne permet d'en obtenir un.
+        //
+        // MESURE — 2026-09-01, à la source du back :
+        //   · les contreparties ne sont listées que par `reputation-admin.controller.ts`
+        //     (contrôleur ADMIN, pas joueur) ;
+        //   · `counterparty_id` n'apparaît côté joueur qu'en PARAMÈTRE d'entrée de la route,
+        //     jamais en sortie d'une autre.
+        // ⇒ C'est une branche morte PAR CONSTRUCTION. Elle ne se répare pas côté écran : faire
+        //   vivre cette section côté front reviendrait à afficher au joueur une chose qu'il ne
+        //   peut jamais atteindre. Elle se répare côté back (lot L-c) ou pas du tout.
+        //
+        // ⚠️ POURQUOI ON LES GARDE plutôt que de les supprimer : la maquette dessine cette section
+        // (m-123), donc le jour où le lot back arrive, la question n'est pas « comment l'écrire »
+        // mais « où la brancher ». Les supprimer économiserait trente lignes et coûterait la
+        // traçabilité du choix.
+        //
+        // ⚠️ ET LA DATE COMPTE. Cet écran a déjà affiché au joueur, pendant huit tours de juge,
+        // qu'une donnée n'était « pas projetée » alors que le back l'avait livrée entre-temps —
+        // personne ne redemande jamais si une telle affirmation est encore vraie.
+        // ★ Un écart assumé sans sa date ni sa mesure devient une vérité par ancienneté.
+        //   Celui-ci porte les siennes : re-mesurer avant de s'y fier.
+        // ══════════════════════════════════════════════════════════════════════════════════════
         public static string OffrePhrase(string posture)
         {
             switch (posture)

@@ -371,7 +371,7 @@ namespace MafiaCleanCity.Operational
                 sousTitre.text = absorbe == 0
                     ? "UN LIEUTENANT NEUF N’A ENCORE RIEN ABSORBÉ"
                     : "PERSONNE NE VOUS A ENCORE JUGÉ";
-                MajVerdict("Pas encore jugeable", ReputationResolvers.Muet);
+                MajVerdict("indeterminate");
                 MajPanneau("« PAS JUGEABLE » N’EST PAS « MOYEN »",
                     "Rien n’a encore déteint",
                     "ses quatre voyants sont éteints parce qu’il n’a " + Or("rien pris de vous") +
@@ -385,7 +385,7 @@ namespace MafiaCleanCity.Operational
             if (cue == "drifting")
             {
                 sousTitre.text = "VOUS VOUS ÉCARTEZ DE VOS PROPRES RÈGLES";
-                MajVerdict("Vous vous en écartez", ReputationResolvers.Ambre);
+                MajVerdict("drifting");
                 MajPanneau("CE QUI A CHANGÉ",
                     "Une règle donnée, une règle enfreinte",
                     "vous avez laissé passer ce que vous aviez interdit. Les deux cercles " +
@@ -397,7 +397,7 @@ namespace MafiaCleanCity.Operational
             }
 
             sousTitre.text = "CE QU’IL A PRIS DE VOUS SE VOIT SUR LUI";
-            MajVerdict("Vous vous y tenez", ReputationResolvers.Vert);
+            MajVerdict("aligned");
             MajPanneau("LA RÈGLE DU JEU",
                 "Vous vous lisez sur lui",
                 "chaque vertu qu’il vous voit tenir finit sur sa tenue — col, manches, montre, " +
@@ -414,11 +414,19 @@ namespace MafiaCleanCity.Operational
         /// quatrième chemin : un état qui oublierait d'appeler cette méthode laisserait la colonne
         /// SANS titre, ce qui est exactement le défaut qu'on vient de corriger. Une couleur nulle
         /// est refusée bruyamment plutôt que rendue en blanc par défaut.</summary>
-        private void MajVerdict(string libelle, Color couleur)
+        private void MajVerdict(string cue)
         {
             if (verdictTitre == null) return;   // écran pas encore construit — pas une erreur
-            verdictTitre.text = libelle;
-            verdictTitre.color = couleur;
+            // ⛔ LE LIBELLÉ ET LA COULEUR VIENNENT DU RÉSOLVEUR, jamais d'ici. Les trois branches
+            // d'`AppliquerEtat` les recopiaient en clair — deux sources pour une même valeur, et
+            // c'est exactement ce que le fichier des résolveurs interdit dans son propre en-tête.
+            // Le juge données l'a relevé : `CoherencePhrase` et `CoherenceCouleur` avaient ZÉRO
+            // appelant alors qu'elles portaient déjà les trois libellés et les trois couleurs.
+            // ★ Une duplication ne fait pas de mal tant que les deux copies s'accordent — ce qui
+            //   la rend invisible en revue. Elle ne coûte qu'au moment où l'une des deux change,
+            //   et c'est alors l'autre qu'on cherche.
+            verdictTitre.text = ReputationResolvers.CoherencePhrase(cue);
+            verdictTitre.color = ReputationResolvers.CoherenceCouleur(cue);
         }
 
         /// <summary>Repli NOMMÉ quand la récupération échoue — jamais une exception, jamais un
