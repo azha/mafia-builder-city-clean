@@ -123,6 +123,22 @@ namespace MafiaCleanCity.Shell.Tests
             canvas.planeDistance = 10f;
             Canvas.ForceUpdateCanvases();
             yield return null;
+
+            // ⛔⛔ LA CAUSE DE L'IMAGE VIDE, ET ELLE N'EST PAS DEVINÉE — elle est reprise du
+            // diagnostic déjà écrit dans `ReputationScreenPlayModeTests` (chercher qui exerce déjà
+            // la même couture AVANT d'écrire un instrument : cette couture-là était résolue depuis
+            // une heure, et je l'ai réinventée pour rien).
+            // Une caméra orthographique voit 2 × `orthographicSize` unités de haut : la valeur par
+            // DÉFAUT est 5, donc DIX unités — pour un canvas qui en fait plus de deux mille. Elle
+            // cadrait 0,4 % de l'écran, dans une zone vide. D'où l'aplat.
+            // ⚠️ Et la demi-hauteur se mesure sur le rect RÉEL après reconstruction, jamais depuis
+            // la résolution demandée : le canvas porte un `CanvasScaler`, donc ses unités ne sont
+            // PAS les pixels de la cible.
+            RectTransform crt = (RectTransform)canvas.transform;
+            cam.orthographicSize = crt.rect.height / 2f;
+            cam.aspect = crt.rect.width / crt.rect.height;
+            Debug.Log($"[CAPTURE diag] canvas.rect={crt.rect.width:F0}x{crt.rect.height:F0} " +
+                      $"orthoSize={cam.orthographicSize:F1} scaleFactor={canvas.scaleFactor:F3}");
             cam.Render();
 
             RenderTexture prev = RenderTexture.active;
