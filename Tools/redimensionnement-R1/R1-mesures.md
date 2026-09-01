@@ -125,6 +125,52 @@ qui a servi à signaler le problème était lui-même **déduit** (une soustract
 à un seul répertoire ; il en couvrait treize. *Un chiffre qu'on se rapporte à soi-même dans un
 signalement de bonne foi reste un chiffre déduit* — la commande qui tranche tenait en une ligne.
 
+## ㉕ — sonde du seam : DEUX runs réels, et aucun n'a encore mesuré le seam
+
+**État : NON LIVRÉ.** Deux runs batchmode (427 s et 423 s, `passed=260 failed=2` les deux fois).
+Ce que chacun a rendu, et pourquoi le second vaut mieux que le premier :
+
+| run | verdict de la sonde | ce qu'il valait |
+|---|---|---|
+| r1 | « le seam ne produit PAS d'inset distinct ⇒ R4 doit couvrir la zone sûre » | ⛔ **FAUX, et crédible** |
+| r2 | « AUCUNE publication d'insets en 240 frames — la sonde n'a pas observé son montage » | ✅ **vrai, et nommé** |
+
+⛔⛔ **r1 EST LE RÉSULTAT LE PLUS INSTRUCTIF DU LOT : un ROUGE PLAUSIBLE.** Les deux points ont
+rendu **exactement** `top=274,970 · bottom=294,433`. L'arithmétique réfute les deux : à
+`Screen=640×480` le point A impose un `topSafe` local de **120**, le point B de **280**.
+**274,970 est la valeur à `topSafe = 0`** — celle du provider PAR DÉFAUT. La sonde n'a jamais
+observé son propre provider ; elle a lu deux fois une valeur **étrangère**, laissée par l'un des
+260 autres tests du même processus, `ShellChrome.TopInsetPx` étant **statique**.
+⇒ ***J'ai asserté une DIFFÉRENCE sans avoir prouvé qu'une MESURE avait eu lieu.***
+⇒ ★★ **Et un ROUGE plausible est plus traître qu'un vert plausible** : un vert, ce dépôt le
+soupçonne par réflexe ; **un rouge, on le croit**, et il fait ouvrir un chunk de correctif sur un
+défaut qui n'existe pas. J'allais faire couvrir la zone sûre par R4 sur cette foi. *Une égalité
+parfaite est la signature d'une dégénérescence, jamais un résultat.*
+
+**r2, après la garde** (sentinelle avant montage + attente bornée + échec NOMMÉ) : la valeur n'a pas
+bougé d'un iota en **240 frames**. Le diagnostic est donc établi et il est différent du soupçon
+initial : **`PublierInsetsDuChrome()` n'est pas sur le chemin qu'un montage nu emprunte** — ses deux
+sites d'appel (`AppShell.cs:552` et `:1373`) vivent dans des chemins de session/reconstruction que
+ma sonde ne déclenche pas.
+
+⇒ **CE QUE LE PROCHAIN RUN DOIT CHANGER, et c'était lisible dans le dépôt depuis le début** : le
+test qui marche déjà sur ce seam (`ChromeSafeAreaPlayModeTests`) ne lit pas le statique — il lit
+**`shellInstance.TopBarSlot.anchoredPosition.y`**, une grandeur **d'INSTANCE**. Elle appartient au
+shell qu'on vient de monter, donc elle est **structurellement** immunisée contre la pollution par
+les tests voisins, et elle est peuplée une frame après le montage.
+★ *Le bon observable était à un fichier de distance, dans le seul test du dépôt qui exerce ce même
+seam.* Même motif que la fixture inerte de `claims-partagees.py` : le dispositif correct existait
+déjà dans le lot, et je ne l'ai pas cherché avant d'en écrire un.
+
+⚠️ **Le rapport des écarts (1,6) n'est NI confirmé NI réfuté** — l'assertion de distinction n'a
+jamais été atteinte. Ma thèse de survie de ㉕ reste **due**, et c'est elle qui décide si ⑤ ⑮ ㉙
+tombent avec R4 ou avant lui.
+
+**Second rouge, ANTÉRIEUR au lot et non attribuable à ce run** :
+`NavD12_DistrictTitle_MargeGouttiere_Serif_EtOmbreSurMateriauDInstance` — sa propre garde de
+dimensionnement rougit (`letterbox mesuré 0.0px`). C'est **TD-422**, l'écran qui hérite de son
+viewport ; identique aux deux runs, indépendant de ma sonde.
+
 ## ① — Ancres re-mesurées, **par symbole**, épinglées à un SHA FIXE
 
 Le §2 impose le grain le plus fin possible. Fait : aucun numéro n'est recopié.
