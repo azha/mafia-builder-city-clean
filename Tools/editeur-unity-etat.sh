@@ -16,6 +16,13 @@
 #   (B) le VERROU de projet : un éditeur qui DÉTIENT un projet pose `Temp/UnityLockfile`.
 #   Les deux doivent concorder ; s'ils divergent, le script le DIT au lieu de choisir.
 #
+# ⛔⛔ CE QU'IL NE MESURE PAS, ET IL FAUT LE LIRE AVANT LE VERDICT : il répond « l éditeur est-il
+#    LIBRE ? », jamais « le créneau est-il À MOI ? ». *Une garde technique mesure la DISPONIBILITÉ,
+#    jamais l ATTRIBUTION* — un verrou libre dit « personne ne tient », pas « personne n attend ».
+#    La réservation ne vit sur aucun disque, donc aucun instrument local ne peut la voir.
+#    ⇒ Un vert d ici n autorise rien. *Un instrument qui ne déclare pas ce qu il ne mesure pas sera
+#      lu comme s il mesurait tout.*
+#
 # ⚠️ CONTRÔLE POSITIF INTÉGRÉ : (A) doit trouver des processus Unity (le Hub en est un). S'il en
 #    trouve ZÉRO, il est aveugle et son « aucun éditeur » ne prouve rien — cas distingué, sortie 2.
 
@@ -60,8 +67,12 @@ if [ "$editeurs" -ne "$verrous" ]; then
   exit 3
 fi
 if [ "$editeurs" -eq 0 ]; then
-  echo "✅ AUCUN éditeur ne tourne, AUCUN verrou : le batchmode est possible sur les deux arbres."
+  echo "✅ AUCUN éditeur ne tourne, AUCUN verrou : le batchmode est TECHNIQUEMENT possible."
   echo "   ⚠️ Un pont MCP peut écouter quand même — il ne pilote rien. Ne pas le confondre."
+  echo "   ⛔⛔ CE SCRIPT MESURE LA DISPONIBILITÉ, JAMAIS L ATTRIBUTION."
+  echo "      Un verrou libre ne dit pas « personne n attend », il dit « personne ne tient »."
+  echo "      La réservation d un créneau vit dans la coordination entre sessions, PAS sur le"
+  echo "      disque : ce vert n est donc PAS une autorisation de lancer. Demander le créneau."
   exit 0
 fi
 echo "⛔ $editeurs éditeur(s) actif(s) — un seul pilote : NE PAS lancer de run, demander le créneau."
