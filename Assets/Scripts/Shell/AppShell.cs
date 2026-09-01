@@ -842,13 +842,43 @@ namespace MafiaCleanCity.Shell
                                       bottomSafe + TabBarRoot.rect.height);
         }
 
-        private static (float top, float bottom) SafeAreaInsetsLocal()
+        /// <summary>R4 — le facteur d'échelle vient du CANVAS, plus de <c>Screen</c>.
+        ///
+        /// ⛔⛔ CE QUE CETTE MÉTHODE FAISAIT DE FAUX, ET POURQUOI C'ÉTAIT INVISIBLE (mesuré 2026-09-01).
+        ///    Elle RECALCULAIT son propre facteur — <c>Screen.width / ReferenceResolutionWidth</c> —
+        ///    au lieu de lire celui du canvas. Tant que le canvas suit l'écran, les deux coïncident
+        ///    et rien ne se voit. Ils DIVERGENT dès que le canvas vise autre chose que l'écran :
+        ///    c'est le cas de la seule voie de rendu multi-résolution que ce dépôt possède (caméra →
+        ///    <c>RenderTexture</c> ; <c>Screen.SetResolution</c> = 0 occurrence, <c>GameViewSizes</c>
+        ///    refusé par écrit dans les tests). Le canvas suit alors la texture cible pendant que
+        ///    <c>Screen.width</c> reste celui du Game View — bloqué à 640 en batchmode. ⇒ **Le canvas
+        ///    se redimensionne, le chrome NON**, et toute capture « à telle résolution » montre une
+        ///    géométrie HYBRIDE que le joueur n'a jamais.
+        ///
+        /// ⚠️ POURQUOI <c>renderingDisplaySize</c> ET NON <c>scaleFactor</c> : <c>Canvas.scaleFactor</c>
+        ///    lu dans la frame de création rend <b>1,000000</b> — une valeur PLAUSIBLE, pas une erreur,
+        ///    et légitime à 1280 de large, donc aucune garde de seuil ne peut la distinguer du cas
+        ///    juste (les 4 précédents maison gardent <c>&gt; 0.0001f</c> : 1,0 les satisfait tous).
+        ///    <c>renderingDisplaySize</c> est la grandeur d'ENTRÉE du <c>CanvasScaler</c>, disponible
+        ///    sans attendre une frame, et elle suit la RenderTexture. Sous
+        ///    <c>matchWidthOrHeight = 0</c> — le réglage de ce shell — le scaler calcule exactement
+        ///    <c>renderingDisplaySize.x / referenceResolution.x</c> : on lit donc la MÊME formule sur
+        ///    la MÊME source, au lieu d'en recalculer une seconde depuis <c>Screen</c>.
+        ///
+        /// ⛔ AUCUN REPLI SILENCIEUX VERS <c>Screen</c> : un repli rétablirait le défaut exactement
+        ///    dans le monde où il mord, et le rendrait invisible. Canvas absent ou dégénéré ⇒ (0,0),
+        ///    la même issue que la garde d'anti-vacuité qui existait déjà pour un écran nul.</summary>
+        private (float top, float bottom) SafeAreaInsetsLocal()
         {
             Rect safeArea = SafeAreaProvider();
-            float screenW = Screen.width, screenH = Screen.height;
-            if (screenW <= 0f || screenH <= 0f) return (0f, 0f); // anti-vacuité — jamais une division par 0
-            float scaleFactor = screenW / ReferenceResolutionWidth;
-            float topPx = Mathf.Max(0f, screenH - safeArea.yMax);
+            if (ShellCanvas == null) return (0f, 0f);
+            float largeurRendu = ShellCanvas.renderingDisplaySize.x;
+            float hauteurEcran = Screen.height; // la zone sûre est EXPRIMÉE en pixels d'écran : c'est
+                                                // son propre référentiel, pas celui de la conversion
+            if (largeurRendu <= 0f || hauteurEcran <= 0f) return (0f, 0f); // jamais une division par 0
+            float scaleFactor = largeurRendu / ReferenceResolutionWidth;
+            if (scaleFactor <= 0f) return (0f, 0f);
+            float topPx = Mathf.Max(0f, hauteurEcran - safeArea.yMax);
             float bottomPx = Mathf.Max(0f, safeArea.yMin);
             return (topPx / scaleFactor, bottomPx / scaleFactor);
         }
