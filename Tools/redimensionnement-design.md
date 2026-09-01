@@ -502,8 +502,10 @@ remplaçable, exercé par une suite du dépôt. **Deux valeurs de provider aux d
 donnent la distinction que §6.2 exige, **sans toucher la production**.
 ⚠️ **I6 : cette décision était assignée à R1 alors que son instrument (⑳) appartient à R3, qui court
 en DERNIER.** Si le verdict était « le seam ne suffit pas », le refactor tomberait dans R2 — déjà
-passé. ⇒ **Une sonde réduite du seam remonte en R1 (㉕**, et non ⑤ qui est « imprimer les insets après bascule » — I2 de la v9 : le correctif de B3 avait atteint la table et pas la ligne du corps qui ASSIGNE**), et le refactor éventuel devient un
-**R4 conditionnel** — et **défini ici**, parce que la v8 l'invoquait sans le définir, ce qui est
+passé. ⇒ **Une sonde réduite du seam remonte en R1 (㉕**, et non ⑤ qui est « imprimer les insets après bascule » — I2 de la v9 : le correctif de B3 avait atteint la table et pas la ligne du corps qui ASSIGNE**), et le refactor devient **R4**,
+**défini ici** — ⚠️ **et son régime a changé le 2026-09-01 : il n'est plus subordonné à cette
+sonde, voir son propre paragraphe. Ce que ㉕ tranche désormais, c'est ce que R4 doit couvrir côté
+zone sûre, pas s'il existe.** La v8 l'invoquait sans le définir, ce qui est
 mot pour mot le BLOQUANT que le §11 adresse aux v1–v4 (« *invoquaient R1/R2/R3 sans jamais les
 DÉFINIR* ») : **classe fermée sur trois instances et rouverte sur la quatrième, dans le même
 document** (I4).
@@ -544,8 +546,15 @@ document** (I4).
 > celui du Game View par défaut. ⇒ Piloter la divergence (la voie RenderTexture la produit) et
 > asserter que les insets suivent **le canvas**. **Contrôle qui rend l'assertion probante :
 > l'ANCIENNE forme doit RATER** — sans lui, une conversion qui ne change rien passe le test.
-⇒ **Ne toucher au calcul d'insets QUE si cette sonde montre que le seam ne suffit pas** — et
-alors écrire le refactor `static`→instance ET la conversion d'unités.
+⇒ **R4 est dû dans tous les cas** — le refactor `static`→instance ET la conversion d'unités. Ce que
+la sonde ㉕ détermine, c'est **l'étendue de ce que R4 doit couvrir côté zone sûre**, plus s'il a
+lieu. *(⚠️ **QUATRIÈME énoncé périmé de ce document, et il a été trouvé par ㉜ — pas par la passe
+de balayage qui venait d'en corriger trois.** Il concluait le §5 en subordonnant le geste à une
+condition que le paragraphe R4, quinze lignes plus haut, venait de lever. ⇒ **Une passe de
+correction qui vise les occurrences d'un MOTIF ne voit pas la phrase qui porte la même dépendance
+avec d'autres mots** : le balayage cherchait le mot du régime, celui-ci exprime le régime sans le
+nommer. C'est la deuxième fois que l'instrument du plancher sort un défaut qu'une revue et une
+passe humaine avaient laissé.)*
 
 ## 6. La falsifiable
 
@@ -740,7 +749,7 @@ l'autre membre — et **ils ne sont PAS construits indépendamment** : voir la d
 | 10 | §4 | assertion de non-émission, fenêtre à l'attachement | R2 ⑩ |
 | 11 | §5 | imprimer les insets après bascule | R1 ⑤ |
 | 12 | §5 | commiter le log qui porte la mesure du §5 | R1 **㉔** |
-| 25 | §5 | **la sonde réduite du seam** — l'instrument dont dépend la décision d'annulation | R1 **㉕** |
+| 25 | §5 | **la sonde réduite du seam** — l'instrument qui détermine ce que R4 doit couvrir côté zone sûre *(⚠️ **révisé le 2026-09-01** : il ne conditionne plus l'existence de R4, acquise par un second déclencheur)* | R1 **㉕** |
 | 26 | §8 | **détecteur de c3** — `ZoomLevels[Length-1] == 3f` sur **toutes les résolutions que le harnais REND** *(I3 de la v13 : le compte était FIGÉ à la population d'alors, et ㉙ en ajoute une de plus — un détecteur de péremption à population gelée sous-couvre en silence. **Le littéral fautif n'est pas reproduit ici** : le citer pour expliquer qu'on le retire le maintient en vie, et c'est ainsi qu'il a survécu deux versions dans le corps.)* | R1 **㉖** |
 | 13 | §5 | zone sûre à valeurs distinctes via le seam | R3 ⑳ |
 | 14 | §6 | (a) et (b) dans deux scénarios distincts | R2 ⑪ |
@@ -784,7 +793,7 @@ ligne le dit à la place d'un ✅.
 *(I7 de la v18 : cette obligation avait son prédicat, sa sortie attendue et sa comparaison — et zéro
 numéro, zéro ligne d'énumération, zéro cellule. **QUATRIÈME instance de la forme C**, dans le paragraphe
 qui ferme le bloquant le plus ancien du document. Le §5 possédait déjà la forme — « hors plancher tant
-qu'il est conditionnel, mais il a un paragraphe » — et ne se l'était pas appliquée.)*
+la forme du §5 pour un chunk subordonné qui a néanmoins son paragraphe — et ne se l'était pas appliquée.)*
 
 ⚠️ **Contrôle de cohérence de propriétaire** (absent de la v5, qui disait « R3 publie la table des
 30 » dans le corps et l'assignait à R1 dans la table) : tout « R\<i\> fait X » du corps doit

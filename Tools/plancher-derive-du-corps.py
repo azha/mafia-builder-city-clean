@@ -97,7 +97,12 @@ def couvert(txt):
     if not w: return True
     return sum(1 for x in w if x in mots_table) / len(w) >= 0.62
 
-retenus = [(a, x) for a, x in cands if not couvert(x)]
+# ⛔ m1 : le ratio de vocabulaire porte sur la table ENTIÈRE, donc il déclarait « couvert » un
+#    candidat venu d'une section qui n'a AUCUNE ligne de plancher — un mot commun ailleurs suffit.
+#    L'observable qui le réfute est déjà calculé (`lignes_par_section`) : une section sans ligne
+#    ne peut couvrir personne. Le compte de section PRIME sur le ratio.
+retenus = [(a, x) for a, x in cands
+           if not couvert(x) or lignes_par_section.get(cle_section(a), 0) == 0]
 
 # contrôle POSITIF : le motif doit trouver quelque chose, et la table doit être lisible.
 if not cands:
@@ -126,7 +131,14 @@ par_section = collections.Counter(cle_section(a) for a, _ in cands)
 if not (set(par_section) & set(lignes_par_section)):
     print('⛔ AUCUNE clé de section commune aux deux côtés — la comparaison serait UNIFORME et fausse.')
     sys.exit(2)
-print(f'  portée ................... §0–§8 ({len(corps)} caractères, le §11 EXCLU)')
+# ⛔ LA PORTÉE EST DÉRIVÉE, PLUS ÉCRITE EN DUR (IMPORTANT I1, revue ⊥ du 2026-09-01). La v1
+#    imprimait une borne haute FAUSSE — et son propre run la contredisait six lignes plus bas, en
+#    listant des candidats venus de sections au-delà. La ligne de portée était à 0 delta pendant
+#    que le correctif ajoutait la table par section juste EN DESSOUS : *le texte que la correction
+#    devait rouvrir se trouvait à six lignes du curseur.*
+_secs = sorted({int(m.group(1)) for m in re.finditer(r'^## (\d+)\.', corps, re.M)})
+_portee = f'§{_secs[0]}–§{_secs[-1]}' if _secs else '(aucune section détectée)'
+print(f'  portée ................... {_portee} dérivée ({len(corps)} caractères, le §11 EXCLU)')
 print(f'  candidats du corps ....... {len(cands)}')
 print(f'  déjà couverts par la table {len(cands) - len(retenus)}')
 print(f'  ⇒ À TRANCHER ............. {len(retenus)}\n')
@@ -140,8 +152,16 @@ for sec in sorted(set(par_section) | set(lignes_par_section), key=tri):
     nc = par_section.get(sec, 0)
     nt = lignes_par_section.get(sec, 0)
     marque = ''
-    if nc == 0 and nt > 0:
+    if sec == '§11':
+        # le §11 est retiré du corps en tête de script : le compter comme angle mort serait
+        # TAUTOLOGIQUE et rendrait le chiffre de cécité non opposable (IMPORTANT I2).
+        marque = '  (exclu par construction — pas un angle mort)'
+    elif nc == 0 and nt > 0:
         marque = '  ⛔ MUETTE — le balayage ne peut RIEN y trouver'; muettes.append((sec, nt))
+    elif nc > 0 and nt == 0:
+        # m2 : c'est ICI qu'un orphelin est le plus probable — des obligations dans le corps, zéro
+        # ligne de plancher en face. L'instrument ne tranche pas, il DÉSIGNE.
+        marque = '  ⚠️ candidats SANS ligne de plancher — à regarder en premier'
     print(f'      {sec[:30]:30} {nc:>10} {nt:>16}{marque}')
 if muettes:
     perdu = sum(n for _, n in muettes)

@@ -48,9 +48,10 @@ ici : le citer pour expliquer qu'on le retire le remet dans le fichier — et un
 > session : j'avais lu un fichier `.pid` **vivant et écoutant**, et il nomme le **pont MCP**, pas un
 > éditeur. ⇒ ***Un `.pid` atteste qu'un processus existe, jamais l'identité de ce qu'il sert.***
 > La vérification était rigoureuse et portait sur le mauvais objet — et les deux fois, l'erreur
-> allait dans le sens qui m'arrangeait, puisqu'un empêchement extérieur dispense d'agir. *(La v1 de ce fichier écrivait « l'éditeur est verrouillé
-> depuis 20:52 » — un énoncé daté sans mode d'emploi, exactement ce que le socle interdit : il
-> serait resté vrai en apparence pour toujours.)*
+> allait dans le sens qui m'arrangeait, puisqu'un empêchement extérieur dispense d'agir. *(La v1 de ce fichier datait son blocage à une
+> heure précise sans dire comment le réfuter — exactement ce que le socle interdit : un tel énoncé
+> reste vrai en apparence pour toujours. **Sa formulation n'est pas reproduite ici**, sans quoi le
+> retrait serait annulé par la phrase qui l'explique.)*
 
 ---
 
@@ -222,23 +223,49 @@ depuis la v8. Sa couverture est **partielle et déclarée** (prescriptions en gr
 d'obligation ; une obligation en prose nue lui échappe), et sa sortie est une **liste de revue**,
 pas un verdict.
 
-**Premier passage** : 30 candidats du corps, 10 déjà couverts, **20 à trancher**. Triés à la main :
+⛔⛔ **CE QUE CETTE SORTIE NE PEUT PAS ÊTRE, ET POURQUOI LA PREMIÈRE L'ÉTAIT** : un compte collé ici
+est une **mesure DATÉE**, pas une propriété du document. La v1 de cette section publiait un triplet
+mesuré sur le design **avant la dernière édition du commit qui le publiait** — les deux moitiés du
+commit étaient cohérentes séparément et se contredisaient ensemble, et le triplet n'était
+reproductible à **aucun** commit du lot. Un livrable dont l'énoncé est « sortie publiée **et
+comparée à la table** » ne peut pas s'appuyer sur une sortie irreproductible.
+⇒ **La forme qui tient : la COMMANDE, et le SHA auquel elle a été passée.** Les chiffres ci-dessous
+valent pour ce commit et se re-tranchent en une ligne ; s'ils ne se reproduisent pas, c'est le
+document qui a bougé, et c'est exactement ce que ㉜ doit détecter.
 
-| classe | nombre | exemples |
+```
+python3 Tools/plancher-derive-du-corps.py Tools/redimensionnement-design.md
+```
+
+**Ce que le tri a donné** — 25 candidats à trancher, classés un par un :
+
+| classe | n | ce que c'est |
 |---|---|---|
-| (c) règle de méthode, pas un livrable | 12 | les corollaires du §10, la règle d'unité du §7 |
-| (b) reformulation d'un livrable existant | 5 | la garde de delta (déjà dans ⑫), l'ordre de reconstruction (déjà ㉓) |
-| (c) livrable de **R4**, hors plancher | 2 | R4 porte ses deux livrables dans son propre paragraphe *(⚠️ **son déclencheur a changé le 2026-09-01** : il ne dépend plus d'une décision de ㉕ — voir le design. La classe (c) reste juste, la RAISON de son appartenance a bougé.)* |
-| **(a) DÉFAUT RÉEL** | **1** | ci-dessous |
+| (c) règle de méthode, pas un livrable | 11 | les corollaires du §10, la règle d'unité du §7, la tenue de l'en-tête |
+| (b) reformulation d'un livrable déjà possédé | 8 | la garde de delta et la garde de capacité (⑫), l'ordre de reconstruction (㉓), le compte d'émissions (⑩), le critère d'appartenance (②) |
+| (c) prose de décision, hors plancher | 4 | le régime de R4 et les deux sections « hors périmètre » |
+| **(a) DÉFAUT RÉEL** | **2** | ci-dessous |
 
-⛔ **LE DÉFAUT (a), ET C'EST LE PREMIER DE SA CLASSE TROUVÉ PAR UN INSTRUMENT** : le §8 prescrivait
-le détecteur de c3 sur une **population figée**, alors que le §11 avait corrigé exactement ce point
-deux versions plus tôt et écrit pourquoi. **La correction avait atteint l'énumération et jamais le
-corps** — la jointure du socle dans sa forme pure. Neuf revues ⊥ d'affilée avaient trouvé un défaut
-de cette famille ; c'est la première fois qu'un balayage le sort tout seul.
-★ **Et il était doublé d'un piège de citation** : la parenthèse du §11 qui explique la correction
-**reproduisait le littéral fautif**, donc le document le portait deux fois. Corrigé dans le même
-commit, contrôle collé : motif fautif **2 → 0**, valeur attendue écrite avant l'édition.
+⇒ **DEUX défauts (a), et les deux sont des ÉNONCÉS PÉRIMÉS que le corps portait encore.**
+1. Le §8 prescrivait le détecteur de c3 sur une **population figée** que le §11 avait corrigée deux
+   versions plus tôt *en écrivant pourquoi*. La correction avait atteint l'énumération et jamais le
+   corps.
+2. Le §5 concluait en **subordonnant le refactor des insets à une condition que le paragraphe R4,
+   quinze lignes plus haut, venait de lever**.
+
+★★ **CE QUE LE SECOND PROUVE, ET C'EST LA RAISON D'ÊTRE DE ㉜** : il a été trouvé **après** une passe
+de balayage humaine qui venait d'en corriger trois dans ce même document, et qui l'a manqué. Le
+balayage cherchait les occurrences d'un **mot** ; cette phrase exprime la même dépendance **sans
+employer ce mot**. ⇒ *Une passe qui vise un MOTIF ne voit pas la phrase qui porte la même propriété
+avec d'autres mots* — et c'est précisément le trou qu'un instrument dérivé du corps peut combler,
+puisqu'il part des obligations et non du vocabulaire.
+
+⚠️ **ET SA CÉCITÉ EST PUBLIÉE, PAS DÉDUITE** : la sortie porte une table **par section**. Sept
+sections rendent **zéro candidat** en portant **11 lignes de plancher** — dont tout le §6, qui en
+porte 10. Sur cette part, « aucun orphelin » signifierait « je n'ai pas regardé », et l'instrument
+le dit à la place d'un ✅. *(La v1 comptait aussi le §11 parmi ses angles morts — or il est retiré du
+corps en tête de script : une cécité tautologique qui sur-déclarait le chiffre et le rendait non
+opposable.)*
 
 ## ㉔ — Le log de la décision du §5, commité
 

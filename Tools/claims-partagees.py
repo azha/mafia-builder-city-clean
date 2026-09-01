@@ -36,14 +36,43 @@ import pathlib, re, sys, itertools
 #    loin, DANS LE MÊME COMMIT. Écrire la règle ne l'installe pas chez son auteur ; seule une
 #    dérivation la tient.
 RACINE = pathlib.Path(__file__).resolve().parent
+DEPOT = RACINE.parent
+
 def population():
-    """Tout artefact du lot : les documents et les instruments, découverts et non listés."""
-    vus = {}
-    for motif in ('redimensionnement*.md', 'redimensionnement-R1/*.md',
-                  'redimensionnement-R1/*.py', 'plancher-*.py', 'borne-*.py', 'claims-*.py'):
-        for f in RACINE.glob(motif):
-            if f.is_file(): vus[f.stem if f.stem not in vus else str(f)] = f
-    return dict(sorted(vus.items()))
+    """Les artefacts du lot, DÉRIVÉS DE L'HISTOIRE — jamais d'un nom ni d'une extension.
+
+    ⛔⛔ TROISIÈME FORME DE CE DÉFAUT, ET LES DEUX PREMIÈRES ÉTAIENT DÉJÀ « CORRIGÉES ».
+       v1 : liste écrite à la main (5 fichiers sur 7).
+       v2 : glob par préfixe de nom + extension (7 sur 8) — il ratait `editeur-unity-etat.sh`,
+            ajouté par le commit IMMÉDIATEMENT PRÉCÉDENT. Coût mesuré : 22 claims publiées au
+            lieu de 25, et les 3 manquantes portaient sur le sujet propre de ce fichier.
+       ⇒ **Un glob par nom et par extension EST une allowlist** — le script citait cette phrase
+       dans sa propre docstring pendant que son trou tombait exactement là. Deux corrections
+       successives ont chacune reproduit la classe un cran plus bas.
+    ⇒ La dérivation qui n'a pas de trou de NOMMAGE : les fichiers que l'HISTOIRE associe au
+      document du lot — ceux modifiés dans les mêmes commits que lui. Un artefact ne peut pas
+      entrer dans le lot sans un commit, donc il ne peut pas échapper à ce critère.
+    """
+    import subprocess
+    ancre = 'Tools/redimensionnement-design.md'
+    shas = subprocess.run(['git','-C',str(DEPOT),'log','--format=%H','--',ancre],
+                          capture_output=True,text=True).stdout.split()
+    if not shas:
+        print(f'⛔ aucun commit ne touche {ancre} — la dérivation NE S EST PAS EXÉCUTÉE'); sys.exit(2)
+    vus = set()
+    for sha in shas:
+        out = subprocess.run(['git','-C',str(DEPOT),'show','--name-only','--format=',sha],
+                             capture_output=True,text=True).stdout
+        vus.update(l.strip() for l in out.splitlines() if l.strip())
+    fichiers = {}
+    for rel in sorted(vus):
+        f = DEPOT / rel
+        if not f.is_file(): continue
+        if f.suffix.lower() in {'.png','.jpg','.jpeg','.gif','.meta','.asset'}: continue
+        try: f.read_text(encoding='utf-8')
+        except (UnicodeDecodeError, OSError): continue
+        fichiers[f.stem] = f
+    return dict(sorted(fichiers.items()))
 
 N = 9  # longueur de séquence : en dessous, la prose technique produit du bruit ; mesuré sur ce lot.
 
