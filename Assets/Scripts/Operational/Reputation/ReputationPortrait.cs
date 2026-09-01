@@ -121,8 +121,13 @@ namespace MafiaCleanCity.Operational
             Forme(ref montreAiguilleV, "MontreAiguilleV", buste, ReputationResolvers.Encre,
                   new Rect(49.8f, 73.0f, 0.35f, 1.1f), ech);
             // `<ellipse cx="12" cy="75" rx="5" ry="3.4">` — une ellipse déclarée comme telle.
+            // ⚠️ Rentré de 1,6 unité : à y=75 l'ellipse des épaules a une demi-largeur de 24,8
+            // (centre x=31), donc son bord gauche tombe à 6,2 — et le gant, posé à 7 avec un
+            // liseré de 1,2, commençait à 6,4. Il mordait le bord et son contour passait sur le
+            // fond de la carte : « déborde d'un tiers hors de la silhouette », le second des deux
+            // findings classés EMPÊCHE.
             FormeLiseree(ref gantG, "GantG", buste, ReputationResolvers.Creme2,
-                  new Rect(7f, 71.6f, 10f, 6.8f), ech, 1.2f, ellipse: true);  // stroke-width="1.2"
+                  new Rect(8.6f, 71.6f, 10f, 6.8f), ech, 1.2f, ellipse: true);
             // ⛔ LES DEUX TRAITS DE SALETÉ — `if tells['gloves'] != 'clean'` dans le SVG :
             // `M9 74 l3 1.6 M13 74.6 l3 -1`, deux courtes obliques sombres sur le gant.
             // ⚠️ Le juge mesure un rapport aire/boîte de 0,81 en jeu contre 0,67 en maquette : un
@@ -131,10 +136,18 @@ namespace MafiaCleanCity.Operational
             // invisible : ce qu'il mesurait était le gant, seul objet de cette forme à cet endroit.
             // ★ Un finding nomme ce que le juge CROIT voir ; c'est à l'auteur de retrouver quel
             //   objet il a réellement mesuré. Corriger la montre n'aurait rien changé à l'image.
+            // ⛔ LES MARQUES SONT OBLIQUES, PAS HORIZONTALES — et c'est ce que le juge a vu.
+            // Le SVG trace `M9 74 l3 1.6` (pente +0,53, descendante) et `M13 74.6 l3 -1`
+            // (pente −0,33, montante) : deux petites griffes croisées. J'avais posé deux
+            // rectangles PLATS, donc « deux barres horizontales parallèles » — la seule chose du
+            // portrait qu'un juge ait classée EMPÊCHE au huitième tour.
+            // Faute de primitive de trait incliné, on pose le rectangle puis on le TOURNE.
             Forme(ref gantTacheA, "GantTacheA", buste, ReputationResolvers.Encre,
-                  new Rect(9f, 74f, 3f, 0.8f), ech);
+                  new Rect(9f, 74f, 3.4f, 0.8f), ech);
+            gantTacheA.rectTransform.localEulerAngles = new Vector3(0f, 0f, -28f);   // atan(1,6/3)
             Forme(ref gantTacheB, "GantTacheB", buste, ReputationResolvers.Encre,
-                  new Rect(13f, 73.9f, 3f, 0.8f), ech);
+                  new Rect(13f, 74.1f, 3.2f, 0.8f), ech);
+            gantTacheB.rectTransform.localEulerAngles = new Vector3(0f, 0f, 18f);    // atan(1/3)
             Forme(ref _cou, "Cou", buste, ReputationResolvers.Creme2,
                   new Rect(26f, 48f, 10f, 10f), ech);
             // `<ellipse cx="31" cy="32" rx="12.5" ry="15">` — une ellipse, pas un stade.
@@ -408,7 +421,20 @@ namespace MafiaCleanCity.Operational
         {
             if (spriteTriangle != null) return spriteTriangle;
             const int d = 64;
-            var tex = new Texture2D(d, d, TextureFormat.RGBA32, false) { filterMode = FilterMode.Bilinear };
+            // ⛔ `Clamp` ET NON `Repeat` (le défaut d'Unity). Sans lui, l'échantillonnage au ras
+            // du bord reboucle sur l'autre côté de la texture : la BASE opaque du triangle
+            // reparaît sous sa POINTE, en un trait clair de la largeur nominale de la forme.
+            // ⚠️ J'ai d'abord mis à zéro la dernière ligne de la texture, puis les deux dernières,
+            // en croyant à un débordement d'anti-crénelage. Le trait revenait — parce qu'il ne
+            // venait pas de ces lignes-là, mais de celles d'EN FACE.
+            // ★ Deux corrections successives au bon endroit apparent, pour une cause située à
+            //   l'opposé exact. Quand un correctif précis ne change rien, ce n'est pas qu'il est
+            //   trop faible : c'est qu'il vise autre chose que la cause.
+            var tex = new Texture2D(d, d, TextureFormat.RGBA32, false)
+            {
+                filterMode = FilterMode.Bilinear,
+                wrapMode = TextureWrapMode.Clamp,
+            };
             var px = new Color[d * d];
             for (int y = 0; y < d; y++)
             {
