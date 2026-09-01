@@ -49,6 +49,24 @@ deux actions que le domaine ne permet pas. La re-ratifier suppose de choisir ent
 existe déjà, elle est sur la mauvaise route) · un écrivain de production pour `safehouses`, sans
 quoi les deux CTA resteront morts quel que soit le travail côté écran.
 
+## ⚠️ CORRECTION À MON PROPRE CONSTAT — le contrôleur, lui, est déjà sain
+
+Ajouté après avoir ouvert le fichier plutôt que de le supposer. `BuildingCardController` porte, dans
+son en-tête, exactement la doctrine que la maquette enfreint :
+
+> « la projection ne renvoie jamais que des bandes, des booléens et des identifiants — cet écran
+> rend exactement ceux-là ; il ne fabrique JAMAIS de scalaire brut (cents / grammes / ticks / heat) »
+
+et il déclare ses absents en toutes lettres plus bas (ligne de heat, phase de péremption,
+cohésion-voisin, courbe du registre, appui long de démolition), en disant que ces projections
+n'existent pas sur la route qu'il consomme.
+
+⇒ **Il n'y a donc rien à refondre ici.** J'ai intitulé ce fichier « avant refonte » avant de l'avoir
+lu, et le titre est resté ; le travail réel sur ② n'est pas de réécrire l'écran mais de le MONTER —
+il est aujourd'hui « NAV-HORS-SHELL », injoignable depuis un shell en marche, exactement comme ⑨.
+★ J'ai failli refaire un écran parce que sa MAQUETTE était fautive. L'écart entre les deux ne dit
+  pas lequel des deux a tort — et ici c'est le dessin, pas le code.
+
 ## Ce que je fais en attendant
 
 Je prépare la version livrable ci-dessus — bandes, échéance, CTA réduits — pour qu'elle soit prête
