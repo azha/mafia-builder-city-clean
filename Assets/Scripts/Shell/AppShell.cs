@@ -399,7 +399,7 @@ namespace MafiaCleanCity.Shell
                 // obtenu) : chacun rend son état vide NOMMÉ (§2, point (c)) — jamais "atteint et
                 // blanc". BuildingCard/ExceptionQueue(plein écran)/Autonomy/ExceptionDetail restent
                 // hors périmètre (ce ne sont pas des panneaux de l'Accueil).
-                bool pasEncoreActiveEchec = CurrentTab == (Tab)(-1);
+                bool pasEncoreActiveEchec = CurrentTab == (Tab)(-1) && !UneSurimpressionAEteMontee;
                 if (pasEncoreActiveEchec)
                 {
                     ActivateTab(Tab.Empire); // repli : le locataire signera lui-même
@@ -487,7 +487,7 @@ namespace MafiaCleanCity.Shell
             // monté, uniquement si c'est CE montage-ci qui vient d'activer l'onglet par défaut
             // (jamais un joueur qui a déjà navigué ailleurs pendant l'acquisition). Capturé AVANT
             // `ActivateTab` : après lui, `CurrentTab` n'est plus le sentinel `(Tab)(-1)`.
-            bool pasEncoreActive = CurrentTab == (Tab)(-1);
+            bool pasEncoreActive = CurrentTab == (Tab)(-1) && !UneSurimpressionAEteMontee;
             if (pasEncoreActive)
             {
                 ActivateTab(Tab.Empire);
@@ -589,10 +589,27 @@ namespace MafiaCleanCity.Shell
         /// sa file encore vivante au retour). `MountedTenantGameObject`/`MountedTenantType` restent
         /// donc INTOUCHÉS ici : 6 assertions existantes d'`AppShellPlayModeTests` les lisent avec
         /// le sens précis « ce que l'ONGLET courant a monté ».</summary>
+        /// <summary>⛔ MESURÉ 2026-09-02 — LE SENTINELLE D'ACQUISITION OBSERVAIT LA MAUVAISE
+        /// GRANDEUR. Les deux montages forcés d'`Empire` en fin d'acquisition asynchrone sont gardés
+        /// par <c>CurrentTab == (Tab)(-1)</c> : « personne n'a encore navigué ». La garde est juste
+        /// pour un joueur qui change d'ONGLET — et aveugle à un joueur qui ouvre une SURIMPRESSION,
+        /// parce que ce chemin-ci ne touche jamais <c>CurrentTab</c>. Résultat : un écran ouvert par
+        /// un geste (⑨ via « voir tout », ⑯ idem) pendant les 2 à 4 allers-retours de l'acquisition
+        /// est écrasé par le montage d'`Empire` quelques frames plus tard — `UnmountCurrentTenant`
+        /// vidant tout `ContentSlot`, ce qui est son contrat et n'est PAS le défaut.
+        /// ⇒ *Durcir la garde n'aurait rien donné : elle mesurait la navigation par ONGLET quand la
+        /// propriété en jeu est « quelque chose a-t-il été monté ». Une autre force sur la même
+        /// grandeur ne peut pas atteindre un défaut qui vit dans une autre grandeur.*
+        /// ⇒ Ce chemin déclare donc son propre montage, et le sentinel lit les DEUX.</summary>
         public T MonterLocataireEnSurimpression<T>() where T : MonoBehaviour, IShellTenant
         {
+            UneSurimpressionAEteMontee = true;
             return ConstruireLocataire<T>(out _);
         }
+
+        /// <summary>Vrai dès qu'une surimpression a été montée par un geste du joueur. Lu par le
+        /// sentinel d'acquisition, qui sans lui ne voit que la navigation par onglet.</summary>
+        public bool UneSurimpressionAEteMontee { get; private set; }
 
         /// <summary>Item 0.5 §2 (Tools/charpente-item05-design.md) — les 4 panneaux orphelins de
         /// l'Accueil (`HighestLeverageCardController`/`ExceptionQueuePanelController`/

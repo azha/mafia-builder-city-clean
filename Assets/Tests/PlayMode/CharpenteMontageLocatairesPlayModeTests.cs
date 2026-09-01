@@ -761,6 +761,10 @@ namespace MafiaCleanCity.Shell.Tests
                 { AppShell.Tab.Empire, typeof(CityMapController) },
                 { AppShell.Tab.Org, typeof(LieutenantScreenController) },
                 { AppShell.Tab.Pipeline, typeof(LaunderingController) },
+                // ⚠️ 2026-09-02 : SECONDE table du même fichier. La première a été corrigée d'abord
+                // et celle-ci est restée rouge — *fermer l'instance qu'on a sous les yeux laisse la
+                // classe ouverte*, y compris à onze lignes d'intervalle dans le même fichier.
+                { AppShell.Tab.More, typeof(MafiaCleanCity.Operational.ReputationScreenController) },
             };
 
             // ── ordre gauche→droite (attribut jamais couvert par F0.1-a/F0.2). ──
