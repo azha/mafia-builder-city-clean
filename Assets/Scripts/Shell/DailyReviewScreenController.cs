@@ -87,7 +87,25 @@ namespace MafiaCleanCity.Shell
         // première version rouvrait un `signin` à elle, c'est-à-dire un second chemin d'auth pour
         // un jeton déjà acquis. Et ne pas implémenter cette interface était une ERREUR DE
         // COMPILATION, pas un oubli silencieux : `MountTenant<T>` la contraint.
-        public void SetMountParent(Transform parent) => mountParent = parent;
+        /// <summary>⛔ ET LE PARENTAGE SE FAIT ICI, PAS DANS `BuildLayout()`. Mesuré sur la première
+        /// capture réussie : les cinq billets se sont empilés dans une colonne de largeur nulle,
+        /// tous les textes superposés. Cause — `BuildLayout()` est appelé depuis `Awake()`, donc
+        /// AVANT que le shell n'appelle `SetMountParent` : `mountParent` y valait null, les ancres
+        /// de plein écran n'étaient jamais posées, et la racine gardait une largeur de zéro.
+        /// *Un rect de largeur nulle ne casse rien et ne lève rien : il laisse tout déborder au
+        /// centre, ce qui ressemble à un défaut de mise en page et n'en est pas un.*</summary>
+        public void SetMountParent(Transform parent)
+        {
+            mountParent = parent;
+            EnsureInitialized();
+            if (parent == null) return;
+            transform.SetParent(parent, false);
+            RectTransform rt = (RectTransform)transform;
+            rt.anchorMin = Vector2.zero;
+            rt.anchorMax = Vector2.one;
+            rt.offsetMin = Vector2.zero;
+            rt.offsetMax = Vector2.zero;
+        }
 
         public void SetToken(string bearer)
         {
@@ -230,6 +248,12 @@ namespace MafiaCleanCity.Shell
             hlg.spacing = Px(7f);
             hlg.childControlWidth = true;
             hlg.childControlHeight = true;
+            // ⚠️ `childForceExpandWidth` DOIT RESTER FAUX. Mis à vrai pour réparer le débordement,
+            // il a étiré le médaillon et le jeton en ELLIPSES larges — le correctif d'un défaut de
+            // largeur qui en fabrique un autre, un cran plus loin. Ce qui règle vraiment le
+            // débordement est `preferredWidth = 0` sur la bulle (voir plus bas) : elle cesse de
+            // réclamer la largeur de son texte non coupé, et son `flexibleWidth` lui donne le
+            // reste. Les deux voisins gardent alors leur taille carrée.
             hlg.childForceExpandWidth = false;
             hlg.childForceExpandHeight = false;
             hlg.childAlignment = TextAnchor.LowerLeft;
@@ -247,6 +271,7 @@ namespace MafiaCleanCity.Shell
             medlLe.preferredWidth = Px(40f);
             medlLe.preferredHeight = Px(40f);
             medlLe.flexibleWidth = 0f;
+            medlLe.flexibleHeight = 0f;
 
             // ── la bulle : c'est LUI qui parle ───────────────────────────────────────────────
             GameObject bulle = new GameObject("Bulle", typeof(RectTransform));
@@ -274,6 +299,12 @@ namespace MafiaCleanCity.Shell
             bvlg.childForceExpandWidth = true;
             bvlg.childForceExpandHeight = false;
             LayoutElement bulleLe = bulle.AddComponent<LayoutElement>();
+            // ⛔ `preferredWidth = 0` EST LE POINT QUI COMPTE. Sans lui, TMP réclame la largeur de
+            // sa ligne NON COUPÉE : la bulle demandait des milliers d'unités, poussait la colonne
+            // du jeton hors de l'écran, et le débordement se lisait comme un défaut de marge alors
+            // que c'était une demande de taille. *Une boîte qui réclame plus que son contenant ne
+            // rétrécit pas : elle pousse ses voisins dehors.*
+            bulleLe.preferredWidth = 0f;
             bulleLe.flexibleWidth = 1f;
 
             // ligne « qui » : le nom, ses chips, le jour poussé à droite
@@ -312,8 +343,15 @@ namespace MafiaCleanCity.Shell
             phrase.color = Creme;
             phrase.lineSpacing = -8f;
             phrase.enableWordWrapping = true;
-            string titre = card.descriptor != null ? card.descriptor.key : "";
-            string motif = card.flag_reason != null ? card.flag_reason.key : "";
+            // ⛔ AUCUNE CLÉ i18n N'EST SERVIE PAR CE BACK — mesuré au socle : 178 clés référencées,
+            // 0 servie. Afficher `descriptor.key` tel quel donne
+            // « core_loops.flag_discipline.routine.front_shop_reconciliation.descriptor » en pleine
+            // bulle, ce que la première capture montre. La maquette veut une PHRASE.
+            // ⇒ En attendant le bundle, on rend le dernier segment porteur, lisible, et le fait que
+            // ce soit un PIS-ALLER est écrit ici : le jour où `GET /v1/i18n/bundle` sert ces clés,
+            // c'est cette fonction qu'on remplace, pas la mise en page.
+            string titre = Lisible(card.descriptor != null ? card.descriptor.key : null);
+            string motif = Lisible(card.flag_reason != null ? card.flag_reason.key : null);
             phrase.text = string.IsNullOrEmpty(motif)
                 ? titre
                 : titre + "<i><color=#b9ad92> — " + motif + "</color></i>";
@@ -325,12 +363,17 @@ namespace MafiaCleanCity.Shell
             cvlg.spacing = Px(1f);
             cvlg.childControlWidth = true;
             cvlg.childControlHeight = true;
-            cvlg.childForceExpandWidth = true;
+            // le jeton est un DISQUE : étiré à la largeur de sa colonne il devient un ovale, et la
+            // troisième capture le montrait sur les cinq billets. Même cause que les médaillons, un
+            // conteneur plus loin — *un correctif de largeur se vérifie sur CHAQUE conteneur qui
+            // porte un objet rond, pas seulement sur celui qu'on vient de toucher.*
+            cvlg.childForceExpandWidth = false;
             cvlg.childForceExpandHeight = false;
             cvlg.childAlignment = TextAnchor.MiddleCenter;
             LayoutElement colLe = col.AddComponent<LayoutElement>();
             colLe.preferredWidth = Px(50f);
             colLe.flexibleWidth = 0f;
+            colLe.flexibleHeight = 0f;
 
             GameObject jeton = new GameObject("Jeton", typeof(RectTransform));
             jeton.transform.SetParent(col.transform, false);
@@ -339,6 +382,7 @@ namespace MafiaCleanCity.Shell
             LayoutElement jetonLe = jeton.AddComponent<LayoutElement>();
             jetonLe.preferredWidth = Px(34f);
             jetonLe.preferredHeight = Px(34f);
+            jetonLe.flexibleWidth = 0f;
             Texte(jeton.transform, "Coche", "✓", Px(13f), Hex("#3a2a12"), DesignTokens.Current.primaryFont,
                   TextAlignmentOptions.Center, true);
 
@@ -387,9 +431,24 @@ namespace MafiaCleanCity.Shell
                 LayoutElement pl = pip.AddComponent<LayoutElement>();
                 pl.preferredWidth = Px(9f);
                 pl.preferredHeight = Px(9f);
+                pl.flexibleWidth = 0f;
             }
             Texte(col.transform, "ReserveLib", "RÉSERVE · " + ReserveLibelle(card.trust_budget_bucket),
                   Px(5.8f), Creme2, DesignTokens.Current.primaryFont, TextAlignmentOptions.Center);
+        }
+
+        /// <summary>Pis-aller d'affichage tant qu'aucune clé i18n n'est servie : on prend le
+        /// segment porteur de la clé et on le rend lisible. Ce n'est PAS une traduction.</summary>
+        private static string Lisible(string cle)
+        {
+            if (string.IsNullOrEmpty(cle)) return "";
+            string[] parts = cle.Split('.');
+            string dernier = parts.Length >= 2 && (parts[parts.Length - 1] == "descriptor" ||
+                                                   parts[parts.Length - 1] == "reason")
+                ? parts[parts.Length - 2]
+                : parts[parts.Length - 1];
+            dernier = dernier.Replace('_', ' ');
+            return dernier.Length == 0 ? "" : char.ToUpperInvariant(dernier[0]) + dernier.Substring(1);
         }
 
         private static int ReservePastilles(string bucket)
@@ -488,7 +547,13 @@ namespace MafiaCleanCity.Shell
             }
 
             VerticalLayoutGroup vlg = gameObject.AddComponent<VerticalLayoutGroup>();
-            vlg.padding = new RectOffset((int)Px(10f), (int)Px(10f), 0, (int)Px(10f));
+            // ⛔ SANS LES MARGES DE CHROME, LE PREMIER BILLET PASSE SOUS LA TOPBAR ET LE TAMPON SOUS
+            // LA BARRE D'ONGLETS — mesuré sur la première capture lisible : les deux étaient à
+            // moitié couverts. Le shell publie ses insets pour tout locataire (`ShellChrome`), et
+            // ne pas les consommer est le défaut par défaut, pas un cas limite.
+            vlg.padding = new RectOffset((int)Px(10f), (int)Px(10f),
+                                         (int)ShellChrome.TopInsetPx + (int)Px(6f),
+                                         (int)ShellChrome.BottomInsetPx + (int)Px(6f));
             vlg.spacing = Px(8f);
             vlg.childControlWidth = true;
             vlg.childControlHeight = true;

@@ -72,12 +72,12 @@ namespace MafiaCleanCity.Shell.Tests
             float montage = 0f;
             while (montage < 15f && famille == null)
             {
-                famille = shell.ContentSlot.GetComponentInChildren<DailyReviewScreenController>(false);
+                famille = shell.ContentSlot.GetComponentInChildren<LieutenantScreenController>(false);
                 montage += Time.deltaTime;
                 yield return null;
             }
             Assert.IsNotNull(famille,
-                "DailyReviewScreenController non monté sous l'onglet Org — la capture montrerait une destination vide");
+                "LieutenantScreenController non monté sous l'onglet Org — la capture montrerait une destination vide");
 
             // Laisser le chargement (signin → review → roster) aboutir : une capture prise avant
             // rendrait un comptoir vide et l'écran aurait l'air correct.
