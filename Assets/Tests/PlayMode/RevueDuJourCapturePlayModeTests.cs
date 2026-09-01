@@ -48,7 +48,14 @@ namespace MafiaCleanCity.Shell.Tests
         public IEnumerator Capture_RevueDuJour_1080x2400()
         {
             const int Largeur = 1080, Hauteur = 2400;
-            const string Chemin = "Assets/Screenshots/revue_du_jour_1080x2400.png";
+            // ⚠️ LE NOM PORTE LA MISE EN SCÈNE, et c'est délibéré. Le compte de démo ne peut pas produire de
+            // signalements en balance de PRODUCTION — deux gardes disjointes s'y opposent (mesuré par la
+            // session back, dette posée). Pour cette capture, le seuil de déviation est forcé à 0,1 par le
+            // registre, le temps du run, puis remis à sa valeur.
+            // ⇒ Ce qu'on juge ici est la MISE EN SCÈNE des trois jetons, PAS la balance du jeu. Un nom qui
+            // tairait cela ferait passer une capture sous seuil forcé pour une capture du chemin nominal —
+            // et c'est exactement le genre d'image qu'on relit six mois plus tard en la croyant probante.
+            const string Chemin = "Assets/Screenshots/revue_du_jour_seuil-force-0.1_1080x2400.png";
 
             yield return ChargerLaSceneDeDemarrageDuBuild();
             AppShell shell = SondeShellDansLaScene(sceneDeDemarrage);
