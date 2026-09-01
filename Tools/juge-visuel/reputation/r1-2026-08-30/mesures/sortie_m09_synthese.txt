@@ -1,0 +1,56 @@
+m-120.png (900, 1752)
+screen_b3_reputation_1080x1920.png (1080, 1920)
+screen_b3_reputation_1080x2400.png (1080, 2400)
+
+  RÉFÉRENCE m-120 (x3,0) — panneau intérieur = 1350 px = 450.0 CSS
+    padding haut      21 px      7.0 CSS     1.56 % du panneau
+    enseigne         158 px     52.7 CSS    11.70 % du panneau
+    gouttière         27 px      9.0 CSS     2.00 % du panneau
+    compteurs         96 px     32.0 CSS     7.11 % du panneau
+    gouttière         27 px      9.0 CSS     2.00 % du panneau
+    miroir           635 px    211.7 CSS    47.04 % du panneau
+    gouttière         27 px      9.0 CSS     2.00 % du panneau
+    note             229 px     76.3 CSS    16.96 % du panneau
+    gouttière         27 px      9.0 CSS     2.00 % du panneau
+    CTA               79 px     26.3 CSS     5.85 % du panneau
+    VIDE bas          24 px      8.0 CSS     1.78 % du panneau
+    (contrôle positif) somme = 1350 px vs panneau 1350 px
+
+  CAPTURE 1080x1920 (x3,6) — panneau intérieur = 1878 px = 521.7 CSS
+    padding haut      25 px      6.9 CSS     1.33 % du panneau
+    enseigne         184 px     51.1 CSS     9.80 % du panneau
+    gouttière         32 px      8.9 CSS     1.70 % du panneau
+    compteurs        152 px     42.2 CSS     8.09 % du panneau
+    gouttière         32 px      8.9 CSS     1.70 % du panneau
+    miroir           677 px    188.1 CSS    36.05 % du panneau
+    gouttière         35 px      9.7 CSS     1.86 % du panneau
+    note             264 px     73.3 CSS    14.06 % du panneau
+    gouttière         35 px      9.7 CSS     1.86 % du panneau
+    CTA               85 px     23.6 CSS     4.53 % du panneau
+    VIDE bas         357 px     99.2 CSS    19.01 % du panneau
+    (contrôle positif) somme = 1878 px vs panneau 1878 px
+
+  écarts bloc à bloc (CSS) :
+    padding haut   réf     7.0  jeu     6.9  delta    -0.1 CSS (  -0.8 %)
+    enseigne       réf    52.7  jeu    51.1  delta    -1.6 CSS (  -3.0 %)
+    compteurs      réf    32.0  jeu    42.2  delta   +10.2 CSS ( +31.9 %)
+    miroir         réf   211.7  jeu   188.1  delta   -23.6 CSS ( -11.2 %)
+    note           réf    76.3  jeu    73.3  delta    -3.0 CSS (  -3.9 %)
+    CTA            réf    26.3  jeu    23.6  delta    -2.7 CSS ( -10.3 %)
+    VIDE bas       réf     8.0  jeu    99.2  delta   +91.2 CSS (+1139.6 %)
+
+  1080x2400 : VIDE bas = 2378-1542+1 = 837 px = 232.5 CSS = 35.5 % du panneau
+
+  --- largeurs des 3 tuiles de compteurs (m04) ---
+    RÉF : 257 px = 28.56 %L  257 px = 28.56 %L  257 px = 28.56 %L   -> écart max/min = 1.000
+    JEU : 364 px = 33.70 %L  287 px = 26.57 %L  294 px = 27.22 %L   -> écart max/min = 1.268
+
+  --- couleurs des titres ---
+    RÉF Le miroir (fût du L)     (285, 445) = (242, 201, 107)
+    RÉF Pas encore jugeable      (470, 750) = (138, 151, 156)
+    RÉF Il vous écoute           (200, 1207) = (17, 24, 35)
+    RÉF titre de la note         (100, 1450) = (16, 23, 34)
+    JEU Le miroir (fût du L)     (360, 105) = (242, 201, 106)
+    JEU Pas encore jugeable      (548, 490) = (94, 102, 106)
+    JEU Il vous écoute           (185, 1020) = (13, 22, 34)
+    JEU titre de la note         (95, 1248) = (234, 224, 200)

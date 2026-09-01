@@ -1,0 +1,3 @@
+callsign=jd-rep-1788287094
+token_len=423
+lieutenant_id(passe2)=01a05e37-9057-7bac-9335-57f55ea3155e

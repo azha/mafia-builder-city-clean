@@ -1,0 +1,19 @@
+--- VOYANT de la 1re carte (« col ouvert ») : rond ou ovale ? ---
+  REF voyant 1 [m-120.png 900x1752] n=338 px  bbox=(480,866,500,886)  l=21 px = 2.33 %L   h=21 px = 2.33 %L   ratio h/l = 1.000
+  CAP voyant 1 [screen_b3_reputation_1080x1920.png 1080x1920] n=1377 px  bbox=(550,570,599,662)  l=50 px = 4.63 %L   h=93 px = 8.61 %L   ratio h/l = 1.860
+
+--- CARTE PORTRAIT (liseré or) ---
+  REF carte portrait [m-120.png 900x1752] n=5358 px  bbox=(69,732,422,1279)  l=354 px = 39.33 %L   h=548 px = 60.89 %L   ratio h/l = 1.548
+  CAP carte portrait [screen_b3_reputation_1080x1920.png 1080x1920] n=7268 px  bbox=(72,471,496,1096)  l=425 px = 39.35 %L   h=626 px = 57.96 %L   ratio h/l = 1.473
+
+--- TÊTE du portrait (aplat chair) ---
+  REF tête [m-120.png 900x1752] n=11656 px  bbox=(194,905,422,1119)  l=229 px = 25.44 %L   h=215 px = 23.89 %L   ratio h/l = 0.939
+  CAP tête [screen_b3_reputation_1080x1920.png 1080x1920] n=18969 px  bbox=(204,683,342,899)  l=139 px = 12.87 %L   h=217 px = 20.09 %L   ratio h/l = 1.561
+
+--- REVERS / plastron clair (le triangle blanc de la maquette) ---
+  REF revers [m-120.png 900x1752] n=1024 px  bbox=(221,1078,270,1127)  l=50 px = 5.56 %L   h=50 px = 5.56 %L   ratio h/l = 1.000
+  CAP revers [screen_b3_reputation_1080x1920.png 1080x1920] n=5534 px  bbox=(251,864,328,941)  l=78 px = 7.22 %L   h=78 px = 7.22 %L   ratio h/l = 1.000
+
+--- BOUTON CTA (liseré or) ---
+  REF cta [m-120.png 900x1752] n=5745 px  bbox=(42,1610,879,1714)  l=838 px = 93.11 %L   h=105 px = 11.67 %L   ratio h/l = 0.125
+  CAP cta [screen_b3_reputation_1080x1920.png 1080x1920] n=8080 px  bbox=(46,1440,1059,1554)  l=1014 px = 93.89 %L   h=115 px = 10.65 %L   ratio h/l = 0.113

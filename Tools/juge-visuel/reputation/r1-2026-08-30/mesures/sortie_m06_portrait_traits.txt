@@ -1,0 +1,32 @@
+(contrôle négatif) couleur absente :
+  !! REF magenta [m-120.png 900x1752] : rien trouvé
+
+--- SILHOUETTE SOMBRE (cheveux + buste) dans la carte portrait ---
+  REF silhouette [m-120.png 900x1752] bbox=(127,859,363,1173) l=26.33 %L h=35.00 %L ratio=1.329 remplissage= 22.5 %
+  CAP silhouette [screen_b3_reputation_1080x1920.png 1080x1920] bbox=(79,475,492,1093) l=38.33 %L h=57.31 %L ratio=1.495 remplissage= 15.2 %  <-- BBOX TOUCHE LE BORD DE LA FENÊTRE
+
+--- TÊTE (aplat chair, fenêtre limitée au haut de la carte) ---
+  REF tête [m-120.png 900x1752] bbox=(194,918,297,1049) l=11.56 %L h=14.67 %L ratio=1.269 remplissage= 65.9 %  <-- BBOX TOUCHE LE BORD DE LA FENÊTRE
+  CAP tête [screen_b3_reputation_1080x1920.png 1080x1920] bbox=(204,683,342,829) l=12.87 %L h=13.61 %L ratio=1.058 remplissage= 69.5 %  <-- BBOX TOUCHE LE BORD DE LA FENÊTRE
+
+--- COL / cou (aplat chair sous la tête) ---
+  REF col [m-120.png 900x1752] bbox=(223,1038,268,1079) l= 5.11 %L h= 4.67 %L ratio=0.913 remplissage=100.0 %  <-- BBOX TOUCHE LE BORD DE LA FENÊTRE
+  CAP col [screen_b3_reputation_1080x1920.png 1080x1920] bbox=(245,810,300,874) l= 5.19 %L h= 6.02 %L ratio=1.161 remplissage= 88.5 %  <-- BBOX TOUCHE LE BORD DE LA FENÊTRE
+
+--- REVERS (aplat clair) : triangle ou rectangle ? ---
+  REF revers [m-120.png 900x1752] bbox=(221,1078,270,1127) l= 5.56 %L h= 5.56 %L ratio=1.000 remplissage= 41.0 %
+  CAP revers [screen_b3_reputation_1080x1920.png 1080x1920] bbox=(251,864,328,941) l= 7.22 %L h= 7.22 %L ratio=1.000 remplissage= 91.0 %
+
+--- GANTS (aplat gris-vert) ---
+  REF gants [m-120.png 900x1752] bbox=(139,1149,340,1217) l=22.44 %L h= 7.67 %L ratio=0.342 remplissage=  4.7 %
+  CAP gants [screen_b3_reputation_1080x1920.png 1080x1920] bbox=(139,951,377,1019) l=22.13 %L h= 6.39 %L ratio=0.289 remplissage= 12.7 %  <-- BBOX TOUCHE LE BORD DE LA FENÊTRE
+
+--- LES 4 VOYANTS des cartes de règles (rond ou ovale ?) ---
+  REF voyant 1 [m-120.png 900x1752] bbox=(465,834,519,886) l= 6.11 %L h= 5.89 %L ratio=0.964 remplissage= 17.3 %  <-- BBOX TOUCHE LE BORD DE LA FENÊTRE
+  CAP voyant 1 [screen_b3_reputation_1080x1920.png 1080x1920] bbox=(540,501,609,679) l= 6.48 %L h=16.57 %L ratio=2.557 remplissage= 13.9 %  <-- BBOX TOUCHE LE BORD DE LA FENÊTRE
+  REF voyant 2 [m-120.png 900x1752] bbox=(465,916,519,983) l= 6.11 %L h= 7.56 %L ratio=1.236 remplissage= 17.9 %  <-- BBOX TOUCHE LE BORD DE LA FENÊTRE
+  CAP voyant 2 [screen_b3_reputation_1080x1920.png 1080x1920] bbox=(540,605,609,769) l= 6.48 %L h=15.28 %L ratio=2.357 remplissage= 21.7 %  <-- BBOX TOUCHE LE BORD DE LA FENÊTRE
+  REF voyant 3 [m-120.png 900x1752] bbox=(465,1013,519,1080) l= 6.11 %L h= 7.56 %L ratio=1.236 remplissage= 17.9 %  <-- BBOX TOUCHE LE BORD DE LA FENÊTRE
+  CAP voyant 3 [screen_b3_reputation_1080x1920.png 1080x1920] bbox=(540,710,609,877) l= 6.48 %L h=15.56 %L ratio=2.400 remplissage= 21.7 %  <-- BBOX TOUCHE LE BORD DE LA FENÊTRE
+  REF voyant 4 [m-120.png 900x1752] bbox=(465,1110,519,1177) l= 6.11 %L h= 7.56 %L ratio=1.236 remplissage= 17.9 %  <-- BBOX TOUCHE LE BORD DE LA FENÊTRE
+  CAP voyant 4 [screen_b3_reputation_1080x1920.png 1080x1920] bbox=(540,820,609,984) l= 6.48 %L h=15.28 %L ratio=2.357 remplissage= 21.6 %  <-- BBOX TOUCHE LE BORD DE LA FENÊTRE

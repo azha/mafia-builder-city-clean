@@ -31,22 +31,57 @@ public static class MafiaCI
     // ⇒ après tout run qui doit DÉCIDER, relancer le test visé SEUL par son nom complet et vérifier
     // qu'il est dans le compte. Ne jamais choisir un nom de catégorie de mémoire : le lire dans le
     // fichier qui le porte.
-    // SURCHARGE D'IDENTITÉ DE DÉMO (revue ⊥ I2, 2026-08-30) — ajoute "DemoIdentity" : sans cette
-    // entrée, les 3 classes de `DemoIdentityResolverPlayModeTests.cs` /
-    // `DemoIdentityTwoAccountsPlayModeTests.cs` ne tournaient sous AUCUN juge — une garde qui n'a
-    // jamais tourné n'est pas une garde. Même patron : on élargit, jamais un second point d'entrée.
-    // ⚠️ CONSÉQUENCE ANNONCÉE (revue ⊥ ronde 2, non exécutée avant cette ronde) : cet ajout fait
-    // entrer 3 classes sous CE juge POUR LA PREMIÈRE FOIS. Un rouge qui apparaîtrait au premier run
-    // n'est donc PAS une régression de ce lot — c'est un défaut DORMANT qui n'a simplement jamais
-    // été observé avant, et son diagnostic commence par déterminer s'il préexistait déjà au code
-    // qu'il touche. Voir `Tools/demo-identity-override-implementation-notes.md` § RONDE 3.
-    private static readonly string[] Categories = { "W4P4a", "W3UDA", "W3U1", "W3U2", "Charpente", "DemoIdentity" };
+    // ⛔⛔ RÉSOLUTION DE MERGE (2026-09-02) — UNION EXPLICITE, ET AUCUN CÔTÉ N'ÉTAIT SUFFISANT.
+    // Les deux branches ont ajouté une catégorie et ignoré celle de l'autre : `main` portait
+    // `DemoIdentity` (29 tests déclarés) sans `ScreenB3`, `pilote-B` portait `ScreenB3` sans
+    // `DemoIdentity`. **Prendre un côté tel quel retirait des tests du filtre SANS RIEN DIRE** —
+    // très exactement le défaut que l'avertissement ci-dessous décrit. Mesuré avant de résoudre :
+    // 227 tests déclarés sous le filtre de `main`, et la liste de B en aurait retiré 29.
+    // ⛔ CETTE LISTE EST UN FILTRE, ET UN TEST HORS LISTE NE TOURNE JAMAIS — sans que rien ne le
+    // signale. Le run rend son `TOTAL:` et son exit 0 en ayant exécuté un AUTRE jeu que celui
+    // qu'on croyait. Ce dépôt a déjà payé exactement ça : `category_names: ["HUD"]` a rendu
+    // **31/31 VERT avec le défaut réarmé exprès**, parce qu'aucune catégorie « HUD » n'existe et
+    // que le filtre matche par préfixe.
+    //
+    // ⇒ Toute catégorie neuve doit être AJOUTÉE ICI le jour où elle est créée, sinon la suite qui
+    // la porte est invisible au juge — verte par absence, ce qui ressemble trait pour trait à
+    // verte par succès.
+    //
+    // `ScreenB3` ajoutée le 2026-08-31 : l'écran ㊲ (La réputation). Mesuré au moment de
+    // l'ajouter — les catégories réellement portées par la suite sont W3U2 (17), Screenshot (11),
+    // W3U1 (10), HUDv31 (5), Charpente (5), W4P4a (3), W3UDA (3), ScreenB3 (1), JUGE (1),
+    // Capture (1). Quatre d'entre elles restent DÉLIBÉRÉMENT hors filtre — `Screenshot`,
+    // `Capture`, `JUGE`, `HUDv31` produisent des images ou des rapports et coûtent cher ; elles se
+    // lancent nommément, pas dans le run de vérification.
+    private static readonly string[] Categories =
+        { "W4P4a", "W3UDA", "W3U1", "W3U2", "Charpente", "DemoIdentity", "ScreenB3" };
 
+    // ⚠️ `MAFIA_CI_CATEGORIES` (liste séparée par des virgules) REMPLACE le filtre par défaut.
+    // Ajouté le 2026-08-31 pour une raison précise et vérifiable : le log ne NOMME que les tests
+    // qui échouent, donc « 0 échec sur ma catégorie » ne distingue pas « tout est vert » de
+    // « le filtre n'a rien matché » — le zéro d'ABSENCE, déjà payé une fois sur cet écran quand
+    // `ScreenB3` manquait dans `Categories` et que 8 tests n'ont jamais tourné en se déclarant verts.
+    // Le compteur global ne le dit pas non plus : mesuré, il vaut 231 tests exécutés AVANT comme
+    // APRÈS l'ajout de mes 9 tests. Un run filtré sur une seule catégorie rend `passed=N` pour
+    // CETTE catégorie, et N est alors une preuve d'exécution, pas une absence d'échec.
+    // ⛔ Non posée, la variable laisse le comportement BYTE-IDENTIQUE pour tout appelant existant.
     public static void RunPlayModeTests()
     {
+        string[] cats = Categories;
+        string surcharge = System.Environment.GetEnvironmentVariable("MAFIA_CI_CATEGORIES");
+        if (!string.IsNullOrWhiteSpace(surcharge))
+        {
+            cats = surcharge.Split(',');
+            for (int i = 0; i < cats.Length; i++) cats[i] = cats[i].Trim();
+            cats = System.Array.FindAll(cats, c => c.Length > 0);
+            // Imprimé pour que le filtre EFFECTIVEMENT appliqué soit lisible dans le log — un
+            // filtre qu'on croit posé et qui ne l'est pas est exactement le piège qu'on ferme ici.
+            UnityEngine.Debug.Log("MafiaCI: filtre SURCHARGÉ par MAFIA_CI_CATEGORIES = ["
+                                  + string.Join(", ", cats) + "]");
+        }
         var api = ScriptableObject.CreateInstance<TestRunnerApi>();
         api.RegisterCallbacks(new Callbacks());
-        api.Execute(new ExecutionSettings(new Filter { testMode = TestMode.PlayMode, categoryNames = Categories }));
+        api.Execute(new ExecutionSettings(new Filter { testMode = TestMode.PlayMode, categoryNames = cats }));
     }
 
     private class Callbacks : ICallbacks

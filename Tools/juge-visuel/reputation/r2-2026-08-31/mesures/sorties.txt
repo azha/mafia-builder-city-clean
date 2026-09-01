@@ -1,0 +1,272 @@
+=== 01_reperes.py ===
+REF  m-120.png  (900, 1752)  -> 300x584.0 CSS
+CAP  screen_b3_reputation_1080x1920.png  (1080, 1920)  -> 300x533.3 CSS
+
+[CONTRÔLE POSITIF] couleur du liseré d'or, panneau extérieur
+  ref (x=6.5 CSS, y=160 CSS) : (176, 141, 62)
+  cap (x=5.5 CSS, y= 40 CSS) : (176, 141, 61)
+
+[REPÈRES]
+  REF — bandes d'or (px CSS) :
+    y   125.3 ->   126.0   ep. 1.0
+    y   184.0 ->   185.7   ep. 2.0
+    y   244.0 ->   244.7   ep. 1.0
+    y   425.7 ->   426.3   ep. 1.0
+    y   542.0 ->   542.7   ep. 1.0
+    y   567.3 ->   568.0   ep. 1.0
+    y   576.3 ->   577.0   ep. 1.0
+  CAP — bandes d'or (px CSS) :
+    y     5.0 ->     5.6   ep. 0.8
+    y    61.7 ->    63.6   ep. 2.2
+    y   120.8 ->   121.7   ep. 1.1
+    y   372.5 ->   373.1   ep. 0.8
+    y   472.5 ->   473.1   ep. 0.8
+    y   496.1 ->   496.7   ep. 0.8
+    y   527.5 ->   528.1   ep. 0.8
+
+  OFFSET vertical réf<-cap = 120.3 px CSS (le bandeau/chrome absent de la capture)
+  hauteur utile réf sous le chrome : 458.7 CSS
+  hauteur utile cap sous le chrome : 528.3 CSS
+
+[HAUTEURS DÉRIVÉES, px CSS]
+  bloc-titre (haut panneau -> filet)     réf    60.3   jeu    58.6   delta    -1.7 (-2.9 %)
+  carte-portrait (haut -> bas)           réf   182.3   jeu   252.2   delta   +69.9 (+38.3 %)
+  CTA (haut -> bas)                      réf    26.0   jeu    24.2   delta    -1.8 (-7.1 %)
+  panneau entier                         réf   451.7   jeu   523.1   delta   +71.4 (+15.8 %)
+
+[BILAN ÉLASTIQUE] où passe la hauteur rendue par le chrome absent ?
+  hauteur d'image        réf   584.0   jeu   533.3   delta   -50.7
+  marge haute (au-dessus du panneau)  réf  125.3   jeu    5.0
+  marge basse                         réf    7.0   jeu    5.3
+  hauteur DISPONIBLE pour le panneau  réf  451.7   jeu  523.1   delta +71.4
+  croissance de la carte-portrait                       +69.9
+  -> si les deux deltas coïncident, le vide sous le portrait EST l'absorption
+     élastique du bandeau absent, pas un défaut de mise en page.
+
+[CONTRÔLE NÉGATIF] la carte-portrait doit RESSORTIR différente ci-dessus.
+
+=== 02_boites.py ===
+REF m-120.png (900, 1752)   CAP screen_b3_reputation_1080x1920.png (1080, 1920)
+
+[A] Rangée des trois compteurs — profil horizontal (px CSS)
+  REF y=213 CSS : [(0.0, (58, 67, 86)), (1.0, (19, 25, 31)), (6.0, (176, 141, 62)), (7.0, (11, 16, 22)), (11.7, (16, 23, 32)), (14.0, (42, 54, 72)), (15.0, (16, 25, 32)), (21.0, (10, 15, 23)), (47.0, (16, 25, 33)), (71.3, (10, 15, 24)), (99.3, (16, 25, 32)), (99.7, (42, 54, 72)), (100.7, (33, 35, 34)), (106.7, (42, 54, 72)), (107.7, (16, 25, 32)), (113.7, (10, 15, 23)), (134.7, (16, 25, 32)), (169.7, (10, 15, 24)), (192.0, (16, 25, 32)), (192.3, (42, 54, 72)), (193.3, (34, 35, 34)), (199.3, (42, 54, 72)), (200.3, (16, 25, 32)), (206.3, (10, 15, 23)), (232.3, (16, 25, 33)), (256.7, (10, 15, 24)), (284.7, (16, 25, 32)), (285.0, (42, 54, 72)), (286.0, (15, 20, 29)), (293.0, (176, 141, 62)), (294.0, (25, 28, 30)), (299.0, (58, 67, 86))]
+  CAP y= 89 CSS : [(0.0, (13, 13, 22)), (5.0, (176, 141, 61)), (6.1, (13, 13, 22)), (12.8, (42, 53, 73)), (13.9, (13, 13, 22)), (53.6, (13, 13, 22)), (63.6, (13, 13, 22)), (99.4, (42, 53, 73)), (100.3, (13, 13, 22)), (106.4, (42, 53, 73)), (107.2, (13, 13, 22)), (141.7, (13, 13, 22)), (151.7, (13, 13, 22)), (156.4, (13, 13, 22)), (163.6, (13, 13, 22)), (192.8, (42, 53, 73)), (193.6, (13, 13, 22)), (199.7, (42, 53, 73)), (200.8, (13, 13, 22)), (287.2, (13, 13, 22)), (294.2, (176, 141, 61)), (295.0, (13, 13, 22))]
+
+[B] Colonne du corps — profil horizontal au travers des tuiles-règles
+  REF y=356.7 CSS : [(0.0, (58, 67, 86)), (1.0, (16, 20, 23)), (6.0, (176, 141, 62)), (7.0, (11, 16, 22)), (14.0, (42, 54, 72)), (15.0, (9, 10, 11)), (23.0, (176, 141, 62)), (24.0, (17, 24, 35)), (67.3, (12, 18, 25)), (74.3, (165, 154, 131)), (74.7, (185, 173, 146)), (89.3, (164, 153, 130)), (89.7, (10, 16, 21)), (97.3, (16, 23, 33)), (140.0, (176, 141, 62)), (141.0, (13, 15, 16)), (151.0, (42, 54, 72)), (152.0, (17, 24, 35)), (160.0, (40, 51, 69)), (167.0, (17, 24, 35)), (276.0, (42, 54, 72)), (277.0, (11, 12, 13)), (285.0, (42, 54, 72)), (286.0, (11, 16, 22)), (293.0, (176, 141, 62)), (294.0, (22, 24, 24)), (299.0, (58, 67, 86))]
+  CAP y=220.8 CSS : [(0.0, (13, 13, 22)), (5.0, (176, 141, 61)), (5.8, (110, 87, 41)), (6.1, (13, 13, 22)), (12.8, (42, 53, 73)), (13.9, (13, 13, 13)), (20.0, (176, 141, 61)), (20.8, (29, 30, 35)), (21.1, (13, 22, 34)), (136.9, (170, 136, 60)), (138.1, (13, 13, 13)), (148.1, (42, 53, 73)), (148.9, (13, 22, 34)), (155.8, (26, 35, 51)), (156.1, (42, 53, 73)), (162.8, (26, 35, 51)), (163.1, (13, 22, 34)), (279.2, (42, 53, 73)), (280.0, (13, 13, 13)), (286.1, (39, 48, 67)), (287.2, (13, 13, 22)), (293.9, (110, 87, 41)), (294.2, (176, 141, 61)), (295.0, (13, 13, 22))]
+
+[C] Rythme vertical — bord gauche des grands blocs (liseré)
+  REF x=14.0 CSS : [(1.3, 1.3), (133.3, 185.0), (195.0, 226.7), (236.0, 447.3), (456.7, 532.7)]
+  CAP x=12.8 CSS : [(74.4, 103.1), (115.6, 378.6), (390.8, 461.7)]
+
+[D] Tuiles-règles — bord gauche
+  REF x=153.7 CSS : [(21.0, 21.0), (133.3, 134.0), (195.0, 195.7), (226.0, 226.7), (236.0, 236.7), (278.0, 278.7), (305.3, 306.0), (310.3, 311.0), (337.7, 338.3), (342.7, 343.3), (370.0, 370.7), (375.0, 375.7), (402.3, 403.0), (446.7, 447.3), (456.7, 457.3), (532.0, 532.7)]
+  CAP x=148.9 CSS : [(72.8, 73.6), (103.9, 104.7), (113.9, 114.4), (148.6, 149.4), (172.8, 173.6), (178.6, 179.4), (202.5, 203.3), (208.3, 209.2), (232.2, 233.3), (238.1, 238.9), (262.2, 263.1), (379.4, 380.3), (389.4, 390.0), (462.5, 463.1)]
+
+[LECTURE — reportée dans le rapport]
+  carte-portrait, LARGEUR    réf  23.0->140.7 = 117.7 | jeu  20.0->137.7 = 117.7   [CONTRÔLE POSITIF]
+  carte-portrait, HAUTEUR    réf 244.0->426.3 = 182.3 | jeu 120.8->373.1 = 252.2   [CONTRÔLE NÉGATIF]
+  panneau CORPS, largeur     réf  14.0->285.7 = 271.7 | jeu  12.8->287.0 = 274.2
+  padding intérieur du CORPS réf gauche 9.0 / droite 9.0 | jeu gauche 7.2 / droite 6.9
+  padding CORPS haut/bas     réf 8.0 / 21.0            | jeu 5.2 / 5.5
+  tuiles-règles, largeur     réf 151.0->276.0 = 125.0  | jeu 148.1->279.2 = 131.1
+  tuiles-règles, hauteur     réf 28.0 (x4, égales)     | jeu 25.0 (x4, égales)
+  gouttière carte<->tuiles   réf 10.3                  | jeu 10.4
+  compteurs, largeur         réf 85.7/85.6/85.7        | jeu 86.6/86.4/86.4
+  compteurs, gouttière       réf 7.0                   | jeu 7.0 / 6.9
+  compteurs, hauteur         réf 31.7                  | jeu 28.7
+  bandeau-titre, hauteur     réf 51.7                  | jeu 48.6
+  bandeau-titre, liseré      réf (42,54,72) PRÉSENT    | jeu ABSENT (aplat nu)
+  épilogue, hauteur          réf 76.0                  | jeu 70.9
+  CTA, hauteur               réf 26.0                  | jeu 24.2
+  écarts entre blocs         réf 9.3 / 9.3 / 9.4 / 9.3 | jeu 10.8 / 12.5 / 12.2 / 10.8
+    (filet->compteurs, compteurs->corps, corps->épilogue, épilogue->CTA)
+
+
+=== 03_couleurs.py ===
+REF m-120.png (900, 1752)   CAP screen_b3_reputation_1080x1920.png (1080, 1920)
+
+[ENCRES]  (delta max par canal ; tolérance 6/255)
+  titre « Le miroir » (or)     réf (242, 201, 107)  jeu (242, 201, 106)  delta 1
+  compteurs « 00 » (cyan)      réf (127, 212, 217)  jeu (127, 212, 217)  delta 0
+  libellé compteur (gris)      réf (138, 151, 156)  jeu (138, 151, 156)  delta 0
+  sous-titre (crème)           réf (185, 173, 146)  jeu (185, 173, 146)  delta 0
+  « Il vous écoute » (vert)    réf (125, 179, 106)  jeu (125, 179, 106)  delta 0
+
+[APLATS]  (médiane d'une fenêtre 7x7, à >= 3 px de tout bord)
+  fond de page           réf (11, 16, 22)  jeu (13, 13, 22)  delta 3
+  panneau CORPS          réf (13, 15, 16)  jeu (13, 13, 13)  delta 3
+  carte-portrait         réf (17, 24, 35)  jeu (13, 22, 34)  delta 4
+  tuile-règle            réf (17, 24, 35)  jeu (13, 22, 34)  delta 4
+  panneau épilogue       réf (16, 22, 32)  jeu (13, 22, 34)  delta 3
+
+[LISERÉ]  médiane le long du bord lui-même (1 px de large, 61 px de haut)
+  réf : (42, 54, 72)
+  jeu : (42, 53, 73)
+
+[CONTRÔLE NÉGATIF] voile intérieur d'une tuile-compteur (profil vertical, colonne au quart)
+  réf : min (9, 14, 22)  max (14, 22, 30)  amplitude du voile 21 (somme des canaux)
+  jeu : min (13, 13, 22)  max (13, 13, 22)  amplitude du voile 0 (somme des canaux)
+
+[COUCHE GLOBALE]  zone comparable = le panneau d'or, du haut au bas
+  RÉF  panneau  (288x452 CSS)
+    luminance moyenne : 33.1/255
+    densité d'encre (L>45) : 12.21 %
+    palette dominante : [((17, 24, 35), '25.2%'), ((22, 25, 27), '5.9%'), ((13, 15, 16), '4.6%'), ((12, 14, 15), '3.2%'), ((42, 54, 72), '3.1%'), ((16, 23, 34), '3.0%')]
+  JEU  panneau  (290x523 CSS)
+    luminance moyenne : 29.4/255
+    densité d'encre (L>45) : 10.21 %
+    palette dominante : [((13, 22, 34), '43.0%'), ((13, 13, 22), '22.7%'), ((13, 13, 13), '18.4%'), ((22, 22, 28), '4.8%'), ((42, 53, 73), '2.1%'), ((176, 141, 61), '2.0%')]
+
+=== 04_portrait.py ===
+REF m-120.png (900, 1752)   CAP screen_b3_reputation_1080x1920.png (1080, 1920)
+
+[RÉFÉRENCE]  origine = coin de la carte-portrait
+  visage               x   41.7->  76.0 (l  34.3)  y   62.0-> 116.7 (h  54.7)  aire  1160.0  remplissage 0.62  centre  58.8 (axe 58.9, écart -0.0)
+  col (crème)          x   50.7->  67.0 (l  16.3)  y  115.3-> 131.7 (h  16.3)  aire   113.8  remplissage 0.43  centre  58.8 (axe 58.9, écart -0.0)
+  buste + cheveux      x   19.3->  98.0 (l  78.7)  y   42.3-> 147.0 (h 104.7)  aire  1876.0  remplissage 0.23  centre  58.7 (axe 58.9, écart -0.2)
+
+[JEU]  origine = coin de la carte-portrait
+  visage               x   37.2->  74.2 (l  36.9)  y   54.4-> 116.7 (h  62.2)  aire  1434.0  remplissage 0.62  centre  55.7 (axe 58.9, écart -3.2)
+  col (crème)          x   49.7->  71.1 (l  21.4)  y  113.9-> 135.3 (h  21.4)  aire   427.0  remplissage 0.93  centre  60.4 (axe 58.9, écart +1.6)
+  buste + cheveux      x   17.2->  94.4 (l  77.2)  y   42.5-> 147.5 (h 105.0)  aire  1961.9  remplissage 0.24  centre  55.8 (axe 58.9, écart -3.0)
+
+[RAPPORTS INTERNES — invariants d'échelle]
+  aire visage / aire buste         réf 0.618   jeu 0.731   +18 %
+  aire col / aire visage           réf 0.098   jeu 0.298   +204 %
+  largeur col / largeur visage     réf 0.476   jeu 0.579   +22 %
+  largeur visage / largeur buste   réf 0.436   jeu 0.478   +10 %
+
+[CONTRÔLE NÉGATIF] taux de remplissage du col (0,50 = triangle · 1,00 = rectangle)
+  réf 0.43    jeu 0.93
+
+[SILHOUETTE]
+  RÉF (y CSS, largeur d'encre CSS) :
+    41:0  44:16  47:26  50:31  53:35  56:38  59:111  62:41  65:42  68:43  71:40  74:40  77:41  80:40  83:40  86:39  89:36  92:32  95:29  98:22  101:10  104:15  107:15  110:15  113:32  116:47  119:55  122:62  125:67  128:71  131:73  134:75  137:77  140:77  143:78  146:79  149:0  152:0  155:4
+  JEU (y CSS, largeur d'encre CSS) :
+    42:0  45:20  48:31  51:36  54:38  57:38  60:35  63:32  66:36  69:37  72:39  75:39  78:39  81:38  84:37  88:34  91:32  94:27  97:20  100:7  103:16  106:16  109:16  112:16  115:26  118:36  121:46  124:53  127:59  130:63  133:67  136:70  139:72  142:74  146:74  149:0  152:0  155:0
+
+[MONTRE — le cadran porte-t-il des aiguilles ?]
+  On isole la bbox du cadran (35,42,45), puis on regarde le RECTANGLE
+  CENTRAL (50 % de la bbox) : à l'intérieur d'une ellipse pleine il est
+  100 % cadran ; toute encre plus sombre qui y traîne est une aiguille.
+  réf : cadran 13.3 x 8.3 CSS ; dans le carré central, 92/286 px plus sombres que le cadran = 32.2 %
+  jeu : cadran 15.0 x 9.7 CSS ; dans le carré central, 0/532 px plus sombres que le cadran = 0.0 %
+
+=== 05_reflet.py ===
+REF m-120.png (900, 1752)
+  RÉFÉRENCE m-120  (balayage y 236->447 CSS, x 15->286 CSS)
+    meilleure ligne : y=302.0 CSS, 550 px turquoise sur 812 (67.7 %)
+    -> reflet PRÉSENT : y 301.7->303.3 CSS (épaisseur 2.0), x 55.3->276.7 CSS, couleur au centre (60, 98, 106)
+
+CAP screen_b3_reputation_1080x1920.png (1080, 1920)
+  JEU (image entière)  (balayage y 0->533 CSS, x 13->287 CSS)
+    meilleure ligne : y=85.8 CSS, 65 px turquoise sur 987 (6.6 %)
+    -> AUCUNE ligne ne dépasse 30 % : le reflet est ABSENT.
+
+CAP screen_b3_reputation_1080x2400.png (1080, 2400)
+  JEU (image entière)  (balayage y 0->667 CSS, x 13->287 CSS)
+    meilleure ligne : y=85.8 CSS, 65 px turquoise sur 987 (6.6 %)
+    -> AUCUNE ligne ne dépasse 30 % : le reflet est ABSENT.
+
+=== 06_resolutions.py ===
+T    screen_b3_reputation_1080x1920.png (1080, 1920)
+T+1s screen_b3_reputation_1080x1920_t1s.png (1080, 1920)
+20:9 screen_b3_reputation_1080x2400.png (1080, 2400)
+
+[STABILITÉ]  aucune exclusion : le chrome est absent des deux images
+  bbox des différences : None
+  pixels différents : 0 / 2073600
+  delta maximal : 0/255
+  -> STABLE (aucune animation)
+
+[20:9]  repères, px CSS
+  haut du panneau          16:9     5.0   20:9     5.0
+  filet sous le titre      16:9    61.7   20:9    61.7
+  haut carte-portrait      16:9   120.8   20:9   120.8
+  bas carte-portrait       16:9   372.5   20:9   505.8
+  haut CTA                 16:9   472.5   20:9   605.8
+  bas CTA                  16:9   496.1   20:9   629.4
+  bas du panneau           16:9   527.5   20:9   660.8
+
+  hauteur carte-portrait   16:9   252.2   20:9   385.6   [CONTRÔLE NÉGATIF : doit grandir]
+  hauteur du panneau       16:9   523.1   20:9   656.4
+  hauteur d'image          16:9   533.3   20:9   666.7
+  marge basse sous le CTA  16:9     5.3   20:9     5.3
+
+  largeur du panneau d'or  [CONTRÔLE POSITIF]
+    16:9 (5.0, 294.72222222222223)    20:9 (5.0, 294.72222222222223)
+
+[20:9 — rien de coupé ?] colonnes/lignes d'encre touchant le bord d'image
+  pixels d'encre (L>45) sur les 2 px de bordure d'image : 0
+
+[20:9 — le sous-titre déborde-t-il ?]
+  16:9 : encre du sous-titre x 16.7 -> 283.1 CSS ; plaque 12.8 -> 287.2 ; marge gauche 3.9, marge droite 4.1
+  20:9 : encre du sous-titre x 16.7 -> 283.1 CSS ; plaque 12.8 -> 287.2 ; marge gauche 3.9, marge droite 4.1
+
+=== 07_textes.py ===
+REF m-120.png (900, 1752)   CAP screen_b3_reputation_1080x1920.png (1080, 1920)
+
+[HAUTEURS DE CAPITALE et INTERLIGNES] (haut, bas, hauteur) en px CSS
+  titre « Le miroir »
+    réf : [(142.3, 155.3, 13.3)]
+    jeu : [(23.3, 35.8, 12.8)]
+  sous-titre du bandeau
+    réf : [(164.0, 168.3, 4.7), (169.0, 169.7, 1.0), (170.3, 174.7, 4.7)]
+    jeu : [(44.7, 50.6, 6.1)]
+  compteur « 00 » + libellé
+    réf : [(201.0, 211.7, 11.0), (216.7, 217.0, 0.7), (217.7, 221.3, 4.0)]
+    jeu : [(78.9, 89.4, 10.8), (94.7, 99.7, 5.3)]
+  épilogue (4 blocs de texte)
+    réf : [(466.0, 471.0, 5.3), (477.3, 488.0, 11.0), (496.3, 502.7, 6.7), (505.7, 512.0, 6.7), (515.0, 521.3, 6.7)]
+    jeu : [(398.3, 403.6, 5.6), (409.4, 420.0, 10.8), (427.8, 434.2, 6.7), (435.3, 441.9, 6.9), (443.1, 449.4, 6.7)]
+
+[ÉTENDUE DE L'ENCRE] px CSS
+  titre       réf (91.0, 206.3)  jeu (92.2, 208.3)
+  sous-titre  réf (41.3, 256.3) (1re ligne sur 2)  jeu (16.7, 283.1) (1 seule ligne)
+  plaque du bandeau : réf 14.0 -> 285.0    jeu 12.8 -> 287.2
+
+[LECTURE — reportée dans le rapport]
+  titre « Le miroir »          réf capitale 13.3  jeu 12.8   -3,8 %   [CONTRÔLE POSITIF]
+  H2 « Rien n'a encore… »      réf capitale 11.0  jeu 10.8   -1,8 %   [CONTRÔLE POSITIF]
+  compteur « 00 »              réf capitale 11.0  jeu 10.8   -1,8 %   [CONTRÔLE POSITIF]
+  corps de l'épilogue          réf capitale  6.7  jeu 6.7/6.9         [CONTRÔLE POSITIF]
+  sous-titre du bandeau        réf capitale  4.7  jeu  6.1  +30 %     [CONTRÔLE NÉGATIF]
+  interligne du corps épilogue réf 9.4            jeu 7.5 / 7.8  -19 %
+  sous-titre : réf 2 lignes centrées, marge 27.3 CSS de chaque côté
+               jeu 1 ligne, marges 3.9 / 4.1 CSS -> 97 % de la plaque occupés
+
+
+=== 08_voyants_et_assumes.py ===
+REF m-120.png (900, 1752)   CAP screen_b3_reputation_1080x1920.png (1080, 1920)
+
+[VOYANT ÉTEINT n°1]  (0,79 = disque · 1,00 = carré)   [CONTRÔLE POSITIF]
+  réf                       7.0 x  7.0 CSS   aire  39.0   remplissage 0.80   couleur dominante (42, 54, 72)
+  jeu                       7.2 x  6.9 CSS   aire  38.0   remplissage 0.76   couleur dominante (42, 53, 73)
+
+[COU]  bbox et jonction avec le col
+  réf : x  51.7-> 66.0 (centre  58.8, axe 58.9)  y  98.0->114.7
+  jeu : x  48.1-> 63.3 (centre  55.7, axe 58.9)  y  96.9->115.6
+  rappel (04) : col réf y 115.3->131.7  |  col jeu y 113.9->135.3
+  -> réf : le cou finit à 114.7, le col commence à 115.3 : ils s'aboutent.
+  -> jeu : le cou finit à 115.6, le col commence à 113.9 : ils se recouvrent.
+
+[ASSUMÉ 1] compteur ENFREINTES : « — » et non « 00 »
+  réf « 00 » : (127, 212, 217)    jeu « — » : (127, 212, 217)    delta 0/255
+  -> même encre que les chiffres, centrée dans la tuile : rendu PROPREMENT.
+
+[ASSUMÉ 2] « Salvatore » + mention « lieutenant.name — non projeté (L0.4) »
+  réf : « Il vous écoute » vert (125, 179, 106) ; encre x 25.7->92.0 CSS
+  jeu : « Il vous écoute » vert (125, 179, 106) ; encre x 24.7->93.1 CSS
+  -> même vert, même position dans la carte : rendu PROPREMENT.
+
+[ASSUMÉ 3] « le col rendu par un triangle sommaire »
+  taux de remplissage du col (cf. 04) : réf 0.43 (triangle) | jeu 0.93 (rectangle)
+  -> ce qui est rendu n'est PAS le triangle assumé. L'écart sort du périmètre
+     de l'assumé et doit être remonté comme défaut.
+
+[ASSUMÉ 4] 4 couleurs hors DesignTokens (Encre, Panneau, Liseré, Vert)
+  cf. 03 : les aplats correspondants sortent à <= 4/255 de la maquette,
+  et le vert à 0/255. La dette est de CODE, sans conséquence visuelle.
+

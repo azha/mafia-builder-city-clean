@@ -1,0 +1,6 @@
+# run47 — extrait de preuve, 2026-09-01 20:14:01
+# journal complet : 1082 lignes (scratchpad, non versé)
+
+filtre SURCHARGÉ par MAFIA_CI_CATEGORIES = [ScreenB3]
+finished — passed=11 failed=0 skipped=0 inconclusive=0
+MafiaCI-harness: elapsed=38s timeout=2700s issue=[sortie normale (RC=0)]
