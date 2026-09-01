@@ -72,3 +72,31 @@ il est aujourd'hui « NAV-HORS-SHELL », injoignable depuis un shell en marche, 
 Je prépare la version livrable ci-dessus — bandes, échéance, CTA réduits — pour qu'elle soit prête
 quel que soit l'arbitrage : elle est le socle commun des deux voies. **Je ne dessine aucun chiffre
 que le serveur ne projette pas**, et je ne pose aucun bouton dont je sais qu'il échouera.
+
+---
+
+## ⛔ MESURE DU 2026-09-02 — aucune route ne liste les bâtiments du joueur
+
+Cherché pour capturer ② avec des données réelles. Mesuré en direct sur le **compte de démo**
+(celui que le seeder alimente, jeton obtenu par `signin`) :
+
+    GET /v1/me/buildings              → 404 RESOURCE_NOT_FOUND   (la route n'existe pas)
+    GET /v1/city/district/16          → 404 RESOURCE_NOT_FOUND
+    routes de bâtiment déclarées      → operational/building/:id · buildings/:id/maintenance-state
+                                        friction/nodes/:buildingId · players/:id/critical-buildings
+
+⇒ **La fiche se consomme par identifiant, et aucune route joueur ne fournit cet identifiant.** Le
+seul écrivain connu est le seeder, qui crée les bâtiments par `operational/building/purchase` et
+retient les ids dans son propre fil d'exécution.
+
+⚠️ **Et la même erreur figure dans un rapport de juge données antérieur.** Son script de mesure
+interroge `/v1/me/buildings` et son corps capturé est enregistré comme des données vides : c'était
+un corps d'ERREUR 404. Mon propre test faisait exactement la même lecture — il cherchait un
+identifiant dans le corps, ne le trouvait pas, et concluait « liste vide ».
+★ Un 404 dont on ne lit que le corps ressemble à une réponse vide. Deux instruments indépendants
+  s'y sont trompés de la même façon, à une semaine d'écart : **il faut lire le CODE avant le corps**,
+  sinon « absent » et « vide » deviennent le même mot.
+
+⇒ Conséquence pour l'écran : ② n'est pas atteignable par un chemin joueur aujourd'hui, quel que
+soit l'état du client. Ce n'est pas un défaut de la fiche — c'est un maillon manquant, à ouvrir
+comme lot back au même titre que ceux de ⑨.
