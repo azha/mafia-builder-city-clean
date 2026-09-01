@@ -317,6 +317,16 @@ namespace MafiaCleanCity.Shell
             qhlg.childForceExpandWidth = false;
             qhlg.childAlignment = TextAnchor.MiddleLeft;
 
+            // ⚠️ CE NOM VAUDRA « Lieutenant » POUR TOUT LE MONDE, ET CE N'EST PAS UN DÉFAUT D'ICI.
+            // Mesuré côté back : le chemin de recrutement de PRODUCTION écrit le littéral
+            // (`lieutenant.service.ts:235`, `name: 'Lieutenant'` — pool de noms localisés différé,
+            // spec §11), et l'octroi d'onboarding fait pareil. En base, tous joueurs confondus :
+            // « Lieutenant » ×18996, « LT w3u1 » ×474, et deux vrais noms.
+            // ⇒ La colonne ACCEPTE un vrai nom, c'est le POOL qui n'existe pas. Cette projection est
+            // correcte : elle affiche fidèlement ce que la production écrit. Le juge-données avait
+            // raison sur le symptôme (« les noms sont un bouchon ») et à côté sur la cause — ce
+            // n'est pas la base qui est bouchonnée, c'est l'écrivain UNIQUE qui écrit une constante.
+            // Couvert par TD-046 (pool de noms différé) ; ne pas rouvrir de dette ici.
             string nom = card.lieutenant != null && !string.IsNullOrEmpty(card.lieutenant.name)
                 ? card.lieutenant.name
                 : "—";
