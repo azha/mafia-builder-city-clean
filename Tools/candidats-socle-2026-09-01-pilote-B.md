@@ -118,8 +118,15 @@ run, donc le sentiment d'avoir été prudent. **Une garde qui répond à côté 
 exactement la même confiance qu'une garde qui y répond** — et trois instruments verts ont parlé
 plus fort qu'une phrase lue.
 
-**Ancre.** Horodatages ci-dessus, vérifiables sur les journaux `run47`…`run49` du scratchpad de
-session.
+**Ancre.** `Tools/preuves/creneau-unity-2026-09-01/` — les trois extraits de journal avec leur
+horodatage, le filtre réellement appliqué et le compte de chaque run.
+
+⚠️ **Cette ancre a été corrigée après coup, et l'erreur mérite d'être dite** : elle renvoyait
+d'abord aux journaux du scratchpad de session, c'est-à-dire à `/tmp`. Une ancre dans un répertoire
+temporaire **meurt avec la session** — elle n'est donc pas re-vérifiable, ce que la barre posée en
+tête de ce document condamne explicitement.
+★ J'ai écrit la barre, puis j'ai déposé sous elle une ancre qui ne la passait pas. Une règle qu'on
+  vient d'énoncer ne se relit pas : on la croit acquise parce qu'on l'a formulée.
 
 **Portée.** Deux autres sessions l'ont appliquée dans l'heure, dont une au miroir : une garde trop
 LARGE refuse un créneau légitime, symétrique du même défaut.
