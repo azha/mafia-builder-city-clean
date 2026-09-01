@@ -262,6 +262,19 @@ namespace MafiaCleanCity.Operational.Exceptions
                     $"{Cap(c.severity_band)} · {Cap(c.priority_band)}", 8f, TextSecondary);
                 bandes.alignment = TextAlignmentOptions.Center;
                 TrackText(bandes, bandes.text);
+
+                // screen_a8 : la catégorie de couche conflit, EN TOUTES LETTRES.
+                // ⛔ Le canon la veut « doublée texte » (F2/a11y) — donc pas d'icône seule, et
+                // surtout pas une couleur seule. Rien n'est dessiné quand la catégorie n'est pas
+                // reconnue : une pastille par défaut aurait la même forme qu'une pastille mesurée.
+                string cat = CategorieConflit(c);
+                if (cat != null)
+                {
+                    TextMeshProUGUI pastille = NouveauTexteMaquette(a.transform, "Categorie",
+                                                                    cat, 7.5f, TextSecondary);
+                    pastille.alignment = TextAlignmentOptions.Center;
+                    TrackText(pastille, pastille.text);
+                }
             }
         }
 
@@ -556,6 +569,51 @@ $"{QuiParle(c)} · {Cap(c.severity_band)} · {Cap(c.priority_band)}", 8f, TextSe
         /// ★ Même règle que sur ㊲ : le trou se montre, il ne se comble pas. Y écrire un nom
         ///   plausible serait le défaut exact que le juge données a trouvé là-bas.
         /// Mesure du 2026-09-02 : `ExceptionCardDto` porte `lieutenant_id`, pas de champ de nom.</summary>
+        /// <summary>screen_a8 — la CATÉGORIE de couche conflit d'une exception, ou `null`.
+        ///
+        /// Le canon (`docs/tech/08a_conflict_layer_screens/screen_a8_…md`) fait de a8 une
+        /// EXTENSION de cet écran : dix types d'exception venus de la couche conflit, et une seule
+        /// spécificité d'affichage — « une petite icône de catégorie conflit / diplomacy / intel /
+        /// reputation par row ». Tout le reste est REUSE de ⑨. C'est donc ici que a8 vit, et
+        /// nulle part ailleurs : il n'y a pas d'écran a8 à construire.
+        ///
+        /// ⛔ CE QUE CETTE FONCTION NE SAIT PAS, et il faut le lire avant de s'y fier.
+        /// `ExceptionCardDto` ne porte **aucun champ de catégorie** : le canon dit que le filtre
+        /// Type « opère sur une catégorie DÉRIVÉE d'`event_descriptor` ». Or `event_descriptor`
+        /// est une clé i18n, et **je n'ai jamais vu une seule de ces clés** — `front.md` mesure
+        /// « 0 occurrence de la variante conflit » (2026-08-27), et la session back confirme le
+        /// 2026-09-02 : six exceptions sur le compte de démo, zéro conflit.
+        /// ⇒ Les fragments ci-dessous sont pris aux NOMS DES MÉCANIQUES du canon, pas à des clés
+        ///   observées. Ils sont donc une hypothèse, et elle est écrite comme telle.
+        /// ★ Une correspondance écrite sans un seul échantillon ne se teste pas : elle rend
+        ///   `null` sur tout, aujourd'hui, et ce `null` ressemblerait à « pas de conflit » alors
+        ///   qu'il veut dire « je n'ai rien pu reconnaître ». C'est pourquoi l'appelant affiche la
+        ///   pastille SEULEMENT sur une catégorie reconnue, et ne dessine rien sinon — plutôt que
+        ///   d'inventer une catégorie par défaut, qui aurait la même forme qu'une catégorie
+        ///   mesurée.
+        /// ⚠️ À rejouer dès qu'une exception de conflit existe : si les clés réelles ne
+        ///   contiennent pas ces fragments, cette fonction restera muette sans rien signaler.</summary>
+        internal static string CategorieConflit(ExceptionCardDto c)
+        {
+            if (c == null || string.IsNullOrEmpty(c.event_descriptor)) return null;
+            string d = c.event_descriptor.ToLowerInvariant();
+
+            // reputation — Boss Mirror (04c §3.1)
+            if (d.Contains("boss_mirror") || d.Contains("mirror")) return "REPUTATION";
+            // diplomacy — Sealed-Envelope (§4.7), Shared Exposure Lock (§4.5)
+            if (d.Contains("sealed_envelope") || d.Contains("exposure") || d.Contains("pact"))
+                return "DIPLOMATIE";
+            // intel — Regime Switching (§3.1), Adaptive Skin (§3.6), Purge Trap (§8.4)
+            if (d.Contains("regime") || d.Contains("adaptive_skin") || d.Contains("purge"))
+                return "RENSEIGNEMENT";
+            // conflit — Dead Hand (§7.1), Sandpile (§5.1), Familiarity (§6.1), Trophic Gap (§3.5)
+            if (d.Contains("dead_hand") || d.Contains("sandpile") || d.Contains("cascade")
+                || d.Contains("familiarity") || d.Contains("trophic"))
+                return "CONFLIT";
+
+            return null;
+        }
+
         private static string QuiParle(ExceptionCardDto c) =>
             string.IsNullOrEmpty(c.lieutenant_id) ? "La ville" : "Votre lieutenant";
 

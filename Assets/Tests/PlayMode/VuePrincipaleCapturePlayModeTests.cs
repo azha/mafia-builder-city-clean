@@ -558,14 +558,26 @@ namespace MafiaCleanCity.Capture.Tests
         // ⇒ Reprendre quand le shell ne videra plus son slot à chaque changement d'onglet
         //   (correctif routé) : ⑨ sera alors atteignable par le vrai geste joueur depuis l'Accueil,
         //   ce qui supprime le montage forcé ET le canvas emprunté.
-        [Ignore("⑨ hors shell : Canvas d'une fixture antérieure — voir le commentaire ci-dessus")]
+        [Category("CaptureExceptions")]
+        // ⛔ L'`[Ignore]` est LEVÉ. Sa raison — « Canvas d'une fixture antérieure » — ne tient
+        // plus : ce test FOURNIT son canvas, et la capture passe désormais par
+        // `CaptureSupport.CapturerCanvas`, qui prend le canvas en argument au lieu de lire
+        // `shell.ShellCanvas` (nul hors shell). La catégorie dédiée l'isole en prime : la
+        // catégorie `Capture` entière fait segfauter le pilote Mesa sur captures répétées.
+        // ⚠️ CE QUE CETTE CAPTURE NE MONTRE TOUJOURS PAS : l'écran sous le bandeau et le dock.
+        // Le vrai geste joueur reste hors d'atteinte tant que `UnmountCurrentTenant` vide tout
+        // `ContentSlot` à chaque `ActivateTab`. Hors shell ≠ dans le parcours.
         public IEnumerator Capture_EcranExceptions()
         {
+            // ⛔ LE COMPTE DE DÉMO, PAS UN SIGNUP FRAIS. Un compte neuf a une file VIDE : la
+            // capture sortirait pleine, valide, et ne montrerait aucune exception — exactement
+            // l'écran qu'on ne vient pas voir. Le compte de démo en porte six (mesuré par la
+            // session back).
             var auth = new AuthClient { BaseUrl = BaseUrl };
-            string callsign = SeederSupport.SafeCallsign("excep", ref seq);
             string token = null, err = null;
-            yield return auth.SignUp(callsign, "excep-capture-pw", t => token = t, e => err = e);
-            Assert.IsNull(err, $"signup errored: {err}");
+            yield return auth.SignIn("operational_demo@example.test", "operational-demo-pw",
+                                     t => token = t, e => err = e);
+            Assert.IsNull(err, $"connexion au compte de démo échouée : {err}");
 
             var sessionClient = new SessionClient { BaseUrl = BaseUrl };
             SessionOpenDto payload = null;
@@ -623,7 +635,10 @@ namespace MafiaCleanCity.Capture.Tests
                 $"⑨ doit avoir construit son contenu (mesuré {noeuds} noeuds sous sa racine) — "
                 + "une capture d'un écran vide passerait sinon pour une réussite");
 
-            yield return CapturerA(1080, 2400, "Assets/Screenshots/screen_5_exceptions_1080x2400.png");
+            const string cheminExc = "Assets/Screenshots/screen_5_exceptions_1080x2400.png";
+            yield return MafiaCleanCity.Tests.CaptureSupport.CapturerCanvas(
+                cv, (RectTransform)canvasGo.transform, 1080, 2400, cheminExc);
+            MafiaCleanCity.Tests.CaptureSupport.GarderLaCapture(cheminExc);
         }
 
         [UnityTest]

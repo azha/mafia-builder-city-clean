@@ -336,5 +336,44 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.AreEqual(DashboardController.NavTarget.Exceptions, dash.LastNavTarget);
             Assert.IsNotNull(dash.LastNavGameObject.GetComponent<ExceptionQueueController>());
         }
-    }
+    
+        // ═══ screen_a8 — la catégorie de couche conflit ═══════════════════════════════════
+
+        /// <summary>⛔ CE TEST NE PROUVE PAS QUE L'ÉCRAN CLASSERA BIEN LES VRAIES EXCEPTIONS.
+        ///
+        /// Il exerce `CategorieConflit` sur des descripteurs que J'AI écrits, à partir des noms de
+        /// mécaniques du canon — pas d'un seul corps observé. `front.md` mesure « 0 occurrence de
+        /// la variante conflit » (2026-08-27) et la session back le confirme le 2026-09-02 : zéro
+        /// exception de conflit sur le compte de démo. Il n'existe donc aucune clé réelle à
+        /// laquelle se confronter.
+        /// ⇒ Ce qu'il teste vraiment : que la fonction est TOTALE et PRUDENTE — elle reconnaît les
+        ///   quatre familles quand le fragment est là, et elle rend `null` plutôt qu'une catégorie
+        ///   par défaut quand elle ne reconnaît rien. C'est une garde sur ma lecture du canon, pas
+        ///   sur le serveur, et c'est tout ce qu'elle peut être aujourd'hui.
+        /// ★ La leçon de ㊲ vaut ici : une garde ne teste jamais la source, elle teste ma lecture
+        ///   de la source. Autant l'écrire sur la garde elle-même.</summary>
+        [Test]
+        public void ScreenA8_LaCategorieDeConflit_ReconnaitLesQuatreFamillesEtSeTaitSinon()
+        {
+            ExceptionCardDto Carte(string descripteur) =>
+                new ExceptionCardDto { event_descriptor = descripteur };
+
+            // positifs — un par famille du canon
+            Assert.AreEqual("REPUTATION",
+                ExceptionQueueController.CategorieConflit(Carte("exception.boss_mirror.divergence")));
+            Assert.AreEqual("DIPLOMATIE",
+                ExceptionQueueController.CategorieConflit(Carte("exception.sealed_envelope.reveal_due")));
+            Assert.AreEqual("RENSEIGNEMENT",
+                ExceptionQueueController.CategorieConflit(Carte("exception.regime.switch_detected")));
+            Assert.AreEqual("CONFLIT",
+                ExceptionQueueController.CategorieConflit(Carte("exception.dead_hand.imminent")));
+
+            // négatifs — RIEN ne doit sortir d'un descripteur hors couche conflit, ni du vide.
+            // Sans ces trois-là, une fonction qui rendrait « CONFLIT » pour tout passerait les
+            // quatre assertions du dessus.
+            Assert.IsNull(ExceptionQueueController.CategorieConflit(Carte("exception.maintenance.due")));
+            Assert.IsNull(ExceptionQueueController.CategorieConflit(Carte("")));
+            Assert.IsNull(ExceptionQueueController.CategorieConflit(null));
+        }
+}
 }
