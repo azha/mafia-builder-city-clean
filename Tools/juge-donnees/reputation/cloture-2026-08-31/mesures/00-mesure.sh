@@ -19,8 +19,12 @@ echo "token_len=${#TOKEN}" >> compte.txt
 A=(-H "Authorization: Bearer $TOKEN")
 
 # 2. session/open (session.controller.ts:56) — octroie le kit de départ
+# ⚠️ `client_version` est REQUIS (session.controller.ts:63-66) — un `{}` rend 422 et
+# n'ouvre AUCUNE session. Première passe de ce juge : `{}` → 422 (02-session-open.json,
+# conservé comme preuve). Corrigé ici ; la mesure qui fait foi est la 2ᵉ passe (fichiers 1x/2x).
 curl -s -X POST $H/v1/session/open "${A[@]}" -H 'Content-Type: application/json' \
-  -H "Idempotency-Key: $(python3 -c 'import uuid;print(uuid.uuid4())')" -d '{}' > 02-session-open.json
+  -H "Idempotency-Key: $(python3 -c 'import uuid;print(uuid.uuid4())')" \
+  -d '{"client_version":"juge-donnees-1.0"}' > 02-session-open.json
 
 # 3. identité — pour épingler MON player_id (pile partagée : tout dénombrement filtré dessus)
 curl -s "${A[@]}" $H/v1/me > 03-me.json
