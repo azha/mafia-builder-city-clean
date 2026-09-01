@@ -631,6 +631,20 @@ namespace MafiaCleanCity.Operational
                 card.operational ? "[#]" : "[ ]", card.operational ? AccentMild : AccentSevere);
             AddStatusRow("Cover", CoverLabel(card.cover_band), CoverGlyph(card.cover_band), CoverAccent(card.cover_band));
 
+            // ⛔ L'ENTRETIEN — donnée REÇUE et JETÉE jusqu'ici. `lapse_phase_bucket` et
+            // `days_until_maintenance_due` sont dans le DTO depuis qu'il existe, et aucune ligne
+            // ne les affichait : le corps les portait, l'écran les ignorait.
+            // ★ C'est le défaut « disponible, et dessiné nulle part » que le juge données traque —
+            //   le même qu'il a trouvé sur ㊲, où trois résolveurs avaient zéro appelant.
+            //
+            // ⚠️ Et c'est le SEUL chiffre que cette fiche a le droit de montrer. La projection
+            // le dit d'elle-même : « le SEUL signal numérique de maintenance exposé ». Les deux
+            // autres nombres que la maquette dessine (montant à collecter, pourcentage de heat)
+            // sont bucketés puis JETÉS par le back, avec la consigne écrite « jamais les valeurs
+            // brutes » — les afficher reviendrait à les inventer.
+            AddStatusRow("Entretien", EcheanceLabel(card.lapse_phase_bucket, card.days_until_maintenance_due),
+                         LapseGlyph(card.lapse_phase_bucket), LapseAccent(card.lapse_phase_bucket));
+
             // ----- Phase-2b raid / repair / risk surface (a11y F2: glyph + text, never colour-only; R2.2: bands only) -----
             AddStatusRow("Structure", StructuralLabel(card.structural_state),
                 StructuralGlyph(card.structural_state), StructuralAccent(card.structural_state));
@@ -1744,6 +1758,41 @@ namespace MafiaCleanCity.Operational
             avlg.childForceExpandHeight = false;
             actionBar = (RectTransform)actions.transform;
             AddLayoutElement(actions, flexibleHeight: 1);
+        }
+
+        /// <summary>L'échéance d'entretien, en clair. Le nombre est SIGNÉ — négatif = en retard —
+        /// et un « -3 jours » ne se lit pas ; on dit « en retard de 3 jours ».
+        /// ⚠️ Zéro jour sur un bâtiment pas encore opérationnel ne veut pas dire « dû aujourd'hui » :
+        /// la projection le documente comme une valeur de remplissage pour ce cas. On s'appuie donc
+        /// sur la BANDE pour décider quoi dire, jamais sur le nombre seul.</summary>
+        private static string EcheanceLabel(string bucket, int jours)
+        {
+            if (string.IsNullOrEmpty(bucket) || bucket == "WITHIN_WINDOW")
+                return jours > 0 ? $"Dans {jours} j" : "À jour";
+            if (jours < 0) return $"En retard de {-jours} j";
+            return jours == 0 ? "Dû aujourd'hui" : $"Dans {jours} j";
+        }
+
+        private static string LapseGlyph(string bucket)
+        {
+            switch (bucket)
+            {
+                case "CRITICAL": return "[!!!]";
+                case "HARD":     return "[!!.]";
+                case "SOFT":     return "[!..]";
+                default:          return "[...]";
+            }
+        }
+
+        private static Color LapseAccent(string bucket)
+        {
+            switch (bucket)
+            {
+                case "CRITICAL": return AccentSevere;
+                case "HARD":     return AccentModerate;
+                case "SOFT":     return AccentMild;
+                default:          return AccentMild;   // « dans la fenêtre » : pas une alerte
+            }
         }
 
         private void AddStatusRow(string label, string value, string glyph, Color accent)
