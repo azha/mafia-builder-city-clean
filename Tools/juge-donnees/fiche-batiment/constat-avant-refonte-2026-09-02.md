@@ -100,3 +100,29 @@ identifiant dans le corps, ne le trouvait pas, et concluait « liste vide ».
 ⇒ Conséquence pour l'écran : ② n'est pas atteignable par un chemin joueur aujourd'hui, quel que
 soit l'état du client. Ce n'est pas un défaut de la fiche — c'est un maillon manquant, à ouvrir
 comme lot back au même titre que ceux de ⑨.
+
+## ⛔ CORRECTION DE LA MESURE CI-DESSUS — ma conclusion était fausse
+
+Les deux 404 sont exacts : `/v1/me/buildings` et `/v1/city/district/:id` n'existent pas. **Mais la
+conclusion que j'en ai tirée — « aucune route joueur ne fournit l'identifiant » — est fausse**, et
+c'est la session back qui me l'a signalé. Vérifié moi-même à l'instant sur le compte de démo :
+
+    GET /v1/city/district/16/interior  →  buildings : 13 entrées
+        clés : building · block_id · name_i18n · operational_type · conversion_band
+               shell_state · condition_band · revenue_band
+
+`building` **est** l'identifiant que les routes par `:id` réclament. Le chemin existe, il est
+éprouvé, et il est déjà emprunté par une autre spec du dépôt.
+
+★ **J'ai testé deux routes, je les ai trouvées absentes, et j'ai conclu qu'il n'y en avait aucune.**
+Deux échecs ne font pas une exhaustivité. La bonne formulation de ma mesure aurait été « les deux
+routes que j'ai essayées n'existent pas », pas « aucune route ne le permet » — et la différence
+n'est pas rhétorique : la première invite à chercher, la seconde fait ouvrir un lot back inutile.
+⇒ **Une absence constatée sur un échantillon n'est pas une absence dans le domaine.** C'est la
+  version « recherche » du même piège que le 404 lu comme une liste vide : dans les deux cas, je
+  prends ce que je n'ai pas trouvé pour ce qui n'existe pas.
+
+⇒ **Rien à demander au back pour ②** : sa fiche s'ouvre depuis un district — le joueur tape un
+bâtiment sur la carte — donc le contexte de district est toujours présent au moment où l'écran
+s'ouvre. Une route de liste globale ferait 1 appel au lieu de 19, mais ce serait une seconde
+projection à garder cohérente avec la première, sur trois écrans. Ce n'est pas mon besoin.
