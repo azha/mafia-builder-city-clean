@@ -361,6 +361,9 @@ namespace MafiaCleanCity.Shell.Tests
                 nameof(CityMapController), nameof(BuildingCardController),
                 nameof(LaunderingController), nameof(ExceptionQueueController), nameof(AutonomyInboxController),
                 nameof(ExceptionDetailController),
+                // ⚠️ 2026-09-02 (merge `pilote-B`) : ㊲ est monté par `Tab.More`, c'est donc un
+                // locataire vivant de plein droit sous le shell.
+                nameof(MafiaCleanCity.Operational.ReputationScreenController),
             };
             var typesTrouves = locataires.Select(t => t.GetType().Name).ToList();
             CollectionAssert.AreEquivalent(typesAttendus, typesTrouves,
@@ -630,9 +633,11 @@ namespace MafiaCleanCity.Shell.Tests
                 { AppShell.Tab.Empire, typeof(CityMapController) },
                 { AppShell.Tab.Org, typeof(LieutenantScreenController) },
                 { AppShell.Tab.Pipeline, typeof(LaunderingController) },
-                // Tab.More volontairement ABSENT de cette table : son comportement NOMMÉ est
-                // « destination vide ASSUMÉE » (design §0 hors périmètre / C1-F1) — vérifié par la
-                // branche else ci-dessous, jamais un type monté.
+                // ⚠️ MISE À JOUR 2026-09-02 (merge `pilote-B`) — `Tab.More` N'EST PLUS la
+                // destination vide : il monte ㊲ La réputation. Son comportement reste NOMMÉ, il a
+                // changé de NATURE — d'où une entrée dans cette table plutôt qu'une branche à part.
+                // *La garde ne s'assouplit pas : elle change de propriété observée.*
+                { AppShell.Tab.More, typeof(MafiaCleanCity.Operational.ReputationScreenController) },
             };
 
             foreach (AppShell.Tab membre in membres)
@@ -640,13 +645,6 @@ namespace MafiaCleanCity.Shell.Tests
                 shell.ActivateTab(membre);
                 yield return null;
 
-                if (membre == AppShell.Tab.More)
-                {
-                    Assert.IsNull(shell.MountedTenantType,
-                        "Tab.More doit avoir le comportement NOMMÉ « destination vide ASSUMÉE » : " +
-                        $"aucun type monté — trouvé {shell.MountedTenantType?.Name ?? "<rien>"}.");
-                }
-                else
                 {
                     Assert.IsTrue(typeParTab.ContainsKey(membre),
                         $"Tab.{membre} n'a ni entrée dans typeParTab ni traitement 'destination vide' " +
@@ -837,15 +835,8 @@ namespace MafiaCleanCity.Shell.Tests
                     "BLOQUANT) : c'est CETTE assertion, pas celle du type monté ci-dessous, qui " +
                     "détecte un clic avalé sur la bulle déjà active.");
 
-                if (membre == AppShell.Tab.More)
-                {
-                    Assert.IsTrue(shell.OnEmptyMoreDestination,
-                        $"le CLIC RÉEL sur Tab_{membre} doit activer la destination vide NOMMÉE");
-                    Assert.IsNull(shell.MountedTenantType,
-                        $"le CLIC RÉEL sur Tab_{membre} ne doit monter AUCUN type — trouvé " +
-                        $"{shell.MountedTenantType?.Name ?? "<rien>"}");
-                }
-                else
+                // ⚠️ 2026-09-02 : plus de cas particulier pour `Tab.More` — il monte ㊲ comme
+                // chaque onglet monte le sien, donc il passe par la MÊME assertion que les autres.
                 {
                     Assert.IsTrue(typeParTab.ContainsKey(membre), $"Tab.{membre} absent de la table de destinations — test à relire");
                     Assert.AreEqual(typeParTab[membre], shell.MountedTenantType,
