@@ -370,7 +370,7 @@ namespace MafiaCleanCity.Operational
         private int PxTrait(float css) =>
             EchelleMaquette.PxTrait(css, racinePleinEcran, EchelleMaquette.LargeurEcransBrennar);
 
-        private void Awake() => EnsureInitialized();
+        private void Start() => EnsureInitialized() // Start, jamais Awake : AddComponent déclenche Awake AVANT SetMountParent (㊲ et ㊱ l'ont payé);
 
         private void EnsureInitialized()
         {{
