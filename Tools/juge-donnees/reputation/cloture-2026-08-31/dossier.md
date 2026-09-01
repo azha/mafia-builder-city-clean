@@ -58,11 +58,10 @@ mafia-clean-city-bo-front-1  Up 10 minutes (healthy)
 - **Rapport `juge-visuel` APPROUVÉ** : `Tools/juge-visuel/reputation/r8-2026-08-31/rapport.md`
   — verdict **APPROUVÉ SOUS RÉSERVE** au 8ᵉ tour (0 bloquant ; les 2 findings classés
   `EMPÊCHE` ont été levés, commit `2af4343` ; les 6 `RAFFINEMENT` sont consignés en dette,
-  voir `…/r8-2026-08-31/reserves.md`). ⛔ ANCIENNE MENTION, désormais fausse : — le juge visuel n'a pas
-  encore rendu. Ce dossier est monté d'avance ; il ne doit pas être instruit tant que cette ligne
-  n'est pas remplacée par un chemin réel. Le mode clôture EXIGE l'approbation visuelle en amont.
-- **SHA du client** : `b728923` · suite PlayMode ScreenB3 : **9/9** au run 28, filtre `MAFIA_CI_CATEGORIES=ScreenB3`
-  imprimé dans le log (`passed=9 failed=0 skipped=0`) — un compte, pas une absence d'échec.
+  voir `…/r8-2026-08-31/reserves.md`).
+- **SHA du client** : `b728923` · suite PlayMode ScreenB3 : **11/11** au run 48, filtre
+  `MAFIA_CI_CATEGORIES=ScreenB3` imprimé dans le log (`passed=11 failed=0 skipped=0`) — un compte,
+  pas une absence d'échec.
 
 ## Écarts ASSUMÉS déjà connus (le juge les re-vérifie, il ne les recopie pas)
 
