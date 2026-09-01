@@ -433,6 +433,8 @@ namespace MafiaCleanCity.Capture.Tests
         /// cette fiche a le droit d'afficher. Capture hors shell : ② est « NAV-HORS-SHELL » comme
         /// ⑨, et le shell vide son slot à chaque changement d'onglet (défaut connu, routé).</summary>
         [Category("Capture")]
+        [Category("CaptureFiche")]   // isole ② : la catégorie entière fait segfauter le pilote Mesa
+        
         public IEnumerator Capture_FicheBatiment()
         {
             // ⛔ LE COMPTE DE DÉMO, PAS UN SIGNUP FRAIS. Mesuré au tour précédent :
@@ -478,28 +480,46 @@ namespace MafiaCleanCity.Capture.Tests
             // ⚠️ Mesuré : 7 nœuds sous le canvas — assez pour qu'un PNG sorte, pas assez pour
             // qu'il montre quoi que ce soit. C'est exactement ce que la garde anti-vacuité existe
             // pour attraper, et c'est la troisième fois qu'elle me sauve d'une capture vide.
+            // ⛔ `/v1/me/buildings` N'EXISTE PAS — et j'en avais tiré la mauvaise conclusion.
+            // La route rend 404, ce que ce test lisait comme une liste vide : il cherchait un
+            // identifiant dans le CORPS sans regarder le CODE. Un corps d'erreur ressemble à une
+            // réponse vide. ⚠️ Un rapport de juge données antérieur s'y est trompé de la même
+            // façon, à une semaine d'écart, avec son propre instrument.
+            // ★ Et j'ai aggravé la lecture : ayant essayé DEUX routes absentes, j'ai conclu
+            //   « aucune route joueur ne fournit l'identifiant ». Faux — c'est la session back qui
+            //   me l'a signalé. Deux échecs ne font pas une exhaustivité : la mesure juste était
+            //   « les deux routes que j'ai essayées n'existent pas », et la différence n'est pas
+            //   rhétorique — la première invite à chercher, la seconde fait ouvrir un lot back
+            //   inutile.
+            // ⇒ Le vrai chemin est celui du JOUEUR : il tape un bâtiment sur la carte, donc le
+            //   district est toujours connu quand la fiche s'ouvre. `district/:id/interior` rend
+            //   les bâtiments avec leur clé `building`, qui EST l'identifiant des routes `:id`.
             string batimentId = null;
-            using (var req = UnityEngine.Networking.UnityWebRequest.Get(BaseUrl + "/v1/me/buildings"))
+            long codeVu = 0;
+            foreach (int district in new[] { 16, 13, 11, 1 })
             {
-                req.SetRequestHeader("Authorization", "Bearer " + token);
-                yield return req.SendWebRequest();
-                if (req.result == UnityEngine.Networking.UnityWebRequest.Result.Success)
+                using (var req = UnityEngine.Networking.UnityWebRequest.Get(
+                           BaseUrl + $"/v1/city/district/{district}/interior"))
                 {
-                    // Le corps est enveloppé (`payload.data`), comme toutes les routes du dépôt.
-                    // On extrait le premier identifiant sans DTO dédié : ce test n'a besoin que
-                    // d'un bâtiment quelconque, pas d'un contrat.
+                    req.SetRequestHeader("Authorization", "Bearer " + token);
+                    yield return req.SendWebRequest();
+                    codeVu = req.responseCode;
+                    // LE CODE D'ABORD, le corps ensuite — c'est toute la leçon ci-dessus.
+                    if (codeVu != 200) continue;
                     string corps = req.downloadHandler.text;
-                    int k = corps.IndexOf("\"building_id\"");
+                    int k = corps.IndexOf("\"building\"");
                     if (k >= 0)
                     {
                         int d = corps.IndexOf('"', corps.IndexOf(':', k) + 1) + 1;
                         int f = corps.IndexOf('"', d);
-                        if (d > 0 && f > d) batimentId = corps.Substring(d, f - d);
+                        if (d > 0 && f > d) { batimentId = corps.Substring(d, f - d); break; }
                     }
                 }
             }
             Assert.IsFalse(string.IsNullOrEmpty(batimentId),
-                "le kit de départ doit fournir au moins un bâtiment — sinon la fiche n'a rien à montrer");
+                $"aucun bâtiment trouvé dans les districts essayés (dernier code HTTP {codeVu}) — " +
+                "sans identifiant la fiche ne bâtit que sa charpente vide, et la capture serait " +
+                "un cadre parfaitement valide qui ne montre rien.");
 
             yield return ecran.LoadBuilding(batimentId);
             for (int i = 0; i < 90; i++) yield return null;
@@ -510,7 +530,16 @@ namespace MafiaCleanCity.Capture.Tests
             Assert.Greater(noeuds, 15,
                 $"② doit avoir construit son contenu (mesuré {noeuds} noeuds sous son canvas)");
 
-            yield return CapturerA(1080, 2400, "Assets/Screenshots/screen_2a_fiche_1080x2400.png");
+            // ⛔ PAS le `CapturerA` de ce fichier : il lit `shell.ShellCanvas`, nul ici — ② monte
+            // sous SON canvas, hors shell. Mesuré sur ㊱, qui a rendu une `NullReferenceException`
+            // sans pile utile pour exactement cette raison.
+            // ⛔ UNE seule fiche. Une charpente bâtie deux fois se superpose exactement à
+            // elle-même tant que sa hauteur est fixe : invisible sur toutes les captures
+            // précédentes, révélée seulement quand la hauteur s'est mise à épouser le contenu.
+            const string chemin = "Assets/Screenshots/screen_2a_fiche_1080x2400.png";
+            yield return MafiaCleanCity.Tests.CaptureSupport.CapturerCanvas(
+                cv, (RectTransform)canvasGo.transform, 1080, 2400, chemin);
+            MafiaCleanCity.Tests.CaptureSupport.GarderLaCapture(chemin);
         }
 
         [UnityTest]

@@ -1715,12 +1715,22 @@ namespace MafiaCleanCity.Operational
             // The bottom-sheet card, anchored bottom-centre.
             GameObject card = NewUI("BuildingCardSheet", root);
             RectTransform cardRt = (RectTransform)card.transform;
-            cardRt.anchorMin = new Vector2(0.5f, 0f);
-            cardRt.anchorMax = new Vector2(0.5f, 0f);
+            // ⛔ LARGEUR : la fiche s'ÉTIRE, elle n'a pas de largeur fixe.
+            // Elle valait `520` en unités de canvas, soit 40,6 % de la largeur — mesuré sur la
+            // capture 1080×2400, puis comparé au rendu RATIFIÉ par l'user
+            // (`Tools/juge-visuel/ecran-principal/ecran-canon.png`, 1176×2091) où le panneau bas
+            // occupe **93,6 %** de la largeur, marges de 3,2 % de chaque côté.
+            // ⚠️ Une largeur fixe en unités de canvas n'est une proportion sur AUCUNE résolution
+            // en particulier : elle en vise une, muettement, et se décale sur toutes les autres.
+            // ★ Le défaut ne s'est vu que sur une capture. Aucune garde structurelle ne le voyait :
+            //   la carte existait, ses rangées étaient bonnes, ses valeurs justes — elle était
+            //   simplement deux fois trop étroite, et rien dans l'arbre ne le dit.
+            const float MargeCoteUnites = 41f;   // 3,2 % de 1280 unités, la marge du canon
+            cardRt.anchorMin = new Vector2(0f, 0f);
+            cardRt.anchorMax = new Vector2(1f, 0f);
             cardRt.pivot = new Vector2(0.5f, 0f);
-            cardRt.sizeDelta = new Vector2(520, 760); // taller to fit the Phase-2b raid/risk rows + Phase-2c Ash lab-tier /
-                                                      // purity / appointment rows + the Upgrade + refining-passes + honor affordances.
-            cardRt.anchoredPosition = new Vector2(0, 24);
+            cardRt.sizeDelta = new Vector2(-2f * MargeCoteUnites, 760f);
+            cardRt.anchoredPosition = new Vector2(0f, 24f);
             card.AddComponent<Image>().color = SurfaceBg;
             VerticalLayoutGroup vlg = card.AddComponent<VerticalLayoutGroup>();
             vlg.padding = new RectOffset(18, 18, 16, 16);
@@ -1729,6 +1739,19 @@ namespace MafiaCleanCity.Operational
             vlg.childControlHeight = true;
             vlg.childForceExpandWidth = true;
             vlg.childForceExpandHeight = false;
+
+            // ⛔ La hauteur ÉPOUSE le contenu — elle ne le devine pas. La valeur fixe de 760
+            // unités laissait, sur le compte de démo, une bande morte sous les actions : le canon
+            // (`ecran-canon.png`) montre un panneau qui s'arrête à sa dernière action.
+            // ⚠️ Et une hauteur fixe est fausse dans les DEUX sens : elle laisse du vide quand
+            // l'immeuble a peu de rangées, et elle rogne quand il en a beaucoup (les rangées
+            // raid/risque et Ash n'apparaissent que sur certains bâtiments). Le vide se voit ;
+            // la coupe ne se voit que sur le bâtiment qui la déclenche, et ce n'est pas celui
+            // qu'on capture.
+            var ajusteur = card.AddComponent<ContentSizeFitter>();
+            ajusteur.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            ajusteur.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+
             cardContent = cardRt;
 
             titleText = NewText("Title", card.transform, "BÂTIMENT OPÉRATIONNEL", 22, TextAlignmentOptions.Left);

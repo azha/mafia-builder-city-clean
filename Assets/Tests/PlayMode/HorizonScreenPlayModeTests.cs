@@ -163,124 +163,17 @@ namespace MafiaCleanCity.Operational.Tests
             yield return CapturerA(1080, 2400,
                 "Assets/Screenshots/screen_c6_horizon_etat-vide_1080x2400.png");
 
-            AucuneCouleurNeRecouvreTout("Assets/Screenshots/screen_c6_horizon_etat-vide_1080x2400.png");
         }
 
-        /// <summary>Garde de RECOUVREMENT — la teinte qui domine l'écran doit être un FOND.
-        ///
-        /// Les gardes structurelles voyaient un `Contour` présent, de la bonne couleur, au bon
-        /// endroit de l'arbre, pendant que ce même contour peignait 82,5 % de l'écran en or plein
-        /// (un enfant plein cadre est rendu APRÈS le graphique de son parent, quel que soit son
-        /// rang de fratrie). Existence et ordre étaient justes ; le rendu était faux.
-        ///
-        /// ⚠️ CE QUE CETTE GARDE NE MESURE PAS, et c'est ma première version qui se trompait :
-        /// **la PART de la teinte dominante ne discrimine rien.** Mesuré des deux côtés —
-        /// or fautif 82,5 %, écran correct 77,3 % : les deux mondes se touchent, et sur un écran
-        /// de liste VIDE le fond est légitimement écrasant. Un plafond à 70 % refusait l'écran
-        /// juste. *Un seuil qui ne sépare pas deux mesures réelles n'est pas une garde.*
-        ///
-        /// ⇒ Ce qui sépare vraiment les deux : la NATURE de la teinte dominante. Un fond est
-        /// sombre (canal max 13 sur la capture juste) ; un accent qui déborde est clair (176 pour
-        /// l'or). La garde plafonne donc la LUMINOSITÉ du dominant, pas sa surface — elle attrape
-        /// n'importe quel accent qui recouvre, pas seulement cet or-ci, et laisse le fond dominer
-        /// autant qu'il le doit.</summary>
-        private void AucuneCouleurNeRecouvreTout(string chemin)
-        {
-            var tex = new Texture2D(2, 2);
-            Assert.IsTrue(tex.LoadImage(System.IO.File.ReadAllBytes(chemin)),
-                          $"capture illisible : {chemin}");
-            var comptes = new Dictionary<Color32, int>();
-            Color32[] px = tex.GetPixels32();
-            foreach (Color32 c in px)
-            {
-                var k = new Color32(c.r, c.g, c.b, 255);
-                comptes.TryGetValue(k, out int n); comptes[k] = n + 1;
-            }
-            KeyValuePair<Color32, int> dom = new KeyValuePair<Color32, int>(default, 0);
-            foreach (var kv in comptes) if (kv.Value > dom.Value) dom = kv;
-            float part = 100f * dom.Value / px.Length;
-            int vif = Mathf.Max(dom.Key.r, Mathf.Max(dom.Key.g, dom.Key.b));
-            Debug.Log($"[RECOUVREMENT] dominante rgb({dom.Key.r},{dom.Key.g},{dom.Key.b}) " +
-                      $"= {part:0.0} % · canal max {vif} · {comptes.Count} teintes");
-
-            // 13 (fond juste) contre 176 (or fautif) : le seuil se pose dans le vide entre les deux
-            // mesures, pas au bord de l'une d'elles.
-            Assert.Less(vif, 90,
-                $"la teinte qui couvre {part:0.0} % de l'écran est rgb({dom.Key.r},{dom.Key.g}," +
-                $"{dom.Key.b}), canal max {vif} : c'est un ACCENT, pas un fond — quelque chose " +
-                "recouvre la mise en page au lieu de la border.");
-            Assert.Greater(comptes.Count, 200,
-                $"seulement {comptes.Count} teintes distinctes (1034 sur la capture de référence, " +
-                "478 quand l'or recouvrait tout) : l'écran n'a probablement rien rendu.");
-            Object.DestroyImmediate(tex);
-        }
-
+        /// <summary>Délègue au support partagé : la garde posée là vaut pour tous les écrans
+        /// capturés hors shell, celle qui vivait ici ne protégeait que ㊱.</summary>
         private IEnumerator CapturerA(int largeur, int hauteur, string chemin)
         {
             GameObject racine = RacineEcran();
             Canvas canvas = racine.GetComponentInParent<Canvas>();
-            Assert.IsNotNull(canvas, "HorizonRoot n'est sous aucun Canvas : rien ne peut être rendu");
-
-            RenderMode modeAvant = canvas.renderMode;
-            Camera cameraAvant = canvas.worldCamera;
-            float planAvant = canvas.planeDistance;
-
-            var rt = new RenderTexture(largeur, hauteur, 24, RenderTextureFormat.ARGB32);
-            var camGo = new GameObject("CaptureCamScreenC6");
-            var cam = camGo.AddComponent<Camera>();
-            cam.targetTexture = rt;
-            cam.clearFlags = CameraClearFlags.SolidColor;
-            cam.backgroundColor = Color.black;
-            cam.orthographic = true;
-
-            canvas.renderMode = RenderMode.ScreenSpaceCamera;
-            canvas.worldCamera = cam;
-            canvas.planeDistance = 10f;
-            Canvas.ForceUpdateCanvases();
-            yield return null;
-
-            LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform)racine.transform);
-            Canvas.ForceUpdateCanvases();
-            yield return null;
-            yield return null;
-
-            RectTransform crt = (RectTransform)canvas.transform;
-            cam.orthographicSize = crt.rect.height / 2f;
-            cam.aspect = crt.rect.width / crt.rect.height;
-
-            cam.Render();
-            RenderTexture prev = RenderTexture.active;
-            RenderTexture.active = rt;
-            var tex = new Texture2D(largeur, hauteur, TextureFormat.RGB24, false);
-            tex.ReadPixels(new Rect(0, 0, largeur, hauteur), 0, 0);
-            tex.Apply();
-            RenderTexture.active = prev;
-            System.IO.File.WriteAllBytes(chemin, tex.EncodeToPNG());
-
-            // Anti-vacuité de FORME (patron ㊲) : une capture ratée est UNIFORME, peu importe sa
-            // couleur — on compte les pixels qui diffèrent du fond dominant, pas les pixels
-            // "clairs" (le fond lui-même peut être clair).
-            Color[] pixels = tex.GetPixels();
-            var histo = new Dictionary<int, int>();
-            foreach (Color c in pixels)
-            {
-                int k = (Mathf.RoundToInt(c.r * 31) << 10) | (Mathf.RoundToInt(c.g * 31) << 5) | Mathf.RoundToInt(c.b * 31);
-                histo.TryGetValue(k, out int n); histo[k] = n + 1;
-            }
-            int dominant = 0;
-            foreach (var kv in histo) if (kv.Value > dominant) dominant = kv.Value;
-            int horsFond = pixels.Length - dominant;
-            Assert.Greater(horsFond, 0,
-                $"capture {largeur}x{hauteur} entièrement UNIFORME — l'écran n'a rien rendu " +
-                "hors de son propre fond (plancher volontairement bas : le squelette n'a pas " +
-                "encore de contenu MÉTIER ICI ; le durcir une fois BuildLayout() rempli)");
-
-            canvas.renderMode = modeAvant;
-            canvas.worldCamera = cameraAvant;
-            canvas.planeDistance = planAvant;
-            Object.Destroy(camGo);
-            rt.Release();
-            yield return null;
+            yield return MafiaCleanCity.Tests.CaptureSupport.CapturerCanvas(
+                canvas, (RectTransform)racine.transform, largeur, hauteur, chemin);
+            MafiaCleanCity.Tests.CaptureSupport.GarderLaCapture(chemin);
         }
 
         // MÉTIER ICI — ajouter ici les tests de PARCOURS (signup → session/open → la route) et
