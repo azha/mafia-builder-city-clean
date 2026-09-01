@@ -255,3 +255,51 @@ valeurs « AVANT » sans « APRÈS », c'est-à-dire une moitié de preuve qui a
 
 ⇒ **Les quatre tombent ensemble**, à la même condition, et R2 ne peut pas s'ouvrir avant ㉕ : c'est
 la sonde qui décide si le refactor conditionnel R4 doit exister.
+
+## ⛔⛔ ET LES QUATRE NE TOMBENT PAS ENSEMBLE — mesuré AVANT de demander le créneau
+
+Le créneau éditeur est rationné et partagé. Avant de le demander, j'ai mesuré **par quel mécanisme**
+chacun des quatre se rendrait — et deux d'entre eux n'ont pas de mécanisme honnête aujourd'hui.
+
+**Ce que le dépôt possède**, mesuré hors commentaires sur `Assets/` + `Tools/` :
+
+| mécanisme | occurrences | verdict |
+|---|---|---|
+| `Screen.SetResolution` | **0** | inexistant |
+| `GameViewSizes` (API interne) | **0** | **refusé délibérément** — `ChromeMultiResolutionPlayModeTests.cs:16-22` écrit pourquoi : un test qui dépend d'une API interne casse à l'upgrade Unity pour une raison sans rapport avec une régression produit |
+| caméra → `RenderTexture` + `ScreenSpaceCamera` | **7 · 6** | **committé et employé** (`AccueilPanneauxGeometriePhotoPlayModeTests.cs:323-326`, `:459-462`) — c'est la seule voie |
+
+⇒ **La seule voie est la RenderTexture.** Et elle a une conséquence que le design n'a jamais écrite :
+
+⛔ **`AppShell.cs:845-854` — `SafeAreaInsetsLocal()` RECALCULE son propre facteur d'échelle depuis
+`Screen`** :
+```csharp
+float screenW = Screen.width, screenH = Screen.height;
+float scaleFactor = screenW / ReferenceResolutionWidth;
+```
+**Il ne lit PAS `ShellCanvas.scaleFactor`.** Sous la voie RenderTexture, le canvas suit la texture
+cible pendant que `Screen.width` reste celui du Game View (et vaut **640** en batchmode — le
+commentaire du helper de capture le dit, `:43-44`). ⇒ **Le canvas se redimensionne, le chrome NON** :
+une capture « à 1920×1080 » montrerait une géométrie **hybride que le joueur n'a jamais**.
+
+| | ce qu'il mesure | la voie RenderTexture le rend-elle honnête ? |
+|---|---|---|
+| ㉕ | deux valeurs de `SafeAreaProvider` donnent-elles des insets DISTINCTS ? | ✅ **oui** — le facteur est le même des deux côtés, donc la DISTINCTION survit |
+| ⑤ | les insets **après** bascule | ⛔ **non** — la valeur absolue dépend du facteur, qui vient de `Screen` |
+| ⑮ ㉙ | deux points **rendus** | ⛔ **non** — c'est exactement la géométrie hybride ci-dessus |
+
+★★ **C'est le défaut de la charpente, encore vivant, et il est ANTÉRIEUR à ce lot** : le seul
+recalcul d'échelle hors canvas vit dans une méthode que tout le chrome traverse. Il avait été trouvé
+une fois (« le juge photographiait une géométrie que le joueur n'a jamais eue ») ; **il n'a pas été
+refermé**, et il rend deux livrables de R1 non mesurables par le seul mécanisme disponible.
+
+⇒ **CE QUE ÇA CHANGE, ET C'EST UN ARBITRAGE QUI REMONTE** :
+1. **㉕ est faisable dès le créneau** — c'est aussi celui dont R2 dépend. **Il passe en premier.**
+2. **⑤ ⑮ ㉙ exigent d'abord que `SafeAreaInsetsLocal` dérive son facteur du CANVAS et non de
+   `Screen`.** C'est **une ligne de production**, donc hors de R1 (« aucune ligne de production
+   touchée ») — et hors de R4, qui est le refactor `static`→instance et pas celui-ci.
+3. ⇒ **Le découpage a besoin d'un maillon qui n'existe pas** : soit R2 le porte, soit un chunk
+   R0 le porte avant tout le reste. **Je ne tranche pas seul un ajout au découpage** : c'est la
+   question ouverte que ce rapport remonte.
+★ **Ce que cette mesure a évité** : demander le créneau, rendre deux captures, les publier comme
+« les deux points de S1 », et livrer une comparaison entre deux hybrides. Le run aurait été VERT.
