@@ -12,9 +12,24 @@ using TMPro;
 
 namespace MafiaCleanCity.Operational.Lieutenant
 {
-    // Phase-9 vector #9 — drives the Lieutenant rule-editor screen (screen_4a) for the COOK loop.
+    // ⑥ `screen_3` — « LA FAMILLE », l'organigramme Don → lieutenants → hommes.
     //
-    // T1 scope (this file): the screen SHELL + the Recruit section.
+    // ⚠️ L'EN-TÊTE DE CE FICHIER A DÉCRIT PENDANT DES MOIS UN AUTRE ÉCRAN. Il annonçait un
+    // « recruit-only shell » pour `screen_4a` (l'éditeur de règles), alors que le fichier fait
+    // 3300+ lignes, porte six sections, et que sa section principale est l'organigramme ratifié.
+    // `front.md` le signalait périmé sans que personne ne le corrige : *un énoncé daté ne rougit
+    // jamais tout seul, et celui-ci envoyait chaque lecteur vers le mauvais écran.*
+    //
+    // Ce fichier porte : l'authentification joueur, le roster, l'organigramme (maquette ratifiée
+    // `ecrans-brennar.html` §1, commit `0881e8a`), le recrutement, l'éditeur de règles T2, et les
+    // bandes d'autonomie. Il est monté par `AppShell` sous l'onglet `Org`.
+    //
+    // ⛔ NON REVU — jalon 2026-09-05 (régime full prod).
+    //
+    // Historique — Phase-9 vecteur #9 : ce fichier a COMMENCÉ comme le shell de `screen_4a` pour la
+    // boucle COOK, ce que l'en-tête ci-dessous décrivait fidèlement À L'ÉPOQUE.
+    //
+    // T1 scope (à l'origine) : the screen SHELL + the Recruit section.
     //   1. signs in (POST /v1/auth/signin) to get a PLAYER Bearer — REUSE CityMap.AuthClient;
     //   2. offers a "Recruit COOK" button → POST /v1/lieutenants { archetype:"COOK", assigned_building_id } →
     //      stores the returned lieutenant_id + shows the outcome;
