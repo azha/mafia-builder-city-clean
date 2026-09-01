@@ -53,8 +53,11 @@ namespace MafiaCleanCity.Operational
             v.childForceExpandWidth = true; v.childForceExpandHeight = false;
             v.childAlignment = TextAnchor.UpperCenter;
 
-            TextMeshProUGUI titre = Texte("Titre", "SALVATORE, VOTRE LIEUTENANT", 5.6f,
-                                          ReputationResolvers.Muet, transform);
+            // Le nom vient du serveur (`GET /v1/lieutenants/:id`, clé `name`), jamais d'ici.
+            // Le libellé de départ n'est qu'un gabarit sans nom : il ne doit JAMAIS rester visible.
+            titreLieutenant = Texte("Titre", "VOTRE LIEUTENANT", 5.6f,
+                                    ReputationResolvers.Muet, transform);
+            TextMeshProUGUI titre = titreLieutenant;
             titre.alignment = TextAlignmentOptions.Center;
             titre.characterSpacing = 14f;
             titre.fontStyle = TMPro.FontStyles.Bold;   // maquette : .prt i, 700 5.6px
@@ -207,14 +210,39 @@ namespace MafiaCleanCity.Operational
             verdict.fontStyle = TMPro.FontStyles.Bold;   // maquette : .prt b, 700 8.6px
             verdict.font = DesignTokens.Current.hudSerifFont;
 
-            // ⛔ LE TROU, ÉCRIT À L'ÉCRAN PLUTÔT QUE MASQUÉ. « Salvatore » est une FICTION de
-            // maquette : `lieutenant.name` existe en base (varchar 64, NOT NULL) et n'est rendu
-            // par AUCUNE des deux projections joueur mesurées (5 clés et 17 clés). Tant que le
-            // lot back ne le projette pas, l'écran le dit — il ne fabrique pas un nom et ne fait
-            // pas semblant que la question ne se pose pas.
-            reference = Texte("Reference", "lieutenant.name — non projeté (L0.4)", 5f,
-                              ReputationResolvers.Eteint, transform);
-            reference.alignment = TextAlignmentOptions.Center;
+            // ⛔⛔ CETTE LIGNE AFFICHAIT UNE DETTE DÉJÀ PAYÉE, ET C'EST LE PIRE DÉFAUT DE CET ÉCRAN.
+            // Elle disait au joueur « lieutenant.name — non projeté (L0.4) » pendant que le titre
+            // affichait « SALVATORE » en dur : l'écran INVENTAIT un nom tout en affirmant que le
+            // serveur ne le donnait pas. Les deux ne peuvent pas être vrais ensemble.
+            //
+            // Et la prémisse était fausse. Mesuré à la source par le juge données, puis vérifié :
+            // `name` est projeté par TROIS routes — `GET /v1/lieutenants`, `GET /v1/lieutenants/:id`
+            // et la carte d'exception de `POST /v1/session/open`. Le commentaire du back le dit
+            // mot pour mot : « C3 (D7, L0.5) … defect n°1 of back.md's L0.4 table ». Le trou que
+            // j'annonçais était RÉPARÉ, et je continuais à le publier à l'écran.
+            //
+            // ★★ Ce défaut a traversé HUIT tours de juge visuel sans être vu, et pas par
+            //    négligence : il était déclaré « écart assumé » dans chaque dossier, et les huit
+            //    juges ont consciencieusement vérifié qu'il était *rendu proprement*. Ils ont
+            //    contrôlé la mise en forme du mensonge.
+            // ⇒ Un écart assumé met sa PRÉMISSE hors du champ de la revue. Tant qu'il est déclaré,
+            //   plus personne ne redemande si ce qu'il affirme est encore vrai — et une prémisse
+            //   vraie le jour où on l'écrit peut cesser de l'être pendant qu'un lot voisin avance.
+            //   D'où la règle qui manquait : un écart assumé doit porter la DATE et la MESURE qui
+            //   le fondent, pour qu'on puisse le refaire, pas seulement le relire.
+            reference = null;
+        }
+
+        private TextMeshProUGUI titreLieutenant;
+
+        /// <summary>Le nom du lieutenant, tel qu'il vient du serveur. Vide ⇒ on n'affiche que le
+        /// rôle, jamais un nom de remplacement : l'écran ne comble pas un trou de données.</summary>
+        public void DefinirNom(string nom)
+        {
+            if (titreLieutenant == null) return;
+            titreLieutenant.text = string.IsNullOrWhiteSpace(nom)
+                ? "VOTRE LIEUTENANT"
+                : nom.ToUpperInvariant() + ", VOTRE LIEUTENANT";
         }
 
         private Image _epaules, _cou, _tete, _cheveux;

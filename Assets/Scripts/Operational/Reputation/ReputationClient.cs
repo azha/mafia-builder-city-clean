@@ -84,6 +84,37 @@ namespace MafiaCleanCity.Operational
         /// qu'une règle tient « jusqu'à ce qu'elle soit publiquement retirée ». L'écran affiche
         /// donc un geste sans retour possible, et le dit — il ne dessine pas un bouton de
         /// retrait qui n'existe pas.</summary>
+        /// <summary>`GET /v1/lieutenants/:id` → la fiche du lieutenant, dont sa clé `name`.
+        ///
+        /// ⛔ Ajoutée parce que l'écran INVENTAIT le nom (« SALVATORE » en dur) tout en affichant
+        /// au joueur que le serveur ne le projetait pas. Les deux ne pouvaient pas être vrais
+        /// ensemble, et c'est la seconde affirmation qui était fausse : `name` est projeté par
+        /// trois routes, et le back documente la réparation de ce trou (« C3 (D7, L0.5) …
+        /// defect n°1 of back.md's L0.4 table »).
+        ///
+        /// ⚠️ Un échec ici n'est PAS une erreur d'écran : le portrait se contente alors d'afficher
+        /// « VOTRE LIEUTENANT » sans nom. Un nom absent doit rester absent — c'est exactement le
+        /// trou qu'on vient de cesser de combler avec une fiction.
+        public IEnumerator GetLieutenant(string bearer, string lieutenantId,
+                                         System.Action<string> onNom, System.Action<long> onErr)
+        {
+            if (string.IsNullOrEmpty(lieutenantId)) { onErr?.Invoke(0); yield break; }
+            string url = BaseUrl.TrimEnd('/') + "/v1/lieutenants/"
+                         + UnityWebRequest.EscapeURL(lieutenantId);
+            using (UnityWebRequest req = UnityWebRequest.Get(url))
+            {
+                if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
+                yield return req.SendWebRequest();
+                if (req.result != UnityWebRequest.Result.Success)
+                {
+                    onErr?.Invoke(req.responseCode);
+                    yield break;
+                }
+                var fiche = JsonUtility.FromJson<LieutenantFicheDto>(req.downloadHandler.text);
+                onNom?.Invoke(fiche != null ? fiche.name : null);
+            }
+        }
+
         public IEnumerator DeclareHouseRule(string bearer, string ruleId,
                                             Action<DeclareRuleResponseDto> onOk, Action<long, string> onErr)
         {

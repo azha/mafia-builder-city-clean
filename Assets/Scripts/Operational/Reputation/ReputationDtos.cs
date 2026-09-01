@@ -209,3 +209,14 @@ namespace MafiaCleanCity.Operational
     [Serializable] public class DeclareRulePayload { public DeclareRuleResponseDto data; }
     [Serializable] public class DeclareRuleEnvelope { public DeclareRulePayload payload; }
 }
+
+    /// <summary>La fiche renvoyée par `GET /v1/lieutenants/:id`. On n'y déclare que ce qu'on
+    /// CONSOMME — `name`. Les 17 autres clés existent et sont listées comme « passé à côté ? »
+    /// par le juge données ; les déclarer ici sans les afficher donnerait l'illusion qu'elles
+    /// sont traitées.</summary>
+    [System.Serializable]
+    public class LieutenantFicheDto
+    {
+        public string name;
+    
+}

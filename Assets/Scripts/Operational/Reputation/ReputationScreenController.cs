@@ -323,6 +323,15 @@ namespace MafiaCleanCity.Operational
             if (bm != null)
             {
                 portrait.Appliquer(tells, bm.portrait_posture);
+                // Le nom vient du serveur, jamais d'une constante. L'appel est lancé sans bloquer
+                // le rendu : le portrait s'affiche tout de suite avec « VOTRE LIEUTENANT », et se
+                // complète quand la fiche arrive. Si elle n'arrive pas, il reste sans nom — ce qui
+                // est la vérité, et non un nom de remplacement.
+                if (!string.IsNullOrEmpty(LieutenantIdCourant))
+                    StartCoroutine(client.GetLieutenant(token, LieutenantIdCourant,
+                        nom => portrait.DefinirNom(nom),
+                        code => Debug.LogWarning($"[b3] nom du lieutenant indisponible (HTTP {code}) — "
+                                                 + "le portrait reste sans nom, il n'en invente pas")));
                 portrait.DefinirVerdict(ReputationResolvers.PosturePhrase(bm.portrait_posture),
                                         ReputationResolvers.PostureCouleur(bm.portrait_posture));
             }
@@ -977,8 +986,11 @@ namespace MafiaCleanCity.Operational
         /// fabriquerait du contenu que le back ne connaît pas, et le premier `rule_id` inattendu
         /// tomberait dans un « (règle inconnue) ».
         /// ⇒ On montre l'identifiant tel quel. **Le trou se montre, il ne se masque pas** — c'est
-        /// la même règle que le compteur d'enfreintes à « — » et que la mention
-        /// « lieutenant.name — non projeté » sous le portrait.
+        /// la même règle que le compteur d'enfreintes à « — ».
+        /// ⚠️ Ce renvoi citait aussi la mention « lieutenant.name — non projeté » : elle a été
+        /// RETIRÉE, parce que le trou qu'elle annonçait était réparé côté back depuis un lot que
+        /// personne n'avait re-mesuré. Un exemple qui survit à ce qu'il illustre transforme une
+        /// règle juste en preuve d'une chose fausse.
         ///
         /// ⚠️ Et il n'y a AUCUN bouton de retrait, volontairement : `retractRule` existe côté
         /// serveur mais n'a qu'un appelant, de test — zéro en production. Le canon dit qu'une
