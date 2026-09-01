@@ -67,6 +67,16 @@ namespace MafiaCleanCity.Shell
         /// artefact constant).</summary>
         public const float LargeurEcransBrennar6 = 300f;
 
+        /// <summary>Largeur CSS des écrans de la série 4 (`ecrans-brennar-4.html`, `.tel{width:
+        /// min(300px,88vw)}`) — la file au comptoir et le détail en main de cartes.
+        ///
+        /// ⚠️ Elle vaut le MÊME nombre que `LargeurEcransBrennar6` aujourd'hui, et c'est délibéré
+        /// qu'elle soit déclarée à part : les deux séries sont des fichiers SOURCES différents, qui
+        /// peuvent diverger sans prévenir. Un écran qui emprunte la constante de son voisin hérite
+        /// d'une valeur que personne ne re-mesurera pour lui — et le jour où l'une des deux bouge,
+        /// c'est l'autre écran qui casse, loin de la modification.
+        public const float LargeurEcransBrennar4 = 300f;
+
         /// <summary>`palettes-ecrans.html` — `.tel{width:min(252px,86vw)}`.</summary>
         public const float LargeurPalettesEcrans = 252f;
 

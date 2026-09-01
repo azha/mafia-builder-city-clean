@@ -428,6 +428,63 @@ namespace MafiaCleanCity.Capture.Tests
         // Cible : `Tools/family-organigramme-reference-1120.png` (« LA FAMILLE — l'organigramme »,
         // maquette ratifiée user). Cette capture existe pour MESURER l'écart, pas pour le certifier.
         [UnityTest]
+        /// <summary>⑨ EXCEPTIONS, refondu sur la maquette ratifiée (série 4 cadre 14) et monté
+        /// dans le shell. L'écran s'ouvre EN SURIMPRESSION — ce n'est pas un onglet.</summary>
+        [Category("Capture")]
+        public IEnumerator Capture_EcranExceptions_SousChrome()
+        {
+            var auth = new AuthClient { BaseUrl = BaseUrl };
+            string callsign = SeederSupport.SafeCallsign("excep", ref seq);
+            string token = null, err = null;
+            yield return auth.SignUp(callsign, "excep-capture-pw", t => token = t, e => err = e);
+            Assert.IsNull(err, $"signup errored: {err}");
+
+            var sessionClient = new SessionClient { BaseUrl = BaseUrl };
+            SessionOpenDto payload = null;
+            yield return sessionClient.OpenSession(token, "capture-excep", dto => payload = dto,
+                (c, m) => Assert.Fail($"session/open failed: {c}: {m}"));
+            Assert.IsNotNull(payload, "session/open doit réussir");
+
+            LogAssert.ignoreFailingMessages = true;
+            shellGo = new GameObject("ExceptionsShell");
+            shell = shellGo.AddComponent<AppShell>();
+            shell.SetIdentity(callsign, "excep-capture-pw");
+            yield return null;
+
+            float t0 = Time.realtimeSinceStartup;
+            while (string.IsNullOrEmpty(shell.Token) && Time.realtimeSinceStartup - t0 < 30f) yield return null;
+            Assert.IsFalse(string.IsNullOrEmpty(shell.Token), "le shell doit avoir acquis sa session");
+
+            // ⛔ LAISSER LE SHELL SE POSER D'ABORD. Il monte l'Accueil EN SURIMPRESSION juste
+            // après avoir activé son premier onglet ; monter ⑨ avant que ce geste ait eu lieu le
+            // fait recouvrir par l'Accueil, et la capture montre l'Accueil.
+            for (int i = 0; i < 60; i++) yield return null;
+
+            var nav = (MafiaCleanCity.Shell.IShellNavigator)shell;
+            var ecran = nav.MonterLocataireEnSurimpression<
+                MafiaCleanCity.Operational.Exceptions.ExceptionQueueController>();
+            Assert.IsNotNull(ecran, "l'écran ⑨ doit être monté en surimpression");
+            for (int i = 0; i < 120; i++) yield return null;
+
+            Assert.IsNotNull(shell.TopBar, "le chrome haut doit exister");
+
+            // ⛔ COMPTER SOUS L'ÉCRAN, PAS SOUS LE SLOT. La première version de cette garde
+            // mesurait `shell.ContentSlot`, qui porte AUSSI l'Accueil monté par le shell : elle est
+            // passée à vert sur une capture où ⑨ n'apparaissait nulle part — l'image montrait
+            // l'Accueil, et 20 nœuds étaient bien là.
+            // ★ Une garde anti-vacuité qui compte le CONTENANT ne dit rien de son CONTENU. Elle
+            //   répond « il y a quelque chose », pas « il y a CE quelque chose » — et la seconde
+            //   question est la seule qui protège une capture.
+            int noeuds = ecran.GetComponentsInChildren<Transform>(true).Length;
+            Assert.Greater(noeuds, 20,
+                $"⑨ doit avoir construit SON contenu (mesuré {noeuds} noeuds sous le contrôleur "
+                + "lui-même) — une capture où il serait recouvert passerait sinon pour une réussite");
+
+            yield return CapturerA(1080, 2400, "Assets/Screenshots/screen_5_exceptions_sous_chrome_1080x2400.png");
+        }
+
+        [UnityTest]
+        
         /// <summary>㊲ LA RÉPUTATION, montée dans le shell — la seule chose qu'aucun des huit tours
         /// de juge n'a pu vérifier : l'écran sous le bandeau et le dock.
         ///
