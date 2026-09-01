@@ -16,12 +16,12 @@ ici : le citer pour expliquer qu'on le retire le remet dans le fichier — et un
 | | livrable | état |
 |---|---|---|
 | ① | ancres re-mesurées @HEAD, au grain du §2 | ✅ livré |
-| ② | les TRANSIENT par la règle d'appartenance | ✅ livré |
-| ④ | unité et portée de chaque compte du §7 | ✅ livré |
+| ② | les TRANSIENT par la règle d'appartenance | ✅ **livré ici** (noms **ET ancres**) |
+| ④ | unité et portée de chaque compte du §7 | ⚠️ **PARTIEL — 7 sur 8** |
 | ⑤ | insets **après** bascule | ⛔ exige l'éditeur |
 | ⑥ | prédicat + commande + portée + contrôle positif du §0 | ✅ écrit, **non exécuté** (voir plus bas) |
 | ⑮ | seconde largeur de capture | ⛔ exige l'éditeur |
-| ⑱ | règle de clôture de l'ensemble de fichiers du §0 | ✅ livré |
+| ⑱ | règle de clôture de l'ensemble de fichiers du §0 | ⛔ **NON LIVRÉ — n'existe nulle part** |
 | ㉔ | le log de la mesure du §5, commité | ✅ livré |
 | ㉕ | sonde réduite du seam | ⛔ exige l'éditeur |
 | ㉖ | détecteur de c3 | ✅ **livré ici** |
@@ -124,6 +124,56 @@ d'un état de travail voisin. Depuis, tout `git add` de ce lot **nomme ses chemi
 qui a servi à signaler le problème était lui-même **déduit** (une soustraction `89 − 3`) et attribué
 à un seul répertoire ; il en couvrait treize. *Un chiffre qu'on se rapporte à soi-même dans un
 signalement de bonne foi reste un chiffre déduit* — la commande qui tranche tenait en une ligne.
+
+## ⛔ RECTIFICATIF D'ÉTAT — trois « ✅ livré » ne l'étaient pas
+
+Une revue ⊥ avait signalé n'avoir pu confronter que 5 des 10 livrables déclarés à **ce que leur
+ligne de plancher demande**. Les 3 restants confrontés ici, et **aucun des trois ne tenait** :
+
+| | ce que la ligne EXIGE | ce que R1 publiait | verdict |
+|---|---|---|---|
+| ② | nom **ET ancre** de chaque TRANSIENT | 23 noms, **0 ancre** | moitié manquante |
+| ④ | unité + portée de **chaque** compte du §7 | 8 comptes, **1 explicitement « non déclarée »** | 7/8 |
+| ⑱ | la **règle de clôture** de l'ensemble de fichiers du §0 | rien | **0 mention dans le §0** |
+
+★ **Le titre de section n'était pas la preuve** : chacun des trois portait un en-tête qui nommait
+son livrable, et deux d'entre eux une prose plausible. *Confronter un livrable à sa ligne de
+plancher, jamais à son propre titre.*
+
+### ② — les ancres, désormais mesurées
+
+**Unité : ligne de DÉCLARATION · portée : 65 fichiers de `Assets/Scripts/{Shell,CityMap,Operational,ShellContracts}`, hors commentaires.** Contrôle positif : le motif retrouve un symbole
+connu de portée privée (`SafeAreaInsetsLocal` → `AppShell.cs`), donc il n'est pas muet.
+
+| TRANSIENT | ancre @`3a0f04c` |
+|---|---|
+| `BuildTabBar` | `AppShell.cs:988` |
+| `BuildLayout` (TopBar) | `TopBarController.cs:615` |
+| `PxTrait` | `EchelleMaquette.cs:95` · `:101` |
+| `ClampPan` | `DistrictMapNavigation.cs:214` |
+| `EffectiveScaleFactor` | `DistrictMapNavigation.cs:232` |
+| `PivotLocalForBlock` | `DistrictBackgroundAnchorDto.cs:85` |
+| `PixelToFondLocal` | `DistrictBackgroundAnchorDto.cs:72` |
+| `FindParcel` | `DistrictBackgroundAnchorDto.cs:60` |
+| `MajEchelleFamille` | `LieutenantScreenController.cs:1840` |
+
+⛔⛔ **ET LA MESURE A SORTI CE QUE LA LISTE DE NOMS CACHAIT : `BuildLayout` est déclaré dans SEIZE
+classes.** La liste écrivait « BuildLayout (TopBar) » — une désambiguïsation **en prose**, entre
+parenthèses, qu'aucun balayage ne peut honorer. ⇒ *Un symbole homonyme cité sans ancre ne désigne
+rien* — même famille que les deux types homonymes du socle, dont l'un était pris par erreur par le
+seul importateur qui comptait. **C'est précisément la moitié « ancre » qui ferme ce trou**, et c'est
+elle qui manquait.
+
+### ④ — le compte qui reste dû
+
+Sept des huit comptes du §7 portent leur colonne unité · portée. Le huitième la porte
+**explicitement à « non déclarée »**, avec un statut qui dit lui-même qu'il ne se reproduit pas.
+⇒ ④ n'est pas livré tant que ce compte n'est pas soit re-mesuré avec sa portée, soit **retiré**.
+
+### ⑱ — le livrable n'existe pas
+
+Balayage du §0 : **zéro** mention d'une règle de clôture. Ce n'est pas une prose insuffisante, c'est
+une **absence**. ⇒ ⑱ est **NON LIVRÉ**, et il l'était déjà quand le rapport le déclarait acquis.
 
 ## ㉕ — sonde du seam : DEUX runs réels, et aucun n'a encore mesuré le seam
 
