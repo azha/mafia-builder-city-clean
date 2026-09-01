@@ -24,7 +24,15 @@ namespace MafiaCleanCity.Shell.Tests
     // `CurrentTab`. *La garde mesurait la navigation par ONGLET quand la propriété en jeu est
     // « quelque chose a-t-il été monté » — une autre force sur la même grandeur ne pouvait pas
     // l'atteindre.*
-    [Category("Charpente")]
+    // ⛔ CATÉGORIE PROPRE, ET C'EST UNE CONTRAINTE D'ÉTAT, PAS DE GOÛT (2026-09-02). Ce test
+    // n'appelle PAS le seeder — mais `Charpente` contient trois fixtures qui l'appellent en
+    // `OneTimeSetUp` (`AccueilPanneauxGeometriePhoto…`, `CharpenteAccueilPanneaux…`,
+    // `CharpenteOuvertureSessionOverlay…`), et le seeder remet le compte de démo À ZÉRO. Le lancer
+    // effacerait les signalements posés par une autre session dans le même compte.
+    // ⇒ Mesuré : 23 fichiers de test du dépôt appellent le seeder, dont 3 sous `Charpente`.
+    // *Une catégorie n'est pas qu'une étiquette : c'est ce qu'on fait tourner AVEC.* Un test propre
+    // rangé dans une catégorie qui seede est un test qu'on ne peut plus lancer seul.
+    [Category("ShellSurimpression")]
     public class ShellSurimpressionAcquisitionPlayModeTests
     {
         private GameObject shellGo;
