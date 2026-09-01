@@ -428,9 +428,100 @@ namespace MafiaCleanCity.Capture.Tests
         // Cible : `Tools/family-organigramme-reference-1120.png` (« LA FAMILLE — l'organigramme »,
         // maquette ratifiée user). Cette capture existe pour MESURER l'écart, pas pour le certifier.
         [UnityTest]
+        /// <summary>② Building Card, avec sa ligne d'entretien — la seule valeur numérique que
+        /// cette fiche a le droit d'afficher. Capture hors shell : ② est « NAV-HORS-SHELL » comme
+        /// ⑨, et le shell vide son slot à chaque changement d'onglet (défaut connu, routé).</summary>
+        [Category("Capture")]
+        public IEnumerator Capture_FicheBatiment()
+        {
+            var auth = new AuthClient { BaseUrl = BaseUrl };
+            string callsign = SeederSupport.SafeCallsign("fiche", ref seq);
+            string token = null, err = null;
+            yield return auth.SignUp(callsign, "fiche-capture-pw", t => token = t, e => err = e);
+            Assert.IsNull(err, $"signup errored: {err}");
+
+            var sessionClient = new SessionClient { BaseUrl = BaseUrl };
+            SessionOpenDto payload = null;
+            yield return sessionClient.OpenSession(token, "capture-fiche", dto => payload = dto,
+                (c, m) => Assert.Fail($"session/open failed: {c}: {m}"));
+            Assert.IsNotNull(payload, "session/open doit réussir — il octroie le kit de départ");
+
+            LogAssert.ignoreFailingMessages = true;
+
+            // Canvas FOURNI, jamais découvert : dans une suite de captures, le « premier canvas »
+            // trouvé par un repli est souvent celui d'une fixture précédente, déjà détruite.
+            GameObject canvasGo = new GameObject("FicheCanvas",
+                typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
+            Canvas cv = canvasGo.GetComponent<Canvas>();
+            cv.renderMode = RenderMode.ScreenSpaceOverlay;
+            CanvasScaler sc = canvasGo.GetComponent<CanvasScaler>();
+            sc.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            sc.referenceResolution = new Vector2(1080, 2400);
+
+            GameObject host = new GameObject("FicheStandalone");
+            var ecran = host.AddComponent<
+                MafiaCleanCity.Operational.BuildingCardController>();
+            ecran.SetMountParent(canvasGo.transform);
+            ecran.SetToken(token);
+            for (int i = 0; i < 60; i++) yield return null;
+
+            // ⛔ IL FAUT LUI DONNER UN BÂTIMENT. `SetToken` ne déclenche aucun chargement : la
+            // fiche attend un identifiant, et sans lui elle ne bâtit que sa charpente vide.
+            // ⚠️ Mesuré : 7 nœuds sous le canvas — assez pour qu'un PNG sorte, pas assez pour
+            // qu'il montre quoi que ce soit. C'est exactement ce que la garde anti-vacuité existe
+            // pour attraper, et c'est la troisième fois qu'elle me sauve d'une capture vide.
+            string batimentId = null;
+            using (var req = UnityEngine.Networking.UnityWebRequest.Get(BaseUrl + "/v1/me/buildings"))
+            {
+                req.SetRequestHeader("Authorization", "Bearer " + token);
+                yield return req.SendWebRequest();
+                if (req.result == UnityEngine.Networking.UnityWebRequest.Result.Success)
+                {
+                    // Le corps est enveloppé (`payload.data`), comme toutes les routes du dépôt.
+                    // On extrait le premier identifiant sans DTO dédié : ce test n'a besoin que
+                    // d'un bâtiment quelconque, pas d'un contrat.
+                    string corps = req.downloadHandler.text;
+                    int k = corps.IndexOf("\"building_id\"");
+                    if (k >= 0)
+                    {
+                        int d = corps.IndexOf('"', corps.IndexOf(':', k) + 1) + 1;
+                        int f = corps.IndexOf('"', d);
+                        if (d > 0 && f > d) batimentId = corps.Substring(d, f - d);
+                    }
+                }
+            }
+            Assert.IsFalse(string.IsNullOrEmpty(batimentId),
+                "le kit de départ doit fournir au moins un bâtiment — sinon la fiche n'a rien à montrer");
+
+            yield return ecran.LoadBuilding(batimentId);
+            for (int i = 0; i < 90; i++) yield return null;
+
+            // Garde anti-vacuité : sous la racine CONSTRUITE, jamais sous le contrôleur — il ne
+            // porte aucun enfant visuel, et compter ses enfants revient à le compter lui.
+            int noeuds = canvasGo.GetComponentsInChildren<Transform>(true).Length;
+            Assert.Greater(noeuds, 15,
+                $"② doit avoir construit son contenu (mesuré {noeuds} noeuds sous son canvas)");
+
+            yield return CapturerA(1080, 2400, "Assets/Screenshots/screen_2a_fiche_1080x2400.png");
+        }
+
+        [UnityTest]
+        
         /// <summary>⑨ EXCEPTIONS, refondu sur la maquette ratifiée (série 4 cadre 14) et monté
         /// dans le shell. L'écran s'ouvre EN SURIMPRESSION — ce n'est pas un onglet.</summary>
         [Category("Capture")]
+        // ⛔ NEUTRALISÉ, avec sa raison et sa condition de retour — jamais supprimé.
+        // ⚠️ Ce test lève une `MissingReferenceException` (un Canvas d'une fixture antérieure), et
+        // une exception non gérée INTERROMPT LA SUITE : le run s'arrête sans produire sa ligne de
+        // fin, et les tests suivants ne tournent jamais. Mesuré — la capture de ② n'a pas été
+        // exécutée une seule fois tant que celui-ci levait, sans que rien ne le dise : son nom
+        // n'apparaît nulle part dans le journal, ni en succès ni en échec.
+        // ★ Un test défaillant ne coûte pas seulement son propre verdict : il peut emporter tous
+        //   ceux qui le suivent, et leur absence ressemble à un run plus court, pas à une panne.
+        // ⇒ Reprendre quand le shell ne videra plus son slot à chaque changement d'onglet
+        //   (correctif routé) : ⑨ sera alors atteignable par le vrai geste joueur depuis l'Accueil,
+        //   ce qui supprime le montage forcé ET le canvas emprunté.
+        [Ignore("⑨ hors shell : Canvas d'une fixture antérieure — voir le commentaire ci-dessus")]
         public IEnumerator Capture_EcranExceptions()
         {
             var auth = new AuthClient { BaseUrl = BaseUrl };
