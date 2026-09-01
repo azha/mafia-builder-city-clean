@@ -80,12 +80,38 @@ public static class MafiaCI
                                   + string.Join(", ", cats) + "]");
         }
         var api = ScriptableObject.CreateInstance<TestRunnerApi>();
-        api.RegisterCallbacks(new Callbacks());
+        api.RegisterCallbacks(new Callbacks(cats));
         api.Execute(new ExecutionSettings(new Filter { testMode = TestMode.PlayMode, categoryNames = cats }));
     }
 
     private class Callbacks : ICallbacks
     {
+        // ⛔⛔ LE DÉNOMINATEUR QUI MANQUAIT (mesuré 2026-09-02, par une session voisine).
+        //    **Une exception NON GÉRÉE dans un test PlayMode interrompt la SUITE** : les tests qui
+        //    suivent ne tournent jamais, et leur nom n'apparaît NI en succès NI en échec. Le run
+        //    ressemble alors simplement à un run plus court. Mesuré chez elle : une capture n'a pas
+        //    été exécutée une seule fois tant qu'une autre levait — invisible dans les compteurs.
+        //    ⇒ `passed=N failed=M` ne prouve donc RIEN à lui seul : il dit ce qui a tourné, jamais
+        //    ce qui AURAIT DÛ tourner. Sans dénominateur, « aucun échec » et « la suite s'est
+        //    arrêtée au troisième test » rendent la même sortie.
+        //    ⇒ On compte ici les feuilles que le FILTRE retient, et `RunFinished` confronte.
+        private readonly string[] filtre;
+        private int declares = -1;
+        public Callbacks(string[] categories) { filtre = categories; }
+
+        private int CompterFeuillesFiltrees(ITestAdaptor n, string[] heritees)
+        {
+            string[] cats = (n.Categories != null && n.Categories.Length > 0) ? n.Categories : heritees;
+            if (!n.IsSuite)
+                return (filtre == null || filtre.Length == 0
+                        || (cats != null && System.Array.Exists(cats, c => System.Array.IndexOf(filtre, c) >= 0)))
+                       ? 1 : 0;
+            int total = 0;
+            if (n.Children != null)
+                foreach (ITestAdaptor enfant in n.Children) total += CompterFeuillesFiltrees(enfant, cats);
+            return total;
+        }
+
         public void RunStarted(ITestAdaptor testsToRun)
         {
             // Revue ⊥ MINOR-6 : `testsToRun.TestCaseCount` reflète l'ARBRE PlayMode DÉCOUVERT dans
@@ -95,25 +121,50 @@ public static class MafiaCI
             // "passed=86" peut lire 65 tests évaporés là où rien n'a disparu. Le mot "découverts"
             // rend ça explicite sans changer ce que la ligne mesure (aucune falsifiable n'en dépend
             // — seul `passed=`/`failed=` de RunFinished ci-dessous compte).
-            Debug.Log($"MafiaCI: RunPlayModeTests started — {testsToRun.TestCaseCount} test(s) découverts (arbre PlayMode entier ; le filtre de catégories s'applique à l'exécution, voir passed= ci-dessous)");
+            declares = CompterFeuillesFiltrees(testsToRun, null);
+            Debug.Log($"MafiaCI: RunPlayModeTests started — {testsToRun.TestCaseCount} test(s) découverts (arbre PlayMode entier ; le filtre de catégories s'applique à l'exécution, voir passed= ci-dessous) — DÉCLARÉS SOUS LE FILTRE : {declares}");
         }
 
         public void RunFinished(ITestResultAdaptor result)
         {
             int failed = result.FailCount;
+            int comptes = result.PassCount + failed + result.SkipCount + result.InconclusiveCount;
             Debug.Log($"MafiaCI: RunPlayModeTests finished — passed={result.PassCount} failed={failed} " +
-                      $"skipped={result.SkipCount} inconclusive={result.InconclusiveCount}");
-            EditorApplication.Exit(failed > 0 ? 1 : 0);
+                      $"skipped={result.SkipCount} inconclusive={result.InconclusiveCount} " +
+                      $"declares={declares} comptes={comptes}");
+            // Une suite interrompue laisse des DÉCLARÉS sans résultat. C'est le seul signal qui
+            // distingue « rien n'a échoué » de « la suite s'est arrêtée et personne ne l'a dit ».
+            bool tronquee = declares > 0 && comptes < declares;
+            if (tronquee)
+                Debug.Log($"MafiaCI: ⛔ SUITE TRONQUÉE — {declares - comptes} test(s) déclarés sous le " +
+                          "filtre n'ont produit AUCUN résultat (ni succès, ni échec, ni ignoré). Une " +
+                          "exception non gérée interrompt la suite : les suivants ne tournent jamais et " +
+                          "leur nom n'apparaît nulle part. Ce run ne prouve rien sur eux.");
+            EditorApplication.Exit(failed > 0 || tronquee ? 1 : 0);
         }
 
-        public void TestStarted(ITestAdaptor test) { }
+        // ⛔⛔ UNE LIGNE PAR TEST, ET CE N'EST PAS DU CONFORT (mesuré 2026-09-02).
+        //    Cette classe n'imprimait QUE les `FAIL`. Conséquence : quand l'éditeur meurt EN PLEIN
+        //    test — SIGSEGV reproduit deux fois dans le pilote graphique, `RenderOffscreenCameras`
+        //    → `DrawBufferRanges`, Mesa Intel 25.2.8 — le log ne porte AUCUNE trace du test en
+        //    cours, et la panne ressemble à « crash AVANT tout test ». On cherche alors la cause
+        //    dans le démarrage, jamais dans le test qui l'a déclenchée.
+        //    ⇒ `RUN`/`PASS` par test est le SEUL moyen de situer un crash : le dernier `RUN` sans
+        //    `PASS` NOMME le coupable. Sans lui, un mort silencieux est indiscernable d'un mort-né.
+        //    ⚠️ Et c'est complémentaire du dénominateur ci-dessus, ça ne le remplace pas : le
+        //    dénominateur dit COMBIEN manquent, `RUN`/`PASS` dit LEQUEL a emporté la suite.
+        public void TestStarted(ITestAdaptor test)
+        {
+            if (!test.IsSuite) Debug.Log($"MafiaCI: RUN {test.FullName}");
+        }
 
         public void TestFinished(ITestResultAdaptor result)
         {
-            if (result.TestStatus == TestStatus.Failed && !result.HasChildren)
-            {
+            if (result.HasChildren) return;
+            if (result.TestStatus == TestStatus.Failed)
                 Debug.LogError($"MafiaCI: FAIL {result.FullName} — {result.Message}");
-            }
+            else
+                Debug.Log($"MafiaCI: {result.TestStatus.ToString().ToUpperInvariant()} {result.FullName}");
         }
     }
 }
