@@ -89,6 +89,26 @@ chemin**, et ils appartiennent à des captures de juges déjà suivies dans les 
 ⇒ **Décision : non réécrit.** Le coût d'une réécriture d'historique dans un arbre que plusieurs
 sessions partagent dépasse le gain, qui est cosmétique. Cette note existe pour qu'un balayage futur
 ne rouvre pas la question.
+⛔⛔ **ET LES 86 NE SONT PAS DE MÊME NATURE — 79 AJOUTÉS, 6 ÉCRASÉS.** Le décompte complet :
+85 PNG sur 14 répertoires, dont **79 ajoutés** et **6 MODIFIÉS** (`Tools/juge-visuel/v6/m-119` à
+`m-124`). Ajouter un fichier que rien ne référence ne coûte rien ; **écraser un artefact de
+RÉFÉRENCE en est une autre**, parce que déplacer la référence sous les pieds de celui qui juge
+contre elle est le défaut le plus cher de ce programme.
+⇒ **Mesuré** : les 6 ont bien changé de contenu (oid ET taille différents des deux côtés), ils
+appartiennent au lot des captures de juges livré le 2026-08-29, et **ce sont des régénérations
+produites par une AUTRE session, laissées non commitées dans l'arbre** — mon `add -A` les a
+commitées sous un message qui parle de bloquants de design.
+⇒ **Aucune ratification ne repose dessus** : balayage du dépôt ENTIER (10 105 fichiers texte),
+**0 référence** à ces six captures, avec contrôle positif (23 références `juge-visuel/<…>` existent
+dans `Tools/*.md`, donc le motif mord). ⇒ **Non réécrit**, mais **consigné ici pour que le
+propriétaire de ces captures sache que sa régénération est commitée à `87ee672`** et sous quel
+message — sans quoi il chercherait son travail dans un commit qui ne le mentionne pas.
+★ **Le piège de comptage, des deux côtés** : j'avais le bon total (86) attaché au mauvais
+répertoire ; un pair avait le bon répertoire attaché au mauvais total (6). **Et son 6 coïncidait
+exactement avec le nombre de fichiers MODIFIÉS** — deux grandeurs différentes, même nombre, donc
+son étiquette fausse avait l'air confirmée. *Le nombre qui tombe juste est le moment de vérifier
+l'unité, pas de conclure.*
+
 ⛔ **LA CLASSE, ELLE, EST LE GESTE — pas ces fichiers** : `git add -A` ne distingue pas un correctif
 d'un état de travail voisin. Depuis, tout `git add` de ce lot **nomme ses chemins**. ★ Et le compte
 qui a servi à signaler le problème était lui-même **déduit** (une soustraction `89 − 3`) et attribué
