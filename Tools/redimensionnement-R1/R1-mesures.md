@@ -54,6 +54,21 @@ ici : le citer pour expliquer qu'on le retire le remet dans le fichier — et un
 
 ---
 
+## ⚠️ Note d'hygiène — ce que le commit `87ee672` porte en plus de son sujet
+
+Il annonce le design v19 et porte **3 fichiers de ce lot** ; un `git add -A` y a embarqué
+**86 fichiers de plus** (85 PNG répartis sur 13 sous-répertoires de `Tools/juge-visuel/`, plus un
+script). **Ils sont en LFS** — 85 pointeurs, **0 Mo de blob réel** — **rien ne les référence par
+chemin**, et ils appartiennent à des captures de juges déjà suivies dans les deux arbres.
+⇒ **Décision : non réécrit.** Le coût d'une réécriture d'historique dans un arbre que plusieurs
+sessions partagent dépasse le gain, qui est cosmétique. Cette note existe pour qu'un balayage futur
+ne rouvre pas la question.
+⛔ **LA CLASSE, ELLE, EST LE GESTE — pas ces fichiers** : `git add -A` ne distingue pas un correctif
+d'un état de travail voisin. Depuis, tout `git add` de ce lot **nomme ses chemins**. ★ Et le compte
+qui a servi à signaler le problème était lui-même **déduit** (une soustraction `89 − 3`) et attribué
+à un seul répertoire ; il en couvrait treize. *Un chiffre qu'on se rapporte à soi-même dans un
+signalement de bonne foi reste un chiffre déduit* — la commande qui tranche tenait en une ligne.
+
 ## ① — Ancres re-mesurées @HEAD, **par symbole**
 
 Le §2 impose le grain le plus fin possible. Fait : aucun numéro n'est recopié.
