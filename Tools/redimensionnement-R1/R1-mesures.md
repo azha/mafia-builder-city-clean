@@ -30,25 +30,25 @@ ici : le citer pour expliquer qu'on le retire le remet dans le fichier — et un
 | ㉚ | la conversion d'unités du cadrage | ✅ **livré ici** |
 | ㉜ | le balayage exécutable dérivant le plancher du CORPS | ✅ **livré ici** |
 
-**10 livrés · 4 bloqués.** Les quatre bloqués le sont par la MÊME cause, et elle est vérifiable :
+**10 livrés · 4 dus.** ⚠️ **Ils ne sont PAS dus pour la même raison** — c'est la section
+« mécanisme » plus bas qui les sépare, et la séparation commande l'ordre du découpage :
 
-> ⛔ **L'ÉDITEUR EST VIVANT, ET IL N'EST PAS À MOI** (mesuré 2026-08-31). Le point de terminaison
-> configuré pour cette session refuse la connexion — mais c'est un fait sur MA configuration, pas sur
-> l'éditeur : le serveur écoute sur `127.0.0.1:8081` et il est **scopé à `~/project/mafia-unity-B`,
-> branche `pilote-B`** — le MÊME dépôt (`mafia-builder-city-clean.git`), un AUTRE arbre de travail,
-> piloté par une autre session.
-> ⇒ **La règle dure du socle s'applique : un seul éditeur ⇒ un seul pilote.** Le découpage par
-> fichiers ne protège pas d'un runtime partagé — recompilations et rechargements de domaine
-> traversent les arbres. Ces quatre livrables ne sont donc pas « bloqués par une panne » : ils
-> **attendent le créneau**, et les prendre serait un défaut, pas de l'initiative.
-> ⚠️ **MODE D'EMPLOI DE PÉREMPTION** — l'énoncé est daté, donc il porte comment le tuer :
-> `mcp_http_8081.pid` sous `<arbre>/Library/MCPForUnity/RunState/` nomme l'arbre servi. **Le lire,
-> jamais recopier celui-ci.**
-> ★ **Pourquoi cette correction est écrite plutôt que le constat d'origine** : j'avais d'abord noté
-> « le serveur refuse la connexion », ce qui est vrai de mon point de terminaison et **faux de
-> l'éditeur** — et faux dans le sens qui m'arrangeait, puisqu'une panne excuse là où une file
-> d'attente oblige à attendre. Cette machine porte **cinq** arbres Unity, deux de ce programme :
-> *un artefact se reconnaît à son remote et à ce qui le sert, jamais à sa présence sur le disque.* *(La v1 de ce fichier écrivait « l'éditeur est verrouillé
+> ⛔ **AUCUN ÉDITEUR UNITY NE TOURNE** (mesuré 2026-09-01 20:00, deux oracles concordants). Aucun
+> processus d'éditeur, aucun `Temp/UnityLockfile` dans l'un ou l'autre arbre : **le batchmode est
+> possible dès maintenant.** Ces quatre livrables ne sont donc retenus ni par une indisponibilité
+> ni par une file d'attente — voir la section « mécanisme » : **deux d'entre eux n'ont pas de
+> moyen de mesure honnête tant que R4 n'est pas passé.**
+> ⚠️ **CET ÉNONCÉ NE SE RECOPIE PAS, IL S'EXÉCUTE** : `Tools/editeur-unity-etat.sh`, commité, le
+> re-tranche en une commande. Il porte son contrôle positif (s'il ne voit **aucun** processus Unity,
+> pas même le Hub, il sort en erreur au lieu de conclure) et il refuse de trancher quand ses deux
+> oracles divergent.
+> ★★ **Pourquoi l'oracle existe : j'ai écrit DEUX raisons successives, toutes deux confortables et
+> toutes deux fausses.** La première attribuait le blocage à une indisponibilité du serveur — vrai
+> de mon point de terminaison, faux de l'éditeur. La seconde attribuait l'éditeur à une autre
+> session : j'avais lu un fichier `.pid` **vivant et écoutant**, et il nomme le **pont MCP**, pas un
+> éditeur. ⇒ ***Un `.pid` atteste qu'un processus existe, jamais l'identité de ce qu'il sert.***
+> La vérification était rigoureuse et portait sur le mauvais objet — et les deux fois, l'erreur
+> allait dans le sens qui m'arrangeait, puisqu'un empêchement extérieur dispense d'agir. *(La v1 de ce fichier écrivait « l'éditeur est verrouillé
 > depuis 20:52 » — un énoncé daté sans mode d'emploi, exactement ce que le socle interdit : il
 > serait resté vrai en apparence pour toujours.)*
 
@@ -213,7 +213,7 @@ pas un verdict.
 |---|---|---|
 | (c) règle de méthode, pas un livrable | 12 | les corollaires du §10, la règle d'unité du §7 |
 | (b) reformulation d'un livrable existant | 5 | la garde de delta (déjà dans ⑫), l'ordre de reconstruction (déjà ㉓) |
-| (c) livrable d'un chunk **conditionnel** hors plancher | 2 | les deux livrables de R4, explicitement hors plancher |
+| (c) livrable de **R4**, hors plancher | 2 | R4 porte ses deux livrables dans son propre paragraphe *(⚠️ **son déclencheur a changé le 2026-09-01** : il ne dépend plus d'une décision de ㉕ — voir le design. La classe (c) reste juste, la RAISON de son appartenance a bougé.)* |
 | **(a) DÉFAUT RÉEL** | **1** | ci-dessous |
 
 ⛔ **LE DÉFAUT (a), ET C'EST LE PREMIER DE SA CLASSE TROUVÉ PAR UN INSTRUMENT** : le §8 prescrivait
@@ -253,8 +253,9 @@ valeurs « AVANT » sans « APRÈS », c'est-à-dire une moitié de preuve qui a
 | ㉙ | les DEUX points de S1, rendus | exige un rendu réel | l'éditeur répond |
 | ㉕ | sonde réduite du seam | exige un rendu réel | l'éditeur répond |
 
-⇒ **Les quatre tombent ensemble**, à la même condition, et R2 ne peut pas s'ouvrir avant ㉕ : c'est
-la sonde qui décide si le refactor conditionnel R4 doit exister.
+⇒ **R2 ne peut pas s'ouvrir avant ㉕** — la sonde du seam est sa dépendance. Ce que ㉕ tranche a
+changé le 2026-09-01 : il ne décide plus de l'EXISTENCE de R4 (elle est acquise), mais de ce que R4
+doit couvrir côté zone sûre.
 
 ## ⛔⛔ ET LES QUATRE NE TOMBENT PAS ENSEMBLE — mesuré AVANT de demander le créneau
 
@@ -297,7 +298,11 @@ refermé**, et il rend deux livrables de R1 non mesurables par le seul mécanism
 1. **㉕ est faisable dès le créneau** — c'est aussi celui dont R2 dépend. **Il passe en premier.**
 2. **⑤ ⑮ ㉙ exigent d'abord que `SafeAreaInsetsLocal` dérive son facteur du CANVAS et non de
    `Screen`.** C'est **une ligne de production**, donc hors de R1 (« aucune ligne de production
-   touchée ») — et hors de R4, qui est le refactor `static`→instance et pas celui-ci.
+   touchée »). ⚠️ **RÉVISÉ le 2026-09-01, et c'est MON raisonnement qui était faux** : j'avais classé
+ce correctif comme distinct de R4. Lecture faite du corps de R4, **il en EST la charge utile, mot
+pour mot**. Lui ouvrir un chunk aurait donné **deux propriétaires à un seul refactor** — le bloquant
+que ce document combat depuis dix-neuf versions. Ce qui devait changer n'était pas le propriétaire :
+c'était le **déclencheur** de R4, qui en avait un là où il en fallait deux.
 3. ⇒ **Le découpage a besoin d'un maillon qui n'existe pas** : soit R2 le porte, soit un chunk
    R0 le porte avant tout le reste. **Je ne tranche pas seul un ajout au découpage** : c'est la
    question ouverte que ce rapport remonte.
