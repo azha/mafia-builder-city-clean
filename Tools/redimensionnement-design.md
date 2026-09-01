@@ -507,12 +507,43 @@ passé. ⇒ **Une sonde réduite du seam remonte en R1 (㉕**, et non ⑤ qui es
 mot pour mot le BLOQUANT que le §11 adresse aux v1–v4 (« *invoquaient R1/R2/R3 sans jamais les
 DÉFINIR* ») : **classe fermée sur trois instances et rouverte sur la quatrième, dans le même
 document** (I4).
-> **R4 — refactor du calcul d'insets. CONDITIONNEL** : ouvert **uniquement** si la sonde ㉕ de R1
-> montre que le seam ne suffit pas. Livrables : le passage `static` → instance de
-> `SafeAreaInsetsLocal`, **et** la conversion d'unités écran ↔ cible. Falsifiable : la zone sûre
-> rend des valeurs distinctes aux deux points de mesure. Gate : revue ⊥.
-> ⚠️ **Hors plancher tant qu'il est conditionnel** — mais il a un paragraphe, ce qui est
-> précisément ce qui manquait.
+> **R4 — refactor du calcul d'insets. ⛔ N'EST PLUS CONDITIONNEL** (2026-09-01). Livrables
+> inchangés : le passage `static` → instance de `SafeAreaInsetsLocal`, **et** la conversion
+> d'unités écran ↔ cible. Gate : revue ⊥.
+> ⛔⛔ **CE QUI A CHANGÉ N'EST PAS SON CONTENU, C'EST SON DÉCLENCHEUR — et R4 avait UN déclencheur
+> là où il en fallait DEUX.** Le premier (« si la sonde ㉕ montre que le seam ne suffit pas ») porte
+> sur la §5 : obtenir des valeurs de zone sûre DISTINCTES. Le second n'avait jamais été écrit :
+> **`AppShell.cs:845-854` recalcule `scaleFactor = Screen.width / ReferenceResolutionWidth` au lieu
+> de lire le canvas.** Or la seule voie de rendu multi-résolution que ce dépôt possède est la
+> RenderTexture (`Screen.SetResolution` : **0** occurrence ; `GameViewSizes` : **0**, refusé par
+> écrit dans `ChromeMultiResolutionPlayModeTests.cs:16-22`) — et sous cette voie le canvas suit la
+> texture cible pendant que `Screen.width` reste celui du Game View. ⇒ **Le canvas se
+> redimensionne, le chrome NON.** Toute capture « à telle résolution » montrerait une géométrie
+> HYBRIDE que le joueur n'a jamais.
+> ⇒ **Conséquence d'ORDRE, et c'est elle qui coûte** : ⑤, ⑮ et ㉙ ne sont pas mesurables tant que
+> R4 n'est pas passé. **R4 court donc AVANT eux**, et non après ㉕ comme l'ordre précédent le
+> laissait croire. Seul ㉕ survit à la voie RenderTexture — parce qu'il mesure une DISTINCTION
+> entre deux valeurs de provider, et que le facteur fautif est **commun aux deux termes**, donc il
+> se simplifie. *Une grandeur fausse partagée par les deux membres d'une différence ne fausse pas
+> la différence — mais elle fausse toute valeur ABSOLUE.*
+> ⇒ **PÉRIMÈTRE DE CLASSE, compté avant d'écrire** (`Assets/Scripts`, hors commentaires, 66
+> fichiers) : **1 porteur** — `AppShell.cs:848` est la SEULE lecture de `Screen.width/height` de
+> toute la production — et **4 précédents CORRECTS** à recopier (`DistrictInteriorScreenController.cs:393`,
+> `DistrictMapNavigation.cs:233`, `TopBarController.cs:156-157`), tous avec leur garde
+> d'anti-vacuité sur le facteur. **1 porteur = 1 corrigé** : le correctif ne peut pas se rouvrir un
+> cran plus bas faute d'avoir balayé la population.
+> ⚠️ **Ce défaut est ANTÉRIEUR au lot** : c'est celui de la charpente (*« le juge photographiait une
+> géométrie que le joueur n'a jamais eue »*), trouvé une fois et jamais refermé.
+> ⚠️ **PIÈGE DE TIMING, déjà documenté DANS `AppShell.cs` (`:1141`, `:1163` — « 3ᵉ fois sur ce
+> lot »)** : `Canvas.scaleFactor` lu dans la frame de création rend **1,000000**, une valeur
+> PLAUSIBLE et non une erreur. La garde des 4 précédents (`> 0.0001f`) **ne l'attrape PAS** — 1,0
+> la satisfait. ⇒ Le correctif doit lire APRÈS une frame, et sa falsifiable doit le prouver.
+> ⛔ **SA FALSIFIABLE EST STRUCTURELLE, PAS DE VALEUR** : elle doit rougir sur l'ÉVÉNEMENT exact —
+> *`Screen.width` diverge de la largeur effective du canvas*. Un monde où les deux COÏNCIDENT la
+> satisferait sans rien prouver ; c'est le monde dégénéré à tuer nommément, et c'est justement
+> celui du Game View par défaut. ⇒ Piloter la divergence (la voie RenderTexture la produit) et
+> asserter que les insets suivent **le canvas**. **Contrôle qui rend l'assertion probante :
+> l'ANCIENNE forme doit RATER** — sans lui, une conversion qui ne change rien passe le test.
 ⇒ **Ne toucher au calcul d'insets QUE si cette sonde montre que le seam ne suffit pas** — et
 alors écrire le refactor `static`→instance ET la conversion d'unités.
 
