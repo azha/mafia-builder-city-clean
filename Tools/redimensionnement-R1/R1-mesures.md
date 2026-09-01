@@ -98,11 +98,21 @@ contre elle est le défaut le plus cher de ce programme.
 appartiennent au lot des captures de juges livré le 2026-08-29, et **ce sont des régénérations
 produites par une AUTRE session, laissées non commitées dans l'arbre** — mon `add -A` les a
 commitées sous un message qui parle de bloquants de design.
-⇒ **Aucune ratification ne repose dessus** : balayage du dépôt ENTIER (10 105 fichiers texte),
-**0 référence** à ces six captures, avec contrôle positif (23 références `juge-visuel/<…>` existent
-dans `Tools/*.md`, donc le motif mord). ⇒ **Non réécrit**, mais **consigné ici pour que le
-propriétaire de ces captures sache que sa régénération est commitée à `87ee672`** et sous quel
-message — sans quoi il chercherait son travail dans un commit qui ne le mentionne pas.
+⇒ **Aucune ratification ne repose dessus** — **unité : références par NOM DE FICHIER · portée :
+dépôt entier, 10 105 fichiers texte** ⇒ **0**, avec contrôle positif (23 références
+`juge-visuel/<…>` existent dans `Tools/*.md`, donc le motif mord).
+⚠️ **Et la portée compte ici, parce qu'une autre question a une autre réponse** : ce zéro vaut pour
+**les six fichiers**, pas pour **le répertoire** — ce rapport-ci le référence. *Deux populations,
+deux réponses ; un zéro sans sa portée sera lu comme le plus large des deux.*
+⇒ **Non réécrit**, et le propriétaire n'existe plus : la session qui a produit ce corpus s'est
+arrêtée fin août, et l'arbre voisin est propre sur ces chemins. Il n'y a personne à prévenir.
+⛔ **MAIS LE RISQUE EST LATENT, PAS ÉTEINT — et c'est pour ça que cette ligne existe** : ces six
+sont des **références de juge visuel**, et leur contenu a changé **sans que personne ne ratifie le
+changement**. Aucun juge ne les cite aujourd'hui ; le jour où l'un d'eux comparera un écran à ces
+images, il comparera à une **régénération non ratifiée, et rien ne le lui dira**.
+⇒ **À retenir dans cette forme, avec sa date et sa mesure** : *références `v6/m-119` à `m-124`
+régénérées à `87ee672` le 2026-08-31 — régénération NON RATIFIÉE, aucun juge ne s'y appuie à cette
+date.* Un écart assumé porte sa date et sa mesure ; c'est ce qui le distingue d'un trou.
 ★ **Le piège de comptage, des deux côtés** : j'avais le bon total (86) attaché au mauvais
 répertoire ; un pair avait le bon répertoire attaché au mauvais total (6). **Et son 6 coïncidait
 exactement avec le nombre de fichiers MODIFIÉS** — deux grandeurs différentes, même nombre, donc

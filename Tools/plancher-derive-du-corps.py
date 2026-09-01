@@ -94,18 +94,35 @@ lignes_par_section = collections.Counter(
     cle_section(m.group(1)) for m in re.finditer(r'^\| [0-9]+ \| (§[^|]*) \|', enum_txt, re.M))
 mots_table = set(re.sub(r'[^a-zà-ÿ0-9 ]', '', re.sub(r'\s+', ' ', enum_txt.lower())).split())
 
-def couvert(txt):
-    """Un candidat est COUVERT si l'essentiel de son vocabulaire porteur vit déjà dans la table."""
+# ⛔⛔ LE RATIO NE DÉCIDE PLUS RIEN (2026-09-01). Il a décidé pendant trois versions, avec un seuil
+#    de 0,62 choisi à vue et JAMAIS dérivé d'une distribution. Deux mesures l'ont condamné :
+#      · la courbe des ratios n'a **aucun coude** — 0,5→15 couverts, 0,6→13, 0,62→10, 0,65→10 ;
+#      · ma propre fixture de contrôle est passée de **0,615 à 1,000 pour CINQ ACCENTS**.
+#    ⇒ *Un seuil sans marge est une garde qui bascule sur du bruit* : un mot ajouté au corps, un
+#      accent, une reformulation, et elle change d'avis pour une raison sans rapport avec ce qu'elle
+#      teste. Le précédent maison est le 1,30 posé à vue puis rétracté après mesure d'un p95.
+#    ⇒ Deux issues possibles : dériver le seuil d'une distribution, ou **retirer au ratio le droit
+#      de décider**. La première est impossible ici (pas de coude) ; la seconde est gratuite, parce
+#      que la fermeture STRUCTURELLE (source de la table + comptes par section) ne dépend d'aucun
+#      seuil et existe déjà. **Le ratio devient un ORDRE DE LECTURE, pas un verdict.**
+def proximite(txt):
+    """Fraction du vocabulaire porteur déjà présent dans la table. SIGNAL, jamais décision :
+    sert à ordonner la liste de revue, du plus probablement neuf au plus probablement redit."""
     w = [x for x in re.sub(r'[^a-zà-ÿ0-9 ]', '', txt.lower()).split() if len(x) > 4]
-    if not w: return True
-    return sum(1 for x in w if x in mots_table) / len(w) >= 0.62
+    return sum(1 for x in w if x in mots_table) / len(w) if w else 1.0
+
+def couvert(txt):
+    """Conservé UNIQUEMENT pour les contrôles de source ci-dessous — ne classe plus aucun candidat."""
+    return proximite(txt) >= 0.62
 
 # ⛔ m1 : le ratio de vocabulaire porte sur la table ENTIÈRE, donc il déclarait « couvert » un
 #    candidat venu d'une section qui n'a AUCUNE ligne de plancher — un mot commun ailleurs suffit.
 #    L'observable qui le réfute est déjà calculé (`lignes_par_section`) : une section sans ligne
 #    ne peut couvrir personne. Le compte de section PRIME sur le ratio.
-retenus = [(a, x) for a, x in cands
-           if not couvert(x) or lignes_par_section.get(cle_section(a), 0) == 0]
+# Tous les candidats sont à trancher : c'est un travail de revue, et le script ne prétend plus
+# faire un tri qu'aucune grandeur mesurée ne justifie. L'ordre porte l'information.
+retenus = sorted(cands, key=lambda c: (proximite(c[1]),
+                                       lignes_par_section.get(cle_section(c[0]), 0)))
 
 # contrôle POSITIF : le motif doit trouver quelque chose, et la table doit être lisible.
 if not cands:
@@ -182,8 +199,7 @@ _portee = (f'{"préambule + " if _avant.strip() else ""}§{_secs[0]}–§{_secs[
            if _secs else '(aucune section détectée)')
 print(f'  portée ................... {_portee} dérivée ({len(corps)} caractères, le §11 EXCLU)')
 print(f'  candidats du corps ....... {len(cands)}')
-print(f'  déjà couverts par la table {len(cands) - len(retenus)}')
-print(f'  ⇒ À TRANCHER ............. {len(retenus)}\n')
+print(f'  ⇒ TOUS À TRANCHER ........ {len(retenus)}  (le ratio ORDONNE, il ne classe plus)\n')
 print('  ⇒ PORTÉE RÉELLE, PAR SECTION — c est ici que se lit ce que le balayage NE VOIT PAS :')
 print(f'      {"section du corps":30} {"candidats":>10} {"lignes de table":>16}')
 muettes = []
@@ -232,7 +248,7 @@ if muettes:
     print('     est aveugle sur cette part. Ce n est PAS « aucun orphelin » — c est « non regardé ».\n')
 for i, (a, x) in enumerate(retenus, 1):
     _w = x.split()
-    print(f'   [{i:2}] {a:26} {len(_w)} mots · repère «{" ".join(_w[:6])}…»')
+    print(f'   [{i:2}] {a:26} prox={proximite(x):.2f} · {len(_w)} mots · repère «{" ".join(_w[:6])}…»')
 print(f'\n  ⚠️ Couverture PARTIELLE par construction : seules les prescriptions EN GRAS sous un')
 print(f'     marqueur ({"/".join(MARQUEURS)}) sont vues. Une obligation en prose nue échappe.')
 print(f'  ⚠️ Un candidat retenu n est PAS un défaut : il peut être une reformulation ou une règle')
