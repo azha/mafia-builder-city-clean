@@ -55,6 +55,31 @@ ici : le citer pour expliquer qu'on le retire le remet dans le fichier — et un
 
 ---
 
+## ⛔ RECTIFICATIF — « le log manquant portait 3 claims » était FAUX, et c'était une soustraction
+
+Le commit `f8cd712` affirme que l'artefact ajouté à la population (`extrait-log-runA-1820.txt`)
+portait **3 claims partagées**. **Mesuré ensuite, il en porte ZÉRO** — confronté un par un aux huit
+autres artefacts, aucun bloc de 9 mots en commun.
+
+⇒ **D'où venait le « 3 » : de `28 − 25`.** Le total avait bougé entre deux exécutions, et je l'ai
+attribué à la seule chose que je venais d'ajouter. Or deux autres variables avaient bougé en même
+temps — l'appartenance à la population, et **mes propres éditions du design et du rapport**.
+***Deux variables qui bougent ensemble ne départagent rien***, appliqué à mon propre instrument.
+
+⇒ **LA RÈGLE QUI EN SORT, et elle vaut pour tout compteur agrégé** : *un DELTA de total n'est pas
+une ATTRIBUTION.* Pour dire « cet artefact apporte N claims », il faut le confronter **seul** au
+reste — ce qui coûte une boucle et douze secondes. La soustraction est gratuite, disponible, et
+elle désigne toujours le dernier changement qu'on a en tête.
+★ **Troisième fois de la session que je publie un nombre DÉDUIT en le croyant compté** : un compte
+de fichiers obtenu par soustraction et attribué à un seul répertoire alors qu'il en couvrait treize ;
+un « 6 » d'un pair, juste pour un répertoire et faux pour le commit ; et celui-ci. **Les trois fois,
+la commande qui tranchait tenait en une ligne.** *Ce qui est compté tient ; ce qui est déduit ment* —
+y compris quand le déduit est un sous-produit d'une mesure par ailleurs correcte.
+
+⚠️ **Ce que le rectificatif NE change PAS** : l'artefact manquait bel et bien à la population, la
+quatrième forme du défaut d'allowlist est réelle, et la dérivation corrigée reste due. C'est
+l'ATTRIBUTION du chiffre qui était fausse, pas le défaut de dénominateur.
+
 ## ⚠️ Note d'hygiène — ce que le commit `87ee672` porte en plus de son sujet
 
 Il annonce le design v19 et porte **3 fichiers de ce lot** ; un `git add -A` y a embarqué
