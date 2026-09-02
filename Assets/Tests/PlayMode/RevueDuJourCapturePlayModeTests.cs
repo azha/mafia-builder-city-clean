@@ -180,6 +180,18 @@ namespace MafiaCleanCity.Shell.Tests
             // fait 100x100, et un écran de cette taille ne dessine rien de visible.
             // ⇒ Contrôle de FORME, indépendant de tout pixel, posé AVANT le compte de teintes —
             // c'est le seul qui pouvait voir ce défaut, et il coûte deux lignes.
+            // ⛔⛔ ET L'OCCLUSION SE VÉRIFIE AVANT LA TAILLE — c'est le défaut que la garde de
+            // taille a laissé passer le 2026-09-02, sur DEUX écrans. `rect=1280x960`, bonne
+            // taille, bon canvas, bon parent : et `frere=1/8`, donc six frères dessinés par
+            // dessus. La capture montrait la carte de la ville ; l'écran, nulle part.
+            // ⇒ Propriété STRUCTURELLE, sans un seul pixel : le locataire doit être le DERNIER
+            // enfant de son parent. *Une mesure de fidélité sur un objet occlus mesure le
+            // VOISIN* — et rend un verdict d'autant plus rassurant qu'il est faux.
+            Transform parentDuRevue = revue.transform.parent;
+            Assert.AreEqual(parentDuRevue.childCount - 1, revue.transform.GetSiblingIndex(),
+                $"le locataire est le frère {revue.transform.GetSiblingIndex()} sur "
+                + $"{parentDuRevue.childCount} — les suivants se dessinent PAR DESSUS et la "
+                + "capture montrerait les écrans du dessous, à la bonne taille.");
             RectTransform locataireRt = (RectTransform)revue.transform;
             Assert.Greater(locataireRt.rect.width, 200f,
                 $"le locataire fait {locataireRt.rect.width:F0}x{locataireRt.rect.height:F0} — c'est la "

@@ -92,6 +92,15 @@ namespace MafiaCleanCity.Shell
             rt.anchorMax = Vector2.one;
             rt.offsetMin = Vector2.zero;
             rt.offsetMax = Vector2.zero;
+            // ⛔⛔ ET L'ORDRE DE FRATRIE DÉCIDE DE CE QU'ON VOIT. Mesuré le 2026-09-02 sur deux
+            // captures : `rect=1280x960`, `frere=1/8` — l'écran était de la BONNE taille, au BON
+            // endroit, sous le BON canvas, et SIX frères se dessinaient par-dessus. La capture
+            // montrait la carte de la ville, l'autonomie et le dock ; l'écran, nulle part.
+            // ⇒ Un locataire monté en surimpression doit être le DERNIER enfant, sinon il est
+            // rendu dessous. C'est une propriété STRUCTURELLE — elle ne dépend d'aucun pixel,
+            // d'aucune résolution, d'aucune couleur — et c'est la seule classe de garde qui ait
+            // fermé ce genre de défaut ici.
+            transform.SetAsLastSibling();
         }
 
         public void SetToken(string bearer)
