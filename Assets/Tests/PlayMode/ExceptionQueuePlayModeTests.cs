@@ -532,5 +532,34 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.IsFalse(System.Text.RegularExpressions.Regex.IsMatch(json, "\"action_id\"\\s*:"),
                 "un champ `action_id` seul est le piège TD-451 — il réussit en silence");
         }
+
+        /// <summary>⛔ `MethodFor` NE DOIT JAMAIS RENDRE UN TEXTE TRADUIT.
+        ///
+        /// Sa valeur ne s'affiche pas : elle part dans le CORPS de `resolve` comme `method`. Si
+        /// quelqu'un la faisait passer par le résolveur i18n « pour être cohérent », le client
+        /// enverrait un jour un `method` traduit — et le serveur ne le dirait pas : TD-451 a
+        /// mesuré qu'un corps mal formé rend **200**, ignore le champ, et consomme la carte.
+        /// ★ Une chaîne qui VOYAGE vers le serveur n'est pas un libellé, même écrite en
+        ///   majuscules lisibles. La question n'est pas « est-ce du texte ? » mais « qui le lit —
+        ///   un joueur ou un handler ? ». Cette garde fixe la réponse.</summary>
+        [Test]
+        public void MethodFor_RendUneValeurDeProtocole_JamaisUnLibelleTraduit()
+        {
+            // Un dictionnaire qui traduirait ces valeurs : s'il était consulté, le test le verrait.
+            MafiaCleanCity.I18n.I18nCatalog.ChargerPourTest("fr", new Dictionary<string, string> {
+                { "exception_detail.bloc.add_rule", "Ajouter une règle" },
+                { "exception_detail.bloc.one_time", "Une seule fois" },
+            });
+
+            var enseignable = new CandidateActionDto { id = "a", label = "x", add_rule_dsl = "WHEN y THEN z" };
+            var simple      = new CandidateActionDto { id = "b", label = "y" };
+
+            Assert.AreEqual("ADD_RULE", ExceptionDetailController.MethodFor(enseignable, addAsRule: true),
+                "la méthode part dans le corps de resolve : elle doit rester la valeur de PROTOCOLE");
+            Assert.AreEqual("ONE_TIME", ExceptionDetailController.MethodFor(simple, addAsRule: true));
+            Assert.AreEqual("ONE_TIME", ExceptionDetailController.MethodFor(enseignable, addAsRule: false));
+
+            MafiaCleanCity.I18n.I18nCatalog.Oublier();
+        }
 }
 }

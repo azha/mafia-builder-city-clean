@@ -206,19 +206,19 @@ namespace MafiaCleanCity.Operational.Exceptions
             // ---- Resolved state: show outcome + Back, then return. ----
             if (!string.IsNullOrEmpty(LastOutcome))
             {
-                TextMeshProUGUI resolved = NewText("Resolved", body, "Résolu ✓", 16, TextAlignmentOptions.Left);
+                TextMeshProUGUI resolved = NewText("Resolved", body, Lib("Résolu ✓"), 16, TextAlignmentOptions.Left);
                 resolved.color = AccentMild;
                 resolved.fontStyle = FontStyles.Bold;
                 AddLayoutElement(resolved.gameObject, minHeight: 22, flexibleHeight: 0);
-                TrackText(resolved, "Résolu ✓");
+                TrackText(resolved, Lib("Résolu ✓"));
 
                 // Outcome — producer free text (enum value may carry letters but qualitative): CHROME, TextPrimary.
-                TextMeshProUGUI outcomeText = NewText("Outcome", body, "Issue : " + LastOutcome, 14, TextAlignmentOptions.Left);
+                TextMeshProUGUI outcomeText = NewText("Outcome", body, Lib("Issue :") + " " + LastOutcome, 14, TextAlignmentOptions.Left);
                 outcomeText.color = TextPrimary;
                 AddLayoutElement(outcomeText.gameObject, minHeight: 20, flexibleHeight: 0);
                 // chrome — NOT tracked
 
-                AddButton("Back", Back);
+                AddButton(Lib("Back"), Back);
                 return;
             }
 
@@ -244,8 +244,8 @@ namespace MafiaCleanCity.Operational.Exceptions
             // `.carte:nth-child(2){translateY(-8px)}`). Le reste part au TALON, qui n'est pas un
             // ornement mais le CARDINAL des issues non montrées.
             RendreMain(c);
-            AddButton("Escalate", () => StartCoroutine(Escalate()));
-            AddButton("Back", Back);
+            AddButton(Lib("Escalate"), () => StartCoroutine(Escalate()));
+            AddButton(Lib("Back"), Back);
         }
 
         // ── ⑩ : les constantes de la maquette, lues à la source (série 4, largeur 300) ──
@@ -301,9 +301,9 @@ namespace MafiaCleanCity.Operational.Exceptions
                              flexibleHeight: 0);
 
             // L'ORDRE EST CELUI DU DESSIN : risquée, suggérée (levée, au milieu), apprendre.
-            if (risquee != null)   Carte(main.transform, "Risqué",        risquee,   sombre: true,  levee: false);
-            if (sug != null)       Carte(main.transform, "Suggéré",       sug,       sombre: false, levee: true);
-            if (apprendre != null) Carte(main.transform, "Lui apprendre", apprendre, sombre: true,  levee: false);
+            if (risquee != null)   Carte(main.transform, Lib("Risqué"),        risquee,   sombre: true,  levee: false);
+            if (sug != null)       Carte(main.transform, Lib("Suggéré"),       sug,       sombre: false, levee: true);
+            if (apprendre != null) Carte(main.transform, Lib("Lui apprendre"), apprendre, sombre: true,  levee: false);
 
             // Le talon : le CARDINAL des issues qu'on ne montre pas. Zéro ⇒ pas de talon (le
             // dessin n'en met pas quand la main tient entière).
@@ -409,6 +409,24 @@ namespace MafiaCleanCity.Operational.Exceptions
                 default:         return TextSecondary;
             }
         }
+
+        /// <summary>Item 0.6 — un libellé d'affichage STATIQUE de ⑩ passe par
+        /// `exception_detail.bloc.<slug>`, repli sur le littéral.
+        ///
+        /// ⛔⛔ CE QUI NE DOIT JAMAIS PASSER PAR ICI, et c'est le cas le plus grave rencontré sur
+        /// ce chantier : `MethodFor` rend `"ADD_RULE"` / `"ONE_TIME"` / le type d'effet. Ces
+        /// chaînes ne s'affichent PAS — elles partent dans le CORPS de
+        /// `POST /v1/exceptions/:id/resolve` comme valeur de `method`.
+        /// ⇒ Les keyer serait sans effet aujourd'hui (repli = littéral) et **casserait la
+        ///   résolution le jour où le dictionnaire les porterait** : le client enverrait un
+        ///   `method` traduit. Et le serveur ne le dirait pas — TD-451 a montré qu'un corps mal
+        ///   formé rend **200**, ignore le champ, et consomme la carte quand même.
+        /// ★ Une chaîne qui VOYAGE vers le serveur n'est pas un libellé, même quand elle est
+        ///   écrite en majuscules lisibles. La question n'est pas « est-ce du texte ? » mais
+        ///   « qui le lit — un joueur ou un handler ? ».
+        /// ⚠️ De même, `"+" + restantes.Count` (le talon) est CALCULÉ : aucune clé n'en dérive.</summary>
+        private static string Lib(string litteral) =>
+            MafiaCleanCity.I18n.Libelle.De("exception_detail", "bloc", litteral);
 
         private void AddButton(string label, UnityEngine.Events.UnityAction onClick) => AddButtonTo(body, label, onClick, track: true);
 
