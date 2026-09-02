@@ -338,7 +338,22 @@ namespace MafiaCleanCity.Capture.Tests
         ///   sont ceux d'avant le chrome — les y armer mesurerait autre chose sous le même nom.
         /// ⚠️ AJOUTER UNE CAPTURE SOUS CHROME = AJOUTER L'APPEL, et recompter cette liste. Je
         ///   m'étais arrêté à 3 sur 7 en croyant avoir fini, ce qui est la même faute d'un cran
-        ///   plus haut que celle qui a laissé passer ⑨.</summary>
+        ///   plus haut que celle qui a laissé passer ⑨.
+        ///
+        /// ⇒ CE QUE CETTE GARDE NE PEUT PAS VOIR : les écrans qu'aucune capture ne photographie.
+        ///   Ses deux moitiés ont donc été balayées STATIQUEMENT le 2026-09-02, et les deux
+        ///   balayages ne se ressemblent pas — c'est le résultat utile :
+        ///   · TRONCATURE — la largeur figée sous un glyphe de longueur variable était recopiée
+        ///     sur CINQ écrans (② ⑤×2 Blanchiment Pipeline Accueil). Corrigée à la source dans
+        ///     `LargeurDeGlyphe` ;
+        ///   · CONTRASTE — ZÉRO autre cas. Les deux seuls candidats (Autonomie, ⑤) sont des faux
+        ///     positifs : l'accent qu'on lit à côté colore un AUTRE texte, pas un fond.
+        /// ★ L'asymétrie s'explique et vaut mieux que les deux chiffres : le défaut de glyphe
+        ///   s'est propagé parce que la CONSTRUCTION avait été recopiée ; celui de ⑨ est né d'un
+        ///   fond changé sous une encre existante — un ÉVÉNEMENT, pas un motif. On balaie pour
+        ///   les motifs ; les événements, seule la garde les attrape, et seulement là où elle est
+        ///   armée. ⇒ Inutile de refaire le balayage du contraste ; refaire celui des largeurs
+        ///   si une sixième colonne apparaît.</summary>
         private static void LisibiliteDuTexte(GameObject racine)
         {
             float Lum(Color c) => 0.2126f * c.r + 0.7152f * c.g + 0.0722f * c.b;
