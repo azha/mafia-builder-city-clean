@@ -13,7 +13,12 @@
         "Shell",
         "ShellContracts",
         "Unity.InputSystem",
-        "I18n"
+        "I18n",
+        "Economy",
+        "CoreLoops",
+        "CitySim",
+        "Account",
+        "Onboarding"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

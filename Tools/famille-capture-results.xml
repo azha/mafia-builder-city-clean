@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="1" result="Passed" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-09-01 23:55:24Z" end-time="2026-09-01 23:55:25Z" duration="1.1324106">
+  <test-suite type="TestSuite" id="1469" name="mafia-builder-city-clean" fullname="mafia-builder-city-clean" runstate="Runnable" testcasecount="365" result="Passed" start-time="2026-09-01 23:55:24Z" end-time="2026-09-01 23:55:25Z" duration="1.132411" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="PlayMode" />
+    </properties>
+    <test-suite type="Assembly" id="1450" name="CityMap.PlayMode.Tests.dll" fullname="/home/erutheone/project/mafia-unity-F/Library/ScriptAssemblies/CityMap.PlayMode.Tests.dll" runstate="Runnable" testcasecount="365" result="Passed" start-time="2026-09-01 23:55:24Z" end-time="2026-09-01 23:55:25Z" duration="1.126034" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="2088908" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="PlayMode" />
+        <property name="EditorOnly" value="False" />
+      </properties>
+      <test-suite type="TestSuite" id="1451" name="MafiaCleanCity" fullname="MafiaCleanCity" runstate="Runnable" testcasecount="365" result="Passed" start-time="2026-09-01 23:55:24Z" end-time="2026-09-01 23:55:25Z" duration="1.123398" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="TestSuite" id="1464" name="Shell" fullname="MafiaCleanCity.Shell" runstate="Runnable" testcasecount="123" result="Passed" start-time="2026-09-01 23:55:24Z" end-time="2026-09-01 23:55:25Z" duration="1.121520" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-suite type="TestSuite" id="1465" name="Tests" fullname="MafiaCleanCity.Shell.Tests" runstate="Runnable" testcasecount="123" result="Passed" start-time="2026-09-01 23:55:24Z" end-time="2026-09-01 23:55:25Z" duration="1.120693" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-suite type="TestFixture" id="1372" name="FamilleCapturePlayModeTests" fullname="MafiaCleanCity.Shell.Tests.FamilleCapturePlayModeTests" classname="MafiaCleanCity.Shell.Tests.FamilleCapturePlayModeTests" runstate="Runnable" testcasecount="1" result="Passed" start-time="2026-09-01 23:55:24Z" end-time="2026-09-01 23:55:25Z" duration="1.119121" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1373" name="Capture_Famille_1080x2400" fullname="MafiaCleanCity.Shell.Tests.FamilleCapturePlayModeTests.Capture_Famille_1080x2400" methodname="Capture_Famille_1080x2400" classname="MafiaCleanCity.Shell.Tests.FamilleCapturePlayModeTests" runstate="Runnable" seed="799709184" result="Passed" start-time="2026-09-01 23:55:24Z" end-time="2026-09-01 23:55:25Z" duration="1.111790" asserts="0">
+                <properties>
+                  <property name="_JOINTYPE" value="UnityCombinatorial" />
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <output><![CDATA[
+IgnoreFailingMessages:true
+[DemoIdentityResolver] régime=défaut identité=operational_demo@example.test
+[Famille] panneau 1248 u — échelle 2.229 (médaillon 158, nom 50)
+[Famille] opacité 0.500 trop faible pour atteindre la cible sRGB de RGBA(0.000, 0.000, 0.000, 1.000) sur RGBA(0.035, 0.055, 0.094, 0.740) — couleur écrêtée.
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [TierBadge].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Section].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [TierBadge].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Section].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [TierBadge].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Section].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+[Famille] opacité 0.500 trop faible pour atteindre la cible sRGB de RGBA(0.000, 0.000, 0.000, 1.000) sur RGBA(0.035, 0.055, 0.094, 0.740) — couleur écrêtée.
+[Famille] opacité 0.400 trop faible pour atteindre la cible sRGB de RGBA(0.000, 0.000, 0.000, 1.000) sur RGBA(0.086, 0.098, 0.106, 1.000) — couleur écrêtée.
+[Famille] opacité 0.500 trop faible pour atteindre la cible sRGB de RGBA(0.000, 0.000, 0.000, 1.000) sur RGBA(0.035, 0.055, 0.094, 0.740) — couleur écrêtée.
+[Famille] opacité 0.400 trop faible pour atteindre la cible sRGB de RGBA(0.000, 0.000, 0.000, 1.000) sur RGBA(0.086, 0.098, 0.106, 1.000) — couleur écrêtée.
+[Famille] opacité 0.500 trop faible pour atteindre la cible sRGB de RGBA(0.000, 0.000, 0.000, 1.000) sur RGBA(0.035, 0.055, 0.094, 0.740) — couleur écrêtée.
+[Famille] opacité 0.400 trop faible pour atteindre la cible sRGB de RGBA(0.000, 0.000, 0.000, 1.000) sur RGBA(0.086, 0.098, 0.106, 1.000) — couleur écrêtée.
+[Famille] opacité 0.500 trop faible pour atteindre la cible sRGB de RGBA(0.000, 0.000, 0.000, 1.000) sur RGBA(0.035, 0.055, 0.094, 0.740) — couleur écrêtée.
+[Famille] opacité 0.400 trop faible pour atteindre la cible sRGB de RGBA(0.000, 0.000, 0.000, 1.000) sur RGBA(0.086, 0.098, 0.106, 1.000) — couleur écrêtée.
+[Famille] opacité 0.500 trop faible pour atteindre la cible sRGB de RGBA(0.000, 0.000, 0.000, 1.000) sur RGBA(0.035, 0.055, 0.094, 0.740) — couleur écrêtée.
+[Famille] opacité 0.400 trop faible pour atteindre la cible sRGB de RGBA(0.000, 0.000, 0.000, 1.000) sur RGBA(0.086, 0.098, 0.106, 1.000) — couleur écrêtée.
+[Famille] opacité 0.500 trop faible pour atteindre la cible sRGB de RGBA(0.000, 0.000, 0.000, 1.000) sur RGBA(0.035, 0.055, 0.094, 0.740) — couleur écrêtée.
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [TierBadge].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Section].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Locked].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [TierBadge].
+The character with Unicode value \U0001F512 was not found in the [DejaVuSans SDF] font asset or any potential fallbacks. It was replaced by Unicode character \u25A1 in text object [Section].
+[CAPTURE diag] canvas=Canvas mode=ScreenSpaceOverlay contentSlot.parentCanvas=Canvas famille.parent=ContentSlot
+[CAPTURE diag] canvas.rect=1280x2844 orthoSize=1422.2 scaleFactor=0.844
+[CAPTURE] Assets/Screenshots/famille_1080x2400.png 1080x2400 — 574 teintes distinctes · roster=5
+<b><color=#2EA3FF>MCP-FOR-UNITY</color></b>: [TestRunnerNoThrottle] Restored Interaction Mode after test run.
+Saving results to: /home/erutheone/.config/unity3d/DefaultCompany/mafia-builder-city-clean/TestResults.xml
+]]></output>
+              </test-case>
+            </test-suite>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

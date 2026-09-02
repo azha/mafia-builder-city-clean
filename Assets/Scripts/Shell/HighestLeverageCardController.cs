@@ -27,6 +27,21 @@ namespace MafiaCleanCity.Shell
 
         // ---- test hooks ----------------------------------------------------
         public CardState RenderedState { get; private set; } = CardState.NoCard;
+        /// <summary>⑤ — le bloc de l'Accueil est un RÉSUMÉ ; l'écran de détail est un autre objet
+        /// (`DecisionDetailScreenController`), et `front.md` le dit depuis le début : « ce contrôleur
+        /// couvre le BLOC de screen_1, pas cet écran ». Ce bloc n'a pas à le connaître — il annonce
+        /// qu'on veut l'ouvrir, et c'est le shell qui monte l'écran. *Un bloc qui monterait lui-même
+        /// un écran plein cadre inverserait la responsabilité et le rendrait impossible à monter
+        /// depuis ailleurs.*</summary>
+        public event System.Action OnOuvrirDetail;
+
+        /// <summary>Appelé par la surface de la carte — pas par les boutons Commit/Skip, qui
+        /// tranchent depuis le résumé sans passer par le détail.</summary>
+        public void DemanderDetail()
+        {
+            if (CurrentCard != null) OnOuvrirDetail?.Invoke();
+        }
+
         public HlCardDto CurrentCard { get; private set; }
         public bool CapReached { get; private set; }
         public int CommitRequestCount { get; private set; }

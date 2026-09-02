@@ -12,9 +12,24 @@ using TMPro;
 
 namespace MafiaCleanCity.Operational.Lieutenant
 {
-    // Phase-9 vector #9 — drives the Lieutenant rule-editor screen (screen_4a) for the COOK loop.
+    // ⑥ `screen_3` — « LA FAMILLE », l'organigramme Don → lieutenants → hommes.
     //
-    // T1 scope (this file): the screen SHELL + the Recruit section.
+    // ⚠️ L'EN-TÊTE DE CE FICHIER A DÉCRIT PENDANT DES MOIS UN AUTRE ÉCRAN. Il annonçait un
+    // « recruit-only shell » pour `screen_4a` (l'éditeur de règles), alors que le fichier fait
+    // 3300+ lignes, porte six sections, et que sa section principale est l'organigramme ratifié.
+    // `front.md` le signalait périmé sans que personne ne le corrige : *un énoncé daté ne rougit
+    // jamais tout seul, et celui-ci envoyait chaque lecteur vers le mauvais écran.*
+    //
+    // Ce fichier porte : l'authentification joueur, le roster, l'organigramme (maquette ratifiée
+    // `ecrans-brennar.html` §1, commit `0881e8a`), le recrutement, l'éditeur de règles T2, et les
+    // bandes d'autonomie. Il est monté par `AppShell` sous l'onglet `Org`.
+    //
+    // ⛔ NON REVU — jalon 2026-09-05 (régime full prod).
+    //
+    // Historique — Phase-9 vecteur #9 : ce fichier a COMMENCÉ comme le shell de `screen_4a` pour la
+    // boucle COOK, ce que l'en-tête ci-dessous décrivait fidèlement À L'ÉPOQUE.
+    //
+    // T1 scope (à l'origine) : the screen SHELL + the Recruit section.
     //   1. signs in (POST /v1/auth/signin) to get a PLAYER Bearer — REUSE CityMap.AuthClient;
     //   2. offers a "Recruit COOK" button → POST /v1/lieutenants { archetype:"COOK", assigned_building_id } →
     //      stores the returned lieutenant_id + shows the outcome;
@@ -296,6 +311,15 @@ namespace MafiaCleanCity.Operational.Lieutenant
         }
 
         /// <summary>Set the player Bearer directly (test convenience when already signed in elsewhere).</summary>
+
+        /// <summary>⛔ Le shell re-parente APRÈS `SetMountParent` : poser l'ordre de fratrie dans
+        /// le setter le fait défaire. On réagit donc à l'ÉVÉNEMENT de re-parentage, qui arrive
+        /// quel que soit l'ordre interne du shell. Le parent est nul au démontage — d'où la garde.</summary>
+        private void OnTransformParentChanged()
+        {
+            if (transform.parent != null) transform.SetAsLastSibling();
+        }
+
         public void SetToken(string token)
         {
             Token = token;
@@ -989,7 +1013,16 @@ namespace MafiaCleanCity.Operational.Lieutenant
         // W3.U1 C1 (design D2) — optional parent-of-mount the AppShell renseigne BEFORE Start() runs.
         // See DashboardController.mountParent for the full rationale (byte-identical mechanism here).
         private Transform mountParent;
-        public void SetMountParent(Transform parent) => mountParent = parent;
+        public void SetMountParent(Transform parent)
+        {
+            mountParent = parent;
+            // ⛔ L'ordre de fratrie décide de ce qu'on voit : un locataire qui n'est pas le
+            // DERNIER enfant est rendu SOUS ses frères, à la bonne taille et au bon endroit.
+            // Mesuré sur deux écrans le 2026-09-02 (`frere=1/8`) — la capture montrait la carte
+            // de la ville et l'écran nulle part. Cet écran-ci rendait déjà correctement en
+            // ONGLET ; la garde le protège du jour où on le montera en surimpression.
+            transform.SetAsLastSibling();
+        }
 
         // --------------------------------------------------------------- layout
 

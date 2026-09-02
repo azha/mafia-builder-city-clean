@@ -596,6 +596,12 @@ namespace MafiaCleanCity.Shell
         private (string libelle, System.Action monter)[] DestinationsPlus() => new (string, System.Action)[]
         {
             ("LA RÉPUTATION", () => MountTenant<ReputationScreenController>()),
+            // ⑯ arrivée par `pilote-F`, qui la montait comme HANDLER de `Tab.More`. Ce contrat a
+            // changé le 2026-09-02 (l'onglet est devenu un MENU) : elle descend donc d'un cran, en
+            // ENTRÉE. Résoudre le conflit en gardant simplement le menu aurait supprimé en silence
+            // le seul chemin joueur de cet écran — *un conflit se résout sur les deux INTENTIONS,
+            // pas sur le côté le plus récent.*
+            ("LA REVUE DU JOUR", () => MountTenant<DailyReviewScreenController>()),
         };
 
         /// <summary>Monte le menu « Plus » : une entrée par destination, chacune montant son écran.
@@ -723,6 +729,14 @@ namespace MafiaCleanCity.Shell
             // (chacun occupe toute la largeur, un quart de la hauteur), pas une composition visuelle
             // finale (celle-ci reste un travail ultérieur, DA/juge-visuel — consigné en Deviation).
             HighestLeverageCardController hlCard = NouveauPanneauAccueil<HighestLeverageCardController>("AccueilHlCard", 0.75f, 1.00f);
+            // ⑤ `screen_1a` — le DÉTAIL de la carte, en surimpression. L'écran existe (maquette
+            // ratifiée « ok top on garde comme ça »), et sans ce fil il ne serait montable par
+            // personne : les quatre onglets sont pris, et un écran de détail n'a pas vocation à en
+            // occuper un. *Un écran construit que rien ne monte est un écran que le joueur ne voit
+            // jamais* — c'est le défaut exact qui laissait la Revue du jour invisible depuis W3.U1.
+            if (hlCard != null)
+                hlCard.OnOuvrirDetail += () => MonterLocataireEnSurimpression<DecisionDetailScreenController>();
+
             hlCard.SetPayload(Token, dto?.hl_card, dto?.structural_budget);
 
             ExceptionQueuePanelController exceptions = NouveauPanneauAccueil<ExceptionQueuePanelController>("AccueilExceptionQueue", 0.50f, 0.75f);

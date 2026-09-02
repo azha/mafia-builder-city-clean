@@ -11,7 +11,26 @@ using TMPro;
 
 namespace MafiaCleanCity.Operational.Autonomy
 {
-    // IMPLEMENTS: spec §4-T4 — screen_7 (Autonomy Inbox, c7 reduced) REDUCED surface: the pending report list with
+    // ㉔ `screen_c7` — AUTONOMY INBOX.
+    //
+    // ⚠️ L'EN-TÊTE PORTAIT LE MAUVAIS IDENTIFIANT : il disait « screen_7 », qui est l'Unconformity
+    // Ledger — un AUTRE écran. `front.md` le signalait et demandait la correction « dans le même
+    // commit que le premier travail sur cet écran », parce qu'un identifiant faux dans un en-tête
+    // VOYAGE : il est recopié dans les commits, les rapports et les mandats avant que quiconque
+    // ouvre le fichier.
+    //
+    // ⛔⛔ ET CET ÉCRAN EST INJOIGNABLE, mesuré le 2026-09-02. Son SEUL chemin de montage est
+    // `DashboardController.OpenNav(NavTarget.Autonomy)` — or le Dashboard n'est monté par AUCUN
+    // onglet depuis qu'il a été débranché (item 0.5). Il n'a donc pas d'entrée : un joueur ne peut
+    // pas l'atteindre, quel que soit son état de finition.
+    // ⇒ Ce n'est PAS un défaut de cet écran et ça ne se corrige pas ici : les quatre onglets sont
+    // pris (Empire, Org, Pipeline, More), et lui donner une entrée est un arbitrage de NAVIGATION,
+    // pas un réglage. C'est la même classe que la Revue du jour, invisible depuis W3.U1 pour la
+    // même raison — sauf qu'ici il n'existe aucun bloc d'accueil d'où le monter en surimpression.
+    //
+    // ⛔ NON REVU — jalon 2026-09-05.
+    //
+    // IMPLEMENTS: spec §4-T4 — surface RÉDUITE : the pending report list with
     // per-issue option blocks + Choose A/B buttons, decided state, outcome display, EmptyState. One-way screen (no
     // Back). Honest deferral (M1 Dashboard precedent): budget-band gauge, SendDecision controls, sort/filter, Loading-
     // Partial-Offline-Error rich states are NOT built in this slice — land with canon completion (spec §8).

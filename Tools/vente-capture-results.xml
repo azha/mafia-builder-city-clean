@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="1" result="Passed" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-09-02 04:18:07Z" end-time="2026-09-02 04:18:09Z" duration="1.9773722">
+  <test-suite type="TestSuite" id="1473" name="mafia-builder-city-clean" fullname="mafia-builder-city-clean" runstate="Runnable" testcasecount="367" result="Passed" start-time="2026-09-02 04:18:07Z" end-time="2026-09-02 04:18:09Z" duration="1.977372" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="PlayMode" />
+    </properties>
+    <test-suite type="Assembly" id="1454" name="CityMap.PlayMode.Tests.dll" fullname="/home/erutheone/project/mafia-unity-F/Library/ScriptAssemblies/CityMap.PlayMode.Tests.dll" runstate="Runnable" testcasecount="367" result="Passed" start-time="2026-09-02 04:18:08Z" end-time="2026-09-02 04:18:09Z" duration="1.962657" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="2623987" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="PlayMode" />
+        <property name="EditorOnly" value="False" />
+      </properties>
+      <test-suite type="TestSuite" id="1455" name="MafiaCleanCity" fullname="MafiaCleanCity" runstate="Runnable" testcasecount="367" result="Passed" start-time="2026-09-02 04:18:08Z" end-time="2026-09-02 04:18:09Z" duration="1.956600" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="TestSuite" id="1468" name="Shell" fullname="MafiaCleanCity.Shell" runstate="Runnable" testcasecount="125" result="Passed" start-time="2026-09-02 04:18:08Z" end-time="2026-09-02 04:18:09Z" duration="1.952088" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-suite type="TestSuite" id="1469" name="Tests" fullname="MafiaCleanCity.Shell.Tests" runstate="Runnable" testcasecount="125" result="Passed" start-time="2026-09-02 04:18:08Z" end-time="2026-09-02 04:18:09Z" duration="1.950114" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-suite type="TestFixture" id="1401" name="LaVenteCapturePlayModeTests" fullname="MafiaCleanCity.Shell.Tests.LaVenteCapturePlayModeTests" classname="MafiaCleanCity.Shell.Tests.LaVenteCapturePlayModeTests" runstate="Runnable" testcasecount="1" result="Passed" start-time="2026-09-02 04:18:08Z" end-time="2026-09-02 04:18:09Z" duration="1.946594" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1402" name="Capture_LaVente_1080x2400" fullname="MafiaCleanCity.Shell.Tests.LaVenteCapturePlayModeTests.Capture_LaVente_1080x2400" methodname="Capture_LaVente_1080x2400" classname="MafiaCleanCity.Shell.Tests.LaVenteCapturePlayModeTests" runstate="Runnable" seed="1256759121" result="Passed" start-time="2026-09-02 04:18:08Z" end-time="2026-09-02 04:18:09Z" duration="1.930906" asserts="0">
+                <properties>
+                  <property name="_JOINTYPE" value="UnityCombinatorial" />
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <output><![CDATA[
+IgnoreFailingMessages:true
+[DemoIdentityResolver] régime=défaut identité=operational_demo@example.test
+[CityMap] Loaded 18 districts (north=9, south=9).
+[VENTE diag] chemin=Canvas/ContentSlot/Tenant_SellingScreenController/ actif=True rect=1280x960 frere=3/8 graphics=23 canvas=Canvas
+[CAPTURE diag] canvas=Canvas mode=ScreenSpaceOverlay contentSlot.parentCanvas=Canvas vente.parent=ContentSlot
+[CAPTURE diag] canvas.rect=1280x2844 orthoSize=1422.2 scaleFactor=0.844
+[CAPTURE] Assets/Screenshots/la_vente_1080x2400.png 1080x2400 — 576 teintes distinctes · dealers=1 vide=False
+<b><color=#2EA3FF>MCP-FOR-UNITY</color></b>: [TestRunnerNoThrottle] Restored Interaction Mode after test run.
+Saving results to: /home/erutheone/.config/unity3d/DefaultCompany/mafia-builder-city-clean/TestResults.xml
+]]></output>
+              </test-case>
+            </test-suite>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

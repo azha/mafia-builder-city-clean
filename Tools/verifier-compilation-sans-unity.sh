@@ -162,13 +162,29 @@ ERREURS=$(grep -cE 'error CS' "$TMP/out.txt" || true)
 echo "EXIT=$RC · erreurs=$ERREURS"
 grep -E 'error CS' "$TMP/out.txt" | head -30
 
-if [[ "${1:-}" == "--controle-positif" ]]; then
-  if [[ "$ERREURS" -ge 3 ]]; then
-    echo "✓ CONTRÔLE POSITIF : la faute injectée rougit ($ERREURS erreurs) — la compilation VOIT le code du lot."
+# ⛔⛔ DEUX DÉFAUTS DE CE VERDICT, TROUVÉS EN AJOUTANT `--editeur` (2026-09-02) :
+#  (a) il testait `$1`, donc `--editeur --controle-positif` ne l'atteignait JAMAIS : le script
+#      sortait RC=1 en ayant parfaitement rempli son office, et un appelant qui lit le code de
+#      retour aurait conclu « le lot ne compile pas » sur un contrôle RÉUSSI. Un instrument qui
+#      accuse le code quand c'est lui qui a changé de forme.
+#  (b) le seuil `>= 3` était le compte de la sonde GAMEPLAY, recopié comme s'il était universel.
+#      La sonde éditeur en produit 2, celle des tests 5. *Un nombre dérivé d'un cas puis gelé.*
+# ⇒ La propriété juste n'est pas COMBIEN d'erreurs, c'est OÙ elles sont : le contrôle exige que
+#   les erreurs soient attribuées au FICHIER DE LA SONDE. Une erreur ailleurs ne prouve pas que
+#   le compilateur voit la cible — elle prouve seulement que quelque chose est cassé.
+if [[ "$CP" == "1" ]]; then
+  SUR_SONDE=$(grep -E 'error CS' "$TMP/out.txt" | grep -cF 'ControlePositif.cs' || true)
+  AILLEURS=$(( ERREURS - SUR_SONDE ))
+  if [[ "$SUR_SONDE" -ge 2 ]]; then
+    echo "✓ CONTRÔLE POSITIF : $SUR_SONDE erreur(s) sur la sonde — la compilation VOIT la cible de CE périmètre (${PERIMETRE:-gameplay})."
+    # Une erreur HORS sonde pendant un contrôle positif est un vrai rouge du lot, masqué par
+    # le bruit volontaire : le dire, sinon le ✓ le couvre.
+    [[ "$AILLEURS" -gt 0 ]] && echo "  ⚠️ mais $AILLEURS erreur(s) HORS sonde : le lot ne compile pas, relancer sans --controle-positif."
+    [[ "$AILLEURS" -gt 0 ]] && exit 1
     exit 0
   fi
-  echo "✗ CONTRÔLE POSITIF ÉCHOUÉ : la faute injectée n'a pas rougi."
-  echo "  ⇒ la passe normale ne prouve RIEN : le compilateur ne voit pas ces types."
+  echo "✗ CONTRÔLE POSITIF ÉCHOUÉ : $SUR_SONDE erreur(s) sur la sonde (2 attendues au moins)."
+  echo "  ⇒ la passe normale ne prouve RIEN sur ce périmètre : le compilateur ne voit pas ces types."
   exit 1
 fi
 

@@ -819,7 +819,12 @@ namespace MafiaCleanCity.Operational.Tests
             //    donc elles sont satisfaites par les VOISINS de l'écran absent. *Une garde qui
             //    mesure la surface entière certifie l'absence de ce qu'elle doit prouver.*
             //    Celle-ci ne regarde pas la couleur : elle regarde si le locataire a une TAILLE.
-            RectTransform rectLocataire = screen != null ? (RectTransform)screen.transform : null;
+            // ⚠️ `racine`, pas `screen` : `pilote-B` a remplacé la variable locale par `RacineEcran()`
+            //    pendant que `tests/garde-rect-capture` écrivait cette garde contre l'ancien nom.
+            //    Les deux branches étaient JUSTES séparément et ne compilaient plus ensemble — git
+            //    a fusionné les deux textes sans conflit parce qu'ils ne se touchent pas d'une
+            //    ligne. *Un merge sans conflit n'est pas un merge qui compile.*
+            RectTransform rectLocataire = racine != null ? racine.transform as RectTransform : null;
             Assert.IsNotNull(rectLocataire, "aucun locataire à mesurer — la capture ne prouverait rien");
             Vector2 taille = rectLocataire.rect.size;
             Assert.IsFalse(Mathf.Approximately(taille.x, 100f) && Mathf.Approximately(taille.y, 100f),
