@@ -31,6 +31,19 @@ namespace MafiaCleanCity.Shell.Tests
     // AUCUN de ces sept écrans n'a d'entrée de navigation, les quatre onglets étant pris. Ce sont
     // deux propriétés distinctes, et c'est la seconde qui manque au chantier. Le test les monte
     // donc directement en surimpression, et le dit ici plutôt que de laisser la capture le taire.
+    // ⚠️ RÉSERVE MESURÉE SUR ⑰ LE COMMISSARIAT, à porter avec la capture — sinon l'image ment
+    // par omission. Le compte que le shell monte (`operational_demo`, dit « riche ») a ses cartes
+    // de suspicion SATURÉES : **6 precincts sur 6 en HUNTING**, une seule bande distincte, pics
+    // 235-255 pour un seuil à 180 (mesuré par la session qui provisionne, 2026-09-02).
+    // ⇒ La capture de ⑰ prouvera donc que l'écran REND, et pas qu'il sait DISTINGUER — ce qui est
+    // pourtant tout son sujet, puisqu'il ne montre que deux paliers. *Six fiches identiques ne
+    // valident pas une correspondance palier → apparence : elles n'en exercent qu'un point.*
+    // ⇒ Le contraste existe sur `demo_precincts@example.test` (HUNTING · SUSPICIOUS · HUNTING ·
+    // HUNTING · WATCHFUL · HUNTING, 3 bandes sur 4), mais il coûte un SECOND run d'éditeur, donc
+    // ~13 min de porte partagée entre quatre sessions. Arbitrage assumé : on prend le plat
+    // maintenant, et le contraste fait l'objet d'un passage dédié SI l'user veut juger la
+    // correspondance des paliers. ⚠️ Ce compte-là est une FENÊTRE : ses tuiles montent de façon
+    // monotone et il se saturera comme le riche — le capturer tard revient à ne rien capturer.
     public class PlancheEcransCapturePlayModeTests
     {
         private Scene sceneDeDemarrage;
