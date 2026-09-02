@@ -171,6 +171,21 @@ namespace MafiaCleanCity.Shell.Tests
 
             float attente = 0f;
             while (attente < 20f && !charge(ecran)) { attente += Time.deltaTime; yield return null; }
+            // ⛔⛔ ATTENDRE N'EST PAS AVOIR CHARGÉ, et la différence est passée sous les trois
+            // gardes précédentes. ㉓ a été capturée « verte » sur un écran qui n'affichait que son
+            // titre et « — jetons » : le délai avait expiré, la coroutine n'avait pas abouti, et
+            // le compte de teintes était satisfait PAR LE CHROME du shell — barre du haut, jauge,
+            // dock — qui n'appartient pas à l'écran mesuré.
+            // ⇒ Une capture prise avant la fin du chargement montre un écran VIDE qui a l'air
+            // fini. C'est le même défaut que la garde de teintes d'origine, un cran plus loin :
+            // elle prouvait qu'il y avait de l'encre, jamais que c'était CELLE de l'écran ; celle-ci
+            // prouve qu'on a attendu, jamais que l'attente a abouti.
+            if (!charge(ecran))
+            {
+                echecs.Add($"{nom} : chargement NON abouti après {attente:F0} s — la capture montrerait "
+                           + "un écran vide qui a l'air fini");
+                yield break;
+            }
 
             Canvas.ForceUpdateCanvases();
             yield return null;
