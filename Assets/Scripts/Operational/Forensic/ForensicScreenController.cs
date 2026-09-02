@@ -97,9 +97,9 @@ namespace MafiaCleanCity.Operational
         {
             if (dto == null) { RendreEtatIndisponible(); return; }
 
-            MajSignal(0, "RISQUE D'AUDIT",        dto.audit_risk_bucket);
-            MajSignal(1, "VISIBILITÉ DES REJETS", dto.effluent_visibility_bucket);
-            MajSignal(2, "TRAIN DE VIE",          dto.lifestyle_alarm_bucket);
+            MajSignal(0, Lib("RISQUE D'AUDIT"),        dto.audit_risk_bucket);
+            MajSignal(1, Lib("VISIBILITÉ DES REJETS"), dto.effluent_visibility_bucket);
+            MajSignal(2, Lib("TRAIN DE VIE"),          dto.lifestyle_alarm_bucket);
 
             // ⛔ CE QUE L'ÉCRAN NE PEUT PAS SAVOIR, ET QU'IL DIT QUAND MÊME.
             // Mesuré le 2026-09-02 par la session back : `lifestyle_alarm_bucket` rend `quiet`
@@ -110,8 +110,8 @@ namespace MafiaCleanCity.Operational
             //   porte l'écart avec SA DATE, comme ㊲ porte les siens.
             // ⚠️ À re-mesurer : la pile a été reconstruite après cette mesure, et le maillon de
             //   blanchiment dont dépend l'épingle d'audit a été fermé entre-temps.
-            MajPanneau("CE QUE CET ÉCRAN NE PEUT PAS VOUS DIRE",
-                "Une bande sans source ressemble à une bande mesurée",
+            MajPanneau(Lib("CE QUE CET ÉCRAN NE PEUT PAS VOUS DIRE"),
+                Lib("Une bande sans source ressemble à une bande mesurée"),
                 "au 2 septembre 2026, « train de vie » rend « calme » alors qu'aucune ligne ne le "
                 + "mesure pour vous : c'est la valeur par défaut du serveur. Le corps ne dit pas "
                 + "lesquelles de ces trois bandes reposent sur des données — cet écran ne peut "
@@ -129,8 +129,8 @@ namespace MafiaCleanCity.Operational
             MajSignal(0, "RISQUE D'AUDIT",        null);
             MajSignal(1, "VISIBILITÉ DES REJETS", null);
             MajSignal(2, "TRAIN DE VIE",          null);
-            MajPanneau("CE QUE LE SERVEUR ENVOIE VRAIMENT",
-                "Pas de réponse",
+            MajPanneau(Lib("CE QUE LE SERVEUR ENVOIE VRAIMENT"),
+                Lib("Pas de réponse"),
                 "la route n'a rien rendu. Ce n'est pas « tout va bien » : c'est « on ne sait pas ».");
         }
 
@@ -212,10 +212,10 @@ namespace MafiaCleanCity.Operational
             v.childControlWidth = true; v.childControlHeight = true;
             v.childForceExpandWidth = true; v.childForceExpandHeight = false;
 
-            NouveauTexte(go.transform, "Titre", "Ce qui se voit", Px(19f),
+            NouveauTexte(go.transform, "Titre", Lib("Ce qui se voit"), Px(19f),
                          DesignTokens.Current.accentGold, DesignTokens.Current.hudSerifFont)
                 .alignment = TextAlignmentOptions.Center;
-            NouveauTexte(go.transform, "SousTitre", "TROIS SIGNAUX, TROIS BANDES", Px(8.5f),
+            NouveauTexte(go.transform, "SousTitre", Lib("TROIS SIGNAUX, TROIS BANDES"), Px(8.5f),
                          DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont)
                 .alignment = TextAlignmentOptions.Center;
         }
@@ -293,6 +293,16 @@ namespace MafiaCleanCity.Operational
             if (pannSur == null) return;
             pannSur.text = sur; pannTitre.text = titre; pannTexte.text = texte;
         }
+
+        /// <summary>Item 0.6 — un littéral STATIQUE de 42 passe par `forensic.bloc.<slug>`,
+        /// repli sur le littéral.
+        /// ⛔ N'Y PASSE PAS : la BANDE INCONNUE. `Phrase()` rend le mot du serveur TEL QUEL quand
+        /// il n'est pas reconnu (`return bande;`) — c'est délibéré, et le keyer inverserait le
+        /// choix : le joueur verrait une paraphrase rassurante au lieu du mot que le serveur a
+        /// réellement envoyé.
+        /// ★ Sur cet écran, montrer un mot non traduit est une INFORMATION, pas un manque.</summary>
+        private static string Lib(string litteral) =>
+            MafiaCleanCity.I18n.Libelle.De("forensic", "bloc", litteral);
 
         private static void AjouterHauteur(GameObject go, float hauteur)
         {
@@ -414,9 +424,9 @@ namespace MafiaCleanCity.Operational
         {
             switch (NiveauDe(bande))
             {
-                case Gravite.Calme:     return "Rien ne dépasse";
-                case Gravite.Surveille: return "On vous regarde";
-                case Gravite.Criant:    return "Ça se voit de loin";
+                case Gravite.Calme:     return MafiaCleanCity.I18n.Libelle.De("forensic", "gravite", "Rien ne dépasse");
+                case Gravite.Surveille: return MafiaCleanCity.I18n.Libelle.De("forensic", "gravite", "On vous regarde");
+                case Gravite.Criant:    return MafiaCleanCity.I18n.Libelle.De("forensic", "gravite", "Ça se voit de loin");
                 default: return string.IsNullOrEmpty(bande) ? "—" : bande;
             }
         }
