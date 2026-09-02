@@ -12,7 +12,8 @@
         "AssetLint",
         "Shell",
         "ShellContracts",
-        "Unity.InputSystem"
+        "Unity.InputSystem",
+        "I18n"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

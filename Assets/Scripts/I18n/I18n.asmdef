@@ -1,15 +1,7 @@
 {
-    "name": "Operational",
-    "rootNamespace": "MafiaCleanCity.Operational",
-    "references": [
-        "CityMap",
-        "UnityEngine.UI",
-        "Unity.InputSystem",
-        "Theme",
-        "Unity.TextMeshPro",
-        "ShellContracts",
-        "I18n"
-    ],
+    "name": "I18n",
+    "rootNamespace": "MafiaCleanCity.I18n",
+    "references": [],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
