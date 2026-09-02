@@ -211,6 +211,21 @@ namespace MafiaCleanCity.CityMap
             EnsureInitialized();
             LastFetchSucceeded = false;
             LastErrorCode = 0;
+            // ⛔ SANS CETTE LIGNE, LE RÉSOLVEUR EST MUET ET PERSONNE NE LE VOIT — `Traduire` rend
+            // la CLÉ BRUTE quand le catalogue est vide (contrat d'I18nCatalog) : la fiche
+            // afficherait "game.fiction.building.name" au lieu d'un nom, et l'écran resterait
+            // pourtant parfaitement affiché (repli sur `LibellesBatiment.Type` inchangé si le
+            // bundle échoue — voir ResoudreNomBatiment). MÊME PATRON que le seul appelant existant
+            // du dépôt, `ExceptionQueueController.cs:98` (« un repli qui marche trop bien masque
+            // le fait qu'on est en train de replier »). Amorcé UNE fois par entrée de district
+            // (SetSession n'est appelé qu'une fois par district, pas une fois par bâtiment) — et
+            // AVANT le fetch de la scène pour être prêt au premier rendu des noms.
+            // ⚠️ Le bon endroit STRUCTUREL serait le shell (un producteur, tous les locataires
+            // servis) — délibérément PAS fait ici : AppShell.cs est hors périmètre de ce fichier et
+            // partagé avec d'autres sessions en ce moment. Centralisation en dette.
+            yield return MafiaCleanCity.I18n.I18nCatalog.Amorcer(
+                new MafiaCleanCity.I18n.I18nClient { BaseUrl = baseUrl }, bearer);
+
             yield return projections.Interior(districtId, bearer,
                 dto => { LastFetch = dto; LastFetchSucceeded = true; },
                 code => LastErrorCode = code);
@@ -228,6 +243,20 @@ namespace MafiaCleanCity.CityMap
         {
             EnsureInitialized();
             if (root == null) BuildRoot();
+            // ⛔ MÊME CLASSE DE DÉFAUT que ShopScreenController.cs:107-115 (« un locataire monté en
+            // surimpression doit être le DERNIER enfant, sinon il est rendu dessous » — mesuré là,
+            // 6 frères par-dessus l'écran). Le patron de Shop (SetAsLastSibling posé dans
+            // SetMountParent + réaffirmé par OnTransformParentChanged) NE SE TRANSPOSE PAS ICI tel
+            // quel : Shop EST son propre RectTransform de contenu, alors qu'ici le contenu vit dans
+            // `root`, un GameObject SÉPARÉ créé paresseusement (BuildRoot) et parenté directement
+            // sous ContentSlot — le host de ce contrôleur (celui que le shell reparente) ne porte
+            // aucun visuel, donc `OnTransformParentChanged` dessus ne protégerait rien. `root` n'est
+            // jamais re-parenté après sa création (rien ne le touche hors ce fichier), mais
+            // `MonterLocataireEnSurimpression<T>` empile d'AUTRES locataires comme simples frères
+            // sous ContentSlot SANS le vider (c'est le sens même de « en surimpression ») : on
+            // réaffirme donc l'ordre à CHAQUE Render() plutôt qu'à un seul événement — idempotent,
+            // sans coût, et ça couvre aussi bien la construction initiale que tout ré-rendu.
+            root.SetAsLastSibling();
             ClearContent();
             renderedTexts.Clear();
             RenderedBuildingCount = 0;
@@ -364,14 +393,18 @@ namespace MafiaCleanCity.CityMap
             // Aucun nœud ajouté : `DistrictTitle` reste le TextMeshProUGUI lui-même, donc le compte de
             // 3 enfants de root et l'ordre de fratrie (titre en DERNIER, nav-district-F8) sont
             // inchangés, et `anchoredPosition.y` reste byte-identique (nav-F5 le mesure).
-            // ⛔ `name_canonical` EST UN IDENTIFIANT, PAS UN NOM D'AFFICHAGE. Le DTO le dit
-            // lui-même (`// e.g. "Tidewater-1"`), et un juge visuel ⊥ l'a relevé : « chaîne à
-            // allure d'identifiant (casse mixte + tiret) ». Le back ne projette aucun libellé —
-            // c'est un trou de PROJECTION, la forme F. En attendant qu'il en porte un, on met en
-            // forme ce qu'on a : le tiret devient une espace, ce qui donne « Verge A » au lieu de
-            // « Verge-A ». On ne fabrique pas de donnée, on cesse d'afficher une clé technique.
-            string libelleDistrict = string.IsNullOrEmpty(dto.name_canonical)
+            // ⛔ `name_canonical` RESTE UN IDENTIFIANT, PAS UN NOM D'AFFICHAGE — un juge visuel ⊥
+            // l'avait relevé (« chaîne à allure d'identifiant, casse mixte + tiret ») quand c'était
+            // la seule donnée disponible et le titre la mettait en forme (le tiret devenait une
+            // espace) faute de mieux. **Depuis le 2026-09-02 le back sert `name`, le nom de fiction
+            // du district** (mesuré : "La Lisière" pour d16) — le titre l'affiche en priorité.
+            // `name_canonical`, mis en forme comme avant, ne sert plus que de REPLI EXPLICITE : un
+            // environnement plus ancien qui ne sert pas encore `name` ne doit pas afficher un titre
+            // vide. Voir Tools/district-pixelperfect-notes.md pour l'historique du MINOR que ce
+            // champ ferme.
+            string repliIdentifiant = string.IsNullOrEmpty(dto.name_canonical)
                 ? "—" : dto.name_canonical.Replace('-', ' ');
+            string libelleDistrict = string.IsNullOrEmpty(dto.name) ? repliIdentifiant : dto.name;
             TextMeshProUGUI title = NewText("DistrictTitle", root, libelleDistrict, 20, TextAlignmentOptions.TopLeft);
             title.font = DesignTokens.Current.hudSerifFont;
             title.characterSpacing = DistrictTitleCharacterSpacing;
@@ -1751,6 +1784,30 @@ namespace MafiaCleanCity.CityMap
             b.onClick.AddListener(action);
         }
 
+        /// <summary>Le nom du bâtiment, résolu par le catalogue i18n — ou LA CLÉ, visible, jamais un
+        /// texte inventé (contrat d'I18nCatalog.Traduire). MÊME PATRON que
+        /// `BuildingCardController.NomDuBatiment` (mesuré le 2026-09-02, mais sur `…/interior` —
+        /// forme des params NON réutilisée telle quelle, voir DistrictBuildingNameParamsDto). Repli
+        /// sur `LibellesBatiment.Type` — déjà établi ICI, plus informatif qu'un libellé générique —
+        /// tant que le back ne sert encore aucune clé pour ce bâtiment (environnement plus ancien,
+        /// ou bâtiment que le lot fiction n'a pas encore couvert).</summary>
+        private static string ResoudreNomBatiment(DistrictInteriorBuildingDto b)
+        {
+            if (b.name_i18n == null || string.IsNullOrEmpty(b.name_i18n.key))
+                return LibellesBatiment.Type(b.operational_type);
+
+            var p = new Dictionary<string, string>();
+            DistrictBuildingNameParamsDto pr = b.name_i18n.@params;
+            if (pr != null)
+            {
+                if (!string.IsNullOrEmpty(pr.enseigne)) p["enseigne"] = pr.enseigne;
+                if (!string.IsNullOrEmpty(pr.district)) p["district"] = pr.district;
+                if (!string.IsNullOrEmpty(pr.block))    p["block"] = pr.block;
+                if (!string.IsNullOrEmpty(pr.rang))     p["rang"] = pr.rang;
+            }
+            return MafiaCleanCity.I18n.I18nCatalog.Traduire(b.name_i18n.key, p);
+        }
+
         /// <summary>Ouvre la fiche sur un bâtiment. Les trois cases gardent la POSITION et le RÔLE
         /// du canon ; leur contenu est la bande RÉELLE, jamais un montant inventé.</summary>
         public void OuvrirFiche(DistrictInteriorBuildingDto b)
@@ -1758,7 +1815,7 @@ namespace MafiaCleanCity.CityMap
             if (ficheRoot == null || b == null) return;
             FicheBuildingId = b.building;
 
-            ficheTitre.text = LibellesBatiment.Type(b.operational_type);
+            ficheTitre.text = ResoudreNomBatiment(b);
             ficheType.text = LibellesBatiment.Conversion(b.conversion_band);
 
             // `$ 2 400 / À COLLECTER` ⇒ la bande de revenu : le bâtiment rapporte-t-il ?
