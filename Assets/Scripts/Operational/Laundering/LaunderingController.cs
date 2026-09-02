@@ -249,6 +249,14 @@ namespace MafiaCleanCity.Operational
             // the affordance is present; the actual launder is driven through Inject().
             AddActionButton(actionBar, "Inject (launder)", () => { /* needs front-shop + safehouse targets; driven via Inject() */ });
 
+            // ⛔ ⑨ LA FILIÈRE N'AVAIT AUCUN CHEMIN JOUEUR — mesuré sur les 11 écrans montables du
+            //    client : `PipelineOverviewController` était le SEUL sans aucune voie depuis le shell
+            //    (ni onglet, ni menu, ni parent). Il était construit, testé, et injoignable.
+            //    Il vit ici parce que c'est ici que le `nodeId` existe : sa route est
+            //    `/v1/operational/laundering/:nodeId/pipeline`, et ce contrôleur est le seul écran qui
+            //    en tient un (`LoadNode(id)`). *Un écran s'attache là où sa clé d'entrée est déjà.*
+            AddActionButton(actionBar, "Voir la filière", OuvrirFiliere);
+
             actionStatusText = NewText("ActionStatus", actionBar, "", 14, TextAlignmentOptions.Left);
             actionStatusText.color = DesignTokens.Current.onSurfaceMutedAlt;
             AddLayoutElement(actionStatusText.gameObject, minHeight: 22, flexibleHeight: 0);
@@ -407,6 +415,43 @@ namespace MafiaCleanCity.Operational
             AddLayoutElement(t.gameObject, minHeight: 20, flexibleHeight: 0);
             return text;
         }
+
+        /// <summary>Ouvre ⑨ (la filière) par-dessus ce nœud — MÊME patron que
+        /// `ExceptionQueueController.OpenDetail` et `DashboardController.OpenNav` : un `AppShell`
+        /// (`IShellNavigator`) trouvé monte l'écran EN SURIMPRESSION, sinon repli hors shell.
+        /// Aucun mécanisme neuf : j'ai cherché qui exerçait déjà cette couture avant d'en écrire une.
+        ///
+        /// ⚠️ UN SEUL À LA FOIS : un second appui ne doit pas empiler deux filières sur le même
+        /// overlay (défaut déjà payé sur le détail d'exception, sa revue I1).
+        /// ⚠️ ET LE RETOUR EST LE POINT DÉLICAT : `PipelineOverviewController` n'expose AUCUN
+        /// `onBack`, contrairement à `ExceptionDetailController`. Ouvrir sans retour piégerait le
+        /// joueur dans un écran sans issue — pire que l'écran injoignable qu'on répare. On pose donc
+        /// l'action de tête du shell sur « revenir », et on la rend au nœud en repartant.
+        /// Non revu — jalon 09-05.</summary>
+        public void OuvrirFiliere()
+        {
+            if (string.IsNullOrEmpty(NodeId)) return;                 // rien à montrer sans clé d'entrée
+            if (filiereOuverte != null && filiereOuverte) return;      // un seul overlay à la fois
+
+            MafiaCleanCity.Shell.IShellNavigator nav = MafiaCleanCity.Shell.ShellNavigatorLocator.Find();
+            PipelineOverviewController vue;
+            if (nav != null)
+            {
+                vue = nav.MonterLocataireEnSurimpression<PipelineOverviewController>();
+            }
+            else
+            {
+                // Repli hors shell : même forme que les deux précédents maison.
+                filiereHost = new GameObject("Nav_PipelineOverview");
+                vue = filiereHost.AddComponent<PipelineOverviewController>();
+            }
+            filiereOuverte = vue;
+            vue.SetToken(Token);
+            StartCoroutine(vue.LoadPipeline(NodeId));
+        }
+
+        private PipelineOverviewController filiereOuverte;
+        private GameObject filiereHost;
 
         private void AddActionButton(Transform parent, string label, UnityEngine.Events.UnityAction onClick)
         {

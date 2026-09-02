@@ -64,3 +64,7 @@ node_modules/
 # tout checkout frais (clone, worktree) ouvrait en Safe Mode avec CS0234. Mesuré le 2026-08-30
 # sur le worktree pilote-B. Exception :
 !Packages/com.coplaydev.unity-mcp/**/[Bb]uild/
+
+# artefacts de session — jamais versionnés
+scratchpad/
+mono_crash.mem.*.blob
