@@ -355,7 +355,7 @@ $"{QuiParle(c)} · {Cap(c.severity_band)} · {Cap(c.priority_band)}", 8f, TextSe
             TrackText(qui, qui.text);
 
             TextMeshProUGUI dit = NouveauTexteMaquette(bulle.transform, "Replique",
-                string.IsNullOrEmpty(c.event_descriptor) ? "—" : $"« {c.event_descriptor} »",
+                Replique(c),
                 10f, TextPrimary);
             dit.enableWordWrapping = true;
             // ⚠️ Texte LIBRE du producteur : chrome, suivi au composant et pas au corpus (il peut
@@ -462,7 +462,7 @@ $"{QuiParle(c)} · {Cap(c.severity_band)} · {Cap(c.priority_band)}", 8f, TextSe
             AddLayoutElement(row, flexibleHeight: 0);
 
             // Descriptor — producer free text (an i18n key may carry digits): CHROME, component-tracked only.
-            TextMeshProUGUI desc = NewText("Descriptor", row.transform, card.event_descriptor, 15, TextAlignmentOptions.Left);
+            TextMeshProUGUI desc = NewText("Descriptor", row.transform, TexteServeur(card), 15, TextAlignmentOptions.Left);
             desc.fontStyle = FontStyles.Bold;
             AddLayoutElement(desc.gameObject, minHeight: 20, flexibleHeight: 0);
 
@@ -695,6 +695,43 @@ $"{QuiParle(c)} · {Cap(c.severity_band)} · {Cap(c.priority_band)}", 8f, TextSe
         ///   une dérivation côté client.
         /// ★ Décider ce qui N'A PAS le droit de devenir une clé demande plus d'attention que la
         ///   conversion elle-même.</summary>
+        /// <summary>La réplique du premier — LE point de passage du texte serveur de ⑨.
+        ///
+        /// Consomme `event_descriptor_i18n` quand le back l'envoie ET que le dictionnaire porte
+        /// la clé ; sinon la PROSE. Mesuré le 2026-09-02 : la référence est non nulle sur 2
+        /// cartes sur 6, et 11 des 12 clés demandées par ⑨/⑩ sont servies — donc ce branchement
+        /// change réellement ce que le joueur lit, contrairement à la mesure d'hier soir où le
+        /// recouvrement était nul.
+        ///
+        /// ⛔ ET IL RÈGLE UN DÉFAUT QUE LA CAPTURE SOUS CHROME AVAIT MONTRÉ : sur les 4 cartes du
+        /// seeder, `event_descriptor` n'est PAS de la prose — c'est un identifiant
+        /// (`exc_demo_teach_heat`), et ⑨ l'affichait entre guillemets comme une parole de
+        /// lieutenant. Un identifiant n'est pas une réplique : s'il n'a pas d'espace, il est
+        /// montré tel quel, sans guillemets, comme ㊱ montre ses clés.
+        /// ★ Mettre un identifiant technique dans la bouche d'un personnage, c'est le seul cas
+        ///   de la nuit où l'écran ne se contentait pas de taire une donnée : il en inventait
+        ///   une. Le trou se montre, il ne se déguise pas en dialogue.</summary>
+        private static string Replique(ExceptionCardDto c)
+        {
+            string t = TexteServeur(c);
+            if (string.IsNullOrEmpty(t)) return "—";
+            bool ressembleAUnIdentifiant = !t.Contains(" ");
+            return ressembleAUnIdentifiant ? t : $"« {t} »";
+        }
+
+        /// <summary>Le texte serveur d'une carte : la référence i18n si elle est SERVIE, la prose
+        /// sinon. `Connait` avant `Traduire` — une clé absente ne doit pas remplacer une prose
+        /// lisible par une clé nue.</summary>
+        private static string TexteServeur(ExceptionCardDto c)
+        {
+            if (c == null) return string.Empty;
+            if (c.event_descriptor_i18n != null
+                && !string.IsNullOrEmpty(c.event_descriptor_i18n.key)
+                && MafiaCleanCity.I18n.I18nCatalog.Connait(c.event_descriptor_i18n.key))
+                return MafiaCleanCity.I18n.I18nCatalog.Traduire(c.event_descriptor_i18n.key);
+            return c.event_descriptor ?? string.Empty;
+        }
+
         private static string Lib(string litteral) =>
             MafiaCleanCity.I18n.Libelle.De("exceptions", "bloc", litteral);
 
