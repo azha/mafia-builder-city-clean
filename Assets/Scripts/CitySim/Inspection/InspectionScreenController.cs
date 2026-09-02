@@ -162,10 +162,12 @@ namespace MafiaCleanCity.CitySim.Inspection
             Section(corps, "PAR GRAVITÉ");
             if (File.severity_distribution != null)
             {
-                Bande("Critique", File.severity_distribution.critical, Braise);
-                Bande("Urgent", File.severity_distribution.urgent, Or);
-                Bande("Sous l'œil", File.severity_distribution.watching, Creme);
-                Bande("Silencieux", File.severity_distribution.silent, Creme2);
+                // ⛔ Les clés sont LOW/MEDIUM/HIGH/CRITICAL — celles du `PriorityBucket` de
+                // `citysim/inspection`, PAS celles de l'homonyme du module `exceptions`.
+                Bande("Critique", File.severity_distribution.CRITICAL, Braise);
+                Bande("Élevée", File.severity_distribution.HIGH, Or);
+                Bande("Moyenne", File.severity_distribution.MEDIUM, Creme);
+                Bande("Faible", File.severity_distribution.LOW, Creme2);
             }
 
             Section(corps, "PAR PROVENANCE");

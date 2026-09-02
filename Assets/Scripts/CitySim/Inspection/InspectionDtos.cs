@@ -16,12 +16,26 @@ namespace MafiaCleanCity.CitySim.Inspection
     // ⚠️ Si le back ajoute un membre à l'une de ces unions, ces classes le PERDRONT en silence.
     // Le détecteur n'est pas le compilateur C# (il ne voit pas le TypeScript) : c'est le contrôle
     // du test de capture, qui asserte que la somme des bandes lues égale le nombre de clés servies.
+    // ⛔⛔ CES QUATRE NOMS ONT ÉTÉ FAUX PENDANT UNE CAPTURE ENTIÈRE, ET LE DÉFAUT ÉTAIT MUET.
+    // J'avais recopié `silent | watching | urgent | critical` — les valeurs d'un `PriorityBucket`
+    // qui existe bel et bien dans ce back, mais **dans un AUTRE module** :
+    //   exceptions/exceptions.projection.service.ts  →  'silent' | 'watching' | 'urgent' | 'critical'
+    //   citysim/inspection/inspection.repository.ts  →  'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'   ← celui-ci
+    // Deux types HOMONYMES aux valeurs DISJOINTES. `JsonUtility` ne lève pas sur des champs qui
+    // ne correspondent à rien : il rend des chaînes VIDES, en silence. La capture du 2026-09-02
+    // montrait donc quatre bandes de gravité à « — » pendant que celles de provenance rendaient
+    // « None / Predominant » — un demi-écran muet, sans une erreur, sans un log.
+    // ⇒ *Recopier une valeur d'énumération depuis « le type qui porte ce nom » ne suffit pas : il
+    // faut le type que la ROUTE utilise.* Vérifié ici en lisant le corps de `severityDistribution`,
+    // qui initialise littéralement `{ LOW: 0, MEDIUM: 0, HIGH: 0, CRITICAL: 0 }`.
+    // ★ Et c'est un asymétrique révélateur : les deux Record du MÊME corps de réponse, l'un décodé
+    // l'autre pas. Un écran entièrement muet se remarque ; un écran à moitié muet passe.
     [Serializable] public class BandesSeverite
     {
-        public string silent;
-        public string watching;
-        public string urgent;
-        public string critical;
+        public string LOW;
+        public string MEDIUM;
+        public string HIGH;
+        public string CRITICAL;
     }
 
     [Serializable] public class BandesSource
