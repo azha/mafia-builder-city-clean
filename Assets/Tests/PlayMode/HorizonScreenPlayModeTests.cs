@@ -176,8 +176,99 @@ namespace MafiaCleanCity.Operational.Tests
             MafiaCleanCity.Tests.CaptureSupport.GarderLaCapture(chemin);
         }
 
-        // MÉTIER ICI — ajouter ici les tests de PARCOURS (signup → session/open → la route) et
-        // les tests d'état (AppliquerEtat sur un corps fabriqué via RendrePourTest), patron ㊲
-        // §§ 1/3/5 de ReputationScreenPlayModeTests.
+        // ═══ 3. L'ÉCHELLE DES PALIERS (TD-408) — sur des états FABRIQUÉS ════════════════════
+
+        /// <summary>Les textes de l'échelle, dans l'ordre de l'arbre.</summary>
+        private static List<string> BarreauxAffiches(GameObject racine)
+        {
+            var vus = new List<string>();
+            foreach (TMPro.TextMeshProUGUI t in racine.GetComponentsInChildren<TMPro.TextMeshProUGUI>(true))
+                if (t.name.StartsWith("Barreau") || t.name == "EtatSuivant") vus.Add(t.text);
+            return vus;
+        }
+
+        /// <summary>⛔ POURQUOI CE TEST EXISTE ALORS QU'UNE CAPTURE EXISTE DÉJÀ : le compte de
+        /// démo est au palier 1, et une capture ne montrera donc JAMAIS qu'un seul état de
+        /// l'échelle — celui où aucun barreau n'est franchi. Les trois autres crans
+        /// (franchi / courant / suivant) ne sont atteignables qu'en fabriquant l'état.
+        /// ★ C'est le pendant exact de la leçon du jour sur ⑨ : une garde ne mesure que ce
+        ///   qu'on lui présente. Ici c'est l'ÉTAT, pas l'écran, qui manquait à la population.</summary>
+        [UnityTest]
+        public IEnumerator ScreenC6S3_LEchelle_MarqueLeCourant_EtGriseLesFranchis()
+        {
+            HorizonScreenController ecran = MonterEcran();
+            yield return null;
+
+            // Palier courant 3 : les barreaux 2 sont franchis, 3 est le courant, 4 le suivant.
+            ecran.RendrePourTest(new GetMetaHorizonFeedResponseDto { cards = new HorizonCardDto[0] },
+                new Exceptions.ProgressionDto
+                {
+                    vocabulary_tier = 3,
+                    next_tier = 4,
+                    progress_to_next = "IN_PROGRESS",
+                });
+            yield return null;
+
+            List<string> vus = BarreauxAffiches(RacineEcran());
+            Assert.AreEqual(5, vus.Count,
+                $"4 barreaux + 1 état attendus, vus : [{string.Join(" | ", vus)}]");
+
+            Assert.IsTrue(vus[0].StartsWith("✓"),
+                $"le palier 2 est DERRIÈRE le palier courant 3 : il doit être marqué franchi — « {vus[0]} »");
+            Assert.IsTrue(vus[1].StartsWith("▸"),
+                $"le palier 3 EST le palier courant : il doit être marqué — « {vus[1]} »");
+            Assert.IsTrue(vus[2].StartsWith("·"),
+                $"le palier 4 est devant : ni franchi ni courant — « {vus[2]} »");
+            // ⚠️ L'état suit le barreau SUIVANT (4), pas la fin de la liste : c'est la marche
+            // qu'on est en train de monter qui porte l'information, pas le dernier barreau.
+            Assert.IsTrue(vus[3].Contains("en cours"),
+                $"`IN_PROGRESS` doit se lire en toutes lettres sous le palier suivant — « {vus[3]} »");
+        }
+
+        /// <summary>⛔ Le contrat NON FATAL, éprouvé : `/v1/progression` peut tomber, et ㊱
+        /// existait avant elle. Une échelle absente est un manque ; un écran blanc est une panne.
+        /// ⚠️ Ce test vaut surtout par ce qu'il interdit : « pas d'échelle » ne doit jamais
+        /// devenir « pas d'écran ».</summary>
+        [UnityTest]
+        public IEnumerator ScreenC6S3_ProgressionAbsente_NeCasseRien()
+        {
+            HorizonScreenController ecran = MonterEcran();
+            yield return null;
+
+            ecran.RendrePourTest(new GetMetaHorizonFeedResponseDto { cards = new HorizonCardDto[0] }, null);
+            yield return null;
+
+            Assert.IsEmpty(BarreauxAffiches(RacineEcran()),
+                "sans progression, AUCUN barreau ne doit être dessiné — une échelle inventée à " +
+                "partir de rien vaudrait moins que pas d'échelle");
+            Assert.Greater(RacineEcran().GetComponentsInChildren<Graphic>(true).Length, 0,
+                "l'écran doit rester entier : l'échec de la seconde route ne l'efface pas");
+        }
+
+        /// <summary>⛔ Un cran INCONNU se montre TEL QUEL. Si le back ajoute demain un quatrième
+        /// état, un libellé de repli inventé le ferait passer pour compris — et masquerait
+        /// justement la chose neuve qu'il faut traiter.
+        /// ★ C'est la même règle que la clé nue de la fiche ② : ce qu'on ne sait pas nommer se
+        ///   montre brut, pas maquillé.</summary>
+        [UnityTest]
+        public IEnumerator ScreenC6S3_CranInconnu_SeMontreTelQuel()
+        {
+            HorizonScreenController ecran = MonterEcran();
+            yield return null;
+
+            ecran.RendrePourTest(new GetMetaHorizonFeedResponseDto { cards = new HorizonCardDto[0] },
+                new Exceptions.ProgressionDto
+                {
+                    vocabulary_tier = 2, next_tier = 3, progress_to_next = "CRAN_QUI_NEXISTE_PAS",
+                });
+            yield return null;
+
+            Assert.IsTrue(BarreauxAffiches(RacineEcran()).Exists(t => t.Contains("CRAN_QUI_NEXISTE_PAS")),
+                "un cran inconnu doit apparaître brut à l'écran, jamais traduit en un libellé " +
+                "de repli qui le ferait passer pour un cas traité");
+        }
+
+        // MÉTIER ICI — reste à ajouter les tests de PARCOURS (signup → session/open → la route),
+        // patron ㊲ §§ 1/3/5 de ReputationScreenPlayModeTests.
     }
 }
