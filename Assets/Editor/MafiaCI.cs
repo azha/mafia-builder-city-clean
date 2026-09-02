@@ -53,8 +53,14 @@ public static class MafiaCI
     // Capture (1). Quatre d'entre elles restent DÉLIBÉRÉMENT hors filtre — `Screenshot`,
     // `Capture`, `JUGE`, `HUDv31` produisent des images ou des rapports et coûtent cher ; elles se
     // lancent nommément, pas dans le run de vérification.
+    // `Joignabilite` ajoutée le 2026-09-02 — et pour la RAISON QUE CE FICHIER DOCUMENTE DÉJÀ
+    // deux lignes plus haut : quand `ScreenB3` manquait ici, 8 tests n'ont jamais tourné en se
+    // déclarant verts. Les deux gardes du chantier joignabilité (le balayage du graphe de montage
+    // et le clic des entrées du menu) portent cette catégorie ; sans cette ligne elles seraient
+    // livrées, compilées, et JAMAIS EXÉCUTÉES par le juge — la forme la plus économique de garde
+    // décorative. *Écrire une garde ne l'installe pas ; l'inscrire au filtre, si.*
     private static readonly string[] Categories =
-        { "W4P4a", "W3UDA", "W3U1", "W3U2", "Charpente", "DemoIdentity", "ScreenB3", "ShellSurimpression", "CaptureDistrict", "CaptureReputation" };
+        { "W4P4a", "W3UDA", "W3U1", "W3U2", "Charpente", "DemoIdentity", "ScreenB3", "ShellSurimpression", "CaptureDistrict", "CaptureReputation", "Joignabilite" };
 
     // ⚠️ `MAFIA_CI_CATEGORIES` (liste séparée par des virgules) REMPLACE le filtre par défaut.
     // Ajouté le 2026-08-31 pour une raison précise et vérifiable : le log ne NOMME que les tests

@@ -68,3 +68,7 @@ node_modules/
 # artefacts de session — jamais versionnés
 scratchpad/
 mono_crash.mem.*.blob
+
+# artefacts de build local — jamais versionnés (APK ~108 Mo)
+Builds/
+.utmp/

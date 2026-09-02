@@ -71,21 +71,26 @@ namespace MafiaCleanCity.Shell.Tests
                 $"le menu ne porte que {shell.MenuPlusEntrees} entrée(s) : soit il ne se construit pas, " +
                 "soit la table des destinations a rétréci — dans les deux cas ce test ne prouverait rien.");
 
-            List<Button> entrees = Object.FindObjectsByType<Button>(FindObjectsSortMode.None)
+            // ⛔ ON GARDE LES NOMS, JAMAIS LES `Button`. Défaut mesuré au premier run réel
+            //    (`MissingReferenceException` au 2e tour) : rouvrir le menu DÉTRUIT les boutons du
+            //    tour précédent, et la boucle relisait `entree.gameObject.name` sur un objet mort.
+            //    Une `List<Button>` capturée avant la boucle est une liste de références qui
+            //    survivent en C# et plus en Unity — un objet Unity détruit reste non-null côté
+            //    managé et jette au premier accès. *Le nom est une donnée, le Button est un état.*
+            List<string> noms = Object.FindObjectsByType<Button>(FindObjectsSortMode.None)
                 .Where(b => b.gameObject.name.StartsWith("MenuPlus_"))
-                .OrderBy(b => b.gameObject.name, System.StringComparer.Ordinal)
+                .Select(b => b.gameObject.name)
+                .OrderBy(n => n, System.StringComparer.Ordinal)
                 .ToList();
-            Assert.AreEqual(shell.MenuPlusEntrees, entrees.Count,
-                $"{shell.MenuPlusEntrees} entrées comptées par le shell mais {entrees.Count} boutons trouvés : " +
+            Assert.AreEqual(shell.MenuPlusEntrees, noms.Count,
+                $"{shell.MenuPlusEntrees} entrées comptées par le shell mais {noms.Count} boutons trouvés : " +
                 "l'un des deux ment, et aucune conclusion n'est possible tant qu'ils divergent.");
 
             var montes = new Dictionary<string, System.Type>();
             var echecs = new List<string>();
 
-            foreach (Button entree in entrees)
+            foreach (string nom in noms)
             {
-                string nom = entree.gameObject.name;
-
                 // Re-ouvrir le menu : le clic précédent a monté un locataire À SA PLACE, donc les
                 // boutons de la passe précédente sont détruits. On relit la liste à chaque tour
                 // plutôt que de garder des références mortes.
