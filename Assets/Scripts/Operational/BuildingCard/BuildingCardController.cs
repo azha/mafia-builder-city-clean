@@ -1858,49 +1858,11 @@ namespace MafiaCleanCity.Operational
             return MafiaCleanCity.I18n.I18nCatalog.Traduire(card.name_i18n.key, p);
         }
 
-        /// <summary>ITEM 0.6 — un littéral d'écran passe par une CLÉ, et retombe sur lui-même.
-        ///
-        /// **Décision de conception, prise ici et écrite dans le commit** : la clé est DÉRIVÉE du
-        /// littéral (`building.<rôle>.<slug>`) au lieu d'être posée à chaque site d'appel.
-        /// · ② porte **152 littéraux visibles** (45 directs + 107 rendus par ses résolveurs,
-        ///   mesuré) : les réécrire un par un, c'est 152 occasions de casser un écran monté et
-        ///   quatre fichiers de tests qui assertent ces valeurs.
-        /// · Le repli est le littéral LUI-MÊME, byte-identique. Tant que le dictionnaire ne porte
-        ///   pas la clé, **l'écran ne change pas d'un pixel** et les gardes existantes restent
-        ///   vraies. Le jour où planque ajoute l'entrée, le texte devient traduisible sans
-        ///   toucher au client.
-        /// ⚠️ CE QUI NE PASSE PAS PAR ICI, et c'est délibéré : les valeurs DYNAMIQUES. « Dans 30 j »
-        /// contient une donnée ; en dériver une clé fabriquerait une clé par nombre —
-        /// `building.value.dans_30_j`, `..._29_j`, à l'infini. Une clé doit nommer une PHRASE
-        /// FERMÉE, jamais une phrase calculée. Seuls les libellés de rangée (statiques) et les
-        /// vocabulaires fermés des résolveurs y passent.
-        /// ⛔ `Connait` AVANT `Traduire` : sans ce test, une clé absente remplacerait un texte
-        /// lisible par `building.row.setup` à l'écran — une régression déguisée en progrès.</summary>
-        internal static string Cle(string role, string litteral)
-        {
-            if (string.IsNullOrEmpty(litteral)) return litteral;
-            string slug = Slug(litteral);
-            if (slug.Length == 0) return litteral;
-            string cle = "building." + role + "." + slug;
-            return MafiaCleanCity.I18n.I18nCatalog.Connait(cle)
-                ? MafiaCleanCity.I18n.I18nCatalog.Traduire(cle)
-                : litteral;
-        }
-
-        /// <summary>Minuscules, accents pliés, tout le reste en `_`. Déterministe : le même
-        /// littéral rend toujours la même clé, sur toutes les machines.</summary>
-        internal static string Slug(string s)
-        {
-            var sb = new System.Text.StringBuilder();
-            foreach (char c in s.Normalize(System.Text.NormalizationForm.FormD))
-            {
-                if (System.Globalization.CharUnicodeInfo.GetUnicodeCategory(c)
-                    == System.Globalization.UnicodeCategory.NonSpacingMark) continue;
-                if (char.IsLetterOrDigit(c)) sb.Append(char.ToLowerInvariant(c));
-                else if (sb.Length > 0 && sb[sb.Length - 1] != '_') sb.Append('_');
-            }
-            return sb.ToString().Trim('_');
-        }
+        /// <summary>Le passage par clé vit dans `MafiaCleanCity.I18n.Libelle` — partagé par
+        /// les neuf écrans à convertir, pas recopié dans chacun. Voir ce fichier pour le contrat
+        /// (repli byte-identique) et pour ce qui n'a PAS le droit d'y passer (valeurs calculées).</summary>
+        internal static string Cle(string role, string litteral) =>
+            MafiaCleanCity.I18n.Libelle.De("building", role, litteral);
 
         private void AddStatusRow(string label, string value, string glyph, Color accent)
         {

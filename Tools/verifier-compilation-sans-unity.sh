@@ -71,8 +71,16 @@ PY
 if [[ "$MODE" == "--tests" ]]; then
   find Assets/Scripts Assets/Tests/PlayMode Assets/Editor/AssetLint -name '*.cs' > "$TMP/srcs.txt"
 else
-  find Assets/Scripts/Operational Assets/Scripts/ShellContracts Assets/Scripts/Theme \
-       Assets/Scripts/CityMap Assets/Scripts/Shell -name '*.cs' > "$TMP/srcs.txt"
+  # ⛔ PLUS DE LISTE FIGÉE DE DOSSIERS. Elle énumérait cinq assemblies à la main et devenait
+  # FAUSSE dès qu'on en ajoutait une : `Assets/Scripts/I18n` (socle i18n, 2026-09-02) en était
+  # absent, et ce mode rendait `CS0234 : MafiaCleanCity.I18n n'existe pas` sur du code
+  # parfaitement valide — pendant que `--tests`, qui balaie `Assets/Scripts` en entier, était
+  # VERT sur les mêmes fichiers.
+  # ★ Deux modes du même instrument qui se contredisent : celui qui énumère à la main a tort,
+  #   toujours. Un rouge d'outil ressemble trait pour trait à un rouge de code, et on va
+  #   corriger le code.
+  # `Assets/Scripts` en entier, comme `--tests` : le seul périmètre qui ne se périme pas.
+  find Assets/Scripts -name '*.cs' > "$TMP/srcs.txt"
 fi
 
 sed 's|^|/r:|' "$TMP/refs.txt" > "$TMP/rsp.txt"
