@@ -159,5 +159,60 @@ namespace MafiaCleanCity.I18nTests
             foreach (string k in demandees)
                 Debug.Log($"[I18N]   {(I18nCatalog.Connait(k) ? "✓ servie" : "✗ ABSENTE")}  {k}");
         }
-    }
+    
+        // ═══ La FALSIFIABLE de l'item 0.6, telle que `front.md` l'écrit ═════════════════════
+
+        /// <summary>« Un test rend un écran dont TOUT libellé vient d'une clé, et asserte
+        /// qu'AUCUNE CLÉ BRUTE ne reste à l'écran. Contrôle positif OBLIGATOIRE : une clé
+        /// volontairement absente du bundle DOIT être détectée — sinon la garde certifie le
+        /// défaut. » (`front.md`, item 0.6)
+        ///
+        /// ⛔ CE QUE J'AI DÛ CORRIGER DANS MA PROPRE LECTURE. Écrite naïvement contre les écrans
+        /// que je viens de convertir, cette garde serait VIDE : leur repli est le LITTÉRAL
+        /// (byte-identique), donc aucune clé brute ne peut apparaître, et l'assertion passerait
+        /// toujours — en certifiant exactement le défaut qu'elle prétend traquer.
+        /// ⇒ Elle porte donc sur le chemin où une clé brute PEUT sortir : les clés venues du
+        ///   SERVEUR (`event_descriptor_i18n`, `name_i18n`…), dont le repli est la prose — et,
+        ///   à défaut de prose, la clé nue.
+        /// ★ Le contrôle positif n'est pas une formalité ici : c'est lui qui distingue « aucune
+        ///   clé à l'écran » de « mon détecteur ne voit rien ».</summary>
+        [Test]
+        public void Item06_AucuneCleBruteALEcran_EtLeDetecteurLeProuve()
+        {
+            // Un détecteur de clé brute : trois segments minuscules séparés par des points.
+            bool EstUneCleBrute(string s) =>
+                !string.IsNullOrEmpty(s) &&
+                System.Text.RegularExpressions.Regex.IsMatch(s.Trim(),
+                    @"^[a-z][a-z0-9_]*(\.[a-z0-9_]+){2,}$");
+
+            // — CONTRÔLE POSITIF, en premier : le détecteur doit VOIR une clé nue. —
+            Assert.IsTrue(EstUneCleBrute("game.fiction.building.name"),
+                "le détecteur ne reconnaît pas une clé nue : tout le reste de ce test serait vide");
+            Assert.IsTrue(EstUneCleBrute("exception.heat_pressure.card.descriptor"));
+            Assert.IsTrue(EstUneCleBrute("onboarding.preseed_exception.card"),
+                "c'est la clé RÉELLE que le serveur envoie et que le bundle ne sert pas (mesuré)");
+
+            // — CONTRÔLES NÉGATIFS : une phrase n'est pas une clé. —
+            Assert.IsFalse(EstUneCleBrute("Citywide heat is high — your operations are under pressure."));
+            Assert.IsFalse(EstUneCleBrute("Il vous écoute"));
+            Assert.IsFalse(EstUneCleBrute("Dans 30 j"));
+            Assert.IsFalse(EstUneCleBrute("exc_demo_teach_heat"),
+                "un identifiant de seeder n'a pas de point : il n'est pas une clé i18n, et c'est " +
+                "un AUTRE défaut (⑨ l'affiche comme une réplique) — ne pas les confondre");
+
+            // — Le comportement garanti : une clé SERVIE ne sort jamais nue. —
+            I18nCatalog.ChargerPourTest("en", new Dictionary<string, string> {
+                { "exception.heat_pressure.card.descriptor", "Citywide heat is high." } });
+            string rendu = I18nCatalog.Traduire("exception.heat_pressure.card.descriptor");
+            Assert.IsFalse(EstUneCleBrute(rendu),
+                $"une clé SERVIE ne doit jamais sortir nue à l'écran (rendu : « {rendu} »)");
+            Assert.AreEqual("Citywide heat is high.", rendu);
+
+            // — Et une clé ABSENTE sort nue, VISIBLEMENT : c'est le repli voulu du socle. —
+            string absent = I18nCatalog.Traduire("onboarding.preseed_exception.card");
+            Assert.IsTrue(EstUneCleBrute(absent),
+                "une clé absente doit rester LISIBLE comme une clé — c'est ce qui fait écrire le " +
+                "texte. Si elle sortait vide ou remplacée, le manque deviendrait invisible.");
+        }
+}
 }
