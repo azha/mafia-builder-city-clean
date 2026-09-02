@@ -310,6 +310,14 @@ namespace MafiaCleanCity.Shell.Tests
                 {
                     Transform rang = etageres.GetChild(0);
                     var vlg = rang.GetComponent<VerticalLayoutGroup>();
+                    // ⚠️ La LARGEUR aussi : le défaut résiduel est un débordement HORIZONTAL, et
+                    // une sonde qui ne mesure que la hauteur ne peut pas le voir — c'est
+                    // exactement l'erreur de grandeur payée trois fois aujourd'hui.
+                    var vueRt = etageres.parent as RectTransform;
+                    var listeRt = (RectTransform)etageres;
+                    Debug.Log($"[GEOM] vue w={(vueRt == null ? -1f : vueRt.rect.width):F1} "
+                              + $"· liste w={listeRt.rect.width:F1} x={listeRt.anchoredPosition.x:F1} "
+                              + $"pivot={listeRt.pivot.x:F2} ancres=[{listeRt.anchorMin.x:F1},{listeRt.anchorMax.x:F1}]");
                     Debug.Log($"[GEOM] rangée '{rang.name}' rect={((RectTransform)rang).rect.height:F1} "
                               + $"vlg={(vlg == null ? "ABSENT" : $"ctrlH={vlg.childControlHeight} expH={vlg.childForceExpandHeight} spacing={vlg.spacing:F1}")}");
                     for (int k = 0; k < rang.childCount; k++)

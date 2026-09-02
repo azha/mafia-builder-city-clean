@@ -368,9 +368,16 @@ namespace MafiaCleanCity.Economy.Shop
             // qu'ils sont mieux construits.
             GameObject vue = new GameObject("Defilement", typeof(RectTransform));
             vue.transform.SetParent(transform, false);
-            Image masque = vue.AddComponent<Image>();
-            masque.color = new Color(0f, 0f, 0f, 0.004f);   // un masque exige un Graphic pour agir
-            vue.AddComponent<Mask>().showMaskGraphic = false;
+            // ⛔ `Mask` DÉCOUPE PAR LE CANAL ALPHA de son Graphic, pas par son rectangle. Le
+            // masque quasi transparent que j'avais posé (alpha 0,004) est donc un pochoir presque
+            // VIDE : il pouvait écarter ce qu'il devait garder. Symptôme sur la capture — rangées
+            // débordant à gauche et bordures arrondies disparues.
+            // ⇒ `RectMask2D` découpe par RECTANGLE, n'exige aucun Graphic et n'a pas de seuil
+            // d'alpha. Il n'y a rien à régler et donc rien à régler de travers.
+            // ★ Ce n'est pas une 4e hypothèse à l'aveugle : c'est le remplacement d'un mécanisme
+            // dont le paramètre décisif était douteux par un mécanisme qui n'en a pas. Et la sonde
+            // ci-dessous mesure le résultat au lieu de me laisser dire « ça a l'air mieux ».
+            vue.AddComponent<RectMask2D>();
             LayoutElement vueLe = vue.AddComponent<LayoutElement>();
             vueLe.flexibleHeight = 1f;                      // prend toute la hauteur restante
             ScrollRect defil = vue.AddComponent<ScrollRect>();
@@ -383,6 +390,19 @@ namespace MafiaCleanCity.Economy.Shop
             listeRt.anchorMin = new Vector2(0f, 1f);
             listeRt.anchorMax = new Vector2(1f, 1f);
             listeRt.pivot = new Vector2(0.5f, 1f);
+            // ⛔ UN RectTransform NEUF A UN sizeDelta DE (100, 100), ET DES ANCRES ÉTIRÉES NE LE
+            // REMPLACENT PAS : ELLES S'Y AJOUTENT. Mesuré, pas supposé — la sonde a rendu
+            //     vue w=1196,0 · liste w=1296,0 · ancres=[0,0 → 1,0]
+            // et 1296 − 1196 = 100, exactement la valeur par défaut. La liste débordait donc de
+            // 50 px de CHAQUE côté (pivot centré), ce qui coupait le début des libellés et
+            // poussait les bordures arrondies hors du masque.
+            // ⇒ Avec des ancres étirées, `sizeDelta` est un DELTA sur la taille du parent, pas une
+            // taille. Le laisser à sa valeur par défaut, c'est demander « parent + 100 ».
+            // ★ Trois hypothèses avaient précédé cette mesure sur le défaut voisin ; ici le nombre
+            // a tranché du premier coup parce que la sonde regardait enfin la bonne GRANDEUR — la
+            // largeur. Une sonde qui ne mesure que la hauteur ne peut pas voir un débordement
+            // horizontal, et j'avais passé deux runs avec exactement cette sonde-là.
+            listeRt.sizeDelta = new Vector2(0f, listeRt.sizeDelta.y);
             // ⚠️ Sans ce fitter, le contenu garde la hauteur du cadre et le groupe écrase de
             // nouveau : c'est LUI qui laisse la liste grandir au-delà de ce qui est visible.
             var fitter = liste.AddComponent<ContentSizeFitter>();
