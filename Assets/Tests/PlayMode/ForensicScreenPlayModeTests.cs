@@ -128,7 +128,25 @@ namespace MafiaCleanCity.Operational.Tests
         ///   dans son panneau, au lieu de présenter les trois bandes comme trois faits.
         /// ⛔ Et il n'existe AUCUNE maquette ratifiée pour cet écran (`front.md` : maquette ❌,
         /// 20 des 24 écrans v1.x n'en ont aucune). Cette capture ne peut donc pas être jugée
-        /// « conforme au dessin » — il n'y a pas de dessin.</summary>
+        /// « conforme au dessin » — il n'y a pas de dessin.
+        ///
+        /// ⛔⛔ CE QUE LE VERT DE CE TEST NE DIT PAS : RIEN SUR LES INSETS DE CHROME. Cet écran
+        /// pose son bandeau et son dock PAR ANALOGIE avec les autres — les valeurs n'ont jamais
+        /// été mesurées sur lui — et AUCUNE assertion de ce fichier ne les regarde. Vérifié le
+        /// 2026-09-02 : `TopInsetPx` / `BottomInsetPx` n'apparaissent nulle part ici.
+        /// ★ J'ai failli cocher « insets de 42 vérifiés » parce que la catégorie était verte.
+        ///   Un vert dit que rien n'a levé ; il ne dit pas que la propriété a été MESURÉE. Le
+        ///   même piège que la garde de lisibilité armée sur un écran injoignable — présente,
+        ///   inopérante, et verte.
+        /// ⚠️ ET ON NE PEUT PAS SIMPLEMENT AJOUTER LA GARDE ICI : hors shell, `ShellChrome`
+        /// publie des insets à ZÉRO, donc `offsetMin.y >= 0` serait vrai toujours et ne
+        /// mesurerait rien. C'est exactement le piège que ⑨ neutralise par un
+        /// `Assert.Greater(BottomInsetPx, 0f, "…sinon la garde ci-dessous ne mesure rien")`.
+        /// ⇒ CONDITION DE LEVÉE, mesurée et non supposée : `AppShell.ActivateTab` ne monte
+        ///   aujourd'hui que ㊲ sous `Tab.More` — ㊴ n'est atteignable par AUCUN chemin joueur sur
+        ///   cette branche. Le jour où il l'est, écrire ici la capture SOUS CHROME et ses deux
+        ///   gardes d'inset, sur le patron de ⑨/②/㊱. Tant que ce jour n'est pas venu, les insets
+        ///   de ㊴ sont une SUPPOSITION, et c'est écrit plutôt que passé sous silence.</summary>
         [UnityTest, Category("Capture"), Category("CaptureForensic")]
         public IEnumerator ScreenB7C2_CapturerParLeReseau()
         {
