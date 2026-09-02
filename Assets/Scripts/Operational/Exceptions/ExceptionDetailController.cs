@@ -359,7 +359,15 @@ namespace MafiaCleanCity.Operational.Exceptions
 
             TextMeshProUGUI lib = NewText("Role", carte.transform, role, (int)PxD(CssCarteL),
                                           TextAlignmentOptions.Left);
-            lib.color = levee ? CtaColor : AccentModerate;
+            // ⛔ LE RÔLE SUIT LE FOND DE SA CARTE, pas son rang. J'avais mis l'or sur la
+            // carte SUGGÉRÉE pour la distinguer — et comme cette carte est CLAIRE, l'or (0,82)
+            // s'est retrouvé sur du crème (0,88) : écart 0,06, illisible. La maquette le dit
+            // autrement : `.carte .l{color:#93402c}` (brique SOMBRE sur carte claire) et
+            // `.carte.sombre .l{color:var(--braise)}` (braise sur carte foncée).
+            // ★ Ce qui distingue la suggérée n'est PAS sa couleur de libellé : c'est sa position
+            //   (levée, au milieu) et le fond clair lui-même. J'ai voulu ajouter un signal là où
+            //   le dessin en avait déjà deux, et j'ai cassé la lisibilité pour l'ajouter.
+            lib.color = sombre ? AccentModerate : DesignTokens.Current.surfaceBase;
             TrackText(lib, role);
 
             TextMeshProUGUI titre = NewText("Titre", carte.transform,
