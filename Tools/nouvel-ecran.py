@@ -675,7 +675,18 @@ namespace MafiaCleanCity.Operational.Tests
         ///
         /// ⚠️ `Canvas.scaleFactor` lu la frame de la création rend 1,0 — plausible et faux, d'où
         /// les `yield return null` avant tout rendu.</summary>
-        [UnityTest, Category("Capture")]
+        // ⛔⛔ PAS `Category("Capture")` — c'était codé en dur ici, et ce gabarit produit les 46
+        /// écrans restants. Deux défauts d'un coup, à chaque écran généré :
+        /// (a) la capture n'était adressable QUE par `Capture`, donc pas isolable de ses soeurs ;
+        /// (b) `Capture` fait SIGSEGV dans le pilote Mesa (mesuré dans ce dépôt), donc la seule
+        ///     demande qui l'atteignait est aussi celle qui tue le run.
+        /// ⇒ Une capture livrée par ce gabarit était **armée et injoignable** — exactement le
+        ///   défaut que le chantier joignabilité ferme côté ÉCRANS, ici côté TESTS.
+        /// ⚠️ Et le préfixe est `Photo`, pas `Capture` : le filtre d'Unity matche par PRÉFIXE, donc
+        ///   `Capture<Ecran>` serait emporté par une demande de `Capture` — le piège qui a mordu
+        ///   trois sessions le 2026-09-02 (`["HUD"]`→`HUDv31`, `["CaptureDetail"]`→
+        ///   `CaptureDetailMutant`, et ma propre série de noms, refusée par ma propre garde).
+        [UnityTest, Category("Photo{category}")]
         public IEnumerator {category}C1_CapturerPourLeJugeVisuel_DeuxResolutions()
         {{
             MonterEcran();
