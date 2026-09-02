@@ -720,7 +720,27 @@ namespace MafiaCleanCity.Capture.Tests
                 MafiaCleanCity.Operational.Exceptions.ExceptionQueueController>();
             ecran.SetMountParent(canvasGo.transform);
             ecran.SetToken(token);
-            for (int i = 0; i < 120; i++) yield return null;
+
+            // ⛔ ATTENDRE LE DRAPEAU, PAS UN NOMBRE DE FRAMES. `SetToken` DÉCLENCHE le chargement
+            // sans l'attendre : compter 120 frames revient à parier sur la latence du réseau.
+            // Mesuré le 2026-09-02 — ce test a rendu 7 nœuds et échoué, pendant que son jumeau
+            // SOUS CHROME photographiait les mêmes trois attendants sans broncher. La seule
+            // différence entre les deux était celle-ci.
+            // ★ Et la doctrine était DÉJÀ ÉCRITE dans ce fichier, au-dessus de la capture de
+            //   l'état vide : « ATTENDRE LE CHARGEMENT, PAS UN NOMBRE DE FRAMES. Sans ça, "pas
+            //   encore chargé" et "chargé et vide" ont la même image ». Elle n'avait été
+            //   appliquée qu'à un seul des deux tests qui en avaient besoin.
+            // ⚠️ Balayé avant de corriger : 28 attentes à frames fixes dans ce fichier, dont 15
+            //   suivies d'une assertion de contenu — mais UNE SEULE est fautive, celle-ci. Les
+            //   autres suivent soit un rendu local, soit un `yield return …Charger()` qui a DÉJÀ
+            //   achevé le chargement avant de rendre la main ; leurs frames ne servent qu'au
+            //   layout, ce qui est légitime. *Compter les occurrences en accusait quinze ; les
+            //   classer en laisse une.*
+            float tAttenteFile = Time.realtimeSinceStartup;
+            while (!ecran.QueueLoaded && Time.realtimeSinceStartup - tAttenteFile < 30f)
+                yield return null;
+            Assert.IsTrue(ecran.QueueLoaded, $"⑨ n'a pas chargé sa file : {ecran.QueueError}");
+            for (int i = 0; i < 30; i++) yield return null;   // laisser le layout se poser
 
             // ⛔ COMPTER SOUS LA RACINE CONSTRUITE, PAS SOUS LE CONTRÔLEUR.
             // ⚠️ Ma première version comptait sous `ecran` et rendait 1 : le contrôleur ne porte
