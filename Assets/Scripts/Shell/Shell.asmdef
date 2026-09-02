@@ -12,7 +12,8 @@
         "Economy",
         "Account",
         "CitySim",
-        "CoreLoops"
+        "CoreLoops",
+        "Onboarding"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
