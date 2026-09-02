@@ -18,6 +18,7 @@ namespace MafiaCleanCity.CityMap.Tests
     // so the full PlayMode assembly is order-independent. The operational concern runs on a
     // DISTINCT player (operational_demo) on its own heat-coupled city, so it never washes this
     // gradient. (See SeederSupport.)
+    [Category("ScreenCarte")]
     public class CityMapHeatPlayModeTests
     {
         private const string DemoIdentifier = "citymap_demo@example.test";

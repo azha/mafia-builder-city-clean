@@ -17,7 +17,12 @@ namespace MafiaCleanCity.CityMap
         private string D(int id, string leaf) => $"{BaseUrl.TrimEnd('/')}/v1/city/district/{id}/{leaf}";
         private string P(int precinct, string leaf) => $"{BaseUrl.TrimEnd('/')}/v1/city/precinct/{precinct}/{leaf}";
 
-        /// <summary>The owning precinct for a district (3 districts/precinct, capped at 6) — mirrors the backend.</summary>
+        /// <summary>The owning precinct for a district (3 districts/precinct, capped at 6) — mirrors the
+        /// backend's rule client-side. FALLBACK ONLY (measured 2026-09-02): DistrictDto now carries a
+        /// SERVED `precinct_id`, which coincides with this formula 18/18 today but is not guaranteed to
+        /// forever — a business rule duplicated across two repos diverges silently the day the backend
+        /// changes it. Belief/Patrol below prefer the served value whenever the caller has a DistrictDto;
+        /// this formula remains for callers that only have a bare districtId.</summary>
         public static int PrecinctForDistrict(int districtId) => Mathf.Min(6, (districtId - 1) / 3 + 1);
 
         // Raw authenticated GET. onJson on 2xx; onMissing(code) on anything else.
@@ -64,11 +69,17 @@ namespace MafiaCleanCity.CityMap
         public IEnumerator Inspection(int districtId, string token, Action<InspectionDto> ok, Action<long> missing) =>
             Get(D(districtId, "inspection"), token, j => ok(JsonUtility.FromJson<InspectionEnvelope>(j)?.payload?.data), missing);
 
-        public IEnumerator Belief(int districtId, string token, Action<BeliefDto> ok, Action<long> missing) =>
-            Get(P(PrecinctForDistrict(districtId), "belief"), token, j => ok(JsonUtility.FromJson<BeliefEnvelope>(j)?.payload?.data), missing);
+        /// <summary>`precinctId`: pass the district's SERVED `precinct_id` (DistrictDto.precinct_id) when
+        /// the caller holds the DTO — it is authoritative. Optional and defaulted to null so existing
+        /// bare-districtId callers are unaffected; they fall back onto PrecinctForDistrict's client-side
+        /// mirror of the backend rule (see its own doc comment for why that is a fallback, not the source
+        /// of truth).</summary>
+        public IEnumerator Belief(int districtId, string token, Action<BeliefDto> ok, Action<long> missing, int? precinctId = null) =>
+            Get(P(precinctId ?? PrecinctForDistrict(districtId), "belief"), token, j => ok(JsonUtility.FromJson<BeliefEnvelope>(j)?.payload?.data), missing);
 
-        public IEnumerator Patrol(int districtId, string token, Action<PatrolDto> ok, Action<long> missing) =>
-            Get(P(PrecinctForDistrict(districtId), "patrol"), token, j => ok(JsonUtility.FromJson<PatrolEnvelope>(j)?.payload?.data), missing);
+        /// <summary>Same `precinctId` contract as Belief above.</summary>
+        public IEnumerator Patrol(int districtId, string token, Action<PatrolDto> ok, Action<long> missing, int? precinctId = null) =>
+            Get(P(precinctId ?? PrecinctForDistrict(districtId), "patrol"), token, j => ok(JsonUtility.FromJson<PatrolEnvelope>(j)?.payload?.data), missing);
 
         public IEnumerator Whisper(string token, Action<WhisperDto> ok, Action<long> missing) =>
             Get($"{BaseUrl.TrimEnd('/')}/v1/city/citizens/whisper", token, j => ok(JsonUtility.FromJson<WhisperEnvelope>(j)?.payload?.data), missing);
