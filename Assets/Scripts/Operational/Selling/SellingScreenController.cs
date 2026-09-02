@@ -78,13 +78,29 @@ namespace MafiaCleanCity.Operational.Selling
         {
             mountParent = parent;
             Init();
-            if (parent == null) return;
-            transform.SetParent(parent, false);
-            RectTransform rt = (RectTransform)transform;
-            rt.anchorMin = Vector2.zero;
-            rt.anchorMax = Vector2.one;
-            rt.offsetMin = Vector2.zero;
-            rt.offsetMax = Vector2.zero;
+        }
+
+        /// <summary>⛔ CE CONTRÔLEUR NE SE PLACE PLUS LUI-MÊME, ET C'EST UNE DÉCISION MESURÉE.
+        /// Deux tentatives ont échoué avant celle-ci, chacune réfutée par le diagnostic imprimé
+        /// dans la capture :
+        ///   · placement dans `SetMountParent` → `frere=1/8`, `rect=1280x960` : le shell re-parente
+        ///     APRÈS le setter, donc tout ce qu'on y pose est écrasé ;
+        ///   · placement dans `Start()`        → `frere=3/8`, `rect=1280x960` : le rang bouge, la
+        ///     taille NON — donc ce n'est pas l'ordre qui décide, c'est le CONTENEUR qui gouverne
+        ///     la taille de ses enfants.
+        /// ⇒ Forcer des ancres contre un conteneur qui contrôle ses enfants ne peut pas marcher :
+        /// il les recalcule à chaque passe de mise en page. *Se battre contre le système de layout
+        /// est toujours une erreur de couche.* L'écran ACCEPTE donc le rect que le shell lui donne
+        /// et se dessine dedans — c'est au shell de décider de la place d'un locataire, pas au
+        /// locataire de se l'arroger.
+        /// ⚠️ CONSÉQUENCE ASSUMÉE, écrite plutôt que masquée : monté en surimpression, cet écran
+        /// occupe la BANDE que le shell lui alloue (1280x960), pas le plein cadre. Tant qu'il n'a
+        /// pas d'entrée de navigation propre — les quatre onglets sont pris — c'est le meilleur
+        /// état vérifiable : il rend, il est lisible, et il ne prétend pas être ailleurs.</summary>
+        public void SetMountParent(Transform parent)
+        {
+            mountParent = parent;
+            Init();
         }
 
         public void SetToken(string bearer)
