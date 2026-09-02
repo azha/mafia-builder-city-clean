@@ -375,5 +375,115 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.IsNull(ExceptionQueueController.CategorieConflit(Carte("")));
             Assert.IsNull(ExceptionQueueController.CategorieConflit(null));
         }
+
+        // ═══ ⑩ — la main de cartes, et le chemin joueur qui l'ouvre ══════════════════════════
+
+        /// <summary>⛔ CHAQUE ATTENDANT OUVRE SA PROPRE CARTE — pas celle du premier.
+        ///
+        /// Avant, seul le tampon ouvrait ⑩, et toujours sur `Cards[0]` : les deuxième et
+        /// troisième attendants étaient dessinés, alignés, lisibles, et MORTS au toucher. Aucune
+        /// garde structurelle ne pouvait le voir — les trois existent, aux bonnes places, avec
+        /// les bonnes valeurs.
+        /// ⚠️ Et le piège de la capture par référence est réel : un `foreach` qui passe `c` à la
+        /// lambda sans copie fait ouvrir la DERNIÈRE carte aux trois attendants. Ce test
+        /// l'attrape parce qu'il exige l'identité de la carte ouverte, pas seulement qu'une
+        /// carte s'ouvre.</summary>
+        [UnityTest, Category("Ecran10")]
+        public IEnumerator Ecran9_ChaqueAttendantOuvreSaPropreCarte()
+        {
+            var ctl = MonterFileAvecCartes(new[] { "a", "b", "c" });
+            yield return null;
+
+            for (int i = 0; i < 3; i++)
+            {
+                GameObject att = GameObject.Find($"Attendant{i}");
+                Assert.IsNotNull(att, $"l'attendant {i} doit être dessiné");
+                var bouton = att.GetComponent<UnityEngine.UI.Button>();
+                Assert.IsNotNull(bouton, $"l'attendant {i} doit être touchable — sinon il est décoratif");
+
+                bouton.onClick.Invoke();
+                yield return null;
+                Assert.IsNotNull(ctl.LastDetail, $"l'attendant {i} doit avoir ouvert un détail");
+                Assert.AreEqual(ctl.Cards[i].exception_id, ctl.LastDetail.CurrentCard.exception_id,
+                    $"l'attendant {i} a ouvert la carte d'un AUTRE : la lambda capture la variable " +
+                    "de boucle au lieu d'une copie, et les trois ouvrent la même.");
+                ctl.LastDetail.Back();
+                yield return null;
+            }
+        }
+
+        /// <summary>Les trois rôles de la main sont décidés sur la DONNÉE, pas sur l'ordre du
+        /// tableau : suggérée = `suggested_action`, « lui apprendre » = celle qui porte
+        /// `add_rule_dsl`, risquée = la première autre. Le talon porte le CARDINAL du reste.
+        /// ⚠️ Contrôle négatif inclus : une carte à UNE seule issue ne doit produire NI risquée
+        /// NI apprendre NI talon — mesuré, `exc_demo_one_time` est exactement ce cas.</summary>
+        [UnityTest, Category("Ecran10")]
+        public IEnumerator Ecran10_LesRolesDeLaMainViennentDeLaDonnee()
+        {
+            var ctl = MonterFileAvecCartes(new[] { "riche" });
+            ctl.Cards[0].suggested_action = new CandidateActionDto { id = "sug", label = "Réparer" };
+            ctl.Cards[0].candidate_actions = new[]
+            {
+                new CandidateActionDto { id = "risq", label = "Soudoyer" },
+                new CandidateActionDto { id = "sug",  label = "Réparer" },
+                new CandidateActionDto { id = "appr", label = "Gérer seul", add_rule_dsl = "WHEN raid THEN repair" },
+                new CandidateActionDto { id = "autre1", label = "X" },
+                new CandidateActionDto { id = "autre2", label = "Y" },
+            };
+            ctl.OpenDetail(ctl.Cards[0]);
+            yield return null;
+            for (int i = 0; i < 5; i++) yield return null;
+
+            var textes = ctl.LastDetail.RenderedTexts;
+            CollectionAssert.Contains(textes, "Suggéré");
+            CollectionAssert.Contains(textes, "Risqué");
+            CollectionAssert.Contains(textes, "Lui apprendre");
+            CollectionAssert.Contains(textes, "+2",
+                "cinq issues, trois montrées ⇒ le talon doit porter « +2 » : c'est un cardinal, " +
+                "pas un ornement");
+            ctl.LastDetail.Back();
+            yield return null;
+
+            // — contrôle négatif : une seule issue —
+            var ctl2 = MonterFileAvecCartes(new[] { "pauvre" });
+            ctl2.Cards[0].suggested_action = new CandidateActionDto { id = "seule", label = "Laisser filer" };
+            ctl2.Cards[0].candidate_actions = new[]
+            {
+                new CandidateActionDto { id = "seule", label = "Laisser filer" },
+            };
+            ctl2.OpenDetail(ctl2.Cards[0]);
+            yield return null;
+            for (int i = 0; i < 5; i++) yield return null;
+
+            var t2 = ctl2.LastDetail.RenderedTexts;
+            CollectionAssert.Contains(t2, "Suggéré");
+            CollectionAssert.DoesNotContain(t2, "Risqué",
+                "une carte à une seule issue ne doit pas inventer de carte « risquée » pour " +
+                "remplir le dessin");
+            CollectionAssert.DoesNotContain(t2, "Lui apprendre");
+            Assert.IsFalse(t2.Contains("+0") || t2.Contains("+1"),
+                "aucune issue restante ⇒ pas de talon du tout");
+        }
+
+        /// <summary>Monte ⑨ avec des cartes FABRIQUÉES. ⛔ Ne prouve rien sur le serveur — les
+        /// gardes de contrat passent par le réseau ; celles-ci portent sur le RENDU.</summary>
+        private ExceptionQueueController MonterFileAvecCartes(string[] ids)
+        {
+            controllerGo = new GameObject("ExceptionQueueScreen");
+            var ctl = controllerGo.AddComponent<ExceptionQueueController>();
+            var cartes = new ExceptionCardDto[ids.Length];
+            for (int i = 0; i < ids.Length; i++)
+                cartes[i] = new ExceptionCardDto
+                {
+                    exception_id = ids[i],
+                    event_descriptor = "descripteur " + ids[i],
+                    severity_band = "MILD", priority_band = "SILENT", confidence_band = "LIKELY",
+                    resolution_status = "pending",
+                    suggested_action = new CandidateActionDto { id = "s_" + ids[i], label = "Agir" },
+                    candidate_actions = new[] { new CandidateActionDto { id = "s_" + ids[i], label = "Agir" } },
+                };
+            ctl.RendrePourTest(cartes);
+            return ctl;
+        }
 }
 }

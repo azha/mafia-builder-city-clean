@@ -226,6 +226,16 @@ namespace MafiaCleanCity.Operational.Exceptions
         /// <summary>La file : un attendant par carte, le PREMIER plus grand et pleinement opaque
         /// (`.attendant.premier{width:74px;opacity:1}` contre 60px et .78). L'ordre est celui que
         /// le serveur sert — la maquette ratifie explicitement qu'il n'y a PAS de tri.</summary>
+        /// <summary>Rend une file FABRIQUÉE, sans réseau — RÉSERVÉ AUX TESTS (patron ㊲/㊱).
+        /// ⛔ Ne prouve JAMAIS que le serveur émet ces cartes : seulement ce que l'écran EN FAIT.
+        /// Les gardes qui portent sur le contrat de la route passent par le vrai réseau.</summary>
+        public void RendrePourTest(ExceptionCardDto[] cartes)
+        {
+            EnsureInitialized();
+            Cards = cartes ?? System.Array.Empty<ExceptionCardDto>();
+            Render();
+        }
+
         private void RendreFile()
         {
             for (int i = fileRoot.childCount - 1; i >= 0; i--)
@@ -236,6 +246,20 @@ namespace MafiaCleanCity.Operational.Exceptions
                 ExceptionCardDto c = Cards[i];
                 bool premier = i == 0;
                 GameObject a = NewUI($"Attendant{i}", fileRoot);
+
+                // ⛔ CHAQUE ATTENDANT OUVRE SA PROPRE CARTE — c'est LE chemin joueur vers ⑩.
+                // Avant : seul le tampon ouvrait, et toujours celle du PREMIER. Les deux autres
+                // attendants étaient dessinés, alignés, lisibles… et morts au toucher. Un écran
+                // qui montre trois interlocuteurs et n'en laisse joindre qu'un ment sur ce qu'il
+                // propose, sans qu'aucune garde structurelle ne s'en aperçoive : les trois
+                // existent, aux bonnes places, avec les bonnes valeurs.
+                Image fondA = a.AddComponent<Image>();
+                fondA.color = new Color(0f, 0f, 0f, 0f);   // cible de toucher, invisible
+                Button ba = a.AddComponent<Button>();
+                ba.targetGraphic = fondA;
+                ExceptionCardDto carteDeCetAttendant = c;   // capture par valeur : sinon les
+                ba.onClick.AddListener(() => OpenDetail(carteDeCetAttendant)); // trois ouvrent la dernière
+
                 VerticalLayoutGroup v = a.AddComponent<VerticalLayoutGroup>();
                 v.spacing = Px(3f);
                 v.childControlWidth = true; v.childControlHeight = true;
