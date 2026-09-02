@@ -840,6 +840,76 @@ namespace MafiaCleanCity.Capture.Tests
         }
 
         [UnityTest]
+        /// <summary>⑩ APRÈS LE TAMPON — l'état que la maquette dessine avec son `outcome`.
+        ///
+        /// ⛔⛔ CE TEST MUTE, ET C'EST POUR ÇA QU'IL EST SÉPARÉ ET DANS SA PROPRE CATÉGORIE.
+        /// Il résout une exception POUR DE BON (`POST /v1/exceptions/:id/resolve`) : la carte
+        /// sort de la file et n'y revient pas. Le compte de démo est partagé — planque le
+        /// restaure par `scripts/provision-demo-riche.mjs`, qui REMET LE COMPTE À ZÉRO. Il faut
+        /// donc la prévenir AVANT de lancer ceci, et ne pas le lancer pendant qu'une autre
+        /// session capture.
+        /// ⇒ Le mélanger avec la capture de la main de cartes ferait d'une image rejouable une
+        ///   image qui abîme le compte à chaque exécution.
+        ///
+        /// ⚠️ ON CONSOMME `exc_demo_one_time` ET PAS UNE AUTRE : elle n'a qu'une seule issue,
+        /// donc c'est la moins intéressante pour la main de cartes de ⑨ — choix arrêté avec la
+        /// session back plutôt que pris au hasard.
+        ///
+        /// ⚠️ ET L'`outcome` PEUT NE PAS ÊTRE REPRODUCTIBLE. Le back émet dix valeurs, dont
+        /// `BRIBE_SUCCEEDED` / `BRIBE_FAILED` qui sont TIRÉES AU SORT dans le handler. Sur une
+        /// carte `ONE_TIME` on attend `RESOLVED`, mais si un jour cette capture porte un
+        /// `BRIBE_*`, son nom doit le dire — sinon quelqu'un la rejouera et lira une régression
+        /// là où il n'y a qu'un tirage.</summary>
+        [Category("CaptureDetailMutant")]
+        public IEnumerator Capture_Detail_ApresTampon_SousChrome_MUTE()
+        {
+            LogAssert.ignoreFailingMessages = true;
+            shellGo = new GameObject("DetailMuteShell");
+            shell = shellGo.AddComponent<AppShell>();
+            yield return null;
+            float t0 = Time.realtimeSinceStartup;
+            while (string.IsNullOrEmpty(shell.Token) && Time.realtimeSinceStartup - t0 < 30f) yield return null;
+            Assert.IsFalse(string.IsNullOrEmpty(shell.Token), "le shell doit avoir sa session");
+            for (int i = 0; i < 30; i++) yield return null;
+
+            var file = shell.MonterLocataireEnSurimpression<
+                MafiaCleanCity.Operational.Exceptions.ExceptionQueueController>();
+            float tc = Time.realtimeSinceStartup;
+            while ((file.Cards == null || file.Cards.Length == 0)
+                   && Time.realtimeSinceStartup - tc < 30f) yield return null;
+            Assert.Greater(file.Cards.Length, 0, "la file doit porter des cartes");
+
+            // La carte CONVENUE, pas la première venue.
+            MafiaCleanCity.Operational.Exceptions.ExceptionCardDto cible = null;
+            foreach (var c in file.Cards)
+                if (c != null && c.event_descriptor != null
+                    && c.event_descriptor.Contains("one_time")) { cible = c; break; }
+            Assert.IsNotNull(cible,
+                "`exc_demo_one_time` est absente : le compte a peut-être déjà été consommé ou " +
+                "reseedé. Ne PAS résoudre une autre carte à la place — relancer le provisionnement.");
+
+            file.OpenDetail(cible);
+            for (int i = 0; i < 30; i++) yield return null;
+            var detail = file.LastDetail;
+            Assert.IsNotNull(detail, "⑩ doit être ouvert");
+
+            var action = cible.candidate_actions != null && cible.candidate_actions.Length > 0
+                ? cible.candidate_actions[0] : cible.suggested_action;
+            Assert.IsNotNull(action, "la carte doit porter une issue");
+
+            yield return detail.ResolveWith(action);   // ⛔ MUTATION RÉELLE
+            Assert.IsNull(detail.LastError, $"la résolution a échoué : {detail.LastError}");
+            Assert.IsNotEmpty(detail.LastOutcome,
+                "le back doit rendre un `outcome` — c'est TOUT l'objet de cette capture");
+            Debug.Log($"[APRES-TAMPON] outcome = {detail.LastOutcome}");
+            for (int i = 0; i < 45; i++) yield return null;
+
+            yield return CapturerA(1080, 2400,
+                "Assets/Screenshots/screen_5a_detail_apres-tampon_sous_chrome_1080x2400.png");
+        }
+
+        [UnityTest]
+        
         /// <summary>⑩ SOUS LE CHROME — la main de cartes, état NON MUTANT.
         ///
         /// Ouvre le détail par le CHEMIN JOUEUR : on touche un attendant de ⑨, qui monte ⑩ en
