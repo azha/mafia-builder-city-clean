@@ -485,5 +485,33 @@ namespace MafiaCleanCity.Operational.Tests
             ctl.RendrePourTest(cartes);
             return ctl;
         }
+
+        /// <summary>⛔ LE CORPS DU RESOLVE DOIT PORTER `chosen_action_id`, exactement.
+        ///
+        /// TD-451, mesuré par la session back : un corps qui porte `action_id` au lieu de
+        /// `chosen_action_id` rend **200**, le serveur IGNORE le champ, et **la carte est
+        /// consommée sans faire ce qu'on demandait**. C'est comme ça qu'une carte enseignable a
+        /// été brûlée.
+        /// ★ Le pire mode de panne de la nuit : pas une erreur, un SUCCÈS qui ne fait pas ce
+        ///   qu'on croit. Aucun code HTTP ne le signale, aucune garde de statut ne l'attrape —
+        ///   seule la FORME du corps envoyé le dit.
+        /// ⇒ Cette garde sérialise la requête réelle et lit le JSON. Le contrôle négatif est ce
+        ///   qui lui donne sa valeur : sans lui, un DTO renommé passerait au vert.</summary>
+        [Test]
+        public void LeCorpsDuResolve_PorteChosenActionId_PasActionId()
+        {
+            string json = JsonUtility.ToJson(
+                new ResolveRequest { method = "ONE_TIME", chosen_action_id = "acknowledge" });
+
+            StringAssert.Contains("\"chosen_action_id\"", json,
+                "le serveur n'accepte que `chosen_action_id` ; sous tout autre nom il rend 200, " +
+                "ignore le champ et consomme la carte (TD-451)");
+            StringAssert.Contains("\"acknowledge\"", json, "la valeur doit voyager avec le champ");
+            StringAssert.Contains("\"method\"", json);
+
+            // contrôle négatif : le nom fautif ne doit apparaître NULLE PART dans le corps
+            Assert.IsFalse(System.Text.RegularExpressions.Regex.IsMatch(json, "\"action_id\"\\s*:"),
+                "un champ `action_id` seul est le piège TD-451 — il réussit en silence");
+        }
 }
 }

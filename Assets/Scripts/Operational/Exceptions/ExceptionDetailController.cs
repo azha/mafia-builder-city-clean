@@ -193,6 +193,16 @@ namespace MafiaCleanCity.Operational.Exceptions
             desc.color = TextPrimary;
             AddLayoutElement(desc.gameObject, minHeight: PxD(24f), flexibleHeight: 0);
 
+            // ---- L'APRÈS-TAMPON : le mot que le back rend ----
+            // Les DIX `outcome` émis, un par handler (inventaire de la session back, 2026-09-02) :
+            //   RESOLVED · ESCALATED · TAUGHT · DEFERRED · DEMOLISHED · LAID_LOW ·
+            //   REPAIRING · REPAIRING_SLOW · BRIBE_SUCCEEDED · BRIBE_FAILED
+            // ⚠️ `BRIBE_SUCCEEDED` / `BRIBE_FAILED` sont NON DÉTERMINISTES — tirage dans le
+            // handler. Une capture de cet état-là n'est PAS reproductible : si on en prend une,
+            // son nom doit le dire, sinon quelqu'un la rejouera et lira une régression là où il
+            // n'y a qu'un tirage.
+            // ⛔ On affiche le mot du serveur TEL QUEL, sans le traduire en « réussi / échoué » :
+            // dix valeurs fermées dont deux aléatoires, c'est au serveur de les nommer.
             // ---- Resolved state: show outcome + Back, then return. ----
             if (!string.IsNullOrEmpty(LastOutcome))
             {
