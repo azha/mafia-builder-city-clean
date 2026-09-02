@@ -74,12 +74,6 @@ namespace MafiaCleanCity.Operational.Selling
             Construire();
         }
 
-        public void SetMountParent(Transform parent)
-        {
-            mountParent = parent;
-            Init();
-        }
-
         /// <summary>⛔ CE CONTRÔLEUR NE SE PLACE PLUS LUI-MÊME, ET C'EST UNE DÉCISION MESURÉE.
         /// Deux tentatives ont échoué avant celle-ci, chacune réfutée par le diagnostic imprimé
         /// dans la capture :
