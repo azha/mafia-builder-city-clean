@@ -72,6 +72,25 @@ namespace MafiaCleanCity.Shell.Tests
             Assert.AreEqual(AppShell.Tab.Empire, shell.CurrentTab,
                 "acquisition de session du shell non résolue — toute capture prise ici serait celle d'un autre écran");
 
+            // ⛔ 2026-09-02 (capture DA silhouettes, 1er run : « frère 0 sur 3 ») : `CurrentTab`
+            //    passe à Empire UNE FRAME AVANT que l'acquisition monte les panneaux d'Accueil
+            //    (AcquisitionNEnterrePasLEcranOuvertPlayModeTests l'établit pour les surimpressions ;
+            //    un ONGLET activé dans la même fenêtre subit le même recouvrement). On attend donc
+            //    que le ContentSlot soit STABLE — même nombre d'enfants sur 10 frames consécutives —
+            //    avant de changer d'onglet : c'est l'événement (les panneaux posés), pas son proxy.
+            //    ⚠️ Cette attente rend la CAPTURE fiable ; elle ne répare rien en production, où
+            //    personne n'attend dix frames stables avant de toucher l'écran (remarque de 98).
+            //    Et elle n'était PAS la cause des deux premiers rouges — voir la garde de fratrie.
+            {
+                int stable = 0, dernier = -1; float ts = 0f;
+                while (stable < 10 && ts < 10f)
+                {
+                    int n = shell.ContentSlot.childCount;
+                    stable = (n == dernier) ? stable + 1 : 0; dernier = n;
+                    ts += Time.deltaTime; yield return null;
+                }
+            }
+
             shell.ActivateTab(AppShell.Tab.Org);
             LieutenantScreenController famille = null;
             float montage = 0f;
@@ -187,11 +206,35 @@ namespace MafiaCleanCity.Shell.Tests
             // enfant de son parent. *Une mesure de fidélité sur un objet occlus mesure le
             // VOISIN* — et rend un verdict d'autant plus rassurant qu'il est faux.
             Transform parentDuFamille = famille.transform.parent;
-            Assert.AreEqual(parentDuFamille.childCount - 1, famille.transform.GetSiblingIndex(),
-                $"le locataire est le frère {famille.transform.GetSiblingIndex()} sur "
-                + $"{parentDuFamille.childCount} — les suivants se dessinent PAR DESSUS et la "
-                + "capture montrerait les écrans du dessous, à la bonne taille.");
-            RectTransform locataireRt = (RectTransform)famille.transform;
+            // ⛔ 2026-09-02, capture DA silhouettes, deux runs rouges « frère 0 sur 3 » : la garde
+            //    d'origine comparait un RANG (`childCount - 1 == GetSiblingIndex()`), et les deux
+            //    frères d'après étaient `LieutenantBackdrop` et `LieutenantSheet` — les PROPRES
+            //    parties de l'écran, que `LieutenantScreenController` crée sous `mountParent`
+            //    (= ContentSlot) APRÈS s'y être placé dernier. « Ce qui vient après moi dans la
+            //    fratrie » n'est pas « ce qui m'enterre » (98 a payé le même angle mort sur
+            //    Laundering le même jour). ⇒ On NOMME les frères d'après et on exclut ceux que
+            //    l'écran a fabriqués lui-même ; ce qui reste est un occultant, et il est cité.
+            {
+                var occultants = new System.Collections.Generic.List<string>();
+                for (int k = famille.transform.GetSiblingIndex() + 1; k < parentDuFamille.childCount; k++)
+                {
+                    Transform f = parentDuFamille.GetChild(k);
+                    if (!f.gameObject.activeInHierarchy) continue;
+                    if (f.name == "LieutenantBackdrop" || f.name == "LieutenantSheet") continue; // parties de l'écran
+                    occultants.Add(f.name);
+                }
+                Assert.IsEmpty(occultants,
+                    $"le locataire est le frère {famille.transform.GetSiblingIndex()} sur {parentDuFamille.childCount} "
+                    + $"et se fait recouvrir par : [{string.Join(", ", occultants)}] — la capture montrerait ces "
+                    + "écrans-là, pas la Famille");
+            }
+            // ⛔ 2026-09-02 (run 3) : `(RectTransform)famille.transform` jetait InvalidCastException —
+            //    le shell crée l'hôte du locataire par `new GameObject("Tenant_…")`, un Transform NU
+            //    (AppShell.ConstruireLocataire). Ce qui a une taille, c'est la FEUILLE que l'écran
+            //    construit à côté de lui sous ContentSlot : c'est elle qu'on mesure.
+            Transform feuille = parentDuFamille.Find("LieutenantSheet");
+            Assert.IsNotNull(feuille, "LieutenantSheet absente sous ContentSlot — l'écran n'a rien construit");
+            RectTransform locataireRt = (RectTransform)feuille;
             Assert.Greater(locataireRt.rect.width, 200f,
                 $"le locataire fait {locataireRt.rect.width:F0}x{locataireRt.rect.height:F0} — c'est la "
                 + "taille par défaut d'un RectTransform, donc il ne dessine rien et la capture montre "
