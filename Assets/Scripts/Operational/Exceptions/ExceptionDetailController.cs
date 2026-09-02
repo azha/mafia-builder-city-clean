@@ -318,6 +318,18 @@ namespace MafiaCleanCity.Operational.Exceptions
                 TextMeshProUGUI t = NewText("TalonNb", talon.transform, "+" + restantes.Count,
                                             (int)PxD(CssCarteT), TextAlignmentOptions.Center);
                 t.color = TextPrimary;
+                // ⛔ SANS CET ÉTIREMENT, TMP N'A AUCUNE PLACE OÙ POSER LES CARACTÈRES. Le talon
+                // porte un `LayoutElement` mais AUCUN groupe de mise en page : son enfant garde
+                // donc le rect par défaut, et « +1 » sortait à ZÉRO caractère posé — le talon
+                // s'affichait comme un rectangle rouge nu.
+                // ★ Un `LayoutElement` dimensionne l'objet AUPRÈS DE SON PARENT ; il ne dit rien
+                //   à ses propres enfants. J'avais lu « le talon a une taille » comme « son
+                //   contenu a une taille ».
+                // ⚠️ Et c'est la garde de TRONCATURE qui l'a dit, pas l'œil : sur l'image, un
+                //   texte à zéro caractère et un texte absent sont le même rectangle.
+                var trt = (RectTransform)t.transform;
+                trt.anchorMin = Vector2.zero; trt.anchorMax = Vector2.one;
+                trt.offsetMin = Vector2.zero; trt.offsetMax = Vector2.zero;
                 TrackText(t, "+" + restantes.Count);
             }
 
