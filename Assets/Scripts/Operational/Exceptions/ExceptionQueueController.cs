@@ -239,12 +239,12 @@ namespace MafiaCleanCity.Operational.Exceptions
         {
             switch (n)
             {
-                case 2: return "Deux";
-                case 3: return "Trois";
-                case 4: return "Quatre";
-                case 5: return "Cinq";
-                case 6: return "Six";
-                default: return "Plusieurs";
+                case 2: return MafiaCleanCity.I18n.Libelle.De("exceptions", "nombre", "Deux");
+                case 3: return MafiaCleanCity.I18n.Libelle.De("exceptions", "nombre", "Trois");
+                case 4: return MafiaCleanCity.I18n.Libelle.De("exceptions", "nombre", "Quatre");
+                case 5: return MafiaCleanCity.I18n.Libelle.De("exceptions", "nombre", "Cinq");
+                case 6: return MafiaCleanCity.I18n.Libelle.De("exceptions", "nombre", "Six");
+                default: return MafiaCleanCity.I18n.Libelle.De("exceptions", "nombre", "Plusieurs");
             }
         }
 
@@ -408,7 +408,7 @@ $"{QuiParle(c)} · {Cap(c.severity_band)} · {Cap(c.priority_band)}", 8f, TextSe
             //   la maquette met derrière l'appui long, promu geste principal tant que le maillon
             //   manque. L'écran ne promet rien qu'il ne puisse tenir.
             TextMeshProUGUI sous = NouveauTexteMaquette(t.transform, "SousTexte",
-                "il attend une consigne", 8f, TextSecondary);
+                Lib("il attend une consigne"), 8f, TextSecondary);
             sous.alignment = TextAlignmentOptions.Center;
             TrackText(sous, sous.text);
         }
@@ -428,12 +428,12 @@ $"{QuiParle(c)} · {Cap(c.severity_band)} · {Cap(c.priority_band)}", 8f, TextSe
             v.childAlignment = TextAnchor.MiddleCenter;
 
             TextMeshProUGUI titre = NouveauTexteMaquette(l.transform, "Titre",
-                "Escalades archivées", 9.5f, TextPrimary);
+                Lib("Escalades archivées"), 9.5f, TextPrimary);
             titre.alignment = TextAlignmentOptions.Center;
             TrackText(titre, titre.text);
 
             TextMeshProUGUI leg = NouveauTexteMaquette(l.transform, "Legende",
-                "à relire à tête reposée", 7.5f, TextSecondary);
+                Lib("à relire à tête reposée"), 7.5f, TextSecondary);
             leg.alignment = TextAlignmentOptions.Center;
             TrackText(leg, leg.text);
         }
@@ -442,7 +442,7 @@ $"{QuiParle(c)} · {Cap(c.severity_band)} · {Cap(c.priority_band)}", 8f, TextSe
         {
             ClearRows();
             headerText.text = "EXCEPTIONS";
-            TextMeshProUGUI err = NewText("Error", rowsArea, "File indisponible — vérifier la pile", 14, TextAlignmentOptions.Left);
+            TextMeshProUGUI err = NewText("Error", rowsArea, Lib("File indisponible — vérifier la pile"), 14, TextAlignmentOptions.Left);
             err.color = AccentSevere;
             AddLayoutElement(err.gameObject, minHeight: 24, flexibleHeight: 0);
             TrackText(headerText, headerText.text);
@@ -476,7 +476,7 @@ $"{QuiParle(c)} · {Cap(c.severity_band)} · {Cap(c.priority_band)}", 8f, TextSe
             TrackText(bandText, bands);
 
             // Open affordance (≥44dp tap target, F2).
-            GameObject btn = NewUI("Ouvrir", row.transform);
+            GameObject btn = NewUI(Lib("Ouvrir"), row.transform);
             Image img = btn.AddComponent<Image>();
             img.color = DesignTokens.Current.surfaceRaised;
             Button b = btn.AddComponent<Button>();
@@ -658,23 +658,45 @@ $"{QuiParle(c)} · {Cap(c.severity_band)} · {Cap(c.priority_band)}", 8f, TextSe
             string d = c.event_descriptor.ToLowerInvariant();
 
             // reputation — Boss Mirror (04c §3.1)
-            if (d.Contains("boss_mirror") || d.Contains("mirror")) return "REPUTATION";
+            if (d.Contains("boss_mirror") || d.Contains("mirror")) return MafiaCleanCity.I18n.Libelle.De("exceptions", "categorie", "REPUTATION");
             // diplomacy — Sealed-Envelope (§4.7), Shared Exposure Lock (§4.5)
             if (d.Contains("sealed_envelope") || d.Contains("exposure") || d.Contains("pact"))
-                return "DIPLOMATIE";
+                return MafiaCleanCity.I18n.Libelle.De("exceptions", "categorie", "DIPLOMATIE");
             // intel — Regime Switching (§3.1), Adaptive Skin (§3.6), Purge Trap (§8.4)
             if (d.Contains("regime") || d.Contains("adaptive_skin") || d.Contains("purge"))
-                return "RENSEIGNEMENT";
+                return MafiaCleanCity.I18n.Libelle.De("exceptions", "categorie", "RENSEIGNEMENT");
             // conflit — Dead Hand (§7.1), Sandpile (§5.1), Familiarity (§6.1), Trophic Gap (§3.5)
             if (d.Contains("dead_hand") || d.Contains("sandpile") || d.Contains("cascade")
                 || d.Contains("familiarity") || d.Contains("trophic"))
-                return "CONFLIT";
+                return MafiaCleanCity.I18n.Libelle.De("exceptions", "categorie", "CONFLIT");
 
             return null;
         }
 
         private static string QuiParle(ExceptionCardDto c) =>
-            string.IsNullOrEmpty(c.lieutenant_id) ? "La ville" : "Votre lieutenant";
+            string.IsNullOrEmpty(c.lieutenant_id) ? MafiaCleanCity.I18n.Libelle.De("exceptions", "locuteur", "La ville") : "Votre lieutenant";
+
+        /// <summary>Item 0.6 — un littéral STATIQUE de ⑨ passe par `exceptions.bloc.<slug>`,
+        /// repli sur le littéral (contrat de `Libelle`).
+        ///
+        /// ⛔ TROIS FAMILLES NE PASSENT PAS PAR ICI, et chacune pour sa raison :
+        /// · les GLYPHES (`[!!!]`, `[!..]`) — ce sont des FORMES, pas de la langue. Elles portent
+        ///   la gravité pour qui ne distingue pas les couleurs (a11y) et sont identiques dans
+        ///   toutes les langues. Les traduire n'aurait pas de sens ; les keyer inviterait
+        ///   quelqu'un à le faire un jour ;
+        /// · les valeurs de DOMAINE renvoyées par les résolveurs de bande — une clé qui, une fois
+        ///   le dictionnaire rempli, traduirait une valeur servant à la logique ;
+        /// · la LIGNE D'AMBIANCE, et c'est le cas intéressant : « Trois attendent vos ordres — la
+        ///   file est calme » est ASSEMBLÉE à partir d'un compte. Keyer ses fragments produirait
+        ///   des phrases intraduisibles (l'ordre des mots change d'une langue à l'autre) ; keyer
+        ///   le tout est impossible puisqu'elle varie. Sa forme juste est une clé ICU à PLURIEL,
+        ///   avec le compte en paramètre — exactement ce que `game.lieutenant.assignment.summary`
+        ///   fait déjà et que notre résolveur sait rendre. C'est donc un lot back, demandé, pas
+        ///   une dérivation côté client.
+        /// ★ Décider ce qui N'A PAS le droit de devenir une clé demande plus d'attention que la
+        ///   conversion elle-même.</summary>
+        private static string Lib(string litteral) =>
+            MafiaCleanCity.I18n.Libelle.De("exceptions", "bloc", litteral);
 
         private TextMeshProUGUI NouveauTexteMaquette(Transform parent, string nom, string texte,
                                                      float corpsCss, Color couleur)
