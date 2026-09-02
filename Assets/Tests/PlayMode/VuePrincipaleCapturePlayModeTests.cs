@@ -388,8 +388,18 @@ namespace MafiaCleanCity.Capture.Tests
             Assert.IsNotNull(shell.ContentSlot, $"aucun slot de contenu — {quoi} n'a nulle part où être");
             RectTransform plusGrand = null;
             float aireMax = 0f;
+            // ⛔ EXCLURE `ContentSlot` LUI-MÊME — sans cette ligne la garde mesure le CONTENANT,
+            //    pas le locataire, et elle est donc toujours verte. Mesuré au premier run réel
+            //    (2026-09-02) : elle a rapporté « plus grand rect = 1280x960 (ContentSlot) », la
+            //    taille du slot du shell, pendant qu'elle prétendait mesurer l'écran monté dedans.
+            //    `GetComponentsInChildren` INCLUT la racine sur laquelle on l'appelle — un piège
+            //    d'API, pas une erreur de raisonnement, et c'est pour ça qu'il faut l'écrire.
+            //    ⇒ Telle quelle, elle aurait certifié un locataire à 100x100. *Une garde qui
+            //      mesure le contenant certifie l'absence de ce qu'elle doit prouver* — la même
+            //      famille que les gardes de pixels qu'elle est censée compléter.
             foreach (var rt in shell.ContentSlot.GetComponentsInChildren<RectTransform>(true))
             {
+                if (rt == shell.ContentSlot) continue;
                 float aire = rt.rect.width * rt.rect.height;
                 if (aire > aireMax) { aireMax = aire; plusGrand = rt; }
             }

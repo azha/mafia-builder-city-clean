@@ -84,6 +84,15 @@ namespace MafiaCleanCity.CityMap
         // inchangé pour elles.
         private static int BottomPadding => RootPadding + (int)MafiaCleanCity.Shell.ShellChrome.BottomInsetPx;
 
+        // ⛔ LE SYMÉTRIQUE, ET IL MANQUAIT — mesuré sur la PREMIÈRE capture 1080x2400 réelle
+        //    (2026-09-02, chantier C, image à l'appui) : le titre « CARTE DE LA VILLE » et la
+        //    première rangée de districts passaient DERRIÈRE la barre haute, sous « ARGENT » et le
+        //    manomètre. Le padding du haut valait `RootPadding` nu, soit 16 px, alors que le chrome
+        //    en mange bien davantage. Le correctif de bas avait été posé le matin même sans son
+        //    symétrique — *un correctif scopé au côté qu'on regardait.*
+        //    Vaut `RootPadding` seul hors shell (l'inset est à 0) : repli inchangé pour les fixtures.
+        private static int TopPadding => RootPadding + (int)MafiaCleanCity.Shell.ShellChrome.TopInsetPx;
+
         private void Start()
         {
             font = DesignTokens.Current.primaryFont;
@@ -274,7 +283,7 @@ namespace MafiaCleanCity.CityMap
             // pouvait passer sous le dock. Vaut 0 hors shell (tests isolés ci-dessous) : inchangé
             // pour eux. Même valeur réutilisée dans ReserveSpaceForPanel — ne PAS dupliquer le 0
             // implicite là-bas.
-            rootVlg.padding = new RectOffset(RootPadding, RootPadding, RootPadding, BottomPadding);
+            rootVlg.padding = new RectOffset(RootPadding, RootPadding, TopPadding, BottomPadding);
             rootVlg.spacing = 12;
             rootVlg.childControlWidth = true;
             rootVlg.childControlHeight = true;
@@ -496,8 +505,13 @@ namespace MafiaCleanCity.CityMap
             // le Footer/« Entrer » du panneau passait sous le dock. `sizeDelta.y` mange maintenant
             // AUSSI `ShellChrome.BottomInsetPx` — `anchoredPosition.y` reste -16 (inset du haut,
             // hors périmètre de ce correctif) ; vaut 0 hors shell, repli inchangé pour les fixtures.
-            dp.sizeDelta = new Vector2(380f, -(16f + MafiaCleanCity.Shell.ShellChrome.BottomInsetPx));
-            dp.anchoredPosition = new Vector2(-16f, -16f);
+            // 2026-09-02 (chantier C) — l'inset du HAUT entre ici aussi : il était déclaré
+            // « hors périmètre » par le correctif de bas, et la capture réelle a montré que le
+            // chrome recouvre le contenu. Les deux insets sont désormais mangés par la hauteur, et
+            // le panneau descend sous la barre au lieu de commencer derrière elle.
+            dp.sizeDelta = new Vector2(380f, -(16f + MafiaCleanCity.Shell.ShellChrome.TopInsetPx
+                                               + MafiaCleanCity.Shell.ShellChrome.BottomInsetPx));
+            dp.anchoredPosition = new Vector2(-16f, -(16f + MafiaCleanCity.Shell.ShellChrome.TopInsetPx));
             // 2026-09-02 — même garde structurelle que CityMapRoot ci-dessus : ce panneau doit
             // toujours rendre AU-DESSUS de la carte. Aujourd'hui redondant (BuildDetailPanel est
             // appelé après CityMapRoot dans le même BuildLayout, donc déjà dernier enfant à la

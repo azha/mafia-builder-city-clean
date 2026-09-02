@@ -292,6 +292,24 @@ namespace MafiaCleanCity.Shell
             // `DistrictInteriorScreenController.SetToken` est un no-op (`IShellTenant.cs:24-28` —
             // ce contrôleur reçoit sa donnée par `SetSession`, via la variable locale `token`
             // ci-dessus, pas par ce canal).
+            // ⛔⛔ CE CHEMIN DOIT SE DÉCLARER AU SENTINELLE D'ACQUISITION, EXACTEMENT COMME
+            //    `MonterLocataireEnSurimpression` — mesuré le 2026-09-02 (chantier C), capture à
+            //    l'appui. Le correctif du même jour a appris au sentinelle à voir les
+            //    SURIMPRESSIONS, parce que ce chemin-là ne touche pas `CurrentTab`. Or
+            //    `EnterDistrict` ne le touche pas non plus : il pose `CityTabDistrictId`. La garde
+            //    `CurrentTab == (Tab)(-1) && !UneSurimpressionAEteMontee` (`:418`, `:523`) le lit
+            //    donc encore comme « personne n'a navigué », force le montage d'`Empire` quelques
+            //    frames plus tard, et `ActivateTab` remet `CityTabDistrictId` à -1 en détruisant
+            //    l'écran. ⇒ Un joueur qui touche un district pendant les 2 à 4 allers-retours de
+            //    l'acquisition est ramené sur la carte. Ce n'est pas un artefact de test : c'est le
+            //    chemin joueur.
+            //    ★ *Le correctif précédent a fermé l'INSTANCE (la surimpression) et pas la CLASSE
+            //      (« quelque chose a-t-il été monté ? »).* Le sentinelle observe la bonne grandeur
+            //      depuis ce matin ; il ne la recevait simplement pas de tous ceux qui montent.
+            //    Mesuré ici : `Capture_VuePrincipale_DistrictAvecBatiments_SousChromeV31` échouait
+            //    sur `Expected: 16 · But was: -1`.
+            UneSurimpressionAEteMontee = true;
+            SurimpressionsMontees++;
             DistrictInteriorScreenController tenant = ConstruireLocataire<DistrictInteriorScreenController>(out GameObject host);
             MountedTenantGameObject = host;
             MountedTenantType = typeof(DistrictInteriorScreenController);
