@@ -345,7 +345,39 @@ namespace MafiaCleanCity.Capture.Tests
         ///
         /// ⚠️ Seuil de contraste à 0,18 de luminance : mesuré, le cas fautif était à ~0,02
         /// (crème sombre sur ardoise) et les cas justes au-dessus de 0,35. Le seuil est posé
-        /// dans le vide entre les deux mesures, pas au bord de l'une d'elles.</summary>
+        /// dans le vide entre les deux mesures, pas au bord de l'une d'elles.
+        ///
+        /// ⛔ 2026-09-02 — CETTE GARDE N'ÉTAIT APPELÉE QUE PAR ⑩, l'écran pour lequel je l'avais
+        /// écrite. Pendant ce temps ⑨ portait le MÊME défaut, de la même famille : un sous-titre
+        /// en `onSurfaceSecondary` posé sur l'aplat corail du tampon, à 0,096. Il a fallu que je
+        /// mesure la capture à la main, hors du test, pour le voir.
+        /// ★ Un instrument braqué sur le seul cas qui l'a fait naître continuera de rater
+        ///   partout ailleurs. Une garde appelée par UN écran mesure un écran, pas une propriété :
+        ///   elle a l'air d'exister, elle a même déjà mordu une fois, et sa population est de un.
+        ///
+        /// ⇒ LA POPULATION, NOMMÉE ET COMPTÉE — les 7 captures SOUS CHROME, toutes armées :
+        ///     ㊱ horizon (état vide) · ② fiche · ⑨ file · ⑨ file vide (en attente auto-armée)
+        ///     · ⑩ main de cartes · ⑩ après tampon · ㊲ réputation
+        ///   Les 4 captures HORS chrome ne le sont pas : elles n'ont pas d'insets et leurs fonds
+        ///   sont ceux d'avant le chrome — les y armer mesurerait autre chose sous le même nom.
+        /// ⚠️ AJOUTER UNE CAPTURE SOUS CHROME = AJOUTER L'APPEL, et recompter cette liste. Je
+        ///   m'étais arrêté à 3 sur 7 en croyant avoir fini, ce qui est la même faute d'un cran
+        ///   plus haut que celle qui a laissé passer ⑨.
+        ///
+        /// ⇒ CE QUE CETTE GARDE NE PEUT PAS VOIR : les écrans qu'aucune capture ne photographie.
+        ///   Ses deux moitiés ont donc été balayées STATIQUEMENT le 2026-09-02, et les deux
+        ///   balayages ne se ressemblent pas — c'est le résultat utile :
+        ///   · TRONCATURE — la largeur figée sous un glyphe de longueur variable était recopiée
+        ///     sur CINQ écrans (② ⑤×2 Blanchiment Pipeline Accueil). Corrigée à la source dans
+        ///     `LargeurDeGlyphe` ;
+        ///   · CONTRASTE — ZÉRO autre cas. Les deux seuls candidats (Autonomie, ⑤) sont des faux
+        ///     positifs : l'accent qu'on lit à côté colore un AUTRE texte, pas un fond.
+        /// ★ L'asymétrie s'explique et vaut mieux que les deux chiffres : le défaut de glyphe
+        ///   s'est propagé parce que la CONSTRUCTION avait été recopiée ; celui de ⑨ est né d'un
+        ///   fond changé sous une encre existante — un ÉVÉNEMENT, pas un motif. On balaie pour
+        ///   les motifs ; les événements, seule la garde les attrape, et seulement là où elle est
+        ///   armée. ⇒ Inutile de refaire le balayage du contraste ; refaire celui des largeurs
+        ///   si une sixième colonne apparaît.</summary>
         private static void LisibiliteDuTexte(GameObject racine)
         {
             float Lum(Color c) => 0.2126f * c.r + 0.7152f * c.g + 0.0722f * c.b;
@@ -358,11 +390,20 @@ namespace MafiaCleanCity.Capture.Tests
                 // — TRONCATURE : TMP a-t-il posé tous les caractères qu'on lui a donnés ? —
                 t.ForceMeshUpdate();
                 int poses = t.textInfo != null ? t.textInfo.characterCount : t.text.Length;
-                int demandes = t.text.Replace("\u200B", string.Empty).Length;
+                // \u26D4 `t.text.Length` COMPTE LES BALISES DE TEXTE RICHE, `characterCount` NON.
+                // Mesur\u00E9 le 2026-09-02 : \u32B1 a rougi sur \u00AB 00<size=64%>/0</size> \u00BB \u2014 21 caract\u00E8res
+                // bruts, 4 pos\u00E9s \u2014 alors que la capture montre ce compteur rendu ENTIER. La
+                // troncature \u00E9tait dans mon instrument, pas dans l'\u00E9cran.
+                // \u2605 Un faux positif ici est PIRE qu'un trou : il fait \u00AB corriger \u00BB un \u00E9cran sain,
+                //   et le correctif casse ce qui marchait. `GetParsedText()` rend le texte tel que
+                //   TMP le posera, balises r\u00E9solues \u2014 c'est la seule longueur comparable \u00E0
+                //   `characterCount`.
+                string rendu = t.GetParsedText() ?? string.Empty;
+                int demandes = rendu.Replace("\u200B", string.Empty).Length;
                 Assert.GreaterOrEqual(poses, demandes - 1,
                     $"texte TRONQUÉ dans « {t.name} » : {poses} caractères posés sur {demandes} " +
-                    $"(« {t.text} »). Un libellé coupé ressemble à un libellé court — rien ne " +
-                    "signale la coupe à celui qui lit.");
+                    $"(rendu attendu « {rendu} », source « {t.text} »). Un libellé coupé ressemble " +
+                    "à un libellé court — rien ne signale la coupe à celui qui lit.");
 
                 // — CONTRASTE : contre le premier fond opaque au-dessus de lui —
                 Color fond = Color.clear;
@@ -835,6 +876,8 @@ namespace MafiaCleanCity.Capture.Tests
                 $"le corps de ㊱ monte à {corpsRt.offsetMax.y:F0} et le bandeau occupe " +
                 $"{MafiaCleanCity.Shell.ShellChrome.TopInsetPx:F0} : il passe DESSOUS.");
 
+            LisibiliteDuTexte(racineUI);
+
             yield return CapturerA(1080, 2400,
                 "Assets/Screenshots/screen_c6_horizon_etat-vide_sous_chrome_1080x2400.png");
         }
@@ -903,6 +946,8 @@ namespace MafiaCleanCity.Capture.Tests
             Assert.Greater(MafiaCleanCity.Shell.ShellChrome.BottomInsetPx, 0f,
                 "sous le chrome l'inset bas doit être publié, sinon la garde ne mesure rien");
 
+            LisibiliteDuTexte(feuille);
+
             yield return CapturerA(1080, 2400,
                 "Assets/Screenshots/screen_2a_fiche_sous_chrome_1080x2400.png");
         }
@@ -946,10 +991,19 @@ namespace MafiaCleanCity.Capture.Tests
             float tc = Time.realtimeSinceStartup;
             while (!ecran.QueueLoaded && Time.realtimeSinceStartup - tc < 30f) yield return null;
             Assert.IsTrue(ecran.QueueLoaded, $"⑨ n'a pas chargé sa file : {ecran.QueueError}");
-            Assert.AreEqual(0, ecran.Cards.Length,
-                $"le compte porte {ecran.Cards.Length} carte(s) : ce n'est plus l'état vide, il " +
-                "faut renommer la capture — une image nommée `_personne-en-file_` qui montre des " +
-                "attendants ment deux fois.");
+            // ⛔ MESURÉ le 2026-09-02 13:21 : le compte porte de nouveau 3 cartes — le
+            // re-provisionnement annoncé plus haut a eu lieu. L'état vide n'est plus atteignable.
+            // ★ Ce n'est PAS une raison de supprimer ce test : la maquette RATIFIE cet état
+            //   (cadre 16), et il n'a toujours jamais été photographié. Le test se met donc en
+            //   attente au lieu d'échouer, et se rearme SEUL le jour où la file redevient vide.
+            //   Un `[Ignore]` statique aurait, lui, exigé que quelqu'un se souvienne d'y revenir.
+            // ⚠️ L'assertion d'origine reste la bonne DOCTRINE — une image nommée
+            //   `_personne-en-file_` qui montre des attendants ment deux fois — mais elle punissait
+            //   le run pour un état du serveur que ce test ne gouverne pas.
+            if (ecran.Cards.Length != 0)
+                Assert.Ignore($"la file porte {ecran.Cards.Length} carte(s) : l'état vide n'est pas " +
+                    "là aujourd'hui. Rien à photographier — cette planche attend que le compte de " +
+                    "démo se vide, et se prendra toute seule à ce moment.");
             for (int i = 0; i < 30; i++) yield return null;
 
             Assert.IsNotNull(shell.TopBar, "le chrome haut doit exister");
@@ -964,6 +1018,8 @@ namespace MafiaCleanCity.Capture.Tests
             Assert.GreaterOrEqual(comptoirRt.offsetMin.y, MafiaCleanCity.Shell.ShellChrome.BottomInsetPx,
                 $"le comptoir démarre à {comptoirRt.offsetMin.y:F0} et le dock occupe " +
                 $"{MafiaCleanCity.Shell.ShellChrome.BottomInsetPx:F0} : il passe DESSOUS.");
+
+            LisibiliteDuTexte(racineUI);
 
             yield return CapturerA(1080, 2400,
                 "Assets/Screenshots/screen_5_exceptions_personne-en-file_sous_chrome_1080x2400.png");
@@ -1039,6 +1095,8 @@ namespace MafiaCleanCity.Capture.Tests
                 "le back doit rendre un `outcome` — c'est TOUT l'objet de cette capture");
             Debug.Log($"[APRES-TAMPON] outcome = {detail.LastOutcome}");
             for (int i = 0; i < 45; i++) yield return null;
+
+            LisibiliteDuTexte(detail.gameObject);
 
             yield return CapturerA(1080, 2400,
                 "Assets/Screenshots/screen_5a_detail_apres-tampon_sous_chrome_1080x2400.png");
@@ -1184,6 +1242,8 @@ namespace MafiaCleanCity.Capture.Tests
                 "sous le chrome, l'inset bas doit être publié — à zéro, la garde ci-dessus " +
                 "passerait toujours et ne mesurerait rien");
 
+            LisibiliteDuTexte(racineUI);
+
             yield return CapturerA(1080, 2400,
                 "Assets/Screenshots/screen_5_exceptions_sous_chrome_1080x2400.png");
         }
@@ -1202,10 +1262,16 @@ namespace MafiaCleanCity.Capture.Tests
         ///
         /// Les gardes anti-mensonge sont celles du patron voisin : un slot vide produit un PNG
         /// parfaitement valide, et une capture d'écran vide ressemble à une capture.</summary>
-        [Category("Capture")]
-        // ⛔ + une catégorie PROPRE (NUnit CUMULE) : la catégorie `Capture` entière fait SIGSEGV
-        //    dans le pilote Mesa — reproduit 2×, jamais sur une capture seule. Sans elle, ce
-        //    chemin joueur (Plus -> entrée -> ㊲) n'est pas lançable du tout.
+        /// ⛔ CATÉGORIE PROPRE, ajoutée le 2026-09-02 : cette capture ne portait que `Capture`,
+        /// la catégorie de CLASSE que TOUS les tests de ce fichier portent. Elle était donc
+        /// INJOIGNABLE seule — l'atteindre exigeait de demander `Capture` nu, qui emporte par
+        /// PRÉFIXE les treize tests du fichier et fait SIGSEGV dans Mesa.
+        /// ★ Je venais d'armer `LisibiliteDuTexte` ici en écrivant « les 7 captures sous chrome,
+        ///   toutes armées ». Armée, elle l'était ; ATTEIGNABLE, non. Une garde qu'aucun run
+        ///   praticable n'exécute est une garde qui n'existe pas — la même leçon que celle qui
+        ///   m'a fait l'étendre, rencontrée un cran plus loin.
+        /// ⇒ Ses cinq sœurs adressables s'appellent déjà CaptureDetail / CaptureFiche /
+        ///   CaptureExceptions / CaptureHorizon / CaptureSousChrome ; celle-ci suit.
         [Category("CaptureReputation")]
         public IEnumerator Capture_EcranReputation_SousChrome()
         {
@@ -1262,6 +1328,8 @@ namespace MafiaCleanCity.Capture.Tests
             Assert.Greater(noeuds, 20,
                 $"㊲ doit avoir construit son contenu dans le slot (mesuré {noeuds} noeuds) — " +
                 "une capture d'un slot vide passerait sinon pour une réussite");
+
+            LisibiliteDuTexte(shell.ContentSlot.gameObject);
 
             yield return CapturerA(1080, 2400, "Assets/Screenshots/screen_b3_reputation_sous_chrome_1080x2400.png");
         }

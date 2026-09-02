@@ -32,13 +32,28 @@ namespace MafiaCleanCity.Operational
         public BuildingNameParamsDto @params;
     }
 
+    /// <summary>Les paramètres du nom, sous LES NOMS QUE LE BUNDLE RÉCLAME.
+    ///
+    /// ⛔ MESURÉ le 2026-09-02, à l'image puis sur cinq routes : ces champs s'appelaient
+    /// `type` et `rank`, et le serveur ne les émet plus sous ces noms-là. La fiche affichait
+    /// donc, littéralement, `{enseigne} — La Lisière, îlot 1501, n° {rang}` — `district` et
+    /// `block` substitués, les deux autres laissés en accolades à l'écran.
+    /// ★ La décision produit ratifiée le 2026-09-02 a changé les deux À LA FOIS : l'enseigne a
+    ///   remplacé le type (les bâtiments portent des enseignes inventées depuis P4), et le rang
+    ///   n'est plus émis QUE s'il désambiguïse. Ce n'était pas un détail de nommage.
+    ///
+    /// ⚠️ `rang` EST ABSENT QUAND IL VAUT 1 — et c'est le SERVEUR qui choisit alors l'autre clé
+    /// (`game.fiction.building.name`, sans le segment `, n° {rang}`). Ne complétez JAMAIS un
+    /// paramètre manquant côté client : un client qui envoie toujours quatre paramètres écrirait
+    /// `n° 1` sur tous les bâtiments uniques, que la clé servie ne demande même pas.
+    /// ⇒ On passe les paramètres TELS QU'ON LES REÇOIT. Le champ vide reste vide.</summary>
     [Serializable]
     public class BuildingNameParamsDto
     {
-        public string type;
+        public string enseigne;
         public string district;
         public string block;
-        public string rank;
+        public string rang;
     }
 
     [Serializable]
@@ -48,11 +63,12 @@ namespace MafiaCleanCity.Operational
 
         /// <summary>Le NOM du bâtiment, en clé i18n + paramètres — projeté depuis toujours et
         /// jamais lu par cet écran. Mesuré le 2026-09-02 :
-        /// `{"key":"game.fiction.building.name","params":{"type":"lab","district":"16",
-        ///   "block":"1501","rank":"1"}}`
-        /// ⚠️ La clé n'est PAS dans le bundle (`GET /v1/i18n/bundle` sert 67 clés, dont 63
-        /// `error.*`) : l'écran affichera donc la CLÉ tant que le dictionnaire ne la porte pas.
-        /// C'est voulu — un nom fabriqué serait plus joli et faux.</summary>
+        /// `{"key":"game.fiction.building.name.rang","params":{"enseigne":…,"district":"La Lisière",
+        ///   "block":"1501","rang":…}}` — et `game.fiction.building.name` SANS `rang` au rang 1.
+        /// ⚠️ Le bundle porte ces deux clés depuis le 2026-09-02 (386 clés servies). Il n'en a
+        /// longtemps porté aucune, et l'écran affichait alors la clé nue : c'est CETTE clé nue,
+        /// laissée visible au lieu d'être maquillée, qui a rendu le désaccord de noms lisible
+        /// à l'image et permis de le trancher en cinq minutes.</summary>
         public BuildingNameI18nDto name_i18n;
         public string setup_state;       // NOT_CONVERTED | IN_SETUP | OPERATIONAL
         public string cover_band;        // NONE | WEAK | STANDARD | STRONG
