@@ -204,6 +204,11 @@ namespace MafiaCleanCity.Economy.Shop
                 new RectOffset((int)Px(10f), (int)Px(10f), (int)Px(8f), (int)Px(9f));
 
             GameObject tete = Bloc("Tete", r.transform, true, Px(6f));
+            // ⛔ Le bloc de tête déclare SA hauteur : un groupe horizontal enfant d'un groupe
+            // vertical ne la déduit pas de ses textes, et une hauteur nulle fait empiler tous les
+            // frères au même Y.
+            LayoutElement teteLe = tete.AddComponent<LayoutElement>();
+            teteLe.preferredHeight = Px(13f);
             var htete = tete.GetComponent<HorizontalLayoutGroup>();
             htete.childForceExpandWidth = false;
             htete.childAlignment = TextAnchor.MiddleLeft;
@@ -383,6 +388,17 @@ namespace MafiaCleanCity.Economy.Shop
             LayoutElement le = go.AddComponent<LayoutElement>();
             le.preferredWidth = 0f;
             le.flexibleWidth = 1f;
+            // ⛔ SANS HAUTEUR DÉCLARÉE, UN TEXTE IMBRIQUÉ NE PREND PAS DE PLACE ET TOUT SE
+            // SUPERPOSE. Mesuré à la capture du 2026-09-02 : les neuf articles rendaient leurs
+            // vraies données — nom, prix, bonus, raison — TOUS DESSINÉS AU MÊME ENDROIT, illisibles.
+            // Cause : `preferredWidth = 0` empêche TMP de calculer une hauteur utile quand il est
+            // sous un groupe HORIZONTAL lui-même enfant d'un groupe vertical ; le bloc de tête
+            // remontait donc une hauteur nulle et ses frères se plaçaient par-dessus.
+            // ⇒ On déclare la hauteur de ligne au lieu de la laisser déduire. ⚠️ Correctif SCOPÉ à
+            // cet écran : ㉒ le profil emploie les mêmes helpers et rend juste — il n'a pas de bloc
+            // horizontal imbriqué. *Le défaut est dans l'imbrication, pas dans le helper*, et
+            // toucher les huit écrans pour réparer celui-ci en casserait sept qui vont bien.
+            le.preferredHeight = taille * 1.35f;
             return t;
         }
     }
