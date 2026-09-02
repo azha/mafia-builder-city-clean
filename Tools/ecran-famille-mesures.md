@@ -132,20 +132,27 @@ Compilation propre CONFIRMÉE pour cette partie.
   mauvais fond fait croire que tout est "contenu").
 - **`Tools/family-organigramme-reference-1120.png` — RENDU ET VÉRIFIÉ VISUELLEMENT** (1120×1850,
   2x de 560×925 CSS). Inspection visuelle confirmée : panneaux verre gravé, fil laiton continu +
-  ticks, bustes silhouettes (homburg Don / fedora lieutenants), chips Délégué/Direct, badges
+  ticks, bustes silhouettes (⚠️ amendé 2026-09-02 : les chapeaux d'époque de la maquette du 25/08
+  sont remplacés — don tête nue, lieutenant capuche, homme casquette ; voir le bloc `<defs>` de
+  `Tools/family-bustes-source.html`, seul producteur), chips Délégué/Direct, badges
   État, slots équipe (déplié/replié), CTA bas — tout lisible et fidèle à la doctrine DA.
-- `Tools/family-bustes-source.html` + `Tools/family-bustes-render.sh` : rasterise les 3 bustes
-  SVG verbatim de la maquette (`ecrans-brennar.html:184-195`) en PNG transparents 256×256.
-  **Rendu et vérifié** : `alpha_min==0` (fond transparent réel) et `alpha_max>0` (silhouette
-  présente) contrôlés programmatiquement pour les 3, ET inspection visuelle du fedora (silhouette
-  nette, transparence correcte).
+- ⚠️ **Amendé 2026-09-02** — le rendu Chrome sans tête de cette passe (`family-bustes-render.sh`,
+  retiré) CROPAIT en silence (épaules absentes, mesuré le 22/08) et ses contrôles `alpha_min`/
+  `alpha_max` ne voyaient pas le dessin. Producteur actuel : `Tools/rasterise-bustes.py` (PIL,
+  parse le bloc `<defs>` de `family-bustes-source.html`, bbox dérivée de la géométrie, détecteur de
+  crop, `--controle-positif`). L'énoncé d'origine (« rendu et vérifié » par alpha min/max +
+  inspection visuelle) est conservé ci-dessous comme trace de ce qui a été cru vrai :
+  contrôles programmatiques `alpha_min==0` / `alpha_max>0` pour les 3 + inspection visuelle.
 - Assets importés **et vérifiés dans Unity** : `Assets/Resources/Lieutenant/
-  ui_element_buste_{homburg,fedora,casquette}.png`, `textureType=Sprite` posé par code
+  ui_element_buste_{don,lieutenant,homme}.png` (noms de RÔLE depuis le 2026-09-02, GUID
+  conservés ; à l'origine nommés par leur chapeau), `textureType=Sprite` posé par code
   (`W4P4aArtImportPostprocessor` ne couvre PAS `Assets/Resources/` — seulement `Assets/Art/` ;
   ces 9 écrans opérationnels sont construits 100% à l'exécution sans prefab/scène, donc
   `Resources.Load<Sprite>` est le SEUL seam de livraison possible, même contrainte que
-  `DesignTokens.asset`). `Resources.Load<Sprite>("Lieutenant/ui_element_buste_fedora")` **testé
-  et confirmé non-null** via `execute_code`. `casquette` n'a AUJOURD'HUI aucun consommateur
+  `DesignTokens.asset`). `Resources.Load<Sprite>("Lieutenant/ui_element_buste_lieutenant")` (nom
+  actuel ; l'ancien nom avait été **testé et confirmé non-null** via `execute_code` le 25/08 —
+  non rejoué après le renommage du 2026-09-02, seul le typecheck à froid l'a vu). `homme`
+  (ex-3ᵉ buste) n'a AUJOURD'HUI aucun consommateur
   (aucune donnée d'équipe nommée n'existe côté back — voir (b)3 ci-dessus) ; importé quand même
   pour la complétude du jeu de 3 bustes (REUSE verbatim de la maquette).
 - **Décision de fond non implémentée** : "chaque écran plein garde la ville floutée dessous"
@@ -168,7 +175,7 @@ organigramme "La Famille" :
   serif "LA FAMILLE", sous-titre, filet laiton).
 - `BuildRosterSection()`/`RenderRoster()` : reconstruits pour bâtir le Don (`BuildDonRow`), l'arbre
   des lieutenants (fil laiton étiré par ancrage — PAS de coroutine de resize, le VerticalLayoutGroup
-  ambiant recalcule tout seul), un `BuildFamilyLieutenantRow` par ligne (médaillon fedora +
+  ambiant recalcule tout seul), un `BuildFamilyLieutenantRow` par ligne (médaillon à silhouette de lieutenant +
   archétype-comme-nom + chip mode + badge état + panneau verre gravé + tap→OpenLieutenant
   INCHANGÉ) suivi de `BuildEquipeSlot` (replié/déplié), puis `BuildRecruitCta`.
 - `ClearRosterRows()` restauré (avait été accidentellement supprimé pendant une passe d'édition,
