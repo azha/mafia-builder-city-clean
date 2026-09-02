@@ -103,6 +103,22 @@ namespace MafiaCleanCity.Shell
             transform.SetAsLastSibling();
         }
 
+
+        /// <summary>⛔ LE SHELL RE-PARENTE APRÈS AVOIR APPELÉ `SetMountParent` — mesuré deux fois.
+        /// Poser l'ordre de fratrie dans le setter le fait donc DÉFAIRE aussitôt : la planche du
+        /// 2026-09-02 a intercepté ㉓ à « frère 6 sur 11 » alors que le setter l'avait bien mise en
+        /// dernier. Les six autres écrans passaient, non parce que le geste marchait, mais parce
+        /// que le shell les appendait déjà en fin de liste — *une garde qui réussit six fois sur
+        /// sept ne marche pas : elle est chanceuse six fois sur sept.*
+        /// ⇒ On ne devine plus QUAND le parentage a lieu : on RÉAGIT à l'événement. Unity appelle
+        /// ce callback exactement au changement de parent, donc après le geste du shell, quel que
+        /// soit son ordre interne. La propriété devient indépendante de la séquence d'appel.
+        /// ⚠️ Le callback tire aussi au démontage, où le parent est nul — d'où la garde.</summary>
+        private void OnTransformParentChanged()
+        {
+            if (transform.parent != null) transform.SetAsLastSibling();
+        }
+
         public void SetToken(string bearer)
         {
             Init();
