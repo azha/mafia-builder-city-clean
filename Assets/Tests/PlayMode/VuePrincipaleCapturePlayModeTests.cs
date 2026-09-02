@@ -642,6 +642,74 @@ namespace MafiaCleanCity.Capture.Tests
         }
 
         [UnityTest]
+        /// <summary>② SOUS LE CHROME. Même question que ⑨ : la fiche est un panneau BAS, et le
+        /// dock occupe le bas. La garde A4 est posée AVANT d'avoir regardé l'image — si elle
+        /// échoue, c'est le même défaut, et je préfère l'apprendre d'une assertion que d'un
+        /// coup d'œil sur une capture.</summary>
+        [Category("CaptureSousChrome")]
+        public IEnumerator Capture_FicheBatiment_SousChrome()
+        {
+            LogAssert.ignoreFailingMessages = true;
+            shellGo = new GameObject("FicheShell");
+            shell = shellGo.AddComponent<AppShell>();
+            yield return null;
+
+            float t0 = Time.realtimeSinceStartup;
+            while (string.IsNullOrEmpty(shell.Token) && Time.realtimeSinceStartup - t0 < 30f) yield return null;
+            Assert.IsFalse(string.IsNullOrEmpty(shell.Token), "le shell doit avoir acquis sa session");
+            for (int i = 0; i < 30; i++) yield return null;
+
+            // Le chemin JOUEUR : la fiche s'ouvre depuis un district, donc on prend un bâtiment
+            // par `district/:id/interior` — la route qui porte `building`.
+            string batimentId = null; long codeVu = 0;
+            foreach (int district in new[] { 16, 13, 11, 1 })
+            {
+                using (var req = UnityEngine.Networking.UnityWebRequest.Get(
+                           BaseUrl + $"/v1/city/district/{district}/interior"))
+                {
+                    req.SetRequestHeader("Authorization", "Bearer " + shell.Token);
+                    yield return req.SendWebRequest();
+                    codeVu = req.responseCode;
+                    if (codeVu != 200) continue;               // LE CODE D'ABORD
+                    string corps = req.downloadHandler.text;
+                    int k = corps.IndexOf("\"building\"");
+                    if (k >= 0)
+                    {
+                        int d = corps.IndexOf('"', corps.IndexOf(':', k) + 1) + 1;
+                        int f = corps.IndexOf('"', d);
+                        if (d > 0 && f > d) { batimentId = corps.Substring(d, f - d); break; }
+                    }
+                }
+            }
+            Assert.IsFalse(string.IsNullOrEmpty(batimentId),
+                $"aucun bâtiment trouvé (dernier code HTTP {codeVu})");
+
+            var ecran = shell.MonterLocataireEnSurimpression<
+                MafiaCleanCity.Operational.BuildingCardController>();
+            Assert.IsNotNull(ecran, "la surimpression doit avoir monté ②");
+            yield return ecran.LoadBuilding(batimentId);
+            for (int i = 0; i < 60; i++) yield return null;
+
+            Assert.IsNotNull(shell.TopBar, "le chrome haut doit exister");
+            var feuille = GameObject.Find("BuildingCardSheet");
+            Assert.IsNotNull(feuille, "② n'a construit aucune fiche sous le chrome");
+            int noeuds = feuille.GetComponentsInChildren<Transform>(true).Length;
+            Assert.Greater(noeuds, 15, $"② doit avoir du contenu (mesuré {noeuds} nœuds)");
+
+            // GARDE A4 — écrite avant de regarder l'image.
+            var rt = (RectTransform)feuille.transform;
+            Assert.GreaterOrEqual(rt.offsetMin.y, MafiaCleanCity.Shell.ShellChrome.BottomInsetPx,
+                $"la fiche démarre à {rt.offsetMin.y:F0} alors que le dock occupe " +
+                $"{MafiaCleanCity.Shell.ShellChrome.BottomInsetPx:F0} : elle passe DESSOUS.");
+            Assert.Greater(MafiaCleanCity.Shell.ShellChrome.BottomInsetPx, 0f,
+                "sous le chrome l'inset bas doit être publié, sinon la garde ne mesure rien");
+
+            yield return CapturerA(1080, 2400,
+                "Assets/Screenshots/screen_2a_fiche_sous_chrome_1080x2400.png");
+        }
+
+        [UnityTest]
+        
         /// <summary>⑨ SOUS LE CHROME — le bandeau et le dock, enfin dans l'image.
         ///
         /// ⛔ Ce que les captures hors shell ne pouvaient pas montrer, et que celle-ci tranche :

@@ -1730,7 +1730,16 @@ namespace MafiaCleanCity.Operational
             cardRt.anchorMax = new Vector2(1f, 0f);
             cardRt.pivot = new Vector2(0.5f, 0f);
             cardRt.sizeDelta = new Vector2(-2f * MargeCoteUnites, 760f);
-            cardRt.anchoredPosition = new Vector2(0f, 24f);
+            // ⛔ LE DOCK MANGE SA PART. Mesuré sous chrome le 2026-09-02 : la fiche démarrait à
+            // 24 unités du bas quand le dock en occupe 294 — elle passait dessous, et aucune
+            // capture hors shell ne pouvait le montrer (il n'y a pas de dock dans une image sans
+            // dock). Même défaut que ⑨, trouvé le même jour, par la même garde.
+            // ★ Ici la garde a précédé l'image : je l'ai écrite AVANT de regarder la capture, en
+            //   pariant que le défaut serait le même. Il l'était — et c'est l'assertion qui l'a
+            //   dit, pas mon œil. Une classe de défaut qu'on vient de corriger ailleurs se
+            //   cherche, elle ne s'attend pas.
+            // Hors shell l'inset vaut 0 : la fiche retombe sur son comportement d'avant.
+            cardRt.anchoredPosition = new Vector2(0f, 24f + MafiaCleanCity.Shell.ShellChrome.BottomInsetPx);
             card.AddComponent<Image>().color = SurfaceBg;
             VerticalLayoutGroup vlg = card.AddComponent<VerticalLayoutGroup>();
             vlg.padding = new RectOffset(18, 18, 16, 16);
