@@ -151,6 +151,9 @@ namespace MafiaCleanCity.I18nTests
             string[] demandees = { "game.fiction.building.name", "onboarding.preseed_exception.card" };
             int servies = 0;
             foreach (string k in demandees) if (I18nCatalog.Connait(k)) servies++;
+            // ⚠️ `Locale` n'est PAS une preuve de langue : `?locale=fr` rend 200 avec 63 des 67
+            // valeurs identiques à l'anglais (mesuré par la session back). On l'imprime pour
+            // mémoire, on n'en conclut rien.
             Debug.Log($"[I18N] locale={I18nCatalog.Locale} · {I18nCatalog.NbClesServies} clés servies · " +
                       $"clés demandées par les écrans résolues : {servies}/{demandees.Length}");
             foreach (string k in demandees)

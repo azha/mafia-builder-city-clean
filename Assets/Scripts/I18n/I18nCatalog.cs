@@ -27,6 +27,15 @@ namespace MafiaCleanCity.I18n
     ///   Ce qui compte n'est pas le nombre servi, c'est le RECOUVREMENT.</summary>
     public static class I18nCatalog
     {
+        // ⛔ « fr » RÉPOND 200 ET EST ANGLAIS À 94 % — mesuré par la session back le 2026-09-02 :
+        // `?locale=fr` rend 67 clés dont **63 byte-identiques à l'anglais** ; seules les 4 `game.*`
+        // sont vraiment traduites, et une locale inconnue retombe silencieusement sur « en ».
+        // ⇒ Ne JAMAIS lire `Locale` comme « la langue est en place ». Une locale acceptée, un
+        //   corps de taille voisine et un 200 ressemblent trait pour trait à un dictionnaire
+        //   servi — c'est ce qui m'avait fait douter de mon cache plutôt que du bundle.
+        // ★ Même famille que « 67 clés servies » : le signal disponible décrit une population
+        //   qui n'est pas celle qu'on croit mesurer.
+
         private static readonly Dictionary<string, string> Messages = new Dictionary<string, string>();
 
         public static string Locale { get; private set; }
