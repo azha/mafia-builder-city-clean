@@ -1905,10 +1905,9 @@ namespace MafiaCleanCity.Operational
             //   supprimerait la troncature en détruisant ce à quoi elle sert.
             // ⇒ Largeur MESURÉE PAR TMP sur le glyphe le plus large, jamais un nombre posé à la
             //   main : ajouter demain un glyphe plus long élargira la colonne tout seul.
-            float largeurGlyphe = 0f;
-            foreach (string candidat in GlyphesLesPlusLarges)
-                largeurGlyphe = Mathf.Max(largeurGlyphe, g.GetPreferredValues(candidat).x);
-            largeurGlyphe = Mathf.Ceil(largeurGlyphe) + 2f;   // 2 px de garde contre l'arrondi
+            // ⇒ La mesure vit dans `LargeurDeGlyphe`, pas ici : le même défaut était recopié sur
+            //   cinq écrans, et une hypothèse fausse recopiée se corrige là où elle est PRODUITE.
+            float largeurGlyphe = LargeurDeGlyphe.PourLesPlusLarges(g, GlyphesLesPlusLarges);
             AddLayoutElement(g.gameObject, minWidth: largeurGlyphe,
                 preferredWidth: largeurGlyphe, flexibleWidth: 0);
 

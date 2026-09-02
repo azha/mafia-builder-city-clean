@@ -237,7 +237,12 @@ namespace MafiaCleanCity.Operational
             TextMeshProUGUI g = NewText("Glyph", row.transform, CleanlinessGlyph(stage.cleanliness_band), 15, TextAlignmentOptions.Center);
             g.color = accent;
             g.fontStyle = FontStyles.Bold;
-            AddLayoutElement(g.gameObject, minWidth: 58, preferredWidth: 58, flexibleWidth: 0);
+            // ⛔ La colonne était figée et COUPAIT les glyphes longs — même défaut que ②,
+            // mesuré rouge le 2026-09-02 (« [####] » posé à 4 caractères sur 6 à 46 px/corps 16/gras).
+            // La mesure vit dans `LargeurDeGlyphe` : un producteur, cinq citations.
+            float largeurGlyphe = LargeurDeGlyphe.PourLesPlusLarges(g, "[####]");
+            AddLayoutElement(g.gameObject, minWidth: largeurGlyphe,
+                preferredWidth: largeurGlyphe, flexibleWidth: 0);
             TrackText(CleanlinessGlyph(stage.cleanliness_band));
 
             TextMeshProUGUI band = NewText("BandValue", row.transform, CleanlinessLabel(stage.cleanliness_band), 15, TextAlignmentOptions.Left);
