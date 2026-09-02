@@ -15,6 +15,7 @@ using MafiaCleanCity.Operational.Selling;
 //    précisément pour que les écrans parlent au shell sans en dépendre.
 using MafiaCleanCity.Economy.Shop;
 using MafiaCleanCity.Account.Profile;
+using MafiaCleanCity.Account.Settings;
 using MafiaCleanCity.Onboarding;
 using MafiaCleanCity.CitySim.Inspection;
 using MafiaCleanCity.CitySim.Precinct;
@@ -671,6 +672,14 @@ namespace MafiaCleanCity.Shell
             // nom : c'est une collision du CANON, pas un choix de menu, et je ne la tranche pas en
             // douce. Le menu dit donc « VOTRE PROFIL », sans ambiguïté ; l'arbitrage remonte.
             ("VOTRE PROFIL",         () => MountTenant<ProfileScreenController>()),      // ㉒
+
+            // ⑲ — ARRIVÉ SANS PORTE PAR `pilote-F`, ET C'EST LA GARDE QUI L'A DIT. Le matin même,
+            // `SettingsScreenController` n'existait pas : je l'avais compté parmi les trois écrans
+            // du canon sans aucun contrôleur. Il est né dans la journée, mergé le soir, et
+            // `LocataireJoignabilitePlayModeTests` l'a immédiatement classé orphelin — le DIXIÈME,
+            // exactement le cas pour lequel elle a été écrite. *Une garde de classe ne prouve sa
+            // valeur qu'en attrapant le membre qu'on n'a pas vu arriver.*
+            ("LES RÉGLAGES",         () => MountTenant<SettingsScreenController>()),     // ⑲
 
             // ⚠️ ㊱ — sa liste est VIDE PAR CONSTRUCTION sur le compte de démo : TD-408 mesure
             // qu'au plus UNE carte peut être surfacée pour un joueur. Un écran vide ici n'est donc
