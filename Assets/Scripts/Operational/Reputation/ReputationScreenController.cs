@@ -357,7 +357,7 @@ namespace MafiaCleanCity.Operational
             // « DONNER UNE PREMIÈRE RÈGLE » à la seule vue vierge (ligne 211) et « DONNER UNE
             // RÈGLE » partout ailleurs (200, 222, 237).
             if (ctaLibelle != null)
-                ctaLibelle.text = declarees == 0 ? "DONNER UNE PREMIÈRE RÈGLE" : "DONNER UNE RÈGLE";
+                ctaLibelle.text = declarees == 0 ? "DONNER UNE PREMIÈRE RÈGLE" : Lib("DONNER UNE RÈGLE");
 
             RendreListeDesRegles(bm != null ? bm.declared_rules : null);
 
@@ -736,7 +736,7 @@ namespace MafiaCleanCity.Operational
             // sous-titre. Sans ça, le VerticalLayoutGroup de l'enseigne lui réserve une ligne.
             filet.AddComponent<LayoutElement>().ignoreLayout = true;
 
-            TextMeshProUGUI titre = NouveauTexte(go.transform, "Titre", "Le miroir",
+            TextMeshProUGUI titre = NouveauTexte(go.transform, "Titre", Lib("Le miroir"),
                 CssTitreCorps, ReputationResolvers.OrVif, DesignTokens.Current.hudSerifFont);
             titre.fontStyle = TMPro.FontStyles.Bold;   // maquette : .enseigne b, 700 17px
             titre.alignment = TextAlignmentOptions.Center;
@@ -967,7 +967,7 @@ namespace MafiaCleanCity.Operational
             // La légende ne dépend d'AUCUN état : c'est la même phrase dans les six vues de la
             // maquette. La poser une fois ici, plutôt que dans `AppliquerEtat`, évite qu'un état
             // futur oublie de la réécrire et laisse une colonne sans son explication.
-            NouveauTexte(verdictGo.transform, "Legende", "ce qu’il a absorbé de vos règles",
+            NouveauTexte(verdictGo.transform, "Legende", Lib("ce qu’il a absorbé de vos règles"),
                 CssVerdictLegende, ReputationResolvers.Muet, DesignTokens.Current.primaryFont);
 
             for (int i = 0; i < 4; i++)
@@ -1057,7 +1057,7 @@ namespace MafiaCleanCity.Operational
             AjouterFond(go, ReputationResolvers.Fond2);
             Contour(go, ReputationResolvers.Lisere);
 
-            NouveauTexte(go.transform, "SurTitre", "LES RÈGLES QUE VOUS AVEZ DONNÉES",
+            NouveauTexte(go.transform, "SurTitre", Lib("LES RÈGLES QUE VOUS AVEZ DONNÉES"),
                 CssPannSurTitre, ReputationResolvers.Muet,
                 DesignTokens.Current.primaryFont).characterSpacing = 19f;
 
@@ -1069,7 +1069,7 @@ namespace MafiaCleanCity.Operational
             v.childForceExpandWidth = true; v.childForceExpandHeight = false;
 
             listeReglesVide = NouveauTexte(go.transform, "Vide",
-                "vous n’avez encore donné aucune règle — rien ne peut donc être enfreint",
+                Lib("vous n’avez encore donné aucune règle — rien ne peut donc être enfreint"),
                 CssPannTexte, ReputationResolvers.Eteint, DesignTokens.Current.primaryFont);
 
             EmpilerVertical(go, Px(CssPannPadY), Px(4f), Px(CssPannPadX));
@@ -1278,6 +1278,18 @@ namespace MafiaCleanCity.Operational
             img.color = couleur;
             img.raycastTarget = false;
         }
+
+        /// <summary>Item 0.6 — un littéral STATIQUE de cet écran passe par une clé
+        /// `reputation.bloc.<slug>`, et retombe sur lui-même tant que le dictionnaire ne la porte
+        /// pas (contrat de `Libelle`, repli byte-identique).
+        /// ⛔ POSÉ SITE PAR SITE, JAMAIS AU FABRICANT DE TEXTE. `NouveauTexte` reçoit aussi des
+        /// valeurs CALCULÉES — `regle.rule_id` ligne ~1135, les phrases de verdict — et keyer au
+        /// point de passage fabriquerait une clé par donnée.
+        /// ⚠️ J'avais écrit un convertisseur automatique par expression régulière pour faire ce
+        /// travail : il a converti 4 sites sur 20 et inséré un appel à un helper inexistant. Une
+        /// réécriture de masse au regex sur du C# produit du plausible, pas du juste.</summary>
+        private static string Lib(string litteral) =>
+            MafiaCleanCity.I18n.Libelle.De("reputation", "bloc", litteral);
 
         private TextMeshProUGUI NouveauTexte(Transform parent, string nom, string texte,
                                              float corpsCss, Color couleur, TMP_FontAsset police)
