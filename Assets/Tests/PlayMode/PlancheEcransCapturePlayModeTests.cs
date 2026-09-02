@@ -45,6 +45,12 @@ namespace MafiaCleanCity.Shell.Tests
     // maintenant, et le contraste fait l'objet d'un passage dédié SI l'user veut juger la
     // correspondance des paliers. ⚠️ Ce compte-là est une FENÊTRE : ses tuiles montent de façon
     // monotone et il se saturera comme le riche — le capturer tard revient à ne rien capturer.
+    // TD-490 — SANS catégorie, ce fichier était invisible à TOUT filtre : ni le juge ni
+    // personne ne pouvait le demander. Onze fichiers, 29 tests dans ce cas au 2026-09-02.
+    // *Un test qui n'a jamais tourné et un test qui passe rendent la même absence d'erreur.*
+    // ⚠️ Pas de préfixe `Capture` : cette catégorie EXISTE, le filtre d'Unity matche par
+    // PRÉFIXE, et la demander emporterait celle-ci — or `Capture` fait SIGSEGV (Mesa).
+    [Category("PhotoPlanche")]
     public class PlancheEcransCapturePlayModeTests
     {
         private Scene sceneDeDemarrage;

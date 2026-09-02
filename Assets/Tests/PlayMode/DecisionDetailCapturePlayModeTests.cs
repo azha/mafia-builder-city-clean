@@ -16,6 +16,12 @@ namespace MafiaCleanCity.Shell.Tests
     // montage, rendu). À ce titre elle porte les gardes qui rendraient l'image MENSONGÈRE, et
     // elles seulement : l'onglet est réellement entré, le contrôleur est réellement monté, et
     // l'image n'est pas noire. Sans elles, une capture d'écran vide passe pour une réussite.
+    // TD-490 — SANS catégorie, ce fichier était invisible à TOUT filtre : ni le juge ni
+    // personne ne pouvait le demander. Onze fichiers, 29 tests dans ce cas au 2026-09-02.
+    // *Un test qui n'a jamais tourné et un test qui passe rendent la même absence d'erreur.*
+    // ⚠️ Pas de préfixe `Capture` : cette catégorie EXISTE, le filtre d'Unity matche par
+    // PRÉFIXE, et la demander emporterait celle-ci — or `Capture` fait SIGSEGV (Mesa).
+    [Category("PhotoDecision")]
     public class DecisionDetailCapturePlayModeTests
     {
         private Scene sceneDeDemarrage;

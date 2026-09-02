@@ -43,6 +43,12 @@ namespace MafiaCleanCity.Operational.Tests
     // buildings.heat cannot hold heat low. Accrual + SETTLING are heat-independent here: a cook-only rule (no PAUSE rule)
     // resolves EXECUTE_DEFAULT every tick → never paused → accrues; the settling window is armed by the re-script/reassign
     // itself, not by heat. (This mirrors how the Phase-9 capstone drives op_state via the attached rules.)
+    // TD-490 — SANS catégorie, ce fichier était invisible à TOUT filtre : ni le juge ni
+    // personne ne pouvait le demander. Onze fichiers, 29 tests dans ce cas au 2026-09-02.
+    // *Un test qui n'a jamais tourné et un test qui passe rendent la même absence d'erreur.*
+    // ⚠️ Pas de préfixe `Capture` : cette catégorie EXISTE, le filtre d'Unity matche par
+    // PRÉFIXE, et la demander emporterait celle-ci — or `Capture` fait SIGSEGV (Mesa).
+    [Category("EcranTenureLieutenant")]
     public class LieutenantTenureInertiaPlayModeTests
     {
         private GameObject controllerGo;
