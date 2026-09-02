@@ -224,10 +224,14 @@ namespace MafiaCleanCity.Shell
                 case Tab.Org: MountTenant<LieutenantScreenController>(); break;
                 case Tab.Pipeline: MountTenant<LaunderingController>(); break;
                 case Tab.More:
-                    // ㊲ LA RÉPUTATION — premier écran du programme atteignable par un chemin joueur.
-                    // Cet onglet était la destination VIDE assumée (design §0 hors périmètre / C1-F1) ;
-                    // il ne l'est plus, et le drapeau `OnEmptyMoreDestination` le dit désormais.
-                    MountTenant<ReputationScreenController>();
+                    // ⇒ 2026-09-02 : `Tab.More` devient un MENU, et c'est une contrainte
+                    // d'arithmétique, pas de goût — le dock n'a que QUATRE bulles, et il reste des
+                    // écrans à atteindre (㊱ Horizon et la suite) qui n'ont aucune entrée. Un
+                    // cinquième onglet n'existe pas ; une liste sous le quatrième, si.
+                    // Historique : cet onglet était la destination VIDE assumée, puis ㊲ y a été
+                    // monté en direct (premier écran atteignable du programme) — il est désormais
+                    // la PREMIÈRE ENTRÉE du menu, joignable en un geste de plus, pas perdue.
+                    MonterMenuPlus();
                     break;
             }
             RefreshTabButtonVisuals();
@@ -572,6 +576,81 @@ namespace MafiaCleanCity.Shell
             if (!string.IsNullOrEmpty(Token)) tenant.SetToken(Token);
             return tenant;
         }
+
+        /// <summary>Les destinations du menu « Plus » — libellé + le geste qui monte l'écran.
+        ///
+        /// ⚠️ UNE TABLE D'ACTIONS, PAS DE `Type` : `MountTenant&lt;T&gt;` est générique, donc une
+        /// table de `System.Type` obligerait à passer par la réflexion et ferait perdre la
+        /// vérification à la COMPILATION. Une entrée dont l'écran est renommé ou retiré doit être
+        /// une erreur de build, pas un menu qui s'ouvre sur un bouton mort. *Un dispositif qui
+        /// échoue au build vaut mieux qu'un dispositif qui échoue devant le joueur.*
+        ///
+        /// ⚠️ LIBELLÉS LITTÉRAUX, ET C'EST LA CONVENTION MESURÉE : ce dépôt n'a AUCUN helper i18n
+        /// (balayage de `Assets/Scripts` : zéro `I18n.`/`Traduire`/`Localise`), tous les libellés
+        /// d'interface sont des littéraux. Introduire ici un mécanisme de traduction serait une
+        /// décision d'architecture, pas l'ajout d'un menu — consigné plutôt que pris.
+        ///
+        /// ⛔ N'Y ENTRE QU'UN ÉCRAN QUI EXISTE. ㊱ Horizon n'a pas encore de contrôleur : une entrée
+        /// pour lui serait une destination morte, exactement ce que le dock a mis des semaines à
+        /// cesser d'avoir. Il s'ajoute ici LE JOUR où son contrôleur existe, en une ligne.</summary>
+        private (string libelle, System.Action monter)[] DestinationsPlus() => new (string, System.Action)[]
+        {
+            ("LA RÉPUTATION", () => MountTenant<ReputationScreenController>()),
+        };
+
+        /// <summary>Monte le menu « Plus » : une entrée par destination, chacune montant son écran.
+        /// Le retour au menu passe par le geste standard (`ActivateTab(Tab.More)`), donc aucun
+        /// mécanisme de navigation neuf — le menu se reconstruit comme n'importe quel onglet.</summary>
+        private void MonterMenuPlus()
+        {
+            UnmountCurrentTenant();
+            MenuPlusEntrees = 0;
+            GameObject menu = new GameObject("MenuPlus", typeof(RectTransform));
+            menu.transform.SetParent(ContentSlot, false);
+            RectTransform rt = (RectTransform)menu.transform;
+            // Le menu respecte ce que le chrome MANGE — même contrat que tout locataire, sinon la
+            // première entrée passe sous le bandeau (défaut déjà payé sur « LA FAMILLE »).
+            rt.anchorMin = new Vector2(0f, 0f); rt.anchorMax = new Vector2(1f, 1f);
+            rt.offsetMin = new Vector2(0f, ShellChrome.BottomInsetPx);
+            rt.offsetMax = new Vector2(0f, -ShellChrome.TopInsetPx);
+            VerticalLayoutGroup pile = menu.AddComponent<VerticalLayoutGroup>();
+            pile.childAlignment = TextAnchor.UpperCenter;
+            pile.spacing = Px(TabDockGapCss);
+            pile.childControlWidth = true; pile.childControlHeight = true;
+            pile.childForceExpandWidth = true; pile.childForceExpandHeight = false;
+
+            foreach ((string libelle, System.Action monter) in DestinationsPlus())
+            {
+                GameObject entree = new GameObject($"MenuPlus_{libelle}", typeof(RectTransform));
+                entree.transform.SetParent(menu.transform, false);
+                Image fond = entree.AddComponent<Image>();
+                fond.color = DesignTokens.Current.surfaceRow;
+                AddLayoutElementLocal(entree, Px(TabDockLabelHeightCss) * 3f);
+                Button b = entree.AddComponent<Button>();
+                b.targetGraphic = fond;
+                System.Action geste = monter;   // capture par valeur : sinon les N entrées montent la DERNIÈRE
+                b.onClick.AddListener(() => geste());
+
+                GameObject textGo = new GameObject("Libelle", typeof(RectTransform));
+                textGo.transform.SetParent(entree.transform, false);
+                TextMeshProUGUI txt = textGo.AddComponent<TextMeshProUGUI>();
+                txt.font = DesignTokens.Current.primaryFont;
+                txt.text = libelle;
+                txt.fontSize = Px(TabDockLabelSizeCss);
+                txt.alignment = TextAlignmentOptions.Center;
+                txt.color = DesignTokens.Current.hudCremeSecondary;
+                txt.raycastTarget = false;
+                RectTransform trt = (RectTransform)textGo.transform;
+                trt.anchorMin = Vector2.zero; trt.anchorMax = Vector2.one;
+                trt.offsetMin = Vector2.zero; trt.offsetMax = Vector2.zero;
+                MenuPlusEntrees++;
+            }
+        }
+
+        /// <summary>Nombre d'entrées réellement construites au dernier montage du menu « Plus ».
+        /// Crochet de test : une garde qui ne lit que « le menu existe » resterait verte sur un
+        /// menu VIDE — le monde dégénéré exact d'une table de destinations mal remplie.</summary>
+        public int MenuPlusEntrees { get; private set; }
 
         private void MountTenant<T>() where T : MonoBehaviour, IShellTenant
         {
