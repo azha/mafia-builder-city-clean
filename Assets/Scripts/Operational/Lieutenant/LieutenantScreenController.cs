@@ -2140,7 +2140,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             HorizontalLayoutGroup hDon = rang.GetComponent<HorizontalLayoutGroup>();
             hDon.padding = new RectOffset(FX(19), FX(19), FX(15), FX(15));
             hDon.spacing = FX(19);
-            BuildMedaillon(rang.transform, "ui_element_buste_homburg", don: true);
+            BuildMedaillon(rang.transform, "ui_element_buste_don", don: true);
 
             GameObject bloc = NewUI("Textes", rang.transform);
             VerticalLayoutGroup v = bloc.AddComponent<VerticalLayoutGroup>();
@@ -2184,7 +2184,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             BuildRailTick(enveloppeRang.transform, DesignTokens.Current.hudHairlineGold);
 
             GameObject rang = BuildRangBase(enveloppeRang.transform, "RosterRow_" + index, bord, ombre: true);
-            BuildMedaillon(rang.transform, "ui_element_buste_fedora", don: false);
+            BuildMedaillon(rang.transform, "ui_element_buste_lieutenant", don: false);
 
             GameObject bloc = NewUI("Textes", rang.transform);
             VerticalLayoutGroup v = bloc.AddComponent<VerticalLayoutGroup>();

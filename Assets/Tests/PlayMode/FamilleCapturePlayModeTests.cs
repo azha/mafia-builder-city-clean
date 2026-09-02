@@ -17,6 +17,11 @@ namespace MafiaCleanCity.Shell.Tests
     // montage, rendu). À ce titre elle porte les gardes qui rendraient l'image MENSONGÈRE, et
     // elles seulement : l'onglet est réellement entré, le contrôleur est réellement monté, et
     // l'image n'est pas noire. Sans elles, une capture d'écran vide passe pour une réussite.
+    // `[Category]` ajoutée le 2026-09-02 : sans elle, ce test n'était atteignable par AUCUN run
+    // `MafiaCI.RunPlayModeTests` (filtre par catégorie, MAFIA_CI_CATEGORIES compris) — la capture
+    // du 2026-09-01 avait été prise par un autre chemin, non consigné. Même patron que
+    // `CaptureDistrict` / `CaptureReputation`.
+    [Category("CaptureFamille")]
     public class FamilleCapturePlayModeTests
     {
         private Scene sceneDeDemarrage;
