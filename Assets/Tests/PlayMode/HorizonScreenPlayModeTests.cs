@@ -183,7 +183,8 @@ namespace MafiaCleanCity.Operational.Tests
         {
             var vus = new List<string>();
             foreach (TMPro.TextMeshProUGUI t in racine.GetComponentsInChildren<TMPro.TextMeshProUGUI>(true))
-                if (t.name.StartsWith("Barreau") || t.name == "EtatSuivant") vus.Add(t.text);
+                if (t.name.StartsWith("Barreau") || t.name == "EtatCourant" || t.name == "EtatSuivant")
+                    vus.Add(t.text);
             return vus;
         }
 
@@ -210,19 +211,33 @@ namespace MafiaCleanCity.Operational.Tests
             yield return null;
 
             List<string> vus = BarreauxAffiches(RacineEcran());
-            Assert.AreEqual(5, vus.Count,
-                $"4 barreaux + 1 état attendus, vus : [{string.Join(" | ", vus)}]");
+            Assert.AreEqual(6, vus.Count,
+                $"4 barreaux + l'état du courant + la ligne du suivant attendus, vus : " +
+                $"[{string.Join(" | ", vus)}]");
 
             Assert.IsTrue(vus[0].StartsWith("✓"),
                 $"le palier 2 est DERRIÈRE le palier courant 3 : il doit être marqué franchi — « {vus[0]} »");
             Assert.IsTrue(vus[1].StartsWith("▸"),
                 $"le palier 3 EST le palier courant : il doit être marqué — « {vus[1]} »");
-            Assert.IsTrue(vus[2].StartsWith("·"),
-                $"le palier 4 est devant : ni franchi ni courant — « {vus[2]} »");
-            // ⚠️ L'état suit le barreau SUIVANT (4), pas la fin de la liste : c'est la marche
-            // qu'on est en train de monter qui porte l'information, pas le dernier barreau.
-            Assert.IsTrue(vus[3].Contains("en cours"),
-                $"`IN_PROGRESS` doit se lire en toutes lettres sous le palier suivant — « {vus[3]} »");
+
+            // ⛔ LA BANDE SUIT LE PALIER COURANT, PAS LE SUIVANT — mesuré dans
+            // `progression.projection.service.ts` : `progress_to_next` décrit le palier DÉJÀ
+            // ATTEINT malgré son nom, et vaut `UNLOCKED` pour toujours dès le palier 2. Ce test
+            // assertait le contraire et validait donc un écran qui MENTAIT.
+            Assert.IsTrue(vus[2].Contains("commencé"),
+                $"la bande doit se lire sous le palier COURANT — « {vus[2]} »");
+            Assert.IsTrue(vus[3].StartsWith("·"),
+                $"le palier 4 est devant : ni franchi ni courant — « {vus[3]} »");
+
+            // ⚠️ Et sous le suivant, AUCUNE promesse : ce qui manque pour l'atteindre est un
+            // prédicat de capacité que le back ne projette pas sur la surface joueur.
+            Assert.IsTrue(vus[4].Contains("ne dit pas"),
+                $"sous le palier suivant l'écran doit dire qu'il ne sait pas, jamais promettre " +
+                $"une marche proche — « {vus[4]} »");
+            foreach (string ligne in vus)
+                Assert.IsFalse(ligne.Contains("à portée"),
+                    $"« à portée » sous un palier promet une proximité qu'aucune donnée ne " +
+                    $"soutient — c'est le décor que cet écran démonte — « {ligne} »");
         }
 
         /// <summary>⛔ Le contrat NON FATAL, éprouvé : `/v1/progression` peut tomber, et ㊱

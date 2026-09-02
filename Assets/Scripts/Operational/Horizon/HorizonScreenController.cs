@@ -266,27 +266,50 @@ namespace MafiaCleanCity.Operational
                     marque + libelle, 9.5f, franchi ? TexteFaible : TexteFort);
                 if (courant) ligne.fontStyle = TMPro.FontStyles.Bold;
 
+                // ⛔ LA BANDE SE POSE SOUS LE PALIER COURANT, PAS SOUS LE SUIVANT — corrigé le
+                // 2026-09-02 après mesure du back. Son nom (`progress_to_next`) dit le contraire
+                // de ce qu'elle porte : elle décrit le palier DÉJÀ ATTEINT.
+                //     if (tier >= 2)  band = UNLOCKED;   // « the meaningful one landed »
+                //     else if (…)     band = IN_PROGRESS;
+                //     else            band = LOCKED;
+                // Au-delà du palier 1 elle vaut donc `UNLOCKED` POUR TOUJOURS, quoi qu'il arrive.
+                // ★ Je l'avais posée sous le barreau suivant avec le mot « à portée » : l'écran
+                //   promettait une marche proche alors que la bande ne parle pas d'elle. C'est
+                //   exactement le décor que cet écran est censé démonter — et il me l'a fait
+                //   écrire en une ligne.
+                if (courant)
+                    NouveauTexte(bloc.transform, "EtatCourant",
+                        "    " + EtatDuPalierAtteint(prog.progress_to_next), 8.5f, TexteFaible);
+
+                // ⚠️ ET SOUS LE SUIVANT, ON NE PROMET RIEN. Ce qui manque pour l'atteindre est un
+                // PRÉDICAT de capacité (pour 201 : 15 exceptions traitées, mesuré 4) — et cette
+                // grandeur n'est PAS projetée sur la surface joueur aujourd'hui. Dire « à portée »
+                // demanderait une donnée que le back n'émet pas ; dire qu'on ne sait pas demande
+                // zéro lot, et c'est la thèse de l'écran.
                 if (leSuivant)
-                {
-                    // L'état de la marche suivante, en toutes lettres — jamais une jauge : le
-                    // serveur rend une BANDE à trois crans, pas une fraction. Dessiner une barre
-                    // inventerait la précision qu'il refuse de donner, comme pour les conditions.
                     NouveauTexte(bloc.transform, "EtatSuivant",
-                        "    " + EtatDuPalierSuivant(prog.progress_to_next), 8.5f, TexteFaible);
-                }
+                        "    " + Lib("le serveur ne dit pas ce qui manque pour y arriver"),
+                        8.5f, TexteFaible);
             }
         }
 
-        /// <summary>La bande `progress_to_next` en clair. Un cran INCONNU se montre TEL QUEL —
-        /// un libellé inventé pour une valeur qu'on ne connaît pas ferait croire qu'on l'a
-        /// comprise, et masquerait justement le cran neuf qu'il faudrait traiter.</summary>
-        private static string EtatDuPalierSuivant(string bande)
+        /// <summary>La bande `progress_to_next` en clair — pour le palier ATTEINT, malgré son nom.
+        ///
+        /// ⛔ MESURÉ dans `progression.projection.service.ts` : `UNLOCKED` dès le palier 2 et pour
+        /// toujours, `IN_PROGRESS` au palier 1 dès qu'on a enseigné ou traité quelque chose,
+        /// `LOCKED` au palier 1 vierge. Les libellés disent donc ce qui EST DERRIÈRE, jamais ce
+        /// qui vient — c'est ce contresens qui m'a fait écrire « à portée » sous le mauvais
+        /// barreau.
+        /// ⚠️ Un cran INCONNU se montre TEL QUEL : un libellé inventé pour une valeur qu'on ne
+        /// connaît pas ferait croire qu'on l'a comprise, et masquerait justement le cran neuf
+        /// qu'il faudrait traiter.</summary>
+        private static string EtatDuPalierAtteint(string bande)
         {
             switch (bande)
             {
-                case "LOCKED":      return Lib("hors de portée pour l'instant");
-                case "IN_PROGRESS": return Lib("en cours");
-                case "UNLOCKED":    return Lib("à portée");
+                case "LOCKED":      return Lib("vous n'avez encore rien engagé");
+                case "IN_PROGRESS": return Lib("vous avez commencé");
+                case "UNLOCKED":    return Lib("ce palier est acquis");
                 default:            return string.IsNullOrEmpty(bande) ? Lib("état inconnu") : bande;
             }
         }
