@@ -166,8 +166,17 @@ namespace MafiaCleanCity.Operational
             // ⇒ Elle n'est pas opposable comme « conforme à la maquette » : il n'y en a pas.
             //   Ce qui EST opposable, c'est qu'elle ne montre que des bandes servies.
             VerticalLayoutGroup pile = racine.AddComponent<VerticalLayoutGroup>();
-            pile.padding = new RectOffset((int)Px(CssMargeX), (int)Px(CssMargeX),
-                                          (int)Px(CssMargeY), (int)Px(CssMargeY));
+            // ⛔ LE CHROME MANGE SA PART, EN HAUT ET EN BAS — posé AVANT toute capture sous
+            // chrome, parce que trois écrans sur trois portaient ce défaut le même jour (⑨ et ②
+            // en bas, ㊱ aux deux bouts) et que 42 est un écran PLEIN comme ㊱.
+            // ⚠️ NON VÉRIFIÉ SOUS CHROME : 42 n'est monté nulle part, donc aucune capture ne le
+            // prouve. C'est un correctif par ANALOGIE, et je le dis plutôt que de le présenter
+            // comme mesuré — la garde viendra avec le montage.
+            // Hors shell les insets valent 0 et l'écran remplit tout.
+            pile.padding = new RectOffset(
+                (int)Px(CssMargeX), (int)Px(CssMargeX),
+                (int)(Px(CssMargeY) + MafiaCleanCity.Shell.ShellChrome.TopInsetPx),
+                (int)(Px(CssMargeY) + MafiaCleanCity.Shell.ShellChrome.BottomInsetPx));
             pile.spacing = Px(CssEcart);
             pile.childControlWidth = true;  pile.childControlHeight = true;
             pile.childForceExpandWidth = true; pile.childForceExpandHeight = false;
