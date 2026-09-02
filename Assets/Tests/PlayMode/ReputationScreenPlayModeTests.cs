@@ -810,9 +810,29 @@ namespace MafiaCleanCity.Operational.Tests
                 $"capture {largeur}x{hauteur} quasi UNIFORME : {horsFond} px seulement diffèrent " +
                 $"de la couleur dominante (sur {pixels.Length}). L'écran n'a pas été rendu — et " +
                 "un fond nu ne compte pas comme du contenu.");
-            // Contrôle de FORME, distinct du précédent : une image réellement rendue porte
-            // plusieurs dizaines de teintes (texte, or, crème, voyants). Un dégradé uni en
-            // porterait aussi beaucoup, d'où les DEUX assertions plutôt qu'une.
+            // ⛔⛔ LE RECT DU LOCATAIRE — la garde qui manquait, et la seule qui distingue « l'écran
+            //    est là » de « quelque chose a rendu ». Mesuré par une session voisine sur un AUTRE
+            //    écran : la capture montrait la carte, l'autonomie, les exceptions et le dock
+            //    empilés, et le locataire visé occupait **100×100** — la taille par défaut d'un
+            //    `RectTransform` neuf, c'est-à-dire un écran monté mais jamais dimensionné.
+            //    ⇒ Toutes les gardes de PIXELS passaient : elles comptent l'encre de TOUTE l'image,
+            //    donc elles sont satisfaites par les VOISINS de l'écran absent. *Une garde qui
+            //    mesure la surface entière certifie l'absence de ce qu'elle doit prouver.*
+            //    Celle-ci ne regarde pas la couleur : elle regarde si le locataire a une TAILLE.
+            RectTransform rectLocataire = screen != null ? (RectTransform)screen.transform : null;
+            Assert.IsNotNull(rectLocataire, "aucun locataire à mesurer — la capture ne prouverait rien");
+            Vector2 taille = rectLocataire.rect.size;
+            Assert.IsFalse(Mathf.Approximately(taille.x, 100f) && Mathf.Approximately(taille.y, 100f),
+                $"le locataire mesure {taille.x}x{taille.y} — c'est la taille PAR DÉFAUT d'un " +
+                "`RectTransform` neuf : il est monté mais jamais dimensionné, et tout ce que la " +
+                "capture montre appartient à ses voisins.");
+            Assert.Greater(taille.x * taille.y, 100f * 100f,
+                $"le locataire n'occupe que {taille.x}x{taille.y} : trop peu pour l'écran capturé");
+
+            // Contrôle de FORME, secondaire et DÉCLARÉ tel : une image réellement rendue porte
+            // plusieurs dizaines de teintes. ⚠️ Il compte les teintes de TOUTE l'image, donc il ne
+            // discrimine PAS l'écran visé — il reste utile contre un rendu totalement raté, et c'est
+            // tout ce qu'on lui demande depuis que le rect est asserté au-dessus.
             Assert.Greater(histo.Count, 8,
                 $"capture {largeur}x{hauteur} : seulement {histo.Count} teintes distinctes — " +
                 "trop peu pour un écran qui porte du texte, de l'or et quatre voyants");
