@@ -129,8 +129,14 @@ namespace MafiaCleanCity.CoreLoops.Compression
         {
             yield return client.LireEtat(bearer, e => Etat = e,
                                          (c, m) => DerniereErreur = $"état {c}: {m}");
+            // ⛔ 404 SUR LE TABLEAU N'EST PAS UNE PANNE : c'est « aucune semaine de compression
+            // en cours », et le back le dit mot pour mot — `no active compression board for
+            // player`. Mesuré le 2026-09-02 : `compression/state` rend 200 avec
+            // `week_state: "none"` pendant que `compression/board` rend 404. Sans ce cas, l'écran
+            // annonçait « Le tableau n'a pas répondu » sur l'état le plus NORMAL du jeu, et la
+            // capture le montrait — un écran honnête sur la mauvaise chose.
             yield return client.LireTableau(bearer, t => Tableau = t,
-                                            (c, m) => DerniereErreur = $"tableau {c}: {m}");
+                                            (c, m) => DerniereErreur = c == 404 ? null : $"tableau {c}: {m}");
             Rendre();
         }
 
@@ -144,7 +150,14 @@ namespace MafiaCleanCity.CoreLoops.Compression
             pressionTexte.text = Etat == null
                 ? "pression inconnue"
                 : $"{Lisible(Etat.stress_bucket)} · {Lisible(Etat.week_state)}";
-            pressionTexte.color = Etat != null && Etat.stress_bucket == "SEVERE" ? Braise : Creme2;
+            // ⛔ « SEVERE » N'EXISTE PAS DANS CE DOMAINE — je l'avais supposé par analogie avec les
+            // paliers d'autres écrans. `StressBucket` (stress-bucket.ts) vaut
+            // `calm | mounting | crushing | compression_active`, EN MINUSCULES. La comparaison
+            // précédente ne pouvait donc JAMAIS être vraie : la couleur d'alerte était morte, et
+            // rien ne l'aurait signalé — un écran qui n'alerte jamais ressemble à un écran calme.
+            bool tendu = Etat != null
+                      && (Etat.stress_bucket == "crushing" || Etat.stress_bucket == "compression_active");
+            pressionTexte.color = tendu ? Braise : Creme2;
 
             // le budget en JETONS qu'on compte — jamais un nombre noyé dans une phrase
             if (Tableau != null)
@@ -161,7 +174,7 @@ namespace MafiaCleanCity.CoreLoops.Compression
                 // distinguer d'une route qui n'a pas répondu, sinon on annonce le calme à un
                 // joueur dont le tableau a simplement échoué à charger.
                 videTexte.text = DerniereErreur == null
-                    ? "Au calme — aucun problème cette semaine."
+                    ? "Au calme — aucune semaine de compression en cours."
                     : "Le tableau n'a pas répondu.";
                 return;
             }

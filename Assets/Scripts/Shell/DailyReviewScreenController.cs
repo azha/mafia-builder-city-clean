@@ -516,7 +516,12 @@ namespace MafiaCleanCity.Shell
             if (string.IsNullOrEmpty(lieutenantId) || roster == null) return null;
             foreach (RosterRow r in roster)
             {
-                if (r != null && r.lieutenant_id == lieutenantId && r.tenure_bucket == "new") return "NOUVELLE";
+                // ⛔ « new » N'EST PAS UNE VALEUR DE CE DOMAINE — je l'avais supposée par bon sens.
+                // `bucketForStreak` (tenure-inertia.ts) ne rend que FRESH | ACCLIMATED | SEASONED |
+                // SENIOR | ENTRENCHED. La comparaison était donc morte : le badge « NOUVELLE » ne
+                // s'affichait JAMAIS, sur aucun lieutenant, et rien ne le signalait — un badge qui ne
+                // s'allume pas ressemble à un badge dont la condition n'est pas remplie.
+                if (r != null && r.lieutenant_id == lieutenantId && r.tenure_bucket == "FRESH") return "NOUVELLE";
             }
             return null;
         }
