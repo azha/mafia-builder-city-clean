@@ -13,22 +13,23 @@ using MafiaCleanCity.CitySim.Precinct;
 using MafiaCleanCity.Account.Profile;
 using MafiaCleanCity.Onboarding;
 using MafiaCleanCity.Operational.Selling;
+using MafiaCleanCity.Account.Settings;
 
 namespace MafiaCleanCity.Shell.Tests
 {
-    // PLANCHE DE CAPTURES — les SEPT écrans du chantier F en UN SEUL run d'éditeur.
+    // PLANCHE DE CAPTURES — les HUIT écrans du chantier F en UN SEUL run d'éditeur.
     //
     // ⛔⛔ POURQUOI GROUPER, ET C'EST UNE MESURE, PAS UN CONFORT. Le rechargement de domaine de
     // cet éditeur coûte **674 à 677 secondes MESURÉES** (`Finished resetting the current domain,
     // in 676.994 seconds`), et il est payé UNE FOIS PAR LANCEMENT, avant toute compilation.
-    // Sept tests séparés = sept rechargements = **~80 min de porte Unity**. Un seul test qui monte
-    // les sept à la suite = un rechargement = **~13 min**. Sur une machine où quatre sessions se
+    // Huit tests séparés = sept rechargements = **~80 min de porte Unity**. Un seul test qui monte
+    // les huit à la suite = un rechargement = **~13 min**. Sur une machine où quatre sessions se
     // partagent un éditeur unique par un système de file, ce n'est pas une optimisation : c'est la
     // différence entre bloquer les autres une heure et les bloquer un quart d'heure.
     //
     // ⚠️ CE QUE CE TEST PROUVE ET CE QU'IL NE PROUVE PAS. Il prouve que chaque écran REND — monté,
     // dimensionné, au premier plan, avec de l'encre. Il ne prouve PAS qu'un joueur peut y arriver :
-    // AUCUN de ces sept écrans n'a d'entrée de navigation, les quatre onglets étant pris. Ce sont
+    // AUCUN de ces huit écrans n'a d'entrée de navigation, les quatre onglets étant pris. Ce sont
     // deux propriétés distinctes, et c'est la seconde qui manque au chantier. Le test les monte
     // donc directement en surimpression, et le dit ici plutôt que de laisser la capture le taire.
     // ⚠️ RÉSERVE MESURÉE SUR ⑰ LE COMMISSARIAT, à porter avec la capture — sinon l'image ment
@@ -73,7 +74,7 @@ namespace MafiaCleanCity.Shell.Tests
         }
 
         [UnityTest]
-        public IEnumerator Capture_PlancheDesSeptEcrans_1080x2400()
+        public IEnumerator Capture_PlancheDesHuitEcrans_1080x2400()
         {
             yield return ChargerLaSceneDeDemarrageDuBuild();
             AppShell shell = SondeShellDansLaScene(sceneDeDemarrage);
@@ -102,6 +103,9 @@ namespace MafiaCleanCity.Shell.Tests
             yield return Capturer<ProfileScreenController>(shell, "le_coffre", e => e.Profil != null || e.EtatVide, echecs);
             yield return Capturer<TutorialScreenController>(shell, "la_premiere_fois", e => e.Etat != null || e.EtatVide, echecs);
             yield return Capturer<SellingScreenController>(shell, "la_vente", e => e.Dealers != null || e.EtatVide, echecs);
+            // ⑲ a rejoint la liste APRÈS avoir été déclaré bloqué ce matin : son écrivain de
+            // `locale` a été livré dans la journée. *Un « bloqué » est une mesure datée.*
+            yield return Capturer<SettingsScreenController>(shell, "les_reglages", e => e.Profil != null || e.EtatVide, echecs);
 
             Assert.IsEmpty(echecs, "écrans en défaut :\n  · " + string.Join("\n  · ", echecs));
         }

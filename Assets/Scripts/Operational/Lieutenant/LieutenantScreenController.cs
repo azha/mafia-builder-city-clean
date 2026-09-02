@@ -255,6 +255,9 @@ namespace MafiaCleanCity.Operational.Lieutenant
 
         private void Start()
         {
+            // ⛔ Le shell ajoute des frères APRÈS la fenêtre synchrone du montage : c'est
+            // ici, à la frame suivante, qu'« être dernier » devient stable.
+            if (transform.parent != null) transform.SetAsLastSibling();
             EnsureInitialized();
             StartCoroutine(Boot());
         }
@@ -312,13 +315,6 @@ namespace MafiaCleanCity.Operational.Lieutenant
 
         /// <summary>Set the player Bearer directly (test convenience when already signed in elsewhere).</summary>
 
-        /// <summary>⛔ Le shell re-parente APRÈS `SetMountParent` : poser l'ordre de fratrie dans
-        /// le setter le fait défaire. On réagit donc à l'ÉVÉNEMENT de re-parentage, qui arrive
-        /// quel que soit l'ordre interne du shell. Le parent est nul au démontage — d'où la garde.</summary>
-        private void OnTransformParentChanged()
-        {
-            if (transform.parent != null) transform.SetAsLastSibling();
-        }
 
         public void SetToken(string token)
         {

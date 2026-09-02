@@ -104,20 +104,27 @@ namespace MafiaCleanCity.Shell
         }
 
 
-        /// <summary>⛔ LE SHELL RE-PARENTE APRÈS AVOIR APPELÉ `SetMountParent` — mesuré deux fois.
-        /// Poser l'ordre de fratrie dans le setter le fait donc DÉFAIRE aussitôt : la planche du
-        /// 2026-09-02 a intercepté ㉓ à « frère 6 sur 11 » alors que le setter l'avait bien mise en
-        /// dernier. Les six autres écrans passaient, non parce que le geste marchait, mais parce
-        /// que le shell les appendait déjà en fin de liste — *une garde qui réussit six fois sur
-        /// sept ne marche pas : elle est chanceuse six fois sur sept.*
-        /// ⇒ On ne devine plus QUAND le parentage a lieu : on RÉAGIT à l'événement. Unity appelle
-        /// ce callback exactement au changement de parent, donc après le geste du shell, quel que
-        /// soit son ordre interne. La propriété devient indépendante de la séquence d'appel.
-        /// ⚠️ Le callback tire aussi au démontage, où le parent est nul — d'où la garde.</summary>
-        private void OnTransformParentChanged()
+        /// <summary>⛔⛔ CE HOOK-CI EST LE BON, ET LES DEUX PRÉCÉDENTS ÉTAIENT DÉCORATIFS.
+        /// Lu dans le corps du shell (`AppShell.ConstruireLocataire`), pas déduit :
+        ///   1. `host = new GameObject(...)`      — créé à la racine, SANS parent
+        ///   2. `host.transform.SetParent(slot)`  — le parent change ICI
+        ///   3. `host.AddComponent&lt;T&gt;()`         — le composant naît APRÈS
+        ///   4. `tenant.SetMountParent(slot)`     — puis `SetToken`, même frame
+        /// ⇒ `OnTransformParentChanged` ne pouvait JAMAIS tirer : au moment du re-parentage,
+        /// ce composant n'existait pas. Un dispositif qui nomme un mécanisme réel et ne
+        /// s'exécute jamais — et il a survécu deux runs en passant pour un correctif, parce que
+        /// six écrans sur sept étaient déjà derniers SANS lui.
+        /// ⇒ Et poser l'ordre en (4) ne suffit pas non plus : la mesure dit `frère 6 sur 11`,
+        /// donc des frères s'ajoutent APRÈS la fenêtre synchrone du montage.
+        /// ⇒ `Start()` s'exécute à la frame SUIVANTE — après tout ce que le shell fait en
+        /// synchrone. C'est le premier instant où « être dernier » est stable.
+        /// ★ La leçon vaut plus que la ligne : *avant d'écrire un hook, lire le CORPS de ce qui
+        /// l'appelle, et se demander si l'événement qu'il observe peut seulement se produire.*</summary>
+        private void Start()
         {
             if (transform.parent != null) transform.SetAsLastSibling();
         }
+
 
         public void SetToken(string bearer)
         {
