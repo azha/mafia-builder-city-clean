@@ -155,6 +155,15 @@ namespace MafiaCleanCity.Account.Settings
             GameObject r = Bloc("L_" + code, corps, true, Px(6f));
             var h = r.GetComponent<HorizontalLayoutGroup>();
             h.childAlignment = TextAnchor.MiddleLeft;
+            // ⛔ SANS CECI LA PASTILLE EST ÉTIRÉE SUR TOUTE LA LARGEUR, en une ellipse d'or de
+            // 400 px — vu sur la capture du 2026-09-02. `Bloc()` laisse `childForceExpandWidth` à
+            // vrai, ce qui écrase le `flexibleWidth = 0` de la pastille : le groupe distribue
+            // l'espace restant à TOUS ses enfants, y compris ceux qui ont déclaré ne pas en
+            // vouloir. *Un disque étiré ne se lit plus comme un disque* — et l'étirement d'un
+            // sprite rond en ellipse est le défaut que ce dépôt a déjà payé sur un anneau 9-slice.
+            // ⇒ Trouvé par un balayage, pas par l'œil : des 8 écrans qui dessinent une pastille,
+            // celui-ci était le SEUL à ne jamais poser cette ligne (0 occurrence contre 1 à 12).
+            h.childForceExpandWidth = false;
             h.padding = new RectOffset((int)Px(10f), (int)Px(10f), (int)Px(8f), (int)Px(9f));
             Image fond = r.AddComponent<Image>();
             fond.sprite = ProceduralUI.RoundedRectOutline((int)Px(10f), Px(1f),

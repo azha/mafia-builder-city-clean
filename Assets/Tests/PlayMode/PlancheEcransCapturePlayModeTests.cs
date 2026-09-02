@@ -300,6 +300,43 @@ namespace MafiaCleanCity.Shell.Tests
 
             System.IO.File.WriteAllBytes(chemin, tex.EncodeToPNG());
 
+            // ⛔ MESURE, PAS DÉDUCTION. ㉓ dessine tous les textes d'une rangée au même endroit.
+            // J'ai émis TROIS hypothèses (hauteur des textes, hauteur du bloc de tête,
+            // imbrication) et posé un correctif sur la deuxième : l'image est revenue IDENTIQUE.
+            // Et le regard la réfute — le COMPTOIR superpose aussi ses deux textes, alors qu'il ne
+            // contient aucun bloc imbriqué. *Trois hypothèses plausibles valent moins qu'une
+            // mesure*, et j'ai déjà payé quatre runs ce matin pour l'apprendre sur l'ordre de
+            // fratrie. On imprime donc la géométrie réelle au lieu de la supposer.
+            if (nom == "la_vitrine")
+            {
+                Transform etageres = null;
+                foreach (var rt2 in ecran.GetComponentsInChildren<RectTransform>(true))
+                    if (rt2.name == "Etageres") { etageres = rt2; break; }
+                if (etageres != null && etageres.childCount > 0)
+                {
+                    Transform rang = etageres.GetChild(0);
+                    var vlg = rang.GetComponent<VerticalLayoutGroup>();
+                    // ⚠️ La LARGEUR aussi : le défaut résiduel est un débordement HORIZONTAL, et
+                    // une sonde qui ne mesure que la hauteur ne peut pas le voir — c'est
+                    // exactement l'erreur de grandeur payée trois fois aujourd'hui.
+                    var vueRt = etageres.parent as RectTransform;
+                    var listeRt = (RectTransform)etageres;
+                    Debug.Log($"[GEOM] vue w={(vueRt == null ? -1f : vueRt.rect.width):F1} "
+                              + $"· liste w={listeRt.rect.width:F1} x={listeRt.anchoredPosition.x:F1} "
+                              + $"pivot={listeRt.pivot.x:F2} ancres=[{listeRt.anchorMin.x:F1},{listeRt.anchorMax.x:F1}]");
+                    Debug.Log($"[GEOM] rangée '{rang.name}' rect={((RectTransform)rang).rect.height:F1} "
+                              + $"vlg={(vlg == null ? "ABSENT" : $"ctrlH={vlg.childControlHeight} expH={vlg.childForceExpandHeight} spacing={vlg.spacing:F1}")}");
+                    for (int k = 0; k < rang.childCount; k++)
+                    {
+                        var e = (RectTransform)rang.GetChild(k);
+                        var le2 = e.GetComponent<LayoutElement>();
+                        Debug.Log($"[GEOM]   [{k}] {e.name,-10} y={e.anchoredPosition.y,8:F1} h={e.rect.height,7:F1} "
+                                  + $"prefH={(le2 == null ? -1f : le2.preferredHeight),7:F1} ignore={(le2 != null && le2.ignoreLayout)}");
+                    }
+                }
+                else Debug.Log("[GEOM] Etageres introuvable ou vide");
+            }
+
             // (3) VARIÉTÉ — dernière et la plus faible des trois : « pas noire » est satisfait par
             // un gris uniforme, et le compte de teintes de TOUTE l'image est satisfait par les
             // écrans du dessous. Elle ne vaut qu'APRÈS les deux gardes structurelles.

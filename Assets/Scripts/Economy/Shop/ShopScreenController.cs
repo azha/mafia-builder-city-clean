@@ -204,6 +204,11 @@ namespace MafiaCleanCity.Economy.Shop
                 new RectOffset((int)Px(10f), (int)Px(10f), (int)Px(8f), (int)Px(9f));
 
             GameObject tete = Bloc("Tete", r.transform, true, Px(6f));
+            // ⛔ Le bloc de tête déclare SA hauteur : un groupe horizontal enfant d'un groupe
+            // vertical ne la déduit pas de ses textes, et une hauteur nulle fait empiler tous les
+            // frères au même Y.
+            LayoutElement teteLe = tete.AddComponent<LayoutElement>();
+            teteLe.preferredHeight = Px(13f);
             var htete = tete.GetComponent<HorizontalLayoutGroup>();
             htete.childForceExpandWidth = false;
             htete.childAlignment = TextAnchor.MiddleLeft;
@@ -344,8 +349,67 @@ namespace MafiaCleanCity.Economy.Shop
             terminalTexte.enableWordWrapping = true;
             terminalTexte.gameObject.SetActive(false);
 
-            GameObject liste = Bloc("Etageres", transform, false, Px(8f));
-            etageres = (RectTransform)liste.transform;
+            // ⛔⛔ NEUF ARTICLES NE TIENNENT PAS DANS 569 px, ET SANS DÉFILEMENT LE GROUPE LES
+            // ÉCRASE AU LIEU DE DÉBORDER. Mesuré par sonde géométrique, pas déduit — les quatre
+            // enfants de la première rangée sont bien placés et espacés (y = -36,7 / -58,9 /
+            // -80,6 / -131,3, le groupe vertical FONCTIONNE), mais leur hauteur RÉELLE tombe à
+            // ~5 px pour une hauteur PRÉFÉRÉE de ~55 :
+            //     rangée h=200,8 · [0] Tete h=5,4 prefH=55,5 · [1] Prix h=5,0 prefH=51,8
+            //                     · [2] Donne h=4,2 prefH=43,2 · [3] Geste h=63,1
+            // TMP dessine son texte HORS de sa boîte quand la boîte est trop petite : d'où neuf
+            // articles superposés et illisibles, sans une seule erreur.
+            // ⇒ Trois hypothèses fausses avaient précédé cette mesure (hauteur des textes, hauteur
+            // du bloc de tête, imbrication), et un correctif posé sur la deuxième n'avait RIEN
+            // changé. *Une explication qui n'explique qu'une partie des occurrences est fausse,
+            // pas partielle* — le comptoir superposait aussi, sans bloc imbriqué.
+            // ⇒ La vraie cause n'est pas la géométrie d'une rangée, c'est que le CONTENU dépasse
+            // le cadre. Une boutique à neuf articles a besoin de DÉFILER ; comprimer était le
+            // symptôme, pas le sujet. ㉒ et ⑲ rendent juste parce qu'ils tiennent, pas parce
+            // qu'ils sont mieux construits.
+            GameObject vue = new GameObject("Defilement", typeof(RectTransform));
+            vue.transform.SetParent(transform, false);
+            // ⛔ `Mask` DÉCOUPE PAR LE CANAL ALPHA de son Graphic, pas par son rectangle. Le
+            // masque quasi transparent que j'avais posé (alpha 0,004) est donc un pochoir presque
+            // VIDE : il pouvait écarter ce qu'il devait garder. Symptôme sur la capture — rangées
+            // débordant à gauche et bordures arrondies disparues.
+            // ⇒ `RectMask2D` découpe par RECTANGLE, n'exige aucun Graphic et n'a pas de seuil
+            // d'alpha. Il n'y a rien à régler et donc rien à régler de travers.
+            // ★ Ce n'est pas une 4e hypothèse à l'aveugle : c'est le remplacement d'un mécanisme
+            // dont le paramètre décisif était douteux par un mécanisme qui n'en a pas. Et la sonde
+            // ci-dessous mesure le résultat au lieu de me laisser dire « ça a l'air mieux ».
+            vue.AddComponent<RectMask2D>();
+            LayoutElement vueLe = vue.AddComponent<LayoutElement>();
+            vueLe.flexibleHeight = 1f;                      // prend toute la hauteur restante
+            ScrollRect defil = vue.AddComponent<ScrollRect>();
+            defil.horizontal = false;
+            defil.movementType = ScrollRect.MovementType.Clamped;
+            defil.scrollSensitivity = Px(20f);
+
+            GameObject liste = Bloc("Etageres", vue.transform, false, Px(8f));
+            RectTransform listeRt = (RectTransform)liste.transform;
+            listeRt.anchorMin = new Vector2(0f, 1f);
+            listeRt.anchorMax = new Vector2(1f, 1f);
+            listeRt.pivot = new Vector2(0.5f, 1f);
+            // ⛔ UN RectTransform NEUF A UN sizeDelta DE (100, 100), ET DES ANCRES ÉTIRÉES NE LE
+            // REMPLACENT PAS : ELLES S'Y AJOUTENT. Mesuré, pas supposé — la sonde a rendu
+            //     vue w=1196,0 · liste w=1296,0 · ancres=[0,0 → 1,0]
+            // et 1296 − 1196 = 100, exactement la valeur par défaut. La liste débordait donc de
+            // 50 px de CHAQUE côté (pivot centré), ce qui coupait le début des libellés et
+            // poussait les bordures arrondies hors du masque.
+            // ⇒ Avec des ancres étirées, `sizeDelta` est un DELTA sur la taille du parent, pas une
+            // taille. Le laisser à sa valeur par défaut, c'est demander « parent + 100 ».
+            // ★ Trois hypothèses avaient précédé cette mesure sur le défaut voisin ; ici le nombre
+            // a tranché du premier coup parce que la sonde regardait enfin la bonne GRANDEUR — la
+            // largeur. Une sonde qui ne mesure que la hauteur ne peut pas voir un débordement
+            // horizontal, et j'avais passé deux runs avec exactement cette sonde-là.
+            listeRt.sizeDelta = new Vector2(0f, listeRt.sizeDelta.y);
+            // ⚠️ Sans ce fitter, le contenu garde la hauteur du cadre et le groupe écrase de
+            // nouveau : c'est LUI qui laisse la liste grandir au-delà de ce qui est visible.
+            var fitter = liste.AddComponent<ContentSizeFitter>();
+            fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            defil.content = listeRt;
+            defil.viewport = (RectTransform)vue.transform;
+            etageres = listeRt;
 
             videTexte = Texte(transform, "Vide", "", Px(11f), Creme2,
                               DesignTokens.Current.hudSerifFont, TextAlignmentOptions.Center);
@@ -383,6 +447,17 @@ namespace MafiaCleanCity.Economy.Shop
             LayoutElement le = go.AddComponent<LayoutElement>();
             le.preferredWidth = 0f;
             le.flexibleWidth = 1f;
+            // ⛔ SANS HAUTEUR DÉCLARÉE, UN TEXTE IMBRIQUÉ NE PREND PAS DE PLACE ET TOUT SE
+            // SUPERPOSE. Mesuré à la capture du 2026-09-02 : les neuf articles rendaient leurs
+            // vraies données — nom, prix, bonus, raison — TOUS DESSINÉS AU MÊME ENDROIT, illisibles.
+            // Cause : `preferredWidth = 0` empêche TMP de calculer une hauteur utile quand il est
+            // sous un groupe HORIZONTAL lui-même enfant d'un groupe vertical ; le bloc de tête
+            // remontait donc une hauteur nulle et ses frères se plaçaient par-dessus.
+            // ⇒ On déclare la hauteur de ligne au lieu de la laisser déduire. ⚠️ Correctif SCOPÉ à
+            // cet écran : ㉒ le profil emploie les mêmes helpers et rend juste — il n'a pas de bloc
+            // horizontal imbriqué. *Le défaut est dans l'imbrication, pas dans le helper*, et
+            // toucher les huit écrans pour réparer celui-ci en casserait sept qui vont bien.
+            le.preferredHeight = taille * 1.35f;
             return t;
         }
     }
