@@ -39,6 +39,13 @@ namespace MafiaCleanCity.Account.Settings
         public ProfilData Profil { get; private set; }
         public string LangueCourante { get; private set; }
         public bool EtatVide { get; private set; }
+        /// <summary>⛔ LE SEUL PRÉDICAT HONNÊTE POUR UNE CAPTURE. Attendre qu'un CHAMP arrive
+        /// n'est pas attendre que l'écran soit DESSINÉ : ㉓ enchaîne trois requêtes, et guetter la
+        /// première faisait capturer DEUX requêtes trop tôt — image vide, test vert. ⑰ battait
+        /// entre 23 et 3 éléments d'un run à l'autre pour la même raison, une requête d'avance.
+        /// ⇒ Ce compteur monte à la FIN de `Rendre()`. C'est une propriété structurelle : elle ne
+        /// dépend d'aucun champ, d'aucun ordre de requêtes, et elle survivra à l'ajout d'un appel.</summary>
+        public int RendusEffectues { get; private set; }
         public string DerniereErreur { get; private set; }
 
         private const float K = 1280f / 300f;
@@ -117,6 +124,7 @@ namespace MafiaCleanCity.Account.Settings
             if (EtatVide)
             {
                 videTexte.text = DerniereErreur == null ? "Aucun réglage." : "Les réglages n'ont pas répondu.";
+                RendusEffectues++;
                 return;
             }
 
@@ -127,6 +135,7 @@ namespace MafiaCleanCity.Account.Settings
             Manque("Se déconnecter", "aucune route de déconnexion joueur");
             Manque("Supprimer mon compte", "le domaine RGPD n'a pas de surface joueur");
             Manque("Les autres préférences", "chacune vit sur sa propre route — il n'y a pas de service de réglages");
+            RendusEffectues++;
         }
 
         private void Section(string titre)

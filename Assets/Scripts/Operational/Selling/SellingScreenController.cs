@@ -39,6 +39,13 @@ namespace MafiaCleanCity.Operational.Selling
 
         public DealerDto[] Dealers { get; private set; }
         public bool EtatVide { get; private set; }
+        /// <summary>⛔ LE SEUL PRÉDICAT HONNÊTE POUR UNE CAPTURE. Attendre qu'un CHAMP arrive
+        /// n'est pas attendre que l'écran soit DESSINÉ : ㉓ enchaîne trois requêtes, et guetter la
+        /// première faisait capturer DEUX requêtes trop tôt — image vide, test vert. ⑰ battait
+        /// entre 23 et 3 éléments d'un run à l'autre pour la même raison, une requête d'avance.
+        /// ⇒ Ce compteur monte à la FIN de `Rendre()`. C'est une propriété structurelle : elle ne
+        /// dépend d'aucun champ, d'aucun ordre de requêtes, et elle survivra à l'ajout d'un appel.</summary>
+        public int RendusEffectues { get; private set; }
         public int CollectTentatives { get; private set; }
         public string DerniereErreur { get; private set; }
 
@@ -169,9 +176,11 @@ namespace MafiaCleanCity.Operational.Selling
                 videTexte.text = DerniereErreur == null
                     ? "Aucun point de vente."
                     : "Les points de vente n'ont pas répondu.";
+                RendusEffectues++;
                 return;
             }
             foreach (DealerDto d in Dealers) Rangee(d);
+            RendusEffectues++;
         }
 
         private void Rangee(DealerDto d)

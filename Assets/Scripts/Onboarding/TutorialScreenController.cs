@@ -37,6 +37,13 @@ namespace MafiaCleanCity.Onboarding
 
         public TutorielData Etat { get; private set; }
         public bool EtatVide { get; private set; }
+        /// <summary>⛔ LE SEUL PRÉDICAT HONNÊTE POUR UNE CAPTURE. Attendre qu'un CHAMP arrive
+        /// n'est pas attendre que l'écran soit DESSINÉ : ㉓ enchaîne trois requêtes, et guetter la
+        /// première faisait capturer DEUX requêtes trop tôt — image vide, test vert. ⑰ battait
+        /// entre 23 et 3 éléments d'un run à l'autre pour la même raison, une requête d'avance.
+        /// ⇒ Ce compteur monte à la FIN de `Rendre()`. C'est une propriété structurelle : elle ne
+        /// dépend d'aucun champ, d'aucun ordre de requêtes, et elle survivra à l'ajout d'un appel.</summary>
+        public int RendusEffectues { get; private set; }
         public string DerniereErreur { get; private set; }
 
         private const float K = 1280f / 300f;
@@ -140,6 +147,7 @@ namespace MafiaCleanCity.Onboarding
                 videTexte.text = DerniereErreur == null
                     ? "Rien à découvrir pour l'instant."
                     : "L'état du tutoriel n'a pas répondu.";
+                RendusEffectues++;
                 return;
             }
 
@@ -149,6 +157,7 @@ namespace MafiaCleanCity.Onboarding
                       Px(11f), Creme2, DesignTokens.Current.hudSerifFont,
                       TextAlignmentOptions.Center).enableWordWrapping = true;
                 Bouton("REVENIR SUR CE CHOIX", Or, () => StartCoroutine(Refuser(false)));
+                RendusEffectues++;
                 return;
             }
 
@@ -183,6 +192,7 @@ namespace MafiaCleanCity.Onboarding
 
             // ★ le refus est un DROIT : au même rang que « continuer », jamais caché
             Bouton("NE PLUS RIEN ME MONTRER", Creme2, () => StartCoroutine(Refuser(true)));
+            RendusEffectues++;
         }
 
         private void Bouton(string libelle, Color teinte, UnityEngine.Events.UnityAction action)

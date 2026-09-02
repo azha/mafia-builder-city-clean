@@ -36,6 +36,13 @@ namespace MafiaCleanCity.Account.Profile
 
         public ProfilData Profil { get; private set; }
         public bool EtatVide { get; private set; }
+        /// <summary>⛔ LE SEUL PRÉDICAT HONNÊTE POUR UNE CAPTURE. Attendre qu'un CHAMP arrive
+        /// n'est pas attendre que l'écran soit DESSINÉ : ㉓ enchaîne trois requêtes, et guetter la
+        /// première faisait capturer DEUX requêtes trop tôt — image vide, test vert. ⑰ battait
+        /// entre 23 et 3 éléments d'un run à l'autre pour la même raison, une requête d'avance.
+        /// ⇒ Ce compteur monte à la FIN de `Rendre()`. C'est une propriété structurelle : elle ne
+        /// dépend d'aucun champ, d'aucun ordre de requêtes, et elle survivra à l'ajout d'un appel.</summary>
+        public int RendusEffectues { get; private set; }
         public string DerniereErreur { get; private set; }
 
         private const float K = 1280f / 300f;
@@ -137,6 +144,7 @@ namespace MafiaCleanCity.Account.Profile
             if (EtatVide)
             {
                 videTexte.text = DerniereErreur == null ? "Aucun profil." : "Le profil n'a pas répondu.";
+                RendusEffectues++;
                 return;
             }
 
@@ -155,6 +163,7 @@ namespace MafiaCleanCity.Account.Profile
             Manque("Changer le mot de passe", "aucune route de mutation de profil n'existe");
             Manque("Double authentification", "aucune route TOTP n'existe");
             Manque("Vos sauvegardes", "aucun domaine de sauvegarde — l'emplacement n'existe que comme article");
+            RendusEffectues++;
         }
 
         private void Champ(string libelle, string valeur, string note)

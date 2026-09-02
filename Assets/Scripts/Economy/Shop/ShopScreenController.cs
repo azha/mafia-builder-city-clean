@@ -51,6 +51,13 @@ namespace MafiaCleanCity.Economy.Shop
         public int Solde { get; private set; } = -1;
         public string[] Possedes { get; private set; }
         public bool EtatVide { get; private set; }
+        /// <summary>⛔ LE SEUL PRÉDICAT HONNÊTE POUR UNE CAPTURE. Attendre qu'un CHAMP arrive
+        /// n'est pas attendre que l'écran soit DESSINÉ : ㉓ enchaîne trois requêtes, et guetter la
+        /// première faisait capturer DEUX requêtes trop tôt — image vide, test vert. ⑰ battait
+        /// entre 23 et 3 éléments d'un run à l'autre pour la même raison, une requête d'avance.
+        /// ⇒ Ce compteur monte à la FIN de `Rendre()`. C'est une propriété structurelle : elle ne
+        /// dépend d'aucun champ, d'aucun ordre de requêtes, et elle survivra à l'ajout d'un appel.</summary>
+        public int RendusEffectues { get; private set; }
         public string DerniereErreur { get; private set; }
 
         private const float K = 1280f / 300f;
@@ -176,9 +183,11 @@ namespace MafiaCleanCity.Economy.Shop
                 videTexte.text = DerniereErreur == null
                     ? "La vitrine est vide."
                     : "La vitrine n'a pas répondu.";
+                RendusEffectues++;
                 return;
             }
             foreach (SkuDto s in Catalogue) Article(s, possedes.Contains(s.sku_id));
+            RendusEffectues++;
         }
 
         private void Article(SkuDto s, bool possede)

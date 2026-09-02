@@ -118,19 +118,26 @@ namespace MafiaCleanCity.Shell.Tests
             Debug.Log($"[PLANCHE] shell stabilisé : {dernierCompte} enfants après {gardeFou} frames");
             Assert.Less(gardeFou, 600, "le shell n'a jamais cessé d'ajouter des enfants — capture non fiable");
 
+            // ⛔⛔ LES PRÉDICATS ATTENDENT LE RENDU, PLUS UN CHAMP. Guetter l'arrivée d'un champ
+            // est satisfait AU MILIEU de la coroutine : ㉓ enchaîne trois requêtes et j'attendais
+            // la première — la capture partait deux requêtes trop tôt, image vide, test VERT.
+            // ⑰ battait entre 23 et 3 éléments d'un run à l'autre pour la même raison.
+            // ⇒ `RendusEffectues` monte à la fin de `Rendre()`. Propriété STRUCTURELLE : elle ne
+            // dépend ni du nombre de requêtes ni de leur ordre, et elle reste juste le jour où
+            // un écran en ajoute une. *Un proxy qui marche sur sept écrans sur huit ne marche pas.*
             var echecs = new List<string>();
             // ⚠️ On n'arrête PAS au premier échec : un rouge en masque un autre, et sur sept écrans
             // ça coûterait sept rechargements de domaine pour les découvrir un par un. On collecte,
             // puis on rend le verdict complet.
-            yield return Capturer<CompressionScreenController>(shell, "la_semaine", e => e.Tableau != null || e.EtatVide, echecs);
-            yield return Capturer<InspectionScreenController>(shell, "les_inspections", e => e.File != null || e.EtatVide, echecs);
-            yield return Capturer<PrecinctScreenController>(shell, "le_commissariat", e => e.Croyance != null || e.EtatVide, echecs);
-            yield return Capturer<ProfileScreenController>(shell, "le_coffre", e => e.Profil != null || e.EtatVide, echecs);
-            yield return Capturer<TutorialScreenController>(shell, "la_premiere_fois", e => e.Etat != null || e.EtatVide, echecs);
-            yield return Capturer<SellingScreenController>(shell, "la_vente", e => e.Dealers != null || e.EtatVide, echecs);
+            yield return Capturer<CompressionScreenController>(shell, "la_semaine", e => e.RendusEffectues > 0, echecs);
+            yield return Capturer<InspectionScreenController>(shell, "les_inspections", e => e.RendusEffectues > 0, echecs);
+            yield return Capturer<PrecinctScreenController>(shell, "le_commissariat", e => e.RendusEffectues > 0, echecs);
+            yield return Capturer<ProfileScreenController>(shell, "le_coffre", e => e.RendusEffectues > 0, echecs);
+            yield return Capturer<TutorialScreenController>(shell, "la_premiere_fois", e => e.RendusEffectues > 0, echecs);
+            yield return Capturer<SellingScreenController>(shell, "la_vente", e => e.RendusEffectues > 0, echecs);
             // ⑲ a rejoint la liste APRÈS avoir été déclaré bloqué ce matin : son écrivain de
             // `locale` a été livré dans la journée. *Un « bloqué » est une mesure datée.*
-            yield return Capturer<SettingsScreenController>(shell, "les_reglages", e => e.Profil != null || e.EtatVide, echecs);
+            yield return Capturer<SettingsScreenController>(shell, "les_reglages", e => e.RendusEffectues > 0, echecs);
             // ⛔⛔ ㉓ EST CAPTURÉE EN DERNIER, ET CE N'EST PAS UN CONFORT : elle a échoué
             // QUATRE runs de suite en première position, toujours « frère 6 sur 11 », et j'ai
             // corrigé trois fois le mauvais objet avant que la garde ne NOMME les occultants :
@@ -144,7 +151,7 @@ namespace MafiaCleanCity.Shell.Tests
             // elle est signalée comme telle à la session qui tient le shell. Ce test n'a pas
             // à la reproduire pour prouver que les huit écrans RENDENT — c'est une autre
             // propriété, et la confondre ferait passer un défaut de shell pour un défaut d'écran.
-            yield return Capturer<ShopScreenController>(shell, "la_vitrine", e => e.Catalogue != null || e.EtatVide, echecs);
+            yield return Capturer<ShopScreenController>(shell, "la_vitrine", e => e.RendusEffectues > 0, echecs);
 
             Assert.IsEmpty(echecs, "écrans en défaut :\n  · " + string.Join("\n  · ", echecs));
         }

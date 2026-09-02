@@ -44,6 +44,13 @@ namespace MafiaCleanCity.CitySim.Precinct
         public CroyanceData Croyance { get; private set; }
         public PatrouilleData Patrouille { get; private set; }
         public bool EtatVide { get; private set; }
+        /// <summary>⛔ LE SEUL PRÉDICAT HONNÊTE POUR UNE CAPTURE. Attendre qu'un CHAMP arrive
+        /// n'est pas attendre que l'écran soit DESSINÉ : ㉓ enchaîne trois requêtes, et guetter la
+        /// première faisait capturer DEUX requêtes trop tôt — image vide, test vert. ⑰ battait
+        /// entre 23 et 3 éléments d'un run à l'autre pour la même raison, une requête d'avance.
+        /// ⇒ Ce compteur monte à la FIN de `Rendre()`. C'est une propriété structurelle : elle ne
+        /// dépend d'aucun champ, d'aucun ordre de requêtes, et elle survivra à l'ajout d'un appel.</summary>
+        public int RendusEffectues { get; private set; }
         public string DerniereErreur { get; private set; }
 
         private const float K = 1280f / 300f;
@@ -150,6 +157,7 @@ namespace MafiaCleanCity.CitySim.Precinct
                 videTexte.text = DerniereErreur == null
                     ? "Ce commissariat n'a encore rien retenu de vous."
                     : "Le commissariat n'a pas répondu.";
+                RendusEffectues++;
                 return;
             }
 
@@ -165,6 +173,7 @@ namespace MafiaCleanCity.CitySim.Precinct
             // ce qui manque, écrit — jamais un bouton qui ne peut pas aboutir
             Manque("Recruter un greffier", "aucune route n'existe encore");
             Manque("Acheter un renseignement", "la route voisine vise les affaires internes, pas ce commissariat");
+            RendusEffectues++;
         }
 
         private void Palier(string titre, string valeur, int rang, int total, string mot)
