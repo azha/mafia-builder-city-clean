@@ -471,11 +471,11 @@ namespace MafiaCleanCity.Operational
         {
             switch (b)
             {
-                case "FLUSH": return "Flush";
-                case "HIGH": return "High";
-                case "MODERATE": return "Moderate";
-                case "LOW": return "Low";
-                case "BROKE": return "Broke";
+                case "FLUSH": return MafiaCleanCity.I18n.Libelle.De("accueil", "etat", "Flush");
+                case "HIGH": return MafiaCleanCity.I18n.Libelle.De("accueil", "etat", "High");
+                case "MODERATE": return MafiaCleanCity.I18n.Libelle.De("accueil", "etat", "Moderate");
+                case "LOW": return MafiaCleanCity.I18n.Libelle.De("accueil", "etat", "Low");
+                case "BROKE": return MafiaCleanCity.I18n.Libelle.De("accueil", "etat", "Broke");
                 default: return b;
             }
         }
@@ -526,9 +526,9 @@ namespace MafiaCleanCity.Operational
         {
             switch (b)
             {
-                case "UNLOCKED": return "Unlocked";
-                case "IN_PROGRESS": return "In progress";
-                case "LOCKED": return "Locked";
+                case "UNLOCKED": return MafiaCleanCity.I18n.Libelle.De("accueil", "etat", "Unlocked");
+                case "IN_PROGRESS": return MafiaCleanCity.I18n.Libelle.De("accueil", "etat", "In progress");
+                case "LOCKED": return MafiaCleanCity.I18n.Libelle.De("accueil", "etat", "Locked");
                 default: return string.IsNullOrEmpty(b) ? "Unknown" : b;
             }
         }
