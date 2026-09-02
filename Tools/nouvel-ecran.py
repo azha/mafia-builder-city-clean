@@ -675,7 +675,7 @@ namespace MafiaCleanCity.Operational.Tests
         ///
         /// ⚠️ `Canvas.scaleFactor` lu la frame de la création rend 1,0 — plausible et faux, d'où
         /// les `yield return null` avant tout rendu.</summary>
-        // ⛔⛔ PAS `Category("Capture")` — c'était codé en dur ici, et ce gabarit produit les 46
+        // ⛔⛔ LA CATÉGORIE GÉNÉRIQUE DES CAPTURES ÉTAIT CODÉE EN DUR ICI, et ce gabarit produit les 46
         /// écrans restants. Deux défauts d'un coup, à chaque écran généré :
         /// (a) la capture n'était adressable QUE par `Capture`, donc pas isolable de ses soeurs ;
         /// (b) `Capture` fait SIGSEGV dans le pilote Mesa (mesuré dans ce dépôt), donc la seule
