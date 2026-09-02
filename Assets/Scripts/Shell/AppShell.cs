@@ -7,6 +7,18 @@ using UnityEngine.UI;
 using MafiaCleanCity.CityMap;
 using MafiaCleanCity.Operational; // DashboardController + LaunderingController (both live here — see each file's own namespace)
 using MafiaCleanCity.Operational.Lieutenant;
+using MafiaCleanCity.Operational.Selling;
+// ⛔ LES QUATRE ASSEMBLIES AJOUTÉES À `Shell.asmdef` AVEC CES USINGS (chantier joignabilité).
+//    Le shell est le point de composition : il monte, donc il dépend. Le sens est SÛR et vérifié
+//    avant de l'écrire — `Economy`, `Account`, `CitySim` et `CoreLoops` ne référencent QUE
+//    `ShellContracts` (jamais `Shell`), donc aucun cycle possible ; `ShellContracts` existe
+//    précisément pour que les écrans parlent au shell sans en dépendre.
+using MafiaCleanCity.Economy.Shop;
+using MafiaCleanCity.Account.Profile;
+using MafiaCleanCity.Onboarding;
+using MafiaCleanCity.CitySim.Inspection;
+using MafiaCleanCity.CitySim.Precinct;
+using MafiaCleanCity.CoreLoops.Compression;
 using MafiaCleanCity.Theme;
 using TMPro;
 
@@ -602,6 +614,35 @@ namespace MafiaCleanCity.Shell
             // le seul chemin joueur de cet écran — *un conflit se résout sur les deux INTENTIONS,
             // pas sur le côté le plus récent.*
             ("LA REVUE DU JOUR", () => MountTenant<DailyReviewScreenController>()),
+
+            // ⛔⛔ LES NEUF SANS PORTE (chantier joignabilité, 2026-09-02). Mesuré sur la POPULATION
+            // — les 22 `IShellTenant` du client, obtenus par réflexion, pas par une liste — puis
+            // fermeture transitive du graphe de montage depuis ce fichier : NEUF locataires
+            // n'étaient atteints par rien. Construits, testés, capturés, invisibles au joueur.
+            // Le dock n'a que quatre bulles ; ce menu est le seul endroit qui ait de la place.
+            //
+            // ⚠️ Les libellés viennent des planches (`Assets/Screenshots/planche_*.png`), pas de mon
+            // invention — sauf deux, signalés plus bas. Littéraux et non traduits : ce dépôt n'a
+            // AUCUN helper i18n (balayage : zéro `I18n.`/`Traduire`/`Localise` dans les écrans), et
+            // en introduire un ici serait une décision d'architecture déguisée en ajout de menu.
+            ("LA VENTE",             () => MountTenant<SellingScreenController>()),      // ㉟
+            ("LA VITRINE",           () => MountTenant<ShopScreenController>()),         // ㉓
+            ("LES INSPECTIONS",      () => MountTenant<InspectionScreenController>()),   // ⑮
+            ("LE COMMISSARIAT",      () => MountTenant<PrecinctScreenController>()),     // ⑰
+            ("LA SEMAINE",           () => MountTenant<CompressionScreenController>()),  // ⑭
+            ("LE DOSSIER",           () => MountTenant<ForensicScreenController>()),     // ㊴
+            ("LA PREMIÈRE FOIS",     () => MountTenant<TutorialScreenController>()),     // ㉕
+
+            // ⚠️ ㉒ — sa planche s'appelle `planche_le_coffre` et l'écran écrit « LE COFFRE » dans
+            // son propre corps, MAIS `front.md` donne déjà ce nom à ⑪ Pipeline. Deux écrans pour un
+            // nom : c'est une collision du CANON, pas un choix de menu, et je ne la tranche pas en
+            // douce. Le menu dit donc « VOTRE PROFIL », sans ambiguïté ; l'arbitrage remonte.
+            ("VOTRE PROFIL",         () => MountTenant<ProfileScreenController>()),      // ㉒
+
+            // ⚠️ ㊱ — sa liste est VIDE PAR CONSTRUCTION sur le compte de démo : TD-408 mesure
+            // qu'au plus UNE carte peut être surfacée pour un joueur. Un écran vide ici n'est donc
+            // pas un défaut de montage, et il ne faut pas partir le chercher comme tel.
+            ("L'HORIZON DES POSSIBLES", () => MountTenant<HorizonScreenController>()),   // ㊱
         };
 
         /// <summary>Monte le menu « Plus » : une entrée par destination, chacune montant son écran.

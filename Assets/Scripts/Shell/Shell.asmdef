@@ -8,7 +8,11 @@
         "UnityEngine.UI",
         "Unity.InputSystem",
         "Unity.TextMeshPro",
-        "ShellContracts"
+        "ShellContracts",
+        "Economy",
+        "Account",
+        "CitySim",
+        "CoreLoops"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
