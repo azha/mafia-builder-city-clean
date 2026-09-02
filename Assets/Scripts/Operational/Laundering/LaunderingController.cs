@@ -262,10 +262,10 @@ namespace MafiaCleanCity.Operational
         {
             switch (b)
             {
-                case "CLEAN": return "Clean";
-                case "MOSTLY_CLEAN": return "Mostly clean";
+                case "CLEAN": return MafiaCleanCity.I18n.Libelle.De("blanchiment", "purete", "Clean");
+                case "MOSTLY_CLEAN": return MafiaCleanCity.I18n.Libelle.De("blanchiment", "purete", "Mostly clean");
                 case "PARTIAL": return "Partial";
-                case "DIRTY": return "Dirty";
+                case "DIRTY": return MafiaCleanCity.I18n.Libelle.De("blanchiment", "purete", "Dirty");
                 default: return b;
             }
         }
