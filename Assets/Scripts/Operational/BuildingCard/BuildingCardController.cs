@@ -1870,6 +1870,13 @@ namespace MafiaCleanCity.Operational
         internal static string Cle(string role, string litteral) =>
             MafiaCleanCity.I18n.Libelle.De("building", role, litteral);
 
+        /// <summary>Les candidats au titre de glyphe le plus large — le vocabulaire complet
+        /// plafonne à 7 caractères, et ces deux-là portent les caractères les plus gras.
+        /// ⚠️ Ce n'est PAS la liste des glyphes : c'est la liste de ceux qui peuvent gagner la
+        /// mesure. Un glyphe plus long ajouté ailleurs doit venir ici, sinon il sera coupé —
+        /// c'est le seul endroit du fichier qui doit bouger dans ce cas.</summary>
+        private static readonly string[] GlyphesLesPlusLarges = { "[#####]", "[$$$$$]" };
+
         private void AddStatusRow(string label, string value, string glyph, Color accent)
         {
             GameObject row = NewUI("Row_" + label, statusRows);
@@ -1888,7 +1895,22 @@ namespace MafiaCleanCity.Operational
             TextMeshProUGUI g = NewText("Glyph", row.transform, glyph, 16, TextAlignmentOptions.Center);
             g.color = accent;
             g.fontStyle = FontStyles.Bold;
-            AddLayoutElement(g.gameObject, minWidth: 46, preferredWidth: 46, flexibleWidth: 0);
+            // ⛔ MESURÉ le 2026-09-02 par la garde de lisibilité : cette colonne était figée à
+            // 46 px et COUPAIT les glyphes longs — « [####] » posait 4 caractères sur 6. Sur la
+            // capture ça donnait « [## », qui ressemble à un glyphe court et non à un glyphe
+            // coupé. J'avais photographié cet écran deux fois sans le voir.
+            // ★ Le vocabulaire va de 3 caractères (« [#] ») à 7 (« [#####] », « [$$$$$] ») ; une
+            //   largeur choisie pour le plus court coupe forcément le plus long. Et la colonne
+            //   existe pour ALIGNER les libellés : la laisser se dimensionner par ligne
+            //   supprimerait la troncature en détruisant ce à quoi elle sert.
+            // ⇒ Largeur MESURÉE PAR TMP sur le glyphe le plus large, jamais un nombre posé à la
+            //   main : ajouter demain un glyphe plus long élargira la colonne tout seul.
+            float largeurGlyphe = 0f;
+            foreach (string candidat in GlyphesLesPlusLarges)
+                largeurGlyphe = Mathf.Max(largeurGlyphe, g.GetPreferredValues(candidat).x);
+            largeurGlyphe = Mathf.Ceil(largeurGlyphe) + 2f;   // 2 px de garde contre l'arrondi
+            AddLayoutElement(g.gameObject, minWidth: largeurGlyphe,
+                preferredWidth: largeurGlyphe, flexibleWidth: 0);
 
             string libelle = Cle("row", label);
             TextMeshProUGUI l = NewText("Label", row.transform, libelle, 15, TextAlignmentOptions.Left);

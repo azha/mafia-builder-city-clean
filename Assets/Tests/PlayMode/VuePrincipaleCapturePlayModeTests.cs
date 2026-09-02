@@ -351,11 +351,20 @@ namespace MafiaCleanCity.Capture.Tests
                 // — TRONCATURE : TMP a-t-il posé tous les caractères qu'on lui a donnés ? —
                 t.ForceMeshUpdate();
                 int poses = t.textInfo != null ? t.textInfo.characterCount : t.text.Length;
-                int demandes = t.text.Replace("\u200B", string.Empty).Length;
+                // \u26D4 `t.text.Length` COMPTE LES BALISES DE TEXTE RICHE, `characterCount` NON.
+                // Mesur\u00E9 le 2026-09-02 : \u32B1 a rougi sur \u00AB 00<size=64%>/0</size> \u00BB \u2014 21 caract\u00E8res
+                // bruts, 4 pos\u00E9s \u2014 alors que la capture montre ce compteur rendu ENTIER. La
+                // troncature \u00E9tait dans mon instrument, pas dans l'\u00E9cran.
+                // \u2605 Un faux positif ici est PIRE qu'un trou : il fait \u00AB corriger \u00BB un \u00E9cran sain,
+                //   et le correctif casse ce qui marchait. `GetParsedText()` rend le texte tel que
+                //   TMP le posera, balises r\u00E9solues \u2014 c'est la seule longueur comparable \u00E0
+                //   `characterCount`.
+                string rendu = t.GetParsedText() ?? string.Empty;
+                int demandes = rendu.Replace("\u200B", string.Empty).Length;
                 Assert.GreaterOrEqual(poses, demandes - 1,
                     $"texte TRONQUÉ dans « {t.name} » : {poses} caractères posés sur {demandes} " +
-                    $"(« {t.text} »). Un libellé coupé ressemble à un libellé court — rien ne " +
-                    "signale la coupe à celui qui lit.");
+                    $"(rendu attendu « {rendu} », source « {t.text} »). Un libellé coupé ressemble " +
+                    "à un libellé court — rien ne signale la coupe à celui qui lit.");
 
                 // — CONTRASTE : contre le premier fond opaque au-dessus de lui —
                 Color fond = Color.clear;
