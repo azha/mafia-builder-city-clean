@@ -308,6 +308,17 @@ namespace MafiaCleanCity.Capture.Tests
         ///   mesure les deux choses qui rendent un texte illisible sans rien casser :
         ///   · le CONTRASTE avec le fond que le texte a réellement derrière lui ;
         ///   · la TRONCATURE — TMP sait combien de caractères il a effectivement posés.
+        /// ★★ LE MÉCANISME QU'ELLE ATTRAPE, ET QUI SE REPRODUIRA : **on répare le FOND et on
+        /// laisse l'ENCRE dans une couleur pensée pour l'ancien fond.** Mesuré sur ⑩ le
+        /// 2026-09-02 : la carte suggérée devait être CLAIRE (maquette) ; je l'ai éclaircie et
+        /// laissé son libellé de rôle en OR, choisi quand elle était sombre. Or 0,82 sur crème
+        /// 0,88 — écart 0,06. Le correctif d'un défaut de contraste en a créé un autre, au même
+        /// endroit, en sens inverse.
+        /// ⇒ *Un correctif de FOND change la contrainte de tout ce qui se pose dessus, et rien
+        ///   ne le rappelle.* Même famille que des insets de chrome posés par analogie sur un
+        ///   écran voisin : la valeur était juste dans son contexte d'origine, jamais revérifiée
+        ///   dans le nouveau. Cette garde est le rappel qui manquait.
+        ///
         /// ⚠️ Seuil de contraste à 0,18 de luminance : mesuré, le cas fautif était à ~0,02
         /// (crème sombre sur ardoise) et les cas justes au-dessus de 0,35. Le seuil est posé
         /// dans le vide entre les deux mesures, pas au bord de l'une d'elles.</summary>
