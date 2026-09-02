@@ -142,11 +142,19 @@ namespace MafiaCleanCity.Operational.Tests
         /// publie des insets à ZÉRO, donc `offsetMin.y >= 0` serait vrai toujours et ne
         /// mesurerait rien. C'est exactement le piège que ⑨ neutralise par un
         /// `Assert.Greater(BottomInsetPx, 0f, "…sinon la garde ci-dessous ne mesure rien")`.
-        /// ⇒ CONDITION DE LEVÉE, mesurée et non supposée : `AppShell.ActivateTab` ne monte
-        ///   aujourd'hui que ㊲ sous `Tab.More` — ㊴ n'est atteignable par AUCUN chemin joueur sur
-        ///   cette branche. Le jour où il l'est, écrire ici la capture SOUS CHROME et ses deux
-        ///   gardes d'inset, sur le patron de ⑨/②/㊱. Tant que ce jour n'est pas venu, les insets
-        ///   de ㊴ sont une SUPPOSITION, et c'est écrit plutôt que passé sous silence.</summary>
+        /// ⇒ CONDITION DE LEVÉE : `AppShell.ActivateTab` ne monte que ㊲ sous `Tab.More` SUR
+        ///   CETTE BRANCHE — donc ㊴ n'y est atteignable par aucun chemin joueur.
+        /// ⚠️ CORRIGÉ le 2026-09-02 : j'avais d'abord écrit « le jour où ㊴ sera monté », comme
+        ///   si le montage restait à faire. Il est fait — `Tab.More` est devenu un MENU de douze
+        ///   entrées sur `main`, et ㊴ y figure depuis ce matin. Ma branche avait 71 commits de
+        ///   retard, ce que je n'avais pas vérifié avant de conclure.
+        /// ★ La mesure était juste et sa PORTÉE fausse : « ㊴ n'est monté nulle part » valait
+        ///   pour cette branche, pas pour le dépôt. Une mesure locale énoncée au présent général
+        ///   se lit comme un état du monde — c'est la même faute que le vert qui ne mesurait pas
+        ///   les insets, un cran plus haut : exacte, et pas sur ce qu'on croit.
+        /// ⇒ Donc : dès que `main` atteint cette branche, écrire ici la capture SOUS CHROME et
+        ///   ses deux gardes d'inset, sur le patron de ⑨/②/㊱. Jusque-là, les insets de ㊴ sont
+        ///   une SUPPOSITION, et c'est écrit plutôt que passé sous silence.</summary>
         [UnityTest, Category("Capture"), Category("CaptureForensic")]
         public IEnumerator ScreenB7C2_CapturerParLeReseau()
         {
