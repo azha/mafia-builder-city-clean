@@ -51,8 +51,9 @@ Règle 5 du socle : imprévu non bloquant → option conservatrice CONSIGNÉE. L
 - **GridBorder** : le carve-out fond↔b0 de R3F1 est adossé à un indice réel (liseré nightSocle,
   2 px), asserté par R4F2 — plus jamais un `continue` nu.
 - **FloorTint** : hash position (73856093/19349663) — même monde ⇒ mêmes taches, zéro période lisible.
-- **Libellés de type** : seulement en repli sans art (le sprite est l'identité). Titre inchangé
-  (MINOR restant : name_canonical — attend un display_name côté back, pas d'invention C#).
+- **Libellés de type** : seulement en repli sans art (le sprite est l'identité). Titre à l'époque
+  inchangé (MINOR : le back ne servait alors aucun nom de fiction pour le district — fermé le
+  2026-09-02, voir plus bas).
 
 ## Round 5-6 — CONVERGENCE PRONONCÉE (⊥, sans réserve) — 2026-08-20
 - Verdict ⊥ r5 : palette / contrastes / échelle / calques **CONVERGÉS**, « je ne les rouvrirai pas ».
@@ -66,5 +67,9 @@ Règle 5 du socle : imprévu non bloquant → option conservatrice CONSIGNÉE. L
 - ⚠️ ARBITRAGE OUVERT (round 6) : cœur 0,45 et plancher 1,3 incompatibles sur b0 (plafond de la
   paire = 1,332 OPAQUE ; 0,45 → 1,164 ; 1,3 exigerait 0,88). Livré : 1,15 sur b0, 1,3 sur b1/b2.
   Recommandé (i) ratifier 1,15.
-- Restent consignés sans urgence : liseré 4 px haut (offsetMax) · titre name_canonical (attend un
-  display_name back) · pivot .meta bas-centre.
+- Restent consignés sans urgence : liseré 4 px haut (offsetMax) · pivot .meta bas-centre.
+- ✅ **2026-09-02 — le MINOR titre est fermé.** Le back sert désormais `name` sur `…/interior` (le
+  nom de fiction du district, mesuré : "La Lisière" pour d16), à côté de `name_canonical`
+  (l'identifiant/slug). Le titre affiche `name` en priorité ; la mise en forme de `name_canonical`
+  (tiret → espace) ne sert plus que de repli explicite pour un environnement qui ne le servirait
+  pas encore. Voir `DistrictInteriorScreenController.RenderHeroDiorama`.

@@ -33,7 +33,10 @@ namespace MafiaCleanCity.CityMap
             // JUGE-D5 (audit visuel, 2026-08-21, balayage étendu à CityMap.cs/DistrictCellView.cs,
             // même périmètre CityMap/) — "blocks" traduit en "blocs" (terme déjà établi dans ce
             // dépôt, ex. DistrictInteriorScreenController.cs : "unité = le bloc").
-            label.text = $"{dto.name_canonical}    ·    {dto.profile}    ·    {dto.block_count} blocs";
+            // 2026-09-02 : la tuile affichait `name_canonical` (le nom de code, ex. "Verge-A") —
+            // le back sert désormais un nom de fiction en français (`name`, ex. "La Lisière").
+            // CityMapEnums.DisplayName choisit `name`, repli explicite sur `name_canonical`.
+            label.text = $"{CityMapEnums.DisplayName(dto)}    ·    {dto.profile}    ·    {dto.block_count} blocs";
         }
 
         /// <summary>Wire the heat badge UI (built by the controller). Hidden until heat is set.</summary>

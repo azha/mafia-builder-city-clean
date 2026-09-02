@@ -104,6 +104,14 @@ namespace MafiaCleanCity.Capture.Tests
 
             ScreenCapture.CaptureScreenshot("Assets/Screenshots/vue_principale_batiments_hud.png");
             for (int i = 0; i < 12; i++) yield return null;
+
+            // ⛔ La capture opposable du DISTRICT SEUL, avant l'ouverture de la fiche : 1080x2400,
+            //    hors écran, sous le chrome réel. Celle du dessus passe par la vue de jeu, que le
+            //    batchmode borne à 640 de large — elle ne montre pas la géométrie du joueur.
+            GarderLeRectDuLocataire("l'intérieur de district");
+            yield return CapturerA(1080, 2400,
+                "Assets/Screenshots/screen_1_district_sous_chrome_1080x2400.png");
+
             Debug.Log($"[CAPTURE] vue principale — batiments={batiments} district={shell.CityTabDistrictId} " +
                       $"ecran={Screen.width}x{Screen.height}");
 
@@ -155,6 +163,13 @@ namespace MafiaCleanCity.Capture.Tests
         // Mêmes gardes anti-mensonge que la capture précédente : sans elles, un écran vide passerait
         // pour une réussite.
         [UnityTest]
+        // ⛔ CATÉGORIE PROPRE — cette capture n'en avait AUCUNE, et ce n'est pas un oubli de
+        //    rangement : sans elle, le seul moyen de la lancer est la catégorie `Capture` ENTIÈRE,
+        //    dont ce fichier documente déjà qu'elle fait SIGSEGV dans le pilote Mesa (reproduit 2×).
+        //    Une capture qu'aucun filtre ne peut atteindre est une capture qui ne sera jamais prise,
+        //    et son silence se lit comme un succès. Mesuré le 2026-09-02 : les 4 suites PlayMode de
+        //    la carte étaient dans le même cas — aucune `[Category]`, donc jamais exécutées.
+        [Category("CaptureCarte")]
         public IEnumerator Capture_CarteDeVille_SousChromeV31()
         {
             var auth = new AuthClient { BaseUrl = BaseUrl };
@@ -228,6 +243,15 @@ namespace MafiaCleanCity.Capture.Tests
             ScreenCapture.CaptureScreenshot("Assets/Screenshots/carte_de_ville_hud.png");
             for (int i = 0; i < 12; i++) yield return null;
             Debug.Log($"[CAPTURE] carte de ville — noeuds={noeuds} ecran={Screen.width}x{Screen.height}");
+
+            // ⛔ LA CAPTURE QUI COMPTE — 1080x2400, la résolution de travail du projet.
+            //    `ScreenCapture.CaptureScreenshot` ci-dessus prend la VUE DE JEU, dont le batchmode
+            //    fixe la largeur à 640 quoi qu'on lui passe : le PNG produit ne dit rien de ce que
+            //    le joueur verra. `CapturerA` rend hors écran DANS la cible et porte les gardes
+            //    d'échelle. La seule capture opposable de cet écran est donc celle-ci.
+            GarderLeRectDuLocataire("la carte de ville");
+            yield return CapturerA(1080, 2400,
+                "Assets/Screenshots/screen_2_carte_sous_chrome_1080x2400.png");
         }
 
         // ── Capture de NUIT ───────────────────────────────────────────────────────────────────────
@@ -345,6 +369,42 @@ namespace MafiaCleanCity.Capture.Tests
             Assert.Greater(vus, 3,
                 $"seulement {vus} textes examinés : la garde ne mesure presque rien, elle " +
                 "passerait sur un écran vide");
+        }
+
+        // ⛔⛔ LA GARDE QUI MESURE SOUS LE RECT DU LOCATAIRE — celle qui distingue « l'écran visé
+        //    est là » de « quelque chose a rendu ». Les gardes de PIXELS de `CapturerA` comptent
+        //    l'encre de TOUTE l'image : elles sont satisfaites par les VOISINS de l'écran absent.
+        //    Mesuré le 2026-09-02 sur un autre écran : le locataire occupait 100x100 — la taille
+        //    par défaut d'un `RectTransform` neuf, c'est-à-dire monté mais jamais dimensionné —
+        //    pendant que la capture montrait la carte, l'autonomie et le dock. Toutes les gardes
+        //    de couleur étaient vertes. *Une garde qui mesure la surface entière certifie
+        //    l'absence de ce qu'elle doit prouver.*
+        // ⚠️ On mesure le plus GRAND `RectTransform` sous le slot, pas l'hôte : `ConstruireLocataire`
+        //    crée l'hôte par un `new GameObject`, qui porte un `Transform` NU. Une garde qui ferait
+        //    `host.transform as RectTransform` lirait `null` sur un écran parfaitement monté, et
+        //    échouerait pour une raison sans rapport avec ce qu'elle surveille.
+        private void GarderLeRectDuLocataire(string quoi)
+        {
+            Assert.IsNotNull(shell.ContentSlot, $"aucun slot de contenu — {quoi} n'a nulle part où être");
+            RectTransform plusGrand = null;
+            float aireMax = 0f;
+            foreach (var rt in shell.ContentSlot.GetComponentsInChildren<RectTransform>(true))
+            {
+                float aire = rt.rect.width * rt.rect.height;
+                if (aire > aireMax) { aireMax = aire; plusGrand = rt; }
+            }
+            Assert.IsNotNull(plusGrand,
+                $"aucun RectTransform sous le slot de contenu : {quoi} n'a rien construit, et la " +
+                "capture ne montrerait que ses voisins");
+            Vector2 taille = plusGrand.rect.size;
+            Debug.Log($"[RECT] {quoi} — plus grand rect = {taille.x:F0}x{taille.y:F0} " +
+                      $"({plusGrand.name}) · frere={plusGrand.transform.GetSiblingIndex()}");
+            Assert.IsFalse(Mathf.Approximately(taille.x, 100f) && Mathf.Approximately(taille.y, 100f),
+                $"{quoi} mesure {taille.x}x{taille.y} — c'est la taille PAR DÉFAUT d'un RectTransform " +
+                "neuf : monté mais jamais dimensionné, et tout ce que la capture montre appartient " +
+                "à ses voisins.");
+            Assert.Greater(aireMax, 100f * 100f,
+                $"{quoi} n'occupe que {taille.x}x{taille.y} : trop peu pour l'écran capturé");
         }
 
         private IEnumerator CapturerA(int largeur, int hauteur, string chemin)

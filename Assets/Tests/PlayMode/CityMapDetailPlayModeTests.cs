@@ -16,6 +16,7 @@ namespace MafiaCleanCity.CityMap.Tests
     // precondition and the full PlayMode assembly is order-independent. The operational concern
     // runs on a DISTINCT player (operational_demo), so it never washes this gradient. (See
     // SeederSupport.)
+    [Category("ScreenCarte")]
     public class CityMapDetailPlayModeTests
     {
         private GameObject controllerGo;

@@ -9,6 +9,7 @@ namespace MafiaCleanCity.CityMap.Tests
     // E2E (charter 27: no mock). Drives the real CityMapController, which builds
     // its own Canvas + UI and fetches the live backend. Asserts the rendered
     // cells match the contract: 18 districts, grouped by bank, coloured by state.
+    [Category("ScreenCarte")]
     public class CityMapRenderPlayModeTests
     {
         private GameObject controllerGo;
@@ -58,9 +59,14 @@ namespace MafiaCleanCity.CityMap.Tests
                 Assert.AreEqual(CityMapEnums.ColorFor(cell.State), cell.Background.color,
                     $"district {cell.Model.name_canonical} colour does not match its control_state");
 
-                // Label carries the district identity.
-                StringAssert.Contains(cell.Model.name_canonical, cell.Label.text,
-                    "cell label must show the district name");
+                // Label carries the district's DISPLAY name — 2026-09-02: the tile now shows the
+                // fiction name (`name`, e.g. "La Lisière") in front of the code name, explicit
+                // fallback onto `name_canonical` (CityMapEnums.DisplayName — same rule the detail
+                // panel title uses). The live backend serves `name` for all 18 districts, so this
+                // also exercises the "name present" branch; the fallback branch itself is a pure
+                // unit test (CityMapFetchPlayModeTests.DisplayName_FallsBackToNameCanonical...).
+                StringAssert.Contains(CityMapEnums.DisplayName(cell.Model), cell.Label.text,
+                    "cell label must show the district's display name");
             }
         }
     }
