@@ -1182,7 +1182,7 @@ namespace MafiaCleanCity.CityMap
         /// affichée rend un blob anguleux, défaut déjà payé par le manomètre du bandeau.</summary>
         private const int MarqueurTextureResPx = 64;
 
-        /// <summary>La silhouette du médaillon (le fedora de la maquette « LA FAMILLE »), chargée
+        /// <summary>La silhouette du médaillon (la silhouette de lieutenant de la maquette « LA FAMILLE », capuche depuis le chantier DA 2026-09-02), chargée
         /// PARESSEUSEMENT et mise en cache.
         ///
         /// ⚠️ Le chargement ne doit JAMAIS partir d'un initialiseur statique : `Resources.Load` jette
@@ -1196,7 +1196,7 @@ namespace MafiaCleanCity.CityMap
         {
             if (busteLieutenantCherche) return busteLieutenantCache;
             busteLieutenantCherche = true;
-            busteLieutenantCache = Resources.Load<Sprite>("Lieutenant/ui_element_buste_fedora");
+            busteLieutenantCache = Resources.Load<Sprite>("Lieutenant/ui_element_buste_lieutenant");
             return busteLieutenantCache;
         }
 
@@ -1276,7 +1276,7 @@ namespace MafiaCleanCity.CityMap
                 // C'était un APLAT rectangulaire opaque. Deux d'entre eux, posés sur un bâtiment
                 // peint, lisaient comme un défaut d'affichage — et ne disaient rien de ce qu'ils
                 // signifient. La DA de ce programme a déjà son signe pour « un lieutenant est ici » :
-                // le médaillon à silhouette de fedora de la maquette « LA FAMILLE », dont les bustes
+                // le médaillon à silhouette de lieutenant de la maquette « LA FAMILLE », dont les bustes
                 // sont DÉJÀ importés et vérifiés dans le dépôt (`Assets/Resources/Lieutenant/`).
                 // Composition, du fond vers l'avant, exactement celle du médaillon du bandeau :
                 // disque sombre → anneau laiton → silhouette. REUSE de `ProceduralUI` (descendu dans
@@ -1326,7 +1326,12 @@ namespace MafiaCleanCity.CityMap
                     brt.sizeDelta = new Vector2(marqueurW * 0.60f, marqueurW * 0.60f);
                     Image bi = busteGo.AddComponent<Image>();
                     bi.sprite = buste;
-                    bi.color = DesignTokens.Current.hudCreme;
+                    // ⚠️ BLANC, PAS UN TOKEN — même règle que LieutenantScreenController.BuildMedaillon :
+                    // la couleur `#cfc4a6` est CUITE dans le PNG ; la teinter en `hudCreme` par-dessus
+                    // multipliait deux couleurs (≈ (190,172,130), un crème viré au kaki). Le correctif du
+                    // 2026-08-25 avait fermé l'INSTANCE (Famille) et laissé ce second porteur : fermé le
+                    // 2026-09-02 avec le remplacement des silhouettes (chantier DA contemporain).
+                    bi.color = Color.white;
                     bi.preserveAspect = true;
                     bi.raycastTarget = false;
                 }

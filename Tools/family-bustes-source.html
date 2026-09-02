@@ -2,20 +2,28 @@
 <html><head><meta charset="utf-8">
 <title>bustes isoles</title>
 <!--
-  family-bustes-source.html — les 3 bustes silhouettes de "La Famille : l'organigramme"
-  (homburg/fedora/casquette), REUSE verbatim des <path> SVG de la maquette ratifiée user
-  (atelier3d-mafia/ecrans-brennar.html:184-195). Remplacent les icônes ("j'aime pas les icônes",
-  verdict user) — ce sont des silhouettes maison, pas des pictogrammes.
+  family-bustes-source.html — les 3 bustes silhouettes de "La Famille : l'organigramme", nommés par
+  RÔLE : don (vous), lieutenant, homme. C'est LE producteur de la géométrie : le bloc <defs> ci-dessous
+  est lu par Tools/rasterise-bustes.py (PIL, sans navigateur) qui rend
+  Assets/Resources/Lieutenant/ui_element_buste_{don,lieutenant,homme}.png en 256x256 et vérifie sa
+  bbox contre cette géométrie. La maquette de référence (family-organigramme-reference-source.html)
+  porte une COPIE du bloc, et le rasteriseur refuse de tourner si elle diverge.
 
-  Rendues ISOLÉES ici (fond transparent, --default-background-color=00000000) pour être rasterisées
-  en sprites Unity : Assets/Art/Lieutenant/ui_element_buste_{homburg,fedora,casquette}.png (préfixe
-  `ui_element_` — import_settings.md invariant 1, W4P4aArtImportPostprocessor.cs).
-  Le fill `#cfc4a6` (`.buste-t{fill:#cfc4a6}`, ecrans-brennar.html:39 zone médaillons) est BAKED dans
-  le PNG — ce sont des assets d'art statiques (REUSE du patron déjà établi pour les 83 icônes/132
-  tiles W3.U-DA : couleur baked au pixel, hors du namespace DesignTokens/R2.3 qui gouverne les
-  Color C# — jamais de recolorisation par état dans la maquette, donc aucun besoin de tinting
-  runtime). Taille de sortie : viewBox 32x32 rendu à 256x256 (8x, marge nette pour un import Unity
-  sans flou), device-scale-factor=1 (le facteur d'échelle est dans le --window-size directement).
+  Registre (chantier DA 2026-09-02, ruling user « ère contemporaine 2000-2010 ») : canon gdd/02
+  « you wear something forgettable » et son interdit des tropes mafieux d'époque ; art_direction.md
+  « pas de boss outfit ». Don = tête nue, col de veste ordinaire (la seule marque de rang reste
+  l'anneau or-vif du médaillon) ; lieutenant = capuche relevée, ouverture du visage en creux
+  (fill-rule evenodd — la seule forme qui distingue une capuche d'une grosse tête en aplat) ;
+  homme = casquette. Les trois vocabulaires comparés (Quai / Rue / Hiver) sont dans le commit.
+
+  Le fill `#cfc4a6` (`.buste-t`) est BAKED dans le PNG — même patron que les 83 icônes W3.U-DA ;
+  l'Image Unity reste à Color.white (LieutenantScreenController.BuildMedaillon). Ce n'est PAS un
+  token DesignTokens (mesuré : 0 hit dans gdd/14) — valeur née dans ecrans-brennar.html, conservée
+  telle quelle par ce chantier.
+
+  Ce fichier reste rendable dans un navigateur (?g=don|lieutenant|homme) pour l'œil, mais AUCUN
+  asset ne doit plus en sortir par Chrome sans tête : family-bustes-render.sh crope en silence
+  (mesuré 2026-08-22 : épaules absentes, bbox (64,44,192,169) pour (48,43,208,240) attendus).
 -->
 <style>
 html,body{margin:0;padding:0;background:transparent}
@@ -24,28 +32,32 @@ html,body{margin:0;padding:0;background:transparent}
 svg{width:100%;height:100%;display:block}
 </style></head>
 <body>
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <!-- Silhouettes 2000-2010 (chantier DA 2026-09-02, canon gdd/02 « you wear something forgettable »
+         et interdit des tropes mafieux d'époque). Nommées par RÔLE, jamais par vêtement.
+         UN SEUL PRODUCTEUR : ce bloc est lu par Tools/rasterise-bustes.py, qui exige que la copie
+         de family-organigramme-reference-source.html lui soit identique. -->
+    <g id="buste-don"><path class="buste-t" d="M6 30 C6 22.5 12 20 16 20 C20 20 26 22.5 26 30 Z"/>
+      <path class="buste-t" d="M12.4 20.6 L13.7 17.6 L16 21.4 L18.3 17.6 L19.6 20.6 Z"/>
+      <ellipse class="buste-t" cx="16" cy="12.6" rx="4.3" ry="4.7"/>
+      <path class="buste-t" d="M11.7 12.4 C11.7 8.2 13.4 6.7 16 6.7 C18.6 6.7 20.3 8.2 20.3 12.4 C19 11.1 13 11.1 11.7 12.4 Z"/></g>
+    <g id="buste-lieutenant"><path class="buste-t" d="M6 30 C6 22.5 12 20 16 20 C20 20 26 22.5 26 30 Z"/>
+      <path class="buste-t" fill-rule="evenodd" d="M9.2 21.6 C8.0 15 10.2 6.6 16 5.2 C21.8 6.6 24.0 15 22.8 21.6 C19.4 23.2 12.6 23.2 9.2 21.6 Z M16 10.2 C18.0 10.2 19.3 12.0 19.3 14.6 C19.3 17.6 18 19.6 16 19.6 C14 19.6 12.7 17.6 12.7 14.6 C12.7 12.0 14 10.2 16 10.2 Z"/></g>
+    <g id="buste-homme"><path class="buste-t" d="M6.5 30 C6.5 23 12 20.6 16 20.6 C20 20.6 25.5 23 25.5 30 Z"/>
+      <circle class="buste-t" cx="16" cy="13.6" r="4.2"/>
+      <path class="buste-t" d="M11.3 13.0 C11.1 8.6 12.9 6.5 16 6.5 C19.1 6.5 20.9 8.6 20.7 13.0 C17.6 12.0 14.4 12.0 11.3 13.0 Z"/>
+      <path class="buste-t" d="M20.0 11.2 C22.9 10.8 25.1 11.5 26.0 12.8 C24.4 13.8 22.2 14.0 20.3 13.5 Z"/></g>
+  </defs>
+</svg>
 <div class="medl-probe" id="target">
   <svg viewBox="0 0 32 32" id="svgroot"></svg>
 </div>
 <script>
-  // Le buste à rendre est choisi par ?g=homburg|fedora|casquette (query string) — un seul fichier
-  // source, 3 rendus séparés (même patron que hud-topbar-reference-source.html : un fichier isolé,
-  // un script wrapper qui pilote plusieurs passes).
+  // Le buste affiché est choisi par ?g=don|lieutenant|homme (query string) — un seul fichier
+  // source, la géométrie ne vit que dans le bloc <defs> ci-dessus.
   var params = new URLSearchParams(window.location.search);
-  var which = params.get('g') || 'homburg';
-  var groups = {
-    homburg: '<path class="buste-t" d="M6 30 C6 22 12 19 16 19 C20 19 26 22 26 30 Z"/>' +
-      '<circle class="buste-t" cx="16" cy="12.5" r="4.6"/>' +
-      '<path class="buste-t" d="M8.5 9.5 Q16 4.5 23.5 9.5 L23 11 Q16 8.6 9 11 Z"/>' +
-      '<rect class="buste-t" x="12.6" y="5.2" width="6.8" height="4.4" rx="1.6"/>',
-    fedora: '<path class="buste-t" d="M6 30 C6 22.5 12 20 16 20 C20 20 26 22.5 26 30 Z"/>' +
-      '<circle class="buste-t" cx="16" cy="13" r="4.4"/>' +
-      '<path class="buste-t" d="M8 10.6 Q16 8.2 24 10.6 L23.2 12 Q16 10.2 8.8 12 Z"/>' +
-      '<path class="buste-t" d="M11.6 9.8 Q12.6 5.4 16.6 5.6 Q20.4 5.9 20.6 9.8 Q16 8.4 11.6 9.8Z"/>',
-    casquette: '<path class="buste-t" d="M6.5 30 C6.5 23 12 20.6 16 20.6 C20 20.6 25.5 23 25.5 30 Z"/>' +
-      '<circle class="buste-t" cx="16" cy="13.6" r="4.2"/>' +
-      '<path class="buste-t" d="M10.4 10.8 Q11 6.4 16 6.4 Q21 6.4 21.6 10.6 L22.8 11.4 L21.8 12.4 Q16 10.4 10.4 10.8Z"/>',
-  };
-  document.getElementById('svgroot').innerHTML = groups[which];
+  var which = params.get('g') || 'don';
+  document.getElementById('svgroot').innerHTML = '<use href="#buste-' + which + '"/>';
 </script>
 </body></html>
