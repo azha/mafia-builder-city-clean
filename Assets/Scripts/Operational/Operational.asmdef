@@ -7,7 +7,8 @@
         "Unity.InputSystem",
         "Theme",
         "Unity.TextMeshPro",
-        "ShellContracts"
+        "ShellContracts",
+        "I18n"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

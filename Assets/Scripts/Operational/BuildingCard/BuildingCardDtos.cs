@@ -21,10 +21,39 @@ namespace MafiaCleanCity.Operational
     // Captured verbatim from the live stack — see Tools/OPERATIONAL_CONTRACTS.md §1 + §13 (the DAMAGED / REPAIRING
     // shapes + the repair endpoint). Every Phase-2b leaf is a qualitative band STRING or a BOOLEAN (R2.2 — no raw
     // grams/cents/heat/ticks leaks).
+    /// <summary>Les paramètres du nom sont DÉCLARÉS un par un, pas génériques : `JsonUtility`
+    /// ne lit pas un objet à clés arbitraires. Les quatre ci-dessous sont ceux que le serveur
+    /// envoie aujourd'hui (mesuré) ; un cinquième apparaîtrait silencieusement comme `{nom}`
+    /// dans le texte rendu, ce qui est le comportement voulu : visible, jamais deviné.</summary>
+    [Serializable]
+    public class BuildingNameI18nDto
+    {
+        public string key;
+        public BuildingNameParamsDto @params;
+    }
+
+    [Serializable]
+    public class BuildingNameParamsDto
+    {
+        public string type;
+        public string district;
+        public string block;
+        public string rank;
+    }
+
     [Serializable]
     public class BuildingCardDto
     {
         public string building;          // uuid identity
+
+        /// <summary>Le NOM du bâtiment, en clé i18n + paramètres — projeté depuis toujours et
+        /// jamais lu par cet écran. Mesuré le 2026-09-02 :
+        /// `{"key":"game.fiction.building.name","params":{"type":"lab","district":"16",
+        ///   "block":"1501","rank":"1"}}`
+        /// ⚠️ La clé n'est PAS dans le bundle (`GET /v1/i18n/bundle` sert 67 clés, dont 63
+        /// `error.*`) : l'écran affichera donc la CLÉ tant que le dictionnaire ne la porte pas.
+        /// C'est voulu — un nom fabriqué serait plus joli et faux.</summary>
+        public BuildingNameI18nDto name_i18n;
         public string setup_state;       // NOT_CONVERTED | IN_SETUP | OPERATIONAL
         public string cover_band;        // NONE | WEAK | STANDARD | STRONG
         public bool operational;         // setup_state == OPERATIONAL (function-enable gate)

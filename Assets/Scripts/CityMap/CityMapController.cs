@@ -276,8 +276,8 @@ namespace MafiaCleanCity.CityMap
 
             // JUGE-D5 (audit visuel du district, 2026-08-21, balayage étendu à CityMap.cs — même
             // périmètre CityMap/) — chaîne traduite, était en anglais dans une surface autrement
-            // française ("← Carte"/"Entrer" plus bas dans ce même fichier).
-            TextMeshProUGUI title = NewText("Title", header.transform, "CARTE DE LA VILLE — Districts", 28, TextAlignmentOptions.Left);
+            // française ("← Carte"/Lib("Entrer") plus bas dans ce même fichier).
+            TextMeshProUGUI title = NewText("Title", header.transform, Lib("CARTE DE LA VILLE — Districts"), 28, TextAlignmentOptions.Left);
             title.fontStyle = FontStyles.Bold;
             AddLayoutElement(title.gameObject, flexibleWidth: 1);
 
@@ -754,6 +754,14 @@ namespace MafiaCleanCity.CityMap
             go.transform.SetParent(parent, false);
             return go;
         }
+
+        /// <summary>Item 0.6 — les deux littéraux AFFICHÉS de cet écran passent par
+        /// `carte.bloc.<slug>`, repli sur le littéral.
+        /// ⚠️ Mon recensement en annonçait onze : les neuf autres sont des NOMS D'OBJET
+        /// (« Title », « Label »…), premier argument de `NewText`, qui ne s'affichent nulle
+        /// part. Le compteur lisait le mauvais argument — corrigé sur l'Accueil, revérifié ici.</summary>
+        private static string Lib(string litteral) =>
+            MafiaCleanCity.I18n.Libelle.De("carte", "bloc", litteral);
 
         private TextMeshProUGUI NewText(string name, Transform parent, string value, int size, TextAlignmentOptions anchor)
         {

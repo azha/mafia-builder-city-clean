@@ -837,13 +837,13 @@ namespace MafiaCleanCity.Operational.Lieutenant
         {
             switch (a)
             {
-                case "COOK": return "Cook";
-                case "SECURITY": return "Security";
-                case "LOGISTICS": return "Logistics";
-                case "BOOKKEEPER": return "Bookkeeper";
-                case "LAUNDERING": return "Laundering";
-                case "DISTRIBUTION": return "Distribution";
-                case "UNKNOWN": return "Unknown";
+                case "COOK": return MafiaCleanCity.I18n.Libelle.De("famille", "archetype", "Cook");
+                case "SECURITY": return MafiaCleanCity.I18n.Libelle.De("famille", "archetype", "Security");
+                case "LOGISTICS": return MafiaCleanCity.I18n.Libelle.De("famille", "archetype", "Logistics");
+                case "BOOKKEEPER": return MafiaCleanCity.I18n.Libelle.De("famille", "archetype", "Bookkeeper");
+                case "LAUNDERING": return MafiaCleanCity.I18n.Libelle.De("famille", "archetype", "Laundering");
+                case "DISTRIBUTION": return MafiaCleanCity.I18n.Libelle.De("famille", "archetype", "Distribution");
+                case "UNKNOWN": return MafiaCleanCity.I18n.Libelle.De("famille", "archetype", "Unknown");
                 default: return string.IsNullOrEmpty(a) ? "—" : a;
             }
         }
@@ -853,10 +853,10 @@ namespace MafiaCleanCity.Operational.Lieutenant
         {
             switch (r)
             {
-                case "advisory": return "Advisory";
-                case "executor": return "Executor";
-                case "delegated_owner": return "Delegated owner";
-                case "cohort_overseer": return "Cohort overseer";
+                case "advisory": return MafiaCleanCity.I18n.Libelle.De("famille", "grantedrole", "Advisory");
+                case "executor": return MafiaCleanCity.I18n.Libelle.De("famille", "grantedrole", "Executor");
+                case "delegated_owner": return MafiaCleanCity.I18n.Libelle.De("famille", "grantedrole", "Delegated owner");
+                case "cohort_overseer": return MafiaCleanCity.I18n.Libelle.De("famille", "grantedrole", "Cohort overseer");
                 default: return string.IsNullOrEmpty(r) ? "—" : r;
             }
         }
@@ -869,8 +869,8 @@ namespace MafiaCleanCity.Operational.Lieutenant
         {
             switch (m)
             {
-                case "tasked": return "Tasked";
-                case "delegated": return "Delegated";
+                case "tasked": return MafiaCleanCity.I18n.Libelle.De("famille", "mode", "Tasked");
+                case "delegated": return MafiaCleanCity.I18n.Libelle.De("famille", "mode", "Delegated");
                 default: return string.IsNullOrEmpty(m) ? "—" : m;
             }
         }
@@ -884,10 +884,10 @@ namespace MafiaCleanCity.Operational.Lieutenant
         {
             switch (s)
             {
-                case "SETTLING": return "Settling in";
-                case "ACTIVE": return "Active";
-                case "PAUSED": return "Paused";
-                case "IDLE": return "Idle";
+                case "SETTLING": return MafiaCleanCity.I18n.Libelle.De("famille", "opstate", "Settling in");
+                case "ACTIVE": return MafiaCleanCity.I18n.Libelle.De("famille", "opstate", "Active");
+                case "PAUSED": return MafiaCleanCity.I18n.Libelle.De("famille", "opstate", "Paused");
+                case "IDLE": return MafiaCleanCity.I18n.Libelle.De("famille", "opstate", "Idle");
                 default: return string.IsNullOrEmpty(s) ? "—" : s;
             }
         }
@@ -902,9 +902,9 @@ namespace MafiaCleanCity.Operational.Lieutenant
         {
             switch (b)
             {
-                case "NONE": return "No rules";
-                case "FEW": return "A few rules";
-                case "MANY": return "Many rules";
+                case "NONE": return MafiaCleanCity.I18n.Libelle.De("famille", "rulecount", "No rules");
+                case "FEW": return MafiaCleanCity.I18n.Libelle.De("famille", "rulecount", "A few rules");
+                case "MANY": return MafiaCleanCity.I18n.Libelle.De("famille", "rulecount", "Many rules");
                 default: return string.IsNullOrEmpty(b) ? "—" : b;
             }
         }
@@ -938,10 +938,10 @@ namespace MafiaCleanCity.Operational.Lieutenant
         {
             switch (c)
             {
-                case "COST_1": return "Cheap to re-script";
-                case "COST_2": return "Costly to re-script";
-                case "COST_3": return "Pricey to re-script";
-                case "COST_MAX": return "Very costly to re-script";
+                case "COST_1": return MafiaCleanCity.I18n.Libelle.De("famille", "revisioncost", "Cheap to re-script");
+                case "COST_2": return MafiaCleanCity.I18n.Libelle.De("famille", "revisioncost", "Costly to re-script");
+                case "COST_3": return MafiaCleanCity.I18n.Libelle.De("famille", "revisioncost", "Pricey to re-script");
+                case "COST_MAX": return MafiaCleanCity.I18n.Libelle.De("famille", "revisioncost", "Very costly to re-script");
                 default: return string.IsNullOrEmpty(c) ? "—" : c;
             }
         }
@@ -956,10 +956,10 @@ namespace MafiaCleanCity.Operational.Lieutenant
         {
             switch (d)
             {
-                case "DISRUPT_SHORT": return "Short settling";
-                case "DISRUPT_MED": return "Medium settling";
-                case "DISRUPT_LONG": return "Long settling";
-                case "DISRUPT_MAX": return "Very long settling";
+                case "DISRUPT_SHORT": return MafiaCleanCity.I18n.Libelle.De("famille", "disruption", "Short settling");
+                case "DISRUPT_MED": return MafiaCleanCity.I18n.Libelle.De("famille", "disruption", "Medium settling");
+                case "DISRUPT_LONG": return MafiaCleanCity.I18n.Libelle.De("famille", "disruption", "Long settling");
+                case "DISRUPT_MAX": return MafiaCleanCity.I18n.Libelle.De("famille", "disruption", "Very long settling");
                 default: return string.IsNullOrEmpty(d) ? "—" : d;
             }
         }
@@ -974,10 +974,10 @@ namespace MafiaCleanCity.Operational.Lieutenant
         {
             switch (e)
             {
-                case "BONUS_NONE": return "No yield bonus";
-                case "BONUS_LOW": return "Small yield bonus";
-                case "BONUS_MID": return "Solid yield bonus";
-                case "BONUS_CAP": return "Peak yield bonus";
+                case "BONUS_NONE": return MafiaCleanCity.I18n.Libelle.De("famille", "efficiencybonus", "No yield bonus");
+                case "BONUS_LOW": return MafiaCleanCity.I18n.Libelle.De("famille", "efficiencybonus", "Small yield bonus");
+                case "BONUS_MID": return MafiaCleanCity.I18n.Libelle.De("famille", "efficiencybonus", "Solid yield bonus");
+                case "BONUS_CAP": return MafiaCleanCity.I18n.Libelle.De("famille", "efficiencybonus", "Peak yield bonus");
                 default: return string.IsNullOrEmpty(e) ? "—" : e;
             }
         }
@@ -2674,14 +2674,14 @@ namespace MafiaCleanCity.Operational.Lieutenant
         private static string CategoryLabel(string c)
         {
             switch (c) {
-                case "PRODUCTION_OPS": return "Production ops";
-                case "LOGISTICS_ROUTING": return "Logistics routing";
-                case "DISTRIBUTION_DISPATCH": return "Distribution dispatch";
-                case "LAUNDERING_FLOW": return "Laundering flow";
-                case "SECURITY_RESPONSE": return "Security response";
-                case "BOOKKEEPING_AUDIT": return "Bookkeeping audit";
-                case "CROSS_CATEGORY_INCIDENT": return "Cross-category incident";
-                default: return "Unknown category";
+                case "PRODUCTION_OPS": return MafiaCleanCity.I18n.Libelle.De("famille", "category", "Production ops");
+                case "LOGISTICS_ROUTING": return MafiaCleanCity.I18n.Libelle.De("famille", "category", "Logistics routing");
+                case "DISTRIBUTION_DISPATCH": return MafiaCleanCity.I18n.Libelle.De("famille", "category", "Distribution dispatch");
+                case "LAUNDERING_FLOW": return MafiaCleanCity.I18n.Libelle.De("famille", "category", "Laundering flow");
+                case "SECURITY_RESPONSE": return MafiaCleanCity.I18n.Libelle.De("famille", "category", "Security response");
+                case "BOOKKEEPING_AUDIT": return MafiaCleanCity.I18n.Libelle.De("famille", "category", "Bookkeeping audit");
+                case "CROSS_CATEGORY_INCIDENT": return MafiaCleanCity.I18n.Libelle.De("famille", "category", "Cross-category incident");
+                default: return MafiaCleanCity.I18n.Libelle.De("famille", "category", "Unknown category");
             }
         }
 
@@ -2689,11 +2689,11 @@ namespace MafiaCleanCity.Operational.Lieutenant
         private static string BandLabel(string b)
         {
             switch (b) {
-                case "full": return "[####] Full";
-                case "nominal": return "[###.] Nominal";
-                case "low": return "[##..] Low";
-                case "depleted": return "[....] Depleted";
-                default: return "[?] Unknown";
+                case "full": return MafiaCleanCity.I18n.Libelle.De("famille", "band", "[####] Full");
+                case "nominal": return MafiaCleanCity.I18n.Libelle.De("famille", "band", "[###.] Nominal");
+                case "low": return MafiaCleanCity.I18n.Libelle.De("famille", "band", "[##..] Low");
+                case "depleted": return MafiaCleanCity.I18n.Libelle.De("famille", "band", "[....] Depleted");
+                default: return MafiaCleanCity.I18n.Libelle.De("famille", "band", "[?] Unknown");
             }
         }
 

@@ -336,5 +336,236 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.AreEqual(DashboardController.NavTarget.Exceptions, dash.LastNavTarget);
             Assert.IsNotNull(dash.LastNavGameObject.GetComponent<ExceptionQueueController>());
         }
-    }
+    
+        // ═══ screen_a8 — la catégorie de couche conflit ═══════════════════════════════════
+
+        /// <summary>⛔ CE TEST NE PROUVE PAS QUE L'ÉCRAN CLASSERA BIEN LES VRAIES EXCEPTIONS.
+        ///
+        /// Il exerce `CategorieConflit` sur des descripteurs que J'AI écrits, à partir des noms de
+        /// mécaniques du canon — pas d'un seul corps observé. `front.md` mesure « 0 occurrence de
+        /// la variante conflit » (2026-08-27) et la session back le confirme le 2026-09-02 : zéro
+        /// exception de conflit sur le compte de démo. Il n'existe donc aucune clé réelle à
+        /// laquelle se confronter.
+        /// ⇒ Ce qu'il teste vraiment : que la fonction est TOTALE et PRUDENTE — elle reconnaît les
+        ///   quatre familles quand le fragment est là, et elle rend `null` plutôt qu'une catégorie
+        ///   par défaut quand elle ne reconnaît rien. C'est une garde sur ma lecture du canon, pas
+        ///   sur le serveur, et c'est tout ce qu'elle peut être aujourd'hui.
+        /// ★ La leçon de ㊲ vaut ici : une garde ne teste jamais la source, elle teste ma lecture
+        ///   de la source. Autant l'écrire sur la garde elle-même.</summary>
+        [Test]
+        public void ScreenA8_LaCategorieDeConflit_ReconnaitLesQuatreFamillesEtSeTaitSinon()
+        {
+            ExceptionCardDto Carte(string descripteur) =>
+                new ExceptionCardDto { event_descriptor = descripteur };
+
+            // positifs — un par famille du canon
+            Assert.AreEqual("REPUTATION",
+                ExceptionQueueController.CategorieConflit(Carte("exception.boss_mirror.divergence")));
+            Assert.AreEqual("DIPLOMATIE",
+                ExceptionQueueController.CategorieConflit(Carte("exception.sealed_envelope.reveal_due")));
+            Assert.AreEqual("RENSEIGNEMENT",
+                ExceptionQueueController.CategorieConflit(Carte("exception.regime.switch_detected")));
+            Assert.AreEqual("CONFLIT",
+                ExceptionQueueController.CategorieConflit(Carte("exception.dead_hand.imminent")));
+
+            // négatifs — RIEN ne doit sortir d'un descripteur hors couche conflit, ni du vide.
+            // Sans ces trois-là, une fonction qui rendrait « CONFLIT » pour tout passerait les
+            // quatre assertions du dessus.
+            Assert.IsNull(ExceptionQueueController.CategorieConflit(Carte("exception.maintenance.due")));
+            Assert.IsNull(ExceptionQueueController.CategorieConflit(Carte("")));
+            Assert.IsNull(ExceptionQueueController.CategorieConflit(null));
+        }
+
+        // ═══ ⑩ — la main de cartes, et le chemin joueur qui l'ouvre ══════════════════════════
+
+        /// <summary>⛔ CHAQUE ATTENDANT OUVRE SA PROPRE CARTE — pas celle du premier.
+        ///
+        /// Avant, seul le tampon ouvrait ⑩, et toujours sur `Cards[0]` : les deuxième et
+        /// troisième attendants étaient dessinés, alignés, lisibles, et MORTS au toucher. Aucune
+        /// garde structurelle ne pouvait le voir — les trois existent, aux bonnes places, avec
+        /// les bonnes valeurs.
+        /// ⚠️ Et le piège de la capture par référence est réel : un `foreach` qui passe `c` à la
+        /// lambda sans copie fait ouvrir la DERNIÈRE carte aux trois attendants. Ce test
+        /// l'attrape parce qu'il exige l'identité de la carte ouverte, pas seulement qu'une
+        /// carte s'ouvre.</summary>
+        [UnityTest, Category("Ecran10")]
+        public IEnumerator Ecran9_ChaqueAttendantOuvreSaPropreCarte()
+        {
+            ExceptionQueueController ctl = null;
+            yield return MonterFileAvecCartes(new[] { "a", "b", "c" }, c => ctl = c);
+
+            // ⛔ NAVIGUER DEPUIS LA RACINE VIVANTE, jamais `GameObject.Find`. `RendreFile`
+            // détruit ses enfants avant de les recréer et `Destroy` est DIFFÉRÉ : la recherche
+            // par nom rendait un attendant de la génération précédente, encore trouvable et déjà
+            // condamné. Son `onClick` levait sur un contrôleur mort — sans jamais entrer dans
+            // `OpenDetail`, ce que le diagnostic a montré (aucune trace pour les cartes a/b/c).
+            var attendants = ctl.AttendantsPourTest();
+            Assert.AreEqual(3, attendants.Count,
+                $"la file doit porter trois attendants touchables (mesuré {attendants.Count})");
+            for (int i = 0; i < 3; i++)
+            {
+                var bouton = attendants[i];
+                Assert.IsNotNull(bouton, $"l'attendant {i} doit être touchable — sinon il est décoratif");
+
+                bouton.onClick.Invoke();
+                yield return null;
+                Assert.IsNotNull(ctl.LastDetail, $"l'attendant {i} doit avoir ouvert un détail");
+                Assert.AreEqual(ctl.Cards[i].exception_id, ctl.LastDetail.CurrentCard.exception_id,
+                    $"l'attendant {i} a ouvert la carte d'un AUTRE : la lambda capture la variable " +
+                    "de boucle au lieu d'une copie, et les trois ouvrent la même.");
+                ctl.LastDetail.Back();
+                yield return null;
+            }
+        }
+
+        /// <summary>Les trois rôles de la main sont décidés sur la DONNÉE, pas sur l'ordre du
+        /// tableau : suggérée = `suggested_action`, « lui apprendre » = celle qui porte
+        /// `add_rule_dsl`, risquée = la première autre. Le talon porte le CARDINAL du reste.
+        /// ⚠️ Contrôle négatif inclus : une carte à UNE seule issue ne doit produire NI risquée
+        /// NI apprendre NI talon — mesuré, `exc_demo_one_time` est exactement ce cas.</summary>
+        [UnityTest, Category("Ecran10")]
+        public IEnumerator Ecran10_LesRolesDeLaMainViennentDeLaDonnee()
+        {
+            ExceptionQueueController ctl = null;
+            yield return MonterFileAvecCartes(new[] { "riche" }, c => ctl = c);
+            ctl.Cards[0].suggested_action = new CandidateActionDto { id = "sug", label = "Réparer" };
+            ctl.Cards[0].candidate_actions = new[]
+            {
+                new CandidateActionDto { id = "risq", label = "Soudoyer" },
+                new CandidateActionDto { id = "sug",  label = "Réparer" },
+                new CandidateActionDto { id = "appr", label = "Gérer seul", add_rule_dsl = "WHEN raid THEN repair" },
+                new CandidateActionDto { id = "autre1", label = "X" },
+                new CandidateActionDto { id = "autre2", label = "Y" },
+            };
+            ctl.OpenDetail(ctl.Cards[0]);
+            yield return null;
+            for (int i = 0; i < 5; i++) yield return null;
+
+            var textes = ctl.LastDetail.RenderedTexts;
+            CollectionAssert.Contains(textes, "Suggéré");
+            CollectionAssert.Contains(textes, "Risqué");
+            CollectionAssert.Contains(textes, "Lui apprendre");
+            CollectionAssert.Contains(textes, "+2",
+                "cinq issues, trois montrées ⇒ le talon doit porter « +2 » : c'est un cardinal, " +
+                "pas un ornement");
+            ctl.LastDetail.Back();
+            yield return null;
+
+            // — contrôle négatif : une seule issue —
+            ExceptionQueueController ctl2 = null;
+            yield return MonterFileAvecCartes(new[] { "pauvre" }, c => ctl2 = c);
+            ctl2.Cards[0].suggested_action = new CandidateActionDto { id = "seule", label = "Laisser filer" };
+            ctl2.Cards[0].candidate_actions = new[]
+            {
+                new CandidateActionDto { id = "seule", label = "Laisser filer" },
+            };
+            ctl2.OpenDetail(ctl2.Cards[0]);
+            yield return null;
+            for (int i = 0; i < 5; i++) yield return null;
+
+            var t2 = ctl2.LastDetail.RenderedTexts;
+            CollectionAssert.Contains(t2, "Suggéré");
+            CollectionAssert.DoesNotContain(t2, "Risqué",
+                "une carte à une seule issue ne doit pas inventer de carte « risquée » pour " +
+                "remplir le dessin");
+            CollectionAssert.DoesNotContain(t2, "Lui apprendre");
+            Assert.IsFalse(t2.Contains("+0") || t2.Contains("+1"),
+                "aucune issue restante ⇒ pas de talon du tout");
+        }
+
+        /// <summary>Monte ⑨ SANS réseau et rend des cartes FABRIQUÉES.
+        ///
+        /// ⛔ IL FAUT LAISSER `Boot()` ÉCHOUER D'ABORD, et c'est la mesure qui l'a dit. `Start()`
+        /// lance `Boot()` → `SignIn()` → `LoadQueue()` : sans jeton, la file part en 401, ÉCRASE
+        /// `Cards` et re-rend un comptoir vide. Fabriquer avant, c'était fabriquer sous un
+        /// chargement réseau qui allait tout balayer une frame plus tard.
+        /// ★ Le test échouait d'abord sur « l'attendant n'a rien ouvert », ce qui désignait le
+        ///   clic. Le clic n'était pas en cause : l'attendant que je trouvais était celui du
+        ///   rendu d'APRÈS l'échec réseau. J'ai corrigé deux fois la mauvaise chose (le
+        ///   navigateur, puis le repli) avant d'instrumenter et de voir que `OpenDetail` n'était
+        ///   jamais atteint. **Deux corrections plausibles ne valent pas une mesure.**
+        /// ⚠️ `ignoreFailingMessages` parce que le 401 est ATTENDU ici : ce test porte sur le
+        /// RENDU, pas sur le réseau. Sans ça, le log d'erreur fait échouer NUnit tout seul.</summary>
+        private IEnumerator MonterFileAvecCartes(string[] ids, System.Action<ExceptionQueueController> pret)
+        {
+            LogAssert.ignoreFailingMessages = true;
+            controllerGo = new GameObject("ExceptionQueueScreen");
+            var ctl = controllerGo.AddComponent<ExceptionQueueController>();
+
+            // laisser Boot() partir, échouer, et finir de rendre son comptoir vide
+            for (int i = 0; i < 12; i++) yield return null;
+
+            var cartes = new ExceptionCardDto[ids.Length];
+            for (int i = 0; i < ids.Length; i++)
+                cartes[i] = new ExceptionCardDto
+                {
+                    exception_id = ids[i],
+                    event_descriptor = "descripteur " + ids[i],
+                    severity_band = "MILD", priority_band = "SILENT", confidence_band = "LIKELY",
+                    resolution_status = "pending",
+                    suggested_action = new CandidateActionDto { id = "s_" + ids[i], label = "Agir" },
+                    candidate_actions = new[] { new CandidateActionDto { id = "s_" + ids[i], label = "Agir" } },
+                };
+            ctl.RendrePourTest(cartes);
+            yield return null;
+            pret(ctl);
+        }
+
+        /// <summary>⛔ LE CORPS DU RESOLVE DOIT PORTER `chosen_action_id`, exactement.
+        ///
+        /// TD-451, mesuré par la session back : un corps qui porte `action_id` au lieu de
+        /// `chosen_action_id` rend **200**, le serveur IGNORE le champ, et **la carte est
+        /// consommée sans faire ce qu'on demandait**. C'est comme ça qu'une carte enseignable a
+        /// été brûlée.
+        /// ★ Le pire mode de panne de la nuit : pas une erreur, un SUCCÈS qui ne fait pas ce
+        ///   qu'on croit. Aucun code HTTP ne le signale, aucune garde de statut ne l'attrape —
+        ///   seule la FORME du corps envoyé le dit.
+        /// ⇒ Cette garde sérialise la requête réelle et lit le JSON. Le contrôle négatif est ce
+        ///   qui lui donne sa valeur : sans lui, un DTO renommé passerait au vert.</summary>
+        [Test]
+        public void LeCorpsDuResolve_PorteChosenActionId_PasActionId()
+        {
+            string json = JsonUtility.ToJson(
+                new ResolveRequest { method = "ONE_TIME", chosen_action_id = "acknowledge" });
+
+            StringAssert.Contains("\"chosen_action_id\"", json,
+                "le serveur n'accepte que `chosen_action_id` ; sous tout autre nom il rend 200, " +
+                "ignore le champ et consomme la carte (TD-451)");
+            StringAssert.Contains("\"acknowledge\"", json, "la valeur doit voyager avec le champ");
+            StringAssert.Contains("\"method\"", json);
+
+            // contrôle négatif : le nom fautif ne doit apparaître NULLE PART dans le corps
+            Assert.IsFalse(System.Text.RegularExpressions.Regex.IsMatch(json, "\"action_id\"\\s*:"),
+                "un champ `action_id` seul est le piège TD-451 — il réussit en silence");
+        }
+
+        /// <summary>⛔ `MethodFor` NE DOIT JAMAIS RENDRE UN TEXTE TRADUIT.
+        ///
+        /// Sa valeur ne s'affiche pas : elle part dans le CORPS de `resolve` comme `method`. Si
+        /// quelqu'un la faisait passer par le résolveur i18n « pour être cohérent », le client
+        /// enverrait un jour un `method` traduit — et le serveur ne le dirait pas : TD-451 a
+        /// mesuré qu'un corps mal formé rend **200**, ignore le champ, et consomme la carte.
+        /// ★ Une chaîne qui VOYAGE vers le serveur n'est pas un libellé, même écrite en
+        ///   majuscules lisibles. La question n'est pas « est-ce du texte ? » mais « qui le lit —
+        ///   un joueur ou un handler ? ». Cette garde fixe la réponse.</summary>
+        [Test]
+        public void MethodFor_RendUneValeurDeProtocole_JamaisUnLibelleTraduit()
+        {
+            // Un dictionnaire qui traduirait ces valeurs : s'il était consulté, le test le verrait.
+            MafiaCleanCity.I18n.I18nCatalog.ChargerPourTest("fr", new Dictionary<string, string> {
+                { "exception_detail.bloc.add_rule", "Ajouter une règle" },
+                { "exception_detail.bloc.one_time", "Une seule fois" },
+            });
+
+            var enseignable = new CandidateActionDto { id = "a", label = "x", add_rule_dsl = "WHEN y THEN z" };
+            var simple      = new CandidateActionDto { id = "b", label = "y" };
+
+            Assert.AreEqual("ADD_RULE", ExceptionDetailController.MethodFor(enseignable, addAsRule: true),
+                "la méthode part dans le corps de resolve : elle doit rester la valeur de PROTOCOLE");
+            Assert.AreEqual("ONE_TIME", ExceptionDetailController.MethodFor(simple, addAsRule: true));
+            Assert.AreEqual("ONE_TIME", ExceptionDetailController.MethodFor(enseignable, addAsRule: false));
+
+            MafiaCleanCity.I18n.I18nCatalog.Oublier();
+        }
+}
 }

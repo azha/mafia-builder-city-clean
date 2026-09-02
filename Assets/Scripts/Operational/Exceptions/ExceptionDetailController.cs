@@ -159,34 +159,68 @@ namespace MafiaCleanCity.Operational.Exceptions
 
             ClearBody();
 
-            // Descriptor — producer free text (an i18n key may carry digits): CHROME, component-tracked only.
-            TextMeshProUGUI desc = NewText("Descriptor", body, c.event_descriptor, 16, TextAlignmentOptions.Left);
-            desc.fontStyle = FontStyles.Bold;
-            AddLayoutElement(desc.gameObject, minHeight: 22, flexibleHeight: 0);
+            // ── `.parle` : qui parle, ses trois bandes en pastilles, puis sa réplique ──
+            // Maquette : « <b>Le cuisinier</b> · au bâtiment touché » + chips gravité/priorité/
+            // confiance, puis la réplique entre guillemets.
+            //
+            // ⚠️ LE RÔLE N'EST PAS DANS CE CORPS. La maquette le tire de `GET /v1/lieutenants`
+            // par jointure (`archetype`) — jointure que cet écran ne fait pas. Et `lieutenant`
+            // porte bien un `name` depuis peu, mais sa valeur est « Lieutenant » : le placeholder
+            // de TD-046, écrit par le chemin de recrutement de production lui-même sur 18 996
+            // lignes. Rien dans le corps ne distingue ce placeholder d'un vrai nom.
+            // ★ Donc on montre le RÔLE générique, pas le « nom ». Afficher « Lieutenant » comme
+            //   un nom serait le même mensonge que « SALVATORE » sur ㊲ : plus joli, et faux.
+            //   L'écart est déclaré ici avec sa date plutôt que masqué.
+            string qui = c.lieutenant_id != null && c.lieutenant_id.Length > 0
+                ? "Votre lieutenant" : "La ville";
+            TextMeshProUGUI quiTxt = NewText("Qui", body, qui, (int)PxD(11f), TextAlignmentOptions.Left);
+            quiTxt.fontStyle = FontStyles.Bold;
+            AddLayoutElement(quiTxt.gameObject, minHeight: PxD(14f), flexibleHeight: 0);
+            TrackText(quiTxt, qui);
 
-            // Bands line — CLOSED labels, tracked (the scan corpus). Color TextSecondary (neutral — detail shows all bands).
-            string bands = $"Severity {Cap(c.severity_band)}  •  Priority {Cap(c.priority_band)}  •  Confidence {Cap(c.confidence_band)}";
-            TextMeshProUGUI bandText = NewText("Bands", body, bands, 13, TextAlignmentOptions.Left);
-            bandText.color = TextSecondary;
-            AddLayoutElement(bandText.gameObject, minHeight: 18, flexibleHeight: 0);
-            TrackText(bandText, bands);
+            // Les trois bandes, en pastilles — libellés FERMÉS, suivis par le corpus de balayage.
+            string pastilles = $"{Cap(c.severity_band)} · {Cap(c.priority_band)} · {Cap(c.confidence_band)}";
+            TextMeshProUGUI chips = NewText("Chips", body, pastilles, (int)PxD(CssChipCorps * 1.4f),
+                                            TextAlignmentOptions.Left);
+            chips.color = SeverityTeinte(c.severity_band);
+            AddLayoutElement(chips.gameObject, minHeight: PxD(11f), flexibleHeight: 0);
+            TrackText(chips, pastilles);
 
+            // La réplique — texte PRODUCTEUR (prose anglaise aujourd'hui, clé demain) : chrome,
+            // non suivi. Passe par le point unique `Texte()`.
+            TextMeshProUGUI desc = NewText("Descriptor", body,
+                "« " + Texte(c.event_descriptor, c.event_descriptor_i18n) + " »", (int)PxD(11.5f), TextAlignmentOptions.Left);
+            desc.textWrappingMode = TextWrappingModes.Normal;
+            desc.overflowMode = TextOverflowModes.Overflow;
+            desc.color = TextPrimary;
+            AddLayoutElement(desc.gameObject, minHeight: PxD(24f), flexibleHeight: 0);
+
+            // ---- L'APRÈS-TAMPON : le mot que le back rend ----
+            // Les DIX `outcome` émis, un par handler (inventaire de la session back, 2026-09-02) :
+            //   RESOLVED · ESCALATED · TAUGHT · DEFERRED · DEMOLISHED · LAID_LOW ·
+            //   REPAIRING · REPAIRING_SLOW · BRIBE_SUCCEEDED · BRIBE_FAILED
+            // ⚠️ `BRIBE_SUCCEEDED` / `BRIBE_FAILED` sont NON DÉTERMINISTES — tirage dans le
+            // handler. Une capture de cet état-là n'est PAS reproductible : si on en prend une,
+            // son nom doit le dire, sinon quelqu'un la rejouera et lira une régression là où il
+            // n'y a qu'un tirage.
+            // ⛔ On affiche le mot du serveur TEL QUEL, sans le traduire en « réussi / échoué » :
+            // dix valeurs fermées dont deux aléatoires, c'est au serveur de les nommer.
             // ---- Resolved state: show outcome + Back, then return. ----
             if (!string.IsNullOrEmpty(LastOutcome))
             {
-                TextMeshProUGUI resolved = NewText("Resolved", body, "Résolu ✓", 16, TextAlignmentOptions.Left);
+                TextMeshProUGUI resolved = NewText("Resolved", body, Lib("Résolu ✓"), 16, TextAlignmentOptions.Left);
                 resolved.color = AccentMild;
                 resolved.fontStyle = FontStyles.Bold;
                 AddLayoutElement(resolved.gameObject, minHeight: 22, flexibleHeight: 0);
-                TrackText(resolved, "Résolu ✓");
+                TrackText(resolved, Lib("Résolu ✓"));
 
                 // Outcome — producer free text (enum value may carry letters but qualitative): CHROME, TextPrimary.
-                TextMeshProUGUI outcomeText = NewText("Outcome", body, "Issue : " + LastOutcome, 14, TextAlignmentOptions.Left);
+                TextMeshProUGUI outcomeText = NewText("Outcome", body, Lib("Issue :") + " " + LastOutcome, 14, TextAlignmentOptions.Left);
                 outcomeText.color = TextPrimary;
                 AddLayoutElement(outcomeText.gameObject, minHeight: 20, flexibleHeight: 0);
                 // chrome — NOT tracked
 
-                AddButton("Back", Back);
+                AddButton(Lib("Back"), Back);
                 return;
             }
 
@@ -199,80 +233,214 @@ namespace MafiaCleanCity.Operational.Exceptions
                 // chrome — NOT tracked
             }
 
-            // ---- "Add as rule" toggle — only when ≥1 candidate has non-empty add_rule_dsl. ----
-            bool anyTeachable = false;
-            if (c.candidate_actions != null)
-                foreach (CandidateActionDto ca in c.candidate_actions)
-                    if (ca != null && !string.IsNullOrEmpty(ca.add_rule_dsl)) { anyTeachable = true; break; }
+            // ═══ ⑩ LA MAIN DE CARTES — maquette RATIFIÉE `ecrans-brennar-4.html`, cadre
+            // « Exception — sa main de cartes (le détail) », ratifiée avec ⑨ le 2026-08-26.
+            //
+            // ⛔ IL N'Y A PAS DE ROUTE DE DÉTAIL, et ce n'est pas un manque : `GET
+            // /v1/exceptions/:id` rend 404 (mesuré 2026-09-02) et la maquette le DIT elle-même —
+            // « le détail, même carte dépliée — il n'y a pas de GET unitaire ». La carte de la
+            // file porte déjà tout. Ne pas ouvrir de lot back pour cette route.
+            //
+            // Les trois cartes ne sont pas trois candidats quelconques : ce sont trois RÔLES, et
+            // le dessin les place toujours au même endroit (la suggérée au MILIEU, levée —
+            // `.carte:nth-child(2){translateY(-8px)}`). Le reste part au TALON, qui n'est pas un
+            // ornement mais le CARDINAL des issues non montrées.
+            RendreMain(c);
+            AddButton(Lib("Escalate"), () => StartCoroutine(Escalate()));
+            AddButton(Lib("Back"), Back);
+        }
 
-            if (anyTeachable)
-            {
-                string toggleLabel = AddAsRule ? "Add as rule: ON" : "Add as rule: OFF";
-                AddButton(toggleLabel, () => SetAddAsRule(!AddAsRule));
-            }
+        // ── ⑩ : les constantes de la maquette, lues à la source (série 4, largeur 300) ──
+        private const float CssMainEcart   = 7f;     // .main{gap:7px}
+        private const float CssCarteRayon  = 9f;     // .carte{border-radius:9px}
+        private const float CssCarteLargeur = 100f;  // .carte{max-width:100px}
+        private const float CssCarteRatio  = 3f / 2f;// .carte{aspect-ratio:2/3}
+        private const float CssCarteLeve   = 8f;     // .carte:nth-child(2){translateY(-8px)}
+        private const float CssCarteL      = 8f;     // .carte .l
+        private const float CssCarteT      = 11.5f;  // .carte .t
+        private const float CssCarteC      = 7.5f;   // .carte .c
+        private const float CssTalonL      = 34f;    // .talon{width:34px}
+        private const float CssTalonH      = 50f;    // .talon{height:50px}
+        private const float CssChipCorps   = 6.5f;   // .bulle .qui .chip{font-size:6.5px}
+        private const float CssTamponHaut  = 46f;    // le tampon de ⑨, même châssis
+        private const float CssMargeEcran  = 10f;    // .comptoir{padding-inline:10px} (⑨, même châssis)
 
-            // ---- Per-candidate blocks. ----
-            string suggestedId = c.suggested_action != null ? c.suggested_action.id : "";
+        private float PxD(float css) => MafiaCleanCity.Shell.EchelleMaquette.Px(
+            css, body, MafiaCleanCity.Shell.EchelleMaquette.LargeurEcransBrennar4);
+
+        /// <summary>Le rôle de chaque carte, décidé sur la DONNÉE et non sur l'ordre du tableau.
+        /// · suggérée  = `suggested_action` ;
+        /// · apprendre = l'issue qui porte `add_rule_dsl` (« lui apprendre », maquette) ;
+        /// · risquée   = la première autre.
+        /// ⚠️ Une carte peut n'avoir qu'UNE issue (mesuré : `exc_demo_one_time` n'a que
+        /// `let_ride`). On rend alors ce qu'on a — jamais une carte vide pour tenir le dessin.
+        /// ⛔ La carte « nue » à zéro issue n'est PAS dessinée par la maquette (écart É8 assumé
+        /// par la maquette elle-même) : on affiche la réplique et le talon, sans main.</summary>
+        private void RendreMain(ExceptionCardDto c)
+        {
+            string idSug = c.suggested_action != null ? c.suggested_action.id : "";
+            CandidateActionDto sug = null, apprendre = null, risquee = null;
+            var restantes = new List<CandidateActionDto>();
+
             if (c.candidate_actions != null)
-            {
                 foreach (CandidateActionDto ca in c.candidate_actions)
                 {
                     if (ca == null) continue;
-                    bool isTeachable = !string.IsNullOrEmpty(ca.add_rule_dsl);
-                    bool isSuggested = !string.IsNullOrEmpty(suggestedId) && ca.id == suggestedId;
-
-                    GameObject block = NewUI("Candidate_" + ca.id, body);
-                    block.AddComponent<Image>().color = RowBg;
-                    VerticalLayoutGroup v = block.AddComponent<VerticalLayoutGroup>();
-                    v.padding = new RectOffset(8, 8, 6, 6);
-                    v.spacing = 2;
-                    v.childControlWidth = true; v.childControlHeight = true;
-                    v.childForceExpandWidth = true; v.childForceExpandHeight = false;
-                    AddLayoutElement(block, flexibleHeight: 0);
-
-                    // Label — producer free text (chrome); bold when suggested.
-                    TextMeshProUGUI labelText = NewText("Label", block.transform, ca.label, 15, TextAlignmentOptions.Left);
-                    if (isSuggested) labelText.fontStyle = FontStyles.Bold;
-                    AddLayoutElement(labelText.gameObject, minHeight: 20, flexibleHeight: 0);
-                    // chrome — NOT tracked
-
-                    // "★ Suggéré" marker — CLOSED label, tracked.
-                    if (isSuggested)
-                    {
-                        TextMeshProUGUI sugMarker = NewText("Suggested", block.transform, "★ Suggéré", 13, TextAlignmentOptions.Left);
-                        sugMarker.color = CtaColor;
-                        AddLayoutElement(sugMarker.gameObject, minHeight: 18, flexibleHeight: 0);
-                        TrackText(sugMarker, "★ Suggéré");
-                    }
-
-                    // Projected consequence — producer free text (chrome).
-                    if (!string.IsNullOrEmpty(ca.projected_consequence))
-                    {
-                        TextMeshProUGUI conseq = NewText("Consequence", block.transform, ca.projected_consequence, 13, TextAlignmentOptions.Left);
-                        conseq.color = TextSecondary;
-                        AddLayoutElement(conseq.gameObject, minHeight: 18, flexibleHeight: 0);
-                        // chrome — NOT tracked
-                    }
-
-                    // DSL preview — producer free text (chrome), shown only when AddAsRule && teachable.
-                    if (AddAsRule && isTeachable)
-                    {
-                        TextMeshProUGUI dslText = NewText("DSL", block.transform, "Enseigne : " + ca.add_rule_dsl, 12, TextAlignmentOptions.Left);
-                        dslText.color = AccentMild;
-                        AddLayoutElement(dslText.gameObject, minHeight: 16, flexibleHeight: 0);
-                        // chrome — NOT tracked
-                    }
-
-                    // Resolve button — "Resolve: " + label is chrome (label is producer text).
-                    CandidateActionDto captured = ca;
-                    AddButtonTo(block.transform, "Resolve: " + ca.label, () => StartCoroutine(ResolveWith(captured)), track: false); // producer text in the caption — chrome (R2.2)
+                    if (sug == null && !string.IsNullOrEmpty(idSug) && ca.id == idSug) { sug = ca; continue; }
+                    if (apprendre == null && !string.IsNullOrEmpty(ca.add_rule_dsl)) { apprendre = ca; continue; }
+                    if (risquee == null) { risquee = ca; continue; }
+                    restantes.Add(ca);
                 }
+            if (sug == null) sug = c.suggested_action;
+
+            GameObject main = NewUI("Main", body);
+            HorizontalLayoutGroup h = main.AddComponent<HorizontalLayoutGroup>();
+            h.spacing = PxD(CssMainEcart);
+            h.childAlignment = TextAnchor.LowerCenter;
+            h.childControlWidth = true; h.childControlHeight = true;
+            h.childForceExpandWidth = true; h.childForceExpandHeight = false;
+            AddLayoutElement(main, minHeight: PxD(CssCarteLargeur * CssCarteRatio + CssCarteLeve),
+                             flexibleHeight: 0);
+
+            // L'ORDRE EST CELUI DU DESSIN : risquée, suggérée (levée, au milieu), apprendre.
+            if (risquee != null)   Carte(main.transform, Lib("Risqué"),        risquee,   sombre: true,  levee: false);
+            if (sug != null)       Carte(main.transform, Lib("Suggéré"),       sug,       sombre: false, levee: true);
+            if (apprendre != null) Carte(main.transform, Lib("Lui apprendre"), apprendre, sombre: true,  levee: false);
+
+            // Le talon : le CARDINAL des issues qu'on ne montre pas. Zéro ⇒ pas de talon (le
+            // dessin n'en met pas quand la main tient entière).
+            if (restantes.Count > 0)
+            {
+                GameObject talon = NewUI("Talon", main.transform);
+                talon.AddComponent<Image>().color = AccentSevere;
+                AddLayoutElement(talon, minWidth: PxD(CssTalonL), preferredWidth: PxD(CssTalonL),
+                                 minHeight: PxD(CssTalonH), flexibleHeight: 0, flexibleWidth: 0);
+                TextMeshProUGUI t = NewText("TalonNb", talon.transform, "+" + restantes.Count,
+                                            (int)PxD(CssCarteT), TextAlignmentOptions.Center);
+                t.color = TextPrimary;
+                TrackText(t, "+" + restantes.Count);
             }
 
-            // ---- Escalate + Back affordances. ----
-            AddButton("Escalate", () => StartCoroutine(Escalate()));
-            AddButton("Back", Back);
+            // Le tampon — l'action suggérée, en un seul geste. `POST /v1/exceptions/:id/resolve`
+            // est la SEULE route d'écriture de cet écran (maquette : « un seul geste, une route »).
+            if (sug != null)
+            {
+                CandidateActionDto capture = sug;
+                AddButtonTo(body, sug.label, () => StartCoroutine(ResolveWith(capture)), track: false);
+            }
         }
+
+        /// <summary>Une carte de la main. `l` (le rôle) est un libellé FERMÉ — il est suivi ;
+        /// `t` (le titre) et `c` (la conséquence) sont du texte producteur — chrome, non suivi.</summary>
+        private void Carte(Transform parent, string role, CandidateActionDto a, bool sombre, bool levee)
+        {
+            GameObject carte = NewUI("Carte_" + (a != null ? a.id : role), parent);
+            // ⛔ LA MAQUETTE DIT L'INVERSE DE CE QUE J'AVAIS ÉCRIT. `.carte` est CLAIRE à
+            // texte sombre ; `.carte.sombre` est foncée à texte crème. Je peignais les DEUX en
+            // foncé tout en colorant le titre de la claire en `surfaceBase` — texte sombre sur
+            // fond sombre, illisible. J'avais implémenté la moitié de la règle.
+            carte.AddComponent<Image>().color = sombre ? RowBg : DesignTokens.Current.hudCreme;
+            VerticalLayoutGroup v = carte.AddComponent<VerticalLayoutGroup>();
+            int pad = (int)PxD(8f);
+            v.padding = new RectOffset(pad, pad, pad, (int)PxD(7f));
+            v.spacing = PxD(2f);
+            v.childControlWidth = true; v.childControlHeight = true;
+            v.childForceExpandWidth = true; v.childForceExpandHeight = false;
+            AddLayoutElement(carte, preferredWidth: PxD(CssCarteLargeur),
+                             minHeight: PxD(CssCarteLargeur * CssCarteRatio), flexibleHeight: 0);
+
+            // La suggérée est LEVÉE — c'est le seul signal de rang dans le dessin, et il ne tient
+            // pas dans la couleur seule : le rôle est écrit en toutes lettres juste dessous.
+            if (levee)
+            {
+                var rt = (RectTransform)carte.transform;
+                rt.anchoredPosition = new Vector2(rt.anchoredPosition.x, PxD(CssCarteLeve));
+            }
+
+            TextMeshProUGUI lib = NewText("Role", carte.transform, role, (int)PxD(CssCarteL),
+                                          TextAlignmentOptions.Left);
+            lib.color = levee ? CtaColor : AccentModerate;
+            TrackText(lib, role);
+
+            TextMeshProUGUI titre = NewText("Titre", carte.transform,
+                a != null ? Texte(a.label, a.label_i18n) : "—", (int)PxD(CssCarteT), TextAlignmentOptions.Left);
+            titre.fontStyle = FontStyles.Bold;
+            titre.color = sombre ? TextPrimary : DesignTokens.Current.surfaceBase;
+            // ⛔ UNE CARTE DE 100 px CSS A BESOIN DE RETOURS À LA LIGNE. `NewText` pose
+            // `NoWrap` + `Truncate` : la capture montrait « Escalate for r » et « The card is
+            // archived for », coupés en plein mot. Un titre tronqué ressemble à un libellé
+            // court — rien ne signale la coupe.
+            titre.textWrappingMode = TextWrappingModes.Normal;
+            titre.overflowMode = TextOverflowModes.Overflow;
+
+            if (a != null && !string.IsNullOrEmpty(a.projected_consequence))
+            {
+                TextMeshProUGUI cons = NewText("Consequence", carte.transform,
+                    Texte(a.projected_consequence, a.projected_consequence_i18n), (int)PxD(CssCarteC), TextAlignmentOptions.Left);
+                cons.fontStyle = FontStyles.Italic;
+                cons.color = sombre ? TextSecondary : DesignTokens.Current.surfaceCard;
+                cons.textWrappingMode = TextWrappingModes.Normal;
+                cons.overflowMode = TextOverflowModes.Overflow;
+            }
+        }
+
+        /// <summary>LE POINT UNIQUE de passage des textes serveur.
+        ///
+        /// Aujourd'hui la route rend de la PROSE anglaise (mesuré 2026-09-02 : 14 proses pour
+        /// 1 clé sur `/v1/exceptions/queue`) — donc ceci rend la prose telle quelle. La session
+        /// back convertit ces champs en `*_ref` (TD-452, additif : la prose reste, une référence
+        /// arrive à côté).
+        /// ⇒ Quand les `*_ref` seront là, c'est ICI et nulle part ailleurs qu'on les consomme :
+        ///   `I18nCatalog.Traduire(ref)` si la référence est présente, la prose sinon. Le repli
+        ///   n'est PAS la clé nue pour cet écran — contrairement au nom de bâtiment, une prose
+        ///   existe et veut dire quelque chose.
+        /// ⚠️ Je n'écris pas le branchement maintenant : les noms de champs ne sont pas encore
+        ///   dans le corps, et coder contre des noms supposés est exactement ce qui a fait
+        ///   inventer un écran a8 qui n'existait pas.</summary>
+        private static string Texte(string prose, I18nRefDto reference = null)
+        {
+            // La référence GAGNE quand elle est là ET que le dictionnaire la porte. Sinon la
+            // prose : elle existe et veut dire quelque chose — contrairement au nom de bâtiment,
+            // le repli n'est PAS la clé nue ici.
+            // ⛔ `Connait` avant `Traduire` : sans ce test, une clé absente s'afficherait à la
+            // place d'une prose parfaitement lisible, et l'écran REGRESSERAIT en se branchant.
+            if (reference != null && !string.IsNullOrEmpty(reference.key)
+                && MafiaCleanCity.I18n.I18nCatalog.Connait(reference.key))
+                return MafiaCleanCity.I18n.I18nCatalog.Traduire(reference.key);
+            return prose ?? string.Empty;
+        }
+
+        /// <summary>La teinte d'une gravité — fonction NOMMÉE (patron `HeatBucketResolver`),
+        /// jamais une chaîne de ternaires : une garde anti-régression ne voit pas sa cible dans
+        /// un ternaire. Une bande inconnue rend la teinte neutre, jamais celle de « bénin ».</summary>
+        private static Color SeverityTeinte(string bande)
+        {
+            switch ((bande ?? string.Empty).Trim().ToUpperInvariant())
+            {
+                case "MILD":     return AccentMild;
+                case "MODERATE": return AccentModerate;
+                case "SEVERE":   return AccentSevere;
+                default:         return TextSecondary;
+            }
+        }
+
+        /// <summary>Item 0.6 — un libellé d'affichage STATIQUE de ⑩ passe par
+        /// `exception_detail.bloc.<slug>`, repli sur le littéral.
+        ///
+        /// ⛔⛔ CE QUI NE DOIT JAMAIS PASSER PAR ICI, et c'est le cas le plus grave rencontré sur
+        /// ce chantier : `MethodFor` rend `"ADD_RULE"` / `"ONE_TIME"` / le type d'effet. Ces
+        /// chaînes ne s'affichent PAS — elles partent dans le CORPS de
+        /// `POST /v1/exceptions/:id/resolve` comme valeur de `method`.
+        /// ⇒ Les keyer serait sans effet aujourd'hui (repli = littéral) et **casserait la
+        ///   résolution le jour où le dictionnaire les porterait** : le client enverrait un
+        ///   `method` traduit. Et le serveur ne le dirait pas — TD-451 a montré qu'un corps mal
+        ///   formé rend **200**, ignore le champ, et consomme la carte quand même.
+        /// ★ Une chaîne qui VOYAGE vers le serveur n'est pas un libellé, même quand elle est
+        ///   écrite en majuscules lisibles. La question n'est pas « est-ce du texte ? » mais
+        ///   « qui le lit — un joueur ou un handler ? ».
+        /// ⚠️ De même, `"+" + restantes.Count` (le talon) est CALCULÉ : aucune clé n'en dérive.</summary>
+        private static string Lib(string litteral) =>
+            MafiaCleanCity.I18n.Libelle.De("exception_detail", "bloc", litteral);
 
         private void AddButton(string label, UnityEngine.Events.UnityAction onClick) => AddButtonTo(body, label, onClick, track: true);
 
@@ -331,11 +499,30 @@ namespace MafiaCleanCity.Operational.Exceptions
             sheetGo = NewUI("ExceptionDetailSheet", root);
             GameObject card = sheetGo;
             RectTransform cardRt = (RectTransform)card.transform;
-            cardRt.anchorMin = new Vector2(0.5f, 1f);
-            cardRt.anchorMax = new Vector2(0.5f, 1f);
-            cardRt.pivot = new Vector2(0.5f, 1f);
-            cardRt.sizeDelta = new Vector2(560, 600);
-            cardRt.anchoredPosition = new Vector2(0, -28);
+            // ⛔ ⑩ EST UN ÉCRAN PLEIN, pas une carte posée. La maquette le dessine dans un
+            // `.tel` entier (barre + comptoir), comme ⑨ dont il est le dépliage. Il valait
+            // 560×600 en unités fixes, ancré en haut : sur un canvas de 1280 ça fait 43,7 % de la
+            // largeur, et sous le chrome ça passait sous le bandeau.
+            // ⛔ ET LES INSETS DU CHROME, dès l'écriture — c'est la quatrième fois cette nuit :
+            // ⑨ et ② passaient sous le dock, ㊱ collisionnait aux deux bouts. Je ne les découvre
+            // plus par la capture, je les pose en écrivant, et la garde vérifiera.
+            // Hors shell les insets valent 0 et l'écran remplit tout.
+            // ⛔ L'ÉCHELLE SE LIT SUR LE PLEIN ÉCRAN, ET `body` N'EXISTE PAS ENCORE ICI.
+            // `PxD` s'appuie sur `body`, assigné trente lignes plus bas : l'appeler à cet endroit
+            // lisait un rect NUL. C'est la même faute que sur ㊲ — une conversion px CSS faite
+            // avant que sa référence soit résolue — et elle ne se voit pas : elle rend un écran
+            // proportionnellement faux, qui ressemble à un choix de mise en page.
+            var refEchelle = root as RectTransform;
+            Canvas.ForceUpdateCanvases();
+            float margeX = refEchelle != null
+                ? MafiaCleanCity.Shell.EchelleMaquette.Px(CssMargeEcran, refEchelle,
+                      MafiaCleanCity.Shell.EchelleMaquette.LargeurEcransBrennar4)
+                : CssMargeEcran;
+            cardRt.anchorMin = Vector2.zero;
+            cardRt.anchorMax = Vector2.one;
+            cardRt.pivot = new Vector2(0.5f, 0.5f);
+            cardRt.offsetMin = new Vector2(margeX, margeX + MafiaCleanCity.Shell.ShellChrome.BottomInsetPx);
+            cardRt.offsetMax = new Vector2(-margeX, -(margeX + MafiaCleanCity.Shell.ShellChrome.TopInsetPx));
             card.AddComponent<Image>().color = CardBg;
             VerticalLayoutGroup vlg = card.AddComponent<VerticalLayoutGroup>();
             vlg.padding = new RectOffset(20, 20, 18, 18);

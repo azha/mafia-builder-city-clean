@@ -76,6 +76,19 @@ namespace MafiaCleanCity.Shell
 
         /// <summary>"View all" — the ONE place this panel calls `GET /v1/exceptions/queue` (REUSE
         /// ExceptionsClient.GetQueue), a REAL request read through payload.data.</summary>
+        /// <summary>Le geste « voir tout » du panneau d'accueil — il OUVRE désormais l'écran ⑨.
+        ///
+        /// ⛔ Il ne naviguait pas. Il refaisait l'appel réseau et rangeait le résultat dans
+        /// `LastViewAllResult`, une propriété que seuls des tests lisent : le joueur cliquait, une
+        /// requête partait, et rien ne se passait à l'écran. La file complète était donc
+        /// INJOIGNABLE depuis un shell en marche — c'est le « NAV-HORS-SHELL » du document de lot,
+        /// et il ne se voit dans aucun test qui appelle `ViewAll()` puis lit sa propriété.
+        /// ★ Un geste qui rend une VALEUR au lieu de produire un EFFET se teste parfaitement et ne
+        ///   sert à personne. Le test vérifiait que la donnée arrivait ; le joueur attendait un écran.
+        ///
+        /// La requête est conservée : elle rafraîchit le panneau au passage, et l'écran monté
+        /// recharge de son côté. Le repli — pas de navigateur trouvé — garde l'ancien comportement
+        /// plutôt que de lever : hors shell, il n'y a nulle part où ouvrir.
         public IEnumerator ViewAll()
         {
             EnsureInitialized();
@@ -84,7 +97,17 @@ namespace MafiaCleanCity.Shell
             yield return client.GetQueue(token,
                 cards => LastViewAllResult = cards,
                 (code, msg) => LastViewAllError = $"{code}: {msg}");
+
+            MafiaCleanCity.Shell.IShellNavigator nav = MafiaCleanCity.Shell.ShellNavigatorLocator.Find();
+            if (nav == null) yield break;   // hors shell : rien à ouvrir, et ce n'est pas une erreur
+            LastViewAllNavGameObject =
+                nav.MonterLocataireEnSurimpression<MafiaCleanCity.Operational.Exceptions.ExceptionQueueController>()
+                   .gameObject;
         }
+
+        /// <summary>L'hôte de l'écran ouvert par le dernier « voir tout » — crochet de test.
+        /// Nul tant qu'aucune navigation n'a eu lieu (ou hors shell).</summary>
+        public GameObject LastViewAllNavGameObject { get; private set; }
 
         // --------------------------------------------------------------- render
 

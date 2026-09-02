@@ -3,6 +3,9 @@ using UnityEngine;
 using MafiaCleanCity.Shell;
 using MafiaCleanCity.Theme;
 
+// ITEM 0.6 — ces retours sont un VOCABULAIRE FERMÉ (une phrase par membre d'enum), donc
+// exactement ce qu'une clé a le droit de nommer. Ils passent par `Libelle.De`, avec repli sur
+// le littéral : tant que le dictionnaire est vide, l'écran rend les mêmes chaînes qu'avant.
 namespace MafiaCleanCity.Operational
 {
     /// <summary>㊲ La réputation — les correspondances « valeur du domaine → apparence » de
@@ -111,11 +114,11 @@ namespace MafiaCleanCity.Operational
         {
             switch (posture)
             {
-                case "attentive": return "Il vous écoute";
-                case "cautious":  return "Il se tient à carreau";
-                case "withdrawn": return "Il se ferme";
-                case "hostile":   return "Il vous en veut";
-                default:          return "Posture inconnue";
+                case "attentive": return MafiaCleanCity.I18n.Libelle.De("reputation", "etat", "Il vous écoute");
+                case "cautious":  return MafiaCleanCity.I18n.Libelle.De("reputation", "etat", "Il se tient à carreau");
+                case "withdrawn": return MafiaCleanCity.I18n.Libelle.De("reputation", "etat", "Il se ferme");
+                case "hostile":   return MafiaCleanCity.I18n.Libelle.De("reputation", "etat", "Il vous en veut");
+                default:          return MafiaCleanCity.I18n.Libelle.De("reputation", "etat", "Posture inconnue");
             }
         }
 
@@ -157,10 +160,10 @@ namespace MafiaCleanCity.Operational
         {
             switch (cue)
             {
-                case "aligned":       return "Vous vous y tenez";
-                case "drifting":      return "Vous vous en écartez";
-                case "indeterminate": return "Pas encore jugeable";
-                default:              return "Cohérence inconnue";
+                case "aligned":       return MafiaCleanCity.I18n.Libelle.De("reputation", "etat", "Vous vous y tenez");
+                case "drifting":      return MafiaCleanCity.I18n.Libelle.De("reputation", "etat", "Vous vous en écartez");
+                case "indeterminate": return MafiaCleanCity.I18n.Libelle.De("reputation", "etat", "Pas encore jugeable");
+                default:              return MafiaCleanCity.I18n.Libelle.De("reputation", "etat", "Cohérence inconnue");
             }
         }
 
@@ -205,10 +208,10 @@ namespace MafiaCleanCity.Operational
         {
             switch (pose)
             {
-                case UniformTellsDto.Pose.Collar:  return "la comptabilité tenue";
-                case UniformTellsDto.Pose.Sleeves: return "la justice envers les siens";
-                case UniformTellsDto.Pose.Watch:   return "la ponctualité";
-                case UniformTellsDto.Pose.Gloves:  return "la discrétion devant les civils";
+                case UniformTellsDto.Pose.Collar:  return MafiaCleanCity.I18n.Libelle.De("reputation", "etat", "la comptabilité tenue");
+                case UniformTellsDto.Pose.Sleeves: return MafiaCleanCity.I18n.Libelle.De("reputation", "etat", "la justice envers les siens");
+                case UniformTellsDto.Pose.Watch:   return MafiaCleanCity.I18n.Libelle.De("reputation", "etat", "la ponctualité");
+                case UniformTellsDto.Pose.Gloves:  return MafiaCleanCity.I18n.Libelle.De("reputation", "etat", "la discrétion devant les civils");
                 default: return "";
             }
         }
@@ -276,9 +279,9 @@ namespace MafiaCleanCity.Operational
         {
             switch (posture)
             {
-                case "standard": return "On vient sans garantie";
-                case "wary":     return "On demande des gages";
-                default:         return "Offre inconnue";
+                case "standard": return MafiaCleanCity.I18n.Libelle.De("reputation", "etat", "On vient sans garantie");
+                case "wary":     return MafiaCleanCity.I18n.Libelle.De("reputation", "etat", "On demande des gages");
+                default:         return MafiaCleanCity.I18n.Libelle.De("reputation", "etat", "Offre inconnue");
             }
         }
 

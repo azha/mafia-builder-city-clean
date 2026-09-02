@@ -97,6 +97,22 @@ public static class MafiaCI
         //    ⇒ On compte ici les feuilles que le FILTRE retient, et `RunFinished` confronte.
         private readonly string[] filtre;
         private int declares = -1;
+
+        // ⛔⛔ CE QUE LE FILTRE A RÉELLEMENT PRIS — mesuré le 2026-09-02, et payé DEUX FOIS.
+        //    `Filter.categoryNames` d'Unity correspond par PRÉFIXE, pas exactement.
+        //    · 2026-08-21, session voisine : un run lancé sur `["HUD"]` a rendu **31/31 VERT avec
+        //      un défaut réarmé exprès** — aucune catégorie « HUD » n'existe, le filtre avait pris
+        //      `HUDv31`. Le vert certifiait le défaut.
+        //    · 2026-09-02, ici : `["CaptureDetail"]` a emporté `CaptureDetailMutant`, un test qui
+        //      CONSOMME une carte du compte de démo partagé. La séparation par catégorie était
+        //      visible, documentée, et inopérante.
+        //    ⇒ Même moteur, même piège, quatre mois d'écart : ce n'est pas une inattention, c'est
+        //      STRUCTUREL. La ligne demandée ne dit pas ce qui a tourné.
+        //    ⇒ On collecte donc les catégories des tests RÉELLEMENT exécutés et on les confronte
+        //      au filtre demandé. *Vérifier ce qu'un instrument a pris, pas ce qu'on croit lui
+        //      avoir demandé.*
+        private readonly System.Collections.Generic.SortedSet<string> categoriesVues
+            = new System.Collections.Generic.SortedSet<string>();
         public Callbacks(string[] categories) { filtre = categories; }
 
         private int CompterFeuillesFiltrees(ITestAdaptor n, string[] heritees)
@@ -146,6 +162,25 @@ public static class MafiaCI
                           "exercé : ce n'est pas « tout est vert », c'est « rien n'a été demandé ». " +
                           "Vérifier le nom de catégorie (le filtre matche par PRÉFIXE et ne signale " +
                           "jamais un nom inconnu).");
+            // Ce que le filtre a RÉELLEMENT sélectionné, et ce qui n'avait pas été demandé.
+            if (categoriesVues.Count > 0)
+            {
+                Debug.Log("MafiaCI: catégories RÉELLEMENT exécutées = ["
+                          + string.Join(", ", categoriesVues) + "]");
+                if (filtre != null && filtre.Length > 0)
+                {
+                    var surprises = new System.Collections.Generic.List<string>();
+                    foreach (string c in categoriesVues)
+                        if (System.Array.IndexOf(filtre, c) < 0) surprises.Add(c);
+                    if (surprises.Count > 0)
+                        Debug.LogWarning("MafiaCI: ⚠️ CATÉGORIES NON DEMANDÉES EXÉCUTÉES ["
+                            + string.Join(", ", surprises) + "] — le filtre d'Unity correspond par "
+                            + "PRÉFIXE : une catégorie demandée en emporte toute autre qui commence "
+                            + "par elle. Vérifier qu'aucune n'a d'effet de bord (un test qui MUTE un "
+                            + "compte partagé, par exemple) avant de croire ce run inoffensif.");
+                }
+            }
+
             bool tronquee = declares > 0 && comptes < declares;
             if (tronquee)
                 Debug.Log($"MafiaCI: ⛔ SUITE TRONQUÉE — {declares - comptes} test(s) déclarés sous le " +
@@ -167,7 +202,10 @@ public static class MafiaCI
         //    dénominateur dit COMBIEN manquent, `RUN`/`PASS` dit LEQUEL a emporté la suite.
         public void TestStarted(ITestAdaptor test)
         {
-            if (!test.IsSuite) Debug.Log($"MafiaCI: RUN {test.FullName}");
+            if (test.IsSuite) return;
+            if (test.Categories != null)
+                foreach (string c in test.Categories) categoriesVues.Add(c);
+            Debug.Log($"MafiaCI: RUN {test.FullName}");
         }
 
         public void TestFinished(ITestResultAdaptor result)

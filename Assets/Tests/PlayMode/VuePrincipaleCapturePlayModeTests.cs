@@ -298,6 +298,55 @@ namespace MafiaCleanCity.Capture.Tests
         /// taille de la CIBLE, et toute la mise en page reflue pour de bon. On rend l'état
         /// d'origine ensuite — un test qui laisse le shell dans un autre mode contaminerait tous
         /// ses voisins du même processus.</summary>
+        /// <summary>⛔ LA GARDE QUI MANQUAIT : le texte est-il LISIBLE ?
+        ///
+        /// Mes gardes comptaient des nœuds, vérifiaient des insets, mesuraient une teinte
+        /// dominante — et sont restées VERTES sur un ⑩ dont la carte suggérée était en texte
+        /// sombre sur fond sombre et dont tous les libellés étaient coupés en plein mot
+        /// (« Escalate for r », « The card is archived for »).
+        /// ★ Ce qu'une garde structurelle ne voit jamais, c'est ce que l'écran DIT. Celle-ci
+        ///   mesure les deux choses qui rendent un texte illisible sans rien casser :
+        ///   · le CONTRASTE avec le fond que le texte a réellement derrière lui ;
+        ///   · la TRONCATURE — TMP sait combien de caractères il a effectivement posés.
+        /// ⚠️ Seuil de contraste à 0,18 de luminance : mesuré, le cas fautif était à ~0,02
+        /// (crème sombre sur ardoise) et les cas justes au-dessus de 0,35. Le seuil est posé
+        /// dans le vide entre les deux mesures, pas au bord de l'une d'elles.</summary>
+        private static void LisibiliteDuTexte(GameObject racine)
+        {
+            float Lum(Color c) => 0.2126f * c.r + 0.7152f * c.g + 0.0722f * c.b;
+            int vus = 0;
+            foreach (TMPro.TextMeshProUGUI t in racine.GetComponentsInChildren<TMPro.TextMeshProUGUI>(true))
+            {
+                if (string.IsNullOrWhiteSpace(t.text) || t.text.Trim() == "—") continue;
+                vus++;
+
+                // — TRONCATURE : TMP a-t-il posé tous les caractères qu'on lui a donnés ? —
+                t.ForceMeshUpdate();
+                int poses = t.textInfo != null ? t.textInfo.characterCount : t.text.Length;
+                int demandes = t.text.Replace("\u200B", string.Empty).Length;
+                Assert.GreaterOrEqual(poses, demandes - 1,
+                    $"texte TRONQUÉ dans « {t.name} » : {poses} caractères posés sur {demandes} " +
+                    $"(« {t.text} »). Un libellé coupé ressemble à un libellé court — rien ne " +
+                    "signale la coupe à celui qui lit.");
+
+                // — CONTRASTE : contre le premier fond opaque au-dessus de lui —
+                Color fond = Color.clear;
+                for (Transform p = t.transform.parent; p != null; p = p.parent)
+                {
+                    var img = p.GetComponent<UnityEngine.UI.Image>();
+                    if (img != null && img.color.a > 0.5f) { fond = img.color; break; }
+                }
+                if (fond.a <= 0.5f) continue;   // pas de fond opaque identifiable : on ne conclut pas
+                float ecart = Mathf.Abs(Lum(t.color) - Lum(fond));
+                Assert.Greater(ecart, 0.18f,
+                    $"texte ILLISIBLE dans « {t.name} » : luminance {Lum(t.color):0.00} sur un " +
+                    $"fond à {Lum(fond):0.00} (écart {ecart:0.00}). « {t.text} »");
+            }
+            Assert.Greater(vus, 3,
+                $"seulement {vus} textes examinés : la garde ne mesure presque rien, elle " +
+                "passerait sur un écran vide");
+        }
+
         private IEnumerator CapturerA(int largeur, int hauteur, string chemin)
         {
             Canvas canvas = shell.ShellCanvas;
@@ -428,6 +477,639 @@ namespace MafiaCleanCity.Capture.Tests
         // Cible : `Tools/family-organigramme-reference-1120.png` (« LA FAMILLE — l'organigramme »,
         // maquette ratifiée user). Cette capture existe pour MESURER l'écart, pas pour le certifier.
         [UnityTest]
+        
+        /// <summary>② Building Card, avec sa ligne d'entretien — la seule valeur numérique que
+        /// cette fiche a le droit d'afficher. Capture hors shell : ② est « NAV-HORS-SHELL » comme
+        /// ⑨, et le shell vide son slot à chaque changement d'onglet (défaut connu, routé).</summary>
+        [Category("Capture")]
+        [Category("CaptureFiche")]   // isole ② : la catégorie entière fait segfauter le pilote Mesa
+        
+        public IEnumerator Capture_FicheBatiment()
+        {
+            // ⛔ LE COMPTE DE DÉMO, PAS UN SIGNUP FRAIS. Mesuré au tour précédent :
+            // `GET /v1/me/buildings` rend une liste VIDE sur un compte neuf — le kit octroyé par
+            // `session/open` porte des lieutenants, pas des bâtiments. Une fiche de bâtiment n'a
+            // alors rien à montrer, et la capture serait un cadre vide parfaitement valide.
+            // ⚠️ On se CONNECTE au compte de démo, on ne le RESEEDE pas : le seeder remet son monde
+            // à zéro et effacerait le travail des autres sessions qui s'y appuient.
+            var auth = new AuthClient { BaseUrl = BaseUrl };
+            string token = null, err = null;
+            yield return auth.SignIn("operational_demo@example.test", "operational-demo-pw",
+                                     t => token = t, e => err = e);
+            Assert.IsNull(err, $"connexion au compte de démo échouée : {err}");
+            Assert.IsFalse(string.IsNullOrEmpty(token), "le compte de démo doit rendre un jeton");
+
+            var sessionClient = new SessionClient { BaseUrl = BaseUrl };
+            SessionOpenDto payload = null;
+            yield return sessionClient.OpenSession(token, "capture-fiche", dto => payload = dto,
+                (c, m) => Assert.Fail($"session/open failed: {c}: {m}"));
+            Assert.IsNotNull(payload, "session/open doit réussir");
+
+            LogAssert.ignoreFailingMessages = true;
+
+            // Canvas FOURNI, jamais découvert : dans une suite de captures, le « premier canvas »
+            // trouvé par un repli est souvent celui d'une fixture précédente, déjà détruite.
+            GameObject canvasGo = new GameObject("FicheCanvas",
+                typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
+            Canvas cv = canvasGo.GetComponent<Canvas>();
+            cv.renderMode = RenderMode.ScreenSpaceOverlay;
+            CanvasScaler sc = canvasGo.GetComponent<CanvasScaler>();
+            sc.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            sc.referenceResolution = new Vector2(1080, 2400);
+
+            GameObject host = new GameObject("FicheStandalone");
+            var ecran = host.AddComponent<
+                MafiaCleanCity.Operational.BuildingCardController>();
+            ecran.SetMountParent(canvasGo.transform);
+            ecran.SetToken(token);
+            for (int i = 0; i < 60; i++) yield return null;
+
+            // ⛔ IL FAUT LUI DONNER UN BÂTIMENT. `SetToken` ne déclenche aucun chargement : la
+            // fiche attend un identifiant, et sans lui elle ne bâtit que sa charpente vide.
+            // ⚠️ Mesuré : 7 nœuds sous le canvas — assez pour qu'un PNG sorte, pas assez pour
+            // qu'il montre quoi que ce soit. C'est exactement ce que la garde anti-vacuité existe
+            // pour attraper, et c'est la troisième fois qu'elle me sauve d'une capture vide.
+            // ⛔ `/v1/me/buildings` N'EXISTE PAS — et j'en avais tiré la mauvaise conclusion.
+            // La route rend 404, ce que ce test lisait comme une liste vide : il cherchait un
+            // identifiant dans le CORPS sans regarder le CODE. Un corps d'erreur ressemble à une
+            // réponse vide. ⚠️ Un rapport de juge données antérieur s'y est trompé de la même
+            // façon, à une semaine d'écart, avec son propre instrument.
+            // ★ Et j'ai aggravé la lecture : ayant essayé DEUX routes absentes, j'ai conclu
+            //   « aucune route joueur ne fournit l'identifiant ». Faux — c'est la session back qui
+            //   me l'a signalé. Deux échecs ne font pas une exhaustivité : la mesure juste était
+            //   « les deux routes que j'ai essayées n'existent pas », et la différence n'est pas
+            //   rhétorique — la première invite à chercher, la seconde fait ouvrir un lot back
+            //   inutile.
+            // ⇒ Le vrai chemin est celui du JOUEUR : il tape un bâtiment sur la carte, donc le
+            //   district est toujours connu quand la fiche s'ouvre. `district/:id/interior` rend
+            //   les bâtiments avec leur clé `building`, qui EST l'identifiant des routes `:id`.
+            string batimentId = null;
+            long codeVu = 0;
+            foreach (int district in new[] { 16, 13, 11, 1 })
+            {
+                using (var req = UnityEngine.Networking.UnityWebRequest.Get(
+                           BaseUrl + $"/v1/city/district/{district}/interior"))
+                {
+                    req.SetRequestHeader("Authorization", "Bearer " + token);
+                    yield return req.SendWebRequest();
+                    codeVu = req.responseCode;
+                    // LE CODE D'ABORD, le corps ensuite — c'est toute la leçon ci-dessus.
+                    if (codeVu != 200) continue;
+                    string corps = req.downloadHandler.text;
+                    int k = corps.IndexOf("\"building\"");
+                    if (k >= 0)
+                    {
+                        int d = corps.IndexOf('"', corps.IndexOf(':', k) + 1) + 1;
+                        int f = corps.IndexOf('"', d);
+                        if (d > 0 && f > d) { batimentId = corps.Substring(d, f - d); break; }
+                    }
+                }
+            }
+            Assert.IsFalse(string.IsNullOrEmpty(batimentId),
+                $"aucun bâtiment trouvé dans les districts essayés (dernier code HTTP {codeVu}) — " +
+                "sans identifiant la fiche ne bâtit que sa charpente vide, et la capture serait " +
+                "un cadre parfaitement valide qui ne montre rien.");
+
+            yield return ecran.LoadBuilding(batimentId);
+            for (int i = 0; i < 90; i++) yield return null;
+
+            // Garde anti-vacuité : sous la racine CONSTRUITE, jamais sous le contrôleur — il ne
+            // porte aucun enfant visuel, et compter ses enfants revient à le compter lui.
+            int noeuds = canvasGo.GetComponentsInChildren<Transform>(true).Length;
+            Assert.Greater(noeuds, 15,
+                $"② doit avoir construit son contenu (mesuré {noeuds} noeuds sous son canvas)");
+
+            // ⛔ PAS le `CapturerA` de ce fichier : il lit `shell.ShellCanvas`, nul ici — ② monte
+            // sous SON canvas, hors shell. Mesuré sur ㊱, qui a rendu une `NullReferenceException`
+            // sans pile utile pour exactement cette raison.
+            // ⛔ UNE seule fiche. Une charpente bâtie deux fois se superpose exactement à
+            // elle-même tant que sa hauteur est fixe : invisible sur toutes les captures
+            // précédentes, révélée seulement quand la hauteur s'est mise à épouser le contenu.
+            const string chemin = "Assets/Screenshots/screen_2a_fiche_1080x2400.png";
+            yield return MafiaCleanCity.Tests.CaptureSupport.CapturerCanvas(
+                cv, (RectTransform)canvasGo.transform, 1080, 2400, chemin);
+            MafiaCleanCity.Tests.CaptureSupport.GarderLaCapture(chemin);
+        }
+
+        [UnityTest]
+        
+        /// <summary>⑨ EXCEPTIONS, refondu sur la maquette ratifiée (série 4 cadre 14) et monté
+        /// dans le shell. L'écran s'ouvre EN SURIMPRESSION — ce n'est pas un onglet.</summary>
+        [Category("Capture")]
+        // ⛔ NEUTRALISÉ, avec sa raison et sa condition de retour — jamais supprimé.
+        // ⚠️ Ce test lève une `MissingReferenceException` (un Canvas d'une fixture antérieure), et
+        // une exception non gérée INTERROMPT LA SUITE : le run s'arrête sans produire sa ligne de
+        // fin, et les tests suivants ne tournent jamais. Mesuré — la capture de ② n'a pas été
+        // exécutée une seule fois tant que celui-ci levait, sans que rien ne le dise : son nom
+        // n'apparaît nulle part dans le journal, ni en succès ni en échec.
+        // ★ Un test défaillant ne coûte pas seulement son propre verdict : il peut emporter tous
+        //   ceux qui le suivent, et leur absence ressemble à un run plus court, pas à une panne.
+        // ⇒ Reprendre quand le shell ne videra plus son slot à chaque changement d'onglet
+        //   (correctif routé) : ⑨ sera alors atteignable par le vrai geste joueur depuis l'Accueil,
+        //   ce qui supprime le montage forcé ET le canvas emprunté.
+        [Category("CaptureExceptions")]
+        // ⛔ L'`[Ignore]` est LEVÉ. Sa raison — « Canvas d'une fixture antérieure » — ne tient
+        // plus : ce test FOURNIT son canvas, et la capture passe désormais par
+        // `CaptureSupport.CapturerCanvas`, qui prend le canvas en argument au lieu de lire
+        // `shell.ShellCanvas` (nul hors shell). La catégorie dédiée l'isole en prime : la
+        // catégorie `Capture` entière fait segfauter le pilote Mesa sur captures répétées.
+        // ⚠️ CE QUE CETTE CAPTURE NE MONTRE TOUJOURS PAS : l'écran sous le bandeau et le dock.
+        // Le vrai geste joueur reste hors d'atteinte tant que `UnmountCurrentTenant` vide tout
+        // `ContentSlot` à chaque `ActivateTab`. Hors shell ≠ dans le parcours.
+        public IEnumerator Capture_EcranExceptions()
+        {
+            // ⛔ LE COMPTE DE DÉMO, PAS UN SIGNUP FRAIS. Un compte neuf a une file VIDE : la
+            // capture sortirait pleine, valide, et ne montrerait aucune exception — exactement
+            // l'écran qu'on ne vient pas voir. Le compte de démo en porte six (mesuré par la
+            // session back).
+            var auth = new AuthClient { BaseUrl = BaseUrl };
+            string token = null, err = null;
+            yield return auth.SignIn("operational_demo@example.test", "operational-demo-pw",
+                                     t => token = t, e => err = e);
+            Assert.IsNull(err, $"connexion au compte de démo échouée : {err}");
+
+            var sessionClient = new SessionClient { BaseUrl = BaseUrl };
+            SessionOpenDto payload = null;
+            yield return sessionClient.OpenSession(token, "capture-excep", dto => payload = dto,
+                (c, m) => Assert.Fail($"session/open failed: {c}: {m}"));
+            Assert.IsNotNull(payload, "session/open doit réussir");
+
+            LogAssert.ignoreFailingMessages = true;
+
+            // ⛔ CAPTURE HORS SHELL, ET C'EST DÉCLARÉ PLUTÔT QUE SUBI.
+            // Cinq tentatives sous chrome ont échoué, et la cause est comprise :
+            // `AppShell.UnmountCurrentTenant()` ne détruit pas seulement l'hôte du locataire — il
+            // VIDE tout `ContentSlot` (son commentaire dit « la source unique de vérité de ce qui
+            // est montré »), et il est appelé par CHAQUE `ActivateTab`. Un écran monté en
+            // surimpression est donc emporté par n'importe quel geste d'onglet ultérieur, y compris
+            // ceux que le shell se donne à lui-même — mesuré : détruit même 8 frames après son
+            // montage.
+            // ★ J'ai d'abord fait varier l'ATTENTE, en cherchant le bon moment. Il n'y en a pas :
+            //   le risque ne décroît pas avec le temps, il croît. La question n'était pas « quand
+            //   monter » mais « qu'est-ce qui démonte ».
+            // ⇒ Ce que cette capture NE montre pas : l'écran sous le bandeau et le dock. C'est le
+            //   même angle mort que ㊲ a porté pendant huit tours, et il se ferme le jour où ⑨ est
+            //   atteint par un vrai geste joueur depuis l'Accueil plutôt que monté de force.
+            // ⚠️ CANVAS FOURNI, jamais découvert. `BuildLayout` fait `FindFirstObjectByType<Canvas>()`
+            // en repli, et dans une suite de captures ce « premier canvas » est souvent celui d'une
+            // fixture PRÉCÉDENTE, déjà détruite — mesuré : MissingReferenceException sur un Canvas
+            // mort. Un test qui laisse un écran chercher son parent hérite de ce que les tests
+            // d'avant ont laissé dans la scène.
+            GameObject canvasGo = new GameObject("ExceptionsCanvas",
+                typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
+            Canvas cv = canvasGo.GetComponent<Canvas>();
+            cv.renderMode = RenderMode.ScreenSpaceOverlay;
+            CanvasScaler sc = canvasGo.GetComponent<CanvasScaler>();
+            sc.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            sc.referenceResolution = new Vector2(1080, 2400);
+
+            GameObject host = new GameObject("ExceptionsStandalone");
+            var ecran = host.AddComponent<
+                MafiaCleanCity.Operational.Exceptions.ExceptionQueueController>();
+            ecran.SetMountParent(canvasGo.transform);
+            ecran.SetToken(token);
+            for (int i = 0; i < 120; i++) yield return null;
+
+            // ⛔ COMPTER SOUS LA RACINE CONSTRUITE, PAS SOUS LE CONTRÔLEUR.
+            // ⚠️ Ma première version comptait sous `ecran` et rendait 1 : le contrôleur ne porte
+            // aucun enfant visuel, il bâtit son interface sous le CANVAS. C'est mot pour mot le
+            // défaut que ㊲ m'a appris il y a deux jours — « compter les enfants du contrôleur
+            // revient à compter le contrôleur » — et je viens de le refaire à l'identique.
+            // ★ Connaître un piège ne protège pas de lui : il se présente sous une autre forme,
+            //   et c'est la même mesure qui le rattrape.
+            GameObject racineUI = GameObject.Find("ExceptionQueueRoot");
+            Assert.IsNotNull(racineUI, "⑨ n'a construit aucune racine d'interface");
+            int noeuds = racineUI.GetComponentsInChildren<Transform>(true).Length;
+            Assert.Greater(noeuds, 15,
+                $"⑨ doit avoir construit son contenu (mesuré {noeuds} noeuds sous sa racine) — "
+                + "une capture d'un écran vide passerait sinon pour une réussite");
+
+            const string cheminExc = "Assets/Screenshots/screen_5_exceptions_1080x2400.png";
+            yield return MafiaCleanCity.Tests.CaptureSupport.CapturerCanvas(
+                cv, (RectTransform)canvasGo.transform, 1080, 2400, cheminExc);
+            MafiaCleanCity.Tests.CaptureSupport.GarderLaCapture(cheminExc);
+        }
+
+        [UnityTest]
+        /// <summary>㊱ SOUS LE CHROME — état vide, monté en surimpression.
+        ///
+        /// ⚠️ CE N'EST PAS L'ENTRÉE DANS LE MENU « PLUS », et il ne faut pas lire cette capture
+        /// comme telle : le menu est le travail d'une autre session et `Tab.More` monte encore
+        /// ㊲ en direct sur `main`. Ici ㊱ est monté de force en surimpression — le chrome est
+        /// donc RÉEL, mais le chemin joueur ne l'est pas encore.
+        /// ⇒ Ce que ça vaut : ça ferme la question du chrome (rien sous le bandeau, rien sous le
+        ///   dock). Ce que ça ne vaut pas : « ㊱ est dans le parcours ».
+        ///
+        /// ㊱ est un écran PLEIN, pas un panneau bas — sa garde A4 porte donc sur les DEUX insets,
+        /// pas seulement celui du dock.</summary>
+        [Category("CaptureSousChrome")]
+        public IEnumerator Capture_Horizon_SousChrome()
+        {
+            LogAssert.ignoreFailingMessages = true;
+            shellGo = new GameObject("HorizonShell");
+            shell = shellGo.AddComponent<AppShell>();
+            yield return null;
+
+            float t0 = Time.realtimeSinceStartup;
+            while (string.IsNullOrEmpty(shell.Token) && Time.realtimeSinceStartup - t0 < 30f) yield return null;
+            Assert.IsFalse(string.IsNullOrEmpty(shell.Token), "le shell doit avoir acquis sa session");
+            for (int i = 0; i < 30; i++) yield return null;
+
+            var ecran = shell.MonterLocataireEnSurimpression<
+                MafiaCleanCity.Operational.HorizonScreenController>();
+            Assert.IsNotNull(ecran, "la surimpression doit avoir monté ㊱");
+            yield return ecran.Charger();
+            for (int i = 0; i < 60; i++) yield return null;
+
+            Assert.IsNull(ecran.DerniereErreur,
+                $"la route a échoué (code {ecran.DernierCodeErreur}) : la capture montrerait " +
+                "l'écran d'indisponibilité, pas l'état vide");
+            Assert.IsNotNull(ecran.DernierChargement, "aucun corps reçu");
+            int cartes = ecran.DernierChargement.cards == null ? 0 : ecran.DernierChargement.cards.Length;
+            Assert.AreEqual(0, cartes,
+                $"le compte porte {cartes} carte(s) : ce n'est plus l'état vide, il faut renommer " +
+                "la capture — une image nommée `_etat-vide_` qui montre des cartes ment deux fois.");
+
+            Assert.IsNotNull(shell.TopBar, "le chrome haut doit exister");
+            GameObject racineUI = GameObject.Find("HorizonRoot");
+            Assert.IsNotNull(racineUI, "㊱ n'a construit aucune racine sous le chrome");
+
+            // ⛔ MESURER L'ÉCRAN, PAS LE CHROME. Ma première version de cette garde n'assertait
+            // que « les insets sont publiés » — elle est passée VERTE sur une capture où
+            // l'enseigne de ㊱ était derrière la jauge de chaleur et son panneau derrière le dock.
+            // ★ Vérifier qu'une contrainte EXISTE ne dit rien de son RESPECT. C'est la même faute
+            //   que la garde qui comptait les nœuds du slot au lieu de ceux de l'écran : les deux
+            //   mesurent le contexte et concluent sur le contenu.
+            Assert.Greater(MafiaCleanCity.Shell.ShellChrome.BottomInsetPx, 0f,
+                "sous le chrome les insets doivent être publiés, sinon la garde ci-dessous " +
+                "passerait toujours et ne mesurerait rien");
+            Assert.Greater(MafiaCleanCity.Shell.ShellChrome.TopInsetPx, 0f, "idem pour l'inset haut");
+
+            var corpsRt = racineUI.transform.Find("Corps") as RectTransform;
+            Assert.IsNotNull(corpsRt, "㊱ doit porter son corps");
+            Assert.GreaterOrEqual(corpsRt.offsetMin.y, MafiaCleanCity.Shell.ShellChrome.BottomInsetPx,
+                $"le corps de ㊱ démarre à {corpsRt.offsetMin.y:F0} et le dock occupe " +
+                $"{MafiaCleanCity.Shell.ShellChrome.BottomInsetPx:F0} : il passe DESSOUS.");
+            Assert.LessOrEqual(corpsRt.offsetMax.y, -MafiaCleanCity.Shell.ShellChrome.TopInsetPx,
+                $"le corps de ㊱ monte à {corpsRt.offsetMax.y:F0} et le bandeau occupe " +
+                $"{MafiaCleanCity.Shell.ShellChrome.TopInsetPx:F0} : il passe DESSOUS.");
+
+            yield return CapturerA(1080, 2400,
+                "Assets/Screenshots/screen_c6_horizon_etat-vide_sous_chrome_1080x2400.png");
+        }
+
+        [UnityTest]
+        
+        /// <summary>② SOUS LE CHROME. Même question que ⑨ : la fiche est un panneau BAS, et le
+        /// dock occupe le bas. La garde A4 est posée AVANT d'avoir regardé l'image — si elle
+        /// échoue, c'est le même défaut, et je préfère l'apprendre d'une assertion que d'un
+        /// coup d'œil sur une capture.</summary>
+        [Category("CaptureSousChrome")]
+        public IEnumerator Capture_FicheBatiment_SousChrome()
+        {
+            LogAssert.ignoreFailingMessages = true;
+            shellGo = new GameObject("FicheShell");
+            shell = shellGo.AddComponent<AppShell>();
+            yield return null;
+
+            float t0 = Time.realtimeSinceStartup;
+            while (string.IsNullOrEmpty(shell.Token) && Time.realtimeSinceStartup - t0 < 30f) yield return null;
+            Assert.IsFalse(string.IsNullOrEmpty(shell.Token), "le shell doit avoir acquis sa session");
+            for (int i = 0; i < 30; i++) yield return null;
+
+            // Le chemin JOUEUR : la fiche s'ouvre depuis un district, donc on prend un bâtiment
+            // par `district/:id/interior` — la route qui porte `building`.
+            string batimentId = null; long codeVu = 0;
+            foreach (int district in new[] { 16, 13, 11, 1 })
+            {
+                using (var req = UnityEngine.Networking.UnityWebRequest.Get(
+                           BaseUrl + $"/v1/city/district/{district}/interior"))
+                {
+                    req.SetRequestHeader("Authorization", "Bearer " + shell.Token);
+                    yield return req.SendWebRequest();
+                    codeVu = req.responseCode;
+                    if (codeVu != 200) continue;               // LE CODE D'ABORD
+                    string corps = req.downloadHandler.text;
+                    int k = corps.IndexOf("\"building\"");
+                    if (k >= 0)
+                    {
+                        int d = corps.IndexOf('"', corps.IndexOf(':', k) + 1) + 1;
+                        int f = corps.IndexOf('"', d);
+                        if (d > 0 && f > d) { batimentId = corps.Substring(d, f - d); break; }
+                    }
+                }
+            }
+            Assert.IsFalse(string.IsNullOrEmpty(batimentId),
+                $"aucun bâtiment trouvé (dernier code HTTP {codeVu})");
+
+            var ecran = shell.MonterLocataireEnSurimpression<
+                MafiaCleanCity.Operational.BuildingCardController>();
+            Assert.IsNotNull(ecran, "la surimpression doit avoir monté ②");
+            yield return ecran.LoadBuilding(batimentId);
+            for (int i = 0; i < 60; i++) yield return null;
+
+            Assert.IsNotNull(shell.TopBar, "le chrome haut doit exister");
+            var feuille = GameObject.Find("BuildingCardSheet");
+            Assert.IsNotNull(feuille, "② n'a construit aucune fiche sous le chrome");
+            int noeuds = feuille.GetComponentsInChildren<Transform>(true).Length;
+            Assert.Greater(noeuds, 15, $"② doit avoir du contenu (mesuré {noeuds} nœuds)");
+
+            // GARDE A4 — écrite avant de regarder l'image.
+            var rt = (RectTransform)feuille.transform;
+            Assert.GreaterOrEqual(rt.offsetMin.y, MafiaCleanCity.Shell.ShellChrome.BottomInsetPx,
+                $"la fiche démarre à {rt.offsetMin.y:F0} alors que le dock occupe " +
+                $"{MafiaCleanCity.Shell.ShellChrome.BottomInsetPx:F0} : elle passe DESSOUS.");
+            Assert.Greater(MafiaCleanCity.Shell.ShellChrome.BottomInsetPx, 0f,
+                "sous le chrome l'inset bas doit être publié, sinon la garde ne mesure rien");
+
+            yield return CapturerA(1080, 2400,
+                "Assets/Screenshots/screen_2a_fiche_sous_chrome_1080x2400.png");
+        }
+
+        [UnityTest]
+        /// <summary>⑨ — « personne ne fait la queue », SOUS CHROME. État RATIFIÉ par la maquette
+        /// (cadre 16 : `exceptions []` · `escalations.total 0`) : tabourets vides, et la porte
+        /// des escalades qui reste ouverte.
+        ///
+        /// ⚠️ CET ÉTAT N'EXISTE QUE PAR ACCIDENT AUJOURD'HUI. Le compte de démo s'est retrouvé
+        /// vide (lieutenants et progression partis avec, cause inconnue de mon côté) et va être
+        /// re-provisionné. Je le capture pendant qu'il est là : jusqu'ici la file a toujours eu
+        /// des cartes, et cet état dessiné n'avait jamais été photographié.
+        /// ★ J'ai d'abord lu « la file est à 0 » comme un blocage. C'est une OCCASION : un état
+        ///   vide que la maquette dessine vaut une planche au même titre qu'un état plein.
+        ///
+        /// ⛔ Le nom du fichier porte `_personne-en-file_`. Sans ce mot, l'image serait relue plus
+        /// tard comme « ⑨ » et son comptoir désert passerait pour la mise en page voulue — la
+        /// leçon de `_etat-vide_` sur ㊱.</summary>
+        [Category("CaptureSousChrome")]
+        public IEnumerator Capture_EcranExceptions_FileVide_SousChrome()
+        {
+            LogAssert.ignoreFailingMessages = true;
+            shellGo = new GameObject("ExceptionsVideShell");
+            shell = shellGo.AddComponent<AppShell>();
+            yield return null;
+
+            float t0 = Time.realtimeSinceStartup;
+            while (string.IsNullOrEmpty(shell.Token) && Time.realtimeSinceStartup - t0 < 30f) yield return null;
+            Assert.IsFalse(string.IsNullOrEmpty(shell.Token), "le shell doit avoir acquis sa session");
+            for (int i = 0; i < 30; i++) yield return null;
+
+            var ecran = shell.MonterLocataireEnSurimpression<
+                MafiaCleanCity.Operational.Exceptions.ExceptionQueueController>();
+            Assert.IsNotNull(ecran, "la surimpression doit avoir monté ⑨");
+
+            // ⛔ ATTENDRE LE CHARGEMENT, PAS UN NOMBRE DE FRAMES — et ici l'attente ne peut pas
+            // porter sur « des cartes arrivent » puisqu'il n'y en a aucune : on attend le DRAPEAU
+            // de chargement. Sans ça, « pas encore chargé » et « chargé et vide » ont la même
+            // image, et je publierais la première en croyant tenir la seconde.
+            float tc = Time.realtimeSinceStartup;
+            while (!ecran.QueueLoaded && Time.realtimeSinceStartup - tc < 30f) yield return null;
+            Assert.IsTrue(ecran.QueueLoaded, $"⑨ n'a pas chargé sa file : {ecran.QueueError}");
+            Assert.AreEqual(0, ecran.Cards.Length,
+                $"le compte porte {ecran.Cards.Length} carte(s) : ce n'est plus l'état vide, il " +
+                "faut renommer la capture — une image nommée `_personne-en-file_` qui montre des " +
+                "attendants ment deux fois.");
+            for (int i = 0; i < 30; i++) yield return null;
+
+            Assert.IsNotNull(shell.TopBar, "le chrome haut doit exister");
+            GameObject racineUI = GameObject.Find("ExceptionQueueRoot");
+            Assert.IsNotNull(racineUI, "⑨ n'a construit aucune racine sous le chrome");
+
+            // GARDE A4 — même mesure que sur la file pleine : le contenu ne passe pas sous le dock.
+            var comptoirRt = racineUI.transform.Find("Comptoir") as RectTransform;
+            Assert.IsNotNull(comptoirRt, "⑨ doit porter son comptoir même vide");
+            Assert.Greater(MafiaCleanCity.Shell.ShellChrome.BottomInsetPx, 0f,
+                "sous le chrome l'inset bas doit être publié, sinon la garde ci-dessous ne mesure rien");
+            Assert.GreaterOrEqual(comptoirRt.offsetMin.y, MafiaCleanCity.Shell.ShellChrome.BottomInsetPx,
+                $"le comptoir démarre à {comptoirRt.offsetMin.y:F0} et le dock occupe " +
+                $"{MafiaCleanCity.Shell.ShellChrome.BottomInsetPx:F0} : il passe DESSOUS.");
+
+            yield return CapturerA(1080, 2400,
+                "Assets/Screenshots/screen_5_exceptions_personne-en-file_sous_chrome_1080x2400.png");
+        }
+
+        [UnityTest]
+        /// <summary>⑩ APRÈS LE TAMPON — l'état que la maquette dessine avec son `outcome`.
+        ///
+        /// ⛔⛔ CE TEST MUTE, ET C'EST POUR ÇA QU'IL EST SÉPARÉ ET DANS SA PROPRE CATÉGORIE.
+        /// Il résout une exception POUR DE BON (`POST /v1/exceptions/:id/resolve`) : la carte
+        /// sort de la file et n'y revient pas. Le compte de démo est partagé — planque le
+        /// restaure par `scripts/provision-demo-riche.mjs`, qui REMET LE COMPTE À ZÉRO. Il faut
+        /// donc la prévenir AVANT de lancer ceci, et ne pas le lancer pendant qu'une autre
+        /// session capture.
+        /// ⇒ Le mélanger avec la capture de la main de cartes ferait d'une image rejouable une
+        ///   image qui abîme le compte à chaque exécution.
+        ///
+        /// ⚠️ ON CONSOMME `exc_demo_one_time` ET PAS UNE AUTRE : elle n'a qu'une seule issue,
+        /// donc c'est la moins intéressante pour la main de cartes de ⑨ — choix arrêté avec la
+        /// session back plutôt que pris au hasard.
+        ///
+        /// ⚠️ ET L'`outcome` PEUT NE PAS ÊTRE REPRODUCTIBLE. Le back émet dix valeurs, dont
+        /// `BRIBE_SUCCEEDED` / `BRIBE_FAILED` qui sont TIRÉES AU SORT dans le handler. Sur une
+        /// carte `ONE_TIME` on attend `RESOLVED`, mais si un jour cette capture porte un
+        /// `BRIBE_*`, son nom doit le dire — sinon quelqu'un la rejouera et lira une régression
+        /// là où il n'y a qu'un tirage.</summary>
+        [Category("MutationDeCarte")]
+        // ⛔ NOM CHOISI POUR N'ÊTRE LE PRÉFIXE DE RIEN. Ce test s'appelait
+        // `CaptureDetailMutant` et un lancement sur `CaptureDetail` l'a EMPORTÉ AVEC :
+        // le filtre de catégories d'Unity correspond par PRÉFIXE, pas exactement. La carte a
+        // été consommée alors que j'avais promis de prévenir avant.
+        // ★ Une protection structurelle fondée sur une supposition non mesurée ne protège
+        //   rien : deux noms distincts n'isolent pas si l'un commence par l'autre.
+        public IEnumerator Capture_Detail_ApresTampon_SousChrome_MUTE()
+        {
+            LogAssert.ignoreFailingMessages = true;
+            shellGo = new GameObject("DetailMuteShell");
+            shell = shellGo.AddComponent<AppShell>();
+            yield return null;
+            float t0 = Time.realtimeSinceStartup;
+            while (string.IsNullOrEmpty(shell.Token) && Time.realtimeSinceStartup - t0 < 30f) yield return null;
+            Assert.IsFalse(string.IsNullOrEmpty(shell.Token), "le shell doit avoir sa session");
+            for (int i = 0; i < 30; i++) yield return null;
+
+            var file = shell.MonterLocataireEnSurimpression<
+                MafiaCleanCity.Operational.Exceptions.ExceptionQueueController>();
+            float tc = Time.realtimeSinceStartup;
+            while ((file.Cards == null || file.Cards.Length == 0)
+                   && Time.realtimeSinceStartup - tc < 30f) yield return null;
+            Assert.Greater(file.Cards.Length, 0, "la file doit porter des cartes");
+
+            // La carte CONVENUE, pas la première venue.
+            MafiaCleanCity.Operational.Exceptions.ExceptionCardDto cible = null;
+            foreach (var c in file.Cards)
+                if (c != null && c.event_descriptor != null
+                    && c.event_descriptor.Contains("one_time")) { cible = c; break; }
+            Assert.IsNotNull(cible,
+                "`exc_demo_one_time` est absente : le compte a peut-être déjà été consommé ou " +
+                "reseedé. Ne PAS résoudre une autre carte à la place — relancer le provisionnement.");
+
+            file.OpenDetail(cible);
+            for (int i = 0; i < 30; i++) yield return null;
+            var detail = file.LastDetail;
+            Assert.IsNotNull(detail, "⑩ doit être ouvert");
+
+            var action = cible.candidate_actions != null && cible.candidate_actions.Length > 0
+                ? cible.candidate_actions[0] : cible.suggested_action;
+            Assert.IsNotNull(action, "la carte doit porter une issue");
+
+            yield return detail.ResolveWith(action);   // ⛔ MUTATION RÉELLE
+            Assert.IsNull(detail.LastError, $"la résolution a échoué : {detail.LastError}");
+            Assert.IsNotEmpty(detail.LastOutcome,
+                "le back doit rendre un `outcome` — c'est TOUT l'objet de cette capture");
+            Debug.Log($"[APRES-TAMPON] outcome = {detail.LastOutcome}");
+            for (int i = 0; i < 45; i++) yield return null;
+
+            yield return CapturerA(1080, 2400,
+                "Assets/Screenshots/screen_5a_detail_apres-tampon_sous_chrome_1080x2400.png");
+        }
+
+        [UnityTest]
+        
+        /// <summary>⑩ SOUS LE CHROME — la main de cartes, état NON MUTANT.
+        ///
+        /// Ouvre le détail par le CHEMIN JOUEUR : on touche un attendant de ⑨, qui monte ⑩ en
+        /// surimpression. Rien n'est résolu — cette capture ne consomme aucune carte et peut
+        /// donc être rejouée autant de fois qu'on veut.
+        /// ⚠️ L'état « après le tampon » est dans un test SÉPARÉ parce qu'il MUTE : il consomme
+        /// une exception pour de bon. Les mélanger ferait d'une capture rejouable une capture
+        /// qui abîme le compte à chaque exécution.</summary>
+        [Category("CaptureDetail")]
+        public IEnumerator Capture_Detail_MainDeCartes_SousChrome()
+        {
+            LogAssert.ignoreFailingMessages = true;
+            shellGo = new GameObject("DetailShell");
+            shell = shellGo.AddComponent<AppShell>();
+            yield return null;
+            float t0 = Time.realtimeSinceStartup;
+            while (string.IsNullOrEmpty(shell.Token) && Time.realtimeSinceStartup - t0 < 30f) yield return null;
+            Assert.IsFalse(string.IsNullOrEmpty(shell.Token), "le shell doit avoir sa session");
+            for (int i = 0; i < 30; i++) yield return null;
+
+            var file = shell.MonterLocataireEnSurimpression<
+                MafiaCleanCity.Operational.Exceptions.ExceptionQueueController>();
+            Assert.IsNotNull(file, "⑨ doit être monté");
+            float tc = Time.realtimeSinceStartup;
+            while ((file.Cards == null || file.Cards.Length == 0)
+                   && Time.realtimeSinceStartup - tc < 30f) yield return null;
+            Assert.Greater(file.Cards.Length, 0, "la file doit porter des cartes");
+
+            // ⛔ LE GESTE JOUEUR, pas un montage forcé : on TOUCHE un attendant.
+            var attendants = file.AttendantsPourTest();
+            Assert.Greater(attendants.Count, 0, "⑨ doit porter des attendants touchables");
+            attendants[0].onClick.Invoke();
+            for (int i = 0; i < 60; i++) yield return null;
+
+            Assert.IsNotNull(file.LastDetail, "toucher un attendant doit ouvrir ⑩");
+            GameObject feuille = GameObject.Find("ExceptionDetailSheet");
+            Assert.IsNotNull(feuille, "⑩ n'a pas construit sa feuille");
+            int noeuds = feuille.GetComponentsInChildren<Transform>(true).Length;
+            Assert.Greater(noeuds, 15, $"⑩ doit avoir du contenu (mesuré {noeuds} nœuds)");
+
+            // GARDE A4 — écrite avant de regarder l'image, comme sur ② et ㊱.
+            var rt = (RectTransform)feuille.transform;
+            Assert.Greater(MafiaCleanCity.Shell.ShellChrome.BottomInsetPx, 0f,
+                "sous le chrome les insets doivent être publiés, sinon la garde ne mesure rien");
+            Assert.GreaterOrEqual(rt.offsetMin.y, MafiaCleanCity.Shell.ShellChrome.BottomInsetPx,
+                $"⑩ démarre à {rt.offsetMin.y:F0} et le dock occupe " +
+                $"{MafiaCleanCity.Shell.ShellChrome.BottomInsetPx:F0} : il passe DESSOUS.");
+            Assert.LessOrEqual(rt.offsetMax.y, -MafiaCleanCity.Shell.ShellChrome.TopInsetPx,
+                $"⑩ monte à {rt.offsetMax.y:F0} et le bandeau occupe " +
+                $"{MafiaCleanCity.Shell.ShellChrome.TopInsetPx:F0} : il passe DESSOUS.");
+
+            LisibiliteDuTexte(feuille);
+
+            yield return CapturerA(1080, 2400,
+                "Assets/Screenshots/screen_5a_detail_main-de-cartes_sous_chrome_1080x2400.png");
+        }
+
+        [UnityTest]
+        
+        
+        
+        /// <summary>⑨ SOUS LE CHROME — le bandeau et le dock, enfin dans l'image.
+        ///
+        /// ⛔ Ce que les captures hors shell ne pouvaient pas montrer, et que celle-ci tranche :
+        /// que rien ne passe sous le bandeau haut, et que rien ne touche le dock. C'était l'angle
+        /// mort déclaré de ⑨ ET de ㊲ pendant huit tours de juge.
+        ///
+        /// ⚠️ ⑨ s'ouvre EN SURIMPRESSION — ce n'est pas un onglet. Cinq tentatives antérieures ont
+        /// échoué parce que `UnmountCurrentTenant()` vide tout `ContentSlot` et qu'il est appelé
+        /// par CHAQUE `ActivateTab` : un écran monté en surimpression était emporté par n'importe
+        /// quel geste d'onglet ultérieur, y compris ceux que le shell se donne à lui-même.
+        /// ★ J'avais alors fait varier l'ATTENTE, en cherchant le bon moment. Il n'y en avait pas :
+        ///   le risque ne décroissait pas avec le temps, il croissait. La question n'était pas
+        ///   « quand monter » mais « qu'est-ce qui démonte ».
+        ///
+        /// Le compte de démo est l'identité PAR DÉFAUT du shell : on ne pose pas d'identité, et
+        /// c'est voulu — un compte neuf aurait une file vide, et la capture sortirait pleine,
+        /// valide, et sans une seule exception à montrer.</summary>
+        [Category("CaptureSousChrome")]
+        public IEnumerator Capture_EcranExceptions_SousChrome()
+        {
+            LogAssert.ignoreFailingMessages = true;
+            shellGo = new GameObject("ExceptionsShell");
+            shell = shellGo.AddComponent<AppShell>();
+            yield return null;
+
+            float t0 = Time.realtimeSinceStartup;
+            while (string.IsNullOrEmpty(shell.Token) && Time.realtimeSinceStartup - t0 < 30f) yield return null;
+            Assert.IsFalse(string.IsNullOrEmpty(shell.Token), "le shell doit avoir acquis sa session");
+
+            // On monte APRÈS avoir laissé le shell finir ses propres gestes d'onglet : c'est eux
+            // qui emportaient la surimpression.
+            for (int i = 0; i < 30; i++) yield return null;
+            var ecran = shell.MonterLocataireEnSurimpression<
+                MafiaCleanCity.Operational.Exceptions.ExceptionQueueController>();
+            Assert.IsNotNull(ecran, "la surimpression doit avoir monté ⑨");
+
+            // ⛔ ATTENDRE LA CONDITION, PAS UN NOMBRE DE FRAMES. Ma première version comptait 120
+            // frames et a capturé une file VIDE : le shell signe sa session PUIS ⑨ signe la
+            // sienne et charge, et 120 frames ne suffisaient pas. La garde anti-vacuité l'a
+            // attrapée (7 nœuds), sinon je publiais un écran « calme » alors que le compte porte
+            // trois exceptions en attente — mesuré à la même minute sur la route.
+            // ★ Un nombre de frames est une SUPPOSITION sur la durée d'un travail asynchrone.
+            //   Elle est juste jusqu'au jour où la machine est chargée, et ce jour-là elle produit
+            //   une image plausible et fausse.
+            float tCharge = Time.realtimeSinceStartup;
+            while ((ecran.Cards == null || ecran.Cards.Length == 0)
+                   && Time.realtimeSinceStartup - tCharge < 30f) yield return null;
+            Assert.IsNotNull(ecran.Cards, "⑨ n'a jamais chargé sa file sous le chrome");
+            Assert.Greater(ecran.Cards.Length, 0,
+                "la file du compte de démo est VIDE ici alors que la route en rend trois : " +
+                "la capture montrerait un état « calme » qui n'existe pas.");
+            for (int i = 0; i < 30; i++) yield return null;   // laisser le rendu se poser
+
+            Assert.IsNotNull(shell.TopBar, "le chrome haut doit exister — c'est TOUT l'objet de cette capture");
+            Assert.IsTrue(shell.UneSurimpressionAEteMontee, "⑨ doit être monté en surimpression");
+
+            // Anti-vacuité : sous la racine CONSTRUITE, jamais sous le contrôleur — il ne porte
+            // aucun enfant visuel, et compter ses enfants revient à le compter lui.
+            GameObject racineUI = GameObject.Find("ExceptionQueueRoot");
+            Assert.IsNotNull(racineUI, "⑨ n'a construit aucune racine d'interface sous le chrome");
+            int noeuds = racineUI.GetComponentsInChildren<Transform>(true).Length;
+            Assert.Greater(noeuds, 15,
+                $"⑨ doit avoir construit son contenu (mesuré {noeuds} noeuds sous sa racine)");
+
+            // ⛔ GARDE A4 — le contenu ne passe PAS sous le dock.
+            // La première capture sous chrome a montré « Escalades archivées » derrière les quatre
+            // boutons de navigation. Une garde structurelle le dit maintenant en clair, au lieu
+            // de dépendre de quelqu'un qui regarde l'image au bon moment.
+            var comptoirRt = racineUI.transform.Find("Comptoir") as RectTransform;
+            Assert.IsNotNull(comptoirRt, "⑨ doit porter son comptoir");
+            Assert.GreaterOrEqual(comptoirRt.offsetMin.y, MafiaCleanCity.Shell.ShellChrome.BottomInsetPx,
+                $"le comptoir de ⑨ démarre à {comptoirRt.offsetMin.y:F0} alors que le dock occupe " +
+                $"{MafiaCleanCity.Shell.ShellChrome.BottomInsetPx:F0} : le contenu passe DESSOUS.");
+            Assert.Greater(MafiaCleanCity.Shell.ShellChrome.BottomInsetPx, 0f,
+                "sous le chrome, l'inset bas doit être publié — à zéro, la garde ci-dessus " +
+                "passerait toujours et ne mesurerait rien");
+
+            yield return CapturerA(1080, 2400,
+                "Assets/Screenshots/screen_5_exceptions_sous_chrome_1080x2400.png");
+        }
+
+        [UnityTest]
+        
+        
         /// <summary>㊲ LA RÉPUTATION, montée dans le shell — la seule chose qu'aucun des huit tours
         /// de juge n'a pu vérifier : l'écran sous le bandeau et le dock.
         ///

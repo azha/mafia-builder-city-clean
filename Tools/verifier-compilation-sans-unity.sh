@@ -42,9 +42,31 @@ trap 'rm -rf "$TMP"' EXIT
 cd "$RACINE"
 [[ -f Operational.csproj ]] || { echo "Operational.csproj absent — ouvrir l'IDE une fois pour le générer"; exit 2; }
 
-MODE="${1:-}"
+# ⛔⛔ LE PÉRIMÈTRE EST DEVENU UN ARGUMENT SÉPARÉ DU CONTRÔLE POSITIF — trouvé en m'en servant
+#    (2026-09-02) : j'ai résolu un conflit dans `Assets/Editor/MafiaCI.cs`, lancé ce script,
+#    obtenu VERT + contrôle positif VERT, et failli commiter. Or le mode par défaut compile
+#    `Operational.csproj` : **`Assets/Editor` n'y est pas**. Le vert ne disait rien du fichier
+#    que je venais d'éditer, et son contrôle positif non plus — la sonde tapait dans
+#    `MafiaCleanCity.Operational`, une assembly que ce mode voyait effectivement.
+#    ⇒ *Un contrôle positif prouve que le compilateur voit LA CIBLE DE LA SONDE, pas la cible
+#      de l'édition.* C'est le piège du run scopé sur la mauvaise catégorie, transposé au
+#      compilateur : l'instrument a bien tourné, longtemps, sur autre chose.
+#    ⇒ D'où `--editeur`, et d'où une sonde PAR PÉRIMÈTRE : celle du mode éditeur appelle une
+#      méthode inexistante sur `MafiaCI` lui-même, donc son rouge prouve que `Assets/Editor`
+#      est bien dans le jeu compilé.
+PERIMETRE=""
+CP=0
+for a in "$@"; do
+  case "$a" in
+    --tests|--editeur) PERIMETRE="$a" ;;
+    --controle-positif) CP=1 ;;
+    *) echo "argument inconnu : $a (attendus : --tests, --editeur, --controle-positif)"; exit 2 ;;
+  esac
+done
+MODE="$PERIMETRE"
 CSPROJ="Operational.csproj"
-[[ "$MODE" == "--tests" ]] && CSPROJ="CityMap.PlayMode.Tests.csproj"
+[[ "$PERIMETRE" == "--tests"   ]] && CSPROJ="CityMap.PlayMode.Tests.csproj"
+[[ "$PERIMETRE" == "--editeur" ]] && CSPROJ="Assembly-CSharp-Editor.csproj"
 [[ -f "$CSPROJ" ]] || { echo "$CSPROJ absent — ouvrir l'IDE une fois pour le générer"; exit 2; }
 
 # Les références : lues dans le csproj généré par Unity, jamais listées à la main.
@@ -68,21 +90,52 @@ PY
 # Les sources : les assemblies de gameplay, compilées DEPUIS LEURS SOURCES et non depuis leurs
 # .dll — sinon une constante ajoutée aujourd'hui (p. ex. EchelleMaquette.LargeurEcransBrennar6)
 # serait absente de la dll d'hier et le contrôle échouerait pour une raison sans rapport.
-if [[ "$MODE" == "--tests" ]]; then
+if [[ "$PERIMETRE" == "--tests" ]]; then
   find Assets/Scripts Assets/Tests/PlayMode Assets/Editor/AssetLint -name '*.cs' > "$TMP/srcs.txt"
+elif [[ "$PERIMETRE" == "--editeur" ]]; then
+  # Le code d'éditeur APPELLE le gameplay : le compiler seul rendrait des CS0246 qui accusent
+  # le code alors que le défaut serait le périmètre. On prend donc les deux, comme `--tests`.
+  find Assets/Scripts Assets/Editor -name '*.cs' > "$TMP/srcs.txt"
 else
-  find Assets/Scripts/Operational Assets/Scripts/ShellContracts Assets/Scripts/Theme \
-       Assets/Scripts/CityMap Assets/Scripts/Shell -name '*.cs' > "$TMP/srcs.txt"
+  # ⛔ PLUS DE LISTE FIGÉE DE DOSSIERS. Elle énumérait cinq assemblies à la main et devenait
+  # FAUSSE dès qu'on en ajoutait une : `Assets/Scripts/I18n` (socle i18n, 2026-09-02) en était
+  # absent, et ce mode rendait `CS0234 : MafiaCleanCity.I18n n'existe pas` sur du code
+  # parfaitement valide — pendant que `--tests`, qui balaie `Assets/Scripts` en entier, était
+  # VERT sur les mêmes fichiers.
+  # ★ Deux modes du même instrument qui se contredisent : celui qui énumère à la main a tort,
+  #   toujours. Un rouge d'outil ressemble trait pour trait à un rouge de code, et on va
+  #   corriger le code.
+  # `Assets/Scripts` en entier, comme `--tests` : le seul périmètre qui ne se périme pas.
+  find Assets/Scripts -name '*.cs' > "$TMP/srcs.txt"
 fi
 
 sed 's|^|/r:|' "$TMP/refs.txt" > "$TMP/rsp.txt"
 printf '/target:library\n/out:%s/verif.dll\n/nostdlib+\n/langversion:9.0\n' "$TMP" >> "$TMP/rsp.txt"
 # UNITY_INCLUDE_TESTS : sans lui, l'assembly de tests est écartée par sa propre
 # `defineConstraints` et le run compilerait 0 test en rendant EXIT=0 — un vert de non-exécution.
-[[ "$MODE" == "--tests" ]] && echo '/define:UNITY_INCLUDE_TESTS' >> "$TMP/rsp.txt"
+[[ "$PERIMETRE" == "--tests" ]] && echo '/define:UNITY_INCLUDE_TESTS' >> "$TMP/rsp.txt"
+# Le code d'éditeur est gardé par UNITY_EDITOR : sans ce define, les fichiers d'`Assets/Editor`
+# se compilent à VIDE et le mode rendrait un vert de non-exécution — la famille exacte du run
+# jamais démarré. La sonde ci-dessous le prouve : sans le define, elle ne trouve pas `MafiaCI`.
+[[ "$PERIMETRE" == "--editeur" ]] && printf '/define:UNITY_EDITOR\n/define:UNITY_INCLUDE_TESTS\n' >> "$TMP/rsp.txt"
 cat "$TMP/srcs.txt" >> "$TMP/rsp.txt"
 
-if [[ "$MODE" == "--controle-positif" ]]; then
+if [[ "$CP" == "1" && "$PERIMETRE" == "--editeur" ]]; then
+  # ⚠️ SONDE DU PÉRIMÈTRE ÉDITEUR : elle vise `MafiaCI`, un type d'`Assets/Editor`. Son rouge
+  #    prouve que CE dossier est compilé — la sonde gameplay, elle, resterait rouge même si
+  #    `Assets/Editor` était entièrement absent du jeu de sources.
+  cat > "$TMP/ControlePositif.cs" <<'CS'
+public class ControlePositifSondeEditeur
+{
+    void DoitRougir()
+    {
+        MafiaCI.MethodeQuiNExistePas();          // CS0117 sur un type d'Assets/Editor
+        int mauvais = MafiaCI.RunPlayModeTests;  // méthode utilisée comme champ
+    }
+}
+CS
+  echo "$TMP/ControlePositif.cs" >> "$TMP/rsp.txt"
+elif [[ "$CP" == "1" ]]; then
   cat > "$TMP/ControlePositif.cs" <<'CS'
 using MafiaCleanCity.Operational;
 public class ControlePositifSonde

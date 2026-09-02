@@ -619,7 +619,7 @@ namespace MafiaCleanCity.Operational
 
             ClearRows();
 
-            titleText.text = "BÂTIMENT OPÉRATIONNEL";
+            titleText.text = NomDuBatiment(card);
             typeText.text = $"Type: {TypeLabel(card.operational_type)}";
             TrackText(titleText, titleText.text);
             TrackText(typeText, typeText.text);
@@ -630,6 +630,20 @@ namespace MafiaCleanCity.Operational
             AddStatusRow("Operational", card.operational ? "Yes" : "No",
                 card.operational ? "[#]" : "[ ]", card.operational ? AccentMild : AccentSevere);
             AddStatusRow("Cover", CoverLabel(card.cover_band), CoverGlyph(card.cover_band), CoverAccent(card.cover_band));
+
+            // ⛔ L'ENTRETIEN — donnée REÇUE et JETÉE jusqu'ici. `lapse_phase_bucket` et
+            // `days_until_maintenance_due` sont dans le DTO depuis qu'il existe, et aucune ligne
+            // ne les affichait : le corps les portait, l'écran les ignorait.
+            // ★ C'est le défaut « disponible, et dessiné nulle part » que le juge données traque —
+            //   le même qu'il a trouvé sur ㊲, où trois résolveurs avaient zéro appelant.
+            //
+            // ⚠️ Et c'est le SEUL chiffre que cette fiche a le droit de montrer. La projection
+            // le dit d'elle-même : « le SEUL signal numérique de maintenance exposé ». Les deux
+            // autres nombres que la maquette dessine (montant à collecter, pourcentage de heat)
+            // sont bucketés puis JETÉS par le back, avec la consigne écrite « jamais les valeurs
+            // brutes » — les afficher reviendrait à les inventer.
+            AddStatusRow("Entretien", EcheanceLabel(card.lapse_phase_bucket, card.days_until_maintenance_due),
+                         LapseGlyph(card.lapse_phase_bucket), LapseAccent(card.lapse_phase_bucket));
 
             // ----- Phase-2b raid / repair / risk surface (a11y F2: glyph + text, never colour-only; R2.2: bands only) -----
             AddStatusRow("Structure", StructuralLabel(card.structural_state),
@@ -1083,9 +1097,9 @@ namespace MafiaCleanCity.Operational
         {
             switch (s)
             {
-                case "OPERATIONAL": return "Operational";
-                case "IN_SETUP": return "In setup";
-                case "NOT_CONVERTED": return "Not converted";
+                case "OPERATIONAL": return Cle("setup", "Operational");
+                case "IN_SETUP": return Cle("setup", "In setup");
+                case "NOT_CONVERTED": return Cle("setup", "Not converted");
                 default: return s;
             }
         }
@@ -1098,10 +1112,10 @@ namespace MafiaCleanCity.Operational
         {
             switch (b)
             {
-                case "STRONG": return "Strong";
-                case "STANDARD": return "Standard";
-                case "WEAK": return "Weak";
-                case "NONE": return "None";
+                case "STRONG": return Cle("cover", "Strong");
+                case "STANDARD": return Cle("cover", "Standard");
+                case "WEAK": return Cle("cover", "Weak");
+                case "NONE": return Cle("cover", "None");
                 default: return b;
             }
         }
@@ -1123,9 +1137,9 @@ namespace MafiaCleanCity.Operational
         {
             switch (s)
             {
-                case "OPERATIONAL": return "Intact";
-                case "DAMAGED": return "Damaged";
-                case "REPAIRING": return "Repairing";
+                case "OPERATIONAL": return Cle("structural", "Intact");
+                case "DAMAGED": return Cle("structural", "Damaged");
+                case "REPAIRING": return Cle("structural", "Repairing");
                 default: return s;
             }
         }
@@ -1140,10 +1154,10 @@ namespace MafiaCleanCity.Operational
         {
             switch (b)
             {
-                case "LOW": return "Low";
-                case "ELEVATED": return "Elevated";
-                case "HIGH": return "High";
-                case "IMMINENT": return "Imminent";
+                case "LOW": return Cle("raid_risk", "Low");
+                case "ELEVATED": return Cle("raid_risk", "Elevated");
+                case "HIGH": return Cle("raid_risk", "High");
+                case "IMMINENT": return Cle("raid_risk", "Imminent");
                 default: return b;
             }
         }
@@ -1193,11 +1207,11 @@ namespace MafiaCleanCity.Operational
         {
             switch (s)
             {
-                case "BRINDLE": return "Brindle";
-                case "CRICK": return "Crick";
-                case "HUSH": return "Hush";
-                case "ASH": return "Ash";
-                case "": case null: return "—";
+                case "BRINDLE": return Cle("substance", "Brindle");
+                case "CRICK": return Cle("substance", "Crick");
+                case "HUSH": return Cle("substance", "Hush");
+                case "ASH": return Cle("substance", "Ash");
+                case "": case null: return Cle("substance", "—");
                 default: return s;
             }
         }
@@ -1208,9 +1222,9 @@ namespace MafiaCleanCity.Operational
         {
             switch (b)
             {
-                case "OPTIMAL_COLD": return "Optimal (cold)";
-                case "MODERATE": return "Warming";
-                case "HOT": return "Hot";
+                case "OPTIMAL_COLD": return Cle("temperature", "Optimal (cold)");
+                case "MODERATE": return Cle("temperature", "Warming");
+                case "HOT": return Cle("temperature", "Hot");
                 default: return b;
             }
         }
@@ -1609,8 +1623,8 @@ namespace MafiaCleanCity.Operational
         {
             switch (b)
             {
-                case "IDLE": return "Idle";
-                case "EARNING": return "Earning";
+                case "IDLE": return Cle("yield", "Idle");
+                case "EARNING": return Cle("yield", "Earning");
                 default: return b;
             }
         }
@@ -1701,12 +1715,31 @@ namespace MafiaCleanCity.Operational
             // The bottom-sheet card, anchored bottom-centre.
             GameObject card = NewUI("BuildingCardSheet", root);
             RectTransform cardRt = (RectTransform)card.transform;
-            cardRt.anchorMin = new Vector2(0.5f, 0f);
-            cardRt.anchorMax = new Vector2(0.5f, 0f);
+            // ⛔ LARGEUR : la fiche s'ÉTIRE, elle n'a pas de largeur fixe.
+            // Elle valait `520` en unités de canvas, soit 40,6 % de la largeur — mesuré sur la
+            // capture 1080×2400, puis comparé au rendu RATIFIÉ par l'user
+            // (`Tools/juge-visuel/ecran-principal/ecran-canon.png`, 1176×2091) où le panneau bas
+            // occupe **93,6 %** de la largeur, marges de 3,2 % de chaque côté.
+            // ⚠️ Une largeur fixe en unités de canvas n'est une proportion sur AUCUNE résolution
+            // en particulier : elle en vise une, muettement, et se décale sur toutes les autres.
+            // ★ Le défaut ne s'est vu que sur une capture. Aucune garde structurelle ne le voyait :
+            //   la carte existait, ses rangées étaient bonnes, ses valeurs justes — elle était
+            //   simplement deux fois trop étroite, et rien dans l'arbre ne le dit.
+            const float MargeCoteUnites = 41f;   // 3,2 % de 1280 unités, la marge du canon
+            cardRt.anchorMin = new Vector2(0f, 0f);
+            cardRt.anchorMax = new Vector2(1f, 0f);
             cardRt.pivot = new Vector2(0.5f, 0f);
-            cardRt.sizeDelta = new Vector2(520, 760); // taller to fit the Phase-2b raid/risk rows + Phase-2c Ash lab-tier /
-                                                      // purity / appointment rows + the Upgrade + refining-passes + honor affordances.
-            cardRt.anchoredPosition = new Vector2(0, 24);
+            cardRt.sizeDelta = new Vector2(-2f * MargeCoteUnites, 760f);
+            // ⛔ LE DOCK MANGE SA PART. Mesuré sous chrome le 2026-09-02 : la fiche démarrait à
+            // 24 unités du bas quand le dock en occupe 294 — elle passait dessous, et aucune
+            // capture hors shell ne pouvait le montrer (il n'y a pas de dock dans une image sans
+            // dock). Même défaut que ⑨, trouvé le même jour, par la même garde.
+            // ★ Ici la garde a précédé l'image : je l'ai écrite AVANT de regarder la capture, en
+            //   pariant que le défaut serait le même. Il l'était — et c'est l'assertion qui l'a
+            //   dit, pas mon œil. Une classe de défaut qu'on vient de corriger ailleurs se
+            //   cherche, elle ne s'attend pas.
+            // Hors shell l'inset vaut 0 : la fiche retombe sur son comportement d'avant.
+            cardRt.anchoredPosition = new Vector2(0f, 24f + MafiaCleanCity.Shell.ShellChrome.BottomInsetPx);
             card.AddComponent<Image>().color = SurfaceBg;
             VerticalLayoutGroup vlg = card.AddComponent<VerticalLayoutGroup>();
             vlg.padding = new RectOffset(18, 18, 16, 16);
@@ -1715,6 +1748,19 @@ namespace MafiaCleanCity.Operational
             vlg.childControlHeight = true;
             vlg.childForceExpandWidth = true;
             vlg.childForceExpandHeight = false;
+
+            // ⛔ La hauteur ÉPOUSE le contenu — elle ne le devine pas. La valeur fixe de 760
+            // unités laissait, sur le compte de démo, une bande morte sous les actions : le canon
+            // (`ecran-canon.png`) montre un panneau qui s'arrête à sa dernière action.
+            // ⚠️ Et une hauteur fixe est fausse dans les DEUX sens : elle laisse du vide quand
+            // l'immeuble a peu de rangées, et elle rogne quand il en a beaucoup (les rangées
+            // raid/risque et Ash n'apparaissent que sur certains bâtiments). Le vide se voit ;
+            // la coupe ne se voit que sur le bâtiment qui la déclenche, et ce n'est pas celui
+            // qu'on capture.
+            var ajusteur = card.AddComponent<ContentSizeFitter>();
+            ajusteur.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            ajusteur.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+
             cardContent = cardRt;
 
             titleText = NewText("Title", card.transform, "BÂTIMENT OPÉRATIONNEL", 22, TextAlignmentOptions.Left);
@@ -1746,6 +1792,78 @@ namespace MafiaCleanCity.Operational
             AddLayoutElement(actions, flexibleHeight: 1);
         }
 
+        /// <summary>L'échéance d'entretien, en clair. Le nombre est SIGNÉ — négatif = en retard —
+        /// et un « -3 jours » ne se lit pas ; on dit « en retard de 3 jours ».
+        /// ⚠️ Zéro jour sur un bâtiment pas encore opérationnel ne veut pas dire « dû aujourd'hui » :
+        /// la projection le documente comme une valeur de remplissage pour ce cas. On s'appuie donc
+        /// sur la BANDE pour décider quoi dire, jamais sur le nombre seul.</summary>
+        private static string EcheanceLabel(string bucket, int jours)
+        {
+            if (string.IsNullOrEmpty(bucket) || bucket == "WITHIN_WINDOW")
+                return jours > 0 ? $"Dans {jours} j" : "À jour";
+            if (jours < 0) return $"En retard de {-jours} j";
+            return jours == 0 ? "Dû aujourd'hui" : $"Dans {jours} j";
+        }
+
+        private static string LapseGlyph(string bucket)
+        {
+            switch (bucket)
+            {
+                case "CRITICAL": return "[!!!]";
+                case "HARD":     return "[!!.]";
+                case "SOFT":     return "[!..]";
+                default:          return "[...]";
+            }
+        }
+
+        private static Color LapseAccent(string bucket)
+        {
+            switch (bucket)
+            {
+                case "CRITICAL": return AccentSevere;
+                case "HARD":     return AccentModerate;
+                case "SOFT":     return AccentMild;
+                default:          return AccentMild;   // « dans la fenêtre » : pas une alerte
+            }
+        }
+
+        /// <summary>Le nom du bâtiment, résolu par le catalogue i18n — ou LA CLÉ, visible.
+        ///
+        /// ⛔ Mesuré le 2026-09-02 : la fiche projette `name_i18n` depuis toujours
+        /// (`{key:"game.fiction.building.name", params:{type,district,block,rank}}`) et cet écran
+        /// ne l'a jamais lu — il affichait « BÂTIMENT OPÉRATIONNEL », un libellé de CATÉGORIE là
+        /// où le serveur donnait un NOM.
+        /// ⚠️ Et cette clé n'est pas dans le bundle : `GET /v1/i18n/bundle` sert 67 clés, dont
+        /// 63 `error.*` et 4 `game.*` — aucune de celles que les écrans demandent. Le titre
+        /// affichera donc la clé, telle quelle, tant que le dictionnaire ne la porte pas.
+        /// ★ C'est laid et c'est le point : un nom fabriqué serait plus joli et ferait croire au
+        ///   lecteur que le jeu nomme ses bâtiments. La clé à l'écran est ce qui fera écrire les
+        ///   textes ; « BÂTIMENT OPÉRATIONNEL » ne l'a pas fait en plusieurs mois.
+        /// Le repli sur le libellé de catégorie ne subsiste que si le serveur n'envoie AUCUNE
+        /// clé — là, il n'y a rien à montrer, pas même un trou.</summary>
+        private static string NomDuBatiment(BuildingCardDto card)
+        {
+            if (card == null || card.name_i18n == null || string.IsNullOrEmpty(card.name_i18n.key))
+                return "BÂTIMENT OPÉRATIONNEL";
+
+            var p = new Dictionary<string, string>();
+            BuildingNameParamsDto pr = card.name_i18n.@params;
+            if (pr != null)
+            {
+                if (!string.IsNullOrEmpty(pr.type))     p["type"] = pr.type;
+                if (!string.IsNullOrEmpty(pr.district)) p["district"] = pr.district;
+                if (!string.IsNullOrEmpty(pr.block))    p["block"] = pr.block;
+                if (!string.IsNullOrEmpty(pr.rank))     p["rank"] = pr.rank;
+            }
+            return MafiaCleanCity.I18n.I18nCatalog.Traduire(card.name_i18n.key, p);
+        }
+
+        /// <summary>Le passage par clé vit dans `MafiaCleanCity.I18n.Libelle` — partagé par
+        /// les neuf écrans à convertir, pas recopié dans chacun. Voir ce fichier pour le contrat
+        /// (repli byte-identique) et pour ce qui n'a PAS le droit d'y passer (valeurs calculées).</summary>
+        internal static string Cle(string role, string litteral) =>
+            MafiaCleanCity.I18n.Libelle.De("building", role, litteral);
+
         private void AddStatusRow(string label, string value, string glyph, Color accent)
         {
             GameObject row = NewUI("Row_" + label, statusRows);
@@ -1766,7 +1884,8 @@ namespace MafiaCleanCity.Operational
             g.fontStyle = FontStyles.Bold;
             AddLayoutElement(g.gameObject, minWidth: 46, preferredWidth: 46, flexibleWidth: 0);
 
-            TextMeshProUGUI l = NewText("Label", row.transform, label, 15, TextAlignmentOptions.Left);
+            string libelle = Cle("row", label);
+            TextMeshProUGUI l = NewText("Label", row.transform, libelle, 15, TextAlignmentOptions.Left);
             l.color = DesignTokens.Current.onSurfaceMuted;
             AddLayoutElement(l.gameObject, minWidth: 120, flexibleWidth: 1);
 
@@ -1776,7 +1895,7 @@ namespace MafiaCleanCity.Operational
             AddLayoutElement(v.gameObject, minWidth: 140, flexibleWidth: 0);
 
             TrackText(g, glyph);
-            TrackText(l, label);
+            TrackText(l, libelle);
             TrackText(v, value);
         }
 
