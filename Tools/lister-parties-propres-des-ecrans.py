@@ -41,6 +41,30 @@ def balayer():
     return trouve
 
 
+def hosts_sans_recttransform():
+    """Quels contrôleurs N'AJOUTENT PAS de `RectTransform` à leur propre host ?
+
+    ⛔ Seconde question que les gardes de capture doivent poser, et pour la même raison que la
+       première : `ConstruireLocataire` crée `new GameObject($"Tenant_{T}")` — un GameObject NU.
+       Un test qui fait `(RectTransform)<locataire>.transform` jette donc `InvalidCastException`…
+       SAUF si le contrôleur s'en ajoute un lui-même, ce que la plupart font.
+    ⚠️ ET C'EST LÀ QUE J'AI EU TORT AVANT DE MESURER : ayant vu le cas Lieutenant (mesuré par la
+       session 85), j'ai compté les `(RectTransform)x.transform` des tests de capture, trouvé
+       « cinq sites », et annoncé une classe. **Quatre des cinq ajoutent le composant** — leur cast
+       est sûr. Et les 7 écrans de la planche l'ajoutent tous. Il ne restait qu'UN site, déjà
+       corrigé. *Un hit VU est un fait déduit ; seul un hit CLASSÉ est un fait compté* — j'ai
+       compté juste et lu faux, ce qui est plus crédible qu'une erreur de comptage.
+    """
+    sans = []
+    for f in glob.glob(os.path.join(RACINE, 'Assets/Scripts/**/*Controller.cs'), recursive=True):
+        t = open(f, encoding='utf-8', errors='replace').read()
+        if 'IShellTenant' not in t:
+            continue
+        if not re.search(r'(gameObject|this)\.AddComponent<RectTransform>\(\)', t):
+            sans.append(os.path.basename(f)[:-3])
+    return sorted(sans)
+
+
 def main():
     ecrans = balayer()
     # ⚠️ ANTI-VACUITÉ : un balayage qui ne voit pas l'arbre rendrait « 0 écran » — vert pour
@@ -59,6 +83,18 @@ def main():
     print(f"\n  ✓ contrôle positif : {nom} porte bien {partie}.")
     print("  ⇒ Toute garde de rang de fratrie DOIT exclure ces noms avant de conclure qu'un écran "
           "est recouvert.")
+
+    sans = hosts_sans_recttransform()
+    print(f"\n  {len(sans)} locataire(s) SANS `RectTransform` sur leur propre host — un test qui fait")
+    print("  `(RectTransform)<locataire>.transform` y jette InvalidCastException :")
+    for n in sans:
+        print(f"    {n}")
+    # Contrôle positif de CETTE question : Lieutenant doit y être (InvalidCastException mesurée
+    # par la session 85). S'il n'y est pas, le motif rate le seul cas confirmé.
+    if 'LieutenantScreenController' not in sans:
+        print("✗ CONTRÔLE POSITIF ÉCHOUÉ : Lieutenant devrait être dans cette liste.")
+        return 1
+    print("  ✓ contrôle positif : Lieutenant y est bien.")
     return 0
 
 
