@@ -328,9 +328,17 @@ namespace MafiaCleanCity.Capture.Tests
         /// en `onSurfaceSecondary` posé sur l'aplat corail du tampon, à 0,096. Il a fallu que je
         /// mesure la capture à la main, hors du test, pour le voir.
         /// ★ Un instrument braqué sur le seul cas qui l'a fait naître continuera de rater
-        ///   partout ailleurs. Elle est maintenant armée sur ㊱, ② et ⑨ aussi. Avant d'ajouter
-        ///   un écran, ajoutez l'appel — c'est la ligne qui fait la différence entre une garde
-        ///   et une anecdote.</summary>
+        ///   partout ailleurs. Une garde appelée par UN écran mesure un écran, pas une propriété :
+        ///   elle a l'air d'exister, elle a même déjà mordu une fois, et sa population est de un.
+        ///
+        /// ⇒ LA POPULATION, NOMMÉE ET COMPTÉE — les 7 captures SOUS CHROME, toutes armées :
+        ///     ㊱ horizon (état vide) · ② fiche · ⑨ file · ⑨ file vide (en attente auto-armée)
+        ///     · ⑩ main de cartes · ⑩ après tampon · ㊲ réputation
+        ///   Les 4 captures HORS chrome ne le sont pas : elles n'ont pas d'insets et leurs fonds
+        ///   sont ceux d'avant le chrome — les y armer mesurerait autre chose sous le même nom.
+        /// ⚠️ AJOUTER UNE CAPTURE SOUS CHROME = AJOUTER L'APPEL, et recompter cette liste. Je
+        ///   m'étais arrêté à 3 sur 7 en croyant avoir fini, ce qui est la même faute d'un cran
+        ///   plus haut que celle qui a laissé passer ⑨.</summary>
         private static void LisibiliteDuTexte(GameObject racine)
         {
             float Lum(Color c) => 0.2126f * c.r + 0.7152f * c.g + 0.0722f * c.b;
@@ -917,6 +925,8 @@ namespace MafiaCleanCity.Capture.Tests
                 $"le comptoir démarre à {comptoirRt.offsetMin.y:F0} et le dock occupe " +
                 $"{MafiaCleanCity.Shell.ShellChrome.BottomInsetPx:F0} : il passe DESSOUS.");
 
+            LisibiliteDuTexte(racineUI);
+
             yield return CapturerA(1080, 2400,
                 "Assets/Screenshots/screen_5_exceptions_personne-en-file_sous_chrome_1080x2400.png");
         }
@@ -991,6 +1001,8 @@ namespace MafiaCleanCity.Capture.Tests
                 "le back doit rendre un `outcome` — c'est TOUT l'objet de cette capture");
             Debug.Log($"[APRES-TAMPON] outcome = {detail.LastOutcome}");
             for (int i = 0; i < 45; i++) yield return null;
+
+            LisibiliteDuTexte(detail.gameObject);
 
             yield return CapturerA(1080, 2400,
                 "Assets/Screenshots/screen_5a_detail_apres-tampon_sous_chrome_1080x2400.png");
@@ -1192,6 +1204,8 @@ namespace MafiaCleanCity.Capture.Tests
             Assert.Greater(noeuds, 20,
                 $"㊲ doit avoir construit son contenu dans le slot (mesuré {noeuds} noeuds) — " +
                 "une capture d'un slot vide passerait sinon pour une réussite");
+
+            LisibiliteDuTexte(shell.ContentSlot.gameObject);
 
             yield return CapturerA(1080, 2400, "Assets/Screenshots/screen_b3_reputation_sous_chrome_1080x2400.png");
         }
