@@ -1,0 +1,20 @@
+{
+    "name": "CoreLoops",
+    "rootNamespace": "MafiaCleanCity.Operational",
+    "references": [
+        "UnityEngine.UI",
+        "Unity.InputSystem",
+        "Theme",
+        "Unity.TextMeshPro",
+        "ShellContracts"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

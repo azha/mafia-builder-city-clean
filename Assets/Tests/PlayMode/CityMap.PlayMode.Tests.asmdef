@@ -12,7 +12,12 @@
         "AssetLint",
         "Shell",
         "ShellContracts",
-        "Unity.InputSystem"
+        "Unity.InputSystem",
+        "Economy",
+        "CoreLoops",
+        "CitySim",
+        "Account",
+        "Onboarding"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
