@@ -337,8 +337,16 @@ namespace MafiaCleanCity.Operational
             GameObject corps = NouveauUI("Corps", racine.transform);
             RectTransform crt = (RectTransform)corps.transform;
             crt.anchorMin = new Vector2(0f, 0f); crt.anchorMax = new Vector2(1f, 1f);
-            crt.offsetMin = new Vector2(Px(CssMargeH), Px(CssMargeH));
-            crt.offsetMax = new Vector2(-Px(CssMargeH), -Px(CssMargeH));
+            // ⛔ LE CHROME MANGE SA PART, EN HAUT ET EN BAS. ㊱ est un écran PLEIN : contrairement
+            // à ⑨ et ② qui sont des panneaux bas, il collisionne aux DEUX bouts. Mesuré sous
+            // chrome le 2026-09-02 : son enseigne passait derrière la jauge de chaleur et sous le
+            // bandeau, et son panneau bas derrière les quatre boutons du dock.
+            // ⚠️ ET MES GARDES ÉTAIENT VERTES PENDANT CE TEMPS. Elles vérifiaient que les insets
+            // sont PUBLIÉS (`> 0`), pas que cet écran les RESPECTE — elles mesuraient le chrome,
+            // pas l'écran. Même famille que la garde qui comptait le slot au lieu de l'écran.
+            // Hors shell les deux insets valent 0 et ㊱ remplit tout, comme avant.
+            crt.offsetMin = new Vector2(Px(CssMargeH), Px(CssMargeH) + ShellChrome.BottomInsetPx);
+            crt.offsetMax = new Vector2(-Px(CssMargeH), -(Px(CssMargeH) + ShellChrome.TopInsetPx));
 
             VerticalLayoutGroup pile = corps.AddComponent<VerticalLayoutGroup>();
             pile.spacing = Px(CssEcartBloc);

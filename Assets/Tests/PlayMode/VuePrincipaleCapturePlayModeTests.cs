@@ -642,6 +642,75 @@ namespace MafiaCleanCity.Capture.Tests
         }
 
         [UnityTest]
+        /// <summary>㊱ SOUS LE CHROME — état vide, monté en surimpression.
+        ///
+        /// ⚠️ CE N'EST PAS L'ENTRÉE DANS LE MENU « PLUS », et il ne faut pas lire cette capture
+        /// comme telle : le menu est le travail d'une autre session et `Tab.More` monte encore
+        /// ㊲ en direct sur `main`. Ici ㊱ est monté de force en surimpression — le chrome est
+        /// donc RÉEL, mais le chemin joueur ne l'est pas encore.
+        /// ⇒ Ce que ça vaut : ça ferme la question du chrome (rien sous le bandeau, rien sous le
+        ///   dock). Ce que ça ne vaut pas : « ㊱ est dans le parcours ».
+        ///
+        /// ㊱ est un écran PLEIN, pas un panneau bas — sa garde A4 porte donc sur les DEUX insets,
+        /// pas seulement celui du dock.</summary>
+        [Category("CaptureSousChrome")]
+        public IEnumerator Capture_Horizon_SousChrome()
+        {
+            LogAssert.ignoreFailingMessages = true;
+            shellGo = new GameObject("HorizonShell");
+            shell = shellGo.AddComponent<AppShell>();
+            yield return null;
+
+            float t0 = Time.realtimeSinceStartup;
+            while (string.IsNullOrEmpty(shell.Token) && Time.realtimeSinceStartup - t0 < 30f) yield return null;
+            Assert.IsFalse(string.IsNullOrEmpty(shell.Token), "le shell doit avoir acquis sa session");
+            for (int i = 0; i < 30; i++) yield return null;
+
+            var ecran = shell.MonterLocataireEnSurimpression<
+                MafiaCleanCity.Operational.HorizonScreenController>();
+            Assert.IsNotNull(ecran, "la surimpression doit avoir monté ㊱");
+            yield return ecran.Charger();
+            for (int i = 0; i < 60; i++) yield return null;
+
+            Assert.IsNull(ecran.DerniereErreur,
+                $"la route a échoué (code {ecran.DernierCodeErreur}) : la capture montrerait " +
+                "l'écran d'indisponibilité, pas l'état vide");
+            Assert.IsNotNull(ecran.DernierChargement, "aucun corps reçu");
+            int cartes = ecran.DernierChargement.cards == null ? 0 : ecran.DernierChargement.cards.Length;
+            Assert.AreEqual(0, cartes,
+                $"le compte porte {cartes} carte(s) : ce n'est plus l'état vide, il faut renommer " +
+                "la capture — une image nommée `_etat-vide_` qui montre des cartes ment deux fois.");
+
+            Assert.IsNotNull(shell.TopBar, "le chrome haut doit exister");
+            GameObject racineUI = GameObject.Find("HorizonRoot");
+            Assert.IsNotNull(racineUI, "㊱ n'a construit aucune racine sous le chrome");
+
+            // ⛔ MESURER L'ÉCRAN, PAS LE CHROME. Ma première version de cette garde n'assertait
+            // que « les insets sont publiés » — elle est passée VERTE sur une capture où
+            // l'enseigne de ㊱ était derrière la jauge de chaleur et son panneau derrière le dock.
+            // ★ Vérifier qu'une contrainte EXISTE ne dit rien de son RESPECT. C'est la même faute
+            //   que la garde qui comptait les nœuds du slot au lieu de ceux de l'écran : les deux
+            //   mesurent le contexte et concluent sur le contenu.
+            Assert.Greater(MafiaCleanCity.Shell.ShellChrome.BottomInsetPx, 0f,
+                "sous le chrome les insets doivent être publiés, sinon la garde ci-dessous " +
+                "passerait toujours et ne mesurerait rien");
+            Assert.Greater(MafiaCleanCity.Shell.ShellChrome.TopInsetPx, 0f, "idem pour l'inset haut");
+
+            var corpsRt = racineUI.transform.Find("Corps") as RectTransform;
+            Assert.IsNotNull(corpsRt, "㊱ doit porter son corps");
+            Assert.GreaterOrEqual(corpsRt.offsetMin.y, MafiaCleanCity.Shell.ShellChrome.BottomInsetPx,
+                $"le corps de ㊱ démarre à {corpsRt.offsetMin.y:F0} et le dock occupe " +
+                $"{MafiaCleanCity.Shell.ShellChrome.BottomInsetPx:F0} : il passe DESSOUS.");
+            Assert.LessOrEqual(corpsRt.offsetMax.y, -MafiaCleanCity.Shell.ShellChrome.TopInsetPx,
+                $"le corps de ㊱ monte à {corpsRt.offsetMax.y:F0} et le bandeau occupe " +
+                $"{MafiaCleanCity.Shell.ShellChrome.TopInsetPx:F0} : il passe DESSOUS.");
+
+            yield return CapturerA(1080, 2400,
+                "Assets/Screenshots/screen_c6_horizon_etat-vide_sous_chrome_1080x2400.png");
+        }
+
+        [UnityTest]
+        
         /// <summary>② SOUS LE CHROME. Même question que ⑨ : la fiche est un panneau BAS, et le
         /// dock occupe le bas. La garde A4 est posée AVANT d'avoir regardé l'image — si elle
         /// échoue, c'est le même défaut, et je préfère l'apprendre d'une assertion que d'un
