@@ -13,22 +13,23 @@ using MafiaCleanCity.CitySim.Precinct;
 using MafiaCleanCity.Account.Profile;
 using MafiaCleanCity.Onboarding;
 using MafiaCleanCity.Operational.Selling;
+using MafiaCleanCity.Account.Settings;
 
 namespace MafiaCleanCity.Shell.Tests
 {
-    // PLANCHE DE CAPTURES — les SEPT écrans du chantier F en UN SEUL run d'éditeur.
+    // PLANCHE DE CAPTURES — les HUIT écrans du chantier F en UN SEUL run d'éditeur.
     //
     // ⛔⛔ POURQUOI GROUPER, ET C'EST UNE MESURE, PAS UN CONFORT. Le rechargement de domaine de
     // cet éditeur coûte **674 à 677 secondes MESURÉES** (`Finished resetting the current domain,
     // in 676.994 seconds`), et il est payé UNE FOIS PAR LANCEMENT, avant toute compilation.
-    // Sept tests séparés = sept rechargements = **~80 min de porte Unity**. Un seul test qui monte
-    // les sept à la suite = un rechargement = **~13 min**. Sur une machine où quatre sessions se
+    // Huit tests séparés = sept rechargements = **~80 min de porte Unity**. Un seul test qui monte
+    // les huit à la suite = un rechargement = **~13 min**. Sur une machine où quatre sessions se
     // partagent un éditeur unique par un système de file, ce n'est pas une optimisation : c'est la
     // différence entre bloquer les autres une heure et les bloquer un quart d'heure.
     //
     // ⚠️ CE QUE CE TEST PROUVE ET CE QU'IL NE PROUVE PAS. Il prouve que chaque écran REND — monté,
     // dimensionné, au premier plan, avec de l'encre. Il ne prouve PAS qu'un joueur peut y arriver :
-    // AUCUN de ces sept écrans n'a d'entrée de navigation, les quatre onglets étant pris. Ce sont
+    // AUCUN de ces huit écrans n'a d'entrée de navigation, les quatre onglets étant pris. Ce sont
     // deux propriétés distinctes, et c'est la seconde qui manque au chantier. Le test les monte
     // donc directement en surimpression, et le dit ici plutôt que de laisser la capture le taire.
     // ⚠️ RÉSERVE MESURÉE SUR ⑰ LE COMMISSARIAT, à porter avec la capture — sinon l'image ment
@@ -73,7 +74,7 @@ namespace MafiaCleanCity.Shell.Tests
         }
 
         [UnityTest]
-        public IEnumerator Capture_PlancheDesSeptEcrans_1080x2400()
+        public IEnumerator Capture_PlancheDesHuitEcrans_1080x2400()
         {
             yield return ChargerLaSceneDeDemarrageDuBuild();
             AppShell shell = SondeShellDansLaScene(sceneDeDemarrage);
@@ -91,17 +92,66 @@ namespace MafiaCleanCity.Shell.Tests
             Assert.AreEqual(AppShell.Tab.Empire, shell.CurrentTab,
                 "acquisition de session non résolue — toute capture prise ici serait celle d'un autre écran");
 
+            // ⛔⛔ ATTENDRE QUE LE SHELL SE TAISE — et ce n'est pas de la prudence, c'est le
+            // résultat d'un CONTRÔLE. Le premier écran monté échouait quatre runs de suite sur
+            // « frère 6 sur 11 », recouvert par [7] AccueilHlCard [8] AccueilExceptionQueue
+            // [9] AccueilOrgVitals [10] AccueilHomeChrome. J'ai déplacé ㉓ en dernier : **⑭, qui
+            // a pris sa place, a échoué avec la signature IDENTIQUE.** Le défaut suit donc la
+            // POSITION, pas l'écran — c'est la course d'acquisition du shell, qui rappelle
+            // `ActivateTab` et remonte l'Accueil PAR DESSUS ce qui est déjà là.
+            // ⇒ Ce déplacement n'aurait fait que changer la victime. On attend que le nombre
+            // d'enfants du slot soit STABLE avant de monter quoi que ce soit : c'est la seule
+            // façon de mesurer les ÉCRANS au lieu de mesurer la course.
+            // ⚠️ Et la course reste un défaut de PRODUCTION — un joueur qui ouvre un écran
+            // pendant l'acquisition se le fait enterrer. Elle est signalée à la session qui tient
+            // le shell ; l'attendre ici ne la corrige pas, ça évite seulement de compter un
+            // défaut de SHELL comme un défaut d'ÉCRAN.
+            int dernierCompte = -1, framesStables = 0, gardeFou = 0;
+            while (framesStables < 30 && gardeFou < 600)
+            {
+                int c = shell.ContentSlot.childCount;
+                framesStables = (c == dernierCompte) ? framesStables + 1 : 0;
+                dernierCompte = c;
+                gardeFou++;
+                yield return null;
+            }
+            Debug.Log($"[PLANCHE] shell stabilisé : {dernierCompte} enfants après {gardeFou} frames");
+            Assert.Less(gardeFou, 600, "le shell n'a jamais cessé d'ajouter des enfants — capture non fiable");
+
+            // ⛔⛔ LES PRÉDICATS ATTENDENT LE RENDU, PLUS UN CHAMP. Guetter l'arrivée d'un champ
+            // est satisfait AU MILIEU de la coroutine : ㉓ enchaîne trois requêtes et j'attendais
+            // la première — la capture partait deux requêtes trop tôt, image vide, test VERT.
+            // ⑰ battait entre 23 et 3 éléments d'un run à l'autre pour la même raison.
+            // ⇒ `RendusEffectues` monte à la fin de `Rendre()`. Propriété STRUCTURELLE : elle ne
+            // dépend ni du nombre de requêtes ni de leur ordre, et elle reste juste le jour où
+            // un écran en ajoute une. *Un proxy qui marche sur sept écrans sur huit ne marche pas.*
             var echecs = new List<string>();
             // ⚠️ On n'arrête PAS au premier échec : un rouge en masque un autre, et sur sept écrans
             // ça coûterait sept rechargements de domaine pour les découvrir un par un. On collecte,
             // puis on rend le verdict complet.
-            yield return Capturer<ShopScreenController>(shell, "la_vitrine", e => e.Catalogue != null || e.EtatVide, echecs);
-            yield return Capturer<CompressionScreenController>(shell, "la_semaine", e => e.Tableau != null || e.EtatVide, echecs);
-            yield return Capturer<InspectionScreenController>(shell, "les_inspections", e => e.File != null || e.EtatVide, echecs);
-            yield return Capturer<PrecinctScreenController>(shell, "le_commissariat", e => e.Croyance != null || e.EtatVide, echecs);
-            yield return Capturer<ProfileScreenController>(shell, "le_coffre", e => e.Profil != null || e.EtatVide, echecs);
-            yield return Capturer<TutorialScreenController>(shell, "la_premiere_fois", e => e.Etat != null || e.EtatVide, echecs);
-            yield return Capturer<SellingScreenController>(shell, "la_vente", e => e.Dealers != null || e.EtatVide, echecs);
+            yield return Capturer<CompressionScreenController>(shell, "la_semaine", e => e.RendusEffectues > 0, echecs);
+            yield return Capturer<InspectionScreenController>(shell, "les_inspections", e => e.RendusEffectues > 0, echecs);
+            yield return Capturer<PrecinctScreenController>(shell, "le_commissariat", e => e.RendusEffectues > 0, echecs);
+            yield return Capturer<ProfileScreenController>(shell, "le_coffre", e => e.RendusEffectues > 0, echecs);
+            yield return Capturer<TutorialScreenController>(shell, "la_premiere_fois", e => e.RendusEffectues > 0, echecs);
+            yield return Capturer<SellingScreenController>(shell, "la_vente", e => e.RendusEffectues > 0, echecs);
+            // ⑲ a rejoint la liste APRÈS avoir été déclaré bloqué ce matin : son écrivain de
+            // `locale` a été livré dans la journée. *Un « bloqué » est une mesure datée.*
+            yield return Capturer<SettingsScreenController>(shell, "les_reglages", e => e.RendusEffectues > 0, echecs);
+            // ⛔⛔ ㉓ EST CAPTURÉE EN DERNIER, ET CE N'EST PAS UN CONFORT : elle a échoué
+            // QUATRE runs de suite en première position, toujours « frère 6 sur 11 », et j'ai
+            // corrigé trois fois le mauvais objet avant que la garde ne NOMME les occultants :
+            //   [7] AccueilHlCard  [8] AccueilExceptionQueue  [9] AccueilOrgVitals  [10] AccueilHomeChrome
+            // Ce sont les quatre blocs de l'onglet Accueil, que le shell REMONTE quand son
+            // acquisition de session aboutit — la course décrite dans l'en-tête de ce fichier.
+            // Le premier écran monté est donc le seul à se faire recouvrir ; les suivants
+            // arrivent après la course et sont derniers sans rien faire.
+            // ⇒ Changer l'ordre ne CORRIGE pas la course : elle reste un défaut de PRODUCTION
+            // (un joueur qui ouvre un écran pendant l'acquisition se le fait recouvrir), et
+            // elle est signalée comme telle à la session qui tient le shell. Ce test n'a pas
+            // à la reproduire pour prouver que les huit écrans RENDENT — c'est une autre
+            // propriété, et la confondre ferait passer un défaut de shell pour un défaut d'écran.
+            yield return Capturer<ShopScreenController>(shell, "la_vitrine", e => e.RendusEffectues > 0, echecs);
 
             Assert.IsEmpty(echecs, "écrans en défaut :\n  · " + string.Join("\n  · ", echecs));
         }
@@ -128,6 +178,36 @@ namespace MafiaCleanCity.Shell.Tests
 
             float attente = 0f;
             while (attente < 20f && !charge(ecran)) { attente += Time.deltaTime; yield return null; }
+            // ⛔⛔ ATTENDRE N'EST PAS AVOIR CHARGÉ, et la différence est passée sous les trois
+            // gardes précédentes. ㉓ a été capturée « verte » sur un écran qui n'affichait que son
+            // titre et « — jetons » : le délai avait expiré, la coroutine n'avait pas abouti, et
+            // le compte de teintes était satisfait PAR LE CHROME du shell — barre du haut, jauge,
+            // dock — qui n'appartient pas à l'écran mesuré.
+            // ⇒ Une capture prise avant la fin du chargement montre un écran VIDE qui a l'air
+            // fini. C'est le même défaut que la garde de teintes d'origine, un cran plus loin :
+            // elle prouvait qu'il y avait de l'encre, jamais que c'était CELLE de l'écran ; celle-ci
+            // prouve qu'on a attendu, jamais que l'attente a abouti.
+            if (!charge(ecran))
+            {
+                // ⚠️ On dit POURQUOI, pas seulement QUE. La latence est écartée par la mesure :
+                // les trois routes de ㉓ répondent en 17, 11 et 3 ms au moment de ce diagnostic.
+                // Restent deux causes possibles, et la sonde les sépare : le shell n'a pas donné
+                // de jeton (il ne le donne que si le sien est non vide), ou la coroutine a échoué.
+                // *Un compte nu fait deviner ; c'est ce qui m'a coûté quatre runs sur l'ordre de
+                // fratrie, et je ne le refais pas ici.*
+                var diag = new System.Text.StringBuilder();
+                foreach (var p in typeof(T).GetProperties())
+                {
+                    if (p.Name != "DerniereErreur" && p.Name != "EtatVide") continue;
+                    object val = null;
+                    try { val = p.GetValue(ecran); } catch { }
+                    diag.Append($" {p.Name}={val ?? "null"}");
+                }
+                echecs.Add($"{nom} : chargement NON abouti après {attente:F0} s —{diag} · "
+                           + $"jetonDuShell={(string.IsNullOrEmpty(shell.Token) ? "VIDE" : "présent")} · "
+                           + "la capture montrerait un écran vide qui a l'air fini");
+                yield break;
+            }
 
             Canvas.ForceUpdateCanvases();
             yield return null;
@@ -141,8 +221,21 @@ namespace MafiaCleanCity.Shell.Tests
             Transform parent = ecran.transform.parent;
             if (parent != null && ecran.transform.GetSiblingIndex() != parent.childCount - 1)
             {
+                // ⛔ QUATRE HYPOTHÈSES FAUSSES SUR CE MÊME DÉFAUT, TOUTES PLAUSIBLES, TOUTES
+                // RÉFUTÉES PAR LE MÊME NOMBRE : « frère 6 sur 11 », inchangé à travers
+                // `SetAsLastSibling` dans le setter, puis `OnTransformParentChanged`, puis
+                // `Start()`. Un compte NU ne dit pas ce qu'il compte : il me disait qu'il y a
+                // des frères au-dessus, jamais LESQUELS — donc j'ai deviné quatre fois au lieu
+                // de lire une fois. La garde nomme désormais les occultants.
+                var dessus = new System.Text.StringBuilder();
+                for (int k = ecran.transform.GetSiblingIndex() + 1; k < parent.childCount; k++)
+                {
+                    Transform f = parent.GetChild(k);
+                    dessus.Append($"\n      [{k}] {f.name} actif={f.gameObject.activeInHierarchy} "
+                                  + $"graphics={f.GetComponentsInChildren<Graphic>(true).Length}");
+                }
                 echecs.Add($"{nom} : frère {ecran.transform.GetSiblingIndex()} sur {parent.childCount} — "
-                           + "les suivants se dessinent PAR DESSUS, la capture montrerait les écrans du dessous");
+                           + $"ce qui se dessine PAR DESSUS :{dessus}");
                 yield break;
             }
 
@@ -207,9 +300,15 @@ namespace MafiaCleanCity.Shell.Tests
             var teintes = new HashSet<int>();
             foreach (Color c in tex.GetPixels())
                 teintes.Add((Mathf.RoundToInt(c.r * 31) << 10) | (Mathf.RoundToInt(c.g * 31) << 5) | Mathf.RoundToInt(c.b * 31));
+            // ⚠️ `graphics` seul ne distingue pas « écran vide parce que la donnée est vide » de
+            // « écran vide parce que la route a échoué » — ⑰ est passé de 23 à 3 entre deux runs
+            // sans que rien ne le dise. Le compte de textes non vides le sépare.
+            int encre = 0;
+            foreach (var t in ecran.GetComponentsInChildren<TMPro.TextMeshProUGUI>(true))
+                if (!string.IsNullOrWhiteSpace(t.text)) encre++;
             Debug.Log($"[PLANCHE] {chemin} — {teintes.Count} teintes · rect={rt.rect.width:F0}x{rt.rect.height:F0} "
                       + $"· frere={ecran.transform.GetSiblingIndex()}/{(parent != null ? parent.childCount : 0)} "
-                      + $"· graphics={ecran.GetComponentsInChildren<Graphic>(true).Length}");
+                      + $"· graphics={ecran.GetComponentsInChildren<Graphic>(true).Length} · textes={encre}");
             if (teintes.Count <= 12) echecs.Add($"{nom} : {teintes.Count} teintes — c'est un fond, pas un écran");
 
             if (camGo != null) Object.Destroy(camGo);

@@ -117,20 +117,27 @@ namespace MafiaCleanCity.Shell
         }
 
 
-        /// <summary>⛔ LE SHELL RE-PARENTE APRÈS AVOIR APPELÉ `SetMountParent` — mesuré deux fois.
-        /// Poser l'ordre de fratrie dans le setter le fait donc DÉFAIRE aussitôt : la planche du
-        /// 2026-09-02 a intercepté ㉓ à « frère 6 sur 11 » alors que le setter l'avait bien mise en
-        /// dernier. Les six autres écrans passaient, non parce que le geste marchait, mais parce
-        /// que le shell les appendait déjà en fin de liste — *une garde qui réussit six fois sur
-        /// sept ne marche pas : elle est chanceuse six fois sur sept.*
-        /// ⇒ On ne devine plus QUAND le parentage a lieu : on RÉAGIT à l'événement. Unity appelle
-        /// ce callback exactement au changement de parent, donc après le geste du shell, quel que
-        /// soit son ordre interne. La propriété devient indépendante de la séquence d'appel.
-        /// ⚠️ Le callback tire aussi au démontage, où le parent est nul — d'où la garde.</summary>
-        private void OnTransformParentChanged()
+        /// <summary>⛔⛔ CE HOOK-CI EST LE BON, ET LES DEUX PRÉCÉDENTS ÉTAIENT DÉCORATIFS.
+        /// Lu dans le corps du shell (`AppShell.ConstruireLocataire`), pas déduit :
+        ///   1. `host = new GameObject(...)`      — créé à la racine, SANS parent
+        ///   2. `host.transform.SetParent(slot)`  — le parent change ICI
+        ///   3. `host.AddComponent&lt;T&gt;()`         — le composant naît APRÈS
+        ///   4. `tenant.SetMountParent(slot)`     — puis `SetToken`, même frame
+        /// ⇒ `OnTransformParentChanged` ne pouvait JAMAIS tirer : au moment du re-parentage,
+        /// ce composant n'existait pas. Un dispositif qui nomme un mécanisme réel et ne
+        /// s'exécute jamais — et il a survécu deux runs en passant pour un correctif, parce que
+        /// six écrans sur sept étaient déjà derniers SANS lui.
+        /// ⇒ Et poser l'ordre en (4) ne suffit pas non plus : la mesure dit `frère 6 sur 11`,
+        /// donc des frères s'ajoutent APRÈS la fenêtre synchrone du montage.
+        /// ⇒ `Start()` s'exécute à la frame SUIVANTE — après tout ce que le shell fait en
+        /// synchrone. C'est le premier instant où « être dernier » est stable.
+        /// ★ La leçon vaut plus que la ligne : *avant d'écrire un hook, lire le CORPS de ce qui
+        /// l'appelle, et se demander si l'événement qu'il observe peut seulement se produire.*</summary>
+        private void Start()
         {
             if (transform.parent != null) transform.SetAsLastSibling();
         }
+
 
         public void SetToken(string bearer)
         {
@@ -224,7 +231,20 @@ namespace MafiaCleanCity.Shell
             for (int i = rowsRoot.childCount - 1; i >= 0; i--) UnityEngine.Object.Destroy(rowsRoot.GetChild(i).gameObject);
 
             int enAttente = LastLoadedReview != null ? LastLoadedReview.routine_pending_count : 0;
-            bool tamponDisponible = LastLoadedReview != null && LastLoadedReview.batch_confirm_available;
+            // ⛔⛔ LE BOUTON DE LOT NE SE FIE PLUS AU SEUL BOOLÉEN DU BACK, ET C'EST UNE MESURE.
+            // Sur le compte de démo : `cards: []`, `routine_pending_count: 156`,
+            // `batch_confirm_available: TRUE`. Le tampon était donc offert sur une file VIDE, et
+            // un clic aurait confirmé 156 routines que le joueur n'a jamais vues — un geste
+            // irréversible sur un écran qui ne montre rien.
+            // ⇒ La disponibilité côté serveur dit « le lot est techniquement possible » ; elle ne
+            // dit PAS « il y a quelque chose à trancher ». Ce sont deux propriétés distinctes, et
+            // les confondre transforme un état vide en piège. Le bouton exige donc les DEUX : le
+            // feu vert du back ET au moins une carte réellement affichée.
+            // ★ Même famille que la garde satisfaite par un monde dégénéré : le booléen était
+            // VRAI dans le monde exact où il ne fallait rien proposer.
+            bool tamponDisponible = LastLoadedReview != null
+                                 && LastLoadedReview.batch_confirm_available
+                                 && cards != null && cards.Length > 0;
 
             if (cards == null || cards.Length == 0)
             {
@@ -233,6 +253,9 @@ namespace MafiaCleanCity.Shell
                 emptyStateText.gameObject.SetActive(true);
                 // « Personne au comptoir » — trois tabourets vides, le registre seul. Le texte est
                 // la scène, pas un état d'erreur : c'est une bonne nouvelle, pas un vide technique.
+                // ⚠️ L'état vide ne promet RIEN : il ne mentionne pas les routines en attente,
+                // parce qu'aucun geste ne permet de les traiter depuis ici. Nommer un nombre sans
+                // offrir de geste fabrique une attente que l'écran ne peut pas tenir.
                 emptyStateText.text = "Personne au comptoir ce matin.";
                 MajRegistre(enAttente, tamponDisponible, 0);
                 return;
