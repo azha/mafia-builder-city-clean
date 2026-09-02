@@ -34,6 +34,41 @@
 
 import { execFileSync } from 'node:child_process';
 import { scryptSync, randomBytes } from 'node:crypto';
+import { existsSync, writeFileSync, unlinkSync, readFileSync } from 'node:fs';
+import { homedir } from 'node:os';
+import { join } from 'node:path';
+
+// ⛔⛔ SENTINELLE DE SEMIS — TD-454, correctif PARTIEL (ne ferme PAS la dette).
+//    Le défaut : ce script SUPPRIME (32 `DELETE`, l. ~252-374) puis RECONSTRUIT (`INSERT`,
+//    l. ~766+), sans rien entre les deux qui dise « je suis à mi-chemin ». Un run tué dans
+//    l'intervalle laisse un compte VIDE mais d'apparence utilisable — c'est ce qui l'a vidé
+//    cette nuit.
+//    ⚠️ POURQUOI PAS UNE TRANSACTION, la réparation qu'on attendrait : `psql()` lance
+//    `docker compose exec` — **un processus et une connexion PAR APPEL**, 111 appels. Une
+//    transaction ne peut pas les enjamber. Et une session persistante serait PIRE : il y a
+//    **20 requêtes HTTP au back** entre les deux phases, et le back lit LA MÊME base — on
+//    tiendrait un verrou pendant qu'on attend un service qui attend ce verrou.
+//    ⇒ Faute de pouvoir EMPÊCHER le demi-état, on le rend DÉTECTABLE. C'est moins, et c'est dit.
+const MARQUEUR_SEMIS = join(homedir(), '.mafia-semis-en-cours');
+
+function poserMarqueur(playerId) {
+  writeFileSync(MARQUEUR_SEMIS, JSON.stringify({ playerId, debut: new Date().toISOString() }));
+}
+function retirerMarqueur() {
+  if (existsSync(MARQUEUR_SEMIS)) unlinkSync(MARQUEUR_SEMIS);
+}
+// ⚠️ LE CONSOMMATEUR : sans lui cette sentinelle serait un garde-fou que personne ne lit, et
+//    quelqu'un le retirerait de bonne foi au premier nettoyage. Il vit ICI, sur le chemin que
+//    tout run emprunte.
+function verifierMarqueurAuDemarrage() {
+  if (!existsSync(MARQUEUR_SEMIS)) return;
+  const info = JSON.parse(readFileSync(MARQUEUR_SEMIS, 'utf-8'));
+  console.error(
+    `[op-seed] ⚠️ SEMIS PRÉCÉDENT INTERROMPU (démarré ${info.debut}, joueur ${info.playerId}).\n` +
+    `[op-seed]    Le compte est à MOITIÉ semé : purgé, pas reconstruit. Ce run repart de la\n` +
+    `[op-seed]    PURGE — c'est le seul point d'où l'état est reconstructible.`,
+  );
+}
 
 const COMPOSE = ['compose', '--project-name', 'mafia-clean-city'];
 const PG_USER = process.env.POSTGRES_USER ?? 'mafia';
@@ -249,7 +284,17 @@ async function main() {
   // only to this operational demo player). Deleted FIRST (FK children of ash_appointment→buildings + batch_purity→
   // product_storage). The specialized_lab building lives in a GLASS district (NOT district 16), so it is wiped by its
   // own targeted clause below — the district-16 building wipe does not reach it.
-  psql(`DELETE FROM ash_appointment WHERE player_id='${playerId}';`);
+  verifierMarqueurAuDemarrage();
+poserMarqueur(playerId);
+
+// ⛔ LA PURGE EST ATOMIQUE ENTRE SES ÉNONCÉS (TD-454, moitié 2). Les 32 `DELETE` partaient en
+//    32 processus `psql` distincts : un run tué au milieu laissait « quelques tables purgées »,
+//    un état qu'aucune relecture ne distingue d'une purge complète. En UN SEUL appel enveloppé
+//    de `BEGIN`/`COMMIT`, c'est 0 ou 32 — jamais entre.
+//    ⚠️ Ça NE ferme PAS le défaut principal : tué APRÈS ce COMMIT et avant les INSERT, le compte
+//    est toujours vidé. C'est la sentinelle ci-dessus qui rend CE cas détectable, et seule une
+//    reconstruction dans un compte neuf le rendrait impossible (TD-454 reste ouverte).
+psql(`DELETE FROM ash_appointment WHERE player_id='${playerId}';`);
   psql(`DELETE FROM batch_purity WHERE player_id='${playerId}';`);
   // Phase-3 vector #3 (grow_house): the player's grow_session rows (player-scoped — safe to wipe wholesale; they belong
   // only to this operational demo player). Deleted explicitly (a grow_session FK-cascades on its grow_house building
@@ -1052,6 +1097,14 @@ async function main() {
       2,
     ),
   );
+
+  // ⛔ LE RETRAIT VIT ICI, DERNIÈRE INSTRUCTION DE `main()` — et sa PLACE est la garde.
+  //    Écrit d'abord au niveau module, il s'exécutait AVANT l'appel de `main()` : le marqueur
+  //    était effacé au démarrage et la sentinelle n'aurait JAMAIS rien signalé. Une garde posée
+  //    au mauvais endroit ne rate pas son défaut : elle certifie qu'il n'existe pas.
+  //    ⚠️ Et il n'est PAS dans un `finally` : un semis qui échoue doit LAISSER le marqueur — c'est
+  //    précisément le cas qu'on veut rendre détectable.
+  retirerMarqueur();
 }
 
 main().catch((e) => {
