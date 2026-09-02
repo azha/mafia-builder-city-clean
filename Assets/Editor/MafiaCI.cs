@@ -60,7 +60,17 @@ public static class MafiaCI
     // livrées, compilées, et JAMAIS EXÉCUTÉES par le juge — la forme la plus économique de garde
     // décorative. *Écrire une garde ne l'installe pas ; l'inscrire au filtre, si.*
     private static readonly string[] Categories =
-        { "W4P4a", "W3UDA", "W3U1", "W3U2", "Charpente", "DemoIdentity", "ScreenB3", "ShellSurimpression", "CaptureDistrict", "CaptureReputation", "Joignabilite" };
+        { "W4P4a", "W3UDA", "W3U1", "W3U2", "Charpente", "DemoIdentity", "ScreenB3", "ShellSurimpression", "CaptureDistrict", "CaptureReputation", "Joignabilite", "ScreenCarte", "CaptureCarte" };
+    // `ScreenCarte` et `CaptureCarte` ajoutees le 2026-09-02 (chantier C) — POUR LA RAISON QUE CE
+    // FICHIER DOCUMENTE DEJA DEUX FOIS. Mesure du jour sur `Assets/Tests/PlayMode` : 86 fichiers,
+    // 68 portent une categorie, 15 n'en portent AUCUNE et abritent 30 tests. Les 4 suites de la
+    // carte en faisaient partie, et la capture `Capture_CarteDeVille_SousChromeV31` n'heritait que
+    // du `Capture` de sa classe — or ce meme depot documente que la categorie `Capture` ENTIERE
+    // fait SIGSEGV dans le pilote Mesa : cette capture n'etait donc atteignable par AUCUN filtre
+    // executable. Poser la categorie sur les suites sans l'inscrire ICI aurait ferme le defaut
+    // visible en laissant le defaut reel : *ecrire une garde ne l'installe pas ; l'inscrire au
+    // filtre, si.*
+    // ⚠️ Il reste 11 fichiers sans categorie (TD-490) — ce lot ne ferme pas la classe.
 
     // ⚠️ `MAFIA_CI_CATEGORIES` (liste séparée par des virgules) REMPLACE le filtre par défaut.
     // Ajouté le 2026-08-31 pour une raison précise et vérifiable : le log ne NOMME que les tests
