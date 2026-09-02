@@ -321,7 +321,16 @@ namespace MafiaCleanCity.Capture.Tests
         ///
         /// ⚠️ Seuil de contraste à 0,18 de luminance : mesuré, le cas fautif était à ~0,02
         /// (crème sombre sur ardoise) et les cas justes au-dessus de 0,35. Le seuil est posé
-        /// dans le vide entre les deux mesures, pas au bord de l'une d'elles.</summary>
+        /// dans le vide entre les deux mesures, pas au bord de l'une d'elles.
+        ///
+        /// ⛔ 2026-09-02 — CETTE GARDE N'ÉTAIT APPELÉE QUE PAR ⑩, l'écran pour lequel je l'avais
+        /// écrite. Pendant ce temps ⑨ portait le MÊME défaut, de la même famille : un sous-titre
+        /// en `onSurfaceSecondary` posé sur l'aplat corail du tampon, à 0,096. Il a fallu que je
+        /// mesure la capture à la main, hors du test, pour le voir.
+        /// ★ Un instrument braqué sur le seul cas qui l'a fait naître continuera de rater
+        ///   partout ailleurs. Elle est maintenant armée sur ㊱, ② et ⑨ aussi. Avant d'ajouter
+        ///   un écran, ajoutez l'appel — c'est la ligne qui fait la différence entre une garde
+        ///   et une anecdote.</summary>
         private static void LisibiliteDuTexte(GameObject racine)
         {
             float Lum(Color c) => 0.2126f * c.r + 0.7152f * c.g + 0.0722f * c.b;
@@ -765,6 +774,8 @@ namespace MafiaCleanCity.Capture.Tests
                 $"le corps de ㊱ monte à {corpsRt.offsetMax.y:F0} et le bandeau occupe " +
                 $"{MafiaCleanCity.Shell.ShellChrome.TopInsetPx:F0} : il passe DESSOUS.");
 
+            LisibiliteDuTexte(racineUI);
+
             yield return CapturerA(1080, 2400,
                 "Assets/Screenshots/screen_c6_horizon_etat-vide_sous_chrome_1080x2400.png");
         }
@@ -833,6 +844,8 @@ namespace MafiaCleanCity.Capture.Tests
             Assert.Greater(MafiaCleanCity.Shell.ShellChrome.BottomInsetPx, 0f,
                 "sous le chrome l'inset bas doit être publié, sinon la garde ne mesure rien");
 
+            LisibiliteDuTexte(feuille);
+
             yield return CapturerA(1080, 2400,
                 "Assets/Screenshots/screen_2a_fiche_sous_chrome_1080x2400.png");
         }
@@ -876,10 +889,19 @@ namespace MafiaCleanCity.Capture.Tests
             float tc = Time.realtimeSinceStartup;
             while (!ecran.QueueLoaded && Time.realtimeSinceStartup - tc < 30f) yield return null;
             Assert.IsTrue(ecran.QueueLoaded, $"⑨ n'a pas chargé sa file : {ecran.QueueError}");
-            Assert.AreEqual(0, ecran.Cards.Length,
-                $"le compte porte {ecran.Cards.Length} carte(s) : ce n'est plus l'état vide, il " +
-                "faut renommer la capture — une image nommée `_personne-en-file_` qui montre des " +
-                "attendants ment deux fois.");
+            // ⛔ MESURÉ le 2026-09-02 13:21 : le compte porte de nouveau 3 cartes — le
+            // re-provisionnement annoncé plus haut a eu lieu. L'état vide n'est plus atteignable.
+            // ★ Ce n'est PAS une raison de supprimer ce test : la maquette RATIFIE cet état
+            //   (cadre 16), et il n'a toujours jamais été photographié. Le test se met donc en
+            //   attente au lieu d'échouer, et se rearme SEUL le jour où la file redevient vide.
+            //   Un `[Ignore]` statique aurait, lui, exigé que quelqu'un se souvienne d'y revenir.
+            // ⚠️ L'assertion d'origine reste la bonne DOCTRINE — une image nommée
+            //   `_personne-en-file_` qui montre des attendants ment deux fois — mais elle punissait
+            //   le run pour un état du serveur que ce test ne gouverne pas.
+            if (ecran.Cards.Length != 0)
+                Assert.Ignore($"la file porte {ecran.Cards.Length} carte(s) : l'état vide n'est pas " +
+                    "là aujourd'hui. Rien à photographier — cette planche attend que le compte de " +
+                    "démo se vide, et se prendra toute seule à ce moment.");
             for (int i = 0; i < 30; i++) yield return null;
 
             Assert.IsNotNull(shell.TopBar, "le chrome haut doit exister");
@@ -1113,6 +1135,8 @@ namespace MafiaCleanCity.Capture.Tests
             Assert.Greater(MafiaCleanCity.Shell.ShellChrome.BottomInsetPx, 0f,
                 "sous le chrome, l'inset bas doit être publié — à zéro, la garde ci-dessus " +
                 "passerait toujours et ne mesurerait rien");
+
+            LisibiliteDuTexte(racineUI);
 
             yield return CapturerA(1080, 2400,
                 "Assets/Screenshots/screen_5_exceptions_sous_chrome_1080x2400.png");

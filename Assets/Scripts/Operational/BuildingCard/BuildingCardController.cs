@@ -1833,12 +1833,13 @@ namespace MafiaCleanCity.Operational
         /// (`{key:"game.fiction.building.name", params:{type,district,block,rank}}`) et cet écran
         /// ne l'a jamais lu — il affichait « BÂTIMENT OPÉRATIONNEL », un libellé de CATÉGORIE là
         /// où le serveur donnait un NOM.
-        /// ⚠️ Et cette clé n'est pas dans le bundle : `GET /v1/i18n/bundle` sert 67 clés, dont
-        /// 63 `error.*` et 4 `game.*` — aucune de celles que les écrans demandent. Le titre
-        /// affichera donc la clé, telle quelle, tant que le dictionnaire ne la porte pas.
-        /// ★ C'est laid et c'est le point : un nom fabriqué serait plus joli et ferait croire au
-        ///   lecteur que le jeu nomme ses bâtiments. La clé à l'écran est ce qui fera écrire les
-        ///   textes ; « BÂTIMENT OPÉRATIONNEL » ne l'a pas fait en plusieurs mois.
+        /// ⚠️ Le bundle a longtemps servi 67 clés dont aucune de celles-ci, et le titre affichait
+        /// alors la clé nue. Depuis le 2026-09-02 il en sert 386, celle-ci comprise.
+        /// ★ C'était laid et c'était le point : un nom fabriqué aurait été plus joli et aurait
+        ///   fait croire au lecteur que le jeu nomme ses bâtiments. La clé nue a fait DEUX fois
+        ///   son travail — elle a fait écrire les textes (« BÂTIMENT OPÉRATIONNEL » ne l'avait pas
+        ///   fait en plusieurs mois), puis elle a montré à l'image que le client et le bundle ne
+        ///   s'accordaient pas sur les noms des paramètres. Un maquillage aurait caché les deux.
         /// Le repli sur le libellé de catégorie ne subsiste que si le serveur n'envoie AUCUNE
         /// clé — là, il n'y a rien à montrer, pas même un trou.</summary>
         private static string NomDuBatiment(BuildingCardDto card)
@@ -1850,10 +1851,15 @@ namespace MafiaCleanCity.Operational
             BuildingNameParamsDto pr = card.name_i18n.@params;
             if (pr != null)
             {
-                if (!string.IsNullOrEmpty(pr.type))     p["type"] = pr.type;
+                // ⛔ Les noms sont ceux du BUNDLE, pas ceux d'une charge utile d'hier — voir
+                // BuildingNameParamsDto. Et le test `IsNullOrEmpty` n'est pas une précaution
+                // décorative : `rang` est absent au rang 1, et la clé servie alors NE LE DEMANDE
+                // PAS. Un `p["rang"] = "1"` de complaisance écrirait un rang que personne n'a
+                // demandé — on passe ce qu'on reçoit, rien de plus.
+                if (!string.IsNullOrEmpty(pr.enseigne)) p["enseigne"] = pr.enseigne;
                 if (!string.IsNullOrEmpty(pr.district)) p["district"] = pr.district;
                 if (!string.IsNullOrEmpty(pr.block))    p["block"] = pr.block;
-                if (!string.IsNullOrEmpty(pr.rank))     p["rank"] = pr.rank;
+                if (!string.IsNullOrEmpty(pr.rang))     p["rang"] = pr.rang;
             }
             return MafiaCleanCity.I18n.I18nCatalog.Traduire(card.name_i18n.key, p);
         }
