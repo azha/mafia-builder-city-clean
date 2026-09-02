@@ -190,6 +190,8 @@ namespace MafiaCleanCity.Operational.Exceptions
             // non suivi. Passe par le point unique `Texte()`.
             TextMeshProUGUI desc = NewText("Descriptor", body,
                 "« " + Texte(c.event_descriptor, c.event_descriptor_i18n) + " »", (int)PxD(11.5f), TextAlignmentOptions.Left);
+            desc.textWrappingMode = TextWrappingModes.Normal;
+            desc.overflowMode = TextOverflowModes.Overflow;
             desc.color = TextPrimary;
             AddLayoutElement(desc.gameObject, minHeight: PxD(24f), flexibleHeight: 0);
 
@@ -333,7 +335,11 @@ namespace MafiaCleanCity.Operational.Exceptions
         private void Carte(Transform parent, string role, CandidateActionDto a, bool sombre, bool levee)
         {
             GameObject carte = NewUI("Carte_" + (a != null ? a.id : role), parent);
-            carte.AddComponent<Image>().color = sombre ? RowBg : CardBg;
+            // ⛔ LA MAQUETTE DIT L'INVERSE DE CE QUE J'AVAIS ÉCRIT. `.carte` est CLAIRE à
+            // texte sombre ; `.carte.sombre` est foncée à texte crème. Je peignais les DEUX en
+            // foncé tout en colorant le titre de la claire en `surfaceBase` — texte sombre sur
+            // fond sombre, illisible. J'avais implémenté la moitié de la règle.
+            carte.AddComponent<Image>().color = sombre ? RowBg : DesignTokens.Current.hudCreme;
             VerticalLayoutGroup v = carte.AddComponent<VerticalLayoutGroup>();
             int pad = (int)PxD(8f);
             v.padding = new RectOffset(pad, pad, pad, (int)PxD(7f));
@@ -360,6 +366,12 @@ namespace MafiaCleanCity.Operational.Exceptions
                 a != null ? Texte(a.label, a.label_i18n) : "—", (int)PxD(CssCarteT), TextAlignmentOptions.Left);
             titre.fontStyle = FontStyles.Bold;
             titre.color = sombre ? TextPrimary : DesignTokens.Current.surfaceBase;
+            // ⛔ UNE CARTE DE 100 px CSS A BESOIN DE RETOURS À LA LIGNE. `NewText` pose
+            // `NoWrap` + `Truncate` : la capture montrait « Escalate for r » et « The card is
+            // archived for », coupés en plein mot. Un titre tronqué ressemble à un libellé
+            // court — rien ne signale la coupe.
+            titre.textWrappingMode = TextWrappingModes.Normal;
+            titre.overflowMode = TextOverflowModes.Overflow;
 
             if (a != null && !string.IsNullOrEmpty(a.projected_consequence))
             {
@@ -367,6 +379,8 @@ namespace MafiaCleanCity.Operational.Exceptions
                     Texte(a.projected_consequence, a.projected_consequence_i18n), (int)PxD(CssCarteC), TextAlignmentOptions.Left);
                 cons.fontStyle = FontStyles.Italic;
                 cons.color = sombre ? TextSecondary : DesignTokens.Current.surfaceCard;
+                cons.textWrappingMode = TextWrappingModes.Normal;
+                cons.overflowMode = TextOverflowModes.Overflow;
             }
         }
 

@@ -298,6 +298,55 @@ namespace MafiaCleanCity.Capture.Tests
         /// taille de la CIBLE, et toute la mise en page reflue pour de bon. On rend l'état
         /// d'origine ensuite — un test qui laisse le shell dans un autre mode contaminerait tous
         /// ses voisins du même processus.</summary>
+        /// <summary>⛔ LA GARDE QUI MANQUAIT : le texte est-il LISIBLE ?
+        ///
+        /// Mes gardes comptaient des nœuds, vérifiaient des insets, mesuraient une teinte
+        /// dominante — et sont restées VERTES sur un ⑩ dont la carte suggérée était en texte
+        /// sombre sur fond sombre et dont tous les libellés étaient coupés en plein mot
+        /// (« Escalate for r », « The card is archived for »).
+        /// ★ Ce qu'une garde structurelle ne voit jamais, c'est ce que l'écran DIT. Celle-ci
+        ///   mesure les deux choses qui rendent un texte illisible sans rien casser :
+        ///   · le CONTRASTE avec le fond que le texte a réellement derrière lui ;
+        ///   · la TRONCATURE — TMP sait combien de caractères il a effectivement posés.
+        /// ⚠️ Seuil de contraste à 0,18 de luminance : mesuré, le cas fautif était à ~0,02
+        /// (crème sombre sur ardoise) et les cas justes au-dessus de 0,35. Le seuil est posé
+        /// dans le vide entre les deux mesures, pas au bord de l'une d'elles.</summary>
+        private static void LisibiliteDuTexte(GameObject racine)
+        {
+            float Lum(Color c) => 0.2126f * c.r + 0.7152f * c.g + 0.0722f * c.b;
+            int vus = 0;
+            foreach (TMPro.TextMeshProUGUI t in racine.GetComponentsInChildren<TMPro.TextMeshProUGUI>(true))
+            {
+                if (string.IsNullOrWhiteSpace(t.text) || t.text.Trim() == "—") continue;
+                vus++;
+
+                // — TRONCATURE : TMP a-t-il posé tous les caractères qu'on lui a donnés ? —
+                t.ForceMeshUpdate();
+                int poses = t.textInfo != null ? t.textInfo.characterCount : t.text.Length;
+                int demandes = t.text.Replace("\u200B", string.Empty).Length;
+                Assert.GreaterOrEqual(poses, demandes - 1,
+                    $"texte TRONQUÉ dans « {t.name} » : {poses} caractères posés sur {demandes} " +
+                    $"(« {t.text} »). Un libellé coupé ressemble à un libellé court — rien ne " +
+                    "signale la coupe à celui qui lit.");
+
+                // — CONTRASTE : contre le premier fond opaque au-dessus de lui —
+                Color fond = Color.clear;
+                for (Transform p = t.transform.parent; p != null; p = p.parent)
+                {
+                    var img = p.GetComponent<UnityEngine.UI.Image>();
+                    if (img != null && img.color.a > 0.5f) { fond = img.color; break; }
+                }
+                if (fond.a <= 0.5f) continue;   // pas de fond opaque identifiable : on ne conclut pas
+                float ecart = Mathf.Abs(Lum(t.color) - Lum(fond));
+                Assert.Greater(ecart, 0.18f,
+                    $"texte ILLISIBLE dans « {t.name} » : luminance {Lum(t.color):0.00} sur un " +
+                    $"fond à {Lum(fond):0.00} (écart {ecart:0.00}). « {t.text} »");
+            }
+            Assert.Greater(vus, 3,
+                $"seulement {vus} textes examinés : la garde ne mesure presque rien, elle " +
+                "passerait sur un écran vide");
+        }
+
         private IEnumerator CapturerA(int largeur, int hauteur, string chemin)
         {
             Canvas canvas = shell.ShellCanvas;
@@ -860,7 +909,13 @@ namespace MafiaCleanCity.Capture.Tests
         /// carte `ONE_TIME` on attend `RESOLVED`, mais si un jour cette capture porte un
         /// `BRIBE_*`, son nom doit le dire — sinon quelqu'un la rejouera et lira une régression
         /// là où il n'y a qu'un tirage.</summary>
-        [Category("CaptureDetailMutant")]
+        [Category("MutationDeCarte")]
+        // ⛔ NOM CHOISI POUR N'ÊTRE LE PRÉFIXE DE RIEN. Ce test s'appelait
+        // `CaptureDetailMutant` et un lancement sur `CaptureDetail` l'a EMPORTÉ AVEC :
+        // le filtre de catégories d'Unity correspond par PRÉFIXE, pas exactement. La carte a
+        // été consommée alors que j'avais promis de prévenir avant.
+        // ★ Une protection structurelle fondée sur une supposition non mesurée ne protège
+        //   rien : deux noms distincts n'isolent pas si l'un commence par l'autre.
         public IEnumerator Capture_Detail_ApresTampon_SousChrome_MUTE()
         {
             LogAssert.ignoreFailingMessages = true;
@@ -960,6 +1015,8 @@ namespace MafiaCleanCity.Capture.Tests
             Assert.LessOrEqual(rt.offsetMax.y, -MafiaCleanCity.Shell.ShellChrome.TopInsetPx,
                 $"⑩ monte à {rt.offsetMax.y:F0} et le bandeau occupe " +
                 $"{MafiaCleanCity.Shell.ShellChrome.TopInsetPx:F0} : il passe DESSOUS.");
+
+            LisibiliteDuTexte(feuille);
 
             yield return CapturerA(1080, 2400,
                 "Assets/Screenshots/screen_5a_detail_main-de-cartes_sous_chrome_1080x2400.png");
