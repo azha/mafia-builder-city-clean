@@ -1004,7 +1004,16 @@ namespace MafiaCleanCity.Operational.Lieutenant
         // W3.U1 C1 (design D2) — optional parent-of-mount the AppShell renseigne BEFORE Start() runs.
         // See DashboardController.mountParent for the full rationale (byte-identical mechanism here).
         private Transform mountParent;
-        public void SetMountParent(Transform parent) => mountParent = parent;
+        public void SetMountParent(Transform parent)
+        {
+            mountParent = parent;
+            // ⛔ L'ordre de fratrie décide de ce qu'on voit : un locataire qui n'est pas le
+            // DERNIER enfant est rendu SOUS ses frères, à la bonne taille et au bon endroit.
+            // Mesuré sur deux écrans le 2026-09-02 (`frere=1/8`) — la capture montrait la carte
+            // de la ville et l'écran nulle part. Cet écran-ci rendait déjà correctement en
+            // ONGLET ; la garde le protège du jour où on le montera en surimpression.
+            transform.SetAsLastSibling();
+        }
 
         // --------------------------------------------------------------- layout
 
@@ -1641,15 +1650,6 @@ namespace MafiaCleanCity.Operational.Lieutenant
             rt.anchorMax = Vector2.one;
             rt.offsetMin = Vector2.zero;
             rt.offsetMax = Vector2.zero;
-            // ⛔⛔ ET L'ORDRE DE FRATRIE DÉCIDE DE CE QU'ON VOIT. Mesuré le 2026-09-02 sur deux
-            // captures : `rect=1280x960`, `frere=1/8` — l'écran était de la BONNE taille, au BON
-            // endroit, sous le BON canvas, et SIX frères se dessinaient par-dessus. La capture
-            // montrait la carte de la ville, l'autonomie et le dock ; l'écran, nulle part.
-            // ⇒ Un locataire monté en surimpression doit être le DERNIER enfant, sinon il est
-            // rendu dessous. C'est une propriété STRUCTURELLE — elle ne dépend d'aucun pixel,
-            // d'aucune résolution, d'aucune couleur — et c'est la seule classe de garde qui ait
-            // fermé ce genre de défaut ici.
-            transform.SetAsLastSibling();
         }
 
         // ----------------------------------------------------------- roster UI (B2)
