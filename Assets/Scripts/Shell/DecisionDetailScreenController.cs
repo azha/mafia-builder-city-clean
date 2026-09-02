@@ -194,6 +194,17 @@ namespace MafiaCleanCity.Shell
             RectTransform selfRt = GetComponent<RectTransform>();
             if (selfRt == null) selfRt = gameObject.AddComponent<RectTransform>();
 
+            // ⛔ UN ÉCRAN EN SURIMPRESSION SANS FOND N'EN EST PAS UN. Mesuré sur la première
+            // capture : la carte, les pips et le tampon rendaient correctement — et la carte de la
+            // ville, ses districts et les blocs de l'Accueil traversaient tout, rendant l'écran
+            // illisible. Le défaut ne se voit PAS en lisant le contrôleur : il naît de ce qu'il y a
+            // DERRIÈRE, donc seule une capture prise sur le chemin réel pouvait le montrer.
+            // ⇒ Le voile est opaque, pas un scrim : cet écran REMPLACE la vue, il ne la nuance pas.
+            Image voile = gameObject.AddComponent<Image>();
+            voile.color = DesignTokens.Current.surfaceBase;
+            voile.raycastTarget = true;   // et il AVALE les clics : sans ça, un doigt qui tombe entre
+                                          // deux éléments actionne l'écran de dessous.
+
             VerticalLayoutGroup vlg = gameObject.AddComponent<VerticalLayoutGroup>();
             vlg.padding = new RectOffset((int)Px(10f), (int)Px(10f),
                                          (int)ShellChrome.TopInsetPx + (int)Px(6f),

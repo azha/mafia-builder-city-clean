@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="1" result="Passed" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-09-02 00:09:47Z" end-time="2026-09-02 00:09:48Z" duration="0.940453">
+  <test-suite type="TestSuite" id="1471" name="mafia-builder-city-clean" fullname="mafia-builder-city-clean" runstate="Runnable" testcasecount="366" result="Passed" start-time="2026-09-02 00:09:47Z" end-time="2026-09-02 00:09:48Z" duration="0.940453" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="PlayMode" />
+    </properties>
+    <test-suite type="Assembly" id="1452" name="CityMap.PlayMode.Tests.dll" fullname="/home/erutheone/project/mafia-unity-F/Library/ScriptAssemblies/CityMap.PlayMode.Tests.dll" runstate="Runnable" testcasecount="366" result="Passed" start-time="2026-09-02 00:09:47Z" end-time="2026-09-02 00:09:48Z" duration="0.934262" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="2149988" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="PlayMode" />
+        <property name="EditorOnly" value="False" />
+      </properties>
+      <test-suite type="TestSuite" id="1453" name="MafiaCleanCity" fullname="MafiaCleanCity" runstate="Runnable" testcasecount="366" result="Passed" start-time="2026-09-02 00:09:47Z" end-time="2026-09-02 00:09:48Z" duration="0.931525" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="TestSuite" id="1466" name="Shell" fullname="MafiaCleanCity.Shell" runstate="Runnable" testcasecount="124" result="Passed" start-time="2026-09-02 00:09:47Z" end-time="2026-09-02 00:09:48Z" duration="0.929275" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-suite type="TestSuite" id="1467" name="Tests" fullname="MafiaCleanCity.Shell.Tests" runstate="Runnable" testcasecount="124" result="Passed" start-time="2026-09-02 00:09:47Z" end-time="2026-09-02 00:09:48Z" duration="0.928428" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-suite type="TestFixture" id="1367" name="DecisionDetailCapturePlayModeTests" fullname="MafiaCleanCity.Shell.Tests.DecisionDetailCapturePlayModeTests" classname="MafiaCleanCity.Shell.Tests.DecisionDetailCapturePlayModeTests" runstate="Runnable" testcasecount="1" result="Passed" start-time="2026-09-02 00:09:47Z" end-time="2026-09-02 00:09:48Z" duration="0.926570" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1368" name="Capture_DecisionDetail_1080x2400" fullname="MafiaCleanCity.Shell.Tests.DecisionDetailCapturePlayModeTests.Capture_DecisionDetail_1080x2400" methodname="Capture_DecisionDetail_1080x2400" classname="MafiaCleanCity.Shell.Tests.DecisionDetailCapturePlayModeTests" runstate="Runnable" seed="976439477" result="Passed" start-time="2026-09-02 00:09:47Z" end-time="2026-09-02 00:09:48Z" duration="0.919083" asserts="0">
+                <properties>
+                  <property name="_JOINTYPE" value="UnityCombinatorial" />
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <output><![CDATA[
+IgnoreFailingMessages:true
+[DemoIdentityResolver] régime=défaut identité=operational_demo@example.test
+[CityMap] Loaded 18 districts (north=9, south=9).
+[CAPTURE diag] canvas=Canvas mode=ScreenSpaceOverlay contentSlot.parentCanvas=Canvas decision.parent=ContentSlot
+[CAPTURE diag] canvas.rect=1280x2844 orthoSize=1422.2 scaleFactor=0.844
+[CAPTURE] Assets/Screenshots/decision_du_jour_1080x2400.png 1080x2400 — 538 teintes distinctes · carte=db12f574-24a3-41c0-8e5d-f737a41dc4e7 sabot=False
+<b><color=#2EA3FF>MCP-FOR-UNITY</color></b>: [TestRunnerNoThrottle] Restored Interaction Mode after test run.
+Saving results to: /home/erutheone/.config/unity3d/DefaultCompany/mafia-builder-city-clean/TestResults.xml
+]]></output>
+              </test-case>
+            </test-suite>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>
