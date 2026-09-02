@@ -420,6 +420,7 @@ namespace MafiaCleanCity.Shell
                 {
                     ActivateTab(Tab.Empire); // repli : le locataire signera lui-même
                     MonterLocataireEnSurimpression<DashboardController>();
+                    int generationEchec = SurimpressionsMontees; // capturée APRÈS la nôtre — garde plus bas
                     // ROUND 7 (revue ⊥, BLOQUANT 2 — je change de décision, la mesure me le fait
                     // faire) — la seconde moitié du ruling (« puis on tombe sur la ville ») livrée
                     // avec le mécanisme DÉJÀ câblé pour le district (`EnterDistrict`, plus haut) :
@@ -458,8 +459,24 @@ namespace MafiaCleanCity.Shell
                     // nommément la classe "IMPORTANT-1 (verdict ⊥ HUD v3.1)" citée 24 lignes plus haut
                     // ("payée deux fois"), ici une TROISIÈME. La sentinelle `(Tab)(-1)` ne peut plus
                     // être relue telle quelle : `ActivateTab` vient de la remplacer par `Tab.Empire`.
+                    // ⛔⛔ LA GÉNÉRATION, PAS SEULEMENT L'ONGLET — défaut de PRODUCTION mesuré le
+                    //    2026-09-02 (vu sur une capture par la session f1, caractérisé ici sur le
+                    //    code). `CurrentTab` ne change QUE dans `ActivateTab` : une SURIMPRESSION ne
+                    //    le touche jamais. Or NEUF sites de production en montent une
+                    //    (`DashboardController` ×5, `ExceptionQueueController`, `LaunderingController`,
+                    //    `ExceptionQueuePanelController`, `HomeChromeController`). Un joueur qui en
+                    //    ouvre une PENDANT la frame de marge ci-dessus laisse donc `CurrentTab ==
+                    //    Empire` : la garde d'onglet PASSE, et les quatre panneaux de l'Accueil se
+                    //    posent en DERNIERS FRÈRES — par-dessus l'écran qu'il vient d'ouvrir. Il
+                    //    reste actif, à la bonne taille, sous le bon canvas, et INVISIBLE.
+                    //    ⇒ La garde d'onglet demandait « le joueur a-t-il changé d'ONGLET ? ». La
+                    //      question utile est « le monde a-t-il bougé sous moi ? ». Ce ne sont pas
+                    //      les mêmes, et la première est VRAIE dans le cas exact qu'on veut exclure.
+                    //    ⚠️ `UneSurimpressionAEteMontee` ne pouvait pas servir : le shell vient de le
+                    //      mettre à vrai en montant l'Accueil. D'où la génération.
                     if (this == null) yield break; // shell torn down mid-fetch
-                    if (CurrentTab != Tab.Empire) yield break; // joueur déjà parti vers un autre onglet pendant ce frame
+                    if (CurrentTab != Tab.Empire) yield break; // parti vers un autre onglet pendant ce frame
+                    if (SurimpressionsMontees != generationEchec) yield break; // a ouvert un écran : ne pas l'enterrer
                     MonterPanneauxAccueil(null); // aucune session obtenue — les 4 rendent leur état vide NOMMÉ
                 }
                 yield break;
@@ -508,6 +525,7 @@ namespace MafiaCleanCity.Shell
             {
                 ActivateTab(Tab.Empire);
                 MonterLocataireEnSurimpression<DashboardController>();
+                int generation = SurimpressionsMontees; // capturée APRÈS la nôtre — garde plus bas
                 // ROUND 7 (revue ⊥, BLOQUANT 2) — même geste, même ordre, même raison que la branche
                 // d'échec ci-dessus : `ActivateTab` a déjà remis l'action de tête à `None`, cette
                 // ligne vient donc APRÈS lui et après le montage de l'overlay.
@@ -531,8 +549,23 @@ namespace MafiaCleanCity.Shell
                 // navigation vers un autre onglet. `this == null` reste un `yield break` immédiat
                 // (objet détruit ⇒ toucher `PublishCitywideHeat`/`t` plus bas serait unsafe) ; le
                 // sentinel de navigation, lui, ne garde QUE le montage des panneaux.
+                // ⛔⛔ LA GÉNÉRATION, PAS SEULEMENT L'ONGLET — défaut de PRODUCTION mesuré le
+                //    2026-09-02 (vu sur une capture par la session f1, caractérisé ici sur le
+                //    code). `CurrentTab` ne change QUE dans `ActivateTab` : une SURIMPRESSION ne
+                //    le touche jamais. Or NEUF sites de production en montent une
+                //    (`DashboardController` ×5, `ExceptionQueueController`, `LaunderingController`,
+                //    `ExceptionQueuePanelController`, `HomeChromeController`). Un joueur qui en
+                //    ouvre une PENDANT la frame de marge ci-dessus laisse donc `CurrentTab ==
+                //    Empire` : la garde d'onglet PASSE, et les quatre panneaux de l'Accueil se
+                //    posent en DERNIERS FRÈRES — par-dessus l'écran qu'il vient d'ouvrir. Il
+                //    reste actif, à la bonne taille, sous le bon canvas, et INVISIBLE.
+                //    ⇒ La garde d'onglet demandait « le joueur a-t-il changé d'ONGLET ? ». La
+                //      question utile est « le monde a-t-il bougé sous moi ? ». Ce ne sont pas
+                //      les mêmes, et la première est VRAIE dans le cas exact qu'on veut exclure.
+                //    ⚠️ `UneSurimpressionAEteMontee` ne pouvait pas servir : le shell vient de le
+                //      mettre à vrai en montant l'Accueil. D'où la génération.
                 if (this == null) yield break; // shell torn down mid-fetch
-                if (CurrentTab == Tab.Empire) MonterPanneauxAccueil(dto);
+                if (CurrentTab == Tab.Empire && SurimpressionsMontees == generation) MonterPanneauxAccueil(dto);
             }
 
             // §6.2, AMENDÉ (B1, Deviation) — le chunk 5 sondait CONDITIONNELLEMENT ("seulement si le
@@ -730,12 +763,26 @@ namespace MafiaCleanCity.Shell
         public T MonterLocataireEnSurimpression<T>() where T : MonoBehaviour, IShellTenant
         {
             UneSurimpressionAEteMontee = true;
+            // ⛔⛔ UN COMPTEUR EN PLUS DU BOOLÉEN, et ce n'est pas une redondance (2026-09-02).
+            //    Le booléen répond « une surimpression a-t-elle été montée DEPUIS LE DÉBUT ? ».
+            //    `AcquireSessionThenActivateHome` a besoin d'une AUTRE question : « une surimpression
+            //    a-t-elle été montée DEPUIS LA MIENNE ? » — et le booléen ne peut pas y répondre,
+            //    puisque c'est le shell lui-même qui vient de le mettre à vrai en montant l'Accueil.
+            //    *Un drapeau déjà armé ne discrimine plus rien ; seule une GÉNÉRATION le peut.*
+            SurimpressionsMontees++;
             return ConstruireLocataire<T>(out _);
         }
 
         /// <summary>Vrai dès qu'une surimpression a été montée par un geste du joueur. Lu par le
         /// sentinel d'acquisition, qui sans lui ne voit que la navigation par onglet.</summary>
         public bool UneSurimpressionAEteMontee { get; private set; }
+
+        /// <summary>Nombre de locataires montés EN SURIMPRESSION depuis le démarrage. Sert de
+        /// GÉNÉRATION : un appelant capture la valeur, laisse passer des frames, et sait ensuite si
+        /// quelqu'un d'autre a ouvert un écran entre-temps — ce qu'un booléen déjà armé ne peut pas
+        /// dire. Crochet de test autant que garde de production : sans lui, « rien n'a bougé sous
+        /// moi » n'est pas une propriété observable.</summary>
+        public int SurimpressionsMontees { get; private set; }
 
         /// <summary>Item 0.5 §2 (Tools/charpente-item05-design.md) — les 4 panneaux orphelins de
         /// l'Accueil (`HighestLeverageCardController`/`ExceptionQueuePanelController`/
