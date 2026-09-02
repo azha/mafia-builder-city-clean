@@ -349,8 +349,47 @@ namespace MafiaCleanCity.Economy.Shop
             terminalTexte.enableWordWrapping = true;
             terminalTexte.gameObject.SetActive(false);
 
-            GameObject liste = Bloc("Etageres", transform, false, Px(8f));
-            etageres = (RectTransform)liste.transform;
+            // ⛔⛔ NEUF ARTICLES NE TIENNENT PAS DANS 569 px, ET SANS DÉFILEMENT LE GROUPE LES
+            // ÉCRASE AU LIEU DE DÉBORDER. Mesuré par sonde géométrique, pas déduit — les quatre
+            // enfants de la première rangée sont bien placés et espacés (y = -36,7 / -58,9 /
+            // -80,6 / -131,3, le groupe vertical FONCTIONNE), mais leur hauteur RÉELLE tombe à
+            // ~5 px pour une hauteur PRÉFÉRÉE de ~55 :
+            //     rangée h=200,8 · [0] Tete h=5,4 prefH=55,5 · [1] Prix h=5,0 prefH=51,8
+            //                     · [2] Donne h=4,2 prefH=43,2 · [3] Geste h=63,1
+            // TMP dessine son texte HORS de sa boîte quand la boîte est trop petite : d'où neuf
+            // articles superposés et illisibles, sans une seule erreur.
+            // ⇒ Trois hypothèses fausses avaient précédé cette mesure (hauteur des textes, hauteur
+            // du bloc de tête, imbrication), et un correctif posé sur la deuxième n'avait RIEN
+            // changé. *Une explication qui n'explique qu'une partie des occurrences est fausse,
+            // pas partielle* — le comptoir superposait aussi, sans bloc imbriqué.
+            // ⇒ La vraie cause n'est pas la géométrie d'une rangée, c'est que le CONTENU dépasse
+            // le cadre. Une boutique à neuf articles a besoin de DÉFILER ; comprimer était le
+            // symptôme, pas le sujet. ㉒ et ⑲ rendent juste parce qu'ils tiennent, pas parce
+            // qu'ils sont mieux construits.
+            GameObject vue = new GameObject("Defilement", typeof(RectTransform));
+            vue.transform.SetParent(transform, false);
+            Image masque = vue.AddComponent<Image>();
+            masque.color = new Color(0f, 0f, 0f, 0.004f);   // un masque exige un Graphic pour agir
+            vue.AddComponent<Mask>().showMaskGraphic = false;
+            LayoutElement vueLe = vue.AddComponent<LayoutElement>();
+            vueLe.flexibleHeight = 1f;                      // prend toute la hauteur restante
+            ScrollRect defil = vue.AddComponent<ScrollRect>();
+            defil.horizontal = false;
+            defil.movementType = ScrollRect.MovementType.Clamped;
+            defil.scrollSensitivity = Px(20f);
+
+            GameObject liste = Bloc("Etageres", vue.transform, false, Px(8f));
+            RectTransform listeRt = (RectTransform)liste.transform;
+            listeRt.anchorMin = new Vector2(0f, 1f);
+            listeRt.anchorMax = new Vector2(1f, 1f);
+            listeRt.pivot = new Vector2(0.5f, 1f);
+            // ⚠️ Sans ce fitter, le contenu garde la hauteur du cadre et le groupe écrase de
+            // nouveau : c'est LUI qui laisse la liste grandir au-delà de ce qui est visible.
+            var fitter = liste.AddComponent<ContentSizeFitter>();
+            fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            defil.content = listeRt;
+            defil.viewport = (RectTransform)vue.transform;
+            etageres = listeRt;
 
             videTexte = Texte(transform, "Vide", "", Px(11f), Creme2,
                               DesignTokens.Current.hudSerifFont, TextAlignmentOptions.Center);
