@@ -115,10 +115,10 @@ namespace MafiaCleanCity.Operational
                 else if (c.affordable) aPortee++;
             }
 
-            sousTitre.text = "CE QUE LE SERVEUR NE DIT PAS";
-            MajCompteur(0, aPortee, cartes.Length, "À PORTÉE");
-            MajCompteur(1, prises, -1, "DÉJÀ PRISES");
-            MajCompteur(2, reculees, -1, "ONT RECULÉ");
+            sousTitre.text = Lib("CE QUE LE SERVEUR NE DIT PAS");
+            MajCompteur(0, aPortee, cartes.Length, Lib("À PORTÉE"));
+            MajCompteur(1, prises, -1, Lib("DÉJÀ PRISES"));
+            MajCompteur(2, reculees, -1, Lib("ONT RECULÉ"));
 
             RendreCartes(cartes);
 
@@ -128,8 +128,8 @@ namespace MafiaCleanCity.Operational
             // dictionnaire du jeu ne contient aujourd'hui que des messages d'erreur.
             // ★ C'est la même règle que sur ㊲ : afficher un nom inventé serait plus joli et
             //   faux. Ici le dessin lui-même a tranché en faveur du vrai.
-            MajPanneau("CE QUE LE SERVEUR ENVOIE VRAIMENT",
-                cartes.Length == 0 ? "Rien à l'horizon" : "Aucune de ces cartes n'a de nom",
+            MajPanneau(Lib("CE QUE LE SERVEUR ENVOIE VRAIMENT"),
+                cartes.Length == 0 ? Lib("Rien à l'horizon") : Lib("Aucune de ces cartes n'a de nom"),
                 cartes.Length == 0
                     ? "le serveur ne propose aucune capacité pour l'instant — ce n'est pas une "
                       + "panne, c'est un état : rien n'est encore à portée."
@@ -184,7 +184,7 @@ namespace MafiaCleanCity.Operational
                 if (c.predicate_regressed)
                 {
                     TextMeshProUGUI perte = NouveauTexte(carte.transform, "Perte",
-                        "C'était à portée. Ça s'est éloigné.", 10f, AccentRecule);
+                        Lib("C'était à portée. Ça s'est éloigné."), 10f, AccentRecule);
                     perte.fontStyle = TMPro.FontStyles.Bold;
                 }
             }
@@ -372,7 +372,7 @@ namespace MafiaCleanCity.Operational
             v.childForceExpandWidth = true; v.childForceExpandHeight = false;
             v.childAlignment = TextAnchor.MiddleCenter;
 
-            TextMeshProUGUI titre = NouveauTexte(go.transform, "Titre", "L'horizon",
+            TextMeshProUGUI titre = NouveauTexte(go.transform, "Titre", Lib("L'horizon"),
                                                  CssTitreCorps, DesignTokens.Current.accentGold);
             titre.alignment = TextAlignmentOptions.Center;
             titre.characterSpacing = 20f;
@@ -506,6 +506,17 @@ namespace MafiaCleanCity.Operational
             img.raycastTarget = false;
             return img;
         }
+
+        /// <summary>Item 0.6 — un littéral STATIQUE de ㊱ passe par `horizon.bloc.<slug>`,
+        /// repli sur le littéral.
+        /// ⛔ N'Y PASSENT PAS : `c.capability_key` (une CLÉ SERVEUR, déjà affichée telle quelle et
+        /// à dessein — c'est le propos de cet écran), ni les phrases du panneau qui varient avec
+        /// le nombre de cartes, ni `view_status` / `predicate_type` (valeurs de domaine).
+        /// ★ Sur cet écran, afficher une clé nue N'EST PAS un défaut : c'est ce qu'il montre
+        ///   exprès — « le serveur ne rend que des clés de traduction ». La conversion ne doit
+        ///   surtout pas « réparer » ça.</summary>
+        private static string Lib(string litteral) =>
+            MafiaCleanCity.I18n.Libelle.De("horizon", "bloc", litteral);
 
         private static TextMeshProUGUI NouveauTexte(Transform parent, string nom, string texte,
                                                      float corpsPx, Color couleur, TMP_FontAsset police)
