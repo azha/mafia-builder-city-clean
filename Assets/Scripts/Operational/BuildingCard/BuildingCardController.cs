@@ -1097,9 +1097,9 @@ namespace MafiaCleanCity.Operational
         {
             switch (s)
             {
-                case "OPERATIONAL": return "Operational";
-                case "IN_SETUP": return "In setup";
-                case "NOT_CONVERTED": return "Not converted";
+                case "OPERATIONAL": return Cle("setup", "Operational");
+                case "IN_SETUP": return Cle("setup", "In setup");
+                case "NOT_CONVERTED": return Cle("setup", "Not converted");
                 default: return s;
             }
         }
@@ -1112,10 +1112,10 @@ namespace MafiaCleanCity.Operational
         {
             switch (b)
             {
-                case "STRONG": return "Strong";
-                case "STANDARD": return "Standard";
-                case "WEAK": return "Weak";
-                case "NONE": return "None";
+                case "STRONG": return Cle("cover", "Strong");
+                case "STANDARD": return Cle("cover", "Standard");
+                case "WEAK": return Cle("cover", "Weak");
+                case "NONE": return Cle("cover", "None");
                 default: return b;
             }
         }
@@ -1137,9 +1137,9 @@ namespace MafiaCleanCity.Operational
         {
             switch (s)
             {
-                case "OPERATIONAL": return "Intact";
-                case "DAMAGED": return "Damaged";
-                case "REPAIRING": return "Repairing";
+                case "OPERATIONAL": return Cle("structural", "Intact");
+                case "DAMAGED": return Cle("structural", "Damaged");
+                case "REPAIRING": return Cle("structural", "Repairing");
                 default: return s;
             }
         }
@@ -1154,10 +1154,10 @@ namespace MafiaCleanCity.Operational
         {
             switch (b)
             {
-                case "LOW": return "Low";
-                case "ELEVATED": return "Elevated";
-                case "HIGH": return "High";
-                case "IMMINENT": return "Imminent";
+                case "LOW": return Cle("raid_risk", "Low");
+                case "ELEVATED": return Cle("raid_risk", "Elevated");
+                case "HIGH": return Cle("raid_risk", "High");
+                case "IMMINENT": return Cle("raid_risk", "Imminent");
                 default: return b;
             }
         }
@@ -1207,11 +1207,11 @@ namespace MafiaCleanCity.Operational
         {
             switch (s)
             {
-                case "BRINDLE": return "Brindle";
-                case "CRICK": return "Crick";
-                case "HUSH": return "Hush";
-                case "ASH": return "Ash";
-                case "": case null: return "—";
+                case "BRINDLE": return Cle("substance", "Brindle");
+                case "CRICK": return Cle("substance", "Crick");
+                case "HUSH": return Cle("substance", "Hush");
+                case "ASH": return Cle("substance", "Ash");
+                case "": case null: return Cle("substance", "—");
                 default: return s;
             }
         }
@@ -1222,9 +1222,9 @@ namespace MafiaCleanCity.Operational
         {
             switch (b)
             {
-                case "OPTIMAL_COLD": return "Optimal (cold)";
-                case "MODERATE": return "Warming";
-                case "HOT": return "Hot";
+                case "OPTIMAL_COLD": return Cle("temperature", "Optimal (cold)");
+                case "MODERATE": return Cle("temperature", "Warming");
+                case "HOT": return Cle("temperature", "Hot");
                 default: return b;
             }
         }
@@ -1623,8 +1623,8 @@ namespace MafiaCleanCity.Operational
         {
             switch (b)
             {
-                case "IDLE": return "Idle";
-                case "EARNING": return "Earning";
+                case "IDLE": return Cle("yield", "Idle");
+                case "EARNING": return Cle("yield", "Earning");
                 default: return b;
             }
         }
@@ -1858,6 +1858,50 @@ namespace MafiaCleanCity.Operational
             return MafiaCleanCity.I18n.I18nCatalog.Traduire(card.name_i18n.key, p);
         }
 
+        /// <summary>ITEM 0.6 — un littéral d'écran passe par une CLÉ, et retombe sur lui-même.
+        ///
+        /// **Décision de conception, prise ici et écrite dans le commit** : la clé est DÉRIVÉE du
+        /// littéral (`building.<rôle>.<slug>`) au lieu d'être posée à chaque site d'appel.
+        /// · ② porte **152 littéraux visibles** (45 directs + 107 rendus par ses résolveurs,
+        ///   mesuré) : les réécrire un par un, c'est 152 occasions de casser un écran monté et
+        ///   quatre fichiers de tests qui assertent ces valeurs.
+        /// · Le repli est le littéral LUI-MÊME, byte-identique. Tant que le dictionnaire ne porte
+        ///   pas la clé, **l'écran ne change pas d'un pixel** et les gardes existantes restent
+        ///   vraies. Le jour où planque ajoute l'entrée, le texte devient traduisible sans
+        ///   toucher au client.
+        /// ⚠️ CE QUI NE PASSE PAS PAR ICI, et c'est délibéré : les valeurs DYNAMIQUES. « Dans 30 j »
+        /// contient une donnée ; en dériver une clé fabriquerait une clé par nombre —
+        /// `building.value.dans_30_j`, `..._29_j`, à l'infini. Une clé doit nommer une PHRASE
+        /// FERMÉE, jamais une phrase calculée. Seuls les libellés de rangée (statiques) et les
+        /// vocabulaires fermés des résolveurs y passent.
+        /// ⛔ `Connait` AVANT `Traduire` : sans ce test, une clé absente remplacerait un texte
+        /// lisible par `building.row.setup` à l'écran — une régression déguisée en progrès.</summary>
+        internal static string Cle(string role, string litteral)
+        {
+            if (string.IsNullOrEmpty(litteral)) return litteral;
+            string slug = Slug(litteral);
+            if (slug.Length == 0) return litteral;
+            string cle = "building." + role + "." + slug;
+            return MafiaCleanCity.I18n.I18nCatalog.Connait(cle)
+                ? MafiaCleanCity.I18n.I18nCatalog.Traduire(cle)
+                : litteral;
+        }
+
+        /// <summary>Minuscules, accents pliés, tout le reste en `_`. Déterministe : le même
+        /// littéral rend toujours la même clé, sur toutes les machines.</summary>
+        internal static string Slug(string s)
+        {
+            var sb = new System.Text.StringBuilder();
+            foreach (char c in s.Normalize(System.Text.NormalizationForm.FormD))
+            {
+                if (System.Globalization.CharUnicodeInfo.GetUnicodeCategory(c)
+                    == System.Globalization.UnicodeCategory.NonSpacingMark) continue;
+                if (char.IsLetterOrDigit(c)) sb.Append(char.ToLowerInvariant(c));
+                else if (sb.Length > 0 && sb[sb.Length - 1] != '_') sb.Append('_');
+            }
+            return sb.ToString().Trim('_');
+        }
+
         private void AddStatusRow(string label, string value, string glyph, Color accent)
         {
             GameObject row = NewUI("Row_" + label, statusRows);
@@ -1878,7 +1922,8 @@ namespace MafiaCleanCity.Operational
             g.fontStyle = FontStyles.Bold;
             AddLayoutElement(g.gameObject, minWidth: 46, preferredWidth: 46, flexibleWidth: 0);
 
-            TextMeshProUGUI l = NewText("Label", row.transform, label, 15, TextAlignmentOptions.Left);
+            string libelle = Cle("row", label);
+            TextMeshProUGUI l = NewText("Label", row.transform, libelle, 15, TextAlignmentOptions.Left);
             l.color = DesignTokens.Current.onSurfaceMuted;
             AddLayoutElement(l.gameObject, minWidth: 120, flexibleWidth: 1);
 
@@ -1888,7 +1933,7 @@ namespace MafiaCleanCity.Operational
             AddLayoutElement(v.gameObject, minWidth: 140, flexibleWidth: 0);
 
             TrackText(g, glyph);
-            TrackText(l, label);
+            TrackText(l, libelle);
             TrackText(v, value);
         }
 
