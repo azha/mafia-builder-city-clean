@@ -1168,7 +1168,17 @@ namespace MafiaCleanCity.Capture.Tests
         ///
         /// Les gardes anti-mensonge sont celles du patron voisin : un slot vide produit un PNG
         /// parfaitement valide, et une capture d'écran vide ressemble à une capture.</summary>
-        [Category("Capture")]
+        /// ⛔ CATÉGORIE PROPRE, ajoutée le 2026-09-02 : cette capture ne portait que `Capture`,
+        /// la catégorie de CLASSE que TOUS les tests de ce fichier portent. Elle était donc
+        /// INJOIGNABLE seule — l'atteindre exigeait de demander `Capture` nu, qui emporte par
+        /// PRÉFIXE les treize tests du fichier et fait SIGSEGV dans Mesa.
+        /// ★ Je venais d'armer `LisibiliteDuTexte` ici en écrivant « les 7 captures sous chrome,
+        ///   toutes armées ». Armée, elle l'était ; ATTEIGNABLE, non. Une garde qu'aucun run
+        ///   praticable n'exécute est une garde qui n'existe pas — la même leçon que celle qui
+        ///   m'a fait l'étendre, rencontrée un cran plus loin.
+        /// ⇒ Ses cinq sœurs adressables s'appellent déjà CaptureDetail / CaptureFiche /
+        ///   CaptureExceptions / CaptureHorizon / CaptureSousChrome ; celle-ci suit.
+        [Category("CaptureReputation")]
         public IEnumerator Capture_EcranReputation_SousChrome()
         {
             var auth = new AuthClient { BaseUrl = BaseUrl };
