@@ -95,6 +95,20 @@ namespace MafiaCleanCity.Operational.Selling
         {
             mountParent = parent;
             Init();
+            // ⛔ LES ANCRES SONT LE TRAVAIL DE L'ÉCRAN, ET LES RETIRER A ÉTÉ UNE SUR-CORRECTION.
+            // Mesuré dans les deux sens : AVEC elles `rect=1280x960` (la taille réelle du
+            // `ContentSlot`), SANS elles `rect=100x100` — la taille par défaut d'un RectTransform
+            // neuf — et l'écran ne dessine plus rien du tout.
+            // ⇒ Ce que la mesure précédente disait vraiment n'était pas « le placement appartient
+            // au shell », c'était « le shell alloue 960 de haut, pas le plein cadre ». J'ai conclu
+            // d'un rect qui ne changeait pas qu'il ne fallait rien poser, alors qu'il ne changeait
+            // pas parce qu'il était DÉJÀ correct. *Un chiffre stable entre deux essais ne dit pas
+            // que le geste est inutile : il peut dire qu'il a marché les deux fois.*
+            RectTransform rt = (RectTransform)transform;
+            rt.anchorMin = Vector2.zero;
+            rt.anchorMax = Vector2.one;
+            rt.offsetMin = Vector2.zero;
+            rt.offsetMax = Vector2.zero;
         }
 
         public void SetToken(string bearer)

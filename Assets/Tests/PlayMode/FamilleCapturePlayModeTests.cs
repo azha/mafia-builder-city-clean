@@ -166,6 +166,19 @@ namespace MafiaCleanCity.Shell.Tests
             }
             Debug.Log($"[CAPTURE] {Chemin} {Largeur}x{Hauteur} — {teintes.Count} teintes distinctes · " +
                       $"roster={(famille.CurrentRoster != null ? famille.CurrentRoster.Length : -1)}");
+            // ⛔⛔ CETTE GARDE A CERTIFIÉ UN ÉCRAN ABSENT — mesuré le 2026-09-02 sur ㉟. Elle
+            // comptait les teintes de TOUTE l'image, donc elle passait au vert dès que N'IMPORTE
+            // QUEL écran rendait : la capture montrait la carte de la ville, l'autonomie et le
+            // dock empilés, 616 teintes, et le locataire nulle part. La grandeur qui discrimine
+            // n'est pas la variété du CADRE, c'est la taille du LOCATAIRE : un RectTransform neuf
+            // fait 100x100, et un écran de cette taille ne dessine rien de visible.
+            // ⇒ Contrôle de FORME, indépendant de tout pixel, posé AVANT le compte de teintes —
+            // c'est le seul qui pouvait voir ce défaut, et il coûte deux lignes.
+            RectTransform locataireRt = (RectTransform)famille.transform;
+            Assert.Greater(locataireRt.rect.width, 200f,
+                $"le locataire fait {locataireRt.rect.width:F0}x{locataireRt.rect.height:F0} — c'est la "
+                + "taille par défaut d'un RectTransform, donc il ne dessine rien et la capture montre "
+                + "les écrans du DESSOUS. Le compte de teintes serait vert quand même.");
             Assert.Greater(teintes.Count, 12,
                 $"{Chemin} ne porte que {teintes.Count} teintes — c'est un fond, pas un écran rendu.");
 

@@ -94,6 +94,16 @@ namespace MafiaCleanCity.Economy.Shop
         {
             mountParent = parent;
             Init();
+            // ⛔ Sans ces quatre lignes le rect reste à 100x100 — la taille par défaut d'un
+            // RectTransform neuf — et l'écran ne dessine RIEN, sans erreur console. Mesuré sur ㉟
+            // le 2026-09-02, capture à l'appui : la garde anti-vacuité était verte quand même,
+            // parce qu'elle comptait les teintes de TOUTE l'image et que les écrans du dessous
+            // rendaient. Une garde qui mesure le cadre ne peut pas voir qu'un locataire est absent.
+            RectTransform rt = (RectTransform)transform;
+            rt.anchorMin = Vector2.zero;
+            rt.anchorMax = Vector2.one;
+            rt.offsetMin = Vector2.zero;
+            rt.offsetMax = Vector2.zero;
         }
 
         public void SetToken(string bearer)
