@@ -394,11 +394,17 @@ namespace MafiaCleanCity.Operational.Tests
             ExceptionQueueController ctl = null;
             yield return MonterFileAvecCartes(new[] { "a", "b", "c" }, c => ctl = c);
 
+            // ⛔ NAVIGUER DEPUIS LA RACINE VIVANTE, jamais `GameObject.Find`. `RendreFile`
+            // détruit ses enfants avant de les recréer et `Destroy` est DIFFÉRÉ : la recherche
+            // par nom rendait un attendant de la génération précédente, encore trouvable et déjà
+            // condamné. Son `onClick` levait sur un contrôleur mort — sans jamais entrer dans
+            // `OpenDetail`, ce que le diagnostic a montré (aucune trace pour les cartes a/b/c).
+            var attendants = ctl.AttendantsPourTest();
+            Assert.AreEqual(3, attendants.Count,
+                $"la file doit porter trois attendants touchables (mesuré {attendants.Count})");
             for (int i = 0; i < 3; i++)
             {
-                GameObject att = GameObject.Find($"Attendant{i}");
-                Assert.IsNotNull(att, $"l'attendant {i} doit être dessiné");
-                var bouton = att.GetComponent<UnityEngine.UI.Button>();
+                var bouton = attendants[i];
                 Assert.IsNotNull(bouton, $"l'attendant {i} doit être touchable — sinon il est décoratif");
 
                 bouton.onClick.Invoke();

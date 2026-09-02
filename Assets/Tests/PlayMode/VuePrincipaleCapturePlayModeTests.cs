@@ -840,6 +840,63 @@ namespace MafiaCleanCity.Capture.Tests
         }
 
         [UnityTest]
+        /// <summary>⑩ SOUS LE CHROME — la main de cartes, état NON MUTANT.
+        ///
+        /// Ouvre le détail par le CHEMIN JOUEUR : on touche un attendant de ⑨, qui monte ⑩ en
+        /// surimpression. Rien n'est résolu — cette capture ne consomme aucune carte et peut
+        /// donc être rejouée autant de fois qu'on veut.
+        /// ⚠️ L'état « après le tampon » est dans un test SÉPARÉ parce qu'il MUTE : il consomme
+        /// une exception pour de bon. Les mélanger ferait d'une capture rejouable une capture
+        /// qui abîme le compte à chaque exécution.</summary>
+        [Category("CaptureDetail")]
+        public IEnumerator Capture_Detail_MainDeCartes_SousChrome()
+        {
+            LogAssert.ignoreFailingMessages = true;
+            shellGo = new GameObject("DetailShell");
+            shell = shellGo.AddComponent<AppShell>();
+            yield return null;
+            float t0 = Time.realtimeSinceStartup;
+            while (string.IsNullOrEmpty(shell.Token) && Time.realtimeSinceStartup - t0 < 30f) yield return null;
+            Assert.IsFalse(string.IsNullOrEmpty(shell.Token), "le shell doit avoir sa session");
+            for (int i = 0; i < 30; i++) yield return null;
+
+            var file = shell.MonterLocataireEnSurimpression<
+                MafiaCleanCity.Operational.Exceptions.ExceptionQueueController>();
+            Assert.IsNotNull(file, "⑨ doit être monté");
+            float tc = Time.realtimeSinceStartup;
+            while ((file.Cards == null || file.Cards.Length == 0)
+                   && Time.realtimeSinceStartup - tc < 30f) yield return null;
+            Assert.Greater(file.Cards.Length, 0, "la file doit porter des cartes");
+
+            // ⛔ LE GESTE JOUEUR, pas un montage forcé : on TOUCHE un attendant.
+            var attendants = file.AttendantsPourTest();
+            Assert.Greater(attendants.Count, 0, "⑨ doit porter des attendants touchables");
+            attendants[0].onClick.Invoke();
+            for (int i = 0; i < 60; i++) yield return null;
+
+            Assert.IsNotNull(file.LastDetail, "toucher un attendant doit ouvrir ⑩");
+            GameObject feuille = GameObject.Find("ExceptionDetailSheet");
+            Assert.IsNotNull(feuille, "⑩ n'a pas construit sa feuille");
+            int noeuds = feuille.GetComponentsInChildren<Transform>(true).Length;
+            Assert.Greater(noeuds, 15, $"⑩ doit avoir du contenu (mesuré {noeuds} nœuds)");
+
+            // GARDE A4 — écrite avant de regarder l'image, comme sur ② et ㊱.
+            var rt = (RectTransform)feuille.transform;
+            Assert.Greater(MafiaCleanCity.Shell.ShellChrome.BottomInsetPx, 0f,
+                "sous le chrome les insets doivent être publiés, sinon la garde ne mesure rien");
+            Assert.GreaterOrEqual(rt.offsetMin.y, MafiaCleanCity.Shell.ShellChrome.BottomInsetPx,
+                $"⑩ démarre à {rt.offsetMin.y:F0} et le dock occupe " +
+                $"{MafiaCleanCity.Shell.ShellChrome.BottomInsetPx:F0} : il passe DESSOUS.");
+            Assert.LessOrEqual(rt.offsetMax.y, -MafiaCleanCity.Shell.ShellChrome.TopInsetPx,
+                $"⑩ monte à {rt.offsetMax.y:F0} et le bandeau occupe " +
+                $"{MafiaCleanCity.Shell.ShellChrome.TopInsetPx:F0} : il passe DESSOUS.");
+
+            yield return CapturerA(1080, 2400,
+                "Assets/Screenshots/screen_5a_detail_main-de-cartes_sous_chrome_1080x2400.png");
+        }
+
+        [UnityTest]
+        
         
         
         /// <summary>⑨ SOUS LE CHROME — le bandeau et le dock, enfin dans l'image.

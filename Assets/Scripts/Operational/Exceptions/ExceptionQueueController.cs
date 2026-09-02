@@ -254,6 +254,27 @@ namespace MafiaCleanCity.Operational.Exceptions
         /// <summary>Rend une file FABRIQUÉE, sans réseau — RÉSERVÉ AUX TESTS (patron ㊲/㊱).
         /// ⛔ Ne prouve JAMAIS que le serveur émet ces cartes : seulement ce que l'écran EN FAIT.
         /// Les gardes qui portent sur le contrat de la route passent par le vrai réseau.</summary>
+        /// <summary>Les attendants RÉELLEMENT montés, dans l'ordre de la file — crochet de test.
+        /// ⛔ Existe parce que `GameObject.Find("Attendant0")` est un piège ici : `RendreFile`
+        /// DÉTRUIT ses enfants avant de les recréer, et `Destroy` est DIFFÉRÉ d'une frame. La
+        /// recherche par nom global rend donc un attendant de la génération PRÉCÉDENTE, encore
+        /// trouvable et déjà condamné ; son `onClick` lève sur un contrôleur mort, avant même
+        /// d'entrer dans `OpenDetail`.
+        /// ★ Troisième fois cette nuit que « chercher par nom global » désigne un objet mort :
+        ///   la garde qui comptait le slot, le canvas d'une fixture antérieure, et ceci. La
+        ///   parade est toujours la même — naviguer depuis la racine VIVANTE.</summary>
+        public System.Collections.Generic.IReadOnlyList<UnityEngine.UI.Button> AttendantsPourTest()
+        {
+            var l = new System.Collections.Generic.List<UnityEngine.UI.Button>();
+            if (fileRoot == null) return l;
+            for (int i = 0; i < fileRoot.childCount; i++)
+            {
+                var b = fileRoot.GetChild(i).GetComponent<UnityEngine.UI.Button>();
+                if (b != null) l.Add(b);
+            }
+            return l;
+        }
+
         public void RendrePourTest(ExceptionCardDto[] cartes)
         {
             EnsureInitialized();
