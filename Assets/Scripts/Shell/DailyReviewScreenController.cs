@@ -231,7 +231,20 @@ namespace MafiaCleanCity.Shell
             for (int i = rowsRoot.childCount - 1; i >= 0; i--) UnityEngine.Object.Destroy(rowsRoot.GetChild(i).gameObject);
 
             int enAttente = LastLoadedReview != null ? LastLoadedReview.routine_pending_count : 0;
-            bool tamponDisponible = LastLoadedReview != null && LastLoadedReview.batch_confirm_available;
+            // ⛔⛔ LE BOUTON DE LOT NE SE FIE PLUS AU SEUL BOOLÉEN DU BACK, ET C'EST UNE MESURE.
+            // Sur le compte de démo : `cards: []`, `routine_pending_count: 156`,
+            // `batch_confirm_available: TRUE`. Le tampon était donc offert sur une file VIDE, et
+            // un clic aurait confirmé 156 routines que le joueur n'a jamais vues — un geste
+            // irréversible sur un écran qui ne montre rien.
+            // ⇒ La disponibilité côté serveur dit « le lot est techniquement possible » ; elle ne
+            // dit PAS « il y a quelque chose à trancher ». Ce sont deux propriétés distinctes, et
+            // les confondre transforme un état vide en piège. Le bouton exige donc les DEUX : le
+            // feu vert du back ET au moins une carte réellement affichée.
+            // ★ Même famille que la garde satisfaite par un monde dégénéré : le booléen était
+            // VRAI dans le monde exact où il ne fallait rien proposer.
+            bool tamponDisponible = LastLoadedReview != null
+                                 && LastLoadedReview.batch_confirm_available
+                                 && cards != null && cards.Length > 0;
 
             if (cards == null || cards.Length == 0)
             {
@@ -240,6 +253,9 @@ namespace MafiaCleanCity.Shell
                 emptyStateText.gameObject.SetActive(true);
                 // « Personne au comptoir » — trois tabourets vides, le registre seul. Le texte est
                 // la scène, pas un état d'erreur : c'est une bonne nouvelle, pas un vide technique.
+                // ⚠️ L'état vide ne promet RIEN : il ne mentionne pas les routines en attente,
+                // parce qu'aucun geste ne permet de les traiter depuis ici. Nommer un nombre sans
+                // offrir de geste fabrique une attente que l'écran ne peut pas tenir.
                 emptyStateText.text = "Personne au comptoir ce matin.";
                 MajRegistre(enAttente, tamponDisponible, 0);
                 return;
