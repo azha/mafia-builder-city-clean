@@ -106,9 +106,16 @@ namespace MafiaCleanCity.Shell.Tests
             Assert.IsFalse(shell.OnEmptyMoreDestination,
                 "More monte désormais ㊲ — plus aucune destination n'est vide, et on l'affirme PAR "
                 + "VALEUR, jamais par la présence d'un composant monté");
-            Assert.AreEqual(typeof(MafiaCleanCity.Operational.ReputationScreenController),
-                shell.MountedTenantType,
-                "l'onglet More doit monter le contrôleur de ㊲, pas seulement « quelque chose »");
+            // ⚠️ 2026-09-02 — `Tab.More` ouvre le MENU des destinations (ruling « Plus → les succès
+            // → l'horizon » : Plus DÉCRIT un menu). ㊲ n'y a pas d'exception : un onglet qui serait
+            // « ㊲ + une liste » serait un menu qui ment sur son premier élément. ㊲ reste joignable
+            // en une entrée, et la garde observe toujours ce que l'onglet monte — c'est la PROPRIÉTÉ
+            // qui a changé, pas la rigueur.
+            Assert.IsNull(shell.MountedTenantType,
+                "l'onglet More ouvre un menu : aucun locataire ne doit être monté directement");
+            Assert.Greater(shell.MenuPlusEntrees, 0,
+                "le menu doit porter au moins une entrée — un menu vide passerait toute garde qui se " +
+                "contente de vérifier son existence");
         }
 
         // C1-F2 (NON-OCCLUSION — remplace l'assertion d'identité de la v1) — le locataire monte DANS

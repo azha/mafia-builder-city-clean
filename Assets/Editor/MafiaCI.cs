@@ -54,7 +54,7 @@ public static class MafiaCI
     // `Capture`, `JUGE`, `HUDv31` produisent des images ou des rapports et coûtent cher ; elles se
     // lancent nommément, pas dans le run de vérification.
     private static readonly string[] Categories =
-        { "W4P4a", "W3UDA", "W3U1", "W3U2", "Charpente", "DemoIdentity", "ScreenB3", "ShellSurimpression", "CaptureDistrict" };
+        { "W4P4a", "W3UDA", "W3U1", "W3U2", "Charpente", "DemoIdentity", "ScreenB3", "ShellSurimpression", "CaptureDistrict", "CaptureReputation" };
 
     // ⚠️ `MAFIA_CI_CATEGORIES` (liste séparée par des virgules) REMPLACE le filtre par défaut.
     // Ajouté le 2026-08-31 pour une raison précise et vérifiable : le log ne NOMME que les tests
@@ -134,13 +134,25 @@ public static class MafiaCI
                       $"declares={declares} comptes={comptes}");
             // Une suite interrompue laisse des DÉCLARÉS sans résultat. C'est le seul signal qui
             // distingue « rien n'a échoué » de « la suite s'est arrêtée et personne ne l'a dit ».
+            // ⛔⛔ UN FILTRE QUI NE MATCHE RIEN SORTAIT VERT — trou de ce dénominateur, trouvé en
+            //    m'en servant (2026-09-02) : `declares=0 comptes=0` ne déclenchait aucune alerte et
+            //    rendait RC=0. C'est EXACTEMENT le piège que l'en-tête de ce fichier décrit
+            //    (`["HUD"]` -> 31/31 VERT sur une catégorie inexistante), et ma garde passait à côté
+            //    parce qu'elle ne mordait qu'à partir de `declares > 0`.
+            //    ⇒ *Une garde bornée par « il y a quelque chose » ne voit jamais le monde vide.*
+            bool filtreVide = declares == 0;
+            if (filtreVide)
+                Debug.Log("MafiaCI: ⛔ FILTRE VIDE — 0 test déclaré sous ce filtre. Le run n'a RIEN " +
+                          "exercé : ce n'est pas « tout est vert », c'est « rien n'a été demandé ». " +
+                          "Vérifier le nom de catégorie (le filtre matche par PRÉFIXE et ne signale " +
+                          "jamais un nom inconnu).");
             bool tronquee = declares > 0 && comptes < declares;
             if (tronquee)
                 Debug.Log($"MafiaCI: ⛔ SUITE TRONQUÉE — {declares - comptes} test(s) déclarés sous le " +
                           "filtre n'ont produit AUCUN résultat (ni succès, ni échec, ni ignoré). Une " +
                           "exception non gérée interrompt la suite : les suivants ne tournent jamais et " +
                           "leur nom n'apparaît nulle part. Ce run ne prouve rien sur eux.");
-            EditorApplication.Exit(failed > 0 || tronquee ? 1 : 0);
+            EditorApplication.Exit(failed > 0 || tronquee || filtreVide ? 1 : 0);
         }
 
         // ⛔⛔ UNE LIGNE PAR TEST, ET CE N'EST PAS DU CONFORT (mesuré 2026-09-02).

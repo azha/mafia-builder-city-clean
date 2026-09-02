@@ -361,9 +361,8 @@ namespace MafiaCleanCity.Shell.Tests
                 nameof(CityMapController), nameof(BuildingCardController),
                 nameof(LaunderingController), nameof(ExceptionQueueController), nameof(AutonomyInboxController),
                 nameof(ExceptionDetailController),
-                // ⚠️ 2026-09-02 (merge `pilote-B`) : ㊲ est monté par `Tab.More`, c'est donc un
-                // locataire vivant de plein droit sous le shell.
-                nameof(MafiaCleanCity.Operational.ReputationScreenController),
+                // ⚠️ 2026-09-02 : ㊲ n'est plus monté par `Tab.More` (qui ouvre un menu) — il ne
+                // fait donc plus partie des locataires vivants de ce scénario.
             };
             var typesTrouves = locataires.Select(t => t.GetType().Name).ToList();
             CollectionAssert.AreEquivalent(typesAttendus, typesTrouves,
@@ -637,7 +636,8 @@ namespace MafiaCleanCity.Shell.Tests
                 // destination vide : il monte ㊲ La réputation. Son comportement reste NOMMÉ, il a
                 // changé de NATURE — d'où une entrée dans cette table plutôt qu'une branche à part.
                 // *La garde ne s'assouplit pas : elle change de propriété observée.*
-                { AppShell.Tab.More, typeof(MafiaCleanCity.Operational.ReputationScreenController) },
+                // ⚠️ 2026-09-02 — `Tab.More` ouvre le MENU des destinations : pas de locataire
+                // direct, donc pas d'entrée ici. ㊲ reste joignable, en PREMIÈRE entrée du menu.
             };
 
             foreach (AppShell.Tab membre in membres)
@@ -645,6 +645,16 @@ namespace MafiaCleanCity.Shell.Tests
                 shell.ActivateTab(membre);
                 yield return null;
 
+                if (membre == AppShell.Tab.More)
+                {
+                    Assert.IsNull(shell.MountedTenantType,
+                        "Tab.More ouvre un MENU : aucun locataire monté directement — trouvé " +
+                        $"{shell.MountedTenantType?.Name ?? "<rien>"}.");
+                    Assert.Greater(shell.MenuPlusEntrees, 0,
+                        "le menu doit porter au moins une entrée : un menu VIDE satisfait toute garde " +
+                        "qui se contente de vérifier qu'il existe.");
+                }
+                else
                 {
                     Assert.IsTrue(typeParTab.ContainsKey(membre),
                         $"Tab.{membre} n'a ni entrée dans typeParTab ni traitement 'destination vide' " +
@@ -764,7 +774,8 @@ namespace MafiaCleanCity.Shell.Tests
                 // ⚠️ 2026-09-02 : SECONDE table du même fichier. La première a été corrigée d'abord
                 // et celle-ci est restée rouge — *fermer l'instance qu'on a sous les yeux laisse la
                 // classe ouverte*, y compris à onze lignes d'intervalle dans le même fichier.
-                { AppShell.Tab.More, typeof(MafiaCleanCity.Operational.ReputationScreenController) },
+                // ⚠️ 2026-09-02 — `Tab.More` ouvre le MENU des destinations : pas de locataire
+                // direct, donc pas d'entrée ici. ㊲ reste joignable, en PREMIÈRE entrée du menu.
             };
 
             // ── ordre gauche→droite (attribut jamais couvert par F0.1-a/F0.2). ──
@@ -839,8 +850,12 @@ namespace MafiaCleanCity.Shell.Tests
                     "BLOQUANT) : c'est CETTE assertion, pas celle du type monté ci-dessous, qui " +
                     "détecte un clic avalé sur la bulle déjà active.");
 
-                // ⚠️ 2026-09-02 : plus de cas particulier pour `Tab.More` — il monte ㊲ comme
-                // chaque onglet monte le sien, donc il passe par la MÊME assertion que les autres.
+                if (membre == AppShell.Tab.More)
+                {
+                    Assert.IsNull(shell.MountedTenantType, "le clic réel sur Tab_More ouvre le MENU");
+                    Assert.Greater(shell.MenuPlusEntrees, 0, "le menu ouvert par un clic réel a des entrées");
+                }
+                else
                 {
                     Assert.IsTrue(typeParTab.ContainsKey(membre), $"Tab.{membre} absent de la table de destinations — test à relire");
                     Assert.AreEqual(typeParTab[membre], shell.MountedTenantType,

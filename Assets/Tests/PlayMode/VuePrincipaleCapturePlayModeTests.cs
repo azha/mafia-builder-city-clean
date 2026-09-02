@@ -440,6 +440,10 @@ namespace MafiaCleanCity.Capture.Tests
         /// Les gardes anti-mensonge sont celles du patron voisin : un slot vide produit un PNG
         /// parfaitement valide, et une capture d'écran vide ressemble à une capture.</summary>
         [Category("Capture")]
+        // ⛔ + une catégorie PROPRE (NUnit CUMULE) : la catégorie `Capture` entière fait SIGSEGV
+        //    dans le pilote Mesa — reproduit 2×, jamais sur une capture seule. Sans elle, ce
+        //    chemin joueur (Plus -> entrée -> ㊲) n'est pas lançable du tout.
+        [Category("CaptureReputation")]
         public IEnumerator Capture_EcranReputation_SousChrome()
         {
             var auth = new AuthClient { BaseUrl = BaseUrl };
@@ -464,8 +468,28 @@ namespace MafiaCleanCity.Capture.Tests
             while (string.IsNullOrEmpty(shell.Token) && Time.realtimeSinceStartup - t0 < 30f) yield return null;
             Assert.IsFalse(string.IsNullOrEmpty(shell.Token), "le shell doit avoir acquis sa session");
 
-            // ㊲ vit sous l'onglet More depuis le 2026-09-02 — il y était la destination VIDE.
+            // ⚠️ 2026-09-02 — ㊲ n'est plus à UN clic : `Tab.More` ouvre le MENU des destinations,
+            // et ㊲ en est la première entrée. **Cette capture suit donc le chemin RÉEL du joueur** —
+            // ouvrir Plus, puis activer l'entrée — au lieu d'un raccourci que personne n'emprunte.
+            // Les assertions ci-dessous sont INCHANGÉES : seul le chemin change, la garde reste.
             shell.ActivateTab(AppShell.Tab.More);
+            for (int i = 0; i < 90; i++) yield return null;
+            Assert.Greater(shell.MenuPlusEntrees, 0,
+                "le menu « Plus » n'a aucune entrée : la navigation qui suit serait vide, et la " +
+                "capture montrerait un écran que le joueur ne peut pas atteindre");
+
+            // La capture du MENU lui-même, prise ICI parce que c'est l'état RÉEL que le joueur voit
+            // en ouvrant Plus — et sans dupliquer les ~30 lignes de signup/session de ce test. Sans
+            // elle, le compte d'écrans saute de l'onglet à sa destination et l'étape où le joueur
+            // CHOISIT n'est montrée à personne.
+            yield return CapturerA(1080, 2400, "Assets/Screenshots/menu_plus_1080x2400.png");
+
+            UnityEngine.UI.Button entree = null;
+            foreach (var b in shell.ContentSlot.GetComponentsInChildren<UnityEngine.UI.Button>(true))
+                if (b.gameObject.name.StartsWith("MenuPlus_")) { entree = b; break; }
+            Assert.IsNotNull(entree,
+                "aucune entrée cliquable trouvée dans le menu « Plus » — le chemin joueur est rompu");
+            entree.onClick.Invoke();
             for (int i = 0; i < 90; i++) yield return null;
 
             Assert.IsNotNull(shell.TopBar, "le chrome haut doit exister — c'est TOUT l'objet de cette capture");
@@ -640,5 +664,6 @@ namespace MafiaCleanCity.Capture.Tests
             // la fenêtre d'éditeur : c'est là que les grandeurs qui dépendent du ratio se trahissent.
             yield return CapturerA(1080, 2400, "Assets/Screenshots/ecran_lieutenants_1080x2400.png");
         }
+
     }
 }
