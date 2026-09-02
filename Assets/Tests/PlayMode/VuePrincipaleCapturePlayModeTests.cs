@@ -778,6 +778,69 @@ namespace MafiaCleanCity.Capture.Tests
         }
 
         [UnityTest]
+        /// <summary>⑨ — « personne ne fait la queue », SOUS CHROME. État RATIFIÉ par la maquette
+        /// (cadre 16 : `exceptions []` · `escalations.total 0`) : tabourets vides, et la porte
+        /// des escalades qui reste ouverte.
+        ///
+        /// ⚠️ CET ÉTAT N'EXISTE QUE PAR ACCIDENT AUJOURD'HUI. Le compte de démo s'est retrouvé
+        /// vide (lieutenants et progression partis avec, cause inconnue de mon côté) et va être
+        /// re-provisionné. Je le capture pendant qu'il est là : jusqu'ici la file a toujours eu
+        /// des cartes, et cet état dessiné n'avait jamais été photographié.
+        /// ★ J'ai d'abord lu « la file est à 0 » comme un blocage. C'est une OCCASION : un état
+        ///   vide que la maquette dessine vaut une planche au même titre qu'un état plein.
+        ///
+        /// ⛔ Le nom du fichier porte `_personne-en-file_`. Sans ce mot, l'image serait relue plus
+        /// tard comme « ⑨ » et son comptoir désert passerait pour la mise en page voulue — la
+        /// leçon de `_etat-vide_` sur ㊱.</summary>
+        [Category("CaptureSousChrome")]
+        public IEnumerator Capture_EcranExceptions_FileVide_SousChrome()
+        {
+            LogAssert.ignoreFailingMessages = true;
+            shellGo = new GameObject("ExceptionsVideShell");
+            shell = shellGo.AddComponent<AppShell>();
+            yield return null;
+
+            float t0 = Time.realtimeSinceStartup;
+            while (string.IsNullOrEmpty(shell.Token) && Time.realtimeSinceStartup - t0 < 30f) yield return null;
+            Assert.IsFalse(string.IsNullOrEmpty(shell.Token), "le shell doit avoir acquis sa session");
+            for (int i = 0; i < 30; i++) yield return null;
+
+            var ecran = shell.MonterLocataireEnSurimpression<
+                MafiaCleanCity.Operational.Exceptions.ExceptionQueueController>();
+            Assert.IsNotNull(ecran, "la surimpression doit avoir monté ⑨");
+
+            // ⛔ ATTENDRE LE CHARGEMENT, PAS UN NOMBRE DE FRAMES — et ici l'attente ne peut pas
+            // porter sur « des cartes arrivent » puisqu'il n'y en a aucune : on attend le DRAPEAU
+            // de chargement. Sans ça, « pas encore chargé » et « chargé et vide » ont la même
+            // image, et je publierais la première en croyant tenir la seconde.
+            float tc = Time.realtimeSinceStartup;
+            while (!ecran.QueueLoaded && Time.realtimeSinceStartup - tc < 30f) yield return null;
+            Assert.IsTrue(ecran.QueueLoaded, $"⑨ n'a pas chargé sa file : {ecran.QueueError}");
+            Assert.AreEqual(0, ecran.Cards.Length,
+                $"le compte porte {ecran.Cards.Length} carte(s) : ce n'est plus l'état vide, il " +
+                "faut renommer la capture — une image nommée `_personne-en-file_` qui montre des " +
+                "attendants ment deux fois.");
+            for (int i = 0; i < 30; i++) yield return null;
+
+            Assert.IsNotNull(shell.TopBar, "le chrome haut doit exister");
+            GameObject racineUI = GameObject.Find("ExceptionQueueRoot");
+            Assert.IsNotNull(racineUI, "⑨ n'a construit aucune racine sous le chrome");
+
+            // GARDE A4 — même mesure que sur la file pleine : le contenu ne passe pas sous le dock.
+            var comptoirRt = racineUI.transform.Find("Comptoir") as RectTransform;
+            Assert.IsNotNull(comptoirRt, "⑨ doit porter son comptoir même vide");
+            Assert.Greater(MafiaCleanCity.Shell.ShellChrome.BottomInsetPx, 0f,
+                "sous le chrome l'inset bas doit être publié, sinon la garde ci-dessous ne mesure rien");
+            Assert.GreaterOrEqual(comptoirRt.offsetMin.y, MafiaCleanCity.Shell.ShellChrome.BottomInsetPx,
+                $"le comptoir démarre à {comptoirRt.offsetMin.y:F0} et le dock occupe " +
+                $"{MafiaCleanCity.Shell.ShellChrome.BottomInsetPx:F0} : il passe DESSOUS.");
+
+            yield return CapturerA(1080, 2400,
+                "Assets/Screenshots/screen_5_exceptions_personne-en-file_sous_chrome_1080x2400.png");
+        }
+
+        [UnityTest]
+        
         
         /// <summary>⑨ SOUS LE CHROME — le bandeau et le dock, enfin dans l'image.
         ///

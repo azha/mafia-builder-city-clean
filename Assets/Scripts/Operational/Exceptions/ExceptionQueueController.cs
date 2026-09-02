@@ -87,6 +87,17 @@ namespace MafiaCleanCity.Operational.Exceptions
         {
             yield return SignIn();
             if (!IsAuthenticated) yield break;
+
+            // ⛔ SANS CETTE LIGNE, LE RÉSOLVEUR EST MUET ET PERSONNE NE LE VOIT. `Traduire` rend
+            // la prose quand le catalogue est vide — donc l'écran reste PARFAITEMENT lisible, en
+            // anglais, exactement comme avant le socle i18n. Le branchement se serait « bien
+            // passé » et n'aurait rien changé.
+            // ★ Un repli qui marche trop bien masque le fait qu'on est en train de replier.
+            //   Mesuré : 11 des 12 clés demandées par ⑨/⑩ SONT servies — donc ici la différence
+            //   entre amorcé et pas amorcé, c'est 11 textes traduits ou 11 textes anglais.
+            yield return MafiaCleanCity.I18n.I18nCatalog.Amorcer(
+                new MafiaCleanCity.I18n.I18nClient { BaseUrl = baseUrl }, Token);
+
             yield return LoadQueue();
         }
 
@@ -162,22 +173,36 @@ namespace MafiaCleanCity.Operational.Exceptions
         // `onBack` la rappelle toujours (design §2.1). SINON : repli EXACT d'aujourd'hui.
         public void OpenDetail(ExceptionCardDto card)
         {
+            Debug.Log($"[DIAG-OPEN] entrée · carte={(card == null ? "NULL" : card.exception_id)} · " +
+                      $"LastDetail={(LastDetail == null ? "null" : "présent")} · Token={(string.IsNullOrEmpty(Token) ? "VIDE" : "ok")}");
             if (card == null) return;
             // One detail at a time: a double-tap (or a second row) must not stack screens — the previous
             // detail still owns the shared canvas overlay (review I1).
             if (LastDetail != null && LastDetail) return;
             MafiaCleanCity.Shell.IShellNavigator nav = MafiaCleanCity.Shell.ShellNavigatorLocator.Find();
             ExceptionDetailController detail;
+            // ⛔ UN NAVIGATEUR PRÉSENT MAIS HORS D'ÉTAT REND NULL — et le geste du joueur
+            // disparaissait alors en silence. `ShellNavigatorLocator.Find()` peut rendre un shell
+            // détruit (une fixture précédente, un onglet qui a démonté son slot) : `nav != null`
+            // était vrai, `MonterLocataireEnSurimpression` rendait null, et `detail.Init` levait
+            // dans un `UnityEvent`, qui AVALE l'exception. Résultat : on touche l'attendant, rien
+            // ne s'ouvre, rien ne s'écrit nulle part.
+            // ★ Tester `nav != null` teste l'EXISTENCE du navigateur, pas qu'il ait monté quelque
+            //   chose. Encore la même famille : vérifier qu'une chose existe ne dit rien de ce
+            //   qu'elle fait. On retombe donc sur le montage autonome plutôt que d'avaler le geste.
+            detail = null;
             if (nav != null)
             {
                 detail = nav.MonterLocataireEnSurimpression<ExceptionDetailController>();
-                LastNavGameObject = detail.gameObject;
+                if (detail != null) LastNavGameObject = detail.gameObject;
+                else Debug.LogWarning("[⑨] le navigateur n'a monté aucun détail — repli autonome");
             }
-            else
+            if (detail == null)
             {
                 LastNavGameObject = new GameObject("Nav_ExceptionDetail");
                 detail = LastNavGameObject.AddComponent<ExceptionDetailController>();
             }
+            Debug.Log($"[DIAG-OPEN] detail={(detail == null ? "NULL" : "construit")}");
             detail.Init(card, Token, baseUrl, onBack: () => { if (!Destroyed) StartCoroutine(LoadQueue()); });
             LastDetail = detail;
         }

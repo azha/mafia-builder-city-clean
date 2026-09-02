@@ -189,7 +189,7 @@ namespace MafiaCleanCity.Operational.Exceptions
             // La réplique — texte PRODUCTEUR (prose anglaise aujourd'hui, clé demain) : chrome,
             // non suivi. Passe par le point unique `Texte()`.
             TextMeshProUGUI desc = NewText("Descriptor", body,
-                "« " + Texte(c.event_descriptor) + " »", (int)PxD(11.5f), TextAlignmentOptions.Left);
+                "« " + Texte(c.event_descriptor, c.event_descriptor_i18n) + " »", (int)PxD(11.5f), TextAlignmentOptions.Left);
             desc.color = TextPrimary;
             AddLayoutElement(desc.gameObject, minHeight: PxD(24f), flexibleHeight: 0);
 
@@ -357,14 +357,14 @@ namespace MafiaCleanCity.Operational.Exceptions
             TrackText(lib, role);
 
             TextMeshProUGUI titre = NewText("Titre", carte.transform,
-                a != null ? Texte(a.label) : "—", (int)PxD(CssCarteT), TextAlignmentOptions.Left);
+                a != null ? Texte(a.label, a.label_i18n) : "—", (int)PxD(CssCarteT), TextAlignmentOptions.Left);
             titre.fontStyle = FontStyles.Bold;
             titre.color = sombre ? TextPrimary : DesignTokens.Current.surfaceBase;
 
             if (a != null && !string.IsNullOrEmpty(a.projected_consequence))
             {
                 TextMeshProUGUI cons = NewText("Consequence", carte.transform,
-                    Texte(a.projected_consequence), (int)PxD(CssCarteC), TextAlignmentOptions.Left);
+                    Texte(a.projected_consequence, a.projected_consequence_i18n), (int)PxD(CssCarteC), TextAlignmentOptions.Left);
                 cons.fontStyle = FontStyles.Italic;
                 cons.color = sombre ? TextSecondary : DesignTokens.Current.surfaceCard;
             }
@@ -383,7 +383,18 @@ namespace MafiaCleanCity.Operational.Exceptions
         /// ⚠️ Je n'écris pas le branchement maintenant : les noms de champs ne sont pas encore
         ///   dans le corps, et coder contre des noms supposés est exactement ce qui a fait
         ///   inventer un écran a8 qui n'existait pas.</summary>
-        private static string Texte(string prose) => prose ?? string.Empty;
+        private static string Texte(string prose, I18nRefDto reference = null)
+        {
+            // La référence GAGNE quand elle est là ET que le dictionnaire la porte. Sinon la
+            // prose : elle existe et veut dire quelque chose — contrairement au nom de bâtiment,
+            // le repli n'est PAS la clé nue ici.
+            // ⛔ `Connait` avant `Traduire` : sans ce test, une clé absente s'afficherait à la
+            // place d'une prose parfaitement lisible, et l'écran REGRESSERAIT en se branchant.
+            if (reference != null && !string.IsNullOrEmpty(reference.key)
+                && MafiaCleanCity.I18n.I18nCatalog.Connait(reference.key))
+                return MafiaCleanCity.I18n.I18nCatalog.Traduire(reference.key);
+            return prose ?? string.Empty;
+        }
 
         /// <summary>La teinte d'une gravité — fonction NOMMÉE (patron `HeatBucketResolver`),
         /// jamais une chaîne de ternaires : une garde anti-régression ne voit pas sa cible dans

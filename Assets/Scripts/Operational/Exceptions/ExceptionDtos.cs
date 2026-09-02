@@ -27,10 +27,21 @@ namespace MafiaCleanCity.Operational.Exceptions
     {
         public string id;
         public string label;                  // producer free text (chrome — never in the scan corpus)
+        public I18nRefDto label_i18n;         // TD-452 — présent sur 5 actions sur 13 (mesuré)
         public string projected_consequence;  // producer free text (chrome)
+        public I18nRefDto projected_consequence_i18n;
         public string add_rule_dsl;           // the DSL rule ADD_RULE appends, or "" (not teachable)
         public ExceptionEffectDto effect;     // raid candidates only (empty-type instance otherwise)
     }
+
+    /// <summary>Une référence i18n. FORME MESURÉE le 2026-09-02 sur le corps réel :
+    /// `{"key":"exception.heat_pressure.card.descriptor","params":{}}` — un objet, pas une
+    /// chaîne. Identique à `name_i18n` de la fiche bâtiment.
+    /// ⚠️ `params` n'est PAS lu : `JsonUtility` ne sait pas lire un objet à clés arbitraires, et
+    /// il est **vide sur les 12 références mesurées**. Le jour où il portera quelque chose, un
+    /// paramètre non substitué restera VISIBLE dans le texte (`{nom}`) — le résolveur est écrit
+    /// pour ça. Déclaré ici plutôt que découvert à l'écran.</summary>
+    [Serializable] public class I18nRefDto { public string key; }
 
     [Serializable]
     public class ExceptionCardDto
@@ -38,6 +49,10 @@ namespace MafiaCleanCity.Operational.Exceptions
         public string exception_id;
         public string lieutenant_id;          // "" when the card is not lieutenant-bound
         public string event_descriptor;       // i18n-key text (chrome)
+        /// <summary>La référence i18n de la réplique — TD-452, ADDITIF : la prose reste.
+        /// Mesuré : non nulle sur 2 cartes sur 6 (les producteurs), nulle sur les 4 du seeder,
+        /// dont les libellés sont EN BASE et hors de portée du back (TD-453).</summary>
+        public I18nRefDto event_descriptor_i18n;
         public CandidateActionDto[] candidate_actions;
         public CandidateActionDto suggested_action;
         public string confidence_band;        // tentative | likely | confident  (closed, casse canon ConfidenceBucket — back lot-3 TD-072)

@@ -391,8 +391,8 @@ namespace MafiaCleanCity.Operational.Tests
         [UnityTest, Category("Ecran10")]
         public IEnumerator Ecran9_ChaqueAttendantOuvreSaPropreCarte()
         {
-            var ctl = MonterFileAvecCartes(new[] { "a", "b", "c" });
-            yield return null;
+            ExceptionQueueController ctl = null;
+            yield return MonterFileAvecCartes(new[] { "a", "b", "c" }, c => ctl = c);
 
             for (int i = 0; i < 3; i++)
             {
@@ -420,7 +420,8 @@ namespace MafiaCleanCity.Operational.Tests
         [UnityTest, Category("Ecran10")]
         public IEnumerator Ecran10_LesRolesDeLaMainViennentDeLaDonnee()
         {
-            var ctl = MonterFileAvecCartes(new[] { "riche" });
+            ExceptionQueueController ctl = null;
+            yield return MonterFileAvecCartes(new[] { "riche" }, c => ctl = c);
             ctl.Cards[0].suggested_action = new CandidateActionDto { id = "sug", label = "Réparer" };
             ctl.Cards[0].candidate_actions = new[]
             {
@@ -445,7 +446,8 @@ namespace MafiaCleanCity.Operational.Tests
             yield return null;
 
             // — contrôle négatif : une seule issue —
-            var ctl2 = MonterFileAvecCartes(new[] { "pauvre" });
+            ExceptionQueueController ctl2 = null;
+            yield return MonterFileAvecCartes(new[] { "pauvre" }, c => ctl2 = c);
             ctl2.Cards[0].suggested_action = new CandidateActionDto { id = "seule", label = "Laisser filer" };
             ctl2.Cards[0].candidate_actions = new[]
             {
@@ -465,12 +467,28 @@ namespace MafiaCleanCity.Operational.Tests
                 "aucune issue restante ⇒ pas de talon du tout");
         }
 
-        /// <summary>Monte ⑨ avec des cartes FABRIQUÉES. ⛔ Ne prouve rien sur le serveur — les
-        /// gardes de contrat passent par le réseau ; celles-ci portent sur le RENDU.</summary>
-        private ExceptionQueueController MonterFileAvecCartes(string[] ids)
+        /// <summary>Monte ⑨ SANS réseau et rend des cartes FABRIQUÉES.
+        ///
+        /// ⛔ IL FAUT LAISSER `Boot()` ÉCHOUER D'ABORD, et c'est la mesure qui l'a dit. `Start()`
+        /// lance `Boot()` → `SignIn()` → `LoadQueue()` : sans jeton, la file part en 401, ÉCRASE
+        /// `Cards` et re-rend un comptoir vide. Fabriquer avant, c'était fabriquer sous un
+        /// chargement réseau qui allait tout balayer une frame plus tard.
+        /// ★ Le test échouait d'abord sur « l'attendant n'a rien ouvert », ce qui désignait le
+        ///   clic. Le clic n'était pas en cause : l'attendant que je trouvais était celui du
+        ///   rendu d'APRÈS l'échec réseau. J'ai corrigé deux fois la mauvaise chose (le
+        ///   navigateur, puis le repli) avant d'instrumenter et de voir que `OpenDetail` n'était
+        ///   jamais atteint. **Deux corrections plausibles ne valent pas une mesure.**
+        /// ⚠️ `ignoreFailingMessages` parce que le 401 est ATTENDU ici : ce test porte sur le
+        /// RENDU, pas sur le réseau. Sans ça, le log d'erreur fait échouer NUnit tout seul.</summary>
+        private IEnumerator MonterFileAvecCartes(string[] ids, System.Action<ExceptionQueueController> pret)
         {
+            LogAssert.ignoreFailingMessages = true;
             controllerGo = new GameObject("ExceptionQueueScreen");
             var ctl = controllerGo.AddComponent<ExceptionQueueController>();
+
+            // laisser Boot() partir, échouer, et finir de rendre son comptoir vide
+            for (int i = 0; i < 12; i++) yield return null;
+
             var cartes = new ExceptionCardDto[ids.Length];
             for (int i = 0; i < ids.Length; i++)
                 cartes[i] = new ExceptionCardDto
@@ -483,7 +501,8 @@ namespace MafiaCleanCity.Operational.Tests
                     candidate_actions = new[] { new CandidateActionDto { id = "s_" + ids[i], label = "Agir" } },
                 };
             ctl.RendrePourTest(cartes);
-            return ctl;
+            yield return null;
+            pret(ctl);
         }
 
         /// <summary>⛔ LE CORPS DU RESOLVE DOIT PORTER `chosen_action_id`, exactement.
