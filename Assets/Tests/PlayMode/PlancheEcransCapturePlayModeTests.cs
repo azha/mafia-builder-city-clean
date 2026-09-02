@@ -182,8 +182,23 @@ namespace MafiaCleanCity.Shell.Tests
             // prouve qu'on a attendu, jamais que l'attente a abouti.
             if (!charge(ecran))
             {
-                echecs.Add($"{nom} : chargement NON abouti après {attente:F0} s — la capture montrerait "
-                           + "un écran vide qui a l'air fini");
+                // ⚠️ On dit POURQUOI, pas seulement QUE. La latence est écartée par la mesure :
+                // les trois routes de ㉓ répondent en 17, 11 et 3 ms au moment de ce diagnostic.
+                // Restent deux causes possibles, et la sonde les sépare : le shell n'a pas donné
+                // de jeton (il ne le donne que si le sien est non vide), ou la coroutine a échoué.
+                // *Un compte nu fait deviner ; c'est ce qui m'a coûté quatre runs sur l'ordre de
+                // fratrie, et je ne le refais pas ici.*
+                var diag = new System.Text.StringBuilder();
+                foreach (var p in typeof(T).GetProperties())
+                {
+                    if (p.Name != "DerniereErreur" && p.Name != "EtatVide") continue;
+                    object val = null;
+                    try { val = p.GetValue(ecran); } catch { }
+                    diag.Append($" {p.Name}={val ?? "null"}");
+                }
+                echecs.Add($"{nom} : chargement NON abouti après {attente:F0} s —{diag} · "
+                           + $"jetonDuShell={(string.IsNullOrEmpty(shell.Token) ? "VIDE" : "présent")} · "
+                           + "la capture montrerait un écran vide qui a l'air fini");
                 yield break;
             }
 
