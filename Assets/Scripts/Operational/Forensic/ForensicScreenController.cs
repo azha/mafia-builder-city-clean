@@ -1,0 +1,415 @@
+using System.Collections;
+using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
+using MafiaCleanCity.Shell;
+using MafiaCleanCity.Theme;
+
+namespace MafiaCleanCity.Operational
+{
+    /// <summary>screen_b7 « Forensic » — squelette généré par Tools/nouvel-ecran.py.
+    ///
+    /// Patron : `ReputationScreenController` (㊲, `pilote-B` — le seul écran construit ET jugé
+    /// par juge-visuel ET juge-données). Ce squelette pose le contrat `IShellTenant`, un fond
+    /// CanvasRenderer-safe et un résolveur exhaustif d'exemple ; il NE POSE PAS la géométrie de
+    /// la maquette — ça, c'est `// MÉTIER ICI`, une fois la maquette lue.
+    ///
+    /// GÉOMÉTRIE — deux règles héritées, non négociables (mesurées ailleurs dans ce dépôt) :
+    ///  · aucune valeur dérivée de `Screen.*` ni d'un `rect` lu au montage — passer par
+    ///    `EchelleMaquette.Px(...)` avec la largeur DÉCLARÉE de LA maquette de cet écran
+    ///    (`EchelleMaquette.LargeurEcransBrennar` = 300 par défaut pour les écrans de la famille
+    ///    `ecrans-brennar.html` — // MÉTIER ICI : vérifier laquelle des 3 maquettes est la
+    ///    source, ou ajouter une constante `Largeur<Nom>` si c'en est une quatrième).
+    ///  · `Canvas.scaleFactor` lu la frame de la création rend 1,0 — plausible et faux. Toute
+    ///    lecture de géométrie attend `yield return null` après la construction.</summary>
+    public class ForensicScreenController : MonoBehaviour, IShellTenant
+    {
+        [Header("Backend")]
+        [SerializeField] private string baseUrl = "http://localhost";
+
+        // ---- points d'injection du shell (IShellTenant) -----------------------------------
+        private Transform mountParent;
+        public void SetMountParent(Transform parent) => mountParent = parent;
+
+        private string token;
+        public void SetToken(string t) => token = t;
+
+        // ---- crochets de test ---------------------------------------------------------------
+        public GetForensicResponseDto DernierChargement { get; private set; }
+        public string DerniereErreur { get; private set; }
+        public long DernierCodeErreur { get; private set; }
+
+        private RectTransform racinePleinEcran;
+        private ForensicClient client;
+        private bool initialise;
+
+        private float Px(float css) =>
+            EchelleMaquette.Px(css, racinePleinEcran, EchelleMaquette.LargeurEcransBrennar);
+        private int PxTrait(float css) =>
+            EchelleMaquette.PxTrait(css, racinePleinEcran, EchelleMaquette.LargeurEcransBrennar);
+
+        private void Awake() => EnsureInitialized();
+
+        private void EnsureInitialized()
+        {
+            if (initialise) return;
+            initialise = true;
+            client = new ForensicClient { BaseUrl = baseUrl };
+            BuildLayout();
+        }
+
+        // ═══ Chargement ══════════════════════════════════════════════════════════════════════
+
+        /// <summary>Charge la surface. // MÉTIER ICI si `GetForensic` a des paramètres
+        /// de chemin (id, etc.) — ajouter les arguments correspondants ici et les faire
+        /// remonter depuis l'appelant (le shell, ou un `RendrePourTest`).</summary>
+        public IEnumerator Charger()
+        {
+            EnsureInitialized();
+            DerniereErreur = null;
+            DernierCodeErreur = 0;
+
+            yield return client.GetForensic(token,
+                dto => DernierChargement = dto,
+                (code, msg) => { DernierCodeErreur = code; DerniereErreur = msg; });
+
+            // La frame de création rend des rects non résolus : on attend le layout AVANT de
+            // rendre quoi que ce soit qui lise une géométrie.
+            yield return null;
+
+            if (DernierChargement == null) { RendreEtatIndisponible(); yield break; }
+            AppliquerEtat(DernierChargement);
+        }
+
+        /// <summary>Rend un corps FABRIQUÉ, sans réseau — réservé aux tests (patron ㊲,
+        /// `RendrePourTest`). Ne prouve jamais que le back émet ce corps, seulement ce que
+        /// l'écran EN FAIT.</summary>
+        public void RendrePourTest(GetForensicResponseDto dto)
+        {
+            EnsureInitialized();
+            AppliquerEtat(dto);
+        }
+
+        /// <summary>// MÉTIER ICI — TOUT le rendu métier de cet écran part d'ici. Vide à
+        /// dessein : remplir depuis la maquette RATIFIÉE et le corps RÉEL mesuré, jamais depuis
+        /// une supposition sur ce que l'interface TypeScript back "devrait" rendre.</summary>
+        private void AppliquerEtat(GetForensicResponseDto dto)
+        {
+            if (dto == null) { RendreEtatIndisponible(); return; }
+
+            MajSignal(0, "RISQUE D'AUDIT",        dto.audit_risk_bucket);
+            MajSignal(1, "VISIBILITÉ DES REJETS", dto.effluent_visibility_bucket);
+            MajSignal(2, "TRAIN DE VIE",          dto.lifestyle_alarm_bucket);
+
+            // ⛔ CE QUE L'ÉCRAN NE PEUT PAS SAVOIR, ET QU'IL DIT QUAND MÊME.
+            // Mesuré le 2026-09-02 par la session back : `lifestyle_alarm_bucket` rend `quiet`
+            // alors que `lifestyle_audit_state` ne porte AUCUNE ligne pour ce joueur — c'est une
+            // valeur PAR DÉFAUT, pas une mesure. Et depuis le corps, rien ne les distingue :
+            // ★ une bande rendue sans ligne source a exactement la même forme qu'une bande
+            //   mesurée. Le client ne peut pas trancher — donc il ne prétend pas trancher : il
+            //   porte l'écart avec SA DATE, comme ㊲ porte les siens.
+            // ⚠️ À re-mesurer : la pile a été reconstruite après cette mesure, et le maillon de
+            //   blanchiment dont dépend l'épingle d'audit a été fermé entre-temps.
+            MajPanneau("CE QUE CET ÉCRAN NE PEUT PAS VOUS DIRE",
+                "Une bande sans source ressemble à une bande mesurée",
+                "au 2 septembre 2026, « train de vie » rend « calme » alors qu'aucune ligne ne le "
+                + "mesure pour vous : c'est la valeur par défaut du serveur. Le corps ne dit pas "
+                + "lesquelles de ces trois bandes reposent sur des données — cet écran ne peut "
+                + "donc pas les distinguer, et il préfère vous le dire plutôt que de les "
+                + "présenter toutes les trois comme des faits.");
+        }
+
+        /// <summary>Repli NOMMÉ sur échec réseau — jamais une exception, jamais un écran noir
+        /// (patron ㊲ : `Render(null)` a fait planter un autre écran de ce dépôt à la première
+        /// ligne qui lisait le payload).</summary>
+        private void RendreEtatIndisponible()
+        {
+            // Les trois signaux repassent à « — » : sans ça, les bandes du chargement précédent
+            // resteraient à l'écran et une panne ressemblerait à un état.
+            MajSignal(0, "RISQUE D'AUDIT",        null);
+            MajSignal(1, "VISIBILITÉ DES REJETS", null);
+            MajSignal(2, "TRAIN DE VIE",          null);
+            MajPanneau("CE QUE LE SERVEUR ENVOIE VRAIMENT",
+                "Pas de réponse",
+                "la route n'a rien rendu. Ce n'est pas « tout va bien » : c'est « on ne sait pas ».");
+        }
+
+        // ═══ Construction de la mise en page ═════════════════════════════════════════════════
+
+        private void BuildLayout()
+        {
+            Canvas canvas = FindFirstObjectByType<Canvas>();
+            if (canvas == null)
+            {
+                GameObject go = new GameObject("Canvas",
+                    typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
+                canvas = go.GetComponent<Canvas>();
+                canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+                CanvasScaler sc = go.GetComponent<CanvasScaler>();
+                sc.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+                sc.referenceResolution = new Vector2(1280, 720);
+            }
+            Transform root = mountParent != null ? mountParent : canvas.transform;
+
+            // La racine PLEIN ÉCRAN — jamais un panneau intermédiaire : c'est elle qui sert de
+            // référence d'échelle à `Px()`/`PxTrait()` (un conteneur plus étroit fausserait
+            // TOUTE la mise à l'échelle par un facteur muet).
+            GameObject racine = NouveauUI("ForensicRoot", root);
+            racinePleinEcran = (RectTransform)racine.transform;
+            Etirer(racinePleinEcran);
+            AjouterFond(racine, DesignTokens.Current.surfaceBase);
+
+            // ⚠️ AUCUNE MAQUETTE RATIFIÉE POUR CET ÉCRAN — et c'est mesuré, pas supposé :
+            // `front.md` porte `maquette ❌` pour `screen_b7`, et note que **20 des 24 écrans
+            // v1.x n'en ont aucune**. La mise en page ci-dessous suit donc les CONVENTIONS du
+            // châssis de la série 6 (enseigne / blocs / panneau bas), pas un dessin ratifié.
+            // ⇒ Elle n'est pas opposable comme « conforme à la maquette » : il n'y en a pas.
+            //   Ce qui EST opposable, c'est qu'elle ne montre que des bandes servies.
+            VerticalLayoutGroup pile = racine.AddComponent<VerticalLayoutGroup>();
+            pile.padding = new RectOffset((int)Px(CssMargeX), (int)Px(CssMargeX),
+                                          (int)Px(CssMargeY), (int)Px(CssMargeY));
+            pile.spacing = Px(CssEcart);
+            pile.childControlWidth = true;  pile.childControlHeight = true;
+            pile.childForceExpandWidth = true; pile.childForceExpandHeight = false;
+
+            ConstruireEnseigne(racine.transform);
+            signalRoot = ConstruireSignaux(racine.transform);
+            ConstruireEspaceur(racine.transform);
+            ConstruirePanneau(racine.transform);
+        }
+
+        // ═══ Blocs ═══════════════════════════════════════════════════════════════════════════
+
+        private const float CssMargeX   = 11f;
+        private const float CssMargeY   = 14f;
+        private const float CssEcart    = 10f;
+        private const float CssHEnseigne = 51f;
+        private const float CssHSignal   = 62f;
+        private const float CssHPanneau  = 92f;
+
+        private RectTransform signalRoot;
+        private readonly TextMeshProUGUI[] sigLib = new TextMeshProUGUI[3];
+        private readonly TextMeshProUGUI[] sigVal = new TextMeshProUGUI[3];
+        private readonly Image[] sigRail = new Image[3];
+        private TextMeshProUGUI pannSur, pannTitre, pannTexte;
+
+        private void ConstruireEnseigne(Transform parent)
+        {
+            GameObject go = NouveauUI("Enseigne", parent);
+            AjouterFond(go, DesignTokens.Current.surfaceCard);
+            AjouterHauteur(go, Px(CssHEnseigne));
+            var v = go.AddComponent<VerticalLayoutGroup>();
+            v.childAlignment = TextAnchor.MiddleCenter;
+            v.childControlWidth = true; v.childControlHeight = true;
+            v.childForceExpandWidth = true; v.childForceExpandHeight = false;
+
+            NouveauTexte(go.transform, "Titre", "Ce qui se voit", Px(19f),
+                         DesignTokens.Current.accentGold, DesignTokens.Current.hudSerifFont)
+                .alignment = TextAlignmentOptions.Center;
+            NouveauTexte(go.transform, "SousTitre", "TROIS SIGNAUX, TROIS BANDES", Px(8.5f),
+                         DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont)
+                .alignment = TextAlignmentOptions.Center;
+        }
+
+        /// <summary>Les trois signaux. Chacun : son nom, sa bande EN MOTS, et un rail coloré.
+        /// ⛔ Le rail ne porte JAMAIS l'information seul — la phrase la porte aussi (a11y : la
+        /// gravité ne doit jamais tenir dans la couleur, convention globale du dépôt).</summary>
+        private RectTransform ConstruireSignaux(Transform parent)
+        {
+            GameObject bloc = NouveauUI("Signaux", parent);
+            var v = bloc.AddComponent<VerticalLayoutGroup>();
+            v.spacing = Px(CssEcart);
+            v.childControlWidth = true; v.childControlHeight = true;
+            v.childForceExpandWidth = true; v.childForceExpandHeight = false;
+
+            for (int i = 0; i < 3; i++)
+            {
+                GameObject ligne = NouveauUI($"Signal{i}", bloc.transform);
+                AjouterFond(ligne, DesignTokens.Current.surfaceCard);
+                AjouterHauteur(ligne, Px(CssHSignal));
+                var lv = ligne.AddComponent<VerticalLayoutGroup>();
+                lv.padding = new RectOffset((int)Px(10f), (int)Px(10f), (int)Px(8f), (int)Px(8f));
+                lv.spacing = Px(3f);
+                lv.childControlWidth = true; lv.childControlHeight = true;
+                lv.childForceExpandWidth = true; lv.childForceExpandHeight = false;
+
+                sigLib[i] = NouveauTexte(ligne.transform, "Libelle", "", Px(8.5f),
+                    DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont);
+                sigVal[i] = NouveauTexte(ligne.transform, "Valeur", "—", Px(13f),
+                    DesignTokens.Current.hudCreme, DesignTokens.Current.hudSerifFont);
+
+                GameObject rail = NouveauUI("Rail", ligne.transform);
+                sigRail[i] = AjouterFond(rail, DesignTokens.Current.onSurfaceMuted);
+                AjouterHauteur(rail, PxTrait(2f));
+            }
+            return (RectTransform)bloc.transform;
+        }
+
+        private void ConstruireEspaceur(Transform parent)
+        {
+            GameObject go = NouveauUI("Espaceur", parent);
+            var le = go.AddComponent<LayoutElement>();
+            le.flexibleHeight = 1f; le.minHeight = 0f;
+        }
+
+        private void ConstruirePanneau(Transform parent)
+        {
+            GameObject go = NouveauUI("Panneau", parent);
+            AjouterFond(go, DesignTokens.Current.surfaceCard);
+            AjouterHauteur(go, Px(CssHPanneau));
+            var v = go.AddComponent<VerticalLayoutGroup>();
+            v.padding = new RectOffset((int)Px(10f), (int)Px(10f), (int)Px(9f), (int)Px(9f));
+            v.spacing = Px(3f);
+            v.childControlWidth = true; v.childControlHeight = true;
+            v.childForceExpandWidth = true; v.childForceExpandHeight = false;
+
+            pannSur = NouveauTexte(go.transform, "SurTitre", "", Px(7.5f),
+                DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont);
+            pannTitre = NouveauTexte(go.transform, "Titre", "", Px(13f),
+                DesignTokens.Current.accentGold, DesignTokens.Current.hudSerifFont);
+            pannTexte = NouveauTexte(go.transform, "Texte", "", Px(9f),
+                DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont);
+        }
+
+        private void MajSignal(int i, string libelle, string bande)
+        {
+            if (sigLib[i] == null) return;
+            sigLib[i].text = libelle;
+            sigVal[i].text = ForensicResolvers.Phrase(bande);
+            sigRail[i].color = ForensicResolvers.CouleurPour(ForensicResolvers.NiveauDe(bande));
+        }
+
+        private void MajPanneau(string sur, string titre, string texte)
+        {
+            if (pannSur == null) return;
+            pannSur.text = sur; pannTitre.text = titre; pannTexte.text = texte;
+        }
+
+        private static void AjouterHauteur(GameObject go, float hauteur)
+        {
+            var le = go.GetComponent<LayoutElement>() ?? go.AddComponent<LayoutElement>();
+            le.minHeight = hauteur; le.preferredHeight = hauteur; le.flexibleHeight = 0f;
+        }
+
+        // ═══ Primitives — dupliquées par convention (aucun fichier du dépôt ne les partage,
+        // mesuré sur `main` le 2026-09-02) ═════════════════════════════════════════════════════
+
+        private static GameObject NouveauUI(string nom, Transform parent)
+        {
+            GameObject go = new GameObject(nom, typeof(RectTransform));
+            go.transform.SetParent(parent, false);
+            return go;
+        }
+
+        /// <summary>⛔ TOUTE Image passe par ici. `AddComponent&lt;T&gt;()` à l'exécution
+        /// n'honore PAS le `[RequireComponent(CanvasRenderer)]` d'une classe de base — sans
+        /// `CanvasRenderer`, un `Graphic` ne dessine RIEN, sans la moindre erreur console
+        /// (mesuré sur ce dépôt : `VerticalGradientImage`, deux panneaux jamais visibles).
+        /// Et un `Image` standard `UnityEngine.UI.Image` (utilisée ici) EST déjà `MaskableGraphic`
+        /// — elle passe donc sous un `Mask` parent sans rien de plus à faire ; seul un `Graphic`
+        /// personnalisé dérivé directement de `Graphic` (pas `MaskableGraphic`) aurait besoin
+        /// d'un correctif de base en plus de ce `CanvasRenderer` explicite.</summary>
+        private static Image AjouterImage(GameObject go)
+        {
+            if (go.GetComponent<CanvasRenderer>() == null) go.AddComponent<CanvasRenderer>();
+            return go.AddComponent<Image>();
+        }
+
+        private static Image AjouterFond(GameObject go, Color couleur)
+        {
+            Image img = AjouterImage(go);
+            img.color = couleur;
+            img.raycastTarget = false;
+            return img;
+        }
+
+        private static TextMeshProUGUI NouveauTexte(Transform parent, string nom, string texte,
+                                                     float corpsPx, Color couleur, TMP_FontAsset police)
+        {
+            GameObject go = NouveauUI(nom, parent);
+            if (go.GetComponent<CanvasRenderer>() == null) go.AddComponent<CanvasRenderer>();
+            TextMeshProUGUI t = go.AddComponent<TextMeshProUGUI>();
+            t.font = police;
+            t.text = texte;
+            t.fontSize = corpsPx;   // un corps de texte à 0 est un défaut de rendu
+            t.color = couleur;
+            t.raycastTarget = false;
+            return t;
+        }
+
+        private static void Etirer(RectTransform rt, float marge = 0f)
+        {
+            rt.anchorMin = Vector2.zero;
+            rt.anchorMax = Vector2.one;
+            rt.offsetMin = new Vector2(marge, marge);
+            rt.offsetMax = new Vector2(-marge, -marge);
+        }
+    }
+
+    /// <summary>screen_b7 — les correspondances « valeur du domaine → apparence », chacune en
+    /// FONCTION NOMMÉE prenant la valeur du domaine (patron `HeatBucketResolver.SeverityColor` —
+    /// jamais un tableau positionnel ni une chaîne de ternaires : mesuré sur ce dépôt, un
+    /// balayage anti-régression écrit pour traquer ces correspondances rend ZÉRO sur un fichier
+    /// qui les porte par l'ordre d'un tableau — la garde ne peut voir sa cible qu'APRÈS ce
+    /// passage en fonction nommée).
+    ///
+    /// // MÉTIER ICI — `EtatDomaine` est un PLACEHOLDER : remplacer par l'enum réel du domaine
+    /// (ex. `Severity`, `Posture`…) une fois le corps back mesuré, PUIS écrire le switch
+    /// EXHAUSTIF sans `default` silencieux (un `default: throw` rend une 5ᵉ valeur BRUYANTE
+    /// plutôt que collisionner avec un repli connu — patron `HeatBucketResolver`, note M2 :
+    /// un `switch` STATEMENT C# sans `default` est une erreur de compilation CS0161, donc
+    /// "exhaustif sans default" n'existe PAS ici — le détecteur d'un membre neuf est un TEST sur
+    /// `Enum.GetValues(typeof(EtatDomaine))`, jamais le compilateur).</summary>
+    public static class ForensicResolvers
+    {
+        /// <summary>Les trois signaux du corps. Chacun porte une bande, et les vocabulaires ne
+        /// sont PAS les mêmes d'un signal à l'autre — c'est pourquoi il n'y a pas un enum unique.
+        /// Valeurs observées le 2026-09-02 : `watched`, `glaring`, `quiet`.
+        /// ⚠️ Le vocabulaire complet de chaque bande n'est PAS connu : une seule valeur par
+        /// signal a été vue. `NiveauDe` range donc par gravité les valeurs observées ET les
+        /// valeurs nommées par le canon, et rend `Inconnu` pour tout le reste — jamais une
+        /// gravité par défaut, qui donnerait à une bande jamais vue l'apparence d'une bande
+        /// mesurée.</summary>
+        public enum Gravite { Inconnu = 0, Calme, Surveille, Criant }
+
+        public static Gravite NiveauDe(string bande)
+        {
+            if (string.IsNullOrEmpty(bande)) return Gravite.Inconnu;
+            switch (bande.Trim().ToLowerInvariant())
+            {
+                case "quiet":    case "clean":    case "dormant":  return Gravite.Calme;
+                case "watched":  case "elevated": case "noticed":  return Gravite.Surveille;
+                case "glaring":  case "critical": case "exposed":  return Gravite.Criant;
+                default: return Gravite.Inconnu;
+            }
+        }
+
+        public static Color CouleurPour(Gravite g)
+        {
+            switch (g)
+            {
+                case Gravite.Calme:     return DesignTokens.Current.hudGaugeArcCold;
+                case Gravite.Surveille: return DesignTokens.Current.accentGold;
+                case Gravite.Criant:    return HeatBucketResolver.SeverityColor(
+                                                   HeatBucketResolver.Severity.Severe);
+                case Gravite.Inconnu:   return DesignTokens.Current.onSurfaceMuted;
+                default: throw new System.ArgumentOutOfRangeException(nameof(g), g,
+                    "ForensicResolvers.CouleurPour : membre de Gravite non résolu.");
+            }
+        }
+
+        /// <summary>La bande, en mots. ⛔ Une bande inconnue s'affiche TELLE QUELLE, jamais
+        /// traduite en « calme » par défaut : si le serveur invente un mot, le joueur doit voir
+        /// le mot du serveur plutôt qu'une paraphrase rassurante.</summary>
+        public static string Phrase(string bande)
+        {
+            switch (NiveauDe(bande))
+            {
+                case Gravite.Calme:     return "Rien ne dépasse";
+                case Gravite.Surveille: return "On vous regarde";
+                case Gravite.Criant:    return "Ça se voit de loin";
+                default: return string.IsNullOrEmpty(bande) ? "—" : bande;
+            }
+        }
+    }
+}

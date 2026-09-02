@@ -593,7 +593,7 @@ $"{QuiParle(c)} · {Cap(c.severity_band)} · {Cap(c.priority_band)}", 8f, TextSe
         ///   mesurée.
         /// ⚠️ À rejouer dès qu'une exception de conflit existe : si les clés réelles ne
         ///   contiennent pas ces fragments, cette fonction restera muette sans rien signaler.</summary>
-        internal static string CategorieConflit(ExceptionCardDto c)
+        public static string CategorieConflit(ExceptionCardDto c)
         {
             if (c == null || string.IsNullOrEmpty(c.event_descriptor)) return null;
             string d = c.event_descriptor.ToLowerInvariant();
