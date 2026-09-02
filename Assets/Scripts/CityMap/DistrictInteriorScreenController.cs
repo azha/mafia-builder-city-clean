@@ -1358,19 +1358,19 @@ namespace MafiaCleanCity.CityMap
         {
             switch (t)
             {
-                case "lab": return "Lab";
-                case "stash": return "Stash";
-                case "front_shop": return "Front shop";
-                case "cash_safehouse": return "Cash safehouse";
-                case "dealer_spot_front": return "Dealer-spot front";
-                case "specialized_lab": return "Specialized lab";
-                case "refinery": return "Refinery";
-                case "grow_house": return "Grow house";
-                case "distribution_hub": return "Distribution hub";
-                case "money_holding": return "Money holding";
-                case "office": return "Office";
-                case "press_house": return "Press house";
-                case "": case null: return "Vacant lot";
+                case "lab": return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Lab");
+                case "stash": return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Stash");
+                case "front_shop": return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Front shop");
+                case "cash_safehouse": return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Cash safehouse");
+                case "dealer_spot_front": return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Dealer-spot front");
+                case "specialized_lab": return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Specialized lab");
+                case "refinery": return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Refinery");
+                case "grow_house": return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Grow house");
+                case "distribution_hub": return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Distribution hub");
+                case "money_holding": return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Money holding");
+                case "office": return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Office");
+                case "press_house": return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Press house");
+                case "": case null: return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Vacant lot");
                 default: return t;
             }
         }
