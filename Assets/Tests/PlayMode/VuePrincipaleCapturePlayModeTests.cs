@@ -642,6 +642,89 @@ namespace MafiaCleanCity.Capture.Tests
         }
 
         [UnityTest]
+        /// <summary>⑨ SOUS LE CHROME — le bandeau et le dock, enfin dans l'image.
+        ///
+        /// ⛔ Ce que les captures hors shell ne pouvaient pas montrer, et que celle-ci tranche :
+        /// que rien ne passe sous le bandeau haut, et que rien ne touche le dock. C'était l'angle
+        /// mort déclaré de ⑨ ET de ㊲ pendant huit tours de juge.
+        ///
+        /// ⚠️ ⑨ s'ouvre EN SURIMPRESSION — ce n'est pas un onglet. Cinq tentatives antérieures ont
+        /// échoué parce que `UnmountCurrentTenant()` vide tout `ContentSlot` et qu'il est appelé
+        /// par CHAQUE `ActivateTab` : un écran monté en surimpression était emporté par n'importe
+        /// quel geste d'onglet ultérieur, y compris ceux que le shell se donne à lui-même.
+        /// ★ J'avais alors fait varier l'ATTENTE, en cherchant le bon moment. Il n'y en avait pas :
+        ///   le risque ne décroissait pas avec le temps, il croissait. La question n'était pas
+        ///   « quand monter » mais « qu'est-ce qui démonte ».
+        ///
+        /// Le compte de démo est l'identité PAR DÉFAUT du shell : on ne pose pas d'identité, et
+        /// c'est voulu — un compte neuf aurait une file vide, et la capture sortirait pleine,
+        /// valide, et sans une seule exception à montrer.</summary>
+        [Category("CaptureSousChrome")]
+        public IEnumerator Capture_EcranExceptions_SousChrome()
+        {
+            LogAssert.ignoreFailingMessages = true;
+            shellGo = new GameObject("ExceptionsShell");
+            shell = shellGo.AddComponent<AppShell>();
+            yield return null;
+
+            float t0 = Time.realtimeSinceStartup;
+            while (string.IsNullOrEmpty(shell.Token) && Time.realtimeSinceStartup - t0 < 30f) yield return null;
+            Assert.IsFalse(string.IsNullOrEmpty(shell.Token), "le shell doit avoir acquis sa session");
+
+            // On monte APRÈS avoir laissé le shell finir ses propres gestes d'onglet : c'est eux
+            // qui emportaient la surimpression.
+            for (int i = 0; i < 30; i++) yield return null;
+            var ecran = shell.MonterLocataireEnSurimpression<
+                MafiaCleanCity.Operational.Exceptions.ExceptionQueueController>();
+            Assert.IsNotNull(ecran, "la surimpression doit avoir monté ⑨");
+
+            // ⛔ ATTENDRE LA CONDITION, PAS UN NOMBRE DE FRAMES. Ma première version comptait 120
+            // frames et a capturé une file VIDE : le shell signe sa session PUIS ⑨ signe la
+            // sienne et charge, et 120 frames ne suffisaient pas. La garde anti-vacuité l'a
+            // attrapée (7 nœuds), sinon je publiais un écran « calme » alors que le compte porte
+            // trois exceptions en attente — mesuré à la même minute sur la route.
+            // ★ Un nombre de frames est une SUPPOSITION sur la durée d'un travail asynchrone.
+            //   Elle est juste jusqu'au jour où la machine est chargée, et ce jour-là elle produit
+            //   une image plausible et fausse.
+            float tCharge = Time.realtimeSinceStartup;
+            while ((ecran.Cards == null || ecran.Cards.Length == 0)
+                   && Time.realtimeSinceStartup - tCharge < 30f) yield return null;
+            Assert.IsNotNull(ecran.Cards, "⑨ n'a jamais chargé sa file sous le chrome");
+            Assert.Greater(ecran.Cards.Length, 0,
+                "la file du compte de démo est VIDE ici alors que la route en rend trois : " +
+                "la capture montrerait un état « calme » qui n'existe pas.");
+            for (int i = 0; i < 30; i++) yield return null;   // laisser le rendu se poser
+
+            Assert.IsNotNull(shell.TopBar, "le chrome haut doit exister — c'est TOUT l'objet de cette capture");
+            Assert.IsTrue(shell.UneSurimpressionAEteMontee, "⑨ doit être monté en surimpression");
+
+            // Anti-vacuité : sous la racine CONSTRUITE, jamais sous le contrôleur — il ne porte
+            // aucun enfant visuel, et compter ses enfants revient à le compter lui.
+            GameObject racineUI = GameObject.Find("ExceptionQueueRoot");
+            Assert.IsNotNull(racineUI, "⑨ n'a construit aucune racine d'interface sous le chrome");
+            int noeuds = racineUI.GetComponentsInChildren<Transform>(true).Length;
+            Assert.Greater(noeuds, 15,
+                $"⑨ doit avoir construit son contenu (mesuré {noeuds} noeuds sous sa racine)");
+
+            // ⛔ GARDE A4 — le contenu ne passe PAS sous le dock.
+            // La première capture sous chrome a montré « Escalades archivées » derrière les quatre
+            // boutons de navigation. Une garde structurelle le dit maintenant en clair, au lieu
+            // de dépendre de quelqu'un qui regarde l'image au bon moment.
+            var comptoirRt = racineUI.transform.Find("Comptoir") as RectTransform;
+            Assert.IsNotNull(comptoirRt, "⑨ doit porter son comptoir");
+            Assert.GreaterOrEqual(comptoirRt.offsetMin.y, MafiaCleanCity.Shell.ShellChrome.BottomInsetPx,
+                $"le comptoir de ⑨ démarre à {comptoirRt.offsetMin.y:F0} alors que le dock occupe " +
+                $"{MafiaCleanCity.Shell.ShellChrome.BottomInsetPx:F0} : le contenu passe DESSOUS.");
+            Assert.Greater(MafiaCleanCity.Shell.ShellChrome.BottomInsetPx, 0f,
+                "sous le chrome, l'inset bas doit être publié — à zéro, la garde ci-dessus " +
+                "passerait toujours et ne mesurerait rien");
+
+            yield return CapturerA(1080, 2400,
+                "Assets/Screenshots/screen_5_exceptions_sous_chrome_1080x2400.png");
+        }
+
+        [UnityTest]
+        
         
         /// <summary>㊲ LA RÉPUTATION, montée dans le shell — la seule chose qu'aucun des huit tours
         /// de juge n'a pu vérifier : l'écran sous le bandeau et le dock.

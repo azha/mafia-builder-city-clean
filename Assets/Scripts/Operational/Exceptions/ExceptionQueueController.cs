@@ -503,7 +503,17 @@ $"{QuiParle(c)} · {Cap(c.severity_band)} · {Cap(c.priority_band)}", 8f, TextSe
             comptoir.anchorMin = new Vector2(0f, 0f);
             comptoir.anchorMax = new Vector2(1f, 0f);
             comptoir.pivot = new Vector2(0.5f, 0f);
-            comptoir.offsetMin = new Vector2(Px(CssComptoirPadX), Px(CssComptoirPadBas));
+            // ⛔ LE DOCK MANGE SA PART — sinon le contenu passe DESSOUS.
+            // Trouvé par la première capture SOUS CHROME (2026-09-02) : le lien « Escalades
+            // archivées » et le bas du tampon passaient derrière les quatre boutons de navigation.
+            // Aucune capture hors shell ne pouvait le voir — il n'y a pas de dock dans l'image, et
+            // l'écran paraissait parfaitement posé.
+            // ★ C'est exactement l'angle mort A4, porté déclaré pendant huit tours de juge sur ㊲ :
+            //   « ce que l'absence de chrome m'empêche de vérifier ». Il ne se ferme pas en
+            //   raisonnant, il se ferme en montant l'écran sous le chrome et en regardant.
+            // Hors shell l'inset vaut 0 et l'écran retombe exactement sur son comportement d'avant.
+            comptoir.offsetMin = new Vector2(Px(CssComptoirPadX),
+                                             Px(CssComptoirPadBas) + ShellChrome.BottomInsetPx);
             comptoir.offsetMax = new Vector2(-Px(CssComptoirPadX), 0f);
             comptoir.sizeDelta = new Vector2(comptoir.sizeDelta.x, Px(CssComptoirHaut));
 
