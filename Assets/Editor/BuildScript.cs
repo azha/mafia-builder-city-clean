@@ -72,7 +72,16 @@ public static class BuildScript
         //    d'environnement (`DemoIdentityResolver`), on le suit plutôt que d'en inventer un.
         //    ⛔ ET LE DISPOSITIF DÉCLARE SON RÉGIME, toujours : un override inerte ressemble trait
         //    pour trait à un override appliqué. On imprime l'URL qui part, dans les deux cas.
+        //    ⛔⛔ ET LE DISPOSITIF RESTAURE CE QU'IL A MUTÉ — défaut mesuré au premier build réel
+        //    (2026-09-02) : `AppliquerBaseUrl` SAUVEGARDE la scène, donc `Boot.unity` restait sur
+        //    l'URL du VPS après le build. Toute la suite PlayMode locale lit ce champ : le lot
+        //    suivant aurait pointé sur la production sans que rien ne le dise, et le premier à s'en
+        //    apercevoir l'aurait vu comme un défaut de réseau. *Un dispositif de build qui écrit
+        //    sur un asset partagé le contamine pour tout le monde* — ce dépôt l'a déjà payé avec un
+        //    contrôle positif qui mutait un matériau partagé.
+        //    ⇒ On relit la valeur d'origine AVANT de poser la nôtre, et on la remet APRÈS le build.
         string urlVoulue = Environment.GetEnvironmentVariable(BaseUrlEnvVar);
+        string urlOrigine = AppliquerBaseUrl(porteuse, null);   // lecture seule : rend la valeur en place
         string urlEmbarquee = AppliquerBaseUrl(porteuse, urlVoulue);
         Debug.Log("[BuildScript] " + BaseUrlEnvVar + (string.IsNullOrEmpty(urlVoulue) ? " NON POSÉE" : " = " + urlVoulue) +
                   " · baseUrl RÉELLEMENT EMBARQUÉE = " + (urlEmbarquee ?? "<non lisible>"));
@@ -95,6 +104,14 @@ public static class BuildScript
         BuildSummary s = report.summary;
         Debug.Log("[BuildScript] BUILD_DONE result=" + s.result + " sizeBytes=" + s.totalSize +
                   " errors=" + s.totalErrors + " path=" + outPath);
+        // Remise en état de la scène, et on le DIT : un dispositif silencieux qui restaure
+        // ressemble à un dispositif qui n'a rien touché — impossible de vérifier après coup.
+        if (!string.IsNullOrEmpty(urlVoulue) && urlOrigine != null && urlOrigine != urlVoulue)
+        {
+            string apres = AppliquerBaseUrl(porteuse, urlOrigine);
+            Debug.Log("[BuildScript] baseUrl RESTAURÉE dans la scène : " + apres +
+                      (apres == urlOrigine ? " (conforme à l'origine)" : " ⛔ DIVERGE de l'origine " + urlOrigine));
+        }
         if (Application.isBatchMode) EditorApplication.Exit(s.result == BuildResult.Succeeded ? 0 : 1);
     }
 
