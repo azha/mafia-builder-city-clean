@@ -15,6 +15,7 @@ using MafiaCleanCity.Onboarding;
 using MafiaCleanCity.Operational.Selling;
 using MafiaCleanCity.Account.Settings;
 using MafiaCleanCity.Operational;
+using MafiaCleanCity.Operational.Lieutenant;
 
 namespace MafiaCleanCity.Shell.Tests
 {
@@ -149,6 +150,46 @@ namespace MafiaCleanCity.Shell.Tests
             // avant d'en trouver un. `RendusEffectues` ne monte qu'après ce balayage, ce qui rend
             // l'attente de 20 s du harnais NÉCESSAIRE ici, pas confortable.
             yield return Capturer<DemolitionScreenController>(shell, "raser_un_site", (e, _) => e.RendusEffectues > 0, echecs);
+            // ⑧ « Signer l'ordre » — l'éditeur de règles, section du même écran que le roster.
+            // ⛔⛔ LE PRÉDICAT OUVRE UN LIEUTENANT, ET C'EST TOUT LE POINT. `BuilderSection` a été
+            // mesurée à 100×100 sur une capture précédente (TD-575) et lue comme un défaut de mise
+            // en page. Ce n'en est pas un : `MajVisibiliteDetail()` pose `ignoreLayout = true` sur
+            // les sections de détail tant qu'aucun lieutenant n'est ouvert, et un enfant en
+            // `ignoreLayout` garde EXACTEMENT sa taille par défaut. Le 100×100 était la trace du
+            // détail replié, pas d'un layout cassé.
+            // ⇒ Une capture qui ne l'ouvre pas photographie le roster et rien d'autre — image
+            //   parfaitement valide, et sans rapport avec l'écran qu'on prétend montrer.
+            // ⇒ Le prédicat ouvre donc le premier lieutenant du roster PUIS exige que l'éditeur ait
+            //   une hauteur RÉELLE. Il ne teste pas « la section existe » (elle a toujours existé) :
+            //   il teste qu'elle est DÉPLIÉE, la seule grandeur qui distingue les deux mondes.
+            // ⚠️ ET `nomFeuille` EST OBLIGATOIRE ICI — mesuré au premier essai, qui a échoué avec
+            //   « Tenant_LieutenantScreenController n'est pas un RectTransform (c'est un
+            //   Transform) ». ⑧ est du côté « dessine dans un FRÈRE de son hôte » de la frontière
+            //   que ce harnais nomme : son hôte ne reçoit aucun `Graphic`, donc Unity ne le
+            //   convertit jamais. Sa feuille est `LieutenantSheet`, PAS `LieutenantBackdrop` : cet
+            //   écran pose DEUX objets en enfants directs de `ContentSlot`, le fond puis la
+            //   feuille. J'ai d'abord nommé le FOND — le nom qu'une garde d'un autre test cite,
+            //   donc celui que j'avais sous la main — et la garde a répondu « frère 21 sur 23,
+            //   LieutenantSheet (168 graphics) se dessine par dessus ». Elle avait raison : un
+            //   fond est derrière par construction. *Le nom qu'on connaît n'est pas forcément
+            //   celui qu'on cherche*, et c'est encore la garde d'ordre de fratrie qui a tranché.
+            //   ⇒ Deux causes indépendantes rendaient donc cette capture impossible — le détail
+            //     replié ET la feuille non désignée. Corriger la première seule aurait rendu un
+            //     échec DIFFÉRENT, et fait croire que le diagnostic était faux.
+            yield return Capturer<LieutenantScreenController>(shell, "signer_l_ordre", (e, _) =>
+            {
+                if (string.IsNullOrEmpty(e.LastRecruitedId)
+                    && e.CurrentRoster != null && e.CurrentRoster.Length > 0)
+                    e.OpenLieutenant(e.CurrentRoster[0].lieutenant_id);
+                if (e.HauteurEditeurDeRegles <= 100f) return false;
+                // ⛔ DÉPLIÉ N'EST PAS VISIBLE. Le prédicat précédent s'arrêtait ici et sortait
+                // VERT sur une image qui montrait l'organigramme : l'éditeur était déplié, mis en
+                // page, et à mille pixels sous la ligne de flottaison. Sur un écran défilant,
+                // « rendu » et « dans le cadre » sont DEUX mesures — la capture ne photographie
+                // que la seconde. On amène donc la vue au bas du contenu, et on n'accepte que si
+                // le geste a réellement eu une vue à faire défiler.
+                return e.FaireDefilerVersEditeur();
+            }, echecs, nomFeuille: "LieutenantSheet");
 
             Assert.IsEmpty(echecs, "écrans en défaut :\n  · " + string.Join("\n  · ", echecs));
         }
@@ -160,14 +201,22 @@ namespace MafiaCleanCity.Shell.Tests
         /// ⛔ Elles ont été extraites parce qu'une seconde planche allait en faire une QUATRIÈME
         /// copie — et `CaptureSupport` porte déjà la leçon en tête de son fichier : *une garde
         /// recopiée n'est pas une garde partagée.*</summary>
+        /// <param name="nomFeuille">La feuille où l'écran dessine RÉELLEMENT, quand ce n'est pas
+        /// son hôte. ⛔ Ce paramètre manquait, et son absence a coûté un run : `CapturerLocataire`
+        /// l'accepte depuis toujours, ce passe-plat ne le transmettait pas — donc ⑧ ne pouvait pas
+        /// nommer sa feuille et échouait sur « n'est pas un RectTransform ». *Un passe-plat qui
+        /// laisse tomber un paramètre rend une capacité INVISIBLE à ses appelants* : l'API la
+        /// portait, ce fichier ne la publiait pas.</param>
         private IEnumerator Capturer<T>(AppShell shell, string nom,
                                         System.Func<T, RectTransform, bool> charge,
-                                        List<string> echecs) where T : MonoBehaviour, IShellTenant
+                                        List<string> echecs,
+                                        string nomFeuille = null) where T : MonoBehaviour, IShellTenant
         {
             System.Action<T> sonde = null;
             if (nom == "la_vitrine") sonde = e => SonderLaVitrine(e);
             yield return CaptureSousShell.CapturerLocataire<T>(shell, nom, charge, echecs,
-                                                               monter: true, sonde: sonde);
+                                                               monter: true, sonde: sonde,
+                                                               nomFeuille: nomFeuille);
         }
 
         /// <summary>⛔ MESURE, PAS DÉDUCTION. ㉓ dessine tous les textes d'une rangée au même

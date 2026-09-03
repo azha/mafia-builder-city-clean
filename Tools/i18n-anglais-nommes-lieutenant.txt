@@ -1,0 +1,44 @@
+Cook
+Security
+Logistics
+Bookkeeper
+Laundering
+Unknown
+Advisory
+Executor
+Delegated owner
+Cohort overseer
+Tasked
+Delegated
+Settling in
+Active
+Paused
+Idle
+No rules
+A few rules
+Many rules
+Cheap to re-script
+Costly to re-script
+Pricey to re-script
+Very costly to re-script
+Short settling
+Medium settling
+Long settling
+Very long settling
+No yield bonus
+Small yield bonus
+Solid yield bonus
+Peak yield bonus
+Production ops
+Logistics routing
+Distribution dispatch
+Laundering flow
+Security response
+Bookkeeping audit
+Cross-category incident
+Unknown category
+[####] Full
+[###.] Nominal
+[##..] Low
+[....] Depleted
+[?] Unknown
