@@ -162,22 +162,30 @@ namespace MafiaCleanCity.Operational
             DernierCodeErreur = 0;
             RenduTermine = false;
 
-            // ⛔ LE `nodeId` EST LE MAILLON MANQUANT, ET LE COMPILATEUR VIENT DE LE DIRE.
-            // `GetLaundering(bearer, nodeId, …)` exige un identifiant de nœud que RIEN ne
-            // fournit : aucune route amont ne rend la liste des nœuds d'un joueur (back TD-572),
-            // et ⑪/⑫ affichent pour cette raison un titre, un sous-titre et aucune donnée.
-            // ★ Le squelette généré appelait `GetLaundering(token, …)` sans le `nodeId` et ne
-            //   compilait pas. Ce rouge n'est pas un défaut du gabarit : c'est la dette du
-            //   domaine, rendue visible par le typage avant même le premier run.
-            // ⇒ On NE FABRIQUE PAS d'identifiant. Sans `nodeId`, l'écran ne demande rien et
-            //   montre la chaîne cassée LÀ où elle casse — ce que sa maquette prévoit déjà
-            //   (cadre 142 : « 04 maillons, 04 cassés, 00 joueurs servis »).
+            // ⛔ ON DEMANDE LA LISTE — corrigé le 2026-09-03 après mesure.
+            // Ma première version tenait le `nodeId` pour introuvable (TD-572 : « aucune route
+            // amont ne le fournit ») et affichait la chaîne cassée sans rien demander.
+            // MESURÉ : `GET /v1/operational/laundering` rend 200 avec `{"nodes":[]}`. La route
+            // EXISTE ; c'est le joueur neuf qui n'a aucun nœud.
+            // ★ « On ne peut pas savoir » et « il n'y a rien encore » se dessinent différemment,
+            //   et seule la seconde est vraie. J'allais peindre la première sur l'autorité d'une
+            //   maquette — qui, elle, a été dessinée quand la route n'existait peut-être pas.
             if (string.IsNullOrEmpty(nodeId))
             {
+                LaunderingNodesDto liste = null;
+                yield return client.GetLaunderingNodes(token,
+                    dto => liste = dto,
+                    (code, msg) => { DernierCodeErreur = code; DerniereErreur = msg; });
                 yield return null;
-                RendreChaineCassee();
-                RenduTermine = true;
-                yield break;
+
+                if (liste == null) { RendreEtatIndisponible(); RenduTermine = true; yield break; }
+                if (liste.nodes == null || liste.nodes.Length == 0)
+                {
+                    RendreAucunNoeud();
+                    RenduTermine = true;
+                    yield break;
+                }
+                nodeId = liste.nodes[0];
             }
 
             yield return client.GetLaunderingPipeline(nodeId, token,
@@ -236,29 +244,24 @@ namespace MafiaCleanCity.Operational
         ///   « 04 maillons, 04 cassés, 00 joueurs servis », et son tampon est DÉSACTIVÉ —
         ///   « INJECTER — IMPOSSIBLE : il faut une planque, et rien n'en crée jamais ». Le dessin
         ///   a tranché avant moi ; je le suis.</summary>
-        private void RendreChaineCassee()
+        private void RendreAucunNoeud()
         {
             ViderListe();
-            sousTitre.text = Lib("CE QUI MANQUE ENCORE");
-            MajCompteur(0, 4, Lib("MAILLONS"));
-            MajCompteur(1, 4, Lib("CASSÉS"));
-            MajCompteur(2, 0, Lib("JOUEURS SERVIS"));
+            sousTitre.text = Lib("AUCUN NŒUD POUR VOUS");
+            MajCompteur(0, 0, Lib("ÉTAPES"));
+            MajCompteur(1, 0, Lib("PROPRE AU BOUT"));
+            MajCompteur(2, 0, Lib("ÉCARTS"));
 
-            Maillon("L1", Lib("Obtenir une planque"),
-                Lib("le premier maillon, et il bloque aussi le ramassage des caisses de dealers "
-                    + "— un seul lot débloque deux écrans"));
-            Maillon("L2", Lib("Dire combien il y a dans la filière"),
-                Lib("le montant entre et ne ressort jamais ; aucune lecture ne le rend"));
-            Maillon("L3", Lib("Nommer les nœuds et les bâtiments"),
-                Lib("ce sont des références ; septième écran à buter sur les libellés"));
-            Maillon("L4", Lib("Dire pourquoi la filière s'écarte"),
-                Lib("`deviation_active` est un booléen sans cause ni ampleur"));
+            Maillon("1", Lib("Obtenir une planque"),
+                Lib("le premier maillon : sans elle, rien n'entre dans la filière. Le même lot "
+                    + "débloque le ramassage des caisses de dealers."));
+            Maillon("2", Lib("Dire combien il y a dans la filière"),
+                Lib("la propreté est la seule grandeur servie : ni montant, ni durée, ni frais."));
 
             MajPanneau(Lib("CE QUE LA FILIÈRE NE DIT PAS"),
-                Lib("Jamais combien il y a dedans"),
-                Lib("la propreté est la seule grandeur servie : ni montant, ni durée, ni frais. "
-                    + "On met de l'argent dans une filière qui ne dit jamais ce qu'elle en "
-                    + "contient."));
+                Lib("Vous n'avez encore aucun nœud"),
+                Lib("la route répond, et elle répond « rien » : ce n'est pas une panne, c'est un "
+                    + "état. Il faut une planque pour que la filière commence quelque part."));
         }
 
         /// <summary>Un maillon manquant — le patron du cadre 142.</summary>
@@ -379,6 +382,16 @@ namespace MafiaCleanCity.Operational
 
             // Les trois compteurs
             GameObject bande = NouveauUI("Compteurs", racine.transform);
+            // ⛔ HAUTEUR DONNÉE À LA BANDE — omise à la première écriture, et la capture l'a
+            // montrée tout de suite : les trois compteurs s'étiraient sur 600 px. Leur
+            // `HorizontalLayoutGroup` a `childForceExpandHeight`, donc sans hauteur propre la
+            // bande prend tout ce que la pile lui laisse.
+            // ★ ㊳ portait déjà cette ligne ; je ne l'ai pas recopiée. Un patron qu'on suit de
+            //   mémoire perd une ligne à chaque copie — c'est l'argument pour un producteur, et
+            //   ici je n'en ai pas fait un : les deux écrans dupliquent leurs primitives par
+            //   convention du dépôt.
+            var leBande = bande.AddComponent<LayoutElement>();
+            leBande.minHeight = Px(44f); leBande.preferredHeight = Px(44f); leBande.flexibleHeight = 0f;
             var hb = bande.AddComponent<HorizontalLayoutGroup>();
             hb.spacing = Px(6f);
             hb.childControlWidth = true; hb.childControlHeight = true;

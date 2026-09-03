@@ -122,7 +122,7 @@ public static class MafiaCI
     // ce même run (28 passés / 1 échec, l'échec étant le seul ci-dessus). *Le même run tranche
     // dans les deux sens : il inscrit ce qui passe et refuse ce qui tombe.*
     private static readonly string[] Categories =
-        { "W4P4a", "W3UDA", "W3U1", "W3U2", "Charpente", "DemoIdentity", "ScreenB3", "ShellSurimpression", "CaptureDistrict", "CaptureReputation", "CaptureFamille", "Joignabilite", "ScreenCarte", "CaptureCarte", "EcranAutonomy", "EcranExceptions", "EcranRegleLieutenant", "EcranTenureLieutenant", "EcranUiLieutenant", "EcranRegleTier2", "EcranAppro", "ScreenB7", "ScreenC1", "ScreenC6", "EcranDelegation", "ScreenC2", "FiliereSonde" };
+        { "W4P4a", "W3UDA", "W3U1", "W3U2", "Charpente", "DemoIdentity", "ScreenB3", "ShellSurimpression", "CaptureDistrict", "CaptureReputation", "CaptureFamille", "Joignabilite", "ScreenCarte", "CaptureCarte", "EcranAutonomy", "EcranExceptions", "EcranRegleLieutenant", "EcranTenureLieutenant", "EcranUiLieutenant", "EcranRegleTier2", "EcranAppro", "ScreenB7", "ScreenC1", "ScreenC6", "EcranDelegation", "ScreenC2", "CaptureJournal", "CaptureFiliere", "CaptureDossier" };
     // ⚠️ UNION AU MERGE (3e fois sur cette ligne le 2026-09-03) — et la règle est
     // toujours la même : on unit ce qui est PORTÉ, jamais les deux listes. Une entrée
     // sans porteur affirme une couverture qui n'existe pas ; une entrée portée qu'on
