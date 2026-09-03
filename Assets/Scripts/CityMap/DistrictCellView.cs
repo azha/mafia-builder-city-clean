@@ -21,7 +21,7 @@ namespace MafiaCleanCity.CityMap
         public TextMeshProUGUI HeatBadgeLabel { get; private set; }
         public HeatBucket Heat { get; private set; }
 
-        public void Bind(DistrictDto dto, Image background, TextMeshProUGUI label)
+        public void Bind(DistrictDto dto, Image background, TextMeshProUGUI label, bool compact = false)
         {
             Model = dto;
             Background = background;
@@ -33,7 +33,14 @@ namespace MafiaCleanCity.CityMap
             // JUGE-D5 (audit visuel, 2026-08-21, balayage étendu à CityMap.cs/DistrictCellView.cs,
             // même périmètre CityMap/) — "blocks" traduit en "blocs" (terme déjà établi dans ce
             // dépôt, ex. DistrictInteriorScreenController.cs : "unité = le bloc").
-            label.text = $"{dto.name_canonical}    ·    {dto.profile}    ·    {dto.block_count} blocs";
+            // `compact` (marqueur sur la ville peinte, 2026-09-03) : le nom seul — profil et blocs
+            // sont dans le panneau de détail. Le TEXTE reste le nom servi tel quel (le test de rendu
+            // exige que le libellé le contienne — mesuré : `.ToUpperInvariant()` ici l'a fait
+            // rougir) ; les capitales du lettrage de la maquette sont un STYLE (`FontStyles.UpperCase`,
+            // posé par `BuildMarqueur`), pas une réécriture de la donnée.
+            label.text = compact
+                ? (dto.name_canonical ?? string.Empty)
+                : $"{dto.name_canonical}    ·    {dto.profile}    ·    {dto.block_count} blocs";
         }
 
         /// <summary>Wire the heat badge UI (built by the controller). Hidden until heat is set.</summary>

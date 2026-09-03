@@ -9,6 +9,9 @@ namespace MafiaCleanCity.CityMap.Tests
     // E2E (charter 27: no mock). Drives the real CityMapController, which builds
     // its own Canvas + UI and fetches the live backend. Asserts the rendered
     // cells match the contract: 18 districts, grouped by bank, coloured by state.
+    // [Category] posée le 2026-09-03 (chantier ville peinte) : sans elle, cette suite ne tournait sous
+    // AUCUN run MafiaCI (filtre par catégorie). Même catégorie que le lot qui change cet écran.
+    [Category("CarteVille")]
     public class CityMapRenderPlayModeTests
     {
         private GameObject controllerGo;

@@ -16,6 +16,9 @@ namespace MafiaCleanCity.CityMap.Tests
     // precondition and the full PlayMode assembly is order-independent. The operational concern
     // runs on a DISTINCT player (operational_demo), so it never washes this gradient. (See
     // SeederSupport.)
+    // [Category] posée le 2026-09-03 (chantier ville peinte) : sans elle, cette suite ne tournait sous
+    // AUCUN run MafiaCI (filtre par catégorie). Même catégorie que le lot qui change cet écran.
+    [Category("CarteVille")]
     public class CityMapDetailPlayModeTests
     {
         private GameObject controllerGo;

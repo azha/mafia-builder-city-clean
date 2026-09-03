@@ -9,6 +9,9 @@ namespace MafiaCleanCity.CityMap.Tests
     // E2E (charter 27: no mock). Hits the live game-back service through Traefik
     // at http://localhost/v1/world/districts. The editor runs on the same host as
     // the docker stack, so this is the real wire contract, parsed by the real client.
+    // [Category] posée le 2026-09-03 (chantier ville peinte) : sans elle, cette suite ne tournait sous
+    // AUCUN run MafiaCI (filtre par catégorie). Même catégorie que le lot qui change cet écran.
+    [Category("CarteVille")]
     public class CityMapFetchPlayModeTests
     {
         [UnityTest]
