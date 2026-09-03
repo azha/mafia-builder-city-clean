@@ -94,85 +94,34 @@ namespace MafiaCleanCity.Operational.Tests
                 string.Join(", ", nonMaskable));
         }
 
-        // ═══ 2. CAPTURE pour le juge visuel ⊥ — deux résolutions ══════════════════════════════
-
-        /// <summary>Patron ㊲/㉚ (`CapturerA`) : bascule le Canvas en `ScreenSpaceCamera` sur une
-        /// `RenderTexture` de la taille CIBLE, reconstruit le layout APRÈS la bascule, cadre
-        /// l'ortho sur le rect RÉEL du canvas.</summary>
-        [UnityTest, Category("PhotoEcranDistribution")]
-        public IEnumerator EcranDistributionC1_CapturerPourLeJugeVisuel_DeuxResolutions()
-        {
-            MonterEcran();
-            yield return null;
-
-            yield return CapturerA(1080, 1920, "Assets/Screenshots/ecran_distribution_1080x1920.png");
-            yield return CapturerA(1080, 2400, "Assets/Screenshots/ecran_distribution_1080x2400.png");
-        }
-
-        private IEnumerator CapturerA(int largeur, int hauteur, string chemin)
-        {
-            GameObject racine = RacineEcran();
-            Canvas canvas = racine.GetComponentInParent<Canvas>();
-            Assert.IsNotNull(canvas, "DistributionRoot n'est sous aucun Canvas : rien ne peut être rendu");
-
-            RenderMode modeAvant = canvas.renderMode;
-            Camera cameraAvant = canvas.worldCamera;
-            float planAvant = canvas.planeDistance;
-
-            var rt = new RenderTexture(largeur, hauteur, 24, RenderTextureFormat.ARGB32);
-            var camGo = new GameObject("CaptureCamEcranDistribution");
-            var cam = camGo.AddComponent<Camera>();
-            cam.targetTexture = rt;
-            cam.clearFlags = CameraClearFlags.SolidColor;
-            cam.backgroundColor = Color.black;
-            cam.orthographic = true;
-
-            canvas.renderMode = RenderMode.ScreenSpaceCamera;
-            canvas.worldCamera = cam;
-            canvas.planeDistance = 10f;
-            Canvas.ForceUpdateCanvases();
-            yield return null;
-
-            LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform)racine.transform);
-            Canvas.ForceUpdateCanvases();
-            yield return null;
-            yield return null;
-
-            RectTransform crt = (RectTransform)canvas.transform;
-            cam.orthographicSize = crt.rect.height / 2f;
-            cam.aspect = crt.rect.width / crt.rect.height;
-
-            cam.Render();
-            RenderTexture prev = RenderTexture.active;
-            RenderTexture.active = rt;
-            var tex = new Texture2D(largeur, hauteur, TextureFormat.RGB24, false);
-            tex.ReadPixels(new Rect(0, 0, largeur, hauteur), 0, 0);
-            tex.Apply();
-            RenderTexture.active = prev;
-            System.IO.File.WriteAllBytes(chemin, tex.EncodeToPNG());
-
-            // Anti-vacuité de FORME (patron ㊲/㉚) : une capture ratée est UNIFORME.
-            Color[] pixels = tex.GetPixels();
-            var histo = new Dictionary<int, int>();
-            foreach (Color c in pixels)
-            {
-                int k = (Mathf.RoundToInt(c.r * 31) << 10) | (Mathf.RoundToInt(c.g * 31) << 5) | Mathf.RoundToInt(c.b * 31);
-                histo.TryGetValue(k, out int n); histo[k] = n + 1;
-            }
-            int dominant = 0;
-            foreach (var kv in histo) if (kv.Value > dominant) dominant = kv.Value;
-            int horsFond = pixels.Length - dominant;
-            Assert.Greater(horsFond, 0,
-                $"capture {largeur}x{hauteur} entièrement UNIFORME — l'écran n'a rien rendu hors " +
-                "de son propre fond");
-
-            canvas.renderMode = modeAvant;
-            canvas.worldCamera = cameraAvant;
-            canvas.planeDistance = planAvant;
-            Object.Destroy(camGo);
-            rt.Release();
-            yield return null;
-        }
+        // ═══ 2. LA CAPTURE HORS SHELL A ÉTÉ RETIRÉE — mesurée VIDE, et sa garde la certifiait ═
+        //
+        // ⛔⛔ Ce que le gabarit posait ici photographiait un écran NON MONTÉ et NON CHARGÉ :
+        // `MonterEcran()` fait un `AddComponent` nu — pas de shell, pas de `SetMountParent`, pas
+        // de jeton, pas d'appel à `Charger()` — puis la capture partait UNE frame plus tard.
+        // Mesuré le 2026-09-03 sur les PNG produits, en comptant les teintes distinctes quantifiées
+        // à 5 bits par canal, exactement comme la garde de variété du dépôt :
+        //     ecran_appro_1080x1920.png                 →   2 teintes
+        //     ecran_appro_1080x2400.png                 →   2 teintes
+        //     planche_la_chaine_d_appro_1080x2400.png   → 563 teintes   (sous le chrome réel)
+        //     planche_la_distribution_1080x2400.png     → 573 teintes   (sous le chrome réel)
+        // Deux teintes, c'est un fond et un titre. Une session voisine a fait le même constat sur
+        // ㉘ et a retiré la catégorie du filtre plutôt que de commiter l'image.
+        //
+        // ★ ET LA GARDE ANTI-VACUITÉ DU GABARIT CERTIFIAIT CE VIDE. Elle assertait
+        // `horsFond > 0` — « l'image n'est pas parfaitement uniforme » — avec un plancher que son
+        // propre commentaire déclarait « volontairement bas, à durcir une fois BuildLayout()
+        // rempli ». Un écran qui rend son fond ET son titre la satisfait. *Une garde qui mesure la
+        // mauvaise propriété est pire que pas de garde : elle certifie le défaut.* Et le
+        // durcissement différé n'est jamais venu — un différé sans détecteur n'est pas un différé,
+        // c'est un trou.
+        //
+        // ⇒ La capture de cet écran vit dans `PlancheChantierCCapturePlayModeTests`, qui le monte
+        // SOUS LE CHROME RÉEL par `CaptureSousShell`, attend un chargement abouti, et mesure le
+        // rect du locataire — pas l'encre de toute l'image. Deux résolutions sont par ailleurs hors
+        // du régime de la semaine (une capture par écran).
+        // ⚠️ Le patron retiré ici existe encore dans 5 autres suites du dépôt, dont 3 montent
+        // aussi hors shell : ce lot ferme l'instance, pas la classe.
 
         // ═══ Fixtures parcours — patron ㊲/㉚ ══════════════════════════════════════════════════
 

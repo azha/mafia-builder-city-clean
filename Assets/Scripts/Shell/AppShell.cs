@@ -771,6 +771,10 @@ namespace MafiaCleanCity.Shell
             // (m-54, « L'envoi de ce soir » aurait été trop long pour une entrée de menu — REUSE
             // du nom court déjà porté par le brief et par `Tools/juge-visuel/ecran_distribution/`).
             ("LA DISTRIBUTION", () => MountTenant<DistributionScreenController>()), // ㉘
+
+            // ㉛ — « le parloir ». Libellé en CAPITALES, patron des entrées voisines (aucune
+            // planche de menu ne nomme cet écran — même situation que ㉘, ajoutée le même jour).
+            ("LA LOI", () => MountTenant<LoiScreenController>()), // ㉛
         };
 
         /// <summary>Monte le menu « Plus » : une entrée par destination, chacune montant son écran.
