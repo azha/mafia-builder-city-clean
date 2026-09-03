@@ -229,7 +229,10 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.AreEqual(exceptionLtId, report.lieutenant_id);
 
             Assert.That(ctl.RenderedTexts, Does.Contain("[~] Minimal"));
-            Assert.That(ctl.RenderedTexts, Does.Contain("[<>] Tradeoff"));
+            // « Tradeoff » → « Arbitrage » (2026-09-03) : la thèse du test ne change pas — il
+            // vérifie qu'un PALIER est rendu, jamais un scalaire brut — seule la langue du
+            // libellé bouge. « [~] Minimal » reste tel quel : le mot est identique en français.
+            Assert.That(ctl.RenderedTexts, Does.Contain("[<>] Arbitrage"));
             foreach (string t in ctl.RenderedTexts)
                 Assert.IsFalse(Regex.IsMatch(t, @"(?<![A-Za-z])\d+(\.\d+)?(?![A-Za-z])"), $"raw scalar leaked client-side: '{t}'");
         }
