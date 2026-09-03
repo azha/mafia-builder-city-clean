@@ -993,7 +993,7 @@ namespace MafiaCleanCity.Operational
             TextMeshProUGUI tiret = NouveauTexte(tenu.transform, "Tiret", "—", Px(CssTenuTitre),
                                                  DelegationResolvers.OrMuet, DesignTokens.Current.primaryFont);
             tiret.alignment = TextAlignmentOptions.Right;
-            TextMeshProUGUI rien = NouveauTexte(tenu.transform, "Rien", "rien derrière", Px(CssTenuSous),
+            TextMeshProUGUI rien = NouveauTexte(tenu.transform, "Rien", Lib("rien derrière"), Px(CssTenuSous),
                                                 DelegationResolvers.MuetEteint, DesignTokens.Current.primaryFont);
             rien.alignment = TextAlignmentOptions.Right;
         }
@@ -1012,7 +1012,7 @@ namespace MafiaCleanCity.Operational
             v.childControlWidth = true;  v.childControlHeight = true;
             v.childForceExpandWidth = true; v.childForceExpandHeight = false;
 
-            TextMeshProUGUI h4 = NouveauTexte(go.transform, "Titre", "Si vous reprenez maintenant",
+            TextMeshProUGUI h4 = NouveauTexte(go.transform, "Titre", Lib("Si vous reprenez maintenant"),
                 Px(CssApercuTitre), DelegationResolvers.TitreVif, DesignTokens.Current.hudSerifFont);
             h4.fontStyle = FontStyles.Bold;
             h4.margin = new Vector4(0f, 0f, 0f, Px(CssApercuTitreBas));
@@ -1312,6 +1312,16 @@ namespace MafiaCleanCity.Operational
             img.color = Color.white;   // la couleur vit dans le sprite, jamais dans les deux
             img.raycastTarget = false;
         }
+
+        /// <summary>Item 0.6 — les littéraux STATIQUES passent par `delegation.bloc.<slug>`,
+        /// repli sur le littéral (affichage byte-identique tant que la clé n'est pas servie).
+        /// ⚠️ CET ÉCRAN N'EN PORTE QUE DEUX, pas dix-huit. Mon outil comptait les NOMS DE
+        /// GAMEOBJECT passés en argument (`NouveauTexte(parent, "Titre", texte, …)`) et les
+        /// balises de texte riche. Une regex ne peut pas trancher : l'ordre des arguments
+        /// diffère d'un contrôleur à l'autre, donc « le texte » n'a pas de position fiable.</summary>
+        private static string Lib(string litteral) =>
+            MafiaCleanCity.I18n.Libelle.De("delegation", "bloc", litteral);
+
     }
 
     /// <summary>㉜ — la copie CLIENT du catalogue de catégories. **C'est un pis-aller, et il est

@@ -42,6 +42,23 @@ LIGNE_POSEUSE = re.compile(r'(?:NouveauTexte|NewText|\.text\s*=)')
 LITTERAL = re.compile(r'"([^"\\]{3,60})"')
 
 
+# ⛔ CORRIGÉ UNE SECONDE FOIS le 2026-09-03, dans l'AUTRE sens. La version précédente comptait
+# 18 littéraux dans `DelegationScreenController` ; il y en a DEUX. Les seize autres étaient des
+# NOMS DE GAMEOBJECT passés en argument — `NouveauTexte(parent, "Titre", texte, …)` — et des
+# balises de texte riche (`<b>`, `</b>`).
+# ⚠️ ET UNE REGEX NE PEUT PAS TRANCHER : l'ordre des arguments DIFFÈRE d'un contrôleur à
+# l'autre (`NouveauTexte(parent, nom, texte)` ici, `NewText(nom, parent, texte)` ailleurs). Il
+# n'existe donc pas de position fiable pour « le texte ».
+# ★ Cet outil produit des CANDIDATS, pas une dette chiffrée. Un premier passage sous-comptait
+#   (45), un second sur-comptait (58) ; la vérité tient dans une fourchette qu'il faut OUVRIR
+#   les fichiers pour fermer. *Un compteur qu'on croit exact est plus dangereux qu'un compteur
+#   qui s'annonce approximatif.*
+# ⇒ Filtres ajoutés : un mot unique commençant par une majuscule (nom d'objet typique), et le
+#   balisage. Ce qui reste est PLAUSIBLEMENT du texte, à confirmer à l'œil.
+NOM_DOBJET = re.compile(r'^[A-Z][A-Za-z0-9]*$')
+BALISE = re.compile(r'^</?[a-z]')
+
+
 def candidats(source: str) -> set[str]:
     trouves = set()
     for ligne in source.split('\n'):
@@ -49,8 +66,11 @@ def candidats(source: str) -> set[str]:
             continue
         for m in LITTERAL.finditer(ligne):
             s = m.group(1)
-            if re.search(r'[A-Za-zÀ-ÿ]', s) and not s.startswith('/') and '{' not in s:
-                trouves.add(s)
+            if not re.search(r'[A-Za-zÀ-ÿ]', s) or s.startswith('/') or '{' in s:
+                continue
+            if NOM_DOBJET.match(s) or BALISE.match(s):
+                continue          # nom de GameObject ou balise : jamais affiché tel quel
+            trouves.add(s)
     return trouves
 
 
