@@ -60,15 +60,7 @@ public static class MafiaCI
     // livrées, compilées, et JAMAIS EXÉCUTÉES par le juge — la forme la plus économique de garde
     // décorative. *Écrire une garde ne l'installe pas ; l'inscrire au filtre, si.*
     private static readonly string[] Categories =
-        { "W4P4a", "W3UDA", "W3U1", "W3U2", "Charpente", "DemoIdentity", "ScreenB3", "ShellSurimpression", "CaptureDistrict", "CaptureReputation", "CaptureFamille", "Joignabilite", "ScreenCarte", "CaptureCarte", "EcranAutonomy", "EcranExceptions", "EcranRegleLieutenant", "EcranTenureLieutenant", "EcranUiLieutenant", "EcranRegleTier2", "PhotoChantierC" };
-    // ⚠️ UNION AU MERGE DU 2026-09-03 (3e du jour sur CETTE ligne) : `PhotoChantierC`
-    // vient du chantier C. `CarteVille` est RETIRÉE et ce n'est pas un oubli — la session
-    // DA a renommé la catégorie de sa propre suite en `ScreenCarte` (une par écran), donc
-    // plus aucun test ne la porte : la garder ferait croire à une couverture qui n'existe
-    // plus. Contrôle exécuté : `grep -rn 'Category("CarteVille")' Assets` → 0.
-    // ⇒ Un filtre se fusionne en UNION de ce qui est PORTÉ, jamais en union des listes :
-    //   une catégorie que personne ne porte n'ajoute rien, une catégorie portée qu'on
-    //   retire rend ses tests inatteignables sans que rien ne rougisse.
+        { "W4P4a", "W3UDA", "W3U1", "W3U2", "Charpente", "DemoIdentity", "ScreenB3", "ShellSurimpression", "CaptureDistrict", "CaptureReputation", "CaptureFamille", "CarteVille", "Joignabilite", "ScreenCarte", "CaptureCarte", "EcranAutonomy", "EcranExceptions", "EcranRegleLieutenant", "EcranTenureLieutenant", "EcranUiLieutenant", "EcranRegleTier2", "PhotoChantierC", "EcranAppro", "PhotoEcranAppro" };
     // ⚠️ UNION AU MERGE DU 2026-09-03 : `CarteVille` vient du lot « ville peinte », les huit
     // autres du chantier C et du mien. Les deux branches avaient RAISON séparément et le
     // conflit portait sur la LIGNE, pas sur l'intention — un filtre se fusionne toujours en

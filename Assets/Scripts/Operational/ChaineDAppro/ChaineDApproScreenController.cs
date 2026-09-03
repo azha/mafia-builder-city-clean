@@ -101,6 +101,7 @@ namespace MafiaCleanCity.Operational
         private RectTransform racinePleinEcran;
         private ChaineDApproClient client;
         private bool initialise;
+        private bool chargementAmorce;
 
         private float Px(float css) =>
             EchelleMaquette.Px(css, racinePleinEcran, EchelleMaquette.LargeurEcransBrennar);
@@ -116,6 +117,15 @@ namespace MafiaCleanCity.Operational
         {
             EnsureInitialized();
             EnsureEventSystem();
+            // ⛔⛔ L'ÉCRAN SE CHARGE LUI-MÊME AU MONTAGE — sans cette ligne il se construit et reste
+            //    VIDE POUR TOUJOURS. Le shell monte le locataire et lui passe un jeton ; il
+            //    n'appelle JAMAIS `Charger()`. Mesuré le 2026-09-03 : `Charger()` était défini et
+            //    n'avait AUCUN appelant dans tout le fichier, et la capture a échoué sur
+            //    « chargement NON abouti après 20 s ».
+            //    ★ Et les tests de ce lot ne pouvaient pas le voir : ils appellent `Charger()`
+            //      eux-mêmes. *Un test qui déclenche lui-même ce qu'il vérifie ne prouve rien du
+            //      déclencheur* — c'est la capture, et elle seule, qui a trouvé le trou.
+            if (!chargementAmorce) { chargementAmorce = true; StartCoroutine(Charger()); }
             // Second point d'ordre de fratrie — voir le commentaire de `SetMountParent` : c'est ce
             // second appel, une frame plus tard, qui rend l'ordre STABLE (patron Shop).
             transform.SetAsLastSibling();
@@ -172,7 +182,16 @@ namespace MafiaCleanCity.Operational
             var proj = new CityProjectionsClient { BaseUrl = baseUrl };
             foreach (DistrictDto d in districts)
             {
-                if (d.control_state != "PLAYER_HELD") continue;
+                // ⛔ PAS DE FILTRE SUR `control_state` — mesuré le 2026-09-03 sur la pile de dev :
+                //    les 18 districts servis sont TOUS `UNCONTESTED`, aucun n'est `PLAYER_HELD`.
+                //    Le filtre écartait donc la totalité de la liste, la découverte ne trouvait
+                //    jamais rien, et l'écran restait vide en 20 s sans poser d'erreur — la capture
+                //    a rendu « chargement NON abouti · DerniereErreur=null ». *Un filtre qui ne
+                //    laisse rien passer ne se distingue pas d'une absence de données.*
+                //    Le seul critère qui discrimine vraiment est celui d'en dessous : ce district
+                //    porte-t-il au moins UN bâtiment du joueur ? `interior` est scopé au porteur du
+                //    jeton, donc sa liste `buildings` EST la réponse. `control_state` décrit qui
+                //    tient le district au sens du conflit, pas qui y possède un mur.
 
                 DistrictInteriorDto interior = null;
                 long codeInterior = 0;
@@ -187,8 +206,8 @@ namespace MafiaCleanCity.Operational
                     yield break;
                 }
             }
-            onErr?.Invoke("aucun district PLAYER_HELD avec au moins un bâtiment — la prémisse de " +
-                          "cet écran (un kit de départ possédé) ne tient pas sur ce compte");
+            onErr?.Invoke("aucun des 18 districts ne porte de bâtiment pour ce compte — la " +
+                          "prémisse de cet écran (un kit de départ possédé) ne tient pas ici");
         }
 
         // ═══ Chargement ══════════════════════════════════════════════════════════════════════
