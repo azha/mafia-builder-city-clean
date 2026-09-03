@@ -45,7 +45,7 @@ def slug(s: str) -> str:
 
 
 APPEL_DIRECT = re.compile(
-    r'Libelle\.De\(\s*"([^"]*)"\s*,\s*"([^"]*)"\s*,\s*"([^"\\]{1,120})"\s*\)')
+    r'Libelle\.De\(\s*"([^"]*)"\s*,\s*"([^"]*)"\s*,\s*"([^"\\]{1,400})"\s*\)')
 # le helper local : `private static string Lib(string x) => …Libelle.De("d", "r", x);`
 HELPER = re.compile(
     r'string\s+(\w+)\s*\(\s*string\s+\w+\s*\)\s*=>\s*[\w.]*Libelle\.De\(\s*"([^"]*)"\s*,\s*"([^"]*)"')
@@ -61,6 +61,30 @@ HELPER2 = re.compile(
     r'[\w.]*Libelle\.De\(\s*"([^"]*)"\s*,\s*(\w+)\s*,')
 
 
+# ⛔⛔ LA CONCATÉNATION SE RECOLLE AVANT TOUTE LECTURE — ET SANS ÇA L'OUTIL PRODUIT DES CLÉS
+# QUE LE CLIENT NE DEMANDERA JAMAIS. Mesuré : le client écrit couramment
+#     Lib("la route n'a rien rendu. Ce n'est pas « la filière est vide » : c'est « on "
+#         + "ne sait pas où elle en est ».")
+# Le `+` s'évalue DANS l'appel : `Libelle.De` reçoit la phrase ENTIÈRE et dérive la clé entière.
+# Une lecture ligne par ligne ne voit que le PREMIER fragment et fabrique
+# `…c_est_on` — une clé tronquée au milieu d'un mot.
+# ⇒ J'aurais fait servir par le back une liste dont une partie n'est demandée par personne, ET
+#   qui manque les vraies clés. Les comptes auraient été verts des deux côtés.
+# ⇒ C'est exactement le mode d'échec que l'en-tête de ce fichier annonce pour `Slug` — sauf que
+#   la divergence n'était pas dans la normalisation, mais dans la RECONSTRUCTION DE L'ARGUMENT.
+#   *Reproduire la règle ne suffit pas : il faut aussi reproduire ce qu'on lui donne à manger.*
+CONCAT = re.compile(r'"([^"\\]*)"\s*\+\s*"([^"\\]*)"', re.S)
+
+
+def recoller(src: str) -> str:
+    """`"a" + "b"` → `"ab"`, y compris à cheval sur plusieurs lignes, jusqu'à stabilité."""
+    avant = None
+    while avant != src:
+        avant = src
+        src = CONCAT.sub(lambda m: '"' + m.group(1) + m.group(2) + '"', src)
+    return src
+
+
 def cles_du_fichier(src: str):
     """Rend {(domaine, role, litteral)} — la clé se dérive ensuite."""
     trouves = set()
@@ -70,12 +94,12 @@ def cles_du_fichier(src: str):
         nom, dom, role = h.group(1), h.group(2), h.group(3)
         # ⚠️ On exige le nom EXACT du helper, jamais un `\w+\(` générique : `Lib(` et `Libelle.De(`
         # partagent un préfixe, et un motif large compterait deux fois le même appel.
-        appel = re.compile(r'(?<![\w.])' + re.escape(nom) + r'\(\s*(?:\$?)"([^"\\]{1,120})"')
+        appel = re.compile(r'(?<![\w.])' + re.escape(nom) + r'\(\s*(?:\$?)"([^"\\]{1,400})"')
         for m in appel.finditer(src):
             trouves.add((dom, role, m.group(1)))
     for h in HELPER2.finditer(src):
         nom, dom = h.group(1), h.group(2)
-        appel = re.compile(r'(?<![\w.])' + re.escape(nom) + r'\(\s*"([^"\\]{1,60})"\s*,\s*(?:\$?)"([^"\\]{1,120})"')
+        appel = re.compile(r'(?<![\w.])' + re.escape(nom) + r'\(\s*"([^"\\]{1,60})"\s*,\s*(?:\$?)"([^"\\]{1,400})"')
         for m in appel.finditer(src):
             trouves.add((dom, m.group(1), m.group(2)))
     return trouves
@@ -90,6 +114,7 @@ def main() -> int:
         src = f.read_text(encoding='utf-8')
         if 'Libelle' not in src:
             continue
+        src = recoller(src)   # AVANT toute extraction — voir la note de `recoller`.
         trouves = cles_du_fichier(src)
         par_fichier[str(f)] = len(trouves)
         for dom, role, lit in trouves:
