@@ -166,3 +166,136 @@ corps ; s'ils existent comme VALEURS de `route_state`, ils n'ont jamais été ob
 - m-58 (coursier arrêté) ressemble à un ÉCRAN/ÉVÉNEMENT SÉPARÉ (mugshot, 3 choix moraux) plutôt
   qu'un état de CET écran — aucune des 4 routes données ne le sert. À confirmer avec le
   chantier : appartient-il à ㉘ ou à un autre écran non encore scaffoldé ?
+
+## Addendum 2026-09-03 (soir) — TD-558 : la ficelle et son épingle
+
+Item unique, isolé du reste du chantier de métier ci-dessus. Même régime : pas de suite complète,
+pas de revue ⊥, pas de gate. **Éditeur Unity toujours PAS lancé** — rien de ce qui suit n'a été vu
+en Play Mode ; preuve = les quatre commandes de compilation, toutes vertes avec contrôle positif
+(voir § Evidence en fin de section).
+
+### Le défaut, tel que mesuré sur la capture livrée
+
+`planche_la_distribution_1080x2400.png` montre deux étiquettes crème sur le liège et RIEN entre
+elles — confirmé en ouvrant l'image. `Tools/juge-visuel/v6/m-54.png` montre une ficelle claire
+tendue en diagonale + une épingle rouge à l'origine. Sans elles, « la ficelle sur le liège » est un
+liège avec deux papiers posés dessus — c'est exactement le trou que l'addendum précédent
+consignait sous « approximation volontaire, `juge-visuel` tranchera si c'est assez » : il ne l'a
+jamais fait (éditeur non lancé), donc le trou est resté silencieux jusqu'à ce brief.
+
+### Fichiers touchés
+
+- `Assets/Scripts/Operational/Distribution/DistributionScreenController.cs` :
+  - `RendreCorkboard()` réorganisée (route calculée AVANT le panneau ; construit la ficelle
+    comme PREMIER enfant du panneau, `ignoreLayout`, AVANT les deux étiquettes ; lit leurs
+    `RectTransform` réels APRÈS `Canvas.ForceUpdateCanvases()` ; appelle `DefinirTrace`).
+  - `ConstruireEtiquette` : rend désormais le `GameObject` construit (était `void`) — seul
+    changement de signature, aucun appelant externe.
+  - Deux couleurs ajoutées à la palette locale : `CordeClaire` (`#c9bda0`) et `EpingleRouge`
+    (`#c4413a`) — MESURÉES au pixel (voir § Mesure des couleurs), pas estimées visuellement
+    comme `Liege`/`Creme`.
+  - `DistributionResolvers` : 3 résolveurs nommés de plus — `FormeChaineSerpente`,
+    `NombreTraverseesFicelle`, `EstRompue` — chacun sur la MÊME valeur de domaine qu'un
+    résolveur de texte déjà existant (`TexteChemin`/`TexteTraverser`/`TexteRouteState`),
+    jamais relue autrement.
+  - Nouvelle classe `DistributionFicelleGraphic : MaskableGraphic` (fin de fichier) — dessine le
+    trait (droit ou onde sinus perpendiculaire), les marques de franchissement, l'interruption
+    "rompue" et le disque de l'épingle, par `OnPopulateMesh`/`VertexHelper` (patron
+    `VerticalGradientImage`).
+- `Assets/Tests/PlayMode/DistributionScreenPlayModeTests.cs` : S2 (garde structurelle de la
+  ficelle, CanvasRenderer + MaskableGraphic), E6 (aucune route ⇒ aucune ficelle fabriquée), R7-R9
+  (les 3 nouveaux résolveurs). Docstring de classe mise à jour. NON EXÉCUTÉS cette passe non plus.
+
+### Comment la forme du trait est dérivée de chaque bande
+
+Les trois valeurs sont lues sur `route` (première entrée de `GET .../distribution/projection`,
+la MÊME variable que celle qui alimente déjà les 3 lignes de texte existantes — jamais relue
+séparément) :
+
+| bande | résolveur (nouveau) | effet sur le trait |
+|---|---|---|
+| `sinuosity_bucket` | `FormeChaineSerpente` (bool) | `false` ("direct", MESURÉE) → segment droit. `true` (tout le reste — "meandering" MESURÉE, "tortuous" hypothèse m-57, ou inconnu) → onde sinus complète, amplitude perpendiculaire au segment direct. |
+| `river_crossings_count_bucket` | `NombreTraverseesFicelle` (int) | 0/1/2 marques perpendiculaires posées SUR le trait (jamais dans une légende), réparties à intervalles réguliers le long du paramètre `t`. |
+| `route_state` | `EstRompue` (bool) | `false` ("active", SEULE valeur mesurée, 3/3) → trait continu. `true` (tout le reste) → un trou franc autour du centre du trait (±3,5 % de sa longueur), sur toute sa largeur — jamais un dégradé, jamais une couleur qui change seule. |
+
+### Ce qui a été fait de la branche « rompue » — jamais observée
+
+`route_state` n'a rendu que `"active"` sur les 3 routes mesurées ce matin (voir
+`EcranDistributionR4`, hérité). Le brief demande une branche « rompue » sans garantir sa valeur
+exacte. `EstRompue(string) => routeState != "active"` traite donc "active" comme le SEUL cas
+nominal connu et bascule tout le reste (une hypothèse "severed", une valeur inconnue, `null`,
+chaîne vide) sur la branche interrompue — documenté dans le docstring de la méthode et testé en
+R9 (jamais exécuté, seulement compilé). Aucune prétention de connaître le domaine complet.
+
+### La garde qui couvre la ficelle
+
+`EcranDistributionS1_ToutGraphic_PorteSonCanvasRenderer` (préexistante) balaie
+`RacineEcran().GetComponentsInChildren<Graphic>(true)` sans filtrer par type — elle aurait donc
+couvert la ficelle automatiquement SI elle existait déjà à ce point du montage. Elle ne l'est pas :
+S1 tourne juste après `MonterEcran()` + un frame, AVANT que `Charger()` n'ait fini son premier
+aller-retour réseau, donc avant tout appel à `RendreCorkboard()`. ⇒ Ajouté
+`EcranDistributionS2_AvecUneRoute_LaFicelleEstMaskableGraphicAvecCanvasRenderer` : monte l'écran
+via `RendrePourTest` (route fabriquée), trouve `GameObject.Find("Ficelle")`, assert 1 seul
+`Graphic`, `CanvasRenderer` présent, `MaskableGraphic` — PUIS rejoue le balayage large de S1 dans
+cet état pour fermer la classe entière, pas seulement l'instance.
+
+### Mesure des couleurs (nouveau : l'outil était disponible cette passe)
+
+Les couleurs `Liege`/`Creme` du fichier étaient déjà « ESTIMÉES VISUELLEMENT, NON ÉCHANTILLONNÉES
+AU PIXEL » (addendum précédent) faute d'outil de lecture de pixel disponible. Cette fois `python3`
++ Pillow étaient là : `Tools/juge-visuel/v6/m-54.png` fait 900×1752 px — soit 300 CSS px × 3 (le
+facteur de rendu de la famille `ecrans-brennar.html`, cohérent avec `EchelleMaquette.
+LargeurEcransBrennar = 300` déjà en vigueur sur cet écran). Couleur la plus fréquente dans un carré
+échantillon posé (a) sur le trait entre le pin et l'étiquette d'arrivée → `(201,189,160)` de façon
+quasi uniforme sur plusieurs points le long du tracé ; (b) au cœur du disque rouge de l'épingle →
+`(196,65,58)`, 430 pixels sur un échantillon de repérage. Script ad hoc, non commité (mesure
+ponctuelle, pas un instrument réutilisé par un test).
+
+### Ce qui reste ouvert / non vérifié
+
+- **Aucune vérification visuelle** — éditeur non lancé, `juge-visuel`/`juge-données` non invoqués.
+  L'angle exact du trait dans le jeu réel dépend des positions RÉELLES des deux étiquettes
+  (pleine largeur, empilées, avec un espace de 24 CSS px entre elles d'après le layout) — TRÈS
+  différent de la diagonale à 45° de la maquette m-54, dont le panneau montre deux étiquettes
+  décalées en X et en Y. C'est le layout de l'écran (établi AVANT ce lot, pas retouché ici) qui
+  fixe cette différence, pas la ficelle elle-même — mais je ne l'ai pas VU rendu, donc je ne peux
+  pas dire si le résultat reste lisible. `juge-visuel` tranchera au prochain jugement d'écran.
+  ⚠️ Le vertical disponible entre les deux étiquettes est de seulement 24 CSS px (spacing du
+  `VerticalLayoutGroup`) — l'amplitude de l'onde "serpente" est réglée à 6 CSS px pour rester dans
+  cette marge sans chevaucher les étiquettes, mais ce n'est pas mesuré en jeu.
+- La coupure "rompue" (±3,5 % de la longueur du trait) n'a aucune source visuelle — jamais
+  observée, largeur choisie pour rester visible sans dépendre de la résolution, pas dérivée d'une
+  maquette qui montre cet état (aucune des 5 planches `m-54..m-58` ne le fait).
+- Aucune prémisse du brief n'a été trouvée fausse cette passe (contrairement au chantier du
+  matin) — les 3 clés (`sinuosity_bucket`/`river_crossings_count_bucket`/`route_state`) et leurs
+  valeurs mesurées sont exactement celles déjà consignées dans ce fichier plus haut.
+
+### Evidence — les quatre commandes, sortie collée
+
+```
+$ Tools/verifier-compilation-sans-unity.sh --tests --controle-positif
+sources : 231  ·  références : 269
+EXIT=1 · erreurs=3
+/tmp/tmp.ckH8ZCWJl8/ControlePositif.cs(7,23): error CS0029: Cannot implicitly convert type 'bool' to 'int'
+/tmp/tmp.ckH8ZCWJl8/ControlePositif.cs(8,24): error CS0029: Cannot implicitly convert type 'int' to 'string'
+/tmp/tmp.ckH8ZCWJl8/ControlePositif.cs(9,11): error CS1061: 'UniformTellsDto' does not contain a definition for 'MethodeQuiNExistePas' [...]
+✓ CONTRÔLE POSITIF : 3 erreur(s) sur la sonde — la compilation VOIT la cible de CE périmètre (--tests).
+
+$ Tools/verifier-compilation-sans-unity.sh --tests
+sources : 231  ·  références : 269
+EXIT=0 · erreurs=0
+✓ compile (relancer avec --controle-positif pour que ce vert ait une valeur)
+
+$ python3 Tools/verifier-references-asmdef.py
+  13 asmdef · 236 fichiers .cs · 26 namespaces fournis
+  ⇒ ✅ tout `using MafiaCleanCity.*` est couvert par l'asmdef de son fichier.
+
+$ python3 Tools/verifier-references-asmdef.py --controle-positif
+✓ CONTRÔLE POSITIF : la référence retirée rougit (1 using non couvert) — le balayage VOIT cette classe de défaut.
+    Assets/Scripts/Shell/AppShell.cs · using MafiaCleanCity.Onboarding · assembly Shell ne référence aucun de ['Onboarding']
+```
+
+Les quatre commandes rendent EXIT=0 (le script de compilation rend `EXIT=1` en INTERNE sur le run
+avec faute injectée — c'est la sonde qui doit rougir — mais son wrapper `--controle-positif`
+ré-évalue et sort 0 quand les erreurs sont bien toutes attribuées au fichier de la sonde, ce
+qu'elles sont ici : 0 erreur "AILLEURS").
