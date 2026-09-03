@@ -23,6 +23,24 @@
 # `Assets/Editor/AssetLint` (les tests en dépendent) et définit `UNITY_INCLUDE_TESTS`, sans quoi
 # l'assembly de tests est exclue par sa propre contrainte de define.
 #
+# ⛔⛔ CE QUE CE VERT NE PROUVE PAS, ET C'EST STRUCTUREL — MESURÉ LE 2026-09-03.
+# Ce script rassemble les sources par `find Assets/Scripts … -name '*.cs'` et les compile dans UNE
+# SEULE invocation de Roslyn. Il ne connaît donc AUCUNE frontière d'assembly : tout ce qui est dans
+# l'arbre voit tout le reste. Unity, lui, compile une assembly par `.asmdef`, avec ses références
+# déclarées — et refuse les cycles.
+# ⇒ Un écran d'`Operational` qui lit un type de l'assembly `Shell` compile ICI et rougit LÀ-BAS.
+#   Mesuré à l'euro près : ce script a rendu `EXIT=0 · erreurs=0` sur un contrôleur que le batchmode
+#   a immédiatement refusé — `CS0246: The type or namespace name 'StructuralBudgetDto' could not be
+#   found`, deux fois. Le `using` était juste ; c'est la RÉFÉRENCE D'ASSEMBLY qui manquait, et
+#   `Shell` référence déjà `Operational` (la lecture inverse est un cycle).
+# ⇒ **Son vert répond à « la syntaxe et les types tiennent-ils ? », jamais à « le découpage en
+#   assemblies l'autorise-t-il ? ».** Deux questions, un seul vert. Un lot qui ajoute une dépendance
+#   ENTRE dossiers d'assemblies doit passer par le batchmode ; ce script reste juste pour tout le
+#   reste, qui est l'écrasante majorité des éditions.
+# ⚠️ Ce n'est pas réparable en ajoutant un motif : il faudrait compiler assembly par assembly, en
+#   lisant le graphe des `.asmdef`. Tant que ce n'est pas fait, la limite se DÉCLARE plutôt que de
+#   se laisser découvrir — un contrôle dont on ne borne pas la portée est lu plus large qu'il n'est.
+#
 # usage :
 #   Tools/verifier-compilation-sans-unity.sh                    # le code de jeu
 #   Tools/verifier-compilation-sans-unity.sh --tests            # code de jeu + suites PlayMode

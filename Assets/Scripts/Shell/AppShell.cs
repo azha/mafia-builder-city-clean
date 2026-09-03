@@ -511,6 +511,19 @@ namespace MafiaCleanCity.Shell
             if (dto != null)
             {
                 LastSessionOpen = dto;
+                // ⛔ LE JETON DE STRUCTURE SE PUBLIE ICI, ET C'EST LE SEUL ENDROIT. Trois écrans du
+                // canon (㉜ le tableau de service, ㉝ raser un site, et toute graduation) partagent
+                // le plafond « une décision de structure par journée » : ils doivent en donner la
+                // MÊME lecture, sinon le joueur croit avoir trois budgets et découvre la contrainte
+                // par un 409. Ils ne peuvent pas lire `LastSessionOpen` — `StructuralBudgetDto` vit
+                // dans CETTE assembly, et `Shell` référence déjà `Operational` : la lecture inverse
+                // serait un cycle qu'asmdef refuse (mesuré, CS0246). `JetonDeStructure` vit donc
+                // dans `ShellContracts`, la seule assembly que le shell et ses locataires voient
+                // tous les deux — même patron et même raison que `ShellChrome.PublierInsets`.
+                // ⚠️ Publié seulement quand le corps le porte : sans lui, `Connu` reste faux et les
+                // écrans se rendent comme avant que ce champ existe, plutôt que de supposer un zéro.
+                if (dto.structural_budget != null)
+                    JetonDeStructure.Publier(dto.structural_budget.used, dto.structural_budget.cap_reached);
                 yield return TopBar.Load(t, dto.backlog_badge, dto.opened_game_day);
                 if (this == null) yield break;
             }
@@ -716,6 +729,15 @@ namespace MafiaCleanCity.Shell
             // qu'au plus UNE carte peut être surfacée pour un joueur. Un écran vide ici n'est donc
             // pas un défaut de montage, et il ne faut pas partir le chercher comme tel.
             ("L'HORIZON DES POSSIBLES", () => MountTenant<HorizonScreenController>()),   // ㊱
+
+            // ㉜ — le tableau de service. Le libellé est le TITRE DE LA PLANCHE (m-75), pas le
+            // nom de la classe : c'est l'état que le joueur vient consulter (« ce que vous avez
+            // confié »), et c'est aussi celui que l'écran affiche quand quelque chose est confié.
+            // ⚠️ Cet écran partage son jeton — une décision de structure par journée — avec ㉝ et
+            // ㉞ : les trois doivent en donner la MÊME lecture, sinon le joueur croit avoir trois
+            // budgets. La source unique est `structural_budget` de `session/open`, que le shell
+            // tient déjà (`LastSessionOpen`) ; aucun des trois ne rouvre de session pour le lire.
+            ("CE QUE VOUS AVEZ CONFIÉ", () => MountTenant<DelegationScreenController>()), // ㉜
         };
 
         /// <summary>Monte le menu « Plus » : une entrée par destination, chacune montant son écran.

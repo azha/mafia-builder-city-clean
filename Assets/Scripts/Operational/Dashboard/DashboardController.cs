@@ -37,11 +37,19 @@ namespace MafiaCleanCity.Operational
     // BuildingCardController / LaunderingController / CityMapController) so a scene needs almost
     // no manual wiring.
     //
-    // M1 scope note (honest deferral, amended Phase-20): the full screen_1 design (the HighestLeverageCard +
-    // [Consider]/[Commit]/[Skip], the top-3 ExceptionQueuePanel with INLINE actions, the 4-bar OrgVitalsPanel,
-    // the ContextualBanner, the ShortcutBar, the rich KPI tiles + decision feed) is still NOT built here. Since
-    // Phase-20 the exception queue IS live as its own screen (ExceptionQueueController — nav below) + a pending
-    // alerts note; the INLINE top-3 panel and one_decision (core_loops.*) remain deferred.
+    // M1 scope note (honest deferral, amended Phase-20, RE-amended 2026-09-03): the rich blocks of the
+    // screen_1 design are not assembled by THIS controller — it renders the wallet band, the citywide
+    // heat band, an alerts line and the nav buttons. Since Phase-20 the exception queue is live as its
+    // own screen (ExceptionQueueController — nav below); the inline top-3 panel and one_decision
+    // (core_loops.*) remain deferred HERE.
+    // ⛔ WHAT THIS NOTE USED TO LET A READER CONCLUDE, AND WHICH IS NOW FALSE: that the player never
+    // sees those blocks at all. Item 0.5 §2 mounted the four of them — the leverage card, the exception
+    // queue panel, the org-vitals panel and the home chrome — as four bands under the Empire tab
+    // (AppShell.MonterPanneauxAccueil, called from the two session-acquisition paths), each fed from the
+    // session/open payload the shell already holds. They live in Shell/, not here, and the shell owns
+    // their geometry. A reader chasing "where did the screen_1 content go" must look there.
+    // ★ The note stayed LITERALLY true while becoming misleading — the exact shape a dated statement
+    //   takes when the work moves and nobody re-reads the sentence that describes its absence.
     public class DashboardController : MonoBehaviour, MafiaCleanCity.Shell.IShellTenant
     {
         [Header("Backend")]

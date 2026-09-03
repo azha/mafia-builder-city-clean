@@ -19,14 +19,20 @@ namespace MafiaCleanCity.Operational.Autonomy
     // VOYAGE : il est recopié dans les commits, les rapports et les mandats avant que quiconque
     // ouvre le fichier.
     //
-    // ⛔⛔ ET CET ÉCRAN EST INJOIGNABLE, mesuré le 2026-09-02. Son SEUL chemin de montage est
-    // `DashboardController.OpenNav(NavTarget.Autonomy)` — or le Dashboard n'est monté par AUCUN
-    // onglet depuis qu'il a été débranché (item 0.5). Il n'a donc pas d'entrée : un joueur ne peut
-    // pas l'atteindre, quel que soit son état de finition.
-    // ⇒ Ce n'est PAS un défaut de cet écran et ça ne se corrige pas ici : les quatre onglets sont
-    // pris (Empire, Org, Pipeline, More), et lui donner une entrée est un arbitrage de NAVIGATION,
-    // pas un réglage. C'est la même classe que la Revue du jour, invisible depuis W3.U1 pour la
-    // même raison — sauf qu'ici il n'existe aucun bloc d'accueil d'où le monter en surimpression.
+    // ✅ ATTEIGNABLE DEPUIS LE 2026-09-02 SOIR — et l'énoncé qui disait le contraire tenait ici
+    // même jusqu'au 2026-09-03. Son chemin de montage reste le même,
+    // `DashboardController.OpenNav(NavTarget.Autonomy)` : ce qui a changé est un cran EN AMONT —
+    // le shell monte désormais le Dashboard en surimpression à l'ouverture de session
+    // (`AppShell.cs:441` et `:546`), donc le bouton existe à l'écran dès le démarrage.
+    // `LocataireJoignabilitePlayModeTests` (catégorie `Joignabilite`) le prouve par fermeture
+    // TRANSITIVE : 23 locataires déclarés, 23 atteints depuis `AppShell`, 0 orphelin.
+    // ⇒ CE QUE CE RENVERSEMENT ENSEIGNE, et c'est plus utile que le fait : l'énoncé était exact à
+    // sa date, il nommait le bon mécanisme, et il est devenu faux sans qu'une seule ligne de CE
+    // fichier bouge — parce qu'il décrivait l'état d'un VOISIN. Un commentaire qui parle de ce que
+    // quelqu'un d'autre fait se périme sans prévenir, et personne ne revient le lire.
+    // ⚠️ Ce qui reste vrai : cet écran n'a PAS d'entrée propre dans le menu « Plus ». Il dépend du
+    // Dashboard. Le jour où le Dashboard cesse d'être monté au démarrage, il redevient injoignable
+    // — et c'est la garde `Joignabilite` qui rougira, pas ce commentaire.
     //
     // ⛔ NON REVU — jalon 2026-09-05.
     //
