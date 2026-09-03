@@ -632,7 +632,7 @@ namespace MafiaCleanCity.Operational
                 DemolitionResolvers.FicheEncre, DesignTokens.Current.hudSerifFont);
             titre.fontStyle = FontStyles.Bold;
             titre.GetComponent<LayoutElement>().flexibleWidth = 1f;
-            TextMeshProUGUI etiq = NouveauTexte(h4.transform, "Etiquette", "FICHE DU SITE",
+            TextMeshProUGUI etiq = NouveauTexte(h4.transform, "Etiquette", Lib("FICHE DU SITE"),
                 Px(CssFicheEtiquette), DemolitionResolvers.FicheMuet, DesignTokens.Current.primaryFont);
             etiq.characterSpacing = 18f;   // .h4 span{letter-spacing:1.1px} sur 6,2px
             etiq.alignment = TextAlignmentOptions.Right;
@@ -670,10 +670,10 @@ namespace MafiaCleanCity.Operational
                 vv.childControlWidth = true; vv.childControlHeight = true;
                 vv.childForceExpandWidth = true; vv.childForceExpandHeight = false;
                 verdict.GetComponent<LayoutElement>();
-                NouveauTexte(verdict.transform, "Titre", "Il vous coûte plus qu'il ne vous rapporte.",
+                NouveauTexte(verdict.transform, "Titre", Lib("Il vous coûte plus qu'il ne vous rapporte."),
                              Px(CssVerdictTitre), DemolitionResolvers.VerdictEncre,
                              DesignTokens.Current.primaryFont).fontStyle = FontStyles.Bold;
-                NouveauTexte(verdict.transform, "Sous", "Le garder, c'est payer pour gêner les autres.",
+                NouveauTexte(verdict.transform, "Sous", Lib("Le garder, c'est payer pour gêner les autres."),
                              Px(CssVerdictSous), DemolitionResolvers.VerdictSous,
                              DesignTokens.Current.primaryFont);
             }
@@ -747,7 +747,7 @@ namespace MafiaCleanCity.Operational
             vt.padding = new RectOffset(0, 0, 0, PxTrait(CssTitronBas));
             vt.childControlWidth = true; vt.childControlHeight = true;
             vt.childForceExpandWidth = true; vt.childForceExpandHeight = false;
-            NouveauTexte(titron.transform, "Texte", "CE QU'ON PEUT Y METTRE", Px(CssTitron),
+            NouveauTexte(titron.transform, "Texte", Lib("CE QU'ON PEUT Y METTRE"), Px(CssTitron),
                          DemolitionResolvers.Muet, DesignTokens.Current.primaryFont)
                 .characterSpacing = 22f;
 
@@ -1198,6 +1198,13 @@ namespace MafiaCleanCity.Operational
         /// <summary>⛔ DÉ-PARENTER AVANT `Destroy` : `Destroy` est DIFFÉRÉ à la fin de la frame, et
         /// une reconstruction immédiate compterait les anciens enfants dans le layout le temps
         /// d'une frame — une capture prise là montre l'écran doublé.</summary>
+        /// <summary>Le passage littéral → clé de cet écran. Le littéral reste le FRANÇAIS :
+        /// `Libelle.De` rend le littéral quand la clé manque, donc c'est lui qu'on voit tant que
+        /// le bundle ne sert rien — et c'est le comportement voulu. Un repli anglais laisserait
+        /// l'écran en anglais À TRAVERS la conversion, ce qui est le défaut mesuré sur ⑧.</summary>
+        private static string Lib(string litteral) =>
+            MafiaCleanCity.I18n.Libelle.De("demolition", "ecran", litteral);
+
         private static void Vider(RectTransform zone)
         {
             if (zone == null) return;

@@ -18,6 +18,18 @@ fichier INTACT, il rend **405**, parce qu'il compte les IDENTIFIANTS et pas les 
   propriété à mesurer n'est pas « ce mot anglais est absent du fichier » mais « ce texte posé à
   l'écran passe par une clé ».
 
+⛔⛔ ET UN ANGLE MORT MESURÉ, QU'IL FAUT LIRE AVANT DE CROIRE UN ZÉRO. Cet outil ne connaît
+que les poseurs qu'on lui a NOMMÉS. Un écran dont les textes passent par ses propres helpers —
+`EcrireTete(titre, sous)`, `ConstruireGeste(libellé, précision, …)`, comme ㉜ et ㉝ — rend
+**0 / 0** alors qu'il porte des dizaines de littéraux visibles. Le zéro est alors une ABSENCE
+DE COUVERTURE, pas un travail fini.
+⇒ Avant de lire un 0 comme un succès : vérifier que le fichier apparaît bien dans la population,
+  c'est-à-dire qu'au moins UN de ses littéraux a été retenu. Un fichier à 0 posés ET 0 replis
+  n'est pas converti — il est INVISIBLE.
+⇒ C'est la même faute que celle que cet outil existe pour corriger, un cran plus bas : l'autre
+  balayage jugeait le FICHIER au lieu du littéral, celui-ci juge les POSEURS QU'IL CONNAÎT au
+  lieu de tous. *Nommer la population avant de compter* — la règle vaut pour son successeur.
+
 ⚠️ CE QUE CET OUTIL NE PRÉTEND PAS. Il produit une population, pas une vérité. Deux passes
 antérieures l'ont encadrée sans la donner (53 littéraux en ne connaissant que `NewText`, 89 en
 ramassant les noms de `GameObject` et les valeurs d'enum). Les filtres ci-dessous excluent ce
