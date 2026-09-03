@@ -291,7 +291,7 @@ namespace MafiaCleanCity.CoreLoops.Compression
             if (res != null && res.finalized)
                 DerniereErreur = null;
             if (res != null && res.revealed_secondary)
-                pressionTexte.text = "un autre problème vient d'apparaître";
+                pressionTexte.text = Lib("un autre problème vient d'apparaître");
             yield return Charger(token);
         }
 
@@ -382,5 +382,14 @@ namespace MafiaCleanCity.CoreLoops.Compression
             le.flexibleWidth = 1f;
             return t;
         }
+
+        /// <summary>Item 0.6 — les littéraux STATIQUES de cet écran passent par
+        /// `semaine.bloc.<slug>`, repli sur le littéral (affichage BYTE-IDENTIQUE tant que le
+        /// dictionnaire ne porte pas la clé — c'est ce qui rend la conversion sûre sans run).
+        /// ⚠️ Cette phrase est une CONSTATATION de l'écran, pas une donnée du serveur : elle
+        /// a donc sa clé, contrairement aux bandes servies qui restent brutes.</summary>
+        private static string Lib(string litteral) =>
+            MafiaCleanCity.I18n.Libelle.De("semaine", "bloc", litteral);
+
     }
 }
