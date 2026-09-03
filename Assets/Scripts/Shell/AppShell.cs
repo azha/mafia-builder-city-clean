@@ -738,6 +738,8 @@ namespace MafiaCleanCity.Shell
             // budgets. La source unique est `structural_budget` de `session/open`, que le shell
             // tient déjà (`LastSessionOpen`) ; aucun des trois ne rouvre de session pour le lire.
             ("CE QUE VOUS AVEZ CONFIÉ", () => MountTenant<DelegationScreenController>()), // ㉜
+
+            ("LA CHAÎNE D'APPRO", () => MountTenant<ChaineDApproScreenController>()), // ㉚
         };
 
         /// <summary>Monte le menu « Plus » : une entrée par destination, chacune montant son écran.
