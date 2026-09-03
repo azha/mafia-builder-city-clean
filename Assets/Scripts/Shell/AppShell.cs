@@ -812,6 +812,10 @@ namespace MafiaCleanCity.Shell
             //   invisible au joueur est exactement ce que ce chantier a trouvé neuf fois, et
             //   l'inscrire en exception aurait demandé une raison que je n'ai pas. Le libellé vient
             //   de la planche (`front.md` ㉞) ; si B en veut un autre, c'est UNE chaîne à changer.
+
+            // ㉙ — « la table du fond », version 2 dite lisible. Même situation que ㉘/㉛ : aucune
+            // planche de menu ne nomme cet écran, le libellé vient du chantier lui-même.
+            ("LE CONFLIT", () => MountTenant<ConflitScreenController>()), // ㉙
         };
 
         /// <summary>Monte le menu « Plus » : une entrée par destination, chacune montant son écran.
