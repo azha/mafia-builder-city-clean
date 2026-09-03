@@ -17,7 +17,7 @@ namespace MafiaCleanCity.Shell.Tests
     /// (2) CAPTURE sous chrome 1080×2400 — ce qui rendrait l'image mensongère : le locataire entré,
     ///     la peinture montée, 18 marqueurs, aucun occultant nommé (les parties propres exclues),
     ///     pas un fond uni.</summary>
-    [Category("CarteVille")]
+    [Category("ScreenCarte")] // la catégorie de l'écran ③ (chantier C, 2026-09-02) — une seule par écran
     public class CarteVillePlayModeTests
     {
         private GameObject controllerGo;

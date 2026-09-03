@@ -813,7 +813,6 @@ namespace MafiaCleanCity.CityMap
         private void ReserveSpaceForPanel(bool reserve)
         {
             if (rootVlg == null) return; // ville peinte : pas de layout à décaler, le panneau recouvre la carte
-            if (rootVlg == null) return;
             int right = reserve ? PanelReservedRight : RootPadding;
             // 2026-09-02 — ce recalcul écrasait le padding bas posé dans BuildLayout et retombait
             // sur un `RootPadding` nu, perdant le BottomInsetPx dès le premier SelectDistrict/
