@@ -104,6 +104,14 @@ namespace MafiaCleanCity.Capture.Tests
 
             ScreenCapture.CaptureScreenshot("Assets/Screenshots/vue_principale_batiments_hud.png");
             for (int i = 0; i < 12; i++) yield return null;
+
+            // ⛔ La capture opposable du DISTRICT SEUL, avant l'ouverture de la fiche : 1080x2400,
+            //    hors écran, sous le chrome réel. Celle du dessus passe par la vue de jeu, que le
+            //    batchmode borne à 640 de large — elle ne montre pas la géométrie du joueur.
+            GarderLeRectDuLocataire("l'intérieur de district");
+            yield return CapturerA(1080, 2400,
+                "Assets/Screenshots/screen_1_district_sous_chrome_1080x2400.png");
+
             Debug.Log($"[CAPTURE] vue principale — batiments={batiments} district={shell.CityTabDistrictId} " +
                       $"ecran={Screen.width}x{Screen.height}");
 
@@ -155,6 +163,13 @@ namespace MafiaCleanCity.Capture.Tests
         // Mêmes gardes anti-mensonge que la capture précédente : sans elles, un écran vide passerait
         // pour une réussite.
         [UnityTest]
+        // ⛔ CATÉGORIE PROPRE — cette capture n'en avait AUCUNE, et ce n'est pas un oubli de
+        //    rangement : sans elle, le seul moyen de la lancer est la catégorie `Capture` ENTIÈRE,
+        //    dont ce fichier documente déjà qu'elle fait SIGSEGV dans le pilote Mesa (reproduit 2×).
+        //    Une capture qu'aucun filtre ne peut atteindre est une capture qui ne sera jamais prise,
+        //    et son silence se lit comme un succès. Mesuré le 2026-09-02 : les 4 suites PlayMode de
+        //    la carte étaient dans le même cas — aucune `[Category]`, donc jamais exécutées.
+        [Category("CaptureCarte")]
         public IEnumerator Capture_CarteDeVille_SousChromeV31()
         {
             var auth = new AuthClient { BaseUrl = BaseUrl };
@@ -228,6 +243,15 @@ namespace MafiaCleanCity.Capture.Tests
             ScreenCapture.CaptureScreenshot("Assets/Screenshots/carte_de_ville_hud.png");
             for (int i = 0; i < 12; i++) yield return null;
             Debug.Log($"[CAPTURE] carte de ville — noeuds={noeuds} ecran={Screen.width}x{Screen.height}");
+
+            // ⛔ LA CAPTURE QUI COMPTE — 1080x2400, la résolution de travail du projet.
+            //    `ScreenCapture.CaptureScreenshot` ci-dessus prend la VUE DE JEU, dont le batchmode
+            //    fixe la largeur à 640 quoi qu'on lui passe : le PNG produit ne dit rien de ce que
+            //    le joueur verra. `CapturerA` rend hors écran DANS la cible et porte les gardes
+            //    d'échelle. La seule capture opposable de cet écran est donc celle-ci.
+            GarderLeRectDuLocataire("la carte de ville");
+            yield return CapturerA(1080, 2400,
+                "Assets/Screenshots/screen_2_carte_sous_chrome_1080x2400.png");
         }
 
         // ── Capture de NUIT ───────────────────────────────────────────────────────────────────────
@@ -308,9 +332,52 @@ namespace MafiaCleanCity.Capture.Tests
         ///   mesure les deux choses qui rendent un texte illisible sans rien casser :
         ///   · le CONTRASTE avec le fond que le texte a réellement derrière lui ;
         ///   · la TRONCATURE — TMP sait combien de caractères il a effectivement posés.
+        /// ★★ LE MÉCANISME QU'ELLE ATTRAPE, ET QUI SE REPRODUIRA : **on répare le FOND et on
+        /// laisse l'ENCRE dans une couleur pensée pour l'ancien fond.** Mesuré sur ⑩ le
+        /// 2026-09-02 : la carte suggérée devait être CLAIRE (maquette) ; je l'ai éclaircie et
+        /// laissé son libellé de rôle en OR, choisi quand elle était sombre. Or 0,82 sur crème
+        /// 0,88 — écart 0,06. Le correctif d'un défaut de contraste en a créé un autre, au même
+        /// endroit, en sens inverse.
+        /// ⇒ *Un correctif de FOND change la contrainte de tout ce qui se pose dessus, et rien
+        ///   ne le rappelle.* Même famille que des insets de chrome posés par analogie sur un
+        ///   écran voisin : la valeur était juste dans son contexte d'origine, jamais revérifiée
+        ///   dans le nouveau. Cette garde est le rappel qui manquait.
+        ///
         /// ⚠️ Seuil de contraste à 0,18 de luminance : mesuré, le cas fautif était à ~0,02
         /// (crème sombre sur ardoise) et les cas justes au-dessus de 0,35. Le seuil est posé
-        /// dans le vide entre les deux mesures, pas au bord de l'une d'elles.</summary>
+        /// dans le vide entre les deux mesures, pas au bord de l'une d'elles.
+        ///
+        /// ⛔ 2026-09-02 — CETTE GARDE N'ÉTAIT APPELÉE QUE PAR ⑩, l'écran pour lequel je l'avais
+        /// écrite. Pendant ce temps ⑨ portait le MÊME défaut, de la même famille : un sous-titre
+        /// en `onSurfaceSecondary` posé sur l'aplat corail du tampon, à 0,096. Il a fallu que je
+        /// mesure la capture à la main, hors du test, pour le voir.
+        /// ★ Un instrument braqué sur le seul cas qui l'a fait naître continuera de rater
+        ///   partout ailleurs. Une garde appelée par UN écran mesure un écran, pas une propriété :
+        ///   elle a l'air d'exister, elle a même déjà mordu une fois, et sa population est de un.
+        ///
+        /// ⇒ LA POPULATION, NOMMÉE ET COMPTÉE — les 7 captures SOUS CHROME, toutes armées :
+        ///     ㊱ horizon (état vide) · ② fiche · ⑨ file · ⑨ file vide (en attente auto-armée)
+        ///     · ⑩ main de cartes · ⑩ après tampon · ㊲ réputation
+        ///   Les 4 captures HORS chrome ne le sont pas : elles n'ont pas d'insets et leurs fonds
+        ///   sont ceux d'avant le chrome — les y armer mesurerait autre chose sous le même nom.
+        /// ⚠️ AJOUTER UNE CAPTURE SOUS CHROME = AJOUTER L'APPEL, et recompter cette liste. Je
+        ///   m'étais arrêté à 3 sur 7 en croyant avoir fini, ce qui est la même faute d'un cran
+        ///   plus haut que celle qui a laissé passer ⑨.
+        ///
+        /// ⇒ CE QUE CETTE GARDE NE PEUT PAS VOIR : les écrans qu'aucune capture ne photographie.
+        ///   Ses deux moitiés ont donc été balayées STATIQUEMENT le 2026-09-02, et les deux
+        ///   balayages ne se ressemblent pas — c'est le résultat utile :
+        ///   · TRONCATURE — la largeur figée sous un glyphe de longueur variable était recopiée
+        ///     sur CINQ écrans (② ⑤×2 Blanchiment Pipeline Accueil). Corrigée à la source dans
+        ///     `LargeurDeGlyphe` ;
+        ///   · CONTRASTE — ZÉRO autre cas. Les deux seuls candidats (Autonomie, ⑤) sont des faux
+        ///     positifs : l'accent qu'on lit à côté colore un AUTRE texte, pas un fond.
+        /// ★ L'asymétrie s'explique et vaut mieux que les deux chiffres : le défaut de glyphe
+        ///   s'est propagé parce que la CONSTRUCTION avait été recopiée ; celui de ⑨ est né d'un
+        ///   fond changé sous une encre existante — un ÉVÉNEMENT, pas un motif. On balaie pour
+        ///   les motifs ; les événements, seule la garde les attrape, et seulement là où elle est
+        ///   armée. ⇒ Inutile de refaire le balayage du contraste ; refaire celui des largeurs
+        ///   si une sixième colonne apparaît.</summary>
         private static void LisibiliteDuTexte(GameObject racine)
         {
             float Lum(Color c) => 0.2126f * c.r + 0.7152f * c.g + 0.0722f * c.b;
@@ -323,11 +390,20 @@ namespace MafiaCleanCity.Capture.Tests
                 // — TRONCATURE : TMP a-t-il posé tous les caractères qu'on lui a donnés ? —
                 t.ForceMeshUpdate();
                 int poses = t.textInfo != null ? t.textInfo.characterCount : t.text.Length;
-                int demandes = t.text.Replace("\u200B", string.Empty).Length;
+                // \u26D4 `t.text.Length` COMPTE LES BALISES DE TEXTE RICHE, `characterCount` NON.
+                // Mesur\u00E9 le 2026-09-02 : \u32B1 a rougi sur \u00AB 00<size=64%>/0</size> \u00BB \u2014 21 caract\u00E8res
+                // bruts, 4 pos\u00E9s \u2014 alors que la capture montre ce compteur rendu ENTIER. La
+                // troncature \u00E9tait dans mon instrument, pas dans l'\u00E9cran.
+                // \u2605 Un faux positif ici est PIRE qu'un trou : il fait \u00AB corriger \u00BB un \u00E9cran sain,
+                //   et le correctif casse ce qui marchait. `GetParsedText()` rend le texte tel que
+                //   TMP le posera, balises r\u00E9solues \u2014 c'est la seule longueur comparable \u00E0
+                //   `characterCount`.
+                string rendu = t.GetParsedText() ?? string.Empty;
+                int demandes = rendu.Replace("\u200B", string.Empty).Length;
                 Assert.GreaterOrEqual(poses, demandes - 1,
                     $"texte TRONQUÉ dans « {t.name} » : {poses} caractères posés sur {demandes} " +
-                    $"(« {t.text} »). Un libellé coupé ressemble à un libellé court — rien ne " +
-                    "signale la coupe à celui qui lit.");
+                    $"(rendu attendu « {rendu} », source « {t.text} »). Un libellé coupé ressemble " +
+                    "à un libellé court — rien ne signale la coupe à celui qui lit.");
 
                 // — CONTRASTE : contre le premier fond opaque au-dessus de lui —
                 Color fond = Color.clear;
@@ -345,6 +421,52 @@ namespace MafiaCleanCity.Capture.Tests
             Assert.Greater(vus, 3,
                 $"seulement {vus} textes examinés : la garde ne mesure presque rien, elle " +
                 "passerait sur un écran vide");
+        }
+
+        // ⛔⛔ LA GARDE QUI MESURE SOUS LE RECT DU LOCATAIRE — celle qui distingue « l'écran visé
+        //    est là » de « quelque chose a rendu ». Les gardes de PIXELS de `CapturerA` comptent
+        //    l'encre de TOUTE l'image : elles sont satisfaites par les VOISINS de l'écran absent.
+        //    Mesuré le 2026-09-02 sur un autre écran : le locataire occupait 100x100 — la taille
+        //    par défaut d'un `RectTransform` neuf, c'est-à-dire monté mais jamais dimensionné —
+        //    pendant que la capture montrait la carte, l'autonomie et le dock. Toutes les gardes
+        //    de couleur étaient vertes. *Une garde qui mesure la surface entière certifie
+        //    l'absence de ce qu'elle doit prouver.*
+        // ⚠️ On mesure le plus GRAND `RectTransform` sous le slot, pas l'hôte : `ConstruireLocataire`
+        //    crée l'hôte par un `new GameObject`, qui porte un `Transform` NU. Une garde qui ferait
+        //    `host.transform as RectTransform` lirait `null` sur un écran parfaitement monté, et
+        //    échouerait pour une raison sans rapport avec ce qu'elle surveille.
+        private void GarderLeRectDuLocataire(string quoi)
+        {
+            Assert.IsNotNull(shell.ContentSlot, $"aucun slot de contenu — {quoi} n'a nulle part où être");
+            RectTransform plusGrand = null;
+            float aireMax = 0f;
+            // ⛔ EXCLURE `ContentSlot` LUI-MÊME — sans cette ligne la garde mesure le CONTENANT,
+            //    pas le locataire, et elle est donc toujours verte. Mesuré au premier run réel
+            //    (2026-09-02) : elle a rapporté « plus grand rect = 1280x960 (ContentSlot) », la
+            //    taille du slot du shell, pendant qu'elle prétendait mesurer l'écran monté dedans.
+            //    `GetComponentsInChildren` INCLUT la racine sur laquelle on l'appelle — un piège
+            //    d'API, pas une erreur de raisonnement, et c'est pour ça qu'il faut l'écrire.
+            //    ⇒ Telle quelle, elle aurait certifié un locataire à 100x100. *Une garde qui
+            //      mesure le contenant certifie l'absence de ce qu'elle doit prouver* — la même
+            //      famille que les gardes de pixels qu'elle est censée compléter.
+            foreach (var rt in shell.ContentSlot.GetComponentsInChildren<RectTransform>(true))
+            {
+                if (rt == shell.ContentSlot) continue;
+                float aire = rt.rect.width * rt.rect.height;
+                if (aire > aireMax) { aireMax = aire; plusGrand = rt; }
+            }
+            Assert.IsNotNull(plusGrand,
+                $"aucun RectTransform sous le slot de contenu : {quoi} n'a rien construit, et la " +
+                "capture ne montrerait que ses voisins");
+            Vector2 taille = plusGrand.rect.size;
+            Debug.Log($"[RECT] {quoi} — plus grand rect = {taille.x:F0}x{taille.y:F0} " +
+                      $"({plusGrand.name}) · frere={plusGrand.transform.GetSiblingIndex()}");
+            Assert.IsFalse(Mathf.Approximately(taille.x, 100f) && Mathf.Approximately(taille.y, 100f),
+                $"{quoi} mesure {taille.x}x{taille.y} — c'est la taille PAR DÉFAUT d'un RectTransform " +
+                "neuf : monté mais jamais dimensionné, et tout ce que la capture montre appartient " +
+                "à ses voisins.");
+            Assert.Greater(aireMax, 100f * 100f,
+                $"{quoi} n'occupe que {taille.x}x{taille.y} : trop peu pour l'écran capturé");
         }
 
         private IEnumerator CapturerA(int largeur, int hauteur, string chemin)
@@ -668,7 +790,27 @@ namespace MafiaCleanCity.Capture.Tests
                 MafiaCleanCity.Operational.Exceptions.ExceptionQueueController>();
             ecran.SetMountParent(canvasGo.transform);
             ecran.SetToken(token);
-            for (int i = 0; i < 120; i++) yield return null;
+
+            // ⛔ ATTENDRE LE DRAPEAU, PAS UN NOMBRE DE FRAMES. `SetToken` DÉCLENCHE le chargement
+            // sans l'attendre : compter 120 frames revient à parier sur la latence du réseau.
+            // Mesuré le 2026-09-02 — ce test a rendu 7 nœuds et échoué, pendant que son jumeau
+            // SOUS CHROME photographiait les mêmes trois attendants sans broncher. La seule
+            // différence entre les deux était celle-ci.
+            // ★ Et la doctrine était DÉJÀ ÉCRITE dans ce fichier, au-dessus de la capture de
+            //   l'état vide : « ATTENDRE LE CHARGEMENT, PAS UN NOMBRE DE FRAMES. Sans ça, "pas
+            //   encore chargé" et "chargé et vide" ont la même image ». Elle n'avait été
+            //   appliquée qu'à un seul des deux tests qui en avaient besoin.
+            // ⚠️ Balayé avant de corriger : 28 attentes à frames fixes dans ce fichier, dont 15
+            //   suivies d'une assertion de contenu — mais UNE SEULE est fautive, celle-ci. Les
+            //   autres suivent soit un rendu local, soit un `yield return …Charger()` qui a DÉJÀ
+            //   achevé le chargement avant de rendre la main ; leurs frames ne servent qu'au
+            //   layout, ce qui est légitime. *Compter les occurrences en accusait quinze ; les
+            //   classer en laisse une.*
+            float tAttenteFile = Time.realtimeSinceStartup;
+            while (!ecran.QueueLoaded && Time.realtimeSinceStartup - tAttenteFile < 30f)
+                yield return null;
+            Assert.IsTrue(ecran.QueueLoaded, $"⑨ n'a pas chargé sa file : {ecran.QueueError}");
+            for (int i = 0; i < 30; i++) yield return null;   // laisser le layout se poser
 
             // ⛔ COMPTER SOUS LA RACINE CONSTRUITE, PAS SOUS LE CONTRÔLEUR.
             // ⚠️ Ma première version comptait sous `ecran` et rendait 1 : le contrôleur ne porte
@@ -754,6 +896,8 @@ namespace MafiaCleanCity.Capture.Tests
                 $"le corps de ㊱ monte à {corpsRt.offsetMax.y:F0} et le bandeau occupe " +
                 $"{MafiaCleanCity.Shell.ShellChrome.TopInsetPx:F0} : il passe DESSOUS.");
 
+            LisibiliteDuTexte(racineUI);
+
             yield return CapturerA(1080, 2400,
                 "Assets/Screenshots/screen_c6_horizon_etat-vide_sous_chrome_1080x2400.png");
         }
@@ -822,6 +966,8 @@ namespace MafiaCleanCity.Capture.Tests
             Assert.Greater(MafiaCleanCity.Shell.ShellChrome.BottomInsetPx, 0f,
                 "sous le chrome l'inset bas doit être publié, sinon la garde ne mesure rien");
 
+            LisibiliteDuTexte(feuille);
+
             yield return CapturerA(1080, 2400,
                 "Assets/Screenshots/screen_2a_fiche_sous_chrome_1080x2400.png");
         }
@@ -865,10 +1011,19 @@ namespace MafiaCleanCity.Capture.Tests
             float tc = Time.realtimeSinceStartup;
             while (!ecran.QueueLoaded && Time.realtimeSinceStartup - tc < 30f) yield return null;
             Assert.IsTrue(ecran.QueueLoaded, $"⑨ n'a pas chargé sa file : {ecran.QueueError}");
-            Assert.AreEqual(0, ecran.Cards.Length,
-                $"le compte porte {ecran.Cards.Length} carte(s) : ce n'est plus l'état vide, il " +
-                "faut renommer la capture — une image nommée `_personne-en-file_` qui montre des " +
-                "attendants ment deux fois.");
+            // ⛔ MESURÉ le 2026-09-02 13:21 : le compte porte de nouveau 3 cartes — le
+            // re-provisionnement annoncé plus haut a eu lieu. L'état vide n'est plus atteignable.
+            // ★ Ce n'est PAS une raison de supprimer ce test : la maquette RATIFIE cet état
+            //   (cadre 16), et il n'a toujours jamais été photographié. Le test se met donc en
+            //   attente au lieu d'échouer, et se rearme SEUL le jour où la file redevient vide.
+            //   Un `[Ignore]` statique aurait, lui, exigé que quelqu'un se souvienne d'y revenir.
+            // ⚠️ L'assertion d'origine reste la bonne DOCTRINE — une image nommée
+            //   `_personne-en-file_` qui montre des attendants ment deux fois — mais elle punissait
+            //   le run pour un état du serveur que ce test ne gouverne pas.
+            if (ecran.Cards.Length != 0)
+                Assert.Ignore($"la file porte {ecran.Cards.Length} carte(s) : l'état vide n'est pas " +
+                    "là aujourd'hui. Rien à photographier — cette planche attend que le compte de " +
+                    "démo se vide, et se prendra toute seule à ce moment.");
             for (int i = 0; i < 30; i++) yield return null;
 
             Assert.IsNotNull(shell.TopBar, "le chrome haut doit exister");
@@ -883,6 +1038,8 @@ namespace MafiaCleanCity.Capture.Tests
             Assert.GreaterOrEqual(comptoirRt.offsetMin.y, MafiaCleanCity.Shell.ShellChrome.BottomInsetPx,
                 $"le comptoir démarre à {comptoirRt.offsetMin.y:F0} et le dock occupe " +
                 $"{MafiaCleanCity.Shell.ShellChrome.BottomInsetPx:F0} : il passe DESSOUS.");
+
+            LisibiliteDuTexte(racineUI);
 
             yield return CapturerA(1080, 2400,
                 "Assets/Screenshots/screen_5_exceptions_personne-en-file_sous_chrome_1080x2400.png");
@@ -958,6 +1115,8 @@ namespace MafiaCleanCity.Capture.Tests
                 "le back doit rendre un `outcome` — c'est TOUT l'objet de cette capture");
             Debug.Log($"[APRES-TAMPON] outcome = {detail.LastOutcome}");
             for (int i = 0; i < 45; i++) yield return null;
+
+            LisibiliteDuTexte(detail.gameObject);
 
             yield return CapturerA(1080, 2400,
                 "Assets/Screenshots/screen_5a_detail_apres-tampon_sous_chrome_1080x2400.png");
@@ -1103,6 +1262,8 @@ namespace MafiaCleanCity.Capture.Tests
                 "sous le chrome, l'inset bas doit être publié — à zéro, la garde ci-dessus " +
                 "passerait toujours et ne mesurerait rien");
 
+            LisibiliteDuTexte(racineUI);
+
             yield return CapturerA(1080, 2400,
                 "Assets/Screenshots/screen_5_exceptions_sous_chrome_1080x2400.png");
         }
@@ -1121,10 +1282,16 @@ namespace MafiaCleanCity.Capture.Tests
         ///
         /// Les gardes anti-mensonge sont celles du patron voisin : un slot vide produit un PNG
         /// parfaitement valide, et une capture d'écran vide ressemble à une capture.</summary>
-        [Category("Capture")]
-        // ⛔ + une catégorie PROPRE (NUnit CUMULE) : la catégorie `Capture` entière fait SIGSEGV
-        //    dans le pilote Mesa — reproduit 2×, jamais sur une capture seule. Sans elle, ce
-        //    chemin joueur (Plus -> entrée -> ㊲) n'est pas lançable du tout.
+        /// ⛔ CATÉGORIE PROPRE, ajoutée le 2026-09-02 : cette capture ne portait que `Capture`,
+        /// la catégorie de CLASSE que TOUS les tests de ce fichier portent. Elle était donc
+        /// INJOIGNABLE seule — l'atteindre exigeait de demander `Capture` nu, qui emporte par
+        /// PRÉFIXE les treize tests du fichier et fait SIGSEGV dans Mesa.
+        /// ★ Je venais d'armer `LisibiliteDuTexte` ici en écrivant « les 7 captures sous chrome,
+        ///   toutes armées ». Armée, elle l'était ; ATTEIGNABLE, non. Une garde qu'aucun run
+        ///   praticable n'exécute est une garde qui n'existe pas — la même leçon que celle qui
+        ///   m'a fait l'étendre, rencontrée un cran plus loin.
+        /// ⇒ Ses cinq sœurs adressables s'appellent déjà CaptureDetail / CaptureFiche /
+        ///   CaptureExceptions / CaptureHorizon / CaptureSousChrome ; celle-ci suit.
         [Category("CaptureReputation")]
         public IEnumerator Capture_EcranReputation_SousChrome()
         {
@@ -1182,7 +1349,177 @@ namespace MafiaCleanCity.Capture.Tests
                 $"㊲ doit avoir construit son contenu dans le slot (mesuré {noeuds} noeuds) — " +
                 "une capture d'un slot vide passerait sinon pour une réussite");
 
+            LisibiliteDuTexte(shell.ContentSlot.gameObject);
+
             yield return CapturerA(1080, 2400, "Assets/Screenshots/screen_b3_reputation_sous_chrome_1080x2400.png");
+        }
+
+        [UnityTest]
+        /// <summary>㊴ LE DOSSIER, SOUS CHROME — la capture qui ferme la dette des insets.
+        ///
+        /// ⛔ CE QUE CETTE CAPTURE EXISTE POUR MESURER, et qu'aucune autre ne mesurait : les insets
+        /// de chrome de ㊴ ont été posés PAR ANALOGIE avec les autres écrans, jamais mesurés sur
+        /// lui. `CaptureForensic` était verte et ne regardait ni `TopInsetPx` ni `BottomInsetPx` —
+        /// un vert dit que rien n'a levé, pas que la propriété a été mesurée.
+        ///
+        /// ⚠️ ET ELLE N'ÉTAIT PAS ÉCRIVABLE HIER, pour une raison que j'ai d'abord mal située.
+        /// J'avais conclu « ㊴ n'est monté par aucun onglet » d'un `grep` sur `ActivateTab` : le
+        /// grep disait vrai de MA BRANCHE, qui avait 71 commits de retard. `Tab.More` est un MENU
+        /// de douze entrées depuis le 2026-09-02, et ㊴ y figure. La mesure était exacte et sa
+        /// PORTÉE fausse — une mesure locale énoncée au présent général se lit comme un état du
+        /// monde.
+        ///
+        /// ⇒ CHEMIN JOUEUR RÉEL, comme ㊲ : ouvrir Plus, puis CLIQUER l'entrée « LE DOSSIER ».
+        ///   Pas un `MountTenant` de raccourci — un montage forcé prouverait que l'écran sait se
+        ///   dessiner, jamais qu'on peut l'atteindre.</summary>
+        [Category("CaptureDossier")]
+        public IEnumerator Capture_LeDossier_SousChrome()
+        {
+            var auth = new AuthClient { BaseUrl = BaseUrl };
+            string callsign = SeederSupport.SafeCallsign("dossier", ref seq);
+            string token = null, err = null;
+            yield return auth.SignUp(callsign, "dossier-capture-pw", t => token = t, e => err = e);
+            Assert.IsNull(err, $"signup errored: {err}");
+
+            var sessionClient = new SessionClient { BaseUrl = BaseUrl };
+            SessionOpenDto payload = null;
+            yield return sessionClient.OpenSession(token, "capture-dossier", dto => payload = dto,
+                (c, m) => Assert.Fail($"session/open failed: {c}: {m}"));
+            Assert.IsNotNull(payload, "session/open doit réussir — il octroie le kit de départ");
+
+            LogAssert.ignoreFailingMessages = true;
+            shellGo = new GameObject("DossierShell");
+            shell = shellGo.AddComponent<AppShell>();
+            shell.SetIdentity(callsign, "dossier-capture-pw");
+            yield return null;
+
+            float t0 = Time.realtimeSinceStartup;
+            while (string.IsNullOrEmpty(shell.Token) && Time.realtimeSinceStartup - t0 < 30f) yield return null;
+            Assert.IsFalse(string.IsNullOrEmpty(shell.Token), "le shell doit avoir acquis sa session");
+
+            shell.ActivateTab(AppShell.Tab.More);
+            for (int i = 0; i < 90; i++) yield return null;
+            Assert.Greater(shell.MenuPlusEntrees, 0,
+                "le menu « Plus » n'a aucune entrée : la navigation qui suit serait vide, et la " +
+                "capture montrerait un écran que le joueur ne peut pas atteindre");
+
+            // ⛔ L'ENTRÉE NOMMÉE, PAS LA PREMIÈRE. ㊲ prend `MenuPlus_*` au premier trouvé parce
+            // qu'il EST le premier ; ici il faut « LE DOSSIER » précisément, et le chercher par son
+            // nom fait échouer le test le jour où l'entrée disparaît du menu — au lieu de
+            // photographier silencieusement l'écran du voisin sous le nom de ㊴.
+            UnityEngine.UI.Button entree = null;
+            var libellesVus = new System.Collections.Generic.List<string>();
+            foreach (var b in shell.ContentSlot.GetComponentsInChildren<UnityEngine.UI.Button>(true))
+            {
+                if (!b.gameObject.name.StartsWith("MenuPlus_")) continue;
+                libellesVus.Add(b.gameObject.name);
+                if (b.gameObject.name == "MenuPlus_LE DOSSIER") entree = b;
+            }
+            Assert.IsNotNull(entree,
+                "l'entrée « LE DOSSIER » est absente du menu « Plus » — ㊴ n'est plus atteignable " +
+                $"par un geste joueur. Entrées vues : [{string.Join(", ", libellesVus)}]");
+            entree.onClick.Invoke();
+            for (int i = 0; i < 90; i++) yield return null;
+
+            Assert.AreEqual(typeof(MafiaCleanCity.Operational.ForensicScreenController),
+                shell.MountedTenantType, "l'entrée « LE DOSSIER » doit avoir monté ㊴");
+            int noeuds = shell.ContentSlot.GetComponentsInChildren<Transform>(true).Length;
+            Assert.Greater(noeuds, 20,
+                $"㊴ doit avoir construit son contenu dans le slot (mesuré {noeuds} noeuds) — " +
+                "une capture d'un slot vide passerait sinon pour une réussite");
+
+            // ⛔⛔ LE PLANCHER D'ABORD — c'est LUI qui fait la différence entre une garde et une
+            // formalité. Hors shell, `ShellChrome` publie des insets à ZÉRO, et les deux
+            // assertions qui suivent seraient alors vraies PAR CONSTRUCTION : vertes, et muettes.
+            // ★ Une garde vraie par construction est pire que pas de garde — elle donne le vert ET
+            //   la conscience tranquille. C'est exactement pour ça que je n'avais PAS écrit cette
+            //   garde hier dans le fichier de ㊴, où elle n'aurait rien pu mesurer.
+            Assert.Greater(MafiaCleanCity.Shell.ShellChrome.TopInsetPx, 0f,
+                "sous le chrome, l'inset HAUT doit être publié — à zéro, la garde ci-dessous " +
+                "passerait toujours sans rien mesurer");
+            Assert.Greater(MafiaCleanCity.Shell.ShellChrome.BottomInsetPx, 0f,
+                "sous le chrome, l'inset BAS doit être publié — même raison");
+
+            Assert.IsNotNull(shell.TopBar, "le chrome haut doit exister");
+
+            // ⛔ MESURER LÀ OÙ CET ÉCRAN AGIT — pas là où les autres agissent.
+            // ⚠️ Ma première version assertait sur les offsets de `shell.ContentSlot` et a rougi
+            // tout de suite : « démarre à 0, le dock occupe 294 ». C'était l'INSTRUMENT qui avait
+            // tort. `ContentSlot` est PLEIN ÉCRAN PAR CONCEPTION (index 0 sous les barres) : la
+            // non-occlusion vient de l'ORDRE DE FRATRIE, pas d'un inset — le fichier du shell le
+            // dit en toutes lettres. Un slot inset aurait fait rougir n'importe quel locataire.
+            // ★ Troisième fois de la journée qu'un rouge vient de l'instrument et non de l'écran.
+            //   Les trois se ressemblaient : un chiffre plausible, une accusation nette. Ce qui
+            //   les sépare n'est pas visible dans le verdict — il faut aller voir CE QUI EST MESURÉ.
+            // ⇒ ㊴ garde sa racine plein écran (c'est sa référence d'échelle : un conteneur plus
+            //   étroit fausserait tout `Px()`) et réserve la place du chrome en PADDING sur sa
+            //   pile verticale. C'est donc le padding qu'il faut mesurer, et c'est exactement ce
+            //   que « insets posés par analogie » désignait.
+            // ⚠️ La recherche part du GameObject du LOCATAIRE, pas du slot : `MountTenant` place
+            // l'hôte quelque part sous le shell, et supposer que c'est directement sous
+            // `ContentSlot` est précisément le genre de raccourci qui m'a déjà coûté un run.
+            GameObject racineForensic = null;
+            var nomsVus = new System.Collections.Generic.List<string>();
+            foreach (Transform t in shell.ContentSlot.GetComponentsInChildren<Transform>(true))
+            {
+                nomsVus.Add(t.gameObject.name);
+                if (t.gameObject.name == "ForensicRoot") racineForensic = t.gameObject;
+            }
+            if (racineForensic == null && shell.MountedTenantGameObject != null)
+                foreach (Transform t in shell.MountedTenantGameObject.GetComponentsInChildren<Transform>(true))
+                    if (t.gameObject.name == "ForensicRoot") { racineForensic = t.gameObject; break; }
+            if (racineForensic == null)
+            {
+                // ⛔ ÉNUMÉRER CE QU'ON VOIT plutôt que d'émettre des hypothèses : un verdict qui
+                // dit seulement « absent » relance la devinette, un verdict qui dit ce QUI EST LÀ
+                // tranche en un run. Trois hypothèses plausibles valent moins qu'une mesure.
+                var horsSlot = new System.Collections.Generic.List<string>();
+                foreach (GameObject g in Object.FindObjectsByType<GameObject>(FindObjectsSortMode.None))
+                    if (g.name.Contains("Forensic")) horsSlot.Add(g.name + " ⊂ " +
+                        (g.transform.parent != null ? g.transform.parent.name : "(racine)"));
+                Assert.Fail("㊴ n'a construit aucune racine nommée `ForensicRoot`.\n" +
+                    $"  sous ContentSlot ({nomsVus.Count}) : [{string.Join(", ", nomsVus.GetRange(0, System.Math.Min(25, nomsVus.Count)))}]\n" +
+                    $"  objets « Forensic » dans la scène : [{string.Join(" · ", horsSlot)}]");
+            }
+
+            var pile = racineForensic.GetComponent<UnityEngine.UI.VerticalLayoutGroup>();
+            Assert.IsNotNull(pile, "㊴ doit porter sa pile verticale — c'est elle qui réserve le chrome");
+            Assert.GreaterOrEqual(pile.padding.top, (int)MafiaCleanCity.Shell.ShellChrome.TopInsetPx,
+                $"le padding haut de ㊴ vaut {pile.padding.top} et le bandeau occupe " +
+                $"{MafiaCleanCity.Shell.ShellChrome.TopInsetPx:F0} : son contenu passe DESSOUS.");
+            Assert.GreaterOrEqual(pile.padding.bottom, (int)MafiaCleanCity.Shell.ShellChrome.BottomInsetPx,
+                $"le padding bas de ㊴ vaut {pile.padding.bottom} et le dock occupe " +
+                $"{MafiaCleanCity.Shell.ShellChrome.BottomInsetPx:F0} : son contenu passe DESSOUS.");
+
+            // ⛔ UN ÉCHEC SILENCIEUX NE DOIT PAS POUVOIR POSER POUR UN ÉTAT VIDE.
+            // ⚠️ Mesuré sur cette capture : les trois lignes de signaux sortent ANONYMES — libellé
+            // vide, valeur « — ». C'est l'état INITIAL de l'écran, celui d'avant le chargement, et
+            // il est visuellement identique à « le serveur n'a rien à dire ». Sans la garde
+            // ci-dessous, une route en panne produirait exactement cette image, valide et
+            // plausible, sous le nom de la planche de référence.
+            // ★ C'est la doctrine que ⑨ porte déjà (« pas encore chargé » et « chargé et vide »
+            //   ont la même image) — appliquée ici parce que rien ne la propage toute seule.
+            // ⚠️ ET LA GARDE DOIT EXIGER QUE LE CHARGEMENT AIT EU LIEU, pas seulement qu'il n'ait
+            // pas échoué. Ma première version n'assertait que `DerniereErreur == null` — elle
+            // passait, et elle ne prouvait RIEN : `Charger()` n'était appelé par personne, donc
+            // l'erreur restait nulle parce que rien ne s'était produit. C'est en vérifiant que
+            // cette garde MORDAIT que j'ai trouvé le défaut qu'elle était censée surveiller.
+            var ecranForensic = shell.MountedTenantGameObject.GetComponent<
+                MafiaCleanCity.Operational.ForensicScreenController>();
+            Assert.IsNotNull(ecranForensic, "le locataire monté doit être ㊴ lui-même");
+            Assert.IsNull(ecranForensic.DerniereErreur,
+                $"㊴ a échoué à charger ({ecranForensic.DernierCodeErreur}) : " +
+                $"{ecranForensic.DerniereErreur}. La capture qui suivrait montrerait des " +
+                "signaux vides — indiscernables d'un compte neuf qui n'a rien à montrer.");
+            Assert.IsNotNull(ecranForensic.DernierChargement,
+                "㊴ n'a RIEN chargé : `DerniereErreur` est nulle parce que rien ne s'est produit, " +
+                "pas parce que tout s'est bien passé. Une capture prise ici montrerait le " +
+                "squelette d'avant le réseau sous le nom de la planche de référence.");
+
+            LisibiliteDuTexte(shell.ContentSlot.gameObject);
+
+            yield return CapturerA(1080, 2400,
+                "Assets/Screenshots/screen_b7_dossier_sous_chrome_1080x2400.png");
         }
 
         [UnityTest]

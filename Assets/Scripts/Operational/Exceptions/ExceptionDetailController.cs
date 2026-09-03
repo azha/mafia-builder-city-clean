@@ -318,6 +318,18 @@ namespace MafiaCleanCity.Operational.Exceptions
                 TextMeshProUGUI t = NewText("TalonNb", talon.transform, "+" + restantes.Count,
                                             (int)PxD(CssCarteT), TextAlignmentOptions.Center);
                 t.color = TextPrimary;
+                // ⛔ SANS CET ÉTIREMENT, TMP N'A AUCUNE PLACE OÙ POSER LES CARACTÈRES. Le talon
+                // porte un `LayoutElement` mais AUCUN groupe de mise en page : son enfant garde
+                // donc le rect par défaut, et « +1 » sortait à ZÉRO caractère posé — le talon
+                // s'affichait comme un rectangle rouge nu.
+                // ★ Un `LayoutElement` dimensionne l'objet AUPRÈS DE SON PARENT ; il ne dit rien
+                //   à ses propres enfants. J'avais lu « le talon a une taille » comme « son
+                //   contenu a une taille ».
+                // ⚠️ Et c'est la garde de TRONCATURE qui l'a dit, pas l'œil : sur l'image, un
+                //   texte à zéro caractère et un texte absent sont le même rectangle.
+                var trt = (RectTransform)t.transform;
+                trt.anchorMin = Vector2.zero; trt.anchorMax = Vector2.one;
+                trt.offsetMin = Vector2.zero; trt.offsetMax = Vector2.zero;
                 TrackText(t, "+" + restantes.Count);
             }
 
@@ -359,7 +371,15 @@ namespace MafiaCleanCity.Operational.Exceptions
 
             TextMeshProUGUI lib = NewText("Role", carte.transform, role, (int)PxD(CssCarteL),
                                           TextAlignmentOptions.Left);
-            lib.color = levee ? CtaColor : AccentModerate;
+            // ⛔ LE RÔLE SUIT LE FOND DE SA CARTE, pas son rang. J'avais mis l'or sur la
+            // carte SUGGÉRÉE pour la distinguer — et comme cette carte est CLAIRE, l'or (0,82)
+            // s'est retrouvé sur du crème (0,88) : écart 0,06, illisible. La maquette le dit
+            // autrement : `.carte .l{color:#93402c}` (brique SOMBRE sur carte claire) et
+            // `.carte.sombre .l{color:var(--braise)}` (braise sur carte foncée).
+            // ★ Ce qui distingue la suggérée n'est PAS sa couleur de libellé : c'est sa position
+            //   (levée, au milieu) et le fond clair lui-même. J'ai voulu ajouter un signal là où
+            //   le dessin en avait déjà deux, et j'ai cassé la lisibilité pour l'ajouter.
+            lib.color = sombre ? AccentModerate : DesignTokens.Current.surfaceBase;
             TrackText(lib, role);
 
             TextMeshProUGUI titre = NewText("Titre", carte.transform,

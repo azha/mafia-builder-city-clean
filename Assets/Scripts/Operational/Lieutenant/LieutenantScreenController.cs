@@ -255,6 +255,9 @@ namespace MafiaCleanCity.Operational.Lieutenant
 
         private void Start()
         {
+            // ⛔ Le shell ajoute des frères APRÈS la fenêtre synchrone du montage : c'est
+            // ici, à la frame suivante, qu'« être dernier » devient stable.
+            if (transform.parent != null) transform.SetAsLastSibling();
             EnsureInitialized();
             StartCoroutine(Boot());
         }
@@ -312,13 +315,6 @@ namespace MafiaCleanCity.Operational.Lieutenant
 
         /// <summary>Set the player Bearer directly (test convenience when already signed in elsewhere).</summary>
 
-        /// <summary>⛔ Le shell re-parente APRÈS `SetMountParent` : poser l'ordre de fratrie dans
-        /// le setter le fait défaire. On réagit donc à l'ÉVÉNEMENT de re-parentage, qui arrive
-        /// quel que soit l'ordre interne du shell. Le parent est nul au démontage — d'où la garde.</summary>
-        private void OnTransformParentChanged()
-        {
-            if (transform.parent != null) transform.SetAsLastSibling();
-        }
 
         public void SetToken(string token)
         {
@@ -2407,7 +2403,12 @@ namespace MafiaCleanCity.Operational.Lieutenant
             TextMeshProUGUI g = NewText("Glyph", go.transform, ArchetypeGlyph(row.archetype), 16, TextAlignmentOptions.Center);
             g.color = AccentMild;
             g.fontStyle = FontStyles.Bold;
-            AddLayoutElement(g.gameObject, minWidth: 46, preferredWidth: 46, flexibleWidth: 0);
+            // ⛔ La colonne était figée et COUPAIT les glyphes longs — même défaut que ②,
+            // mesuré rouge le 2026-09-02 (« [####] » posé à 4 caractères sur 6 à 46 px/corps 16/gras).
+            // La mesure vit dans `LargeurDeGlyphe` : un producteur, cinq citations.
+            float largeurGlyphe = LargeurDeGlyphe.PourLesPlusLarges(g, "[####]");
+            AddLayoutElement(g.gameObject, minWidth: largeurGlyphe,
+                preferredWidth: largeurGlyphe, flexibleWidth: 0);
 
             TextMeshProUGUI label = NewText("Archetype", go.transform, ArchetypeLabel(row.archetype), 15, TextAlignmentOptions.Left);
             label.color = DesignTokens.Current.onSurfaceMuted;
@@ -3291,7 +3292,12 @@ namespace MafiaCleanCity.Operational.Lieutenant
             TextMeshProUGUI g = NewText("Glyph", row.transform, glyph, 16, TextAlignmentOptions.Center);
             g.color = accent;
             g.fontStyle = FontStyles.Bold;
-            AddLayoutElement(g.gameObject, minWidth: 46, preferredWidth: 46, flexibleWidth: 0);
+            // ⛔ La colonne était figée et COUPAIT les glyphes longs — même défaut que ②,
+            // mesuré rouge le 2026-09-02 (« [####] » posé à 4 caractères sur 6 à 46 px/corps 16/gras).
+            // La mesure vit dans `LargeurDeGlyphe` : un producteur, cinq citations.
+            float largeurGlyphe = LargeurDeGlyphe.PourLesPlusLarges(g, "[####]");
+            AddLayoutElement(g.gameObject, minWidth: largeurGlyphe,
+                preferredWidth: largeurGlyphe, flexibleWidth: 0);
 
             TextMeshProUGUI l = NewText("Label", row.transform, label, 15, TextAlignmentOptions.Left);
             l.color = DesignTokens.Current.onSurfaceMuted;

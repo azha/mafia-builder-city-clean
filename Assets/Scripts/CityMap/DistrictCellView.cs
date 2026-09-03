@@ -34,13 +34,15 @@ namespace MafiaCleanCity.CityMap
             // même périmètre CityMap/) — "blocks" traduit en "blocs" (terme déjà établi dans ce
             // dépôt, ex. DistrictInteriorScreenController.cs : "unité = le bloc").
             // `compact` (marqueur sur la ville peinte, 2026-09-03) : le nom seul — profil et blocs
-            // sont dans le panneau de détail. Le TEXTE reste le nom servi tel quel (le test de rendu
-            // exige que le libellé le contienne — mesuré : `.ToUpperInvariant()` ici l'a fait
-            // rougir) ; les capitales du lettrage de la maquette sont un STYLE (`FontStyles.UpperCase`,
-            // posé par `BuildMarqueur`), pas une réécriture de la donnée.
+            // sont dans le panneau de détail. Le TEXTE reste le nom SERVI (le test de rendu exige que
+            // le libellé le contienne — mesuré : `.ToUpperInvariant()` ici l'a fait rougir) ; les
+            // capitales du lettrage de la maquette sont un STYLE (`FontStyles.UpperCase`, posé par
+            // `BuildMarqueur`), jamais une réécriture de la donnée.
+            // 2026-09-02 (chantier C) : le back sert un nom de fiction (`name`, ex. « La Lisière ») —
+            // `CityMapEnums.DisplayName` le choisit, repli explicite sur `name_canonical`.
             label.text = compact
-                ? (dto.name_canonical ?? string.Empty)
-                : $"{dto.name_canonical}    ·    {dto.profile}    ·    {dto.block_count} blocs";
+                ? CityMapEnums.DisplayName(dto)
+                : $"{CityMapEnums.DisplayName(dto)}    ·    {dto.profile}    ·    {dto.block_count} blocs";
         }
 
         /// <summary>Wire the heat badge UI (built by the controller). Hidden until heat is set.</summary>

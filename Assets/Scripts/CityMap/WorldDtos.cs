@@ -20,10 +20,23 @@ namespace MafiaCleanCity.CityMap
         public int id;
         public string profile;          // glass | lattice | spine | stack | tidewater | verge
         public string index;            // string in the contract (e.g. "1")
-        public string name_canonical;   // e.g. "Tidewater-1"
+        public string name_canonical;   // e.g. "Tidewater-1" — the code name.
+        // Fiction name, server-supplied, French (e.g. "La Lisière" for name_canonical
+        // "Verge-A") — measured 2026-09-02 on the live 18 seeded districts. Display via
+        // CityMapEnums.DisplayName, never raw: an older account/environment whose district
+        // row predates this column can serve it empty, and that must fall back onto
+        // name_canonical rather than show a blank tile.
+        public string name;
         public int block_count;
         public string bank_side;        // north | south
         public string control_state;    // UNCONTESTED | CONTESTED | PLAYER_HELD | RIVAL_HELD
+        // The district's owning precinct (1..6), server-supplied — measured 2026-09-02 to
+        // coincide 18/18 with CityProjectionsClient.PrecinctForDistrict's client-side mirror
+        // of the same rule (3 districts/precinct, capped at 6). Coinciding today is not a
+        // guarantee: prefer this served value wherever a DistrictDto is on hand (see
+        // CityProjectionsClient.Belief/Patrol), the formula is a fallback for callers that
+        // only have a bare districtId.
+        public int precinct_id;
     }
 
     [Serializable]
@@ -173,6 +186,15 @@ namespace MafiaCleanCity.CityMap
                 default: return BankSide.Unknown;
             }
         }
+
+        // The name a player sees for a district: the fiction name (`name`, French, server-
+        // supplied) when present, explicit fallback onto the code name (`name_canonical`,
+        // e.g. "Verge-A") otherwise — never a null/blank tile. NOT an i18n key: `name` is a
+        // literal the backend serves (no game.fiction.district.name key exists), so it is
+        // never routed through Libelle.De. Shared by DistrictCellView.Bind and
+        // CityMapController's detail-panel title so both agree on one rule.
+        public static string DisplayName(DistrictDto dto) =>
+            !string.IsNullOrEmpty(dto.name) ? dto.name : dto.name_canonical;
 
         // Qualitative palette for the control-state overlay. These are the only
         // colours the City Map uses to encode who holds a district.

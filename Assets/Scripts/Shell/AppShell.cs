@@ -15,6 +15,7 @@ using MafiaCleanCity.Operational.Selling;
 //    précisément pour que les écrans parlent au shell sans en dépendre.
 using MafiaCleanCity.Economy.Shop;
 using MafiaCleanCity.Account.Profile;
+using MafiaCleanCity.Account.Settings;
 using MafiaCleanCity.Onboarding;
 using MafiaCleanCity.CitySim.Inspection;
 using MafiaCleanCity.CitySim.Precinct;
@@ -292,6 +293,24 @@ namespace MafiaCleanCity.Shell
             // `DistrictInteriorScreenController.SetToken` est un no-op (`IShellTenant.cs:24-28` —
             // ce contrôleur reçoit sa donnée par `SetSession`, via la variable locale `token`
             // ci-dessus, pas par ce canal).
+            // ⛔⛔ CE CHEMIN DOIT SE DÉCLARER AU SENTINELLE D'ACQUISITION, EXACTEMENT COMME
+            //    `MonterLocataireEnSurimpression` — mesuré le 2026-09-02 (chantier C), capture à
+            //    l'appui. Le correctif du même jour a appris au sentinelle à voir les
+            //    SURIMPRESSIONS, parce que ce chemin-là ne touche pas `CurrentTab`. Or
+            //    `EnterDistrict` ne le touche pas non plus : il pose `CityTabDistrictId`. La garde
+            //    `CurrentTab == (Tab)(-1) && !UneSurimpressionAEteMontee` (`:418`, `:523`) le lit
+            //    donc encore comme « personne n'a navigué », force le montage d'`Empire` quelques
+            //    frames plus tard, et `ActivateTab` remet `CityTabDistrictId` à -1 en détruisant
+            //    l'écran. ⇒ Un joueur qui touche un district pendant les 2 à 4 allers-retours de
+            //    l'acquisition est ramené sur la carte. Ce n'est pas un artefact de test : c'est le
+            //    chemin joueur.
+            //    ★ *Le correctif précédent a fermé l'INSTANCE (la surimpression) et pas la CLASSE
+            //      (« quelque chose a-t-il été monté ? »).* Le sentinelle observe la bonne grandeur
+            //      depuis ce matin ; il ne la recevait simplement pas de tous ceux qui montent.
+            //    Mesuré ici : `Capture_VuePrincipale_DistrictAvecBatiments_SousChromeV31` échouait
+            //    sur `Expected: 16 · But was: -1`.
+            UneSurimpressionAEteMontee = true;
+            SurimpressionsMontees++;
             DistrictInteriorScreenController tenant = ConstruireLocataire<DistrictInteriorScreenController>(out GameObject host);
             MountedTenantGameObject = host;
             MountedTenantType = typeof(DistrictInteriorScreenController);
@@ -415,12 +434,12 @@ namespace MafiaCleanCity.Shell
                 // obtenu) : chacun rend son état vide NOMMÉ (§2, point (c)) — jamais "atteint et
                 // blanc". BuildingCard/ExceptionQueue(plein écran)/Autonomy/ExceptionDetail restent
                 // hors périmètre (ce ne sont pas des panneaux de l'Accueil).
-                bool pasEncoreActiveEchec = CurrentTab == (Tab)(-1) && !UneSurimpressionAEteMontee;
+                bool pasEncoreActiveEchec = CurrentTab == (Tab)(-1) && MontagesEffectues == 0;
                 if (pasEncoreActiveEchec)
                 {
                     ActivateTab(Tab.Empire); // repli : le locataire signera lui-même
                     MonterLocataireEnSurimpression<DashboardController>();
-                    int generationEchec = SurimpressionsMontees; // capturée APRÈS la nôtre — garde plus bas
+                    int generationEchec = MontagesEffectues; // capturée APRÈS la nôtre — garde plus bas
                     // ROUND 7 (revue ⊥, BLOQUANT 2 — je change de décision, la mesure me le fait
                     // faire) — la seconde moitié du ruling (« puis on tombe sur la ville ») livrée
                     // avec le mécanisme DÉJÀ câblé pour le district (`EnterDistrict`, plus haut) :
@@ -476,7 +495,7 @@ namespace MafiaCleanCity.Shell
                     //      mettre à vrai en montant l'Accueil. D'où la génération.
                     if (this == null) yield break; // shell torn down mid-fetch
                     if (CurrentTab != Tab.Empire) yield break; // parti vers un autre onglet pendant ce frame
-                    if (SurimpressionsMontees != generationEchec) yield break; // a ouvert un écran : ne pas l'enterrer
+                    if (MontagesEffectues != generationEchec) yield break; // a ouvert un écran : ne pas l'enterrer
                     MonterPanneauxAccueil(null); // aucune session obtenue — les 4 rendent leur état vide NOMMÉ
                 }
                 yield break;
@@ -492,6 +511,19 @@ namespace MafiaCleanCity.Shell
             if (dto != null)
             {
                 LastSessionOpen = dto;
+                // ⛔ LE JETON DE STRUCTURE SE PUBLIE ICI, ET C'EST LE SEUL ENDROIT. Trois écrans du
+                // canon (㉜ le tableau de service, ㉝ raser un site, et toute graduation) partagent
+                // le plafond « une décision de structure par journée » : ils doivent en donner la
+                // MÊME lecture, sinon le joueur croit avoir trois budgets et découvre la contrainte
+                // par un 409. Ils ne peuvent pas lire `LastSessionOpen` — `StructuralBudgetDto` vit
+                // dans CETTE assembly, et `Shell` référence déjà `Operational` : la lecture inverse
+                // serait un cycle qu'asmdef refuse (mesuré, CS0246). `JetonDeStructure` vit donc
+                // dans `ShellContracts`, la seule assembly que le shell et ses locataires voient
+                // tous les deux — même patron et même raison que `ShellChrome.PublierInsets`.
+                // ⚠️ Publié seulement quand le corps le porte : sans lui, `Connu` reste faux et les
+                // écrans se rendent comme avant que ce champ existe, plutôt que de supposer un zéro.
+                if (dto.structural_budget != null)
+                    JetonDeStructure.Publier(dto.structural_budget.used, dto.structural_budget.cap_reached);
                 yield return TopBar.Load(t, dto.backlog_badge, dto.opened_game_day);
                 if (this == null) yield break;
             }
@@ -520,12 +552,12 @@ namespace MafiaCleanCity.Shell
             // monté, uniquement si c'est CE montage-ci qui vient d'activer l'onglet par défaut
             // (jamais un joueur qui a déjà navigué ailleurs pendant l'acquisition). Capturé AVANT
             // `ActivateTab` : après lui, `CurrentTab` n'est plus le sentinel `(Tab)(-1)`.
-            bool pasEncoreActive = CurrentTab == (Tab)(-1) && !UneSurimpressionAEteMontee;
+            bool pasEncoreActive = CurrentTab == (Tab)(-1) && MontagesEffectues == 0;
             if (pasEncoreActive)
             {
                 ActivateTab(Tab.Empire);
                 MonterLocataireEnSurimpression<DashboardController>();
-                int generation = SurimpressionsMontees; // capturée APRÈS la nôtre — garde plus bas
+                int generation = MontagesEffectues; // capturée APRÈS la nôtre — garde plus bas
                 // ROUND 7 (revue ⊥, BLOQUANT 2) — même geste, même ordre, même raison que la branche
                 // d'échec ci-dessus : `ActivateTab` a déjà remis l'action de tête à `None`, cette
                 // ligne vient donc APRÈS lui et après le montage de l'overlay.
@@ -565,7 +597,7 @@ namespace MafiaCleanCity.Shell
                 //    ⚠️ `UneSurimpressionAEteMontee` ne pouvait pas servir : le shell vient de le
                 //      mettre à vrai en montant l'Accueil. D'où la génération.
                 if (this == null) yield break; // shell torn down mid-fetch
-                if (CurrentTab == Tab.Empire && SurimpressionsMontees == generation) MonterPanneauxAccueil(dto);
+                if (CurrentTab == Tab.Empire && MontagesEffectues == generation) MonterPanneauxAccueil(dto);
             }
 
             // §6.2, AMENDÉ (B1, Deviation) — le chunk 5 sondait CONDITIONNELLEMENT ("seulement si le
@@ -590,6 +622,19 @@ namespace MafiaCleanCity.Shell
         /// les renseignent — un locataire monté EN SURIMPRESSION ne remplace pas l'onglet actif.</summary>
         private T ConstruireLocataire<T>(out GameObject host) where T : MonoBehaviour, IShellTenant
         {
+            // ⛔⛔ LE COMPTEUR EST ICI, AU POINT DE PASSAGE OBLIGÉ — pas chez les appelants.
+            //    Le 2026-09-02, trois chemins montent un locataire : `MountTenant`, `EnterDistrict`,
+            //    `MonterLocataireEnSurimpression`. Mon correctif du matin a appris au sentinelle
+            //    d'acquisition à voir les SURIMPRESSIONS ; la session C a mesuré ensuite qu'
+            //    `EnterDistrict` ne se déclarait pas non plus, et un joueur qui touchait un district
+            //    pendant l'acquisition était ramené sur la carte (`Expected: 16 · But was: -1`).
+            //    ⇒ *J'avais fermé l'INSTANCE (la surimpression) et pas la CLASSE (« quelque chose
+            //      a-t-il été monté ? »).* Le sentinelle observait déjà la bonne grandeur — il ne la
+            //      RECEVAIT pas de tout le monde.
+            //    ⇒ Corriger le troisième appelant aurait rouvert le trou au quatrième. Compter ici
+            //      rend l'oubli IMPOSSIBLE : aucun locataire ne se construit sans passer par cette
+            //      ligne. C'est la garde structurelle qui remplace trois gardes de discipline.
+            MontagesEffectues++;
             host = new GameObject($"Tenant_{typeof(T).Name}");
             // Parent the HOST itself under ContentSlot (lifecycle only — the tenant's OWN UI is a
             // SEPARATE set of GameObjects it builds and parents there itself, see IShellTenant's own
@@ -672,10 +717,27 @@ namespace MafiaCleanCity.Shell
             // douce. Le menu dit donc « VOTRE PROFIL », sans ambiguïté ; l'arbitrage remonte.
             ("VOTRE PROFIL",         () => MountTenant<ProfileScreenController>()),      // ㉒
 
+            // ⑲ — ARRIVÉ SANS PORTE PAR `pilote-F`, ET C'EST LA GARDE QUI L'A DIT. Le matin même,
+            // `SettingsScreenController` n'existait pas : je l'avais compté parmi les trois écrans
+            // du canon sans aucun contrôleur. Il est né dans la journée, mergé le soir, et
+            // `LocataireJoignabilitePlayModeTests` l'a immédiatement classé orphelin — le DIXIÈME,
+            // exactement le cas pour lequel elle a été écrite. *Une garde de classe ne prouve sa
+            // valeur qu'en attrapant le membre qu'on n'a pas vu arriver.*
+            ("LES RÉGLAGES",         () => MountTenant<SettingsScreenController>()),     // ⑲
+
             // ⚠️ ㊱ — sa liste est VIDE PAR CONSTRUCTION sur le compte de démo : TD-408 mesure
             // qu'au plus UNE carte peut être surfacée pour un joueur. Un écran vide ici n'est donc
             // pas un défaut de montage, et il ne faut pas partir le chercher comme tel.
             ("L'HORIZON DES POSSIBLES", () => MountTenant<HorizonScreenController>()),   // ㊱
+
+            // ㉜ — le tableau de service. Le libellé est le TITRE DE LA PLANCHE (m-75), pas le
+            // nom de la classe : c'est l'état que le joueur vient consulter (« ce que vous avez
+            // confié »), et c'est aussi celui que l'écran affiche quand quelque chose est confié.
+            // ⚠️ Cet écran partage son jeton — une décision de structure par journée — avec ㉝ et
+            // ㉞ : les trois doivent en donner la MÊME lecture, sinon le joueur croit avoir trois
+            // budgets. La source unique est `structural_budget` de `session/open`, que le shell
+            // tient déjà (`LastSessionOpen`) ; aucun des trois ne rouvre de session pour le lire.
+            ("CE QUE VOUS AVEZ CONFIÉ", () => MountTenant<DelegationScreenController>()), // ㉜
         };
 
         /// <summary>Monte le menu « Plus » : une entrée par destination, chacune montant son écran.
@@ -783,6 +845,13 @@ namespace MafiaCleanCity.Shell
         /// dire. Crochet de test autant que garde de production : sans lui, « rien n'a bougé sous
         /// moi » n'est pas une propriété observable.</summary>
         public int SurimpressionsMontees { get; private set; }
+
+        /// <summary>Nombre de locataires montés par N'IMPORTE QUEL chemin depuis le démarrage —
+        /// incrémenté dans `ConstruireLocataire`, le point de passage obligé des trois monteurs.
+        /// C'est la grandeur que le sentinelle d'acquisition doit lire : sa question n'est pas
+        /// « une surimpression a-t-elle été montée ? » mais « quelque chose a-t-il été monté ? ».
+        /// Les deux ne coïncident que tant que personne n'ajoute un quatrième chemin.</summary>
+        public int MontagesEffectues { get; private set; }
 
         /// <summary>Item 0.5 §2 (Tools/charpente-item05-design.md) — les 4 panneaux orphelins de
         /// l'Accueil (`HighestLeverageCardController`/`ExceptionQueuePanelController`/

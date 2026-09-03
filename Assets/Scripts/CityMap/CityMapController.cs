@@ -98,6 +98,21 @@ namespace MafiaCleanCity.CityMap
         private Dictionary<string, AncreDistrictDto> ancres;
         private readonly List<string> districtsSansAncre = new List<string>();
 
+        // ShellChrome.BottomInsetPx (dock height) read fresh each time, never cached: the shell
+        // publishes it AFTER a locataire mounts, and it can be 0 for a while during that window.
+        // Vaut 0 hors shell (les fixtures ci-dessous montent CityMapController seul) — repli
+        // inchangé pour elles.
+        private static int BottomPadding => RootPadding + (int)MafiaCleanCity.Shell.ShellChrome.BottomInsetPx;
+
+        // ⛔ LE SYMÉTRIQUE, ET IL MANQUAIT — mesuré sur la PREMIÈRE capture 1080x2400 réelle
+        //    (2026-09-02, chantier C, image à l'appui) : le titre « CARTE DE LA VILLE » et la
+        //    première rangée de districts passaient DERRIÈRE la barre haute, sous « ARGENT » et le
+        //    manomètre. Le padding du haut valait `RootPadding` nu, soit 16 px, alors que le chrome
+        //    en mange bien davantage. Le correctif de bas avait été posé le matin même sans son
+        //    symétrique — *un correctif scopé au côté qu'on regardait.*
+        //    Vaut `RootPadding` seul hors shell (l'inset est à 0) : repli inchangé pour les fixtures.
+        private static int TopPadding => RootPadding + (int)MafiaCleanCity.Shell.ShellChrome.TopInsetPx;
+
         private void Start()
         {
             font = DesignTokens.Current.primaryFont;
@@ -288,6 +303,13 @@ namespace MafiaCleanCity.CityMap
             GameObject root = NewUI("CityMapRoot", mountRoot);
             RectTransform rootRt = (RectTransform)root.transform;
             Stretch(rootRt, Vector2.zero, Vector2.zero);
+            // 2026-09-02 — hygiène de montage : aucune garde d'ordre de fratrie n'existait ici.
+            // `CityMapRoot` (contrairement à ShopScreenController) n'est PAS le transform du
+            // locataire lui-même — c'est un enfant SÉPARÉ créé ici, sous `mountRoot`, jamais
+            // reparenté ensuite : un site unique suffit (pas de `OnTransformParentChanged` à poser,
+            // rien ne le reparente après cette ligne — le patron à deux sites de
+            // ShopScreenController.cs:105-135 répond à un mécanisme qui ne s'applique pas ici).
+            rootRt.SetAsLastSibling();
             Image rootBg = root.AddComponent<Image>();
             rootBg.color = DesignTokens.Current.mapRootBg;
 
@@ -371,7 +393,12 @@ namespace MafiaCleanCity.CityMap
         private void BuildListeEnColonnes(GameObject root)
         {
             rootVlg = root.AddComponent<VerticalLayoutGroup>();
-            rootVlg.padding = new RectOffset(RootPadding, RootPadding, RootPadding, RootPadding);
+            // 2026-09-02 — `ShellChrome.BottomInsetPx` (zone sûre + barre d'onglets) n'était lu
+            // nulle part dans ce fichier : le contenu (dernière rangée de districts, légende)
+            // pouvait passer sous le dock. Vaut 0 hors shell (tests isolés ci-dessous) : inchangé
+            // pour eux. Même valeur réutilisée dans ReserveSpaceForPanel — ne PAS dupliquer le 0
+            // implicite là-bas.
+            rootVlg.padding = new RectOffset(RootPadding, RootPadding, TopPadding, BottomPadding);
             rootVlg.spacing = 12;
             rootVlg.childControlWidth = true;
             rootVlg.childControlHeight = true;
@@ -639,8 +666,24 @@ namespace MafiaCleanCity.CityMap
             dp.anchorMin = new Vector2(1f, 0f);
             dp.anchorMax = new Vector2(1f, 1f);
             dp.pivot = new Vector2(1f, 1f);
-            dp.sizeDelta = new Vector2(380f, -16f);
-            dp.anchoredPosition = new Vector2(-16f, -16f);
+            // 2026-09-02 — le bas de ce panneau tombait EXACTEMENT sur le bord bas de ContentSlot
+            // (0 px d'écart : anchorMin.y=0, pivot=(1,1), l'ancien `sizeDelta.y=-16` ne mange QUE
+            // l'inset du haut). Sous shell, ContentSlot couvre tout le canvas par conception, donc
+            // le Footer/« Entrer » du panneau passait sous le dock. `sizeDelta.y` mange maintenant
+            // AUSSI `ShellChrome.BottomInsetPx` — `anchoredPosition.y` reste -16 (inset du haut,
+            // hors périmètre de ce correctif) ; vaut 0 hors shell, repli inchangé pour les fixtures.
+            // 2026-09-02 (chantier C) — l'inset du HAUT entre ici aussi : il était déclaré
+            // « hors périmètre » par le correctif de bas, et la capture réelle a montré que le
+            // chrome recouvre le contenu. Les deux insets sont désormais mangés par la hauteur, et
+            // le panneau descend sous la barre au lieu de commencer derrière elle.
+            dp.sizeDelta = new Vector2(380f, -(16f + MafiaCleanCity.Shell.ShellChrome.TopInsetPx
+                                               + MafiaCleanCity.Shell.ShellChrome.BottomInsetPx));
+            dp.anchoredPosition = new Vector2(-16f, -(16f + MafiaCleanCity.Shell.ShellChrome.TopInsetPx));
+            // 2026-09-02 — même garde structurelle que CityMapRoot ci-dessus : ce panneau doit
+            // toujours rendre AU-DESSUS de la carte. Aujourd'hui redondant (BuildDetailPanel est
+            // appelé après CityMapRoot dans le même BuildLayout, donc déjà dernier enfant à la
+            // création) — posé explicitement pour ne plus dépendre de cet ordre d'appel.
+            dp.SetAsLastSibling();
 
             Image bg = detailPanel.AddComponent<Image>();
             bg.color = DesignTokens.Current.mapDialogBg;
@@ -742,7 +785,9 @@ namespace MafiaCleanCity.CityMap
             SelectedDistrictId = districtId;
             DetailLoaded = false;
             DistrictCellView cell = cells.FirstOrDefault(c => c.Model != null && c.Model.id == districtId);
-            if (detailTitle != null) detailTitle.text = cell != null ? cell.Model.name_canonical : $"District {districtId}";
+            // 2026-09-02 — même repli que la tuile (CityMapEnums.DisplayName) : fiction d'abord,
+            // name_canonical si le back n'en sert pas.
+            if (detailTitle != null) detailTitle.text = cell != null ? CityMapEnums.DisplayName(cell.Model) : $"District {districtId}";
             if (detailPanel != null) detailPanel.SetActive(true);
             ReserveSpaceForPanel(true);
             RefreshEnterInteractable(); // §3.2 — 1er point
@@ -762,9 +807,11 @@ namespace MafiaCleanCity.CityMap
         private void ReserveSpaceForPanel(bool reserve)
         {
             if (rootVlg == null) return; // ville peinte : pas de layout à décaler, le panneau recouvre la carte
-            if (rootVlg == null) return;
             int right = reserve ? PanelReservedRight : RootPadding;
-            rootVlg.padding = new RectOffset(RootPadding, right, RootPadding, RootPadding);
+            // 2026-09-02 — ce recalcul écrasait le padding bas posé dans BuildLayout et retombait
+            // sur un `RootPadding` nu, perdant le BottomInsetPx dès le premier SelectDistrict/
+            // HideDetail. Même valeur qu'à la construction (BottomPadding), pas un second calcul.
+            rootVlg.padding = new RectOffset(RootPadding, right, RootPadding, BottomPadding);
         }
 
         private static DetailRow Missing(string label) => new DetailRow(label, "n/a (not ticked)", false);
@@ -851,13 +898,20 @@ namespace MafiaCleanCity.CityMap
             yield return proj.Cohesion(districtId, Token, c => { coh = c; cohOk = true; }, _ => { });
             detail.rows.Add(cohOk && coh != null ? new DetailRow("Cohesion", coh.cohesion_state) : Missing("Cohesion"));
 
+            // 2026-09-02 — precinct_id SERVI par le district (cell.Model), passé explicitement à
+            // Belief/Patrol : c'est la valeur d'AUTORITÉ (CityProjectionsClient.PrecinctForDistrict
+            // n'est qu'un repli client pour l'appelant qui n'a qu'un districtId nu — voir son
+            // commentaire). `cell` peut être null (districtId sans cellule correspondante) : repli
+            // sur la formule dans ce cas aussi, ce que `?? ` couvre.
+            int? servedPrecinct = cell?.Model?.precinct_id;
+            int precinct = servedPrecinct ?? CityProjectionsClient.PrecinctForDistrict(districtId);
+
             BeliefDto bel = null; bool belOk = false;
-            yield return proj.Belief(districtId, Token, b => { bel = b; belOk = true; }, _ => { });
-            int precinct = CityProjectionsClient.PrecinctForDistrict(districtId);
+            yield return proj.Belief(districtId, Token, b => { bel = b; belOk = true; }, _ => { }, servedPrecinct);
             detail.rows.Add(belOk && bel != null ? new DetailRow($"Police belief (P{precinct})", bel.belief) : Missing($"Police belief (P{precinct})"));
 
             PatrolDto pat = null; bool patOk = false;
-            yield return proj.Patrol(districtId, Token, p => { pat = p; patOk = true; }, _ => { });
+            yield return proj.Patrol(districtId, Token, p => { pat = p; patOk = true; }, _ => { }, servedPrecinct);
             detail.rows.Add(patOk && pat != null ? new DetailRow($"Patrol heat (P{precinct})", pat.patrol_heat) : Missing($"Patrol heat (P{precinct})"));
 
             WhisperDto whi = null; bool whiOk = false;

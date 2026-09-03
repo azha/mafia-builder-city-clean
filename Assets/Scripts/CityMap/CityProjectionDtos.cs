@@ -70,6 +70,16 @@ namespace MafiaCleanCity.CityMap
     // here carries ONLY lapse_phase_bucket + maintenance_in_progress (district-interior.controller.ts's
     // DistrictInteriorBuildingResponse) — the THIRD maintenance key, days_until_maintenance_due, lives
     // on the SEPARATE building-card route/DTO only (D7, U-8 — BuildingCardDtos.cs, not this file).
+    //
+    // ⛔ MESURÉ EN DIRECT LE 2026-09-02 : le corps rend désormais 11 clés de premier niveau, pas 10 —
+    // `name` (le nom de fiction du district, ex. "La Lisière" pour d16) s'ajoute à `name_canonical`
+    // (l'identifiant/slug, ex. "Verge-A") — et 13 clés par bâtiment, pas 12 — `name_i18n` s'ajoute
+    // (clé i18n + params, hors P5 au même titre que block_id/building : c'est de l'identité, pas
+    // une bande). Les deux étaient absents plus haut, donc jetés en silence par JsonUtility — jamais
+    // une erreur. Le corpus porte aussi `lieutenants` (liste des lieutenants du district, forme
+    // mesurée : voir DistrictLieutenantDto) — le DTO est porté ici, mais NON consommé à
+    // l'affichage (aucun emplacement d'écran existant sans décision de mise en page — voir
+    // Tools/district-interior-name-i18n-implementation-notes.md § Deviations).
     [Serializable]
     public class DistrictInteriorBlockDto
     {
@@ -83,6 +93,40 @@ namespace MafiaCleanCity.CityMap
     {
         public int width;
         public int height;
+    }
+
+    /// <summary>Les paramètres de `name_i18n`, DÉCLARÉS un par un (JsonUtility ne lit pas un objet à
+    /// clés arbitraires) — MÊME FORME que `BuildingCardDtos.BuildingNameI18nDto/ParamsDto`
+    /// (`Assets/Scripts/Operational/BuildingCard/BuildingCardDtos.cs:29-42`), NON réutilisée
+    /// littéralement : `CityMap.asmdef` ne référence pas `Operational`, et l'ajouter sort du
+    /// périmètre de ce chunk (Tools/district-interior-name-i18n-implementation-notes.md
+    /// § Deviations). Champs MESURÉS en direct sur
+    /// `…/interior` (pas ceux, différents, de `…/building/:id` — un précédent lu pour une route reste
+    /// déduit sur une autre), sur les 13 bâtiments du compte de démo, avec les DEUX motifs
+    /// réellement servis par le bundle (`GET /v1/i18n/bundle?locale=fr`) :
+    ///   game.fiction.building.name       → {enseigne} — {district}, îlot {block}
+    ///   game.fiction.building.name.rang  → {enseigne} — {district}, îlot {block}, n° {rang}
+    /// `enseigne`/`district`/`block` : 13/13 bâtiments. `rang` : présent seulement sur certains
+    /// (1/13 sur le compte mesuré, un compte plus riche en porte plus) — TOUS EN CHAÎNES dans le
+    /// corps réel (`"block":"1501"`, `"rang":"2"`), jamais des entiers : les déclarer `int` les
+    /// ferait REJETER par JsonUtility (le champ resterait toujours à sa valeur par défaut).
+    /// ⚠️ Un défaut sans `rang` déclaré ici afficherait « … n° {rang} » accolades comprises — le
+    /// comportement correct et documenté d'I18nCatalog.Traduire (un paramètre absent ressort tel
+    /// quel), mais visible et évitable une fois le champ mesuré.</summary>
+    [Serializable]
+    public class DistrictBuildingNameParamsDto
+    {
+        public string enseigne;
+        public string district;
+        public string block;
+        public string rang;
+    }
+
+    [Serializable]
+    public class DistrictBuildingNameI18nDto
+    {
+        public string key;
+        public DistrictBuildingNameParamsDto @params;
     }
 
     [Serializable]
@@ -105,6 +149,22 @@ namespace MafiaCleanCity.CityMap
         // JsonUtility gère un tableau de primitives EN CHAMP d'une classe — seul un tableau EN RACINE
         // exigerait un wrapper).
         public string[] lieutenant_ids;      // trié par lieutenant_id côté back — ordre stable
+        // 2026-09-02 — le nom propre du bâtiment (clé i18n + params), hors P5 (identité, comme
+        // block_id/building juste au-dessus) : voir DistrictBuildingNameI18nDto.
+        public DistrictBuildingNameI18nDto name_i18n;
+    }
+
+    /// <summary>Un lieutenant du district, tel que servi par `…/interior`. Mesuré en direct le
+    /// 2026-09-02 (compte de démo, district 16) : deux clés, DEUX CHAÎNES — `lieutenant_id` (uuid,
+    /// jointure vers `DistrictInteriorBuildingDto.lieutenant_ids`) et `name` (ex. "Lt. Wend").
+    /// ⛔ `name` est un LITTÉRAL FRANÇAIS servi par le back, PAS une clé i18n — même régime que
+    /// `DistrictInteriorDto.name`, à l'opposé de `buildings[].name_i18n`. Ne PAS le passer par
+    /// I18nCatalog.Traduire.</summary>
+    [Serializable]
+    public class DistrictLieutenantDto
+    {
+        public string lieutenant_id;
+        public string name;
     }
 
     [Serializable]
@@ -113,12 +173,20 @@ namespace MafiaCleanCity.CityMap
         public string district;       // "district-N" — REUSE heat.projection.service.ts's convention
         public int district_id;
         public string profile;        // 6 membres — la clé de jointure des sous-teintes (DA)
-        public string name_canonical;
+        public string name;           // 2026-09-02 — nom de fiction du district (ex. "La Lisière").
+        public string name_canonical; // identifiant/slug ("Verge-A") — PAS un nom d'affichage.
         public string bank_side;
         public DistrictInteriorGridDto grid;
         public DistrictInteriorBlockDto[] blocks;
         public string day_phase;      // DAWN | DAY | DUSK | NIGHT — D8, engagement 1
         public DistrictInteriorBuildingDto[] buildings;
+        // 2026-09-02 — les lieutenants du district (voir DistrictLieutenantDto). NON encore
+        // consommés à l'affichage : `buildings[].lieutenant_ids` s'y joint (Q5 du rapport
+        // juge-données), mais aucun emplacement d'écran existant ne peut porter un nom sans une
+        // décision de mise en page (fiche déjà pleine à la mesure canon, marqueurs sans emplacement
+        // de texte) — hors budget de ce lot, voir
+        // Tools/district-interior-name-i18n-implementation-notes.md § Deviations.
+        public DistrictLieutenantDto[] lieutenants;
     }
 
     [Serializable] public class DistrictInteriorPayload { public DistrictInteriorDto data; }

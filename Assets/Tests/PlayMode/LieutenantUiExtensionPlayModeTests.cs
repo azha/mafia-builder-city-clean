@@ -36,6 +36,12 @@ namespace MafiaCleanCity.Operational.Tests
     // operational building (security-binding.validateAssignment — no building-type restriction), so the hub is a valid
     // SECURITY host. The roster caps at 2 (T.lieutenant.max_count_per_player), so we recruit EXACTLY COOK + SECURITY and
     // ResetRoster() at the start of every recruiting test (the seeder runs once per fixture; the tests recruit per-test).
+    // TD-490 — SANS catégorie, ce fichier était invisible à TOUT filtre : ni le juge ni
+    // personne ne pouvait le demander. Onze fichiers, 29 tests dans ce cas au 2026-09-02.
+    // *Un test qui n'a jamais tourné et un test qui passe rendent la même absence d'erreur.*
+    // ⚠️ Pas de préfixe `Capture` : cette catégorie EXISTE, le filtre d'Unity matche par
+    // PRÉFIXE, et la demander emporterait celle-ci — or `Capture` fait SIGSEGV (Mesa).
+    [Category("EcranUiLieutenant")]
     public class LieutenantUiExtensionPlayModeTests
     {
         private GameObject controllerGo;

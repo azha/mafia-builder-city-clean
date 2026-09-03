@@ -9,9 +9,7 @@ namespace MafiaCleanCity.CityMap.Tests
     // E2E (charter 27: no mock). Hits the live game-back service through Traefik
     // at http://localhost/v1/world/districts. The editor runs on the same host as
     // the docker stack, so this is the real wire contract, parsed by the real client.
-    // [Category] posée le 2026-09-03 (chantier ville peinte) : sans elle, cette suite ne tournait sous
-    // AUCUN run MafiaCI (filtre par catégorie). Même catégorie que le lot qui change cet écran.
-    [Category("CarteVille")]
+    [Category("ScreenCarte")]
     public class CityMapFetchPlayModeTests
     {
         [UnityTest]
@@ -31,6 +29,11 @@ namespace MafiaCleanCity.CityMap.Tests
             {
                 Assert.IsFalse(string.IsNullOrEmpty(d.name_canonical),
                     $"district id={d.id} missing name_canonical");
+                // 2026-09-02 — `name` (fiction, français, ex. "La Lisière") est désormais servi à
+                // côté de `name_canonical` (nom de code, ex. "Verge-A") : mesuré présent sur les
+                // 18 districts seedés. WorldDtos.DistrictDto.name / CityMapEnums.DisplayName.
+                Assert.IsFalse(string.IsNullOrEmpty(d.name),
+                    $"district id={d.id} ({d.name_canonical}) missing name (fiction)");
                 Assert.Greater(d.block_count, 0,
                     $"district {d.name_canonical} should have block_count > 0");
 
@@ -41,7 +44,35 @@ namespace MafiaCleanCity.CityMap.Tests
                 ControlState state = CityMapEnums.ParseControlState(d.control_state);
                 Assert.AreNotEqual(ControlState.Unknown, state,
                     $"district {d.name_canonical} has unparsed control_state '{d.control_state}'");
+
+                // 2026-09-02 — `precinct_id` servi (1..6, "3 districts/precinct, capped at 6") —
+                // CityProjectionsClient.PrecinctForDistrict n'est plus qu'un repli. Bande large
+                // (1..6) plutôt qu'une égalité avec la formule client : le but de ce champ est
+                // justement de cesser de dépendre de cette formule pour rester exacte.
+                Assert.That(d.precinct_id, Is.InRange(1, 6),
+                    $"district {d.name_canonical} precinct_id={d.precinct_id} outside the 1..6 band");
             }
+        }
+
+        // Pure logic, zero network/DB (charter 27 covers fonctionnel E2E, not a ban on testing a
+        // pure C# helper): the live backend always serves a non-empty `name` (18/18, assertion
+        // above), so the empty/missing-name fallback branch of CityMapEnums.DisplayName can only be
+        // exercised with a synthetic DTO — never asserted against `dto.name_canonical` alone
+        // implicitly, always through the shared helper both the tile and the detail panel call.
+        [Test]
+        public void DisplayName_FallsBackToNameCanonical_WhenNameMissing()
+        {
+            var withFiction = new DistrictDto { name = "La Lisière", name_canonical = "Verge-A" };
+            Assert.AreEqual("La Lisière", CityMapEnums.DisplayName(withFiction),
+                "fiction name preferred when present");
+
+            var emptyName = new DistrictDto { name = "", name_canonical = "Verge-A" };
+            Assert.AreEqual("Verge-A", CityMapEnums.DisplayName(emptyName),
+                "empty string falls back to name_canonical");
+
+            var nullName = new DistrictDto { name = null, name_canonical = "Verge-A" };
+            Assert.AreEqual("Verge-A", CityMapEnums.DisplayName(nullName),
+                "null (older env without the column) falls back to name_canonical");
         }
     }
 }

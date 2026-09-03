@@ -40,29 +40,39 @@ namespace MafiaCleanCity.Shell.Tests
             LogAssert.ignoreFailingMessages = false;
         }
 
-        /// <summary>Rang du dernier frère ACTIF de `ContentSlot` occupé par cet objet, et ce qui se
-        /// dessine par-dessus. Un seul calcul, employé par le scénario ET par son contrôle positif —
-        /// jamais deux chemins qui pourraient diverger entre eux.</summary>
-        private static (int rang, int total, string occultants) Fratrie(RectTransform slot, GameObject cible)
+        // ⛔⛔ LA GRANDEUR A CHANGÉ APRÈS LE PREMIER RUN RÉEL, et c'est le contrôle positif qui
+        //    l'a imposé. Ma v1 mesurait « quels frères de ContentSlot viennent APRÈS mon écran ».
+        //    Rouge au premier run : `[LaunderingBackdrop, LaunderingSheet]` — **les propres parties
+        //    de l'écran mesuré**. Un locataire parente son fond et sa feuille DIRECTEMENT sous
+        //    `ContentSlot` (le shell le documente pour le Dashboard), donc ils sont ses FRÈRES et
+        //    naissent après lui. La sonde comptait l'écran comme son propre occultant.
+        //    ⇒ *La grandeur qui discrimine n'est presque jamais celle qu'on regarde.* « Ce qui est
+        //      après moi dans la fratrie » n'est pas « ce qui m'enterre » : la propriété qui compte
+        //      est *les panneaux de l'Accueil ont-ils été montés alors que j'avais ouvert un écran ?*
+        //    ⇒ Et durcir la v1 (exclure les frères au nom du locataire) aurait visé la FORME et
+        //      laissé passer tout occultant portant un autre nom. On change de mesure, pas de seuil.
+        //    ★ Le contrôle positif a refusé sa propre ligne de base ("rien ne doit encore recouvrir")
+        //      — il a donc réfuté le choix de grandeur AVANT que le test principal ne le fasse.
+
+        /// <summary>Les panneaux de l'Accueil présents sous `ContentSlot`. C'est la seule chose que
+        /// la garde de génération empêche : leur montage. Les nommer plutôt que compter — un compte
+        /// nu fait deviner, il ne fait pas chercher (leçon f1, quatre runs sur `frère 6 sur 11`).</summary>
+        private static string[] PanneauxAccueil(RectTransform slot)
         {
-            Transform[] freres = Enumerable.Range(0, slot.childCount).Select(slot.GetChild).ToArray();
-            int rang = System.Array.FindIndex(freres, t => t.gameObject == cible);
-            string apres = string.Join(", ", freres.Skip(rang + 1)
-                .Where(t => t.gameObject.activeInHierarchy).Select(t => t.gameObject.name));
-            return (rang, freres.Length, apres);
+            return Enumerable.Range(0, slot.childCount).Select(slot.GetChild)
+                .Where(t => t.gameObject.name.StartsWith("Accueil", System.StringComparison.Ordinal))
+                .Select(t => t.gameObject.name).ToArray();
         }
 
         [UnityTest]
-        public IEnumerator UnEcranOuvertPendantLAcquisitionResteAuDessusDeLAccueil()
+        public IEnumerator UnEcranOuvertPendantLAcquisitionEmpecheLeMontageDeLAccueil()
         {
             shellGo = new GameObject("AppShell");
             AppShell shell = shellGo.AddComponent<AppShell>();
 
-            // ⛔ LA FENÊTRE EST ICI, et c'est tout l'enjeu du scénario : `CurrentTab` devient
-            //    `Empire` AVANT que les panneaux de l'Accueil soient montés (il y a une frame de
-            //    marge entre les deux). Attendre `CurrentTab == Empire` puis monter IMMÉDIATEMENT,
-            //    c'est exactement ce que fait un joueur qui touche l'écran dès qu'il le voit — et
-            //    c'est ce que la capture de f1 a reproduit sans le chercher.
+            // LA FENÊTRE : `CurrentTab` devient `Empire` AVANT que les panneaux soient montés (une
+            // frame de marge les sépare). Attendre puis monter IMMÉDIATEMENT, c'est ce que fait un
+            // joueur qui touche l'écran dès qu'il le voit — et ce que la capture de f1 a reproduit.
             float t = 0f;
             while (shell.CurrentTab != AppShell.Tab.Empire && t < 25f) { t += Time.deltaTime; yield return null; }
             Assert.AreEqual(AppShell.Tab.Empire, shell.CurrentTab,
@@ -75,47 +85,36 @@ namespace MafiaCleanCity.Shell.Tests
                 "la génération n'a pas bougé alors qu'une surimpression vient d'être montée : le " +
                 "discriminant de la garde ne compte pas ce qu'il prétend compter");
 
-            // Laisser passer LARGEMENT la frame de marge : c'est après elle que les panneaux se
-            // posaient. Une seule frame d'attente laisserait le test vert sans avoir traversé
-            // l'événement — un scénario sous-dimensionné pour ce qu'il mesure.
+            // DIX frames, pas une : les panneaux se posaient APRÈS la marge, et une seule frame
+            // laisserait ce test vert sans avoir traversé l'événement qu'il prétend détecter.
             for (int i = 0; i < 10; i++) yield return null;
 
-            (int rang, int total, string occultants) = Fratrie(shell.ContentSlot, ouvert.gameObject);
-            Assert.GreaterOrEqual(rang, 0, "l'écran ouvert n'est plus un enfant de ContentSlot");
-            Assert.IsEmpty(occultants,
-                $"l'écran ouvert pendant l'acquisition est frère {rang + 1} sur {total} et se fait " +
-                $"recouvrir par : [{occultants}]. Il est actif, dimensionné, sous le bon canvas — et " +
-                "le joueur ne le voit pas.");
+            string[] poses = PanneauxAccueil(shell.ContentSlot);
+            Assert.IsEmpty(poses,
+                $"l'Accueil s'est monté PAR-DESSUS l'écran ouvert pendant l'acquisition : [{string.Join(", ", poses)}]. " +
+                "L'écran reste actif, dimensionné, sous le bon canvas — et le joueur ne le voit pas.");
         }
 
         [UnityTest]
-        public IEnumerator LaSondeDeFratrieSaitROUGIR()
+        public IEnumerator LaSondeVOITLesPanneauxQuandRienNEstOuvert()
         {
-            // ⛔ SANS CE CONTRÔLE, le test ci-dessus serait vert sur un monde où RIEN ne peut se
-            //    poser par-dessus — donc vert pour une raison sans rapport avec la garde. On prouve
-            //    donc que la MESURE sait voir un occultant, en en fabriquant un : cible INERTE,
-            //    créée ici, jamais une ligne de production que le prochain lot peut corriger.
+            // ⛔ GARDE DE CAPACITÉ — sans elle, le test ci-dessus serait vert dans un monde où les
+            //    panneaux ne se montent JAMAIS (nom changé, montage supprimé, shell qui n'aboutit
+            //    pas) : un zéro rendu pour la mauvaise raison. Ici, personne n'ouvre rien, donc la
+            //    garde de génération laisse passer et les quatre DOIVENT apparaître. C'est la même
+            //    sonde, sur le chemin où elle doit trouver.
             shellGo = new GameObject("AppShell");
             AppShell shell = shellGo.AddComponent<AppShell>();
             float t = 0f;
             while (shell.CurrentTab != AppShell.Tab.Empire && t < 25f) { t += Time.deltaTime; yield return null; }
             Assert.AreEqual(AppShell.Tab.Empire, shell.CurrentTab, "acquisition non aboutie");
 
-            LaunderingController ouvert = shell.MonterLocataireEnSurimpression<LaunderingController>();
             for (int i = 0; i < 10; i++) yield return null;
-            Assert.IsEmpty(Fratrie(shell.ContentSlot, ouvert.gameObject).occultants,
-                "état de départ : rien ne doit encore recouvrir — sinon le contrôle ne prouve rien");
 
-            var occultant = new GameObject("OccultantSynthetique", typeof(RectTransform));
-            occultant.transform.SetParent(shell.ContentSlot, false);
-            occultant.transform.SetAsLastSibling();
-            yield return null;
-
-            (int rang, int total, string occultants) = Fratrie(shell.ContentSlot, ouvert.gameObject);
-            Assert.IsNotEmpty(occultants,
-                $"la sonde ne VOIT PAS un frère posé délibérément par-dessus (frère {rang + 1}/{total}) : " +
-                "elle ne peut donc pas rougir sur le défaut qu'elle surveille, et son vert ne vaut rien");
-            StringAssert.Contains("OccultantSynthetique", occultants);
+            string[] poses = PanneauxAccueil(shell.ContentSlot);
+            Assert.IsNotEmpty(poses,
+                "la sonde ne trouve AUCUN panneau de l'Accueil sur le chemin où ils doivent être là : " +
+                "elle ne peut donc pas non plus prouver leur absence, et le test voisin serait vert à vide.");
         }
     }
 }

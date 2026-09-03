@@ -428,8 +428,20 @@ $"{QuiParle(c)} · {Cap(c.severity_band)} · {Cap(c.priority_band)}", 8f, TextSe
             // ⇒ Le bouton ouvre donc la main complète, où le joueur CHOISIT — c'est le geste que
             //   la maquette met derrière l'appui long, promu geste principal tant que le maillon
             //   manque. L'écran ne promet rien qu'il ne puisse tenir.
+            // ⛔ MESURÉ sur la capture du 2026-09-02 : ce sous-titre était en `TextSecondary`
+            // (`onSurfaceSecondary`, #8a979c) et son contraste sur l'aplat corail du tampon
+            // tombait à 0.096 — sous le seuil de 0.18 de `LisibiliteDuTexte`, quand le titre
+            // juste au-dessus mesurait 0.456.
+            // ★ `onSurfaceSecondary` est une encre pour la SURFACE sombre. Posée sur un accent,
+            //   elle n'est pas « discrète », elle est illisible. Sur un aplat d'accent, la
+            //   sourdine doit venir de l'ALPHA de l'encre sur accent — même famille que le titre,
+            //   atténuée — jamais d'un jeton fait pour un autre fond.
+            // C'est la faute que j'ai déjà commise sur ⑩ : un fond qu'on corrige change la
+            // contrainte sur TOUT ce qui est posé dessus, et rien ne vient le rappeler.
+            Color encreSurTampon = TextPrimary;
+            encreSurTampon.a = 0.8f;          // mesuré : contraste 0.365 sur le corail
             TextMeshProUGUI sous = NouveauTexteMaquette(t.transform, "SousTexte",
-                Lib("il attend une consigne"), 8f, TextSecondary);
+                Lib("il attend une consigne"), 8f, encreSurTampon);
             sous.alignment = TextAlignmentOptions.Center;
             TrackText(sous, sous.text);
         }

@@ -80,6 +80,19 @@ namespace MafiaCleanCity.Operational
                 dto => DernierChargement = dto,
                 (code, msg) => { DernierCodeErreur = code; DerniereErreur = msg; });
 
+            // ⛔ L'ÉCHELLE DES PALIERS vient d'une SECONDE route, et son échec est NON FATAL :
+            // ㊱ existait avant elle et doit continuer d'afficher son flux si elle tombe. Une
+            // échelle absente est un manque ; un écran blanc est une panne.
+            // ⚠️ On RÉUTILISE `ProgressionClient`, qui appelait déjà `/v1/progression` pour
+            // l'Accueil et ⑤. J'ai commencé par en écrire un second avant de voir celui-ci :
+            // j'avais cherché la DONNÉE (`tier`) et non la ROUTE. Un producteur qui existe déjà
+            // ne se signale pas par le nom de ce qu'on lui demande.
+            clientProgression = clientProgression
+                ?? new Exceptions.ProgressionClient { BaseUrl = baseUrl };
+            yield return clientProgression.GetProgression(token,
+                dto => DerniereProgression = dto,
+                (code, msg) => { DerniereProgression = null; });
+
             // La frame de création rend des rects non résolus : on attend le layout AVANT de
             // rendre quoi que ce soit qui lise une géométrie.
             yield return null;
@@ -121,6 +134,7 @@ namespace MafiaCleanCity.Operational
             MajCompteur(2, reculees, -1, Lib("ONT RECULÉ"));
 
             RendreCartes(cartes);
+            RendreEchelle(DerniereProgression);
 
             // ⛔ LE PANNEAU DIT LE TROU, il ne le masque pas — et c'est la maquette qui l'exige :
             // son cadre ratifié affiche l'écran « tel qu'il s'afficherait aujourd'hui », clés
@@ -190,8 +204,149 @@ namespace MafiaCleanCity.Operational
             }
         }
 
+        /// <summary>L'ÉCHELLE DES PALIERS, sous les cartes — le contexte qui manquait à ㊱.
+        ///
+        /// ⛔ CE QUE CET ÉCRAN MONTRAIT AVANT : une carte, ou rien, sans jamais dire de QUOI cette
+        /// carte était un barreau. TD-408 demandait « rendre l'écran capable d'afficher deux
+        /// cartes » et les deux gestes prescrits y arrivaient — en FABRIQUANT des cartes fausses
+        /// (adoptables et sans effet). L'échelle donne le contexte sans inventer d'objet : on
+        /// montre les barreaux, pas des capacités qui n'existent pas.
+        ///
+        /// ⚠️ `progress_to_next` n'est PAS un ornement : c'est lui qui sépare « le palier suivant
+        /// est hors de portée » de « il est en cours ». Il passe à `IN_PROGRESS` dès la première
+        /// carte d'exception tranchée — donc cette ligne BOUGE en jeu, et c'est le seul endroit
+        /// de l'écran qui le dise.
+        ///
+        /// ⚠️ Progression absente ⇒ AUCUNE échelle, et le reste de l'écran est intact. C'est le
+        /// contrat non fatal de `Charger()` : une échelle manquante est un manque, un écran blanc
+        /// est une panne.</summary>
+        private void RendreEchelle(Exceptions.ProgressionDto prog)
+        {
+            if (prog == null) return;
+
+            GameObject bloc = NouveauUI("Echelle", listeRoot);
+            bloc.AddComponent<Image>().color = FondCarte;
+            VerticalLayoutGroup v = bloc.AddComponent<VerticalLayoutGroup>();
+            v.padding = new RectOffset(PxI(12f), PxI(12f), PxI(10f), PxI(10f));
+            v.spacing = Px(3f);
+            v.childControlWidth = true; v.childControlHeight = true;
+            v.childForceExpandWidth = true; v.childForceExpandHeight = false;
+
+            TextMeshProUGUI enseigne = NouveauTexte(bloc.transform, "TitreEchelle",
+                Lib("L'ÉCHELLE DES PALIERS"), 8.5f, TexteFaible);
+            enseigne.fontStyle = TMPro.FontStyles.Bold;
+
+            foreach (int barreau in BarreauxDeLEchelle)
+            {
+                bool franchi  = barreau <  prog.vocabulary_tier;
+                bool courant  = barreau == prog.vocabulary_tier;
+                bool leSuivant = barreau == prog.next_tier;
+
+                // ⚠️ Le préfixe porte l'information, pas seulement la teinte (a11y F2) : un
+                // palier franchi doit se lire aussi sans distinguer les couleurs. C'est la même
+                // règle que les puces « × » et « · » des conditions ci-dessus.
+                string marque = franchi ? "✓  " : courant ? "▸  " : "·  ";
+
+                string libelle = Lib("Palier ") + barreau;
+                if (leSuivant && prog.tier_label_i18n != null
+                    && !string.IsNullOrEmpty(prog.tier_label_i18n.key))
+                {
+                    // ⚠️ Clé PARAMÉTRÉE : paramètres passés TELS QU'ON LES REÇOIT, sous le nom
+                    // que le corps porte. La fiche ② a coûté une demi-journée le même jour pour
+                    // avoir supposé ces noms au lieu de les lire.
+                    var p = new System.Collections.Generic.Dictionary<string, string>();
+                    if (prog.tier_label_i18n.@params != null
+                        && !string.IsNullOrEmpty(prog.tier_label_i18n.@params.tier))
+                        p["tier"] = prog.tier_label_i18n.@params.tier;
+                    if (MafiaCleanCity.I18n.I18nCatalog.Connait(prog.tier_label_i18n.key))
+                        libelle = MafiaCleanCity.I18n.I18nCatalog.Traduire(prog.tier_label_i18n.key, p);
+                }
+
+                TextMeshProUGUI ligne = NouveauTexte(bloc.transform, "Barreau" + barreau,
+                    marque + libelle, 9.5f, franchi ? TexteFaible : TexteFort);
+                if (courant) ligne.fontStyle = TMPro.FontStyles.Bold;
+
+                // ⛔ LA BANDE SE POSE SOUS LE PALIER COURANT, PAS SOUS LE SUIVANT — corrigé le
+                // 2026-09-02 après mesure du back. Son nom (`progress_to_next`) dit le contraire
+                // de ce qu'elle porte : elle décrit le palier DÉJÀ ATTEINT.
+                //     if (tier >= 2)  band = UNLOCKED;   // « the meaningful one landed »
+                //     else if (…)     band = IN_PROGRESS;
+                //     else            band = LOCKED;
+                // Au-delà du palier 1 elle vaut donc `UNLOCKED` POUR TOUJOURS, quoi qu'il arrive.
+                // ★ Je l'avais posée sous le barreau suivant avec le mot « à portée » : l'écran
+                //   promettait une marche proche alors que la bande ne parle pas d'elle. C'est
+                //   exactement le décor que cet écran est censé démonter — et il me l'a fait
+                //   écrire en une ligne.
+                if (courant)
+                    NouveauTexte(bloc.transform, "EtatCourant",
+                        "    " + EtatDuPalierAtteint(prog.progress_to_next), 8.5f, TexteFaible);
+
+                // ⚠️ ET SOUS LE SUIVANT, ON NE PROMET RIEN. Ce qui manque pour l'atteindre est un
+                // PRÉDICAT de capacité (pour 201 : 15 exceptions traitées, mesuré 4) — et cette
+                // grandeur n'est PAS projetée sur la surface joueur aujourd'hui. Dire « à portée »
+                // demanderait une donnée que le back n'émet pas ; dire qu'on ne sait pas demande
+                // zéro lot, et c'est la thèse de l'écran.
+                if (leSuivant)
+                    NouveauTexte(bloc.transform, "EtatSuivant",
+                        "    " + Lib("le serveur ne dit pas ce qui manque pour y arriver"),
+                        8.5f, TexteFaible);
+            }
+        }
+
+        /// <summary>La bande `progress_to_next` en clair — pour le palier ATTEINT, malgré son nom.
+        ///
+        /// ⛔ MESURÉ dans `progression.projection.service.ts` : `UNLOCKED` dès le palier 2 et pour
+        /// toujours, `IN_PROGRESS` au palier 1 dès qu'on a enseigné ou traité quelque chose,
+        /// `LOCKED` au palier 1 vierge. Les libellés disent donc ce qui EST DERRIÈRE, jamais ce
+        /// qui vient — c'est ce contresens qui m'a fait écrire « à portée » sous le mauvais
+        /// barreau.
+        /// ⚠️ Un cran INCONNU se montre TEL QUEL : un libellé inventé pour une valeur qu'on ne
+        /// connaît pas ferait croire qu'on l'a comprise, et masquerait justement le cran neuf
+        /// qu'il faudrait traiter.</summary>
+        private static string EtatDuPalierAtteint(string bande)
+        {
+            switch (bande)
+            {
+                case "LOCKED":      return Lib("vous n'avez encore rien engagé");
+                case "IN_PROGRESS": return Lib("vous avez commencé");
+                case "UNLOCKED":    return Lib("ce palier est acquis");
+                default:            return string.IsNullOrEmpty(bande) ? Lib("état inconnu") : bande;
+            }
+        }
+
         /// <summary>Les cartes du dernier chargement — crochet de test.</summary>
         public HorizonCardDto[] Cartes { get; private set; } = new HorizonCardDto[0];
+
+        private Exceptions.ProgressionClient clientProgression;
+
+        /// <summary>La progression du dernier chargement, ou `null` si la route a échoué —
+        /// crochet de test. `null` est un ÉTAT normal ici, pas une anomalie : voir le contrat
+        /// non fatal dans `Charger()`.</summary>
+        public Exceptions.ProgressionDto DerniereProgression { get; private set; }
+
+        /// <summary>Rend un couple FABRIQUÉ (flux + progression), sans réseau — pour éprouver
+        /// l'échelle à des paliers que le compte de démo n'atteint pas.</summary>
+        public void RendrePourTest(GetMetaHorizonFeedResponseDto dto, Exceptions.ProgressionDto prog)
+        {
+            EnsureInitialized();
+            DerniereProgression = prog;
+            AppliquerEtat(dto);
+        }
+
+        /// <summary>Les barreaux de l'échelle : les paliers que les 4 capacités VIVANTES exigent.
+        ///
+        /// ⛔ MESURÉ (TD-408) : le catalogue porte 7 entrées — 4 vivantes et 3 réservées. Les
+        /// vivantes forment une échelle de vocabulaire : 201 exige le palier 2 et mène au 3, 202
+        /// exige le 3 → 4, 203 le 4 → 5, 204 le 5 → 6. Les barreaux sont donc 2, 3, 4, 5.
+        /// ★ Un joueur n'étant qu'à UN palier, une seule carte peut être vraie à la fois. Ce
+        ///   n'est pas un défaut du prédicat, c'est LA FORME DE L'OBJET — et c'est pour ça que
+        ///   TD-408 conclut qu'il ne faut RIEN changer aux 4 vivantes ni réveiller les 3
+        ///   réservées (elles n'ont ni prédicat ni effet : elles seraient adoptables et sans
+        ///   effet, ce qui est pire qu'un écran à une carte parce que ça a l'air de marcher).
+        /// ⇒ L'écran ne fabrique donc pas une seconde carte : il montre l'ÉCHELLE dont cette
+        ///   carte est un barreau. Un écran qui montre une carte parce que le système n'en a
+        ///   qu'une est honnête ; c'est le CONTEXTE qui manquait, pas les cartes.</summary>
+        private static readonly int[] BarreauxDeLEchelle = { 2, 3, 4, 5 };
 
         /// <summary>Repli NOMMÉ sur échec réseau — jamais une exception, jamais un écran noir
         /// (patron ㊲ : `Render(null)` a fait planter un autre écran de ce dépôt à la première

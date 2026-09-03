@@ -36,6 +36,12 @@ namespace MafiaCleanCity.Operational.Tests
     //   4. C_ wait uses BudgetBands.Count > 0 (bands load asynchronously via RefreshBands→RefreshAutonomy
     //      chain after OpenLieutenant; the test yields until bands arrive, capped at 10s).
     //   5. D_ TearDown also destroys LastNavGameObject (mirrors ExceptionQueuePlayModeTests pattern).
+    // TD-490 — SANS catégorie, ce fichier était invisible à TOUT filtre : ni le juge ni
+    // personne ne pouvait le demander. Onze fichiers, 29 tests dans ce cas au 2026-09-02.
+    // *Un test qui n'a jamais tourné et un test qui passe rendent la même absence d'erreur.*
+    // ⚠️ Pas de préfixe `Capture` : cette catégorie EXISTE, le filtre d'Unity matche par
+    // PRÉFIXE, et la demander emporterait celle-ci — or `Capture` fait SIGSEGV (Mesa).
+    [Category("EcranAutonomy")]
     public class AutonomyInboxPlayModeTests
     {
         private GameObject controllerGo;

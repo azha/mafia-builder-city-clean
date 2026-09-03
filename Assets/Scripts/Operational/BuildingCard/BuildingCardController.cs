@@ -1833,12 +1833,13 @@ namespace MafiaCleanCity.Operational
         /// (`{key:"game.fiction.building.name", params:{type,district,block,rank}}`) et cet écran
         /// ne l'a jamais lu — il affichait « BÂTIMENT OPÉRATIONNEL », un libellé de CATÉGORIE là
         /// où le serveur donnait un NOM.
-        /// ⚠️ Et cette clé n'est pas dans le bundle : `GET /v1/i18n/bundle` sert 67 clés, dont
-        /// 63 `error.*` et 4 `game.*` — aucune de celles que les écrans demandent. Le titre
-        /// affichera donc la clé, telle quelle, tant que le dictionnaire ne la porte pas.
-        /// ★ C'est laid et c'est le point : un nom fabriqué serait plus joli et ferait croire au
-        ///   lecteur que le jeu nomme ses bâtiments. La clé à l'écran est ce qui fera écrire les
-        ///   textes ; « BÂTIMENT OPÉRATIONNEL » ne l'a pas fait en plusieurs mois.
+        /// ⚠️ Le bundle a longtemps servi 67 clés dont aucune de celles-ci, et le titre affichait
+        /// alors la clé nue. Depuis le 2026-09-02 il en sert 386, celle-ci comprise.
+        /// ★ C'était laid et c'était le point : un nom fabriqué aurait été plus joli et aurait
+        ///   fait croire au lecteur que le jeu nomme ses bâtiments. La clé nue a fait DEUX fois
+        ///   son travail — elle a fait écrire les textes (« BÂTIMENT OPÉRATIONNEL » ne l'avait pas
+        ///   fait en plusieurs mois), puis elle a montré à l'image que le client et le bundle ne
+        ///   s'accordaient pas sur les noms des paramètres. Un maquillage aurait caché les deux.
         /// Le repli sur le libellé de catégorie ne subsiste que si le serveur n'envoie AUCUNE
         /// clé — là, il n'y a rien à montrer, pas même un trou.</summary>
         private static string NomDuBatiment(BuildingCardDto card)
@@ -1850,10 +1851,15 @@ namespace MafiaCleanCity.Operational
             BuildingNameParamsDto pr = card.name_i18n.@params;
             if (pr != null)
             {
-                if (!string.IsNullOrEmpty(pr.type))     p["type"] = pr.type;
+                // ⛔ Les noms sont ceux du BUNDLE, pas ceux d'une charge utile d'hier — voir
+                // BuildingNameParamsDto. Et le test `IsNullOrEmpty` n'est pas une précaution
+                // décorative : `rang` est absent au rang 1, et la clé servie alors NE LE DEMANDE
+                // PAS. Un `p["rang"] = "1"` de complaisance écrirait un rang que personne n'a
+                // demandé — on passe ce qu'on reçoit, rien de plus.
+                if (!string.IsNullOrEmpty(pr.enseigne)) p["enseigne"] = pr.enseigne;
                 if (!string.IsNullOrEmpty(pr.district)) p["district"] = pr.district;
                 if (!string.IsNullOrEmpty(pr.block))    p["block"] = pr.block;
-                if (!string.IsNullOrEmpty(pr.rank))     p["rank"] = pr.rank;
+                if (!string.IsNullOrEmpty(pr.rang))     p["rang"] = pr.rang;
             }
             return MafiaCleanCity.I18n.I18nCatalog.Traduire(card.name_i18n.key, p);
         }
@@ -1863,6 +1869,13 @@ namespace MafiaCleanCity.Operational
         /// (repli byte-identique) et pour ce qui n'a PAS le droit d'y passer (valeurs calculées).</summary>
         internal static string Cle(string role, string litteral) =>
             MafiaCleanCity.I18n.Libelle.De("building", role, litteral);
+
+        /// <summary>Les candidats au titre de glyphe le plus large — le vocabulaire complet
+        /// plafonne à 7 caractères, et ces deux-là portent les caractères les plus gras.
+        /// ⚠️ Ce n'est PAS la liste des glyphes : c'est la liste de ceux qui peuvent gagner la
+        /// mesure. Un glyphe plus long ajouté ailleurs doit venir ici, sinon il sera coupé —
+        /// c'est le seul endroit du fichier qui doit bouger dans ce cas.</summary>
+        private static readonly string[] GlyphesLesPlusLarges = { "[#####]", "[$$$$$]" };
 
         private void AddStatusRow(string label, string value, string glyph, Color accent)
         {
@@ -1882,7 +1895,21 @@ namespace MafiaCleanCity.Operational
             TextMeshProUGUI g = NewText("Glyph", row.transform, glyph, 16, TextAlignmentOptions.Center);
             g.color = accent;
             g.fontStyle = FontStyles.Bold;
-            AddLayoutElement(g.gameObject, minWidth: 46, preferredWidth: 46, flexibleWidth: 0);
+            // ⛔ MESURÉ le 2026-09-02 par la garde de lisibilité : cette colonne était figée à
+            // 46 px et COUPAIT les glyphes longs — « [####] » posait 4 caractères sur 6. Sur la
+            // capture ça donnait « [## », qui ressemble à un glyphe court et non à un glyphe
+            // coupé. J'avais photographié cet écran deux fois sans le voir.
+            // ★ Le vocabulaire va de 3 caractères (« [#] ») à 7 (« [#####] », « [$$$$$] ») ; une
+            //   largeur choisie pour le plus court coupe forcément le plus long. Et la colonne
+            //   existe pour ALIGNER les libellés : la laisser se dimensionner par ligne
+            //   supprimerait la troncature en détruisant ce à quoi elle sert.
+            // ⇒ Largeur MESURÉE PAR TMP sur le glyphe le plus large, jamais un nombre posé à la
+            //   main : ajouter demain un glyphe plus long élargira la colonne tout seul.
+            // ⇒ La mesure vit dans `LargeurDeGlyphe`, pas ici : le même défaut était recopié sur
+            //   cinq écrans, et une hypothèse fausse recopiée se corrige là où elle est PRODUITE.
+            float largeurGlyphe = LargeurDeGlyphe.PourLesPlusLarges(g, GlyphesLesPlusLarges);
+            AddLayoutElement(g.gameObject, minWidth: largeurGlyphe,
+                preferredWidth: largeurGlyphe, flexibleWidth: 0);
 
             string libelle = Cle("row", label);
             TextMeshProUGUI l = NewText("Label", row.transform, libelle, 15, TextAlignmentOptions.Left);
