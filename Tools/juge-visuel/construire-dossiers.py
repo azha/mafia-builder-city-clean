@@ -46,8 +46,8 @@ TABLE = [
       cadres=[(S6, list(range(22, 25)))], nominal=(S6, 22), planche="carte_ville_1080x2400.png",
       confiance="mesurée", note="ville peinte livrée le 03/09 (TD-494) ; cadres 22-24 avec les noms de fiction (TD-492)"),
  dict(sym="④", ctl="DashboardController", dossier="accueil", chemin="surimpression à l'ouverture de session (acquisition), puis Accueil",
-      cadres=[(S6, [20, 21])], nominal=(S6, 20), planche="planche_l_accueil_1080x2400.png",
-      confiance="déduite", note="cadres 20-21 « Le Bureau » rattachés par le titre seulement — à confirmer"),
+      cadres=[], nominal=None, planche="planche_l_accueil_1080x2400.png",
+      confiance="aucune", note="AUCUNE maquette (front.md:1609 « [ ] maquetté ») — les cadres 20-21 « Le Bureau du patron » sont ⑱ le menu Plus (front.md:1567), corrigé par l'orchestrateur le 03/09"),
  dict(sym="⑤", ctl="DecisionDetailScreenController", dossier="decision-du-jour", chemin="surimpression depuis la carte de tête (hl_card) de l'Accueil",
       cadres=[(S4, list(range(4, 9))), (S6, list(range(4, 9)))], nominal=(S4, 4), planche="decision_du_jour_1080x2400.png",
       confiance="mesurée", note="série 4 cadres 4-8 RATIFIÉS par l'user (« ok top on garde comme ça », 2026-08-26)"),
@@ -68,7 +68,7 @@ TABLE = [
       confiance="déduite", note="cadres 107-112 « La vente » par le titre ; dealers en prénoms servis (§DA-2)"),
  dict(sym="㉓", ctl="ShopScreenController", dossier="compte", chemin="Plus → LA VITRINE",
       cadres=[(S6, [98, 99, 100])], nominal=(S6, 98), planche="planche_la_vitrine_1080x2400.png",
-      confiance="déduite", note="le contrôleur dit « cadres 48-50 » (numérotation d'une autre série) ; par le titre : 98-100 ; canon compte/boutique-canon.png"),
+      confiance="déduite", note="déduit par titre (98-100) — le contrôleur dit « cadres 48-50 », numérotation d'une autre série ; canon compte/boutique-canon.png"),
  dict(sym="⑮", ctl="InspectionScreenController", dossier="police", chemin="Plus → LES INSPECTIONS",
       cadres=[(S6, list(range(31, 36)))], nominal=(S6, 31), planche="planche_les_inspections_1080x2400.png",
       confiance="mesurée", note="le contrôleur cite les cadres 31-35 ; canon police/inspections-canon.png"),
@@ -92,7 +92,7 @@ TABLE = [
       confiance="aucune", note="canon compte/tutoriel-canon.png ; aucun cadre de série 4/6 identifié"),
  dict(sym="㉒", ctl="ProfileScreenController", dossier="compte", chemin="Plus → VOTRE PROFIL",
       cadres=[(S6, [95, 96, 97])], nominal=(S6, 95), planche="planche_le_coffre_1080x2400.png",
-      confiance="déduite", note="le contrôleur dit « cadres 45-47 » (autre numérotation) ; par le titre : 95-97 « Le compte » ; canon compte/profil-canon.png ; ⚠️ sa planche s'appelle planche_le_coffre"),
+      confiance="déduite", note="déduit par titre (95-97 « Le compte ») — le contrôleur dit « cadres 45-47 », autre numérotation ; canon compte/profil-canon.png ; ⚠️ sa planche s'appelle planche_le_coffre"),
  dict(sym="⑲", ctl="SettingsScreenController", dossier="compte", chemin="Plus → LES RÉGLAGES",
       cadres=[], nominal=None, planche="planche_les_reglages_1080x2400.png",
       confiance="aucune", note="canon compte/reglages-canon.png ; aucun cadre de série 4/6 identifié"),
@@ -149,7 +149,8 @@ HORS_APPSHELL = [
       cadres=[(S6, list(range(101, 107)))], nominal=(S6, 101), planche="",
       confiance="déduite", note="cadres 101-106 (le tableau) ; écran bloqué (front.md) ; la colonne des quartiers tronque les noms longs (§DA-2)"),
  dict(sym="⑱", ctl="AppShell.MonterMenuPlus", dossier="plus", chemin="onglet PLUS",
-      cadres=[], nominal=None, planche="", confiance="aucune", note="canon plus/ecran-canon.png ; le menu, pas un locataire"),
+      cadres=[(S6, [20, 21])], nominal=(S6, 20), planche="", confiance="mesurée",
+      note="cadres 20-21 « Le Bureau du patron » = le menu Plus (front.md:1567, série 6 v3.3) ; canon plus/ecran-canon.png ; le menu, pas un locataire"),
 ]
 
 
