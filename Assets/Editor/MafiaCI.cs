@@ -97,8 +97,20 @@ public static class MafiaCI
     //   elle n'entrera ici qu'après un run vert, parce que sa 4e suite (`TopBarDoctrineV31`, 7
     //   tests) n'a JAMAIS tourné : le crash est arrivé avant elle. *Douze verts ne disent rien des
     //   sept qui n'ont pas démarré.*
+    // ⛔ LES `Photo*` SONT DEHORS — TOUTES, depuis le 2026-09-03. Elles écrivent des PNG dans
+    // `Assets/Screenshots` à chaque exécution : les faire tourner sous le juge salit l'arbre à
+    // chaque run, et un `git add` distrait embarque alors des captures que personne n'a regardées.
+    // ⚠️ MA RÈGLE DE FUSION LES A LAISSÉES ENTRER. En résolvant trois conflits de suite sur cette
+    // ligne j'ai appliqué « union de ce qui est PORTÉ » — juste contre les entrées MORTES, muet
+    // sur la question de savoir si une catégorie portée DOIT être jugée. Résultat mesuré :
+    // 8 `Photo*` dehors et 2 dedans (`PhotoChantierC`, `PhotoEcranAppro`), pendant que je refusais
+    // `PhotoEcranDelegation` pour cette raison exacte, dans le même commit.
+    // ⇒ Deux critères, pas un : (1) l'entrée est-elle PORTÉE ? sinon elle affirme une couverture
+    //   qui n'existe pas ; (2) sa suite doit-elle tourner sous le juge ? une capture, non.
+    //   La première est un compte, la seconde une décision — les confondre laisse passer les deux
+    //   sortes d'erreur.
     private static readonly string[] Categories =
-        { "W4P4a", "W3UDA", "W3U1", "W3U2", "Charpente", "DemoIdentity", "ScreenB3", "ShellSurimpression", "CaptureDistrict", "CaptureReputation", "CaptureFamille", "Joignabilite", "ScreenCarte", "CaptureCarte", "EcranAutonomy", "EcranExceptions", "EcranRegleLieutenant", "EcranTenureLieutenant", "EcranUiLieutenant", "EcranRegleTier2", "PhotoChantierC", "EcranAppro", "PhotoEcranAppro", "ScreenB7", "ScreenC1", "ScreenC6", "EcranDelegation" };
+        { "W4P4a", "W3UDA", "W3U1", "W3U2", "Charpente", "DemoIdentity", "ScreenB3", "ShellSurimpression", "CaptureDistrict", "CaptureReputation", "CaptureFamille", "Joignabilite", "ScreenCarte", "CaptureCarte", "EcranAutonomy", "EcranExceptions", "EcranRegleLieutenant", "EcranTenureLieutenant", "EcranUiLieutenant", "EcranRegleTier2", "EcranAppro", "ScreenB7", "ScreenC1", "ScreenC6", "EcranDelegation" };
     // ⚠️ UNION AU MERGE (3e fois sur cette ligne le 2026-09-03) — et la règle est
     // toujours la même : on unit ce qui est PORTÉ, jamais les deux listes. Une entrée
     // sans porteur affirme une couverture qui n'existe pas ; une entrée portée qu'on
