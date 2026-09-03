@@ -1653,6 +1653,108 @@ namespace MafiaCleanCity.Capture.Tests
         }
 
         [UnityTest]
+        /// <summary>㊵ LA FILIÈRE, SOUS CHROME — chemin joueur réel.
+        ///
+        /// ⛔ CE QUE CETTE CAPTURE DOIT MONTRER, et qui a failli être faux : l'état « aucun nœud
+        /// pour vous », pas « la chaîne est cassée ». La route de liste EXISTE et rend 200 avec
+        /// un tableau VIDE sur un compte frais — mesuré le 2026-09-03. La différence tient en un
+        /// mot et elle est visible ici : un écran qui dit « on ne peut pas savoir » et un écran
+        /// qui dit « il n'y a rien encore » ne se dessinent pas pareil.</summary>
+        [Category("CaptureFiliere")]
+        public IEnumerator Capture_LaFiliere_SousChrome()
+        {
+            var auth = new AuthClient { BaseUrl = BaseUrl };
+            string callsign = SeederSupport.SafeCallsign("filiere", ref seq);
+            string token = null, err = null;
+            yield return auth.SignUp(callsign, "filiere-capture-pw", t => token = t, e => err = e);
+            Assert.IsNull(err, $"signup errored: {err}");
+
+            var sessionClient = new SessionClient { BaseUrl = BaseUrl };
+            SessionOpenDto payload = null;
+            yield return sessionClient.OpenSession(token, "capture-filiere", dto => payload = dto,
+                (c, m) => Assert.Fail($"session/open failed: {c}: {m}"));
+            Assert.IsNotNull(payload, "session/open doit réussir — il octroie le kit de départ");
+
+            LogAssert.ignoreFailingMessages = true;
+            shellGo = new GameObject("FiliereShell");
+            shell = shellGo.AddComponent<AppShell>();
+            shell.SetIdentity(callsign, "filiere-capture-pw");
+            yield return null;
+
+            float t0 = Time.realtimeSinceStartup;
+            while (string.IsNullOrEmpty(shell.Token) && Time.realtimeSinceStartup - t0 < 30f) yield return null;
+            Assert.IsFalse(string.IsNullOrEmpty(shell.Token), "le shell doit avoir acquis sa session");
+
+            shell.ActivateTab(AppShell.Tab.More);
+            for (int i = 0; i < 90; i++) yield return null;
+            Assert.Greater(shell.MenuPlusEntrees, 0, "le menu « Plus » n'a aucune entrée");
+
+            UnityEngine.UI.Button entree = null;
+            var libellesVus = new System.Collections.Generic.List<string>();
+            foreach (var b in shell.ContentSlot.GetComponentsInChildren<UnityEngine.UI.Button>(true))
+            {
+                if (!b.gameObject.name.StartsWith("MenuPlus_")) continue;
+                libellesVus.Add(b.gameObject.name);
+                if (b.gameObject.name == "MenuPlus_LA FILIÈRE") entree = b;
+            }
+            Assert.IsNotNull(entree,
+                "l'entrée « LA FILIÈRE » est absente du menu — ㊵ n'est pas atteignable. " +
+                $"Entrées vues : [{string.Join(", ", libellesVus)}]");
+            entree.onClick.Invoke();
+            for (int i = 0; i < 30; i++) yield return null;
+
+            Assert.AreEqual(typeof(MafiaCleanCity.Operational.FiliereScreenController),
+                shell.MountedTenantType, "l'entrée doit avoir monté ㊵");
+            var ecran = shell.MountedTenantGameObject.GetComponent<
+                MafiaCleanCity.Operational.FiliereScreenController>();
+            Assert.IsNotNull(ecran, "le locataire monté doit être ㊵ lui-même");
+
+            // ⛔ ATTENDRE LE DRAPEAU, PAS N FRAMES — la faute que j'ai refaite sur ㊳ après l'avoir
+            // corrigée sur ⑨ la veille. ㊵ enchaîne deux requêtes (la liste, puis le pipeline si
+            // un nœud existe) : compter des frames revient à parier sur la latence.
+            float tRendu = Time.realtimeSinceStartup;
+            while (!ecran.RenduTermine && Time.realtimeSinceStartup - tRendu < 30f) yield return null;
+            Assert.IsTrue(ecran.RenduTermine,
+                $"㊵ n'a pas fini de se rendre en 30 s (erreur : {ecran.DerniereErreur})");
+            for (int i = 0; i < 15; i++) yield return null;
+
+            // ⛔ ANTI-VACUITÉ : la PREMIÈRE capture de ㊳ est partie muette et VERTE. Un PNG d'une
+            // coquille est un PNG parfaitement valide.
+            var textes = new System.Collections.Generic.List<string>();
+            foreach (TMPro.TextMeshProUGUI tt in shell.ContentSlot.GetComponentsInChildren<TMPro.TextMeshProUGUI>(true))
+                if (!string.IsNullOrWhiteSpace(tt.text)) textes.Add(tt.name);
+            Assert.GreaterOrEqual(textes.Count, 8,
+                $"㊵ ne pose que {textes.Count} texte(s) non vides — la capture montrerait une " +
+                $"coquille. Vus : [{string.Join(", ", textes)}]");
+
+            // ⛔⛔ LE PLANCHER D'ABORD : hors shell les insets valent ZÉRO et les gardes suivantes
+            // seraient vraies PAR CONSTRUCTION.
+            Assert.Greater(MafiaCleanCity.Shell.ShellChrome.TopInsetPx, 0f,
+                "sous le chrome, l'inset HAUT doit être publié — sinon la garde ne mesure rien");
+            Assert.Greater(MafiaCleanCity.Shell.ShellChrome.BottomInsetPx, 0f,
+                "sous le chrome, l'inset BAS doit être publié — même raison");
+
+            GameObject racine = null;
+            foreach (Transform tr in shell.ContentSlot.GetComponentsInChildren<Transform>(true))
+                if (tr.gameObject.name == "FiliereRoot") { racine = tr.gameObject; break; }
+            Assert.IsNotNull(racine, "㊵ n'a construit aucune racine `FiliereRoot` sous le slot");
+
+            var pile = racine.GetComponent<UnityEngine.UI.VerticalLayoutGroup>();
+            Assert.IsNotNull(pile, "㊵ doit porter sa pile verticale — c'est elle qui réserve le chrome");
+            Assert.GreaterOrEqual(pile.padding.top, (int)MafiaCleanCity.Shell.ShellChrome.TopInsetPx,
+                $"le padding haut de ㊵ vaut {pile.padding.top} et le bandeau occupe " +
+                $"{MafiaCleanCity.Shell.ShellChrome.TopInsetPx:F0} : son contenu passe DESSOUS.");
+            Assert.GreaterOrEqual(pile.padding.bottom, (int)MafiaCleanCity.Shell.ShellChrome.BottomInsetPx,
+                $"le padding bas de ㊵ vaut {pile.padding.bottom} et le dock occupe " +
+                $"{MafiaCleanCity.Shell.ShellChrome.BottomInsetPx:F0} : son contenu passe DESSOUS.");
+
+            LisibiliteDuTexte(shell.ContentSlot.gameObject);
+
+            yield return CapturerA(1080, 2400,
+                "Assets/Screenshots/screen_c2_filiere_sous_chrome_1080x2400.png");
+        }
+
+        [UnityTest]
         
         public IEnumerator Capture_EcranLieutenants_SousChromeV31()
         {
