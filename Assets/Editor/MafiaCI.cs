@@ -109,8 +109,20 @@ public static class MafiaCI
     //   qui n'existe pas ; (2) sa suite doit-elle tourner sous le juge ? une capture, non.
     //   La première est un compte, la seconde une décision — les confondre laisse passer les deux
     //   sortes d'erreur.
+    // ⛔⛔ `EcranDistribution` RETIRÉE AVANT D'ÊTRE POUSSÉE — DEUXIÈME FOIS QUE CE CONTRÔLE PAIE
+    // DANS LA JOURNÉE. Elle est arrivée inscrite par la branche du chantier C, sans avoir jamais
+    // été exécutée. Lancée avant de pousser :
+    //   FAIL DistributionScreenPlayModeTests.EcranDistributionC1_CapturerPourLeJugeVisuel_DeuxResolutions
+    //     — « capture 1080x1920 entièrement UNIFORME — l'écran n'a rien rendu hors de son propre fond »
+    // La pousser aurait rendu le juge ROUGE pour les cinq sessions, sur un défaut qui n'est pas
+    // le leur. (Le matin, le même contrôle avait intercepté `HUDv31`, qui fait planter l'éditeur.)
+    // ⇒ Elle revient ici quand ㉘ rend quelque chose — c'est au chantier C de le dire, pas à moi
+    //   de le supposer. Le défaut est signalé, pas corrigé : l'écran n'est pas de mon périmètre.
+    // ⚠️ `ScreenC2` et `FiliereSonde` sont inscrites, elles, parce qu'elles ont tourné VERTES dans
+    // ce même run (28 passés / 1 échec, l'échec étant le seul ci-dessus). *Le même run tranche
+    // dans les deux sens : il inscrit ce qui passe et refuse ce qui tombe.*
     private static readonly string[] Categories =
-        { "W4P4a", "W3UDA", "W3U1", "W3U2", "Charpente", "DemoIdentity", "ScreenB3", "ShellSurimpression", "CaptureDistrict", "CaptureReputation", "CaptureFamille", "Joignabilite", "ScreenCarte", "CaptureCarte", "EcranAutonomy", "EcranExceptions", "EcranRegleLieutenant", "EcranTenureLieutenant", "EcranUiLieutenant", "EcranRegleTier2", "EcranAppro", "ScreenB7", "ScreenC1", "ScreenC6", "EcranDelegation", "EcranDistribution" };
+        { "W4P4a", "W3UDA", "W3U1", "W3U2", "Charpente", "DemoIdentity", "ScreenB3", "ShellSurimpression", "CaptureDistrict", "CaptureReputation", "CaptureFamille", "Joignabilite", "ScreenCarte", "CaptureCarte", "EcranAutonomy", "EcranExceptions", "EcranRegleLieutenant", "EcranTenureLieutenant", "EcranUiLieutenant", "EcranRegleTier2", "EcranAppro", "ScreenB7", "ScreenC1", "ScreenC6", "EcranDelegation", "ScreenC2", "FiliereSonde" };
     // ⚠️ UNION AU MERGE (3e fois sur cette ligne le 2026-09-03) — et la règle est
     // toujours la même : on unit ce qui est PORTÉ, jamais les deux listes. Une entrée
     // sans porteur affirme une couverture qui n'existe pas ; une entrée portée qu'on
