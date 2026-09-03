@@ -197,49 +197,5 @@ namespace MafiaCleanCity.Operational.Tests
         // les tests d'état (AppliquerEtat sur un corps fabriqué via RendrePourTest), patron ㊲
         // §§ 1/3/5 de ReputationScreenPlayModeTests.
     
-        // ═══ SONDE DE DONNÉES — mesurer les corps AVANT d'écrire les DTO ═══════════════════
-
-        /// <summary>⛔ CETTE SONDE N'ASSERTE PRESQUE RIEN : elle IMPRIME les corps réels des trois
-        /// routes de lecture de ㊳, pour que les DTO soient écrits d'après ce que le serveur
-        /// ENVOIE et non d'après ce qu'une interface TypeScript dit qu'il envoie. La doctrine du
-        /// dépôt l'exige, et la fiche ② a coûté une demi-journée le 2026-09-02 pour l'avoir
-        /// contournée — quatre paramètres documentés qu'aucune route n'émettait plus.
-        /// ★ Trois hypothèses plausibles valent moins qu'une mesure. Un run, et les formes sont
-        ///   connues.
-        /// ⚠️ À SUPPRIMER une fois les DTO écrits : une sonde qui reste devient un test qui
-        /// n'affirme rien et qu'on croit protecteur.</summary>
-        [UnityTest, Category("JournalSonde")]
-        public IEnumerator SondeC1_ImprimerLesCorpsReels()
-        {
-            var auth = new MafiaCleanCity.CityMap.AuthClient { BaseUrl = "http://localhost" };
-            // ⚠️ `SafeCallsign`, pas une chaîne fabriquée : mon premier essai concaténait des
-            // CHIFFRES et des TIRETS et le signup a rendu 422. Le dépôt a un producteur pour ça
-            // (`DigitsToLetters` : le format n'accepte que des lettres) — le chercher AVANT
-            // d'inventer, exactement comme pour un client dont on cherche la route.
-            string callsign = SeederSupport.SafeCallsign("sondejournal", ref seq);
-            string token = null, err = null;
-            yield return auth.SignUp(callsign, "sonde-journal-pw", t => token = t, e => err = e);
-            Assert.IsNull(err, $"signup errored: {err}");
-
-            var session = new MafiaCleanCity.Shell.SessionClient { BaseUrl = "http://localhost" };
-            yield return session.OpenSession(token, "sonde-journal", _ => { },
-                (c, m) => Debug.LogWarning($"[C1-SONDE] session/open {c}: {m}"));
-
-            foreach (string route in new[] { "/v1/news/feed", "/v1/ambient/feed",
-                                             "/v1/random-world/active",
-                                             "/v1/random-world/known-couplings" })
-            {
-                using (var req = UnityEngine.Networking.UnityWebRequest.Get("http://localhost" + route))
-                {
-                    req.timeout = 10;
-                    req.SetRequestHeader("Authorization", "Bearer " + token);
-                    yield return req.SendWebRequest();
-                    string corps = req.downloadHandler != null ? req.downloadHandler.text : "(vide)";
-                    if (corps != null && corps.Length > 1800) corps = corps.Substring(0, 1800) + " …TRONQUÉ";
-                    Debug.Log($"[C1-SONDE] {route} -> {req.responseCode}\n{corps}");
-                }
-            }
-        }
-
 }
 }

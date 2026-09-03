@@ -59,8 +59,19 @@ public static class MafiaCI
     // et le clic des entrées du menu) portent cette catégorie ; sans cette ligne elles seraient
     // livrées, compilées, et JAMAIS EXÉCUTÉES par le juge — la forme la plus économique de garde
     // décorative. *Écrire une garde ne l'installe pas ; l'inscrire au filtre, si.*
+    // ⛔ AJOUTÉ le 2026-09-03 : `ScreenB7` (㊴ Le dossier, 4 tests), `ScreenC6` (㊱ L'horizon,
+    // 6 tests) et `ScreenC1` (㊳ Le journal, 2 tests) — DOUZE tests qui n'avaient JAMAIS tourné
+    // dans une passe par défaut, exactement le défaut que le commentaire ci-dessus raconte pour
+    // `ScreenB3` (« 8 tests n'ont jamais tourné en se déclarant verts »).
+    // ★ Les trois suites étaient vertes chaque fois que je les lançais À LA MAIN, par leur
+    //   catégorie. Ce qui manquait n'était pas le test, c'était son INSCRIPTION — une suite
+    //   qu'aucun juge n'exécute est une suite qui n'existe pas, et rien ne le signale : le
+    //   compte de tests baisse sans qu'aucune ligne ne rougisse.
+    // ⚠️ Je n'inscris QUE mes trois écrans. 97 tests du dépôt sont dans le même cas (TD-574) ;
+    //   les inscrire tous depuis ici serait un balayage qui n'est pas mon lot, et une passe par
+    //   défaut soudain quatre fois plus longue est une décision, pas un ajout.
     private static readonly string[] Categories =
-        { "W4P4a", "W3UDA", "W3U1", "W3U2", "Charpente", "DemoIdentity", "ScreenB3", "ShellSurimpression", "CaptureDistrict", "CaptureReputation", "CaptureFamille", "CarteVille", "Joignabilite", "ScreenCarte", "CaptureCarte", "EcranAutonomy", "EcranExceptions", "EcranRegleLieutenant", "EcranTenureLieutenant", "EcranUiLieutenant", "EcranRegleTier2" };
+        { "W4P4a", "W3UDA", "W3U1", "W3U2", "Charpente", "DemoIdentity", "ScreenB3", "ScreenB7", "ScreenC1", "ScreenC6", "ShellSurimpression", "CaptureDistrict", "CaptureReputation", "CaptureFamille", "CarteVille", "Joignabilite", "ScreenCarte", "CaptureCarte", "EcranAutonomy", "EcranExceptions", "EcranRegleLieutenant", "EcranTenureLieutenant", "EcranUiLieutenant", "EcranRegleTier2" };
     // ⚠️ UNION AU MERGE DU 2026-09-03 : `CarteVille` vient du lot « ville peinte », les huit
     // autres du chantier C et du mien. Les deux branches avaient RAISON séparément et le
     // conflit portait sur la LIGNE, pas sur l'intention — un filtre se fusionne toujours en
