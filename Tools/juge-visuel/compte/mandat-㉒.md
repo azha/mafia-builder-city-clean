@@ -21,7 +21,7 @@
 | `compte/reglages-canon.png` | canon existant (900×1752, ×3) | — | ×3 | 300 CSS = 900 px |
 | `compte/tutoriel-canon.png` | canon existant (900×1752, ×3) | — | ×3 | 300 CSS = 900 px |
 - **Cadres de la maquette** : `ecrans-brennar-6.html` 95, 96, 97 — atelier `3c02f72`. Cadres d'ÉTATS : les autres numéros du groupe.
-- **Attribution cadre ↔ écran** : déduite. le contrôleur dit « cadres 45-47 » (autre numérotation) ; par le titre : 95-97 « Le compte » ; canon compte/profil-canon.png ; ⚠️ sa planche s'appelle planche_le_coffre
+- **Attribution cadre ↔ écran** : déduite. déduit par titre (95-97 « Le compte ») — le contrôleur dit « cadres 45-47 », autre numérotation ; canon compte/profil-canon.png ; ⚠️ sa planche s'appelle planche_le_coffre
 - ⚠️ La référence fait **1080×2102** (le `.tel` de l'atelier est en 9:17,5) ; la capture fait 1080×2400
   (9:20). On aligne par PARTIES, en % de la largeur — pas par le pixel absolu.
 - Polices : le rendu passe par Chrome sur cette machine (`fc-match Georgia` → Noto Serif, `fc-match
