@@ -378,7 +378,20 @@ namespace MafiaCleanCity.Operational
             // (1) L'hôte remplit son conteneur. Sans ça son rect reste à 100×100 — la taille par
             // défaut d'un RectTransform neuf — et tout ce qu'on bâtit dessous tient dans 100 px,
             // sans la moindre erreur console.
+            // ⛔⛔ L'HÔTE N'EST PAS UN `RectTransform` — ET LA RÈGLE EXACTE A ÉTÉ MESURÉE.
+            // `AppShell.ConstruireLocataire` crée l'hôte par `new GameObject($"Tenant_...")`,
+            // donc avec un `Transform` NU. Les écrans qui en ont quand même un ne l'ont pas
+            // reçu : ils l'ont PROVOQUÉ, en posant un `Graphic` directement sur l'hôte — Unity
+            // convertit alors le Transform toute seule.
+            // ⇒ **L'hôte est un `RectTransform` si et seulement si l'écran dessine dessus.**
+            //   Cet écran-ci dessine dans un ENFANT de l'hôte, donc la conversion n'arriverait
+            //   jamais : le harnais de capture rendrait « n'est pas un RectTransform », et un
+            //   cast dur rendrait une `InvalidCastException` nue (mesuré, run r2 et run 3).
+            // ⇒ On la demande donc EXPLICITEMENT, plutôt que de compter sur un effet de bord de
+            //   quelqu'un d'autre. Un `RectTransform` ajouté ici remplace le `Transform` — c'est
+            //   l'opération prévue par Unity pour exactement ce cas.
             RectTransform rtHote = transform as RectTransform;
+            if (rtHote == null) rtHote = gameObject.AddComponent<RectTransform>();
             if (rtHote != null)
             {{
                 rtHote.anchorMin = Vector2.zero;
