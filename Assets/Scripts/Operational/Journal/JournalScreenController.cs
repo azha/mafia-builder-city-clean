@@ -56,14 +56,21 @@ namespace MafiaCleanCity.Operational
             //   3. `SetAsLastSibling()` ICI **et** dans `Start()` — le montage et la frame
             //      suivante sont deux moments où un frère peut passer devant ;
             //   4. la racine sous `transform` (voir `BuildLayout`), pas sous `mountParent`.
-            var rtHote = gameObject.GetComponent<RectTransform>()
-                         ?? gameObject.AddComponent<RectTransform>();
-            if (parent != null)
-            {
-                rtHote.SetParent(parent, false);
-                Etirer(rtHote);
-                rtHote.SetAsLastSibling();
-            }
+            // ⚠️ ALIGNÉ MOT POUR MOT sur `Tools/nouvel-ecran.py:393-405` — un producteur, N
+            // citations. Ma première version appelait en plus `SetParent(parent)` : inutile, car
+            // `ConstruireLocataire` a DÉJÀ parenté l'hôte sous `ContentSlot` avant d'appeler
+            // ceci. Un geste redondant dans une copie manuelle est le début d'une divergence.
+            // ⛔ ET C'EST BIEN AU CONTRÔLEUR DE LE FAIRE — mesuré sur `main` (68f6851) :
+            // `AppShell.cs` ne contient AUCUN `AddComponent<RectTransform>`, et
+            // `ConstruireLocataire` crée `new GameObject($"Tenant_{T}")`, un objet NU. L'hôte
+            // n'a donc ni `RectTransform` ni taille tant que le locataire ne se les donne pas.
+            RectTransform rtHote = transform as RectTransform;
+            if (rtHote == null) rtHote = gameObject.AddComponent<RectTransform>();
+            rtHote.anchorMin = Vector2.zero;
+            rtHote.anchorMax = Vector2.one;
+            rtHote.offsetMin = Vector2.zero;
+            rtHote.offsetMax = Vector2.zero;
+            transform.SetAsLastSibling();
 
             EnsureInitialized();
         }
