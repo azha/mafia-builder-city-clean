@@ -451,8 +451,8 @@ namespace MafiaCleanCity.CityMap
             banksHlg.childForceExpandHeight = true;
             AddLayoutElement(banks, flexibleHeight: 0);
 
-            northContent = BuildColumn(banks.transform, "North Bank", DesignTokens.Current.mapPanelNorth);
-            southContent = BuildColumn(banks.transform, "South Bank", DesignTokens.Current.mapPanelSouth);
+            northContent = BuildColumn(banks.transform, "NorthBank", Lib("Rive nord"), DesignTokens.Current.mapPanelNorth);
+            southContent = BuildColumn(banks.transform, "SouthBank", Lib("Rive sud"), DesignTokens.Current.mapPanelSouth);
 
             BuildLegend(root.transform);
         }
@@ -477,13 +477,13 @@ namespace MafiaCleanCity.CityMap
         {
             if (toggleLabel != null)
             {
-                toggleLabel.text = heatOverlayOn ? "Heat overlay: ON" : "Heat overlay: OFF";
+                toggleLabel.text = heatOverlayOn ? Lib("Chaleur : affichée") : Lib("Chaleur : masquée");
             }
         }
 
-        private RectTransform BuildColumn(Transform parent, string header, Color panelColor)
+        private RectTransform BuildColumn(Transform parent, string nomObjet, string header, Color panelColor)
         {
-            GameObject col = NewUI(header.Replace(" ", ""), parent);
+            GameObject col = NewUI(nomObjet, parent);
             // PIÈGE MESURÉ ailleurs dans ce dépôt (`Shell/VerticalGradientImage.cs`) — `Graphic`
             // porte `[RequireComponent(typeof(CanvasRenderer))]`, mais `AddComponent<T>()` seul ne
             // l'ajoute PAS à l'exécution : sans lui, ce Graphic ne dessinerait RIEN, silencieusement.
@@ -637,10 +637,10 @@ namespace MafiaCleanCity.CityMap
             hlg.childForceExpandHeight = false;
             AddLayoutElement(legend, minHeight: 30, flexibleHeight: 0);
 
-            AddLegendItem(legend.transform, "Uncontested", CityMapEnums.ColorFor(ControlState.Uncontested));
-            AddLegendItem(legend.transform, "Contested", CityMapEnums.ColorFor(ControlState.Contested));
-            AddLegendItem(legend.transform, "Player held", CityMapEnums.ColorFor(ControlState.PlayerHeld));
-            AddLegendItem(legend.transform, "Rival held", CityMapEnums.ColorFor(ControlState.RivalHeld));
+            AddLegendItem(legend.transform, Lib("Libre"), CityMapEnums.ColorFor(ControlState.Uncontested));
+            AddLegendItem(legend.transform, Lib("Disputé"), CityMapEnums.ColorFor(ControlState.Contested));
+            AddLegendItem(legend.transform, Lib("À vous"), CityMapEnums.ColorFor(ControlState.PlayerHeld));
+            AddLegendItem(legend.transform, Lib("Rival"), CityMapEnums.ColorFor(ControlState.RivalHeld));
         }
 
         private void AddLegendItem(Transform parent, string label, Color swatchColor)
