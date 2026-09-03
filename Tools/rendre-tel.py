@@ -22,7 +22,9 @@ TEL_H_CSS = 584  # aspect-ratio 9/17.5 ⇒ 583,33 ; les canons existants font 90
 
 def main():
     page, idx, sortie = sys.argv[1], int(sys.argv[2]), sys.argv[3]
-    ech = int(sys.argv[4]) if len(sys.argv) > 4 else 3
+    # échelle DÉCIMALE acceptée depuis le 2026-09-03 (§DA-3) : 3,6 rend 300 px CSS → 1080 px, la
+    # résolution de travail des juges ; ×3 (900) et ×4 (1200) restent entiers.
+    ech = float(sys.argv[4]) if len(sys.argv) > 4 else 3.0
     html = open(page, encoding="utf-8").read()
     n_cadres = len(re.findall(r'class="cadre"', html))
     if not (0 <= idx < n_cadres):

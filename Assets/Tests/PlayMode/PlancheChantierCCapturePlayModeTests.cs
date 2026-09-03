@@ -117,7 +117,21 @@ namespace MafiaCleanCity.Shell.Tests
                 shell, "la_loi",
                 (e, _) => e.DernierChargement != null || e.DerniereErreur != null, echecs);
 
-            // ㉙ — ajouté ici au fil du chantier, un appel, jamais un test de plus.
+            // ㉙ LE CONFLIT — « la table du fond ».
+            // ⚠️ CE QUE CETTE CAPTURE MONTRE : un écran dont l'unique action NE PEUT PAS ABOUTIR.
+            // `POST /v1/me/engagements` exige un lieutenant d'archétype `MUSCLE` (le back répond
+            // « No such MUSCLE lieutenant for this player »), et le compte de démo en a CINQ —
+            // trois COOK, un LAUNDERING, un LOGISTICS, zéro MUSCLE (mesuré sur
+            // `GET /v1/lieutenants`, qui est le seul endroit donnant l'archétype :
+            // `interior.lieutenants[]` ne rend que l'identifiant et le nom). De plus aucune route
+            // ne liste les rivaux ni leurs possessions, donc `target_holding_id` n'est pas
+            // découvrable. L'écran DÉCLARE cette impossibilité au joueur au lieu de griser un
+            // bouton en silence — c'est cet état-là qu'on photographie, et c'est le vrai.
+            yield return CaptureSousShell.CapturerLocataire<ConflitScreenController>(
+                shell, "le_conflit",
+                (e, _) => (e.DernierChargementEngagements != null
+                           && e.DernierChargementLieutenants != null) || e.DerniereErreur != null,
+                echecs);
 
             Assert.IsEmpty(echecs,
                 "captures du chantier C en échec :\n  · " + string.Join("\n  · ", echecs));

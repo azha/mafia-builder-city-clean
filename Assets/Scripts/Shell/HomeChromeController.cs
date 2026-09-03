@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using MafiaCleanCity.Operational.Exceptions; // REUSE ExceptionQueueController — cible du raccourci "Exceptions" (item 0.5 §2)
+using MafiaCleanCity.Operational.Exceptions; // REUSE ExceptionQueueController — cible du raccourci Lib("chrome", "Les exceptions") (item 0.5 §2)
 using MafiaCleanCity.Theme;
 using TMPro;
 
@@ -13,7 +13,7 @@ namespace MafiaCleanCity.Shell
     // des clés que C3 a déjà obtenues (design §3.0, "l'exception défendue").
     //
     // ITEM 0.5 §2 (Tools/charpente-item05-design.md, (b)) — CORRIGÉ : le second raccourci
-    // (`Shortcut_Second`, libellé "Exceptions") ne portait AUCUN `onClick` — un bouton branché sur
+    // (`Shortcut_Second`, libellé Lib("chrome", "Les exceptions")) ne portait AUCUN `onClick` — un bouton branché sur
     // rien, invisible à la seule question "quelle route sert sa donnée" (défaut joueur, pas un
     // détail). REUSE de `IShellNavigator` (même mécanisme que `DashboardController.OpenExceptions`) :
     // `ExceptionQueueController` est déjà un `IShellTenant` monté par CE mécanisme ailleurs, donc
@@ -52,7 +52,7 @@ namespace MafiaCleanCity.Shell
         // le `toBe(404)` dans le bon sens (socle : « un différé consigné qui n'est jamais repris
         // n'est plus un différé, c'est un trou »).
         public GameObject LastOpenedDailyReview { get; private set; }
-        // ITEM 0.5 §2 — le raccourci "Exceptions", désormais câblé (voir le commentaire d'en-tête).
+        // ITEM 0.5 §2 — le raccourci Lib("chrome", "Les exceptions"), désormais câblé (voir le commentaire d'en-tête).
         public int ExceptionsShortcutClicks { get; private set; }
         public GameObject LastOpenedExceptions { get; private set; }
 
@@ -187,7 +187,7 @@ namespace MafiaCleanCity.Shell
             TextMeshProUGUI drLabel = new GameObject("Label", typeof(RectTransform)).AddComponent<TextMeshProUGUI>();
             drLabel.transform.SetParent(dailyReviewGo.transform, false);
             drLabel.font = DesignTokens.Current.primaryFont;
-            drLabel.text = "Daily Review";
+            drLabel.text = Lib("chrome", "La revue du jour");
             drLabel.fontSize = 13;
             drLabel.color = DesignTokens.Current.onSurfacePrimary;
 
@@ -201,7 +201,7 @@ namespace MafiaCleanCity.Shell
             TextMeshProUGUI secLabel = new GameObject("Label", typeof(RectTransform)).AddComponent<TextMeshProUGUI>();
             secLabel.transform.SetParent(secondGo.transform, false);
             secLabel.font = DesignTokens.Current.primaryFont;
-            secLabel.text = "Exceptions";
+            secLabel.text = Lib("chrome", "Les exceptions");
             secLabel.fontSize = 13;
             secLabel.color = DesignTokens.Current.onSurfacePrimary;
         }
@@ -217,5 +217,14 @@ namespace MafiaCleanCity.Shell
             t.raycastTarget = false;
             return t;
         }
+
+        /// <summary>Item 0.6 — le littéral d'écran passe par une CLÉ. Le repli passé à `Libelle`
+        /// est FRANÇAIS : `Libelle.De` rend le littéral quand la clé manque au bundle, donc un
+        /// repli anglais resterait anglais à l'écran À TRAVERS la conversion (mesuré par le
+        /// chantier B : 81 replis sur 107 étaient anglais après une première passe — « converti
+        /// sans traduire »). Convertir sans traduire ne change rien pour le joueur.</summary>
+        private static string Lib(string role, string litteral) =>
+            MafiaCleanCity.I18n.Libelle.De("accueil", role, litteral);
+
     }
 }

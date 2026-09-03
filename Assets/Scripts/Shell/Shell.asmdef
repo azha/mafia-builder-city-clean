@@ -13,7 +13,8 @@
         "Account",
         "CitySim",
         "CoreLoops",
-        "Onboarding"
+        "Onboarding",
+        "I18n"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

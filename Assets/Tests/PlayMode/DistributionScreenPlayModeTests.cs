@@ -12,14 +12,19 @@ using Object = UnityEngine.Object;
 namespace MafiaCleanCity.Operational.Tests
 {
     /// <summary>ecran_distribution « La distribution » (㉘) — suite du chantier de métier du
-    /// 2026-09-03.
+    /// 2026-09-03, complétée le même jour par TD-558 (la ficelle et son épingle du panneau de
+    /// liège, voir `DistributionFicelleGraphic`).
     ///
-    /// COUVERT : le montage structurel (CanvasRenderer, MaskableGraphic), la capture pour le juge
-    /// visuel (armée, jamais exécutée cette passe — éditeur non lancé), DEUX PARCOURS joueur réels
-    /// (§P — un compte FRAIS, sans distribution_hub dans son kit de départ, et le compte de démo
-    /// nommé par le brief, qui EN a un), les 5 états pilotés par la donnée (§E, via
-    /// `RendrePourTest`) et les résolveurs des 5 domaines (§R, tous à repli gracieux — aucun n'est
-    /// confirmé fermé par un message d'erreur, contrairement à ㉚).
+    /// COUVERT : le montage structurel (CanvasRenderer, MaskableGraphic — S1 pour le squelette à
+    /// vide, S2 pour la ficelle une fois une route connue, S1 tournant trop tôt pour la voir), la
+    /// capture pour le juge visuel (armée, jamais exécutée cette passe — éditeur non lancé), DEUX
+    /// PARCOURS joueur réels (§P — un compte FRAIS, sans distribution_hub dans son kit de départ,
+    /// et le compte de démo nommé par le brief, qui EN a un), les 6 états pilotés par la donnée
+    /// (§E, via `RendrePourTest` — dont E6 : aucune route ⇒ aucune ficelle fabriquée) et les
+    /// résolveurs des 5 domaines DE TEXTE + 3 domaines DE FORME (§R, tous à repli gracieux — aucun
+    /// n'est confirmé fermé par un message d'erreur, contrairement à ㉚ ; TD-558 : `route_state`
+    /// n'a mesuré qu'"active", la branche "rompue" est un repli documenté, jamais une valeur
+    /// observée — voir `EcranDistributionR9`).
     /// NON EXÉCUTÉ cette passe (aucun test n'a tourné, seule la COMPILATION est prouvée — voir
     /// implementation-notes.md).
     /// NON COUVERT : le geste « ENVOYER CE SOIR »/« ACHETER UN VÉLO » de bout en bout contre le
@@ -353,8 +358,62 @@ namespace MafiaCleanCity.Operational.Tests
                 "la note honnête d'absence de destination est absente");
         }
 
-        // ═══ R — Résolveurs : QUATRE domaines, AUCUN confirmé fermé (contrôle positif + repli
-        // gracieux — jamais de contrôle négatif "doit lever", contrairement à ㉚) ════════════════
+        // ═══ TD-558 — la ficelle et son épingle ════════════════════════════════════════════════
+
+        /// <summary>⛔⛔ TOUT `Graphic` PORTE SON `CanvasRenderer`, et TOUT Graphic sous ce fond est
+        /// `MaskableGraphic` — la même garde structurelle que S1, mais APRÈS que la donnée soit
+        /// posée : S1 tourne AVANT que `Charger()` n'ait complété son premier appel réseau, donc
+        /// AVANT que `RendreCorkboard()` n'ait jamais construit de ficelle (elle n'existe que si
+        /// une route est connue). C'est cette garde-ci qui la couvre.</summary>
+        [UnityTest]
+        public IEnumerator EcranDistributionS2_AvecUneRoute_LaFicelleEstMaskableGraphicAvecCanvasRenderer()
+        {
+            var ecran = MonterEcran();
+            ecran.RendrePourTest(CouriersFabrique(Courier("IDLE")), ProjectionFabrique(RouteFabrique()));
+            yield return null;
+
+            GameObject ficelleGo = GameObject.Find("Ficelle");
+            Assert.IsNotNull(ficelleGo,
+                "TD-558 : aucun GameObject « Ficelle » construit alors qu'une route est connue");
+
+            Graphic[] graphics = ficelleGo.GetComponents<Graphic>();
+            Assert.AreEqual(1, graphics.Length, "la ficelle ne porte pas exactement 1 Graphic");
+            Assert.IsNotNull(ficelleGo.GetComponent<CanvasRenderer>(),
+                "sans CanvasRenderer explicite, la ficelle ne dessinerait RIEN, sans erreur console " +
+                "(AddComponent<T>() n'honore pas [RequireComponent(CanvasRenderer)] à l'exécution)");
+            Assert.IsInstanceOf<MaskableGraphic>(graphics[0],
+                "un Graphic nu échapperait à tout Mask parent — incident VerticalGradientImage, 2026-08-22");
+
+            // Re-balaie l'ENSEMBLE de l'écran dans CET état (donnée posée) — la garde de S1,
+            // rejouée quand la ficelle existe réellement.
+            var sansRenderer = new List<string>();
+            var nonMaskable = new List<string>();
+            foreach (Graphic g in RacineEcran().GetComponentsInChildren<Graphic>(true))
+            {
+                if (g.GetComponent<CanvasRenderer>() == null) sansRenderer.Add(g.name);
+                if (!(g is MaskableGraphic)) nonMaskable.Add(g.name);
+            }
+            Assert.IsEmpty(sansRenderer, "Graphic sans CanvasRenderer : " + string.Join(", ", sansRenderer));
+            Assert.IsEmpty(nonMaskable, "Graphic non-MaskableGraphic : " + string.Join(", ", nonMaskable));
+        }
+
+        /// <summary>Sans route connue, `RendreCorkboard()` ne doit fabriquer AUCUNE ficelle — il
+        /// n'y a aucune des 3 bandes à partir desquelles dériver sa forme, et une géométrie
+        /// inventée (deux étiquettes seules, sans route) serait une donnée fabriquée.</summary>
+        [UnityTest]
+        public IEnumerator EcranDistributionE6_AucuneRouteDansLaProjection_AucuneFicelleFabriquee()
+        {
+            var ecran = MonterEcran();
+            ecran.RendrePourTest(CouriersFabrique(Courier("IDLE")), ProjectionFabrique());
+            yield return null;
+
+            Assert.IsNull(GameObject.Find("Ficelle"),
+                "TD-558 : sans route connue, aucune ficelle ne doit être fabriquée");
+        }
+
+        // ═══ R — Résolveurs : QUATRE domaines DE TEXTE (contrôle positif + repli gracieux —
+        // jamais de contrôle négatif "doit lever", contrairement à ㉚) + TROIS domaines DE FORME
+        // (TD-558, R7-R9 — mêmes valeurs, résolveurs distincts, voir DistributionResolvers) ══════
 
         [Test]
         public void EcranDistributionR1_ResolveurChemin_CouvreLesDeuxValeursMesurees()
@@ -404,6 +463,49 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.AreEqual("arrivé", DistributionResolvers.TexteTransitBand("ARRIVED"));
             Assert.AreEqual("prêt", DistributionResolvers.TexteTransitBand("IDLE"));
             Assert.AreEqual("en chemin", DistributionResolvers.TexteTransitBand("IN_TRANSIT"));
+        }
+
+        // ═══ TD-558 — les 3 résolveurs de FORME de la ficelle, même valeurs de domaine que
+        // R1/R3/R4 ci-dessus, jamais relues autrement (voir DistributionResolvers) ═══════════════
+
+        [Test]
+        public void EcranDistributionR7_ResolveurFormeChaine_SeuleDirectEstDroite()
+        {
+            Assert.IsFalse(DistributionResolvers.FormeChaineSerpente("direct"),
+                "'direct' (MESURÉE) doit rester un segment droit");
+            Assert.IsTrue(DistributionResolvers.FormeChaineSerpente("meandering"),
+                "'meandering' (MESURÉE) doit serpenter");
+            Assert.IsTrue(DistributionResolvers.FormeChaineSerpente("tortuous"),
+                "hypothèse m-57, jamais observée — doit quand même serpenter (repli, pas d'exception)");
+            Assert.IsTrue(DistributionResolvers.FormeChaineSerpente("bogus_valeur_inconnue"),
+                "domaine NON confirmé fermé — une valeur inconnue serpente plutôt que de " +
+                "prétendre être le cas simple confirmé");
+        }
+
+        [Test]
+        public void EcranDistributionR8_ResolveurNombreTraversees_CouvreLesValeursMesureesEtLHypothese()
+        {
+            Assert.AreEqual(0, DistributionResolvers.NombreTraverseesFicelle("none"), "'none' (MESURÉE) → 0 marque");
+            Assert.AreEqual(1, DistributionResolvers.NombreTraverseesFicelle("single"), "'single' (MESURÉE) → 1 marque");
+            Assert.AreEqual(2, DistributionResolvers.NombreTraverseesFicelle("multiple"),
+                "hypothèse m-57 'trois ponts', jamais observée — au moins 2 pour rester distinct de 'single'");
+            Assert.AreEqual(1, DistributionResolvers.NombreTraverseesFicelle("bogus_valeur_inconnue"),
+                "domaine NON confirmé fermé — une valeur inconnue non vide pose 1 marque, jamais 0 " +
+                "ni un compte inventé");
+            Assert.AreEqual(0, DistributionResolvers.NombreTraverseesFicelle(null), "repli anti-vacuité sur null");
+        }
+
+        [Test]
+        public void EcranDistributionR9_ResolveurEstRompue_SeuleActiveEstIntacte()
+        {
+            Assert.IsFalse(DistributionResolvers.EstRompue("active"),
+                "la SEULE valeur mesurée sur ce compte (3/3, voir R4) doit rester intacte");
+            Assert.IsTrue(DistributionResolvers.EstRompue("severed"),
+                "valeur annoncée par le brief, JAMAIS observée sur les 3 routes réelles disponibles " +
+                "— domaine non confirmé fermé : tout ce qui n'est pas 'active' bascule sur la " +
+                "branche interrompue plutôt que de prétendre connaître le domaine complet");
+            Assert.IsTrue(DistributionResolvers.EstRompue(null), "null n'est pas 'active' → interrompu");
+            Assert.IsTrue(DistributionResolvers.EstRompue(""), "chaîne vide n'est pas 'active' → interrompu");
         }
     }
 }

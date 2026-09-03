@@ -87,7 +87,11 @@ namespace MafiaCleanCity.Shell.Tests
             // Polarity 1 — cap REACHED: Commit is refused, RenderedState says so BY VALUE.
             ctrl.SetPayload("dummy-token", structuralCard, new StructuralBudgetDto { used = 1, cap_reached = true });
             Assert.AreEqual(HighestLeverageCardController.CardState.CapBlocked, ctrl.RenderedState);
-            Assert.IsTrue(ctrl.RenderedTexts.Contains("Structural cap reached"));
+            // ⚠️ FRANÇAIS depuis la conversion i18n du 2026-09-03. Cette assertion épinglait un
+            // libellé ANGLAIS sur un écran français — elle certifiait le défaut qu'elle croisait.
+            // Le repli passé à `Libelle` est français ; tant que la clé manque au bundle, c'est ce
+            // texte-là que le joueur voit, et donc celui qu'il faut épingler.
+            Assert.IsTrue(ctrl.RenderedTexts.Contains("Limite de structure atteinte"));
 
             // Polarity 2 — cap NOT reached: the SAME structural card is Available.
             ctrl.SetPayload("dummy-token", structuralCard, new StructuralBudgetDto { used = 0, cap_reached = false });

@@ -391,15 +391,28 @@ namespace MafiaCleanCity.Operational
 
         /// <summary>Le panneau de liège : deux étiquettes (texte SOURCÉ — `FromLabel`/`ToLabel`,
         /// jamais les littéraux « Spine-B »/« Lattice-A » de la maquette, voir le commentaire de
-        /// classe) + les 3 lignes en pointillés, résolues depuis la PREMIÈRE route de la
-        /// projection (aucun sélecteur dans la maquette — un seul panneau à la fois).
-        /// ⚠️ La FICELLE elle-même n'est pas tracée en géométrie exacte — approximation
-        /// consignée, voir implementation-notes.md § Deviations : le lien est porté par l'ORDRE
-        /// visuel des deux étiquettes et leurs sous-titres D'OÙ ÇA PART / OÙ ÇA VA, pas par un
-        /// tracé point-à-point.</summary>
+        /// classe) + LA FICELLE ET SON ÉPINGLE (TD-558, voir `DistributionFicelleGraphic`) + les 3
+        /// lignes en pointillés, résolues depuis la PREMIÈRE route de la projection (aucun
+        /// sélecteur dans la maquette — un seul panneau à la fois).
+        /// ⛔ La ficelle relie le coin BAS-GAUCHE de l'étiquette de départ (alignée à gauche, comme
+        /// « D'OÙ ÇA PART ») au coin HAUT-DROIT de l'étiquette d'arrivée (alignée à droite, comme
+        /// « OÙ ÇA VA ») — c'est la MÊME asymétrie que `ConstruireEtiquette` porte déjà dans ses
+        /// alignements, filée jusqu'à la géométrie. Les deux coins sont lus sur les VRAIS
+        /// `RectTransform`, jamais des constantes recopiées de la maquette : ils bougent avec la
+        /// résolution. Sa FORME (droite/serpente, marques de franchissement, trait
+        /// continu/interrompu) est intégralement dérivée des 3 bandes de la route via
+        /// `DistributionResolvers.FormeChaineSerpente`/`NombreTraverseesFicelle`/`EstRompue` —
+        /// aucune n'est relue autrement que les résolveurs de texte voisins.</summary>
         private void RendreCorkboard()
         {
             ViderEnfants(corkboardRoot);
+
+            // La route AVANT le panneau : la ficelle a besoin de savoir, dès sa construction, si
+            // elle a une forme à porter (aucune route ⇒ pas de ficelle du tout, seulement les 2
+            // étiquettes — même idiome que "Lignes" plus bas, qui retombe sur un message honnête).
+            DistributionRouteDto route = (DernierChargementProjection?.routes != null &&
+                                           DernierChargementProjection.routes.Length > 0)
+                ? DernierChargementProjection.routes[0] : null;
 
             GameObject panneau = NouveauUI("Panneau", corkboardRoot);
             AjouterFond(panneau, Liege);
@@ -411,11 +424,60 @@ namespace MafiaCleanCity.Operational
             vp.childForceExpandWidth = true; vp.childForceExpandHeight = false;
             vp.childAlignment = TextAnchor.UpperLeft;
 
-            ConstruireEtiquette(panneau.transform, "EtiquetteDepart",
+            // ⛔⛔ LA FICELLE — premier enfant du panneau, `ignoreLayout` (ce n'est pas une rangée
+            // du VerticalLayoutGroup : c'est une SURCOUCHE qui recouvre tout le panneau, jamais
+            // dimensionnée par lui). Ordre de fratrie : un enfant est TOUJOURS rendu après le
+            // graphique de SON PARENT (donc après le fond `Liege` posé sur `panneau` lui-même —
+            // sous le liège dans l'ordre de rendu, mais au-dessus de sa texture) et, en étant le
+            // PREMIER enfant, elle est rendue AVANT les deux étiquettes construites juste après
+            // (sous les deux étiquettes). Patron `VerticalGradientImage` : `MaskableGraphic`,
+            // jamais `Graphic` nu, et son `CanvasRenderer` posé EXPLICITEMENT — `AddComponent<T>()`
+            // à l'exécution n'honore pas le `[RequireComponent]` d'une classe de base.
+            DistributionFicelleGraphic ficelle = null;
+            RectTransform ficelleRt = null;
+            if (route != null)
+            {
+                GameObject ficelleGo = NouveauUI("Ficelle", panneau.transform);
+                ficelleRt = (RectTransform)ficelleGo.transform;
+                Etirer(ficelleRt);
+                LayoutElement leFicelle = ficelleGo.AddComponent<LayoutElement>();
+                leFicelle.ignoreLayout = true;
+                if (ficelleGo.GetComponent<CanvasRenderer>() == null) ficelleGo.AddComponent<CanvasRenderer>();
+                ficelle = ficelleGo.AddComponent<DistributionFicelleGraphic>();
+                ficelle.raycastTarget = false;
+            }
+
+            GameObject etiquetteDepart = ConstruireEtiquette(panneau.transform, "EtiquetteDepart",
                 FromLabel ?? "?", "D'OÙ ÇA PART", TextAlignmentOptions.Left);
-            ConstruireEtiquette(panneau.transform, "EtiquetteArrivee",
+            GameObject etiquetteArrivee = ConstruireEtiquette(panneau.transform, "EtiquetteArrivee",
                 ToLabel ?? Libelle.De("distribution", "bloc", "destination à déterminer"),
                 "OÙ ÇA VA", TextAlignmentOptions.Right);
+
+            if (ficelle != null)
+            {
+                // ⚠️ Les deux étiquettes viennent d'être créées : leur RectTransform n'est PAS
+                // encore résolu CETTE frame sans ce forçage (même idiome que `BuildLayout` pour
+                // `racinePleinEcran` — une géométrie lue dans la frame de sa création rend des
+                // valeurs plausibles et fausses).
+                Canvas.ForceUpdateCanvases();
+                RectTransform departRt = (RectTransform)etiquetteDepart.transform;
+                RectTransform arriveeRt = (RectTransform)etiquetteArrivee.transform;
+
+                var cd = new Vector3[4];
+                departRt.GetWorldCorners(cd);      // [0]=bas-gauche [1]=haut-gauche [2]=haut-droit [3]=bas-droit
+                var ca = new Vector3[4];
+                arriveeRt.GetWorldCorners(ca);
+
+                Vector2 origineLocale = ficelleRt.InverseTransformPoint(cd[0]);      // coin bas-gauche du départ
+                Vector2 destinationLocale = ficelleRt.InverseTransformPoint(ca[2]);  // coin haut-droit de l'arrivée
+
+                ficelle.DefinirTrace(origineLocale, destinationLocale,
+                    DistributionResolvers.FormeChaineSerpente(route.sinuosity_bucket),
+                    DistributionResolvers.NombreTraverseesFicelle(route.river_crossings_count_bucket),
+                    DistributionResolvers.EstRompue(route.route_state),
+                    CordeClaire, EpingleRouge,
+                    epaisseur: Px(1.5f), rayon: Px(4.5f), amplitude: Px(6f), demiLargeurMarque: Px(5f));
+            }
 
             GameObject lignes = NouveauUI("Lignes", corkboardRoot);
             VerticalLayoutGroup vl = lignes.AddComponent<VerticalLayoutGroup>();
@@ -424,10 +486,6 @@ namespace MafiaCleanCity.Operational
             vl.childForceExpandWidth = true; vl.childForceExpandHeight = false;
             AddLayoutElement(lignes, flexibleHeight: 0);
             lignesRoot = lignes.transform;
-
-            DistributionRouteDto route = (DernierChargementProjection?.routes != null &&
-                                           DernierChargementProjection.routes.Length > 0)
-                ? DernierChargementProjection.routes[0] : null;
 
             if (route == null)
             {
@@ -449,7 +507,9 @@ namespace MafiaCleanCity.Operational
                 DistributionResolvers.CouleurRouteState(route.route_state, VertBon, DesignTokens.Current.onSurfacePrimary));
         }
 
-        private void ConstruireEtiquette(Transform parent, string nom, string titreBrut,
+        /// <summary>Rend le `GameObject` de la fiche — TD-558 : `RendreCorkboard` lit ses
+        /// coordonnées réelles APRÈS coup pour y ancrer la ficelle, jamais des constantes.</summary>
+        private GameObject ConstruireEtiquette(Transform parent, string nom, string titreBrut,
             string sousTitreLitteral, TextAlignmentOptions alignement)
         {
             GameObject chip = NouveauUI(nom, parent);
@@ -472,6 +532,7 @@ namespace MafiaCleanCity.Operational
             sous.characterSpacing = 2f;
             sous.alignment = alignement;
             TrackText(sous.text);
+            return chip;
         }
 
         private void ConstruireLigne(Transform parent, string libelleLitteral, string valeur, Color couleurValeur)
@@ -859,6 +920,13 @@ namespace MafiaCleanCity.Operational
         // lecture de pixel disponible cette passe — même trou que ㉚, voir implementation-notes.md).
         private static readonly Color Liege = Hex("#7a5230");
         private static readonly Color Or = Hex("#d9ab4e");
+        // ⛔⛔ TD-558 — la ficelle et l'épingle du panneau de liège. MESURÉES au pixel sur
+        // `Tools/juge-visuel/v6/m-54.png` (python3/PIL, couleur la plus fréquente dans un carré
+        // échantillon posé sur le trait / le cœur de l'épingle) — pas « estimées visuellement »
+        // comme `Liege`/`Creme` ci-dessus : le cordage rend (201,189,160) de façon quasi uniforme
+        // le long du trait, la tête de l'épingle (196,65,58) dans son cœur.
+        private static readonly Color CordeClaire = Hex("#c9bda0");
+        private static readonly Color EpingleRouge = Hex("#c4413a");
         private static Color RougeMauvais => DesignTokens.Current.accentDanger;
         private static Color VertBon => DesignTokens.Current.accentSuccess;
 
@@ -1005,6 +1073,44 @@ namespace MafiaCleanCity.Operational
             }
         }
 
+        // ═══ TD-558 — la FORME de la ficelle (voir `DistributionFicelleGraphic`), trois
+        // résolveurs NOMMÉS de plus, chacun sur la MÊME valeur de domaine que son résolveur de
+        // texte voisin — jamais relue autrement, jamais un switch recopié à deux endroits. ═══════
+
+        /// <summary>`sinuosity_bucket` → le trait est-il une courbe qui SERPENTE ? Même valeur de
+        /// domaine que `TexteChemin`. Seule "direct" (MESURÉE) est un segment DROIT confirmé ;
+        /// toute autre valeur — "meandering" (MESURÉE), "tortuous" (hypothèse m-57) ou une valeur
+        /// inconnue — dessine une courbe : "direct" est le cas simple confirmé, pas la majorité
+        /// du domaine, donc le repli va vers "ça serpente", pas vers "c'est droit".</summary>
+        public static bool FormeChaineSerpente(string sinuosityBucket) => sinuosityBucket != "direct";
+
+        /// <summary>`river_crossings_count_bucket` → le nombre de marques de franchissement à
+        /// poser SUR le trait (pas dans une légende). Même valeur de domaine que `TexteTraverser`.
+        /// "none" (MESURÉE) → 0 · "single" (MESURÉE) → 1 · "multiple" (hypothèse m-57, « trois
+        /// ponts », jamais observée) → 2, pour rester visuellement distinct de "single" sans
+        /// prétendre connaître le compte exact d'un cas jamais vu · une valeur inconnue et non
+        /// vide pose UNE marque plutôt que d'en inventer le nombre.</summary>
+        public static int NombreTraverseesFicelle(string riverCrossingsBucket)
+        {
+            switch (riverCrossingsBucket)
+            {
+                case "none": return 0;
+                case "single": return 1;
+                case "multiple": return 2;
+                default: return string.IsNullOrEmpty(riverCrossingsBucket) ? 0 : 1;
+            }
+        }
+
+        /// <summary>`route_state` → le trait est-il INTERROMPU ? Même valeur de domaine que
+        /// `TexteRouteState`/`CouleurRouteState`. ⛔ UNE SEULE valeur a été mesurée sur ce compte,
+        /// 3/3 : "active" (voir `EcranDistributionR4`). Le brief annonce une valeur « route
+        /// rompue » que je n'ai jamais observée sur les 3 routes réelles disponibles — le domaine
+        /// n'est PAS confirmé fermé, donc pas de liste positive de valeurs "rompues" : "active"
+        /// est le seul cas NOMINAL connu, et tout le reste (une valeur "rompue" hypothétique, une
+        /// valeur inconnue, `null`) bascule sur la branche interrompue plutôt que de prétendre
+        /// connaître le domaine complet des états possibles.</summary>
+        public static bool EstRompue(string routeState) => routeState != "active";
+
         /// <summary>`transit_band` (courriers) — 2 valeurs MESURÉES sur les 3 courriers du
         /// compte : "ARRIVED", "IDLE". "IN_TRANSIT" est ANNONCÉ par le brief mais JAMAIS observé
         /// ici — traité en hypothèse, repli gracieux.</summary>
@@ -1034,6 +1140,152 @@ namespace MafiaCleanCity.Operational
                 case "REFRIGERATED_VAN": return "en camion réfrigéré";
                 default: return type;
             }
+        }
+    }
+
+    /// <summary>TD-558 — la ficelle et son épingle du panneau de liège de ㉘ « La distribution » :
+    /// ce qui manquait entre les deux étiquettes (voir le commentaire de classe de
+    /// `DistributionScreenController.RendreCorkboard`). PORTEUSE DE DONNÉE, jamais décorative — sa
+    /// forme entière (droite/serpente, marques de franchissement, trait continu/interrompu) est
+    /// REÇUE via `DefinirTrace`, calculée exclusivement par `DistributionResolvers.
+    /// FormeChaineSerpente`/`NombreTraverseesFicelle`/`EstRompue` : ce fichier ne relit aucune des
+    /// 3 valeurs de domaine autrement.
+    ///
+    /// ⛔⛔ `MaskableGraphic`, JAMAIS `Graphic` nu — patron `VerticalGradientImage` (incident
+    /// 2026-08-22 : un `Graphic` nu n'implémente ni `IMaskable` ni `IClippable`, donc échappe à
+    /// tout `Mask` parent, deux panneaux du shell rendus non masqués pendant des semaines pour
+    /// cette raison exacte). Et son `CanvasRenderer` est posé EXPLICITEMENT par l'appelant
+    /// (`RendreCorkboard`) — `AddComponent<T>()` à l'exécution n'honore PAS le
+    /// `[RequireComponent(CanvasRenderer)]` hérité de `Graphic` : sans lui, ce composant ne
+    /// dessinerait RIEN, sans la moindre erreur console.
+    ///
+    /// R2.3 — toute géométrie (épaisseur, rayon, amplitude) et toute couleur sont REÇUES via
+    /// `DefinirTrace`, jamais câblées ici (même discipline que `VerticalGradientImage.SetColors`) :
+    /// ce fichier ne contient aucun littéral de couleur ni de px CSS.</summary>
+    public class DistributionFicelleGraphic : MaskableGraphic
+    {
+        // Tessellation de la courbe "serpente" — une qualité de rendu, pas une valeur de design :
+        // aucune maquette ni aucun résolveur n'en dépend, seule la mesh en dépend.
+        private const int Segments = 32;
+
+        // ± autour du centre du trait, EN PROPORTION de sa longueur totale — la coupure existe
+        // pour une branche "rompue" JAMAIS observée sur ce back (voir
+        // `DistributionResolvers.EstRompue`) : sa largeur exacte n'est donc sourcée nulle part,
+        // choisie pour rester lisible sans dépendre de la résolution (une proportion, pas un px).
+        private const float DemiCoupureProportion = 0.035f;
+
+        private Vector2 origine, destination;
+        private bool serpente, rompue, trace;
+        private int traversees;
+        private Color couleurCorde, couleurEpingle;
+        private float epaisseurTrait, rayonEpingle, amplitudeSerpent, demiLargeurTraversee;
+
+        /// <summary>Le seul point d'entrée de donnée de ce composant — voir `RendreCorkboard`
+        /// pour la provenance de chaque argument (résolveurs nommés, `RectTransform` réels,
+        /// conversions `Px()`).</summary>
+        public void DefinirTrace(Vector2 origineLocale, Vector2 destinationLocale, bool estSerpente,
+            int nombreTraversees, bool estRompue, Color corde, Color epingle,
+            float epaisseur, float rayon, float amplitude, float demiLargeurMarque)
+        {
+            origine = origineLocale;
+            destination = destinationLocale;
+            serpente = estSerpente;
+            traversees = Mathf.Max(0, nombreTraversees);
+            rompue = estRompue;
+            couleurCorde = corde;
+            couleurEpingle = epingle;
+            epaisseurTrait = Mathf.Max(0.5f, epaisseur);
+            rayonEpingle = Mathf.Max(0f, rayon);
+            amplitudeSerpent = amplitude;
+            demiLargeurTraversee = Mathf.Max(0.5f, demiLargeurMarque);
+            trace = true;
+            SetVerticesDirty();
+        }
+
+        /// <summary>Le point du trait à `t ∈ [0,1]` : un `Lerp` pur si "direct" ; une onde SINUS
+        /// complète perpendiculaire au segment direct si "serpente" — jamais un shader, jamais une
+        /// texture, une mesh uGUI classique comme `VerticalGradientImage` voisine.</summary>
+        private Vector2 Evaluer(float t)
+        {
+            Vector2 direct = Vector2.Lerp(origine, destination, t);
+            if (!serpente) return direct;
+
+            Vector2 delta = destination - origine;
+            Vector2 normale = delta.sqrMagnitude > 0.0001f
+                ? new Vector2(-delta.y, delta.x).normalized
+                : Vector2.up;
+            float decalage = Mathf.Sin(t * Mathf.PI * 2f) * amplitudeSerpent;
+            return direct + normale * decalage;
+        }
+
+        protected override void OnPopulateMesh(VertexHelper vh)
+        {
+            vh.Clear();
+            if (!trace) return;
+
+            // Le trait — continu, ou interrompu autour de son centre si `rompue` (brief : « une
+            // route rompue doit rendre le trait INTERROMPU » — jamais une couleur qui change
+            // seule, un GESTE géométrique).
+            float gapDebut = 0.5f - DemiCoupureProportion;
+            float gapFin = 0.5f + DemiCoupureProportion;
+            for (int i = 0; i < Segments; i++)
+            {
+                float t0 = i / (float)Segments;
+                float t1 = (i + 1) / (float)Segments;
+                if (rompue && t0 < gapFin && t1 > gapDebut) continue;
+                AjouterSegment(vh, Evaluer(t0), Evaluer(t1), couleurCorde, epaisseurTrait);
+            }
+
+            // Les marques de franchissement — SUR le trait, à l'endroit où il croise (brief :
+            // « pas dans la légende ») : un petit tick perpendiculaire à la tangente locale,
+            // réparti régulièrement le long du trait entier.
+            for (int k = 0; k < traversees; k++)
+            {
+                float t = (k + 1) / (float)(traversees + 1);
+                Vector2 p = Evaluer(t);
+                Vector2 tangente = Evaluer(Mathf.Min(1f, t + 0.01f)) - Evaluer(Mathf.Max(0f, t - 0.01f));
+                if (tangente.sqrMagnitude < 0.0001f) tangente = destination - origine;
+                Vector2 normale = new Vector2(-tangente.y, tangente.x).normalized;
+                AjouterSegment(vh, p - normale * demiLargeurTraversee, p + normale * demiLargeurTraversee,
+                    couleurCorde, epaisseurTrait * 0.85f);
+            }
+
+            // L'épingle — un disque plein à l'ORIGINE (le coin de l'étiquette de départ), patron
+            // m-54 : le pin rouge où la ficelle démarre.
+            AjouterDisque(vh, origine, rayonEpingle, couleurEpingle);
+        }
+
+        private static void AjouterSegment(VertexHelper vh, Vector2 a, Vector2 b, Color couleur, float epaisseur)
+        {
+            Vector2 delta = b - a;
+            if (delta.sqrMagnitude < 0.0001f) return;
+            Vector2 dir = delta.normalized;
+            Vector2 normale = new Vector2(-dir.y, dir.x) * (epaisseur * 0.5f);
+
+            int idx = vh.currentVertCount;
+            vh.AddVert(new Vector3(a.x - normale.x, a.y - normale.y), couleur, Vector2.zero);
+            vh.AddVert(new Vector3(a.x + normale.x, a.y + normale.y), couleur, Vector2.zero);
+            vh.AddVert(new Vector3(b.x + normale.x, b.y + normale.y), couleur, Vector2.zero);
+            vh.AddVert(new Vector3(b.x - normale.x, b.y - normale.y), couleur, Vector2.zero);
+            vh.AddTriangle(idx, idx + 1, idx + 2);
+            vh.AddTriangle(idx + 2, idx + 3, idx);
+        }
+
+        private static void AjouterDisque(VertexHelper vh, Vector2 centre, float rayon, Color couleur,
+            int segments = 16)
+        {
+            if (rayon <= 0f) return;
+            int idxCentre = vh.currentVertCount;
+            vh.AddVert(new Vector3(centre.x, centre.y), couleur, Vector2.zero);
+            int premier = vh.currentVertCount;
+            for (int i = 0; i <= segments; i++)
+            {
+                float angle = i / (float)segments * Mathf.PI * 2f;
+                Vector2 p = centre + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * rayon;
+                vh.AddVert(new Vector3(p.x, p.y), couleur, Vector2.zero);
+            }
+            for (int i = 0; i < segments; i++)
+                vh.AddTriangle(idxCentre, premier + i, premier + i + 1);
         }
     }
 }
