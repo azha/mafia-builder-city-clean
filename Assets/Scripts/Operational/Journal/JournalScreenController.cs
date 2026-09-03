@@ -80,6 +80,11 @@ namespace MafiaCleanCity.Operational
 
         // ---- crochets de test ---------------------------------------------------------------
         public GetNewsFeedResponseDto DernierChargement { get; private set; }
+        /// <summary>Les deux flux SECONDAIRES. `null` y est un ÉTAT NORMAL — leur échec n'est pas
+        /// fatal (voir `Charger`), et le confondre avec une anomalie ferait rougir un écran qui
+        /// se comporte comme prévu.</summary>
+        public GetAmbientFeedResponseDto DernierAmbient { get; private set; }
+        public GetRandomWorldActiveResponseDto DernierMonde { get; private set; }
         public string DerniereErreur { get; private set; }
         public long DernierCodeErreur { get; private set; }
 
@@ -135,9 +140,22 @@ namespace MafiaCleanCity.Operational
             DerniereErreur = null;
             DernierCodeErreur = 0;
 
+            // ⛔ TROIS FLUX, PAS UN. Les trois compteurs de la maquette comptent trois listes
+            // DIFFÉRENTES — « à la une » (news), « dans la rue » (ambient), « en cours »
+            // (random-world) — et ne charger que la première rendrait deux compteurs à zéro
+            // qui ressembleraient à un monde calme.
+            // ⚠️ Seul le premier flux est FATAL : les deux autres, en échec, laissent leur
+            // compteur à zéro et leur liste vide, ce que l'écran sait dire. Un écran noir parce
+            // que la troisième route tousse serait pire que trois lignes manquantes.
             yield return client.GetNewsFeed(token,
                 dto => DernierChargement = dto,
                 (code, msg) => { DernierCodeErreur = code; DerniereErreur = msg; });
+
+            yield return client.GetAmbientFeed(token,
+                dto => DernierAmbient = dto, (code, msg) => DernierAmbient = null);
+
+            yield return client.GetRandomWorldActive(token,
+                dto => DernierMonde = dto, (code, msg) => DernierMonde = null);
 
             // La frame de création rend des rects non résolus : on attend le layout AVANT de
             // rendre quoi que ce soit qui lise une géométrie.
@@ -161,17 +179,384 @@ namespace MafiaCleanCity.Operational
         /// une supposition sur ce que l'interface TypeScript back "devrait" rendre.</summary>
         private void AppliquerEtat(GetNewsFeedResponseDto dto)
         {
-            // MÉTIER ICI
+            NewsBeatDto[] breves = dto != null && dto.beats != null ? dto.beats : new NewsBeatDto[0];
+            AmbientEventDto[] rue = DernierAmbient != null && DernierAmbient.events != null
+                ? DernierAmbient.events : new AmbientEventDto[0];
+            RandomWorldEventDto[] monde = DernierMonde != null && DernierMonde.events != null
+                ? DernierMonde.events : new RandomWorldEventDto[0];
+
+            Breves = breves; Rue = rue; Monde = monde;
+
+            bool rienNeBouge = breves.Length == 0 && rue.Length == 0 && monde.Length == 0;
+
+            // ⛔ LE SOUS-TITRE PORTE LE MODE — cadre 125 « ce qui se dit ce matin », cadre 129
+            // « rien ne bouge ». Les six cadres ratifiés ne diffèrent que par lui.
+            sousTitre.text = rienNeBouge ? Lib("RIEN NE BOUGE") : Lib("CE QUI SE DIT CE MATIN");
+
+            MajCompteur(0, breves.Length, Lib("À LA UNE"));
+            MajCompteur(1, rue.Length,    Lib("DANS LA RUE"));
+            MajCompteur(2, monde.Length,  Lib("EN COURS"));
+
+            RendreListe(breves, rue, monde, rienNeBouge);
+
+            if (rienNeBouge)
+            {
+                // ⛔ CE QUE LE CADRE 129 DIT, ET QUI N'EST PAS « TOUT VA BIEN » : ces trois listes
+                // se remplissent avec ce que LA VILLE fait, pas avec ce que le joueur fait. Un
+                // journal vide n'est donc pas un reproche au joueur — et le dire évite qu'il
+                // cherche ce qu'il a mal fait.
+                MajPanneau(Lib("POURQUOI C'EST VIDE"),
+                    Lib("Le journal suit le monde, pas vous"),
+                    Lib("ces trois listes se remplissent avec ce que la ville fait. Aucune ne "
+                        + "dépend de vos gestes."));
+            }
+            else
+            {
+                // ⛔ LE PANNEAU DIT LE TROU PLUTÔT QUE DE LE MASQUER — et ici le trou est mesuré,
+                // pas supposé : les titres servis sont des CLÉS (`news_beat.digest.…`), et le
+                // dictionnaire ne les porte pas. C'est le maillon L1 que la maquette déclare
+                // elle-même au cadre 130, confirmé par le corps réel.
+                MajPanneau(Lib("CE QUE LE SERVEUR ENVOIE VRAIMENT"),
+                    Lib("Aucune de ces brèves n'a de texte"),
+                    Lib("le serveur rend des clés et un gabarit à trous ; les titres restent à "
+                        + "écrire. Voilà le journal tel qu'il s'afficherait aujourd'hui."));
+            }
         }
+
+        /// <summary>L'état AVANT tout chargement — le troisième, et celui qu'on oublie.
+        ///
+        /// ⛔ MESURÉ sur la première capture de ㊳ (2026-09-03) : montée sans jeton, la coquille
+        /// se dessinait NUE — enseigne sans sous-titre, trois « 00 » sans libellé, panneau vide —
+        /// et le test PASSAIT. C'est exactement ce que ㊴ m'a montré ce matin, à ceci près que
+        /// ㊴ ne chargeait jamais, tandis qu'ici l'écran n'a simplement pas ENCORE chargé.
+        /// ★ TROIS états donnent trois compteurs à zéro, et rien ne les distingue à l'image :
+        ///     « pas encore chargé »  ← ICI, l'écran ne sait pas encore
+        ///     « rien ne bouge »        chargé, et la ville a été calme (cadre 129)
+        ///     « pas de réponse »       la route a échoué
+        ///   Les confondre, c'est faire passer une panne pour une nuit tranquille. Chacun a donc
+        ///   son texte, et aucun ne laisse l'écran muet.
+        /// ⇒ Un écran monté sans session n'est plus une coquille : il DIT qu'il attend.</summary>
+        private void RendreEtatInitial()
+        {
+            sousTitre.text = Lib("EN ATTENTE DU MATIN");
+            MajCompteur(0, 0, Lib("À LA UNE"));
+            MajCompteur(1, 0, Lib("DANS LA RUE"));
+            MajCompteur(2, 0, Lib("EN COURS"));
+            MajPanneau(Lib("CE QUE CET ÉCRAN SAIT POUR L'INSTANT"),
+                Lib("Le journal n'a pas encore été ouvert"),
+                Lib("les trois listes n'ont pas été demandées — ce n'est ni « rien ne bouge » ni "
+                    + "« pas de réponse », c'est « pas encore »."));
+        }
+
+        private void MajCompteur(int i, int valeur, string libelle)
+        {
+            if (compteurNombre[i] == null) return;
+            // Deux chiffres comme la maquette : « 01 », « 04 ». Un compteur qui passe de « 9 » à
+            // « 10 » ferait bouger toute la ligne.
+            compteurNombre[i].text = valeur < 100 ? valeur.ToString("00") : valeur.ToString();
+            compteurLibelle[i].text = libelle;
+        }
+
+        private void MajPanneau(string sur, string titre, string texte)
+        {
+            if (pannSur == null) return;
+            pannSur.text = sur; pannTitre.text = titre; pannTexte.text = texte;
+        }
+
+        /// <summary>Les trois listes, dans l'ordre du cadre 125 : la une, puis la rue, puis ce
+        /// qui arrive à la ville.
+        /// ⚠️ CHAQUE LIGNE MONTRE SA CLÉ SOUS SON TITRE — c'est ce que la maquette dessine
+        /// (`news.beat.body_found · Stack-2`), et ce n'est pas un débogage laissé traîner : tant
+        /// que les textes ne sont pas écrits, la clé est la seule chose vraie à afficher.</summary>
+        private void RendreListe(NewsBeatDto[] breves, AmbientEventDto[] rue,
+                                 RandomWorldEventDto[] monde, bool rienNeBouge)
+        {
+            for (int i = listeRoot.childCount - 1; i >= 0; i--)
+                UnityEngine.Object.Destroy(listeRoot.GetChild(i).gameObject);
+
+            if (rienNeBouge)
+            {
+                TextMeshProUGUI vide = NouveauTexte(listeRoot, "RienCeMatin",
+                    Lib("Rien ce matin.\nLa ville a passé une nuit tranquille."),
+                    Px(10f), TexteFaible, DesignTokens.Current.hudSerifFont);
+                vide.alignment = TextAlignmentOptions.Center;
+                return;
+            }
+
+            foreach (NewsBeatDto b in breves)
+            {
+                if (b == null) continue;
+                Ligne(b.outlet_i18n_key, b.headline_i18n_key, b.district, b.recency_band, false);
+            }
+            foreach (AmbientEventDto a in rue)
+            {
+                if (a == null) continue;
+                Ligne(null, a.descriptor_i18n_key, a.district, a.recency_band, false);
+            }
+            foreach (RandomWorldEventDto m in monde)
+            {
+                if (m == null) continue;
+                // ⛔ `permanent` A SON CADRE (127) : c'est le seul cran qui ne s'en va pas, et
+                // c'est toute la thèse de ce bloc. Il se signale ici par son contour, jamais par
+                // la couleur seule (a11y) — la phase est aussi écrite en toutes lettres.
+                bool acquis = m.phase_band == "permanent";
+                Ligne(PhaseEnMots(m.phase_band), m.template_i18n_key, m.district,
+                      m.recency_band, acquis);
+            }
+        }
+
+        /// <summary>Une ligne : le titre (une CLÉ), et sous lui la clé technique + le quartier.</summary>
+        private void Ligne(string sur, string cle, string quartier, string fraicheur, bool acquis)
+        {
+            GameObject go = NouveauUI("Ligne", listeRoot);
+            AjouterFond(go, FondBloc);
+            AjouterHauteur(go, Px(CssHBreve));
+            if (acquis) Contour(go, AccentVif);
+
+            var v = go.AddComponent<VerticalLayoutGroup>();
+            v.padding = new RectOffset((int)Px(9f), (int)Px(9f), (int)Px(7f), (int)Px(7f));
+            v.spacing = Px(2f);
+            v.childControlWidth = true; v.childControlHeight = true;
+            v.childForceExpandWidth = true; v.childForceExpandHeight = false;
+
+            if (!string.IsNullOrEmpty(sur))
+                NouveauTexte(go.transform, "Sur", sur, Px(7f),
+                    acquis ? AccentVif : AccentOr, DesignTokens.Current.primaryFont);
+
+            NouveauTexte(go.transform, "Titre", cle ?? "(sans clé)", Px(11f), TexteFort,
+                DesignTokens.Current.hudSerifFont);
+
+            string dessous = quartier ?? "";
+            if (!string.IsNullOrEmpty(fraicheur))
+                dessous = string.IsNullOrEmpty(dessous) ? fraicheur : dessous + " · " + fraicheur;
+            NouveauTexte(go.transform, "Cle", dessous, Px(7f), TexteFaible,
+                DesignTokens.Current.primaryFont);
+        }
+
+        /// <summary>La phase, en mots — cadre 126 : « quatre passent, une seule reste ».
+        /// ⛔ Une phase INCONNUE s'affiche TELLE QUELLE. Le seul cran qui compte vraiment est
+        /// celui qui ne s'en va pas ; rabattre l'inconnu sur « ça traîne » effacerait la seule
+        /// distinction que cet écran existe pour montrer — même règle que la bande de ㊴.</summary>
+        private static string PhaseEnMots(string bande)
+        {
+            switch (bande)
+            {
+                case "starting":  return Lib("ÇA COMMENCE");
+                case "unfolding": return Lib("ÇA SE DÉPLOIE");
+                case "settling":  return Lib("ÇA RETOMBE");
+                case "lingering": return Lib("ÇA TRAÎNE");
+                case "permanent": return Lib("ÇA NE PARTIRA PAS");
+                default: return string.IsNullOrEmpty(bande) ? Lib("PHASE INCONNUE") : bande;
+            }
+        }
+
+        /// <summary>Les listes du dernier chargement — crochets de test.</summary>
+        public NewsBeatDto[] Breves { get; private set; } = new NewsBeatDto[0];
+        public AmbientEventDto[] Rue { get; private set; } = new AmbientEventDto[0];
+        public RandomWorldEventDto[] Monde { get; private set; } = new RandomWorldEventDto[0];
 
         /// <summary>Repli NOMMÉ sur échec réseau — jamais une exception, jamais un écran noir
         /// (patron ㊲ : `Render(null)` a fait planter un autre écran de ce dépôt à la première
         /// ligne qui lisait le payload).</summary>
         private void RendreEtatIndisponible()
         {
-            // MÉTIER ICI — au minimum, un texte d'état ; ne PAS laisser le rendu du chargement
-            // précédent affiché (même défaut qu'une liste non vidée : ㊲ l'a payé).
+            // ⛔ VIDER D'ABORD. Laisser les brèves du chargement précédent afficherait un journal
+            // PÉRIMÉ sous un message d'erreur — et un journal périmé se lit exactement comme un
+            // journal frais. ㊲ a payé ce défaut sur sa liste de règles.
+            Breves = new NewsBeatDto[0];
+            Rue = new AmbientEventDto[0];
+            Monde = new RandomWorldEventDto[0];
+
+            for (int i = listeRoot.childCount - 1; i >= 0; i--)
+                UnityEngine.Object.Destroy(listeRoot.GetChild(i).gameObject);
+
+            sousTitre.text = Lib("LE JOURNAL N'EST PAS ARRIVÉ");
+            MajCompteur(0, 0, Lib("À LA UNE"));
+            MajCompteur(1, 0, Lib("DANS LA RUE"));
+            MajCompteur(2, 0, Lib("EN COURS"));
+
+            // ⚠️ « Pas de réponse » N'EST PAS « rien ne bouge » — et c'est toute la différence
+            // que ce repli existe pour dire. Les compteurs à zéro sont identiques dans les deux
+            // cas ; seul ce texte les sépare. Sans lui, une panne de route se lirait comme une
+            // nuit tranquille.
+            MajPanneau(Lib("CE QUE LE SERVEUR ENVOIE VRAIMENT"),
+                Lib("Pas de réponse"),
+                Lib("la route n'a rien rendu. Ce n'est pas « la ville est calme » : c'est « on "
+                    + "ne sait pas ce qu'elle a fait cette nuit »."));
         }
+
+        // ═══ Géométrie — conventions du châssis de la série 6, PAS une maquette mesurée au pixel
+        // ⚠️ Les six cadres ratifiés (m-125..130) fixent la COMPOSITION — enseigne, trois
+        // compteurs, liste, panneau — pas des cotes. Les hauteurs ci-dessous reprennent celles
+        // du châssis déjà en place sur ㊴/㊲ ; elles sont assumées comme conventions, et c'est
+        // dit ici plutôt que présenté comme une mesure. ⇒ Ce qui EST opposable à la maquette :
+        // l'ordre des blocs, les trois compteurs, les libellés, et le fait que les clés i18n
+        // s'affichent SOUS les titres.
+        private const float CssMargeX    = 13f;
+        private const float CssMargeY    = 10f;
+        private const float CssEcart     =  9f;
+        private const float CssHEnseigne = 51f;
+        private const float CssHCompteur = 44f;
+        private const float CssHBreve    = 52f;
+        private const float CssHPanneau  = 92f;
+
+        private static Color FondBloc    => DesignTokens.Current.surfaceCard;
+        private static Color TexteFort   => DesignTokens.Current.hudCreme;
+        private static Color TexteFaible => DesignTokens.Current.hudCremeSecondary;
+        private static Color AccentOr    => DesignTokens.Current.accentGold;
+        private static Color AccentVif   => HeatBucketResolver.SeverityColor(
+                                                HeatBucketResolver.Severity.Severe);
+
+        private RectTransform listeRoot;
+        private TextMeshProUGUI sousTitre;
+        private readonly TextMeshProUGUI[] compteurNombre = new TextMeshProUGUI[3];
+        private readonly TextMeshProUGUI[] compteurLibelle = new TextMeshProUGUI[3];
+        private TextMeshProUGUI pannSur, pannTitre, pannTexte;
+
+        /// <summary>L'enseigne : « Le journal » et, dessous, CE QUE CE CADRE MONTRE. Les six
+        /// cadres ratifiés ne diffèrent que par ce sous-titre — « ce qui se dit ce matin »,
+        /// « ce qui arrive à la ville », « ce qui ne partira pas »… C'est donc lui qui porte le
+        /// MODE de lecture, et il n'est pas décoratif.</summary>
+        private void ConstruireEnseigne(Transform parent)
+        {
+            GameObject go = NouveauUI("Enseigne", parent);
+            AjouterFond(go, FondBloc);
+            AjouterHauteur(go, Px(CssHEnseigne));
+            var v = go.AddComponent<VerticalLayoutGroup>();
+            v.padding = new RectOffset((int)Px(8f), (int)Px(8f), (int)Px(7f), (int)Px(7f));
+            v.spacing = Px(2f);
+            v.childControlWidth = true; v.childControlHeight = true;
+            v.childForceExpandWidth = true; v.childForceExpandHeight = false;
+
+            TextMeshProUGUI titre = NouveauTexte(go.transform, "Titre", Lib("Le journal"),
+                Px(19f), AccentOr, DesignTokens.Current.hudSerifFont);
+            titre.alignment = TextAlignmentOptions.Center;
+            titre.characterSpacing = 14f;
+
+            sousTitre = NouveauTexte(go.transform, "SousTitre", "", Px(7.5f), TexteFaible,
+                DesignTokens.Current.primaryFont);
+            sousTitre.alignment = TextAlignmentOptions.Center;
+            sousTitre.characterSpacing = 18f;
+        }
+
+        /// <summary>Les TROIS compteurs. Chacun compte une LISTE différente — c'est pour ça que
+        /// l'écran charge trois flux et pas un.
+        /// ⚠️ Les nombres sont posés à deux chiffres (« 01 », « 04 ») comme la maquette : un
+        /// compteur qui saute de « 9 » à « 10 » fait bouger toute la ligne.</summary>
+        private void ConstruireCompteurs(Transform parent)
+        {
+            GameObject bande = NouveauUI("Compteurs", parent);
+            AjouterHauteur(bande, Px(CssHCompteur));
+            var h = bande.AddComponent<HorizontalLayoutGroup>();
+            h.spacing = Px(6f);
+            h.childControlWidth = true; h.childControlHeight = true;
+            h.childForceExpandWidth = true; h.childForceExpandHeight = true;
+
+            for (int i = 0; i < 3; i++)
+            {
+                GameObject c = NouveauUI("Compteur" + i, bande.transform);
+                AjouterFond(c, FondBloc);
+                var v = c.AddComponent<VerticalLayoutGroup>();
+                v.padding = new RectOffset((int)Px(4f), (int)Px(4f), (int)Px(5f), (int)Px(5f));
+                v.childControlWidth = true; v.childControlHeight = true;
+                v.childForceExpandWidth = true; v.childForceExpandHeight = false;
+
+                compteurNombre[i] = NouveauTexte(c.transform, "Nombre", "00", Px(15f),
+                    DesignTokens.Current.hudGaugeArcCold, DesignTokens.Current.hudSerifFont);
+                compteurNombre[i].alignment = TextAlignmentOptions.Center;
+
+                compteurLibelle[i] = NouveauTexte(c.transform, "Libelle", "", Px(6.5f),
+                    TexteFaible, DesignTokens.Current.primaryFont);
+                compteurLibelle[i].alignment = TextAlignmentOptions.Center;
+                compteurLibelle[i].characterSpacing = 16f;
+            }
+        }
+
+        private RectTransform ConstruireListe(Transform parent)
+        {
+            GameObject go = NouveauUI("Liste", parent);
+            var le = go.AddComponent<LayoutElement>();
+            le.flexibleHeight = 1f;   // la liste prend ce qui reste, le panneau garde sa place
+            var v = go.AddComponent<VerticalLayoutGroup>();
+            v.spacing = Px(5f);
+            v.childControlWidth = true; v.childControlHeight = true;
+            v.childForceExpandWidth = true; v.childForceExpandHeight = false;
+            v.childAlignment = TextAnchor.UpperCenter;
+            return (RectTransform)go.transform;
+        }
+
+        /// <summary>Le panneau bas — ce que l'écran ne peut pas dire. Hauteur PLANCHER, pas
+        /// figée : ㊴ a montré hier qu'un cadre de hauteur fixe recevant une PHRASE fait
+        /// chevaucher son titre et déborder son corps.</summary>
+        private void ConstruirePanneau(Transform parent)
+        {
+            GameObject go = NouveauUI("Panneau", parent);
+            AjouterFond(go, FondBloc);
+            var le = go.GetComponent<LayoutElement>() ?? go.AddComponent<LayoutElement>();
+            le.minHeight = Px(CssHPanneau);
+            le.preferredHeight = -1f;
+            le.flexibleHeight = 0f;
+
+            var v = go.AddComponent<VerticalLayoutGroup>();
+            v.padding = new RectOffset((int)Px(10f), (int)Px(10f), (int)Px(9f), (int)Px(9f));
+            v.spacing = Px(3f);
+            v.childControlWidth = true; v.childControlHeight = true;
+            v.childForceExpandWidth = true; v.childForceExpandHeight = false;
+
+            pannSur = NouveauTexte(go.transform, "SurTitre", "", Px(7.5f), TexteFaible,
+                DesignTokens.Current.primaryFont);
+            pannTitre = NouveauTexte(go.transform, "Titre", "", Px(13f), AccentOr,
+                DesignTokens.Current.hudSerifFont);
+            pannTexte = NouveauTexte(go.transform, "Texte", "", Px(9f), TexteFaible,
+                DesignTokens.Current.primaryFont);
+        }
+
+        /// <summary>Un contour, en QUATRE BANDES d'un pixel — jamais un enfant plein rect.
+        ///
+        /// ⛔ MESURÉ sur ㊱ le 2026-09-02 : un enfant qui couvre tout le rect de son parent est
+        /// dessiné APRÈS le graphique du parent, donc il le RECOUVRE — 82,5 % de l'écran était
+        /// passé en doré. `SetAsFirstSibling` n'y change rien : il ordonne les FRÈRES, pas un
+        /// enfant vis-à-vis de son parent.
+        /// ⇒ Quatre bandes de bord, qui ne couvrent que ce qu'elles doivent peindre.
+        /// ⚠️ `ignoreLayout` sur chacune : sans lui, le `VerticalLayoutGroup` du parent les
+        /// empilerait comme du contenu et pousserait le vrai contenu hors du cadre.</summary>
+        private void Contour(GameObject cible, Color couleur)
+        {
+            float e = PxTrait(1f);
+            var bords = new (Vector2 min, Vector2 max, Vector2 oMin, Vector2 oMax)[]
+            {
+                (new Vector2(0f, 1f), Vector2.one,        new Vector2(0f, -e),  Vector2.zero),   // haut
+                (Vector2.zero,        new Vector2(1f, 0f), Vector2.zero,        new Vector2(0f, e)), // bas
+                (Vector2.zero,        new Vector2(0f, 1f), Vector2.zero,        new Vector2(e, 0f)), // gauche
+                (new Vector2(1f, 0f), Vector2.one,        new Vector2(-e, 0f),  Vector2.zero),   // droite
+            };
+            foreach (var b in bords)
+            {
+                GameObject bord = NouveauUI("Bord", cible.transform);
+                AjouterFond(bord, couleur);
+                var le = bord.AddComponent<LayoutElement>();
+                le.ignoreLayout = true;
+                var rt = (RectTransform)bord.transform;
+                rt.anchorMin = b.min; rt.anchorMax = b.max;
+                rt.offsetMin = b.oMin; rt.offsetMax = b.oMax;
+            }
+        }
+
+        private static void AjouterHauteur(GameObject go, float hauteur)
+        {
+            var le = go.GetComponent<LayoutElement>() ?? go.AddComponent<LayoutElement>();
+            le.minHeight = hauteur; le.preferredHeight = hauteur; le.flexibleHeight = 0f;
+        }
+
+        /// <summary>Item 0.6 — les littéraux STATIQUES de ㊳ passent par `journal.bloc.<slug>`,
+        /// repli sur le littéral.
+        /// ⛔ N'Y PASSENT PAS : les CLÉS servies par le serveur (`headline_i18n_key`,
+        /// `descriptor_i18n_key`, `template_i18n_key`). Elles s'affichent TELLES QUELLES —
+        /// c'est ce que la maquette dessine, et c'est le maillon L1 que le cadre 130 déclare :
+        /// « écrire les titres et les brèves ». Les faire passer par un traducteur qui ne les
+        /// connaît pas rendrait la même chaîne en prétendant l'avoir traduite.</summary>
+        private static string Lib(string litteral) =>
+            MafiaCleanCity.I18n.Libelle.De("journal", "bloc", litteral);
 
         // ═══ Construction de la mise en page ═════════════════════════════════════════════════
 
@@ -202,9 +587,24 @@ namespace MafiaCleanCity.Operational
             Etirer(racinePleinEcran);
             AjouterFond(racine, DesignTokens.Current.surfaceBase);
 
-            // MÉTIER ICI — le reste de la mise en page (enseigne, blocs, listes…) se construit
-            // ici, depuis la maquette. `ConstruireCerne`/`ConstruireEnseigne`/… de ㊲ montrent le
-            // patron : un bloc = une méthode `Construire<Nom>(Transform parent)`.
+            // ⛔ LE CHROME MANGE SA PART, EN HAUT ET EN BAS — posé AVANT toute capture sous
+            // chrome. Quatre écrans sur quatre portaient ce défaut le même jour (⑨ et ② en bas,
+            // ㊱ aux deux bouts, ㊴ non mesuré jusqu'à hier). Hors shell les insets valent 0 et
+            // l'écran remplit tout, ce qui est le comportement voulu.
+            VerticalLayoutGroup pile = racine.AddComponent<VerticalLayoutGroup>();
+            pile.padding = new RectOffset(
+                (int)Px(CssMargeX), (int)Px(CssMargeX),
+                (int)(Px(CssMargeY) + MafiaCleanCity.Shell.ShellChrome.TopInsetPx),
+                (int)(Px(CssMargeY) + MafiaCleanCity.Shell.ShellChrome.BottomInsetPx));
+            pile.spacing = Px(CssEcart);
+            pile.childControlWidth = true; pile.childControlHeight = true;
+            pile.childForceExpandWidth = true; pile.childForceExpandHeight = false;
+
+            ConstruireEnseigne(racine.transform);
+            ConstruireCompteurs(racine.transform);
+            listeRoot = ConstruireListe(racine.transform);
+            ConstruirePanneau(racine.transform);
+            RendreEtatInitial();
         }
 
         // ═══ Primitives — dupliquées par convention (aucun fichier du dépôt ne les partage,

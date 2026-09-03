@@ -121,6 +121,22 @@ namespace MafiaCleanCity.Operational.Tests
             MonterEcran();
             yield return null;
 
+            // ⛔ GARDE ANTI-VACUITÉ — elle manquait, et la PREMIÈRE capture de ㊳ est partie MUETTE :
+            // enseigne sans sous-titre, trois « 00 » sans libellé, panneau vide, test VERT.
+            // ★ Un PNG d'une coquille est un PNG parfaitement valide. Rien dans le verdict ne
+            //   distingue « l'écran s'est dessiné » de « l'écran s'est dessiné et n'a rien à
+            //   dire » — seule une garde sur le CONTENU les sépare.
+            // ⚠️ On n'exige PAS de données : cet écran est monté sans session, et son état
+            //   « pas encore chargé » est légitime. On exige qu'il le DISE.
+            var textes = new List<string>();
+            foreach (TMPro.TextMeshProUGUI t in RacineEcran()
+                         .GetComponentsInChildren<TMPro.TextMeshProUGUI>(true))
+                if (!string.IsNullOrWhiteSpace(t.text)) textes.Add(t.name);
+            Assert.GreaterOrEqual(textes.Count, 8,
+                "㊳ ne pose que " + textes.Count + " texte(s) non vides — la capture montrerait " +
+                "une coquille : enseigne, trois compteurs avec leurs libellés et le panneau font " +
+                "au moins huit. Vus : [" + string.Join(", ", textes) + "]");
+
             yield return CapturerA(1080, 1920, "Assets/Screenshots/screen_c1_1080x1920.png");
             yield return CapturerA(1080, 2400, "Assets/Screenshots/screen_c1_1080x2400.png");
         }
