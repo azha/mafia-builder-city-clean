@@ -764,6 +764,13 @@ namespace MafiaCleanCity.Shell
             // écran (« Le journal & la rue »), et le dossier de juge livré avec lui déclare déjà
             // « chemin joueur : onglet More » — l'intention était là, la ligne manquait.
             ("LE JOURNAL & LA RUE", () => MountTenant<JournalScreenController>()), // ㊳
+
+            // ㉘ — « la ficelle sur le liège ». Aucune planche de menu ne nomme cet écran (il
+            // n'existe pas encore au moment où les planches `Assets/Screenshots/planche_*.png`
+            // ont été prises) : le libellé est le TITRE DU BANDEAU de la maquette de repos
+            // (m-54, « L'envoi de ce soir » aurait été trop long pour une entrée de menu — REUSE
+            // du nom court déjà porté par le brief et par `Tools/juge-visuel/ecran_distribution/`).
+            ("LA DISTRIBUTION", () => MountTenant<DistributionScreenController>()), // ㉘
         };
 
         /// <summary>Monte le menu « Plus » : une entrée par destination, chacune montant son écran.
