@@ -2762,13 +2762,13 @@ namespace MafiaCleanCity.Operational.Lieutenant
         private static string CategoryLabel(string c)
         {
             switch (c) {
-                case "PRODUCTION_OPS": return MafiaCleanCity.I18n.Libelle.De("famille", "category", "Production");
-                case "LOGISTICS_ROUTING": return MafiaCleanCity.I18n.Libelle.De("famille", "category", "Acheminement");
-                case "DISTRIBUTION_DISPATCH": return MafiaCleanCity.I18n.Libelle.De("famille", "category", "Envois");
-                case "LAUNDERING_FLOW": return MafiaCleanCity.I18n.Libelle.De("famille", "category", "Filière");
-                case "SECURITY_RESPONSE": return MafiaCleanCity.I18n.Libelle.De("famille", "category", "Réponse de sécurité");
+                case "PRODUCTION_OPS": return MafiaCleanCity.I18n.Libelle.De("famille", "category", "Opérations de production");
+                case "LOGISTICS_ROUTING": return MafiaCleanCity.I18n.Libelle.De("famille", "category", "Routage logistique");
+                case "DISTRIBUTION_DISPATCH": return MafiaCleanCity.I18n.Libelle.De("famille", "category", "Envoi de distribution");
+                case "LAUNDERING_FLOW": return MafiaCleanCity.I18n.Libelle.De("famille", "category", "Flux de blanchiment");
+                case "SECURITY_RESPONSE": return MafiaCleanCity.I18n.Libelle.De("famille", "category", "Réponse sécurité");
                 case "BOOKKEEPING_AUDIT": return MafiaCleanCity.I18n.Libelle.De("famille", "category", "Audit comptable");
-                case "CROSS_CATEGORY_INCIDENT": return MafiaCleanCity.I18n.Libelle.De("famille", "category", "Incident transverse");
+                case "CROSS_CATEGORY_INCIDENT": return MafiaCleanCity.I18n.Libelle.De("famille", "category", "Incident transversal");
                 default: return MafiaCleanCity.I18n.Libelle.De("famille", "category", "Catégorie inconnue");
             }
         }
