@@ -67,6 +67,17 @@ public static class MafiaCI
     //   catégorie. Ce qui manquait n'était pas le test, c'était son INSCRIPTION — une suite
     //   qu'aucun juge n'exécute est une suite qui n'existe pas, et rien ne le signale : le
     //   compte de tests baisse sans qu'aucune ligne ne rougisse.
+    // ⛔⛔ RETIRÉES le 2026-09-03 : `CaptureJournal`, `CaptureFiliere`, `CaptureDossier`. Je les
+    // avais inscrites après un run vert CHACUNE — la règle que je venais d'apprendre — et 98 a
+    // mesuré qu'elles passent SEULES et tombent EN GROUPE (TD-576 : 14 tests, 2 échecs ; chacune
+    // des 4 additions seule, 0 échec). Cause DIFFUSE : de l'état accumulé sur un run long, pas
+    // un co-tenant nommable.
+    // ★ *Vert SEUL ne dit pas vert EN GROUPE.* C'est la même famille que « un vert ne dit pas que
+    //   la propriété a été mesurée » : le run individuel mesure le test, pas sa cohabitation.
+    //   Ma règle « inscrire après un run vert » était donc nécessaire et INSUFFISANTE.
+    // ⇒ Elles restent dehors tant que la reproduction n'est pas construite — et la construire,
+    //   c'est SEMER l'état, pas allonger le run : un run plus long reproduit par hasard et
+    //   n'explique rien.
     // ⛔ ORDRE : INSCRIRE APRÈS UN RUN VERT, JAMAIS AVANT. `ScreenC2` (㊵) est ajoutée ici
     // seulement une fois passée 2/2, et `CaptureJournal`/`CaptureFiliere`/`CaptureDossier` une
     // fois chacune verte 1/1.
@@ -79,7 +90,7 @@ public static class MafiaCI
     //   les inscrire tous depuis ici serait un balayage qui n'est pas mon lot, et une passe par
     //   défaut soudain quatre fois plus longue est une décision, pas un ajout.
     private static readonly string[] Categories =
-        { "W4P4a", "W3UDA", "W3U1", "W3U2", "Charpente", "DemoIdentity", "ScreenB3", "ScreenB7", "ScreenC1", "ScreenC2", "ScreenC6", "CaptureJournal", "CaptureFiliere", "CaptureDossier", "ShellSurimpression", "CaptureDistrict", "CaptureReputation", "CaptureFamille", "CarteVille", "Joignabilite", "ScreenCarte", "CaptureCarte", "EcranAutonomy", "EcranExceptions", "EcranRegleLieutenant", "EcranTenureLieutenant", "EcranUiLieutenant", "EcranRegleTier2" };
+        { "W4P4a", "W3UDA", "W3U1", "W3U2", "Charpente", "DemoIdentity", "ScreenB3", "ScreenB7", "ScreenC1", "ScreenC2", "ScreenC6", "ShellSurimpression", "CaptureDistrict", "CaptureReputation", "CaptureFamille", "CarteVille", "Joignabilite", "ScreenCarte", "CaptureCarte", "EcranAutonomy", "EcranExceptions", "EcranRegleLieutenant", "EcranTenureLieutenant", "EcranUiLieutenant", "EcranRegleTier2" };
     // ⚠️ UNION AU MERGE DU 2026-09-03 : `CarteVille` vient du lot « ville peinte », les huit
     // autres du chantier C et du mien. Les deux branches avaient RAISON séparément et le
     // conflit portait sur la LIGNE, pas sur l'intention — un filtre se fusionne toujours en

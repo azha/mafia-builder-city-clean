@@ -31,16 +31,26 @@ from pathlib import Path
 
 RACINE = Path(__file__).resolve().parent.parent
 
-# Un littéral CANDIDAT : passé à un poseur de texte, contenant des lettres, ni chemin ni gabarit.
-POSEUR = re.compile(r'(?:NouveauTexte|NewText|\.text\s*=)\s*\(?[^;\n]*?"([^"\\]{3,60})"')
+# ⛔ CORRIGÉ le 2026-09-03 : la première version cherchait `poseur … "littéral"` en UNE passe
+# non gourmande, donc elle s'arrêtait au PREMIER littéral de la ligne. Une ligne comme
+#     videTexte.text = erreur == null ? "Aucun profil." : "Le profil n'a pas répondu.";
+# comptait 1 au lieu de 2, et mon total annoncé (45) était SOUS-ÉVALUÉ.
+# ★ Un instrument qui sous-compte rassure ; il ne se signale pas. Je l'ai découvert en OUVRANT
+#   le premier fichier à convertir — pas en relisant l'outil.
+# ⇒ Deux passes : repérer les LIGNES qui posent du texte, puis y prendre TOUS les littéraux.
+LIGNE_POSEUSE = re.compile(r'(?:NouveauTexte|NewText|\.text\s*=)')
+LITTERAL = re.compile(r'"([^"\\]{3,60})"')
 
 
 def candidats(source: str) -> set[str]:
     trouves = set()
-    for m in POSEUR.finditer(source):
-        s = m.group(1)
-        if re.search(r'[A-Za-zÀ-ÿ]', s) and not s.startswith('/') and '{' not in s:
-            trouves.add(s)
+    for ligne in source.split('\n'):
+        if not LIGNE_POSEUSE.search(ligne):
+            continue
+        for m in LITTERAL.finditer(ligne):
+            s = m.group(1)
+            if re.search(r'[A-Za-zÀ-ÿ]', s) and not s.startswith('/') and '{' not in s:
+                trouves.add(s)
     return trouves
 
 
