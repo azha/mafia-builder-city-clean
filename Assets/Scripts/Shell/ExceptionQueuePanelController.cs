@@ -121,7 +121,7 @@ namespace MafiaCleanCity.Shell
                 RenderedEmptyState = true;
                 RenderedCardCount = 0;
                 emptyStateText.gameObject.SetActive(true);
-                emptyStateText.text = "No exceptions waiting";
+                emptyStateText.text = Lib("file", "Aucune exception en attente");
                 return;
             }
 
@@ -205,7 +205,7 @@ namespace MafiaCleanCity.Shell
             rvlg.childForceExpandHeight = false;
             rowsRoot = (RectTransform)rowsGo.transform;
 
-            emptyStateText = NewText(transform, "No exceptions waiting", 260);
+            emptyStateText = NewText(transform, Lib("file", "Aucune exception en attente"), 260);
             emptyStateText.gameObject.SetActive(false);
 
             GameObject viewAllGo = new GameObject("ViewAll", typeof(RectTransform));
@@ -234,5 +234,14 @@ namespace MafiaCleanCity.Shell
             le.preferredWidth = preferredWidth;
             return t;
         }
+
+        /// <summary>Item 0.6 — le littéral d'écran passe par une CLÉ. Le repli passé à `Libelle`
+        /// est FRANÇAIS : `Libelle.De` rend le littéral quand la clé manque au bundle, donc un
+        /// repli anglais resterait anglais à l'écran À TRAVERS la conversion (mesuré par le
+        /// chantier B : 81 replis sur 107 étaient anglais après une première passe — « converti
+        /// sans traduire »). Convertir sans traduire ne change rien pour le joueur.</summary>
+        private static string Lib(string role, string litteral) =>
+            MafiaCleanCity.I18n.Libelle.De("accueil", role, litteral);
+
     }
 }
