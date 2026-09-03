@@ -125,6 +125,26 @@ namespace MafiaCleanCity.Operational
             // est stable.
             if (transform.parent != null) transform.SetAsLastSibling();
             EnsureInitialized();
+            StartCoroutine(Amorcer());
+        }
+
+        /// <summary>Charger dès le montage — sans cet appel, `Charger()` n'a AUCUN appelant et
+        /// l'écran reste sur son état initial pour toujours.
+        ///
+        /// ⛔⛔ TROISIÈME FOIS. ㊴ l'a payé, ㊵ porte déjà ce commentaire mot pour mot — et j'ai
+        /// bâti ㉞ sans l'appel. Ce qui l'a rendu invisible : `BuildLayout()` construit un écran
+        /// COMPLET et NOMMÉ (« le carnet n'a pas encore été ouvert », les 8 créneaux dessinés),
+        /// donc la capture isolée est belle, remplie, et parfaitement plausible. *Un état initial
+        /// bien fait ressemble à un écran qui fonctionne ; c'est ce qui le rend indétectable à
+        /// l'œil.* Aucune de mes gardes structurelles ni ma photo isolée ne pouvaient le voir :
+        /// elles n'attendaient aucune donnée, donc elles n'ont rien manqué.
+        /// ⇒ C'est la capture SOUS CHROME qui l'a trouvé, en refusant de photographier tant que
+        ///   `RenduTermine` était faux. La garde qui refuse de mesurer vaut mieux que la mesure
+        ///   qui rassure.</summary>
+        private IEnumerator Amorcer()
+        {
+            if (string.IsNullOrEmpty(token)) yield break;   // hors session : état initial NOMMÉ
+            yield return Charger();
         }
 
         private void EnsureInitialized()
@@ -352,7 +372,13 @@ namespace MafiaCleanCity.Operational
             {
                 TextMeshProUGUI rien = NouveauTexte(corps.transform, "Rien", Lib("— rien —"),
                     Px(9f), CouleurEncreFaible, DesignTokens.Current.hudSerifFont);
-                rien.alignment = TextAlignmentOptions.Center;
+                // ⛔ À GAUCHE, comme le titre d'un créneau REMPLI (voir juste en dessous, qui
+                // laisse `NouveauTexte` à son alignement gauche par défaut). Centré, « — rien — »
+                // se posait à ~500 px de son propre numéro de rang et la colonne SAUTAIT selon
+                // que le créneau était plein ou vide — mesuré à l'image le 2026-09-03, sur un run
+                // VERT 2/2. *Mes deux tests comptaient des textes ; compter du texte ne dit
+                // jamais où il est.* Le vide et le plein doivent partager une seule colonne.
+                rien.alignment = TextAlignmentOptions.Left;
                 return;
             }
             NouveauTexte(corps.transform, "Titre", titre, Px(11f), CouleurEncre,
