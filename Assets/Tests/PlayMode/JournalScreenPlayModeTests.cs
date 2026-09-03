@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.TestTools;
 using MafiaCleanCity.Operational;
+using MafiaCleanCity.Tests;   // SeederSupport.SafeCallsign
 using Object = UnityEngine.Object;
 
 namespace MafiaCleanCity.Operational.Tests
@@ -23,6 +24,7 @@ namespace MafiaCleanCity.Operational.Tests
     public class JournalScreenPlayModeTests
     {
         private GameObject hostGo;
+        private int seq;
 
         [TearDown]
         public void TearDown()
@@ -210,7 +212,11 @@ namespace MafiaCleanCity.Operational.Tests
         public IEnumerator SondeC1_ImprimerLesCorpsReels()
         {
             var auth = new MafiaCleanCity.CityMap.AuthClient { BaseUrl = "http://localhost" };
-            string callsign = "sonde-journal-" + System.DateTime.UtcNow.Ticks;
+            // ⚠️ `SafeCallsign`, pas une chaîne fabriquée : mon premier essai concaténait des
+            // CHIFFRES et des TIRETS et le signup a rendu 422. Le dépôt a un producteur pour ça
+            // (`DigitsToLetters` : le format n'accepte que des lettres) — le chercher AVANT
+            // d'inventer, exactement comme pour un client dont on cherche la route.
+            string callsign = SeederSupport.SafeCallsign("sondejournal", ref seq);
             string token = null, err = null;
             yield return auth.SignUp(callsign, "sonde-journal-pw", t => token = t, e => err = e);
             Assert.IsNull(err, $"signup errored: {err}");
