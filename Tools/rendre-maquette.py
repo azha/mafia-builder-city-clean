@@ -37,5 +37,5 @@ def rendre(html, sortie, largeur_css, hauteur_css, echelle):
 
 if __name__ == "__main__":
     html, sortie = sys.argv[1], sys.argv[2]
-    lc, hc, ech = int(sys.argv[3]), int(sys.argv[4]), int(sys.argv[5])
+    lc, hc, ech = int(sys.argv[3]), int(sys.argv[4]), float(sys.argv[5])
     rendre(html, sortie, lc, hc, ech)
