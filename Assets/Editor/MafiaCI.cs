@@ -67,11 +67,19 @@ public static class MafiaCI
     //   catégorie. Ce qui manquait n'était pas le test, c'était son INSCRIPTION — une suite
     //   qu'aucun juge n'exécute est une suite qui n'existe pas, et rien ne le signale : le
     //   compte de tests baisse sans qu'aucune ligne ne rougisse.
-    // ⚠️ Je n'inscris QUE mes trois écrans. 97 tests du dépôt sont dans le même cas (TD-574) ;
+    // ⛔ ORDRE : INSCRIRE APRÈS UN RUN VERT, JAMAIS AVANT. `ScreenC2` (㊵) est ajoutée ici
+    // seulement une fois passée 2/2, et `CaptureJournal`/`CaptureFiliere`/`CaptureDossier` une
+    // fois chacune verte 1/1.
+    // ⚠️ J'AI FAUTÉ CET ORDRE sur `ScreenC1` le 2026-09-03 : inscrite avant son premier run. Le
+    // risque ne s'est pas matérialisé (2/2 depuis), mais 98 l'a mesuré ailleurs — `HUDv31`
+    // inscrite à l'aveugle puis exécutée a fait un CORE DUMP du juge (904 s), ce qui aurait
+    // cassé la passe par défaut pour les cinq sessions. Une catégorie qu'on inscrit sans l'avoir
+    // vue verte est un pari qu'on fait avec le temps des autres.
+    // ⚠️ Je n'inscris QUE mes propres écrans. 97 tests du dépôt sont dans le même cas (TD-574) ;
     //   les inscrire tous depuis ici serait un balayage qui n'est pas mon lot, et une passe par
     //   défaut soudain quatre fois plus longue est une décision, pas un ajout.
     private static readonly string[] Categories =
-        { "W4P4a", "W3UDA", "W3U1", "W3U2", "Charpente", "DemoIdentity", "ScreenB3", "ScreenB7", "ScreenC1", "ScreenC6", "ShellSurimpression", "CaptureDistrict", "CaptureReputation", "CaptureFamille", "CarteVille", "Joignabilite", "ScreenCarte", "CaptureCarte", "EcranAutonomy", "EcranExceptions", "EcranRegleLieutenant", "EcranTenureLieutenant", "EcranUiLieutenant", "EcranRegleTier2" };
+        { "W4P4a", "W3UDA", "W3U1", "W3U2", "Charpente", "DemoIdentity", "ScreenB3", "ScreenB7", "ScreenC1", "ScreenC2", "ScreenC6", "CaptureJournal", "CaptureFiliere", "CaptureDossier", "ShellSurimpression", "CaptureDistrict", "CaptureReputation", "CaptureFamille", "CarteVille", "Joignabilite", "ScreenCarte", "CaptureCarte", "EcranAutonomy", "EcranExceptions", "EcranRegleLieutenant", "EcranTenureLieutenant", "EcranUiLieutenant", "EcranRegleTier2" };
     // ⚠️ UNION AU MERGE DU 2026-09-03 : `CarteVille` vient du lot « ville peinte », les huit
     // autres du chantier C et du mien. Les deux branches avaient RAISON séparément et le
     // conflit portait sur la LIGNE, pas sur l'intention — un filtre se fusionne toujours en
