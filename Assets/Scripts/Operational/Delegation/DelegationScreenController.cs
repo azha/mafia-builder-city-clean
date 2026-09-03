@@ -169,7 +169,12 @@ namespace MafiaCleanCity.Operational
             EchelleMaquette.PxTrait(css, racinePleinEcran, EchelleMaquette.LargeurEcransBrennar6);
 
         // ── Géométrie de la maquette, en px CSS — lue dans `generateur-service.py`, jamais à l'œil.
-        private const float CssHauteurCadre  = 462f;  // service(..., H=462)
+        // ⚠️ CONSERVÉE POUR CE QU'ELLE DOCUMENTE, PLUS EMPLOYÉE POUR FIGER : `service(..., H=462)`
+        // est le RESTE sous le chrome dans le téléphone de la maquette (583 − 121), pas une hauteur
+        // de carte. Voir `BuildLayout` — la recopier telle quelle laissait une bande morte de 11,9 %
+        // au-dessus du dock à 20:9. *Un nombre qui décrit un reste ne se transporte pas d'un rapport
+        // d'aspect à un autre.*
+        private const float CssHauteurCadreMaquette = 462f;
         private const float CssMargeH        = 13f;   // .sv-tete / .sv-body / .sv-bas padding-x
         private const float CssTetePadHaut   = 11f;   // .sv-tete{padding:11px 13px 9px}
         private const float CssTetePadBas    = 9f;
@@ -697,20 +702,30 @@ namespace MafiaCleanCity.Operational
                                  + "conversions px CSS de cet écran seront proportionnellement fausses.");
             }
 
-            // Le corps vit SOUS le chrome. ⛔ HAUTEUR FIXE de 462 px CSS ancrée en HAUT, et non
-            // étirée : la maquette le dit dans sa signature (`service(..., H=462)`), et un cadre
-            // étiré verse tout le surplus d'un écran plus haut dans son bloc élastique — sur un
-            // écran dont le métier est de dire « il n'y a que quatre choses », un grand vide se
-            // met à dire « ça n'a pas fini de charger ».
+            // ⛔⛔ LE CADRE REMPLIT L'ESPACE ENTRE LES DEUX BARRES — il n'est PAS une carte de
+            // hauteur fixe, et la première capture a tranché entre les deux lectures.
+            // La maquette écrit `service(..., H=462)`, ce qui invite à figer 462 px CSS. Mais 462
+            // n'est pas une hauteur CHOISIE : c'est TOUT ce qui reste sous le chrome dans le
+            // téléphone de la maquette (300 × 17,5/9 = 583 CSS, moins 121 de chrome = 462). Le
+            // nombre décrit un RESTE, pas une carte — et un reste ne se recopie pas d'un rapport
+            // d'aspect à un autre.
+            // ⇒ Figé, il laissait **285 px de fond NU entre le pied et le dock** sur 2400 (11,9 %
+            //   de la hauteur, mesuré sur la capture). Dans la maquette il n'y a AUCUNE bande de
+            //   ce genre : le pied touche le bas du cadre. Un bandeau mort au-dessus du dock ne se
+            //   lit pas comme une respiration, il se lit comme un écran qui n'a pas fini.
+            // ⇒ La CSS le disait déjà : `.serv6{height:100%}` et `.sv-body{flex:1}`. Le bloc qui
+            //   absorbe la différence est le CORPS, jamais le cadre. On étire donc entre les deux
+            //   insets publiés par le shell, et le `flexibleHeight` de la zone centrale fait le
+            //   reste — c'est exactement le mécanisme du flex de la maquette.
+            // ⚠️ Hors shell, les insets valent 0 et le cadre remplit tout : le comportement d'avant
+            //   que ces champs existent.
             GameObject corpsGo = NouveauUI("Corps", racine.transform);
             corps = (RectTransform)corpsGo.transform;
-            corps.anchorMin = new Vector2(0f, 1f);
-            corps.anchorMax = new Vector2(1f, 1f);
-            corps.pivot = new Vector2(0.5f, 1f);
-            corps.offsetMin = Vector2.zero;
-            corps.offsetMax = Vector2.zero;
-            corps.anchoredPosition = new Vector2(0f, -ShellChrome.TopInsetPx);
-            corps.sizeDelta = new Vector2(0f, Px(CssHauteurCadre));
+            corps.anchorMin = Vector2.zero;
+            corps.anchorMax = Vector2.one;
+            corps.pivot = new Vector2(0.5f, 0.5f);
+            corps.offsetMin = new Vector2(0f, ShellChrome.BottomInsetPx);
+            corps.offsetMax = new Vector2(0f, -ShellChrome.TopInsetPx);
 
             // `.serv6{display:flex;flex-direction:column}` — tête et bas à leur hauteur de
             // contenu, le corps prend le reste. `childForceExpandHeight=false` + un
@@ -814,9 +829,20 @@ namespace MafiaCleanCity.Operational
             disque.sprite = ProceduralUI.RadialDisc(32, Color.white, Color.white);
             disque.color = disponible ? DelegationResolvers.Or : DelegationResolvers.JetonRondUse;
             disque.raycastTarget = false;
+            // ⛔⛔ `preferredWidth` NE SUFFIT PAS — MESURÉ SUR LA PREMIÈRE CAPTURE : le rond rendait
+            // **39 × 54 px** là où 16 px CSS à 3,6× en imposent 58 × 58. Ratio h/l = 1,385 : une
+            // ELLIPSE d'or, exactement la classe que ⑲ a déjà payée sur ses pastilles.
+            // Le mécanisme : un `HorizontalLayoutGroup` dont la somme des largeurs préférées
+            // dépasse sa propre largeur RÉTRÉCIT ses enfants vers leur `minWidth` — qui vaut ZÉRO
+            // par défaut. `preferredWidth` est un SOUHAIT, `minWidth` est un PLANCHER, et seul le
+            // plancher tient quand la place manque. La hauteur, elle, n'était disputée par
+            // personne : d'où une compression sur UN SEUL AXE, et donc un cercle devenu ovale.
+            // ⇒ *Un défaut qui n'apparaît que sur un axe désigne une contrainte de layout, pas une
+            //   erreur de valeur* — les deux nombres écrits étaient justes.
             LayoutElement leRond = rond.AddComponent<LayoutElement>();
             leRond.preferredWidth = Px(CssJetonRond); leRond.preferredHeight = Px(CssJetonRond);
-            leRond.flexibleWidth = 0f;
+            leRond.minWidth = Px(CssJetonRond); leRond.minHeight = Px(CssJetonRond);
+            leRond.flexibleWidth = 0f; leRond.flexibleHeight = 0f;
             GameObject anneau = NouveauUI("Anneau", rond.transform);
             Etirer((RectTransform)anneau.transform);
             Image bord = AjouterImage(anneau);
@@ -884,6 +910,10 @@ namespace MafiaCleanCity.Operational
             croImg.raycastTarget = false;
             LayoutElement leCro = cro.AddComponent<LayoutElement>();
             leCro.preferredWidth = Px(CssCroLarg); leCro.preferredHeight = Px(CssCroHaut);
+            // Même plancher que le rond du jeton, et pour le même mécanisme : sans `minWidth`,
+            // ce filet se fait rétrécir dès que la ligne est serrée. Ici il ne l'était pas encore —
+            // on ferme la CLASSE plutôt que l'instance qu'on a vue.
+            leCro.minWidth = Px(CssCroLarg); leCro.minHeight = Px(CssCroHaut);
             leCro.flexibleWidth = 0f; leCro.flexibleHeight = 0f;
 
             GameObject q = NouveauUI("Q", go.transform);
@@ -968,6 +998,10 @@ namespace MafiaCleanCity.Operational
             croImg.raycastTarget = false;
             LayoutElement leCro = cro.AddComponent<LayoutElement>();
             leCro.preferredWidth = Px(CssCroLarg); leCro.preferredHeight = Px(CssCroHaut);
+            // Même plancher que le rond du jeton, et pour le même mécanisme : sans `minWidth`,
+            // ce filet se fait rétrécir dès que la ligne est serrée. Ici il ne l'était pas encore —
+            // on ferme la CLASSE plutôt que l'instance qu'on a vue.
+            leCro.minWidth = Px(CssCroLarg); leCro.minHeight = Px(CssCroHaut);
             leCro.flexibleWidth = 0f; leCro.flexibleHeight = 0f;
 
             GameObject q = NouveauUI("Q", go.transform);
