@@ -2842,8 +2842,8 @@ namespace MafiaCleanCity.Operational.Lieutenant
         {
             if (Destroyed || tierBadgeText == null) return;
             tierBadgeText.text = ConditionEditorVisible
-                ? $"Vocabulary Tier {VocabularyTier} — conditions unlocked (AND_IF)"
-                : "Vocabulary Tier 1 — conditions locked 🔒 (resolve exceptions + teach rules to unlock)";
+                ? Lib($"Palier de vocabulaire {VocabularyTier} — conditions débloquées (AND_IF)")
+                : Lib("Palier de vocabulaire 1 — conditions verrouillées 🔒 (résolvez des exceptions et enseignez des règles pour débloquer)");
         }
 
         // ----------------------------------------------------------- locked-tier teaser (B3)
@@ -2886,17 +2886,17 @@ namespace MafiaCleanCity.Operational.Lieutenant
             // one-frame stragglers are harmless).
             textComponents.RemoveAll(t => t == null);
 
-            AddLockedLine(lockedTeaserRows, "Triggers");
+            AddLockedLine(lockedTeaserRows, Lib("Déclencheurs"));
             foreach (RuleModel.LockedPrimitive p in RuleModel.LockedTriggers)
                 AddLockedLine(lockedTeaserRows, "  " + p.Label);
 
-            AddLockedLine(lockedTeaserRows, "Actions");
+            AddLockedLine(lockedTeaserRows, Lib("Actions"));
             foreach (RuleModel.LockedPrimitive p in RuleModel.LockedActions)
                 AddLockedLine(lockedTeaserRows, "  " + p.Label);
 
             if (!ConditionEditorVisible)
             {
-                AddLockedLine(lockedTeaserRows, "Combinator");
+                AddLockedLine(lockedTeaserRows, Lib("Combinateur"));
                 AddLockedLine(lockedTeaserRows, "  " + RuleModel.LockedCombinator.Label);
             }
         }
