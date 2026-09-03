@@ -60,7 +60,40 @@ public static class MafiaCI
     // livrées, compilées, et JAMAIS EXÉCUTÉES par le juge — la forme la plus économique de garde
     // décorative. *Écrire une garde ne l'installe pas ; l'inscrire au filtre, si.*
     private static readonly string[] Categories =
-        { "W4P4a", "W3UDA", "W3U1", "W3U2", "Charpente", "DemoIdentity", "ScreenB3", "ShellSurimpression", "CaptureDistrict", "CaptureReputation", "CaptureFamille", "Joignabilite", "ScreenCarte", "CaptureCarte", "EcranAutonomy", "EcranExceptions", "EcranRegleLieutenant", "EcranTenureLieutenant", "EcranUiLieutenant", "EcranRegleTier2" };
+        { "W4P4a", "W3UDA", "W3U1", "W3U2", "Charpente", "DemoIdentity", "ScreenB3", "ShellSurimpression", "CaptureDistrict", "CaptureReputation", "CaptureFamille", "Joignabilite", "ScreenCarte", "CaptureCarte", "EcranAutonomy", "EcranExceptions", "EcranRegleLieutenant", "EcranTenureLieutenant", "EcranUiLieutenant", "EcranRegleTier2", "EcranDelegation", "EcranDemolition" };
+    // `EcranDelegation` (㉜, 6 tests) ajoutée le 2026-09-03 (chantier F),
+    // pour LA raison que ce fichier documente déjà trois fois. ㉜ a été livré et mergé avec sa
+    // suite compilée, verte en local, et INJOIGNABLE par le juge : aucun filtre exécutable ne la
+    // nommait. *Écrire une garde ne l'installe pas ; l'inscrire au filtre, si.* — et cette fois
+    // c'est un voisin qui l'a mesuré (TD-574 : 97 tests PlayMode dans ce cas), pas moi, sur un
+    // écran que je venais de déclarer clos.
+    // ⇒ La leçon qui vaut au-delà du cas : *une garde que son AUTEUR croit installée est
+    //   exactement celle que personne ne re-vérifie*, parce qu'il l'a vue verte de ses yeux — en
+    //   la LANÇANT LUI-MÊME par une surcharge `MAFIA_CI_CATEGORIES`, c'est-à-dire par le seul
+    //   chemin qui contourne le défaut.
+    // ★★ ET LA VERSION LA PLUS BÊTE DE CETTE FAUTE, COMMISE ICI MÊME UNE HEURE APRÈS L'AVOIR
+    //   ÉCRITE : j'ai inscrit `EcranDelegation` en affirmant qu'elle « avait tourné verte au
+    //   run 5 ». Elle n'avait JAMAIS tourné — les runs 5 à 7 portaient `Joignabilite`,
+    //   `PhotoPlanche` et `EcranDemolition`. Les lignes de commande étaient dans mon propre
+    //   journal ; je ne les ai pas relues. *Une catégorie qu'on croit avoir lancée et une
+    //   catégorie lancée rendent le même souvenir — seule la ligne de commande les distingue.*
+    //   Les deux sont ici parce qu'elles sont VERTES au run 9 (`passed=17`, catégories réellement
+    //   exécutées imprimées dans le log), pas parce que je m'en souvenais.
+    // ⛔⛔ ET L'ORDRE COMPTE : ON N'INSCRIT PAS UNE CATÉGORIE QU'ON N'A JAMAIS VUE TOURNER.
+    // J'avais inscrit ici, dans le même geste, `EcranDemolition` — dont AUCUN test n'avait encore
+    // été exécuté une seule fois. Un voisin l'a arrêté : `HUDv31` inscrite sans run préalable a
+    // fait un CORE DUMP du juge, et un juge mort ne rapporte rien sur AUCUNE des autres catégories.
+    // ⇒ *Inscrire au filtre est un geste de PUBLICATION, pas de déclaration* : il expose tous les
+    //   autres lots au comportement d'un test que personne n'a encore exercé. La séquence est donc :
+    //   lancer la catégorie par surcharge `MAFIA_CI_CATEGORIES`, la voir verte, PUIS l'inscrire.
+    // ⇒ Et c'est le pendant exact de la leçon du dessus : celle-ci dit « une garde non inscrite ne
+    //   tourne jamais », celle-là dit « une garde inscrite sans avoir tourné peut tuer le juge ».
+    //   Les deux fautes sont symétriques, et on ne peut pas les éviter toutes les deux d'un seul
+    //   geste — il en faut deux, dans cet ordre.
+    // ⚠️ Les catégories `Photo*` de ces écrans ne sont VOLONTAIREMENT pas ici : la capture
+    //   qui fait foi est celle de la planche, prise SOUS CHROME (`PhotoPlanche`). La capture
+    //   isolée du gabarit reste adressable à la demande, elle ne doit simplement pas coûter deux
+    //   rendus à chaque run du juge. Ce n'est donc pas un oubli — c'est le régime, écrit.
     // `ScreenCarte` et `CaptureCarte` ajoutees le 2026-09-02 (chantier C) — POUR LA RAISON QUE CE
     // FICHIER DOCUMENTE DEJA DEUX FOIS. Mesure du jour sur `Assets/Tests/PlayMode` : 86 fichiers,
     // 68 portent une categorie, 15 n'en portent AUCUNE et abritent 30 tests. Les 4 suites de la

@@ -765,21 +765,60 @@ namespace MafiaCleanCity.Operational
             return (RectTransform)go.transform;
         }
 
-        /// <summary>`.sv-body{flex:1;min-height:0;overflow:hidden;padding:10px 13px 0}`.</summary>
+        /// <summary>`.dm-body{flex:1;min-height:0;overflow:hidden}` — et les TROIS morceaux comptent.
+        ///
+        /// ⛔⛔ `overflow:hidden` N'ÉTAIT PAS IMPLÉMENTÉ, ET LA CAPTURE L'A DIT. Avec 17 sites, la
+        /// liste réclamait sa hauteur de contenu : le groupe vertical parent la lui accordait,
+        /// l'écran DÉBORDAIT sous le dock, et la tête se faisait écraser — titre et sous-titre
+        /// superposés. Rien dans le code ne bornait la zone ; `min-height:0` seul ne borne pas,
+        /// il autorise seulement à rétrécir.
+        /// ⇒ Trois gestes, un par morceau de la CSS, et aucun n'est facultatif :
+        ///   · `preferredHeight = 0` — la zone ne RÉCLAME rien. Sans ça elle demande la hauteur de
+        ///     ses 17 enfants et le parent la sert avant de servir la tête et le pied.
+        ///   · `flexibleHeight = 1` — elle prend ce qui RESTE, et rien de plus. C'est `flex:1`.
+        ///   · `RectMask2D` — elle COUPE ce qui dépasse. C'est `overflow:hidden`, et c'est la seule
+        ///     des trois qui empêche un enfant de dessiner par-dessus le dock.
+        /// ⚠️ Et comme couper sans donner accès au reste rendrait des sites INJOIGNABLES, la zone
+        ///   est aussi un `ScrollRect` vertical. La maquette ne le montre pas parce qu'elle n'a
+        ///   jamais eu que quatre rangées ; le monde réel en a dix-sept. *Une maquette dessine un
+        ///   cas, pas une borne.*
+        /// ⇒ `zoneCentrale` est le CONTENU (ce qui défile), pas la fenêtre : tous les blocs
+        ///   continuent de s'y parenter sans rien savoir du défilement.</summary>
         private RectTransform ConstruireZoneCentrale(Transform parent)
         {
-            GameObject go = NouveauUI("Corps", parent);
-            LayoutElement le = go.AddComponent<LayoutElement>();
-            le.flexibleHeight = 1f;   // c'est LUI qui absorbe la hauteur restante — `flex:1`
-            le.minHeight = 0f;        // `min-height:0`, sinon un enfant trop grand pousse la tête
+            GameObject fenetre = NouveauUI("Corps", parent);
+            LayoutElement le = fenetre.AddComponent<LayoutElement>();
+            le.flexibleHeight = 1f;
+            le.minHeight = 0f;
+            le.preferredHeight = 0f;
+            fenetre.AddComponent<RectMask2D>();
+            ScrollRect sr = fenetre.AddComponent<ScrollRect>();
+            sr.horizontal = false;
+            sr.vertical = true;
+            sr.movementType = ScrollRect.MovementType.Clamped;
+            sr.scrollSensitivity = 40f;
 
-            VerticalLayoutGroup v = go.AddComponent<VerticalLayoutGroup>();
+            GameObject contenu = NouveauUI("Contenu", fenetre.transform);
+            RectTransform rtc = (RectTransform)contenu.transform;
+            rtc.anchorMin = new Vector2(0f, 1f);
+            rtc.anchorMax = new Vector2(1f, 1f);
+            rtc.pivot = new Vector2(0.5f, 1f);
+            rtc.offsetMin = Vector2.zero;
+            rtc.offsetMax = Vector2.zero;
+            sr.viewport = (RectTransform)fenetre.transform;
+            sr.content = rtc;
+
+            VerticalLayoutGroup v = contenu.AddComponent<VerticalLayoutGroup>();
             v.padding = new RectOffset(PxTrait(CssMargeH), PxTrait(CssMargeH), PxTrait(CssBodyPadHaut), 0);
-            v.spacing = Px(CssPlaqueBas);   // `.sv-plaque{margin-bottom:5px}`
+            v.spacing = Px(CssPlaqueBas);
             v.childAlignment = TextAnchor.UpperCenter;
-            v.childControlWidth = true;  v.childControlHeight = true;
+            v.childControlWidth = true; v.childControlHeight = true;
             v.childForceExpandWidth = true; v.childForceExpandHeight = false;
-            return (RectTransform)go.transform;
+            // Le contenu se dimensionne sur ses enfants — c'est ce qui donne au ScrollRect une
+            // course à parcourir. Sans lui, la zone couperait et il n'y aurait rien à faire défiler.
+            ContentSizeFitter csf = contenu.AddComponent<ContentSizeFitter>();
+            csf.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            return rtc;
         }
 
         /// <summary>`.sv-bas{flex:none;background:#141a21;border-top:2px solid #2c3640;

@@ -738,6 +738,13 @@ namespace MafiaCleanCity.Shell
             // budgets. La source unique est `structural_budget` de `session/open`, que le shell
             // tient déjà (`LastSessionOpen`) ; aucun des trois ne rouvre de session pour le lire.
             ("CE QUE VOUS AVEZ CONFIÉ", () => MountTenant<DelegationScreenController>()), // ㉜
+
+            // ㉝ — raser un site. Deuxième des trois écrans qui partagent le jeton de structure,
+            // et le seul qui le DÉPENSE de façon irréversible : une démolition ne se rejoue pas.
+            // Mesuré le 2026-09-03 : après un `decommission` réussi, `structural_budget` passe à
+            // `{used:1, cap_reached:true}` — donc ㉜ doit éteindre son geste dans la même session,
+            // et il le fait, en lisant la même source (`JetonDeStructure`).
+            ("RASER UN SITE", () => MountTenant<DemolitionScreenController>()),           // ㉝
         };
 
         /// <summary>Monte le menu « Plus » : une entrée par destination, chacune montant son écran.
