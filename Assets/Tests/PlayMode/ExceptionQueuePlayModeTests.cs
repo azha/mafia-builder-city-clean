@@ -64,9 +64,25 @@ namespace MafiaCleanCity.Operational.Tests
 
             // A test may end with a detail screen still open (its Nav_ host is a SIBLING of controllerGo) —
             // destroy it too so its canvas overlay never leaks into the next test (final-review Minor 1).
+            // ⛔⛔ `DestroyImmediate`, JAMAIS `Destroy` — ET C'EST LA CAUSE DE TD-576.
+            // `Object.Destroy` est DIFFÉRÉ à la fin de la frame : le contrôleur survit au
+            // `[TearDown]`, ses coroutines continuent de courir, et sa requête en vol revient
+            // PENDANT LE TEST SUIVANT. Elle journalise alors « [ExceptionQueue] load failed:
+            // 401 » — et NUnit impute tout log d'erreur non déclaré au test qui court à cet
+            // instant.
+            // ★ *La victime n'est donc jamais le test fautif : c'est celui qui passait par là.*
+            //   D'où toute la signature de TD-576 — vert SEUL, rouge EN GROUPE, et un test
+            //   accusé DIFFÉRENT d'un run à l'autre. Mesuré ici sur `ScreenB3,EcranExceptions` :
+            //   `B3C1` accusé d'une erreur émise par la suite des exceptions. Les trois
+            //   `Capture*` tombaient pour la même raison — une capture dure longtemps, donc
+            //   c'est elle qui a le plus de chances de courir quand l'orphelin parle.
+            // ⇒ `DestroyImmediate` arrête les coroutines SYNCHRONEMENT, avant que le test
+            //   suivant ne commence. Un objet « détruit » qui vit encore une frame n'est pas
+            //   détruit : il est en sursis, et ce sursis est partagé.
             var queue = controllerGo != null ? controllerGo.GetComponent<ExceptionQueueController>() : null;
-            if (queue != null && queue.LastNavGameObject != null) Object.Destroy(queue.LastNavGameObject);
-            if (controllerGo != null) Object.Destroy(controllerGo);
+            if (queue != null && queue.LastNavGameObject != null) Object.DestroyImmediate(queue.LastNavGameObject);
+            if (controllerGo != null) Object.DestroyImmediate(controllerGo);
+            controllerGo = null;
         }
 
         // Seed THIS fixture's precondition immediately before its tests run. Seeding in
