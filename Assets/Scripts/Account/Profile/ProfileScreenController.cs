@@ -143,7 +143,12 @@ namespace MafiaCleanCity.Account.Profile
             videTexte.gameObject.SetActive(EtatVide);
             if (EtatVide)
             {
-                videTexte.text = DerniereErreur == null ? "Aucun profil." : "Le profil n'a pas répondu.";
+                // ⛔ DEUX littéraux sur une ligne, et mon propre outil n'en comptait qu'UN : sa
+                // regex s'arrêtait au premier. Corrigé le 2026-09-03 — un instrument qui
+                // sous-compte rassure sans se signaler.
+                videTexte.text = DerniereErreur == null
+                    ? Lib("Aucun profil.")
+                    : Lib("Le profil n'a pas répondu.");
                 RendusEffectues++;
                 return;
             }
@@ -283,5 +288,15 @@ namespace MafiaCleanCity.Account.Profile
             le.flexibleWidth = 1f;
             return t;
         }
+
+        /// <summary>Item 0.6 — les littéraux STATIQUES de cet écran passent par
+        /// `profil.bloc.<slug>`, avec repli sur le littéral lui-même : tant que le dictionnaire
+        /// ne porte pas la clé, l'affichage est BYTE-IDENTIQUE à avant. C'est ce qui rend la
+        /// conversion sûre à livrer sans run.
+        /// ⚠️ N'Y PASSENT PAS les textes venus du serveur : les faire traduire par un catalogue
+        /// qui ne les connaît pas rendrait la même chaîne en prétendant l'avoir traduite.</summary>
+        private static string Lib(string litteral) =>
+            MafiaCleanCity.I18n.Libelle.De("profil", "bloc", litteral);
+
     }
 }
