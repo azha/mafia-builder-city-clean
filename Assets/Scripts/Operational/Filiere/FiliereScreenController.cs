@@ -101,12 +101,15 @@ namespace MafiaCleanCity.Operational
         public bool RenduTermine { get; private set; }
 
         // ---- crochets de test ---------------------------------------------------------------
-        public GetLaunderingResponseDto DernierChargement { get; private set; }
+        public LaunderingPipelineDto DernierChargement { get; private set; }
         public string DerniereErreur { get; private set; }
         public long DernierCodeErreur { get; private set; }
 
         private RectTransform racinePleinEcran;
-        private FiliereClient client;
+        // ⛔ `LaunderingClient` — LE PRODUCTEUR QUI EXISTAIT DÉJÀ, pas un client neuf.
+        // Le générateur m'en avait fabriqué un second (`FiliereClient`), supprimé : ⑪ appelle ces
+        // quatre routes depuis toujours, et sous un préfixe que je n'avais pas cherché.
+        private MafiaCleanCity.Operational.LaunderingClient client;
         private bool initialise;
 
         private float Px(float css) =>
@@ -143,7 +146,7 @@ namespace MafiaCleanCity.Operational
         {
             if (initialise) return;
             initialise = true;
-            client = new FiliereClient { BaseUrl = baseUrl };
+            client = new MafiaCleanCity.Operational.LaunderingClient { BaseUrl = baseUrl };
             BuildLayout();
         }
 
@@ -177,7 +180,7 @@ namespace MafiaCleanCity.Operational
                 yield break;
             }
 
-            yield return client.GetLaundering(token, nodeId,
+            yield return client.GetLaunderingPipeline(nodeId, token,
                 dto => DernierChargement = dto,
                 (code, msg) => { DernierCodeErreur = code; DerniereErreur = msg; });
 
@@ -193,7 +196,7 @@ namespace MafiaCleanCity.Operational
         /// <summary>Rend un corps FABRIQUÉ, sans réseau — réservé aux tests (patron ㊲,
         /// `RendrePourTest`). Ne prouve jamais que le back émet ce corps, seulement ce que
         /// l'écran EN FAIT.</summary>
-        public void RendrePourTest(GetLaunderingResponseDto dto)
+        public void RendrePourTest(LaunderingPipelineDto dto)
         {
             EnsureInitialized();
             AppliquerEtat(dto);
@@ -202,7 +205,7 @@ namespace MafiaCleanCity.Operational
         /// <summary>// MÉTIER ICI — TOUT le rendu métier de cet écran part d'ici. Vide à
         /// dessein : remplir depuis la maquette RATIFIÉE et le corps RÉEL mesuré, jamais depuis
         /// une supposition sur ce que l'interface TypeScript back "devrait" rendre.</summary>
-        private void AppliquerEtat(GetLaunderingResponseDto dto)
+        private void AppliquerEtat(LaunderingPipelineDto dto)
         {
             // MÉTIER ICI
         }
