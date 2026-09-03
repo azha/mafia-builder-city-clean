@@ -2842,7 +2842,18 @@ namespace MafiaCleanCity.Operational.Lieutenant
         {
             if (Destroyed || tierBadgeText == null) return;
             tierBadgeText.text = ConditionEditorVisible
-                ? Lib($"Palier de vocabulaire {VocabularyTier} — conditions débloquées (AND_IF)")
+                // ⛔ PAS DE `Lib(…)` ICI, ET C'EST LE CORRECTIF D'UNE FAUTE QUE J'AI COMMISE.
+                // Cette phrase est INTERPOLÉE : `Libelle.De` dérive sa clé du littéral, donc au
+                // palier 1 elle demanderait `…_palier_de_vocabulaire_1_…`, au palier 2
+                // `…_2_…` — UNE CLÉ PAR PALIER, dont aucune ne serait jamais servie.
+                // ⇒ `Libelle` l'interdit dans sa propre docstring : « RÉSERVÉ AUX PHRASES
+                //   FERMÉES … une phrase calculée relève d'une clé À PARAMÈTRES, donc d'un lot
+                //   back ». Je l'ai enfreint en convertissant en masse, et c'est l'extracteur de
+                //   clés qui l'a montré : il a produit `…_vocabularytier_…`, une clé dérivée du
+                //   TEXTE SOURCE que le client ne demandera jamais — j'allais la faire servir.
+                // ⇒ *Une conversion mécanique traverse les exceptions sans les voir.* Restaurée
+                //   en littéral tant qu'il n'y a pas de clé à paramètres. TD-537.
+                ? $"Palier de vocabulaire {VocabularyTier} — conditions débloquées (AND_IF)"
                 : Lib("Palier de vocabulaire 1 — conditions verrouillées 🔒 (résolvez des exceptions et enseignez des règles pour débloquer)");
         }
 
