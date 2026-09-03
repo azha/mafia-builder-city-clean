@@ -364,6 +364,33 @@ namespace MafiaCleanCity.Operational
         public void SetMountParent(Transform parent)
         {{
             mountParent = parent;
+
+            // ⛔⛔ LES DEUX GESTES CI-DESSOUS SONT UN CORRECTIF MESURÉ (2026-09-03, écran ㉜),
+            // et ce gabarit produit les écrans qui restent : sans eux, CHACUN naîtrait avec le
+            // même défaut. Le gabarit faisait bâtir la racine sous `mountParent` (= `ContentSlot`) :
+            // elle devenait un FRÈRE de l'hôte du locataire au lieu de son enfant. La garde d'ordre
+            // de fratrie de la planche l'a dit au premier montage réel — « frère 18 sur 20 — ce qui
+            // se dessine PAR DESSUS : [19] <Nom>Root graphics=52 ». L'écran était complet et se
+            // recouvrait LUI-MÊME : la garde mesurait l'hôte, le dessin vivait sur la racine.
+            // ⇒ Les écrans qui passent déjà sous le shell (`Shop`, `Settings`, …) font tous
+            //   l'inverse : hôte étiré au conteneur, hôte DERNIER, racine sous l'hôte.
+
+            // (1) L'hôte remplit son conteneur. Sans ça son rect reste à 100×100 — la taille par
+            // défaut d'un RectTransform neuf — et tout ce qu'on bâtit dessous tient dans 100 px,
+            // sans la moindre erreur console.
+            RectTransform rtHote = transform as RectTransform;
+            if (rtHote != null)
+            {{
+                rtHote.anchorMin = Vector2.zero;
+                rtHote.anchorMax = Vector2.one;
+                rtHote.offsetMin = Vector2.zero;
+                rtHote.offsetMax = Vector2.zero;
+            }}
+
+            // (2) Un locataire monté en surimpression doit être le DERNIER enfant, sinon il est
+            // rendu SOUS ses frères. Propriété STRUCTURELLE : aucun pixel, aucune résolution.
+            transform.SetAsLastSibling();
+
             EnsureInitialized();
         }}
 
@@ -389,7 +416,16 @@ namespace MafiaCleanCity.Operational
         // parent, et `EnsureInitialized` est idempotent, donc le premier des deux qui arrive gagne
         // sans que le second ne reconstruise. Sans ce filet, un écran monté sans `SetMountParent`
         // ni `Charger()` ne se construirait JAMAIS — un vert par absence, pas une économie.
-        private void Start() => EnsureInitialized();
+        private void Start()
+        {{
+            // ⛔ RÉPÉTÉ ICI, ET CE N'EST PAS UNE REDONDANCE. Le shell ajoute des enfants à
+            // `ContentSlot` APRÈS la fenêtre synchrone du montage — mesuré ailleurs dans ce dépôt :
+            // « frère 6 sur 11 » restait inchangé quand l'ordre n'était posé qu'au montage.
+            // `Start()` court à la frame SUIVANTE : c'est le premier instant où « être dernier »
+            // est stable.
+            if (transform.parent != null) transform.SetAsLastSibling();
+            EnsureInitialized();
+        }}
 
         private void EnsureInitialized()
         {{
@@ -463,7 +499,10 @@ namespace MafiaCleanCity.Operational
                 sc.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
                 sc.referenceResolution = new Vector2(1280, 720);
             }}
-            Transform root = mountParent != null ? mountParent : canvas.transform;
+            // ⛔ SOUS L'HÔTE, PAS SOUS `mountParent` — voir `SetMountParent`. Monté dans le shell,
+            // `transform` EST déjà l'enfant de `ContentSlot` que le shell gouverne. Hors shell
+            // (test isolé), l'hôte n'est sous aucun canvas : on retombe sur le canvas découvert.
+            Transform root = mountParent != null ? transform : canvas.transform;
 
             // La racine PLEIN ÉCRAN — jamais un panneau intermédiaire : c'est elle qui sert de
             // référence d'échelle à `Px()`/`PxTrait()` (un conteneur plus étroit fausserait

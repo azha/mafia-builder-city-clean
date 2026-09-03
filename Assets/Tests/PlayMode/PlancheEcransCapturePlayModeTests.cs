@@ -14,6 +14,7 @@ using MafiaCleanCity.Account.Profile;
 using MafiaCleanCity.Onboarding;
 using MafiaCleanCity.Operational.Selling;
 using MafiaCleanCity.Account.Settings;
+using MafiaCleanCity.Operational;
 
 namespace MafiaCleanCity.Shell.Tests
 {
@@ -158,6 +159,16 @@ namespace MafiaCleanCity.Shell.Tests
             // à la reproduire pour prouver que les huit écrans RENDENT — c'est une autre
             // propriété, et la confondre ferait passer un défaut de shell pour un défaut d'écran.
             yield return Capturer<ShopScreenController>(shell, "la_vitrine", e => e.RendusEffectues > 0, echecs);
+            // ㉜ — le tableau de service (chantier F, 2026-09-03). Même prédicat structurel que
+            // les huit autres : `RendusEffectues` ne monte qu'après le DERNIER `Construire…`,
+            // jamais à l'arrivée d'un champ.
+            // ⚠️ Sur un compte neuf cet écran est dans son état le plus PLAT — les quatre charges
+            // tenues par le joueur, aucune confiée, aucun aperçu de reprise. C'est l'état m-73 de
+            // la planche, et c'est celui qu'un joueur voit vraiment au premier jour : la capture
+            // n'est donc pas un cas dégénéré, mais elle n'exerce ni le cadre « confié » (m-75) ni
+            // l'aperçu (m-76), qui exigent une délégation réelle — laquelle exige `ELIGIBLE`,
+            // qu'aucun compte frais n'atteint. Consigné, pas masqué : TD-531.
+            yield return Capturer<DelegationScreenController>(shell, "ce_que_vous_avez_confie", e => e.RendusEffectues > 0, echecs);
 
             Assert.IsEmpty(echecs, "écrans en défaut :\n  · " + string.Join("\n  · ", echecs));
         }
