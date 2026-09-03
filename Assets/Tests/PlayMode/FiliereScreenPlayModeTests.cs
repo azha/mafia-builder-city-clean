@@ -226,7 +226,7 @@ namespace MafiaCleanCity.Operational.Tests
 
             // 1. De quoi le joueur dispose-t-il ? La planque, si elle existe, doit être quelque
             //    part — on regarde d'abord ce que les routes de lecture rendent SANS nodeId.
-            foreach (string route in new[] { "/v1/laundering", "/v1/me/buildings" })
+            foreach (string route in new[] { "/v1/operational/laundering", "/v1/me/state" })
             {
                 using (var req = UnityEngine.Networking.UnityWebRequest.Get("http://localhost" + route))
                 {
@@ -240,7 +240,7 @@ namespace MafiaCleanCity.Operational.Tests
             }
 
             // 2. LA question : `inject` passe-t-il ?
-            using (var req = new UnityEngine.Networking.UnityWebRequest("http://localhost/v1/laundering/inject", "POST"))
+            using (var req = new UnityEngine.Networking.UnityWebRequest("http://localhost/v1/operational/laundering/inject", "POST"))
             {
                 req.uploadHandler = new UnityEngine.Networking.UploadHandlerRaw(
                     System.Text.Encoding.UTF8.GetBytes("{}"));
@@ -252,7 +252,7 @@ namespace MafiaCleanCity.Operational.Tests
                 yield return req.SendWebRequest();
                 string corps = req.downloadHandler != null ? req.downloadHandler.text : "(vide)";
                 if (corps != null && corps.Length > 1200) corps = corps.Substring(0, 1200) + " …TRONQUÉ";
-                Debug.Log($"[C2-SONDE] POST /v1/laundering/inject -> {req.responseCode}\n{corps}");
+                Debug.Log($"[C2-SONDE] POST /v1/operational/laundering/inject -> {req.responseCode}\n{corps}");
             }
         }
 
