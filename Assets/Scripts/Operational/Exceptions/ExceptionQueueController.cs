@@ -691,7 +691,7 @@ $"{QuiParle(c)} · {Cap(c.severity_band)} · {Cap(c.priority_band)}", 8f, TextSe
             string d = c.event_descriptor.ToLowerInvariant();
 
             // reputation — Boss Mirror (04c §3.1)
-            if (d.Contains("boss_mirror") || d.Contains("mirror")) return MafiaCleanCity.I18n.Libelle.De("exceptions", "categorie", "REPUTATION");
+            if (d.Contains("boss_mirror") || d.Contains("mirror")) return MafiaCleanCity.I18n.Libelle.De("exceptions", "categorie", "RÉPUTATION");
             // diplomacy — Sealed-Envelope (§4.7), Shared Exposure Lock (§4.5)
             if (d.Contains("sealed_envelope") || d.Contains("exposure") || d.Contains("pact"))
                 return MafiaCleanCity.I18n.Libelle.De("exceptions", "categorie", "DIPLOMATIE");

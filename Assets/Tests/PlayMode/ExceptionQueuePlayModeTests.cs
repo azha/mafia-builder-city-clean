@@ -51,6 +51,17 @@ namespace MafiaCleanCity.Operational.Tests
         [TearDown]
         public void TearDown()
         {
+            // ⛔⛔ LE CATALOGUE i18n EST UN GLOBAL STATIQUE MUTABLE, et le rendre était écrit DANS
+            // le corps d'un test — donc sauté à la première assertion rouge. Un test qui échoue
+            // laissait alors `I18nCatalog` peuplé pour TOUS les tests suivants du run : un état
+            // partagé qui ne se manifeste qu'EN GROUPE, jamais en solo. C'est le mécanisme que
+            // TD-576 cherchait à nommer — le premier trouvé qui ne passe par AUCUN pixel, donc
+            // qui n'incrimine pas le pilote graphique.
+            // ⇒ Le nettoyage d'un global appartient au TEARDOWN, jamais à la fin du corps :
+            //   *un nettoyage écrit à la fin d'un test ne s'exécute que si le test réussit,
+            //   c'est-à-dire exactement quand on n'en a pas besoin.*
+            MafiaCleanCity.I18n.I18nCatalog.Oublier();
+
             // A test may end with a detail screen still open (its Nav_ host is a SIBLING of controllerGo) —
             // destroy it too so its canvas overlay never leaks into the next test (final-review Minor 1).
             var queue = controllerGo != null ? controllerGo.GetComponent<ExceptionQueueController>() : null;
@@ -365,7 +376,11 @@ namespace MafiaCleanCity.Operational.Tests
                 new ExceptionCardDto { event_descriptor = descripteur };
 
             // positifs — un par famille du canon
-            Assert.AreEqual("REPUTATION",
+            // « REPUTATION » → « RÉPUTATION » (2026-09-03) : la thèse du test ne bouge pas — il
+            // vérifie que les QUATRE familles sont reconnues et que rien n'est inventé sinon ;
+            // seul l'accent sur la capitale change. Convention déjà posée par le menu Plus
+            // (« LA RÉPUTATION », `AppShell.cs`) : en français l'accent sur capitale est correct.
+            Assert.AreEqual("RÉPUTATION",
                 ExceptionQueueController.CategorieConflit(Carte("exception.boss_mirror.divergence")));
             Assert.AreEqual("DIPLOMATIE",
                 ExceptionQueueController.CategorieConflit(Carte("exception.sealed_envelope.reveal_due")));
@@ -571,7 +586,11 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.AreEqual("ONE_TIME", ExceptionDetailController.MethodFor(simple, addAsRule: true));
             Assert.AreEqual("ONE_TIME", ExceptionDetailController.MethodFor(enseignable, addAsRule: false));
 
-            MafiaCleanCity.I18n.I18nCatalog.Oublier();
+            // ⛔ PAS D'`Oublier()` ICI — il est au `[TearDown]`, voir plus haut. Posé en ligne, il
+            // était SAUTÉ dès qu'une des trois assertions ci-dessus échouait : NUnit lève, la
+            // dernière ligne ne court jamais, et le catalogue STATIQUE restait peuplé pour tout le
+            // reste du run. *Un nettoyage écrit à la fin d'un test ne s'exécute que si le test
+            // réussit — c'est-à-dire exactement quand on n'en a pas besoin.*
         }
 }
 }

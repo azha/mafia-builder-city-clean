@@ -266,17 +266,12 @@ namespace MafiaCleanCity.Operational
 
         // CleanlinessBucket projected by the laundering node (DIRTY | PARTIAL | MOSTLY_CLEAN | CLEAN).
         // The glyph is a fill-ramp (a11y: shape conveys the band independent of colour).
-        private static string CleanlinessLabel(string b)
-        {
-            switch (b)
-            {
-                case "CLEAN": return MafiaCleanCity.I18n.Libelle.De("blanchiment", "purete", "Clean");
-                case "MOSTLY_CLEAN": return MafiaCleanCity.I18n.Libelle.De("blanchiment", "purete", "Mostly clean");
-                case "PARTIAL": return "Partial";
-                case "DIRTY": return MafiaCleanCity.I18n.Libelle.De("blanchiment", "purete", "Dirty");
-                default: return b;
-            }
-        }
+        // ⛔ DÉLÉGUÉ AU PRODUCTEUR UNIQUE (`PureteResolvers.Libelle`). Ce `switch` existait ICI
+        // ET dans l'autre écran de la paire, identique à la clé i18n près — deux copies qui
+        // s'accordaient, donc invisibles. Voir `PureteResolvers` pour les deux défauts qu'elles
+        // partageaient : `PARTIAL` ne passait pas par `Libelle`, et `default` rendait
+        // l'identifiant brut du serveur à l'écran.
+        private static string CleanlinessLabel(string b) => PureteResolvers.Libelle(b);
         private static string CleanlinessGlyph(string b)
         {
             switch (b)
