@@ -72,12 +72,28 @@ public static class MafiaCI
     //   portée ? ») et accusait `PhotoEcranAppro`, qui est bel et bien portée par
     //   `ChaineDApproScreenPlayModeTests`. Un balayage qui accuse se vérifie sur un cas dont on
     //   SAIT la réponse avant de supprimer quoi que ce soit.
+    // ⚠️⚠️ TROISIÈME RETRAIT, le même jour, et cette fois c'est MOI (chantier C) qui l'avais
+    //   ressuscitée. Mécanisme : mes merges de `main` produisaient un conflit sur CETTE liste, et
+    //   je le résolvais en UNION à chaque fois — règle juste quand les deux côtés AJOUTENT, et
+    //   FAUSSE dès qu'un côté a délibérément RETIRÉ. L'union ne distingue pas « il ne l'a pas
+    //   encore » de « il l'a enlevée exprès ».
+    // ⇒ *Une union aveugle est un revert silencieux de toute suppression faite par l'autre
+    //   branche.* Le contrôle prescrit deux lignes plus haut — compter les PORTEURS de chaque
+    //   entrée après chaque merge — est ce qui l'a rattrapé, et c'est un compte, jamais une
+    //   mémoire. Rejoué ici : 24 entrées, 0 orpheline, contrôle positif sur `Joignabilite`.
+    // ⚠️ `PhotoEcranAppro`/`PhotoEcranDistribution`/`PhotoEcranLoi` retirées le 2026-09-03 pour
+    //   la raison INVERSE : leurs tests de capture hors shell ont été supprimés (mesurés vides —
+    //   2 teintes distinctes contre 563 sous le chrome réel), donc ces entrées n'ont plus aucun
+    //   porteur. Une entrée sans porteur affirme une couverture qui n'existe pas.
     private static readonly string[] Categories =
-        { "W4P4a", "W3UDA", "W3U1", "W3U2", "Charpente", "DemoIdentity", "ScreenB3", "ShellSurimpression", "CaptureDistrict", "CaptureReputation", "CaptureFamille", "CarteVille", "Joignabilite", "ScreenCarte", "CaptureCarte", "EcranAutonomy", "EcranExceptions", "EcranRegleLieutenant", "EcranTenureLieutenant", "EcranUiLieutenant", "EcranRegleTier2", "PhotoChantierC", "EcranAppro", "PhotoEcranAppro", "EcranDistribution", "PhotoEcranDistribution" };
+        {
+            "W4P4a", "W3UDA", "W3U1", "W3U2", "Charpente", "DemoIdentity", "ScreenB3", "ShellSurimpression", "CaptureDistrict", "CaptureReputation", "CaptureFamille", "Joignabilite", "ScreenCarte", "CaptureCarte", "EcranAutonomy", "EcranExceptions", "EcranRegleLieutenant", "EcranTenureLieutenant", "EcranUiLieutenant", "EcranRegleTier2", "PhotoChantierC", "EcranAppro", "EcranDistribution", "EcranLoi" };
     // ⚠️ AJOUT DU 2026-09-03 (㉘ « la distribution ») : `EcranDistribution`/`PhotoEcranDistribution`,
     // même geste que `EcranAppro`/`PhotoEcranAppro` la veille — TD-490 le dit noir sur blanc :
     // sans cette ligne, la suite est livrée, compilée, et JAMAIS exécutée par aucun juge, en
     // silence.
+    // ⚠️ AJOUT DU 2026-09-03, MÊME JOUR (㉛ « la loi ») : `EcranLoi`/`PhotoEcranLoi`, même geste,
+    // même raison — TD-490 encore.
     // ⚠️ UNION AU MERGE DU 2026-09-03 : `CarteVille` vient du lot « ville peinte », les huit
     // autres du chantier C et du mien. Les deux branches avaient RAISON séparément et le
     // conflit portait sur la LIGNE, pas sur l'intention — un filtre se fusionne toujours en

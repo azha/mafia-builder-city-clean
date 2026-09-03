@@ -106,7 +106,18 @@ namespace MafiaCleanCity.Shell.Tests
                 (e, _) => (e.DernierChargementCouriers != null && e.DernierChargementProjection != null)
                           || e.DerniereErreur != null, echecs);
 
-            // ㉛ ㉙ — ajoutés ici au fil du chantier, un appel chacun, jamais un test de plus.
+            // ㉛ LA LOI — « le parloir ».
+            // ⚠️ CE QUE CETTE CAPTURE MONTRE, et il faut le savoir : `GET /v1/me/legal` rend
+            // `{activeCases: [], lawyerRoster: []}` — LES DEUX VIDES sur le compte de démo, mesuré
+            // en direct. Le joueur peut recruter un avocat, mais il ne peut PAS se créer une
+            // affaire : elles naissent d'une descente. Les trois routes `cases/:id/*` sont donc
+            // inatteignables, et l'écran le DÉCLARE au lieu de le simuler. L'image montre un
+            // parloir sans affaire — l'état réel, pas un état d'échec.
+            yield return CaptureSousShell.CapturerLocataire<LoiScreenController>(
+                shell, "la_loi",
+                (e, _) => e.DernierChargement != null || e.DerniereErreur != null, echecs);
+
+            // ㉙ — ajouté ici au fil du chantier, un appel, jamais un test de plus.
 
             Assert.IsEmpty(echecs,
                 "captures du chantier C en échec :\n  · " + string.Join("\n  · ", echecs));
