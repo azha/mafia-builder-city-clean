@@ -274,42 +274,38 @@ namespace MafiaCleanCity.Shell.Tests
                 "sans elle aucun clic réel n'atteint ExceptionDetailController, et cette jambe de la chaîne " +
                 "serait vraie À VIDE (garde anti-vacuité).");
 
-            string nomLigne = "Card_" + queue.Cards[0].exception_id;
-            Transform ligne = TrouverDescendant(shell.ContentSlot, nomLigne);
-            // ⛔ CE « DOIT EXISTER » NE DISAIT PAS CE QU'IL AVAIT TROUVÉ — TD-577, 2026-09-03.
-            // Il rougit et personne n'a pu l'attribuer : le message ne portait que l'identifiant
-            // cherché, pas l'état du monde au moment de la recherche. On ne pouvait pas décider
-            // entre « la file n'a rendu AUCUNE ligne », « elle en a rendu d'AUTRES » et « l'écran a
-            // été démonté sous nous » — trois causes, trois correctifs.
-            // ★ Même faute que l'assertion sans message trouvée le même jour dans le test des
-            //   panneaux d'Accueil : *une assertion qui ne rapporte que ce qu'elle attendait oblige
-            //   le suivant à refaire la mesure.*
-            if (ligne == null)
+            // ⛔⛔ TD-577 RÉSOLU — CE TEST ÉTAIT PÉRIMÉ, PAS L'ÉCRAN. Il cherchait une ligne
+            // nommée `Card_<exception_id>`, produite par `ExceptionQueueController.AddCardRow`.
+            // Mesuré le 2026-09-03 : cette méthode a **ZÉRO appelant** — la file a été redessinée
+            // en « comptoir » (trois `Attendant{i}` qui attendent), et `AddCardRow` est du code mort
+            // que plus personne n'exécute. Le rouge n'a donc jamais dit « la carte servie n'est pas
+            // affichée » : il disait « je cherche un objet d'un design précédent ».
+            // ★ CE QU'IL A FALLU POUR LE SAVOIR : l'assertion d'origine était un `IsNotNull` dont le
+            //   message ne portait QUE l'identifiant cherché. Trois runs pour l'attribuer, et deux
+            //   sondes successives pour trancher — d'abord « 0 ligne sous ContentSlot » (qui ne
+            //   distingue pas *bâtie ailleurs* de *jamais bâtie*), puis la recherche dans TOUTE la
+            //   scène : **0 partout**, donc rien n'était bâti sous CE nom. *Une assertion qui ne
+            //   rapporte que ce qu'elle attendait fait payer trois runs à celui qui la trouve rouge.*
+            // ⇒ La propriété que ce test doit prouver n'a pas changé : depuis la file, un geste de
+            //   PRODUCTION atteint ⑩. Elle se prouve sur l'objet que l'écran construit VRAIMENT.
+            Transform attendant = TrouverDescendant(shell.ContentSlot, "Attendant0");
+            if (attendant == null)
             {
-                var lignesVues = new List<string>();
+                var vus = new List<string>();
                 foreach (Transform t in shell.ContentSlot.GetComponentsInChildren<Transform>(true))
-                    if (t.name.StartsWith("Card_"))
-                        lignesVues.Add(t.name + (t.gameObject.activeInHierarchy ? "" : " (INACTIF)"));
-                bool vivant = queue != null;
-                Assert.Fail(
-                    "la ligne " + nomLigne + " n'est pas dans la file RENDUE."
-                    + " · cartes servies par la file : " + queue.Cards.Length
-                    + " · lignes Card_* sous ContentSlot : " + lignesVues.Count
-                    + (lignesVues.Count == 0
-                        ? " — AUCUNE : la file n'a rien rendu, ou son écran a été démonté"
-                        : " -> [" + string.Join(", ", lignesVues) + "]")
-                    + " · écran de file : " + (!vivant ? "DÉTRUIT"
-                        : queue.gameObject.activeInHierarchy ? "actif" : "INACTIF")
-                    + " · sous ContentSlot : " + (vivant && queue.transform.IsChildOf(shell.ContentSlot))
-                    + " · locataire monté : " + (shell.MountedTenantType != null ? shell.MountedTenantType.Name : "(aucun)"));
+                    if (t.name.StartsWith("Attendant")) vus.Add(t.name);
+                Assert.Fail("aucun `Attendant0` sous ContentSlot — la file n'a rendu personne."
+                    + " cartes servies : " + queue.Cards.Length
+                    + " · `Attendant*` trouvés : " + (vus.Count == 0 ? "aucun" : string.Join(", ", vus))
+                    + " · écran de file : " + (queue.gameObject.activeInHierarchy ? "actif" : "INACTIF"));
             }
-            Transform boutonOuvrir = ligne.Find("Ouvrir");
-            Assert.IsNotNull(boutonOuvrir, "chaque ligne de la file doit porter un bouton 'Ouvrir' (ExceptionQueueController.AddCardRow)");
-            Button ouvrir = boutonOuvrir.GetComponent<Button>();
-            Assert.IsNotNull(ouvrir, "'Ouvrir' doit porter un Button");
-            // ⛔ round 4 (revue ⊥, BLOQUANT) — même correctif que CliquerBoutonNav ci-dessus :
-            // ProductionClickSupport.Click passe PAR l'EventSystem plutôt que d'invoquer la
-            // UnityEvent nue, jamais `queue.OpenDetail(card)` appelé directement non plus.
+            Button ouvrir = attendant.GetComponent<Button>();
+            Assert.IsNotNull(ouvrir,
+                "l'attendant doit PORTER le bouton qui ouvre sa carte — c'est le chemin joueur vers ⑩ "
+                + "(`RendreFile` pose une cible de toucher invisible sur chaque attendant). Sans lui, "
+                + "l'écran montre trois interlocuteurs dont aucun n'est joignable.");
+            // ⛔ round 4 (revue ⊥, BLOQUANT) — ProductionClickSupport.Click passe PAR l'EventSystem
+            // plutôt que d'invoquer la UnityEvent nue, jamais `queue.OpenDetail(card)` en direct.
             ProductionClickSupport.Click(ouvrir); // ⛔ LE GESTE DE PRODUCTION
             yield return null;
 

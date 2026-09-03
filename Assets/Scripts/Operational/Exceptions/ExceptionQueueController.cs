@@ -481,46 +481,12 @@ $"{QuiParle(c)} · {Cap(c.severity_band)} · {Cap(c.priority_band)}", 8f, TextSe
             TrackText(headerText, headerText.text);
             TrackText(err, err.text);
         }
-
-        // One queue row: severity glyph + descriptor (chrome) + the 3 bands + lieutenant badge + Open button.
-        private void AddCardRow(ExceptionCardDto card)
-        {
-            GameObject row = NewUI("Card_" + card.exception_id, rowsArea);
-            row.AddComponent<Image>().color = RowBg;
-            VerticalLayoutGroup v = row.AddComponent<VerticalLayoutGroup>();
-            v.padding = new RectOffset(10, 10, 6, 6);
-            v.spacing = 3;
-            v.childControlWidth = true; v.childControlHeight = true;
-            v.childForceExpandWidth = true; v.childForceExpandHeight = false;
-            AddLayoutElement(row, flexibleHeight: 0);
-
-            // Descriptor — producer free text (an i18n key may carry digits): CHROME, component-tracked only.
-            TextMeshProUGUI desc = NewText("Descriptor", row.transform, TexteServeur(card), 15, TextAlignmentOptions.Left);
-            desc.fontStyle = FontStyles.Bold;
-            AddLayoutElement(desc.gameObject, minHeight: 20, flexibleHeight: 0);
-
-            // Bands line — CLOSED labels, tracked (the scan corpus).
-            string bound = string.IsNullOrEmpty(card.lieutenant_id) ? "" : "  •  Lieutenant-bound";
-            string bands = $"{SeverityGlyph(card.severity_band)} Severity {Cap(card.severity_band)}  •  " +
-                           $"Priority {Cap(card.priority_band)}  •  Confidence {Cap(card.confidence_band)}{bound}";
-            TextMeshProUGUI bandText = NewText("Bands", row.transform, bands, 13, TextAlignmentOptions.Left);
-            bandText.color = SeverityAccent(card.severity_band);
-            AddLayoutElement(bandText.gameObject, minHeight: 18, flexibleHeight: 0);
-            TrackText(bandText, bands);
-
-            // Open affordance (≥44dp tap target, F2).
-            GameObject btn = NewUI(Lib("Ouvrir"), row.transform);
-            Image img = btn.AddComponent<Image>();
-            img.color = DesignTokens.Current.surfaceRaised;
-            Button b = btn.AddComponent<Button>();
-            b.targetGraphic = img;
-            b.onClick.AddListener(() => OpenDetail(card));
-            AddLayoutElement(btn, minHeight: 44, flexibleHeight: 0);
-            TextMeshProUGUI bt = NewText("Label", btn.transform, "Ouvrir", 14, TextAlignmentOptions.Center);
-            bt.color = CtaColor;
-            Stretch((RectTransform)bt.transform, new Vector2(10, 2), new Vector2(-10, -2));
-            TrackText(bt, "Ouvrir");
-        }
+        // ⛔ `AddCardRow` RETIRÉE le 2026-09-03 — code mort depuis la refonte en « comptoir ».
+        // Elle bâtissait des lignes `Card_<exception_id>` que plus AUCUN appelant ne demandait
+        // (mesuré : 0 dans tout `Assets/Scripts`). Son seul effet restant était de tromper :
+        // un test cherchait encore ses objets et rougissait en accusant l'écran de ne pas
+        // afficher une carte servie (TD-577). *Du code mort qui nomme un design précédent
+        // n'est pas neutre — il donne à une garde périmée l'air d'avoir raison.*
 
         // ---- band → glyph/accent (a11y F2: shape + label, never colour alone) ----
         private static string SeverityGlyph(string b)
