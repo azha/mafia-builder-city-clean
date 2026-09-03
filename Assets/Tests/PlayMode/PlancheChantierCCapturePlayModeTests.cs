@@ -95,7 +95,18 @@ namespace MafiaCleanCity.Shell.Tests
             // désormais échouer la capture sur « feuille introuvable ». *Le paramètre qui sauvait
             // hier casse aujourd'hui : il décrit une structure, pas une préférence.*
 
-            // ㉘ ㉛ ㉙ — ajoutés ici au fil du chantier, un appel chacun, jamais un test de plus.
+            // ㉘ LA DISTRIBUTION — « la ficelle sur le liège ».
+            // ⚠️ CE QUE CETTE CAPTURE NE PROUVE PAS, et il faut le savoir en la regardant : un
+            // compte FRAÎCHEMENT signé n'a AUCUN `distribution_hub` (mesuré : le kit de départ
+            // donne lab, stash, front_shop et cash_safehouse, jamais de hub). La prémisse de cet
+            // écran ne tient donc pas au jour 1 — seul le compte de démo, qui en possède un,
+            // permet de le photographier peuplé. L'image montre l'écran d'un joueur avancé.
+            yield return CaptureSousShell.CapturerLocataire<DistributionScreenController>(
+                shell, "la_distribution",
+                (e, _) => (e.DernierChargementCouriers != null && e.DernierChargementProjection != null)
+                          || e.DerniereErreur != null, echecs);
+
+            // ㉛ ㉙ — ajoutés ici au fil du chantier, un appel chacun, jamais un test de plus.
 
             Assert.IsEmpty(echecs,
                 "captures du chantier C en échec :\n  · " + string.Join("\n  · ", echecs));
