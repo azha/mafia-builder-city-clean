@@ -276,7 +276,33 @@ namespace MafiaCleanCity.Shell.Tests
 
             string nomLigne = "Card_" + queue.Cards[0].exception_id;
             Transform ligne = TrouverDescendant(shell.ContentSlot, nomLigne);
-            Assert.IsNotNull(ligne, $"la ligne {nomLigne} doit exister dans la file RENDUE (queue.Cards[0] réellement affichée)");
+            // ⛔ CE « DOIT EXISTER » NE DISAIT PAS CE QU'IL AVAIT TROUVÉ — TD-577, 2026-09-03.
+            // Il rougit et personne n'a pu l'attribuer : le message ne portait que l'identifiant
+            // cherché, pas l'état du monde au moment de la recherche. On ne pouvait pas décider
+            // entre « la file n'a rendu AUCUNE ligne », « elle en a rendu d'AUTRES » et « l'écran a
+            // été démonté sous nous » — trois causes, trois correctifs.
+            // ★ Même faute que l'assertion sans message trouvée le même jour dans le test des
+            //   panneaux d'Accueil : *une assertion qui ne rapporte que ce qu'elle attendait oblige
+            //   le suivant à refaire la mesure.*
+            if (ligne == null)
+            {
+                var lignesVues = new List<string>();
+                foreach (Transform t in shell.ContentSlot.GetComponentsInChildren<Transform>(true))
+                    if (t.name.StartsWith("Card_"))
+                        lignesVues.Add(t.name + (t.gameObject.activeInHierarchy ? "" : " (INACTIF)"));
+                bool vivant = queue != null;
+                Assert.Fail(
+                    "la ligne " + nomLigne + " n'est pas dans la file RENDUE."
+                    + " · cartes servies par la file : " + queue.Cards.Length
+                    + " · lignes Card_* sous ContentSlot : " + lignesVues.Count
+                    + (lignesVues.Count == 0
+                        ? " — AUCUNE : la file n'a rien rendu, ou son écran a été démonté"
+                        : " -> [" + string.Join(", ", lignesVues) + "]")
+                    + " · écran de file : " + (!vivant ? "DÉTRUIT"
+                        : queue.gameObject.activeInHierarchy ? "actif" : "INACTIF")
+                    + " · sous ContentSlot : " + (vivant && queue.transform.IsChildOf(shell.ContentSlot))
+                    + " · locataire monté : " + (shell.MountedTenantType != null ? shell.MountedTenantType.Name : "(aucun)"));
+            }
             Transform boutonOuvrir = ligne.Find("Ouvrir");
             Assert.IsNotNull(boutonOuvrir, "chaque ligne de la file doit porter un bouton 'Ouvrir' (ExceptionQueueController.AddCardRow)");
             Button ouvrir = boutonOuvrir.GetComponent<Button>();

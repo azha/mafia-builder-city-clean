@@ -203,9 +203,13 @@ namespace MafiaCleanCity.Operational.Tests
         }
 
         // map a live band enum → the label the controller renders (kept in sync with the controller).
+        // Repointé sur le résolveur du dépôt (2026-09-03) — comme `HeatLabelFor` deux lignes plus
+        // bas le faisait déjà. Cette copie portait « kept in sync with the controller » : une
+        // consigne de discipline là où une DÉLÉGATION rend la divergence impossible. Elle s'est
+        // présentée le jour de la traduction — le même changement devait être fait à trois
+        // endroits, et un oubli aurait rendu ce test vert sur un écran faux.
         private static string WalletLabelFor(string b) =>
-            b == "FLUSH" ? "Flush" : b == "HIGH" ? "High" : b == "MODERATE" ? "Moderate" :
-            b == "LOW" ? "Low" : b == "BROKE" ? "Broke" : b;
+            MafiaCleanCity.Shell.WalletBandResolver.Label(b);
 
         private static string HeatLabelFor(string b) =>
             MafiaCleanCity.Shell.HeatBucketResolver.Label(b);

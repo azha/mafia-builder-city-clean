@@ -477,15 +477,11 @@ namespace MafiaCleanCity.Operational
         // (a11y: shape conveys the band independent of colour).
         private static string WalletLabel(string b)
         {
-            switch (b)
-            {
-                case "FLUSH": return MafiaCleanCity.I18n.Libelle.De("accueil", "etat", "Flush");
-                case "HIGH": return MafiaCleanCity.I18n.Libelle.De("accueil", "etat", "High");
-                case "MODERATE": return MafiaCleanCity.I18n.Libelle.De("accueil", "etat", "Moderate");
-                case "LOW": return MafiaCleanCity.I18n.Libelle.De("accueil", "etat", "Low");
-                case "BROKE": return MafiaCleanCity.I18n.Libelle.De("accueil", "etat", "Broke");
-                default: return b;
-            }
+            // Repointé sur le lieu UNIQUE (`WalletBandResolver`, ShellContracts) — même geste que
+            // `HeatLabel` sur `HeatBucketResolver`. La table vivait ici ET recopiée dans DEUX
+            // suites de tests « kept in sync with the controller » : la traduction du 2026-09-03
+            // aurait dû être faite à trois endroits.
+            return MafiaCleanCity.Shell.WalletBandResolver.Label(b);
         }
         private static string WalletGlyph(string b)
         {
@@ -534,10 +530,10 @@ namespace MafiaCleanCity.Operational
         {
             switch (b)
             {
-                case "UNLOCKED": return MafiaCleanCity.I18n.Libelle.De("accueil", "etat", "Unlocked");
-                case "IN_PROGRESS": return MafiaCleanCity.I18n.Libelle.De("accueil", "etat", "In progress");
-                case "LOCKED": return MafiaCleanCity.I18n.Libelle.De("accueil", "etat", "Locked");
-                default: return string.IsNullOrEmpty(b) ? "Unknown" : b;
+                case "UNLOCKED": return MafiaCleanCity.I18n.Libelle.De("accueil", "etat", "Ouvert");
+                case "IN_PROGRESS": return MafiaCleanCity.I18n.Libelle.De("accueil", "etat", "En cours");
+                case "LOCKED": return MafiaCleanCity.I18n.Libelle.De("accueil", "etat", "Verrouillé");
+                default: return string.IsNullOrEmpty(b) ? MafiaCleanCity.I18n.Libelle.De("accueil", "etat", "Inconnu") : b;
             }
         }
 
