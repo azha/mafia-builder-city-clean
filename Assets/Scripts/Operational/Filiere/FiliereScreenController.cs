@@ -382,6 +382,16 @@ namespace MafiaCleanCity.Operational
 
             // Les trois compteurs
             GameObject bande = NouveauUI("Compteurs", racine.transform);
+            // ⛔ HAUTEUR DONNÉE À LA BANDE — omise à la première écriture, et la capture l'a
+            // montrée tout de suite : les trois compteurs s'étiraient sur 600 px. Leur
+            // `HorizontalLayoutGroup` a `childForceExpandHeight`, donc sans hauteur propre la
+            // bande prend tout ce que la pile lui laisse.
+            // ★ ㊳ portait déjà cette ligne ; je ne l'ai pas recopiée. Un patron qu'on suit de
+            //   mémoire perd une ligne à chaque copie — c'est l'argument pour un producteur, et
+            //   ici je n'en ai pas fait un : les deux écrans dupliquent leurs primitives par
+            //   convention du dépôt.
+            var leBande = bande.AddComponent<LayoutElement>();
+            leBande.minHeight = Px(44f); leBande.preferredHeight = Px(44f); leBande.flexibleHeight = 0f;
             var hb = bande.AddComponent<HorizontalLayoutGroup>();
             hb.spacing = Px(6f);
             hb.childControlWidth = true; hb.childControlHeight = true;
