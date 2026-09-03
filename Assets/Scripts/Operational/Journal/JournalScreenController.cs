@@ -88,6 +88,21 @@ namespace MafiaCleanCity.Operational
         public string DerniereErreur { get; private set; }
         public long DernierCodeErreur { get; private set; }
 
+        /// <summary>Vrai dès que l'écran a FINI de se rendre — succès ou repli.
+        ///
+        /// ⛔ POURQUOI CE DRAPEAU EXISTE. `Charger()` enchaîne TROIS requêtes ; la première
+        /// renseigne `DernierChargement` et les deux autres sont encore en vol. Un appelant qui
+        /// attend « `DernierChargement` non nul » croit donc l'écran prêt alors qu'il n'a pas
+        /// encore appelé `AppliquerEtat` — mesuré le 2026-09-03 : la capture sous chrome
+        /// photographiait « EN ATTENTE DU MATIN » avec un chargement déjà non nul.
+        /// ★ C'est la leçon que j'avais écrite LA VEILLE sur ⑨ — « attendre le drapeau, pas un
+        ///   nombre de frames » — et que j'ai répétée en écrivant un test neuf. Une leçon écrite
+        ///   ne protège pas le code qu'on écrit après elle : il faut le DRAPEAU, pas la phrase.
+        /// ⚠️ « Chargé » ici veut dire « rendu », pas « rendu avec des données » : le repli
+        /// d'erreur le lève aussi, parce qu'un écran qui affiche « pas de réponse » a fini de
+        /// faire ce qu'il avait à faire.</summary>
+        public bool RenduTermine { get; private set; }
+
         private RectTransform racinePleinEcran;
         private JournalClient client;
         private bool initialise;
@@ -139,6 +154,10 @@ namespace MafiaCleanCity.Operational
             EnsureInitialized();
             DerniereErreur = null;
             DernierCodeErreur = 0;
+            // ⚠️ ABAISSÉ AU DÉBUT : un drapeau qui reste levé d'un chargement à l'autre ferait
+            // croire prêt un écran qui recharge. Il dit « ce rendu-ci est fini », pas « un
+            // rendu a eu lieu un jour ».
+            RenduTermine = false;
 
             // ⛔ TROIS FLUX, PAS UN. Les trois compteurs de la maquette comptent trois listes
             // DIFFÉRENTES — « à la une » (news), « dans la rue » (ambient), « en cours »
@@ -161,8 +180,9 @@ namespace MafiaCleanCity.Operational
             // rendre quoi que ce soit qui lise une géométrie.
             yield return null;
 
-            if (DernierChargement == null) { RendreEtatIndisponible(); yield break; }
+            if (DernierChargement == null) { RendreEtatIndisponible(); RenduTermine = true; yield break; }
             AppliquerEtat(DernierChargement);
+            RenduTermine = true;
         }
 
         /// <summary>Rend un corps FABRIQUÉ, sans réseau — réservé aux tests (patron ㊲,
@@ -310,7 +330,16 @@ namespace MafiaCleanCity.Operational
         {
             GameObject go = NouveauUI("Ligne", listeRoot);
             AjouterFond(go, FondBloc);
-            AjouterHauteur(go, Px(CssHBreve));
+            // ⛔ HAUTEUR PLANCHER, PAS FIGÉE — TROISIÈME fois aujourd'hui que ce défaut se
+            // présente (le panneau de ㊴ ce matin, puis celui-ci deux fois). Un titre qui passe
+            // sur deux lignes dans un cadre de hauteur fixe CHEVAUCHE la ligne du dessous.
+            // ★ Ici les titres sont des CLÉS, donc longues par nature
+            //   (`news_beat.digest.ambient_micro.free_weekly.headline`) : la hauteur variable
+            //   n'est pas un cas limite, c'est le cas NORMAL de cet écran.
+            var leLigne = go.AddComponent<LayoutElement>();
+            leLigne.minHeight = Px(CssHBreve);
+            leLigne.preferredHeight = -1f;
+            leLigne.flexibleHeight = 0f;
             if (acquis) Contour(go, AccentVif);
 
             var v = go.AddComponent<VerticalLayoutGroup>();
@@ -472,17 +501,49 @@ namespace MafiaCleanCity.Operational
             }
         }
 
+        /// <summary>Le cadre de la liste — un CADRE borné, et dedans un CONTENU libre d'être haut.
+        ///
+        /// ⛔ MESURÉ le 2026-09-03, et les deux symptômes n'avaient QU'UNE cause. Ma première
+        /// version mettait le `VerticalLayoutGroup` directement sur le cadre : sa hauteur
+        /// MINIMALE devenait alors la somme des vingt lignes. Le parent ne pouvant pas descendre
+        /// sous ce minimum, tout retombait aux hauteurs minimales — d'où les titres écrasés sur
+        /// leur ligne de quartier — et le cadre lui-même débordait sous le dock, ce qui rendait
+        /// le masque inutile puisqu'il découpait un rectangle déjà trop grand.
+        /// ★ J'ai d'abord corrigé les DEUX symptômes séparément (hauteur des lignes, puis masque)
+        ///   et l'image est revenue IDENTIQUE. Deux correctifs qui ne changent rien disent qu'on
+        ///   n'a pas trouvé la cause — pas qu'il en faut un troisième.
+        /// ⇒ CADRE : `minHeight = 0`, aucun layout group, un `RectMask2D`. Il prend l'espace qui
+        ///   reste et ne peut jamais le dépasser.
+        ///   CONTENU : ancré en haut, sa propre pile, libre de mesurer ce qu'il veut — il déborde
+        ///   du cadre, et c'est le masque qui décide de ce qui se voit.
+        /// ⚠️ Ce n'est PAS un défilement : les brèves du bas ne sont pas atteignables. C'est un
+        /// manque ASSUMÉ — la maquette ne dessine aucune barre, et son propre cadre des manques
+        /// (130) n'en parle pas. Un masque qui cache proprement vaut mieux qu'un débordement qui
+        /// recouvre le dock ; les deux valent mieux qu'une barre qui ne défilerait pas.</summary>
         private RectTransform ConstruireListe(Transform parent)
         {
-            GameObject go = NouveauUI("Liste", parent);
-            var le = go.AddComponent<LayoutElement>();
-            le.flexibleHeight = 1f;   // la liste prend ce qui reste, le panneau garde sa place
-            var v = go.AddComponent<VerticalLayoutGroup>();
+            GameObject cadre = NouveauUI("Liste", parent);
+            var le = cadre.AddComponent<LayoutElement>();
+            le.minHeight = 0f;          // ⇐ LA ligne qui manquait
+            le.preferredHeight = 0f;
+            le.flexibleHeight = 1f;     // prend ce qui reste, jamais plus
+            cadre.AddComponent<RectMask2D>();
+
+            GameObject contenu = NouveauUI("Contenu", cadre.transform);
+            var rt = (RectTransform)contenu.transform;
+            rt.anchorMin = new Vector2(0f, 1f);
+            rt.anchorMax = new Vector2(1f, 1f);
+            rt.pivot = new Vector2(0.5f, 1f);
+            rt.offsetMin = Vector2.zero; rt.offsetMax = Vector2.zero;
+
+            var v = contenu.AddComponent<VerticalLayoutGroup>();
             v.spacing = Px(5f);
             v.childControlWidth = true; v.childControlHeight = true;
             v.childForceExpandWidth = true; v.childForceExpandHeight = false;
             v.childAlignment = TextAnchor.UpperCenter;
-            return (RectTransform)go.transform;
+            var fit = contenu.AddComponent<ContentSizeFitter>();
+            fit.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            return rt;
         }
 
         /// <summary>Le panneau bas — ce que l'écran ne peut pas dire. Hauteur PLANCHER, pas

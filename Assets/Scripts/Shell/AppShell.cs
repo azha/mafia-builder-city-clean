@@ -709,6 +709,11 @@ namespace MafiaCleanCity.Shell
             ("LE COMMISSARIAT",      () => MountTenant<PrecinctScreenController>()),     // ⑰
             ("LA SEMAINE",           () => MountTenant<CompressionScreenController>()),  // ⑭
             ("LE DOSSIER",           () => MountTenant<ForensicScreenController>()),     // ㊴
+            // ⚠️ Libellé pris de la maquette ratifiée (cadres 125-130, « Le journal — ce qui se
+            // dit ce matin ») et non inventé. « & LA RUE » parce que l'écran porte DEUX flux que
+            // le joueur ne distingue pas par leur route : la une (`news/feed`) et les brèves de
+            // la rue (`ambient/feed`). Un libellé « LE JOURNAL » seul cacherait la moitié.
+            ("LE JOURNAL & LA RUE",  () => MountTenant<JournalScreenController>()),      // ㊳
             ("LA PREMIÈRE FOIS",     () => MountTenant<TutorialScreenController>()),     // ㉕
 
             // ⚠️ ㉒ — sa planche s'appelle `planche_le_coffre` et l'écran écrit « LE COFFRE » dans

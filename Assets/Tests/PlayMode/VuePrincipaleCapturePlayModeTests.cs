@@ -1523,6 +1523,136 @@ namespace MafiaCleanCity.Capture.Tests
         }
 
         [UnityTest]
+        /// <summary>㊳ LE JOURNAL & LA RUE, SOUS CHROME — chemin joueur réel, comme ㊴.
+        ///
+        /// ⛔ CE QUE CETTE CAPTURE MESURE ET QU'AUCUNE AUTRE NE MESURE : que ㊳ CHARGE quand un
+        /// vrai geste l'ouvre. Sa capture hors shell est montée SANS session — elle photographie
+        /// donc l'état « pas encore chargé », qui est légitime mais ne prouve rien du reste.
+        /// ★ ㊴ portait exactement ce trou ce matin : `Charger()` n'était appelé par personne, et
+        ///   l'image ne pouvait pas le dire (un écran non chargé et un compte vide donnent la
+        ///   même photo). C'est en exigeant que le chargement ait EU LIEU qu'on le voit.</summary>
+        [Category("CaptureJournal")]
+        public IEnumerator Capture_LeJournal_SousChrome()
+        {
+            var auth = new AuthClient { BaseUrl = BaseUrl };
+            string callsign = SeederSupport.SafeCallsign("journal", ref seq);
+            string token = null, err = null;
+            yield return auth.SignUp(callsign, "journal-capture-pw", t => token = t, e => err = e);
+            Assert.IsNull(err, $"signup errored: {err}");
+
+            var sessionClient = new SessionClient { BaseUrl = BaseUrl };
+            SessionOpenDto payload = null;
+            yield return sessionClient.OpenSession(token, "capture-journal", dto => payload = dto,
+                (c, m) => Assert.Fail($"session/open failed: {c}: {m}"));
+            Assert.IsNotNull(payload, "session/open doit réussir — il octroie le kit de départ");
+
+            LogAssert.ignoreFailingMessages = true;
+            shellGo = new GameObject("JournalShell");
+            shell = shellGo.AddComponent<AppShell>();
+            shell.SetIdentity(callsign, "journal-capture-pw");
+            yield return null;
+
+            float t0 = Time.realtimeSinceStartup;
+            while (string.IsNullOrEmpty(shell.Token) && Time.realtimeSinceStartup - t0 < 30f) yield return null;
+            Assert.IsFalse(string.IsNullOrEmpty(shell.Token), "le shell doit avoir acquis sa session");
+
+            shell.ActivateTab(AppShell.Tab.More);
+            for (int i = 0; i < 90; i++) yield return null;
+            Assert.Greater(shell.MenuPlusEntrees, 0,
+                "le menu « Plus » n'a aucune entrée : la capture montrerait un écran que le " +
+                "joueur ne peut pas atteindre");
+
+            // L'entrée NOMMÉE, pas la première — sans quoi on photographierait l'écran du voisin
+            // sous le nom de ㊳ le jour où l'ordre du menu change.
+            UnityEngine.UI.Button entree = null;
+            var libellesVus = new System.Collections.Generic.List<string>();
+            foreach (var b in shell.ContentSlot.GetComponentsInChildren<UnityEngine.UI.Button>(true))
+            {
+                if (!b.gameObject.name.StartsWith("MenuPlus_")) continue;
+                libellesVus.Add(b.gameObject.name);
+                if (b.gameObject.name == "MenuPlus_LE JOURNAL & LA RUE") entree = b;
+            }
+            Assert.IsNotNull(entree,
+                "l'entrée « LE JOURNAL & LA RUE » est absente du menu — ㊳ n'est pas atteignable. " +
+                $"Entrées vues : [{string.Join(", ", libellesVus)}]");
+            entree.onClick.Invoke();
+            for (int i = 0; i < 30; i++) yield return null;
+
+            Assert.AreEqual(typeof(MafiaCleanCity.Operational.JournalScreenController),
+                shell.MountedTenantType, "l'entrée doit avoir monté ㊳");
+
+            var ecran = shell.MountedTenantGameObject.GetComponent<
+                MafiaCleanCity.Operational.JournalScreenController>();
+            Assert.IsNotNull(ecran, "le locataire monté doit être ㊳ lui-même");
+
+            // ⛔ EXIGER QUE LE CHARGEMENT AIT EU LIEU, pas seulement qu'il n'ait pas échoué.
+            // `DerniereErreur == null` seul est VRAI À VIDE tant que rien ne charge — c'est ainsi
+            // que ㊴ a gardé un `Charger()` orphelin sans que rien ne rougisse.
+            Assert.IsNull(ecran.DerniereErreur,
+                $"㊳ a échoué à charger ({ecran.DernierCodeErreur}) : {ecran.DerniereErreur}");
+            Assert.IsNotNull(ecran.DernierChargement,
+                "㊳ n'a RIEN chargé : `DerniereErreur` est nulle parce que rien ne s'est produit, " +
+                "pas parce que tout s'est bien passé. La capture montrerait l'état « pas encore ».");
+
+            // ⛔⛔ LE PLANCHER D'ABORD : hors shell les insets valent ZÉRO et les deux assertions
+            // suivantes seraient vraies PAR CONSTRUCTION — vertes, et muettes.
+            Assert.Greater(MafiaCleanCity.Shell.ShellChrome.TopInsetPx, 0f,
+                "sous le chrome, l'inset HAUT doit être publié — à zéro, la garde ci-dessous " +
+                "passerait toujours sans rien mesurer");
+            Assert.Greater(MafiaCleanCity.Shell.ShellChrome.BottomInsetPx, 0f,
+                "sous le chrome, l'inset BAS doit être publié — même raison");
+
+            GameObject racineJournal = null;
+            foreach (Transform tr in shell.ContentSlot.GetComponentsInChildren<Transform>(true))
+                if (tr.gameObject.name == "JournalRoot") { racineJournal = tr.gameObject; break; }
+            Assert.IsNotNull(racineJournal,
+                "㊳ n'a construit aucune racine `JournalRoot` sous le slot — s'il a bâti ailleurs, " +
+                "il est hors de la sous-arborescence que le shell contrôle");
+
+            var pile = racineJournal.GetComponent<UnityEngine.UI.VerticalLayoutGroup>();
+            Assert.IsNotNull(pile, "㊳ doit porter sa pile verticale — c'est elle qui réserve le chrome");
+            Assert.GreaterOrEqual(pile.padding.top, (int)MafiaCleanCity.Shell.ShellChrome.TopInsetPx,
+                $"le padding haut de ㊳ vaut {pile.padding.top} et le bandeau occupe " +
+                $"{MafiaCleanCity.Shell.ShellChrome.TopInsetPx:F0} : son contenu passe DESSOUS.");
+            Assert.GreaterOrEqual(pile.padding.bottom, (int)MafiaCleanCity.Shell.ShellChrome.BottomInsetPx,
+                $"le padding bas de ㊳ vaut {pile.padding.bottom} et le dock occupe " +
+                $"{MafiaCleanCity.Shell.ShellChrome.BottomInsetPx:F0} : son contenu passe DESSOUS.");
+
+            // ⛔ LE CHARGEMENT A EU LIEU, MAIS L'ÉCRAN AFFICHE-T-IL SON RÉSULTAT ? Deux choses
+            // différentes, et la première capture les a séparées : `DernierChargement` non nul
+            // ET le sous-titre resté sur « EN ATTENTE DU MATIN ». Un état interne chargé et un
+            // écran qui le MONTRE ne sont pas la même propriété.
+            // ⚠️ Cette garde énumère plutôt que d'accuser : elle imprime ce qu'elle voit, pour
+            // que le verdict tranche en un run au lieu de relancer la devinette.
+            // ⛔ ATTENDRE LE DRAPEAU, PAS UN NOMBRE DE FRAMES — et j'ai refait la faute que
+            // j'avais corrigée LA VEILLE sur ⑨. `Charger()` enchaîne TROIS requêtes : la première
+            // renseigne `DernierChargement`, et j'assertais pendant que les deux autres étaient
+            // encore en vol. La capture montrait donc « EN ATTENTE DU MATIN » avec un chargement
+            // déjà non nul — deux faits contradictoires qui étaient tous les deux exacts.
+            // ★ Une leçon ÉCRITE ne protège pas le code qu'on écrit après elle. Ce qui protège,
+            //   c'est le drapeau — un objet, pas une phrase.
+            float tRendu = Time.realtimeSinceStartup;
+            while (!ecran.RenduTermine && Time.realtimeSinceStartup - tRendu < 30f) yield return null;
+            Assert.IsTrue(ecran.RenduTermine,
+                $"㊳ n'a pas fini de se rendre en 30 s (erreur : {ecran.DerniereErreur})");
+            for (int i = 0; i < 15; i++) yield return null;   // laisser le layout se poser
+
+            var sousTitres = new System.Collections.Generic.List<string>();
+            foreach (TMPro.TextMeshProUGUI tt in shell.ContentSlot.GetComponentsInChildren<TMPro.TextMeshProUGUI>(true))
+                if (tt.name == "SousTitre" || tt.name == "Titre") sousTitres.Add(tt.name + "=«" + tt.text + "»");
+            Assert.IsFalse(sousTitres.Exists(s => s.Contains("EN ATTENTE DU MATIN")),
+                "㊳ a chargé (`DernierChargement` non nul, " +
+                $"{ecran.Breves.Length} brèves / {ecran.Rue.Length} rue / {ecran.Monde.Length} monde) " +
+                "mais son sous-titre est resté sur l'état INITIAL : l'écran ne montre pas ce " +
+                $"qu'il sait. Textes vus : [{string.Join(" · ", sousTitres)}]");
+
+            LisibiliteDuTexte(shell.ContentSlot.gameObject);
+
+            yield return CapturerA(1080, 2400,
+                "Assets/Screenshots/screen_c1_journal_sous_chrome_1080x2400.png");
+        }
+
+        [UnityTest]
         
         public IEnumerator Capture_EcranLieutenants_SousChromeV31()
         {
