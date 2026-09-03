@@ -275,6 +275,46 @@ namespace MafiaCleanCity.Shell.Tests
                           + "aucun panneau d'Accueil monté (rien à recuire côté Accueil ; le chrome "
                           + "l'a été)");
 
+            // ⛔⛔ UNE CAPTURE MONTRE UN SEUL ÉCRAN — et mon extinction « par différence » n'y
+            // suffisait pas. Signalé par le chantier F sur la capture de ⑧ : la marge gauche porte
+            // des fragments de l'Accueil (`AUTONOMY_REPORTS_PENDING`, « Moderate », « Elevated »,
+            // « Ready »). Ma différence n'éteint que ce que CET appel a monté ; l'état de DÉMARRAGE
+            // du shell — les quatre panneaux d'Accueil et la feuille du Dashboard, posés par
+            // l'acquisition de session — reste allumé dessous, et chaque voile de fond est un scrim
+            // TRANSLUCIDE : il assombrit au lieu de cacher.
+            // ⇒ On éteint donc, le temps du rendu, TOUT ce qui vit dans `ContentSlot` et qui n'est
+            //   pas l'écran capturé — puis on rallume. Ce que « l'écran capturé » recouvre est
+            //   exactement ce que l'appelant a DÉJÀ déclaré : son hôte, sa racine visible, et les
+            //   frères qu'il accepte au-dessus (pour ④, ce sont les panneaux d'Accueil eux-mêmes,
+            //   qui font partie de l'écran et restent donc allumés).
+            // ★ Aucun nom deviné : la liste des gardés vient des paramètres, pas d'une convention.
+            var gardes = new HashSet<Transform> { ecran.transform, racine };
+            foreach (string n2 in freresAttendusAuDessus ?? new string[0])
+                for (int k = 0; k < shell.ContentSlot.childCount; k++)
+                    if (shell.ContentSlot.GetChild(k).name == n2) gardes.Add(shell.ContentSlot.GetChild(k));
+            // Le voile de fond de l'écran, s'il en a un : même préfixe que sa feuille.
+            if (!string.IsNullOrEmpty(nomFeuille) && nomFeuille.EndsWith("Sheet"))
+            {
+                string nomVoile = nomFeuille.Substring(0, nomFeuille.Length - 5) + "Backdrop";
+                for (int k = 0; k < shell.ContentSlot.childCount; k++)
+                    if (shell.ContentSlot.GetChild(k).name == nomVoile) gardes.Add(shell.ContentSlot.GetChild(k));
+            }
+            var eteintsPourLeRendu = new List<GameObject>();
+            for (int k = 0; k < shell.ContentSlot.childCount; k++)
+            {
+                Transform f = shell.ContentSlot.GetChild(k);
+                if (gardes.Contains(f) || !f.gameObject.activeSelf) continue;
+                f.gameObject.SetActive(false);
+                eteintsPourLeRendu.Add(f.gameObject);
+            }
+            if (eteintsPourLeRendu.Count > 0)
+            {
+                Canvas.ForceUpdateCanvases();
+                yield return null;
+                Debug.Log($"[PLANCHE] {nom} — {eteintsPourLeRendu.Count} voisin(s) éteint(s) le temps "
+                          + "du rendu (l'image ne montre qu'un écran)");
+            }
+
             // `avantRendu` : le dernier moment où l'écran peut être MIS DANS L'ÉTAT qu'on veut
             // photographier — après le recuit de géométrie (sinon on positionne dans l'ancienne)
             // et avant le rendu. C'est ce qui permet de capturer une SECTION précise d'un écran
@@ -331,6 +371,9 @@ namespace MafiaCleanCity.Shell.Tests
             canvas.planeDistance = planPrecedent;
 
             System.IO.File.WriteAllBytes(chemin, tex.EncodeToPNG());
+
+            // Rallumer les voisins : ce test n'a pas à changer le monde qu'il a trouvé.
+            foreach (GameObject g in eteintsPourLeRendu) if (g != null) g.SetActive(true);
 
             if (sonde != null) sonde(ecran);
 

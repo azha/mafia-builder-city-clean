@@ -782,6 +782,18 @@ namespace MafiaCleanCity.Shell
             // `{used:1, cap_reached:true}` — donc ㉜ doit éteindre son geste dans la même session,
             // et il le fait, en lisant la même source (`JetonDeStructure`).
             ("RASER UN SITE", () => MountTenant<DemolitionScreenController>()),           // ㉝
+
+            // ㉞ — « les ordres du soir ». AJOUTÉE PAR LA GARDE, deuxième fois de la journée après
+            // ㊳ : `pilote-B` a livré `CarnetScreenController` sans sa ligne ici, et
+            // `LocataireJoignabilitePlayModeTests` l'a classé orphelin au premier run post-merge
+            // (« 1 locataire sans AUCUN chemin : [CarnetScreenController] », population 31).
+            // ⚠️ L'écran est un SQUELETTE, et je ne l'inscris pas pour autant dans
+            // `ExceptionsDeclarees` : cette allowlist dit d'elle-même qu'elle n'est PAS pour « un
+            // écran qu'on n'a pas eu le temps de brancher », mais pour un locataire dont on AFFIRME
+            // qu'il ne doit pas avoir de porte. Ce n'est pas le cas ici — il en aura une, autant
+            // que ce soit maintenant. Un écran titré et vide est ce que ce régime livre déjà
+            // (⑪ et ⑫ sont capturés sans données et consignés) ; un écran sans porte, non.
+            ("LES ORDRES DU SOIR", () => MountTenant<CarnetScreenController>()),         // ㉞
         };
 
         /// <summary>Monte le menu « Plus » : une entrée par destination, chacune montant son écran.

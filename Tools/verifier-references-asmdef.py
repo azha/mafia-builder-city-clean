@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Chaque `using MafiaCleanCity.X` est-il couvert par une référence de l'asmdef du fichier ?
+"""Chaque usage de `MafiaCleanCity.X` — `using` OU nom pleinement qualifié — est-il couvert par une référence de l'asmdef du fichier ?
 
 ⛔⛔ POURQUOI CET INSTRUMENT EXISTE — un ANGLE MORT du vérificateur de compilation à froid,
    découvert le 2026-09-02 en le payant. `Tools/verifier-compilation-sans-unity.sh` compile TOUT
@@ -62,16 +62,44 @@ def balayer(asmdefs):
             continue
         a = asmdefs[d]
         refs = set(a.get('references', []))
-        for m in re.finditer(r'^using\s+(MafiaCleanCity[\w.]*);',
-                             open(f, encoding='utf-8', errors='replace').read(), re.M):
-            ns = m.group(1)
+        src = open(f, encoding='utf-8', errors='replace').read()
+        # ⚠️ LES COMMENTAIRES D'ABORD — sinon l'outil accuse de la DOCUMENTATION. Mesuré au premier
+        # essai du motif qualifié : il a signalé `CityMap` pour `MafiaCleanCity.AssetLint`, dont
+        # l'unique occurrence du fichier est un `<see cref="MafiaCleanCity.AssetLint.…"/>` dans un
+        # commentaire XML. Un renvoi de doc ne crée aucune dépendance d'assembly.
+        # ★ *Un outil qui accuse à tort est pire que celui qui rate* : j'ai failli livrer un
+        #   vérificateur qui rougit sur une phrase.
+        src = re.sub(r'/\*.*?\*/', ' ', src, flags=re.S)      # blocs /* */ (donc aussi /** */)
+        src = re.sub(r'//[^\n]*', ' ', src)                    # lignes // et ///
+        # ⛔⛔ DEUX FORMES, PAS UNE — et la seconde a laissé passer un build CASSÉ dans `main`
+        # le 2026-09-03. Cet outil ne cherchait que `using MafiaCleanCity.X;`. Or un lot i18n a
+        # écrit `MafiaCleanCity.I18n.Libelle.De(...)` PLEINEMENT QUALIFIÉ, sans `using` : trois
+        # asmdef (`Account`, `Economy`, `CoreLoops`) utilisaient le namespace sans le référencer,
+        # Unity a rendu `CS0234`, et cet outil disait ✅.
+        # ★ Le vérificateur à froid ne pouvait pas le voir non plus (il compile tout en UNE
+        #   assembly) : les deux instruments étaient verts sur un arbre qui ne compile pas.
+        #   *Un namespace s'utilise de deux façons ; en surveiller une seule, c'est n'en
+        #   surveiller aucune.*
+        # ⚠️ Le motif qualifié exige un point APRÈS le namespace (`MafiaCleanCity.I18n.`) pour ne
+        #   pas confondre `MafiaCleanCity.I18nCatalog` avec `MafiaCleanCity.I18n` — la frontière de
+        #   mot en milieu d'identifiant, le piège que ce dépôt a déjà payé sur `BuildingTypeIcon`.
+        formes = {}
+        for u in re.findall(r'^using\s+(MafiaCleanCity[\w.]*);', src, re.M): formes[u] = 'using'
+        utilises = set(formes)
+        for ns_q in re.findall(r'\b(MafiaCleanCity(?:\.[A-Z]\w*)+)\s*\.', src):
+            utilises.add(ns_q); formes.setdefault(ns_q, 'nom qualifié')
+            while '.' in ns_q[len('MafiaCleanCity.'):]:
+                ns_q = ns_q.rsplit('.', 1)[0]
+                utilises.add(ns_q); formes.setdefault(ns_q, 'nom qualifié')
+        for ns in sorted(utilises):
             fournisseurs = ns2asm.get(ns, set())
             # namespace inconnu (aucun fichier ne le déclare) : hors sujet ici, le compilateur
             # le dira. Fichier dans SA propre assembly : rien à référencer.
             if not fournisseurs or a['name'] in fournisseurs:
                 continue
             if not (refs & fournisseurs):
-                manques.append((os.path.relpath(f, RACINE), ns, a['name'], sorted(fournisseurs)))
+                manques.append((os.path.relpath(f, RACINE), f"{formes.get(ns,'using')} {ns}",
+                                a['name'], sorted(fournisseurs)))
     return manques, len(fichiers), len(ns2asm)
 
 
@@ -109,11 +137,11 @@ def main():
         print("  ⛔ le balayage ne voit pas l'arbre (trop peu d'asmdef ou de fichiers) : son zéro "
               "ne vaudrait rien."); return 2
     if not manques:
-        print("  ⇒ ✅ tout `using MafiaCleanCity.*` est couvert par l'asmdef de son fichier.")
+        print("  ⇒ ✅ tout usage de `MafiaCleanCity.*` (using ET nom qualifié) est couvert par l'asmdef de son fichier.")
         return 0
-    print(f"  ⇒ ⛔ {len(manques)} using(s) NON COUVERT(s) — Unity sortira CS0234 dessus :")
+    print(f"  ⇒ ⛔ {len(manques)} usage(s) NON COUVERT(s) — Unity sortira CS0234 dessus :")
     for f, ns, a, four in manques:
-        print(f"    {f}\n      using {ns} · l'assembly {a} ne référence aucun de {four}")
+        print(f"    {f}\n      {ns} · l'assembly {a} ne référence aucun de {four}")
     return 1
 
 
