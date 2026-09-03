@@ -54,7 +54,12 @@ MOT_FR = re.compile(r'\b(le|la|les|un|une|des|du|de|au|aux|vos|votre|pas|rien|su
                     #   mots. *Un détecteur qu'on satisfait en changeant le sujet ne mesure plus.*
                     r'|confortable|correct|juste|ouvert|ouverte|verrouille|verrouillee|fauche'
                     r'|conflit|diplomatie|renseignement|reputation|cours|flot|prix|options'
-                    r'|silence|violent|abandon|avocat|police|argent|jour|nuit|ville|maison)\b', re.I)
+                    r'|silence|violent|abandon|avocat|police|argent|jour|nuit|ville|maison'
+                    # Types de bâtiment ratifiés le 2026-09-03 (TD-578) — sept repris de
+                    # `LibellesBatiment`, six ratifiés. Tous français, tous sans accent sauf deux :
+                    # la liste est le seul moyen pour cet outil de les reconnaître.
+                    r'|bureau|cache|coffre|laboratoire|relais|serre|planque|raffinerie'
+                    r'|commerce|point|vente|atelier|presse|terrain|vague|specialise)\b', re.I)
 
 
 def probablement_anglais(litteral: str) -> bool:

@@ -1392,23 +1392,38 @@ namespace MafiaCleanCity.CityMap
         // porte les siennes dans ce dépôt, cf. LaunderingController.CleanlinessLabel : jamais une
         // dépendance croisée CityMap -> Operational.BuildingCard pour une chaîne d'affichage).
 
+        // ⛔⛔ LES LIBELLÉS SONT FRANÇAIS DEPUIS LE 2026-09-03 — ratification rétroactive, ruling
+        // fiction du 02/09 (`fr` = langue réelle du jeu). Et SEPT des treize ne sont pas de mon
+        // invention : ils sont REPRIS de `LibellesBatiment.Type`, à côté dans ce même dossier, qui
+        // portait DÉJÀ le français pour les mêmes concepts — `LAB`→Laboratoire, `GROW_HOUSE`→Serre,
+        // `DISTRIBUTION_HUB`→Relais, `MONEY_HOLDING`→Coffre, `FRONT_SHOP`→Commerce-écran,
+        // `OFFICE`→Bureau, `SAFEHOUSE`→Planque. Six seulement sont ratifiés ici : Cache, Raffinerie,
+        // Laboratoire spécialisé, Atelier de presse, Point de vente, Terrain vague.
+        // ⚠️ CE QUE J'AI FAILLI FAIRE : traduire les treize sans regarder l'autre table. Ce fichier
+        // consomme LES DEUX (`LibellesBatiment.Type(b.operational_type)` en `:1802`, et ce
+        // `TypeLabel` ici) sur des champs de casse différente — donc sur des CLÉS différentes mais
+        // les MÊMES concepts. Deux traductions indépendantes auraient donné deux mots français pour
+        // une seule chose, sur le même écran.
+        // ★ Le commentaire au-dessus assume la copie (« chaque écran porte les siennes ») : c'est une
+        //   convention de dépendances, pas une licence à diverger sur le VOCABULAIRE. Le jour où le
+        //   même concept reçoit deux noms, la convention a coûté plus qu'elle n'a protégé.
         private static string TypeLabel(string t)
         {
             switch (t)
             {
-                case "lab": return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Lab");
-                case "stash": return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Stash");
-                case "front_shop": return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Front shop");
-                case "cash_safehouse": return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Cash safehouse");
-                case "dealer_spot_front": return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Dealer-spot front");
-                case "specialized_lab": return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Specialized lab");
-                case "refinery": return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Refinery");
-                case "grow_house": return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Grow house");
-                case "distribution_hub": return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Distribution hub");
-                case "money_holding": return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Money holding");
-                case "office": return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Office");
-                case "press_house": return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Press house");
-                case "": case null: return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Vacant lot");
+                case "lab": return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Laboratoire");
+                case "stash": return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Cache");
+                case "front_shop": return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Commerce-écran");
+                case "cash_safehouse": return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Planque");
+                case "dealer_spot_front": return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Point de vente");
+                case "specialized_lab": return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Laboratoire spécialisé");
+                case "refinery": return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Raffinerie");
+                case "grow_house": return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Serre");
+                case "distribution_hub": return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Relais");
+                case "money_holding": return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Coffre");
+                case "office": return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Bureau");
+                case "press_house": return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Atelier de presse");
+                case "": case null: return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Terrain vague");
                 default: return t;
             }
         }
