@@ -775,6 +775,13 @@ namespace MafiaCleanCity.Shell
             // ㉛ — « le parloir ». Libellé en CAPITALES, patron des entrées voisines (aucune
             // planche de menu ne nomme cet écran — même situation que ㉘, ajoutée le même jour).
             ("LA LOI", () => MountTenant<LoiScreenController>()), // ㉛
+
+            // ㉝ — raser un site. Deuxième des trois écrans qui partagent le jeton de structure,
+            // et le seul qui le DÉPENSE de façon irréversible : une démolition ne se rejoue pas.
+            // Mesuré le 2026-09-03 : après un `decommission` réussi, `structural_budget` passe à
+            // `{used:1, cap_reached:true}` — donc ㉜ doit éteindre son geste dans la même session,
+            // et il le fait, en lisant la même source (`JetonDeStructure`).
+            ("RASER UN SITE", () => MountTenant<DemolitionScreenController>()),           // ㉝
         };
 
         /// <summary>Monte le menu « Plus » : une entrée par destination, chacune montant son écran.
