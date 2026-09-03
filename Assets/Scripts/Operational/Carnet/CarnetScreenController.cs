@@ -352,7 +352,13 @@ namespace MafiaCleanCity.Operational
             {
                 TextMeshProUGUI rien = NouveauTexte(corps.transform, "Rien", Lib("— rien —"),
                     Px(9f), CouleurEncreFaible, DesignTokens.Current.hudSerifFont);
-                rien.alignment = TextAlignmentOptions.Center;
+                // ⛔ À GAUCHE, comme le titre d'un créneau REMPLI (voir juste en dessous, qui
+                // laisse `NouveauTexte` à son alignement gauche par défaut). Centré, « — rien — »
+                // se posait à ~500 px de son propre numéro de rang et la colonne SAUTAIT selon
+                // que le créneau était plein ou vide — mesuré à l'image le 2026-09-03, sur un run
+                // VERT 2/2. *Mes deux tests comptaient des textes ; compter du texte ne dit
+                // jamais où il est.* Le vide et le plein doivent partager une seule colonne.
+                rien.alignment = TextAlignmentOptions.Left;
                 return;
             }
             NouveauTexte(corps.transform, "Titre", titre, Px(11f), CouleurEncre,

@@ -4,6 +4,7 @@ using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.TestTools;
+using TMPro;
 using MafiaCleanCity.Operational;
 using MafiaCleanCity.Tests;   // SeederSupport.SafeCallsign
 using Object = UnityEngine.Object;
@@ -90,6 +91,74 @@ namespace MafiaCleanCity.Operational.Tests
                 "des Graphic non-MaskableGraphic ignoreraient tout Mask parent (un `Graphic` nu " +
                 "dérivé sur mesure, jamais `UnityEngine.UI.Image`/`TextMeshProUGUI`) : " +
                 string.Join(", ", nonMaskable));
+        }
+
+        /// <summary>⛔ LE VIDE ET LE PLEIN PARTAGENT UNE SEULE COLONNE.
+        ///
+        /// ⛔⛔ POURQUOI CETTE GARDE EXISTE, et ce qu'elle dit de celle d'au-dessus. Le
+        /// 2026-09-03, `ScreenC3` est sorti **VERT 2/2** et l'écran était fautif : « — rien — »
+        /// était centré (`TextAlignmentOptions.Center`) dans un corps `flexibleWidth = 1`, donc
+        /// posé à ~500 px de son propre numéro de rang, alors qu'un créneau REMPLI pose son titre
+        /// à gauche. La colonne SAUTAIT selon que le créneau était plein ou vide. Rien ne l'a vu
+        /// parce que mes deux seules gardes comptaient des `Graphic` et photographiaient.
+        /// ⇒ *Une garde anti-vacuité certifie qu'il Y A du texte, jamais qu'il est À SA PLACE.*
+        ///   Compter est une mesure de PRÉSENCE ; l'alignement est une mesure de POSITION. Un
+        ///   écran peut être plein et illisible : les deux familles ne se remplacent pas.
+        ///
+        /// ⚠️ Elle n'assène pas `alignment == Left` — ce serait relire le setter qu'on vient
+        /// d'écrire, une garde tautologique qui resterait verte si la colonne sautait pour une
+        /// AUTRE raison (padding, pivot, largeur de rang). Elle compare deux bords GAUCHES
+        /// mesurés après mise en page : le seul fait qui intéresse le lecteur de l'écran.</summary>
+        [UnityTest]
+        public IEnumerator ScreenC3S2_CreneauVideEtCreneauPlein_PartagentLaMemeColonne()
+        {
+            MonterEcran();
+            yield return null;
+            yield return null;   // laisser le VerticalLayoutGroup se résoudre
+
+            GameObject racine = RacineEcran();
+            var rien = new List<RectTransform>();
+            var titres = new List<RectTransform>();
+            // ⛔ SÉLECTIONNER PAR STRUCTURE, PAS PAR NOM SEUL. Première version : tout
+            // `TextMeshProUGUI` nommé « Rien » ou « Titre » dans l'écran — elle a rendu 8 vides
+            // + 2 pleins sur un carnet qui n'a que 8 créneaux, parce que « Titre » est un nom
+            // générique porté aussi par des textes HORS liste. Le plancher `AreEqual(8, ...)` a
+            // attrapé la faute et le run est sorti ROUGE : *une garde trop large ne se trompe pas
+            // seulement de population, elle accuse l'écran d'un défaut qui est le sien.*
+            // ⇒ Un créneau se reconnaît à sa STRUCTURE : son texte est enfant direct d'un
+            //   « Corps », lui-même enfant de la ligne de créneau. Aucun autre texte de l'écran
+            //   n'a ce parent.
+            foreach (TextMeshProUGUI t in racine.GetComponentsInChildren<TextMeshProUGUI>(true))
+            {
+                if (t.transform.parent == null || t.transform.parent.name != "Corps") continue;
+                if (t.name == "Rien") rien.Add((RectTransform)t.transform);
+                else if (t.name == "Titre") titres.Add((RectTransform)t.transform);
+            }
+
+            // ⚠️ PLANCHER — sans lui, un écran qui ne dessinerait AUCUN créneau rendrait les deux
+            // listes vides et la comparaison serait vraie à vide, le mode d'échec de ce dépôt.
+            Assert.AreEqual(8, rien.Count + titres.Count,
+                "les 8 créneaux doivent TOUJOURS être dessinés (vides compris) — obtenu " +
+                rien.Count + " vide(s) + " + titres.Count + " plein(s)");
+            Assert.IsNotEmpty(rien, "aucun créneau vide : cette garde serait vraie À VIDE");
+
+            var coins = new Vector3[4];
+            float gauche = float.NaN;
+            foreach (RectTransform rt in rien)
+            {
+                rt.GetWorldCorners(coins);
+                if (float.IsNaN(gauche)) gauche = coins[0].x;
+                Assert.AreEqual(gauche, coins[0].x, 0.5f,
+                    "deux « — rien — » ne commencent pas à la même abscisse");
+            }
+
+            // Le corps qui PORTE le texte donne la colonne attendue : le texte doit commencer au
+            // bord gauche de son corps, pas flotter en son milieu.
+            Transform corps = rien[0].parent;
+            ((RectTransform)corps).GetWorldCorners(coins);
+            Assert.AreEqual(coins[0].x, gauche, 1.0f,
+                "« — rien — » ne commence pas au bord gauche de son créneau : il flotte au " +
+                "milieu, loin de son numéro de rang, et la colonne saute entre vide et plein");
         }
 
         // ═══ 2. CAPTURE pour le juge visuel ⊥ — deux résolutions ══════════════════════════════
