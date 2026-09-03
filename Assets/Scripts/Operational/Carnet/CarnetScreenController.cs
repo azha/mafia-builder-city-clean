@@ -125,6 +125,26 @@ namespace MafiaCleanCity.Operational
             // est stable.
             if (transform.parent != null) transform.SetAsLastSibling();
             EnsureInitialized();
+            StartCoroutine(Amorcer());
+        }
+
+        /// <summary>Charger dès le montage — sans cet appel, `Charger()` n'a AUCUN appelant et
+        /// l'écran reste sur son état initial pour toujours.
+        ///
+        /// ⛔⛔ TROISIÈME FOIS. ㊴ l'a payé, ㊵ porte déjà ce commentaire mot pour mot — et j'ai
+        /// bâti ㉞ sans l'appel. Ce qui l'a rendu invisible : `BuildLayout()` construit un écran
+        /// COMPLET et NOMMÉ (« le carnet n'a pas encore été ouvert », les 8 créneaux dessinés),
+        /// donc la capture isolée est belle, remplie, et parfaitement plausible. *Un état initial
+        /// bien fait ressemble à un écran qui fonctionne ; c'est ce qui le rend indétectable à
+        /// l'œil.* Aucune de mes gardes structurelles ni ma photo isolée ne pouvaient le voir :
+        /// elles n'attendaient aucune donnée, donc elles n'ont rien manqué.
+        /// ⇒ C'est la capture SOUS CHROME qui l'a trouvé, en refusant de photographier tant que
+        ///   `RenduTermine` était faux. La garde qui refuse de mesurer vaut mieux que la mesure
+        ///   qui rassure.</summary>
+        private IEnumerator Amorcer()
+        {
+            if (string.IsNullOrEmpty(token)) yield break;   // hors session : état initial NOMMÉ
+            yield return Charger();
         }
 
         private void EnsureInitialized()

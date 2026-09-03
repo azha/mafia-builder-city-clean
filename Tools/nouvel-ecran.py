@@ -438,6 +438,27 @@ namespace MafiaCleanCity.Operational
             // est stable.
             if (transform.parent != null) transform.SetAsLastSibling();
             EnsureInitialized();
+            StartCoroutine(Amorcer());
+        }}
+
+        /// <summary>Charger dès le montage — sans cet appel, `Charger()` n'a AUCUN appelant et
+        /// l'écran reste sur son état initial pour toujours.
+        ///
+        /// ⛔⛔ CE GÉNÉRATEUR PRODUISAIT `Start()` SANS CET APPEL, et le défaut a été reconduit
+        /// TROIS FOIS : ㊴ l'a payé, ㊵ porte le commentaire qui le raconte, ㉞ l'a rejoué quand
+        /// même. *Écrire la leçon À CÔTÉ du patron ne la fait pas relire au moment où l'on génère
+        /// l'écran suivant.* Un défaut reconduit par DÉFAUT se corrige à la SOURCE, jamais au cas
+        /// — sinon on paie une fois par écran, indéfiniment.
+        ///
+        /// ⚠️ CE QUI L'A RENDU INVISIBLE À CHAQUE FOIS : `BuildLayout()` construit un état initial
+        /// COMPLET et NOMMÉ. La capture isolée est donc belle, remplie et plausible. *Un état
+        /// initial bien fait ressemble à un écran qui fonctionne.* Seule une capture SOUS CHROME
+        /// qui attend `RenduTermine` peut le voir — une garde qui REFUSE de photographier tant que
+        /// l'écran n'a pas fini vaut mieux qu'une image qui rassure.</summary>
+        private IEnumerator Amorcer()
+        {{
+            if (string.IsNullOrEmpty(token)) yield break;   // hors session : état initial NOMMÉ
+            yield return Charger();
         }}
 
         private void EnsureInitialized()

@@ -4,7 +4,10 @@ using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.TestTools;
+using System.Linq;
 using TMPro;
+using MafiaCleanCity.Shell;
+using MafiaCleanCity.CityMap;   // AuthClient y vit — mesuré, pas supposé
 using MafiaCleanCity.Operational;
 using MafiaCleanCity.Tests;   // SeederSupport.SafeCallsign
 using Object = UnityEngine.Object;
@@ -25,6 +28,9 @@ namespace MafiaCleanCity.Operational.Tests
     public class CarnetScreenPlayModeTests
     {
         private GameObject hostGo;
+        private GameObject shellGo;
+        private AppShell shell;
+        private int seq;
 
         [TearDown]
         public void TearDown()
@@ -191,6 +197,96 @@ namespace MafiaCleanCity.Operational.Tests
 
             yield return CapturerA(1080, 1920, "Assets/Screenshots/screen_c3_1080x1920.png");
             yield return CapturerA(1080, 2400, "Assets/Screenshots/screen_c3_1080x2400.png");
+        }
+
+        /// <summary>⛔ ㉞ SOUS LE CHROME RÉEL, atteint par le CHEMIN DU JOUEUR — l'entrée nommée
+        /// du menu Plus, cliquée par un clic de production, jamais un montage direct.
+        ///
+        /// ⛔⛔ POURQUOI CETTE CAPTURE EN PLUS DE L'AUTRE, et ce que l'autre ne peut pas voir.
+        /// `ScreenC3C1` monte l'écran SEUL : hors shell, `ShellChrome.TopInsetPx` vaut ZÉRO, donc
+        /// une garde d'inset y serait vraie sans rien mesurer, et l'écran peut parfaitement
+        /// passer sous la barre du haut sans que rien ne l'attrape. Deux écrans de ce dépôt ont
+        /// été livrés ainsi. *Un écran isolé est photographié dans un monde où le chrome n'existe
+        /// pas — ce n'est pas une version plus simple du vrai, c'est un autre écran.*
+        ///
+        /// ⚠️ PLANCHER D'INSETS OBLIGATOIRE (`Assert.Greater(TopInsetPx, 0f)`) AVANT toute garde
+        /// de zone sûre : sans lui, la garde « le contenu commence sous l'inset » est satisfaite
+        /// par un inset nul, et certifie l'écran hors shell au lieu de le refuser. Troisième
+        /// variante de la garde décorative : vraie À VIDE.
+        ///
+        /// ⚠️ ATTENTE SUR `RenduTermine`, JAMAIS sur N frames : un compte de frames est une durée
+        /// déguisée en état, vert sur une machine rapide et rouge sur une lente, et il photographie
+        /// un écran à moitié rempli sans jamais le dire.</summary>
+        [UnityTest, Category("PhotoScreenC3SousChrome")]
+        public IEnumerator ScreenC3C2_CapturerSousLeChromeReel_ParLeCheminDuJoueur()
+        {
+            var auth = new AuthClient { BaseUrl = "http://localhost" };
+            string callsign = SeederSupport.SafeCallsign("carnet", ref seq);
+            string token = null, err = null;
+            yield return auth.SignUp(callsign, "carnet-capture-pw", t => token = t, e => err = e);
+            Assert.IsNull(err, "signup errored: " + err);
+
+            var sessionClient = new SessionClient { BaseUrl = "http://localhost" };
+            SessionOpenDto payload = null;
+            yield return sessionClient.OpenSession(token, "capture-carnet", d => payload = d,
+                (c, m) => Assert.Fail("session/open failed: " + c + ": " + m));
+            Assert.IsNotNull(payload, "session/open doit réussir");
+
+            LogAssert.ignoreFailingMessages = true;
+            shellGo = new GameObject("CarnetShell");
+            shell = shellGo.AddComponent<AppShell>();
+            shell.SetIdentity(callsign, "carnet-capture-pw");
+            yield return null;
+
+            float t0 = Time.realtimeSinceStartup;
+            while (string.IsNullOrEmpty(shell.Token) && Time.realtimeSinceStartup - t0 < 30f)
+                yield return null;
+            Assert.IsFalse(string.IsNullOrEmpty(shell.Token),
+                "le shell doit avoir acquis sa session avant qu'on ouvre le menu");
+
+            // ⛔ L'ENTRÉE EST DÉSIGNÉE PAR SON NOM, jamais par son RANG dans la liste : un
+            // `boutons[7]` resterait vert en photographiant l'écran du voisin le jour où une
+            // entrée est insérée avant. *Le nom est une donnée stable, l'indice est un accident
+            // d'ordre.*
+            const string NOM = "MenuPlus_LES ORDRES DU SOIR";
+            shell.ActivateTab(AppShell.Tab.More);
+            yield return null;
+            Button entree = Object.FindObjectsByType<Button>(FindObjectsSortMode.None)
+                .FirstOrDefault(b => b.gameObject.name == NOM);
+            Assert.IsNotNull(entree,
+                "l'entrée « " + NOM + " » est introuvable dans le menu Plus — l'écran n'a pas de " +
+                "porte, et une capture prise en le montant à la main mentirait sur son accessibilité");
+            Assert.IsTrue(ProductionClickSupport.Click(entree),
+                "l'entrée refuse le clic de production (inactive ou non interactive) : un doigt " +
+                "ne pourrait pas l'actionner, la destination est une porte peinte sur un mur");
+            yield return null;
+
+            var ecran = Object.FindFirstObjectByType<CarnetScreenController>();
+            Assert.IsNotNull(ecran, "le clic n'a monté aucun CarnetScreenController");
+
+            t0 = Time.realtimeSinceStartup;
+            while (!ecran.RenduTermine && Time.realtimeSinceStartup - t0 < 30f) yield return null;
+            Assert.IsTrue(ecran.RenduTermine,
+                "l'écran n'a jamais déclaré son rendu terminé en 30 s — photographier ici " +
+                "donnerait un carnet à moitié écrit, et la capture ne le dirait pas");
+
+            // ⛔ PLANCHER — avant toute garde de zone sûre. Hors shell ces deux valeurs sont
+            // NULLES, et la garde qui suit serait vraie sans rien mesurer.
+            Assert.Greater(ShellChrome.TopInsetPx, 0f,
+                "l'inset HAUT est nul : on n'est pas sous le chrome, toute garde de zone sûre " +
+                "serait vraie À VIDE et certifierait l'écran hors shell");
+            Assert.Greater(ShellChrome.BottomInsetPx, 0f, "l'inset BAS est nul — même défaut");
+
+            // ⛔ ANTI-VACUITÉ — une capture d'écran vide passerait toutes les gardes ci-dessus.
+            int textes = 0;
+            foreach (TextMeshProUGUI t in RacineEcran().GetComponentsInChildren<TextMeshProUGUI>(true))
+                if (!string.IsNullOrWhiteSpace(t.text)) textes++;
+            Assert.GreaterOrEqual(textes, 8,
+                "seulement " + textes + " texte(s) non vides sous CarnetRoot : les 8 créneaux " +
+                "doivent au minimum être écrits, sinon on photographie une page blanche");
+
+            yield return CapturerA(1080, 2400,
+                "Assets/Screenshots/screen_c3_sous_chrome_1080x2400.png");
         }
 
         private IEnumerator CapturerA(int largeur, int hauteur, string chemin)
