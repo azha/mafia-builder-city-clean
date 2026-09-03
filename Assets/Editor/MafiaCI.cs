@@ -73,7 +73,15 @@ public static class MafiaCI
     //   `ChaineDApproScreenPlayModeTests`. Un balayage qui accuse se vérifie sur un cas dont on
     //   SAIT la réponse avant de supprimer quoi que ce soit.
     private static readonly string[] Categories =
-        { "W4P4a", "W3UDA", "W3U1", "W3U2", "Charpente", "DemoIdentity", "ScreenB3", "ShellSurimpression", "CaptureDistrict", "CaptureReputation", "CaptureFamille", "Joignabilite", "ScreenCarte", "CaptureCarte", "EcranAutonomy", "EcranExceptions", "EcranRegleLieutenant", "EcranTenureLieutenant", "EcranUiLieutenant", "EcranRegleTier2", "PhotoChantierC", "EcranAppro", "PhotoEcranAppro" };
+        { "W4P4a", "W3UDA", "W3U1", "W3U2", "Charpente", "DemoIdentity", "ScreenB3", "ShellSurimpression", "CaptureDistrict", "CaptureReputation", "CaptureFamille", "Joignabilite", "ScreenCarte", "CaptureCarte", "EcranAutonomy", "EcranExceptions", "EcranRegleLieutenant", "EcranTenureLieutenant", "EcranUiLieutenant", "EcranRegleTier2", "PhotoChantierC", "EcranAppro", "PhotoEcranAppro", "ScreenB7", "ScreenC1", "ScreenC6" };
+    // ⚠️ UNION AU MERGE (3e fois sur cette ligne le 2026-09-03) — et la règle est
+    // toujours la même : on unit ce qui est PORTÉ, jamais les deux listes. Une entrée
+    // sans porteur affirme une couverture qui n'existe pas ; une entrée portée qu'on
+    // retire rend ses tests inatteignables sans que rien ne rougisse. Le compte se
+    // refait à CHAQUE merge — c'est une mesure, pas une mémoire.
+    // ⚠️ Le balayage des porteurs utilise `Category\("x"\)` PARTOUT, jamais
+    //   `\[Category\("x"\)\]` : la forme combinée `[UnityTest, Category("x")]` est
+    //   employée ici et le motif étroit en cachait HUIT le 2026-09-03.
     // ⚠️ UNION AU MERGE DU 2026-09-03 : `CarteVille` vient du lot « ville peinte », les huit
     // autres du chantier C et du mien. Les deux branches avaient RAISON séparément et le
     // conflit portait sur la LIGNE, pas sur l'intention — un filtre se fusionne toujours en
