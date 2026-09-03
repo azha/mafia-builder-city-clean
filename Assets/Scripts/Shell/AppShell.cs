@@ -714,6 +714,11 @@ namespace MafiaCleanCity.Shell
             // le joueur ne distingue pas par leur route : la une (`news/feed`) et les brèves de
             // la rue (`ambient/feed`). Un libellé « LE JOURNAL » seul cacherait la moitié.
             ("LE JOURNAL & LA RUE",  () => MountTenant<JournalScreenController>()),      // ㊳
+            // ⚠️ ADDITIF, pas un remplacement. L'onglet « FILIÈRE » du dock monte toujours ⑪
+            // (`LaunderingController`, mono-nœud). ㊵ montre la filière ENTIÈRE et son état de
+            // cassure ; savoir lequel des deux mérite la bulle du dock est une décision de DOCK,
+            // pas un effet de bord d'un ajout de menu. Elle est CONSIGNÉE ici, pas prise.
+            ("LA FILIÈRE",           () => MountTenant<FiliereScreenController>()),      // ㊵
             ("LA PREMIÈRE FOIS",     () => MountTenant<TutorialScreenController>()),     // ㉕
 
             // ⚠️ ㉒ — sa planche s'appelle `planche_le_coffre` et l'écran écrit « LE COFFRE » dans
