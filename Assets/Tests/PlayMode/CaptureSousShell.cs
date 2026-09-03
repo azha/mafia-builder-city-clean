@@ -1,0 +1,381 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
+using MafiaCleanCity.Shell;
+using Object = UnityEngine.Object;
+
+namespace MafiaCleanCity.Shell.Tests
+{
+    /// <summary>Capture d'un locataire monté SOUS le shell — le pendant de `CaptureSupport`
+    /// (qui, lui, ne sait capturer que les écrans bâtissant sous LEUR propre canvas).
+    ///
+    /// ⛔ POURQUOI CE FICHIER EXISTE. Ces ~150 lignes vivaient en privé dans
+    /// `PlancheEcransCapturePlayModeTests` et chacune de ses trois gardes a été payée par une
+    /// capture fausse : un écran occlus par ses frères (mesuré « frère 6 sur 11 », quatre runs et
+    /// quatre hypothèses fausses avant que la garde ne NOMME les occultants), un RectTransform
+    /// resté à sa taille par défaut (100×100, aucune erreur console), une image « pas noire »
+    /// satisfaite par le chrome du shell alors que l'écran mesuré était vide.
+    /// `CaptureSupport` dit déjà la règle pour son propre périmètre : *une garde recopiée n'est
+    /// pas une garde partagée — elle diverge, et le durcissement posé sur l'une ne protège aucune
+    /// des autres.* Une seconde planche allait en faire une quatrième copie.
+    /// ⇒ Toute garde ajoutée ICI vaut pour TOUTE capture prise sous le shell. C'est le point.</summary>
+    public static class CaptureSousShell
+    {
+        /// <summary>Monte (ou retrouve) un locataire, attend son chargement, le capture, et
+        /// vérifie les TROIS propriétés qui rendraient l'image mensongère — dans cet ordre, du
+        /// structurel au pixel.
+        ///
+        /// `monter == false` : le locataire est DÉJÀ à l'écran (le shell le monte lui-même — cas
+        /// de `DashboardController`, posé en surimpression à l'ouverture de session). En monter un
+        /// second exemplaire capturerait une copie que le joueur ne voit jamais, pendant que
+        /// l'original reste dessous : on capture ce que le joueur a, pas ce qu'on sait fabriquer.
+        ///
+        /// `sonde` : appelée juste après l'écriture du PNG, pour imprimer la géométrie propre à un
+        /// écran. *Mesure, pas déduction* — trois hypothèses plausibles valent moins qu'un log.</summary>
+        public static IEnumerator CapturerLocataire<T>(AppShell shell, string nom,
+                                                       System.Func<T, RectTransform, bool> charge,
+                                                       List<string> echecs,
+                                                       bool monter = true,
+                                                       System.Action<T> sonde = null,
+                                                       string nomFeuille = null,
+                                                       string[] freresAttendusAuDessus = null,
+                                                       int largeur = 1080, int hauteur = 2400)
+            where T : MonoBehaviour, IShellTenant
+        {
+            string chemin = $"Assets/Screenshots/planche_{nom}_{largeur}x{hauteur}.png";
+
+            // ⛔⛔ CE QU'UNE CAPTURE PRÉCÉDENTE LAISSE À L'ÉCRAN CONTAMINE LA SUIVANTE — mesuré le
+            // 2026-09-03 sur `planche_la_filiere` : la feuille de ㉔, capturée deux appels plus
+            // tôt, y est LISIBLE en haut de l'image. Les écrans ne sont jamais démontés entre deux
+            // captures (le compte de frères monte 10 → 13 → 16 → 19), et le voile de fond de
+            // chaque écran est un SCRIM translucide : il assombrit ce qu'il y a dessous au lieu de
+            // le cacher. Les trois gardes ne pouvaient pas le voir — elles regardent ce qui est
+            // AU-DESSUS, jamais ce qui transparaît DESSOUS.
+            // ⇒ On note ce qui est présent AVANT de monter, et on éteint après l'écriture du PNG
+            //   tout ce qui est apparu depuis — par DIFFÉRENCE, jamais par nom deviné.
+            var avantMontage = new HashSet<Transform>();
+            for (int k = 0; k < shell.ContentSlot.childCount; k++) avantMontage.Add(shell.ContentSlot.GetChild(k));
+
+            if (monter) shell.MonterLocataireEnSurimpression<T>();
+            T ecran = null;
+            float montage = 0f;
+            while (montage < 15f && ecran == null)
+            {
+                ecran = shell.ContentSlot.GetComponentInChildren<T>(true);
+                montage += Time.deltaTime;
+                yield return null;
+            }
+            if (ecran == null)
+            {
+                echecs.Add(monter
+                    ? $"{nom} : non monté sous le shell"
+                    : $"{nom} : introuvable sous le shell alors qu'on ne devait PAS le monter — "
+                      + "le shell ne l'a pas posé, la capture n'aurait montré que ce qu'il y a dessous");
+                yield break;
+            }
+
+            // ⛔⛔ LA RACINE VISIBLE N'EST PAS TOUJOURS LE COMPOSANT — et c'est une CLASSE, pas
+            // un cas. SEPT des vingt-trois locataires (BuildingCard, ExceptionDetail, Laundering,
+            // PipelineOverview, AutonomyInbox, Lieutenant, Dashboard) bâtissent leur `<X>Backdrop`
+            // et leur `<X>Sheet` sous `mountParent` — donc en FRÈRES de leur propre hôte, jamais
+            // en enfants. Mesuré : `grep -rnE 'NewUI\("[A-Za-z]+(Sheet|Backdrop)"' Assets/Scripts`
+            // = 7 contrôleurs.
+            // ⇒ Tout ce qui interroge `ecran.GetComponentsInChildren<…>` mesure alors un sous-arbre
+            //   VIDE : la garde d'ordre de fratrie regarde un hôte sans un pixel, la garde de
+            //   taille lit un rect par défaut, et le compte d'encre rend 0 sur un écran plein.
+            //   Payé le 2026-09-03 par quatre échecs d'un seul run, tous de cette cause : ④ et ㉔
+            //   « recouverts » par leur PROPRE feuille, ⑪ et ⑫ « chargement non abouti » alors que
+            //   leur titre était à l'écran depuis le premier frame.
+            // ⇒ L'appelant NOMME la feuille. Pas de repli devinant un nom : si `nomFeuille` est
+            //   donné et introuvable, on échoue en le disant — un nom qu'on résout au jugé est
+            //   exactement l'endroit où une garde se met à mesurer le voisin.
+            // ⛔ LA CONVERSION EN `RectTransform` NE VA PAS DE SOI, et le run r2 l'a payée d'une
+            // `InvalidCastException` nue. Le mécanisme, mesuré : `AppShell.ConstruireLocataire`
+            // crée l'hôte par `new GameObject($"Tenant_{typeof(T).Name}")` — donc avec un
+            // `Transform` NU. Les huit écrans de la planche 1 en ont quand même un `RectTransform`
+            // parce qu'ils bâtissent leur UI SUR leur hôte, et poser un `Graphic` fait convertir le
+            // Transform par Unity. Les sept qui dessinent dans une feuille voisine n'y posent rien,
+            // donc leur hôte reste un `Transform` nu.
+            // ⇒ **L'hôte est un `RectTransform` SI ET SEULEMENT SI l'écran dessine dessus** — la
+            //   même frontière que celle qui rend `GetComponentsInChildren` vide pour ces sept-là.
+            //   Un seul fait explique les deux symptômes.
+            // ⇒ On ne suppose plus : `as` gardé, et on ÉCRIT ce qu'on a trouvé. Un cast dur
+            //   transforme une hypothèse fausse en trace d'exception sans un mot sur l'objet en
+            //   cause ; un `as` gardé la transforme en mesure.
+            Transform racineT = ecran.transform;
+            if (!string.IsNullOrEmpty(nomFeuille))
+            {
+                Transform parentHote = ecran.transform.parent;
+                Transform feuille = null;
+                float rechercheFeuille = 0f;
+                while (rechercheFeuille < 10f && feuille == null)
+                {
+                    if (parentHote != null)
+                        for (int k = 0; k < parentHote.childCount; k++)
+                            if (parentHote.GetChild(k).name == nomFeuille) { feuille = parentHote.GetChild(k); break; }
+                    if (feuille != null) break;
+                    rechercheFeuille += Time.deltaTime;
+                    yield return null;
+                }
+                if (feuille == null)
+                {
+                    var fratrie = new System.Text.StringBuilder();
+                    if (parentHote != null)
+                        for (int k = 0; k < parentHote.childCount; k++)
+                            fratrie.Append($"\n      [{k}] {parentHote.GetChild(k).name}");
+                    echecs.Add($"{nom} : feuille « {nomFeuille} » introuvable parmi les frères de "
+                               + $"l'hôte — la garde mesurerait un hôte sans pixel. Fratrie :{fratrie}");
+                    yield break;
+                }
+                racineT = feuille;
+            }
+
+            RectTransform racine = racineT as RectTransform;
+            if (racine == null)
+            {
+                echecs.Add($"{nom} : « {racineT.name} » n'est pas un RectTransform "
+                           + $"(c'est un {racineT.GetType().Name}) — ni la géométrie ni la capture "
+                           + "ne peuvent être mesurées dessus. Donne `nomFeuille` pour désigner la "
+                           + "feuille où l'écran dessine réellement.");
+                yield break;
+            }
+
+            float attente = 0f;
+            while (attente < 20f && !charge(ecran, racine)) { attente += Time.deltaTime; yield return null; }
+            // ⛔⛔ ATTENDRE N'EST PAS AVOIR CHARGÉ. Une capture prise avant la fin du chargement
+            // montre un écran VIDE qui a l'air fini — et le compte de teintes est alors satisfait
+            // PAR LE CHROME du shell (barre du haut, jauge, dock), qui n'appartient pas à l'écran
+            // mesuré. La garde de teintes prouve qu'il y a de l'encre, jamais que c'est CELLE de
+            // l'écran ; celle-ci prouve qu'on a attendu, jamais que l'attente a abouti.
+            if (!charge(ecran, racine))
+            {
+                // ⚠️ On dit POURQUOI, pas seulement QUE : un compte nu fait deviner.
+                var diag = new System.Text.StringBuilder();
+                foreach (var p in typeof(T).GetProperties())
+                {
+                    if (p.Name != "DerniereErreur" && p.Name != "EtatVide") continue;
+                    object val = null;
+                    try { val = p.GetValue(ecran); } catch { }
+                    diag.Append($" {p.Name}={val ?? "null"}");
+                }
+                echecs.Add($"{nom} : chargement NON abouti après {attente:F0} s —{diag} · "
+                           + $"jetonDuShell={(string.IsNullOrEmpty(shell.Token) ? "VIDE" : "présent")} · "
+                           + "la capture montrerait un écran vide qui a l'air fini");
+                yield break;
+            }
+
+            Canvas.ForceUpdateCanvases();
+            yield return null;
+            yield return null;
+
+            // (1) ORDRE DE FRATRIE — la propriété la plus structurelle, et celle qui a menti le
+            // plus longtemps. Une mesure sur un objet occlus mesure LE VOISIN, et rend un verdict
+            // d'autant plus rassurant qu'il est faux. La garde NOMME les occultants : un compte nu
+            // dit qu'il y a des frères au-dessus, jamais LESQUELS.
+            // ⚠️ « QUELS nœuds », jamais « combien ». Un compte nu dit qu'il y a des frères
+            // au-dessus, jamais LESQUELS — j'ai deviné quatre fois au lieu de lire une fois. Et
+            // l'appelant doit NOMMER ceux qu'il accepte : un écran légitimement recouvert (④ l'est,
+            // par les quatre panneaux de l'Accueil que `AppShell.MonterPanneauxAccueil` monte
+            // EXPRÈS une frame plus tard pour qu'ils soient cadets — c'est écrit verbatim dans
+            // `AcquireSessionThenActivateHome`) doit le DÉCLARER, pas le subir en silence.
+            var attendus = new HashSet<string>(freresAttendusAuDessus ?? new string[0]);
+            Transform parent = racine.parent;
+            int rang = racine.GetSiblingIndex();
+            if (parent != null && rang != parent.childCount - 1)
+            {
+                var inattendus = new System.Text.StringBuilder();
+                int nbInattendus = 0;
+                for (int k = rang + 1; k < parent.childCount; k++)
+                {
+                    Transform f = parent.GetChild(k);
+                    int g = f.GetComponentsInChildren<Graphic>(true).Length;
+                    if (attendus.Contains(f.name) || g == 0) continue;
+                    nbInattendus++;
+                    inattendus.Append($"\n      [{k}] {f.name} actif={f.gameObject.activeInHierarchy} graphics={g}");
+                }
+                if (nbInattendus > 0)
+                {
+                    echecs.Add($"{nom} : la racine visible « {racine.name} » est frère {rang} sur "
+                               + $"{parent.childCount} — {nbInattendus} frère(s) NON DÉCLARÉ(S) se "
+                               + $"dessinent par dessus :{inattendus}");
+                    yield break;
+                }
+            }
+
+            // (2) TAILLE — un RectTransform neuf fait 100x100 et ne dessine rien de VISIBLE, sans
+            // la moindre erreur console.
+            RectTransform rt = racine;
+            if (rt.rect.width < 200f)
+            {
+                echecs.Add($"{nom} : rect {rt.rect.width:F0}x{rt.rect.height:F0} — taille par défaut, "
+                           + "l'écran ne dessine rien");
+                yield break;
+            }
+
+            Canvas canvas = racine.GetComponentInParent<Canvas>();
+            if (canvas != null) canvas = canvas.rootCanvas;
+            if (canvas == null) { echecs.Add($"{nom} : sous AUCUN canvas"); yield break; }
+
+            // ⛔ Un canvas en Screen Space OVERLAY n'est pas rendu par une caméra : une capture par
+            // `targetTexture` rendrait le fond de la caméra. On bascule en Screen Space Camera le
+            // temps du rendu, puis on rétablit.
+            RenderMode modePrecedent = canvas.renderMode;
+            Camera cameraPrecedente = canvas.worldCamera;
+            float planPrecedent = canvas.planeDistance;
+
+            GameObject camGo = new GameObject("CapturePlancheCam");
+            Camera cam = camGo.AddComponent<Camera>();
+            cam.clearFlags = CameraClearFlags.SolidColor;
+            cam.backgroundColor = Color.black;
+            cam.orthographic = true;
+            var rtex = new RenderTexture(largeur, hauteur, 24, RenderTextureFormat.ARGB32);
+            cam.targetTexture = rtex;
+
+            canvas.renderMode = RenderMode.ScreenSpaceCamera;
+            canvas.worldCamera = cam;
+            canvas.planeDistance = 10f;
+            Canvas.ForceUpdateCanvases();
+            yield return null;
+
+            // ⚠️ La demi-hauteur se mesure sur le rect RÉEL du canvas, jamais depuis la résolution
+            // demandée : le canvas porte un CanvasScaler, ses unités ne sont pas les pixels cible.
+            // La valeur par défaut d'`orthographicSize` (5) cadrerait 0,4 % de l'écran.
+            RectTransform crt = (RectTransform)canvas.transform;
+            cam.orthographicSize = crt.rect.height / 2f;
+            cam.aspect = crt.rect.width / crt.rect.height;
+            cam.Render();
+
+            RenderTexture prev = RenderTexture.active;
+            RenderTexture.active = rtex;
+            var tex = new Texture2D(largeur, hauteur, TextureFormat.RGB24, false);
+            tex.ReadPixels(new Rect(0, 0, largeur, hauteur), 0, 0);
+            tex.Apply();
+            RenderTexture.active = prev;
+            canvas.renderMode = modePrecedent;
+            canvas.worldCamera = cameraPrecedente;
+            canvas.planeDistance = planPrecedent;
+
+            System.IO.File.WriteAllBytes(chemin, tex.EncodeToPNG());
+
+            if (sonde != null) sonde(ecran);
+
+            // (3) VARIÉTÉ — dernière et la plus faible des trois : « pas noire » est satisfait par
+            // un gris uniforme, et le compte de teintes de TOUTE l'image est satisfait par les
+            // écrans du dessous. Elle ne vaut qu'APRÈS les deux gardes structurelles.
+            var teintes = new HashSet<int>();
+            foreach (Color c in tex.GetPixels())
+                teintes.Add((Mathf.RoundToInt(c.r * 31) << 10) | (Mathf.RoundToInt(c.g * 31) << 5) | Mathf.RoundToInt(c.b * 31));
+            // ⚠️ `graphics` seul ne distingue pas « écran vide parce que la donnée est vide » de
+            // « écran vide parce que la route a échoué » : le compte de textes non vides le sépare.
+            int encre = 0;
+            foreach (var t in racine.GetComponentsInChildren<TMPro.TextMeshProUGUI>(true))
+                if (!string.IsNullOrWhiteSpace(t.text)) encre++;
+            Debug.Log($"[PLANCHE] {chemin} — {teintes.Count} teintes · racine={racine.name} "
+                      + $"rect={rt.rect.width:F0}x{rt.rect.height:F0} "
+                      + $"· frere={rang}/{(parent != null ? parent.childCount : 0)} "
+                      + $"· graphics={racine.GetComponentsInChildren<Graphic>(true).Length} · textes={encre}");
+            if (teintes.Count <= 12) echecs.Add($"{nom} : {teintes.Count} teintes — c'est un fond, pas un écran");
+
+            if (camGo != null) Object.Destroy(camGo);
+            Object.Destroy(rtex);
+
+            // Éteindre ce que CET appel a monté, pour que la capture suivante ne le voie pas au
+            // travers de son scrim. `monter: false` n'a rien monté : la différence est vide et
+            // l'état de démarrage du shell reste intact — c'est voulu, il n'est à personne.
+            int eteints = 0;
+            for (int k = 0; k < shell.ContentSlot.childCount; k++)
+            {
+                Transform f = shell.ContentSlot.GetChild(k);
+                if (avantMontage.Contains(f) || !f.gameObject.activeSelf) continue;
+                f.gameObject.SetActive(false);
+                eteints++;
+            }
+            if (eteints > 0) Debug.Log($"[PLANCHE] {nom} — {eteints} objet(s) éteint(s) après capture");
+            yield return null;
+        }
+
+        /// <summary>« Cette racine porte-t-elle du texte ? » — le prédicat de repli pour un écran
+        /// dont le chargement ne peut PAS aboutir (une précondition manque côté back). Plus faible
+        /// que le drapeau de chargement du contrôleur : il est donc NOMMÉ à l'appel, jamais glissé
+        /// derrière un `true`.</summary>
+        public static bool PorteDuTexte(RectTransform racine)
+        {
+            if (racine == null) return false;
+            foreach (var t in racine.GetComponentsInChildren<TMPro.TextMeshProUGUI>(true))
+                if (!string.IsNullOrWhiteSpace(t.text)) return true;
+            return false;
+        }
+
+        /// <summary>Charge la scène d'index de build 0, attend que l'acquisition de session du
+        /// shell soit RÉSOLUE, puis que le nombre d'enfants du slot soit STABLE.
+        ///
+        /// ⛔ Les deux attentes sont des mesures, pas de la prudence. (a) L'acquisition rappelle
+        /// l'onglet par défaut quand elle aboutit : capturer avant montrerait un autre écran.
+        /// (b) Le premier écran monté échouait quatre runs de suite « frère 6 sur 11 », recouvert
+        /// par les quatre panneaux de l'Accueil que le shell remonte — j'ai déplacé un écran, et
+        /// **celui qui a pris sa place a échoué avec la signature IDENTIQUE**. Le défaut suit donc
+        /// la POSITION, pas l'écran. Attendre la stabilité est la seule façon de mesurer les
+        /// ÉCRANS au lieu de mesurer la course. ⚠️ Et la course reste un défaut de PRODUCTION —
+        /// l'attendre ici ne la corrige pas, ça évite de compter un défaut de SHELL comme un
+        /// défaut d'ÉCRAN.</summary>
+        public static IEnumerator AttendreUnShellCalme(AppShell shell, List<string> echecs)
+        {
+            float attente = 0f;
+            while (shell.CurrentTab != AppShell.Tab.Empire && attente < 25f)
+            {
+                attente += Time.deltaTime;
+                yield return null;
+            }
+            if (shell.CurrentTab != AppShell.Tab.Empire)
+            {
+                echecs.Add("acquisition de session non résolue — toute capture prise ici serait "
+                           + "celle d'un autre écran");
+                yield break;
+            }
+
+            int dernierCompte = -1, framesStables = 0, gardeFou = 0;
+            while (framesStables < 30 && gardeFou < 600)
+            {
+                int c = shell.ContentSlot.childCount;
+                framesStables = (c == dernierCompte) ? framesStables + 1 : 0;
+                dernierCompte = c;
+                gardeFou++;
+                yield return null;
+            }
+            Debug.Log($"[PLANCHE] shell stabilisé : {dernierCompte} enfants après {gardeFou} frames");
+
+            // ⛔ LA GÉOMÉTRIE DU SHELL, IMPRIMÉE — parce que trois captures d'affilée montrent le
+            // contenu tassé dans le cinquième supérieur d'un 1080×2400 et que je refuse de
+            // l'attribuer au jugé. Une image qui surprend se mesure : canvas, slot de contenu,
+            // et le facteur d'échelle qui les relie. *Un défaut de cadrage se lit comme un défaut
+            // d'écran, et on corrige alors sept écrans au lieu d'un conteneur.*
+            // ⚠️ VERS LE HAUT, pas vers le bas : le shell VIT SOUS le canvas. Ma première version
+            // cherchait en `GetComponentInChildren` et a rendu `canvas=ABSENT scaleFactor=-1` —
+            // un résultat uniforme et absurde, la signature d'un instrument qui mesure ailleurs.
+            // *J'ai failli en tirer une conclusion sur la géométrie du jeu.*
+            Canvas cnv = shell.GetComponentInParent<Canvas>();
+            if (cnv == null && shell.ContentSlot != null) cnv = shell.ContentSlot.GetComponentInParent<Canvas>();
+            if (cnv != null) cnv = cnv.rootCanvas;
+            RectTransform cnvRt = cnv != null ? (RectTransform)cnv.transform : null;
+            var slot = shell.ContentSlot;
+            Debug.Log($"[GEOM-SHELL] ecran={Screen.width}x{Screen.height}"
+                      + $" · canvas={(cnvRt == null ? "ABSENT" : $"{cnvRt.rect.width:F0}x{cnvRt.rect.height:F0}")}"
+                      + $" scaleFactor={(cnv == null ? -1f : cnv.scaleFactor):F3}"
+                      + $" · ContentSlot={(slot == null ? "ABSENT" : $"{slot.rect.width:F0}x{slot.rect.height:F0}")}"
+                      + $" ancres=[{(slot == null ? 0f : slot.anchorMin.y):F2}..{(slot == null ? 0f : slot.anchorMax.y):F2}]"
+                      + $" offsets=[{(slot == null ? 0f : slot.offsetMin.y):F0},{(slot == null ? 0f : slot.offsetMax.y):F0}]");
+            // La chaîne de parenté, rect par rect : c'est elle qui dit OÙ le format se perd.
+            var chaine = new System.Text.StringBuilder();
+            for (Transform t = slot; t != null; t = t.parent)
+            {
+                var r = t as RectTransform;
+                chaine.Append($"\n      {t.name} = {(r == null ? "(Transform nu)" : $"{r.rect.width:F0}x{r.rect.height:F0}")}"
+                              + $" scaleY={t.localScale.y:F3}");
+            }
+            Debug.Log($"[GEOM-SHELL] chaîne de parenté depuis ContentSlot :{chaine}");
+            if (gardeFou >= 600)
+                echecs.Add("le shell n'a jamais cessé d'ajouter des enfants — capture non fiable");
+        }
+    }
+}
