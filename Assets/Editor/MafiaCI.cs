@@ -59,8 +59,21 @@ public static class MafiaCI
     // et le clic des entrées du menu) portent cette catégorie ; sans cette ligne elles seraient
     // livrées, compilées, et JAMAIS EXÉCUTÉES par le juge — la forme la plus économique de garde
     // décorative. *Écrire une garde ne l'installe pas ; l'inscrire au filtre, si.*
+    // ⚠️ `CarteVille` RE-RETIRÉE le 2026-09-03, la DEUXIÈME fois dans la journée. La branche
+    // « légende » de DA est repartie d'un `main` ANTÉRIEUR à son propre renommage (une catégorie
+    // par écran) et l'a réintroduite au filtre. Compté après merge : **0 fichier porteur**. Une
+    // entrée que personne ne porte ne casse rien — elle AFFIRME une couverture qui n'existe pas,
+    // le symétrique exact du défaut que ce fichier existe pour empêcher.
+    // ⇒ *Une valeur retirée revient par la branche qui n'a pas vu le retrait.* Le contrôle utile
+    //   n'est donc pas « l'ai-je retirée ? » mais « QUI la porte aujourd'hui ? », rejoué à chaque
+    //   merge — c'est un compte, pas une mémoire.
+    // ⚠️ Et le contrôle lui-même se contrôle : ma première version comparait dans le MAUVAIS SENS
+    //   (« une catégorie portée commence-t-elle par l'entrée ? » au lieu de « l'entrée est-elle
+    //   portée ? ») et accusait `PhotoEcranAppro`, qui est bel et bien portée par
+    //   `ChaineDApproScreenPlayModeTests`. Un balayage qui accuse se vérifie sur un cas dont on
+    //   SAIT la réponse avant de supprimer quoi que ce soit.
     private static readonly string[] Categories =
-        { "W4P4a", "W3UDA", "W3U1", "W3U2", "Charpente", "DemoIdentity", "ScreenB3", "ShellSurimpression", "CaptureDistrict", "CaptureReputation", "CaptureFamille", "CarteVille", "Joignabilite", "ScreenCarte", "CaptureCarte", "EcranAutonomy", "EcranExceptions", "EcranRegleLieutenant", "EcranTenureLieutenant", "EcranUiLieutenant", "EcranRegleTier2", "PhotoChantierC", "EcranAppro", "PhotoEcranAppro" };
+        { "W4P4a", "W3UDA", "W3U1", "W3U2", "Charpente", "DemoIdentity", "ScreenB3", "ShellSurimpression", "CaptureDistrict", "CaptureReputation", "CaptureFamille", "Joignabilite", "ScreenCarte", "CaptureCarte", "EcranAutonomy", "EcranExceptions", "EcranRegleLieutenant", "EcranTenureLieutenant", "EcranUiLieutenant", "EcranRegleTier2", "PhotoChantierC", "EcranAppro", "PhotoEcranAppro" };
     // ⚠️ UNION AU MERGE DU 2026-09-03 : `CarteVille` vient du lot « ville peinte », les huit
     // autres du chantier C et du mien. Les deux branches avaient RAISON séparément et le
     // conflit portait sur la LIGNE, pas sur l'intention — un filtre se fusionne toujours en
