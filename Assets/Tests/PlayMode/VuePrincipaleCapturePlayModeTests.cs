@@ -1355,6 +1355,174 @@ namespace MafiaCleanCity.Capture.Tests
         }
 
         [UnityTest]
+        /// <summary>㊴ LE DOSSIER, SOUS CHROME — la capture qui ferme la dette des insets.
+        ///
+        /// ⛔ CE QUE CETTE CAPTURE EXISTE POUR MESURER, et qu'aucune autre ne mesurait : les insets
+        /// de chrome de ㊴ ont été posés PAR ANALOGIE avec les autres écrans, jamais mesurés sur
+        /// lui. `CaptureForensic` était verte et ne regardait ni `TopInsetPx` ni `BottomInsetPx` —
+        /// un vert dit que rien n'a levé, pas que la propriété a été mesurée.
+        ///
+        /// ⚠️ ET ELLE N'ÉTAIT PAS ÉCRIVABLE HIER, pour une raison que j'ai d'abord mal située.
+        /// J'avais conclu « ㊴ n'est monté par aucun onglet » d'un `grep` sur `ActivateTab` : le
+        /// grep disait vrai de MA BRANCHE, qui avait 71 commits de retard. `Tab.More` est un MENU
+        /// de douze entrées depuis le 2026-09-02, et ㊴ y figure. La mesure était exacte et sa
+        /// PORTÉE fausse — une mesure locale énoncée au présent général se lit comme un état du
+        /// monde.
+        ///
+        /// ⇒ CHEMIN JOUEUR RÉEL, comme ㊲ : ouvrir Plus, puis CLIQUER l'entrée « LE DOSSIER ».
+        ///   Pas un `MountTenant` de raccourci — un montage forcé prouverait que l'écran sait se
+        ///   dessiner, jamais qu'on peut l'atteindre.</summary>
+        [Category("CaptureDossier")]
+        public IEnumerator Capture_LeDossier_SousChrome()
+        {
+            var auth = new AuthClient { BaseUrl = BaseUrl };
+            string callsign = SeederSupport.SafeCallsign("dossier", ref seq);
+            string token = null, err = null;
+            yield return auth.SignUp(callsign, "dossier-capture-pw", t => token = t, e => err = e);
+            Assert.IsNull(err, $"signup errored: {err}");
+
+            var sessionClient = new SessionClient { BaseUrl = BaseUrl };
+            SessionOpenDto payload = null;
+            yield return sessionClient.OpenSession(token, "capture-dossier", dto => payload = dto,
+                (c, m) => Assert.Fail($"session/open failed: {c}: {m}"));
+            Assert.IsNotNull(payload, "session/open doit réussir — il octroie le kit de départ");
+
+            LogAssert.ignoreFailingMessages = true;
+            shellGo = new GameObject("DossierShell");
+            shell = shellGo.AddComponent<AppShell>();
+            shell.SetIdentity(callsign, "dossier-capture-pw");
+            yield return null;
+
+            float t0 = Time.realtimeSinceStartup;
+            while (string.IsNullOrEmpty(shell.Token) && Time.realtimeSinceStartup - t0 < 30f) yield return null;
+            Assert.IsFalse(string.IsNullOrEmpty(shell.Token), "le shell doit avoir acquis sa session");
+
+            shell.ActivateTab(AppShell.Tab.More);
+            for (int i = 0; i < 90; i++) yield return null;
+            Assert.Greater(shell.MenuPlusEntrees, 0,
+                "le menu « Plus » n'a aucune entrée : la navigation qui suit serait vide, et la " +
+                "capture montrerait un écran que le joueur ne peut pas atteindre");
+
+            // ⛔ L'ENTRÉE NOMMÉE, PAS LA PREMIÈRE. ㊲ prend `MenuPlus_*` au premier trouvé parce
+            // qu'il EST le premier ; ici il faut « LE DOSSIER » précisément, et le chercher par son
+            // nom fait échouer le test le jour où l'entrée disparaît du menu — au lieu de
+            // photographier silencieusement l'écran du voisin sous le nom de ㊴.
+            UnityEngine.UI.Button entree = null;
+            var libellesVus = new System.Collections.Generic.List<string>();
+            foreach (var b in shell.ContentSlot.GetComponentsInChildren<UnityEngine.UI.Button>(true))
+            {
+                if (!b.gameObject.name.StartsWith("MenuPlus_")) continue;
+                libellesVus.Add(b.gameObject.name);
+                if (b.gameObject.name == "MenuPlus_LE DOSSIER") entree = b;
+            }
+            Assert.IsNotNull(entree,
+                "l'entrée « LE DOSSIER » est absente du menu « Plus » — ㊴ n'est plus atteignable " +
+                $"par un geste joueur. Entrées vues : [{string.Join(", ", libellesVus)}]");
+            entree.onClick.Invoke();
+            for (int i = 0; i < 90; i++) yield return null;
+
+            Assert.AreEqual(typeof(MafiaCleanCity.Operational.ForensicScreenController),
+                shell.MountedTenantType, "l'entrée « LE DOSSIER » doit avoir monté ㊴");
+            int noeuds = shell.ContentSlot.GetComponentsInChildren<Transform>(true).Length;
+            Assert.Greater(noeuds, 20,
+                $"㊴ doit avoir construit son contenu dans le slot (mesuré {noeuds} noeuds) — " +
+                "une capture d'un slot vide passerait sinon pour une réussite");
+
+            // ⛔⛔ LE PLANCHER D'ABORD — c'est LUI qui fait la différence entre une garde et une
+            // formalité. Hors shell, `ShellChrome` publie des insets à ZÉRO, et les deux
+            // assertions qui suivent seraient alors vraies PAR CONSTRUCTION : vertes, et muettes.
+            // ★ Une garde vraie par construction est pire que pas de garde — elle donne le vert ET
+            //   la conscience tranquille. C'est exactement pour ça que je n'avais PAS écrit cette
+            //   garde hier dans le fichier de ㊴, où elle n'aurait rien pu mesurer.
+            Assert.Greater(MafiaCleanCity.Shell.ShellChrome.TopInsetPx, 0f,
+                "sous le chrome, l'inset HAUT doit être publié — à zéro, la garde ci-dessous " +
+                "passerait toujours sans rien mesurer");
+            Assert.Greater(MafiaCleanCity.Shell.ShellChrome.BottomInsetPx, 0f,
+                "sous le chrome, l'inset BAS doit être publié — même raison");
+
+            Assert.IsNotNull(shell.TopBar, "le chrome haut doit exister");
+
+            // ⛔ MESURER LÀ OÙ CET ÉCRAN AGIT — pas là où les autres agissent.
+            // ⚠️ Ma première version assertait sur les offsets de `shell.ContentSlot` et a rougi
+            // tout de suite : « démarre à 0, le dock occupe 294 ». C'était l'INSTRUMENT qui avait
+            // tort. `ContentSlot` est PLEIN ÉCRAN PAR CONCEPTION (index 0 sous les barres) : la
+            // non-occlusion vient de l'ORDRE DE FRATRIE, pas d'un inset — le fichier du shell le
+            // dit en toutes lettres. Un slot inset aurait fait rougir n'importe quel locataire.
+            // ★ Troisième fois de la journée qu'un rouge vient de l'instrument et non de l'écran.
+            //   Les trois se ressemblaient : un chiffre plausible, une accusation nette. Ce qui
+            //   les sépare n'est pas visible dans le verdict — il faut aller voir CE QUI EST MESURÉ.
+            // ⇒ ㊴ garde sa racine plein écran (c'est sa référence d'échelle : un conteneur plus
+            //   étroit fausserait tout `Px()`) et réserve la place du chrome en PADDING sur sa
+            //   pile verticale. C'est donc le padding qu'il faut mesurer, et c'est exactement ce
+            //   que « insets posés par analogie » désignait.
+            // ⚠️ La recherche part du GameObject du LOCATAIRE, pas du slot : `MountTenant` place
+            // l'hôte quelque part sous le shell, et supposer que c'est directement sous
+            // `ContentSlot` est précisément le genre de raccourci qui m'a déjà coûté un run.
+            GameObject racineForensic = null;
+            var nomsVus = new System.Collections.Generic.List<string>();
+            foreach (Transform t in shell.ContentSlot.GetComponentsInChildren<Transform>(true))
+            {
+                nomsVus.Add(t.gameObject.name);
+                if (t.gameObject.name == "ForensicRoot") racineForensic = t.gameObject;
+            }
+            if (racineForensic == null && shell.MountedTenantGameObject != null)
+                foreach (Transform t in shell.MountedTenantGameObject.GetComponentsInChildren<Transform>(true))
+                    if (t.gameObject.name == "ForensicRoot") { racineForensic = t.gameObject; break; }
+            if (racineForensic == null)
+            {
+                // ⛔ ÉNUMÉRER CE QU'ON VOIT plutôt que d'émettre des hypothèses : un verdict qui
+                // dit seulement « absent » relance la devinette, un verdict qui dit ce QUI EST LÀ
+                // tranche en un run. Trois hypothèses plausibles valent moins qu'une mesure.
+                var horsSlot = new System.Collections.Generic.List<string>();
+                foreach (GameObject g in Object.FindObjectsByType<GameObject>(FindObjectsSortMode.None))
+                    if (g.name.Contains("Forensic")) horsSlot.Add(g.name + " ⊂ " +
+                        (g.transform.parent != null ? g.transform.parent.name : "(racine)"));
+                Assert.Fail("㊴ n'a construit aucune racine nommée `ForensicRoot`.\n" +
+                    $"  sous ContentSlot ({nomsVus.Count}) : [{string.Join(", ", nomsVus.GetRange(0, System.Math.Min(25, nomsVus.Count)))}]\n" +
+                    $"  objets « Forensic » dans la scène : [{string.Join(" · ", horsSlot)}]");
+            }
+
+            var pile = racineForensic.GetComponent<UnityEngine.UI.VerticalLayoutGroup>();
+            Assert.IsNotNull(pile, "㊴ doit porter sa pile verticale — c'est elle qui réserve le chrome");
+            Assert.GreaterOrEqual(pile.padding.top, (int)MafiaCleanCity.Shell.ShellChrome.TopInsetPx,
+                $"le padding haut de ㊴ vaut {pile.padding.top} et le bandeau occupe " +
+                $"{MafiaCleanCity.Shell.ShellChrome.TopInsetPx:F0} : son contenu passe DESSOUS.");
+            Assert.GreaterOrEqual(pile.padding.bottom, (int)MafiaCleanCity.Shell.ShellChrome.BottomInsetPx,
+                $"le padding bas de ㊴ vaut {pile.padding.bottom} et le dock occupe " +
+                $"{MafiaCleanCity.Shell.ShellChrome.BottomInsetPx:F0} : son contenu passe DESSOUS.");
+
+            // ⛔ UN ÉCHEC SILENCIEUX NE DOIT PAS POUVOIR POSER POUR UN ÉTAT VIDE.
+            // ⚠️ Mesuré sur cette capture : les trois lignes de signaux sortent ANONYMES — libellé
+            // vide, valeur « — ». C'est l'état INITIAL de l'écran, celui d'avant le chargement, et
+            // il est visuellement identique à « le serveur n'a rien à dire ». Sans la garde
+            // ci-dessous, une route en panne produirait exactement cette image, valide et
+            // plausible, sous le nom de la planche de référence.
+            // ★ C'est la doctrine que ⑨ porte déjà (« pas encore chargé » et « chargé et vide »
+            //   ont la même image) — appliquée ici parce que rien ne la propage toute seule.
+            // ⚠️ ET LA GARDE DOIT EXIGER QUE LE CHARGEMENT AIT EU LIEU, pas seulement qu'il n'ait
+            // pas échoué. Ma première version n'assertait que `DerniereErreur == null` — elle
+            // passait, et elle ne prouvait RIEN : `Charger()` n'était appelé par personne, donc
+            // l'erreur restait nulle parce que rien ne s'était produit. C'est en vérifiant que
+            // cette garde MORDAIT que j'ai trouvé le défaut qu'elle était censée surveiller.
+            var ecranForensic = shell.MountedTenantGameObject.GetComponent<
+                MafiaCleanCity.Operational.ForensicScreenController>();
+            Assert.IsNotNull(ecranForensic, "le locataire monté doit être ㊴ lui-même");
+            Assert.IsNull(ecranForensic.DerniereErreur,
+                $"㊴ a échoué à charger ({ecranForensic.DernierCodeErreur}) : " +
+                $"{ecranForensic.DerniereErreur}. La capture qui suivrait montrerait des " +
+                "signaux vides — indiscernables d'un compte neuf qui n'a rien à montrer.");
+            Assert.IsNotNull(ecranForensic.DernierChargement,
+                "㊴ n'a RIEN chargé : `DerniereErreur` est nulle parce que rien ne s'est produit, " +
+                "pas parce que tout s'est bien passé. Une capture prise ici montrerait le " +
+                "squelette d'avant le réseau sous le nom de la planche de référence.");
+
+            LisibiliteDuTexte(shell.ContentSlot.gameObject);
+
+            yield return CapturerA(1080, 2400,
+                "Assets/Screenshots/screen_b7_dossier_sous_chrome_1080x2400.png");
+        }
+
+        [UnityTest]
         
         public IEnumerator Capture_EcranLieutenants_SousChromeV31()
         {

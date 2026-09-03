@@ -48,7 +48,48 @@ namespace MafiaCleanCity.Operational
         private int PxTrait(float css) =>
             EchelleMaquette.PxTrait(css, racinePleinEcran, EchelleMaquette.LargeurEcransBrennar);
 
-        private void Awake() => EnsureInitialized();
+        // ⛔ `Start()`, PAS `Awake()` — MESURÉ le 2026-09-03 au premier montage réel de ㊴ sous
+        // chrome : sa racine était bâtie sous le CANVAS et non sous `ContentSlot`.
+        //     Tenant_ForensicScreenController ⊂ ContentSlot
+        //     ForensicRoot                    ⊂ Canvas          ← échappé du slot
+        // ⚠️ `Awake()` s'exécute DANS `AddComponent`, donc AVANT que `MountTenant<T>` ait appelé
+        // `SetMountParent(ContentSlot)` : l'écran bâtissait avant de savoir OÙ, retombait sur sa
+        // racine de repli (`FindFirstObjectByType<Canvas>()`) et n'atteignait jamais le slot. Or
+        // c'est l'appartenance à `ContentSlot` — index 0, sous les barres — qui garantit la
+        // non-occlusion par l'ordre de fratrie. Hors du slot, cette garantie ne s'applique plus.
+        // ★ ET LA LEÇON ÉTAIT DÉJÀ ÉCRITE, à un écran d'ici : ㊲ porte ce même diagnostic daté de
+        //   la veille — « il bâtit donc AVANT de savoir où : il retombe sur sa racine de repli et
+        //   n'atteint jamais le slot de contenu ». Corrigé là-bas, jamais propagé ici. Une règle
+        //   juste ne protège que l'endroit où elle a été écrite.
+        // ⇒ Balayé plutôt que corrigé au cas par cas : sur les 15 locataires classables, QUATRE
+        //   bâtissaient dans `Awake` — mais deux (HomeChrome, OrgVitalsPanel) ne sont montés par
+        //   aucun `MountTenant` et ne peuvent donc pas porter ce défaut. Restaient ㊴ et la Revue
+        //   du jour. *Compter en accusait quatre ; classer en laisse deux.*
+        private void Start()
+        {
+            EnsureInitialized();
+            StartCoroutine(Amorcer());
+        }
+
+        /// <summary>Charger ce que l'écran montre, une fois monté — MESURÉ MANQUANT le 2026-09-03.
+        ///
+        /// ⛔ `Charger()` existait et N'ÉTAIT APPELÉ PAR PERSONNE : ni ici, ni par le shell. Monté
+        /// par un vrai geste joueur, ㊴ dessinait son squelette et restait vide POUR TOUJOURS —
+        /// trois lignes de signaux sans libellé, valeur « — », un panneau bas vide.
+        /// ⚠️ Et l'image ne le disait pas : cet état est visuellement IDENTIQUE à « le serveur n'a
+        /// rien à montrer sur un compte du premier jour ». C'est en voulant garder la capture
+        /// contre un échec silencieux que je l'ai trouvé — la garde que j'écrivais
+        /// (`DerniereErreur == null`) était VRAIE À VIDE, puisque rien ne chargeait jamais.
+        /// ★ Une garde vraie à vide est pire que pas de garde : elle donne le vert ET la
+        ///   conscience tranquille. C'est le fait de vérifier qu'elle mordait qui a révélé le
+        ///   défaut qu'elle était censée surveiller.
+        /// ⇒ Patron de ㊲ (`Amorcer`), repris tel quel : hors session on ne charge rien et on
+        ///   reste sur l'état vide NOMMÉ, plutôt que d'échouer.</summary>
+        private IEnumerator Amorcer()
+        {
+            if (string.IsNullOrEmpty(token)) yield break;   // monté hors session : rien à charger
+            yield return Charger();
+        }
 
         private void EnsureInitialized()
         {
