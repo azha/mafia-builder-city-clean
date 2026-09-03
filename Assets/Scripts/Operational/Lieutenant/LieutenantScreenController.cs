@@ -829,27 +829,27 @@ namespace MafiaCleanCity.Operational.Lieutenant
             ClearStatusRows();
 
             // archetype (COOK | SECURITY | LOGISTICS | BOOKKEEPER | LAUNDERING | DISTRIBUTION | UNKNOWN).
-            AddStatusRow("Archetype", ArchetypeLabel(b.archetype), "[*]", AccentMild);
+            AddStatusRow(Lib("Archétype"), ArchetypeLabel(b.archetype), "[*]", AccentMild);
             // granted_role (advisory | executor | delegated_owner | cohort_overseer).
-            AddStatusRow("Role", GrantedRoleLabel(b.granted_role), GrantedRoleGlyph(b.granted_role), AccentMild);
+            AddStatusRow(Lib("Rôle"), GrantedRoleLabel(b.granted_role), GrantedRoleGlyph(b.granted_role), AccentMild);
             // mode (tasked | delegated).
-            AddStatusRow("Mode", ModeLabel(b.mode), ModeGlyph(b.mode), AccentMild);
+            AddStatusRow(Lib("Mode"), ModeLabel(b.mode), ModeGlyph(b.mode), AccentMild);
             // op_state_band (SETTLING | ACTIVE | PAUSED | IDLE) — the delegated operational state (Phase-11 adds SETTLING).
-            AddStatusRow("State", OpStateLabel(b.op_state_band), OpStateGlyph(b.op_state_band), OpStateAccent(b.op_state_band));
+            AddStatusRow(Lib("État"), OpStateLabel(b.op_state_band), OpStateGlyph(b.op_state_band), OpStateAccent(b.op_state_band));
             // rule_count_band (NONE | FEW | MANY) — the behavior-script rule count as a band (never the raw count).
-            AddStatusRow("Rules", RuleCountLabel(b.rule_count_band), RuleCountGlyph(b.rule_count_band), RuleCountAccent(b.rule_count_band));
+            AddStatusRow(Lib("Règles"), RuleCountLabel(b.rule_count_band), RuleCountGlyph(b.rule_count_band), RuleCountAccent(b.rule_count_band));
 
             // ===== Phase-11 tenure-inertia chips (B1) — the tenure_bucket chip + the 3 effect chips. Each is a worded BAND
             // (NO digit leaks — R2.2): the bucket is DERIVED from the BO-only streak; the 3 effects are DERIVED from the bucket.
             // tenure_bucket (FRESH | ACCLIMATED | SEASONED | SENIOR | ENTRENCHED) — the tenure band.
-            AddStatusRow("Tenure", TenureBucketLabel(b.tenure_bucket), TenureBucketGlyph(b.tenure_bucket), TenureBucketAccent(b.tenure_bucket));
+            AddStatusRow(Lib("Ancienneté"), TenureBucketLabel(b.tenure_bucket), TenureBucketGlyph(b.tenure_bucket), TenureBucketAccent(b.tenure_bucket));
             TenureBucketShown = TenureBucketLabel(b.tenure_bucket); // B3 hook — the rendered bucket label.
             // script_revision_cost (COST_1..COST_MAX) — how costly re-scripting this lieutenant is (the inertia COST).
-            AddStatusRow("Re-script cost", RevisionCostLabel(b.script_revision_cost), RevisionCostGlyph(b.script_revision_cost), RevisionCostAccent(b.script_revision_cost));
+            AddStatusRow(Lib("Coût de réécriture"), RevisionCostLabel(b.script_revision_cost), RevisionCostGlyph(b.script_revision_cost), RevisionCostAccent(b.script_revision_cost));
             // reassignment_disruption (DISRUPT_SHORT..DISRUPT_MAX) — the settling-window drag a move would incur (the inertia DRAG).
-            AddStatusRow("Move settling", DisruptionLabel(b.reassignment_disruption), DisruptionGlyph(b.reassignment_disruption), DisruptionAccent(b.reassignment_disruption));
+            AddStatusRow(Lib("Stabilisation après transfert"), DisruptionLabel(b.reassignment_disruption), DisruptionGlyph(b.reassignment_disruption), DisruptionAccent(b.reassignment_disruption));
             // role_efficiency_bonus (BONUS_NONE..BONUS_CAP) — the tenure yield REWARD (lost on a reassignment).
-            AddStatusRow("Yield bonus", EfficiencyBonusLabel(b.role_efficiency_bonus), EfficiencyBonusGlyph(b.role_efficiency_bonus), EfficiencyBonusAccent(b.role_efficiency_bonus));
+            AddStatusRow(Lib("Gain de rendement"), EfficiencyBonusLabel(b.role_efficiency_bonus), EfficiencyBonusGlyph(b.role_efficiency_bonus), EfficiencyBonusAccent(b.role_efficiency_bonus));
 
             RenderScriptSource(b.script_source);
 
@@ -901,13 +901,13 @@ namespace MafiaCleanCity.Operational.Lieutenant
         {
             switch (a)
             {
-                case "COOK": return MafiaCleanCity.I18n.Libelle.De("famille", "archetype", "Cook");
-                case "SECURITY": return MafiaCleanCity.I18n.Libelle.De("famille", "archetype", "Security");
-                case "LOGISTICS": return MafiaCleanCity.I18n.Libelle.De("famille", "archetype", "Logistics");
-                case "BOOKKEEPER": return MafiaCleanCity.I18n.Libelle.De("famille", "archetype", "Bookkeeper");
-                case "LAUNDERING": return MafiaCleanCity.I18n.Libelle.De("famille", "archetype", "Laundering");
+                case "COOK": return MafiaCleanCity.I18n.Libelle.De("famille", "archetype", "Cuisinier");
+                case "SECURITY": return MafiaCleanCity.I18n.Libelle.De("famille", "archetype", "Sécurité");
+                case "LOGISTICS": return MafiaCleanCity.I18n.Libelle.De("famille", "archetype", "Logistique");
+                case "BOOKKEEPER": return MafiaCleanCity.I18n.Libelle.De("famille", "archetype", "Comptable");
+                case "LAUNDERING": return MafiaCleanCity.I18n.Libelle.De("famille", "archetype", "Blanchiment");
                 case "DISTRIBUTION": return MafiaCleanCity.I18n.Libelle.De("famille", "archetype", "Distribution");
-                case "UNKNOWN": return MafiaCleanCity.I18n.Libelle.De("famille", "archetype", "Unknown");
+                case "UNKNOWN": return MafiaCleanCity.I18n.Libelle.De("famille", "archetype", "Inconnu");
                 default: return string.IsNullOrEmpty(a) ? "—" : a;
             }
         }
@@ -917,10 +917,10 @@ namespace MafiaCleanCity.Operational.Lieutenant
         {
             switch (r)
             {
-                case "advisory": return MafiaCleanCity.I18n.Libelle.De("famille", "grantedrole", "Advisory");
-                case "executor": return MafiaCleanCity.I18n.Libelle.De("famille", "grantedrole", "Executor");
-                case "delegated_owner": return MafiaCleanCity.I18n.Libelle.De("famille", "grantedrole", "Delegated owner");
-                case "cohort_overseer": return MafiaCleanCity.I18n.Libelle.De("famille", "grantedrole", "Cohort overseer");
+                case "advisory": return MafiaCleanCity.I18n.Libelle.De("famille", "grantedrole", "Conseil");
+                case "executor": return MafiaCleanCity.I18n.Libelle.De("famille", "grantedrole", "Exécutant");
+                case "delegated_owner": return MafiaCleanCity.I18n.Libelle.De("famille", "grantedrole", "Responsable délégué");
+                case "cohort_overseer": return MafiaCleanCity.I18n.Libelle.De("famille", "grantedrole", "Chef de groupe");
                 default: return string.IsNullOrEmpty(r) ? "—" : r;
             }
         }
@@ -933,8 +933,8 @@ namespace MafiaCleanCity.Operational.Lieutenant
         {
             switch (m)
             {
-                case "tasked": return MafiaCleanCity.I18n.Libelle.De("famille", "mode", "Tasked");
-                case "delegated": return MafiaCleanCity.I18n.Libelle.De("famille", "mode", "Delegated");
+                case "tasked": return MafiaCleanCity.I18n.Libelle.De("famille", "mode", "Missionné");
+                case "delegated": return MafiaCleanCity.I18n.Libelle.De("famille", "mode", "Délégué");
                 default: return string.IsNullOrEmpty(m) ? "—" : m;
             }
         }
@@ -948,10 +948,10 @@ namespace MafiaCleanCity.Operational.Lieutenant
         {
             switch (s)
             {
-                case "SETTLING": return MafiaCleanCity.I18n.Libelle.De("famille", "opstate", "Settling in");
-                case "ACTIVE": return MafiaCleanCity.I18n.Libelle.De("famille", "opstate", "Active");
-                case "PAUSED": return MafiaCleanCity.I18n.Libelle.De("famille", "opstate", "Paused");
-                case "IDLE": return MafiaCleanCity.I18n.Libelle.De("famille", "opstate", "Idle");
+                case "SETTLING": return MafiaCleanCity.I18n.Libelle.De("famille", "opstate", "Prend ses marques");
+                case "ACTIVE": return MafiaCleanCity.I18n.Libelle.De("famille", "opstate", "Actif");
+                case "PAUSED": return MafiaCleanCity.I18n.Libelle.De("famille", "opstate", "En pause");
+                case "IDLE": return MafiaCleanCity.I18n.Libelle.De("famille", "opstate", "Au repos");
                 default: return string.IsNullOrEmpty(s) ? "—" : s;
             }
         }
@@ -966,9 +966,9 @@ namespace MafiaCleanCity.Operational.Lieutenant
         {
             switch (b)
             {
-                case "NONE": return MafiaCleanCity.I18n.Libelle.De("famille", "rulecount", "No rules");
-                case "FEW": return MafiaCleanCity.I18n.Libelle.De("famille", "rulecount", "A few rules");
-                case "MANY": return MafiaCleanCity.I18n.Libelle.De("famille", "rulecount", "Many rules");
+                case "NONE": return MafiaCleanCity.I18n.Libelle.De("famille", "rulecount", "Aucune règle");
+                case "FEW": return MafiaCleanCity.I18n.Libelle.De("famille", "rulecount", "Quelques règles");
+                case "MANY": return MafiaCleanCity.I18n.Libelle.De("famille", "rulecount", "Beaucoup de règles");
                 default: return string.IsNullOrEmpty(b) ? "—" : b;
             }
         }
@@ -1002,10 +1002,10 @@ namespace MafiaCleanCity.Operational.Lieutenant
         {
             switch (c)
             {
-                case "COST_1": return MafiaCleanCity.I18n.Libelle.De("famille", "revisioncost", "Cheap to re-script");
-                case "COST_2": return MafiaCleanCity.I18n.Libelle.De("famille", "revisioncost", "Costly to re-script");
-                case "COST_3": return MafiaCleanCity.I18n.Libelle.De("famille", "revisioncost", "Pricey to re-script");
-                case "COST_MAX": return MafiaCleanCity.I18n.Libelle.De("famille", "revisioncost", "Very costly to re-script");
+                case "COST_1": return MafiaCleanCity.I18n.Libelle.De("famille", "revisioncost", "Réécrire coûte peu");
+                case "COST_2": return MafiaCleanCity.I18n.Libelle.De("famille", "revisioncost", "Réécrire coûte cher");
+                case "COST_3": return MafiaCleanCity.I18n.Libelle.De("famille", "revisioncost", "Réécrire coûte très cher");
+                case "COST_MAX": return MafiaCleanCity.I18n.Libelle.De("famille", "revisioncost", "Réécrire coûte énormément");
                 default: return string.IsNullOrEmpty(c) ? "—" : c;
             }
         }
@@ -1020,10 +1020,10 @@ namespace MafiaCleanCity.Operational.Lieutenant
         {
             switch (d)
             {
-                case "DISRUPT_SHORT": return MafiaCleanCity.I18n.Libelle.De("famille", "disruption", "Short settling");
-                case "DISRUPT_MED": return MafiaCleanCity.I18n.Libelle.De("famille", "disruption", "Medium settling");
-                case "DISRUPT_LONG": return MafiaCleanCity.I18n.Libelle.De("famille", "disruption", "Long settling");
-                case "DISRUPT_MAX": return MafiaCleanCity.I18n.Libelle.De("famille", "disruption", "Very long settling");
+                case "DISRUPT_SHORT": return MafiaCleanCity.I18n.Libelle.De("famille", "disruption", "S'installe vite");
+                case "DISRUPT_MED": return MafiaCleanCity.I18n.Libelle.De("famille", "disruption", "S'installe normalement");
+                case "DISRUPT_LONG": return MafiaCleanCity.I18n.Libelle.De("famille", "disruption", "S'installe lentement");
+                case "DISRUPT_MAX": return MafiaCleanCity.I18n.Libelle.De("famille", "disruption", "S'installe très lentement");
                 default: return string.IsNullOrEmpty(d) ? "—" : d;
             }
         }
@@ -1038,10 +1038,10 @@ namespace MafiaCleanCity.Operational.Lieutenant
         {
             switch (e)
             {
-                case "BONUS_NONE": return MafiaCleanCity.I18n.Libelle.De("famille", "efficiencybonus", "No yield bonus");
-                case "BONUS_LOW": return MafiaCleanCity.I18n.Libelle.De("famille", "efficiencybonus", "Small yield bonus");
-                case "BONUS_MID": return MafiaCleanCity.I18n.Libelle.De("famille", "efficiencybonus", "Solid yield bonus");
-                case "BONUS_CAP": return MafiaCleanCity.I18n.Libelle.De("famille", "efficiencybonus", "Peak yield bonus");
+                case "BONUS_NONE": return MafiaCleanCity.I18n.Libelle.De("famille", "efficiencybonus", "Aucun gain de rendement");
+                case "BONUS_LOW": return MafiaCleanCity.I18n.Libelle.De("famille", "efficiencybonus", "Petit gain de rendement");
+                case "BONUS_MID": return MafiaCleanCity.I18n.Libelle.De("famille", "efficiencybonus", "Bon gain de rendement");
+                case "BONUS_CAP": return MafiaCleanCity.I18n.Libelle.De("famille", "efficiencybonus", "Gain de rendement maximal");
                 default: return string.IsNullOrEmpty(e) ? "—" : e;
             }
         }
@@ -1286,7 +1286,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             phlg.childForceExpandHeight = true;
             AddLayoutElement(pickerRow, minHeight: 30, flexibleHeight: 0);
 
-            TextMeshProUGUI pickerCap = NewText("PickerCap", pickerRow.transform, "Archetype", 14, TextAlignmentOptions.Left);
+            TextMeshProUGUI pickerCap = NewText("PickerCap", pickerRow.transform, Lib("Archétype"), 14, TextAlignmentOptions.Left);
             pickerCap.color = DesignTokens.Current.onSurfaceMuted;
             AddLayoutElement(pickerCap.gameObject, minWidth: 90, flexibleWidth: 0);
             TrackText(pickerCap, "Archetype");
@@ -1353,7 +1353,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
         {
             NewSectionLabel(statusSection, "ÉTAT — lieutenant délégué");
 
-            refreshButton = AddActionButton(statusSection, "Refresh", () => StartCoroutine(RefreshBands()));
+            refreshButton = AddActionButton(statusSection, Lib("Rafraîchir"), () => StartCoroutine(RefreshBands()));
 
             // Script-source sub-label + the readable DSL block (the ONE allowed non-band field). Empty until a script is
             // attached (T3); shows "(aucun script pour l'instant)" so a fresh recruit reads clearly.
@@ -2477,7 +2477,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             // Open — select this lieutenant (→ RefreshBands loads its bands + switches the builder palette). The
             // lieutenant_id is captured in the closure (an opaque key); it is never rendered.
             string capturedId = row.lieutenant_id;
-            AddActionButton(go.transform, "Open", () => OpenLieutenant(capturedId));
+            AddActionButton(go.transform, Lib("Ouvrir"), () => OpenLieutenant(capturedId));
 
             TrackText(g, ArchetypeGlyph(row.archetype));
             TrackText(label, ArchetypeLabel(row.archetype));
@@ -2523,7 +2523,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
 
             // The "Reassign…" button opens the confirmation (it does NOT move immediately — the player confirms with the
             // projected cost in view). The confirmation's own Confirm button drives ReassignChosen().
-            AddActionButton(reassignSection, "Reassign…", OpenReassign);
+            AddActionButton(reassignSection, Lib("Réaffecter…"), OpenReassign);
 
             // The confirmation block — built empty; RenderReassignConfirm fills it (the projected disruption + tenure/bonus lost
             // + a Confirm/Cancel pair) when ReassignConfirmOpen, and clears it otherwise.
@@ -2578,8 +2578,8 @@ namespace MafiaCleanCity.Operational.Lieutenant
             AddReassignConfirmLine($"Yield bonus lost: {EfficiencyBonusLabel(b.role_efficiency_bonus)}", EfficiencyBonusAccent(b.role_efficiency_bonus));
 
             // The Confirm / Cancel decision pair.
-            AddActionButton(reassignConfirm, "Confirm reassignment", () => StartCoroutine(ReassignChosen()));
-            AddActionButton(reassignConfirm, "Keep tenure (cancel)", CancelReassign);
+            AddActionButton(reassignConfirm, Lib("Confirmer la réaffectation"), () => StartCoroutine(ReassignChosen()));
+            AddActionButton(reassignConfirm, Lib("Garder l'ancienneté (annuler)"), CancelReassign);
         }
 
         // One worded line in the confirmation block. Tracked for the no-raw-scalar scan (these are BAND-only sentences — no
@@ -2633,9 +2633,9 @@ namespace MafiaCleanCity.Operational.Lieutenant
             AddLayoutElement(rows, flexibleHeight: 0);
 
             // The 3 ceiling-decision buttons (spec kind strings are the stable API keys).
-            AddActionButton(parent, "Reset budget", () => StartCoroutine(Decide("reset_budget")));
-            AddActionButton(parent, "Raise ceiling", () => StartCoroutine(Decide("raise_ceiling")));
-            AddActionButton(parent, "Override one-shot", () => StartCoroutine(Decide("override_one_shot")));
+            AddActionButton(parent, Lib("Remettre le budget à zéro"), () => StartCoroutine(Decide("reset_budget")));
+            AddActionButton(parent, Lib("Relever le plafond"), () => StartCoroutine(Decide("raise_ceiling")));
+            AddActionButton(parent, Lib("Forcer une fois"), () => StartCoroutine(Decide("override_one_shot")));
 
             // Phase-21 F2: the readable decision-failure detail (cooldown reason — carries ids/digits) renders as
             // CHROME: component-tracked only, never in the scan corpus (the tier-badge technique).
@@ -2762,14 +2762,14 @@ namespace MafiaCleanCity.Operational.Lieutenant
         private static string CategoryLabel(string c)
         {
             switch (c) {
-                case "PRODUCTION_OPS": return MafiaCleanCity.I18n.Libelle.De("famille", "category", "Production ops");
-                case "LOGISTICS_ROUTING": return MafiaCleanCity.I18n.Libelle.De("famille", "category", "Logistics routing");
-                case "DISTRIBUTION_DISPATCH": return MafiaCleanCity.I18n.Libelle.De("famille", "category", "Distribution dispatch");
-                case "LAUNDERING_FLOW": return MafiaCleanCity.I18n.Libelle.De("famille", "category", "Laundering flow");
-                case "SECURITY_RESPONSE": return MafiaCleanCity.I18n.Libelle.De("famille", "category", "Security response");
-                case "BOOKKEEPING_AUDIT": return MafiaCleanCity.I18n.Libelle.De("famille", "category", "Bookkeeping audit");
-                case "CROSS_CATEGORY_INCIDENT": return MafiaCleanCity.I18n.Libelle.De("famille", "category", "Cross-category incident");
-                default: return MafiaCleanCity.I18n.Libelle.De("famille", "category", "Unknown category");
+                case "PRODUCTION_OPS": return MafiaCleanCity.I18n.Libelle.De("famille", "category", "Production");
+                case "LOGISTICS_ROUTING": return MafiaCleanCity.I18n.Libelle.De("famille", "category", "Acheminement");
+                case "DISTRIBUTION_DISPATCH": return MafiaCleanCity.I18n.Libelle.De("famille", "category", "Envois");
+                case "LAUNDERING_FLOW": return MafiaCleanCity.I18n.Libelle.De("famille", "category", "Filière");
+                case "SECURITY_RESPONSE": return MafiaCleanCity.I18n.Libelle.De("famille", "category", "Réponse de sécurité");
+                case "BOOKKEEPING_AUDIT": return MafiaCleanCity.I18n.Libelle.De("famille", "category", "Audit comptable");
+                case "CROSS_CATEGORY_INCIDENT": return MafiaCleanCity.I18n.Libelle.De("famille", "category", "Incident transverse");
+                default: return MafiaCleanCity.I18n.Libelle.De("famille", "category", "Catégorie inconnue");
             }
         }
 
@@ -2777,11 +2777,11 @@ namespace MafiaCleanCity.Operational.Lieutenant
         private static string BandLabel(string b)
         {
             switch (b) {
-                case "full": return MafiaCleanCity.I18n.Libelle.De("famille", "band", "[####] Full");
-                case "nominal": return MafiaCleanCity.I18n.Libelle.De("famille", "band", "[###.] Nominal");
-                case "low": return MafiaCleanCity.I18n.Libelle.De("famille", "band", "[##..] Low");
-                case "depleted": return MafiaCleanCity.I18n.Libelle.De("famille", "band", "[....] Depleted");
-                default: return MafiaCleanCity.I18n.Libelle.De("famille", "band", "[?] Unknown");
+                case "full": return MafiaCleanCity.I18n.Libelle.De("famille", "band", "[####] Plein");
+                case "nominal": return MafiaCleanCity.I18n.Libelle.De("famille", "band", "[###.] Normal");
+                case "low": return MafiaCleanCity.I18n.Libelle.De("famille", "band", "[##..] Bas");
+                case "depleted": return MafiaCleanCity.I18n.Libelle.De("famille", "band", "[....] Épuisé");
+                default: return MafiaCleanCity.I18n.Libelle.De("famille", "band", "[?] Inconnu");
             }
         }
 
@@ -2815,12 +2815,12 @@ namespace MafiaCleanCity.Operational.Lieutenant
             AddLayoutElement(rows, flexibleHeight: 0);
 
             // +Add rule / Validate / Attach controls.
-            AddActionButton(builderSection, "+ Add rule", () => AddRule(NewDefaultRule()));
-            AddActionButton(builderSection, "Validate", () => StartCoroutine(ValidateRules()));
-            AddActionButton(builderSection, "Attach", () => StartCoroutine(AttachRules()));
+            AddActionButton(builderSection, Lib("+ Ajouter une règle"), () => AddRule(NewDefaultRule()));
+            AddActionButton(builderSection, Lib("Valider"), () => StartCoroutine(ValidateRules()));
+            AddActionButton(builderSection, Lib("Attacher"), () => StartCoroutine(AttachRules()));
 
             // The diagnostics area — RenderDiagnostics lists the 422 details here (cleared on a successful validate/attach).
-            NewSectionLabel(builderSection, "Diagnostics");
+            NewSectionLabel(builderSection, Lib("Diagnostics"));
             GameObject diags = NewUI("DiagnosticsArea", builderSection);
             VerticalLayoutGroup dvlg = diags.AddComponent<VerticalLayoutGroup>();
             dvlg.spacing = 3;
@@ -3422,6 +3422,15 @@ namespace MafiaCleanCity.Operational.Lieutenant
             rt.offsetMin = offMin;
             rt.offsetMax = offMax;
         }
+
+        /// <summary>Le passage littéral → clé pour cet écran. Domaine `famille`, rôle `ecran` :
+        /// les fonctions de libellé de ce fichier emploient déjà `famille`/`archetype` et
+        /// `famille`/`role`, on garde la même racine pour que le bundle n'ait qu'un domaine à
+        /// servir. ⚠️ Le littéral passé est le FRANÇAIS, jamais l'anglais : `Libelle.De` rend le
+        /// littéral quand la clé manque, donc un repli anglais laisserait l'écran en anglais À
+        /// TRAVERS la conversion — c'est exactement ce que faisaient les 44 appels d'origine.</summary>
+        private static string Lib(string litteral) =>
+            MafiaCleanCity.I18n.Libelle.De("famille", "ecran", litteral);
 
         private static void AddLayoutElement(GameObject go, float minHeight = -1, float preferredHeight = -1,
             float flexibleHeight = -1, float flexibleWidth = -1, float minWidth = -1, float preferredWidth = -1)

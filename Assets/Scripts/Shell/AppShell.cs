@@ -782,6 +782,15 @@ namespace MafiaCleanCity.Shell
             // `{used:1, cap_reached:true}` — donc ㉜ doit éteindre son geste dans la même session,
             // et il le fait, en lisant la même source (`JetonDeStructure`).
             ("RASER UN SITE", () => MountTenant<DemolitionScreenController>()),           // ㉝
+
+            // ㉞ — les ordres du soir. ⚠️ CET ÉCRAN N'EST PAS DE MOI : il est arrivé par `main`
+            // (session B, à qui ㉞ a été réattribué) SANS entrée, et la garde de joignabilité l'a
+            // immédiatement classé orphelin — le seul des 31 locataires dans ce cas.
+            // ⇒ Je pose la porte plutôt que de contourner la garde : un écran construit, testé et
+            //   invisible au joueur est exactement ce que ce chantier a trouvé neuf fois, et
+            //   l'inscrire en exception aurait demandé une raison que je n'ai pas. Le libellé vient
+            //   de la planche (`front.md` ㉞) ; si B en veut un autre, c'est UNE chaîne à changer.
+            ("LES ORDRES DU SOIR", () => MountTenant<CarnetScreenController>()), // ㉞
         };
 
         /// <summary>Monte le menu « Plus » : une entrée par destination, chacune montant son écran.
