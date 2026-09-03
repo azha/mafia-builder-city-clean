@@ -238,6 +238,48 @@ namespace MafiaCleanCity.Shell.Tests
             Canvas.ForceUpdateCanvases();
             yield return null;
 
+            // ⛔⛔⛔ RECUIRE LA GÉOMÉTRIE POUR LA RÉSOLUTION CIBLE — sans quoi la capture montre
+            // une géométrie QUE LE JOUEUR N'A JAMAIS EUE, et on corrige alors un écran qui va bien.
+            // Le mécanisme est écrit noir sur blanc dans `AppShell` : `PoserBandeAccueil` cuit
+            // chaque bande en DÉCALAGE ABSOLU dérivé de `ContentSlot.rect.height` LU AU MONTAGE.
+            // En batchmode le montage a lieu à 640×480 (canvas 1280×960) ; brancher ce canvas sur
+            // une cible 1080×2400 le fait passer à ~2400 unités de haut, mais les décalages restent
+            // cuits pour 960 ⇒ les quatre panneaux de l'Accueil se retrouvent tassés dans le bas.
+            // ⇒ Ma première lecture de `planche_l_accueil` accusait la COMPOSITION de l'écran
+            //   (« 55 % de vide, panneaux tassés ») : c'était mon instrument. Le dépôt avait déjà
+            //   payé exactement ce défaut ailleurs — *le juge photographiait une géométrie que le
+            //   joueur n'a jamais eue*.
+            // ⚠️ ORDRE OBLIGATOIRE, imposé par le docstring de la seconde : le chrome D'ABORD (il
+            // republie `ShellChrome.Top/BottomInsetPx` à sa toute fin), les panneaux ENSUITE — le
+            // même ordre qu'au montage initial.
+            // ⚠️ LA SONDE MESURE CE QUI DOIT BOUGER, et ma première version ne le faisait pas :
+            // elle relevait la hauteur de `ContentSlot` avant et après — or le recuit REPOSITIONNE
+            // les panneaux DANS ce slot, il ne change pas le slot. Elle rendait donc « 2844 → 2844 »
+            // à chaque écran, un résultat rassurant, stable et incapable de rien prouver.
+            // *Nommer la grandeur qui doit bouger vient AVANT d'écrire la sonde.*
+            RectTransform temoin = null;
+            if (shell.ContentSlot != null)
+                for (int k = 0; k < shell.ContentSlot.childCount; k++)
+                    if (shell.ContentSlot.GetChild(k).name == "AccueilHlCard")
+                    { temoin = (RectTransform)shell.ContentSlot.GetChild(k); break; }
+            float basAvant = temoin != null ? temoin.offsetMin.y : float.NaN;
+            float hautAvant = temoin != null ? temoin.offsetMax.y : float.NaN;
+
+            shell.RebatirChromePourResolutionCourante();
+            shell.RebatirPanneauxAccueilPourResolutionCourante();
+            Canvas.ForceUpdateCanvases();
+            yield return null;
+
+            if (temoin != null)
+                Debug.Log($"[PLANCHE] {nom} — recuit pour la cible {largeur}x{hauteur} : bande "
+                          + $"AccueilHlCard y [{basAvant:F0}..{hautAvant:F0}] → "
+                          + $"[{temoin.offsetMin.y:F0}..{temoin.offsetMax.y:F0}] "
+                          + $"dans un ContentSlot de {shell.ContentSlot.rect.height:F0} unités");
+            else
+                Debug.Log($"[PLANCHE] {nom} — recuit pour la cible {largeur}x{hauteur} : "
+                          + "aucun panneau d'Accueil monté (rien à recuire côté Accueil ; le chrome "
+                          + "l'a été)");
+
             // ⚠️ La demi-hauteur se mesure sur le rect RÉEL du canvas, jamais depuis la résolution
             // demandée : le canvas porte un CanvasScaler, ses unités ne sont pas les pixels cible.
             // La valeur par défaut d'`orthographicSize` (5) cadrerait 0,4 % de l'écran.
