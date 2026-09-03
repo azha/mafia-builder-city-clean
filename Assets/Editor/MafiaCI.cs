@@ -72,8 +72,33 @@ public static class MafiaCI
     //   portée ? ») et accusait `PhotoEcranAppro`, qui est bel et bien portée par
     //   `ChaineDApproScreenPlayModeTests`. Un balayage qui accuse se vérifie sur un cas dont on
     //   SAIT la réponse avant de supprimer quoi que ce soit.
+    // ⛔ `HUDv31` et `EcranDelegation` INSCRITES le 2026-09-03 — deux trous MESURÉS, pas supposés.
+    // Balayage du jour : 25 fichiers / 85 tests ne portent QUE des catégories absentes de cette
+    // liste, donc qu'aucun run ne peut demander. Une partie est délibérée (les `Photo*` de capture
+    // et `Capture`, qui fait SIGSEGV sous Mesa — documenté plus haut), mais pas ces deux-là :
+    //   · `HUDv31` : 5 fichiers / 24 tests — le chrome, la barre d'onglets, la zone sûre, le
+    //     manomètre. Le socle de l'écran, jugé par personne.
+    //   · `EcranDelegation` : la suite de ㉜, arrivée avec l'écran sans son inscription ici.
+    // ⚠️ `PhotoEcranDelegation` n'est PAS inscrite, et c'est délibéré : les catégories `Photo*`
+    // écrivent des PNG à chaque exécution — les faire tourner sous le juge salit l'arbre à chaque
+    // run. Même régime que `PhotoPlanche`/`PhotoRevue`.
+    // ⚠️ Inscrire une catégorie ne la rend pas VERTE : c'est justement l'inverse du service qu'on
+    // lui demande. Elles s'inscrivent APRÈS avoir été exécutées vertes, jamais avant — et c'est ce
+    // qui a évité le pire ici.
+    // ⛔⛔ CE QUE LE RUN DE VÉRIFICATION A TROUVÉ, ET POURQUOI `HUDv31` N'EST PAS DANS LA LISTE.
+    // Inscrite puis exécutée, elle a passé DOUZE tests (multi-résolution, zone sûre, barre
+    // d'onglets) puis **fait planter l'éditeur** sur `ManometreOraclePlayModeTests` :
+    // `Got a SIGSEGV while executing native code`, core dumped, puis le process a pendu jusqu'au
+    // plafond — `elapsed=904s timeout=900s`. La l'inscrire sans la lancer aurait fait tomber CHAQUE
+    // run du juge en core dump, pour tout le monde. C'est un second porteur du SIGSEGV que ce
+    // fichier documente déjà pour `Capture`.
+    // ⇒ Le fichier fautif est sorti de `HUDv31` (catégorie `ManometreOracle`, hors filtre, même
+    //   régime que `Capture`). `HUDv31` en compte donc 4 au lieu de 5 et redevient candidate — mais
+    //   elle n'entrera ici qu'après un run vert, parce que sa 4e suite (`TopBarDoctrineV31`, 7
+    //   tests) n'a JAMAIS tourné : le crash est arrivé avant elle. *Douze verts ne disent rien des
+    //   sept qui n'ont pas démarré.*
     private static readonly string[] Categories =
-        { "W4P4a", "W3UDA", "W3U1", "W3U2", "Charpente", "DemoIdentity", "ScreenB3", "ShellSurimpression", "CaptureDistrict", "CaptureReputation", "CaptureFamille", "Joignabilite", "ScreenCarte", "CaptureCarte", "EcranAutonomy", "EcranExceptions", "EcranRegleLieutenant", "EcranTenureLieutenant", "EcranUiLieutenant", "EcranRegleTier2", "PhotoChantierC", "EcranAppro", "PhotoEcranAppro", "ScreenB7", "ScreenC1", "ScreenC6" };
+        { "W4P4a", "W3UDA", "W3U1", "W3U2", "Charpente", "DemoIdentity", "ScreenB3", "ShellSurimpression", "CaptureDistrict", "CaptureReputation", "CaptureFamille", "Joignabilite", "ScreenCarte", "CaptureCarte", "EcranAutonomy", "EcranExceptions", "EcranRegleLieutenant", "EcranTenureLieutenant", "EcranUiLieutenant", "EcranRegleTier2", "PhotoChantierC", "EcranAppro", "PhotoEcranAppro", "ScreenB7", "ScreenC1", "ScreenC6", "EcranDelegation" };
     // ⚠️ UNION AU MERGE (3e fois sur cette ligne le 2026-09-03) — et la règle est
     // toujours la même : on unit ce qui est PORTÉ, jamais les deux listes. Une entrée
     // sans porteur affirme une couverture qui n'existe pas ; une entrée portée qu'on

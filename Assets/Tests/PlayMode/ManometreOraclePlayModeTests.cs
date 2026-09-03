@@ -25,7 +25,24 @@ namespace MafiaCleanCity.Shell.Tests
     // marge — un régime que DA6, jamais alarmé, ne pouvait pas exercer. Ce fichier COUVRE la classe :
     // il exerce calme ET alarme, et remplace le blanc-seing "toute couleur or connue" par un contrôle
     // de FORME (un seul run contigu de la famille laiton par angle, jamais deux).
-    [Category("HUDv31")]
+    // ⛔⛔ SORTI DE `HUDv31` LE 2026-09-03 — CE FICHIER FAIT PLANTER L'ÉDITEUR, MESURÉ.
+    // En inscrivant `HUDv31` au filtre du juge (elle en était absente, 5 fichiers / 24 tests
+    // qu'aucun run ne pouvait demander), le run a passé les DOUZE tests des trois suites de chrome
+    // puis est mort ici : `Got a SIGSEGV while executing native code`, 15 trames de pile, core
+    // dumped, et le process a ensuite pendu jusqu'au plafond — `elapsed=904s timeout=900s`.
+    // Le test en cause est `Oracle1_…_On360_…`, qui échantillonne 360 angles de rendu : mesuré à
+    // 315 % de CPU et 15 min de temps processeur avant de tomber. C'est la MÊME famille que la
+    // catégorie `Capture`, dont `MafiaCI` documente déjà le SIGSEGV sous le pilote Mesa — mais un
+    // SECOND porteur, inconnu jusqu'ici.
+    // ⇒ Le remède n'est pas de renoncer à juger le HUD : les 12 autres tests sont verts et
+    //   protègent le multi-résolution, la zone sûre et la barre d'onglets. On sort le SEUL fichier
+    //   qui plante, sous une catégorie à lui, ABSENTE du filtre — le même régime que `Capture`.
+    // ⚠️ Ce qui n'est PAS mesuré : si le crash vient de ce test précis ou de tout le fichier. Il
+    //   est tombé au PREMIER, donc les suivants n'ont jamais tourné. Le savoir coûte un run de
+    //   15 min qui finit en core dump ; la question reste ouverte plutôt que tranchée au jugé.
+    // ⇒ Pour l'exécuter à la main : `MAFIA_CI_CATEGORIES="ManometreOracle"` — en sachant que
+    //   l'éditeur ne rendra pas la main.
+    [Category("ManometreOracle")]
     public class ManometreOraclePlayModeTests
     {
         private GameObject scaffoldCanvasGo;
