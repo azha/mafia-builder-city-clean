@@ -60,7 +60,7 @@ public static class MafiaCI
     // livrées, compilées, et JAMAIS EXÉCUTÉES par le juge — la forme la plus économique de garde
     // décorative. *Écrire une garde ne l'installe pas ; l'inscrire au filtre, si.*
     private static readonly string[] Categories =
-        { "W4P4a", "W3UDA", "W3U1", "W3U2", "Charpente", "DemoIdentity", "ScreenB3", "ShellSurimpression", "CaptureDistrict", "CaptureReputation", "CaptureFamille", "Joignabilite", "ScreenCarte", "CaptureCarte", "EcranAutonomy", "EcranExceptions", "EcranRegleLieutenant", "EcranTenureLieutenant", "EcranUiLieutenant", "EcranRegleTier2" };
+        { "W4P4a", "W3UDA", "W3U1", "W3U2", "Charpente", "DemoIdentity", "ScreenB3", "ShellSurimpression", "CaptureDistrict", "CaptureReputation", "CaptureFamille", "Joignabilite", "ScreenCarte", "CaptureCarte", "EcranAutonomy", "EcranExceptions", "EcranRegleLieutenant", "EcranTenureLieutenant", "EcranUiLieutenant", "EcranRegleTier2", "PhotoChantierC" };
     // `ScreenCarte` et `CaptureCarte` ajoutees le 2026-09-02 (chantier C) — POUR LA RAISON QUE CE
     // FICHIER DOCUMENTE DEJA DEUX FOIS. Mesure du jour sur `Assets/Tests/PlayMode` : 86 fichiers,
     // 68 portent une categorie, 15 n'en portent AUCUNE et abritent 30 tests. Les 4 suites de la

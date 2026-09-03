@@ -716,6 +716,8 @@ namespace MafiaCleanCity.Shell
             // qu'au plus UNE carte peut être surfacée pour un joueur. Un écran vide ici n'est donc
             // pas un défaut de montage, et il ne faut pas partir le chercher comme tel.
             ("L'HORIZON DES POSSIBLES", () => MountTenant<HorizonScreenController>()),   // ㊱
+
+            ("LA CHAÎNE D'APPRO", () => MountTenant<ChaineDApproScreenController>()), // ㉚
         };
 
         /// <summary>Monte le menu « Plus » : une entrée par destination, chacune montant son écran.
