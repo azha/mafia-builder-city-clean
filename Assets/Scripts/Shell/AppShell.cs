@@ -775,6 +775,10 @@ namespace MafiaCleanCity.Shell
             // ㉛ — « le parloir ». Libellé en CAPITALES, patron des entrées voisines (aucune
             // planche de menu ne nomme cet écran — même situation que ㉘, ajoutée le même jour).
             ("LA LOI", () => MountTenant<LoiScreenController>()), // ㉛
+
+            // ㉙ — « la table du fond », version 2 dite lisible. Même situation que ㉘/㉛ : aucune
+            // planche de menu ne nomme cet écran, le libellé vient du chantier lui-même.
+            ("LE CONFLIT", () => MountTenant<ConflitScreenController>()), // ㉙
         };
 
         /// <summary>Monte le menu « Plus » : une entrée par destination, chacune montant son écran.

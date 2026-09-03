@@ -122,15 +122,8 @@ public static class MafiaCI
     // ce même run (28 passés / 1 échec, l'échec étant le seul ci-dessus). *Le même run tranche
     // dans les deux sens : il inscrit ce qui passe et refuse ce qui tombe.*
     private static readonly string[] Categories =
-        { "W4P4a", "W3UDA", "W3U1", "W3U2", "Charpente", "DemoIdentity", "ScreenB3", "ShellSurimpression", "CaptureDistrict", "CaptureReputation", "CaptureFamille", "Joignabilite", "ScreenCarte", "CaptureCarte", "EcranAutonomy", "EcranExceptions", "EcranRegleLieutenant", "EcranTenureLieutenant", "EcranUiLieutenant", "EcranRegleTier2", "EcranAppro", "ScreenB7", "ScreenC1", "ScreenC6", "EcranDelegation", "ScreenC2", "CaptureJournal", "CaptureFiliere", "CaptureDossier" };
-    // ⚠️ UNION AU MERGE (3e fois sur cette ligne le 2026-09-03) — et la règle est
-    // toujours la même : on unit ce qui est PORTÉ, jamais les deux listes. Une entrée
-    // sans porteur affirme une couverture qui n'existe pas ; une entrée portée qu'on
-    // retire rend ses tests inatteignables sans que rien ne rougisse. Le compte se
-    // refait à CHAQUE merge — c'est une mesure, pas une mémoire.
-    // ⚠️ Le balayage des porteurs utilise `Category\("x"\)` PARTOUT, jamais
-    //   `\[Category\("x"\)\]` : la forme combinée `[UnityTest, Category("x")]` est
-    //   employée ici et le motif étroit en cachait HUIT le 2026-09-03.
+        {
+            "W4P4a", "W3UDA", "W3U1", "W3U2", "Charpente", "DemoIdentity", "ScreenB3", "ShellSurimpression", "CaptureDistrict", "CaptureReputation", "CaptureFamille", "Joignabilite", "ScreenCarte", "CaptureCarte", "EcranAutonomy", "EcranExceptions", "EcranRegleLieutenant", "EcranTenureLieutenant", "EcranUiLieutenant", "EcranRegleTier2", "EcranAppro", "ScreenB7", "ScreenC1", "ScreenC6", "EcranDelegation", "ScreenC2", "CaptureJournal", "CaptureFiliere", "CaptureDossier", "PhotoChantierC", "EcranDistribution", "EcranLoi", "EcranConflit" };
     // ⚠️ UNION AU MERGE DU 2026-09-03 : `CarteVille` vient du lot « ville peinte », les huit
     // autres du chantier C et du mien. Les deux branches avaient RAISON séparément et le
     // conflit portait sur la LIGNE, pas sur l'intention — un filtre se fusionne toujours en
