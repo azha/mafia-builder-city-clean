@@ -78,6 +78,12 @@ namespace MafiaCleanCity.CityMap
         private const int PanelReservedRight = 408;
         private const int RootPadding = 16;
 
+        // ⛔ UNION AU MERGE DU 2026-09-03 — deux ajouts DISJOINTS dans la même région, aucun
+        // arbitrage à rendre : le chantier C a posé les deux paddings de chrome (`BottomPadding` le
+        // matin, `TopPadding` l'après-midi — *un correctif scopé au côté qu'on regardait*), le lot
+        // « ville peinte » a posé les champs de la texture plein cadre et de ses 18 ancres. La
+        // branche peinte est partie AVANT les deux paddings : leur absence de son côté n'était pas
+        // une décision, c'était sa date. Les deux blocs se suivent.
         // ShellChrome.BottomInsetPx (dock height) read fresh each time, never cached: the shell
         // publishes it AFTER a locataire mounts, and it can be 0 for a while during that window.
         // Vaut 0 hors shell (les fixtures ci-dessous montent CityMapController seul) — repli
@@ -92,6 +98,26 @@ namespace MafiaCleanCity.CityMap
         //    symétrique — *un correctif scopé au côté qu'on regardait.*
         //    Vaut `RootPadding` seul hors shell (l'inset est à 0) : repli inchangé pour les fixtures.
         private static int TopPadding => RootPadding + (int)MafiaCleanCity.Shell.ShellChrome.TopInsetPx;
+
+        // ------------------------------------------------------- la ville peinte (TD-494, 2026-09-03)
+        // La texture plein cadre de l'écran ③ (atelier `ville-peinte/`, extraite de la maquette
+        // ratifiée série 6 cadre ③·22) et ses 18 ancres, chargées par `Resources.Load` — le même
+        // seam que les bustes de La Famille : cet écran est construit 100 % à l'exécution, sans
+        // prefab ni scène. Absentes ⇒ l'ancienne liste en deux colonnes est montée à la place, et
+        // `VillePeinteMontee` reste FAUX — `CarteVillePlayModeTests` l'asserte VRAI : un asset
+        // manquant rougit, il ne se déguise pas en écran qui marche.
+        private const string CheminPeinture = "CityMap/carte_ville_nuit";
+        private const string CheminAncres = "CityMap/ancres_districts";
+        private const float MarqueurLargeur = 210f;   // unités canvas (1280 de large) — le lettrage de
+        private const float MarqueurHauteur = 40f;    // la maquette fait ~2,2 % de la largeur
+        public bool VillePeinteMontee { get; private set; }
+        public Sprite VillePeinteSprite { get; private set; }
+        public RectTransform VillePeinteRect => villePeinteRt;
+        public IReadOnlyList<string> DistrictsSansAncre => districtsSansAncre;
+        private RectTransform villePeinteRt;
+        private RectTransform marqueursRt;
+        private Dictionary<string, AncreDistrictDto> ancres;
+        private readonly List<string> districtsSansAncre = new List<string>();
 
         private void Start()
         {
@@ -222,11 +248,25 @@ namespace MafiaCleanCity.CityMap
             foreach (DistrictDto dto in districts)
             {
                 BankSide bank = CityMapEnums.ParseBankSide(dto.bank_side);
-                RectTransform parent = bank == BankSide.South ? southContent : northContent;
                 if (bank == BankSide.South) SouthCount++; else NorthCount++;
 
-                DistrictCellView cell = BuildCell(parent);
-                cell.Bind(dto, cell.GetComponent<Image>(), cell.GetComponentInChildren<TextMeshProUGUI>());
+                DistrictCellView cell;
+                if (VillePeinteMontee)
+                {
+                    // L'ancre est appariée par le nom canon, sans la casse ("Tidewater-1" ↔
+                    // "TIDEWATER-1") ; un district sans ancre est CONSIGNÉ (le test l'exige vide)
+                    // et posé au centre plutôt que perdu.
+                    string cle = (dto.name_canonical ?? string.Empty).ToUpperInvariant();
+                    if (!ancres.TryGetValue(cle, out AncreDistrictDto ancre)) districtsSansAncre.Add(dto.name_canonical);
+                    cell = BuildMarqueur(marqueursRt, ancre);
+                    cell.Bind(dto, cell.GetComponent<Image>(), cell.GetComponentInChildren<TextMeshProUGUI>(), compact: true);
+                }
+                else
+                {
+                    RectTransform parent = bank == BankSide.South ? southContent : northContent;
+                    cell = BuildCell(parent);
+                    cell.Bind(dto, cell.GetComponent<Image>(), cell.GetComponentInChildren<TextMeshProUGUI>());
+                }
                 cells.Add(cell);
             }
         }
@@ -238,6 +278,7 @@ namespace MafiaCleanCity.CityMap
                 if (c != null) Destroy(c.gameObject);
             }
             cells.Clear();
+            districtsSansAncre.Clear();
             NorthCount = 0;
             SouthCount = 0;
             HeatLoaded = false;
@@ -277,6 +318,86 @@ namespace MafiaCleanCity.CityMap
             rootRt.SetAsLastSibling();
             Image rootBg = root.AddComponent<Image>();
             rootBg.color = DesignTokens.Current.mapRootBg;
+
+            Sprite peinture = Resources.Load<Sprite>(CheminPeinture);
+            TextAsset ancresJson = Resources.Load<TextAsset>(CheminAncres);
+            if (peinture != null && ancresJson != null)
+            {
+                BuildVillePeinte(root.transform, peinture, ancresJson);
+            }
+            else
+            {
+                Debug.LogWarning($"[CityMap] ville peinte absente (sprite={peinture != null}, ancres={ancresJson != null}) — liste en colonnes montée à la place");
+                BuildListeEnColonnes(root);
+            }
+            BuildDetailPanel(mountRoot); // W3.U1 D2 — modal stays confined to the shell's content slot too
+        }
+
+        /// <summary>La ville peinte : la texture en COVER dans la zone LIBRE sous le chrome (la
+        /// maquette ③·22 pose la carte entre la barre haute et le dock, jamais dessous), les 18
+        /// marqueurs ancrés en FRACTIONS du rect de la peinture (ils suivent le cover à toute
+        /// résolution), et un pied (bascule de chaleur + légende) au bas de la zone.</summary>
+        private void BuildVillePeinte(Transform root, Sprite peinture, TextAsset ancresJson)
+        {
+            VillePeinteSprite = peinture;
+            AncresDistrictsDto dto = JsonUtility.FromJson<AncresDistrictsDto>(ancresJson.text);
+            ancres = new Dictionary<string, AncreDistrictDto>();
+            if (dto != null && dto.ancres != null)
+            {
+                foreach (AncreDistrictDto a in dto.ancres) ancres[a.nom.ToUpperInvariant()] = a;
+            }
+
+            // `ShellChrome` publie ce que le chrome MANGE (barre haute + débord du manomètre,
+            // dock) ; hors shell les deux valent 0 et la zone est le canvas entier.
+            GameObject zone = NewUI("ZoneLibre", root);
+            RectTransform zoneRt = (RectTransform)zone.transform;
+            Stretch(zoneRt, new Vector2(0f, MafiaCleanCity.Shell.ShellChrome.BottomInsetPx),
+                            new Vector2(0f, -MafiaCleanCity.Shell.ShellChrome.TopInsetPx));
+
+            // COVER : la peinture remplit la zone en gardant son format (2100×3640 = 0,577 contre
+            // 0,546 pour la zone libre à 1080×2400 : ~1,4 % rogné de chaque côté, rien en hauteur).
+            // ⚠️ BLANC, pas un token : la couleur est CUITE dans la texture (même règle que les
+            // bustes — teinter multiplierait deux couleurs).
+            GameObject peintureGo = NewUI("VillePeinte", zone.transform);
+            villePeinteRt = (RectTransform)peintureGo.transform;
+            Stretch(villePeinteRt, Vector2.zero, Vector2.zero);
+            Image img = peintureGo.AddComponent<Image>();
+            img.sprite = peinture;
+            img.color = Color.white;
+            img.preserveAspect = false;
+            img.raycastTarget = false;
+            AspectRatioFitter fit = peintureGo.AddComponent<AspectRatioFitter>();
+            fit.aspectMode = AspectRatioFitter.AspectMode.EnvelopeParent;
+            fit.aspectRatio = peinture.rect.width / peinture.rect.height;
+
+            GameObject marqueurs = NewUI("Marqueurs", peintureGo.transform);
+            marqueursRt = (RectTransform)marqueurs.transform;
+            Stretch(marqueursRt, Vector2.zero, Vector2.zero);
+
+            GameObject pied = NewUI("Pied", zone.transform);
+            RectTransform piedRt = (RectTransform)pied.transform;
+            piedRt.anchorMin = new Vector2(0f, 0f);
+            piedRt.anchorMax = new Vector2(1f, 0f);
+            piedRt.pivot = new Vector2(0.5f, 0f);
+            piedRt.sizeDelta = new Vector2(-2f * RootPadding, 40f);
+            piedRt.anchoredPosition = new Vector2(0f, RootPadding);
+            HorizontalLayoutGroup hlg = pied.AddComponent<HorizontalLayoutGroup>();
+            hlg.spacing = 18;
+            hlg.childAlignment = TextAnchor.MiddleLeft;
+            hlg.childControlWidth = true;
+            hlg.childControlHeight = true;
+            hlg.childForceExpandWidth = false;
+            hlg.childForceExpandHeight = false;
+            BuildToggleButton(pied.transform);
+            BuildLegend(pied.transform);
+
+            VillePeinteMontee = true;
+        }
+
+        /// <summary>L'ancienne liste en deux colonnes — REPLI quand la peinture ou ses ancres
+        /// manquent (et le chemin que les tests `CityMap*` d'avant le 2026-09-03 exerçaient).</summary>
+        private void BuildListeEnColonnes(GameObject root)
+        {
             rootVlg = root.AddComponent<VerticalLayoutGroup>();
             // 2026-09-02 — `ShellChrome.BottomInsetPx` (zone sûre + barre d'onglets) n'était lu
             // nulle part dans ce fichier : le contenu (dernière rangée de districts, légende)
@@ -330,11 +451,10 @@ namespace MafiaCleanCity.CityMap
             banksHlg.childForceExpandHeight = true;
             AddLayoutElement(banks, flexibleHeight: 0);
 
-            northContent = BuildColumn(banks.transform, "North Bank", DesignTokens.Current.mapPanelNorth);
-            southContent = BuildColumn(banks.transform, "South Bank", DesignTokens.Current.mapPanelSouth);
+            northContent = BuildColumn(banks.transform, "NorthBank", Lib("Rive nord"), DesignTokens.Current.mapPanelNorth);
+            southContent = BuildColumn(banks.transform, "SouthBank", Lib("Rive sud"), DesignTokens.Current.mapPanelSouth);
 
             BuildLegend(root.transform);
-            BuildDetailPanel(mountRoot); // W3.U1 D2 — modal stays confined to the shell's content slot too
         }
 
         private void BuildToggleButton(Transform parent)
@@ -357,13 +477,13 @@ namespace MafiaCleanCity.CityMap
         {
             if (toggleLabel != null)
             {
-                toggleLabel.text = heatOverlayOn ? "Heat overlay: ON" : "Heat overlay: OFF";
+                toggleLabel.text = heatOverlayOn ? Lib("Chaleur : affichée") : Lib("Chaleur : masquée");
             }
         }
 
-        private RectTransform BuildColumn(Transform parent, string header, Color panelColor)
+        private RectTransform BuildColumn(Transform parent, string nomObjet, string header, Color panelColor)
         {
-            GameObject col = NewUI(header.Replace(" ", ""), parent);
+            GameObject col = NewUI(nomObjet, parent);
             // PIÈGE MESURÉ ailleurs dans ce dépôt (`Shell/VerticalGradientImage.cs`) — `Graphic`
             // porte `[RequireComponent(typeof(CanvasRenderer))]`, mais `AddComponent<T>()` seul ne
             // l'ajoute PAS à l'exécution : sans lui, ce Graphic ne dessinerait RIEN, silencieusement.
@@ -452,6 +572,59 @@ namespace MafiaCleanCity.CityMap
             return view;
         }
 
+        /// <summary>Un marqueur de district sur la ville peinte. Il garde les TROIS porteurs
+        /// qu'une tuile avait et que les tests épinglent : `Background` (couleur = état de contrôle),
+        /// `Label` (contient `name_canonical`), `HeatBadge` (carré-témoin + libellé, masqué tant
+        /// que la chaleur est inconnue) — plus le composant `DistrictCellView` lui-même (sceau
+        /// d'identité de type, `AppShellPlayModeTests`). Ancre = fraction du rect parent.</summary>
+        private DistrictCellView BuildMarqueur(Transform parent, AncreDistrictDto ancre)
+        {
+            GameObject cell = NewUI("DistrictMarqueur", parent);
+            RectTransform rt = (RectTransform)cell.transform;
+            Vector2 a = ancre != null ? new Vector2(ancre.x_frac, 1f - ancre.y_frac) : new Vector2(0.5f, 0.5f);
+            rt.anchorMin = a;
+            rt.anchorMax = a;
+            rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.sizeDelta = new Vector2(MarqueurLargeur, MarqueurHauteur);
+            rt.anchoredPosition = Vector2.zero;
+            Image bg = cell.AddComponent<Image>();
+            bg.color = Color.gray;
+
+            TextMeshProUGUI label = NewText("Label", cell.transform, "", 16, TextAlignmentOptions.Center);
+            label.characterSpacing = 8f; // le lettrage espacé de la maquette (.nomq : letter-spacing .24em)
+            label.fontStyle = FontStyles.UpperCase; // capitales en STYLE — le texte reste le nom servi
+            Stretch((RectTransform)label.transform, new Vector2(6, 2), new Vector2(-6, -2));
+
+            GameObject badge = NewUI("HeatBadge", cell.transform);
+            RectTransform badgeRt = (RectTransform)badge.transform;
+            badgeRt.anchorMin = new Vector2(0.5f, 0f);
+            badgeRt.anchorMax = new Vector2(0.5f, 0f);
+            badgeRt.pivot = new Vector2(0.5f, 1f);
+            badgeRt.sizeDelta = new Vector2(80f, 24f);
+            badgeRt.anchoredPosition = new Vector2(0f, -4f);
+
+            const float SwatchDiameterPx = 14f;
+            GameObject swatchGo = NewUI("HeatSwatch", badge.transform);
+            RectTransform swatchRt = (RectTransform)swatchGo.transform;
+            swatchRt.anchorMin = new Vector2(0f, 0.5f);
+            swatchRt.anchorMax = new Vector2(0f, 0.5f);
+            swatchRt.pivot = new Vector2(0f, 0.5f);
+            swatchRt.sizeDelta = new Vector2(SwatchDiameterPx, SwatchDiameterPx);
+            swatchRt.anchoredPosition = Vector2.zero;
+            Image badgeBg = swatchGo.AddComponent<Image>();
+            badgeBg.color = CityMapEnums.HeatColorFor(HeatBucket.Unknown);
+            badgeBg.raycastTarget = false;
+            TextMeshProUGUI badgeLabel = NewText("HeatLabel", badge.transform, "", 12, TextAlignmentOptions.Left);
+            Stretch((RectTransform)badgeLabel.transform, new Vector2(SwatchDiameterPx + 6f, 2f), new Vector2(0f, -2f));
+
+            DistrictCellView view = cell.AddComponent<DistrictCellView>();
+            view.AttachHeatBadge(badge, badgeBg, badgeLabel);
+            Button cellButton = cell.AddComponent<Button>();
+            cellButton.targetGraphic = bg;
+            cellButton.onClick.AddListener(() => SelectDistrict(view.Model.id));
+            return view;
+        }
+
         private void BuildLegend(Transform parent)
         {
             GameObject legend = NewUI("Legend", parent);
@@ -464,10 +637,10 @@ namespace MafiaCleanCity.CityMap
             hlg.childForceExpandHeight = false;
             AddLayoutElement(legend, minHeight: 30, flexibleHeight: 0);
 
-            AddLegendItem(legend.transform, "Uncontested", CityMapEnums.ColorFor(ControlState.Uncontested));
-            AddLegendItem(legend.transform, "Contested", CityMapEnums.ColorFor(ControlState.Contested));
-            AddLegendItem(legend.transform, "Player held", CityMapEnums.ColorFor(ControlState.PlayerHeld));
-            AddLegendItem(legend.transform, "Rival held", CityMapEnums.ColorFor(ControlState.RivalHeld));
+            AddLegendItem(legend.transform, Lib("Libre"), CityMapEnums.ColorFor(ControlState.Uncontested));
+            AddLegendItem(legend.transform, Lib("Disputé"), CityMapEnums.ColorFor(ControlState.Contested));
+            AddLegendItem(legend.transform, Lib("À vous"), CityMapEnums.ColorFor(ControlState.PlayerHeld));
+            AddLegendItem(legend.transform, Lib("Rival"), CityMapEnums.ColorFor(ControlState.RivalHeld));
         }
 
         private void AddLegendItem(Transform parent, string label, Color swatchColor)
@@ -639,7 +812,7 @@ namespace MafiaCleanCity.CityMap
         // re-runs — mutating RectOffset fields in place would not mark it dirty).
         private void ReserveSpaceForPanel(bool reserve)
         {
-            if (rootVlg == null) return;
+            if (rootVlg == null) return; // ville peinte : pas de layout à décaler, le panneau recouvre la carte
             int right = reserve ? PanelReservedRight : RootPadding;
             // 2026-09-02 — ce recalcul écrasait le padding bas posé dans BuildLayout et retombait
             // sur un `RootPadding` nu, perdant le BottomInsetPx dès le premier SelectDistrict/

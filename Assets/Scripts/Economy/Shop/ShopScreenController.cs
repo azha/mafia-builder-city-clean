@@ -170,7 +170,18 @@ namespace MafiaCleanCity.Economy.Shop
 
             // ⚠️ -1 signifie « pas lu », 0 signifie « lu, et il est vide ». Les confondre ferait
             // afficher « zéro jeton » à un joueur dont la route a simplement échoué.
-            soldeTexte.text = Solde < 0 ? "— jetons" : $"{Solde} jetons";
+            // ⛔ UN SEUL DES DEUX PASSE PAR LA CLÉ, et le choix n'est pas cosmétique.
+            // · « — jetons » est un littéral STATIQUE : l'état « solde inconnu ». Il a sa clé.
+            // · `$"{Solde} jetons"` ASSEMBLE une valeur avec un mot. Le faire passer entier par
+            //   le catalogue exigerait un gabarit à trou (`{n} jetons`) que le dictionnaire ne
+            //   porte pas, et keyer le seul mot « jetons » fabriquerait une phrase que personne
+            //   n'a écrite — l'ordre des mots et l'accord ne sont pas les mêmes dans toutes les
+            //   langues.
+            // ★ C'est le même cas que la phrase ambiante de ⑨ (« Trois attendent vos ordres »),
+            //   qui a dû être demandée au back comme clé ICU plurielle plutôt que recomposée
+            //   côté client. Ici la clé n'existe pas encore : je laisse la composition VISIBLE
+            //   plutôt que d'en fabriquer une moitié.
+            soldeTexte.text = Solde < 0 ? Lib("— jetons") : $"{Solde} jetons";
             soldeTexte.color = Solde == 0 ? Braise : Or;
 
             var possedes = new HashSet<string>(Possedes ?? new string[0]);
@@ -460,5 +471,14 @@ namespace MafiaCleanCity.Economy.Shop
             le.preferredHeight = taille * 1.35f;
             return t;
         }
+
+        /// <summary>Item 0.6 — les littéraux STATIQUES passent par `boutique.bloc.<slug>`, repli
+        /// sur le littéral.
+        /// ⚠️ N'Y PASSE PAS la composition `$"{Solde} jetons"` : voir le commentaire au site
+        /// d'appel. Une chaîne assemblée avec une valeur demande un gabarit ICU côté serveur,
+        /// pas une clé côté client.</summary>
+        private static string Lib(string litteral) =>
+            MafiaCleanCity.I18n.Libelle.De("boutique", "bloc", litteral);
+
     }
 }

@@ -59,41 +59,99 @@ public static class MafiaCI
     // et le clic des entrées du menu) portent cette catégorie ; sans cette ligne elles seraient
     // livrées, compilées, et JAMAIS EXÉCUTÉES par le juge — la forme la plus économique de garde
     // décorative. *Écrire une garde ne l'installe pas ; l'inscrire au filtre, si.*
+    // ⚠️ `CarteVille` RE-RETIRÉE le 2026-09-03, la DEUXIÈME fois dans la journée. La branche
+    // « légende » de DA est repartie d'un `main` ANTÉRIEUR à son propre renommage (une catégorie
+    // par écran) et l'a réintroduite au filtre. Compté après merge : **0 fichier porteur**. Une
+    // entrée que personne ne porte ne casse rien — elle AFFIRME une couverture qui n'existe pas,
+    // le symétrique exact du défaut que ce fichier existe pour empêcher.
+    // ⇒ *Une valeur retirée revient par la branche qui n'a pas vu le retrait.* Le contrôle utile
+    //   n'est donc pas « l'ai-je retirée ? » mais « QUI la porte aujourd'hui ? », rejoué à chaque
+    //   merge — c'est un compte, pas une mémoire.
+    // ⚠️ Et le contrôle lui-même se contrôle : ma première version comparait dans le MAUVAIS SENS
+    //   (« une catégorie portée commence-t-elle par l'entrée ? » au lieu de « l'entrée est-elle
+    //   portée ? ») et accusait `PhotoEcranAppro`, qui est bel et bien portée par
+    //   `ChaineDApproScreenPlayModeTests`. Un balayage qui accuse se vérifie sur un cas dont on
+    //   SAIT la réponse avant de supprimer quoi que ce soit.
+    // ⛔ `HUDv31` et `EcranDelegation` INSCRITES le 2026-09-03 — deux trous MESURÉS, pas supposés.
+    // Balayage du jour : 25 fichiers / 85 tests ne portent QUE des catégories absentes de cette
+    // liste, donc qu'aucun run ne peut demander. Une partie est délibérée (les `Photo*` de capture
+    // et `Capture`, qui fait SIGSEGV sous Mesa — documenté plus haut), mais pas ces deux-là :
+    //   · `HUDv31` : 5 fichiers / 24 tests — le chrome, la barre d'onglets, la zone sûre, le
+    //     manomètre. Le socle de l'écran, jugé par personne.
+    //   · `EcranDelegation` : la suite de ㉜, arrivée avec l'écran sans son inscription ici.
+    // ⚠️ `PhotoEcranDelegation` n'est PAS inscrite, et c'est délibéré : les catégories `Photo*`
+    // écrivent des PNG à chaque exécution — les faire tourner sous le juge salit l'arbre à chaque
+    // run. Même régime que `PhotoPlanche`/`PhotoRevue`.
+    // ⚠️ Inscrire une catégorie ne la rend pas VERTE : c'est justement l'inverse du service qu'on
+    // lui demande. Elles s'inscrivent APRÈS avoir été exécutées vertes, jamais avant — et c'est ce
+    // qui a évité le pire ici.
+    // ⛔⛔ CE QUE LE RUN DE VÉRIFICATION A TROUVÉ, ET POURQUOI `HUDv31` N'EST PAS DANS LA LISTE.
+    // Inscrite puis exécutée, elle a passé DOUZE tests (multi-résolution, zone sûre, barre
+    // d'onglets) puis **fait planter l'éditeur** sur `ManometreOraclePlayModeTests` :
+    // `Got a SIGSEGV while executing native code`, core dumped, puis le process a pendu jusqu'au
+    // plafond — `elapsed=904s timeout=900s`. La l'inscrire sans la lancer aurait fait tomber CHAQUE
+    // run du juge en core dump, pour tout le monde. C'est un second porteur du SIGSEGV que ce
+    // fichier documente déjà pour `Capture`.
+    // ⇒ Le fichier fautif est sorti de `HUDv31` (catégorie `ManometreOracle`, hors filtre, même
+    //   régime que `Capture`). `HUDv31` en compte donc 4 au lieu de 5 et redevient candidate — mais
+    //   elle n'entrera ici qu'après un run vert, parce que sa 4e suite (`TopBarDoctrineV31`, 7
+    //   tests) n'a JAMAIS tourné : le crash est arrivé avant elle. *Douze verts ne disent rien des
+    //   sept qui n'ont pas démarré.*
+    // ⛔ LES `Photo*` SONT DEHORS — TOUTES, depuis le 2026-09-03. Elles écrivent des PNG dans
+    // `Assets/Screenshots` à chaque exécution : les faire tourner sous le juge salit l'arbre à
+    // chaque run, et un `git add` distrait embarque alors des captures que personne n'a regardées.
+    // ⚠️ MA RÈGLE DE FUSION LES A LAISSÉES ENTRER. En résolvant trois conflits de suite sur cette
+    // ligne j'ai appliqué « union de ce qui est PORTÉ » — juste contre les entrées MORTES, muet
+    // sur la question de savoir si une catégorie portée DOIT être jugée. Résultat mesuré :
+    // 8 `Photo*` dehors et 2 dedans (`PhotoChantierC`, `PhotoEcranAppro`), pendant que je refusais
+    // `PhotoEcranDelegation` pour cette raison exacte, dans le même commit.
+    // ⇒ Deux critères, pas un : (1) l'entrée est-elle PORTÉE ? sinon elle affirme une couverture
+    //   qui n'existe pas ; (2) sa suite doit-elle tourner sous le juge ? une capture, non.
+    //   La première est un compte, la seconde une décision — les confondre laisse passer les deux
+    //   sortes d'erreur.
+    // ⛔⛔ `EcranDistribution` RETIRÉE AVANT D'ÊTRE POUSSÉE — DEUXIÈME FOIS QUE CE CONTRÔLE PAIE
+    // DANS LA JOURNÉE. Elle est arrivée inscrite par la branche du chantier C, sans avoir jamais
+    // été exécutée. Lancée avant de pousser :
+    //   FAIL DistributionScreenPlayModeTests.EcranDistributionC1_CapturerPourLeJugeVisuel_DeuxResolutions
+    //     — « capture 1080x1920 entièrement UNIFORME — l'écran n'a rien rendu hors de son propre fond »
+    // La pousser aurait rendu le juge ROUGE pour les cinq sessions, sur un défaut qui n'est pas
+    // le leur. (Le matin, le même contrôle avait intercepté `HUDv31`, qui fait planter l'éditeur.)
+    // ⇒ Elle revient ici quand ㉘ rend quelque chose — c'est au chantier C de le dire, pas à moi
+    //   de le supposer. Le défaut est signalé, pas corrigé : l'écran n'est pas de mon périmètre.
+    // ⚠️ `ScreenC2` et `FiliereSonde` sont inscrites, elles, parce qu'elles ont tourné VERTES dans
+    // ce même run (28 passés / 1 échec, l'échec étant le seul ci-dessus). *Le même run tranche
+    // dans les deux sens : il inscrit ce qui passe et refuse ce qui tombe.*
+    // ⛔⛔ `CaptureJournal` / `CaptureFiliere` / `CaptureDossier` NON INSCRITES — elles passent
+    // SEULES et tombent EN GROUPE, et je n'ai pas su nommer le coupable. Les quatre mesures, dans
+    // l'ordre où je les ai prises (2026-09-03) :
+    //   les 3 + `Joignabilite` + `ScreenC2`  → 12 passés / **2 échecs** (㊴ et ㊳ « n'ont RIEN chargé »)
+    //   les 2 en défaut, SEULES              →  2 passés / 0 échec
+    //   + `Joignabilite` seulement           → 11 passés / 0 échec
+    //   + `ScreenC2` seulement               →  4 passés / 0 échec
+    //   + `CaptureFiliere` seulement         →  3 passés / 0 échec
+    // ⇒ Aucune addition UNIQUE ne reproduit. *Quand ça ne reproduit pas, c'est une information* :
+    //   la cause est DIFFUSE — de l'état accumulé sur un run long (le run rouge en portait 14, les
+    //   verts 2 à 11), pas un co-tenant identifiable. Les gardes qui tombent sont celles que le
+    //   chantier B a écrites aujourd'hui contre le vert à vide, et elles font exactement leur
+    //   travail : elles refusent de photographier un écran qui n'a pas chargé.
+    // ⇒ Les inscrire ferait tomber le juge, qui exécute justement des runs longs. Elles restent
+    //   dehors jusqu'à ce que la reproduction soit construite — et construire la reproduction fait
+    //   partie du correctif, sinon le prochain lot repaie ces quatre runs.
+    // ⚠️ Ce n'est PAS un défaut des écrans : ils chargent et se capturent correctement en isolé.
     private static readonly string[] Categories =
-        { "W4P4a", "W3UDA", "W3U1", "W3U2", "Charpente", "DemoIdentity", "ScreenB3", "ShellSurimpression", "CaptureDistrict", "CaptureReputation", "CaptureFamille", "Joignabilite", "ScreenCarte", "CaptureCarte", "EcranAutonomy", "EcranExceptions", "EcranRegleLieutenant", "EcranTenureLieutenant", "EcranUiLieutenant", "EcranRegleTier2", "EcranDelegation", "EcranDemolition" };
-    // `EcranDelegation` (㉜, 6 tests) ajoutée le 2026-09-03 (chantier F),
-    // pour LA raison que ce fichier documente déjà trois fois. ㉜ a été livré et mergé avec sa
-    // suite compilée, verte en local, et INJOIGNABLE par le juge : aucun filtre exécutable ne la
-    // nommait. *Écrire une garde ne l'installe pas ; l'inscrire au filtre, si.* — et cette fois
-    // c'est un voisin qui l'a mesuré (TD-574 : 97 tests PlayMode dans ce cas), pas moi, sur un
-    // écran que je venais de déclarer clos.
-    // ⇒ La leçon qui vaut au-delà du cas : *une garde que son AUTEUR croit installée est
-    //   exactement celle que personne ne re-vérifie*, parce qu'il l'a vue verte de ses yeux — en
-    //   la LANÇANT LUI-MÊME par une surcharge `MAFIA_CI_CATEGORIES`, c'est-à-dire par le seul
-    //   chemin qui contourne le défaut.
-    // ★★ ET LA VERSION LA PLUS BÊTE DE CETTE FAUTE, COMMISE ICI MÊME UNE HEURE APRÈS L'AVOIR
-    //   ÉCRITE : j'ai inscrit `EcranDelegation` en affirmant qu'elle « avait tourné verte au
-    //   run 5 ». Elle n'avait JAMAIS tourné — les runs 5 à 7 portaient `Joignabilite`,
-    //   `PhotoPlanche` et `EcranDemolition`. Les lignes de commande étaient dans mon propre
-    //   journal ; je ne les ai pas relues. *Une catégorie qu'on croit avoir lancée et une
-    //   catégorie lancée rendent le même souvenir — seule la ligne de commande les distingue.*
-    //   Les deux sont ici parce qu'elles sont VERTES au run 9 (`passed=17`, catégories réellement
-    //   exécutées imprimées dans le log), pas parce que je m'en souvenais.
-    // ⛔⛔ ET L'ORDRE COMPTE : ON N'INSCRIT PAS UNE CATÉGORIE QU'ON N'A JAMAIS VUE TOURNER.
-    // J'avais inscrit ici, dans le même geste, `EcranDemolition` — dont AUCUN test n'avait encore
-    // été exécuté une seule fois. Un voisin l'a arrêté : `HUDv31` inscrite sans run préalable a
-    // fait un CORE DUMP du juge, et un juge mort ne rapporte rien sur AUCUNE des autres catégories.
-    // ⇒ *Inscrire au filtre est un geste de PUBLICATION, pas de déclaration* : il expose tous les
-    //   autres lots au comportement d'un test que personne n'a encore exercé. La séquence est donc :
-    //   lancer la catégorie par surcharge `MAFIA_CI_CATEGORIES`, la voir verte, PUIS l'inscrire.
-    // ⇒ Et c'est le pendant exact de la leçon du dessus : celle-ci dit « une garde non inscrite ne
-    //   tourne jamais », celle-là dit « une garde inscrite sans avoir tourné peut tuer le juge ».
-    //   Les deux fautes sont symétriques, et on ne peut pas les éviter toutes les deux d'un seul
-    //   geste — il en faut deux, dans cet ordre.
-    // ⚠️ Les catégories `Photo*` de ces écrans ne sont VOLONTAIREMENT pas ici : la capture
-    //   qui fait foi est celle de la planche, prise SOUS CHROME (`PhotoPlanche`). La capture
-    //   isolée du gabarit reste adressable à la demande, elle ne doit simplement pas coûter deux
-    //   rendus à chaque run du juge. Ce n'est donc pas un oubli — c'est le régime, écrit.
+        { "W4P4a", "W3UDA", "W3U1", "W3U2", "Charpente", "DemoIdentity", "ScreenB3", "ShellSurimpression", "CaptureDistrict", "CaptureReputation", "CaptureFamille", "Joignabilite", "ScreenCarte", "CaptureCarte", "EcranAutonomy", "EcranExceptions", "EcranRegleLieutenant", "EcranTenureLieutenant", "EcranUiLieutenant", "EcranRegleTier2", "EcranAppro", "ScreenB7", "ScreenC1", "ScreenC6", "EcranDelegation", "ScreenC2", "EcranDemolition" };
+    // ⚠️ UNION AU MERGE (3e fois sur cette ligne le 2026-09-03) — et la règle est
+    // toujours la même : on unit ce qui est PORTÉ, jamais les deux listes. Une entrée
+    // sans porteur affirme une couverture qui n'existe pas ; une entrée portée qu'on
+    // retire rend ses tests inatteignables sans que rien ne rougisse. Le compte se
+    // refait à CHAQUE merge — c'est une mesure, pas une mémoire.
+    // ⚠️ Le balayage des porteurs utilise `Category\("x"\)` PARTOUT, jamais
+    //   `\[Category\("x"\)\]` : la forme combinée `[UnityTest, Category("x")]` est
+    //   employée ici et le motif étroit en cachait HUIT le 2026-09-03.
+    // ⚠️ UNION AU MERGE DU 2026-09-03 : `CarteVille` vient du lot « ville peinte », les huit
+    // autres du chantier C et du mien. Les deux branches avaient RAISON séparément et le
+    // conflit portait sur la LIGNE, pas sur l'intention — un filtre se fusionne toujours en
+    // union : une catégorie retirée ici rend ses tests inatteignables SANS que rien ne rougisse.
     // `ScreenCarte` et `CaptureCarte` ajoutees le 2026-09-02 (chantier C) — POUR LA RAISON QUE CE
     // FICHIER DOCUMENTE DEJA DEUX FOIS. Mesure du jour sur `Assets/Tests/PlayMode` : 86 fichiers,
     // 68 portent une categorie, 15 n'en portent AUCUNE et abritent 30 tests. Les 4 suites de la

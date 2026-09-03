@@ -306,7 +306,23 @@ namespace MafiaCleanCity.Operational
         {
             GameObject go = NouveauUI("Panneau", parent);
             AjouterFond(go, DesignTokens.Current.surfaceCard);
-            AjouterHauteur(go, Px(CssHPanneau));
+
+            // ⛔ HAUTEUR PLANCHER, PAS HAUTEUR FIGÉE — mesuré sur la première capture sous chrome
+            // de ㊴ (2026-09-03) : à `preferredHeight` verrouillé, le titre passait sur deux
+            // lignes, CHEVAUCHAIT le corps, et le corps débordait sous le fond du panneau, par
+            // dessus le dock.
+            // ⚠️ La cause n'est pas le texte : c'est qu'un cadre de hauteur fixe reçoit un contenu
+            // de longueur VARIABLE. Les trois lignes du haut portent des bandes courtes et tiennent
+            // ; ce panneau porte une PHRASE, et sa longueur dépend de ce que le serveur a servi.
+            // ★ Les hauteurs figées du châssis de la série 6 valent pour les blocs à contenu
+            //   calibré. Les appliquer à un bloc qui argumente revient à décider d'avance combien
+            //   de mots l'argument aura le droit de faire.
+            // ⇒ `minHeight` conserve la silhouette du châssis quand le texte est court ;
+            //   `preferredHeight` laissé au layout la rend au contenu quand il est long.
+            var le = go.GetComponent<LayoutElement>() ?? go.AddComponent<LayoutElement>();
+            le.minHeight = Px(CssHPanneau);
+            le.preferredHeight = -1f;     // ⇒ calculée depuis les enfants, jamais imposée
+            le.flexibleHeight = 0f;
             var v = go.AddComponent<VerticalLayoutGroup>();
             v.padding = new RectOffset((int)Px(10f), (int)Px(10f), (int)Px(9f), (int)Px(9f));
             v.spacing = Px(3f);
@@ -437,9 +453,30 @@ namespace MafiaCleanCity.Operational
             if (string.IsNullOrEmpty(bande)) return Gravite.Inconnu;
             switch (bande.Trim().ToLowerInvariant())
             {
-                case "quiet":    case "clean":    case "dormant":  return Gravite.Calme;
-                case "watched":  case "elevated": case "noticed":  return Gravite.Surveille;
-                case "glaring":  case "critical": case "exposed":  return Gravite.Criant;
+                // ⛔ LES TROIS PISTES ONT CHACUNE SON ÉCHELLE — mesuré dans le back le 2026-09-03
+                // (`forensic.projection.service.ts:98`, domaine clos ; `:141` ; `:200`) :
+                //     audit     : clean → … → audited
+                //     effluent  : clear → faint → visible → glaring
+                //     lifestyle : quiet → … → subpoenaed
+                // ⚠️ `clear` N'EST PAS un synonyme de `clean` : c'est le premier cran de SA piste,
+                // et `:200` en donne la cause — « aucune production d'atelier ⇒ déviation nulle ⇒
+                // clear ». C'est l'état normal d'un compte neuf.
+                // ★ Cette table mélange donc DÉLIBÉRÉMENT trois vocabulaires. Je l'ai découvert en
+                //   voyant « clear » s'afficher BRUT à l'écran : le repli qui montre le mot du
+                //   serveur au lieu de le rabattre sur « calme » a fait apparaître le manque au
+                //   lieu de le masquer. Une paraphrase rassurante l'aurait enterré.
+                case "quiet":    case "clean":    case "dormant":
+                case "clear":                                     return Gravite.Calme;
+                case "watched":  case "elevated": case "noticed":
+                case "faint":                                     return Gravite.Surveille;
+                // ⚠️ QUATRE CRANS POUR TROIS GRAVITÉS : l'échelle des rejets en a un de plus que
+                // l'échelle d'affichage, donc DEUX crans doivent partager une gravité. Le choix
+                // n'est pas neutre et il est écrit ici : `visible` monte en « Criant » plutôt que
+                // de rejoindre `faint` en « Surveillé ». Sur un écran d'affaires internes,
+                // sous-déclarer une exposition coûte plus cher que sur-alerter — c'est la même
+                // raison qui interdit de rabattre une bande INCONNUE sur « calme ».
+                case "glaring":  case "critical": case "exposed":
+                case "visible":                                   return Gravite.Criant;
                 default: return Gravite.Inconnu;
             }
         }

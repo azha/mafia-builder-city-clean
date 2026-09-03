@@ -31,6 +31,38 @@ namespace MafiaCleanCity.Operational
         /// GET /v1/operational/laundering/:nodeId — the Stage-1 laundering node projection.
         /// onOk(dto) on 2xx; onErr(code, message) on anything else.
         /// </summary>
+        /// <summary>GET /v1/operational/laundering — LA LISTE des nœuds de blanchiment du joueur.
+        ///
+        /// ⛔ AJOUTÉE le 2026-09-03, et elle corrige une prémisse. TD-572 énonce qu'« aucune route
+        /// amont ne fournit le `nodeId` », ce qui a valu à ⑪ et ⑫ d'afficher un titre, un
+        /// sous-titre et aucune donnée. MESURÉ : la route EXISTE et rend 200 —
+        ///     `{"nodes":[]}` sur un compte frais.
+        /// ⇒ Ce n'est donc pas la ROUTE qui manque, c'est le JOUEUR neuf qui n'a aucun nœud. La
+        ///   distinction n'est pas cosmétique : « on ne peut pas savoir » et « il n'y a rien
+        ///   encore » se dessinent différemment, et seule la seconde est vraie.
+        /// ⚠️ Ce que je n'ai PAS mesuré : ce que rend cette route pour un joueur qui possède une
+        /// boutique. Le tableau est déclaré, sa forme non-vide reste à voir.</summary>
+        public IEnumerator GetLaunderingNodes(string bearer,
+            Action<LaunderingNodesDto> onOk, Action<long, string> onErr)
+        {
+            string url = Url("laundering");
+            using (UnityWebRequest req = UnityWebRequest.Get(url))
+            {
+                req.timeout = TimeoutSeconds;
+                if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
+                yield return req.SendWebRequest();
+                if (req.result == UnityWebRequest.Result.Success)
+                {
+                    LaunderingNodesDto dto =
+                        JsonUtility.FromJson<LaunderingNodesEnvelope>(req.downloadHandler.text)?.payload?.data;
+                    if (dto == null) { onErr?.Invoke(0, "corps vide (GetLaunderingNodes)"); yield break; }
+                    onOk?.Invoke(dto);
+                }
+                else onErr?.Invoke(req.responseCode,
+                                   $"GET /v1/operational/laundering a échoué ({req.responseCode}) {req.error}");
+            }
+        }
+
         public IEnumerator GetLaunderingNode(string nodeId, string bearer,
             Action<LaunderingNodeDto> onOk, Action<long, string> onErr)
         {

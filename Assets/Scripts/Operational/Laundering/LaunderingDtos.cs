@@ -49,6 +49,20 @@ namespace MafiaCleanCity.Operational
         public LaunderingStageDto[] stages; // ordered head→tail (by stage_index)
     }
 
+    /// <summary>La liste des nœuds du joueur. Corps mesuré le 2026-09-03 : `{"nodes":[]}` sur un
+    /// compte frais — le tableau est VIDE, pas absent.
+    /// ⚠️ Les éléments sont déclarés en `string` : je n'ai vu que le tableau vide, donc je ne
+    /// connais pas la forme d'un nœud dans CETTE réponse. La déclarer d'après `LaunderingNodeDto`
+    /// serait une supposition — deux routes voisines n'ont pas forcément la même projection.</summary>
+    [Serializable]
+    public class LaunderingNodesDto
+    {
+        public string[] nodes;
+    }
+
+    [Serializable] public class LaunderingNodesPayload { public LaunderingNodesDto data; }
+    [Serializable] public class LaunderingNodesEnvelope { public LaunderingNodesPayload payload; }
+
     [Serializable] public class LaunderingPipelineEnvelope { public LaunderingPipelinePayload payload; }
     [Serializable] public class LaunderingPipelinePayload { public LaunderingPipelineDto data; }
 

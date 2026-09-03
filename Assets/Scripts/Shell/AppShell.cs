@@ -709,6 +709,16 @@ namespace MafiaCleanCity.Shell
             ("LE COMMISSARIAT",      () => MountTenant<PrecinctScreenController>()),     // ⑰
             ("LA SEMAINE",           () => MountTenant<CompressionScreenController>()),  // ⑭
             ("LE DOSSIER",           () => MountTenant<ForensicScreenController>()),     // ㊴
+            // ⚠️ Libellé pris de la maquette ratifiée (cadres 125-130, « Le journal — ce qui se
+            // dit ce matin ») et non inventé. « & LA RUE » parce que l'écran porte DEUX flux que
+            // le joueur ne distingue pas par leur route : la une (`news/feed`) et les brèves de
+            // la rue (`ambient/feed`). Un libellé « LE JOURNAL » seul cacherait la moitié.
+            ("LE JOURNAL & LA RUE",  () => MountTenant<JournalScreenController>()),      // ㊳
+            // ⚠️ ADDITIF, pas un remplacement. L'onglet « FILIÈRE » du dock monte toujours ⑪
+            // (`LaunderingController`, mono-nœud). ㊵ montre la filière ENTIÈRE et son état de
+            // cassure ; savoir lequel des deux mérite la bulle du dock est une décision de DOCK,
+            // pas un effet de bord d'un ajout de menu. Elle est CONSIGNÉE ici, pas prise.
+            ("LA FILIÈRE",           () => MountTenant<FiliereScreenController>()),      // ㊵
             ("LA PREMIÈRE FOIS",     () => MountTenant<TutorialScreenController>()),     // ㉕
 
             // ⚠️ ㉒ — sa planche s'appelle `planche_le_coffre` et l'écran écrit « LE COFFRE » dans
@@ -738,6 +748,33 @@ namespace MafiaCleanCity.Shell
             // budgets. La source unique est `structural_budget` de `session/open`, que le shell
             // tient déjà (`LastSessionOpen`) ; aucun des trois ne rouvre de session pour le lire.
             ("CE QUE VOUS AVEZ CONFIÉ", () => MountTenant<DelegationScreenController>()), // ㉜
+
+            ("LA CHAÎNE D'APPRO", () => MountTenant<ChaineDApproScreenController>()), // ㉚
+
+            // ㊳ — AJOUTÉE AU MERGE DU 2026-09-03 PAR LA GARDE, PAS PAR LECTURE. `pilote-B` a livré
+            // `JournalScreenController` sans sa ligne ici : `LocataireJoignabilitePlayModeTests` l'a
+            // classé orphelin au premier run post-merge (« 1 locataire(s) sans AUCUN chemin :
+            // [JournalScreenController] »). Vérifié avant d'accuser mon propre merge — la branche
+            // `pilote-B` ne mentionne le type nulle part dans ce fichier (0 occurrence) : l'entrée
+            // n'a jamais existé, elle n'a pas été perdue par une résolution de conflit.
+            // ★ C'est le TROISIÈME écran que cette garde rattrape à l'arrivée (⑲, puis ㊳ ici) —
+            //   *une garde de classe ne prouve sa valeur qu'en attrapant le membre qu'on n'a pas vu
+            //   arriver*, et elle l'a fait sur un écran qui n'est pas de mon chantier.
+            // ⚠️ Le libellé n'est pas de mon invention : c'est le titre que le chantier donne à cet
+            // écran (« Le journal & la rue »), et le dossier de juge livré avec lui déclare déjà
+            // « chemin joueur : onglet More » — l'intention était là, la ligne manquait.
+            ("LE JOURNAL & LA RUE", () => MountTenant<JournalScreenController>()), // ㊳
+
+            // ㉘ — « la ficelle sur le liège ». Aucune planche de menu ne nomme cet écran (il
+            // n'existe pas encore au moment où les planches `Assets/Screenshots/planche_*.png`
+            // ont été prises) : le libellé est le TITRE DU BANDEAU de la maquette de repos
+            // (m-54, « L'envoi de ce soir » aurait été trop long pour une entrée de menu — REUSE
+            // du nom court déjà porté par le brief et par `Tools/juge-visuel/ecran_distribution/`).
+            ("LA DISTRIBUTION", () => MountTenant<DistributionScreenController>()), // ㉘
+
+            // ㉛ — « le parloir ». Libellé en CAPITALES, patron des entrées voisines (aucune
+            // planche de menu ne nomme cet écran — même situation que ㉘, ajoutée le même jour).
+            ("LA LOI", () => MountTenant<LoiScreenController>()), // ㉛
 
             // ㉝ — raser un site. Deuxième des trois écrans qui partagent le jeton de structure,
             // et le seul qui le DÉPENSE de façon irréversible : une démolition ne se rejoue pas.
