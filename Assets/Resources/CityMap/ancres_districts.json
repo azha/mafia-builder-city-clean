@@ -1,0 +1,160 @@
+{
+ "source": "atelier3d-mafia ebea368",
+ "texture": "ville-nuit-2100x3640.png",
+ "taille_px": [
+  2100,
+  3640
+ ],
+ "viewBox": [
+  300,
+  520
+ ],
+ "echelle": 7,
+ "distance_min_px": 417.2,
+ "ancres": [
+  {
+   "nom": "TIDEWATER-1",
+   "profil": "tidewater",
+   "x_px": 342.3,
+   "y_px": 507.5,
+   "x_frac": 0.163,
+   "y_frac": 0.13942
+  },
+  {
+   "nom": "TIDEWATER-2",
+   "profil": "tidewater",
+   "x_px": 1069.6,
+   "y_px": 501.2,
+   "x_frac": 0.50933,
+   "y_frac": 0.13769
+  },
+  {
+   "nom": "TIDEWATER-3",
+   "profil": "tidewater",
+   "x_px": 1777.3,
+   "y_px": 469.0,
+   "x_frac": 0.84633,
+   "y_frac": 0.12885
+  },
+  {
+   "nom": "SPINE-A",
+   "profil": "spine",
+   "x_px": 366.8,
+   "y_px": 936.6,
+   "x_frac": 0.17467,
+   "y_frac": 0.25731
+  },
+  {
+   "nom": "SPINE-B",
+   "profil": "spine",
+   "x_px": 1127.0,
+   "y_px": 925.4,
+   "x_frac": 0.53667,
+   "y_frac": 0.25423
+  },
+  {
+   "nom": "SPINE-C",
+   "profil": "spine",
+   "x_px": 1810.9,
+   "y_px": 884.8,
+   "x_frac": 0.86233,
+   "y_frac": 0.24308
+  },
+  {
+   "nom": "SPINE-D",
+   "profil": "spine",
+   "x_px": 372.4,
+   "y_px": 1379.7,
+   "x_frac": 0.17733,
+   "y_frac": 0.37904
+  },
+  {
+   "nom": "STACK-1",
+   "profil": "stack",
+   "x_px": 1111.6,
+   "y_px": 1384.6,
+   "x_frac": 0.52933,
+   "y_frac": 0.38038
+  },
+  {
+   "nom": "STACK-2",
+   "profil": "stack",
+   "x_px": 1788.5,
+   "y_px": 1374.8,
+   "x_frac": 0.85167,
+   "y_frac": 0.37769
+  },
+  {
+   "nom": "LATTICE-A",
+   "profil": "lattice",
+   "x_px": 338.1,
+   "y_px": 2251.2,
+   "x_frac": 0.161,
+   "y_frac": 0.61846
+  },
+  {
+   "nom": "LATTICE-B",
+   "profil": "lattice",
+   "x_px": 1072.4,
+   "y_px": 2286.2,
+   "x_frac": 0.51067,
+   "y_frac": 0.62808
+  },
+  {
+   "nom": "GLASS-1",
+   "profil": "glass",
+   "x_px": 1784.3,
+   "y_px": 2261.0,
+   "x_frac": 0.84967,
+   "y_frac": 0.62115
+  },
+  {
+   "nom": "LATTICE-C",
+   "profil": "lattice",
+   "x_px": 314.3,
+   "y_px": 2777.6,
+   "x_frac": 0.14967,
+   "y_frac": 0.76308
+  },
+  {
+   "nom": "GLASS-2",
+   "profil": "glass",
+   "x_px": 1030.4,
+   "y_px": 2792.3,
+   "x_frac": 0.49067,
+   "y_frac": 0.76712
+  },
+  {
+   "nom": "VERGE-A",
+   "profil": "verge",
+   "x_px": 1766.1,
+   "y_px": 2751.7,
+   "x_frac": 0.841,
+   "y_frac": 0.75596
+  },
+  {
+   "nom": "GLASS-3",
+   "profil": "glass",
+   "x_px": 336.0,
+   "y_px": 3307.5,
+   "x_frac": 0.16,
+   "y_frac": 0.90865
+  },
+  {
+   "nom": "VERGE-B",
+   "profil": "verge",
+   "x_px": 1028.3,
+   "y_px": 3309.6,
+   "x_frac": 0.48967,
+   "y_frac": 0.90923
+  },
+  {
+   "nom": "VERGE-C",
+   "profil": "verge",
+   "x_px": 1742.3,
+   "y_px": 3276.0,
+   "x_frac": 0.82967,
+   "y_frac": 0.9
+  }
+ ]
+}

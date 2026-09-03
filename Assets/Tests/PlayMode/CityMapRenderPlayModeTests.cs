@@ -9,7 +9,13 @@ namespace MafiaCleanCity.CityMap.Tests
     // E2E (charter 27: no mock). Drives the real CityMapController, which builds
     // its own Canvas + UI and fetches the live backend. Asserts the rendered
     // cells match the contract: 18 districts, grouped by bank, coloured by state.
-    [Category("ScreenCarte")]
+        // ⚠️ DEUX catégories, et c'est l'UNION du merge du 2026-09-03 : le chantier C a posé
+        // `ScreenCarte` (ces suites ne tournaient sous AUCUN filtre — TD-490), le lot « ville
+        // peinte » a posé `CarteVille` pour la même raison, chacun sans voir l'autre. NUnit accepte
+        // les deux attributs ; en garder UNE SEULE rendrait la suite invisible au filtre de l'autre
+        // lot — et un test qu'aucun filtre n'atteint ne rougit jamais.
+        [Category("ScreenCarte")]
+        [Category("CarteVille")]
     public class CityMapRenderPlayModeTests
     {
         private GameObject controllerGo;
