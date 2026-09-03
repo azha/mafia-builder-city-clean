@@ -142,6 +142,13 @@ namespace MafiaCleanCity.Shell.Tests
             // un cas dégénéré, mais elle n'exerce ni m-75 ni m-76, qui exigent une délégation
             // réelle — laquelle exige `ELIGIBLE`, qu'aucun compte frais n'atteint. TD-531.
             yield return Capturer<DelegationScreenController>(shell, "ce_que_vous_avez_confie", (e, _) => e.RendusEffectues > 0, echecs);
+            // ㉝ — raser un site. Même prédicat structurel, même côté de la frontière que ㉜ :
+            // l'écran bâtit sous son hôte, donc pas de `nomFeuille`.
+            // ⚠️ Cet écran BALAIE les districts avant de pouvoir rendre quoi que ce soit d'utile
+            // (aucune route ne liste les bâtiments d'un joueur — TD-534) : mesuré, 16 requêtes
+            // avant d'en trouver un. `RendusEffectues` ne monte qu'après ce balayage, ce qui rend
+            // l'attente de 20 s du harnais NÉCESSAIRE ici, pas confortable.
+            yield return Capturer<DemolitionScreenController>(shell, "raser_un_site", (e, _) => e.RendusEffectues > 0, echecs);
 
             Assert.IsEmpty(echecs, "écrans en défaut :\n  · " + string.Join("\n  · ", echecs));
         }

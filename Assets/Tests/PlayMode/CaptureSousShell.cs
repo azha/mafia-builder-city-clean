@@ -40,6 +40,7 @@ namespace MafiaCleanCity.Shell.Tests
                                                        System.Action<T> sonde = null,
                                                        string nomFeuille = null,
                                                        string[] freresAttendusAuDessus = null,
+                                                       System.Action<T> avantRendu = null,
                                                        int largeur = 1080, int hauteur = 2400)
             where T : MonoBehaviour, IShellTenant
         {
@@ -206,12 +207,6 @@ namespace MafiaCleanCity.Shell.Tests
             // (2) TAILLE — un RectTransform neuf fait 100x100 et ne dessine rien de VISIBLE, sans
             // la moindre erreur console.
             RectTransform rt = racine;
-            if (rt.rect.width < 200f)
-            {
-                echecs.Add($"{nom} : rect {rt.rect.width:F0}x{rt.rect.height:F0} — taille par défaut, "
-                           + "l'écran ne dessine rien");
-                yield break;
-            }
 
             Canvas canvas = racine.GetComponentInParent<Canvas>();
             if (canvas != null) canvas = canvas.rootCanvas;
@@ -280,9 +275,85 @@ namespace MafiaCleanCity.Shell.Tests
                           + "aucun panneau d'Accueil monté (rien à recuire côté Accueil ; le chrome "
                           + "l'a été)");
 
+            // ⛔⛔ UNE CAPTURE MONTRE UN SEUL ÉCRAN — et mon extinction « par différence » n'y
+            // suffisait pas. Signalé par le chantier F sur la capture de ⑧ : la marge gauche porte
+            // des fragments de l'Accueil (`AUTONOMY_REPORTS_PENDING`, « Moderate », « Elevated »,
+            // « Ready »). Ma différence n'éteint que ce que CET appel a monté ; l'état de DÉMARRAGE
+            // du shell — les quatre panneaux d'Accueil et la feuille du Dashboard, posés par
+            // l'acquisition de session — reste allumé dessous, et chaque voile de fond est un scrim
+            // TRANSLUCIDE : il assombrit au lieu de cacher.
+            // ⇒ On éteint donc, le temps du rendu, TOUT ce qui vit dans `ContentSlot` et qui n'est
+            //   pas l'écran capturé — puis on rallume. Ce que « l'écran capturé » recouvre est
+            //   exactement ce que l'appelant a DÉJÀ déclaré : son hôte, sa racine visible, et les
+            //   frères qu'il accepte au-dessus (pour ④, ce sont les panneaux d'Accueil eux-mêmes,
+            //   qui font partie de l'écran et restent donc allumés).
+            // ★ Aucun nom deviné : la liste des gardés vient des paramètres, pas d'une convention.
+            var gardes = new HashSet<Transform> { ecran.transform, racine };
+            foreach (string n2 in freresAttendusAuDessus ?? new string[0])
+                for (int k = 0; k < shell.ContentSlot.childCount; k++)
+                    if (shell.ContentSlot.GetChild(k).name == n2) gardes.Add(shell.ContentSlot.GetChild(k));
+            // Le voile de fond de l'écran, s'il en a un : même préfixe que sa feuille.
+            if (!string.IsNullOrEmpty(nomFeuille) && nomFeuille.EndsWith("Sheet"))
+            {
+                string nomVoile = nomFeuille.Substring(0, nomFeuille.Length - 5) + "Backdrop";
+                for (int k = 0; k < shell.ContentSlot.childCount; k++)
+                    if (shell.ContentSlot.GetChild(k).name == nomVoile) gardes.Add(shell.ContentSlot.GetChild(k));
+            }
+            var eteintsPourLeRendu = new List<GameObject>();
+            for (int k = 0; k < shell.ContentSlot.childCount; k++)
+            {
+                Transform f = shell.ContentSlot.GetChild(k);
+                if (gardes.Contains(f) || !f.gameObject.activeSelf) continue;
+                f.gameObject.SetActive(false);
+                eteintsPourLeRendu.Add(f.gameObject);
+            }
+            if (eteintsPourLeRendu.Count > 0)
+            {
+                Canvas.ForceUpdateCanvases();
+                yield return null;
+                Debug.Log($"[PLANCHE] {nom} — {eteintsPourLeRendu.Count} voisin(s) éteint(s) le temps "
+                          + "du rendu (l'image ne montre qu'un écran)");
+            }
+
+            // `avantRendu` : le dernier moment où l'écran peut être MIS DANS L'ÉTAT qu'on veut
+            // photographier — après le recuit de géométrie (sinon on positionne dans l'ancienne)
+            // et avant le rendu. C'est ce qui permet de capturer une SECTION précise d'un écran
+            // qui défile, sans en faire un écran à part.
+            if (avantRendu != null)
+            {
+                avantRendu(ecran);
+                Canvas.ForceUpdateCanvases();
+                yield return null;
+            }
+
             // ⚠️ La demi-hauteur se mesure sur le rect RÉEL du canvas, jamais depuis la résolution
             // demandée : le canvas porte un CanvasScaler, ses unités ne sont pas les pixels cible.
             // La valeur par défaut d'`orthographicSize` (5) cadrerait 0,4 % de l'écran.
+            // ⛔⛔ LA GARDE DE TAILLE EST ICI, PAS AVANT LA BASCULE — et ce n'est pas un
+            // rangement, c'est un correctif MESURÉ le 2026-09-03. Elle vivait avant le passage du
+            // canvas en caméra, donc elle jugeait la géométrie de la VUE DE JEU de l'éditeur
+            // (640×480), pas celle de la CIBLE. Mesuré sur ⑦ : `LieutenantSheet` rend **727 × -1**
+            // dans la vue de jeu et **1248 × 2275** à la résolution de capture. La garde d'avant
+            // aurait donc refusé une capture parfaitement bonne — et pour les écrans sains elle
+            // validait une géométrie que l'image n'utilise pas.
+            // ★ C'est le MÊME défaut que le recuit ajouté ce matin, à l'autre bout : *juger l'écran
+            //   dans une géométrie que le joueur n'a jamais eue.* Je l'ai reproduit dans la garde
+            //   après l'avoir corrigé dans le rendu.
+            // ⚠️ Et les DEUX dimensions : elle ne testait que la largeur, donc une hauteur nulle ou
+            //   négative passait — un rect dégénéré ne casse rien et ne lève rien.
+            if (rt.rect.width < 200f || rt.rect.height < 200f)
+            {
+                echecs.Add($"{nom} : à la résolution de capture, rect "
+                           + $"{rt.rect.width:F0}x{rt.rect.height:F0} — une dimension sous le "
+                           + "plancher : l'écran ne dessine rien de mesurable");
+                if (camGo != null) Object.Destroy(camGo);
+                Object.Destroy(rtex);
+                canvas.renderMode = modePrecedent;
+                canvas.worldCamera = cameraPrecedente;
+                canvas.planeDistance = planPrecedent;
+                yield break;
+            }
+
             RectTransform crt = (RectTransform)canvas.transform;
             cam.orthographicSize = crt.rect.height / 2f;
             cam.aspect = crt.rect.width / crt.rect.height;
@@ -294,11 +365,15 @@ namespace MafiaCleanCity.Shell.Tests
             tex.ReadPixels(new Rect(0, 0, largeur, hauteur), 0, 0);
             tex.Apply();
             RenderTexture.active = prev;
+            Rect rectCapture = rt.rect;   // AVANT la restauration — voir le log plus bas
             canvas.renderMode = modePrecedent;
             canvas.worldCamera = cameraPrecedente;
             canvas.planeDistance = planPrecedent;
 
             System.IO.File.WriteAllBytes(chemin, tex.EncodeToPNG());
+
+            // Rallumer les voisins : ce test n'a pas à changer le monde qu'il a trouvé.
+            foreach (GameObject g in eteintsPourLeRendu) if (g != null) g.SetActive(true);
 
             if (sonde != null) sonde(ecran);
 
@@ -313,8 +388,12 @@ namespace MafiaCleanCity.Shell.Tests
             int encre = 0;
             foreach (var t in racine.GetComponentsInChildren<TMPro.TextMeshProUGUI>(true))
                 if (!string.IsNullOrWhiteSpace(t.text)) encre++;
+            // ⚠️ `rectCapture` est relevé AVANT la restauration du canvas : le `rect` d'après
+            // restauration est celui de la vue de jeu, et le publier ferait croire que l'image a
+            // été prise dans cette géométrie-là. Toutes les lignes `[PLANCHE]` d'avant le
+            // 2026-09-03 rapportaient ce rect restauré.
             Debug.Log($"[PLANCHE] {chemin} — {teintes.Count} teintes · racine={racine.name} "
-                      + $"rect={rt.rect.width:F0}x{rt.rect.height:F0} "
+                      + $"rect={rectCapture.width:F0}x{rectCapture.height:F0} "
                       + $"· frere={rang}/{(parent != null ? parent.childCount : 0)} "
                       + $"· graphics={racine.GetComponentsInChildren<Graphic>(true).Length} · textes={encre}");
             if (teintes.Count <= 12) echecs.Add($"{nom} : {teintes.Count} teintes — c'est un fond, pas un écran");

@@ -18,13 +18,7 @@ namespace MafiaCleanCity.CityMap.Tests
     // so the full PlayMode assembly is order-independent. The operational concern runs on a
     // DISTINCT player (operational_demo) on its own heat-coupled city, so it never washes this
     // gradient. (See SeederSupport.)
-        // ⚠️ DEUX catégories, et c'est l'UNION du merge du 2026-09-03 : le chantier C a posé
-        // `ScreenCarte` (ces suites ne tournaient sous AUCUN filtre — TD-490), le lot « ville
-        // peinte » a posé `CarteVille` pour la même raison, chacun sans voir l'autre. NUnit accepte
-        // les deux attributs ; en garder UNE SEULE rendrait la suite invisible au filtre de l'autre
-        // lot — et un test qu'aucun filtre n'atteint ne rougit jamais.
-        [Category("ScreenCarte")]
-        [Category("CarteVille")]
+    [Category("ScreenCarte")]
     public class CityMapHeatPlayModeTests
     {
         private const string DemoIdentifier = "citymap_demo@example.test";

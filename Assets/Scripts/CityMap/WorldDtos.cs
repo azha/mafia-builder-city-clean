@@ -223,14 +223,18 @@ namespace MafiaCleanCity.CityMap
         }
 
         // Short human label for the heat badge (text + colour, never colour alone — F2 a11y).
+        /// <summary>Le libellé AFFICHÉ d'un palier de chaleur — en français, par le résolveur
+        /// partagé du chrome (`HeatBucketResolver.Label` : Froid / Tiède / Chaud / Brûlant), jamais
+        /// un second dictionnaire ici (2026-09-03 : la légende de ③ était le dernier écran à
+        /// afficher les codes du back COLD/WARM/HOT/BURNING en clair).</summary>
         public static string HeatLabel(HeatBucket bucket)
         {
             switch (bucket)
             {
-                case HeatBucket.Cold: return "COLD";
-                case HeatBucket.Warm: return "WARM";
-                case HeatBucket.Hot: return "HOT";
-                case HeatBucket.Burning: return "BURNING";
+                case HeatBucket.Cold: return MafiaCleanCity.Shell.HeatBucketResolver.Label("COLD");
+                case HeatBucket.Warm: return MafiaCleanCity.Shell.HeatBucketResolver.Label("WARM");
+                case HeatBucket.Hot: return MafiaCleanCity.Shell.HeatBucketResolver.Label("HOT");
+                case HeatBucket.Burning: return MafiaCleanCity.Shell.HeatBucketResolver.Label("BURNING");
                 default: return "—";
             }
         }

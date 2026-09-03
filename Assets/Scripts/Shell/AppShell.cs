@@ -748,6 +748,52 @@ namespace MafiaCleanCity.Shell
             // budgets. La source unique est `structural_budget` de `session/open`, que le shell
             // tient déjà (`LastSessionOpen`) ; aucun des trois ne rouvre de session pour le lire.
             ("CE QUE VOUS AVEZ CONFIÉ", () => MountTenant<DelegationScreenController>()), // ㉜
+
+            ("LA CHAÎNE D'APPRO", () => MountTenant<ChaineDApproScreenController>()), // ㉚
+
+            // ㊳ — AJOUTÉE AU MERGE DU 2026-09-03 PAR LA GARDE, PAS PAR LECTURE. `pilote-B` a livré
+            // `JournalScreenController` sans sa ligne ici : `LocataireJoignabilitePlayModeTests` l'a
+            // classé orphelin au premier run post-merge (« 1 locataire(s) sans AUCUN chemin :
+            // [JournalScreenController] »). Vérifié avant d'accuser mon propre merge — la branche
+            // `pilote-B` ne mentionne le type nulle part dans ce fichier (0 occurrence) : l'entrée
+            // n'a jamais existé, elle n'a pas été perdue par une résolution de conflit.
+            // ★ C'est le TROISIÈME écran que cette garde rattrape à l'arrivée (⑲, puis ㊳ ici) —
+            //   *une garde de classe ne prouve sa valeur qu'en attrapant le membre qu'on n'a pas vu
+            //   arriver*, et elle l'a fait sur un écran qui n'est pas de mon chantier.
+            // ⚠️ Le libellé n'est pas de mon invention : c'est le titre que le chantier donne à cet
+            // écran (« Le journal & la rue »), et le dossier de juge livré avec lui déclare déjà
+            // « chemin joueur : onglet More » — l'intention était là, la ligne manquait.
+            ("LE JOURNAL & LA RUE", () => MountTenant<JournalScreenController>()), // ㊳
+
+            // ㉘ — « la ficelle sur le liège ». Aucune planche de menu ne nomme cet écran (il
+            // n'existe pas encore au moment où les planches `Assets/Screenshots/planche_*.png`
+            // ont été prises) : le libellé est le TITRE DU BANDEAU de la maquette de repos
+            // (m-54, « L'envoi de ce soir » aurait été trop long pour une entrée de menu — REUSE
+            // du nom court déjà porté par le brief et par `Tools/juge-visuel/ecran_distribution/`).
+            ("LA DISTRIBUTION", () => MountTenant<DistributionScreenController>()), // ㉘
+
+            // ㉛ — « le parloir ». Libellé en CAPITALES, patron des entrées voisines (aucune
+            // planche de menu ne nomme cet écran — même situation que ㉘, ajoutée le même jour).
+            ("LA LOI", () => MountTenant<LoiScreenController>()), // ㉛
+
+            // ㉝ — raser un site. Deuxième des trois écrans qui partagent le jeton de structure,
+            // et le seul qui le DÉPENSE de façon irréversible : une démolition ne se rejoue pas.
+            // Mesuré le 2026-09-03 : après un `decommission` réussi, `structural_budget` passe à
+            // `{used:1, cap_reached:true}` — donc ㉜ doit éteindre son geste dans la même session,
+            // et il le fait, en lisant la même source (`JetonDeStructure`).
+            ("RASER UN SITE", () => MountTenant<DemolitionScreenController>()),           // ㉝
+
+            // ㉞ — « les ordres du soir ». AJOUTÉE PAR LA GARDE, deuxième fois de la journée après
+            // ㊳ : `pilote-B` a livré `CarnetScreenController` sans sa ligne ici, et
+            // `LocataireJoignabilitePlayModeTests` l'a classé orphelin au premier run post-merge
+            // (« 1 locataire sans AUCUN chemin : [CarnetScreenController] », population 31).
+            // ⚠️ L'écran est un SQUELETTE, et je ne l'inscris pas pour autant dans
+            // `ExceptionsDeclarees` : cette allowlist dit d'elle-même qu'elle n'est PAS pour « un
+            // écran qu'on n'a pas eu le temps de brancher », mais pour un locataire dont on AFFIRME
+            // qu'il ne doit pas avoir de porte. Ce n'est pas le cas ici — il en aura une, autant
+            // que ce soit maintenant. Un écran titré et vide est ce que ce régime livre déjà
+            // (⑪ et ⑫ sont capturés sans données et consignés) ; un écran sans porte, non.
+            ("LES ORDRES DU SOIR", () => MountTenant<CarnetScreenController>()),         // ㉞
         };
 
         /// <summary>Monte le menu « Plus » : une entrée par destination, chacune montant son écran.
