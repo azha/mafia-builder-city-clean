@@ -123,7 +123,9 @@ namespace MafiaCleanCity.Account.Settings
             videTexte.gameObject.SetActive(EtatVide);
             if (EtatVide)
             {
-                videTexte.text = DerniereErreur == null ? "Aucun réglage." : "Les réglages n'ont pas répondu.";
+                videTexte.text = DerniereErreur == null
+                    ? Lib("Aucun réglage.")
+                    : Lib("Les réglages n'ont pas répondu.");
                 RendusEffectues++;
                 return;
             }
@@ -274,5 +276,14 @@ namespace MafiaCleanCity.Account.Settings
             le.flexibleWidth = 1f;
             return t;
         }
+
+        /// <summary>Item 0.6 — les littéraux STATIQUES de cet écran passent par
+        /// `reglages.bloc.<slug>`, repli sur le littéral (affichage BYTE-IDENTIQUE tant que le
+        /// dictionnaire ne porte pas la clé — c'est ce qui rend la conversion sûre sans run).
+        /// ⚠️ « Aucun réglage » et « Les réglages n'ont pas répondu » disent deux choses
+        /// DIFFÉRENTES — un état vide et une panne — et gardent donc deux clés distinctes.</summary>
+        private static string Lib(string litteral) =>
+            MafiaCleanCity.I18n.Libelle.De("reglages", "bloc", litteral);
+
     }
 }
