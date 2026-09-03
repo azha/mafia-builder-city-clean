@@ -740,6 +740,20 @@ namespace MafiaCleanCity.Shell
             ("CE QUE VOUS AVEZ CONFIÉ", () => MountTenant<DelegationScreenController>()), // ㉜
 
             ("LA CHAÎNE D'APPRO", () => MountTenant<ChaineDApproScreenController>()), // ㉚
+
+            // ㊳ — AJOUTÉE AU MERGE DU 2026-09-03 PAR LA GARDE, PAS PAR LECTURE. `pilote-B` a livré
+            // `JournalScreenController` sans sa ligne ici : `LocataireJoignabilitePlayModeTests` l'a
+            // classé orphelin au premier run post-merge (« 1 locataire(s) sans AUCUN chemin :
+            // [JournalScreenController] »). Vérifié avant d'accuser mon propre merge — la branche
+            // `pilote-B` ne mentionne le type nulle part dans ce fichier (0 occurrence) : l'entrée
+            // n'a jamais existé, elle n'a pas été perdue par une résolution de conflit.
+            // ★ C'est le TROISIÈME écran que cette garde rattrape à l'arrivée (⑲, puis ㊳ ici) —
+            //   *une garde de classe ne prouve sa valeur qu'en attrapant le membre qu'on n'a pas vu
+            //   arriver*, et elle l'a fait sur un écran qui n'est pas de mon chantier.
+            // ⚠️ Le libellé n'est pas de mon invention : c'est le titre que le chantier donne à cet
+            // écran (« Le journal & la rue »), et le dossier de juge livré avec lui déclare déjà
+            // « chemin joueur : onglet More » — l'intention était là, la ligne manquait.
+            ("LE JOURNAL & LA RUE", () => MountTenant<JournalScreenController>()), // ㊳
         };
 
         /// <summary>Monte le menu « Plus » : une entrée par destination, chacune montant son écran.
