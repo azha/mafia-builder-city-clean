@@ -196,55 +196,5 @@ namespace MafiaCleanCity.Operational.Tests
         // les tests d'état (AppliquerEtat sur un corps fabriqué via RendrePourTest), patron ㊲
         // §§ 1/3/5 de ReputationScreenPlayModeTests.
     
-        // ═══ SONDE DE CHEMINS — énumérer les candidats plutôt qu'en supposer un ═════════════
-
-        private int seq;
-
-        /// <summary>⛔ POURQUOI ÉNUMÉRER PLUTÔT QUE SUPPOSER. Le 2026-09-03, une sonde sur
-        /// `/v1/laundering/...` a rendu 404 sur trois routes et j'ai failli en conclure que le
-        /// serveur ne les avait pas. Le préfixe réel était `/v1/operational/laundering/...` : le
-        /// 404 était un fait sur MOI, pas sur le domaine. Un écran entier a failli être écrit sur
-        /// cette lecture — vert, cohérent, et faux.
-        /// ⇒ On ne parie donc plus sur UN chemin : on en essaie plusieurs et on lit les codes.
-        ///   Un 404 partout dit « la route n'existe pas » ; un 200 quelque part dit où elle est ;
-        ///   un 401/403 dit qu'elle existe et qu'il manque un droit — trois faits différents que
-        ///   le pari sur un seul chemin ne distingue jamais.
-        /// ⚠️ À SUPPRIMER une fois les chemins connus.</summary>
-        [UnityTest, Category("CarnetSonde")]
-        public IEnumerator SondeC3_OuSontLesRoutes()
-        {
-            var auth = new MafiaCleanCity.CityMap.AuthClient { BaseUrl = "http://localhost" };
-            string callsign = SeederSupport.SafeCallsign("sondecarnet", ref seq);
-            string token = null, err = null;
-            yield return auth.SignUp(callsign, "sonde-carnet-pw", t => token = t, e => err = e);
-            Assert.IsNull(err, $"signup errored: {err}");
-
-            var session = new MafiaCleanCity.Shell.SessionClient { BaseUrl = "http://localhost" };
-            yield return session.OpenSession(token, "sonde-carnet", _ => { },
-                (c, m) => Debug.LogWarning($"[C3-SONDE] session/open {c}: {m}"));
-
-            string[] candidats =
-            {
-                "/v1/cue-stack", "/v1/cue_stack", "/v1/operational/cue-stack",
-                "/v1/operational/cue_stack", "/v1/me/cue-stack", "/v1/evening/cue-stack",
-                "/v1/political", "/v1/political/calendar", "/v1/operational/political",
-                "/v1/meta/political", "/v1/city/political",
-            };
-            foreach (string route in candidats)
-            {
-                using (var req = UnityEngine.Networking.UnityWebRequest.Get("http://localhost" + route))
-                {
-                    req.timeout = 8;
-                    req.SetRequestHeader("Authorization", "Bearer " + token);
-                    yield return req.SendWebRequest();
-                    string corps = req.downloadHandler != null ? req.downloadHandler.text : "";
-                    if (req.responseCode == 200 && corps != null && corps.Length > 900)
-                        corps = corps.Substring(0, 900) + " …TRONQUÉ";
-                    else if (req.responseCode != 200) corps = "";
-                    Debug.Log($"[C3-SONDE] {req.responseCode,4}  {route}  {corps}");
-                }
-            }
-        }
-
 }
 }
