@@ -21,7 +21,7 @@ namespace MafiaCleanCity.CityMap
         public TextMeshProUGUI HeatBadgeLabel { get; private set; }
         public HeatBucket Heat { get; private set; }
 
-        public void Bind(DistrictDto dto, Image background, TextMeshProUGUI label)
+        public void Bind(DistrictDto dto, Image background, TextMeshProUGUI label, bool compact = false)
         {
             Model = dto;
             Background = background;
@@ -33,10 +33,26 @@ namespace MafiaCleanCity.CityMap
             // JUGE-D5 (audit visuel, 2026-08-21, balayage étendu à CityMap.cs/DistrictCellView.cs,
             // même périmètre CityMap/) — "blocks" traduit en "blocs" (terme déjà établi dans ce
             // dépôt, ex. DistrictInteriorScreenController.cs : "unité = le bloc").
-            // 2026-09-02 : la tuile affichait `name_canonical` (le nom de code, ex. "Verge-A") —
-            // le back sert désormais un nom de fiction en français (`name`, ex. "La Lisière").
-            // CityMapEnums.DisplayName choisit `name`, repli explicite sur `name_canonical`.
-            label.text = $"{CityMapEnums.DisplayName(dto)}    ·    {dto.profile}    ·    {dto.block_count} blocs";
+                // ⛔ RÉCONCILIATION DU MERGE 2026-09-03 — les deux branches avaient raison sur des
+                // choses DIFFÉRENTES, et prendre l'une aurait effacé l'autre en silence.
+                //   · chantier C (2026-09-02) : la tuile affichait `name_canonical` (le nom de CODE,
+                //     ex. « Verge-A ») alors que le back sert un nom de FICTION en français
+                //     (`name`, ex. « La Lisière »). D'où `CityMapEnums.DisplayName`, qui choisit
+                //     `name` avec repli EXPLICITE sur `name_canonical`.
+                //   · lot « ville peinte » (2026-09-03) : le marqueur posé sur la ville a besoin du
+                //     nom SEUL — profil et blocs vivent dans le panneau de détail. D'où `compact`.
+                // Le lot peint, parti d'avant le merge de C, a rétabli `name_canonical` sans le
+                // vouloir : ce n'était pas une décision, c'était son point de départ.
+                // ⇒ On garde la FORME de l'un (`compact`) et la DONNÉE de l'autre (`DisplayName`).
+                // ⚠️ Et ce n'est pas un arbitrage de goût : `CityMapRenderPlayModeTests:74` asserte
+                // `StringAssert.Contains(CityMapEnums.DisplayName(cell.Model), cell.Label.text)` —
+                // garder `name_canonical` ici ferait rougir le rendu dès qu'un district a un nom de
+                // fiction. Le texte reste la donnée servie telle quelle ; les capitales du lettrage
+                // de la maquette sont un STYLE (`FontStyles.UpperCase`, posé par `BuildMarqueur`),
+                // jamais une réécriture de la donnée — `.ToUpperInvariant()` ici l'a fait rougir.
+                label.text = compact
+                    ? CityMapEnums.DisplayName(dto)
+                    : $"{CityMapEnums.DisplayName(dto)}    ·    {dto.profile}    ·    {dto.block_count} blocs";
         }
 
         /// <summary>Wire the heat badge UI (built by the controller). Hidden until heat is set.</summary>

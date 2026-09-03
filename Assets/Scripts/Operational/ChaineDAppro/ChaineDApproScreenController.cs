@@ -65,7 +65,20 @@ namespace MafiaCleanCity.Operational
             // essayé, l'a vu mort, et corrigé par un second appel dans `Start()` — c'est CE
             // patron-là que ce fichier suit, pas celui du brief (voir implementation-notes.md
             // § Deviations).
-            if (racinePleinEcran != null) racinePleinEcran.SetAsLastSibling();
+            // ⛔ L'HÔTE N'EST PAS UN `RectTransform` — `ConstruireLocataire` le crée par un
+            // `new GameObject($"Tenant_{T}")` nu (vérifié le 2026-09-03 sur `main` : zéro
+            // `AddComponent<RectTransform>` dans `AppShell.cs`). On le demande donc
+            // EXPLICITEMENT plutôt que de compter sur l'effet de bord de quelqu'un d'autre :
+            // sans lui, le harnais de capture rend « n'est pas un RectTransform ».
+            RectTransform rtHote = transform as RectTransform;
+            if (rtHote == null) rtHote = gameObject.AddComponent<RectTransform>();
+            rtHote.anchorMin = Vector2.zero;
+            rtHote.anchorMax = Vector2.one;
+            rtHote.offsetMin = Vector2.zero;
+            rtHote.offsetMax = Vector2.zero;
+            // L'ordre porte sur l'HÔTE, pas sur la racine : c'est lui qui est frère des
+            // autres locataires sous `ContentSlot`.
+            transform.SetAsLastSibling();
         }
 
         private string token;
@@ -105,7 +118,7 @@ namespace MafiaCleanCity.Operational
             EnsureEventSystem();
             // Second point d'ordre de fratrie — voir le commentaire de `SetMountParent` : c'est ce
             // second appel, une frame plus tard, qui rend l'ordre STABLE (patron Shop).
-            if (racinePleinEcran != null) racinePleinEcran.SetAsLastSibling();
+            transform.SetAsLastSibling();
         }
 
         private void EnsureInitialized()
@@ -591,7 +604,15 @@ namespace MafiaCleanCity.Operational
                 sc.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
                 sc.referenceResolution = new Vector2(1280, 720);
             }
-            Transform root = mountParent != null ? mountParent : canvas.transform;
+            // ⛔ SOUS L'HÔTE, PAS SOUS `mountParent` — aligné le 2026-09-03 sur le gabarit
+            // corrigé (`Tools/nouvel-ecran.py:515-518`). Bâtir sous `mountParent` faisait
+            // naître la feuille en FRÈRE de l'hôte : toute garde en `GetComponentsInChildren`
+            // sur le composant mesurait alors un sous-arbre VIDE et rapportait « chargement non
+            // abouti » sur un écran parfaitement affiché — payé le même jour sur quatre écrans
+            // d'un coup, avec quatre messages précis, chiffrés et faux. `transform` EST déjà
+            // l'enfant de `ContentSlot` que le shell gouverne ; hors shell on retombe sur le
+            // canvas découvert.
+            Transform root = mountParent != null ? transform : canvas.transform;
 
             // La racine PLEIN ÉCRAN — jamais un panneau intermédiaire : c'est elle qui sert de
             // référence d'échelle à `Px()`/`PxTrait()` (un conteneur plus étroit fausserait

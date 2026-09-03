@@ -14,6 +14,7 @@ using MafiaCleanCity.Account.Profile;
 using MafiaCleanCity.Onboarding;
 using MafiaCleanCity.Operational.Selling;
 using MafiaCleanCity.Account.Settings;
+using MafiaCleanCity.Operational;
 
 namespace MafiaCleanCity.Shell.Tests
 {
@@ -127,6 +128,20 @@ namespace MafiaCleanCity.Shell.Tests
             // à la reproduire pour prouver que les huit écrans RENDENT — c'est une autre
             // propriété, et la confondre ferait passer un défaut de shell pour un défaut d'écran.
             yield return Capturer<ShopScreenController>(shell, "la_vitrine", (e, _) => e.RendusEffectues > 0, echecs);
+            // ㉜ — le tableau de service (chantier F, 2026-09-03). Même prédicat structurel que les
+            // autres : `RendusEffectues` ne monte qu'après le DERNIER `Construire…`, jamais à
+            // l'arrivée d'un champ.
+            // ⚠️ PAS de `nomFeuille` ici, et c'est une propriété, pas un oubli : ㉜ bâtit sa racine
+            // SOUS son hôte (l'hôte est rendu `RectTransform` au montage, cf. `SetMountParent`),
+            // donc le sous-arbre que les gardes mesurent est le bon. C'est le côté « les huit de la
+            // planche 1 » de la frontière que ce harnais nomme, pas le côté « les sept qui
+            // dessinent dans un frère ».
+            // ⚠️ Sur un compte neuf l'écran est dans son état le plus PLAT — les quatre charges
+            // tenues par le joueur, aucune confiée, aucun aperçu de reprise. C'est l'état m-73 de
+            // la planche, et c'est ce qu'un joueur voit au premier jour : la capture n'est donc pas
+            // un cas dégénéré, mais elle n'exerce ni m-75 ni m-76, qui exigent une délégation
+            // réelle — laquelle exige `ELIGIBLE`, qu'aucun compte frais n'atteint. TD-531.
+            yield return Capturer<DelegationScreenController>(shell, "ce_que_vous_avez_confie", (e, _) => e.RendusEffectues > 0, echecs);
 
             Assert.IsEmpty(echecs, "écrans en défaut :\n  · " + string.Join("\n  · ", echecs));
         }

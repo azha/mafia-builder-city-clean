@@ -24,12 +24,16 @@ namespace MafiaCleanCity.Shell.Tests
     // 2026-09-01, jalon 09-05) — ni que leur contenu est complet. Ce qui est capturé sans données
     // est déclaré ci-dessous, plutôt que laissé à l'image de le taire.
     //
-    // ⚠️ `nomFeuille` N'EST PAS FACULTATIF ICI. Ces écrans bâtissent leur racine sous
-    // `mountParent`, c'est-à-dire en FRÈRE de l'hôte que `ConstruireLocataire` leur crée, et non
-    // en enfant. Toute garde écrite en `GetComponentsInChildren` sur le composant mesure donc un
-    // sous-arbre VIDE et rapporte « chargement non abouti » sur un écran parfaitement affiché.
-    // Le défaut a été payé le 2026-09-03 sur quatre écrans d'un coup, avec quatre messages
-    // précis, chiffrés et faux. On NOMME la feuille.
+    // ⚠️ AUCUN `nomFeuille` DANS CETTE PLANCHE, et il faut savoir pourquoi avant d'en ajouter un.
+    // Le défaut d'origine : le gabarit faisait bâtir la racine sous `mountParent`, donc en FRÈRE
+    // de l'hôte, et toute garde en `GetComponentsInChildren` sur le composant mesurait un
+    // sous-arbre VIDE — quatre écrans rapportés « chargement non abouti » alors qu'ils étaient
+    // affichés, avec quatre messages précis, chiffrés et faux. `nomFeuille` était le contournement.
+    // Le gabarit corrigé (merge du 2026-09-03) bâtit sous `transform` : la racine est ENFANT de
+    // l'hôte, les gardes la voient, et passer `nomFeuille` ferait au contraire échouer la capture
+    // sur « feuille introuvable parmi les frères ». ⇒ Un écran aligné sur le gabarit n'en veut pas ;
+    // un écran ancien qui bâtit encore sous `mountParent` en a besoin. Le paramètre décrit une
+    // STRUCTURE, jamais une préférence : le choisir demande de regarder où l'écran pose sa racine.
     [Category("PhotoChantierC")]
     public class PlancheChantierCCapturePlayModeTests
     {
@@ -83,8 +87,13 @@ namespace MafiaCleanCity.Shell.Tests
             // expirer la capture au lieu de montrer l'écran d'erreur — qui est un écran réel.
             yield return CaptureSousShell.CapturerLocataire<ChaineDApproScreenController>(
                 shell, "la_chaine_d_appro",
-                (e, _) => e.DernierChargement != null || e.DerniereErreur != null, echecs,
-                nomFeuille: "ChaineDApproRoot");
+                (e, _) => e.DernierChargement != null || e.DerniereErreur != null, echecs);
+            // ⚠️ PAS de `nomFeuille` — et c'est le contraire de ce que je croyais ce matin.
+            // Le gabarit corrigé (merge du 2026-09-03) fait bâtir la racine sous `transform`,
+            // donc sous l'HÔTE : elle est son ENFANT, et les gardes en `GetComponentsInChildren`
+            // la trouvent. `nomFeuille` cherche parmi les FRÈRES de l'hôte — le passer ici ferait
+            // désormais échouer la capture sur « feuille introuvable ». *Le paramètre qui sauvait
+            // hier casse aujourd'hui : il décrit une structure, pas une préférence.*
 
             // ㉘ ㉛ ㉙ — ajoutés ici au fil du chantier, un appel chacun, jamais un test de plus.
 
