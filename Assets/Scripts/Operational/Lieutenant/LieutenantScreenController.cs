@@ -68,6 +68,49 @@ namespace MafiaCleanCity.Operational.Lieutenant
         public string AuthError { get; private set; }
         /// <summary>The lieutenant_id returned by the last successful Recruit (a uuid; null until recruited).</summary>
         public string LastRecruitedId { get; private set; }
+
+        /// <summary>La hauteur RÉELLE de la section « éditeur de règles » (⑧ « Signer l'ordre »).
+        ///
+        /// ⛔ EXISTE PARCE QU'UN CHIFFRE A ÉTÉ MAL LU, ET LE CHIFFRE ÉTAIT JUSTE. Une capture de ⑧
+        /// a mesuré `BuilderSection` à **100×100** — la taille par défaut d'un RectTransform — et
+        /// le diagnostic proposé était « soit elle n'est pas la dernière section, soit elle n'est
+        /// pas mise en page » (TD-575). C'est la seconde, mais PAS comme un défaut : elle n'est pas
+        /// mise en page **par conception**, parce que `MajVisibiliteDetail()` lui pose
+        /// `ignoreLayout = true` tant qu'aucun lieutenant n'est ouvert (`LastRecruitedId` vide).
+        /// Un enfant en `ignoreLayout` est ignoré par son `VerticalLayoutGroup` : il GARDE donc
+        /// 100×100, exactement, et c'est le comportement voulu.
+        /// ⇒ *Le 100×100 n'était pas le défaut : c'était la trace du détail replié.* La capture
+        ///   partait sans avoir ouvert personne — défiler amenait le roster parce que l'éditeur
+        ///   était à `alpha = 0` et hors flux, pas parce qu'il était mal placé.
+        /// ⇒ Ce crochet donne la grandeur qui DISCRIMINE : un prédicat de capture peut exiger que
+        ///   l'éditeur soit réellement déplié avant de photographier, au lieu de vérifier qu'il
+        ///   existe. *Une garde qui mesure « présent » ne peut pas voir « replié ».*</summary>
+        public float HauteurEditeurDeRegles => builderSection != null ? builderSection.rect.height : 0f;
+
+        /// <summary>Amène l'éditeur de règles DANS LE CADRE — et c'est une propriété différente de
+        /// « il est déplié ».
+        ///
+        /// ⛔ MESURÉ, ET C'EST LE PIÈGE LE PLUS FIN DE CETTE SÉRIE. Un prédicat de capture exigeait
+        /// `HauteurEditeurDeRegles > 100` : il est passé, le test est sorti VERT, et l'image
+        /// montrait l'organigramme de la famille — le HAUT de la feuille. L'éditeur était bien
+        /// déplié, bien mis en page, et à mille pixels sous la ligne de flottaison.
+        /// ⇒ *Une garde qui prouve qu'un objet EXISTE ne prouve pas qu'il est DANS LE CADRE.* Sur
+        ///   un écran défilant, « rendu » et « visible » sont deux mesures, et la capture ne
+        ///   photographie que la seconde. J'avais corrigé la cause précédente et hérité de la
+        ///   suivante, un cran plus bas — le défaut migre vers l'intérieur.
+        /// ⚠️ Renvoie `false` s'il n'y a rien à faire défiler : l'appelant doit pouvoir distinguer
+        /// « amené dans le cadre » de « il n'y avait pas de vue défilante », au lieu de croire que
+        /// le geste a réussi parce qu'il n'a pas échoué.</summary>
+        public bool FaireDefilerVersEditeur()
+        {
+            // Le champ, jamais une recherche : voir sa note à la construction.
+            ScrollRect sr = defilementFeuille;
+            if (sr == null || sr.content == null) return false;
+            Canvas.ForceUpdateCanvases();
+            sr.verticalNormalizedPosition = 0f;   // 0 = le BAS du contenu, où vit l'éditeur
+            Canvas.ForceUpdateCanvases();
+            return true;
+        }
         /// <summary>A short status string reporting the last outcome (recruited / a readable error — never a raw code).</summary>
         public string LastOutcome { get; private set; }
         /// <summary>The last-fetched lieutenant band projection (T2 test hook): the closed-domain bands + the
@@ -200,6 +243,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
 
         // ---- T3 Rule-builder section ------------------------------------------
         private readonly List<RuleRow> rules = new List<RuleRow>();  // the authored rule model (test hook: Rules/SetRules).
+        private ScrollRect defilementFeuille;  // la vue défilante de la feuille — retenue, jamais cherchée.
         private RectTransform builderSection;  // holds the rule-builder label + the per-rule rows + the +Add/Validate/Attach.
         private RectTransform ruleRows;        // the container the per-rule editor rows render into.
         private RectTransform diagnosticsArea; // where RenderDiagnostics lists the 422 diagnostics (cleared on success).
@@ -1072,6 +1116,16 @@ namespace MafiaCleanCity.Operational.Lieutenant
             RectTransform vueRt = (RectTransform)vue.transform;
             Stretch(vueRt);
             var scroll = vue.AddComponent<ScrollRect>();
+            // ⛔ RETENU DANS UN CHAMP, ET C'EST UN CORRECTIF. `FaireDefilerVersEditeur` le
+            // cherchait par `GetComponentInChildren<ScrollRect>` DEPUIS LE CONTRÔLEUR — or le
+            // contrôleur vit sur l'HÔTE et cette feuille est un FRÈRE de l'hôte, pas son enfant.
+            // La recherche balayait donc un sous-arbre VIDE et rendait toujours `false`, en
+            // silence : le prédicat de capture n'a jamais abouti, 20 s durant.
+            // ⇒ C'est exactement la frontière que le harnais de capture nomme (« 7 locataires sur
+            //   23 dessinent dans un frère de leur hôte »), revenue mordre dans MON helper une
+            //   heure après que je l'aie contournée avec `nomFeuille`. *Contourner une frontière
+            //   à un endroit ne la déplace pas : elle attend au suivant.*
+            defilementFeuille = scroll;
             scroll.horizontal = false;
             scroll.movementType = ScrollRect.MovementType.Clamped;
             scroll.scrollSensitivity = 30f;
