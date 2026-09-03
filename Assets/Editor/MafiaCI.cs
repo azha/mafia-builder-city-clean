@@ -121,8 +121,25 @@ public static class MafiaCI
     // ⚠️ `ScreenC2` et `FiliereSonde` sont inscrites, elles, parce qu'elles ont tourné VERTES dans
     // ce même run (28 passés / 1 échec, l'échec étant le seul ci-dessus). *Le même run tranche
     // dans les deux sens : il inscrit ce qui passe et refuse ce qui tombe.*
+    // ⛔⛔ `CaptureJournal` / `CaptureFiliere` / `CaptureDossier` NON INSCRITES — elles passent
+    // SEULES et tombent EN GROUPE, et je n'ai pas su nommer le coupable. Les quatre mesures, dans
+    // l'ordre où je les ai prises (2026-09-03) :
+    //   les 3 + `Joignabilite` + `ScreenC2`  → 12 passés / **2 échecs** (㊴ et ㊳ « n'ont RIEN chargé »)
+    //   les 2 en défaut, SEULES              →  2 passés / 0 échec
+    //   + `Joignabilite` seulement           → 11 passés / 0 échec
+    //   + `ScreenC2` seulement               →  4 passés / 0 échec
+    //   + `CaptureFiliere` seulement         →  3 passés / 0 échec
+    // ⇒ Aucune addition UNIQUE ne reproduit. *Quand ça ne reproduit pas, c'est une information* :
+    //   la cause est DIFFUSE — de l'état accumulé sur un run long (le run rouge en portait 14, les
+    //   verts 2 à 11), pas un co-tenant identifiable. Les gardes qui tombent sont celles que le
+    //   chantier B a écrites aujourd'hui contre le vert à vide, et elles font exactement leur
+    //   travail : elles refusent de photographier un écran qui n'a pas chargé.
+    // ⇒ Les inscrire ferait tomber le juge, qui exécute justement des runs longs. Elles restent
+    //   dehors jusqu'à ce que la reproduction soit construite — et construire la reproduction fait
+    //   partie du correctif, sinon le prochain lot repaie ces quatre runs.
+    // ⚠️ Ce n'est PAS un défaut des écrans : ils chargent et se capturent correctement en isolé.
     private static readonly string[] Categories =
-        { "W4P4a", "W3UDA", "W3U1", "W3U2", "Charpente", "DemoIdentity", "ScreenB3", "ShellSurimpression", "CaptureDistrict", "CaptureReputation", "CaptureFamille", "Joignabilite", "ScreenCarte", "CaptureCarte", "EcranAutonomy", "EcranExceptions", "EcranRegleLieutenant", "EcranTenureLieutenant", "EcranUiLieutenant", "EcranRegleTier2", "EcranAppro", "ScreenB7", "ScreenC1", "ScreenC6", "EcranDelegation", "ScreenC2", "CaptureJournal", "CaptureFiliere", "CaptureDossier" };
+        { "W4P4a", "W3UDA", "W3U1", "W3U2", "Charpente", "DemoIdentity", "ScreenB3", "ShellSurimpression", "CaptureDistrict", "CaptureReputation", "CaptureFamille", "Joignabilite", "ScreenCarte", "CaptureCarte", "EcranAutonomy", "EcranExceptions", "EcranRegleLieutenant", "EcranTenureLieutenant", "EcranUiLieutenant", "EcranRegleTier2", "EcranAppro", "ScreenB7", "ScreenC1", "ScreenC6", "EcranDelegation", "ScreenC2" };
     // ⚠️ UNION AU MERGE (3e fois sur cette ligne le 2026-09-03) — et la règle est
     // toujours la même : on unit ce qui est PORTÉ, jamais les deux listes. Une entrée
     // sans porteur affirme une couverture qui n'existe pas ; une entrée portée qu'on
