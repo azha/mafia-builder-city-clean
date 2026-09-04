@@ -383,7 +383,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
         public IEnumerator RecruitChosen()
         {
             EnsureInitialized();
-            if (!IsAuthenticated) { SetOutcome("Connectez-vous d'abord.", AccentSevere); yield break; }
+            if (!IsAuthenticated) { SetOutcome(Lib("Connectez-vous d'abord."), AccentSevere); yield break; }
 
             string archetype = pickedArchetype;
             string id = null;
@@ -418,7 +418,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             {
                 // Surface the readable error message (F2) — the raw code is kept on the log line only.
                 Debug.LogError($"[Lieutenant] recruit failed ({errCode}): {errMsg}");
-                SetOutcome(errMsg ?? "Échec du recrutement.", AccentSevere);
+                SetOutcome(errMsg ?? Lib("Échec du recrutement."), AccentSevere);
             }
         }
 
@@ -438,8 +438,8 @@ namespace MafiaCleanCity.Operational.Lieutenant
         public IEnumerator RefreshBands()
         {
             EnsureInitialized();
-            if (!IsAuthenticated) { SetOutcome("Connectez-vous d'abord.", AccentSevere); yield break; }
-            if (string.IsNullOrEmpty(LastRecruitedId)) { SetOutcome("Recrutez d'abord un lieutenant.", AccentModerate); yield break; }
+            if (!IsAuthenticated) { SetOutcome(Lib("Connectez-vous d'abord."), AccentSevere); yield break; }
+            if (string.IsNullOrEmpty(LastRecruitedId)) { SetOutcome(Lib("Recrutez d'abord un lieutenant."), AccentModerate); yield break; }
 
             yield return client.GetBands(LastRecruitedId, Token,
                 bands => { CurrentBands = bands; },
@@ -447,7 +447,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
                 {
                     // F2: surface the readable error — the raw code is kept on the log line only.
                     Debug.LogError($"[Lieutenant] status failed ({code}): {msg}");
-                    SetOutcome("Échec de l'état — " + msg, AccentSevere);
+                    SetOutcome(Lib("Échec de l'état — ") + msg, AccentSevere);
                 });
 
             // The GET is a network round-trip; bail before touching UI if torn down by an inter-fixture teardown.
@@ -511,7 +511,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
         public IEnumerator RefreshRoster()
         {
             EnsureInitialized();
-            if (!IsAuthenticated) { SetOutcome("Connectez-vous d'abord.", AccentSevere); yield break; }
+            if (!IsAuthenticated) { SetOutcome(Lib("Connectez-vous d'abord."), AccentSevere); yield break; }
 
             yield return client.ListLieutenants(Token,
                 rows => { CurrentRoster = rows; RenderRoster(); },
@@ -519,7 +519,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
                 {
                     // F2: surface the readable error — the raw code is kept on the log line only.
                     Debug.LogError($"[Lieutenant] roster failed ({code}): {msg}");
-                    SetOutcome("Échec du chargement de la famille — " + msg, AccentSevere);
+                    SetOutcome(Lib("Échec du chargement de la famille — ") + msg, AccentSevere);
                 });
         }
 
@@ -551,8 +551,8 @@ namespace MafiaCleanCity.Operational.Lieutenant
         {
             EnsureInitialized();
             if (Destroyed) return;
-            if (!IsAuthenticated) { SetOutcome("Connectez-vous d'abord.", AccentSevere); return; }
-            if (string.IsNullOrEmpty(LastRecruitedId)) { SetOutcome("Recrutez ou ouvrez d'abord un lieutenant.", AccentModerate); return; }
+            if (!IsAuthenticated) { SetOutcome(Lib("Connectez-vous d'abord."), AccentSevere); return; }
+            if (string.IsNullOrEmpty(LastRecruitedId)) { SetOutcome(Lib("Recrutez ou ouvrez d'abord un lieutenant."), AccentModerate); return; }
             ReassignConfirmOpen = true;
             RenderReassignConfirm();
         }
@@ -574,9 +574,9 @@ namespace MafiaCleanCity.Operational.Lieutenant
         public IEnumerator ReassignChosen()
         {
             EnsureInitialized();
-            if (!IsAuthenticated) { SetOutcome("Connectez-vous d'abord.", AccentSevere); yield break; }
-            if (string.IsNullOrEmpty(LastRecruitedId)) { SetOutcome("Recrutez ou ouvrez d'abord un lieutenant.", AccentModerate); yield break; }
-            if (string.IsNullOrEmpty(reassignBuildingId)) { SetOutcome("Choisissez un bâtiment de destination.", AccentModerate); yield break; }
+            if (!IsAuthenticated) { SetOutcome(Lib("Connectez-vous d'abord."), AccentSevere); yield break; }
+            if (string.IsNullOrEmpty(LastRecruitedId)) { SetOutcome(Lib("Recrutez ou ouvrez d'abord un lieutenant."), AccentModerate); yield break; }
+            if (string.IsNullOrEmpty(reassignBuildingId)) { SetOutcome(Lib("Choisissez un bâtiment de destination."), AccentModerate); yield break; }
 
             // A 2-building archetype sends its new target; a single-building archetype omits it (pass null), like recruit.
             string target = RuleModel.NeedsTarget(CurrentArchetype) ? reassignTargetBuildingId : null;
@@ -593,7 +593,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             if (moved)
             {
                 ReassignConfirmOpen = false;
-                SetOutcome("Réaffecté — ancienneté remise à zéro, période de stabilisation.", AccentMild);
+                SetOutcome(Lib("Réaffecté — ancienneté remise à zéro, période de stabilisation."), AccentMild);
                 // Pull the fresh bands so the card reflects the reset (tenure_bucket → FRESH, op_state_band → SETTLING).
                 yield return RefreshBands();
                 if (!Destroyed)
@@ -609,7 +609,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             {
                 // Surface the readable error message (F2) — the raw code is kept on the log line only.
                 Debug.LogError($"[Lieutenant] reassign failed ({errCode}): {errMsg}");
-                SetOutcome(errMsg ?? "Échec de la réaffectation.", AccentSevere);
+                SetOutcome(errMsg ?? Lib("Échec de la réaffectation."), AccentSevere);
             }
         }
 
@@ -699,8 +699,8 @@ namespace MafiaCleanCity.Operational.Lieutenant
         public IEnumerator ValidateRules()
         {
             EnsureInitialized();
-            if (!IsAuthenticated) { SetOutcome("Connectez-vous d'abord.", AccentSevere); yield break; }
-            if (string.IsNullOrEmpty(LastRecruitedId)) { SetOutcome("Recrutez d'abord un lieutenant.", AccentModerate); yield break; }
+            if (!IsAuthenticated) { SetOutcome(Lib("Connectez-vous d'abord."), AccentSevere); yield break; }
+            if (string.IsNullOrEmpty(LastRecruitedId)) { SetOutcome(Lib("Recrutez d'abord un lieutenant."), AccentModerate); yield break; }
 
             string source = RuleModel.SerializeRules(rules);
             yield return client.ValidateScript(LastRecruitedId, source, Token,
@@ -708,7 +708,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
                 {
                     if (Destroyed) return;
                     ClearDiagnostics();
-                    SetOutcome("Script valide ✓", AccentMild);
+                    SetOutcome(Lib("Script valide ✓"), AccentMild);
                 },
                 onInvalid: (code, details, msg) =>
                 {
@@ -724,8 +724,8 @@ namespace MafiaCleanCity.Operational.Lieutenant
         public IEnumerator AttachRules()
         {
             EnsureInitialized();
-            if (!IsAuthenticated) { SetOutcome("Connectez-vous d'abord.", AccentSevere); yield break; }
-            if (string.IsNullOrEmpty(LastRecruitedId)) { SetOutcome("Recrutez d'abord un lieutenant.", AccentModerate); yield break; }
+            if (!IsAuthenticated) { SetOutcome(Lib("Connectez-vous d'abord."), AccentSevere); yield break; }
+            if (string.IsNullOrEmpty(LastRecruitedId)) { SetOutcome(Lib("Recrutez d'abord un lieutenant."), AccentModerate); yield break; }
 
             string source = RuleModel.SerializeRules(rules);
             bool attached = false;
@@ -735,7 +735,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
                     if (Destroyed) return;
                     attached = true;
                     ClearDiagnostics();
-                    SetOutcome("Attaché ✓", AccentMild);
+                    SetOutcome(Lib("Attaché ✓"), AccentMild);
                 },
                 onInvalid: (code, details, msg) =>
                 {
@@ -888,7 +888,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
         {
             if (Destroyed) return;
             bool empty = string.IsNullOrEmpty(source);
-            string shown = empty ? "(aucun script pour l'instant)" : source;
+            string shown = empty ? Lib("(aucun script pour l'instant)") : source;
             if (scriptSourceText != null)
             {
                 scriptSourceText.text = shown;
@@ -1362,7 +1362,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
         // pattern. The button drives RecruitChosen() as a coroutine (recruits the PICKED archetype).
         private void BuildRecruitSection()
         {
-            NewSectionLabel(actionBar, "RECRUTER — choisir un rôle et affecter");
+            NewSectionLabel(actionBar, Lib("RECRUTER — choisir un rôle et affecter"));
 
             // Archetype picker — a tap-to-cycle button over the 6 recruitable archetypes (RuleModel.Archetypes). Advancing
             // it changes PickedArchetype, which re-renders this section (target row + button label follow) + (pre-recruit)
@@ -1389,7 +1389,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
 
             // Assigned-building row caption (the field itself is configured via the SerializeField / AssignedBuildingId hook;
             // the M1 demo seeds it, so the screen does not need a free-text uuid editor here — the row is a readable label).
-            NewSectionLabel(actionBar, "Bâtiment affecté");
+            NewSectionLabel(actionBar, Lib("Bâtiment affecté"));
 
             // Conditional target-building row — built once, shown/hidden by RenderRecruitSection per NeedsTarget(picked).
             targetRow = NewUI("TargetRow", actionBar);
@@ -1400,7 +1400,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             tvlg.childForceExpandWidth = true;
             tvlg.childForceExpandHeight = false;
             AddLayoutElement(targetRow, flexibleHeight: 0);
-            NewSectionLabel(targetRow.transform, "Bâtiment cible (destination / planque)");
+            NewSectionLabel(targetRow.transform, Lib("Bâtiment cible (destination / planque)"));
 
             recruitButton = AddActionButton(actionBar, RecruitButtonText(pickedArchetype), () => StartCoroutine(RecruitChosen()));
             recruitButtonLabel = recruitButton.GetComponentInChildren<TextMeshProUGUI>();
@@ -1442,14 +1442,14 @@ namespace MafiaCleanCity.Operational.Lieutenant
         // Refresh button drives RefreshBands() as a coroutine. Mirrors the building-card action-button + status-line style.
         private void BuildStatusSection()
         {
-            NewSectionLabel(statusSection, "ÉTAT — lieutenant délégué");
+            NewSectionLabel(statusSection, Lib("ÉTAT — lieutenant délégué"));
 
             refreshButton = AddActionButton(statusSection, Lib("Rafraîchir"), () => StartCoroutine(RefreshBands()));
 
             // Script-source sub-label + the readable DSL block (the ONE allowed non-band field). Empty until a script is
             // attached (T3); shows "(aucun script pour l'instant)" so a fresh recruit reads clearly.
-            NewSectionLabel(statusSection, "Script de conduite");
-            scriptSourceText = NewText("ScriptSource", statusSection, "(aucun script pour l'instant)", 13, TextAlignmentOptions.TopLeft);
+            NewSectionLabel(statusSection, Lib("Script de conduite"));
+            scriptSourceText = NewText("ScriptSource", statusSection, Lib("(aucun script pour l'instant)"), 13, TextAlignmentOptions.TopLeft);
             scriptSourceText.color = DesignTokens.Current.onSurfaceSecondaryAlt;
             scriptSourceText.fontStyle = FontStyles.Italic;
             scriptSourceText.overflowMode = TextOverflowModes.Overflow;
@@ -1573,7 +1573,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             v.childForceExpandHeight = false;
             AddLayoutElement(bloc, flexibleWidth: 1);
 
-            TextMeshProUGUI titre = NewText("Titre", bloc.transform, "LA FAMILLE",
+            TextMeshProUGUI titre = NewText("Titre", bloc.transform, Lib("LA FAMILLE"),
                 FXSerif(RefFamilleTitreTaille), TextAlignmentOptions.Left);
             titre.font = DesignTokens.Current.hudSerifFont;
             // ⚠️ CRÉNAGE COUPÉ, ET C'EST LA PAIRE « LA » QUI L'IMPOSE. Un juge ⊥ a décomposé le
@@ -1588,7 +1588,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             titre.characterSpacing = 19f;           // .16em + les 17 % d'approche que le juge a comptés
             titre.color = DesignTokens.Current.hudMoneyGold;   // --or-vif #f2c96b
             AddLayoutElement(titre.gameObject, minHeight: FX(34), flexibleHeight: 0);   // boîte de ligne réelle
-            TrackText(titre, "LA FAMILLE");
+            TrackText(titre, Lib("LA FAMILLE"));
 
             familySubtitleText = NewText("SousTitre", bloc.transform, "",
                 FX(RefFamilleSousTitreTaille), TextAlignmentOptions.Left);
@@ -1618,6 +1618,12 @@ namespace MafiaCleanCity.Operational.Lieutenant
         {
             if (familySubtitleText == null) return;
             int n = CurrentRoster == null ? 0 : CurrentRoster.Length;
+            // ⛔ PAS DE CLÉ ICI : c'est un PLURIEL CALCULÉ. `Libelle.De` dérive la clé du
+            // littéral, donc « 3 LIEUTENANTS » fabriquerait `…_3_lieutenants`, « 4 » une autre —
+            // une clé par effectif, dont aucune ne serait jamais servie. Et « LIEUTENANTS » seul
+            // est un FRAGMENT concaténé à un nombre, pas une phrase fermée.
+            // ⇒ Un pluriel relève d'ICU (`{n, plural, one{…} other{…}}`), donc d'une clé À
+            //   PARAMÈTRES côté back — le registre en sert déjà de cette forme. TD-542.
             familySubtitleText.text = n == 1 ? "1 LIEUTENANT" : n + " LIEUTENANTS";
         }
 
@@ -1855,10 +1861,10 @@ namespace MafiaCleanCity.Operational.Lieutenant
 
             if (CurrentRoster == null || CurrentRoster.Length == 0)
             {
-                TextMeshProUGUI empty = NewText("NoLieutenants", rosterRows, "Aucun lieutenant recruté", 12, TextAlignmentOptions.Center);
+                TextMeshProUGUI empty = NewText("NoLieutenants", rosterRows, Lib("Aucun lieutenant recruté"), 12, TextAlignmentOptions.Center);
                 empty.color = DesignTokens.Current.hudCremeSecondary;
                 AddLayoutElement(empty.gameObject, minHeight: 34, flexibleHeight: 0);
-                TrackText(empty, "Aucun lieutenant recruté");
+                TrackText(empty, Lib("Aucun lieutenant recruté"));
                 BuildRecruitCta(rosterRows);
                 RefreshFamilySubtitle();
                 return;
@@ -2295,11 +2301,11 @@ namespace MafiaCleanCity.Operational.Lieutenant
             AddLayoutElement(role.gameObject, minHeight: FX(34), flexibleHeight: 0);
             TrackText(role, "VOUS");
 
-            TextMeshProUGUI sous = NewText("Sous", bloc.transform, "LE DON", FamilleRoleTaille, TextAlignmentOptions.Left);
+            TextMeshProUGUI sous = NewText("Sous", bloc.transform, Lib("LE DON"), FamilleRoleTaille, TextAlignmentOptions.Left);
             sous.characterSpacing = 16f;
             sous.color = DesignTokens.Current.hudCremeSecondary;
             AddLayoutElement(sous.gameObject, minHeight: FX(22), flexibleHeight: 0);
-            TrackText(sous, "LE DON");
+            TrackText(sous, Lib("LE DON"));
         }
 
         /// <summary>Un rang de lieutenant : médaillon, nom (le libellé FR de l'archétype — la mesure
@@ -2406,11 +2412,11 @@ namespace MafiaCleanCity.Operational.Lieutenant
             AddLayoutElement(etatTxt.gameObject, minHeight: FX(27), flexibleHeight: 0);
             TrackText(etatTxt, etat);
 
-            TextMeshProUGUI etatLbl = NewText("EtatLibelle", etatBloc.transform, "ÉTAT", FamilleEtatLibelleTaille, TextAlignmentOptions.Right);
+            TextMeshProUGUI etatLbl = NewText("EtatLibelle", etatBloc.transform, Lib("ÉTAT"), FamilleEtatLibelleTaille, TextAlignmentOptions.Right);
             etatLbl.characterSpacing = 10f;
             etatLbl.color = DesignTokens.Current.hudCremeSecondary;
             AddLayoutElement(etatLbl.gameObject, minHeight: FX(19), flexibleHeight: 0);
-            TrackText(etatLbl, "ÉTAT");
+            TrackText(etatLbl, Lib("ÉTAT"));
 
             string id = row.lieutenant_id;
             Button b = rang.AddComponent<Button>();
@@ -2462,10 +2468,10 @@ namespace MafiaCleanCity.Operational.Lieutenant
             img.raycastTarget = false;
             AddLayoutElement(vide, minHeight: FX(71), flexibleHeight: 0);   // .vide mesuré 71,1 u par le juge ⊥
 
-            TextMeshProUGUI t = NewText("Texte", vide.transform, "Aucune équipe rattachée", FamilleVideTaille, TextAlignmentOptions.Center);
+            TextMeshProUGUI t = NewText("Texte", vide.transform, Lib("Aucune équipe rattachée"), FamilleVideTaille, TextAlignmentOptions.Center);
             t.color = DesignTokens.Current.hudCremeSecondary;
             Stretch((RectTransform)t.transform);
-            TrackText(t, "Aucune équipe rattachée");
+            TrackText(t, Lib("Aucune équipe rattachée"));
         }
 
         /// <summary>L'appel à l'action du bas — la maquette le montre en pointillés, pleine largeur.</summary>
@@ -2495,10 +2501,10 @@ namespace MafiaCleanCity.Operational.Lieutenant
             img.color = Color.white;
             AddLayoutElement(cta, minHeight: FX(71), flexibleHeight: 0);
 
-            TextMeshProUGUI t = NewText("Texte", cta.transform, "Recruter un nouveau lieutenant", FamilleVideTaille, TextAlignmentOptions.Center);
+            TextMeshProUGUI t = NewText("Texte", cta.transform, Lib("Recruter un nouveau lieutenant"), FamilleVideTaille, TextAlignmentOptions.Center);
             t.color = DesignTokens.Current.hudCremeSecondary;
             Stretch((RectTransform)t.transform);
-            TrackText(t, "Recruter un nouveau lieutenant");
+            TrackText(t, Lib("Recruter un nouveau lieutenant"));
 
             // Le CTA DÉPLIE le panneau de recrutement. Sans ce câblage il serait un décor : un
             // bouton qui ne fait rien est pire qu'un bouton absent — il promet une action.
@@ -2598,8 +2604,8 @@ namespace MafiaCleanCity.Operational.Lieutenant
         // SerializeField (the M1 demo seeds it) — the screen shows a readable caption, mirroring the recruit section's idiom.
         private void BuildReassignSection()
         {
-            NewSectionLabel(reassignSection, "RÉAFFECTER — déplacer ce lieutenant (remet l'ancienneté à zéro)");
-            NewSectionLabel(reassignSection, "Nouveau bâtiment");
+            NewSectionLabel(reassignSection, Lib("RÉAFFECTER — déplacer ce lieutenant (remet l'ancienneté à zéro)"));
+            NewSectionLabel(reassignSection, Lib("Nouveau bâtiment"));
 
             // Conditional new-target row — shown/hidden per NeedsTarget(CurrentArchetype) in RenderReassignSection.
             reassignTargetRow = NewUI("ReassignTargetRow", reassignSection);
@@ -2610,7 +2616,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             tvlg.childForceExpandWidth = true;
             tvlg.childForceExpandHeight = false;
             AddLayoutElement(reassignTargetRow, flexibleHeight: 0);
-            NewSectionLabel(reassignTargetRow.transform, "Nouveau bâtiment cible (destination / planque)");
+            NewSectionLabel(reassignTargetRow.transform, Lib("Nouveau bâtiment cible (destination / planque)"));
 
             // The "Reassign…" button opens the confirmation (it does NOT move immediately — the player confirms with the
             // projected cost in view). The confirmation's own Confirm button drives ReassignChosen().
@@ -2765,11 +2771,11 @@ namespace MafiaCleanCity.Operational.Lieutenant
 
             if (budgetBands.Count == 0)
             {
-                TextMeshProUGUI empty = NewText("NoAutonomy", autonomyRows, "Aucun budget d'autonomie pour l'instant", 13, TextAlignmentOptions.Left);
+                TextMeshProUGUI empty = NewText("NoAutonomy", autonomyRows, Lib("Aucun budget d'autonomie pour l'instant"), 13, TextAlignmentOptions.Left);
                 empty.color = DesignTokens.Current.onSurfaceSecondaryAlt;
                 empty.fontStyle = FontStyles.Italic;
                 AddLayoutElement(empty.gameObject, minHeight: 22, flexibleHeight: 0);
-                TrackText(empty, "Aucun budget d'autonomie pour l'instant");
+                TrackText(empty, Lib("Aucun budget d'autonomie pour l'instant"));
                 return;
             }
 
@@ -2840,12 +2846,12 @@ namespace MafiaCleanCity.Operational.Lieutenant
                 // CHROME (the player reads it in the detail HUD / logs; the PlayMode test asserts it via LastDecisionError).
                 // Pass a band-safe outcome label through SetOutcome (→ renderedTexts) so the scan corpus stays digit-free;
                 // the raw error stays in LastDecisionError ONLY (not tracked into the band corpus).
-                SetOutcome("Échec de la décision.", AccentSevere);
+                SetOutcome(Lib("Échec de la décision."), AccentSevere);
                 if (decisionErrorText != null) decisionErrorText.text = LastDecisionError ?? "";
                 yield break;
             }
             if (decisionErrorText != null) decisionErrorText.text = "";
-            SetOutcome("Décision appliquée ✓", AccentMild);
+            SetOutcome(Lib("Décision appliquée ✓"), AccentMild);
             yield return RefreshAutonomy();
         }
 
@@ -2884,7 +2890,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
         // is not violated (the values shown are the player's, like script_source).
         private void BuildRuleBuilderSection()
         {
-            NewSectionLabel(builderSection, "ÉDITEUR DE RÈGLES — écrire un script de conduite");
+            NewSectionLabel(builderSection, Lib("ÉDITEUR DE RÈGLES — écrire un script de conduite"));
 
             // Phase-20: the tier badge — carries the tier digit (intentional chrome): component-tracked only,
             // excluded from the scan corpus (the locked-teaser technique).
@@ -2960,7 +2966,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
         // TextMeshProUGUI COMPONENT (so a re-render can find it), never the string. The teaser is built once (static catalogues).
         private void BuildLockedTeaser()
         {
-            NewSectionLabel(builderSection, "🔒 Verrouillé — se débloque avec la progression");
+            NewSectionLabel(builderSection, Lib("🔒 Verrouillé — se débloque avec la progression"));
 
             GameObject teaser = NewUI("LockedTeaser", builderSection);
             VerticalLayoutGroup tvlg = teaser.AddComponent<VerticalLayoutGroup>();
@@ -3029,7 +3035,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
 
             if (rules.Count == 0)
             {
-                TextMeshProUGUI empty = NewText("NoRules", ruleRows, "(aucune règle — touchez « + Ajouter une règle »)", 13, TextAlignmentOptions.Left);
+                TextMeshProUGUI empty = NewText("NoRules", ruleRows, Lib("(aucune règle — touchez « + Ajouter une règle »)"), 13, TextAlignmentOptions.Left);
                 empty.color = DesignTokens.Current.onSurfaceSecondaryAlt;
                 empty.fontStyle = FontStyles.Italic;
                 AddLayoutElement(empty.gameObject, minHeight: 22, flexibleHeight: 0);
@@ -3383,7 +3389,8 @@ namespace MafiaCleanCity.Operational.Lieutenant
             hlg.childForceExpandHeight = true;
             AddLayoutElement(wrap, minHeight: 28, minWidth: 150, flexibleWidth: 1);
 
-            TextMeshProUGUI cap = NewText("PrioCap", wrap.transform, "P " + initial, 13, TextAlignmentOptions.Left);
+            TextMeshProUGUI cap = NewText("PrioCap", wrap.transform, "P " + initial /* ⛔ « P » est un GLYPHE de préfixe, pas un mot : rien à traduire, et une clé
+                   dérivée d'un fragment d'une lettre serait du bruit dans le bundle */, 13, TextAlignmentOptions.Left);
             cap.color = TextPrimary;
             AddLayoutElement(cap.gameObject, minWidth: 48, flexibleWidth: 0);
 
