@@ -48,6 +48,17 @@ namespace MafiaCleanCity.Operational.Tests
             hote = null;
         }
 
+        /// <summary>⚠️ CE `SignUp` EST DÉLIBÉRÉ, et il n'écrase l'identité de personne — précision
+        /// à écrire, parce que la session B vient de mesurer que quatre suites voisines écrasaient
+        /// l'identité par défaut du shell (`operational_demo@example.test`) en signant un compte
+        /// frais, et que leur correctif était une SUPPRESSION.
+        /// ⇒ La différence est structurelle : cette suite ne monte PAS sous le shell. Elle
+        ///   instancie l'écran seul et lui donne un jeton, parce qu'elle mesure les REPLIS de
+        ///   `Libelle`, une propriété indépendante du compte (les clés sont les mêmes pour tous).
+        ///   Il n'y a donc aucune identité juste à préserver ici — il n'y a pas de shell.
+        /// ⇒ *La même ligne est un défaut dans une suite de capture et une nécessité dans une
+        ///   suite de mesure : ce qui les sépare, c'est de savoir s'il existe un shell dont on
+        ///   écrase le choix.*</summary>
         private IEnumerator MonterAvecBundleReel(System.Action<LieutenantScreenController> apres)
         {
             var auth = new MafiaCleanCity.CityMap.AuthClient { BaseUrl = BaseUrl };
