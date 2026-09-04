@@ -871,6 +871,14 @@ namespace MafiaCleanCity.Capture.Tests
                 "l'écran d'indisponibilité, pas l'état vide");
             Assert.IsNotNull(ecran.DernierChargement, "aucun corps reçu");
             int cartes = ecran.DernierChargement.cards == null ? 0 : ecran.DernierChargement.cards.Length;
+            // ⚠️ CETTE ASSERTION A ÉTÉ ÉCRITE POUR UN COMPTE FRAIS, ET LE COMPTE A CHANGÉ. Depuis
+            //    le retrait de `SetIdentity`, cette capture photographie `operational_demo`, que le
+            //    seeder garnit exprès. « 0 carte » n'est donc plus une propriété du CODE mais une
+            //    propriété de l'ÉTAT d'un compte que quelqu'un d'autre remplit. Le jour où ㊱ aura
+            //    des cartes sur ce compte, ce rouge ne dira PAS qu'un défaut est apparu : il dira
+            //    que la planche ne s'appelle plus « état vide ». Le message le dit déjà — je le
+            //    laisse tel quel plutôt que de relâcher l'assertion, parce qu'un rouge qui NOMME
+            //    sa cause vaut mieux qu'une garde assouplie qui ne dira plus rien.
             Assert.AreEqual(0, cartes,
                 $"le compte porte {cartes} carte(s) : ce n'est plus l'état vide, il faut renommer " +
                 "la capture — une image nommée `_etat-vide_` qui montre des cartes ment deux fois.");
@@ -1506,6 +1514,18 @@ namespace MafiaCleanCity.Capture.Tests
             var ecranForensic = shell.MountedTenantGameObject.GetComponent<
                 MafiaCleanCity.Operational.ForensicScreenController>();
             Assert.IsNotNull(ecranForensic, "le locataire monté doit être ㊴ lui-même");
+
+            // ⛔ MÊME ATTENTE CONDITIONNELLE QUE ㊳ — et posée AVANT d'en avoir besoin. Celle-ci
+            //    est passée aujourd'hui ; elle est passée parce que la requête est revenue à
+            //    temps, pas parce qu'on l'a attendue. La différence ne se voit que le jour où
+            //    elle ne revient pas — et ce jour-là le rouge tombe sur un run de capture, pas
+            //    sur un run de test, donc au pire moment. *Une attente par nombre de frames est
+            //    un pari ; on ne le laisse pas ouvert sous prétexte qu'il est gagnant.*
+            float tf = Time.realtimeSinceStartup;
+            while (ecranForensic.DernierChargement == null && ecranForensic.DerniereErreur == null
+                   && Time.realtimeSinceStartup - tf < 30f) yield return null;
+            for (int i = 0; i < 10; i++) yield return null;   // la mise en page se pose
+
             Assert.IsNull(ecranForensic.DerniereErreur,
                 $"㊴ a échoué à charger ({ecranForensic.DernierCodeErreur}) : " +
                 $"{ecranForensic.DerniereErreur}. La capture qui suivrait montrerait des " +
@@ -1581,6 +1601,27 @@ namespace MafiaCleanCity.Capture.Tests
             var ecran = shell.MountedTenantGameObject.GetComponent<
                 MafiaCleanCity.Operational.JournalScreenController>();
             Assert.IsNotNull(ecran, "le locataire monté doit être ㊳ lui-même");
+
+            // ⛔⛔ ATTENDRE LA CONDITION, PAS UN NOMBRE DE FRAMES — et c'est ce run qui l'a prouvé.
+            //    Le `for (30)` ci-dessus suffisait tant que la capture photographiait un compte
+            //    FRAIS : `Charger()` enchaîne TROIS requêtes, et sur un joueur vide elles rendent
+            //    presque tout de suite. Sur le compte de démo — garni exprès — elles ne sont pas
+            //    revenues en trente frames, et l'assertion est tombée sur un écran qui chargeait
+            //    encore. Le rouge était JUSTE : la capture aurait montré l'état « pas encore ».
+            //    ★ C'est le miroir exact du piège que ce dépôt connaît déjà : un test vert par la
+            //      LENTEUR d'un voisin. Ici c'est un test vert par la VACUITÉ d'un compte — la même
+            //      faute, l'autre variable. *Un nombre de frames n'est pas une attente, c'est un
+            //      pari sur le temps que met quelqu'un d'autre.*
+            //    ⇒ On attend la condition réelle (chargé OU en erreur), bornée. Le message dit
+            //      lequel des deux manquait, sinon un dépassement se lit comme une panne réseau.
+            float tj = Time.realtimeSinceStartup;
+            while (ecran.DernierChargement == null && ecran.DerniereErreur == null
+                   && Time.realtimeSinceStartup - tj < 30f) yield return null;
+            Assert.IsTrue(ecran.DernierChargement != null || ecran.DerniereErreur != null,
+                "㊳ n'a ni chargé ni échoué en 30 s — `Charger()` ne s'est jamais achevé. Ce n'est " +
+                "pas une lenteur : c'est une coroutine qui ne rend pas la main.");
+            // laisser la mise en page se poser une fois les données arrivées
+            for (int i = 0; i < 15; i++) yield return null;
 
             // ⛔ EXIGER QUE LE CHARGEMENT AIT EU LIEU, pas seulement qu'il n'ait pas échoué.
             // `DerniereErreur == null` seul est VRAI À VIDE tant que rien ne charge — c'est ainsi
