@@ -201,6 +201,12 @@ namespace MafiaCleanCity.Operational
         /// l'écran EN FAIT.</summary>
         public void RendrePourTest(GetLieutenantsResponseDto lieutenants, GetEngagementsResponseDto engagements)
         {
+            chargementAmorce = true;   // ⛔ un rendu EXPLICITE annule l'auto-chargement — sinon
+                                       //    `Start()` lance `Charger()` une frame plus tard, la
+                                       //    charge échoue, l'état d'erreur fait un `Clear()` et
+                                       //    efface ce rendu AVANT les assertions. Mesuré sur ㉚
+                                       //    le 2026-09-04 : le test n'était vert que parce que
+                                       //    le back répondait plus lentement qu'une frame.
             EnsureInitialized();
             DernierChargementLieutenants = lieutenants;
             DernierChargementEngagements = engagements;
