@@ -72,3 +72,39 @@ mesure.*
 multi-lignes · commentaires comptés comme du code · comptage par sous-chaîne ramassant des voisins ·
 fenêtre de lecture trop courte déclarant un correctif incomplet). **À chaque fois, c'est la lecture
 du code qui a tranché, jamais un second compteur.**
+
+## Le critère, corrigé DEUX FOIS par les pairs — et ce que ça a changé au compte
+
+Mon premier contrôle était **« un `yield return` = une relecture du drapeau »**, avec égalité stricte.
+Deux sessions l'ont réfuté le même jour, chacune sur un point différent, et les deux avaient raison.
+
+**F** : l'égalité stricte **CONDAMNE le correctif par ARRÊT**. Une poignée retenue plus
+`StopCoroutine` coupe la coroutine à *tout* point de reprise d'un coup, sans une seule relecture —
+un écran ainsi corrigé rend `yields > relectures` et serait accusé à tort. ⇒ La propriété à asserter
+est **« toute reprise est couverte »** ; l'arrêt et la relecture en sont deux implémentations, et le
+compte seul n'en distingue aucune. *Un contrôle qui mesure une IMPLÉMENTATION au lieu de la
+PROPRIÉTÉ accuse le correctif qui a choisi l'autre.*
+
+**B** : le compte des `yield` de `Charger()` **ne voit pas la bonne population**. Sur ⑨, une SECONDE
+coroutine **détachée** (`StartCoroutine(client.GetLieutenant(…))` lancée depuis `Rendre()`) survit à
+l'arrêt de la première et écrit le vrai nom plusieurs frames après le corps imposé. ⇒ Le dénominateur
+juste est **le nombre de `StartCoroutine` du FICHIER**, chacun retenu et arrêté nommément ou couvert
+par relecture.
+
+### Mes 4 écrans sur le critère de B — mesuré, pas déduit
+
+| écran | `StartCoroutine` | de chargement (poignée + arrêt) | d'ACTION | lancé depuis un rendu ? |
+|---|---|---|---|---|
+| ㉚ appro        | 2 | 1 ✔ | `PasserCommandeCoroutine` | **non** — `PasserCommande()`, clic |
+| ㉘ distribution | 3 | 1 ✔ | `EnvoyerCeSoirCoroutine`, `AcheterVehiculeCoroutine` | **non** — clic |
+| ㉛ loi          | 3 | 1 ✔ | `RecruterAvocatCoroutine`, `BasculerRetainerCoroutine` | **non** — clic |
+| ㉙ conflit      | 2 | 1 ✔ | `EnvoyerCeSoirEtRecharger` | **non** — et pas même câblée à un bouton |
+
+**0 coroutine détachée lancée depuis un chemin de rendu** : le cas (b) de B n'existe pas ici. Les six
+coroutines d'action ne partent que d'une méthode publique qu'un CLIC (ou un test explicite) appelle.
+
+⛔ **Et je ne les garde PAS**, délibérément. Elles rendent après leurs `yield`, et c'est leur travail :
+un test qui clique VEUT voir le rechargement. Y poser le drapeau supprimerait le comportement en
+croyant supprimer un défaut — *après avoir durci un critère, recompter ce qui passe encore*. Le jour
+où un test cliquera **et** imposera un corps, elles entreront dans la population ; ce jour-là c'est
+l'arrêt nommé qu'il faudra, pas la relecture.

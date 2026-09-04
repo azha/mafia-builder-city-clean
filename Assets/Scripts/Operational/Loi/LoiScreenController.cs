@@ -87,6 +87,25 @@ namespace MafiaCleanCity.Operational
         private RectTransform racinePleinEcran;
         private LoiClient client;
         private bool initialise;
+        /// <summary>⛔ LA POIGNÉE, PARCE QUE LE DRAPEAU SEUL NE FERME QUE LE DÉMARRAGE — précision
+        /// mesurée par la session B, relayée par l'orchestrateur, appliquée ici aux quatre écrans du
+        /// chantier C. `Charger()` ne lit `chargementAmorce` qu'AVANT de partir : une coroutine déjà
+        /// en vol l'a donc franchi, elle attend le réseau, et elle rendra PAR-DESSUS le rendu du test
+        /// quelques frames plus tard. Mon correctif d'hier ne fermait que le cas où `Start()` n'était
+        /// pas encore parti — c'est-à-dire pas la fenêtre qui dépend de la latence du back, la seule
+        /// qui rougisse vraiment.
+        /// ⇒ *Une garde placée à l'entrée d'une coroutine ne protège que de son DÉMARRAGE, jamais de
+        ///   son achèvement.* Il faut l'ARRÊTER, pas seulement lui interdire de commencer.</summary>
+        private Coroutine coroutineChargement;
+
+        /// <summary>⛔ ET LE DRAPEAU RELU APRÈS CHAQUE `yield`, qui n'est PAS redondant avec le
+        /// `StopCoroutine` ci-dessus : celui-ci n'atteint que la coroutine dont on a gardé la poignée.
+        /// Une reprise lancée par un autre chemin (bouton « réessayer », rechargement) n'y est pas, et
+        /// elle rendrait quand même. Le drapeau, lui, est lu par TOUTE instance de `Charger()` à chaque
+        /// reprise. *Deux mécanismes pour deux populations : la coroutine qu'on tient, et celles qu'on
+        /// ne tient pas.*</summary>
+        private bool renduExpliciteDemande;
+
         private bool chargementAmorce;
 
         private float Px(float css) =>
@@ -106,7 +125,7 @@ namespace MafiaCleanCity.Operational
             // aucun appelant, capture en échec sur « chargement non abouti après 20 s ». Et les
             // tests de CET écran ne peuvent pas voir ce trou : ils appellent `Charger()`
             // eux-mêmes — c'est la capture, et elle seule, qui l'aurait trouvé.
-            if (!chargementAmorce) { chargementAmorce = true; StartCoroutine(Charger()); }
+            if (!chargementAmorce) { chargementAmorce = true; coroutineChargement = StartCoroutine(Charger()); }
             transform.SetAsLastSibling();
         }
 
@@ -138,14 +157,17 @@ namespace MafiaCleanCity.Operational
             // ⛔ SANS CETTE LIGNE, LES RÉSOLVEURS SONT MUETS (patron ㉘/㉚/⑨) : `Libelle.De` rend
             // le littéral tant que le dictionnaire est vide — branchement transparent.
             yield return I18nCatalog.Amorcer(new I18nClient { BaseUrl = baseUrl }, token);
+            if (renduExpliciteDemande) yield break;   // un test a rendu pendant l'attente : on n'écrase pas
 
             yield return client.GetLegal(token,
                 dto => DernierChargement = dto,
                 (code, msg) => { DernierCodeErreur = code; DerniereErreur = msg; });
+            if (renduExpliciteDemande) yield break;   // un test a rendu pendant l'attente : on n'écrase pas
 
             // La frame de création rend des rects non résolus : on attend le layout AVANT de
             // rendre quoi que ce soit qui lise une géométrie.
             yield return null;
+            if (renduExpliciteDemande) yield break;   // un test a rendu pendant l'attente : on n'écrase pas
 
             if (DernierChargement == null) { RendreEtatIndisponible(); yield break; }
             AppliquerEtat(DernierChargement);
@@ -156,6 +178,9 @@ namespace MafiaCleanCity.Operational
         /// l'écran EN FAIT.</summary>
         public void RendrePourTest(GetLegalResponseDto dto)
         {
+            // ⛔ Arrêter ce qui est DÉJÀ parti, en plus d'interdire un départ — voir `coroutineChargement`.
+            renduExpliciteDemande = true;
+            if (coroutineChargement != null) { StopCoroutine(coroutineChargement); coroutineChargement = null; }
             chargementAmorce = true;   // ⛔ un rendu EXPLICITE annule l'auto-chargement — sinon
                                        //    `Start()` lance `Charger()` une frame plus tard, la
                                        //    charge échoue, l'état d'erreur fait un `Clear()` et
