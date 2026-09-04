@@ -119,6 +119,26 @@ def main() -> int:
         par_fichier[str(f)] = len(trouves)
         for dom, role, lit in trouves:
             total[f"{dom}.{role}.{slug(lit)}"] = lit
+    # ⛔⛔ UNE POPULATION VIDE EST UNE ERREUR, JAMAIS UN VERT — défaut mesuré par la session B
+    # dans CET outil. Sur un chemin inexistant il rendait `0 clé` et sortait **0** : exactement la
+    # même sortie que « tout est déjà servi ». C'est la classe que ce dépôt nomme ailleurs — le run
+    # qui n'a jamais démarré ressemble trait pour trait à un run vert — et je l'ai reproduite dans
+    # l'instrument que j'écrivais POUR détecter des absences silencieuses.
+    # ⇒ Un producteur de liste doit distinguer « je n'ai rien trouvé » de « je n'ai rien REGARDÉ ».
+    #   Le second est une panne d'outillage ; le premier, un résultat. Ils ne se ressemblent que
+    #   parce que le compte est le même.
+    # ⚠️ Le seuil est ZÉRO fichier balayé, pas zéro clé : un arbre réel peut légitimement ne
+    #   contenir aucune clé, il ne peut pas ne contenir aucun fichier qui mentionne `Libelle`.
+    if not racine.exists():
+        print(f"⛔ chemin inexistant : {racine} — RIEN n'a été balayé, ce n'est pas un résultat.",
+              file=sys.stderr)
+        return 2
+    if not par_fichier:
+        print(f"⛔ population VIDE sous {racine} : aucun fichier ne mentionne `Libelle`. "
+              "Un zéro obtenu ainsi ne dit pas « tout est servi », il dit « je n'ai rien regardé ».",
+              file=sys.stderr)
+        return 2
+
     print(f"fichiers qui mentionnent `Libelle` : {len(par_fichier)}")
     for f, n in sorted(par_fichier.items(), key=lambda kv: -kv[1]):
         marque = '  ⚠️ ZÉRO — trou d instrument ou fichier sans littéral' if n == 0 else ''
