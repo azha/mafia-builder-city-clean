@@ -135,6 +135,13 @@ namespace MafiaCleanCity.Shell
         public string Token { get; private set; }
         public SessionOpenDto LastSessionOpen { get; private set; }
 
+        /// <summary>Le nombre de locataires déjà montés À L'INSTANT où le dictionnaire a été
+        /// amorcé — `-1` s'il ne l'a pas été. La garde lit CECI, pas `I18nCatalog.Charge` : un
+        /// booléen « chargé » est vrai aussi quand on l'a chargé TROP TARD, c'est-à-dire après
+        /// qu'un écran a déjà rendu ses replis pour toute la session. *La propriété qui compte
+        /// n'est pas « est-ce chargé ? » mais « était-ce chargé AVANT le premier montage ? ».*</summary>
+        public int MontagesAuChargementDuCatalogue { get; private set; } = -1;
+
         // §6.2 — la valeur citywide_bucket, sondée par CE shell avec SON jeton (voir
         // AcquireSessionThenActivateHome — Deviation notée là : sonde inconditionnelle sous B1,
         // plus simple et sans fenêtre de course que le repli conditionnel du chunk 5). Null tant que
@@ -507,6 +514,31 @@ namespace MafiaCleanCity.Shell
             string sessionErr = null;
             yield return sessionClient.OpenSession(t, Application.version, d => dto = d, (c, m) => sessionErr = $"{c}: {m}");
             if (this == null) yield break;
+
+            // ⛔⛔ LE DICTIONNAIRE S'AMORCE ICI, UNE FOIS, AVANT TOUT RENDU — et c'est une mesure du
+            // chantier B, pas une préférence : sur SEPT écrans convertis à `Libelle`, **ZÉRO**
+            // n'amorçait `I18nCatalog`. La conversion était donc INERTE, et invisible : le repli
+            // rendu est le littéral, byte-identique à l'avant — la garantie qui rendait la
+            // conversion sûre est exactement ce qui a caché qu'elle ne servait à rien.
+            // ⇒ Le catalogue est un global de SESSION. L'amorcer par écran, c'est onze appels qui
+            //   peuvent tous manquer ; l'amorcer ici, c'est un endroit qu'aucun écran ne contourne
+            //   — les appels par écran deviennent des no-op (`Amorcer` sort si `Charge`).
+            // ⚠️ AVANT `TopBar.Load` et avant le premier `MountTenant` : la barre haute rend du
+            // texte elle aussi, et un écran monté avant l'amorçage afficherait ses replis pour
+            // toute la session (le cache est par session, il ne se recharge pas).
+            // ⚠️ Sur les DEUX branches, y compris quand `session/open` échoue : le jeton existe
+            // dans les deux cas, et un écran d'erreur mérite d'être lisible.
+            if (!string.IsNullOrEmpty(t))
+            {
+                yield return MafiaCleanCity.I18n.I18nCatalog.Amorcer(
+                    new MafiaCleanCity.I18n.I18nClient { BaseUrl = baseUrl }, t);
+                if (this == null) yield break;
+                // La GÉNÉRATION au moment de l'amorçage — la grandeur qu'une garde peut lire pour
+                // savoir si un écran a été monté AVANT. Un booléen « chargé » ne le dirait pas :
+                // il est vrai aussi quand on l'amorce trop tard. Même patron que
+                // `SurimpressionsMontees`, pour la même raison.
+                MontagesAuChargementDuCatalogue = MontagesEffectues;
+            }
 
             if (dto != null)
             {
