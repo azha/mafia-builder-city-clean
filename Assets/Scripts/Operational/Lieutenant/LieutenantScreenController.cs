@@ -1861,9 +1861,19 @@ namespace MafiaCleanCity.Operational.Lieutenant
 
             if (CurrentRoster == null || CurrentRoster.Length == 0)
             {
-                TextMeshProUGUI empty = NewText("NoLieutenants", rosterRows, Lib("Aucun lieutenant recruté"), 12, TextAlignmentOptions.Center);
+                // ⛔ MESURÉ EN CAPTURE (planche ⑥, 2026-09-04) : ce libellé sortait à ~10 px de
+                // haut sur une image de 1080 de large, illisible, à trois centimètres d'un CTA de
+                // 28 px. Les deux valeurs étaient des LITTÉRAUX BRUTS (12 et 34) là où son frère de
+                // classe — le CTA « Recruter… », construit six cents lignes plus bas dans le MÊME
+                // état vide — passe `FamilleVideTaille` (= `FX(21)`, la `.vide: 20,53` de la
+                // maquette) et `FX(71)`. *Un état vide construit en deux endroits n'a été mis à
+                // l'échelle qu'à l'endroit qu'on regardait.*
+                // ⚠️ Et le plancher DEVAIT bouger avec la police : à l'échelle, le texte passe de
+                // 12 à ~90 unités — un `minHeight` resté à 34 l'aurait tronqué. Corriger la taille
+                // seule aurait déplacé le défaut au lieu de le fermer.
+                TextMeshProUGUI empty = NewText("NoLieutenants", rosterRows, Lib("Aucun lieutenant recruté"), FamilleVideTaille, TextAlignmentOptions.Center);
                 empty.color = DesignTokens.Current.hudCremeSecondary;
-                AddLayoutElement(empty.gameObject, minHeight: 34, flexibleHeight: 0);
+                AddLayoutElement(empty.gameObject, minHeight: FX(34), flexibleHeight: 0);
                 TrackText(empty, Lib("Aucun lieutenant recruté"));
                 BuildRecruitCta(rosterRows);
                 RefreshFamilySubtitle();

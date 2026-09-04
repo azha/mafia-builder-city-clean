@@ -663,6 +663,16 @@ namespace MafiaCleanCity.Shell
             h.childControlWidth = true;
             h.childControlHeight = true;
             h.childForceExpandWidth = false;
+            // ⛔ MESURÉ EN CAPTURE (planche ⑯, 2026-09-04) : sans cette ligne, la valeur par défaut
+            // est `true` et la rangée étirait ses enfants sur TOUTE sa hauteur. Ce qu'on voyait :
+            // la pastille — un disque de `Px(10)` — rendue en FUSEAU VERT de ~1 300 px, et le
+            // compte « 78 » centré au milieu du vide, à quinze centimètres du titre qui le légende.
+            // *Un joueur ne pouvait pas relier le nombre à sa phrase.*
+            // ★ C'est la MÊME classe que le jeton rendu en ellipse sur ㉜ (un `preferredWidth`
+            //   sans plancher dans un groupe qui comprime) : une DIMENSION dictée par le groupe et
+            //   non par l'objet. Je l'avais fermée sur cet écran-là, sur l'axe X. Elle vivait
+            //   toujours ici, sur l'axe Y. *Fermer une instance ne ferme pas la classe.*
+            h.childForceExpandHeight = false;
             h.childAlignment = TextAnchor.MiddleLeft;
 
             GameObject pt = new GameObject("Pastille", typeof(RectTransform));
@@ -671,6 +681,13 @@ namespace MafiaCleanCity.Shell
             LayoutElement ptLe = pt.AddComponent<LayoutElement>();
             ptLe.preferredWidth = Px(10f);
             ptLe.preferredHeight = Px(10f);
+            // `preferred` est un SOUHAIT : un groupe qui force l'expansion le piétine, un groupe
+            // qui comprime descend jusqu'au `min` (0 par défaut). Le disque porte donc ses deux
+            // bornes, pour qu'aucun des deux régimes ne puisse le déformer.
+            ptLe.minWidth = Px(10f);
+            ptLe.minHeight = Px(10f);
+            ptLe.flexibleWidth = 0f;
+            ptLe.flexibleHeight = 0f;
 
             GameObject quoi = new GameObject("Quoi", typeof(RectTransform));
             quoi.transform.SetParent(reg.transform, false);
