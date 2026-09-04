@@ -49,6 +49,10 @@ namespace MafiaCleanCity.Operational.Exceptions
         private ExceptionsClient client;
         private bool initialized;
 
+        /// <summary>Vrai dès qu'un chargement a été DÉCIDÉ — par `Start` ou par un rendu explicite.
+        /// Empêche l'auto-chargement d'écraser un rendu de test une frame plus tard (patron `2efdf2e`).</summary>
+        private bool chargementAmorce;
+
         // House teardown flag (BuildingCardController precedent) — covers coroutines resumed by an external
         // PlayMode runner after an inter-fixture teardown.
         private bool destroyed;
@@ -69,7 +73,19 @@ namespace MafiaCleanCity.Operational.Exceptions
         private void Start()
         {
             EnsureInitialized();
-            StartCoroutine(Boot());
+            // ⛔⛔ UN RENDU EXPLICITE ANNULE L'AUTO-CHARGEMENT — sinon les deux se courent après et le
+            //    rendu explicite PERD. Mesuré sur `ChaineDAppro` le 2026-09-04 (`2efdf2e`), et cet
+            //    écran a exactement la même forme : `AddComponent` → le test appelle `RendrePourTest`
+            //    dans la MÊME frame (avant `Start`) → une frame passe → `Start` lance `Boot()` →
+            //    `LoadQueue()` remplace `Cards` par ce que le back rend, AVANT les assertions.
+            //    ★ Ce que ça rend traître : le test reste VERT tant que le réseau est plus lent
+            //      qu'une frame. Il ne rougit que le jour où le back est absent, rapide, ou en
+            //      erreur — donc dans un run où on l'attribuera à la régression d'un voisin. C'est
+            //      arrivé, sur `EcranApproE1_EtatRepos`, dans un run à huit catégories.
+            //    ⇒ La classe fait DOUZE contrôleurs (`Start` auto-chargeant + `RendrePourTest`) ;
+            //      quatre portaient déjà la garde, celui-ci est le cinquième. Les sept restants sont
+            //      nommés dans le message de commit — je ne touche pas aux écrans des autres.
+            if (!chargementAmorce) { chargementAmorce = true; StartCoroutine(Boot()); }
         }
 
         private void EnsureInitialized()
@@ -278,6 +294,8 @@ namespace MafiaCleanCity.Operational.Exceptions
         public void RendrePourTest(ExceptionCardDto[] cartes)
         {
             EnsureInitialized();
+            chargementAmorce = true;   // ⇒ `Start()` ne lancera pas `Boot()` par-dessus ce rendu
+
             Cards = cartes ?? System.Array.Empty<ExceptionCardDto>();
             Render();
         }
