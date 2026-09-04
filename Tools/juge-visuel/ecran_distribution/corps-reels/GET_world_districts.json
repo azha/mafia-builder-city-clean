@@ -1,0 +1,231 @@
+{
+ "route": "/v1/world/districts",
+ "route_appelee": "/v1/world/districts",
+ "methode": "GET",
+ "statut": 200,
+ "params": {},
+ "provenance": {
+  "date": "2026-09-04T10:08:35",
+  "back_main": "c6b74f58",
+  "game_back": "mafia-clean-city-game-back 2026-09-04T08:06:19.233319758Z",
+  "compte": "operational_demo@example.test",
+  "dossier": "ecran_distribution",
+  "symbole": "㉘",
+  "controleur": "DistributionScreenController",
+  "X-Request-Id": "70cfe368-bf83-41bd-a32b-cffbfd79cf7d",
+  "X-Server-Processed-At": "2026-09-04T08:08:38.243Z",
+  "X-Api-Version": "1"
+ },
+ "corps": {
+  "response_meta": {
+   "request_id_echo": "70cfe368-bf83-41bd-a32b-cffbfd79cf7d",
+   "server_processed_at": "2026-09-04T08:08:38.243Z",
+   "api_version": 1,
+   "correlation_id_echo": null
+  },
+  "payload": {
+   "data": {
+    "districts": [
+     {
+      "id": 1,
+      "profile": "tidewater",
+      "index": "1",
+      "name_canonical": "Tidewater-1",
+      "block_count": 37,
+      "bank_side": "north",
+      "control_state": "UNCONTESTED",
+      "name": "Les Bassins",
+      "precinct_id": 1
+     },
+     {
+      "id": 2,
+      "profile": "tidewater",
+      "index": "2",
+      "name_canonical": "Tidewater-2",
+      "block_count": 44,
+      "bank_side": "north",
+      "control_state": "UNCONTESTED",
+      "name": "Quai-Nord",
+      "precinct_id": 1
+     },
+     {
+      "id": 3,
+      "profile": "tidewater",
+      "index": "3",
+      "name_canonical": "Tidewater-3",
+      "block_count": 51,
+      "bank_side": "north",
+      "control_state": "UNCONTESTED",
+      "name": "Sarnes",
+      "precinct_id": 1
+     },
+     {
+      "id": 4,
+      "profile": "spine",
+      "index": "a",
+      "name_canonical": "Spine-A",
+      "block_count": 58,
+      "bank_side": "north",
+      "control_state": "UNCONTESTED",
+      "name": "La Colonne",
+      "precinct_id": 2
+     },
+     {
+      "id": 5,
+      "profile": "spine",
+      "index": "b",
+      "name_canonical": "Spine-B",
+      "block_count": 65,
+      "bank_side": "north",
+      "control_state": "UNCONTESTED",
+      "name": "Hautes-Marches",
+      "precinct_id": 2
+     },
+     {
+      "id": 6,
+      "profile": "spine",
+      "index": "c",
+      "name_canonical": "Spine-C",
+      "block_count": 72,
+      "bank_side": "north",
+      "control_state": "UNCONTESTED",
+      "name": "Verrier",
+      "precinct_id": 2
+     },
+     {
+      "id": 7,
+      "profile": "spine",
+      "index": "d",
+      "name_canonical": "Spine-D",
+      "block_count": 79,
+      "bank_side": "north",
+      "control_state": "UNCONTESTED",
+      "name": "Saint-Brand",
+      "precinct_id": 3
+     },
+     {
+      "id": 8,
+      "profile": "lattice",
+      "index": "a",
+      "name_canonical": "Lattice-A",
+      "block_count": 35,
+      "bank_side": "south",
+      "control_state": "UNCONTESTED",
+      "name": "Le Treillis",
+      "precinct_id": 3
+     },
+     {
+      "id": 9,
+      "profile": "lattice",
+      "index": "b",
+      "name_canonical": "Lattice-B",
+      "block_count": 42,
+      "bank_side": "south",
+      "control_state": "UNCONTESTED",
+      "name": "Marne-Basse",
+      "precinct_id": 3
+     },
+     {
+      "id": 10,
+      "profile": "lattice",
+      "index": "c",
+      "name_canonical": "Lattice-C",
+      "block_count": 49,
+      "bank_side": "south",
+      "control_state": "UNCONTESTED",
+      "name": "Orsel",
+      "precinct_id": 4
+     },
+     {
+      "id": 11,
+      "profile": "stack",
+      "index": "1",
+      "name_canonical": "Stack-1",
+      "block_count": 56,
+      "bank_side": "north",
+      "control_state": "UNCONTESTED",
+      "name": "Les Entrepôts",
+      "precinct_id": 4
+     },
+     {
+      "id": 12,
+      "profile": "stack",
+      "index": "2",
+      "name_canonical": "Stack-2",
+      "block_count": 63,
+      "bank_side": "north",
+      "control_state": "UNCONTESTED",
+      "name": "Dépôt-Est",
+      "precinct_id": 4
+     },
+     {
+      "id": 13,
+      "profile": "glass",
+      "index": "1",
+      "name_canonical": "Glass-1",
+      "block_count": 70,
+      "bank_side": "south",
+      "control_state": "UNCONTESTED",
+      "name": "Le Verre",
+      "precinct_id": 5
+     },
+     {
+      "id": 14,
+      "profile": "glass",
+      "index": "2",
+      "name_canonical": "Glass-2",
+      "block_count": 77,
+      "bank_side": "south",
+      "control_state": "UNCONTESTED",
+      "name": "Place des Comptes",
+      "precinct_id": 5
+     },
+     {
+      "id": 15,
+      "profile": "glass",
+      "index": "3",
+      "name_canonical": "Glass-3",
+      "block_count": 33,
+      "bank_side": "south",
+      "control_state": "UNCONTESTED",
+      "name": "La Chancellerie",
+      "precinct_id": 5
+     },
+     {
+      "id": 16,
+      "profile": "verge",
+      "index": "a",
+      "name_canonical": "Verge-A",
+      "block_count": 40,
+      "bank_side": "south",
+      "control_state": "UNCONTESTED",
+      "name": "La Lisière",
+      "precinct_id": 6
+     },
+     {
+      "id": 17,
+      "profile": "verge",
+      "index": "b",
+      "name_canonical": "Verge-B",
+      "block_count": 47,
+      "bank_side": "south",
+      "control_state": "UNCONTESTED",
+      "name": "Les Friches",
+      "precinct_id": 6
+     },
+     {
+      "id": 18,
+      "profile": "verge",
+      "index": "c",
+      "name_canonical": "Verge-C",
+      "block_count": 54,
+      "bank_side": "south",
+      "control_state": "UNCONTESTED",
+      "name": "Pont-Gris",
+      "precinct_id": 6
+     }
+    ]
+   }
+  }
+ }
+}

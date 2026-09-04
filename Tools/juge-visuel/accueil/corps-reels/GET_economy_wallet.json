@@ -1,0 +1,34 @@
+{
+ "route": "/v1/economy/wallet",
+ "route_appelee": "/v1/economy/wallet",
+ "methode": "GET",
+ "statut": 200,
+ "params": {},
+ "provenance": {
+  "date": "2026-09-04T10:08:35",
+  "back_main": "c6b74f58",
+  "game_back": "mafia-clean-city-game-back 2026-09-04T08:06:19.233319758Z",
+  "compte": "operational_demo@example.test",
+  "dossier": "accueil",
+  "symbole": "④",
+  "controleur": "DashboardController",
+  "X-Request-Id": "339b307e-d2dc-454f-85f8-ed62b35fcd84",
+  "X-Server-Processed-At": "2026-09-04T08:08:36.616Z",
+  "X-Api-Version": "1"
+ },
+ "corps": {
+  "response_meta": {
+   "request_id_echo": "339b307e-d2dc-454f-85f8-ed62b35fcd84",
+   "server_processed_at": "2026-09-04T08:08:36.616Z",
+   "api_version": 1,
+   "correlation_id_echo": null
+  },
+  "payload": {
+   "data": {
+    "player_id": "01a01f34-fd4e-7771-83b0-b75efa6e8023",
+    "cash_cents": "962782000",
+    "wallet_band": "FLUSH"
+   }
+  }
+ }
+}

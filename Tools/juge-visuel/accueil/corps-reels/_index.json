@@ -1,0 +1,115 @@
+{
+ "dossier": "accueil",
+ "symbole": "④",
+ "controleur": "DashboardController",
+ "date": "2026-09-04T10:08:35",
+ "back_main": "c6b74f58",
+ "compte": "operational_demo@example.test",
+ "note": "routes = celles du DOSSIER de code du contrôleur et de ses classes *Client (parfois plus larges que l'écran) ; le juge-donnees filtre",
+ "comptes": {
+  "appelées": 9,
+  "sans instance": 0,
+  "mutations": 5,
+  "erreurs": 0
+ },
+ "routes": [
+  {
+   "fichier": "POST_auth_signin.json",
+   "route": "/v1/auth/signin",
+   "methode": "POST",
+   "statut": null,
+   "etat": "mutation"
+  },
+  {
+   "fichier": "POST_auth_signup.json",
+   "route": "/v1/auth/signup",
+   "methode": "POST",
+   "statut": null,
+   "etat": "mutation"
+  },
+  {
+   "fichier": "GET_autonomy-reports.json",
+   "route": "/v1/autonomy-reports",
+   "methode": "GET",
+   "statut": 200,
+   "etat": "appelée"
+  },
+  {
+   "fichier": "POST_autonomy-reports_reportId_issues_issueId_resolve.json",
+   "route": "/v1/autonomy-reports/{reportId}/issues/{issueId}/resolve",
+   "methode": "POST",
+   "statut": null,
+   "etat": "mutation"
+  },
+  {
+   "fichier": "GET_city_district_districtId_heat.json",
+   "route": "/v1/city/district/{districtId}/heat",
+   "methode": "GET",
+   "statut": 200,
+   "etat": "appelée"
+  },
+  {
+   "fichier": "GET_economy_wallet.json",
+   "route": "/v1/economy/wallet",
+   "methode": "GET",
+   "statut": 200,
+   "etat": "appelée"
+  },
+  {
+   "fichier": "GET_exceptions_queue.json",
+   "route": "/v1/exceptions/queue",
+   "methode": "GET",
+   "statut": 200,
+   "etat": "appelée"
+  },
+  {
+   "fichier": "POST_exceptions_id_resolve.json",
+   "route": "/v1/exceptions/{id}/resolve",
+   "methode": "POST",
+   "statut": null,
+   "etat": "mutation"
+  },
+  {
+   "fichier": "GET_lieutenants_id.json",
+   "route": "/v1/lieutenants/{id}",
+   "methode": "GET",
+   "statut": 200,
+   "etat": "appelée"
+  },
+  {
+   "fichier": "POST_lieutenants_id_autonomy_decision.json",
+   "route": "/v1/lieutenants/{id}/autonomy/decision",
+   "methode": "POST",
+   "statut": null,
+   "etat": "mutation"
+  },
+  {
+   "fichier": "GET_me.json",
+   "route": "/v1/me",
+   "methode": "GET",
+   "statut": 200,
+   "etat": "appelée"
+  },
+  {
+   "fichier": "GET_progression.json",
+   "route": "/v1/progression",
+   "methode": "GET",
+   "statut": 200,
+   "etat": "appelée"
+  },
+  {
+   "fichier": "GET_world_districts.json",
+   "route": "/v1/world/districts",
+   "methode": "GET",
+   "statut": 200,
+   "etat": "appelée"
+  },
+  {
+   "fichier": "POST_session_open.json",
+   "route": "/v1/session/open",
+   "methode": "POST",
+   "statut": 200,
+   "etat": "appelée"
+  }
+ ]
+}

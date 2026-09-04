@@ -1,0 +1,73 @@
+{
+ "dossier": "ecran_appro",
+ "symbole": "㉚",
+ "controleur": "ChaineDApproScreenController",
+ "date": "2026-09-04T10:08:35",
+ "back_main": "c6b74f58",
+ "compte": "operational_demo@example.test",
+ "note": "routes = celles du DOSSIER de code du contrôleur et de ses classes *Client (parfois plus larges que l'écran) ; le juge-donnees filtre",
+ "comptes": {
+  "appelées": 5,
+  "sans instance": 0,
+  "mutations": 3,
+  "erreurs": 0
+ },
+ "routes": [
+  {
+   "fichier": "GET_city_district_districtId_heat.json",
+   "route": "/v1/city/district/{districtId}/heat",
+   "methode": "GET",
+   "statut": 200,
+   "etat": "appelée"
+  },
+  {
+   "fichier": "GET_city_district_id_interior.json",
+   "route": "/v1/city/district/{id}/interior",
+   "methode": "GET",
+   "statut": 200,
+   "etat": "appelée"
+  },
+  {
+   "fichier": "POST_operational_precursors_order.json",
+   "route": "/v1/operational/precursors/order",
+   "methode": "POST",
+   "statut": null,
+   "etat": "mutation"
+  },
+  {
+   "fichier": "GET_operational_precursors_building_id.json",
+   "route": "/v1/operational/precursors?building_id=",
+   "methode": "GET",
+   "statut": 200,
+   "etat": "appelée"
+  },
+  {
+   "fichier": "GET_supply-chain_graph.json",
+   "route": "/v1/supply-chain/graph",
+   "methode": "GET",
+   "statut": 200,
+   "etat": "appelée"
+  },
+  {
+   "fichier": "POST_supply-chain_legs.json",
+   "route": "/v1/supply-chain/legs/",
+   "methode": "POST",
+   "statut": null,
+   "etat": "mutation"
+  },
+  {
+   "fichier": "POST_supply-chain_legs_id_maintain.json",
+   "route": "/v1/supply-chain/legs/{id}/maintain",
+   "methode": "POST",
+   "statut": null,
+   "etat": "mutation"
+  },
+  {
+   "fichier": "GET_world_districts.json",
+   "route": "/v1/world/districts",
+   "methode": "GET",
+   "statut": 200,
+   "etat": "appelée"
+  }
+ ]
+}

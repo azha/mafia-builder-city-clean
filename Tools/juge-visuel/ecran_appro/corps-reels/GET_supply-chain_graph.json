@@ -1,0 +1,67 @@
+{
+ "route": "/v1/supply-chain/graph",
+ "route_appelee": "/v1/supply-chain/graph",
+ "methode": "GET",
+ "statut": 200,
+ "params": {},
+ "provenance": {
+  "date": "2026-09-04T10:08:35",
+  "back_main": "c6b74f58",
+  "game_back": "mafia-clean-city-game-back 2026-09-04T08:06:19.233319758Z",
+  "compte": "operational_demo@example.test",
+  "dossier": "ecran_appro",
+  "symbole": "㉚",
+  "controleur": "ChaineDApproScreenController",
+  "X-Request-Id": "9943c3d3-0b66-4165-91ea-b70b589b99c3",
+  "X-Server-Processed-At": "2026-09-04T08:08:38.109Z",
+  "X-Api-Version": "1"
+ },
+ "corps": {
+  "response_meta": {
+   "request_id_echo": "9943c3d3-0b66-4165-91ea-b70b589b99c3",
+   "server_processed_at": "2026-09-04T08:08:38.109Z",
+   "api_version": 1,
+   "correlation_id_echo": null
+  },
+  "payload": {
+   "data": {
+    "nodes": [
+     {
+      "building_id": "5efc1ea0-d5c0-4e0c-9046-413c93b3cc13",
+      "bucket": "silent",
+      "has_arrow": false,
+      "arrow_to_building_id": null
+     },
+     {
+      "building_id": "b543365a-5141-49fe-ad36-2724ed3cb75d",
+      "bucket": "silent",
+      "has_arrow": false,
+      "arrow_to_building_id": null
+     },
+     {
+      "building_id": "34971d48-16af-49b7-9c9d-8875cde605f3",
+      "bucket": "silent",
+      "has_arrow": false,
+      "arrow_to_building_id": null
+     },
+     {
+      "building_id": "606f73f0-3db6-4ee0-99bb-939838499b0b",
+      "bucket": "silent",
+      "has_arrow": false,
+      "arrow_to_building_id": null
+     }
+    ],
+    "legs": [
+     {
+      "leg_id": "e051a5e5-4e52-416f-a15c-6f2ce442db76",
+      "origin_building_id": "e6e6efe0-a1ae-4d1d-830b-2080b2fdaa24",
+      "destination_building_id": "bcc8193e-627a-403c-8b2b-14fad55e6dde",
+      "debt_bucket": "accruing",
+      "bypassed": false
+     }
+    ],
+    "routes": []
+   }
+  }
+ }
+}

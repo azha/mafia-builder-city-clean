@@ -1,0 +1,171 @@
+{
+ "dossier": "fiche-batiment",
+ "symbole": "②",
+ "controleur": "BuildingCardController",
+ "date": "2026-09-04T10:08:35",
+ "back_main": "c6b74f58",
+ "compte": "operational_demo@example.test",
+ "note": "routes = celles du DOSSIER de code du contrôleur et de ses classes *Client (parfois plus larges que l'écran) ; le juge-donnees filtre",
+ "comptes": {
+  "appelées": 2,
+  "sans instance": 3,
+  "mutations": 17,
+  "erreurs": 0
+ },
+ "routes": [
+  {
+   "fichier": "POST_auth_signin.json",
+   "route": "/v1/auth/signin",
+   "methode": "POST",
+   "statut": null,
+   "etat": "mutation"
+  },
+  {
+   "fichier": "POST_auth_signup.json",
+   "route": "/v1/auth/signup",
+   "methode": "POST",
+   "statut": null,
+   "etat": "mutation"
+  },
+  {
+   "fichier": "GET_economy_wallet.json",
+   "route": "/v1/economy/wallet",
+   "methode": "GET",
+   "statut": 200,
+   "etat": "appelée"
+  },
+  {
+   "fichier": "POST_operational_appointment.json",
+   "route": "/v1/operational/appointment",
+   "methode": "POST",
+   "statut": null,
+   "etat": "mutation"
+  },
+  {
+   "fichier": "GET_operational_appointment_id.json",
+   "route": "/v1/operational/appointment/{id}",
+   "methode": "GET",
+   "statut": null,
+   "etat": "sans instance"
+  },
+  {
+   "fichier": "POST_operational_appointment_id_honor.json",
+   "route": "/v1/operational/appointment/{id}/honor",
+   "methode": "POST",
+   "statut": null,
+   "etat": "mutation"
+  },
+  {
+   "fichier": "GET_operational_building_id.json",
+   "route": "/v1/operational/building/{id}",
+   "methode": "GET",
+   "statut": 200,
+   "etat": "appelée"
+  },
+  {
+   "fichier": "POST_operational_building_id_convert.json",
+   "route": "/v1/operational/building/{id}/convert",
+   "methode": "POST",
+   "statut": null,
+   "etat": "mutation"
+  },
+  {
+   "fichier": "POST_operational_building_id_deposit-cash.json",
+   "route": "/v1/operational/building/{id}/deposit-cash",
+   "methode": "POST",
+   "statut": null,
+   "etat": "mutation"
+  },
+  {
+   "fichier": "POST_operational_building_id_repair.json",
+   "route": "/v1/operational/building/{id}/repair",
+   "methode": "POST",
+   "statut": null,
+   "etat": "mutation"
+  },
+  {
+   "fichier": "POST_operational_building_id_upgrade-hub-tier.json",
+   "route": "/v1/operational/building/{id}/upgrade-hub-tier",
+   "methode": "POST",
+   "statut": null,
+   "etat": "mutation"
+  },
+  {
+   "fichier": "POST_operational_building_id_upgrade-money-holding-tier.json",
+   "route": "/v1/operational/building/{id}/upgrade-money-holding-tier",
+   "methode": "POST",
+   "statut": null,
+   "etat": "mutation"
+  },
+  {
+   "fichier": "POST_operational_building_id_upgrade-tier.json",
+   "route": "/v1/operational/building/{id}/upgrade-tier",
+   "methode": "POST",
+   "statut": null,
+   "etat": "mutation"
+  },
+  {
+   "fichier": "POST_operational_building_id_withdraw-cash.json",
+   "route": "/v1/operational/building/{id}/withdraw-cash",
+   "methode": "POST",
+   "statut": null,
+   "etat": "mutation"
+  },
+  {
+   "fichier": "POST_operational_distribution_dispatch.json",
+   "route": "/v1/operational/distribution/dispatch",
+   "methode": "POST",
+   "statut": null,
+   "etat": "mutation"
+  },
+  {
+   "fichier": "POST_operational_grow-house_id_plant.json",
+   "route": "/v1/operational/grow-house/{id}/plant",
+   "methode": "POST",
+   "statut": null,
+   "etat": "mutation"
+  },
+  {
+   "fichier": "GET_operational_grow-session_id.json",
+   "route": "/v1/operational/grow-session/{id}",
+   "methode": "GET",
+   "statut": null,
+   "etat": "sans instance"
+  },
+  {
+   "fichier": "POST_operational_grow-session_id_tend.json",
+   "route": "/v1/operational/grow-session/{id}/tend",
+   "methode": "POST",
+   "statut": null,
+   "etat": "mutation"
+  },
+  {
+   "fichier": "POST_operational_lab_id_cook.json",
+   "route": "/v1/operational/lab/{id}/cook",
+   "methode": "POST",
+   "statut": null,
+   "etat": "mutation"
+  },
+  {
+   "fichier": "POST_operational_laundering_inject.json",
+   "route": "/v1/operational/laundering/inject",
+   "methode": "POST",
+   "statut": null,
+   "etat": "mutation"
+  },
+  {
+   "fichier": "POST_operational_precursors_order.json",
+   "route": "/v1/operational/precursors/order",
+   "methode": "POST",
+   "statut": null,
+   "etat": "mutation"
+  },
+  {
+   "fichier": "GET_operational_storage_id.json",
+   "route": "/v1/operational/storage/{id}",
+   "methode": "GET",
+   "statut": null,
+   "etat": "sans instance"
+  }
+ ]
+}

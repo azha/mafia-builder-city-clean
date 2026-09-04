@@ -1,0 +1,23 @@
+{
+ "route": "/v1/operational/appointment/{id}",
+ "methode": "GET",
+ "statut": null,
+ "sans_instance": {
+  "appointmentId": "aucune instance sur le compte de démo — attendue dans un corps du dossier (clés ['appointmentId'])"
+ },
+ "params": {
+  "appointmentId": {
+   "valeur": null,
+   "source": "aucune instance sur le compte de démo — attendue dans un corps du dossier (clés ['appointmentId'])"
+  }
+ },
+ "provenance": {
+  "date": "2026-09-04T10:08:35",
+  "back_main": "c6b74f58",
+  "game_back": "mafia-clean-city-game-back 2026-09-04T08:06:19.233319758Z",
+  "compte": "operational_demo@example.test",
+  "dossier": "fiche-batiment",
+  "symbole": "②",
+  "controleur": "BuildingCardController"
+ }
+}

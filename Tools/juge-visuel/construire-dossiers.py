@@ -261,8 +261,10 @@ def main(argv):
               "×3,6 (1080×2102, anti-crop vérifié) ; `cadres` = page de l'atelier + numéros (index 0-based = numéro du cadre) au SHA atelier `%s`. "
               "`confiance` dit comment le rattachement cadre ↔ écran a été établi : **mesurée** (le contrôleur ou un dossier cite le cadre), "
               "**déduite** (par le titre du cadre), **aucune** (pas de maquette de série 4/6 — une ligne est une ligne, pas une absence)." % sha, "",
-              "| sym | écran (front.md) | contrôleur | dossier | cadres | référence | planche en jeu | état front.md | confiance |",
-              "|---|---|---|---|---|---|---|---|---|"]
+              "`corps` = `<dossier>/corps-reels/` (§DA-4, `capturer-corps-reels.py`) : réponses RÉELLES des routes du dossier de code du contrôleur sur la pile dev, "
+              "compte de démo — « a/s/m/e » = appelées (2xx) / sans instance sur ce compte / mutations non appelées / erreurs HTTP réelles du back (404, 409, 403 : des faits, pas des trous).", "",
+              "| sym | écran (front.md) | contrôleur | dossier | cadres | référence | planche en jeu | état front.md | confiance | corps |",
+              "|---|---|---|---|---|---|---|---|---|---|"]
     for r in TABLE + HORS_APPSHELL:
         f = fm.get(r["sym"], {})
         cad = " · ".join(f"`{p}` {', '.join(map(str, ix))}" for p, ix in r["cadres"]) or "aucune maquette de série 4/6"
@@ -270,7 +272,17 @@ def main(argv):
         ref = (f"`{r['dossier']}/reference-{r['sym'] + '-' if nb > 1 else ''}1080x2102.png`") if r["nominal"] else "—"
         planche = r["planche"]
         pe = ("existe" if planche and os.path.exists(os.path.join(CLIENT, "Assets/Screenshots", planche)) else ("ABSENTE" if planche else "—"))
-        lignes.append(f"| {r['sym']} | {f.get('nom', '?')} `{f.get('id', '')}` | `{r['ctl']}` | `{r['dossier']}` | {cad} | {ref} | `{planche}` ({pe}) | {f.get('reste', '') or '—'} | {r['confiance']} |")
+        corps = "—"
+        for nom_idx in (f"_index-{r['sym']}.json", "_index.json"):
+            chemin_idx = os.path.join(JV, r["dossier"], "corps-reels", nom_idx)
+            if os.path.exists(chemin_idx):
+                try:
+                    ci = json.load(open(chemin_idx, encoding="utf-8")).get("comptes", {})
+                    corps = f"{ci.get('appelées', 0)}a/{ci.get('sans instance', 0)}s/{ci.get('mutations', 0)}m/{ci.get('erreurs', 0)}e"
+                except Exception:
+                    corps = "index illisible"
+                break
+        lignes.append(f"| {r['sym']} | {f.get('nom', '?')} `{f.get('id', '')}` | `{r['ctl']}` | `{r['dossier']}` | {cad} | {ref} | `{planche}` ({pe}) | {f.get('reste', '') or '—'} | {r['confiance']} | {corps} |")
     lignes += ["", f"Montés par `AppShell.cs` : {len(montes)} contrôleurs distincts ({', '.join(montes)}) — tous indexés (garde du script). "
                f"Lignes hors AppShell : {len(HORS_APPSHELL)}."]
     index = "\n".join(lignes) + "\n"

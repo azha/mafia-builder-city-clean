@@ -1,0 +1,54 @@
+{
+ "route": "/v1/operational/couriers",
+ "route_appelee": "/v1/operational/couriers",
+ "methode": "GET",
+ "statut": 200,
+ "params": {},
+ "provenance": {
+  "date": "2026-09-04T10:08:35",
+  "back_main": "c6b74f58",
+  "game_back": "mafia-clean-city-game-back 2026-09-04T08:06:19.233319758Z",
+  "compte": "operational_demo@example.test",
+  "dossier": "ecran_distribution",
+  "symbole": "㉘",
+  "controleur": "DistributionScreenController",
+  "X-Request-Id": "6754b7e2-2043-4a3e-84f2-befe67d62cf3",
+  "X-Server-Processed-At": "2026-09-04T08:08:38.217Z",
+  "X-Api-Version": "1"
+ },
+ "corps": {
+  "response_meta": {
+   "request_id_echo": "6754b7e2-2043-4a3e-84f2-befe67d62cf3",
+   "server_processed_at": "2026-09-04T08:08:38.217Z",
+   "api_version": 1,
+   "correlation_id_echo": null
+  },
+  "payload": {
+   "data": {
+    "couriers": [
+     {
+      "courier": "219b0764-92fe-4d71-be06-0955c167327b",
+      "vehicle_type": "BIKE",
+      "transit_band": "IDLE",
+      "temperature_status": null,
+      "degrading": false
+     },
+     {
+      "courier": "57b4a942-8966-4047-b681-a36a3a294ab0",
+      "vehicle_type": "BIKE",
+      "transit_band": "IN_TRANSIT",
+      "temperature_status": "HOT",
+      "degrading": true
+     },
+     {
+      "courier": "8dc93771-e68b-47ed-b6a6-0d1cc1aee94f",
+      "vehicle_type": "FOOT",
+      "transit_band": "ARRIVED",
+      "temperature_status": null,
+      "degrading": false
+     }
+    ]
+   }
+  }
+ }
+}

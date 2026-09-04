@@ -1,0 +1,57 @@
+{
+ "route": "/v1/lieutenants",
+ "route_appelee": "/v1/lieutenants",
+ "methode": "GET",
+ "statut": 200,
+ "params": {},
+ "provenance": {
+  "date": "2026-09-04T10:08:35",
+  "back_main": "c6b74f58",
+  "game_back": "mafia-clean-city-game-back 2026-09-04T08:06:19.233319758Z",
+  "compte": "operational_demo@example.test",
+  "dossier": "decision-du-jour",
+  "symbole": "⑤",
+  "controleur": "DecisionDetailScreenController",
+  "X-Request-Id": "7dd7913c-fd09-4f4d-9caf-56caa6b40a96",
+  "X-Server-Processed-At": "2026-09-04T08:08:36.801Z",
+  "X-Api-Version": "1"
+ },
+ "corps": {
+  "response_meta": {
+   "request_id_echo": "7dd7913c-fd09-4f4d-9caf-56caa6b40a96",
+   "server_processed_at": "2026-09-04T08:08:36.801Z",
+   "api_version": 1,
+   "correlation_id_echo": null
+  },
+  "payload": {
+   "data": {
+    "lieutenants": [
+     {
+      "lieutenant_id": "01a067af-94d9-73b3-ad02-c854661b65b9",
+      "name": "Lt. Rook",
+      "archetype": "COOK",
+      "op_state_band": "IDLE",
+      "rule_count_band": "NONE",
+      "tenure_bucket": "FRESH"
+     },
+     {
+      "lieutenant_id": "01a067af-9bd3-7066-b3ef-ac3396913573",
+      "name": "Lt. Dorne",
+      "archetype": "COOK",
+      "op_state_band": "IDLE",
+      "rule_count_band": "NONE",
+      "tenure_bucket": "FRESH"
+     },
+     {
+      "lieutenant_id": "01a067af-9bd9-7602-8a75-43759f903eaf",
+      "name": "Lt. Marr",
+      "archetype": "COOK",
+      "op_state_band": "IDLE",
+      "rule_count_band": "NONE",
+      "tenure_bucket": "FRESH"
+     }
+    ]
+   }
+  }
+ }
+}
