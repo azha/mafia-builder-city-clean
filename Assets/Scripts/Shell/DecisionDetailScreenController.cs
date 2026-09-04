@@ -156,7 +156,7 @@ namespace MafiaCleanCity.Shell
 
             bool structurelle = carte.structural;
             coinLibelle.text = structurelle ? "structurelle" : "tactique";
-            titre.text = Lisible(carte.decision_type_key);
+            titre.text = LibelleDuType(carte.decision_type_key);
             noteZinc.text = structurelle
                 ? "Structurelle — trancher consomme votre décision de la session."
                 : "Tactique — trancher ne touche pas à votre décision structurelle.";
@@ -188,6 +188,35 @@ namespace MafiaCleanCity.Shell
         /// <summary>Pis-aller tant qu'aucune clé i18n n'est servie par ce back (178 référencées,
         /// 0 servie — mesuré au socle). Ce n'est PAS une traduction : le jour où le bundle arrive,
         /// c'est cette fonction qu'on remplace, pas la mise en page.</summary>
+        /// <summary>Le titre que le JOUEUR lit pour un type de décision.
+        ///
+        /// ⛔ MESURÉ EN CAPTURE (planche ⑤, 2026-09-04) : l'écran affichait
+        /// « AUTONOMY REPORTS PENDING » en capitales, au centre d'une interface entièrement
+        /// française. Ce n'était pas une traduction manquante — c'était `Lisible()`, un
+        /// DÉ-SLUGGEUR : il prend la clé machine du serveur, remplace les `_` par des espaces et
+        /// met une majuscule. *Le joueur lisait un identifiant technique déguisé en phrase.*
+        /// ⇒ Aucune garde ne pouvait le voir : le texte est bien posé, non vide, capitalisé, et
+        ///   il ne passe par AUCUN littéral — donc mon extracteur de clés le compte à zéro et mon
+        ///   compteur de replis ne le voit pas non plus. Il n'existe que dans l'image.
+        ///
+        /// La forme ici : on demande la clé au dictionnaire, et on RETOMBE sur l'ancien rendu si
+        /// elle manque. Tant que le back ne sert pas `decision.type.*`, l'écran est byte-identique
+        /// à avant — la conversion ne peut donc rien casser ; elle devient française le jour où
+        /// les clés arrivent.
+        /// ⚠️ CE QUE ÇA NE FERME PAS, et c'est écrit parce qu'un zéro s'y cache : la clé est
+        /// CALCULÉE depuis une valeur du serveur, donc `Tools/cles-i18n-du-client.py` — qui ne
+        /// lit que des littéraux — ne la produira JAMAIS. La liste des types de décision doit
+        /// venir du back, elle ne peut pas être dérivée d'ici. TD-535.</summary>
+        private static string LibelleDuType(string cle)
+        {
+            if (string.IsNullOrEmpty(cle)) return "";
+            string traduit = MafiaCleanCity.I18n.Libelle.De("decision", "type", cle);
+            // `De` rend le LITTÉRAL quand la clé manque : ici le littéral EST la clé machine, donc
+            // un repli brut afficherait `autonomy_reports_pending`. Pire que le défaut qu'on
+            // corrige. On reconnaît le repli à l'identité et on rend l'ancien dé-sluggage.
+            return traduit == cle ? Lisible(cle) : traduit;
+        }
+
         private static string Lisible(string cle)
         {
             if (string.IsNullOrEmpty(cle)) return "";
