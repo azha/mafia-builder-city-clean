@@ -214,6 +214,14 @@ namespace MafiaCleanCity.Operational
             refusAffiche = null;
             LireJetonDepuisLeShell();
 
+            // ⛔ SANS CETTE LIGNE, TOUTES LES CLÉS DE CET ÉCRAN RETOMBENT SUR LEUR LITTÉRAL,
+            // quoi que le back serve. `Libelle.De` interroge un dictionnaire que PERSONNE ne
+            // remplit ici : l'écran passait donc « par les clés » sans en demander aucune.
+            // ⇒ *Convertir un écran et l'amorcer sont deux gestes ; le premier sans le second
+            //   coche l'audit et ne change rien à l'écran.* Mesuré sur ⑧ et ㉝ le 2026-09-04.
+            yield return MafiaCleanCity.I18n.I18nCatalog.Amorcer(
+                new MafiaCleanCity.I18n.I18nClient { BaseUrl = baseUrl }, token);
+
             yield return client.GetFrictionState(token,
                 d => DerniereFriction = d,
                 r => DerniereErreur = r.message);
