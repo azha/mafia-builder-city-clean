@@ -208,6 +208,19 @@ namespace MafiaCleanCity.Operational
         /// parti.
         /// ⇒ *Une garde placée à l'entrée d'une coroutine ne protège que de son DÉMARRAGE, jamais
         ///   de son achèvement.* Il faut l'arrêter, pas seulement lui interdire de commencer.</summary>
+        /// ⚠️ CONTRÔLE DE C (relais 2026-09-04) — POURQUOI LE COMPTE DE `yield` NE S'APPLIQUE PAS ICI.
+        /// Sa garde compte les `yield return` du chemin de chargement et exige AUTANT de
+        /// relectures du drapeau, parce qu'un drapeau lu à l'entrée d'une coroutine ne protège
+        /// plus après le premier point de reprise.
+        /// ⇒ Mesuré sur cet écran : `Amorcer` 1 `yield`, `Charger` 5 (+3 dans le balayage), **0 `StartCoroutine`** dans
+        ///   tout le chemin. Les `yield return Charger()` sont IMBRIQUÉS : ils s'exécutent dans la
+        ///   MÊME coroutine, celle dont on retient la poignée.
+        /// ⇒ Le correctif posé ici n'est pas une relecture de drapeau mais un `StopCoroutine` sur
+        ///   cette poignée : il coupe la chaîne entière à quelque point de reprise qu'elle soit
+        ///   parquée. *Un arrêt couvre tous les yields d'un coup ; une relecture n'en couvre qu'un.*
+        /// ⇒ Les deux trous que C signale n'existent donc pas ici : pas de `yield` multiligne à
+        ///   rater (on ne relit rien) et pas de sous-coroutine à orpheliner (aucune n'est lancée).
+        ///   Le compte a été FAIT, et c'est lui qui autorise à ne rien changer.
         private Coroutine coroutineAmorce;
 
         private IEnumerator Amorcer()
