@@ -35,6 +35,22 @@ CAPTURE = re.compile(r'"Assets/Screenshots/[^"]+\.png"')
 # Les trois façons d'obtenir une identité, mesurées sur ce dépôt.
 FRAIS = re.compile(r'SafeCallsign|auth\.SignUp')
 SERVI = re.compile(r'seed_operational_demo|operational_demo|demoEmail|RunSeeder')
+# ⚠️ IGNORER LES COMMENTAIRES — corrigé le 2026-09-04, une heure APRÈS avoir corrigé le MÊME
+# défaut dans `lister-gardes-de-capture-vides.py`. Première version : ⑨ Réputation était classée
+# « compte servi » à cause d'une ligne de commentaire qui mentionne `operational_demo@…` pour
+# expliquer qu'elle ne l'utilise PAS. Le verdict était donc l'exact CONTRAIRE de ce que le
+# fichier dit.
+# ★ *Écrire une leçon ne l'applique pas au prochain outil.* Je l'avais formulée, commitée, et je
+#   l'ai réintroduite vingt minutes plus tard dans un outil frère — parce qu'on relit ce qu'on
+#   corrige, jamais ce qu'on écrit. Un motif qui cherche du CODE doit exclure les commentaires
+#   par construction, pas par mémoire.
+COMMENTAIRE = re.compile(r'^\s*(//|///|\*|/\*)')
+
+
+def code_seul(source: str) -> str:
+    """Le fichier PRIVÉ de ses lignes de commentaire — la seule matière où un motif de code a un
+    sens. Une mention dans une explication n'est pas un usage ; c'est souvent son contraire."""
+    return "\n".join(l for l in source.split("\n") if not COMMENTAIRE.match(l))
 
 
 def main() -> int:
@@ -45,7 +61,7 @@ def main() -> int:
     neufs, servis, sans = [], [], []
     balayes = 0
     for p in sorted(TESTS.rglob("*.cs")):
-        s = p.read_text(encoding="utf-8", errors="replace")
+        s = code_seul(p.read_text(encoding="utf-8", errors="replace"))
         if not CAPTURE.search(s):
             continue
         balayes += 1
