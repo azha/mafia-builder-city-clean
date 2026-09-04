@@ -132,6 +132,37 @@ namespace MafiaCleanCity.Shell.Tests
                 shell, "le_pipeline", (e, racine) => CaptureSousShell.PorteDuTexte(racine), echecs,
                 nomFeuille: "PipelineSheet");
 
+            // ═══ 2026-09-04 — LES TROIS ÉCRANS QUI N'AVAIENT AUCUNE CAPTURE SOUS SHELL ═══════
+            // ⛔ MESURE QUI A RÉDUIT LA LISTE DE SEPT À TROIS. On m'a signalé « 7 suites
+            // photographient un écran vide » : ㉜ ㉝ ㉟ ㉓ ⑧ ⑤ ⑯. Vérifié une par une contre les
+            // planches existantes — CINQ ont déjà leur capture pleine ici ou dans la planche
+            // voisine (`ce_que_vous_avez_confie` 591 teintes, `raser_un_site` 541,
+            // `signer_l_ordre` 765, `la_vente`, `la_vitrine`). Leurs suites ISOLÉES sont
+            // redondantes, pas cassées : elles photographient la charpente parce qu'elles ne
+            // donnent aucun jeton (TD-541), et la capture qui fait foi existe déjà.
+            // ⇒ *Avant de réparer sept choses, compter combien sont déjà réparées ailleurs.* Ce
+            //   qui manquait vraiment tient en trois lignes, et deux écrans sur trois n'avaient
+            //   JAMAIS été photographiés sous le shell.
+
+            // ⑤ « la décision du jour » — sa donnée vient de `session/open` (le shell la lui
+            // passe), donc aucun état vide légitime ici : s'il ne porte pas de texte, il n'a pas
+            // reçu ce que le shell tient.
+            yield return CaptureSousShell.CapturerLocataire<MafiaCleanCity.Shell.DecisionDetailScreenController>(
+                shell, "la_decision_du_jour", (e, racine) => CaptureSousShell.PorteDuTexte(racine), echecs);
+
+            // ⑯ « la revue du jour ».
+            yield return CaptureSousShell.CapturerLocataire<MafiaCleanCity.Shell.DailyReviewScreenController>(
+                shell, "la_revue_du_jour", (e, racine) => CaptureSousShell.PorteDuTexte(racine), echecs);
+
+            // ⑥ « la famille » — MÊME contrôleur que ⑧, vu du HAUT de la feuille. ⑧ est déjà
+            // capturé dans la planche voisine, mais son prédicat DÉFILE jusqu'à l'éditeur de
+            // règles : l'organigramme, qui est l'écran ⑥, n'y est jamais dans le cadre.
+            // ⇒ *Deux écrans du canon peuvent partager un contrôleur ; ce qui les distingue est
+            //   la position de la vue, pas la classe.* Ici on ne défile pas.
+            yield return CaptureSousShell.CapturerLocataire<MafiaCleanCity.Operational.Lieutenant.LieutenantScreenController>(
+                shell, "la_famille", (e, racine) => CaptureSousShell.PorteDuTexte(racine), echecs,
+                nomFeuille: "LieutenantSheet");
+
             // ⛔ L'ÉPINGLE QUI SE RETOURNE — un `toBe(404)` dans le bon sens, AVEC son mode
             // d'emploi de péremption. Elle n'asserte pas une ABSENCE (une clé qui manque est
             // satisfaite par n'importe quel échec) : elle asserte la VALEUR d'un booléen que le
