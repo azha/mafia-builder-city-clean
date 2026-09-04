@@ -29,6 +29,40 @@ gouverne une politique d'exclusion, donc son vieillissement se paie en couvertur
 jamais été lancée seule. Les verdicts marqués (runbook §4.x) sont RECOPIÉS d'une mesure d'autrui et
 non refaits : ils portent la date de cette mesure, pas celle de ce document.
 
+## ⛔⛔ LA RÈGLE D'EXCLUSION VISE UN NOM LÀ OÙ SA RAISON DÉSIGNE UNE PROPRIÉTÉ
+
+Le runbook §4.3 exclut les `Photo*` avec une raison écrite : « elles écrivent des PNG dans
+`Assets/Screenshots` à chaque exécution ; sous le juge, l'arbre se salit à chaque run ». La raison
+est juste. **Le critère ne l'est pas** : il porte sur le PRÉFIXE DU NOM, pas sur l'écriture.
+
+Mesuré le 2026-09-04 (motif : `EncodeToPNG|WriteAllBytes|CapturerLocataire|CapturerA|ScreenCapture`
+sur le fichier porteur) :
+
+| population | écrivent des images |
+|---|---|
+| les 14 `Photo*` (exclues par la règle) | 14 / 14 |
+| **les 28 entrées DÉJÀ INSCRITES au filtre** | **14 / 28** |
+| les 15 catégories orphelines encore à mesurer | 8 / 15 |
+
+⇒ **La règle écarte quatorze écrivains et en admet quatorze autres.** `Charpente`, `ScreenB3`,
+`CaptureDistrict`, `CaptureReputation`, `CaptureFamille`, `ScreenCarte`, `CaptureCarte`, `ScreenB7`,
+`ScreenC1`, `ScreenC6`, `EcranDelegation`, `ScreenC2`, `EcranDemolition`, `ScreenC3` sont dans le
+filtre et écrivent des PNG à chaque run du juge. La propriété que l'exclusion invoque pour se
+justifier est donc **déjà vraie de la moitié de ce qu'elle laisse passer**.
+
+★ Et ce n'est pas une hypothèse : je l'ai subi ce matin. Un run de la seule catégorie
+`PhotoManquants` a re-rendu **quatre planches d'autres écrans** et fait grossir **les trois atlas de
+police** — tous restaurés à la main par `git checkout` avant commit. Un run du juge sur `Charpente`
+ou `CaptureDistrict` fait exactement la même chose, sans que rien ne le signale.
+
+⇒ **Ce qui doit être arbitré (98 tient le runbook §4)** : soit le critère devient la PROPRIÉTÉ —
+mesurable, et l'instrument est écrit — et alors 14 entrées inscrites en sortent ; soit l'exclusion
+des `Photo*` a une autre raison que celle qui est écrite, et c'est cette raison-là qu'il faut
+écrire. *Une règle dont la raison est déjà fausse de la moitié de sa population n'est pas une
+règle, c'est une convention de nommage.*
+⚠️ Je ne tranche pas ici : la politique appartient au runbook, pas à ce triage. Ce document apporte
+la mesure et son dénominateur.
+
 ## Le triage
 
 | catégorie | tests | fichiers | où | verdict | source / raison |
