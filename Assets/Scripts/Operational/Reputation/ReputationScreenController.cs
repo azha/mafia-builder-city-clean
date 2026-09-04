@@ -254,6 +254,19 @@ namespace MafiaCleanCity.Operational
             DerniereErreur = null;
             DernierCodeErreur = 0;
 
+            // ⛔ SANS CETTE LIGNE, LA CONVERSION i18n EST INERTE. `Libelle.De` rend son LITTÉRAL
+            // tant que `I18nCatalog` est vide, donc un écran « converti » qui n'amorce jamais le
+            // dictionnaire affiche exactement ce qu'il affichait avant — et ses captures sont
+            // belles, françaises, et ne prouvent rien.
+            // ★ *Convertir et amorcer sont deux gestes.* Le premier est visible dans le diff, le
+            //   second ne l'est nulle part : rien ne rougit quand il manque, puisque le repli est
+            //   byte-identique au texte d'origine. C'est la même famille que « deux populations
+            //   disjointes » — la garantie qui rendait la conversion sûre est ce qui a caché
+            //   qu'elle ne servait à rien. Mesuré le 2026-09-04 : AUCUN de mes 7 écrans convertis
+            //   n'amorçait, sur les 6 du dépôt qui le font.
+            yield return MafiaCleanCity.I18n.I18nCatalog.Amorcer(
+                new MafiaCleanCity.I18n.I18nClient { BaseUrl = baseUrl }, token);
+
             yield return client.GetReputation(token, lieutenantId, counterpartyId,
                 dto => DernierChargement = dto,
                 (code, msg) => { DernierCodeErreur = code; DerniereErreur = msg; });

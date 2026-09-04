@@ -151,6 +151,13 @@ namespace MafiaCleanCity.Operational.Autonomy
         public IEnumerator LoadReports()
         {
             EnsureInitialized();
+
+            // ⛔ SANS CETTE LIGNE, LA CONVERSION i18n EST INERTE — `Libelle.De` rend son LITTÉRAL
+            // tant que `I18nCatalog` est vide. *Convertir et amorcer sont deux gestes* : le
+            // premier se voit dans le diff, le second ne se voit nulle part, et rien ne rougit
+            // quand il manque puisque le repli est byte-identique au texte d'origine.
+            yield return MafiaCleanCity.I18n.I18nCatalog.Amorcer(
+                new MafiaCleanCity.I18n.I18nClient { BaseUrl = baseUrl }, Token);
             if (isLoading)
             {
                 while (isLoading && this != null) yield return null;
