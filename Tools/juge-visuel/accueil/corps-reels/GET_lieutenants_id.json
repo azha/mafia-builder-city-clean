@@ -1,36 +1,36 @@
 {
  "route": "/v1/lieutenants/{id}",
- "route_appelee": "/v1/lieutenants/01a067af-94d9-73b3-ad02-c854661b65b9",
+ "route_appelee": "/v1/lieutenants/01a06b7a-43a8-7af0-a1fa-59ab2876f120",
  "methode": "GET",
  "statut": 200,
  "params": {
   "lieutenantId": {
-   "valeur": "01a067af-94d9-73b3-ad02-c854661b65b9",
+   "valeur": "01a06b7a-43a8-7af0-a1fa-59ab2876f120",
    "source": "lu dans le corps de `lieutenants` (clé parmi ['lieutenant_id'])"
   }
  },
  "provenance": {
-  "date": "2026-09-04T10:08:35",
-  "back_main": "c6b74f58",
-  "game_back": "mafia-clean-city-game-back 2026-09-04T08:06:19.233319758Z",
+  "date": "2026-09-04T10:15:48",
+  "back_main": "6ff684db",
+  "game_back": "mafia-clean-city-game-back 2026-09-04T08:14:29.844933926Z",
   "compte": "operational_demo@example.test",
   "dossier": "accueil",
   "symbole": "④",
   "controleur": "DashboardController",
-  "X-Request-Id": "b1f06d41-8b23-49dd-adb6-649058124689",
-  "X-Server-Processed-At": "2026-09-04T08:08:36.646Z",
+  "X-Request-Id": "195a0890-ff64-4ce9-947e-6e7200d41d5b",
+  "X-Server-Processed-At": "2026-09-04T08:15:49.977Z",
   "X-Api-Version": "1"
  },
  "corps": {
   "response_meta": {
-   "request_id_echo": "b1f06d41-8b23-49dd-adb6-649058124689",
-   "server_processed_at": "2026-09-04T08:08:36.646Z",
+   "request_id_echo": "195a0890-ff64-4ce9-947e-6e7200d41d5b",
+   "server_processed_at": "2026-09-04T08:15:49.977Z",
    "api_version": 1,
    "correlation_id_echo": null
   },
   "payload": {
    "data": {
-    "name": "Lt. Rook",
+    "name": "Lt. Marr",
     "archetype": "COOK",
     "granted_role": "executor",
     "mode": "delegated",
@@ -42,7 +42,7 @@
     "role_efficiency_bonus": "BONUS_NONE",
     "reassign_availability": "AVAILABLE",
     "budget_bands": {
-     "PRODUCTION_OPS": "depleted"
+     "PRODUCTION_OPS": "full"
     },
     "cue_bands": {},
     "drift_phase": "DIRECT_ALIGNED",

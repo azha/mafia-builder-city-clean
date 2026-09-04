@@ -5,21 +5,21 @@
  "statut": 200,
  "params": {},
  "provenance": {
-  "date": "2026-09-04T10:08:35",
-  "back_main": "c6b74f58",
-  "game_back": "mafia-clean-city-game-back 2026-09-04T08:06:19.233319758Z",
+  "date": "2026-09-04T10:15:48",
+  "back_main": "6ff684db",
+  "game_back": "mafia-clean-city-game-back 2026-09-04T08:14:29.844933926Z",
   "compte": "operational_demo@example.test",
   "dossier": "famille",
   "symbole": "⑥",
   "controleur": "LieutenantScreenController",
-  "X-Request-Id": "610884ce-b0ad-417c-a017-90c056f2f67b",
-  "X-Server-Processed-At": "2026-09-04T08:08:36.906Z",
+  "X-Request-Id": "716de27f-4a02-4fea-bfce-823abba0bce6",
+  "X-Server-Processed-At": "2026-09-04T08:15:50.215Z",
   "X-Api-Version": "1"
  },
  "corps": {
   "response_meta": {
-   "request_id_echo": "610884ce-b0ad-417c-a017-90c056f2f67b",
-   "server_processed_at": "2026-09-04T08:08:36.906Z",
+   "request_id_echo": "716de27f-4a02-4fea-bfce-823abba0bce6",
+   "server_processed_at": "2026-09-04T08:15:50.215Z",
    "api_version": 1,
    "correlation_id_echo": null
   },
@@ -27,15 +27,15 @@
    "data": {
     "reports": [
      {
-      "report_id": "9f657ff2-7b2d-467f-8300-e26b09ee46a0",
-      "lieutenant_id": "01a067af-94d9-73b3-ad02-c854661b65b9",
+      "report_id": "22f4b84f-543c-4ff4-9c3a-25a7e40eff83",
+      "lieutenant_id": "01a06b7a-43a8-7af0-a1fa-59ab2876f120",
       "backlog_age_cycles": 2,
       "issues": [
        {
         "issue_id": "iss_demo_1",
         "category": "PRODUCTION_OPS",
         "refused_action": "COOK",
-        "decided": null,
+        "decided": "A",
         "option_a": {
          "label_key": "autonomy.cook.now",
          "effect_kind": "COOK_NOW",

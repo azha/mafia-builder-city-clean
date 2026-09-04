@@ -2,13 +2,13 @@
  "dossier": "carte",
  "symbole": "③",
  "controleur": "CityMapController",
- "date": "2026-09-04T10:08:35",
- "back_main": "c6b74f58",
+ "date": "2026-09-04T10:15:48",
+ "back_main": "6ff684db",
  "compte": "operational_demo@example.test",
  "note": "routes = celles du DOSSIER de code du contrôleur et de ses classes *Client (parfois plus larges que l'écran) ; le juge-donnees filtre",
  "comptes": {
-  "appelées": 4,
-  "sans instance": 1,
+  "appelées": 5,
+  "sans instance": 0,
   "mutations": 4,
   "erreurs": 0
  },
@@ -45,8 +45,8 @@
    "fichier": "GET_i18n_bundle_locale.json",
    "route": "/v1/i18n/bundle?locale=",
    "methode": "GET",
-   "statut": null,
-   "etat": "sans instance"
+   "statut": 200,
+   "etat": "appelée"
   },
   {
    "fichier": "POST_operational_dealer_id_collect.json",

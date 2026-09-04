@@ -6,29 +6,29 @@
   "client_version": "da4-corps-reels"
  },
  "provenance": {
-  "date": "2026-09-04T10:08:35",
-  "back_main": "c6b74f58",
-  "game_back": "mafia-clean-city-game-back 2026-09-04T08:06:19.233319758Z",
+  "date": "2026-09-04T10:15:48",
+  "back_main": "6ff684db",
+  "game_back": "mafia-clean-city-game-back 2026-09-04T08:14:29.844933926Z",
   "compte": "operational_demo@example.test",
   "dossier": "revue-du-jour",
   "symbole": "⑯",
   "controleur": "DailyReviewScreenController",
-  "X-Request-Id": "9dd0e054-3c86-42c2-b264-b215cff16739",
-  "X-Server-Processed-At": "2026-09-04T08:08:36.120Z",
+  "X-Request-Id": "1e54c778-60f4-4411-a597-f579e7634f86",
+  "X-Server-Processed-At": "2026-09-04T08:15:48.999Z",
   "X-Api-Version": "1"
  },
  "corps": {
   "response_meta": {
-   "request_id_echo": "9dd0e054-3c86-42c2-b264-b215cff16739",
-   "server_processed_at": "2026-09-04T08:08:36.120Z",
+   "request_id_echo": "1e54c778-60f4-4411-a597-f579e7634f86",
+   "server_processed_at": "2026-09-04T08:15:48.999Z",
    "api_version": 1,
    "correlation_id_echo": null
   },
   "payload": {
    "data": {
-    "session_id": "bc13590c-e6b9-488f-9693-5769bee88265",
+    "session_id": "186219cf-e80d-46c5-85d4-758a947b8849",
     "hl_card": {
-     "card_id": "b7f83038-fa2a-48d0-9e35-3da08510aa0f",
+     "card_id": "8a8bd373-2631-47e9-a09e-629883fb4d41",
      "decision_type_key": "AUTONOMY_REPORTS_PENDING",
      "impact_bucket": "moderate",
      "urgency_bucket": "low",
@@ -44,11 +44,11 @@
     },
     "queue": [
      {
-      "exception_id": "98601dc1-50bd-4e89-a248-4b2bfeefa62e",
-      "lieutenant_id": "01a067af-94d9-73b3-ad02-c854661b65b9",
+      "exception_id": "7e4fd3b0-4214-40b2-8b8f-317efe78c94a",
+      "lieutenant_id": "01a06b7a-43a8-7af0-a1fa-59ab2876f120",
       "lieutenant": {
-       "id": "01a067af-94d9-73b3-ad02-c854661b65b9",
-       "name": "Lt. Rook"
+       "id": "01a06b7a-43a8-7af0-a1fa-59ab2876f120",
+       "name": "Lt. Marr"
       },
       "event_descriptor": "exc_demo_teach_heat",
       "event_descriptor_i18n": null,
@@ -81,11 +81,11 @@
       "resolution_status": "pending"
      },
      {
-      "exception_id": "b4bd38cf-961a-4a5c-8eaf-14f602a0817f",
-      "lieutenant_id": "01a067af-94d9-73b3-ad02-c854661b65b9",
+      "exception_id": "9ad36f27-be3c-4a82-8866-a00741abf7c6",
+      "lieutenant_id": "01a06b7a-43a8-7af0-a1fa-59ab2876f120",
       "lieutenant": {
-       "id": "01a067af-94d9-73b3-ad02-c854661b65b9",
-       "name": "Lt. Rook"
+       "id": "01a06b7a-43a8-7af0-a1fa-59ab2876f120",
+       "name": "Lt. Marr"
       },
       "event_descriptor": "exc_demo_raid_style",
       "event_descriptor_i18n": null,
@@ -95,7 +95,7 @@
         "label": "Repair quietly",
         "effect": {
          "type": "REPAIR",
-         "target_building_id": "e6e6efe0-a1ae-4d1d-830b-2080b2fdaa24"
+         "target_building_id": "cd6b9e39-ed5b-460d-8970-1535f6a55b85"
         },
         "add_rule_dsl": null,
         "projected_consequence": "Costs cash, sheds no heat",
@@ -106,7 +106,7 @@
         "label": "Bribe the inspector",
         "effect": {
          "type": "BRIBE",
-         "target_building_id": "e6e6efe0-a1ae-4d1d-830b-2080b2fdaa24"
+         "target_building_id": "cd6b9e39-ed5b-460d-8970-1535f6a55b85"
         },
         "add_rule_dsl": null,
         "projected_consequence": "Cheaper but riskier",
@@ -117,7 +117,7 @@
         "label": "Lay low",
         "effect": {
          "type": "LAY_LOW",
-         "target_building_id": "e6e6efe0-a1ae-4d1d-830b-2080b2fdaa24"
+         "target_building_id": "cd6b9e39-ed5b-460d-8970-1535f6a55b85"
         },
         "add_rule_dsl": null,
         "projected_consequence": "Free, ops slow down",
@@ -129,7 +129,7 @@
        "label": "Repair quietly",
        "effect": {
         "type": "REPAIR",
-        "target_building_id": "e6e6efe0-a1ae-4d1d-830b-2080b2fdaa24"
+        "target_building_id": "cd6b9e39-ed5b-460d-8970-1535f6a55b85"
        },
        "add_rule_dsl": null,
        "projected_consequence": "Costs cash, sheds no heat",
@@ -141,7 +141,7 @@
       "resolution_status": "pending"
      },
      {
-      "exception_id": "7f0ec533-2215-4e5b-80bb-272bd1db4034",
+      "exception_id": "13f3ee1f-912e-4e59-906b-a7a407bbd6ba",
       "lieutenant_id": null,
       "lieutenant": null,
       "event_descriptor": "Citywide heat is high — your operations are under pressure.",
