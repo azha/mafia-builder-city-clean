@@ -53,6 +53,18 @@ namespace MafiaCleanCity.Operational.Exceptions
         /// Empêche l'auto-chargement d'écraser un rendu de test une frame plus tard (patron `2efdf2e`).</summary>
         private bool chargementAmorce;
 
+        /// <summary>⛔⛔ LA POIGNÉE, PARCE QUE LE DRAPEAU SEUL NE FERME QUE LE DÉMARRAGE — et sur CET
+        /// écran il ne ferme même pas ça. Précision mesurée par B, appliquée par F à ㉜/㉝ (`69dbf7f`),
+        /// et vérifiée ici sur le corps du test : `ExceptionQueuePlayModeTests.cs:531-546` fait
+        /// `AddComponent` → **douze frames** → `RendrePourTest`. Quand le rendu arrive, `Start()` est
+        /// passé depuis longtemps et `chargementAmorce` vaut DÉJÀ `true` : le drapeau ne peut plus
+        /// rien empêcher. Si `Boot()` attend encore le réseau, il rendra par-dessus.
+        /// ⇒ *Une garde à l'entrée d'une coroutine ne protège que de son DÉMARRAGE, jamais de son
+        ///   achèvement.* Il faut l'ARRÊTER, pas seulement lui interdire de commencer.
+        /// ★ Les douze frames sont exactement la forme du piège : elles rendent le test vert tant
+        ///   que le back échoue vite, et rouge le jour où il répond lentement.</summary>
+        private Coroutine coroutineBoot;
+
         // House teardown flag (BuildingCardController precedent) — covers coroutines resumed by an external
         // PlayMode runner after an inter-fixture teardown.
         private bool destroyed;
@@ -85,7 +97,7 @@ namespace MafiaCleanCity.Operational.Exceptions
             //    ⇒ La classe fait DOUZE contrôleurs (`Start` auto-chargeant + `RendrePourTest`) ;
             //      quatre portaient déjà la garde, celui-ci est le cinquième. Les sept restants sont
             //      nommés dans le message de commit — je ne touche pas aux écrans des autres.
-            if (!chargementAmorce) { chargementAmorce = true; StartCoroutine(Boot()); }
+            if (!chargementAmorce) { chargementAmorce = true; coroutineBoot = StartCoroutine(Boot()); }
         }
 
         private void EnsureInitialized()
@@ -295,6 +307,8 @@ namespace MafiaCleanCity.Operational.Exceptions
         {
             EnsureInitialized();
             chargementAmorce = true;   // ⇒ `Start()` ne lancera pas `Boot()` par-dessus ce rendu
+            // …et arrêter ce qui est DÉJÀ parti — c'est le cas réel ici, voir `coroutineBoot`.
+            if (coroutineBoot != null) { StopCoroutine(coroutineBoot); coroutineBoot = null; }
 
             Cards = cartes ?? System.Array.Empty<ExceptionCardDto>();
             Render();
