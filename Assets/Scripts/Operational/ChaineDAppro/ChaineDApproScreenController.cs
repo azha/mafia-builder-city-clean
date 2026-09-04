@@ -277,9 +277,26 @@ namespace MafiaCleanCity.Operational
         /// <summary>Rend un corps FABRIQUÉ, sans réseau — réservé aux tests (patron ㊲,
         /// `RendrePourTest`). Ne prouve jamais que le back émet ce corps, seulement ce que
         /// l'écran EN FAIT.</summary>
+        // ⛔⛔ UN RENDU EXPLICITE ANNULE L'AUTO-CHARGEMENT — sinon les deux se courent après, et le
+        //    rendu explicite PERD une frame plus tard. Mesuré le 2026-09-04, sur un rouge non
+        //    attribué remonté depuis le run d'une AUTRE branche : `EcranApproE1_EtatRepos` échouait
+        //    sur « le bouton n'est pas construit en état repos ».
+        //    La séquence : `AddComponent` → le test appelle `RendrePourTest` (même frame, avant
+        //    `Start`) et `renderedTexts` se remplit → une frame passe → `Start` déclenche
+        //    `StartCoroutine(Charger())` → la charge réseau échoue → `RendreEtatIndisponible()`
+        //    fait `renderedTexts.Clear()` et le bouton disparaît AVANT les assertions.
+        //    ★ Le test n'était vert que parce que le back répondait en ~400 ms, donc plus lentement
+        //    qu'une frame. *Un test vert par la LENTEUR d'un voisin est un test qui rougira le jour
+        //    où le voisin est absent* — et c'est exactement ce qui s'est passé dans un run à huit
+        //    catégories, où il a été pris pour une régression d'autrui.
+        //    ⚠️ La première hypothèse — le catalogue i18n amorcé par un voisin, qui aurait fait
+        //    rendre une TRADUCTION au lieu du littéral asserté — a été RÉFUTÉE par la mesure :
+        //    `appro.bouton.en_commander` vaut exactement « EN COMMANDER » dans le bundle. Le
+        //    mécanisme plausible n'était pas le bon ; seule la lecture du chemin d'erreur l'a dit.
         public void RendrePourTest(GetOperationalPrecursorsResponseDto dto)
         {
             EnsureInitialized();
+            chargementAmorce = true;   // ⇒ `Start()` ne lancera pas `Charger()` par-dessus ce rendu
             DernierChargement = dto;
             AppliquerEtat(dto);
         }
@@ -287,6 +304,7 @@ namespace MafiaCleanCity.Operational
         /// <summary>Idem pour la section chaîne — voir `RendrePourTest`.</summary>
         public void RendrePourTestChaine(GetSupplyChainGraphResponseDto dto)
         {
+            chargementAmorce = true;   // même raison que `RendrePourTest` ci-dessus
             EnsureInitialized();
             DernierGraphe = dto;
             AppliquerChaine(dto);

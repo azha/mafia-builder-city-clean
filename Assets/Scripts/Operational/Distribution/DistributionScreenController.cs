@@ -324,6 +324,12 @@ namespace MafiaCleanCity.Operational
             string fromLabel = "L'entrepôt de test", string toLabel = "La boutique de test",
             string lieutenantLabel = null)
         {
+            chargementAmorce = true;   // ⛔ un rendu EXPLICITE annule l'auto-chargement — sinon
+                                       //    `Start()` lance `Charger()` une frame plus tard, la
+                                       //    charge échoue, l'état d'erreur fait un `Clear()` et
+                                       //    efface ce rendu AVANT les assertions. Mesuré sur ㉚
+                                       //    le 2026-09-04 : le test n'était vert que parce que
+                                       //    le back répondait plus lentement qu'une frame.
             EnsureInitialized();
             DernierChargementCouriers = couriers;
             DernierChargementProjection = projection;
