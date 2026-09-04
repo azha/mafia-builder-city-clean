@@ -1,0 +1,16 @@
+{
+ "dossier": "pile-du-jour",
+ "symbole": "⑬",
+ "controleur": "CueStack (sections)",
+ "date": "2026-09-04T10:08:35",
+ "back_main": "c6b74f58",
+ "compte": "operational_demo@example.test",
+ "note": "routes = celles du DOSSIER de code du contrôleur et de ses classes *Client (parfois plus larges que l'écran) ; le juge-donnees filtre",
+ "comptes": {
+  "appelées": 0,
+  "sans instance": 0,
+  "mutations": 0,
+  "erreurs": 0
+ },
+ "routes": []
+}

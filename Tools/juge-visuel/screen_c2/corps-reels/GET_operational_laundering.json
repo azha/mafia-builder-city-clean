@@ -1,0 +1,61 @@
+{
+ "route": "/v1/operational/laundering",
+ "route_appelee": "/v1/operational/laundering",
+ "methode": "GET",
+ "statut": 200,
+ "params": {},
+ "provenance": {
+  "date": "2026-09-04T10:08:35",
+  "back_main": "c6b74f58",
+  "game_back": "mafia-clean-city-game-back 2026-09-04T08:06:19.233319758Z",
+  "compte": "operational_demo@example.test",
+  "dossier": "screen_c2",
+  "symbole": "㊵",
+  "controleur": "FiliereScreenController",
+  "X-Request-Id": "288a2e93-5122-4e46-ab4c-bd30f961a298",
+  "X-Server-Processed-At": "2026-09-04T08:08:37.694Z",
+  "X-Api-Version": "1"
+ },
+ "corps": {
+  "response_meta": {
+   "request_id_echo": "288a2e93-5122-4e46-ab4c-bd30f961a298",
+   "server_processed_at": "2026-09-04T08:08:37.694Z",
+   "api_version": 1,
+   "correlation_id_echo": null
+  },
+  "payload": {
+   "data": {
+    "nodes": [
+     {
+      "node": "d42556b0-4d29-4d85-81d0-6693b16850b8",
+      "stage_index": 1,
+      "cleanliness_band": "PARTIAL",
+      "terminal": false,
+      "has_cash": false
+     },
+     {
+      "node": "0aba950b-4490-4662-8841-0253dbe150f9",
+      "stage_index": 2,
+      "cleanliness_band": "MOSTLY_CLEAN",
+      "terminal": false,
+      "has_cash": true
+     },
+     {
+      "node": "998a9efa-479a-433c-b500-1d33ff88e6f7",
+      "stage_index": 3,
+      "cleanliness_band": "CLEAN",
+      "terminal": false,
+      "has_cash": false
+     },
+     {
+      "node": "c577a1bb-9bd6-483c-b051-b0a22605f90b",
+      "stage_index": 4,
+      "cleanliness_band": "CLEAN",
+      "terminal": true,
+      "has_cash": false
+     }
+    ]
+   }
+  }
+ }
+}

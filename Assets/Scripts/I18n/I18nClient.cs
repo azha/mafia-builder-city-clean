@@ -17,11 +17,21 @@ namespace MafiaCleanCity.I18n
     {
         public string BaseUrl = "http://localhost";
 
+        // ⛔⛔ LE PARAMÈTRE `?locale=` EST LA SEULE CHOSE QUI DÉCIDE DE LA LANGUE — mesuré le
+        //    2026-09-04, et ça RÉFUTE ce que trois sessions croyaient ce matin. `i18n.controller.ts`
+        //    est PUBLIC et ne lit QUE `@Query('locale')` : `normalizeLocale(undefined)` rend
+        //    `CANONICAL_LOCALE` = `en`. Le jeton n'est même pas regardé. ⇒ la colonne
+        //    `player.locale` n'a AUCUN effet sur ce bundle : mis `operational_demo` à `fr` en base,
+        //    puis re-signé et redemandé — le corps revient encore `locale=en`, `accueil.etat.broke`
+        //    = « Broke ». *Corriger le compte ne corrige rien ici ; c'est cette ligne qui décide.*
+        // ⇒ Un producteur, une valeur. Le jeu est en français (ruling fiction 2026-09-02).
+        public string Locale = "fr";
+
         public IEnumerator GetBundle(string token,
                                      Action<string, Dictionary<string, string>> onSuccess,
                                      Action<long, string> onError)
         {
-            using (UnityWebRequest req = UnityWebRequest.Get(BaseUrl + "/v1/i18n/bundle"))
+            using (UnityWebRequest req = UnityWebRequest.Get(BaseUrl + "/v1/i18n/bundle?locale=" + Locale))
             {
                 if (!string.IsNullOrEmpty(token)) req.SetRequestHeader("Authorization", "Bearer " + token);
                 yield return req.SendWebRequest();
@@ -41,6 +51,19 @@ namespace MafiaCleanCity.I18n
                 if (messages == null)
                 {
                     onError?.Invoke(200, "corps sans `messages` — bundle illisible");
+                    yield break;
+                }
+                // ⛔ LA LANGUE SERVIE DOIT ÊTRE CELLE DEMANDÉE — sinon on préfère PAS DE BUNDLE.
+                //    `normalizeLocale` rabat toute valeur inconnue sur `en` SANS ERREUR : un jour où
+                //    ce paramètre disparaît, où il est mal orthographié, ou où le back retire `fr`,
+                //    la réponse est un 200 parfaitement valide qui sert 570 littéraux ANGLAIS — et
+                //    ils ÉCRASENT les replis français de `Libelle.De`. Le mode dégradé qu'on veut est
+                //    l'inverse : catalogue vide ⇒ chaque écran rend son littéral français. C'est donc
+                //    une panne, et elle est bruyante.
+                if (!string.Equals(locale, Locale, StringComparison.Ordinal))
+                {
+                    onError?.Invoke(200, "langue servie `" + locale + "` != demandée `" + Locale
+                                         + "` — bundle refusé, les écrans gardent leurs libellés");
                     yield break;
                 }
                 onSuccess?.Invoke(locale, messages);

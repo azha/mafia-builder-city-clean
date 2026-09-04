@@ -1,0 +1,54 @@
+{
+ "route": "/v1/city/district/{districtId}/heat",
+ "route_appelee": "/v1/city/district/1/heat",
+ "methode": "GET",
+ "statut": 200,
+ "params": {
+  "districtId": {
+   "valeur": 1,
+   "source": "lu dans le corps de `session/open` (clé parmi ['home_district_id', 'district_id', 'district'])"
+  }
+ },
+ "provenance": {
+  "date": "2026-09-04T10:08:35",
+  "back_main": "c6b74f58",
+  "game_back": "mafia-clean-city-game-back 2026-09-04T08:06:19.233319758Z",
+  "compte": "operational_demo@example.test",
+  "dossier": "accueil",
+  "symbole": "④",
+  "controleur": "DashboardController",
+  "X-Request-Id": "74675d51-5e64-4a27-baea-c7fe63a783b1",
+  "X-Server-Processed-At": "2026-09-04T08:08:36.600Z",
+  "X-Api-Version": "1"
+ },
+ "corps": {
+  "response_meta": {
+   "request_id_echo": "74675d51-5e64-4a27-baea-c7fe63a783b1",
+   "server_processed_at": "2026-09-04T08:08:36.600Z",
+   "api_version": 1,
+   "correlation_id_echo": null
+  },
+  "payload": {
+   "data": {
+    "district": "district-1",
+    "district_bucket": "WARM",
+    "citywide_bucket": "COLD",
+    "escalated": false,
+    "buildings": [
+     {
+      "building": "491d9fbe-6d7f-430f-8e70-0a0d8d5c72e9",
+      "heat_bucket": "WARM",
+      "name_i18n": {
+       "key": "game.fiction.building.name",
+       "params": {
+        "enseigne": "Fret Sunniva",
+        "district": "Les Bassins",
+        "block": "1"
+       }
+      }
+     }
+    ]
+   }
+  }
+ }
+}

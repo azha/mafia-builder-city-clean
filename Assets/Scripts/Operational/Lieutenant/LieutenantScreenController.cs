@@ -334,6 +334,13 @@ namespace MafiaCleanCity.Operational.Lieutenant
             // bouton de mise au point pour voir sa propre organisation.
             // ★ La garde qui a rendu ça visible n'est pas un test : c'est une CAPTURE prise sur le
             //   chemin de production. Aucune falsifiable du dépôt n'assertait que le roster arrive.
+            // ⛔ LE DICTIONNAIRE AVANT LE ROSTER, ET AVANT TOUT RENDU. `Libelle.De` interroge un
+            // dictionnaire que personne ne remplissait ici : les 71 clés de cet écran retombaient
+            // TOUTES sur leur littéral, quoi que le back serve. La conversion de §F-2 était donc
+            // exacte et sans effet — l'écran « passait par les clés » sans en demander aucune.
+            // ⇒ *Convertir et amorcer sont deux gestes ; le premier sans le second coche l'audit
+            //   et laisse l'écran exactement où il était.*
+            if (IsAuthenticated) yield return AmorcerLeDictionnaire();
             if (IsAuthenticated) yield return RefreshRoster();
         }
 
@@ -489,6 +496,18 @@ namespace MafiaCleanCity.Operational.Lieutenant
         /// yields an empty roster (rendered as a friendly empty line, NOT an error). On failure shows a readable status
         /// (never a raw HTTP code, F2) and leaves the previously-rendered roster intact. Called from the "Refresh roster"
         /// button.</summary>
+        /// <summary>⛔ AMORCE DU DICTIONNAIRE — sans elle, les 71 clés de cet écran retombent
+        /// TOUTES sur leur littéral, quoi que le back serve. `Libelle.De` interroge un
+        /// dictionnaire que personne ne remplissait ici : l'écran « passait par les clés » sans
+        /// en demander aucune, et la conversion de §F-2 n'aurait rien changé à l'écran.
+        /// ⇒ *Convertir et amorcer sont deux gestes. Le premier sans le second coche l'audit et
+        ///   laisse l'écran exactement où il était.*</summary>
+        public IEnumerator AmorcerLeDictionnaire()
+        {
+            yield return MafiaCleanCity.I18n.I18nCatalog.Amorcer(
+                new MafiaCleanCity.I18n.I18nClient { BaseUrl = baseUrl }, Token);
+        }
+
         public IEnumerator RefreshRoster()
         {
             EnsureInitialized();
@@ -897,6 +916,78 @@ namespace MafiaCleanCity.Operational.Lieutenant
 
         // ----- archetype band (COOK | SECURITY | LOGISTICS | BOOKKEEPER | LAUNDERING | DISTRIBUTION | UNKNOWN) -----
         // EXHAUSTIVE over LieutenantProjectionService.ArchetypeBand (LieutenantArchetype + UNKNOWN).
+        /// <summary>⛔ CROCHET DE MESURE — rejoue CHAQUE résolveur de cet écran sur CHAQUE valeur
+        /// de son domaine, pour que les compteurs de `Libelle` voient toutes les clés que l'écran
+        /// peut demander. Sans lui, une garde « zéro repli » ne mesurerait que les quelques clés
+        /// que l'état courant du compte fait afficher — et serait verte en ignorant les autres.
+        ///
+        /// ⚠️ CE N'EST PAS UNE LISTE PARALLÈLE, et c'est ce qui l'empêche d'être une tautologie :
+        /// il appelle les résolveurs DE PRODUCTION, ceux-là mêmes que l'écran emploie. Les valeurs
+        /// de domaine ci-dessous ont été LUES dans les `case` de ces résolveurs, pas recopiées de
+        /// mémoire — une liste tenue à la main testerait ma liste, pas le code.
+        /// ⚠️ Chaque résolveur est aussi appelé sur une valeur INCONNUE : son repli nommé demande
+        /// lui aussi une clé, et l'oublier laisserait un trou dans la mesure.
+        /// ⛔ Il vieillira : une valeur de domaine ajoutée côté serveur n'apparaîtra pas ici. Le
+        /// détecteur de ce vieillissement est le compteur d'APPELS de la garde, dont le plancher
+        /// est comparé au compte réel — il faut le relever quand cette méthode grossit. TD-538.</summary>
+        public void RendreTousLesLibelles()
+        {
+            ArchetypeLabel("COOK");
+            ArchetypeLabel("SECURITY");
+            ArchetypeLabel("LOGISTICS");
+            ArchetypeLabel("BOOKKEEPER");
+            ArchetypeLabel("LAUNDERING");
+            ArchetypeLabel("DISTRIBUTION");
+            ArchetypeLabel("UNKNOWN");
+            ArchetypeLabel("__inconnu__");   // le repli nommé du résolveur
+            GrantedRoleLabel("advisory");
+            GrantedRoleLabel("executor");
+            GrantedRoleLabel("delegated_owner");
+            GrantedRoleLabel("cohort_overseer");
+            GrantedRoleLabel("__inconnu__");   // le repli nommé du résolveur
+            ModeLabel("tasked");
+            ModeLabel("delegated");
+            ModeLabel("__inconnu__");   // le repli nommé du résolveur
+            OpStateLabel("SETTLING");
+            OpStateLabel("ACTIVE");
+            OpStateLabel("PAUSED");
+            OpStateLabel("IDLE");
+            OpStateLabel("__inconnu__");   // le repli nommé du résolveur
+            RuleCountLabel("NONE");
+            RuleCountLabel("FEW");
+            RuleCountLabel("MANY");
+            RuleCountLabel("__inconnu__");   // le repli nommé du résolveur
+            TenureBucketLabel("__inconnu__");   // le repli nommé du résolveur
+            RevisionCostLabel("COST_1");
+            RevisionCostLabel("COST_2");
+            RevisionCostLabel("COST_3");
+            RevisionCostLabel("COST_MAX");
+            RevisionCostLabel("__inconnu__");   // le repli nommé du résolveur
+            DisruptionLabel("DISRUPT_SHORT");
+            DisruptionLabel("DISRUPT_MED");
+            DisruptionLabel("DISRUPT_LONG");
+            DisruptionLabel("DISRUPT_MAX");
+            DisruptionLabel("__inconnu__");   // le repli nommé du résolveur
+            EfficiencyBonusLabel("BONUS_NONE");
+            EfficiencyBonusLabel("BONUS_LOW");
+            EfficiencyBonusLabel("BONUS_MID");
+            EfficiencyBonusLabel("BONUS_CAP");
+            EfficiencyBonusLabel("__inconnu__");   // le repli nommé du résolveur
+            CategoryLabel("PRODUCTION_OPS");
+            CategoryLabel("LOGISTICS_ROUTING");
+            CategoryLabel("DISTRIBUTION_DISPATCH");
+            CategoryLabel("LAUNDERING_FLOW");
+            CategoryLabel("SECURITY_RESPONSE");
+            CategoryLabel("BOOKKEEPING_AUDIT");
+            CategoryLabel("CROSS_CATEGORY_INCIDENT");
+            CategoryLabel("__inconnu__");   // le repli nommé du résolveur
+            BandLabel("full");
+            BandLabel("nominal");
+            BandLabel("low");
+            BandLabel("depleted");
+            BandLabel("__inconnu__");   // le repli nommé du résolveur
+        }
+
         private static string ArchetypeLabel(string a)
         {
             switch (a)

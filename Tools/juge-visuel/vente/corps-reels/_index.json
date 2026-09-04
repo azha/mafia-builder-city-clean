@@ -1,0 +1,38 @@
+{
+ "dossier": "vente",
+ "symbole": "㉟",
+ "controleur": "SellingScreenController",
+ "date": "2026-09-04T10:08:35",
+ "back_main": "c6b74f58",
+ "compte": "operational_demo@example.test",
+ "note": "routes = celles du DOSSIER de code du contrôleur et de ses classes *Client (parfois plus larges que l'écran) ; le juge-donnees filtre",
+ "comptes": {
+  "appelées": 1,
+  "sans instance": 1,
+  "mutations": 1,
+  "erreurs": 0
+ },
+ "routes": [
+  {
+   "fichier": "GET_operational_dealer_id.json",
+   "route": "/v1/operational/dealer/{id}",
+   "methode": "GET",
+   "statut": null,
+   "etat": "sans instance"
+  },
+  {
+   "fichier": "POST_operational_dealer_id_collect.json",
+   "route": "/v1/operational/dealer/{id}/collect",
+   "methode": "POST",
+   "statut": null,
+   "etat": "mutation"
+  },
+  {
+   "fichier": "GET_operational_dealers.json",
+   "route": "/v1/operational/dealers",
+   "methode": "GET",
+   "statut": 200,
+   "etat": "appelée"
+  }
+ ]
+}

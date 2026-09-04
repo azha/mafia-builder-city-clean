@@ -74,10 +74,23 @@ async function main() {
   if (accountId) {
     playerId = psql(`SELECT player_id FROM "player" WHERE account_id = '${accountId}';`);
     psql(`UPDATE "account_credential" SET password_hash = '${hashPassword(PASSWORD)}', updated_at = now() WHERE account_id = '${accountId}';`);
+    // ⛔ MÊME RATTRAPAGE QUE DANS `seed_operational_demo.mjs` — les DEUX comptes de démo sont
+    //    photographiés, donc la CLASSE compte deux membres et un correctif sur un seul laisse ③
+    //    CarteVille en anglais. Mesuré le 2026-09-04 : `citymap_demo@example.test` était `en`,
+    //    comme `operational_demo`. Le client demande le bundle SANS paramètre de locale ⇒ le back
+    //    rend celle du COMPTE ⇒ un compte `en` sert les littéraux anglais et ÉCRASE les replis
+    //    français du client. TD-539 n'a changé que le défaut d'un signup NEUF ; sans cette ligne
+    //    un compte déjà créé reste `en` pour toujours (la branche de création ne le revoit jamais).
+    const localeAvant = psql(`SELECT locale FROM "player" WHERE account_id = '${accountId}';`);
+    if (localeAvant !== 'fr') {
+      psql(`UPDATE "player" SET locale = 'fr' WHERE account_id = '${accountId}';`);
+      console.log(`[seed] locale du compte de démo : '${localeAvant}' -> 'fr' (TD-539 ; pas de migration de masse, c'est ce seeder qui rattrape)`);
+    }
     console.log(`[seed] reusing demo account ${accountId} (player ${playerId})`);
   } else {
     accountId = psql(`INSERT INTO "account" ("kind","lifecycle_state") VALUES ('PLAYER','ACTIVE') RETURNING account_id;`);
-    playerId = psql(`INSERT INTO "player" ("account_id","callsign","email","locale") VALUES ('${accountId}','${CALLSIGN}','${EMAIL}','en') RETURNING player_id;`);
+    // `fr` à la création — la langue réelle du jeu (TD-539).
+    playerId = psql(`INSERT INTO "player" ("account_id","callsign","email","locale") VALUES ('${accountId}','${CALLSIGN}','${EMAIL}','fr') RETURNING player_id;`);
     psql(`INSERT INTO "account_credential" ("account_id","password_hash") VALUES ('${accountId}','${hashPassword(PASSWORD)}');`);
     console.log(`[seed] created demo account ${accountId} (player ${playerId})`);
   }

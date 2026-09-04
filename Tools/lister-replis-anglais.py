@@ -42,7 +42,24 @@ ACCENT = re.compile(r'[àâäçéèêëîïôöùûüÀÂÄÇÉÈÊËÎÏÔÖÙ�
 MOT_FR = re.compile(r'\b(le|la|les|un|une|des|du|de|au|aux|vos|votre|pas|rien|sur|dans|qui|que'
                     r'|ne|est|sont|pour|avec|sans|plus|encore|jamais|tout|toute|il|elle|on|vous'
                     r'|se|y|en|ce|cet|cette|deux|trois|quatre|cinq|six|sept|huit|neuf|dix'
-                    r'|plusieurs|aucun|aucune|inconnue|inconnu|ferme|tiens|tenez)\b', re.I)
+                    r'|plusieurs|aucun|aucune|inconnue|inconnu|ferme|tiens|tenez'
+                    # ⚠️ AJOUTS DU 2026-09-03 — l'heuristique est « pas d'accent ET absent de cette
+                    # liste ⇒ anglais », donc **tout mot français SANS ACCENT est un faux positif par
+                    # construction**. Mesuré en convertissant l'Accueil : « Confortable », « Correct »,
+                    # « Juste », « Ouvert » ont été accusés, et « CONFLIT », « DIPLOMATIE »,
+                    # « RENSEIGNEMENT », « REPUTATION » l'étaient déjà côté exceptions.
+                    # ⇒ Le compte de cet outil est un MAJORANT, pas une mesure : viser zéro sans
+                    #   étendre la liste pousse à écrire du français accentué pour plaire au
+                    #   détecteur. La liste EST le mécanisme prévu ; on l'étend, on ne tord pas les
+                    #   mots. *Un détecteur qu'on satisfait en changeant le sujet ne mesure plus.*
+                    r'|confortable|correct|juste|ouvert|ouverte|verrouille|verrouillee|fauche'
+                    r'|conflit|diplomatie|renseignement|reputation|cours|flot|prix|options'
+                    r'|silence|violent|abandon|avocat|police|argent|jour|nuit|ville|maison'
+                    # Types de bâtiment ratifiés le 2026-09-03 (TD-578) — sept repris de
+                    # `LibellesBatiment`, six ratifiés. Tous français, tous sans accent sauf deux :
+                    # la liste est le seul moyen pour cet outil de les reconnaître.
+                    r'|bureau|cache|coffre|laboratoire|relais|serre|planque|raffinerie'
+                    r'|commerce|point|vente|atelier|presse|terrain|vague|specialise)\b', re.I)
 
 
 def probablement_anglais(litteral: str) -> bool:

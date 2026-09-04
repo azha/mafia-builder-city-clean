@@ -1,0 +1,66 @@
+{
+ "dossier": "ecran_loi",
+ "symbole": "㉛",
+ "controleur": "LoiScreenController",
+ "date": "2026-09-04T10:08:35",
+ "back_main": "c6b74f58",
+ "compte": "operational_demo@example.test",
+ "note": "routes = celles du DOSSIER de code du contrôleur et de ses classes *Client (parfois plus larges que l'écran) ; le juge-donnees filtre",
+ "comptes": {
+  "appelées": 1,
+  "sans instance": 1,
+  "mutations": 5,
+  "erreurs": 0
+ },
+ "routes": [
+  {
+   "fichier": "GET_me_legal.json",
+   "route": "/v1/me/legal",
+   "methode": "GET",
+   "statut": 200,
+   "etat": "appelée"
+  },
+  {
+   "fichier": "POST_me_legal_cases.json",
+   "route": "/v1/me/legal/cases/",
+   "methode": "POST",
+   "statut": null,
+   "etat": "mutation"
+  },
+  {
+   "fichier": "POST_me_legal_cases_id_payoff.json",
+   "route": "/v1/me/legal/cases/{id}/payoff",
+   "methode": "POST",
+   "statut": null,
+   "etat": "mutation"
+  },
+  {
+   "fichier": "POST_me_legal_cases_id_plea.json",
+   "route": "/v1/me/legal/cases/{id}/plea",
+   "methode": "POST",
+   "statut": null,
+   "etat": "mutation"
+  },
+  {
+   "fichier": "POST_me_legal_lawyers.json",
+   "route": "/v1/me/legal/lawyers",
+   "methode": "POST",
+   "statut": null,
+   "etat": "mutation"
+  },
+  {
+   "fichier": "GET_me_legal_lawyers.json",
+   "route": "/v1/me/legal/lawyers/",
+   "methode": "GET",
+   "statut": null,
+   "etat": "sans instance"
+  },
+  {
+   "fichier": "PUT_me_legal_lawyers_id_retainer.json",
+   "route": "/v1/me/legal/lawyers/{id}/retainer",
+   "methode": "PUT",
+   "statut": null,
+   "etat": "mutation"
+  }
+ ]
+}

@@ -1,0 +1,101 @@
+{
+ "dossier": "carnet",
+ "symbole": "㉞",
+ "controleur": "CarnetScreenController",
+ "date": "2026-09-04T10:08:35",
+ "back_main": "c6b74f58",
+ "compte": "operational_demo@example.test",
+ "note": "routes = celles du DOSSIER de code du contrôleur et de ses classes *Client (parfois plus larges que l'écran) ; le juge-donnees filtre",
+ "comptes": {
+  "appelées": 7,
+  "sans instance": 0,
+  "mutations": 4,
+  "erreurs": 1
+ },
+ "routes": [
+  {
+   "fichier": "POST_ambient_attend.json",
+   "route": "/v1/ambient/attend/",
+   "methode": "POST",
+   "statut": null,
+   "etat": "mutation"
+  },
+  {
+   "fichier": "POST_ambient_attend_id.json",
+   "route": "/v1/ambient/attend/{id}",
+   "methode": "POST",
+   "statut": null,
+   "etat": "mutation"
+  },
+  {
+   "fichier": "GET_ambient_feed.json",
+   "route": "/v1/ambient/feed",
+   "methode": "GET",
+   "statut": 200,
+   "etat": "appelée"
+  },
+  {
+   "fichier": "GET_cue-stack_current.json",
+   "route": "/v1/cue-stack/current",
+   "methode": "GET",
+   "statut": 200,
+   "etat": "appelée"
+  },
+  {
+   "fichier": "GET_cue-stack_named-sequences.json",
+   "route": "/v1/cue-stack/named-sequences",
+   "methode": "GET",
+   "statut": 403,
+   "etat": "erreur"
+  },
+  {
+   "fichier": "GET_news_beats.json",
+   "route": "/v1/news/beats/",
+   "methode": "GET",
+   "statut": 200,
+   "etat": "appelée"
+  },
+  {
+   "fichier": "GET_news_beats_id.json",
+   "route": "/v1/news/beats/{id}",
+   "methode": "GET",
+   "statut": 200,
+   "etat": "appelée"
+  },
+  {
+   "fichier": "GET_news_feed.json",
+   "route": "/v1/news/feed",
+   "methode": "GET",
+   "statut": 200,
+   "etat": "appelée"
+  },
+  {
+   "fichier": "GET_random-world_active.json",
+   "route": "/v1/random-world/active",
+   "methode": "GET",
+   "statut": 200,
+   "etat": "appelée"
+  },
+  {
+   "fichier": "POST_random-world_hollow.json",
+   "route": "/v1/random-world/hollow/",
+   "methode": "POST",
+   "statut": null,
+   "etat": "mutation"
+  },
+  {
+   "fichier": "POST_random-world_hollow_eventId_attend-funeral.json",
+   "route": "/v1/random-world/hollow/{eventId}/attend-funeral",
+   "methode": "POST",
+   "statut": null,
+   "etat": "mutation"
+  },
+  {
+   "fichier": "GET_random-world_known-couplings.json",
+   "route": "/v1/random-world/known-couplings",
+   "methode": "GET",
+   "statut": 200,
+   "etat": "appelée"
+  }
+ ]
+}
