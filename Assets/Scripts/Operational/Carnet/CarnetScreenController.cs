@@ -125,7 +125,7 @@ namespace MafiaCleanCity.Operational
             // est stable.
             if (transform.parent != null) transform.SetAsLastSibling();
             EnsureInitialized();
-            StartCoroutine(Amorcer());
+            amorce = StartCoroutine(Amorcer());
         }
 
         /// <summary>Charger dès le montage — sans cet appel, `Charger()` n'a AUCUN appelant et
@@ -144,6 +144,7 @@ namespace MafiaCleanCity.Operational
         private IEnumerator Amorcer()
         {
             if (string.IsNullOrEmpty(token)) yield break;   // hors session : état initial NOMMÉ
+            if (corpsImposeParUnTest) yield break;          // un test tient l'écran
             yield return Charger();
         }
 
@@ -205,8 +206,22 @@ namespace MafiaCleanCity.Operational
         /// <summary>Rend un corps FABRIQUÉ, sans réseau — réservé aux tests (patron ㊲,
         /// `RendrePourTest`). Ne prouve jamais que le back émet ce corps, seulement ce que
         /// l'écran EN FAIT.</summary>
+        /// <summary>⛔ FERME LA COURSE ENTRE `Start()` ET LE RENDU DE TEST. Une suite qui pose un
+        /// VRAI jeton puis appelle cette méthode laisse `Amorcer()` partir en parallèle :
+        /// l'auto-chargement rendrait les données réelles PAR-DESSUS le corps fabriqué.
+        /// ⚠️ Le garde-fou `IsNullOrEmpty(token)` ne couvre PAS ce cas — il protège l'écran monté
+        /// hors session, pas celui à qui un test donne une identité PUIS impose un corps.
+        /// ⚠️ Et le drapeau seul ne suffit pas : si la coroutine est déjà dans son appel réseau,
+        /// elle appliquera son état — `Charger()` le fait dans PLUSIEURS branches. *Fermer une
+        /// course en demandant à l'autre de renoncer suppose qu'il repasse par un point où on
+        /// peut le lui dire.* `StopCoroutine` ne le suppose pas.</summary>
+        private bool corpsImposeParUnTest;
+        private Coroutine amorce;
+
         public void RendrePourTest(CarnetCourantDto dto)
         {
+            corpsImposeParUnTest = true;
+            if (amorce != null) { StopCoroutine(amorce); amorce = null; }
             EnsureInitialized();
             AppliquerEtat(dto);
         }

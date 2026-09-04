@@ -178,10 +178,24 @@ namespace MafiaCleanCity.Operational.Tests
             int dominant = 0;
             foreach (var kv in histo) if (kv.Value > dominant) dominant = kv.Value;
             int horsFond = pixels.Length - dominant;
-            Assert.Greater(horsFond, 0,
-                $"capture {largeur}x{hauteur} entièrement UNIFORME — l'écran n'a rien rendu " +
-                "hors de son propre fond (plancher volontairement bas : le squelette n'a pas " +
-                "encore de contenu MÉTIER ICI ; le durcir une fois BuildLayout() rempli)");
+            // ⛔ TD-554 : ce plancher était `horsFond > 0` — il n'exigeait QUE que l'image ne
+            // soit pas d'une seule couleur, donc un écran VIDE le franchissait. Il venait du
+            // gabarit de `Tools/nouvel-ecran.py`, avec son excuse « plancher volontairement bas,
+            // à durcir une fois BuildLayout() rempli » : aucun écran n'est jamais revenu le
+            // durcir. *Une dette écrite dans un gabarit n'est pas une dette, c'est une politique.*
+            // La PROPORTION de pixels hors dominante est de toute façon la mauvaise grandeur —
+            // l'anticrénelage d'un titre en produit autant qu'une mise en page. Le NOMBRE DE
+            // TEINTES tranche. Seuils repris de `CaptureSousShell`.
+            // ⛔ AVERTISSEMENT, PAS ASSERTION (2026-09-04) : cet écran est capturé SEUL, sur un
+            // compte souvent frais. Son état vide rend légitimement 8 à 9 teintes, et asserter
+            // ici ferait rougir un écran CORRECT — mesuré sur ㉜ et ㉝, à qui je l'ai failli.
+            // *Une garde chromatique ne distingue pas « cassé » de « correctement vide ».*
+            if (histo.Count <= 12)
+                Debug.LogWarning($"[CAPTURE] {largeur}x{hauteur} — {histo.Count} teintes : un FOND " +
+                    "avec un titre. Vérifier QUEL COMPTE la suite ouvre avant de conclure.");
+            Assert.IsTrue(largeur >= 200 && hauteur >= 200,
+                $"capture {largeur}x{hauteur} : une dimension sous 200 px — un RectTransform resté " +
+                "à sa taille par défaut (100x100) ne leve AUCUNE erreur console et rend une image plausible");
 
             canvas.renderMode = modeAvant;
             canvas.worldCamera = cameraAvant;

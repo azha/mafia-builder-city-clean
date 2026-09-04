@@ -135,9 +135,49 @@ namespace MafiaCleanCity.Tests
                       $"rgb({dom.Key.r},{dom.Key.g},{dom.Key.b}) {part:0.0} % · canal max {vif} · " +
                       $"hors fond {horsFond:0.0} % · {comptes.Count} teintes");
 
-            Assert.Greater(horsFond, 2f,
-                $"seulement {horsFond:0.0} % de pixels hors du fond dominant : l'écran n'a " +
-                "quasiment rien rendu (22,7 % sur une liste VIDE, le cas le plus pauvre publié).");
+            // ⛔⛔ TD-554 — LA GARDE QUI CERTIFIAIT LE VIDE, ET QUI S'AUTO-DÉNONÇAIT.
+            // Elle était : `Assert.Greater(horsFond, 2f)`, et son propre message d'échec disait
+            // « 22,7 % sur une liste VIDE, le cas le plus pauvre publié ». Le seuil était donc
+            // ONZE FOIS SOUS le pire cas connu : un écran entièrement vide le franchissait sans
+            // effort. *Une garde dont le message cite un contre-exemple qui la passe est une
+            // garde qui documente sa propre inutilité* — et personne ne l'a lue ainsi pendant
+            // des semaines, parce qu'elle était VERTE.
+            //
+            // ⛔ ET LA PROPORTION EST LA MAUVAISE GRANDEUR. `horsFond` mesure quelle FRACTION
+            // des pixels s'écarte de la dominante : de l'anticrénelage sur un titre suffit à en
+            // produire. Ce qui distingue un écran d'un fond n'est pas combien de pixels diffèrent,
+            // c'est COMBIEN DE COULEURS DIFFÉRENTES il porte — un fond, même bruité, en a peu.
+            // ⇒ On reprend les deux gardes de `CaptureSousShell`, seule capture de ce dépôt dont
+            //   chaque garde a été payée par une image fausse : la TAILLE, puis les TEINTES.
+            Assert.IsTrue(tex.width >= 200 && tex.height >= 200,
+                $"capture {tex.width}x{tex.height} : une dimension sous le seuil des 200 px — " +
+                "un RectTransform resté à sa taille par défaut (100×100) ne lève AUCUNE erreur " +
+                "console et rend une image plausible.");
+            // ⛔⛔ LE NOMBRE DE TEINTES N'EST PAS ASSERTÉ ICI, ET C'EST UNE DÉCISION MESURÉE.
+            // Ma première version l'assertait (`> 12`) et a fait rougir ㉜ Délégation (8 teintes)
+            // et ㉝ Démolition (9). Vérification faite APRÈS coup — et elle m'a donné tort :
+            // leurs suites ouvrent un compte FRAIS (`SafeCallsign` + `SignUp`), voire aucune
+            // session du tout. Ces écrans n'ont donc RIEN à afficher, et leur état vide — titre
+            // plus une phrase — est le rendu CORRECT.
+            // ★ *Une garde chromatique ne distingue pas « l'écran est cassé » de « l'écran montre
+            //   correctement qu'il n'y a rien ».* Elle mesure la RICHESSE VISUELLE et l'appelle
+            //   justesse. C'est le même travers que `horsFond` qu'elle remplace : un meilleur
+            //   indicateur INDIRECT reste indirect, et je l'aurais fait payer à deux sessions
+            //   voisines sous forme d'un défaut inexistant.
+            // ⇒ Ici — `CaptureSupport` sert les écrans montés SEULS, dont les données ne sont
+            //   jamais garanties — on AVERTIT avec le compte, et on laisse le lecteur juger.
+            //   L'assertion dure vit dans `CaptureSousShell`, où la capture suit un parcours
+            //   joueur réel et où l'absence de données est, elle, un vrai défaut.
+            // ⇒ La TAILLE reste assertée : 100×100 n'est jamais un état légitime.
+            if (comptes.Count <= 12)
+                Debug.LogWarning(
+                    $"[CAPTURE] {System.IO.Path.GetFileName(chemin)} — seulement {comptes.Count} " +
+                    "teintes distinctes. C'est un FOND avec un titre. Deux lectures possibles, et " +
+                    "cette garde ne peut pas trancher : soit l'écran n'a rien rendu, soit il rend " +
+                    "correctement son état vide parce que le compte de ce test est FRAIS. " +
+                    "⇒ Vérifier QUEL COMPTE la suite ouvre avant de conclure au défaut : une " +
+                    "capture de juge se prend sur un compte SERVI (`operational_demo`), jamais " +
+                    "sur un `SignUp` neuf.");
             Assert.Less(vif, 90,
                 $"la teinte qui couvre {part:0.0} % de l'écran est rgb({dom.Key.r},{dom.Key.g}," +
                 $"{dom.Key.b}), canal max {vif} : c'est un ACCENT, pas un fond — quelque chose " +

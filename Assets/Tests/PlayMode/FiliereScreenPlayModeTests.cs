@@ -117,8 +117,78 @@ namespace MafiaCleanCity.Operational.Tests
         [UnityTest, Category("PhotoScreenC2")]
         public IEnumerator ScreenC2C1_CapturerPourLeJugeVisuel_DeuxResolutions()
         {
-            MonterEcran();
+            // ⛔⛔ ON SE CONNECTE AU COMPTE SERVI, ET C'EST TOUT LE SUJET DE CETTE CAPTURE.
+            // Cette suite ne s'authentifiait PAS : l'écran était monté sans jeton, `Amorcer()`
+            // sortait aussitôt, et la capture photographiait un écran JAMAIS CHARGÉ. Mesuré le
+            // 2026-09-04 sur 17 suites de capture — 12 photographiaient un monde vide.
+            // ★ *Une capture ne mesure pas l'écran : elle mesure l'écran ET le monde qu'on lui a
+            //   donné.* Sans données, « l'écran est cassé » et « l'écran montre correctement
+            //   qu'il n'y a rien » rendent EXACTEMENT la même image, et aucune garde de pixels ne
+            //   les sépare — c'est ce qui a permis à la garde `horsFond` de certifier le vide
+            //   pendant des semaines.
+            var auth = new MafiaCleanCity.CityMap.AuthClient { BaseUrl = "http://localhost" };
+            string token = null, err = null;
+            yield return auth.SignIn("operational_demo@example.test", "operational-demo-pw",
+                                     t => token = t, e => err = e);
+            Assert.IsNull(err, $"connexion au compte de démo échouée : {err}");
+
+            var ecran = MonterEcran();
+            ecran.SetToken(token);
             yield return null;
+            yield return ecran.Charger();
+            yield return null;
+
+            // ⛔ LE VIDE RENDU ET LE VIDE SUBI ONT LA MÊME IMAGE (patron ㊴). Sans ces deux
+            // gardes, une route en panne donnerait une capture d'état d'indisponibilité qu'on
+            // publierait comme un écran nominal.
+            Assert.IsNull(ecran.DerniereErreur,
+                // ⛔ LE CODE SEUL NE SUFFIT PAS. Première version : elle imprimait « code 422 »
+                // et rien d'autre — j'ai dû relancer un run entier pour apprendre POURQUOI.
+                // *Une garde qui nomme le symptôme sans le motif coûte un aller-retour à chaque
+                // fois qu'elle mord*, et c'est justement quand elle mord qu'on est pressé.
+                $"la route a échoué (code {ecran.DernierCodeErreur} — {ecran.DerniereErreur}) : " +
+                "la capture montrerait l'état d'indisponibilité, pas les données");
+            Assert.IsNotNull(ecran.DernierChargement, "aucun corps reçu — rien à photographier");
+
+            // ⛔⛔ ASSURER CE QUE L'IMAGE MONTRE, PAS CE QUE LE CONTRÔLEUR SAIT.
+            // Mesuré le 2026-09-04 : ce test est sorti VERT 2/2 — corps reçu, aucune erreur — et
+            // la capture montrait « EN ATTENTE · La filière n'a pas encore été interrogée », tous
+            // compteurs à 00, avec la bande de compteurs dessinée DEUX FOIS.
+            // ★ *Mes deux gardes lisaient l'objet `ecran` ; l'appareil photographiait la scène.*
+            //   Rien ne garantissait que ce soient le même écran. Un contrôleur peut avoir reçu
+            //   son corps pendant qu'une AUTRE racine, plus ancienne, occupe le canvas — et
+            //   `GameObject.Find` rend la PREMIÈRE, pas la vivante.
+            // ⇒ Deux faits sur la SCÈNE, pas sur l'objet : une seule racine, et le rendu terminé.
+            var racines = new List<GameObject>();
+            foreach (Transform t in Object.FindObjectsByType<Transform>(FindObjectsSortMode.None))
+                if (t.name == "FiliereRoot") racines.Add(t.gameObject);
+            Assert.AreEqual(1, racines.Count,
+                $"{racines.Count} racines « FiliereRoot » dans la scène : la capture en " +
+                "photographie UNE, et rien ne dit que c'est celle qui a chargé.");
+            // ⛔⛔ ET UNE GARDE SUR LE CONTENU — c'est celle qui manquait, et son absence a coûté
+            // un écran entier. `RenduTermine` était VRAI, une seule racine existait, aucune erreur
+            // réseau : trois assertions vertes sur un écran qui affichait « EN ATTENTE » et trois
+            // compteurs à « 00 », parce que `AppliquerEtat` était vide (`// MÉTIER ICI`).
+            // ★ *`RenduTermine` dit que le code a FINI, jamais que l'écran a CHANGÉ.* Un drapeau
+            //   posé en fin de méthode est vrai même si la méthode ne fait rien.
+            // ⇒ On lit donc l'écran lui-même : le compteur d'étapes ne peut pas rester à « 00 »
+            //   quand le serveur a rendu des étapes.
+            int etapesServies = ecran.DernierChargement.stages == null
+                ? 0 : ecran.DernierChargement.stages.Length;
+            Assert.Greater(etapesServies, 0,
+                "le compte de démo ne sert aucune étape : la planche ne montrerait rien, et ce " +
+                "n'est pas un défaut d'écran mais un monde vide");
+            var textes = new List<string>();
+            foreach (TMPro.TextMeshProUGUI t in racines[0].GetComponentsInChildren<TMPro.TextMeshProUGUI>(true))
+                textes.Add(t.text);
+            Assert.IsTrue(textes.Contains(etapesServies.ToString("00")),
+                $"le serveur a rendu {etapesServies} étape(s) et aucun texte de l'écran ne porte " +
+                $"« {etapesServies:00} » : l'écran n'a pas appliqué ce qu'il a reçu. " +
+                "Textes lus : " + string.Join(" · ", textes));
+
+            Assert.IsTrue(ecran.RenduTermine,
+                "le contrôleur n'a pas déclaré son rendu terminé : le corps est arrivé mais " +
+                "l'écran ne l'a pas encore appliqué — photographier ici montrerait l'état initial");
 
             yield return CapturerA(1080, 1920, "Assets/Screenshots/screen_c2_1080x1920.png");
             yield return CapturerA(1080, 2400, "Assets/Screenshots/screen_c2_1080x2400.png");
@@ -179,10 +249,24 @@ namespace MafiaCleanCity.Operational.Tests
             int dominant = 0;
             foreach (var kv in histo) if (kv.Value > dominant) dominant = kv.Value;
             int horsFond = pixels.Length - dominant;
-            Assert.Greater(horsFond, 0,
-                $"capture {largeur}x{hauteur} entièrement UNIFORME — l'écran n'a rien rendu " +
-                "hors de son propre fond (plancher volontairement bas : le squelette n'a pas " +
-                "encore de contenu MÉTIER ICI ; le durcir une fois BuildLayout() rempli)");
+            // ⛔ TD-554 : ce plancher était `horsFond > 0` — il n'exigeait QUE que l'image ne
+            // soit pas d'une seule couleur, donc un écran VIDE le franchissait. Il venait du
+            // gabarit de `Tools/nouvel-ecran.py`, avec son excuse « plancher volontairement bas,
+            // à durcir une fois BuildLayout() rempli » : aucun écran n'est jamais revenu le
+            // durcir. *Une dette écrite dans un gabarit n'est pas une dette, c'est une politique.*
+            // La PROPORTION de pixels hors dominante est de toute façon la mauvaise grandeur —
+            // l'anticrénelage d'un titre en produit autant qu'une mise en page. Le NOMBRE DE
+            // TEINTES tranche. Seuils repris de `CaptureSousShell`.
+            // ⛔ AVERTISSEMENT, PAS ASSERTION (2026-09-04) : cet écran est capturé SEUL, sur un
+            // compte souvent frais. Son état vide rend légitimement 8 à 9 teintes, et asserter
+            // ici ferait rougir un écran CORRECT — mesuré sur ㉜ et ㉝, à qui je l'ai failli.
+            // *Une garde chromatique ne distingue pas « cassé » de « correctement vide ».*
+            if (histo.Count <= 12)
+                Debug.LogWarning($"[CAPTURE] {largeur}x{hauteur} — {histo.Count} teintes : un FOND " +
+                    "avec un titre. Vérifier QUEL COMPTE la suite ouvre avant de conclure.");
+            Assert.IsTrue(largeur >= 200 && hauteur >= 200,
+                $"capture {largeur}x{hauteur} : une dimension sous 200 px — un RectTransform resté " +
+                "à sa taille par défaut (100x100) ne leve AUCUNE erreur console et rend une image plausible");
 
             canvas.renderMode = modeAvant;
             canvas.worldCamera = cameraAvant;

@@ -198,7 +198,7 @@ namespace MafiaCleanCity.Operational
         private void Start()
         {
             EnsureInitialized();
-            StartCoroutine(Amorcer());
+            amorce = StartCoroutine(Amorcer());
         }
 
         /// <summary>⛔ L'ÉCRAN SE CHARGE LUI-MÊME AU MONTAGE. Sans ça il se construit et reste VIDE :
@@ -217,10 +217,14 @@ namespace MafiaCleanCity.Operational
         private IEnumerator Amorcer()
         {
             if (string.IsNullOrEmpty(token)) yield break;   // monté hors session : rien à charger
+            if (corpsImposeParUnTest) yield break;          // un test tient l'écran : ne pas l'écraser
             string id = null;
             yield return client.GetPremierLieutenantId(token, v => id = v,
                 code => Debug.LogWarning($"[b3] liste des lieutenants indisponible (HTTP {code}) — "
                                          + "l'écran reste sur son état vide nommé"));
+            // ⛔ RELU APRÈS CHAQUE `yield` : le test a pu poser le drapeau pendant l'appel réseau.
+            // Ne le lire qu'à l'entrée laisserait passer exactement la course qu'on ferme.
+            if (corpsImposeParUnTest) yield break;
             if (string.IsNullOrEmpty(id)) yield break;
             yield return Charger(id);
         }
@@ -329,8 +333,35 @@ namespace MafiaCleanCity.Operational
         /// RENDU d'un corps supposé, pas le contrat. Un test qui fabrique son entrée ne vérifie
         /// jamais que l'entrée existe — il vérifie ce qu'on en fait si elle arrive.
         /// ⇒ La dette de contrat reste entière et reste déclarée ; seule la dette de RENDU se ferme.
+        /// <summary>⛔⛔ CE DRAPEAU FERME UNE COURSE MESURÉE, et il explique un rouge qu'on avait
+        /// attribué ailleurs. `MonterEcran()` pose un VRAI jeton avant que `Start()` ne lance
+        /// `Amorcer()` : l'auto-chargement part donc en parallèle, va chercher les données réelles
+        /// d'un compte FRAIS — sans réputation, donc `indeterminate` — et ÉCRASE le corps fabriqué
+        /// par le test, à une frame près.
+        /// ★ C'est très probablement la vraie cause de `B3S5`, qui voyait « Pas encore jugeable »
+        ///   là où il posait `aligned` : la valeur observée n'était pas un défaut de résolveur,
+        ///   c'était **l'état réel du compte** rendu par-dessus. *Un test qui perd une course lit
+        ///   une vérité — celle d'un autre monde que le sien.*
+        /// ⚠️ Et le garde-fou `IsNullOrEmpty(token)` ne suffit PAS ici : il protège l'écran monté
+        ///   HORS session, pas celui à qui un test donne une vraie identité avant de lui imposer
+        ///   un corps de test. Deux protections différentes pour deux situations différentes.
+        /// ⇒ Le drapeau est consulté à CHAQUE reprise d'`Amorcer`, pas seulement à son entrée :
+        ///   la coroutine peut être déjà partie quand le test le pose.</summary>
+        private bool corpsImposeParUnTest;
+        private Coroutine amorce;
+        private Coroutine nomEnVol;
+
         public void RendrePourTest(ReputationSurfaceDto dto)
         {
+            corpsImposeParUnTest = true;
+            // ⛔ ON ARRÊTE L'AUTO-CHARGEMENT, on ne se contente pas de le décourager. Le drapeau
+            // seul ne ferme que le cas facile (le test rend AVANT que la coroutine ne parte) :
+            // si elle est déjà dans son appel réseau, elle rendra son résultat PAR-DESSUS le corps
+            // du test quelques frames plus tard, et `Charger()` applique son état dans plusieurs
+            // branches — y semer des gardes serait fragile et incomplet.
+            // ★ *Fermer une course en demandant poliment à l'autre de renoncer suppose qu'il
+            //   repasse par un point où on peut le lui dire.* `StopCoroutine` ne le suppose pas.
+            if (amorce != null) { StopCoroutine(amorce); amorce = null; }
             EnsureInitialized();
             Rendre(dto);
         }
@@ -381,8 +412,20 @@ namespace MafiaCleanCity.Operational
                 // le rendu : le portrait s'affiche tout de suite avec « VOTRE LIEUTENANT », et se
                 // complète quand la fiche arrive. Si elle n'arrive pas, il reste sans nom — ce qui
                 // est la vérité, et non un nom de remplacement.
+                // ⛔⛔ CETTE COROUTINE EST DÉTACHÉE, ET `StopCoroutine(amorce)` NE LA TUE PAS.
+                // Relevé par la session C : arrêter la coroutine d'amorçage suffit pour tout ce
+                // qui passe par `yield return` — la chaîne meurt avec son parent — mais PAS pour
+                // ce qui est lancé par un `StartCoroutine` séparé. Celle-ci survit à l'arrêt et
+                // écrit le VRAI nom du lieutenant sur le portrait, plusieurs frames après que le
+                // test a imposé son corps.
+                // ★ *Un arrêt ne remonte que le long du lien qui l'a créé.* Une coroutine
+                //   détachée n'a pas ce lien : elle doit être suivie et arrêtée nommément.
+                // ⚠️ On ne garde PAS le callback par le drapeau : `RendrePourTest` appelle
+                //   `Rendre()`, qui relance cette coroutine — la garder ferait taire le nom dans
+                //   le rendu du test lui-même. On annule la PRÉCÉDENTE, et celle du test vit.
+                if (nomEnVol != null) StopCoroutine(nomEnVol);
                 if (!string.IsNullOrEmpty(LieutenantIdCourant))
-                    StartCoroutine(client.GetLieutenant(token, LieutenantIdCourant,
+                    nomEnVol = StartCoroutine(client.GetLieutenant(token, LieutenantIdCourant,
                         nom => portrait.DefinirNom(nom),
                         code => Debug.LogWarning($"[b3] nom du lieutenant indisponible (HTTP {code}) — "
                                                  + "le portrait reste sans nom, il n'en invente pas")));

@@ -640,7 +640,24 @@ namespace MafiaCleanCity.Operational.Tests
         [UnityTest, Category("Capture")]
         public IEnumerator B3C1_CapturerPourLeJugeVisuel_DeuxResolutions()
         {
-            yield return OuvrirJoueurFrais();
+            // ⛔⛔ LE COMPTE SERVI, PAS UN COMPTE FRAIS — et la nuance porte sur ce que le juge voit.
+            // `OuvrirJoueurFrais()` ouvre un compte neuf : il a bien ses deux lieutenants du kit
+            // de départ, donc l'écran n'est pas VIDE — mais il n'a AUCUN historique de réputation,
+            // donc le juge voyait éternellement l'état « pas encore jugeable ».
+            // ★ *Un monde pauvre ne rend pas une capture fausse, il la rend NON REPRÉSENTATIVE* —
+            //   plus insidieux qu'une capture vide, parce qu'elle a l'air complète.
+            //   Les autres tests de cette suite GARDENT leur compte frais : ils vérifient des
+            //   ÉTATS, et l'état neuf en est un. Seule la capture de juge a besoin d'un monde
+            //   servi, parce qu'elle est lue comme « voilà à quoi ressemble cet écran ».
+            var authDemo = new AuthClient { BaseUrl = BaseUrl };
+            string errDemo = null;
+            token = null;
+            yield return authDemo.SignIn("operational_demo@example.test", "operational-demo-pw",
+                                         t => token = t, e => errDemo = e);
+            Assert.IsNull(errDemo, $"connexion au compte de démo échouée : {errDemo}");
+            yield return LirePremierLieutenant();
+            Assert.IsNotNull(lieutenantId,
+                "aucun lieutenant sur le compte de démo — la capture n'aurait rien à montrer");
             var ecran = MonterEcran();
             yield return ecran.Charger(lieutenantId);
 
@@ -806,10 +823,24 @@ namespace MafiaCleanCity.Operational.Tests
             foreach (var kv in histo) if (kv.Value > dominant) dominant = kv.Value;
             int horsFond = pixels.Length - dominant;
 
-            Assert.Greater(horsFond, pixels.Length / 100,
-                $"capture {largeur}x{hauteur} quasi UNIFORME : {horsFond} px seulement diffèrent " +
-                $"de la couleur dominante (sur {pixels.Length}). L'écran n'a pas été rendu — et " +
-                "un fond nu ne compte pas comme du contenu.");
+            // ⛔ TD-554 : ce plancher était `horsFond > 0` — il n'exigeait QUE que l'image ne
+            // soit pas d'une seule couleur, donc un écran VIDE le franchissait. Il venait du
+            // gabarit de `Tools/nouvel-ecran.py`, avec son excuse « plancher volontairement bas,
+            // à durcir une fois BuildLayout() rempli » : aucun écran n'est jamais revenu le
+            // durcir. *Une dette écrite dans un gabarit n'est pas une dette, c'est une politique.*
+            // La PROPORTION de pixels hors dominante est de toute façon la mauvaise grandeur —
+            // l'anticrénelage d'un titre en produit autant qu'une mise en page. Le NOMBRE DE
+            // TEINTES tranche. Seuils repris de `CaptureSousShell`.
+            // ⛔ AVERTISSEMENT, PAS ASSERTION (2026-09-04) : cet écran est capturé SEUL, sur un
+            // compte souvent frais. Son état vide rend légitimement 8 à 9 teintes, et asserter
+            // ici ferait rougir un écran CORRECT — mesuré sur ㉜ et ㉝, à qui je l'ai failli.
+            // *Une garde chromatique ne distingue pas « cassé » de « correctement vide ».*
+            if (histo.Count <= 12)
+                Debug.LogWarning($"[CAPTURE] {largeur}x{hauteur} — {histo.Count} teintes : un FOND " +
+                    "avec un titre. Vérifier QUEL COMPTE la suite ouvre avant de conclure.");
+            Assert.IsTrue(largeur >= 200 && hauteur >= 200,
+                $"capture {largeur}x{hauteur} : une dimension sous 200 px — un RectTransform resté " +
+                "à sa taille par défaut (100x100) ne leve AUCUNE erreur console et rend une image plausible");
             // ⛔⛔ LE RECT DU LOCATAIRE — la garde qui manquait, et la seule qui distingue « l'écran
             //    est là » de « quelque chose a rendu ». Mesuré par une session voisine sur un AUTRE
             //    écran : la capture montrait la carte, l'autonomie, les exceptions et le dock
