@@ -47,17 +47,15 @@ namespace MafiaCleanCity.Capture.Tests
         public IEnumerator Capture_VuePrincipale_DistrictAvecBatiments_SousChromeV31()
         {
             // 1. compte FRAIS : session/open octroie le kit de départ (4 bâtiments J0).
-            var auth = new AuthClient { BaseUrl = BaseUrl };
-            string callsign = SeederSupport.SafeCallsign("vue", ref seq);
-            string token = null, err = null;
-            yield return auth.SignUp(callsign, "vue-capture-pw", t => token = t, e => err = e);
-            Assert.IsNull(err, $"signup errored: {err}");
-
-            var sessionClient = new SessionClient { BaseUrl = BaseUrl };
-            SessionOpenDto payload = null;
-            yield return sessionClient.OpenSession(token, "capture-vue", dto => payload = dto,
-                (c, m) => Assert.Fail($"session/open failed: {c}: {m}"));
-            Assert.IsNotNull(payload, "session/open doit réussir — c'est lui qui octroie le kit de départ");
+            // ⛔ LE PRÉAMBULE « signer un compte frais puis ouvrir sa session » EST PARTI AVEC
+            //    `SetIdentity` — il n'avait de sens que pour LUI. Il ouvrait une session sur un
+            //    compte que le shell n'utilise plus : une vérification de disponibilité du back
+            //    portant sur un AUTRE joueur que celui qu'on photographie. Ce n'est pas une
+            //    garde plus faible qui la remplace, c'est une plus forte : l'attente de
+            //    `shell.Token` ci-dessous porte sur le compte RÉELLEMENT photographié.
+            //    ★ Et la raison écrite ici (« session/open octroie le kit de départ ») ne vaut
+            //      plus : le compte de démo est garni par le seeder, pas par un kit de départ.
+            //      *Une justification survit à ce qu'elle justifiait, et se relit comme vraie.*
 
             // 2. le shell REEL, avec cette identité (fenêtre synchrone avant Start()).
             LogAssert.ignoreFailingMessages = true;
@@ -66,7 +64,16 @@ namespace MafiaCleanCity.Capture.Tests
             // MESURÉ : AuthClient.SignUp n'envoie QUE { callsign, password } — l'identifiant de
             // connexion est donc le PSEUDONYME, jamais un e-mail dérivé (mon premier jet supposait
             // "callsign@example.test" et le shell n'a jamais pu se connecter).
-            shell.SetIdentity(callsign, "vue-capture-pw");
+            // ⛔⛔ PLUS DE `SetIdentity` ICI — LA CAPTURE PHOTOGRAPHIAIT UN COMPTE FRAIS, DONC UN
+            //    ÉCRAN VIDE. Mesuré par la session B le 2026-09-04 (`Tools/lister-comptes-des-
+            //    captures.py`) : 12 suites de capture sur 17 signaient leur propre compte et
+            //    écrasaient l'identité par défaut du shell. Les juges de demain comparent ces
+            //    planches aux maquettes — ils auraient jugé des écrans sans données.
+            //    Le défaut du shell est `operational_demo@example.test` (`AppShell.cs:104`), le
+            //    compte que le seeder opérationnel garnit et qui est passé en `fr` ce matin.
+            //    ★ Ce qui rendait la faute invisible : un écran vide RESSEMBLE à un écran qui
+            //      marche — cadre, chrome, titres, tout est là. Seule la donnée manque, et une
+            //      capture ne s'en plaint pas.
             yield return null;
 
             // 3. attendre que l'acquisition asynchrone du shell soit terminée (sinon son
@@ -172,22 +179,20 @@ namespace MafiaCleanCity.Capture.Tests
         [Category("CaptureCarte")]
         public IEnumerator Capture_CarteDeVille_SousChromeV31()
         {
-            var auth = new AuthClient { BaseUrl = BaseUrl };
-            string callsign = SeederSupport.SafeCallsign("carte", ref seq);
-            string token = null, err = null;
-            yield return auth.SignUp(callsign, "carte-capture-pw", t => token = t, e => err = e);
-            Assert.IsNull(err, $"signup errored: {err}");
-
-            var sessionClient = new SessionClient { BaseUrl = BaseUrl };
-            SessionOpenDto payload = null;
-            yield return sessionClient.OpenSession(token, "capture-carte", dto => payload = dto,
-                (c, m) => Assert.Fail($"session/open failed: {c}: {m}"));
-            Assert.IsNotNull(payload, "session/open doit réussir");
+            // ⛔ LE PRÉAMBULE « signer un compte frais puis ouvrir sa session » EST PARTI AVEC
+            //    `SetIdentity` — il n'avait de sens que pour LUI. Il ouvrait une session sur un
+            //    compte que le shell n'utilise plus : une vérification de disponibilité du back
+            //    portant sur un AUTRE joueur que celui qu'on photographie. Ce n'est pas une
+            //    garde plus faible qui la remplace, c'est une plus forte : l'attente de
+            //    `shell.Token` ci-dessous porte sur le compte RÉELLEMENT photographié.
+            //    ★ Et la raison écrite ici (« session/open octroie le kit de départ ») ne vaut
+            //      plus : le compte de démo est garni par le seeder, pas par un kit de départ.
+            //      *Une justification survit à ce qu'elle justifiait, et se relit comme vraie.*
 
             LogAssert.ignoreFailingMessages = true;
             shellGo = new GameObject("CarteDeVilleShell");
             shell = shellGo.AddComponent<AppShell>();
-            shell.SetIdentity(callsign, "carte-capture-pw");
+            // idem — voir la note du premier retrait, plus haut dans ce fichier.
             yield return null;
 
             float t0 = Time.realtimeSinceStartup;
@@ -263,22 +268,20 @@ namespace MafiaCleanCity.Capture.Tests
         [UnityTest]
         public IEnumerator Capture_VuePrincipale_Nuit()
         {
-            var auth = new AuthClient { BaseUrl = BaseUrl };
-            string callsign = SeederSupport.SafeCallsign("nuit", ref seq);
-            string token = null, err = null;
-            yield return auth.SignUp(callsign, "nuit-capture-pw", t => token = t, e => err = e);
-            Assert.IsNull(err, $"signup errored: {err}");
-
-            var sessionClient = new SessionClient { BaseUrl = BaseUrl };
-            SessionOpenDto payload = null;
-            yield return sessionClient.OpenSession(token, "capture-nuit", dto => payload = dto,
-                (c, m) => Assert.Fail($"session/open failed: {c}: {m}"));
-            Assert.IsNotNull(payload, "session/open doit réussir — il octroie le kit de départ");
+            // ⛔ LE PRÉAMBULE « signer un compte frais puis ouvrir sa session » EST PARTI AVEC
+            //    `SetIdentity` — il n'avait de sens que pour LUI. Il ouvrait une session sur un
+            //    compte que le shell n'utilise plus : une vérification de disponibilité du back
+            //    portant sur un AUTRE joueur que celui qu'on photographie. Ce n'est pas une
+            //    garde plus faible qui la remplace, c'est une plus forte : l'attente de
+            //    `shell.Token` ci-dessous porte sur le compte RÉELLEMENT photographié.
+            //    ★ Et la raison écrite ici (« session/open octroie le kit de départ ») ne vaut
+            //      plus : le compte de démo est garni par le seeder, pas par un kit de départ.
+            //      *Une justification survit à ce qu'elle justifiait, et se relit comme vraie.*
 
             LogAssert.ignoreFailingMessages = true;
             shellGo = new GameObject("VueNuitShell");
             shell = shellGo.AddComponent<AppShell>();
-            shell.SetIdentity(callsign, "nuit-capture-pw");
+            // idem — voir la note du premier retrait, plus haut dans ce fichier.
             yield return null;
 
             float t0 = Time.realtimeSinceStartup;
@@ -1295,22 +1298,20 @@ namespace MafiaCleanCity.Capture.Tests
         [Category("CaptureReputation")]
         public IEnumerator Capture_EcranReputation_SousChrome()
         {
-            var auth = new AuthClient { BaseUrl = BaseUrl };
-            string callsign = SeederSupport.SafeCallsign("reput", ref seq);
-            string token = null, err = null;
-            yield return auth.SignUp(callsign, "reput-capture-pw", t => token = t, e => err = e);
-            Assert.IsNull(err, $"signup errored: {err}");
-
-            var sessionClient = new SessionClient { BaseUrl = BaseUrl };
-            SessionOpenDto payload = null;
-            yield return sessionClient.OpenSession(token, "capture-reput", dto => payload = dto,
-                (c, m) => Assert.Fail($"session/open failed: {c}: {m}"));
-            Assert.IsNotNull(payload, "session/open doit réussir — il octroie le kit de départ");
+            // ⛔ LE PRÉAMBULE « signer un compte frais puis ouvrir sa session » EST PARTI AVEC
+            //    `SetIdentity` — il n'avait de sens que pour LUI. Il ouvrait une session sur un
+            //    compte que le shell n'utilise plus : une vérification de disponibilité du back
+            //    portant sur un AUTRE joueur que celui qu'on photographie. Ce n'est pas une
+            //    garde plus faible qui la remplace, c'est une plus forte : l'attente de
+            //    `shell.Token` ci-dessous porte sur le compte RÉELLEMENT photographié.
+            //    ★ Et la raison écrite ici (« session/open octroie le kit de départ ») ne vaut
+            //      plus : le compte de démo est garni par le seeder, pas par un kit de départ.
+            //      *Une justification survit à ce qu'elle justifiait, et se relit comme vraie.*
 
             LogAssert.ignoreFailingMessages = true;
             shellGo = new GameObject("ReputationShell");
             shell = shellGo.AddComponent<AppShell>();
-            shell.SetIdentity(callsign, "reput-capture-pw");
+            // idem — voir la note du premier retrait, plus haut dans ce fichier.
             yield return null;
 
             float t0 = Time.realtimeSinceStartup;
@@ -1375,22 +1376,20 @@ namespace MafiaCleanCity.Capture.Tests
         [Category("CaptureDossier")]
         public IEnumerator Capture_LeDossier_SousChrome()
         {
-            var auth = new AuthClient { BaseUrl = BaseUrl };
-            string callsign = SeederSupport.SafeCallsign("dossier", ref seq);
-            string token = null, err = null;
-            yield return auth.SignUp(callsign, "dossier-capture-pw", t => token = t, e => err = e);
-            Assert.IsNull(err, $"signup errored: {err}");
-
-            var sessionClient = new SessionClient { BaseUrl = BaseUrl };
-            SessionOpenDto payload = null;
-            yield return sessionClient.OpenSession(token, "capture-dossier", dto => payload = dto,
-                (c, m) => Assert.Fail($"session/open failed: {c}: {m}"));
-            Assert.IsNotNull(payload, "session/open doit réussir — il octroie le kit de départ");
+            // ⛔ LE PRÉAMBULE « signer un compte frais puis ouvrir sa session » EST PARTI AVEC
+            //    `SetIdentity` — il n'avait de sens que pour LUI. Il ouvrait une session sur un
+            //    compte que le shell n'utilise plus : une vérification de disponibilité du back
+            //    portant sur un AUTRE joueur que celui qu'on photographie. Ce n'est pas une
+            //    garde plus faible qui la remplace, c'est une plus forte : l'attente de
+            //    `shell.Token` ci-dessous porte sur le compte RÉELLEMENT photographié.
+            //    ★ Et la raison écrite ici (« session/open octroie le kit de départ ») ne vaut
+            //      plus : le compte de démo est garni par le seeder, pas par un kit de départ.
+            //      *Une justification survit à ce qu'elle justifiait, et se relit comme vraie.*
 
             LogAssert.ignoreFailingMessages = true;
             shellGo = new GameObject("DossierShell");
             shell = shellGo.AddComponent<AppShell>();
-            shell.SetIdentity(callsign, "dossier-capture-pw");
+            // idem — voir la note du premier retrait, plus haut dans ce fichier.
             yield return null;
 
             float t0 = Time.realtimeSinceStartup;
@@ -1534,22 +1533,20 @@ namespace MafiaCleanCity.Capture.Tests
         [Category("CaptureJournal")]
         public IEnumerator Capture_LeJournal_SousChrome()
         {
-            var auth = new AuthClient { BaseUrl = BaseUrl };
-            string callsign = SeederSupport.SafeCallsign("journal", ref seq);
-            string token = null, err = null;
-            yield return auth.SignUp(callsign, "journal-capture-pw", t => token = t, e => err = e);
-            Assert.IsNull(err, $"signup errored: {err}");
-
-            var sessionClient = new SessionClient { BaseUrl = BaseUrl };
-            SessionOpenDto payload = null;
-            yield return sessionClient.OpenSession(token, "capture-journal", dto => payload = dto,
-                (c, m) => Assert.Fail($"session/open failed: {c}: {m}"));
-            Assert.IsNotNull(payload, "session/open doit réussir — il octroie le kit de départ");
+            // ⛔ LE PRÉAMBULE « signer un compte frais puis ouvrir sa session » EST PARTI AVEC
+            //    `SetIdentity` — il n'avait de sens que pour LUI. Il ouvrait une session sur un
+            //    compte que le shell n'utilise plus : une vérification de disponibilité du back
+            //    portant sur un AUTRE joueur que celui qu'on photographie. Ce n'est pas une
+            //    garde plus faible qui la remplace, c'est une plus forte : l'attente de
+            //    `shell.Token` ci-dessous porte sur le compte RÉELLEMENT photographié.
+            //    ★ Et la raison écrite ici (« session/open octroie le kit de départ ») ne vaut
+            //      plus : le compte de démo est garni par le seeder, pas par un kit de départ.
+            //      *Une justification survit à ce qu'elle justifiait, et se relit comme vraie.*
 
             LogAssert.ignoreFailingMessages = true;
             shellGo = new GameObject("JournalShell");
             shell = shellGo.AddComponent<AppShell>();
-            shell.SetIdentity(callsign, "journal-capture-pw");
+            // idem — voir la note du premier retrait, plus haut dans ce fichier.
             yield return null;
 
             float t0 = Time.realtimeSinceStartup;
@@ -1663,22 +1660,20 @@ namespace MafiaCleanCity.Capture.Tests
         [Category("CaptureFiliere")]
         public IEnumerator Capture_LaFiliere_SousChrome()
         {
-            var auth = new AuthClient { BaseUrl = BaseUrl };
-            string callsign = SeederSupport.SafeCallsign("filiere", ref seq);
-            string token = null, err = null;
-            yield return auth.SignUp(callsign, "filiere-capture-pw", t => token = t, e => err = e);
-            Assert.IsNull(err, $"signup errored: {err}");
-
-            var sessionClient = new SessionClient { BaseUrl = BaseUrl };
-            SessionOpenDto payload = null;
-            yield return sessionClient.OpenSession(token, "capture-filiere", dto => payload = dto,
-                (c, m) => Assert.Fail($"session/open failed: {c}: {m}"));
-            Assert.IsNotNull(payload, "session/open doit réussir — il octroie le kit de départ");
+            // ⛔ LE PRÉAMBULE « signer un compte frais puis ouvrir sa session » EST PARTI AVEC
+            //    `SetIdentity` — il n'avait de sens que pour LUI. Il ouvrait une session sur un
+            //    compte que le shell n'utilise plus : une vérification de disponibilité du back
+            //    portant sur un AUTRE joueur que celui qu'on photographie. Ce n'est pas une
+            //    garde plus faible qui la remplace, c'est une plus forte : l'attente de
+            //    `shell.Token` ci-dessous porte sur le compte RÉELLEMENT photographié.
+            //    ★ Et la raison écrite ici (« session/open octroie le kit de départ ») ne vaut
+            //      plus : le compte de démo est garni par le seeder, pas par un kit de départ.
+            //      *Une justification survit à ce qu'elle justifiait, et se relit comme vraie.*
 
             LogAssert.ignoreFailingMessages = true;
             shellGo = new GameObject("FiliereShell");
             shell = shellGo.AddComponent<AppShell>();
-            shell.SetIdentity(callsign, "filiere-capture-pw");
+            // idem — voir la note du premier retrait, plus haut dans ce fichier.
             yield return null;
 
             float t0 = Time.realtimeSinceStartup;
@@ -1758,22 +1753,20 @@ namespace MafiaCleanCity.Capture.Tests
         
         public IEnumerator Capture_EcranLieutenants_SousChromeV31()
         {
-            var auth = new AuthClient { BaseUrl = BaseUrl };
-            string callsign = SeederSupport.SafeCallsign("lieut", ref seq);
-            string token = null, err = null;
-            yield return auth.SignUp(callsign, "lieut-capture-pw", t => token = t, e => err = e);
-            Assert.IsNull(err, $"signup errored: {err}");
-
-            var sessionClient = new SessionClient { BaseUrl = BaseUrl };
-            SessionOpenDto payload = null;
-            yield return sessionClient.OpenSession(token, "capture-lieut", dto => payload = dto,
-                (c, m) => Assert.Fail($"session/open failed: {c}: {m}"));
-            Assert.IsNotNull(payload, "session/open doit réussir — il octroie le kit de départ (2 lieutenants)");
+            // ⛔ LE PRÉAMBULE « signer un compte frais puis ouvrir sa session » EST PARTI AVEC
+            //    `SetIdentity` — il n'avait de sens que pour LUI. Il ouvrait une session sur un
+            //    compte que le shell n'utilise plus : une vérification de disponibilité du back
+            //    portant sur un AUTRE joueur que celui qu'on photographie. Ce n'est pas une
+            //    garde plus faible qui la remplace, c'est une plus forte : l'attente de
+            //    `shell.Token` ci-dessous porte sur le compte RÉELLEMENT photographié.
+            //    ★ Et la raison écrite ici (« session/open octroie le kit de départ ») ne vaut
+            //      plus : le compte de démo est garni par le seeder, pas par un kit de départ.
+            //      *Une justification survit à ce qu'elle justifiait, et se relit comme vraie.*
 
             LogAssert.ignoreFailingMessages = true;
             shellGo = new GameObject("LieutenantsShell");
             shell = shellGo.AddComponent<AppShell>();
-            shell.SetIdentity(callsign, "lieut-capture-pw");
+            // idem — voir la note du premier retrait, plus haut dans ce fichier.
             yield return null;
 
             float t0 = Time.realtimeSinceStartup;
