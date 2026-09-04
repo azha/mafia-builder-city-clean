@@ -1,0 +1,73 @@
+{
+ "dossier": "ecran_delegation",
+ "symbole": "㉜",
+ "controleur": "DelegationScreenController",
+ "date": "2026-09-04T10:08:35",
+ "back_main": "c6b74f58",
+ "compte": "operational_demo@example.test",
+ "note": "routes = celles du DOSSIER de code du contrôleur et de ses classes *Client (parfois plus larges que l'écran) ; le juge-donnees filtre",
+ "comptes": {
+  "appelées": 3,
+  "sans instance": 0,
+  "mutations": 2,
+  "erreurs": 3
+ },
+ "routes": [
+  {
+   "fichier": "GET_lieutenants.json",
+   "route": "/v1/lieutenants",
+   "methode": "GET",
+   "statut": 200,
+   "etat": "appelée"
+  },
+  {
+   "fichier": "POST_meta_graduation.json",
+   "route": "/v1/meta/graduation",
+   "methode": "POST",
+   "statut": null,
+   "etat": "mutation"
+  },
+  {
+   "fichier": "POST_meta_recall.json",
+   "route": "/v1/meta/recall",
+   "methode": "POST",
+   "statut": null,
+   "etat": "mutation"
+  },
+  {
+   "fichier": "GET_meta_recall-preview.json",
+   "route": "/v1/meta/recall-preview/",
+   "methode": "GET",
+   "statut": 409,
+   "etat": "erreur"
+  },
+  {
+   "fichier": "GET_meta_recall-preview_1.json",
+   "route": "/v1/meta/recall-preview/1",
+   "methode": "GET",
+   "statut": 409,
+   "etat": "erreur"
+  },
+  {
+   "fichier": "GET_meta_recall-preview_categoryId.json",
+   "route": "/v1/meta/recall-preview/{categoryId}",
+   "methode": "GET",
+   "statut": 409,
+   "etat": "erreur"
+  },
+  {
+   "fichier": "GET_meta_task-categories.json",
+   "route": "/v1/meta/task-categories",
+   "methode": "GET",
+   "statut": 200,
+   "etat": "appelée"
+  },
+  {
+   "fichier": "POST_session_open.json",
+   "route": "/v1/session/open",
+   "methode": "POST",
+   "statut": 200,
+   "etat": "appelée"
+  }
+ ]
+}

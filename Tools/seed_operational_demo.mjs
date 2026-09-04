@@ -253,10 +253,26 @@ async function main() {
   if (accountId) {
     playerId = psql(`SELECT player_id FROM "player" WHERE account_id = '${accountId}';`);
     psql(`UPDATE "account_credential" SET password_hash = '${hashPassword(PASSWORD)}', updated_at = now() WHERE account_id = '${accountId}';`);
+    // ⛔⛔ LA LOCALE SE RATTRAPE À CHAQUE SEMIS, PAS SEULEMENT À LA CRÉATION — et sans cette ligne
+    //    le compte de démo reste `en` POUR TOUJOURS : il existe déjà, la branche de création
+    //    ci-dessous ne le reverra jamais. TD-539 a fait de `fr` le défaut d'un signup NEUF ; il n'y
+    //    a pas de migration de masse (TD-540), donc les comptes déjà là gardent leur `en`.
+    // ⚠️ CE QUE ÇA CHANGE, MESURÉ le 2026-09-04 : le client demande `GET /v1/i18n/bundle` SANS
+    //    paramètre de locale, le back rend celle du COMPTE, et pour `en` il sert `Broke`, `Flush`,
+    //    `Front shop`, `Lab` — c'est-à-dire les littéraux ANGLAIS que la conversion i18n venait de
+    //    remplacer par des replis français. Un écran converti, amorcé sur un compte `en`, redevient
+    //    donc ANGLAIS : le bundle écrase le repli. *Traduire le client ne suffit pas si le compte
+    //    qui le lit demande l'autre langue.*
+    const localeAvant = psql(`SELECT locale FROM "player" WHERE account_id = '${accountId}';`);
+    if (localeAvant !== 'fr') {
+      psql(`UPDATE "player" SET locale = 'fr' WHERE account_id = '${accountId}';`);
+      console.log(`[op-seed] locale du compte de démo : '${localeAvant}' -> 'fr' (TD-539 ; pas de migration de masse, c'est ce seeder qui rattrape)`);
+    }
     console.log(`[op-seed] reusing operational demo account ${accountId} (player ${playerId})`);
   } else {
     accountId = psql(`INSERT INTO "account" ("kind","lifecycle_state") VALUES ('PLAYER','ACTIVE') RETURNING account_id;`);
-    playerId = psql(`INSERT INTO "player" ("account_id","callsign","email","locale") VALUES ('${accountId}','${CALLSIGN}','${EMAIL}','en') RETURNING player_id;`);
+    // `fr` à la création — la langue réelle du jeu (ruling fiction du 2026-09-02, TD-539).
+    playerId = psql(`INSERT INTO "player" ("account_id","callsign","email","locale") VALUES ('${accountId}','${CALLSIGN}','${EMAIL}','fr') RETURNING player_id;`);
     psql(`INSERT INTO "account_credential" ("account_id","password_hash") VALUES ('${accountId}','${hashPassword(PASSWORD)}');`);
     console.log(`[op-seed] created operational demo account ${accountId} (player ${playerId})`);
   }

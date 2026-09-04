@@ -177,7 +177,7 @@ namespace MafiaCleanCity.Shell
         private void RenderCohesionDeclaredUnavailable()
         {
             CohesionDeclaredUnavailable = true;
-            cohesionText.text = "Cohesion: Unavailable (no citywide aggregate)";
+            cohesionText.text = Lib("vitals", "Cohésion : indisponible (pas d'agrégat pour la ville)");
             RebuildTrackedTexts();
         }
 
@@ -243,5 +243,14 @@ namespace MafiaCleanCity.Shell
             t.raycastTarget = false;
             return t;
         }
+
+        /// <summary>Item 0.6 — le littéral d'écran passe par une CLÉ. Le repli passé à `Libelle`
+        /// est FRANÇAIS : `Libelle.De` rend le littéral quand la clé manque au bundle, donc un
+        /// repli anglais resterait anglais à l'écran À TRAVERS la conversion (mesuré par le
+        /// chantier B : 81 replis sur 107 étaient anglais après une première passe — « converti
+        /// sans traduire »). Convertir sans traduire ne change rien pour le joueur.</summary>
+        private static string Lib(string role, string litteral) =>
+            MafiaCleanCity.I18n.Libelle.De("accueil", role, litteral);
+
     }
 }

@@ -1,0 +1,15 @@
+{
+ "route": "/v1/meta/recall",
+ "methode": "POST",
+ "statut": null,
+ "non_appelee": "mutation — pas de corps réel sans changer l'état du compte de démo la veille des juges",
+ "provenance": {
+  "date": "2026-09-04T10:08:35",
+  "back_main": "c6b74f58",
+  "game_back": "mafia-clean-city-game-back 2026-09-04T08:06:19.233319758Z",
+  "compte": "operational_demo@example.test",
+  "dossier": "ecran_delegation",
+  "symbole": "㉜",
+  "controleur": "DelegationScreenController"
+ }
+}

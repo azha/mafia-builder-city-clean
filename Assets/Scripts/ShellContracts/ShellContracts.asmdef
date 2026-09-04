@@ -2,7 +2,8 @@
     "name": "ShellContracts",
     "rootNamespace": "MafiaCleanCity.Shell",
     "references": [
-        "Theme"
+        "Theme",
+        "I18n"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

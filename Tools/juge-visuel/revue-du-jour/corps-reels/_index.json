@@ -1,0 +1,108 @@
+{
+ "dossier": "revue-du-jour",
+ "symbole": "⑯",
+ "controleur": "DailyReviewScreenController",
+ "date": "2026-09-04T10:08:35",
+ "back_main": "c6b74f58",
+ "compte": "operational_demo@example.test",
+ "note": "routes = celles du DOSSIER de code du contrôleur et de ses classes *Client (parfois plus larges que l'écran) ; le juge-donnees filtre",
+ "comptes": {
+  "appelées": 5,
+  "sans instance": 0,
+  "mutations": 8,
+  "erreurs": 0
+ },
+ "routes": [
+  {
+   "fichier": "GET_exceptions_queue.json",
+   "route": "/v1/exceptions/queue",
+   "methode": "GET",
+   "statut": 200,
+   "etat": "appelée"
+  },
+  {
+   "fichier": "GET_flag-review.json",
+   "route": "/v1/flag-review",
+   "methode": "GET",
+   "statut": 200,
+   "etat": "appelée"
+  },
+  {
+   "fichier": "POST_flag-review_batch-confirm.json",
+   "route": "/v1/flag-review/batch-confirm",
+   "methode": "POST",
+   "statut": null,
+   "etat": "mutation"
+  },
+  {
+   "fichier": "POST_flag-review_flagId_dismiss.json",
+   "route": "/v1/flag-review/{flagId}/dismiss",
+   "methode": "POST",
+   "statut": null,
+   "etat": "mutation"
+  },
+  {
+   "fichier": "POST_flag-review_flagId_validate.json",
+   "route": "/v1/flag-review/{flagId}/validate",
+   "methode": "POST",
+   "statut": null,
+   "etat": "mutation"
+  },
+  {
+   "fichier": "GET_lieutenants.json",
+   "route": "/v1/lieutenants",
+   "methode": "GET",
+   "statut": 200,
+   "etat": "appelée"
+  },
+  {
+   "fichier": "GET_lieutenants_id.json",
+   "route": "/v1/lieutenants/{id}",
+   "methode": "GET",
+   "statut": 200,
+   "etat": "appelée"
+  },
+  {
+   "fichier": "POST_lieutenants_id_behavior-script.json",
+   "route": "/v1/lieutenants/{id}/behavior-script",
+   "methode": "POST",
+   "statut": null,
+   "etat": "mutation"
+  },
+  {
+   "fichier": "POST_lieutenants_id_behavior-script_validate.json",
+   "route": "/v1/lieutenants/{id}/behavior-script/validate",
+   "methode": "POST",
+   "statut": null,
+   "etat": "mutation"
+  },
+  {
+   "fichier": "POST_lieutenants_id_reassign.json",
+   "route": "/v1/lieutenants/{id}/reassign",
+   "methode": "POST",
+   "statut": null,
+   "etat": "mutation"
+  },
+  {
+   "fichier": "POST_session_hl-card_cardId_commit.json",
+   "route": "/v1/session/hl-card/{cardId}/commit",
+   "methode": "POST",
+   "statut": null,
+   "etat": "mutation"
+  },
+  {
+   "fichier": "POST_session_hl-card_cardId_skip.json",
+   "route": "/v1/session/hl-card/{cardId}/skip",
+   "methode": "POST",
+   "statut": null,
+   "etat": "mutation"
+  },
+  {
+   "fichier": "POST_session_open.json",
+   "route": "/v1/session/open",
+   "methode": "POST",
+   "statut": 200,
+   "etat": "appelée"
+  }
+ ]
+}

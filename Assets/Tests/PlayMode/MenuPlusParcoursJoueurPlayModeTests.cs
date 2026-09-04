@@ -86,7 +86,17 @@ namespace MafiaCleanCity.Shell.Tests
                 $"{shell.MenuPlusEntrees} entrées comptées par le shell mais {noms.Count} boutons trouvés : " +
                 "l'un des deux ment, et aucune conclusion n'est possible tant qu'ils divergent.");
 
-            var montes = new Dictionary<string, System.Type>();
+            // ⛔⛔ UNE LISTE, PAS UN DICTIONNAIRE — et c'est le correctif d'un défaut que cette garde
+            //    a laissé passer le 2026-09-03. Elle accumulait dans un `Dictionary<string, Type>`
+            //    CLÉ PAR NOM DE BOUTON : deux entrées de menu identiques (même libellé, même écran)
+            //    produisent deux boutons de même nom, la seconde ÉCRASE la première, et
+            //    `montes.Count == distincts` devient vrai par construction. Mesuré : le menu a
+            //    porté ㊳ en double, puis ㉞ en double, sans que cette garde bronche — alors que son
+            //    nom promet exactement cette propriété.
+            //    ⇒ *La garde mesurait la bonne propriété sur une collection qui avait déjà perdu la
+            //      preuve.* Le dictionnaire dédupliquait avant l'assertion : c'est l'INSTRUMENT qui
+            //      rendait le monde dégénéré inobservable, pas l'assertion qui était trop faible.
+            var montes = new List<(string nom, System.Type type)>();
             var echecs = new List<string>();
 
             foreach (string nom in noms)
@@ -111,7 +121,7 @@ namespace MafiaCleanCity.Shell.Tests
                 yield return null;
 
                 if (shell.MountedTenantType == null) { echecs.Add($"{nom} : cliqué, aucun locataire monté"); continue; }
-                montes[nom] = shell.MountedTenantType;
+                montes.Add((nom, shell.MountedTenantType));
             }
 
             Assert.IsEmpty(echecs,
@@ -127,12 +137,20 @@ namespace MafiaCleanCity.Shell.Tests
             //      monte. On asserte donc la CARDINALITÉ, pas l'occupation. *Même famille que
             //      l'anneau à « N entrées distinctes en POSITION » satisfait par des valeurs
             //      identiques — la garde qui certifie le défaut.*
-            int distincts = montes.Values.Distinct().Count();
+            // Et les NOMS aussi : deux boutons de même nom sont déjà une anomalie du menu, même
+            // s'ils montaient des écrans différents — un joueur lit deux fois la même destination.
+            var nomsDoubles = noms.GroupBy(n => n).Where(g => g.Count() > 1).Select(g => g.Key).ToList();
+            Assert.IsEmpty(nomsDoubles,
+                $"le menu porte {nomsDoubles.Count} libellé(s) en double : [{string.Join(", ", nomsDoubles)}]. "
+                + "La table des destinations se fusionne en UNION puis se DÉDUPLIQUE par contrôleur ; "
+                + "sans le second temps, deux branches qui ajoutent la même entrée la posent deux fois.");
+
+            int distincts = montes.Select(x => x.type).Distinct().Count();
             Assert.AreEqual(montes.Count, distincts,
                 $"{montes.Count} entrées cliquées ne montent que {distincts} écran(s) DISTINCT(s) : " +
                 "plusieurs entrées mènent au même endroit — le symptôme exact d'une capture de " +
                 "variable de boucle par référence.\n" +
-                string.Join("\n", montes.Select(kv => $"  {kv.Key} -> {kv.Value.Name}")));
+                string.Join("\n", montes.Select(x => $"  {x.nom} -> {x.type.Name}")));
         }
     }
 }

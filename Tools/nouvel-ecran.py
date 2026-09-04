@@ -438,6 +438,27 @@ namespace MafiaCleanCity.Operational
             // est stable.
             if (transform.parent != null) transform.SetAsLastSibling();
             EnsureInitialized();
+            StartCoroutine(Amorcer());
+        }}
+
+        /// <summary>Charger dès le montage — sans cet appel, `Charger()` n'a AUCUN appelant et
+        /// l'écran reste sur son état initial pour toujours.
+        ///
+        /// ⛔⛔ CE GÉNÉRATEUR PRODUISAIT `Start()` SANS CET APPEL, et le défaut a été reconduit
+        /// TROIS FOIS : ㊴ l'a payé, ㊵ porte le commentaire qui le raconte, ㉞ l'a rejoué quand
+        /// même. *Écrire la leçon À CÔTÉ du patron ne la fait pas relire au moment où l'on génère
+        /// l'écran suivant.* Un défaut reconduit par DÉFAUT se corrige à la SOURCE, jamais au cas
+        /// — sinon on paie une fois par écran, indéfiniment.
+        ///
+        /// ⚠️ CE QUI L'A RENDU INVISIBLE À CHAQUE FOIS : `BuildLayout()` construit un état initial
+        /// COMPLET et NOMMÉ. La capture isolée est donc belle, remplie et plausible. *Un état
+        /// initial bien fait ressemble à un écran qui fonctionne.* Seule une capture SOUS CHROME
+        /// qui attend `RenduTermine` peut le voir — une garde qui REFUSE de photographier tant que
+        /// l'écran n'a pas fini vaut mieux qu'une image qui rassure.</summary>
+        private IEnumerator Amorcer()
+        {{
+            if (string.IsNullOrEmpty(token)) yield break;   // hors session : état initial NOMMÉ
+            yield return Charger();
         }}
 
         private void EnsureInitialized()
@@ -1000,6 +1021,18 @@ def main():
     # ── Bloc AppShell à COLLER — jamais écrit automatiquement (une autre session tient ce fichier) ──
     controleur_actuel = montages.get(args.tab, "(destination vide)")
     print(f"\n{'=' * 78}")
+    print("⛔⛔ COLLER CE BLOC MAINTENANT, PAS À LA CLÔTURE DE L'ÉCRAN.")
+    print("Mesuré DEUX fois le 2026-09-03 (㊳ puis ㉞) : le squelette est parti dans `main`")
+    print("SANS sa ligne de destination, et la garde de joignabilité l'a classé orphelin au")
+    print("premier run post-merge — « 1 locataire sans AUCUN chemin ». Les deux fois l'écran")
+    print("était bâti, testé, capturé, et INJOIGNABLE.")
+    print("★ Un écran titré et vide est ce que ce régime livre déjà ; un écran SANS PORTE, non.")
+    print("⚠️ Et la garde qui attrape ça (`Joignabilite`) est DANS le filtre par défaut : elle")
+    print("ne se déclenche pas pour qui ne lance que des catégories SCOPÉES — son propre")
+    print("périmètre, à chaque run. Une garde qui protège la branche entière ne se déclenche")
+    print("jamais pour qui ne court que chez lui.")
+    print("⇒ Coller le bloc, PUIS lancer MAFIA_CI_CATEGORIES=Joignabilite AVANT le 1er commit.")
+    print("=" * 78)
     print(f"AppShell.cs — NE PAS ÉDITER AUTOMATIQUEMENT. Bloc à coller dans `ActivateTab`,")
     print(f"dans le `switch (tab)` (méthode publique `ActivateTab(Tab tab)`) :")
     print(f"{'=' * 78}")

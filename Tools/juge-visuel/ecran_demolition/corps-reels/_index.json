@@ -1,0 +1,87 @@
+{
+ "dossier": "ecran_demolition",
+ "symbole": "㉝",
+ "controleur": "DemolitionScreenController",
+ "date": "2026-09-04T10:08:35",
+ "back_main": "c6b74f58",
+ "compte": "operational_demo@example.test",
+ "note": "routes = celles du DOSSIER de code du contrôleur et de ses classes *Client (parfois plus larges que l'écran) ; le juge-donnees filtre",
+ "comptes": {
+  "appelées": 7,
+  "sans instance": 1,
+  "mutations": 2,
+  "erreurs": 0
+ },
+ "routes": [
+  {
+   "fichier": "GET_city_district_districtId_interior.json",
+   "route": "/v1/city/district/{districtId}/interior",
+   "methode": "GET",
+   "statut": 200,
+   "etat": "appelée"
+  },
+  {
+   "fichier": "GET_city_district_id_interior.json",
+   "route": "/v1/city/district/{id}/interior",
+   "methode": "GET",
+   "statut": 200,
+   "etat": "appelée"
+  },
+  {
+   "fichier": "GET_friction_nodes.json",
+   "route": "/v1/friction/nodes/",
+   "methode": "GET",
+   "statut": 200,
+   "etat": "appelée"
+  },
+  {
+   "fichier": "GET_friction_nodes_buildingId.json",
+   "route": "/v1/friction/nodes/{buildingId}",
+   "methode": "GET",
+   "statut": 200,
+   "etat": "appelée"
+  },
+  {
+   "fichier": "POST_friction_nodes_buildingId_decommission.json",
+   "route": "/v1/friction/nodes/{buildingId}/decommission",
+   "methode": "POST",
+   "statut": null,
+   "etat": "mutation"
+  },
+  {
+   "fichier": "GET_friction_replacement-options.json",
+   "route": "/v1/friction/replacement-options",
+   "methode": "GET",
+   "statut": 200,
+   "etat": "appelée"
+  },
+  {
+   "fichier": "GET_friction_replacement-options.json",
+   "route": "/v1/friction/replacement-options/",
+   "methode": "GET",
+   "statut": null,
+   "etat": "sans instance"
+  },
+  {
+   "fichier": "POST_friction_replacement-options_id_pick.json",
+   "route": "/v1/friction/replacement-options/{id}/pick",
+   "methode": "POST",
+   "statut": null,
+   "etat": "mutation"
+  },
+  {
+   "fichier": "GET_friction_state.json",
+   "route": "/v1/friction/state",
+   "methode": "GET",
+   "statut": 200,
+   "etat": "appelée"
+  },
+  {
+   "fichier": "GET_world_districts.json",
+   "route": "/v1/world/districts",
+   "methode": "GET",
+   "statut": 200,
+   "etat": "appelée"
+  }
+ ]
+}

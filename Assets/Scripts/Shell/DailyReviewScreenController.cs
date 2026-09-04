@@ -256,7 +256,7 @@ namespace MafiaCleanCity.Shell
                 // ⚠️ L'état vide ne promet RIEN : il ne mentionne pas les routines en attente,
                 // parce qu'aucun geste ne permet de les traiter depuis ici. Nommer un nombre sans
                 // offrir de geste fabrique une attente que l'écran ne peut pas tenir.
-                emptyStateText.text = "Personne au comptoir ce matin.";
+                emptyStateText.text = Lib("bloc", "Personne au comptoir ce matin.");
                 MajRegistre(enAttente, tamponDisponible, 0);
                 return;
             }
@@ -278,7 +278,7 @@ namespace MafiaCleanCity.Shell
             if (tamponRoot != null)
             {
                 tamponRoot.SetActive(tamponDisponible);
-                if (tamponLibelle != null) tamponLibelle.text = "CONFIRMER LA ROUTINE · " + enAttente;
+                if (tamponLibelle != null) tamponLibelle.text = Lib("bloc", "CONFIRMER LA ROUTINE · ") + enAttente;
                 if (tamponSous != null)
                     tamponSous.text = signalements > 0
                         ? "appui long — les " + signalements + " signalements restent à votre main"
@@ -732,5 +732,14 @@ namespace MafiaCleanCity.Shell
                 .ListLieutenants(bearerToken, rows => roster = rows, (c, m) => { });
             if (LastLoadedReview != null) Render(LastLoadedReview.cards);
         }
+
+        /// <summary>Item 0.6 — le littéral d'écran passe par une CLÉ. Le repli passé à `Libelle`
+        /// est FRANÇAIS : `Libelle.De` rend le littéral quand la clé manque au bundle, donc un
+        /// repli anglais resterait anglais à l'écran À TRAVERS la conversion (mesuré par le
+        /// chantier B : 81 replis sur 107 étaient anglais après une première passe — « converti
+        /// sans traduire »). Convertir sans traduire ne change rien pour le joueur.</summary>
+        private static string Lib(string role, string litteral) =>
+            MafiaCleanCity.I18n.Libelle.De("revue", role, litteral);
+
     }
 }

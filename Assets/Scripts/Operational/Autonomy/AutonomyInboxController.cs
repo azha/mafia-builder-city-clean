@@ -363,10 +363,10 @@ namespace MafiaCleanCity.Operational.Autonomy
         {
             switch (b) {
                 case "MINIMAL": return MafiaCleanCity.I18n.Libelle.De("autonomie", "etat", "[~] Minimal");
-                case "TRADEOFF": return MafiaCleanCity.I18n.Libelle.De("autonomie", "etat", "[<>] Tradeoff");
-                case "ELEVATED_EXPOSURE": return MafiaCleanCity.I18n.Libelle.De("autonomie", "etat", "[!] Elevated exposure");
-                case "OPPORTUNITY_COST": return MafiaCleanCity.I18n.Libelle.De("autonomie", "etat", "[$] Opportunity cost");
-                default: return MafiaCleanCity.I18n.Libelle.De("autonomie", "etat", "[?] Unknown");
+                case "TRADEOFF": return MafiaCleanCity.I18n.Libelle.De("autonomie", "etat", "[<>] Arbitrage");
+                case "ELEVATED_EXPOSURE": return MafiaCleanCity.I18n.Libelle.De("autonomie", "etat", "[!] Exposition accrue");
+                case "OPPORTUNITY_COST": return MafiaCleanCity.I18n.Libelle.De("autonomie", "etat", "[$] Coût d'opportunité");
+                default: return MafiaCleanCity.I18n.Libelle.De("autonomie", "etat", "[?] Inconnu");
             }
         }
 

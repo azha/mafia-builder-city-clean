@@ -1,0 +1,38 @@
+{
+ "dossier": "exceptions",
+ "symbole": "⑩",
+ "controleur": "ExceptionDetailController",
+ "date": "2026-09-04T10:08:35",
+ "back_main": "c6b74f58",
+ "compte": "operational_demo@example.test",
+ "note": "routes = celles du DOSSIER de code du contrôleur et de ses classes *Client (parfois plus larges que l'écran) ; le juge-donnees filtre",
+ "comptes": {
+  "appelées": 2,
+  "sans instance": 0,
+  "mutations": 1,
+  "erreurs": 0
+ },
+ "routes": [
+  {
+   "fichier": "GET_exceptions_queue.json",
+   "route": "/v1/exceptions/queue",
+   "methode": "GET",
+   "statut": 200,
+   "etat": "appelée"
+  },
+  {
+   "fichier": "POST_exceptions_id_resolve.json",
+   "route": "/v1/exceptions/{id}/resolve",
+   "methode": "POST",
+   "statut": null,
+   "etat": "mutation"
+  },
+  {
+   "fichier": "GET_progression.json",
+   "route": "/v1/progression",
+   "methode": "GET",
+   "statut": 200,
+   "etat": "appelée"
+  }
+ ]
+}

@@ -1,0 +1,38 @@
+{
+ "dossier": "compte",
+ "symbole": "㉕",
+ "controleur": "TutorialScreenController",
+ "date": "2026-09-04T10:08:35",
+ "back_main": "c6b74f58",
+ "compte": "operational_demo@example.test",
+ "note": "routes = celles du DOSSIER de code du contrôleur et de ses classes *Client (parfois plus larges que l'écran) ; le juge-donnees filtre",
+ "comptes": {
+  "appelées": 1,
+  "sans instance": 0,
+  "mutations": 2,
+  "erreurs": 0
+ },
+ "routes": [
+  {
+   "fichier": "PATCH_ui_tutorial.json",
+   "route": "/v1/ui/tutorial",
+   "methode": "PATCH",
+   "statut": null,
+   "etat": "mutation"
+  },
+  {
+   "fichier": "PATCH_ui_tutorial-opt-out.json",
+   "route": "/v1/ui/tutorial-opt-out",
+   "methode": "PATCH",
+   "statut": null,
+   "etat": "mutation"
+  },
+  {
+   "fichier": "GET_ui_tutorial-state.json",
+   "route": "/v1/ui/tutorial-state",
+   "methode": "GET",
+   "statut": 200,
+   "etat": "appelée"
+  }
+ ]
+}

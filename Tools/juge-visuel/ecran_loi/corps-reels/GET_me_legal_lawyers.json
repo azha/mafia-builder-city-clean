@@ -1,0 +1,23 @@
+{
+ "route": "/v1/me/legal/lawyers/",
+ "methode": "GET",
+ "statut": null,
+ "sans_instance": {
+  "lawyerId": "aucune instance sur le compte de démo — attendue dans ['me/legal/lawyers', 'me/legal'] (clés ['lawyer_id', 'id'])"
+ },
+ "params": {
+  "lawyerId": {
+   "valeur": null,
+   "source": "aucune instance sur le compte de démo — attendue dans ['me/legal/lawyers', 'me/legal'] (clés ['lawyer_id', 'id'])"
+  }
+ },
+ "provenance": {
+  "date": "2026-09-04T10:08:35",
+  "back_main": "c6b74f58",
+  "game_back": "mafia-clean-city-game-back 2026-09-04T08:06:19.233319758Z",
+  "compte": "operational_demo@example.test",
+  "dossier": "ecran_loi",
+  "symbole": "㉛",
+  "controleur": "LoiScreenController"
+ }
+}

@@ -19,6 +19,14 @@ GUID neuf de son côté. Résultat : **onze conflits de GUID**, un par machine.
   des deux ne part. Si l'éditeur n'a pas encore tourné, on attend le run — on ne
   commite pas l'asset seul en promettant de compléter.
 
+⚠️ CET OUTIL NE SERT À RIEN SI ON NE LIT PAS SON CODE DE SORTIE. Le 2026-09-03 il a imprimé
+son avertissement en toutes lettres et j'ai commité par-dessus, parce que mon `git commit`
+n'était pas conditionné à lui. *Une garde qui s'exécute mais que rien n'écoute est une garde
+décorative* — troisième variante du même défaut dans la même journée, après « garde vraie à
+vide » et « garde vraie trop tôt ».
+⇒ L'appeler ainsi, jamais autrement :
+       python3 Tools/verifier-meta-des-assets.py --staged || exit 1
+
 Usage :
     python3 Tools/verifier-meta-des-assets.py           # l'index git (ce qui est suivi)
     python3 Tools/verifier-meta-des-assets.py --staged  # ce qu'on s'apprête à commiter

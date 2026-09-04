@@ -4,6 +4,10 @@ using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.TestTools;
+using System.Linq;
+using TMPro;
+using MafiaCleanCity.Shell;
+using MafiaCleanCity.CityMap;   // AuthClient y vit — mesuré, pas supposé
 using MafiaCleanCity.Operational;
 using MafiaCleanCity.Tests;   // SeederSupport.SafeCallsign
 using Object = UnityEngine.Object;
@@ -24,6 +28,9 @@ namespace MafiaCleanCity.Operational.Tests
     public class CarnetScreenPlayModeTests
     {
         private GameObject hostGo;
+        private GameObject shellGo;
+        private AppShell shell;
+        private int seq;
 
         [TearDown]
         public void TearDown()
@@ -92,6 +99,74 @@ namespace MafiaCleanCity.Operational.Tests
                 string.Join(", ", nonMaskable));
         }
 
+        /// <summary>⛔ LE VIDE ET LE PLEIN PARTAGENT UNE SEULE COLONNE.
+        ///
+        /// ⛔⛔ POURQUOI CETTE GARDE EXISTE, et ce qu'elle dit de celle d'au-dessus. Le
+        /// 2026-09-03, `ScreenC3` est sorti **VERT 2/2** et l'écran était fautif : « — rien — »
+        /// était centré (`TextAlignmentOptions.Center`) dans un corps `flexibleWidth = 1`, donc
+        /// posé à ~500 px de son propre numéro de rang, alors qu'un créneau REMPLI pose son titre
+        /// à gauche. La colonne SAUTAIT selon que le créneau était plein ou vide. Rien ne l'a vu
+        /// parce que mes deux seules gardes comptaient des `Graphic` et photographiaient.
+        /// ⇒ *Une garde anti-vacuité certifie qu'il Y A du texte, jamais qu'il est À SA PLACE.*
+        ///   Compter est une mesure de PRÉSENCE ; l'alignement est une mesure de POSITION. Un
+        ///   écran peut être plein et illisible : les deux familles ne se remplacent pas.
+        ///
+        /// ⚠️ Elle n'assène pas `alignment == Left` — ce serait relire le setter qu'on vient
+        /// d'écrire, une garde tautologique qui resterait verte si la colonne sautait pour une
+        /// AUTRE raison (padding, pivot, largeur de rang). Elle compare deux bords GAUCHES
+        /// mesurés après mise en page : le seul fait qui intéresse le lecteur de l'écran.</summary>
+        [UnityTest]
+        public IEnumerator ScreenC3S2_CreneauVideEtCreneauPlein_PartagentLaMemeColonne()
+        {
+            MonterEcran();
+            yield return null;
+            yield return null;   // laisser le VerticalLayoutGroup se résoudre
+
+            GameObject racine = RacineEcran();
+            var rien = new List<RectTransform>();
+            var titres = new List<RectTransform>();
+            // ⛔ SÉLECTIONNER PAR STRUCTURE, PAS PAR NOM SEUL. Première version : tout
+            // `TextMeshProUGUI` nommé « Rien » ou « Titre » dans l'écran — elle a rendu 8 vides
+            // + 2 pleins sur un carnet qui n'a que 8 créneaux, parce que « Titre » est un nom
+            // générique porté aussi par des textes HORS liste. Le plancher `AreEqual(8, ...)` a
+            // attrapé la faute et le run est sorti ROUGE : *une garde trop large ne se trompe pas
+            // seulement de population, elle accuse l'écran d'un défaut qui est le sien.*
+            // ⇒ Un créneau se reconnaît à sa STRUCTURE : son texte est enfant direct d'un
+            //   « Corps », lui-même enfant de la ligne de créneau. Aucun autre texte de l'écran
+            //   n'a ce parent.
+            foreach (TextMeshProUGUI t in racine.GetComponentsInChildren<TextMeshProUGUI>(true))
+            {
+                if (t.transform.parent == null || t.transform.parent.name != "Corps") continue;
+                if (t.name == "Rien") rien.Add((RectTransform)t.transform);
+                else if (t.name == "Titre") titres.Add((RectTransform)t.transform);
+            }
+
+            // ⚠️ PLANCHER — sans lui, un écran qui ne dessinerait AUCUN créneau rendrait les deux
+            // listes vides et la comparaison serait vraie à vide, le mode d'échec de ce dépôt.
+            Assert.AreEqual(8, rien.Count + titres.Count,
+                "les 8 créneaux doivent TOUJOURS être dessinés (vides compris) — obtenu " +
+                rien.Count + " vide(s) + " + titres.Count + " plein(s)");
+            Assert.IsNotEmpty(rien, "aucun créneau vide : cette garde serait vraie À VIDE");
+
+            var coins = new Vector3[4];
+            float gauche = float.NaN;
+            foreach (RectTransform rt in rien)
+            {
+                rt.GetWorldCorners(coins);
+                if (float.IsNaN(gauche)) gauche = coins[0].x;
+                Assert.AreEqual(gauche, coins[0].x, 0.5f,
+                    "deux « — rien — » ne commencent pas à la même abscisse");
+            }
+
+            // Le corps qui PORTE le texte donne la colonne attendue : le texte doit commencer au
+            // bord gauche de son corps, pas flotter en son milieu.
+            Transform corps = rien[0].parent;
+            ((RectTransform)corps).GetWorldCorners(coins);
+            Assert.AreEqual(coins[0].x, gauche, 1.0f,
+                "« — rien — » ne commence pas au bord gauche de son créneau : il flotte au " +
+                "milieu, loin de son numéro de rang, et la colonne saute entre vide et plein");
+        }
+
         // ═══ 2. CAPTURE pour le juge visuel ⊥ — deux résolutions ══════════════════════════════
 
         /// <summary>Patron ㊲ (`CapturerA`) : bascule le Canvas en `ScreenSpaceCamera` sur une
@@ -122,6 +197,96 @@ namespace MafiaCleanCity.Operational.Tests
 
             yield return CapturerA(1080, 1920, "Assets/Screenshots/screen_c3_1080x1920.png");
             yield return CapturerA(1080, 2400, "Assets/Screenshots/screen_c3_1080x2400.png");
+        }
+
+        /// <summary>⛔ ㉞ SOUS LE CHROME RÉEL, atteint par le CHEMIN DU JOUEUR — l'entrée nommée
+        /// du menu Plus, cliquée par un clic de production, jamais un montage direct.
+        ///
+        /// ⛔⛔ POURQUOI CETTE CAPTURE EN PLUS DE L'AUTRE, et ce que l'autre ne peut pas voir.
+        /// `ScreenC3C1` monte l'écran SEUL : hors shell, `ShellChrome.TopInsetPx` vaut ZÉRO, donc
+        /// une garde d'inset y serait vraie sans rien mesurer, et l'écran peut parfaitement
+        /// passer sous la barre du haut sans que rien ne l'attrape. Deux écrans de ce dépôt ont
+        /// été livrés ainsi. *Un écran isolé est photographié dans un monde où le chrome n'existe
+        /// pas — ce n'est pas une version plus simple du vrai, c'est un autre écran.*
+        ///
+        /// ⚠️ PLANCHER D'INSETS OBLIGATOIRE (`Assert.Greater(TopInsetPx, 0f)`) AVANT toute garde
+        /// de zone sûre : sans lui, la garde « le contenu commence sous l'inset » est satisfaite
+        /// par un inset nul, et certifie l'écran hors shell au lieu de le refuser. Troisième
+        /// variante de la garde décorative : vraie À VIDE.
+        ///
+        /// ⚠️ ATTENTE SUR `RenduTermine`, JAMAIS sur N frames : un compte de frames est une durée
+        /// déguisée en état, vert sur une machine rapide et rouge sur une lente, et il photographie
+        /// un écran à moitié rempli sans jamais le dire.</summary>
+        [UnityTest, Category("PhotoScreenC3SousChrome")]
+        public IEnumerator ScreenC3C2_CapturerSousLeChromeReel_ParLeCheminDuJoueur()
+        {
+            var auth = new AuthClient { BaseUrl = "http://localhost" };
+            string callsign = SeederSupport.SafeCallsign("carnet", ref seq);
+            string token = null, err = null;
+            yield return auth.SignUp(callsign, "carnet-capture-pw", t => token = t, e => err = e);
+            Assert.IsNull(err, "signup errored: " + err);
+
+            var sessionClient = new SessionClient { BaseUrl = "http://localhost" };
+            SessionOpenDto payload = null;
+            yield return sessionClient.OpenSession(token, "capture-carnet", d => payload = d,
+                (c, m) => Assert.Fail("session/open failed: " + c + ": " + m));
+            Assert.IsNotNull(payload, "session/open doit réussir");
+
+            LogAssert.ignoreFailingMessages = true;
+            shellGo = new GameObject("CarnetShell");
+            shell = shellGo.AddComponent<AppShell>();
+            shell.SetIdentity(callsign, "carnet-capture-pw");
+            yield return null;
+
+            float t0 = Time.realtimeSinceStartup;
+            while (string.IsNullOrEmpty(shell.Token) && Time.realtimeSinceStartup - t0 < 30f)
+                yield return null;
+            Assert.IsFalse(string.IsNullOrEmpty(shell.Token),
+                "le shell doit avoir acquis sa session avant qu'on ouvre le menu");
+
+            // ⛔ L'ENTRÉE EST DÉSIGNÉE PAR SON NOM, jamais par son RANG dans la liste : un
+            // `boutons[7]` resterait vert en photographiant l'écran du voisin le jour où une
+            // entrée est insérée avant. *Le nom est une donnée stable, l'indice est un accident
+            // d'ordre.*
+            const string NOM = "MenuPlus_LES ORDRES DU SOIR";
+            shell.ActivateTab(AppShell.Tab.More);
+            yield return null;
+            Button entree = Object.FindObjectsByType<Button>(FindObjectsSortMode.None)
+                .FirstOrDefault(b => b.gameObject.name == NOM);
+            Assert.IsNotNull(entree,
+                "l'entrée « " + NOM + " » est introuvable dans le menu Plus — l'écran n'a pas de " +
+                "porte, et une capture prise en le montant à la main mentirait sur son accessibilité");
+            Assert.IsTrue(ProductionClickSupport.Click(entree),
+                "l'entrée refuse le clic de production (inactive ou non interactive) : un doigt " +
+                "ne pourrait pas l'actionner, la destination est une porte peinte sur un mur");
+            yield return null;
+
+            var ecran = Object.FindFirstObjectByType<CarnetScreenController>();
+            Assert.IsNotNull(ecran, "le clic n'a monté aucun CarnetScreenController");
+
+            t0 = Time.realtimeSinceStartup;
+            while (!ecran.RenduTermine && Time.realtimeSinceStartup - t0 < 30f) yield return null;
+            Assert.IsTrue(ecran.RenduTermine,
+                "l'écran n'a jamais déclaré son rendu terminé en 30 s — photographier ici " +
+                "donnerait un carnet à moitié écrit, et la capture ne le dirait pas");
+
+            // ⛔ PLANCHER — avant toute garde de zone sûre. Hors shell ces deux valeurs sont
+            // NULLES, et la garde qui suit serait vraie sans rien mesurer.
+            Assert.Greater(ShellChrome.TopInsetPx, 0f,
+                "l'inset HAUT est nul : on n'est pas sous le chrome, toute garde de zone sûre " +
+                "serait vraie À VIDE et certifierait l'écran hors shell");
+            Assert.Greater(ShellChrome.BottomInsetPx, 0f, "l'inset BAS est nul — même défaut");
+
+            // ⛔ ANTI-VACUITÉ — une capture d'écran vide passerait toutes les gardes ci-dessus.
+            int textes = 0;
+            foreach (TextMeshProUGUI t in RacineEcran().GetComponentsInChildren<TextMeshProUGUI>(true))
+                if (!string.IsNullOrWhiteSpace(t.text)) textes++;
+            Assert.GreaterOrEqual(textes, 8,
+                "seulement " + textes + " texte(s) non vides sous CarnetRoot : les 8 créneaux " +
+                "doivent au minimum être écrits, sinon on photographie une page blanche");
+
+            yield return CapturerA(1080, 2400,
+                "Assets/Screenshots/screen_c3_sous_chrome_1080x2400.png");
         }
 
         private IEnumerator CapturerA(int largeur, int hauteur, string chemin)
@@ -196,55 +361,5 @@ namespace MafiaCleanCity.Operational.Tests
         // les tests d'état (AppliquerEtat sur un corps fabriqué via RendrePourTest), patron ㊲
         // §§ 1/3/5 de ReputationScreenPlayModeTests.
     
-        // ═══ SONDE DE CHEMINS — énumérer les candidats plutôt qu'en supposer un ═════════════
-
-        private int seq;
-
-        /// <summary>⛔ POURQUOI ÉNUMÉRER PLUTÔT QUE SUPPOSER. Le 2026-09-03, une sonde sur
-        /// `/v1/laundering/...` a rendu 404 sur trois routes et j'ai failli en conclure que le
-        /// serveur ne les avait pas. Le préfixe réel était `/v1/operational/laundering/...` : le
-        /// 404 était un fait sur MOI, pas sur le domaine. Un écran entier a failli être écrit sur
-        /// cette lecture — vert, cohérent, et faux.
-        /// ⇒ On ne parie donc plus sur UN chemin : on en essaie plusieurs et on lit les codes.
-        ///   Un 404 partout dit « la route n'existe pas » ; un 200 quelque part dit où elle est ;
-        ///   un 401/403 dit qu'elle existe et qu'il manque un droit — trois faits différents que
-        ///   le pari sur un seul chemin ne distingue jamais.
-        /// ⚠️ À SUPPRIMER une fois les chemins connus.</summary>
-        [UnityTest, Category("CarnetSonde")]
-        public IEnumerator SondeC3_OuSontLesRoutes()
-        {
-            var auth = new MafiaCleanCity.CityMap.AuthClient { BaseUrl = "http://localhost" };
-            string callsign = SeederSupport.SafeCallsign("sondecarnet", ref seq);
-            string token = null, err = null;
-            yield return auth.SignUp(callsign, "sonde-carnet-pw", t => token = t, e => err = e);
-            Assert.IsNull(err, $"signup errored: {err}");
-
-            var session = new MafiaCleanCity.Shell.SessionClient { BaseUrl = "http://localhost" };
-            yield return session.OpenSession(token, "sonde-carnet", _ => { },
-                (c, m) => Debug.LogWarning($"[C3-SONDE] session/open {c}: {m}"));
-
-            string[] candidats =
-            {
-                "/v1/cue-stack", "/v1/cue_stack", "/v1/operational/cue-stack",
-                "/v1/operational/cue_stack", "/v1/me/cue-stack", "/v1/evening/cue-stack",
-                "/v1/political", "/v1/political/calendar", "/v1/operational/political",
-                "/v1/meta/political", "/v1/city/political",
-            };
-            foreach (string route in candidats)
-            {
-                using (var req = UnityEngine.Networking.UnityWebRequest.Get("http://localhost" + route))
-                {
-                    req.timeout = 8;
-                    req.SetRequestHeader("Authorization", "Bearer " + token);
-                    yield return req.SendWebRequest();
-                    string corps = req.downloadHandler != null ? req.downloadHandler.text : "";
-                    if (req.responseCode == 200 && corps != null && corps.Length > 900)
-                        corps = corps.Substring(0, 900) + " …TRONQUÉ";
-                    else if (req.responseCode != 200) corps = "";
-                    Debug.Log($"[C3-SONDE] {req.responseCode,4}  {route}  {corps}");
-                }
-            }
-        }
-
 }
 }

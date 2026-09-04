@@ -1,0 +1,23 @@
+{
+ "route": "/v1/operational/laundering/{nodeId}",
+ "methode": "GET",
+ "statut": null,
+ "sans_instance": {
+  "nodeId": "aucune instance sur le compte de démo — attendue dans un corps du dossier (clés ['nodeId'])"
+ },
+ "params": {
+  "nodeId": {
+   "valeur": null,
+   "source": "aucune instance sur le compte de démo — attendue dans un corps du dossier (clés ['nodeId'])"
+  }
+ },
+ "provenance": {
+  "date": "2026-09-04T10:08:35",
+  "back_main": "c6b74f58",
+  "game_back": "mafia-clean-city-game-back 2026-09-04T08:06:19.233319758Z",
+  "compte": "operational_demo@example.test",
+  "dossier": "coffre",
+  "symbole": "⑪",
+  "controleur": "LaunderingController"
+ }
+}

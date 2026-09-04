@@ -150,10 +150,10 @@ namespace MafiaCleanCity.Shell
             switch (RenderedState)
             {
                 case CardState.NoCard:
-                    titleText.text = "No decision waiting";
+                    titleText.text = Lib("carte", "Aucune décision en attente");
                     impactText.text = "";
                     urgencyText.text = "";
-                    stateText.text = "All clear";
+                    stateText.text = Lib("carte", "Rien à signaler");
                     Track(titleText.text);
                     Track(stateText.text);
                     break;
@@ -161,7 +161,7 @@ namespace MafiaCleanCity.Shell
                     titleText.text = CurrentCard.decision_type_key;
                     impactText.text = ImpactLabel(CurrentCard.impact_bucket);
                     urgencyText.text = UrgencyLabel(CurrentCard.urgency_bucket);
-                    stateText.text = "Structural cap reached";
+                    stateText.text = Lib("carte", "Limite de structure atteinte");
                     Track(titleText.text);
                     Track(impactText.text);
                     Track(urgencyText.text);
@@ -171,7 +171,7 @@ namespace MafiaCleanCity.Shell
                     titleText.text = CurrentCard.decision_type_key;
                     impactText.text = ImpactLabel(CurrentCard.impact_bucket);
                     urgencyText.text = UrgencyLabel(CurrentCard.urgency_bucket);
-                    stateText.text = "Ready";
+                    stateText.text = Lib("carte", "Prêt");
                     Track(titleText.text);
                     Track(impactText.text);
                     Track(urgencyText.text);
@@ -308,5 +308,14 @@ namespace MafiaCleanCity.Shell
             t.raycastTarget = false;
             return t;
         }
+
+        /// <summary>Item 0.6 — le littéral d'écran passe par une CLÉ. Le repli passé à `Libelle`
+        /// est FRANÇAIS : `Libelle.De` rend le littéral quand la clé manque au bundle, donc un
+        /// repli anglais resterait anglais à l'écran À TRAVERS la conversion (mesuré par le
+        /// chantier B : 81 replis sur 107 étaient anglais après une première passe — « converti
+        /// sans traduire »). Convertir sans traduire ne change rien pour le joueur.</summary>
+        private static string Lib(string role, string litteral) =>
+            MafiaCleanCity.I18n.Libelle.De("accueil", role, litteral);
+
     }
 }

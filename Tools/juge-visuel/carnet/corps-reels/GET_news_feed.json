@@ -1,0 +1,148 @@
+{
+ "route": "/v1/news/feed",
+ "route_appelee": "/v1/news/feed",
+ "methode": "GET",
+ "statut": 200,
+ "params": {},
+ "provenance": {
+  "date": "2026-09-04T10:08:35",
+  "back_main": "c6b74f58",
+  "game_back": "mafia-clean-city-game-back 2026-09-04T08:06:19.233319758Z",
+  "compte": "operational_demo@example.test",
+  "dossier": "carnet",
+  "symbole": "㉞",
+  "controleur": "CarnetScreenController",
+  "X-Request-Id": "dda9aaef-2822-42aa-829f-6f5645a0a50e",
+  "X-Server-Processed-At": "2026-09-04T08:08:38.541Z",
+  "X-Api-Version": "1"
+ },
+ "corps": {
+  "response_meta": {
+   "request_id_echo": "dda9aaef-2822-42aa-829f-6f5645a0a50e",
+   "server_processed_at": "2026-09-04T08:08:38.541Z",
+   "api_version": 1,
+   "correlation_id_echo": null
+  },
+  "payload": {
+   "data": {
+    "beats": [
+     {
+      "beat_id": "4e392965-2c63-49a5-8b8e-badfa24ed66d",
+      "headline_i18n_key": "news_beat.cooper_affair.organized_crime.brennar_daily_star.headline",
+      "headline_params": {
+       "frame": "organized_crime",
+       "outlet": "press.outlet.brennar_daily_star.name",
+       "district": "district-1"
+      },
+      "headline_params_fields": {
+       "district": "district-1",
+       "outlet": "press.outlet.brennar_daily_star.name",
+       "frame": "organized_crime"
+      },
+      "category": "brennar_local",
+      "outlet_i18n_key": "press.outlet.brennar_daily_star.name",
+      "frame_tag_i18n_key": "news_beat.frame_tag.organized_crime",
+      "district": "district-1",
+      "recency_band": "fresh"
+     },
+     {
+      "beat_id": "63679e54-44f5-44d6-81da-453f1655c47f",
+      "headline_i18n_key": "news_beat.digest.ambient_micro.free_weekly.headline",
+      "headline_params": {
+       "outlet": "press.outlet.free_weekly.name",
+       "subject": "ambient.micro_event.noisy_block",
+       "district": "district-10"
+      },
+      "headline_params_fields": {
+       "district": "district-10",
+       "subject": "ambient.micro_event.noisy_block",
+       "outlet": "press.outlet.free_weekly.name"
+      },
+      "category": "brennar_local",
+      "outlet_i18n_key": "press.outlet.free_weekly.name",
+      "frame_tag_i18n_key": null,
+      "district": "district-10",
+      "recency_band": "settling"
+     },
+     {
+      "beat_id": "da88f6c0-873e-471b-b2ca-d5d7f98fab76",
+      "headline_i18n_key": "news_beat.digest.ambient_micro.free_weekly.headline",
+      "headline_params": {
+       "outlet": "press.outlet.free_weekly.name",
+       "subject": "ambient.micro_event.building_inspection",
+       "district": "district-11"
+      },
+      "headline_params_fields": {
+       "district": "district-11",
+       "subject": "ambient.micro_event.building_inspection",
+       "outlet": "press.outlet.free_weekly.name"
+      },
+      "category": "business",
+      "outlet_i18n_key": "press.outlet.free_weekly.name",
+      "frame_tag_i18n_key": null,
+      "district": "district-11",
+      "recency_band": "settling"
+     },
+     {
+      "beat_id": "5e3cf587-3633-4238-bf59-1385eab32cda",
+      "headline_i18n_key": "news_beat.digest.ambient_micro.brennar_daily_star.headline",
+      "headline_params": {
+       "outlet": "press.outlet.brennar_daily_star.name",
+       "subject": "ambient.micro_event.noisy_block",
+       "district": "district-7"
+      },
+      "headline_params_fields": {
+       "district": "district-7",
+       "subject": "ambient.micro_event.noisy_block",
+       "outlet": "press.outlet.brennar_daily_star.name"
+      },
+      "category": "brennar_local",
+      "outlet_i18n_key": "press.outlet.brennar_daily_star.name",
+      "frame_tag_i18n_key": null,
+      "district": "district-7",
+      "recency_band": "settling"
+     },
+     {
+      "beat_id": "0e3ecf1c-299b-43c3-a3c7-295d847bbc2d",
+      "headline_i18n_key": "news_beat.digest.ambient_micro.free_weekly.headline",
+      "headline_params": {
+       "outlet": "press.outlet.free_weekly.name",
+       "subject": "ambient.micro_event.noisy_block",
+       "district": "district-12"
+      },
+      "headline_params_fields": {
+       "district": "district-12",
+       "subject": "ambient.micro_event.noisy_block",
+       "outlet": "press.outlet.free_weekly.name"
+      },
+      "category": "brennar_local",
+      "outlet_i18n_key": "press.outlet.free_weekly.name",
+      "frame_tag_i18n_key": null,
+      "district": "district-12",
+      "recency_band": "settling"
+     },
+     {
+      "beat_id": "9bb9af74-8a9d-4ff2-8f7e-277cdba185eb",
+      "headline_i18n_key": "news_beat.digest.ambient_micro.free_weekly.headline",
+      "headline_params": {
+       "outlet": "press.outlet.free_weekly.name",
+       "subject": "ambient.micro_event.noisy_block",
+       "district": "district-15"
+      },
+      "headline_params_fields": {
+       "district": "district-15",
+       "subject": "ambient.micro_event.noisy_block",
+       "outlet": "press.outlet.free_weekly.name"
+      },
+      "category": "brennar_local",
+      "outlet_i18n_key": "press.outlet.free_weekly.name",
+      "frame_tag_i18n_key": null,
+      "district": "district-15",
+      "recency_band": "settling"
+     }
+    ],
+    "nextCursor": null
+   }
+  }
+ }
+}

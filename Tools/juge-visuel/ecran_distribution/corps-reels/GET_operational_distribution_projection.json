@@ -1,0 +1,69 @@
+{
+ "route": "/v1/operational/distribution/projection",
+ "route_appelee": "/v1/operational/distribution/projection",
+ "methode": "GET",
+ "statut": 200,
+ "params": {},
+ "provenance": {
+  "date": "2026-09-04T10:08:35",
+  "back_main": "c6b74f58",
+  "game_back": "mafia-clean-city-game-back 2026-09-04T08:06:19.233319758Z",
+  "compte": "operational_demo@example.test",
+  "dossier": "ecran_distribution",
+  "symbole": "㉘",
+  "controleur": "DistributionScreenController",
+  "X-Request-Id": "3653523e-4b23-43ce-a835-6b3c7cd74730",
+  "X-Server-Processed-At": "2026-09-04T08:08:38.232Z",
+  "X-Api-Version": "1"
+ },
+ "corps": {
+  "response_meta": {
+   "request_id_echo": "3653523e-4b23-43ce-a835-6b3c7cd74730",
+   "server_processed_at": "2026-09-04T08:08:38.232Z",
+   "api_version": 1,
+   "correlation_id_echo": null
+  },
+  "payload": {
+   "data": {
+    "routes": [
+     {
+      "route_id": "b80ee922-68c8-4fb4-b4b2-fe784f1100f9",
+      "from_building_id": "692e5d77-0589-4db9-bbeb-9238fb03d8b1",
+      "to_building_id": "bcc8193e-627a-403c-8b2b-14fad55e6dde",
+      "sinuosity_bucket": "meandering",
+      "river_crossings_count_bucket": "single",
+      "route_state": "active",
+      "available_vehicles": [
+       "FOOT",
+       "BIKE"
+      ]
+     },
+     {
+      "route_id": "b74b4269-736b-4b0b-90ee-da4e7dc5f7d2",
+      "from_building_id": "692e5d77-0589-4db9-bbeb-9238fb03d8b1",
+      "to_building_id": "a4bf9380-055e-45b3-9822-94d9d6d61d5e",
+      "sinuosity_bucket": "direct",
+      "river_crossings_count_bucket": "single",
+      "route_state": "active",
+      "available_vehicles": [
+       "FOOT",
+       "BIKE"
+      ]
+     },
+     {
+      "route_id": "527bb62c-c3e8-428f-8e4e-7a3edec89c83",
+      "from_building_id": "e6e6efe0-a1ae-4d1d-830b-2080b2fdaa24",
+      "to_building_id": "bcc8193e-627a-403c-8b2b-14fad55e6dde",
+      "sinuosity_bucket": "direct",
+      "river_crossings_count_bucket": "none",
+      "route_state": "active",
+      "available_vehicles": [
+       "FOOT",
+       "BIKE"
+      ]
+     }
+    ]
+   }
+  }
+ }
+}

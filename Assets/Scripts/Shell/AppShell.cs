@@ -683,6 +683,17 @@ namespace MafiaCleanCity.Shell
         /// ⛔ N'Y ENTRE QU'UN ÉCRAN QUI EXISTE. ㊱ Horizon n'a pas encore de contrôleur : une entrée
         /// pour lui serait une destination morte, exactement ce que le dock a mis des semaines à
         /// cesser d'avoir. Il s'ajoute ici LE JOUR où son contrôleur existe, en une ligne.</summary>
+        // ⛔⛔ CETTE TABLE SE FUSIONNE EN UNION — ET L'UNION A SON PROPRE MODE D'ÉCHEC, payé le
+        // 2026-09-03 : deux branches ont ajouté la MÊME entrée (㉞ « LES ORDRES DU SOIR », que
+        // j'avais posée après un rouge de la garde, et que `pilote-F` a posée de son côté). Une
+        // union littérale des deux côtés d'un conflit produit alors DEUX lignes pour un écran, et
+        // le joueur voit la destination en double. ㊳ l'était déjà, sans que personne le voie.
+        // ⇒ La règle complète tient en deux temps : UNION des lignes, puis DÉDUPLICATION PAR
+        //   CONTRÔLEUR (le libellé peut différer, l'écran non). *Une règle de fusion qui ne dit
+        //   rien des doublons n'est pas une règle de fusion.*
+        // ⚠️ La garde de joignabilité ne peut PAS le voir : elle demande « chaque locataire a-t-il
+        //   un chemin ? », et deux chemins valent un. Le doublon est une propriété du MENU, et le
+        //   contrôle qui mord est un compte de contrôleurs DISTINCTS.
         private (string libelle, System.Action monter)[] DestinationsPlus() => new (string, System.Action)[]
         {
             ("LA RÉPUTATION", () => MountTenant<ReputationScreenController>()),
@@ -763,7 +774,6 @@ namespace MafiaCleanCity.Shell
             // ⚠️ Le libellé n'est pas de mon invention : c'est le titre que le chantier donne à cet
             // écran (« Le journal & la rue »), et le dossier de juge livré avec lui déclare déjà
             // « chemin joueur : onglet More » — l'intention était là, la ligne manquait.
-            ("LE JOURNAL & LA RUE", () => MountTenant<JournalScreenController>()), // ㊳
 
             // ㉘ — « la ficelle sur le liège ». Aucune planche de menu ne nomme cet écran (il
             // n'existe pas encore au moment où les planches `Assets/Screenshots/planche_*.png`
@@ -783,6 +793,18 @@ namespace MafiaCleanCity.Shell
             // et il le fait, en lisant la même source (`JetonDeStructure`).
             ("RASER UN SITE", () => MountTenant<DemolitionScreenController>()),           // ㉝
 
+            // ㉞ — « les ordres du soir ». AJOUTÉE PAR LA GARDE, deuxième fois de la journée après
+            // ㊳ : `pilote-B` a livré `CarnetScreenController` sans sa ligne ici, et
+            // `LocataireJoignabilitePlayModeTests` l'a classé orphelin au premier run post-merge
+            // (« 1 locataire sans AUCUN chemin : [CarnetScreenController] », population 31).
+            // ⚠️ L'écran est un SQUELETTE, et je ne l'inscris pas pour autant dans
+            // `ExceptionsDeclarees` : cette allowlist dit d'elle-même qu'elle n'est PAS pour « un
+            // écran qu'on n'a pas eu le temps de brancher », mais pour un locataire dont on AFFIRME
+            // qu'il ne doit pas avoir de porte. Ce n'est pas le cas ici — il en aura une, autant
+            // que ce soit maintenant. Un écran titré et vide est ce que ce régime livre déjà
+            // (⑪ et ⑫ sont capturés sans données et consignés) ; un écran sans porte, non.
+            ("LES ORDRES DU SOIR", () => MountTenant<CarnetScreenController>()),         // ㉞
+
             // ㉞ — les ordres du soir. ⚠️ CET ÉCRAN N'EST PAS DE MOI : il est arrivé par `main`
             // (session B, à qui ㉞ a été réattribué) SANS entrée, et la garde de joignabilité l'a
             // immédiatement classé orphelin — le seul des 31 locataires dans ce cas.
@@ -790,7 +812,10 @@ namespace MafiaCleanCity.Shell
             //   invisible au joueur est exactement ce que ce chantier a trouvé neuf fois, et
             //   l'inscrire en exception aurait demandé une raison que je n'ai pas. Le libellé vient
             //   de la planche (`front.md` ㉞) ; si B en veut un autre, c'est UNE chaîne à changer.
-            ("LES ORDRES DU SOIR", () => MountTenant<CarnetScreenController>()), // ㉞
+
+            // ㉙ — « la table du fond », version 2 dite lisible. Même situation que ㉘/㉛ : aucune
+            // planche de menu ne nomme cet écran, le libellé vient du chantier lui-même.
+            ("LE CONFLIT", () => MountTenant<ConflitScreenController>()), // ㉙
         };
 
         /// <summary>Monte le menu « Plus » : une entrée par destination, chacune montant son écran.

@@ -362,7 +362,18 @@ namespace MafiaCleanCity.Shell.Tests
                 "D5 — Cohesion est déclarée indisponible EN PERMANENCE (aucune agrégation citywide " +
                 "n'existe côté back pour elle) : ce n'est PAS un défaut à corriger ici, c'est le MODÈLE " +
                 "du trou déclaré que ce chunk imite pour les 3 autres panneaux.");
-            Assert.IsTrue(orgVitals.RenderedTexts.Any(t => t.Contains("Unavailable")));
+            // ⚠️ FRANÇAIS depuis la conversion i18n du 2026-09-03 : le panneau rend désormais
+            // « Cohésion : indisponible (pas d'agrégat pour la ville) ». Cette assertion épinglait
+            // le mot ANGLAIS « Unavailable » — elle certifiait donc un libellé anglais sur un écran
+            // français, et elle était la SEULE de ce test sans message : un « Expected: True / But
+            // was: False » nu, qui ne dit pas ce qu'il cherchait.
+            // ★ Attribution mesurée avant de la toucher : `Charpente` AVEC la conversion rend 34/2,
+            //   SANS elle 35/1 — ce rouge-ci est le mien, l'autre (`BLOQUANT2_Dashboard…`) ne l'est
+            //   pas et tombait déjà. *Deux rouges dans le même run n'ont pas forcément la même
+            //   cause, et le seul moyen de le savoir est de faire varier UNE chose.*
+            Assert.IsTrue(orgVitals.RenderedTexts.Any(t => t.Contains("indisponible")),
+                "le panneau doit DÉCLARER l'indisponibilité de la cohésion dans son texte rendu — "
+                + $"textes vus : [{string.Join(" | ", orgVitals.RenderedTexts)}]");
 
             // I4 (revue ⊥ item05-C2, IMPORTANT-PREUVE) — ANTI-VACUITÉ D'ABORD : sans elle, un
             // ground-truth qui rendrait ces deux clés null satisferait l'égalité ci-dessous À VIDE
