@@ -5,21 +5,21 @@
  "statut": 200,
  "params": {},
  "provenance": {
-  "date": "2026-09-04T10:08:35",
-  "back_main": "c6b74f58",
-  "game_back": "mafia-clean-city-game-back 2026-09-04T08:06:19.233319758Z",
+  "date": "2026-09-04T10:15:48",
+  "back_main": "6ff684db",
+  "game_back": "mafia-clean-city-game-back 2026-09-04T08:14:29.844933926Z",
   "compte": "operational_demo@example.test",
   "dossier": "carnet",
   "symbole": "㉞",
   "controleur": "CarnetScreenController",
-  "X-Request-Id": "7c7ce6fc-9b8f-40c5-adcc-d7899eadb1e5",
-  "X-Server-Processed-At": "2026-09-04T08:08:38.574Z",
+  "X-Request-Id": "265908d1-942a-4f36-9e8c-f7ac64d35d4c",
+  "X-Server-Processed-At": "2026-09-04T08:15:52.119Z",
   "X-Api-Version": "1"
  },
  "corps": {
   "response_meta": {
-   "request_id_echo": "7c7ce6fc-9b8f-40c5-adcc-d7899eadb1e5",
-   "server_processed_at": "2026-09-04T08:08:38.574Z",
+   "request_id_echo": "265908d1-942a-4f36-9e8c-f7ac64d35d4c",
+   "server_processed_at": "2026-09-04T08:15:52.119Z",
    "api_version": 1,
    "correlation_id_echo": null
   },

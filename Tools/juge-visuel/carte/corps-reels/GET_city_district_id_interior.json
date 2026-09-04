@@ -10,21 +10,21 @@
   }
  },
  "provenance": {
-  "date": "2026-09-04T10:08:35",
-  "back_main": "c6b74f58",
-  "game_back": "mafia-clean-city-game-back 2026-09-04T08:06:19.233319758Z",
+  "date": "2026-09-04T10:15:48",
+  "back_main": "6ff684db",
+  "game_back": "mafia-clean-city-game-back 2026-09-04T08:14:29.844933926Z",
   "compte": "operational_demo@example.test",
   "dossier": "carte",
   "symbole": "③",
   "controleur": "CityMapController",
-  "X-Request-Id": "58352c44-3579-416e-bf1d-9a1e48528f3b",
-  "X-Server-Processed-At": "2026-09-04T08:08:36.448Z",
+  "X-Request-Id": "4abbee80-ce70-4893-a133-eae747f3f99e",
+  "X-Server-Processed-At": "2026-09-04T08:15:49.766Z",
   "X-Api-Version": "1"
  },
  "corps": {
   "response_meta": {
-   "request_id_echo": "58352c44-3579-416e-bf1d-9a1e48528f3b",
-   "server_processed_at": "2026-09-04T08:08:36.448Z",
+   "request_id_echo": "4abbee80-ce70-4893-a133-eae747f3f99e",
+   "server_processed_at": "2026-09-04T08:15:49.766Z",
    "api_version": 1,
    "correlation_id_echo": null
   },
@@ -230,12 +230,12 @@
     "day_phase": "DAWN",
     "buildings": [
      {
-      "building": "491d9fbe-6d7f-430f-8e70-0a0d8d5c72e9",
+      "building": "bea32c47-e1fd-4385-92c7-3f83eaa16dbb",
       "block_id": 1,
       "name_i18n": {
        "key": "game.fiction.building.name",
        "params": {
-        "enseigne": "Fret Sunniva",
+        "enseigne": "Transit Marrek",
         "district": "Les Bassins",
         "block": "1"
        }

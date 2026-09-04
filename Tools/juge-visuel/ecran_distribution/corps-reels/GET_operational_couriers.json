@@ -5,21 +5,21 @@
  "statut": 200,
  "params": {},
  "provenance": {
-  "date": "2026-09-04T10:08:35",
-  "back_main": "c6b74f58",
-  "game_back": "mafia-clean-city-game-back 2026-09-04T08:06:19.233319758Z",
+  "date": "2026-09-04T10:15:48",
+  "back_main": "6ff684db",
+  "game_back": "mafia-clean-city-game-back 2026-09-04T08:14:29.844933926Z",
   "compte": "operational_demo@example.test",
   "dossier": "ecran_distribution",
   "symbole": "㉘",
   "controleur": "DistributionScreenController",
-  "X-Request-Id": "6754b7e2-2043-4a3e-84f2-befe67d62cf3",
-  "X-Server-Processed-At": "2026-09-04T08:08:38.217Z",
+  "X-Request-Id": "53f07b92-006c-4452-a5c1-6402e10d6180",
+  "X-Server-Processed-At": "2026-09-04T08:15:51.713Z",
   "X-Api-Version": "1"
  },
  "corps": {
   "response_meta": {
-   "request_id_echo": "6754b7e2-2043-4a3e-84f2-befe67d62cf3",
-   "server_processed_at": "2026-09-04T08:08:38.217Z",
+   "request_id_echo": "53f07b92-006c-4452-a5c1-6402e10d6180",
+   "server_processed_at": "2026-09-04T08:15:51.713Z",
    "api_version": 1,
    "correlation_id_echo": null
   },
@@ -27,21 +27,21 @@
    "data": {
     "couriers": [
      {
-      "courier": "219b0764-92fe-4d71-be06-0955c167327b",
+      "courier": "2499a47f-b4c7-4a5e-9394-9942db256404",
       "vehicle_type": "BIKE",
       "transit_band": "IDLE",
       "temperature_status": null,
       "degrading": false
      },
      {
-      "courier": "57b4a942-8966-4047-b681-a36a3a294ab0",
+      "courier": "6d5dc51f-f796-48d1-87bb-a750fd708e71",
       "vehicle_type": "BIKE",
-      "transit_band": "IN_TRANSIT",
-      "temperature_status": "HOT",
-      "degrading": true
+      "transit_band": "IDLE",
+      "temperature_status": null,
+      "degrading": false
      },
      {
-      "courier": "8dc93771-e68b-47ed-b6a6-0d1cc1aee94f",
+      "courier": "9fe196a7-9f2e-4d6a-b3f2-51eac5e22ba8",
       "vehicle_type": "FOOT",
       "transit_band": "ARRIVED",
       "temperature_status": null,

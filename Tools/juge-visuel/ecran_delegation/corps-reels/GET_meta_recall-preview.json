@@ -10,21 +10,21 @@
   }
  },
  "provenance": {
-  "date": "2026-09-04T10:08:35",
-  "back_main": "c6b74f58",
-  "game_back": "mafia-clean-city-game-back 2026-09-04T08:06:19.233319758Z",
+  "date": "2026-09-04T10:15:48",
+  "back_main": "6ff684db",
+  "game_back": "mafia-clean-city-game-back 2026-09-04T08:14:29.844933926Z",
   "compte": "operational_demo@example.test",
   "dossier": "ecran_delegation",
   "symbole": "㉜",
   "controleur": "DelegationScreenController",
-  "X-Request-Id": "4a0a87f4-13d8-48da-9609-b147df35e2e0",
-  "X-Server-Processed-At": "2026-09-04T08:08:37.950Z",
+  "X-Request-Id": "f245c3d6-c0eb-4db3-80f8-9acb60baf713",
+  "X-Server-Processed-At": "2026-09-04T08:15:51.399Z",
   "X-Api-Version": "1"
  },
  "corps": {
   "response_meta": {
-   "request_id_echo": "4a0a87f4-13d8-48da-9609-b147df35e2e0",
-   "server_processed_at": "2026-09-04T08:08:37.950Z",
+   "request_id_echo": "f245c3d6-c0eb-4db3-80f8-9acb60baf713",
+   "server_processed_at": "2026-09-04T08:15:51.399Z",
    "api_version": 1,
    "correlation_id_echo": null
   },
@@ -39,10 +39,10 @@
     "details": null,
     "message": "category 1 is not DELEGATED for this player — no recall to preview.",
     "trace": {
-     "request_id_echo": "4a0a87f4-13d8-48da-9609-b147df35e2e0",
+     "request_id_echo": "f245c3d6-c0eb-4db3-80f8-9acb60baf713",
      "correlation_id": null,
      "trace_id": null,
-     "server_emitted_at": "2026-09-04T08:08:37.950Z"
+     "server_emitted_at": "2026-09-04T08:15:51.399Z"
     },
     "retryable_class": "AFTER_USER_ACTION",
     "retry_after_s": null

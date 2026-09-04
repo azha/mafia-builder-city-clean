@@ -1,30 +1,30 @@
 {
  "route": "/v1/friction/nodes/{buildingId}",
- "route_appelee": "/v1/friction/nodes/491d9fbe-6d7f-430f-8e70-0a0d8d5c72e9",
+ "route_appelee": "/v1/friction/nodes/bea32c47-e1fd-4385-92c7-3f83eaa16dbb",
  "methode": "GET",
  "statut": 200,
  "params": {
   "buildingId": {
-   "valeur": "491d9fbe-6d7f-430f-8e70-0a0d8d5c72e9",
+   "valeur": "bea32c47-e1fd-4385-92c7-3f83eaa16dbb",
    "source": "lu dans le corps de `city/district/1/interior` (clé parmi ['building', 'building_id'])"
   }
  },
  "provenance": {
-  "date": "2026-09-04T10:08:35",
-  "back_main": "c6b74f58",
-  "game_back": "mafia-clean-city-game-back 2026-09-04T08:06:19.233319758Z",
+  "date": "2026-09-04T10:15:48",
+  "back_main": "6ff684db",
+  "game_back": "mafia-clean-city-game-back 2026-09-04T08:14:29.844933926Z",
   "compte": "operational_demo@example.test",
   "dossier": "ecran_demolition",
   "symbole": "㉝",
   "controleur": "DemolitionScreenController",
-  "X-Request-Id": "91550fb7-c152-4748-881b-5a84bde54869",
-  "X-Server-Processed-At": "2026-09-04T08:08:38.390Z",
+  "X-Request-Id": "e8f82e22-b014-42c0-9770-2d8fc13d358f",
+  "X-Server-Processed-At": "2026-09-04T08:15:51.909Z",
   "X-Api-Version": "1"
  },
  "corps": {
   "response_meta": {
-   "request_id_echo": "91550fb7-c152-4748-881b-5a84bde54869",
-   "server_processed_at": "2026-09-04T08:08:38.390Z",
+   "request_id_echo": "e8f82e22-b014-42c0-9770-2d8fc13d358f",
+   "server_processed_at": "2026-09-04T08:15:51.909Z",
    "api_version": 1,
    "correlation_id_echo": null
   },
