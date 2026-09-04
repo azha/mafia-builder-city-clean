@@ -113,6 +113,22 @@ namespace MafiaCleanCity.Operational.Tests
         ///   `Capture<Ecran>` serait emporté par une demande de `Capture` — le piège qui a mordu
         ///   trois sessions le 2026-09-02 (`["HUD"]`→`HUDv31`, `["CaptureDetail"]`→
         ///   `CaptureDetailMutant`, et ma propre série de noms, refusée par ma propre garde).
+        /// <summary>⛔⛔ CETTE CAPTURE MONTRE LA CHARPENTE, PAS L'ÉCRAN — ET C'EST MESURÉ, pas
+        /// supposé. `MonterEcran()` n'appelle JAMAIS `SetToken` : l'amorce de l'écran sort
+        /// immédiatement (`if (string.IsNullOrEmpty(token)) yield break;`), aucune route n'est
+        /// appelée, aucune donnée n'arrive. La capture rend donc 8 à 9 teintes — sur N'IMPORTE
+        /// QUEL compte, y compris `operational_demo`.
+        /// ⇒ La garde de teintes de B (> 12) rougit ici pour une raison STRUCTURELLE, pas parce
+        ///   que le compte serait vide : changer de compte ne changerait rien.
+        /// ⇒ Mesure qui tranche : les mêmes écrans capturés SOUS LE SHELL, avec jeton et données
+        ///   (`PlancheEcransCapturePlayModeTests`), rendent **591** teintes pour ㉜, **541** pour
+        ///   ㉝ et **765** pour ⑧. L'écart n'est pas un état vide, c'est une absence de montage.
+        /// ⇒ *Deux captures du même écran ne mesurent pas la même chose : celle qui fait foi est
+        ///   celle qui passe par le chemin du joueur.* La planche est l'oracle ; celle-ci ne
+        ///   prouve que la construction de la mise en page.
+        /// ⚠️ Ne PAS la « réparer » en abaissant le seuil de la garde : ce serait relâcher une
+        ///   assertion qui a raison. Soit on lui donne un jeton et elle devient une vraie
+        ///   capture, soit elle sort du périmètre de la garde de teintes. TD-541.</summary>
         [UnityTest, Category("PhotoEcranDemolition")]
         public IEnumerator EcranDemolitionC1_CapturerPourLeJugeVisuel_DeuxResolutions()
         {

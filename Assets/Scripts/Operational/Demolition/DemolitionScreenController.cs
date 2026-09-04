@@ -183,7 +183,7 @@ namespace MafiaCleanCity.Operational
             // `Start()` court à la frame suivante, premier instant où « être dernier » est stable.
             if (transform.parent != null) transform.SetAsLastSibling();
             EnsureInitialized();
-            StartCoroutine(Amorcer());
+            coroutineAmorce = StartCoroutine(Amorcer());
         }
 
         /// <summary>⛔ L'ÉCRAN SE CHARGE LUI-MÊME AU MONTAGE. Le contrat `IShellTenant` ne porte que
@@ -191,8 +191,28 @@ namespace MafiaCleanCity.Operational
         /// l'écran se construit et reste vide — charpente complète, données absentes. Mesuré sur
         /// l'écran voisin, et invisible à huit tours de juge : *un test qui déclenche lui-même ce
         /// qu'il vérifie ne prouve rien du déclencheur.*</summary>
+        /// <summary>⛔ UN RENDU EXPLICITE ANNULE L'AUTO-CHARGEMENT — course mesurée par la session C
+        /// le 2026-09-04 sur ㉚, et cet écran réunit les deux conditions.
+        /// `AddComponent` → `RendrePourTest(corps fabriqué)` dans la MÊME frame → puis `Start()`
+        /// lance `Amorcer()`, dont l'échec appelle `RendreEtatIndisponible()` et EFFACE ce que le
+        /// test venait de rendre. *Le test n'est vert que si le réseau est plus LENT qu'une frame* —
+        /// vert chez qui a un back lent, rouge chez le voisin, et pris pour la régression d'un
+        /// autre. Un vert obtenu par la lenteur d'un tiers tombe le jour où le tiers est absent.
+        /// ⚠️ Aucun changement pour le chemin joueur : il ne passe jamais par `RendrePourTest`.</summary>
+        private bool renduExpliciteDemande;
+
+        /// <summary>⛔ LA POIGNÉE, PARCE QUE LE DRAPEAU SEUL NE SUFFIT PAS — précision mesurée par
+        /// la session B. `Amorcer()` lit le drapeau à sa PREMIÈRE ligne : une coroutine déjà en
+        /// vol l'a donc franchi, elle attend le réseau, et elle rendra PAR-DESSUS le rendu du test
+        /// quelques frames plus tard. Le drapeau ne ferme que le cas où `Start()` n'est pas encore
+        /// parti.
+        /// ⇒ *Une garde placée à l'entrée d'une coroutine ne protège que de son DÉMARRAGE, jamais
+        ///   de son achèvement.* Il faut l'arrêter, pas seulement lui interdire de commencer.</summary>
+        private Coroutine coroutineAmorce;
+
         private IEnumerator Amorcer()
         {
+            if (renduExpliciteDemande) yield break;   // un test a déjà rendu : on n'écrase pas
             if (string.IsNullOrEmpty(token)) yield break;
             yield return Charger();
         }
@@ -331,6 +351,9 @@ namespace MafiaCleanCity.Operational
                                    DistrictBuildingDto[] batiments = null,
                                    bool? jetonDepense = null)
         {
+            renduExpliciteDemande = true;
+            // Arrêter ce qui est DÉJÀ parti — voir la note de `coroutineAmorce`.
+            if (coroutineAmorce != null) { StopCoroutine(coroutineAmorce); coroutineAmorce = null; }
             EnsureInitialized();
             DerniereFriction = friction;
             DerniereFiche = fiche;
