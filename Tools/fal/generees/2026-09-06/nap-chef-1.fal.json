@@ -1,0 +1,13 @@
+{
+  "modele": "fal-ai/flux/dev",
+  "prompt": "A rival family boss in his sixties, heavy build, thick neck, a hard metal tracheotomy tube and scar at the base of the throat, cold unblinking stare, grey slicked hair. Dark Neapolitan crime portrait, late 1980s to early 1990s. Bust, head and shoulders, front view, filling the square frame. Heavy chiaroscuro: one hard warm key light raking from the left, deep black shadow on the other side. Southern-European face. Period clothing only: boxy suit jacket with wide lapels, open shirt collar or knitted tie, thick hair, moustache where fitting — nothing modern, no sportswear, no technical fabric. Muted desaturated palette, dark blue-grey ground, no saturated colour, no jewellery beyond a plain band, no text, no logo, no watermark. Painted poster illustration: flat areas of colour, thick contours, heavy simplification, no photorealism, no lens blur.",
+  "seed": 63,
+  "largeur": 1024,
+  "hauteur": 1024,
+  "etapes": 28,
+  "guidance": 3.5,
+  "request_id": "01a077e5-60f0-7f11-bfed-0082d75b6d94",
+  "duree_s": 8.0,
+  "cout_usd_estime": 0.025,
+  "genere_le": "2026-09-06T20:05:24+0200"
+}

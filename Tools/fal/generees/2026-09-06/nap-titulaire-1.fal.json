@@ -1,0 +1,13 @@
+{
+  "modele": "fal-ai/flux/dev",
+  "prompt": "A lieutenant in his forties, boxer's broken nose, heavy black moustache, close-set eyes, steady and unimpressed. Dark Neapolitan crime portrait, late 1980s to early 1990s. Bust, head and shoulders, front view, filling the square frame. Heavy chiaroscuro: one hard warm key light raking from the left, deep black shadow on the other side. Southern-European face. Period clothing only: boxy suit jacket with wide lapels, open shirt collar or knitted tie, thick hair, moustache where fitting — nothing modern, no sportswear, no technical fabric. Muted desaturated palette, dark blue-grey ground, no saturated colour, no jewellery beyond a plain band, no text, no logo, no watermark. Painted poster illustration: flat areas of colour, thick contours, heavy simplification, no photorealism, no lens blur.",
+  "seed": 63,
+  "largeur": 1024,
+  "hauteur": 1024,
+  "etapes": 28,
+  "guidance": 3.5,
+  "request_id": "01a077e5-80bb-7ef2-bfef-e25d4f1e45e8",
+  "duree_s": 6.0,
+  "cout_usd_estime": 0.025,
+  "genere_le": "2026-09-06T20:05:30+0200"
+}
