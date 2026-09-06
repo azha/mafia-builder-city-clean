@@ -213,8 +213,52 @@ namespace MafiaCleanCity.Operational
             //   derrière le visage (front découvert), puis trop bas (visage rond), puis trop large
             //   (béret). Une forme dont la silhouette dépend d'une autre a plus de façons d'être
             //   fausse qu'une forme isolée.
+            // ⛔⛔⛔ QUATRIÈME RÉGLAGE, ET LES TROIS PREMIERS RÉGLAIENT LA MAUVAISE CHOSE.
+            // Un juge ⊥ a fini par mesurer la propriété que je n'avais jamais mesurée — non pas
+            // « quelle taille fait la calotte » mais **comment elle rejoint le visage** :
+            //   (a) largeur de calotte ÷ largeur de tête, AU POINT DE JONCTION : la référence
+            //       s'élargit de façon MONOTONE jusqu'à 1,183 et fusionne sans jamais se
+            //       rétrécir ; le jeu atteignait 1,058 puis **se rétrécissait à 0,920** — la
+            //       coiffe devenait plus étroite que la tête qu'elle coiffe ;
+            //   (b) hauteur d'attache : l'encre latérale dépasse la ligne de base jusqu'à **20 %**
+            //       de la hauteur du visage en référence, et à **AUCUNE hauteur** en jeu ⇒ 0 % ;
+            //   (c) épaisseur latérale à 15 % du visage : **20/20 px → 10/10** ;
+            //   (d) une bande d'encre de **105 × 14 px** traversait le front, absente de la référence.
+            // ⇒ Une ELLIPSE ne peut pas produire (a), (b) ni (d), quelles que soient ses cotes : son
+            //   bord bas est convexe VERS LE BAS, donc elle est forcément la plus large en son
+            //   milieu et la plus étroite là où elle touche le visage — l'inverse exact de ce que
+            //   la maquette dessine. Les trois réglages précédents cherchaient des cotes pour une
+            //   forme incapable de porter la propriété. *Quand un défaut revient sous des formes
+            //   voisines, ce n'est pas d'une valeur de plus qu'il faut, c'est de la bonne forme.*
+            //
+            // LE CHEMIN DE LA MAQUETTE (`generateur-reputation.py:136-138`), lu au lieu d'être
+            // approché : `M18 26 C19 14 25 10 31 10 C38 10 44 15 44 26 C40 20 36 21 31 21
+            // C26 21 21 21 18 26 Z`. Un dôme de x 18 à 44 (26 unités, contre 23,8 posées jusqu'ici),
+            // sommet à y = 10 — et un bord bas **CONCAVE** : il remonte à y = 21 au centre et
+            // redescend à y = 26 aux tempes. C'est ce creux qui dégage le front tout en laissant la
+            // chevelure descendre sur les côtés, donc qui produit (a), (b) et l'absence de (d).
+            //
+            // FAUTE DE PRIMITIVE À CHEMIN, ON LE CONSTRUIT PAR OCCLUSION — le mécanisme que ce
+            // fichier emploie déjà pour la bouche, dix lignes plus bas. Le dôme est une ellipse
+            // pleine ; une seconde ellipse, de la COULEUR DU VISAGE, en creuse le bas. Son arc
+            // supérieur passe par (18 ; 26), (31 ; 21) et (44 ; 26) — les trois points du chemin —
+            // pour un centre à (31 ; 26), un demi-grand axe de 13 et un demi-petit axe de 5.
+            // ⚠️ Elle est resserrée à 12,4 (24,8 de large) plutôt que 13 : à 13 elle dépasserait le
+            //   visage de ~0,9 unité de chaque côté à sa base, et peindrait de la couleur de peau
+            //   sur le fond. À 12,4 le débord reste dans le trait du visage (2 unités de large).
+            // ⛔ UN RECTANGLE ARRONDI, PAS UNE ELLIPSE — et le rayon vient du chemin, pas de l'œil.
+            // La tangente du chemin en (18 ; 26) est (1 ; −12) : le flanc est QUASI VERTICAL au
+            // départ, et ne s'infléchit qu'en montant. Une ellipse se referme dès son milieu, donc
+            // elle est forcément la plus étroite là où la maquette est la plus large. Un stade
+            // (l'arrondi par défaut, rayon = demi-petit-côté = 8) fait pire encore : à y = 26 il ne
+            // rendrait que 26 − 2 × 8 = 10 unités de large.
+            // Rayon 11 sur une hauteur de 16 : flancs droits de y = 21 à y = 26 — donc largeur
+            // PLEINE (26 unités) à la jonction, et l'élargissement est monotone comme en référence.
             FormeLiseree(ref _cheveux, "Cheveux", buste, ReputationResolvers.Carte2,
-                  new Rect(19.1f, 11.4f, 23.8f, 13.2f), ech, 2.4f, ellipse: true);
+                  new Rect(18f, 10f, 26f, 16f), ech, 1.8f, arrondi: true, rayonVb: 11f);
+            Image creuxFront = null;
+            Forme(ref creuxFront, "CheveuxCreux", buste, ReputationResolvers.Creme2,
+                  new Rect(18.6f, 21f, 24.8f, 10f), ech, ellipse: true);
             Forme(ref oeilG, "OeilG", buste, ReputationResolvers.Encre,
                   new Rect(24.6f, 29.7f, 3.8f, 4.6f), ech, arrondi: true);
             Forme(ref oeilD, "OeilD", buste, ReputationResolvers.Encre,
@@ -383,8 +427,19 @@ namespace MafiaCleanCity.Operational
         private static void PoserX(RectTransform rt, float x) =>
             rt.anchoredPosition = new Vector2(x, rt.anchoredPosition.y);
 
+        /// <param name="rayonVb">Rayon d'arrondi EN UNITÉS DE VIEWBOX. À 0 (le défaut, et le
+        /// comportement de tous les appelants d'avant) le rayon vaut la moitié du petit côté —
+        /// c'est-à-dire un stade, ce que veulent les yeux et la bouche. Un rayon EXPLICITE sert aux
+        /// formes dont le chemin a des côtés droits sur une partie de leur hauteur : la calotte a
+        /// des flancs quasi verticaux jusqu'à la jonction avec le visage, et un stade les referme
+        /// bien avant.
+        /// ⚠️ Paramètre optionnel ASSUMÉ : ce socle dit qu'un marqueur d'optionalité est un endroit
+        /// où le compilateur cesse d'aider. Le risque qu'il décrit — un appelant qui hérite d'un
+        /// comportement en silence — est nul ici : la valeur par défaut REPRODUIT exactement ce que
+        /// les huit appelants existants obtenaient, et un seul passe une valeur.</param>
         private void Forme(ref Image cible, string nom, Transform parent, Color couleur,
-                           Rect vb, float ech, bool arrondi = false, bool ellipse = false)
+                           Rect vb, float ech, bool arrondi = false, bool ellipse = false,
+                           float rayonVb = 0f)
         {
             GameObject go = Nouveau(nom, parent);
             RectTransform rt = (RectTransform)go.transform;
@@ -430,8 +485,9 @@ namespace MafiaCleanCity.Operational
             }
             else if (arrondi)
             {
+                float rayon = rayonVb > 0f ? rayonVb : Mathf.Min(vb.width, vb.height) * 0.5f;
                 img.sprite = ProceduralUI.RoundedRectMask(
-                    Mathf.Max(1, Mathf.RoundToInt(Mathf.Min(vb.width, vb.height) * ech * 0.5f)));
+                    Mathf.Max(1, Mathf.RoundToInt(rayon * ech)));
                 img.type = Image.Type.Sliced;
             }
             cible = img;
@@ -450,14 +506,15 @@ namespace MafiaCleanCity.Operational
         ///   elles. Une figure se lit par ses bords autant que par ses surfaces.</summary>
         private void FormeLiseree(ref Image cible, string nom, Transform parent, Color couleur,
                                   Rect vb, float ech, float stroke, bool ellipse = false,
-                                  bool arrondi = false)
+                                  bool arrondi = false, float rayonVb = 0f)
         {
             Image bord = null;
             Rect vbBord = new Rect(vb.x - stroke / 2f, vb.y - stroke / 2f,
                                    vb.width + stroke, vb.height + stroke);
             Forme(ref bord, nom + "Lisere", parent, ReputationResolvers.Encre, vbBord, ech,
-                  arrondi: arrondi, ellipse: ellipse);
-            Forme(ref cible, nom, parent, couleur, vb, ech, arrondi: arrondi, ellipse: ellipse);
+                  arrondi: arrondi, ellipse: ellipse, rayonVb: rayonVb);
+            Forme(ref cible, nom, parent, couleur, vb, ech, arrondi: arrondi, ellipse: ellipse,
+                  rayonVb: rayonVb);
         }
 
         private static Sprite spriteTriangle;
