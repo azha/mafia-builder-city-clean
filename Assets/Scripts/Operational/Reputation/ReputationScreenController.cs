@@ -88,6 +88,35 @@ namespace MafiaCleanCity.Operational
         /// <summary>Son opacité — le `99` de `cyan99`, soit 0x99/255. Lue dans la source, pas
         /// choisie pour l'effet obtenu.</summary>
         private const float CssHaloOpacite = 0x99 / 255f;
+
+        /// <summary>⛔⛔⛔ DEUX CORRECTIONS, ET FERMER SUR UNE SEULE LAISSE LE DÉFAUT — ㊲ M1.
+        ///
+        /// Un `text-shadow` de navigateur est un flou GAUSSIEN : il étale l'encre, donc son pic est
+        /// bien plus bas que l'opacité déclarée et sa queue s'éteint vite. `VoileRadial` part au
+        /// contraire à PLEINE opacité au centre et décroît en cosinus jusqu'au bord de sa boîte.
+        /// Recopier `0x99/255` et laisser la queue courir jusqu'au bord reproduit donc **deux**
+        /// écarts, pas un.
+        /// ⇒ MESURÉ par un juge ⊥ en ajustant le même profil des deux côtés
+        ///   (`A·exp(−d/λ)`) : canon **A = 38,0 pts · λ = 8,01 px** ; jeu **A = 81,2 · λ = 12,56**
+        ///   ⇒ **alpha ×2,13 · rayon ×1,57 · lumière totale ×5,2**.
+        /// ⛔ ET IL ÉCRIT POURQUOI UNE SEULE NE SUFFIT PAS : ramener l'alpha seul laisserait un halo
+        ///   **1,57× trop large**, qui porterait encore ≈ +10 pts à d = 20 là où la maquette est
+        ///   à +1 ; ramener le rayon seul laisserait le contraste vers 5,5 pour 8,67 au canon.
+        ///   *Corriger une des deux grandeurs rend une valeur parfaitement plausible et garde le
+        ///   défaut* — c'est la famille « durcir sur une autre grandeur que le monde dégénéré ».
+        ///
+        /// ⚠️ LES DEUX FACTEURS SONT DES CORRECTIONS DÉCLARÉES, PAS DES VALEURS CHOISIES, et ils
+        /// vivent à côté de la constante du canon plutôt qu'à sa place : `CssHaloOpacite` reste ce
+        /// que la source dit, et ce qui la corrige reste lisible comme une correction. Écraser la
+        /// constante aurait effacé la trace de l'écart.
+        /// ⚠️ ET LA CLÔTURE NE SE PROUVE PAS SUR CES DEUX NOMBRES : elle se prouve en RENDANT et en
+        /// comptant — **deux lignes d'encre dans la boîte du compteur** (le canon en a deux, le jeu
+        /// une seule, la lueur soudant le chiffre à son libellé). Un critère sans seuil, qu'aucun
+        /// réglage à l'œil ne satisfait par hasard. *Une garde sur les PARAMÈTRES d'un effet n'est
+        /// pas une garde sur son EFFET* : ce dépôt a déjà livré un halo dont les trois réglages
+        /// étaient valides et qui ne produisait aucun pixel.</summary>
+        private const float HaloAmplitudeCorrection = 1f / 2.13f;
+        private const float HaloEtendueCorrection = 1f / 1.57f;
         private const float CssCompteurLib   = 5.4f;  // .fen > span
         private const float CssPortraitLarg  = 118f;  // .prt{width:118px}
 
@@ -998,9 +1027,15 @@ namespace MafiaCleanCity.Operational
                                      "le creux — teinte d'origine conservée, l'écart demeure.");
                     haloTeinte = ReputationResolvers.Cyan;
                 }
-                haloTeinte.a = CssHaloOpacite;
+                // Les DEUX corrections, ensemble : l'amplitude sur l'alpha de la teinte, l'étendue
+                // par `finEnFraction`, qui raccourcit la queue SANS toucher au profil en cosinus —
+                // lequel est lui-même le correctif d'un autre défaut (quatre paliers durs mesurés
+                // dans un voile linéaire) et ne doit pas être rouvert.
+                // ★ Le paramètre existait déjà et deux appelants de CE fichier s'en servent (0,66 et
+                //   0,70, trois cents lignes plus haut) ; celui-ci héritait du défaut 1,0.
+                haloTeinte.a = CssHaloOpacite * HaloAmplitudeCorrection;
                 haloImg.sprite = MafiaCleanCity.Shell.ProceduralUI.VoileRadial(
-                    64, haloTeinte, new Vector2(0.5f, 0.5f), 0.5f, 0.5f);
+                    64, haloTeinte, new Vector2(0.5f, 0.5f), 0.5f, 0.5f, HaloEtendueCorrection);
                 haloImg.color = Color.white;   // la teinte vit dans la texture
                 haloImg.raycastTarget = false;
 
