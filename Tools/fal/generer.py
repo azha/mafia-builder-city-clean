@@ -12,9 +12,14 @@ commande (elle finirait dans l'historique du shell).
 Chaque image sortie porte un sidecar `<nom>.fal.json` (modèle, prompt, seed, taille, request_id,
 coût estimé) — une image sans sa provenance n'est pas reproductible, donc pas corrigeable.
 
+Consigne user (2026-09-06, relayée par l'orchestration) : CHAQUE image générée est sauvegardée, retenue
+ou non — par défaut sous `Tools/fal/generees/<AAAA-MM-JJ>/<slug>-<n>.png`, `n` incrémenté pour ne
+jamais écraser (deux générations du même prompt sont deux fichiers), puis commitée. Une image écartée
+aujourd'hui est une référence demain ; non suivie = pas sauvegardée.
+
 usage :
-  generer.py --modele fal-ai/flux/dev --prompt-fichier p.txt --largeur 1024 --hauteur 1024 \
-             --seed 7 --sortie out/piece.png [--etapes 28] [--guidance 3.5]
+  generer.py --modele fal-ai/flux/dev --prompt-fichier p.txt --slug icone-conteneurs \
+             [--largeur 1024 --hauteur 1024 --seed 7 --etapes 28 --guidance 3.5] [--sortie chemin.png]
 """
 import argparse, json, os, sys, time, urllib.request, urllib.error
 from pathlib import Path
@@ -42,6 +47,23 @@ def appel(methode: str, url: str, corps: dict | None, k: str) -> dict:
         sys.exit(f"HTTP {e.code} sur {methode} {url} : {e.read().decode()[:600]}")
 
 
+def chemin_sortie(slug: str | None, sortie: str | None) -> Path:
+    """Jamais d'écrasement : un chemin explicite existant est refusé, un slug reçoit le prochain n."""
+    if sortie:
+        p = Path(sortie)
+        if p.exists():
+            sys.exit(f"refus d'écraser {p} — chaque génération est un fichier distinct")
+        return p
+    if not slug:
+        sys.exit("--slug (ou --sortie) requis")
+    dossier = Path(__file__).resolve().parent / "generees" / time.strftime("%Y-%m-%d")
+    dossier.mkdir(parents=True, exist_ok=True)
+    n = 1
+    while (dossier / f"{slug}-{n}.png").exists():
+        n += 1
+    return dossier / f"{slug}-{n}.png"
+
+
 def base_modele(modele: str) -> str:
     # `fal-ai/flux/dev` → les routes de requête vivent sous `fal-ai/flux`
     parts = modele.split("/")
@@ -57,10 +79,12 @@ def main() -> None:
     p.add_argument("--seed", type=int, default=None)
     p.add_argument("--etapes", type=int, default=28)
     p.add_argument("--guidance", type=float, default=3.5)
-    p.add_argument("--sortie", required=True)
+    p.add_argument("--sortie", default=None, help="chemin explicite (refusé s'il existe déjà)")
+    p.add_argument("--slug", default=None, help="nom court ; sortie = generees/<date>/<slug>-<n>.png")
     a = p.parse_args()
 
     prompt = Path(a.prompt_fichier).read_text().strip()
+    out = chemin_sortie(a.slug, a.sortie)
     k = cle()
     corps = {
         "prompt": prompt,
@@ -90,7 +114,6 @@ def main() -> None:
     img = res["images"][0]
     with urllib.request.urlopen(img["url"], timeout=120) as r:
         octets = r.read()
-    out = Path(a.sortie)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_bytes(octets)
 

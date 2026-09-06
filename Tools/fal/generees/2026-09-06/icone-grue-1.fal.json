@@ -1,0 +1,13 @@
+{
+  "modele": "fal-ai/flux/dev",
+  "prompt": "Motif: the silhouette of a harbour gantry crane over a wet quay, one amber lamp. Mobile app icon, flat illustration, one bold centered motif filling the square, dark background edge to edge, night, rain haze, sodium-vapour amber glow. Muted palette only: near-black #0d0f10, charcoal #16191b, night blue #212b36, desaturated amber #493a2e and #b08d3e, warm window light #ffb726 used sparingly. No text, no letters, no numbers, no logo, no watermark, no border, no rounded frame, no people. Simple shapes readable at 48 pixels, clean edges, minimal detail.",
+  "seed": 11,
+  "largeur": 1024,
+  "hauteur": 1024,
+  "etapes": 28,
+  "guidance": 3.5,
+  "request_id": "01a07455-ad49-7cf2-9cdc-722152a27bdc",
+  "duree_s": 5.7,
+  "cout_usd_estime": 0.025,
+  "genere_le": "2026-09-06T03:29:33+0200"
+}
