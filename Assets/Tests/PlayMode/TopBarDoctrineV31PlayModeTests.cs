@@ -597,6 +597,88 @@ namespace MafiaCleanCity.Shell.Tests
                         if (neutreCourant > neutreMax) neutreMax = neutreCourant;
                     }
                 }
+                // ⛔⛔ L'ÉPAISSEUR, PAR LE MÊME CLASSIFIEUR — et c'est tout l'intérêt de la poser
+                // ICI plutôt que dans un instrument voisin. J'en ai écrit un à côté (`DA9`) avec un
+                // seuil de DISTANCE à la braise : il a mesuré l'arc FROID pendant trois tours, et
+                // il a fallu éteindre la cible pour s'en apercevoir. La raison est écrite quinze
+                // lignes plus haut, dans ce fichier, depuis le premier jour : *une distance absolue
+                // à la couleur pure mesure l'OPACITÉ autant que la teinte*, et les deux arcs sont
+                // composés à des opacités différentes. **Le classifieur juste existait déjà ; j'ai
+                // écrit le mauvais à côté au lieu d'étendre le bon.**
+                // ⇒ On balaie donc le RAYON à chaque degré, avec la direction de teinte, et on
+                //   compte l'épaisseur peinte. Bande large (0,30 R à 0,70 R) : elle doit CONTENIR
+                //   l'anneau, pas prétendre le border.
+                int epFroidMin = 9999, epFroidMax = 0, epChaudMin = 9999, epChaudMax = 0;
+                for (int deg = -95; deg <= 95; deg++)
+                {
+                    float a2 = (90f - deg) * Mathf.Deg2Rad;
+                    int epF = 0, epC = 0;
+                    for (float fr = 0.30f; fr <= 0.70f; fr += 0.005f)
+                    {
+                        int px2 = Mathf.RoundToInt(cx + Mathf.Cos(a2) * rPx * fr);
+                        int py2 = Mathf.RoundToInt(cy + Mathf.Sin(a2) * rPx * fr);
+                        if (px2 < 0 || py2 < 0 || px2 >= img.width || py2 >= img.height) continue;
+                        Color c2 = img.GetPixel(px2, py2);
+                        if (Mathf.Min(c2.g, c2.b) - c2.r > 0.06f) epF++;
+                        else if (c2.r - Mathf.Max(c2.g, c2.b) > 0.06f) epC++;
+                    }
+                    if (epF > 0) { if (epF < epFroidMin) epFroidMin = epF; if (epF > epFroidMax) epFroidMax = epF; }
+                    if (epC > 0) { if (epC < epChaudMin) epChaudMin = epC; if (epC > epChaudMax) epChaudMax = epC; }
+                }
+                // ⚠️ LE PAS EST L'UNITÉ DE LA MESURE, ET IL DOIT ÊTRE PETIT DEVANT L'OBJET.
+                // Première version à 0,02 R : un pas de **1,11 px** pour un arc qui en fait ~4 —
+                // l'épaisseur ne pouvait rendre que 1,11 · 2,22 · 3,33…, et le « ratio 8,00 » qu'elle
+                // affichait était surtout de la quantification. Un instrument dont le pas est du
+                // même ordre que la grandeur mesure son propre pas.
+                float pasPx = rPx * 0.005f;
+                // ⛔⛔⛔ LE CONTRÔLE QUI MANQUAIT PARTOUT AILLEURS : ÉTEINDRE LA CIBLE. Un contrôle
+                // négatif prouve qu'on ne mesure pas RIEN ; il ne prouve pas qu'on mesure LE BON.
+                // Trois tours d'un instrument voisin ont rapporté l'arc FROID en croyant lire le
+                // chaud, avec un contrôle négatif parfait et une prédiction qui suivait. Le seul
+                // contrôle qui l'aurait vu est celui-ci — et il coûte deux extinctions.
+                var ecartsControle = new List<string>();
+                foreach (var cible in new[] { ("ArcCold", true), ("ArcHot", false) })
+                {
+                    Transform cT = manoT.Find(cible.Item1);
+                    var cImg = cT != null ? cT.GetComponent<UnityEngine.UI.Image>() : null;
+                    if (cImg == null) { ecartsControle.Add($"{cible.Item1} introuvable"); continue; }
+                    float garde = cImg.fillAmount;
+                    cImg.fillAmount = 0f;
+                    Canvas.ForceUpdateCanvases();
+                    Texture2D sans = RendreLEcran();
+                    int reste = 0;
+                    for (int deg = -95; deg <= 95; deg++)
+                    {
+                        float aa = (90f - deg) * Mathf.Deg2Rad;
+                        for (float fr = 0.30f; fr <= 0.70f; fr += 0.02f)
+                        {
+                            int qx = Mathf.RoundToInt(cx + Mathf.Cos(aa) * rPx * fr);
+                            int qy = Mathf.RoundToInt(cy + Mathf.Sin(aa) * rPx * fr);
+                            if (qx < 0 || qy < 0 || qx >= sans.width || qy >= sans.height) continue;
+                            Color cc = sans.GetPixel(qx, qy);
+                            bool vu = cible.Item2 ? (Mathf.Min(cc.g, cc.b) - cc.r > 0.06f)
+                                                  : (cc.r - Mathf.Max(cc.g, cc.b) > 0.06f);
+                            if (vu) reste++;
+                        }
+                    }
+                    Object.DestroyImmediate(sans);
+                    cImg.fillAmount = garde;
+                    Canvas.ForceUpdateCanvases();
+                    Debug.Log($"[CADRAN-CIBLE] {cible.Item1} éteint ⇒ {reste} échantillon(s) de sa "
+                              + "teinte survivent (attendu ~0 : sinon l'instrument mesure autre chose)");
+                    if (reste > 40)
+                        ecartsControle.Add($"CONTRÔLE DE CIBLE : {cible.Item1} éteint et {reste} "
+                            + "échantillons de sa teinte subsistent — la mesure d'épaisseur "
+                            + "ci-dessus porte sur un AUTRE objet et aucun de ses nombres ne vaut.");
+                }
+                foreach (string e in ecartsControle) ecarts.Add(e);
+
+                Debug.Log($"[CADRAN-EPAISSEUR] pas={pasPx:F2} px · froid {epFroidMin * pasPx:F2}.."
+                          + $"{epFroidMax * pasPx:F2} px (ratio {(epFroidMin > 0 ? epFroidMax / (float)epFroidMin : 0f):F2}) · "
+                          + $"chaud {epChaudMin * pasPx:F2}..{epChaudMax * pasPx:F2} px "
+                          + $"(ratio {(epChaudMin > 0 ? epChaudMax / (float)epChaudMin : 0f):F2}) — "
+                          + "mesuré par DIRECTION DE TEINTE, le seul classifieur qui ne confonde pas "
+                          + "les deux arcs composés à des opacités différentes");
                 Debug.Log($"[CADRAN] arc : froid {froidMin}..{froidMax}° ({nFroid}°) · " +
                           $"chaud {chaudMin}..{chaudMax}° ({nChaud}°) · " +
                           $"segment neutre le plus long entre les deux = {neutreMax}° (source SVG 29,45°)");
