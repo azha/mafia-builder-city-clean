@@ -275,8 +275,11 @@ namespace MafiaCleanCity.Operational
             v.childControlWidth = true; v.childControlHeight = true;
             v.childForceExpandWidth = true; v.childForceExpandHeight = false;
 
+            // ⛔ `hudMoneyGold`, PAS `accentGold` — voir la note de `ForensicResolvers.CouleurPour`.
+            //    L'or de cette maquette est `--or-vif` #f2c96b ; `accentGold` vaut #ffd23f, 43/255
+            //    plus bas sur le bleu. J'avais vérifié « est-ce de l'or ? », jamais « LEQUEL ».
             NouveauTexte(go.transform, "Titre", Lib("Ce qui se voit"), Px(19f),
-                         DesignTokens.Current.accentGold, DesignTokens.Current.hudSerifFont)
+                         DesignTokens.Current.hudMoneyGold, DesignTokens.Current.hudSerifFont)
                 .alignment = TextAlignmentOptions.Center;
             NouveauTexte(go.transform, "SousTitre", Lib("TROIS SIGNAUX, TROIS BANDES"), Px(8.5f),
                          DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont)
@@ -354,7 +357,7 @@ namespace MafiaCleanCity.Operational
             pannSur = NouveauTexte(go.transform, "SurTitre", "", Px(7.5f),
                 DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont);
             pannTitre = NouveauTexte(go.transform, "Titre", "", Px(13f),
-                DesignTokens.Current.accentGold, DesignTokens.Current.hudSerifFont);
+                DesignTokens.Current.hudMoneyGold, DesignTokens.Current.hudSerifFont);
             pannTexte = NouveauTexte(go.transform, "Texte", "", Px(9f),
                 DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont);
         }
@@ -537,7 +540,19 @@ namespace MafiaCleanCity.Operational
                 // autre — effaçant une distinction que le dessin faisait exprès. *Un repli pris dans
                 // la même palette ressemble à un choix ; c'est ce qui le rend invisible.*
                 case Gravite.Calme:     return DesignTokens.Current.accentCalm;
-                case Gravite.Surveille: return DesignTokens.Current.accentGold;
+                // ⛔⛔ L'OR DE CETTE MAQUETTE EST `hudMoneyGold`, ET J'AVAIS CONCLU L'INVERSE IL Y A
+                //    QUELQUES HEURES. J'avais écrit ici : « la référence emploie l'or au titre, au
+                //    CTA ET à ce rang de gravité, c'est donc le commentaire du token qui est plus
+                //    étroit que l'usage ratifié ». La première moitié est vraie ; la seconde était
+                //    une DÉDUCTION. Un juge ⊥ a mesuré le cran de la référence **byte-exact contre
+                //    le markup** : (242,201,107) = #f2c96b = `hudMoneyGold`, quand le jeu rendait
+                //    (255,210,64) = `accentGold` #ffd23f — **43/255 d'écart sur le bleu, sept fois
+                //    la tolérance de 6**.
+                //    ★★ J'avais vérifié « est-ce de l'or ? » et jamais « LEQUEL des deux ors ». La
+                //      note que j'ai écrite ce jour-là — *un token lu pour sa définition reste
+                //      déduit sur son emploi* — s'appliquait à moi une ligne plus bas : j'ai lu la
+                //      référence pour son RÔLE (de l'or à ce rang) sans en mesurer la VALEUR.
+                case Gravite.Surveille: return DesignTokens.Current.hudMoneyGold;
                 case Gravite.Criant:    return DesignTokens.Current.accentWarning;
                 case Gravite.Inconnu:   return DesignTokens.Current.onSurfaceMuted;
                 default: throw new System.ArgumentOutOfRangeException(nameof(g), g,
