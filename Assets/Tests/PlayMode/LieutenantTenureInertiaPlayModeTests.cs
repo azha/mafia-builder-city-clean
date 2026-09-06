@@ -417,14 +417,32 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.AreNotEqual(FamilleLabels.Anciennete("FRESH"), controller.TenureBucketShown,
                 $"the rendered tenure_bucket chip promoted past 'Fresh' (got '{controller.TenureBucketShown}')");
 
-            // The 3 effect chips render as WORDED bands (their closed-domain labels appear in the rendered band corpus).
+            // ⛔⛔ CES TROIS ASSERTIONS ÉPINGLAIENT DES FRAGMENTS ANGLAIS — « Cheap… », « …settling »,
+            // « …yield bonus » — tous servis par le CATALOGUE, donc rouges depuis que le client
+            // demande le français (les replis sont « Réécrire coûte peu », « S'installe vite »,
+            // « Petit gain de rendement »). Mesuré le 2026-09-06.
+            // ★ Et la forme était déjà fragile avant d'être fausse : `StartsWith`/`EndsWith` sur un
+            //   fragment de phrase suppose l'ORDRE DES MOTS d'une langue. « Réécrire coûte peu » ne
+            //   commence par aucun des quatre préfixes, et aucune traduction n'a de raison de le
+            //   faire. *Un motif de sous-chaîne sur du texte traduit est une hypothèse de syntaxe,
+            //   pas une mesure.*
+            // ⇒ CE QUI EST PROUVABLE SANS LA LANGUE : les trois puces ont été RENDUES, et aucune
+            //   ne montre son code de domaine au joueur. Les codes viennent du corps servi, donc
+            //   l'assertion est dimensionnée par les données — pas par une liste écrite ici.
             var rendered = controller.RenderedTexts;
-            Assert.IsTrue(rendered.Any(t => t.StartsWith("Cheap") || t.StartsWith("Costly") || t.StartsWith("Pricey") || t.StartsWith("Very costly")),
-                "the script_revision_cost chip rendered a worded cost label");
-            Assert.IsTrue(rendered.Any(t => t.EndsWith("settling")),
-                "the reassignment_disruption chip rendered a worded settling label");
-            Assert.IsTrue(rendered.Any(t => t.EndsWith("yield bonus")),
-                "the role_efficiency_bonus chip rendered a worded yield-bonus label");
+            Assert.IsNotEmpty(rendered, "aucun texte rendu : les gardes suivantes seraient vraies À VIDE.");
+            foreach (string brut in new[] { b.script_revision_cost, b.reassignment_disruption, b.role_efficiency_bonus })
+            {
+                Assert.IsNotNull(brut, "une bande d'effet servie est nulle : le scénario n'est pas dimensionné " +
+                                       "pour mesurer son rendu.");
+                Assert.IsFalse(rendered.Any(x => x == brut),
+                    $"le code de domaine « {brut} » est rendu TEL QUEL : la puce n'a pas été " +
+                    "traduite en libellé et le joueur lit un identifiant de serveur.");
+            }
+            // ⚠️ CE QUE CE TEST NE PROUVE PAS ENCORE : que chaque puce porte le libellé de SA bande
+            //    (et non celui d'une voisine), ni sa langue. Les deux exigent d'appeler le
+            //    producteur — et il y en a deux, concurrents, pour ces grandeurs : voir TD-611.
+            //    L'assertion se repointera sur le producteur unique une fois celui-ci posé.
 
             Debug.Log($"[LieutenantTenureE2E] accrual OK — bucket FRESH → {b.tenure_bucket}, chip='{controller.TenureBucketShown}', " +
                       $"cost={b.script_revision_cost} disruption={b.reassignment_disruption} bonus={b.role_efficiency_bonus}");
@@ -458,9 +476,17 @@ namespace MafiaCleanCity.Operational.Tests
             yield return controller.RefreshBands();
             Assert.AreEqual("SETTLING", controller.CurrentBands.op_state_band,
                 $"re-scripting a tenured lieutenant opens a settling window → op_state_band SETTLING (got '{controller.CurrentBands.op_state_band}')");
-            // The State chip rendered the worded SETTLING label ("Settling in" — band-only, no digits).
-            Assert.IsTrue(controller.RenderedTexts.Any(t => t == "Settling in"),
-                "the State row rendered the worded SETTLING band label");
+            // ⛔ MÊME CAUSE : « Settling in » est un libellé anglais servi par le catalogue (repli
+            // français « Prend ses marques »). Et cette grandeur est celle qui a DEUX producteurs
+            // divergents — `OpStateLabel` rend « Prend ses marques », `FamilleLabels.Etat` rend
+            // « Stabilisation », et les deux sont appelés sur cet écran (TD-611). Épingler l'un
+            // des deux serait vert ou rouge selon celui qui a couru : ça ne mesurerait rien.
+            // ⇒ La propriété indépendante du producteur ET de la langue : l'état servi a été
+            //   traduit — le code brut n'atteint pas le joueur.
+            Assert.IsNotEmpty(controller.RenderedTexts,
+                "aucun texte rendu : la garde suivante serait vraie À VIDE.");
+            Assert.IsFalse(controller.RenderedTexts.Any(x => x == "SETTLING"),
+                "le code « SETTLING » est rendu TEL QUEL : la ligne d'état n'a pas été traduite.");
 
             // Advance past the settling window (DISRUPT_SHORT default = 2 ticks; advance 6 to clear it robustly) → resume.
             yield return Advance(6);
