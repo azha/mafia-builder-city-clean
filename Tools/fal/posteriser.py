@@ -13,7 +13,15 @@ portraits dont l'exposition diffère donnent alors la même répartition d'encre
 ne garantit pas. Le sujet seul est postérisé quand un matte est fourni — postériser le fond aussi
 ferait remonter du bruit de compression en aplats.
 
-usage : posteriser.py <image.png> <sortie.png> [matte.png] [#hex,#hex,...]
+⚠️ **Les frontières entre encres sont FRANCHES, et l'œil lit ça comme de la pixelisation** (retour user
+2026-09-07 : « c'est pixelisé, c'est normal ? »). Ce n'est pas la résolution — l'image fait 1024² — c'est
+qu'un aplat à 4 encres n'a AUCUN ton intermédiaire : chaque dégradé devient un escalier. Le remède ne
+consiste ni à ajouter des encres (on perdrait la DA) ni à flouter (on perdrait les aplats) : on
+**suréchantillonne**. Postériser à 2× puis réduire ne crée des pixels intermédiaires QUE sur les
+frontières — les aplats restent des aplats, les bords deviennent nets. C'est le défaut par ici ;
+`--franc` rend l'ancien comportement.
+
+usage : posteriser.py <image.png> <sortie.png> [matte.png] [#hex,#hex,...] [--franc]
 
 Deux encres suffisent pour une silhouette sans visage (UNKNOWN) : au-delà, la quantification
 fabrique du moucheté sur un aplat uni — mesuré ici même.
@@ -41,10 +49,17 @@ def rgb(h):
 
 
 def main() -> None:
-    src = Image.open(sys.argv[1]).convert("RGB")
-    sortie = Path(sys.argv[2])
-    matte_p = sys.argv[3] if len(sys.argv) > 3 and sys.argv[3].lower().endswith(".png") else None
-    rampe = [rgb(c) for c in (sys.argv[4].split(",") if len(sys.argv) > 4 else RAMPE)]
+    args = [a for a in sys.argv[1:] if a != "--franc"]
+    adoucir = "--franc" not in sys.argv
+    src = Image.open(args[0]).convert("RGB")
+    sortie = Path(args[1])
+    matte_p = args[2] if len(args) > 2 and args[2].lower().endswith(".png") else None
+    rampe = [rgb(c) for c in (args[3].split(",") if len(args) > 3 else RAMPE)]
+    taille = src.size
+    if adoucir:
+        # 2× AVANT le seuillage : les frontières tombent alors sur une grille deux fois plus fine, et
+        # la réduction finale les moyenne. Les aplats, eux, restent identiques à eux-mêmes.
+        src = src.resize((taille[0] * 2, taille[1] * 2), Image.LANCZOS)
 
     gris = src.convert("L")
     alpha = None
@@ -88,6 +103,8 @@ def main() -> None:
         # 0,55) pour corriger un défaut qui n'existait pas.
         fond = Image.new("RGB", src.size, rampe[0])
         out = Image.composite(out, fond, alpha.point(lambda v: 255 if v > 128 else 0))
+    if adoucir:
+        out = out.resize(taille, Image.LANCZOS)
     out.save(sortie)
     parts = " · ".join(f"{c:02x}" for s in seuils for c in (s,))
     print(f"{sortie.name} · {n} encres · seuils de luminance {parts} · sujet {len(vals)} px")

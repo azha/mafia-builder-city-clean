@@ -109,3 +109,22 @@ combinatoire, pas une licence.*
    `(22,28,43)`**. *Compter les fichiers n'est pas vérifier leur contenu.*
 
 Planche : `planches/pool-150-visages.png`. Coût du pool : ~150 générations + 150 détourages.
+
+
+---
+
+## ⚠️ « C'est pixelisé » — ce n'était pas la résolution (retour user, 2026-09-07)
+
+Mesuré sur un portrait : la source fait **1024×1024** et porte **121 994 couleurs** ; l'aplat en portait
+**4**. Le crénelage ne venait donc pas d'un manque de pixels mais de l'absence de **tons intermédiaires** :
+à quatre encres, chaque dégradé devient une frontière franche, et l'œil lit l'escalier.
+
+**Ce qui aurait été de mauvaises réponses** : ajouter des encres (on perd l'aplat qui fait la DA), ou
+flouter l'image (on perd la netteté des à-plats). **Le remède est un suréchantillonnage** : postériser à
+2× puis réduire. Les frontières tombent sur une grille deux fois plus fine et la réduction les moyenne —
+**les aplats restent des aplats, seuls les bords gagnent des pixels intermédiaires** (4 couleurs → 15 421,
+toutes concentrées sur les contours). C'est le défaut du script depuis ; `--franc` rend l'ancien
+comportement.
+
+**Les 210 pièces ont été repassées** (150 visages + 60 du casting) et les fonds re-vérifiés : **150/150
+au jeton exact**. Le contrôle utile n'est pas le nombre de fichiers mais la **valeur d'un coin**.
