@@ -151,6 +151,31 @@ namespace MafiaCleanCity.Operational.Exceptions
             }
         }
 
+        /// <summary>⛔⛔ LA RÈGLE DU DESCRIPTEUR, SORTIE DE L'ÉCRAN QUI LA PORTAIT SEUL.
+        ///
+        /// `ExceptionQueueController.Replique` portait cette règle, écrite et justifiée : un
+        /// descripteur SANS ESPACE est un identifiant technique, donc il s'affiche **tel quel, sans
+        /// guillemets** — *mettre un identifiant dans la bouche d'un personnage, c'est inventer une
+        /// donnée ; le trou se montre, il ne se déguise pas en dialogue.*
+        /// **Et `ExceptionDetailController` faisait l'inverse, inconditionnellement** : il entourait
+        /// la valeur de guillemets, identifiant compris. Les deux écrans montrent la MÊME carte, à un
+        /// clic l'un de l'autre.
+        /// ⇒ *Une règle qui vit dans un seul de deux fichiers voisins n'est pas une règle, c'est une
+        ///   habitude.* Et recopier la condition dans le second fermerait l'instance en laissant la
+        ///   classe : la TROISIÈME surface qui affichera un descripteur la réécrira à sa façon.
+        ///   Une fonction que les deux consomment est ce qui la rend obligatoire.
+        ///
+        /// ⚠️ CE QU'ELLE NE FAIT PAS : traduire. Elle décide de la PRÉSENTATION — dialogue ou
+        /// identifiant — pas du contenu. Un descripteur en identifiant reste un trou de données côté
+        /// serveur ; cette fonction le rend visible au lieu de le maquiller.</summary>
+        public static string Replique(string texteServeur)
+        {
+            if (string.IsNullOrWhiteSpace(texteServeur)) return Inconnue;
+            string t = texteServeur.Trim();
+            // Pas d'espace ⇒ personne ne parle ainsi : c'est un identifiant, il se montre nu.
+            return t.Contains(" ") ? $"« {t} »" : t;
+        }
+
         private static string Resoudre(Dictionary<string, string> table, string bande)
         {
             if (string.IsNullOrWhiteSpace(bande)) return Inconnue;

@@ -751,10 +751,9 @@ $"{QuiParle(c)} · {ExceptionBandes.Ligne(c.severity_band, c.priority_band)}", 8
         ///   une. Le trou se montre, il ne se déguise pas en dialogue.</summary>
         private static string Replique(ExceptionCardDto c)
         {
-            string t = TexteServeur(c);
-            if (string.IsNullOrEmpty(t)) return "—";
-            bool ressembleAUnIdentifiant = !t.Contains(" ");
-            return ressembleAUnIdentifiant ? t : $"« {t} »";
+            // La règle vit désormais dans `ExceptionBandes.Replique`, que ⑩ consomme aussi :
+            // elle était écrite ici seule, et l'écran de détail faisait l'inverse à un clic d'écart.
+            return ExceptionBandes.Replique(TexteServeur(c));
         }
 
         /// <summary>Le texte serveur d'une carte : la référence i18n si elle est SERVIE, la prose

@@ -195,7 +195,11 @@ namespace MafiaCleanCity.Operational.Exceptions
             // La réplique — texte PRODUCTEUR (prose anglaise aujourd'hui, clé demain) : chrome,
             // non suivi. Passe par le point unique `Texte()`.
             TextMeshProUGUI desc = NewText("Descriptor", body,
-                "« " + Texte(c.event_descriptor, c.event_descriptor_i18n) + " »", (int)PxD(11.5f), TextAlignmentOptions.Left);
+                // ⛔ LES GUILLEMETS ÉTAIENT INCONDITIONNELS : un identifiant technique se retrouvait
+                //    dans la bouche d'un lieutenant, alors que ⑨ — le même contenu, à un clic — a une
+                //    règle écrite qui l'interdit. La règle est partagée maintenant.
+                ExceptionBandes.Replique(Texte(c.event_descriptor, c.event_descriptor_i18n)),
+                (int)PxD(11.5f), TextAlignmentOptions.Left);
             desc.textWrappingMode = TextWrappingModes.Normal;
             desc.overflowMode = TextOverflowModes.Overflow;
             desc.color = TextPrimary;

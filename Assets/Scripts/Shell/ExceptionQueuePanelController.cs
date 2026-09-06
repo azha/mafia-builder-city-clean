@@ -156,7 +156,10 @@ namespace MafiaCleanCity.Shell
             TextMeshProUGUI label = NewText(row.transform, SeverityLabel(card.severity_band), 90);
             renderedSeverityLabels.Add(label.text);
 
-            TextMeshProUGUI descriptor = NewText(row.transform, card.event_descriptor, 260);
+            // ⛔ Le descripteur partait BRUT ici — ni règle, ni guillemets, ni tiret sur le vide.
+            //    C'est le `exc_demo_teach_heat` que le juge a lu sur la planche.
+            TextMeshProUGUI descriptor = NewText(row.transform,
+                MafiaCleanCity.Operational.Exceptions.ExceptionBandes.Replique(card.event_descriptor), 260);
 
             GameObject resolveBtn = new GameObject("Resolve", typeof(RectTransform));
             resolveBtn.transform.SetParent(row.transform, false);
