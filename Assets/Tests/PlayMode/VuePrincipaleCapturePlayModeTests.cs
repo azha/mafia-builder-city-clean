@@ -559,6 +559,117 @@ namespace MafiaCleanCity.Capture.Tests
             foreach (Color c in tex.GetPixels())
                 if (c.r + c.g + c.b > 0.15f) clairs++;
             Debug.Log($"[CAPTURE] {largeur}x{hauteur} — {clairs} pixels non noirs sur {largeur * hauteur}");
+
+            // ⛔⛔ L'ÉCHELLE DU CHROME, MESURÉE SUR LE PNG QU'ON VIENT D'ÉCRIRE — la seule garde qui
+            // aurait attrapé le défaut du r5 de ①.
+            // Ce que le juge a mesuré : capitale d'« ARGENT » à **23 px** (bande y 32..54) là où les
+            // cinquante autres planches sous chrome du dépôt rendent **19** (bande y 27..45), soit
+            // ×1,21. La planche du dossier et celle du commit sont les MÊMES octets (sha256
+            // `c31837119129`), donc ce n'est pas une erreur de transport. Régénérée depuis le même
+            // code, la même planche rend 19 : le défaut n'est pas dans l'arbre, il est dans l'ÉTAT
+            // d'un run — et rien, nulle part, ne l'empêchait de partir chez un juge.
+            // ⇒ La grandeur qui le voit sans dépendre d'une métrique de police : le FILET DORÉ du
+            //   bandeau, une ligne pleine largeur dont la position encode à la fois la hauteur de la
+            //   barre et son échelle. On la PRÉDIT depuis la géométrie du shell et on la LIT dans
+            //   l'image ; le désaccord des deux est exactement le facteur cherché.
+            // ⚠️ `ReadPixels` a son origine EN BAS : la ligne image `y` vaut `hauteur - 1 - y` ici.
+            {
+                float facteur = shell.ShellCanvas.scaleFactor;
+                (float topSafe, _) = (0f, 0f);
+                float prediteU = shell.TopBarSlot.rect.height;   // depuis le haut du canvas
+                float preditePx = prediteU * facteur;
+                // ⚠️ J'AI CRU À UN PROBLÈME D'ESPACE COLORIMÉTRIQUE, ET C'ÉTAIT LE SEUIL.
+                // Première version : aucune ligne trouvée (`y=-1`) sur une planche dont le filet est
+                // parfaitement visible. J'ai ajouté un `.gamma`, ça a « marché » — puis la même
+                // conversion, appliquée à la mesure de capitale ci-dessous, a rendu 60 sur 60 en
+                // éclaircissant tout. Le diagnostic imprimé disait la vérité : la meilleure ligne
+                // portait **225 pixels or sur 270**, sous un seuil posé à 243. C'était le seuil, pas
+                // l'espace — `ReadPixels` d'une RenderTexture ARGB32 vers une Texture2D RGB24 ne
+                // convertit rien, `GetPixel` rend les mêmes octets que le PNG.
+                // *Un correctif qui fait passer le test sans nommer la cause déplace le défaut* :
+                // celui-là l'a déplacé de dix lignes plus bas.
+                int filet = -1, meilleur = -1, meilleurY = -1;
+                int borne = Mathf.Min(hauteur - 1, Mathf.RoundToInt(preditePx * 2f));
+                for (int d = 0; d <= borne; d++)
+                {
+                    int y = hauteur - 1 - d;
+                    int n = 0;
+                    for (int x = 0; x < largeur; x += 4)
+                    {
+                        Color c = tex.GetPixel(x, y);
+                        if (c.r > 0.43f && c.r - c.b > 0.137f) n++;
+                    }
+                    if (n > meilleur) { meilleur = n; meilleurY = d; }
+                    // ⛔ 70 % ET NON 90 % — mesuré, pas assoupli. Le MÉDAILLON est posé SUR le filet
+                    // et en masque une portion : une ligne qui va réellement d'un bord à l'autre
+                    // plafonne à **225 sur 270** échantillons (83 %). Un seuil à 90 % ne pouvait
+                    // donc jamais être atteint, et le détecteur rendait −1 sur une planche dont le
+                    // filet est parfaitement visible. *Un seuil se mesure sur la référence avant
+                    // d'être écrit* — et celui-ci a été relevé sur la sortie de son propre
+                    // diagnostic, pas choisi pour faire passer le test.
+                    if (filet < 0 && n > (largeur / 4) * 0.70f) filet = d;
+                }
+                Debug.Log($"[CHROME-FILET-DIAG] meilleure ligne y={meilleurY} avec {meilleur} " +
+                          $"pixels or sur {largeur / 4} échantillonnés (seuil {(largeur / 4) * 0.9f:F0})");
+                float rapport = filet > 0 ? filet / preditePx : -1f;
+                Debug.Log($"[CHROME-FILET] {largeur}x{hauteur} filet observé à y={filet} px · " +
+                          $"prédit {preditePx:F1} px ({prediteU:F1} u × {facteur:F6}) · " +
+                          $"rapport={rapport:F4}  (⚠️ topSafe non retiré de la prédiction — " +
+                          "le rapport est l'observable, pas la valeur absolue)");
+                Assert.Greater(filet, 0,
+                    "aucun filet doré pleine largeur trouvé sous le bandeau : soit le chrome n'est " +
+                    "pas rendu, soit il l'est à une échelle telle qu'il sort de la fenêtre de " +
+                    "recherche — dans les deux cas la planche ne montre pas le chrome du jeu");
+                // ⛔⛔ LE FILET EST UN DIAGNOSTIC, PAS L'ASSERTION — mesuré par contrôle positif.
+                // En injectant le facteur du r5 (×1,21) sur l'échelle du chrome, le filet ne passe
+                // que de 138 à 152 px, soit un rapport de **1,061** : il ne suit le facteur qu'à
+                // ~29 %, parce que la hauteur du SLOT (`Px(TopBarHauteurCss)`) ne dépend pas de
+                // cette échelle — seul son CONTENU la subit. Une tolérance assez large pour le
+                // bruit de rendu serait alors du même ordre que le signal.
+                // ⇒ L'assertion porte sur la grandeur que le juge mesure vraiment, et qui suit le
+                //   facteur à 100 % : la HAUTEUR DE CAPITALE d'« ARGENT ». 19 px sur les cinquante
+                //   planches sous chrome du dépôt, 23 sur la planche du r5.
+                // ⚠️ La fenêtre commence à x = 40 pour laisser dehors la flèche retour (x 29..38),
+                //   présente sur ① seul : sans ça la bande mesurée sur ① ne serait pas la même
+                //   qu'ailleurs, et la garde comparerait deux choses différentes.
+                // ⚠️ FENÊTRE BORNÉE AU BANDEAU (60 px), et c'est une correction mesurée : ouverte à
+                // 220 px, la recherche rendait **220** sur la planche 1920 — le ciel de l'art, juste
+                // sous la barre, est clair sur toute la largeur, donc la bande d'encre ne se
+                // refermait jamais. Elle rendait 19 sur la planche 2400 du même run : *un détecteur
+                // qui marche sur une planche et pas sur la suivante ne mesure pas ce qu'on croit.*
+                // Le bandeau fait 143 px de haut et « ARGENT » vit à y 27..45 : 60 px suffisent, et
+                // excluent l'art entièrement.
+                int debut = -1, fin = -1;
+                for (int d = 0; d < 60; d++)
+                {
+                    int y = hauteur - 1 - d;
+                    int n = 0;
+                    for (int x = 40; x < 340; x++)
+                    {
+                        // ⚠️ PAS de `.gamma` ICI. `ReadPixels` d'une `RenderTexture` ARGB32 vers
+                        // une `Texture2D` RGB24 ne convertit rien : `GetPixel` rend donc les MÊMES
+                        // octets que le PNG, et l'instrument hors ligne qui a fixé le 19 lit ce
+                        // PNG. Convertir une seconde fois éclaircissait tout : la bande d'encre ne
+                        // se refermait jamais et la mesure rendait 60 sur 60.
+                        Color c = tex.GetPixel(x, y);
+                        if (c.r + c.g + c.b > 3f * 0.372f) n++;
+                    }
+                    if (n > 3) { if (debut < 0) debut = d; fin = d; }
+                    else if (debut >= 0 && d - fin > 2) break;
+                }
+                int capitale = debut < 0 ? -1 : fin - debut + 1;
+                Debug.Log($"[CHROME-CAPITALE] {largeur}x{hauteur} « ARGENT » capitale={capitale} px " +
+                          $"bande y={debut}..{fin} (attendu 19, bande 27..45 sur les 50 planches " +
+                          "sous chrome du dépôt ; le r5 de ① rendait 23, bande 32..54)");
+                Assert.Greater(capitale, 0,
+                    "le libellé « ARGENT » du bandeau est introuvable : le chrome n'est pas sur " +
+                    "cette planche, ou pas là où il devrait être");
+                Assert.AreEqual(19, capitale, 2,
+                    $"le chrome est rendu à {capitale / 19f:F3}× : la capitale d'« ARGENT » mesure " +
+                    $"{capitale} px (bande y {debut}..{fin}) au lieu de 19 (bande 27..45). C'est le " +
+                    "défaut du r5 de ①, qui est parti chez un juge — les mêmes octets des deux " +
+                    "côtés — parce qu'AUCUNE garde ne lisait l'échelle du chrome SUR l'image.");
+            }
             Assert.Greater(clairs, largeur * hauteur / 20,
                 $"la capture {largeur}x{hauteur} est quasi NOIRE ({clairs} pixels) : le shell n'a pas " +
                 "été rendu dans la cible, et le fichier passerait pourtant pour une réussite.");

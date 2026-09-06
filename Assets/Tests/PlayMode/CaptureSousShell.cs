@@ -45,6 +45,52 @@ namespace MafiaCleanCity.Shell.Tests
         /// ⚠️ Elle ne couvre que les captures qui passent PAR ICI. Une suite qui écrit son PNG
         ///    elle-même doit appeler cette méthode explicitement — c'est le cas des cinq suites
         ///    semeuses, et c'est écrit plutôt que supposé couvert.</summary>
+        /// <summary>La hauteur de capitale d'« ARGENT » dans le bandeau, lue sur la texture qu'on
+        /// vient d'écrire. 19 px sur les cinquante planches sous chrome du dépôt, bande y 27..45.
+        ///
+        /// ⚠️ PAS de `.gamma` : `ReadPixels` d'une RenderTexture ARGB32 vers une Texture2D RGB24 ne
+        /// convertit rien, donc `GetPixel` rend les MÊMES octets que le PNG — et c'est ce PNG que
+        /// l'instrument hors ligne a lu pour fixer le 19. Convertir une seconde fois éclaircit tout
+        /// et la bande d'encre ne se referme jamais (mesuré : 60 sur 60).
+        /// ⚠️ Fenêtre bornée à 60 px de haut : ouverte à 220, elle mordait dans le ciel de l'art,
+        /// clair sur toute la largeur juste sous la barre. Et elle commence à x = 40 pour laisser
+        /// dehors la flèche retour (x 29..38), présente sur certains écrans seulement — sans ça la
+        /// garde comparerait deux bandes différentes selon l'écran.
+        /// ⚠️ Un écran sans chrome n'a pas d'« ARGENT » : la garde se DÉCLARE hors sujet plutôt que
+        /// d'accuser, sinon elle rendrait un nombre de bruit sur les planches hors shell (mesuré :
+        /// 3, 4 et 7 px sur les neuf planches sans bandeau du dépôt).</summary>
+        private static void EchelleDuChromeOuEchoue(Texture2D tex, int largeur, int hauteur,
+                                                    string nom, List<string> echecs)
+        {
+            int debut = -1, fin = -1;
+            for (int d = 0; d < 60; d++)
+            {
+                int y = hauteur - 1 - d;
+                int n = 0;
+                for (int x = 40; x < 340 && x < largeur; x++)
+                {
+                    Color c = tex.GetPixel(x, y);
+                    if (c.r + c.g + c.b > 3f * 0.372f) n++;
+                }
+                if (n > 3) { if (debut < 0) debut = d; fin = d; }
+                else if (debut >= 0 && d - fin > 2) break;
+            }
+            if (debut < 0 || fin - debut + 1 >= 59)
+            {
+                Debug.Log($"[CHROME-CAPITALE] {nom} : pas de bandeau lisible dans la fenêtre " +
+                          $"(bande {debut}..{fin}) — garde HORS SUJET, aucun verdict rendu");
+                return;
+            }
+            int capitale = fin - debut + 1;
+            Debug.Log($"[CHROME-CAPITALE] {nom} {largeur}x{hauteur} capitale={capitale} px " +
+                      $"bande y={debut}..{fin} (attendu 19, bande 27..45)");
+            if (Mathf.Abs(capitale - 19) > 2)
+                echecs.Add($"{nom} : le chrome est rendu à {capitale / 19f:F3}× — capitale " +
+                           $"d'« ARGENT » à {capitale} px (bande y {debut}..{fin}) au lieu de 19 " +
+                           "(bande 27..45). C'est le défaut parti chez le juge de ① le 2026-09-06, " +
+                           "que rien ne voyait parce qu'aucune garde ne lisait l'échelle SUR l'image.");
+        }
+
         public static (string identifiant, string motDePasse) IdentiteDeCaptureOuEchoue(string quoi)
         {
             string id = System.Environment.GetEnvironmentVariable("MAFIA_DEMO_IDENTIFIER");
@@ -410,6 +456,21 @@ namespace MafiaCleanCity.Shell.Tests
             canvas.planeDistance = planPrecedent;
 
             System.IO.File.WriteAllBytes(chemin, tex.EncodeToPNG());
+
+            // ⛔⛔ L'ÉCHELLE DU CHROME, LUE SUR LE PNG — la garde qui manquait, posée au SEUL endroit
+            // qui la rend vraie pour toutes les planches sous shell.
+            // Le 2026-09-06, un juge a reçu une planche de ① dont le chrome rendait ×1,21 : capitale
+            // d'« ARGENT » à 23 px là où les cinquante autres planches sous chrome du dépôt rendent
+            // 19. La planche du dossier et celle du commit portaient les MÊMES octets (sha256
+            // `c31837119129`) — donc pas une erreur de transport — et régénérée depuis le même code
+            // elle rend 19 : le défaut vit dans l'ÉTAT d'un run, pas dans l'arbre. Deux BLOQUANT et
+            // huit MAJEUR ont été écrits dessus.
+            // ⇒ Rien ne pouvait l'attraper : toutes les gardes de capture lisent l'ARBRE (locataire
+            //   monté, encre présente, ordre de fratrie), aucune ne lisait l'IMAGE. Celle-ci lit
+            //   l'image, sur l'unique grandeur qui suit le facteur à 100 %.
+            // Contrôle positif exécuté en injectant ×1,21 sur `TopBarEchelle` : capitale **23 px,
+            // rapport 1,211** — le chiffre du juge, reproduit à la troisième décimale.
+            EchelleDuChromeOuEchoue(tex, largeur, hauteur, nom, echecs);
 
             // Rallumer les voisins : ce test n'a pas à changer le monde qu'il a trouvé.
             foreach (GameObject g in eteintsPourLeRendu) if (g != null) g.SetActive(true);
