@@ -69,6 +69,10 @@ def lien(dst: pathlib.Path, src: pathlib.Path):
     dst.symlink_to(os.path.relpath(src, dst.parent))
     assert dst.exists(), f'lien cassé : {dst} → {src}'
 
+# Liens COMMUNS à tout dossier sous chrome (amendement 2026-09-06 : le canon du HUD porte un nom qui ne collisionne avec aucun
+# canon antérieur d'écran — `ecran-canon.png` désigne, dans plusieurs dossiers, un canon de série 2 de l'écran lui-même).
+LIENS_COMMUNS = [('hud-canon-1176.png', JV / 'ecran-principal' / 'ecran-canon.png')]
+
 def taille(p):
     from PIL import Image
     return '%d×%d' % Image.open(p).size
@@ -90,8 +94,9 @@ ECHELLE_S6 = f"""## Échelle — OBLIGATOIRE, jamais déduite par le juge
   d'après `hud-brennar.html` (`.tel` de **392 CSS**) : `AppShell.Px(css) = css × 1280/392` — soit
   **×2,755 px par px CSS à 1080 de large** (`Assets/Scripts/Shell/AppShell.cs:1583`, `EchelleMaquette.cs:87`).
   Le cadre de série 6 dessine sa propre barre et son propre dock à 300 CSS : ce sont des ÉVOCATIONS du
-  chrome, pas le chrome. ⇒ **Le chrome se juge contre le canon du HUD** (`Tools/juge-visuel/ecran-principal/ecran-canon.png`,
-  1176 px = 392 CSS, ×3) **et le contenu contre le cadre de série 6**. Une différence de hauteur de
+  chrome, pas le chrome. ⇒ **Le chrome se juge contre le canon du HUD** — dans ce dossier : **`hud-canon-1176.png`** (lien vers
+  `Tools/juge-visuel/ecran-principal/ecran-canon.png`, 1176 px = 392 CSS, ×3 ; ⚠️ un fichier `ecran-canon.png` LOCAL, s'il existe,
+  est un canon ANTÉRIEUR de l'écran, pas le HUD) **et le contenu contre le cadre de série 6**. Une différence de hauteur de
   bandeau entre le cadre de série 6 et la capture est ASSUMÉE (chrome partagé), pas un défaut de l'écran.
 - Hauteurs : référence **584 CSS** (2102 px, `.tel` en 9:17,5) ; capture **666,7 CSS** (2400 px, 9:20).
   La différence (82,7 CSS) est absorbée par la zone de contenu ENTRE le bandeau et le dock : aligne le
@@ -454,7 +459,7 @@ ECHELLE_FAM = """## Échelle — OBLIGATOIRE, jamais déduite par le juge
   `--force-device-scale-factor=2`, fenêtre généreuse (1300) puis crop à l'encre (fond `--encre #0b1016`). Le client
   dessine à `FX()` = échelle du panneau : **1 unité de canvas = 1 px CSS de la référence** au facteur du panneau.
 - Le chrome (bandeau, dock) est celui du shell (392 CSS ↔ 1280 u, ×2,755 px) — se juge contre le canon du HUD
-  (`Tools/juge-visuel/ecran-principal/ecran-canon.png`), pas contre cette référence qui n'en a pas.
+  (`hud-canon-1176.png` dans ce dossier → `Tools/juge-visuel/ecran-principal/ecran-canon.png`), pas contre cette référence qui n'en a pas.
 - Ce que la normalisation ne couvre pas : les rapports INTERNES (médaillon/rang, rang/rang, marges) restent réels.
 """
 E.append(dict(
