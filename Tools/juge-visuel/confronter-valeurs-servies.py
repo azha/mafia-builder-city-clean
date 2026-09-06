@@ -18,6 +18,15 @@ Plutôt que d'attendre le troisième, cet instrument les compte tous.
    Une valeur servie, connue du vocabulaire, mais qu'aucun cadre ne dessine, est exactement le
    trou qui fait inventer le client.
 
+⛔ ET LA SONDE ACCUSE AUTANT QU'ELLE TROUVE. Sa seconde version ne reconnaissait qu'une forme de
+   table : 366 valeurs « hors vocabulaire » sur 376, un verdict à 96 % uniforme — donc un
+   instrument qui mesure autre chose. Élargie aux deux formes, la couverture a bougé (vocabulaire
+   115 → 321, dessinées 10 → 103) ; sans cette vérification l'élargissement aurait été décoratif.
+   ★ Et elle a RETIRÉ deux accusations : `faint` était donné sans témoin sur deux écrans alors
+   qu'il est membre de DEUX énumérations et que la seconde est bien dessinée.
+   ⇒ **La sonde étroite fabriquait l'accusation autant que le trou.** Un balayage qu'on n'a pas
+   élargi ne rend pas « moins de résultats » : il rend de FAUX résultats, dans les deux sens.
+
 ⛔ CONTRÔLE POSITIF OBLIGATOIRE, exécuté à chaque run : `glaring` DOIT ressortir « connue mais non
    dessinée ». S'il ressort autrement, l'instrument mesure autre chose et le run est refusé — un
    balayage dont on ne prouve pas qu'il sait trouver ce qu'on lui demande ne prouve rien.
