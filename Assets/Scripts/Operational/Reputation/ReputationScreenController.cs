@@ -738,7 +738,8 @@ namespace MafiaCleanCity.Operational
             //   district et sur les bandes de l'Accueil).
             var borne = corpsGo.AddComponent<HauteurBorneeParLaZoneLibre>();
             borne.hauteurVoulue = Px(CssHauteurCadre);
-            borne.margeBasse = ShellChrome.BottomInsetPx + Px(CssMargeBasseCadre);
+            borne.margeBasseHorsChrome = Px(CssMargeBasseCadre);
+            borne.margeBasse = ShellChrome.BottomInsetPx + borne.margeBasseHorsChrome;
             borne.insetHaut = ShellChrome.TopInsetPx;
             borne.Appliquer();
 
@@ -1520,6 +1521,13 @@ namespace MafiaCleanCity.Operational
         {
             public float hauteurVoulue, margeBasse, insetHaut;
 
+            /// <summary>La marge basse PROPRE au cadre (hors chrome). Le chrome est relu à chaque
+            /// passe : `ShellChrome.BottomInsetPx` peut être publié après le montage du locataire,
+            /// et une valeur figée serait celle d'un écran qui n'est plus affiché.</summary>
+            public float margeBasseHorsChrome;
+
+            protected override void OnEnable() { base.OnEnable(); Appliquer(); }
+
             protected override void OnRectTransformDimensionsChange() { Appliquer(); }
 
             public void Appliquer()
@@ -1527,11 +1535,40 @@ namespace MafiaCleanCity.Operational
                 var rt = transform as RectTransform;
                 var parent = rt != null ? rt.parent as RectTransform : null;
                 if (rt == null || parent == null || hauteurVoulue <= 0f) return;
+                // ⛔⛔⛔ LA POSITION SE REPREND AUSSI, ET C'EST LE CORRECTIF DU BLOQUANT ㊲ B1.
+                // Ce composant ne reprenait que la HAUTEUR. La position, elle, était posée UNE FOIS
+                // au montage à partir de `ShellChrome.BottomInsetPx` — or ce champ est publié par le
+                // shell APRÈS sa passe de layout, et une capture bascule la résolution APRÈS le
+                // montage. Le cadre gardait donc l'offset d'un autre écran.
+                // ⇒ Mesuré par un juge ⊥ à 1080×1920 : zone libre y 143..1681 (**1 539 px**), contenu
+                //   **1 488 px** — il TIENT — mais posé à y=250, soit **107 px trop bas**, d'où
+                //   **56 px** qui passent sous le dock. Le libellé du CTA y perd 47 à 49 % de ses
+                //   colonnes. *Il y a la place, elle est mal utilisée.*
+                // ★ ET C'EST EXACTEMENT LA CLASSE QUE LE COMMENTAIRE VOISIN DÉNONCE, sur l'autre
+                //   grandeur : « une hauteur cuite au montage serait celle d'un autre écran ». La
+                //   hauteur a été rendue élastique, la position est restée cuite. *Un correctif qui
+                //   nomme une classe et n'en traite qu'une grandeur laisse la classe ouverte.*
+                // ⚠️ LES DEUX INSETS SE RELISENT, PAS UN SEUL. N'en rendre qu'un élastique serait
+                //    appliquer la règle à la moitié de son objet — la faute exacte que ce même
+                //    écran vient de payer sur la coiffe (M5), où le bon principe a été appliqué au
+                //    dôme et pas à l'occlusion qui le creuse.
+                float bas = MafiaCleanCity.Shell.ShellChrome.BottomInsetPx + margeBasseHorsChrome;
+                margeBasse = bas;
+                insetHaut = MafiaCleanCity.Shell.ShellChrome.TopInsetPx;
+                if (!Mathf.Approximately(rt.anchoredPosition.y, bas))
+                    rt.anchoredPosition = new Vector2(rt.anchoredPosition.x, bas);
+
                 float zoneLibre = parent.rect.height - insetHaut - margeBasse;
                 if (zoneLibre <= 0f) return;   // rect pas encore résolu : on ne cuit rien
                 float h = Mathf.Min(hauteurVoulue, zoneLibre);
                 if (!Mathf.Approximately(rt.sizeDelta.y, h))
                     rt.sizeDelta = new Vector2(rt.sizeDelta.x, h);
+
+                // Le journal dit ce que le composant a VU, pas ce qu'on suppose qu'il voit : les
+                // deux insets viennent du shell et n'existent pas hors shell (ils valent 0).
+                Debug.Log($"[CADRE-ELASTIQUE] écran {parent.rect.height:F0} · insetHaut {insetHaut:F0}"
+                          + $" · margeBasse {bas:F0} · zone libre {zoneLibre:F0} · voulu "
+                          + $"{hauteurVoulue:F0} · posé {h:F0}");
             }
         }
 
