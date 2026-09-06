@@ -1503,6 +1503,20 @@ namespace MafiaCleanCity.Capture.Tests
             //   `B3C1`, qui monte l'écran NU (aucun `AppShell`). Le cadre y touchait le haut de
             //   l'image parce qu'il n'y avait pas de chrome — ce qui a fait porter quatre tours de
             //   mesures sur un ancrage qu'aucune de ces captures ne pouvait montrer.
+            // ⛔⛔ LES DEUX FALSIFIABLES DU CADRE ÉLASTIQUE (㊲ r11, BLOQUANT F15/F16), mesurées
+            // AUX DEUX RÉSOLUTIONS AVANT les captures — parce que c'est le passage d'une résolution
+            // à l'autre qui a produit le défaut, et qu'une seule des deux ne prouve rien sur l'autre.
+            //   · à 1080×2400 (le format visé) : la borne NE MORD PAS — le cadre garde ses 462 px
+            //     CSS, donc le rendu est identique à celui d'avant le correctif ;
+            //   · à 1080×1920 : le cadre ne DÉBORDE PLUS sous le bandeau. Le juge mesurait −141 px
+            //     de débordement et **0 % d'encre de titre intacte** ; la propriété structurelle qui
+            //     couvre ça sans lire un pixel est « le haut du cadre est au niveau ou EN DESSOUS de
+            //     l'inset de chrome ».
+            foreach (var format in new[] { new Vector2Int(1080, 2400), new Vector2Int(1080, 1920) })
+            {
+                yield return MesurerCadreA(format.x, format.y);
+            }
+
             yield return CapturerA(1080, 2400, "Assets/Screenshots/screen_b3_reputation_sous_chrome_1080x2400.png");
             yield return CapturerA(1080, 1920, "Assets/Screenshots/screen_b3_reputation_sous_chrome_1080x1920.png");
 
@@ -2262,5 +2276,61 @@ namespace MafiaCleanCity.Capture.Tests
             yield return CapturerA(1080, 2400, "Assets/Screenshots/ecran_lieutenants_1080x2400.png");
         }
 
+
+        /// <summary>Met le canvas du shell à une résolution donnée, laisse la mise en page se faire,
+        /// et vérifie les deux propriétés du cadre élastique de ㊲. Restaure l'état du canvas dans
+        /// tous les cas — le laisser en `ScreenSpaceCamera` changerait le monde de la suite.</summary>
+        private IEnumerator MesurerCadreA(int largeur, int hauteur)
+        {
+            Canvas canvas = shell.ShellCanvas;
+            RenderMode modeAvant = canvas.renderMode;
+            Camera camAvant = canvas.worldCamera;
+            float planAvant = canvas.planeDistance;
+            var rt = new RenderTexture(largeur, hauteur, 24, RenderTextureFormat.ARGB32);
+            var camGo = new GameObject("MesureCadreCam");
+            var cam = camGo.AddComponent<Camera>();
+            cam.targetTexture = rt; cam.orthographic = true;
+            canvas.renderMode = RenderMode.ScreenSpaceCamera;
+            canvas.worldCamera = cam; canvas.planeDistance = 10f;
+            Canvas.ForceUpdateCanvases();
+            yield return null;
+            Canvas.ForceUpdateCanvases();
+            yield return null;
+
+            Transform corpsT = TrouverEnfant(shell.ContentSlot, "Corps");
+            var slot = (RectTransform)shell.ContentSlot;
+            float hauteurCadre = -1f, hautDepuisLeHaut = -1f, insetHaut = MafiaCleanCity.Shell.ShellChrome.TopInsetPx;
+            if (corpsT != null)
+            {
+                var corpsRt = (RectTransform)corpsT;
+                hauteurCadre = corpsRt.rect.height;
+                hautDepuisLeHaut = slot.rect.yMax - slot.InverseTransformPoint(
+                    corpsRt.TransformPoint(new Vector3(0f, corpsRt.rect.yMax, 0f))).y;
+            }
+            // ⚠️ La conversion en px CSS passe par la maquette de la série 6 (téléphone de 300 px
+            // CSS), pas par celle du HUD : deux maquettes, deux largeurs de téléphone.
+            float uParCss = slot.rect.width / MafiaCleanCity.Shell.EchelleMaquette.LargeurEcransBrennar6;
+            Debug.Log($"[CADRE-B3] {largeur}x{hauteur} · slot {slot.rect.width:F0}x{slot.rect.height:F0} u · " +
+                      $"cadre h={hauteurCadre:F1} u = {hauteurCadre / uParCss:F2} css (voulu 462,00) · " +
+                      $"haut du cadre à {hautDepuisLeHaut:F1} u · inset de chrome {insetHaut:F1} u");
+
+            canvas.renderMode = modeAvant;
+            canvas.worldCamera = camAvant;
+            canvas.planeDistance = planAvant;
+            Object.DestroyImmediate(camGo);
+            rt.Release();
+            Object.DestroyImmediate(rt);
+
+            Assert.IsNotNull(corpsT, "le cadre de ㊲ doit exister pour être mesuré");
+            Assert.GreaterOrEqual(hautDepuisLeHaut, insetHaut - 1f,
+                $"à {largeur}x{hauteur} le cadre commence à {hautDepuisLeHaut:F1} u du haut alors que " +
+                $"le chrome en occupe {insetHaut:F1} : il DÉBORDE sous le bandeau, et c'est là que le " +
+                "titre disparaît");
+            if (hauteur == 2400)
+                Assert.AreEqual(462f, hauteurCadre / uParCss, 1f,
+                    $"au format visé la borne ne doit PAS mordre : le cadre mesure " +
+                    $"{hauteurCadre / uParCss:F2} px CSS au lieu de 462,00, donc le correctif du 16:9 " +
+                    "a changé le rendu du 20:9");
+        }
     }
 }

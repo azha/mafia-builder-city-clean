@@ -718,7 +718,29 @@ namespace MafiaCleanCity.Operational
             // Les 24 px de marge basse de la référence valent 24/3,6 = 6,67 px CSS ; le dock du
             // shell s'ajoute par-dessus (0 hors shell, comportement d'avant inchangé).
             corps.anchoredPosition = new Vector2(0f, ShellChrome.BottomInsetPx + Px(CssMargeBasseCadre));
-            corps.sizeDelta = new Vector2(0f, Px(CssHauteurCadre));
+            // ⛔⛔ LA HAUTEUR EST BORNÉE PAR LA ZONE LIBRE, ET C'EST UN BLOQUANT DU r11.
+            // Le cadre valait 462 px CSS FIXES. Mesuré par un juge ⊥ aux deux résolutions : au 2400
+            // la gouttière basse est juste (+70, l'ancrage au dock tient) ; au **1920** le cadre
+            // déborde sous le bandeau de **−141 px** et le titre disparaît — **0 % d'encre intacte**.
+            // La zone libre au 16:9 vaut 1 556 px, le cadre en demande 1 698.
+            // ⇒ Le canon NE COUVRE PAS le 16:9 : sa page fait 584 px CSS = 122 de chrome + 462, et
+            //   cette arithmétique n'a de solution qu'à cette proportion-là. *Une arithmétique
+            //   exacte sur la seule résolution de la référence est une arithmétique non testée* —
+            //   c'est déjà ce qui avait masqué l'ancrage pendant quatre tours.
+            // ⇒ DÉVIATION CONSIGNÉE : le cadre prend `min(462 CSS, zone libre)`. Au format visé
+            //   (1080×2400) le rendu est INCHANGÉ — 462 exactement, la borne ne mord pas. Au 16:9
+            //   il se comprime, et le contenu suit par le panneau DÉJÀ élastique par contrat
+            //   (`.elast{flex:1}`), jamais par la tête. L'user peut retirer le 16:9 des cibles de
+            //   cet écran ; d'ici là il ne rend plus un titre invisible.
+            // ⚠️ Recalculée à CHAQUE changement de dimensions, pas une fois au montage : une
+            //   capture bascule la résolution APRÈS le montage, et une hauteur cuite au montage
+            //   serait celle d'un autre écran (la classe que ce dépôt a payée sur le fond de
+            //   district et sur les bandes de l'Accueil).
+            var borne = corpsGo.AddComponent<HauteurBorneeParLaZoneLibre>();
+            borne.hauteurVoulue = Px(CssHauteurCadre);
+            borne.margeBasse = ShellChrome.BottomInsetPx + Px(CssMargeBasseCadre);
+            borne.insetHaut = ShellChrome.TopInsetPx;
+            borne.Appliquer();
 
             // ⛔⛔ SANS CE LAYOUT, LES SIX BLOCS RESTENT TOUS À LA POSITION PAR DÉFAUT.
             // Mesuré sur la première capture réussie : l'enseigne était en place (elle porte son
@@ -1485,6 +1507,32 @@ namespace MafiaCleanCity.Operational
                 t.lineSpacing = (interligneEm - naturelEm) * 100f;
             }
             return t;
+        }
+
+        /// <summary>Borne la hauteur du cadre par la place réellement disponible sous le bandeau.
+        ///
+        /// ⛔ Un composant plutôt qu'un calcul au montage : `OnRectTransformDimensionsChange` est le
+        /// seul endroit qui voit un changement de résolution APRÈS coup. Ce dépôt a payé deux fois
+        /// la classe « géométrie cuite au montage » — le fond de district à 0,9000 de sa taille, et
+        /// les bandes de l'Accueil — et les deux fois le défaut n'est apparu qu'en capturant à une
+        /// autre résolution que celle de la mise en page.</summary>
+        private sealed class HauteurBorneeParLaZoneLibre : UnityEngine.EventSystems.UIBehaviour
+        {
+            public float hauteurVoulue, margeBasse, insetHaut;
+
+            protected override void OnRectTransformDimensionsChange() { Appliquer(); }
+
+            public void Appliquer()
+            {
+                var rt = transform as RectTransform;
+                var parent = rt != null ? rt.parent as RectTransform : null;
+                if (rt == null || parent == null || hauteurVoulue <= 0f) return;
+                float zoneLibre = parent.rect.height - insetHaut - margeBasse;
+                if (zoneLibre <= 0f) return;   // rect pas encore résolu : on ne cuit rien
+                float h = Mathf.Min(hauteurVoulue, zoneLibre);
+                if (!Mathf.Approximately(rt.sizeDelta.y, h))
+                    rt.sizeDelta = new Vector2(rt.sizeDelta.x, h);
+            }
         }
 
         private static void Etirer(RectTransform rt, float marge = 0f)
