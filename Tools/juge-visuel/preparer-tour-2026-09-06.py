@@ -214,8 +214,7 @@ def ecran_md(e):
 
 - Client au moment des captures : `76ee3cc` (`main`, 2026-09-04 11:23 — « les QUINZE planches reprises sur le
   MÊME bundle (674 clés) ») ; ce dossier est préparé sur `{SHA}`. Une capture est une mesure DATÉE.
-- Compte photographié : celui du shell par défaut, `operational_demo@example.test` (`AppShell.cs:104`), garni
-  par le seeder — **pas un compte frais**. Son état au moment de la capture n'est pas re-mesurable ici.
+- Compte photographié : {e.get('compte', "celui du shell par défaut, `operational_demo@example.test` (`AppShell.cs:104`), garni par le seeder — **pas un compte frais** ; son état au moment de la capture n'est pas re-mesurable ici")}.
 - Gardes du test (`CaptureSousShell` / `CapturerA`) : locataire réellement monté, feuille nommée par l'appelant,
   contenu chargé, rect ≥ 200×200, **compte de TEINTES distinctes** (pas « non noir » — un aplat satisfait « non
   noir »), voisins éteints par différence. Les valeurs mesurées ne sont pas disponibles (log non préservé).
@@ -344,7 +343,7 @@ E.append(dict(
     etats="un seul, celui du compte de démo — VIERGE (cadre #120) ou GARNI (cadre #119 : règles données, absorbées) : ton inventaire le dira, et c'est LE témoin à choisir.",
     references=[('reference-1080x2102.png', 'rendu du cadre nominal (série 6 #120 « Rien n\'a encore déteint » — l\'état VIERGE)', '1080×2102', '×3,6', '300 CSS = 1080 px'),
                 ('etats/m-119.png … m-124.png', 'les 6 cadres du groupe rendus à ×3 (119 = canon garni, 121 dérive, 122 règles, 123 gages, 124 ce qui manque)', '900×1752', '×3,0', '300 CSS = 900 px')],
-    source_md=src_s6([119, 120, 121, 122, 123, 124], 120, autres=f"- Générateur de cet écran : `{ATELIER}/generateur-reputation.py` (+ `chassis6.py` pour `.elast`, `.enseigne`, `.fen`, `.pann`, `.cta6`). Le cadre a une hauteur FIXE de **462 px CSS** (`reputation(cadre, H=462)`) : sous lui, sur la maquette, c'est le dock ; sur la capture, c'est le dock du shell. Un vide DANS le cadre se juge ; l'espace sous le cadre est la place du dock."),
+    source_md=src_s6([119, 120, 121, 122, 123, 124], 120, autres=f"- Générateur de cet écran : `{ATELIER}/generateur-reputation.py` (+ `chassis6.py` pour `.elast`, `.enseigne`, `.fen`, `.pann`, `.cta6`). Le cadre a une hauteur FIXE de **462 px CSS** (`reputation(cadre, H=462)`). ⚠️ Mesuré au r10 : **la maquette pose ce bloc EN BAS** du `.tel` (sous 434 px d'évocation de chrome, filet bas à y = 2078 sur 2102) ; **le client le pose EN HAUT** (sous le bandeau réel). L'ancrage est INVERSÉ — c'est un écart de mise en page à part entière (à classer), et il rend indécidable, sur une capture sans chrome, ce que le bandeau du shell recouvrirait. Un vide DANS le cadre se juge ; l'espace hors du cadre se lit à l'aune de cet ancrage."),
     captures=[('capture-1080x2400.png', '1080×2400', 'compte de démo, sous chrome, via Plus', '2026-09-04 11:22', 'VuePrincipaleCapturePlayModeTests.Capture_EcranReputation_SousChrome (`screen_b3_reputation_sous_chrome_1080x2400.png`)')],
     captures_note="- ⚠️ Il existe dans `Assets/Screenshots/` trois captures antérieures de cet écran SANS chrome (2026-09-02, compte frais, bundle anglais) : elles ne te sont pas fournies — autre monde.",
     non_fourni_extra="\n- **huit tours de juge (r1 → r8) existent dans `Tools/juge-visuel/reputation/`** — ils ne te sont pas fournis, ne les ouvre pas ;",
