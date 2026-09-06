@@ -43,7 +43,13 @@ PASSWD = os.environ.get("MAFIA_DEMO_PASSWORD", "operational-demo-pw")
 
 # paramètre → (clés candidates dans les corps reçus, corps à consulter d'abord)
 PARAMS = {
-    "districtId":  (["home_district_id", "district_id", "district"], ["session/open", "city/district/{districtId}/interior"]),
+    # ⛔ `home_district_id` N'EST PAS une clé du back : elle était INJECTÉE dans le corps capturé
+    #    de `session/open` (retiré le 2026-09-06). La source honnête est `district_id`, une vraie
+    #    clé du corps d'`interior`. ⚠️ L'ancienne source `city/district/{districtId}/interior` ne
+    #    pouvait DE TOUTE FAÇON jamais matcher : la comparaison est `source in clé`, et la clé
+    #    stockée est `city/district/<n>/interior` — le littéral `{districtId}` n'y figure pas.
+    #    Une source qui ne matche jamais avait rendu l'injection « nécessaire ».
+    "districtId":  (["district_id", "district"], ["interior"]),
     "buildingId":  (["building", "building_id"], ["interior"]),
     "lieutenantId": (["lieutenant_id"], ["lieutenants"]),
     "cardId":      (["card_id"], ["session/open"]),
@@ -128,7 +134,7 @@ def routes_avec_methode(ctl):
 
 class Pile:
     def __init__(self):
-        self.token = None; self.corps = {}; self.entetes = {}
+        self.token = None; self.corps = {}; self.entetes = {}; self.empreintes = {}
 
     def appel(self, methode, route, corps=None, cle=None):
         req = urllib.request.Request(BASE + route, method=methode, data=(json.dumps(corps).encode() if corps is not None else None))
@@ -159,8 +165,40 @@ class Pile:
 
     def get(self, route):
         st, b, h = self.appel("GET", route)
-        self.corps[route.replace("/v1/", "")] = b
+        cle = route.replace("/v1/", "")
+        self.corps[cle] = b
+        self.empreintes[cle] = _cles_du_corps(b)
         return st, b, h
+
+    def verifier_integrite(self):
+        """⛔ AUCUN corps capturé ne doit avoir changé depuis sa réception.
+
+        Payé le 2026-09-06 : cet outil INJECTAIT `home_district_id` dans le corps de
+        `session/open` pour se simplifier une résolution de paramètre. Le fichier livré portait
+        donc 13 clés là où le back en rend 12, et 240 corps « réels » contenaient une donnée que
+        le back ne dit pas. Un instrument de preuve qui FABRIQUE la donnée qu'il mesure est pire
+        qu'un instrument absent : il est cru.
+        ⇒ Cette garde ne surveille pas la clé fautive (elle serait scopée à l'instance) mais la
+          PROPRIÉTÉ : un corps reçu est en lecture seule.
+        """
+        ecarts = []
+        for cle, corps in self.corps.items():
+            attendu = self.empreintes.get(cle)
+            if attendu is None:
+                continue                       # posé à la main (ex. alias) : rien à comparer
+            vu = _cles_du_corps(corps)
+            if vu != attendu:
+                ecarts.append("  %s : %s" % (cle, {"ajoutées": sorted(vu - attendu),
+                                                   "disparues": sorted(attendu - vu)}))
+        return ecarts
+
+
+def _cles_du_corps(b):
+    """L'ensemble des clés de premier niveau du `payload.data` d'une réponse — ce qu'un E2E épingle."""
+    if not isinstance(b, dict):
+        return frozenset()
+    d = (b.get("payload") or {}).get("data")
+    return frozenset(d.keys()) if isinstance(d, dict) else frozenset()
 
 
 def chercher(obj, cles, prof=0):
@@ -328,7 +366,12 @@ def main(argv):
     for d in range(1, 19):
         st, b, _ = pile.get(f"/v1/city/district/{d}/interior")
         if st == 200 and (b.get("payload", {}).get("data", {}) or {}).get("buildings"):
-            home = d; pile.corps["interior"] = b; pile.corps["session/open"]["payload"]["data"]["home_district_id"] = d
+            # ⛔ NE RIEN ÉCRIRE DANS UN CORPS CAPTURÉ. La version d'avant injectait ici
+            #    `home_district_id` dans le corps de `session/open` : le back n'en rend rien, et
+            #    les corps livrés portaient une clé de plus que ce que la route projette.
+            #    Le district mesuré est un FAIT DE L'OUTIL (« le district dont l'intérieur porte
+            #    ses bâtiments »), il vit dans la provenance, pas dans le corps du back.
+            home = d; pile.corps["interior"] = b
             break
     print(f"district du joueur (bâtiments présents) : {home}")
     jour_de_jeu = ((pile.corps.get("session/open", {}).get("payload", {}) or {})
@@ -343,6 +386,17 @@ def main(argv):
     if minute_de_jeu is None:
         print("⚠️ la provenance portera l'absence et sa raison — jamais une valeur inventée,")
         print("   et surtout jamais l'horloge GLOBALE en remplacement (autre grandeur).")
+    # ⛔ La garde a un CONSOMMATEUR, sinon elle serait retirée de bonne foi au prochain
+    #    nettoyage. Elle tourne AVANT toute écriture : un corps altéré ne doit pas atteindre le
+    #    disque, où il serait cru.
+    ecarts = pile.verifier_integrite()
+    if ecarts:
+        print("⛔ UN CORPS CAPTURÉ A ÉTÉ MODIFIÉ DEPUIS SA RÉCEPTION — rien écrit.")
+        print("   Un instrument de preuve qui fabrique la donnée qu'il mesure est cru.")
+        print("\n".join(ecarts))
+        sys.exit(1)
+    print("intégrité des corps : %d vérifiés, aucun modifié ✅" % len(pile.empreintes))
+
     total = {"appelées": 0, "sans instance": 0, "mutations": 0, "erreurs": 0}
     lignes = ["| dossier | sym | routes | appelées | sans instance | mutations non appelées | erreurs HTTP |", "|---|---|---|---|---|---|---|"]
     for r in cd.TABLE + cd.HORS_APPSHELL:
@@ -360,6 +414,9 @@ def main(argv):
                     "jour_de_jeu": jour_de_jeu,
                     "horloge_game_minute": minute_de_jeu,
                     "horloge_source": source_horloge,
+                    # fait de l'OUTIL, pas une clé du back : le district dont l'intérieur porte
+                    # les bâtiments du joueur. Il vit ici, jamais dans le corps capturé.
+                    "district_du_joueur_mesure": home,
                     "dossier": r["dossier"], "symbole": r["sym"], "controleur": r["ctl"]}
             if route == "/v1/session/open":
                 st, h = pile.entetes["session/open"]
@@ -394,7 +451,7 @@ def main(argv):
             partage = sum(1 for x in cd.TABLE + cd.HORS_APPSHELL if x["dossier"] == r["dossier"]) > 1
             nom_index = f"_index-{r['sym']}.json" if partage else "_index.json"
             json.dump({"dossier": r["dossier"], "symbole": r["sym"], "controleur": r["ctl"], "date": date, "back_main": back_sha, "compte": IDENT,
-                       "note": "routes = celles du DOSSIER de code du contrôleur et de ses classes *Client (parfois plus larges que l'écran) ; le juge-donnees filtre",
+                       "note": "routes = celles du DOSSIER de code du contrôleur et de ses classes *Client. DEUX SENS, et le second manquait : elles sont parfois PLUS LARGES que l'écran (le juge-donnees filtre), et parfois PLUS ÉTROITES que le domaine — une route du domaine que le code de l'écran n'appelle pas N'APPARAÎT PAS ICI, par construction et non par échec. Mesuré le 2026-09-06 sur screen_c2 : POST .../laundering/stage existe côté back et le client la référence 0 fois, donc elle est absente de cet index. ⛔ Une absence ici se lit « pas dans la surface de code de l'écran », JAMAIS « pas de corps » ni « pas regardée » — confronter au mandat du dossier pour la trancher.",
                        "comptes": c, "routes": idx}, open(os.path.join(d, nom_index), "w", encoding="utf-8"), ensure_ascii=False, indent=1)
         for k in total: total[k] += c[k]
         lignes.append(f"| `{r['dossier']}` | {r['sym']} | {len(routes)} | {c['appelées']} | {c['sans instance']} | {c['mutations']} | {c['erreurs']} |")
