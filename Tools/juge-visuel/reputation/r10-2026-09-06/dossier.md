@@ -1,3 +1,5 @@
+> ⏸️ **SUSPENDU le 2026-09-06 ~11:40 (f2)** : ce tour attend la PAIRE fraîche 1920+2400 (la suite ㊲ sème, TD-647) ; juge arrêté avant toute mesure, aucun rapport. À relancer sur la paire.
+
 # Dossier du juge visuel — ㊲ La réputation (« le miroir ») — r10 — 2026-09-06
 
 > ⚠️ **Ce dossier est complet et instruisable.** S'il te manque quelque chose, c'est un défaut du dossier :
