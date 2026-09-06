@@ -1801,7 +1801,24 @@ namespace MafiaCleanCity.Capture.Tests
             //   RÉELLEMENT parsé. C'est ce qui manquait pour départager « le corps reçu diffère du
             //   corps capturé » de « le parsing perd ce champ », et ça reste utile après : une
             //   planche vaut ce que vaut le corps qui l'a produite, et il n'était nulle part.
-            var recu = new System.Text.StringBuilder($"[㊵ REÇU] stages={etapesServies}");
+            // ⛔⛔ L'IDENTITÉ D'ABORD, ET C'EST LE DISCRIMINANT QUI M'A MANQUÉ PENDANT TROIS RUNS.
+            // Sans la paire d'environnement, `DemoIdentityResolver` retombe sur le `[SerializeField]`
+            // et signe en `operational_demo` — un AUTRE compte, avec sa propre filière à quatre
+            // étapes, les mêmes bandes (elles sont dérivées du rang) et le même « JOUR ».
+            // ★ *Rien dans l'image ne distingue les deux comptes.* J'ai lu trois planches, comparé
+            //   au bon corps, vérifié l'identifiant de chaîne DU CORPS — et conclu à un défaut
+            //   d'écran, puis à une divergence serveur, puis à « une horloge gelée ne gèle pas la
+            //   base ». Les trois étaient faux : je mesurais le mauvais compte.
+            // ⇒ Le régime est journalisé par le résolveur, dans une ligne que personne ne relit.
+            //   On l'imprime donc ICI, avec le nœud réellement chargé — deux champs qui auraient
+            //   tranché en une lecture au lieu de trois runs.
+            string identiteAttendue =
+                System.Environment.GetEnvironmentVariable(
+                    MafiaCleanCity.CityMap.DemoIdentityResolver.OperationalIdentifierEnvVar);
+            var recu = new System.Text.StringBuilder("[㊵ REÇU]");
+            recu.Append($" identité={(string.IsNullOrEmpty(identiteAttendue) ? "DÉFAUT (paire non exportée)" : identiteAttendue)}")
+                .Append($" · nœud={(etapesServies > 0 ? ecran.DernierChargement.stages[0]?.node : "aucun")}")
+                .Append($" · stages={etapesServies}");
             for (int s = 0; s < etapesServies; s++)
             {
                 var e = ecran.DernierChargement.stages[s];
@@ -1810,6 +1827,25 @@ namespace MafiaCleanCity.Capture.Tests
                     .Append($" has_cash={(e != null && e.has_cash)}");
             }
             Debug.Log(recu.ToString());
+
+            // ⛔⛔ ET LA GARDE QUE JE N'ÉCRIS PAS, PARCE QU'ELLE SERAIT TAUTOLOGIQUE — c'est le
+            // point le plus utile de ce bloc. J'ai d'abord écrit
+            //     `Assert.AreEqual(identiteAttendue, shell.IdentiteResolue)`.
+            // Deux défauts, et le second condamne la forme entière :
+            //  (a) `IdentiteResolue` N'EXISTE PAS — ni sur `AppShell`, ni sur le résolveur (vérifié :
+            //      le seul accesseur public du shell est `Token`, et le résolveur n'expose que
+            //      `Resolve` et `ResolveAndSignIn`). Je l'avais inventée.
+            //  (b) Même en la créant, l'assertion serait VIDE : le résolveur DÉRIVE son identité de
+            //      cette même variable d'environnement. Comparer sa sortie à son entrée est vrai
+            //      par construction, dans les deux régimes, y compris le jour où la capture signe
+            //      ailleurs. *Une garde qui compare une valeur à sa propre source ne peut pas
+            //      rougir* — c'est la famille exacte des gardes de ce dépôt qui certifient le
+            //      défaut qu'elles surveillent.
+            // ⇒ La propriété qui compte n'est PAS « le résolveur a lu la bonne variable » mais
+            //   « la planche montre le monde du compte attendu ». Elle ne se prouve pas dans le
+            //   test : elle se prouve en confrontant le NŒUD imprimé ci-dessus au corps de
+            //   référence — c'est-à-dire par le juge, avec la signature que cette ligne fournit.
+            //   Une signature honnête vaut mieux qu'une garde verte qui ne peut pas rougir.
             Assert.Greater(etapesServies, 0,
                 "le compte de ce run ne sert AUCUNE étape : la planche montrerait l'écran « aucun " +
                 "nœud », qui est un rendu CORRECT et non un défaut. Ce n'est pas l'écran qu'il faut " +
