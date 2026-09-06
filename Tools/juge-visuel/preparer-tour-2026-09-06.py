@@ -244,7 +244,8 @@ def src_s6(idx_list, nominal, page=S6, autres=None):
 - **Rendu** : `Tools/rendre-tel.py <page> <index> <sortie> 3.6` — Chrome sans tête, fenêtre généreuse puis recadrage
   à 300×584 CSS × 3,6 = 1080×2102, assertion de taille en sortie (anti-crop payé deux fois ici).
 - ⚠️ **Témoin** : la référence rendue est le cadre NOMINAL. Si la capture montre un AUTRE état (liste vide, semaine
-  en cours, rapport traité…), choisis le cadre d'état homologue dans `etats/` ou dans la source — et dis lequel."""
+  en cours, rapport traité…), choisis le cadre d'état homologue dans `etats/` (quand ce répertoire existe dans le
+  dossier — sinon il n'y a que la SOURCE, et c'est dit ici) — et dis lequel."""
     if autres: t += '\n' + autres
     return t
 
