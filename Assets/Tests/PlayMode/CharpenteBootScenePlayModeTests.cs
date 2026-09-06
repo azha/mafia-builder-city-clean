@@ -391,6 +391,65 @@ namespace MafiaCleanCity.Shell.Tests
         // exige l'ÉGALITÉ : aucune valeur exprimée en pixels d'écran ne peut la satisfaire, quel que
         // soit le nombre mesuré à la première lecture.
         // ─────────────────────────────────────────────────────────────────────────────────────────
+        /// <summary>⛔⛔⛔ LE DÉBORD DOIT SURVIVRE À UNE REPUBLICATION — et la garde d'à côté ne le
+        /// voyait pas, parce qu'elle ne LIT QU'UNE FOIS.
+        ///
+        /// MESURÉ le 2026-09-07 en instrumentant le getter : sur cinq publications d'un même run,
+        ///     `debordLocal` (MAQUETTE) = **32,21 aux cinq**, `barre.yMin` et `mano.min.y`
+        ///     identiques — la géométrie ne bouge pas d'un centième ;
+        ///     `lossyScale` = **1,633** à la première, **0,011** aux suivantes — facteur 148 ;
+        ///     sortie = **105,17** puis **0,44**.
+        /// ⇒ Le débord n'est pas mal MESURÉ : il est bien mesuré, puis multiplié par une échelle qui
+        ///   n'existe pas encore. Une échelle de 0,011 sur un objet visible est absurde — le bandeau
+        ///   est lu pendant que son nœud d'échelle n'est pas appliqué.
+        /// ⇒ ET CE SONT LES PUBLICATIONS SUIVANTES QUI GOUVERNENT ce que le locataire lit : l'inset
+        ///   publié perd donc tout son débord après le premier montage, sur TOUS les écrans.
+        ///
+        /// ⛔ POURQUOI LA GARDE D'À CÔTÉ NE POUVAIT PAS L'ATTRAPER, alors qu'elle porte le bon
+        /// plancher (`> 4f`) : elle lit la propriété **une seule fois**, au premier montage, là où
+        /// elle vaut 105. *Une garde qui échantillonne une fois ne voit pas une grandeur qui se
+        /// dégrade à la deuxième.* Ce n'est pas un seuil à durcir, c'est un échantillon à ajouter.
+        ///
+        /// ⚠️ ET CE N'EST PAS UNE INVARIANCE SUR LA SORTIE, délibérément. Une garde « la seconde
+        /// publication doit égaler la première » serait satisfaite en **gelant une échelle fausse** :
+        /// les deux côtés d'un rapport faux, figés ensemble, ne rougissent jamais. C'est pourquoi le
+        /// plancher `> 4f` est réasserté APRÈS la republication — il porte sur la VALEUR, que seule
+        /// une échelle réelle peut produire, et pas sur l'égalité de deux lectures.
+        /// ★ *Une invariance posée sans savoir ce qui la casse se satisfait en gelant la mauvaise
+        ///   moitié* — et je l'aurais écrite ainsi si la mesure n'était pas venue avant.</summary>
+        [UnityTest]
+        public IEnumerator BLOQUANT_EffectiveBottomOverhangPx_SurvitAUneRepublication()
+        {
+            yield return ChargerLaSceneDeDemarrageDuBuild();
+            AppShell shell = SondeShellDansLaScene(sceneDeDemarrage);
+            Assert.IsNotNull(shell, $"aucun AppShell dans la scène de démarrage ({sceneDeDemarrage.path})");
+            Assert.IsNotNull(shell.TopBar, "le shell doit porter un TopBarController");
+
+            float avant = shell.TopBar.EffectiveBottomOverhangPx;
+            Assert.Greater(avant, 4f,
+                "ANTI-VACUITÉ, et c'est la PRÉCONDITION du test : le médaillon doit réellement " +
+                "déborder au premier montage, sinon la republication n'a rien à dégrader et ce test " +
+                "serait vert à vide.");
+
+            // La republication, c'est-à-dire le geste qui a produit l'effondrement : le chrome se
+            // rebâtit et republie ses insets à sa toute fin.
+            shell.RebatirChromePourResolutionCourante();
+            yield return null;
+
+            float apres = shell.TopBar.EffectiveBottomOverhangPx;
+
+            // INCONDITIONNEL — un dispositif doit imprimer qu'il se soit activé ou non.
+            Debug.Log($"[Charpente] débord AVANT republication {avant:F4} · APRÈS {apres:F4} " +
+                      $"(rapport {(avant > 0.0001f ? apres / avant : 0f):F3})");
+
+            Assert.Greater(apres, 4f,
+                $"LE DÉBORD S'EST EFFONDRÉ À LA REPUBLICATION : {avant:F4} → {apres:F4}. La " +
+                "géométrie ne bouge pas (mesuré : `debordLocal` constant à 32,21 sur cinq passes) ; " +
+                "c'est `lossyScale` qui est lu avant que le nœud d'échelle du bandeau ne soit " +
+                "appliqué (1,633 → 0,011). Tout locataire monté après le premier lit alors un inset " +
+                "amputé de son débord, et pose son contenu sous le chrome.");
+        }
+
         [UnityTest]
         public IEnumerator BLOQUANT_EffectiveBottomOverhangPx_EstEnUnitesDeCanvas_InvariantAuScaleFactor()
         {
