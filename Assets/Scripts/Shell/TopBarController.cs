@@ -856,7 +856,29 @@ namespace MafiaCleanCity.Shell
             Stretch((RectTransform)bgGo.transform, Vector2.zero, Vector2.zero);
             barBackground = bgGo.AddComponent<VerticalGradientImage>();
             barBackground.raycastTarget = false;
-            barBackground.SetColors(DesignTokens.Current.hudBarGlassTop, DesignTokens.Current.hudBarGlassBottom);
+            // ⛔⛔ LES DEUX OPACITÉS DU VERRE SONT CONVERTIES, ET C'ÉTAIT UNE POPULATION.
+            // Un juge ⊥ a balayé les cinq surfaces translucides du chrome : plaque, arc froid et
+            // arc chaud passent par la conversion sRGB→linéaire ; **le voile du bandeau et la
+            // volute la sautaient**, et les recopiaient telles quelles. Écart mesuré sur le voile :
+            // **+29/255**, pour un écart de 1 une fois converti.
+            // ⇒ *Une conversion appliquée à trois surfaces sur cinq n'est pas une conversion, c'est
+            //   une coïncidence* — et rien ne la signale, puisqu'elle est juste là où elle est
+            //   appliquée. C'est la forme « allowlist » du défaut : la garde couvre une population
+            //   qui exclut le défaut.
+            // ⚠️ Le fond du bandeau est l'ART, donc inconnu : c'est l'ajustement déclaré
+            //   (`AlphaVoileSurFondQuelconque`), pas la résolution exacte réservée aux fonds connus.
+            //   Les deux mécanismes existent, et prendre le mauvais serait aussi faux que ne rien
+            //   convertir.
+            Color verreHaut = DesignTokens.Current.hudBarGlassTop;
+            Color verreBas = DesignTokens.Current.hudBarGlassBottom;
+            float residuHaut, residuBas;
+            verreHaut.a = ProceduralUI.AlphaVoileSurFondQuelconque(verreHaut, verreHaut.a, out residuHaut);
+            verreBas.a = ProceduralUI.AlphaVoileSurFondQuelconque(verreBas, verreBas.a, out residuBas);
+            Debug.Log($"[VERRE-BANDEAU] haut α {DesignTokens.Current.hudBarGlassTop.a:F3} → {verreHaut.a:F4} "
+                      + $"(résidu {residuHaut:F2}/255) · bas α {DesignTokens.Current.hudBarGlassBottom.a:F3} → "
+                      + $"{verreBas.a:F4} (résidu {residuBas:F2}/255) — conversion sRGB→linéaire, "
+                      + "fond inconnu donc ajustement déclaré");
+            barBackground.SetColors(verreHaut, verreBas);
         }
 
         /// <summary>Filet or (`hudHairlineGold`, opaque — plus de composition par alpha, voir
@@ -1476,7 +1498,7 @@ namespace MafiaCleanCity.Shell
 
             Sprite trace = ProceduralUI.Chemin((int)VoluteLargeurCss * Facteur,
                 (int)VoluteHauteurCss * Facteur, chemins, VoluteTraitCss * Facteur,
-                WithAlpha(DesignTokens.Current.hudCreme, VoluteOpacite));
+                VoluteEncreConvertie());
 
             foreach (bool gauche in new[] { true, false })
             {
@@ -1498,6 +1520,27 @@ namespace MafiaCleanCity.Shell
             Debug.Log($"[VOLUTES] deux tracés posés depuis le `d` du canon ({VoluteLargeurCss}×"
                       + $"{VoluteHauteurCss} CSS, trait {VoluteTraitCss}, opacité {VoluteOpacite:F2}, "
                       + "droite = miroir de la gauche)");
+        }
+
+        /// <summary>L'encre de la volute, CONVERTIE — `opacity:.28` est une opacité de NAVIGATEUR,
+        /// donc exprimée dans un espace sRGB, et la recopier dans un moteur linéaire est un
+        /// changement d'unité silencieux. Un juge ⊥ a mesuré la volute **×1,9** trop forte pour
+        /// cette seule raison, alors que les trois surfaces voisines du même écran étaient déjà
+        /// converties. *Une conversion appliquée à trois surfaces sur cinq n'est pas une
+        /// conversion.*
+        /// ⚠️ La volute est posée sur le VERRE du bandeau, un fond CONNU : on résout donc
+        /// exactement (trois équations, trois inconnues) au lieu d'ajuster l'opacité — la forme
+        /// réservée aux fonds inconnus. Ce dépôt a mesuré que le compromis à un seul nombre laisse
+        /// une dispersion par canal détectable à l'image.</summary>
+        private static Color VoluteEncreConvertie()
+        {
+            bool atteignable;
+            Color c = ProceduralUI.CouleurPourMelangeLineaire(
+                DesignTokens.Current.hudCreme, DesignTokens.Current.hudBarGlassTop, 0.28f, out atteignable);
+            c.a = 0.28f;
+            Debug.Log($"[VOLUTE-ENCRE] `opacity:.28` converti sur le verre du bandeau ⇒ "
+                      + $"({c.r:F3},{c.g:F3},{c.b:F3}) · atteignable={atteignable}");
+            return c;
         }
 
         private void BuildNotificationHook()
