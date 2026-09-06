@@ -27,9 +27,11 @@ for f in rapports:
         if hit: c[hit[0]] += 1
         else: autres += 1
     verdict = next((l.strip() for l in f.read_text(encoding='utf-8').splitlines() if l.startswith('## Verdict')), '?')
-    print(f'{f.parent.parent.name:18s} {f.parent.name:16s} findings={len(rows):2d}  B={c["BLOQUANT"]} M={c["MAJEUR"]} m={c["MINEUR"]}'
-          + (f'  ⚠️ {autres} ligne(s) sans gravité reconnue' if autres else '') + f'   {verdict[:60]}')
+    n = sum(c.values())   # un finding = une ligne à id ET gravité reconnue ; les lignes à id sans gravité (annexes,
+                          # inventaires) ne comptent pas, mais sont dites
+    print(f'{f.parent.parent.name:18s} {f.parent.name:16s} findings={n:2d}  B={c["BLOQUANT"]} M={c["MAJEUR"]} m={c["MINEUR"]}'
+          + (f'  ({autres} ligne(s) à id sans gravité, hors compte)' if autres else '') + f'   {verdict[:60]}')
     for k in tot: tot[k] += c[k]
-    n_tot += len(rows)
+    n_tot += n
 print(f'— {len(rapports)} rapports · {n_tot} findings · B={tot["BLOQUANT"]} M={tot["MAJEUR"]} m={tot["MINEUR"]}'
       + ('' if n_tot == sum(tot.values()) else f'  ⚠️ somme des gravités {sum(tot.values())} ≠ {n_tot}'))
