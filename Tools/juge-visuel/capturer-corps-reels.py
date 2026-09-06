@@ -260,15 +260,20 @@ def _lire_drapeaux(argv):
 
 
 # ⛔⛔ DEUX HORLOGES DANS CE DÉPÔT, ET ELLES NE SE RESSEMBLENT PAS (mesuré par mafia-back,
-#    2026-09-06) : `city_epoch.game_minute` est GLOBALE (une ligne, valait 1500) ;
-#    `city_sim_clock.game_minute` est PAR JOUEUR (compte de démo : 71908). C'est la seconde
-#    qu'une provenance doit porter — une empreinte prise sur la globale ne dirait rien du compte
-#    capturé. ⚠️ Le piège concret : `GET /v1/_test/citysim/…` rend un champ nommé `game_minute`
-#    qui est le GLOBAL. Une route qui rend le BON NOM et la MAUVAISE GRANDEUR ; elle répondrait
-#    200 et on l'inscrirait dans 240 manifestes.
-# ⛔ Et ne PAS dériver l'une de l'autre : `opened_game_day` valait 37 quand l'horloge joueur en
-#    indiquait 49,9 — douze jours d'écart, origine non mesurée. Les deux s'inscrivent telles
-#    qu'elles sont lues, jamais converties.
+#    2026-09-06) : `city_epoch.game_minute` est GLOBALE (une seule ligne) ;
+#    `city_sim_clock.game_minute` est PAR JOUEUR. C'est la seconde qu'une provenance doit porter
+#    — une empreinte prise sur la globale ne dirait rien du compte capturé.
+#    ⚠️ Le piège concret : `GET /v1/_test/citysim/…` rend un champ nommé `game_minute` qui est le
+#    GLOBAL. Une route qui rend le BON NOM et la MAUVAISE GRANDEUR ; elle répondrait 200 et on
+#    l'inscrirait dans 240 manifestes sans qu'un contrôle bronche.
+# ⛔ Ne PAS dériver l'une de l'autre. ORDRES DE GRANDEUR OBSERVÉS — mesures DATÉES ET SOURCÉES,
+#    pas des propriétés du dépôt : le 2026-09-06 vers 01h5x UTC, sur le compte `operational_demo`
+#    et lues par la session `mafia-back`, la globale était à ~1,5e3 quand l'horloge joueur était à
+#    ~7,2e4, soit ~50 jours de jeu — tandis que `opened_game_day` du même compte rendait 37.
+#    Douze jours d'écart, origine NON mesurée. ⇒ Ces nombres illustrent que les compteurs ne sont
+#    pas deux vues d'une même grandeur ; ils ne valent pour AUCUN autre compte ni aucune autre
+#    date, et surtout pas pour `demo_capture`. Relire la valeur au moment de la passe.
+#    Les deux compteurs s'inscrivent tels que lus, jamais convertis.
 HORLOGE_SQL = "SELECT game_minute FROM city_sim_clock WHERE player_id='%s';"
 
 
