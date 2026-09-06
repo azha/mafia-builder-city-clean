@@ -971,6 +971,23 @@ namespace MafiaCleanCity.Shell
 
         private void MountTenant<T>() where T : MonoBehaviour, IShellTenant
         {
+            // ⛔⛔⛔ MESURÉ SUR CAPTURE LE 2026-09-06 — LES VINGT-ET-UNE DESTINATIONS DU MENU
+            //    « PLUS » SE DESSINAIENT PAR-DESSUS LE MENU. La planche de ⑯ montre l'écran rendu
+            //    et, DERRIÈRE lui, la liste entière : LA RÉPUTATION, LA REVUE DU JOUR, LA VENTE…
+            //    Cause : `ActivateTab` démonte AVANT d'appeler cette méthode, mais une entrée du
+            //    menu l'appelle DIRECTEMENT (`() => MountTenant<X>()`), et rien ne démontait alors.
+            //    ⇒ Le démontage vivait chez UN appelant sur deux. Le remettre ici le rend vrai pour
+            //      TOUS — y compris le vingt-deuxième écran que personne n'a encore écrit.
+            //    ⚠️ Et aucune garde ne pouvait le voir : le parcours du menu rouvre `Tab.More` entre
+            //      deux clics (donc il passe par `ActivateTab`, qui démonte), `MountedTenantType`
+            //      était correctement renseigné, l'ordre de fratrie était bon — le locataire EST le
+            //      dernier enfant, il se dessine simplement sur un fond qui n'aurait pas dû exister.
+            //      *Toutes les grandeurs mesurées étaient justes ; celle qui manquait est le NOMBRE
+            //      d'enfants de `ContentSlot`.* C'est une capture regardée qui l'a trouvée, pas un
+            //      test — d'où la falsifiable structurelle posée avec ce correctif.
+            //    Appelé deux fois sur le chemin des onglets (`ActivateTab` puis ici) : le second
+            //    passage est un no-op — `ContentSlot` est déjà vide et la référence déjà nulle.
+            UnmountCurrentTenant();
             T tenant = ConstruireLocataire<T>(out GameObject host);
             MountedTenantGameObject = host;
             MountedTenantType = typeof(T);

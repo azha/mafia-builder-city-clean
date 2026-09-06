@@ -184,6 +184,91 @@ namespace MafiaCleanCity.Shell.Tests
                 "qu'un montage précédent a laissé (ici : zéro, posé exprès par ce test).");
         }
 
+        // ── (3) LE MENU DOIT DISPARAÎTRE QUAND ON LE QUITTE ────────────────────────────────────
+        //
+        // ⛔⛔ CETTE PROPRIÉTÉ A ÉTÉ TROUVÉE PAR UNE CAPTURE REGARDÉE, PAS PAR UN TEST — et elle
+        //    était fausse sur les VINGT-ET-UNE destinations. L'écran se montait bien, au bon
+        //    endroit, à la bonne taille, en dernier frère ; et le menu restait DESSOUS, visible
+        //    entre les blocs de l'écran. Toutes les grandeurs que ce dépôt mesure d'habitude
+        //    étaient justes. Celle qui manquait tient en un mot : le NOMBRE d'occupants.
+        //
+        // ★ POURQUOI AUCUNE GARDE NE POUVAIT LE VOIR, et c'est la leçon : le parcours du menu
+        //   rouvre `Tab.More` entre deux clics — donc il repasse par `ActivateTab`, qui démonte, et
+        //   il ne visite JAMAIS l'état « j'ai cliqué une entrée et j'y suis resté ». *Un test qui
+        //   revient à son point de départ à chaque tour ne visite pas l'état où l'on s'arrête.*
+        //
+        // LA GRANDEUR : **aucun occupant d'AVANT le montage ne survit APRÈS**. Structurelle, sans
+        // un pixel — la seule famille qui ait fermé des classes ici.
+        // ⚠️ ET CE N'EST PAS LA GRANDEUR QUE J'AVAIS ÉCRITE EN PREMIER. La v1 assertait
+        //    « `ContentSlot` porte exactement UN enfant » : elle a rougi sur un correctif qui
+        //    marchait, parce qu'un écran monté en occupe légitimement **deux** — l'hôte du
+        //    locataire et la racine d'UI que son `BuildLayout()` parente à côté. `UnmountCurrentTenant`
+        //    le dit noir sur blanc, dix lignes de commentaire, et je ne les avais pas lues.
+        //    *J'avais choisi un NOMBRE au lieu de nommer la propriété* — et un nombre choisi accuse
+        //    le code au premier écran qui n'a pas la forme qu'on lui prêtait.
+        //    ⇒ La comparaison d'ENSEMBLES ne demande aucun nombre : elle est vraie quel que soit le
+        //      nombre de racines qu'un écran se donne, aujourd'hui et au prochain.
+        // Le monde dégénéré à tuer : un `ContentSlot` VIDE, ou un menu qui ne s'est jamais
+        // construit — les deux rendraient l'intersection vide sans rien prouver. D'où les deux
+        // planchers : le menu occupe le slot AVANT, un locataire est monté APRÈS.
+        [UnityTest]
+        public IEnumerator MenuPlus_EntrerDansUneDestination_NeLaisseAucunOccupantDerriere()
+        {
+            shellGo = new GameObject("AppShell");
+            shell = shellGo.AddComponent<AppShell>();
+            yield return AttendreEmpire(shell);
+
+            shell.ActivateTab(AppShell.Tab.More);
+            yield return null;
+            var (menu, _, entrees) = LireLeMenu();
+            Assert.Greater(entrees.Count, 0, "menu vide : rien à quitter, ce test ne prouverait rien");
+            // Dimensionnement : le menu occupe RÉELLEMENT le slot avant le geste. Sans ce constat,
+            // « il n'y est plus après » serait vrai d'un menu qui ne s'est jamais construit.
+            var avant = new Dictionary<int, string>();
+            for (int i = 0; i < shell.ContentSlot.childCount; i++)
+            {
+                Transform e = shell.ContentSlot.GetChild(i);
+                avant[e.gameObject.GetInstanceID()] = e.name;
+            }
+            Assert.IsNotEmpty(avant, "`ContentSlot` est vide avant le clic : le menu ne s'est pas construit, " +
+                                     "et « rien ne survit » serait vrai pour n'avoir rien eu à survivre");
+            Assert.IsTrue(avant.Values.Contains("MenuPlus"),
+                $"le menu n'est pas dans le slot avant le clic (vu : [{string.Join(", ", avant.Values)}]) — " +
+                "la prémisse de ce test n'est pas celle qu'il croit mesurer");
+
+            string nomEntree = entrees[0].name;
+            Button bouton = null;
+            foreach (Button b in Object.FindObjectsByType<Button>(FindObjectsSortMode.None))
+                if (b.gameObject.name == nomEntree) { bouton = b; break; }
+            Assert.IsNotNull(bouton, $"pas de Button sur l'entrée « {nomEntree} »");
+            Assert.IsTrue(ProductionClickSupport.Click(bouton),
+                $"« {nomEntree} » refuse le clic de production");
+
+            // `Object.Destroy` est différé à la fin de frame : une lecture immédiate verrait encore
+            // le menu, et un test qui conclurait là accuserait un correctif qui marche.
+            yield return null;
+            yield return null;
+
+            var restants = new List<string>();
+            var survivants = new List<string>();
+            for (int i = 0; i < shell.ContentSlot.childCount; i++)
+            {
+                Transform e = shell.ContentSlot.GetChild(i);
+                restants.Add(e.name);
+                if (avant.ContainsKey(e.gameObject.GetInstanceID())) survivants.Add(e.name);
+            }
+            Assert.IsNotNull(shell.MountedTenantType,
+                $"aucun locataire monté après le clic sur « {nomEntree} » : le slot serait vide pour la " +
+                "mauvaise raison, et « rien n'a survécu » serait vrai sans rien prouver");
+            Assert.IsEmpty(survivants,
+                $"après être entré dans « {nomEntree} », {survivants.Count} occupant(s) d'AVANT survivent " +
+                $"dans `ContentSlot` : [{string.Join(", ", survivants)}] (le slot porte [{string.Join(", ", restants)}]). " +
+                "La destination se dessine PAR-DESSUS eux, et le joueur voit la liste transparaître entre " +
+                "les blocs de l'écran. `ActivateTab` démonte avant de monter ; une entrée de menu appelle " +
+                "`MountTenant` directement — le démontage doit donc vivre chez `MountTenant`, pas chez " +
+                "l'un de ses deux appelants.");
+        }
+
         // ── (2) LE DÉBORDEMENT ─────────────────────────────────────────────────────────────────
         //
         // LA GRANDEUR : est-ce qu'un DOIGT peut amener chaque entrée entièrement dans la fenêtre ?
