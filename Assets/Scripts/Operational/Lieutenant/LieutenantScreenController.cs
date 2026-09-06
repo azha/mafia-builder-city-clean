@@ -2411,8 +2411,8 @@ namespace MafiaCleanCity.Operational.Lieutenant
             // ⛔⛔⛔ LE RANG PORTE LE NOM **ET** LE MÉTIER, et le second a manqué un tour entier.
             //    D-1 a remplacé l'archétype par le nom dans cette fente — le nom était servi et
             //    jeté, trois « Cuisinier » identiques s'affichaient, le correctif était dû. Mais le
-            //    message de ce commit affirmait que « l'archétype reste visible, il descend sur la
-            //    ligne d'état » : **cette ligne de code n'a jamais été écrite.** L'archétype n'était
+            //    message de ce commit ASSURAIT que le métier restait affiché ailleurs sur le rang :
+            //    **cette ligne de code n'a jamais été écrite.** L'archétype n'était
             //    plus NULLE PART, les trois rangs sont devenus interchangeables (nom + RÉCENT + Au
             //    repos, trois fois) et le juge ⊥ a mis un BLOQUANT sur le BUT de l'écran : on ne
             //    peut plus lire d'un coup d'œil qui tient quoi.
