@@ -113,6 +113,61 @@ namespace MafiaCleanCity.Shell.Tests
             //   par run pour une question tranchée une fois. Les nombres restent ici, la sonde non —
             //   seul cas où ce dépôt ne commite pas l'instrument avec son verdict, et la raison est
             //   écrite plutôt que supposée.
+
+            // ⛔⛔ LA VRAIE CARTE HORS CHROME — et elle n'existait pas, malgré son nom. Le juge de ③
+            // demande depuis deux tours une planche SANS bandeau ni dock ; `carte_ville_1080x2400`
+            // porte les deux (elle monte le shell et attend sa session), donc elle ne peut pas
+            // servir de contrôle. *Un nom de fichier n'est pas une propriété de l'image* — et
+            // celui-là a fait croire deux fois que la planche existait.
+            // ⇒ Ici, le contrôleur est monté SEUL depuis le début de ce test : aucune barre, aucun
+            //   dock, rien que la ville et ses marqueurs. C'est la définition même du hors chrome,
+            //   et elle est structurelle plutôt que déclarée.
+            {
+                const int L = 1080, H = 2400;
+                const string CheminHC = "Assets/Screenshots/carte_ville_hors_chrome_1080x2400.png";
+                Canvas cnv = peinture.GetComponentInParent<Canvas>().rootCanvas;
+                RenderMode modeAv = cnv.renderMode;
+                Camera camAv = cnv.worldCamera;
+                var rtex2 = new RenderTexture(L, H, 24, RenderTextureFormat.ARGB32);
+                var camGo2 = new GameObject("CarteHorsChromeCam");
+                try
+                {
+                    var cam2 = camGo2.AddComponent<Camera>();
+                    cam2.targetTexture = rtex2;
+                    cam2.clearFlags = CameraClearFlags.SolidColor;
+                    cam2.backgroundColor = Color.black;
+                    cam2.orthographic = true;
+                    cnv.renderMode = RenderMode.ScreenSpaceCamera;
+                    cnv.worldCamera = cam2;
+                    cnv.planeDistance = 10f;
+                    Canvas.ForceUpdateCanvases();
+                    yield return null;
+                    var crt2 = (RectTransform)cnv.transform;
+                    cam2.orthographicSize = crt2.rect.height / 2f;
+                    cam2.aspect = crt2.rect.width / crt2.rect.height;
+                    cam2.Render();
+                    RenderTexture prev2 = RenderTexture.active;
+                    RenderTexture.active = rtex2;
+                    var tex2 = new Texture2D(L, H, TextureFormat.RGB24, false);
+                    tex2.ReadPixels(new Rect(0, 0, L, H), 0, 0);
+                    tex2.Apply();
+                    RenderTexture.active = prev2;
+                    System.IO.File.WriteAllBytes(CheminHC, tex2.EncodeToPNG());
+                    // Le plancher d'encre — 4 planches du dépôt étaient vides avec des tests verts.
+                    MafiaCleanCity.Shell.Tests.CaptureSousShell.PlancherDEncre(tex2, CheminHC);
+                    Debug.Log($"[CARTE-HORS-CHROME] {CheminHC} {L}x{H} — contrôleur monté SEUL, "
+                              + $"{c.Cells.Count} marqueurs, aucun shell dans la scène");
+                    Object.Destroy(tex2);
+                }
+                finally
+                {
+                    cnv.renderMode = modeAv;
+                    cnv.worldCamera = camAv;
+                    Object.DestroyImmediate(camGo2);
+                    rtex2.Release();
+                    Object.DestroyImmediate(rtex2);
+                }
+            }
         }
 
         [UnityTest]

@@ -257,6 +257,13 @@ namespace MafiaCleanCity.Capture.Tests
             GarderLeRectDuLocataire("la carte de ville");
             yield return CapturerA(1080, 2400,
                 "Assets/Screenshots/screen_2_carte_sous_chrome_1080x2400.png");
+            // ⛔ LES DEUX RÉSOLUTIONS, DANS LE MÊME RUN — le juge de ③ les demande ensemble, et
+            // c'est le seul moyen d'attribuer un écart à l'ÉCRAN plutôt qu'au format. Ce dépôt a
+            // déjà mesuré qu'un même dock rend 8,2:1 à 2400 et 4,2:1 à 1920 parce que l'art sous
+            // lui n'est pas le même : *un défaut qui ne se voit qu'à une résolution se diagnostique
+            // faux tant qu'on ne dispose que de cette résolution.*
+            yield return CapturerA(1080, 1920,
+                "Assets/Screenshots/screen_2_carte_sous_chrome_1080x1920.png");
         }
 
         // ── Capture de NUIT ───────────────────────────────────────────────────────────────────────
