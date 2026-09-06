@@ -37,11 +37,43 @@ DUS = [
 
 
 def machine_occupee():
-    """Les conteneurs de gate qui tournent. Un fait physique, pas un `pgrep` (qui se matche lui-même)."""
+    """Tout ce qui rend la machine à quelqu'un d'autre — des faits physiques, jamais un `pgrep`
+    sur le nom du script (il se matche lui-même et rend un PID pour rien).
+
+    ⛔ ANGLE MORT PAYÉ LE 2026-09-06 : cette garde ne regardait QUE les conteneurs de gate. Elle
+       est passée au vert pendant qu'une session voisine tenait la porte Unity pour un run
+       batchmode — je l'avais écrite contre le gate E2E, et je l'ai lue comme « la machine est
+       libre ». Une garde qui vérifie UNE des raisons de s'abstenir rassure sur les autres.
+       (Les rendus n'ont duré que 2 s et rien n'a été mesuré comme cassé — mais la garde, elle,
+       était fausse, et c'est ça qu'on répare.)
+    """
+    occupants = []
+    # ── 1. LA PORTE UNITY — le signal OFFICIEL, et le seul qui dise l'intention d'un voisin.
+    #    Un `ps` ne voit qu'un run DÉJÀ commencé ; la porte dit « je vais en lancer un ».
+    #    C'est le critère que ma garde n'avait pas, et pourquoi elle est passée au vert le
+    #    2026-09-06 alors qu'une session la tenait depuis 94 minutes.
+    porte = os.path.expanduser('~/project/mafia-clean-city/scripts/creneau-unity.sh')
+    if os.path.exists(porte):
+        d = subprocess.run([porte, 'status'], capture_output=True, text=True)
+        premiere = (d.stdout or '').strip().splitlines()[:1]
+        if premiere and premiere[0].startswith('PRIS'):
+            occupants.append('porte-unity: ' + premiere[0][:70])
+    else:
+        occupants.append('porte-unity: SCRIPT INTROUVABLE — impossible d’affirmer qu’elle est libre')
+
     r = subprocess.run(['docker', 'ps', '--format', '{{.Names}}'], capture_output=True, text=True)
     if r.returncode != 0:
         return None                      # docker illisible : on ne prétend pas savoir
-    return [n for n in r.stdout.split() if n.startswith('mcc-e2e-')]
+    occupants += ['gate:' + n for n in r.stdout.split() if n.startswith('mcc-e2e-')]
+
+    # Unity en BATCHMODE tient la porte ; `unityhub-bin` qui traîne à 0 % ne la tient PAS —
+    # les confondre ferait refuser tous les rendus pour toujours.
+    p = subprocess.run(['ps', '-eo', 'pid,args'], capture_output=True, text=True)
+    if p.returncode == 0:
+        for ligne in p.stdout.splitlines():
+            if '-batchmode' in ligne and 'unityhub' not in ligne.lower():
+                occupants.append('unity-batchmode:' + ligne.split()[0])
+    return occupants
 
 
 def etiquettes(page):
@@ -83,8 +115,8 @@ def main():
         print('\n--verifier : les %d rendus sont prêts, rien exécuté.' % len(DUS))
         return
     if occupee:
-        print('⛔ un gate E2E tourne (%s…). Un rendu headless pendant un gate charge la machine'
-              % ', '.join(occupee[:3]))
+        print('⛔ la machine est à quelqu’un d’autre : %s' % ', '.join(occupee[:4]))
+        print('   Un rendu headless pendant un gate OU un run Unity batchmode charge la machine')
         print('   de l’user et fabrique des rouges chez les voisins. Rien rendu — relancer après.')
         sys.exit(1)
 
