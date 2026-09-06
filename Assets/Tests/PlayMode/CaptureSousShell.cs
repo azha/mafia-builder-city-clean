@@ -540,6 +540,96 @@ namespace MafiaCleanCity.Shell.Tests
         /// ÉCRANS au lieu de mesurer la course. ⚠️ Et la course reste un défaut de PRODUCTION —
         /// l'attendre ici ne la corrige pas, ça évite de compter un défaut de SHELL comme un
         /// défaut d'ÉCRAN.</summary>
+        /// <summary>⛔⛔ LE CHROME EST-IL ALIMENTÉ, ET SA PHASE EST-ELLE COHÉRENTE AVEC L'ÉCRAN ?
+        /// La garde qui manquait — mesurée le 2026-09-06 sur QUATRE runs de la MÊME commande
+        /// (`MAFIA_CI_CATEGORIES=CaptureCarte`, même compte gelé, arbre inchangé, aucun commit
+        /// entre eux). Elles ont rendu TROIS états différents du bandeau de ③ :
+        ///
+        ///   run | ARGENT           | JOUR | cadran CHALEUR
+        ///   ----|------------------|------|-------------------------
+        ///   A   | 9 627 820,00 €   |  50  | Brûlant, anneau braise
+        ///   B   | —                |  —   | vide, aiguille neutre, anneau or
+        ///   C   | 9 627 820,00 €   |  50  | vide, aiguille neutre, anneau or
+        ///   D   | 9 627 820,00 €   |  50  | Brûlant, anneau braise
+        ///
+        /// ⇒ Le bandeau est alimenté par DEUX arrivées asynchrones INDÉPENDANTES — le montant et
+        ///   le jour d'un côté (`session/open`), le bucket de chaleur de l'autre
+        ///   (`SetCitywideHeatBucket`). B montre les deux absentes, **C montre la première arrivée
+        ///   et pas la seconde** : c'est C qui prouve qu'elles sont séparées, et donc qu'attendre
+        ///   l'une ne donne pas l'autre.
+        ///
+        /// ⚠️ MA PREMIÈRE VERSION DE CETTE GARDE A ÉTÉ VERTE SUR UNE PLANCHE FAUSSE, TROIS FOIS.
+        ///   Elle attendait le montant, le jour et la phase — et la phase n'est PAS ce que le
+        ///   cadran affiche. Le mot en serif au centre est le bucket de CHALEUR (« CHALEUR » est
+        ///   écrit dessous) ; la phase du jour vit dans l'aile droite, sous « JOUR N », et son
+        ///   « — » hors district est l'état CORRECT que §6.3 exige. Le journal disait donc
+        ///   `phase=«—»` — juste — pendant que l'image montrait un cadran vide, et la garde
+        ///   passait. *J'ai attendu la mauvaise des trois arrivées, et la seule façon de le voir a
+        ///   été de REGARDER la planche que la garde venait de déclarer bonne.*
+        ///
+        /// ★ Ce que ça a coûté avant d'être vu : un juge ⊥ a mesuré « un jour d'écart entre les
+        ///   deux planches du même écran », un autre « la phase est alimentée sur ① et pas sur ③ »
+        ///   — deux findings d'ÉCRAN pour une course de CAPTURE. *Une planche non gardée fait
+        ///   juger l'aléa d'un run comme une propriété de l'écran.*
+        ///
+        /// ⇒ CE QU'ELLE ASSERTE. (1) alimentation, ATTENDUE : montant ≠ placeholder, jour > 0, ET
+        ///   bucket de chaleur non vide — les trois, parce que chacune est une arrivée distincte ;
+        ///   (2) cohérence de la phase, NON attendue (ce n'est pas une arrivée mais une valeur qui
+        ///   peut être périmée) : hors district la phase DOIT valoir « — ».
+        /// ⚠️ Elle se déclare HORS SUJET sur une planche sans chrome (`shell.TopBar == null`) —
+        ///   sinon elle accuserait les planches hors shell, exactement comme la garde d'échelle.
+        /// ⚠️ Elle n'asserte RIEN sur la valeur du montant : le compte gelé n'est pas son sujet,
+        ///   c'est celui de la paire d'identité et de TD-640.</summary>
+        public static IEnumerator ChromeAlimenteOuEchoue(AppShell shell, string nom, List<string> echecs)
+        {
+            if (shell == null || shell.TopBar == null)
+            {
+                Debug.Log($"[CHROME-ALIMENTE] {nom} : HORS SUJET — pas de bandeau sur cette planche");
+                yield break;
+            }
+
+            const float Delai = 20f;
+            float attente = 0f;
+            while (attente < Delai
+                   && (string.IsNullOrEmpty(shell.TopBar.RenderedCashText)
+                       || shell.TopBar.RenderedCashText == PlaceholderVide
+                       || shell.TopBar.OpenedGameDay <= 0
+                       || string.IsNullOrEmpty(shell.TopBar.CitywideHeatBucket)))
+            {
+                attente += Time.deltaTime;
+                yield return null;
+            }
+
+            string montant = shell.TopBar.RenderedCashText;
+            int jour = shell.TopBar.OpenedGameDay;
+            string phase = shell.TopBar.DayPhaseText;
+            string chaleur = shell.TopBar.CitywideHeatBucket;
+            bool enDistrict = shell.CityTabDistrictId >= 0;
+            Debug.Log($"[CHROME-ALIMENTE] {nom} montant=«{montant}» jour={jour} "
+                      + $"chaleur=«{chaleur}» phase=«{phase}» "
+                      + $"district={(enDistrict ? shell.CityTabDistrictId.ToString() : "aucun")} "
+                      + $"attendu {attente:F2}s");
+
+            if (string.IsNullOrEmpty(montant) || montant == PlaceholderVide || jour <= 0
+                || string.IsNullOrEmpty(chaleur))
+                echecs.Add($"{nom} : le bandeau n'a pas été alimenté en {Delai:F0} s "
+                           + $"(montant=«{montant}» jour={jour} chaleur=«{chaleur}») — la planche "
+                           + "montrerait un shell vide et un juge l'attribuerait à l'écran");
+
+            if (!enDistrict && phase != PlaceholderVide)
+                echecs.Add($"{nom} : phase «{phase}» hors district — §6.3 exige l'état nommé "
+                           + $"«{PlaceholderVide}» partout sauf en district ; cette valeur est le "
+                           + "reste d'un écran quitté, arrivé après le reset de `ActivateTab`");
+            if (enDistrict && phase == PlaceholderVide)
+                echecs.Add($"{nom} : en district {shell.CityTabDistrictId} et phase «{phase}» — "
+                           + "le manomètre doit porter la `day_phase` du DTO déjà récupéré");
+        }
+
+        /// <summary>L'état nommé du bandeau quand une valeur manque. RECOPIÉ de
+        /// `TopBarController` (cadratin), jamais reformulé — deux littéraux qui divergent
+        /// rendraient la garde ci-dessus verte pour la mauvaise raison.</summary>
+        private const string PlaceholderVide = "—";
+
         public static IEnumerator AttendreUnShellCalme(AppShell shell, List<string> echecs)
         {
             float attente = 0f;

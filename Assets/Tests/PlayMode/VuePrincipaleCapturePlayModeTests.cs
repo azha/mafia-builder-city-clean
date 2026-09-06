@@ -474,6 +474,16 @@ namespace MafiaCleanCity.Capture.Tests
 
         private IEnumerator CapturerA(int largeur, int hauteur, string chemin)
         {
+            // ⛔⛔ LE BANDEAU AVANT LE RENDU — la course mesurée le 2026-09-06 sur quatre runs
+            //    identiques de `CaptureCarte` (trois états du bandeau : vide / alimenté sans
+            //    phase / alimenté avec une phase de district périmée). Voir le corps de la garde
+            //    dans `CaptureSousShell` : elle ATTEND l'alimentation et REFUSE la phase
+            //    incohérente. Ici plutôt que dans l'appelant, pour que les onze captures de ce
+            //    fichier en héritent sans qu'on ait à s'en souvenir onze fois.
+            var echecsChrome = new System.Collections.Generic.List<string>();
+            yield return MafiaCleanCity.Shell.Tests.CaptureSousShell.ChromeAlimenteOuEchoue(shell, chemin, echecsChrome);
+            if (echecsChrome.Count > 0) Assert.Fail(string.Join("\n", echecsChrome));
+
             Canvas canvas = shell.ShellCanvas;
             Assert.IsNotNull(canvas, "le shell doit avoir un canvas pour être rendu hors écran");
             RenderMode modeAvant = canvas.renderMode;

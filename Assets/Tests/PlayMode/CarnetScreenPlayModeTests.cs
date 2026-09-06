@@ -289,6 +289,15 @@ namespace MafiaCleanCity.Operational.Tests
 
         private IEnumerator CapturerA(int largeur, int hauteur, string chemin)
         {
+            // Même garde que les captures de ①/③ : le bandeau est alimenté par trois arrivées
+            // asynchrones et la capture partait sans en attendre aucune (mesuré le 2026-09-06 :
+            // à l'entrée de cette méthode, montant, jour et chaleur sont tous VIDES). Elle se
+            // déclare hors sujet si `shell` est nul — les six autres écrans capturent hors shell.
+            var echecsChrome = new System.Collections.Generic.List<string>();
+            yield return MafiaCleanCity.Shell.Tests.CaptureSousShell.ChromeAlimenteOuEchoue(
+                shell, chemin, echecsChrome);
+            if (echecsChrome.Count > 0) Assert.Fail(string.Join("\n", echecsChrome));
+
             GameObject racine = RacineEcran();
             Canvas canvas = racine.GetComponentInParent<Canvas>();
             Assert.IsNotNull(canvas, "CarnetRoot n'est sous aucun Canvas : rien ne peut être rendu");
