@@ -115,8 +115,29 @@ namespace MafiaCleanCity.Shell
         {
             get
             {
+                // ⛔⛔ CE GETTER S'EFFONDRE À LA REPUBLICATION — mesuré le 2026-09-07 : il rend
+                //    105,2 au premier montage puis **0,4** à toutes les passes suivantes, pour un
+                //    médaillon qui n'a pas bougé. Et ce sont les passes suivantes qui gouvernent
+                //    ce que le locataire lit, donc l'inset publié perd tout son débord après le
+                //    premier montage — sur TOUS les écrans, pas seulement celui qui l'a révélé.
+                // ⚠️ CE QUE LE JOURNAL IMPRIME, ET POURQUOI CHAQUE TERME : `debordLocal` est en
+                //    unités de MAQUETTE, la sortie en unités de CANVAS, et c'est en soustrayant
+                //    l'une de l'autre que j'ai publié un diagnostic faux. Les deux repères et
+                //    l'échelle sont donc imprimés ENSEMBLE — aucune analyse ne peut plus les
+                //    mélanger sans le voir.
+                //    ★ *Un instrument qui rate sa cible dans deux sens opposés — ×3,27 puis ÷100 —
+                //      ne rate pas une valeur, il rate un repère.* Le signe et l'ORDRE du résidu
+                //      disent lequel des deux, et ça se lit avant toute enquête.
+                // ⇒ Les trois termes qui décident sont `rect.yMin` du bandeau, `bounds.min.y` du
+                //   médaillon et `lossyScale` : si l'effondrement vient du premier, le bandeau a
+                //   changé de hauteur ; du deuxième, le médaillon est mesuré avant sa passe de
+                //   layout ; du troisième, c'est l'échelle qui n'est pas encore appliquée.
                 Transform manoT = transform.Find("Manometre");
-                if (manoT == null) return 0f;
+                if (manoT == null)
+                {
+                    Debug.Log("[DEBORD-BANDEAU] Manometre INTROUVABLE ⇒ débord 0");
+                    return 0f;
+                }
                 RectTransform selfRt = GetComponent<RectTransform>();
                 Bounds manoBounds = RectTransformUtility.CalculateRelativeRectTransformBounds(transform, (RectTransform)manoT);
                 float selfBottomY = selfRt.rect.yMin;
@@ -157,6 +178,10 @@ namespace MafiaCleanCity.Shell
                     ? canvasParent.scaleFactor : 1f;   // anti-vacuité : jamais une division par 0
                 float echelle = transform.lossyScale.y / scaleFactor;
                 if (echelle <= 0.0001f) echelle = 1f;   // anti-vacuité : jamais une division/produit par 0
+                Debug.Log($"[DEBORD-BANDEAU] barre.yMin {selfRt.rect.yMin:F2} · mano.min.y "
+                          + $"{manoBottomY:F2} · debordLocal(MAQUETTE) {debordLocal:F2} · lossyScale "
+                          + $"{transform.lossyScale.y:F3} · scaleFactor {scaleFactor:F3} · échelle "
+                          + $"{echelle:F3} ⇒ sortie(CANVAS) {(debordLocal * echelle):F2}");
                 return debordLocal * echelle;
             }
         }

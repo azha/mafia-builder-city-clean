@@ -1336,48 +1336,32 @@ namespace MafiaCleanCity.Shell
             // `canvas.scaleFactor`) — donc additionnable tel quel avec `rect.height`, sans
             // qu'aucun appelant ait à s'en souvenir.
             float debord = TopBar != null ? TopBar.EffectiveBottomOverhangPx : 0f;
-            // ⛔ CE QUE L'INSET COUVRE DE CE QUE LE CHROME DESSINE — la grandeur que ㊲ M3 pose.
-            //
-            // ⚠️⚠️ CORRECTION DE MA PROPRE MESURE, ET ELLE RENVERSE LE DIAGNOSTIC (2026-09-07).
-            // La première version de ce journal comparait `debord` (qui sort en unités de CANVAS,
-            // après la conversion `debordLocal * echelle` du bandeau) à une portée de hiérarchie
-            // calculée ICI **sans cette conversion**, donc en unités de MAQUETTE. **Deux repères,
-            // une soustraction** — et j'en ai tiré « l'inset est court d'environ 32 unités en
-            // régime établi », que j'ai poussé et fait relayer comme un lot de shell.
-            // ⇒ L'arithmétique le dit : `105,2 = 32,2 × 3,27`, et 3,27 est exactement l'échelle du
-            //   bandeau. **La première publication n'était donc pas trois fois trop grande : elle
-            //   était JUSTE.** Le défaut est que les publications SUIVANTES rendent `0,4`.
-            // ⇒ Ce n'est pas « l'inset est court d'un montant fixe », c'est **le débord
-            //   S'EFFONDRE à la republication** — et comme ce sont les publications suivantes qui
-            //   gouvernent ce que lit le locataire, l'inset perd tout son débord après le premier
-            //   montage. La classe reste réelle et concerne tous les locataires ; sa CAUSE et sa
-            //   réparation ne sont pas celles que j'avais écrites.
-            // ★ *Deux grandeurs comparées sans être mesurées dans le même repère* — la forme E du
-            //   socle, que je venais de citer deux fois la même nuit. Le commentaire qui donne
-            //   l'échelle est à quinze lignes du getter ; je ne l'avais pas ouvert.
-            // ⇒ Ce journal imprime donc désormais les DEUX repères et l'échelle, pour qu'aucune
-            //   soustraction ne puisse plus mélanger les unités.
-            float insetHautPublie = topSafe + TopBarSlot.rect.height + debord;
-            float debordReel = debord;
-            if (TopBar != null)
-            {
-                var barreRt = TopBar.GetComponent<RectTransform>();
-                if (barreRt != null)
-                {
-                    Bounds tout = RectTransformUtility.CalculateRelativeRectTransformBounds(barreRt);
-                    float brut = Mathf.Max(0f, barreRt.rect.yMin - tout.min.y);
-                    Canvas cv = TopBar.GetComponentInParent<Canvas>();
-                    float sf = (cv != null && cv.scaleFactor > 0.0001f) ? cv.scaleFactor : 1f;
-                    float ech = TopBar.transform.lossyScale.y / sf;
-                    debordReel = brut * ech;   // MÊME repère que `debord` : canvas, pas maquette.
-                }
-            }
-            Debug.Log($"[CHROME-PORTEE] safe {topSafe:F0} · barre {TopBarSlot.rect.height:F0}"
-                      + $" · débord COMPTÉ {debord:F1} · débord RÉEL (toute la hiérarchie)"
-                      + $" {debordReel:F1} · écart {(debordReel - debord):F1} · inset publié"
-                      + $" {insetHautPublie:F0}");
-
-            ShellChrome.PublierInsets(insetHautPublie,
+            // ⛔⛔⛔ LE DIAGNOSTIC QUI VIVAIT ICI EST RETIRÉ — il est le SUSPECT du SIGSEGV que le
+            //    plan factoriel d'unity a isolé (2026-09-07), et sa mesure est acquise.
+            //    Il appelait `RectTransformUtility.CalculateRelativeRectTransformBounds(barreRt)`
+            //    — un parcours NATIF de toute la hiérarchie du bandeau — **à chaque montage de
+            //    locataire**, donc sur le chemin chaud du shell.
+            // ⇒ CE QUE LE PLAN FACTORIEL DIT, et il ne dit pas « ton code est faux » :
+            //       ScreenB3 seul, AVANT et APRÈS : 13/13   · CaptureReputation seul, APRÈS : 1/1
+            //       les DEUX ensemble, AVANT : 14/14        · les DEUX, APRÈS : **SIGNAL 11**
+            //   Chaque catégorie passe seule des deux côtés ; seule leur CO-TENANCE plante, et
+            //   seulement après le merge. Ni la catégorie `Capture` seule (elle passe), ni les
+            //   lignes ajoutées seules (elles passent) n'expliquent quoi que ce soit.
+            // ⇒ La question n'était donc pas « ma modification est-elle fausse » — elle ne l'est pas
+            //   prise seule — mais **qu'est-ce qui ne survit pas à un SECOND montage de shell dans
+            //   le MÊME processus ?** Un parcours natif de hiérarchie est le candidat le plus
+            //   plausible : au second montage, les objets du locataire précédent sont en cours de
+            //   destruction, et une marche native sur des `RectTransform` à moitié détruits est
+            //   exactement ce qui produit un signal 11 plutôt qu'une exception managée.
+            // ★ Famille « un lot change le régime d'exécution d'un autre sans toucher une de ses
+            //   lignes » — sauf qu'ici les deux lots sont deux CATÉGORIES du même run, et la
+            //   ressource partagée est **le processus Unity lui-même**.
+            // ⇒ CE QUE LA MESURE A RENDU, et pourquoi le diagnostic peut partir : `debordLocal` est
+            //   CONSTANT à 32,21 sur les cinq passes, et c'est `lossyScale` qui s'effondre de 1,633
+            //   à 0,011. La géométrie est hors de cause ; la réparation porte sur l'échelle, et le
+            //   journal qui le prouve vit désormais dans le getter du bandeau, hors du chemin de
+            //   montage.
+            ShellChrome.PublierInsets(topSafe + TopBarSlot.rect.height + debord,
                                       bottomSafe + TabBarRoot.rect.height);
         }
 
