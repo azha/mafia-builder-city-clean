@@ -1454,6 +1454,29 @@ namespace MafiaCleanCity.Operational.Lieutenant
         /// depuis le bandeau haut (`ProceduralUI.HorizontalFade`).</summary>
         private void BuildFamilyHeader(Transform parent)
         {
+            // ⛔⛔ LE FILET PAYAIT LA GOUTTIÈRE DE `.corps`, ET C'EST LÀ QUE PASSAIT LE SURPLUS.
+            //    Le juge ⊥ mesure l'en-tête à +11,96 % et note que TOUT le supplément se loge entre
+            //    le sous-titre et le filet (24,00 → 43,13 CSS, +79,7 %) — « un filet décroché de son
+            //    sous-titre », et tout le contenu poussé de +11 à +14.
+            //    Cause : `tete` et `filet` étaient deux FRÈRES sous le contenu défilant, dont le
+            //    `VerticalLayoutGroup` insère `.corps gap` = 15 entre chacun de ses enfants. Le
+            //    filet payait donc l'écart qui sépare deux BLOCS, alors qu'il est la FERMETURE du
+            //    bloc de tête — la maquette l'écrit ainsi, et son écart au sous-titre est le
+            //    `padding-bottom` de `.tete`, rien d'autre.
+            //    ⇒ On remonte depuis les DEUX objets mesurés (sous-titre, filet) jusqu'à leur
+            //      premier parent COMMUN — c'était le contenu défilant, pas `tete` — et on édite
+            //      celui-là, en les réunissant sous un conteneur à écart NUL. C'est la discipline
+            //      que ce dépôt a payée : corriger un `spacing` sans vérifier QUEL groupe sépare
+            //      les deux objets qu'on mesure, c'est corriger à côté et croire avoir corrigé.
+            //      Le `.corps gap` reste, à sa place : SOUS le filet, entre l'en-tête et le Don.
+            GameObject enTeteComplet = NewUI("EnTeteComplet", parent);
+            VerticalLayoutGroup etc = enTeteComplet.AddComponent<VerticalLayoutGroup>();
+            etc.spacing = 0;
+            etc.childControlWidth = true; etc.childControlHeight = true;
+            etc.childForceExpandWidth = true; etc.childForceExpandHeight = false;
+            AddLayoutElement(enTeteComplet, flexibleHeight: 0);
+            parent = enTeteComplet.transform;
+
             GameObject tete = NewUI("FamilyHeader", parent);
             HorizontalLayoutGroup h = tete.AddComponent<HorizontalLayoutGroup>();
             h.spacing = FX(19);                            // .tete gap : 18,67
@@ -1462,7 +1485,17 @@ namespace MafiaCleanCity.Operational.Lieutenant
             // corps ayant déjà posé ses 22,4, l'en-tête ne doit ajouter que la DIFFÉRENCE, sinon il
             // se retrouve indenté de 48 et se désaligne visiblement de la colonne de cartes
             // (mesuré par le juge ⊥ : 48,0 u au lieu de 26,0).
-            h.padding = new RectOffset(FX(26 - 22), FX(26 - 22), FX(26 - 19), FX(24));   // 24 : bas mesuré
+            // ⚠️ LE `+4,5` N'EST PAS UNE VALEUR DE MAQUETTE, C'EST UNE COMPENSATION DE BOÎTE DE
+            //    LIGNE, et il faut le dire. Le juge ⊥ mesure l'ENCRE du titre à 38,00 CSS depuis le
+            //    haut de la feuille côté référence et à 33,50 côté jeu : le bloc est 4,5 trop HAUT.
+            //    Les paddings, eux, sont exacts (26,13 − 19 = 7,13) et l'interligne interne du bloc
+            //    est conforme (22,50 → 21,27, −5 %). Ce qui diffère est la quantité de blanc que la
+            //    boîte de ligne réserve AU-DESSUS de l'encre : celle de TMP en met 4,5 de moins que
+            //    la line-box du navigateur. *La grandeur qui compte est l'endroit où l'ENCRE tombe,
+            //    pas où un bord de boîte tombe* — même arbitrage que la hauteur de capitale alignée
+            //    pendant que la chasse est assumée. On le rend donc au padding, et on le REPREND en
+            //    bas pour que l'écart sous-titre→filet retombe sur les 24,00 de la référence.
+            h.padding = new RectOffset(FX(26 - 22), FX(26 - 22), FX(26 - 19 + 4.5f), FX(24 - 4.5f));
             h.childAlignment = TextAnchor.MiddleLeft;
             h.childControlWidth = true;
             h.childControlHeight = true;
@@ -1577,8 +1610,25 @@ namespace MafiaCleanCity.Operational.Lieutenant
             GameObject filet = NewUI("FiletTete", parent);
             AddLayoutElement(filet, minHeight: 2, flexibleHeight: 0);
             Image filetImg = filet.AddComponent<Image>();
-            filetImg.color = DesignTokens.Current.hudHairlineGold;
-            filetImg.sprite = MafiaCleanCity.Shell.ProceduralUI.HorizontalFade(256, 0.30f, 0f);
+            // ⛔⛔ LA RAMPE SE MÉLANGE EN sRGB, PAS EN LINÉAIRE — mesuré par un juge ⊥ avec un test
+            //    de modèle à UNE variable : la RÉFÉRENCE tombe sur sRGB (écarts 2/255 contre
+            //    270 en linéaire), le JEU tombait sur linéaire (275 contre 7). Le filet montait à
+            //    pleine intensité beaucoup plus près du bord au lieu de s'y éteindre.
+            //    Cause : un masque BLANC dont seul l'ALPHA varie, teinté par `Image.color` — donc
+            //    composé par Unity, donc en linéaire. La surcharge employée ici écrit le résultat
+            //    du mélange sRGB en pixels OPAQUES : un pixel opaque n'est plus composé du tout.
+            //    C'est la technique du rail de l'arbre (deux couleurs opaques), au pixel près.
+            // ⚠️ BALAYAGE DE LA CLASSE, pas de l'instance — « tous les dégradés d'alpha de ⑥ ».
+            //    Deux membres, pas un : ce filet, et le VOILE d'en-tête (`VoileRadial`, qui fait
+            //    `c.a *= a`). Le voile n'est PAS converti ici, et pour une raison mesurable : une
+            //    rampe opaque PEINT le fond qu'on lui donne, ce qui n'est admissible que sur un
+            //    fond connu et uni. Le filet est un trait de 2 px posé sur la feuille ; le voile
+            //    déborde du bloc de tête de 22 unités de chaque côté et de 19 en haut, sur une
+            //    zone dont je n'ai pas prouvé l'uniformité. Son propre finding est d'ailleurs
+            //    distinct : le juge le mesure ABSENT (amplitude 0), pas mal composé.
+            filetImg.color = Color.white;   // la teinte vient de la texture, pas du composant
+            filetImg.sprite = MafiaCleanCity.Shell.ProceduralUI.HorizontalFade(
+                256, 0.30f, 0f, DesignTokens.Current.hudHairlineGold, SurfaceBg);
             filetImg.type = Image.Type.Simple;
             filetImg.raycastTarget = false;
 
@@ -2281,11 +2331,19 @@ namespace MafiaCleanCity.Operational.Lieutenant
             v.childForceExpandWidth = true; v.childForceExpandHeight = false;
             AddLayoutElement(bloc, flexibleWidth: 1);
 
-            TextMeshProUGUI role = NewText("Role", bloc.transform, "VOUS", FamilleNomDonTaille, TextAlignmentOptions.Left);
+            // ⛔ F13 — LA CASSE, ET ELLE SEULE. La maquette met un nom propre en casse mixte
+            //    (« Don V. ») sur cette fente et le rôle en capitales dessous ; le jeu mettait des
+            //    CAPITALES sur les deux, mesuré par le même instrument de casse (6/6 contrôles).
+            //    Le CONTENU reste un arbitrage produit — le back n'expose aucun nom de joueur, on
+            //    ne l'invente pas. Ce qui est corrigible côté client est la forme : on rend donc la
+            //    casse mixte que la fente d'identité porte des deux côtés, sans toucher au mot.
+            //    ★ *Un arbitrage sur le CONTENU n'excuse pas un écart sur la FORME* — les deux se
+            //      jugent séparément, et seul le second est de mon ressort.
+            TextMeshProUGUI role = NewText("Role", bloc.transform, "Vous", FamilleNomDonTaille, TextAlignmentOptions.Left);
             role.font = DesignTokens.Current.hudSerifFont;
             role.color = DesignTokens.Current.hudMoneyGold;
             AddLayoutElement(role.gameObject, minHeight: FX(34), flexibleHeight: 0);
-            TrackText(role, "VOUS");
+            TrackText(role, "Vous");
 
             TextMeshProUGUI sous = NewText("Sous", bloc.transform, Lib("LE DON"), FamilleRoleTaille, TextAlignmentOptions.Left);
             sous.characterSpacing = 16f;
@@ -2325,15 +2383,30 @@ namespace MafiaCleanCity.Operational.Lieutenant
             v.childForceExpandWidth = true; v.childForceExpandHeight = false;
             AddLayoutElement(bloc, flexibleWidth: 1);
 
-            // ⛔ LE NOM SERVI, PLUS L'ARCHÉTYPE. Le champ existait dans la réponse et le DTO le
-            // jetait ; les trois lieutenants du compte de démo étant tous COOK, l'organigramme
-            // affichait « Cuisinier » trois fois. L'archétype reste visible — il descend sur la
-            // ligne d'état, à sa place, comme qualificatif et non comme identité.
-            // ⚠️ Repli NOMMÉ si le serveur n'envoie rien : l'archétype, qui reste un fait sur ce
-            //    lieutenant. Jamais une chaîne vide — un nom absent doit se VOIR.
-            string nom = string.IsNullOrWhiteSpace(row.name)
-                ? FamilleLabels.Archetype(row.archetype)
-                : row.name;
+            // ⛔⛔⛔ LE RANG PORTE LE NOM **ET** LE MÉTIER, et le second a manqué un tour entier.
+            //    D-1 a remplacé l'archétype par le nom dans cette fente — le nom était servi et
+            //    jeté, trois « Cuisinier » identiques s'affichaient, le correctif était dû. Mais le
+            //    message de ce commit affirmait que « l'archétype reste visible, il descend sur la
+            //    ligne d'état » : **cette ligne de code n'a jamais été écrite.** L'archétype n'était
+            //    plus NULLE PART, les trois rangs sont devenus interchangeables (nom + RÉCENT + Au
+            //    repos, trois fois) et le juge ⊥ a mis un BLOQUANT sur le BUT de l'écran : on ne
+            //    peut plus lire d'un coup d'œil qui tient quoi.
+            //    ★★ *Un correctif qui REMPLACE un champ par un autre déplace le défaut d'un cran* —
+            //      et j'ai écrit dans le même souffle une phrase qui décrivait le geste manquant
+            //      comme s'il était fait. **Une affirmation de clôture exige la même evidence
+            //      qu'une autre** : la planche était là, il suffisait de la regarder.
+            // ⇒ Deux grandeurs distinctes, deux fentes : le NOM identifie (ligne 1, serif crème,
+            //   la plus grosse encre du bloc), le MÉTIER qualifie (ligne 2, devant l'ancienneté).
+            //   La maquette met le métier en ligne 1 parce qu'elle n'avait pas de nom à montrer ;
+            //   maintenant qu'il y en a un, l'identité prend la ligne d'identité et le métier
+            //   rejoint les autres qualificatifs. La géométrie à DEUX lignes que le juge a mesurée
+            //   conforme (hauteur de rang 99,5 · pas 201,6) est préservée.
+            // ⚠️ Repli si le serveur n'envoie pas de nom : l'archétype remonte en ligne 1 et NE SE
+            //    RÉPÈTE PAS en ligne 2 — afficher deux fois la même chaîne serait un rang qui
+            //    prétend porter deux informations et n'en porte qu'une.
+            string metier = FamilleLabels.Archetype(row.archetype);
+            bool nomServi = !string.IsNullOrWhiteSpace(row.name);
+            string nom = nomServi ? row.name : metier;
             TextMeshProUGUI nomTxt = NewText("Nom", bloc.transform, nom, FamilleNomTaille, TextAlignmentOptions.Left);
             nomTxt.font = DesignTokens.Current.hudSerifFont;
             nomTxt.color = DesignTokens.Current.hudCreme;
@@ -2367,6 +2440,21 @@ namespace MafiaCleanCity.Operational.Lieutenant
             ph.childControlWidth = true; ph.childControlHeight = true;
             ph.childForceExpandWidth = false; ph.childForceExpandHeight = false;
             AddLayoutElement(puceLigne, minHeight: FX(28), flexibleHeight: 0);
+            // LE MÉTIER, devant l'ancienneté. Couleur et corps des micro-libellés (comme la puce et
+            // le libellé d'état) : il qualifie, il n'identifie pas — c'est le nom au-dessus qui
+            // identifie, et lui seul est en serif crème.
+            if (nomServi)
+            {
+                TextMeshProUGUI metierTxt = NewText("Metier", puceLigne.transform, metier,
+                                                    FamilleRoleTaille, TextAlignmentOptions.Left);
+                metierTxt.color = DesignTokens.Current.hudCremeSecondary;
+                AddLayoutElement(metierTxt.gameObject, minHeight: FX(28), flexibleHeight: 0);
+                TrackText(metierTxt, metier);
+            }
+            // L'écart métier↔puce n'a pas d'homologue dans la maquette (elle n'a que la puce sur
+            // cette ligne) : on reprend le padding horizontal de `.chip` plutôt que d'inventer un
+            // nombre — une valeur déjà mesurée dans ce fichier, pas un choix de goût.
+            ph.spacing = FX(11);
             GameObject puce = NewUI("Puce", puceLigne.transform);
             AddLayoutElement(puce, minHeight: FX(28), flexibleHeight: 0);
             LayoutElement lePuce = puce.GetComponent<LayoutElement>();
@@ -2412,11 +2500,21 @@ namespace MafiaCleanCity.Operational.Lieutenant
             AddLayoutElement(etatTxt.gameObject, minHeight: FX(27), flexibleHeight: 0);
             TrackText(etatTxt, etat);
 
-            TextMeshProUGUI etatLbl = NewText("EtatLibelle", etatBloc.transform, Lib("ÉTAT"), FamilleEtatLibelleTaille, TextAlignmentOptions.Right);
+            // ⛔ F9 — `.rang .etat span{text-transform:uppercase}`, et c'était le SEUL micro-libellé
+            //    de l'écran à ne pas l'être : « 3 LIEUTENANTS », « RÉCENT », « LE DON » le sont
+            //    tous. Le juge ⊥ l'a établi par un instrument de casse à 6 contrôles sur 6 (trois
+            //    positifs, trois négatifs) — pas à l'œil sur un zoom, comme au tour précédent.
+            //    ⚠️ LA CASSE VIENT DU BUNDLE, PAS DU LITTÉRAL : la source dit « ÉTAT », l'écran
+            //    rendait « État ». `Libelle.De` a servi la valeur traduite, en casse mixte. Une
+            //    transformation de PRÉSENTATION se fait donc côté client, exactement comme la puce
+            //    d'ancienneté juste au-dessus (`TenureBucketLabel(...).ToUpperInvariant()`) — et
+            //    surtout PAS en corrigeant la casse dans le bundle, qui sert la même clé ailleurs.
+            string etatLibelle = Lib("ÉTAT").ToUpperInvariant();
+            TextMeshProUGUI etatLbl = NewText("EtatLibelle", etatBloc.transform, etatLibelle, FamilleEtatLibelleTaille, TextAlignmentOptions.Right);
             etatLbl.characterSpacing = 10f;
             etatLbl.color = DesignTokens.Current.hudCremeSecondary;
             AddLayoutElement(etatLbl.gameObject, minHeight: FX(19), flexibleHeight: 0);
-            TrackText(etatLbl, Lib("ÉTAT"));
+            TrackText(etatLbl, etatLibelle);
 
             string id = row.lieutenant_id;
             Button b = rang.AddComponent<Button>();

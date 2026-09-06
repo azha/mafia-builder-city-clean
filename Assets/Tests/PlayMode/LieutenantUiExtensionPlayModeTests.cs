@@ -448,6 +448,45 @@ namespace MafiaCleanCity.Operational.Tests
                     $"le nom servi « {n} » n'apparaît nulle part dans le rendu. " +
                     "Corpus : [" + string.Join(" · ", textes) + "]");
 
+            // ⛔⛔⛔ ET LE MÉTIER AVEC — la garde qui manquait, et son absence a coûté un BLOQUANT.
+            //    Les assertions ci-dessus prouvent que le NOM est rendu. Elles sont restées VERTES
+            //    pendant que l'archétype disparaissait complètement de l'écran : le correctif qui
+            //    posait le nom l'avait posé À LA PLACE du métier, et les trois rangs sont devenus
+            //    interchangeables (nom + RÉCENT + Au repos, trois fois). Un juge ⊥ l'a vu, aucune
+            //    garde ne pouvait — elles ne demandaient qu'à l'un des deux d'être là.
+            //    ★★ *Une garde qui vérifie qu'une valeur EST rendue ne dit rien de celle qu'elle a
+            //      REMPLACÉE.* Quand un correctif fait passer une fente d'une grandeur à une autre,
+            //      la falsifiable qui mord porte sur LES DEUX, jamais sur la nouvelle seule.
+            // Le libellé vient du catalogue — le producteur unique de cette grandeur (TD-611) —
+            // et non d'une chaîne recopiée ici : une copie dériverait le jour où le catalogue bouge.
+            string[] metiers = roster.Select(r => FamilleLabels.Archetype(r.archetype)).ToArray();
+            foreach (string m in metiers)
+                Assert.IsTrue(textes.Any(x => x == m),
+                    $"le métier « {m} » n'apparaît nulle part dans le rendu : le rang n'identifie " +
+                    "plus QUI TIENT QUOI, et les trois rangs deviennent interchangeables. " +
+                    "Corpus : [" + string.Join(" · ", textes) + "]");
+
+            // ANTI-DÉGÉNÉRESCENCE SUR LES DEUX CÔTÉS, et il en faut deux DIFFÉRENTES :
+            //  · côté NOMS, la propriété est la VARIÉTÉ (déjà assertée plus haut) — trois noms
+            //    identiques signeraient le retour du champ jeté ;
+            //  · côté MÉTIERS, la variété serait FAUSSE : les trois lieutenants du compte de démo
+            //    sont réellement tous COOK, donc trois libellés identiques sont la VÉRITÉ. Exiger
+            //    des métiers distincts ferait rougir la garde sur une donnée correcte.
+            //    La propriété qui vaut ici est que le métier n'est ni vide, ni la clé brute du
+            //    back, ni une COPIE du nom — c'est-à-dire que la fente porte bien une SECONDE
+            //    grandeur et non deux fois la première.
+            for (int i = 0; i < roster.Length; i++)
+            {
+                Assert.IsFalse(string.IsNullOrWhiteSpace(metiers[i]),
+                    $"la rangée {roster[i].lieutenant_id} rend un métier vide");
+                Assert.AreNotEqual(roster[i].archetype, metiers[i],
+                    $"le métier rendu pour {roster[i].lieutenant_id} est la clé brute du back " +
+                    $"(« {metiers[i]} ») : le catalogue ne l'a pas traduit, et le joueur lit un enum");
+                Assert.AreNotEqual(noms[i], metiers[i],
+                    $"la rangée {roster[i].lieutenant_id} affiche deux fois la même chaîne " +
+                    $"(« {noms[i]} ») : le rang prétend porter deux informations et n'en porte qu'une");
+            }
+
             // --- Open the COOK row → the builder palette switches back to COOK. OpenLieutenant points the current-lieutenant
             // id at cookId and StartCoroutine(RefreshBands()) internally; wait until CurrentArchetype reflects COOK (the bands
             // load is a network round-trip), mirroring the bring-up's "while (… && elapsed < 20f)" wait idiom.

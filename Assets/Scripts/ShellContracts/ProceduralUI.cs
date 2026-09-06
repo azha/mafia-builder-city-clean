@@ -116,6 +116,66 @@ namespace MafiaCleanCity.Shell
         /// La texture est générée LARGE (256) puis étirée : un ruban d'un pixel de haut interpolé
         /// horizontalement donne une rampe lisse à n'importe quelle largeur d'écran, là où une
         /// texture à la largeur exacte serait à refaire à chaque résolution.</summary>
+        /// <summary>La MÊME rampe, mais rendue en pixels OPAQUES déjà mélangés en sRGB — pour les
+        /// dégradés qui doivent retomber sur ce qu'un navigateur produit.
+        ///
+        /// ⛔⛔ POURQUOI UNE SECONDE FORME PLUTÔT QU'UN RÉGLAGE. La surcharge ci-dessous écrit un
+        /// masque BLANC dont seul l'alpha varie ; Unity compose ce masque en espace LINÉAIRE, alors
+        /// que la maquette compose son `linear-gradient` en sRGB. Un juge ⊥ l'a mesuré sur le filet
+        /// de tête de ⑥ par un test de modèle à UNE variable (alpha connu de la CSS, fond et encre
+        /// pleins relevés sur CHAQUE image, 10 points, plus un point de contrôle à α = 1 où les deux
+        /// prédictions coïncident) : **référence — somme des écarts sRGB 2/255 contre linéaire
+        /// 270/255 ; jeu — sRGB 275/255 contre linéaire 7/255.** Deux espaces, pas un réglage à
+        /// corriger. Symptôme : le filet monte à pleine intensité beaucoup plus près du bord au
+        /// lieu de s'y éteindre (à 8 % de la largeur, +17 attendu contre +39 mesuré).
+        ///
+        /// ⇒ LA SOLUTION N'EST PAS DE CONVERTIR L'ALPHA. `CouleurPourMelangeLineaire` déplace la
+        ///   COULEUR à opacité constante — elle n'a pas d'emploi ici, où c'est l'opacité qui varie
+        ///   d'un pixel à l'autre et où la couleur, elle, est unique. On écrit donc directement le
+        ///   RÉSULTAT du mélange sRGB, pixel par pixel, en OPAQUE : un pixel opaque n'est plus
+        ///   composé du tout, donc plus aucun espace ne s'en mêle. C'est déjà la technique du rail
+        ///   de l'arbre (`VerticalGradient` entre deux couleurs opaques), généralisée au pixel.
+        ///
+        /// ⚠️ LE PRIX, ET IL FAUT LE DIRE : la rampe PEINT le fond qu'on lui donne au lieu de
+        ///    laisser voir celui qui est réellement dessous. À n'employer que là où le fond est
+        ///    connu et uni — un filet posé sur la feuille, pas un voile qui déborde d'un bloc.</summary>
+        public static Sprite HorizontalFade(int widthPx, float fadeFraction, float alphaAuBord,
+                                            Color encre, Color fond)
+        {
+            string cle = "fadeop:" + widthPx + ":" + fadeFraction.ToString("F3") + ":"
+                       + alphaAuBord.ToString("F3") + ":" + ColorKey(encre) + ":" + ColorKey(fond);
+            if (cacheFade.TryGetValue(cle, out Sprite deja)) return deja;
+
+            var tex = new Texture2D(widthPx, 1, TextureFormat.RGBA32, false)
+            {
+                filterMode = FilterMode.Bilinear,
+                wrapMode = TextureWrapMode.Clamp,
+                hideFlags = HideFlags.HideAndDontSave,
+            };
+            var pixels = new Color32[widthPx];
+            float bordePx = Mathf.Max(1f, widthPx * fadeFraction);
+            for (int x = 0; x < widthPx; x++)
+            {
+                float depuisBord = Mathf.Min(x + 0.5f, widthPx - 0.5f - x);
+                float t = Mathf.Clamp01(depuisBord / bordePx);
+                float a = Mathf.Lerp(alphaAuBord, 1f, t);
+                // Le mélange du NAVIGATEUR : une interpolation sur les composantes NON linéaires.
+                // `Color.Lerp` opère sur les composantes telles quelles — donc en sRGB ici, ce qui
+                // est exactement ce qu'on veut. La texture est créée sans `linear:true`, donc elle
+                // est lue comme sRGB : le pixel écrit est le pixel affiché.
+                Color melange = Color.Lerp(fond, encre, a);
+                melange.a = 1f;
+                pixels[x] = melange;
+            }
+            tex.SetPixels32(pixels);
+            tex.Apply(false, false);
+            Sprite sp = Sprite.Create(tex, new Rect(0, 0, widthPx, 1), new Vector2(0.5f, 0.5f), 100f, 0,
+                SpriteMeshType.FullRect);
+            sp.hideFlags = HideFlags.HideAndDontSave;
+            cacheFade[cle] = sp;
+            return sp;
+        }
+
         public static Sprite HorizontalFade(int widthPx, float fadeFraction, float alphaAuBord)
         {
             string cle = "fade:" + widthPx + ":" + fadeFraction.ToString("F3") + ":" + alphaAuBord.ToString("F3");
