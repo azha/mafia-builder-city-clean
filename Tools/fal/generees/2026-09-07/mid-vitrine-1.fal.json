@@ -1,0 +1,13 @@
+{
+  "modele": "fal-ai/flux/dev",
+  "prompt": "An empty shop display case with three bare shelves in a brass frame. Painted illustration of ONE object, filling the frame, seen head-on. MIDDLE GROUND: real volume and soft shading — not a flat two-tone texture, and not a glossy cartoon toy. Restrained contours, believable materials, grown-up but appealing. Dark blue-grey ground #161c2b, warm brass #b08d3e and cream #eae0c8 dominant, ONE restrained accent of muted teal or amber, nothing saturated. Late-1980s port city. Light raking from off-frame. No text, no letters, no logo, no watermark, no grain, no dust, no photorealism.",
+  "seed": 31,
+  "largeur": 1024,
+  "hauteur": 1024,
+  "etapes": 28,
+  "guidance": 3.5,
+  "request_id": "01a078f6-f73f-7591-99df-bb666ebbfcfb",
+  "duree_s": 6.4,
+  "cout_usd_estime": 0.025,
+  "genere_le": "2026-09-07T01:04:12+0200"
+}

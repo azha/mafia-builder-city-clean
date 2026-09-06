@@ -1,0 +1,13 @@
+{
+  "modele": "fal-ai/flux/dev",
+  "prompt": "An open safe with bare shelves and a big brass dial on its door, seen head-on, filling the frame. Bold flat GAME illustration, chunky simplified shapes, clean thick outlines, playful and inviting — a mobile game asset, not a documentary photograph. Warm and readable: deep blue-grey ground, warm brass and cream, plus small pops of teal #43e0c0 and warm orange #ff9e3d as accents. Slight cartoon exaggeration, generous shapes, satisfying to look at. Late-1980s port-city subject. No text, no letters, no logo, no watermark, no photorealism, no grain, no dust.",
+  "seed": 31,
+  "largeur": 1024,
+  "hauteur": 1024,
+  "etapes": 28,
+  "guidance": 3.5,
+  "request_id": "01a078f5-73c7-7ee2-a47d-6d4773b507dc",
+  "duree_s": 6.3,
+  "cout_usd_estime": 0.025,
+  "genere_le": "2026-09-07T01:02:33+0200"
+}
