@@ -85,9 +85,25 @@ const BASE_URL = process.env.STACK_BASE_URL ?? 'http://localhost';
 // PLUS partager CE compte : voir Assets/Scripts/CityMap/DemoIdentityResolver.cs côté client, MÊMES
 // NOMS de variable des deux côtés). Additif — défaut INCHANGÉ quand la variable est absente ou vide
 // (`||` retombe sur le littéral pour `undefined` ET `''`).
-const EMAIL = process.env.MAFIA_DEMO_IDENTIFIER || 'operational_demo@example.test';
+// ⛔⛔⛔ TD-647 — LA RACINE : LE SEEDER LIT DÉSORMAIS SA PROPRE VARIABLE, PLUS CELLE DU CLIENT.
+//    `MAFIA_DEMO_IDENTIFIER` désigne QUEL COMPTE LE CLIENT PHOTOGRAPHIE. Ce seeder la lisait aussi,
+//    pour désigner QUEL COMPTE IL RÉÉCRIT — deux consommateurs sans rapport derrière un seul nom.
+//    Conséquence mesurée le 2026-09-06 : exporter la paire pour capturer et lancer une suite
+//    semeuse dans la même invocation re-semait le compte gelé (roster remplacé, horloge +105).
+//    ★★ Le refus des comptes gelés (plus bas) contenait le SYMPTÔME — il faisait rougir la suite
+//      au lieu de la laisser détruire la base. Il ne réparait pas la CAUSE : les deux régimes
+//      restaient mutuellement exclusifs, donc les cinq suites semeuses restaient hors de toute
+//      campagne de planches. *Contenir un symptôme n'est pas fermer une classe.*
+//    ⇒ Avec deux noms distincts, une même invocation peut capturer `demo_capture` PENDANT que les
+//      suites semeuses sèment `operational_demo`. Le refus reste, en ceinture : il protège encore
+//      contre un `MAFIA_SEED_IDENTIFIER` pointé par erreur sur un compte gelé.
+// ⚠️ CE QUE ÇA CHANGE POUR UN APPELANT EXISTANT, et il faut le dire : un poste qui isolait son
+//    seeder par `MAFIA_DEMO_IDENTIFIER` (deux éditeurs Unity en parallèle, cas documenté ci-dessus
+//    le 2026-08-30) doit désormais exporter `MAFIA_SEED_IDENTIFIER`. Le défaut, lui, est INCHANGÉ :
+//    variable absente ⇒ `operational_demo@example.test`, exactement comme avant.
+const EMAIL = process.env.MAFIA_SEED_IDENTIFIER || 'operational_demo@example.test';
 const CALLSIGN = EMAIL.split('@')[0]; // dérivé de EMAIL — rend 'operational_demo' au défaut (inchangé).
-const PASSWORD = process.env.MAFIA_DEMO_PASSWORD || 'operational-demo-pw';
+const PASSWORD = process.env.MAFIA_SEED_PASSWORD || 'operational-demo-pw';
 
 // ⛔⛔⛔ TD-642 — UNE SEULE VARIABLE DÉSIGNAIT LE COMPTE PHOTOGRAPHIÉ *ET* LE COMPTE RÉÉCRIT.
 //    `MAFIA_DEMO_IDENTIFIER` est lue par DEUX consommateurs qui n'ont rien à voir : le client
