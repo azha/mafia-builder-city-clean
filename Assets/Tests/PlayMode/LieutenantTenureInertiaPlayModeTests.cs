@@ -439,10 +439,12 @@ namespace MafiaCleanCity.Operational.Tests
                     $"le code de domaine « {brut} » est rendu TEL QUEL : la puce n'a pas été " +
                     "traduite en libellé et le joueur lit un identifiant de serveur.");
             }
-            // ⚠️ CE QUE CE TEST NE PROUVE PAS ENCORE : que chaque puce porte le libellé de SA bande
-            //    (et non celui d'une voisine), ni sa langue. Les deux exigent d'appeler le
-            //    producteur — et il y en a deux, concurrents, pour ces grandeurs : voir TD-611.
-            //    L'assertion se repointera sur le producteur unique une fois celui-ci posé.
+            // ⚠️ CE QUE CE TEST NE PROUVE TOUJOURS PAS : que chaque puce porte le libellé de SA
+            //    bande plutôt que celui d'une voisine. Ce n'est PLUS un problème de producteur
+            //    (TD-611 est fermée) mais de STRUCTURE : `RenderedTexts` est un corpus PLAT, et
+            //    rien n'y relie un libellé à la puce qui le porte. La même limite a fait échouer
+            //    une de mes assertions sur les bandes de budget. *Une propriété par-ligne ne se
+            //    mesure pas sur un corpus à plat* — il y faudrait un crochet par puce.
 
             Debug.Log($"[LieutenantTenureE2E] accrual OK — bucket FRESH → {b.tenure_bucket}, chip='{controller.TenureBucketShown}', " +
                       $"cost={b.script_revision_cost} disruption={b.reassignment_disruption} bonus={b.role_efficiency_bonus}");
@@ -487,6 +489,15 @@ namespace MafiaCleanCity.Operational.Tests
                 "aucun texte rendu : la garde suivante serait vraie À VIDE.");
             Assert.IsFalse(controller.RenderedTexts.Any(x => x == "SETTLING"),
                 "le code « SETTLING » est rendu TEL QUEL : la ligne d'état n'a pas été traduite.");
+            // ✅ TD-611 FERMÉE (`3e57e98`) : un seul producteur, donc le libellé est assertable.
+            // Il ne l'était pas il y a une heure — `OpStateLabel` rendait « Prend ses marques » et
+            // `FamilleLabels.Etat` « Stabilisation », les deux à l'écran.
+            string libEtat = FamilleLabels.Etat("SETTLING");
+            Assert.AreNotEqual(libEtat, FamilleLabels.Etat("ACTIVE"),
+                "anti-dégénérescence : le résolveur d'état ne discrimine pas ses valeurs.");
+            Assert.IsTrue(controller.RenderedTexts.Any(x => x == libEtat),
+                $"l'état servi est SETTLING → « {libEtat} », absent du rendu. Corpus : [" +
+                string.Join(" · ", controller.RenderedTexts) + "]");
 
             // Advance past the settling window (DISRUPT_SHORT default = 2 ticks; advance 6 to clear it robustly) → resume.
             yield return Advance(6);

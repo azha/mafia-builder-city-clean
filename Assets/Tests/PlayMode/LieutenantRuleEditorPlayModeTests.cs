@@ -419,27 +419,25 @@ namespace MafiaCleanCity.Operational.Tests
                 $"l'archétype servi est « {b.archetype} » et le résolveur en fait " +
                 $"« {libArchetype} », qu'aucun texte de l'écran ne porte : la valeur du serveur " +
                 "n'a pas atteint le rendu.");
-            // ⚠️ CE QUE CETTE ASSERTION NE DIT PAS, et il faut l'écrire : l'archétype a LUI AUSSI
-            //    deux producteurs (`FamilleLabels.Archetype`, en dur, appelé par la rangée
-            //    `:2352` ; et `ArchetypeLabel` `:991`, adossé au catalogue). Ils rendent la même
-            //    chose AUJOURD'HUI, donc cette ligne passe quel que soit celui qui a couru — elle
-            //    ne discrimine pas lequel. Elle vaudra vraiment le jour où TD-611 sera fermée et
-            //    qu'il n'y aura plus qu'un producteur. *Une assertion qui passe par coïncidence
-            //    d'accord entre deux copies est verte pour la mauvaise raison.*
+            // ✅ Et depuis `3e57e98` cette ligne discrimine vraiment : `ArchetypeLabel` a été
+            //    supprimé, il n'y a plus qu'un producteur. Auparavant elle passait quel que soit
+            //    celui des deux qui avait couru — *verte pour la mauvaise raison*.
 
-            // ⛔⛔ ET LE MODE M'A PRIS EN FLAGRANT DÉLIT — TD-611, EN MOINS D'UNE HEURE.
-            // J'avais écrit ici l'assertion symétrique de celle de l'archétype, sur
-            // `FamilleLabels.Mode(b.mode)` → « DÉLÉGUÉ ». **Rouge** : l'écran rend « Délégué ».
-            // Mesuré : il n'appelle PAS `FamilleLabels.Mode` mais son propre `ModeLabel`
-            // (`LieutenantScreenController.cs:1023-1028`, `private static`, adossé au catalogue,
-            // repli « Délégué »). **Deux producteurs pour la même grandeur, et j'ai visé le
-            // mauvais** — exactement le coût que TD-611 annonce : *la duplication ne coûte qu'au
-            // jour où l'une des deux copies bouge, et c'est alors l'AUTRE qu'on cherche.*
-            // ⇒ `ModeLabel` étant privé, ce test ne peut pas l'appeler sans dupliquer une
-            //   troisième fois la correspondance. La seule assertion honnête sur le mode est donc
-            //   celle qui ne dépend d'aucun producteur : le code brut ne fuit pas (couvert en (1)).
-            //   *Mieux vaut une assertion plus faible et vraie qu'une forte qui vise le mauvais
-            //   producteur.* La langue de ce champ est prouvée par la garde de catalogue.
+            // ✅ TD-611 FERMÉE (`3e57e98`) — ET CETTE ASSERTION EST LA PREUVE QU'ELLE L'EST.
+            // Elle était impossible il y a une heure : `mode` avait DEUX producteurs, l'un rendant
+            // « DÉLÉGUÉ » (littéral en dur) et l'autre « Délégué » (catalogue), tous deux appelés.
+            // Viser l'un revenait à être vert ou rouge selon celui qui avait couru — j'ai fait
+            // l'erreur, et le test est parti rouge en accusant l'écran.
+            // ⇒ Il n'y a désormais qu'un producteur PUBLIC par grandeur : le test appelle
+            //   exactement ce que l'écran appelle. *Une assertion sur un libellé n'est possible
+            //   que lorsqu'il n'y a plus de choix de producteur à faire.*
+            string libMode = FamilleLabels.Mode(b.mode);
+            Assert.AreNotEqual(libMode, FamilleLabels.Mode("tasked"),
+                "anti-dégénérescence : le résolveur de mode rend la même chose pour ses deux " +
+                "valeurs — l'assertion suivante serait vraie sans rien prouver.");
+            Assert.IsTrue(texts.Any(x => x == libMode),
+                $"le mode servi est « {b.mode} » → « {libMode} », qu'aucun texte de l'écran ne " +
+                "porte. Corpus : [" + string.Join(" · ", texts) + "]");
 
             // ⚠️ `rule_count_band` passe par le CATALOGUE, pas par `FamilleLabels` : on ne peut pas
             //    le résoudre ici sans dupliquer la clé. On asserte donc la seule propriété
