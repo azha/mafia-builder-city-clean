@@ -46,7 +46,24 @@ def cadres(page):
 
 CADRES = {p: cadres(p) for p in ['ecrans-brennar-6.html', 'ecrans-brennar-4.html']}
 
+CAPTURE_PREFIXES = ('capture', 'planche', 'temoin')
+
+def copier_capture(dst, src, note=''):
+    """Amendement de mandat 2026-09-06 (f2) : une capture est une mesure DATÉE — elle se COPIE dans le dossier avec son
+    sha256 et le dernier commit qui la touche, jamais liée (un lien résout vers ce que l'arbre porte au moment de la LECTURE)."""
+    import hashlib, subprocess
+    dst=pathlib.Path(dst); src=pathlib.Path(src); dst.parent.mkdir(parents=True, exist_ok=True)
+    data=src.read_bytes(); dst.write_bytes(data); h=hashlib.sha256(data).hexdigest()
+    c=subprocess.run(['git','log','-1','--format=%h %cd','--date=iso','--',str(src)],capture_output=True,text=True).stdout.strip() or '?'
+    prov=dst.parent/'captures-provenance.md'
+    if not prov.exists():
+        prov.write_text("# Provenance des captures — COPIES avec empreinte (amendement 2026-09-06 : jamais de lien)\n\n| capture | source | dernier commit | sha256 | note |\n|---|---|---|---|---|\n",encoding='utf-8')
+    with prov.open('a',encoding='utf-8') as f: f.write(f"| `{dst.name}` | `{src}` | `{c}` | `{h[:16]}…` | {note} |\n")
+    return h
+
 def lien(dst: pathlib.Path, src: pathlib.Path):
+    if pathlib.Path(dst).name.lower().startswith(CAPTURE_PREFIXES):
+        raise SystemExit(f"⛔ lien() refusé pour une CAPTURE ({dst}) — utiliser copier_capture() (amendement 2026-09-06)")
     dst.parent.mkdir(parents=True, exist_ok=True)
     if dst.is_symlink() or dst.exists(): dst.unlink()
     dst.symlink_to(os.path.relpath(src, dst.parent))
