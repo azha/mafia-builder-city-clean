@@ -57,8 +57,8 @@ def copier_capture(dst, src, note=''):
     c=subprocess.run(['git','log','-1','--format=%h %cd','--date=iso','--',str(src)],capture_output=True,text=True).stdout.strip() or '?'
     prov=dst.parent/'captures-provenance.md'
     if not prov.exists():
-        prov.write_text("# Provenance des captures — COPIES avec empreinte (amendement 2026-09-06 : jamais de lien)\n\n| capture | source | dernier commit | sha256 | note |\n|---|---|---|---|---|\n",encoding='utf-8')
-    with prov.open('a',encoding='utf-8') as f: f.write(f"| `{dst.name}` | `{src}` | `{c}` | `{h[:16]}…` | {note} |\n")
+        prov.write_text("# Provenance des captures — COPIES avec empreinte (amendement 2026-09-06 : jamais de lien)\n\n> ⚠️ « dernier commit » = le commit du PNG, PAS le SHA de l'arbre qui l'a rendu (un fichier commité aujourd'hui peut avoir été rendu par un arbre d'hier). L'arbre de rendu n'est connu que si la suite l'imprime (`git rev-parse HEAD` au run — lot Unity) : colonne « arbre de rendu » = « non imprimé » sinon.\n\n| capture | source | dernier commit du PNG | sha256 | arbre de rendu | note |\n|---|---|---|---|---|---|\n",encoding='utf-8')
+    with prov.open('a',encoding='utf-8') as f: f.write(f"| `{dst.name}` | `{src}` | `{c}` | `{h[:16]}…` | non imprimé | {note} |\n")
     return h
 
 def lien(dst: pathlib.Path, src: pathlib.Path):

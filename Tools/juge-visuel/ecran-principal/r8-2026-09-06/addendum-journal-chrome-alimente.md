@@ -13,3 +13,16 @@
 - Règle pour tout dossier à venir : **citer une ligne de journal seulement si elle est jointe (fichier) ; sinon écrire « déclaré par la
   ligne GO, non relu »**. Le cahier des charges (d) « identité par planche » est du code à écrire dans les 16 suites (Unity), pas une
   option de run — les prochaines lignes GO viendront avec leur dénominateur de couverture.
+
+## Rectification (21:20, f2 — mesuré dans `correcteur/ecrans`)
+
+**La ligne était RÉELLE** : `Assets/Tests/PlayMode/CaptureSousShell.cs:877` — `Debug.Log($"[CHROME-ALIMENTE] {nom} montant=«{montant}» jour={jour} …")`,
+imprimée par `ChromeAlimenteOuEchoue(shell, nom, echecs)` (`:852`), appelée par `VuePrincipaleCapturePlayModeTests.cs:491` (la suite des trois
+planches ① de `43ac9cb`) et `CarnetScreenPlayModeTests.cs:297`. Le marqueur prend le NOM de la planche : il s'imprime **par capture**.
+Unity ne l'a pas trouvé parce qu'il cherchait dans SON arbre (`pilote-F`) — le marqueur ne vit que sur `correcteur/ecrans`. Chacun a
+mesuré juste dans un arbre différent : même racine que tout le reste de la soirée (le travail du correcteur n'a atteint aucun arbre partagé).
+⇒ La citation du dossier r8 tient ; **la règle « une ligne de journal ne se cite que JOINTE » est gardée** — elle vaut indépendamment du
+fait que celle-ci était vraie. ⚠️ Et une limite de `captures-provenance.md`, nommée par le correcteur : il enregistre **le commit du PNG**,
+pas **le SHA de l'ARBRE qui l'a rendu** — un fichier commité à 13:35 peut avoir été rendu par un arbre de la veille. Remède chez le
+producteur (la suite imprime `git rev-parse HEAD` au moment du run — lot Unity, avec le (d)) ; d'ici là, la colonne « arbre de rendu »
+des dossiers vaut « non imprimé ».
