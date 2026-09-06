@@ -128,7 +128,17 @@ namespace MafiaCleanCity.Operational.Tests
             //   pendant des semaines.
             var auth = new MafiaCleanCity.CityMap.AuthClient { BaseUrl = "http://localhost" };
             string token = null, err = null;
-            yield return auth.SignIn("operational_demo@example.test", "operational-demo-pw",
+            // ⛔⛔ LE COMPTE PHOTOGRAPHIÉ VIENT DE LA CAMPAGNE, PLUS D'UN LITTÉRAL. Cette suite
+            //    SÈME un compte et en PHOTOGRAPHIE un autre — ce qui n'était pas distinguable tant
+            //    qu'un seul nom (`MAFIA_DEMO_IDENTIFIER`) désignait les deux (TD-642/647). Depuis
+            //    que le seeder a sa propre variable, le littéral figeait la capture sur le compte
+            //    de SEMIS : mesuré le 2026-09-06, `operational_demo` porte **0 lieutenant** quand
+            //    le compte de capture en porte 3 — la précondition échouait donc à raison, sur le
+            //    mauvais compte. *Une capture doit vérifier le compte qu'elle PHOTOGRAPHIE.*
+            //    La paire est EXIGÉE, pas repliée : sans elle la planche montrerait un autre monde
+            //    sans que rien dans l'image ne le dise (garde partagée, `CaptureSousShell`).
+            var (idCapture, mdpCapture) = MafiaCleanCity.Shell.Tests.CaptureSousShell.IdentiteDeCaptureOuEchoue("screen_c2");
+            yield return auth.SignIn(idCapture, mdpCapture,
                                      t => token = t, e => err = e);
             Assert.IsNull(err, $"connexion au compte de démo échouée : {err}");
 

@@ -1,4 +1,5 @@
 using System.Collections;
+using NUnit.Framework;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -22,6 +23,41 @@ namespace MafiaCleanCity.Shell.Tests
     /// ⇒ Toute garde ajoutée ICI vaut pour TOUTE capture prise sous le shell. C'est le point.</summary>
     public static class CaptureSousShell
     {
+        /// <summary>LA PAIRE D'IDENTITÉ DE CAPTURE, OU RIEN. Rend `(identifiant, mot de passe)` et
+        /// **fait échouer l'appelant** si la paire n'est pas exportée.
+        ///
+        /// ⛔⛔⛔ POURQUOI UNE GARDE DE PRÉSENCE, ET POURQUOI À UN SEUL SITE. `DemoIdentityResolver`
+        /// retombe sur son `[SerializeField]` quand `MAFIA_DEMO_IDENTIFIER`/`_PASSWORD` sont
+        /// absentes — un repli LÉGITIME hors campagne, et un piège dans une campagne : la capture
+        /// s'exécute, écrit un PNG, passe toutes ses gardes, et photographie **un autre compte**.
+        /// Rien dans l'image ne le dit — deux comptes de démo ont la même forme d'écran.
+        /// Mesuré : **trois fois le 2026-09-06** un run a produit des planches sur le compte de
+        /// repli, dont deux découvertes après coup en comparant des empreintes.
+        /// ★★ *Un repli correct dans son contexte, appliqué dans un contexte où il ne l'est pas,
+        ///   produit une valeur PLAUSIBLE — et c'est ce qui la rend indétectable.*
+        ///
+        /// ⇒ CE QU'ELLE VÉRIFIE ET CE QU'ELLE NE VÉRIFIE PAS, et la distinction est le point :
+        /// elle asserte la PRÉSENCE de la paire, jamais sa VALEUR. Comparer l'identité rendue par
+        /// le back à celle qu'on attendait est une autre garde (TD-640, armée par
+        /// `MAFIA_CAPTURE_EXPECT_PLAYER` sur une seule capture des quinze). Celle-ci coûte deux
+        /// lignes, tient à UN site pour tous les appelants de ce producteur, et ferme le seul mode
+        /// d'échec qui produit une image SANS que personne l'ait demandé.
+        /// ⚠️ Elle ne couvre que les captures qui passent PAR ICI. Une suite qui écrit son PNG
+        ///    elle-même doit appeler cette méthode explicitement — c'est le cas des cinq suites
+        ///    semeuses, et c'est écrit plutôt que supposé couvert.</summary>
+        public static (string identifiant, string motDePasse) IdentiteDeCaptureOuEchoue(string quoi)
+        {
+            string id = System.Environment.GetEnvironmentVariable("MAFIA_DEMO_IDENTIFIER");
+            string mdp = System.Environment.GetEnvironmentVariable("MAFIA_DEMO_PASSWORD");
+            Assert.IsFalse(string.IsNullOrWhiteSpace(id) || string.IsNullOrWhiteSpace(mdp),
+                $"capture refusée ({quoi}) : la paire `MAFIA_DEMO_IDENTIFIER`/`MAFIA_DEMO_PASSWORD` " +
+                "n'est pas exportée. Sans elle le client retombe sur son identité par défaut et la " +
+                "planche photographierait UN AUTRE COMPTE, sans que rien dans l'image ne le dise — " +
+                "c'est arrivé trois fois le 2026-09-06. Exporter la paire du compte de capture, ou " +
+                "ne pas lancer les catégories de capture.");
+            return (id, mdp);
+        }
+
         /// <summary>Monte (ou retrouve) un locataire, attend son chargement, le capture, et
         /// vérifie les TROIS propriétés qui rendraient l'image mensongère — dans cet ordre, du
         /// structurel au pixel.
@@ -44,6 +80,9 @@ namespace MafiaCleanCity.Shell.Tests
                                                        int largeur = 1080, int hauteur = 2400)
             where T : MonoBehaviour, IShellTenant
         {
+            // AVANT TOUT : sans la paire, on n'écrit rien. Placé en tête pour qu'aucun PNG ne
+            // parte, pas même celui d'un écran qui se serait monté correctement.
+            IdentiteDeCaptureOuEchoue($"planche_{nom}");
             string chemin = $"Assets/Screenshots/planche_{nom}_{largeur}x{hauteur}.png";
 
             // ⛔⛔ CE QU'UNE CAPTURE PRÉCÉDENTE LAISSE À L'ÉCRAN CONTAMINE LA SUIVANTE — mesuré le
