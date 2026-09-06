@@ -846,8 +846,29 @@ namespace MafiaCleanCity.Operational
             contenuRt.offsetMax = Vector2.zero;
             defilement.viewport = (RectTransform)corpsGo.transform;
             defilement.content = contenuRt;
-            ContentSizeFitter ajusteur = contenuGo.AddComponent<ContentSizeFitter>();
-            ajusteur.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            // ⛔⛔⛔ PAS DE `ContentSizeFitter` — ET C'EST LE CORRECTIF DE ㊲ M3, une régression que
+            //    j'ai produite en posant le défilement.
+            // MESURÉ par le juge : le panneau élastique perd **89 px** (765 → 676) pendant que le
+            // cadre garde sa hauteur, et la carte portrait SORT de son panneau de 8,5 à 9,0 px là
+            // où la maquette laisse 82 px de marge.
+            // ⇒ LA CAUSE, et elle est mécanique : un `ContentSizeFitter` en `PreferredSize` donne au
+            //   contenu **exactement** sa hauteur préférée. Il n'y a donc plus de MOU dans le groupe
+            //   vertical — et `flexibleHeight = 1f` du panneau élastique, qui n'existe que pour
+            //   absorber ce mou, devient **inerte**. *Le panneau n'a pas rétréci : il a cessé de
+            //   recevoir ce qui restait, parce qu'il ne restait plus rien.*
+            // ★ Deux symptômes, une racine : M3 (le panneau perd sa part) et M2 (la carte déborde
+            //   d'un panneau devenu trop court pour elle) se ferment du même geste.
+            // ⇒ CE QUE LE DÉFILEMENT DEMANDE VRAIMENT : une course à parcourir **quand le contenu
+            //   dépasse**, et rien d'autre. Quand il tient, le contenu doit REMPLIR la fenêtre pour
+            //   que le mou revienne au panneau élastique. La hauteur juste est donc
+            //   `max(préféré, fenêtre)` — pas `préféré`, qui casse le cas qui tient, et pas
+            //   `fenêtre`, qui casse le cas qui déborde.
+            // ⚠️ Recalculée à chaque changement de dimensions, jamais cuite au montage : c'est la
+            //   classe que cet écran a déjà payée deux fois cette nuit, sur la hauteur puis sur la
+            //   position du cadre.
+            var courseGo = contenuGo.AddComponent<HauteurDeContenuDefilant>();
+            courseGo.fenetre = (RectTransform)corpsGo.transform;
+            courseGo.Appliquer();
 
             VerticalLayoutGroup pile = contenuGo.AddComponent<VerticalLayoutGroup>();
             pile.spacing = Px(CssEcartBloc);
@@ -1709,6 +1730,38 @@ namespace MafiaCleanCity.Operational
                           + $"{hauteurVoulue:F0} · posé {h:F0} · RENDU {rendu:F0} · préféré "
                           + $"{prefere:F0} · MIN {mini:F0} · sommet "
                           + $"{(parent.rect.height - bas - rendu):F0}");
+            }
+        }
+
+        /// <summary>La hauteur d'un contenu défilant : `max(préféré, fenêtre)`.
+        ///
+        /// ⛔ POURQUOI PAS `ContentSizeFitter` EN `PreferredSize`, qui est le réflexe : il donne au
+        /// contenu EXACTEMENT sa hauteur préférée, donc il supprime le mou du groupe vertical — et
+        /// tout `flexibleHeight` d'un enfant, qui n'existe que pour absorber ce mou, devient inerte.
+        /// Mesuré sur ㊲ : le panneau élastique a perdu **89 px** et la carte qu'il contient est
+        /// sortie de lui de 9 px, sans que rien d'autre ne bouge.
+        /// ⇒ Le défilement n'a besoin d'une course que **quand le contenu dépasse**. Quand il tient,
+        ///   le contenu doit REMPLIR la fenêtre, sinon les enfants élastiques perdent leur part.
+        ///   `max(préféré, fenêtre)` sert les deux cas ; ni l'un ni l'autre des deux termes seul ne
+        ///   le fait.
+        /// ⚠️ `OnRectTransformDimensionsChange` et non un calcul au montage : une capture bascule la
+        /// résolution APRÈS le montage, et une hauteur cuite serait celle d'un autre écran — la
+        /// classe que cet écran a déjà payée sur la hauteur puis sur la position de son cadre.</summary>
+        private sealed class HauteurDeContenuDefilant : UnityEngine.EventSystems.UIBehaviour
+        {
+            public RectTransform fenetre;
+
+            protected override void OnRectTransformDimensionsChange() { Appliquer(); }
+
+            public void Appliquer()
+            {
+                var rt = transform as RectTransform;
+                if (rt == null || fenetre == null) return;
+                float prefere = LayoutUtility.GetPreferredHeight(rt);
+                float h = Mathf.Max(prefere, fenetre.rect.height);
+                if (h <= 0f) return;   // rect pas encore résolu : on ne cuit rien
+                if (!Mathf.Approximately(rt.sizeDelta.y, h))
+                    rt.sizeDelta = new Vector2(rt.sizeDelta.x, h);
             }
         }
 
