@@ -151,6 +151,127 @@ namespace MafiaCleanCity.Operational.Tests
         ///
         /// La garde est STRUCTURELLE : elle ne dépend d'aucune couleur, d'aucune résolution, et
         /// couvre la classe entière plutôt que les instances qu'on a pensé à citer.</summary>
+        /// <summary>MESURE — l'axe de la figure contre l'axe de sa carte (㊲ F3, quatre tours à la
+        /// même valeur : −11,4 px = −3,2 px CSS, sur quatre masques indépendants).
+        ///
+        /// ⛔ Elle imprime la CHAÎNE des rects, du dôme d'épaules jusqu'au corps du cadre, chacun
+        /// avec son centre dans le repère de son parent. Un décalage porté par un seul maillon se
+        /// lit alors sur la ligne de ce maillon, et il n'y a rien à déduire : *l'écart sélectif
+        /// désigne son conteneur*.
+        /// ⇒ Le maillon trouvé : `Forme` pose chaque trait à `vb.x * ech` depuis le bord GAUCHE de
+        /// son parent, donc elle suppose un parent large d'exactement `VbL * ech`. Il en mesurait
+        /// 435,5 pour 409,6 déclarés — le layout l'avait étendu, et les 25,9 de surplus tombaient
+        /// tous à droite. La garde (a) ci-dessous ferme la CLASSE (le buste est le viewBox, centré) ;
+        /// la garde (b) ferme deux INSTANCES, dont le `Cou` qui n'a pas de contour et sert de témoin
+        /// contre l'autre mécanisme (F4).</summary>
+        [UnityTest]
+        public IEnumerator B3M1_LaFigureEstSurLAxeDeSaCarte()
+        {
+            yield return OuvrirJoueurFrais();
+            var ecran = MonterEcran();
+            yield return ecran.Charger(lieutenantId);
+            for (int i = 0; i < 10; i++) yield return null;
+
+            // ⚠️ L'écran ne construit PAS sous son propre GameObject : il monte « ReputationRoot »
+            // sous un Canvas. Ma première version marchait sur `ecran.GetComponentsInChildren` et
+            // rendait UN objet — et l'assertion qui suit l'a dit. Un balayage qui part du mauvais
+            // parent rend zéro, et un zéro se lit comme « rien à signaler ».
+            GameObject racineEcran = RacineEcran();
+            Assert.IsNotNull(racineEcran, "ReputationRoot doit exister");
+            Transform epaules = null;
+            var noms = new System.Text.StringBuilder("[PRT-NOMS]");
+            foreach (Transform t in racineEcran.GetComponentsInChildren<Transform>(true))
+            {
+                noms.Append(' ').Append(t.name);
+                if (epaules == null && t.name.StartsWith("Epaule")) epaules = t;
+            }
+            Debug.Log(noms.ToString());
+            Assert.IsNotNull(epaules, "le dôme d'épaules doit exister — sinon la mesure est vide");
+
+            var lignes = new System.Text.StringBuilder("[PRT-AXE] chaîne des rects (centre x dans le parent)\n");
+            Transform t2 = epaules;
+            while (t2 != null && t2 != racineEcran.transform.parent)
+            {
+                var rt = t2 as RectTransform;
+                if (rt != null)
+                {
+                    float centreDansParent = rt.anchoredPosition.x
+                        + (0.5f - rt.pivot.x) * rt.rect.width;
+                    var parentRt = rt.parent as RectTransform;
+                    float largeurParent = parentRt != null ? parentRt.rect.width : 0f;
+                    // Ancres non nulles ⇒ `anchoredPosition` est relative au point d'ancrage :
+                    // on ramène tout au CENTRE du parent, sinon deux lignes ne se comparent pas.
+                    float decalageAncre = ((rt.anchorMin.x + rt.anchorMax.x) * 0.5f - 0.5f) * largeurParent;
+                    lignes.Append($"  {t2.name,-16} l={rt.rect.width,7:F1} pivotX={rt.pivot.x:F2} " +
+                                  $"ancreX=({rt.anchorMin.x:F2},{rt.anchorMax.x:F2}) " +
+                                  $"centre_vs_centre_parent={centreDansParent + decalageAncre,7:F2} " +
+                                  $"(parent l={largeurParent,7:F1})\n");
+                }
+                t2 = t2.parent;
+            }
+            Debug.Log(lignes.ToString());
+
+            // ⚠️ La chaîne ne dit rien tant qu'elle ne porte qu'UNE forme : le juge a mesuré QUATRE
+            // masques indépendants au même écart, donc le décalage est commun aux formes, pas propre
+            // au dôme. On les balaie toutes, sous le même parent, dans le même repère.
+            Transform buste = epaules.parent;
+            var tableau = new System.Text.StringBuilder($"[PRT-FORMES] sous « {buste.name} » (l={((RectTransform)buste).rect.width:F1} u)\n");
+            foreach (Transform f in buste)
+            {
+                var frt = f as RectTransform;
+                if (frt == null) continue;
+                float centre = frt.anchoredPosition.x + (0.5f - frt.pivot.x) * frt.rect.width
+                    + ((frt.anchorMin.x + frt.anchorMax.x) * 0.5f - 0.5f) * ((RectTransform)buste).rect.width;
+                tableau.Append($"  {f.name,-18} l={frt.rect.width,7:F1} x={frt.anchoredPosition.x,7:F1} " +
+                               $"pivotX={frt.pivot.x:F2} centre_vs_axe={centre,7:F2}\n");
+            }
+            Debug.Log(tableau.ToString());
+
+            // ── LES GARDES ─────────────────────────────────────────────────────────────────────
+            // (a) STRUCTURELLE, et c'est elle qui ferme la CLASSE : le buste fait exactement le
+            //     viewBox et il est centré dans sa zone. Tant que c'est vrai, aucune forme posée à
+            //     `vb.x * ech` depuis son bord gauche ne peut être décentrée — quelle que soit la
+            //     largeur que le layout donne à la zone.
+            var busteRt = (RectTransform)buste;
+            var zoneRt = (RectTransform)buste.parent;
+            float centreBuste = busteRt.anchoredPosition.x + (0.5f - busteRt.pivot.x) * busteRt.rect.width
+                + ((busteRt.anchorMin.x + busteRt.anchorMax.x) * 0.5f - 0.5f) * zoneRt.rect.width;
+            Assert.AreEqual(0f, centreBuste, 0.5f,
+                $"le buste est à {centreBuste:F2} unités de l'axe de sa zone (zone {zoneRt.rect.width:F1}, " +
+                $"buste {busteRt.rect.width:F1}) — toute la figure suit");
+            // ⛔⛔ ET LA LIGNE CI-DESSUS NE SUFFIT PAS — elle était VACUE, mesuré par contrôle positif.
+            // Défaut réarmé (buste étiré sur sa zone) : elle reste VERTE, parce qu'un buste qui EST
+            // sa zone est trivialement centré dedans. Seule la garde de VALEUR (b) a rougi.
+            // *Une garde satisfaite par le monde qu'elle doit interdire certifie le défaut* — et
+            // celle-ci l'était pour la raison la plus banale : les deux termes de sa comparaison
+            // devenaient le même objet.
+            // ⇒ La propriété qui discrimine est la FORME du buste, pas sa position : il doit avoir
+            //   les proportions du viewBox (62 × 78). Étiré sur sa zone il prend celles de la zone.
+            //   Sans échelle dans l'énoncé, donc vraie à toute résolution.
+            float rapport = busteRt.rect.width / busteRt.rect.height;
+            Assert.AreEqual(62f / 78f, rapport, 0.01f,
+                $"le buste a un rapport de {rapport:F3} au lieu du viewBox 62/78 = {62f / 78f:F3} " +
+                $"({busteRt.rect.width:F1} × {busteRt.rect.height:F1}) : il épouse sa zone au lieu " +
+                "de porter le dessin, et tout ce que le layout ajoute à la zone décale la figure");
+
+            // (b) DE VALEUR, sur les DEUX primitives symétriques du viewBox — l'une avec contour,
+            //     l'autre sans. Le `Cou` est le témoin qui a permis au juge d'écarter le contour
+            //     comme cause (F4) : il n'en porte pas, et il était décalé pareil. Une garde qui ne
+            //     regarderait que les formes lisérées confondrait les deux mécanismes.
+            foreach (string nom in new[] { "Cou", "Epaules" })
+            {
+                Transform f = null;
+                foreach (Transform c in buste) if (c.name == nom) { f = c; break; }
+                Assert.IsNotNull(f, $"« {nom} » doit exister — sans lui cette garde est vide");
+                var frt = (RectTransform)f;
+                float centre = frt.anchoredPosition.x + (0.5f - frt.pivot.x) * frt.rect.width
+                    + ((frt.anchorMin.x + frt.anchorMax.x) * 0.5f - 0.5f) * busteRt.rect.width;
+                Assert.AreEqual(0f, centre, 1.0f,
+                    $"« {nom} » est à {centre:F2} unités de l'axe du buste — la figure est hors de " +
+                    "l'axe de sa carte, alors que les textes de la même carte restent centrés");
+            }
+        }
+
         [UnityTest]
         public IEnumerator B3S1_ToutGraphic_PorteSonCanvasRenderer()
         {

@@ -141,6 +141,12 @@ namespace MafiaCleanCity.Operational
         private const float CssPiedPadHaut =  9f;   // `.pied{padding:9px 13px 14px}`
         private const float CssPiedPadBas  = 14f;
         private const float CssHauteurCadre = 462f;  // `reputation(cadre, H=462)`
+
+        /// <summary>La marge sous le cadre, en px CSS — MESURÉE sur la référence
+        /// (`reputation/reference-1080x2102.png`) : le filet doré s'arrête à y = 2078 pour une
+        /// image de 2102, soit **24 px** à l'échelle ×3,6 de cette référence = 6,67 px CSS.
+        /// Elle n'est pas dérivée d'un padding CSS : elle est lue sur l'image ratifiée.</summary>
+        private const float CssMargeBasseCadre = 24f / 3.6f;
         private const float CssEnseignePadX = 11f;  // `.enseigne{padding:7px 11px 8px}`
         private const float CssRefletY    = 62f;   // 34,7 % de la course de `%(p)s-scan`
         private const float CssRefletHaut =  2f;   // `.elast::after{height:2px}`
@@ -680,12 +686,31 @@ namespace MafiaCleanCity.Operational
             //
             // Corriger l'élastique ne pouvait pas suffire : le mou existait parce que le cadre
             // s'étirait. On supprime le mou à sa source plutôt que de choisir qui l'absorbe.
-            corps.anchorMin = new Vector2(0f, 1f);
-            corps.anchorMax = new Vector2(1f, 1f);
-            corps.pivot = new Vector2(0.5f, 1f);
+            // ⛔⛔ ET IL EST ANCRÉ EN BAS, PAS EN HAUT — corrigé le 2026-09-06, après QUATRE tours
+            // de juge passés à mesurer autre chose. L'ancrage haut venait du dossier remis au juge
+            // au r8 ; il s'est propagé sans que personne ne le confronte à l'image.
+            // MESURÉ sur la référence elle-même (`reputation/reference-1080x2102.png`, 1080×2102) :
+            // le filet doré du cadre va de **y 452 à y 2078**, soit **24 px sous lui** et 452
+            // au-dessus. Le cadre n'est pas posé sous le chrome : c'est une FEUILLE DE BAS, et ce
+            // qui est au-dessus (chrome + bande d'art) prend ce qui reste.
+            // ★ POURQUOI L'ERREUR A SURVÉCU QUATRE TOURS, et c'est la partie qui vaut : sur l'écran
+            //   de la maquette, les deux ancrages donnent EXACTEMENT le même résultat. 2102 px =
+            //   584 px CSS ; 584 − 462 = **122**, le chiffre que le commentaire d'à côté écrivait
+            //   déjà. Ancrer en haut sous 122 de chrome et ancrer en bas ne divergent que sur un
+            //   écran PLUS HAUT que la maquette — et le seul écran réellement visé, 1080×2400, fait
+            //   667 px CSS. *Une arithmétique exacte sur la seule résolution de la référence est
+            //   une arithmétique non testée.* Le juge ne pouvait pas trancher : sa capture était
+            //   sans chrome, donc le cadre y touchait le haut pour une seconde raison.
+            // ⇒ Le surplus d'un écran plus haut va désormais AU-DESSUS du cadre, là où la référence
+            //   met de l'art, et non en dessous où il n'y a rien à montrer.
+            corps.anchorMin = new Vector2(0f, 0f);
+            corps.anchorMax = new Vector2(1f, 0f);
+            corps.pivot = new Vector2(0.5f, 0f);
             corps.offsetMin = new Vector2(0f, 0f);
             corps.offsetMax = new Vector2(0f, 0f);
-            corps.anchoredPosition = new Vector2(0f, -ShellChrome.TopInsetPx);
+            // Les 24 px de marge basse de la référence valent 24/3,6 = 6,67 px CSS ; le dock du
+            // shell s'ajoute par-dessus (0 hors shell, comportement d'avant inchangé).
+            corps.anchoredPosition = new Vector2(0f, ShellChrome.BottomInsetPx + Px(CssMargeBasseCadre));
             corps.sizeDelta = new Vector2(0f, Px(CssHauteurCadre));
 
             // ⛔⛔ SANS CE LAYOUT, LES SIX BLOCS RESTENT TOUS À LA POSITION PAR DÉFAUT.

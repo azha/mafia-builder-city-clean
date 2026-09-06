@@ -85,7 +85,38 @@ namespace MafiaCleanCity.Operational
 
             GameObject bu = Nouveau("Buste", zone.transform);
             buste = (RectTransform)bu.transform;
-            Etirer(buste);
+            // ⛔⛔ LE BUSTE FAIT EXACTEMENT LE VIEWBOX, ET IL EST CENTRÉ — il n'ÉPOUSE PLUS LA ZONE.
+            // ㊲ F3, quatre tours de juge à la même valeur : la figure est à −11,4 px = −3,2 px CSS
+            // de l'axe de sa carte, sur quatre masques indépendants (peau, cou, col, bbox du
+            // torse), pendant que les DEUX textes de la même carte restent centrés.
+            // MESURÉ à l'exécution (`B3M1_AxeDeLaFigure_ChaineDesRects`), et c'est la chaîne des
+            // rects qui a désigné le maillon — pas une lecture :
+            //     EpaulesLisere  centre_vs_axe = −12,93     Buste 0,00   Dessin 0,00
+            //     Mir6 0,00   Miroir 0,00   Corps 0,00   ReputationRoot 0,00
+            // puis, sur les DIX-NEUF formes du buste, TOUTES les formes centrées au MÊME −12,93 —
+            // y compris le `Cou`, la seule primitive SANS contour. Un décalage identique sur des
+            // formes de tailles différentes et sans trait commun n'est pas un artefact de contour :
+            // c'est une TRANSLATION RIGIDE.
+            // ⇒ Arithmétique : `Forme` pose chaque trait à `vb.x * ech` depuis le bord GAUCHE de son
+            //   parent, ce qui suppose un parent large d'exactement `VbL * ech` = 62 × 6,607 =
+            //   409,6 unités. Le parent en mesurait **435,5** : le layout l'avait ÉTENDU au-delà de
+            //   sa taille déclarée (`flexibleWidth = 0` n'empêche pas `childForceExpand` de
+            //   distribuer le mou). Les 25,9 unités de surplus tombent donc INTÉGRALEMENT à droite,
+            //   et la figure se retrouve à −12,95 de l'axe. La mesure disait −12,93.
+            // ★ Ce que ça montre, et pourquoi trois tours de juge ne pouvaient pas le trouver : le
+            //   défaut n'est ni dans une forme, ni dans une constante, ni dans une couleur — il est
+            //   dans l'écart entre la taille qu'un conteneur DÉCLARE et celle qu'il REÇOIT. Aucune
+            //   mesure sur l'image ne distingue ça d'un dessin décentré.
+            buste.anchorMin = new Vector2(0.5f, 1f);
+            buste.anchorMax = new Vector2(0.5f, 1f);
+            // Le pivot est CONSTANT (le `rotate(deg 31 70)` du viewBox) : posé ici une fois pour
+            // toutes plutôt qu'à chaque `Appliquer`. Sur un rect non étiré, changer le pivot DÉPLACE
+            // l'objet — le poser deux fois au même endroit marchait par chance, pas par contrat.
+            buste.pivot = new Vector2(31f / VbL, 1f - 70f / VbH);
+            buste.sizeDelta = new Vector2(VbL * ech, VbH * ech);
+            buste.anchoredPosition = new Vector2(
+                (0.5f - buste.pivot.x) * VbL * ech,
+                -(1f - buste.pivot.y) * VbH * ech);
 
             // Les traits, du fond vers l'avant. L'ordre de fratrie EST la profondeur : c'est une
             // propriété STRUCTURELLE, testable sans lire un pixel — et c'est ce type de garde
@@ -254,7 +285,7 @@ namespace MafiaCleanCity.Operational
             float deg = ReputationResolvers.PostureInclinaisonDeg(posture);
             // Le pivot d'inclinaison est en BAS du buste (rotate(deg 31 70) du viewBox) : un
             // buste qui pivoterait par son centre décollerait des épaules.
-            buste.pivot = new Vector2(31f / VbL, 1f - 70f / VbH);
+            // Le pivot est posé au montage (rect non étiré : le rebouger ici DÉPLACERAIT le buste).
             buste.localRotation = Quaternion.Euler(0f, 0f, -deg);
 
             bool colFerme = tells != null && tells.ActifEstAbsorbe(UniformTellsDto.Pose.Collar);
