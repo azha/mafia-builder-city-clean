@@ -79,9 +79,29 @@ SEGMENT_PARAM = {"nodes": "buildingId", "lieutenants": "lieutenantId", "beats": 
                  "hl-card": "cardId", "flag-review": "flagId", "district": "districtId", "dealer": "dealerId", "task-categories": "categoryId"}
 
 
+UUID_OU_NUM = re.compile(r"/(?:[0-9a-fA-F]{8}-[0-9a-fA-F-]{20,}|\d+)(?=/|$)")
+
+
 def slug(route, method):
     s = re.sub(r"[{}?=&/:]+", "_", route.replace("/v1/", "")).strip("_")
     return f"{method}_{s}.json"
+
+
+def slug_reel(route_declaree, route_appelee, method):
+    """Le nom du fichier suit la route RÉELLEMENT APPELÉE, jamais celle déclarée.
+
+    ⛔ PAYÉ LE 2026-09-06. Une sonde a appelé `/v1/lieutenants/` — avec une barre finale — le back
+       a résolu `/v1/lieutenants/{id}` et rendu le DÉTAIL d'un lieutenant ; le fichier a été écrit
+       sous le nom de la route DÉCLARÉE, donc sous celui du roster. Deux routes, un seul nom : la
+       seconde écrase la première, et le dossier annonce un roster en portant un détail.
+       C'est la même faute que la clé fabriquée, version NOM DE FICHIER — l'outil dit avoir
+       capturé une chose et en a capturé une autre.
+    ⇒ On re-généralise la route appelée (les identifiants redeviennent `{id}`) et c'est ELLE qui
+      nomme le fichier. Une route non appelée garde son nom déclaré : il n'y a rien d'autre.
+    """
+    if not route_appelee:
+        return slug(route_declaree, method)
+    return slug(UUID_OU_NUM.sub("/{id}", route_appelee).rstrip("/"), method)
 
 
 def routes_avec_methode(ctl):
@@ -99,6 +119,10 @@ def routes_avec_methode(ctl):
                                  capture_output=True, text=True).stdout.split():
             if ch not in fichiers:
                 fichiers.append(ch)
+    # ⛔ CLÉ = (route, VERBE), pas la route seule. Mesuré le 2026-09-06 : `/v1/lieutenants` sert
+    #    LES DEUX — POST pour recruter, GET pour le roster. Clé par route, le premier verbe
+    #    rencontré gagnait, et c'était la mutation : le roster (le seul des deux qui ait un
+    #    corps) disparaissait du dossier. Une route à deux verbes est DEUX routes.
     out = {}
     for chemin in fichiers:
         src = open(chemin, encoding="utf-8").read()
@@ -107,7 +131,24 @@ def routes_avec_methode(ctl):
             route = re.sub(r":([A-Za-z]+)", r"{\1}", m.group(2).rstrip(".?&"))
             route = re.sub(r"(\?[a-z_]+=)[^&]*$", r"\1", route)   # `?lieutenant_id=<valeur>` → paramètre à résoudre
             route = route.rstrip("-")                                # tiret de coupure de ligne d'un docstring
-            out.setdefault(route, m.group(1))
+            out.setdefault((route, m.group(1)), m.group(1))
+        # (a-bis) LES DÉCLARATIONS EN COMMENTAIRE DE LIGNE — `// GET /v1/…`, deux barres.
+        #   Le balayage n'acceptait que les docstrings à TROIS barres et manquait donc 113
+        #   déclarations exactes du client. Mesuré le 2026-09-06 : le roster de l'organigramme
+        #   (`LieutenantClient`, qui construit ses URL par préfixe et ne porte aucun littéral
+        #   `/v1/…`) était invisible, et son absence du dossier `famille` se lisait « pas de
+        #   corps » au lieu de « pas vu par la sonde ».
+        # ⛔ Une première version tentait de DÉDUIRE la route depuis `Url("<feuille>")`. Elle
+        #   fabriquait des routes qui n'existent pas (`/v1/{id}/reassign`, la feuille prise pour
+        #   une route entière) et se trompait de VERBE — un verbe faux est pire qu'une route
+        #   manquante : il range un GET parmi les mutations, donc il n'est jamais appelé.
+        #   Le commentaire, lui, PORTE le verbe et la route ; on le lit au lieu de le deviner.
+        for m in re.finditer(r"^\s*//\s*(GET|POST|PUT|DELETE|PATCH)\s+(/v1/[A-Za-z0-9_/{}:.?=&-]+)",
+                             src, re.M):
+            route = re.sub(r":([A-Za-z]+)", r"{\1}", m.group(2).rstrip(".?&-"))
+            route = re.sub(r"(\?[a-z_]+=)[^&]*$", r"\1", route)
+            out.setdefault((route, m.group(1)), m.group(1))
+
         # (b) les littéraux `"/v1/…"` du code, méthode par proximité du verbe HTTP
         for m in re.finditer(r'\$?"(/v1/[^"]+)"', src):
             route = m.group(1)
@@ -118,18 +159,33 @@ def routes_avec_methode(ctl):
                 methode = "PUT"
             if re.search(r"kHttpVerbDELETE|\.Delete\(", autour + avant):
                 methode = "DELETE"
-            out.setdefault(route, methode)
-    for route in list(out):
-        if any(o != route and o.startswith(route + "?") for o in out):
-            out.pop(route)
-    # (c) règle des verbes d'ACTION : une route qui se termine par un verbe est une mutation, quel que
-    #     soit ce que la proximité a lu ; `auth/*` idem (jamais un GET)
-    for route in list(out):
-        if re.search(r"/(validate|dismiss|commit|skip|order|dispatch|purchase|adopt|recall|graduation|attend|batch-confirm|open|collect|report|hire|fire|sign|resolve|confirm)(/|$)", route) or route.startswith("/v1/auth/"):
-            out[route] = "POST" if out[route] == "GET" else out[route]
-        if route == "/v1/city/district/":            # préfixe nu dans le code : la route réelle est l'intérieur
-            out.pop(route); out.setdefault("/v1/city/district/{districtId}/interior", "GET")
-    return sorted(out.items())
+            out.setdefault((route, methode), methode)
+    # une route nue est absorbée par sa variante à query-string, à VERBE ÉGAL (les clés sont
+    # désormais des couples : comparer les routes entre elles, pas les couples).
+    for cle in list(out):
+        route, verbe = cle
+        if any(r != route and r.startswith(route + "?") and v == verbe for r, v in out):
+            out.pop(cle)
+    # (c) règle des verbes d'ACTION : une route qui se termine par un verbe est une mutation, quel
+    #     que soit ce que la proximité a lu ; `auth/*` idem (jamais un GET).
+    #     ⛔ `out` est clé par (route, verbe) : on RECONSTRUIT plutôt que de muter en place, sinon
+    #        un changement de verbe changerait la clé sous l'itération.
+    ACTIONS = re.compile(r"/(validate|dismiss|commit|skip|order|dispatch|purchase|adopt|recall"
+                         r"|graduation|attend|batch-confirm|open|collect|report|hire|fire|sign"
+                         r"|resolve|confirm)(/|$)")
+    corrige = {}
+    for route, verbe in out:
+        if verbe == "GET" and (ACTIONS.search(route) or route.startswith("/v1/auth/")):
+            verbe = "POST"
+        corrige[(route, verbe)] = verbe
+    out = corrige
+
+    # préfixe nu dans le code : la route réelle est l'intérieur du district
+    for k in [k for k in list(out) if k[0] == "/v1/city/district/"]:
+        out.pop(k)
+    out.setdefault(("/v1/city/district/{districtId}/interior", "GET"), "GET")
+
+    return sorted(out)          # [(route, verbe), …] — une route à deux verbes rend DEUX entrées
 
 
 class Pile:
@@ -405,6 +461,7 @@ def main(argv):
         if r["sym"] in ("③", "⑨", "⑤", "④", "⑯") and "/v1/session/open" not in dict(routes):
             routes.append(("/v1/session/open", "POST"))
         idx = []; c = {"appelées": 0, "sans instance": 0, "mutations": 0, "erreurs": 0}
+        noms_pris = {}          # nom de fichier → route qui l'a pris (garde de collision)
         for route, methode in routes:
             fichier = os.path.join(d, slug(route, methode))
             # `jour_de_jeu` : la seule horloge que ce compte expose à cet outil. C'est un JOUR,
@@ -444,6 +501,20 @@ def main(argv):
                     if st >= 400:
                         err = (b.get("payload", {}) or {}).get("error", {}) if isinstance(b, dict) else {}
                         print(f"   ✗ {r['sym']} {appelable} → {st} {err.get('code', '')} {str(err.get('message', ''))[:90]}")
+            # ⛔ LE NOM DU FICHIER SUIT LA ROUTE APPELÉE, décidé APRÈS l'appel — sinon un
+            #    `/v1/x/` que le back résout en `/v1/x/{id}` s'écrit sous le nom de `/v1/x`.
+            vrai = slug_reel(route, doc.get("route_appelee"), methode)
+            if vrai != os.path.basename(fichier):
+                fichier = os.path.join(d, vrai)
+            # ⛔ GARDE DE COLLISION — la classe, pas l'instance. Deux routes qui produiraient le
+            #    même nom : la seconde écraserait la première EN SILENCE, et le dossier
+            #    annoncerait une route en portant le corps d'une autre. Refuser plutôt qu'écraser.
+            if vrai in noms_pris and noms_pris[vrai] != route:
+                print(f"⛔ COLLISION de nom dans `{r['dossier']}` : `{vrai}` réclamé par "
+                      f"`{noms_pris[vrai]}` ET `{route}`. Rien écrit — deux routes ne peuvent pas "
+                      f"partager un fichier, la seconde effacerait la première en silence.")
+                sys.exit(1)
+            noms_pris[vrai] = route
             idx.append({"fichier": os.path.basename(fichier), "route": route, "methode": methode, "statut": doc.get("statut"), "etat": "appelée" if doc.get("corps") is not None and (doc.get("statut") or 0) < 400 else ("mutation" if "non_appelee" in doc else ("sans instance" if "sans_instance" in doc else "erreur"))})
             if not controle:
                 json.dump(doc, open(fichier, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
