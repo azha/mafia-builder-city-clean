@@ -1336,7 +1336,30 @@ namespace MafiaCleanCity.Shell
             // `canvas.scaleFactor`) — donc additionnable tel quel avec `rect.height`, sans
             // qu'aucun appelant ait à s'en souvenir.
             float debord = TopBar != null ? TopBar.EffectiveBottomOverhangPx : 0f;
-            ShellChrome.PublierInsets(topSafe + TopBarSlot.rect.height + debord,
+            // ⛔ CE QUE L'INSET COUVRE DE CE QUE LE CHROME DESSINE — la grandeur que ㊲ M3 pose et
+            //    que personne n'avait chiffrée. `debord` ne mesure QUE l'objet nommé `Manometre` ;
+            //    si un autre enfant du bandeau descend plus bas, il n'entre dans aucun calcul et
+            //    tombe sur le contenu du locataire, qui a pourtant respecté l'inset publié.
+            //    On mesure donc la portée RÉELLE de toute la hiérarchie du bandeau, dans les mêmes
+            //    unités canvas, et on imprime l'écart. Un écart nul innocente le contrat du shell ;
+            //    un écart positif en fait une classe qui concerne TOUS les locataires.
+            float insetHautPublie = topSafe + TopBarSlot.rect.height + debord;
+            float debordReel = debord;
+            if (TopBar != null)
+            {
+                var barreRt = TopBar.GetComponent<RectTransform>();
+                if (barreRt != null)
+                {
+                    Bounds tout = RectTransformUtility.CalculateRelativeRectTransformBounds(barreRt);
+                    debordReel = Mathf.Max(0f, barreRt.rect.yMin - tout.min.y);
+                }
+            }
+            Debug.Log($"[CHROME-PORTEE] safe {topSafe:F0} · barre {TopBarSlot.rect.height:F0}"
+                      + $" · débord COMPTÉ {debord:F1} · débord RÉEL (toute la hiérarchie)"
+                      + $" {debordReel:F1} · écart {(debordReel - debord):F1} · inset publié"
+                      + $" {insetHautPublie:F0}");
+
+            ShellChrome.PublierInsets(insetHautPublie,
                                       bottomSafe + TabBarRoot.rect.height);
         }
 
