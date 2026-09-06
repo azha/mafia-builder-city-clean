@@ -76,6 +76,11 @@ namespace MafiaCleanCity.Shell
 
         private RectTransform carteRoot;
         private TextMeshProUGUI coinLibelle, titre, noteZinc, jetonChiffre, jetonEtat;
+        /// <summary>L'inclinaison de la carte, en degrés — `+` = sens trigonométrique (le haut
+        /// part vers la gauche), la convention d'Unity. Mesurée à 2,00° sur la référence par le
+        /// juge ⊥ (F14) ; le sens est lu sur l'image, jamais déduit de la magnitude.</summary>
+        private const float InclinaisonCarteDeg = 2f;
+
         private RectTransform pipsPortee, pipsUrgence;
         private TextMeshProUGUI porteeLibelle, urgenceLibelle, sabotTexte;
         private GameObject filet, tampon;
@@ -285,6 +290,14 @@ namespace MafiaCleanCity.Shell
 
             GameObject carte = Bloc("CarteDuJour", table.transform, horizontal: false, espace: Px(4f));
             carteRoot = (RectTransform)carte.transform;
+            // ⛔ F14 — LA CARTE EST POSÉE, PAS COLLÉE. Le canon l'incline de **2,00°** (bord gauche,
+            // résidu 0,29 px sur 650 lignes chez le juge) ; le jeu la rendait à 0,00°, et elle
+            // cessait d'être « une carte distribuée sur un zinc » pour devenir un panneau.
+            // ⚠️ Le SIGNE vient de la RÉFÉRENCE ouverte, pas du rapport : celui-ci donne la valeur
+            //   absolue de l'angle du bord, ce qui ne dit pas de quel côté. Ce dépôt a déjà payé un
+            //   signe déduit d'une magnitude — l'aiguille du manomètre inversée, et le halo des
+            //   noms de ③ construit à l'envers d'un contour. *Une magnitude ne porte pas son sens.*
+            carteRoot.localRotation = Quaternion.Euler(0f, 0f, InclinaisonCarteDeg);
             Image fond = carte.AddComponent<Image>();
             // ⛔ LA CINQUIÈME RECOPIE VIVAIT ICI, AVEC SON ALPHA — et c'est la forme que le motif
             //    de la garde ratait : il exigeait le guillemet fermant après SIX chiffres, donc
@@ -306,9 +319,8 @@ namespace MafiaCleanCity.Shell
             GameObject coin = Bloc("Coin", carte.transform, horizontal: true, espace: Px(4f));
             coin.GetComponent<HorizontalLayoutGroup>().childForceExpandWidth = false;
             Texte(coin.transform, "Cachet", "♦", Px(13f), Or, DesignTokens.Current.primaryFont);
-            coinLibelle = Texte(coin.transform, "Nature", "tactique", Px(7.5f), Creme2,
-                                DesignTokens.Current.primaryFont);
-            coinLibelle.characterSpacing = 12f;
+            coinLibelle = PetitesCapitales(Texte(coin.transform, "Nature", "tactique", Px(7.5f), Creme2,
+                                DesignTokens.Current.primaryFont));
 
             TextMeshProUGUI kicker = Texte(carte.transform, "Kicker", "CE QUI PÈSE LE PLUS AUJOURD'HUI",
                                            Px(7.5f), Creme2, DesignTokens.Current.primaryFont);
@@ -340,8 +352,8 @@ namespace MafiaCleanCity.Shell
             jl.flexibleWidth = 0f;
             jetonChiffre = Texte(jeton.transform, "Chiffre", "1", Px(13f), Hex("#3a2a12"),
                                  DesignTokens.Current.primaryFont, TextAlignmentOptions.Center, true);
-            jetonEtat = Texte(colonne.transform, "Etat", "libre", Px(7.5f), OrVif,
-                              DesignTokens.Current.primaryFont, TextAlignmentOptions.Center);
+            jetonEtat = PetitesCapitales(Texte(colonne.transform, "Etat", "libre", Px(7.5f), OrVif,
+                              DesignTokens.Current.primaryFont, TextAlignmentOptions.Center));
             Texte(colonne.transform, "Sous", "votre décision structurelle de la session", Px(6.3f),
                   Creme2, DesignTokens.Current.primaryFont, TextAlignmentOptions.Center)
                 .enableWordWrapping = true;
@@ -352,9 +364,13 @@ namespace MafiaCleanCity.Shell
                                DesignTokens.Current.hudSerifFont, TextAlignmentOptions.Center);
             sabotTexte.gameObject.SetActive(false);
 
+            // F19 — la légende est en ITALIQUE dans le canon (« Tactique — trancher ne touche
+            // pas… »), le jeu la rendait en romain. Vérifié sur la référence, pas déduit du
+            // rapport.
             noteZinc = Texte(transform, "NoteZinc", "", Px(8f), Creme2,
                              DesignTokens.Current.primaryFont, TextAlignmentOptions.Center);
             noteZinc.enableWordWrapping = true;
+            noteZinc.fontStyle |= FontStyles.Italic;   // F19 — le canon la met en italique
 
             // ── « laisser sur le zinc » = skip. Un geste simple : la carte revient. ───────────
             filet = Bloc("Filet", transform, horizontal: false, espace: Px(1f));
@@ -399,7 +415,7 @@ namespace MafiaCleanCity.Shell
             GameObject bande = Bloc("Bande" + nom, parent, horizontal: true, espace: Px(6f));
             bande.GetComponent<HorizontalLayoutGroup>().childForceExpandWidth = false;
             bande.GetComponent<HorizontalLayoutGroup>().childAlignment = TextAnchor.MiddleLeft;
-            Texte(bande.transform, "Lib", nom, Px(7.5f), Creme2, DesignTokens.Current.primaryFont);
+            PetitesCapitales(Texte(bande.transform, "Lib", nom, Px(7.5f), Creme2, DesignTokens.Current.primaryFont));
 
             GameObject pips = Bloc("Pips", bande.transform, horizontal: true, espace: Px(3f));
             pips.GetComponent<HorizontalLayoutGroup>().childForceExpandWidth = false;
@@ -413,8 +429,33 @@ namespace MafiaCleanCity.Shell
                 pl.preferredHeight = Px(7f);
                 pl.flexibleWidth = 0f;
             }
+            // ⚠️ PAS de petites capitales ici, et c'est la RÉFÉRENCE qui l'a dit, pas moi. Je les
+            // avais appliquées aux cinq sites d'un coup — le finding parle de « cinq instances, une
+            // cause ». En ouvrant la référence : les LIBELLÉS sont en capitales espacées (PORTÉE,
+            // URGENCE, LIBRE), mais les VALEURS sont en bas de casse (« modérée », « faible »).
+            // *Une cause unique ne veut pas dire une population unique* — j'ai failli fermer le
+            // finding en en créant un autre, et seule l'image l'a montré.
             libelle = Texte(bande.transform, "Val", "—", Px(7.5f), Creme, DesignTokens.Current.primaryFont);
             return (RectTransform)pips.transform;
+        }
+
+        /// <summary>⛔⛔ LES PETITES CAPITALES ESPACÉES — trait d'identité (d) du canon, et **une
+        /// seule cause pour cinq instances**. Un juge ⊥ mesure « toutes les petites capitales
+        /// espacées deviennent du bas-de-casse » : TACTIQUE → tactique, PORTÉE → Portée, URGENCE,
+        /// LIBRE, et les deux valeurs de bande. *Cinq findings dans la table, un seul geste ici* —
+        /// et c'est pour ça qu'on écrit un producteur au lieu de retoucher cinq appels.
+        /// ⚠️ La CASSE est un STYLE, jamais une transformation du texte : `FontStyles.UpperCase`
+        /// laisse la chaîne servie intacte, donc `Portée` reste `Portée` pour qui la lit dans le
+        /// DTO ou dans un test. Passer par `ToUpper()` aurait rendu la donnée illisible à sa propre
+        /// source — la faute que ce dépôt a déjà nommée sur ③ (« capitales en STYLE, le texte reste
+        /// le nom servi »).
+        /// ⚠️ Et l'interlettrage se compte en CENTIÈMES d'em dans TMP : `.12em` s'écrit `12f`.
+        /// Ce dépôt l'a payé sur ③ le même jour (8 posé pour 24 dus, soit le tiers).</summary>
+        private static TextMeshProUGUI PetitesCapitales(TextMeshProUGUI t)
+        {
+            t.fontStyle |= FontStyles.UpperCase;
+            t.characterSpacing = 12f;   // `.12em` — 100 = 1 em dans TMP
+            return t;
         }
 
         private static GameObject Bloc(string nom, Transform parent, bool horizontal, float espace)
