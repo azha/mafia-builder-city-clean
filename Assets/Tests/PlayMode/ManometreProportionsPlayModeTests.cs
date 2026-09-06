@@ -35,6 +35,18 @@ namespace MafiaCleanCity.Shell.Tests
     /// jeu — le médaillon est passé de 64 à 68 sans que les grandeurs dérivées suivent. Tout est
     /// donc en fraction du rayon MESURÉ sur l'objet, jamais en valeur absolue.
     ///
+    /// ⚠️⚠️ SA CONVENTION DE BORD, ET POURQUOI ELLE DIFFÈRE DE CELLE DU JUGE SANS QU'AUCUN DES
+    /// DEUX NE SOIT FAUX. Cet oracle rend l'épaisseur NOMINALE : il lit les deux bords à mi-alpha
+    /// et rajoute la rampe du générateur. Un juge qui compte les pixels au-dessus d'un seuil rend,
+    /// lui, la largeur du CŒUR opaque — soit la nominale moins la rampe. Le retrait étant presque
+    /// constant en pixels, il pèse proportionnellement PLUS sur le trait fin : d'où un ratio
+    /// anneau/arc de **0,499** dans sa convention contre **0,600** dans celle-ci, sur le MÊME
+    /// objet. Les deux mesures sont exactes ; c'est leur comparaison qui ne l'est pas.
+    /// ⇒ VÉRIFIÉ PAR UN TROISIÈME CHEMIN, sur une planche et sans Unity : l'anneau y fait **8 px**
+    ///   pour un rayon extérieur de 93,5 ⇒ **0,0856 R**, quand cet oracle annonce **0,0881 R** et
+    ///   que les constantes prédisent **8,27 px**. Trois chemins, un résultat — *il n'y a aucun
+    ///   facteur caché entre la géométrie déclarée et les pixels affichés.*
+    ///
     /// ⚠️ CE QU'IL NE MESURE PAS, écrit plutôt que sous-entendu : la couleur, l'angle, la position.
     /// Et il lit la TEXTURE du sprite plus la taille du rect — c'est-à-dire ce que l'écran affiche
     /// — mais pas les pixels de l'écran lui-même. Un effet appliqué APRÈS (un `localScale` sur un
@@ -158,7 +170,15 @@ namespace MafiaCleanCity.Shell.Tests
 
             float fracAnneau = epAnneau / rAnneau;
             float fracArc = epArc / rAnneau;          // les DEUX rapportées au rayon du MÉDAILLON
-            float fracRayonArc = rArc / rAnneau;
+            // ⛔ LE RAYON MÉDIAN, PAS LE RAYON EXTÉRIEUR — et c'est la correction d'une ambiguïté
+            //    que ma première version portait sans le dire. Le canon fixe « 0,45 R » sur le
+            //    rayon MÉDIAN de l'arc (le juge écrit « rayon médian » dans son r2) ; `rArc` est le
+            //    rayon EXTÉRIEUR du rect. Les comparer directement, c'est comparer deux grandeurs
+            //    qui diffèrent d'une demi-épaisseur — et sur un arc de 5 unités pour un médaillon
+            //    de 34, cette demi-épaisseur vaut 0,074 R, soit un sixième de la valeur visée.
+            //    *Deux grandeurs qui portent le même nom dans deux repères ne se comparent pas
+            //    parce qu'elles portent le même nom.*
+            float fracRayonArc = (rArc - epArc / 2f) / rAnneau;
             float ratio = epAnneau / epArc;
 
             // Les deux références, recopiées de leurs sources et non de mémoire :
@@ -170,7 +190,7 @@ namespace MafiaCleanCity.Shell.Tests
 
             Debug.Log($"[① manomètre] rayon médaillon {rAnneau:F2} u (texture {texAnneau} px) · " +
                       $"anneau {epAnneau:F2} u = {fracAnneau:F4} R · arc {epArc:F2} u = {fracArc:F4} R " +
-                      $"(texture {texArc} px, rayon {rArc:F2} u = {fracRayonArc:F4} R) · " +
+                      $"(texture {texArc} px, rayon extérieur {rArc:F2} u, médian = {fracRayonArc:F4} R) · " +
                       $"ratio anneau/arc {ratio:F4} (références : {RatioReference:F4})");
 
             // ── (1) LE RATIO, la seule grandeur SANS unité, et la seule sur laquelle les deux

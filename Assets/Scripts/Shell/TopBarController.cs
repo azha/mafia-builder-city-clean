@@ -282,8 +282,27 @@ namespace MafiaCleanCity.Shell
         public const string LibelleNotifCalme = "[ ] Calme";
 
         private const float BoitierRingThicknessPx = 3f;
-        private const float ArcDiameterPx = 48f;
         private const float ArcThicknessPx = 5f;
+
+        /// <summary>Le rayon MÉDIAN de l'arc, en fraction du rayon du médaillon — la grandeur que
+        /// le canon fixe, et la seule qui ne dépende pas de la taille du médaillon.</summary>
+        private const float ArcRayonMedianFractionCanon = 0.45f;
+
+        /// <summary>⛔⛔⛔ DÉRIVÉ, PLUS UN LITTÉRAL — et le littéral qu'il remplace est celui que le
+        /// socle de ce dépôt cite déjà en exemple. `ArcDiameterPx` valait **48**, un nombre calculé
+        /// quand le médaillon faisait **64** ; il est passé à **68** au lot suivant et personne
+        /// n'est revenu. L'arc s'est donc retrouvé à un rayon médian de 0,632 R au lieu de 0,45 —
+        /// mesuré par un juge ⊥ (« +43 % de rayon, l'arc frôle la jante au lieu d'être un liseré
+        /// discret ») et confirmé au pixel sur une planche (médian 0,59 R).
+        /// ★★ *Une grandeur qui DÉPEND d'une autre se dérive, elle ne se recopie pas* — un nombre
+        ///   gelé ne rougit pas quand ce dont il dépend bouge, et c'est exactement ce qui s'est
+        ///   passé ici. Le socle cite déjà ce même objet pour un ratio figé à `0,75f` avec, dans
+        ///   son commentaire, la division par 64 qui le trahissait. C'est la deuxième fois sur le
+        ///   même médaillon, et la deuxième fois le commentaire portait la preuve.
+        /// La conversion : le diamètre EXTÉRIEUR d'un anneau dont le rayon médian vaut `f · R` et
+        /// l'épaisseur `t` vaut `2·(f·R + t/2)` = `f · D + t`.</summary>
+        private const float ArcDiameterPx =
+            ArcRayonMedianFractionCanon * ManometreDiameter + ArcThicknessPx;
         // 96 — `hud-brennar.html` : `.aile{min-width:96px}`, mesuré `.aile.gauche` 96,00 et
         // `.aile.droite` 97,95. À 160 les deux ailes totalisaient 320 des 392 de large et se
         // rejoignaient SOUS le médaillon (64 de large, centré) — 320 + 64 = 384 pour 392 moins
