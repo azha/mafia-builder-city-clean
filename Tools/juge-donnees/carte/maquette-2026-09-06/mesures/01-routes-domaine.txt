@@ -1,0 +1,26 @@
+# 01 — les routes du domaine (oracle python, jamais un grep lu au terminal)
+
+$ python3 : @Get/@Post littéraux de TOUS les *.controller.ts de services/game-back/src
+TOTAL routes déclarées (tout le back) : 1029
+routes du domaine CARTE (préfixe city/ ou world/ + me/buildings) : 17
+
+  JWT       Get   /v1/city/citizens/whisper                  citysim/sparse_citizens/sparse_citizens.controller.ts:44
+  JWT       Get   /v1/city/district/:id/buffer               citysim/buffer_bloat/buffer-bloat.controller.ts:56
+  JWT       Get   /v1/city/district/:id/cohesion             citysim/cohesion/cohesion.controller.ts:54
+  JWT       Get   /v1/city/district/:id/flow                 citysim/flow_cells/flow_cells.controller.ts:48
+  JWT       Get   /v1/city/district/:id/heat                 citysim/heat/heat.controller.ts:52
+  JWT       Get   /v1/city/district/:id/inspection           citysim/inspection/inspection.controller.ts:76
+  JWT       Get   /v1/city/district/:id/interior             citysim/district_interior/district-interior.controller.ts:96
+  JWT       Get   /v1/city/district/:id/leks                 citysim/deal_lek/deal-lek.controller.ts:50
+  JWT       Get   /v1/city/district/:id/stash                citysim/erlang_stash/erlang-stash.controller.ts:59
+  JWT       Get   /v1/city/district/:id/throughput           citysim/dwell_time/dwell-time.controller.ts:57
+  JWT       Get   /v1/city/district/:id/unconformity         citysim/unconformity/unconformity.controller.ts:56
+  JWT       Post  /v1/city/inspection/report                 citysim/inspection/inspection.controller.ts:117
+  JWT       Get   /v1/city/precinct/:id/belief               citysim/police_memory/police_memory.controller.ts:51
+  JWT       Get   /v1/city/precinct/:id/patrol               citysim/patrol/patrol.controller.ts:52
+  JWT       Get   /v1/me/buildings                           citysim/district_interior/player-buildings.controller.ts:89
+            Get   /v1/world/districts                        citysim/world/world.controller.ts:39
+            Get   /v1/world/threnny-edges                    citysim/world/world.controller.ts:50
+
+dont sous JwtAuthGuard (routes JOUEUR) : 15
+dont publiques sans garde              : 2

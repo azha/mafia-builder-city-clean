@@ -1,0 +1,32 @@
+# 02 — les 18 noms et les 18 profils : maquette ↔ back (avec CONTRÔLE POSITIF)
+
+source M : /home/erutheone/project/atelier3d-mafia/ecrans-brennar-6.html ligne 866 (cadre 22)
+source B : corps réel GET_world_districts.json (back_main 6ff684db, 2026-09-04)
+
+M : 18 groupes <g class="q …">, 18 noms distincts
+B : 18 districts, 18 noms distincts
+intersection des noms : 18   |   M seulement : []   |   B seulement : []
+profils divergents (nom -> profil M vs profil B) : 0 []
+
+CONTRÔLE POSITIF (le motif SAIT rendre un écart) : on remplace ORSEL par ORSELXX côté M
+  écarts attendus 1, obtenus 1
+
+détail (nom M | profil M | profil B | block_count B | bank_side B | precinct_id B | control_state B)
+  LES BASSINS          tidewater  tidewater   37  north  1  UNCONTESTED
+  QUAI-NORD            tidewater  tidewater   44  north  1  UNCONTESTED
+  SARNES               tidewater  tidewater   51  north  1  UNCONTESTED
+  LA COLONNE           spine      spine       58  north  2  UNCONTESTED
+  HAUTES-MARCHES       spine      spine       65  north  2  UNCONTESTED
+  VERRIER              spine      spine       72  north  2  UNCONTESTED
+  SAINT-BRAND          spine      spine       79  north  3  UNCONTESTED
+  LES ENTREPÔTS        stack      stack       56  north  4  UNCONTESTED
+  DÉPÔT-EST            stack      stack       63  north  4  UNCONTESTED
+  LE TREILLIS          lattice    lattice     35  south  3  UNCONTESTED
+  MARNE-BASSE          lattice    lattice     42  south  3  UNCONTESTED
+  LE VERRE             glass      glass       70  south  5  UNCONTESTED
+  ORSEL                lattice    lattice     49  south  4  UNCONTESTED
+  PLACE DES COMPTES    glass      glass       77  south  5  UNCONTESTED
+  LA LISIÈRE           verge      verge       40  south  6  UNCONTESTED
+  LA CHANCELLERIE      glass      glass       33  south  5  UNCONTESTED
+  LES FRICHES          verge      verge       47  south  6  UNCONTESTED
+  PONT-GRIS            verge      verge       54  south  6  UNCONTESTED

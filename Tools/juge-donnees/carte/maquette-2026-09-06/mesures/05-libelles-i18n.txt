@@ -1,0 +1,49 @@
+# 05 — les LIBELLÉS : ce que le bundle i18n sert, ce que la maquette écrit
+
+source : services/game-back/src/i18n/string_table.ts (lu à main, pas au corps périmé)
+
+## (a) DEUX familles concurrentes de libellés de type de bâtiment
+  lignes district.type_batiment.* : 52   clés distinctes : 26   (2 locales par clé)
+  famille A (clé = valeur de l'enum `building_operational_type`) : 13
+  famille B (clé = un mot français, AUCUNE valeur d'enum ne la nomme) : 13
+
+  concept                A (clé=enum)                B (clé=mot fr)             identiques ?
+    front_shop           Boutique-écran             Commerce-écran             NON
+    cash_safehouse       Planque à liquide          Planque                    NON
+    stash                Réserve                    Cache                      NON
+    lab                  Labo                       Laboratoire                NON
+    money_holding        Dépôt d\'argent            Coffre                     NON
+    distribution_hub     Plateforme de distribution Relais                     NON
+    dealer_spot_front    Façade de point de vente   Point de vente             NON
+    press_house          Imprimerie                 Atelier de presse          NON
+    specialized_lab      Labo spécialisé            Laboratoire spécialisé     NON
+    grow_house           Serre                      Serre                      oui
+    refinery             Raffinerie                 Raffinerie                 oui
+    office               Bureau                     Bureau                     oui
+    vacant_lot           Terrain vague              Terrain vague              oui
+  ⇒ 9 des 13 concepts portent DEUX libellés français DIFFÉRENTS.
+
+## (b) référencement des deux familles PAR LE BACK (hors string_table.ts) : 0 et 0
+  occurrences de 'type_batiment' hors string_table.ts : 0
+  ⇒ aucune valeur d'enum ne DÉSIGNE la famille B : seul un client qui code la clé en dur l'atteint.
+
+## (c) les libellés que la maquette écrit et que le bundle NE SERT PAS
+  bandes de chaleur (COLD/WARM/HOT/BURNING) : {'COLD': 0, 'WARM': 0, 'BURNING': 0, 'tiède': 0, 'froid': 0, 'brûlant': 0}
+  bandes de conviction police (DORMANT/WATCHFUL/SUSPICIOUS/HUNTING) : {'DORMANT': 0, 'WATCHFUL': 0, 'SUSPICIOUS': 0, 'HUNTING': 0, 'en chasse': 0, 'soupçon': 0}
+  les 6 profils de district : {'tidewater': 0, 'spine': 0, 'lattice': 0, 'glass': 0, 'verge': 0}
+  toponymes de la fiction : {'Brennar': 0, 'Threnny': 0}
+  CONTRÔLE POSITIF sur le même fichier : 'carte.bloc.entrer' -> 2 (2 = en + fr)
+  CONTRÔLE POSITIF : 'district.type_batiment.lab' -> 2
+
+## (d) les 10 clés carte.* servies (valeurs fr, table à main)
+  clés carte.* distinctes : 10
+    carte.bloc.a_vous                             en='Yours'                             fr='À vous'
+    carte.bloc.carte_de_la_ville_districts        en='CITY MAP — Districts'              fr='CARTE DE LA VILLE — Districts'
+    carte.bloc.chaleur_affichee                   en='Heat: shown'                       fr='Chaleur : affichée'
+    carte.bloc.chaleur_masquee                    en='Heat: hidden'                      fr='Chaleur : masquée'
+    carte.bloc.dispute                            en='Contested'                         fr='Disputé'
+    carte.bloc.entrer                             en='Enter'                             fr='Entrer'
+    carte.bloc.libre                              en='Free'                              fr='Libre'
+    carte.bloc.rival                              en='Rival'                             fr='Rival'
+    carte.bloc.rive_nord                          en='North bank'                        fr='Rive nord'
+    carte.bloc.rive_sud                           en='South bank'                        fr='Rive sud'
