@@ -36,7 +36,11 @@ médiane du ciel** en montant.
 matière) et le **filet laiton** `#b08d3e`. C'est ce qui manquait à la liste de polish : elle dit *quoi
 corriger*, pas *à quoi ça doit ressembler*.
 
-Elle sert de cible aux juges et au correcteur, et elle rend visible d'un coup d'œil quels écrans ont
-encore un trou : **8 écrans n'ont pas d'état vide** (compression, fiche bâtiment, lieutenant, autonomie,
-police, bureau, loi, confié, raser, vente) — non pas parce qu'ils n'en ont pas besoin, mais parce que je
-n'en ai produit que douze. C'est la prochaine série si elle est demandée.
+Elle sert de cible aux juges et au correcteur — et **elle a payé au premier usage** : elle a rendu
+visible que **10 écrans n'avaient pas d'état vide** (le compte annoncé « 8 » était faux, la planche l'a
+corrigé). Les dix manquants ont été produits dans la foulée. ⇒ **Les 20 écrans ont désormais leur
+matière ET leur état vide, sans trou**, et le total d'états vides est de **22** (deux de plus que les
+écrans référencés : le journal ㊳ et le recrutement ⑳).
+
+★ C'est ce qu'on attend d'une planche de référence : elle ne décrit pas seulement la cible, elle
+**mesure l'écart** — et le premier écart qu'elle a mesuré était dans mon propre compte.
