@@ -1,0 +1,261 @@
+<title>HUD de Brennar</title>
+<style>
+:root{
+  --encre:#0b1016; --panneau:#111823; --lisere:#2a3648;
+  --creme:#eae0c8; --creme-2:#b9ad92; --or:#d9ab4e; --or-vif:#f2c96b; --laiton:#b08d3e;
+  --braise:#e0664a; --cyan:#7fd4d9;
+}
+*{box-sizing:border-box}
+body{background:var(--encre);color:var(--creme);margin:0;font:15px/1.55 "Segoe UI",Roboto,system-ui,sans-serif}
+.serif{font-family:Georgia,"Times New Roman",serif}
+.page{max-width:1180px;margin:0 auto;padding:28px 20px 60px}
+header.bandeau{text-align:center;margin:10px 0 26px}
+header.bandeau h1{font-family:Georgia,serif;font-size:clamp(26px,4vw,40px);letter-spacing:.14em;margin:0;color:var(--or);text-transform:uppercase;text-wrap:balance}
+header.bandeau p{color:var(--creme-2);max-width:64ch;margin:10px auto 0}
+.scene{display:flex;gap:34px;align-items:flex-start;justify-content:center;flex-wrap:wrap}
+
+/* ═ LE TÉLÉPHONE ═ */
+.tel{position:relative;width:min(392px,92vw);aspect-ratio:9/16;border-radius:26px;overflow:hidden;
+  border:1px solid #3a4356;box-shadow:0 30px 80px #000c,0 0 0 6px #060a0f;flex:0 0 auto;background:#000}
+.fond{position:absolute;inset:0;background-size:cover;background-position:center 38%;transition:opacity .5s}
+#fond-jour{opacity:0}
+.tel.jour #fond-jour{opacity:1}
+.hud{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:space-between}
+
+/* ── LA BARRE UNIQUE : verre fumé charbon + filet laiton + médaillon ── */
+.barre{position:relative;height:52px;background:linear-gradient(180deg,#0b111be8,#0d131ed8);
+  backdrop-filter:blur(5px);display:flex;align-items:center;justify-content:space-between;padding:0 16px}
+.barre::after{content:"";position:absolute;left:0;right:0;bottom:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--laiton) 18%,var(--laiton) 82%,transparent);
+  transition:background .6s}
+.tel.chaud .barre::after{background:linear-gradient(90deg,transparent,var(--braise) 18%,var(--braise) 82%,transparent)}
+.volute{position:absolute;top:50%;transform:translateY(-50%);width:34px;height:12px;opacity:.28;pointer-events:none}
+.volute svg{width:100%;height:100%}
+.volute.g{left:4px}.volute.d{right:4px;transform:translateY(-50%) scaleX(-1)}
+.aile{display:flex;flex-direction:column;line-height:1.12;min-width:96px}
+.aile .lib{font-size:8.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--creme-2)}
+.aile .val{font-family:Georgia,serif;font-variant-numeric:tabular-nums;font-size:17px;letter-spacing:.02em}
+.aile.gauche .val{color:var(--or-vif)}
+.aile.droite{align-items:flex-end;text-align:right}
+.aile.droite .val{color:var(--creme)}
+.tel.chaud .aile.droite .val{color:var(--braise)}
+/* le médaillon — montre à gousset de la ville */
+.medaillon{position:absolute;left:50%;top:7px;transform:translateX(-50%);width:64px;height:64px;z-index:3}
+.medaillon .boitier{width:100%;height:100%;border-radius:50%;
+  background:radial-gradient(circle at 38% 30%,#2c3242,#141a26 60%,#0a0e16);
+  border:1.5px solid var(--laiton);box-shadow:inset 0 1px 2px #ffffff2a,inset 0 -4px 8px #0009,0 6px 14px #000c;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;transition:border-color .6s}
+.medaillon .lunette{position:absolute;inset:3px;border-radius:50%;border:1px solid #ffffff1e;transition:box-shadow .6s;
+  box-shadow:0 0 10px #23406a66 inset}
+.tel.jour .medaillon .lunette{box-shadow:0 0 10px #d9ab4e55 inset}
+.medaillon .jour{font-size:8px;letter-spacing:.18em;color:var(--creme-2);text-transform:uppercase}
+.medaillon .heure{font-family:Georgia,serif;font-size:15px;color:var(--creme);line-height:1}
+.medaillon .phase{font-size:7.5px;letter-spacing:.14em;color:var(--cyan);text-transform:uppercase;margin-top:2px}
+.tel.jour .medaillon .phase{color:var(--or)}
+.medaillon .losange{position:absolute;bottom:-11px;left:50%;transform:translateX(-50%) rotate(45deg);
+  width:7px;height:7px;background:var(--laiton);box-shadow:0 0 0 1px #0009}
+
+
+.ratio{display:block;width:74px;height:2px;background:#5a6376;margin-top:3px;border-radius:1px;overflow:hidden}
+.ratio i{display:block;height:100%;background:var(--or)}
+.cadran{width:44px;height:28px;margin-top:1px}
+.heatpct{font-family:Georgia,serif;font-size:13px;line-height:1;color:var(--creme);margin-top:-14px}
+.heatlib{font-size:7px;letter-spacing:.22em;color:var(--creme-2);text-transform:uppercase;margin-top:1px}
+.tel.chaud .heatpct{color:var(--braise)}
+.tel.chaud .medaillon .boitier{border-color:var(--braise)}
+.tel.descente .heatpct,.tel.descente .heatlib{color:var(--braise)}
+.tel.descente .medaillon .boitier{border-color:var(--braise);animation:pouls 1.1s infinite}
+.tel.descente .barre::after{animation:pouls 1.1s infinite}
+.tel.descente #aiguille{animation:tremble .14s infinite}
+@keyframes pouls{0%,100%{opacity:1}50%{opacity:.45}}
+@keyframes tremble{0%,100%{transform:rotate(52deg);transform-origin:30px 34px}50%{transform:rotate(56deg);transform-origin:30px 34px}}
+.gyro{position:absolute;left:23%;top:56.5%;width:60px;height:36px;pointer-events:none;opacity:0;transition:opacity .5s;
+  background:radial-gradient(closest-side,#ff5a3cbb,#ff5a3c00 70%);animation:gyroflip 0.9s infinite}
+.tel.descente .gyro{opacity:1}
+.tel.jour .gyro{opacity:0}
+@keyframes gyroflip{0%,100%{filter:hue-rotate(0deg)}50%{filter:hue-rotate(-140deg)}}
+.floater{position:absolute;left:55%;top:42%;color:var(--or-vif);font-weight:700;font-size:12px;
+  text-shadow:0 1px 3px #000;pointer-events:none;animation:monte 3.2s infinite}
+.tel.jour .floater{display:none}
+@keyframes monte{0%{opacity:0;transform:translateY(8px)}18%{opacity:1}70%{opacity:1}100%{opacity:0;transform:translateY(-26px)}}
+/* bandeau éphémère (remplace tout badge permanent) */
+.bandeau-alerte{position:absolute;left:0;right:0;top:78px;display:flex;justify-content:center;pointer-events:none}
+.bandeau-alerte div{background:linear-gradient(90deg,transparent,#0c1220ee 12%,#0c1220ee 88%,transparent);
+  color:var(--creme);font-size:11.5px;letter-spacing:.06em;padding:7px 34px;border-top:1px solid #ffffff14;border-bottom:1px solid #ffffff14}
+.bandeau-alerte b{color:var(--or-vif);font-weight:600}
+
+/* fiche bâtiment — verre fumé, serif, 1 CTA or */
+.fiche{position:relative;margin:0 12px 12px;border-radius:14px;padding:13px 16px 14px;
+  background:linear-gradient(180deg,#0c1320ef,#080d17f6);backdrop-filter:blur(5px);
+  border:1px solid #ffffff17;box-shadow:0 10px 26px #000c}
+.fiche::after{content:"";position:absolute;left:14px;right:14px;top:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--laiton) 30%,var(--laiton) 70%,transparent)}
+.fiche .titre{text-align:center}
+.fiche .titre .serif{color:var(--or-vif);letter-spacing:.13em;font-size:16px}
+.fiche .titre .type{display:block;font-size:9px;color:var(--creme-2);text-transform:uppercase;letter-spacing:.2em;margin-top:2px}
+.stats{display:flex;margin:10px 0 12px;font-variant-numeric:tabular-nums;text-align:center}
+.stats>div{flex:1;border-right:1px solid #ffffff10}
+.stats>div:last-child{border-right:none}
+.stats b{font-family:Georgia,serif;font-size:14.5px;font-weight:400}
+.stats span{font-size:8.5px;color:var(--creme-2);display:block;text-transform:uppercase;letter-spacing:.14em;margin-top:2px}
+.actions{display:flex;gap:9px}
+.btn{flex:1;text-align:center;padding:10px 4px;border-radius:9px;font-size:11.5px;letter-spacing:.12em;font-weight:600}
+.btn.or{background:linear-gradient(180deg,#e9c56b,#c99a37);color:#241804;box-shadow:0 2px 8px #00000080;border:1px solid #8a611c}
+.btn.ligne{background:#ffffff0a;color:var(--creme);border:1px solid #ffffff2a}
+
+/* dock bas — 4 boutons ronds gravés, la Carte n'y est plus (on est dessus) */
+.dock{display:flex;justify-content:center;gap:22px;padding:10px 0 16px;
+  background:linear-gradient(180deg,transparent,#070b12d8 40%)}
+.dockb{display:flex;flex-direction:column;align-items:center;gap:5px;color:var(--creme-2);
+  font-size:8.5px;letter-spacing:.16em;text-transform:uppercase}
+.dockb .rond{width:46px;height:46px;border-radius:50%;background:radial-gradient(circle at 38% 30%,#1d2635,#0d1420 65%);
+  border:1px solid #ffffff22;box-shadow:inset 0 1px 0 #ffffff1c,0 4px 10px #000a;
+  display:flex;align-items:center;justify-content:center;position:relative}
+.dockb .rond img{width:20px;height:20px;filter:brightness(0) invert(.78)}
+.dockb .pointe{position:absolute;bottom:-4px;left:50%;transform:translateX(-50%);width:14px;height:2px;background:var(--laiton);border-radius:1px;opacity:0}
+.dockb.actif .pointe{opacity:1}
+.dockb small.disc{position:absolute;top:-2px;right:-2px;width:8px;height:8px;border-radius:50%;background:var(--or);border:1.5px solid #0a0f17}
+
+/* bascule + call-outs */
+.bascule{position:absolute;left:10px;top:120px;width:42px;height:42px;border-radius:50%;
+  background:radial-gradient(circle at 38% 30%,#1d2635,#0d1420 65%);border:1px solid #ffffff22;
+  display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;user-select:none;box-shadow:0 4px 10px #000a}
+.chaudb{position:absolute;left:10px;top:170px;width:42px;height:42px;border-radius:50%;
+  background:radial-gradient(circle at 38% 30%,#2b1d1a,#160d0c 65%);border:1px solid #e0664a44;
+  display:flex;align-items:center;justify-content:center;font-size:17px;cursor:pointer;user-select:none;box-shadow:0 4px 10px #000a}
+.co{position:absolute;width:22px;height:22px;border-radius:50%;background:var(--or);color:#1a1206;font-weight:800;
+  font-size:12px;display:flex;align-items:center;justify-content:center;border:2px solid #0b1016;box-shadow:0 0 0 1px var(--or);z-index:6}
+
+/* ═ ANNOTATIONS ═ */
+.annexes{flex:1 1 380px;max-width:480px;min-width:300px}
+.annexes h2{font-family:Georgia,serif;color:var(--or);letter-spacing:.1em;text-transform:uppercase;font-size:15px;border-bottom:1px solid var(--lisere);padding-bottom:8px}
+.annexes ol{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:13px}
+.annexes li{display:flex;gap:12px}
+.annexes .num{flex:0 0 24px;height:24px;border-radius:50%;background:var(--or);color:#1a1206;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;margin-top:2px}
+.annexes b{color:var(--creme)}
+.annexes p{margin:2px 0 0;color:var(--creme-2);font-size:13.5px}
+.note{margin-top:22px;background:var(--panneau);border:1px solid var(--lisere);border-radius:12px;padding:14px 16px;font-size:13.5px;color:var(--creme-2)}
+.note b{color:var(--or)}
+</style>
+<div class="page">
+<header class="bandeau">
+  <h1>HUD de Brennar</h1>
+  <p>v3 — la grammaire des jeux d'ambiance, prouvée sur le corpus (108 captures analysées) : une seule
+  barre de verre fumé, l'or réservé à l'argent, la montre de la ville en médaillon. Essayez 🌙/☀️ et 🔥
+  (le heat réchauffe le chrome).</p>
+</header>
+<div class="scene">
+  <div class="tel" id="tel">
+    <div class="fond" id="fond-nuit" style="background-image:url(«DATA_URI 4036142 octets»)"></div>
+    <div class="fond" id="fond-jour" style="background-image:url(«DATA_URI 3994674 octets»)"></div>
+    <div class="hud">
+      <div>
+        <div class="barre">
+          <span class="volute g"><svg viewBox="0 0 34 12" fill="none" stroke="#eae0c8" stroke-width="1">
+            <path d="M1 6 h12 M13 6 c4 0 4 -5 8 -5 c3 0 3 4 0 4 c-2 0 -2 -3 1 -3"/></svg></span>
+          <div class="aile gauche"><span class="lib">Argent</span><span class="val">$ 24 850</span>
+            <span class="ratio"><i style="width:68%"></i></span></div>
+          <div class="medaillon"><div class="boitier"><div class="lunette"></div>
+            <svg class="cadran" viewBox="0 0 60 40">
+              <path d="M8 34 A 26 26 0 0 1 52 34" fill="none" stroke="#ffffff22" stroke-width="3.5"/>
+              <path d="M8 34 A 26 26 0 0 1 30 8" fill="none" stroke="#7fd4d955" stroke-width="3.5"/>
+              <path d="M43 11 A 26 26 0 0 1 52 34" fill="none" stroke="#e0664a88" stroke-width="3.5"/>
+              <line id="aiguille" x1="30" y1="34" x2="30" y2="12" stroke="#eae0c8" stroke-width="2"
+                stroke-linecap="round" transform="rotate(-42 30 34)" style="transition:transform .7s"/>
+              <circle cx="30" cy="34" r="2.6" fill="#b08d3e"/>
+            </svg>
+            <span class="heatpct" id="heatval">37%</span>
+            <span class="heatlib" id="heatlib">Heat</span></div><div class="losange"></div></div>
+          <div class="aile droite"><span class="lib">Jour 12 · Soirée</span><span class="val serif" id="heure" style="font-size:15px">21:40</span></div>
+          <span class="volute d"><svg viewBox="0 0 34 12" fill="none" stroke="#eae0c8" stroke-width="1">
+            <path d="M1 6 h12 M13 6 c4 0 4 -5 8 -5 c3 0 3 4 0 4 c-2 0 -2 -3 1 -3"/></svg></span>
+        </div>
+        <div class="co" style="left:14px;top:56px">1</div>
+        <div class="co" style="left:50%;top:74px;transform:translateX(-50%)">2</div>
+        <div class="co" style="right:14px;top:56px;left:auto">3</div>
+        <div class="bandeau-alerte"><div id="alerte">✉ <b>Sal</b> a un rapport du soir — <b>lire</b></div></div>
+        <div class="co" style="right:26%;top:96px;left:auto">4</div>
+      </div>
+      <div class="gyro"></div><div class="floater">+ $320</div>
+      <div class="bascule" id="bascule">🌙</div>
+      <div class="chaudb" id="chaudb">🔥</div>
+      <div>
+        <div class="fiche">
+          <div class="titre"><span class="serif">LE VERGE D'OR</span><span class="type">Bar · Quartier général</span></div>
+          <div class="co" style="right:4px;top:-10px;left:auto">5</div>
+          <div class="stats">
+            <div><b style="color:var(--or-vif)">$ 2 400</b><span>À collecter</span></div>
+            <div><b>$ 180/h</b><span>Revenus</span></div>
+            <div><b style="color:var(--braise)">12%</b><span>Heat local</span></div>
+          </div>
+          <div class="actions">
+            <div class="btn or">COLLECTER</div>
+            <div class="btn ligne">BLANCHIR</div>
+            <div class="btn ligne">AMÉLIORER</div>
+          </div>
+        </div>
+        <div class="dock">
+          <div class="dockb actif"><span class="rond"><img src="«DATA_URI 330 octets»"><span class="pointe"></span></span>Empire</div>
+          <div class="dockb"><span class="rond"><img src="«DATA_URI 258 octets»"><small class="disc"></small><span class="pointe"></span></span>Famille</div>
+          <div class="dockb"><span class="rond"><img src="«DATA_URI 354 octets»"><span class="pointe"></span></span>Marché</div>
+          <div class="dockb"><span class="rond"><img src="«DATA_URI 410 octets»"><span class="pointe"></span></span>Plus</div>
+        </div>
+        <div class="co" style="left:16px;bottom:52px;top:auto">6</div>
+      </div>
+    </div>
+  </div>
+  <aside class="annexes">
+    <h2>La doctrine, prouvée par le corpus</h2>
+    <ol>
+      <li><div class="num">1</div><div><b>L'argent — seul or de l'écran</b><p>Chiffres serif sans contour,
+        et dessous un fil de 2 px : la part <b>propre</b> (or) contre <b>sale</b> (gris) — le ratio du
+        blanchiment lisible d'un coup d'œil, sans un élément de plus. Les « + $ » ambre montent des
+        bâtiments qui rapportent vers le solde (regarde le bar) : l'argent se voit gagner.</p></div></li>
+      <li><div class="num">2</div><div><b>Le manomètre — heat au centre, pour la tension</b><p>Ton appel,
+        et le corpus le soutient (le thermomètre central de Frostpunk). Un cadran à aiguille : arc bleu
+        (calme) → crème → braise. 🔥 cycle les trois états : à 78 % le chrome se réchauffe ; à 96 %
+        <b>DESCENTE</b> — l'aiguille tremble, la barre pulse, et regarde la ville : <b>le gyrophare du
+        flic en planque s'allume</b>. L'état vit dans le monde, pas que dans le chrome.</p></div></li>
+      <li><div class="num">3</div><div><b>L'horloge passe à l'aile droite</b><p>Jour 12 · Soirée · 21:40,
+        compacte, serif. Elle pilote toujours la scène jour/nuit (<i>game_minute</i>).</p></div></li>
+      <li><div class="num">4</div><div><b>Zéro badge permanent</b><p>Le corpus sombre n'a aucun badge
+        rouge : les événements arrivent en bandeaux éphémères (rapport d'un lieutenant, convocation) et
+        s'effacent. La ville elle-même porte l'info : néon allumé = ça rapporte.</p></div></li>
+      <li><div class="num">5</div><div><b>Fiche — verre fumé, un seul CTA</b><p>Plus sombre que la
+        carte, filet laiton haut, titre serif. Une seule action colorée : COLLECTER (l'or = l'argent) ;
+        le reste en boutons-filets.</p></div></li>
+      <li><div class="num">6</div><div><b>Dock — 4 ronds gravés, sans la Carte</b><p>On est déjà sur la
+        carte : elle sort du dock. Empire · Famille (point or discret, pas de badge rouge) · Marché ·
+        Plus. Boutons ronds charbon, icônes du lot DA gravées, trait laiton sous l'actif.</p></div></li>
+    </ol>
+    <div class="note"><b>Les comptes derrière ces choix :</b> 21 HUD lisibles sur 108 captures — les
+    4 jeux d'ambiance (Frozen City, Whiteout, Frostpunk ×2) ont tous UNE barre ≤ 5 modules à médaillon
+    central ; les 4X mafia chargés (SimCity ~11 éléments, City of Crime 3 zones) sont les repoussoirs.
+    Au repos, la v3 montre <b>8 éléments</b> (cluster sombre du corpus : 3-8) contre ~14 en v2.
+    <br><br><b>À trancher :</b> ① le médaillon porte l'horloge (proposé) ou le heat ? ② dock 4 boutons
+    (proposé) ou tiroir unique façon Pocket City ? ③ le respect/influence entre-t-il dans la barre ou
+    reste-t-il dans Profil ?</div>
+  </aside>
+</div>
+</div>
+<script>
+var tel=document.getElementById('tel');
+document.getElementById('bascule').addEventListener('click',function(){
+  tel.classList.toggle('jour');
+  this.textContent=tel.classList.contains('jour')?'☀️':'🌙';
+  document.getElementById('heure').textContent=tel.classList.contains('jour')?'14:10':'21:40';
+  document.getElementById('phase').textContent=tel.classList.contains('jour')?'Après-midi':'Soirée';
+});
+var etatHeat=0; var AIG={0:-42,1:34,2:52};
+document.getElementById('chaudb').addEventListener('click',function(){
+  etatHeat=(etatHeat+1)%3;
+  tel.classList.toggle('chaud',etatHeat===1);
+  tel.classList.toggle('descente',etatHeat===2);
+  document.getElementById('heatval').textContent=['37%','78%','96%'][etatHeat];
+  document.getElementById('heatlib').textContent=['Heat','Heat','Descente'][etatHeat];
+  if(etatHeat!==2) document.getElementById('aiguille').setAttribute('transform','rotate('+AIG[etatHeat]+' 30 34)');
+  document.getElementById('alerte').innerHTML=['✉ <b>Sal</b> a un rapport du soir — <b>lire</b>',
+    '⚠ Les indics parlent : la brigade s\u2019agite',
+    '🚨 <b>La brigade quadrille le Verge</b> — planquez la caisse'][etatHeat];
+});
+</script>
