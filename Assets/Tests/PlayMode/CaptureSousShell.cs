@@ -582,6 +582,184 @@ namespace MafiaCleanCity.Shell.Tests
         ///   sinon elle accuserait les planches hors shell, exactement comme la garde d'échelle.
         /// ⚠️ Elle n'asserte RIEN sur la valeur du montant : le compte gelé n'est pas son sujet,
         ///   c'est celui de la paire d'identité et de TD-640.</summary>
+        /// <summary>⛔⛔ UN TEXTE POSÉ SUR L'ART A-T-IL VRAIMENT UN FOND ? La garde d'EFFET qui
+        /// remplace trois gardes de PARAMÈTRE.
+        ///
+        /// LE DÉFAUT DE CLASSE. Le voile du dock et les plaques du district sont posés par
+        /// `AlphaVoileSurFondQuelconque` — un alpha ajusté, déclaré, avec son résidu. C'est
+        /// honnête et c'est **une garantie d'OPACITÉ, jamais de CONTRASTE** : le code le dit
+        /// lui-même (« le dock flotte sur l'ART ⇒ fond inconnu »). Sur un mur sombre le libellé
+        /// rend 8:1 ; sur l'eau claire d'un port, 3,5:1. Aucune des trois valeurs n'a bougé depuis
+        /// le 25 août — vérifié par `git log` sur le bloc, sur la fonction et sur le jeton — et
+        /// pourtant deux juges ⊥ ont mesuré 4,91:1 puis 3,54:1. *Ce n'est pas une régression :
+        /// c'est un alpha fixe sur un art variable, et il n'existe aucune valeur qui tienne
+        /// partout.*
+        ///
+        /// ⇒ LA GRANDEUR EST DONC LE CONTRASTE RENDU, et il ne se lit que sur l'image. Méthode
+        ///   reprise de l'instrument du juge (`m45`, `m47`), pour que nos deux mesures soient
+        ///   comparables plutôt que concurrentes :
+        ///   · l'ENCRE = les pixels proches de la couleur que le composant déclare porter ;
+        ///   · le FOND = la MÉDIANE des pixels situés à plus de `BandeMorteCss` de toute encre —
+        ///     **la bande morte est le cœur de la méthode**, pas un détail : trois sondes de ce
+        ///     dépôt ont déjà rendu « 100 % sous le seuil » en mesurant, à chaque fois, la frange
+        ///     d'anti-crénelage qui entoure chaque glyphe. Tout ce qui interroge « le voisin » la
+        ///     rencontre d'abord.
+        ///   · et on rapporte AUSSI le fond le plus CLAIR (95ᵉ centile) : c'est lui qui décide du
+        ///     pire cas, et c'est le seul chiffre qui ait un sens sur un art qui défile.
+        /// ⚠️ Elle asserte sur le fond MÉDIAN et publie le pire cas sans l'asserter : un art peut
+        ///   légitimement porter un éclat ponctuel. Ce qui doit rougir, c'est un texte dont le fond
+        ///   TYPIQUE ne tient pas — pas un texte malchanceux sur trois pixels.
+        /// ⚠️ Elle se déclare HORS SUJET si elle ne trouve pas d'encre : un libellé absent est le
+        ///   sujet d'une autre garde, et accuser ici rendrait un contraste de bruit.
+        /// ⚠️⚠️ LIMITE CONNUE, ÉCRITE PLUTÔT QUE TUE : la boîte est dérivée des coins MONDE du
+        ///   rect, donc un texte TOURNÉ (les libellés de quartier de ③ suivent la trame de leur
+        ///   quartier) rend une hauteur NÉGATIVE et sort en « hors sujet ». Mesuré : 3 des 18 noms
+        ///   de ③ y échappent. Ce n'est pas une garde qui ment — elle le DIT, avec ses dimensions —
+        ///   mais sa couverture est de 15/18 sur cet écran, et le chiffre doit voyager avec elle.
+        ///   *Un dénominateur non publié se lit comme une couverture totale.* La forme qui fermera
+        ///   ce reste est une boîte alignée sur l'axe du texte, pas un élargissement du rect.</summary>
+        /// <summary>Les cibles de la garde ci-dessus, RAMASSÉES plutôt que nommées : tous les
+        /// textes du slot de contenu et du dock. Nommer deux libellés fermerait deux instances ;
+        /// c'est la CLASSE « un texte posé sur l'art » qu'il faut couvrir, et un texte neuf doit y
+        /// entrer sans que personne s'en souvienne.
+        /// ⚠️ Sur-ramasser est SANS DANGER ici, et c'est ce qui rend le geste possible : la garde
+        /// se déclare hors sujet dès qu'elle ne trouve pas d'encre à la couleur déclarée, ou pas
+        /// assez de fond hors bande morte. Un texte sur un aplat opaque en sort donc tout seul,
+        /// sans liste d'exceptions à tenir à jour — *une allowlist est une liste qui vieillit.*
+        /// La couleur d'encre vient du composant lui-même (`text.color`), jamais d'un jeton
+        /// recopié : c'est la seule source qui ne peut pas diverger de ce qui est dessiné.</summary>
+        public static List<(RectTransform, Color, string)> TextesPosesSurLArt(AppShell shell)
+        {
+            var cibles = new List<(RectTransform, Color, string)>();
+            if (shell == null) return cibles;
+            foreach (Transform racine in new[] { (Transform)shell.ContentSlot, (Transform)shell.TabBarRoot })
+            {
+                if (racine == null) continue;
+                foreach (TMPro.TextMeshProUGUI txt in racine.GetComponentsInChildren<TMPro.TextMeshProUGUI>(false))
+                {
+                    if (txt == null || string.IsNullOrWhiteSpace(txt.text)) continue;
+                    cibles.Add(((RectTransform)txt.transform, txt.color,
+                        $"{racine.name}/{txt.name} «{(txt.text.Length > 22 ? txt.text.Substring(0, 22) + "…" : txt.text)}»"));
+                }
+            }
+            return cibles;
+        }
+
+        public static void ContrasteSurArtOuEchoue(Texture2D tex, Canvas canvas, string nom,
+            List<(RectTransform zone, Color encre, string libelle)> cibles, List<string> echecs)
+        {
+            const float SeuilContraste = 4.5f;   // plancher de lisibilité, celui des juges
+            const float BandeMorteCss = 4f;      // ≥ celle de `m47` — la frange vit en deçà
+            const float Tolerance = 30f;         // par canal, autour de la couleur déclarée
+
+            if (cibles == null || cibles.Count == 0) return;
+            RectTransform crt = (RectTransform)canvas.transform;
+            float uxMin = crt.rect.xMin, uyMin = crt.rect.yMin;
+            float parU = tex.width / crt.rect.width;             // px de texture par unité canvas
+            int bandeMorte = Mathf.Max(2, Mathf.RoundToInt(BandeMorteCss * parU * (1280f / 392f) / (1280f / 392f)));
+
+            foreach ((RectTransform zone, Color encre, string libelle) in cibles)
+            {
+                if (zone == null) continue;
+                var coins = new Vector3[4];
+                zone.GetWorldCorners(coins);
+                // monde → local canvas → pixels de texture (l'axe Y de la texture monte, comme le canvas)
+                int x0 = Mathf.Clamp(Mathf.FloorToInt((canvas.transform.InverseTransformPoint(coins[0]).x - uxMin) * parU), 0, tex.width - 1);
+                int x1 = Mathf.Clamp(Mathf.CeilToInt((canvas.transform.InverseTransformPoint(coins[2]).x - uxMin) * parU), 0, tex.width - 1);
+                int y0 = Mathf.Clamp(Mathf.FloorToInt((canvas.transform.InverseTransformPoint(coins[0]).y - uyMin) * parU), 0, tex.height - 1);
+                int y1 = Mathf.Clamp(Mathf.CeilToInt((canvas.transform.InverseTransformPoint(coins[2]).y - uyMin) * parU), 0, tex.height - 1);
+                if (x1 - x0 < 3 || y1 - y0 < 3)
+                {
+                    Debug.Log($"[CONTRASTE-ART] {nom} · {libelle} : HORS SUJET — zone de {x1 - x0}x{y1 - y0} px");
+                    continue;
+                }
+
+                var estEncre = new System.Func<Color, bool>(c =>
+                    Mathf.Abs(c.r - encre.r) * 255f < Tolerance &&
+                    Mathf.Abs(c.g - encre.g) * 255f < Tolerance &&
+                    Mathf.Abs(c.b - encre.b) * 255f < Tolerance);
+
+                var encres = new List<Color>();
+                for (int y = y0; y <= y1; y++)
+                    for (int x = x0; x <= x1; x++)
+                    { Color c = tex.GetPixel(x, y); if (estEncre(c)) encres.Add(c); }
+                if (encres.Count < 20)
+                {
+                    Debug.Log($"[CONTRASTE-ART] {nom} · {libelle} : HORS SUJET — {encres.Count} px d'encre "
+                              + "trouvés, trop peu pour une médiane (le libellé est absent, ou d'une autre teinte)");
+                    continue;
+                }
+
+                // FOND : au-delà de la bande morte, dans une fenêtre élargie du même montant.
+                var fonds = new List<Color>();
+                int e0 = Mathf.Max(0, x0 - bandeMorte), e1 = Mathf.Min(tex.width - 1, x1 + bandeMorte);
+                int f0 = Mathf.Max(0, y0 - bandeMorte), f1 = Mathf.Min(tex.height - 1, y1 + bandeMorte);
+                for (int y = f0; y <= f1; y++)
+                    for (int x = e0; x <= e1; x++)
+                    {
+                        bool encrePres = false;
+                        for (int dy = -bandeMorte; dy <= bandeMorte && !encrePres; dy += 2)
+                            for (int dx = -bandeMorte; dx <= bandeMorte && !encrePres; dx += 2)
+                            {
+                                int ax = Mathf.Clamp(x + dx, 0, tex.width - 1), ay = Mathf.Clamp(y + dy, 0, tex.height - 1);
+                                if (estEncre(tex.GetPixel(ax, ay))) encrePres = true;
+                            }
+                        if (!encrePres) fonds.Add(tex.GetPixel(x, y));
+                    }
+                if (fonds.Count < 20)
+                {
+                    Debug.Log($"[CONTRASTE-ART] {nom} · {libelle} : HORS SUJET — {fonds.Count} px de fond "
+                              + "hors bande morte (la zone est saturée d'encre)");
+                    continue;
+                }
+
+                Color encreMed = Mediane(encres);
+                fonds.Sort((a, b) => Luminance(a).CompareTo(Luminance(b)));
+                Color fondMed = fonds[fonds.Count / 2];
+                Color fondClair = fonds[Mathf.Min(fonds.Count - 1, (int)(0.95f * fonds.Count))];
+                float ratio = Contraste(encreMed, fondMed);
+                float ratioPire = Contraste(encreMed, fondClair);
+                Debug.Log($"[CONTRASTE-ART] {nom} · {libelle} : encre={Hex(encreMed)} ({encres.Count} px) "
+                          + $"fond médian={Hex(fondMed)} ⇒ **{ratio:F2}:1** · fond le plus clair (p95)="
+                          + $"{Hex(fondClair)} ⇒ {ratioPire:F2}:1 · bande morte {bandeMorte} px · seuil {SeuilContraste:F1}");
+                if (ratio < SeuilContraste)
+                    echecs.Add($"{nom} · {libelle} : {ratio:F2}:1 sur son fond médian, sous le plancher de "
+                               + $"{SeuilContraste:F1}:1 (pire cas mesuré {ratioPire:F2}:1). Un texte posé sur l'art "
+                               + "n'a pas de fond garanti par un alpha : il en faut un mesuré. Ne PAS remonter "
+                               + "l'alpha jusqu'à ce que ça passe — ce serait régler sur le seuil, sur CET art, "
+                               + "et faux sur le suivant.");
+            }
+        }
+
+        private static Color Mediane(List<Color> v)
+        {
+            var r = new List<float>(); var g = new List<float>(); var b = new List<float>();
+            foreach (Color c in v) { r.Add(c.r); g.Add(c.g); b.Add(c.b); }
+            r.Sort(); g.Sort(); b.Sort();
+            return new Color(r[r.Count / 2], g[g.Count / 2], b[b.Count / 2]);
+        }
+
+        private static float Luminance(Color c) => 0.2126f * c.r + 0.7152f * c.g + 0.0722f * c.b;
+
+        /// <summary>WCAG : luminance RELATIVE, donc canaux LINÉARISÉS. Les linéariser est le point —
+        /// une version sur les octets bruts rend des ratios plausibles et faux, et c'est la façon
+        /// naturelle de l'écrire.</summary>
+        private static float Contraste(Color a, Color b)
+        {
+            float la = LumRelative(a), lb = LumRelative(b);
+            if (la < lb) { float t = la; la = lb; lb = t; }
+            return (la + 0.05f) / (lb + 0.05f);
+        }
+
+        private static float LumRelative(Color c)
+            => 0.2126f * Lin(c.r) + 0.7152f * Lin(c.g) + 0.0722f * Lin(c.b);
+
+        private static float Lin(float u)
+            => u <= 0.04045f ? u / 12.92f : Mathf.Pow((u + 0.055f) / 1.055f, 2.4f);
+
+        private static string Hex(Color c)
+            => $"#{Mathf.RoundToInt(c.r * 255):x2}{Mathf.RoundToInt(c.g * 255):x2}{Mathf.RoundToInt(c.b * 255):x2}";
+
         /// <summary>⛔⛔ LA PLANCHE A-T-ELLE DE L'ENCRE ? Le plancher qui manquait — et il manquait
         /// parce que la garde voisine porte sur la VARIÉTÉ, pas sur l'existence d'un dessin.
         ///

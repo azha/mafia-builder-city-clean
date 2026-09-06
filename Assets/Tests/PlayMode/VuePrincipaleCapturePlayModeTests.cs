@@ -566,6 +566,18 @@ namespace MafiaCleanCity.Capture.Tests
             // Le plancher d'encre — 4 planches du dépôt étaient vides avec des tests verts.
             MafiaCleanCity.Shell.Tests.CaptureSousShell.PlancherDEncre(tex, chemin);
 
+            // B1+M5 — le contraste RENDU de chaque texte posé sur l'art. ⚠️ RÉGIME DÉCLARÉ : ce
+            // premier tour MESURE et n'échoue pas. Poser le plancher avant de savoir ce qu'il
+            // accuse, ce serait choisir le seuil pour qu'il passe, ou rougir la moitié de l'écran
+            // sans savoir laquelle a tort. Les nombres d'abord, l'assertion au tour suivant.
+            {
+                var ecC = new System.Collections.Generic.List<string>();
+                MafiaCleanCity.Shell.Tests.CaptureSousShell.ContrasteSurArtOuEchoue(
+                    tex, canvas, chemin,
+                    MafiaCleanCity.Shell.Tests.CaptureSousShell.TextesPosesSurLArt(shell), ecC);
+                foreach (string e in ecC) Debug.Log("[CONTRASTE-ART][SOUS-SEUIL] " + e);
+            }
+
             // ⛔ ANTI-MENSONGE : une cible noire produirait un PNG parfaitement valide et vide.
             int clairs = 0;
             foreach (Color c in tex.GetPixels())
