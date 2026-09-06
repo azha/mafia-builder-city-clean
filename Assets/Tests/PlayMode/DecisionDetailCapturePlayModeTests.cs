@@ -79,7 +79,24 @@ namespace MafiaCleanCity.Shell.Tests
             Assert.AreEqual(AppShell.Tab.Empire, shell.CurrentTab,
                 "acquisition de session du shell non résolue — toute capture prise ici serait celle d'un autre écran");
 
-            shell.ActivateTab(AppShell.Tab.Empire);
+            // ⛔⛔⛔ CE `ActivateTab(Empire)` DÉTRUISAIT CE QUE LE TEST VENAIT ATTENDRE — et c'est
+            //    la garde du shell qui avait raison, pas lui. Les quatre panneaux de l'Accueil ne
+            //    sont montés qu'UNE fois par vie de shell, à la fin de l'acquisition de session, et
+            //    la pose est gardée par `MontagesEffectues == generation` : *« le monde a-t-il bougé
+            //    sous moi ? »*. Or `MontagesEffectues++` s'incrémente à CHAQUE construction de
+            //    locataire (`ConstruireLocataire`, garde structurelle) — donc réactiver l'onglet que
+            //    le shell venait d'activer construit un CityMap de plus, fait échouer la garde, et
+            //    les panneaux ne sont **jamais** posés. Sans bloc HL, ⑤ n'a aucun déclencheur.
+            //    ★★ TD-624 ouvrait la piste sur le STATUT de la carte (« `session_ref` ? `surfaced_at` ? »).
+            //      **Réfuté par la mesure** : `session/open` sur le compte de capture SERT bien un
+            //      `hl_card` complet (`card_id`, `decision_type_key=AUTONOMY_REPORTS_PENDING`, deux
+            //      options). La donnée était là ; c'est le test qui empêchait le montage.
+            //      *Devant un bloc qui ne se monte pas, lire ce que le back a servi coûte une requête
+            //      et écarte toute une famille d'hypothèses.*
+            //    ⇒ On ne réactive plus rien : le shell monte Empire ET ses panneaux tout seul, et
+            //      l'attente ci-dessous est le seul geste nécessaire. La ligne retirée n'était pas
+            //      « le même chemin que le joueur » — un joueur n'appuie pas sur l'onglet où il est
+            //      déjà au moment exact où sa session s'ouvre.
             // ⑤ n'a pas d'onglet : c'est un écran de DÉTAIL, monté en surimpression quand le bloc
             // de l'Accueil demande son ouverture. On déclenche donc le MÊME chemin que le joueur.
             HighestLeverageCardController bloc = null;
@@ -177,6 +194,8 @@ namespace MafiaCleanCity.Shell.Tests
             canvas.planeDistance = planPrecedent;
 
             System.IO.File.WriteAllBytes(Chemin, tex.EncodeToPNG());
+            // Le plancher d'encre — 4 planches du dépôt étaient vides avec des tests verts.
+            MafiaCleanCity.Shell.Tests.CaptureSousShell.PlancherDEncre(tex, Chemin);
             // ⛔ « PAS NOIRE » EST LA MAUVAISE PROPRIÉTÉ, et un gris uniforme la satisfait — c'est
             // exactement ce qui est arrivé au premier essai : 2 592 000 pixels sur 2 592 000
             // déclarés « non noirs », pour une image ENTIÈREMENT VIDE. La propriété qui discrimine

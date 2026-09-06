@@ -4,6 +4,8 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 using UnityEngine.UI;
+using MafiaCleanCity.Tests;   // ProductionClickSupport — le geste, jamais la UnityEvent nue
+using Object = UnityEngine.Object;
 
 namespace MafiaCleanCity.Shell.Tests
 {
@@ -61,7 +63,22 @@ namespace MafiaCleanCity.Shell.Tests
             // ⇒ Ce qu'on juge ici est la MISE EN SCÈNE des trois jetons, PAS la balance du jeu. Un nom qui
             // tairait cela ferait passer une capture sous seuil forcé pour une capture du chemin nominal —
             // et c'est exactement le genre d'image qu'on relit six mois plus tard en la croyant probante.
-            const string Chemin = "Assets/Screenshots/revue_du_jour_seuil-force-0.1_1080x2400.png";
+            // ⛔⛔⛔ DEUX CHEMINS, ET C'EST LA CORRECTION D'UN DÉFAUT MESURÉ LE 2026-09-06 : ce test
+            //    A ÉCRASÉ la planche aux trois jetons avec une image de COMPTOIR VIDE, et il est
+            //    passé au VERT en le faisant. Le nom du fichier promet une mise en scène (seuil de
+            //    déviation forcé à 0,1) que rien dans ce test ne pose — elle était faite à la main
+            //    sur le registre, hors du code. Le jour où la pile ne la porte plus, l'écran rend
+            //    son état vide, toutes les gardes restent vertes (521 teintes, bonne taille, bon
+            //    frère) et la planche MENT sur son propre nom.
+            //    ⇒ *Une capture est une mesure DATÉE : la question n'est pas « le commit
+            //      déclare-t-il l'état ? » mais « sous quel état a-t-elle été prise ? »* Ici la
+            //      réponse est dans l'image, et le nom du fichier doit la porter.
+            //    ⇒ Le chemin est donc CHOISI PAR L'ÉTAT OBSERVÉ, jamais fixé d'avance. La planche
+            //      « seuil forcé » n'est réécrite QUE si des signalements sont réellement rendus ;
+            //      sinon on écrit la planche du comptoir vide, qui est un artefact légitime — et la
+            //      première reste ce qu'elle est, une mesure prise sous un régime qu'on sait nommer.
+            const string CheminMisEnScene = "Assets/Screenshots/revue_du_jour_seuil-force-0.1_1080x2400.png";
+            const string CheminVide = "Assets/Screenshots/revue_du_jour_comptoir-vide_1080x2400.png";
 
             yield return ChargerLaSceneDeDemarrageDuBuild();
             AppShell shell = SondeShellDansLaScene(sceneDeDemarrage);
@@ -79,7 +96,35 @@ namespace MafiaCleanCity.Shell.Tests
             Assert.AreEqual(AppShell.Tab.Empire, shell.CurrentTab,
                 "acquisition de session du shell non résolue — toute capture prise ici serait celle d'un autre écran");
 
+            // ⛔⛔ PÉRIMÉE PAR ⑱, ET LE ROUGE NE DISAIT PAS POURQUOI. Cette suite attendait que
+            //    `ActivateTab(More)` monte ⑯ directement. C'était vrai quand « Plus » était une
+            //    destination ; ce ne l'est plus depuis qu'il est un MENU — l'onglet monte la liste,
+            //    et l'écran est à UN GESTE de plus. La garde a fait son travail (« non monté »),
+            //    mais son message accusait le montage alors que c'est le CHEMIN qui avait bougé.
+            //    ★ *Un chemin joueur qui gagne une étape périme toutes les fixtures qui le
+            //      raccourcissaient* — et elles ne rougissent qu'au run suivant, loin du commit.
+            // ⇒ On refait le geste du joueur : ouvrir le menu, puis CLIQUER l'entrée nommée.
+            //   Par `ProductionClickSupport.Click`, jamais `onClick.Invoke()` : une entrée rendue
+            //   non interactive laisserait le second vert et la capture montrerait autre chose.
             shell.ActivateTab(AppShell.Tab.More);
+            yield return null;
+            const string NomEntree = "MenuPlus_LA REVUE DU JOUR";
+            Button entree = null;
+            foreach (Button b in Object.FindObjectsByType<Button>(FindObjectsSortMode.None))
+            {
+                if (b.gameObject.name == NomEntree) { entree = b; break; }
+            }
+            // ⚠️ L'ENTRÉE NOMMÉE, JAMAIS LA PREMIÈRE `MenuPlus_*` — le menu en porte une vingtaine
+            //    et prendre la première capturerait un autre écran, à la bonne taille, avec des
+            //    teintes en quantité : toutes les gardes ci-dessous resteraient vertes.
+            Assert.IsNotNull(entree,
+                $"« {NomEntree} » introuvable dans le menu « Plus ». Soit le libellé de la table des "
+                + "destinations a changé (il est la SOURCE, ce nom n'en est que la copie), soit le menu "
+                + "ne s'est pas construit. Dans les deux cas la capture montrerait une autre destination.");
+            Assert.IsTrue(ProductionClickSupport.Click(entree),
+                $"« {NomEntree} » refuse le clic de production : un doigt ne pourrait pas l'actionner, "
+                + "et une capture prise après un clic qui n'a rien fait montre l'écran PRÉCÉDENT.");
+
             DailyReviewScreenController revue = null;
             float montage = 0f;
             while (montage < 15f && revue == null)
@@ -89,7 +134,8 @@ namespace MafiaCleanCity.Shell.Tests
                 yield return null;
             }
             Assert.IsNotNull(revue,
-                "DailyReviewScreenController non monté sous l'onglet More — la capture montrerait une destination vide");
+                "DailyReviewScreenController non monté après le clic sur l'entrée du menu « Plus » — "
+                + "la capture montrerait une destination vide");
 
             // Laisser le chargement (signin → review → roster) aboutir : une capture prise avant
             // rendrait un comptoir vide et l'écran aurait l'air correct.
@@ -102,6 +148,14 @@ namespace MafiaCleanCity.Shell.Tests
             Canvas.ForceUpdateCanvases();
             yield return null;
             yield return null;
+
+            // LE RÉGIME SE DÉCLARE, il ne se suppose pas. Un dispositif conditionnel qui ne dit pas
+            // s'il s'est activé ressemble trait pour trait à un dispositif appliqué.
+            bool misEnScene = revue.RenderedCardCount > 0 && !revue.RenderedEmptyState;
+            string chemin = misEnScene ? CheminMisEnScene : CheminVide;
+            Debug.Log($"[CAPTURE régime] cartes={revue.RenderedCardCount} vide={revue.RenderedEmptyState} " +
+                      $"⇒ {(misEnScene ? "MISE EN SCÈNE (seuil forcé actif sur la pile)" : "COMPTOIR VIDE (le seuil n'est PAS forcé — la planche aux jetons n'est pas touchée)")} " +
+                      $"⇒ {chemin}");
 
             // ⚠️ `FindFirstObjectByType<Canvas>` rend le PREMIER canvas de la scène, pas celui qui
             // porte l'écran : basculer celui-là en mode caméra ne rendrait rien de ce qu'on veut
@@ -164,7 +218,9 @@ namespace MafiaCleanCity.Shell.Tests
             canvas.worldCamera = cameraPrecedente;
             canvas.planeDistance = planPrecedent;
 
-            System.IO.File.WriteAllBytes(Chemin, tex.EncodeToPNG());
+            System.IO.File.WriteAllBytes(chemin, tex.EncodeToPNG());
+            // Le plancher d'encre — 4 planches du dépôt étaient vides avec des tests verts.
+            MafiaCleanCity.Shell.Tests.CaptureSousShell.PlancherDEncre(tex, chemin);
             // ⛔ « PAS NOIRE » EST LA MAUVAISE PROPRIÉTÉ, et un gris uniforme la satisfait — c'est
             // exactement ce qui est arrivé au premier essai : 2 592 000 pixels sur 2 592 000
             // déclarés « non noirs », pour une image ENTIÈREMENT VIDE. La propriété qui discrimine
@@ -176,7 +232,7 @@ namespace MafiaCleanCity.Shell.Tests
             {
                 teintes.Add((Mathf.RoundToInt(c.r * 31) << 10) | (Mathf.RoundToInt(c.g * 31) << 5) | Mathf.RoundToInt(c.b * 31));
             }
-            Debug.Log($"[CAPTURE] {Chemin} {Largeur}x{Hauteur} — {teintes.Count} teintes distinctes · " +
+            Debug.Log($"[CAPTURE] {chemin} {Largeur}x{Hauteur} — {teintes.Count} teintes distinctes · " +
                       $"cartes={revue.RenderedCardCount} vide={revue.RenderedEmptyState}");
             // ⛔⛔ CETTE GARDE A CERTIFIÉ UN ÉCRAN ABSENT — mesuré le 2026-09-02 sur ㉟. Elle
             // comptait les teintes de TOUTE l'image, donc elle passait au vert dès que N'IMPORTE
@@ -204,7 +260,19 @@ namespace MafiaCleanCity.Shell.Tests
                 + "taille par défaut d'un RectTransform, donc il ne dessine rien et la capture montre "
                 + "les écrans du DESSOUS. Le compte de teintes serait vert quand même.");
             Assert.Greater(teintes.Count, 12,
-                $"{Chemin} ne porte que {teintes.Count} teintes — c'est un fond, pas un écran rendu.");
+                $"{chemin} ne porte que {teintes.Count} teintes — c'est un fond, pas un écran rendu.");
+            // ⛔ ET LA GARDE QUI MANQUAIT, celle qui aurait vu l'écrasement : la planche mise en
+            //    scène ne peut PAS sortir d'un écran vide. Le compte de teintes ne la voit pas —
+            //    l'état vide en rend 521, largement au-dessus du plancher. *La grandeur qui
+            //    discrimine n'est pas la richesse de l'image, c'est ce que l'écran a rendu.*
+            if (chemin == CheminMisEnScene)
+            {
+                Assert.Greater(revue.RenderedCardCount, 0,
+                    "la planche « seuil-force-0.1 » promet des signalements et l'écran n'en a rendu " +
+                    "aucun : l'écrire ici ferait passer un comptoir vide pour la mise en scène.");
+                Assert.IsFalse(revue.RenderedEmptyState,
+                    "la planche « seuil-force-0.1 » ne peut pas être l'état vide.");
+            }
 
             if (camGo != null) Object.Destroy(camGo);
             Object.Destroy(rt);

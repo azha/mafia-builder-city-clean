@@ -124,7 +124,7 @@ namespace MafiaCleanCity.Operational
             // montage ; celui-ci à la frame suivante, quand tous les frères de ce parent ont eu le
             // temps d'être posés. Un seul des deux laisse une fenêtre où l'écran passe dessous.
             if (mountParent != null) transform.SetAsLastSibling();
-            StartCoroutine(Amorcer());
+            amorce = StartCoroutine(Amorcer());
         }
 
         /// <summary>Charger dès le montage — sans quoi l'écran reste un squelette. ㊴ portait ce
@@ -133,6 +133,7 @@ namespace MafiaCleanCity.Operational
         private IEnumerator Amorcer()
         {
             if (string.IsNullOrEmpty(token)) yield break;   // hors session : état vide NOMMÉ
+            if (corpsImposeParUnTest) yield break;          // un test tient l'écran
             yield return Charger();
         }
 
@@ -201,8 +202,29 @@ namespace MafiaCleanCity.Operational
         /// <summary>Rend un corps FABRIQUÉ, sans réseau — réservé aux tests (patron ㊲,
         /// `RendrePourTest`). Ne prouve jamais que le back émet ce corps, seulement ce que
         /// l'écran EN FAIT.</summary>
+        /// <summary>⛔ FERME LA COURSE ENTRE `Start()` ET LE RENDU DE TEST. Une suite qui pose un
+        /// VRAI jeton puis appelle `RendrePourTest` laisse `Amorcer()` partir en parallèle :
+        /// l'auto-chargement va chercher les données réelles et ÉCRASE le corps fabriqué, à une
+        /// frame près. *Un test qui perd cette course lit une vérité — celle d'un autre monde que
+        /// le sien*, et son rouge accuse alors le résolveur au lieu de l'ordonnancement.
+        /// ⚠️ Le garde-fou `IsNullOrEmpty(token)` NE COUVRE PAS ce cas : il protège l'écran monté
+        /// hors session, pas celui à qui un test donne une identité PUIS impose un corps.
+        /// ⚠️ Relu APRÈS CHAQUE `yield`, jamais seulement à l'entrée : la coroutine peut être déjà
+        /// partie quand le test pose le drapeau. Mesuré sur ⑨ (patron `2efdf2e`).</summary>
+        private bool corpsImposeParUnTest;
+        private Coroutine amorce;
+
         public void RendrePourTest(GetNewsFeedResponseDto dto)
         {
+            corpsImposeParUnTest = true;
+            // ⛔ ON ARRÊTE L'AUTO-CHARGEMENT, on ne se contente pas de le décourager. Le drapeau
+            // seul ne ferme que le cas facile (le test rend AVANT que la coroutine ne parte) :
+            // si elle est déjà dans son appel réseau, elle rendra son résultat PAR-DESSUS le corps
+            // du test quelques frames plus tard, et `Charger()` applique son état dans plusieurs
+            // branches — y semer des gardes serait fragile et incomplet.
+            // ★ *Fermer une course en demandant poliment à l'autre de renoncer suppose qu'il
+            //   repasse par un point où on peut le lui dire.* `StopCoroutine` ne le suppose pas.
+            if (amorce != null) { StopCoroutine(amorce); amorce = null; }
             EnsureInitialized();
             AppliquerEtat(dto);
         }

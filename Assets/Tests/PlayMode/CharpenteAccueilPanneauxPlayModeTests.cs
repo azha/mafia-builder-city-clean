@@ -330,8 +330,26 @@ namespace MafiaCleanCity.Shell.Tests
                 "l'identifiant rendu doit ÉGALER celui du ground-truth — un identifiant ISSU DE LA RÉPONSE " +
                 "BACK (§2), jamais une valeur fabriquée localement ni une coïncidence de type.");
             Assert.AreEqual(verite.hl_card.decision_type_key, hlCard.CurrentCard.decision_type_key);
-            Assert.IsTrue(hlCard.RenderedTexts.Any(t => t == hlCard.CurrentCard.decision_type_key),
-                "le texte RENDU doit porter la clé de décision reçue du back (pas seulement le test hook)");
+            // ⛔⛔ CETTE GARDE EXIGEAIT LA CLÉ MACHINE À L'ÉCRAN — elle ÉPINGLAIT le défaut.
+            //    Elle assertait que le texte rendu contient `decision_type_key` TEL QUEL, ce qui
+            //    n'était satisfaisable qu'en affichant `AUTONOMY_REPORTS_PENDING` au joueur. Le
+            //    jour où le titre passe par un résolveur — c'est-à-dire le jour où le défaut est
+            //    corrigé — elle rougit. *Une garde qu'on ne peut satisfaire qu'en cassant ce
+            //    qu'elle protège se REMPLACE ; elle ne s'assouplit pas et ne s'ignore pas.*
+            //    ⇒ Sa propriété réelle, celle qu'elle voulait tenir, est : **le panneau rend la
+            //      décision que le BACK a envoyée, pas un placeholder ni le hook de test**. On
+            //      l'asserte donc sur le libellé DÉRIVÉ de cette clé-là — la clé reste la source,
+            //      et la traduction cesse d'être interdite.
+            //    ⚠️ Avec ses deux mondes dégénérés nommés : un libellé VIDE, et un libellé qui
+            //      serait celui de l'état « rien à signaler » — les deux satisferaient un simple
+            //      « le texte contient quelque chose ».
+            string libelleAttendu = MafiaCleanCity.Shell.LibellesDecision.Type(hlCard.CurrentCard.decision_type_key);
+            Assert.IsNotEmpty(libelleAttendu,
+                "le résolveur ne rend rien pour la clé reçue — le panneau afficherait un titre vide");
+            Assert.IsTrue(hlCard.RenderedTexts.Any(x => x == libelleAttendu),
+                $"le texte RENDU doit porter le libellé DÉRIVÉ de la clé reçue du back (« {libelleAttendu} » " +
+                $"pour « {hlCard.CurrentCard.decision_type_key} »), pas seulement le test hook. " +
+                "Rendu : [" + string.Join(" · ", hlCard.RenderedTexts) + "]");
 
             // ── 3. ExceptionQueue — MONDE RÉEL : la file SEEDÉE (§Phase-20). Anti-vacuité D'ABORD :
             //      sans au moins une carte RENDUE, chercher une ligne par nom serait vrai À VIDE. ──

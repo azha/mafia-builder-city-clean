@@ -29,5 +29,15 @@ namespace MafiaCleanCity.CityMap
         public float y_px;
         public float x_frac;
         public float y_frac;
+
+        /// <summary>L'inclinaison du nom, EN CONVENTION D'IMAGE : 0° = horizontale, **positif =
+        /// sens HORAIRE** (y descend, comme en SVG et en pixels).
+        /// ⚠️ Unity tourne à l'INVERSE : `Quaternion.Euler(0, 0, -angle_deg)`. Le fichier d'ancres
+        /// porte cette convention en toutes lettres (`angle_convention`) — et c'est la seule chose
+        /// qui empêche l'aiguille inversée : une garde sur le SIGNE de la constante serait
+        /// satisfaite par les deux mondes.
+        /// C'est une propriété du PROFIL de trame — six profils, six angles, amplitude 28° — lue
+        /// dans la source d'auteur (`geo_brennar.py`, champ `rot`), pas dérivée d'une image.</summary>
+        public float angle_deg;
     }
 }

@@ -578,6 +578,28 @@ namespace MafiaCleanCity.Operational.Lieutenant
             if (string.IsNullOrEmpty(LastRecruitedId)) { SetOutcome(Lib("Recrutez ou ouvrez d'abord un lieutenant."), AccentModerate); yield break; }
             if (string.IsNullOrEmpty(reassignBuildingId)) { SetOutcome(Lib("Choisissez un bâtiment de destination."), AccentModerate); yield break; }
 
+            // ⛔⛔ LA DISPONIBILITÉ, SERVIE ET JAMAIS LUE — le client envoyait le POST quoi qu'il
+            // arrive et laissait le serveur refuser en 409. Le joueur voyait le geste offert, le
+            // confirmait, et récoltait une erreur. *Un geste impossible qu'on laisse cliquer n'est
+            // pas une erreur de serveur : c'est une promesse que l'écran n'avait pas le droit de
+            // faire.* ⚠️ On ne refuse QUE sur une valeur explicitement non disponible : bandes non
+            // chargées ou champ vide ⇒ on laisse passer, et c'est le serveur qui tranche — une
+            // garde qui bloquerait sur l'ignorance interdirait le geste à tout joueur dont les
+            // bandes n'ont pas encore été relues.
+            string dispo = CurrentBands != null ? CurrentBands.reassign_availability : null;
+            if (!string.IsNullOrEmpty(dispo) && dispo != "AVAILABLE")
+            {
+                // ⚠️ LITTÉRAL, PAS `Lib` — ET J'AVAIS REFAIT LA FAUTE QUE CE FICHIER DOCUMENTE.
+                //    La clé que `Libelle.De` dériverait de cette phrase n'est PAS servie (mesuré
+                //    sur le bundle `fr` réel). D-6 l'avait posée en `Lib()`, ce qui ajoutait un
+                //    repli de plus — exactement ce que `FamilleLabels.Mode` raconte dix lignes de
+                //    commentaire plus haut, à propos d'une clé de repli que j'avais inventée la
+                //    veille. *Nommer un piège ne protège pas de lui, et l'avoir nommé récemment ne
+                //    protège pas davantage.* La clé part en dette avec les trois autres.
+                SetOutcome("Ce lieutenant ne peut pas être réaffecté pour l'instant.", AccentModerate);
+                yield break;
+            }
+
             // A 2-building archetype sends its new target; a single-building archetype omits it (pass null), like recruit.
             string target = RuleModel.NeedsTarget(CurrentArchetype) ? reassignTargetBuildingId : null;
             bool moved = false;
@@ -847,14 +869,27 @@ namespace MafiaCleanCity.Operational.Lieutenant
 
             ClearStatusRows();
 
+            // ⛔ LE NOM EN TÊTE, ET IL MANQUAIT ICI AUSSI. Le panneau de détail décrivait
+            //    l'archétype, le rôle, le mode, l'état, les règles et l'ancienneté d'un lieutenant
+            //    — et ne le nommait jamais. `name` est servi par les DEUX routes de cette
+            //    projection ; D-1 ne l'avait déclaré que sur la liste.
+            // ⚠️ Le libellé est un LITTÉRAL, pas `Lib("Nom")` : la clé que `Libelle.De` dériverait
+            //    (`famille.ecran.nom`) n'est PAS servie — mesuré sur le bundle `fr` réel, 56 clés
+            //    `famille.ecran`, celle-là absente. L'employer ajouterait un repli et ferait rougir
+            //    `BundleReel_…_ZeroRepli`, la garde qui existe pour ça. La clé part en dette.
+            // ⚠️ Repli « — » quand le nom manque : l'état NOMMÉ vide, la même convention que la
+            //    phase du jour du bandeau. Jamais l'archétype, qui est la ligne d'en dessous : le
+            //    défaut de D-1 était exactement de laisser une grandeur prendre la place d'une
+            //    autre, et le repli est l'endroit le plus discret où le refaire.
+            AddStatusRow("Nom", string.IsNullOrWhiteSpace(b.name) ? "—" : b.name, "[*]", AccentMild);
             // archetype (COOK | SECURITY | LOGISTICS | BOOKKEEPER | LAUNDERING | DISTRIBUTION | UNKNOWN).
-            AddStatusRow(Lib("Archétype"), ArchetypeLabel(b.archetype), "[*]", AccentMild);
+            AddStatusRow(Lib("Archétype"), FamilleLabels.Archetype(b.archetype), "[*]", AccentMild);
             // granted_role (advisory | executor | delegated_owner | cohort_overseer).
             AddStatusRow(Lib("Rôle"), GrantedRoleLabel(b.granted_role), GrantedRoleGlyph(b.granted_role), AccentMild);
             // mode (tasked | delegated).
-            AddStatusRow(Lib("Mode"), ModeLabel(b.mode), ModeGlyph(b.mode), AccentMild);
+            AddStatusRow(Lib("Mode"), FamilleLabels.Mode(b.mode), ModeGlyph(b.mode), AccentMild);
             // op_state_band (SETTLING | ACTIVE | PAUSED | IDLE) — the delegated operational state (Phase-11 adds SETTLING).
-            AddStatusRow(Lib("État"), OpStateLabel(b.op_state_band), OpStateGlyph(b.op_state_band), OpStateAccent(b.op_state_band));
+            AddStatusRow(Lib("État"), FamilleLabels.Etat(b.op_state_band), OpStateGlyph(b.op_state_band), OpStateAccent(b.op_state_band));
             // rule_count_band (NONE | FEW | MANY) — the behavior-script rule count as a band (never the raw count).
             AddStatusRow(Lib("Règles"), RuleCountLabel(b.rule_count_band), RuleCountGlyph(b.rule_count_band), RuleCountAccent(b.rule_count_band));
 
@@ -932,31 +967,40 @@ namespace MafiaCleanCity.Operational.Lieutenant
         /// est comparé au compte réel — il faut le relever quand cette méthode grossit. TD-538.</summary>
         public void RendreTousLesLibelles()
         {
-            ArchetypeLabel("COOK");
-            ArchetypeLabel("SECURITY");
-            ArchetypeLabel("LOGISTICS");
-            ArchetypeLabel("BOOKKEEPER");
-            ArchetypeLabel("LAUNDERING");
-            ArchetypeLabel("DISTRIBUTION");
-            ArchetypeLabel("UNKNOWN");
-            ArchetypeLabel("__inconnu__");   // le repli nommé du résolveur
+            // ⛔⛔⛔ CETTE LISTE CERTIFIAIT LE TROU QU'ELLE DEVAIT MESURER. Elle énumérait SEPT
+            //    archétypes quand le résolveur en traite NEUF, et les deux manquants — plus un
+            //    troisième — sont exactement ceux dont le catalogue ne sert pas la clé. La garde
+            //    « zéro repli » était donc verte parce qu'elle ne demandait jamais les clés
+            //    absentes. *Une garde de couverture qui recopie sa population à la main mesure la
+            //    recopie, pas la population* — et sa docstring affirmait pourtant que les valeurs
+            //    avaient été « lues dans les `case` ».
+            //    ⇒ La liste vient désormais du résolveur lui-même (`ArchetypesCanoniques`, qui est
+            //      DÉJÀ la source exposée pour qu'un 10ᵉ membre soit détectable), et un test lit
+            //      les `case` du fichier pour prouver qu'aucun n'échappe à ce tableau.
+            foreach (string archetype in FamilleLabels.ArchetypesCanoniques)
+                FamilleLabels.Archetype(archetype);
+            FamilleLabels.Archetype("__inconnu__");   // le repli nommé du résolveur
             GrantedRoleLabel("advisory");
             GrantedRoleLabel("executor");
             GrantedRoleLabel("delegated_owner");
             GrantedRoleLabel("cohort_overseer");
             GrantedRoleLabel("__inconnu__");   // le repli nommé du résolveur
-            ModeLabel("tasked");
-            ModeLabel("delegated");
-            ModeLabel("__inconnu__");   // le repli nommé du résolveur
-            OpStateLabel("SETTLING");
-            OpStateLabel("ACTIVE");
-            OpStateLabel("PAUSED");
-            OpStateLabel("IDLE");
-            OpStateLabel("__inconnu__");   // le repli nommé du résolveur
+            FamilleLabels.Mode("tasked");
+            FamilleLabels.Mode("delegated");
+            FamilleLabels.Mode("__inconnu__");   // le repli nommé du résolveur
+            FamilleLabels.Etat("SETTLING");
+            FamilleLabels.Etat("ACTIVE");
+            FamilleLabels.Etat("PAUSED");
+            FamilleLabels.Etat("IDLE");
+            FamilleLabels.Etat("__inconnu__");   // le repli nommé du résolveur
             RuleCountLabel("NONE");
             RuleCountLabel("FEW");
             RuleCountLabel("MANY");
             RuleCountLabel("__inconnu__");   // le repli nommé du résolveur
+            // ⛔ SES CINQ VALEURS RÉELLES, plus le repli — et non le repli seul. Rejoué uniquement
+            //    sur l'inconnu, ce résolveur ne faisait demander AUCUNE de ses clés à la garde de
+            //    catalogue : le même trou que celui des archétypes, laissé ouvert sur son voisin.
+            foreach (string palier in FamilleLabels.AnciennetesCanoniques) TenureBucketLabel(palier);
             TenureBucketLabel("__inconnu__");   // le repli nommé du résolveur
             RevisionCostLabel("COST_1");
             RevisionCostLabel("COST_2");
@@ -988,20 +1032,6 @@ namespace MafiaCleanCity.Operational.Lieutenant
             BandLabel("__inconnu__");   // le repli nommé du résolveur
         }
 
-        private static string ArchetypeLabel(string a)
-        {
-            switch (a)
-            {
-                case "COOK": return MafiaCleanCity.I18n.Libelle.De("famille", "archetype", "Cuisinier");
-                case "SECURITY": return MafiaCleanCity.I18n.Libelle.De("famille", "archetype", "Sécurité");
-                case "LOGISTICS": return MafiaCleanCity.I18n.Libelle.De("famille", "archetype", "Logistique");
-                case "BOOKKEEPER": return MafiaCleanCity.I18n.Libelle.De("famille", "archetype", "Comptable");
-                case "LAUNDERING": return MafiaCleanCity.I18n.Libelle.De("famille", "archetype", "Blanchiment");
-                case "DISTRIBUTION": return MafiaCleanCity.I18n.Libelle.De("famille", "archetype", "Distribution");
-                case "UNKNOWN": return MafiaCleanCity.I18n.Libelle.De("famille", "archetype", "Inconnu");
-                default: return string.IsNullOrEmpty(a) ? "—" : a;
-            }
-        }
 
         // ----- granted_role band (advisory | executor | delegated_owner | cohort_overseer) — EXHAUSTIVE over GrantedRoleBand -----
         private static string GrantedRoleLabel(string r)
@@ -1019,33 +1049,8 @@ namespace MafiaCleanCity.Operational.Lieutenant
         private static string GrantedRoleGlyph(string r) =>
             r == "advisory" ? "[?]" : r == "executor" ? "[>]" : r == "delegated_owner" ? "[@]" : r == "cohort_overseer" ? "[#]" : "[-]";
 
-        // ----- mode band (tasked | delegated) — EXHAUSTIVE over ModeBand -----
-        private static string ModeLabel(string m)
-        {
-            switch (m)
-            {
-                case "tasked": return MafiaCleanCity.I18n.Libelle.De("famille", "mode", "Missionné");
-                case "delegated": return MafiaCleanCity.I18n.Libelle.De("famille", "mode", "Délégué");
-                default: return string.IsNullOrEmpty(m) ? "—" : m;
-            }
-        }
         private static string ModeGlyph(string m) => m == "delegated" ? "[>>]" : m == "tasked" ? "[>]" : "[-]";
 
-        // ----- op_state_band (SETTLING | PAUSED | ACTIVE | IDLE) — EXHAUSTIVE over OpStateBand (Phase-11 adds SETTLING) -----
-        // R2.2: the delegation_paused bool + live cook state + the settling window surface ONLY as this band. PRECEDENCE
-        // SETTLING > PAUSED > ACTIVE > IDLE. SETTLING=re-script/reassign window still open (moderate — transient, resolves on
-        // its own), ACTIVE=working (mild), PAUSED=script halted ops (severe), IDLE=quiet (moderate).
-        private static string OpStateLabel(string s)
-        {
-            switch (s)
-            {
-                case "SETTLING": return MafiaCleanCity.I18n.Libelle.De("famille", "opstate", "Prend ses marques");
-                case "ACTIVE": return MafiaCleanCity.I18n.Libelle.De("famille", "opstate", "Actif");
-                case "PAUSED": return MafiaCleanCity.I18n.Libelle.De("famille", "opstate", "En pause");
-                case "IDLE": return MafiaCleanCity.I18n.Libelle.De("famille", "opstate", "Au repos");
-                default: return string.IsNullOrEmpty(s) ? "—" : s;
-            }
-        }
         private static string OpStateGlyph(string s) =>
             s == "SETTLING" ? "[~]" : s == "ACTIVE" ? "[>]" : s == "PAUSED" ? "[||]" : s == "IDLE" ? "[..]" : "[-]";
         private static Color OpStateAccent(string s) =>
@@ -1383,7 +1388,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             TrackText(pickerCap, "Archetype");
 
             Button pick = AddCycleButton(pickerRow.transform, "Archetype",
-                () => ArchetypeLabel(pickedArchetype),
+                () => FamilleLabels.Archetype(pickedArchetype),
                 CyclePickedArchetype);
             pickerLabel = pick.GetComponentInChildren<TextMeshProUGUI>();
 
@@ -1429,13 +1434,13 @@ namespace MafiaCleanCity.Operational.Lieutenant
         private void RenderRecruitSection()
         {
             if (Destroyed) return;
-            if (pickerLabel != null) pickerLabel.text = ArchetypeLabel(pickedArchetype);
+            if (pickerLabel != null) pickerLabel.text = FamilleLabels.Archetype(pickedArchetype);
             if (recruitButtonLabel != null) recruitButtonLabel.text = RecruitButtonText(pickedArchetype);
             if (targetRow != null) targetRow.SetActive(RuleModel.NeedsTarget(pickedArchetype));
         }
 
         // The Recruit button caption for an archetype ("Recruit Cook" / "Recruit Security" …).
-        private static string RecruitButtonText(string archetype) => "Recruit " + ArchetypeLabel(archetype);
+        private static string RecruitButtonText(string archetype) => "Recruit " + FamilleLabels.Archetype(archetype);
 
         // The Status section (T2): a section label + a Refresh button (re-fetch the bands) + the player-authored script
         // text block. The band ROWS render into statusRows (above); this section holds the controls + the script. The
@@ -1478,6 +1483,29 @@ namespace MafiaCleanCity.Operational.Lieutenant
         /// depuis le bandeau haut (`ProceduralUI.HorizontalFade`).</summary>
         private void BuildFamilyHeader(Transform parent)
         {
+            // ⛔⛔ LE FILET PAYAIT LA GOUTTIÈRE DE `.corps`, ET C'EST LÀ QUE PASSAIT LE SURPLUS.
+            //    Le juge ⊥ mesure l'en-tête à +11,96 % et note que TOUT le supplément se loge entre
+            //    le sous-titre et le filet (24,00 → 43,13 CSS, +79,7 %) — « un filet décroché de son
+            //    sous-titre », et tout le contenu poussé de +11 à +14.
+            //    Cause : `tete` et `filet` étaient deux FRÈRES sous le contenu défilant, dont le
+            //    `VerticalLayoutGroup` insère `.corps gap` = 15 entre chacun de ses enfants. Le
+            //    filet payait donc l'écart qui sépare deux BLOCS, alors qu'il est la FERMETURE du
+            //    bloc de tête — la maquette l'écrit ainsi, et son écart au sous-titre est le
+            //    `padding-bottom` de `.tete`, rien d'autre.
+            //    ⇒ On remonte depuis les DEUX objets mesurés (sous-titre, filet) jusqu'à leur
+            //      premier parent COMMUN — c'était le contenu défilant, pas `tete` — et on édite
+            //      celui-là, en les réunissant sous un conteneur à écart NUL. C'est la discipline
+            //      que ce dépôt a payée : corriger un `spacing` sans vérifier QUEL groupe sépare
+            //      les deux objets qu'on mesure, c'est corriger à côté et croire avoir corrigé.
+            //      Le `.corps gap` reste, à sa place : SOUS le filet, entre l'en-tête et le Don.
+            GameObject enTeteComplet = NewUI("EnTeteComplet", parent);
+            VerticalLayoutGroup etc = enTeteComplet.AddComponent<VerticalLayoutGroup>();
+            etc.spacing = 0;
+            etc.childControlWidth = true; etc.childControlHeight = true;
+            etc.childForceExpandWidth = true; etc.childForceExpandHeight = false;
+            AddLayoutElement(enTeteComplet, flexibleHeight: 0);
+            parent = enTeteComplet.transform;
+
             GameObject tete = NewUI("FamilyHeader", parent);
             HorizontalLayoutGroup h = tete.AddComponent<HorizontalLayoutGroup>();
             h.spacing = FX(19);                            // .tete gap : 18,67
@@ -1486,7 +1514,17 @@ namespace MafiaCleanCity.Operational.Lieutenant
             // corps ayant déjà posé ses 22,4, l'en-tête ne doit ajouter que la DIFFÉRENCE, sinon il
             // se retrouve indenté de 48 et se désaligne visiblement de la colonne de cartes
             // (mesuré par le juge ⊥ : 48,0 u au lieu de 26,0).
-            h.padding = new RectOffset(FX(26 - 22), FX(26 - 22), FX(26 - 19), FX(24));   // 24 : bas mesuré
+            // ⚠️ LE `+4,5` N'EST PAS UNE VALEUR DE MAQUETTE, C'EST UNE COMPENSATION DE BOÎTE DE
+            //    LIGNE, et il faut le dire. Le juge ⊥ mesure l'ENCRE du titre à 38,00 CSS depuis le
+            //    haut de la feuille côté référence et à 33,50 côté jeu : le bloc est 4,5 trop HAUT.
+            //    Les paddings, eux, sont exacts (26,13 − 19 = 7,13) et l'interligne interne du bloc
+            //    est conforme (22,50 → 21,27, −5 %). Ce qui diffère est la quantité de blanc que la
+            //    boîte de ligne réserve AU-DESSUS de l'encre : celle de TMP en met 4,5 de moins que
+            //    la line-box du navigateur. *La grandeur qui compte est l'endroit où l'ENCRE tombe,
+            //    pas où un bord de boîte tombe* — même arbitrage que la hauteur de capitale alignée
+            //    pendant que la chasse est assumée. On le rend donc au padding, et on le REPREND en
+            //    bas pour que l'écart sous-titre→filet retombe sur les 24,00 de la référence.
+            h.padding = new RectOffset(FX(26 - 22), FX(26 - 22), FX(26 - 19 + 4.5f), FX(24 - 4.5f));
             h.childAlignment = TextAnchor.MiddleLeft;
             h.childControlWidth = true;
             h.childControlHeight = true;
@@ -1601,8 +1639,25 @@ namespace MafiaCleanCity.Operational.Lieutenant
             GameObject filet = NewUI("FiletTete", parent);
             AddLayoutElement(filet, minHeight: 2, flexibleHeight: 0);
             Image filetImg = filet.AddComponent<Image>();
-            filetImg.color = DesignTokens.Current.hudHairlineGold;
-            filetImg.sprite = MafiaCleanCity.Shell.ProceduralUI.HorizontalFade(256, 0.30f, 0f);
+            // ⛔⛔ LA RAMPE SE MÉLANGE EN sRGB, PAS EN LINÉAIRE — mesuré par un juge ⊥ avec un test
+            //    de modèle à UNE variable : la RÉFÉRENCE tombe sur sRGB (écarts 2/255 contre
+            //    270 en linéaire), le JEU tombait sur linéaire (275 contre 7). Le filet montait à
+            //    pleine intensité beaucoup plus près du bord au lieu de s'y éteindre.
+            //    Cause : un masque BLANC dont seul l'ALPHA varie, teinté par `Image.color` — donc
+            //    composé par Unity, donc en linéaire. La surcharge employée ici écrit le résultat
+            //    du mélange sRGB en pixels OPAQUES : un pixel opaque n'est plus composé du tout.
+            //    C'est la technique du rail de l'arbre (deux couleurs opaques), au pixel près.
+            // ⚠️ BALAYAGE DE LA CLASSE, pas de l'instance — « tous les dégradés d'alpha de ⑥ ».
+            //    Deux membres, pas un : ce filet, et le VOILE d'en-tête (`VoileRadial`, qui fait
+            //    `c.a *= a`). Le voile n'est PAS converti ici, et pour une raison mesurable : une
+            //    rampe opaque PEINT le fond qu'on lui donne, ce qui n'est admissible que sur un
+            //    fond connu et uni. Le filet est un trait de 2 px posé sur la feuille ; le voile
+            //    déborde du bloc de tête de 22 unités de chaque côté et de 19 en haut, sur une
+            //    zone dont je n'ai pas prouvé l'uniformité. Son propre finding est d'ailleurs
+            //    distinct : le juge le mesure ABSENT (amplitude 0), pas mal composé.
+            filetImg.color = Color.white;   // la teinte vient de la texture, pas du composant
+            filetImg.sprite = MafiaCleanCity.Shell.ProceduralUI.HorizontalFade(
+                256, 0.30f, 0f, DesignTokens.Current.hudHairlineGold, SurfaceBg);
             filetImg.type = Image.Type.Simple;
             filetImg.raycastTarget = false;
 
@@ -2305,11 +2360,19 @@ namespace MafiaCleanCity.Operational.Lieutenant
             v.childForceExpandWidth = true; v.childForceExpandHeight = false;
             AddLayoutElement(bloc, flexibleWidth: 1);
 
-            TextMeshProUGUI role = NewText("Role", bloc.transform, "VOUS", FamilleNomDonTaille, TextAlignmentOptions.Left);
+            // ⛔ F13 — LA CASSE, ET ELLE SEULE. La maquette met un nom propre en casse mixte
+            //    (« Don V. ») sur cette fente et le rôle en capitales dessous ; le jeu mettait des
+            //    CAPITALES sur les deux, mesuré par le même instrument de casse (6/6 contrôles).
+            //    Le CONTENU reste un arbitrage produit — le back n'expose aucun nom de joueur, on
+            //    ne l'invente pas. Ce qui est corrigible côté client est la forme : on rend donc la
+            //    casse mixte que la fente d'identité porte des deux côtés, sans toucher au mot.
+            //    ★ *Un arbitrage sur le CONTENU n'excuse pas un écart sur la FORME* — les deux se
+            //      jugent séparément, et seul le second est de mon ressort.
+            TextMeshProUGUI role = NewText("Role", bloc.transform, "Vous", FamilleNomDonTaille, TextAlignmentOptions.Left);
             role.font = DesignTokens.Current.hudSerifFont;
             role.color = DesignTokens.Current.hudMoneyGold;
             AddLayoutElement(role.gameObject, minHeight: FX(34), flexibleHeight: 0);
-            TrackText(role, "VOUS");
+            TrackText(role, "Vous");
 
             TextMeshProUGUI sous = NewText("Sous", bloc.transform, Lib("LE DON"), FamilleRoleTaille, TextAlignmentOptions.Left);
             sous.characterSpacing = 16f;
@@ -2349,7 +2412,30 @@ namespace MafiaCleanCity.Operational.Lieutenant
             v.childForceExpandWidth = true; v.childForceExpandHeight = false;
             AddLayoutElement(bloc, flexibleWidth: 1);
 
-            string nom = FamilleLabels.Archetype(row.archetype);
+            // ⛔⛔⛔ LE RANG PORTE LE NOM **ET** LE MÉTIER, et le second a manqué un tour entier.
+            //    D-1 a remplacé l'archétype par le nom dans cette fente — le nom était servi et
+            //    jeté, trois « Cuisinier » identiques s'affichaient, le correctif était dû. Mais le
+            //    message de ce commit ASSURAIT que le métier restait affiché ailleurs sur le rang :
+            //    **cette ligne de code n'a jamais été écrite.** L'archétype n'était
+            //    plus NULLE PART, les trois rangs sont devenus interchangeables (nom + RÉCENT + Au
+            //    repos, trois fois) et le juge ⊥ a mis un BLOQUANT sur le BUT de l'écran : on ne
+            //    peut plus lire d'un coup d'œil qui tient quoi.
+            //    ★★ *Un correctif qui REMPLACE un champ par un autre déplace le défaut d'un cran* —
+            //      et j'ai écrit dans le même souffle une phrase qui décrivait le geste manquant
+            //      comme s'il était fait. **Une affirmation de clôture exige la même evidence
+            //      qu'une autre** : la planche était là, il suffisait de la regarder.
+            // ⇒ Deux grandeurs distinctes, deux fentes : le NOM identifie (ligne 1, serif crème,
+            //   la plus grosse encre du bloc), le MÉTIER qualifie (ligne 2, devant l'ancienneté).
+            //   La maquette met le métier en ligne 1 parce qu'elle n'avait pas de nom à montrer ;
+            //   maintenant qu'il y en a un, l'identité prend la ligne d'identité et le métier
+            //   rejoint les autres qualificatifs. La géométrie à DEUX lignes que le juge a mesurée
+            //   conforme (hauteur de rang 99,5 · pas 201,6) est préservée.
+            // ⚠️ Repli si le serveur n'envoie pas de nom : l'archétype remonte en ligne 1 et NE SE
+            //    RÉPÈTE PAS en ligne 2 — afficher deux fois la même chaîne serait un rang qui
+            //    prétend porter deux informations et n'en porte qu'une.
+            string metier = FamilleLabels.Archetype(row.archetype);
+            bool nomServi = !string.IsNullOrWhiteSpace(row.name);
+            string nom = nomServi ? row.name : metier;
             TextMeshProUGUI nomTxt = NewText("Nom", bloc.transform, nom, FamilleNomTaille, TextAlignmentOptions.Left);
             nomTxt.font = DesignTokens.Current.hudSerifFont;
             nomTxt.color = DesignTokens.Current.hudCreme;
@@ -2357,10 +2443,16 @@ namespace MafiaCleanCity.Operational.Lieutenant
             TrackText(nomTxt, nom);
 
             // ⚠️ LA PUCE NE PEUT PAS PORTER LE MODE, ET C'EST MESURÉ. La maquette y met « DÉLÉGUÉ » /
-            // « DIRECT », c'est-à-dire `mode` (tasked|delegated) — un champ que `RosterRow` NE PORTE
-            // PAS (`LieutenantDtos.cs:113-120` : lieutenant_id, archetype, op_state_band,
-            // rule_count_band, tenure_bucket). `mode` vit sur le DÉTAIL, une requête par lieutenant.
-            // Afficher un mode ici demanderait N appels, ou de l'inventer.
+            // « DIRECT », c'est-à-dire `mode` (tasked|delegated) — un champ que la liste ne porte
+            // pas : il vit sur le DÉTAIL, une requête par lieutenant. Afficher un mode ici
+            // demanderait N appels, ou de l'inventer.
+            // ⛔ L'ÉNUMÉRATION DES CHAMPS QUI SUIVAIT ICI ÉTAIT FAUSSE, et c'est instructif : elle
+            //    listait « lieutenant_id, archetype, op_state_band, rule_count_band, tenure_bucket »
+            //    comme la totalité de ce que la liste transporte. Le serveur en servait un SIXIÈME
+            //    — `name` — que le DTO ne déclarait pas. *Une énumération recopiée d'un DTO décrit
+            //    le DTO, jamais la réponse* : elle ne pouvait pas voir le champ qui manquait
+            //    justement au DTO. Elle est retirée plutôt que corrigée — c'est le corps servi qui
+            //    fait foi, pas une liste dans un commentaire.
             // La puce porte donc l'ANCIENNETÉ, que la liste transporte explicitement — le DTO dit
             // qu'elle existe pour « the filter-by-bucket teaser surface ». C'est un qualificatif réel
             // et c'est ce qu'un organigramme de famille montre sous un nom.
@@ -2377,6 +2469,21 @@ namespace MafiaCleanCity.Operational.Lieutenant
             ph.childControlWidth = true; ph.childControlHeight = true;
             ph.childForceExpandWidth = false; ph.childForceExpandHeight = false;
             AddLayoutElement(puceLigne, minHeight: FX(28), flexibleHeight: 0);
+            // LE MÉTIER, devant l'ancienneté. Couleur et corps des micro-libellés (comme la puce et
+            // le libellé d'état) : il qualifie, il n'identifie pas — c'est le nom au-dessus qui
+            // identifie, et lui seul est en serif crème.
+            if (nomServi)
+            {
+                TextMeshProUGUI metierTxt = NewText("Metier", puceLigne.transform, metier,
+                                                    FamilleRoleTaille, TextAlignmentOptions.Left);
+                metierTxt.color = DesignTokens.Current.hudCremeSecondary;
+                AddLayoutElement(metierTxt.gameObject, minHeight: FX(28), flexibleHeight: 0);
+                TrackText(metierTxt, metier);
+            }
+            // L'écart métier↔puce n'a pas d'homologue dans la maquette (elle n'a que la puce sur
+            // cette ligne) : on reprend le padding horizontal de `.chip` plutôt que d'inventer un
+            // nombre — une valeur déjà mesurée dans ce fichier, pas un choix de goût.
+            ph.spacing = FX(11);
             GameObject puce = NewUI("Puce", puceLigne.transform);
             AddLayoutElement(puce, minHeight: FX(28), flexibleHeight: 0);
             LayoutElement lePuce = puce.GetComponent<LayoutElement>();
@@ -2422,11 +2529,21 @@ namespace MafiaCleanCity.Operational.Lieutenant
             AddLayoutElement(etatTxt.gameObject, minHeight: FX(27), flexibleHeight: 0);
             TrackText(etatTxt, etat);
 
-            TextMeshProUGUI etatLbl = NewText("EtatLibelle", etatBloc.transform, Lib("ÉTAT"), FamilleEtatLibelleTaille, TextAlignmentOptions.Right);
+            // ⛔ F9 — `.rang .etat span{text-transform:uppercase}`, et c'était le SEUL micro-libellé
+            //    de l'écran à ne pas l'être : « 3 LIEUTENANTS », « RÉCENT », « LE DON » le sont
+            //    tous. Le juge ⊥ l'a établi par un instrument de casse à 6 contrôles sur 6 (trois
+            //    positifs, trois négatifs) — pas à l'œil sur un zoom, comme au tour précédent.
+            //    ⚠️ LA CASSE VIENT DU BUNDLE, PAS DU LITTÉRAL : la source dit « ÉTAT », l'écran
+            //    rendait « État ». `Libelle.De` a servi la valeur traduite, en casse mixte. Une
+            //    transformation de PRÉSENTATION se fait donc côté client, exactement comme la puce
+            //    d'ancienneté juste au-dessus (`TenureBucketLabel(...).ToUpperInvariant()`) — et
+            //    surtout PAS en corrigeant la casse dans le bundle, qui sert la même clé ailleurs.
+            string etatLibelle = Lib("ÉTAT").ToUpperInvariant();
+            TextMeshProUGUI etatLbl = NewText("EtatLibelle", etatBloc.transform, etatLibelle, FamilleEtatLibelleTaille, TextAlignmentOptions.Right);
             etatLbl.characterSpacing = 10f;
             etatLbl.color = DesignTokens.Current.hudCremeSecondary;
             AddLayoutElement(etatLbl.gameObject, minHeight: FX(19), flexibleHeight: 0);
-            TrackText(etatLbl, Lib("ÉTAT"));
+            TrackText(etatLbl, etatLibelle);
 
             string id = row.lieutenant_id;
             Button b = rang.AddComponent<Button>();
@@ -2571,12 +2688,12 @@ namespace MafiaCleanCity.Operational.Lieutenant
             AddLayoutElement(g.gameObject, minWidth: largeurGlyphe,
                 preferredWidth: largeurGlyphe, flexibleWidth: 0);
 
-            TextMeshProUGUI label = NewText("Archetype", go.transform, ArchetypeLabel(row.archetype), 15, TextAlignmentOptions.Left);
+            TextMeshProUGUI label = NewText("Archetype", go.transform, FamilleLabels.Archetype(row.archetype), 15, TextAlignmentOptions.Left);
             label.color = DesignTokens.Current.onSurfaceMuted;
             AddLayoutElement(label.gameObject, minWidth: 120, flexibleWidth: 1);
 
             // op_state band (ACTIVE | PAUSED | IDLE), worded + colour-coded like the Status section's State row.
-            TextMeshProUGUI state = NewText("State", go.transform, OpStateLabel(row.op_state_band), 15, TextAlignmentOptions.Right);
+            TextMeshProUGUI state = NewText("State", go.transform, FamilleLabels.Etat(row.op_state_band), 15, TextAlignmentOptions.Right);
             state.color = OpStateAccent(row.op_state_band);
             state.fontStyle = FontStyles.Bold;
             AddLayoutElement(state.gameObject, minWidth: 90, flexibleWidth: 0);
@@ -2587,8 +2704,8 @@ namespace MafiaCleanCity.Operational.Lieutenant
             AddActionButton(go.transform, Lib("Ouvrir"), () => OpenLieutenant(capturedId));
 
             TrackText(g, ArchetypeGlyph(row.archetype));
-            TrackText(label, ArchetypeLabel(row.archetype));
-            TrackText(state, OpStateLabel(row.op_state_band));
+            TrackText(label, FamilleLabels.Archetype(row.archetype));
+            TrackText(state, FamilleLabels.Etat(row.op_state_band));
         }
 
         // A distinct shape per archetype (a11y F2 — shape carries meaning alongside colour). EXHAUSTIVE over the roster's
@@ -2630,7 +2747,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
 
             // The "Reassign…" button opens the confirmation (it does NOT move immediately — the player confirms with the
             // projected cost in view). The confirmation's own Confirm button drives ReassignChosen().
-            AddActionButton(reassignSection, Lib("Réaffecter…"), OpenReassign);
+            boutonReaffecter = AddActionButton(reassignSection, Lib("Réaffecter…"), OpenReassign);
 
             // The confirmation block — built empty; RenderReassignConfirm fills it (the projected disruption + tenure/bonus lost
             // + a Confirm/Cancel pair) when ReassignConfirmOpen, and clears it otherwise.
@@ -2654,7 +2771,27 @@ namespace MafiaCleanCity.Operational.Lieutenant
         {
             if (Destroyed) return;
             if (reassignTargetRow != null) reassignTargetRow.SetActive(RuleModel.NeedsTarget(CurrentArchetype));
+
+            // ⛔⛔ D-6, LA CLASSE ET PAS L'INSTANCE. Le correctif précédent gardait le POST : le
+            //    geste restait OFFERT, le joueur ouvrait la confirmation, lisait ce qu'il allait
+            //    perdre, confirmait — et récoltait un refus. La docstring du DTO énonce pourtant
+            //    la règle : *un geste impossible qu'on laisse cliquer est une promesse que l'écran
+            //    n'avait pas le droit de faire.* Garder le POST ferme le 409 ; ça ne retire pas la
+            //    promesse. ⇒ Le bouton se DÉSACTIVE, et la garde du POST reste — les deux, parce
+            //    qu'elles couvrent deux mondes : l'un ce que le joueur peut toucher, l'autre ce
+            //    qui part sur le réseau quand les bandes ont changé sous ses doigts.
+            // ⚠️ MÊME PRUDENCE QUE LA GARDE DU POST : on ne retire le geste que sur une valeur
+            //    explicitement non disponible. Bandes non chargées ou champ vide ⇒ bouton actif,
+            //    et c'est le serveur qui tranche. Une garde qui bloque sur l'IGNORANCE interdirait
+            //    le geste à tout joueur dont les bandes n'ont pas encore été relues.
+            if (boutonReaffecter != null)
+            {
+                string dispo = CurrentBands != null ? CurrentBands.reassign_availability : null;
+                boutonReaffecter.interactable = string.IsNullOrEmpty(dispo) || dispo == "AVAILABLE";
+            }
         }
+
+        private Button boutonReaffecter;
 
         // Build (or clear) the Reassign CONFIRMATION block. When ReassignConfirmOpen + bands are loaded, it surfaces — all
         // BAND-ONLY (worded, no digits, tracked for the no-raw-scalar scan):

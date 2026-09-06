@@ -31,6 +31,48 @@ const EMAIL = process.env.MAFIA_CITYMAP_IDENTIFIER || 'citymap_demo@example.test
 const CALLSIGN = EMAIL.split('@')[0]; // dérivé de EMAIL — rend 'citymap_demo' au défaut (inchangé).
 const PASSWORD = process.env.MAFIA_CITYMAP_PASSWORD || 'citymap-demo-pw';
 
+// ⛔⛔ LA MÊME PORTE QUE LE SEEDER OPÉRATIONNEL, ET ELLE MANQUAIT ICI — c'est par ce trou que le
+// compte gelé a perdu 14 bâtiments et ses 2 planques le 2026-09-06.
+// LA CHAÎNE, mesurée et non supposée : `CityMapHeatPlayModeTests` et `CityMapDetailPlayModeTests`
+// (catégorie `ScreenCarte`) s'AUTO-SÈMENT en `[OneTimeSetUp]` en lançant ce script ; ce script lit
+// `MAFIA_CITYMAP_IDENTIFIER` ; et il appelle `advance()`. Une session de capture a exporté cette
+// paire sur le compte gelé — pour corriger l'identité d'une planche — et a du même coup pointé le
+// SEMIS dessus. Deux suites = deux ticks = +2 minutes de jeu, et le lapse de maintenance a détruit
+// ce qui n'était pas entretenu.
+// ⇒ *Un canal de repointage ne couvre que les maillons qu'on a ÉNUMÉRÉS.* La règle était écrite le
+//   jour même, dans le runbook, pour l'AUTRE paire — « poser les deux variables pointe le client ET
+//   le seeder » — et elle n'a pas été appliquée à celle-ci. Nommer un piège ne protège pas de lui.
+// ⚠️ ET LA GARDE PORTE SUR LA MUTATION, PAS SUR LE SEMIS. Le refus du seeder opérationnel parle de
+//   « semis » ; ici le geste destructeur est l'AVANCE DE L'HORLOGE, qui n'est pas un semis. Une
+//   garde qui nomme l'opération au lieu de la CLASSE laisse passer sa voisine — c'est exactement ce
+//   qui vient d'arriver.
+const COMPTES_GELES = new Set([
+  // L'état de ce compte EST la base de preuve des planches jugées : toute MUTATION — semis, avance
+  // d'horloge, raid — invalide en silence les rapports qui s'y réfèrent.
+  'demo_capture@example.test',
+]);
+const AUTORISE_GEL = process.env.MAFIA_SEED_ALLOW_FROZEN === '1';
+
+// Le dispositif DÉCLARE son régime à chaque exécution : un dispositif inerte ressemble trait pour
+// trait à un dispositif appliqué, sauf s'il dit lequel des deux il est.
+console.log(`[seed-citymap] compte=${EMAIL} · gel=${COMPTES_GELES.has(EMAIL) ? 'COMPTE GELÉ' : 'compte ordinaire'}`
+          + ` · MAFIA_SEED_ALLOW_FROZEN=${AUTORISE_GEL ? '1 (contournement EXPLICITE)' : 'non posée'}`);
+
+if (COMPTES_GELES.has(EMAIL) && !AUTORISE_GEL) {
+  console.error(
+    `[seed-citymap] REFUS : « ${EMAIL} » est un COMPTE GELÉ — son état est la base de preuve des\n` +
+    `       planches jugées, et ce script le MUTE deux fois : il sème le gradient de chaleur ET il\n` +
+    `       AVANCE L'HORLOGE (\`advance()\`), ce qui déclenche le lapse de maintenance et détruit les\n` +
+    `       bâtiments et planques non entretenus. Mesuré le 2026-09-06 : −14 bâtiments, −2 planques.\n` +
+    `       ⇒ C'est presque toujours une paire de CAPTURE exportée dans un run qui embarque une suite\n` +
+    `         de la catégorie \`ScreenCarte\` — celles-ci s'auto-sèment en OneTimeSetUp.\n` +
+    `       ⇒ Pour capturer la carte : n'exporter QUE \`MAFIA_DEMO_*\`, jamais \`MAFIA_CITYMAP_*\`, et\n` +
+    `         lancer \`CaptureCarte\` sans \`ScreenCarte\`.\n` +
+    `       ⇒ Pour re-semer ce compte À DESSEIN : MAFIA_SEED_ALLOW_FROZEN=1, empreinte publiée AVANT\n` +
+    `         et APRÈS.`);
+  process.exit(3);
+}
+
 // Advance to at least this game-minute so nightly (1440) + 12h (720) + 30-min cadences fire.
 const TARGET_MINUTE = 1500;
 
