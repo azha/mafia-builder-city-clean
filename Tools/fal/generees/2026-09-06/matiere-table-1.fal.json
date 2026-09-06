@@ -1,0 +1,13 @@
+{
+  "modele": "fal-ai/flux/dev",
+  "prompt": "A dark varnished bar counter of old oak: straight open wood grain, small scratches and wear, no glass rings, no stains, no objects. Seamless tileable texture, flat orthographic top-down view, even diffuse light, no vignette, no shadow of any object, no border, no frame, edge to edge, no perspective, no objects lying on it, no text, no logo, no watermark. Photographic material study, muted and desaturated.",
+  "seed": 7,
+  "largeur": 1024,
+  "hauteur": 1024,
+  "etapes": 28,
+  "guidance": 3.5,
+  "request_id": "01a07792-bf57-7c40-a61b-7d3860ca3214",
+  "duree_s": 8.0,
+  "cout_usd_estime": 0.025,
+  "genere_le": "2026-09-06T18:35:08+0200"
+}
