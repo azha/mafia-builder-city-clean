@@ -18,7 +18,8 @@
    "x_px": 342.3,
    "y_px": 507.5,
    "x_frac": 0.163,
-   "y_frac": 0.13942
+   "y_frac": 0.13942,
+   "angle_deg": -10.0
   },
   {
    "nom": "TIDEWATER-2",
@@ -26,7 +27,8 @@
    "x_px": 1069.6,
    "y_px": 501.2,
    "x_frac": 0.50933,
-   "y_frac": 0.13769
+   "y_frac": 0.13769,
+   "angle_deg": -10.0
   },
   {
    "nom": "TIDEWATER-3",
@@ -34,7 +36,8 @@
    "x_px": 1777.3,
    "y_px": 469.0,
    "x_frac": 0.84633,
-   "y_frac": 0.12885
+   "y_frac": 0.12885,
+   "angle_deg": -10.0
   },
   {
    "nom": "SPINE-A",
@@ -42,7 +45,8 @@
    "x_px": 366.8,
    "y_px": 936.6,
    "x_frac": 0.17467,
-   "y_frac": 0.25731
+   "y_frac": 0.25731,
+   "angle_deg": 3.0
   },
   {
    "nom": "SPINE-B",
@@ -50,7 +54,8 @@
    "x_px": 1127.0,
    "y_px": 925.4,
    "x_frac": 0.53667,
-   "y_frac": 0.25423
+   "y_frac": 0.25423,
+   "angle_deg": 3.0
   },
   {
    "nom": "SPINE-C",
@@ -58,7 +63,8 @@
    "x_px": 1810.9,
    "y_px": 884.8,
    "x_frac": 0.86233,
-   "y_frac": 0.24308
+   "y_frac": 0.24308,
+   "angle_deg": 3.0
   },
   {
    "nom": "SPINE-D",
@@ -66,7 +72,8 @@
    "x_px": 372.4,
    "y_px": 1379.7,
    "x_frac": 0.17733,
-   "y_frac": 0.37904
+   "y_frac": 0.37904,
+   "angle_deg": 3.0
   },
   {
    "nom": "STACK-1",
@@ -74,7 +81,8 @@
    "x_px": 1111.6,
    "y_px": 1384.6,
    "x_frac": 0.52933,
-   "y_frac": 0.38038
+   "y_frac": 0.38038,
+   "angle_deg": 7.0
   },
   {
    "nom": "STACK-2",
@@ -82,7 +90,8 @@
    "x_px": 1788.5,
    "y_px": 1374.8,
    "x_frac": 0.85167,
-   "y_frac": 0.37769
+   "y_frac": 0.37769,
+   "angle_deg": 7.0
   },
   {
    "nom": "LATTICE-A",
@@ -90,7 +99,8 @@
    "x_px": 338.1,
    "y_px": 2251.2,
    "x_frac": 0.161,
-   "y_frac": 0.61846
+   "y_frac": 0.61846,
+   "angle_deg": 0.0
   },
   {
    "nom": "LATTICE-B",
@@ -98,7 +108,8 @@
    "x_px": 1072.4,
    "y_px": 2286.2,
    "x_frac": 0.51067,
-   "y_frac": 0.62808
+   "y_frac": 0.62808,
+   "angle_deg": 0.0
   },
   {
    "nom": "GLASS-1",
@@ -106,7 +117,8 @@
    "x_px": 1784.3,
    "y_px": 2261.0,
    "x_frac": 0.84967,
-   "y_frac": 0.62115
+   "y_frac": 0.62115,
+   "angle_deg": 18.0
   },
   {
    "nom": "LATTICE-C",
@@ -114,7 +126,8 @@
    "x_px": 314.3,
    "y_px": 2777.6,
    "x_frac": 0.14967,
-   "y_frac": 0.76308
+   "y_frac": 0.76308,
+   "angle_deg": 0.0
   },
   {
    "nom": "GLASS-2",
@@ -122,7 +135,8 @@
    "x_px": 1030.4,
    "y_px": 2792.3,
    "x_frac": 0.49067,
-   "y_frac": 0.76712
+   "y_frac": 0.76712,
+   "angle_deg": 18.0
   },
   {
    "nom": "VERGE-A",
@@ -130,7 +144,8 @@
    "x_px": 1766.1,
    "y_px": 2751.7,
    "x_frac": 0.841,
-   "y_frac": 0.75596
+   "y_frac": 0.75596,
+   "angle_deg": -7.0
   },
   {
    "nom": "GLASS-3",
@@ -138,7 +153,8 @@
    "x_px": 336.0,
    "y_px": 3307.5,
    "x_frac": 0.16,
-   "y_frac": 0.90865
+   "y_frac": 0.90865,
+   "angle_deg": 18.0
   },
   {
    "nom": "VERGE-B",
@@ -146,7 +162,8 @@
    "x_px": 1028.3,
    "y_px": 3309.6,
    "x_frac": 0.48967,
-   "y_frac": 0.90923
+   "y_frac": 0.90923,
+   "angle_deg": -7.0
   },
   {
    "nom": "VERGE-C",
@@ -154,7 +171,10 @@
    "x_px": 1742.3,
    "y_px": 3276.0,
    "x_frac": 0.82967,
-   "y_frac": 0.9
+   "y_frac": 0.9,
+   "angle_deg": -7.0
   }
- ]
+ ],
+ "angle_convention": "convention de l'IMAGE : 0° = horizontale, POSITIF = sens HORAIRE (y descend, comme en SVG et en pixels). ⚠️ Unity tourne à l'inverse : rt.localRotation = Quaternion.Euler(0, 0, -angle_deg).",
+ "angle_source": "atelier3d-mafia/geo_brennar.py, champ `rot` de chaque quartier — valeur AUTEURE, pas une mesure. C'est elle que la maquette applique et que le juge a mesurée sur l'image rendue (F4)."
 }
