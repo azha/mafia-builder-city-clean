@@ -713,15 +713,49 @@ namespace MafiaCleanCity.Shell.Tests
                     continue;
                 }
 
+                // ⛔⛔ L'ANNEAU PROCHE — la grandeur que le contraste glyphe↔fond NE VOIT PAS.
+                // Un halo ou un contour ne change pas la couleur du glyphe : il INTERCALE une
+                // bande sombre. La mesure ci-dessus saute délibérément cette bande (c'est la
+                // bande morte, et sans elle trois sondes de ce dépôt ont mesuré la frange
+                // d'anti-crénelage et rendu « 100 % sous le seuil »). ⇒ Un texte à 1,70:1 peut
+                // donc porter un halo parfaitement actif, et un texte sans halo rendre le même
+                // nombre : **le ratio glyphe↔art ne dit rien de l'existence du halo.**
+                // Cet anneau le dit : si un dispositif intercale, sa luminance est SOUS celle de
+                // l'art alentour. Rapporté, jamais asserté — l'assertion porte sur le contraste,
+                // ce chiffre sert à savoir QUOI corriger.
+                var anneau = new List<Color>();
+                for (int y = Mathf.Max(0, y0 - 2); y <= Mathf.Min(tex.height - 1, y1 + 2); y++)
+                    for (int x = Mathf.Max(0, x0 - 2); x <= Mathf.Min(tex.width - 1, x1 + 2); x++)
+                    {
+                        if (estEncre(tex.GetPixel(x, y))) continue;
+                        bool colle = false;
+                        for (int dy = -2; dy <= 2 && !colle; dy++)
+                            for (int dx = -2; dx <= 2 && !colle; dx++)
+                            {
+                                int ax = Mathf.Clamp(x + dx, 0, tex.width - 1), ay = Mathf.Clamp(y + dy, 0, tex.height - 1);
+                                if (estEncre(tex.GetPixel(ax, ay))) colle = true;
+                            }
+                        if (colle) anneau.Add(tex.GetPixel(x, y));
+                    }
+
                 Color encreMed = Mediane(encres);
                 fonds.Sort((a, b) => Luminance(a).CompareTo(Luminance(b)));
                 Color fondMed = fonds[fonds.Count / 2];
                 Color fondClair = fonds[Mathf.Min(fonds.Count - 1, (int)(0.95f * fonds.Count))];
                 float ratio = Contraste(encreMed, fondMed);
                 float ratioPire = Contraste(encreMed, fondClair);
+                string diagAnneau = "anneau: n/d";
+                if (anneau.Count >= 20)
+                {
+                    anneau.Sort((a, b) => Luminance(a).CompareTo(Luminance(b)));
+                    Color anMed = anneau[anneau.Count / 2];
+                    float dL = Luminance(anMed) - Luminance(fondMed);
+                    diagAnneau = $"anneau proche={Hex(anMed)} ΔL={dL * 255f:+0.0;-0.0} vs fond "
+                               + (dL < -0.02f ? "⇒ un dispositif INTERCALE" : "⇒ RIEN n'est intercalé");
+                }
                 Debug.Log($"[CONTRASTE-ART] {nom} · {libelle} : encre={Hex(encreMed)} ({encres.Count} px) "
                           + $"fond médian={Hex(fondMed)} ⇒ **{ratio:F2}:1** · fond le plus clair (p95)="
-                          + $"{Hex(fondClair)} ⇒ {ratioPire:F2}:1 · bande morte {bandeMorte} px · seuil {SeuilContraste:F1}");
+                          + $"{Hex(fondClair)} ⇒ {ratioPire:F2}:1 · {diagAnneau} · bande morte {bandeMorte} px · seuil {SeuilContraste:F1}");
                 if (ratio < SeuilContraste)
                     echecs.Add($"{nom} · {libelle} : {ratio:F2}:1 sur son fond médian, sous le plancher de "
                                + $"{SeuilContraste:F1}:1 (pire cas mesuré {ratioPire:F2}:1). Un texte posé sur l'art "
