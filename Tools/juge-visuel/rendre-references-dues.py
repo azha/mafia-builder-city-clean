@@ -24,15 +24,26 @@ PAGE = os.path.join(ATELIER, 'ecrans-brennar-6.html')
 RENDRE = os.path.abspath(os.path.join(ICI, '..', 'rendre-tel.py'))
 ECHELLE = '3.6'          # 300 px CSS → 1080 ; c'est la résolution de travail des juges (§DA-3)
 TAILLE = (1080, 2102)
+MOI = 'mafia-blender'    # le détenteur légitime de cette porte pour ce script
 
 # (index, étiquette ATTENDUE à cet index, sortie, pourquoi ce rendu est dû)
 DUS = [
-    (137, 'La filière — où en est chaque étape', 'screen_c2/reference-1080x2102.png',
-     'la référence rend encore la v1, dessinée sur une prémisse morte depuis le 2026-08-31 ; '
-     'un juge qui en part jugerait contre une planche périmée'),
-    (68, 'Lui trouver un avocat', 'ecran_loi/reference-avocat-1080x2102.png',
-     'la référence du dossier montre l’arrestation (cadre 67) ; les cartes de choix d’avocat '
-     'vivent au cadre 68 et n’ont AUCUNE référence — `Loi:339` est non vérifiable sans elle'),
+    (131, 'Le dossier — trois pistes qui ne se mélangent pas',
+     'screen_b7/reference-1080x2102.png',
+     "E1 : ce cadre attribuait au JOUEUR un palier qui est celui d'UN LIEUTENANT "
+     "(`lifestyle_audit_state` porte player_id ET lieutenant_id). Le générateur était corrigé, "
+     "la PAGE ne l'était pas — sans re-pose, cette référence montrait encore le défaut"),
+    (143, 'Les douze crans, tous',
+     'screen_b7/reference-vocabulaire-1080x2102.png',
+     "E2 : les cadres d'état ne montrent que 6 des 12 crans ; le juge a classé NON APPROUVÉ sur "
+     "« l'échelle de chaque piste a disparu ». Ce témoin dessine l'énumération entière"),
+    (144, 'Il a pris, pas encore de quoi le lire',
+     'reputation/reference-indetermine-1080x2102.png',
+     "F12 : l'état `indeterminate` AVEC de l'absorbé n'avait aucune ligne, et le client en avait "
+     "inventé une qui parlait du joueur au lieu du lieutenant"),
+    (145, 'Les onze crans, tous',
+     'screen_c1/reference-vocabulaire-1080x2102.png',
+     "`fading` et `lingering` sont servis par le back et n'avaient aucun dessin"),
 ]
 
 
@@ -56,7 +67,11 @@ def machine_occupee():
     if os.path.exists(porte):
         d = subprocess.run([porte, 'status'], capture_output=True, text=True)
         premiere = (d.stdout or '').strip().splitlines()[:1]
-        if premiere and premiere[0].startswith('PRIS'):
+        # ⛔ La porte tenue PAR MOI n'est pas une occupation : c'est l'autorisation. Sans cette
+        #    distinction la garde devient impossible à satisfaire autrement qu'en la contournant
+        #    — prendre la porte comme le protocole l'exige la ferait refuser. Une garde qu'on ne
+        #    peut satisfaire qu'en cassant ce qu'elle protège se corrige, elle ne se contourne pas.
+        if premiere and premiere[0].startswith('PRIS') and MOI not in premiere[0]:
             occupants.append('porte-unity: ' + premiere[0][:70])
     else:
         occupants.append('porte-unity: SCRIPT INTROUVABLE — impossible d’affirmer qu’elle est libre')
