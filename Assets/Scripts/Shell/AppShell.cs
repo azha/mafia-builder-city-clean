@@ -853,10 +853,49 @@ namespace MafiaCleanCity.Shell
         /// <summary>Monte le menu « Plus » : une entrée par destination, chacune montant son écran.
         /// Le retour au menu passe par le geste standard (`ActivateTab(Tab.More)`), donc aucun
         /// mécanisme de navigation neuf — le menu se reconstruit comme n'importe quel onglet.</summary>
+        /// <summary>⛔⛔ DEUX DÉFAUTS ONT VÉCU ICI, ET ILS PRODUISAIENT LA MÊME IMAGE — un juge ⊥ à
+        /// contexte vierge les a rapportés comme deux BLOQUANT distincts (2026-09-06), et aucun des
+        /// deux ne se soignait en corrigeant l'autre.
+        ///
+        /// (1) L'INSET ÉTAIT LU, ET SA VALEUR ÉTAIT PÉRIMÉE. La ligne `offsetMax = -TopInsetPx`
+        ///     existait déjà, et c'est exactement ce qui a fait passer le défaut : un relecteur qui
+        ///     l'ouvre la trouve juste et va chercher ailleurs. *La ligne existe ; personne n'a
+        ///     demandé si elle pouvait être VRAIE.* `Tab.More` est la SEULE branche d'`ActivateTab`
+        ///     qui ne construit pas un locataire — donc la seule qui ne passe jamais par
+        ///     `ConstruireLocataire`, donc jamais par `PublierInsetsDuChrome()` ni par le
+        ///     `Canvas.ForceUpdateCanvases()` qui rend les hauteurs valides avant la mesure. Le menu
+        ///     lisait donc l'inset publié par un montage PRÉCÉDENT — ou **0** si « Plus » est la
+        ///     première destination, ce que `ShellChrome` documente comme le repli légitime du
+        ///     hors-shell. *Un repli correct dans son contexte, appliqué dans un contexte où il ne
+        ///     l'est pas : la valeur est plausible, et c'est pour ça qu'elle passe.*
+        ///     ⇒ On publie AVANT de poser les offsets. Une ligne, et le menu revient sur le même
+        ///       contrat que les quatre autres branches.
+        ///
+        /// (2) LA LISTE N'AVAIT AUCUNE FENÊTRE, et elle sortait par le bas SOUS le dock opaque.
+        ///     Mesuré par le juge : rect libre 2 039 px pour un pas de 122,6 ⇒ 16,6 rangées, et le
+        ///     menu en pose DIX-NEUF — la 19ᵉ à 45 % de sa hauteur, invisible et injoignable. Ce
+        ///     défaut-ci **survit au correctif (1)** : dix-neuf bandes ne rentrent pas, quel que
+        ///     soit l'inset. ⇒ REUSE du patron de ㉝ (`DemolitionScreenController.
+        ///     ConstruireZoneCentrale`), qui a payé exactement cette classe : `RectMask2D` coupe ce
+        ///     qui dépasse, `ScrollRect` rend joignable ce qui est coupé (sans lui, couper rend des
+        ///     destinations INATTEIGNABLES — le contraire du but de ce menu), `ContentSizeFitter`
+        ///     donne au défilement une course à parcourir.
+        ///     ★ Et la docstring de ㉝ porte la leçon qui vaut ici mot pour mot : *« la maquette ne
+        ///       le montre pas parce qu'elle n'a jamais eu que quatre rangées ; le monde réel en a
+        ///       dix-sept. Une maquette dessine un CAS, pas une BORNE. »* Ce menu en a dix-neuf.
+        ///
+        /// ⚠️ LES DEUX SE VÉRIFIENT SÉPARÉMENT, et c'est délibéré : corriger (1) « remonte » la
+        /// liste et donne l'illusion que le débordement est réglé. Le haut de la première bande se
+        /// mesure contre le bandeau ; le nombre de rangées entièrement visibles se compte.</summary>
         private void MonterMenuPlus()
         {
             UnmountCurrentTenant();
             MenuPlusEntrees = 0;
+
+            // (1) — AVANT tout calcul de géométrie. Voir la docstring : sans cet appel, la ligne
+            // `-TopInsetPx` ci-dessous lit ce qu'un autre montage a laissé, ou zéro.
+            PublierInsetsDuChrome();
+
             GameObject menu = new GameObject("MenuPlus", typeof(RectTransform));
             menu.transform.SetParent(ContentSlot, false);
             RectTransform rt = (RectTransform)menu.transform;
@@ -865,16 +904,42 @@ namespace MafiaCleanCity.Shell
             rt.anchorMin = new Vector2(0f, 0f); rt.anchorMax = new Vector2(1f, 1f);
             rt.offsetMin = new Vector2(0f, ShellChrome.BottomInsetPx);
             rt.offsetMax = new Vector2(0f, -ShellChrome.TopInsetPx);
-            VerticalLayoutGroup pile = menu.AddComponent<VerticalLayoutGroup>();
+
+            // (2) — `menu` devient la FENÊTRE (elle coupe et fait défiler) ; la pile d'entrées
+            // descend d'un cran dans `MenuPlus_Contenu`, qui se dimensionne sur ses enfants.
+            menu.AddComponent<RectMask2D>();
+            ScrollRect defilement = menu.AddComponent<ScrollRect>();
+            defilement.horizontal = false;
+            defilement.vertical = true;
+            defilement.movementType = ScrollRect.MovementType.Clamped;
+            defilement.scrollSensitivity = 40f;
+
+            GameObject contenu = new GameObject("MenuPlus_Contenu", typeof(RectTransform));
+            contenu.transform.SetParent(menu.transform, false);
+            RectTransform rtc = (RectTransform)contenu.transform;
+            // Ancré en HAUT sur toute la largeur : la course de défilement se déploie vers le bas,
+            // et la première entrée reste collée sous le bandeau quelle que soit la hauteur totale.
+            rtc.anchorMin = new Vector2(0f, 1f);
+            rtc.anchorMax = new Vector2(1f, 1f);
+            rtc.pivot = new Vector2(0.5f, 1f);
+            rtc.offsetMin = Vector2.zero;
+            rtc.offsetMax = Vector2.zero;
+            defilement.viewport = rt;
+            defilement.content = rtc;
+
+            VerticalLayoutGroup pile = contenu.AddComponent<VerticalLayoutGroup>();
             pile.childAlignment = TextAnchor.UpperCenter;
             pile.spacing = Px(TabDockGapCss);
             pile.childControlWidth = true; pile.childControlHeight = true;
             pile.childForceExpandWidth = true; pile.childForceExpandHeight = false;
+            // Sans lui, la fenêtre couperait et il n'y aurait rien à faire défiler.
+            ContentSizeFitter ajuste = contenu.AddComponent<ContentSizeFitter>();
+            ajuste.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
             foreach ((string libelle, System.Action monter) in DestinationsPlus())
             {
                 GameObject entree = new GameObject($"MenuPlus_{libelle}", typeof(RectTransform));
-                entree.transform.SetParent(menu.transform, false);
+                entree.transform.SetParent(contenu.transform, false);
                 Image fond = entree.AddComponent<Image>();
                 fond.color = DesignTokens.Current.surfaceRow;
                 AddLayoutElementLocal(entree, Px(TabDockLabelHeightCss) * 3f);
