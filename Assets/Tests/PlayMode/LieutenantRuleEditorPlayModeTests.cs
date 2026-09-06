@@ -377,13 +377,99 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.AreEqual(expected.Trim(), (b.script_source ?? string.Empty).Trim(),
                 "script_source round-trips the serialized demo rules");
 
-            // The UI reflects the bands: the worded labels are rendered (closed-domain, never raw).
+            // ⛔⛔ CES TROIS ASSERTIONS ÉPINGLAIENT DES LIBELLÉS ANGLAIS, et elles sont rouges depuis
+            // que le client demande le français. Mesuré le 2026-09-06 — le corpus rendu porte
+            // « Cuisinier », « Exécutant », « Délégué ». Deux causes DIFFÉRENTES derrière un même
+            // symptôme, et elles ne se réparent pas pareil :
+            //   · `Cook`/`Delegated` viennent de `FamilleLabels`, qui contient **0 appel** au
+            //     catalogue i18n : ce sont des littéraux français EN DUR. Il n'y a aucune langue
+            //     à prouver ici — le catalogue n'est pas dans le chemin.
+            //   · `A few rules` vient du catalogue SERVI (`Libelle.De("famille","rulecount",…)`).
+            //     Sa langue est une propriété RÉELLE, mais elle se prouve UNE fois, ailleurs, avec
+            //     un contrôle positif (le patron de ⑧) — pas trois fois ici, en passant.
+            //
+            // ⛔ ET LA RÉPARATION ÉVIDENTE EST UNE TAUTOLOGIE : comparer le rendu à
+            //   `FamilleLabels.Archetype(b.archetype)` met le MÊME producteur des deux côtés —
+            //   vrai que le résolveur rende du français, de l'anglais ou du charabia. C'est
+            //   exactement ce que fait `Accrual_…:403` sur l'ancienneté, et cette assertion-là ne
+            //   prouve rien depuis le jour où elle a été écrite.
+            //
+            // ⇒ CE QUE CES LIGNES DOIVENT PROUVER, ET QUI NE DÉPEND D'AUCUNE LANGUE : que l'écran
+            //   a bien TRADUIT le code du serveur en libellé — c'est-à-dire (1) que le code brut
+            //   ne fuit pas jusqu'au joueur, et (2) que le libellé affiché est celui que le
+            //   résolveur produit POUR LA VALEUR SERVIE, pas pour une autre.
             var texts = controller.RenderedTexts;
-            Assert.IsTrue(texts.Any(t => t == "Cook"), "archetype 'Cook' rendered");
-            Assert.IsTrue(texts.Any(t => t == "Delegated"), "mode 'Delegated' rendered");
-            Assert.IsTrue(texts.Any(t => t == "A few rules"), "rule_count band 'A few rules' rendered");
+
+            // (1) Aucun code de domaine ne doit atteindre l'écran. Langue-indépendant, et c'est la
+            //     régression que le joueur verrait : « COOK » en capitales au milieu d'une phrase.
+            foreach (string brut in new[] { b.archetype, b.granted_role, b.mode, b.rule_count_band })
+                Assert.IsFalse(texts.Any(x => x == brut),
+                    $"le code brut « {brut} » est rendu TEL QUEL : le résolveur n'a pas été " +
+                    "appelé sur ce champ, et le joueur lit un identifiant de serveur.");
+
+            // (2) Le libellé affiché est celui du résolveur POUR LA VALEUR SERVIE — et l'assertion
+            //     n'est pas vide parce qu'elle est doublée d'un contrôle d'ANTI-DÉGÉNÉRESCENCE :
+            //     le résolveur doit rendre AUTRE CHOSE pour une autre valeur du domaine. Sans lui,
+            //     un résolveur qui renverrait une constante passerait les deux lignes.
+            string libArchetype = FamilleLabels.Archetype(b.archetype);
+            Assert.AreNotEqual(libArchetype, FamilleLabels.Archetype("MUSCLE"),
+                "anti-dégénérescence : le résolveur d'archétype rend la MÊME chose pour deux " +
+                "valeurs différentes — l'assertion suivante serait vraie sans rien prouver.");
+            Assert.IsTrue(texts.Any(x => x == libArchetype),
+                $"l'archétype servi est « {b.archetype} » et le résolveur en fait " +
+                $"« {libArchetype} », qu'aucun texte de l'écran ne porte : la valeur du serveur " +
+                "n'a pas atteint le rendu.");
+            // ⚠️ CE QUE CETTE ASSERTION NE DIT PAS, et il faut l'écrire : l'archétype a LUI AUSSI
+            //    deux producteurs (`FamilleLabels.Archetype`, en dur, appelé par la rangée
+            //    `:2352` ; et `ArchetypeLabel` `:991`, adossé au catalogue). Ils rendent la même
+            //    chose AUJOURD'HUI, donc cette ligne passe quel que soit celui qui a couru — elle
+            //    ne discrimine pas lequel. Elle vaudra vraiment le jour où TD-611 sera fermée et
+            //    qu'il n'y aura plus qu'un producteur. *Une assertion qui passe par coïncidence
+            //    d'accord entre deux copies est verte pour la mauvaise raison.*
+
+            // ⛔⛔ ET LE MODE M'A PRIS EN FLAGRANT DÉLIT — TD-611, EN MOINS D'UNE HEURE.
+            // J'avais écrit ici l'assertion symétrique de celle de l'archétype, sur
+            // `FamilleLabels.Mode(b.mode)` → « DÉLÉGUÉ ». **Rouge** : l'écran rend « Délégué ».
+            // Mesuré : il n'appelle PAS `FamilleLabels.Mode` mais son propre `ModeLabel`
+            // (`LieutenantScreenController.cs:1023-1028`, `private static`, adossé au catalogue,
+            // repli « Délégué »). **Deux producteurs pour la même grandeur, et j'ai visé le
+            // mauvais** — exactement le coût que TD-611 annonce : *la duplication ne coûte qu'au
+            // jour où l'une des deux copies bouge, et c'est alors l'AUTRE qu'on cherche.*
+            // ⇒ `ModeLabel` étant privé, ce test ne peut pas l'appeler sans dupliquer une
+            //   troisième fois la correspondance. La seule assertion honnête sur le mode est donc
+            //   celle qui ne dépend d'aucun producteur : le code brut ne fuit pas (couvert en (1)).
+            //   *Mieux vaut une assertion plus faible et vraie qu'une forte qui vise le mauvais
+            //   producteur.* La langue de ce champ est prouvée par la garde de catalogue.
+
+            // ⚠️ `rule_count_band` passe par le CATALOGUE, pas par `FamilleLabels` : on ne peut pas
+            //    le résoudre ici sans dupliquer la clé. On asserte donc la seule propriété
+            //    langue-indépendante disponible — le code brut ne fuit pas (couvert en (1)) — et
+            //    la langue de ce champ est prouvée par la garde de catalogue, à un seul endroit.
+            //    *Mieux vaut une assertion plus faible et vraie qu'une forte et tautologique.*
 
             Debug.Log($"[LieutenantE2E] full loop OK — bands archetype={b.archetype} mode={b.mode} rules={b.rule_count_band}");
+        }
+
+        /// <summary>Le libellé attendu pour un état — copie ASSUMÉE de `OpStateLabel`, le
+        /// producteur que la ligne d'état emploie réellement (`:2579`/`:2591`).
+        /// ⚠️ C'est une TROISIÈME copie de la correspondance, et je l'écris en le sachant :
+        /// `OpStateLabel` est `private static`, donc inatteignable depuis ce test. Le choix est
+        /// entre une copie NOMMÉE comme telle, et une assertion sur `FamilleLabels.Etat` qui
+        /// viserait le MAUVAIS producteur — j'ai fait cette erreur sur le `mode` vingt minutes
+        /// plus tôt et le test est parti rouge en accusant l'écran.
+        /// ⇒ Elle disparaît le jour où TD-611 est fermée : un producteur unique et PUBLIC rend
+        ///   cette copie inutile. Tant qu'il y en a deux et qu'ils divergent, un test qui ne
+        ///   nomme pas le sien ment sur ce qu'il mesure.</summary>
+        private static string OpStateLabelAttendu(string s)
+        {
+            switch (s)
+            {
+                case "SETTLING": return MafiaCleanCity.I18n.Libelle.De("famille", "opstate", "Prend ses marques");
+                case "ACTIVE":   return MafiaCleanCity.I18n.Libelle.De("famille", "opstate", "Actif");
+                case "PAUSED":   return MafiaCleanCity.I18n.Libelle.De("famille", "opstate", "En pause");
+                case "IDLE":     return MafiaCleanCity.I18n.Libelle.De("famille", "opstate", "Au repos");
+                default:         return MafiaCleanCity.I18n.Libelle.De("famille", "opstate", "État inconnu");
+            }
         }
 
         // (2) DELEGATED STATUS (the proof): the delegated op_state_band tracks the ATTACHED rules — ACTIVE (the COOK
@@ -443,10 +529,38 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.AreEqual("ACTIVE", controller.CurrentBands.op_state_band,
                 "the PAUSE rule removed → the lieutenant resumes → op_state_band ACTIVE");
 
-            // The op-state band is always a worded label client-side (never the raw delegation_paused bool / tick).
+            // ⛔⛔ CETTE ASSERTION ÉPINGLAIT « Active / Paused / Idle » — trois libellés ANGLAIS,
+            // rouges depuis que le client demande le français. Mais la réparer a mis au jour un
+            // défaut de PRODUCTION que le rouge cachait, et qui vaut plus que le test :
+            //
+            // ★★ `op_state_band` A DEUX PRODUCTEURS DANS CE MÊME FICHIER, ET ILS DIVERGENT :
+            //      code       OpStateLabel (catalogue, :1038-1045)   FamilleLabels.Etat (en dur, :89-96)
+            //      SETTLING   « Prend ses marques »                  « Stabilisation »     ← DIFFÉRENT
+            //      IDLE       « Au repos »                           « Repos »             ← DIFFÉRENT
+            //      ACTIVE     « Actif »                              « Actif »
+            //      PAUSED     « En pause »                           « En pause »
+            //    Les deux sont APPELÉS : `:2414` prend `FamilleLabels.Etat` pour la rangée de
+            //    l'organigramme, `:2579`/`:2591` prennent `OpStateLabel` pour la ligne d'état.
+            //    ⇒ **Un lieutenant en SETTLING lit « Prend ses marques » à un endroit de l'écran et
+            //      « Stabilisation » à un autre.** C'est TD-611 qui n'est plus latente : la
+            //      duplication ne coûte qu'au jour où l'une des copies bouge, et elle a bougé.
+            //
+            // ⇒ CE QUE CE TEST PEUT PROUVER SANS CHOISIR UN PRODUCTEUR — et c'est aussi ce que son
+            //   intitulé d'origine visait (« never a raw scalar ») : le code de domaine ne fuit pas
+            //   jusqu'au joueur. Langue-indépendant, producteur-indépendant, et c'est la régression
+            //   que le joueur verrait.
             var texts = controller.RenderedTexts;
-            Assert.IsTrue(texts.Any(t => t == "Active" || t == "Paused" || t == "Idle"),
-                "the op-state is rendered as a worded band, never a raw scalar");
+            Assert.IsNotEmpty(texts,
+                "anti-vacuité : aucun texte rendu — l'assertion suivante serait vraie à vide.");
+            foreach (string brut in new[] { "ACTIVE", "PAUSED", "IDLE", "SETTLING" })
+                Assert.IsFalse(texts.Any(x => x == brut),
+                    $"le code brut « {brut} » est rendu TEL QUEL : l'état n'a pas été traduit en " +
+                    "libellé, et le joueur lit un identifiant de serveur.");
+            // Et la bande servie DOIT avoir produit un libellé quelque part — sinon « aucun code
+            // brut » serait vrai simplement parce que RIEN n'est rendu sur l'état.
+            Assert.IsTrue(texts.Any(x => x == OpStateLabelAttendu(controller.CurrentBands.op_state_band)),
+                $"l'état servi est « {controller.CurrentBands.op_state_band} » et aucun texte de " +
+                "l'écran ne porte le libellé correspondant : la valeur n'a pas atteint le rendu.");
 
             Debug.Log("[LieutenantE2E] delegated status OK — ACTIVE → PAUSED → ACTIVE (driven by the attached rules)");
         }
