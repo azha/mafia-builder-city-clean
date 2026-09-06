@@ -679,6 +679,24 @@ namespace MafiaCleanCity.Shell.Tests
                 }
                 foreach (string e in ecartsControle) ecarts.Add(e);
 
+                // ⚠️⚠️ L'INTERSTICE À 34° NE SE FERME PAS EN ÉLARGISSANT LES BORNES — essayé,
+                // mesuré, retiré. Les arcs sont cuits à 90°→180° et 0°→60,55° ; cet oracle lit
+                // 87° et 60°, interstice 34° pour 29,45° au canon. L'écart, ~2,5° par bout libre,
+                // ressemble au fondu d'embout — d'où la correction évidente : élargir la fenêtre
+                // d'une DEMI-rampe à chaque bout, pour que la borne à mi-alpha tombe sur l'angle
+                // demandé (l'arithmétique que ce dépôt applique déjà à l'ÉPAISSEUR).
+                // ⇒ Résultat mesuré : **dépassement dans l'autre sens** — froid 94° (pour 90),
+                //   chaud 65° (pour 60,55), interstice 26° (pour 29,45) — ET le fuselage explose,
+                //   les ratios passant de 1,61 et 3,33 à **29 et 30** parce que la queue de fondu
+                //   entre alors dans le seuil et rend des épaisseurs d'un seul pas.
+                // ⇒ CE QUE ÇA ÉTABLIT : **le seuil de teinte de cet oracle (0,06) ne coupe PAS à
+                //   mi-alpha**, il coupe bien plus bas. Ma correction dérivait d'un modèle de
+                //   l'endroit où l'instrument tranche, et la mesure l'a réfuté. *Corriger une
+                //   géométrie pour satisfaire un seuil dont on n'a pas mesuré la position, c'est
+                //   régler sur l'instrument et non sur l'objet.*
+                // ⇒ DONC : les 4,5° d'écart d'interstice sont AU MOINS EN PARTIE instrumentaux, et
+                //   c'est une planche — pas cet oracle — qui doit dire s'ils se voient. Tout a été
+                //   retiré ; l'arbre reste aux bornes du canon.
                 Debug.Log($"[CADRAN-EPAISSEUR] pas={pasPx:F2} px · froid {epFroidMin * pasPx:F2}.."
                           + $"{epFroidMax * pasPx:F2} px (ratio {(epFroidMin > 0 ? epFroidMax / (float)epFroidMin : 0f):F2}) · "
                           + $"chaud {epChaudMin * pasPx:F2}..{epChaudMax * pasPx:F2} px "
