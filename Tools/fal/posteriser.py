@@ -79,6 +79,13 @@ def main() -> None:
     out.putdata(dst)
 
     if alpha is not None:
+        # Seuil à 128, et il est BON. Le 2026-09-06 j'ai cru qu'il laissait passer du fond d'origine
+        # (les portraits rendaient « fond L 33,3 » au lieu du jeton à 27,8) et je l'ai durci à 200 +
+        # érosion : le chiffre n'a pas bougé d'un dixième. Cause réelle, lue en imprimant les quatre
+        # coins : trois valent EXACTEMENT (22,28,43) = le jeton, et le quatrième vaut (44,50,66) = la
+        # deuxième encre — l'épaule du sujet ATTEINT ce coin. Le fond était juste ; c'est la sonde qui
+        # moyennait un pixel de sujet. Durcissement retiré : il rognait le sujet (remplissage 0,56 →
+        # 0,55) pour corriger un défaut qui n'existait pas.
         fond = Image.new("RGB", src.size, rampe[0])
         out = Image.composite(out, fond, alpha.point(lambda v: 255 if v > 128 else 0))
     out.save(sortie)

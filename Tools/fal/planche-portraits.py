@@ -34,7 +34,11 @@ def mesures(im):
     p = im.convert("RGB")
     w, h = p.size
     coins = [p.getpixel((4, 4)), p.getpixel((w - 5, 4)), p.getpixel((4, h - 5)), p.getpixel((w - 5, h - 5))]
-    fond = sum(luminance(c) for c in coins) / 4
+    # MÉDIANE et non moyenne : sur un buste qui remplit le cadre, une épaule atteint un coin et une
+    # moyenne le fait entrer dans la mesure du fond (mesuré : 33,3 au lieu de 27,8 pour un seul coin
+    # sur quatre). Trois coins sur quatre suffisent à dire le fond ; la médiane les écoute.
+    ls = sorted(luminance(c) for c in coins)
+    fond = (ls[1] + ls[2]) / 2
     petit = p.resize((26, 26), Image.LANCZOS)
     vals = [luminance(petit.getpixel((x, y))) for y in range(26) for x in range(26)]
     ecart = sum(1 for v in vals if abs(v - fond) > 40) / len(vals)

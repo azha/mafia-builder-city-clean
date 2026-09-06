@@ -14,13 +14,38 @@ Clé d'attribution : le **NOM**, jamais l'archétype ⇒ un emblème ne peut êt
 | lieutenant titulaire | 33,3 | 6,57:1 | 28,4 % |
 | sa doublure | 27,8 | 7,58:1 | 31,1 % |
 
-Le registre tient à 26 px, au niveau des meilleurs de la série précédente. **Deux défauts nommés :**
-1. ⚠️ **L'emblème personnel du chef n'a pas été rendu** — le prompt demandait une canule de trachéotomie
-   et une cicatrice à la gorge ; l'image n'en porte aucune trace. *Un emblème personnel se VÉRIFIE sur
-   l'image, il ne se suppose pas depuis le prompt* — et c'est le seul dispositif d'identité sous la clé
-   par nom, donc son contrôle est obligatoire, image par image, avant de peupler les 74.
-2. ⚠️ **Fond à 33,3 sur deux des trois** au lieu de 27,8 (le jeton) : le détourage a laissé passer des
-   pixels de fond d'origine. L'aplat n'est donc pas exactement uniforme sur ce lot — à resserrer.
+Chiffres corrigés après réparation de la sonde (voir ci-dessous) : fond **27,8 sur les trois**,
+contraste 7,63 / 7,67 / 7,58:1, écart à 26 px **32,5 / 29,4 / 31,1 %**.
+
+### Défaut 1 — l'emblème n'a pas été rendu, et il est maintenant GARDÉ
+
+Le prompt du chef demandait une canule de trachéotomie et une cicatrice ; l'image n'en porte rien.
+Sous la clé par nom, l'emblème personnel est le **seul** dispositif d'identité ⇒ un portrait sans son
+emblème est un portrait **sans identité**, pas un portrait moins bon.
+
+⛔ **La première sonde écrite pour ça était fausse et disait OUI.** Elle comparait l'image à un témoin
+généré à la même graine, prompt privé de sa clause d'emblème, et concluait sur la divergence de la zone
+de gorge : **22,56 ⇒ « EMBLÈME RENDU »** sur le cas même qui l'avait motivée. En recadrant les deux
+gorges côte à côte : aucune canule ni cicatrice dans l'une ni dans l'autre — toute la divergence venait
+de la **cravate**, passée de bordeaux à noire parce qu'on avait retiré treize mots. La sonde mesurait
+« le prompt a changé l'image », pas « l'emblème est là ». *Aucune mesure de pixels ne sait dire « ceci
+est une canule ».*
+
+⇒ `verifier-embleme.py` v2 pose la question à un modèle de **vision** (`fal-ai/moondream2/visual-query`)
+avec ses deux contrôles exécutés à chaque appel — positif : le masque à gaz du cuisinier doit rendre
+*yes* ; négatif : le même objet, absent d'un autre portrait, doit rendre *no*. Exécuté sur le chef :
+contrôles ✓ ✓, réponse **« no »**, code de sortie **1**. La garde attrape le défaut qui l'a motivée.
+
+### Défaut 2 — il n'existait pas : c'était la sonde
+
+J'ai lu « fond L 33,3 au lieu de 27,8 » sur deux portraits, conclu que le détourage laissait passer du
+fond d'origine, et durci le seuil à 200 + érosion. **Le chiffre n'a pas bougé d'un dixième.** Cause
+réelle, trouvée en imprimant les quatre coins : trois valent **exactement (22,28,43)** — le jeton — et
+le quatrième vaut **(44,50,66)**, la deuxième encre : **l'épaule du sujet atteint ce coin**, et ma sonde
+en faisait la moyenne avec le fond. L'aplat était juste depuis le début.
+⇒ Durcissement **retiré** (il rognait le sujet, remplissage 0,56 → 0,55, pour un défaut inexistant) et
+sonde corrigée : **médiane** des quatre coins au lieu de la moyenne — trois coins sur quatre suffisent
+à dire le fond, la médiane les écoute. Les trois portraits rendent alors 27,8, le jeton exact.
 
 ## Titulaire ↔ doublure — trois traitements, à ARBITRER (aucun n'est tranché ici)
 
