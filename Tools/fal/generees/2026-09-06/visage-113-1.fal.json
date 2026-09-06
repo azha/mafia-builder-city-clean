@@ -1,0 +1,13 @@
+{
+  "modele": "fal-ai/flux/dev",
+  "prompt": "A woman in her late twenties, short and stocky, with short braids, a knitted beanie pulled low, heavy dark brows, wearing a worn leather blouson over an open polo shirt. Dark crime-drama portrait, late 1980s to early 1990s, the register of The Sopranos and The Wire: an ordinary person in everyday clothes, NOT gangster-movie elegance. NO tailored suit, NO wide-lapel jacket, NO necktie, nothing sharp or expensive. Bust, head and shoulders, front view, filling the square frame. Heavy chiaroscuro: one hard warm key light raking from the left, deep black shadow on the other side. Muted desaturated palette, dark blue-grey ground, no saturated colour, no text, no logo, no watermark. Painted poster illustration: flat areas of colour, thick contours, heavy simplification, no photorealism, no lens blur.",
+  "seed": 63,
+  "largeur": 1024,
+  "hauteur": 1024,
+  "etapes": 28,
+  "guidance": 3.5,
+  "request_id": "01a078b6-46b6-7e53-8d5a-3b15fa8e3f1c",
+  "duree_s": 6.3,
+  "cout_usd_estime": 0.025,
+  "genere_le": "2026-09-06T23:53:32+0200"
+}

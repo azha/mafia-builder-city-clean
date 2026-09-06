@@ -57,3 +57,55 @@ casting. Ce qui subsiste après postérisation : l'âge, le sexe, la corpulence,
 `fal-ai/flux/dev`, graine **63** sur les 46, 1024², prompt archivé à côté de chaque image, sidecar de
 provenance (modèle, graine, durée, coût, request_id). Détourage `fal-ai/birefnet`. Rien n'est écrasé.
 Planches : `serie-24-lieutenants.png`, `serie-dealers-et-figures.png`, `arbitrage-registre-vestimentaire.png`.
+
+---
+
+# Le pool de VISAGES — 150, clé par identifiant (2026-09-06/07)
+
+**Ruling user** : « il en faut beaucoup plus vu le côté aléatoire des profils, et il faut de la
+diversité, éviter de revoir 2× la même image ». Mesuré : `lieutenant_state` porte **22 408 lignes**,
+un joueur en voit **13 simultanément**, et il n'y a que **24 noms** — donc le visage se répétait, pas
+le nom.
+
+## Deux décisions, prises avec l'orchestration
+
+**1. Le portrait suit l'IDENTIFIANT, plus le nom.** L'identifiant est encore plus stable (un lieutenant
+ne change jamais de visage) et il y en a 22 408 ⇒ le nombre de visages se **découple** du nombre de
+noms, et le lot back « 24 → 48 noms » sort du chemin critique.
+⚠️ **Ce que ça coûte, écrit pour que personne ne le rouvre comme un bug** : « Lt. Kane » cesse d'être
+un visage reconnaissable d'une partie à l'autre. Le ruling demande une variété de POPULATION, pas des
+personnages récurrents — la perte est acceptée.
+
+**2. Le volume ne suffit pas — c'est le SONDAGE qui supprime les doublons.** Pour 13 visages
+simultanés tirés par hachage seul : **98,2 %** de chance de doublon à 24 visages, **49,0 %** à 120,
+**41,4 %** à 150, 12,3 % à 600. ⇒ Le mécanisme qui règle ça existait déjà à côté :
+`nomPourLieutenant` **sonde** (le hachage donne le point de départ, on avance jusqu'au premier libre).
+Le même sondage sur les visages donne **zéro doublon par construction**, dès que le pool dépasse
+l'ensemble visible. Le volume redevient un cadran de variété : **150 suffit largement**.
+⚠️ Propriété à préserver côté client : le sondage rend le visage stable **à ensemble visible donné** —
+un visage déjà attribué ne se recalcule pas quand l'ensemble change, comme pour les noms.
+
+## La variété est CONSTRUITE, pas improvisée
+
+`campagne-visages.py` croise **sept axes** — sexe · âge (7) · corpulence (7) · coiffure (14) ·
+couvre-chef (9) · visage (10, +6 réservés aux hommes) · vêtement (15) — avec un tirage semé
+reproductible, et refuse deux combinaisons identiques. **150 prompts vérifiés distincts.**
+⛔ Le **teint n'est pas un axe** : il ne survit pas à l'aplat aux quatre encres (ruling user
+« accepter »). La diversité vit dans l'âge, la corpulence, la coiffure, le couvre-chef, le vêtement.
+⚠️ Garde-fou trouvé **avant** de dépenser un centime : le croisement brut produisait « une femme avec
+un bouc ». La pilosité faciale et le pronom sont liés au sexe — *un croisement d'axes est une
+combinatoire, pas une licence.*
+
+## Deux défauts de pipeline trouvés en exécutant
+
+1. ⚠️ **Un lot long traverse MINUIT, et le dossier d'archive est DATÉ.** `generer.py` écrit dans le
+   dossier du jour ; la campagne cherchait dans celui figé au départ ⇒ **5 « ÉCHEC de génération »
+   alors que les images existaient**, rangées dans `2026-09-07/`. Corrigé : le script cherche
+   désormais dans **tous** les dossiers datés. *Un chemin qui dépend de l'heure est un piège pour tout
+   travail qui dure.*
+2. ⚠️ **Trois aplats étaient faux et le compte disait 150/150.** Postérisés sans matte (le glob avait
+   échoué en silence), ils portaient du laiton dans les coins au lieu du jeton. Trouvé en mesurant
+   **le coin de chacun des 150** — pas en comptant les fichiers. Recomposés : **150/150 au jeton exact
+   `(22,28,43)`**. *Compter les fichiers n'est pas vérifier leur contenu.*
+
+Planche : `planches/pool-150-visages.png`. Coût du pool : ~150 générations + 150 détourages.
