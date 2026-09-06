@@ -1,0 +1,15 @@
+{
+  "modele": "fal-ai/birefnet",
+  "source": "/home/erutheone/project/mafia-unity-fal/Tools/fal/generees/2026-09-06/visage-026-1.png",
+  "parametres": {
+    "model": "General Use (Heavy)",
+    "operating_resolution": "1024x1024",
+    "output_format": "png",
+    "refine_foreground": true
+  },
+  "largeur": 1024,
+  "hauteur": 1024,
+  "request_id": "01a078a6-90fa-76c3-8d6d-62aeafc68f49",
+  "duree_s": 4.8,
+  "genere_le": "2026-09-06T23:36:20+0200"
+}

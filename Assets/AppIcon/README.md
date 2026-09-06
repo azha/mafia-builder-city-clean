@@ -22,6 +22,18 @@ disque visible ? » rend 99,4 % composé contre 95,5 % plein cadre — sur ce mo
 donc elle passe des deux façons. Une garde dont le contrôle positif ne rougit pas ne prouve rien : elle
 a été remplacée, pas assouplie.
 
+## ⚠️ Pourquoi l'avant-plan est VIDE, et pourquoi c'est la bonne réponse
+
+`icone_adaptive_avant_432.png` est **entièrement transparent**, et ce n'est pas un oubli : **le motif
+entier vit dans le calque de FOND**, mis à l'échelle de la zone visible. Le lanceur compose alors le
+fond seul et montre la composition complète.
+
+C'est plus robuste que de répartir le dessin sur deux couches : rien ne dépend de l'ordre des calques
+(non documenté par Unity), rien ne se décale quand le lanceur applique sa parallaxe à l'avant-plan, et
+la zone visible affiche exactement ce qui a été composé. ⇒ **« l'avant-plan est vide » n'est pas un
+défaut à rouvrir** — c'est le régime `sujet-en-fond`, choisi, mesuré et asserté par le script (qui
+REFUSE d'écrire si l'avant-plan porte de l'encre sous ce régime).
+
 ## Le régime des deux calques
 
 **`sujet-en-fond`** (choix user du 2026-09-06 sur la question A/B) : le fond porte l'image opaque,
