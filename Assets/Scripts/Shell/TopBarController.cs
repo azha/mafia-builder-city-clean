@@ -327,6 +327,19 @@ namespace MafiaCleanCity.Shell
         private const float MoneyClusterWidth = 96f;
         private const float ClockClusterWidth = 98f;
         private const float HairlineThicknessPx = 2f;
+
+        /// <summary>L'épaisseur du FILET de bas de barre, en px CSS — **1**, et c'est une constante
+        /// SÉPARÉE parce que le canon donne deux valeurs différentes à deux éléments que ce fichier
+        /// confondait sous un seul nombre.
+        ///
+        /// ⛔ Mesuré par un juge ⊥ (r6 de ①) : filet **1,00 → 1,81 px CSS**, soit 3 px pleins au
+        /// canon contre 5 en jeu. Cause : `HairlineThicknessPx = 2` servait À LA FOIS le filet de la
+        /// barre et le soulignement du montant. Or la source dit `.barre::after{height:1px}` et
+        /// `.ratio{height:2px}` — **deux rôles, deux valeurs**, et le 2 était juste pour l'un et
+        /// faux pour l'autre.
+        /// ★ *Une constante partagée par deux rôles est vraie pour celui qui l'a nommée et fausse
+        ///   pour l'autre* — et rien ne le signale, puisqu'elle est correcte quelque part.</summary>
+        private const float FiletBarreEpaisseurPx = 1f;
         private const float MoneyUnderlineWidthPx = 74f; // REUSE exact — hud-brennar.html:59 `.ratio{width:74px}`
         private const float ZoneRowWidth = 34f;
         private const float ZoneRowHeight = 9f;
@@ -582,7 +595,27 @@ namespace MafiaCleanCity.Shell
             if (alarm)
             {
                 Color severe = HeatBucketResolver.SeverityColor(HeatBucketResolver.Severity.Severe);
-                Color warmedBrass = Color.Lerp(calmGoldColor, severe, AlarmTintBlendRatio);
+                // ⛔⛔ LE VIRAGE CHAUD VA AU JETON DE LA MAQUETTE, PAS À LA COULEUR DE SÉVÉRITÉ.
+                // Un juge ⊥ (r6 de ①) mesure le cerclage à **(200,126,66)** contre `--laiton`
+                // (176,141,62). Sa comparaison porte sur l'état CALME — le compte photographié est
+                // à « Brûlant », donc l'état chaud — mais son constat tient quand même, pour une
+                // autre raison que celle qu'il donne. Deux mesures l'établissent :
+                //   · la maquette DÉFINIT bien un état chaud (`hud-brennar.html` : `.chaud .barre
+                //     ::after` et `.chaud .medaillon .boitier{border-color:var(--braise)}`), donc le
+                //     virage lui-même est conforme — un juge précédent l'avait déjà classé ainsi ;
+                //   · mais la maquette y met **`--braise` ENTIER** (#e0664a), là où ce code
+                //     n'en mélangeait que 30 % à partir du laiton.
+                // ⚠️ ET L'ESSAI ÉVIDENT — prendre la couleur de SÉVÉRITÉ entière — EST FAUX, mesuré
+                //   sur la planche : elle rend **(255,90,77)**, un rouge écrêté au canal R, et c'est
+                //   exactement le défaut qu'un juge a relevé sur un AUTRE écran (« rouge saturé
+                //   écrêté au lieu du corail du canon, (224,102,74) attendu »). La sévérité et
+                //   `--braise` ne sont pas la même couleur, et les 28 oracles n'ont pas bronché sur
+                //   l'essai : *un vert ne dit pas qu'on a pris la bonne teinte, seulement qu'aucune
+                //   garde ne regarde celle-là.*
+                // ⇒ On prend le jeton de la maquette. `hudGaugeArcHot` EST `--braise` (#e0664a) —
+                //   c'est déjà lui que l'arc chaud du cadran emploie, donc un seul `--braise` dans
+                //   tout le chrome, comme il n'y a qu'un seul or.
+                Color warmedBrass = DesignTokens.Current.hudGaugeArcHot;
                 if (hairline != null) hairline.color = warmedBrass;
                 if (boitierRing != null) boitierRing.color = warmedBrass;
             }
@@ -812,7 +845,7 @@ namespace MafiaCleanCity.Shell
             hlRect.anchorMin = new Vector2(0f, 0f);
             hlRect.anchorMax = new Vector2(1f, 0f);
             hlRect.pivot = new Vector2(0.5f, 0f);
-            hlRect.sizeDelta = new Vector2(0f, HairlineThicknessPx);
+            hlRect.sizeDelta = new Vector2(0f, FiletBarreEpaisseurPx);   // `.barre::after{height:1px}`
             hlRect.anchoredPosition = Vector2.zero;
             hairline = hlGo.AddComponent<Image>();
             hairline.raycastTarget = false;
@@ -945,6 +978,52 @@ namespace MafiaCleanCity.Shell
         /// aux 180° que son nom suggère — `fillAmount=0.5` donne donc un DEMI-tour exact, jamais un
         /// quart. `Image.FillMethod.Radial180` — le mécanisme uGUI natif pour un cadran, pas de
         /// texture procédurale par angle.</summary>
+        /// <summary>La couleur du FOND sur lequel un élément du cadran se compose, à un rayon donné.
+        ///
+        /// ⛔ C'est ce qui rend la solution EXACTE possible. La face est un dégradé radial
+        /// (`RadialDisc` interpole par la distance au centre) — donc à RAYON CONSTANT, sa couleur
+        /// est constante. Un arc, un anneau, une lunette suivent un cercle : leur fond ne varie pas
+        /// le long d'eux. Le système a autant d'inconnues que d'équations, et *quand un système en a
+        /// autant, il y a une solution exacte : la chercher* plutôt que d'ajuster une opacité.</summary>
+        private static Color FondDuCadranAuRayon(float rayonPx)
+        {
+            float rayonFace = (ManometreDiameter - BoitierRingThicknessPx * 2f - 1f) / 2f;
+            float t = Mathf.Clamp01(rayonPx / Mathf.Max(1f, rayonFace));
+            return Color.Lerp(DesignTokens.Current.hudGaugeFaceInner,
+                              DesignTokens.Current.hudGaugeFaceOuter, t);
+        }
+
+        /// <summary>Une teinte de maquette, posée pour rendre en LINÉAIRE ce que le navigateur rend
+        /// en sRGB, sur le fond CONNU du cadran à ce rayon.
+        ///
+        /// ⛔⛔ LA CLASSE, MESURÉE PAR UN JUGE ⊥ (r6 de ①) : les deux arcs rendent **33 % et 40 %
+        /// plus clairs** que le canon, dans le MÊME sens — le canon se reproduit en sRGB à une
+        /// distance de 2,0 et 8,6, le jeu en linéaire à 17,9 et 34,6. *Un écart systématique et de
+        /// même signe sur des mesures indépendantes n'est pas plusieurs erreurs : c'est une erreur
+        /// de MODÈLE.* Le navigateur compose en sRGB, ce projet en linéaire, et le mélange linéaire
+        /// favorise la couleur claire. Cinq sites du chrome recopiaient une opacité CSS telle
+        /// quelle ; les quatre qui composent sur le cadran passent ici.
+        /// ⚠️ On garde l'opacité de la CSS et on déplace la COULEUR — trois équations, trois
+        /// inconnues, solution exacte. Résoudre en ajustant l'OPACITÉ serait un nombre pour trois
+        /// canaux, et ce dépôt a déjà mesuré la signature de ce compromis (α résolu à 0,334 en R,
+        /// 0,320 en G, 0,218 en B sur une seule bordure).
+        /// ⚠️ Si la solution sort du gamut, on garde la teinte d'origine — et le log le DIT, parce
+        /// qu'un dispositif inerte ressemble trait pour trait à un dispositif appliqué.</summary>
+        private static Color TeinteSurCadran(Color teinteCss, float alphaCss, float rayonPx, string quoi)
+        {
+            Color fond = FondDuCadranAuRayon(rayonPx);
+            bool atteignable;
+            Color resolue = ProceduralUI.CouleurPourMelangeLineaire(teinteCss, fond, alphaCss, out atteignable);
+            if (!atteignable)
+            {
+                Debug.LogWarning($"[CADRAN-sRGB] {quoi} : aucune couleur ne reproduit le mélange sRGB " +
+                                 "sur ce fond — teinte d'origine conservée, l'écart demeure.");
+                return WithAlpha(teinteCss, alphaCss);
+            }
+            resolue.a = alphaCss;
+            return resolue;
+        }
+
         private void BuildManometre()
         {
             GameObject manoGo = new GameObject("Manometre", typeof(RectTransform));
@@ -1031,7 +1110,7 @@ namespace MafiaCleanCity.Shell
             lunetteRect.sizeDelta = new Vector2(lunetteDiametre, lunetteDiametre);
             Image lunette = lunetteGo.AddComponent<Image>();
             lunette.sprite = ProceduralUI.Ring((int)lunetteDiametre, 2f, Color.white);
-            lunette.color = WithAlpha(Color.white, 0.165f);   // `#ffffff2a`
+            lunette.color = TeinteSurCadran(Color.white, 0.165f, lunetteDiametre / 2f, "lunette");   // `#ffffff2a`
             lunette.raycastTarget = false;
 
             // Alphas REUSE exacts `hud-topbar-reference-source.html:42-44` : track `#ffffff22`
@@ -1061,7 +1140,8 @@ namespace MafiaCleanCity.Shell
             trackRect.sizeDelta = new Vector2(ArcDiameterPx, ArcDiameterPx);
             Image trackImg = trackGo.AddComponent<Image>();
             trackImg.sprite = ProceduralUI.Ring((int)ArcDiameterPx, ArcThicknessPx, Color.white);
-            trackImg.color = WithAlpha(DesignTokens.Current.onSurfacePrimary, 0.133f);
+            trackImg.color = TeinteSurCadran(DesignTokens.Current.onSurfacePrimary, 0.133f,
+                                             ArcDiameterPx / 2f, "piste");
             trackImg.type = Image.Type.Filled;
             trackImg.fillMethod = Image.FillMethod.Radial180;
             trackImg.fillOrigin = (int)Image.Origin180.Left;
@@ -1089,7 +1169,8 @@ namespace MafiaCleanCity.Shell
             //   passe serait ajuster sur le seuil ; ici la cible est la borne du canon, et le seuil
             //   (≥ 20°) ne bouge pas.
             BuildArcSegment(manoGo.transform, "ArcCold",
-                WithAlpha(DesignTokens.Current.hudGaugeArcCold, 0.333f), Image.Origin180.Left, true, 0.1745f);
+                TeinteSurCadran(DesignTokens.Current.hudGaugeArcCold, 0.333f, ArcDiameterPx / 2f, "arc froid"),
+                Image.Origin180.Left, true, 0.1745f);
             // ⛔⛔ LE SEGMENT NEUTRE EST RÉTABLI, ET LE COMMENTAIRE QUI L'AVAIT ABANDONNÉ EST RETIRÉ.
             // Il disait, en substance, que l'interstice de la source ne survivait pas à cette
             // combinaison origine/sens, qu'un arc sans coupure suffisait, et qu'une capture l'avait
@@ -1111,7 +1192,8 @@ namespace MafiaCleanCity.Shell
             // 0,1682 couvre 86°, donc 57,5° (de +25,5 à +83, pour un interstice de 29,45 après le
             // froid qui finit à −4) demandent 0,1682 × 57,5 / 86 = **0,1124**.
             BuildArcSegment(manoGo.transform, "ArcHot",
-                WithAlpha(DesignTokens.Current.hudGaugeArcHot, 0.533f), Image.Origin180.Right, false, 0.1124f);
+                TeinteSurCadran(DesignTokens.Current.hudGaugeArcHot, 0.533f, ArcDiameterPx / 2f, "arc chaud"),
+                Image.Origin180.Right, false, 0.1124f);
 
             // MESURÉ (revue ⊥ sur capture r5, 2026-08-21) — `ZoneRow` (34×9, ancré au bord bas du
             // médaillon) DÉPASSE le cercle de la face : à sa position la plus basse, le rayon

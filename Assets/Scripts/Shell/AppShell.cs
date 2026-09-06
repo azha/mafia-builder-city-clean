@@ -107,6 +107,25 @@ namespace MafiaCleanCity.Shell
 
         // ---- test hooks --------------------------------------------------
         public Tab CurrentTab { get; private set; } = (Tab)(-1); // "no tab activated yet" — a named state, not a magic default
+
+        /// <summary>L'onglet que le DOCK signale — distinct de `CurrentTab`, et c'est le correctif.
+        ///
+        /// ⛔ MESURÉ le 2026-09-06 : sous l'intérieur de district, `CurrentTab` vaut la sentinelle
+        /// `(Tab)(-1)` et **0 indicateur sur 4 est allumé** ; sous un autre écran, 1 sur 4 l'est.
+        /// Un juge ⊥ l'avait vu par l'autre bout — « 0 pixel doré dans toute la bande du dock » —
+        /// et les planches le confirment : ③ en porte 172, ⑥ 95, ① **zéro**. Les quatre objets
+        /// EXISTENT ; c'est l'ÉTAT qui manque. *Avant de corriger un objet absent, vérifier qu'il
+        /// est absent* : ici il ne l'était pas.
+        /// ⇒ Cause : `EnterDistrict` ne touche pas `CurrentTab`, et le fichier le dit — mais on ne
+        ///   peut PAS le lui faire toucher : la sentinelle `(Tab)(-1)` est lue par la garde
+        ///   d'acquisition de session (trois sites), qui distingue « aucun onglet activé » de
+        ///   « onglet activé ». Lui donner une valeur ici changerait un dispositif qui n'a rien à
+        ///   voir avec le dock. *Une garde utile sur un domaine devient un défaut dès qu'on
+        ///   l'applique à un autre* — on ne réutilise donc pas sa variable.
+        /// ⇒ Deux questions, deux champs : `CurrentTab` reste « quel onglet a été activé », et
+        ///   celui-ci répond « quel onglet le dock met en évidence ». Entrer dans un district
+        ///   signale l'Empire, parce que le district S'ATTEINT depuis l'Empire.</summary>
+        private Tab ongletSignale = (Tab)(-1);
         public GameObject MountedTenantGameObject { get; private set; }
         public System.Type MountedTenantType { get; private set; }
         /// <summary>True only while the 5th tab (More) is current — the EMPTY destination is
@@ -206,6 +225,7 @@ namespace MafiaCleanCity.Shell
             EnsureInitialized();
             UnmountCurrentTenant();
             CurrentTab = tab;
+            ongletSignale = tab;
             // ⚠️ PLUS AUCUNE destination vide : `Tab.More` monte ㊲ (La réputation) depuis ce
             // commit. Le drapeau est CONSERVÉ plutôt que supprimé — il est la façon dont l'écran
             // vide s'affirme PAR VALEUR et non par l'absence d'un composant monté, et un futur
@@ -290,6 +310,18 @@ namespace MafiaCleanCity.Shell
             }
 
             UnmountCurrentTenant();
+
+            // ⛔ LE DOCK DOIT DIRE OÙ L'ON EST, et un district s'atteint depuis l'Empire. Sans cette
+            // ligne, entrer dans un district par ce chemin laisse le dock MUET : `CurrentTab` garde
+            // sa sentinelle, aucun des quatre indicateurs ne s'allume, et le joueur perd le seul
+            // repère qui lui dit dans quelle branche il se trouve. Mesuré : 0 indicateur allumé sur
+            // 4 ici contre 1 sur 4 partout ailleurs — et un juge ⊥ l'avait vu par les pixels,
+            // « 0 px doré dans toute la bande du dock ».
+            // ⚠️ On ne touche PAS `CurrentTab` : sa sentinelle est lue par la garde d'acquisition de
+            //   session à trois endroits. C'est `ongletSignale` qui bouge — voir sa déclaration
+            //   pour pourquoi ce sont deux questions et non une.
+            ongletSignale = Tab.Empire;
+            RefreshTabButtonVisuals();
 
             // FUSIONNÉ (item 0.4, charpente-item0-4-design.md §1.6/§2.2) — n'est plus une copie
             // verbatim du corps de `MountTenant<T>` : les DEUX appellent désormais
@@ -1728,7 +1760,23 @@ namespace MafiaCleanCity.Shell
             rondImg.color = Color.white;
             rondImg.raycastTarget = false;
 
-            Color jonc = Color.white; jonc.a = 0.133f;                 // #ffffff22
+            // ⛔ CINQUIÈME SITE DE LA MÊME CLASSE (voir `TopBarController.TeinteSurCadran`) : une
+            // opacité CSS recopiée telle quelle rend PLUS CLAIR dans un projet en linéaire que dans
+            // le navigateur, et l'écart croît avec le contraste. Ici le fond est CONNU — le jonc
+            // longe le BORD du rond, et `RadialDisc` y vaut sa couleur de bord — donc la solution
+            // est exacte : on garde l'opacité de la CSS et on déplace la couleur.
+            // ⚠️ Si elle sort du gamut, on garde le blanc et le log le dit : un dispositif inerte
+            // ressemble trait pour trait à un dispositif appliqué.
+            bool joncAtteignable;
+            Color jonc = MafiaCleanCity.Shell.ProceduralUI.CouleurPourMelangeLineaire(
+                Color.white, DesignTokens.Current.dockRondOuter, 0.133f, out joncAtteignable);
+            if (!joncAtteignable)
+            {
+                Debug.LogWarning("[DOCK-sRGB] le jonc du rond : aucune couleur ne reproduit le " +
+                                 "mélange sRGB sur ce fond — blanc conservé, l'écart demeure.");
+                jonc = Color.white;
+            }
+            jonc.a = 0.133f;                                           // #ffffff22
             GameObject joncGo = new GameObject("Jonc", typeof(RectTransform));
             joncGo.transform.SetParent(rondGo.transform, false);
             Stretch((RectTransform)joncGo.transform, Vector2.zero, Vector2.zero);
@@ -1877,7 +1925,7 @@ namespace MafiaCleanCity.Shell
             // l'indicateur d'actif sur la mauvaise bulle. Une seule liste, trois lecteurs.
             for (int i = 0; i < tabButtons.Count && i < DockRatifie.Length; i++)
             {
-                bool active = DockRatifie[i].onglet == CurrentTab;
+                bool active = DockRatifie[i].onglet == ongletSignale;
                 // HUD v3.1 cohérence (2026-08-21, demandé par le contrôleur — voir BuildTabBar) :
                 // le fond du bouton reste `surfaceRow` dans LES DEUX états (jamais d'aplat coloré
                 // pour signaler l'actif — doctrine « l'or jamais en aplat », W3.U2/C5). L'actif se

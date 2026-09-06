@@ -255,6 +255,22 @@ namespace MafiaCleanCity.Capture.Tests
                 sb.Append($"    {nom,-14} lossyScale={t.lossyScale.x:F6} " +
                           $"rect={rt.rect.width:F1}x{rt.rect.height:F1} localScale={t.localScale.x:F6}\n");
             }
+            // ⛔ L'INDICATEUR D'ONGLET ACTIF — un juge ⊥ mesure **0 pixel doré dans toute la bande
+            // du dock** sur ① (r6), là où les planches de ③ et ⑥ en portent 172 et 95 (mesuré hors
+            // ligne sur les trois planches). Reste à savoir si l'objet a disparu ou si c'est l'ÉTAT
+            // qui n'est pas posé : `EnterDistrict` ne touche PAS `CurrentTab` — le fichier le dit
+            // en toutes lettres — donc l'indicateur dépend de ce qu'un `ActivateTab` a laissé.
+            int indicateursPresents = 0, indicateursAllumes = 0;
+            foreach (Transform t in (canvas != null ? canvas.transform : shell.transform)
+                        .GetComponentsInChildren<Transform>(true))
+                if (t.name == "ActiveIndicator")
+                {
+                    indicateursPresents++;
+                    if (t.gameObject.activeInHierarchy) indicateursAllumes++;
+                }
+            sb.Append($"    dock : {indicateursPresents} indicateurs dans l'arbre, " +
+                      $"{indicateursAllumes} ALLUMÉS · CurrentTab={shell.CurrentTab}\n");
+
             if (shell.TopBar != null)
             {
                 var trt = (RectTransform)shell.TopBar.transform;

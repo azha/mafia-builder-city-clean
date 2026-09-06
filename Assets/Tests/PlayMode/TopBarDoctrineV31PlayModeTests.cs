@@ -648,6 +648,37 @@ namespace MafiaCleanCity.Shell.Tests
             return n == 0 ? Color.black : new Color(sr / n, sg / n, sb / n);
         }
 
+        /// <summary>Le filet de barre et le soulignement du montant ont des épaisseurs DIFFÉRENTES
+        /// au canon — `.barre::after{height:1px}` contre `.ratio{height:2px}` — et le client les
+        /// confondait sous une seule constante. Un juge ⊥ a mesuré le filet à 1,81 px CSS pour 1,00.
+        /// ⚠️ La garde porte sur le RAPPORT des deux, pas sur leurs valeurs absolues : elle est donc
+        /// vraie à toute résolution et ne casse pas si la maquette change d'échelle. Et elle exige
+        /// que les deux EXISTENT — un soulignement absent rendrait le rapport indéfini, pas juste.</summary>
+        [UnityTest]
+        public IEnumerator DA8_FiletDeBarre_MoitieDuSoulignement()
+        {
+            yield return WaitTopBarLoaded(BootShell());
+            yield return new WaitForEndOfFrame();
+
+            RectTransform filet = null, souligne = null;
+            foreach (RectTransform rt in shell.TopBar.GetComponentsInChildren<RectTransform>(true))
+            {
+                if (rt.name == "Hairline") filet = rt;
+                if (rt.name == "Underline") souligne = rt;
+            }
+            Assert.IsNotNull(filet, "le filet de bas de barre doit exister");
+            Assert.IsNotNull(souligne, "le soulignement du montant doit exister — sans lui le " +
+                                       "rapport mesuré ci-dessous serait indéfini, pas juste");
+            Assert.Greater(filet.rect.height, 0f, "anti-vacuité : le filet doit avoir une épaisseur");
+            float rapport = filet.rect.height / souligne.rect.height;
+            Debug.Log($"[FILET] barre={filet.rect.height:F2} u · soulignement={souligne.rect.height:F2} u " +
+                      $"· rapport={rapport:F3} (canon 1/2 = 0,500)");
+            Assert.AreEqual(0.5f, rapport, 0.05f,
+                $"le filet de barre fait {rapport:F3} fois le soulignement au lieu de la moitié : le " +
+                "canon donne 1 px CSS au filet et 2 au soulignement, et une constante unique pour " +
+                "les deux est vraie pour l'un et fausse pour l'autre");
+        }
+
         /// <summary>Rend le canvas du shell dans une texture AUX DIMENSIONS DE L'ÉCRAN, par le
         /// chemin qui fonctionne dans ce batchmode : une caméra hors-écran et une `RenderTexture`.
         ///
