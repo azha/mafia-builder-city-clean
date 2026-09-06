@@ -452,6 +452,55 @@ namespace MafiaCleanCity.Shell.Tests
             return (offenders, sampled, examples);
         }
 
+        /// <summary>Rend le canvas du shell dans une texture AUX DIMENSIONS DE L'ÉCRAN, par le
+        /// chemin qui fonctionne dans ce batchmode : une caméra hors-écran et une `RenderTexture`.
+        ///
+        /// ⚠️ La taille est celle de l'ÉCRAN et non un format choisi : cet oracle situe le
+        /// médaillon par `GetWorldCorners`, qui rend des pixels d'écran sous un canvas
+        /// `ScreenSpaceOverlay`. Une texture d'une autre taille décalerait toutes les sondes sans
+        /// rien casser de visible — le pire des défauts d'instrument.
+        /// ⚠️ Le mode du canvas est RÉTABLI dans tous les cas : le laisser en `ScreenSpaceCamera`
+        /// changerait le monde du test suivant, et cette suite en compte vingt-six autres.</summary>
+        private Texture2D RendreLEcran()
+        {
+            Canvas canvas = shell.ShellCanvas;
+            RenderMode modeAvant = canvas.renderMode;
+            Camera camAvant = canvas.worldCamera;
+            float planAvant = canvas.planeDistance;
+            int l = Screen.width, h = Screen.height;
+            var rt = new RenderTexture(l, h, 24, RenderTextureFormat.ARGB32);
+            var camGo = new GameObject("DA6Cam");
+            try
+            {
+                var cam = camGo.AddComponent<Camera>();
+                cam.targetTexture = rt;
+                cam.clearFlags = CameraClearFlags.SolidColor;
+                cam.backgroundColor = Color.black;
+                cam.orthographic = true;
+                canvas.renderMode = RenderMode.ScreenSpaceCamera;
+                canvas.worldCamera = cam;
+                canvas.planeDistance = 10f;
+                Canvas.ForceUpdateCanvases();
+                cam.Render();
+                RenderTexture prev = RenderTexture.active;
+                RenderTexture.active = rt;
+                var tex = new Texture2D(l, h, TextureFormat.RGB24, false);
+                tex.ReadPixels(new Rect(0, 0, l, h), 0, 0);
+                tex.Apply();
+                RenderTexture.active = prev;
+                return tex;
+            }
+            finally
+            {
+                canvas.renderMode = modeAvant;
+                canvas.worldCamera = camAvant;
+                canvas.planeDistance = planAvant;
+                Object.DestroyImmediate(camGo);
+                rt.Release();
+                Object.DestroyImmediate(rt);
+            }
+        }
+
         [UnityTest]
         public IEnumerator DA6_ManometreContent_NeverExceedsInscribedCircle_PixelReal()
         {
@@ -485,13 +534,29 @@ namespace MafiaCleanCity.Shell.Tests
             //     VARIABLE — deux captures qui ne diffèrent QUE par la présence du médaillon.
             //     Tout pixel de l'anneau qui change entre les deux EST du manomètre, quel que soit
             //     ce qu'il y a derrière. Plus aucune hypothèse sur le décor, à aucune résolution.
-            Texture2D avec = ScreenCapture.CaptureScreenshotAsTexture();
+            // ⛔⛔⛔ CET ORACLE N'AVAIT JAMAIS TOURNÉ ICI. Mesuré le 2026-09-06 : il lève une
+            // `NullReferenceException` à cette ligne même, sur les DEUX captures (`:488` et `:494`),
+            // parce que `ScreenCapture.CaptureScreenshotAsTexture()` ne rend RIEN dans ce batchmode.
+            // C'est la classe que le runbook §4.8 documente déjà pour `ScreenCapture.CaptureScreenshot`
+            // (« cette API n'écrit rien dans ce batchmode », TD-597, 0 passé sur 11) — et la ligne
+            // de partage y est nommée : *les suites de capture qui marchent ici passent toutes par
+            // `RenderTexture` + une caméra*.
+            // ★ Ce que ça coûtait : c'est le SEUL oracle du dépôt qui regarde les pixels du
+            //   manomètre. Les vingt-six autres de `HUDv31` mesurent des propriétés structurelles
+            //   ou géométriques. Un juge ⊥ a donc pu relever quatre défauts du cadran — pivot du
+            //   mauvais côté du centre (0,147 R en dessous → 0,145 R au-dessus), segment neutre de
+            //   27° disparu, lunette intérieure absente, fond radial devenu plat — pendant que
+            //   `HUDv31` rendait 26/27. *Une garde qui n'a jamais tourné n'est pas une garde ;
+            //   c'est une prose datée avec un `[Test]` devant.*
+            // ⚠️ Le rouge ne se lisait pas comme ça : `NullReferenceException` sur un oracle de
+            //   pixels ressemble à un défaut de l'écran, pas à une API muette.
+            Texture2D avec = RendreLEcran();
             Texture2D sans = null;
             try
             {
                 manoT.gameObject.SetActive(false);
                 yield return new WaitForEndOfFrame();
-                sans = ScreenCapture.CaptureScreenshotAsTexture();
+                sans = RendreLEcran();
                 manoT.gameObject.SetActive(true);
 
                 Assert.AreEqual(avec.width, sans.width, "les deux captures doivent avoir la MÊME taille");
