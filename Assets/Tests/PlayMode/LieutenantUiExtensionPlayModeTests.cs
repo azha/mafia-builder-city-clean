@@ -421,7 +421,32 @@ namespace MafiaCleanCity.Operational.Tests
                     $"each roster row's op_state_band is a closed-domain band (got '{r.op_state_band}')");
                 CollectionAssert.Contains(new[] { "NONE", "FEW", "MANY" }, r.rule_count_band,
                     $"each roster row's rule_count_band is a closed-domain band (got '{r.rule_count_band}')");
+                // ⛔ LE NOM EST SERVI ET DOIT ÊTRE PARSÉ — c'est le champ que le DTO jetait.
+                Assert.IsFalse(string.IsNullOrWhiteSpace(r.name),
+                    $"la rangée {r.lieutenant_id} n'a pas de `name` parsé : le serveur le sert " +
+                    "(mesuré sur le corps du 2026-09-06, six clés), et un DTO qui ne le déclare " +
+                    "pas le jette EN SILENCE — `JsonUtility` n'a aucun moyen de s'en plaindre.");
             }
+
+            // ⛔⛔ ET LA PROPRIÉTÉ QUI COMPTE POUR LE JOUEUR : les noms DISTINGUENT les lieutenants.
+            // Le défaut réparé n'était pas « un champ manque » mais ce que le joueur voyait : les
+            // trois lieutenants du compte de démo sont tous COOK, donc l'organigramme affichait
+            // « Cuisinier » trois fois. *Un champ jeté ne laisse pas un vide — il laisse un AUTRE
+            // champ prendre sa place, et c'est indiscernable tant que les valeurs diffèrent.*
+            // ⇒ ANTI-DÉGÉNÉRESCENCE : des noms tous IDENTIQUES satisferaient « chaque rangée a un
+            //   nom » sans rien réparer. On exige donc autant de noms DISTINCTS que de rangées.
+            string[] noms = roster.Select(r => r.name).ToArray();
+            Assert.AreEqual(noms.Length, noms.Distinct().Count(),
+                "deux lieutenants portent le même nom rendu — c'est exactement le symptôme du " +
+                "champ jeté (l'archétype prenait la place du nom, et trois COOK donnaient trois " +
+                "fois « Cuisinier »). Noms : [" + string.Join(" · ", noms) + "]");
+
+            // Et le rendu porte bien CES noms-là, pas une dérivation locale.
+            var textes = controller.RenderedTexts;
+            foreach (string n in noms)
+                Assert.IsTrue(textes.Any(x => x == n),
+                    $"le nom servi « {n} » n'apparaît nulle part dans le rendu. " +
+                    "Corpus : [" + string.Join(" · ", textes) + "]");
 
             // --- Open the COOK row → the builder palette switches back to COOK. OpenLieutenant points the current-lieutenant
             // id at cookId and StartCoroutine(RefreshBands()) internally; wait until CurrentArchetype reflects COOK (the bands

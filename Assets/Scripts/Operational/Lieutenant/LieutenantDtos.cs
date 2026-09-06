@@ -113,6 +113,17 @@ namespace MafiaCleanCity.Operational.Lieutenant
     public class RosterRow
     {
         public string lieutenant_id;    // uuid identity of the lieutenant (the Open key; opaque, not a scalar)
+        /// <summary>⛔⛔ LE NOM ÉTAIT SERVI ET LE CLIENT LE JETAIT — forme F, côté client.
+        /// Mesuré le 2026-09-06 sur le corps de `GET /v1/lieutenants` (`demo_capture`, horloge
+        /// 72 013) : le serveur rend **six** clés — `lieutenant_id · name · archetype ·
+        /// op_state_band · rule_count_band · tenure_bucket` — et ce DTO n'en déclarait que
+        /// **cinq**. `JsonUtility` ignore en silence ce qu'il ne sait pas nommer.
+        /// ⇒ Conséquence à l'écran, relevée par le juge ⊥ à la bbox : l'organigramme affichait
+        ///   l'ARCHÉTYPE à la place du nom, et les trois lieutenants du compte étant tous `COOK`,
+        ///   le joueur lisait **« Cuisinier » trois fois** au lieu de `Lt. Oster / Lt. Brasse /
+        ///   Lt. Sallo`. *Un champ absent d'un DTO ne lève rien : il se voit à l'écran, sous la
+        ///   forme d'un autre champ qui prend sa place.*</summary>
+        public string name;             // le nom de fiction du lieutenant (servi ; jamais dérivé côté client)
         public string archetype;        // COOK | SECURITY | BOOKKEEPER | LOGISTICS | LAUNDERING | DISTRIBUTION | UNKNOWN
         public string op_state_band;    // PAUSED | ACTIVE | IDLE — the delegated operational state band
         public string rule_count_band;  // NONE | FEW | MANY — the behavior-script rule count as a band (never the raw count)

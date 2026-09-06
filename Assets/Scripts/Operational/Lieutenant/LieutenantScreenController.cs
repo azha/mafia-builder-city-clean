@@ -2310,7 +2310,15 @@ namespace MafiaCleanCity.Operational.Lieutenant
             v.childForceExpandWidth = true; v.childForceExpandHeight = false;
             AddLayoutElement(bloc, flexibleWidth: 1);
 
-            string nom = FamilleLabels.Archetype(row.archetype);
+            // ⛔ LE NOM SERVI, PLUS L'ARCHÉTYPE. Le champ existait dans la réponse et le DTO le
+            // jetait ; les trois lieutenants du compte de démo étant tous COOK, l'organigramme
+            // affichait « Cuisinier » trois fois. L'archétype reste visible — il descend sur la
+            // ligne d'état, à sa place, comme qualificatif et non comme identité.
+            // ⚠️ Repli NOMMÉ si le serveur n'envoie rien : l'archétype, qui reste un fait sur ce
+            //    lieutenant. Jamais une chaîne vide — un nom absent doit se VOIR.
+            string nom = string.IsNullOrWhiteSpace(row.name)
+                ? FamilleLabels.Archetype(row.archetype)
+                : row.name;
             TextMeshProUGUI nomTxt = NewText("Nom", bloc.transform, nom, FamilleNomTaille, TextAlignmentOptions.Left);
             nomTxt.font = DesignTokens.Current.hudSerifFont;
             nomTxt.color = DesignTokens.Current.hudCreme;
@@ -2318,10 +2326,16 @@ namespace MafiaCleanCity.Operational.Lieutenant
             TrackText(nomTxt, nom);
 
             // ⚠️ LA PUCE NE PEUT PAS PORTER LE MODE, ET C'EST MESURÉ. La maquette y met « DÉLÉGUÉ » /
-            // « DIRECT », c'est-à-dire `mode` (tasked|delegated) — un champ que `RosterRow` NE PORTE
-            // PAS (`LieutenantDtos.cs:113-120` : lieutenant_id, archetype, op_state_band,
-            // rule_count_band, tenure_bucket). `mode` vit sur le DÉTAIL, une requête par lieutenant.
-            // Afficher un mode ici demanderait N appels, ou de l'inventer.
+            // « DIRECT », c'est-à-dire `mode` (tasked|delegated) — un champ que la liste ne porte
+            // pas : il vit sur le DÉTAIL, une requête par lieutenant. Afficher un mode ici
+            // demanderait N appels, ou de l'inventer.
+            // ⛔ L'ÉNUMÉRATION DES CHAMPS QUI SUIVAIT ICI ÉTAIT FAUSSE, et c'est instructif : elle
+            //    listait « lieutenant_id, archetype, op_state_band, rule_count_band, tenure_bucket »
+            //    comme la totalité de ce que la liste transporte. Le serveur en servait un SIXIÈME
+            //    — `name` — que le DTO ne déclarait pas. *Une énumération recopiée d'un DTO décrit
+            //    le DTO, jamais la réponse* : elle ne pouvait pas voir le champ qui manquait
+            //    justement au DTO. Elle est retirée plutôt que corrigée — c'est le corps servi qui
+            //    fait foi, pas une liste dans un commentaire.
             // La puce porte donc l'ANCIENNETÉ, que la liste transporte explicitement — le DTO dit
             // qu'elle existe pour « the filter-by-bucket teaser surface ». C'est un qualificatif réel
             // et c'est ce qu'un organigramme de famille montre sous un nom.
