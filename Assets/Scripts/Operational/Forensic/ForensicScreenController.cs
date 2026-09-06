@@ -503,14 +503,42 @@ namespace MafiaCleanCity.Operational
             }
         }
 
+        /// <summary>La couleur d'un rang de gravité — PRODUCTEUR UNIQUE, et il rend désormais la
+        /// palette que la maquette porte.
+        ///
+        /// ⛔⛔ DEUX DES TROIS RANGS ÉTAIENT FAUX, ET LE TROISIÈME — celui qu'on aurait « corrigé »
+        /// en premier — ÉTAIT LE SEUL JUSTE. Mesuré le 2026-09-06 sur la référence ratifiée
+        /// `Tools/juge-visuel/screen_b7/reference-1080x2102.png`, dominantes sur les aplats des
+        /// trois pastilles (≈3 220 pixels identiques chacun, donc la couleur de remplissage et non
+        /// la frange d'anticrénelage) :
+        ///
+        ///     « discret »    (clear)   rgb(125,179,106)  ← un VERT      · le code rendait le cyan
+        ///     « on regarde » (faint)   rgb(242,201,107)  ← un OR        · le code rendait de l'or ✓
+        ///     « ça se voit » (visible) rgb(255,158,61)   ← accentWarning· le code rendait du ROUGE
+        ///
+        /// ★ Le rang « visible » est le plus grave des trois : la maquette y rend `accentWarning`
+        ///   **à distance 0**, et l'écran peignait `SeverityColor(Severe)`. Un cran de gravité de
+        ///   trop, sur l'écran qui existe pour dire au joueur à quel point il est visible.
+        /// ★ Et `SeverityColor` n'avait rien à faire ici : c'est l'échelle de la CHALEUR d'un
+        ///   bâtiment, pas la gravité d'une piste. **Deux échelles, deux producteurs** — les faire
+        ///   se croiser rendait chaque changement de l'une visible dans l'autre, sans qu'aucune
+        ///   garde ne relie les deux.
+        /// ★★ Ce qui rend le cas instructif : j'ai d'abord classé `Surveille → accentGold` comme un
+        ///   défaut, en lisant le COMMENTAIRE du token (« CTA / stage terminale ») au lieu d'ouvrir
+        ///   la référence. La référence emploie l'or au titre, au CTA **et** à ce rang de gravité :
+        ///   c'est donc le commentaire du token qui est plus étroit que l'usage ratifié.
+        ///   *Un token lu pour sa définition reste déduit sur son emploi.*</summary>
         public static Color CouleurPour(Gravite g)
         {
             switch (g)
             {
-                case Gravite.Calme:     return DesignTokens.Current.hudGaugeArcCold;
+                // Le repli précédent était `hudGaugeArcCold`, c'est-à-dire le cyan de la palette :
+                // il ne posait pas une valeur d'attente, il SUBSTITUAIT un token de la palette à un
+                // autre — effaçant une distinction que le dessin faisait exprès. *Un repli pris dans
+                // la même palette ressemble à un choix ; c'est ce qui le rend invisible.*
+                case Gravite.Calme:     return DesignTokens.Current.accentCalm;
                 case Gravite.Surveille: return DesignTokens.Current.accentGold;
-                case Gravite.Criant:    return HeatBucketResolver.SeverityColor(
-                                                   HeatBucketResolver.Severity.Severe);
+                case Gravite.Criant:    return DesignTokens.Current.accentWarning;
                 case Gravite.Inconnu:   return DesignTokens.Current.onSurfaceMuted;
                 default: throw new System.ArgumentOutOfRangeException(nameof(g), g,
                     "ForensicResolvers.CouleurPour : membre de Gravite non résolu.");
