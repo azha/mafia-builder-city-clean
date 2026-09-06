@@ -848,13 +848,13 @@ namespace MafiaCleanCity.Operational.Lieutenant
             ClearStatusRows();
 
             // archetype (COOK | SECURITY | LOGISTICS | BOOKKEEPER | LAUNDERING | DISTRIBUTION | UNKNOWN).
-            AddStatusRow(Lib("Archétype"), ArchetypeLabel(b.archetype), "[*]", AccentMild);
+            AddStatusRow(Lib("Archétype"), FamilleLabels.Archetype(b.archetype), "[*]", AccentMild);
             // granted_role (advisory | executor | delegated_owner | cohort_overseer).
             AddStatusRow(Lib("Rôle"), GrantedRoleLabel(b.granted_role), GrantedRoleGlyph(b.granted_role), AccentMild);
             // mode (tasked | delegated).
-            AddStatusRow(Lib("Mode"), ModeLabel(b.mode), ModeGlyph(b.mode), AccentMild);
+            AddStatusRow(Lib("Mode"), FamilleLabels.Mode(b.mode), ModeGlyph(b.mode), AccentMild);
             // op_state_band (SETTLING | ACTIVE | PAUSED | IDLE) — the delegated operational state (Phase-11 adds SETTLING).
-            AddStatusRow(Lib("État"), OpStateLabel(b.op_state_band), OpStateGlyph(b.op_state_band), OpStateAccent(b.op_state_band));
+            AddStatusRow(Lib("État"), FamilleLabels.Etat(b.op_state_band), OpStateGlyph(b.op_state_band), OpStateAccent(b.op_state_band));
             // rule_count_band (NONE | FEW | MANY) — the behavior-script rule count as a band (never the raw count).
             AddStatusRow(Lib("Règles"), RuleCountLabel(b.rule_count_band), RuleCountGlyph(b.rule_count_band), RuleCountAccent(b.rule_count_band));
 
@@ -932,27 +932,27 @@ namespace MafiaCleanCity.Operational.Lieutenant
         /// est comparé au compte réel — il faut le relever quand cette méthode grossit. TD-538.</summary>
         public void RendreTousLesLibelles()
         {
-            ArchetypeLabel("COOK");
-            ArchetypeLabel("SECURITY");
-            ArchetypeLabel("LOGISTICS");
-            ArchetypeLabel("BOOKKEEPER");
-            ArchetypeLabel("LAUNDERING");
-            ArchetypeLabel("DISTRIBUTION");
-            ArchetypeLabel("UNKNOWN");
-            ArchetypeLabel("__inconnu__");   // le repli nommé du résolveur
+            FamilleLabels.Archetype("COOK");
+            FamilleLabels.Archetype("SECURITY");
+            FamilleLabels.Archetype("LOGISTICS");
+            FamilleLabels.Archetype("BOOKKEEPER");
+            FamilleLabels.Archetype("LAUNDERING");
+            FamilleLabels.Archetype("DISTRIBUTION");
+            FamilleLabels.Archetype("UNKNOWN");
+            FamilleLabels.Archetype("__inconnu__");   // le repli nommé du résolveur
             GrantedRoleLabel("advisory");
             GrantedRoleLabel("executor");
             GrantedRoleLabel("delegated_owner");
             GrantedRoleLabel("cohort_overseer");
             GrantedRoleLabel("__inconnu__");   // le repli nommé du résolveur
-            ModeLabel("tasked");
-            ModeLabel("delegated");
-            ModeLabel("__inconnu__");   // le repli nommé du résolveur
-            OpStateLabel("SETTLING");
-            OpStateLabel("ACTIVE");
-            OpStateLabel("PAUSED");
-            OpStateLabel("IDLE");
-            OpStateLabel("__inconnu__");   // le repli nommé du résolveur
+            FamilleLabels.Mode("tasked");
+            FamilleLabels.Mode("delegated");
+            FamilleLabels.Mode("__inconnu__");   // le repli nommé du résolveur
+            FamilleLabels.Etat("SETTLING");
+            FamilleLabels.Etat("ACTIVE");
+            FamilleLabels.Etat("PAUSED");
+            FamilleLabels.Etat("IDLE");
+            FamilleLabels.Etat("__inconnu__");   // le repli nommé du résolveur
             RuleCountLabel("NONE");
             RuleCountLabel("FEW");
             RuleCountLabel("MANY");
@@ -988,20 +988,6 @@ namespace MafiaCleanCity.Operational.Lieutenant
             BandLabel("__inconnu__");   // le repli nommé du résolveur
         }
 
-        private static string ArchetypeLabel(string a)
-        {
-            switch (a)
-            {
-                case "COOK": return MafiaCleanCity.I18n.Libelle.De("famille", "archetype", "Cuisinier");
-                case "SECURITY": return MafiaCleanCity.I18n.Libelle.De("famille", "archetype", "Sécurité");
-                case "LOGISTICS": return MafiaCleanCity.I18n.Libelle.De("famille", "archetype", "Logistique");
-                case "BOOKKEEPER": return MafiaCleanCity.I18n.Libelle.De("famille", "archetype", "Comptable");
-                case "LAUNDERING": return MafiaCleanCity.I18n.Libelle.De("famille", "archetype", "Blanchiment");
-                case "DISTRIBUTION": return MafiaCleanCity.I18n.Libelle.De("famille", "archetype", "Distribution");
-                case "UNKNOWN": return MafiaCleanCity.I18n.Libelle.De("famille", "archetype", "Inconnu");
-                default: return string.IsNullOrEmpty(a) ? "—" : a;
-            }
-        }
 
         // ----- granted_role band (advisory | executor | delegated_owner | cohort_overseer) — EXHAUSTIVE over GrantedRoleBand -----
         private static string GrantedRoleLabel(string r)
@@ -1019,33 +1005,8 @@ namespace MafiaCleanCity.Operational.Lieutenant
         private static string GrantedRoleGlyph(string r) =>
             r == "advisory" ? "[?]" : r == "executor" ? "[>]" : r == "delegated_owner" ? "[@]" : r == "cohort_overseer" ? "[#]" : "[-]";
 
-        // ----- mode band (tasked | delegated) — EXHAUSTIVE over ModeBand -----
-        private static string ModeLabel(string m)
-        {
-            switch (m)
-            {
-                case "tasked": return MafiaCleanCity.I18n.Libelle.De("famille", "mode", "Missionné");
-                case "delegated": return MafiaCleanCity.I18n.Libelle.De("famille", "mode", "Délégué");
-                default: return string.IsNullOrEmpty(m) ? "—" : m;
-            }
-        }
         private static string ModeGlyph(string m) => m == "delegated" ? "[>>]" : m == "tasked" ? "[>]" : "[-]";
 
-        // ----- op_state_band (SETTLING | PAUSED | ACTIVE | IDLE) — EXHAUSTIVE over OpStateBand (Phase-11 adds SETTLING) -----
-        // R2.2: the delegation_paused bool + live cook state + the settling window surface ONLY as this band. PRECEDENCE
-        // SETTLING > PAUSED > ACTIVE > IDLE. SETTLING=re-script/reassign window still open (moderate — transient, resolves on
-        // its own), ACTIVE=working (mild), PAUSED=script halted ops (severe), IDLE=quiet (moderate).
-        private static string OpStateLabel(string s)
-        {
-            switch (s)
-            {
-                case "SETTLING": return MafiaCleanCity.I18n.Libelle.De("famille", "opstate", "Prend ses marques");
-                case "ACTIVE": return MafiaCleanCity.I18n.Libelle.De("famille", "opstate", "Actif");
-                case "PAUSED": return MafiaCleanCity.I18n.Libelle.De("famille", "opstate", "En pause");
-                case "IDLE": return MafiaCleanCity.I18n.Libelle.De("famille", "opstate", "Au repos");
-                default: return string.IsNullOrEmpty(s) ? "—" : s;
-            }
-        }
         private static string OpStateGlyph(string s) =>
             s == "SETTLING" ? "[~]" : s == "ACTIVE" ? "[>]" : s == "PAUSED" ? "[||]" : s == "IDLE" ? "[..]" : "[-]";
         private static Color OpStateAccent(string s) =>
@@ -1383,7 +1344,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             TrackText(pickerCap, "Archetype");
 
             Button pick = AddCycleButton(pickerRow.transform, "Archetype",
-                () => ArchetypeLabel(pickedArchetype),
+                () => FamilleLabels.Archetype(pickedArchetype),
                 CyclePickedArchetype);
             pickerLabel = pick.GetComponentInChildren<TextMeshProUGUI>();
 
@@ -1429,13 +1390,13 @@ namespace MafiaCleanCity.Operational.Lieutenant
         private void RenderRecruitSection()
         {
             if (Destroyed) return;
-            if (pickerLabel != null) pickerLabel.text = ArchetypeLabel(pickedArchetype);
+            if (pickerLabel != null) pickerLabel.text = FamilleLabels.Archetype(pickedArchetype);
             if (recruitButtonLabel != null) recruitButtonLabel.text = RecruitButtonText(pickedArchetype);
             if (targetRow != null) targetRow.SetActive(RuleModel.NeedsTarget(pickedArchetype));
         }
 
         // The Recruit button caption for an archetype ("Recruit Cook" / "Recruit Security" …).
-        private static string RecruitButtonText(string archetype) => "Recruit " + ArchetypeLabel(archetype);
+        private static string RecruitButtonText(string archetype) => "Recruit " + FamilleLabels.Archetype(archetype);
 
         // The Status section (T2): a section label + a Refresh button (re-fetch the bands) + the player-authored script
         // text block. The band ROWS render into statusRows (above); this section holds the controls + the script. The
@@ -2571,12 +2532,12 @@ namespace MafiaCleanCity.Operational.Lieutenant
             AddLayoutElement(g.gameObject, minWidth: largeurGlyphe,
                 preferredWidth: largeurGlyphe, flexibleWidth: 0);
 
-            TextMeshProUGUI label = NewText("Archetype", go.transform, ArchetypeLabel(row.archetype), 15, TextAlignmentOptions.Left);
+            TextMeshProUGUI label = NewText("Archetype", go.transform, FamilleLabels.Archetype(row.archetype), 15, TextAlignmentOptions.Left);
             label.color = DesignTokens.Current.onSurfaceMuted;
             AddLayoutElement(label.gameObject, minWidth: 120, flexibleWidth: 1);
 
             // op_state band (ACTIVE | PAUSED | IDLE), worded + colour-coded like the Status section's State row.
-            TextMeshProUGUI state = NewText("State", go.transform, OpStateLabel(row.op_state_band), 15, TextAlignmentOptions.Right);
+            TextMeshProUGUI state = NewText("State", go.transform, FamilleLabels.Etat(row.op_state_band), 15, TextAlignmentOptions.Right);
             state.color = OpStateAccent(row.op_state_band);
             state.fontStyle = FontStyles.Bold;
             AddLayoutElement(state.gameObject, minWidth: 90, flexibleWidth: 0);
@@ -2587,8 +2548,8 @@ namespace MafiaCleanCity.Operational.Lieutenant
             AddActionButton(go.transform, Lib("Ouvrir"), () => OpenLieutenant(capturedId));
 
             TrackText(g, ArchetypeGlyph(row.archetype));
-            TrackText(label, ArchetypeLabel(row.archetype));
-            TrackText(state, OpStateLabel(row.op_state_band));
+            TrackText(label, FamilleLabels.Archetype(row.archetype));
+            TrackText(state, FamilleLabels.Etat(row.op_state_band));
         }
 
         // A distinct shape per archetype (a11y F2 — shape carries meaning alongside colour). EXHAUSTIVE over the roster's
