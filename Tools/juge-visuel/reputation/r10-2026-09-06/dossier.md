@@ -1,5 +1,3 @@
-> ⏸️ **SUSPENDU le 2026-09-06 ~11:40 (f2)** : ce tour attend la PAIRE fraîche 1920+2400 (la suite ㊲ sème, TD-647) ; juge arrêté avant toute mesure, aucun rapport. À relancer sur la paire.
-
 # Dossier du juge visuel — ㊲ La réputation (« le miroir ») — r10 — 2026-09-06
 
 > ⚠️ **Ce dossier est complet et instruisable.** S'il te manque quelque chose, c'est un défaut du dossier :
@@ -9,8 +7,8 @@
 
 - **Nom** : La réputation (« le miroir ») (㊲, canon `screen_b3`) — contrôleur `ReputationScreenController`
 - **Ce qu'on vient y faire** : « le miroir » : on vient lire ce que son lieutenant a ABSORBÉ des règles qu'on lui a données — pas ce qu'on lui a dit, ce qu'il en a retenu. L'écran est UN portrait : le lieutenant, sa posture, ses quatre indices de tenue ; on se lit sur lui.
-- **Chemin joueur emprunté par la capture** : onglet PLUS → première entrée « LA RÉPUTATION » (chemin RÉEL du joueur, `Capture_EcranReputation_SousChrome`), compte de démo.
-- **États capturés** : un seul : celui du compte `demo_capture` (re-semé, TD-642) — VIERGE (cadre #120) ou GARNI (cadre #119) : ton inventaire le dira, et c'est LE témoin à choisir.
+- **Chemin joueur emprunté par la capture** : onglet PLUS → « LA RÉPUTATION » pour le chemin joueur ; **ces captures-ci sont prises SANS le chrome du shell** (suite `ReputationScreenPlayModeTests`, canvas propre) — ne compte pas l'absence de bandeau/dock comme un écart, mais dis ce que cette absence t'empêche de vérifier.
+- **États capturés** : un seul : le compte `demo_capture` GELÉ (base 72 118, roster Halde·Rook·Sallo) — VIERGE (cadre #120) ou GARNI (cadre #119) : ton inventaire le dira, c'est LE témoin à choisir.
 
 ## Référence (fait autorité : l'IMAGE)
 
@@ -61,20 +59,23 @@
 
 | fichier (dans ce dossier) | résolution | état | prise le | test |
 |---|---|---|---|---|
-| `capture-1080x2400.png` | 1080×2400 | compte `demo_capture` (rapporté), sous chrome, via Plus — après le correctif du menu fantôme | 2026-09-06 10:50 (commit `31d8e43`, repris tel quel dans la campagne `1b887e3`) | `VuePrincipaleCapturePlayModeTests.Capture_EcranReputation_SousChrome (`screen_b3_reputation_sous_chrome_1080x2400.png`, sha256 `0b63d5a9…`)` |
+| `capture-1080x1920.png` | 1080×1920 (16:9) | compte gelé, SANS chrome | 2026-09-06 11:37 (`0da8895`, `correcteur/ecrans`) | `ReputationScreenPlayModeTests (`screen_b3_reputation_1080x1920.png`, sha256 `1612c8bb…`)` |
+| `capture-1080x2400.png` | 1080×2400 (20:9, cible téléphone) | compte gelé, SANS chrome | 2026-09-06 11:37 (`0da8895`) | `idem (`screen_b3_reputation_1080x2400.png`, `9974e422…`)` |
+| `capture-1080x1920-t1s.png` | 1080×1920 à T+1 s | contrôle de stabilité (aucune animation attendue) | 2026-09-06 11:37 (`0da8895`) | `idem (`screen_b3_reputation_1080x1920_t1s.png`) — ⚠️ sha256 IDENTIQUE à la capture T (`1612c8bb…`) : 0 pixel différent par construction ; dis si cela prouve la stabilité ou si le même tampon a été écrit deux fois (indécidable depuis l'image)` |
 
 - Client au moment des captures : `76ee3cc` (`main`, 2026-09-04 11:23 — « les QUINZE planches reprises sur le
-  MÊME bundle (674 clés) ») ; ce dossier est préparé sur `17d44dc`. Une capture est une mesure DATÉE.
+  MÊME bundle (674 clés) ») ; ce dossier est préparé sur `635a101`. Une capture est une mesure DATÉE.
 - Compte photographié : celui du shell par défaut, `operational_demo@example.test` (`AppShell.cs:104`), garni
   par le seeder — **pas un compte frais**. Son état au moment de la capture n'est pas re-mesurable ici.
 - Gardes du test (`CaptureSousShell` / `CapturerA`) : locataire réellement monté, feuille nommée par l'appelant,
   contenu chargé, rect ≥ 200×200, **compte de TEINTES distinctes** (pas « non noir » — un aplat satisfait « non
   noir »), voisins éteints par différence. Les valeurs mesurées ne sont pas disponibles (log non préservé).
-- **Identité et minute** : la campagne `1b887e3` est annoncée `régime=env`, base 72 118 (`empreinte-reference.json`) ; **le message du commit `31d8e43` ne cite pas la ligne `[DemoIdentityResolver]` pour cette planche** ⇒ identité et minute **NON VÉRIFIÉES ici** — toute comparaison de VALEUR (un compte, un nom) va en non-vérifié ; la forme se juge.
-- **Depuis la planche du r9** : le menu « Plus » restait monté SOUS les écrans ouverts par ce chemin (`15a0da7`) — corrigé avant cette recapture ; le code de l'écran a bougé d'un commit (`cbffc49`, +45/−2 sur `ReputationScreenController.cs`, garde de capture). Fait de provenance, pas verdict.
-- **Deux faits rapportés par le correcteur — À VÉRIFIER SUR L'IMAGE, pas à croire** : (1) le portrait serait PROCÉDURAL (rectangles/ellipses aux coordonnées du SVG, aucun rendu d'atelier) ; (2) en état VIERGE la maquette et le client ne rendent PAS de montre (`watch = hidden`, 0 pixel d'or dans la carte), et l'ovale clair aux deux barres que des juges précédents ont appelé « montre » serait le **GANT** (griffes de saleté obliques −28°/+18°, gant rentré). ⇒ **Nomme l'OBJET que tu mesures par sa position dans le buste et sa taille** (« ellipse claire de a×b CSS centrée à (x, y) % de la carte, sous le poignet droit »), jamais par son nom supposé ; puis dis à quel élément du SVG (`generateur-reputation.py`) il correspond, avec la mesure.
-- **Mesure DUE sur la calotte/coiffe** (trois réglages précédents, trois erreurs) : donne **largeur de calotte ÷ largeur de tête**, **hauteur d'attache** (où la calotte rejoint le visage, en % de la hauteur du visage) et l'épaisseur, des deux côtés — c'est ce qui manque pour un 4ᵉ réglage qui ne tâtonne pas.
-- **Grandeurs des tours précédents** : `grandeurs-r9.md` (planche du 04/09, `operational_demo`) et `grandeurs-r8.md` (planche sans chrome du 01/09) — valeurs sans verdict, pour la colonne `critère`. Rien d'autre des tours r1→r9 n'est fourni.
+- **Identité** : le commit `0da8895` dit « un run sans la paire ne peut plus produire d'image » et cite `régime=env identité=demo_capture@example.test` pour cette suite (garde armée : la présence de la paire, jamais la valeur). Base gelée 72 118 (`empreinte-reference.json`). Journal non joint.
+- **Cadre à hauteur FIXE de 462 px CSS** (`reputation(cadre, H=462)`) : sous lui, le fond — c'est la place du dock absent. Un vide DANS le cadre se juge ; l'espace sous le cadre, non.
+- **Correctif de référence** : `2af4343` (01/09, ancêtre de ces planches ET des planches du r9) — griffes de saleté obliques (−28°/+18°), gant rentré de 1,6 CSS. Depuis le r9 : `cbffc49` (+45/−2, garde de capture) et le chemin d'identité. Fait de provenance, pas verdict.
+- **Deux faits rapportés par le correcteur — À VÉRIFIER SUR L'IMAGE, pas à croire** : (1) le portrait serait PROCÉDURAL (rectangles/ellipses aux coordonnées du SVG) ; (2) en état VIERGE la maquette et le client ne rendent PAS de montre (`watch = hidden`, 0 pixel d'or dans la carte), et l'ovale clair aux deux barres que des juges précédents ont appelé « montre » serait le **GANT**. ⇒ **Nomme l'OBJET que tu mesures par sa position dans le buste et sa taille** (« ellipse claire de a×b CSS centrée à (x, y) % de la carte, sous le poignet droit »), jamais par son nom supposé ; puis dis à quel élément du SVG (`generateur-reputation.py`) il correspond, avec la mesure.
+- **Mesure DUE sur la calotte/coiffe** (trois réglages précédents, trois erreurs) : **largeur de calotte ÷ largeur de tête**, **hauteur d'attache** (où la calotte rejoint le visage, en % de la hauteur du visage), épaisseur, des deux côtés — c'est ce qui manque pour un 4ᵉ réglage qui ne tâtonne pas.
+- **Grandeurs des tours précédents** : `grandeurs-r9.md` (planche du 04/09, sous chrome) et `grandeurs-r8.md` (planche sans chrome du 01/09, la plus comparable à celles-ci) — valeurs sans verdict, pour la colonne `critère`. Rien d'autre des tours r1→r9 n'est fourni.
 ## Échelle — OBLIGATOIRE, jamais déduite par le juge
 
 | | px de l'image | largeur CSS de référence | facteur |
@@ -147,6 +148,7 @@ c'est un défaut à remonter). Sans elle, l'assumé absorbe en silence des défa
 | 4 couleurs hors `DesignTokens` (Encre, Panneau, Liseré, Vert) | arbitrage DA escaladé, non tranché — dette de CODE, pas de rendu | que la couleur RENDUE s'écarte de la maquette |
 | le nom du lieutenant est celui du compte, pas « Salvatore » | `lieutenant.name` est projeté depuis C3 (L0.4) ; la mention « non projeté (L0.4) » d'un tour précédent est un DÉFAUT si elle subsiste (juge-données clôture D2) | « SALVATORE » en dur, ou la mention « non projeté » encore visible |
 | pas de section « gages » (`restraint`) | omise sans `counterparty_id` (É4) ; sur le compte de démo elle peut être absente | une place réservée vide |
+| la ligne de balayage teal qui traverse le panneau au tiers haut est PRÉSENTE, fixe | trait d'identité (e) de la maquette (`.elast::after`, animée 7,5 s côté HTML, figée à 34,7 % de course dans le rendu ratifié) — sa présence est attendue ; son intensité et sa position se mesurent | absente, animée (T ≠ T+1 s), ou ailleurs que dans le tiers haut |
 
 ## Format du RAPPORT — imposé
 
@@ -180,5 +182,5 @@ par ligne, dans UNE table, et rien de compté ailleurs** :
 - le rect imprimé par le test (log non préservé) — la géométrie ci-dessus est dérivée du code, et tu la
   vérifies sur l'image (largeur du bandeau = 1080, hauteur mesurée) avant de t'en servir ;
 - **neuf tours de juge (r1 → r9) existent dans `Tools/juge-visuel/reputation/`** — pas fournis, ne les ouvre pas ; seules `grandeurs-r8.md` / `grandeurs-r9.md` te sont données ;
-- le journal du run de `31d8e43` (identité non prouvée pour cette planche) ;
+- le journal du run `0da8895` ; le chrome (captures sans shell) ;
 - tout « choix » non écrit dans la table des écarts assumés : s'il n'y est pas, il n'existe pas.
