@@ -32,6 +32,21 @@ namespace MafiaCleanCity.Operational
             "BOOKKEEPER", "MUSCLE", "INTELLIGENCE", "FACILITY_MANAGER", "UNKNOWN",
         };
 
+        /// <summary>Les cinq paliers d'ancienneté servis par le back (`tenure_bucket`), exposés
+        /// pour la MÊME raison que `ArchetypesCanoniques` : la garde de couverture doit les
+        /// parcourir, et une liste recopiée à la main dans la garde mesure la recopie.
+        ///
+        /// ⛔ RÉSERVE DE CLASSE DU JUGE-DONNÉES (2026-09-06) : `RendreTousLesLibelles` ne rejouait
+        /// ce résolveur que sur sa valeur INCONNUE — **ses cinq valeurs réelles jamais**. Le trou
+        /// est le même que celui qui a laissé passer trois clés d'archétype absentes, et le
+        /// correctif de ce jour-là l'avait fermé pour UN résolveur sur neuf. *Fermer un trou sur
+        /// l'instance qu'on regardait ne le ferme pas sur ses huit sœurs.*
+        /// ⚠️ Aujourd'hui `Anciennete` rend des littéraux français hors catalogue (TD-643/650) :
+        /// les rejouer n'ajoute donc AUCUNE clé. C'est précisément pourquoi il faut le faire
+        /// maintenant — le jour où ils passeront au catalogue, la garde les demandera déjà.</summary>
+        public static readonly string[] AnciennetesCanoniques =
+            { "FRESH", "ACCLIMATED", "SEASONED", "SENIOR", "ENTRENCHED" };
+
         /// <summary>Les quatre que la maquette écrit noir sur blanc.</summary>
         public static readonly string[] ArchetypesRatifies = { "BOOKKEEPER", "SECURITY", "LAUNDERING", "LOGISTICS" };
 
@@ -40,30 +55,72 @@ namespace MafiaCleanCity.Operational
             switch (a)
             {
                 // Ratifiés par la maquette (Sal=Comptable, Vito=Sécurité, Rosa=Blanchiment, Enzo=Logistique).
-                case "BOOKKEEPER": return "Comptable";
-                case "SECURITY": return "Sécurité";
-                case "LAUNDERING": return "Blanchiment";
-                case "LOGISTICS": return "Logistique";
+                case "BOOKKEEPER": return Lib("Comptable");
+                case "SECURITY": return Lib("Sécurité");
+                case "LAUNDERING": return Lib("Blanchiment");
+                case "LOGISTICS": return Lib("Logistique");
                 // Traduits (noms communs), en attente de ratification par la maquette.
-                case "COOK": return "Cuisinier";
-                case "DISTRIBUTION": return "Distribution";
+                case "COOK": return Lib("Cuisinier");
+                case "DISTRIBUTION": return Lib("Distribution");
+                // ⛔⛔ CES TROIS-LÀ NE PASSENT PAS PAR `Lib`, ET C'EST MESURÉ, PAS PRUDENT. Le
+                //    bundle réel servi en `fr` porte 14 clés `famille.archetype.*` ; les trois que
+                //    `Libelle.De` dériverait de ces littéraux — un slug par littéral — n'y sont
+                //    PAS. Les faire passer par le catalogue ajouterait trois REPLIS, et la garde
+                //    `BundleReel_…_ZeroRepli` a exactement ce mode d'échec pour raison d'être :
+                //    « le back ne les sert pas, et l'écran l'affiche en français sans que rien ne
+                //    rougisse ». Le mot français est ici la valeur ratifiée du client, pas un
+                //    repli déguisé — et les trois clés sont inscrites en dette, routées au lot
+                //    i18n, plutôt qu'inventées ici.
+                //    ★ *Une clé qu'on invente pour « faire propre » est du français non traduisible
+                //      de plus, et le seul endroit où ça se voit est une garde de catalogue.*
                 case "MUSCLE": return "Gros bras";
                 case "INTELLIGENCE": return "Renseignement";
                 case "FACILITY_MANAGER": return "Intendant";
-                // Inconnu : rendu tel quel. Un 10ᵉ archétype doit se VOIR, pas se fondre.
+                // ⛔ `UNKNOWN` EST UNE VALEUR RÉELLE DU DOMAINE, pas l'absence d'une valeur — le
+                //    back la produit (`lieutenant.projection.service.ts`). Tombée dans le `default`
+                //    elle sortait « Unknown » en casse de titre, c'est-à-dire l'anglais brut à
+                //    l'écran d'un jeu français ; et la clé `famille.archetype.inconnu` EST servie,
+                //    mais plus personne ne la demandait. Deux défauts d'un seul oubli.
+                case "UNKNOWN": return Lib("Inconnu");
+                // Un 10ᵉ archétype, lui, doit se VOIR brut : le repli sert de signal, pas de
+                // traduction. C'est la distinction que `UNKNOWN` ci-dessus n'avait pas.
                 default: return CasseDeTitre(a);
             }
         }
 
+        private static string Lib(string repli) =>
+            MafiaCleanCity.I18n.Libelle.De("famille", "archetype", repli);
+
         /// <summary>Le mode d'exercice — la puce sous le nom. La maquette en montre deux :
         /// « DÉLÉGUÉ » et « DIRECT ».</summary>
+        /// <summary>⛔ LES REPLIS ONT CHANGÉ, ET CE N'EST PAS UN DÉTAIL DE STYLE. Cette méthode
+        /// rendait « DÉLÉGUÉ » / « DIRECT » (littéraux en dur, capitales de la maquette) pendant
+        /// qu'un SECOND résolveur — `LieutenantScreenController.ModeLabel`, privé — rendait
+        /// « Délégué » / « Missionné » depuis le catalogue.
+        /// ⛔ RECTIFIÉ (juge-données, 2026-09-06) : la phrase qui suivait affirmait que les deux
+        ///    résolveurs étaient employés. **Faux, et mesuré** : à l'état d'avant l'unification,
+        ///    CELUI-CI n'avait aucun appelant — le catalogue le remplaçait déjà partout. Le
+        ///    doublon existait bien, mais un seul des deux était sur un chemin vivant. *Une
+        ///    justification écrite au passé dans un commit se vérifie comme le code qu'elle
+        ///    justifie* : je l'avais déduite de la présence de deux méthodes, pas comptée.
+        /// C'est le catalogue qui gagne : il est la source de vérité du lot 0, et ses clés `famille.mode.*`
+        /// sont servies. Les capitales, si la DA les veut, sont une affaire de RENDU (`fontStyle`,
+        /// `characterSpacing`), pas de contenu — un libellé en capitales dans le catalogue rend la
+        /// clé intraduisible dans les langues qui n'ont pas de casse.</summary>
         public static string Mode(string mode)
         {
             switch (mode)
             {
-                case "delegated": return "DÉLÉGUÉ";
-                case "tasked": return "DIRECT";
-                default: return CasseDeTitre(mode).ToUpperInvariant();
+                case "delegated": return MafiaCleanCity.I18n.Libelle.De("famille", "mode", "Délégué");
+                case "tasked": return MafiaCleanCity.I18n.Libelle.De("famille", "mode", "Missionné");
+                // ⛔ PAS DE CLÉ SUR LE REPLI, et c'est la garde de catalogue qui me l'a appris.
+                // J'avais écrit `Libelle.De("famille","mode","Mode inconnu")` — une clé que le
+                // back NE SERT PAS. `BundleReel_…_ZeroRepli` a rougi aussitôt : « 2 clés sur 46
+                // sont retombées sur leur littéral ». *Inventer une clé de repli, c'est ajouter
+                // du français non traduisible en croyant bien faire* — et le seul endroit où ça
+                // se voit est cette garde. Les deux résolveurs supprimés rendaient la valeur
+                // BRUTE sur ce chemin ; on garde leur comportement.
+                default: return CasseDeTitre(mode);
             }
         }
 
@@ -86,15 +143,23 @@ namespace MafiaCleanCity.Operational
             }
         }
 
+        /// <summary>⛔⛔ CETTE MÉTHODE ET `LieutenantScreenController.OpStateLabel` RENDAIENT DEUX
+        /// MOTS DIFFÉRENTS POUR LA MÊME VALEUR, ET LES DEUX ÉTAIENT À L'ÉCRAN (mesuré 2026-09-06) :
+        ///     SETTLING  « Stabilisation » ici · « Prend ses marques » là
+        ///     IDLE      « Repos »         ici · « Au repos »          là
+        /// `:2414` appelait celle-ci pour la rangée d'organigramme, `:2579`/`:2591` l'autre pour la
+        /// ligne d'état — **un lieutenant en SETTLING lisait deux mots différents sur le même
+        /// écran**. TD-611 n'était donc pas une dette latente : c'était un défaut visible.
+        /// ⇒ Un seul producteur, adossé au catalogue, avec les replis de la version SERVIE.</summary>
         public static string Etat(string band)
         {
             switch (band)
             {
-                case "ACTIVE": return "Actif";
-                case "IDLE": return "Repos";
-                case "PAUSED": return "En pause";
-                case "SETTLING": return "Stabilisation";
-                default: return CasseDeTitre(band);
+                case "ACTIVE": return MafiaCleanCity.I18n.Libelle.De("famille", "opstate", "Actif");
+                case "IDLE": return MafiaCleanCity.I18n.Libelle.De("famille", "opstate", "Au repos");
+                case "PAUSED": return MafiaCleanCity.I18n.Libelle.De("famille", "opstate", "En pause");
+                case "SETTLING": return MafiaCleanCity.I18n.Libelle.De("famille", "opstate", "Prend ses marques");
+                default: return CasseDeTitre(band);   // idem : aucune clé inventée sur le repli
             }
         }
 

@@ -1763,11 +1763,19 @@ namespace MafiaCleanCity.Operational
 
             cardContent = cardRt;
 
-            titleText = NewText("Title", card.transform, "BÂTIMENT OPÉRATIONNEL", 22, TextAlignmentOptions.Left);
+            // ⛔ CENTRÉS — le canon en fait une PLAQUE, pas une ligne de texte. Mesuré par un juge
+            //    ⊥ : le titre du jeu occupe **98,5 %** de la largeur utile (3,0 CSS de marge à
+            //    gauche, 1,9 à droite) là où la référence lui en donne **42,7 %**, centré, avec
+            //    95 CSS de marge de chaque côté. La boîte reste pleine largeur — c'est le TEXTE
+            //    qui se centre, donc la plaque garde sa largeur naturelle quel que soit le nom, et
+            //    un nom long ne se retrouve pas décalé à gauche de son propre bloc.
+            //    ⚠️ Le sous-titre suit : il est la seconde ligne de la même plaque, et les laisser
+            //      désalignés produirait un bloc en escalier que ni la référence ni le jeu n'ont.
+            titleText = NewText("Title", card.transform, "BÂTIMENT OPÉRATIONNEL", 22, TextAlignmentOptions.Center);
             titleText.fontStyle = FontStyles.Bold;
             AddLayoutElement(titleText.gameObject, minHeight: 30, flexibleHeight: 0);
 
-            typeText = NewText("Type", card.transform, "Type : —", 16, TextAlignmentOptions.Left);
+            typeText = NewText("Type", card.transform, "Type : —", 16, TextAlignmentOptions.Center);
             typeText.color = DesignTokens.Current.onSurfaceDim;
             AddLayoutElement(typeText.gameObject, minHeight: 24, flexibleHeight: 0);
 

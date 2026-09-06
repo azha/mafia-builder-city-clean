@@ -72,7 +72,19 @@ namespace MafiaCleanCity.Shell
                 case "WARM": return "Tiède";
                 case "HOT": return "Chaud";
                 case "BURNING": return "Brûlant";
-                default: return string.IsNullOrEmpty(bucket) ? "Unknown" : bucket;
+                // ⛔ « Unknown » ÉTAIT ÉCRIT ICI, EN ANGLAIS, SUR LE CHROME PARTAGÉ — donc sur les
+                //    dix écrans. Mesuré sur la planche de ⑱ du 2026-09-06 : le manomètre affiche
+                //    « Unknown » sous « CHALEUR » tant que la session n'est pas acquise, à côté de
+                //    « ARGENT — » et « JOUR — » qui, eux, emploient l'état NOMMÉ vide.
+                //    ⇒ Ce n'est pas une valeur du domaine qui passe : c'est un mot que le CLIENT
+                //      écrit pour dire « pas encore de donnée ». Il rejoint donc la convention de
+                //      ses deux voisins de barre, et il devient traduisible par construction —
+                //      un tiret n'a pas de langue.
+                //    ⚠️ Le second membre est CONSERVÉ : une valeur de bande inconnue mais NON VIDE
+                //      continue de sortir BRUTE. Voir une valeur qu'on n'attendait pas est un
+                //      signal ; la voir disparaître derrière un mot choisi n'en est pas un. Ce sont
+                //      deux mondes différents et ils gardent deux réponses différentes.
+                default: return string.IsNullOrEmpty(bucket) ? "—" : bucket;
             }
         }
 

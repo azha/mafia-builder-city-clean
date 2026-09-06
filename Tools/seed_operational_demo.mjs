@@ -85,9 +85,68 @@ const BASE_URL = process.env.STACK_BASE_URL ?? 'http://localhost';
 // PLUS partager CE compte : voir Assets/Scripts/CityMap/DemoIdentityResolver.cs côté client, MÊMES
 // NOMS de variable des deux côtés). Additif — défaut INCHANGÉ quand la variable est absente ou vide
 // (`||` retombe sur le littéral pour `undefined` ET `''`).
-const EMAIL = process.env.MAFIA_DEMO_IDENTIFIER || 'operational_demo@example.test';
+// ⛔⛔⛔ TD-647 — LA RACINE : LE SEEDER LIT DÉSORMAIS SA PROPRE VARIABLE, PLUS CELLE DU CLIENT.
+//    `MAFIA_DEMO_IDENTIFIER` désigne QUEL COMPTE LE CLIENT PHOTOGRAPHIE. Ce seeder la lisait aussi,
+//    pour désigner QUEL COMPTE IL RÉÉCRIT — deux consommateurs sans rapport derrière un seul nom.
+//    Conséquence mesurée le 2026-09-06 : exporter la paire pour capturer et lancer une suite
+//    semeuse dans la même invocation re-semait le compte gelé (roster remplacé, horloge +105).
+//    ★★ Le refus des comptes gelés (plus bas) contenait le SYMPTÔME — il faisait rougir la suite
+//      au lieu de la laisser détruire la base. Il ne réparait pas la CAUSE : les deux régimes
+//      restaient mutuellement exclusifs, donc les cinq suites semeuses restaient hors de toute
+//      campagne de planches. *Contenir un symptôme n'est pas fermer une classe.*
+//    ⇒ Avec deux noms distincts, une même invocation peut capturer `demo_capture` PENDANT que les
+//      suites semeuses sèment `operational_demo`. Le refus reste, en ceinture : il protège encore
+//      contre un `MAFIA_SEED_IDENTIFIER` pointé par erreur sur un compte gelé.
+// ⚠️ CE QUE ÇA CHANGE POUR UN APPELANT EXISTANT, et il faut le dire : un poste qui isolait son
+//    seeder par `MAFIA_DEMO_IDENTIFIER` (deux éditeurs Unity en parallèle, cas documenté ci-dessus
+//    le 2026-08-30) doit désormais exporter `MAFIA_SEED_IDENTIFIER`. Le défaut, lui, est INCHANGÉ :
+//    variable absente ⇒ `operational_demo@example.test`, exactement comme avant.
+const EMAIL = process.env.MAFIA_SEED_IDENTIFIER || 'operational_demo@example.test';
 const CALLSIGN = EMAIL.split('@')[0]; // dérivé de EMAIL — rend 'operational_demo' au défaut (inchangé).
-const PASSWORD = process.env.MAFIA_DEMO_PASSWORD || 'operational-demo-pw';
+const PASSWORD = process.env.MAFIA_SEED_PASSWORD || 'operational-demo-pw';
+
+// ⛔⛔⛔ TD-642 — UNE SEULE VARIABLE DÉSIGNAIT LE COMPTE PHOTOGRAPHIÉ *ET* LE COMPTE RÉÉCRIT.
+//    `MAFIA_DEMO_IDENTIFIER` est lue par DEUX consommateurs qui n'ont rien à voir : le client
+//    Unity (QUEL compte la capture photographie) et CE seeder (QUEL compte on réécrit, en
+//    `OneTimeSetUp`, sans cache, une fois par SUITE). Exporter la paire pour capturer et lancer
+//    une suite semeuse dans la même invocation re-sème donc le compte de capture.
+//    MESURÉ le 2026-09-06 en le provoquant : les trois lieutenants de `demo_capture` ont été
+//    REMPLACÉS (ids et noms), et l'horloge a avancé de 105 minutes de jeu. La base de preuve des
+//    planches n'était plus celle que les juges avaient mesurée, et **rien dans l'image ne le
+//    disait** — trois noms qu'aucun rapport ne pouvait prédire.
+//    ★★ CE N'EST PAS « les deux comptes doivent être distincts » : ils L'ÉTAIENT, et la
+//      prescription était respectée. *Séparer les comptes ne sert à rien tant qu'un seul nom les
+//      désigne tous les deux.* La classe est « protéger un état partagé = énumérer TOUT ce qui
+//      l'écrit » — et ici l'écrivain était nommé par la variable du LECTEUR.
+//
+// ⇒ LE SEEDER REFUSE, PLUTÔT QUE LE CLIENT RENONCE. C'est le seul des deux qui MUTE ; c'est donc
+//   lui qui porte la garde. Le refus est EXPLICITE et sort en erreur : `SeederSupport` asserte le
+//   code de sortie, donc la suite qui tentait de semer devient ROUGE en portant cette phrase,
+//   plutôt que de semer en silence. Un refus muet ressemblerait trait pour trait à un semis.
+const COMPTES_GELES = new Set([
+  // Le compte sur lequel les planches jugées sont prises. Son état EST la base de preuve : le
+  // re-semer invalide silencieusement tout rapport de juge qui s'y réfère.
+  'demo_capture@example.test',
+]);
+const AUTORISE_GEL = process.env.MAFIA_SEED_ALLOW_FROZEN === '1';
+
+// LE DISPOSITIF DÉCLARE SON RÉGIME, à chaque exécution — un dispositif inerte ressemble trait pour
+// trait à un dispositif appliqué, sauf s'il dit lequel des deux il est.
+console.log(`[seed] compte=${EMAIL} · gel=${COMPTES_GELES.has(EMAIL) ? 'COMPTE GELÉ' : 'compte ordinaire'}`
+          + ` · MAFIA_SEED_ALLOW_FROZEN=${AUTORISE_GEL ? '1 (contournement EXPLICITE)' : 'non posée'}`);
+
+if (COMPTES_GELES.has(EMAIL) && !AUTORISE_GEL) {
+  console.error(
+    `[seed] REFUS : « ${EMAIL} » est un COMPTE GELÉ — son état est la base de preuve des planches\n` +
+    `       jugées, et le semis le réécrit (roster remplacé, horloge avancée). Ce n'est pas une\n` +
+    `       erreur de configuration : c'est très probablement une paire de CAPTURE exportée dans un\n` +
+    `       run qui embarque une suite SEMEUSE. Les deux régimes ne peuvent pas tourner ensemble.\n` +
+    `       ⇒ Pour capturer : ne lancer que les catégories de capture.\n` +
+    `       ⇒ Pour semer et tester : ne PAS exporter MAFIA_DEMO_IDENTIFIER (défaut = le compte de semis).\n` +
+    `       ⇒ Pour re-semer ce compte À DESSEIN (refonte de la base de preuve) : MAFIA_SEED_ALLOW_FROZEN=1,\n` +
+    `       et publier la nouvelle empreinte AVANT et APRÈS.`);
+  process.exit(3);
+}
 
 // The Verge district the operational buildings live in — far from the City Map heat-gradient blocks (districts 3/7/11).
 const OP_DISTRICT = 16;

@@ -1,4 +1,5 @@
 using System.Collections;
+using NUnit.Framework;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -22,6 +23,87 @@ namespace MafiaCleanCity.Shell.Tests
     /// ⇒ Toute garde ajoutée ICI vaut pour TOUTE capture prise sous le shell. C'est le point.</summary>
     public static class CaptureSousShell
     {
+        /// <summary>LA PAIRE D'IDENTITÉ DE CAPTURE, OU RIEN. Rend `(identifiant, mot de passe)` et
+        /// **fait échouer l'appelant** si la paire n'est pas exportée.
+        ///
+        /// ⛔⛔⛔ POURQUOI UNE GARDE DE PRÉSENCE, ET POURQUOI À UN SEUL SITE. `DemoIdentityResolver`
+        /// retombe sur son `[SerializeField]` quand `MAFIA_DEMO_IDENTIFIER`/`_PASSWORD` sont
+        /// absentes — un repli LÉGITIME hors campagne, et un piège dans une campagne : la capture
+        /// s'exécute, écrit un PNG, passe toutes ses gardes, et photographie **un autre compte**.
+        /// Rien dans l'image ne le dit — deux comptes de démo ont la même forme d'écran.
+        /// Mesuré : **trois fois le 2026-09-06** un run a produit des planches sur le compte de
+        /// repli, dont deux découvertes après coup en comparant des empreintes.
+        /// ★★ *Un repli correct dans son contexte, appliqué dans un contexte où il ne l'est pas,
+        ///   produit une valeur PLAUSIBLE — et c'est ce qui la rend indétectable.*
+        ///
+        /// ⇒ CE QU'ELLE VÉRIFIE ET CE QU'ELLE NE VÉRIFIE PAS, et la distinction est le point :
+        /// elle asserte la PRÉSENCE de la paire, jamais sa VALEUR. Comparer l'identité rendue par
+        /// le back à celle qu'on attendait est une autre garde (TD-640, armée par
+        /// `MAFIA_CAPTURE_EXPECT_PLAYER` sur une seule capture des quinze). Celle-ci coûte deux
+        /// lignes, tient à UN site pour tous les appelants de ce producteur, et ferme le seul mode
+        /// d'échec qui produit une image SANS que personne l'ait demandé.
+        /// ⚠️ Elle ne couvre que les captures qui passent PAR ICI. Une suite qui écrit son PNG
+        ///    elle-même doit appeler cette méthode explicitement — c'est le cas des cinq suites
+        ///    semeuses, et c'est écrit plutôt que supposé couvert.</summary>
+        /// <summary>La hauteur de capitale d'« ARGENT » dans le bandeau, lue sur la texture qu'on
+        /// vient d'écrire. 19 px sur les cinquante planches sous chrome du dépôt, bande y 27..45.
+        ///
+        /// ⚠️ PAS de `.gamma` : `ReadPixels` d'une RenderTexture ARGB32 vers une Texture2D RGB24 ne
+        /// convertit rien, donc `GetPixel` rend les MÊMES octets que le PNG — et c'est ce PNG que
+        /// l'instrument hors ligne a lu pour fixer le 19. Convertir une seconde fois éclaircit tout
+        /// et la bande d'encre ne se referme jamais (mesuré : 60 sur 60).
+        /// ⚠️ Fenêtre bornée à 60 px de haut : ouverte à 220, elle mordait dans le ciel de l'art,
+        /// clair sur toute la largeur juste sous la barre. Et elle commence à x = 40 pour laisser
+        /// dehors la flèche retour (x 29..38), présente sur certains écrans seulement — sans ça la
+        /// garde comparerait deux bandes différentes selon l'écran.
+        /// ⚠️ Un écran sans chrome n'a pas d'« ARGENT » : la garde se DÉCLARE hors sujet plutôt que
+        /// d'accuser, sinon elle rendrait un nombre de bruit sur les planches hors shell (mesuré :
+        /// 3, 4 et 7 px sur les neuf planches sans bandeau du dépôt).</summary>
+        private static void EchelleDuChromeOuEchoue(Texture2D tex, int largeur, int hauteur,
+                                                    string nom, List<string> echecs)
+        {
+            int debut = -1, fin = -1;
+            for (int d = 0; d < 60; d++)
+            {
+                int y = hauteur - 1 - d;
+                int n = 0;
+                for (int x = 40; x < 340 && x < largeur; x++)
+                {
+                    Color c = tex.GetPixel(x, y);
+                    if (c.r + c.g + c.b > 3f * 0.372f) n++;
+                }
+                if (n > 3) { if (debut < 0) debut = d; fin = d; }
+                else if (debut >= 0 && d - fin > 2) break;
+            }
+            if (debut < 0 || fin - debut + 1 >= 59)
+            {
+                Debug.Log($"[CHROME-CAPITALE] {nom} : pas de bandeau lisible dans la fenêtre " +
+                          $"(bande {debut}..{fin}) — garde HORS SUJET, aucun verdict rendu");
+                return;
+            }
+            int capitale = fin - debut + 1;
+            Debug.Log($"[CHROME-CAPITALE] {nom} {largeur}x{hauteur} capitale={capitale} px " +
+                      $"bande y={debut}..{fin} (attendu 19, bande 27..45)");
+            if (Mathf.Abs(capitale - 19) > 2)
+                echecs.Add($"{nom} : le chrome est rendu à {capitale / 19f:F3}× — capitale " +
+                           $"d'« ARGENT » à {capitale} px (bande y {debut}..{fin}) au lieu de 19 " +
+                           "(bande 27..45). C'est le défaut parti chez le juge de ① le 2026-09-06, " +
+                           "que rien ne voyait parce qu'aucune garde ne lisait l'échelle SUR l'image.");
+        }
+
+        public static (string identifiant, string motDePasse) IdentiteDeCaptureOuEchoue(string quoi)
+        {
+            string id = System.Environment.GetEnvironmentVariable("MAFIA_DEMO_IDENTIFIER");
+            string mdp = System.Environment.GetEnvironmentVariable("MAFIA_DEMO_PASSWORD");
+            Assert.IsFalse(string.IsNullOrWhiteSpace(id) || string.IsNullOrWhiteSpace(mdp),
+                $"capture refusée ({quoi}) : la paire `MAFIA_DEMO_IDENTIFIER`/`MAFIA_DEMO_PASSWORD` " +
+                "n'est pas exportée. Sans elle le client retombe sur son identité par défaut et la " +
+                "planche photographierait UN AUTRE COMPTE, sans que rien dans l'image ne le dise — " +
+                "c'est arrivé trois fois le 2026-09-06. Exporter la paire du compte de capture, ou " +
+                "ne pas lancer les catégories de capture.");
+            return (id, mdp);
+        }
+
         /// <summary>Monte (ou retrouve) un locataire, attend son chargement, le capture, et
         /// vérifie les TROIS propriétés qui rendraient l'image mensongère — dans cet ordre, du
         /// structurel au pixel.
@@ -44,6 +126,9 @@ namespace MafiaCleanCity.Shell.Tests
                                                        int largeur = 1080, int hauteur = 2400)
             where T : MonoBehaviour, IShellTenant
         {
+            // AVANT TOUT : sans la paire, on n'écrit rien. Placé en tête pour qu'aucun PNG ne
+            // parte, pas même celui d'un écran qui se serait monté correctement.
+            IdentiteDeCaptureOuEchoue($"planche_{nom}");
             string chemin = $"Assets/Screenshots/planche_{nom}_{largeur}x{hauteur}.png";
 
             // ⛔⛔ CE QU'UNE CAPTURE PRÉCÉDENTE LAISSE À L'ÉCRAN CONTAMINE LA SUIVANTE — mesuré le
@@ -371,6 +456,23 @@ namespace MafiaCleanCity.Shell.Tests
             canvas.planeDistance = planPrecedent;
 
             System.IO.File.WriteAllBytes(chemin, tex.EncodeToPNG());
+            // Le plancher d'encre — 4 planches du dépôt étaient vides avec des tests verts.
+            PlancherDEncreOuEchoue(tex, chemin, echecs);
+
+            // ⛔⛔ L'ÉCHELLE DU CHROME, LUE SUR LE PNG — la garde qui manquait, posée au SEUL endroit
+            // qui la rend vraie pour toutes les planches sous shell.
+            // Le 2026-09-06, un juge a reçu une planche de ① dont le chrome rendait ×1,21 : capitale
+            // d'« ARGENT » à 23 px là où les cinquante autres planches sous chrome du dépôt rendent
+            // 19. La planche du dossier et celle du commit portaient les MÊMES octets (sha256
+            // `c31837119129`) — donc pas une erreur de transport — et régénérée depuis le même code
+            // elle rend 19 : le défaut vit dans l'ÉTAT d'un run, pas dans l'arbre. Deux BLOQUANT et
+            // huit MAJEUR ont été écrits dessus.
+            // ⇒ Rien ne pouvait l'attraper : toutes les gardes de capture lisent l'ARBRE (locataire
+            //   monté, encre présente, ordre de fratrie), aucune ne lisait l'IMAGE. Celle-ci lit
+            //   l'image, sur l'unique grandeur qui suit le facteur à 100 %.
+            // Contrôle positif exécuté en injectant ×1,21 sur `TopBarEchelle` : capitale **23 px,
+            // rapport 1,211** — le chiffre du juge, reproduit à la troisième décimale.
+            EchelleDuChromeOuEchoue(tex, largeur, hauteur, nom, echecs);
 
             // Rallumer les voisins : ce test n'a pas à changer le monde qu'il a trouvé.
             foreach (GameObject g in eteintsPourLeRendu) if (g != null) g.SetActive(true);
@@ -440,6 +542,363 @@ namespace MafiaCleanCity.Shell.Tests
         /// ÉCRANS au lieu de mesurer la course. ⚠️ Et la course reste un défaut de PRODUCTION —
         /// l'attendre ici ne la corrige pas, ça évite de compter un défaut de SHELL comme un
         /// défaut d'ÉCRAN.</summary>
+        /// <summary>⛔⛔ LE CHROME EST-IL ALIMENTÉ, ET SA PHASE EST-ELLE COHÉRENTE AVEC L'ÉCRAN ?
+        /// La garde qui manquait — mesurée le 2026-09-06 sur QUATRE runs de la MÊME commande
+        /// (`MAFIA_CI_CATEGORIES=CaptureCarte`, même compte gelé, arbre inchangé, aucun commit
+        /// entre eux). Elles ont rendu TROIS états différents du bandeau de ③ :
+        ///
+        ///   run | ARGENT           | JOUR | cadran CHALEUR
+        ///   ----|------------------|------|-------------------------
+        ///   A   | 9 627 820,00 €   |  50  | Brûlant, anneau braise
+        ///   B   | —                |  —   | vide, aiguille neutre, anneau or
+        ///   C   | 9 627 820,00 €   |  50  | vide, aiguille neutre, anneau or
+        ///   D   | 9 627 820,00 €   |  50  | Brûlant, anneau braise
+        ///
+        /// ⇒ Le bandeau est alimenté par DEUX arrivées asynchrones INDÉPENDANTES — le montant et
+        ///   le jour d'un côté (`session/open`), le bucket de chaleur de l'autre
+        ///   (`SetCitywideHeatBucket`). B montre les deux absentes, **C montre la première arrivée
+        ///   et pas la seconde** : c'est C qui prouve qu'elles sont séparées, et donc qu'attendre
+        ///   l'une ne donne pas l'autre.
+        ///
+        /// ⚠️ MA PREMIÈRE VERSION DE CETTE GARDE A ÉTÉ VERTE SUR UNE PLANCHE FAUSSE, TROIS FOIS.
+        ///   Elle attendait le montant, le jour et la phase — et la phase n'est PAS ce que le
+        ///   cadran affiche. Le mot en serif au centre est le bucket de CHALEUR (« CHALEUR » est
+        ///   écrit dessous) ; la phase du jour vit dans l'aile droite, sous « JOUR N », et son
+        ///   « — » hors district est l'état CORRECT que §6.3 exige. Le journal disait donc
+        ///   `phase=«—»` — juste — pendant que l'image montrait un cadran vide, et la garde
+        ///   passait. *J'ai attendu la mauvaise des trois arrivées, et la seule façon de le voir a
+        ///   été de REGARDER la planche que la garde venait de déclarer bonne.*
+        ///
+        /// ★ Ce que ça a coûté avant d'être vu : un juge ⊥ a mesuré « un jour d'écart entre les
+        ///   deux planches du même écran », un autre « la phase est alimentée sur ① et pas sur ③ »
+        ///   — deux findings d'ÉCRAN pour une course de CAPTURE. *Une planche non gardée fait
+        ///   juger l'aléa d'un run comme une propriété de l'écran.*
+        ///
+        /// ⇒ CE QU'ELLE ASSERTE. (1) alimentation, ATTENDUE : montant ≠ placeholder, jour > 0, ET
+        ///   bucket de chaleur non vide — les trois, parce que chacune est une arrivée distincte ;
+        ///   (2) cohérence de la phase, NON attendue (ce n'est pas une arrivée mais une valeur qui
+        ///   peut être périmée) : hors district la phase DOIT valoir « — ».
+        /// ⚠️ Elle se déclare HORS SUJET sur une planche sans chrome (`shell.TopBar == null`) —
+        ///   sinon elle accuserait les planches hors shell, exactement comme la garde d'échelle.
+        /// ⚠️ Elle n'asserte RIEN sur la valeur du montant : le compte gelé n'est pas son sujet,
+        ///   c'est celui de la paire d'identité et de TD-640.</summary>
+        /// <summary>⛔⛔ UN TEXTE POSÉ SUR L'ART A-T-IL VRAIMENT UN FOND ? La garde d'EFFET qui
+        /// remplace trois gardes de PARAMÈTRE.
+        ///
+        /// LE DÉFAUT DE CLASSE. Le voile du dock et les plaques du district sont posés par
+        /// `AlphaVoileSurFondQuelconque` — un alpha ajusté, déclaré, avec son résidu. C'est
+        /// honnête et c'est **une garantie d'OPACITÉ, jamais de CONTRASTE** : le code le dit
+        /// lui-même (« le dock flotte sur l'ART ⇒ fond inconnu »). Sur un mur sombre le libellé
+        /// rend 8:1 ; sur l'eau claire d'un port, 3,5:1. Aucune des trois valeurs n'a bougé depuis
+        /// le 25 août — vérifié par `git log` sur le bloc, sur la fonction et sur le jeton — et
+        /// pourtant deux juges ⊥ ont mesuré 4,91:1 puis 3,54:1. *Ce n'est pas une régression :
+        /// c'est un alpha fixe sur un art variable, et il n'existe aucune valeur qui tienne
+        /// partout.*
+        ///
+        /// ⇒ LA GRANDEUR EST DONC LE CONTRASTE RENDU, et il ne se lit que sur l'image. Méthode
+        ///   reprise de l'instrument du juge (`m45`, `m47`), pour que nos deux mesures soient
+        ///   comparables plutôt que concurrentes :
+        ///   · l'ENCRE = les pixels proches de la couleur que le composant déclare porter ;
+        ///   · le FOND = la MÉDIANE des pixels situés à plus de `BandeMorteCss` de toute encre —
+        ///     **la bande morte est le cœur de la méthode**, pas un détail : trois sondes de ce
+        ///     dépôt ont déjà rendu « 100 % sous le seuil » en mesurant, à chaque fois, la frange
+        ///     d'anti-crénelage qui entoure chaque glyphe. Tout ce qui interroge « le voisin » la
+        ///     rencontre d'abord.
+        ///   · et on rapporte AUSSI le fond le plus CLAIR (95ᵉ centile) : c'est lui qui décide du
+        ///     pire cas, et c'est le seul chiffre qui ait un sens sur un art qui défile.
+        /// ⚠️ Elle asserte sur le fond MÉDIAN et publie le pire cas sans l'asserter : un art peut
+        ///   légitimement porter un éclat ponctuel. Ce qui doit rougir, c'est un texte dont le fond
+        ///   TYPIQUE ne tient pas — pas un texte malchanceux sur trois pixels.
+        /// ⚠️ Elle se déclare HORS SUJET si elle ne trouve pas d'encre : un libellé absent est le
+        ///   sujet d'une autre garde, et accuser ici rendrait un contraste de bruit.
+        /// ⚠️⚠️ LIMITE CONNUE, ÉCRITE PLUTÔT QUE TUE : la boîte est dérivée des coins MONDE du
+        ///   rect, donc un texte TOURNÉ (les libellés de quartier de ③ suivent la trame de leur
+        ///   quartier) rend une hauteur NÉGATIVE et sort en « hors sujet ». Mesuré : 3 des 18 noms
+        ///   de ③ y échappent. Ce n'est pas une garde qui ment — elle le DIT, avec ses dimensions —
+        ///   mais sa couverture est de 15/18 sur cet écran, et le chiffre doit voyager avec elle.
+        ///   *Un dénominateur non publié se lit comme une couverture totale.* La forme qui fermera
+        ///   ce reste est une boîte alignée sur l'axe du texte, pas un élargissement du rect.</summary>
+        /// <summary>Les cibles de la garde ci-dessus, RAMASSÉES plutôt que nommées : tous les
+        /// textes du slot de contenu et du dock. Nommer deux libellés fermerait deux instances ;
+        /// c'est la CLASSE « un texte posé sur l'art » qu'il faut couvrir, et un texte neuf doit y
+        /// entrer sans que personne s'en souvienne.
+        /// ⚠️ Sur-ramasser est SANS DANGER ici, et c'est ce qui rend le geste possible : la garde
+        /// se déclare hors sujet dès qu'elle ne trouve pas d'encre à la couleur déclarée, ou pas
+        /// assez de fond hors bande morte. Un texte sur un aplat opaque en sort donc tout seul,
+        /// sans liste d'exceptions à tenir à jour — *une allowlist est une liste qui vieillit.*
+        /// La couleur d'encre vient du composant lui-même (`text.color`), jamais d'un jeton
+        /// recopié : c'est la seule source qui ne peut pas diverger de ce qui est dessiné.</summary>
+        public static List<(RectTransform, Color, string)> TextesPosesSurLArt(AppShell shell)
+        {
+            var cibles = new List<(RectTransform, Color, string)>();
+            if (shell == null) return cibles;
+            foreach (Transform racine in new[] { (Transform)shell.ContentSlot, (Transform)shell.TabBarRoot })
+            {
+                if (racine == null) continue;
+                foreach (TMPro.TextMeshProUGUI txt in racine.GetComponentsInChildren<TMPro.TextMeshProUGUI>(false))
+                {
+                    if (txt == null || string.IsNullOrWhiteSpace(txt.text)) continue;
+                    cibles.Add(((RectTransform)txt.transform, txt.color,
+                        $"{racine.name}/{txt.name} «{(txt.text.Length > 22 ? txt.text.Substring(0, 22) + "…" : txt.text)}»"));
+                }
+            }
+            return cibles;
+        }
+
+        public static void ContrasteSurArtOuEchoue(Texture2D tex, Canvas canvas, string nom,
+            List<(RectTransform zone, Color encre, string libelle)> cibles, List<string> echecs)
+        {
+            const float SeuilContraste = 4.5f;   // plancher de lisibilité, celui des juges
+            const float BandeMorteCss = 4f;      // ≥ celle de `m47` — la frange vit en deçà
+            const float Tolerance = 30f;         // par canal, autour de la couleur déclarée
+
+            if (cibles == null || cibles.Count == 0) return;
+            RectTransform crt = (RectTransform)canvas.transform;
+            float uxMin = crt.rect.xMin, uyMin = crt.rect.yMin;
+            float parU = tex.width / crt.rect.width;             // px de texture par unité canvas
+            int bandeMorte = Mathf.Max(2, Mathf.RoundToInt(BandeMorteCss * parU * (1280f / 392f) / (1280f / 392f)));
+
+            foreach ((RectTransform zone, Color encre, string libelle) in cibles)
+            {
+                if (zone == null) continue;
+                var coins = new Vector3[4];
+                zone.GetWorldCorners(coins);
+                // monde → local canvas → pixels de texture (l'axe Y de la texture monte, comme le canvas)
+                int x0 = Mathf.Clamp(Mathf.FloorToInt((canvas.transform.InverseTransformPoint(coins[0]).x - uxMin) * parU), 0, tex.width - 1);
+                int x1 = Mathf.Clamp(Mathf.CeilToInt((canvas.transform.InverseTransformPoint(coins[2]).x - uxMin) * parU), 0, tex.width - 1);
+                int y0 = Mathf.Clamp(Mathf.FloorToInt((canvas.transform.InverseTransformPoint(coins[0]).y - uyMin) * parU), 0, tex.height - 1);
+                int y1 = Mathf.Clamp(Mathf.CeilToInt((canvas.transform.InverseTransformPoint(coins[2]).y - uyMin) * parU), 0, tex.height - 1);
+                if (x1 - x0 < 3 || y1 - y0 < 3)
+                {
+                    Debug.Log($"[CONTRASTE-ART] {nom} · {libelle} : HORS SUJET — zone de {x1 - x0}x{y1 - y0} px");
+                    continue;
+                }
+
+                var estEncre = new System.Func<Color, bool>(c =>
+                    Mathf.Abs(c.r - encre.r) * 255f < Tolerance &&
+                    Mathf.Abs(c.g - encre.g) * 255f < Tolerance &&
+                    Mathf.Abs(c.b - encre.b) * 255f < Tolerance);
+
+                var encres = new List<Color>();
+                for (int y = y0; y <= y1; y++)
+                    for (int x = x0; x <= x1; x++)
+                    { Color c = tex.GetPixel(x, y); if (estEncre(c)) encres.Add(c); }
+                if (encres.Count < 20)
+                {
+                    Debug.Log($"[CONTRASTE-ART] {nom} · {libelle} : HORS SUJET — {encres.Count} px d'encre "
+                              + "trouvés, trop peu pour une médiane (le libellé est absent, ou d'une autre teinte)");
+                    continue;
+                }
+
+                // FOND : au-delà de la bande morte, dans une fenêtre élargie du même montant.
+                var fonds = new List<Color>();
+                int e0 = Mathf.Max(0, x0 - bandeMorte), e1 = Mathf.Min(tex.width - 1, x1 + bandeMorte);
+                int f0 = Mathf.Max(0, y0 - bandeMorte), f1 = Mathf.Min(tex.height - 1, y1 + bandeMorte);
+                for (int y = f0; y <= f1; y++)
+                    for (int x = e0; x <= e1; x++)
+                    {
+                        bool encrePres = false;
+                        for (int dy = -bandeMorte; dy <= bandeMorte && !encrePres; dy += 2)
+                            for (int dx = -bandeMorte; dx <= bandeMorte && !encrePres; dx += 2)
+                            {
+                                int ax = Mathf.Clamp(x + dx, 0, tex.width - 1), ay = Mathf.Clamp(y + dy, 0, tex.height - 1);
+                                if (estEncre(tex.GetPixel(ax, ay))) encrePres = true;
+                            }
+                        if (!encrePres) fonds.Add(tex.GetPixel(x, y));
+                    }
+                if (fonds.Count < 20)
+                {
+                    Debug.Log($"[CONTRASTE-ART] {nom} · {libelle} : HORS SUJET — {fonds.Count} px de fond "
+                              + "hors bande morte (la zone est saturée d'encre)");
+                    continue;
+                }
+
+                // ⛔⛔ L'ANNEAU PROCHE — la grandeur que le contraste glyphe↔fond NE VOIT PAS.
+                // Un halo ou un contour ne change pas la couleur du glyphe : il INTERCALE une
+                // bande sombre. La mesure ci-dessus saute délibérément cette bande (c'est la
+                // bande morte, et sans elle trois sondes de ce dépôt ont mesuré la frange
+                // d'anti-crénelage et rendu « 100 % sous le seuil »). ⇒ Un texte à 1,70:1 peut
+                // donc porter un halo parfaitement actif, et un texte sans halo rendre le même
+                // nombre : **le ratio glyphe↔art ne dit rien de l'existence du halo.**
+                // Cet anneau le dit : si un dispositif intercale, sa luminance est SOUS celle de
+                // l'art alentour. Rapporté, jamais asserté — l'assertion porte sur le contraste,
+                // ce chiffre sert à savoir QUOI corriger.
+                var anneau = new List<Color>();
+                for (int y = Mathf.Max(0, y0 - 2); y <= Mathf.Min(tex.height - 1, y1 + 2); y++)
+                    for (int x = Mathf.Max(0, x0 - 2); x <= Mathf.Min(tex.width - 1, x1 + 2); x++)
+                    {
+                        if (estEncre(tex.GetPixel(x, y))) continue;
+                        bool colle = false;
+                        for (int dy = -2; dy <= 2 && !colle; dy++)
+                            for (int dx = -2; dx <= 2 && !colle; dx++)
+                            {
+                                int ax = Mathf.Clamp(x + dx, 0, tex.width - 1), ay = Mathf.Clamp(y + dy, 0, tex.height - 1);
+                                if (estEncre(tex.GetPixel(ax, ay))) colle = true;
+                            }
+                        if (colle) anneau.Add(tex.GetPixel(x, y));
+                    }
+
+                Color encreMed = Mediane(encres);
+                fonds.Sort((a, b) => Luminance(a).CompareTo(Luminance(b)));
+                Color fondMed = fonds[fonds.Count / 2];
+                Color fondClair = fonds[Mathf.Min(fonds.Count - 1, (int)(0.95f * fonds.Count))];
+                float ratio = Contraste(encreMed, fondMed);
+                float ratioPire = Contraste(encreMed, fondClair);
+                string diagAnneau = "anneau: n/d";
+                if (anneau.Count >= 20)
+                {
+                    anneau.Sort((a, b) => Luminance(a).CompareTo(Luminance(b)));
+                    Color anMed = anneau[anneau.Count / 2];
+                    float dL = Luminance(anMed) - Luminance(fondMed);
+                    diagAnneau = $"anneau proche={Hex(anMed)} ΔL={dL * 255f:+0.0;-0.0} vs fond "
+                               + (dL < -0.02f ? "⇒ un dispositif INTERCALE" : "⇒ RIEN n'est intercalé");
+                }
+                Debug.Log($"[CONTRASTE-ART] {nom} · {libelle} : encre={Hex(encreMed)} ({encres.Count} px) "
+                          + $"fond médian={Hex(fondMed)} ⇒ **{ratio:F2}:1** · fond le plus clair (p95)="
+                          + $"{Hex(fondClair)} ⇒ {ratioPire:F2}:1 · {diagAnneau} · bande morte {bandeMorte} px · seuil {SeuilContraste:F1}");
+                if (ratio < SeuilContraste)
+                    echecs.Add($"{nom} · {libelle} : {ratio:F2}:1 sur son fond médian, sous le plancher de "
+                               + $"{SeuilContraste:F1}:1 (pire cas mesuré {ratioPire:F2}:1). Un texte posé sur l'art "
+                               + "n'a pas de fond garanti par un alpha : il en faut un mesuré. Ne PAS remonter "
+                               + "l'alpha jusqu'à ce que ça passe — ce serait régler sur le seuil, sur CET art, "
+                               + "et faux sur le suivant.");
+            }
+        }
+
+        private static Color Mediane(List<Color> v)
+        {
+            var r = new List<float>(); var g = new List<float>(); var b = new List<float>();
+            foreach (Color c in v) { r.Add(c.r); g.Add(c.g); b.Add(c.b); }
+            r.Sort(); g.Sort(); b.Sort();
+            return new Color(r[r.Count / 2], g[g.Count / 2], b[b.Count / 2]);
+        }
+
+        private static float Luminance(Color c) => 0.2126f * c.r + 0.7152f * c.g + 0.0722f * c.b;
+
+        /// <summary>WCAG : luminance RELATIVE, donc canaux LINÉARISÉS. Les linéariser est le point —
+        /// une version sur les octets bruts rend des ratios plausibles et faux, et c'est la façon
+        /// naturelle de l'écrire.</summary>
+        private static float Contraste(Color a, Color b)
+        {
+            float la = LumRelative(a), lb = LumRelative(b);
+            if (la < lb) { float t = la; la = lb; lb = t; }
+            return (la + 0.05f) / (lb + 0.05f);
+        }
+
+        private static float LumRelative(Color c)
+            => 0.2126f * Lin(c.r) + 0.7152f * Lin(c.g) + 0.0722f * Lin(c.b);
+
+        private static float Lin(float u)
+            => u <= 0.04045f ? u / 12.92f : Mathf.Pow((u + 0.055f) / 1.055f, 2.4f);
+
+        private static string Hex(Color c)
+            => $"#{Mathf.RoundToInt(c.r * 255):x2}{Mathf.RoundToInt(c.g * 255):x2}{Mathf.RoundToInt(c.b * 255):x2}";
+
+        /// <summary>⛔⛔ LA PLANCHE A-T-ELLE DE L'ENCRE ? Le plancher qui manquait — et il manquait
+        /// parce que la garde voisine porte sur la VARIÉTÉ, pas sur l'existence d'un dessin.
+        ///
+        /// Mesuré le 2026-09-06 : `ecran_demolition_1080x1920` et `_2400` rendent **0 pixel** dont
+        /// un canal dépasse 110, canal maximum **64** — un dégradé sombre et rien d'autre — et
+        /// leurs deux tests sont VERTS. Le balayage de la CLASSE en a trouvé **deux autres du même
+        /// coup** : `ecran_delegation_1080x1920` et `_2400`, également à zéro. **4 planches vides
+        /// sur les 52 qu'écrivent les suites de capture**, et aucune garde ne les voyait.
+        /// ⇒ *« L'image n'est pas uniforme » et « l'écran a dessiné quelque chose » sont deux
+        ///   propriétés distinctes.* Un dégradé porte plusieurs valeurs : il satisfait la première
+        ///   sans rien dire de la seconde. C'est la garde de variété qui certifiait le vide.
+        ///
+        /// ⇒ LE SEUIL EST DÉRIVÉ, PAS CHOISI, et sa population est écrite. Sur les **52 planches
+        ///   écrites par une suite de capture** (la population que ce site voit, pas les 122 PNG du
+        ///   dépôt — les dioramas et les fonds d'art ne passent pas par ici), la plus PAUVRE des
+        ///   non vides rend **0,518 %** (`screen_2a_fiche_1080x2400`, un écran de fiche sur art
+        ///   sombre). Le plancher est posé **cinq fois plus bas — 0,10 %** : marge nommée, pour
+        ///   qu'il n'attrape que le vide et jamais un écran légitimement sobre.
+        /// ⚠️ Ce qu'il ne fait PAS : juger la richesse d'un écran. Un état vide légitime (« personne
+        ///   au comptoir ce matin ») rend 1,4 % et passe très largement. Il répond à une seule
+        ///   question — *y a-t-il un dessin ?* — et c'est la seule à laquelle un seuil global peut
+        ///   répondre honnêtement.</summary>
+        public static void PlancherDEncre(Texture2D tex, string nom)
+        {
+            var echecs = new List<string>();
+            PlancherDEncreOuEchoue(tex, nom, echecs);
+            if (echecs.Count > 0) Assert.Fail(string.Join("\n", echecs));
+        }
+
+        public static void PlancherDEncreOuEchoue(Texture2D tex, string nom, List<string> echecs)
+        {
+            const float PartMinimale = 0.10f;   // %, soit 1/5 de la plus pauvre des 52 (0,518 %)
+            const int SeuilCanal = 110;
+
+            Color32[] px = tex.GetPixels32();
+            int encre = 0, maxCanal = 0;
+            for (int i = 0; i < px.Length; i++)
+            {
+                int m = px[i].r; if (px[i].g > m) m = px[i].g; if (px[i].b > m) m = px[i].b;
+                if (m > maxCanal) maxCanal = m;
+                if (m > SeuilCanal) encre++;
+            }
+            float part = px.Length > 0 ? 100f * encre / px.Length : 0f;
+            Debug.Log($"[PLANCHER-ENCRE] {nom} {tex.width}x{tex.height} encre={part:F3} % "
+                      + $"({encre} px > {SeuilCanal}) · canal max={maxCanal} · plancher {PartMinimale:F2} %");
+            if (part < PartMinimale)
+                echecs.Add($"{nom} : {part:F3} % d'encre (canal max {maxCanal}) sous le plancher de "
+                           + $"{PartMinimale:F2} % — cette planche ne montre aucun dessin. Le seuil est "
+                           + "dérivé des 52 planches de capture du dépôt (la plus pauvre des non vides "
+                           + "rend 0,518 %), divisé par 5. Trois causes donnent cette image et appellent "
+                           + "trois correctifs : l'écran ne monte pas, il rend un vide légitime sur le "
+                           + "compte photographié, ou le cadrage vise à côté — compter les nœuds de sa "
+                           + "racine avant de conclure.");
+        }
+
+        public static IEnumerator ChromeAlimenteOuEchoue(AppShell shell, string nom, List<string> echecs)
+        {
+            if (shell == null || shell.TopBar == null)
+            {
+                Debug.Log($"[CHROME-ALIMENTE] {nom} : HORS SUJET — pas de bandeau sur cette planche");
+                yield break;
+            }
+
+            const float Delai = 20f;
+            float attente = 0f;
+            while (attente < Delai
+                   && (string.IsNullOrEmpty(shell.TopBar.RenderedCashText)
+                       || shell.TopBar.RenderedCashText == PlaceholderVide
+                       || shell.TopBar.OpenedGameDay <= 0
+                       || string.IsNullOrEmpty(shell.TopBar.CitywideHeatBucket)))
+            {
+                attente += Time.deltaTime;
+                yield return null;
+            }
+
+            string montant = shell.TopBar.RenderedCashText;
+            int jour = shell.TopBar.OpenedGameDay;
+            string phase = shell.TopBar.DayPhaseText;
+            string chaleur = shell.TopBar.CitywideHeatBucket;
+            bool enDistrict = shell.CityTabDistrictId >= 0;
+            Debug.Log($"[CHROME-ALIMENTE] {nom} montant=«{montant}» jour={jour} "
+                      + $"chaleur=«{chaleur}» phase=«{phase}» "
+                      + $"district={(enDistrict ? shell.CityTabDistrictId.ToString() : "aucun")} "
+                      + $"attendu {attente:F2}s");
+
+            if (string.IsNullOrEmpty(montant) || montant == PlaceholderVide || jour <= 0
+                || string.IsNullOrEmpty(chaleur))
+                echecs.Add($"{nom} : le bandeau n'a pas été alimenté en {Delai:F0} s "
+                           + $"(montant=«{montant}» jour={jour} chaleur=«{chaleur}») — la planche "
+                           + "montrerait un shell vide et un juge l'attribuerait à l'écran");
+
+            if (!enDistrict && phase != PlaceholderVide)
+                echecs.Add($"{nom} : phase «{phase}» hors district — §6.3 exige l'état nommé "
+                           + $"«{PlaceholderVide}» partout sauf en district ; cette valeur est le "
+                           + "reste d'un écran quitté, arrivé après le reset de `ActivateTab`");
+            if (enDistrict && phase == PlaceholderVide)
+                echecs.Add($"{nom} : en district {shell.CityTabDistrictId} et phase «{phase}» — "
+                           + "le manomètre doit porter la `day_phase` du DTO déjà récupéré");
+        }
+
+        /// <summary>L'état nommé du bandeau quand une valeur manque. RECOPIÉ de
+        /// `TopBarController` (cadratin), jamais reformulé — deux littéraux qui divergent
+        /// rendraient la garde ci-dessus verte pour la mauvaise raison.</summary>
+        private const string PlaceholderVide = "—";
+
         public static IEnumerator AttendreUnShellCalme(AppShell shell, List<string> echecs)
         {
             float attente = 0f;

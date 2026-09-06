@@ -88,6 +88,26 @@ namespace MafiaCleanCity.Operational.Lieutenant
     [Serializable]
     public class LieutenantBands
     {
+        /// <summary>⛔ SERVI DEPUIS TOUJOURS ET LU PAR PERSONNE — `reassign_availability`
+        /// (AVAILABLE | ON_COOLDOWN | …). Mesuré le 2026-09-06 : **0 site actif** dans tout
+        /// `Assets/Scripts`, alors que `GET /v1/lieutenants/:id` le rend (corps commité,
+        /// `demo_capture`, horloge 72 013, valeur `AVAILABLE`).
+        /// ⇒ CE QUE SON ABSENCE COÛTAIT : `ReassignChosen()` gardait l'authentification, la
+        ///   sélection et le bâtiment de destination — **jamais la disponibilité**. Un joueur en
+        ///   période de latence voyait donc le geste offert, le confirmait, et récoltait un 409.
+        ///   *Un geste impossible qu'on laisse cliquer n'est pas une erreur de serveur : c'est
+        ///   une promesse que l'écran n'avait pas le droit de faire.*</summary>
+        public string reassign_availability;
+        /// <summary>⛔ LE MÊME CHAMP, LA MÊME OMISSION, SUR L'AUTRE ROUTE. `name` était servi par
+        /// `GET /v1/lieutenants` ET par `GET /v1/lieutenants/:id` — deux routes, un seul contrat
+        /// de projection. D-1 a déclaré le champ sur la LISTE et laissé le DÉTAIL sans lui : le
+        /// panneau de détail nomme donc l'archétype, le rôle, le mode, l'état, les règles et
+        /// l'ancienneté d'un lieutenant, et jamais le lieutenant.
+        /// ★★ *Fermer une omission sur la route qu'on regardait ne la ferme pas sur sa sœur* —
+        ///   c'est le correctif scopé à l'INSTANCE, appliqué à un contrat servi en deux
+        ///   exemplaires. La CLASSE ici est « les routes qui servent cette projection », et elles
+        ///   se comptent avant d'écrire le correctif, pas après le rapport du juge.</summary>
+        public string name;
         public string archetype;        // COOK | SECURITY | BOOKKEEPER | LOGISTICS | LAUNDERING | DISTRIBUTION | UNKNOWN
         public string granted_role;     // advisory | executor | delegated_owner | cohort_overseer (CLOSED 07 domain)
         public string mode;             // tasked | delegated (CLOSED 07 domain)
@@ -113,6 +133,17 @@ namespace MafiaCleanCity.Operational.Lieutenant
     public class RosterRow
     {
         public string lieutenant_id;    // uuid identity of the lieutenant (the Open key; opaque, not a scalar)
+        /// <summary>⛔⛔ LE NOM ÉTAIT SERVI ET LE CLIENT LE JETAIT — forme F, côté client.
+        /// Mesuré le 2026-09-06 sur le corps de `GET /v1/lieutenants` (`demo_capture`, horloge
+        /// 72 013) : le serveur rend **six** clés — `lieutenant_id · name · archetype ·
+        /// op_state_band · rule_count_band · tenure_bucket` — et ce DTO n'en déclarait que
+        /// **cinq**. `JsonUtility` ignore en silence ce qu'il ne sait pas nommer.
+        /// ⇒ Conséquence à l'écran, relevée par le juge ⊥ à la bbox : l'organigramme affichait
+        ///   l'ARCHÉTYPE à la place du nom, et les trois lieutenants du compte étant tous `COOK`,
+        ///   le joueur lisait **« Cuisinier » trois fois** au lieu de `Lt. Oster / Lt. Brasse /
+        ///   Lt. Sallo`. *Un champ absent d'un DTO ne lève rien : il se voit à l'écran, sous la
+        ///   forme d'un autre champ qui prend sa place.*</summary>
+        public string name;             // le nom de fiction du lieutenant (servi ; jamais dérivé côté client)
         public string archetype;        // COOK | SECURITY | BOOKKEEPER | LOGISTICS | LAUNDERING | DISTRIBUTION | UNKNOWN
         public string op_state_band;    // PAUSED | ACTIVE | IDLE — the delegated operational state band
         public string rule_count_band;  // NONE | FEW | MANY — the behavior-script rule count as a band (never the raw count)
