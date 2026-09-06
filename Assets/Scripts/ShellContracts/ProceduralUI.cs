@@ -64,6 +64,18 @@ namespace MafiaCleanCity.Shell
         /// ce sprite structurellement NON-aplat quel que soit son diamètre de RectTransform — la
         /// falsifiable "l'or jamais en aplat" mesure la couverture RÉELLE (échantillonnage de la
         /// texture), pas la boîte englobante.</summary>
+        /// <summary>La largeur de la RAMPE d'anti-crénelage des anneaux, en pixels de texture, sur
+        /// CHAQUE bord. Constante du générateur, pas un réglage d'appelant.
+        ///
+        /// ⛔ EXPOSÉE PARCE QU'UN ORACLE NE PEUT PAS S'EN PASSER, et il vaut mieux qu'il la lise
+        /// ici que la recopie. Un trait nominal de `t` px dessiné avec cette rampe a ses deux bords
+        /// à MI-ALPHA distants de `t − RampeAntiCrenelagePx` : la moitié de la rampe est retranchée
+        /// de chaque côté. Un instrument qui mesure la largeur à mi-alpha et la compare à `t`
+        /// accuse donc le dessin d'un défaut que la rasterisation a fabriqué — mesuré le
+        /// 2026-09-06, trois versions d'un oracle de proportions réfutées l'une après l'autre par
+        /// leur propre contrôle avant d'avoir jugé quoi que ce soit.</summary>
+        public const float RampeAntiCrenelagePx = 1.5f;
+
         public static Sprite Ring(int diameterPx, float thicknessPx, Color color)
         {
             string key = $"ring:{diameterPx}:{thicknessPx:F2}:{ColorKey(color)}";
@@ -81,8 +93,8 @@ namespace MafiaCleanCity.Shell
                 {
                     float dist = Vector2.Distance(new Vector2(x + 0.5f, y + 0.5f), center);
                     Color c = color;
-                    float outerFade = Mathf.Clamp01((rOuter - dist) / 1.5f);
-                    float innerFade = Mathf.Clamp01((dist - rInner) / 1.5f);
+                    float outerFade = Mathf.Clamp01((rOuter - dist) / RampeAntiCrenelagePx);
+                    float innerFade = Mathf.Clamp01((dist - rInner) / RampeAntiCrenelagePx);
                     c.a *= Mathf.Min(outerFade, innerFade);
                     pixels[y * d + x] = c;
                 }
