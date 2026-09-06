@@ -278,10 +278,21 @@ namespace MafiaCleanCity.Operational
             // ⚠️ La forme dépend de la posture dans la maquette (`hostile` courbe vers le haut,
             // `withdrawn` est un trait droit) ; seul le sourire par défaut est posé ici, les deux
             // autres postures n'étant atteintes par aucun test (angle mort A5, déclaré).
+            // ⛔ LES BOUTS ARRONDIS COMPTENT DANS LA LONGUEUR (㊲ F11). Le chemin
+            // `M27 40,5 Q31 42,5 36 40,5` fait 9 unités — mais il porte `stroke-linecap:round`, qui
+            // ajoute un demi-trait à CHAQUE bout : **9 + 1,7 = 10,7 unités**, et c'est ce que le
+            // juge mesure sur la référence (59 × 14 px = 10,75 × 2,55 u) contre 50 × 12 (9,14 ×
+            // 2,19) en jeu. Le client rendait le chemin NU.
+            // ★ Une extrémité de trait n'est pas une décoration : c'est de la longueur. Reproduire
+            //   un chemin sans reproduire ses bouts, c'est livrer une forme 15 % plus courte, et
+            //   sur une bouche de 9 unités ça se lit — le juge l'a noté avant de le mesurer.
+            // ⚠️ Ce que je ne touche PAS : la hauteur d'encre (2,19 contre 2,55). Elle vient du
+            //   décalage des deux ellipses, pas des bouts, et ce n'est pas le mécanisme que le
+            //   finding nomme. Une seule variable par correctif, sinon la remesure ne départage rien.
             Forme(ref bouche, "Bouche", buste, ReputationResolvers.Encre,
-                  new Rect(27f, 39.4f, 9f, 3.6f), ech, ellipse: true);
+                  new Rect(26.15f, 39.4f, 10.7f, 3.6f), ech, ellipse: true);
             Forme(ref boucheMasque, "BoucheMasque", buste, ReputationResolvers.Creme2,
-                  new Rect(26.6f, 38.1f, 9.8f, 3.6f), ech, ellipse: true);
+                  new Rect(25.75f, 38.1f, 11.5f, 3.6f), ech, ellipse: true);
 
             baseOeilGX = ((RectTransform)oeilG.transform).anchoredPosition.x;
             baseOeilDX = ((RectTransform)oeilD.transform).anchoredPosition.x;
