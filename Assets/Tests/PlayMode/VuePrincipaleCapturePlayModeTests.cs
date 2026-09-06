@@ -1754,14 +1754,65 @@ namespace MafiaCleanCity.Capture.Tests
                 $"㊵ n'a pas fini de se rendre en 30 s (erreur : {ecran.DerniereErreur})");
             for (int i = 0; i < 15; i++) yield return null;
 
-            // ⛔ ANTI-VACUITÉ : la PREMIÈRE capture de ㊳ est partie muette et VERTE. Un PNG d'une
-            // coquille est un PNG parfaitement valide.
+            // ⛔⛔⛔ CETTE SUITE A PHOTOGRAPHIÉ UN ÉCRAN D'ERREUR ET L'A LAISSÉ PASSER (2026-09-06).
+            // La planche jugée — `screen_c2_filiere_sous_chrome_1080x2400.png`, celle de l'INDEX —
+            // montrait « LA FILIÈRE NE RÉPOND PAS » et 1 165 px de noir, alors que la route rendait
+            // 200 et quatre nœuds une heure plus tôt. Les huit assertions de ce test étaient toutes
+            // JUSTES et toutes AVEUGLES, pour deux raisons distinctes :
+            //   · `RenduTermine` est posé dans TOUTES les branches du contrôleur, `RendreEtatIndisponible`
+            //     comprise — *il dit que le code a FINI, jamais que l'écran a CHANGÉ* ;
+            //   · le plancher de 8 textes est franchi PAR LA COQUILLE — l'état d'indisponibilité pose
+            //     un sous-titre, trois compteurs (libellé + valeur) et un panneau à trois chaînes.
+            // ★ Et `DerniereErreur` ÉTAIT dans ce fichier — uniquement interpolée dans le message
+            //   d'échec ci-dessus. Lue, jamais assertée. *La propriété est mentionnée, donc elle a
+            //   l'air gardée* : un balayage par motif compte cette suite comme couverte, et un
+            //   relecteur qui cherche le symbole trouve un hit et passe.
+            // ⇒ QUATRE GRADES, et chacun tue un monde que le précédent laisse vivre. L'ordre compte :
+            //   (1) STABILISÉ — ni chargé ni en erreur = la coroutine n'a jamais rendu la main ;
+            //   (2) PAS EN ERREUR — c'est le grade qui manquait, et il coûte une planche ;
+            //   (3) CHARGÉ — `DerniereErreur == null` est VRAI À VIDE tant que rien ne charge
+            //       (patron ㊳ `:1626-1633`, qui a payé un `Charger()` orphelin resté vert) ;
+            //   (4) DIMENSIONNÉ — un compte SANS nœud rend un écran « aucun nœud » légitime, qui
+            //       franchit les trois premiers. *Gelé et représentatif sont deux propriétés
+            //       distinctes* : une planche prise sur un monde vide n'est pas fausse, elle ne
+            //       montre simplement pas l'écran qu'on prétend juger.
+            Assert.IsTrue(ecran.DernierChargement != null || ecran.DerniereErreur != null,
+                "㊵ n'a NI chargé NI échoué : `Charger()` n'a jamais rendu la main. Ce n'est pas " +
+                "une lenteur, et la capture montrerait l'état initial « EN ATTENTE ».");
+            Assert.IsNull(ecran.DerniereErreur,
+                $"㊵ a échoué à charger (code {ecran.DernierCodeErreur}) : {ecran.DerniereErreur}. " +
+                "La capture montrerait « LA FILIÈRE NE RÉPOND PAS » — l'état d'indisponibilité, " +
+                "pas les données. C'est EXACTEMENT la planche publiée le 2026-09-06.");
+            Assert.IsNotNull(ecran.DernierChargement,
+                "㊵ n'a RIEN chargé : `DerniereErreur` est nulle parce que rien ne s'est produit, " +
+                "pas parce que tout s'est bien passé.");
+            int etapesServies = ecran.DernierChargement.stages == null
+                ? 0 : ecran.DernierChargement.stages.Length;
+            Assert.Greater(etapesServies, 0,
+                "le compte de ce run ne sert AUCUNE étape : la planche montrerait l'écran « aucun " +
+                "nœud », qui est un rendu CORRECT et non un défaut. Ce n'est pas l'écran qu'il faut " +
+                "réparer, c'est le monde qu'on lui donne — vérifier que la capture tourne sur un " +
+                "compte SERVI, jamais sur un compte frais.");
+
+            // ⛔ ANTI-VACUITÉ DE FORME, gardée en plus des quatre grades ci-dessus : un PNG de
+            // coquille est un PNG parfaitement valide (la première capture de ㊳ est partie muette
+            // et VERTE). ⚠️ Elle ne remplace PAS les grades : l'état d'indisponibilité franchit ce
+            // plancher, c'est mesuré — elle attrape la coquille STRUCTURELLE, pas l'erreur.
             var textes = new System.Collections.Generic.List<string>();
             foreach (TMPro.TextMeshProUGUI tt in shell.ContentSlot.GetComponentsInChildren<TMPro.TextMeshProUGUI>(true))
                 if (!string.IsNullOrWhiteSpace(tt.text)) textes.Add(tt.name);
             Assert.GreaterOrEqual(textes.Count, 8,
                 $"㊵ ne pose que {textes.Count} texte(s) non vides — la capture montrerait une " +
                 $"coquille. Vus : [{string.Join(", ", textes)}]");
+            // Et le contenu DISCRIMINANT : le compteur d'étapes ne peut pas rester à « 00 » quand
+            // le serveur a rendu des étapes. C'est la garde qui sépare le nominal de l'indisponible
+            // — les huit textes, eux, ne les séparent pas.
+            var valeurs = new System.Collections.Generic.List<string>();
+            foreach (TMPro.TextMeshProUGUI tt in shell.ContentSlot.GetComponentsInChildren<TMPro.TextMeshProUGUI>(true))
+                valeurs.Add(tt.text);
+            Assert.IsTrue(valeurs.Contains(etapesServies.ToString("00")),
+                $"le serveur a rendu {etapesServies} étape(s) et aucun texte de ㊵ ne porte " +
+                $"« {etapesServies:00} » : l'écran n'a pas appliqué ce qu'il a reçu.");
 
             // ⛔⛔ LE PLANCHER D'ABORD : hors shell les insets valent ZÉRO et les gardes suivantes
             // seraient vraies PAR CONSTRUCTION.
