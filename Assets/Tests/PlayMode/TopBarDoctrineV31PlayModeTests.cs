@@ -688,6 +688,99 @@ namespace MafiaCleanCity.Shell.Tests
         /// rien casser de visible — le pire des défauts d'instrument.
         /// ⚠️ Le mode du canvas est RÉTABLI dans tous les cas : le laisser en `ScreenSpaceCamera`
         /// changerait le monde du test suivant, et cette suite en compte vingt-six autres.</summary>
+        /// <summary>⛔ D'OÙ VIENT LE FUSELAGE DES ARCS ? Une expérience à UNE variable.
+        ///
+        /// Un juge ⊥ mesure l'épaisseur de l'arc à **1,02 → 3,16 → 0,94** le long de sa course, là
+        /// où le canon la garde constante (2,46–2,52) et coupée net. Trois étapes peuvent produire
+        /// ça, et il faut savoir LAQUELLE avant de toucher au tracé :
+        ///   (1) le RASTERISEUR (`ProceduralUI.Ring`) — **DÉJÀ RÉFUTÉ hors ligne** : reproduit à
+        ///       l'identique, il rend un ratio max/min de **1,083** à la taille réelle (36 texels),
+        ///       et son écart va dans l'autre sens (plus épais sur les axes, plus fin en diagonale)
+        ///       quand le fuselage observé est fin aux DEUX bouts. Réfuté sur la magnitude ET sur
+        ///       la forme ;
+        ///   (2) la COUPE `Image.Type.Filled` en `Radial180` — elle taille un maillage, pas la
+        ///       texture ; ses bords pourraient amincir les extrémités ;
+        ///   (3) la MISE À L'ÉCHELLE d'affichage — un anneau de 36 texels rendu à une autre taille.
+        ///
+        /// ⇒ LE DISCRIMINANT, et c'est ce qui rend l'expérience utile : on rend le MÊME arc à deux
+        ///   `fillAmount` très différents. Si l'amincissement reste collé aux EXTRÉMITÉS et garde la
+        ///   même étendue absolue quand l'arc s'allonge, c'est la coupe (2). S'il se dilate avec
+        ///   l'arc, ou si toute l'épaisseur bouge en bloc, c'est l'échelle (3).
+        /// ⚠️ Le rayon et le centre sont LUS SUR L'OBJET (`ArcTrack`/`ArcHot`), jamais recalculés
+        ///   depuis un ratio : le socle de ce dépôt porte déjà un oracle qui échantillonnait 3 px à
+        ///   côté parce qu'il dérivait son rayon d'un nombre gelé.
+        /// ⚠️ Ce test MESURE et n'asserte que l'anti-vacuité (il doit trouver de l'arc). Poser un
+        ///   seuil avant de savoir d'où vient la grandeur serait choisir la réponse.</summary>
+        [UnityTest, Category("HUDv31")]
+        public IEnumerator DA9_Diagnostic_FuselageDesArcs_UneSeuleVariable()
+        {
+            yield return WaitTopBarLoaded(BootShell());
+            yield return new WaitForEndOfFrame();
+
+            Transform manoT = shell.TopBar.transform.Find("Manometre");
+            Assert.IsNotNull(manoT, "Manometre doit exister");
+            Transform arc = manoT.Find("ArcHot");
+            Assert.IsNotNull(arc, "l'arc chaud doit exister pour être mesuré");
+            var arcImg = arc.GetComponent<UnityEngine.UI.Image>();
+            Assert.IsNotNull(arcImg, "l'arc doit être une Image remplie");
+            float fillOrigine = arcImg.fillAmount;
+
+            var lignes = new List<string>();
+            foreach (float f in new[] { fillOrigine, 0.30f, 0.45f })
+            {
+                arcImg.fillAmount = f;
+                Canvas.ForceUpdateCanvases();
+                yield return null;
+                Texture2D img = RendreLEcran();
+                lignes.Add(ProfilEpaisseurArc(img, (RectTransform)arc, f));
+                Object.DestroyImmediate(img);
+            }
+            arcImg.fillAmount = fillOrigine;
+            Canvas.ForceUpdateCanvases();
+            yield return null;
+
+            foreach (string l in lignes) Debug.Log("[DA9] " + l);
+        }
+
+        /// <summary>L'épaisseur de l'arc le long de sa course, intégrée sur la bande radiale, par
+        /// pas de 2°. Le centre et le rayon viennent du RECT de l'arc — mesurés, pas dérivés.</summary>
+        private string ProfilEpaisseurArc(Texture2D img, RectTransform arcRt, float fill)
+        {
+            var coins = new Vector3[4];
+            arcRt.GetWorldCorners(coins);
+            // monde → pixels de la texture : le rendu couvre l'écran entier
+            float sx = img.width / (float)Screen.width, sy = img.height / (float)Screen.height;
+            Vector2 c0 = RectTransformUtility.WorldToScreenPoint(null, (coins[0] + coins[2]) * 0.5f);
+            Vector2 c1 = RectTransformUtility.WorldToScreenPoint(null, coins[0]);
+            Vector2 c2 = RectTransformUtility.WorldToScreenPoint(null, coins[2]);
+            var centre = new Vector2(c0.x * sx, c0.y * sy);
+            float rayonExt = 0.5f * Mathf.Abs(c2.x - c1.x) * sx;
+
+            float Chaleur(Color p) => p.r - 0.5f * (p.g + p.b);
+            var eps = new List<float>();
+            var brut = new System.Text.StringBuilder();
+            for (int a = 0; a < 180; a += 2)
+            {
+                float th = a * Mathf.Deg2Rad, somme = 0f;
+                for (float r = rayonExt * 0.55f; r <= rayonExt * 1.05f; r += 0.25f)
+                {
+                    int x = Mathf.RoundToInt(centre.x + r * Mathf.Cos(th));
+                    int y = Mathf.RoundToInt(centre.y + r * Mathf.Sin(th));
+                    if (x < 0 || y < 0 || x >= img.width || y >= img.height) continue;
+                    if (Chaleur(img.GetPixel(x, y)) > 0.12f) somme += 0.25f;
+                }
+                if (somme > 0f) { eps.Add(somme); brut.Append($" {a}:{somme:F1}"); }
+            }
+            if (eps.Count == 0)
+                return $"fill={fill:F4} · AUCUN pixel d'arc trouvé (rayon ext lu {rayonExt:F1} px, "
+                     + "centre " + centre + ") — l'instrument mesure ailleurs, PAS un arc absent";
+            float min = float.MaxValue, max = 0f;
+            foreach (float e in eps) { if (e < min) min = e; if (e > max) max = e; }
+            return $"fill={fill:F4} · {eps.Count} secteurs porteurs sur 90 · épaisseur min={min:F2} "
+                 + $"max={max:F2} ratio={max / Mathf.Max(min, 0.01f):F2} · rayon ext lu={rayonExt:F1} px"
+                 + $" · profil{brut}";
+        }
+
         private Texture2D RendreLEcran()
         {
             Canvas canvas = shell.ShellCanvas;
