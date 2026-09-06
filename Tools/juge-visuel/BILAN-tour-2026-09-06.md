@@ -111,3 +111,41 @@ le démonter. Planches de ce tour prises par ce chemin : **㊲ ㊴ ㊵** (`Activ
   du menu n'est visible** dans les trois planches (+0,08 / −0,02 / +0,24) ; un texte fantôme isolé n'est pas testé.
 - ⑱ : le correcteur mesure **21 entrées** (contenu 3 035,8 pour une fenêtre de 390,6, glissé 2 645,2) là où le r1 en
   comptait 19 — les 2 manquantes étaient hors cadre, comme le juge l'avait écrit en non-vérifié. F1/F2 tiennent, en pire.
+
+## 8. Addendum — la journée du 2026-09-06 (tours r<N+1> sur correctifs commités + planches signées)
+
+Protocole figé avec f2 à midi : un tour ne part que sur une ligne « GO <écran> r<N> : correctif <SHA> · planche <nom> ».
+Base de preuve refondée à 11:10 (`empreinte-reference.json`, minute 72 118, compte `demo_capture` gelé, 326 corps `a0623a5`,
+50 planches `1b887e3`) ; `origin/correcteur/ecrans` est resté PÉRIMÉ sur GitHub — les commits jugés vivent dans le worktree
+local `~/project/mafia-unity-correcteur`, d'où les blobs ont été lus.
+
+| écran | tour | verdict | B | M | m | ce qui a bougé |
+|---|---|---|---|---|---|---|
+| ⑥ La Famille | r2 (`8e982ab`) | NON APPROUVÉ | 1 | 1 | 11 | le correctif D-1 a mis le nom dans la fente de l'archétype : **l'archétype a disparu** (défaut déplacé d'un cran) |
+| ⑥ | clôture données delta (`77bd229`) | 4 fermés · 1 ouvert · **2 neufs nés dans le correctif** | | | | archétype disparu (confirmé par la donnée) ; 3 clés i18n non servies + `UNKNOWN` → « Unknown », garde à 6/9 |
+| ⑥ | r3 (`5349ac2`/`77bd229`) | **APPROUVÉ** | 0 | 0 | 14 | 5 écarts fermés au chiffre ; sRGB exact ; les 14 MINEUR en dette groupée |
+| ⑥ | clôture données delta 2 (base refondée) | **0 défaut de couverture** | | | | 3 lignes bougent / 43 ; réserve de classe ⓑ (docstring de garde vraie pour 1/9 résolveurs) ; le « vérifié à 0 » de `5349ac2` non reproductible (phrase citée dans sa réfutation) — **⑥ CLOS par le skill** (`01321d77` au plan) |
+| ㊲ La réputation | r10 (paire sans chrome `0da8895`) | NON APPROUVÉ | 0 | 3 | 10 | faits du correcteur VÉRIFIÉS (portrait procédural ; l'ovale = GANT, 0 px d'or) ; calotte MESURÉE (4 nombres) ; buste hors axe −3,2 CSS pour la 4ᵉ fois ; défaut de dossier hérité 4 tours : l'ancrage du cadre est INVERSÉ maquette/client |
+| ㊲ | r11 (paire SOUS chrome `3b0ffae`) | NON APPROUVÉ | 2 | 5 | 9 | axe/interligne/tuiles/bouche FERMÉS ; **gouttière tranchée : au 16:9 le cadre fixe déborde de 141 px sous le bandeau, le titre disparaît** (zone libre 1556 < cadre 1698) — la maquette n'est pas conçue pour le 16:9 : arbitrage ; calotte reformée, les 4 nombres toujours faux ; gras −20-33 % de fût |
+| ① Le HUD | r5 (`4ccd806`) | NON APPROUVÉ | 2 | 11 | 11 | **chrome ×1,19 sur ① seul** (témoin ⑥ exact) → aile droite hors écran ; F5-rayon CONFIRMÉ (0,4497 R) ; aiguille RÉFUTÉE (même facteur que l'arc) |
+| ① | r6 (`b85acfc`) | NON APPROUVÉ | 0 | 10 | 12 | **F1 FERMÉ** ; **×1,19 NON reproduit** (artefact d'état de run, sonde `[CHROME-CAPTURE]`) ; médaillon ≠ cadran (pivot inversé, 26° de recouvrement, lunette absente) ; laiton devenu orange (200,126,66) ×2 d'épaisseur ; dock sans indicateur ; **classe : l'arc composé en LINÉAIRE** (sRGB d=2/8,6 vs linéaire 17,9/34,6) ; ARGENT à 2,90 CSS du médaillon |
+
+**Ce que la journée a établi** :
+- **Un correctif ferme l'instance et déplace le défaut** — mesuré deux fois sur ⑥ (nom → archétype disparu ; résolveur unique → 3 clés
+  non servies + « Unknown ») et sur ㊲ (calotte reformée sans remesurer les nombres). Le remède qui a marché : **la clôture données en
+  DELTA** juste après le correctif, qui voit ce que le visuel ne voit pas (D-1 « Cuisinier ×3 »), et les **grandeurs du tour précédent
+  jointes au juge suivant** (colonne `critère` remplissable, ㊲ F3 attrapé 4 fois à la même valeur).
+- **Un écart qui revient N fois à la même valeur n'est plus un finding** : ㊲ buste −3,2 CSS (r6→r10) — fermé au r11 dès qu'il a été
+  nommé comme correctif et non remesuré.
+- **Les faits d'un correcteur se vérifient et tiennent souvent** : ㊲ portrait procédural / gant (2/2 vrais) ; ① ×1,19 « réel sur les
+  planches, absent de l'arbre » (vrai : non reproduit au r6) ; ① F5-rayon (vrai) ; ① « l'aiguille dépasse » (faux — réfuté au pixel).
+- **Trois classes neuves** : la composition LINÉAIRE d'un dégradé/arc (⑥ r2 F3 rampe du filet, ① r6 l'arc du manomètre) ; **la
+  hauteur FIXE d'une maquette 9:17,5 qui ne tient pas au 16:9** (㊲ r11) — arbitrage de résolutions cibles avant tout correctif ;
+  **l'ancrage inversé** d'un bloc entre maquette et client, absorbé 4 tours par un assumé faux.
+- **Défauts de mes dossiers, attrapés par les juges** : 6 (⑤ série 4/6 · ⑥ police · ㊴ `etats/` · ⑥ « 3 349 lignes » · stats de diff
+  fausses ×2 · ㊲ « sous le cadre, c'est le dock » + texte commun `operational_demo`) ⇒ règles : plus de stats de diff, `compte` par
+  écran, et **`[ -f dossier.md ] && git commit`** (3 commits partis sans dossier sur une chaîne shell rompue).
+- **Instruments de sonde** : `capturer-corps-reels.py` injectait `home_district_id` ; le dossier `famille` n'avait pas le roster et
+  `reputation/GET_lieutenants.json` était un DÉTAIL ; « sans instance » sur `/:nodeId` = sonde `nodeId` vs clé `node` — les trois
+  fermés dans la resync (`a0623a5` porte le roster de famille).
+- **Comptes** (`compter-findings-tour.py`, ids `F/B/M` + gravité, `C` exclu) : **15 rapports · 241 findings · 34 B / 80 M / 127 m**.
