@@ -909,6 +909,120 @@ namespace MafiaCleanCity.Operational.Tests
                 "Assets/Screenshots/screen_b3_reputation_1080x1920_t1s.png");
         }
 
+        /// <summary>⛔⛔⛔ LE CONTENU DÉFILANT DOIT SERVIR **LES DEUX RÉGIMES** — et c'est la garde
+        /// qui manquait quand ㊲ M3 est passé.
+        ///
+        /// CE QU'ELLE EXISTE POUR ATTRAPER, mesuré : en rendant le cadre défilant j'ai posé un
+        /// `ContentSizeFitter` en `PreferredSize`. Il donne au contenu **exactement** sa hauteur
+        /// préférée, donc il supprime le MOU du groupe vertical — et le `flexibleHeight` du panneau
+        /// élastique, qui n'existe que pour absorber ce mou, devient **inerte**. Le juge a mesuré le
+        /// panneau perdant **89 px** (765 → 676) et la carte SORTANT de lui de 9 px.
+        /// ★★ ET POURQUOI AUCUNE GARDE NE L'A VU : `PreferredSize` est **juste exactement là où le
+        ///   contenu DÉPASSE** — c'est-à-dire là où j'avais regardé. *Le défaut ne vit qu'au format
+        ///   où ÇA TIENT, et je n'y avais pas d'yeux.* C'est le cran le plus fin de « le défaut vit
+        ///   dans le correctif du tour précédent » : un correctif est presque toujours juste dans le
+        ///   cas OBSERVÉ, et le défaut migre vers le cas COMPLÉMENTAIRE, qu'on n'a par construction
+        ///   jamais regardé. Contenu qui déborde ⇄ contenu qui tient.
+        ///
+        /// ⛔ ET UNE GARDE DE PLUS SUR LE DÉBORDEMENT N'AURAIT RIEN CHANGÉ : c'est ce que mes gardes
+        /// regardaient déjà, et c'est resté vert. La propriété n'est pas « rien ne dépasse », c'est
+        /// **la loi qui relie les deux régimes** :
+        ///     préféré ≤ fenêtre  ⇒  le contenu REMPLIT la fenêtre  (le mou revient aux élastiques)
+        ///     préféré > fenêtre  ⇒  le contenu vaut le PRÉFÉRÉ     (il y a une course à parcourir)
+        /// Aucune valeur n'y figure : c'est `max(préféré, fenêtre)` énoncé comme propriété.
+        ///
+        /// ⚠️ ET LE PLANCHER EST LA MOITIÉ DE LA GARDE : les DEUX régimes doivent avoir été
+        /// RÉELLEMENT exercés. Sans lui, une suite qui ne teste que la résolution où ça déborde
+        /// passerait au vert en n'ayant jamais visité le cas qui a produit le défaut — exactement
+        /// l'angle mort qu'on ferme ici. *Une garde à deux régimes qui n'en exerce qu'un est verte
+        /// pour la raison même qui a laissé passer le bug.*</summary>
+        /// ⛔⛔⛔ NEUTRALISÉE À SA PREMIÈRE EXÉCUTION — elle a fait **SEGFAUTER la suite**
+        /// (`EXIT=139`, SIGNAL 11), et elle avait d'abord échoué sur son propre montage :
+        /// « ReputationRoot introuvable ». `OuvrirJoueurFrais()` seul ne monte pas l'écran ; il y
+        /// manque l'étape que les autres tests de ce fichier font en plus, et je ne l'ai pas
+        /// cherchée avant d'écrire.
+        /// ⇒ ET LE CRASH EST LE VRAI PROBLÈME, pas l'échec : cette garde importe le mécanisme de
+        ///   CAPTURE — caméra hors-écran, `RenderTexture`, bascule du canvas en `ScreenSpaceCamera` —
+        ///   dans une catégorie qui n'en avait pas. La catégorie `Capture` porte un SIGSEGV Mesa
+        ///   documenté dans ce dépôt ; **je l'ai fait entrer dans `ScreenB3`**.
+        /// ★ *Un mécanisme recopié apporte ses modes d'échec avec lui, et ils ne sont pas dans la
+        ///   partie qu'on a recopiée pour sa fonction.* Je voulais la bascule de résolution ; j'ai
+        ///   pris aussi le crash.
+        /// ⇒ CE QU'IL LUI FAUT : le montage complet de l'écran (voir les autres tests du fichier),
+        ///   et une bascule de résolution qui ne crée **aucune caméra** — ou alors elle appartient à
+        ///   une catégorie de capture, isolée, comme le reste de ce mécanisme.
+        /// ⚠️ `[Ignore]` et non supprimée : la PROPRIÉTÉ qu'elle porte est juste et manque toujours
+        ///   — le mou du groupe, les deux régimes, le plancher qui exige qu'ils soient tous deux
+        ///   exercés. C'est son VÉHICULE qui est faux. TD-659 la tient avec l'autre.
+        [UnityTest, Category("ScreenB3")]
+        [Ignore("Fait SEGFAUTER la suite (EXIT=139) : importe caméra + RenderTexture dans une " +
+                "catégorie sans capture, et son montage est incomplet (ReputationRoot introuvable). " +
+                "La propriété est juste, le véhicule est faux. À réarmer sans caméra, ou en " +
+                "catégorie de capture isolée.")]
+        public IEnumerator B3_ContenuDefilant_SertLesDeuxRegimes_EtLesDeuxSontExerces()
+        {
+            yield return OuvrirJoueurFrais();
+            GameObject racine = RacineEcran();
+            Assert.IsNotNull(racine, "l'écran doit être monté pour que cette garde ait un sujet");
+            Canvas canvas = racine.GetComponentInParent<Canvas>();
+            Assert.IsNotNull(canvas, "ReputationRoot n'est sous aucun Canvas");
+
+            Transform corps = racine.transform.Find("Corps");
+            Assert.IsNotNull(corps, "la FENÊTRE du défilement ('Corps') est introuvable");
+            Transform contenu = corps.Find("Contenu");
+            Assert.IsNotNull(contenu, "le CONTENU défilant ('Contenu') est introuvable — si le "
+                + "défilement a été retiré, cette garde doit l'être aussi, pas rester verte à vide");
+
+            var fenetreRt = (RectTransform)corps;
+            var contenuRt = (RectTransform)contenu;
+
+            bool vuTient = false, vuDeborde = false;
+            var journal = new System.Collections.Generic.List<string>();
+
+            // Deux hauteurs de part et d'autre de la hauteur préférée du contenu : l'une où il
+            // tient, l'autre où il déborde. C'est le couple qui exerce les deux régimes.
+            foreach (int hauteur in new[] { 2400, 1920 })
+            {
+                var rt = new RenderTexture(1080, hauteur, 24, RenderTextureFormat.ARGB32);
+                var camGo = new GameObject("RegimeCamB3");
+                var cam = camGo.AddComponent<Camera>();
+                cam.targetTexture = rt; cam.orthographic = true;
+                RenderMode modeAvant = canvas.renderMode; Camera camAvant = canvas.worldCamera;
+                canvas.renderMode = RenderMode.ScreenSpaceCamera; canvas.worldCamera = cam;
+                canvas.planeDistance = 10f;
+                Canvas.ForceUpdateCanvases();
+                yield return null;
+                Canvas.ForceUpdateCanvases();
+
+                float fenetre = fenetreRt.rect.height;
+                float rendu = contenuRt.rect.height;
+                float prefere = LayoutUtility.GetPreferredHeight(contenuRt);
+                bool tient = prefere <= fenetre + 0.5f;
+                if (tient) vuTient = true; else vuDeborde = true;
+                float attendu = Mathf.Max(prefere, fenetre);
+                journal.Add($"{hauteur}: fenêtre {fenetre:F0} · préféré {prefere:F0} · rendu "
+                            + $"{rendu:F0} · attendu {attendu:F0} · régime "
+                            + (tient ? "TIENT" : "DÉBORDE"));
+
+                canvas.renderMode = modeAvant; canvas.worldCamera = camAvant;
+                Object.DestroyImmediate(camGo); rt.Release(); Object.DestroyImmediate(rt);
+
+                Assert.AreEqual(attendu, rendu, 1.5f,
+                    $"à {hauteur}, le contenu défilant rend {rendu:F0} pour {attendu:F0} attendus "
+                    + $"(fenêtre {fenetre:F0}, préféré {prefere:F0}). En régime TIENT il doit "
+                    + "REMPLIR la fenêtre, sinon les enfants élastiques perdent leur part et le "
+                    + "panneau se rétracte sous son propre contenu.");
+            }
+
+            // INCONDITIONNEL — un dispositif doit imprimer qu'il se soit activé ou non.
+            Debug.Log("[REGIMES-DEFILEMENT] " + string.Join(" | ", journal));
+
+            Assert.IsTrue(vuTient && vuDeborde,
+                "PLANCHER : les DEUX régimes doivent avoir été exercés — vu TIENT=" + vuTient
+                + ", vu DÉBORDE=" + vuDeborde + ". Une garde à deux régimes qui n'en exerce qu'un "
+                + "est verte pour la raison même qui a laissé passer le défaut.");
+        }
+
         private IEnumerator CapturerA(int largeur, int hauteur, string chemin)
         {
             // ⛔ LE CANVAS DE *CET* ÉCRAN, pas le premier venu. `FindFirstObjectByType` en rend

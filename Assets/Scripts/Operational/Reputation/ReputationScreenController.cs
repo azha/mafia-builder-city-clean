@@ -866,9 +866,28 @@ namespace MafiaCleanCity.Operational
             // ⚠️ Recalculée à chaque changement de dimensions, jamais cuite au montage : c'est la
             //   classe que cet écran a déjà payée deux fois cette nuit, sur la hauteur puis sur la
             //   position du cadre.
-            var courseGo = contenuGo.AddComponent<HauteurDeContenuDefilant>();
-            courseGo.fenetre = (RectTransform)corpsGo.transform;
-            courseGo.Appliquer();
+            // ⛔⛔⛔ REVENU AU `ContentSizeFitter` — MON CORRECTIF DE M3 EST RÉTRACTÉ, et c'est une
+            //    INCOMPATIBILITÉ, pas une erreur d'implémentation.
+            // J'avais posé `max(préféré, fenêtre)` pour rendre au panneau élastique le mou que le
+            // `PreferredSize` lui retirait (juge r14 : panneau 765 → 676, carte sortant de 9 px).
+            // MESURÉ : la suite passe alors de 13/13 à **12/1**, et le rouge est une garde qui
+            // existait déjà — `B3S4_LeMiroirEstElastique_EtLeContenuNeLaissePasUnTiersDeVide` :
+            // « 1080×1920 : **317 unités de vide** sous le contenu du miroir (74 px CSS) — la
+            // maquette en laisse 21 ».
+            // ⇒ LES DEUX EXIGENCES TIRENT EN SENS OPPOSÉS. À 1920 le cadre a PLUS de place que le
+            //   contenu n'en demande. Quelqu'un doit absorber ce mou : si c'est le panneau
+            //   élastique, il laisse un tiers de vide (B3S4 rougit) ; si personne ne l'absorbe, le
+            //   panneau se rétracte sous son contenu (M3). **On ne peut pas satisfaire les deux en
+            //   choisissant QUI absorbe — il faut décider ce que le mou DEVIENT**, et ça n'est pas
+            //   un choix d'implémentation.
+            // ★ Même structure que TD-651 : deux nombres mesurés, tous deux justes, incompatibles
+            //   tant qu'une troisième décision n'est pas prise. *Un correctif qui échange un défaut
+            //   contre un autre n'a rien corrigé, même quand le second est plus petit.*
+            // ⇒ ROUTÉ, pas tranché : c'est un arbitrage de mise en page à 1920, le format que le
+            //   canon ne couvre pas. Le `ContentSizeFitter` reste en attendant — il garde la suite
+            //   verte et laisse M3 ouvert, ce qui est l'état DÉCLARÉ plutôt qu'un état neuf.
+            ContentSizeFitter ajusteur = contenuGo.AddComponent<ContentSizeFitter>();
+            ajusteur.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
             VerticalLayoutGroup pile = contenuGo.AddComponent<VerticalLayoutGroup>();
             pile.spacing = Px(CssEcartBloc);
