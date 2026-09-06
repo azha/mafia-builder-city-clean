@@ -47,10 +47,28 @@ namespace MafiaCleanCity.Operational
                 // Traduits (noms communs), en attente de ratification par la maquette.
                 case "COOK": return Lib("Cuisinier");
                 case "DISTRIBUTION": return Lib("Distribution");
-                case "MUSCLE": return Lib("Gros bras");
-                case "INTELLIGENCE": return Lib("Renseignement");
-                case "FACILITY_MANAGER": return Lib("Intendant");
-                // Inconnu : rendu tel quel. Un 10ᵉ archétype doit se VOIR, pas se fondre.
+                // ⛔⛔ CES TROIS-LÀ NE PASSENT PAS PAR `Lib`, ET C'EST MESURÉ, PAS PRUDENT. Le
+                //    bundle réel servi en `fr` porte 14 clés `famille.archetype.*` ; les trois que
+                //    `Libelle.De` dériverait de ces littéraux — un slug par littéral — n'y sont
+                //    PAS. Les faire passer par le catalogue ajouterait trois REPLIS, et la garde
+                //    `BundleReel_…_ZeroRepli` a exactement ce mode d'échec pour raison d'être :
+                //    « le back ne les sert pas, et l'écran l'affiche en français sans que rien ne
+                //    rougisse ». Le mot français est ici la valeur ratifiée du client, pas un
+                //    repli déguisé — et les trois clés sont inscrites en dette, routées au lot
+                //    i18n, plutôt qu'inventées ici.
+                //    ★ *Une clé qu'on invente pour « faire propre » est du français non traduisible
+                //      de plus, et le seul endroit où ça se voit est une garde de catalogue.*
+                case "MUSCLE": return "Gros bras";
+                case "INTELLIGENCE": return "Renseignement";
+                case "FACILITY_MANAGER": return "Intendant";
+                // ⛔ `UNKNOWN` EST UNE VALEUR RÉELLE DU DOMAINE, pas l'absence d'une valeur — le
+                //    back la produit (`lieutenant.projection.service.ts`). Tombée dans le `default`
+                //    elle sortait « Unknown » en casse de titre, c'est-à-dire l'anglais brut à
+                //    l'écran d'un jeu français ; et la clé `famille.archetype.inconnu` EST servie,
+                //    mais plus personne ne la demandait. Deux défauts d'un seul oubli.
+                case "UNKNOWN": return Lib("Inconnu");
+                // Un 10ᵉ archétype, lui, doit se VOIR brut : le repli sert de signal, pas de
+                // traduction. C'est la distinction que `UNKNOWN` ci-dessus n'avait pas.
                 default: return CasseDeTitre(a);
             }
         }
@@ -63,8 +81,14 @@ namespace MafiaCleanCity.Operational
         /// <summary>⛔ LES REPLIS ONT CHANGÉ, ET CE N'EST PAS UN DÉTAIL DE STYLE. Cette méthode
         /// rendait « DÉLÉGUÉ » / « DIRECT » (littéraux en dur, capitales de la maquette) pendant
         /// qu'un SECOND résolveur — `LieutenantScreenController.ModeLabel`, privé — rendait
-        /// « Délégué » / « Missionné » depuis le catalogue. **Les deux étaient appelés.** C'est le
-        /// catalogue qui gagne : il est la source de vérité du lot 0, et ses clés `famille.mode.*`
+        /// « Délégué » / « Missionné » depuis le catalogue.
+        /// ⛔ RECTIFIÉ (juge-données, 2026-09-06) : la phrase qui suivait affirmait que les deux
+        ///    résolveurs étaient employés. **Faux, et mesuré** : à l'état d'avant l'unification,
+        ///    CELUI-CI n'avait aucun appelant — le catalogue le remplaçait déjà partout. Le
+        ///    doublon existait bien, mais un seul des deux était sur un chemin vivant. *Une
+        ///    justification écrite au passé dans un commit se vérifie comme le code qu'elle
+        ///    justifie* : je l'avais déduite de la présence de deux méthodes, pas comptée.
+        /// C'est le catalogue qui gagne : il est la source de vérité du lot 0, et ses clés `famille.mode.*`
         /// sont servies. Les capitales, si la DA les veut, sont une affaire de RENDU (`fontStyle`,
         /// `characterSpacing`), pas de contenu — un libellé en capitales dans le catalogue rend la
         /// clé intraduisible dans les langues qui n'ont pas de casse.</summary>

@@ -589,7 +589,14 @@ namespace MafiaCleanCity.Operational.Lieutenant
             string dispo = CurrentBands != null ? CurrentBands.reassign_availability : null;
             if (!string.IsNullOrEmpty(dispo) && dispo != "AVAILABLE")
             {
-                SetOutcome(Lib("Ce lieutenant ne peut pas être réaffecté pour l'instant."), AccentModerate);
+                // ⚠️ LITTÉRAL, PAS `Lib` — ET J'AVAIS REFAIT LA FAUTE QUE CE FICHIER DOCUMENTE.
+                //    La clé que `Libelle.De` dériverait de cette phrase n'est PAS servie (mesuré
+                //    sur le bundle `fr` réel). D-6 l'avait posée en `Lib()`, ce qui ajoutait un
+                //    repli de plus — exactement ce que `FamilleLabels.Mode` raconte dix lignes de
+                //    commentaire plus haut, à propos d'une clé de repli que j'avais inventée la
+                //    veille. *Nommer un piège ne protège pas de lui, et l'avoir nommé récemment ne
+                //    protège pas davantage.* La clé part en dette avec les trois autres.
+                SetOutcome("Ce lieutenant ne peut pas être réaffecté pour l'instant.", AccentModerate);
                 yield break;
             }
 
@@ -862,6 +869,19 @@ namespace MafiaCleanCity.Operational.Lieutenant
 
             ClearStatusRows();
 
+            // ⛔ LE NOM EN TÊTE, ET IL MANQUAIT ICI AUSSI. Le panneau de détail décrivait
+            //    l'archétype, le rôle, le mode, l'état, les règles et l'ancienneté d'un lieutenant
+            //    — et ne le nommait jamais. `name` est servi par les DEUX routes de cette
+            //    projection ; D-1 ne l'avait déclaré que sur la liste.
+            // ⚠️ Le libellé est un LITTÉRAL, pas `Lib("Nom")` : la clé que `Libelle.De` dériverait
+            //    (`famille.ecran.nom`) n'est PAS servie — mesuré sur le bundle `fr` réel, 56 clés
+            //    `famille.ecran`, celle-là absente. L'employer ajouterait un repli et ferait rougir
+            //    `BundleReel_…_ZeroRepli`, la garde qui existe pour ça. La clé part en dette.
+            // ⚠️ Repli « — » quand le nom manque : l'état NOMMÉ vide, la même convention que la
+            //    phase du jour du bandeau. Jamais l'archétype, qui est la ligne d'en dessous : le
+            //    défaut de D-1 était exactement de laisser une grandeur prendre la place d'une
+            //    autre, et le repli est l'endroit le plus discret où le refaire.
+            AddStatusRow("Nom", string.IsNullOrWhiteSpace(b.name) ? "—" : b.name, "[*]", AccentMild);
             // archetype (COOK | SECURITY | LOGISTICS | BOOKKEEPER | LAUNDERING | DISTRIBUTION | UNKNOWN).
             AddStatusRow(Lib("Archétype"), FamilleLabels.Archetype(b.archetype), "[*]", AccentMild);
             // granted_role (advisory | executor | delegated_owner | cohort_overseer).
@@ -947,13 +967,18 @@ namespace MafiaCleanCity.Operational.Lieutenant
         /// est comparé au compte réel — il faut le relever quand cette méthode grossit. TD-538.</summary>
         public void RendreTousLesLibelles()
         {
-            FamilleLabels.Archetype("COOK");
-            FamilleLabels.Archetype("SECURITY");
-            FamilleLabels.Archetype("LOGISTICS");
-            FamilleLabels.Archetype("BOOKKEEPER");
-            FamilleLabels.Archetype("LAUNDERING");
-            FamilleLabels.Archetype("DISTRIBUTION");
-            FamilleLabels.Archetype("UNKNOWN");
+            // ⛔⛔⛔ CETTE LISTE CERTIFIAIT LE TROU QU'ELLE DEVAIT MESURER. Elle énumérait SEPT
+            //    archétypes quand le résolveur en traite NEUF, et les deux manquants — plus un
+            //    troisième — sont exactement ceux dont le catalogue ne sert pas la clé. La garde
+            //    « zéro repli » était donc verte parce qu'elle ne demandait jamais les clés
+            //    absentes. *Une garde de couverture qui recopie sa population à la main mesure la
+            //    recopie, pas la population* — et sa docstring affirmait pourtant que les valeurs
+            //    avaient été « lues dans les `case` ».
+            //    ⇒ La liste vient désormais du résolveur lui-même (`ArchetypesCanoniques`, qui est
+            //      DÉJÀ la source exposée pour qu'un 10ᵉ membre soit détectable), et un test lit
+            //      les `case` du fichier pour prouver qu'aucun n'échappe à ce tableau.
+            foreach (string archetype in FamilleLabels.ArchetypesCanoniques)
+                FamilleLabels.Archetype(archetype);
             FamilleLabels.Archetype("__inconnu__");   // le repli nommé du résolveur
             GrantedRoleLabel("advisory");
             GrantedRoleLabel("executor");
@@ -2718,7 +2743,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
 
             // The "Reassign…" button opens the confirmation (it does NOT move immediately — the player confirms with the
             // projected cost in view). The confirmation's own Confirm button drives ReassignChosen().
-            AddActionButton(reassignSection, Lib("Réaffecter…"), OpenReassign);
+            boutonReaffecter = AddActionButton(reassignSection, Lib("Réaffecter…"), OpenReassign);
 
             // The confirmation block — built empty; RenderReassignConfirm fills it (the projected disruption + tenure/bonus lost
             // + a Confirm/Cancel pair) when ReassignConfirmOpen, and clears it otherwise.
@@ -2742,7 +2767,27 @@ namespace MafiaCleanCity.Operational.Lieutenant
         {
             if (Destroyed) return;
             if (reassignTargetRow != null) reassignTargetRow.SetActive(RuleModel.NeedsTarget(CurrentArchetype));
+
+            // ⛔⛔ D-6, LA CLASSE ET PAS L'INSTANCE. Le correctif précédent gardait le POST : le
+            //    geste restait OFFERT, le joueur ouvrait la confirmation, lisait ce qu'il allait
+            //    perdre, confirmait — et récoltait un refus. La docstring du DTO énonce pourtant
+            //    la règle : *un geste impossible qu'on laisse cliquer est une promesse que l'écran
+            //    n'avait pas le droit de faire.* Garder le POST ferme le 409 ; ça ne retire pas la
+            //    promesse. ⇒ Le bouton se DÉSACTIVE, et la garde du POST reste — les deux, parce
+            //    qu'elles couvrent deux mondes : l'un ce que le joueur peut toucher, l'autre ce
+            //    qui part sur le réseau quand les bandes ont changé sous ses doigts.
+            // ⚠️ MÊME PRUDENCE QUE LA GARDE DU POST : on ne retire le geste que sur une valeur
+            //    explicitement non disponible. Bandes non chargées ou champ vide ⇒ bouton actif,
+            //    et c'est le serveur qui tranche. Une garde qui bloque sur l'IGNORANCE interdirait
+            //    le geste à tout joueur dont les bandes n'ont pas encore été relues.
+            if (boutonReaffecter != null)
+            {
+                string dispo = CurrentBands != null ? CurrentBands.reassign_availability : null;
+                boutonReaffecter.interactable = string.IsNullOrEmpty(dispo) || dispo == "AVAILABLE";
+            }
         }
+
+        private Button boutonReaffecter;
 
         // Build (or clear) the Reassign CONFIRMATION block. When ReassignConfirmOpen + bands are loaded, it surfaces — all
         // BAND-ONLY (worded, no digits, tracked for the no-raw-scalar scan):

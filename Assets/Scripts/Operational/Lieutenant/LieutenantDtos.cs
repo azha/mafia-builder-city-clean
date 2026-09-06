@@ -98,6 +98,16 @@ namespace MafiaCleanCity.Operational.Lieutenant
         ///   *Un geste impossible qu'on laisse cliquer n'est pas une erreur de serveur : c'est
         ///   une promesse que l'écran n'avait pas le droit de faire.*</summary>
         public string reassign_availability;
+        /// <summary>⛔ LE MÊME CHAMP, LA MÊME OMISSION, SUR L'AUTRE ROUTE. `name` était servi par
+        /// `GET /v1/lieutenants` ET par `GET /v1/lieutenants/:id` — deux routes, un seul contrat
+        /// de projection. D-1 a déclaré le champ sur la LISTE et laissé le DÉTAIL sans lui : le
+        /// panneau de détail nomme donc l'archétype, le rôle, le mode, l'état, les règles et
+        /// l'ancienneté d'un lieutenant, et jamais le lieutenant.
+        /// ★★ *Fermer une omission sur la route qu'on regardait ne la ferme pas sur sa sœur* —
+        ///   c'est le correctif scopé à l'INSTANCE, appliqué à un contrat servi en deux
+        ///   exemplaires. La CLASSE ici est « les routes qui servent cette projection », et elles
+        ///   se comptent avant d'écrire le correctif, pas après le rapport du juge.</summary>
+        public string name;
         public string archetype;        // COOK | SECURITY | BOOKKEEPER | LOGISTICS | LAUNDERING | DISTRIBUTION | UNKNOWN
         public string granted_role;     // advisory | executor | delegated_owner | cohort_overseer (CLOSED 07 domain)
         public string mode;             // tasked | delegated (CLOSED 07 domain)

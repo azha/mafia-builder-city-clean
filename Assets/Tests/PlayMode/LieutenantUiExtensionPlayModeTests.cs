@@ -353,6 +353,64 @@ namespace MafiaCleanCity.Operational.Tests
         //     cook_idle/heat → author the COOK rule → bands archetype=COOK / rule_count_band=FEW. Then recruit a SECURITY on
         //     the 2nd operational building → its palette is building_damaged → author the SECURITY rule → bands
         //     archetype=SECURITY / rule_count_band=FEW. (cap-of-2: exactly these two recruits.)
+        /// <summary>⛔⛔ LE CONTRÔLE QUI MANQUAIT À LA GARDE DE CATALOGUE — et son absence a laissé
+        /// la garde CERTIFIER le trou qu'elle devait mesurer.
+        ///
+        /// `RendreTousLesLibelles` rejoue chaque résolveur sur toutes les valeurs de son domaine
+        /// pour que « zéro repli » porte sur la population entière. Sa liste d'archétypes était
+        /// recopiée à la main : **SEPT valeurs pour NEUF `case`**. Les deux manquantes — plus une
+        /// troisième — sont exactement celles dont le catalogue ne sert pas la clé, donc la garde
+        /// restait verte en n'allant jamais chercher les clés absentes. Sa docstring affirmait
+        /// pourtant que les valeurs avaient été « lues dans les `case` ».
+        /// ★★ *Une garde de couverture qui recopie sa population à la main mesure la recopie, pas
+        ///   la population.* La liste vient désormais du résolveur ; ce test-ci prouve que le
+        ///   résolveur ne traite rien qui échappe à ce tableau.
+        ///
+        /// ⚠️ IL LIT LE FICHIER SOURCE, et c'est délibéré : la valeur arrive en `string`, il n'y a
+        /// aucun enum C# à rendre exhaustif, donc le compilateur ne peut RIEN ici (une `switch`
+        /// expression sur `string` n'a pas d'exhaustivité, et ce dépôt a déjà mesuré que la forme
+        /// auto-invalidante du TypeScript ne transpose pas au C#). Le seul détecteur possible est
+        /// un test qui va lire les `case`.</summary>
+        [Test]
+        public void ArchetypesCanoniques_CouvreTousLesCasDuResolveur()
+        {
+            string chemin = Path.Combine(Application.dataPath,
+                "Scripts", "Operational", "Lieutenant", "FamilleLabels.cs");
+            Assert.IsTrue(File.Exists(chemin), $"source du résolveur introuvable à {chemin}");
+            string src = File.ReadAllText(chemin);
+
+            // On borne au corps de `Archetype` : les autres résolveurs du fichier ont leurs propres
+            // `case`, et les compter ici ferait rougir sur des valeurs qui n'ont rien à voir.
+            int debut = src.IndexOf("public static string Archetype(");
+            Assert.Greater(debut, 0, "la méthode `Archetype` n'est plus dans ce fichier — ce test " +
+                                     "doit être ré-accordé plutôt que laissé vert sur une tranche vide");
+            int fin = src.IndexOf("private static string Lib(", debut);
+            Assert.Greater(fin, debut, "borne de fin introuvable : la tranche lue serait fausse, et " +
+                                       "un balayage sur une tranche fausse rend un verdict uniforme");
+            string corps = src.Substring(debut, fin - debut);
+
+            var cas = new List<string>();
+            foreach (Match m in Regex.Matches(corps, "case\\s+\"([A-Z_]+)\"\\s*:"))
+                cas.Add(m.Groups[1].Value);
+
+            // ANTI-VACUITÉ : une tranche mal bornée rendrait ZÉRO `case`, et « tous couverts »
+            // serait vrai à vide — le zéro le plus crédible qui soit.
+            Assert.GreaterOrEqual(cas.Count, 9,
+                $"seulement {cas.Count} `case` lus dans le corps de `Archetype` : le motif ou les " +
+                "bornes ne mordent plus, et ce test ne prouverait rien. Lus : [" +
+                string.Join(", ", cas) + "]");
+
+            var tableau = new HashSet<string>(FamilleLabels.ArchetypesCanoniques);
+            var manquants = cas.Where(c => !tableau.Contains(c)).ToList();
+            Assert.IsEmpty(manquants,
+                $"{manquants.Count} valeur(s) traitée(s) par le résolveur mais ABSENTE(S) de " +
+                "`ArchetypesCanoniques` : [" + string.Join(", ", manquants) + "]. " +
+                "`RendreTousLesLibelles` parcourt ce tableau : toute valeur qui n'y est pas ne " +
+                "sera jamais rejouée, donc sa clé de catalogue ne sera jamais demandée, donc la " +
+                "garde « zéro repli » restera verte en l'ignorant. C'est ainsi que trois clés " +
+                "non servies ont traversé la garde qui existe pour les trouver.");
+        }
+
         [UnityTest]
         public IEnumerator MultiArchetype_CookThenSecurity_PalettesAndBands()
         {
