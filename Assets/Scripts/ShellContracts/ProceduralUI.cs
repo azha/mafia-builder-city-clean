@@ -391,6 +391,47 @@ namespace MafiaCleanCity.Shell
             return sp;
         }
 
+        /// <summary>Le MIROIR de `VerticalGradientAvecPalier` : plateau EN HAUT, fondu en bas —
+        /// `linear-gradient(180deg, X 0%, X f%, transparent 100%)`.
+        ///
+        /// ⚠️ POURQUOI DEUX FONCTIONS ET NON UN PARAMÈTRE DE PLUS. Les deux formes existent dans le
+        /// canon et elles ne se déduisent pas l'une de l'autre par une valeur : le dock veut du
+        /// plein EN BAS (il ancre le pied de l'écran), un titre veut du plein EN HAUT (il porte son
+        /// encre). *Deux formes, deux fonctions nommées* — j'ai essayé de servir la seconde avec la
+        /// première en jouant sur la fraction, et le résultat était systématiquement l'inverse de
+        /// l'intention : le titre atterrissait sur la moitié ÉVANOUIE du dégradé.
+        /// ★ Deux fois de suite, sur le même correctif, avec un dispositif complet et correctement
+        ///   paramétré. *Un paramètre qui peut exprimer la forme inverse finit par l'exprimer.*</summary>
+        public static Sprite VerticalGradientPalierEnHaut(int hauteurPx, Color plein, Color evanoui,
+            float fractionPleine)
+        {
+            float f = Mathf.Clamp(fractionPleine, 0.01f, 0.99f);
+            string key = $"vgradph:{hauteurPx}:{ColorKey(plein)}:{ColorKey(evanoui)}:{f:F3}";
+            if (cache.TryGetValue(key, out Sprite cached) && cached != null) return cached;
+
+            int h = Mathf.Max(2, hauteurPx);
+            var tex = new Texture2D(1, h, TextureFormat.RGBA32, false)
+            {
+                filterMode = FilterMode.Bilinear,
+                wrapMode = TextureWrapMode.Clamp,
+                hideFlags = HideFlags.HideAndDontSave,
+            };
+            var pixels = new Color[h];
+            for (int y = 0; y < h; y++)
+            {
+                float depuisLeHaut = 1f - y / (float)(h - 1);   // y=0 est le BAS (convention Unity)
+                float k = depuisLeHaut <= f ? 0f : (depuisLeHaut - f) / (1f - f);
+                pixels[y] = Color.Lerp(plein, evanoui, k);
+            }
+            tex.SetPixels(pixels);
+            tex.Apply(false, false);
+            Sprite sp = Sprite.Create(tex, new Rect(0, 0, 1, h), new Vector2(0.5f, 0.5f), 100f, 0,
+                SpriteMeshType.FullRect);
+            sp.hideFlags = HideFlags.HideAndDontSave;
+            cache[key] = sp;
+            return sp;
+        }
+
         public static Sprite VerticalGradient(int hauteurPx, Color haut, Color bas)
         {
             string key = $"vgrad:{hauteurPx}:{ColorKey(haut)}:{ColorKey(bas)}";
