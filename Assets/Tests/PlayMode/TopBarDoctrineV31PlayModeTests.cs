@@ -1716,5 +1716,107 @@ namespace MafiaCleanCity.Shell.Tests
                     + "la garde départagerait du bruit");
             }
         }
+
+        /// <summary>DA11 — ① M2, la mesure à UNE VARIABLE qui dit d'où viennent les 0,7 px.
+        ///
+        /// LE COMPTE QUI NE TOMBE PAS. `ProceduralUI.RampeAntiCrenelagePx` vaut 1,5 et la docstring
+        /// du rastériseur donne la relation : un trait nominal `t` a ses bords à mi-alpha distants
+        /// de `t − 1,5`. Donc `ArcThicknessPx = 5` doit MESURER 3,5. Un juge ⊥ mesure **4,20** sur
+        /// la planche, et son échelle est corroborée par deux autres grandeurs du MÊME objet — le
+        /// boîtier (68 posé → 67,0 mesuré) et le rayon médian de l'anneau (15,3 → 15,65) — qui
+        /// donnent toutes deux un facteur ≈ 1,0. Il reste **0,7 px que ce rastériseur ne devrait
+        /// pas pouvoir produire**.
+        ///
+        /// ⇒ CE QUE CETTE MESURE TRANCHE, ET ELLE NE FAIT VARIER QU'UNE CHOSE : elle interroge le
+        /// SPRITE SEUL, hors scène, hors piste, hors voisin, hors RectTransform. Deux issues, et
+        /// elles commandent deux correctifs OPPOSÉS :
+        ///   • la largeur rend `t − 1,5` ⇒ le rastériseur est fidèle, l'excédent vient d'AILLEURS
+        ///     (la piste neutre que le rapport signale sous l'interstice, un second dessin
+        ///     superposé, ou une mise à l'échelle du RectTransform qui porte le sprite) — et le
+        ///     correctif n'est PAS sur `ArcThicknessPx` ;
+        ///   • la largeur rend `t − 1,5 + 0,7` ⇒ l'excédent est dans la chaîne de rendu du sprite,
+        ///     et le correctif est bien sur le littéral.
+        /// **Poser 2,45 avant de savoir soustrairait ma part et laisserait l'autre** : on
+        /// atterrirait vers 3,1 mesuré pour 2,65 au canon — un défaut plus petit, toujours là, et
+        /// cette fois SANS explication puisque le littéral serait devenu juste. Ce dépôt a déjà payé
+        /// exactement ça sur cet objet : un élargissement d'une demi-rampe dérivé d'un MODÈLE de
+        /// l'endroit où l'instrument tranche, réfuté par la mesure et reverti.
+        ///
+        /// ⚠️ CETTE GARDE N'EST PAS UN JUGEMENT SUR LE CANON — elle ne compare rien à 2,45. Elle
+        /// vérifie que le rastériseur tient SA PROPRE relation déclarée, pour trois valeurs, ce qui
+        /// est la seule chose qu'un test hors scène peut savoir. Le pas entre deux `t` est asserté
+        /// en plus de la valeur : une constante d'échelle cachée dans le générateur satisferait la
+        /// valeur à une seule épaisseur et se trahirait sur la PENTE.
+        ///
+        /// ⚠️ ET SON PLANCHER ANTI-VACUITÉ : un sprite vide, ou un rayon qui rate l'arc, rendrait
+        /// une largeur nulle et donc une erreur maximale — ce qui rougirait, pas passerait. Mais un
+        /// arc SATURÉ sur toute la ligne rendrait une largeur énorme sans que rien ne le nomme, donc
+        /// la ligne échantillonnée doit contenir du VIDE des deux côtés, et c'est asserté.</summary>
+        [Test, Category("HUDv31")]
+        public void DA11_ArcCuit_LargeurAMiAlpha_SuitSaRelationDeclaree()
+        {
+            const int DiametreSonde = 48;      // large, pour que la courbure ne fausse pas la coupe
+            const float AngleCoupeDeg = 135f;  // au milieu de l'arc 90°..180°, loin des deux embouts
+            const float Tolerance = 0.35f;     // le sous-échantillonnage radial vaut 1/8 px
+
+            var mesures = new List<float>();
+            float[] epaisseurs = { 3f, 4f, 5f };
+
+            foreach (float t in epaisseurs)
+            {
+                Sprite s = ProceduralUI.ArcCuit(DiametreSonde, t, Color.white, 90f, 180f);
+                Assert.IsNotNull(s, $"ArcCuit a rendu null pour t={t}");
+                Texture2D tex = s.texture;
+
+                float centre = DiametreSonde / 2f;
+                float rad = AngleCoupeDeg * Mathf.Deg2Rad;
+                float dx = Mathf.Cos(rad), dy = Mathf.Sin(rad);
+
+                // Profil d'alpha le long du rayon, au huitième de pixel.
+                var alphas = new List<float>();
+                int pas = DiametreSonde * 8;
+                for (int i = 0; i < pas; i++)
+                {
+                    float r = i / 8f;
+                    float x = centre + dx * r, y = centre + dy * r;
+                    if (x < 0f || y < 0f || x >= DiametreSonde || y >= DiametreSonde) break;
+                    alphas.Add(tex.GetPixelBilinear(x / DiametreSonde, y / DiametreSonde).a);
+                }
+
+                Assert.Greater(alphas.Count, 16, $"t={t} : le rayon échantillonné est trop court");
+                Assert.Greater(alphas.Max(), 0.9f,
+                    $"PLANCHER ANTI-VACUITÉ — t={t} : le rayon ne rencontre aucun pixel opaque, "
+                    + "donc il rate l'arc et toute largeur mesurée serait du bruit");
+                Assert.Less(alphas.Min(), 0.1f,
+                    $"PLANCHER — t={t} : le rayon ne rencontre aucun VIDE ; un arc saturé sur toute "
+                    + "la ligne rendrait une largeur énorme sans que rien ne le nomme");
+
+                int premier = alphas.FindIndex(a => a >= 0.5f);
+                int dernier = alphas.FindLastIndex(a => a >= 0.5f);
+                float largeur = (dernier - premier) / 8f;
+                mesures.Add(largeur);
+
+                float attendue = t - ProceduralUI.RampeAntiCrenelagePx;
+                Debug.Log($"[ARC-LARGEUR] t={t:F2} · mi-alpha mesurée {largeur:F3} px · "
+                          + $"relation déclarée {attendue:F3} px · écart {largeur - attendue:+0.000;-0.000}");
+            }
+
+            for (int i = 0; i < epaisseurs.Length; i++)
+            {
+                float attendue = epaisseurs[i] - ProceduralUI.RampeAntiCrenelagePx;
+                Assert.AreEqual(attendue, mesures[i], Tolerance,
+                    $"t={epaisseurs[i]} : le rastériseur rend {mesures[i]:F3} px à mi-alpha pour "
+                    + $"{attendue:F3} annoncés par sa propre docstring. S'il tient sa relation, "
+                    + "l'excédent mesuré en jeu vient d'AILLEURS et le correctif n'est pas sur "
+                    + "`ArcThicknessPx` ; s'il ne la tient pas, c'est ici qu'il faut corriger.");
+            }
+
+            // La PENTE, en plus de la valeur : une échelle cachée satisferait un point et pas deux.
+            Assert.AreEqual(1f, mesures[1] - mesures[0], Tolerance,
+                "PENTE — un pas de 1 px sur `t` doit donner 1 px de largeur. Un écart ici dit qu'une "
+                + "constante d'échelle vit dans le générateur, ce qu'une mesure à une seule "
+                + "épaisseur ne pourrait pas voir");
+            Assert.AreEqual(1f, mesures[2] - mesures[1], Tolerance, "PENTE — même contrôle, 4 → 5");
+        }
     }
 }

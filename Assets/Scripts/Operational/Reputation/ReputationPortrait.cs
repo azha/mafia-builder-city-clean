@@ -262,9 +262,65 @@ namespace MafiaCleanCity.Operational
             // PLEINE (26 unités) à la jonction, et l'élargissement est monotone comme en référence.
             FormeLiseree(ref _cheveux, "Cheveux", buste, ReputationResolvers.Carte2,
                   new Rect(18f, 10f, 26f, 16f), ech, 1.8f, arrondi: true, rayonVb: 11f);
+            // ⛔⛔⛔ L'OCCLUSION EST BORNÉE À LA COIFFE — ET C'EST LE CORRECTIF DE ㊲ M5, une
+            // régression que le correctif précédent (celui juste au-dessus) a lui-même produite.
+            // Le tour d'avant a remplacé une ellipse par la bonne FORME pour le dôme, avec cette
+            // phrase dans son message : *quand un défaut revient sous des formes voisines, ce n'est
+            // pas d'une cote de plus qu'il faut, c'est de la bonne forme*. Puis il a creusé cette
+            // forme avec **une autre ellipse**, non bornée. La règle a été appliquée à la MOITIÉ de
+            // son objet, et c'est plus difficile à voir qu'une erreur franche : le message du commit
+            // se porte garant de la règle, donc personne ne cherche la seconde approximation dans le
+            // même diff.
+            //
+            // CE QUE LA MESURE DIT, et une seule cause la produit. La coiffe occupe y 10..26 ;
+            // l'occlusion, elle, allait de y 21 à **31** — cinq unités SOUS la coiffe, donc en plein
+            // sur le visage. Un juge ⊥ mesure l'épaisseur latérale de sombre (cheveux + contour)
+            // accolée à la peau, par % de la hauteur du visage :
+            //     RÉF  5 % : 26/26 · 10 % : 22/23 · 15 % : 19/20 · 20 % : 13/13 · 30 % : 10/11
+            //     JEU  5 % : 22/21 · 10 % :  2/2  · 15 % :  0/0  · 20 % :  0/0  · 30 % : 10/9
+            // Intacte à 5 %, effondrée de 10 à 20 %, intacte de nouveau à 30 % : **une bande**, et
+            // c'est exactement l'emprise de la moitié basse de l'ellipse. Plus le contrôle qui
+            // nomme le mécanisme : **8 rangées où la peau touche le fond SANS contour** (0 en
+            // référence) — l'occlusion ne mangeait pas que les cheveux, elle mangeait le TRAIT.
+            // ★ Le commentaire d'origine avait vu le risque et choisi 12,4 au lieu de 13 « pour que
+            //   le débord reste dans le trait du visage ». Il raisonnait sur la largeur, et le
+            //   débord était en HAUTEUR. *Un garde-fou posé sur le mauvais axe ne garde rien.*
+            //
+            // ⇒ LE CORRECTIF EST STRUCTUREL, PAS UNE COTE : une fenêtre de masque aux dimensions
+            //   EXACTES de la coiffe, dont l'occlusion est enfant. Elle ne peut plus déborder, quelle
+            //   que soit sa taille — y compris si quelqu'un la retouche demain. Une cote plus petite
+            //   aurait refermé l'instance en laissant la classe ouverte.
+            // ⚠️ `Mask` exige un `MaskableGraphic` : `Image` en est un. Et le masque porte son propre
+            //   `Image` (invisible, `showMaskGraphic = false`) sans quoi il ne découpe rien — ce
+            //   dépôt a déjà livré un masque qui n'atteignait pas sa cible faute de ce contrat.
+            GameObject fenetreCoiffe = Nouveau("CheveuxFenetre", buste);
+            RectTransform fcRt = (RectTransform)fenetreCoiffe.transform;
+            fcRt.anchorMin = new Vector2(0f, 1f);
+            fcRt.anchorMax = new Vector2(0f, 1f);
+            fcRt.pivot = new Vector2(0f, 1f);
+            fcRt.anchoredPosition = new Vector2(18f * ech, -10f * ech);
+            fcRt.sizeDelta = new Vector2(26f * ech, 16f * ech);
+            if (fenetreCoiffe.GetComponent<CanvasRenderer>() == null)
+                fenetreCoiffe.AddComponent<CanvasRenderer>();
+            Image fcImg = fenetreCoiffe.AddComponent<Image>();
+            fcImg.sprite = MafiaCleanCity.Shell.ProceduralUI.RoundedRectMask(0);
+            fcImg.type = Image.Type.Sliced;
+            fcImg.color = Color.white;
+            fcImg.raycastTarget = false;
+            UnityEngine.UI.Mask fcMask = fenetreCoiffe.AddComponent<UnityEngine.UI.Mask>();
+            fcMask.showMaskGraphic = false;
+
+            // Coordonnées RELATIVES à la fenêtre : son origine est (18 ; 10) du viewBox.
             Image creuxFront = null;
-            Forme(ref creuxFront, "CheveuxCreux", buste, ReputationResolvers.Creme2,
-                  new Rect(18.6f, 21f, 24.8f, 10f), ech, ellipse: true);
+            Forme(ref creuxFront, "CheveuxCreux", fenetreCoiffe.transform, ReputationResolvers.Creme2,
+                  new Rect(0.6f, 11f, 24.8f, 10f), ech, ellipse: true);
+
+            // ⚠️ CE QUE CE CORRECTIF NE TRAITE PAS, écrit plutôt que sous-entendu : le juge mesure
+            //   AUSSI un sommet trop plat (80 % de la largeur maximale atteint à 30 px contre 17 en
+            //   référence). Cela vient du DÔME — un rectangle arrondi de rayon 11 — et non de
+            //   l'occlusion. Je ne le touche pas dans le même geste : deux variables qui bougent
+            //   ensemble ne départagent rien, et le rayon 11 est dérivé de la tangente du chemin,
+            //   donc le changer demande de rouvrir cette dérivation, pas de choisir un nombre.
             Forme(ref oeilG, "OeilG", buste, ReputationResolvers.Encre,
                   new Rect(24.6f, 29.7f, 3.8f, 4.6f), ech, arrondi: true);
             Forme(ref oeilD, "OeilD", buste, ReputationResolvers.Encre,
