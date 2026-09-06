@@ -650,6 +650,35 @@ namespace MafiaCleanCity.Shell.Tests
                     // la seule forme qui suive l'objet si le médaillon ou la lunette changent de
                     // taille. Ce fichier a déjà payé un ratio gelé (0,75f) dont le commentaire
                     // portait la division par un diamètre périmé.
+                    // ⛔ LES TROIS CAUSES, MESURÉES PAR DES PROPRIÉTÉS STRUCTURELLES IMPRIMÉES —
+                    // aucune hypothèse. La deuxième et la troisième sont des cas que ce dépôt a
+                    // déjà payés : `AddComponent<T>()` à l'exécution n'honore PAS le
+                    // `[RequireComponent(CanvasRenderer)]` d'une classe de base, et sans
+                    // `CanvasRenderer` un `Graphic` ne dessine RIEN sans la moindre erreur console ;
+                    // et un `Graphic` nu n'implémente ni `IMaskable` ni `IClippable`, donc aucun
+                    // `Mask` ne peut l'atteindre — le dispositif d'encadrement devient décoratif.
+                    Transform lunSonde = manoT.Find("Lunette");
+                    if (lunSonde != null)
+                    {
+                        var lunImg = lunSonde.GetComponent<UnityEngine.UI.Image>();
+                        var lunCr = lunSonde.GetComponent<CanvasRenderer>();
+                        var masqueParent = lunSonde.GetComponentInParent<UnityEngine.UI.Mask>();
+                        var masqueRect = lunSonde.GetComponentInParent<UnityEngine.UI.RectMask2D>();
+                        var lunRt2 = (RectTransform)lunSonde;
+                        float largeurPx = lunRt2.rect.width / Mathf.Max(1f, manoRect.rect.width) * rPx * 2f;
+                        Debug.Log($"[CADRAN-LUNETTE-STRUCT] CanvasRenderer={(lunCr != null ? "PRÉSENT" : "ABSENT")}"
+                                  + $" · Image={(lunImg != null ? "présente" : "ABSENTE")}"
+                                  + $" · MaskableGraphic={(lunImg is UnityEngine.UI.MaskableGraphic ? "oui" : "NON")}"
+                                  + $" · maskable={(lunImg != null && lunImg.maskable ? "oui" : "non")}"
+                                  + $" · sous Mask={(masqueParent != null ? masqueParent.name : "aucun")}"
+                                  + $" · sous RectMask2D={(masqueRect != null ? masqueRect.name : "aucun")}"
+                                  + $" · enabled={(lunImg != null && lunImg.enabled ? "oui" : "NON")}"
+                                  + $" · alpha={(lunImg != null ? lunImg.color.a : -1f):F3}"
+                                  + $" · sprite={(lunImg != null && lunImg.sprite != null ? lunImg.sprite.texture.width + "px" : "ABSENT")}"
+                                  + $" · anneau ≈ {lunRt2.rect.width / Mathf.Max(1f, manoRect.rect.width) * rPx * 2f * (2f / Mathf.Max(1f, lunRt2.rect.width)):F2} px d'épaisseur à l'image"
+                                  + $" (diamètre {largeurPx:F1} px) · pas de sonde {rPx * 0.01f:F2} px");
+                    }
+
                     Transform lunT = manoT.Find("Lunette");
                     float fracLunette = lunT != null
                         ? ((RectTransform)lunT).rect.width / Mathf.Max(1f, manoRect.rect.width)
@@ -671,6 +700,38 @@ namespace MafiaCleanCity.Shell.Tests
                         }
                         profil.Add(n > 0 ? somme / n : 0f);
                     }
+                    // ⛔⛔ ÉTEINDRE LA CIBLE — le contrôle qui a démasqué un instrument aveugle il y
+                    // a une heure, appliqué ici à l'objet lui-même. Si le profil est INCHANGÉ avec
+                    // la lunette désactivée, elle ne contribue à aucun pixel : le débat « trop pâle
+                    // ou mal placée » est clos, elle n'est pas dessinée du tout.
+                    if (lunSonde != null)
+                    {
+                        var li = lunSonde.GetComponent<UnityEngine.UI.Image>();
+                        bool gardeL = li.enabled;
+                        li.enabled = false;
+                        Canvas.ForceUpdateCanvases();
+                        Texture2D sansLun = RendreLEcran();
+                        float sommeS = 0f; int nS = 0;
+                        for (int deg = 190; deg <= 350; deg += 2)
+                        {
+                            float aL = deg * Mathf.Deg2Rad;
+                            int lx = Mathf.RoundToInt(cx + Mathf.Cos(aL) * rPx * fracLunette);
+                            int ly = Mathf.RoundToInt(cy + Mathf.Sin(aL) * rPx * fracLunette);
+                            if (lx < 0 || ly < 0 || lx >= sansLun.width || ly >= sansLun.height) continue;
+                            Color cs = sansLun.GetPixel(lx, ly);
+                            sommeS += 0.2126f * cs.r + 0.7152f * cs.g + 0.0722f * cs.b; nS++;
+                        }
+                        Object.DestroyImmediate(sansLun);
+                        li.enabled = gardeL;
+                        Canvas.ForceUpdateCanvases();
+                        float lSans = nS > 0 ? sommeS / nS : -1f;
+                        int idx = Mathf.RoundToInt((fracLunette - 0.60f) / 0.01f);
+                        float lAvec = (idx >= 0 && idx < profil.Count) ? profil[idx] : -1f;
+                        Debug.Log($"[CADRAN-LUNETTE-CIBLE] L avec={lAvec:F4} · L sans={lSans:F4} · "
+                                  + $"delta={(lAvec - lSans) * 255f:+0.00;-0.00}/255 — si ~0, la lunette "
+                                  + "ne contribue à AUCUN pixel et le débat « pâle ou mal placée » est clos");
+                    }
+
                     int iAttendu = Mathf.RoundToInt((fracLunette - 0.60f) / 0.01f);
                     int iMax = -1; float lMax = -1f;
                     for (int i = 1; i < profil.Count - 1; i++)
@@ -682,7 +743,36 @@ namespace MafiaCleanCity.Shell.Tests
                               + $"· voisins {(iAttendu > 0 ? profil[iAttendu - 1] : -1f):F4}/"
                               + $"{(iAttendu + 1 < profil.Count ? profil[iAttendu + 1] : -1f):F4} — "
                               + "garde d'EFFET : un anneau qui ne fait pas de bosse n'existe pas à l'image");
-                    // ⛔⛔ ÉTAT AU 2026-09-06 : cette garde est ROUGE, et deux mécanismes plausibles
+                    // ⛔⛔⛔ CETTE GARDE A UN DÉFAUT DE CRITÈRE, MESURÉ — et c'est le cinquième
+                    // instrument de la nuit pris en défaut, toujours de la même façon : par un
+                    // contrôle, jamais par relecture.
+                    // Le test cherche un MAXIMUM LOCAL en comparant chaque rayon à ses voisins à
+                    // ±0,01 R. Or l'anneau fait **3,27 px** d'épaisseur pour un rayon de 44 px, soit
+                    // **~0,07 R, c'est-à-dire SEPT pas** : les deux « voisins » sont EUX AUSSI sur
+                    // l'anneau. Prouvé en montant l'opacité — l'apport passe de +6,35 à +32,65/255
+                    // et **les voisins montent avec** (0,1636 → 0,3046) : un plateau large ne
+                    // présente aucun maximum local strict, si clair soit-il.
+                    // ⇒ *Un instrument dont le voisinage est plus étroit que l'objet ne peut pas
+                    //   voir cet objet, quelle que soit son intensité.* Même famille que « le pas
+                    //   est l'unité de la mesure », un cran plus haut : ici c'est la FENÊTRE de
+                    //   comparaison, pas la résolution.
+                    // ⇒ LE CRITÈRE JUSTE : comparer la luminance SUR l'anneau à celle du fond au-
+                    //   DELÀ de sa largeur (de part et d'autre, à plus de 0,07 R), et exiger que
+                    //   l'écart atteigne les +18,5 L du canon. Non écrit ici : le poser maintenant
+                    //   sans le contrôler serait le sixième instrument non validé de la nuit.
+                    //
+                    // ⚠️ CE QUI EST MESURÉ ET SÛR, en revanche, et qui suffit à qualifier le défaut :
+                    //   la lunette **rend** (contrôle de cible : éteinte, le rayon perd 6,35/255),
+                    //   elle apporte **+6,35/255** là où le canon veut **+18,5**, et le fond du
+                    //   cadran DESCEND de ~5,9/255 par pas à ce rayon — donc son apport compense à
+                    //   peine une marche de la pente. *Un anneau ne se voit pas parce qu'il est
+                    //   clair, mais parce qu'il est plus clair que la PENTE qu'il traverse.*
+                    // ⚠️ Un essai de calibration (opacité 0,165 → 0,48) a été fait puis RETIRÉ : il
+                    //   rend +32,65/255, soit 1,76× la cible du canon, et il ne pouvait de toute
+                    //   façon pas être vérifié par un critère défaillant. *On ne garde pas un
+                    //   réglage que l'instrument censé le valider ne sait pas juger.*
+                    //
+                    // ⇒ ÉTAT AU 2026-09-06 : cette garde est ROUGE, et deux mécanismes plausibles
                     // ont été essayés puis RETIRÉS parce qu'ils ne déplaçaient pas la mesure —
                     // pas d'un centième, ce qui est le diagnostic « non appliqué » et non une
                     // déception :
