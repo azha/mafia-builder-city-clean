@@ -59,7 +59,7 @@
 | `capture-1080x2400.png` | 1080×2400 (20:9, cible téléphone) | compte de démo, monté en surimpression | 2026-09-04 11:22 | `PlancheEcransManquantsCapturePlayModeTests (`planche_la_decision_du_jour_1080x2400.png`)` |
 
 - Client au moment des captures : `76ee3cc` (`main`, 2026-09-04 11:23 — « les QUINZE planches reprises sur le
-  MÊME bundle (674 clés) ») ; ce dossier est préparé sur `aacc973`. Une capture est une mesure DATÉE.
+  MÊME bundle (674 clés) ») ; ce dossier est préparé sur `379ad94`. Une capture est une mesure DATÉE.
 - Compte photographié : celui du shell par défaut, `operational_demo@example.test` (`AppShell.cs:104`), garni
   par le seeder — **pas un compte frais**. Son état au moment de la capture n'est pas re-mesurable ici.
 - Gardes du test (`CaptureSousShell` / `CapturerA`) : locataire réellement monté, feuille nommée par l'appelant,
