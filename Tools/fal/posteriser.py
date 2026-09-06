@@ -49,8 +49,15 @@ def rgb(h):
 
 
 def main() -> None:
-    args = [a for a in sys.argv[1:] if a != "--franc"]
+    args = [a for a in sys.argv[1:] if a not in ("--franc", "--ombre-dominante")]
     adoucir = "--franc" not in sys.argv
+    # ⚠️ Les quantiles ÉGAUX donnent la crème au quart le plus clair — sur un PORTRAIT c'est le visage,
+    # sur une SCÈNE éclairée c'est la flaque de lumière au mur, et l'objet se noie (mesuré le 2026-09-07
+    # sur les douze états vides). `--ombre-dominante` rend l'ombre majoritaire : la lumière redevient un
+    # accent. Le bon réglage dépend de ce qu'on postérise, pas d'un goût.
+    global POIDS
+    if "--ombre-dominante" in sys.argv:
+        POIDS = POIDS_OMBRE
     src = Image.open(args[0]).convert("RGB")
     sortie = Path(args[1])
     matte_p = args[2] if len(args) > 2 and args[2].lower().endswith(".png") else None

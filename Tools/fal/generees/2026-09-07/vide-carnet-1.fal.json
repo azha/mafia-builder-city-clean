@@ -1,0 +1,13 @@
+{
+  "modele": "fal-ai/flux/dev",
+  "prompt": "A closed order book on a counter, a pen resting beside it, unopened. A single quiet object or corner, centred, filling the square frame, seen head-on. NOBODY present, no people, no hands. Late 1980s, dark interior, one warm sodium lamp raking from the left, deep shadow elsewhere. Muted desaturated palette: near-black, dark blue-grey, warm brass, cream highlights. No saturated colour, no text, no letters, no logo, no watermark. Painted poster illustration: flat areas of colour, thick contours, heavy simplification, no photorealism. The mood is CALM and WAITING — nothing has gone wrong, nothing is lost, the work simply has not started yet. Not sad, not ominous, not a ruin.",
+  "seed": 21,
+  "largeur": 1024,
+  "hauteur": 1024,
+  "etapes": 28,
+  "guidance": 3.5,
+  "request_id": "01a078e3-c836-7f01-b3e4-0f9b4812042c",
+  "duree_s": 5.7,
+  "cout_usd_estime": 0.025,
+  "genere_le": "2026-09-07T00:43:14+0200"
+}

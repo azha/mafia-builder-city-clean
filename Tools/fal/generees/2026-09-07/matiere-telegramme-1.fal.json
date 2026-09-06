@@ -1,0 +1,13 @@
+{
+  "modele": "fal-ai/flux/dev",
+  "prompt": "A telegram form: thin pale paper with pre-printed pale blue boxes and perforated edges, unwritten. Seamless tileable texture, flat orthographic top-down view, even diffuse light, no vignette, no shadow of any object, no border, no frame, edge to edge, no perspective, no objects lying on it, no text, no letters, no logo, no watermark. Photographic material study, muted and desaturated.",
+  "seed": 7,
+  "largeur": 1024,
+  "hauteur": 1024,
+  "etapes": 28,
+  "guidance": 3.5,
+  "request_id": "01a078e9-3298-73a1-8fc5-791bc73b4448",
+  "duree_s": 5.7,
+  "cout_usd_estime": 0.025,
+  "genere_le": "2026-09-07T00:49:09+0200"
+}
