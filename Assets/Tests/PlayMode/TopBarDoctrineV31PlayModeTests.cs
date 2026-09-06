@@ -732,7 +732,19 @@ namespace MafiaCleanCity.Shell.Tests
         ///   sont là pour être réfutés, pas pour servir de mesure.
         /// ★ Ce que le run a établi : rien de plus. L'hypothèse du rasteriseur reste réfutée hors
         ///   ligne (1,083 contre 3,4 observés) ; la coupe radiale et l'échelle d'affichage restent
-        ///   DÉPARTAGÉES PAR PERSONNE, et aucun geste n'est posé sur le tracé.</summary>
+        ///   DÉPARTAGÉES PAR PERSONNE, et aucun geste n'est posé sur le tracé.
+        ///
+        /// ⇒ TOUR SUIVANT — la GÉOMÉTRIE est réparée et vérifiée (centre au milieu de l'image, rayon
+        ///   29,1 px pour 35,6 unités × 3,26 d'échelle de barre ÷ 2 : les nombres se referment), et le
+        ///   confondant est NOMMÉ : ce n'est pas le laiton, c'est **`ArcTrack`**, la piste pâle —
+        ///   même rayon, même épaisseur, et `fillAmount = 0,5` soit 180°, soit exactement les 90
+        ///   secteurs balayés. D'où « 71 sur 90 » là où l'arc n'en couvre que 54.
+        /// ⚠️ Et le discriminant de DIRECTION DE TEINTE est réfuté avant d'être écrit : le laiton du
+        ///   boîtier n'est pas une chaude voisine de la braise, c'est **le même jeton**
+        ///   (`warmedBrass = DesignTokens.Current.hudGaugeArcHot`). Deux objets qui partagent leur
+        ///   couleur ne se séparent par aucune teinte.
+        /// ⇒ Le séparateur restant est la SATURATION : braise pleine pour l'arc, lavis
+        ///   d'`onSurfacePrimary` à 0,133 pour la piste. C'est la mesure suivante.</summary>
         [UnityTest, Category("HUDv31")]
         public IEnumerator DA9_Diagnostic_FuselageDesArcs_UneSeuleVariable()
         {
@@ -754,7 +766,7 @@ namespace MafiaCleanCity.Shell.Tests
                 Canvas.ForceUpdateCanvases();
                 yield return null;
                 Texture2D img = RendreLEcran();
-                lignes.Add(ProfilEpaisseurArc(img, (RectTransform)arc, f));
+                lignes.Add(ProfilEpaisseurArc(img, (RectTransform)arc, f, (RectTransform)manoT));
                 Object.DestroyImmediate(img);
             }
             arcImg.fillAmount = fillOrigine;
@@ -766,17 +778,50 @@ namespace MafiaCleanCity.Shell.Tests
 
         /// <summary>L'épaisseur de l'arc le long de sa course, intégrée sur la bande radiale, par
         /// pas de 2°. Le centre et le rayon viennent du RECT de l'arc — mesurés, pas dérivés.</summary>
-        private string ProfilEpaisseurArc(Texture2D img, RectTransform arcRt, float fill)
+        private string ProfilEpaisseurArc(Texture2D img, RectTransform arcRt, float fill,
+            RectTransform medaillonRt)
         {
-            var coins = new Vector3[4];
-            arcRt.GetWorldCorners(coins);
-            // monde → pixels de la texture : le rendu couvre l'écran entier
-            float sx = img.width / (float)Screen.width, sy = img.height / (float)Screen.height;
-            Vector2 c0 = RectTransformUtility.WorldToScreenPoint(null, (coins[0] + coins[2]) * 0.5f);
-            Vector2 c1 = RectTransformUtility.WorldToScreenPoint(null, coins[0]);
-            Vector2 c2 = RectTransformUtility.WorldToScreenPoint(null, coins[2]);
-            var centre = new Vector2(c0.x * sx, c0.y * sy);
-            float rayonExt = 0.5f * Mathf.Abs(c2.x - c1.x) * sx;
+            // ⛔⛔ LA CONVERSION SE FAIT PAR LE CANVAS, PAS PAR `WorldToScreenPoint`. Ma version
+            // précédente appelait ce dernier APRÈS que `RendreLEcran` a restauré le mode du canvas :
+            // elle mélangeait donc unités de canvas et pixels d'écran et rendait un rayon de 29,1 px
+            // là où l'arc en fait 8,9 — **plus grand que le médaillon qui le contient**, ce qui
+            // aurait dû sauter aux yeux. C'est le défaut que ce même soir avait déjà produit sur ㊲
+            // (`slot=1280x960, cadre v=-1334..637`), à l'identique. *Une conversion posée après la
+            // restauration mesure un monde qui n'existe plus.*
+            // ⇒ La forme juste, et elle n'a besoin d'aucune caméra : le canvas racine porte son rect
+            //   en unités, l'image porte sa taille en pixels, et le rapport des deux EST l'échelle.
+            RectTransform canvasRt = (RectTransform)arcRt.GetComponentInParent<Canvas>().rootCanvas.transform;
+            var coinsArc = new Vector3[4];
+            arcRt.GetWorldCorners(coinsArc);
+            var coinsCanvas = new Vector3[4];
+            canvasRt.GetWorldCorners(coinsCanvas);
+            // ⚠️ L'ÉCHELLE SE PREND SUR LES MÊMES COINS QUE LES POSITIONS. Ma version précédente
+            // divisait par `canvasRt.rect.width` (unités NON mises à l'échelle) tout en soustrayant
+            // des coins MONDE (qui portent le `scaleFactor` du canvas) : deux repères mélangés dans
+            // la même formule, et le centre atterrissait au quart de l'image au lieu du milieu.
+            // *Le même mélange unités/pixels, réintroduit par le correctif qui le retirait* — la
+            // troisième fois ce soir, et c'est pourquoi le contrôle de vraisemblance ci-dessous
+            // reste, même maintenant qu'il passe.
+            float parU = img.width / Mathf.Abs(coinsCanvas[2].x - coinsCanvas[0].x);
+            var centre = new Vector2(
+                ((coinsArc[0].x + coinsArc[2].x) * 0.5f - coinsCanvas[0].x) * parU,
+                ((coinsArc[0].y + coinsArc[2].y) * 0.5f - coinsCanvas[0].y) * parU);
+            float rayonExt = 0.5f * Mathf.Abs(coinsArc[2].x - coinsArc[0].x) * parU;
+            float rayonMedaillon = 0.5f * Mathf.Abs(medaillonRt.rect.width) * parU;
+            // ⇒ Le contrôle de vraisemblance qui aurait attrapé la version précédente en une ligne :
+            //   un arc ne peut pas être plus large que le médaillon qui le porte.
+            if (rayonExt >= rayonMedaillon)
+                return $"fill={fill:F4} · INSTRUMENT INVALIDE — rayon d'arc lu {rayonExt:F1} px pour "
+                     + $"un médaillon de {rayonMedaillon:F1} px : la conversion est fausse, aucune "
+                     + "mesure n'est publiée.";
+            float sx = parU, sy = parU;
+            // ⛔ LA BANDE VIENT DU RECT DE L'ARC, ET ELLE EST ÉTROITE. Ma première version balayait
+            // 0,55 à 1,05 R : elle ramassait tout ce qui vit entre le centre et la jante. La bande
+            // juste est celle de l'anneau lui-même — du rayon intérieur au rayon extérieur, plus
+            // une marge d'un pixel de chaque côté pour la rampe d'anti-crénelage, et rien de plus.
+            float epaisseurPx = ArcEpaisseurEnPixels(arcRt, sx);
+            float rIn = Mathf.Max(1f, rayonExt - epaisseurPx) - 1f;
+            float rOut = rayonExt + 1f;
 
             float Chaleur(Color p) => p.r - 0.5f * (p.g + p.b);
             var eps = new List<float>();
@@ -784,7 +829,7 @@ namespace MafiaCleanCity.Shell.Tests
             for (int a = 0; a < 180; a += 2)
             {
                 float th = a * Mathf.Deg2Rad, somme = 0f;
-                for (float r = rayonExt * 0.55f; r <= rayonExt * 1.05f; r += 0.25f)
+                for (float r = rIn; r <= rOut; r += 0.25f)
                 {
                     int x = Mathf.RoundToInt(centre.x + r * Mathf.Cos(th));
                     int y = Mathf.RoundToInt(centre.y + r * Mathf.Sin(th));
@@ -799,8 +844,25 @@ namespace MafiaCleanCity.Shell.Tests
             float min = float.MaxValue, max = 0f;
             foreach (float e in eps) { if (e < min) min = e; if (e > max) max = e; }
             return $"fill={fill:F4} · {eps.Count} secteurs porteurs sur 90 · épaisseur min={min:F2} "
-                 + $"max={max:F2} ratio={max / Mathf.Max(min, 0.01f):F2} · rayon ext lu={rayonExt:F1} px"
+                 + $"max={max:F2} ratio={max / Mathf.Max(min, 0.01f):F2} · bande radiale lue "
+                 + $"{rIn:F1}..{rOut:F1} px (ext {rayonExt:F1}, épaisseur {epaisseurPx:F1})"
                  + $" · profil{brut}";
+        }
+
+        /// <summary>L'épaisseur de l'anneau en pixels d'image, dérivée du RECT de l'arc et de la
+        /// proportion connue du sprite (l'anneau occupe `ArcThicknessPx` sur `ArcDiameterPx`), donc
+        /// elle suit l'objet au lieu d'être recopiée. ⚠️ C'est l'épaisseur NOMINALE : la rampe
+        /// d'anti-crénelage en retire ~30 % à l'image (mesuré hors ligne : 3,5 intégrés pour 5
+        /// nominaux). On l'élargit d'un pixel de chaque côté plutôt que de corriger ce facteur ici —
+        /// la bande doit CONTENIR l'arc, pas prétendre le mesurer.</summary>
+        private static float ArcEpaisseurEnPixels(RectTransform arcRt, float echelle)
+        {
+            var coins = new Vector3[4];
+            arcRt.GetWorldCorners(coins);
+            Vector2 g = RectTransformUtility.WorldToScreenPoint(null, coins[0]);
+            Vector2 d = RectTransformUtility.WorldToScreenPoint(null, coins[2]);
+            float diametrePx = Mathf.Abs(d.x - g.x) * echelle;
+            return diametrePx * (5f / 35.6f);   // ArcThicknessPx / ArcDiameterPx, la proportion du sprite
         }
 
         private Texture2D RendreLEcran()
