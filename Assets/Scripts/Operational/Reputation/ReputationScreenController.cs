@@ -754,7 +754,61 @@ namespace MafiaCleanCity.Operational
             //   dans un conteneur sans layout ne produit rien.
             // Marges de la maquette : `.enseigne{margin:13px 13px 0}` puis `margin-top:9px` entre
             // blocs successifs (chassis6.py), converties par EchelleMaquette.
-            VerticalLayoutGroup pile = corpsGo.AddComponent<VerticalLayoutGroup>();
+            // ⛔⛔⛔ LE CADRE DEVIENT UNE FENÊTRE QUI DÉFILE — ruling user du 2026-09-07, après la
+            // mesure qui a montré qu'il n'y avait pas d'autre issue. MESURÉ : le groupe demandait
+            // `MIN 1845` pour une boîte de 467, et **le MIN vaut le PRÉFÉRÉ**, donc zéro marge de
+            // compression. Les six blocs fixent chacun leur minimum à leur hauteur canonique : la
+            // somme des minimums EST la hauteur pleine.
+            // ⇒ Et le panneau dit « élastique » ne l'était qu'à moitié : `flexibleHeight = 1f` avec
+            //   le commentaire « `.elast{flex:1}` », alors que **`flex:1` vaut `flex-grow:1` ET
+            //   `flex-shrink:1`** — `flexibleHeight` d'Unity ne fait que GRANDIR au-dessus du
+            //   préféré, rien ne descend jamais sous `minHeight`. *La moitié « shrink » du contrat
+            //   n'a jamais été traduite*, et le commentaire attestait pourtant l'élasticité.
+            // ⇒ À 1080×1920 sous chrome il manque ~382 px (≈ 118 CSS) : **aucun réglage
+            //   d'élasticité ne fabrique cette place.** Le canon n'a de solution qu'à sa propre
+            //   proportion, ce fichier le disait déjà sans en tirer la conséquence.
+            //
+            // REUSE du patron de ㉝ (`DemolitionScreenController.ConstruireZoneCentrale`) et du menu
+            // « Plus », qui ont payé cette classe avant nous — avec sa leçon, qui n'est PAS
+            // facultative : **couper sans donner accès au reste rend du contenu INJOIGNABLE**, ce
+            // qui est pire que de déborder. D'où les quatre gestes, un par morceau, aucun en trop :
+            //   · `minHeight = preferredHeight = 0` sur la fenêtre — elle ne RÉCLAME rien ;
+            //   · `RectMask2D` — elle COUPE ce qui dépasse (`overflow:hidden`), et c'est la seule
+            //     des quatre qui empêche un enfant de dessiner par-dessus le dock ;
+            //   · `ScrollRect` vertical — ce qui est coupé reste ATTEIGNABLE ;
+            //   · `ContentSizeFitter` sur le contenu — sans course à parcourir, le défilement ne
+            //     défile pas.
+            // ⚠️ LE CERNE RESTE SUR LA FENÊTRE, pas sur le contenu : il encadre l'écran et ne doit
+            //   pas défiler avec lui. Il porte déjà `ignoreLayout` et s'étire à son parent, donc il
+            //   suit la BOÎTE — c'est exactement ce qu'on veut, et c'est aussi ce qui fait que le
+            //   CTA n'apparaîtra plus DEHORS : il est désormais coupé par la fenêtre au lieu d'être
+            //   dessiné par-dessus le filet.
+            // ★ Au format visé (1080×2400) rien ne change : la boîte y vaut 1 971, le contenu 1 845,
+            //   donc la fenêtre ne coupe pas et le défilement n'a aucune course. La déviation ne se
+            //   voit qu'au format que le canon ne couvre pas.
+            LayoutElement fenetreLe = corpsGo.AddComponent<LayoutElement>();
+            fenetreLe.minHeight = 0f;
+            fenetreLe.preferredHeight = 0f;
+            corpsGo.AddComponent<RectMask2D>();
+            ScrollRect defilement = corpsGo.AddComponent<ScrollRect>();
+            defilement.horizontal = false;
+            defilement.vertical = true;
+            defilement.movementType = ScrollRect.MovementType.Clamped;
+            defilement.scrollSensitivity = 40f;
+
+            GameObject contenuGo = NouveauUI("Contenu", corpsGo.transform);
+            RectTransform contenuRt = (RectTransform)contenuGo.transform;
+            contenuRt.anchorMin = new Vector2(0f, 1f);
+            contenuRt.anchorMax = new Vector2(1f, 1f);
+            contenuRt.pivot = new Vector2(0.5f, 1f);
+            contenuRt.offsetMin = Vector2.zero;
+            contenuRt.offsetMax = Vector2.zero;
+            defilement.viewport = (RectTransform)corpsGo.transform;
+            defilement.content = contenuRt;
+            ContentSizeFitter ajusteur = contenuGo.AddComponent<ContentSizeFitter>();
+            ajusteur.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+            VerticalLayoutGroup pile = contenuGo.AddComponent<VerticalLayoutGroup>();
             pile.spacing = Px(CssEcartBloc);
             // ⛔ AUCUNE MARGE BASSE SUR LE CADRE. Tous les blocs de la maquette portent
             // `margin:<n>px 13px 0` — une marge HAUTE et zéro en bas (chassis6.py:111/118/126/132) ;
@@ -770,13 +824,15 @@ namespace MafiaCleanCity.Operational
             pile.childControlWidth = true;  pile.childControlHeight = true;
             pile.childForceExpandWidth = true; pile.childForceExpandHeight = false;
 
+            // Le cerne sur la FENÊTRE (il encadre et ne défile pas) ; les cinq blocs dans le
+            // CONTENU (c'est eux qui défilent). Aucun d'eux n'a à savoir qu'il y a un défilement.
             ConstruireCerne(corpsGo.transform);
-            ConstruireEnseigne(corpsGo.transform);
-            ConstruireCompteurs(corpsGo.transform);
-            ConstruireMiroir(corpsGo.transform);
-            ConstruireListeDesRegles(corpsGo.transform);
-            ConstruirePanneau(corpsGo.transform);
-            ConstruirePied(corpsGo.transform);
+            ConstruireEnseigne(contenuGo.transform);
+            ConstruireCompteurs(contenuGo.transform);
+            ConstruireMiroir(contenuGo.transform);
+            ConstruireListeDesRegles(contenuGo.transform);
+            ConstruirePanneau(contenuGo.transform);
+            ConstruirePied(contenuGo.transform);
         }
 
         /// <summary>Le liseré doré qui encadre l'écran (`.cerne{inset:5px}`).</summary>
@@ -1574,13 +1630,17 @@ namespace MafiaCleanCity.Operational
                 //    par le bas (le CTA passe sous le filet). **Une cause, deux symptômes opposés**,
                 //    qui ressemblent à s'y méprendre à « une borne sur deux a été traitée ».
                 float rendu = rt.rect.height;
-                var lg = GetComponent<UnityEngine.UI.LayoutGroup>();
-                float prefere = lg != null ? UnityEngine.UI.LayoutUtility.GetPreferredHeight(rt) : -1f;
+                // ⚠️ LE GROUPE VIT DÉSORMAIS SUR L'ENFANT `Contenu`, pas sur la fenêtre. Lire le
+                //    groupe ici rendrait −1 et le journal se tairait sur la grandeur qui décide.
+                Transform contenuT = rt.Find("Contenu");
+                var rtMesure = contenuT != null ? (RectTransform)contenuT : rt;
+                var lg = rtMesure.GetComponent<UnityEngine.UI.LayoutGroup>();
+                float prefere = lg != null ? UnityEngine.UI.LayoutUtility.GetPreferredHeight(rtMesure) : -1f;
                 // ⚠️ LE MINIMUM DÉCIDE, PAS LE PRÉFÉRÉ. Un `VerticalLayoutGroup` ne comprime qu'entre
                 //    le MIN et le PRÉFÉRÉ : si la somme des minimums vaut déjà le préféré, il n'a
                 //    aucune marge et dispose ses enfants hors de la boîte. Le préféré seul ne
                 //    permet donc pas de conclure — c'est le min qu'il faut lire.
-                float mini = lg != null ? UnityEngine.UI.LayoutUtility.GetMinHeight(rt) : -1f;
+                float mini = lg != null ? UnityEngine.UI.LayoutUtility.GetMinHeight(rtMesure) : -1f;
                 Debug.Log($"[CADRE-ELASTIQUE] écran {parent.rect.height:F0} · insetHaut {insetHaut:F0}"
                           + $" · margeBasse {bas:F0} · zone libre {zoneLibre:F0} · voulu "
                           + $"{hauteurVoulue:F0} · posé {h:F0} · RENDU {rendu:F0} · préféré "
