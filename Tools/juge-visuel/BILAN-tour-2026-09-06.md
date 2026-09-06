@@ -149,3 +149,21 @@ local `~/project/mafia-unity-correcteur`, d'où les blobs ont été lus.
   `reputation/GET_lieutenants.json` était un DÉTAIL ; « sans instance » sur `/:nodeId` = sonde `nodeId` vs clé `node` — les trois
   fermés dans la resync (`a0623a5` porte le roster de famille).
 - **Comptes** (`compter-findings-tour.py`, ids `F/B/M` + gravité, `C` exclu) : **15 rapports · 241 findings · 34 B / 80 M / 127 m**.
+
+### 8.bis — Après-midi (15:00) : ③ r2 et ① r7, sur planches signées `régime=env` (compte gelé)
+
+| écran | tour | GO (SHA correctif · planches) | verdict | ce qui a bougé |
+|---|---|---|---|---|
+| ③ | r2 | `d6c851d` · sous chrome + `carte_ville` (2400) | NON APPROUVÉ 0B/3M/4m (r1 1B/5M/4m) | la CARTE tient (peinture 2/255, 18 angles ≤ 0,53° sauf 1, capitale ×1,000, F1-F7/F10 tenues) ; le LETTRAGE non : famille romaine→linéale, tracking 0,24 em absent, halo de SIGNE inversé (la maquette creuse), encre −22,5 L, F8 réfuté comme artefact (+7,5 px 13/13) |
+| ① | r7 | `d495284` · fiche 1920/2400, district 2400, témoin ⑥ | NON APPROUVÉ 1B/7M/15m (r6 0B/10M/12m) | FERMÉ : pivot, couleurs des arcs, indicateur de dock, boîtier/filet braise, chrome alimenté. OUVERT : nom du district 1,58:1 à 2400 (aucun fond garanti sur l'art), dock sans voile (3,6:1 à 1920), COLLECTER à angles droits (NOUVEAU), cadran (neutre 12° vs 38°, arcs ×1,7 fuselés, cerclage en halo, lunette absente, fond directionnel perdu), `.chaud` sur 2/4 |
+
+**Ce que l'après-midi a établi**
+- **QUAI-NORD tranché en nommant l'objet** : le r1 mesurait le mot ET le libellé « CHASSE » de l'écusson voisin (résidu 10,59 px contre 1,39 pour le mot seul) — la maquette suit sa source (−10,25°). *Un résidu de régression imprimé partout dit si la mesure a porté sur un seul objet.*
+- **Une cible reprise d'un instrument n'est pas une propriété de la maquette** : le correctif ③ a bâti un halo CLAIR « +20 L » à partir d'une grandeur du r1 ; la maquette, mesurée directement, CREUSE (`paint-order:stroke`, −10..−20 L). Signe inversé — même famille que l'aiguille inversée.
+- **Deux instruments, deux nombres sur la même image** : segment neutre du cadran ① mesuré ~24° par le correcteur (29,45° au SVG) et 12° par le juge (38° sur le PNG canon). Les embouts des arcs mangent le vide ; c'est le VIDE VISIBLE à mi-hauteur qui se compare, pas l'angle des chemins. Désaccord de grandeur à trancher avant tout r8.
+- **Corriger le nombre, pas la propriété** (③ m1) : F9 visait r−b 39 → atteint (identique sur 18 mots) ; la maquette pose l'encre à `opacity:.9`, plus claire de 22 L.
+- **Défaut de dossier (le mien)** : `carte_ville_1080x2400.png` déclarée « hors chrome » — elle porte le même bandeau et le même dock (5 105 px de delta, tous dans le chrome). Générateur corrigé. Et **JOUR 50 → 51 entre deux planches du même run** (aiguille bougée) ⇒ le compte « gelé » ne l'est pas à l'intérieur du run — mesure prioritaire chez f2 (chemin de capture non signé ?).
+- **Chrome partagé** : la phase est alimentée sur ① (« Aube ») et pas sur ③ (« — »), même compte, à 6 min ⇒ dépend de l'écran.
+- **TD-615 (vraie Bold, `6aadd9e` 14:45) est POSTÉRIEURE aux deux planches** ⇒ ③ r2 M1 « fût ×1,41 » à remesurer après recapture (la famille tient) ; ① r7 ne porte aucun finding de graisse ; les grandeurs de gras des tours antérieurs (㊲ r11) ne sont plus comparables entre elles.
+- **Compteur** : deux formes d'id non comptées (minuscules `m1`, gras `**B1**`) — corrigé ; 18 rapports · 286 findings · 37 B / 95 M / 154 m.
+
