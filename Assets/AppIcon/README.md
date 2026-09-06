@@ -13,7 +13,20 @@ brute ROUGISSE (contrôle positif : 18,6 % hors cercle → 0,0 % composé). Sort
 - `icone_adaptive_avant_432.png` — couche entièrement transparente ;
 - `icone_legacy_192.png`, `icone_round_192.png` — même composition.
 
-⚠️ DÉDUIT : l'ordre des deux couches adaptive dans `m_Textures` (fond puis avant-plan) n'est pas documenté
-par Unity (`PlatformIcon.SetTextures` : « array of size maxLayerCount », sans ordre). Le choix
-fond = image OPAQUE / avant = transparent rend l'ordre indifférent à l'affichage : inversé, l'image est
-masquée par le launcher de la même façon. Vérification due : l'icône sur l'appareil au prochain APK.
+**Régime déclaré : `sujet-en-fond`** — fond = image opaque entière, avant-plan entièrement transparent.
+Depuis la revue de l'APK du 2026-09-06 (orchestration : « la couche prévue pour le sujet est vide »), le
+script ASSERTE ce régime au lieu de le supposer : plancher anti-vacuité sur la couche déclarée porteuse,
+avant-plan exigé à 0 pixel opaque sous ce régime, fond exigé opaque à 100 %, et trois contrôles exécutés
+avant d'écrire (P1 découpe brute rouge sur la boîte · P2 avant-plan vide rouge sur le plancher · N1 un
+pixel opaque hors cercle ≠ 0). Sous le régime `sujet-en-avant`, l'avant-plan livré ici ROUGIT (0,000 <
+0,03) — c'est le contrôle qui manquait à la première version.
+
+**Proposition en attente (décision DA, user)** : `Tools/fal/generees/2026-09-06/icone-variantes/` — A
+`sujet-en-fond` (celui-ci) contre B `sujet-en-avant` (conteneurs détourés en avant-plan, ciel/sol
+reconstruits en fond ; le launcher anime alors l'avant-plan en parallaxe). Planche
+`comparaison-A-fond-vs-B-avant.png`. Rien n'est remplacé ici avant la décision.
+
+Ce qui reste DÉDUIT : l'ordre fond/avant des deux couches dans `m_Textures` n'est pas documenté par Unity ;
+sous A l'ordre est indifférent à l'affichage (fond opaque, avant vide). Détecteur : l'icône sur l'appareil au
+prochain APK — Unity a déjà mesuré dans l'APK du 06/09 que les 6 `ic_launcher_foreground` sont à 0 pixel
+opaque et que la pile remplit la zone visible (`scratchpad/apk-icones/` de son arbre).
