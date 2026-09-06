@@ -298,6 +298,17 @@ namespace MafiaCleanCity.Shell
         public const string LibelleNotifActive = "[!] Nouveau";
         public const string LibelleNotifCalme = "[ ] Calme";
 
+        /// <summary>Les trois secteurs du cadran, EN DEGRÉS DU CANON (0° à droite, sens trigo) —
+        /// `froid 180°→90°`, `chaud 60,55°→0°`, donc un interstice de 29,45°. Leur somme fait 180°
+        /// exactement : c'est ce qui prouve que la lecture du canon est complète et non tronquée.
+        /// ⚠️ Ils remplacent trois `fillAmount` dont la carte vers les degrés est non linéaire et
+        /// dont ce fichier disait déjà qu'elle devait être LUE sur la mesure. Des degrés se
+        /// comparent au canon ; un remplissage ne se compare à rien.</summary>
+        private const float ArcFroidDebutDeg = 90f;
+        private const float ArcFroidFinDeg = 180f;
+        private const float ArcChaudDebutDeg = 0f;
+        private const float ArcChaudFinDeg = 60.55f;
+
         private const float BoitierRingThicknessPx = 3f;
         private const float ArcThicknessPx = 5f;
 
@@ -1139,14 +1150,11 @@ namespace MafiaCleanCity.Shell
             trackRect.pivot = new Vector2(0.5f, 0.5f);
             trackRect.sizeDelta = new Vector2(ArcDiameterPx, ArcDiameterPx);
             Image trackImg = trackGo.AddComponent<Image>();
-            trackImg.sprite = ProceduralUI.Ring((int)ArcDiameterPx, ArcThicknessPx, Color.white);
+            trackImg.sprite = ProceduralUI.ArcCuit((int)ArcDiameterPx, ArcThicknessPx, Color.white,
+                ArcChaudDebutDeg, ArcFroidFinDeg);   // le demi-cercle supérieur, cuit lui aussi
             trackImg.color = TeinteSurCadran(DesignTokens.Current.onSurfacePrimary, 0.133f,
                                              ArcDiameterPx / 2f, "piste");
-            trackImg.type = Image.Type.Filled;
-            trackImg.fillMethod = Image.FillMethod.Radial180;
-            trackImg.fillOrigin = (int)Image.Origin180.Left;
-            trackImg.fillClockwise = true;
-            trackImg.fillAmount = 0.5f; // 180°/360° — demi-cercle SUPÉRIEUR exact, REUSE du track SVG
+            trackImg.type = Image.Type.Simple;   // l'étendue est DANS le sprite
             trackImg.raycastTarget = false;
 
             // cold : 90°/360° = 0.25 (SVG 180°→90°, point gauche au point haut). MESURÉ (capture
@@ -1170,7 +1178,7 @@ namespace MafiaCleanCity.Shell
             //   (≥ 20°) ne bouge pas.
             BuildArcSegment(manoGo.transform, "ArcCold",
                 TeinteSurCadran(DesignTokens.Current.hudGaugeArcCold, 0.333f, ArcDiameterPx / 2f, "arc froid"),
-                Image.Origin180.Left, true, 0.1745f);
+                ArcFroidDebutDeg, ArcFroidFinDeg);
             // ⛔⛔ LE SEGMENT NEUTRE EST RÉTABLI, ET LE COMMENTAIRE QUI L'AVAIT ABANDONNÉ EST RETIRÉ.
             // Il disait, en substance, que l'interstice de la source ne survivait pas à cette
             // combinaison origine/sens, qu'un arc sans coupure suffisait, et qu'une capture l'avait
@@ -1193,7 +1201,11 @@ namespace MafiaCleanCity.Shell
             // froid qui finit à −4) demandent 0,1682 × 57,5 / 86 = **0,1124**.
             BuildArcSegment(manoGo.transform, "ArcHot",
                 TeinteSurCadran(DesignTokens.Current.hudGaugeArcHot, 0.533f, ArcDiameterPx / 2f, "arc chaud"),
-                Image.Origin180.Right, false, 0.1124f);
+                ArcChaudDebutDeg, ArcChaudFinDeg);
+            Debug.Log($"[CADRAN-ARCS] étendues CUITES (0° à droite, sens trigo) — froid "
+                      + $"{ArcFroidDebutDeg:F2}°..{ArcFroidFinDeg:F2}° · chaud {ArcChaudDebutDeg:F2}°.."
+                      + $"{ArcChaudFinDeg:F2}° · interstice {ArcFroidDebutDeg - ArcChaudFinDeg:F2}° "
+                      + "(canon 29,45°) · plus aucune coupe `Filled`");
 
             // MESURÉ (revue ⊥ sur capture r5, 2026-08-21) — `ZoneRow` (34×9, ancré au bord bas du
             // médaillon) DÉPASSE le cercle de la face : à sa position la plus basse, le rayon
@@ -1339,8 +1351,20 @@ namespace MafiaCleanCity.Shell
         /// `ProceduralUI.Ring` PARTAGÉ (même diamètre/épaisseur, mis en cache par couleur) : le
         /// mécanisme de remplissage radial d'uGUI masque dynamiquement le sprite complet selon
         /// `fillAmount`/`fillOrigin`/`fillClockwise`, aucune texture par angle nécessaire.</summary>
+        /// <summary>⛔⛔ L'ARC EST CUIT À SON ÉTENDUE, il n'est plus COUPÉ. Les angles sont ceux du
+        /// canon — **0° à droite, sens trigonométrique** — et non plus un couple
+        /// `fillOrigin`/`fillClockwise`/`fillAmount` dont la carte vers les degrés est non linéaire
+        /// et que ce fichier déclarait lui-même « à LIRE sur la mesure ».
+        /// ⇒ CE QUE ÇA FERME : le fuselage mesuré par un juge ⊥ (1,02 → 3,16 → 0,94) et confirmé par
+        ///   `DA7` sur les deux arcs (froid 1,11 → 8,05 px, chaud 0,56 → 6,11) était un défaut des
+        ///   EXTRÉMITÉS — le trait atteint sa cote au milieu. Sa cause n'a jamais été établie :
+        ///   trois hypothèses, deux rétractations. **Cuire l'étendue rend la cause sans importance**,
+        ///   puisqu'il n'y a plus ni coupe ni maillage taillé. *Quand une cause résiste à trois
+        ///   instruments, changer la forme qui la rend possible coûte moins qu'un quatrième.*
+        /// ⚠️ Et ça ne se DÉCLARE pas fermé : `DA7` remesure l'épaisseur sur le nouvel objet, avec
+        ///   son contrôle de cible, et c'est lui qui dira si le fuselage a survécu.</summary>
         private static void BuildArcSegment(Transform parent, string name, Color color,
-            Image.Origin180 origin, bool clockwise, float fillAmount)
+            float angleDebutDeg, float angleFinDeg)
         {
             GameObject go = new GameObject(name, typeof(RectTransform));
             go.transform.SetParent(parent, false);
@@ -1350,13 +1374,10 @@ namespace MafiaCleanCity.Shell
             rect.anchoredPosition = Vector2.zero;
             rect.sizeDelta = new Vector2(ArcDiameterPx, ArcDiameterPx);
             Image img = go.AddComponent<Image>();
-            img.sprite = ProceduralUI.Ring((int)ArcDiameterPx, ArcThicknessPx, Color.white);
+            img.sprite = ProceduralUI.ArcCuit((int)ArcDiameterPx, ArcThicknessPx, Color.white,
+                angleDebutDeg, angleFinDeg);
             img.color = color;
-            img.type = Image.Type.Filled;
-            img.fillMethod = Image.FillMethod.Radial180;
-            img.fillOrigin = (int)origin;
-            img.fillClockwise = clockwise;
-            img.fillAmount = fillAmount;
+            img.type = Image.Type.Simple;   // plus de coupe : l'étendue est DANS le sprite
             img.raycastTarget = false;
         }
 

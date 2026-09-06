@@ -92,9 +92,21 @@ namespace MafiaCleanCity.Shell.Tests
         {
             Texture2D tex = img.sprite.texture;
             larg = tex.width;
-            int cy = tex.height / 2;
-            int demi = tex.width / 2;
-            float Alpha(int x) => tex.GetPixel(Mathf.Clamp(x, 0, tex.width - 1), cy).a;
+            // ⛔⛔ ON SONDE PAR LE HAUT, PLUS PAR LA GAUCHE — et ce n'est pas un rangement.
+            // Cette lecture balayait la RANGÉE MÉDIANE depuis la gauche, ce qui suppose que le
+            // sprite porte du trait à 180°. C'était vrai tant que les arcs étaient des anneaux
+            // COMPLETS coupés à l'affichage ; ils sont désormais **cuits à leur étendue**, et pour
+            // `ArcTrack` (0°→180°) le point à 180° est exactement la BORNE de la fenêtre angulaire,
+            // là où le fondu d'embout met l'alpha sous 0,5. La lecture rendait donc 0 et la garde
+            // rougissait — correctement : *sa propriété avait changé, pas sa validité.*
+            // ⇒ Le socle veut qu'une garde qui rougit sur un changement LÉGITIME soit remplacée par
+            //   la propriété que le nouveau dispositif garantit, jamais assouplie. Ici l'intention
+            //   — « l'épaisseur rendue suit la proportion déclarée, à toute résolution » — ne bouge
+            //   pas ; seul le RAYON de sondage change, pour un rayon qui traverse les deux objets :
+            //   le sommet (90°), intérieur à l'anneau complet du boîtier comme à l'arc de piste.
+            int cx = tex.width / 2;
+            int demi = tex.height / 2;
+            float Alpha(int y) => tex.GetPixel(cx, Mathf.Clamp(tex.height - 1 - y, 0, tex.height - 1)).a;
 
             // Bord EXTÉRIEUR : première traversée montante de 0,5 en venant du vide.
             float bordExt = -1f, bordInt = -1f;

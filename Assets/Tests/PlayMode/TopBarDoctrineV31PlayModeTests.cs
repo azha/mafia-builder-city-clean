@@ -642,8 +642,14 @@ namespace MafiaCleanCity.Shell.Tests
                     Transform cT = manoT.Find(cible.Item1);
                     var cImg = cT != null ? cT.GetComponent<UnityEngine.UI.Image>() : null;
                     if (cImg == null) { ecartsControle.Add($"{cible.Item1} introuvable"); continue; }
-                    float garde = cImg.fillAmount;
-                    cImg.fillAmount = 0f;
+                    // ⚠️ ON ÉTEINT PAR `enabled`, PLUS PAR `fillAmount`. L'étendue des arcs est
+                    // désormais CUITE dans le sprite : `Image.Type.Simple` ignore `fillAmount`, donc
+                    // l'ancienne extinction ne coupait plus rien — et le contrôle a REFUSÉ de
+                    // certifier (558 et 409 échantillons résiduels) au lieu de rendre un faux vert.
+                    // *Un contrôle dont le mécanisme d'extinction devient inopérant doit rougir, pas
+                    // s'adapter* — c'est exactement ce qu'il a fait, et c'est pour ça qu'il existe.
+                    bool garde = cImg.enabled;
+                    cImg.enabled = false;
                     Canvas.ForceUpdateCanvases();
                     Texture2D sans = RendreLEcran();
                     int reste = 0;
@@ -662,7 +668,7 @@ namespace MafiaCleanCity.Shell.Tests
                         }
                     }
                     Object.DestroyImmediate(sans);
-                    cImg.fillAmount = garde;
+                    cImg.enabled = garde;
                     Canvas.ForceUpdateCanvases();
                     Debug.Log($"[CADRAN-CIBLE] {cible.Item1} éteint ⇒ {reste} échantillon(s) de sa "
                               + "teinte survivent (attendu ~0 : sinon l'instrument mesure autre chose)");

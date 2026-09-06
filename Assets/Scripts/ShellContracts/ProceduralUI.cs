@@ -76,6 +76,80 @@ namespace MafiaCleanCity.Shell
         /// leur propre contrôle avant d'avoir jugé quoi que ce soit.</summary>
         public const float RampeAntiCrenelagePx = 1.5f;
 
+        /// <summary>⛔⛔ UN ARC À ÉTENDUE CUITE — l'anneau n'est peint QUE sur l'intervalle
+        /// angulaire demandé, embouts FRANCS par construction. Il remplace le couple
+        /// « `Ring` complet + `Image.Type.Filled` en `Radial180` ».
+        ///
+        /// POURQUOI CUIRE L'ÉTENDUE PLUTÔT QUE COUPER. Un juge ⊥ mesure l'arc à 1,02 → 3,16 → 0,94
+        /// le long de sa course (canon : constant 2,46–2,52, coupé net) et `DA7`, étendu à
+        /// l'épaisseur et validé par un contrôle de cible, le confirme sur les DEUX arcs — froid
+        /// 1,11 → 8,05 px, chaud 0,56 → 6,11 px, le maximum tombant sur l'épaisseur nominale. Le
+        /// trait atteint donc sa cote AU MILIEU : le défaut est aux EXTRÉMITÉS.
+        /// ⚠️ Sa CAUSE, elle, n'a jamais été établie — trois hypothèses, deux rétractations, et une
+        ///   démonstration qui portait sur le mauvais objet. Cuire l'étendue **rend la cause sans
+        ///   importance** : il n'y a plus de coupe, plus de `fillAmount`, plus de maillage taillé.
+        ///   *Quand une cause résiste à trois instruments, changer la forme qui la rend possible
+        ///   coûte moins cher qu'un quatrième instrument* — et DA7 dira sur le nouvel objet si le
+        ///   fuselage a survécu, ce qui reste la seule preuve qui compte.
+        ///
+        /// ⚠️ LA CONVENTION D'ANGLE EST CELLE DU CANON, écrite ici pour qu'aucun appelant n'ait à
+        ///   la deviner : **0° à DROITE, sens trigonométrique** (90° en haut, 180° à gauche) —
+        ///   celle du SVG source et celle des instruments du juge. Le contrôleur, lui, raisonnait
+        ///   en `fillOrigin`/`fillClockwise`, un repère qui n'est celui de personne d'autre.
+        /// ⚠️ L'anti-crénelage porte sur les DEUX bords radiaux ET sur les deux embouts, avec la
+        ///   même rampe : un embout franc n'est pas un embout dur, c'est un embout dont la coupe
+        ///   suit un RAYON au lieu de suivre un maillage.</summary>
+        public static Sprite ArcCuit(int diameterPx, float thicknessPx, Color color,
+            float angleDebutDeg, float angleFinDeg)
+        {
+            string key = $"arc:{diameterPx}:{thicknessPx:F2}:{angleDebutDeg:F2}:{angleFinDeg:F2}:{ColorKey(color)}";
+            if (cache.TryGetValue(key, out Sprite cached) && cached != null) return cached;
+
+            int d = Mathf.Max(4, diameterPx);
+            var tex = NewTexture(d);
+            float rOuter = d / 2f;
+            float rInner = Mathf.Max(0f, rOuter - thicknessPx);
+            var centre = new Vector2(rOuter, rOuter);
+            float a0 = Mathf.Min(angleDebutDeg, angleFinDeg);
+            float a1 = Mathf.Max(angleDebutDeg, angleFinDeg);
+            // La rampe angulaire équivalente à la rampe radiale, prise au rayon MÉDIAN : sans ça un
+            // arc étroit aurait des embouts plus doux qu'un arc large, à rampe égale en pixels.
+            float rMedian = Mathf.Max(1f, (rOuter + rInner) * 0.5f);
+            float rampeDeg = RampeAntiCrenelagePx / rMedian * Mathf.Rad2Deg;
+
+            var pixels = new Color[d * d];
+            for (int y = 0; y < d; y++)
+            {
+                for (int x = 0; x < d; x++)
+                {
+                    var p = new Vector2(x + 0.5f, y + 0.5f);
+                    float dist = Vector2.Distance(p, centre);
+                    float ang = Mathf.Atan2(p.y - centre.y, p.x - centre.x) * Mathf.Rad2Deg;
+                    if (ang < 0f) ang += 360f;
+                    // Ramener l'angle dans la fenêtre, en tenant compte du passage par 0°.
+                    float angRel = ang;
+                    if (angRel < a0 - 180f) angRel += 360f;
+                    else if (angRel > a1 + 180f) angRel -= 360f;
+
+                    Color c = color;
+                    float fondu = Mathf.Min(
+                        Mathf.Clamp01((rOuter - dist) / RampeAntiCrenelagePx),
+                        Mathf.Clamp01((dist - rInner) / RampeAntiCrenelagePx));
+                    float fonduAngle = Mathf.Min(
+                        Mathf.Clamp01((angRel - a0) / rampeDeg),
+                        Mathf.Clamp01((a1 - angRel) / rampeDeg));
+                    c.a *= Mathf.Min(fondu, fonduAngle);
+                    pixels[y * d + x] = c;
+                }
+            }
+            tex.SetPixels(pixels);
+            tex.Apply(false, false);
+
+            Sprite sprite = Sprite.Create(tex, new Rect(0, 0, d, d), new Vector2(0.5f, 0.5f), 100f);
+            cache[key] = sprite;
+            return sprite;
+        }
+
         public static Sprite Ring(int diameterPx, float thicknessPx, Color color)
         {
             string key = $"ring:{diameterPx}:{thicknessPx:F2}:{ColorKey(color)}";
