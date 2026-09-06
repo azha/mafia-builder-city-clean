@@ -49,15 +49,44 @@ namespace MafiaCleanCity.Operational
         public LaunderingStageDto[] stages; // ordered head→tail (by stage_index)
     }
 
-    /// <summary>La liste des nœuds du joueur. Corps mesuré le 2026-09-03 : `{"nodes":[]}` sur un
-    /// compte frais — le tableau est VIDE, pas absent.
-    /// ⚠️ Les éléments sont déclarés en `string` : je n'ai vu que le tableau vide, donc je ne
-    /// connais pas la forme d'un nœud dans CETTE réponse. La déclarer d'après `LaunderingNodeDto`
-    /// serait une supposition — deux routes voisines n'ont pas forcément la même projection.</summary>
+    /// <summary>La liste des nœuds du joueur.
+    ///
+    /// ★★ CE BLOC PORTAIT, JUSQU'AU 2026-09-04, UN AVERTISSEMENT QUI DISAIT EXACTEMENT LE
+    ///    CONTRAIRE DU CODE SOUS LUI : « je n'ai vu que le tableau vide, donc je ne connais pas la
+    ///    forme d'un nœud dans CETTE réponse » — et le champ était déclaré `string[]`.
+    ///    *Écrire qu'on ne sait pas ne dispense pas de choisir : le code, lui, choisit toujours.*
+    ///    Déclarer `string[]` EST une affirmation sur la forme, si prudente que soit la prose
+    ///    au-dessus. La prudence était dans le commentaire, l'affirmation dans le type, et c'est
+    ///    le type que le serveur a lu — d'où `422 nodeId must be a UUID (got "pipeline")`.
+    ///    ⇒ Quand on ne sait pas, on ne déclare pas : on mesure sur un monde SERVI, ou on
+    ///      s'arrête là. Un type est une décision, jamais un espace réservé.</summary>
+    /// <summary>⛔⛔ `nodes` EST UN TABLEAU D'OBJETS, PAS DE CHAÎNES — mesuré le 2026-09-04 sur
+    /// `operational_demo` :
+    ///     {"nodes":[{"node":"a1415fe2-…","stage_index":1,"cleanliness_band":"PARTIAL",
+    ///                "terminal":false,"has_cash":false}, …]}
+    ///
+    /// ★ CE CHAMP ÉTAIT DÉCLARÉ `string[]`, ET JE SAIS POURQUOI. J'avais « mesuré » cette route
+    ///   le 2026-09-03 — sur un compte FRAIS, qui rend `{"nodes":[]}`. J'en ai conclu la forme des
+    ///   éléments. *Un tableau vide ne dit RIEN de la forme de ses éléments* : il confirme que la
+    ///   route existe et que la clé s'appelle `nodes`, rien de plus. J'ai pris une absence pour
+    ///   une observation, et l'écran envoyait ensuite `nodeId = "pipeline"` au serveur, qui
+    ///   répondait `422 nodeId must be a UUID`.
+    /// ⇒ Corollaire à retenir : **mesurer une route sur un monde vide ne renseigne que son
+    ///   enveloppe**. Toute forme d'élément exige un monde SERVI.</summary>
+    [Serializable]
+    public class LaunderingNodeRefDto
+    {
+        public string node;               // l'UUID — c'est LUI que `GetLaunderingPipeline` attend
+        public int stage_index;
+        public string cleanliness_band;   // DIRTY | PARTIAL | MOSTLY_CLEAN | CLEAN
+        public bool terminal;
+        public bool has_cash;
+    }
+
     [Serializable]
     public class LaunderingNodesDto
     {
-        public string[] nodes;
+        public LaunderingNodeRefDto[] nodes;
     }
 
     [Serializable] public class LaunderingNodesPayload { public LaunderingNodesDto data; }

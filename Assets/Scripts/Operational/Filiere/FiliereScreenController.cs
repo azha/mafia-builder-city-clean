@@ -88,10 +88,20 @@ namespace MafiaCleanCity.Operational
         private string token;
         public void SetToken(string t) => token = t;
 
-        /// <summary>Le nœud dont on montre la filière — VIDE aujourd'hui, et c'est le sujet.
-        /// ⚠️ Aucun appelant ne le renseigne parce qu'aucune route amont ne le rend (TD-572).
-        /// Le champ existe pour que le jour où une route le fournit, l'écran ait déjà sa prise —
-        /// et pour que son absence soit une DONNÉE lisible plutôt qu'un paramètre oublié.</summary>
+        /// <summary>Le nœud dont on montre la filière — surchargeable, sinon découvert.
+        ///
+        /// ⛔⛔ CE COMMENTAIRE A PORTÉ UN ÉNONCÉ FAUX 88 LIGNES AU-DESSUS DU CODE QUI LE RÉFUTE.
+        /// Il affirmait qu'aucune route amont ne rend cet identifiant — au PRÉSENT, sans réserve.
+        /// Or `Charger()` appelle `GetLaunderingNodes(token, …)` et prend `nodes[0].node` : la
+        /// route amont était déjà écrite, dans ce fichier, avant que je lise cette ligne.
+        /// ★ *Deux énoncés du même faux vivaient dans un seul fichier : l'un s'est fait corriger
+        ///   en 2026-09-03 par la mesure, l'autre est resté parce que personne ne l'a rouvert.*
+        ///   Le correctif était scopé à la ligne qu'on regardait, pas à la PROPRIÉTÉ qu'elle
+        ///   affirmait — c'est la façon dont un défaut survit à sa propre réparation.
+        ///
+        /// CE QUI EST VRAI AUJOURD'HUI : le champ reste vide par DÉFAUT, et c'est voulu — l'écran
+        /// découvre alors la tête de la filière tout seul. `SetNodeId` existe pour l'ouvrir sur un
+        /// nœud choisi (une future navigation depuis ⑪/⑫), pas pour compenser un manque.</summary>
         private string nodeId;
         public void SetNodeId(string id) => nodeId = id;
 
@@ -131,7 +141,7 @@ namespace MafiaCleanCity.Operational
             // est stable.
             if (transform.parent != null) transform.SetAsLastSibling();
             EnsureInitialized();
-            StartCoroutine(Amorcer());
+            amorce = StartCoroutine(Amorcer());
         }
 
         /// <summary>Charger dès le montage — ㊴ a montré ce que coûte un `Charger()` que personne
@@ -139,6 +149,7 @@ namespace MafiaCleanCity.Operational
         private IEnumerator Amorcer()
         {
             if (string.IsNullOrEmpty(token)) yield break;   // hors session : état initial NOMMÉ
+            if (corpsImposeParUnTest) yield break;          // un test tient l'écran
             yield return Charger();
         }
 
@@ -175,11 +186,20 @@ namespace MafiaCleanCity.Operational
                 new MafiaCleanCity.I18n.I18nClient { BaseUrl = baseUrl }, token);
             RenduTermine = false;
 
-            // ⛔ ON DEMANDE LA LISTE — corrigé le 2026-09-03 après mesure.
-            // Ma première version tenait le `nodeId` pour introuvable (TD-572 : « aucune route
-            // amont ne le fournit ») et affichait la chaîne cassée sans rien demander.
-            // MESURÉ : `GET /v1/operational/laundering` rend 200 avec `{"nodes":[]}`. La route
-            // EXISTE ; c'est le joueur neuf qui n'a aucun nœud.
+            // ⛔ ON DEMANDE LA LISTE — corrigé le 2026-09-03 après mesure, complété le 2026-09-06.
+            // Ma première version tenait cet identifiant pour introuvable, sur la foi d'une entrée
+            // de dette dont le NUMÉRO désignait en fait un tout autre sujet (le bundle i18n du
+            // VPS), et affichait la chaîne rompue sans rien demander.
+            // MESURÉ le 2026-09-03 : `GET /v1/operational/laundering` rend 200, tableau vide sur
+            // un compte FRAIS. La route EXISTE ; c'est le joueur neuf qui n'a aucun nœud.
+            // MESURÉ le 2026-09-04, et c'est la moitié qui manquait : sur `operational_demo` la
+            // même route rend **QUATRE** nœuds — corps commité dans le dossier de juge de cet
+            // écran, `Tools/juge-visuel/screen_c2/corps-reels/GET_operational_laundering.json`,
+            // back `6ff684db`. La première mesure avait laissé sa propre question ouverte en
+            // toutes lettres (« ce que rend cette route pour un joueur qui possède une boutique »)
+            // et personne n'était revenu la fermer.
+            // ★ *Une mesure qui borne honnêtement sa portée désigne la mesure suivante ; encore
+            //   faut-il que quelqu'un la fasse.* Deux jours et un écran inachevé, ici.
             // ★ « On ne peut pas savoir » et « il n'y a rien encore » se dessinent différemment,
             //   et seule la seconde est vraie. J'allais peindre la première sur l'autorité d'une
             //   maquette — qui, elle, a été dessinée quand la route n'existait peut-être pas.
@@ -198,7 +218,9 @@ namespace MafiaCleanCity.Operational
                     RenduTermine = true;
                     yield break;
                 }
-                nodeId = liste.nodes[0];
+                // ⛔ `.node` — l'UUID DANS l'objet, pas l'objet. Voir `LaunderingNodeRefDto` :
+                // ce champ était `string[]` parce que je l'avais mesuré sur un compte VIDE.
+                nodeId = liste.nodes[0].node;
             }
 
             yield return client.GetLaunderingPipeline(nodeId, token,
@@ -217,8 +239,29 @@ namespace MafiaCleanCity.Operational
         /// <summary>Rend un corps FABRIQUÉ, sans réseau — réservé aux tests (patron ㊲,
         /// `RendrePourTest`). Ne prouve jamais que le back émet ce corps, seulement ce que
         /// l'écran EN FAIT.</summary>
+        /// <summary>⛔ FERME LA COURSE ENTRE `Start()` ET LE RENDU DE TEST. Une suite qui pose un
+        /// VRAI jeton puis appelle `RendrePourTest` laisse `Amorcer()` partir en parallèle :
+        /// l'auto-chargement va chercher les données réelles et ÉCRASE le corps fabriqué, à une
+        /// frame près. *Un test qui perd cette course lit une vérité — celle d'un autre monde que
+        /// le sien*, et son rouge accuse alors le résolveur au lieu de l'ordonnancement.
+        /// ⚠️ Le garde-fou `IsNullOrEmpty(token)` NE COUVRE PAS ce cas : il protège l'écran monté
+        /// hors session, pas celui à qui un test donne une identité PUIS impose un corps.
+        /// ⚠️ Relu APRÈS CHAQUE `yield`, jamais seulement à l'entrée : la coroutine peut être déjà
+        /// partie quand le test pose le drapeau. Mesuré sur ⑨ (patron `2efdf2e`).</summary>
+        private bool corpsImposeParUnTest;
+        private Coroutine amorce;
+
         public void RendrePourTest(LaunderingPipelineDto dto)
         {
+            corpsImposeParUnTest = true;
+            // ⛔ ON ARRÊTE L'AUTO-CHARGEMENT, on ne se contente pas de le décourager. Le drapeau
+            // seul ne ferme que le cas facile (le test rend AVANT que la coroutine ne parte) :
+            // si elle est déjà dans son appel réseau, elle rendra son résultat PAR-DESSUS le corps
+            // du test quelques frames plus tard, et `Charger()` applique son état dans plusieurs
+            // branches — y semer des gardes serait fragile et incomplet.
+            // ★ *Fermer une course en demandant poliment à l'autre de renoncer suppose qu'il
+            //   repasse par un point où on peut le lui dire.* `StopCoroutine` ne le suppose pas.
+            if (amorce != null) { StopCoroutine(amorce); amorce = null; }
             EnsureInitialized();
             AppliquerEtat(dto);
         }
@@ -226,9 +269,91 @@ namespace MafiaCleanCity.Operational
         /// <summary>// MÉTIER ICI — TOUT le rendu métier de cet écran part d'ici. Vide à
         /// dessein : remplir depuis la maquette RATIFIÉE et le corps RÉEL mesuré, jamais depuis
         /// une supposition sur ce que l'interface TypeScript back "devrait" rendre.</summary>
+        /// <summary>⛔⛔ CETTE MÉTHODE ÉTAIT VIDE — `// MÉTIER ICI` — ET L'ÉCRAN PASSAIT POUR BÂTI.
+        /// Le 2026-09-03 j'ai mesuré `GET /v1/operational/laundering` sur un compte FRAIS, lu
+        /// `{"nodes":[]}`, et j'en ai tiré DEUX conclusions : que la chaîne était rompue au premier
+        /// maillon — en le consignant sous un numéro de dette qui désigne un autre sujet — et que
+        /// ses éléments étaient des chaînes. Les deux étaient fausses.
+        /// L'écran a donc été écrit comme un CONSTAT DE RUPTURE, son rendu nominal jamais posé, et
+        /// sa planche de juge montrait l'état initial sans que rien ne le signale — le test était
+        /// vert, `RenduTermine` valait vrai.
+        /// ★ *`RenduTermine` dit que le code a fini, jamais que l'écran a changé.*
+        /// ★ *Une seule mesure prise dans le mauvais monde a produit un DTO faux, un TD faux et un
+        ///   écran inachevé* — et chacun de ces trois se citait pour justifier les autres.
+        ///
+        /// CE QUE LE SERVEUR ENVOIE VRAIMENT, mesuré le 2026-09-04 sur `operational_demo` :
+        ///   GET /v1/operational/laundering/{node}/pipeline
+        ///   → {"stages":[{node, cleanliness_band, terminal, has_cash}, …]}  — ordonné tête→queue
+        ///   quatre étapes, bandes PARTIAL → MOSTLY_CLEAN → CLEAN → CLEAN(terminal).
+        ///
+        /// ⚠️ LA BANDE D'UNE ÉTAPE N'EST PAS CELLE DU NŒUD. `GET …/laundering/{node}` rend
+        /// `CLEAN` pour le nœud qui vaut `PARTIAL` dans son propre pipeline : deux projections
+        /// voisines de la même entité. On lit donc la bande DANS `stages`, jamais ailleurs.</summary>
         private void AppliquerEtat(LaunderingPipelineDto dto)
         {
-            // MÉTIER ICI
+            ViderListe();
+            LaunderingStageDto[] etapes = dto != null && dto.stages != null
+                ? dto.stages : new LaunderingStageDto[0];
+
+            if (etapes.Length == 0) { RendreAucunNoeud(); return; }
+
+            sousTitre.text = Lib("LA CHAÎNE, DE LA TÊTE À LA SORTIE");
+
+            int propres = 0, ecarts = 0;
+            foreach (LaunderingStageDto e in etapes)
+            {
+                if (e == null) continue;
+                if (e.terminal && e.cleanliness_band == "CLEAN") propres++;
+                // ⛔ « ÉCART » = une étape qui n'est pas encore propre. On ne compte PAS
+                // `deviation_active` : il vit sur la route du NŒUD, pas dans `stages` — le lire
+                // ici demanderait un appel par étape, et l'écran affirmerait un chiffre qu'il n'a
+                // pas mesuré. Compter ce qu'on a sous les yeux, jamais ce qu'on suppose ailleurs.
+                if (e.cleanliness_band == "DIRTY" || e.cleanliness_band == "PARTIAL") ecarts++;
+            }
+
+            MajCompteur(0, etapes.Length, Lib("ÉTAPES"));
+            MajCompteur(1, propres, Lib("PROPRE AU BOUT"));
+            MajCompteur(2, ecarts, Lib("ÉCARTS"));
+
+            for (int i = 0; i < etapes.Length; i++) Etape(i + 1, etapes[i]);
+
+            MajPanneau(Lib("CE QUE LA CHAÎNE FAIT DE VOTRE ARGENT"),
+                Lib("Elle le lave par paliers, pas d'un coup"),
+                Lib("chaque étape rend l'argent un peu plus propre que la précédente. Seule la "
+                    + "DERNIÈRE crédite le portefeuille — tant qu'il n'y a pas de sortie, il n'y a "
+                    + "pas d'argent, seulement une file d'attente."));
+        }
+
+        /// <summary>Une étape RÉELLE de la chaîne — à ne pas confondre avec `Maillon`, qui dessine
+        /// un maillon MANQUANT. Les deux se ressemblent à l'écran et disent le contraire.</summary>
+        private void Etape(int rang, LaunderingStageDto e)
+        {
+            GameObject go = NouveauUI("Etape" + rang, listeRoot);
+            AjouterFond(go, DesignTokens.Current.surfaceCard);
+            var le = go.AddComponent<LayoutElement>();
+            le.minHeight = Px(52f); le.preferredHeight = -1f; le.flexibleHeight = 0f;
+            var v = go.AddComponent<VerticalLayoutGroup>();
+            v.padding = new RectOffset((int)Px(9f), (int)Px(9f), (int)Px(7f), (int)Px(7f));
+            v.spacing = Px(2f);
+            v.childControlWidth = true; v.childControlHeight = true;
+            v.childForceExpandWidth = true; v.childForceExpandHeight = false;
+
+            // ⛔ Le libellé de propreté vient du PRODUCTEUR UNIQUE, jamais d'un `switch` local :
+            // ⑪ et ⑫ affichent la même échelle, et deux copies finiraient par diverger.
+            string bande = PureteResolvers.Libelle(e != null ? e.cleanliness_band : null);
+            string rangTexte = Lib("ÉTAPE") + "   " + rang.ToString("00");
+            if (e != null && e.terminal) rangTexte += "   ·   " + Lib("LA SORTIE");
+
+            NouveauTexte(go.transform, "Rang", rangTexte, Px(7f),
+                DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont);
+            NouveauTexte(go.transform, "Titre", bande, Px(12f),
+                DesignTokens.Current.hudCreme, DesignTokens.Current.hudSerifFont);
+            // ⚠️ `has_cash` est un DRAPEAU DE PRÉSENCE, jamais un montant — le serveur ne projette
+            // pas les centimes ici. On écrit donc ce qu'on sait, et pas un chiffre inventé.
+            NouveauTexte(go.transform, "Texte",
+                e != null && e.has_cash ? Lib("de l'argent attend à cette étape")
+                                        : Lib("rien n'attend à cette étape"),
+                Px(8f), DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont);
         }
 
         /// <summary>Repli NOMMÉ sur échec réseau — jamais une exception, jamais un écran noir
@@ -246,17 +371,43 @@ namespace MafiaCleanCity.Operational
                     + "ne sait pas où elle en est »."));
         }
 
-        /// <summary>L'ÉTAT VRAI DE CET ÉCRAN AUJOURD'HUI — cadre 142, « ce qui manque encore ».
+        /// <summary>Le repli « ce joueur n'a aucun nœud » — cadre 142 de la maquette.
         ///
-        /// ⛔ La chaîne est cassée au PREMIER maillon et le compilateur l'a dit avant le premier
-        /// run : `GetLaundering` exige un `nodeId` qu'aucune route amont ne fournit (TD-572).
-        /// ⚠️ ㊵ NE POURSUIT PAS la chaîne au-delà de sa cassure : il la montre LÀ où elle casse.
-        /// Fabriquer un identifiant pour « voir quelque chose » afficherait une filière qui
-        /// n'appartient à personne — un décor, exactement ce que ces écrans démontent.
-        /// ★ Et ce n'est pas une prudence de ma part : la maquette ratifiée déclare elle-même
-        ///   « 04 maillons, 04 cassés, 00 joueurs servis », et son tampon est DÉSACTIVÉ —
-        ///   « INJECTER — IMPOSSIBLE : il faut une planque, et rien n'en crée jamais ». Le dessin
-        ///   a tranché avant moi ; je le suis.</summary>
+        /// ⛔⛔ CE BLOC PORTAIT UN DIAGNOSTIC QUI EST FAUX DEPUIS LE 2026-08-31, ET IL LE PORTAIT
+        /// AVEC UN NUMÉRO DE DETTE. Il déclarait la chaîne rompue au premier maillon, faute d'une
+        /// route amont qui donne un identifiant de nœud, et renvoyait à une entrée d'inventaire
+        /// pour l'attester. Les trois moitiés de cet énoncé sont tombées à la mesure :
+        ///
+        ///  (1) LA ROUTE AMONT EXISTE, et elle est appelée dix lignes plus haut dans ce fichier :
+        ///      `GetLaunderingNodes(bearer, …)` — signature à jeton SEUL, aucun identifiant requis
+        ///      (`LaunderingClient.cs:45`). Le contrôleur en tire `nodes[0].node`. L'obstacle
+        ///      décrit n'a jamais existé dans le code qui le décrivait.
+        ///  (2) LE COMPTE DE DÉMO EST SERVI. Corps capturé dans le dossier de juge de cet écran —
+        ///      `Tools/juge-visuel/screen_c2/corps-reels/GET_operational_laundering.json`, back
+        ///      `6ff684db`, 2026-09-04 : **statut 200, QUATRE nœuds**, `PARTIAL` → `MOSTLY_CLEAN`
+        ///      → `CLEAN` → `CLEAN` terminal. Ce repli n'est donc PAS l'état nominal de l'écran ;
+        ///      c'est le cas d'un joueur sans planque, et il le reste, légitimement.
+        ///  (3) LE NUMÉRO DE DETTE CITÉ DÉSIGNE UN AUTRE SUJET — l'entrée existe, elle est
+        ///      ouverte, et elle parle du bundle i18n servi par le VPS. *Une dette citée ressemble
+        ///      à une dette inscrite, et une dette inscrite SOUS UN AUTRE SUJET ressemble encore
+        ///      mieux à une preuve* : le lecteur qui vérifie trouve une entrée réelle et s'arrête.
+        ///      Le maillon manquant, lui, a été refermé par le lot planque le 2026-08-31 —
+        ///      `safehouses` a un écrivain de production via le welcome grant.
+        ///
+        /// ★ Ce que ce bloc illustre pour la suite : *une seule mesure prise dans le mauvais monde*
+        ///   — ici un compte FRAIS, interrogé le 2026-09-03 — *a produit un DTO faux, un diagnostic
+        ///   faux et un écran inachevé*, et chacun des trois se citait pour justifier les deux
+        ///   autres. Le correctif du 2026-09-04 a rempli le rendu nominal et n'a pas rouvert ce
+        ///   commentaire-ci : *le texte qu'un correctif aurait dû rouvrir et n'a pas rouvert est
+        ///   exactement là où le défaut survit.*
+        ///
+        /// ⚠️ CE QUI RESTE VRAI, et ne doit pas être perdu dans la rectification : on ne fabrique
+        /// pas d'identifiant pour « voir quelque chose ». Un joueur sans nœud voit ce repli, qui
+        /// nomme le maillon qui lui manque — pas une filière qui n'est pas la sienne.
+        /// ⚠️ NON VÉRIFIÉ ICI : la maquette porte un décompte de maillons cassés et un tampon
+        /// d'action désactivé, tous deux écrits quand la chaîne l'était. Savoir s'ils sont encore
+        /// justes est une question de DESSIN, pas de code — elle est remontée à l'atelier, et cet
+        /// écran ne se corrige pas vers une maquette dont la prémisse a bougé.</summary>
         private void RendreAucunNoeud()
         {
             ViderListe();

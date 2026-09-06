@@ -85,7 +85,38 @@ namespace MafiaCleanCity.Operational
 
             GameObject bu = Nouveau("Buste", zone.transform);
             buste = (RectTransform)bu.transform;
-            Etirer(buste);
+            // ⛔⛔ LE BUSTE FAIT EXACTEMENT LE VIEWBOX, ET IL EST CENTRÉ — il n'ÉPOUSE PLUS LA ZONE.
+            // ㊲ F3, quatre tours de juge à la même valeur : la figure est à −11,4 px = −3,2 px CSS
+            // de l'axe de sa carte, sur quatre masques indépendants (peau, cou, col, bbox du
+            // torse), pendant que les DEUX textes de la même carte restent centrés.
+            // MESURÉ à l'exécution (`B3M1_AxeDeLaFigure_ChaineDesRects`), et c'est la chaîne des
+            // rects qui a désigné le maillon — pas une lecture :
+            //     EpaulesLisere  centre_vs_axe = −12,93     Buste 0,00   Dessin 0,00
+            //     Mir6 0,00   Miroir 0,00   Corps 0,00   ReputationRoot 0,00
+            // puis, sur les DIX-NEUF formes du buste, TOUTES les formes centrées au MÊME −12,93 —
+            // y compris le `Cou`, la seule primitive SANS contour. Un décalage identique sur des
+            // formes de tailles différentes et sans trait commun n'est pas un artefact de contour :
+            // c'est une TRANSLATION RIGIDE.
+            // ⇒ Arithmétique : `Forme` pose chaque trait à `vb.x * ech` depuis le bord GAUCHE de son
+            //   parent, ce qui suppose un parent large d'exactement `VbL * ech` = 62 × 6,607 =
+            //   409,6 unités. Le parent en mesurait **435,5** : le layout l'avait ÉTENDU au-delà de
+            //   sa taille déclarée (`flexibleWidth = 0` n'empêche pas `childForceExpand` de
+            //   distribuer le mou). Les 25,9 unités de surplus tombent donc INTÉGRALEMENT à droite,
+            //   et la figure se retrouve à −12,95 de l'axe. La mesure disait −12,93.
+            // ★ Ce que ça montre, et pourquoi trois tours de juge ne pouvaient pas le trouver : le
+            //   défaut n'est ni dans une forme, ni dans une constante, ni dans une couleur — il est
+            //   dans l'écart entre la taille qu'un conteneur DÉCLARE et celle qu'il REÇOIT. Aucune
+            //   mesure sur l'image ne distingue ça d'un dessin décentré.
+            buste.anchorMin = new Vector2(0.5f, 1f);
+            buste.anchorMax = new Vector2(0.5f, 1f);
+            // Le pivot est CONSTANT (le `rotate(deg 31 70)` du viewBox) : posé ici une fois pour
+            // toutes plutôt qu'à chaque `Appliquer`. Sur un rect non étiré, changer le pivot DÉPLACE
+            // l'objet — le poser deux fois au même endroit marchait par chance, pas par contrat.
+            buste.pivot = new Vector2(31f / VbL, 1f - 70f / VbH);
+            buste.sizeDelta = new Vector2(VbL * ech, VbH * ech);
+            buste.anchoredPosition = new Vector2(
+                (0.5f - buste.pivot.x) * VbL * ech,
+                -(1f - buste.pivot.y) * VbH * ech);
 
             // Les traits, du fond vers l'avant. L'ordre de fratrie EST la profondeur : c'est une
             // propriété STRUCTURELLE, testable sans lire un pixel — et c'est ce type de garde
@@ -96,7 +127,10 @@ namespace MafiaCleanCity.Operational
             // (la base est le bord du viewBox). D'où une ellipse de hauteur 46 posée à y=55, et le
             // masque de la zone de dessin qui en coupe le bas — pas un rectangle de hauteur 23.
             FormeLiseree(ref _epaules, "Epaules", buste, ReputationResolvers.Carte2,
-                  new Rect(6f, 55f, 50f, 46f), ech, 3.9f, ellipse: true);   // stroke 2 → 3,0 px CSS mesurés
+                  // 1,95 et non 3,9 : l'ancien paramètre valait le DOUBLE du trait rendu (le
+                  // contour était agrandi de tout le trait et le remplissage laissé entier, donc
+                  // seule la moitié se voyait). La valeur calibrée « 3,0 px CSS mesurés » tient.
+                  new Rect(6f, 55f, 50f, 46f), ech, 1.95f, ellipse: true);
             col = FormeTriangle("Col", buste, ReputationResolvers.Creme, ech);
             revresG = null; revresD = null;
             Forme(ref revresG, "RevresG", buste, ReputationResolvers.Creme,
@@ -130,7 +164,7 @@ namespace MafiaCleanCity.Operational
             // fond de la carte : « déborde d'un tiers hors de la silhouette », le second des deux
             // findings classés EMPÊCHE.
             FormeLiseree(ref gantG, "GantG", buste, ReputationResolvers.Creme2,
-                  new Rect(8.6f, 71.6f, 10f, 6.8f), ech, 1.2f, ellipse: true);
+                  new Rect(8.6f, 71.6f, 10f, 6.8f), ech, 0.6f, ellipse: true);   // trait rendu, cf. Epaules
             // ⛔ LES DEUX TRAITS DE SALETÉ — `if tells['gloves'] != 'clean'` dans le SVG :
             // `M9 74 l3 1.6 M13 74.6 l3 -1`, deux courtes obliques sombres sur le gant.
             // ⚠️ Le juge mesure un rapport aire/boîte de 0,81 en jeu contre 0,67 en maquette : un
@@ -155,7 +189,10 @@ namespace MafiaCleanCity.Operational
                   new Rect(26f, 48f, 10f, 10f), ech);
             // `<ellipse cx="31" cy="32" rx="12.5" ry="15">` — une ellipse, pas un stade.
             FormeLiseree(ref _tete, "Tete", buste, ReputationResolvers.Creme2,
-                  new Rect(18.5f, 17f, 25f, 30f), ech, 3.5f, ellipse: true);   // stroke 2 → 2,7 px CSS mesurés
+                  // 1,75 et non 3,5 — même correction d'unité que le dôme d'épaules. Contrôle
+                  // arithmétique : le remplissage devient 25 − 1,75 = **23,25** unités, là où le
+                  // juge mesure la référence à **22,97** et le jeu à 25,22 (F4).
+                  new Rect(18.5f, 17f, 25f, 30f), ech, 1.75f, ellipse: true);
             // ⛔ LES CHEVEUX PASSENT APRÈS LA TÊTE — ils COUVRENT le haut du crâne.
             // ⚠️ Je les avais fait passer AVANT au tour 2, pour obtenir la calotte par occlusion :
             // le visage, dessiné par-dessus, ne laissait dépasser que l'arc supérieur. Ça produisait
@@ -182,8 +219,108 @@ namespace MafiaCleanCity.Operational
             //   derrière le visage (front découvert), puis trop bas (visage rond), puis trop large
             //   (béret). Une forme dont la silhouette dépend d'une autre a plus de façons d'être
             //   fausse qu'une forme isolée.
+            // ⛔⛔⛔ QUATRIÈME RÉGLAGE, ET LES TROIS PREMIERS RÉGLAIENT LA MAUVAISE CHOSE.
+            // Un juge ⊥ a fini par mesurer la propriété que je n'avais jamais mesurée — non pas
+            // « quelle taille fait la calotte » mais **comment elle rejoint le visage** :
+            //   (a) largeur de calotte ÷ largeur de tête, AU POINT DE JONCTION : la référence
+            //       s'élargit de façon MONOTONE jusqu'à 1,183 et fusionne sans jamais se
+            //       rétrécir ; le jeu atteignait 1,058 puis **se rétrécissait à 0,920** — la
+            //       coiffe devenait plus étroite que la tête qu'elle coiffe ;
+            //   (b) hauteur d'attache : l'encre latérale dépasse la ligne de base jusqu'à **20 %**
+            //       de la hauteur du visage en référence, et à **AUCUNE hauteur** en jeu ⇒ 0 % ;
+            //   (c) épaisseur latérale à 15 % du visage : **20/20 px → 10/10** ;
+            //   (d) une bande d'encre de **105 × 14 px** traversait le front, absente de la référence.
+            // ⇒ Une ELLIPSE ne peut pas produire (a), (b) ni (d), quelles que soient ses cotes : son
+            //   bord bas est convexe VERS LE BAS, donc elle est forcément la plus large en son
+            //   milieu et la plus étroite là où elle touche le visage — l'inverse exact de ce que
+            //   la maquette dessine. Les trois réglages précédents cherchaient des cotes pour une
+            //   forme incapable de porter la propriété. *Quand un défaut revient sous des formes
+            //   voisines, ce n'est pas d'une valeur de plus qu'il faut, c'est de la bonne forme.*
+            //
+            // LE CHEMIN DE LA MAQUETTE (`generateur-reputation.py:136-138`), lu au lieu d'être
+            // approché : `M18 26 C19 14 25 10 31 10 C38 10 44 15 44 26 C40 20 36 21 31 21
+            // C26 21 21 21 18 26 Z`. Un dôme de x 18 à 44 (26 unités, contre 23,8 posées jusqu'ici),
+            // sommet à y = 10 — et un bord bas **CONCAVE** : il remonte à y = 21 au centre et
+            // redescend à y = 26 aux tempes. C'est ce creux qui dégage le front tout en laissant la
+            // chevelure descendre sur les côtés, donc qui produit (a), (b) et l'absence de (d).
+            //
+            // FAUTE DE PRIMITIVE À CHEMIN, ON LE CONSTRUIT PAR OCCLUSION — le mécanisme que ce
+            // fichier emploie déjà pour la bouche, dix lignes plus bas. Le dôme est une ellipse
+            // pleine ; une seconde ellipse, de la COULEUR DU VISAGE, en creuse le bas. Son arc
+            // supérieur passe par (18 ; 26), (31 ; 21) et (44 ; 26) — les trois points du chemin —
+            // pour un centre à (31 ; 26), un demi-grand axe de 13 et un demi-petit axe de 5.
+            // ⚠️ Elle est resserrée à 12,4 (24,8 de large) plutôt que 13 : à 13 elle dépasserait le
+            //   visage de ~0,9 unité de chaque côté à sa base, et peindrait de la couleur de peau
+            //   sur le fond. À 12,4 le débord reste dans le trait du visage (2 unités de large).
+            // ⛔ UN RECTANGLE ARRONDI, PAS UNE ELLIPSE — et le rayon vient du chemin, pas de l'œil.
+            // La tangente du chemin en (18 ; 26) est (1 ; −12) : le flanc est QUASI VERTICAL au
+            // départ, et ne s'infléchit qu'en montant. Une ellipse se referme dès son milieu, donc
+            // elle est forcément la plus étroite là où la maquette est la plus large. Un stade
+            // (l'arrondi par défaut, rayon = demi-petit-côté = 8) fait pire encore : à y = 26 il ne
+            // rendrait que 26 − 2 × 8 = 10 unités de large.
+            // Rayon 11 sur une hauteur de 16 : flancs droits de y = 21 à y = 26 — donc largeur
+            // PLEINE (26 unités) à la jonction, et l'élargissement est monotone comme en référence.
             FormeLiseree(ref _cheveux, "Cheveux", buste, ReputationResolvers.Carte2,
-                  new Rect(19.1f, 11.4f, 23.8f, 13.2f), ech, 2.4f, ellipse: true);
+                  new Rect(18f, 10f, 26f, 16f), ech, 1.8f, arrondi: true, rayonVb: 11f);
+            // ⛔⛔⛔ L'OCCLUSION EST BORNÉE À LA COIFFE — ET C'EST LE CORRECTIF DE ㊲ M5, une
+            // régression que le correctif précédent (celui juste au-dessus) a lui-même produite.
+            // Le tour d'avant a remplacé une ellipse par la bonne FORME pour le dôme, avec cette
+            // phrase dans son message : *quand un défaut revient sous des formes voisines, ce n'est
+            // pas d'une cote de plus qu'il faut, c'est de la bonne forme*. Puis il a creusé cette
+            // forme avec **une autre ellipse**, non bornée. La règle a été appliquée à la MOITIÉ de
+            // son objet, et c'est plus difficile à voir qu'une erreur franche : le message du commit
+            // se porte garant de la règle, donc personne ne cherche la seconde approximation dans le
+            // même diff.
+            //
+            // CE QUE LA MESURE DIT, et une seule cause la produit. La coiffe occupe y 10..26 ;
+            // l'occlusion, elle, allait de y 21 à **31** — cinq unités SOUS la coiffe, donc en plein
+            // sur le visage. Un juge ⊥ mesure l'épaisseur latérale de sombre (cheveux + contour)
+            // accolée à la peau, par % de la hauteur du visage :
+            //     RÉF  5 % : 26/26 · 10 % : 22/23 · 15 % : 19/20 · 20 % : 13/13 · 30 % : 10/11
+            //     JEU  5 % : 22/21 · 10 % :  2/2  · 15 % :  0/0  · 20 % :  0/0  · 30 % : 10/9
+            // Intacte à 5 %, effondrée de 10 à 20 %, intacte de nouveau à 30 % : **une bande**, et
+            // c'est exactement l'emprise de la moitié basse de l'ellipse. Plus le contrôle qui
+            // nomme le mécanisme : **8 rangées où la peau touche le fond SANS contour** (0 en
+            // référence) — l'occlusion ne mangeait pas que les cheveux, elle mangeait le TRAIT.
+            // ★ Le commentaire d'origine avait vu le risque et choisi 12,4 au lieu de 13 « pour que
+            //   le débord reste dans le trait du visage ». Il raisonnait sur la largeur, et le
+            //   débord était en HAUTEUR. *Un garde-fou posé sur le mauvais axe ne garde rien.*
+            //
+            // ⇒ LE CORRECTIF EST STRUCTUREL, PAS UNE COTE : une fenêtre de masque aux dimensions
+            //   EXACTES de la coiffe, dont l'occlusion est enfant. Elle ne peut plus déborder, quelle
+            //   que soit sa taille — y compris si quelqu'un la retouche demain. Une cote plus petite
+            //   aurait refermé l'instance en laissant la classe ouverte.
+            // ⚠️ `Mask` exige un `MaskableGraphic` : `Image` en est un. Et le masque porte son propre
+            //   `Image` (invisible, `showMaskGraphic = false`) sans quoi il ne découpe rien — ce
+            //   dépôt a déjà livré un masque qui n'atteignait pas sa cible faute de ce contrat.
+            GameObject fenetreCoiffe = Nouveau("CheveuxFenetre", buste);
+            RectTransform fcRt = (RectTransform)fenetreCoiffe.transform;
+            fcRt.anchorMin = new Vector2(0f, 1f);
+            fcRt.anchorMax = new Vector2(0f, 1f);
+            fcRt.pivot = new Vector2(0f, 1f);
+            fcRt.anchoredPosition = new Vector2(18f * ech, -10f * ech);
+            fcRt.sizeDelta = new Vector2(26f * ech, 16f * ech);
+            if (fenetreCoiffe.GetComponent<CanvasRenderer>() == null)
+                fenetreCoiffe.AddComponent<CanvasRenderer>();
+            Image fcImg = fenetreCoiffe.AddComponent<Image>();
+            fcImg.sprite = MafiaCleanCity.Shell.ProceduralUI.RoundedRectMask(0);
+            fcImg.type = Image.Type.Sliced;
+            fcImg.color = Color.white;
+            fcImg.raycastTarget = false;
+            UnityEngine.UI.Mask fcMask = fenetreCoiffe.AddComponent<UnityEngine.UI.Mask>();
+            fcMask.showMaskGraphic = false;
+
+            // Coordonnées RELATIVES à la fenêtre : son origine est (18 ; 10) du viewBox.
+            Image creuxFront = null;
+            Forme(ref creuxFront, "CheveuxCreux", fenetreCoiffe.transform, ReputationResolvers.Creme2,
+                  new Rect(0.6f, 11f, 24.8f, 10f), ech, ellipse: true);
+
+            // ⚠️ CE QUE CE CORRECTIF NE TRAITE PAS, écrit plutôt que sous-entendu : le juge mesure
+            //   AUSSI un sommet trop plat (80 % de la largeur maximale atteint à 30 px contre 17 en
+            //   référence). Cela vient du DÔME — un rectangle arrondi de rayon 11 — et non de
+            //   l'occlusion. Je ne le touche pas dans le même geste : deux variables qui bougent
+            //   ensemble ne départagent rien, et le rayon 11 est dérivé de la tangente du chemin,
+            //   donc le changer demande de rouvrir cette dérivation, pas de choisir un nombre.
             Forme(ref oeilG, "OeilG", buste, ReputationResolvers.Encre,
                   new Rect(24.6f, 29.7f, 3.8f, 4.6f), ech, arrondi: true);
             Forme(ref oeilD, "OeilD", buste, ReputationResolvers.Encre,
@@ -197,10 +334,21 @@ namespace MafiaCleanCity.Operational
             // ⚠️ La forme dépend de la posture dans la maquette (`hostile` courbe vers le haut,
             // `withdrawn` est un trait droit) ; seul le sourire par défaut est posé ici, les deux
             // autres postures n'étant atteintes par aucun test (angle mort A5, déclaré).
+            // ⛔ LES BOUTS ARRONDIS COMPTENT DANS LA LONGUEUR (㊲ F11). Le chemin
+            // `M27 40,5 Q31 42,5 36 40,5` fait 9 unités — mais il porte `stroke-linecap:round`, qui
+            // ajoute un demi-trait à CHAQUE bout : **9 + 1,7 = 10,7 unités**, et c'est ce que le
+            // juge mesure sur la référence (59 × 14 px = 10,75 × 2,55 u) contre 50 × 12 (9,14 ×
+            // 2,19) en jeu. Le client rendait le chemin NU.
+            // ★ Une extrémité de trait n'est pas une décoration : c'est de la longueur. Reproduire
+            //   un chemin sans reproduire ses bouts, c'est livrer une forme 15 % plus courte, et
+            //   sur une bouche de 9 unités ça se lit — le juge l'a noté avant de le mesurer.
+            // ⚠️ Ce que je ne touche PAS : la hauteur d'encre (2,19 contre 2,55). Elle vient du
+            //   décalage des deux ellipses, pas des bouts, et ce n'est pas le mécanisme que le
+            //   finding nomme. Une seule variable par correctif, sinon la remesure ne départage rien.
             Forme(ref bouche, "Bouche", buste, ReputationResolvers.Encre,
-                  new Rect(27f, 39.4f, 9f, 3.6f), ech, ellipse: true);
+                  new Rect(26.15f, 39.4f, 10.7f, 3.6f), ech, ellipse: true);
             Forme(ref boucheMasque, "BoucheMasque", buste, ReputationResolvers.Creme2,
-                  new Rect(26.6f, 38.1f, 9.8f, 3.6f), ech, ellipse: true);
+                  new Rect(25.75f, 38.1f, 11.5f, 3.6f), ech, ellipse: true);
 
             baseOeilGX = ((RectTransform)oeilG.transform).anchoredPosition.x;
             baseOeilDX = ((RectTransform)oeilD.transform).anchoredPosition.x;
@@ -254,7 +402,7 @@ namespace MafiaCleanCity.Operational
             float deg = ReputationResolvers.PostureInclinaisonDeg(posture);
             // Le pivot d'inclinaison est en BAS du buste (rotate(deg 31 70) du viewBox) : un
             // buste qui pivoterait par son centre décollerait des épaules.
-            buste.pivot = new Vector2(31f / VbL, 1f - 70f / VbH);
+            // Le pivot est posé au montage (rect non étiré : le rebouger ici DÉPLACERAIT le buste).
             buste.localRotation = Quaternion.Euler(0f, 0f, -deg);
 
             bool colFerme = tells != null && tells.ActifEstAbsorbe(UniformTellsDto.Pose.Collar);
@@ -352,8 +500,19 @@ namespace MafiaCleanCity.Operational
         private static void PoserX(RectTransform rt, float x) =>
             rt.anchoredPosition = new Vector2(x, rt.anchoredPosition.y);
 
+        /// <param name="rayonVb">Rayon d'arrondi EN UNITÉS DE VIEWBOX. À 0 (le défaut, et le
+        /// comportement de tous les appelants d'avant) le rayon vaut la moitié du petit côté —
+        /// c'est-à-dire un stade, ce que veulent les yeux et la bouche. Un rayon EXPLICITE sert aux
+        /// formes dont le chemin a des côtés droits sur une partie de leur hauteur : la calotte a
+        /// des flancs quasi verticaux jusqu'à la jonction avec le visage, et un stade les referme
+        /// bien avant.
+        /// ⚠️ Paramètre optionnel ASSUMÉ : ce socle dit qu'un marqueur d'optionalité est un endroit
+        /// où le compilateur cesse d'aider. Le risque qu'il décrit — un appelant qui hérite d'un
+        /// comportement en silence — est nul ici : la valeur par défaut REPRODUIT exactement ce que
+        /// les huit appelants existants obtenaient, et un seul passe une valeur.</param>
         private void Forme(ref Image cible, string nom, Transform parent, Color couleur,
-                           Rect vb, float ech, bool arrondi = false, bool ellipse = false)
+                           Rect vb, float ech, bool arrondi = false, bool ellipse = false,
+                           float rayonVb = 0f)
         {
             GameObject go = Nouveau(nom, parent);
             RectTransform rt = (RectTransform)go.transform;
@@ -399,8 +558,9 @@ namespace MafiaCleanCity.Operational
             }
             else if (arrondi)
             {
+                float rayon = rayonVb > 0f ? rayonVb : Mathf.Min(vb.width, vb.height) * 0.5f;
                 img.sprite = ProceduralUI.RoundedRectMask(
-                    Mathf.Max(1, Mathf.RoundToInt(Mathf.Min(vb.width, vb.height) * ech * 0.5f)));
+                    Mathf.Max(1, Mathf.RoundToInt(rayon * ech)));
                 img.type = Image.Type.Sliced;
             }
             cible = img;
@@ -418,15 +578,34 @@ namespace MafiaCleanCity.Operational
         ///   couleur cible : ce n'étaient pas les couleurs qui manquaient, c'était le TRAIT entre
         ///   elles. Une figure se lit par ses bords autant que par ses surfaces.</summary>
         private void FormeLiseree(ref Image cible, string nom, Transform parent, Color couleur,
-                                  Rect vb, float ech, float stroke, bool ellipse = false,
-                                  bool arrondi = false)
+                                  Rect vb, float ech, float trait, bool ellipse = false,
+                                  bool arrondi = false, float rayonVb = 0f)
         {
+            // ⛔⛔ LE TRAIT EST CENTRÉ SUR LE CHEMIN, PAS POSÉ À L'EXTÉRIEUR (㊲ F4) — et le
+            // corriger ICI ferme la classe pour les QUATRE primitives d'un coup.
+            // Un juge ⊥ a mesuré, en unités de viewBox, que chaque forme pleine gagnait ≈ 2 unités :
+            //     visage **22,97 → 25,22** (trait centré = 23,0 ; trait extérieur = 25,0)
+            //     torse  52,13 → 54,83   (52,0 / 54,0)
+            //     col    11,12 → 14,26   (≈11 / 14,0)
+            //     gant   8,75×5,47 → 10,05×6,40   (8,8×5,6 / 10,0×6,8)
+            // et — le contrôle qui nomme la cause — que le **COU**, seule primitive SANS contour,
+            // ne bouge pas (9,84 → 10,23 pour 10,0 attendu). Quatre écarts, un mécanisme.
+            // SVG pose `stroke-width` À CHEVAL sur le chemin : la moitié du trait mord le
+            // REMPLISSAGE, l'autre moitié le fond. Ici le contour était agrandi de tout le trait et
+            // le remplissage laissé à la taille du chemin ⇒ le bord extérieur tombait juste, mais
+            // la forme pleine gardait sa taille entière et le trait mordait le fond seul.
+            // ⇒ Le contour garde son bord extérieur (chemin + trait/2) ; le remplissage RENTRE de
+            //   trait/2 de chaque côté. La silhouette visible est inchangée, l'encre passe du bon
+            //   côté, et les quatre nombres du juge se referment ensemble.
             Image bord = null;
-            Rect vbBord = new Rect(vb.x - stroke / 2f, vb.y - stroke / 2f,
-                                   vb.width + stroke, vb.height + stroke);
+            Rect vbBord = new Rect(vb.x - trait / 2f, vb.y - trait / 2f,
+                                   vb.width + trait, vb.height + trait);
+            Rect vbPlein = new Rect(vb.x + trait / 2f, vb.y + trait / 2f,
+                                    vb.width - trait, vb.height - trait);
             Forme(ref bord, nom + "Lisere", parent, ReputationResolvers.Encre, vbBord, ech,
-                  arrondi: arrondi, ellipse: ellipse);
-            Forme(ref cible, nom, parent, couleur, vb, ech, arrondi: arrondi, ellipse: ellipse);
+                  arrondi: arrondi, ellipse: ellipse, rayonVb: rayonVb);
+            Forme(ref cible, nom, parent, couleur, vbPlein, ech, arrondi: arrondi, ellipse: ellipse,
+                  rayonVb: rayonVb);
         }
 
         private static Sprite spriteTriangle;

@@ -205,14 +205,37 @@ namespace MafiaCleanCity.Shell
         private const float K = 1280f / 300f;
         private static float Px(float cssPx) => cssPx * K;
 
-        private static readonly Color Creme     = Hex("#eae0c8");
-        private static readonly Color Creme2    = Hex("#b9ad92");
-        private static readonly Color Or        = Hex("#d9ab4e");
-        private static readonly Color OrVif     = Hex("#f2c96b");
-        private static readonly Color Laiton    = Hex("#b08d3e");
-        private static readonly Color Braise    = Hex("#e0664a");
-        private static readonly Color Cyan      = Hex("#7fd4d9");
-        private static readonly Color Vert      = Hex("#7db36a");
+        // ⑯ / TD-612 — HUIT DE CES QUATORZE COULEURS RECOPIAIENT LA VALEUR D'UN TOKEN NOMMÉ.
+        // Valeur juste, chemin faux : l'écran rendait exactement la bonne teinte, et aucune garde
+        // ne pouvait le voir — les allowlists comptent les ACCÈS à `DesignTokens.Current.*` (un
+        // littéral n'en est pas un) et un juge de pixels rend « conforme » tant que la valeur
+        // coïncide. Le défaut ne se serait manifesté que le jour où la palette bouge : les huit
+        // écrans seraient restés à l'ancienne teinte, en silence.
+        // ⇒ Appariement MESURÉ, jamais choisi au nom — `Tools/apparier-litteraux-aux-tokens.py`,
+        //   distances toutes à 0,00. Et c'est bien un appariement par la VALEUR, pas par le nom :
+        //   « Or » n'est PAS `accentGold` (celui-ci vaut #ffd23f, à 47 d'ici) mais
+        //   `hudMoneyUnderlineGold`. Choisir au nom aurait changé la couleur en croyant la ranger.
+        //
+        // ⛔⛔ ET LA FORME EST `=>`, PAS `= …`. Un `static readonly Color X = DesignTokens.Current.Y`
+        //    s'évalue à l'initialisation du TYPE, donc en contexte de constructeur, où le
+        //    `Resources.Load` de `DesignTokens.Current` JETTE. Ce dépôt a mesuré la conséquence :
+        //    65 champs de cette forme étaient VERTS en run complet (un test antérieur avait chauffé
+        //    le cache) et ROUGES en run scopé à froid. Il ne reste aujourd'hui aucun champ de cette
+        //    forme dans `Assets/Scripts` — cette réparation n'en réintroduit pas un.
+        private static Color Creme      => DesignTokens.Current.hudCreme;                // #eae0c8
+        private static Color Creme2     => DesignTokens.Current.hudCremeSecondary;       // #b9ad92
+        private static Color Or         => DesignTokens.Current.hudMoneyUnderlineGold;   // #d9ab4e
+        private static Color OrVif      => DesignTokens.Current.hudMoneyGold;            // #f2c96b
+        private static Color Laiton     => DesignTokens.Current.hudHairlineGold;         // #b08d3e
+        private static Color Braise     => DesignTokens.Current.hudGaugeArcHot;          // #e0664a
+        private static Color Cyan       => DesignTokens.Current.hudGaugeArcCold;         // #7fd4d9
+        private static Color Vert       => DesignTokens.Current.accentCalm;              // #7db36a
+
+        // LES SIX SUIVANTES RESTENT DES LITTÉRAUX, ET C'EST UNE DÉCISION, PAS UN OUBLI. Aucune n'a
+        // de token à moins de 4 (la plus proche est à 13,2, la plus lointaine à 52,0 — mesuré) :
+        // c'est la palette du PAPIER, propre à cet écran, que rien dans les tokens ne porte. Les
+        // convertir demanderait de CRÉER des tokens, c'est-à-dire un arbitrage de palette qui
+        // appartient à l'atelier. Substituer une valeur ne serait pas ranger, ce serait repeindre.
         private static readonly Color PapierHaut = Hex("#efe4c6");
         private static readonly Color PapierBas  = Hex("#dccfa9");
         private static readonly Color EncrePapier = Hex("#2b1d0e");
@@ -410,9 +433,16 @@ namespace MafiaCleanCity.Shell
             // c'est cette fonction qu'on remplace, pas la mise en page.
             string titre = Lisible(card.descriptor != null ? card.descriptor.key : null);
             string motif = Lisible(card.flag_reason != null ? card.flag_reason.key : null);
+            // ⛔ LE NEUVIÈME LITTÉRAL DE CET ÉCRAN VIVAIT ICI, DANS UNE BALISE DE TEXTE RICHE — et
+            //    c'est le site que les DEUX instruments rataient. Il ne s'écrit pas `Hex("#…")` mais
+            //    `<color=#…>` au milieu d'une chaîne : le motif de la garde exigeait un guillemet
+            //    collé au dièse, donc il ne mordait pas. *Deux formulations du même faux demandent
+            //    deux motifs* — la garde en porte désormais un troisième, avec son contrôle.
+            //    La teinte se dérive du token, jamais recopiée : elle suivra la palette.
+            string gris = ColorUtility.ToHtmlStringRGB(DesignTokens.Current.hudCremeSecondary);
             phrase.text = string.IsNullOrEmpty(motif)
                 ? titre
-                : titre + "<i><color=#b9ad92> — " + motif + "</color></i>";
+                : titre + "<i><color=#" + gris + "> — " + motif + "</color></i>";
 
             // ── la colonne du jeton : le geste ───────────────────────────────────────────────
             GameObject col = new GameObject("JetonCol", typeof(RectTransform));

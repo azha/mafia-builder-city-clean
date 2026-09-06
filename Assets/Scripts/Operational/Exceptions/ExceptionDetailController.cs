@@ -179,7 +179,13 @@ namespace MafiaCleanCity.Operational.Exceptions
             TrackText(quiTxt, qui);
 
             // Les trois bandes, en pastilles — libellés FERMÉS, suivis par le corpus de balayage.
-            string pastilles = $"{Cap(c.severity_band)} · {Cap(c.priority_band)} · {Cap(c.confidence_band)}";
+            // ⚠️ La CONFIANCE reste capitalisée telle quelle : son domaine
+            //    (`tentative|likely|confident`) n'apparaît sur AUCUNE maquette, donc je n'ai pas de
+            //    valeur ratifiée pour elle et je n'en invente pas trois de plus dans le même geste.
+            //    C'est un anglais qui reste, il est nommé, et il part à l'arbitrage avec les trois
+            //    autres non ratifiés. *Un trou déclaré est une propriété ; un trou comblé au
+            //    jugé est un piège.*
+            string pastilles = $"{ExceptionBandes.Ligne(c.severity_band, c.priority_band)} · {Cap(c.confidence_band)}";
             TextMeshProUGUI chips = NewText("Chips", body, pastilles, (int)PxD(CssChipCorps * 1.4f),
                                             TextAlignmentOptions.Left);
             chips.color = SeverityTeinte(c.severity_band);
@@ -189,7 +195,11 @@ namespace MafiaCleanCity.Operational.Exceptions
             // La réplique — texte PRODUCTEUR (prose anglaise aujourd'hui, clé demain) : chrome,
             // non suivi. Passe par le point unique `Texte()`.
             TextMeshProUGUI desc = NewText("Descriptor", body,
-                "« " + Texte(c.event_descriptor, c.event_descriptor_i18n) + " »", (int)PxD(11.5f), TextAlignmentOptions.Left);
+                // ⛔ LES GUILLEMETS ÉTAIENT INCONDITIONNELS : un identifiant technique se retrouvait
+                //    dans la bouche d'un lieutenant, alors que ⑨ — le même contenu, à un clic — a une
+                //    règle écrite qui l'interdit. La règle est partagée maintenant.
+                ExceptionBandes.Replique(Texte(c.event_descriptor, c.event_descriptor_i18n)),
+                (int)PxD(11.5f), TextAlignmentOptions.Left);
             desc.textWrappingMode = TextWrappingModes.Normal;
             desc.overflowMode = TextOverflowModes.Overflow;
             desc.color = TextPrimary;

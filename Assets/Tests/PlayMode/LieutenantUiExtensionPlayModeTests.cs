@@ -353,6 +353,87 @@ namespace MafiaCleanCity.Operational.Tests
         //     cook_idle/heat → author the COOK rule → bands archetype=COOK / rule_count_band=FEW. Then recruit a SECURITY on
         //     the 2nd operational building → its palette is building_damaged → author the SECURITY rule → bands
         //     archetype=SECURITY / rule_count_band=FEW. (cap-of-2: exactly these two recruits.)
+        /// <summary>⛔⛔ LE CONTRÔLE QUI MANQUAIT À LA GARDE DE CATALOGUE — et son absence a laissé
+        /// la garde CERTIFIER le trou qu'elle devait mesurer.
+        ///
+        /// `RendreTousLesLibelles` rejoue chaque résolveur sur toutes les valeurs de son domaine
+        /// pour que « zéro repli » porte sur la population entière. Sa liste d'archétypes était
+        /// recopiée à la main : **SEPT valeurs pour NEUF `case`**. Les deux manquantes — plus une
+        /// troisième — sont exactement celles dont le catalogue ne sert pas la clé, donc la garde
+        /// restait verte en n'allant jamais chercher les clés absentes. Sa docstring affirmait
+        /// pourtant que les valeurs avaient été « lues dans les `case` ».
+        /// ★★ *Une garde de couverture qui recopie sa population à la main mesure la recopie, pas
+        ///   la population.* La liste vient désormais du résolveur ; ce test-ci prouve que le
+        ///   résolveur ne traite rien qui échappe à ce tableau.
+        ///
+        /// ⚠️ IL LIT LE FICHIER SOURCE, et c'est délibéré : la valeur arrive en `string`, il n'y a
+        /// aucun enum C# à rendre exhaustif, donc le compilateur ne peut RIEN ici (une `switch`
+        /// expression sur `string` n'a pas d'exhaustivité, et ce dépôt a déjà mesuré que la forme
+        /// auto-invalidante du TypeScript ne transpose pas au C#). Le seul détecteur possible est
+        /// un test qui va lire les `case`.</summary>
+        [Test]
+        public void ArchetypesCanoniques_CouvreTousLesCasDuResolveur()
+        {
+            string chemin = Path.Combine(Application.dataPath,
+                "Scripts", "Operational", "Lieutenant", "FamilleLabels.cs");
+            Assert.IsTrue(File.Exists(chemin), $"source du résolveur introuvable à {chemin}");
+            string src = File.ReadAllText(chemin);
+
+            // On borne au corps de `Archetype` : les autres résolveurs du fichier ont leurs propres
+            // `case`, et les compter ici ferait rougir sur des valeurs qui n'ont rien à voir.
+            int debut = src.IndexOf("public static string Archetype(");
+            Assert.Greater(debut, 0, "la méthode `Archetype` n'est plus dans ce fichier — ce test " +
+                                     "doit être ré-accordé plutôt que laissé vert sur une tranche vide");
+            int fin = src.IndexOf("private static string Lib(", debut);
+            Assert.Greater(fin, debut, "borne de fin introuvable : la tranche lue serait fausse, et " +
+                                       "un balayage sur une tranche fausse rend un verdict uniforme");
+            string corps = src.Substring(debut, fin - debut);
+
+            var cas = new List<string>();
+            foreach (Match m in Regex.Matches(corps, "case\\s+\"([A-Z_]+)\"\\s*:"))
+                cas.Add(m.Groups[1].Value);
+
+            // ANTI-VACUITÉ : une tranche mal bornée rendrait ZÉRO `case`, et « tous couverts »
+            // serait vrai à vide — le zéro le plus crédible qui soit.
+            Assert.GreaterOrEqual(cas.Count, 9,
+                $"seulement {cas.Count} `case` lus dans le corps de `Archetype` : le motif ou les " +
+                "bornes ne mordent plus, et ce test ne prouverait rien. Lus : [" +
+                string.Join(", ", cas) + "]");
+
+            var tableau = new HashSet<string>(FamilleLabels.ArchetypesCanoniques);
+            var manquants = cas.Where(c => !tableau.Contains(c)).ToList();
+            Assert.IsEmpty(manquants,
+                $"{manquants.Count} valeur(s) traitée(s) par le résolveur mais ABSENTE(S) de " +
+                "`ArchetypesCanoniques` : [" + string.Join(", ", manquants) + "]. " +
+                "`RendreTousLesLibelles` parcourt ce tableau : toute valeur qui n'y est pas ne " +
+                "sera jamais rejouée, donc sa clé de catalogue ne sera jamais demandée, donc la " +
+                "garde « zéro repli » restera verte en l'ignorant. C'est ainsi que trois clés " +
+                "non servies ont traversé la garde qui existe pour les trouver.");
+
+            // ⛔ LE MÊME CONTRÔLE SUR LE SECOND RÉSOLVEUR, et c'est le point de la réserve de
+            //    classe du juge-données : fermer un trou sur l'instance qu'on regardait ne le ferme
+            //    pas sur ses sœurs. `Anciennete` a exactement la même forme — un `switch` sur une
+            //    `string`, un tableau exposé, une garde de couverture qui le parcourt — donc
+            //    exactement le même mode d'échec, et il se vérifie de la même façon.
+            int dA = src.IndexOf("public static string Anciennete(");
+            Assert.Greater(dA, 0, "la méthode `Anciennete` n'est plus dans ce fichier — ré-accorder ce test");
+            int fA = src.IndexOf("public static string Etat(", dA);
+            Assert.Greater(fA, dA, "borne de fin introuvable pour `Anciennete` : la tranche lue serait vide");
+            var casA = new List<string>();
+            foreach (Match m in Regex.Matches(src.Substring(dA, fA - dA), "case\\s+\"([A-Z_]+)\"\\s*:"))
+                casA.Add(m.Groups[1].Value);
+            Assert.GreaterOrEqual(casA.Count, 5,
+                $"seulement {casA.Count} `case` lus dans `Anciennete` : le motif ne mord plus. " +
+                "Lus : [" + string.Join(", ", casA) + "]");
+            var tabA = new HashSet<string>(FamilleLabels.AnciennetesCanoniques);
+            var manqA = casA.Where(c => !tabA.Contains(c)).ToList();
+            Assert.IsEmpty(manqA,
+                $"{manqA.Count} palier(s) traité(s) par `Anciennete` mais absent(s) de " +
+                "`AnciennetesCanoniques` : [" + string.Join(", ", manqA) + "]. Le rejeu ne les " +
+                "atteindrait pas, donc leurs clés ne seraient jamais demandées — le trou des " +
+                "archétypes, rouvert sur le résolveur voisin.");
+        }
+
         [UnityTest]
         public IEnumerator MultiArchetype_CookThenSecurity_PalettesAndBands()
         {
@@ -421,6 +502,70 @@ namespace MafiaCleanCity.Operational.Tests
                     $"each roster row's op_state_band is a closed-domain band (got '{r.op_state_band}')");
                 CollectionAssert.Contains(new[] { "NONE", "FEW", "MANY" }, r.rule_count_band,
                     $"each roster row's rule_count_band is a closed-domain band (got '{r.rule_count_band}')");
+                // ⛔ LE NOM EST SERVI ET DOIT ÊTRE PARSÉ — c'est le champ que le DTO jetait.
+                Assert.IsFalse(string.IsNullOrWhiteSpace(r.name),
+                    $"la rangée {r.lieutenant_id} n'a pas de `name` parsé : le serveur le sert " +
+                    "(mesuré sur le corps du 2026-09-06, six clés), et un DTO qui ne le déclare " +
+                    "pas le jette EN SILENCE — `JsonUtility` n'a aucun moyen de s'en plaindre.");
+            }
+
+            // ⛔⛔ ET LA PROPRIÉTÉ QUI COMPTE POUR LE JOUEUR : les noms DISTINGUENT les lieutenants.
+            // Le défaut réparé n'était pas « un champ manque » mais ce que le joueur voyait : les
+            // trois lieutenants du compte de démo sont tous COOK, donc l'organigramme affichait
+            // « Cuisinier » trois fois. *Un champ jeté ne laisse pas un vide — il laisse un AUTRE
+            // champ prendre sa place, et c'est indiscernable tant que les valeurs diffèrent.*
+            // ⇒ ANTI-DÉGÉNÉRESCENCE : des noms tous IDENTIQUES satisferaient « chaque rangée a un
+            //   nom » sans rien réparer. On exige donc autant de noms DISTINCTS que de rangées.
+            string[] noms = roster.Select(r => r.name).ToArray();
+            Assert.AreEqual(noms.Length, noms.Distinct().Count(),
+                "deux lieutenants portent le même nom rendu — c'est exactement le symptôme du " +
+                "champ jeté (l'archétype prenait la place du nom, et trois COOK donnaient trois " +
+                "fois « Cuisinier »). Noms : [" + string.Join(" · ", noms) + "]");
+
+            // Et le rendu porte bien CES noms-là, pas une dérivation locale.
+            var textes = controller.RenderedTexts;
+            foreach (string n in noms)
+                Assert.IsTrue(textes.Any(x => x == n),
+                    $"le nom servi « {n} » n'apparaît nulle part dans le rendu. " +
+                    "Corpus : [" + string.Join(" · ", textes) + "]");
+
+            // ⛔⛔⛔ ET LE MÉTIER AVEC — la garde qui manquait, et son absence a coûté un BLOQUANT.
+            //    Les assertions ci-dessus prouvent que le NOM est rendu. Elles sont restées VERTES
+            //    pendant que l'archétype disparaissait complètement de l'écran : le correctif qui
+            //    posait le nom l'avait posé À LA PLACE du métier, et les trois rangs sont devenus
+            //    interchangeables (nom + RÉCENT + Au repos, trois fois). Un juge ⊥ l'a vu, aucune
+            //    garde ne pouvait — elles ne demandaient qu'à l'un des deux d'être là.
+            //    ★★ *Une garde qui vérifie qu'une valeur EST rendue ne dit rien de celle qu'elle a
+            //      REMPLACÉE.* Quand un correctif fait passer une fente d'une grandeur à une autre,
+            //      la falsifiable qui mord porte sur LES DEUX, jamais sur la nouvelle seule.
+            // Le libellé vient du catalogue — le producteur unique de cette grandeur (TD-611) —
+            // et non d'une chaîne recopiée ici : une copie dériverait le jour où le catalogue bouge.
+            string[] metiers = roster.Select(r => FamilleLabels.Archetype(r.archetype)).ToArray();
+            foreach (string m in metiers)
+                Assert.IsTrue(textes.Any(x => x == m),
+                    $"le métier « {m} » n'apparaît nulle part dans le rendu : le rang n'identifie " +
+                    "plus QUI TIENT QUOI, et les trois rangs deviennent interchangeables. " +
+                    "Corpus : [" + string.Join(" · ", textes) + "]");
+
+            // ANTI-DÉGÉNÉRESCENCE SUR LES DEUX CÔTÉS, et il en faut deux DIFFÉRENTES :
+            //  · côté NOMS, la propriété est la VARIÉTÉ (déjà assertée plus haut) — trois noms
+            //    identiques signeraient le retour du champ jeté ;
+            //  · côté MÉTIERS, la variété serait FAUSSE : les trois lieutenants du compte de démo
+            //    sont réellement tous COOK, donc trois libellés identiques sont la VÉRITÉ. Exiger
+            //    des métiers distincts ferait rougir la garde sur une donnée correcte.
+            //    La propriété qui vaut ici est que le métier n'est ni vide, ni la clé brute du
+            //    back, ni une COPIE du nom — c'est-à-dire que la fente porte bien une SECONDE
+            //    grandeur et non deux fois la première.
+            for (int i = 0; i < roster.Length; i++)
+            {
+                Assert.IsFalse(string.IsNullOrWhiteSpace(metiers[i]),
+                    $"la rangée {roster[i].lieutenant_id} rend un métier vide");
+                Assert.AreNotEqual(roster[i].archetype, metiers[i],
+                    $"le métier rendu pour {roster[i].lieutenant_id} est la clé brute du back " +
+                    $"(« {metiers[i]} ») : le catalogue ne l'a pas traduit, et le joueur lit un enum");
+                Assert.AreNotEqual(noms[i], metiers[i],
+                    $"la rangée {roster[i].lieutenant_id} affiche deux fois la même chaîne " +
+                    $"(« {noms[i]} ») : le rang prétend porter deux informations et n'en porte qu'une");
             }
 
             // --- Open the COOK row → the builder palette switches back to COOK. OpenLieutenant points the current-lieutenant

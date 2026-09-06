@@ -70,6 +70,20 @@ namespace MafiaCleanCity.Theme
         public Color accentWarning;  // #ff9e3d (1,0.62,0.239) — moderate/partial (amber)
         public Color accentDanger;   // #ff5a4d (1,0.353,0.302) — severe/dirty (red)
         public Color accentPremium;  // #c7b3ff (0.78,0.7,1) — BuildingCard premium yield
+        /// <summary>#7db36a (0.490,0.702,0.416) — l'état CALME d'une échelle de gravité : « rien ne
+        /// dépasse ». Spécifié par l'atelier le 2026-09-06, repris TEL QUEL de la palette source
+        /// (`--vert`), zéro changement de pixel contre la maquette de ㊴.
+        ///
+        /// ⛔ POURQUOI CE N'EST PAS `accentSuccess`, ET POURQUOI LE REPLI PRÉCÉDENT ÉTAIT PIRE QUE
+        /// FAUX. « Rien ne dépasse » n'est pas « réussi » : `accentSuccess` est un TURQUOISE de
+        /// réussite (#43e0c0) — une autre teinte pour un autre sens, à 113 de distance, pas une
+        /// autre valeur du même rôle. Et le code rendait `hudGaugeArcCold`, qui est le `--cyan` de
+        /// la palette source : le repli ne posait pas une valeur d'attente, il **substituait un
+        /// token de la palette à un autre**, effaçant une distinction que le dessin faisait exprès.
+        /// ★ *Un repli pris dans la même palette ressemble à un choix ; c'est ce qui le rend
+        ///   invisible.* Mesuré sur la référence de ㊴ : l'aplat vaut (125,179,106), et le token le
+        ///   plus proche de la palette était à 59 — donc aucun ne convenait, et il fallait un nom.</summary>
+        public Color accentCalm;     // #7db36a (0.49,0.702,0.416) — gravité « rien ne dépasse »
 
         // ── Chrome ──────────────────────────────────────────────────────────────────────────
         [Header("Chrome")]

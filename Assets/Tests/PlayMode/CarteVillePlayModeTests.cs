@@ -88,6 +88,86 @@ namespace MafiaCleanCity.Shell.Tests
             // un axe Y inversé — rougit ici, pas dans la distance.
             Assert.Greater(pos["TIDEWATER-1"].y, pos["VERGE-A"].y, "Tidewater-1 (le port) doit être AU-DESSUS de Verge-A");
             Assert.Greater(pos["VERGE-A"].x, pos["LATTICE-C"].x, "Verge-A doit être À DROITE de Lattice-C");
+
+            // ⛔⛔ F8 — DEUX DES TROIS CAUSES RÉFUTÉES PAR LA MESURE, LA TROISIÈME NON DÉCIDABLE ICI.
+            // Un juge ⊥ mesure les noms décalés de **+7,5 px, 13 sur 13 du même signe, sur deux
+            // tours**. Un décalage systématique n'est pas un défaut de placement : c'est un décalage
+            // de RÉFÉRENCE. Trois candidats, tous sondés sur les 18 cellules plutôt qu'un seul
+            // nommé au jugé :
+            //   · LIGNE DE BASE / alignement du texte dans sa boîte — **RÉFUTÉ** : l'écart
+            //     encre−boîte vaut **+0,00 sur les 18** (boîte h=36,00, encre h=30,27, centres
+            //     confondus). TMP centre l'encre exactement ;
+            //   · PIVOT DU LABEL APRÈS ROTATION — **RÉFUTÉ** : l'écart label−cellule en monde vaut
+            //     **+0,52 à −0,16 unité** et il SUIT la rotation de la cellule (+0,52 à 10°, −0,16
+            //     à −3°). Il varie donc avec l'angle, quand le défaut est constant en signe ;
+            //   · SENS DE L'ANCRE — **NON DÉCIDABLE DANS LE CLIENT**, et c'est le résultat utile :
+            //     les fractions d'ancre placent la cellule, la cellule porte son nom centré, tout
+            //     est cohérent de bout en bout. Si le nom atterrit 7,5 px trop haut sur la planche,
+            //     c'est que **l'ancre de la donnée et la position du nom dans la référence ne
+            //     désignent pas le même point** — le centroïde du quartier d'un côté, la pose du
+            //     lettrage de l'autre.
+            // ⇒ CE QU'IL FAUT POUR TRANCHER, et ce n'est pas dans ce dépôt : les positions de NOM de
+            //   la référence, à confronter aux 18 ancres. *Fabriquer cette donnée côté client serait
+            //   l'instrument qui invente ce qu'il mesure.*
+            // ⚠️ Les sondes qui ont produit ces chiffres ont été retirées après lecture : 36 lignes
+            //   par run pour une question tranchée une fois. Les nombres restent ici, la sonde non —
+            //   seul cas où ce dépôt ne commite pas l'instrument avec son verdict, et la raison est
+            //   écrite plutôt que supposée.
+
+            // ⛔⛔ LA VRAIE CARTE HORS CHROME — et elle n'existait pas, malgré son nom. Le juge de ③
+            // demande depuis deux tours une planche SANS bandeau ni dock ; `carte_ville_1080x2400`
+            // porte les deux (elle monte le shell et attend sa session), donc elle ne peut pas
+            // servir de contrôle. *Un nom de fichier n'est pas une propriété de l'image* — et
+            // celui-là a fait croire deux fois que la planche existait.
+            // ⇒ Ici, le contrôleur est monté SEUL depuis le début de ce test : aucune barre, aucun
+            //   dock, rien que la ville et ses marqueurs. C'est la définition même du hors chrome,
+            //   et elle est structurelle plutôt que déclarée.
+            {
+                const int L = 1080, H = 2400;
+                const string CheminHC = "Assets/Screenshots/carte_ville_hors_chrome_1080x2400.png";
+                Canvas cnv = peinture.GetComponentInParent<Canvas>().rootCanvas;
+                RenderMode modeAv = cnv.renderMode;
+                Camera camAv = cnv.worldCamera;
+                var rtex2 = new RenderTexture(L, H, 24, RenderTextureFormat.ARGB32);
+                var camGo2 = new GameObject("CarteHorsChromeCam");
+                try
+                {
+                    var cam2 = camGo2.AddComponent<Camera>();
+                    cam2.targetTexture = rtex2;
+                    cam2.clearFlags = CameraClearFlags.SolidColor;
+                    cam2.backgroundColor = Color.black;
+                    cam2.orthographic = true;
+                    cnv.renderMode = RenderMode.ScreenSpaceCamera;
+                    cnv.worldCamera = cam2;
+                    cnv.planeDistance = 10f;
+                    Canvas.ForceUpdateCanvases();
+                    yield return null;
+                    var crt2 = (RectTransform)cnv.transform;
+                    cam2.orthographicSize = crt2.rect.height / 2f;
+                    cam2.aspect = crt2.rect.width / crt2.rect.height;
+                    cam2.Render();
+                    RenderTexture prev2 = RenderTexture.active;
+                    RenderTexture.active = rtex2;
+                    var tex2 = new Texture2D(L, H, TextureFormat.RGB24, false);
+                    tex2.ReadPixels(new Rect(0, 0, L, H), 0, 0);
+                    tex2.Apply();
+                    RenderTexture.active = prev2;
+                    System.IO.File.WriteAllBytes(CheminHC, tex2.EncodeToPNG());
+                    // Le plancher d'encre — 4 planches du dépôt étaient vides avec des tests verts.
+                    MafiaCleanCity.Shell.Tests.CaptureSousShell.PlancherDEncre(tex2, CheminHC);
+                    Debug.Log($"[CARTE-HORS-CHROME] {CheminHC} {L}x{H} — contrôleur monté SEUL, "
+                              + $"{c.Cells.Count} marqueurs, aucun shell dans la scène");
+                    Object.Destroy(tex2);
+                }
+                finally
+                {
+                    cnv.renderMode = modeAv;
+                    cnv.worldCamera = camAv;
+                    Object.DestroyImmediate(camGo2);
+                    rtex2.Release();
+                    Object.DestroyImmediate(rtex2);
+                }
+            }
         }
 
         [UnityTest]
@@ -190,6 +270,8 @@ namespace MafiaCleanCity.Shell.Tests
             canvas.worldCamera = cameraPrecedente;
             canvas.planeDistance = planPrecedent;
             System.IO.File.WriteAllBytes(Chemin, tex.EncodeToPNG());
+            // Le plancher d'encre — 4 planches du dépôt étaient vides avec des tests verts.
+            MafiaCleanCity.Shell.Tests.CaptureSousShell.PlancherDEncre(tex, Chemin);
 
             var teintes = new HashSet<int>();
             foreach (Color px in tex.GetPixels())

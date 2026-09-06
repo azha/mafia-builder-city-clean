@@ -33,6 +33,49 @@ namespace MafiaCleanCity.Tests
         public const string OperationalSeeder = "Tools/seed_operational_demo.mjs";
         public const string CityMapSeeder = "Tools/seed_citymap_demo.mjs";
 
+        /// <summary>⛔⛔ LE COMPTE GELÉ REFUSE TOUTE MUTATION, PAS SEULEMENT LE SEMIS — et cette
+        /// distinction est le défaut qui a coûté 14 bâtiments et 2 planques le 2026-09-06.
+        ///
+        /// Les deux seeders portaient déjà une porte, et elle parlait de « SEMIS ». Le geste
+        /// destructeur, lui, était une **AVANCE D'HORLOGE** : elle déclenche le lapse de maintenance
+        /// de 04f-A, qui dégrade puis détruit ce qui n'est pas entretenu. *Une garde qui nomme
+        /// l'OPÉRATION au lieu de la CLASSE laisse passer sa voisine* — et c'est exactement ce qui
+        /// est arrivé, par un chemin que personne n'avait énuméré : une paire d'identité de capture
+        /// exportée sur le compte gelé pointe aussi le SEEDER qui la lit, lequel appelle `advance()`.
+        ///
+        /// ⇒ Ce garde-ci couvre l'autre moitié de la population : les **quatre suites** qui appellent
+        ///   `/v1/_test/citysim/advance` en DIRECT, sans passer par un seeder. Recensement du
+        ///   2026-09-06 : **4 seams `_test` mutants** dans l'arbre (`citysim/advance`,
+        ///   `citysim/epoch/set`, `citysim/raid`, `core-loops/seed-pending-exception`) répartis sur
+        ///   8 fichiers — `advance` en compte 5 à lui seul, dont deux seeders.
+        /// ⚠️ Il prend l'IDENTIFIANT, pas le `player_id` : un UUID ne dit pas quel compte il désigne,
+        ///   et une garde qui ne peut pas nommer sa cible ne peut pas la refuser. Les appelants qui
+        ///   n'ont qu'un UUID doivent donc le résoudre AVANT — c'est le prix de la garde, et il est
+        ///   plus faible que celui d'une base de preuve détruite.</summary>
+        public static void RefuserMutationSurCompteGele(string identifiant, string geste)
+        {
+            const string PorteAssumee = "MAFIA_SEED_ALLOW_FROZEN";
+            bool autorise = System.Environment.GetEnvironmentVariable(PorteAssumee) == "1";
+            bool gele = ComptesGeles.Contains(identifiant);
+            Debug.Log($"[COMPTE-GELÉ] {geste} sur « {identifiant} » · "
+                      + (gele ? "COMPTE GELÉ" : "compte ordinaire")
+                      + $" · {PorteAssumee}={(autorise ? "1 (contournement EXPLICITE)" : "non posée")}");
+            if (gele && !autorise)
+                Assert.Fail($"MUTATION REFUSÉE : « {geste} » sur « {identifiant} », un COMPTE GELÉ dont "
+                    + "l'état est la base de preuve des planches jugées. Ce n'est presque jamais une "
+                    + "erreur de configuration : c'est une paire d'identité de CAPTURE exportée dans un "
+                    + "run qui embarque une suite qui MUTE. ⇒ Pour tester des mécaniques : ne pas "
+                    + "exporter les paires de capture. ⇒ Pour muter ce compte à dessein : "
+                    + $"{PorteAssumee}=1, empreinte publiée AVANT et APRÈS.");
+        }
+
+        /// <summary>La liste, UNE fois — recopiée dans les deux seeders parce qu'ils sont en
+        /// JavaScript et ne peuvent pas la lire d'ici. ⚠️ Trois exemplaires d'une même liste sont une
+        /// dette : le jour où un second compte est gelé, les trois doivent bouger ensemble, et rien
+        /// ne le fait respecter. C'est écrit plutôt que supposé couvert.</summary>
+        public static readonly System.Collections.Generic.HashSet<string> ComptesGeles =
+            new System.Collections.Generic.HashSet<string> { "demo_capture@example.test" };
+
         public const string OperationalMarker = "=== OPERATIONAL DEMO SEEDED ===";
         public const string CityMapMarker = "=== DEMO CREDENTIALS ===";
 

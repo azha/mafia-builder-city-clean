@@ -44,6 +44,12 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.Greater(controller.NorthCount, 0, "North bank should have districts");
             Assert.Greater(controller.SouthCount, 0, "South bank should have districts");
 
+            // ⛔ UN DISPOSITIF CONDITIONNEL DOIT IMPRIMER S'IL S'EST ACTIVÉ : sans cette ligne,
+            // le montage « liste en deux colonnes » et le montage « ville peinte » rendent le même
+            // vert, et rien ne dit lequel des deux jeux d'assertions a réellement tourné.
+            Debug.Log($"[CARTE-RENDU] régime={(controller.VillePeinteMontee ? "ville peinte" : "liste 2 colonnes")} " +
+                      $"cellules={controller.Cells.Count} plafond_halo={CityMapController.AlphaHaloMax:F2}");
+
             foreach (DistrictCellView cell in controller.Cells)
             {
                 Assert.IsNotNull(cell.Background, "cell missing Image");
@@ -53,11 +59,74 @@ namespace MafiaCleanCity.CityMap.Tests
                 Assert.AreNotEqual(BankSide.Unknown, cell.Bank,
                     $"district {cell.Model.name_canonical} unparsed bank_side");
 
-                // Control-state overlay: background colour == the palette for the state.
+                // ⛔⛔ CETTE GARDE A ÉTÉ REMPLACÉE, PAS ASSOUPLIE — et la distinction est le sujet.
+                // Elle assertait `Background.color == ColorFor(State)`, opacité comprise. C'était
+                // exact, et c'était la propriété d'une TUILE PLEINE. Le jour où un juge ⊥ a mesuré
+                // que cette plaque opaque produisait cinq des dix écarts de ③ (masse visuelle ×3 à
+                // ×7,85, contraste du nom 2,80:1 sous le plancher 4,5:1, la rose des vents
+                // recouverte sur 21 %, 73 % de plaque sans lettre sur le nom le plus court, arête
+                // à rayon 0), elle est devenue **impossible à satisfaire autrement qu'en
+                // rétablissant le défaut**. Le socle donne trois issues et une seule est bonne :
+                // ni l'assouplir (elle ne protégerait plus rien), ni l'ignorer (elle pourrirait),
+                // mais la remplacer par la propriété que le NOUVEAU dispositif garantit.
+                // ⇒ Ce que le halo garantit, et que la plaque ne garantissait PAS : la teinte porte
+                //   toujours l'état de contrôle CANAL PAR CANAL, **et** son opacité est bornée sous
+                //   le seuil de l'instrument du juge. La garde est donc strictement plus FORTE
+                //   qu'avant : elle a gagné une inégalité, elle n'a rien perdu.
+                // ⚠️ Et elle DÉCLARE son régime : les deux montages de cet écran (ville peinte /
+                //   liste en deux colonnes) n'ont pas la même forme, et une garde muette sur lequel
+                //   des deux elle a jugé se lit plus large qu'elle n'est.
                 Assert.AreNotEqual(ControlState.Unknown, cell.State,
                     $"district {cell.Model.name_canonical} unparsed control_state");
-                Assert.AreEqual(CityMapEnums.ColorFor(cell.State), cell.Background.color,
-                    $"district {cell.Model.name_canonical} colour does not match its control_state");
+                Color attendue = CityMapEnums.ColorFor(cell.State);
+                Color obtenue = cell.Background.color;
+                Assert.AreEqual(attendue.r, obtenue.r, 1f / 255f,
+                    $"district {cell.Model.name_canonical} — canal R de l'état de contrôle");
+                Assert.AreEqual(attendue.g, obtenue.g, 1f / 255f,
+                    $"district {cell.Model.name_canonical} — canal G de l'état de contrôle");
+                Assert.AreEqual(attendue.b, obtenue.b, 1f / 255f,
+                    $"district {cell.Model.name_canonical} — canal B de l'état de contrôle");
+                if (controller.VillePeinteMontee)
+                {
+                    Assert.LessOrEqual(obtenue.a, CityMapController.AlphaHaloMax + 1e-4f,
+                        $"district {cell.Model.name_canonical} — le halo posé sur la peinture est " +
+                        $"opaque à {obtenue.a:F3} : au-delà de {CityMapController.AlphaHaloMax:F2} il " +
+                        "redevient la plaque qui masquait la ville");
+                    // Anti-dégénérescence : un halo à alpha NUL satisferait le plafond ci-dessus
+                    // tout en ne portant plus aucun état — l'inverse exact du défaut, et tout aussi
+                    // muet. La borne est un intervalle, jamais un seul côté.
+                    Assert.Greater(obtenue.a, 0.02f,
+                        $"district {cell.Model.name_canonical} — halo à alpha {obtenue.a:F3} : " +
+                        "l'état de contrôle a cessé d'être visible");
+
+                    // ⛔⛔ AUCUNE TRONCATURE — ET LA PREMIÈRE VERSION DE CETTE GARDE ÉTAIT VIDE.
+                    // Elle comparait `textInfo.characterCount` à `GetParsedText().Length`. Contrôle
+                    // positif (défaut réarmé : `overflowMode = Truncate`) : **VERTE**. Mesuré
+                    // pourquoi, en imprimant les grandeurs candidates sous le défaut armé :
+                    //     « HAUTES-MARC » poses=11 attendus=11 visibles=10 debord=-1 prefere=269,2 boite=198,0
+                    // `GetParsedText()` rend le texte **DÉJÀ COUPÉ** : mes deux termes étaient tous
+                    // les deux en AVAL de la troncature, donc égaux par construction. *Le contrôle
+                    // et son sujet partageaient le support*, et `firstOverflowCharacterIndex` rend
+                    // −1 sur le cas même qui a motivé la garde.
+                    // ⇒ La grandeur qui discrimine est le texte ASSIGNÉ contre le texte POSÉ — le
+                    //   seul couple dont un terme est en amont de la coupe. 14 contre 11 sous le
+                    //   défaut, égal après le correctif.
+                    // ⚠️ Pas `prefere <= boite` : la largeur préférée dépasse la boîte aussi APRÈS
+                    //   le correctif (c'est le principe de `Overflow`), donc cette garde-là serait
+                    //   rouge sur le monde qu'on veut.
+                    cell.Label.ForceMeshUpdate();
+                    string assigne = cell.Label.text;
+                    string pose = cell.Label.GetParsedText();
+                    Assert.AreEqual(assigne.Length, pose.Length,
+                        $"district {cell.Model.name_canonical} — nom TRONQUÉ : « {pose} » " +
+                        $"({pose.Length} caractères posés) pour « {assigne} » ({assigne.Length} servis)");
+                }
+                else
+                {
+                    Assert.AreEqual(1f, obtenue.a, 1e-4f,
+                        $"district {cell.Model.name_canonical} — hors ville peinte, la tuile EST un " +
+                        "pavé plein et doit le rester");
+                }
 
                 // Label carries the district's DISPLAY name — 2026-09-02: the tile now shows the
                 // fiction name (`name`, e.g. "La Lisière") in front of the code name, explicit
@@ -68,6 +137,80 @@ namespace MafiaCleanCity.CityMap.Tests
                 StringAssert.Contains(CityMapEnums.DisplayName(cell.Model), cell.Label.text,
                     "cell label must show the district's display name");
             }
+
+            // ⛔ LA LÉGENDE À PASTILLES N'EXISTE QUE SUR LE REPLI (F6). Garde STRUCTURELLE — elle ne
+            // lit aucun pixel : elle compte des objets nommés dans l'arbre, donc elle survit à un
+            // changement de palette, de taille et de résolution. Et elle est BILATÉRALE : « zéro sur
+            // la ville peinte » seul serait satisfait par une légende supprimée PARTOUT, ce qui
+            // retirerait du repli un élément qui lui appartient. Deux régimes, deux comptes.
+            // ⛔⛔ L'INCLINAISON DES NOMS — ET LA GARDE NE LIT PAS LE SIGNE DE LA CONSTANTE.
+            // Le fichier d'ancres est en convention d'IMAGE (0° horizontal, positif HORAIRE, y vers
+            // le bas) et Unity tourne à l'inverse : une garde assertant « le signe passé à `Euler`
+            // est l'opposé de `angle_deg` » serait vraie dans les DEUX mondes — celui où la
+            // convention est respectée et celui où on l'a inversée deux fois. C'est l'aiguille
+            // inversée du socle : *l'inversion est une propriété du CÔTÉ*, pas de la suite.
+            // ⇒ On lit DE QUEL CÔTÉ tombe l'extrémité : pour un angle horaire (positif), le bout
+            //   DROIT du nom doit être PLUS BAS à l'écran que le bout gauche, et réciproquement.
+            if (controller.VillePeinteMontee)
+            {
+                // ⛔⛔ L'ATTENDU VIENT DE LA DONNÉE, PAS DU TRANSFORM — et ma première version
+                // faisait l'inverse. Elle lisait l'angle sur `localEulerAngles`, c'est-à-dire sur
+                // l'objet même qu'elle teste : en inversant le signe du correctif, l'attendu
+                // s'inversait avec lui, les deux « extrêmes » échangeaient de place et la garde
+                // restait **VERTE** sur le monde qu'elle existait pour interdire. Mesuré par le
+                // contrôle positif, pas par relecture. *Le contrôle et son sujet ne doivent pas
+                // partager leur support.*
+                DistrictCellView plusHoraire = null, plusAntiHoraire = null;
+                float maxA = float.NegativeInfinity, minA = float.PositiveInfinity;
+                foreach (DistrictCellView c in controller.Cells)
+                {
+                    float a = controller.AngleAncreDeclare(c.Model.name_canonical);
+                    if (a > maxA) { maxA = a; plusHoraire = c; }
+                    if (a < minA) { minA = a; plusAntiHoraire = c; }
+                }
+                Debug.Log($"[CARTE-ANGLES] le plus horaire : {plusHoraire?.Model.name_canonical} " +
+                          $"({maxA:F1}°) · le plus anti-horaire : {plusAntiHoraire?.Model.name_canonical} " +
+                          $"({minA:F1}°) · amplitude {maxA - minA:F1}°");
+                // Anti-dégénérescence : si tous les marqueurs sont à plat, les deux « extrêmes »
+                // décrivent le même monde et les assertions de côté seraient vraies pour rien.
+                Assert.Greater(maxA - minA, 10f,
+                    $"l'amplitude des inclinaisons vaut {maxA - minA:F1}° : les noms sont tous à plat " +
+                    "ou presque, et la trame de chaque quartier ne se lit plus (source : 28°)");
+                AssertePenche(plusHoraire, +1, maxA);
+                AssertePenche(plusAntiHoraire, -1, minA);
+            }
+
+            int itemsLegende = 0;
+            foreach (Transform t in controller.GetComponentsInChildren<Transform>(true))
+                if (t.name == "LegendItem") itemsLegende++;
+            if (controller.VillePeinteMontee)
+                Assert.AreEqual(0, itemsLegende,
+                    $"{itemsLegende} pastilles de légende sur la ville peinte : la maquette n'en " +
+                    "porte aucune, et ce sont les seuls aplats saturés de l'écran");
+            else
+                Assert.AreEqual(4, itemsLegende,
+                    $"{itemsLegende} pastilles sur le repli en deux colonnes : la légende de contrôle " +
+                    "y appartient, elle n'a pas été retirée du dépôt mais d'UN montage");
+        }
+
+        /// <summary>Le bout DROIT du nom est-il du bon côté ? `sens = +1` pour un angle horaire (le
+        /// bout droit descend), `−1` pour l'inverse. On lit des coins de `RectTransform` EN MONDE,
+        /// jamais la constante qu'on a écrite.</summary>
+        private static void AssertePenche(DistrictCellView cellule, int sens, float angle)
+        {
+            Assert.IsNotNull(cellule, "aucune cellule à mesurer");
+            var rt = (RectTransform)cellule.Label.transform;
+            var coins = new Vector3[4];
+            rt.GetWorldCorners(coins);   // 0 = bas-gauche, 3 = bas-droite
+            float denivele = coins[3].y - coins[0].y;   // > 0 : le bout droit est plus HAUT
+            Assert.Greater(Mathf.Abs(denivele), 0.5f,
+                $"« {cellule.Model.name_canonical} » est posé à plat alors que {angle:F1}° sont " +
+                "attendus — la mesure de côté n'aurait rien à départager");
+            Assert.AreEqual(sens, denivele < 0f ? +1 : -1,
+                $"« {cellule.Model.name_canonical} » penche du MAUVAIS CÔTÉ : {angle:F1}° en " +
+                "convention d'image (positif = horaire, le bout droit descend), et son bout droit " +
+                $"est {(denivele > 0f ? "plus HAUT" : "plus BAS")} de {Mathf.Abs(denivele):F2} que " +
+                "son bout gauche. Le signe de la constante ne dit rien : c'est le côté qui décide.");
         }
     }
 }

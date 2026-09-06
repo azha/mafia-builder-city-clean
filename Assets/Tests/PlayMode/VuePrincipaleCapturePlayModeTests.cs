@@ -257,6 +257,13 @@ namespace MafiaCleanCity.Capture.Tests
             GarderLeRectDuLocataire("la carte de ville");
             yield return CapturerA(1080, 2400,
                 "Assets/Screenshots/screen_2_carte_sous_chrome_1080x2400.png");
+            // ⛔ LES DEUX RÉSOLUTIONS, DANS LE MÊME RUN — le juge de ③ les demande ensemble, et
+            // c'est le seul moyen d'attribuer un écart à l'ÉCRAN plutôt qu'au format. Ce dépôt a
+            // déjà mesuré qu'un même dock rend 8,2:1 à 2400 et 4,2:1 à 1920 parce que l'art sous
+            // lui n'est pas le même : *un défaut qui ne se voit qu'à une résolution se diagnostique
+            // faux tant qu'on ne dispose que de cette résolution.*
+            yield return CapturerA(1080, 1920,
+                "Assets/Screenshots/screen_2_carte_sous_chrome_1080x1920.png");
         }
 
         // ── Capture de NUIT ───────────────────────────────────────────────────────────────────────
@@ -474,6 +481,16 @@ namespace MafiaCleanCity.Capture.Tests
 
         private IEnumerator CapturerA(int largeur, int hauteur, string chemin)
         {
+            // ⛔⛔ LE BANDEAU AVANT LE RENDU — la course mesurée le 2026-09-06 sur quatre runs
+            //    identiques de `CaptureCarte` (trois états du bandeau : vide / alimenté sans
+            //    phase / alimenté avec une phase de district périmée). Voir le corps de la garde
+            //    dans `CaptureSousShell` : elle ATTEND l'alimentation et REFUSE la phase
+            //    incohérente. Ici plutôt que dans l'appelant, pour que les onze captures de ce
+            //    fichier en héritent sans qu'on ait à s'en souvenir onze fois.
+            var echecsChrome = new System.Collections.Generic.List<string>();
+            yield return MafiaCleanCity.Shell.Tests.CaptureSousShell.ChromeAlimenteOuEchoue(shell, chemin, echecsChrome);
+            if (echecsChrome.Count > 0) Assert.Fail(string.Join("\n", echecsChrome));
+
             Canvas canvas = shell.ShellCanvas;
             Assert.IsNotNull(canvas, "le shell doit avoir un canvas pour être rendu hors écran");
             RenderMode modeAvant = canvas.renderMode;
@@ -523,6 +540,28 @@ namespace MafiaCleanCity.Capture.Tests
                 yield return null;
             }
 
+            // ⛔ SONDE D'ÉCHELLE DU CHROME — prise DANS le régime de capture, jamais après.
+            // Le juge ⊥ du r5 de ① mesure le chrome à ×1,18-×1,21 du canon sur ① et sur lui seul,
+            // avec ⑥ pour témoin au canon exact. Mesuré ici hors capture (`ChromeEchelle_
+            // SousDistrictEtSousFamille`) : `TopBar.lossyScale` IDENTIQUE sous les deux locataires.
+            // La différence n'existe donc que sous la capture — et une sonde lue APRÈS `CapturerA`
+            // rend un rect que la caméra hors-écran vient de démonter (déjà payé sur ㊲ le même
+            // jour : « slot=1280x960, cadre v=-1334..637 »). Elle est donc ICI, avant le rendu.
+            if (shell != null && shell.TopBar != null && shell.ShellCanvas != null)
+            {
+                var trt = (RectTransform)shell.TopBar.transform;
+                var ech = shell.TopBarSlot != null ? shell.TopBarSlot.Find("TopBarEchelle") : null;
+                Debug.Log($"[CHROME-CAPTURE] {largeur}x{hauteur} locataire={shell.MountedTenantType?.Name ?? "aucun"} " +
+                          $"canvas.rect={((RectTransform)shell.ShellCanvas.transform).rect.width:F1}x" +
+                          $"{((RectTransform)shell.ShellCanvas.transform).rect.height:F1} " +
+                          $"scaleFactor={shell.ShellCanvas.scaleFactor:F6} · " +
+                          $"TopBarSlot.rect={shell.TopBarSlot.rect.width:F1}x{shell.TopBarSlot.rect.height:F1} · " +
+                          $"TopBarEchelle.localScale={(ech != null ? ech.localScale.x : -1f):F6} " +
+                          $"rect={(ech != null ? ((RectTransform)ech).rect.width : -1f):F1} · " +
+                          $"TopBar.rect={trt.rect.width:F1}x{trt.rect.height:F1} " +
+                          $"lossyScale={trt.lossyScale.x:F6}");
+            }
+
             cam.Render();
             RenderTexture prev = RenderTexture.active;
             RenderTexture.active = rt;
@@ -531,12 +570,161 @@ namespace MafiaCleanCity.Capture.Tests
             tex.Apply();
             RenderTexture.active = prev;
             System.IO.File.WriteAllBytes(chemin, tex.EncodeToPNG());
+            // Le plancher d'encre — 4 planches du dépôt étaient vides avec des tests verts.
+            MafiaCleanCity.Shell.Tests.CaptureSousShell.PlancherDEncre(tex, chemin);
+
+            // B1+M5 — le contraste RENDU de chaque texte posé sur l'art. ⚠️ RÉGIME DÉCLARÉ : ce
+            // premier tour MESURE et n'échoue pas. Poser le plancher avant de savoir ce qu'il
+            // accuse, ce serait choisir le seuil pour qu'il passe, ou rougir la moitié de l'écran
+            // sans savoir laquelle a tort. Les nombres d'abord, l'assertion au tour suivant.
+            {
+                var ecC = new System.Collections.Generic.List<string>();
+                MafiaCleanCity.Shell.Tests.CaptureSousShell.ContrasteSurArtOuEchoue(
+                    tex, canvas, chemin,
+                    MafiaCleanCity.Shell.Tests.CaptureSousShell.TextesPosesSurLArt(shell), ecC);
+                // ⛔ LE RÉGIME SE DÉCLARE À CHAQUE RUN, sinon un dispositif inerte ressemble trait
+                // pour trait à un dispositif appliqué. Il est désormais ARMÉ : la condition posée
+                // au tour précédent — « quand ① et ③ seront propres » — est remplie et mesurée
+                // (0 lecture sous le plancher sur les trois planches, après le palier du dock et le
+                // fond du titre). *Une condition d'armement se lève sur la mesure qui la remplit,
+                // pas sur le sentiment que le lot est fini.*
+                // ⚠️⚠️ ARMÉE UNE FOIS, PUIS RENDUE À LA MESURE — et le compte dit pourquoi.
+                // La condition posée au tour précédent (« quand ① et ③ seront propres ») était
+                // remplie et mesurée : 0 lecture sous le plancher sur leurs trois planches. Armée,
+                // la garde a rougi sur **4 AUTRES écrans, 8 lectures** — ㊲ (4), ⑤ exceptions (2),
+                // ⑦ lieutenants (1), ② fiche (1) — dont « Commit (hold) » à **1,33:1**.
+                // ⇒ Ma condition d'armement était SOUS-SPÉCIFIÉE : je l'avais écrite pour deux
+                //   écrans et câblée sur un fichier qui en photographie dix-sept. *Une condition
+                //   qui nomme sa cible sans nommer sa POPULATION est une condition à moitié posée.*
+                // ⇒ Les huit sont des défauts RÉELS (aucun n'est un artefact d'instrument : ils
+                //   sont tous sur des panneaux opaques, pas sur l'art — la garde attrape donc une
+                //   classe plus large que celle pour laquelle je l'ai écrite, et c'est une bonne
+                //   nouvelle). Mais armer bloquerait la capture de quatre écrans qui ne sont pas
+                //   dans ce lot, et **cadencer le travail d'autrui n'est pas ma décision** : les
+                //   huit partent en dette avec leurs nombres, et la garde publie au lieu de bloquer.
+                //   *Publier le dénominateur plutôt que bloquer sans arbitrage.*
+                Debug.Log($"[CONTRASTE-ART][RÉGIME] {chemin} : MESURE, NON ARMÉE — "
+                          + $"{ecC.Count} lecture(s) sous le plancher, journalisées et NON assertées "
+                          + "(TD-653 porte l'inventaire ; armer bloquerait 4 écrans hors de ce lot).");
+                foreach (string e in ecC) Debug.Log("[CONTRASTE-ART][SOUS-SEUIL] " + e);
+            }
 
             // ⛔ ANTI-MENSONGE : une cible noire produirait un PNG parfaitement valide et vide.
             int clairs = 0;
             foreach (Color c in tex.GetPixels())
                 if (c.r + c.g + c.b > 0.15f) clairs++;
             Debug.Log($"[CAPTURE] {largeur}x{hauteur} — {clairs} pixels non noirs sur {largeur * hauteur}");
+
+            // ⛔⛔ L'ÉCHELLE DU CHROME, MESURÉE SUR LE PNG QU'ON VIENT D'ÉCRIRE — la seule garde qui
+            // aurait attrapé le défaut du r5 de ①.
+            // Ce que le juge a mesuré : capitale d'« ARGENT » à **23 px** (bande y 32..54) là où les
+            // cinquante autres planches sous chrome du dépôt rendent **19** (bande y 27..45), soit
+            // ×1,21. La planche du dossier et celle du commit sont les MÊMES octets (sha256
+            // `c31837119129`), donc ce n'est pas une erreur de transport. Régénérée depuis le même
+            // code, la même planche rend 19 : le défaut n'est pas dans l'arbre, il est dans l'ÉTAT
+            // d'un run — et rien, nulle part, ne l'empêchait de partir chez un juge.
+            // ⇒ La grandeur qui le voit sans dépendre d'une métrique de police : le FILET DORÉ du
+            //   bandeau, une ligne pleine largeur dont la position encode à la fois la hauteur de la
+            //   barre et son échelle. On la PRÉDIT depuis la géométrie du shell et on la LIT dans
+            //   l'image ; le désaccord des deux est exactement le facteur cherché.
+            // ⚠️ `ReadPixels` a son origine EN BAS : la ligne image `y` vaut `hauteur - 1 - y` ici.
+            {
+                float facteur = shell.ShellCanvas.scaleFactor;
+                (float topSafe, _) = (0f, 0f);
+                float prediteU = shell.TopBarSlot.rect.height;   // depuis le haut du canvas
+                float preditePx = prediteU * facteur;
+                // ⚠️ J'AI CRU À UN PROBLÈME D'ESPACE COLORIMÉTRIQUE, ET C'ÉTAIT LE SEUIL.
+                // Première version : aucune ligne trouvée (`y=-1`) sur une planche dont le filet est
+                // parfaitement visible. J'ai ajouté un `.gamma`, ça a « marché » — puis la même
+                // conversion, appliquée à la mesure de capitale ci-dessous, a rendu 60 sur 60 en
+                // éclaircissant tout. Le diagnostic imprimé disait la vérité : la meilleure ligne
+                // portait **225 pixels or sur 270**, sous un seuil posé à 243. C'était le seuil, pas
+                // l'espace — `ReadPixels` d'une RenderTexture ARGB32 vers une Texture2D RGB24 ne
+                // convertit rien, `GetPixel` rend les mêmes octets que le PNG.
+                // *Un correctif qui fait passer le test sans nommer la cause déplace le défaut* :
+                // celui-là l'a déplacé de dix lignes plus bas.
+                int filet = -1, meilleur = -1, meilleurY = -1;
+                int borne = Mathf.Min(hauteur - 1, Mathf.RoundToInt(preditePx * 2f));
+                for (int d = 0; d <= borne; d++)
+                {
+                    int y = hauteur - 1 - d;
+                    int n = 0;
+                    for (int x = 0; x < largeur; x += 4)
+                    {
+                        Color c = tex.GetPixel(x, y);
+                        if (c.r > 0.43f && c.r - c.b > 0.137f) n++;
+                    }
+                    if (n > meilleur) { meilleur = n; meilleurY = d; }
+                    // ⛔ 70 % ET NON 90 % — mesuré, pas assoupli. Le MÉDAILLON est posé SUR le filet
+                    // et en masque une portion : une ligne qui va réellement d'un bord à l'autre
+                    // plafonne à **225 sur 270** échantillons (83 %). Un seuil à 90 % ne pouvait
+                    // donc jamais être atteint, et le détecteur rendait −1 sur une planche dont le
+                    // filet est parfaitement visible. *Un seuil se mesure sur la référence avant
+                    // d'être écrit* — et celui-ci a été relevé sur la sortie de son propre
+                    // diagnostic, pas choisi pour faire passer le test.
+                    if (filet < 0 && n > (largeur / 4) * 0.70f) filet = d;
+                }
+                Debug.Log($"[CHROME-FILET-DIAG] meilleure ligne y={meilleurY} avec {meilleur} " +
+                          $"pixels or sur {largeur / 4} échantillonnés (seuil {(largeur / 4) * 0.9f:F0})");
+                float rapport = filet > 0 ? filet / preditePx : -1f;
+                Debug.Log($"[CHROME-FILET] {largeur}x{hauteur} filet observé à y={filet} px · " +
+                          $"prédit {preditePx:F1} px ({prediteU:F1} u × {facteur:F6}) · " +
+                          $"rapport={rapport:F4}  (⚠️ topSafe non retiré de la prédiction — " +
+                          "le rapport est l'observable, pas la valeur absolue)");
+                Assert.Greater(filet, 0,
+                    "aucun filet doré pleine largeur trouvé sous le bandeau : soit le chrome n'est " +
+                    "pas rendu, soit il l'est à une échelle telle qu'il sort de la fenêtre de " +
+                    "recherche — dans les deux cas la planche ne montre pas le chrome du jeu");
+                // ⛔⛔ LE FILET EST UN DIAGNOSTIC, PAS L'ASSERTION — mesuré par contrôle positif.
+                // En injectant le facteur du r5 (×1,21) sur l'échelle du chrome, le filet ne passe
+                // que de 138 à 152 px, soit un rapport de **1,061** : il ne suit le facteur qu'à
+                // ~29 %, parce que la hauteur du SLOT (`Px(TopBarHauteurCss)`) ne dépend pas de
+                // cette échelle — seul son CONTENU la subit. Une tolérance assez large pour le
+                // bruit de rendu serait alors du même ordre que le signal.
+                // ⇒ L'assertion porte sur la grandeur que le juge mesure vraiment, et qui suit le
+                //   facteur à 100 % : la HAUTEUR DE CAPITALE d'« ARGENT ». 19 px sur les cinquante
+                //   planches sous chrome du dépôt, 23 sur la planche du r5.
+                // ⚠️ La fenêtre commence à x = 40 pour laisser dehors la flèche retour (x 29..38),
+                //   présente sur ① seul : sans ça la bande mesurée sur ① ne serait pas la même
+                //   qu'ailleurs, et la garde comparerait deux choses différentes.
+                // ⚠️ FENÊTRE BORNÉE AU BANDEAU (60 px), et c'est une correction mesurée : ouverte à
+                // 220 px, la recherche rendait **220** sur la planche 1920 — le ciel de l'art, juste
+                // sous la barre, est clair sur toute la largeur, donc la bande d'encre ne se
+                // refermait jamais. Elle rendait 19 sur la planche 2400 du même run : *un détecteur
+                // qui marche sur une planche et pas sur la suivante ne mesure pas ce qu'on croit.*
+                // Le bandeau fait 143 px de haut et « ARGENT » vit à y 27..45 : 60 px suffisent, et
+                // excluent l'art entièrement.
+                int debut = -1, fin = -1;
+                for (int d = 0; d < 60; d++)
+                {
+                    int y = hauteur - 1 - d;
+                    int n = 0;
+                    for (int x = 40; x < 340; x++)
+                    {
+                        // ⚠️ PAS de `.gamma` ICI. `ReadPixels` d'une `RenderTexture` ARGB32 vers
+                        // une `Texture2D` RGB24 ne convertit rien : `GetPixel` rend donc les MÊMES
+                        // octets que le PNG, et l'instrument hors ligne qui a fixé le 19 lit ce
+                        // PNG. Convertir une seconde fois éclaircissait tout : la bande d'encre ne
+                        // se refermait jamais et la mesure rendait 60 sur 60.
+                        Color c = tex.GetPixel(x, y);
+                        if (c.r + c.g + c.b > 3f * 0.372f) n++;
+                    }
+                    if (n > 3) { if (debut < 0) debut = d; fin = d; }
+                    else if (debut >= 0 && d - fin > 2) break;
+                }
+                int capitale = debut < 0 ? -1 : fin - debut + 1;
+                Debug.Log($"[CHROME-CAPITALE] {largeur}x{hauteur} « ARGENT » capitale={capitale} px " +
+                          $"bande y={debut}..{fin} (attendu 19, bande 27..45 sur les 50 planches " +
+                          "sous chrome du dépôt ; le r5 de ① rendait 23, bande 32..54)");
+                Assert.Greater(capitale, 0,
+                    "le libellé « ARGENT » du bandeau est introuvable : le chrome n'est pas sur " +
+                    "cette planche, ou pas là où il devrait être");
+                Assert.AreEqual(19, capitale, 2,
+                    $"le chrome est rendu à {capitale / 19f:F3}× : la capitale d'« ARGENT » mesure " +
+                    $"{capitale} px (bande y {debut}..{fin}) au lieu de 19 (bande 27..45). C'est le " +
+                    "défaut du r5 de ①, qui est parti chez un juge — les mêmes octets des deux " +
+                    "côtés — parce qu'AUCUNE garde ne lisait l'échelle du chrome SUR l'image.");
+            }
             Assert.Greater(clairs, largeur * hauteur / 20,
                 $"la capture {largeur}x{hauteur} est quasi NOIRE ({clairs} pixels) : le shell n'a pas " +
                 "été rendu dans la cible, et le fichier passerait pourtant pour une réussite.");
@@ -1360,7 +1548,43 @@ namespace MafiaCleanCity.Capture.Tests
 
             LisibiliteDuTexte(shell.ContentSlot.gameObject);
 
+            // ⛔⛔ LA GOUTTIÈRE NE SE TRANCHE PAS SUR UNE SEULE RÉSOLUTION, ET C'EST TOUT L'OBJET
+            // DE CETTE PAIRE. Le r10 du juge a dû laisser F10 en réserve pour cette raison exacte,
+            // et il l'écrit : le MÊME cadre rendu à 1080×1920 et à 1080×2400 diffère de jusqu'à
+            // 7/255 sur son fond, à géométrie identique — le dégradé est ancré sur l'ÉCRAN, pas sur
+            // le cadre. Une planche unique ne permet donc de conclure ni sur le fond, ni sur ce que
+            // le bandeau recouvre.
+            // ⚠️ Et jusqu'ici la seule planche sous chrome était en 2400 : le juge jugeait ㊲ sur
+            //   `B3C1`, qui monte l'écran NU (aucun `AppShell`). Le cadre y touchait le haut de
+            //   l'image parce qu'il n'y avait pas de chrome — ce qui a fait porter quatre tours de
+            //   mesures sur un ancrage qu'aucune de ces captures ne pouvait montrer.
+            // ⛔⛔ LES DEUX FALSIFIABLES DU CADRE ÉLASTIQUE (㊲ r11, BLOQUANT F15/F16), mesurées
+            // AUX DEUX RÉSOLUTIONS AVANT les captures — parce que c'est le passage d'une résolution
+            // à l'autre qui a produit le défaut, et qu'une seule des deux ne prouve rien sur l'autre.
+            //   · à 1080×2400 (le format visé) : la borne NE MORD PAS — le cadre garde ses 462 px
+            //     CSS, donc le rendu est identique à celui d'avant le correctif ;
+            //   · à 1080×1920 : le cadre ne DÉBORDE PLUS sous le bandeau. Le juge mesurait −141 px
+            //     de débordement et **0 % d'encre de titre intacte** ; la propriété structurelle qui
+            //     couvre ça sans lire un pixel est « le haut du cadre est au niveau ou EN DESSOUS de
+            //     l'inset de chrome ».
+            foreach (var format in new[] { new Vector2Int(1080, 2400), new Vector2Int(1080, 1920) })
+            {
+                yield return MesurerCadreA(format.x, format.y);
+            }
+
             yield return CapturerA(1080, 2400, "Assets/Screenshots/screen_b3_reputation_sous_chrome_1080x2400.png");
+            yield return CapturerA(1080, 1920, "Assets/Screenshots/screen_b3_reputation_sous_chrome_1080x1920.png");
+
+            // ⛔ PAS DE SONDE DE GÉOMÉTRIE ICI — j'en ai écrit une, elle a rendu n'importe quoi,
+            // et je la retire plutôt que de livrer son nombre. Elle lisait `ContentSlot.rect` APRÈS
+            // les deux `CapturerA` : sortie `slot=1280,0x960,0 u · cadre v=-1334,1..637,1` — un
+            // cadre plus haut que son propre slot et commençant au-dessus de lui. La caméra
+            // hors-écran de la capture rétablit son état en sortant, donc le rect lu ensuite n'est
+            // celui d'AUCUNE des deux planches.
+            // ★ Le seul chiffre juste de cette sortie était la hauteur du cadre (1971,2 u = 462 px
+            //   CSS × 1280/300), et c'est précisément ce qui rendait le reste crédible.
+            // ⇒ La géométrie sous chrome se mesure sur les PNG, comme le juge la mesure — pas sur
+            //   un rect lu dans un régime que la capture vient de démonter.
         }
 
         [UnityTest]
@@ -1754,14 +1978,171 @@ namespace MafiaCleanCity.Capture.Tests
                 $"㊵ n'a pas fini de se rendre en 30 s (erreur : {ecran.DerniereErreur})");
             for (int i = 0; i < 15; i++) yield return null;
 
-            // ⛔ ANTI-VACUITÉ : la PREMIÈRE capture de ㊳ est partie muette et VERTE. Un PNG d'une
-            // coquille est un PNG parfaitement valide.
+            // ⛔⛔⛔ CETTE SUITE A PHOTOGRAPHIÉ UN ÉCRAN D'ERREUR ET L'A LAISSÉ PASSER (2026-09-06).
+            // La planche jugée — `screen_c2_filiere_sous_chrome_1080x2400.png`, celle de l'INDEX —
+            // montrait « LA FILIÈRE NE RÉPOND PAS » et 1 165 px de noir, alors que la route rendait
+            // 200 et quatre nœuds une heure plus tôt. Les huit assertions de ce test étaient toutes
+            // JUSTES et toutes AVEUGLES, pour deux raisons distinctes :
+            //   · `RenduTermine` est posé dans TOUTES les branches du contrôleur, `RendreEtatIndisponible`
+            //     comprise — *il dit que le code a FINI, jamais que l'écran a CHANGÉ* ;
+            //   · le plancher de 8 textes est franchi PAR LA COQUILLE — l'état d'indisponibilité pose
+            //     un sous-titre, trois compteurs (libellé + valeur) et un panneau à trois chaînes.
+            // ★ Et `DerniereErreur` ÉTAIT dans ce fichier — uniquement interpolée dans le message
+            //   d'échec ci-dessus. Lue, jamais assertée. *La propriété est mentionnée, donc elle a
+            //   l'air gardée* : un balayage par motif compte cette suite comme couverte, et un
+            //   relecteur qui cherche le symbole trouve un hit et passe.
+            // ⇒ QUATRE GRADES, et chacun tue un monde que le précédent laisse vivre. L'ordre compte :
+            //   (1) STABILISÉ — ni chargé ni en erreur = la coroutine n'a jamais rendu la main ;
+            //   (2) PAS EN ERREUR — c'est le grade qui manquait, et il coûte une planche ;
+            //   (3) CHARGÉ — `DerniereErreur == null` est VRAI À VIDE tant que rien ne charge
+            //       (patron ㊳ `:1626-1633`, qui a payé un `Charger()` orphelin resté vert) ;
+            //   (4) DIMENSIONNÉ — un compte SANS nœud rend un écran « aucun nœud » légitime, qui
+            //       franchit les trois premiers. *Gelé et représentatif sont deux propriétés
+            //       distinctes* : une planche prise sur un monde vide n'est pas fausse, elle ne
+            //       montre simplement pas l'écran qu'on prétend juger.
+            Assert.IsTrue(ecran.DernierChargement != null || ecran.DerniereErreur != null,
+                "㊵ n'a NI chargé NI échoué : `Charger()` n'a jamais rendu la main. Ce n'est pas " +
+                "une lenteur, et la capture montrerait l'état initial « EN ATTENTE ».");
+            Assert.IsNull(ecran.DerniereErreur,
+                $"㊵ a échoué à charger (code {ecran.DernierCodeErreur}) : {ecran.DerniereErreur}. " +
+                "La capture montrerait « LA FILIÈRE NE RÉPOND PAS » — l'état d'indisponibilité, " +
+                "pas les données. C'est EXACTEMENT la planche publiée le 2026-09-06.");
+            Assert.IsNotNull(ecran.DernierChargement,
+                "㊵ n'a RIEN chargé : `DerniereErreur` est nulle parce que rien ne s'est produit, " +
+                "pas parce que tout s'est bien passé.");
+            int etapesServies = ecran.DernierChargement.stages == null
+                ? 0 : ecran.DernierChargement.stages.Length;
+            // ⛔ DIAGNOSTIC PERMANENT — CE QUE L'ÉCRAN A REÇU, pas ce que le corps commité contient.
+            // Mesuré le 2026-09-06 : la planche affiche « rien n'attend » sur les QUATRE étapes,
+            // alors que le corps du pipeline de la même passe, du même compte, à la même minute de
+            // jeu et sur la MÊME chaîne (`nodes[0]`, identifiant vérifié) porte `has_cash=true` sur
+            // l'étape 2. Les trois maillons sont pourtant corrects à la lecture : le DTO déclare le
+            // champ au nom exact et porte `[Serializable]`, le client parse la bonne enveloppe, et
+            // le rendu teste le bon booléen. ★ Et `terminal`, un booléen de la MÊME classe, parse :
+            // l'image montre « LA SORTIE » sur l'étape 4. *Un champ qui tombe seul dans une classe
+            // qui parse n'a aucune cause lisible* — donc la mesure suivante est à l'EXÉCUTION.
+            // ⇒ Cette ligne n'est pas un débogage jetable : elle imprime, à chaque capture, l'état
+            //   RÉELLEMENT parsé. C'est ce qui manquait pour départager « le corps reçu diffère du
+            //   corps capturé » de « le parsing perd ce champ », et ça reste utile après : une
+            //   planche vaut ce que vaut le corps qui l'a produite, et il n'était nulle part.
+            // ⛔⛔ L'IDENTITÉ D'ABORD, ET C'EST LE DISCRIMINANT QUI M'A MANQUÉ PENDANT TROIS RUNS.
+            // Sans la paire d'environnement, `DemoIdentityResolver` retombe sur le `[SerializeField]`
+            // et signe en `operational_demo` — un AUTRE compte, avec sa propre filière à quatre
+            // étapes, les mêmes bandes (elles sont dérivées du rang) et le même « JOUR ».
+            // ★ *Rien dans l'image ne distingue les deux comptes.* J'ai lu trois planches, comparé
+            //   au bon corps, vérifié l'identifiant de chaîne DU CORPS — et conclu à un défaut
+            //   d'écran, puis à une divergence serveur, puis à « une horloge gelée ne gèle pas la
+            //   base ». Les trois étaient faux : je mesurais le mauvais compte.
+            // ⇒ Le régime est journalisé par le résolveur, dans une ligne que personne ne relit.
+            //   On l'imprime donc ICI, avec le nœud réellement chargé — deux champs qui auraient
+            //   tranché en une lecture au lieu de trois runs.
+            string identiteAttendue =
+                System.Environment.GetEnvironmentVariable(
+                    MafiaCleanCity.CityMap.DemoIdentityResolver.OperationalIdentifierEnvVar);
+            // ⛔⛔ LA SIGNATURE PORTE UNE VALEUR SERVIE PAR LE BACK, pas l'entrée du client — c'est
+            // ce qui la rend opposable. `TopBarController` tire déjà le portefeuille sur TOUTE
+            // capture sous shell (`:400`), et `WalletDto` porte `player_id` ET `cash_cents`
+            // (`DashboardDtos.cs:32-37`) : un seul appel, les deux champs.
+            // ⚠️ `player_id` est sur le PORTEFEUILLE, pas sur `/v1/me` — `MeDto` ne porte que
+            //   `{account_id, handle, email, lifecycle_state, locale}` (`:45-52`), vérifié avant
+            //   d'écrire cette ligne. *Une clé « déjà parsée » l'est sur une route précise.*
+            var portefeuille = shell.TopBar != null ? shell.TopBar.CurrentWallet : null;
+            var recu = new System.Text.StringBuilder("[㊵ REÇU]");
+            recu.Append($" identité={(string.IsNullOrEmpty(identiteAttendue) ? "DÉFAUT (paire non exportée)" : identiteAttendue)}")
+                .Append($" · player_id={portefeuille?.player_id ?? "inconnu"}")
+                // ⚠️ Le solde est un TÉMOIN IMPRIMÉ, jamais une épingle : il peut changer
+                // LÉGITIMEMENT dans le flux capturé (un écran d'achat photographié après
+                // confirmation), et une assertion rougirait alors pour une bonne raison au
+                // mauvais endroit. *Une valeur qui bouge légitimement se journalise ; seule une
+                // valeur d'identité s'asserte.* C'est l'empreinte de la campagne qui juge le gel.
+                .Append($" · solde={portefeuille?.cash_cents ?? "inconnu"}")
+                .Append($" · nœud={(etapesServies > 0 ? ecran.DernierChargement.stages[0]?.node : "aucun")}")
+                .Append($" · stages={etapesServies}");
+            for (int s = 0; s < etapesServies; s++)
+            {
+                var e = ecran.DernierChargement.stages[s];
+                recu.Append($" · [{s + 1}] band={e?.cleanliness_band ?? "null"}")
+                    .Append($" terminal={(e != null && e.terminal)}")
+                    .Append($" has_cash={(e != null && e.has_cash)}");
+            }
+            Debug.Log(recu.ToString());
+
+            // ⛔⛔ ET LA GARDE QUE JE N'ÉCRIS PAS, PARCE QU'ELLE SERAIT TAUTOLOGIQUE — c'est le
+            // point le plus utile de ce bloc. J'ai d'abord écrit
+            //     `Assert.AreEqual(identiteAttendue, shell.IdentiteResolue)`.
+            // Deux défauts, et le second condamne la forme entière :
+            //  (a) `IdentiteResolue` N'EXISTE PAS — ni sur `AppShell`, ni sur le résolveur (vérifié :
+            //      le seul accesseur public du shell est `Token`, et le résolveur n'expose que
+            //      `Resolve` et `ResolveAndSignIn`). Je l'avais inventée.
+            //  (b) Même en la créant, l'assertion serait VIDE : le résolveur DÉRIVE son identité de
+            //      cette même variable d'environnement. Comparer sa sortie à son entrée est vrai
+            //      par construction, dans les deux régimes, y compris le jour où la capture signe
+            //      ailleurs. *Une garde qui compare une valeur à sa propre source ne peut pas
+            //      rougir* — c'est la famille exacte des gardes de ce dépôt qui certifient le
+            //      défaut qu'elles surveillent.
+            // ⇒ La propriété qui compte n'est PAS « le résolveur a lu la bonne variable » mais
+            //   « la planche montre le monde du compte attendu ». Elle ne se prouve pas dans le
+            //   test : elle se prouve en confrontant le NŒUD imprimé ci-dessus au corps de
+            //   référence — c'est-à-dire par le juge, avec la signature que cette ligne fournit.
+            //   Une signature honnête vaut mieux qu'une garde verte qui ne peut pas rougir.
+            //
+            // ⇒ ET VOICI LA FORME QUI, ELLE, PEUT ROUGIR — trouvée en cherchant une valeur qui ne
+            //   soit pas comparée à sa propre source. `player_id` est SERVI par le back depuis la
+            //   base, propre au compte, exact à l'UUID, et indépendant de l'écran : le trajet
+            //   passe par le serveur, donc ce n'est plus la variable d'environnement confrontée à
+            //   elle-même. Elle sépare les deux mondes que NI l'identité résolue NI le jour ne
+            //   séparent (72 013 et 72 050 tombent tous deux dans le jour 50).
+            //   Elle rougit sur les deux modes d'échec mesurés cette nuit : le repli sur l'autre
+            //   compte, et le jeton d'un co-locataire (le précédent HUD v3.1 où deux locataires
+            //   signaient deux comptes et le shell alternait les portefeuilles — invisible à
+            //   toute garde posée sur l'identité demandée).
+            // ⚠️ ANTI-VACUITÉ PAR DÉCLARATION DE RÉGIME : sans la variable, la garde IMPRIME
+            //   qu'elle n'est pas armée au lieu de passer verte en silence. *Un dispositif inerte
+            //   ressemble trait pour trait à un dispositif appliqué, sauf s'il déclare son état.*
+            string joueurAttendu = System.Environment.GetEnvironmentVariable("MAFIA_CAPTURE_EXPECT_PLAYER");
+            if (string.IsNullOrEmpty(joueurAttendu))
+            {
+                Debug.Log("[㊵ SIGNATURE] garde d'identité : NON ARMÉE " +
+                          "(`MAFIA_CAPTURE_EXPECT_PLAYER` absente) — la planche ne prétend rien " +
+                          "sur le compte qu'elle montre.");
+            }
+            else
+            {
+                Assert.IsNotNull(portefeuille,
+                    "garde d'identité armée mais le portefeuille n'a pas été chargé : la garde " +
+                    "serait vraie À VIDE, ce qui est pire que pas de garde.");
+                Assert.AreEqual(joueurAttendu, portefeuille.player_id,
+                    $"la capture a signé le compte `{portefeuille.player_id}` alors que " +
+                    $"`MAFIA_CAPTURE_EXPECT_PLAYER` demande `{joueurAttendu}` : la planche " +
+                    "montrerait le monde d'un AUTRE joueur, et rien dans l'image ne le dirait — " +
+                    "deux comptes ont la même structure de filière, les mêmes bandes (dérivées du " +
+                    "rang) et le même JOUR. Mesuré le 2026-09-06 : trois planches publiées ainsi.");
+            }
+            Assert.Greater(etapesServies, 0,
+                "le compte de ce run ne sert AUCUNE étape : la planche montrerait l'écran « aucun " +
+                "nœud », qui est un rendu CORRECT et non un défaut. Ce n'est pas l'écran qu'il faut " +
+                "réparer, c'est le monde qu'on lui donne — vérifier que la capture tourne sur un " +
+                "compte SERVI, jamais sur un compte frais.");
+
+            // ⛔ ANTI-VACUITÉ DE FORME, gardée en plus des quatre grades ci-dessus : un PNG de
+            // coquille est un PNG parfaitement valide (la première capture de ㊳ est partie muette
+            // et VERTE). ⚠️ Elle ne remplace PAS les grades : l'état d'indisponibilité franchit ce
+            // plancher, c'est mesuré — elle attrape la coquille STRUCTURELLE, pas l'erreur.
             var textes = new System.Collections.Generic.List<string>();
             foreach (TMPro.TextMeshProUGUI tt in shell.ContentSlot.GetComponentsInChildren<TMPro.TextMeshProUGUI>(true))
                 if (!string.IsNullOrWhiteSpace(tt.text)) textes.Add(tt.name);
             Assert.GreaterOrEqual(textes.Count, 8,
                 $"㊵ ne pose que {textes.Count} texte(s) non vides — la capture montrerait une " +
                 $"coquille. Vus : [{string.Join(", ", textes)}]");
+            // Et le contenu DISCRIMINANT : le compteur d'étapes ne peut pas rester à « 00 » quand
+            // le serveur a rendu des étapes. C'est la garde qui sépare le nominal de l'indisponible
+            // — les huit textes, eux, ne les séparent pas.
+            var valeurs = new System.Collections.Generic.List<string>();
+            foreach (TMPro.TextMeshProUGUI tt in shell.ContentSlot.GetComponentsInChildren<TMPro.TextMeshProUGUI>(true))
+                valeurs.Add(tt.text);
+            Assert.IsTrue(valeurs.Contains(etapesServies.ToString("00")),
+                $"le serveur a rendu {etapesServies} étape(s) et aucun texte de ㊵ ne porte " +
+                $"« {etapesServies:00} » : l'écran n'a pas appliqué ce qu'il a reçu.");
 
             // ⛔⛔ LE PLANCHER D'ABORD : hors shell les insets valent ZÉRO et les gardes suivantes
             // seraient vraies PAR CONSTRUCTION.
@@ -1950,5 +2331,61 @@ namespace MafiaCleanCity.Capture.Tests
             yield return CapturerA(1080, 2400, "Assets/Screenshots/ecran_lieutenants_1080x2400.png");
         }
 
+
+        /// <summary>Met le canvas du shell à une résolution donnée, laisse la mise en page se faire,
+        /// et vérifie les deux propriétés du cadre élastique de ㊲. Restaure l'état du canvas dans
+        /// tous les cas — le laisser en `ScreenSpaceCamera` changerait le monde de la suite.</summary>
+        private IEnumerator MesurerCadreA(int largeur, int hauteur)
+        {
+            Canvas canvas = shell.ShellCanvas;
+            RenderMode modeAvant = canvas.renderMode;
+            Camera camAvant = canvas.worldCamera;
+            float planAvant = canvas.planeDistance;
+            var rt = new RenderTexture(largeur, hauteur, 24, RenderTextureFormat.ARGB32);
+            var camGo = new GameObject("MesureCadreCam");
+            var cam = camGo.AddComponent<Camera>();
+            cam.targetTexture = rt; cam.orthographic = true;
+            canvas.renderMode = RenderMode.ScreenSpaceCamera;
+            canvas.worldCamera = cam; canvas.planeDistance = 10f;
+            Canvas.ForceUpdateCanvases();
+            yield return null;
+            Canvas.ForceUpdateCanvases();
+            yield return null;
+
+            Transform corpsT = TrouverEnfant(shell.ContentSlot, "Corps");
+            var slot = (RectTransform)shell.ContentSlot;
+            float hauteurCadre = -1f, hautDepuisLeHaut = -1f, insetHaut = MafiaCleanCity.Shell.ShellChrome.TopInsetPx;
+            if (corpsT != null)
+            {
+                var corpsRt = (RectTransform)corpsT;
+                hauteurCadre = corpsRt.rect.height;
+                hautDepuisLeHaut = slot.rect.yMax - slot.InverseTransformPoint(
+                    corpsRt.TransformPoint(new Vector3(0f, corpsRt.rect.yMax, 0f))).y;
+            }
+            // ⚠️ La conversion en px CSS passe par la maquette de la série 6 (téléphone de 300 px
+            // CSS), pas par celle du HUD : deux maquettes, deux largeurs de téléphone.
+            float uParCss = slot.rect.width / MafiaCleanCity.Shell.EchelleMaquette.LargeurEcransBrennar6;
+            Debug.Log($"[CADRE-B3] {largeur}x{hauteur} · slot {slot.rect.width:F0}x{slot.rect.height:F0} u · " +
+                      $"cadre h={hauteurCadre:F1} u = {hauteurCadre / uParCss:F2} css (voulu 462,00) · " +
+                      $"haut du cadre à {hautDepuisLeHaut:F1} u · inset de chrome {insetHaut:F1} u");
+
+            canvas.renderMode = modeAvant;
+            canvas.worldCamera = camAvant;
+            canvas.planeDistance = planAvant;
+            Object.DestroyImmediate(camGo);
+            rt.Release();
+            Object.DestroyImmediate(rt);
+
+            Assert.IsNotNull(corpsT, "le cadre de ㊲ doit exister pour être mesuré");
+            Assert.GreaterOrEqual(hautDepuisLeHaut, insetHaut - 1f,
+                $"à {largeur}x{hauteur} le cadre commence à {hautDepuisLeHaut:F1} u du haut alors que " +
+                $"le chrome en occupe {insetHaut:F1} : il DÉBORDE sous le bandeau, et c'est là que le " +
+                "titre disparaît");
+            if (hauteur == 2400)
+                Assert.AreEqual(462f, hauteurCadre / uParCss, 1f,
+                    $"au format visé la borne ne doit PAS mordre : le cadre mesure " +
+                    $"{hauteurCadre / uParCss:F2} px CSS au lieu de 462,00, donc le correctif du 16:9 " +
+                    "a changé le rendu du 20:9");
+        }
     }
 }

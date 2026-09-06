@@ -81,6 +81,13 @@ namespace MafiaCleanCity.Operational
         private const float CssSousTitre     = 6.4f;  // .enseigne i
         private const float CssEcartBloc     = 9f;    // margin-top des blocs successifs
         private const float CssCompteurNombre = 14f;  // .fen b
+
+        /// <summary>Le rayon de flou du halo du chiffre — `text-shadow:0 0 8px` (`chassis6.py:122`).</summary>
+        private const float CssHaloFlou = 8f;
+
+        /// <summary>Son opacité — le `99` de `cyan99`, soit 0x99/255. Lue dans la source, pas
+        /// choisie pour l'effet obtenu.</summary>
+        private const float CssHaloOpacite = 0x99 / 255f;
         private const float CssCompteurLib   = 5.4f;  // .fen > span
         private const float CssPortraitLarg  = 118f;  // .prt{width:118px}
 
@@ -141,6 +148,12 @@ namespace MafiaCleanCity.Operational
         private const float CssPiedPadHaut =  9f;   // `.pied{padding:9px 13px 14px}`
         private const float CssPiedPadBas  = 14f;
         private const float CssHauteurCadre = 462f;  // `reputation(cadre, H=462)`
+
+        /// <summary>La marge sous le cadre, en px CSS — MESURÉE sur la référence
+        /// (`reputation/reference-1080x2102.png`) : le filet doré s'arrête à y = 2078 pour une
+        /// image de 2102, soit **24 px** à l'échelle ×3,6 de cette référence = 6,67 px CSS.
+        /// Elle n'est pas dérivée d'un padding CSS : elle est lue sur l'image ratifiée.</summary>
+        private const float CssMargeBasseCadre = 24f / 3.6f;
         private const float CssEnseignePadX = 11f;  // `.enseigne{padding:7px 11px 8px}`
         private const float CssRefletY    = 62f;   // 34,7 % de la course de `%(p)s-scan`
         private const float CssRefletHaut =  2f;   // `.elast::after{height:2px}`
@@ -198,7 +211,7 @@ namespace MafiaCleanCity.Operational
         private void Start()
         {
             EnsureInitialized();
-            StartCoroutine(Amorcer());
+            amorce = StartCoroutine(Amorcer());
         }
 
         /// <summary>⛔ L'ÉCRAN SE CHARGE LUI-MÊME AU MONTAGE. Sans ça il se construit et reste VIDE :
@@ -217,10 +230,14 @@ namespace MafiaCleanCity.Operational
         private IEnumerator Amorcer()
         {
             if (string.IsNullOrEmpty(token)) yield break;   // monté hors session : rien à charger
+            if (corpsImposeParUnTest) yield break;          // un test tient l'écran : ne pas l'écraser
             string id = null;
             yield return client.GetPremierLieutenantId(token, v => id = v,
                 code => Debug.LogWarning($"[b3] liste des lieutenants indisponible (HTTP {code}) — "
                                          + "l'écran reste sur son état vide nommé"));
+            // ⛔ RELU APRÈS CHAQUE `yield` : le test a pu poser le drapeau pendant l'appel réseau.
+            // Ne le lire qu'à l'entrée laisserait passer exactement la course qu'on ferme.
+            if (corpsImposeParUnTest) yield break;
             if (string.IsNullOrEmpty(id)) yield break;
             yield return Charger(id);
         }
@@ -329,8 +346,35 @@ namespace MafiaCleanCity.Operational
         /// RENDU d'un corps supposé, pas le contrat. Un test qui fabrique son entrée ne vérifie
         /// jamais que l'entrée existe — il vérifie ce qu'on en fait si elle arrive.
         /// ⇒ La dette de contrat reste entière et reste déclarée ; seule la dette de RENDU se ferme.
+        /// <summary>⛔⛔ CE DRAPEAU FERME UNE COURSE MESURÉE, et il explique un rouge qu'on avait
+        /// attribué ailleurs. `MonterEcran()` pose un VRAI jeton avant que `Start()` ne lance
+        /// `Amorcer()` : l'auto-chargement part donc en parallèle, va chercher les données réelles
+        /// d'un compte FRAIS — sans réputation, donc `indeterminate` — et ÉCRASE le corps fabriqué
+        /// par le test, à une frame près.
+        /// ★ C'est très probablement la vraie cause de `B3S5`, qui voyait « Pas encore jugeable »
+        ///   là où il posait `aligned` : la valeur observée n'était pas un défaut de résolveur,
+        ///   c'était **l'état réel du compte** rendu par-dessus. *Un test qui perd une course lit
+        ///   une vérité — celle d'un autre monde que le sien.*
+        /// ⚠️ Et le garde-fou `IsNullOrEmpty(token)` ne suffit PAS ici : il protège l'écran monté
+        ///   HORS session, pas celui à qui un test donne une vraie identité avant de lui imposer
+        ///   un corps de test. Deux protections différentes pour deux situations différentes.
+        /// ⇒ Le drapeau est consulté à CHAQUE reprise d'`Amorcer`, pas seulement à son entrée :
+        ///   la coroutine peut être déjà partie quand le test le pose.</summary>
+        private bool corpsImposeParUnTest;
+        private Coroutine amorce;
+        private Coroutine nomEnVol;
+
         public void RendrePourTest(ReputationSurfaceDto dto)
         {
+            corpsImposeParUnTest = true;
+            // ⛔ ON ARRÊTE L'AUTO-CHARGEMENT, on ne se contente pas de le décourager. Le drapeau
+            // seul ne ferme que le cas facile (le test rend AVANT que la coroutine ne parte) :
+            // si elle est déjà dans son appel réseau, elle rendra son résultat PAR-DESSUS le corps
+            // du test quelques frames plus tard, et `Charger()` applique son état dans plusieurs
+            // branches — y semer des gardes serait fragile et incomplet.
+            // ★ *Fermer une course en demandant poliment à l'autre de renoncer suppose qu'il
+            //   repasse par un point où on peut le lui dire.* `StopCoroutine` ne le suppose pas.
+            if (amorce != null) { StopCoroutine(amorce); amorce = null; }
             EnsureInitialized();
             Rendre(dto);
         }
@@ -381,8 +425,20 @@ namespace MafiaCleanCity.Operational
                 // le rendu : le portrait s'affiche tout de suite avec « VOTRE LIEUTENANT », et se
                 // complète quand la fiche arrive. Si elle n'arrive pas, il reste sans nom — ce qui
                 // est la vérité, et non un nom de remplacement.
+                // ⛔⛔ CETTE COROUTINE EST DÉTACHÉE, ET `StopCoroutine(amorce)` NE LA TUE PAS.
+                // Relevé par la session C : arrêter la coroutine d'amorçage suffit pour tout ce
+                // qui passe par `yield return` — la chaîne meurt avec son parent — mais PAS pour
+                // ce qui est lancé par un `StartCoroutine` séparé. Celle-ci survit à l'arrêt et
+                // écrit le VRAI nom du lieutenant sur le portrait, plusieurs frames après que le
+                // test a imposé son corps.
+                // ★ *Un arrêt ne remonte que le long du lien qui l'a créé.* Une coroutine
+                //   détachée n'a pas ce lien : elle doit être suivie et arrêtée nommément.
+                // ⚠️ On ne garde PAS le callback par le drapeau : `RendrePourTest` appelle
+                //   `Rendre()`, qui relance cette coroutine — la garder ferait taire le nom dans
+                //   le rendu du test lui-même. On annule la PRÉCÉDENTE, et celle du test vit.
+                if (nomEnVol != null) StopCoroutine(nomEnVol);
                 if (!string.IsNullOrEmpty(LieutenantIdCourant))
-                    StartCoroutine(client.GetLieutenant(token, LieutenantIdCourant,
+                    nomEnVol = StartCoroutine(client.GetLieutenant(token, LieutenantIdCourant,
                         nom => portrait.DefinirNom(nom),
                         code => Debug.LogWarning($"[b3] nom du lieutenant indisponible (HTTP {code}) — "
                                                  + "le portrait reste sans nom, il n'en invente pas")));
@@ -637,13 +693,55 @@ namespace MafiaCleanCity.Operational
             //
             // Corriger l'élastique ne pouvait pas suffire : le mou existait parce que le cadre
             // s'étirait. On supprime le mou à sa source plutôt que de choisir qui l'absorbe.
-            corps.anchorMin = new Vector2(0f, 1f);
-            corps.anchorMax = new Vector2(1f, 1f);
-            corps.pivot = new Vector2(0.5f, 1f);
+            // ⛔⛔ ET IL EST ANCRÉ EN BAS, PAS EN HAUT — corrigé le 2026-09-06, après QUATRE tours
+            // de juge passés à mesurer autre chose. L'ancrage haut venait du dossier remis au juge
+            // au r8 ; il s'est propagé sans que personne ne le confronte à l'image.
+            // MESURÉ sur la référence elle-même (`reputation/reference-1080x2102.png`, 1080×2102) :
+            // le filet doré du cadre va de **y 452 à y 2078**, soit **24 px sous lui** et 452
+            // au-dessus. Le cadre n'est pas posé sous le chrome : c'est une FEUILLE DE BAS, et ce
+            // qui est au-dessus (chrome + bande d'art) prend ce qui reste.
+            // ★ POURQUOI L'ERREUR A SURVÉCU QUATRE TOURS, et c'est la partie qui vaut : sur l'écran
+            //   de la maquette, les deux ancrages donnent EXACTEMENT le même résultat. 2102 px =
+            //   584 px CSS ; 584 − 462 = **122**, le chiffre que le commentaire d'à côté écrivait
+            //   déjà. Ancrer en haut sous 122 de chrome et ancrer en bas ne divergent que sur un
+            //   écran PLUS HAUT que la maquette — et le seul écran réellement visé, 1080×2400, fait
+            //   667 px CSS. *Une arithmétique exacte sur la seule résolution de la référence est
+            //   une arithmétique non testée.* Le juge ne pouvait pas trancher : sa capture était
+            //   sans chrome, donc le cadre y touchait le haut pour une seconde raison.
+            // ⇒ Le surplus d'un écran plus haut va désormais AU-DESSUS du cadre, là où la référence
+            //   met de l'art, et non en dessous où il n'y a rien à montrer.
+            corps.anchorMin = new Vector2(0f, 0f);
+            corps.anchorMax = new Vector2(1f, 0f);
+            corps.pivot = new Vector2(0.5f, 0f);
             corps.offsetMin = new Vector2(0f, 0f);
             corps.offsetMax = new Vector2(0f, 0f);
-            corps.anchoredPosition = new Vector2(0f, -ShellChrome.TopInsetPx);
-            corps.sizeDelta = new Vector2(0f, Px(CssHauteurCadre));
+            // Les 24 px de marge basse de la référence valent 24/3,6 = 6,67 px CSS ; le dock du
+            // shell s'ajoute par-dessus (0 hors shell, comportement d'avant inchangé).
+            corps.anchoredPosition = new Vector2(0f, ShellChrome.BottomInsetPx + Px(CssMargeBasseCadre));
+            // ⛔⛔ LA HAUTEUR EST BORNÉE PAR LA ZONE LIBRE, ET C'EST UN BLOQUANT DU r11.
+            // Le cadre valait 462 px CSS FIXES. Mesuré par un juge ⊥ aux deux résolutions : au 2400
+            // la gouttière basse est juste (+70, l'ancrage au dock tient) ; au **1920** le cadre
+            // déborde sous le bandeau de **−141 px** et le titre disparaît — **0 % d'encre intacte**.
+            // La zone libre au 16:9 vaut 1 556 px, le cadre en demande 1 698.
+            // ⇒ Le canon NE COUVRE PAS le 16:9 : sa page fait 584 px CSS = 122 de chrome + 462, et
+            //   cette arithmétique n'a de solution qu'à cette proportion-là. *Une arithmétique
+            //   exacte sur la seule résolution de la référence est une arithmétique non testée* —
+            //   c'est déjà ce qui avait masqué l'ancrage pendant quatre tours.
+            // ⇒ DÉVIATION CONSIGNÉE : le cadre prend `min(462 CSS, zone libre)`. Au format visé
+            //   (1080×2400) le rendu est INCHANGÉ — 462 exactement, la borne ne mord pas. Au 16:9
+            //   il se comprime, et le contenu suit par le panneau DÉJÀ élastique par contrat
+            //   (`.elast{flex:1}`), jamais par la tête. L'user peut retirer le 16:9 des cibles de
+            //   cet écran ; d'ici là il ne rend plus un titre invisible.
+            // ⚠️ Recalculée à CHAQUE changement de dimensions, pas une fois au montage : une
+            //   capture bascule la résolution APRÈS le montage, et une hauteur cuite au montage
+            //   serait celle d'un autre écran (la classe que ce dépôt a payée sur le fond de
+            //   district et sur les bandes de l'Accueil).
+            var borne = corpsGo.AddComponent<HauteurBorneeParLaZoneLibre>();
+            borne.hauteurVoulue = Px(CssHauteurCadre);
+            borne.margeBasseHorsChrome = Px(CssMargeBasseCadre);
+            borne.margeBasse = ShellChrome.BottomInsetPx + borne.margeBasseHorsChrome;
+            borne.insetHaut = ShellChrome.TopInsetPx;
+            borne.Appliquer();
 
             // ⛔⛔ SANS CE LAYOUT, LES SIX BLOCS RESTENT TOUS À LA POSITION PAR DÉFAUT.
             // Mesuré sur la première capture réussie : l'enseigne était en place (elle porte son
@@ -750,13 +848,15 @@ namespace MafiaCleanCity.Operational
             filet.AddComponent<LayoutElement>().ignoreLayout = true;
 
             TextMeshProUGUI titre = NouveauTexte(go.transform, "Titre", Lib("Le miroir"),
-                CssTitreCorps, ReputationResolvers.OrVif, DesignTokens.Current.hudSerifFont);
+                CssTitreCorps, ReputationResolvers.OrVif, DesignTokens.Current.hudSerifFont,
+                1f);  // interligne maquette — .enseigne b{font:700 17px/1}
             titre.fontStyle = TMPro.FontStyles.Bold;   // maquette : .enseigne b, 700 17px
             titre.alignment = TextAlignmentOptions.Center;
             titre.characterSpacing = 20f; // letter-spacing:.2em
 
             sousTitre = NouveauTexte(go.transform, "SousTitre", "", CssSousTitre,
-                ReputationResolvers.Creme2, DesignTokens.Current.primaryFont);
+                ReputationResolvers.Creme2, DesignTokens.Current.primaryFont,
+                1f);  // interligne maquette — .enseigne i{font:700 6.4px/1}
             sousTitre.fontStyle = TMPro.FontStyles.Bold;   // maquette : sous-titre de l’enseigne (.enseigne i, 700 6.4px)
             sousTitre.alignment = TextAlignmentOptions.Center;
             sousTitre.characterSpacing = 34f;
@@ -802,13 +902,61 @@ namespace MafiaCleanCity.Operational
                 AjouterFond(fen, ReputationResolvers.Creux);
                 Contour(fen, ReputationResolvers.Lisere);
 
+                // ⛔ LE HALO DU CHIFFRE — `.fen b{…text-shadow:0 0 8px cyan99}` (`chassis6.py:122`).
+                // Mesuré ABSENT par un juge ⊥ : luminance au-dessus du fond de la fenêtre, à d px à
+                // gauche du premier pixel de chiffre — la référence rend **+20,3 / +17,6 / +14,8 /
+                // +10,5 / +6,9 / +3,1 / −1,5** à d = 2/4/6/9/12/16/22 px, le jeu **+0,0 à toutes**.
+                // Ce n'est pas un réglage manquant, c'est un OBJET manquant : rien ne le portait.
+                // ⚠️ L'opacité de la CSS (0x99/255 = 0,6) est en sRGB et ce projet compose en
+                //   LINÉAIRE — même classe que les cinq sites du chrome corrigés le même jour. Le
+                //   fond est CONNU ici (le creux de la fenêtre), donc la solution est exacte : on
+                //   garde l'opacité et on déplace la couleur.
+                // ⚠️ `ignoreLayout` : un décor enfant direct d'un groupe de disposition en devient
+                //   une COLONNE — c'est la classe que `B3S3` ferme, et elle en avait déjà trouvé
+                //   cinq instances sur cet écran.
+                GameObject haloGo = NouveauUI("HaloChiffre", fen.transform);
+                var haloLe = haloGo.AddComponent<LayoutElement>();
+                haloLe.ignoreLayout = true;
+                var haloRt = (RectTransform)haloGo.transform;
+                haloRt.anchorMin = haloRt.anchorMax = new Vector2(0.5f, 0.5f);
+                haloRt.pivot = new Vector2(0.5f, 0.5f);
+                // ⛔ L'ÉTENDUE EST CELLE DE L'ENCRE PLUS DEUX FOIS LE FLOU, PAS CELLE DE LA BOÎTE.
+                // Première version : un voile de 66 × 30 px CSS, dérivé du CORPS du texte et
+                // multiplié par 2,2 « pour couvrir les deux chiffres ». Regardé sur la planche :
+                // une nappe qui déborde de la fenêtre et lave le creux, là où la référence décroît
+                // à zéro vers **6 px CSS** du glyphe (le juge la mesure de +20,3 à −1,5 entre 2 et
+                // 22 px d'image, soit ~6 CSS).
+                // ⇒ On dérive de l'ENCRE : deux chiffres d'un corps de 14 occupent ≈ 16 px CSS de
+                //   large et ≈ 10 de haut (hauteur de capitale), et le flou ajoute 8 de chaque côté.
+                float haloLargeur = Px(16f + 2f * CssHaloFlou);
+                float haloHauteur = Px(10f + 2f * CssHaloFlou);
+                haloRt.sizeDelta = new Vector2(haloLargeur, haloHauteur);
+                var haloImg = haloGo.AddComponent<Image>();
+                bool haloAtteignable;
+                Color haloTeinte = MafiaCleanCity.Shell.ProceduralUI.CouleurPourMelangeLineaire(
+                    ReputationResolvers.Cyan, ReputationResolvers.Creux, CssHaloOpacite,
+                    out haloAtteignable);
+                if (!haloAtteignable)
+                {
+                    Debug.LogWarning("[HALO] aucune couleur ne reproduit le mélange sRGB du halo sur " +
+                                     "le creux — teinte d'origine conservée, l'écart demeure.");
+                    haloTeinte = ReputationResolvers.Cyan;
+                }
+                haloTeinte.a = CssHaloOpacite;
+                haloImg.sprite = MafiaCleanCity.Shell.ProceduralUI.VoileRadial(
+                    64, haloTeinte, new Vector2(0.5f, 0.5f), 0.5f, 0.5f);
+                haloImg.color = Color.white;   // la teinte vit dans la texture
+                haloImg.raycastTarget = false;
+
                 compteurNombre[i] = NouveauTexte(fen.transform, "Nombre", "—",
-                    CssCompteurNombre, ReputationResolvers.Cyan, DesignTokens.Current.primaryFont);
+                    CssCompteurNombre, ReputationResolvers.Cyan, DesignTokens.Current.primaryFont,
+                1f);  // interligne maquette — .fen b{font:700 14px/1}
                 compteurNombre[i].fontStyle = TMPro.FontStyles.Bold;   // maquette : le chiffre du compteur (.fen, 700 14px)
                 compteurNombre[i].alignment = TextAlignmentOptions.Center;
 
                 compteurLibelle[i] = NouveauTexte(fen.transform, "Libelle", "",
-                    CssCompteurLib, ReputationResolvers.Muet, DesignTokens.Current.primaryFont);
+                    CssCompteurLib, ReputationResolvers.Muet, DesignTokens.Current.primaryFont,
+                1.1f);  // interligne maquette — .fen>span{font:700 5.4px/1.1}
                 compteurLibelle[i].fontStyle = TMPro.FontStyles.Bold;   // maquette : le libellé du compteur (.fen>span, 700 5.4px)
                 compteurLibelle[i].alignment = TextAlignmentOptions.Center;
                 compteurLibelle[i].characterSpacing = 16f;
@@ -898,7 +1046,17 @@ namespace MafiaCleanCity.Operational
             pileMiroir.childForceExpandWidth = true;
             pileMiroir.childForceExpandHeight = false;   // le mou reste SOUS le mir6
             pileMiroir.childAlignment = TextAnchor.UpperCenter;
-            pileMiroir.padding = new RectOffset(PxTrait(7f), PxTrait(7f), PxTrait(7f), PxTrait(7f));
+            // ⛔ `padding:7px 8px` PLUS le `border:1px` — et les deux manquaient (㊲ F8).
+            // La règle est `.elast{…border:1px solid …; padding:7px 8px…}` (`chassis6.py:126-128`) :
+            // le retrait du contenu depuis le bord EXTÉRIEUR vaut donc **8 en haut et en bas**,
+            // **9 à gauche et à droite** — pas 7 partout. Le client posait 7 sur les quatre côtés
+            // et ne comptait pas le trait : un juge ⊥ a mesuré le padding intérieur à **23 px
+            // contre 30** en référence, et les tuiles s'élargir de 4,2 % en conséquence — ce qui
+            // fait passer l'en-tête « ce qu'il a absorbé de vos règles » de TROIS lignes à DEUX,
+            // donc raccourcit la colonne, donc creuse le vide du bas (F1).
+            // ★ *Une bordure est un retrait comme un autre* : la CSS l'ajoute au padding, le
+            //   `RectOffset` d'un layout ne le sait pas — c'est à l'appelant de l'additionner.
+            pileMiroir.padding = new RectOffset(PxTrait(9f), PxTrait(9f), PxTrait(8f), PxTrait(8f));
 
             GameObject mir6 = NouveauUI("Mir6", go.transform);
             // ⛔ HAUTEUR IMPOSÉE, et non laissée au calcul. `childForceExpandHeight = false` sur la
@@ -974,14 +1132,16 @@ namespace MafiaCleanCity.Operational
             hv.childAlignment = TextAnchor.LowerLeft;   // `align-items:baseline`, au plus près
 
             verdictTitre = NouveauTexte(verdictGo.transform, "Titre", "",
-                CssVerdictTitre, ReputationResolvers.Muet, DesignTokens.Current.hudSerifFont);
+                CssVerdictTitre, ReputationResolvers.Muet, DesignTokens.Current.hudSerifFont,
+                1f);  // interligne maquette — .verdict b{font:700 10px/1}
             verdictTitre.fontStyle = TMPro.FontStyles.Bold;   // maquette : .verdict b, 700 10px
 
             // La légende ne dépend d'AUCUN état : c'est la même phrase dans les six vues de la
             // maquette. La poser une fois ici, plutôt que dans `AppliquerEtat`, évite qu'un état
             // futur oublie de la réécrire et laisse une colonne sans son explication.
             NouveauTexte(verdictGo.transform, "Legende", Lib("ce qu’il a absorbé de vos règles"),
-                CssVerdictLegende, ReputationResolvers.Muet, DesignTokens.Current.primaryFont);
+                CssVerdictLegende, ReputationResolvers.Muet, DesignTokens.Current.primaryFont,
+                1.2f);  // interligne maquette — .pcle{font:5.2px/1.2}
 
             for (int i = 0; i < 4; i++)
                 voyants[i] = TellVoyant.Construire(lect.transform, this);
@@ -1072,7 +1232,8 @@ namespace MafiaCleanCity.Operational
 
             NouveauTexte(go.transform, "SurTitre", Lib("LES RÈGLES QUE VOUS AVEZ DONNÉES"),
                 CssPannSurTitre, ReputationResolvers.Muet,
-                DesignTokens.Current.primaryFont).characterSpacing = 19f;
+                DesignTokens.Current.primaryFont,
+                1f).characterSpacing = 19f;  // interligne maquette — .pann i{font:700 5.6px/1}
 
             GameObject lignes = NouveauUI("Lignes", go.transform);
             listeReglesRoot = (RectTransform)lignes.transform;
@@ -1083,7 +1244,8 @@ namespace MafiaCleanCity.Operational
 
             listeReglesVide = NouveauTexte(go.transform, "Vide",
                 Lib("vous n’avez encore donné aucune règle — rien ne peut donc être enfreint"),
-                CssPannTexte, ReputationResolvers.Eteint, DesignTokens.Current.primaryFont);
+                CssPannTexte, ReputationResolvers.Eteint, DesignTokens.Current.primaryFont,
+                1.4f);  // interligne maquette — .pann small{font:6.6px/1.4}
 
             EmpilerVertical(go, Px(CssPannPadY), Px(4f), Px(CssPannPadX));
         }
@@ -1146,7 +1308,8 @@ namespace MafiaCleanCity.Operational
 
                 // L'identifiant, EN CLAIR. Pas de table de libellés : il n'en existe aucune.
                 TextMeshProUGUI id = NouveauTexte(ligne.transform, "RuleId", regle.rule_id,
-                    CssVoyantTitre, ReputationResolvers.Creme, DesignTokens.Current.primaryFont);
+                    CssVoyantTitre, ReputationResolvers.Creme, DesignTokens.Current.primaryFont,
+                1.2f);  // interligne maquette — .ptitre{font:700 7.4px/1.2}
                 LayoutElement idle = id.gameObject.AddComponent<LayoutElement>();
                 idle.flexibleWidth = 1f;
 
@@ -1170,14 +1333,17 @@ namespace MafiaCleanCity.Operational
             // jeu » à un joueur en train de dériver — au moment précis où l'écran doit lui dire
             // autre chose.
             pannSurTitre = NouveauTexte(go.transform, "SurTitre", "", CssPannSurTitre,
-                ReputationResolvers.Muet, DesignTokens.Current.primaryFont);
+                ReputationResolvers.Muet, DesignTokens.Current.primaryFont,
+                1f);  // interligne maquette — .pann i{font:700 5.6px/1}
             pannSurTitre.fontStyle = TMPro.FontStyles.Bold;   // maquette : le sur-titre du panneau (.pann, 700 5.6px)
             pannSurTitre.characterSpacing = 19f;
             pannTitre = NouveauTexte(go.transform, "Titre", "", CssPannTitre,
-                ReputationResolvers.Creme, DesignTokens.Current.hudSerifFont);
+                ReputationResolvers.Creme, DesignTokens.Current.hudSerifFont,
+                1.15f);  // interligne maquette — .pann b{font:700 13px/1.15}
             pannTitre.fontStyle = TMPro.FontStyles.Bold;   // maquette : le titre du panneau (.pann, 700 13px)
             pannTexte = NouveauTexte(go.transform, "Texte", "",
-                CssPannTexte, ReputationResolvers.Creme2, DesignTokens.Current.primaryFont);
+                CssPannTexte, ReputationResolvers.Creme2, DesignTokens.Current.primaryFont,
+                1.4f);  // interligne maquette — .pann small{font:6.6px/1.4}
 
             EmpilerVertical(go, Px(CssPannPadY), Px(4f), Px(CssPannPadX));
         }
@@ -1199,7 +1365,8 @@ namespace MafiaCleanCity.Operational
             CtaDonnerRegle.targetGraphic = fond;
 
             ctaLibelle = NouveauTexte(cta.transform, "Libelle", "DONNER UNE RÈGLE",
-                CssCtaCorps, ReputationResolvers.OrVif, DesignTokens.Current.primaryFont);
+                CssCtaCorps, ReputationResolvers.OrVif, DesignTokens.Current.primaryFont,
+                1f);  // interligne maquette — .cta6{font:700 8.5px/1}
             ctaLibelle.fontStyle = TMPro.FontStyles.Bold;   // maquette : .cta6, 700 8.5px
             ctaLibelle.alignment = TextAlignmentOptions.Center;
             ctaLibelle.characterSpacing = 11f;
@@ -1304,8 +1471,28 @@ namespace MafiaCleanCity.Operational
         private static string Lib(string litteral) =>
             MafiaCleanCity.I18n.Libelle.De("reputation", "bloc", litteral);
 
+        /// <summary>Un texte de cet écran, à son corps ET À SON INTERLIGNE de maquette.
+        ///
+        /// ⛔⛔ L'INTERLIGNE EST OBLIGATOIRE, ET C'EST LE CORRECTIF DE F6, PAS UN DÉTAIL DE
+        /// SIGNATURE. Cette fabrique ne posait AUCUN `lineSpacing` : tous les blocs multi-lignes de
+        /// l'écran héritaient donc du défaut de TMP (~1,157 em pour DejaVu Sans) là où la maquette
+        /// déclare un interligne par bloc. Mesuré par un juge ⊥ : paragraphe `.pann` **33,0 → 27,5
+        /// px** (−17 %) à hauteur de glyphe IDENTIQUE et à largeur de ligne à ≤ 1 % ; titre de carte
+        /// 27 → 24 ; sous-titre d'enseigne 23 → 22 ; tuile 98 → 90.
+        /// ⇒ Un paramètre OPTIONNEL aurait laissé les sites existants sur le défaut de TMP en
+        ///   silence — *« optionnel » est l'endroit où le compilateur cesse d'aider*. Requis, il a
+        ///   obligé à visiter les onze sites et à écrire, pour chacun, la valeur de SA règle CSS.
+        ///
+        /// `interligneEm` est le dénominateur de `font: <corps>px/<interligne>` de la maquette
+        /// (`chassis6.py`) : `.pann small{font:6.6px/1.4}` ⇒ 1,4.
+        /// ⚠️ La conversion vers `lineSpacing` est DÉRIVÉE de la police chargée, jamais d'une
+        /// constante devinée : TMP exprime `lineSpacing` en centièmes de cadratin AJOUTÉS à
+        /// l'interligne naturel de la fonte, qu'on lit dans `faceInfo`. Une constante en dur serait
+        /// fausse le jour où la fonte change — et ce dépôt a déjà payé une référence de police
+        /// substituée sans que personne ne s'en aperçoive.</summary>
         private TextMeshProUGUI NouveauTexte(Transform parent, string nom, string texte,
-                                             float corpsCss, Color couleur, TMP_FontAsset police)
+                                             float corpsCss, Color couleur, TMP_FontAsset police,
+                                             float interligneEm)
         {
             GameObject go = NouveauUI(nom, parent);
             if (go.GetComponent<CanvasRenderer>() == null) go.AddComponent<CanvasRenderer>();
@@ -1315,7 +1502,74 @@ namespace MafiaCleanCity.Operational
             t.fontSize = PxTrait(corpsCss);   // un corps de texte à 0 est un défaut de rendu
             t.color = couleur;
             t.raycastTarget = false;
+            if (police != null && police.faceInfo.pointSize > 0f)
+            {
+                float naturelEm = police.faceInfo.lineHeight / police.faceInfo.pointSize;
+                t.lineSpacing = (interligneEm - naturelEm) * 100f;
+            }
             return t;
+        }
+
+        /// <summary>Borne la hauteur du cadre par la place réellement disponible sous le bandeau.
+        ///
+        /// ⛔ Un composant plutôt qu'un calcul au montage : `OnRectTransformDimensionsChange` est le
+        /// seul endroit qui voit un changement de résolution APRÈS coup. Ce dépôt a payé deux fois
+        /// la classe « géométrie cuite au montage » — le fond de district à 0,9000 de sa taille, et
+        /// les bandes de l'Accueil — et les deux fois le défaut n'est apparu qu'en capturant à une
+        /// autre résolution que celle de la mise en page.</summary>
+        private sealed class HauteurBorneeParLaZoneLibre : UnityEngine.EventSystems.UIBehaviour
+        {
+            public float hauteurVoulue, margeBasse, insetHaut;
+
+            /// <summary>La marge basse PROPRE au cadre (hors chrome). Le chrome est relu à chaque
+            /// passe : `ShellChrome.BottomInsetPx` peut être publié après le montage du locataire,
+            /// et une valeur figée serait celle d'un écran qui n'est plus affiché.</summary>
+            public float margeBasseHorsChrome;
+
+            protected override void OnEnable() { base.OnEnable(); Appliquer(); }
+
+            protected override void OnRectTransformDimensionsChange() { Appliquer(); }
+
+            public void Appliquer()
+            {
+                var rt = transform as RectTransform;
+                var parent = rt != null ? rt.parent as RectTransform : null;
+                if (rt == null || parent == null || hauteurVoulue <= 0f) return;
+                // ⛔⛔⛔ LA POSITION SE REPREND AUSSI, ET C'EST LE CORRECTIF DU BLOQUANT ㊲ B1.
+                // Ce composant ne reprenait que la HAUTEUR. La position, elle, était posée UNE FOIS
+                // au montage à partir de `ShellChrome.BottomInsetPx` — or ce champ est publié par le
+                // shell APRÈS sa passe de layout, et une capture bascule la résolution APRÈS le
+                // montage. Le cadre gardait donc l'offset d'un autre écran.
+                // ⇒ Mesuré par un juge ⊥ à 1080×1920 : zone libre y 143..1681 (**1 539 px**), contenu
+                //   **1 488 px** — il TIENT — mais posé à y=250, soit **107 px trop bas**, d'où
+                //   **56 px** qui passent sous le dock. Le libellé du CTA y perd 47 à 49 % de ses
+                //   colonnes. *Il y a la place, elle est mal utilisée.*
+                // ★ ET C'EST EXACTEMENT LA CLASSE QUE LE COMMENTAIRE VOISIN DÉNONCE, sur l'autre
+                //   grandeur : « une hauteur cuite au montage serait celle d'un autre écran ». La
+                //   hauteur a été rendue élastique, la position est restée cuite. *Un correctif qui
+                //   nomme une classe et n'en traite qu'une grandeur laisse la classe ouverte.*
+                // ⚠️ LES DEUX INSETS SE RELISENT, PAS UN SEUL. N'en rendre qu'un élastique serait
+                //    appliquer la règle à la moitié de son objet — la faute exacte que ce même
+                //    écran vient de payer sur la coiffe (M5), où le bon principe a été appliqué au
+                //    dôme et pas à l'occlusion qui le creuse.
+                float bas = MafiaCleanCity.Shell.ShellChrome.BottomInsetPx + margeBasseHorsChrome;
+                margeBasse = bas;
+                insetHaut = MafiaCleanCity.Shell.ShellChrome.TopInsetPx;
+                if (!Mathf.Approximately(rt.anchoredPosition.y, bas))
+                    rt.anchoredPosition = new Vector2(rt.anchoredPosition.x, bas);
+
+                float zoneLibre = parent.rect.height - insetHaut - margeBasse;
+                if (zoneLibre <= 0f) return;   // rect pas encore résolu : on ne cuit rien
+                float h = Mathf.Min(hauteurVoulue, zoneLibre);
+                if (!Mathf.Approximately(rt.sizeDelta.y, h))
+                    rt.sizeDelta = new Vector2(rt.sizeDelta.x, h);
+
+                // Le journal dit ce que le composant a VU, pas ce qu'on suppose qu'il voit : les
+                // deux insets viennent du shell et n'existent pas hors shell (ils valent 0).
+                Debug.Log($"[CADRE-ELASTIQUE] écran {parent.rect.height:F0} · insetHaut {insetHaut:F0}"
+                          + $" · margeBasse {bas:F0} · zone libre {zoneLibre:F0} · voulu "
+                          + $"{hauteurVoulue:F0} · posé {h:F0}");
+            }
         }
 
         private static void Etirer(RectTransform rt, float marge = 0f)
