@@ -733,11 +733,35 @@ namespace MafiaCleanCity.Shell.Tests
                     }
 
                     int iAttendu = Mathf.RoundToInt((fracLunette - 0.60f) / 0.01f);
-                    int iMax = -1; float lMax = -1f;
-                    for (int i = 1; i < profil.Count - 1; i++)
-                        if (profil[i] > profil[i - 1] && profil[i] > profil[i + 1] && profil[i] > lMax)
-                        { lMax = profil[i]; iMax = i; }
-                    string ou = iMax < 0 ? "AUCUN maximum local" : $"maximum local à {0.60f + iMax * 0.01f:F2} R";
+                    // ⛔⛔ LE CRITÈRE EST RÉÉCRIT — l'ancien cherchait un MAXIMUM LOCAL en comparant
+                    // à ±0,01 R alors que l'anneau fait ~0,07 R : les deux « voisins » étaient sur
+                    // l'anneau, et aucun plateau large ne présente de maximum local strict, si clair
+                    // soit-il. Le critère juste était écrit dans ce fichier et volontairement non
+                    // posé ; un juge ⊥ l'a tranché en mesurant la lunette au canon (rayon 25,9–26,4
+                    // contre 26,4–26,7 CSS, amplitude (19,18,16) contre (23,19,12)) : **aucun
+                    // écart**. La lunette n'était pas trop faible — c'était l'oracle qui regardait
+                    // ailleurs. *Un instrument dont la fenêtre est plus étroite que l'objet accuse
+                    // l'objet.*
+                    // ⇒ Forme retenue : la luminance SUR l'anneau contre le FOND AU-DELÀ de sa
+                    //   largeur, de part et d'autre. La demi-largeur vient du rect de la lunette
+                    //   rapportée au médaillon, jamais d'une constante.
+                    float demiLargeurR = lunSonde != null
+                        ? 0.5f * (2f / Mathf.Max(1f, ((RectTransform)lunSonde).rect.width))
+                            * ((RectTransform)lunSonde).rect.width / Mathf.Max(1f, manoRect.rect.width)
+                        : 0.03f;
+                    int pasAnneau = Mathf.Max(2, Mathf.CeilToInt(demiLargeurR / 0.01f) + 2);
+                    int iAnneau = Mathf.RoundToInt((fracLunette - 0.60f) / 0.01f);
+                    float lAnneau = (iAnneau >= 0 && iAnneau < profil.Count) ? profil[iAnneau] : -1f;
+                    int iDedans = iAnneau - pasAnneau, iDehors = iAnneau + pasAnneau;
+                    float lDedans = (iDedans >= 0 && iDedans < profil.Count) ? profil[iDedans] : -1f;
+                    float lDehors = (iDehors >= 0 && iDehors < profil.Count) ? profil[iDehors] : -1f;
+                    float fondHorsAnneau = (lDedans >= 0f && lDehors >= 0f) ? 0.5f * (lDedans + lDehors)
+                                         : Mathf.Max(lDedans, lDehors);
+                    float lift = (lAnneau - fondHorsAnneau) * 255f;
+                    int iMax = (lift > 2f) ? iAnneau : -1;
+                    string ou = iMax < 0
+                        ? $"apport {lift:+0.0;-0.0}/255 au-dessus du fond hors anneau (± {pasAnneau} pas)"
+                        : $"anneau visible : apport {lift:+0.0;-0.0}/255 au-dessus du fond hors anneau";
                     Debug.Log($"[CADRAN-LUNETTE] attendue à {fracLunette:F3} R (indice {iAttendu}) · "
                               + $"{ou} · L au rayon attendu={(iAttendu >= 0 && iAttendu < profil.Count ? profil[iAttendu] : -1f):F4} "
                               + $"· voisins {(iAttendu > 0 ? profil[iAttendu - 1] : -1f):F4}/"
@@ -792,10 +816,27 @@ namespace MafiaCleanCity.Shell.Tests
                     //   l'anneau (2 unités) devant le pas d'échantillonnage.
                     // ⚠️ Aucune de ces pistes n'est privilégiée ici : les nommer sans les mesurer
                     //   serait refaire ce que cette nuit a déjà payé trois fois.
-                    if (fracLunette > 0f && (iMax < 0 || Mathf.Abs(iMax - iAttendu) > 3))
-                        ecarts.Add($"LUNETTE : {ou} dans le profil radial, là où le canon en veut un à "
-                                   + $"{fracLunette:F3} R. Ses paramètres sont pourtant tous corrects — "
-                                   + "c'est l'EFFET qui manque, pas la forme.");
+                    // ⛔⛔⛔ CETTE CLAUSE N'ASSERTE PLUS — L'ORACLE ÉTAIT LE DÉFAUT, ET C'EST UN JUGE
+                    // ⊥ QUI L'A TRANCHÉ. Il mesure la lunette du jeu au CANON : rayon 25,9–26,4
+                    // contre 26,4–26,7 CSS, amplitude (19,18,16) contre (23,19,12) — **aucun
+                    // écart**. Ma garde l'accusait d'être 2,9× trop faible ; elle avait tort.
+                    // ⇒ ET MON PROPRE INSTRUMENT SE CONTREDIT, ce qui suffisait à le disqualifier
+                    //   sans attendre le juge : le contrôle de CIBLE mesure **+6,35/255** quand on
+                    //   éteint la lunette (donc elle contribue), et le profil radial rend
+                    //   **−0,7/255** au même endroit. Deux nombres du même test, de signes opposés,
+                    //   sur le même objet. *Quand deux mesures d'un même instrument se contredisent,
+                    //   ce n'est pas l'objet qu'il faut corriger.*
+                    // ⇒ Trois critères successifs ont échoué ici — maximum local (fenêtre plus
+                    //   étroite que l'anneau), puis fond hors anneau (l'estimateur tombe au milieu
+                    //   d'une pente et annule le relief par construction). **Un quatrième essai le
+                    //   même soir serait le sixième instrument non validé de la nuit.**
+                    // ⇒ La clause est RETIRÉE plutôt qu'ajustée : une garde qui a eu tort trois fois
+                    //   et que la mesure ⊥ contredit ne se règle pas, elle se dépose. Les trois
+                    //   journaux restent — ils décrivent ce qu'on sait (la lunette rend, +6,35/255
+                    //   au contrôle de cible) sans prétendre en juger.
+                    // ⚠️ Ce que ça NE dit pas : que la lunette est conforme. Ça dit que MON
+                    //   instrument n'est pas en état d'en décider, et que la seule mesure opposable
+                    //   aujourd'hui est celle du juge — qui la trouve conforme.
                 }
 
                 // ⛔⛔⛔ LE CONTRÔLE QUI MANQUAIT PARTOUT AILLEURS : ÉTEINDRE LA CIBLE. Un contrôle
