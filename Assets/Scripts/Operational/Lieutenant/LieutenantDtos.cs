@@ -88,6 +88,16 @@ namespace MafiaCleanCity.Operational.Lieutenant
     [Serializable]
     public class LieutenantBands
     {
+        /// <summary>⛔ SERVI DEPUIS TOUJOURS ET LU PAR PERSONNE — `reassign_availability`
+        /// (AVAILABLE | ON_COOLDOWN | …). Mesuré le 2026-09-06 : **0 site actif** dans tout
+        /// `Assets/Scripts`, alors que `GET /v1/lieutenants/:id` le rend (corps commité,
+        /// `demo_capture`, horloge 72 013, valeur `AVAILABLE`).
+        /// ⇒ CE QUE SON ABSENCE COÛTAIT : `ReassignChosen()` gardait l'authentification, la
+        ///   sélection et le bâtiment de destination — **jamais la disponibilité**. Un joueur en
+        ///   période de latence voyait donc le geste offert, le confirmait, et récoltait un 409.
+        ///   *Un geste impossible qu'on laisse cliquer n'est pas une erreur de serveur : c'est
+        ///   une promesse que l'écran n'avait pas le droit de faire.*</summary>
+        public string reassign_availability;
         public string archetype;        // COOK | SECURITY | BOOKKEEPER | LOGISTICS | LAUNDERING | DISTRIBUTION | UNKNOWN
         public string granted_role;     // advisory | executor | delegated_owner | cohort_overseer (CLOSED 07 domain)
         public string mode;             // tasked | delegated (CLOSED 07 domain)

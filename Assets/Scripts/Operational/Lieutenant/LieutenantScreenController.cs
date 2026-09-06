@@ -578,6 +578,21 @@ namespace MafiaCleanCity.Operational.Lieutenant
             if (string.IsNullOrEmpty(LastRecruitedId)) { SetOutcome(Lib("Recrutez ou ouvrez d'abord un lieutenant."), AccentModerate); yield break; }
             if (string.IsNullOrEmpty(reassignBuildingId)) { SetOutcome(Lib("Choisissez un bâtiment de destination."), AccentModerate); yield break; }
 
+            // ⛔⛔ LA DISPONIBILITÉ, SERVIE ET JAMAIS LUE — le client envoyait le POST quoi qu'il
+            // arrive et laissait le serveur refuser en 409. Le joueur voyait le geste offert, le
+            // confirmait, et récoltait une erreur. *Un geste impossible qu'on laisse cliquer n'est
+            // pas une erreur de serveur : c'est une promesse que l'écran n'avait pas le droit de
+            // faire.* ⚠️ On ne refuse QUE sur une valeur explicitement non disponible : bandes non
+            // chargées ou champ vide ⇒ on laisse passer, et c'est le serveur qui tranche — une
+            // garde qui bloquerait sur l'ignorance interdirait le geste à tout joueur dont les
+            // bandes n'ont pas encore été relues.
+            string dispo = CurrentBands != null ? CurrentBands.reassign_availability : null;
+            if (!string.IsNullOrEmpty(dispo) && dispo != "AVAILABLE")
+            {
+                SetOutcome(Lib("Ce lieutenant ne peut pas être réaffecté pour l'instant."), AccentModerate);
+                yield break;
+            }
+
             // A 2-building archetype sends its new target; a single-building archetype omits it (pass null), like recruit.
             string target = RuleModel.NeedsTarget(CurrentArchetype) ? reassignTargetBuildingId : null;
             bool moved = false;
