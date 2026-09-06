@@ -70,6 +70,14 @@ Tu compares B ↔ F (M dit ce qui était dessiné) — **pas la capture à la ma
   verdict suffit ; ses 10 MINEUR — halo du Don, bouton retour, en-tête — sont hors de ton mandat : tu juges la DONNÉE).
 - Suite PlayMode : non fournie ce tour (aucun run lancé par cette session) — à écrire en non-vérifié.
 
+
+> ⚠️ **Addendum (2026-09-06 ~07:25, après le rendu du juge)** : la ligne `[DemoIdentityResolver] régime=env
+> identité=demo_capture@example.test` du run qui a produit `planche-1080x2400.png` n'est PAS dans ce dossier (log non
+> fourni ; la planche a été copiée non commitée depuis `mafia-unity-F`). L'identité photographiée est donc **non
+> vérifiée** : les 40 planches d'unity (`1d3d412`) sont en `régime=env`, les runs du correcteur en `régime=défaut`
+> (`operational_demo`). Le défaut D-1 (le DTO ne déclare pas `name`) ne dépend d'aucun compte ; toute comparaison de
+> VALEUR planche ↔ corps du rapport est à relire avec cette réserve.
+
 ## Écarts ASSUMÉS déjà connus (le juge les re-vérifie, il ne les recopie pas)
 
 Établis par le juge-données mode maquette du 2026-08-25 (E1..E11) et repris dans le dossier visuel du 2026-09-06 —
