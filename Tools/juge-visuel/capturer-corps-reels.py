@@ -259,6 +259,41 @@ def _lire_drapeaux(argv):
     return opts
 
 
+# ⛔⛔ DEUX HORLOGES DANS CE DÉPÔT, ET ELLES NE SE RESSEMBLENT PAS (mesuré par mafia-back,
+#    2026-09-06) : `city_epoch.game_minute` est GLOBALE (une ligne, valait 1500) ;
+#    `city_sim_clock.game_minute` est PAR JOUEUR (compte de démo : 71908). C'est la seconde
+#    qu'une provenance doit porter — une empreinte prise sur la globale ne dirait rien du compte
+#    capturé. ⚠️ Le piège concret : `GET /v1/_test/citysim/…` rend un champ nommé `game_minute`
+#    qui est le GLOBAL. Une route qui rend le BON NOM et la MAUVAISE GRANDEUR ; elle répondrait
+#    200 et on l'inscrirait dans 240 manifestes.
+# ⛔ Et ne PAS dériver l'une de l'autre : `opened_game_day` valait 37 quand l'horloge joueur en
+#    indiquait 49,9 — douze jours d'écart, origine non mesurée. Les deux s'inscrivent telles
+#    qu'elles sont lues, jamais converties.
+HORLOGE_SQL = "SELECT game_minute FROM city_sim_clock WHERE player_id='%s';"
+
+
+def lire_minute_de_jeu(player_id):
+    """La minute de jeu DU JOUEUR, lue en base. Rend (valeur, source) ou (None, raison)."""
+    if not player_id:
+        # ⛔ Sans scope, la requête rendrait une ligne quelconque : refuser plutôt que de lire
+        #    une grandeur qui n'est pas celle du compte capturé.
+        return None, "player_id inconnu — refus de lire une horloge non scopée"
+    r = subprocess.run(["docker", "compose", "-p", "mafia-clean-city", "exec", "-T", "pg",
+                        "psql", "-U", "mafia", "-d", "mafia_clean_city", "-tAc",
+                        HORLOGE_SQL % player_id], capture_output=True, text=True)
+    brut = r.stdout.strip()
+    # ⛔ `psql -tAc` rend une CHAÎNE VIDE quand la commande échoue : un échec ressemble trait
+    #    pour trait à « pas de ligne ». Distinguer les deux, sinon la provenance porte un trou
+    #    qui se lit comme un fait.
+    if r.returncode != 0:
+        return None, "psql a échoué (code %d) : %s" % (r.returncode, (r.stderr or "").strip()[:120])
+    if brut == "":
+        return None, "aucune ligne `city_sim_clock` pour ce joueur (le monde n'a pas encore tiqué ?)"
+    if not brut.isdigit():
+        return None, "sortie inattendue : %r" % brut[:60]
+    return int(brut), "city_sim_clock.game_minute scopée sur player_id (lecture en base : aucune route joueur ne la projette — forme F)"
+
+
 def main(argv):
     global IDENT, PASSWD
     opts = _lire_drapeaux(argv)
@@ -294,6 +329,15 @@ def main(argv):
     jour_de_jeu = ((pile.corps.get("session/open", {}).get("payload", {}) or {})
                    .get("data", {}) or {}).get("opened_game_day")
     print(f"jour de jeu à l'ouverture : {jour_de_jeu}")
+    # l'identité vient d'une route JOUEUR ; seule la minute descend en base
+    st_me, corps_me, _ = pile.get("/v1/me")
+    player_id = chercher(corps_me if st_me == 200 else {}, ["player_id"])
+    minute_de_jeu, source_horloge = lire_minute_de_jeu(player_id)
+    print(f"player_id : {player_id}")
+    print(f"minute de jeu (city_sim_clock, PAR JOUEUR) : {minute_de_jeu}  [{source_horloge}]")
+    if minute_de_jeu is None:
+        print("⚠️ la provenance portera l'absence et sa raison — jamais une valeur inventée,")
+        print("   et surtout jamais l'horloge GLOBALE en remplacement (autre grandeur).")
     total = {"appelées": 0, "sans instance": 0, "mutations": 0, "erreurs": 0}
     lignes = ["| dossier | sym | routes | appelées | sans instance | mutations non appelées | erreurs HTTP |", "|---|---|---|---|---|---|---|"]
     for r in cd.TABLE + cd.HORS_APPSHELL:
@@ -308,7 +352,10 @@ def main(argv):
             # pas la minute que lit l'empreinte du back — l'écrire quand même, daté et nommé,
             # vaut mieux qu'une base de preuve sans aucune horloge.
             prov = {"date": date, "back_main": back_sha, "game_back": image, "compte": IDENT,
-                    "jour_de_jeu": jour_de_jeu, "dossier": r["dossier"], "symbole": r["sym"], "controleur": r["ctl"]}
+                    "jour_de_jeu": jour_de_jeu,
+                    "horloge_game_minute": minute_de_jeu,
+                    "horloge_source": source_horloge,
+                    "dossier": r["dossier"], "symbole": r["sym"], "controleur": r["ctl"]}
             if route == "/v1/session/open":
                 st, h = pile.entetes["session/open"]
                 doc = {"route": route, "methode": "POST", "statut": st, "params": {"client_version": "da4-corps-reels"}, "provenance": {**prov, **h}, "corps": pile.corps["session/open"]}
