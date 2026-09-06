@@ -1,5 +1,3 @@
-> ⏸️ **SUSPENDU (f2, 2026-09-06 ~11:55, confirmé après croisement de messages)** : ① n'a pas encore son correctif commité (tête de fiche sur nom long, manomètre, bloc argent) ; ce tour attend correctif + planche signée. Deux juges lancés puis arrêtés avant toute mesure, aucun rapport. Les 3 planches de `1b887e3` restent ici comme matériel daté.
-
 # Dossier du juge visuel — ① L'intérieur de district (« le HUD de Brennar ») — r4 — 2026-09-06
 
 > ⚠️ **Ce dossier est complet et instruisable.** S'il te manque quelque chose, c'est un défaut du dossier :
