@@ -81,6 +81,13 @@ namespace MafiaCleanCity.Operational
         private const float CssSousTitre     = 6.4f;  // .enseigne i
         private const float CssEcartBloc     = 9f;    // margin-top des blocs successifs
         private const float CssCompteurNombre = 14f;  // .fen b
+
+        /// <summary>Le rayon de flou du halo du chiffre — `text-shadow:0 0 8px` (`chassis6.py:122`).</summary>
+        private const float CssHaloFlou = 8f;
+
+        /// <summary>Son opacité — le `99` de `cyan99`, soit 0x99/255. Lue dans la source, pas
+        /// choisie pour l'effet obtenu.</summary>
+        private const float CssHaloOpacite = 0x99 / 255f;
         private const float CssCompteurLib   = 5.4f;  // .fen > span
         private const float CssPortraitLarg  = 118f;  // .prt{width:118px}
 
@@ -871,6 +878,52 @@ namespace MafiaCleanCity.Operational
                 tle.minWidth = 0f; tle.preferredWidth = 0f; tle.flexibleWidth = 1f;
                 AjouterFond(fen, ReputationResolvers.Creux);
                 Contour(fen, ReputationResolvers.Lisere);
+
+                // ⛔ LE HALO DU CHIFFRE — `.fen b{…text-shadow:0 0 8px cyan99}` (`chassis6.py:122`).
+                // Mesuré ABSENT par un juge ⊥ : luminance au-dessus du fond de la fenêtre, à d px à
+                // gauche du premier pixel de chiffre — la référence rend **+20,3 / +17,6 / +14,8 /
+                // +10,5 / +6,9 / +3,1 / −1,5** à d = 2/4/6/9/12/16/22 px, le jeu **+0,0 à toutes**.
+                // Ce n'est pas un réglage manquant, c'est un OBJET manquant : rien ne le portait.
+                // ⚠️ L'opacité de la CSS (0x99/255 = 0,6) est en sRGB et ce projet compose en
+                //   LINÉAIRE — même classe que les cinq sites du chrome corrigés le même jour. Le
+                //   fond est CONNU ici (le creux de la fenêtre), donc la solution est exacte : on
+                //   garde l'opacité et on déplace la couleur.
+                // ⚠️ `ignoreLayout` : un décor enfant direct d'un groupe de disposition en devient
+                //   une COLONNE — c'est la classe que `B3S3` ferme, et elle en avait déjà trouvé
+                //   cinq instances sur cet écran.
+                GameObject haloGo = NouveauUI("HaloChiffre", fen.transform);
+                var haloLe = haloGo.AddComponent<LayoutElement>();
+                haloLe.ignoreLayout = true;
+                var haloRt = (RectTransform)haloGo.transform;
+                haloRt.anchorMin = haloRt.anchorMax = new Vector2(0.5f, 0.5f);
+                haloRt.pivot = new Vector2(0.5f, 0.5f);
+                // ⛔ L'ÉTENDUE EST CELLE DE L'ENCRE PLUS DEUX FOIS LE FLOU, PAS CELLE DE LA BOÎTE.
+                // Première version : un voile de 66 × 30 px CSS, dérivé du CORPS du texte et
+                // multiplié par 2,2 « pour couvrir les deux chiffres ». Regardé sur la planche :
+                // une nappe qui déborde de la fenêtre et lave le creux, là où la référence décroît
+                // à zéro vers **6 px CSS** du glyphe (le juge la mesure de +20,3 à −1,5 entre 2 et
+                // 22 px d'image, soit ~6 CSS).
+                // ⇒ On dérive de l'ENCRE : deux chiffres d'un corps de 14 occupent ≈ 16 px CSS de
+                //   large et ≈ 10 de haut (hauteur de capitale), et le flou ajoute 8 de chaque côté.
+                float haloLargeur = Px(16f + 2f * CssHaloFlou);
+                float haloHauteur = Px(10f + 2f * CssHaloFlou);
+                haloRt.sizeDelta = new Vector2(haloLargeur, haloHauteur);
+                var haloImg = haloGo.AddComponent<Image>();
+                bool haloAtteignable;
+                Color haloTeinte = MafiaCleanCity.Shell.ProceduralUI.CouleurPourMelangeLineaire(
+                    ReputationResolvers.Cyan, ReputationResolvers.Creux, CssHaloOpacite,
+                    out haloAtteignable);
+                if (!haloAtteignable)
+                {
+                    Debug.LogWarning("[HALO] aucune couleur ne reproduit le mélange sRGB du halo sur " +
+                                     "le creux — teinte d'origine conservée, l'écart demeure.");
+                    haloTeinte = ReputationResolvers.Cyan;
+                }
+                haloTeinte.a = CssHaloOpacite;
+                haloImg.sprite = MafiaCleanCity.Shell.ProceduralUI.VoileRadial(
+                    64, haloTeinte, new Vector2(0.5f, 0.5f), 0.5f, 0.5f);
+                haloImg.color = Color.white;   // la teinte vit dans la texture
+                haloImg.raycastTarget = false;
 
                 compteurNombre[i] = NouveauTexte(fen.transform, "Nombre", "—",
                     CssCompteurNombre, ReputationResolvers.Cyan, DesignTokens.Current.primaryFont,
