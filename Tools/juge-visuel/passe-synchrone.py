@@ -41,15 +41,26 @@ def gate_en_cours():
 
 
 def empreinte(player_id):
-    """La minute de jeu DU JOUEUR — `city_sim_clock`, jamais l'horloge globale."""
+    """L'empreinte LARGE du compte — pas seulement l'horloge.
+
+    ⛔ ÉLARGIE LE 2026-09-06, ET C'EST MON INSTRUMENT QUI AVAIT LE TROU. Elle ne lisait que
+       `city_sim_clock.game_minute`. Un run a RE-SEMÉ `demo_capture` (TD-642) : les trois
+       lieutenants ont changé d'identité, et l'écart n'a été vu que parce que l'horloge avait
+       bougé AUSSI. Elle aurait pu ne pas bouger — un re-semis qui préserve la minute serait
+       passé, et 240 corps auraient décrit un compte dont les planches montrent d'autres gens.
+    ⇒ Une empreinte doit couvrir ce qui IDENTIFIE le monde, pas seulement ce qui le DATE.
+    """
     import importlib.util as il
-    sp = il.spec_from_file_location('c', CAPTURE)
-    c = il.module_from_spec(sp)
+    sp = il.spec_from_file_location('e', os.path.join(ICI, 'empreinte-compte.py'))
+    e = il.module_from_spec(sp)
     try:
-        sp.loader.exec_module(c)
+        sp.loader.exec_module(e)
     except SystemExit:
         pass
-    return c.lire_minute_de_jeu(player_id)
+    emp, erreurs = e.empreinte(player_id)
+    if erreurs:
+        return None, ' · '.join(erreurs)
+    return emp, 'horloge · lieutenants (nombre ET NOMS) · bâtiments · planques · cartes'
 
 
 def arg(nom, defaut=None):
@@ -83,7 +94,9 @@ def main():
         sys.exit(2)
 
     avant, src = empreinte(player_id)
-    print('\nEMPREINTE AVANT : %s   [%s]' % (avant, src))
+    print('\nEMPREINTE AVANT (%s) :' % src)
+    for k in sorted(avant or {}):
+        print('     %-22s %s' % (k, avant[k]))
     if avant is None:
         print('⛔ pas d’empreinte de départ ⇒ la comparaison finale ne prouverait rien. Rien lancé.')
         sys.exit(1)
@@ -94,17 +107,24 @@ def main():
     code_capture = r.returncode
 
     apres, _ = empreinte(player_id)
-    print('\nEMPREINTE APRÈS : %s' % apres)
+    print('\nEMPREINTE APRÈS :')
+    for k in sorted(apres or {}):
+        print('     %-22s %s' % (k, apres[k]))
 
     if apres is None:
         print('⛔ empreinte finale illisible — l’écart ne peut pas être tranché.'); sys.exit(1)
     if apres != avant:
-        print('\n⛔⛔ L’HORLOGE A BOUGÉ PENDANT LA PASSE : %s → %s (%+d minutes).'
-              % (avant, apres, apres - avant))
+        print('\n⛔⛔ LE COMPTE A CHANGÉ PENDANT LA PASSE — colonne par colonne :')
+        for k in sorted(set(avant) | set(apres)):
+            a, b = avant.get(k, '(absent)'), apres.get(k, '(absent)')
+            print('   %-22s %-28s %s %s' % (k, a, '→' if a != b else ' =', b if a != b else ''))
         print('   Quelque chose a écrit entre les deux mesures. Planches et corps ne décrivent')
         print('   PLUS le même monde : la base est à refaire, et on le sait à la minute.')
         sys.exit(1)
-    print('\n✅ horloge INCHANGÉE (%s) : les corps et les planches décrivent le même monde.' % avant)
+    print('\n✅ COMPTE INCHANGÉ sur les %d colonnes — corps et planches décrivent le même monde.'
+          % len(avant))
+    for k in sorted(avant):
+        print('     %-22s %s' % (k, avant[k]))
     if code_capture != 0:
         print('⚠️ mais la capture a rendu %d — lire son log avant de conclure.' % code_capture)
         sys.exit(code_capture)
