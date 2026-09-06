@@ -1,0 +1,33 @@
+# Valeurs de bande DESSINÉES — ecrans-brennar-6.html, cadres 131..136 (index 0-based)
+# total cadres du fichier : 143
+
+cadre 131 — « Le dossier — trois pistes qui ne se mélangent pas » (ligne 6221) : 3 piste(s)
+   colonne 0 (audit) : intitulé='la comptabilité'  libellé='on regarde'  clé='watched'
+   colonne 1 (effluent) : intitulé='ce qui sort des cuves'  libellé='ça se voit'  clé='visible'
+   colonne 2 (lifestyle) : intitulé='votre train de vie'  libellé='discret'  clé='quiet'
+
+cadre 132 — « Ils sont venus » (ligne 6224) : 3 piste(s)
+   colonne 0 (audit) : intitulé='la comptabilité'  libellé='ils sont venus'  clé='audited'
+   colonne 1 (effluent) : intitulé='ce qui sort des cuves'  libellé='ça se voit'  clé='visible'
+   colonne 2 (lifestyle) : intitulé='votre train de vie'  libellé='convoqué'  clé='subpoenaed'
+
+cadre 133 — « Qui parle, et qui a peur » (ligne 6227) : 0 piste(s)
+
+cadre 134 — « Il ne reviendra pas » (ligne 6230) : 0 piste(s)
+
+cadre 135 — « Rien à votre nom » (ligne 6233) : 0 piste(s)
+
+cadre 136 — « Ce qui manque encore » (ligne 6236) : 0 piste(s)
+
+# COUVERTURE PAR PISTE (domaine fermé lu à la source, forensic.projection.service.ts:79,98,118)
+  audit      domaine=['clean', 'watched', 'flagged', 'audited']
+             DESSINÉES=['watched', 'audited']
+             NON DESSINÉES=['clean', 'flagged']
+  effluent   domaine=['clear', 'faint', 'visible', 'glaring']
+             DESSINÉES=['visible']
+             NON DESSINÉES=['clear', 'faint', 'glaring']
+  lifestyle  domaine=['quiet', 'noticed', 'watched', 'subpoenaed']
+             DESSINÉES=['quiet', 'subpoenaed']
+             NON DESSINÉES=['noticed', 'watched']
+
+  TOTAL : 5/12 valeurs dessinées — 7 SANS libellé dessiné
