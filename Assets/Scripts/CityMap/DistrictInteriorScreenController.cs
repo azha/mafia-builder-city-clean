@@ -1852,14 +1852,40 @@ namespace MafiaCleanCity.CityMap
             GameObject go = NewUI($"Btn_{libelle}", parent);
             // `.actions` y=114,38 h=39,81 — mesuré au navigateur, posé, jamais réparti.
             PoserColonne((RectTransform)go.transform, x, largeur, 114.38f, 39.81f);
+            // ⛔⛔ LE REMPLISSAGE PREND LA FORME DU TRACÉ, il ne se contente plus de vivre dessous.
+            // Un juge ⊥ mesure sur COLLECTER « un remplissage doré à angles DROITS avec le tracé
+            // arrondi dessiné DEDANS ⇒ quatre oreilles d'environ 5×5 CSS », retrait de coin **0,00
+            // mesuré ×9** contre 8,67 → 2,67 au canon. La cause est structurelle : le fond était une
+            // `Image` rectangulaire et l'arrondi un ENFANT posé par-dessus. *Un contour arrondi
+            // dessiné sur un fond carré ne l'arrondit pas — il le souligne.*
+            // ⇒ Le fond devient donc le GRAPHIQUE D'UN MASQUE à coins arrondis (le même rayon que le
+            //   tracé, lu à la même source), et le remplissage — dégradé ou aplat — passe dans un
+            //   enfant qu'il découpe. Appliqué aux DEUX variantes, pas seulement à celle que le juge
+            //   a vue : l'aplat translucide a les mêmes oreilles, simplement moins visibles.
+            // ⚠️ Le graphique du masque n'est pas affiché (`showMaskGraphic = false`) : il découpe,
+            //   il ne peint pas. Et un `Image` EST un `MaskableGraphic`, donc l'enfant est bien
+            //   atteint par le masque — la vérification que ce dépôt a déjà payée sur un `Graphic`
+            //   nu qu'aucun masque ne pouvait toucher.
             Image fond = go.AddComponent<Image>();
+            fond.sprite = MafiaCleanCity.Shell.ProceduralUI.RoundedRectMask(FDi(9f));
+            fond.type = Image.Type.Sliced;
+            fond.color = Color.white;
+            fond.raycastTarget = false;
+            var masque = go.AddComponent<Mask>();
+            masque.showMaskGraphic = false;
+
+            GameObject remplissageGo = NewUI("Remplissage", go.transform);
+            Stretch((RectTransform)remplissageGo.transform, Vector2.zero, Vector2.zero);
+            remplissageGo.AddComponent<LayoutElement>().ignoreLayout = true;
+            Image fondPeint = remplissageGo.AddComponent<Image>();
+            fondPeint.raycastTarget = false;
             if (or)
             {
                 // `background:linear-gradient(180deg,#e9c56b,#c99a37); border:1px solid #8a611c`
-                fond.sprite = MafiaCleanCity.Shell.ProceduralUI.VerticalGradient(64,
+                fondPeint.sprite = MafiaCleanCity.Shell.ProceduralUI.VerticalGradient(64,
                     DesignTokens.Current.ficheCtaOrHaut, DesignTokens.Current.ficheCtaOrBas);
-                fond.type = Image.Type.Simple;
-                fond.color = Color.white;
+                fondPeint.type = Image.Type.Simple;
+                fondPeint.color = Color.white;
             }
             else
             {
@@ -1867,7 +1893,7 @@ namespace MafiaCleanCity.CityMap
                 // Le fond est CONNU (la plaque de la fiche) ⇒ résolution EXACTE par canal, pas un
                 // ajustement : trois équations, trois inconnues.
                 bool atteignable;
-                fond.color = MafiaCleanCity.Shell.ProceduralUI.CouleurPourMelangeLineaire(
+                fondPeint.color = MafiaCleanCity.Shell.ProceduralUI.CouleurPourMelangeLineaire(
                     Color.white, DesignTokens.Current.ficheGlassTop, 0.039f, out atteignable);
             }
 

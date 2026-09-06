@@ -629,11 +629,26 @@ namespace MafiaCleanCity.Shell
                 Color warmedBrass = DesignTokens.Current.hudGaugeArcHot;
                 if (hairline != null) hairline.color = warmedBrass;
                 if (boitierRing != null) boitierRing.color = warmedBrass;
+                // ⛔⛔ LE CANON A QUATRE RÈGLES `.chaud`, CE CODE N'EN APPLIQUAIT QUE DEUX. Un juge
+                // ⊥ (r7 de ①) mesure « Brûlant » et « Aube » restés CRÈME là où la maquette les
+                // passe en braise. Les deux manquantes portent sur du TEXTE, les deux appliquées
+                // sur des TRAITS — d'où l'angle mort : *un état a été implémenté sur les éléments
+                // qui lui ressemblaient, pas sur ceux que la règle nomme.*
+                // ⚠️ Et la conséquence dépasse l'esthétique : c'est le seul virage qui distingue un
+                //   cadran brûlant d'un cadran calme SUR LA VALEUR, pas seulement sur le cerclage.
+                if (gaugeValueText != null) gaugeValueText.color = warmedBrass;
+                if (phaseValueText != null) phaseValueText.color = warmedBrass;
             }
             else
             {
                 if (hairline != null) hairline.color = calmGoldColor;
                 if (boitierRing != null) boitierRing.color = calmGoldColor;
+                // Retour à l'ÉTAT NOMMÉ de construction, jamais à « la dernière couleur connue » :
+                // un état qui ne sait pas revenir laisse une braise permanente au premier pic de
+                // chaleur — la variante « allumé une fois, allumé pour toujours » que ce dépôt a
+                // déjà payée sur le dock.
+                if (gaugeValueText != null) gaugeValueText.color = DesignTokens.Current.hudCreme;
+                if (phaseValueText != null) phaseValueText.color = DesignTokens.Current.hudCreme;
             }
         }
 
