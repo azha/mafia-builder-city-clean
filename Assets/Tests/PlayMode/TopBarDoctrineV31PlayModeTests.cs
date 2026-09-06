@@ -631,6 +631,83 @@ namespace MafiaCleanCity.Shell.Tests
                 // affichait était surtout de la quantification. Un instrument dont le pas est du
                 // même ordre que la grandeur mesure son propre pas.
                 float pasPx = rPx * 0.005f;
+                // ⛔⛔ LA LUNETTE, EN GARDE D'EFFET — un juge ⊥ mesure « aucun maximum local à
+                // l'endroit où le canon pose sa lunette (+18,5 L) : l'anneau n'existe pas à l'image
+                // ou il est fondu ». La garde existante lit sa FORME (sprite présent, alpha non nul,
+                // largeur inférieure au boîtier) : trois propriétés vraies que ZÉRO pixel satisfait
+                // aussi bien. *Une garde sur les paramètres d'un effet n'est pas une garde sur son
+                // effet* — le socle en porte déjà un cas, et c'en est un second.
+                // ⇒ On lit donc le PROFIL RADIAL de luminance et on cherche le maximum local. Le
+                //   rayon visé est une FRACTION du médaillon — (diamètre lunette / 2) / (diamètre
+                //   médaillon / 2) — jamais une valeur en px ni en CSS : une fraction survit à la
+                //   résolution, et ce fichier a déjà payé un ratio gelé qui échantillonnait 3 px à
+                //   côté après un changement de taille.
+                // ⚠️ L'échantillonnage évite les arcs et les libellés : on balaie la moitié BASSE
+                //   (190°..350°), où le canon ne pose rien d'autre. Sans ça le profil mélangerait
+                //   la lunette et les arcs, et le maximum trouvé serait celui de l'arc.
+                {
+                    // ⚠️ La fraction vient des DEUX RECTS, pas d'une constante recopiée : c'est
+                    // la seule forme qui suive l'objet si le médaillon ou la lunette changent de
+                    // taille. Ce fichier a déjà payé un ratio gelé (0,75f) dont le commentaire
+                    // portait la division par un diamètre périmé.
+                    Transform lunT = manoT.Find("Lunette");
+                    float fracLunette = lunT != null
+                        ? ((RectTransform)lunT).rect.width / Mathf.Max(1f, manoRect.rect.width)
+                        : -1f;
+                    if (fracLunette <= 0f) ecarts.Add("LUNETTE : absente de l'arbre — rien à mesurer");
+                    var profil = new List<float>();
+                    for (int i = 0; i <= 40; i++)
+                    {
+                        float fr = 0.60f + i * 0.01f;   // 0,60 R à 1,00 R
+                        float somme = 0f; int n = 0;
+                        for (int deg = 190; deg <= 350; deg += 2)
+                        {
+                            float aL = deg * Mathf.Deg2Rad;
+                            int lx = Mathf.RoundToInt(cx + Mathf.Cos(aL) * rPx * fr);
+                            int ly = Mathf.RoundToInt(cy + Mathf.Sin(aL) * rPx * fr);
+                            if (lx < 0 || ly < 0 || lx >= img.width || ly >= img.height) continue;
+                            Color cl = img.GetPixel(lx, ly);
+                            somme += 0.2126f * cl.r + 0.7152f * cl.g + 0.0722f * cl.b; n++;
+                        }
+                        profil.Add(n > 0 ? somme / n : 0f);
+                    }
+                    int iAttendu = Mathf.RoundToInt((fracLunette - 0.60f) / 0.01f);
+                    int iMax = -1; float lMax = -1f;
+                    for (int i = 1; i < profil.Count - 1; i++)
+                        if (profil[i] > profil[i - 1] && profil[i] > profil[i + 1] && profil[i] > lMax)
+                        { lMax = profil[i]; iMax = i; }
+                    string ou = iMax < 0 ? "AUCUN maximum local" : $"maximum local à {0.60f + iMax * 0.01f:F2} R";
+                    Debug.Log($"[CADRAN-LUNETTE] attendue à {fracLunette:F3} R (indice {iAttendu}) · "
+                              + $"{ou} · L au rayon attendu={(iAttendu >= 0 && iAttendu < profil.Count ? profil[iAttendu] : -1f):F4} "
+                              + $"· voisins {(iAttendu > 0 ? profil[iAttendu - 1] : -1f):F4}/"
+                              + $"{(iAttendu + 1 < profil.Count ? profil[iAttendu + 1] : -1f):F4} — "
+                              + "garde d'EFFET : un anneau qui ne fait pas de bosse n'existe pas à l'image");
+                    // ⛔⛔ ÉTAT AU 2026-09-06 : cette garde est ROUGE, et deux mécanismes plausibles
+                    // ont été essayés puis RETIRÉS parce qu'ils ne déplaçaient pas la mesure —
+                    // pas d'un centième, ce qui est le diagnostic « non appliqué » et non une
+                    // déception :
+                    //   · la lunette était collée au boîtier (son diamètre se dérivait de
+                    //     l'épaisseur du laiton, deux grandeurs sans rapport) ⇒ détachée, posée au
+                    //     rayon du canon (0,797 R, soit 27,11 CSS sur 34 mesurés par le juge). Ce
+                    //     changement-là est GARDÉ : il est juste indépendamment du défaut ;
+                    //   · l'ordre de fratrie (occultation) ⇒ **profil byte-identique**, donc ce
+                    //     n'est pas le mécanisme. Retiré.
+                    // ⇒ CE QUE LA MESURE ÉTABLIT, et qui contredit l'explication facile : un blanc à
+                    //   `alpha 0,165` sur un cadran à L ≈ 0,13 DOIT lever la luminance très
+                    //   visiblement — l'arithmétique de composition le donne. La mesure rend zéro.
+                    //   **Un écart de cet ordre entre le calcul et l'image ne se règle pas en
+                    //   montant l'alpha** : il dit que le pixel n'arrive pas jusqu'à l'écran, et
+                    //   l'occultation par fratrie vient d'être écartée. Reste à examiner : le
+                    //   masque du médaillon, le `CanvasRenderer` de cette Image, et la largeur de
+                    //   l'anneau (2 unités) devant le pas d'échantillonnage.
+                    // ⚠️ Aucune de ces pistes n'est privilégiée ici : les nommer sans les mesurer
+                    //   serait refaire ce que cette nuit a déjà payé trois fois.
+                    if (fracLunette > 0f && (iMax < 0 || Mathf.Abs(iMax - iAttendu) > 3))
+                        ecarts.Add($"LUNETTE : {ou} dans le profil radial, là où le canon en veut un à "
+                                   + $"{fracLunette:F3} R. Ses paramètres sont pourtant tous corrects — "
+                                   + "c'est l'EFFET qui manque, pas la forme.");
+                }
+
                 // ⛔⛔⛔ LE CONTRÔLE QUI MANQUAIT PARTOUT AILLEURS : ÉTEINDRE LA CIBLE. Un contrôle
                 // négatif prouve qu'on ne mesure pas RIEN ; il ne prouve pas qu'on mesure LE BON.
                 // Trois tours d'un instrument voisin ont rapporté l'arc FROID en croyant lire le

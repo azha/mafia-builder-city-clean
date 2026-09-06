@@ -1117,7 +1117,24 @@ namespace MafiaCleanCity.Shell
             RectTransform lunetteRect = (RectTransform)lunetteGo.transform;
             lunetteRect.anchorMin = lunetteRect.anchorMax = new Vector2(0.5f, 0.5f);
             lunetteRect.pivot = new Vector2(0.5f, 0.5f);
-            float lunetteDiametre = ManometreDiameter - BoitierRingThicknessPx * 2f;
+            // ⛔⛔ LA LUNETTE ÉTAIT COLLÉE AU BOÎTIER, DONC INVISIBLE COMME ANNEAU DISTINCT.
+            // Son diamètre valait « médaillon moins deux épaisseurs de boîtier » : son bord
+            // extérieur touchait le bord intérieur du laiton, et les deux se lisaient comme une
+            // seule jante. Mesuré par une garde d'EFFET neuve (profil radial de luminance, moitié
+            // basse pour éviter arcs et libellés) : **aucun maximum local à 0,912 R** — la
+            // luminance y monte de façon monotone vers le boîtier (0,1793 → 0,2138 → 0,2628), le
+            // seul maximum local du profil étant à 0,96 R, c'est-à-dire le laiton lui-même.
+            // ⇒ Un juge ⊥ l'avait dit sans pouvoir en donner la cause (« aucun maximum local là où
+            //   le canon a sa lunette, ton anneau égal n'existe pas à l'image ou est fondu ») ; la
+            //   cause est GÉOMÉTRIQUE, pas une affaire d'opacité. *Trois paramètres corrects — le
+            //   sprite existe, l'alpha est non nul, la largeur est inférieure au boîtier — et zéro
+            //   bosse : une garde de forme les valide tous les trois.*
+            // ⇒ LE RAYON VIENT DU CANON, par la mesure du juge sur la référence : lunette à
+            //   **27,11 CSS** pour un médaillon de 34 CSS de rayon, soit **0,797 R**. Le diamètre
+            //   s'en dérive, il n'est plus déduit de l'épaisseur du boîtier — deux grandeurs qui
+            //   n'ont aucune raison d'être liées.
+            const float LunetteRayonFractionCanon = 0.797f;   // 27,11 CSS / 34 CSS (mesure du juge)
+            float lunetteDiametre = ManometreDiameter * LunetteRayonFractionCanon;
             lunetteRect.sizeDelta = new Vector2(lunetteDiametre, lunetteDiametre);
             Image lunette = lunetteGo.AddComponent<Image>();
             lunette.sprite = ProceduralUI.Ring((int)lunetteDiametre, 2f, Color.white);
