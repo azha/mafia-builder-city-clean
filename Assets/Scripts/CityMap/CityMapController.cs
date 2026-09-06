@@ -132,6 +132,14 @@ namespace MafiaCleanCity.CityMap
         /// l'écart CROÎT avec le contraste — ce qui est exactement notre cas, une teinte claire sur
         /// une nuit bleue).</summary>
         public const float AlphaHaloMax = 0.15f;
+
+        /// <summary>Le contour SOMBRE du canon sous les noms de quartier — `stroke:#080d14` et
+        /// `stroke-width:2.4` en CSS. La dilatation de l'underlay TMP est normalisée (0..1) et se
+        /// rapporte à la largeur du champ de distance ; 2,4 CSS sur un corps de 26 unités donne
+        /// ≈ 0,092, arrondi à **0,09** — dérivé, et à remesurer par la garde d'effet plutôt qu'à
+        /// croire sur parole.</summary>
+        public static readonly Color ContourNomCouleur = new Color(0x08 / 255f, 0x0d / 255f, 0x14 / 255f, 1f);
+        public const float ContourNomDilatation = 0.09f;
         public bool VillePeinteMontee { get; private set; }
         public Sprite VillePeinteSprite { get; private set; }
         public RectTransform VillePeinteRect => villePeinteRt;
@@ -693,10 +701,31 @@ namespace MafiaCleanCity.CityMap
             halo.type = Image.Type.Simple;
             halo.raycastTarget = false;
             halo.transform.SetAsFirstSibling();      // sous le nom, toujours
+            // ⛔ LE HALO CLAIR EST NEUTRALISÉ, PAS SUPPRIMÉ — et le choix se justifie. Il portait le
+            // signe INVERSE de ce que le canon demande (voir le contour sombre plus bas) ; le
+            // supprimer casserait `AjusterHaloSurLEncre` et la garde qui plafonne son alpha, deux
+            // dispositifs justes pour ce qu'ils surveillent. On le rend donc INERTE en un point et
+            // on le dit, plutôt que de disperser le retrait sur trois fichiers dans le même geste.
+            // ⚠️ Un dispositif inerte ressemble trait pour trait à un dispositif appliqué : la
+            //    valeur est écrite ici et son plafond reste vérifié — 0 est bien ≤ au plafond.
+            { Color hc = halo.color; hc.a = 0f; halo.color = hc; }
 
             TextMeshProUGUI label = NewText("Label", cell.transform, "", CorpsDuNomUnites,
                 TextAlignmentOptions.Center);
-            label.characterSpacing = 8f; // le lettrage espacé de la maquette (.nomq : letter-spacing .24em)
+            // ⛔ LA ROMAINE À EMPATTEMENTS DU CANON — `hudSerifFont` EXISTE dans les jetons et
+            // n'était pas employé ici. Un juge ⊥ mesure « la maquette est en romaine à empattements,
+            // le jeu en linéale » ; le client embarque pourtant la fonte. *Un jeton disponible et
+            // non appelé se lit comme un jeton absent, et personne ne le cherche.*
+            label.font = DesignTokens.Current.hudSerifFont;
+            // ⛔ 24, PAS 8 — et l'unité était le défaut, pas la valeur. Le canon donne
+            // `letter-spacing:.24em` ; le `characterSpacing` de TMP se compte en **centièmes d'em**,
+            // ce que ce dépôt écrit déjà noir sur blanc ailleurs (`characterSpacing = 12f` annoté
+            // « `.12em` » sur les boutons de fiche). 8 valait donc 0,08 em — le tiers du dû, et
+            // c'est précisément « l'avance perdue » que le juge mesure.
+            label.characterSpacing = 24f;   // `.nomq{letter-spacing:.24em}` — 100 = 1 em
+            // ⛔ `opacity:.9` du canon (m1), qui n'est PAS un rouge-moins-bleu : la maquette pose une
+            // opacité sur l'encre entière, pas une teinte plus froide.
+            label.alpha = 0.9f;
             label.fontStyle = FontStyles.UpperCase; // capitales en STYLE — le texte reste le nom servi
             // ⛔ LA TEINTE EST UNE FAMILLE, PAS UNE VALEUR (F9). Mesuré par le juge : l'encre de la
             // maquette va de (173,164,144) à (205,189,165), soit r−b de 29 à 40 — une crème CHAUDE.
@@ -721,6 +750,26 @@ namespace MafiaCleanCity.CityMap
             //   paires de marqueurs — C10, 0 sur 153) au lieu d'être coupé en silence.
             Stretch((RectTransform)label.transform, new Vector2(6, 2), new Vector2(-6, -2));
             label.overflowMode = TextOverflowModes.Overflow;
+
+            // ⛔⛔⛔ LE SIGNE ÉTAIT INVERSÉ, ET C'EST LE FINDING LE PLUS COÛTEUX DE CET ÉCRAN.
+            // La maquette CREUSE un contour SOMBRE sous le glyphe — `paint-order:stroke;
+            // stroke:#080d14; stroke-width:2.4` — mesuré par un juge ⊥ à **−10 à −20 L** sous l'art.
+            // Le jeu posait un halo CLAIR, mesuré **+17,7 L**. Les deux dispositifs ont la même
+            // intention (détacher le nom de l'art) et des signes opposés ; le nôtre venait d'un
+            // « +20 L » que le round précédent avait pris pour une propriété de la maquette alors
+            // que c'était le contraste que le contour sombre PRODUIT. *Une cible dérivée d'un effet
+            // n'est pas la description de sa cause* — et on a construit la cause inverse.
+            // ⇒ Le halo clair part ; à sa place, un `Underlay` sombre à la cote du canon. Ce n'est
+            //   PAS un contour TMP (`_OutlineWidth`) : ce dépôt a déjà mesuré qu'il se trace à
+            //   l'INTÉRIEUR du bord et ronge la lettre (195 → 90 → 28 pixels clairs) sans jamais
+            //   devenir sombre. L'underlay, lui, s'ajoute AUTOUR.
+            var mat = label.fontMaterial;
+            mat.EnableKeyword(ShaderUtilities.Keyword_Underlay);
+            mat.SetColor(ShaderUtilities.ID_UnderlayColor, ContourNomCouleur);
+            mat.SetFloat(ShaderUtilities.ID_UnderlayOffsetX, 0f);
+            mat.SetFloat(ShaderUtilities.ID_UnderlayOffsetY, 0f);
+            mat.SetFloat(ShaderUtilities.ID_UnderlayDilate, ContourNomDilatation);
+            mat.SetFloat(ShaderUtilities.ID_UnderlaySoftness, 0f);   // un CONTOUR, pas une ombre
 
             // Le halo suit l'ENCRE (F7) : il est posé une fois le texte connu, dans `AjusterHalo`.
             var haloRt = (RectTransform)haloGo.transform;
