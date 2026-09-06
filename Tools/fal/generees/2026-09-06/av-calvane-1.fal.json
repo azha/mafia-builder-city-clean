@@ -1,0 +1,13 @@
+{
+  "modele": "fal-ai/flux/dev",
+  "prompt": "A man in his thirties, Mediterranean, slicked hair going thin, sweat-shined forehead, shirt collar open, jacket rumpled. Dark crime-drama portrait, late 1980s to early 1990s, the register of The Sopranos and The Wire — the LAWYERS of that world: institutional, tired, a cheap rumpled suit worn badly, never elegant, never expensive, no silk, no pocket square, nothing sharp. Bust, head and shoulders, front view, filling the square frame. Heavy chiaroscuro: one hard warm key light raking from the left, deep black shadow on the other side. Muted desaturated palette, dark blue-grey ground, no saturated colour, no text, no logo, no watermark. Painted poster illustration: flat areas of colour, thick contours, heavy simplification, no photorealism.",
+  "seed": 63,
+  "largeur": 1024,
+  "hauteur": 1024,
+  "etapes": 28,
+  "guidance": 3.5,
+  "request_id": "01a07897-fb08-7302-a5c5-8edeeac8e5df",
+  "duree_s": 8.1,
+  "cout_usd_estime": 0.025,
+  "genere_le": "2026-09-06T23:20:28+0200"
+}

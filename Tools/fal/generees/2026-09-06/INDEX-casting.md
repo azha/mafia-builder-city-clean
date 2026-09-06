@@ -1,4 +1,4 @@
-# Le casting — 46 pièces livrées (2026-09-06)
+# Le casting — 60 pièces livrées (2026-09-06)
 
 **Direction validée par l'user** : « ça c'est mieux » sur le registre **Sopranos / The Wire** — des gens
 ordinaires en vêtements ordinaires, **jamais** le costume-cravate. Ère fin 80 – début 90, pays
@@ -14,13 +14,22 @@ indéterminé. Postérisation aux 4 encres du canon sur l'aplat `#161c2b` impos�
 | frères Tarcum | 1 (deux visages dans le cadre) | le seul rival que le canon dote de visages, et au pluriel |
 | opérateur de Gorge-de-Fer | 1 | « il n'y a pas de frères Iron Throat, il y a des opérateurs » |
 | marque de La Coil | 1 (**un objet, pas un visage**) | « pas de visage, pas de boss charismatique » — le vide EST la caractérisation |
+| avocats | **14** — le pool `lawyer-name-pool.ts`, forme « Maître X » |
 | Saltline | **0** | « n'est pas une organisation » — réemploi de la silhouette `UNKNOWN` |
 
 ⚠️ **Le pool réel compte 24 noms, pas 48.** Le passage à 48 est un plan, pas du code : les 24 noms
 supplémentaires n'existent nulle part. Les générer aurait été **inventer des noms** ; c'est un lot back
 (étendre le pool) qui doit précéder, sinon les portraits n'ont personne à qui appartenir.
-⚠️ **Les 3 avocats ne sont pas produits** : la base ne sert que des étiquettes de rang, en anglais, et la
-question préalable — *personnage nommé ou fonction anonyme ?* — appartient à l'user.
+**Les avocats : 14, pas 3** — ruling user « personnages nommés », et la mesure corrige le compte.
+`hire` n'a **aucun plafond par joueur** : nommer par RANG rendrait trois avocats boutique indiscernables.
+Le back a écrit aujourd'hui `operational/legal/lawyer-name-pool.ts` — **14 patronymes** (Aldane, Berrow,
+Calvane, Tessall, Estave, Farring, Gallow, Hestrom, Ivane, Kelmar, Lorbec, Meridan, Norwan, Prevast),
+forme « **Maître X** », attribués par hash + sondage d'unicité comme les deux autres pools, intersection
+vide avec les 42 noms existants et une garde qui l'asserte sur les 4 pools. Le portrait suivant le NOM,
+il en faut donc **14**, produits ici.
+★ Registre des avocats, et c'est une nuance du ruling : le costume n'est pas interdit chez EUX — un
+avocat commis d'office en costume froissé EST le registre de ces séries. Ce qui est interdit, c'est
+l'élégance : rien de coupé, rien de cher, cravates dénouées, vestes fatiguées.
 
 ## Ce que la garde de vision a mesuré, et ce que ça a changé
 
