@@ -1360,7 +1360,29 @@ namespace MafiaCleanCity.Capture.Tests
 
             LisibiliteDuTexte(shell.ContentSlot.gameObject);
 
+            // ⛔⛔ LA GOUTTIÈRE NE SE TRANCHE PAS SUR UNE SEULE RÉSOLUTION, ET C'EST TOUT L'OBJET
+            // DE CETTE PAIRE. Le r10 du juge a dû laisser F10 en réserve pour cette raison exacte,
+            // et il l'écrit : le MÊME cadre rendu à 1080×1920 et à 1080×2400 diffère de jusqu'à
+            // 7/255 sur son fond, à géométrie identique — le dégradé est ancré sur l'ÉCRAN, pas sur
+            // le cadre. Une planche unique ne permet donc de conclure ni sur le fond, ni sur ce que
+            // le bandeau recouvre.
+            // ⚠️ Et jusqu'ici la seule planche sous chrome était en 2400 : le juge jugeait ㊲ sur
+            //   `B3C1`, qui monte l'écran NU (aucun `AppShell`). Le cadre y touchait le haut de
+            //   l'image parce qu'il n'y avait pas de chrome — ce qui a fait porter quatre tours de
+            //   mesures sur un ancrage qu'aucune de ces captures ne pouvait montrer.
             yield return CapturerA(1080, 2400, "Assets/Screenshots/screen_b3_reputation_sous_chrome_1080x2400.png");
+            yield return CapturerA(1080, 1920, "Assets/Screenshots/screen_b3_reputation_sous_chrome_1080x1920.png");
+
+            // ⛔ PAS DE SONDE DE GÉOMÉTRIE ICI — j'en ai écrit une, elle a rendu n'importe quoi,
+            // et je la retire plutôt que de livrer son nombre. Elle lisait `ContentSlot.rect` APRÈS
+            // les deux `CapturerA` : sortie `slot=1280,0x960,0 u · cadre v=-1334,1..637,1` — un
+            // cadre plus haut que son propre slot et commençant au-dessus de lui. La caméra
+            // hors-écran de la capture rétablit son état en sortant, donc le rect lu ensuite n'est
+            // celui d'AUCUNE des deux planches.
+            // ★ Le seul chiffre juste de cette sortie était la hauteur du cadre (1971,2 u = 462 px
+            //   CSS × 1280/300), et c'est précisément ce qui rendait le reste crédible.
+            // ⇒ La géométrie sous chrome se mesure sur les PNG, comme le juge la mesure — pas sur
+            //   un rect lu dans un régime que la capture vient de démonter.
         }
 
         [UnityTest]
