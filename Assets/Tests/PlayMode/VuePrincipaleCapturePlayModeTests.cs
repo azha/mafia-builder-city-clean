@@ -1815,8 +1815,23 @@ namespace MafiaCleanCity.Capture.Tests
             string identiteAttendue =
                 System.Environment.GetEnvironmentVariable(
                     MafiaCleanCity.CityMap.DemoIdentityResolver.OperationalIdentifierEnvVar);
+            // ⛔⛔ LA SIGNATURE PORTE UNE VALEUR SERVIE PAR LE BACK, pas l'entrée du client — c'est
+            // ce qui la rend opposable. `TopBarController` tire déjà le portefeuille sur TOUTE
+            // capture sous shell (`:400`), et `WalletDto` porte `player_id` ET `cash_cents`
+            // (`DashboardDtos.cs:32-37`) : un seul appel, les deux champs.
+            // ⚠️ `player_id` est sur le PORTEFEUILLE, pas sur `/v1/me` — `MeDto` ne porte que
+            //   `{account_id, handle, email, lifecycle_state, locale}` (`:45-52`), vérifié avant
+            //   d'écrire cette ligne. *Une clé « déjà parsée » l'est sur une route précise.*
+            var portefeuille = shell.TopBar != null ? shell.TopBar.CurrentWallet : null;
             var recu = new System.Text.StringBuilder("[㊵ REÇU]");
             recu.Append($" identité={(string.IsNullOrEmpty(identiteAttendue) ? "DÉFAUT (paire non exportée)" : identiteAttendue)}")
+                .Append($" · player_id={portefeuille?.player_id ?? "inconnu"}")
+                // ⚠️ Le solde est un TÉMOIN IMPRIMÉ, jamais une épingle : il peut changer
+                // LÉGITIMEMENT dans le flux capturé (un écran d'achat photographié après
+                // confirmation), et une assertion rougirait alors pour une bonne raison au
+                // mauvais endroit. *Une valeur qui bouge légitimement se journalise ; seule une
+                // valeur d'identité s'asserte.* C'est l'empreinte de la campagne qui juge le gel.
+                .Append($" · solde={portefeuille?.cash_cents ?? "inconnu"}")
                 .Append($" · nœud={(etapesServies > 0 ? ecran.DernierChargement.stages[0]?.node : "aucun")}")
                 .Append($" · stages={etapesServies}");
             for (int s = 0; s < etapesServies; s++)
@@ -1846,6 +1861,39 @@ namespace MafiaCleanCity.Capture.Tests
             //   test : elle se prouve en confrontant le NŒUD imprimé ci-dessus au corps de
             //   référence — c'est-à-dire par le juge, avec la signature que cette ligne fournit.
             //   Une signature honnête vaut mieux qu'une garde verte qui ne peut pas rougir.
+            //
+            // ⇒ ET VOICI LA FORME QUI, ELLE, PEUT ROUGIR — trouvée en cherchant une valeur qui ne
+            //   soit pas comparée à sa propre source. `player_id` est SERVI par le back depuis la
+            //   base, propre au compte, exact à l'UUID, et indépendant de l'écran : le trajet
+            //   passe par le serveur, donc ce n'est plus la variable d'environnement confrontée à
+            //   elle-même. Elle sépare les deux mondes que NI l'identité résolue NI le jour ne
+            //   séparent (72 013 et 72 050 tombent tous deux dans le jour 50).
+            //   Elle rougit sur les deux modes d'échec mesurés cette nuit : le repli sur l'autre
+            //   compte, et le jeton d'un co-locataire (le précédent HUD v3.1 où deux locataires
+            //   signaient deux comptes et le shell alternait les portefeuilles — invisible à
+            //   toute garde posée sur l'identité demandée).
+            // ⚠️ ANTI-VACUITÉ PAR DÉCLARATION DE RÉGIME : sans la variable, la garde IMPRIME
+            //   qu'elle n'est pas armée au lieu de passer verte en silence. *Un dispositif inerte
+            //   ressemble trait pour trait à un dispositif appliqué, sauf s'il déclare son état.*
+            string joueurAttendu = System.Environment.GetEnvironmentVariable("MAFIA_CAPTURE_EXPECT_PLAYER");
+            if (string.IsNullOrEmpty(joueurAttendu))
+            {
+                Debug.Log("[㊵ SIGNATURE] garde d'identité : NON ARMÉE " +
+                          "(`MAFIA_CAPTURE_EXPECT_PLAYER` absente) — la planche ne prétend rien " +
+                          "sur le compte qu'elle montre.");
+            }
+            else
+            {
+                Assert.IsNotNull(portefeuille,
+                    "garde d'identité armée mais le portefeuille n'a pas été chargé : la garde " +
+                    "serait vraie À VIDE, ce qui est pire que pas de garde.");
+                Assert.AreEqual(joueurAttendu, portefeuille.player_id,
+                    $"la capture a signé le compte `{portefeuille.player_id}` alors que " +
+                    $"`MAFIA_CAPTURE_EXPECT_PLAYER` demande `{joueurAttendu}` : la planche " +
+                    "montrerait le monde d'un AUTRE joueur, et rien dans l'image ne le dirait — " +
+                    "deux comptes ont la même structure de filière, les mêmes bandes (dérivées du " +
+                    "rang) et le même JOUR. Mesuré le 2026-09-06 : trois planches publiées ainsi.");
+            }
             Assert.Greater(etapesServies, 0,
                 "le compte de ce run ne sert AUCUNE étape : la planche montrerait l'écran « aucun " +
                 "nœud », qui est un rendu CORRECT et non un défaut. Ce n'est pas l'écran qu'il faut " +
