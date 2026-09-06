@@ -1,7 +1,7 @@
-# Arbitrages à trancher par l'user — consolidés par la session juge (2026-09-07, 00:50)
+# Arbitrages — consolidés par la session juge (2026-09-07, 00:50) · **RATIFIÉS par f2 à 01:05** sous le ruling user du 30/08 (« ya rien qui doit me revenir, t'as toutes les specs »)
 
 > Une ligne par point : **la mesure** qui l'a fait naître (rapport, chiffre) · **les options** · **l'option recommandée**. Rien
-> n'est tranché ici ; l'user tranche en un passage. Les points déjà tranchés sont marqués ✅ et n'y sont que pour leur conséquence.
+> n'est tranché par la session juge. **État au 2026-09-07 01:05 (message f2)** : les 21 recos sont ratifiées EN BLOC, sauf le point 5 SCINDÉ (le saut de +24 px = correctif ratifié ; « garder sans tween » = NON ratifié, laissé ouvert : *une mesure de l'état présent ne ratifie pas une intention* — dernière parole de l'user le 27/08 : « animé le truc ») et le point 13 COMPLÉTÉ (46 phrases = 24 `decision.type.*` TD-535 + 16 `hl.option.*` + 2 card + 2 staff + 1 event + 1 `live_ops.event.E-LO-11` ; 20 propositions hors bundle — RÉDACTION prise par f2, ère 1B fin 80s / début 90s, R2.2). Les points 17 et 18 sont routés (blender : canon ① propre, références re-rendues avec DejaVu). Ces ratifications font foi pour les classes ASSUMÉ / ARBITRAGE des prochains dossiers ; la session juge n'applique rien elle-même. Les points déjà tranchés sont marqués ✅ et n'y sont que pour leur conséquence.
 > Cap de l'user (00:40) : « jouable ASAP » — la recommandation suit ce cap quand deux options se valent.
 
 ## A. Doctrine et périmètre
