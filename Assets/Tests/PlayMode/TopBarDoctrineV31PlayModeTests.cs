@@ -1635,5 +1635,86 @@ namespace MafiaCleanCity.Shell.Tests
                 "CONTRÔLE POSITIF : après avoir déplacé Hairline APRÈS Manometre dans l'ordre de " +
                 "fratrie, le détecteur DOIT le signaler — sinon le 0 ci-dessus ne prouve rien");
         }
+
+        /// <summary>DA10 — ① M3 : le voile du bandeau doit rendre CE QUE LE NAVIGATEUR REND, et la
+        /// méthode d'avant doit RATER.
+        ///
+        /// ⛔⛔ CETTE GARDE EXISTE PARCE QU'UNE CONVERSION APPLIQUÉE À TROIS SURFACES SUR CINQ N'EST
+        /// PAS UNE CONVERSION. Un juge ⊥ a balayé les cinq surfaces translucides du chrome et
+        /// mesuré, pour chacune, laquelle des deux prédictions gagne : plaque de fiche et les deux
+        /// arcs ⇒ sRGB (alpha converti) ; voile du bandeau et volutes ⇒ linéaire (alpha recopié).
+        /// **La garde de population précédente ne pouvait pas le voir** : elle vérifiait que les
+        /// sites de conversion existent, pas qu'ils couvrent la population. C'est la forme
+        /// « allowlist » du défaut — la garde mesure une population qui EXCLUT le défaut.
+        ///
+        /// ⇒ CE QU'ELLE ASSERTE, ET C'EST UNE PROPRIÉTÉ DE PIXEL, PAS DE PARAMÈTRE : le voile
+        /// composé sur chacun des fonds DÉCLARÉS doit tomber à moins de `ToleranceVoile` de ce
+        /// qu'un mélange sRGB produirait. Asserter que la conversion est APPELÉE laisserait passer
+        /// une conversion qui ne change rien — ce dépôt a déjà livré un halo dont les trois
+        /// paramètres étaient vrais et qui ne produisait aucun pixel.
+        ///
+        /// ⇒ ET LE CONTRÔLE QUI REND L'ASSERTION PROBANTE : l'alpha NON ajusté doit DÉPASSER
+        /// `PlancherEchecVoile`. Sans lui, une conversion inerte passerait dès que les deux espaces
+        /// coïncident sur les cas choisis — et ils coïncident d'autant plus que l'encre est sombre,
+        /// ce qui est exactement le cas ici.
+        ///
+        /// SEUILS MESURÉS, PAS CHOISIS (calculés hors ligne sur le fond que le juge a échantillonné,
+        /// art (149,164,182), au point de dégradé t = 0,128) : alpha recopié ⇒ **26/255** d'écart,
+        /// alpha ajusté ⇒ **4/255**. Le juge, lui, mesure 29 sur la planche. Les deux chiffres ne
+        /// sont pas le même nombre et n'ont pas à l'être — il lit un pixel de capture, je calcule un
+        /// pixel de composition — mais ils sont du même ORDRE et de même SIGNE, ce qui est ce qu'une
+        /// prédiction doit rendre. La tolérance est posée à 8 et le plancher d'échec à 20 : entre
+        /// les deux il y a un facteur 2,5 des deux côtés, donc la garde ne départage pas du bruit.
+        ///
+        /// ⚠️ CE QU'ELLE NE PROUVE PAS, et il faut le dire : elle prouve la COMPOSITION, pas le
+        /// RENDU. Elle ne remplace pas une planche — elle la précède, et elle rougira si quelqu'un
+        /// retire la conversion, ce qu'une planche ne fera qu'au prochain tour de juge.</summary>
+        [Test, Category("HUDv31")]
+        public void DA10_VoileDuBandeau_ComposeCommeLeNavigateur_EtLAncienneMethodeRate()
+        {
+            const float ToleranceVoile = 8f;      // /255 — l'ajusté mesure 4 hors ligne
+            const float PlancherEchecVoile = 20f; // /255 — le recopié mesure 26 hors ligne
+
+            Color[] fonds = ProceduralUI.FondsDeReferenceVoile();
+            Assert.Greater(fonds.Length, 1,
+                "PLANCHER ANTI-VACUITÉ : un domaine de fonds vide rendrait toute erreur nulle, donc "
+                + "l'assertion vraie à vide et VERTE pour toujours");
+
+            var surfaces = new[]
+            {
+                new { Nom = "verre haut", Encre = DesignTokens.Current.hudBarGlassTop },
+                new { Nom = "verre bas",  Encre = DesignTokens.Current.hudBarGlassBottom },
+            };
+
+            foreach (var s in surfaces)
+            {
+                float alphaCss = s.Encre.a;
+                Assert.That(alphaCss, Is.GreaterThan(0f).And.LessThan(1f),
+                    $"{s.Nom} : un alpha à 0 ou 1 sort la surface du domaine de la conversion, et la "
+                    + "ferait passer sans rien prouver");
+
+                float residu;
+                float alphaAjuste = ProceduralUI.AlphaVoileSurFondQuelconque(s.Encre, alphaCss, out residu);
+                float erreurRecopie = ProceduralUI.ErreurVoile(s.Encre, alphaCss, alphaCss);
+
+                Debug.Log($"[VOILE-M3] {s.Nom} : α {alphaCss:F3} → {alphaAjuste:F4} · "
+                          + $"écart ajusté {residu:F2}/255 · écart RECOPIÉ {erreurRecopie:F2}/255");
+
+                Assert.LessOrEqual(residu, ToleranceVoile,
+                    $"{s.Nom} : le voile ajusté s'écarte de {residu:F2}/255 de ce que le navigateur "
+                    + $"produirait, au-delà de la tolérance mesurée {ToleranceVoile}/255");
+
+                Assert.Greater(erreurRecopie, PlancherEchecVoile,
+                    $"CONTRÔLE — {s.Nom} : l'alpha RECOPIÉ ne rate que de {erreurRecopie:F2}/255. "
+                    + "S'il passait sous le plancher, l'assertion ci-dessus ne prouverait plus rien : "
+                    + "une conversion inerte la satisferait aussi. Ce n'est pas la conversion qui est "
+                    + "en cause, c'est cette garde qui a cessé de pouvoir discriminer");
+
+                Assert.Greater(erreurRecopie, residu * 2f,
+                    $"CONTRÔLE DE SÉPARATION — {s.Nom} : recopié {erreurRecopie:F2} contre ajusté "
+                    + $"{residu:F2}. Sans un facteur 2, les deux régimes ne sont pas distinguables et "
+                    + "la garde départagerait du bruit");
+            }
+        }
     }
 }
