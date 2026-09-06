@@ -92,13 +92,28 @@ def main():
         #    propre correctif (une clé fabriquée retirée de session/open) se lirait à 05h30
         #    comme une régression du back — un faux finding dans une fenêtre courte est pire
         #    qu'un finding manqué, parce qu'il détourne l'attention.
+        # ⛔ La forme des « attendus » varie d'une base à l'autre : n'en SUPPOSER aucune, et
+        #    imprimer ce qu'elle contient VRAIMENT. La version d'avant lisait une clé précise et
+        #    affichait « None / None » sur une base d'une autre forme — ce qui se lit comme un
+        #    bug de l'outil au moment précis où quelqu'un décide.
+        cle_att, corps_att = None, set()
         if attendus:
-            a = attendus.get('cles_retirees_par_correctif', {})
-            print('\nécart ATTENDU, exclu des findings : %s' % a.get('attendu'))
-            print('   raison : %s' % a.get('raison'))
+            print('\nÉCARTS ANNONCÉS D’AVANCE (inscrits dans la base, PAS des findings) :')
+            for k, v in sorted(attendus.items()):
+                if k == '_':
+                    print('   %s' % v)
+                elif isinstance(v, dict):
+                    print('   %s :' % k)
+                    for kk, vv in sorted(v.items()):
+                        print('      %-24s %s' % (kk, vv))
+                else:
+                    print('   %-26s %s' % (k, v))
+            a = attendus.get('cles_retirees_par_correctif') or {}
             cle_att, corps_att = a.get('clé'), set(a.get('corps') or ())
-        else:
-            cle_att, corps_att = None, set()
+            if cle_att:
+                print('   ⇒ exclusion ACTIVE sur `%s` dans %d corps' % (cle_att, len(corps_att)))
+            else:
+                print('   ⇒ aucune exclusion active : tout écart de CLÉ sera rapporté.')
 
         partis = sorted(set(base) - set(maint))
         neufs = sorted(set(maint) - set(base))
