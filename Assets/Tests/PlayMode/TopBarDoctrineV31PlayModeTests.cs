@@ -319,12 +319,30 @@ namespace MafiaCleanCity.Shell.Tests
             var sealedFields = new HashSet<string>();
             foreach (FieldInfo field in typeof(DesignTokens).GetFields(BindingFlags.Public | BindingFlags.Instance))
                 sealedFields.Add(field.Name);
-            // 62 Color scellés (CanonPaletteComparator.ExpectedTokenCount, source UNIQUE) + 2
+            // Les Color du canon (CanonPaletteComparator.ExpectedTokenCount, source UNIQUE) + 2
             // TMP_FontAsset (primaryFont, hudSerifFont — hors du périmètre couleur mais des champs
             // publics réels). AMENDÉ NOMMÉMENT — HUD v3.1 boucle ⊥ pixel-perfect (2026-08-21) : +1 →
             // +2, `hudSerifFont` ajouté (écart (5), DesignTokens.cs).
-            Assert.AreEqual(CanonPaletteComparator.ExpectedTokenCount + 2, sealedFields.Count,
-                "sanity du reflet lui-même — doit voir 62 Color + primaryFont + hudSerifFont");
+            //
+            // ⛔⛔ AMENDÉ NOMMÉMENT (2026-09-06) : +2 → +3, `accentCalm` ajouté. Et ce compte-là
+            //    NE SE BUMPE PAS SANS DIRE CE QU'IL COMPTE — un compte nu ne dit pas si le champ de
+            //    plus est légitime. Il est donc NOMMÉ et asserté séparément juste en dessous.
+            //    ⚠️ ET IL PORTE UNE QUESTION OUVERTE, plutôt que de la fermer en silence :
+            //    `accentCalm` a été spécifié par l'atelier (le vert `#7db36a` vivait déjà comme
+            //    littéral dans ⑥ et comme `--vert` documenté dans les résolveurs de réputation) —
+            //    il devrait donc entrer dans l'EXTRAIT DU CANON, et non rester un token client
+            //    hors extrait. Cet arbitrage appartient à la DA, pas à cet écran : tant qu'il n'est
+            //    pas rendu, le champ est compté ici, à découvert. Le jour où le canon le porte,
+            //    `ExpectedTokenCount` monte de 1 et ce `+3` redevient `+2`.
+            const string TokenHorsCanon = "accentCalm";
+            Assert.IsTrue(sealedFields.Contains(TokenHorsCanon),
+                $"le champ hors canon nommé ici (`{TokenHorsCanon}`) n'existe plus sur DesignTokens : " +
+                "cette exception a survécu à ce qu'elle excusait, et le `+3` ci-dessous est devenu faux. " +
+                "Le retirer, ne pas relâcher le compte.");
+            Assert.AreEqual(CanonPaletteComparator.ExpectedTokenCount + 3, sealedFields.Count,
+                $"sanity du reflet lui-même — doit voir {CanonPaletteComparator.ExpectedTokenCount} " +
+                $"Color du canon + primaryFont + hudSerifFont + `{TokenHorsCanon}` (hors canon, " +
+                "voir le commentaire). Vu : [" + string.Join(", ", sealedFields.OrderBy(x => x)) + "]");
 
             MatchCollection matches = Regex.Matches(text, @"DesignTokens\.Current\.(\w+)");
             Assert.GreaterOrEqual(matches.Count, 5,
