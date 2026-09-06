@@ -245,6 +245,8 @@ namespace MafiaCleanCity.Operational.Tests
             tex.Apply();
             RenderTexture.active = prev;
             System.IO.File.WriteAllBytes(chemin, tex.EncodeToPNG());
+            // Le plancher d'encre — 4 planches du dépôt étaient vides avec des tests verts.
+            MafiaCleanCity.Shell.Tests.CaptureSousShell.PlancherDEncre(tex, chemin);
 
             // Anti-vacuité de FORME (patron ㊲) : une capture ratée est UNIFORME, peu importe sa
             // couleur — on compte les pixels qui diffèrent du fond dominant, pas les pixels

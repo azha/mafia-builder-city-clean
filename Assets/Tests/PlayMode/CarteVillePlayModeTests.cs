@@ -190,6 +190,8 @@ namespace MafiaCleanCity.Shell.Tests
             canvas.worldCamera = cameraPrecedente;
             canvas.planeDistance = planPrecedent;
             System.IO.File.WriteAllBytes(Chemin, tex.EncodeToPNG());
+            // Le plancher d'encre — 4 planches du dépôt étaient vides avec des tests verts.
+            MafiaCleanCity.Shell.Tests.CaptureSousShell.PlancherDEncre(tex, Chemin);
 
             var teintes = new HashSet<int>();
             foreach (Color px in tex.GetPixels())

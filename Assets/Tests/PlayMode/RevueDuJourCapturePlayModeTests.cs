@@ -219,6 +219,8 @@ namespace MafiaCleanCity.Shell.Tests
             canvas.planeDistance = planPrecedent;
 
             System.IO.File.WriteAllBytes(chemin, tex.EncodeToPNG());
+            // Le plancher d'encre — 4 planches du dépôt étaient vides avec des tests verts.
+            MafiaCleanCity.Shell.Tests.CaptureSousShell.PlancherDEncre(tex, chemin);
             // ⛔ « PAS NOIRE » EST LA MAUVAISE PROPRIÉTÉ, et un gris uniforme la satisfait — c'est
             // exactement ce qui est arrivé au premier essai : 2 592 000 pixels sur 2 592 000
             // déclarés « non noirs », pour une image ENTIÈREMENT VIDE. La propriété qui discrimine

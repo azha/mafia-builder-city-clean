@@ -1030,6 +1030,8 @@ namespace MafiaCleanCity.Operational.Tests
             tex.Apply();
             RenderTexture.active = prev;
             System.IO.File.WriteAllBytes(chemin, tex.EncodeToPNG());
+            // Le plancher d'encre — 4 planches du dépôt étaient vides avec des tests verts.
+            MafiaCleanCity.Shell.Tests.CaptureSousShell.PlancherDEncre(tex, chemin);
 
             // ⛔⛔ CETTE GARDE A ÉTÉ REFAITE, ET L'ANCIENNE ÉTAIT DÉCORATIVE.
             // Elle comptait les pixels dont la somme RGB dépasse 0,15 et exigeait 2,5 % de la

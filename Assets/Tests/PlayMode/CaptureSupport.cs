@@ -80,6 +80,8 @@ namespace MafiaCleanCity.Tests
             tex.Apply();
             RenderTexture.active = prev;
             System.IO.File.WriteAllBytes(chemin, tex.EncodeToPNG());
+            // Le plancher d'encre — 4 planches du dépôt étaient vides avec des tests verts.
+            MafiaCleanCity.Shell.Tests.CaptureSousShell.PlancherDEncre(tex, chemin);
 
             canvas.renderMode = modeAvant;
             canvas.worldCamera = cameraAvant;

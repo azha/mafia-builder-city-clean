@@ -456,6 +456,8 @@ namespace MafiaCleanCity.Shell.Tests
             canvas.planeDistance = planPrecedent;
 
             System.IO.File.WriteAllBytes(chemin, tex.EncodeToPNG());
+            // Le plancher d'encre — 4 planches du dépôt étaient vides avec des tests verts.
+            PlancherDEncreOuEchoue(tex, chemin, echecs);
 
             // ⛔⛔ L'ÉCHELLE DU CHROME, LUE SUR LE PNG — la garde qui manquait, posée au SEUL endroit
             // qui la rend vraie pour toutes les planches sous shell.
@@ -580,6 +582,61 @@ namespace MafiaCleanCity.Shell.Tests
         ///   sinon elle accuserait les planches hors shell, exactement comme la garde d'échelle.
         /// ⚠️ Elle n'asserte RIEN sur la valeur du montant : le compte gelé n'est pas son sujet,
         ///   c'est celui de la paire d'identité et de TD-640.</summary>
+        /// <summary>⛔⛔ LA PLANCHE A-T-ELLE DE L'ENCRE ? Le plancher qui manquait — et il manquait
+        /// parce que la garde voisine porte sur la VARIÉTÉ, pas sur l'existence d'un dessin.
+        ///
+        /// Mesuré le 2026-09-06 : `ecran_demolition_1080x1920` et `_2400` rendent **0 pixel** dont
+        /// un canal dépasse 110, canal maximum **64** — un dégradé sombre et rien d'autre — et
+        /// leurs deux tests sont VERTS. Le balayage de la CLASSE en a trouvé **deux autres du même
+        /// coup** : `ecran_delegation_1080x1920` et `_2400`, également à zéro. **4 planches vides
+        /// sur les 52 qu'écrivent les suites de capture**, et aucune garde ne les voyait.
+        /// ⇒ *« L'image n'est pas uniforme » et « l'écran a dessiné quelque chose » sont deux
+        ///   propriétés distinctes.* Un dégradé porte plusieurs valeurs : il satisfait la première
+        ///   sans rien dire de la seconde. C'est la garde de variété qui certifiait le vide.
+        ///
+        /// ⇒ LE SEUIL EST DÉRIVÉ, PAS CHOISI, et sa population est écrite. Sur les **52 planches
+        ///   écrites par une suite de capture** (la population que ce site voit, pas les 122 PNG du
+        ///   dépôt — les dioramas et les fonds d'art ne passent pas par ici), la plus PAUVRE des
+        ///   non vides rend **0,518 %** (`screen_2a_fiche_1080x2400`, un écran de fiche sur art
+        ///   sombre). Le plancher est posé **cinq fois plus bas — 0,10 %** : marge nommée, pour
+        ///   qu'il n'attrape que le vide et jamais un écran légitimement sobre.
+        /// ⚠️ Ce qu'il ne fait PAS : juger la richesse d'un écran. Un état vide légitime (« personne
+        ///   au comptoir ce matin ») rend 1,4 % et passe très largement. Il répond à une seule
+        ///   question — *y a-t-il un dessin ?* — et c'est la seule à laquelle un seuil global peut
+        ///   répondre honnêtement.</summary>
+        public static void PlancherDEncre(Texture2D tex, string nom)
+        {
+            var echecs = new List<string>();
+            PlancherDEncreOuEchoue(tex, nom, echecs);
+            if (echecs.Count > 0) Assert.Fail(string.Join("\n", echecs));
+        }
+
+        public static void PlancherDEncreOuEchoue(Texture2D tex, string nom, List<string> echecs)
+        {
+            const float PartMinimale = 0.10f;   // %, soit 1/5 de la plus pauvre des 52 (0,518 %)
+            const int SeuilCanal = 110;
+
+            Color32[] px = tex.GetPixels32();
+            int encre = 0, maxCanal = 0;
+            for (int i = 0; i < px.Length; i++)
+            {
+                int m = px[i].r; if (px[i].g > m) m = px[i].g; if (px[i].b > m) m = px[i].b;
+                if (m > maxCanal) maxCanal = m;
+                if (m > SeuilCanal) encre++;
+            }
+            float part = px.Length > 0 ? 100f * encre / px.Length : 0f;
+            Debug.Log($"[PLANCHER-ENCRE] {nom} {tex.width}x{tex.height} encre={part:F3} % "
+                      + $"({encre} px > {SeuilCanal}) · canal max={maxCanal} · plancher {PartMinimale:F2} %");
+            if (part < PartMinimale)
+                echecs.Add($"{nom} : {part:F3} % d'encre (canal max {maxCanal}) sous le plancher de "
+                           + $"{PartMinimale:F2} % — cette planche ne montre aucun dessin. Le seuil est "
+                           + "dérivé des 52 planches de capture du dépôt (la plus pauvre des non vides "
+                           + "rend 0,518 %), divisé par 5. Trois causes donnent cette image et appellent "
+                           + "trois correctifs : l'écran ne monte pas, il rend un vide légitime sur le "
+                           + "compte photographié, ou le cadrage vise à côté — compter les nœuds de sa "
+                           + "racine avant de conclure.");
+        }
+
         public static IEnumerator ChromeAlimenteOuEchoue(AppShell shell, string nom, List<string> echecs)
         {
             if (shell == null || shell.TopBar == null)

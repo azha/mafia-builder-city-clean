@@ -563,6 +563,8 @@ namespace MafiaCleanCity.Capture.Tests
             tex.Apply();
             RenderTexture.active = prev;
             System.IO.File.WriteAllBytes(chemin, tex.EncodeToPNG());
+            // Le plancher d'encre — 4 planches du dépôt étaient vides avec des tests verts.
+            MafiaCleanCity.Shell.Tests.CaptureSousShell.PlancherDEncre(tex, chemin);
 
             // ⛔ ANTI-MENSONGE : une cible noire produirait un PNG parfaitement valide et vide.
             int clairs = 0;

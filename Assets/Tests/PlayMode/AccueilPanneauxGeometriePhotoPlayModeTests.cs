@@ -392,6 +392,8 @@ namespace MafiaCleanCity.Shell.Tests
             tex.Apply();
             RenderTexture.active = prev;
             System.IO.File.WriteAllBytes(Chemin, tex.EncodeToPNG());
+            // Le plancher d'encre — 4 planches du dépôt étaient vides avec des tests verts.
+            MafiaCleanCity.Shell.Tests.CaptureSousShell.PlancherDEncre(tex, Chemin);
             int clairs = 0;
             foreach (Color c in tex.GetPixels()) if (c.r + c.g + c.b > 0.15f) clairs++;
             Debug.Log($"[CAPTURE] {Chemin} {Largeur}x{Hauteur} — {clairs} pixels non noirs sur {Largeur * Hauteur}");
@@ -524,6 +526,8 @@ namespace MafiaCleanCity.Shell.Tests
             tex.Apply();
             RenderTexture.active = prev;
             System.IO.File.WriteAllBytes(chemin, tex.EncodeToPNG());
+            // Le plancher d'encre — 4 planches du dépôt étaient vides avec des tests verts.
+            MafiaCleanCity.Shell.Tests.CaptureSousShell.PlancherDEncre(tex, chemin);
 
             // ⛔ ANTI-MENSONGE : une cible noire produirait un PNG parfaitement valide et vide.
             int clairs = 0;
