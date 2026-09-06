@@ -472,6 +472,32 @@ LIENS_SUPPL = {
                   ('capture-1080x2400.png', RACINE / SCREENS / 'screen_c2_filiere_sous_chrome_1080x2400.png')],
 }
 
+
+# ㊴ ─────────────────────────────────────────────────────────────────────────────────────────
+# Table d'écarts assumés = le rapport juge-données mode maquette du même jour
+# (Tools/juge-donnees/screen_b7/maquette-2026-09-06/rapport.md, E1..E13) — transcrite, pas recopiée.
+E.append(dict(
+    dossier='screen_b7', tour='r1', sym='㊴', nom='Le dossier (« ce qu\'ils ont sur vous »)', canon='écran neuf, sans id canon',
+    controleur='ForensicScreenController',
+    but="lire trois pistes qui ne se mélangent pas — l'audit des livres, l'effluent des blocs, le train de vie — chacune sur son échelle, le dernier palier étant un événement (ils sont venus) ; puis qui parle, qui a peur, qui ne reviendra pas, et ce qu'on peut acheter comme renseignement.",
+    chemin="onglet PLUS → « LE DOSSIER » (chemin réel du joueur, `Capture_…DossierSousChrome`), compte de démo.",
+    etats="un seul : le compte de démo au 2026-09-04 — corps réel mesuré : audit `watched`, effluent `glaring`, train de vie à lire sur l'image.",
+    references=[('reference-1080x2102.png', 'rendu du cadre nominal (série 6 #131 « trois pistes qui ne se mélangent pas ») — ratifié par délégation', '1080×2102', '×3,6', '300 CSS = 1080 px')],
+    source_md=src_s6([131, 132, 133, 134, 135, 136], 131, autres=f"- Générateur : `{ATELIER}/generateur-dossier.py` (+ `chassis6.py`)."),
+    captures=[('capture-1080x2400.png', '1080×2400', 'compte de démo, sous chrome, via Plus', '2026-09-04 11:22', 'VuePrincipaleCapturePlayModeTests (`screen_b7_dossier_sous_chrome_1080x2400.png`)')],
+    assumes_intro="\n⚠️ Le juge-données du jour a mesuré que **la maquette dessine 5 des 12 valeurs possibles des 3 bandes** — et que la valeur RÉELLE du compte de démo sur l'effluent (`glaring`) n'est dessinée dans AUCUN cadre. Si la capture montre un palier que la référence ne dessine pas, le client a inventé sa forme sans témoin : décris-la, classe-la ARBITRAGE (maquette incomplète), et juge tout le reste de la piste (échelle, position, typographie) contre le cadre le plus proche.\n",
+    assumes=[
+        ("le libellé de la 3ᵉ piste ne dit pas « votre » train de vie", "la donnée est PAR LIEUTENANT (PK `lieutenant_id`, jamais projetée) — la maquette attribue au joueur l'état d'un de ses hommes (E1, sens faux côté MAQUETTE)", "—"),
+        ("pas de CTA « ACHETER DU RENSEIGNEMENT » sur la vue des pistes", "la route exige une cible (`:ref` + `actor_type`) ; la maquette l'offre sans cible et l'omet avec (E5, défaut de maquette)", "un CTA actif sans sélecteur d'acteur"),
+        ("« cinq achetables » n'apparaît nulle part", "le back refuse 3 des 5 types inconditionnellement (E4) — la maquette asserte un fait faux", "—"),
+        ("référence d'acteur = un identifiant opaque ou un libellé, pas « ia.actor.4f21 »", "B rend un UUID (E10) ; le nom du lawyer existe ailleurs (`me/legal`), le clerk n'a aucun nom en base", "un UUID complet visible à l'écran (défaut de langue)"),
+        ("l'état vide « Rien à votre nom » est indiscernable de « tout au plus bas »", "même corps (E9) — si la capture montre l'un ou l'autre, la FORME se juge contre le cadre #135", "—"),
+        ("pas de prix affiché avant l'achat", "aucune route joueur ne sert le tarif AVANT le débit (E6)", "un prix affiché — il serait inventé"),
+        ("la 3ᵉ fenêtre de compteurs porte un seul sens", "la maquette en change d'un cadre à l'autre (E11) — le client en a choisi un ; ne pas le compter comme écart", "—"),
+    ]))
+LIENS_SUPPL['screen_b7'] = [('reference-1080x2102.png', JV / 'screen_b7/reference-1080x2102.png'),
+                            ('capture-1080x2400.png', RACINE / SCREENS / 'screen_b7_dossier_sous_chrome_1080x2400.png')]
+
 # ─────────────────────────────────────────────────────────────────────────────────────────────
 # LIENS : quelles images entrent dans chaque dossier
 LIENS = {
