@@ -3,19 +3,23 @@
  "methode": "GET",
  "statut": null,
  "sans_instance": {
-  "precinctId": "aucune instance sur le compte de démo — attendue dans un corps du dossier (clés ['precinctId'])"
+  "precinctId": "AUCUNE SOURCE CONFIGURÉE pour `precinctId` (clés ['precinctId']) — c'est un trou de cet outil, pas un fait du compte : ajouter son entrée dans PARAMS"
  },
  "params": {
   "precinctId": {
    "valeur": null,
-   "source": "aucune instance sur le compte de démo — attendue dans un corps du dossier (clés ['precinctId'])"
+   "source": "AUCUNE SOURCE CONFIGURÉE pour `precinctId` (clés ['precinctId']) — c'est un trou de cet outil, pas un fait du compte : ajouter son entrée dans PARAMS"
   }
  },
  "provenance": {
-  "date": "2026-09-04T10:15:48",
-  "back_main": "6ff684db",
-  "game_back": "mafia-clean-city-game-back 2026-09-04T08:14:29.844933926Z",
-  "compte": "operational_demo@example.test",
+  "date": "2026-09-06T06:46:03",
+  "back_main": "b357e7a4",
+  "game_back": "mafia-clean-city-game-back 2026-09-04T08:41:42.667221302Z",
+  "compte": "demo_capture@example.test",
+  "jour_de_jeu": 50,
+  "horloge_game_minute": 72013,
+  "horloge_source": "city_sim_clock.game_minute scopée sur player_id (lecture en base : aucune route joueur ne la projette — forme F)",
+  "district_du_joueur_mesure": 1,
   "dossier": "police",
   "symbole": "⑰",
   "controleur": "PrecinctScreenController"

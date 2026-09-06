@@ -6,25 +6,29 @@
  "params": {
   "districtId": {
    "valeur": 1,
-   "source": "lu dans le corps de `session/open` (clé parmi ['home_district_id', 'district_id', 'district'])"
+   "source": "lu dans le corps de `city/district/1/interior` (clé parmi ['district_id', 'district'])"
   }
  },
  "provenance": {
-  "date": "2026-09-04T10:15:48",
-  "back_main": "6ff684db",
-  "game_back": "mafia-clean-city-game-back 2026-09-04T08:14:29.844933926Z",
-  "compte": "operational_demo@example.test",
+  "date": "2026-09-06T06:46:03",
+  "back_main": "b357e7a4",
+  "game_back": "mafia-clean-city-game-back 2026-09-04T08:41:42.667221302Z",
+  "compte": "demo_capture@example.test",
+  "jour_de_jeu": 50,
+  "horloge_game_minute": 72013,
+  "horloge_source": "city_sim_clock.game_minute scopée sur player_id (lecture en base : aucune route joueur ne la projette — forme F)",
+  "district_du_joueur_mesure": 1,
   "dossier": "carte",
   "symbole": "③",
   "controleur": "CityMapController",
-  "X-Request-Id": "4abbee80-ce70-4893-a133-eae747f3f99e",
-  "X-Server-Processed-At": "2026-09-04T08:15:49.766Z",
+  "X-Request-Id": "6e63d365-842d-4830-9159-624e4c9969ed",
+  "X-Server-Processed-At": "2026-09-06T04:46:03.426Z",
   "X-Api-Version": "1"
  },
  "corps": {
   "response_meta": {
-   "request_id_echo": "4abbee80-ce70-4893-a133-eae747f3f99e",
-   "server_processed_at": "2026-09-04T08:15:49.766Z",
+   "request_id_echo": "6e63d365-842d-4830-9159-624e4c9969ed",
+   "server_processed_at": "2026-09-06T04:46:03.426Z",
    "api_version": 1,
    "correlation_id_echo": null
   },
@@ -230,12 +234,12 @@
     "day_phase": "DAWN",
     "buildings": [
      {
-      "building": "bea32c47-e1fd-4385-92c7-3f83eaa16dbb",
+      "building": "bdbc099d-eaba-4935-9bcd-e1272796385c",
       "block_id": 1,
       "name_i18n": {
        "key": "game.fiction.building.name",
        "params": {
-        "enseigne": "Transit Marrek",
+        "enseigne": "Coursiers Ferrand",
         "district": "Les Bassins",
         "block": "1"
        }

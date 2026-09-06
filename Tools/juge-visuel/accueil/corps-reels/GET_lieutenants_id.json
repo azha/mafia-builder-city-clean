@@ -1,36 +1,40 @@
 {
  "route": "/v1/lieutenants/{id}",
- "route_appelee": "/v1/lieutenants/01a06b7a-43a8-7af0-a1fa-59ab2876f120",
+ "route_appelee": "/v1/lieutenants/01a07502-dcb0-78c5-b930-10673e460814",
  "methode": "GET",
  "statut": 200,
  "params": {
   "lieutenantId": {
-   "valeur": "01a06b7a-43a8-7af0-a1fa-59ab2876f120",
+   "valeur": "01a07502-dcb0-78c5-b930-10673e460814",
    "source": "lu dans le corps de `lieutenants` (clé parmi ['lieutenant_id'])"
   }
  },
  "provenance": {
-  "date": "2026-09-04T10:15:48",
-  "back_main": "6ff684db",
-  "game_back": "mafia-clean-city-game-back 2026-09-04T08:14:29.844933926Z",
-  "compte": "operational_demo@example.test",
+  "date": "2026-09-06T06:46:03",
+  "back_main": "b357e7a4",
+  "game_back": "mafia-clean-city-game-back 2026-09-04T08:41:42.667221302Z",
+  "compte": "demo_capture@example.test",
+  "jour_de_jeu": 50,
+  "horloge_game_minute": 72013,
+  "horloge_source": "city_sim_clock.game_minute scopée sur player_id (lecture en base : aucune route joueur ne la projette — forme F)",
+  "district_du_joueur_mesure": 1,
   "dossier": "accueil",
   "symbole": "④",
   "controleur": "DashboardController",
-  "X-Request-Id": "195a0890-ff64-4ce9-947e-6e7200d41d5b",
-  "X-Server-Processed-At": "2026-09-04T08:15:49.977Z",
+  "X-Request-Id": "b9c637ea-30b8-4db2-a378-6d1549e570e2",
+  "X-Server-Processed-At": "2026-09-06T04:46:03.480Z",
   "X-Api-Version": "1"
  },
  "corps": {
   "response_meta": {
-   "request_id_echo": "195a0890-ff64-4ce9-947e-6e7200d41d5b",
-   "server_processed_at": "2026-09-04T08:15:49.977Z",
+   "request_id_echo": "b9c637ea-30b8-4db2-a378-6d1549e570e2",
+   "server_processed_at": "2026-09-06T04:46:03.480Z",
    "api_version": 1,
    "correlation_id_echo": null
   },
   "payload": {
    "data": {
-    "name": "Lt. Marr",
+    "name": "Lt. Oster",
     "archetype": "COOK",
     "granted_role": "executor",
     "mode": "delegated",
@@ -42,7 +46,7 @@
     "role_efficiency_bonus": "BONUS_NONE",
     "reassign_availability": "AVAILABLE",
     "budget_bands": {
-     "PRODUCTION_OPS": "full"
+     "PRODUCTION_OPS": "depleted"
     },
     "cue_bands": {},
     "drift_phase": "DIRECT_ALIGNED",

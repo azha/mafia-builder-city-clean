@@ -5,21 +5,25 @@
  "statut": 200,
  "params": {},
  "provenance": {
-  "date": "2026-09-04T10:15:48",
-  "back_main": "6ff684db",
-  "game_back": "mafia-clean-city-game-back 2026-09-04T08:14:29.844933926Z",
-  "compte": "operational_demo@example.test",
+  "date": "2026-09-06T06:46:03",
+  "back_main": "b357e7a4",
+  "game_back": "mafia-clean-city-game-back 2026-09-04T08:41:42.667221302Z",
+  "compte": "demo_capture@example.test",
+  "jour_de_jeu": 50,
+  "horloge_game_minute": 72013,
+  "horloge_source": "city_sim_clock.game_minute scopée sur player_id (lecture en base : aucune route joueur ne la projette — forme F)",
+  "district_du_joueur_mesure": 1,
   "dossier": "ecran_demolition",
   "symbole": "㉝",
   "controleur": "DemolitionScreenController",
-  "X-Request-Id": "b42f529a-ff15-4fe0-929e-33561b5e80fb",
-  "X-Server-Processed-At": "2026-09-04T08:15:51.945Z",
+  "X-Request-Id": "80b39f67-f25a-447f-af27-446ac6a36d5c",
+  "X-Server-Processed-At": "2026-09-06T04:46:03.934Z",
   "X-Api-Version": "1"
  },
  "corps": {
   "response_meta": {
-   "request_id_echo": "b42f529a-ff15-4fe0-929e-33561b5e80fb",
-   "server_processed_at": "2026-09-04T08:15:51.945Z",
+   "request_id_echo": "80b39f67-f25a-447f-af27-446ac6a36d5c",
+   "server_processed_at": "2026-09-06T04:46:03.934Z",
    "api_version": 1,
    "correlation_id_echo": null
   },
@@ -27,7 +31,7 @@
    "data": {
     "friction_bucket": "balanced",
     "penalty_active": false,
-    "friction_node_count": 9
+    "friction_node_count": 13
    }
   }
  }

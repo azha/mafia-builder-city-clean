@@ -5,21 +5,25 @@
  "statut": 200,
  "params": {},
  "provenance": {
-  "date": "2026-09-04T10:15:48",
-  "back_main": "6ff684db",
-  "game_back": "mafia-clean-city-game-back 2026-09-04T08:14:29.844933926Z",
-  "compte": "operational_demo@example.test",
+  "date": "2026-09-06T06:46:03",
+  "back_main": "b357e7a4",
+  "game_back": "mafia-clean-city-game-back 2026-09-04T08:41:42.667221302Z",
+  "compte": "demo_capture@example.test",
+  "jour_de_jeu": 50,
+  "horloge_game_minute": 72013,
+  "horloge_source": "city_sim_clock.game_minute scopée sur player_id (lecture en base : aucune route joueur ne la projette — forme F)",
+  "district_du_joueur_mesure": 1,
   "dossier": "ecran_distribution",
   "symbole": "㉘",
   "controleur": "DistributionScreenController",
-  "X-Request-Id": "44297a66-6219-47cd-b43a-814f33a3572a",
-  "X-Server-Processed-At": "2026-09-04T08:15:51.732Z",
+  "X-Request-Id": "6d00cd2e-7a0a-4154-b9af-1db98b458523",
+  "X-Server-Processed-At": "2026-09-06T04:46:03.882Z",
   "X-Api-Version": "1"
  },
  "corps": {
   "response_meta": {
-   "request_id_echo": "44297a66-6219-47cd-b43a-814f33a3572a",
-   "server_processed_at": "2026-09-04T08:15:51.732Z",
+   "request_id_echo": "6d00cd2e-7a0a-4154-b9af-1db98b458523",
+   "server_processed_at": "2026-09-06T04:46:03.882Z",
    "api_version": 1,
    "correlation_id_echo": null
   },
@@ -27,39 +31,36 @@
    "data": {
     "routes": [
      {
-      "route_id": "8772ad18-72e4-43f4-8d7f-031266de4ad4",
-      "from_building_id": "e25107fc-0560-4ca2-bcb5-04c23c80f775",
-      "to_building_id": "86b7e091-ccc5-4e7f-843e-814e7b8cb3cd",
+      "route_id": "d2f897b9-a750-4668-bfcf-30ce6d86fc36",
+      "from_building_id": "5bdcc1cd-a3d2-49d9-8e5d-d8a08f14ff09",
+      "to_building_id": "1b26955d-ef69-4482-8f51-9573d11662df",
+      "sinuosity_bucket": "meandering",
+      "river_crossings_count_bucket": "single",
+      "route_state": "active",
+      "available_vehicles": [
+       "FOOT"
+      ]
+     },
+     {
+      "route_id": "5b7a2981-8e45-4092-9916-a92fb476989d",
+      "from_building_id": "5bdcc1cd-a3d2-49d9-8e5d-d8a08f14ff09",
+      "to_building_id": "85201a11-2529-4c8a-946a-11c6537906d8",
       "sinuosity_bucket": "direct",
       "river_crossings_count_bucket": "single",
       "route_state": "active",
       "available_vehicles": [
-       "FOOT",
-       "BIKE"
+       "FOOT"
       ]
      },
      {
-      "route_id": "b4df7c83-66ba-4e44-a961-ff2c2fbd07d8",
-      "from_building_id": "e25107fc-0560-4ca2-bcb5-04c23c80f775",
-      "to_building_id": "103556d9-9f5f-4a38-a2b7-5ffcae70b8c5",
-      "sinuosity_bucket": "direct",
-      "river_crossings_count_bucket": "single",
-      "route_state": "active",
-      "available_vehicles": [
-       "FOOT",
-       "BIKE"
-      ]
-     },
-     {
-      "route_id": "a8bee7df-4644-40f8-8132-70c9df199149",
-      "from_building_id": "cd6b9e39-ed5b-460d-8970-1535f6a55b85",
-      "to_building_id": "86b7e091-ccc5-4e7f-843e-814e7b8cb3cd",
+      "route_id": "b04a36f3-805e-4def-ae82-4d8f9bcd04c9",
+      "from_building_id": "671e927e-e6c8-4427-9d2b-fa44dd4ebe0a",
+      "to_building_id": "1b26955d-ef69-4482-8f51-9573d11662df",
       "sinuosity_bucket": "direct",
       "river_crossings_count_bucket": "none",
       "route_state": "active",
       "available_vehicles": [
-       "FOOT",
-       "BIKE"
+       "FOOT"
       ]
      }
     ]

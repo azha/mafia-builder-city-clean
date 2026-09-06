@@ -5,21 +5,25 @@
  "statut": 200,
  "params": {},
  "provenance": {
-  "date": "2026-09-04T10:15:48",
-  "back_main": "6ff684db",
-  "game_back": "mafia-clean-city-game-back 2026-09-04T08:14:29.844933926Z",
-  "compte": "operational_demo@example.test",
+  "date": "2026-09-06T06:46:03",
+  "back_main": "b357e7a4",
+  "game_back": "mafia-clean-city-game-back 2026-09-04T08:41:42.667221302Z",
+  "compte": "demo_capture@example.test",
+  "jour_de_jeu": 50,
+  "horloge_game_minute": 72013,
+  "horloge_source": "city_sim_clock.game_minute scopée sur player_id (lecture en base : aucune route joueur ne la projette — forme F)",
+  "district_du_joueur_mesure": 1,
   "dossier": "decision-du-jour",
   "symbole": "⑤",
   "controleur": "DecisionDetailScreenController",
-  "X-Request-Id": "ef67493f-39c3-4aef-9f59-f607ae734cac",
-  "X-Server-Processed-At": "2026-09-04T08:15:50.079Z",
+  "X-Request-Id": "824c20ec-0901-486a-a58e-3d2293f31e5d",
+  "X-Server-Processed-At": "2026-09-06T04:46:03.506Z",
   "X-Api-Version": "1"
  },
  "corps": {
   "response_meta": {
-   "request_id_echo": "ef67493f-39c3-4aef-9f59-f607ae734cac",
-   "server_processed_at": "2026-09-04T08:15:50.079Z",
+   "request_id_echo": "824c20ec-0901-486a-a58e-3d2293f31e5d",
+   "server_processed_at": "2026-09-06T04:46:03.506Z",
    "api_version": 1,
    "correlation_id_echo": null
   },
@@ -27,11 +31,11 @@
    "data": {
     "exceptions": [
      {
-      "exception_id": "7e4fd3b0-4214-40b2-8b8f-317efe78c94a",
-      "lieutenant_id": "01a06b7a-43a8-7af0-a1fa-59ab2876f120",
+      "exception_id": "e35defde-8713-4183-9412-d94e09d2a325",
+      "lieutenant_id": "01a07502-dcb0-78c5-b930-10673e460814",
       "lieutenant": {
-       "id": "01a06b7a-43a8-7af0-a1fa-59ab2876f120",
-       "name": "Lt. Marr"
+       "id": "01a07502-dcb0-78c5-b930-10673e460814",
+       "name": "Lt. Oster"
       },
       "event_descriptor": "exc_demo_teach_heat",
       "event_descriptor_i18n": null,
@@ -65,11 +69,11 @@
       "script_complexity_band": "ok"
      },
      {
-      "exception_id": "9ad36f27-be3c-4a82-8866-a00741abf7c6",
-      "lieutenant_id": "01a06b7a-43a8-7af0-a1fa-59ab2876f120",
+      "exception_id": "c4aa29fd-52da-4921-904f-753bfb5c9092",
+      "lieutenant_id": "01a07502-dcb0-78c5-b930-10673e460814",
       "lieutenant": {
-       "id": "01a06b7a-43a8-7af0-a1fa-59ab2876f120",
-       "name": "Lt. Marr"
+       "id": "01a07502-dcb0-78c5-b930-10673e460814",
+       "name": "Lt. Oster"
       },
       "event_descriptor": "exc_demo_raid_style",
       "event_descriptor_i18n": null,
@@ -79,7 +83,7 @@
         "label": "Repair quietly",
         "effect": {
          "type": "REPAIR",
-         "target_building_id": "cd6b9e39-ed5b-460d-8970-1535f6a55b85"
+         "target_building_id": "671e927e-e6c8-4427-9d2b-fa44dd4ebe0a"
         },
         "add_rule_dsl": null,
         "projected_consequence": "Costs cash, sheds no heat",
@@ -90,7 +94,7 @@
         "label": "Bribe the inspector",
         "effect": {
          "type": "BRIBE",
-         "target_building_id": "cd6b9e39-ed5b-460d-8970-1535f6a55b85"
+         "target_building_id": "671e927e-e6c8-4427-9d2b-fa44dd4ebe0a"
         },
         "add_rule_dsl": null,
         "projected_consequence": "Cheaper but riskier",
@@ -101,7 +105,7 @@
         "label": "Lay low",
         "effect": {
          "type": "LAY_LOW",
-         "target_building_id": "cd6b9e39-ed5b-460d-8970-1535f6a55b85"
+         "target_building_id": "671e927e-e6c8-4427-9d2b-fa44dd4ebe0a"
         },
         "add_rule_dsl": null,
         "projected_consequence": "Free, ops slow down",
@@ -113,7 +117,7 @@
        "label": "Repair quietly",
        "effect": {
         "type": "REPAIR",
-        "target_building_id": "cd6b9e39-ed5b-460d-8970-1535f6a55b85"
+        "target_building_id": "671e927e-e6c8-4427-9d2b-fa44dd4ebe0a"
        },
        "add_rule_dsl": null,
        "projected_consequence": "Costs cash, sheds no heat",
@@ -125,7 +129,7 @@
       "resolution_status": "pending"
      },
      {
-      "exception_id": "13f3ee1f-912e-4e59-906b-a7a407bbd6ba",
+      "exception_id": "72c00c6a-5527-4fd2-861f-11224573c8a3",
       "lieutenant_id": null,
       "lieutenant": null,
       "event_descriptor": "Citywide heat is high — your operations are under pressure.",
@@ -205,11 +209,11 @@
       "resolution_status": "pending"
      },
      {
-      "exception_id": "b70488fa-a7ac-4c25-b185-584ff3dd4ecb",
-      "lieutenant_id": "01a06b7a-43a8-7af0-a1fa-59ab2876f120",
+      "exception_id": "f2aafdf3-1086-4ff4-842b-7a3f1035fdad",
+      "lieutenant_id": "01a07502-dcb0-78c5-b930-10673e460814",
       "lieutenant": {
-       "id": "01a06b7a-43a8-7af0-a1fa-59ab2876f120",
-       "name": "Lt. Marr"
+       "id": "01a07502-dcb0-78c5-b930-10673e460814",
+       "name": "Lt. Oster"
       },
       "event_descriptor": "exc_demo_teach_idle",
       "event_descriptor_i18n": null,
@@ -244,11 +248,11 @@
       "script_complexity_band": "ok"
      },
      {
-      "exception_id": "9f4d5e70-b48a-416b-85a5-bd3655ab5ddf",
-      "lieutenant_id": "01a06b7c-ffb9-79f4-a4b7-d15b799303de",
+      "exception_id": "f1bbf4d7-4707-41ac-90ca-7006312d7d5c",
+      "lieutenant_id": "01a07502-df80-7922-bbad-d474dbb9a724",
       "lieutenant": {
-       "id": "01a06b7c-ffb9-79f4-a4b7-d15b799303de",
-       "name": "Lt. Tovah"
+       "id": "01a07502-df80-7922-bbad-d474dbb9a724",
+       "name": "Lt. Brasse"
       },
       "event_descriptor": "onboarding.preseed_exception.card",
       "event_descriptor_i18n": {
@@ -311,7 +315,7 @@
       "resolution_status": "pending"
      },
      {
-      "exception_id": "8d70b25f-ff54-4805-8865-d916a5cec2d0",
+      "exception_id": "3a7d2823-50cc-491c-a647-9c1a19b2b98b",
       "lieutenant_id": null,
       "lieutenant": null,
       "event_descriptor": "exc_demo_one_time",

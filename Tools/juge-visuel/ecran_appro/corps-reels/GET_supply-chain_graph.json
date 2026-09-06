@@ -5,21 +5,25 @@
  "statut": 200,
  "params": {},
  "provenance": {
-  "date": "2026-09-04T10:15:48",
-  "back_main": "6ff684db",
-  "game_back": "mafia-clean-city-game-back 2026-09-04T08:14:29.844933926Z",
-  "compte": "operational_demo@example.test",
+  "date": "2026-09-06T06:46:03",
+  "back_main": "b357e7a4",
+  "game_back": "mafia-clean-city-game-back 2026-09-04T08:41:42.667221302Z",
+  "compte": "demo_capture@example.test",
+  "jour_de_jeu": 50,
+  "horloge_game_minute": 72013,
+  "horloge_source": "city_sim_clock.game_minute scopée sur player_id (lecture en base : aucune route joueur ne la projette — forme F)",
+  "district_du_joueur_mesure": 1,
   "dossier": "ecran_appro",
   "symbole": "㉚",
   "controleur": "ChaineDApproScreenController",
-  "X-Request-Id": "a46b2478-ccba-469e-a16f-e516d4551213",
-  "X-Server-Processed-At": "2026-09-04T08:15:51.595Z",
+  "X-Request-Id": "d8e5f55b-dd4f-40fb-a49a-77feeeec86ce",
+  "X-Server-Processed-At": "2026-09-06T04:46:03.850Z",
   "X-Api-Version": "1"
  },
  "corps": {
   "response_meta": {
-   "request_id_echo": "a46b2478-ccba-469e-a16f-e516d4551213",
-   "server_processed_at": "2026-09-04T08:15:51.595Z",
+   "request_id_echo": "d8e5f55b-dd4f-40fb-a49a-77feeeec86ce",
+   "server_processed_at": "2026-09-06T04:46:03.850Z",
    "api_version": 1,
    "correlation_id_echo": null
   },
@@ -27,25 +31,25 @@
    "data": {
     "nodes": [
      {
-      "building_id": "fa876dba-fbd4-462b-8486-7016226cae97",
+      "building_id": "0701080e-4a6b-49e8-bcb2-d8718ff320e6",
       "bucket": "silent",
       "has_arrow": false,
       "arrow_to_building_id": null
      },
      {
-      "building_id": "ae4cd5a9-553f-4b46-8717-423437af08ac",
+      "building_id": "37567682-77de-4f3d-8f6c-117f12b66f70",
       "bucket": "silent",
       "has_arrow": false,
       "arrow_to_building_id": null
      },
      {
-      "building_id": "0450b0e1-bf89-462d-a230-84fb12efb5ce",
+      "building_id": "7d62ddda-2a44-40a8-a0fe-b9c206f8139f",
       "bucket": "silent",
       "has_arrow": false,
       "arrow_to_building_id": null
      },
      {
-      "building_id": "bd894aac-6468-4365-a63a-1c576bd124dd",
+      "building_id": "be52699e-218e-4d4a-9697-cee9cbe18427",
       "bucket": "silent",
       "has_arrow": false,
       "arrow_to_building_id": null
@@ -53,9 +57,9 @@
     ],
     "legs": [
      {
-      "leg_id": "1a92a858-04da-47ad-80ae-a1d819e5d36f",
-      "origin_building_id": "cd6b9e39-ed5b-460d-8970-1535f6a55b85",
-      "destination_building_id": "86b7e091-ccc5-4e7f-843e-814e7b8cb3cd",
+      "leg_id": "b829b733-c93c-49f5-b7e2-bec7e2e4130d",
+      "origin_building_id": "671e927e-e6c8-4427-9d2b-fa44dd4ebe0a",
+      "destination_building_id": "1b26955d-ef69-4482-8f51-9573d11662df",
       "debt_bucket": "accruing",
       "bypassed": false
      }

@@ -5,21 +5,25 @@
  "statut": 200,
  "params": {},
  "provenance": {
-  "date": "2026-09-04T10:15:48",
-  "back_main": "6ff684db",
-  "game_back": "mafia-clean-city-game-back 2026-09-04T08:14:29.844933926Z",
-  "compte": "operational_demo@example.test",
+  "date": "2026-09-06T06:46:03",
+  "back_main": "b357e7a4",
+  "game_back": "mafia-clean-city-game-back 2026-09-04T08:41:42.667221302Z",
+  "compte": "demo_capture@example.test",
+  "jour_de_jeu": 50,
+  "horloge_game_minute": 72013,
+  "horloge_source": "city_sim_clock.game_minute scopée sur player_id (lecture en base : aucune route joueur ne la projette — forme F)",
+  "district_du_joueur_mesure": 1,
   "dossier": "carnet",
   "symbole": "㉞",
   "controleur": "CarnetScreenController",
-  "X-Request-Id": "011a9d4c-fe4c-4438-a710-7c252bfa11b8",
-  "X-Server-Processed-At": "2026-09-04T08:15:52.006Z",
+  "X-Request-Id": "0cfe4247-1a95-467c-afee-c88a22fd3103",
+  "X-Server-Processed-At": "2026-09-06T04:46:03.951Z",
   "X-Api-Version": "1"
  },
  "corps": {
   "response_meta": {
-   "request_id_echo": "011a9d4c-fe4c-4438-a710-7c252bfa11b8",
-   "server_processed_at": "2026-09-04T08:15:52.006Z",
+   "request_id_echo": "0cfe4247-1a95-467c-afee-c88a22fd3103",
+   "server_processed_at": "2026-09-06T04:46:03.951Z",
    "api_version": 1,
    "correlation_id_echo": null
   },
@@ -27,7 +31,15 @@
    "data": {
     "events": [
      {
-      "event_id": "cbf012c8-fd8c-45aa-a20b-1d4732e4f60c",
+      "event_id": "634bf01c-50f4-4792-9042-6900b5066237",
+      "district": "district-16",
+      "kind": "stalled_tram",
+      "channel": "trade_channel",
+      "descriptor_i18n_key": "ambient.micro_event.stalled_tram",
+      "recency_band": "fresh"
+     },
+     {
+      "event_id": "b8985040-9768-44c8-bca3-cb8ab3eae116",
       "district": "district-16",
       "kind": "bar_rumor",
       "channel": "bar_talk",
@@ -35,95 +47,63 @@
       "recency_band": "fresh"
      },
      {
-      "event_id": "50858169-ec31-4319-a024-b37497eb05b6",
-      "district": "district-16",
+      "event_id": "11498fa0-389f-489b-bd9e-ddf162d6ebb1",
+      "district": "district-13",
+      "kind": "delayed_shipment",
+      "channel": "trade_channel",
+      "descriptor_i18n_key": "ambient.micro_event.delayed_shipment",
+      "recency_band": "fresh"
+     },
+     {
+      "event_id": "031db4a9-c6d8-4657-8b6f-ca7ae5533cf0",
+      "district": "district-13",
+      "kind": "building_inspection",
+      "channel": "constant_hum",
+      "descriptor_i18n_key": "ambient.micro_event.building_inspection",
+      "recency_band": "fresh"
+     },
+     {
+      "event_id": "fa5e543c-7e08-426a-a156-467071948b41",
+      "district": "district-11",
       "kind": "noisy_block",
       "channel": "constant_hum",
       "descriptor_i18n_key": "ambient.micro_event.noisy_block",
       "recency_band": "fresh"
      },
      {
-      "event_id": "81deeb19-b083-449a-a3ba-c39712f031a9",
-      "district": "district-13",
-      "kind": "stalled_tram",
+      "event_id": "b9ec28fb-75d8-48e4-9fff-ff8501687dd9",
+      "district": "district-11",
+      "kind": "delayed_shipment",
       "channel": "trade_channel",
-      "descriptor_i18n_key": "ambient.micro_event.stalled_tram",
+      "descriptor_i18n_key": "ambient.micro_event.delayed_shipment",
       "recency_band": "fresh"
      },
      {
-      "event_id": "fd2ec03c-febc-4b61-9058-e2c39707bea3",
-      "district": "district-13",
-      "kind": "building_inspection",
-      "channel": "constant_hum",
-      "descriptor_i18n_key": "ambient.micro_event.building_inspection",
-      "recency_band": "fresh"
-     },
-     {
-      "event_id": "b3e93e22-65a1-4fcd-a02b-a85acec87d90",
-      "district": "district-11",
-      "kind": "building_inspection",
-      "channel": "constant_hum",
-      "descriptor_i18n_key": "ambient.micro_event.building_inspection",
-      "recency_band": "fresh"
-     },
-     {
-      "event_id": "6edacdc0-ea38-4021-b49c-858f7a61b013",
-      "district": "district-11",
-      "kind": "corner_fight",
-      "channel": "constant_hum",
-      "descriptor_i18n_key": "ambient.micro_event.corner_fight",
-      "recency_band": "fresh"
-     },
-     {
-      "event_id": "3e4243c1-9750-4a7b-b6f0-ce21292cf116",
-      "district": "district-11",
-      "kind": "building_inspection",
-      "channel": "constant_hum",
-      "descriptor_i18n_key": "ambient.micro_event.building_inspection",
-      "recency_band": "fresh"
-     },
-     {
-      "event_id": "70645d65-53ff-4ddc-b395-842f7687579f",
+      "event_id": "ce670c8e-7953-470b-a4cc-757d108ee505",
       "district": "district-1",
-      "kind": "stalled_tram",
-      "channel": "trade_channel",
-      "descriptor_i18n_key": "ambient.micro_event.stalled_tram",
+      "kind": "building_inspection",
+      "channel": "constant_hum",
+      "descriptor_i18n_key": "ambient.micro_event.building_inspection",
       "recency_band": "fresh"
      },
      {
-      "event_id": "5631f9a9-5ffc-40da-b38a-d93b572d2466",
-      "district": "district-13",
-      "kind": "noisy_block",
-      "channel": "constant_hum",
-      "descriptor_i18n_key": "ambient.micro_event.noisy_block",
-      "recency_band": "fading"
-     },
-     {
-      "event_id": "5ede8928-2412-47c8-a272-7d08357b14ad",
-      "district": "district-13",
+      "event_id": "fe3da400-30f0-473b-9bd9-ccf0273c4493",
+      "district": "district-16",
       "kind": "bar_rumor",
       "channel": "bar_talk",
       "descriptor_i18n_key": "ambient.micro_event.bar_rumor",
       "recency_band": "fading"
      },
      {
-      "event_id": "366eda64-18db-4dbe-989e-98bbaf8d0050",
-      "district": "district-11",
-      "kind": "corner_fight",
+      "event_id": "2721bf57-ff90-45b8-902f-8bfd9e3f6073",
+      "district": "district-16",
+      "kind": "noisy_block",
       "channel": "constant_hum",
-      "descriptor_i18n_key": "ambient.micro_event.corner_fight",
-      "recency_band": "fading"
-     },
-     {
-      "event_id": "d466793b-fca6-443e-ba22-0188ad286df1",
-      "district": "district-11",
-      "kind": "building_inspection",
-      "channel": "constant_hum",
-      "descriptor_i18n_key": "ambient.micro_event.building_inspection",
+      "descriptor_i18n_key": "ambient.micro_event.noisy_block",
       "recency_band": "fading"
      }
     ],
-    "total": 12,
+    "total": 9,
     "limit": 20,
     "offset": 0
    }
