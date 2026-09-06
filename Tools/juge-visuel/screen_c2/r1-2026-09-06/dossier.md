@@ -1,33 +1,37 @@
-# Dossier du juge visuel — ⑱ Le menu Plus (« le Bureau du patron ») — r1 — 2026-09-06
+# Dossier du juge visuel — ㊵ Le blanchiment (« la filière ») — r1 — 2026-09-06
 
 > ⚠️ **Ce dossier est complet et instruisable.** S'il te manque quelque chose, c'est un défaut du dossier :
 > dis-le dans ton rapport, section « non vérifié ». Rien ne s'invente.
 
 ## L'écran
 
-- **Nom** : Le menu Plus (« le Bureau du patron ») (⑱, canon `screen_12`) — contrôleur `AppShell.MonterMenuPlus (ce n'est plus un locataire : c'est le shell qui le dessine)`
-- **Ce qu'on vient y faire** : le seul menu du jeu : depuis le bureau cuir/acajou, choisir une destination parmi celles qui ne sont pas des onglets — chaque ligne portant, si elle en a, le nombre de choses ACTIONNABLES (jamais un « 0 »).
-- **Chemin joueur emprunté par la capture** : onglet PLUS (`shell.ActivateTab(Tab.More)`), capture prise juste avant que le test n'active la première entrée.
-- **États capturés** : un seul : le menu ouvert, compte de démo (semaine de compression annoncée ou non — c'est à lire sur l'image).
+- **Nom** : Le blanchiment (« la filière ») (㊵, canon `écran neuf, sans id canon`) — contrôleur `FiliereScreenController`
+- **Ce qu'on vient y faire** : voir où en est chaque étape de la filière (le rang, la propreté de ce qui en sort, s'il y a de l'argent en attente), où la chaîne casse, ce qu'on ne peut pas commencer — et injecter du liquide sale au premier maillon.
+- **Chemin joueur emprunté par la capture** : onglet PLUS → « LA FILIÈRE » (chemin réel du joueur, `Capture_…FiliereSousChrome`), compte de démo.
+- **États capturés** : un seul : le compte de démo au 2026-09-04 (4 nœuds mesurés dans le corps réel, 1 seul `has_cash`).
 
 ## Référence (fait autorité : l'IMAGE)
 
 | fichier (dans ce dossier) | rôle | taille px | facteur | largeur CSS ↔ largeur écran |
 |---|---|---|---|---|
-| `reference-1080x2102.png` | rendu du cadre nominal (série 6 #20 « Le Bureau — tout le reste (semaine annoncée) ») | 1080×2102 | ×3,6 | 300 CSS = 1080 px |
-| `etats/ecran-canon.png · ecran-compression-active.png` | canons de la série 2 (les destinations · semaine en cours) | 900×1752 | ×3,0 | 300 CSS = 900 px |
+| `reference-1080x2102.png` | rendu du cadre nominal (série 6 #137 « où en est chaque étape ») — ratifié par délégation, ⚠️ porte un fait FAUX (voir assumés) | 1080×2102 | ×3,6 | 300 CSS = 1080 px |
 
 - **Source HTML/CSS** (aide de lecture, ne prime JAMAIS sur l'image) : `/home/erutheone/project/atelier3d-mafia/ecrans-brennar-6.html` (atelier `70c8f23` ;
   références rendues au SHA `3c02f72`). Les cadres sont les `<div class="cadre">` numérotés **0-based** ; ceux de cet
   écran, avec la ligne où chacun commence :
-  - #20 (l.808) — Le Bureau — tout le reste (semaine annoncée)  ⇐ **cadre NOMINAL, rendu en référence**
-  - #21 (l.816) — Le Bureau — semaine en cours
+  - #137 (l.6331) — La filière — où en est chaque étape  ⇐ **cadre NOMINAL, rendu en référence**
+  - #138 (l.6334) — La filière s'écarte de son profil
+  - #139 (l.6337) — Ce qui est tenu, ce qui reste flou
+  - #140 (l.6340) — Vous n'avez pas encore de filière
+  - #141 (l.6343) — Aucune filière montée
+  - #142 (l.6346) — Où en est chaque maillon
   Le châssis commun (jetons de couleur, primitives) est `/home/erutheone/project/atelier3d-mafia/chassis6.py` — plusieurs classes ne sont
   DÉFINIES que là. La CSS sert à NOMMER les valeurs voulues (hex, px, états) ; si CSS et image divergent, l'image gagne.
 - **Rendu** : `Tools/rendre-tel.py <page> <index> <sortie> 3.6` — Chrome sans tête, fenêtre généreuse puis recadrage
   à 300×584 CSS × 3,6 = 1080×2102, assertion de taille en sortie (anti-crop payé deux fois ici).
 - ⚠️ **Témoin** : la référence rendue est le cadre NOMINAL. Si la capture montre un AUTRE état (liste vide, semaine
   en cours, rapport traité…), choisis le cadre d'état homologue dans `etats/` ou dans la source — et dis lequel.
+- Générateur : `/home/erutheone/project/atelier3d-mafia/generateur-blanchiment.py` (+ `chassis6.py`).
 
 - **Polices — ce qui a RÉELLEMENT rendu la référence** (`fc-match` sur cette machine, exécuté à la
   génération de ce dossier le 2026-09-06 ; les références ont été rendues ici le 2026-09-03 par
@@ -51,7 +55,7 @@
 
 | fichier (dans ce dossier) | résolution | état | prise le | test |
 |---|---|---|---|---|
-| `capture-1080x2400.png` | 1080×2400 | menu ouvert, compte de démo | 2026-09-04 11:22 | `VuePrincipaleCapturePlayModeTests.Capture_EcranReputation_SousChrome (`menu_plus_1080x2400.png`)` |
+| `capture-1080x2400.png` | 1080×2400 | compte de démo, sous chrome, via Plus | 2026-09-04 11:22 | `VuePrincipaleCapturePlayModeTests (`screen_c2_filiere_sous_chrome_1080x2400.png`)` |
 
 - Client au moment des captures : `76ee3cc` (`main`, 2026-09-04 11:23 — « les QUINZE planches reprises sur le
   MÊME bundle (674 clés) ») ; ce dossier est préparé sur `aacc973`. Une capture est une mesure DATÉE.
@@ -120,12 +124,18 @@
 ⚠️ Un écart assumé a un PÉRIMÈTRE : la colonne de droite dit ce qui le ferait SORTIR de l'assumé (auquel cas
 c'est un défaut à remonter). Sans elle, l'assumé absorbe en silence des défauts d'une autre classe.
 
+⚠️ **La maquette elle-même est fausse sur un point, mesuré** (juge-données du jour, É1) : son CTA nominal est éteint (« INJECTER — IMPOSSIBLE », « il faut une planque, et rien n'en crée jamais ») alors que la planque a un écrivain de production depuis le 2026-08-31 et que le parcours joueur rend 200 sur `inject`. Si la capture montre un CTA ACTIF là où la référence le montre éteint, **c'est la référence qui a tort** : classe ARBITRAGE (maquette à corriger), pas défaut d'écran. Ne juge la FORME du CTA (géométrie, couleurs, typographie) que contre le cadre où il est actif, si tu en trouves un dans la source.
+
 | ce qu'on voit | pourquoi (mesuré, avec sa source) | ce qui le ferait SORTIR de l'assumé |
 |---|---|---|
-| **21 entrées** au lieu des ~8 destinations de la maquette | les 9 écrans neufs du 2026-08-27 et les 9 sans porte du 2026-09-02 entrent tous par ce menu (`DestinationsPlus()`, 21 entrées / 21 contrôleurs / 21 libellés mesurés le 2026-09-04) ; la maquette est en retard sur le nombre | une entrée COUPÉE par le dock, un débordement hors du panneau, deux entrées superposées, un défilement sans indice — le NOMBRE est assumé, sa MISE EN PAGE ne l'est pas |
-| aucun readout « 0 » | canon `screen_12_more_menu.md:193` : badge zéro = badge absent ; la maquette de série 2 en dessinait trois (juge-données E3, défaut de MAQUETTE) | un « 0 » visible |
-| pas de badge sur « Inspections » | aucune route ne le sert (E5, lot back L1) | — |
-| l'état `warning` de la semaine non dessiné | la maquette ne dessine que `none` et `active` (E4) — si le compte est en `warning`, le rendu n'a pas de témoin | — |
+| les 4 étapes s'appellent « ÉTAPE 01 » … et non « Le comptoir · La blanchisserie · Le garage · Le notaire » | aucune projection ne porte `building_id` (compté 0 dans les 3 projections, contrôles positifs 5/3/9) — dessiné sans source, forme F, déjà en dette TD-610 | un nom INVENTÉ (un des quatre noms de la maquette écrit en dur), ou une clé i18n brute |
+| pas de badge « écart » sur une étape, pas de compteur « écarts 00/01 » | `deviation_active` n'existe que sur `GET /:nodeId` et le repository filtre `stage_index == 1` (404 ailleurs) ; aucun cardinal servi (É2, É3) | un badge ou un compteur AFFICHÉ — il serait sans source |
+| les propretés des 4 étapes valent PARTIAL / MOSTLY_CLEAN / CLEAN / CLEAN, pas dirty→clean | `base 0,40 + 0,25·(rang−1)` aux valeurs livrées (É4) ; DIRTY est inatteignable sans re-tuner | une étape affichée DIRTY, ou un libellé hors des 4 membres de la bande |
+| la cuve remplie par paliers 25/50/75/100 % | bande à 4 membres rendue en hauteur discrète — légitime (R2.2 interdit le scalaire, pas l'ordinal), à ASSUMER (É7) | une hauteur qui ne soit pas l'un des 4 paliers |
+| « À demi propre » et non « à moitié » | chaîne servie `blanchiment.purete.a_demi_propre` (`string_table.ts:1702`) — la maquette diverge (É9) | — |
+| un libellé de propreté manquant sur PARTIAL | `blanchiment.purete.partial` n'existe dans aucune locale (É8) — si le client tombe sur un repli, c'est un DÉFAUT à remonter tel quel, pas un assumé | un repli anglais ou une clé brute visible ⇒ défaut |
+| le cadre 138 « la filière s'écarte de son profil » n'est pas capturable | seuil de déviation 250 000 c, planque pleine = 40 000 c (É5, forme E) | — |
+| les cadres 139/142 (« 04 maillons / 04 cassés ») sont périmés | 3 des 4 maillons sont refermés (É11) ; si le client affiche encore « 4 cassés », c'est une prose datée en production — DÉFAUT | un compte de maillons cassés affiché ≥ 2 |
 
 ## Format du RAPPORT — imposé
 

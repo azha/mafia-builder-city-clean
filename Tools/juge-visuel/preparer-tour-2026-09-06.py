@@ -114,6 +114,13 @@ DOCTRINE = """## Règles de doctrine applicables
   de modèle, pas N erreurs.
 - **Animation : AUCUNE sur un nouvel écran** (ruling user 2026-08-27). Aucune paire T/T+1 s n'est fournie ce
   tour : à écrire en non-vérifié.
+- **Chrome non alimenté** : si le bandeau de la capture montre des tirets (ARGENT « — », JOUR « — ») ou « Unknown »
+  dans le médaillon, la capture a été prise AVANT que le bandeau ne soit alimenté — le rapport le dit en tête et
+  **ne juge pas le chrome** (il sera repris) ; le contenu de l'écran, lui, se juge.
+- **Libellés anglais dans la RÉFÉRENCE** (`HEAT`, `$ 24 850`…) : ruling user 2026-09-02 « fr réel » — le client a
+  raison, la maquette est en retard ; à noter UNE fois comme « maquette à mettre à jour », jamais comme écart d'écran.
+- **Or** : s'il diffère, dire dans quel SENS — *plus jaune* (un jeton `accentGold #ffd23f` là où l'art veut
+  `hudMoneyGold #f2c96b`) ou *plus gris* (désaturation : alpha, voile, matériau) — ce sont deux causes distinctes.
 - **Silhouettes** : ruling DA du 2026-09-02 — plus de chapeaux 1950 (Don nu, lieutenant à capuche, homme à
   casquette). La série 6 porte encore 9 `fedora` et 24 `casquette` : si un buste diffère par le COUVRE-CHEF
   seulement, c'est un ARBITRAGE (la référence est en retard sur le ruling), pas un défaut du client.
@@ -436,6 +443,35 @@ E.append(dict(
         ("bustes contemporains (Don nu, lieutenant à capuche, homme à casquette)", "ruling DA 2026-09-02 ; la référence porte encore des chapeaux", "un buste tronqué (épaules manquantes), ovale, ou absent"),
     ]))
 
+
+# ㊵ ─────────────────────────────────────────────────────────────────────────────────────────
+# Table d'écarts assumés = le rapport juge-données mode maquette du même jour
+# (Tools/juge-donnees/screen_c2/maquette-2026-09-06/rapport.md, É1..É12) — transcrite, pas recopiée.
+E.append(dict(
+    dossier='screen_c2', tour='r1', sym='㊵', nom='Le blanchiment (« la filière »)', canon='écran neuf, sans id canon',
+    controleur='FiliereScreenController',
+    but="voir où en est chaque étape de la filière (le rang, la propreté de ce qui en sort, s'il y a de l'argent en attente), où la chaîne casse, ce qu'on ne peut pas commencer — et injecter du liquide sale au premier maillon.",
+    chemin="onglet PLUS → « LA FILIÈRE » (chemin réel du joueur, `Capture_…FiliereSousChrome`), compte de démo.",
+    etats="un seul : le compte de démo au 2026-09-04 (4 nœuds mesurés dans le corps réel, 1 seul `has_cash`).",
+    references=[('reference-1080x2102.png', 'rendu du cadre nominal (série 6 #137 « où en est chaque étape ») — ratifié par délégation, ⚠️ porte un fait FAUX (voir assumés)', '1080×2102', '×3,6', '300 CSS = 1080 px')],
+    source_md=src_s6([137, 138, 139, 140, 141, 142], 137, autres=f"- Générateur : `{ATELIER}/generateur-blanchiment.py` (+ `chassis6.py`)."),
+    captures=[('capture-1080x2400.png', '1080×2400', 'compte de démo, sous chrome, via Plus', '2026-09-04 11:22', 'VuePrincipaleCapturePlayModeTests (`screen_c2_filiere_sous_chrome_1080x2400.png`)')],
+    assumes_intro="\n⚠️ **La maquette elle-même est fausse sur un point, mesuré** (juge-données du jour, É1) : son CTA nominal est éteint (« INJECTER — IMPOSSIBLE », « il faut une planque, et rien n'en crée jamais ») alors que la planque a un écrivain de production depuis le 2026-08-31 et que le parcours joueur rend 200 sur `inject`. Si la capture montre un CTA ACTIF là où la référence le montre éteint, **c'est la référence qui a tort** : classe ARBITRAGE (maquette à corriger), pas défaut d'écran. Ne juge la FORME du CTA (géométrie, couleurs, typographie) que contre le cadre où il est actif, si tu en trouves un dans la source.\n",
+    assumes=[
+        ("les 4 étapes s'appellent « ÉTAPE 01 » … et non « Le comptoir · La blanchisserie · Le garage · Le notaire »", "aucune projection ne porte `building_id` (compté 0 dans les 3 projections, contrôles positifs 5/3/9) — dessiné sans source, forme F, déjà en dette TD-610", "un nom INVENTÉ (un des quatre noms de la maquette écrit en dur), ou une clé i18n brute"),
+        ("pas de badge « écart » sur une étape, pas de compteur « écarts 00/01 »", "`deviation_active` n'existe que sur `GET /:nodeId` et le repository filtre `stage_index == 1` (404 ailleurs) ; aucun cardinal servi (É2, É3)", "un badge ou un compteur AFFICHÉ — il serait sans source"),
+        ("les propretés des 4 étapes valent PARTIAL / MOSTLY_CLEAN / CLEAN / CLEAN, pas dirty→clean", "`base 0,40 + 0,25·(rang−1)` aux valeurs livrées (É4) ; DIRTY est inatteignable sans re-tuner", "une étape affichée DIRTY, ou un libellé hors des 4 membres de la bande"),
+        ("la cuve remplie par paliers 25/50/75/100 %", "bande à 4 membres rendue en hauteur discrète — légitime (R2.2 interdit le scalaire, pas l'ordinal), à ASSUMER (É7)", "une hauteur qui ne soit pas l'un des 4 paliers"),
+        ("« À demi propre » et non « à moitié »", "chaîne servie `blanchiment.purete.a_demi_propre` (`string_table.ts:1702`) — la maquette diverge (É9)", "—"),
+        ("un libellé de propreté manquant sur PARTIAL", "`blanchiment.purete.partial` n'existe dans aucune locale (É8) — si le client tombe sur un repli, c'est un DÉFAUT à remonter tel quel, pas un assumé", "un repli anglais ou une clé brute visible ⇒ défaut"),
+        ("le cadre 138 « la filière s'écarte de son profil » n'est pas capturable", "seuil de déviation 250 000 c, planque pleine = 40 000 c (É5, forme E)", "—"),
+        ("les cadres 139/142 (« 04 maillons / 04 cassés ») sont périmés", "3 des 4 maillons sont refermés (É11) ; si le client affiche encore « 4 cassés », c'est une prose datée en production — DÉFAUT", "un compte de maillons cassés affiché ≥ 2"),
+    ]))
+LIENS_SUPPL = {
+    'screen_c2': [('reference-1080x2102.png', JV / 'screen_c2/reference-1080x2102.png'),
+                  ('capture-1080x2400.png', RACINE / SCREENS / 'screen_c2_filiere_sous_chrome_1080x2400.png')],
+}
+
 # ─────────────────────────────────────────────────────────────────────────────────────────────
 # LIENS : quelles images entrent dans chaque dossier
 LIENS = {
@@ -466,6 +502,8 @@ LIENS = {
         ('etats/ecran-canon.png', JV / 'famille/ecran-canon.png'),
         ('capture-1080x2400.png', RACINE / SCREENS / 'planche_la_famille_1080x2400.png')],
 }
+
+LIENS.update(LIENS_SUPPL)
 
 def preparer(e):
     d = JV / e['dossier'] / f"{e['tour']}-{DATE}"

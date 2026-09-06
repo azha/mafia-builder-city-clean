@@ -17,7 +17,7 @@
 | `reference-1080x2102.png` | rendu du cadre nominal (série 6 #25 « le burner : deux messages ») | 1080×2102 | ×3,6 | 300 CSS = 1080 px |
 | `etats/ecran-canon.png · ecran-canon-vide.png · ecran-rapport-qui-traine.png` | canons de la série 2 (deux rapports · rien · un rapport qui traîne) | 900×1752 | ×3,0 | 300 CSS = 900 px |
 
-- **Source HTML/CSS** (aide de lecture, ne prime JAMAIS sur l'image) : `/home/erutheone/project/atelier3d-mafia/ecrans-brennar-6.html` (atelier `eb1eb55` ;
+- **Source HTML/CSS** (aide de lecture, ne prime JAMAIS sur l'image) : `/home/erutheone/project/atelier3d-mafia/ecrans-brennar-6.html` (atelier `70c8f23` ;
   références rendues au SHA `3c02f72`). Les cadres sont les `<div class="cadre">` numérotés **0-based** ; ceux de cet
   écran, avec la ligne où chacun commence :
   - #25 (l.954) — Autonomie — le burner : deux messages  ⇐ **cadre NOMINAL, rendu en référence**
@@ -58,7 +58,7 @@
 | `capture-1080x2400.png` | 1080×2400 | compte de démo, surimpression | 2026-09-04 11:22 | `PlancheEcransManquantsCapturePlayModeTests (`planche_l_autonomie_1080x2400.png`)` |
 
 - Client au moment des captures : `76ee3cc` (`main`, 2026-09-04 11:23 — « les QUINZE planches reprises sur le
-  MÊME bundle (674 clés) ») ; ce dossier est préparé sur `76ee3cc`. Une capture est une mesure DATÉE.
+  MÊME bundle (674 clés) ») ; ce dossier est préparé sur `aacc973`. Une capture est une mesure DATÉE.
 - Compte photographié : celui du shell par défaut, `operational_demo@example.test` (`AppShell.cs:104`), garni
   par le seeder — **pas un compte frais**. Son état au moment de la capture n'est pas re-mesurable ici.
 - Gardes du test (`CaptureSousShell` / `CapturerA`) : locataire réellement monté, feuille nommée par l'appelant,
@@ -107,6 +107,13 @@
   de modèle, pas N erreurs.
 - **Animation : AUCUNE sur un nouvel écran** (ruling user 2026-08-27). Aucune paire T/T+1 s n'est fournie ce
   tour : à écrire en non-vérifié.
+- **Chrome non alimenté** : si le bandeau de la capture montre des tirets (ARGENT « — », JOUR « — ») ou « Unknown »
+  dans le médaillon, la capture a été prise AVANT que le bandeau ne soit alimenté — le rapport le dit en tête et
+  **ne juge pas le chrome** (il sera repris) ; le contenu de l'écran, lui, se juge.
+- **Libellés anglais dans la RÉFÉRENCE** (`HEAT`, `$ 24 850`…) : ruling user 2026-09-02 « fr réel » — le client a
+  raison, la maquette est en retard ; à noter UNE fois comme « maquette à mettre à jour », jamais comme écart d'écran.
+- **Or** : s'il diffère, dire dans quel SENS — *plus jaune* (un jeton `accentGold #ffd23f` là où l'art veut
+  `hudMoneyGold #f2c96b`) ou *plus gris* (désaturation : alpha, voile, matériau) — ce sont deux causes distinctes.
 - **Silhouettes** : ruling DA du 2026-09-02 — plus de chapeaux 1950 (Don nu, lieutenant à capuche, homme à
   casquette). La série 6 porte encore 9 `fedora` et 24 `casquette` : si un buste diffère par le COUVRE-CHEF
   seulement, c'est un ARBITRAGE (la référence est en retard sur le ruling), pas un défaut du client.
