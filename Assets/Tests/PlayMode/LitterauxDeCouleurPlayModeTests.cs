@@ -14,10 +14,21 @@ namespace MafiaCleanCity.Theme.Tests
     /// token nommé est invisible à toute garde qui balaie les ACCÈS au token.
     ///
     /// ⛔⛔ POURQUOI CETTE GARDE EXISTE, ET POURQUOI LE DÉFAUT A SURVÉCU À DEUX INSTRUMENTS.
-    /// Mesuré le 2026-09-06 sur `Assets/Scripts` : **92 littéraux de couleur actifs dans 18
-    /// fichiers, dont 47 à moins de 4 d'un token nommé, dans 12 fichiers**. `#eae0c8` == `hudCreme`
-    /// est recopié dans 12 fichiers, `#d9ab4e` == `hudMoneyUnderlineGold` dans 12, `#e0664a` ==
-    /// `hudGaugeArcHot` dans 7.
+    /// Mesuré le 2026-09-06 sur `Assets/Scripts` par `Tools/apparier-litteraux-aux-tokens.py
+    /// --bilan`, APRÈS la correction de ⑯ et avec les quatre motifs : **97 littéraux de couleur
+    /// actifs dans 18 fichiers, dont 43 à moins de 4 d'un token nommé, dans 11 fichiers**.
+    /// `hudCreme` est recopié dans 11 fichiers, `hudMoneyUnderlineGold` dans 11,
+    /// `hudCremeSecondary` dans 10, `hudGaugeArcHot` dans 5.
+    ///
+    /// ⚠️ CES CHIFFRES NE SE COMPARENT PAS TERME À TERME AUX PREMIERS (92 / 47 / 12), et la
+    ///    réconciliation est faite plutôt que passée sous silence — trois variables ont bougé :
+    ///      · ⑯ a été corrigé : −8 recopies, et il sort de la population des fichiers (12 → 11) ;
+    ///      · `accentCalm` est entré dans la palette, ce qui a fait d'un littéral existant une
+    ///        recopie qui n'en était pas une la veille : +1. *Une garde de recopie dépend de la
+    ///        palette autant que du code — élargir l'une déplace le compte de l'autre.*
+    ///      · les deux motifs neufs (ci-dessous) ajoutent 13 littéraux, dont 3 recopies : +3.
+    ///    Contrôlé : les motifs d'origine appliqués à l'arbre d'aujourd'hui rendent 84 littéraux et
+    ///    40 recopies — et 84 + 8 = 92, le compte d'origine, à l'unité près.
     ///
     /// ★★ LA CLASSE : *valeur juste, chemin faux.* Les deux instruments du dépôt sont aveugles au
     ///    MÊME endroit, et pour deux raisons différentes qui se renforcent :
@@ -29,23 +40,39 @@ namespace MafiaCleanCity.Theme.Tests
     ///    jour-là le défaut a déjà douze ans d'ancienneté et douze porteurs.
     ///
     /// ⇒ LE CHIFFRE QUI A DÉCIDÉ QUE C'ÉTAIT UN LOT ET NON UN CORRECTIF : croisés avec les deux
-    ///   allowlists, **11 des 12 fichiers porteurs sont hors des DEUX**. Le douzième,
-    ///   `Shell/DailyReviewScreenController.cs`, y figure — mais comme entrée SANS PORTEUR (0 accès
+    ///   allowlists, **11 des 12 fichiers porteurs étaient hors des DEUX**. Le douzième,
+    ///   `Shell/DailyReviewScreenController.cs`, y figurait — mais comme entrée SANS PORTEUR (0 accès
     ///   au token), ce qui l'a fait passer pour une entrée orpheline à nettoyer au lieu d'un écran
     ///   qui échappe à la garde. *Les gardes de population ne sont pas fausses : elles mesurent une
     ///   population qui exclut les écrans porteurs du défaut.*
     ///
-    /// ⇒ PREMIER DÉFAUT VISIBLE QUE ÇA A PRODUIT : le juge ⊥ de ⑯ (2026-09-06) mesure son titre à
-    ///   `(177,165,139)` là où la référence veut `(234,194,104)` — soit 13,3 du littéral local
-    ///   `Creme2 = Hex("#b9ad92")`, le token suivant étant à 44,8. Ni voile, ni défaut de rendu :
-    ///   **la couleur des légendes appliquée à un titre**.
+    /// ⛔⛔⛔ RÉTRACTATION — LA PREMIÈRE VERSION DE CETTE DOCSTRING PORTAIT UNE MESURE QUE PERSONNE
+    ///   N'A PRISE. Elle attribuait à « le juge ⊥ de ⑯ » deux couleurs relevées sur le titre et sur
+    ///   la référence, et en concluait que l'écran peignait son titre avec la teinte des légendes.
+    ///   Vérifié : **il n'existe aucun rapport de juge pour ⑯** — son propre mandat le dit en
+    ///   toutes lettres (« aucune capture prise pour ce mandat ; aucun rapport précédent lu »), et
+    ///   la valeur citée pour le rendu est en fait une ligne d'un tableau HUD v3.1 sans rapport,
+    ///   où elle est marquée conforme. L'autre valeur n'existe nulle part dans l'arbre.
+    ///   ⇒ MESURE RÉELLE, prise sur les deux images : dans la bande du titre de
+    ///     `revue-du-jour/reference-1080x2102.png` la couleur claire dominante est (242,201,107)
+    ///     sur 672 pixels — soit `hudMoneyGold` à distance **0,0** ; dans la capture en jeu
+    ///     `Assets/Screenshots/revue_du_jour_seuil-force-0.1_1080x2400.png`, même bande, (242,201,106)
+    ///     sur 471 pixels. **Le titre était déjà juste.** Il n'y avait pas de couleur à corriger.
+    ///   ★ Ce qui rend la faute instructive : une prescription (« passer le titre en `hudMoneyGold` »)
+    ///     était EXACTE, et la mesure qui la justifiait était INVENTÉE. Un correctif juste ne
+    ///     valide pas la mesure qui l'a motivé — et l'appariement par la valeur, lui, désignait un
+    ///     autre token que le bon (4,4 contre 11,0) parce qu'il partait de la cible fabriquée.
+    ///     *Une mesure fausse peut désigner le bon geste et le mauvais objet dans la même phrase.*
+    ///
+    /// ⇒ CE QUE ⑯ A RÉELLEMENT PRODUIT, ET C'EST ASSEZ : neuf recopies dans un seul fichier — huit
+    ///   champs de couleur et une balise de texte riche — toutes à distance 0,00 de leur token.
     ///
     /// ⚠️ LE GABARIT EST INNOCENT, et c'est une information, pas un détail. `Tools/nouvel-ecran.py`
     ///   porte ZÉRO de ces littéraux (vérifié) — contrairement à TD-554, il n'y a donc **pas de
     ///   source à corriger**. Cette garde est la SEULE fermeture possible : sans elle, le treizième
     ///   arrive au prochain écran, par recopie d'écran à écran.
     ///
-    /// ⚠️ ELLE ROUGIT SUR 47 SITES LE JOUR OÙ ELLE ENTRE, ET C'EST VOULU. Elle rougit sur le
+    /// ⚠️ ELLE ROUGIT SUR SON DÉNOMINATEUR MESURÉ LE JOUR OÙ ELLE ENTRE, ET C'EST VOULU. Elle rougit sur le
     ///   dénominateur MESURÉ, et chaque fichier repassé aux tokens nommés la fait descendre. Une
     ///   garde posée APRÈS les douze corrections n'aurait rien eu à prouver — et n'aurait donc
     ///   jamais montré qu'elle sait rougir.</summary>
@@ -66,11 +93,23 @@ namespace MafiaCleanCity.Theme.Tests
             public Littoral(string f, int l, Color32 v, string s) { Fichier = f; Ligne = l; Valeur = v; Source = s; }
         }
 
-        // Deux formes, parce que le dépôt en porte deux — viser la PROPRIÉTÉ (« une couleur écrite
-        // en dur »), jamais la seule tournure qu'on a vue en premier. Un balayage qui n'aurait connu
-        // que `Hex("#…")` aurait rendu 73 au lieu de 92, et déclaré propres les fichiers qui
-        // n'emploient que `new Color(...)`.
-        private static readonly Regex FormeHex = new Regex("\"#([0-9a-fA-F]{6})\"", RegexOptions.Compiled);
+        // ⛔⛔ QUATRE FORMES, ET LES DEUX DERNIÈRES ONT ÉTÉ AJOUTÉES APRÈS COUP — par la garde
+        // appliquée À ELLE-MÊME (2026-09-06, en corrigeant ⑯). La v1 en connaissait deux et se
+        // croyait complète ; elle ratait :
+        //   · `"#rrggbbaa"` — le motif exigeait le guillemet fermant après SIX chiffres, donc toute
+        //     couleur écrite avec son alpha lui était invisible. **13 sites, dont 3 recopies
+        //     exactes** de `hudMoneyUnderlineGold` (`#d9ab4e40`, `#d9ab4e55`) dans ⑤ et la boutique.
+        //   · `<color=#rrggbb>` — une couleur DANS une chaîne de texte riche, sans guillemet collé
+        //     au dièse. **1 site, et c'était une recopie**, dans ⑯ même.
+        // ⇒ *Deux formulations du même faux demandent deux motifs*, et le corollaire qui manquait :
+        //   un motif qui rend le résultat espéré est le moment de le DURCIR, pas de conclure. La v1
+        //   rendait « 92 littéraux » — un chiffre assez gros pour avoir l'air exhaustif.
+        // ⚠️ ET LE MÊME JEU DE MOTIFS VIT DANS `Tools/apparier-litteraux-aux-tokens.py`, qui sert à
+        //   CORRIGER les fichiers. Les deux doivent balayer la même population : un instrument plus
+        //   étroit que la garde fait déclarer « corrigé » un fichier que la garde verra rouge — ce
+        //   qui est exactement arrivé sur ⑯ au premier passage.
+        private static readonly Regex FormeHex = new Regex("\"#([0-9a-fA-F]{6})([0-9a-fA-F]{2})?\"", RegexOptions.Compiled);
+        private static readonly Regex FormeTexteRiche = new Regex("<color=#([0-9a-fA-F]{6})([0-9a-fA-F]{2})?>", RegexOptions.Compiled);
         private static readonly Regex FormeNewColor = new Regex(
             @"new\s+Color\(\s*([0-9]*\.?[0-9]+)f?\s*,\s*([0-9]*\.?[0-9]+)f?\s*,\s*([0-9]*\.?[0-9]+)f?\s*[,)]",
             RegexOptions.Compiled);
@@ -99,13 +138,20 @@ namespace MafiaCleanCity.Theme.Tests
                     // le zéro contre la mémoire de la raison.
                     if (LigneCommentaire.IsMatch(l)) continue;
 
-                    foreach (Match m in FormeHex.Matches(l))
+                    foreach (Regex forme in new[] { FormeHex, FormeTexteRiche })
                     {
-                        string h = m.Groups[1].Value;
-                        trouves.Add(new Littoral(rel, i + 1, new Color32(
-                            byte.Parse(h.Substring(0, 2), NumberStyles.HexNumber),
-                            byte.Parse(h.Substring(2, 2), NumberStyles.HexNumber),
-                            byte.Parse(h.Substring(4, 2), NumberStyles.HexNumber), 255), m.Value));
+                        foreach (Match m in forme.Matches(l))
+                        {
+                            // Seuls les trois premiers octets sont comparés : l'alpha n'entre pas
+                            // dans la distance. Une couleur recopiée PUIS rendue translucide reste
+                            // une recopie — c'est la teinte qui doit suivre la palette, pas
+                            // l'opacité, qui est un choix de composition propre au site.
+                            string h = m.Groups[1].Value;
+                            trouves.Add(new Littoral(rel, i + 1, new Color32(
+                                byte.Parse(h.Substring(0, 2), NumberStyles.HexNumber),
+                                byte.Parse(h.Substring(2, 2), NumberStyles.HexNumber),
+                                byte.Parse(h.Substring(4, 2), NumberStyles.HexNumber), 255), m.Value));
+                        }
                     }
                     foreach (Match m in FormeNewColor.Matches(l))
                     {
@@ -193,21 +239,38 @@ namespace MafiaCleanCity.Theme.Tests
         }
 
         [Test]
-        public void Controle_LeBalayage_VoitLesDeuxFormes()
+        public void Controle_LeBalayage_VoitLesQuatreFormes()
         {
             string dir = Path.Combine(Path.GetTempPath(), $"td612_{Guid.NewGuid():N}");
             Directory.CreateDirectory(dir);
             try
             {
-                File.WriteAllText(Path.Combine(dir, "Deux.cs"),
+                File.WriteAllText(Path.Combine(dir, "Quatre.cs"),
                     "private static readonly Color A = Hex(\"#eae0c8\");\n" +
                     "img.color = new Color(0.918f, 0.878f, 0.784f);\n" +
+                    "Color B = Hex(\"#d9ab4e40\");\n" +
+                    "txt.text = \"a<color=#b9ad92> — b</color>\";\n" +
                     "// commentaire : Hex(\"#eae0c8\") documenté, NE DOIT PAS compter\n");
                 List<Littoral> vus = Balayer(dir);
-                Assert.AreEqual(2, vus.Count,
-                    "le balayage doit voir les DEUX formes et IGNORER la ligne de commentaire — " +
-                    "un motif qui ne connaît qu'une tournure sous-compte l'autre en silence. Vu : " +
+                // ⚠️ LE CONTRÔLE PORTE SUR CHAQUE FORME, PAS SUR LE TOTAL. Un `AreEqual(4, …)` nu
+                //    resterait VERT si un motif ratait sa forme pendant qu'un autre en comptait une
+                //    de trop — le compte juste pour la mauvaise raison. On nomme donc les quatre.
+                Assert.AreEqual(4, vus.Count,
+                    "le balayage doit voir les QUATRE formes et IGNORER la ligne de commentaire. Vu : " +
                     string.Join(" · ", vus.Select(v => $"{v.Ligne}:{v.Source}")));
+                var sources = vus.Select(v => v.Source).ToList();
+                Assert.IsTrue(sources.Any(s => s == "\"#eae0c8\""), "forme 1 (hex 6) non vue : " + string.Join(" · ", sources));
+                Assert.IsTrue(sources.Any(s => s.StartsWith("new Color(")), "forme 2 (new Color) non vue : " + string.Join(" · ", sources));
+                Assert.IsTrue(sources.Any(s => s == "\"#d9ab4e40\""), "forme 3 (hex 8, avec alpha) non vue — c'est le trou qui a laissé passer 3 recopies : " + string.Join(" · ", sources));
+                Assert.IsTrue(sources.Any(s => s == "<color=#b9ad92>"), "forme 4 (texte riche) non vue — c'est le trou qui a laissé passer la 9e recopie de ⑯ : " + string.Join(" · ", sources));
+                // Et la CLASSIFICATION, pas seulement la détection : un `#rrggbbaa` doit être
+                // apparié sur ses trois premiers octets, sinon il serait vu ET jugé hors palette.
+                Dictionary<string, Color32> tokens = Tokens();
+                Littoral avecAlpha = vus.First(v => v.Source == "\"#d9ab4e40\"");
+                string nomAlpha = PlusProche(tokens, avecAlpha.Valeur, out double dAlpha);
+                Assert.Less(dAlpha, SeuilDistance,
+                    $"`#d9ab4e40` doit être reconnu comme une recopie de son token (trouvé {nomAlpha} " +
+                    $"à {dAlpha:F1}) : le voir sans le classer ne ferait que déplacer l'angle mort.");
             }
             finally { Directory.Delete(dir, recursive: true); }
         }
