@@ -45,7 +45,7 @@
 | `capture-1080x2400.png` | 1080×2400 | compte de démo, sous chrome, haut de la feuille | 2026-09-04 11:22 | `PlancheEcransManquantsCapturePlayModeTests (`planche_la_famille_1080x2400.png`, `nomFeuille: LieutenantSheet`)` |
 
 - Client au moment des captures : `76ee3cc` (`main`, 2026-09-04 11:23 — « les QUINZE planches reprises sur le
-  MÊME bundle (674 clés) ») ; ce dossier est préparé sur `aacc973`. Une capture est une mesure DATÉE.
+  MÊME bundle (674 clés) ») ; ce dossier est préparé sur `379ad94`. Une capture est une mesure DATÉE.
 - Compte photographié : celui du shell par défaut, `operational_demo@example.test` (`AppShell.cs:104`), garni
   par le seeder — **pas un compte frais**. Son état au moment de la capture n'est pas re-mesurable ici.
 - Gardes du test (`CaptureSousShell` / `CapturerA`) : locataire réellement monté, feuille nommée par l'appelant,

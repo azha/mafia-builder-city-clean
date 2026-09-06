@@ -97,8 +97,10 @@ POLICES_BLOC = f"""- **Polices — ce qui a RÉELLEMENT rendu la référence** (
   Le client embarque **DejaVu Sans** / **DejaVu Serif** (`DesignTokens.primaryFont` / `hudSerifFont`).
   ⇒ `Georgia` n'a JAMAIS été montrée à personne : un écart de FAMILLE (Noto Serif ↔ DejaVu Serif) ou de
   chasse est un **ARBITRAGE** ; la **hauteur de capitale**, elle, se compare (c'est l'image approuvée).
-  `'DejaVu Sans'` est demandée par 84 règles de la série 6 et rendue par DejaVu Sans elle-même : sur le
-  sans-sérif, référence et client partagent la MÊME police — un écart y est un écart de taille, pas de famille."""
+  ⚠️ Cette phrase ne vaut que pour les références de SÉRIE 6 (`'DejaVu Sans'` demandée par 84 règles et rendue
+  par DejaVu Sans elle-même ⇒ sur le sans-sérif, référence et client partagent la MÊME police) — vérifie la
+  `font-family` de TA source : la référence Famille demande `"Segoe UI",Roboto,system-ui` ⇒ Noto Sans, et un écart
+  de chasse y est un ARBITRAGE (mesuré par le juge ⑥ le 2026-09-06 : +10 % de chasse à capitale égale)."""
 
 DOCTRINE = """## Règles de doctrine applicables
 
