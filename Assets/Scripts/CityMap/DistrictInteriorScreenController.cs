@@ -860,7 +860,28 @@ namespace MafiaCleanCity.CityMap
             // IMPORTANT) : Resolve ne rend JAMAIS null (table totale C6-F4), donc la branche null
             // seule était morte, et 6 types tombant sur fallback rendaient le même sprite sans
             // aucun discriminant. Le libellé est le discriminant du repli. Inchangé par P3.
-            if (baseSprite == null || (slots != null && baseSprite == slots.fallback))
+            // ⛔⛔ CETTE CONDITION ÉTAIT UN ÉNONCÉ DATÉ EN FORME DE `if` — corrigé le 2026-09-07.
+            //    Écrite quand le sprite ÉTAIT dessiné, elle disait : « le libellé ne sert que pour
+            //    le repli, les autres types se reconnaissent à leur image ». Vraie à sa date.
+            //    Puis l'arbitrage user du 2026-08-22 a éteint l'image (`FondPorteDejaLesBatiments`,
+            //    voir :832-841 — redessiner produisait deux bâtiments au même endroit), et
+            //    personne n'est revenu ici : le prédicat est resté syntaxiquement valide et
+            //    sémantiquement INVERSÉ. Mesuré : les 6 types SANS art portaient un libellé, et les
+            //    7 types AVEC art — laboratoire, planque, serre, coffre, point de vente — n'avaient
+            //    NI sprite NI libellé. À l'écran, le même bâtiment anonyme du fond.
+            //    ⇒ *Aucune garde ne voit ça : la condition compile, et sa valeur de vérité a changé
+            //      sous elle.* C'est la version EN CODE du piège de l'énoncé daté.
+            //
+            // ⇒ La condition exprime désormais la PROPRIÉTÉ et non le cas observé : le libellé est
+            //    nécessaire dès que le sprite ne discrimine pas. Elle reste donc juste dans les DEUX
+            //    régimes — si le drapeau rebascule un jour, le libellé se retire de lui-même pour
+            //    les types qui redeviennent reconnaissables à leur image. C'est la forme
+            //    auto-invalidante qui manquait, obtenue sans test parce qu'elle tient dans le
+            //    prédicat lui-même.
+            bool spriteDiscrimine = !FondPorteDejaLesBatiments
+                                    && baseSprite != null
+                                    && (slots == null || baseSprite != slots.fallback);
+            if (!spriteDiscrimine)
             {
                 TextMeshProUGUI label = NewText("TypeLabel", cell.transform, TypeLabel(building.operational_type),
                     9, TextAlignmentOptions.Bottom);
