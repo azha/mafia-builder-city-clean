@@ -1650,6 +1650,35 @@ namespace MafiaCleanCity.CityMap
             ficheTitre.characterSpacing = 13f;                       // `.13em`
             ficheTitre.color = DesignTokens.Current.hudMoneyGold;     // --or-vif
             ficheTitre.fontFeatures.Clear();
+            // ⛔⛔ UNE SEULE LIGNE, ET C'EST LA BOÎTE QUI L'IMPOSE — mesuré à l'exécution le
+            // 2026-09-06 (`FicheTeteGeometriePlayModeTests`, run scopé `FicheTete`) :
+            //     titre « Outillage Halde — La Lisière, îlot 1501 »  →  lignes = 2
+            //     encre du titre à 8,80 px CSS du haut du panneau, pour une boîte posée à 17,00
+            //     blanc titre → sous-titre = 1,76 px CSS  (le canon en donne 11,00)
+            // Le repli par défaut de TMP est `Normal`, et `TextAlignmentOptions.Center` vaut
+            // « MILIEU + centre », pas « centre horizontal » : un bloc de deux lignes centré dans
+            // une boîte d'UNE ligne (17,00 CSS) déborde donc SYMÉTRIQUEMENT — vers le haut dans le
+            // padding du panneau, vers le bas sur le sous-titre. **Un seul mécanisme produit les
+            // deux nombres du juge.**
+            // ★ Et c'est le SOUS-TITRE qui l'a prouvé avant toute mesure : il est posé à un offset
+            //   ABSOLU (40,80 CSS, `PoserDansFiche`). Un padding faux ou une échelle fausse
+            //   l'auraient déplacé LUI AUSSI, donc n'auraient pas pu rétrécir le blanc. Seule une
+            //   encre qui descend plus bas le peut. Mesuré ensuite : échelle relative racine→titre
+            //   = 1,000000, canvas 1280 u, boîte y=17,00 h=17,00 — l'échelle était innocente.
+            // ⚠️ Ce que ce correctif NE ferme PAS : le titre occupe encore la largeur utile quand
+            //   le nom servi est long (F2). Ce n'est pas un défaut de rendu — le canon montre une
+            //   plaque de 42,7 % parce que son nom tient en deux mots, là où le back sert
+            //   « enseigne — district, îlot N ». Raccourcir ce que la clé compose est un arbitrage
+            //   de CONTENU, pas un réglage de texte.
+            ficheTitre.textWrappingMode = TextWrappingModes.NoWrap;
+            ficheTitre.enableAutoSizing = true;
+            ficheTitre.fontSizeMax = FDi(16f);
+            // ⛔ Le plancher n'est pas un ornement : sans lui, TMP réduit jusqu'à l'illisible sur
+            // un nom très long. 10 px CSS est la hauteur des micro-libellés du bandeau — la plus
+            // petite typographie que cette DA assume déjà ailleurs, donc un plancher MESURÉ sur le
+            // dessin et non choisi. Si un nom l'atteint, le titre débordera de sa boîte en LARGEUR
+            // (visible, donc jugeable) plutôt que de se replier en silence sur deux lignes.
+            ficheTitre.fontSizeMin = FDi(10f);
             PoserDansFiche((RectTransform)ficheTitre.transform, 17.00f, 17.00f);
 
             ficheType = NewText("Type", corps.transform, "", FDi(9f), TextAlignmentOptions.Center);
