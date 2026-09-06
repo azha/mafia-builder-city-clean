@@ -761,11 +761,34 @@ namespace MafiaCleanCity.Shell.Tests
         ///   valeurs sont les mêmes et seule la LONGUEUR change — l'amincissement reste collé aux
         ///   extrémités, avec la même étendue absolue quand l'arc s'allonge. **C'est la COUPE
         ///   `Radial180`, pas l'échelle d'affichage.**
-        /// ★ Corollaire, et il commande la suite : à `fill = 0,1124` — LA VALEUR DE PRODUCTION —
-        ///   l'instrument ne trouve **AUCUN** pixel d'arc, alors qu'il en trouve à 0,30. L'arc de
-        ///   production est si court (20°) qu'il n'est **QUE des extrémités** : il n'atteint jamais
-        ///   son épaisseur nominale. *Le défaut n'est donc pas que l'arc soit fuselé, c'est qu'il
-        ///   soit trop court pour être autre chose que son propre fondu.*</summary>
+        /// ⛔⛔⛔ RÉTRACTATION, LE MÊME SOIR ET PAR L'AUTRE ORACLE DE CE FICHIER. Tout ce qui
+        /// précède sur la LONGUEUR est faux, et le mécanisme de l'erreur est celui que ce fichier
+        /// documente déjà deux cents lignes plus haut : **deux arcs superposés ne se mesurent pas
+        /// indépendamment.**
+        ///   · J'avais conclu « couverture = `fill × 180` » de deux points de DA9 (52° à 0,30,
+        ///     84° à 0,45), et j'avais cru la conclusion solide parce qu'elle reposait sur
+        ///     l'ÉTENDUE et pas seulement sur un compte. Mais les deux étendues commençaient au
+        ///     MÊME 88° — ce 88 n'était pas le début de l'arc chaud, c'était **la frontière où
+        ///     l'arc froid cesse de le masquer**. Une borne partagée par deux mesures censées
+        ///     varier aurait dû me réveiller.
+        ///   · `DA7`, qui classe froid/chaud au rayon médian, mesure sur l'état livré :
+        ///     **froid −83..3° (87°), chaud 28..76° (48°), interstice 24°** — pour un canon à 90°,
+        ///     60,55° et 29,45°. Les arcs ne sont donc PAS « trois fois trop courts » : ils sont
+        ///     un peu courts, et l'interstice manque de 5°.
+        ///   · Et la carte `fillAmount → degrés` n'est pas linéaire : 87/0,1745 = 499 contre
+        ///     48/0,1124 = 427. **Le contrôleur le disait déjà en toutes lettres** (« la carte est
+        ///     non linéaire ; on la LIT sur la mesure au lieu de la supposer ») — j'ai ajusté un
+        ///     modèle linéaire sur deux points confondus au lieu de lire cette phrase.
+        /// ⇒ CE QUI TOMBE AVEC : « l'arc de production fait 20° et n'est que ses extrémités » est
+        ///   RETIRÉ. Il fait 48°. Le fuselage reste mesuré (ratio 3,25, reproduit par le juge à
+        ///   ~3,4) et reste attribué à la COUPE — ce point-là tenait sur des valeurs absolues
+        ///   inchangées entre deux longueurs, et il n'est pas touché par la superposition.
+        /// ⇒ CE QU'IL FAUT POUR MESURER UNE LONGUEUR ICI : **éteindre l'autre arc**. Aucune mesure
+        ///   d'étendue faite avec les deux allumés ne vaut, la mienne pas plus que la première.
+        /// ★ La leçon, et c'est la troisième fois ce soir sur ce médaillon : *un confondant écarté
+        ///   revient sous un autre nom dès que l'état change.* La piste, puis le froid — et à
+        ///   chaque fois le contrôle qui validait l'instrument avait été passé sous l'ancien état.
+        /// </summary>
         [UnityTest, Category("HUDv31")]
         public IEnumerator DA9_Diagnostic_FuselageDesArcs_UneSeuleVariable()
         {
