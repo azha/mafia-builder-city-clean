@@ -322,3 +322,17 @@ là où l'enjeu le mérite, un contrôle négatif.
    absurde : +139 %). La mesure valide est le taux de remplissage du **même glyphe** `a`, à hauteur
    **identique** des deux côtés (`m16`) : −24,8 %.
 
+
+
+---
+
+## Addendum orchestrateur — 2026-09-06 — findings « À REMESURER après recapture » (menu Plus non démonté, `15a0da7`)
+
+Fait rapporté par `mafia-clean-city-f2` : depuis le 02/09, une destination ouverte depuis le menu « Plus » se montait
+PAR-DESSUS le menu sans le démonter (`MountTenant` direct, rien ne démontait). Cette planche a été prise par ce chemin.
+**Les findings suivants portent sur ce que le fond COMPOSITE montre, et un menu resté sous le voile pourrait y entrer** :
+`F1`, `F8`, `F9` — marqués **À REMESURER après recapture**, **sans être retirés** (un finding retiré sur une
+hypothèse est aussi faux qu'un finding inventé). Mesure de l'orchestrateur (`Tools/juge-visuel/mesurer-fantome-menu-plus.py`,
+sortie dans `Tools/juge-visuel/fantome-menu-plus-2026-09-06.txt`) : aucune bande périodique du menu (pas 123 px) n'est
+visible dans la zone libre de cette planche (autocorrélation ≤ +0,25 contre +0,90 sur le menu lui-même) — un texte
+fantôme isolé n'est pas testé par cet instrument. Les autres findings ne dépendent pas du fond.

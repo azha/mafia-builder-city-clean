@@ -99,3 +99,15 @@ acter qu'ils sortent du canon.
 - ⑥ : image validée ⇒ `juge-donnees` mode **clôture** dû — tenu jusqu'au top de f2 (après la resync sur `demo_capture`,
   jamais avant : l'horloge du compte a avancé de +599 min à 01:42Z).
 - Tout correctif ⇒ nouvelle capture ⇒ NOUVEAU juge (r<N+1>) ; jamais deux juges sans correctif entre eux.
+
+## 7. Addendum (2026-09-06, après le bilan) — menu « Plus » non démonté sous les écrans (`15a0da7`)
+
+Fait rapporté par f2 : depuis le 02/09, toute destination ouverte depuis le menu « Plus » se montait PAR-DESSUS le menu sans
+le démonter. Planches de ce tour prises par ce chemin : **㊲ ㊴ ㊵** (`ActivateTab(More)` puis clic d'entrée) ; ⑯ ⑤ ㉔ ⑥
+(montés en surimpression par le test), ① ③ (onglet Empire) et ⑱ (le menu lui-même) ne le sont pas.
+- **8 findings marqués « À REMESURER après recapture », 3 rapports touchés, aucun retiré** : ㊲ F7 F11 · ㊴ F12 F14 F18 ·
+  ㊵ F1 F8 F9 (ceux qui portent sur le fond COMPOSITE). Instrument : `mesurer-fantome-menu-plus.py` (autocorrélation
+  du profil de luminance au pas des bandes du menu, 123 px ; contrôle positif ⑱ +0,90, négatif ⑥ −0,26) — **aucune bande
+  du menu n'est visible** dans les trois planches (+0,08 / −0,02 / +0,24) ; un texte fantôme isolé n'est pas testé.
+- ⑱ : le correcteur mesure **21 entrées** (contenu 3 035,8 pour une fenêtre de 390,6, glissé 2 645,2) là où le r1 en
+  comptait 19 — les 2 manquantes étaient hors cadre, comme le juge l'avait écrit en non-vérifié. F1/F2 tiennent, en pire.

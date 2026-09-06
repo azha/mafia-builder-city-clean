@@ -330,3 +330,17 @@ Tous dans `mesures/`, chacun imprime la taille des images qu'il ouvre.
 | `m25`, `m26` | montre, manchettes, gants ; contrôles négatifs re-posés | montre à +105,5 px contre +106 px imposés par le SVG |
 
 Sorties collées : voir le corps du rapport, chaque mesure cite son script.
+
+
+---
+
+## Addendum orchestrateur — 2026-09-06 — findings « À REMESURER après recapture » (menu Plus non démonté, `15a0da7`)
+
+Fait rapporté par `mafia-clean-city-f2` : depuis le 02/09, une destination ouverte depuis le menu « Plus » se montait
+PAR-DESSUS le menu sans le démonter (`MountTenant` direct, rien ne démontait). Cette planche a été prise par ce chemin.
+**Les findings suivants portent sur ce que le fond COMPOSITE montre, et un menu resté sous le voile pourrait y entrer** :
+`F7`, `F11` — marqués **À REMESURER après recapture**, **sans être retirés** (un finding retiré sur une
+hypothèse est aussi faux qu'un finding inventé). Mesure de l'orchestrateur (`Tools/juge-visuel/mesurer-fantome-menu-plus.py`,
+sortie dans `Tools/juge-visuel/fantome-menu-plus-2026-09-06.txt`) : aucune bande périodique du menu (pas 123 px) n'est
+visible dans la zone libre de cette planche (autocorrélation ≤ +0,25 contre +0,90 sur le menu lui-même) — un texte
+fantôme isolé n'est pas testé par cet instrument. Les autres findings ne dépendent pas du fond.

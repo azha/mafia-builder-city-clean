@@ -1,0 +1,10 @@
+Tools/juge-visuel/plus/r1-2026-09-06/capture-1080x2400.png: (1080, 2400)
+  témoin positif (⑱ menu): autocorr@123 = +0.904
+Tools/juge-visuel/famille/r1-2026-09-06/capture-1080x2400.png: (1080, 2400)
+  témoin négatif (⑥ sans menu): autocorr@123 = -0.263
+Tools/juge-visuel/reputation/r9-2026-09-06/capture-1080x2400.png: (1080, 2400)
+  Tools/juge-visuel/reputation/r9-2026-09-06/capture-1080x2400.png: autocorr@123 = +0.084 · meilleur lag 100-150 = 117 (+0.109) → pas de bandes périodiques du menu (texte fantôme isolé : non testé)
+Tools/juge-visuel/screen_b7/r1-2026-09-06/capture-1080x2400.png: (1080, 2400)
+  Tools/juge-visuel/screen_b7/r1-2026-09-06/capture-1080x2400.png: autocorr@123 = -0.017 · meilleur lag 100-150 = 106 (+0.090) → pas de bandes périodiques du menu (texte fantôme isolé : non testé)
+Tools/juge-visuel/screen_c2/r1-2026-09-06/capture-1080x2400.png: (1080, 2400)
+  Tools/juge-visuel/screen_c2/r1-2026-09-06/capture-1080x2400.png: autocorr@123 = +0.241 · meilleur lag 100-150 = 112 (+0.317) → pas de bandes périodiques du menu (texte fantôme isolé : non testé)
