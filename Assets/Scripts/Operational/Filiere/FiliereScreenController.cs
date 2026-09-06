@@ -131,7 +131,7 @@ namespace MafiaCleanCity.Operational
             // est stable.
             if (transform.parent != null) transform.SetAsLastSibling();
             EnsureInitialized();
-            StartCoroutine(Amorcer());
+            amorce = StartCoroutine(Amorcer());
         }
 
         /// <summary>Charger dès le montage — ㊴ a montré ce que coûte un `Charger()` que personne
@@ -139,6 +139,7 @@ namespace MafiaCleanCity.Operational
         private IEnumerator Amorcer()
         {
             if (string.IsNullOrEmpty(token)) yield break;   // hors session : état initial NOMMÉ
+            if (corpsImposeParUnTest) yield break;          // un test tient l'écran
             yield return Charger();
         }
 
@@ -198,7 +199,9 @@ namespace MafiaCleanCity.Operational
                     RenduTermine = true;
                     yield break;
                 }
-                nodeId = liste.nodes[0];
+                // ⛔ `.node` — l'UUID DANS l'objet, pas l'objet. Voir `LaunderingNodeRefDto` :
+                // ce champ était `string[]` parce que je l'avais mesuré sur un compte VIDE.
+                nodeId = liste.nodes[0].node;
             }
 
             yield return client.GetLaunderingPipeline(nodeId, token,
@@ -217,8 +220,29 @@ namespace MafiaCleanCity.Operational
         /// <summary>Rend un corps FABRIQUÉ, sans réseau — réservé aux tests (patron ㊲,
         /// `RendrePourTest`). Ne prouve jamais que le back émet ce corps, seulement ce que
         /// l'écran EN FAIT.</summary>
+        /// <summary>⛔ FERME LA COURSE ENTRE `Start()` ET LE RENDU DE TEST. Une suite qui pose un
+        /// VRAI jeton puis appelle `RendrePourTest` laisse `Amorcer()` partir en parallèle :
+        /// l'auto-chargement va chercher les données réelles et ÉCRASE le corps fabriqué, à une
+        /// frame près. *Un test qui perd cette course lit une vérité — celle d'un autre monde que
+        /// le sien*, et son rouge accuse alors le résolveur au lieu de l'ordonnancement.
+        /// ⚠️ Le garde-fou `IsNullOrEmpty(token)` NE COUVRE PAS ce cas : il protège l'écran monté
+        /// hors session, pas celui à qui un test donne une identité PUIS impose un corps.
+        /// ⚠️ Relu APRÈS CHAQUE `yield`, jamais seulement à l'entrée : la coroutine peut être déjà
+        /// partie quand le test pose le drapeau. Mesuré sur ⑨ (patron `2efdf2e`).</summary>
+        private bool corpsImposeParUnTest;
+        private Coroutine amorce;
+
         public void RendrePourTest(LaunderingPipelineDto dto)
         {
+            corpsImposeParUnTest = true;
+            // ⛔ ON ARRÊTE L'AUTO-CHARGEMENT, on ne se contente pas de le décourager. Le drapeau
+            // seul ne ferme que le cas facile (le test rend AVANT que la coroutine ne parte) :
+            // si elle est déjà dans son appel réseau, elle rendra son résultat PAR-DESSUS le corps
+            // du test quelques frames plus tard, et `Charger()` applique son état dans plusieurs
+            // branches — y semer des gardes serait fragile et incomplet.
+            // ★ *Fermer une course en demandant poliment à l'autre de renoncer suppose qu'il
+            //   repasse par un point où on peut le lui dire.* `StopCoroutine` ne le suppose pas.
+            if (amorce != null) { StopCoroutine(amorce); amorce = null; }
             EnsureInitialized();
             AppliquerEtat(dto);
         }
@@ -226,9 +250,90 @@ namespace MafiaCleanCity.Operational
         /// <summary>// MÉTIER ICI — TOUT le rendu métier de cet écran part d'ici. Vide à
         /// dessein : remplir depuis la maquette RATIFIÉE et le corps RÉEL mesuré, jamais depuis
         /// une supposition sur ce que l'interface TypeScript back "devrait" rendre.</summary>
+        /// <summary>⛔⛔ CETTE MÉTHODE ÉTAIT VIDE — `// MÉTIER ICI` — ET L'ÉCRAN PASSAIT POUR BÂTI.
+        /// Le 2026-09-03 j'ai mesuré `GET /v1/operational/laundering` sur un compte FRAIS, lu
+        /// `{"nodes":[]}`, et j'en ai tiré DEUX conclusions : que la chaîne était cassée au premier
+        /// maillon (TD-572), et que ses éléments étaient des chaînes. Les deux étaient fausses.
+        /// L'écran a donc été écrit comme un CONSTAT DE RUPTURE, son rendu nominal jamais posé, et
+        /// sa planche de juge montrait l'état initial sans que rien ne le signale — le test était
+        /// vert, `RenduTermine` valait vrai.
+        /// ★ *`RenduTermine` dit que le code a fini, jamais que l'écran a changé.*
+        /// ★ *Une seule mesure prise dans le mauvais monde a produit un DTO faux, un TD faux et un
+        ///   écran inachevé* — et chacun de ces trois se citait pour justifier les autres.
+        ///
+        /// CE QUE LE SERVEUR ENVOIE VRAIMENT, mesuré le 2026-09-04 sur `operational_demo` :
+        ///   GET /v1/operational/laundering/{node}/pipeline
+        ///   → {"stages":[{node, cleanliness_band, terminal, has_cash}, …]}  — ordonné tête→queue
+        ///   quatre étapes, bandes PARTIAL → MOSTLY_CLEAN → CLEAN → CLEAN(terminal).
+        ///
+        /// ⚠️ LA BANDE D'UNE ÉTAPE N'EST PAS CELLE DU NŒUD. `GET …/laundering/{node}` rend
+        /// `CLEAN` pour le nœud qui vaut `PARTIAL` dans son propre pipeline : deux projections
+        /// voisines de la même entité. On lit donc la bande DANS `stages`, jamais ailleurs.</summary>
         private void AppliquerEtat(LaunderingPipelineDto dto)
         {
-            // MÉTIER ICI
+            ViderListe();
+            LaunderingStageDto[] etapes = dto != null && dto.stages != null
+                ? dto.stages : new LaunderingStageDto[0];
+
+            if (etapes.Length == 0) { RendreAucunNoeud(); return; }
+
+            sousTitre.text = Lib("LA CHAÎNE, DE LA TÊTE À LA SORTIE");
+
+            int propres = 0, ecarts = 0;
+            foreach (LaunderingStageDto e in etapes)
+            {
+                if (e == null) continue;
+                if (e.terminal && e.cleanliness_band == "CLEAN") propres++;
+                // ⛔ « ÉCART » = une étape qui n'est pas encore propre. On ne compte PAS
+                // `deviation_active` : il vit sur la route du NŒUD, pas dans `stages` — le lire
+                // ici demanderait un appel par étape, et l'écran affirmerait un chiffre qu'il n'a
+                // pas mesuré. Compter ce qu'on a sous les yeux, jamais ce qu'on suppose ailleurs.
+                if (e.cleanliness_band == "DIRTY" || e.cleanliness_band == "PARTIAL") ecarts++;
+            }
+
+            MajCompteur(0, etapes.Length, Lib("ÉTAPES"));
+            MajCompteur(1, propres, Lib("PROPRE AU BOUT"));
+            MajCompteur(2, ecarts, Lib("ÉCARTS"));
+
+            for (int i = 0; i < etapes.Length; i++) Etape(i + 1, etapes[i]);
+
+            MajPanneau(Lib("CE QUE LA CHAÎNE FAIT DE VOTRE ARGENT"),
+                Lib("Elle le lave par paliers, pas d'un coup"),
+                Lib("chaque étape rend l'argent un peu plus propre que la précédente. Seule la "
+                    + "DERNIÈRE crédite le portefeuille — tant qu'il n'y a pas de sortie, il n'y a "
+                    + "pas d'argent, seulement une file d'attente."));
+        }
+
+        /// <summary>Une étape RÉELLE de la chaîne — à ne pas confondre avec `Maillon`, qui dessine
+        /// un maillon MANQUANT. Les deux se ressemblent à l'écran et disent le contraire.</summary>
+        private void Etape(int rang, LaunderingStageDto e)
+        {
+            GameObject go = NouveauUI("Etape" + rang, listeRoot);
+            AjouterFond(go, DesignTokens.Current.surfaceCard);
+            var le = go.AddComponent<LayoutElement>();
+            le.minHeight = Px(52f); le.preferredHeight = -1f; le.flexibleHeight = 0f;
+            var v = go.AddComponent<VerticalLayoutGroup>();
+            v.padding = new RectOffset((int)Px(9f), (int)Px(9f), (int)Px(7f), (int)Px(7f));
+            v.spacing = Px(2f);
+            v.childControlWidth = true; v.childControlHeight = true;
+            v.childForceExpandWidth = true; v.childForceExpandHeight = false;
+
+            // ⛔ Le libellé de propreté vient du PRODUCTEUR UNIQUE, jamais d'un `switch` local :
+            // ⑪ et ⑫ affichent la même échelle, et deux copies finiraient par diverger.
+            string bande = PureteResolvers.Libelle(e != null ? e.cleanliness_band : null);
+            string rangTexte = Lib("ÉTAPE") + "   " + rang.ToString("00");
+            if (e != null && e.terminal) rangTexte += "   ·   " + Lib("LA SORTIE");
+
+            NouveauTexte(go.transform, "Rang", rangTexte, Px(7f),
+                DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont);
+            NouveauTexte(go.transform, "Titre", bande, Px(12f),
+                DesignTokens.Current.hudCreme, DesignTokens.Current.hudSerifFont);
+            // ⚠️ `has_cash` est un DRAPEAU DE PRÉSENCE, jamais un montant — le serveur ne projette
+            // pas les centimes ici. On écrit donc ce qu'on sait, et pas un chiffre inventé.
+            NouveauTexte(go.transform, "Texte",
+                e != null && e.has_cash ? Lib("de l'argent attend à cette étape")
+                                        : Lib("rien n'attend à cette étape"),
+                Px(8f), DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont);
         }
 
         /// <summary>Repli NOMMÉ sur échec réseau — jamais une exception, jamais un écran noir
