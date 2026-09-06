@@ -221,6 +221,7 @@ def ecran_md(e):
     etats = e.get('etats_md', '')
     assum = '\n'.join(f'| {a[0]} | {a[1]} | {a[2]} |' for a in e['assumes'])
     src = e['source_md']
+    couv = ('\n## Ce que la ligne GO COUVRE — dénominateur publié par Unity (à recopier dans « non vérifié » pour ce qui manque)\n\n' + e['couverture_go'] + '\n') if e.get('couverture_go') else ''
     return f"""# Dossier du juge visuel — {e['sym']} {e['nom']} — {e['tour']} — {DATE}
 
 > ⚠️ **Ce dossier est complet et instruisable.** S'il te manque quelque chose, c'est un défaut du dossier :
@@ -256,8 +257,8 @@ def ecran_md(e):
   contenu chargé, rect ≥ 200×200, **compte de TEINTES distinctes** (pas « non noir » — un aplat satisfait « non
   noir »), voisins éteints par différence. Les valeurs mesurées ne sont pas disponibles (log non préservé).
 {e.get('captures_note', '')}
+{couv}
 # amendement 2026-09-06 (21:05) : la ligne GO publie son DÉNOMINATEUR de couverture ; le dossier le recopie tel quel
-if e.get('couverture_go'): parts.append('\n## Ce que la ligne GO COUVRE — dénominateur publié par Unity (à recopier dans « non vérifié » pour ce qui manque)\n\n' + e['couverture_go'] + '\n')
 {e.get('echelle', ECHELLE_S6)}
 {DOCTRINE}
 {e.get('doctrine_extra', '')}

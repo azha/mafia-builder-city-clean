@@ -62,30 +62,39 @@
 
 | fichier (dans ce dossier) | résolution | état | prise le | test |
 |---|---|---|---|---|
-| `capture-1080x2400.png` | 1080×2400 — PRINCIPALE | sous chrome (via Plus) | 2026-09-06 20:53 (`fd0e21e`) | ``screen_b3_reputation_sous_chrome_1080x2400.png` — sha256 `78f9d699…`` |
-| `capture-1080x1920.png` | 1080×1920 | sous chrome | 2026-09-06 20:53 (`fd0e21e`) | ``screen_b3_reputation_sous_chrome_1080x1920.png` — sha256 `b7391815…`` |
-| `capture-ecran-seul-1080x2400.png` | 1080×2400 | écran SEUL déclaré par son nom (sans shell) — à vérifier | 2026-09-06 20:53 (`fd0e21e`) | ``screen_b3_reputation_1080x2400.png` — sha256 `142a64b8…`` |
-| `capture-ecran-seul-1080x1920-T.png` | 1080×1920 | écran seul — instant T de la paire T / T+1 s | 2026-09-06 20:53 (`fd0e21e`) | ``screen_b3_reputation_1080x1920.png` — sha256 `f1aaf047…`` |
-| `capture-ecran-seul-1080x1920-T+1s.png` | 1080×1920 | écran seul — instant T+1 s (même run) : compte les pixels différents | 2026-09-06 20:53 (`fd0e21e`) | ``screen_b3_reputation_1080x1920_t1s.png` — sha256 `2d799d02…`` |
+| `capture-1080x2400.png` | 1080×2400 — PRINCIPALE | sous chrome (via Plus) | 2026-09-06 20:53 (`fd0e21e`) | ``screen_b3_reputation_sous_chrome_1080x2400.png` — sha256 `?…`` |
+| `capture-1080x1920.png` | 1080×1920 | sous chrome | 2026-09-06 20:53 (`fd0e21e`) | ``screen_b3_reputation_sous_chrome_1080x1920.png` — sha256 `?…`` |
+| `capture-ecran-seul-1080x2400.png` | 1080×2400 | écran SEUL déclaré par son nom (sans shell) — à vérifier | 2026-09-06 20:53 (`fd0e21e`) | ``screen_b3_reputation_1080x2400.png` — sha256 `?…`` |
+| `capture-ecran-seul-1080x1920-T.png` | 1080×1920 | écran seul — instant T de la paire T / T+1 s | 2026-09-06 20:53 (`fd0e21e`) | ``screen_b3_reputation_1080x1920.png` — sha256 `?…`` |
+| `capture-ecran-seul-1080x1920-T+1s.png` | 1080×1920 | écran seul — instant T+1 s (même run) : compte les pixels différents | 2026-09-06 20:53 (`fd0e21e`) | ``screen_b3_reputation_1080x1920_t1s.png` — sha256 `?…`` |
 
 - Client au moment des captures : `76ee3cc` (`main`, 2026-09-04 11:23 — « les QUINZE planches reprises sur le
-  MÊME bundle (674 clés) ») ; ce dossier est préparé sur `bb2a211`. Une capture est une mesure DATÉE.
+  MÊME bundle (674 clés) ») ; ce dossier est préparé sur `39f288c`. Une capture est une mesure DATÉE.
 - Compte photographié : `demo_capture@example.test` — **base POST-CAMPAGNE** (f2, 20:55) : empreinte **72 155 · 20 bâtiments · 3 lieutenants · 2 planques · 8 cartes · 6/6**. ⚠️ Ce n'est PLUS le monde des corps réels `a0623a5` (minute 72 118, 17 bâtiments) ⇒ les VALEURS (roster, règles, chiffres) ne sont comparables à aucun corps fourni : « non vérifié » ; la FORME se juge. Identité : la ligne `régime=env identité=…` n'est PAS jointe (« déclaré par la ligne GO, non relu » ; (d) `[CHROME-ALIMENTE]` par planche n'est imprimé que par 3 suites sur 16 — celle-ci : inconnu).
 - Gardes du test (`CaptureSousShell` / `CapturerA`) : locataire réellement monté, feuille nommée par l'appelant,
   contenu chargé, rect ≥ 200×200, **compte de TEINTES distinctes** (pas « non noir » — un aplat satisfait « non
   noir »), voisins éteints par différence. Les valeurs mesurées ne sont pas disponibles (log non préservé).
-- **Ce que ce tour doit établir** : (1) les **13 constats du r9** (planche de nuit `76ee3cc`, d'AVANT les sept correctifs ㊲) et les **15 du r11** (planches `3b0ffae`, pré-Bold) sont à REJUGER ici sur un arbre qui porte enfin les correctifs — `grandeurs-r9-r11.md` te donne les grandeurs, jamais les verdicts ; marque `DÉJÀ APPLIQUÉ` ce qui revient, `NOUVEAU` le reste ; (2) **la paire T / T+1 s** (écran seul, 1920) : compte les pixels différents hors chrome — c'est la première fois qu'une paire existe, le ruling « sans animation » devient vérifiable ; (3) **deux résolutions** sous chrome : le r11 avait trouvé à 1920 un cadre à hauteur fixe qui débordait sous le bandeau (zone libre 1556 < 1698 px) — le correctif `f14ca81` déclare « le cadre devient élastique » : mesure la gouttière et le titre à 1920 ; (4) la **calotte** (4 nombres remesurés au r11, tous faux : épaisseur 21 → 1 px, pincement ×4,7) ; les **halos** (nuls au r11) ; le **gras** — planches POST-Bold (TD-615) : le fût se compare enfin.
+- **Ce que ce tour doit établir** : (1) les **13 constats du r9** (planche de nuit `76ee3cc`, d'AVANT les sept correctifs ㊲) et les **15 du r11** (planches `3b0ffae`, pré-Bold) sont à REJUGER ici sur un arbre qui porte enfin les correctifs — `grandeurs-r9-r11.md` te donne les grandeurs, jamais les verdicts ; marque `DÉJÀ APPLIQUÉ` ce qui revient, `NOUVEAU` le reste ; (2) **la paire T / T+1 s** (écran seul, 1920) : compte les pixels différents hors chrome — première paire existante, le ruling « sans animation » devient vérifiable ; (3) **deux résolutions** sous chrome : le r11 avait trouvé à 1920 un cadre à hauteur fixe qui débordait sous le bandeau (zone libre 1556 < 1698 px) — le correctif `f14ca81` déclare « le cadre devient élastique » : mesure la gouttière et le titre à 1920 ; (4) la **calotte** (4 nombres remesurés au r11, tous faux : épaisseur 21 → 1 px, pincement ×4,7) ; les **halos** (nuls au r11) ; le **gras** — planches POST-Bold (TD-615) : le fût se compare enfin.
 - Fichiers touchés depuis le r11 (`3b0ffae` → `89231b3`, sans stats) : `CityMap/CityMapController.cs`, `CityMap/DistrictInteriorScreenController.cs`, `CityMap/VillePeinteDtos.cs`, `Operational/Reputation/ReputationScreenController.cs`, `Shell/AppShell.cs`, `Shell/DecisionDetailScreenController.cs`, `Shell/TopBarController.cs`, `ShellContracts/ProceduralUI.cs`.
 - **Chrome** : ARGENT/JOUR alimentés ou tirets ? (course de capture fermée par `9fa198a`, ancêtre) ; la phase « — » hors district est un état VOULU ; le chrome se juge contre `hud-canon-1176.png`. Ronds du dock vides = arbitrage.
 - **Écran seul** : les planches sans `sous_chrome` sont déclarées SANS shell par leur nom — vérifie (sur ③ une homonyme portait bandeau et dock).
 - **Conventions** : bord (mi-alpha nominal vs cœur) et, pour le buste / les tuiles, ce que tu mesures.
 - **Cadre de style** (user, ce soir) : sombre, napolitain, mafieux, fin 80s – début 90s — un écart de DIRECTION est un ARBITRAGE ; un jeton, une matière ou un asset ABSENT reste un écart.
-# amendement 2026-09-06 (21:05) : la ligne GO publie son DÉNOMINATEUR de couverture ; le dossier le recopie tel quel
-if e.get('couverture_go'): parts.append('
+
 ## Ce que la ligne GO COUVRE — dénominateur publié par Unity (à recopier dans « non vérifié » pour ce qui manque)
 
-' + e['couverture_go'] + '
-')
+```
+(a) deux résolutions 1920+2400    9/16  [ÉTABLI]
+(c) onglet actif asserté          7/16  [ÉTABLI]
+(d) [CHROME-ALIMENTE] par planche 3/16  [ÉTABLI]
+(g) SHA de l'arbre imprimé au run 0/16  [ÉTABLI]
+(b) paire T / T+1 seconde          ?/16 [NON ÉTABLI — motif trop large]
+(f) état vide ET état riche        ?/16 [NON ÉTABLI — motif trop large]
+(e) blob ≠ précédente + descendance du dernier correctif : fourni hors code
+```
+(tableau d'Unity, 20:55 — pour ㊲ : (a) oui (5 planches), (b) oui (paire fournie), (c) inconnu, (d) inconnu, (e) VÉRIFIÉ par l'orchestrateur : 5 blobs ≠ r11, commit `fd0e21e` descendant de `89231b3` et `4f8e1ae`, (g) non imprimé.)
+
+# amendement 2026-09-06 (21:05) : la ligne GO publie son DÉNOMINATEUR de couverture ; le dossier le recopie tel quel
 ## Échelle — OBLIGATOIRE, jamais déduite par le juge
 
 | | px de l'image | largeur CSS de référence | facteur |

@@ -49,10 +49,30 @@
 | F12 | le sous-titre affiché n'est aucune des six lignes du groupe, et il change de sujet : les six parlent du lieutenant, celui-ci parle du joueur | `grep -c -i "personne ne vous a encore"` sur `ecrans-brennar-6.html`, `generateur-reputation.py`, `chassis6.py` ⇒ **0 / 0 / 0**. Les six lignes canoniques : « ce qu'il a pris de vous se voit sur lui », « un lieutenant neuf n'a encore rien absorbé », « vous vous écartez de vos propres règles », « les règles que vous avez données », « un lieutenant rappelé — on demande des gages », « ce qui manque encore » |
 | F13 | le bouton CTA est 7 px plus bas de hauteur, texte identique | filet or extérieur : RÉF 1952..2046 = **95 px** ; JEU 1757..1844 = **88 px** (−7,4 %). Encre du libellé identique : 29 × 611 / 29 × 607 (m01/m09) |
 
-## r11 — A. Grandeurs trouvées ÉGALES (contrôle positif, verbatim, 0 lignes)
+## r11 — A. Grandeurs trouvées ÉGALES (contrôle positif, verbatim, 20 lignes)
 
 | # | grandeur | réf | jeu | Δ / note | script |
 |---|---|---|---|---|---|
+| P1 | hauteur du cadre, filet à filet | 1627 px | 1628 px | 1 px (0,06 %) | `m01`/`m12` |
+| P2 | gouttière basse cadre → première encre du dock | — | **70 px aux DEUX résolutions** (1699−1629 · 2179−2109) | 0 px | `m03`/`m12` |
+| P3 | carte portrait (filet doré) | 424 × 656 px | 425 × 658 px | ≤ 2 px | `m19` |
+| P4 | **axe du buste** : carte · visage · col · torse · yeux | 272,5 · 272,5 · 272,0 · 272,0-272,5 · 247,5/297,0 | 272,0 · 272,0 · 272,5 · 272,0-272,5 · 247,0/297,5 | ≤ 0,5 px — **F3 fermé** | `m19`/`m29`/`m30`/`m32` |
+| P5 | gouttière carte → tuiles | 37 px | 37 px | **0 px** | `m28` |
+| P6 | marge tuile → bord droit du panneau | 30 px | 29 px | 1 px | `m28` |
+| P7 | 10 aplats (cadre, `.elast`, tuile, compteur, carte, panneau bas, CTA, enseigne, filet or, torse) | — | — | **≤ 6/255 partout**, filet or à **1/255** | `m40` |
+| P8 | contraste WCAG de 11 textes (libellé compteur +0,01 · LT. +0,12 · « Il vous écoute » +0,15 · titre du panneau +0,15 · paragraphe +0,11 · CTA +0,22 · titre 11,83→11,55) | — | — | **≤ 0,38 partout** | `m34`/`m06` |
+| P9 | couche globale, couverture des 4 premières couleurs de palette | 90,22 · 2,97 · 2,37 · 1,95 % | 90,19 · 2,98 · 2,52 · 1,84 % | ≤ 0,15 pt | `m33` |
+| P10 | sous-titre de l'enseigne : couleur · capitale · largeur d'encre | (185,173,146) · 17 px · 775 px | (185,173,146) · 17 px · 768 px | 0/255 · 0 px · −0,9 % | `m35` |
+| P11 | chiffres des compteurs : hauteur de capitale · couleur | 37 px · (127,212,217) | 37 px · (127,212,217) | 0 px · 0/255 | `m26` |
+| P12 | **interligne du paragraphe** du panneau bas | 32 · 33 px | 33 · 32 px | 1 px — **F6 fermé sur le paragraphe** | `m15` |
+| P13 | **tuiles, largeur** · gouttières entre tuiles | 456 px · 14/15/15 | 463 px · 17/14/15 | +1,5 % (0,7 % du parent) — **F8 refermé** | `m16`/`m28` |
+| P14 | cou · **longueur de la bouche** | 9,84 u · 10,75 u | 10,23 u · 10,78 u | 0,39 u · **0,03 u — F11 fermé sur la longueur** | `m29`/`m30` |
+| P15 | torse : largeur max · gant hors du torse | 74,01 u · 0 px dehors | 74,20 u · **0 px dehors** | +0,26 % · 0 | `m32` |
+| P16 | position du balayage teal dans le panneau | 30,8 % | 28,6 % | 2,2 pt — tiers haut des deux côtés | `m27` |
+| P17 | boîtes des compteurs, largeur · écarts | 312 px · 23 px | 312 px · 25 px | 0 px · 2 px | `m26` |
+| P18 | titre « Le miroir » : largeur d'encre · hauteur de capitale | 416 px · 48 px | 421 px · 46 px | +1,2 % · −4,2 % | `m06` |
+| P19 | inventaire des parties | 1 enseigne · 3 compteurs · 1 panneau élastique (carte + 4 tuiles + balayage) · 1 panneau bas · 1 CTA | idem | **rien EN TROP, rien ABSENT** (hors la section « gages », voulue) | `m13`/`m39` |
+| P20 | hauteur des lignes de texte des tuiles (capitale ligne 1 · ligne 2) | 21 px · 15 px | 21 px · 15 px | 0 px | `m18` |
 
 ## r11 — B. Grandeurs à ÉCART — la mesure seule, sans la classe (16 lignes)
 
