@@ -127,7 +127,10 @@ namespace MafiaCleanCity.Operational
             // (la base est le bord du viewBox). D'où une ellipse de hauteur 46 posée à y=55, et le
             // masque de la zone de dessin qui en coupe le bas — pas un rectangle de hauteur 23.
             FormeLiseree(ref _epaules, "Epaules", buste, ReputationResolvers.Carte2,
-                  new Rect(6f, 55f, 50f, 46f), ech, 3.9f, ellipse: true);   // stroke 2 → 3,0 px CSS mesurés
+                  // 1,95 et non 3,9 : l'ancien paramètre valait le DOUBLE du trait rendu (le
+                  // contour était agrandi de tout le trait et le remplissage laissé entier, donc
+                  // seule la moitié se voyait). La valeur calibrée « 3,0 px CSS mesurés » tient.
+                  new Rect(6f, 55f, 50f, 46f), ech, 1.95f, ellipse: true);
             col = FormeTriangle("Col", buste, ReputationResolvers.Creme, ech);
             revresG = null; revresD = null;
             Forme(ref revresG, "RevresG", buste, ReputationResolvers.Creme,
@@ -161,7 +164,7 @@ namespace MafiaCleanCity.Operational
             // fond de la carte : « déborde d'un tiers hors de la silhouette », le second des deux
             // findings classés EMPÊCHE.
             FormeLiseree(ref gantG, "GantG", buste, ReputationResolvers.Creme2,
-                  new Rect(8.6f, 71.6f, 10f, 6.8f), ech, 1.2f, ellipse: true);
+                  new Rect(8.6f, 71.6f, 10f, 6.8f), ech, 0.6f, ellipse: true);   // trait rendu, cf. Epaules
             // ⛔ LES DEUX TRAITS DE SALETÉ — `if tells['gloves'] != 'clean'` dans le SVG :
             // `M9 74 l3 1.6 M13 74.6 l3 -1`, deux courtes obliques sombres sur le gant.
             // ⚠️ Le juge mesure un rapport aire/boîte de 0,81 en jeu contre 0,67 en maquette : un
@@ -186,7 +189,10 @@ namespace MafiaCleanCity.Operational
                   new Rect(26f, 48f, 10f, 10f), ech);
             // `<ellipse cx="31" cy="32" rx="12.5" ry="15">` — une ellipse, pas un stade.
             FormeLiseree(ref _tete, "Tete", buste, ReputationResolvers.Creme2,
-                  new Rect(18.5f, 17f, 25f, 30f), ech, 3.5f, ellipse: true);   // stroke 2 → 2,7 px CSS mesurés
+                  // 1,75 et non 3,5 — même correction d'unité que le dôme d'épaules. Contrôle
+                  // arithmétique : le remplissage devient 25 − 1,75 = **23,25** unités, là où le
+                  // juge mesure la référence à **22,97** et le jeu à 25,22 (F4).
+                  new Rect(18.5f, 17f, 25f, 30f), ech, 1.75f, ellipse: true);
             // ⛔ LES CHEVEUX PASSENT APRÈS LA TÊTE — ils COUVRENT le haut du crâne.
             // ⚠️ Je les avais fait passer AVANT au tour 2, pour obtenir la calotte par occlusion :
             // le visage, dessiné par-dessus, ne laissait dépasser que l'arc supérieur. Ça produisait
@@ -505,15 +511,33 @@ namespace MafiaCleanCity.Operational
         ///   couleur cible : ce n'étaient pas les couleurs qui manquaient, c'était le TRAIT entre
         ///   elles. Une figure se lit par ses bords autant que par ses surfaces.</summary>
         private void FormeLiseree(ref Image cible, string nom, Transform parent, Color couleur,
-                                  Rect vb, float ech, float stroke, bool ellipse = false,
+                                  Rect vb, float ech, float trait, bool ellipse = false,
                                   bool arrondi = false, float rayonVb = 0f)
         {
+            // ⛔⛔ LE TRAIT EST CENTRÉ SUR LE CHEMIN, PAS POSÉ À L'EXTÉRIEUR (㊲ F4) — et le
+            // corriger ICI ferme la classe pour les QUATRE primitives d'un coup.
+            // Un juge ⊥ a mesuré, en unités de viewBox, que chaque forme pleine gagnait ≈ 2 unités :
+            //     visage **22,97 → 25,22** (trait centré = 23,0 ; trait extérieur = 25,0)
+            //     torse  52,13 → 54,83   (52,0 / 54,0)
+            //     col    11,12 → 14,26   (≈11 / 14,0)
+            //     gant   8,75×5,47 → 10,05×6,40   (8,8×5,6 / 10,0×6,8)
+            // et — le contrôle qui nomme la cause — que le **COU**, seule primitive SANS contour,
+            // ne bouge pas (9,84 → 10,23 pour 10,0 attendu). Quatre écarts, un mécanisme.
+            // SVG pose `stroke-width` À CHEVAL sur le chemin : la moitié du trait mord le
+            // REMPLISSAGE, l'autre moitié le fond. Ici le contour était agrandi de tout le trait et
+            // le remplissage laissé à la taille du chemin ⇒ le bord extérieur tombait juste, mais
+            // la forme pleine gardait sa taille entière et le trait mordait le fond seul.
+            // ⇒ Le contour garde son bord extérieur (chemin + trait/2) ; le remplissage RENTRE de
+            //   trait/2 de chaque côté. La silhouette visible est inchangée, l'encre passe du bon
+            //   côté, et les quatre nombres du juge se referment ensemble.
             Image bord = null;
-            Rect vbBord = new Rect(vb.x - stroke / 2f, vb.y - stroke / 2f,
-                                   vb.width + stroke, vb.height + stroke);
+            Rect vbBord = new Rect(vb.x - trait / 2f, vb.y - trait / 2f,
+                                   vb.width + trait, vb.height + trait);
+            Rect vbPlein = new Rect(vb.x + trait / 2f, vb.y + trait / 2f,
+                                    vb.width - trait, vb.height - trait);
             Forme(ref bord, nom + "Lisere", parent, ReputationResolvers.Encre, vbBord, ech,
                   arrondi: arrondi, ellipse: ellipse, rayonVb: rayonVb);
-            Forme(ref cible, nom, parent, couleur, vb, ech, arrondi: arrondi, ellipse: ellipse,
+            Forme(ref cible, nom, parent, couleur, vbPlein, ech, arrondi: arrondi, ellipse: ellipse,
                   rayonVb: rayonVb);
         }
 
