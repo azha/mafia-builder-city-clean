@@ -1,0 +1,13 @@
+{
+  "modele": "fal-ai/flux/dev",
+  "prompt": "Wired security glass seen head-on: a fine steel wire mesh embedded in slightly greenish scratched glass, condensation haze, no reflections of objects. Seamless tileable texture, flat orthographic top-down view, even diffuse light, no vignette, no shadow of any object, no border, no frame, edge to edge, no perspective, no objects lying on it, no text, no logo, no watermark. Photographic material study, muted and desaturated.",
+  "seed": 7,
+  "largeur": 1024,
+  "hauteur": 1024,
+  "etapes": 28,
+  "guidance": 3.5,
+  "request_id": "01a078df-d6bd-7c13-8905-b51b67c7a15b",
+  "duree_s": 7.9,
+  "cout_usd_estime": 0.025,
+  "genere_le": "2026-09-07T00:38:58+0200"
+}

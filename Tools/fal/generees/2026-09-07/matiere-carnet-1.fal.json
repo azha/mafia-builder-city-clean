@@ -1,0 +1,13 @@
+{
+  "modele": "fal-ai/flux/dev",
+  "prompt": "A page of ruled ledger paper: pale buff stock with fine feint horizontal rules and one vertical margin rule, slight fibre grain, unwritten. Seamless tileable texture, flat orthographic top-down view, even diffuse light, no vignette, no shadow of any object, no border, no frame, edge to edge, no perspective, no objects lying on it, no text, no logo, no watermark. Photographic material study, muted and desaturated.",
+  "seed": 7,
+  "largeur": 1024,
+  "hauteur": 1024,
+  "etapes": 28,
+  "guidance": 3.5,
+  "request_id": "01a078df-7fd2-7ab1-9105-ce515f75fc68",
+  "duree_s": 7.9,
+  "cout_usd_estime": 0.025,
+  "genere_le": "2026-09-07T00:38:35+0200"
+}

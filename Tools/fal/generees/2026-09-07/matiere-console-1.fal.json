@@ -1,0 +1,13 @@
+{
+  "modele": "fal-ai/flux/dev",
+  "prompt": "A dark brushed-metal control desk panel: fine horizontal brushing, matte anodised finish, faint scuffs and fingerprints, no dials, no buttons, no screens. Seamless tileable texture, flat orthographic top-down view, even diffuse light, no vignette, no shadow of any object, no border, no frame, edge to edge, no perspective, no objects lying on it, no text, no logo, no watermark. Photographic material study, muted and desaturated.",
+  "seed": 7,
+  "largeur": 1024,
+  "hauteur": 1024,
+  "etapes": 28,
+  "guidance": 3.5,
+  "request_id": "01a078df-6852-7023-834f-5002d285ebb0",
+  "duree_s": 6.0,
+  "cout_usd_estime": 0.025,
+  "genere_le": "2026-09-07T00:38:27+0200"
+}
