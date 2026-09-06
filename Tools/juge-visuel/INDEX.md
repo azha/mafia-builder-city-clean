@@ -4,6 +4,8 @@ Un juge à contexte vierge part d'ici. `dossier` est sous `Tools/juge-visuel/` ;
 
 `corps` = `<dossier>/corps-reels/` (§DA-4, `capturer-corps-reels.py`) : réponses RÉELLES des routes du dossier de code du contrôleur sur la pile dev, compte de démo — « a/s/m/e » = appelées (2xx) / sans instance sur ce compte / mutations non appelées / erreurs HTTP réelles du back (404, 409, 403 : des faits, pas des trous).
 
+⚠️ Ces corps ont été pris sur un back **daté** — la provenance voyage avec chaque fichier (`back_main`, image, date, compte). Ne pas se demander « sont-ils à jour ? » de mémoire : `python3 verifier-fraicheur-corps.py` compare le SHA que les corps déclarent à `main` du back aujourd'hui, et ne signale que les corps dont une source touchée peut changer la réponse. Il ne rejoue rien (la pile dev est requise pour ça, donc jamais pendant un gate).
+
 | sym | écran (front.md) | contrôleur | dossier | cadres | référence | planche en jeu | état front.md | confiance | corps |
 |---|---|---|---|---|---|---|---|---|---|
 | ③ | City Map `screen_2` | `CityMapController` | `carte` | `ecrans-brennar-6.html` 22, 23, 24 | `carte/reference-1080x2102.png` | `carte_ville_1080x2400.png` (existe) | · « La Carte de Brennar » | mesurée | 5a/0s/4m/0e |
