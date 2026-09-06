@@ -1,3 +1,5 @@
+> ⏸️ **SUSPENDU (protocole f2/juge, 2026-09-06 ~12:00)** : ce tour attend un GO portant sur la même ligne le SHA du correctif ① commité ET le nom de la planche signée. Trois juges lancés puis arrêtés avant toute mesure, aucun rapport. Les 3 planches de `1b887e3` restent ici comme matériel daté.
+
 # Dossier du juge visuel — ① L'intérieur de district (« le HUD de Brennar ») — r4 — 2026-09-06
 
 > ⚠️ **Ce dossier est complet et instruisable.** S'il te manque quelque chose, c'est un défaut du dossier :
