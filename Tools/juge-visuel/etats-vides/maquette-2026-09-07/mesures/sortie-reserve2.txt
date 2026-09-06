@@ -1,0 +1,21 @@
+== CONTROLE POSITIF ==
+  seuils DERIVES : creme tient jusqu'a L<=0.1277 ; encre tient a partir de L>=0.1975
+  verification : contraste(creme,0.1277)=4.500 ; contraste(encre,0.1975)=4.500 -> OK
+  synthetique (240, 240) bande creme-sure posee y=40..99 -> part=100.0% a y=40 (h=48) [attendu 100% et 40<=y<=52] -> OK
+  meme image, part encre-sure -> 100.0% a y=100 [attendu 100% hors de la bande sombre] -> OK
+  controle NEGATIF gris #787878 (L=0.1878, bande morte) -> creme 0% / encre 0% [attendu 0/0] -> OK
+
+== PART D'UNE BOITE DE TEXTE 614x204 QUI TIENT A >= 4,5:1 ==
+    id  fichier                  taille     creme-sure (x,y)      encre-sure (x,y)
+    E1  vide-appro.png           1024x1024   100.00% ( 256,  24)    53.18% ( 128, 600)
+    E2  vide-carnet.png          1024x1024   100.00% ( 256, 192)    78.86% ( 280, 504)
+    E3  vide-coffre.png          1024x1024    92.30% (   0, 312)    62.25% ( 216, 816)
+    E4  vide-conflit.png         1024x1024    98.74% (  24, 696)    48.61% ( 304,  96)
+    E5  vide-distribution.png    1024x1024    99.90% (   0,   0)    65.56% ( 232, 448)
+    E6  vide-exceptions.png      1024x1024   100.00% (  32, 176)    55.99% ( 200, 528)
+    E7  vide-famille.png         1024x1024    97.84% ( 320, 816)    82.42% ( 184,   0)
+    E8  vide-journal.png         1024x1024    95.44% ( 136, 712)    31.77% ( 408, 816)
+    E9  vide-marche.png          1024x1024   100.00% ( 144, 256)    72.29% (   0,   0)
+    E10 vide-recrutement.png     1024x1024    99.81% ( 200,  24)    61.87% ( 408, 816)
+    E11 vide-revue.png           1024x1024   100.00% ( 120, 632)    75.49% ( 176, 264)
+    E12 vide-vitrine.png         1024x1024    95.67% ( 280, 448)    48.68% ( 200, 816)
