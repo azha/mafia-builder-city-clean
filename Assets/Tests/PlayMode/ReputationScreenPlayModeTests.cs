@@ -272,6 +272,106 @@ namespace MafiaCleanCity.Operational.Tests
             }
         }
 
+        /// <summary>㊲ F6 — l'INTERLIGNE des blocs multi-lignes, mesuré sur le texte rendu.
+        ///
+        /// ⛔ Un juge ⊥ a mesuré le paragraphe du panneau à un pas de ligne de **27,5 px contre
+        /// 33,0** en référence (−17 %), à hauteur de glyphe IDENTIQUE et à largeur de ligne à ≤ 1 %.
+        /// Cause : `NouveauTexte` ne posait AUCUN `lineSpacing`, donc tous les blocs de l'écran
+        /// héritaient de l'interligne naturel de la fonte (~1,157 em) là où la maquette en déclare
+        /// un par bloc (`.pann small{font:6.6px/1.4}`).
+        /// ⇒ La garde vise le RAPPORT pas-de-ligne ÷ corps, sans échelle et sans px : il vaut
+        ///   l'interligne CSS, à toute résolution et quelle que soit la conversion px CSS → unités.
+        /// ⚠️ Elle exige d'abord DEUX lignes : sur un texte d'une seule ligne, TMP ne rend aucun pas
+        ///   et la garde serait verte pour une raison sans rapport — le monde le plus dégénéré qui
+        ///   la satisferait.</summary>
+        [UnityTest]
+        public IEnumerator B3M2_LInterligneDuParagraphe_SuitLaMaquette()
+        {
+            yield return OuvrirJoueurFrais();
+            var ecran = MonterEcran();
+            yield return ecran.Charger(lieutenantId);
+            for (int i = 0; i < 10; i++) yield return null;
+
+            GameObject racineEcran = RacineEcran();
+            Assert.IsNotNull(racineEcran, "ReputationRoot doit exister");
+            TMPro.TextMeshProUGUI para = null;
+            foreach (var t in racineEcran.GetComponentsInChildren<TMPro.TextMeshProUGUI>(true))
+                if (t.name == "Texte" || t.name == "Vide") { para = t; break; }
+            Assert.IsNotNull(para, "le paragraphe du panneau doit exister");
+
+            // ⛔ LE SCÉNARIO EST DIMENSIONNÉ ICI, ET C'EST DÉLIBÉRÉ. Première version : la garde a
+            // rougi sur son propre plancher anti-vacuité — « le paragraphe ne rend qu'une ligne »,
+            // parce que sur un compte FRAIS le texte servi tient sur une ligne. *Une garde
+            // anti-vacuité ne prouve pas que le scénario est dimensionné* : ce sont deux propriétés
+            // distinctes, et la première ne donne jamais la seconde.
+            // ⇒ La propriété mesurée est un fait de RENDU (le pas de ligne pour un corps donné), pas
+            //   un fait de donnée. On lui fournit donc de quoi faire deux lignes, au lieu d'attendre
+            //   qu'un compte veuille bien en produire — ce qui ferait dépendre le vert de l'état du
+            //   monde, exactement ce que la garde ne mesure pas.
+            // (le texte est posé plus bas, APRÈS la mise en page — voir la note qui suit)
+            // ⚠️ Et il faut que la MISE EN PAGE ait eu lieu avant de mesurer : sans elle le rect du
+            // paragraphe n'a pas encore sa largeur, donc TMP pose tout sur une ligne quel que soit
+            // le texte — la garde a rougi une seconde fois là-dessus, sur un texte de 140 caractères.
+            Canvas.ForceUpdateCanvases();
+            LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform)racineEcran.transform);
+            yield return null;
+            // ⚠️ ET LE TEXTE SE POSE ICI, APRÈS la frame — pas avant. Posé avant, il était réécrit
+            // par le rendu de l'écran pendant la frame d'attente, et la garde rougissait sur son
+            // plancher anti-vacuité avec MON texte de 140 caractères cité dans le message : le
+            // message disait la vérité, je lisais mal ce qu'il désignait.
+            para.text = "Un paragraphe assez long pour tenir sur au moins deux lignes dans la "
+                      + "largeur du panneau, afin qu'un pas de ligne existe et soit mesurable.";
+            para.ForceMeshUpdate();
+            var info = para.textInfo;
+            Debug.Log($"[B3-INTERLIGNE-DIAG] rect={((RectTransform)para.transform).rect.width:F1}" +
+                      $"x{((RectTransform)para.transform).rect.height:F1} " +
+                      $"wrap={para.textWrappingMode} lignes={info.lineCount}");
+            // ⛔⛔ TROIS GRANDEURS RÉFUTÉES AVANT CELLE-CI, chacune par sa propre mesure :
+            //  (a) écart de LIGNES DE BASE sur deux lignes — la garde a rougi sur son plancher
+            //      anti-vacuité : le texte que je posais était réécrit par le rendu de l'écran
+            //      pendant la frame d'attente, puis la mise en page n'avait pas eu lieu, puis, les
+            //      deux corrigés, un paragraphe de 140 caractères restait sur UNE ligne dans un
+            //      rect de 1 084 unités. *Une garde anti-vacuité ne dit pas que le scénario est
+            //      dimensionné* — ce sont deux propriétés, et la première ne donne pas la seconde.
+            //  (b) `lineInfo[0].lineHeight` — mesuré : **32,59 u pour un corps de 28, rapport
+            //      1,164**, alors que `lineSpacing` valait bien 23,6. TMP n'ajoute l'interligne
+            //      qu'ENTRE deux lignes : cette grandeur est AVEUGLE au réglage qu'elle devait
+            //      vérifier. Une garde verte dessus aurait certifié le défaut.
+            //  (c) forcer le repli par la largeur — c'est faire dépendre la mesure d'une mise en
+            //      page que le test ne contrôle pas.
+            // ⇒ La grandeur juste ne demande ni scénario ni mise en page : la hauteur préférée d'un
+            //   texte de DEUX lignes moins celle d'UNE, le retour à la ligne étant EXPLICITE. La
+            //   différence EST le pas de ligne, et elle est composée par la même fonte, au même
+            //   corps, avec le même `lineSpacing` que le rendu.
+            Assert.Greater(para.fontSize, 0f, "corps nul : rien à mesurer");
+            float hUne = para.GetPreferredValues("A", 0f, 0f).y;
+            float hDeux = para.GetPreferredValues("A\nB", 0f, 0f).y;
+            float pas = hDeux - hUne;
+            float rapport = pas / para.fontSize;
+            Debug.Log($"[B3-INTERLIGNE] « {para.name} » corps={para.fontSize:F1} u · " +
+                      $"h(1 ligne)={hUne:F2} h(2 lignes)={hDeux:F2} · pas={pas:F2} u · " +
+                      $"rapport={rapport:F3} (maquette .pann small = 1,400 ; " +
+                      $"défaut de la fonte ≈ 1,157) · lineSpacing={para.lineSpacing:F1}");
+            // Contrôle positif du DISCRIMINANT lui-même : à `lineSpacing` remis à zéro, le rapport
+            // doit RETOMBER sur l'interligne naturel de la fonte. Sans lui, une grandeur aveugle au
+            // réglage (comme (b) ci-dessus) passerait pour une garde.
+            float memoire = para.lineSpacing;
+            para.lineSpacing = 0f;
+            float rapportSansReglage =
+                (para.GetPreferredValues("A\nB", 0f, 0f).y - para.GetPreferredValues("A", 0f, 0f).y)
+                / para.fontSize;
+            para.lineSpacing = memoire;
+            Debug.Log($"[B3-INTERLIGNE] contrôle : lineSpacing=0 ⇒ rapport={rapportSansReglage:F3}");
+            Assert.Less(rapportSansReglage, rapport - 0.1f,
+                $"le discriminant ne voit pas le réglage : {rapportSansReglage:F3} sans interligne " +
+                $"contre {rapport:F3} avec — il rendrait le même nombre dans les deux mondes");
+
+            Assert.AreEqual(1.40f, rapport, 0.05f,
+                $"le pas de ligne vaut {rapport:F3} cadratin au lieu de 1,400 : le paragraphe est " +
+                "rendu plus serré que la maquette, et ce qu'il perd en hauteur se retrouve en vide " +
+                "au bas du panneau (F1)");
+        }
+
         [UnityTest]
         public IEnumerator B3S1_ToutGraphic_PorteSonCanvasRenderer()
         {

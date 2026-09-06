@@ -818,13 +818,15 @@ namespace MafiaCleanCity.Operational
             filet.AddComponent<LayoutElement>().ignoreLayout = true;
 
             TextMeshProUGUI titre = NouveauTexte(go.transform, "Titre", Lib("Le miroir"),
-                CssTitreCorps, ReputationResolvers.OrVif, DesignTokens.Current.hudSerifFont);
+                CssTitreCorps, ReputationResolvers.OrVif, DesignTokens.Current.hudSerifFont,
+                1f);  // interligne maquette — .enseigne b{font:700 17px/1}
             titre.fontStyle = TMPro.FontStyles.Bold;   // maquette : .enseigne b, 700 17px
             titre.alignment = TextAlignmentOptions.Center;
             titre.characterSpacing = 20f; // letter-spacing:.2em
 
             sousTitre = NouveauTexte(go.transform, "SousTitre", "", CssSousTitre,
-                ReputationResolvers.Creme2, DesignTokens.Current.primaryFont);
+                ReputationResolvers.Creme2, DesignTokens.Current.primaryFont,
+                1f);  // interligne maquette — .enseigne i{font:700 6.4px/1}
             sousTitre.fontStyle = TMPro.FontStyles.Bold;   // maquette : sous-titre de l’enseigne (.enseigne i, 700 6.4px)
             sousTitre.alignment = TextAlignmentOptions.Center;
             sousTitre.characterSpacing = 34f;
@@ -871,12 +873,14 @@ namespace MafiaCleanCity.Operational
                 Contour(fen, ReputationResolvers.Lisere);
 
                 compteurNombre[i] = NouveauTexte(fen.transform, "Nombre", "—",
-                    CssCompteurNombre, ReputationResolvers.Cyan, DesignTokens.Current.primaryFont);
+                    CssCompteurNombre, ReputationResolvers.Cyan, DesignTokens.Current.primaryFont,
+                1f);  // interligne maquette — .fen b{font:700 14px/1}
                 compteurNombre[i].fontStyle = TMPro.FontStyles.Bold;   // maquette : le chiffre du compteur (.fen, 700 14px)
                 compteurNombre[i].alignment = TextAlignmentOptions.Center;
 
                 compteurLibelle[i] = NouveauTexte(fen.transform, "Libelle", "",
-                    CssCompteurLib, ReputationResolvers.Muet, DesignTokens.Current.primaryFont);
+                    CssCompteurLib, ReputationResolvers.Muet, DesignTokens.Current.primaryFont,
+                1.1f);  // interligne maquette — .fen>span{font:700 5.4px/1.1}
                 compteurLibelle[i].fontStyle = TMPro.FontStyles.Bold;   // maquette : le libellé du compteur (.fen>span, 700 5.4px)
                 compteurLibelle[i].alignment = TextAlignmentOptions.Center;
                 compteurLibelle[i].characterSpacing = 16f;
@@ -966,7 +970,17 @@ namespace MafiaCleanCity.Operational
             pileMiroir.childForceExpandWidth = true;
             pileMiroir.childForceExpandHeight = false;   // le mou reste SOUS le mir6
             pileMiroir.childAlignment = TextAnchor.UpperCenter;
-            pileMiroir.padding = new RectOffset(PxTrait(7f), PxTrait(7f), PxTrait(7f), PxTrait(7f));
+            // ⛔ `padding:7px 8px` PLUS le `border:1px` — et les deux manquaient (㊲ F8).
+            // La règle est `.elast{…border:1px solid …; padding:7px 8px…}` (`chassis6.py:126-128`) :
+            // le retrait du contenu depuis le bord EXTÉRIEUR vaut donc **8 en haut et en bas**,
+            // **9 à gauche et à droite** — pas 7 partout. Le client posait 7 sur les quatre côtés
+            // et ne comptait pas le trait : un juge ⊥ a mesuré le padding intérieur à **23 px
+            // contre 30** en référence, et les tuiles s'élargir de 4,2 % en conséquence — ce qui
+            // fait passer l'en-tête « ce qu'il a absorbé de vos règles » de TROIS lignes à DEUX,
+            // donc raccourcit la colonne, donc creuse le vide du bas (F1).
+            // ★ *Une bordure est un retrait comme un autre* : la CSS l'ajoute au padding, le
+            //   `RectOffset` d'un layout ne le sait pas — c'est à l'appelant de l'additionner.
+            pileMiroir.padding = new RectOffset(PxTrait(9f), PxTrait(9f), PxTrait(8f), PxTrait(8f));
 
             GameObject mir6 = NouveauUI("Mir6", go.transform);
             // ⛔ HAUTEUR IMPOSÉE, et non laissée au calcul. `childForceExpandHeight = false` sur la
@@ -1042,14 +1056,16 @@ namespace MafiaCleanCity.Operational
             hv.childAlignment = TextAnchor.LowerLeft;   // `align-items:baseline`, au plus près
 
             verdictTitre = NouveauTexte(verdictGo.transform, "Titre", "",
-                CssVerdictTitre, ReputationResolvers.Muet, DesignTokens.Current.hudSerifFont);
+                CssVerdictTitre, ReputationResolvers.Muet, DesignTokens.Current.hudSerifFont,
+                1f);  // interligne maquette — .verdict b{font:700 10px/1}
             verdictTitre.fontStyle = TMPro.FontStyles.Bold;   // maquette : .verdict b, 700 10px
 
             // La légende ne dépend d'AUCUN état : c'est la même phrase dans les six vues de la
             // maquette. La poser une fois ici, plutôt que dans `AppliquerEtat`, évite qu'un état
             // futur oublie de la réécrire et laisse une colonne sans son explication.
             NouveauTexte(verdictGo.transform, "Legende", Lib("ce qu’il a absorbé de vos règles"),
-                CssVerdictLegende, ReputationResolvers.Muet, DesignTokens.Current.primaryFont);
+                CssVerdictLegende, ReputationResolvers.Muet, DesignTokens.Current.primaryFont,
+                1.2f);  // interligne maquette — .pcle{font:5.2px/1.2}
 
             for (int i = 0; i < 4; i++)
                 voyants[i] = TellVoyant.Construire(lect.transform, this);
@@ -1140,7 +1156,8 @@ namespace MafiaCleanCity.Operational
 
             NouveauTexte(go.transform, "SurTitre", Lib("LES RÈGLES QUE VOUS AVEZ DONNÉES"),
                 CssPannSurTitre, ReputationResolvers.Muet,
-                DesignTokens.Current.primaryFont).characterSpacing = 19f;
+                DesignTokens.Current.primaryFont,
+                1f).characterSpacing = 19f;  // interligne maquette — .pann i{font:700 5.6px/1}
 
             GameObject lignes = NouveauUI("Lignes", go.transform);
             listeReglesRoot = (RectTransform)lignes.transform;
@@ -1151,7 +1168,8 @@ namespace MafiaCleanCity.Operational
 
             listeReglesVide = NouveauTexte(go.transform, "Vide",
                 Lib("vous n’avez encore donné aucune règle — rien ne peut donc être enfreint"),
-                CssPannTexte, ReputationResolvers.Eteint, DesignTokens.Current.primaryFont);
+                CssPannTexte, ReputationResolvers.Eteint, DesignTokens.Current.primaryFont,
+                1.4f);  // interligne maquette — .pann small{font:6.6px/1.4}
 
             EmpilerVertical(go, Px(CssPannPadY), Px(4f), Px(CssPannPadX));
         }
@@ -1214,7 +1232,8 @@ namespace MafiaCleanCity.Operational
 
                 // L'identifiant, EN CLAIR. Pas de table de libellés : il n'en existe aucune.
                 TextMeshProUGUI id = NouveauTexte(ligne.transform, "RuleId", regle.rule_id,
-                    CssVoyantTitre, ReputationResolvers.Creme, DesignTokens.Current.primaryFont);
+                    CssVoyantTitre, ReputationResolvers.Creme, DesignTokens.Current.primaryFont,
+                1.2f);  // interligne maquette — .ptitre{font:700 7.4px/1.2}
                 LayoutElement idle = id.gameObject.AddComponent<LayoutElement>();
                 idle.flexibleWidth = 1f;
 
@@ -1238,14 +1257,17 @@ namespace MafiaCleanCity.Operational
             // jeu » à un joueur en train de dériver — au moment précis où l'écran doit lui dire
             // autre chose.
             pannSurTitre = NouveauTexte(go.transform, "SurTitre", "", CssPannSurTitre,
-                ReputationResolvers.Muet, DesignTokens.Current.primaryFont);
+                ReputationResolvers.Muet, DesignTokens.Current.primaryFont,
+                1f);  // interligne maquette — .pann i{font:700 5.6px/1}
             pannSurTitre.fontStyle = TMPro.FontStyles.Bold;   // maquette : le sur-titre du panneau (.pann, 700 5.6px)
             pannSurTitre.characterSpacing = 19f;
             pannTitre = NouveauTexte(go.transform, "Titre", "", CssPannTitre,
-                ReputationResolvers.Creme, DesignTokens.Current.hudSerifFont);
+                ReputationResolvers.Creme, DesignTokens.Current.hudSerifFont,
+                1.15f);  // interligne maquette — .pann b{font:700 13px/1.15}
             pannTitre.fontStyle = TMPro.FontStyles.Bold;   // maquette : le titre du panneau (.pann, 700 13px)
             pannTexte = NouveauTexte(go.transform, "Texte", "",
-                CssPannTexte, ReputationResolvers.Creme2, DesignTokens.Current.primaryFont);
+                CssPannTexte, ReputationResolvers.Creme2, DesignTokens.Current.primaryFont,
+                1.4f);  // interligne maquette — .pann small{font:6.6px/1.4}
 
             EmpilerVertical(go, Px(CssPannPadY), Px(4f), Px(CssPannPadX));
         }
@@ -1267,7 +1289,8 @@ namespace MafiaCleanCity.Operational
             CtaDonnerRegle.targetGraphic = fond;
 
             ctaLibelle = NouveauTexte(cta.transform, "Libelle", "DONNER UNE RÈGLE",
-                CssCtaCorps, ReputationResolvers.OrVif, DesignTokens.Current.primaryFont);
+                CssCtaCorps, ReputationResolvers.OrVif, DesignTokens.Current.primaryFont,
+                1f);  // interligne maquette — .cta6{font:700 8.5px/1}
             ctaLibelle.fontStyle = TMPro.FontStyles.Bold;   // maquette : .cta6, 700 8.5px
             ctaLibelle.alignment = TextAlignmentOptions.Center;
             ctaLibelle.characterSpacing = 11f;
@@ -1372,8 +1395,28 @@ namespace MafiaCleanCity.Operational
         private static string Lib(string litteral) =>
             MafiaCleanCity.I18n.Libelle.De("reputation", "bloc", litteral);
 
+        /// <summary>Un texte de cet écran, à son corps ET À SON INTERLIGNE de maquette.
+        ///
+        /// ⛔⛔ L'INTERLIGNE EST OBLIGATOIRE, ET C'EST LE CORRECTIF DE F6, PAS UN DÉTAIL DE
+        /// SIGNATURE. Cette fabrique ne posait AUCUN `lineSpacing` : tous les blocs multi-lignes de
+        /// l'écran héritaient donc du défaut de TMP (~1,157 em pour DejaVu Sans) là où la maquette
+        /// déclare un interligne par bloc. Mesuré par un juge ⊥ : paragraphe `.pann` **33,0 → 27,5
+        /// px** (−17 %) à hauteur de glyphe IDENTIQUE et à largeur de ligne à ≤ 1 % ; titre de carte
+        /// 27 → 24 ; sous-titre d'enseigne 23 → 22 ; tuile 98 → 90.
+        /// ⇒ Un paramètre OPTIONNEL aurait laissé les sites existants sur le défaut de TMP en
+        ///   silence — *« optionnel » est l'endroit où le compilateur cesse d'aider*. Requis, il a
+        ///   obligé à visiter les onze sites et à écrire, pour chacun, la valeur de SA règle CSS.
+        ///
+        /// `interligneEm` est le dénominateur de `font: <corps>px/<interligne>` de la maquette
+        /// (`chassis6.py`) : `.pann small{font:6.6px/1.4}` ⇒ 1,4.
+        /// ⚠️ La conversion vers `lineSpacing` est DÉRIVÉE de la police chargée, jamais d'une
+        /// constante devinée : TMP exprime `lineSpacing` en centièmes de cadratin AJOUTÉS à
+        /// l'interligne naturel de la fonte, qu'on lit dans `faceInfo`. Une constante en dur serait
+        /// fausse le jour où la fonte change — et ce dépôt a déjà payé une référence de police
+        /// substituée sans que personne ne s'en aperçoive.</summary>
         private TextMeshProUGUI NouveauTexte(Transform parent, string nom, string texte,
-                                             float corpsCss, Color couleur, TMP_FontAsset police)
+                                             float corpsCss, Color couleur, TMP_FontAsset police,
+                                             float interligneEm)
         {
             GameObject go = NouveauUI(nom, parent);
             if (go.GetComponent<CanvasRenderer>() == null) go.AddComponent<CanvasRenderer>();
@@ -1383,6 +1426,11 @@ namespace MafiaCleanCity.Operational
             t.fontSize = PxTrait(corpsCss);   // un corps de texte à 0 est un défaut de rendu
             t.color = couleur;
             t.raycastTarget = false;
+            if (police != null && police.faceInfo.pointSize > 0f)
+            {
+                float naturelEm = police.faceInfo.lineHeight / police.faceInfo.pointSize;
+                t.lineSpacing = (interligneEm - naturelEm) * 100f;
+            }
             return t;
         }
 
