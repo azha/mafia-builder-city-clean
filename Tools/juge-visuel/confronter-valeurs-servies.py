@@ -55,7 +55,14 @@ VAL = re.compile(r'^[A-Za-z][A-Za-z0-9_]{2,30}$')
 PAIRE = re.compile(r"""\(\s*['"]([A-Za-z_][A-Za-z0-9_]*)['"]\s*,\s*['"]([^'"]{3,60})['"]""")
 PAIRE_DICT = re.compile(r"""['"]([A-Za-z_][A-Za-z0-9_]*)['"]\s*:\s*\(?\s*['"]([^'"]{3,60})['"]""")
 
-TEMOIN = ('glaring', 'connue mais non dessinée')
+# ⛔ CONTRÔLE POSITIF SUR FIXTURE INERTE — et la première version était FAUSSE POUR CETTE RAISON.
+#    Elle épinglait `glaring`, une valeur RÉELLE que le juge avait mesurée « non dessinée ». Le
+#    2026-09-06, la passe de vocabulaire l'a DESSINÉE — et le contrôle a rougi en refusant tout
+#    résultat, alors que le monde venait d'aller dans le bon sens. *Plus le lot réussit, plus le
+#    contrôle s'aveugle.* La cible d'un contrôle positif doit être INERTE : une fixture que
+#    personne n'a le droit de corriger, jamais une ligne vivante.
+TEMOIN_ABSENT = ('__temoin_jamais_dessine__', 'ce libellé n’existe dans aucune page, par construction')
+TEMOIN_PRESENT = ('__temoin_toujours_dessine__', None)   # libellé injecté depuis les pages elles-mêmes
 
 
 def valeurs_servies():
@@ -127,15 +134,22 @@ def main():
     print('corps : %d dossiers · vocabulaire : %d valeurs · pages rendues : %d octets'
           % (len(servies), len(voc), len(pages)))
 
-    # ── le contrôle positif d'abord : sans lui, aucun chiffre n'est opposable ──
-    v, attendu = TEMOIN
-    obtenu = classer(v, voc, pages)
-    print('\nCONTRÔLE POSITIF · `%s` attendu « %s » → obtenu « %s »  %s'
-          % (v, attendu, obtenu, '✅' if obtenu == attendu else '⛔'))
-    if obtenu != attendu:
-        print('   L’instrument ne retrouve pas le cas que le juge a mesuré à la main.')
-        print('   Il mesure autre chose : aucun compte n’est publié.')
-        sys.exit(1)
+    # ── les contrôles d'abord : sans eux, aucun chiffre n'est opposable ──
+    # Deux fixtures, pour prouver que le classeur DISTINGUE — un contrôle à un seul sens ne
+    # prouve rien : un classeur qui répondrait toujours « non dessinée » le passerait.
+    voc = dict(voc)
+    voc[TEMOIN_ABSENT[0]] = {TEMOIN_ABSENT[1]}
+    present = pages[pages.index('<div class="etiquette">') + 23:][:40].strip() or 'cadre'
+    voc[TEMOIN_PRESENT[0]] = {present}
+    essais = [(TEMOIN_ABSENT[0], 'connue mais non dessinée'),
+              (TEMOIN_PRESENT[0], 'dessinée')]
+    for v, attendu in essais:
+        obtenu = classer(v, voc, pages)
+        print('CONTRÔLE · fixture `%s` attendu « %s » → « %s »  %s'
+              % (v[:26], attendu, obtenu, '✅' if obtenu == attendu else '⛔'))
+        if obtenu != attendu:
+            print('   Le classeur ne distingue pas les deux régimes : aucun compte n’est publié.')
+            sys.exit(1)
 
     compte = collections.Counter()
     trous = collections.defaultdict(set)
