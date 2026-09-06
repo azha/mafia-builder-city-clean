@@ -1,0 +1,15 @@
+{
+  "modele": "fal-ai/birefnet",
+  "source": "Tools/fal/generees/2026-09-06/lt-rook-1.png",
+  "parametres": {
+    "model": "General Use (Heavy)",
+    "operating_resolution": "1024x1024",
+    "output_format": "png",
+    "refine_foreground": true
+  },
+  "largeur": 1024,
+  "hauteur": 1024,
+  "request_id": "01a07880-1682-7c83-ba96-94205a153a92",
+  "duree_s": 3.2,
+  "genere_le": "2026-09-06T22:54:17+0200"
+}

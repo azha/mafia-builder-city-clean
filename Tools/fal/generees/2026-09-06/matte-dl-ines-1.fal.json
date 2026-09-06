@@ -1,0 +1,15 @@
+{
+  "modele": "fal-ai/birefnet",
+  "source": "Tools/fal/generees/2026-09-06/dl-ines-1.png",
+  "parametres": {
+    "model": "General Use (Heavy)",
+    "operating_resolution": "1024x1024",
+    "output_format": "png",
+    "refine_foreground": true
+  },
+  "largeur": 1024,
+  "hauteur": 1024,
+  "request_id": "01a07884-95d0-78e2-bd9a-229ab1f9f5e2",
+  "duree_s": 5.0,
+  "genere_le": "2026-09-06T22:59:14+0200"
+}
