@@ -575,6 +575,12 @@ namespace MafiaCleanCity.Capture.Tests
                 MafiaCleanCity.Shell.Tests.CaptureSousShell.ContrasteSurArtOuEchoue(
                     tex, canvas, chemin,
                     MafiaCleanCity.Shell.Tests.CaptureSousShell.TextesPosesSurLArt(shell), ecC);
+                // ⛔ LE RÉGIME SE DÉCLARE À CHAQUE RUN, sinon un dispositif inerte ressemble trait
+                // pour trait à un dispositif appliqué — et c'est précisément une garde en régime de
+                // mesure qu'on relit six mois plus tard comme une garde armée.
+                Debug.Log($"[CONTRASTE-ART][RÉGIME] {chemin} : MESURE, NON ARMÉE — "
+                          + $"{ecC.Count} lecture(s) sous le plancher, journalisées et NON assertées. "
+                          + "L'assertion sera activée quand ① et ③ seront propres, pas avant.");
                 foreach (string e in ecC) Debug.Log("[CONTRASTE-ART][SOUS-SEUIL] " + e);
             }
 
