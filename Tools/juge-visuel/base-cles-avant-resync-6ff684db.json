@@ -1,0 +1,1181 @@
+{
+ "__attendus__": {
+  "_": "Écarts CONNUS D'AVANCE entre cette base et le rejeu — ils ne sont PAS des findings. Inscrits le 2026-09-06 avant la resync, pour qu'ils ne soient pas relus comme des régressions du back dans une fenêtre courte.",
+  "cles_retirees_par_correctif": {
+   "attendu": "session/open passe de 13 à 12 clés, `home_district_id` DISPARUE",
+   "clé": "home_district_id",
+   "corps": [
+    "accueil/corps-reels/POST_session_open.json",
+    "carte/corps-reels/POST_session_open.json",
+    "decision-du-jour/corps-reels/POST_session_open.json",
+    "ecran_delegation/corps-reels/POST_session_open.json",
+    "exceptions/corps-reels/POST_session_open.json",
+    "revue-du-jour/corps-reels/POST_session_open.json"
+   ],
+   "raison": "cet outil l'INJECTAIT dans le corps capturé de session/open (retiré le 2026-09-06). La route en projette 12 ; la base en montre 13. Le rejeu rendra 12 : c'est la CORRECTION qui se voit, pas une clé perdue par le back."
+  }
+ },
+ "accueil/corps-reels/GET_autonomy-reports.json": {
+  "cles": [
+   "reports"
+  ],
+  "methode": "GET",
+  "route": "/v1/autonomy-reports",
+  "statut": 200
+ },
+ "accueil/corps-reels/GET_city_district_districtId_heat.json": {
+  "cles": [
+   "buildings",
+   "citywide_bucket",
+   "district",
+   "district_bucket",
+   "escalated"
+  ],
+  "methode": "GET",
+  "route": "/v1/city/district/{districtId}/heat",
+  "statut": 200
+ },
+ "accueil/corps-reels/GET_economy_wallet.json": {
+  "cles": [
+   "cash_cents",
+   "player_id",
+   "wallet_band"
+  ],
+  "methode": "GET",
+  "route": "/v1/economy/wallet",
+  "statut": 200
+ },
+ "accueil/corps-reels/GET_exceptions_queue.json": {
+  "cles": [
+   "backlog_badge",
+   "exceptions",
+   "queue_pressure_band"
+  ],
+  "methode": "GET",
+  "route": "/v1/exceptions/queue",
+  "statut": 200
+ },
+ "accueil/corps-reels/GET_lieutenants_id.json": {
+  "cles": [
+   "archetype",
+   "budget_bands",
+   "cue_bands",
+   "drift_phase",
+   "flag_frequency_band",
+   "granted_role",
+   "mode",
+   "name",
+   "op_state_band",
+   "reassign_availability",
+   "reassignment_disruption",
+   "role_efficiency_bonus",
+   "rule_count_band",
+   "script_revision_cost",
+   "script_source",
+   "standing_order",
+   "tenure_bucket",
+   "trust_budget_bucket"
+  ],
+  "methode": "GET",
+  "route": "/v1/lieutenants/{id}",
+  "statut": 200
+ },
+ "accueil/corps-reels/GET_me.json": {
+  "cles": [
+   "account_id",
+   "email",
+   "handle",
+   "lifecycle_state",
+   "locale",
+   "meta_market_visibility_enabled",
+   "player_id"
+  ],
+  "methode": "GET",
+  "route": "/v1/me",
+  "statut": 200
+ },
+ "accueil/corps-reels/GET_progression.json": {
+  "cles": [
+   "next_tier",
+   "progress_to_next",
+   "tier_label_i18n",
+   "vocabulary_tier"
+  ],
+  "methode": "GET",
+  "route": "/v1/progression",
+  "statut": 200
+ },
+ "accueil/corps-reels/GET_world_districts.json": {
+  "cles": [
+   "districts"
+  ],
+  "methode": "GET",
+  "route": "/v1/world/districts",
+  "statut": 200
+ },
+ "accueil/corps-reels/POST_session_open.json": {
+  "cles": [
+   "backlog_badge",
+   "compression_glance",
+   "flag_review",
+   "friction_glance",
+   "hl_card",
+   "home_district_id",
+   "onboarding",
+   "opened_game_day",
+   "queue",
+   "queue_pressure_band",
+   "session_id",
+   "settling_glance",
+   "structural_budget"
+  ],
+  "methode": "POST",
+  "route": "/v1/session/open",
+  "statut": 200
+ },
+ "autonomie/corps-reels/GET_autonomy-reports.json": {
+  "cles": [
+   "reports"
+  ],
+  "methode": "GET",
+  "route": "/v1/autonomy-reports",
+  "statut": 200
+ },
+ "autonomie/corps-reels/GET_lieutenants_id.json": {
+  "cles": [
+   "archetype",
+   "budget_bands",
+   "cue_bands",
+   "drift_phase",
+   "flag_frequency_band",
+   "granted_role",
+   "mode",
+   "name",
+   "op_state_band",
+   "reassign_availability",
+   "reassignment_disruption",
+   "role_efficiency_bonus",
+   "rule_count_band",
+   "script_revision_cost",
+   "script_source",
+   "standing_order",
+   "tenure_bucket",
+   "trust_budget_bucket"
+  ],
+  "methode": "GET",
+  "route": "/v1/lieutenants/{id}",
+  "statut": 200
+ },
+ "carnet/corps-reels/GET_ambient_feed.json": {
+  "cles": [
+   "events",
+   "limit",
+   "offset",
+   "total"
+  ],
+  "methode": "GET",
+  "route": "/v1/ambient/feed",
+  "statut": 200
+ },
+ "carnet/corps-reels/GET_cue-stack_current.json": {
+  "cles": [
+   "committed_at",
+   "cue_stack_id",
+   "slots",
+   "state"
+  ],
+  "methode": "GET",
+  "route": "/v1/cue-stack/current",
+  "statut": 200
+ },
+ "carnet/corps-reels/GET_cue-stack_named-sequences.json": {
+  "cles": [
+   "<NoneType>"
+  ],
+  "methode": "GET",
+  "route": "/v1/cue-stack/named-sequences",
+  "statut": 403
+ },
+ "carnet/corps-reels/GET_news_beats.json": {
+  "cles": [
+   "beat_id",
+   "body_i18n_key",
+   "body_params",
+   "byline_i18n_key",
+   "category",
+   "district",
+   "frame_tag_i18n_key",
+   "headline_i18n_key",
+   "headline_params",
+   "headline_params_fields",
+   "outlet_i18n_key",
+   "sourceless_badge",
+   "subject_i18n_key",
+   "wire_badge"
+  ],
+  "methode": "GET",
+  "route": "/v1/news/beats/",
+  "statut": 200
+ },
+ "carnet/corps-reels/GET_news_beats_id.json": {
+  "cles": [
+   "beat_id",
+   "body_i18n_key",
+   "body_params",
+   "byline_i18n_key",
+   "category",
+   "district",
+   "frame_tag_i18n_key",
+   "headline_i18n_key",
+   "headline_params",
+   "headline_params_fields",
+   "outlet_i18n_key",
+   "sourceless_badge",
+   "subject_i18n_key",
+   "wire_badge"
+  ],
+  "methode": "GET",
+  "route": "/v1/news/beats/{id}",
+  "statut": 200
+ },
+ "carnet/corps-reels/GET_news_feed.json": {
+  "cles": [
+   "beats",
+   "nextCursor"
+  ],
+  "methode": "GET",
+  "route": "/v1/news/feed",
+  "statut": 200
+ },
+ "carnet/corps-reels/GET_random-world_active.json": {
+  "cles": [
+   "events"
+  ],
+  "methode": "GET",
+  "route": "/v1/random-world/active",
+  "statut": 200
+ },
+ "carnet/corps-reels/GET_random-world_known-couplings.json": {
+  "cles": [
+   "couplings"
+  ],
+  "methode": "GET",
+  "route": "/v1/random-world/known-couplings",
+  "statut": 200
+ },
+ "carte/corps-reels/GET_city_district_districtId_heat.json": {
+  "cles": [
+   "buildings",
+   "citywide_bucket",
+   "district",
+   "district_bucket",
+   "escalated"
+  ],
+  "methode": "GET",
+  "route": "/v1/city/district/{districtId}/heat",
+  "statut": 200
+ },
+ "carte/corps-reels/GET_city_district_id_interior.json": {
+  "cles": [
+   "bank_side",
+   "blocks",
+   "buildings",
+   "day_phase",
+   "district",
+   "district_id",
+   "grid",
+   "lieutenants",
+   "name",
+   "name_canonical",
+   "profile"
+  ],
+  "methode": "GET",
+  "route": "/v1/city/district/{id}/interior",
+  "statut": 200
+ },
+ "carte/corps-reels/GET_i18n_bundle_locale.json": {
+  "cles": [
+   "locale",
+   "messages"
+  ],
+  "methode": "GET",
+  "route": "/v1/i18n/bundle?locale=",
+  "statut": 200
+ },
+ "carte/corps-reels/GET_world_districts.json": {
+  "cles": [
+   "districts"
+  ],
+  "methode": "GET",
+  "route": "/v1/world/districts",
+  "statut": 200
+ },
+ "carte/corps-reels/POST_session_open.json": {
+  "cles": [
+   "backlog_badge",
+   "compression_glance",
+   "flag_review",
+   "friction_glance",
+   "hl_card",
+   "home_district_id",
+   "onboarding",
+   "opened_game_day",
+   "queue",
+   "queue_pressure_band",
+   "session_id",
+   "settling_glance",
+   "structural_budget"
+  ],
+  "methode": "POST",
+  "route": "/v1/session/open",
+  "statut": 200
+ },
+ "coffre/corps-reels/GET_operational_laundering.json": {
+  "cles": [
+   "nodes"
+  ],
+  "methode": "GET",
+  "route": "/v1/operational/laundering",
+  "statut": 200
+ },
+ "compression/corps-reels/GET_compression_board.json": {
+  "cles": [
+   "<NoneType>"
+  ],
+  "methode": "GET",
+  "route": "/v1/compression/board",
+  "statut": 404
+ },
+ "compression/corps-reels/GET_compression_state.json": {
+  "cles": [
+   "deferral_available",
+   "stress_bucket",
+   "week_state"
+  ],
+  "methode": "GET",
+  "route": "/v1/compression/state",
+  "statut": 200
+ },
+ "compte/corps-reels/GET_iap_catalogue.json": {
+  "cles": [
+   "skus"
+  ],
+  "methode": "GET",
+  "route": "/v1/iap/catalogue",
+  "statut": 200
+ },
+ "compte/corps-reels/GET_me.json": {
+  "cles": [
+   "account_id",
+   "email",
+   "handle",
+   "lifecycle_state",
+   "locale",
+   "meta_market_visibility_enabled",
+   "player_id"
+  ],
+  "methode": "GET",
+  "route": "/v1/me",
+  "statut": 200
+ },
+ "compte/corps-reels/GET_me_iap_balance.json": {
+  "cles": [
+   "marks_balance"
+  ],
+  "methode": "GET",
+  "route": "/v1/me/iap/balance",
+  "statut": 200
+ },
+ "compte/corps-reels/GET_me_iap_entitlements.json": {
+  "cles": [
+   "skus"
+  ],
+  "methode": "GET",
+  "route": "/v1/me/iap/entitlements",
+  "statut": 200
+ },
+ "compte/corps-reels/GET_ui_tutorial-state.json": {
+  "cles": [
+   "eligible_tutorial_ids",
+   "next_tutorial_id",
+   "shown_tutorial_ids",
+   "tutorials_opt_out"
+  ],
+  "methode": "GET",
+  "route": "/v1/ui/tutorial-state",
+  "statut": 200
+ },
+ "decision-du-jour/corps-reels/GET_exceptions_queue.json": {
+  "cles": [
+   "backlog_badge",
+   "exceptions",
+   "queue_pressure_band"
+  ],
+  "methode": "GET",
+  "route": "/v1/exceptions/queue",
+  "statut": 200
+ },
+ "decision-du-jour/corps-reels/GET_flag-review.json": {
+  "cles": [
+   "batch_confirm_available",
+   "cards",
+   "routine_pending_count"
+  ],
+  "methode": "GET",
+  "route": "/v1/flag-review",
+  "statut": 200
+ },
+ "decision-du-jour/corps-reels/GET_lieutenants.json": {
+  "cles": [
+   "lieutenants"
+  ],
+  "methode": "GET",
+  "route": "/v1/lieutenants",
+  "statut": 200
+ },
+ "decision-du-jour/corps-reels/POST_session_open.json": {
+  "cles": [
+   "backlog_badge",
+   "compression_glance",
+   "flag_review",
+   "friction_glance",
+   "hl_card",
+   "home_district_id",
+   "onboarding",
+   "opened_game_day",
+   "queue",
+   "queue_pressure_band",
+   "session_id",
+   "settling_glance",
+   "structural_budget"
+  ],
+  "methode": "POST",
+  "route": "/v1/session/open",
+  "statut": 200
+ },
+ "ecran-principal/corps-reels/GET_city_district_districtId_heat.json": {
+  "cles": [
+   "buildings",
+   "citywide_bucket",
+   "district",
+   "district_bucket",
+   "escalated"
+  ],
+  "methode": "GET",
+  "route": "/v1/city/district/{districtId}/heat",
+  "statut": 200
+ },
+ "ecran-principal/corps-reels/GET_city_district_id_interior.json": {
+  "cles": [
+   "bank_side",
+   "blocks",
+   "buildings",
+   "day_phase",
+   "district",
+   "district_id",
+   "grid",
+   "lieutenants",
+   "name",
+   "name_canonical",
+   "profile"
+  ],
+  "methode": "GET",
+  "route": "/v1/city/district/{id}/interior",
+  "statut": 200
+ },
+ "ecran-principal/corps-reels/GET_i18n_bundle_locale.json": {
+  "cles": [
+   "locale",
+   "messages"
+  ],
+  "methode": "GET",
+  "route": "/v1/i18n/bundle?locale=",
+  "statut": 200
+ },
+ "ecran-principal/corps-reels/GET_world_districts.json": {
+  "cles": [
+   "districts"
+  ],
+  "methode": "GET",
+  "route": "/v1/world/districts",
+  "statut": 200
+ },
+ "ecran_appro/corps-reels/GET_city_district_districtId_heat.json": {
+  "cles": [
+   "buildings",
+   "citywide_bucket",
+   "district",
+   "district_bucket",
+   "escalated"
+  ],
+  "methode": "GET",
+  "route": "/v1/city/district/{districtId}/heat",
+  "statut": 200
+ },
+ "ecran_appro/corps-reels/GET_city_district_id_interior.json": {
+  "cles": [
+   "bank_side",
+   "blocks",
+   "buildings",
+   "day_phase",
+   "district",
+   "district_id",
+   "grid",
+   "lieutenants",
+   "name",
+   "name_canonical",
+   "profile"
+  ],
+  "methode": "GET",
+  "route": "/v1/city/district/{id}/interior",
+  "statut": 200
+ },
+ "ecran_appro/corps-reels/GET_operational_precursors_building_id.json": {
+  "cles": [
+   "building",
+   "has_arrived_order",
+   "has_pending_order",
+   "precursor_type",
+   "price_trend_bucket",
+   "scarcity_active",
+   "stock_band",
+   "stock_liters_label",
+   "supplier_pressure_bucket"
+  ],
+  "methode": "GET",
+  "route": "/v1/operational/precursors?building_id=",
+  "statut": 200
+ },
+ "ecran_appro/corps-reels/GET_supply-chain_graph.json": {
+  "cles": [
+   "legs",
+   "nodes",
+   "routes"
+  ],
+  "methode": "GET",
+  "route": "/v1/supply-chain/graph",
+  "statut": 200
+ },
+ "ecran_appro/corps-reels/GET_world_districts.json": {
+  "cles": [
+   "districts"
+  ],
+  "methode": "GET",
+  "route": "/v1/world/districts",
+  "statut": 200
+ },
+ "ecran_conflit/corps-reels/GET_lieutenants.json": {
+  "cles": [
+   "lieutenants"
+  ],
+  "methode": "GET",
+  "route": "/v1/lieutenants",
+  "statut": 200
+ },
+ "ecran_conflit/corps-reels/GET_me_engagements.json": {
+  "cles": [
+   "engagements"
+  ],
+  "methode": "GET",
+  "route": "/v1/me/engagements",
+  "statut": 200
+ },
+ "ecran_delegation/corps-reels/GET_lieutenants.json": {
+  "cles": [
+   "lieutenants"
+  ],
+  "methode": "GET",
+  "route": "/v1/lieutenants",
+  "statut": 200
+ },
+ "ecran_delegation/corps-reels/GET_meta_recall-preview.json": {
+  "cles": [
+   "<NoneType>"
+  ],
+  "methode": "GET",
+  "route": "/v1/meta/recall-preview/",
+  "statut": 409
+ },
+ "ecran_delegation/corps-reels/GET_meta_recall-preview_1.json": {
+  "cles": [
+   "<NoneType>"
+  ],
+  "methode": "GET",
+  "route": "/v1/meta/recall-preview/1",
+  "statut": 409
+ },
+ "ecran_delegation/corps-reels/GET_meta_recall-preview_categoryId.json": {
+  "cles": [
+   "<NoneType>"
+  ],
+  "methode": "GET",
+  "route": "/v1/meta/recall-preview/{categoryId}",
+  "statut": 409
+ },
+ "ecran_delegation/corps-reels/GET_meta_task-categories.json": {
+  "cles": [
+   "delegated",
+   "task_categories"
+  ],
+  "methode": "GET",
+  "route": "/v1/meta/task-categories",
+  "statut": 200
+ },
+ "ecran_delegation/corps-reels/POST_session_open.json": {
+  "cles": [
+   "backlog_badge",
+   "compression_glance",
+   "flag_review",
+   "friction_glance",
+   "hl_card",
+   "home_district_id",
+   "onboarding",
+   "opened_game_day",
+   "queue",
+   "queue_pressure_band",
+   "session_id",
+   "settling_glance",
+   "structural_budget"
+  ],
+  "methode": "POST",
+  "route": "/v1/session/open",
+  "statut": 200
+ },
+ "ecran_demolition/corps-reels/GET_city_district_districtId_interior.json": {
+  "cles": [
+   "bank_side",
+   "blocks",
+   "buildings",
+   "day_phase",
+   "district",
+   "district_id",
+   "grid",
+   "lieutenants",
+   "name",
+   "name_canonical",
+   "profile"
+  ],
+  "methode": "GET",
+  "route": "/v1/city/district/{districtId}/interior",
+  "statut": 200
+ },
+ "ecran_demolition/corps-reels/GET_city_district_id_interior.json": {
+  "cles": [
+   "bank_side",
+   "blocks",
+   "buildings",
+   "day_phase",
+   "district",
+   "district_id",
+   "grid",
+   "lieutenants",
+   "name",
+   "name_canonical",
+   "profile"
+  ],
+  "methode": "GET",
+  "route": "/v1/city/district/{id}/interior",
+  "statut": 200
+ },
+ "ecran_demolition/corps-reels/GET_friction_nodes.json": {
+  "cles": [
+   "decommission_cost_bucket",
+   "friction_load_bucket",
+   "neighbor_count",
+   "output_to_friction_ratio_bucket",
+   "output_value_bucket"
+  ],
+  "methode": "GET",
+  "route": "/v1/friction/nodes/",
+  "statut": 200
+ },
+ "ecran_demolition/corps-reels/GET_friction_nodes_buildingId.json": {
+  "cles": [
+   "decommission_cost_bucket",
+   "friction_load_bucket",
+   "neighbor_count",
+   "output_to_friction_ratio_bucket",
+   "output_value_bucket"
+  ],
+  "methode": "GET",
+  "route": "/v1/friction/nodes/{buildingId}",
+  "statut": 200
+ },
+ "ecran_demolition/corps-reels/GET_friction_state.json": {
+  "cles": [
+   "friction_bucket",
+   "friction_node_count",
+   "penalty_active"
+  ],
+  "methode": "GET",
+  "route": "/v1/friction/state",
+  "statut": 200
+ },
+ "ecran_demolition/corps-reels/GET_world_districts.json": {
+  "cles": [
+   "districts"
+  ],
+  "methode": "GET",
+  "route": "/v1/world/districts",
+  "statut": 200
+ },
+ "ecran_distribution/corps-reels/GET_city_district_districtId_heat.json": {
+  "cles": [
+   "buildings",
+   "citywide_bucket",
+   "district",
+   "district_bucket",
+   "escalated"
+  ],
+  "methode": "GET",
+  "route": "/v1/city/district/{districtId}/heat",
+  "statut": 200
+ },
+ "ecran_distribution/corps-reels/GET_city_district_id_interior.json": {
+  "cles": [
+   "bank_side",
+   "blocks",
+   "buildings",
+   "day_phase",
+   "district",
+   "district_id",
+   "grid",
+   "lieutenants",
+   "name",
+   "name_canonical",
+   "profile"
+  ],
+  "methode": "GET",
+  "route": "/v1/city/district/{id}/interior",
+  "statut": 200
+ },
+ "ecran_distribution/corps-reels/GET_operational_couriers.json": {
+  "cles": [
+   "couriers"
+  ],
+  "methode": "GET",
+  "route": "/v1/operational/couriers",
+  "statut": 200
+ },
+ "ecran_distribution/corps-reels/GET_operational_distribution_projection.json": {
+  "cles": [
+   "routes"
+  ],
+  "methode": "GET",
+  "route": "/v1/operational/distribution/projection",
+  "statut": 200
+ },
+ "ecran_distribution/corps-reels/GET_world_districts.json": {
+  "cles": [
+   "districts"
+  ],
+  "methode": "GET",
+  "route": "/v1/world/districts",
+  "statut": 200
+ },
+ "ecran_loi/corps-reels/GET_me_legal.json": {
+  "cles": [
+   "activeCases",
+   "lawyerRoster"
+  ],
+  "methode": "GET",
+  "route": "/v1/me/legal",
+  "statut": 200
+ },
+ "exceptions/corps-reels/GET_exceptions_queue.json": {
+  "cles": [
+   "backlog_badge",
+   "exceptions",
+   "queue_pressure_band"
+  ],
+  "methode": "GET",
+  "route": "/v1/exceptions/queue",
+  "statut": 200
+ },
+ "exceptions/corps-reels/GET_progression.json": {
+  "cles": [
+   "next_tier",
+   "progress_to_next",
+   "tier_label_i18n",
+   "vocabulary_tier"
+  ],
+  "methode": "GET",
+  "route": "/v1/progression",
+  "statut": 200
+ },
+ "exceptions/corps-reels/POST_session_open.json": {
+  "cles": [
+   "backlog_badge",
+   "compression_glance",
+   "flag_review",
+   "friction_glance",
+   "hl_card",
+   "home_district_id",
+   "onboarding",
+   "opened_game_day",
+   "queue",
+   "queue_pressure_band",
+   "session_id",
+   "settling_glance",
+   "structural_budget"
+  ],
+  "methode": "POST",
+  "route": "/v1/session/open",
+  "statut": 200
+ },
+ "famille/corps-reels/GET_autonomy-reports.json": {
+  "cles": [
+   "reports"
+  ],
+  "methode": "GET",
+  "route": "/v1/autonomy-reports",
+  "statut": 200
+ },
+ "famille/corps-reels/GET_lieutenants_id.json": {
+  "cles": [
+   "archetype",
+   "budget_bands",
+   "cue_bands",
+   "drift_phase",
+   "flag_frequency_band",
+   "granted_role",
+   "mode",
+   "name",
+   "op_state_band",
+   "reassign_availability",
+   "reassignment_disruption",
+   "role_efficiency_bonus",
+   "rule_count_band",
+   "script_revision_cost",
+   "script_source",
+   "standing_order",
+   "tenure_bucket",
+   "trust_budget_bucket"
+  ],
+  "methode": "GET",
+  "route": "/v1/lieutenants/{id}",
+  "statut": 200
+ },
+ "famille/corps-reels/GET_progression.json": {
+  "cles": [
+   "next_tier",
+   "progress_to_next",
+   "tier_label_i18n",
+   "vocabulary_tier"
+  ],
+  "methode": "GET",
+  "route": "/v1/progression",
+  "statut": 200
+ },
+ "fiche-batiment/corps-reels/GET_economy_wallet.json": {
+  "cles": [
+   "cash_cents",
+   "player_id",
+   "wallet_band"
+  ],
+  "methode": "GET",
+  "route": "/v1/economy/wallet",
+  "statut": 200
+ },
+ "fiche-batiment/corps-reels/GET_operational_building_id.json": {
+  "cles": [
+   "available_vehicles",
+   "block_id",
+   "building",
+   "capacity_band",
+   "cold_storage_capable",
+   "cover_band",
+   "days_until_maintenance_due",
+   "district_id",
+   "forfeiture_band",
+   "held_band",
+   "hub_tier_band",
+   "lab_tier_band",
+   "lapse_phase_bucket",
+   "maintenance_in_progress",
+   "money_holding_tier_band",
+   "name_i18n",
+   "operational",
+   "operational_type",
+   "raid_risk",
+   "recently_raided",
+   "repair_cost",
+   "roster_band",
+   "seized_amount",
+   "setup_state",
+   "structural_state",
+   "yield_band"
+  ],
+  "methode": "GET",
+  "route": "/v1/operational/building/{id}",
+  "statut": 200
+ },
+ "police/corps-reels/GET_city_district_id_inspection.json": {
+  "cles": [
+   "dispatcher_regime",
+   "district",
+   "queue_load",
+   "severity_distribution",
+   "type_distribution"
+  ],
+  "methode": "GET",
+  "route": "/v1/city/district/{id}/inspection",
+  "statut": 200
+ },
+ "reputation/corps-reels/GET_lieutenants.json": {
+  "cles": [
+   "archetype",
+   "budget_bands",
+   "cue_bands",
+   "drift_phase",
+   "flag_frequency_band",
+   "granted_role",
+   "mode",
+   "name",
+   "op_state_band",
+   "reassign_availability",
+   "reassignment_disruption",
+   "role_efficiency_bonus",
+   "rule_count_band",
+   "script_revision_cost",
+   "script_source",
+   "standing_order",
+   "tenure_bucket",
+   "trust_budget_bucket"
+  ],
+  "methode": "GET",
+  "route": "/v1/lieutenants/",
+  "statut": 200
+ },
+ "reputation/corps-reels/GET_lieutenants_id.json": {
+  "cles": [
+   "archetype",
+   "budget_bands",
+   "cue_bands",
+   "drift_phase",
+   "flag_frequency_band",
+   "granted_role",
+   "mode",
+   "name",
+   "op_state_band",
+   "reassign_availability",
+   "reassignment_disruption",
+   "role_efficiency_bonus",
+   "rule_count_band",
+   "script_revision_cost",
+   "script_source",
+   "standing_order",
+   "tenure_bucket",
+   "trust_budget_bucket"
+  ],
+  "methode": "GET",
+  "route": "/v1/lieutenants/{id}",
+  "statut": 200
+ },
+ "reputation/corps-reels/GET_me_reputation_lieutenant_id.json": {
+  "cles": [
+   "boss_mirror",
+   "hidden_curriculum",
+   "player_id"
+  ],
+  "methode": "GET",
+  "route": "/v1/me/reputation?lieutenant_id=",
+  "statut": 200
+ },
+ "revue-du-jour/corps-reels/GET_exceptions_queue.json": {
+  "cles": [
+   "backlog_badge",
+   "exceptions",
+   "queue_pressure_band"
+  ],
+  "methode": "GET",
+  "route": "/v1/exceptions/queue",
+  "statut": 200
+ },
+ "revue-du-jour/corps-reels/GET_flag-review.json": {
+  "cles": [
+   "batch_confirm_available",
+   "cards",
+   "routine_pending_count"
+  ],
+  "methode": "GET",
+  "route": "/v1/flag-review",
+  "statut": 200
+ },
+ "revue-du-jour/corps-reels/GET_lieutenants.json": {
+  "cles": [
+   "lieutenants"
+  ],
+  "methode": "GET",
+  "route": "/v1/lieutenants",
+  "statut": 200
+ },
+ "revue-du-jour/corps-reels/GET_lieutenants_id.json": {
+  "cles": [
+   "archetype",
+   "budget_bands",
+   "cue_bands",
+   "drift_phase",
+   "flag_frequency_band",
+   "granted_role",
+   "mode",
+   "name",
+   "op_state_band",
+   "reassign_availability",
+   "reassignment_disruption",
+   "role_efficiency_bonus",
+   "rule_count_band",
+   "script_revision_cost",
+   "script_source",
+   "standing_order",
+   "tenure_bucket",
+   "trust_budget_bucket"
+  ],
+  "methode": "GET",
+  "route": "/v1/lieutenants/{id}",
+  "statut": 200
+ },
+ "revue-du-jour/corps-reels/POST_session_open.json": {
+  "cles": [
+   "backlog_badge",
+   "compression_glance",
+   "flag_review",
+   "friction_glance",
+   "hl_card",
+   "home_district_id",
+   "onboarding",
+   "opened_game_day",
+   "queue",
+   "queue_pressure_band",
+   "session_id",
+   "settling_glance",
+   "structural_budget"
+  ],
+  "methode": "POST",
+  "route": "/v1/session/open",
+  "statut": 200
+ },
+ "screen_b7/corps-reels/GET_me_forensic.json": {
+  "cles": [
+   "audit_risk_bucket",
+   "effluent_visibility_bucket",
+   "lifestyle_alarm_bucket"
+  ],
+  "methode": "GET",
+  "route": "/v1/me/forensic",
+  "statut": 200
+ },
+ "screen_c1/corps-reels/GET_ambient_feed.json": {
+  "cles": [
+   "events",
+   "limit",
+   "offset",
+   "total"
+  ],
+  "methode": "GET",
+  "route": "/v1/ambient/feed",
+  "statut": 200
+ },
+ "screen_c1/corps-reels/GET_news_beats.json": {
+  "cles": [
+   "beat_id",
+   "body_i18n_key",
+   "body_params",
+   "byline_i18n_key",
+   "category",
+   "district",
+   "frame_tag_i18n_key",
+   "headline_i18n_key",
+   "headline_params",
+   "headline_params_fields",
+   "outlet_i18n_key",
+   "sourceless_badge",
+   "subject_i18n_key",
+   "wire_badge"
+  ],
+  "methode": "GET",
+  "route": "/v1/news/beats/",
+  "statut": 200
+ },
+ "screen_c1/corps-reels/GET_news_beats_id.json": {
+  "cles": [
+   "beat_id",
+   "body_i18n_key",
+   "body_params",
+   "byline_i18n_key",
+   "category",
+   "district",
+   "frame_tag_i18n_key",
+   "headline_i18n_key",
+   "headline_params",
+   "headline_params_fields",
+   "outlet_i18n_key",
+   "sourceless_badge",
+   "subject_i18n_key",
+   "wire_badge"
+  ],
+  "methode": "GET",
+  "route": "/v1/news/beats/{id}",
+  "statut": 200
+ },
+ "screen_c1/corps-reels/GET_news_feed.json": {
+  "cles": [
+   "beats",
+   "nextCursor"
+  ],
+  "methode": "GET",
+  "route": "/v1/news/feed",
+  "statut": 200
+ },
+ "screen_c1/corps-reels/GET_random-world_active.json": {
+  "cles": [
+   "events"
+  ],
+  "methode": "GET",
+  "route": "/v1/random-world/active",
+  "statut": 200
+ },
+ "screen_c1/corps-reels/GET_random-world_known-couplings.json": {
+  "cles": [
+   "couplings"
+  ],
+  "methode": "GET",
+  "route": "/v1/random-world/known-couplings",
+  "statut": 200
+ },
+ "screen_c2/corps-reels/GET_operational_laundering.json": {
+  "cles": [
+   "nodes"
+  ],
+  "methode": "GET",
+  "route": "/v1/operational/laundering",
+  "statut": 200
+ },
+ "screen_c6/corps-reels/GET_meta_horizon-feed.json": {
+  "cles": [
+   "cards"
+  ],
+  "methode": "GET",
+  "route": "/v1/meta/horizon-feed",
+  "statut": 200
+ },
+ "screen_c6/corps-reels/GET_progression.json": {
+  "cles": [
+   "next_tier",
+   "progress_to_next",
+   "tier_label_i18n",
+   "vocabulary_tier"
+  ],
+  "methode": "GET",
+  "route": "/v1/progression",
+  "statut": 200
+ },
+ "vente/corps-reels/GET_operational_dealers.json": {
+  "cles": [
+   "dealers"
+  ],
+  "methode": "GET",
+  "route": "/v1/operational/dealers",
+  "statut": 200
+ }
+}
