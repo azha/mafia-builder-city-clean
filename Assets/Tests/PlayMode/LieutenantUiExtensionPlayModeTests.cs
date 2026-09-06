@@ -409,6 +409,29 @@ namespace MafiaCleanCity.Operational.Tests
                 "sera jamais rejouée, donc sa clé de catalogue ne sera jamais demandée, donc la " +
                 "garde « zéro repli » restera verte en l'ignorant. C'est ainsi que trois clés " +
                 "non servies ont traversé la garde qui existe pour les trouver.");
+
+            // ⛔ LE MÊME CONTRÔLE SUR LE SECOND RÉSOLVEUR, et c'est le point de la réserve de
+            //    classe du juge-données : fermer un trou sur l'instance qu'on regardait ne le ferme
+            //    pas sur ses sœurs. `Anciennete` a exactement la même forme — un `switch` sur une
+            //    `string`, un tableau exposé, une garde de couverture qui le parcourt — donc
+            //    exactement le même mode d'échec, et il se vérifie de la même façon.
+            int dA = src.IndexOf("public static string Anciennete(");
+            Assert.Greater(dA, 0, "la méthode `Anciennete` n'est plus dans ce fichier — ré-accorder ce test");
+            int fA = src.IndexOf("public static string Etat(", dA);
+            Assert.Greater(fA, dA, "borne de fin introuvable pour `Anciennete` : la tranche lue serait vide");
+            var casA = new List<string>();
+            foreach (Match m in Regex.Matches(src.Substring(dA, fA - dA), "case\\s+\"([A-Z_]+)\"\\s*:"))
+                casA.Add(m.Groups[1].Value);
+            Assert.GreaterOrEqual(casA.Count, 5,
+                $"seulement {casA.Count} `case` lus dans `Anciennete` : le motif ne mord plus. " +
+                "Lus : [" + string.Join(", ", casA) + "]");
+            var tabA = new HashSet<string>(FamilleLabels.AnciennetesCanoniques);
+            var manqA = casA.Where(c => !tabA.Contains(c)).ToList();
+            Assert.IsEmpty(manqA,
+                $"{manqA.Count} palier(s) traité(s) par `Anciennete` mais absent(s) de " +
+                "`AnciennetesCanoniques` : [" + string.Join(", ", manqA) + "]. Le rejeu ne les " +
+                "atteindrait pas, donc leurs clés ne seraient jamais demandées — le trou des " +
+                "archétypes, rouvert sur le résolveur voisin.");
         }
 
         [UnityTest]

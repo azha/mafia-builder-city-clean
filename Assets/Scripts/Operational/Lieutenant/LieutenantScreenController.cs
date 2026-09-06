@@ -997,6 +997,10 @@ namespace MafiaCleanCity.Operational.Lieutenant
             RuleCountLabel("FEW");
             RuleCountLabel("MANY");
             RuleCountLabel("__inconnu__");   // le repli nommé du résolveur
+            // ⛔ SES CINQ VALEURS RÉELLES, plus le repli — et non le repli seul. Rejoué uniquement
+            //    sur l'inconnu, ce résolveur ne faisait demander AUCUNE de ses clés à la garde de
+            //    catalogue : le même trou que celui des archétypes, laissé ouvert sur son voisin.
+            foreach (string palier in FamilleLabels.AnciennetesCanoniques) TenureBucketLabel(palier);
             TenureBucketLabel("__inconnu__");   // le repli nommé du résolveur
             RevisionCostLabel("COST_1");
             RevisionCostLabel("COST_2");

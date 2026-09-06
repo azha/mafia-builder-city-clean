@@ -32,6 +32,21 @@ namespace MafiaCleanCity.Operational
             "BOOKKEEPER", "MUSCLE", "INTELLIGENCE", "FACILITY_MANAGER", "UNKNOWN",
         };
 
+        /// <summary>Les cinq paliers d'ancienneté servis par le back (`tenure_bucket`), exposés
+        /// pour la MÊME raison que `ArchetypesCanoniques` : la garde de couverture doit les
+        /// parcourir, et une liste recopiée à la main dans la garde mesure la recopie.
+        ///
+        /// ⛔ RÉSERVE DE CLASSE DU JUGE-DONNÉES (2026-09-06) : `RendreTousLesLibelles` ne rejouait
+        /// ce résolveur que sur sa valeur INCONNUE — **ses cinq valeurs réelles jamais**. Le trou
+        /// est le même que celui qui a laissé passer trois clés d'archétype absentes, et le
+        /// correctif de ce jour-là l'avait fermé pour UN résolveur sur neuf. *Fermer un trou sur
+        /// l'instance qu'on regardait ne le ferme pas sur ses huit sœurs.*
+        /// ⚠️ Aujourd'hui `Anciennete` rend des littéraux français hors catalogue (TD-643/650) :
+        /// les rejouer n'ajoute donc AUCUNE clé. C'est précisément pourquoi il faut le faire
+        /// maintenant — le jour où ils passeront au catalogue, la garde les demandera déjà.</summary>
+        public static readonly string[] AnciennetesCanoniques =
+            { "FRESH", "ACCLIMATED", "SEASONED", "SENIOR", "ENTRENCHED" };
+
         /// <summary>Les quatre que la maquette écrit noir sur blanc.</summary>
         public static readonly string[] ArchetypesRatifies = { "BOOKKEEPER", "SECURITY", "LAUNDERING", "LOGISTICS" };
 
