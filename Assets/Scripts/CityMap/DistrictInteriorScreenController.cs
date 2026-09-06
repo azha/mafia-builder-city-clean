@@ -893,6 +893,39 @@ namespace MafiaCleanCity.CityMap
                 labelRt.anchoredPosition = Vector2.zero;
                 label.color = DesignTokens.Current.onSurfacePrimary;
                 TrackText(label);
+
+                // ── LE GLYPHE DE TYPE, au-dessus du libellé (2026-09-07) ────────────────────────
+                // Arbitrage de DA : LIBELLÉ D'ABORD, GLYPHE ENSUITE, JAMAIS GLYPHE SEUL. Sur les
+                // 11 icônes produites, 2 seulement parlent d'elles-mêmes (l'épingle, la maison
+                // pleine) — un hexagone ne dit pas « laboratoire », un écusson ne dit pas
+                // « planque ». Le libellé NOMME, le glyphe fait RECONNAÎTRE au coup d'œil suivant :
+                // ils se complètent, ils ne se remplacent pas. Le glyphe est donc ajouté SANS rien
+                // retirer au libellé, et son absence n'enlève rien à ce qui est lisible.
+                //
+                // ⛔ `null` EST TRAITÉ EN MASQUANT, jamais par un repli partagé. `specialized_lab`
+                //    n'a pas d'icône (couverture 11/12) : lui donner le glyphe d'un voisin
+                //    remettrait deux types sous la même image — le défaut exact que le libellé
+                //    ci-dessus existe pour réparer. Un glyphe faux est pire qu'un glyphe absent.
+                Sprite glyphe = BuildingIcons.Pour(building.operational_type);
+                if (glyphe != null)
+                {
+                    var iconGo = new GameObject("TypeIcon", typeof(RectTransform));
+                    iconGo.transform.SetParent(cell.transform, false);
+                    Image iconImg = iconGo.AddComponent<Image>();
+                    iconImg.sprite = glyphe;
+                    iconImg.preserveAspect = true;
+                    iconImg.color = DesignTokens.Current.onSurfacePrimary;
+                    // ⚠️ Carré, borné par la DEUX dimensions de la cellule : les cellules mesurées
+                    //    vont de 105 à 460 px de large, et un glyphe dimensionné sur la seule
+                    //    largeur déborderait la bande basse sur les cellules larges.
+                    float cote = Mathf.Min(cellH * 0.22f, cellW * 0.45f);
+                    RectTransform iconRt = (RectTransform)iconGo.transform;
+                    iconRt.anchorMin = iconRt.anchorMax = new Vector2(0.5f, 0f);
+                    iconRt.pivot = new Vector2(0.5f, 0f);
+                    iconRt.sizeDelta = new Vector2(cote, cote);
+                    // Posé SUR la bande du libellé, jamais dedans : le libellé occupe cellH*0.2.
+                    iconRt.anchoredPosition = new Vector2(0f, cellH * 0.2f);
+                }
             }
 
             // C9 (§3, §1.5 — U-10) : les 5 bindings lumineux. C10 (D10/§C2-bis) : les marqueurs de

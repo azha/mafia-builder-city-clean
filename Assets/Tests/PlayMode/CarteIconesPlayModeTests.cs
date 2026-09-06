@@ -1,0 +1,199 @@
+using System.Collections;
+using System.IO;
+using System.Linq;
+using MafiaCleanCity.CityMap;
+using NUnit.Framework;
+using UnityEngine;
+using UnityEngine.TestTools;
+using UnityEngine.UI;
+using Object = UnityEngine.Object;
+
+namespace MafiaCleanCity.CityMap.Tests
+{
+    /// <summary>Le montage des icônes de bâtiment — la garde qui manquait à TOUT l'art de ce dépôt.
+    ///
+    /// ⛔⛔ LA CLASSE, PAS L'INSTANCE. Mesuré le 2026-09-07 par oracle indépendant sur les 576 PNG
+    /// livrés comme assets de jeu : **524 n'ont AUCUN consommateur** — ni GUID cité dans un asset
+    /// sérialisé, ni chemin C# qui les atteigne. De l'art produit, importé, conforme à la palette,
+    /// et que personne ne peut voir. Rien ne compile en rouge quand un PNG n'a pas de lecteur :
+    /// c'est la forme A (l'écrivain existe, l'appelant manque) appliquée à l'art, et elle est
+    /// invisible à toute garde de code.
+    ///
+    /// ⇒ Ce fichier ferme la famille `icon_building_*`. Le détecteur porte sur la BIJECTION
+    /// fichier ↔ résolveur, pas sur « le fichier existe » : un PNG déposé sous un nom que le
+    /// résolveur ne calcule pas est exactement aussi mort qu'un PNG absent, et il est PIRE, parce
+    /// qu'il a l'air monté.</summary>
+    [Category("CarteIcones")]
+    public class CarteIconesPlayModeTests
+    {
+        private const string DossierIcones = "Art/Icons/Resources/BuildingIcons";
+        private const string SuffixeLivre = "_48";
+
+        // Les 12 membres de `building_operational_type`, lus en base le 2026-09-07 (pg_enum) et
+        // portés par `CarteActionResolver.TypesConnus` — source unique, jamais recopiée ici.
+        private static string[] TousLesTypes =>
+            MafiaCleanCity.Shell.CarteActionResolver.TypesConnus.OrderBy(t => t).ToArray();
+
+        private GameObject hote;
+
+        [TearDown]
+        public void TearDown()
+        {
+            if (hote == null) return;
+            var d = hote.GetComponent<DistrictInteriorScreenController>();
+            if (d != null && d.ScreenRoot != null)
+            {
+                Canvas c = d.ScreenRoot.GetComponentInParent<Canvas>();
+                if (c != null) Object.Destroy(c.gameObject);
+            }
+            Object.Destroy(hote);
+        }
+
+        // ── 1. BIJECTION fichier ↔ résolveur ────────────────────────────────────────────────────
+
+        [Test]
+        public void Icones_ChaqueFichierLivreEstATTEIGNABLE_EtChaqueGlypheResoluAUnFichier()
+        {
+            string dir = Path.Combine(Application.dataPath, DossierIcones);
+            Assert.IsTrue(Directory.Exists(dir),
+                $"⛔ le dossier livré n'existe pas : {dir}. Sans dossier `Resources`, un PNG sous "
+                + "`Assets/Art/` n'entre PAS dans le build — il n'est pas « presque monté », il est absent.");
+
+            // Ce que l'ATELIER a déposé.
+            string[] fichiers = Directory.GetFiles(dir, "*.png")
+                .Select(Path.GetFileNameWithoutExtension).OrderBy(x => x).ToArray();
+
+            // ⛔ PLANCHER ANTI-VACUITÉ AVANT TOUTE COMPARAISON D'ENSEMBLES : sur un dossier vide,
+            //    « tout fichier est atteignable » est trivialement VRAI et le resterait pour
+            //    toujours. Ce n'est pas « rien de cassé », c'est « rien mesuré ».
+            Assert.Greater(fichiers.Length, 8,
+                $"⛔ seulement {fichiers.Length} fichier(s) — la bijection serait vraie à vide.");
+
+            // Ce que le RÉSOLVEUR atteint, en partant des types du back (jamais des noms de fichiers).
+            string[] resolus = TousLesTypes.Where(t => BuildingIcons.Pour(t) != null).OrderBy(t => t).ToArray();
+            string[] attendusDepuisFichiers = fichiers
+                .Select(f => f.StartsWith("icon_building_") && f.EndsWith(SuffixeLivre)
+                    ? f.Substring("icon_building_".Length, f.Length - "icon_building_".Length - SuffixeLivre.Length)
+                    : "⛔HORS-CONVENTION:" + f)
+                .OrderBy(x => x).ToArray();
+
+            Debug.Log($"[CarteIcones] {fichiers.Length} fichier(s) livré(s) · {resolus.Length} glyphe(s) résolu(s) "
+                      + $"sur {TousLesTypes.Length} types de l'enum · COUVERTURE {resolus.Length}/{TousLesTypes.Length}. "
+                      + $"Non couverts : [{string.Join(", ", TousLesTypes.Except(resolus))}]");
+
+            // (a) Aucun fichier orphelin — un PNG hors convention de nom est mort ET trompeur.
+            var orphelins = attendusDepuisFichiers.Except(resolus).ToArray();
+            Assert.IsEmpty(orphelins,
+                $"⛔ {orphelins.Length} fichier(s) livré(s) que le résolveur n'atteint PAS : "
+                + $"[{string.Join(", ", orphelins)}]. Ils pèsent dans le build (tout ce qui est sous un "
+                + "`Resources` y entre sans élagage) et ne s'affichent jamais. Soit le nom sort de la "
+                + "convention `icon_building_<operational_type>_48`, soit le type n'existe pas côté back.");
+
+            // (b) Aucun glyphe résolu sans fichier — impossible par construction, donc c'est le
+            //     CONTRÔLE de l'instrument : s'il rougit, c'est ma lecture du dossier qui est fausse.
+            var fantomes = resolus.Except(attendusDepuisFichiers).ToArray();
+            Assert.IsEmpty(fantomes,
+                $"⛔ {fantomes.Length} glyphe(s) résolu(s) sans fichier correspondant : "
+                + $"[{string.Join(", ", fantomes)}] — l'instrument lit le mauvais dossier.");
+
+            // (c) ⚠️ LE DÉNOMINATEUR EST ASSERTÉ, pas seulement journalisé. Il borne ce que ce lot
+            //     livre, et il ROUGIRA le jour où l'atelier produira le glyphe manquant — c'est
+            //     l'épingle qui se retourne, pas une prose datée : le compte est une DONNÉE.
+            Assert.AreEqual(11, resolus.Length,
+                $"couverture attendue 11/{TousLesTypes.Length} au 2026-09-07 (`specialized_lab` n'a pas "
+                + "d'icône produite). Si ce compte a bougé : l'atelier a livré (ou retiré) un glyphe — "
+                + "mettre à jour ce nombre ET la couverture annoncée dans `BuildingIcons`.");
+        }
+
+        // ── 2. Le glyphe est réellement DESSINABLE, et l'absence MASQUE ──────────────────────────
+
+        [UnityTest]
+        public IEnumerator Icones_TypeCouvert_PorteUnGlypheDESSINABLE_TypeNonCouvert_NEnPortePAS()
+        {
+            hote = new GameObject("DistrictInteriorDiorama_Icones");
+            var diorama = hote.AddComponent<DistrictInteriorScreenController>();
+            diorama.Render(Grille(new[] { "lab", "specialized_lab" }));
+
+            RectTransform cellCouverte = Cellule(diorama, 0, 0);
+            RectTransform cellNue = Cellule(diorama, 1, 0);
+
+            // ── Contrôle POSITIF : le type couvert porte son glyphe ──
+            Transform icone = cellCouverte.Find("TypeIcon");
+            Assert.IsNotNull(icone, "⛔ `lab` a un glyphe livré et la cellule n'en porte aucun — le "
+                + "consommateur ne lit pas le seam, ou le seam ne trouve pas le dossier `Resources`.");
+
+            // ⛔ GARDES STRUCTURELLES AVANT TOUTE GARDE DE VALEUR — ce sont les seules qui aient
+            //    fermé des classes ici. Un `Graphic` sans `CanvasRenderer` ne dessine RIEN, SANS
+            //    erreur console ; et un `Graphic` nu sous un `Mask` n'est pas clippable. Les deux
+            //    défauts sont muets : l'objet existe, il est référencé, il ne produit pas un pixel.
+            Assert.IsNotNull(icone.GetComponent<CanvasRenderer>(),
+                "⛔ `TypeIcon` sans `CanvasRenderer` : un Graphic n'y dessine RIEN et ne lève rien.");
+            var img = icone.GetComponent<Image>();
+            Assert.IsNotNull(img, "⛔ `TypeIcon` sans `Image`");
+            Assert.IsInstanceOf<MaskableGraphic>(img,
+                "⛔ `TypeIcon` doit être masquable — un jour il vivra sous un `Mask`, et être ENFANT "
+                + "d'un masque ne rend pas masquable.");
+            Assert.IsTrue(img.enabled, "⛔ `TypeIcon` désactivé — présent et invisible");
+            Assert.IsNotNull(img.sprite, "⛔ `TypeIcon` sans sprite — l'asset n'a pas été chargé");
+
+            // Géométrie : le glyphe est POSÉ SUR la bande du libellé, jamais dedans. Un glyphe qui
+            // recouvre le libellé retire ce que le libellé apporte — et l'arbitrage de DA est que le
+            // libellé NOMME, le glyphe fait seulement RECONNAÎTRE.
+            var iconRt = (RectTransform)icone;
+            var labelRt = (RectTransform)cellCouverte.Find("TypeLabel");
+            Assert.IsNotNull(labelRt, "⛔ le libellé a disparu — jamais de glyphe SEUL");
+            Assert.GreaterOrEqual(iconRt.anchoredPosition.y, labelRt.sizeDelta.y - 0.01f,
+                $"⛔ le glyphe ({iconRt.anchoredPosition.y}) mord sur la bande du libellé "
+                + $"({labelRt.sizeDelta.y}) — il en recouvrirait le texte.");
+            Assert.Greater(iconRt.sizeDelta.x, 0f, "⛔ glyphe de largeur nulle — présent, invisible");
+            Assert.AreEqual(iconRt.sizeDelta.x, iconRt.sizeDelta.y, 0.01f, "le glyphe est carré");
+
+            // ── Contrôle NÉGATIF, et c'est LUI qui rend le positif probant : sans lui, un
+            //    consommateur qui poserait un glyphe de REPLI sur TOUS les types passerait le test
+            //    ci-dessus. Un glyphe faux est pire qu'un glyphe absent : il remet deux types sous
+            //    la même image, le défaut exact que le libellé de type existe pour réparer.
+            Assert.IsNull(cellNue.Find("TypeIcon"),
+                "⛔ `specialized_lab` n'a PAS de glyphe produit — la cellule ne doit en porter aucun, "
+                + "surtout pas celui d'un voisin.");
+            Assert.IsNotNull(cellNue.Find("TypeLabel"),
+                "⛔ et le libellé, lui, doit rester : c'est ce qui reste lisible quand le glyphe manque.");
+
+            yield return null;
+        }
+
+        // ── fabrication (mêmes champs que le DTO réel — valeurs choisies par le test) ────────────
+
+        private static RectTransform Cellule(DistrictInteriorScreenController d, int x, int y)
+        {
+            var cell = d.ScreenRoot.GetComponentsInChildren<RectTransform>(true)
+                .FirstOrDefault(rt => rt.name == $"Cell_{x}_{y}");
+            Assert.IsNotNull(cell, $"Cell_{x}_{y} doit exister dans l'arbre rendu");
+            return cell;
+        }
+
+        private static DistrictInteriorDto Grille(string[] types)
+        {
+            var blocks = new DistrictInteriorBlockDto[types.Length];
+            var bats = new DistrictInteriorBuildingDto[types.Length];
+            for (int i = 0; i < types.Length; i++)
+            {
+                blocks[i] = new DistrictInteriorBlockDto { block_id = i, x = i, y = 0 };
+                bats[i] = new DistrictInteriorBuildingDto
+                {
+                    building = $"building-{i}", block_id = i, operational_type = types[i],
+                    conversion_band = "OPERATIONAL", shell_state = "STANDING", condition_band = "SOUND",
+                    revenue_band = "IDLE", revenue_chain = "UNWIRED", activity_band = "IDLE",
+                    lapse_phase_bucket = "WITHIN_WINDOW", maintenance_in_progress = false,
+                    lieutenant_ids = new string[0],
+                };
+            }
+            return new DistrictInteriorDto
+            {
+                district = "district-1", district_id = 1, profile = "lattice",
+                name_canonical = "Test", bank_side = "north",
+                grid = new DistrictInteriorGridDto { width = types.Length, height = 1 },
+                blocks = blocks, buildings = bats, day_phase = "NIGHT",
+            };
+        }
+    }
+}
