@@ -32,12 +32,21 @@ namespace MafiaCleanCity.CityMap
     ///   d'import — invisible aujourd'hui (les réglages sont déjà dans le `.meta`, et le `.meta` a
     ///   suivi le fichier : GUID vérifiés identiques avant/après), fatal au premier ré-import.
     ///
-    /// ⚠️ COUVERTURE 11/12, et le dénominateur est publié parce qu'un compte qui n'explique pas ce
-    /// qu'il ne couvre pas se lit plus large qu'il n'est : `specialized_lab` n'a PAS d'icône.
-    /// Il rend `null`, et le consommateur MASQUE le glyphe — jamais un repli qui montrerait le
-    /// mauvais bâtiment. Le libellé, lui, reste : c'est l'arbitrage de DA (le libellé NOMME, le
-    /// glyphe fait RECONNAÎTRE ; 2 glyphes sur 7 seulement parlent d'eux-mêmes) — donc jamais de
-    /// glyphe seul, et un glyphe manquant n'enlève rien à ce qui est lisible.</summary>
+    /// ⚠️ COUVERTURE 12/12 depuis le 2026-09-07 au soir — et le chemin par lequel elle y est
+    /// arrivée vaut plus que le nombre. Le lot a été livré à **11/12** (`specialized_lab` n'avait
+    /// pas d'icône), avec le 11 ASSERTÉ dans `CarteIconesPlayModeTests` plutôt que journalisé.
+    /// L'atelier a livré le douzième dans l'heure ; l'épingle a rougi ; on l'a montée à 12 dans le
+    /// même commit que le fichier. *C'est une épingle sur une DONNÉE : elle voit l'événement qu'un
+    /// résolveur exhaustif ne verrait jamais* — ajouter un PNG n'est pas un changement de type, et
+    /// une couverture écrite en prose serait restée « 11/12 » pour toujours.
+    ///
+    /// ⛔ LE CONTRAT RESTE `null` ⇒ MASQUER, et il ne change pas parce que la couverture est pleine
+    /// aujourd'hui : le jour où le back ajoute un 13ᵉ `operational_type`, `Pour` rendra `null` et
+    /// la cellule ne portera aucun glyphe. Jamais un repli partagé — il remettrait deux types sous
+    /// la même image, c'est-à-dire exactement le défaut que le libellé de type existe pour réparer.
+    /// Le libellé, lui, reste toujours : le libellé NOMME, le glyphe fait RECONNAÎTRE (2 glyphes
+    /// sur 12 seulement parlent d'eux-mêmes), donc jamais de glyphe seul, et un glyphe manquant
+    /// n'enlève rien à ce qui est lisible.</summary>
     public static class BuildingIcons
     {
         /// <summary>Racine sous `Resources/`. Le `_48` est la taille RASTÉRISÉE embarquée : les 4

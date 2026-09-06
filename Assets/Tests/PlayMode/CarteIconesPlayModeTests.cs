@@ -34,6 +34,28 @@ namespace MafiaCleanCity.CityMap.Tests
         private static string[] TousLesTypes =>
             MafiaCleanCity.Shell.CarteActionResolver.TypesConnus.OrderBy(t => t).ToArray();
 
+        /// <summary>La cible du contrôle NÉGATIF, et elle est INERTE PAR CONSTRUCTION.
+        ///
+        /// ⛔⛔ CE CHAMP EXISTE PARCE QUE LA PREMIÈRE VERSION S'EST AVEUGLÉE EN UNE HEURE — et elle
+        /// s'est aveuglée AU MOMENT PRÉCIS OÙ LE LOT RÉUSSISSAIT. Le contrôle négatif visait
+        /// `specialized_lab`, le seul `operational_type` sans glyphe au moment de l'écrire. L'atelier
+        /// a livré ce glyphe dans l'heure : la cellule en a porté un, l'assertion « aucun glyphe ici »
+        /// a rougi, et elle accusait **le succès**. Mesuré au premier run — `passed=1 failed=1`.
+        ///
+        /// ⇒ *La cible d'un contrôle négatif ne doit dépendre d'AUCUNE propriété que quelqu'un a le
+        /// droit de corriger.* Un type RÉELLEMENT non couvert est exactement ça : sa non-couverture
+        /// est un manque, donc une chose que l'atelier va combler. En viser un, c'est écrire une
+        /// garde dont la durée de vie est celle du défaut qu'elle décrit.
+        ///
+        /// ⇒ La forme qui tient : une valeur qui n'appartient PAS au domaine, donc pour laquelle
+        /// aucun fichier ne sera jamais produit — le back ne projettera jamais ce type, et personne
+        /// n'a de raison de lui dessiner une icône. La propriété testée est inchangée et elle est
+        /// la bonne : *un type sans glyphe n'en reçoit AUCUN, jamais celui d'un voisin.*
+        /// ⚠️ Et c'est bien un test de couverture, pas de validité : `BuildingIcons.Pour` ne connaît
+        /// pas l'enum — il calcule un chemin et rend `null` s'il n'y a pas de fichier. Le chemin
+        /// emprunté ici est donc EXACTEMENT celui d'un 13ᵉ type ajouté demain côté back.</summary>
+        private const string TypeSansGlypheJamais = "type_absent_du_domaine_controle_negatif";
+
         private GameObject hote;
 
         [TearDown]
@@ -99,10 +121,12 @@ namespace MafiaCleanCity.CityMap.Tests
             // (c) ⚠️ LE DÉNOMINATEUR EST ASSERTÉ, pas seulement journalisé. Il borne ce que ce lot
             //     livre, et il ROUGIRA le jour où l'atelier produira le glyphe manquant — c'est
             //     l'épingle qui se retourne, pas une prose datée : le compte est une DONNÉE.
-            Assert.AreEqual(11, resolus.Length,
-                $"couverture attendue 11/{TousLesTypes.Length} au 2026-09-07 (`specialized_lab` n'a pas "
-                + "d'icône produite). Si ce compte a bougé : l'atelier a livré (ou retiré) un glyphe — "
-                + "mettre à jour ce nombre ET la couverture annoncée dans `BuildingIcons`.");
+            Assert.AreEqual(12, resolus.Length,
+                $"couverture attendue 12/{TousLesTypes.Length} depuis le 2026-09-07 soir — l'atelier a "
+                + "livré `icon_building_specialized_lab` et l'épingle a fait EXACTEMENT ce pour quoi elle "
+                + "existait : elle valait 11, elle a rougi à la livraison, on l'a montée à 12 en même temps "
+                + "que le fichier. C'est une épingle sur une DONNÉE, pas une intention — elle rougira encore "
+                + "au 13e type, dans l'autre sens si un glyphe disparaît.");
         }
 
         // ── 2. Le glyphe est réellement DESSINABLE, et l'absence MASQUE ──────────────────────────
@@ -112,7 +136,7 @@ namespace MafiaCleanCity.CityMap.Tests
         {
             hote = new GameObject("DistrictInteriorDiorama_Icones");
             var diorama = hote.AddComponent<DistrictInteriorScreenController>();
-            diorama.Render(Grille(new[] { "lab", "specialized_lab" }));
+            diorama.Render(Grille(new[] { "lab", TypeSansGlypheJamais }));
 
             RectTransform cellCouverte = Cellule(diorama, 0, 0);
             RectTransform cellNue = Cellule(diorama, 1, 0);
@@ -153,8 +177,8 @@ namespace MafiaCleanCity.CityMap.Tests
             //    ci-dessus. Un glyphe faux est pire qu'un glyphe absent : il remet deux types sous
             //    la même image, le défaut exact que le libellé de type existe pour réparer.
             Assert.IsNull(cellNue.Find("TypeIcon"),
-                "⛔ `specialized_lab` n'a PAS de glyphe produit — la cellule ne doit en porter aucun, "
-                + "surtout pas celui d'un voisin.");
+                $"⛔ « {TypeSansGlypheJamais} » n'a aucun glyphe produit — la cellule ne doit en porter "
+                + "aucun, surtout pas celui d'un voisin.");
             Assert.IsNotNull(cellNue.Find("TypeLabel"),
                 "⛔ et le libellé, lui, doit rester : c'est ce qui reste lisible quand le glyphe manque.");
 
