@@ -34,14 +34,41 @@ textures TRÈS lisses — le papier rend témoin **0,5** et raccord **1,2**, don
 un écart d'un niveau sur 255. Un critère en RATIO n'a pas de sens quand le dénominateur tend vers zéro :
 un **plancher absolu** (2 niveaux) le borne.
 
-## Ce qui n'est PAS résolu, et qui se voit sur la planche
+## La périodicité, mesurée (2ᵉ tour)
 
-1. **La couture est invisible, la PÉRIODICITÉ ne l'est pas.** Ce sont deux propriétés distinctes et ma
-   mesure ne couvre que la première : sur `matieres-en-situation.png`, tuilé 2×2, l'œil suit la
-   répétition des mêmes accidents. Pour un fond plein écran (1080×2400 = 5 tuiles de 512), il faut soit
-   une source plus grande, soit une rotation/décalage par tuile — à mesurer, pas à supposer.
-2. **Le liège est trop saturé** en bichromie vers `#8a611c` : il tire l'ocre. À reprendre vers un jeton
-   plus éteint.
+`mesurer-periodicite.py`, tuilage 5× sur 1080×2400, période 216 px :
+
+| matière | amplitude basse fréquence (lignes · colonnes) | verdict |
+|---|---|---|
+| liège | 1,6 · 1,6 | répétition non lisible |
+| table | 3,8 · 2,2 | répétition non lisible |
+| **papier pelure** | 3,9 · **7,6** | **PÉRIODICITÉ VISIBLE** — ce sont les plis, en colonnes |
+
+Contrôle négatif (grain pur, même chemin) : 1,0 · 0,9. Le chiffre confirme ce que l'œil du relecteur
+avait vu sur la planche, et il désigne le coupable : les **plis verticaux** du papier, pas son grain.
+
+⛔ **Deux versions fausses avant celle-là, toutes deux gardées en tête du script.**
+(1) L'autocorrélation au pas de tuile rend **+0,910 · +0,909 · +0,909** — trois valeurs à un millième :
+un champ construit en répétant une tuile est identique à lui-même décalé d'une période **par
+construction**. L'instrument ne mesurait pas la périodicité perçue, il vérifiait que j'avais bien tuilé.
+(2) Le contrôle négatif tiré directement à la taille de la tuile rendait **5,5** — au-dessus du liège
+(1,6), donc un plancher plus haut que la matière qu'il devait borner : du bruit d'échantillonnage
+(moyenner 216 pixels laisse ~128/√216), pas de la basse fréquence. **Un contrôle doit emprunter le même
+chemin que le sujet** : tiré à la taille de la source puis réduit comme elle, il retombe à 1,0.
+
+## Le papier est un PANNEAU, pas un fond — la maquette tranche
+
+Question posée : un fond de papier clair plein écran inverserait la valeur de tout l'écran. Mesuré dans
+`ecrans-brennar-6.html` (cadres 48-53, ㉚) : l'écran `.appr6` est **sombre** (dégradé, `color:#e7ecf3`,
+en-tête `#1e1b16`) et le papier est la classe **`.bon`** — `background:#efe7d6`, `color:#2a2118`,
+`border-radius:2px`, `box-shadow:0 3px 10px #00000055`. C'est le **bon de commande**, un panneau posé sur
+l'écran sombre. ⇒ Pas d'arbitrage user à demander, et pas de tuilage plein écran : à la largeur d'un
+panneau, la périodicité mesurée ci-dessus ne se pose pas.
+
+## Reprise du liège
+
+Bichromie vers `#6b5a3a` au lieu de `#8a611c` : contraste du pire carreau **6,72:1** (plancher 4,5),
+raccord 3,6 · 4,0 pour un témoin de 3,6 — invisible.
 3. **Aucune n'a été vue sous le chrome réel**, seulement sous un rendu de texte fait ici avec la police
    embarquée (DejaVu). La mesure sous chrome demande une capture, donc la porte Unity.
 
@@ -53,6 +80,21 @@ la scène peinte **existe déjà** — `Assets/Art/District/Backgrounds/VERGE_D_
 (`DistrictInteriorScreenController` via `DistrictBackgroundSlots`). Les sept écrans neufs vérifiés
 (Conflit, Distribution, ChaîneDAppro, Carnet, Loi, Démolition, Délégation) en comptent **zéro**.
 ⇒ **C'est un trou de CÂBLAGE, pas un manque d'asset.** Générer une neuvième matière ne le fermerait pas.
+
+**Chiffrage demandé — ce que l'atelier a déjà rendu, et ce qui manquerait :**
+
+| scène | rendus | dimensions | utilisable en portrait ? |
+|---|---|---|---|
+| District-D | jour + nuit | 1080×1920 | oui — **c'est le seul importé**, sous le nom `VERGE_D_*` (md5 identique à `DISTRICT_D_*`) |
+| District-ZO | jour + nuit | 1080×1920 | oui, jamais importé |
+| Docks · Verge · Verge3 | jour + nuit chacune | **1728×1080** (paysage) | non — à re-rendre en portrait |
+
+⚠️ **Aucun rendu n'est à 1080×2400**, la seconde résolution de travail citée par `AppShell.cs:1082`.
+Les deux scènes portrait couvrent 1920 et laisseraient 480 px à combler à 2400.
+⇒ Le lot « décor » se chiffre donc en **câblage d'un emplacement partagé** (7 écrans à zéro) + **import
+de 2 rendus déjà faits** + **re-rendu de 3 scènes** pour le format haut. ⚠️ Je n'ai **pas** identifié le
+script d'atelier qui produit les `*_FINAL` : deux fichiers les citent (`export_ancres_depuis_blend.py`,
+`parcelles.py`) sans les rendre — à demander à la session Blender plutôt qu'à déduire.
 
 ## Reproductibilité
 
