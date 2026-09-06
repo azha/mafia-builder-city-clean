@@ -1336,13 +1336,27 @@ namespace MafiaCleanCity.Shell
             // `canvas.scaleFactor`) — donc additionnable tel quel avec `rect.height`, sans
             // qu'aucun appelant ait à s'en souvenir.
             float debord = TopBar != null ? TopBar.EffectiveBottomOverhangPx : 0f;
-            // ⛔ CE QUE L'INSET COUVRE DE CE QUE LE CHROME DESSINE — la grandeur que ㊲ M3 pose et
-            //    que personne n'avait chiffrée. `debord` ne mesure QUE l'objet nommé `Manometre` ;
-            //    si un autre enfant du bandeau descend plus bas, il n'entre dans aucun calcul et
-            //    tombe sur le contenu du locataire, qui a pourtant respecté l'inset publié.
-            //    On mesure donc la portée RÉELLE de toute la hiérarchie du bandeau, dans les mêmes
-            //    unités canvas, et on imprime l'écart. Un écart nul innocente le contrat du shell ;
-            //    un écart positif en fait une classe qui concerne TOUS les locataires.
+            // ⛔ CE QUE L'INSET COUVRE DE CE QUE LE CHROME DESSINE — la grandeur que ㊲ M3 pose.
+            //
+            // ⚠️⚠️ CORRECTION DE MA PROPRE MESURE, ET ELLE RENVERSE LE DIAGNOSTIC (2026-09-07).
+            // La première version de ce journal comparait `debord` (qui sort en unités de CANVAS,
+            // après la conversion `debordLocal * echelle` du bandeau) à une portée de hiérarchie
+            // calculée ICI **sans cette conversion**, donc en unités de MAQUETTE. **Deux repères,
+            // une soustraction** — et j'en ai tiré « l'inset est court d'environ 32 unités en
+            // régime établi », que j'ai poussé et fait relayer comme un lot de shell.
+            // ⇒ L'arithmétique le dit : `105,2 = 32,2 × 3,27`, et 3,27 est exactement l'échelle du
+            //   bandeau. **La première publication n'était donc pas trois fois trop grande : elle
+            //   était JUSTE.** Le défaut est que les publications SUIVANTES rendent `0,4`.
+            // ⇒ Ce n'est pas « l'inset est court d'un montant fixe », c'est **le débord
+            //   S'EFFONDRE à la republication** — et comme ce sont les publications suivantes qui
+            //   gouvernent ce que lit le locataire, l'inset perd tout son débord après le premier
+            //   montage. La classe reste réelle et concerne tous les locataires ; sa CAUSE et sa
+            //   réparation ne sont pas celles que j'avais écrites.
+            // ★ *Deux grandeurs comparées sans être mesurées dans le même repère* — la forme E du
+            //   socle, que je venais de citer deux fois la même nuit. Le commentaire qui donne
+            //   l'échelle est à quinze lignes du getter ; je ne l'avais pas ouvert.
+            // ⇒ Ce journal imprime donc désormais les DEUX repères et l'échelle, pour qu'aucune
+            //   soustraction ne puisse plus mélanger les unités.
             float insetHautPublie = topSafe + TopBarSlot.rect.height + debord;
             float debordReel = debord;
             if (TopBar != null)
@@ -1351,7 +1365,11 @@ namespace MafiaCleanCity.Shell
                 if (barreRt != null)
                 {
                     Bounds tout = RectTransformUtility.CalculateRelativeRectTransformBounds(barreRt);
-                    debordReel = Mathf.Max(0f, barreRt.rect.yMin - tout.min.y);
+                    float brut = Mathf.Max(0f, barreRt.rect.yMin - tout.min.y);
+                    Canvas cv = TopBar.GetComponentInParent<Canvas>();
+                    float sf = (cv != null && cv.scaleFactor > 0.0001f) ? cv.scaleFactor : 1f;
+                    float ech = TopBar.transform.lossyScale.y / sf;
+                    debordReel = brut * ech;   // MÊME repère que `debord` : canvas, pas maquette.
                 }
             }
             Debug.Log($"[CHROME-PORTEE] safe {topSafe:F0} · barre {TopBarSlot.rect.height:F0}"
