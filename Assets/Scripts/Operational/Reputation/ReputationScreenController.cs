@@ -1566,9 +1566,20 @@ namespace MafiaCleanCity.Operational
 
                 // Le journal dit ce que le composant a VU, pas ce qu'on suppose qu'il voit : les
                 // deux insets viennent du shell et n'existent pas hors shell (ils valent 0).
+                // ⚠️ LA HAUTEUR POSÉE N'EST PAS FORCÉMENT LA HAUTEUR RENDUE, et c'est l'hypothèse
+                //    que ce journal existe pour trancher. Un `VerticalLayoutGroup` ou un
+                //    `ContentSizeFitter` peut imposer une hauteur PRÉFÉRÉE supérieure à la boîte
+                //    comprimée : le rect grandit alors des deux côtés — le sommet remonte au-dessus
+                //    de l'inset (le losange du chrome tombe sur le titre) ET le dernier enfant sort
+                //    par le bas (le CTA passe sous le filet). **Une cause, deux symptômes opposés**,
+                //    qui ressemblent à s'y méprendre à « une borne sur deux a été traitée ».
+                float rendu = rt.rect.height;
+                var lg = GetComponent<UnityEngine.UI.LayoutGroup>();
+                float prefere = lg != null ? UnityEngine.UI.LayoutUtility.GetPreferredHeight(rt) : -1f;
                 Debug.Log($"[CADRE-ELASTIQUE] écran {parent.rect.height:F0} · insetHaut {insetHaut:F0}"
                           + $" · margeBasse {bas:F0} · zone libre {zoneLibre:F0} · voulu "
-                          + $"{hauteurVoulue:F0} · posé {h:F0}");
+                          + $"{hauteurVoulue:F0} · posé {h:F0} · RENDU {rendu:F0} · préféré "
+                          + $"{prefere:F0} · sommet {(parent.rect.height - bas - rendu):F0}");
             }
         }
 
