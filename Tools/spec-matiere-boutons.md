@@ -29,6 +29,30 @@ La v2 prescrivait d'écrire un résolveur nommé, un masque à coins arrondis et
 ⇒ **Le lot n'invente aucun mécanisme.** Il en assemble quatre qui existent, sous une fabrique qui
 manque. C'est la seule chose qui manque vraiment.
 
+### ⛔ La règle de lisibilité s'APPELLE, elle ne se réécrit pas
+
+C'est le point à ne pas manquer en relisant cette spec. La contrainte « le texte reste lisible sur la
+matière » allait être écrite **en prose** — un seuil, une phrase, un rappel. Elle existe déjà **en
+fonction exécutable** :
+
+```
+ProceduralUI.AlphaPourContrasteGaranti(encre, voile, ratioCible)   // :875 — l'alpha QUI GARANTIT le ratio
+ProceduralUI.ContrasteApresVoile(encre, voile, fond, alpha)        // :901 — et son inverse, qui le mesure
+```
+
+**Une règle exécutable et une règle en prose n'ont pas la même valeur : la première rougit, la seconde
+vieillit.** Toute matière posée sous du texte prend son voile de la première fonction et se vérifie par
+la seconde. Réécrire un seuil en dur dans le lot serait la sixième réinvention d'un mécanisme déjà là —
+il y en a eu cinq dans la seule soirée du 2026-09-06, dont deux découvertes dans un correctif déjà livré.
+
+### ★ Ce que « 42 » ne dit pas, et que « 42 inchangé » dit
+
+Le compte seul se lirait comme une dette qu'on laisse courir. **Le compte inchangé à travers 105
+commits** dit autre chose : ce n'est pas une dérive en cours, c'est **l'état stable du dépôt**. Aucun
+des écrans ajoutés ce soir n'a créé de fabrique, et aucun n'en a manqué une — il n'y en a jamais eu.
+⇒ La priorité du lot ne vient pas de l'urgence (rien n'empire) mais de la **multiplication** : chaque
+écran neuf ajoute des sites à repointer plus tard.
+
 ## Le découpage
 
 | ce que le bouton porte | varie avec la donnée ? | où ça vit |
