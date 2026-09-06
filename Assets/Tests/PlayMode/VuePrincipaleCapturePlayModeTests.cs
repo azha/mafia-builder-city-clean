@@ -272,6 +272,20 @@ namespace MafiaCleanCity.Capture.Tests
         // après le fetch est le MÊME geste que font déjà C8F5 et C10F1 pour la même raison — isoler
         // la propriété qu'on regarde. Ici on ne teste rien : on veut simplement pouvoir REGARDER
         // l'écran dans son éclairage de nuit, que personne n'avait encore vu en jeu.
+        // ⛔ CATÉGORIE DE MÉTHODE POSÉE LE 2026-09-07 — sans elle, cette capture n'était PAS
+        // demandable seule : sa seule catégorie était le `Capture` de la CLASSE, et la demander
+        // sélectionnait aussi `Capture_Detail_ApresTampon_SousChrome_MUTE`, qui CONSOMME une carte
+        // du compte gelé. Photographier l'éclairage de nuit coûtait donc la base de preuve figée.
+        // ★ Le nom est choisi APRÈS un balayage de la population, pas au jugé : le filtre
+        //   `Filter.categoryNames` correspond par PRÉFIXE (ce fichier l'a déjà payé d'une carte,
+        //   voir la note de `Capture_Detail_ApresTampon_SousChrome_MUTE`). Mesuré sur les
+        //   113 fichiers de test et leurs 60 catégories : AUCUNE ne commence par `CaptureNuit`,
+        //   donc la demander sélectionne exactement cette méthode. La seule catégorie dont
+        //   `CaptureNuit` est un descendant de préfixe est `Capture` — c'est-à-dire l'état
+        //   d'avant, inchangé.
+        // ⚠️ Toute catégorie AJOUTÉE ici doit repasser ce balayage : deux noms distincts n'isolent
+        //    pas si l'un commence par l'autre.
+        [Category("CaptureNuit")]
         [UnityTest]
         public IEnumerator Capture_VuePrincipale_Nuit()
         {
@@ -320,8 +334,26 @@ namespace MafiaCleanCity.Capture.Tests
             Transform fondT = district.ScreenRoot.Find("DistrictScene/DistrictBackgroundImage");
             Assert.IsNotNull(fondT, "un fond de NUIT doit être monté — sinon la capture n'est pas de nuit");
 
-            ScreenCapture.CaptureScreenshot("Assets/Screenshots/vue_principale_nuit.png");
-            for (int i = 0; i < 12; i++) yield return null;
+            // ⛔ MESURÉ LE 2026-09-07 : `ScreenCapture.CaptureScreenshot` N'ÉCRIT RIEN EN BATCHMODE.
+            // Ce test passait — assertions vertes, `[CAPTURE]` imprimé, `passed=1` — et produisait
+            // ZÉRO fichier : `find -newermt '-10 minutes'` sur l'arbre entier rendait 0 PNG, et le
+            // `vue_principale_nuit.png` du dépôt datait du 2026-08-25 (commit `fe00b0a`), donc d'un
+            // run d'ÉDITEUR. Le log le disait déjà sans que personne le lise : `ecran=640x480`,
+            // c'est-à-dire l'écran par défaut du batchmode — en PAYSAGE, alors que le projet est en
+            // portrait. *Un test vert qui n'écrit pas son artefact est un faux vert de plus dans la
+            // famille du run jamais démarré.*
+            // ⇒ On emprunte le helper que les 18 autres appels de ce fichier utilisent déjà
+            //   (`CapturerA` : caméra hors écran + RenderTexture), qui lui rend sans écran. Le bon
+            //   outil était dans le fichier ; il ne s'était simplement pas choisi tout seul.
+            // ⚠️ CHEMIN NEUF, DÉLIBÉRÉMENT : écrire sur `vue_principale_nuit.png` écraserait une
+            //   référence commitée produite dans l'autre régime (1200×1600). Deux régimes valent
+            //   mieux comparés que l'un détruit par l'autre.
+            // ⛔ LA CLASSE N'EST PAS FERMÉE ICI : ce fichier porte 5 appels de
+            //   `ScreenCapture.CaptureScreenshot` sur 4 chemins distincts. Les trois autres
+            //   (`vue_principale_batiments_hud`, `carte_de_ville_hud`, `ecran_lieutenants`) ont le
+            //   même mode d'échec en batchmode et n'ont PAS été repassés — chacun peut avoir sa
+            //   raison d'être lancé depuis l'éditeur, et ce n'est pas à cette passe d'en décider.
+            yield return CapturerA(1080, 1920, "Assets/Screenshots/vue_principale_nuit_1080x1920.png");
             Debug.Log($"[CAPTURE] vue de nuit — batiments={batiments} ecran={Screen.width}x{Screen.height}");
         }
 
