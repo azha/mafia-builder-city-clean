@@ -5,25 +5,25 @@
  "statut": 404,
  "params": {},
  "provenance": {
-  "date": "2026-09-06T07:04:39",
-  "back_main": "4fee60b9",
+  "date": "2026-09-06T11:02:54",
+  "back_main": "fc944b62",
   "game_back": "mafia-clean-city-game-back 2026-09-04T08:41:42.667221302Z",
   "compte": "demo_capture@example.test",
   "jour_de_jeu": 50,
-  "horloge_game_minute": 72013,
+  "horloge_game_minute": 72118,
   "horloge_source": "city_sim_clock.game_minute scopée sur player_id (lecture en base : aucune route joueur ne la projette — forme F)",
   "district_du_joueur_mesure": 1,
   "dossier": "compression",
   "symbole": "⑭",
   "controleur": "CompressionScreenController",
-  "X-Request-Id": "da8b6af0-99e4-4eea-966c-d1d355610646",
-  "X-Server-Processed-At": "2026-09-06T05:04:40.024Z",
+  "X-Request-Id": "642dccef-a8bc-4f83-ad7a-0aa42c742fcf",
+  "X-Server-Processed-At": "2026-09-06T09:02:54.678Z",
   "X-Api-Version": "1"
  },
  "corps": {
   "response_meta": {
-   "request_id_echo": "da8b6af0-99e4-4eea-966c-d1d355610646",
-   "server_processed_at": "2026-09-06T05:04:40.024Z",
+   "request_id_echo": "642dccef-a8bc-4f83-ad7a-0aa42c742fcf",
+   "server_processed_at": "2026-09-06T09:02:54.678Z",
    "api_version": 1,
    "correlation_id_echo": null
   },
@@ -36,10 +36,10 @@
     "details": null,
     "message": "no active compression board for player 01a074ce-60f3-7a91-8dbd-41d9be0bd2fc.",
     "trace": {
-     "request_id_echo": "da8b6af0-99e4-4eea-966c-d1d355610646",
+     "request_id_echo": "642dccef-a8bc-4f83-ad7a-0aa42c742fcf",
      "correlation_id": null,
      "trace_id": null,
-     "server_emitted_at": "2026-09-06T05:04:40.024Z"
+     "server_emitted_at": "2026-09-06T09:02:54.678Z"
     },
     "retryable_class": "NEVER",
     "retry_after_s": null

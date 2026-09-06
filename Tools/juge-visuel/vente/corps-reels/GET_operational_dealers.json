@@ -5,25 +5,25 @@
  "statut": 200,
  "params": {},
  "provenance": {
-  "date": "2026-09-06T07:04:39",
-  "back_main": "4fee60b9",
+  "date": "2026-09-06T11:02:54",
+  "back_main": "fc944b62",
   "game_back": "mafia-clean-city-game-back 2026-09-04T08:41:42.667221302Z",
   "compte": "demo_capture@example.test",
   "jour_de_jeu": 50,
-  "horloge_game_minute": 72013,
+  "horloge_game_minute": 72118,
   "horloge_source": "city_sim_clock.game_minute scopée sur player_id (lecture en base : aucune route joueur ne la projette — forme F)",
   "district_du_joueur_mesure": 1,
   "dossier": "vente",
   "symbole": "㉟",
   "controleur": "SellingScreenController",
-  "X-Request-Id": "23cf6647-3b64-4b20-ac5d-e50f76df7977",
-  "X-Server-Processed-At": "2026-09-06T05:04:39.968Z",
+  "X-Request-Id": "a5683ab9-4ecf-4610-b0ca-8da6c25e706e",
+  "X-Server-Processed-At": "2026-09-06T09:02:54.606Z",
   "X-Api-Version": "1"
  },
  "corps": {
   "response_meta": {
-   "request_id_echo": "23cf6647-3b64-4b20-ac5d-e50f76df7977",
-   "server_processed_at": "2026-09-06T05:04:39.968Z",
+   "request_id_echo": "a5683ab9-4ecf-4610-b0ca-8da6c25e706e",
+   "server_processed_at": "2026-09-06T09:02:54.606Z",
    "api_version": 1,
    "correlation_id_echo": null
   },
@@ -31,11 +31,11 @@
    "data": {
     "dealers": [
      {
-      "dealer": "03217318-709d-400d-b7bc-b3f4d20f27ed",
+      "dealer": "d608dc2b-c438-4b37-a157-5e99792b7ef3",
       "name_i18n": {
        "key": "game.fiction.dealer.name",
        "params": {
-        "prenom": "Amara"
+        "prenom": "Yusuf"
        }
       },
       "activity_band": "WORKING",

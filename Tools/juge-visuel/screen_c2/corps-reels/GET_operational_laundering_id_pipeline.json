@@ -1,34 +1,34 @@
 {
  "route": "/v1/operational/laundering/{nodeId}/pipeline",
- "route_appelee": "/v1/operational/laundering/4d1ee185-6106-457f-b072-85d1e4a2cacf/pipeline",
+ "route_appelee": "/v1/operational/laundering/925fed1d-0ff1-4b46-95c0-232bb4d75dae/pipeline",
  "methode": "GET",
  "statut": 200,
  "params": {
   "nodeId": {
-   "valeur": "4d1ee185-6106-457f-b072-85d1e4a2cacf",
+   "valeur": "925fed1d-0ff1-4b46-95c0-232bb4d75dae",
    "source": "lu dans le corps de `operational/laundering` (clé parmi ['node', 'node_id', 'id'])"
   }
  },
  "provenance": {
-  "date": "2026-09-06T07:04:39",
-  "back_main": "4fee60b9",
+  "date": "2026-09-06T11:02:54",
+  "back_main": "fc944b62",
   "game_back": "mafia-clean-city-game-back 2026-09-04T08:41:42.667221302Z",
   "compte": "demo_capture@example.test",
   "jour_de_jeu": 50,
-  "horloge_game_minute": 72013,
+  "horloge_game_minute": 72118,
   "horloge_source": "city_sim_clock.game_minute scopée sur player_id (lecture en base : aucune route joueur ne la projette — forme F)",
   "district_du_joueur_mesure": 1,
   "dossier": "screen_c2",
   "symbole": "㊵",
   "controleur": "FiliereScreenController",
-  "X-Request-Id": "ee833380-dd66-4cb1-b271-20dd331aac1d",
-  "X-Server-Processed-At": "2026-09-06T05:04:40.098Z",
+  "X-Request-Id": "048c8b1d-2035-4930-b267-6dd9e0097c59",
+  "X-Server-Processed-At": "2026-09-06T09:02:54.757Z",
   "X-Api-Version": "1"
  },
  "corps": {
   "response_meta": {
-   "request_id_echo": "ee833380-dd66-4cb1-b271-20dd331aac1d",
-   "server_processed_at": "2026-09-06T05:04:40.098Z",
+   "request_id_echo": "048c8b1d-2035-4930-b267-6dd9e0097c59",
+   "server_processed_at": "2026-09-06T09:02:54.757Z",
    "api_version": 1,
    "correlation_id_echo": null
   },
@@ -36,25 +36,25 @@
    "data": {
     "stages": [
      {
-      "node": "4d1ee185-6106-457f-b072-85d1e4a2cacf",
+      "node": "925fed1d-0ff1-4b46-95c0-232bb4d75dae",
       "cleanliness_band": "PARTIAL",
       "terminal": false,
       "has_cash": false
      },
      {
-      "node": "e990a3c2-7eb6-48e2-8b32-cef0e95af33d",
+      "node": "ee7d7e29-83f2-4378-9b52-39894967f087",
       "cleanliness_band": "MOSTLY_CLEAN",
       "terminal": false,
       "has_cash": true
      },
      {
-      "node": "5b1c24e9-444d-4fba-a3f1-3a1fce075646",
+      "node": "92ddbadc-4092-4df2-b6de-73c7db82fa23",
       "cleanliness_band": "CLEAN",
       "terminal": false,
       "has_cash": false
      },
      {
-      "node": "ca08647c-b6f4-4065-a8b6-9f2af712297a",
+      "node": "869dcd3c-9ee5-4f03-946c-cb972ee59104",
       "cleanliness_band": "CLEAN",
       "terminal": true,
       "has_cash": false

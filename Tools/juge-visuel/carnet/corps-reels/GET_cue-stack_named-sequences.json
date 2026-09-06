@@ -5,25 +5,25 @@
  "statut": 403,
  "params": {},
  "provenance": {
-  "date": "2026-09-06T07:04:39",
-  "back_main": "4fee60b9",
+  "date": "2026-09-06T11:02:54",
+  "back_main": "fc944b62",
   "game_back": "mafia-clean-city-game-back 2026-09-04T08:41:42.667221302Z",
   "compte": "demo_capture@example.test",
   "jour_de_jeu": 50,
-  "horloge_game_minute": 72013,
+  "horloge_game_minute": 72118,
   "horloge_source": "city_sim_clock.game_minute scopée sur player_id (lecture en base : aucune route joueur ne la projette — forme F)",
   "district_du_joueur_mesure": 1,
   "dossier": "carnet",
   "symbole": "㉞",
   "controleur": "CarnetScreenController",
-  "X-Request-Id": "b4bbce75-3e18-41e9-8bc0-d6879d7d40b4",
-  "X-Server-Processed-At": "2026-09-06T05:04:40.310Z",
+  "X-Request-Id": "abd1f9e4-d274-4985-87ff-c6abae20e1bc",
+  "X-Server-Processed-At": "2026-09-06T09:02:54.983Z",
   "X-Api-Version": "1"
  },
  "corps": {
   "response_meta": {
-   "request_id_echo": "b4bbce75-3e18-41e9-8bc0-d6879d7d40b4",
-   "server_processed_at": "2026-09-06T05:04:40.310Z",
+   "request_id_echo": "abd1f9e4-d274-4985-87ff-c6abae20e1bc",
+   "server_processed_at": "2026-09-06T09:02:54.983Z",
    "api_version": 1,
    "correlation_id_echo": null
   },
@@ -46,10 +46,10 @@
     },
     "message": "named sequences require rule_vocabulary_tier >= 2 (Phase-17 meta-progression) — this player is at tier 1.",
     "trace": {
-     "request_id_echo": "b4bbce75-3e18-41e9-8bc0-d6879d7d40b4",
+     "request_id_echo": "abd1f9e4-d274-4985-87ff-c6abae20e1bc",
      "correlation_id": null,
      "trace_id": null,
-     "server_emitted_at": "2026-09-06T05:04:40.310Z"
+     "server_emitted_at": "2026-09-06T09:02:54.983Z"
     },
     "retryable_class": "AFTER_USER_ACTION",
     "retry_after_s": null

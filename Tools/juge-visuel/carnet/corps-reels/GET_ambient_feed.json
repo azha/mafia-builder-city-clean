@@ -5,25 +5,25 @@
  "statut": 200,
  "params": {},
  "provenance": {
-  "date": "2026-09-06T07:04:39",
-  "back_main": "4fee60b9",
+  "date": "2026-09-06T11:02:54",
+  "back_main": "fc944b62",
   "game_back": "mafia-clean-city-game-back 2026-09-04T08:41:42.667221302Z",
   "compte": "demo_capture@example.test",
   "jour_de_jeu": 50,
-  "horloge_game_minute": 72013,
+  "horloge_game_minute": 72118,
   "horloge_source": "city_sim_clock.game_minute scopée sur player_id (lecture en base : aucune route joueur ne la projette — forme F)",
   "district_du_joueur_mesure": 1,
   "dossier": "carnet",
   "symbole": "㉞",
   "controleur": "CarnetScreenController",
-  "X-Request-Id": "ab84b57d-0478-490a-9851-0b34571f399d",
-  "X-Server-Processed-At": "2026-09-06T05:04:40.293Z",
+  "X-Request-Id": "5a112714-c723-4f2c-817a-759c29a3c3d5",
+  "X-Server-Processed-At": "2026-09-06T09:02:54.973Z",
   "X-Api-Version": "1"
  },
  "corps": {
   "response_meta": {
-   "request_id_echo": "ab84b57d-0478-490a-9851-0b34571f399d",
-   "server_processed_at": "2026-09-06T05:04:40.293Z",
+   "request_id_echo": "5a112714-c723-4f2c-817a-759c29a3c3d5",
+   "server_processed_at": "2026-09-06T09:02:54.973Z",
    "api_version": 1,
    "correlation_id_echo": null
   },
@@ -31,8 +31,48 @@
    "data": {
     "events": [
      {
-      "event_id": "634bf01c-50f4-4792-9042-6900b5066237",
-      "district": "district-16",
+      "event_id": "3310cdd8-6336-4e07-a6b7-a4aa67088df6",
+      "district": "district-13",
+      "kind": "corner_fight",
+      "channel": "constant_hum",
+      "descriptor_i18n_key": "ambient.micro_event.corner_fight",
+      "recency_band": "fresh"
+     },
+     {
+      "event_id": "add3dbb7-93aa-4110-8cff-4fff80548eb0",
+      "district": "district-11",
+      "kind": "noisy_block",
+      "channel": "constant_hum",
+      "descriptor_i18n_key": "ambient.micro_event.noisy_block",
+      "recency_band": "fresh"
+     },
+     {
+      "event_id": "a2cbdc03-d796-4053-8109-a927e6ddabbc",
+      "district": "district-11",
+      "kind": "corner_fight",
+      "channel": "constant_hum",
+      "descriptor_i18n_key": "ambient.micro_event.corner_fight",
+      "recency_band": "fresh"
+     },
+     {
+      "event_id": "3226af0f-56be-49a1-aa33-6ca0a8bd46c3",
+      "district": "district-11",
+      "kind": "delayed_shipment",
+      "channel": "trade_channel",
+      "descriptor_i18n_key": "ambient.micro_event.delayed_shipment",
+      "recency_band": "fresh"
+     },
+     {
+      "event_id": "d2f1d64a-3068-460e-83cc-f77cc7e202a5",
+      "district": "district-1",
+      "kind": "noisy_block",
+      "channel": "constant_hum",
+      "descriptor_i18n_key": "ambient.micro_event.noisy_block",
+      "recency_band": "fresh"
+     },
+     {
+      "event_id": "f237252f-48df-423d-ad3e-7cda7b995494",
+      "district": "district-1",
       "kind": "stalled_tram",
       "channel": "trade_channel",
       "descriptor_i18n_key": "ambient.micro_event.stalled_tram",
@@ -44,6 +84,14 @@
       "kind": "bar_rumor",
       "channel": "bar_talk",
       "descriptor_i18n_key": "ambient.micro_event.bar_rumor",
+      "recency_band": "fresh"
+     },
+     {
+      "event_id": "634bf01c-50f4-4792-9042-6900b5066237",
+      "district": "district-16",
+      "kind": "stalled_tram",
+      "channel": "trade_channel",
+      "descriptor_i18n_key": "ambient.micro_event.stalled_tram",
       "recency_band": "fresh"
      },
      {
@@ -85,25 +133,9 @@
       "channel": "constant_hum",
       "descriptor_i18n_key": "ambient.micro_event.building_inspection",
       "recency_band": "fresh"
-     },
-     {
-      "event_id": "fe3da400-30f0-473b-9bd9-ccf0273c4493",
-      "district": "district-16",
-      "kind": "bar_rumor",
-      "channel": "bar_talk",
-      "descriptor_i18n_key": "ambient.micro_event.bar_rumor",
-      "recency_band": "fading"
-     },
-     {
-      "event_id": "2721bf57-ff90-45b8-902f-8bfd9e3f6073",
-      "district": "district-16",
-      "kind": "noisy_block",
-      "channel": "constant_hum",
-      "descriptor_i18n_key": "ambient.micro_event.noisy_block",
-      "recency_band": "fading"
      }
     ],
-    "total": 9,
+    "total": 13,
     "limit": 20,
     "offset": 0
    }

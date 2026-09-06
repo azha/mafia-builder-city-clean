@@ -10,25 +10,25 @@
   }
  },
  "provenance": {
-  "date": "2026-09-06T07:04:39",
-  "back_main": "4fee60b9",
+  "date": "2026-09-06T11:02:54",
+  "back_main": "fc944b62",
   "game_back": "mafia-clean-city-game-back 2026-09-04T08:41:42.667221302Z",
   "compte": "demo_capture@example.test",
   "jour_de_jeu": 50,
-  "horloge_game_minute": 72013,
+  "horloge_game_minute": 72118,
   "horloge_source": "city_sim_clock.game_minute scopée sur player_id (lecture en base : aucune route joueur ne la projette — forme F)",
   "district_du_joueur_mesure": 1,
   "dossier": "screen_b7",
   "symbole": "㊴",
   "controleur": "ForensicScreenController",
-  "X-Request-Id": "3bbae324-50b3-4c45-a6e5-be340ae7156e",
-  "X-Server-Processed-At": "2026-09-06T05:04:40.035Z",
+  "X-Request-Id": "9bc4c6af-70e4-46f5-9bd1-6a4fb8e26c27",
+  "X-Server-Processed-At": "2026-09-06T09:02:54.692Z",
   "X-Api-Version": "1"
  },
  "corps": {
   "response_meta": {
-   "request_id_echo": "3bbae324-50b3-4c45-a6e5-be340ae7156e",
-   "server_processed_at": "2026-09-06T05:04:40.035Z",
+   "request_id_echo": "9bc4c6af-70e4-46f5-9bd1-6a4fb8e26c27",
+   "server_processed_at": "2026-09-06T09:02:54.692Z",
    "api_version": 1,
    "correlation_id_echo": null
   },
@@ -234,12 +234,12 @@
     "day_phase": "DAWN",
     "buildings": [
      {
-      "building": "bdbc099d-eaba-4935-9bcd-e1272796385c",
+      "building": "111846f8-1aac-4a1c-8b33-ad371ffec44d",
       "block_id": 1,
       "name_i18n": {
        "key": "game.fiction.building.name",
        "params": {
-        "enseigne": "Coursiers Ferrand",
+        "enseigne": "Colis Kofi",
         "district": "Les Bassins",
         "block": "1"
        }

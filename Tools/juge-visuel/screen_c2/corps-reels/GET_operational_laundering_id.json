@@ -1,40 +1,40 @@
 {
  "route": "/v1/operational/laundering/{nodeId}",
- "route_appelee": "/v1/operational/laundering/4d1ee185-6106-457f-b072-85d1e4a2cacf",
+ "route_appelee": "/v1/operational/laundering/925fed1d-0ff1-4b46-95c0-232bb4d75dae",
  "methode": "GET",
  "statut": 200,
  "params": {
   "nodeId": {
-   "valeur": "4d1ee185-6106-457f-b072-85d1e4a2cacf",
+   "valeur": "925fed1d-0ff1-4b46-95c0-232bb4d75dae",
    "source": "lu dans le corps de `operational/laundering` (clé parmi ['node', 'node_id', 'id'])"
   }
  },
  "provenance": {
-  "date": "2026-09-06T07:04:39",
-  "back_main": "4fee60b9",
+  "date": "2026-09-06T11:02:54",
+  "back_main": "fc944b62",
   "game_back": "mafia-clean-city-game-back 2026-09-04T08:41:42.667221302Z",
   "compte": "demo_capture@example.test",
   "jour_de_jeu": 50,
-  "horloge_game_minute": 72013,
+  "horloge_game_minute": 72118,
   "horloge_source": "city_sim_clock.game_minute scopée sur player_id (lecture en base : aucune route joueur ne la projette — forme F)",
   "district_du_joueur_mesure": 1,
   "dossier": "screen_c2",
   "symbole": "㊵",
   "controleur": "FiliereScreenController",
-  "X-Request-Id": "8add8cbc-8dff-40b0-a0bd-380a87563bae",
-  "X-Server-Processed-At": "2026-09-06T05:04:40.096Z",
+  "X-Request-Id": "f9731735-0bd0-4bf1-9758-ae8516801aa5",
+  "X-Server-Processed-At": "2026-09-06T09:02:54.754Z",
   "X-Api-Version": "1"
  },
  "corps": {
   "response_meta": {
-   "request_id_echo": "8add8cbc-8dff-40b0-a0bd-380a87563bae",
-   "server_processed_at": "2026-09-06T05:04:40.096Z",
+   "request_id_echo": "f9731735-0bd0-4bf1-9758-ae8516801aa5",
+   "server_processed_at": "2026-09-06T09:02:54.754Z",
    "api_version": 1,
    "correlation_id_echo": null
   },
   "payload": {
    "data": {
-    "node": "4d1ee185-6106-457f-b072-85d1e4a2cacf",
+    "node": "925fed1d-0ff1-4b46-95c0-232bb4d75dae",
     "cleanliness_band": "DIRTY",
     "deviation_active": false
    }

@@ -5,25 +5,25 @@
  "statut": 200,
  "params": {},
  "provenance": {
-  "date": "2026-09-06T07:04:39",
-  "back_main": "4fee60b9",
+  "date": "2026-09-06T11:02:54",
+  "back_main": "fc944b62",
   "game_back": "mafia-clean-city-game-back 2026-09-04T08:41:42.667221302Z",
   "compte": "demo_capture@example.test",
   "jour_de_jeu": 50,
-  "horloge_game_minute": 72013,
+  "horloge_game_minute": 72118,
   "horloge_source": "city_sim_clock.game_minute scopée sur player_id (lecture en base : aucune route joueur ne la projette — forme F)",
   "district_du_joueur_mesure": 1,
   "dossier": "accueil",
   "symbole": "④",
   "controleur": "DashboardController",
-  "X-Request-Id": "26752a16-b359-4a6c-a622-1ce36591ff5c",
-  "X-Server-Processed-At": "2026-09-06T05:04:39.792Z",
+  "X-Request-Id": "8af97cd1-debb-42c2-a0de-86e87a05e5d7",
+  "X-Server-Processed-At": "2026-09-06T09:02:54.405Z",
   "X-Api-Version": "1"
  },
  "corps": {
   "response_meta": {
-   "request_id_echo": "26752a16-b359-4a6c-a622-1ce36591ff5c",
-   "server_processed_at": "2026-09-06T05:04:39.792Z",
+   "request_id_echo": "8af97cd1-debb-42c2-a0de-86e87a05e5d7",
+   "server_processed_at": "2026-09-06T09:02:54.405Z",
    "api_version": 1,
    "correlation_id_echo": null
   },

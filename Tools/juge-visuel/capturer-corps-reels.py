@@ -80,6 +80,14 @@ SEGMENT_PARAM = {"nodes": "buildingId", "lieutenants": "lieutenantId", "beats": 
 
 
 UUID_OU_NUM = re.compile(r"/(?:[0-9a-fA-F]{8}-[0-9a-fA-F-]{20,}|\d+)(?=/|$)")
+# ⛔ ET LES VALEURS DE QUERY SONT DES PARAMÈTRES AUSSI. `UUID_OU_NUM` ne voit un identifiant
+#    qu'après une BARRE ; celui de `?building_id=<uuid>` lui échappait, donc l'uuid atterrissait
+#    dans le NOM DU FICHIER. Mesuré le 2026-09-06 : chaque re-semis créait une paire de fichiers
+#    neufs et laissait les précédents ORPHELINS — 4 accumulés, à côté du fichier correctement
+#    nommé. Une base de preuve dont les noms de fichier changent à chaque re-semis n'est pas
+#    comparable d'une passe à l'autre : c'est exactement ce que le nommage par `{id}` existe
+#    pour éviter, et je l'avais fermé d'un seul côté.
+VALEUR_QUERY = re.compile(r"(\?[a-z_]+=)[^&]*")
 
 
 def slug(route, method):
@@ -101,7 +109,8 @@ def slug_reel(route_declaree, route_appelee, method):
     """
     if not route_appelee:
         return slug(route_declaree, method)
-    return slug(UUID_OU_NUM.sub("/{id}", route_appelee).rstrip("/"), method)
+    r = VALEUR_QUERY.sub(r"\1", route_appelee)          # `?x=<valeur>` → `?x=` (un paramètre)
+    return slug(UUID_OU_NUM.sub("/{id}", r).rstrip("/"), method)
 
 
 def routes_avec_methode(ctl):
