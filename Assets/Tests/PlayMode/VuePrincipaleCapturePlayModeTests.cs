@@ -576,11 +576,29 @@ namespace MafiaCleanCity.Capture.Tests
                     tex, canvas, chemin,
                     MafiaCleanCity.Shell.Tests.CaptureSousShell.TextesPosesSurLArt(shell), ecC);
                 // ⛔ LE RÉGIME SE DÉCLARE À CHAQUE RUN, sinon un dispositif inerte ressemble trait
-                // pour trait à un dispositif appliqué — et c'est précisément une garde en régime de
-                // mesure qu'on relit six mois plus tard comme une garde armée.
+                // pour trait à un dispositif appliqué. Il est désormais ARMÉ : la condition posée
+                // au tour précédent — « quand ① et ③ seront propres » — est remplie et mesurée
+                // (0 lecture sous le plancher sur les trois planches, après le palier du dock et le
+                // fond du titre). *Une condition d'armement se lève sur la mesure qui la remplit,
+                // pas sur le sentiment que le lot est fini.*
+                // ⚠️⚠️ ARMÉE UNE FOIS, PUIS RENDUE À LA MESURE — et le compte dit pourquoi.
+                // La condition posée au tour précédent (« quand ① et ③ seront propres ») était
+                // remplie et mesurée : 0 lecture sous le plancher sur leurs trois planches. Armée,
+                // la garde a rougi sur **4 AUTRES écrans, 8 lectures** — ㊲ (4), ⑤ exceptions (2),
+                // ⑦ lieutenants (1), ② fiche (1) — dont « Commit (hold) » à **1,33:1**.
+                // ⇒ Ma condition d'armement était SOUS-SPÉCIFIÉE : je l'avais écrite pour deux
+                //   écrans et câblée sur un fichier qui en photographie dix-sept. *Une condition
+                //   qui nomme sa cible sans nommer sa POPULATION est une condition à moitié posée.*
+                // ⇒ Les huit sont des défauts RÉELS (aucun n'est un artefact d'instrument : ils
+                //   sont tous sur des panneaux opaques, pas sur l'art — la garde attrape donc une
+                //   classe plus large que celle pour laquelle je l'ai écrite, et c'est une bonne
+                //   nouvelle). Mais armer bloquerait la capture de quatre écrans qui ne sont pas
+                //   dans ce lot, et **cadencer le travail d'autrui n'est pas ma décision** : les
+                //   huit partent en dette avec leurs nombres, et la garde publie au lieu de bloquer.
+                //   *Publier le dénominateur plutôt que bloquer sans arbitrage.*
                 Debug.Log($"[CONTRASTE-ART][RÉGIME] {chemin} : MESURE, NON ARMÉE — "
-                          + $"{ecC.Count} lecture(s) sous le plancher, journalisées et NON assertées. "
-                          + "L'assertion sera activée quand ① et ③ seront propres, pas avant.");
+                          + $"{ecC.Count} lecture(s) sous le plancher, journalisées et NON assertées "
+                          + "(TD-653 porte l'inventaire ; armer bloquerait 4 écrans hors de ce lot).");
                 foreach (string e in ecC) Debug.Log("[CONTRASTE-ART][SOUS-SEUIL] " + e);
             }
 
