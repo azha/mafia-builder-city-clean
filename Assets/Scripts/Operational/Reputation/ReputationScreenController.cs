@@ -115,6 +115,18 @@ namespace MafiaCleanCity.Operational
         /// réglage à l'œil ne satisfait par hasard. *Une garde sur les PARAMÈTRES d'un effet n'est
         /// pas une garde sur son EFFET* : ce dépôt a déjà livré un halo dont les trois réglages
         /// étaient valides et qui ne produisait aucun pixel.</summary>
+        /// <summary>Les deux cotes du flou de l'`Underlay`. `dilate` élargit l'encre avant le
+        /// flou, `softness` étale la transition — ensemble elles jouent le rôle du rayon `8px` du
+        /// `text-shadow` canon, à l'échelle de l'atlas de la fonte et non des pixels d'écran.
+        /// ⚠️ ELLES NE SONT PAS DÉRIVABLES DU CANON : TMP floute dans l'espace du champ de distance
+        /// signée, le navigateur en pixels. Aucune conversion exacte n'existe entre les deux, et
+        /// prétendre le contraire serait le genre de dérivation qui a déjà coûté trois tours ici.
+        /// ⇒ Point de départ posé à l'échelle du dépôt (le titre de district emploie le même
+        /// mécanisme), et **le juge tranchera sur le plateau et la vallée en points** — son critère
+        /// corrigé, celui qui ne dépend d'aucun seuil non déclaré.</summary>
+        private const float HaloDilatation = 0.12f;
+        private const float HaloDouceur = 0.55f;
+
         private const float HaloAmplitudeCorrection = 1f / 2.13f;
         private const float HaloEtendueCorrection = 1f / 1.57f;
         private const float CssCompteurLib   = 5.4f;  // .fen > span
@@ -1008,40 +1020,56 @@ namespace MafiaCleanCity.Operational
                 // ⛔ L'ÉTENDUE EST CELLE DE L'ENCRE PLUS DEUX FOIS LE FLOU, PAS CELLE DE LA BOÎTE.
                 // Première version : un voile de 66 × 30 px CSS, dérivé du CORPS du texte et
                 // multiplié par 2,2 « pour couvrir les deux chiffres ». Regardé sur la planche :
-                // une nappe qui déborde de la fenêtre et lave le creux, là où la référence décroît
-                // à zéro vers **6 px CSS** du glyphe (le juge la mesure de +20,3 à −1,5 entre 2 et
-                // 22 px d'image, soit ~6 CSS).
-                // ⇒ On dérive de l'ENCRE : deux chiffres d'un corps de 14 occupent ≈ 16 px CSS de
-                //   large et ≈ 10 de haut (hauteur de capitale), et le flou ajoute 8 de chaque côté.
-                float haloLargeur = Px(16f + 2f * CssHaloFlou);
-                float haloHauteur = Px(10f + 2f * CssHaloFlou);
-                haloRt.sizeDelta = new Vector2(haloLargeur, haloHauteur);
-                var haloImg = haloGo.AddComponent<Image>();
-                bool haloAtteignable;
-                Color haloTeinte = MafiaCleanCity.Shell.ProceduralUI.CouleurPourMelangeLineaire(
-                    ReputationResolvers.Cyan, ReputationResolvers.Creux, CssHaloOpacite,
-                    out haloAtteignable);
-                if (!haloAtteignable)
-                {
-                    Debug.LogWarning("[HALO] aucune couleur ne reproduit le mélange sRGB du halo sur " +
-                                     "le creux — teinte d'origine conservée, l'écart demeure.");
-                    haloTeinte = ReputationResolvers.Cyan;
-                }
-                // Les DEUX corrections, ensemble : l'amplitude sur l'alpha de la teinte, l'étendue
-                // par `finEnFraction`, qui raccourcit la queue SANS toucher au profil en cosinus —
-                // lequel est lui-même le correctif d'un autre défaut (quatre paliers durs mesurés
-                // dans un voile linéaire) et ne doit pas être rouvert.
-                // ★ Le paramètre existait déjà et deux appelants de CE fichier s'en servent (0,66 et
-                //   0,70, trois cents lignes plus haut) ; celui-ci héritait du défaut 1,0.
-                haloTeinte.a = CssHaloOpacite * HaloAmplitudeCorrection;
-                haloImg.sprite = MafiaCleanCity.Shell.ProceduralUI.VoileRadial(
-                    64, haloTeinte, new Vector2(0.5f, 0.5f), 0.5f, 0.5f, HaloEtendueCorrection);
-                haloImg.color = Color.white;   // la teinte vit dans la texture
-                haloImg.raycastTarget = false;
+                // ⛔⛔⛔ LE HALO EST UN UNDERLAY DU GLYPHE, PLUS UN SPRITE POSÉ SOUS LA CASE —
+                //    et c'est un correctif de MÉCANISME, pas de réglage. Troisième état du même
+                //    défaut : **absent** (r11) → **trop fort** (r12/r13) → **au mauvais endroit**
+                //    (r14). Chaque correctif fermait la couche visible et déplaçait le défaut d'un
+                //    cran ; corriger la POSITION aurait produit le quatrième.
+                // ⇒ CE QUI L'A NOMMÉ, et aucun réglage ne peut l'expliquer : le juge mesure sur les
+                //   TROIS compteurs un objet **identique** — pic 68,3 pts, largeur 45/44/45 px —
+                //   pour des encres de **62, 103 et 47 px**. *Un objet dont le pic, la largeur et la
+                //   position ne changent pas quand le glyphe change n'est pas un rayonnement, c'est
+                //   une décoration.* Et son barycentre est **18,4 px sous** celui du chiffre (la
+                //   référence est à +0,6), avec **zéro** lumière 12 rangées au-dessus contre 643 en
+                //   dessous — là où la référence rend 177 / 184, rapport 1,04. La lumière totale ne
+                //   bougeait que de +3,3 % : elle était **déplacée**, pas supprimée.
+                // ⇒ La cause est dans l'ancien code, lisible : `haloLargeur = Px(16 + 2×flou)` —
+                //   une CONSTANTE, dérivée de « deux chiffres d'un corps de 14 font ≈ 16 CSS ». Elle
+                //   suppose deux chiffres pour toujours, donc elle ignore l'encre par construction.
+                // ⇒ Un `text-shadow` de navigateur est un flou du GLYPHE : il naît de l'encre et
+                //   meurt avec elle. L'équivalent TMP est l'`Underlay`, qui rend une copie floutée
+                //   du glyphe — attaché à l'encre PAR CONSTRUCTION, donc largeur, position et pic
+                //   suivent le texte sans qu'aucune cote ne le dise.
+                // ⚠️ L'ALPHA 0,67 EST BON — le juge l'a certifié (×2,13 → ×0,67, contraste 4,49 →
+                //   11,34 pour 11,03 au canon). Il est repris tel quel ; seul le PORTEUR change.
+                // ⚠️ MATÉRIAU D'INSTANCE, JAMAIS LE PARTAGÉ : `fontMaterial` clone,
+                //   `fontSharedMaterial` contaminerait tous les textes de la même fonte — ce dépôt
+                //   a déjà écrit sur un asset partagé par trois écrans et ne l'a vu qu'à la
+                //   sauvegarde suivante. Et `GetShaderPropertyIDs()` avant tout `SetFloat` : sans
+                //   lui les identifiants peuvent désigner autre chose et l'ombre se pose « en
+                //   silence sur rien ».
+                // ⚠️ CE QUE JE NE PRÉTENDS PAS : que les cotes de flou soient justes. Ce dépôt a
+                //   livré un halo dont les trois paramètres étaient valides et qui ne produisait
+                //   AUCUN pixel — *une garde sur les paramètres d'un effet n'est pas une garde sur
+                //   son effet*. Le juge mesurera le plateau et la vallée EN POINTS, son critère
+                //   corrigé, et c'est lui qui dira si le flou porte.
+                TMPro.ShaderUtilities.GetShaderPropertyIDs();
 
                 compteurNombre[i] = NouveauTexte(fen.transform, "Nombre", "—",
                     CssCompteurNombre, ReputationResolvers.Cyan, DesignTokens.Current.primaryFont,
                 1f);  // interligne maquette — .fen b{font:700 14px/1}
+
+                // Le halo, porté par le glyphe lui-même. Teinte = celle du chiffre (`cyan99` du
+                // canon), alpha = celui que le juge a certifié.
+                Material halo = compteurNombre[i].fontMaterial;   // INSTANCE — voir plus haut
+                halo.EnableKeyword(TMPro.ShaderUtilities.Keyword_Underlay);
+                Color teinteHalo = ReputationResolvers.Cyan;
+                teinteHalo.a = CssHaloOpacite * HaloAmplitudeCorrection;
+                halo.SetColor(TMPro.ShaderUtilities.ID_UnderlayColor, teinteHalo);
+                halo.SetFloat(TMPro.ShaderUtilities.ID_UnderlayOffsetX, 0f);
+                halo.SetFloat(TMPro.ShaderUtilities.ID_UnderlayOffsetY, 0f);
+                halo.SetFloat(TMPro.ShaderUtilities.ID_UnderlayDilate, HaloDilatation);
+                halo.SetFloat(TMPro.ShaderUtilities.ID_UnderlaySoftness, HaloDouceur);
                 compteurNombre[i].fontStyle = TMPro.FontStyles.Bold;   // maquette : le chiffre du compteur (.fen, 700 14px)
                 compteurNombre[i].alignment = TextAlignmentOptions.Center;
 

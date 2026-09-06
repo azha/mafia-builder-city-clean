@@ -417,7 +417,27 @@ namespace MafiaCleanCity.Shell.Tests
         /// une échelle réelle peut produire, et pas sur l'égalité de deux lectures.
         /// ★ *Une invariance posée sans savoir ce qui la casse se satisfait en gelant la mauvaise
         ///   moitié* — et je l'aurais écrite ainsi si la mesure n'était pas venue avant.</summary>
+        /// ⛔⛔⛔ CONTRÔLE POSITIF EXÉCUTÉ LE 2026-09-07 01:40 — **ELLE NE ROUGIT PAS, DONC ELLE
+        /// N'EST PAS ENCORE UNE GARDE.** Sortie : `débord AVANT republication 105,1738 · APRÈS
+        /// 105,1738 (rapport 1,000)` ; suite `Charpente` **40/40**.
+        /// ⇒ Le défaut existe pourtant : le MÊME journal, dans un run `CaptureReputation` lancé cinq
+        ///   minutes plus tard, rend `lossyScale 1,633 → 0,011` et la sortie `105,17 → 0,44`.
+        /// ⇒ **C'est donc le DÉCLENCHEUR qui est faux, pas la propriété.** `RebatirChromePourResolution
+        ///   Courante()` ne reproduit pas l'effondrement : il rebâtit le chrome **sans que `Screen`
+        ///   change**, alors que la capture BASCULE la résolution après le montage — et c'est la
+        ///   bascule qui laisse lire un `lossyScale` non appliqué.
+        /// ★ *La question n'était pas « la propriété est-elle la bonne » mais « le scénario est-il
+        ///   DIMENSIONNÉ pour produire ce que je mesure ».* Je l'avais posée pour le halo et pas pour
+        ///   ma propre garde — le dispositif de sécurité neuf est le texte le moins relu du lot.
+        /// ⇒ `[Ignore]` PLUTÔT QUE SUPPRIMÉE : verte, elle CERTIFIERAIT l'absence d'un défaut mesuré
+        ///   ailleurs — pire que rien. Ignorée, elle reste visible avec sa cause et son correctif.
+        /// ⇒ CE QU'IL LUI FAUT : un déclencheur qui change réellement la résolution (le chemin de
+        ///   `MesurerEtCapturer`), donc une garde de catégorie CAPTURE et non `Charpente`.
         [UnityTest]
+        [Ignore("Contrôle positif ÉCHOUÉ : ne rougit pas sur le défaut mesuré (105,17 → 105,17 ici, " +
+                "105,17 → 0,44 dans un run de capture). Le déclencheur — rebâtir le chrome sans " +
+                "changer Screen — ne reproduit pas l'effondrement. À réarmer avec une bascule de " +
+                "résolution ; verte, elle certifierait le défaut. TD-659.")]
         public IEnumerator BLOQUANT_EffectiveBottomOverhangPx_SurvitAUneRepublication()
         {
             yield return ChargerLaSceneDeDemarrageDuBuild();
