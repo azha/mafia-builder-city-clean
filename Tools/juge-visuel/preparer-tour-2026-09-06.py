@@ -498,6 +498,36 @@ E.append(dict(
 LIENS_SUPPL['screen_b7'] = [('reference-1080x2102.png', JV / 'screen_b7/reference-1080x2102.png'),
                             ('capture-1080x2400.png', RACINE / SCREENS / 'screen_b7_dossier_sous_chrome_1080x2400.png')]
 
+
+# ③ ─────────────────────────────────────────────────────────────────────────────────────────
+# Table d'écarts assumés = le rapport juge-données mode maquette du même jour
+# (Tools/juge-donnees/carte/maquette-2026-09-06/rapport.md, Ma..Mm + D1..D5) — transcrite, pas recopiée.
+E.append(dict(
+    dossier='carte', tour='r1', sym='③', nom='La Carte de Brennar (city map)', canon='screen_2',
+    controleur='CityMapController',
+    but="la ville de nuit, peinte : 18 quartiers nommés, le fleuve, le port ; lire d'un coup d'œil où ça chauffe (la bande de chaleur par quartier), qui est en chasse (les écussons de conviction), et approcher — entrer chez soi.",
+    chemin="onglet EMPIRE (défaut) → la carte, sous chrome (`screen_2_carte_sous_chrome`), compte de démo.",
+    etats="un seul : le compte de démo au 2026-09-04. La référence est de NUIT ; le jour, la semaine de compression et les pastilles par district sont des questions OUVERTES (ne pas les classer défaut).",
+    references=[('reference-1080x2102.png', 'rendu du cadre nominal (série 6 #22 « Brennar la nuit ») — ratifié (ruling user 2026-08-26 : « c\'est le plus important, c\'est le premier écran »)', '1080×2102', '×3,6', '300 CSS = 1080 px'),
+                ('capture-carte-seule-1080x2400.png', 'capture ANTÉRIEURE du 2026-09-03 13:45, hors chrome, prise pour livrer la ville peinte — autre run, à n\'utiliser que pour la lecture de la texture, jamais pour un delta', '1080×2400', '—', '—')],
+    source_md=src_s6([22, 23, 24], 22, autres="- ⚠️ **La ville de la capture EST la peinture de la série 6** (texture 2100×3640 tirée du cadre, TD-494/560, 2026-09-03) : la géométrie, les rues, le fleuve doivent donc tomber JUSTE à un rééchantillonnage près — un écart de forme sur la ville elle-même désignerait la texture, pas le code. Ce qui se juge vraiment : le cadrage (quelle part de la peinture est visible, où), les 18 marqueurs de nom, la bande de chaleur, le chrome, la bande du bas."),
+    captures=[('capture-1080x2400.png', '1080×2400', 'compte de démo, sous chrome', '2026-09-04 11:22', 'VuePrincipaleCapturePlayModeTests (`screen_2_carte_sous_chrome_1080x2400.png`)')],
+    assumes_intro="\n⚠️ Le juge-données du jour a établi que **la géométrie de la ville est du DESIGN ratifié** (ruling user : « rien n\'a besoin d\'être vrai côté back — la géométrie est du design ») et que **8 libellés de la maquette n\'ont pas de clé i18n servie** (chaleur, conviction, profil, descente, aide, « Entrer »). Un libellé absent ou remplacé par le mot de la BANDE n\'est pas un défaut d\'écran.\n",
+    assumes=[
+        ("la ville (quartiers, rues, îlots, tours, parcs, fleuve, port, bateaux, lune, rose des vents) est la peinture, pas une donnée", "aucune colonne de géométrie en base (`world_geography.ts:30-45`) — design ratifié (Ma..Me)", "un quartier COUPÉ par le cadre, la texture étirée (rapport d'aspect ≠ 2100/3640), un marqueur hors de son quartier"),
+        ("18 noms de quartier en français", "`world/districts.name` (18/18 mesurés) ; substituteur de fiction dans la maquette", "un slug, un nom manquant, deux marqueurs qui se chevauchent"),
+        ("le MOT de la chaleur (« tiède », « froid ») peut manquer ou différer", "la bande a sa source, le libellé n'a pas de clé i18n (Mf) — lot back i18n", "une clé brute ou un mot anglais (COLD, WARM…)"),
+        ("les écussons de conviction peuvent manquer ou n'avoir pas de mot", "`belief` a 4 valeurs, 0 clé i18n (Mg) ; DORMANT (l'état de départ) n'a AUCUN dessin dans la maquette", "—"),
+        ("« VOUS ÊTES ICI » / le quartier en or « chez vous » peut manquer", "aucune clé du back ne dit quel district est celui du joueur (Mj) ; dérivable de `me/buildings` seulement", "un « chez vous » posé sur le mauvais quartier (contrôle : les 4 bâtiments du kit sont au district 1, Les Bassins, mesuré §DA-4)"),
+        ("« LE THRENNY », « LE PORT » peuvent manquer", "0 occurrence dans le bundle (Mc, Md)", "—"),
+        ("« pincez pour approcher », « ENTRER dans le quartier » peuvent différer", "aide sans clé ; `carte.bloc.entrer` sert « Entrer » (Ml, Mm)", "un mot anglais"),
+        ("le libellé de type de bâtiment de la bande du bas peut différer de « le labo, la planque… »", "deux familles i18n concurrentes (D3), aucune ne dit « la façade »", "une clé brute"),
+        ("la bande de chaleur peut être JOUR/état différent de la référence", "ruling ouvert (jour / compression / pastilles) ; heat par district = 18 appels, l'écran peut n'en montrer qu'une partie", "—"),
+    ]))
+LIENS_SUPPL['carte'] = [('reference-1080x2102.png', JV / 'carte/reference-1080x2102.png'),
+                        ('capture-1080x2400.png', RACINE / SCREENS / 'screen_2_carte_sous_chrome_1080x2400.png'),
+                        ('capture-carte-seule-1080x2400.png', RACINE / SCREENS / 'carte_ville_1080x2400.png')]
+
 # ─────────────────────────────────────────────────────────────────────────────────────────────
 # LIENS : quelles images entrent dans chaque dossier
 LIENS = {
