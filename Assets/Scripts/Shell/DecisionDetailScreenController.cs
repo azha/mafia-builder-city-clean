@@ -44,10 +44,23 @@ namespace MafiaCleanCity.Shell
         private const float K = 1280f / 300f;
         private static float Px(float cssPx) => cssPx * K;
 
-        private static readonly Color Creme = Hex("#eae0c8");
-        private static readonly Color Creme2 = Hex("#b9ad92");
-        private static readonly Color Or = Hex("#d9ab4e");
-        private static readonly Color OrVif = Hex("#f2c96b");
+        // ⑤ / TD-612 — QUATRE DE CES CINQ COULEURS RECOPIAIENT LA VALEUR D'UN TOKEN NOMMÉ.
+        // Valeur juste, chemin faux : l'écran rendait la bonne teinte et aucune garde ne pouvait
+        // le voir — les allowlists comptent les ACCÈS à `DesignTokens.Current.*`, et un littéral
+        // n'en est pas un. Appariement MESURÉ (`Tools/apparier-litteraux-aux-tokens.py`), toutes
+        // à distance 0,00 — et par la VALEUR, jamais par le nom : « Or » n'est pas `accentGold`
+        // (celui-là est à 47 d'ici) mais `hudMoneyUnderlineGold`.
+        // ⛔⛔ FORME `=>`, JAMAIS `= …` : un `static readonly Color = DesignTokens.Current.X`
+        //    s'évalue à l'initialisation du TYPE, en contexte de constructeur, où le
+        //    `Resources.Load` de `DesignTokens.Current` JETTE. Ce dépôt a mesuré 65 champs de
+        //    cette forme verts en run complet et rouges en run scopé à froid.
+        private static Color Creme  => DesignTokens.Current.hudCreme;              // #eae0c8
+        private static Color Creme2 => DesignTokens.Current.hudCremeSecondary;     // #b9ad92
+        private static Color Or     => DesignTokens.Current.hudMoneyUnderlineGold; // #d9ab4e
+        private static Color OrVif  => DesignTokens.Current.hudMoneyGold;          // #f2c96b
+        // La cinquième reste un littéral : son token le plus proche est à 37,8 — c'est une couleur
+        // propre à cet écran, pas une recopie. La convertir demanderait de CRÉER un token, donc un
+        // arbitrage de palette qui appartient à l'atelier. *Substituer ne serait pas ranger.*
         private static readonly Color Rouge = Hex("#93402c");
 
         private static Color Hex(string h)
@@ -284,7 +297,18 @@ namespace MafiaCleanCity.Shell
             GameObject carte = Bloc("CarteDuJour", table.transform, horizontal: false, espace: Px(4f));
             carteRoot = (RectTransform)carte.transform;
             Image fond = carte.AddComponent<Image>();
-            fond.sprite = ProceduralUI.RoundedRectOutline((int)Px(14f), Px(1.5f), Hex("#d9ab4e55"));
+            // ⛔ LA CINQUIÈME RECOPIE VIVAIT ICI, AVEC SON ALPHA — et c'est la forme que le motif
+            //    de la garde ratait : il exigeait le guillemet fermant après SIX chiffres, donc
+            //    toute couleur écrite avec son opacité lui était invisible (13 sites dans l'arbre,
+            //    3 recopies exactes, dont celle-ci). Le motif porte désormais les deux longueurs.
+            // ⚠️ L'OPACITÉ EST CONSERVÉE TELLE QUELLE, et c'est délibéré : ce commit range le
+            //    CHEMIN de la teinte, il ne touche pas à la composition. Savoir si cette
+            //    translucidité doit être convertie pour le mélange linéaire est une question de
+            //    RENDU, mesurable seulement contre la référence de cet écran — la mêler ici ferait
+            //    bouger deux choses à la fois, et plus rien ne départagerait laquelle a agi.
+            Color bordCarte = DesignTokens.Current.hudMoneyUnderlineGold;
+            bordCarte.a = 0x55 / 255f;
+            fond.sprite = ProceduralUI.RoundedRectOutline((int)Px(14f), Px(1.5f), bordCarte);
             fond.type = Image.Type.Sliced;
             VerticalLayoutGroup cv = carte.GetComponent<VerticalLayoutGroup>();
             cv.padding = new RectOffset((int)Px(12f), (int)Px(12f), (int)Px(10f), (int)Px(12f));
