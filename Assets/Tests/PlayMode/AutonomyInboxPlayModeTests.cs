@@ -280,14 +280,57 @@ namespace MafiaCleanCity.Operational.Tests
             while (ctl.BudgetBands.Count == 0 && Time.realtimeSinceStartup < deadline) yield return null;
             Assert.IsTrue(ctl.BudgetBands.Any(kv => kv.Key == "PRODUCTION_OPS" && kv.Value == "depleted"),
                 "seeded PRODUCTION_OPS must read depleted");
-            Assert.That(ctl.RenderedTexts, Does.Contain("[....] Depleted"));
+            // ⛔⛔ CETTE LIGNE ÉPINGLAIT « [....] Depleted » — un libellé ANGLAIS servi par le
+            // catalogue, rouge depuis que le client demande le français (le corpus rend
+            // « [....] Épuisé »). Mesuré le 2026-09-06.
+            // ⇒ CE QUE LE TEST DOIT PROUVER, ET QUI NE DÉPEND D'AUCUNE LANGUE : la bande servie a
+            //   été TRADUITE en libellé — donc (a) le code de domaine ne fuit pas jusqu'au joueur,
+            //   (b) quelque chose a bien été rendu pour cette bande.
+            // ⚠️ ANTI-VACUITÉ DIMENSIONNÉE, et ce n'est pas « la liste n'est pas vide » : on exige
+            //   le GLYPHE de la bande servie, qui n'est pas une chaîne de repli et n'existe que si
+            //   le résolveur a couru sur la valeur du serveur. Sans lui, « aucun code ne fuit »
+            //   serait vrai sur un corpus vide ou sur un écran qui n'a rien rendu de cette bande.
+            Assert.IsNotEmpty(ctl.RenderedTexts, "aucun texte rendu : les gardes suivantes seraient vraies À VIDE.");
+            Assert.IsFalse(ctl.RenderedTexts.Any(x => x == "depleted" || x == "PRODUCTION_OPS"),
+                "le code de domaine est rendu TEL QUEL : le joueur lit un identifiant de serveur.");
+            Assert.IsTrue(ctl.RenderedTexts.Any(x => x.StartsWith("[....]")),
+                "la bande `depleted` est servie mais aucun texte ne porte son glyphe « [....] » : " +
+                "le résolveur n'a pas couru sur la valeur du serveur. (Le glyphe est le seul " +
+                "marqueur de cette bande qui ne dépende pas de la langue.) " +
+                // ⚠️ LE CORPUS DANS LE MESSAGE — leçon de TD-577, payée trois runs : *une
+                //    assertion qui ne rapporte que ce qu'elle attendait fait payer trois runs à
+                //    celui qui la trouve rouge.* J'ai commis exactement ça il y a dix minutes.
+                "Corpus : [" + string.Join(" · ", ctl.RenderedTexts) + "]");
+            // ⚠️ CE QUE CE TEST NE PROUVE PAS ENCORE : que le LIBELLÉ qui suit le glyphe soit dans
+            //    la bonne langue. Il ne le peut pas tant que la grandeur a deux producteurs
+            //    concurrents — voir TD-611. L'assertion sur le libellé se repointera sur le
+            //    producteur UNIQUE une fois celui-ci posé ; d'ici là, viser l'un des deux serait
+            //    vert ou rouge selon lequel a couru, ce qui ne mesure rien.
 
             yield return ctl.Decide("reset_budget");
             Assert.IsNull(ctl.LastDecisionError, ctl.LastDecisionError);
             Assert.IsTrue(ctl.BudgetBands.Any(kv => kv.Key == "PRODUCTION_OPS" && kv.Value == "full"),
                 "reset_budget must restore the band to full");
-            Assert.That(ctl.RenderedTexts, Does.Contain("[####] Full"));
-            Assert.IsFalse(ctl.RenderedTexts.Contains("[....] Depleted"), "stale depleted band must leave the corpus");
+            Assert.IsTrue(ctl.RenderedTexts.Any(x => x.StartsWith("[####]")),
+                "la bande est revenue à `full` et aucun texte ne porte son glyphe « [####] ». " +
+                "Corpus : [" + string.Join(" · ", ctl.RenderedTexts) + "]");
+            // ⛔⛔ ET L'ASSERTION SYMÉTRIQUE — « le glyphe ÉPUISÉ a quitté le corpus » — EST FAUSSE,
+            // mesurée rouge à 07:4x. Ce n'est pas l'écran : `:2795` rend **une ligne par TYPE de
+            // budget** (`foreach entry in budgetBands`), et le test n'en remet qu'UN à plein
+            // (`PRODUCTION_OPS`). Les autres types gardent légitimement leur bande, dont
+            // « [....] » si l'un d'eux est épuisé. *Un corpus PLAT ne dit pas à quelle ligne
+            // appartient un libellé* — l'assertion visait donc une propriété que la structure de
+            // la mesure ne porte pas.
+            // ★ La ligne d'origine avait le même défaut et passait par chance : elle cherchait le
+            //   libellé anglais complet, qui ne pouvait apparaître que pour le type remis à plein
+            //   tant qu'aucun AUTRE type n'était épuisé. *Une assertion verte par coïncidence de
+            //   données est aussi fausse qu'une rouge.*
+            // ⇒ La propriété « la bande périmée s'en va » se mesure sur l'ÉTAT PARSÉ, par type —
+            //   c'est ce que fait déjà l'assertion sur `BudgetBands` ci-dessus, qui est exacte et
+            //   discriminante. Le corpus rendu, lui, ne peut prouver que l'absence de fuite.
+            Assert.IsFalse(ctl.BudgetBands.Any(kv => kv.Key == "PRODUCTION_OPS" && kv.Value == "depleted"),
+                "la bande `depleted` de PRODUCTION_OPS survit à sa remise à plein — mesuré sur " +
+                "l'état PARSÉ, seul endroit où un type de budget est identifiable.");
 
             yield return ctl.Decide("reset_budget"); // immediate same-kind repeat → cooldown
             Assert.IsNotEmpty(ctl.LastDecisionError, "second same-kind decision inside the cooldown must surface a readable 409");

@@ -68,7 +68,7 @@ namespace MafiaCleanCity.Operational
         private void Start()
         {
             EnsureInitialized();
-            StartCoroutine(Amorcer());
+            amorce = StartCoroutine(Amorcer());
         }
 
         /// <summary>Charger ce que l'écran montre, une fois monté — MESURÉ MANQUANT le 2026-09-03.
@@ -88,6 +88,7 @@ namespace MafiaCleanCity.Operational
         private IEnumerator Amorcer()
         {
             if (string.IsNullOrEmpty(token)) yield break;   // monté hors session : rien à charger
+            if (corpsImposeParUnTest) yield break;          // un test tient l'écran
             yield return Charger();
         }
 
@@ -125,8 +126,29 @@ namespace MafiaCleanCity.Operational
         /// <summary>Rend un corps FABRIQUÉ, sans réseau — réservé aux tests (patron ㊲,
         /// `RendrePourTest`). Ne prouve jamais que le back émet ce corps, seulement ce que
         /// l'écran EN FAIT.</summary>
+        /// <summary>⛔ FERME LA COURSE ENTRE `Start()` ET LE RENDU DE TEST. Une suite qui pose un
+        /// VRAI jeton puis appelle `RendrePourTest` laisse `Amorcer()` partir en parallèle :
+        /// l'auto-chargement va chercher les données réelles et ÉCRASE le corps fabriqué, à une
+        /// frame près. *Un test qui perd cette course lit une vérité — celle d'un autre monde que
+        /// le sien*, et son rouge accuse alors le résolveur au lieu de l'ordonnancement.
+        /// ⚠️ Le garde-fou `IsNullOrEmpty(token)` NE COUVRE PAS ce cas : il protège l'écran monté
+        /// hors session, pas celui à qui un test donne une identité PUIS impose un corps.
+        /// ⚠️ Relu APRÈS CHAQUE `yield`, jamais seulement à l'entrée : la coroutine peut être déjà
+        /// partie quand le test pose le drapeau. Mesuré sur ⑨ (patron `2efdf2e`).</summary>
+        private bool corpsImposeParUnTest;
+        private Coroutine amorce;
+
         public void RendrePourTest(GetForensicResponseDto dto)
         {
+            corpsImposeParUnTest = true;
+            // ⛔ ON ARRÊTE L'AUTO-CHARGEMENT, on ne se contente pas de le décourager. Le drapeau
+            // seul ne ferme que le cas facile (le test rend AVANT que la coroutine ne parte) :
+            // si elle est déjà dans son appel réseau, elle rendra son résultat PAR-DESSUS le corps
+            // du test quelques frames plus tard, et `Charger()` applique son état dans plusieurs
+            // branches — y semer des gardes serait fragile et incomplet.
+            // ★ *Fermer une course en demandant poliment à l'autre de renoncer suppose qu'il
+            //   repasse par un point où on peut le lui dire.* `StopCoroutine` ne le suppose pas.
+            if (amorce != null) { StopCoroutine(amorce); amorce = null; }
             EnsureInitialized();
             AppliquerEtat(dto);
         }
@@ -253,8 +275,11 @@ namespace MafiaCleanCity.Operational
             v.childControlWidth = true; v.childControlHeight = true;
             v.childForceExpandWidth = true; v.childForceExpandHeight = false;
 
+            // ⛔ `hudMoneyGold`, PAS `accentGold` — voir la note de `ForensicResolvers.CouleurPour`.
+            //    L'or de cette maquette est `--or-vif` #f2c96b ; `accentGold` vaut #ffd23f, 43/255
+            //    plus bas sur le bleu. J'avais vérifié « est-ce de l'or ? », jamais « LEQUEL ».
             NouveauTexte(go.transform, "Titre", Lib("Ce qui se voit"), Px(19f),
-                         DesignTokens.Current.accentGold, DesignTokens.Current.hudSerifFont)
+                         DesignTokens.Current.hudMoneyGold, DesignTokens.Current.hudSerifFont)
                 .alignment = TextAlignmentOptions.Center;
             NouveauTexte(go.transform, "SousTitre", Lib("TROIS SIGNAUX, TROIS BANDES"), Px(8.5f),
                          DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont)
@@ -332,7 +357,7 @@ namespace MafiaCleanCity.Operational
             pannSur = NouveauTexte(go.transform, "SurTitre", "", Px(7.5f),
                 DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont);
             pannTitre = NouveauTexte(go.transform, "Titre", "", Px(13f),
-                DesignTokens.Current.accentGold, DesignTokens.Current.hudSerifFont);
+                DesignTokens.Current.hudMoneyGold, DesignTokens.Current.hudSerifFont);
             pannTexte = NouveauTexte(go.transform, "Texte", "", Px(9f),
                 DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont);
         }
@@ -481,14 +506,54 @@ namespace MafiaCleanCity.Operational
             }
         }
 
+        /// <summary>La couleur d'un rang de gravité — PRODUCTEUR UNIQUE, et il rend désormais la
+        /// palette que la maquette porte.
+        ///
+        /// ⛔⛔ DEUX DES TROIS RANGS ÉTAIENT FAUX, ET LE TROISIÈME — celui qu'on aurait « corrigé »
+        /// en premier — ÉTAIT LE SEUL JUSTE. Mesuré le 2026-09-06 sur la référence ratifiée
+        /// `Tools/juge-visuel/screen_b7/reference-1080x2102.png`, dominantes sur les aplats des
+        /// trois pastilles (≈3 220 pixels identiques chacun, donc la couleur de remplissage et non
+        /// la frange d'anticrénelage) :
+        ///
+        ///     « discret »    (clear)   rgb(125,179,106)  ← un VERT      · le code rendait le cyan
+        ///     « on regarde » (faint)   rgb(242,201,107)  ← un OR        · le code rendait de l'or ✓
+        ///     « ça se voit » (visible) rgb(255,158,61)   ← accentWarning· le code rendait du ROUGE
+        ///
+        /// ★ Le rang « visible » est le plus grave des trois : la maquette y rend `accentWarning`
+        ///   **à distance 0**, et l'écran peignait `SeverityColor(Severe)`. Un cran de gravité de
+        ///   trop, sur l'écran qui existe pour dire au joueur à quel point il est visible.
+        /// ★ Et `SeverityColor` n'avait rien à faire ici : c'est l'échelle de la CHALEUR d'un
+        ///   bâtiment, pas la gravité d'une piste. **Deux échelles, deux producteurs** — les faire
+        ///   se croiser rendait chaque changement de l'une visible dans l'autre, sans qu'aucune
+        ///   garde ne relie les deux.
+        /// ★★ Ce qui rend le cas instructif : j'ai d'abord classé `Surveille → accentGold` comme un
+        ///   défaut, en lisant le COMMENTAIRE du token (« CTA / stage terminale ») au lieu d'ouvrir
+        ///   la référence. La référence emploie l'or au titre, au CTA **et** à ce rang de gravité :
+        ///   c'est donc le commentaire du token qui est plus étroit que l'usage ratifié.
+        ///   *Un token lu pour sa définition reste déduit sur son emploi.*</summary>
         public static Color CouleurPour(Gravite g)
         {
             switch (g)
             {
-                case Gravite.Calme:     return DesignTokens.Current.hudGaugeArcCold;
-                case Gravite.Surveille: return DesignTokens.Current.accentGold;
-                case Gravite.Criant:    return HeatBucketResolver.SeverityColor(
-                                                   HeatBucketResolver.Severity.Severe);
+                // Le repli précédent était `hudGaugeArcCold`, c'est-à-dire le cyan de la palette :
+                // il ne posait pas une valeur d'attente, il SUBSTITUAIT un token de la palette à un
+                // autre — effaçant une distinction que le dessin faisait exprès. *Un repli pris dans
+                // la même palette ressemble à un choix ; c'est ce qui le rend invisible.*
+                case Gravite.Calme:     return DesignTokens.Current.accentCalm;
+                // ⛔⛔ L'OR DE CETTE MAQUETTE EST `hudMoneyGold`, ET J'AVAIS CONCLU L'INVERSE IL Y A
+                //    QUELQUES HEURES. J'avais écrit ici : « la référence emploie l'or au titre, au
+                //    CTA ET à ce rang de gravité, c'est donc le commentaire du token qui est plus
+                //    étroit que l'usage ratifié ». La première moitié est vraie ; la seconde était
+                //    une DÉDUCTION. Un juge ⊥ a mesuré le cran de la référence **byte-exact contre
+                //    le markup** : (242,201,107) = #f2c96b = `hudMoneyGold`, quand le jeu rendait
+                //    (255,210,64) = `accentGold` #ffd23f — **43/255 d'écart sur le bleu, sept fois
+                //    la tolérance de 6**.
+                //    ★★ J'avais vérifié « est-ce de l'or ? » et jamais « LEQUEL des deux ors ». La
+                //      note que j'ai écrite ce jour-là — *un token lu pour sa définition reste
+                //      déduit sur son emploi* — s'appliquait à moi une ligne plus bas : j'ai lu la
+                //      référence pour son RÔLE (de l'or à ce rang) sans en mesurer la VALEUR.
+                case Gravite.Surveille: return DesignTokens.Current.hudMoneyGold;
+                case Gravite.Criant:    return DesignTokens.Current.accentWarning;
                 case Gravite.Inconnu:   return DesignTokens.Current.onSurfaceMuted;
                 default: throw new System.ArgumentOutOfRangeException(nameof(g), g,
                     "ForensicResolvers.CouleurPour : membre de Gravite non résolu.");

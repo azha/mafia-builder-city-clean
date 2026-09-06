@@ -33,15 +33,24 @@ namespace MafiaCleanCity.Operational
         /// </summary>
         /// <summary>GET /v1/operational/laundering — LA LISTE des nœuds de blanchiment du joueur.
         ///
-        /// ⛔ AJOUTÉE le 2026-09-03, et elle corrige une prémisse. TD-572 énonce qu'« aucune route
-        /// amont ne fournit le `nodeId` », ce qui a valu à ⑪ et ⑫ d'afficher un titre, un
-        /// sous-titre et aucune donnée. MESURÉ : la route EXISTE et rend 200 —
-        ///     `{"nodes":[]}` sur un compte frais.
+        /// ⛔ AJOUTÉE le 2026-09-03, et elle corrige une prémisse. Une entrée de dette était citée
+        /// pour affirmer qu'aucune route amont ne fournit l'identifiant de nœud — ce qui a valu à
+        /// ⑪ et ⑫ d'afficher un titre, un sous-titre et aucune donnée. Deux choses étaient
+        /// fausses : l'affirmation, et le NUMÉRO qui la portait (il désigne le bundle i18n servi
+        /// par le VPS, un sujet sans rapport). MESURÉ : la route EXISTE et rend 200 —
+        ///     tableau VIDE sur un compte frais.
         /// ⇒ Ce n'est donc pas la ROUTE qui manque, c'est le JOUEUR neuf qui n'a aucun nœud. La
         ///   distinction n'est pas cosmétique : « on ne peut pas savoir » et « il n'y a rien
         ///   encore » se dessinent différemment, et seule la seconde est vraie.
-        /// ⚠️ Ce que je n'ai PAS mesuré : ce que rend cette route pour un joueur qui possède une
-        /// boutique. Le tableau est déclaré, sa forme non-vide reste à voir.</summary>
+        /// ✅ CE QUE JE N'AVAIS PAS MESURÉ L'EST DEPUIS — et je l'écris ici plutôt qu'ailleurs,
+        /// parce que c'est ici que la question a été posée. La forme non-vide : sur
+        /// `operational_demo`, cette route rend **QUATRE** nœuds, `PARTIAL` → `MOSTLY_CLEAN` →
+        /// `CLEAN` → `CLEAN` terminal, chacun portant `node`, `stage_index`, `cleanliness_band`,
+        /// `terminal`, `has_cash`. Corps commité :
+        /// `Tools/juge-visuel/screen_c2/corps-reels/GET_operational_laundering.json` (back
+        /// `6ff684db`, 2026-09-04).
+        /// ★ *Une question ouverte écrite à l'endroit exact où elle se pose est la seule qui se
+        ///   referme* — celle-ci a attendu deux jours, et l'écran est resté inachevé pendant.</summary>
         public IEnumerator GetLaunderingNodes(string bearer,
             Action<LaunderingNodesDto> onOk, Action<long, string> onErr)
         {

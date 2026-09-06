@@ -151,6 +151,227 @@ namespace MafiaCleanCity.Operational.Tests
         ///
         /// La garde est STRUCTURELLE : elle ne dépend d'aucune couleur, d'aucune résolution, et
         /// couvre la classe entière plutôt que les instances qu'on a pensé à citer.</summary>
+        /// <summary>MESURE — l'axe de la figure contre l'axe de sa carte (㊲ F3, quatre tours à la
+        /// même valeur : −11,4 px = −3,2 px CSS, sur quatre masques indépendants).
+        ///
+        /// ⛔ Elle imprime la CHAÎNE des rects, du dôme d'épaules jusqu'au corps du cadre, chacun
+        /// avec son centre dans le repère de son parent. Un décalage porté par un seul maillon se
+        /// lit alors sur la ligne de ce maillon, et il n'y a rien à déduire : *l'écart sélectif
+        /// désigne son conteneur*.
+        /// ⇒ Le maillon trouvé : `Forme` pose chaque trait à `vb.x * ech` depuis le bord GAUCHE de
+        /// son parent, donc elle suppose un parent large d'exactement `VbL * ech`. Il en mesurait
+        /// 435,5 pour 409,6 déclarés — le layout l'avait étendu, et les 25,9 de surplus tombaient
+        /// tous à droite. La garde (a) ci-dessous ferme la CLASSE (le buste est le viewBox, centré) ;
+        /// la garde (b) ferme deux INSTANCES, dont le `Cou` qui n'a pas de contour et sert de témoin
+        /// contre l'autre mécanisme (F4).</summary>
+        [UnityTest]
+        public IEnumerator B3M1_LaFigureEstSurLAxeDeSaCarte()
+        {
+            yield return OuvrirJoueurFrais();
+            var ecran = MonterEcran();
+            yield return ecran.Charger(lieutenantId);
+            for (int i = 0; i < 10; i++) yield return null;
+
+            // ⚠️ L'écran ne construit PAS sous son propre GameObject : il monte « ReputationRoot »
+            // sous un Canvas. Ma première version marchait sur `ecran.GetComponentsInChildren` et
+            // rendait UN objet — et l'assertion qui suit l'a dit. Un balayage qui part du mauvais
+            // parent rend zéro, et un zéro se lit comme « rien à signaler ».
+            GameObject racineEcran = RacineEcran();
+            Assert.IsNotNull(racineEcran, "ReputationRoot doit exister");
+            Transform epaules = null;
+            var noms = new System.Text.StringBuilder("[PRT-NOMS]");
+            foreach (Transform t in racineEcran.GetComponentsInChildren<Transform>(true))
+            {
+                noms.Append(' ').Append(t.name);
+                if (epaules == null && t.name.StartsWith("Epaule")) epaules = t;
+            }
+            Debug.Log(noms.ToString());
+            Assert.IsNotNull(epaules, "le dôme d'épaules doit exister — sinon la mesure est vide");
+
+            var lignes = new System.Text.StringBuilder("[PRT-AXE] chaîne des rects (centre x dans le parent)\n");
+            Transform t2 = epaules;
+            while (t2 != null && t2 != racineEcran.transform.parent)
+            {
+                var rt = t2 as RectTransform;
+                if (rt != null)
+                {
+                    float centreDansParent = rt.anchoredPosition.x
+                        + (0.5f - rt.pivot.x) * rt.rect.width;
+                    var parentRt = rt.parent as RectTransform;
+                    float largeurParent = parentRt != null ? parentRt.rect.width : 0f;
+                    // Ancres non nulles ⇒ `anchoredPosition` est relative au point d'ancrage :
+                    // on ramène tout au CENTRE du parent, sinon deux lignes ne se comparent pas.
+                    float decalageAncre = ((rt.anchorMin.x + rt.anchorMax.x) * 0.5f - 0.5f) * largeurParent;
+                    lignes.Append($"  {t2.name,-16} l={rt.rect.width,7:F1} pivotX={rt.pivot.x:F2} " +
+                                  $"ancreX=({rt.anchorMin.x:F2},{rt.anchorMax.x:F2}) " +
+                                  $"centre_vs_centre_parent={centreDansParent + decalageAncre,7:F2} " +
+                                  $"(parent l={largeurParent,7:F1})\n");
+                }
+                t2 = t2.parent;
+            }
+            Debug.Log(lignes.ToString());
+
+            // ⚠️ La chaîne ne dit rien tant qu'elle ne porte qu'UNE forme : le juge a mesuré QUATRE
+            // masques indépendants au même écart, donc le décalage est commun aux formes, pas propre
+            // au dôme. On les balaie toutes, sous le même parent, dans le même repère.
+            Transform buste = epaules.parent;
+            var tableau = new System.Text.StringBuilder($"[PRT-FORMES] sous « {buste.name} » (l={((RectTransform)buste).rect.width:F1} u)\n");
+            foreach (Transform f in buste)
+            {
+                var frt = f as RectTransform;
+                if (frt == null) continue;
+                float centre = frt.anchoredPosition.x + (0.5f - frt.pivot.x) * frt.rect.width
+                    + ((frt.anchorMin.x + frt.anchorMax.x) * 0.5f - 0.5f) * ((RectTransform)buste).rect.width;
+                tableau.Append($"  {f.name,-18} l={frt.rect.width,7:F1} x={frt.anchoredPosition.x,7:F1} " +
+                               $"pivotX={frt.pivot.x:F2} centre_vs_axe={centre,7:F2}\n");
+            }
+            Debug.Log(tableau.ToString());
+
+            // ── LES GARDES ─────────────────────────────────────────────────────────────────────
+            // (a) STRUCTURELLE, et c'est elle qui ferme la CLASSE : le buste fait exactement le
+            //     viewBox et il est centré dans sa zone. Tant que c'est vrai, aucune forme posée à
+            //     `vb.x * ech` depuis son bord gauche ne peut être décentrée — quelle que soit la
+            //     largeur que le layout donne à la zone.
+            var busteRt = (RectTransform)buste;
+            var zoneRt = (RectTransform)buste.parent;
+            float centreBuste = busteRt.anchoredPosition.x + (0.5f - busteRt.pivot.x) * busteRt.rect.width
+                + ((busteRt.anchorMin.x + busteRt.anchorMax.x) * 0.5f - 0.5f) * zoneRt.rect.width;
+            Assert.AreEqual(0f, centreBuste, 0.5f,
+                $"le buste est à {centreBuste:F2} unités de l'axe de sa zone (zone {zoneRt.rect.width:F1}, " +
+                $"buste {busteRt.rect.width:F1}) — toute la figure suit");
+            // ⛔⛔ ET LA LIGNE CI-DESSUS NE SUFFIT PAS — elle était VACUE, mesuré par contrôle positif.
+            // Défaut réarmé (buste étiré sur sa zone) : elle reste VERTE, parce qu'un buste qui EST
+            // sa zone est trivialement centré dedans. Seule la garde de VALEUR (b) a rougi.
+            // *Une garde satisfaite par le monde qu'elle doit interdire certifie le défaut* — et
+            // celle-ci l'était pour la raison la plus banale : les deux termes de sa comparaison
+            // devenaient le même objet.
+            // ⇒ La propriété qui discrimine est la FORME du buste, pas sa position : il doit avoir
+            //   les proportions du viewBox (62 × 78). Étiré sur sa zone il prend celles de la zone.
+            //   Sans échelle dans l'énoncé, donc vraie à toute résolution.
+            float rapport = busteRt.rect.width / busteRt.rect.height;
+            Assert.AreEqual(62f / 78f, rapport, 0.01f,
+                $"le buste a un rapport de {rapport:F3} au lieu du viewBox 62/78 = {62f / 78f:F3} " +
+                $"({busteRt.rect.width:F1} × {busteRt.rect.height:F1}) : il épouse sa zone au lieu " +
+                "de porter le dessin, et tout ce que le layout ajoute à la zone décale la figure");
+
+            // (b) DE VALEUR, sur les DEUX primitives symétriques du viewBox — l'une avec contour,
+            //     l'autre sans. Le `Cou` est le témoin qui a permis au juge d'écarter le contour
+            //     comme cause (F4) : il n'en porte pas, et il était décalé pareil. Une garde qui ne
+            //     regarderait que les formes lisérées confondrait les deux mécanismes.
+            foreach (string nom in new[] { "Cou", "Epaules" })
+            {
+                Transform f = null;
+                foreach (Transform c in buste) if (c.name == nom) { f = c; break; }
+                Assert.IsNotNull(f, $"« {nom} » doit exister — sans lui cette garde est vide");
+                var frt = (RectTransform)f;
+                float centre = frt.anchoredPosition.x + (0.5f - frt.pivot.x) * frt.rect.width
+                    + ((frt.anchorMin.x + frt.anchorMax.x) * 0.5f - 0.5f) * busteRt.rect.width;
+                Assert.AreEqual(0f, centre, 1.0f,
+                    $"« {nom} » est à {centre:F2} unités de l'axe du buste — la figure est hors de " +
+                    "l'axe de sa carte, alors que les textes de la même carte restent centrés");
+            }
+        }
+
+        /// <summary>㊲ F6 — l'INTERLIGNE des blocs multi-lignes, mesuré sur le texte rendu.
+        ///
+        /// ⛔ Un juge ⊥ a mesuré le paragraphe du panneau à un pas de ligne de **27,5 px contre
+        /// 33,0** en référence (−17 %), à hauteur de glyphe IDENTIQUE et à largeur de ligne à ≤ 1 %.
+        /// Cause : `NouveauTexte` ne posait AUCUN `lineSpacing`, donc tous les blocs de l'écran
+        /// héritaient de l'interligne naturel de la fonte (~1,157 em) là où la maquette en déclare
+        /// un par bloc (`.pann small{font:6.6px/1.4}`).
+        /// ⇒ La garde vise le RAPPORT pas-de-ligne ÷ corps, sans échelle et sans px : il vaut
+        ///   l'interligne CSS, à toute résolution et quelle que soit la conversion px CSS → unités.
+        /// ⚠️ Elle exige d'abord DEUX lignes : sur un texte d'une seule ligne, TMP ne rend aucun pas
+        ///   et la garde serait verte pour une raison sans rapport — le monde le plus dégénéré qui
+        ///   la satisferait.</summary>
+        [UnityTest]
+        public IEnumerator B3M2_LInterligneDuParagraphe_SuitLaMaquette()
+        {
+            yield return OuvrirJoueurFrais();
+            var ecran = MonterEcran();
+            yield return ecran.Charger(lieutenantId);
+            for (int i = 0; i < 10; i++) yield return null;
+
+            GameObject racineEcran = RacineEcran();
+            Assert.IsNotNull(racineEcran, "ReputationRoot doit exister");
+            TMPro.TextMeshProUGUI para = null;
+            foreach (var t in racineEcran.GetComponentsInChildren<TMPro.TextMeshProUGUI>(true))
+                if (t.name == "Texte" || t.name == "Vide") { para = t; break; }
+            Assert.IsNotNull(para, "le paragraphe du panneau doit exister");
+
+            // ⛔ LE SCÉNARIO EST DIMENSIONNÉ ICI, ET C'EST DÉLIBÉRÉ. Première version : la garde a
+            // rougi sur son propre plancher anti-vacuité — « le paragraphe ne rend qu'une ligne »,
+            // parce que sur un compte FRAIS le texte servi tient sur une ligne. *Une garde
+            // anti-vacuité ne prouve pas que le scénario est dimensionné* : ce sont deux propriétés
+            // distinctes, et la première ne donne jamais la seconde.
+            // ⇒ La propriété mesurée est un fait de RENDU (le pas de ligne pour un corps donné), pas
+            //   un fait de donnée. On lui fournit donc de quoi faire deux lignes, au lieu d'attendre
+            //   qu'un compte veuille bien en produire — ce qui ferait dépendre le vert de l'état du
+            //   monde, exactement ce que la garde ne mesure pas.
+            // (le texte est posé plus bas, APRÈS la mise en page — voir la note qui suit)
+            // ⚠️ Et il faut que la MISE EN PAGE ait eu lieu avant de mesurer : sans elle le rect du
+            // paragraphe n'a pas encore sa largeur, donc TMP pose tout sur une ligne quel que soit
+            // le texte — la garde a rougi une seconde fois là-dessus, sur un texte de 140 caractères.
+            Canvas.ForceUpdateCanvases();
+            LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform)racineEcran.transform);
+            yield return null;
+            // ⚠️ ET LE TEXTE SE POSE ICI, APRÈS la frame — pas avant. Posé avant, il était réécrit
+            // par le rendu de l'écran pendant la frame d'attente, et la garde rougissait sur son
+            // plancher anti-vacuité avec MON texte de 140 caractères cité dans le message : le
+            // message disait la vérité, je lisais mal ce qu'il désignait.
+            para.text = "Un paragraphe assez long pour tenir sur au moins deux lignes dans la "
+                      + "largeur du panneau, afin qu'un pas de ligne existe et soit mesurable.";
+            para.ForceMeshUpdate();
+            var info = para.textInfo;
+            Debug.Log($"[B3-INTERLIGNE-DIAG] rect={((RectTransform)para.transform).rect.width:F1}" +
+                      $"x{((RectTransform)para.transform).rect.height:F1} " +
+                      $"wrap={para.textWrappingMode} lignes={info.lineCount}");
+            // ⛔⛔ TROIS GRANDEURS RÉFUTÉES AVANT CELLE-CI, chacune par sa propre mesure :
+            //  (a) écart de LIGNES DE BASE sur deux lignes — la garde a rougi sur son plancher
+            //      anti-vacuité : le texte que je posais était réécrit par le rendu de l'écran
+            //      pendant la frame d'attente, puis la mise en page n'avait pas eu lieu, puis, les
+            //      deux corrigés, un paragraphe de 140 caractères restait sur UNE ligne dans un
+            //      rect de 1 084 unités. *Une garde anti-vacuité ne dit pas que le scénario est
+            //      dimensionné* — ce sont deux propriétés, et la première ne donne pas la seconde.
+            //  (b) `lineInfo[0].lineHeight` — mesuré : **32,59 u pour un corps de 28, rapport
+            //      1,164**, alors que `lineSpacing` valait bien 23,6. TMP n'ajoute l'interligne
+            //      qu'ENTRE deux lignes : cette grandeur est AVEUGLE au réglage qu'elle devait
+            //      vérifier. Une garde verte dessus aurait certifié le défaut.
+            //  (c) forcer le repli par la largeur — c'est faire dépendre la mesure d'une mise en
+            //      page que le test ne contrôle pas.
+            // ⇒ La grandeur juste ne demande ni scénario ni mise en page : la hauteur préférée d'un
+            //   texte de DEUX lignes moins celle d'UNE, le retour à la ligne étant EXPLICITE. La
+            //   différence EST le pas de ligne, et elle est composée par la même fonte, au même
+            //   corps, avec le même `lineSpacing` que le rendu.
+            Assert.Greater(para.fontSize, 0f, "corps nul : rien à mesurer");
+            float hUne = para.GetPreferredValues("A", 0f, 0f).y;
+            float hDeux = para.GetPreferredValues("A\nB", 0f, 0f).y;
+            float pas = hDeux - hUne;
+            float rapport = pas / para.fontSize;
+            Debug.Log($"[B3-INTERLIGNE] « {para.name} » corps={para.fontSize:F1} u · " +
+                      $"h(1 ligne)={hUne:F2} h(2 lignes)={hDeux:F2} · pas={pas:F2} u · " +
+                      $"rapport={rapport:F3} (maquette .pann small = 1,400 ; " +
+                      $"défaut de la fonte ≈ 1,157) · lineSpacing={para.lineSpacing:F1}");
+            // Contrôle positif du DISCRIMINANT lui-même : à `lineSpacing` remis à zéro, le rapport
+            // doit RETOMBER sur l'interligne naturel de la fonte. Sans lui, une grandeur aveugle au
+            // réglage (comme (b) ci-dessus) passerait pour une garde.
+            float memoire = para.lineSpacing;
+            para.lineSpacing = 0f;
+            float rapportSansReglage =
+                (para.GetPreferredValues("A\nB", 0f, 0f).y - para.GetPreferredValues("A", 0f, 0f).y)
+                / para.fontSize;
+            para.lineSpacing = memoire;
+            Debug.Log($"[B3-INTERLIGNE] contrôle : lineSpacing=0 ⇒ rapport={rapportSansReglage:F3}");
+            Assert.Less(rapportSansReglage, rapport - 0.1f,
+                $"le discriminant ne voit pas le réglage : {rapportSansReglage:F3} sans interligne " +
+                $"contre {rapport:F3} avec — il rendrait le même nombre dans les deux mondes");
+
+            Assert.AreEqual(1.40f, rapport, 0.05f,
+                $"le pas de ligne vaut {rapport:F3} cadratin au lieu de 1,400 : le paragraphe est " +
+                "rendu plus serré que la maquette, et ce qu'il perd en hauteur se retrouve en vide " +
+                "au bas du panneau (F1)");
+        }
+
         [UnityTest]
         public IEnumerator B3S1_ToutGraphic_PorteSonCanvasRenderer()
         {
@@ -640,7 +861,34 @@ namespace MafiaCleanCity.Operational.Tests
         [UnityTest, Category("Capture")]
         public IEnumerator B3C1_CapturerPourLeJugeVisuel_DeuxResolutions()
         {
-            yield return OuvrirJoueurFrais();
+            // ⛔⛔ LE COMPTE SERVI, PAS UN COMPTE FRAIS — et la nuance porte sur ce que le juge voit.
+            // `OuvrirJoueurFrais()` ouvre un compte neuf : il a bien ses deux lieutenants du kit
+            // de départ, donc l'écran n'est pas VIDE — mais il n'a AUCUN historique de réputation,
+            // donc le juge voyait éternellement l'état « pas encore jugeable ».
+            // ★ *Un monde pauvre ne rend pas une capture fausse, il la rend NON REPRÉSENTATIVE* —
+            //   plus insidieux qu'une capture vide, parce qu'elle a l'air complète.
+            //   Les autres tests de cette suite GARDENT leur compte frais : ils vérifient des
+            //   ÉTATS, et l'état neuf en est un. Seule la capture de juge a besoin d'un monde
+            //   servi, parce qu'elle est lue comme « voilà à quoi ressemble cet écran ».
+            var authDemo = new AuthClient { BaseUrl = BaseUrl };
+            string errDemo = null;
+            token = null;
+            // ⛔⛔ LE COMPTE PHOTOGRAPHIÉ VIENT DE LA CAMPAGNE, PLUS D'UN LITTÉRAL. Cette suite
+            //    SÈME un compte et en PHOTOGRAPHIE un autre — ce qui n'était pas distinguable tant
+            //    qu'un seul nom (`MAFIA_DEMO_IDENTIFIER`) désignait les deux (TD-642/647). Depuis
+            //    que le seeder a sa propre variable, le littéral figeait la capture sur le compte
+            //    de SEMIS : mesuré le 2026-09-06, `operational_demo` porte **0 lieutenant** quand
+            //    le compte de capture en porte 3 — la précondition échouait donc à raison, sur le
+            //    mauvais compte. *Une capture doit vérifier le compte qu'elle PHOTOGRAPHIE.*
+            //    La paire est EXIGÉE, pas repliée : sans elle la planche montrerait un autre monde
+            //    sans que rien dans l'image ne le dise (garde partagée, `CaptureSousShell`).
+            var (idCapture, mdpCapture) = MafiaCleanCity.Shell.Tests.CaptureSousShell.IdentiteDeCaptureOuEchoue("screen_b3");
+            yield return authDemo.SignIn(idCapture, mdpCapture,
+                                         t => token = t, e => errDemo = e);
+            Assert.IsNull(errDemo, $"connexion au compte de démo échouée : {errDemo}");
+            yield return LirePremierLieutenant();
+            Assert.IsNotNull(lieutenantId,
+                "aucun lieutenant sur le compte de démo — la capture n'aurait rien à montrer");
             var ecran = MonterEcran();
             yield return ecran.Charger(lieutenantId);
 
@@ -782,6 +1030,8 @@ namespace MafiaCleanCity.Operational.Tests
             tex.Apply();
             RenderTexture.active = prev;
             System.IO.File.WriteAllBytes(chemin, tex.EncodeToPNG());
+            // Le plancher d'encre — 4 planches du dépôt étaient vides avec des tests verts.
+            MafiaCleanCity.Shell.Tests.CaptureSousShell.PlancherDEncre(tex, chemin);
 
             // ⛔⛔ CETTE GARDE A ÉTÉ REFAITE, ET L'ANCIENNE ÉTAIT DÉCORATIVE.
             // Elle comptait les pixels dont la somme RGB dépasse 0,15 et exigeait 2,5 % de la
@@ -806,10 +1056,31 @@ namespace MafiaCleanCity.Operational.Tests
             foreach (var kv in histo) if (kv.Value > dominant) dominant = kv.Value;
             int horsFond = pixels.Length - dominant;
 
-            Assert.Greater(horsFond, pixels.Length / 100,
-                $"capture {largeur}x{hauteur} quasi UNIFORME : {horsFond} px seulement diffèrent " +
-                $"de la couleur dominante (sur {pixels.Length}). L'écran n'a pas été rendu — et " +
-                "un fond nu ne compte pas comme du contenu.");
+            // ⛔ TD-554 : ici le plancher n'était PAS celui des cinq autres copies — c'était
+            // `horsFond > pixels.Length / 100`, soit 1 % des pixels, la variante la PLUS serrée
+            // des trois qui circulaient (`> 0`, `> 2f`, `> Length/100`). Et elle tombe quand même :
+            // l'anticrénelage d'un seul titre sur 1920x1080 dépasse 20 000 px. *Que la variante la
+            // plus stricte échoue aussi est la preuve que le défaut n'est pas dans le SEUIL mais
+            // dans la GRANDEUR* — d'où la classe : « toute garde de capture assise sur une
+            // PROPORTION de pixels hors fond », et non « ces trois seuils-là ». Un quatrième
+            // (`> Length/50`) serait de la même classe sans ressembler à aucun des trois.
+            // Les cinq autres copies venaient, elles, du gabarit `Tools/nouvel-ecran.py` et de son
+            // excuse « plancher volontairement bas, à durcir une fois BuildLayout() rempli » :
+            // aucun écran n'est jamais revenu le durcir. *Une dette écrite dans un gabarit n'est
+            // pas une dette, c'est une politique* — le gabarit est donc corrigé à la source.
+            // La PROPORTION de pixels hors dominante est de toute façon la mauvaise grandeur —
+            // l'anticrénelage d'un titre en produit autant qu'une mise en page. Le NOMBRE DE
+            // TEINTES tranche. Seuils repris de `CaptureSousShell`.
+            // ⛔ AVERTISSEMENT, PAS ASSERTION (2026-09-04) : cet écran est capturé SEUL, sur un
+            // compte souvent frais. Son état vide rend légitimement 8 à 9 teintes, et asserter
+            // ici ferait rougir un écran CORRECT — mesuré sur ㉜ et ㉝, à qui je l'ai failli.
+            // *Une garde chromatique ne distingue pas « cassé » de « correctement vide ».*
+            if (histo.Count <= 12)
+                Debug.LogWarning($"[CAPTURE] {largeur}x{hauteur} — {histo.Count} teintes : un FOND " +
+                    "avec un titre. Vérifier QUEL COMPTE la suite ouvre avant de conclure.");
+            Assert.IsTrue(largeur >= 200 && hauteur >= 200,
+                $"capture {largeur}x{hauteur} : une dimension sous 200 px — un RectTransform resté " +
+                "à sa taille par défaut (100x100) ne leve AUCUNE erreur console et rend une image plausible");
             // ⛔⛔ LE RECT DU LOCATAIRE — la garde qui manquait, et la seule qui distingue « l'écran
             //    est là » de « quelque chose a rendu ». Mesuré par une session voisine sur un AUTRE
             //    écran : la capture montrait la carte, l'autonomie, les exceptions et le dock

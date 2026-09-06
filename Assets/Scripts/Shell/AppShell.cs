@@ -107,6 +107,25 @@ namespace MafiaCleanCity.Shell
 
         // ---- test hooks --------------------------------------------------
         public Tab CurrentTab { get; private set; } = (Tab)(-1); // "no tab activated yet" — a named state, not a magic default
+
+        /// <summary>L'onglet que le DOCK signale — distinct de `CurrentTab`, et c'est le correctif.
+        ///
+        /// ⛔ MESURÉ le 2026-09-06 : sous l'intérieur de district, `CurrentTab` vaut la sentinelle
+        /// `(Tab)(-1)` et **0 indicateur sur 4 est allumé** ; sous un autre écran, 1 sur 4 l'est.
+        /// Un juge ⊥ l'avait vu par l'autre bout — « 0 pixel doré dans toute la bande du dock » —
+        /// et les planches le confirment : ③ en porte 172, ⑥ 95, ① **zéro**. Les quatre objets
+        /// EXISTENT ; c'est l'ÉTAT qui manque. *Avant de corriger un objet absent, vérifier qu'il
+        /// est absent* : ici il ne l'était pas.
+        /// ⇒ Cause : `EnterDistrict` ne touche pas `CurrentTab`, et le fichier le dit — mais on ne
+        ///   peut PAS le lui faire toucher : la sentinelle `(Tab)(-1)` est lue par la garde
+        ///   d'acquisition de session (trois sites), qui distingue « aucun onglet activé » de
+        ///   « onglet activé ». Lui donner une valeur ici changerait un dispositif qui n'a rien à
+        ///   voir avec le dock. *Une garde utile sur un domaine devient un défaut dès qu'on
+        ///   l'applique à un autre* — on ne réutilise donc pas sa variable.
+        /// ⇒ Deux questions, deux champs : `CurrentTab` reste « quel onglet a été activé », et
+        ///   celui-ci répond « quel onglet le dock met en évidence ». Entrer dans un district
+        ///   signale l'Empire, parce que le district S'ATTEINT depuis l'Empire.</summary>
+        private Tab ongletSignale = (Tab)(-1);
         public GameObject MountedTenantGameObject { get; private set; }
         public System.Type MountedTenantType { get; private set; }
         /// <summary>True only while the 5th tab (More) is current — the EMPTY destination is
@@ -206,6 +225,7 @@ namespace MafiaCleanCity.Shell
             EnsureInitialized();
             UnmountCurrentTenant();
             CurrentTab = tab;
+            ongletSignale = tab;
             // ⚠️ PLUS AUCUNE destination vide : `Tab.More` monte ㊲ (La réputation) depuis ce
             // commit. Le drapeau est CONSERVÉ plutôt que supprimé — il est la façon dont l'écran
             // vide s'affirme PAR VALEUR et non par l'absence d'un composant monté, et un futur
@@ -290,6 +310,18 @@ namespace MafiaCleanCity.Shell
             }
 
             UnmountCurrentTenant();
+
+            // ⛔ LE DOCK DOIT DIRE OÙ L'ON EST, et un district s'atteint depuis l'Empire. Sans cette
+            // ligne, entrer dans un district par ce chemin laisse le dock MUET : `CurrentTab` garde
+            // sa sentinelle, aucun des quatre indicateurs ne s'allume, et le joueur perd le seul
+            // repère qui lui dit dans quelle branche il se trouve. Mesuré : 0 indicateur allumé sur
+            // 4 ici contre 1 sur 4 partout ailleurs — et un juge ⊥ l'avait vu par les pixels,
+            // « 0 px doré dans toute la bande du dock ».
+            // ⚠️ On ne touche PAS `CurrentTab` : sa sentinelle est lue par la garde d'acquisition de
+            //   session à trois endroits. C'est `ongletSignale` qui bouge — voir sa déclaration
+            //   pour pourquoi ce sont deux questions et non une.
+            ongletSignale = Tab.Empire;
+            RefreshTabButtonVisuals();
 
             // FUSIONNÉ (item 0.4, charpente-item0-4-design.md §1.6/§2.2) — n'est plus une copie
             // verbatim du corps de `MountTenant<T>` : les DEUX appellent désormais
@@ -853,10 +885,49 @@ namespace MafiaCleanCity.Shell
         /// <summary>Monte le menu « Plus » : une entrée par destination, chacune montant son écran.
         /// Le retour au menu passe par le geste standard (`ActivateTab(Tab.More)`), donc aucun
         /// mécanisme de navigation neuf — le menu se reconstruit comme n'importe quel onglet.</summary>
+        /// <summary>⛔⛔ DEUX DÉFAUTS ONT VÉCU ICI, ET ILS PRODUISAIENT LA MÊME IMAGE — un juge ⊥ à
+        /// contexte vierge les a rapportés comme deux BLOQUANT distincts (2026-09-06), et aucun des
+        /// deux ne se soignait en corrigeant l'autre.
+        ///
+        /// (1) L'INSET ÉTAIT LU, ET SA VALEUR ÉTAIT PÉRIMÉE. La ligne `offsetMax = -TopInsetPx`
+        ///     existait déjà, et c'est exactement ce qui a fait passer le défaut : un relecteur qui
+        ///     l'ouvre la trouve juste et va chercher ailleurs. *La ligne existe ; personne n'a
+        ///     demandé si elle pouvait être VRAIE.* `Tab.More` est la SEULE branche d'`ActivateTab`
+        ///     qui ne construit pas un locataire — donc la seule qui ne passe jamais par
+        ///     `ConstruireLocataire`, donc jamais par `PublierInsetsDuChrome()` ni par le
+        ///     `Canvas.ForceUpdateCanvases()` qui rend les hauteurs valides avant la mesure. Le menu
+        ///     lisait donc l'inset publié par un montage PRÉCÉDENT — ou **0** si « Plus » est la
+        ///     première destination, ce que `ShellChrome` documente comme le repli légitime du
+        ///     hors-shell. *Un repli correct dans son contexte, appliqué dans un contexte où il ne
+        ///     l'est pas : la valeur est plausible, et c'est pour ça qu'elle passe.*
+        ///     ⇒ On publie AVANT de poser les offsets. Une ligne, et le menu revient sur le même
+        ///       contrat que les quatre autres branches.
+        ///
+        /// (2) LA LISTE N'AVAIT AUCUNE FENÊTRE, et elle sortait par le bas SOUS le dock opaque.
+        ///     Mesuré par le juge : rect libre 2 039 px pour un pas de 122,6 ⇒ 16,6 rangées, et le
+        ///     menu en pose DIX-NEUF — la 19ᵉ à 45 % de sa hauteur, invisible et injoignable. Ce
+        ///     défaut-ci **survit au correctif (1)** : dix-neuf bandes ne rentrent pas, quel que
+        ///     soit l'inset. ⇒ REUSE du patron de ㉝ (`DemolitionScreenController.
+        ///     ConstruireZoneCentrale`), qui a payé exactement cette classe : `RectMask2D` coupe ce
+        ///     qui dépasse, `ScrollRect` rend joignable ce qui est coupé (sans lui, couper rend des
+        ///     destinations INATTEIGNABLES — le contraire du but de ce menu), `ContentSizeFitter`
+        ///     donne au défilement une course à parcourir.
+        ///     ★ Et la docstring de ㉝ porte la leçon qui vaut ici mot pour mot : *« la maquette ne
+        ///       le montre pas parce qu'elle n'a jamais eu que quatre rangées ; le monde réel en a
+        ///       dix-sept. Une maquette dessine un CAS, pas une BORNE. »* Ce menu en a dix-neuf.
+        ///
+        /// ⚠️ LES DEUX SE VÉRIFIENT SÉPARÉMENT, et c'est délibéré : corriger (1) « remonte » la
+        /// liste et donne l'illusion que le débordement est réglé. Le haut de la première bande se
+        /// mesure contre le bandeau ; le nombre de rangées entièrement visibles se compte.</summary>
         private void MonterMenuPlus()
         {
             UnmountCurrentTenant();
             MenuPlusEntrees = 0;
+
+            // (1) — AVANT tout calcul de géométrie. Voir la docstring : sans cet appel, la ligne
+            // `-TopInsetPx` ci-dessous lit ce qu'un autre montage a laissé, ou zéro.
+            PublierInsetsDuChrome();
+
             GameObject menu = new GameObject("MenuPlus", typeof(RectTransform));
             menu.transform.SetParent(ContentSlot, false);
             RectTransform rt = (RectTransform)menu.transform;
@@ -865,16 +936,42 @@ namespace MafiaCleanCity.Shell
             rt.anchorMin = new Vector2(0f, 0f); rt.anchorMax = new Vector2(1f, 1f);
             rt.offsetMin = new Vector2(0f, ShellChrome.BottomInsetPx);
             rt.offsetMax = new Vector2(0f, -ShellChrome.TopInsetPx);
-            VerticalLayoutGroup pile = menu.AddComponent<VerticalLayoutGroup>();
+
+            // (2) — `menu` devient la FENÊTRE (elle coupe et fait défiler) ; la pile d'entrées
+            // descend d'un cran dans `MenuPlus_Contenu`, qui se dimensionne sur ses enfants.
+            menu.AddComponent<RectMask2D>();
+            ScrollRect defilement = menu.AddComponent<ScrollRect>();
+            defilement.horizontal = false;
+            defilement.vertical = true;
+            defilement.movementType = ScrollRect.MovementType.Clamped;
+            defilement.scrollSensitivity = 40f;
+
+            GameObject contenu = new GameObject("MenuPlus_Contenu", typeof(RectTransform));
+            contenu.transform.SetParent(menu.transform, false);
+            RectTransform rtc = (RectTransform)contenu.transform;
+            // Ancré en HAUT sur toute la largeur : la course de défilement se déploie vers le bas,
+            // et la première entrée reste collée sous le bandeau quelle que soit la hauteur totale.
+            rtc.anchorMin = new Vector2(0f, 1f);
+            rtc.anchorMax = new Vector2(1f, 1f);
+            rtc.pivot = new Vector2(0.5f, 1f);
+            rtc.offsetMin = Vector2.zero;
+            rtc.offsetMax = Vector2.zero;
+            defilement.viewport = rt;
+            defilement.content = rtc;
+
+            VerticalLayoutGroup pile = contenu.AddComponent<VerticalLayoutGroup>();
             pile.childAlignment = TextAnchor.UpperCenter;
             pile.spacing = Px(TabDockGapCss);
             pile.childControlWidth = true; pile.childControlHeight = true;
             pile.childForceExpandWidth = true; pile.childForceExpandHeight = false;
+            // Sans lui, la fenêtre couperait et il n'y aurait rien à faire défiler.
+            ContentSizeFitter ajuste = contenu.AddComponent<ContentSizeFitter>();
+            ajuste.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
             foreach ((string libelle, System.Action monter) in DestinationsPlus())
             {
                 GameObject entree = new GameObject($"MenuPlus_{libelle}", typeof(RectTransform));
-                entree.transform.SetParent(menu.transform, false);
+                entree.transform.SetParent(contenu.transform, false);
                 Image fond = entree.AddComponent<Image>();
                 fond.color = DesignTokens.Current.surfaceRow;
                 AddLayoutElementLocal(entree, Px(TabDockLabelHeightCss) * 3f);
@@ -906,6 +1003,23 @@ namespace MafiaCleanCity.Shell
 
         private void MountTenant<T>() where T : MonoBehaviour, IShellTenant
         {
+            // ⛔⛔⛔ MESURÉ SUR CAPTURE LE 2026-09-06 — LES VINGT-ET-UNE DESTINATIONS DU MENU
+            //    « PLUS » SE DESSINAIENT PAR-DESSUS LE MENU. La planche de ⑯ montre l'écran rendu
+            //    et, DERRIÈRE lui, la liste entière : LA RÉPUTATION, LA REVUE DU JOUR, LA VENTE…
+            //    Cause : `ActivateTab` démonte AVANT d'appeler cette méthode, mais une entrée du
+            //    menu l'appelle DIRECTEMENT (`() => MountTenant<X>()`), et rien ne démontait alors.
+            //    ⇒ Le démontage vivait chez UN appelant sur deux. Le remettre ici le rend vrai pour
+            //      TOUS — y compris le vingt-deuxième écran que personne n'a encore écrit.
+            //    ⚠️ Et aucune garde ne pouvait le voir : le parcours du menu rouvre `Tab.More` entre
+            //      deux clics (donc il passe par `ActivateTab`, qui démonte), `MountedTenantType`
+            //      était correctement renseigné, l'ordre de fratrie était bon — le locataire EST le
+            //      dernier enfant, il se dessine simplement sur un fond qui n'aurait pas dû exister.
+            //      *Toutes les grandeurs mesurées étaient justes ; celle qui manquait est le NOMBRE
+            //      d'enfants de `ContentSlot`.* C'est une capture regardée qui l'a trouvée, pas un
+            //      test — d'où la falsifiable structurelle posée avec ce correctif.
+            //    Appelé deux fois sur le chemin des onglets (`ActivateTab` puis ici) : le second
+            //    passage est un no-op — `ContentSlot` est déjà vide et la référence déjà nulle.
+            UnmountCurrentTenant();
             T tenant = ConstruireLocataire<T>(out GameObject host);
             MountedTenantGameObject = host;
             MountedTenantType = typeof(T);
@@ -1458,8 +1572,21 @@ namespace MafiaCleanCity.Shell
             Color sombre = DesignTokens.Current.hudBarGlassBottom;
             float residuDock;
             sombre.a = ProceduralUI.AlphaVoileSurFondQuelconque(sombre, sombre.a, out residuDock);
+            // ⛔⛔ CE N'EST PAS L'OPACITÉ QUI MANQUAIT — mesuré, et le contraire a été essayé.
+            // L'hypothèse évidente devant des libellés à 4,29:1 est « le voile est trop faible ».
+            // Elle est FAUSSE, et le dispositif qui la réfute a été écrit puis retiré : l'opacité
+            // minimale garantissant 4,5:1 sur le fond de référence le plus clair vaut **0,9174**,
+            // et celle déjà posée ci-dessus vaut **0,9583**. Elle était donc déjà suffisante, et
+            // prendre le maximum des deux ne changeait pas un pixel. *Un correctif qui ne supprime
+            // rien n'a rien corrigé.*
+            // ⇒ LE DÉFAUT ÉTAIT LA FORME DU DÉGRADÉ, pas sa valeur terminale. Le canon demande
+            //   `linear-gradient(180deg, transparent, #070b12d8 40%)` — un PALIER dès 40 % — et le
+            //   commentaire ci-dessus le décrivait mot pour mot ; `VerticalGradient` interpolait
+            //   d'un bout à l'autre, sans palier. Les libellés vivent au tiers supérieur du dock,
+            //   là où une rampe ne vaut qu'un tiers de son opacité finale. Aucune valeur d'alpha ne
+            //   pouvait le corriger : monter l'opacité du bas n'assombrit pas le haut d'une rampe.
             Color clair = sombre; clair.a = 0f;
-            fonduImg.sprite = ProceduralUI.VerticalGradient(64, clair, sombre);
+            fonduImg.sprite = ProceduralUI.VerticalGradientAvecPalier(64, clair, sombre, 0.40f);
             fonduImg.type = Image.Type.Simple;
             fonduImg.color = Color.white;
             fonduImg.raycastTarget = false;
@@ -1646,7 +1773,23 @@ namespace MafiaCleanCity.Shell
             rondImg.color = Color.white;
             rondImg.raycastTarget = false;
 
-            Color jonc = Color.white; jonc.a = 0.133f;                 // #ffffff22
+            // ⛔ CINQUIÈME SITE DE LA MÊME CLASSE (voir `TopBarController.TeinteSurCadran`) : une
+            // opacité CSS recopiée telle quelle rend PLUS CLAIR dans un projet en linéaire que dans
+            // le navigateur, et l'écart croît avec le contraste. Ici le fond est CONNU — le jonc
+            // longe le BORD du rond, et `RadialDisc` y vaut sa couleur de bord — donc la solution
+            // est exacte : on garde l'opacité de la CSS et on déplace la couleur.
+            // ⚠️ Si elle sort du gamut, on garde le blanc et le log le dit : un dispositif inerte
+            // ressemble trait pour trait à un dispositif appliqué.
+            bool joncAtteignable;
+            Color jonc = MafiaCleanCity.Shell.ProceduralUI.CouleurPourMelangeLineaire(
+                Color.white, DesignTokens.Current.dockRondOuter, 0.133f, out joncAtteignable);
+            if (!joncAtteignable)
+            {
+                Debug.LogWarning("[DOCK-sRGB] le jonc du rond : aucune couleur ne reproduit le " +
+                                 "mélange sRGB sur ce fond — blanc conservé, l'écart demeure.");
+                jonc = Color.white;
+            }
+            jonc.a = 0.133f;                                           // #ffffff22
             GameObject joncGo = new GameObject("Jonc", typeof(RectTransform));
             joncGo.transform.SetParent(rondGo.transform, false);
             Stretch((RectTransform)joncGo.transform, Vector2.zero, Vector2.zero);
@@ -1795,7 +1938,7 @@ namespace MafiaCleanCity.Shell
             // l'indicateur d'actif sur la mauvaise bulle. Une seule liste, trois lecteurs.
             for (int i = 0; i < tabButtons.Count && i < DockRatifie.Length; i++)
             {
-                bool active = DockRatifie[i].onglet == CurrentTab;
+                bool active = DockRatifie[i].onglet == ongletSignale;
                 // HUD v3.1 cohérence (2026-08-21, demandé par le contrôleur — voir BuildTabBar) :
                 // le fond du bouton reste `surfaceRow` dans LES DEUX états (jamais d'aplat coloré
                 // pour signaler l'actif — doctrine « l'or jamais en aplat », W3.U2/C5). L'actif se

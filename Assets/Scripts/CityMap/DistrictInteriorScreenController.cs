@@ -650,7 +650,75 @@ namespace MafiaCleanCity.CityMap
             // toujours DERNIER sibling de `root`, donc rendu AU-DESSUS de DistrictScene quel que soit
             // ce que la navigation lui fait faire visuellement. root.childCount reste 2 (pp-F5) — cet
             // appel réordonne, ne recompte pas.
+            // ⛔⛔ LE TITRE N'AVAIT AUCUN FOND, et son contour ne pouvait pas en tenir lieu.
+            // Mesuré le 2026-09-06 : le titre rend **1,70:1** sur son fond médian (1,59:1 au pire
+            // cas) là où le plancher est 4,5:1 — un juge ⊥ avait mesuré 1,58:1, reproduit par un
+            // instrument indépendant. Le contour EXISTE (l'anneau collé au glyphe rend ΔL = −6,9
+            // vs l'art alentour, donc `ApplyTitleShadow` agit) et il est d'un ordre de grandeur
+            // trop faible. Le durcir est le mauvais geste, déjà mesuré ailleurs dans ce dépôt : un
+            // contour tracé à l'intérieur du bord ronge la lettre sans jamais devenir sombre.
+            //
+            // ⚠️⚠️ DEUX VERSIONS FAUSSES AVANT CELLE-CI, et toutes deux « complètes » à la lecture :
+            //   (1) le voile posé en PREMIER frère — enterré sous l'art, qui est peint après ;
+            //   (2) le voile dimensionné depuis les MÊMES constantes que le titre — il couvrait
+            //       y 316..480 pour un titre à y 322..338, donc il était opaque AU-DESSUS du titre
+            //       et transparent DESSUS.
+            //   Les deux fois, le contraste est resté **1,70:1 au centième près**. *Le seul signe
+            //   disponible était que le nombre ne bougeait pas du tout* — et il a fallu imprimer
+            //   les DEUX rects en coordonnées monde pour le voir, au lieu de les déduire de leurs
+            //   ancres. Le socle le dit : une grandeur qui existe comme objet se MESURE sur
+            //   l'objet.
+            // ⇒ D'où la forme retenue : le voile est ancré sur le RECT DU TITRE, jamais recalculé
+            //   depuis ses constantes — il ne peut plus dériver de lui. Son opacité est DÉRIVÉE
+            //   (la plus petite qui garantisse 4,5:1 à l'encre du titre sur le fond de référence le
+            //   plus clair), jamais réglée jusqu'à ce que la garde passe.
+            {
+                Color voileTitre = DesignTokens.Current.hudBarGlassBottom;
+                Color fondPireTitre; float contrasteTitre;
+                voileTitre.a = MafiaCleanCity.Shell.ProceduralUI.AlphaPourContrasteGaranti(
+                    DesignTokens.Current.hudCreme, voileTitre, 4.5f, out fondPireTitre, out contrasteTitre);
+                Color evanoui = voileTitre; evanoui.a = 0f;
+
+                var voileGo = new GameObject("TitreVoile", typeof(RectTransform), typeof(CanvasRenderer));
+                voileGo.transform.SetParent(root.transform, false);
+                var voileRt = (RectTransform)voileGo.transform;
+                var titreRt2 = (RectTransform)title.transform;
+                voileRt.anchorMin = new Vector2(0f, titreRt2.anchorMin.y);
+                voileRt.anchorMax = new Vector2(1f, titreRt2.anchorMax.y);
+                voileRt.pivot = titreRt2.pivot;
+                // Pleine largeur (un voile qui s'arrête avant le bord rouvre l'interstice) et
+                // débordant du titre d'une marge de chaque côté en hauteur.
+                const float MargeVoileTitre = 10f;
+                voileRt.sizeDelta = new Vector2(0f, titreRt2.rect.height + 2f * MargeVoileTitre);
+                voileRt.anchoredPosition = new Vector2(0f, titreRt2.anchoredPosition.y + MargeVoileTitre);
+
+                var voileImg = voileGo.AddComponent<Image>();
+                // Plein sur toute la hauteur du titre, estompé sur les derniers 18 % seulement :
+                // un fond franc là où l'encre est, un bord adouci pour ne pas trancher sur l'art.
+                voileImg.sprite = MafiaCleanCity.Shell.ProceduralUI.VerticalGradientPalierEnHaut(
+                    64, voileTitre, evanoui, 0.82f);
+                voileImg.type = Image.Type.Simple;
+                voileImg.color = Color.white;
+                voileImg.raycastTarget = false;
+                voileGo.AddComponent<LayoutElement>().ignoreLayout = true;
+                Debug.Log($"[TITRE-VOILE] α dérivé={voileTitre.a:F4} pour 4,5:1 sur le fond le plus "
+                          + $"clair ({fondPireTitre.r:F2},{fondPireTitre.g:F2},{fondPireTitre.b:F2}) "
+                          + $"⇒ contraste garanti {contrasteTitre:F2}:1");
+                // Le fond juste SOUS le titre, tous deux au-dessus de la scène : deux appels dans
+                // cet ordre, et l'ORDRE est la garantie — pas un compte d'enfants.
+                voileGo.transform.SetAsLastSibling();
+            }
             title.transform.SetAsLastSibling();
+            // Les DEUX rects imprimés, en coordonnées MONDE : la seule façon de savoir si le fond
+            // couvre le titre. Les déduire de leurs ancres m'a fait poser deux versions fausses.
+            {
+                var cT = new Vector3[4]; ((RectTransform)title.transform).GetWorldCorners(cT);
+                Debug.Log($"[TITRE-GEOM] titre monde y {cT[0].y:F1}..{cT[1].y:F1} x {cT[0].x:F1}..{cT[2].x:F1}");
+                Transform vv = root.transform.Find("TitreVoile");
+                if (vv != null) { var cV = new Vector3[4]; ((RectTransform)vv).GetWorldCorners(cV);
+                    Debug.Log($"[TITRE-GEOM] voile monde y {cV[0].y:F1}..{cV[1].y:F1} x {cV[0].x:F1}..{cV[2].x:F1} · index {vv.GetSiblingIndex()}/{root.transform.childCount}"); }
+                else Debug.Log("[TITRE-GEOM] voile ABSENT");
+            }
         }
 
         // Alphas de COMPOSITE de l'ombre de contact (revue ⊥ r5 (a)) — publics : R2F2 mesure la
@@ -1650,6 +1718,35 @@ namespace MafiaCleanCity.CityMap
             ficheTitre.characterSpacing = 13f;                       // `.13em`
             ficheTitre.color = DesignTokens.Current.hudMoneyGold;     // --or-vif
             ficheTitre.fontFeatures.Clear();
+            // ⛔⛔ UNE SEULE LIGNE, ET C'EST LA BOÎTE QUI L'IMPOSE — mesuré à l'exécution le
+            // 2026-09-06 (`FicheTeteGeometriePlayModeTests`, run scopé `FicheTete`) :
+            //     titre « Outillage Halde — La Lisière, îlot 1501 »  →  lignes = 2
+            //     encre du titre à 8,80 px CSS du haut du panneau, pour une boîte posée à 17,00
+            //     blanc titre → sous-titre = 1,76 px CSS  (le canon en donne 11,00)
+            // Le repli par défaut de TMP est `Normal`, et `TextAlignmentOptions.Center` vaut
+            // « MILIEU + centre », pas « centre horizontal » : un bloc de deux lignes centré dans
+            // une boîte d'UNE ligne (17,00 CSS) déborde donc SYMÉTRIQUEMENT — vers le haut dans le
+            // padding du panneau, vers le bas sur le sous-titre. **Un seul mécanisme produit les
+            // deux nombres du juge.**
+            // ★ Et c'est le SOUS-TITRE qui l'a prouvé avant toute mesure : il est posé à un offset
+            //   ABSOLU (40,80 CSS, `PoserDansFiche`). Un padding faux ou une échelle fausse
+            //   l'auraient déplacé LUI AUSSI, donc n'auraient pas pu rétrécir le blanc. Seule une
+            //   encre qui descend plus bas le peut. Mesuré ensuite : échelle relative racine→titre
+            //   = 1,000000, canvas 1280 u, boîte y=17,00 h=17,00 — l'échelle était innocente.
+            // ⚠️ Ce que ce correctif NE ferme PAS : le titre occupe encore la largeur utile quand
+            //   le nom servi est long (F2). Ce n'est pas un défaut de rendu — le canon montre une
+            //   plaque de 42,7 % parce que son nom tient en deux mots, là où le back sert
+            //   « enseigne — district, îlot N ». Raccourcir ce que la clé compose est un arbitrage
+            //   de CONTENU, pas un réglage de texte.
+            ficheTitre.textWrappingMode = TextWrappingModes.NoWrap;
+            ficheTitre.enableAutoSizing = true;
+            ficheTitre.fontSizeMax = FDi(16f);
+            // ⛔ Le plancher n'est pas un ornement : sans lui, TMP réduit jusqu'à l'illisible sur
+            // un nom très long. 10 px CSS est la hauteur des micro-libellés du bandeau — la plus
+            // petite typographie que cette DA assume déjà ailleurs, donc un plancher MESURÉ sur le
+            // dessin et non choisi. Si un nom l'atteint, le titre débordera de sa boîte en LARGEUR
+            // (visible, donc jugeable) plutôt que de se replier en silence sur deux lignes.
+            ficheTitre.fontSizeMin = FDi(10f);
             PoserDansFiche((RectTransform)ficheTitre.transform, 17.00f, 17.00f);
 
             ficheType = NewText("Type", corps.transform, "", FDi(9f), TextAlignmentOptions.Center);
@@ -1755,14 +1852,40 @@ namespace MafiaCleanCity.CityMap
             GameObject go = NewUI($"Btn_{libelle}", parent);
             // `.actions` y=114,38 h=39,81 — mesuré au navigateur, posé, jamais réparti.
             PoserColonne((RectTransform)go.transform, x, largeur, 114.38f, 39.81f);
+            // ⛔⛔ LE REMPLISSAGE PREND LA FORME DU TRACÉ, il ne se contente plus de vivre dessous.
+            // Un juge ⊥ mesure sur COLLECTER « un remplissage doré à angles DROITS avec le tracé
+            // arrondi dessiné DEDANS ⇒ quatre oreilles d'environ 5×5 CSS », retrait de coin **0,00
+            // mesuré ×9** contre 8,67 → 2,67 au canon. La cause est structurelle : le fond était une
+            // `Image` rectangulaire et l'arrondi un ENFANT posé par-dessus. *Un contour arrondi
+            // dessiné sur un fond carré ne l'arrondit pas — il le souligne.*
+            // ⇒ Le fond devient donc le GRAPHIQUE D'UN MASQUE à coins arrondis (le même rayon que le
+            //   tracé, lu à la même source), et le remplissage — dégradé ou aplat — passe dans un
+            //   enfant qu'il découpe. Appliqué aux DEUX variantes, pas seulement à celle que le juge
+            //   a vue : l'aplat translucide a les mêmes oreilles, simplement moins visibles.
+            // ⚠️ Le graphique du masque n'est pas affiché (`showMaskGraphic = false`) : il découpe,
+            //   il ne peint pas. Et un `Image` EST un `MaskableGraphic`, donc l'enfant est bien
+            //   atteint par le masque — la vérification que ce dépôt a déjà payée sur un `Graphic`
+            //   nu qu'aucun masque ne pouvait toucher.
             Image fond = go.AddComponent<Image>();
+            fond.sprite = MafiaCleanCity.Shell.ProceduralUI.RoundedRectMask(FDi(9f));
+            fond.type = Image.Type.Sliced;
+            fond.color = Color.white;
+            fond.raycastTarget = false;
+            var masque = go.AddComponent<Mask>();
+            masque.showMaskGraphic = false;
+
+            GameObject remplissageGo = NewUI("Remplissage", go.transform);
+            Stretch((RectTransform)remplissageGo.transform, Vector2.zero, Vector2.zero);
+            remplissageGo.AddComponent<LayoutElement>().ignoreLayout = true;
+            Image fondPeint = remplissageGo.AddComponent<Image>();
+            fondPeint.raycastTarget = false;
             if (or)
             {
                 // `background:linear-gradient(180deg,#e9c56b,#c99a37); border:1px solid #8a611c`
-                fond.sprite = MafiaCleanCity.Shell.ProceduralUI.VerticalGradient(64,
+                fondPeint.sprite = MafiaCleanCity.Shell.ProceduralUI.VerticalGradient(64,
                     DesignTokens.Current.ficheCtaOrHaut, DesignTokens.Current.ficheCtaOrBas);
-                fond.type = Image.Type.Simple;
-                fond.color = Color.white;
+                fondPeint.type = Image.Type.Simple;
+                fondPeint.color = Color.white;
             }
             else
             {
@@ -1770,7 +1893,7 @@ namespace MafiaCleanCity.CityMap
                 // Le fond est CONNU (la plaque de la fiche) ⇒ résolution EXACTE par canal, pas un
                 // ajustement : trois équations, trois inconnues.
                 bool atteignable;
-                fond.color = MafiaCleanCity.Shell.ProceduralUI.CouleurPourMelangeLineaire(
+                fondPeint.color = MafiaCleanCity.Shell.ProceduralUI.CouleurPourMelangeLineaire(
                     Color.white, DesignTokens.Current.ficheGlassTop, 0.039f, out atteignable);
             }
 

@@ -248,9 +248,12 @@ humaine), jamais dans les falsifiables commitées (celles-ci sont analytiques, �
 
 Médaillon TOUJOURS parfaitement centré, AUCUN chevauchement, TabBar (5 boutons) toujours dans les
 bornes, rien hors écran, aux 4 résolutions. Captures commitées :
-`Assets/Screenshots/hud_multires_{1280x720_landscape,1080x2280_portrait,1080x2400_portrait,
-1200x1920_tablet}.png` — dimensions vérifiées par PIL, correspondance exacte à la résolution
-demandée pour les 4.
+quatre planches `hud_multires` (paysage 1280×720, portrait 1080×2280 et 1080×2400, tablette
+1200×1920) — dimensions vérifiées par PIL, correspondance exacte à la résolution demandée pour les
+4. ⚠️ **Fichiers RETIRÉS du dépôt le 2026-09-06** : ils montrent le HUD en ANGLAIS et la carte en
+deux colonnes, deux états fermés depuis, et leur chrome rend une capitale d'« ARGENT » de 7 px là
+où le dépôt en rend 19. Un juge qui les recevrait mesurerait des défauts déjà corrigés. La prose
+de ce journal reste : elle est datée, et ce qu'elle rapporte a eu lieu.
 
 ### Falsifiables commitées — `ChromeMultiResolutionPlayModeTests.cs` (analytiques)
 
@@ -300,8 +303,8 @@ nécessaire.
   - `NavigationPlayModeTests` + `ChromeTabAccentAllowlistPlayModeTests` +
     `DistrictNightTokensPlayModeTests` + `HudPlayModeTests` — **23/23 VERT** (12.1s).
   - Total scopé : **55/55 VERT**.
-- Captures Play Mode réelles, commitées : 4 résolutions (`Assets/Screenshots/hud_multires_*.png`,
-  dimensions vérifiées).
+- Captures Play Mode réelles : 4 résolutions, dimensions vérifiées (planches `hud_multires`,
+  retirées du dépôt le 2026-09-06 — voir la note plus haut).
 - Full-suite (ch27) : **hors mandat de ce lot** — appartient au merge-gate du contrôleur.
 
 ## Deviations
@@ -345,8 +348,8 @@ ratio=0,390. **L'ANCIEN 0,55 était déjà passé côté rouge** (hue 17,2°) �
 retour user décrivait. Repris à **0,30** (marge délibérée sous le point de bascule, hue 26,7°) :
 distance calme↔alarme = 0,112 (seuil existant Oracle1 > 0,05, 2,2× marge) ; distance
 alarme↔`accentDanger` brut = 0,261 (seuil existant > 0,10, 2,6× marge, MEILLEURE qu'avant : 0,55
-donnait 0,168). Capturé visuellement (`Assets/Screenshots/citymap_v1_restyled_portrait_1080x2400
-.png`, médaillon en haut) : la teinte lit maintenant comme un laiton chaud, pas un rouge d'alerte.
+donnait 0,168). Capturé visuellement (planche `citymap_v1_restyled` portrait, médaillon en haut ; fichier retiré
+du dépôt le 2026-09-06, même raison que les `hud_multires` ci-dessus) : la teinte lit maintenant comme un laiton chaud, pas un rouge d'alerte.
 
 ### Geste 2 — l'écran City Map (jamais touché par la doctrine)
 
@@ -377,7 +380,7 @@ non plus** — même vérification exhaustive que Geste 1.
   (`WorldDtos.cs`) n'a plus de consommateur mais reste défini (même discipline que
   `chromeTabActive` au round précédent — un token/fonction sans consommateur peut redevenir
   légitime demain, jamais retiré pour un seul appelant qui change).
-- Capturé visuellement (`Assets/Screenshots/citymap_v1_restyled_portrait_1080x2400.png`) : les
+- Capturé visuellement (planche `citymap_v1_restyled` portrait, retirée le 2026-09-06) : les
   deux corrections confirmées — panneaux dimensionnés au contenu, badges en carré-témoin
   (WARM=jaune, COLD=bleu, BURNING=rouge) + texte blanc.
 
@@ -417,8 +420,8 @@ Falsifiables — `ChromeSafeAreaPlayModeTests.cs` (3 tests) :
   bout incluant CityMapController) = **71/71 VERT**, tous obtenus AVANT la collision décrite
   ci-dessous.
 - Captures Play Mode réelles (`run_tests`, jamais la manipulation manuelle du Game View — voir
-  § Collision) : `Assets/Screenshots/citymap_v1_restyled_portrait_1080x2400.png` (2 passes, une
-  avant/une après le chargement heat).
+  § Collision) : planche `citymap_v1_restyled` portrait (2 passes, une avant/une après le
+  chargement heat ; fichier retiré le 2026-09-06).
 
 ### ⚠️ Trouvaille opérationnelle — collision avec un AUTRE processus sur LE MÊME arbre ET LE MÊME
 ### éditeur Unity, EN DIRECT pendant ce round

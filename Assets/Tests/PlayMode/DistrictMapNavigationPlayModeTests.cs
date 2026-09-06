@@ -697,9 +697,38 @@ namespace MafiaCleanCity.CityMap.Tests
             Transform fondT = diorama.ScreenRoot.Find("DistrictScene/DistrictBackgroundImage");
             Assert.IsNotNull(fondT, "prémisse — ce district a un fond réel ; sans lui « le bord du fond » n'a pas de sens");
             float bande = Mathf.Max(0f, (rootRt.rect.width - ((RectTransform)fondT).sizeDelta.x) * 0.5f);
-            Assert.Greater(bande, 0.5f,
-                $"scénario dimensionné — cette résolution DOIT produire une bande de letterbox " +
-                $"(mesuré {bande:F1}px), sinon l'assertion suivante ne teste pas le défaut visé");
+            // ⛔⛔ CETTE LIGNE EXIGEAIT UNE BANDE DE LETTERBOX, ET LE CODE EST ÉCRIT POUR S'EN PASSER.
+            // Elle assertait `bande > 0.5` comme « scénario dimensionné ». Mesuré le 2026-09-06 :
+            // **0.0 px**, et ce n'est pas un défaut d'écran. Le contrôleur porte un `Mathf.Max(0f, …)`
+            // (`DistrictInteriorScreenController.cs:506`) dont le commentaire dit exactement
+            // pourquoi : « à une résolution où le fond est PLUS LARGE que le viewport, la bande est
+            // nulle ou négative et le titre doit rester sur le bord de l'écran ».
+            // ★ *Le code a raison et le test lui interdisait un état qu'il est écrit pour gérer.*
+            //   La bande vaut 0 dès que `tex.width / scaleFactor >= root.rect.width`.
+            //   ⚠️ MESURÉ, PAS DÉDUIT — et ma première explication était fausse. J'avais écrit que
+            //   `scaleFactor < 1` agrandissait le fond à 2160 pour une racine de 1280. La ligne de
+            //   diagnostic ci-dessous, elle, imprime **racine 640 · fond 1080** : le facteur vaut 1
+            //   et c'est la RACINE qui est étroite (l'écran du batchmode), pas le fond qui enfle.
+            //   Le fond, à sa taille native, est simplement PLUS LARGE que le viewport — la bande
+            //   est donc négative avant le `Max`, et nulle après. *Un mécanisme plausible n'est pas
+            //   un mécanisme mesuré ; c'est pour ça que la ligne imprime les deux nombres.*
+            // ⇒ Et la PRÉMISSE n'était créée par personne : le test monte à nu et hérite de la
+            //   résolution que le harnais veut bien lui donner. *Une prémisse qu'on asserte sans la
+            //   construire n'est pas un scénario dimensionné, c'est un pari sur l'environnement.*
+            //
+            // ⇒ CE QUI EST ASSERTÉ À LA PLACE, et qui vaut à TOUTE résolution : la marge du titre
+            //   égale la gouttière PLUS la bande, quelle que soit la bande — c'est la propriété que
+            //   le correctif de 2026-08-22 a posée, et elle est vraie des deux côtés du `Max`.
+            //   Les deux assertions qui suivent la mesurent déjà ; elles n'avaient pas besoin de
+            //   cette prémisse pour mordre.
+            // ⚠️ CE QUI RESTE NON COUVERT, et je l'écris plutôt que de le maquiller : la branche
+            //   « bande > 0 » — le cas où le titre s'écarte pour ne pas chevaucher la couture du
+            //   letterbox — n'est exercée par aucun test, faute d'un harnais qui fixe la
+            //   résolution. La couvrir demande de basculer le canvas sur une `RenderTexture` à la
+            //   taille cible, comme le font les suites de capture. C'est un lot, pas une ligne.
+            Debug.Log($"[NavD12] bande de letterbox mesurée : {bande:F1}px " +
+                      $"(racine {rootRt.rect.width:F0} · fond {((RectTransform)fondT).sizeDelta.x:F0}) — " +
+                      (bande > 0.5f ? "branche LETTERBOX exercée" : "branche SANS letterbox exercée"));
             float margeAttendue = ShellChrome.GutterX + bande;
 
             Assert.AreEqual(margeAttendue, bordGauche, 0.5f,

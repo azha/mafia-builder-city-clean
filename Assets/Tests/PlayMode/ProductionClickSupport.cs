@@ -147,6 +147,62 @@ namespace MafiaCleanCity.Tests
         // une 3e copie du même helper de ~7 lignes (socle : ne pas dupliquer une règle centralisée).
         // `ChromeMultiResolutionPlayModeTests.cs` garde sa propre copie privée, pré-existante, hors
         // du périmètre de ce lot — non touchée pour garder la surface de ce round minimale.
+        /// <summary>Le geste de production pour un DÉFILEMENT : un vrai glissé, par la chaîne
+        /// `IBeginDragHandler` → `IDragHandler` → `IEndDragHandler`, jamais en écrivant
+        /// `verticalNormalizedPosition`.
+        ///
+        /// ⛔⛔ ET C'EST LA MÊME LEÇON QUE `Click`, SUR UNE AUTRE SURFACE. Écrire la position
+        /// normalisée est au `ScrollRect` ce qu'`onClick.Invoke()` est au `Button` : ça produit
+        /// l'effet en contournant les gardes que le doigt, lui, rencontre. `ScrollRect.OnBeginDrag`
+        /// commence par `if (!IsActive()) return;` et `OnDrag` referme l'axe éteint
+        /// (`if (!m_Vertical) position.y = m_ContentStartPosition.y;`). ⇒ Une liste dont on aurait
+        /// mis `vertical = false` se laisse encore positionner par la propriété, et un test qui
+        /// l'emprunte reste VERT sur une liste qu'aucun joueur ne peut faire défiler.
+        ///
+        /// ⚠️ CE QUE CE HELPER NE COUVRE PAS, et il faut le dire comme `Click` le dit : le
+        /// hit-testing. `ExecuteEvents.Execute` route DIRECTEMENT sur le GameObject du `ScrollRect`
+        /// sans consulter aucun `GraphicRaycaster` — un `raycastTarget = false` sur la fenêtre, ou
+        /// un `CanvasGroup.blocksRaycasts = false` au-dessus, resterait invisible ici.
+        ///
+        /// Rend le déplacement RÉELLEMENT subi par le contenu, pour que l'appelant puisse refuser
+        /// de conclure d'un glissé qui n'a rien bougé (le geste s'exécute, l'effet est nul — le
+        /// vert de non-exécution, appliqué à un doigt).</summary>
+        public static Vector2 Glisser(ScrollRect defilement, Vector2 deplacement, int pas = 8)
+        {
+            Assert.IsNotNull(defilement, "ProductionClickSupport.Glisser : ScrollRect null.");
+            Assert.IsNotNull(defilement.content, "ProductionClickSupport.Glisser : le ScrollRect n'a pas de " +
+                "`content` — le glissé ne peut RIEN déplacer, et le site d'appel doit observer cette " +
+                "absence plutôt que d'appeler ce helper à vide.");
+            Assert.Greater(pas, 0, "ProductionClickSupport.Glisser : un glissé en zéro pas ne glisse pas.");
+
+            Vector2 avant = defilement.content.anchoredPosition;
+            // Le point de contact : le centre de la fenêtre, en coordonnées d'ÉCRAN — c'est ce que
+            // `ScrollRect.OnBeginDrag` convertit par `ScreenPointToLocalPointInRectangle`. Canvas en
+            // ScreenSpaceOverlay ⇒ caméra nulle, la conversion est directe.
+            RectTransform vue = defilement.viewport != null
+                ? defilement.viewport
+                : (RectTransform)defilement.transform;
+            Vector2 depart = RectTransformUtility.WorldToScreenPoint(null, vue.position);
+
+            var donnees = new PointerEventData(EventSystem.current)
+            {
+                button = PointerEventData.InputButton.Left,
+                position = depart,
+                pressPosition = depart,
+                pointerCurrentRaycast = new RaycastResult { gameObject = defilement.gameObject },
+            };
+            ExecuteEvents.Execute(defilement.gameObject, donnees, ExecuteEvents.initializePotentialDrag);
+            ExecuteEvents.Execute(defilement.gameObject, donnees, ExecuteEvents.beginDragHandler);
+            for (int i = 1; i <= pas; i++)
+            {
+                donnees.position = depart + deplacement * ((float)i / pas);
+                donnees.delta = deplacement / pas;
+                ExecuteEvents.Execute(defilement.gameObject, donnees, ExecuteEvents.dragHandler);
+            }
+            ExecuteEvents.Execute(defilement.gameObject, donnees, ExecuteEvents.endDragHandler);
+            return defilement.content.anchoredPosition - avant;
+        }
+
         public static float GetPrivateConstFloat(Type t, string name)
         {
             FieldInfo f = t.GetField(name, BindingFlags.NonPublic | BindingFlags.Static);

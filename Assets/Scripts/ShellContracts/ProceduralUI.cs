@@ -64,6 +64,180 @@ namespace MafiaCleanCity.Shell
         /// ce sprite structurellement NON-aplat quel que soit son diamètre de RectTransform — la
         /// falsifiable "l'or jamais en aplat" mesure la couverture RÉELLE (échantillonnage de la
         /// texture), pas la boîte englobante.</summary>
+        /// <summary>La largeur de la RAMPE d'anti-crénelage des anneaux, en pixels de texture, sur
+        /// CHAQUE bord. Constante du générateur, pas un réglage d'appelant.
+        ///
+        /// ⛔ EXPOSÉE PARCE QU'UN ORACLE NE PEUT PAS S'EN PASSER, et il vaut mieux qu'il la lise
+        /// ici que la recopie. Un trait nominal de `t` px dessiné avec cette rampe a ses deux bords
+        /// à MI-ALPHA distants de `t − RampeAntiCrenelagePx` : la moitié de la rampe est retranchée
+        /// de chaque côté. Un instrument qui mesure la largeur à mi-alpha et la compare à `t`
+        /// accuse donc le dessin d'un défaut que la rasterisation a fabriqué — mesuré le
+        /// 2026-09-06, trois versions d'un oracle de proportions réfutées l'une après l'autre par
+        /// leur propre contrôle avant d'avoir jugé quoi que ce soit.</summary>
+        public const float RampeAntiCrenelagePx = 1.5f;
+
+        /// <summary>⛔⛔ UN ARC À ÉTENDUE CUITE — l'anneau n'est peint QUE sur l'intervalle
+        /// angulaire demandé, embouts FRANCS par construction. Il remplace le couple
+        /// « `Ring` complet + `Image.Type.Filled` en `Radial180` ».
+        ///
+        /// POURQUOI CUIRE L'ÉTENDUE PLUTÔT QUE COUPER. Un juge ⊥ mesure l'arc à 1,02 → 3,16 → 0,94
+        /// le long de sa course (canon : constant 2,46–2,52, coupé net) et `DA7`, étendu à
+        /// l'épaisseur et validé par un contrôle de cible, le confirme sur les DEUX arcs — froid
+        /// 1,11 → 8,05 px, chaud 0,56 → 6,11 px, le maximum tombant sur l'épaisseur nominale. Le
+        /// trait atteint donc sa cote AU MILIEU : le défaut est aux EXTRÉMITÉS.
+        /// ⚠️ Sa CAUSE, elle, n'a jamais été établie — trois hypothèses, deux rétractations, et une
+        ///   démonstration qui portait sur le mauvais objet. Cuire l'étendue **rend la cause sans
+        ///   importance** : il n'y a plus de coupe, plus de `fillAmount`, plus de maillage taillé.
+        ///   *Quand une cause résiste à trois instruments, changer la forme qui la rend possible
+        ///   coûte moins cher qu'un quatrième instrument* — et DA7 dira sur le nouvel objet si le
+        ///   fuselage a survécu, ce qui reste la seule preuve qui compte.
+        ///
+        /// ⚠️ LA CONVENTION D'ANGLE EST CELLE DU CANON, écrite ici pour qu'aucun appelant n'ait à
+        ///   la deviner : **0° à DROITE, sens trigonométrique** (90° en haut, 180° à gauche) —
+        ///   celle du SVG source et celle des instruments du juge. Le contrôleur, lui, raisonnait
+        ///   en `fillOrigin`/`fillClockwise`, un repère qui n'est celui de personne d'autre.
+        /// ⚠️ L'anti-crénelage porte sur les DEUX bords radiaux ET sur les deux embouts, avec la
+        ///   même rampe : un embout franc n'est pas un embout dur, c'est un embout dont la coupe
+        ///   suit un RAYON au lieu de suivre un maillage.</summary>
+        public static Sprite ArcCuit(int diameterPx, float thicknessPx, Color color,
+            float angleDebutDeg, float angleFinDeg)
+        {
+            string key = $"arc:{diameterPx}:{thicknessPx:F2}:{angleDebutDeg:F2}:{angleFinDeg:F2}:{ColorKey(color)}";
+            if (cache.TryGetValue(key, out Sprite cached) && cached != null) return cached;
+
+            int d = Mathf.Max(4, diameterPx);
+            var tex = NewTexture(d);
+            float rOuter = d / 2f;
+            float rInner = Mathf.Max(0f, rOuter - thicknessPx);
+            var centre = new Vector2(rOuter, rOuter);
+            float a0 = Mathf.Min(angleDebutDeg, angleFinDeg);
+            float a1 = Mathf.Max(angleDebutDeg, angleFinDeg);
+            // La rampe angulaire équivalente à la rampe radiale, prise au rayon MÉDIAN : sans ça un
+            // arc étroit aurait des embouts plus doux qu'un arc large, à rampe égale en pixels.
+            float rMedian = Mathf.Max(1f, (rOuter + rInner) * 0.5f);
+            float rampeDeg = RampeAntiCrenelagePx / rMedian * Mathf.Rad2Deg;
+
+            var pixels = new Color[d * d];
+            for (int y = 0; y < d; y++)
+            {
+                for (int x = 0; x < d; x++)
+                {
+                    var p = new Vector2(x + 0.5f, y + 0.5f);
+                    float dist = Vector2.Distance(p, centre);
+                    float ang = Mathf.Atan2(p.y - centre.y, p.x - centre.x) * Mathf.Rad2Deg;
+                    if (ang < 0f) ang += 360f;
+                    // Ramener l'angle dans la fenêtre, en tenant compte du passage par 0°.
+                    float angRel = ang;
+                    if (angRel < a0 - 180f) angRel += 360f;
+                    else if (angRel > a1 + 180f) angRel -= 360f;
+
+                    Color c = color;
+                    float fondu = Mathf.Min(
+                        Mathf.Clamp01((rOuter - dist) / RampeAntiCrenelagePx),
+                        Mathf.Clamp01((dist - rInner) / RampeAntiCrenelagePx));
+                    float fonduAngle = Mathf.Min(
+                        Mathf.Clamp01((angRel - a0) / rampeDeg),
+                        Mathf.Clamp01((a1 - angRel) / rampeDeg));
+                    c.a *= Mathf.Min(fondu, fonduAngle);
+                    pixels[y * d + x] = c;
+                }
+            }
+            tex.SetPixels(pixels);
+            tex.Apply(false, false);
+
+            Sprite sprite = Sprite.Create(tex, new Rect(0, 0, d, d), new Vector2(0.5f, 0.5f), 100f);
+            cache[key] = sprite;
+            return sprite;
+        }
+
+        /// <summary>⛔⛔ UN TRACÉ QUELCONQUE, ÉPAISSI — la primitive à CHEMIN qui manquait, et que
+        /// deux dettes réclamaient séparément.
+        ///
+        /// POURQUOI ELLE EXISTE. Le canon dessine certaines formes en SVG et rien d'autre ne les
+        /// rend : les volutes du bandeau (`d="M1 6 h12 M13 6 c4 0 4 -5 8 -5 c3 0 3 4 0 4 c-2 0 -2
+        /// -3 1 -3"`) et la calotte du portrait de ㊲ (TD-651, dont l'entrée dit qu'« aucune ellipse,
+        /// aucun rect, aucun rect arrondi et aucune occlusion ne rend » son bord bas concave).
+        /// Quatre approximations successives ont été tentées sur la seconde avant qu'on écrive que
+        /// la forme, et non la cote, était le problème. *Quand quatre réglages échouent sur une
+        /// forme, c'est la primitive qui manque.*
+        ///
+        /// CE QU'ELLE PREND : une polyligne déjà échantillonnée — l'appelant convertit ses courbes
+        /// en points par `EchantillonnerCubique`. Ce découpage est délibéré : le rasteriseur ne
+        /// connaît que des segments, donc il ne peut pas se tromper sur une courbe, et
+        /// l'échantillonnage se teste séparément.
+        /// ⚠️ La distance point↔segment est calculée exactement (projection bornée), jamais
+        /// approchée par la distance aux extrémités : une approximation par les bouts épaissit les
+        /// angles et amincit les milieux — le fuselage, exactement, qu'un juge a mesuré ailleurs
+        /// sur ce même écran.
+        /// ⚠️ `epaisseurPx` est l'épaisseur TOTALE du trait (comme `stroke-width` en SVG), donc la
+        /// distance retenue est la demi-épaisseur — la confusion inverse donne un trait deux fois
+        /// trop gras et se lit comme une erreur de couleur.</summary>
+        public static Sprite Chemin(int largeurPx, int hauteurPx, IList<IList<Vector2>> sousChemins,
+            float epaisseurPx, Color couleur)
+        {
+            var cle = new System.Text.StringBuilder($"chemin:{largeurPx}:{hauteurPx}:{epaisseurPx:F2}:{ColorKey(couleur)}");
+            foreach (var sc in sousChemins) foreach (Vector2 v in sc) cle.Append($":{v.x:F1},{v.y:F1}");
+            string key = cle.ToString();
+            if (cache.TryGetValue(key, out Sprite cached) && cached != null) return cached;
+
+            int w = Mathf.Max(2, largeurPx), h = Mathf.Max(2, hauteurPx);
+            var tex = new Texture2D(w, h, TextureFormat.RGBA32, false)
+            {
+                filterMode = FilterMode.Bilinear,
+                wrapMode = TextureWrapMode.Clamp,
+                hideFlags = HideFlags.HideAndDontSave,
+            };
+            float demi = epaisseurPx * 0.5f;
+            var pixels = new Color[w * h];
+            for (int y = 0; y < h; y++)
+            {
+                for (int x = 0; x < w; x++)
+                {
+                    // y de texture monte, y du tracé descend (convention SVG) : on retourne ici,
+                    // une fois, plutôt que de demander à chaque appelant d'y penser.
+                    var p = new Vector2(x + 0.5f, h - 1 - y + 0.5f);
+                    float best = float.MaxValue;
+                    foreach (IList<Vector2> sc in sousChemins)
+                        for (int i = 0; i + 1 < sc.Count; i++)
+                        {
+                            float d = DistancePointSegment(p, sc[i], sc[i + 1]);
+                            if (d < best) best = d;
+                        }
+                    Color c = couleur;
+                    c.a *= Mathf.Clamp01((demi - best) / RampeAntiCrenelagePx + 0.5f);
+                    pixels[y * w + x] = c;
+                }
+            }
+            tex.SetPixels(pixels);
+            tex.Apply(false, false);
+            Sprite sp = Sprite.Create(tex, new Rect(0, 0, w, h), new Vector2(0.5f, 0.5f), 100f);
+            sp.hideFlags = HideFlags.HideAndDontSave;
+            cache[key] = sp;
+            return sp;
+        }
+
+        /// <summary>Échantillonne une cubique de Bézier en `n` segments. Séparé du rasteriseur pour
+        /// que chacun se teste seul — et parce qu'un `d` de SVG se traduit en points une fois, pas
+        /// à chaque pixel.</summary>
+        public static void EchantillonnerCubique(List<Vector2> sortie, Vector2 p0, Vector2 p1,
+            Vector2 p2, Vector2 p3, int n = 16)
+        {
+            for (int i = 1; i <= n; i++)
+            {
+                float u = i / (float)n, v = 1f - u;
+                sortie.Add(v * v * v * p0 + 3f * v * v * u * p1 + 3f * v * u * u * p2 + u * u * u * p3);
+            }
+        }
+
+        private static float DistancePointSegment(Vector2 p, Vector2 a, Vector2 b)
+        {
+            Vector2 ab = b - a;
+            float l2 = ab.sqrMagnitude;
+            if (l2 < 1e-6f) return Vector2.Distance(p, a);
+            float t = Mathf.Clamp01(Vector2.Dot(p - a, ab) / l2);
+            return Vector2.Distance(p, a + t * ab);
+        }
+
         public static Sprite Ring(int diameterPx, float thicknessPx, Color color)
         {
             string key = $"ring:{diameterPx}:{thicknessPx:F2}:{ColorKey(color)}";
@@ -81,8 +255,8 @@ namespace MafiaCleanCity.Shell
                 {
                     float dist = Vector2.Distance(new Vector2(x + 0.5f, y + 0.5f), center);
                     Color c = color;
-                    float outerFade = Mathf.Clamp01((rOuter - dist) / 1.5f);
-                    float innerFade = Mathf.Clamp01((dist - rInner) / 1.5f);
+                    float outerFade = Mathf.Clamp01((rOuter - dist) / RampeAntiCrenelagePx);
+                    float innerFade = Mathf.Clamp01((dist - rInner) / RampeAntiCrenelagePx);
                     c.a *= Mathf.Min(outerFade, innerFade);
                     pixels[y * d + x] = c;
                 }
@@ -116,6 +290,66 @@ namespace MafiaCleanCity.Shell
         /// La texture est générée LARGE (256) puis étirée : un ruban d'un pixel de haut interpolé
         /// horizontalement donne une rampe lisse à n'importe quelle largeur d'écran, là où une
         /// texture à la largeur exacte serait à refaire à chaque résolution.</summary>
+        /// <summary>La MÊME rampe, mais rendue en pixels OPAQUES déjà mélangés en sRGB — pour les
+        /// dégradés qui doivent retomber sur ce qu'un navigateur produit.
+        ///
+        /// ⛔⛔ POURQUOI UNE SECONDE FORME PLUTÔT QU'UN RÉGLAGE. La surcharge ci-dessous écrit un
+        /// masque BLANC dont seul l'alpha varie ; Unity compose ce masque en espace LINÉAIRE, alors
+        /// que la maquette compose son `linear-gradient` en sRGB. Un juge ⊥ l'a mesuré sur le filet
+        /// de tête de ⑥ par un test de modèle à UNE variable (alpha connu de la CSS, fond et encre
+        /// pleins relevés sur CHAQUE image, 10 points, plus un point de contrôle à α = 1 où les deux
+        /// prédictions coïncident) : **référence — somme des écarts sRGB 2/255 contre linéaire
+        /// 270/255 ; jeu — sRGB 275/255 contre linéaire 7/255.** Deux espaces, pas un réglage à
+        /// corriger. Symptôme : le filet monte à pleine intensité beaucoup plus près du bord au
+        /// lieu de s'y éteindre (à 8 % de la largeur, +17 attendu contre +39 mesuré).
+        ///
+        /// ⇒ LA SOLUTION N'EST PAS DE CONVERTIR L'ALPHA. `CouleurPourMelangeLineaire` déplace la
+        ///   COULEUR à opacité constante — elle n'a pas d'emploi ici, où c'est l'opacité qui varie
+        ///   d'un pixel à l'autre et où la couleur, elle, est unique. On écrit donc directement le
+        ///   RÉSULTAT du mélange sRGB, pixel par pixel, en OPAQUE : un pixel opaque n'est plus
+        ///   composé du tout, donc plus aucun espace ne s'en mêle. C'est déjà la technique du rail
+        ///   de l'arbre (`VerticalGradient` entre deux couleurs opaques), généralisée au pixel.
+        ///
+        /// ⚠️ LE PRIX, ET IL FAUT LE DIRE : la rampe PEINT le fond qu'on lui donne au lieu de
+        ///    laisser voir celui qui est réellement dessous. À n'employer que là où le fond est
+        ///    connu et uni — un filet posé sur la feuille, pas un voile qui déborde d'un bloc.</summary>
+        public static Sprite HorizontalFade(int widthPx, float fadeFraction, float alphaAuBord,
+                                            Color encre, Color fond)
+        {
+            string cle = "fadeop:" + widthPx + ":" + fadeFraction.ToString("F3") + ":"
+                       + alphaAuBord.ToString("F3") + ":" + ColorKey(encre) + ":" + ColorKey(fond);
+            if (cacheFade.TryGetValue(cle, out Sprite deja)) return deja;
+
+            var tex = new Texture2D(widthPx, 1, TextureFormat.RGBA32, false)
+            {
+                filterMode = FilterMode.Bilinear,
+                wrapMode = TextureWrapMode.Clamp,
+                hideFlags = HideFlags.HideAndDontSave,
+            };
+            var pixels = new Color32[widthPx];
+            float bordePx = Mathf.Max(1f, widthPx * fadeFraction);
+            for (int x = 0; x < widthPx; x++)
+            {
+                float depuisBord = Mathf.Min(x + 0.5f, widthPx - 0.5f - x);
+                float t = Mathf.Clamp01(depuisBord / bordePx);
+                float a = Mathf.Lerp(alphaAuBord, 1f, t);
+                // Le mélange du NAVIGATEUR : une interpolation sur les composantes NON linéaires.
+                // `Color.Lerp` opère sur les composantes telles quelles — donc en sRGB ici, ce qui
+                // est exactement ce qu'on veut. La texture est créée sans `linear:true`, donc elle
+                // est lue comme sRGB : le pixel écrit est le pixel affiché.
+                Color melange = Color.Lerp(fond, encre, a);
+                melange.a = 1f;
+                pixels[x] = melange;
+            }
+            tex.SetPixels32(pixels);
+            tex.Apply(false, false);
+            Sprite sp = Sprite.Create(tex, new Rect(0, 0, widthPx, 1), new Vector2(0.5f, 0.5f), 100f, 0,
+                SpriteMeshType.FullRect);
+            sp.hideFlags = HideFlags.HideAndDontSave;
+            cacheFade[cle] = sp;
+            return sp;
+        }
+
         public static Sprite HorizontalFade(int widthPx, float fadeFraction, float alphaAuBord)
         {
             string cle = "fade:" + widthPx + ":" + fadeFraction.ToString("F3") + ":" + alphaAuBord.ToString("F3");
@@ -258,6 +492,102 @@ namespace MafiaCleanCity.Shell
             tex.SetPixels(pixels);
             tex.Apply(false, false);
             Sprite sp = Sprite.Create(tex, new Rect(0, 0, d, d), new Vector2(0.5f, 0.5f), 100f, 0,
+                SpriteMeshType.FullRect);
+            sp.hideFlags = HideFlags.HideAndDontSave;
+            cache[key] = sp;
+            return sp;
+        }
+
+        /// <summary>⛔⛔ UN DÉGRADÉ AVEC PALIER — `linear-gradient(180deg, transparent, X 40%)`.
+        /// La forme que le canon demande, et que `VerticalGradient` ne rend PAS.
+        ///
+        /// LE DÉFAUT QUE CETTE FONCTION FERME, mesuré le 2026-09-06. Le site d'appel du voile du
+        /// dock porte, en commentaire, la description exacte du canon : « opaque à 84,7 % dès 40 %
+        /// de la hauteur — donc un plateau sur les 60 % du bas ». **Le sprite qu'il construisait
+        /// n'a jamais eu de plateau** : `VerticalGradient` interpole d'un bout à l'autre, donc
+        /// l'opacité au tiers supérieur vaut environ le tiers de la valeur finale. Or c'est
+        /// précisément là que vivent les libellés du dock.
+        /// ⇒ *Le commentaire décrivait le canon, le code faisait autre chose, et les deux se
+        ///   relisaient comme cohérents.* Aucun alpha terminal ne pouvait corriger ça : monter
+        ///   l'opacité du bas n'assombrit pas le haut d'une rampe.
+        ///
+        /// ⇒ CE QUI L'A RENDU VISIBLE, et pourquoi il a survécu si longtemps : le profil vertical
+        ///   de la même colonne, sur deux résolutions du MÊME run —
+        ///     1080×1920 : 53849a → 4f7e93 → 4c788c → 477285 → … → 16232e  (rampe, art clair visible)
+        ///     1080×2400 : 090f19 → 55889e → 212530 → 1f232e → … → 0f151f  (sombre presque aussitôt)
+        ///   L'art sous le dock est clair à 1920 et sombre à 2400 : le défaut ne se voyait qu'à
+        ///   une résolution, sur un art. **Il a été classé « le voile a été retiré » par deux juges
+        ///   ⊥ successifs, et un `git log` a montré que rien n'avait été retiré.**
+        /// ★ La leçon est celle du socle, à l'envers : d'ordinaire on cherche ce qui a changé.
+        ///   Ici rien n'avait changé — c'est la GÉOMÉTRIE qui sollicitait enfin le défaut.</summary>
+        public static Sprite VerticalGradientAvecPalier(int hauteurPx, Color haut, Color bas,
+            float fractionPalier)
+        {
+            float f = Mathf.Clamp(fractionPalier, 0.01f, 0.99f);
+            string key = $"vgradp:{hauteurPx}:{ColorKey(haut)}:{ColorKey(bas)}:{f:F3}";
+            if (cache.TryGetValue(key, out Sprite cached) && cached != null) return cached;
+
+            int h = Mathf.Max(2, hauteurPx);
+            var tex = new Texture2D(1, h, TextureFormat.RGBA32, false)
+            {
+                filterMode = FilterMode.Bilinear,
+                wrapMode = TextureWrapMode.Clamp,
+                hideFlags = HideFlags.HideAndDontSave,
+            };
+            var pixels = new Color[h];
+            for (int y = 0; y < h; y++)
+            {
+                // y = 0 est le BAS de la texture (convention Unity) ⇒ `bas` en 0, `haut` en h−1.
+                // La fraction du CSS se compte depuis le HAUT : le palier occupe donc les
+                // (1 − f) premiers pixels en partant du bas, et la rampe le reste.
+                float depuisLeHaut = 1f - y / (float)(h - 1);
+                float k = depuisLeHaut >= f ? 1f : depuisLeHaut / f;
+                pixels[y] = Color.Lerp(haut, bas, k);
+            }
+            tex.SetPixels(pixels);
+            tex.Apply(false, false);
+            Sprite sp = Sprite.Create(tex, new Rect(0, 0, 1, h), new Vector2(0.5f, 0.5f), 100f, 0,
+                SpriteMeshType.FullRect);
+            sp.hideFlags = HideFlags.HideAndDontSave;
+            cache[key] = sp;
+            return sp;
+        }
+
+        /// <summary>Le MIROIR de `VerticalGradientAvecPalier` : plateau EN HAUT, fondu en bas —
+        /// `linear-gradient(180deg, X 0%, X f%, transparent 100%)`.
+        ///
+        /// ⚠️ POURQUOI DEUX FONCTIONS ET NON UN PARAMÈTRE DE PLUS. Les deux formes existent dans le
+        /// canon et elles ne se déduisent pas l'une de l'autre par une valeur : le dock veut du
+        /// plein EN BAS (il ancre le pied de l'écran), un titre veut du plein EN HAUT (il porte son
+        /// encre). *Deux formes, deux fonctions nommées* — j'ai essayé de servir la seconde avec la
+        /// première en jouant sur la fraction, et le résultat était systématiquement l'inverse de
+        /// l'intention : le titre atterrissait sur la moitié ÉVANOUIE du dégradé.
+        /// ★ Deux fois de suite, sur le même correctif, avec un dispositif complet et correctement
+        ///   paramétré. *Un paramètre qui peut exprimer la forme inverse finit par l'exprimer.*</summary>
+        public static Sprite VerticalGradientPalierEnHaut(int hauteurPx, Color plein, Color evanoui,
+            float fractionPleine)
+        {
+            float f = Mathf.Clamp(fractionPleine, 0.01f, 0.99f);
+            string key = $"vgradph:{hauteurPx}:{ColorKey(plein)}:{ColorKey(evanoui)}:{f:F3}";
+            if (cache.TryGetValue(key, out Sprite cached) && cached != null) return cached;
+
+            int h = Mathf.Max(2, hauteurPx);
+            var tex = new Texture2D(1, h, TextureFormat.RGBA32, false)
+            {
+                filterMode = FilterMode.Bilinear,
+                wrapMode = TextureWrapMode.Clamp,
+                hideFlags = HideFlags.HideAndDontSave,
+            };
+            var pixels = new Color[h];
+            for (int y = 0; y < h; y++)
+            {
+                float depuisLeHaut = 1f - y / (float)(h - 1);   // y=0 est le BAS (convention Unity)
+                float k = depuisLeHaut <= f ? 0f : (depuisLeHaut - f) / (1f - f);
+                pixels[y] = Color.Lerp(plein, evanoui, k);
+            }
+            tex.SetPixels(pixels);
+            tex.Apply(false, false);
+            Sprite sp = Sprite.Create(tex, new Rect(0, 0, 1, h), new Vector2(0.5f, 0.5f), 100f, 0,
                 SpriteMeshType.FullRect);
             sp.hideFlags = HideFlags.HideAndDontSave;
             cache[key] = sp;
@@ -513,6 +843,75 @@ namespace MafiaCleanCity.Shell
             f[6].r = 0.75f; f[6].g = 0.80f; f[6].b = 0.85f;   // ciel de jour
             return f;
         }
+
+        /// <summary>⛔⛔ L'OPACITÉ MINIMALE POUR QU'UN TEXTE RESTE LISIBLE SUR N'IMPORTE QUEL ART.
+        /// La sœur de `AlphaVoileSurFondQuelconque`, et sa DIFFÉRENCE D'OBJECTIF est tout le sujet.
+        ///
+        /// Celle-là vise la FIDÉLITÉ à la maquette : elle rapproche le pixel rendu de ce que le
+        /// navigateur produirait. Elle est juste, et elle laisse le contraste libre — sa propre
+        /// docstring le dit, « pour un fond inconnu il n'existe aucune solution exacte à une seule
+        /// opacité ». Celle-ci vise la LISIBILITÉ : elle rend la plus PETITE opacité telle que,
+        /// même sur le fond de référence le plus CLAIR, l'encre garde `ratioCible` de contraste.
+        ///
+        /// ⇒ POURQUOI IL EN FALLAIT UNE SECONDE, et c'est une mesure. Le voile du dock est posé par
+        ///   la première depuis le 25 août, sans qu'une ligne bouge — vérifié par `git log` sur le
+        ///   bloc, sur la fonction et sur le jeton. Ses libellés rendent pourtant **8,20:1 sur la
+        ///   carte de ville et 4,20:1 sur la fiche de district**, dans le MÊME run, avec les MÊMES
+        ///   valeurs. *Une opacité fixe sur un art variable ne garantit pas une lisibilité : elle
+        ///   garantit une opacité.* Deux juges ⊥ ont mesuré la dérive et cherché ce qui avait retiré
+        ///   le voile ; rien ne l'avait retiré.
+        ///
+        /// ⇒ POURQUOI C'EST DÉRIVÉ ET NON RÉGLÉ. Le contraste composité croît de façon monotone
+        ///   avec l'opacité (le voile tire le fond vers sa propre couleur, sombre) : il existe donc
+        ///   un plus petit alpha qui atteint la cible, et il se TROUVE par dichotomie au lieu de se
+        ///   choisir. Monter l'alpha « jusqu'à ce que la garde passe » donnerait un nombre juste sur
+        ///   CET art et faux sur le suivant — la faute exacte que ce lot corrige.
+        /// ⚠️ La composition se fait en LINÉAIRE (le projet l'est), puis le résultat est réencodé
+        ///   en sRGB avant le calcul WCAG, qui prend des valeurs sRGB et les linéarise lui-même.
+        ///   Sauter le réencodage donne des ratios plausibles et faux.
+        /// ⚠️ Si même l'opacité 1 n'atteint pas la cible (une encre trop proche du voile), on rend
+        ///   1 et `contrasteObtenu` dit la vérité : c'est alors la COULEUR qu'il faut changer, pas
+        ///   l'opacité, et l'appelant doit pouvoir le lire au lieu de croire sa cible atteinte.</summary>
+        public static float AlphaPourContrasteGaranti(Color encre, Color voile, float ratioCible,
+            out Color fondPire, out float contrasteObtenu)
+        {
+            Color[] fonds = FondsDeReferenceVoile();
+            fondPire = fonds[0];
+            float lumPire = -1f;
+            foreach (Color f in fonds)
+            {
+                float l = LumRelativeWcag(f);
+                if (l > lumPire) { lumPire = l; fondPire = f; }
+            }
+
+            float bas = 0f, haut = 1f;
+            contrasteObtenu = ContrasteApresVoile(encre, voile, fondPire, 1f);
+            if (contrasteObtenu < ratioCible) return 1f;      // hors d'atteinte : c'est la couleur, pas l'alpha
+            for (int i = 0; i < 40; i++)
+            {
+                float m = 0.5f * (bas + haut);
+                if (ContrasteApresVoile(encre, voile, fondPire, m) >= ratioCible) haut = m; else bas = m;
+            }
+            contrasteObtenu = ContrasteApresVoile(encre, voile, fondPire, haut);
+            return haut;
+        }
+
+        /// <summary>Le contraste WCAG entre `encre` et le pixel qu'on obtient en posant `voile` à
+        /// l'opacité `alpha` sur `fond` — composition en linéaire, réencodage sRGB, puis WCAG.</summary>
+        public static float ContrasteApresVoile(Color encre, Color voile, Color fond, float alpha)
+        {
+            Color melLin = Color.Lerp(fond.linear, voile.linear, alpha);
+            Color mel = melLin.gamma;
+            float a = LumRelativeWcag(encre), b = LumRelativeWcag(mel);
+            if (a < b) { float t = a; a = b; b = t; }
+            return (a + 0.05f) / (b + 0.05f);
+        }
+
+        private static float LumRelativeWcag(Color c)
+            => 0.2126f * LinWcag(c.r) + 0.7152f * LinWcag(c.g) + 0.0722f * LinWcag(c.b);
+
+        private static float LinWcag(float u)
+            => u <= 0.04045f ? u / 12.92f : Mathf.Pow((u + 0.055f) / 1.055f, 2.4f);
 
         /// <summary>L'opacité à employer, EN MÉLANGE LINÉAIRE, pour qu'un voile posé sur un fond
         /// QUELCONQUE retombe au plus près de ce qu'un navigateur produirait en sRGB à l'opacité CSS.

@@ -118,8 +118,45 @@ namespace MafiaCleanCity.Operational.Tests
         [UnityTest, Category("PhotoScreenC1")]
         public IEnumerator ScreenC1C1_CapturerPourLeJugeVisuel_DeuxResolutions()
         {
-            MonterEcran();
+            // ⛔⛔ ON SE CONNECTE AU COMPTE SERVI. Cette suite ne s'authentifiait PAS : l'écran
+            // était monté sans jeton, `Amorcer()` sortait aussitôt, et la capture photographiait
+            // un écran JAMAIS CHARGÉ. Mesuré le 2026-09-04 : 12 des 17 suites de capture de ce
+            // dépôt étaient dans ce cas.
+            // ★ *Une capture ne mesure pas l'écran : elle mesure l'écran ET le monde qu'on lui a
+            //   donné.* Sans données, « cassé » et « correctement vide » rendent la MÊME image.
+            // ⚠️ La garde anti-vacuité ci-dessous restait donc satisfaite par la coquille : elle
+            //    vérifiait qu'il Y A du texte, sur un écran qui n'avait rien à dire.
+            var auth = new MafiaCleanCity.CityMap.AuthClient { BaseUrl = "http://localhost" };
+            string token = null, err = null;
+            // ⛔⛔ LE COMPTE PHOTOGRAPHIÉ VIENT DE LA CAMPAGNE, PLUS D'UN LITTÉRAL. Cette suite
+            //    SÈME un compte et en PHOTOGRAPHIE un autre — ce qui n'était pas distinguable tant
+            //    qu'un seul nom (`MAFIA_DEMO_IDENTIFIER`) désignait les deux (TD-642/647). Depuis
+            //    que le seeder a sa propre variable, le littéral figeait la capture sur le compte
+            //    de SEMIS : mesuré le 2026-09-06, `operational_demo` porte **0 lieutenant** quand
+            //    le compte de capture en porte 3 — la précondition échouait donc à raison, sur le
+            //    mauvais compte. *Une capture doit vérifier le compte qu'elle PHOTOGRAPHIE.*
+            //    La paire est EXIGÉE, pas repliée : sans elle la planche montrerait un autre monde
+            //    sans que rien dans l'image ne le dise (garde partagée, `CaptureSousShell`).
+            var (idCapture, mdpCapture) = MafiaCleanCity.Shell.Tests.CaptureSousShell.IdentiteDeCaptureOuEchoue("screen_c1");
+            yield return auth.SignIn(idCapture, mdpCapture,
+                                     t => token = t, e => err = e);
+            Assert.IsNull(err, $"connexion au compte de démo échouée : {err}");
+
+            var ecran = MonterEcran();
+            ecran.SetToken(token);
             yield return null;
+            yield return ecran.Charger();
+            yield return null;
+
+            // Le vide RENDU et le vide SUBI ont la même image (patron ㊴).
+            Assert.IsNull(ecran.DerniereErreur,
+                // ⛔ LE CODE SEUL NE SUFFIT PAS. Première version : elle imprimait « code 422 »
+                // et rien d'autre — j'ai dû relancer un run entier pour apprendre POURQUOI.
+                // *Une garde qui nomme le symptôme sans le motif coûte un aller-retour à chaque
+                // fois qu'elle mord*, et c'est justement quand elle mord qu'on est pressé.
+                $"la route a échoué (code {ecran.DernierCodeErreur} — {ecran.DerniereErreur}) : " +
+                "la capture montrerait l'état d'indisponibilité, pas le journal");
+            Assert.IsNotNull(ecran.DernierChargement, "aucun corps reçu — rien à photographier");
 
             // ⛔ GARDE ANTI-VACUITÉ — elle manquait, et la PREMIÈRE capture de ㊳ est partie MUETTE :
             // enseigne sans sous-titre, trois « 00 » sans libellé, panneau vide, test VERT.
@@ -182,6 +219,8 @@ namespace MafiaCleanCity.Operational.Tests
             tex.Apply();
             RenderTexture.active = prev;
             System.IO.File.WriteAllBytes(chemin, tex.EncodeToPNG());
+            // Le plancher d'encre — 4 planches du dépôt étaient vides avec des tests verts.
+            MafiaCleanCity.Shell.Tests.CaptureSousShell.PlancherDEncre(tex, chemin);
 
             // Anti-vacuité de FORME (patron ㊲) : une capture ratée est UNIFORME, peu importe sa
             // couleur — on compte les pixels qui diffèrent du fond dominant, pas les pixels
@@ -196,10 +235,24 @@ namespace MafiaCleanCity.Operational.Tests
             int dominant = 0;
             foreach (var kv in histo) if (kv.Value > dominant) dominant = kv.Value;
             int horsFond = pixels.Length - dominant;
-            Assert.Greater(horsFond, 0,
-                $"capture {largeur}x{hauteur} entièrement UNIFORME — l'écran n'a rien rendu " +
-                "hors de son propre fond (plancher volontairement bas : le squelette n'a pas " +
-                "encore de contenu MÉTIER ICI ; le durcir une fois BuildLayout() rempli)");
+            // ⛔ TD-554 : ce plancher était `horsFond > 0` — il n'exigeait QUE que l'image ne
+            // soit pas d'une seule couleur, donc un écran VIDE le franchissait. Il venait du
+            // gabarit de `Tools/nouvel-ecran.py`, avec son excuse « plancher volontairement bas,
+            // à durcir une fois BuildLayout() rempli » : aucun écran n'est jamais revenu le
+            // durcir. *Une dette écrite dans un gabarit n'est pas une dette, c'est une politique.*
+            // La PROPORTION de pixels hors dominante est de toute façon la mauvaise grandeur —
+            // l'anticrénelage d'un titre en produit autant qu'une mise en page. Le NOMBRE DE
+            // TEINTES tranche. Seuils repris de `CaptureSousShell`.
+            // ⛔ AVERTISSEMENT, PAS ASSERTION (2026-09-04) : cet écran est capturé SEUL, sur un
+            // compte souvent frais. Son état vide rend légitimement 8 à 9 teintes, et asserter
+            // ici ferait rougir un écran CORRECT — mesuré sur ㉜ et ㉝, à qui je l'ai failli.
+            // *Une garde chromatique ne distingue pas « cassé » de « correctement vide ».*
+            if (histo.Count <= 12)
+                Debug.LogWarning($"[CAPTURE] {largeur}x{hauteur} — {histo.Count} teintes : un FOND " +
+                    "avec un titre. Vérifier QUEL COMPTE la suite ouvre avant de conclure.");
+            Assert.IsTrue(largeur >= 200 && hauteur >= 200,
+                $"capture {largeur}x{hauteur} : une dimension sous 200 px — un RectTransform resté " +
+                "à sa taille par défaut (100x100) ne leve AUCUNE erreur console et rend une image plausible");
 
             canvas.renderMode = modeAvant;
             canvas.worldCamera = cameraAvant;
