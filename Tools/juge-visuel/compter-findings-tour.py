@@ -4,7 +4,8 @@
 
 Règle du gabarit (dossier-gabarit.md) : « le compte se prend dans la table, jamais dans la synthèse » —
 mesuré sur cinq tours de ㊲ : deux résumés annonçaient 6 et 3 majeurs là où leurs tables en portaient 8 et 8.
-Une ligne de finding = `| `F<n>` | <gravité> | …` ; la gravité est la 2ᵉ cellule, dépouillée de ` * `.
+Une ligne de finding = `| `<id>` | <gravité> | …` (id `F<n>`, `B<n>`, `M<n>`… — jamais `C<n>`, réservé au contrôle positif) ;
+la gravité est la 2ᵉ cellule, dépouillée de ` * `. Mesuré : un motif limité à `F` rendait 9 findings pour le r5 de ① qui en portait 24.
 
 Usage : python3 Tools/juge-visuel/compter-findings-tour.py <date>   (ex. 2026-09-06)
 Sortie : une ligne par rapport `r*-<date>/rapport.md` trouvé, puis la somme. Plancher anti-vacuité : 0 rapport ⇒ exit 2.
@@ -17,7 +18,7 @@ if not rapports:
     print(f'⛔ aucun rapport r*-{date}/rapport.md sous {racine}', file=sys.stderr); sys.exit(2)
 tot = {'BLOQUANT': 0, 'MAJEUR': 0, 'MINEUR': 0}; n_tot = 0
 for f in rapports:
-    rows = [l for l in f.read_text(encoding='utf-8').splitlines() if re.match(r'^\| `?F\d+`? \|', l)]
+    rows = [l for l in f.read_text(encoding='utf-8').splitlines() if re.match(r'^\| `?(?!C\d)[A-Z]{1,2}\d+`? \|', l)]
     c = {k: 0 for k in tot}; autres = 0
     for l in rows:
         cells = [x.strip(' *`') for x in l.split('|')]
