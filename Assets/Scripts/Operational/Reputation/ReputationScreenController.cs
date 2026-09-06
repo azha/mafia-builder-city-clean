@@ -1576,10 +1576,16 @@ namespace MafiaCleanCity.Operational
                 float rendu = rt.rect.height;
                 var lg = GetComponent<UnityEngine.UI.LayoutGroup>();
                 float prefere = lg != null ? UnityEngine.UI.LayoutUtility.GetPreferredHeight(rt) : -1f;
+                // ⚠️ LE MINIMUM DÉCIDE, PAS LE PRÉFÉRÉ. Un `VerticalLayoutGroup` ne comprime qu'entre
+                //    le MIN et le PRÉFÉRÉ : si la somme des minimums vaut déjà le préféré, il n'a
+                //    aucune marge et dispose ses enfants hors de la boîte. Le préféré seul ne
+                //    permet donc pas de conclure — c'est le min qu'il faut lire.
+                float mini = lg != null ? UnityEngine.UI.LayoutUtility.GetMinHeight(rt) : -1f;
                 Debug.Log($"[CADRE-ELASTIQUE] écran {parent.rect.height:F0} · insetHaut {insetHaut:F0}"
                           + $" · margeBasse {bas:F0} · zone libre {zoneLibre:F0} · voulu "
                           + $"{hauteurVoulue:F0} · posé {h:F0} · RENDU {rendu:F0} · préféré "
-                          + $"{prefere:F0} · sommet {(parent.rect.height - bas - rendu):F0}");
+                          + $"{prefere:F0} · MIN {mini:F0} · sommet "
+                          + $"{(parent.rect.height - bas - rendu):F0}");
             }
         }
 
