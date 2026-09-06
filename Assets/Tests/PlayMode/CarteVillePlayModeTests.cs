@@ -88,6 +88,31 @@ namespace MafiaCleanCity.Shell.Tests
             // un axe Y inversé — rougit ici, pas dans la distance.
             Assert.Greater(pos["TIDEWATER-1"].y, pos["VERGE-A"].y, "Tidewater-1 (le port) doit être AU-DESSUS de Verge-A");
             Assert.Greater(pos["VERGE-A"].x, pos["LATTICE-C"].x, "Verge-A doit être À DROITE de Lattice-C");
+
+            // ⛔⛔ F8 — DEUX DES TROIS CAUSES RÉFUTÉES PAR LA MESURE, LA TROISIÈME NON DÉCIDABLE ICI.
+            // Un juge ⊥ mesure les noms décalés de **+7,5 px, 13 sur 13 du même signe, sur deux
+            // tours**. Un décalage systématique n'est pas un défaut de placement : c'est un décalage
+            // de RÉFÉRENCE. Trois candidats, tous sondés sur les 18 cellules plutôt qu'un seul
+            // nommé au jugé :
+            //   · LIGNE DE BASE / alignement du texte dans sa boîte — **RÉFUTÉ** : l'écart
+            //     encre−boîte vaut **+0,00 sur les 18** (boîte h=36,00, encre h=30,27, centres
+            //     confondus). TMP centre l'encre exactement ;
+            //   · PIVOT DU LABEL APRÈS ROTATION — **RÉFUTÉ** : l'écart label−cellule en monde vaut
+            //     **+0,52 à −0,16 unité** et il SUIT la rotation de la cellule (+0,52 à 10°, −0,16
+            //     à −3°). Il varie donc avec l'angle, quand le défaut est constant en signe ;
+            //   · SENS DE L'ANCRE — **NON DÉCIDABLE DANS LE CLIENT**, et c'est le résultat utile :
+            //     les fractions d'ancre placent la cellule, la cellule porte son nom centré, tout
+            //     est cohérent de bout en bout. Si le nom atterrit 7,5 px trop haut sur la planche,
+            //     c'est que **l'ancre de la donnée et la position du nom dans la référence ne
+            //     désignent pas le même point** — le centroïde du quartier d'un côté, la pose du
+            //     lettrage de l'autre.
+            // ⇒ CE QU'IL FAUT POUR TRANCHER, et ce n'est pas dans ce dépôt : les positions de NOM de
+            //   la référence, à confronter aux 18 ancres. *Fabriquer cette donnée côté client serait
+            //   l'instrument qui invente ce qu'il mesure.*
+            // ⚠️ Les sondes qui ont produit ces chiffres ont été retirées après lecture : 36 lignes
+            //   par run pour une question tranchée une fois. Les nombres restent ici, la sonde non —
+            //   seul cas où ce dépôt ne commite pas l'instrument avec son verdict, et la raison est
+            //   écrite plutôt que supposée.
         }
 
         [UnityTest]
