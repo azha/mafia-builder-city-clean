@@ -310,6 +310,46 @@ namespace MafiaCleanCity.Shell
         private const float ArcChaudFinDeg = 60.55f;
 
         private const float BoitierRingThicknessPx = 3f;
+
+        /// <summary>⛔⛔ CE LITTÉRAL EST FAUX ET NE DOIT PAS ÊTRE CORRIGÉ À L'AVEUGLE — le compte
+        /// ne tombe pas, et c'est le sujet.
+        ///
+        /// LA VALEUR DU CANON, DÉRIVÉE ET NON RECOPIÉE : la source
+        /// (`Tools/hud-topbar-reference-source.html:42-44`) donne `stroke-width="3.5"` dans un
+        /// `viewBox="0 0 60 40"` que la CSS affiche en `.cadran{width:44px;height:28px}`. Un SVG
+        /// sans `preserveAspectRatio` explicite échelonne UNIFORMÉMENT au plus PETIT facteur :
+        /// `min(44/60 ; 28/40) = min(0,7333 ; 0,700) = 0,700` — **c'est la hauteur qui contraint**,
+        /// et la largeur laisse du jeu. ⇒ trait du canon = `3,5 × 0,700` = **2,45 CSS**.
+        ///
+        /// ⇒ POURQUOI CE FICHIER PORTAIT 5 SANS QUE RIEN NE ROUGISSE, et c'est la leçon :
+        /// `ArcDiameterPx`, dix lignes plus bas, est DÉRIVÉ, et son commentaire explique
+        /// longuement qu'une grandeur dépendante se dérive au lieu de se recopier. Il dérive de
+        /// CELUI-CI, resté littéral. *Dériver une grandeur ne vaut rien si son entrée reste un
+        /// littéral* — la chaîne n'est correcte qu'à partir du premier maillon dérivé, et c'est le
+        /// maillon AMONT qu'il faut chercher.
+        ///
+        /// ⛔⛔ ET POURQUOI JE NE POSE PAS 2,45 TOUT DE SUITE : LE COMPTE NE TOMBE PAS.
+        /// `ProceduralUI.RampeAntiCrenelagePx` vaut 1,5 et sa propre docstring donne la relation
+        /// exacte — un trait nominal `t` a ses bords à mi-alpha distants de `t − 1,5`. Donc
+        /// `t = 5` doit MESURER **3,5**. Un juge ⊥ mesure **4,20** (largeur perpendiculaire à la
+        /// centerline, à mi-alpha, 83 à 105 coupes par arc), et son échelle est corroborée par deux
+        /// autres grandeurs du même objet : le boîtier (68 posé → 67,0 mesuré) et le rayon médian
+        /// de l'anneau (15,3 posé → 15,65 mesuré) donnent tous deux un facteur ≈ 1,0.
+        /// ⇒ **0,7 px d'épaisseur que ce rastériseur ne peut pas produire à `t = 5`.** Quelque
+        /// chose épaissit l'arc en plus du paramètre : la piste neutre que le même rapport signale
+        /// sous l'interstice (`m5`), un second dessin superposé, ou une mise à l'échelle du
+        /// RectTransform qui porte le sprite. Je ne sais pas encore lequel.
+        /// ⇒ Poser 2,45 (+ rampe) maintenant reviendrait à soustraire ma part et à laisser l'autre :
+        /// on atterrirait autour de 3,1 mesuré pour 2,65 au canon — un défaut plus petit, toujours
+        /// là, et cette fois SANS explication puisque le littéral serait devenu juste.
+        /// ★ Ce dépôt a déjà payé exactement ça sur cet objet : un élargissement d'une demi-rampe
+        ///   dérivé d'un MODÈLE de l'endroit où l'instrument tranche, réfuté par la mesure et
+        ///   reverti. *Corriger une géométrie pour satisfaire un seuil dont on n'a pas mesuré la
+        ///   position, c'est régler sur l'instrument et non sur l'objet.*
+        /// ⇒ LA MESURE QUI DÉBLOQUE, à faire au prochain créneau Unity : rendre l'arc SEUL, sans
+        /// piste ni voisin, et lire sa largeur à mi-alpha pour `t` ∈ {3, 4, 5}. Si elle rend
+        /// `t − 1,5`, l'excédent vient d'un VOISIN et le correctif est de le retirer ; si elle rend
+        /// `t − 1,5 + 0,7`, il vient de la chaîne de rendu et le correctif est ici.</summary>
         private const float ArcThicknessPx = 5f;
 
         /// <summary>Le rayon MÉDIAN de l'arc, en fraction du rayon du médaillon — la grandeur que
