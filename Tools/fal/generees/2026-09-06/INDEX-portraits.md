@@ -102,3 +102,32 @@ une silhouette **mouchetée** (vu à 26 px). Une silhouette se REMPLIT depuis so
 - Les onze partagent une même lumière et un même cadrage : c'est voulu pour qu'ils s'assoient ensemble
   dans une liste, mais aucun n'a été jugé **sous le chrome réel** (encre crème, laiton) — seulement
   sur l'aplat. C'est la mesure suivante, et elle demande une capture d'écran, donc la porte Unity.
+
+
+---
+
+## ⚠️ PÉREMPTION — la prémisse d'époque des onze est CHANGÉE (ruling user, 2026-09-06 soir)
+
+**L'ère passe de 1A « contemporain 2000-2010 » à 1B « fin des années 1980 – début des années 1990 »**
+(cabines, pagers, béton) — enregistré dans `2026-09-01-reorganisation-production-ecrans.md:61`.
+**Et aucun PAYS n'a jamais été décidé** : la mention « port français » qui apparaît dans les prompts de
+cette série vient d'une invention relayée dans le mandat, pas d'un arbitrage ; l'arbitrage du 2026-09-02
+portait sur la LANGUE. Le cadre est un **port indéterminé**.
+
+⇒ **Les onze portraits ci-dessus sont donc datés d'une ère qui n'est plus la bonne.** Ce n'est pas une
+retouche : c'est un tour complet, même graine, même postérisation aux 4 encres, même protocole (jugé à
+26 px), en 1B. Ce qui tombe : le bonnet + casque audio d'INTELLIGENCE et la polaire technique de
+SECURITY lisent 2010. Ce qui passe sans retouche : le masque à gaz, la casquette plate, le manteau du Don.
+
+**Second axe à trancher dans le même tour, sans mélanger les variables** — l'ère est une contrainte
+FIXÉE (elle ne se compare pas), l'identité est la variable. Mesuré sur la planche des onze :
+**3 archétypes sur 11 portent un attribut qui dit le métier** (masque à gaz, casque, casquette plate) ;
+les huit autres sont des visages. Deux directions à soumettre sur les mêmes trois archétypes :
+- **E « emblème »** — chaque archétype construit autour d'UN objet non ambigu (registre, tablier,
+  trousseau, sacoche). Hypothèse : la lisibilité à 26 px vient de l'ATTRIBUT, pas de l'époque.
+- **N « typé »** — identité forte et assumée, proposée par l'user. Rien ne s'y oppose côté fiction
+  puisqu'aucun pays n'est posé.
+
+*Ce paragraphe est écrit pour qu'un lecteur de l'INDEX ne relance pas la série en 1A : la partie
+au-dessus reste vraie comme MESURE (les chiffres à 26 px, les dispositifs imposés), et fausse comme
+CONSIGNE d'époque.*
