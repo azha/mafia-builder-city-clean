@@ -158,7 +158,7 @@ namespace MafiaCleanCity.Shell
                     Track(stateText.text);
                     break;
                 case CardState.CapBlocked:
-                    titleText.text = CurrentCard.decision_type_key;
+                    titleText.text = LibellesDecision.Type(CurrentCard.decision_type_key);
                     impactText.text = ImpactLabel(CurrentCard.impact_bucket);
                     urgencyText.text = UrgencyLabel(CurrentCard.urgency_bucket);
                     stateText.text = Lib("carte", "Limite de structure atteinte");
@@ -168,7 +168,7 @@ namespace MafiaCleanCity.Shell
                     Track(stateText.text);
                     break;
                 case CardState.Available:
-                    titleText.text = CurrentCard.decision_type_key;
+                    titleText.text = LibellesDecision.Type(CurrentCard.decision_type_key);
                     impactText.text = ImpactLabel(CurrentCard.impact_bucket);
                     urgencyText.text = UrgencyLabel(CurrentCard.urgency_bucket);
                     stateText.text = Lib("carte", "Prêt");
@@ -185,10 +185,18 @@ namespace MafiaCleanCity.Shell
             if (!string.IsNullOrEmpty(t)) renderedTexts.Add(t);
         }
 
-        private static string ImpactLabel(string b) =>
-            b == "minor" ? "Minor" : b == "moderate" ? "Moderate" : b == "major" ? "Major" : (string.IsNullOrEmpty(b) ? "Unknown" : b);
-        private static string UrgencyLabel(string b) =>
-            b == "low" ? "Low" : b == "elevated" ? "Elevated" : b == "pressing" ? "Pressing" : (string.IsNullOrEmpty(b) ? "Unknown" : b);
+        // ⛔⛔ CES DEUX RÉSOLVEURS RENDAIENT L'ANGLAIS PENDANT QUE ⑤ RENDAIT LE FRANÇAIS, sur les
+        //    MÊMES champs de la MÊME réponse, à quelques secondes d'écart pour le joueur : la carte
+        //    de l'Accueil disait « Moderate / Low », son détail « modérée / faible ». Et le TITRE
+        //    était pire — `decision_type_key` posé BRUT, donc `AUTONOMY_REPORTS_PENDING` en toutes
+        //    lettres, là où ⑤ passait par un résolveur.
+        //    ★★ *Deux écrans qui montrent la même donnée doivent la nommer pareil, et la seule
+        //      façon de s'en assurer est qu'un seul code la nomme.* C'est exactement la forme de
+        //      TD-611, sur une autre grandeur : deux producteurs, l'un branché, l'autre oublié.
+        //    ⇒ Les deux méthodes sont supprimées plutôt que traduites : les garder traduites
+        //      laisserait DEUX producteurs, et le prochain qui change un mot n'en changerait qu'un.
+        private static string ImpactLabel(string b) => LibellesDecision.Portee(b);
+        private static string UrgencyLabel(string b) => LibellesDecision.Urgence(b);
 
         // --------------------------------------------------------------- UI build
 

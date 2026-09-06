@@ -169,13 +169,13 @@ namespace MafiaCleanCity.Shell
 
             bool structurelle = carte.structural;
             coinLibelle.text = structurelle ? "structurelle" : "tactique";
-            titre.text = LibelleDuType(carte.decision_type_key);
+            titre.text = LibellesDecision.Type(carte.decision_type_key);
             noteZinc.text = structurelle
                 ? "Structurelle — trancher consomme votre décision de la session."
                 : "Tactique — trancher ne touche pas à votre décision structurelle.";
 
-            RemplirPips(pipsPortee, porteeLibelle, carte.impact_bucket);
-            RemplirPips(pipsUrgence, urgenceLibelle, carte.urgency_bucket);
+            RemplirPips(pipsPortee, porteeLibelle, carte.impact_bucket, urgence: false);
+            RemplirPips(pipsUrgence, urgenceLibelle, carte.urgency_bucket, urgence: true);
 
             // Le jeton : la décision structurelle de la session. `used`/`cap_reached` sont les deux
             // seules clés servies — on n'invente ni total ni reste.
@@ -185,17 +185,24 @@ namespace MafiaCleanCity.Shell
             jetonEtat.color = pris ? Creme2 : OrVif;
         }
 
-        private static void RemplirPips(RectTransform hote, TextMeshProUGUI libelle, string bucket)
+        private static void RemplirPips(RectTransform hote, TextMeshProUGUI libelle, string bucket, bool urgence)
         {
-            int n = bucket == "high" ? 3 : bucket == "moderate" || bucket == "medium" ? 2 : bucket == "low" ? 1 : 0;
+            int n = LibellesDecision.Rang(bucket, urgence);
             for (int i = 0; i < hote.childCount; i++)
             {
                 Image img = hote.GetChild(i).GetComponent<Image>();
                 if (img != null) img.color = i < n ? Or : new Color(1f, 1f, 1f, 0.12f);
             }
-            libelle.text = bucket == "high" ? "élevée"
-                         : bucket == "moderate" || bucket == "medium" ? "modérée"
-                         : bucket == "low" ? "faible" : "—";
+            // ⛔⛔ CETTE TERNAIRE COUVRAIT TROIS VALEURS SUR SIX. Elle testait `high`, `moderate`,
+            //    `medium`, `low` — le back sert `minor|moderate|major` et `low|elevated|pressing`.
+            //    Quatre des six valeurs réelles tombaient donc sur « — », sur l'écran dont c'est
+            //    le sujet, et personne ne l'a vu parce que le compte de démo sert justement les
+            //    deux que la liste contenait. ⇒ Un seul producteur, adossé aux deux types du back.
+            //    ⚠️ Et il en faut DEUX, pas un : portée et urgence sont deux domaines DISTINCTS
+            //      (`minor|moderate|major` / `low|elevated|pressing`), que cette ternaire unique
+            //      mélangeait. Les servir par la même fonction, c'était accepter qu'un jour l'un
+            //      réponde pour l'autre.
+            libelle.text = urgence ? LibellesDecision.Urgence(bucket) : LibellesDecision.Portee(bucket);
         }
 
         /// <summary>Pis-aller tant qu'aucune clé i18n n'est servie par ce back (178 référencées,
@@ -220,24 +227,6 @@ namespace MafiaCleanCity.Shell
         /// CALCULÉE depuis une valeur du serveur, donc `Tools/cles-i18n-du-client.py` — qui ne
         /// lit que des littéraux — ne la produira JAMAIS. La liste des types de décision doit
         /// venir du back, elle ne peut pas être dérivée d'ici. TD-535.</summary>
-        private static string LibelleDuType(string cle)
-        {
-            if (string.IsNullOrEmpty(cle)) return "";
-            string traduit = MafiaCleanCity.I18n.Libelle.De("decision", "type", cle);
-            // `De` rend le LITTÉRAL quand la clé manque : ici le littéral EST la clé machine, donc
-            // un repli brut afficherait `autonomy_reports_pending`. Pire que le défaut qu'on
-            // corrige. On reconnaît le repli à l'identité et on rend l'ancien dé-sluggage.
-            return traduit == cle ? Lisible(cle) : traduit;
-        }
-
-        private static string Lisible(string cle)
-        {
-            if (string.IsNullOrEmpty(cle)) return "";
-            string[] p = cle.Split('.');
-            string d = p[p.Length - 1].Replace('_', ' ');
-            return d.Length == 0 ? "" : char.ToUpperInvariant(d[0]) + d.Substring(1);
-        }
-
         public IEnumerator Commit()
         {
             Init();
