@@ -761,7 +761,29 @@ namespace MafiaCleanCity.Shell.Tests
         ///   valeurs sont les mêmes et seule la LONGUEUR change — l'amincissement reste collé aux
         ///   extrémités, avec la même étendue absolue quand l'arc s'allonge. **C'est la COUPE
         ///   `Radial180`, pas l'échelle d'affichage.**
-        /// ⛔⛔⛔ RÉTRACTATION, LE MÊME SOIR ET PAR L'AUTRE ORACLE DE CE FICHIER. Tout ce qui
+        /// ⛔⛔⛔⛔ SECONDE RÉTRACTATION, PLUS GRAVE : **CET INSTRUMENT N'A JAMAIS MESURÉ L'ARC
+        /// CHAUD.** Éteindre `ArcCold` le temps de la mesure — le geste même que la première
+        /// rétractation prescrivait — le rend AVEUGLE à tous les remplissages : 0, 0,1124, 0,15,
+        /// 0,30, 0,45 et 0,60 rendent tous « aucun pixel d'arc ». Tout ce qu'il a rapporté depuis
+        /// le début était donc **l'arc FROID**, vu à travers un seuil de distance à la braise.
+        ///   ⇒ Tombent avec : l'étendue 88°→138°, l'étendue 88°→170°, la carte `fill × 180`, et
+        ///     surtout le **ratio de fuselage 3,25** — mesuré sur le mauvais objet. La coïncidence
+        ///     avec le ~3,4 du juge ⊥, que j'avais lue comme une corroboration entre deux méthodes
+        ///     indépendantes, n'en était pas une.
+        ///   ⇒ CAUSE : le seuil est dérivé de la distance braise → verre, à 40 %. L'arc chaud est
+        ///     composé à `alpha 0,533` sur le cadran : le pixel rendu est à mi-chemin de la braise,
+        ///     **au-delà du seuil**. Le froid, composé à 0,333, tombe par hasard EN DEÇÀ. J'ai donc
+        ///     dérivé un seuil d'un couple de couleurs que l'objet mesuré ne porte pas.
+        /// ★★ ET LE CONTRÔLE QUI MANQUAIT TIENT EN UNE PHRASE : j'avais un contrôle négatif
+        ///   (« arc à 0 ⇒ rien ») et un contrôle de prédiction (« le compte suit `fillAmount` »).
+        ///   **Aucun des deux ne prouve que l'instrument voit l'objet qu'il NOMME** — les deux sont
+        ///   satisfaits à la perfection par un instrument qui mesure le voisin, puisque le voisin
+        ///   est masqué par celui qu'on éteint et découvert par celui qu'on allonge. *Un contrôle
+        ///   négatif prouve qu'on ne mesure pas RIEN ; il ne prouve pas qu'on mesure LE BON.*
+        ///   ⇒ Le contrôle qui manquait : **éteindre la cible et vérifier que la mesure tombe** —
+        ///     l'inverse exact de celui que j'avais posé.
+        ///
+                /// ⛔⛔⛔ RÉTRACTATION, LE MÊME SOIR ET PAR L'AUTRE ORACLE DE CE FICHIER. Tout ce qui
         /// précède sur la LONGUEUR est faux, et le mécanisme de l'erreur est celui que ce fichier
         /// documente déjà deux cents lignes plus haut : **deux arcs superposés ne se mesurent pas
         /// indépendamment.**
@@ -803,12 +825,22 @@ namespace MafiaCleanCity.Shell.Tests
             Assert.IsNotNull(arcImg, "l'arc doit être une Image remplie");
             float fillOrigine = arcImg.fillAmount;
 
+            // ⛔⛔ L'ARC VOISIN EST ÉTEINT LE TEMPS DE LA MESURE. Sans ça, toute étendue lue ici est
+            // la frontière où l'AUTRE arc cesse de masquer celui-ci — c'est ce qui m'a fait publier
+            // « couverture = fill × 180 » sur deux points dont les bornes de départ étaient le MÊME
+            // 88°, et en tirer une rétractation. Le fichier portait déjà l'avertissement deux cents
+            // lignes plus haut ; l'éteindre est la seule forme qui le respecte.
+            Transform arcFroid = manoT.Find("ArcCold");
+            var froidImg = arcFroid != null ? arcFroid.GetComponent<UnityEngine.UI.Image>() : null;
+            float fillFroidOrigine = froidImg != null ? froidImg.fillAmount : 0f;
+            if (froidImg != null) froidImg.fillAmount = 0f;
+
             var lignes = new List<string>();
             // ⛔ LE CONTRÔLE NÉGATIF EST DANS LE BALAYAGE, pas à côté : `fill = 0` éteint l'arc et
             // laisse la piste seule. S'il rend autre chose que ZÉRO secteur porteur, le seuil
             // compte encore la piste et AUCUN des autres nombres ne vaut. *Un contrôle qui vit dans
             // la même boucle que la mesure ne peut pas être oublié quand la mesure change.*
-            foreach (float f in new[] { 0f, fillOrigine, 0.30f, 0.45f })
+            foreach (float f in new[] { 0f, fillOrigine, 0.15f, 0.30f, 0.45f, 0.60f })
             {
                 arcImg.fillAmount = f;
                 Canvas.ForceUpdateCanvases();
@@ -818,6 +850,7 @@ namespace MafiaCleanCity.Shell.Tests
                 Object.DestroyImmediate(img);
             }
             arcImg.fillAmount = fillOrigine;
+            if (froidImg != null) froidImg.fillAmount = fillFroidOrigine;   // rendre le monde tel qu'on l'a trouvé
             Canvas.ForceUpdateCanvases();
             yield return null;
 
