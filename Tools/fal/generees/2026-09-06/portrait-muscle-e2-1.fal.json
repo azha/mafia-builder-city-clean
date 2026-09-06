@@ -1,0 +1,13 @@
+{
+  "modele": "fal-ai/flux/dev",
+  "prompt": "An enforcer: very wide square shoulders, shaved head, zipped high-collar bomber jacket, thick neck. Flat vector poster illustration, limited palette, hard clean shapes, no photorealism, no texture, no gradient mesh. Bust of a person, head and shoulders, front view, filling the square frame. Contemporary northern-European port city, early 2000s, ordinary working people: no gangster cliches, no fedora, no suit, no jewellery. Background: one single very dark blue-grey #161c2b, perfectly flat and uniform, no vignette, no scenery. Lighting: one strong warm sodium-amber #b08d3e rim light along the left edge of the head and shoulders, everything else in deep shadow. Only four or five colours total: near-black, dark slate blue, warm brass, and a small area of cream #eae0c8. Massive readable silhouette, no small details, no text, no logo, no watermark.",
+  "seed": 41,
+  "largeur": 1024,
+  "hauteur": 1024,
+  "etapes": 28,
+  "guidance": 3.5,
+  "request_id": "01a07784-8a29-7880-92d9-064206ea971d",
+  "duree_s": 7.6,
+  "cout_usd_estime": 0.025,
+  "genere_le": "2026-09-06T18:19:37+0200"
+}
