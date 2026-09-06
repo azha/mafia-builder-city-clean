@@ -1,0 +1,13 @@
+{
+  "modele": "fal-ai/flux/dev",
+  "prompt": "A man seen from behind in dark silhouette, large in frame — head, flat cap and shoulders occupying the lower half — facing a single tall shipping container that fills the upper half, one lit doorway cut into it, sodium glare above. Mobile app icon, painted poster illustration, flat areas of colour, thick contours, heavy simplification, no photorealism. Night, rain, one warm sodium lamp. Muted desaturated palette only: near-black, dark blue-grey #161c2b, warm brass #b08d3e, cream #eae0c8 highlights. Dark background edge to edge, no border, no frame, no text, no letters, no logo, no watermark. ONE dominant motif filling most of the square, very few large shapes, no small distant detail — it must still read at 36 pixels.",
+  "seed": 11,
+  "largeur": 1024,
+  "hauteur": 1024,
+  "etapes": 28,
+  "guidance": 3.5,
+  "request_id": "01a07891-9772-74e1-8561-594f40491dd0",
+  "duree_s": 7.6,
+  "cout_usd_estime": 0.025,
+  "genere_le": "2026-09-06T23:13:29+0200"
+}
