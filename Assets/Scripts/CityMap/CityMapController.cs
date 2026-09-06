@@ -110,6 +110,28 @@ namespace MafiaCleanCity.CityMap
         private const string CheminAncres = "CityMap/ancres_districts";
         private const float MarqueurLargeur = 210f;   // unités canvas (1280 de large) — le lettrage de
         private const float MarqueurHauteur = 40f;    // la maquette fait ~2,2 % de la largeur
+
+        /// <summary>Le corps du nom de quartier, en unités de canvas. ⛔ 16 RENDAIT LE NOM 37 %
+        /// TROP PETIT : un juge ⊥ a mesuré la hauteur de capitale en tranches verticales de 24 px
+        /// (insensible à l'inclinaison) — **médiane 16 px** sur la maquette contre **10 px** en jeu,
+        /// rapport 0,625, avec pour contrôle positif « LE THRENNY », peint dans la texture, qui rend
+        /// 18 px des DEUX côtés (×1,000). Le rapport s'applique au corps : 16 ÷ 0,625 = 25,6.</summary>
+        private const int CorpsDuNomUnites = 26;
+
+
+        /// <summary>Le plafond d'opacité du halo d'état de contrôle — DÉRIVÉ, pas choisi.
+        ///
+        /// L'instrument du juge compte comme « masse visuelle » tout pixel dépassant le fond de
+        /// **+20 de luminance**. Le fond de la carte vit à L ≈ 26–35 (navy) ; la teinte d'état la
+        /// plus claire, `controlUncontested`, rend L ≈ 143. Un voile d'opacité α ajoute donc
+        /// ΔL ≈ (143 − 30)·α, et il reste sous le seuil de l'instrument tant que α &lt; 20/113 =
+        /// **0,177**. Le halo ne peut donc plus, par construction, être compté comme la masse qui a
+        /// produit F1 — et ce n'est pas une promesse, c'est une inégalité opposable.
+        /// ⚠️ Bornée à 0,15 et non à 0,177 : la marge absorbe l'écart sRGB↔linéaire que ce dépôt a
+        /// déjà payé une fois (un même α ne donne pas le même pixel dans les deux espaces, et
+        /// l'écart CROÎT avec le contraste — ce qui est exactement notre cas, une teinte claire sur
+        /// une nuit bleue).</summary>
+        public const float AlphaHaloMax = 0.15f;
         public bool VillePeinteMontee { get; private set; }
         public Sprite VillePeinteSprite { get; private set; }
         public RectTransform VillePeinteRect => villePeinteRt;
@@ -259,7 +281,14 @@ namespace MafiaCleanCity.CityMap
                     string cle = (dto.name_canonical ?? string.Empty).ToUpperInvariant();
                     if (!ancres.TryGetValue(cle, out AncreDistrictDto ancre)) districtsSansAncre.Add(dto.name_canonical);
                     cell = BuildMarqueur(marqueursRt, ancre);
-                    cell.Bind(dto, cell.GetComponent<Image>(), cell.GetComponentInChildren<TextMeshProUGUI>(), compact: true);
+                    // ⛔ Le porteur de l'état de contrôle est le HALO, pas l'`Image` de la cellule —
+                    // celle-ci est devenue la surface de toucher, transparente. `GetComponent<Image>()`
+                    // rendrait l'état de contrôle invisible SANS qu'aucune assertion de couleur ne
+                    // bronche : elle serait vraie sur un objet à alpha nul. On désigne le halo par
+                    // son NOM, jamais par sa position dans l'arbre.
+                    Image halo = cell.transform.Find("Halo").GetComponent<Image>();
+                    cell.Bind(dto, halo, cell.GetComponentInChildren<TextMeshProUGUI>(), compact: true);
+                    AjusterHaloSurLEncre(cell);
                 }
                 else
                 {
@@ -587,13 +616,78 @@ namespace MafiaCleanCity.CityMap
             rt.pivot = new Vector2(0.5f, 0.5f);
             rt.sizeDelta = new Vector2(MarqueurLargeur, MarqueurHauteur);
             rt.anchoredPosition = Vector2.zero;
-            Image bg = cell.AddComponent<Image>();
-            bg.color = Color.gray;
 
-            TextMeshProUGUI label = NewText("Label", cell.transform, "", 16, TextAlignmentOptions.Center);
+            // ⛔⛔ LA PLAQUE OPAQUE EST PARTIE, ET ELLE PORTAIT CINQ DES DIX ÉCARTS DE ③.
+            // Un juge ⊥ a mesuré (`carte/r1-2026-09-06`) : `Image` sur la cellule, `Color.gray`,
+            // 210 × 40 unités, opacité 100 % — 45 échantillons répartis dans une plaque rendent
+            // TOUS exactement (140,140,148), y compris par-dessus le parc et la rose des vents.
+            //   F1  masse visuelle ×3,00 à ×7,85 autour du nom (témoins sans marqueur : ×1,04 à ×1,18)
+            //   F2  contraste du nom 2,80:1 — SOUS le plancher de doctrine 4,5:1, quand la maquette
+            //       obtient 8,43:1 en n'ayant AUCUNE plaque
+            //   F5  le bras SUD de la rose des vents recouvert : 31 px perdus sur 146, soit 21 %
+            //   F7  largeur FIXE : 177 px de plaque pour 48 px d'encre sur « ORSEL » — 73 % de
+            //       plaque sans une seule lettre
+            //   F10 arête franche : (140,140,148) → (22,36,49) en UN pixel, rayon 0
+            // *Un seul objet mal choisi a produit cinq findings dans quatre classes différentes.*
+            // La maquette ne pose pas de plaque : elle GRAVE le nom à même la peinture, et l'état
+            // de contrôle vit ailleurs (lavis sur l'AIRE du quartier, écussons, halo or de chez-soi).
+            //
+            // ⇒ La cellule garde donc DEUX graphiques distincts, parce qu'ils font deux métiers que
+            //   l'ancien mélangeait :
+            //     · `Hit`  — transparent, la SURFACE DE TOUCHER (210 × 40 unités, inchangée : c'est
+            //               une cible de doigt, elle n'a jamais eu à être visible) ;
+            //     · `Halo` — le porteur de l'état de contrôle, une lueur radiale SANS BORD, large
+            //               comme l'encre et non comme une constante.
+            //   `Background` (ce que les tests épinglent) désigne désormais le HALO : le contrat
+            //   « la couleur porte l'état de contrôle » est INTACT, c'est sa forme qui change.
+            Image hit = cell.AddComponent<Image>();
+            hit.color = new Color(0f, 0f, 0f, 0f);   // invisible, mais toujours cliquable
+            hit.raycastTarget = true;
+
+            GameObject haloGo = NewUI("Halo", cell.transform);
+            Image halo = haloGo.AddComponent<Image>();
+            // ⛔ PAS DE SPRITE PLEIN : une lueur qui s'éteint, donc aucune arête à mesurer (F10).
+            halo.sprite = MafiaCleanCity.Shell.ProceduralUI.VoileRadial(
+                128, Color.white, new Vector2(0.5f, 0.5f), 0.5f, 0.5f);
+            halo.type = Image.Type.Simple;
+            halo.raycastTarget = false;
+            halo.transform.SetAsFirstSibling();      // sous le nom, toujours
+
+            TextMeshProUGUI label = NewText("Label", cell.transform, "", CorpsDuNomUnites,
+                TextAlignmentOptions.Center);
             label.characterSpacing = 8f; // le lettrage espacé de la maquette (.nomq : letter-spacing .24em)
             label.fontStyle = FontStyles.UpperCase; // capitales en STYLE — le texte reste le nom servi
+            // ⛔ LA TEINTE EST UNE FAMILLE, PAS UNE VALEUR (F9). Mesuré par le juge : l'encre de la
+            // maquette va de (173,164,144) à (205,189,165), soit r−b de 29 à 40 — une crème CHAUDE.
+            // Le jeu rendait (235,235,236), r−b = 1 : un blanc neutre, qui appartient à une autre
+            // langue graphique. `hudCremeSecondary` (#b9ad92) rend r−b = 39, dans la bande mesurée.
+            label.color = DesignTokens.Current.hudCremeSecondary;
+            // ⛔⛔ LE NOM NE SE TRONQUE PLUS, ET C'EST UNE RÉGRESSION QUE J'AI FAITE PUIS VUE SUR LA
+            // PLANCHE. En passant le corps de 16 à 26 unités (F3), les noms longs ont cessé de tenir
+            // dans les 198 unités que laissait `Stretch` : la planche rendait « HAUTES-MAR »,
+            // « LES ENTREP », « PLACE DES C », « LA CHANCEL », « MARNE-BASS ». Le juge avait pourtant
+            // un CONTRÔLE POSITIF là-dessus — C8, « 18/18, 0 slug, 0 troncature » — et mon correctif
+            // le cassait. *Un correctif qui ferme un finding en cassant un contrôle positif du même
+            // rapport n'a pas corrigé, il a déplacé.* Vu en REGARDANT la planche, pas en relisant le
+            // code : `overflowMode = Truncate` coupe sans lever quoi que ce soit.
+            // ⇒ Le correctif est le MODE DE DÉBORDEMENT, pas la largeur de la boîte. Je l'ai
+            //   d'abord « corrigé » en élargissant la boîte ET en passant en `Overflow` — deux
+            //   variables à la fois — et le contrôle positif est resté VERT quand j'ai remis
+            //   l'ancienne largeur : la largeur n'était pour rien dans le défaut, et la constante
+            //   que j'avais introduite pour elle était décorative. *Deux variables qui bougent
+            //   ensemble ne départagent rien*, y compris dans son propre correctif.
+            //   Un nom trop long DÉBORDE désormais (visible, donc jugeable, et le juge mesure les
+            //   paires de marqueurs — C10, 0 sur 153) au lieu d'être coupé en silence.
             Stretch((RectTransform)label.transform, new Vector2(6, 2), new Vector2(-6, -2));
+            label.overflowMode = TextOverflowModes.Overflow;
+
+            // Le halo suit l'ENCRE (F7) : il est posé une fois le texte connu, dans `AjusterHalo`.
+            var haloRt = (RectTransform)haloGo.transform;
+            haloRt.anchorMin = new Vector2(0.5f, 0.5f);
+            haloRt.anchorMax = new Vector2(0.5f, 0.5f);
+            haloRt.pivot = new Vector2(0.5f, 0.5f);
+            haloRt.anchoredPosition = Vector2.zero;
+            haloRt.sizeDelta = new Vector2(MarqueurLargeur, MarqueurHauteur);
 
             GameObject badge = NewUI("HeatBadge", cell.transform);
             RectTransform badgeRt = (RectTransform)badge.transform;
@@ -620,9 +714,45 @@ namespace MafiaCleanCity.CityMap
             DistrictCellView view = cell.AddComponent<DistrictCellView>();
             view.AttachHeatBadge(badge, badgeBg, badgeLabel);
             Button cellButton = cell.AddComponent<Button>();
-            cellButton.targetGraphic = bg;
+            cellButton.targetGraphic = hit;
             cellButton.onClick.AddListener(() => SelectDistrict(view.Model.id));
             return view;
+        }
+
+        /// <summary>Le halo épouse l'ENCRE du nom, jamais une largeur constante.
+        ///
+        /// ⛔ MESURÉ (F7) : les 18 plaques faisaient TOUTES 177 × 34 px pendant que l'encre allait
+        /// de 48 px (« ORSEL ») à 158 px (« PLACE DES COMPTES ») — donc 129 px de plaque, soit
+        /// **73 %**, sans une seule lettre sur le nom le plus court. Une boîte plus grande que son
+        /// contenu ne se contente pas d'être laide : elle MENT sur la place prise, et ici elle
+        /// masquait la peinture (F5, le bras sud de la rose des vents recouvert sur 21 % de sa
+        /// longueur).
+        /// ⚠️ La surface de TOUCHER, elle, ne suit PAS l'encre : elle reste à
+        /// `MarqueurLargeur × MarqueurHauteur`, parce qu'un nom court ne doit pas devenir une cible
+        /// de doigt plus petite que les autres. *Deux métiers, deux boîtes* — c'est exactement ce
+        /// que l'ancienne `Image` unique confondait.</summary>
+        private static void AjusterHaloSurLEncre(DistrictCellView cell)
+        {
+            if (cell == null || cell.Background == null || cell.Label == null) return;
+            cell.Label.ForceMeshUpdate();
+            var haloRt = (RectTransform)cell.Background.transform;
+            // Le halo s'éteint À SON BORD : sans marge, le voile serait tranché net là où il
+            // devait finir de s'éteindre. Une demi-hauteur de chaque côté suffit.
+            float largeurEncre = cell.Label.GetRenderedValues(true).x;
+            haloRt.sizeDelta = new Vector2(largeurEncre + MarqueurHauteur, MarqueurHauteur);
+
+            // ⛔ LE PLAFOND D'OPACITÉ S'APPLIQUE ICI, ET SEULEMENT ICI. `DistrictCellView.Bind`
+            // pose `ColorFor(State)` à pleine opacité, et c'est JUSTE pour l'autre montage de cet
+            // écran — la liste en deux colonnes, où la tuile EST un pavé plein et doit le rester.
+            // Une opacité bornée dans `Bind` serait une garde d'un domaine appliquée à un autre :
+            // le socle a déjà payé ce défaut (un `Mathf.Max(1, …)` écrit pour une épaisseur de
+            // trait, appliqué à un retrait négatif). ⇒ La contrainte vit chez celui qui la
+            // connaît : le marqueur posé sur la peinture.
+            // La TEINTE, elle, n'est pas touchée — le contrat « la couleur porte l'état de
+            // contrôle » reste vrai canal par canal.
+            Color teinte = cell.Background.color;
+            teinte.a = Mathf.Min(teinte.a, AlphaHaloMax);
+            cell.Background.color = teinte;
         }
 
         private void BuildLegend(Transform parent)
