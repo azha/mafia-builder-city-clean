@@ -5,21 +5,21 @@
  "statut": 200,
  "params": {},
  "provenance": {
-  "date": "2026-09-04T10:08:35",
-  "back_main": "c6b74f58",
-  "game_back": "mafia-clean-city-game-back 2026-09-04T08:06:19.233319758Z",
+  "date": "2026-09-04T10:15:48",
+  "back_main": "6ff684db",
+  "game_back": "mafia-clean-city-game-back 2026-09-04T08:14:29.844933926Z",
   "compte": "operational_demo@example.test",
   "dossier": "exceptions",
   "symbole": "⑩",
   "controleur": "ExceptionDetailController",
-  "X-Request-Id": "d012393f-e0b8-4e30-a55c-75c66b33cda1",
-  "X-Server-Processed-At": "2026-09-04T08:08:38.941Z",
+  "X-Request-Id": "7e8838a7-eb32-4816-96dc-12a5deb5e840",
+  "X-Server-Processed-At": "2026-09-04T08:15:52.518Z",
   "X-Api-Version": "1"
  },
  "corps": {
   "response_meta": {
-   "request_id_echo": "d012393f-e0b8-4e30-a55c-75c66b33cda1",
-   "server_processed_at": "2026-09-04T08:08:38.941Z",
+   "request_id_echo": "7e8838a7-eb32-4816-96dc-12a5deb5e840",
+   "server_processed_at": "2026-09-04T08:15:52.518Z",
    "api_version": 1,
    "correlation_id_echo": null
   },

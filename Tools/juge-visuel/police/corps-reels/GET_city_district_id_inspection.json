@@ -10,21 +10,21 @@
   }
  },
  "provenance": {
-  "date": "2026-09-04T10:08:35",
-  "back_main": "c6b74f58",
-  "game_back": "mafia-clean-city-game-back 2026-09-04T08:06:19.233319758Z",
+  "date": "2026-09-04T10:15:48",
+  "back_main": "6ff684db",
+  "game_back": "mafia-clean-city-game-back 2026-09-04T08:14:29.844933926Z",
   "compte": "operational_demo@example.test",
   "dossier": "police",
   "symbole": "⑮",
   "controleur": "InspectionScreenController",
-  "X-Request-Id": "7686194e-e89b-41f6-96f3-7f19a1c9f498",
-  "X-Server-Processed-At": "2026-09-04T08:08:37.424Z",
+  "X-Request-Id": "e6fd6e51-91b8-4ce0-8300-11dde0a6b160",
+  "X-Server-Processed-At": "2026-09-04T08:15:50.785Z",
   "X-Api-Version": "1"
  },
  "corps": {
   "response_meta": {
-   "request_id_echo": "7686194e-e89b-41f6-96f3-7f19a1c9f498",
-   "server_processed_at": "2026-09-04T08:08:37.424Z",
+   "request_id_echo": "e6fd6e51-91b8-4ce0-8300-11dde0a6b160",
+   "server_processed_at": "2026-09-04T08:15:50.785Z",
    "api_version": 1,
    "correlation_id_echo": null
   },

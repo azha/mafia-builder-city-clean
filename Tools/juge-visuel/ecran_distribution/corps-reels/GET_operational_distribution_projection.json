@@ -5,21 +5,21 @@
  "statut": 200,
  "params": {},
  "provenance": {
-  "date": "2026-09-04T10:08:35",
-  "back_main": "c6b74f58",
-  "game_back": "mafia-clean-city-game-back 2026-09-04T08:06:19.233319758Z",
+  "date": "2026-09-04T10:15:48",
+  "back_main": "6ff684db",
+  "game_back": "mafia-clean-city-game-back 2026-09-04T08:14:29.844933926Z",
   "compte": "operational_demo@example.test",
   "dossier": "ecran_distribution",
   "symbole": "㉘",
   "controleur": "DistributionScreenController",
-  "X-Request-Id": "3653523e-4b23-43ce-a835-6b3c7cd74730",
-  "X-Server-Processed-At": "2026-09-04T08:08:38.232Z",
+  "X-Request-Id": "44297a66-6219-47cd-b43a-814f33a3572a",
+  "X-Server-Processed-At": "2026-09-04T08:15:51.732Z",
   "X-Api-Version": "1"
  },
  "corps": {
   "response_meta": {
-   "request_id_echo": "3653523e-4b23-43ce-a835-6b3c7cd74730",
-   "server_processed_at": "2026-09-04T08:08:38.232Z",
+   "request_id_echo": "44297a66-6219-47cd-b43a-814f33a3572a",
+   "server_processed_at": "2026-09-04T08:15:51.732Z",
    "api_version": 1,
    "correlation_id_echo": null
   },
@@ -27,21 +27,9 @@
    "data": {
     "routes": [
      {
-      "route_id": "b80ee922-68c8-4fb4-b4b2-fe784f1100f9",
-      "from_building_id": "692e5d77-0589-4db9-bbeb-9238fb03d8b1",
-      "to_building_id": "bcc8193e-627a-403c-8b2b-14fad55e6dde",
-      "sinuosity_bucket": "meandering",
-      "river_crossings_count_bucket": "single",
-      "route_state": "active",
-      "available_vehicles": [
-       "FOOT",
-       "BIKE"
-      ]
-     },
-     {
-      "route_id": "b74b4269-736b-4b0b-90ee-da4e7dc5f7d2",
-      "from_building_id": "692e5d77-0589-4db9-bbeb-9238fb03d8b1",
-      "to_building_id": "a4bf9380-055e-45b3-9822-94d9d6d61d5e",
+      "route_id": "8772ad18-72e4-43f4-8d7f-031266de4ad4",
+      "from_building_id": "e25107fc-0560-4ca2-bcb5-04c23c80f775",
+      "to_building_id": "86b7e091-ccc5-4e7f-843e-814e7b8cb3cd",
       "sinuosity_bucket": "direct",
       "river_crossings_count_bucket": "single",
       "route_state": "active",
@@ -51,9 +39,21 @@
       ]
      },
      {
-      "route_id": "527bb62c-c3e8-428f-8e4e-7a3edec89c83",
-      "from_building_id": "e6e6efe0-a1ae-4d1d-830b-2080b2fdaa24",
-      "to_building_id": "bcc8193e-627a-403c-8b2b-14fad55e6dde",
+      "route_id": "b4df7c83-66ba-4e44-a961-ff2c2fbd07d8",
+      "from_building_id": "e25107fc-0560-4ca2-bcb5-04c23c80f775",
+      "to_building_id": "103556d9-9f5f-4a38-a2b7-5ffcae70b8c5",
+      "sinuosity_bucket": "direct",
+      "river_crossings_count_bucket": "single",
+      "route_state": "active",
+      "available_vehicles": [
+       "FOOT",
+       "BIKE"
+      ]
+     },
+     {
+      "route_id": "a8bee7df-4644-40f8-8132-70c9df199149",
+      "from_building_id": "cd6b9e39-ed5b-460d-8970-1535f6a55b85",
+      "to_building_id": "86b7e091-ccc5-4e7f-843e-814e7b8cb3cd",
       "sinuosity_bucket": "direct",
       "river_crossings_count_bucket": "none",
       "route_state": "active",

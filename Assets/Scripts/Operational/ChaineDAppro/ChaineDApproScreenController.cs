@@ -101,6 +101,25 @@ namespace MafiaCleanCity.Operational
         private RectTransform racinePleinEcran;
         private ChaineDApproClient client;
         private bool initialise;
+        /// <summary>⛔ LA POIGNÉE, PARCE QUE LE DRAPEAU SEUL NE FERME QUE LE DÉMARRAGE — précision
+        /// mesurée par la session B, relayée par l'orchestrateur, appliquée ici aux quatre écrans du
+        /// chantier C. `Charger()` ne lit `chargementAmorce` qu'AVANT de partir : une coroutine déjà
+        /// en vol l'a donc franchi, elle attend le réseau, et elle rendra PAR-DESSUS le rendu du test
+        /// quelques frames plus tard. Mon correctif d'hier ne fermait que le cas où `Start()` n'était
+        /// pas encore parti — c'est-à-dire pas la fenêtre qui dépend de la latence du back, la seule
+        /// qui rougisse vraiment.
+        /// ⇒ *Une garde placée à l'entrée d'une coroutine ne protège que de son DÉMARRAGE, jamais de
+        ///   son achèvement.* Il faut l'ARRÊTER, pas seulement lui interdire de commencer.</summary>
+        private Coroutine coroutineChargement;
+
+        /// <summary>⛔ ET LE DRAPEAU RELU APRÈS CHAQUE `yield`, qui n'est PAS redondant avec le
+        /// `StopCoroutine` ci-dessus : celui-ci n'atteint que la coroutine dont on a gardé la poignée.
+        /// Une reprise lancée par un autre chemin (bouton « réessayer », rechargement) n'y est pas, et
+        /// elle rendrait quand même. Le drapeau, lui, est lu par TOUTE instance de `Charger()` à chaque
+        /// reprise. *Deux mécanismes pour deux populations : la coroutine qu'on tient, et celles qu'on
+        /// ne tient pas.*</summary>
+        private bool renduExpliciteDemande;
+
         private bool chargementAmorce;
 
         private float Px(float css) =>
@@ -125,7 +144,7 @@ namespace MafiaCleanCity.Operational
             //    ★ Et les tests de ce lot ne pouvaient pas le voir : ils appellent `Charger()`
             //      eux-mêmes. *Un test qui déclenche lui-même ce qu'il vérifie ne prouve rien du
             //      déclencheur* — c'est la capture, et elle seule, qui a trouvé le trou.
-            if (!chargementAmorce) { chargementAmorce = true; StartCoroutine(Charger()); }
+            if (!chargementAmorce) { chargementAmorce = true; coroutineChargement = StartCoroutine(Charger()); }
             // Second point d'ordre de fratrie — voir le commentaire de `SetMountParent` : c'est ce
             // second appel, une frame plus tard, qui rend l'ordre STABLE (patron Shop).
             transform.SetAsLastSibling();
@@ -223,6 +242,7 @@ namespace MafiaCleanCity.Operational
             string buildingId = null;
             string errBuilding = null;
             yield return DecouvrirBuildingId(id => buildingId = id, e => errBuilding = e);
+            if (renduExpliciteDemande) yield break;   // un test a rendu pendant l'attente : on n'écrase pas
             if (string.IsNullOrEmpty(buildingId))
             {
                 DerniereErreur = errBuilding ?? "découverte du bâtiment : échec";
@@ -236,9 +256,12 @@ namespace MafiaCleanCity.Operational
             // l'écran reste lisible en français « en dur » — le branchement se serait « bien
             // passé » et n'aurait rien changé. Amorcé ici plutôt que caché.
             yield return I18nCatalog.Amorcer(new I18nClient { BaseUrl = baseUrl }, token);
+            if (renduExpliciteDemande) yield break;   // un test a rendu pendant l'attente : on n'écrase pas
 
             yield return RechargerPrecurseurs();
+            if (renduExpliciteDemande) yield break;   // un test a rendu pendant l'attente : on n'écrase pas
             yield return RechargerChaine();
+            if (renduExpliciteDemande) yield break;   // un test a rendu pendant l'attente : on n'écrase pas
         }
 
         private IEnumerator RechargerPrecurseurs()
@@ -253,10 +276,12 @@ namespace MafiaCleanCity.Operational
             yield return client.GetOperationalPrecursors(token, BuildingIdDecouvert,
                 dto => DernierChargement = dto,
                 (code, msg) => { DernierCodeErreur = code; DerniereErreur = msg; });
+            if (renduExpliciteDemande) yield break;   // un test a rendu pendant l'attente : on n'écrase pas
 
             // La frame de création rend des rects non résolus : on attend le layout AVANT de
             // rendre quoi que ce soit qui lise une géométrie.
             yield return null;
+            if (renduExpliciteDemande) yield break;   // un test a rendu pendant l'attente : on n'écrase pas
 
             if (DernierChargement == null) { RendreEtatIndisponible(); yield break; }
             AppliquerEtat(DernierChargement);
@@ -270,6 +295,7 @@ namespace MafiaCleanCity.Operational
                 // Non bloquant : la section chaîne se contente d'un état vide honnête même sans
                 // le graphe (§3 du brief) — un 4xx/5xx ici ne doit pas casser le bon de commande.
                 (code, msg) => DerniereErreur = DerniereErreur ?? $"graphe : {code} {msg}");
+            if (renduExpliciteDemande) yield break;   // un test a rendu pendant l'attente : on n'écrase pas
             DernierGraphe = graphe;
             AppliquerChaine(graphe);
         }
@@ -277,9 +303,29 @@ namespace MafiaCleanCity.Operational
         /// <summary>Rend un corps FABRIQUÉ, sans réseau — réservé aux tests (patron ㊲,
         /// `RendrePourTest`). Ne prouve jamais que le back émet ce corps, seulement ce que
         /// l'écran EN FAIT.</summary>
+        // ⛔⛔ UN RENDU EXPLICITE ANNULE L'AUTO-CHARGEMENT — sinon les deux se courent après, et le
+        //    rendu explicite PERD une frame plus tard. Mesuré le 2026-09-04, sur un rouge non
+        //    attribué remonté depuis le run d'une AUTRE branche : `EcranApproE1_EtatRepos` échouait
+        //    sur « le bouton n'est pas construit en état repos ».
+        //    La séquence : `AddComponent` → le test appelle `RendrePourTest` (même frame, avant
+        //    `Start`) et `renderedTexts` se remplit → une frame passe → `Start` déclenche
+        //    `StartCoroutine(Charger())` → la charge réseau échoue → `RendreEtatIndisponible()`
+        //    fait `renderedTexts.Clear()` et le bouton disparaît AVANT les assertions.
+        //    ★ Le test n'était vert que parce que le back répondait en ~400 ms, donc plus lentement
+        //    qu'une frame. *Un test vert par la LENTEUR d'un voisin est un test qui rougira le jour
+        //    où le voisin est absent* — et c'est exactement ce qui s'est passé dans un run à huit
+        //    catégories, où il a été pris pour une régression d'autrui.
+        //    ⚠️ La première hypothèse — le catalogue i18n amorcé par un voisin, qui aurait fait
+        //    rendre une TRADUCTION au lieu du littéral asserté — a été RÉFUTÉE par la mesure :
+        //    `appro.bouton.en_commander` vaut exactement « EN COMMANDER » dans le bundle. Le
+        //    mécanisme plausible n'était pas le bon ; seule la lecture du chemin d'erreur l'a dit.
         public void RendrePourTest(GetOperationalPrecursorsResponseDto dto)
         {
             EnsureInitialized();
+            // ⛔ Arrêter ce qui est DÉJÀ parti, en plus d'interdire un départ — voir `coroutineChargement`.
+            renduExpliciteDemande = true;
+            if (coroutineChargement != null) { StopCoroutine(coroutineChargement); coroutineChargement = null; }
+            chargementAmorce = true;   // ⇒ `Start()` ne lancera pas `Charger()` par-dessus ce rendu
             DernierChargement = dto;
             AppliquerEtat(dto);
         }
@@ -287,6 +333,10 @@ namespace MafiaCleanCity.Operational
         /// <summary>Idem pour la section chaîne — voir `RendrePourTest`.</summary>
         public void RendrePourTestChaine(GetSupplyChainGraphResponseDto dto)
         {
+            // ⛔ Arrêter ce qui est DÉJÀ parti, en plus d'interdire un départ — voir `coroutineChargement`.
+            renduExpliciteDemande = true;
+            if (coroutineChargement != null) { StopCoroutine(coroutineChargement); coroutineChargement = null; }
+            chargementAmorce = true;   // même raison que `RendrePourTest` ci-dessus
             EnsureInitialized();
             DernierGraphe = dto;
             AppliquerChaine(dto);

@@ -5,21 +5,21 @@
  "statut": 200,
  "params": {},
  "provenance": {
-  "date": "2026-09-04T10:08:35",
-  "back_main": "c6b74f58",
-  "game_back": "mafia-clean-city-game-back 2026-09-04T08:06:19.233319758Z",
+  "date": "2026-09-04T10:15:48",
+  "back_main": "6ff684db",
+  "game_back": "mafia-clean-city-game-back 2026-09-04T08:14:29.844933926Z",
   "compte": "operational_demo@example.test",
   "dossier": "compte",
   "symbole": "㉓",
   "controleur": "ShopScreenController",
-  "X-Request-Id": "7f4565b9-378e-4387-a3f9-cc7d6b013d2b",
-  "X-Server-Processed-At": "2026-09-04T08:08:37.381Z",
+  "X-Request-Id": "d900f818-3183-405b-a6ea-fdbc999f35d9",
+  "X-Server-Processed-At": "2026-09-04T08:15:50.728Z",
   "X-Api-Version": "1"
  },
  "corps": {
   "response_meta": {
-   "request_id_echo": "7f4565b9-378e-4387-a3f9-cc7d6b013d2b",
-   "server_processed_at": "2026-09-04T08:08:37.381Z",
+   "request_id_echo": "d900f818-3183-405b-a6ea-fdbc999f35d9",
+   "server_processed_at": "2026-09-04T08:15:50.728Z",
    "api_version": 1,
    "correlation_id_echo": null
   },

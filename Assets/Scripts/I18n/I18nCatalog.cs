@@ -43,8 +43,15 @@ namespace MafiaCleanCity.I18n
         /// <summary>Nombre de clés servies — un compte, jamais une preuve de couverture.</summary>
         public static int NbClesServies => Messages.Count;
 
-        /// <summary>Cache par SESSION : le bundle ne change pas pendant une partie, et le
-        /// recharger à chaque écran ferait dépendre l'affichage d'un aléa réseau.</summary>
+        /// <summary>Charge le bundle UNE fois par session — le bundle ne change pas pendant une
+        /// partie, et le recharger à chaque écran ferait dépendre l'affichage d'un aléa réseau.
+        ///
+        /// ⚠️ LA POLITIQUE EXACTE, parce que « cache par session » n'était pas tout à fait vrai :
+        /// `Charge` ne passe à `true` qu'au SUCCÈS. Un bundle indisponible est donc **re-tenté par
+        /// chaque écran** qui appelle cette méthode, jusqu'à ce qu'un appel aboutisse. C'est une
+        /// reprise voulue — un serveur qui revient en cours de partie doit pouvoir servir — mais
+        /// ce n'est pas un cache : c'est « au plus un succès, autant d'essais que nécessaire ».
+        /// ⇒ Écrit ici parce qu'un lecteur qui lit « cache » n'attend pas N appels réseau.</summary>
         public static IEnumerator Amorcer(I18nClient client, string token)
         {
             if (Charge) yield break;
@@ -56,9 +63,22 @@ namespace MafiaCleanCity.I18n
                     foreach (KeyValuePair<string, string> kv in messages) Messages[kv.Key] = kv.Value;
                     Charge = true;
                 },
+                // ⛔⛔ CE MESSAGE DÉCRIVAIT UN SYMPTÔME QUI N'ARRIVE JAMAIS, et ça a coûté cher.
+                // Il annonçait des identifiants bruts à l'écran. Or `Libelle.De` rend
+                // `Connait(cle) ? Traduire(cle) : litteral` : catalogue vide ⇒ **le LITTÉRAL**.
+                // Un bundle en panne donne donc un écran parfaitement lisible en français, pas un
+                // écran couvert d'identifiants.
+                // ★ *Une documentation qui promet un symptôme plus spectaculaire que le vrai
+                //   apprend à chercher le mauvais signe — et son absence rassure.* Mesuré le
+                //   2026-09-04 : mes 7 écrans « convertis » n'amorçaient pas du tout ce
+                //   dictionnaire, donc leur i18n était INERTE depuis le début. Personne ne l'a
+                //   vu, parce que tout le monde guettait le symptôme annoncé ici — qui ne
+                //   pouvait pas se produire.
                 (code, msg) => Debug.LogWarning(
-                    $"[i18n] bundle indisponible ({code} {msg}) — les écrans afficheront leurs CLÉS. " +
-                    "C'est le repli voulu : aucune traduction n'est fabriquée."));
+                    $"[i18n] bundle indisponible ({code} {msg}) — les écrans rendent leur " +
+                    "LITTÉRAL de repli (français, lisible), jamais un identifiant brut. " +
+                    "⚠️ L'écran a donc l'air NORMAL : ce message est le seul signe. Aucune " +
+                    "traduction n'est fabriquée, et un nouvel essai aura lieu au prochain écran."));
         }
 
         /// <summary>Réinitialise — pour les tests, et pour un changement de compte.</summary>

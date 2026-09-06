@@ -5,21 +5,21 @@
  "statut": 200,
  "params": {},
  "provenance": {
-  "date": "2026-09-04T10:08:35",
-  "back_main": "c6b74f58",
-  "game_back": "mafia-clean-city-game-back 2026-09-04T08:06:19.233319758Z",
+  "date": "2026-09-04T10:15:48",
+  "back_main": "6ff684db",
+  "game_back": "mafia-clean-city-game-back 2026-09-04T08:14:29.844933926Z",
   "compte": "operational_demo@example.test",
   "dossier": "ecran_appro",
   "symbole": "㉚",
   "controleur": "ChaineDApproScreenController",
-  "X-Request-Id": "9943c3d3-0b66-4165-91ea-b70b589b99c3",
-  "X-Server-Processed-At": "2026-09-04T08:08:38.109Z",
+  "X-Request-Id": "a46b2478-ccba-469e-a16f-e516d4551213",
+  "X-Server-Processed-At": "2026-09-04T08:15:51.595Z",
   "X-Api-Version": "1"
  },
  "corps": {
   "response_meta": {
-   "request_id_echo": "9943c3d3-0b66-4165-91ea-b70b589b99c3",
-   "server_processed_at": "2026-09-04T08:08:38.109Z",
+   "request_id_echo": "a46b2478-ccba-469e-a16f-e516d4551213",
+   "server_processed_at": "2026-09-04T08:15:51.595Z",
    "api_version": 1,
    "correlation_id_echo": null
   },
@@ -27,25 +27,25 @@
    "data": {
     "nodes": [
      {
-      "building_id": "5efc1ea0-d5c0-4e0c-9046-413c93b3cc13",
+      "building_id": "fa876dba-fbd4-462b-8486-7016226cae97",
       "bucket": "silent",
       "has_arrow": false,
       "arrow_to_building_id": null
      },
      {
-      "building_id": "b543365a-5141-49fe-ad36-2724ed3cb75d",
+      "building_id": "ae4cd5a9-553f-4b46-8717-423437af08ac",
       "bucket": "silent",
       "has_arrow": false,
       "arrow_to_building_id": null
      },
      {
-      "building_id": "34971d48-16af-49b7-9c9d-8875cde605f3",
+      "building_id": "0450b0e1-bf89-462d-a230-84fb12efb5ce",
       "bucket": "silent",
       "has_arrow": false,
       "arrow_to_building_id": null
      },
      {
-      "building_id": "606f73f0-3db6-4ee0-99bb-939838499b0b",
+      "building_id": "bd894aac-6468-4365-a63a-1c576bd124dd",
       "bucket": "silent",
       "has_arrow": false,
       "arrow_to_building_id": null
@@ -53,9 +53,9 @@
     ],
     "legs": [
      {
-      "leg_id": "e051a5e5-4e52-416f-a15c-6f2ce442db76",
-      "origin_building_id": "e6e6efe0-a1ae-4d1d-830b-2080b2fdaa24",
-      "destination_building_id": "bcc8193e-627a-403c-8b2b-14fad55e6dde",
+      "leg_id": "1a92a858-04da-47ad-80ae-a1d819e5d36f",
+      "origin_building_id": "cd6b9e39-ed5b-460d-8970-1535f6a55b85",
+      "destination_building_id": "86b7e091-ccc5-4e7f-843e-814e7b8cb3cd",
       "debt_bucket": "accruing",
       "bypassed": false
      }

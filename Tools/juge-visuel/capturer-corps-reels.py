@@ -181,6 +181,8 @@ def resoudre(pile, nom, deja):
     cles, sources = PARAMS.get(nom, ([nom], []))
     if nom == "substance":
         return "crick", "constante de démo (substances : ash · brindle · crick · hush)"
+    if nom == "locale":
+        return "fr", "constante : la fiction est servie en fr (TD-539) ; le compte de démo reste `en` tant que le seeder ne l'a pas basculé — on demande le bundle fr explicitement"
     for src in sources:
         for k, body in pile.corps.items():
             if src in k:
