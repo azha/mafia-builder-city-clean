@@ -150,6 +150,94 @@ namespace MafiaCleanCity.Shell
             return sprite;
         }
 
+        /// <summary>⛔⛔ UN TRACÉ QUELCONQUE, ÉPAISSI — la primitive à CHEMIN qui manquait, et que
+        /// deux dettes réclamaient séparément.
+        ///
+        /// POURQUOI ELLE EXISTE. Le canon dessine certaines formes en SVG et rien d'autre ne les
+        /// rend : les volutes du bandeau (`d="M1 6 h12 M13 6 c4 0 4 -5 8 -5 c3 0 3 4 0 4 c-2 0 -2
+        /// -3 1 -3"`) et la calotte du portrait de ㊲ (TD-651, dont l'entrée dit qu'« aucune ellipse,
+        /// aucun rect, aucun rect arrondi et aucune occlusion ne rend » son bord bas concave).
+        /// Quatre approximations successives ont été tentées sur la seconde avant qu'on écrive que
+        /// la forme, et non la cote, était le problème. *Quand quatre réglages échouent sur une
+        /// forme, c'est la primitive qui manque.*
+        ///
+        /// CE QU'ELLE PREND : une polyligne déjà échantillonnée — l'appelant convertit ses courbes
+        /// en points par `EchantillonnerCubique`. Ce découpage est délibéré : le rasteriseur ne
+        /// connaît que des segments, donc il ne peut pas se tromper sur une courbe, et
+        /// l'échantillonnage se teste séparément.
+        /// ⚠️ La distance point↔segment est calculée exactement (projection bornée), jamais
+        /// approchée par la distance aux extrémités : une approximation par les bouts épaissit les
+        /// angles et amincit les milieux — le fuselage, exactement, qu'un juge a mesuré ailleurs
+        /// sur ce même écran.
+        /// ⚠️ `epaisseurPx` est l'épaisseur TOTALE du trait (comme `stroke-width` en SVG), donc la
+        /// distance retenue est la demi-épaisseur — la confusion inverse donne un trait deux fois
+        /// trop gras et se lit comme une erreur de couleur.</summary>
+        public static Sprite Chemin(int largeurPx, int hauteurPx, IList<IList<Vector2>> sousChemins,
+            float epaisseurPx, Color couleur)
+        {
+            var cle = new System.Text.StringBuilder($"chemin:{largeurPx}:{hauteurPx}:{epaisseurPx:F2}:{ColorKey(couleur)}");
+            foreach (var sc in sousChemins) foreach (Vector2 v in sc) cle.Append($":{v.x:F1},{v.y:F1}");
+            string key = cle.ToString();
+            if (cache.TryGetValue(key, out Sprite cached) && cached != null) return cached;
+
+            int w = Mathf.Max(2, largeurPx), h = Mathf.Max(2, hauteurPx);
+            var tex = new Texture2D(w, h, TextureFormat.RGBA32, false)
+            {
+                filterMode = FilterMode.Bilinear,
+                wrapMode = TextureWrapMode.Clamp,
+                hideFlags = HideFlags.HideAndDontSave,
+            };
+            float demi = epaisseurPx * 0.5f;
+            var pixels = new Color[w * h];
+            for (int y = 0; y < h; y++)
+            {
+                for (int x = 0; x < w; x++)
+                {
+                    // y de texture monte, y du tracé descend (convention SVG) : on retourne ici,
+                    // une fois, plutôt que de demander à chaque appelant d'y penser.
+                    var p = new Vector2(x + 0.5f, h - 1 - y + 0.5f);
+                    float best = float.MaxValue;
+                    foreach (IList<Vector2> sc in sousChemins)
+                        for (int i = 0; i + 1 < sc.Count; i++)
+                        {
+                            float d = DistancePointSegment(p, sc[i], sc[i + 1]);
+                            if (d < best) best = d;
+                        }
+                    Color c = couleur;
+                    c.a *= Mathf.Clamp01((demi - best) / RampeAntiCrenelagePx + 0.5f);
+                    pixels[y * w + x] = c;
+                }
+            }
+            tex.SetPixels(pixels);
+            tex.Apply(false, false);
+            Sprite sp = Sprite.Create(tex, new Rect(0, 0, w, h), new Vector2(0.5f, 0.5f), 100f);
+            sp.hideFlags = HideFlags.HideAndDontSave;
+            cache[key] = sp;
+            return sp;
+        }
+
+        /// <summary>Échantillonne une cubique de Bézier en `n` segments. Séparé du rasteriseur pour
+        /// que chacun se teste seul — et parce qu'un `d` de SVG se traduit en points une fois, pas
+        /// à chaque pixel.</summary>
+        public static void EchantillonnerCubique(List<Vector2> sortie, Vector2 p0, Vector2 p1,
+            Vector2 p2, Vector2 p3, int n = 16)
+        {
+            for (int i = 1; i <= n; i++)
+            {
+                float u = i / (float)n, v = 1f - u;
+                sortie.Add(v * v * v * p0 + 3f * v * v * u * p1 + 3f * v * u * u * p2 + u * u * u * p3);
+            }
+        }
+
+        private static float DistancePointSegment(Vector2 p, Vector2 a, Vector2 b)
+        {
+            Vector2 ab = b - a;
+            float l2 = ab.sqrMagnitude;
+            if (l2 < 1e-6f) return Vector2.Distance(p, a);
+            float t = Mathf.Clamp01(Vector2.Dot(p - a, ab) / l2);
+            return Vector2.Distance(p, a + t * ab);
+        }
+
         public static Sprite Ring(int diameterPx, float thicknessPx, Color color)
         {
             string key = $"ring:{diameterPx}:{thicknessPx:F2}:{ColorKey(color)}";

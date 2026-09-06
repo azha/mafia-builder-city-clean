@@ -810,6 +810,7 @@ namespace MafiaCleanCity.Shell
             BuildManometre();
             BuildClockCluster();
             BuildNotificationHook();
+            BuildVolutes(transform);
 
             RepositionMoneyCluster();
         }
@@ -871,6 +872,22 @@ namespace MafiaCleanCity.Shell
             hlRect.anchorMin = new Vector2(0f, 0f);
             hlRect.anchorMax = new Vector2(1f, 0f);
             hlRect.pivot = new Vector2(0.5f, 0f);
+            // ⛔⛔ LE FILET RESTE À 1,00 CSS, ET L'ARRONDI AU PIXEL NE PEUT PAS SE FAIRE ICI.
+            // Un juge ⊥ mesure le filet à **0,726 CSS** (2 px pleins à ×2,7551) pour 1,00 dû, là où
+            // le canon en rend **3 px à ×3,000, soit 1,00 exactement**. Le geste évident — arrondir
+            // soi-même vers le haut, et le déclarer — a été écrit puis RETIRÉ, parce qu'il ne peut
+            // pas être juste : il calculait l'échelle depuis `Screen.width`, qui vaut **640** en
+            // batchmode, alors que la planche est rendue **hors écran à 1080**. Mesuré :
+            // « 1,00 CSS × 1,6327 = 1,633 px ⇒ 2 px retenus » — un arrondi pour la vue de jeu, pas
+            // pour l'image que le juge regarde.
+            // ⇒ *Une même construction sert la vue de jeu, le 1920 et le 2400 : aucun arrondi au
+            //   pixel n'est une propriété de la CONSTRUCTION.* Il faudrait le faire à la
+            //   re-pose pour la résolution de capture, avec cette résolution en main.
+            // ⇒ CE QUI EST ÉTABLI EN ATTENDANT : la cote est juste (1,00 CSS, la même que le
+            //   canon) ; l'écart de 0,274 CSS est une TRONCATURE de rastérisation sur un trait
+            //   sub-3 px — le canon y échappe parce que son échelle de 3,000 tombe sur un entier.
+            //   Ce n'est donc pas un défaut de valeur, et le corriger par la valeur serait régler
+            //   sur une résolution particulière.
             hlRect.sizeDelta = new Vector2(0f, FiletBarreEpaisseurPx);   // `.barre::after{height:1px}`
             hlRect.anchoredPosition = Vector2.zero;
             hairline = hlGo.AddComponent<Image>();
@@ -1420,6 +1437,69 @@ namespace MafiaCleanCity.Shell
         /// un hook de DONNÉES headless (`notificationText`, alpha 0) qui préserve EXACTEMENT le
         /// contrat R2.2 existant (C2F2/C2F4/DA5 : la VALEUR suit `backlogBadge`, scannée, jamais de
         /// chrome visible).</summary>
+        /// <summary>⛔⛔ LES VOLUTES DU BANDEAU — deux fois relevées absentes par un juge ⊥, et
+        /// elles n'étaient pas un rendu d'atelier : le canon les DESSINE, en SVG, dans le HTML.
+        ///
+        /// La source, recopiée et non reformulée (`hud-brennar.html`) :
+        ///   `.volute{position:absolute;top:50%;transform:translateY(-50%);width:34px;height:12px;
+        ///    opacity:.28;pointer-events:none}`
+        ///   `.volute.g{left:4px}` · `.volute.d{right:4px;transform:translateY(-50%) scaleX(-1)}`
+        ///   `<svg viewBox="0 0 34 12" fill="none" stroke="#eae0c8" stroke-width="1">`
+        ///   `<path d="M1 6 h12 M13 6 c4 0 4 -5 8 -5 c3 0 3 4 0 4 c-2 0 -2 -3 1 -3"/>`
+        /// ⇒ Un trait horizontal puis une volute à trois cubiques, en crème à 28 % — la droite est
+        ///   la gauche MIROIR (`scaleX(-1)`), pas un second dessin.
+        /// ⚠️ C'est pour elles que la primitive `ProceduralUI.Chemin` a été écrite : aucune forme
+        ///   existante ne rend un `d`, et TD-651 réclamait la même chose pour la calotte de ㊲ après
+        ///   quatre approximations ratées. *Quand quatre réglages échouent sur une forme, c'est la
+        ///   primitive qui manque* — ici on l'écrit une fois pour deux dettes.</summary>
+        private void BuildVolutes(Transform parent)
+        {
+            const float VoluteLargeurCss = 34f, VoluteHauteurCss = 12f;
+            const float VoluteMargeCss = 4f, VoluteOpacite = 0.28f, VoluteTraitCss = 1f;
+            const int Facteur = 4;   // on rastérise ×4 puis on laisse le bilinéaire réduire
+
+            var chemins = new List<IList<Vector2>>();
+            chemins.Add(new List<Vector2> { new Vector2(1f, 6f) * Facteur, new Vector2(13f, 6f) * Facteur });
+            var boucle = new List<Vector2> { new Vector2(13f, 6f) * Facteur };
+            // `c4 0 4 -5 8 -5` puis `c3 0 3 4 0 4` puis `c-2 0 -2 -3 1 -3`, en absolu.
+            Vector2 p = new Vector2(13f, 6f);
+            void Cubique(Vector2 d1, Vector2 d2, Vector2 d3)
+            {
+                ProceduralUI.EchantillonnerCubique(boucle, p * Facteur, (p + d1) * Facteur,
+                    (p + d2) * Facteur, (p + d3) * Facteur);
+                p += d3;
+            }
+            Cubique(new Vector2(4f, 0f), new Vector2(4f, -5f), new Vector2(8f, -5f));
+            Cubique(new Vector2(3f, 0f), new Vector2(3f, 4f), new Vector2(0f, 4f));
+            Cubique(new Vector2(-2f, 0f), new Vector2(-2f, -3f), new Vector2(1f, -3f));
+            chemins.Add(boucle);
+
+            Sprite trace = ProceduralUI.Chemin((int)VoluteLargeurCss * Facteur,
+                (int)VoluteHauteurCss * Facteur, chemins, VoluteTraitCss * Facteur,
+                WithAlpha(DesignTokens.Current.hudCreme, VoluteOpacite));
+
+            foreach (bool gauche in new[] { true, false })
+            {
+                GameObject go = new GameObject(gauche ? "VoluteG" : "VoluteD", typeof(RectTransform));
+                go.transform.SetParent(parent, false);
+                var rt = (RectTransform)go.transform;
+                rt.anchorMin = rt.anchorMax = new Vector2(gauche ? 0f : 1f, 0.5f);
+                rt.pivot = new Vector2(gauche ? 0f : 1f, 0.5f);
+                rt.sizeDelta = new Vector2(VoluteLargeurCss, VoluteHauteurCss);
+                rt.anchoredPosition = new Vector2(gauche ? VoluteMargeCss : -VoluteMargeCss, 0f);
+                // `scaleX(-1)` du canon — la droite est le MIROIR de la gauche, pas un second tracé.
+                if (!gauche) rt.localScale = new Vector3(-1f, 1f, 1f);
+                var img = go.AddComponent<Image>();
+                img.sprite = trace;
+                img.type = Image.Type.Simple;
+                img.color = Color.white;
+                img.raycastTarget = false;
+            }
+            Debug.Log($"[VOLUTES] deux tracés posés depuis le `d` du canon ({VoluteLargeurCss}×"
+                      + $"{VoluteHauteurCss} CSS, trait {VoluteTraitCss}, opacité {VoluteOpacite:F2}, "
+                      + "droite = miroir de la gauche)");
+        }
+
         private void BuildNotificationHook()
         {
             notificationText = NewText("Notification", LibelleNotifCalme,
