@@ -346,10 +346,25 @@ namespace MafiaCleanCity.Shell
         ///   dérivé d'un MODÈLE de l'endroit où l'instrument tranche, réfuté par la mesure et
         ///   reverti. *Corriger une géométrie pour satisfaire un seuil dont on n'a pas mesuré la
         ///   position, c'est régler sur l'instrument et non sur l'objet.*
-        /// ⇒ LA MESURE QUI DÉBLOQUE, à faire au prochain créneau Unity : rendre l'arc SEUL, sans
-        /// piste ni voisin, et lire sa largeur à mi-alpha pour `t` ∈ {3, 4, 5}. Si elle rend
-        /// `t − 1,5`, l'excédent vient d'un VOISIN et le correctif est de le retirer ; si elle rend
-        /// `t − 1,5 + 0,7`, il vient de la chaîne de rendu et le correctif est ici.</summary>
+        /// ⇒ LA MESURE A ÉTÉ FAITE — `DA11`, run `HUDv31` du 2026-09-06, `declares=32 comptes=32`,
+        /// 32/32 verts. **Le rastériseur tient sa relation** :
+        ///     t=3,00 → 1,250 px (déclaré 1,500)   t=4,00 → 2,375 (2,500)   t=5,00 → 3,375 (3,500)
+        /// L'écart résiduel de 0,125 px est un huitième de pixel, soit exactement le pas
+        /// d'échantillonnage de la sonde ; la PENTE est de 1,000 px par pas de `t`, donc aucune
+        /// échelle ne se cache dans le générateur.
+        /// ⇒ **`t = 5` produit 3,375 px et le juge en mesure 4,20 : l'excédent est HORS du
+        /// rastériseur.** Ce n'est d'ailleurs pas un excédent ADDITIF — 4,20 / 3,375 = **1,244**,
+        /// c'est un FACTEUR. Et il n'est pas partagé par le reste de l'objet : le boîtier rend 0,985
+        /// et le rayon médian 1,023. **Une seule grandeur de cet objet est mise à l'échelle, et
+        /// c'est l'épaisseur.**
+        /// ⇒ DONC LE CORRECTIF N'EST PAS SUR CE LITTÉRAL, et la branche qui restait à explorer est
+        /// nommée : qu'est-ce qui agrandit le SPRITE d'arc sans agrandir son rayon ? Trois
+        /// candidats, à départager en scène et non ici — le `RectTransform` qui le porte (le
+        /// texture fait `(int)ArcDiameterPx` = 35 pour un rect à 35,6), un second dessin superposé,
+        /// ou la piste neutre que le rapport signale sous l'interstice (`m5`).
+        /// ★ *Poser 2,45 aurait donné un arc trop FIN d'un quart* — le facteur 1,244 aurait continué
+        ///   de s'appliquer à une valeur plus petite. Le correctif aurait déplacé le défaut sans le
+        ///   nommer, et le littéral serait devenu juste, donc insoupçonnable.</summary>
         private const float ArcThicknessPx = 5f;
 
         /// <summary>Le rayon MÉDIAN de l'arc, en fraction du rayon du médaillon — la grandeur que

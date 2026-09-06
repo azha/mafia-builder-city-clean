@@ -172,13 +172,25 @@ namespace MafiaCleanCity.Shell
             btnLe.minHeight = 28;
         }
 
+        // ⛔ LES TROIS ÉTAIENT MORTES, et la troisième était le pire des trois : elle rendait
+        //    « High »/« Medium »/« Low » — de l'anglais — sur un domaine que le back n'émet PAS
+        //    (`HIGH|MEDIUM|LOW` contre `MILD|MODERATE|SEVERE`), donc en pratique elle recrachait
+        //    la valeur BRUTE du serveur, et « Unknown » quand elle était vide. Trois mots anglais
+        //    sur un chemin qui n'en tolère aucun. Le domaine vit dans `ExceptionBandes`.
         private static string SeverityGlyph(string b) =>
-            b == "HIGH" ? "[!!!]" : b == "MEDIUM" ? "[!!.]" : b == "LOW" ? "[!..]" : "[?]";
+            MafiaCleanCity.Operational.Exceptions.ExceptionBandes.Glyphe(b);
         private static string SeverityLabel(string b) =>
-            b == "HIGH" ? "High" : b == "MEDIUM" ? "Medium" : b == "LOW" ? "Low" : (string.IsNullOrEmpty(b) ? "Unknown" : b);
-        private static Color SeverityAccent(string b) =>
-            b == "HIGH" ? DesignTokens.Current.accentDanger : b == "MEDIUM" ? DesignTokens.Current.accentWarning :
-            b == "LOW" ? DesignTokens.Current.accentSuccess : DesignTokens.Current.onSurfaceSecondary;
+            MafiaCleanCity.Operational.Exceptions.ExceptionBandes.Gravite(b);
+        private static Color SeverityAccent(string b)
+        {
+            switch (MafiaCleanCity.Operational.Exceptions.ExceptionBandes.RangGravite(b))
+            {
+                case 0:  return DesignTokens.Current.accentSuccess;
+                case 1:  return DesignTokens.Current.accentWarning;
+                case 2:  return DesignTokens.Current.accentDanger;
+                default: return DesignTokens.Current.onSurfaceSecondary;
+            }
+        }
 
         // --------------------------------------------------------------- UI build
 

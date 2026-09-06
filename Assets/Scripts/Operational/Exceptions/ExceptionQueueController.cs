@@ -361,7 +361,7 @@ namespace MafiaCleanCity.Operational.Exceptions
                 TrackText(nom, nom.text);
 
                 TextMeshProUGUI bandes = NouveauTexteMaquette(a.transform, "Bandes",
-                    $"{Cap(c.severity_band)} · {Cap(c.priority_band)}", 8f, TextSecondary);
+                    ExceptionBandes.Ligne(c.severity_band, c.priority_band), 8f, TextSecondary);
                 bandes.alignment = TextAlignmentOptions.Center;
                 TrackText(bandes, bandes.text);
 
@@ -404,7 +404,7 @@ namespace MafiaCleanCity.Operational.Exceptions
             AddLayoutElement(bulle, flexibleWidth: 1);
 
             TextMeshProUGUI qui = NouveauTexteMaquette(bulle.transform, "Qui",
-$"{QuiParle(c)} · {Cap(c.severity_band)} · {Cap(c.priority_band)}", 8f, TextSecondary);
+$"{QuiParle(c)} · {ExceptionBandes.Ligne(c.severity_band, c.priority_band)}", 8f, TextSecondary);
             TrackText(qui, qui.text);
 
             TextMeshProUGUI dit = NouveauTexteMaquette(bulle.transform, "Replique",
@@ -521,16 +521,23 @@ $"{QuiParle(c)} · {Cap(c.severity_band)} · {Cap(c.priority_band)}", 8f, TextSe
         // n'est pas neutre — il donne à une garde périmée l'air d'avoir raison.*
 
         // ---- band → glyph/accent (a11y F2: shape + label, never colour alone) ----
-        private static string SeverityGlyph(string b)
-        {
-            switch (b) { case "HIGH": return "[!!!]"; case "MEDIUM": return "[!!.]"; case "LOW": return "[!..]"; default: return "[?]"; }
-        }
+        // ⛔ CES DEUX-LÀ ÉTAIENT MORTES : elles commutaient sur `HIGH|MEDIUM|LOW`, que le back
+        //    n'émet jamais (sa projection rend `MILD|MODERATE|SEVERE`). Elles tombaient donc
+        //    TOUJOURS dans leur défaut — glyphe `[?]` et teinte neutre pour chaque carte, quelle
+        //    que soit la gravité. Le domaine vit désormais dans `ExceptionBandes`, une seule fois.
+        private static string SeverityGlyph(string b) => ExceptionBandes.Glyphe(b);
         private static Color SeverityAccent(string b)
         {
-            switch (b) { case "HIGH": return AccentSevere; case "MEDIUM": return AccentModerate; case "LOW": return AccentMild; default: return TextSecondary; }
+            switch (ExceptionBandes.RangGravite(b))
+            {
+                case 0:  return AccentMild;
+                case 1:  return AccentModerate;
+                case 2:  return AccentSevere;
+                default: return TextSecondary;
+            }
         }
-        private static string Cap(string b) =>
-            string.IsNullOrEmpty(b) ? "Unknown" : char.ToUpperInvariant(b[0]) + b.Substring(1).ToLowerInvariant();
+        // `Cap` retiré : son dernier appelant est parti avec les bandes. Il rendait « Unknown »
+        // sur une valeur vide — un mot anglais de plus, sur le chemin d'un trou de donnée.
 
         // W3.U1 C1 (design D2) — optional parent-of-mount the AppShell renseigne BEFORE Start() runs.
         // See DashboardController.mountParent for the full rationale (byte-identical mechanism here).

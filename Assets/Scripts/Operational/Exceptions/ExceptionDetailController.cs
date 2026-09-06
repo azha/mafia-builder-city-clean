@@ -179,7 +179,13 @@ namespace MafiaCleanCity.Operational.Exceptions
             TrackText(quiTxt, qui);
 
             // Les trois bandes, en pastilles — libellés FERMÉS, suivis par le corpus de balayage.
-            string pastilles = $"{Cap(c.severity_band)} · {Cap(c.priority_band)} · {Cap(c.confidence_band)}";
+            // ⚠️ La CONFIANCE reste capitalisée telle quelle : son domaine
+            //    (`tentative|likely|confident`) n'apparaît sur AUCUNE maquette, donc je n'ai pas de
+            //    valeur ratifiée pour elle et je n'en invente pas trois de plus dans le même geste.
+            //    C'est un anglais qui reste, il est nommé, et il part à l'arbitrage avec les trois
+            //    autres non ratifiés. *Un trou déclaré est une propriété ; un trou comblé au
+            //    jugé est un piège.*
+            string pastilles = $"{ExceptionBandes.Ligne(c.severity_band, c.priority_band)} · {Cap(c.confidence_band)}";
             TextMeshProUGUI chips = NewText("Chips", body, pastilles, (int)PxD(CssChipCorps * 1.4f),
                                             TextAlignmentOptions.Left);
             chips.color = SeverityTeinte(c.severity_band);
