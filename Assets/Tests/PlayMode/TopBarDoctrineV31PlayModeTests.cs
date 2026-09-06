@@ -710,7 +710,29 @@ namespace MafiaCleanCity.Shell.Tests
         ///   depuis un ratio : le socle de ce dépôt porte déjà un oracle qui échantillonnait 3 px à
         ///   côté parce qu'il dérivait son rayon d'un nombre gelé.
         /// ⚠️ Ce test MESURE et n'asserte que l'anti-vacuité (il doit trouver de l'arc). Poser un
-        ///   seuil avant de savoir d'où vient la grandeur serait choisir la réponse.</summary>
+        ///   seuil avant de savoir d'où vient la grandeur serait choisir la réponse.
+        ///
+        /// ⛔⛔ ÉTAT AU 2026-09-06 : **CET INSTRUMENT N'EST PAS ENCORE VALIDE, ET C'EST LUI QUI LE
+        /// DIT.** Son premier run rend trois résultats qui le réfutent tous les trois :
+        ///   · à `fill=0,1124` (la valeur de production) il ne trouve **AUCUN** pixel d'arc et
+        ///     l'annonce comme tel — sa bande ne couvre pas l'arc réel. *Il déclare son hors-sujet
+        ///     au lieu de rendre un zéro qui passerait pour une mesure* ;
+        ///   · à `fill=0,30` il compte **71 secteurs porteurs sur 90** là où 0,30 de tour n'en
+        ///     couvre que ~54 : il ramasse plus large que l'arc ;
+        ///   · son profil est **uniforme à 6–7** sur presque tous les secteurs, pour une épaisseur
+        ///     nominale de 5 dont la rampe d'anti-crénelage ne laisse que 3,5 intégrés.
+        ///   ⇒ Les trois disent la même chose : la bande radiale (0,55–1,05 R) et le discriminant
+        ///     « chaleur » attrapent aussi le **LAITON du boîtier**, chaud lui aussi. *Un résultat
+        ///     uniforme dit qu'on mesure autre chose* — troisième fois que ce piège attrape un
+        ///     oracle de ce médaillon.
+        /// ⇒ CE QU'IL LUI FAUT, et ce n'est pas un réglage : une bande radiale dérivée du rect
+        ///   d'`ArcTrack` (pas du médaillon) et un discriminant de DIRECTION DE TEINTE séparant la
+        ///   braise de l'arc du laiton du boîtier — deux chaudes voisines, donc pas un seuil de
+        ///   chaleur. **Tant que ce n'est pas fait, aucun de ses nombres ne doit être cité** : ils
+        ///   sont là pour être réfutés, pas pour servir de mesure.
+        /// ★ Ce que le run a établi : rien de plus. L'hypothèse du rasteriseur reste réfutée hors
+        ///   ligne (1,083 contre 3,4 observés) ; la coupe radiale et l'échelle d'affichage restent
+        ///   DÉPARTAGÉES PAR PERSONNE, et aucun geste n'est posé sur le tracé.</summary>
         [UnityTest, Category("HUDv31")]
         public IEnumerator DA9_Diagnostic_FuselageDesArcs_UneSeuleVariable()
         {
