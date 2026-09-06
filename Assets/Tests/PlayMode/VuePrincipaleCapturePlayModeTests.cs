@@ -523,6 +523,28 @@ namespace MafiaCleanCity.Capture.Tests
                 yield return null;
             }
 
+            // ⛔ SONDE D'ÉCHELLE DU CHROME — prise DANS le régime de capture, jamais après.
+            // Le juge ⊥ du r5 de ① mesure le chrome à ×1,18-×1,21 du canon sur ① et sur lui seul,
+            // avec ⑥ pour témoin au canon exact. Mesuré ici hors capture (`ChromeEchelle_
+            // SousDistrictEtSousFamille`) : `TopBar.lossyScale` IDENTIQUE sous les deux locataires.
+            // La différence n'existe donc que sous la capture — et une sonde lue APRÈS `CapturerA`
+            // rend un rect que la caméra hors-écran vient de démonter (déjà payé sur ㊲ le même
+            // jour : « slot=1280x960, cadre v=-1334..637 »). Elle est donc ICI, avant le rendu.
+            if (shell != null && shell.TopBar != null && shell.ShellCanvas != null)
+            {
+                var trt = (RectTransform)shell.TopBar.transform;
+                var ech = shell.TopBarSlot != null ? shell.TopBarSlot.Find("TopBarEchelle") : null;
+                Debug.Log($"[CHROME-CAPTURE] {largeur}x{hauteur} locataire={shell.MountedTenantType?.Name ?? "aucun"} " +
+                          $"canvas.rect={((RectTransform)shell.ShellCanvas.transform).rect.width:F1}x" +
+                          $"{((RectTransform)shell.ShellCanvas.transform).rect.height:F1} " +
+                          $"scaleFactor={shell.ShellCanvas.scaleFactor:F6} · " +
+                          $"TopBarSlot.rect={shell.TopBarSlot.rect.width:F1}x{shell.TopBarSlot.rect.height:F1} · " +
+                          $"TopBarEchelle.localScale={(ech != null ? ech.localScale.x : -1f):F6} " +
+                          $"rect={(ech != null ? ((RectTransform)ech).rect.width : -1f):F1} · " +
+                          $"TopBar.rect={trt.rect.width:F1}x{trt.rect.height:F1} " +
+                          $"lossyScale={trt.lossyScale.x:F6}");
+            }
+
             cam.Render();
             RenderTexture prev = RenderTexture.active;
             RenderTexture.active = rt;

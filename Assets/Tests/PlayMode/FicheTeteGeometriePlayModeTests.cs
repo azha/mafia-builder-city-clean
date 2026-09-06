@@ -198,6 +198,75 @@ namespace MafiaCleanCity.Capture.Tests
                 "lignes se lisent comme un seul bloc");
         }
 
+        /// <summary>MESURE — le chrome est-il rendu à la même échelle sous ① que sous ⑥ ?
+        ///
+        /// ⛔ Le juge ⊥ du r5 de ① mesure **huit grandeurs indépendantes** du chrome à ×1,18 à
+        /// ×1,21 du canon (ronds 1,184 · pas 1,185 · chasses 1,204-1,211 · capitale 1,204 · barre de
+        /// ratio 1,187 · filet 1,187) — et le TÉMOIN ⑥, MÊME shell, MÊME résolution, trois minutes
+        /// plus tôt, rend le canon exactement. Les centres des ronds sont identiques en CSS à 1920
+        /// et à 2400 ⇒ ce n'est pas la résolution : c'est un facteur porté par un objet propre à ①.
+        /// ⇒ Un écart SYSTÉMATIQUE et de même signe sur huit mesures indépendantes n'est pas huit
+        ///   erreurs : c'est UNE cause. Le socle le dit pour les opacités ; c'est vrai ici pour une
+        ///   échelle. Ce test ne corrige rien : il imprime la chaîne des `lossyScale` et des
+        ///   `scaleFactor` du chrome sous les DEUX locataires, côte à côte, pour que l'objet
+        ///   porteur se lise au lieu de se deviner.
+        /// ⚠️ Deux locataires dans UN run et non deux runs : *deux variables qui bougent ensemble ne
+        ///   départagent rien*, et deux runs feraient bouger l'état de l'éditeur en plus du
+        ///   locataire.</summary>
+        [UnityTest]
+        public IEnumerator ChromeEchelle_SousDistrictEtSousFamille()
+        {
+            LogAssert.ignoreFailingMessages = true;
+            shellGo = new GameObject("EchelleChromeShell");
+            shell = shellGo.AddComponent<AppShell>();
+            yield return null;
+            float t0 = Time.realtimeSinceStartup;
+            while (string.IsNullOrEmpty(shell.Token) && Time.realtimeSinceStartup - t0 < 30f) yield return null;
+            Assert.IsFalse(string.IsNullOrEmpty(shell.Token), "le shell doit avoir acquis sa session");
+            for (int i = 0; i < 30; i++) yield return null;
+
+            shell.EnterDistrict(16);
+            for (int i = 0; i < 60; i++) yield return null;
+            string sousDistrict = DecrireEchelleDuChrome("① district");
+
+            shell.ActivateTab(AppShell.Tab.Org);
+            for (int i = 0; i < 90; i++) yield return null;
+            string sousFamille = DecrireEchelleDuChrome("⑥ famille");
+
+            Debug.Log("[CHROME-ECHELLE]\n" + sousDistrict + sousFamille);
+        }
+
+        /// <summary>La chaîne du chrome, du canvas jusqu'à la barre haute : `lossyScale`,
+        /// `scaleFactor`, et deux longueurs de contrôle. Rendue en texte pour être lue côte à côte.
+        /// ⚠️ On imprime AUSSI le type de locataire monté : sans lui, deux blocs identiques ne
+        /// diraient pas s'ils décrivent bien deux mondes différents.</summary>
+        private string DecrireEchelleDuChrome(string quoi)
+        {
+            var sb = new System.Text.StringBuilder();
+            Canvas canvas = shell.ShellCanvas;
+            sb.Append($"  [{quoi}] locataire={shell.MountedTenantType?.Name ?? "aucun"} " +
+                      $"canvas.scaleFactor={(canvas != null ? canvas.scaleFactor : -1f):F6} " +
+                      $"canvas.lossyScale={(canvas != null ? canvas.transform.lossyScale.x : -1f):F6}\n");
+            foreach (string nom in new[] { "TopBarSlot", "TabBarRoot", "ContentSlot" })
+            {
+                Transform t = TrouverEnfant(canvas != null ? canvas.transform : shell.transform, nom);
+                if (t == null) { sb.Append($"    {nom,-14} ABSENT\n"); continue; }
+                var rt = (RectTransform)t;
+                sb.Append($"    {nom,-14} lossyScale={t.lossyScale.x:F6} " +
+                          $"rect={rt.rect.width:F1}x{rt.rect.height:F1} localScale={t.localScale.x:F6}\n");
+            }
+            if (shell.TopBar != null)
+            {
+                var trt = (RectTransform)shell.TopBar.transform;
+                sb.Append($"    TopBar         lossyScale={trt.lossyScale.x:F6} " +
+                          $"rect={trt.rect.width:F1}x{trt.rect.height:F1} localScale={trt.localScale.x:F6}\n");
+                foreach (Transform enf in trt.GetComponentsInChildren<Transform>(true))
+                    if (enf.localScale.x < 0.999f || enf.localScale.x > 1.001f)
+                        sb.Append($"      ! {enf.name} localScale={enf.localScale.x:F6}\n");
+            }
+            return sb.ToString();
+        }
+
         /// <summary>Le haut d'une boîte, en px CSS de la maquette, RELATIF au haut de la fiche.</summary>
         private static float HautDeBoiteCss(RectTransform fiche, RectTransform boite, float uniteParCss)
         {
