@@ -1,0 +1,13 @@
+{
+  "modele": "fal-ai/flux/dev",
+  "prompt": "A single object centred on a flat dark blue-grey ground, no person, no face, no hands: a lead customs seal crimped onto a coil of wire rope, worn and scratched, seen straight on. Late 1980s dockside object. Painted poster illustration, flat areas of colour, thick contours, heavy simplification, muted desaturated palette, warm brass and cream on dark blue-grey, no saturated colour, no text, no logo, no watermark, no photorealism.",
+  "seed": 63,
+  "largeur": 1024,
+  "hauteur": 1024,
+  "etapes": 28,
+  "guidance": 3.5,
+  "request_id": "01a07885-f672-74f3-ba55-170b23335585",
+  "duree_s": 6.9,
+  "cout_usd_estime": 0.025,
+  "genere_le": "2026-09-06T23:00:47+0200"
+}

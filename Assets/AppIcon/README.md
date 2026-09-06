@@ -1,32 +1,44 @@
 # Icône d'application Android
 
-Générée le 2026-09-06 via `Tools/fal/generer.py` (fal.ai, `fal-ai/flux/dev`, seed 11) — source, prompt et
-sidecar de provenance dans `Source/`. Motif : trois conteneurs empilés sous une lampe au sodium, nuit, pluie
-(registre `art_direction.md` : port industriel, sodium, pluie sur béton ; aucun texte, aucun personnage).
+**Motif retenu le 2026-09-06 (ruling user, « m1v2 ») : un homme de dos, casquette plate, devant la porte
+éclairée d'un conteneur.** Le motif précédent — la pile de conteneurs seule — reste archivé sous
+`Tools/fal/generees/2026-09-06/` avec ses variantes ; rien n'est jeté.
 
-Dérivés par `Tools/fal/icone-android.py` — la boîte englobante du sujet est MESURÉE sur la source (pixels
-qui s'écartent du ciel, hors marges de pluie et hors sol), puis l'image est recentrée et DÉZOOMÉE par
-réplication des bords jusqu'à ce que cette boîte tienne dans le cercle sûr adaptive (66 dp sur 108) ;
-le script refuse d'écrire si une part du sujet reste hors du cercle, et il exige d'abord que la découpe
-brute ROUGISSE (contrôle positif : 18,6 % hors cercle → 0,0 % composé). Sorties :
-- `icone_adaptive_fond_432.png` — couche pleine (le launcher ne montre que les 288 px centraux) ;
-- `icone_adaptive_avant_432.png` — couche entièrement transparente ;
-- `icone_legacy_192.png`, `icone_round_192.png` — même composition.
+Générée par `Tools/fal/generer.py` (`fal-ai/flux/dev`, graine 11) — source, prompt et sidecar de
+provenance dans `Source/`.
 
-**Régime déclaré : `sujet-en-fond`** — fond = image opaque entière, avant-plan entièrement transparent.
-Depuis la revue de l'APK du 2026-09-06 (orchestration : « la couche prévue pour le sujet est vide »), le
-script ASSERTE ce régime au lieu de le supposer : plancher anti-vacuité sur la couche déclarée porteuse,
-avant-plan exigé à 0 pixel opaque sous ce régime, fond exigé opaque à 100 %, et trois contrôles exécutés
-avant d'écrire (P1 découpe brute rouge sur la boîte · P2 avant-plan vide rouge sur le plancher · N1 un
-pixel opaque hors cercle ≠ 0). Sous le régime `sujet-en-avant`, l'avant-plan livré ici ROUGIT (0,000 <
-0,03) — c'est le contrôle qui manquait à la première version.
+## Comment le cadre est construit, et la garde qui le prouve
 
-**Proposition en attente (décision DA, user)** : `Tools/fal/generees/2026-09-06/icone-variantes/` — A
-`sujet-en-fond` (celui-ci) contre B `sujet-en-avant` (conteneurs détourés en avant-plan, ciel/sol
-reconstruits en fond ; le launcher anime alors l'avant-plan en parallaxe). Planche
-`comparaison-A-fond-vs-B-avant.png`. Rien n'est remplacé ici avant la décision.
+Une icône adaptive ne montre que les **66,7 % centraux** de son calque. Le motif entier est donc placé
+dans cette zone visible (288 px sur 432), et la marge que le lanceur rogne est **prolongée par
+réplication des bords** — jamais un aplat choisi, qui trancherait sur l'art.
 
-Ce qui reste DÉDUIT : l'ordre fond/avant des deux couches dans `m_Textures` n'est pas documenté par Unity ;
-sous A l'ordre est indifférent à l'affichage (fond opaque, avant vide). Détecteur : l'icône sur l'appareil au
-prochain APK — Unity a déjà mesuré dans l'APK du 06/09 que les 6 `ic_launcher_foreground` sont à 0 pixel
-opaque et que la pile remplit la zone visible (`scratchpad/apk-icones/` de son arbre).
+**La garde qui discrimine** : le disque visible doit montrer le motif ENTIER. Écart au motif source —
+**composé 0,00** · **contrôle positif, plein cadre : 24,00** niveaux ⇒ le contrôle rougit. Posé plein
+cadre, le lanceur ne montrerait que **44 %** de l'image : le haut du conteneur et le sol sont coupés.
+
+⚠️ **Une garde écartée parce qu'elle ne discriminait pas** : « la lumière chaude tombe-t-elle dans le
+disque visible ? » rend 99,4 % composé contre 95,5 % plein cadre — sur ce motif la lampe est centrale,
+donc elle passe des deux façons. Une garde dont le contrôle positif ne rougit pas ne prouve rien : elle
+a été remplacée, pas assouplie.
+
+## ⚠️ Pourquoi l'avant-plan est VIDE, et pourquoi c'est la bonne réponse
+
+`icone_adaptive_avant_432.png` est **entièrement transparent**, et ce n'est pas un oubli : **le motif
+entier vit dans le calque de FOND**, mis à l'échelle de la zone visible. Le lanceur compose alors le
+fond seul et montre la composition complète.
+
+C'est plus robuste que de répartir le dessin sur deux couches : rien ne dépend de l'ordre des calques
+(non documenté par Unity), rien ne se décale quand le lanceur applique sa parallaxe à l'avant-plan, et
+la zone visible affiche exactement ce qui a été composé. ⇒ **« l'avant-plan est vide » n'est pas un
+défaut à rouvrir** — c'est le régime `sujet-en-fond`, choisi, mesuré et asserté par le script (qui
+REFUSE d'écrire si l'avant-plan porte de l'encre sous ce régime).
+
+## Le régime des deux calques
+
+**`sujet-en-fond`** (choix user du 2026-09-06 sur la question A/B) : le fond porte l'image opaque,
+l'avant-plan est entièrement transparent. Le lanceur n'anime alors rien — c'est assumé.
+`icone_legacy_192.png` et `icone_round_192.png` reprennent la zone visible.
+
+Les `.meta` et leurs GUID sont **inchangés** : remplacer le contenu des PNG suffit, aucune référence de
+`ProjectSettings.asset` n'est touchée (24 références Android déjà câblées).

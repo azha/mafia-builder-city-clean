@@ -1,0 +1,15 @@
+{
+  "modele": "fal-ai/birefnet",
+  "source": "Tools/fal/generees/2026-09-06/portrait-security-s1-1.png",
+  "parametres": {
+    "model": "General Use (Heavy)",
+    "operating_resolution": "1024x1024",
+    "output_format": "png",
+    "refine_foreground": true
+  },
+  "largeur": 1024,
+  "hauteur": 1024,
+  "request_id": "01a0778d-5154-77b2-9c7d-45da22476b18",
+  "duree_s": 2.9,
+  "genere_le": "2026-09-06T18:29:07+0200"
+}

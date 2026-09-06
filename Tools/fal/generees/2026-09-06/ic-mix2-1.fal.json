@@ -1,0 +1,13 @@
+{
+  "modele": "fal-ai/flux/dev",
+  "prompt": "The head and shoulders of a man in the foreground, dark silhouette rimmed in brass light, and behind him a stack of shipping containers with one lit window. Mobile app icon, painted poster illustration, flat areas of colour, thick contours, heavy simplification, no photorealism. Night, rain, one warm sodium lamp. Muted desaturated palette only: near-black, dark blue-grey #161c2b, warm brass #b08d3e, cream #eae0c8 highlights. Dark background edge to edge, no border, no frame, no text, no letters, no logo, no watermark. One bold motif, centred, generous dark margin all around it, readable at 48 pixels.",
+  "seed": 11,
+  "largeur": 1024,
+  "hauteur": 1024,
+  "etapes": 28,
+  "guidance": 3.5,
+  "request_id": "01a0788d-6578-7a03-93f9-8d1abbac08a9",
+  "duree_s": 8.0,
+  "cout_usd_estime": 0.025,
+  "genere_le": "2026-09-06T23:08:55+0200"
+}

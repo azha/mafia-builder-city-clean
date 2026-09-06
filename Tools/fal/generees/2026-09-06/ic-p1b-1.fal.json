@@ -1,0 +1,13 @@
+{
+  "modele": "fal-ai/flux/dev",
+  "prompt": "A man's bust filling the frame, front view, flat cap and raised collar, half the face carved out by hard brass light, the other half pure black. Nothing behind him. Very few shapes, poster-like. Mobile app icon, painted poster illustration, flat areas of colour, thick contours, heavy simplification, no photorealism. Night, rain, one warm sodium lamp. Muted desaturated palette only: near-black, dark blue-grey #161c2b, warm brass #b08d3e, cream #eae0c8 highlights. Dark background edge to edge, no border, no frame, no text, no letters, no logo, no watermark. ONE dominant motif filling most of the square, very few large shapes, no small distant detail — it must still read at 36 pixels.",
+  "seed": 11,
+  "largeur": 1024,
+  "hauteur": 1024,
+  "etapes": 28,
+  "guidance": 3.5,
+  "request_id": "01a07891-d3b7-7e70-8bb2-c79fd5a03a7a",
+  "duree_s": 6.2,
+  "cout_usd_estime": 0.025,
+  "genere_le": "2026-09-06T23:13:43+0200"
+}

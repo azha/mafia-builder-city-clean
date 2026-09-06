@@ -1,0 +1,13 @@
+{
+  "modele": "fal-ai/flux/dev",
+  "prompt": "A man in his seventies, short and stocky, with hair scraped back into a bun, a flat cap, a full beard, wearing a boiler suit. Dark crime-drama portrait, late 1980s to early 1990s, the register of The Sopranos and The Wire: an ordinary person in everyday clothes, NOT gangster-movie elegance. NO tailored suit, NO wide-lapel jacket, NO necktie, nothing sharp or expensive. Bust, head and shoulders, front view, filling the square frame. Heavy chiaroscuro: one hard warm key light raking from the left, deep black shadow on the other side. Muted desaturated palette, dark blue-grey ground, no saturated colour, no text, no logo, no watermark. Painted poster illustration: flat areas of colour, thick contours, heavy simplification, no photorealism, no lens blur.",
+  "seed": 63,
+  "largeur": 1024,
+  "hauteur": 1024,
+  "etapes": 28,
+  "guidance": 3.5,
+  "request_id": "01a078a2-2d6c-7a90-801a-22bec9f0b076",
+  "duree_s": 6.2,
+  "cout_usd_estime": 0.025,
+  "genere_le": "2026-09-06T23:31:35+0200"
+}

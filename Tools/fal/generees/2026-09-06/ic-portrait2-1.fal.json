@@ -1,0 +1,13 @@
+{
+  "modele": "fal-ai/flux/dev",
+  "prompt": "A single man's face in tight close-up, only the eyes and the brow lit by a hard brass rim light, the rest of the head dissolving into black, a thin plume of cigarette smoke. Mobile app icon, painted poster illustration, flat areas of colour, thick contours, heavy simplification, no photorealism. Night, rain, one warm sodium lamp. Muted desaturated palette only: near-black, dark blue-grey #161c2b, warm brass #b08d3e, cream #eae0c8 highlights. Dark background edge to edge, no border, no frame, no text, no letters, no logo, no watermark. One bold motif, centred, generous dark margin all around it, readable at 48 pixels.",
+  "seed": 11,
+  "largeur": 1024,
+  "hauteur": 1024,
+  "etapes": 28,
+  "guidance": 3.5,
+  "request_id": "01a0788d-a451-75d2-9f45-337445803f0b",
+  "duree_s": 6.1,
+  "cout_usd_estime": 0.025,
+  "genere_le": "2026-09-06T23:09:09+0200"
+}

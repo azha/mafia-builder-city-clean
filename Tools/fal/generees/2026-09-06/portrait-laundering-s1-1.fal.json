@@ -1,0 +1,13 @@
+{
+  "modele": "fal-ai/flux/dev",
+  "prompt": "A launderer of money through front shops, woman in her sixties of East Asian descent, hair in a tight bun, shopkeeper's smock over a blouse, reading glasses low on the nose. Illustrated poster portrait, flat areas of colour, thick contours, no photorealism, no lens blur, no texture. Bust of a person, head and shoulders, front view, filling the square frame. Muted desaturated palette only — dark blue-grey, slate, warm brass #b08d3e, cream #eae0c8 for the lit planes; NO saturated colour anywhere, no orange, no red, no yellow, no neon. One warm rim light from the upper left, deep shadow elsewhere. Heavy simplification, bold readable silhouette, no small detail, no text, no logo, no watermark. Contemporary early-2000s French port city, ordinary working people: no gangster cliche, no fedora, no suit-and-tie, no jewellery.",
+  "seed": 41,
+  "largeur": 1024,
+  "hauteur": 1024,
+  "etapes": 28,
+  "guidance": 3.5,
+  "request_id": "01a0778c-039c-7d72-8462-af7fc98c9d28",
+  "duree_s": 8.2,
+  "cout_usd_estime": 0.025,
+  "genere_le": "2026-09-06T18:27:47+0200"
+}

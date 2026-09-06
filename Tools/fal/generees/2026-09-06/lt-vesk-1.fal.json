@@ -1,0 +1,13 @@
+{
+  "modele": "fal-ai/flux/dev",
+  "prompt": "A wiry man in his thirties, Eastern-European features, sunken cheeks, a missing upper tooth showing when the mouth is slightly open, tracksuit top zipped halfway. Dark crime-drama portrait, late 1980s to early 1990s, the register of The Sopranos and The Wire: ordinary people in everyday clothes, NOT gangster-movie elegance. NO tailored suit, NO wide-lapel jacket, NO necktie, nothing sharp or expensive. Bust, head and shoulders, front view, filling the square frame. Heavy chiaroscuro: one hard warm key light raking from the left, deep black shadow on the other side. Muted desaturated palette, dark blue-grey ground, no saturated colour, no text, no logo, no watermark. Painted poster illustration: flat areas of colour, thick contours, heavy simplification, no photorealism, no lens blur.",
+  "seed": 63,
+  "largeur": 1024,
+  "hauteur": 1024,
+  "etapes": 28,
+  "guidance": 3.5,
+  "request_id": "01a07877-fa01-7452-8170-33f758582659",
+  "duree_s": 6.2,
+  "cout_usd_estime": 0.025,
+  "genere_le": "2026-09-06T22:45:29+0200"
+}

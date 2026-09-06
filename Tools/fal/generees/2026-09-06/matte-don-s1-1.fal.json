@@ -1,0 +1,15 @@
+{
+  "modele": "fal-ai/birefnet",
+  "source": "Tools/fal/generees/2026-09-06/portrait-don-s1-1.png",
+  "parametres": {
+    "model": "General Use (Heavy)",
+    "operating_resolution": "1024x1024",
+    "output_format": "png",
+    "refine_foreground": true
+  },
+  "largeur": 1024,
+  "hauteur": 1024,
+  "request_id": "01a0778d-8514-7d01-a4a9-0db26cd844c6",
+  "duree_s": 4.6,
+  "genere_le": "2026-09-06T18:29:22+0200"
+}

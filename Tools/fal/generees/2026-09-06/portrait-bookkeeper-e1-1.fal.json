@@ -1,0 +1,13 @@
+{
+  "modele": "fal-ai/flux/dev",
+  "prompt": "A bookkeeper: thin build, narrow shoulders, wire-frame glasses catching the rim light, buttoned shirt under a knit cardigan, close-cropped greying hair. Painted character bust portrait, head and shoulders, facing the viewer, slightly turned. Contemporary northern-European port city, early 2000s: ordinary working people, no gangster cliches, no suit-and-fedora, no glamour, no jewellery. Flat dark blue-grey background #161c2b, empty, no scenery. One warm sodium-amber rim light from the upper left, cool dim fill on the other side. Desaturated muted palette only: charcoal, slate blue, cream #eae0c8 skin light, brass #b08d3e. Very strong readable silhouette, simple large shapes, painterly with soft edges, minimal fine detail, no text, no logo, no watermark, square framing, the head and shoulders fill the frame.",
+  "seed": 41,
+  "largeur": 1024,
+  "hauteur": 1024,
+  "etapes": 28,
+  "guidance": 3.5,
+  "request_id": "01a07783-9691-7d82-83ed-a9c6aa8c2182",
+  "duree_s": 6.4,
+  "cout_usd_estime": 0.025,
+  "genere_le": "2026-09-06T18:18:33+0200"
+}

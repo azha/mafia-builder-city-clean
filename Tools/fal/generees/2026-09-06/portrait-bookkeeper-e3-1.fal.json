@@ -1,0 +1,13 @@
+{
+  "modele": "fal-ai/flux/dev",
+  "prompt": "A bookkeeper: narrow shoulders, thick wire-frame glasses catching the light, collared shirt under a cardigan. Two-colour silkscreen poster portrait, screen print, hard flat areas of ink, no photorealism, no photographic shading, no gradient, no texture, no lens blur. Bust of a person, head and shoulders, front view, filling the square frame. Printed in three inks only: dark blue-grey #161c2b as the paper, warm brass #b08d3e, and cream #eae0c8 for the lit planes. The face is reduced to a few flat shapes with thick contours, heavy simplification, bold poster shapes, very high contrast, no small detail, no halftone dots, no text, no logo, no watermark, no saturated colour of any kind. Contemporary early-2000s northern-European port worker: no gangster cliche, no fedora, no suit, no jewellery.",
+  "seed": 41,
+  "largeur": 1024,
+  "hauteur": 1024,
+  "etapes": 28,
+  "guidance": 3.5,
+  "request_id": "01a07787-94e7-72e0-a795-51e55ea5f4a7",
+  "duree_s": 6.3,
+  "cout_usd_estime": 0.025,
+  "genere_le": "2026-09-06T18:22:55+0200"
+}
