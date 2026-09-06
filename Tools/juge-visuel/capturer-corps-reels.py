@@ -58,6 +58,11 @@ PARAMS = {
     "legId":       (["leg_id", "id"], ["supply-chain/graph"]),
     "substance":   (["substance", "substance_type"], ["operational/distribution/projection"]),
     "dealerId":    (["dealer_id", "id"], ["operational/dealers"]),
+    # ⛔ TROU FERMÉ LE 2026-09-06 : sans cette entrée, `nodeId` partait avec ZÉRO source (le repli
+    #    `([nom], [])` ne consulte aucun corps), donc la route rendait « aucune instance » alors
+    #    que le corps frère porte quatre identifiants. La clé servie est `node`, PAS `node_id` —
+    #    un repli sur le nom du paramètre ne pouvait pas la trouver.
+    "nodeId":      (["node", "node_id", "id"], ["operational/laundering"]),
     "categoryId":  (["category_id", "id"], ["meta/task-categories"]),
     "id":          (["id"], []),
 }
@@ -189,7 +194,17 @@ def resoudre(pile, nom, deja):
                 v = chercher(body.get("payload", {}).get("data", body) if isinstance(body, dict) else body, cles)
                 if v is not None:
                     return v, f"lu dans le corps de `{k}` (clé parmi {cles})"
-    return None, f"aucune instance sur le compte de démo — attendue dans {sources or 'un corps du dossier'} (clés {cles})"
+    # ⛔ Deux échecs très différents portaient le même message, donc le trou de `nodeId` s'est lu
+    #    pendant deux jours comme une absence de donnée. Un dispositif doit DÉCLARER SON RÉGIME :
+    #    « aucune source configurée » est un défaut d'outil, « source lue, rien dedans » est un
+    #    fait du compte. Mesuré le 2026-09-06 : sur les 15 paramètres rencontrés dans les corps,
+    #    `nodeId` était le seul du premier genre (corrigé) ; `precinctId`, `appointmentId`,
+    #    `storageId` et `grow-sessionId` sont du second — aucun corps frère servi ne porte leur
+    #    identifiant, donc « aucune instance » est la bonne réponse et non un trou à combler.
+    if not sources:
+        return None, (f"AUCUNE SOURCE CONFIGURÉE pour `{nom}` (clés {cles}) — c'est un trou de "
+                      f"cet outil, pas un fait du compte : ajouter son entrée dans PARAMS")
+    return None, f"aucune instance sur le compte de démo — cherchée dans {sources} (clés {cles}), rien trouvé"
 
 
 def parametrer(route):
@@ -213,8 +228,47 @@ def parametrer(route):
     return r, params
 
 
+def _lire_drapeaux(argv):
+    """⛔ Un drapeau inconnu est FATAL, il n'est pas ignoré.
+
+    Payé le 2026-09-06 sans l'exécuter : `main` ne testait que `--controle`, donc un
+    `--compte <autre>` passé de bonne foi aurait été ignoré EN SILENCE et l'outil aurait
+    capturé le compte par défaut en annonçant l'autre. Une base de preuve entière aurait
+    décrit le mauvais monde, sans un mot dans le log — la famille « l'outil rend un succès
+    plausible pour n'avoir rien fait ».
+    """
+    connus = {"--controle"}
+    avec_valeur = {"--compte": "ident", "--motdepasse": "passwd"}
+    opts = {"controle": False, "ident": None, "passwd": None}
+    i = 1
+    while i < len(argv):
+        a = argv[i]
+        if a in connus:
+            opts["controle"] = True; i += 1
+        elif a in avec_valeur:
+            if i + 1 >= len(argv):
+                print(f"⛔ {a} attend une valeur"); sys.exit(2)
+            opts[avec_valeur[a]] = argv[i + 1]; i += 2
+        elif a.startswith("--") and "=" in a and a.split("=")[0] in avec_valeur:
+            k, v = a.split("=", 1); opts[avec_valeur[k]] = v; i += 1
+        else:
+            print(f"⛔ drapeau inconnu : {a}")
+            print(f"   connus : --controle · --compte <email> · --motdepasse <mdp>")
+            print("   (ignorer un drapeau ferait capturer le mauvais compte en silence)")
+            sys.exit(2)
+    return opts
+
+
 def main(argv):
-    controle = "--controle" in argv
+    global IDENT, PASSWD
+    opts = _lire_drapeaux(argv)
+    controle = opts["controle"]
+    if opts["ident"]:
+        IDENT = opts["ident"]
+    if opts["passwd"]:
+        PASSWD = opts["passwd"]
+    print(f"COMPTE CAPTURÉ : {IDENT}   (source : "
+          f"{'--compte' if opts['ident'] else 'MAFIA_DEMO_IDENTIFIER ou défaut'})")
     date = datetime.datetime.now().isoformat(timespec="seconds")
     back_sha = subprocess.run(["git", "-C", BACK, "rev-parse", "--short", "main"], capture_output=True, text=True).stdout.strip()
     image = subprocess.run(["docker", "inspect", "-f", "{{.Config.Image}} {{.Created}}", "mafia-clean-city-game-back-1"], capture_output=True, text=True).stdout.strip()
@@ -223,7 +277,11 @@ def main(argv):
     # amorces : les corps qui fournissent les ids des routes paramétrées
     for r in ("/v1/lieutenants", "/v1/world/districts", "/v1/flag-review", "/v1/me/legal", "/v1/news/feed", "/v1/meta/horizon-feed",
               "/v1/ambient/feed", "/v1/random-world/active", "/v1/friction/replacement-options", "/v1/supply-chain/graph",
-              "/v1/operational/dealers", "/v1/meta/task-categories"):
+              "/v1/operational/dealers", "/v1/meta/task-categories",
+              # ⛔ porte les identifiants de `{nodeId}` : sans amorce, la résolution dépendait
+              #    de l'ordre des dossiers — un corps frère absent de la pile rend « aucune
+              #    instance » alors que la donnée existe.
+              "/v1/operational/laundering"):
         pile.get(r)
     # le district du joueur : celui dont l'intérieur porte ses bâtiments (mesuré, pas supposé)
     home = None
@@ -233,6 +291,9 @@ def main(argv):
             home = d; pile.corps["interior"] = b; pile.corps["session/open"]["payload"]["data"]["home_district_id"] = d
             break
     print(f"district du joueur (bâtiments présents) : {home}")
+    jour_de_jeu = ((pile.corps.get("session/open", {}).get("payload", {}) or {})
+                   .get("data", {}) or {}).get("opened_game_day")
+    print(f"jour de jeu à l'ouverture : {jour_de_jeu}")
     total = {"appelées": 0, "sans instance": 0, "mutations": 0, "erreurs": 0}
     lignes = ["| dossier | sym | routes | appelées | sans instance | mutations non appelées | erreurs HTTP |", "|---|---|---|---|---|---|---|"]
     for r in cd.TABLE + cd.HORS_APPSHELL:
@@ -243,7 +304,11 @@ def main(argv):
         idx = []; c = {"appelées": 0, "sans instance": 0, "mutations": 0, "erreurs": 0}
         for route, methode in routes:
             fichier = os.path.join(d, slug(route, methode))
-            prov = {"date": date, "back_main": back_sha, "game_back": image, "compte": IDENT, "dossier": r["dossier"], "symbole": r["sym"], "controleur": r["ctl"]}
+            # `jour_de_jeu` : la seule horloge que ce compte expose à cet outil. C'est un JOUR,
+            # pas la minute que lit l'empreinte du back — l'écrire quand même, daté et nommé,
+            # vaut mieux qu'une base de preuve sans aucune horloge.
+            prov = {"date": date, "back_main": back_sha, "game_back": image, "compte": IDENT,
+                    "jour_de_jeu": jour_de_jeu, "dossier": r["dossier"], "symbole": r["sym"], "controleur": r["ctl"]}
             if route == "/v1/session/open":
                 st, h = pile.entetes["session/open"]
                 doc = {"route": route, "methode": "POST", "statut": st, "params": {"client_version": "da4-corps-reels"}, "provenance": {**prov, **h}, "corps": pile.corps["session/open"]}
