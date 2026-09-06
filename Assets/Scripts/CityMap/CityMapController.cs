@@ -418,7 +418,22 @@ namespace MafiaCleanCity.CityMap
             hlg.childForceExpandWidth = false;
             hlg.childForceExpandHeight = false;
             BuildToggleButton(pied.transform);
-            BuildLegend(pied.transform);
+            // ⛔ PLUS DE LÉGENDE À PASTILLES SUR LA VILLE PEINTE (F6). Le juge ⊥ l'a mesurée comme
+            // les SEULS aplats saturés de l'écran — (242,189,49), (61,178,86), (209,66,66) — sur un
+            // écran dont la palette dominante plafonne à (85,87,77), et texte en blanc PUR
+            // (242,242,242). La maquette n'en porte aucune : elle explique l'état par des écussons
+            // posés sur la ville, et sa ligne du bas est une phrase de fiction en italique.
+            // ⚠️ Elle reste montée sur le REPLI en deux colonnes (`BuildListeEnColonnes`), où elle
+            //   fait partie de cette mise en page-là. On retire une légende d'un montage, pas la
+            //   fonction du dépôt.
+            // ⚠️ ET CE QUE CE RETRAIT LAISSE OUVERT, plutôt que de le passer sous silence : plus rien
+            //   n'explique les couleurs d'état. Le halo les porte à α ≤ 0,15, donc à peine ; la
+            //   maquette, elle, ne les explique pas non plus — elle les DESSINE autrement (écussons
+            //   numérotés, lavis sur l'aire du quartier, halo or de chez-soi), et ces trois objets
+            //   n'existent pas côté client. C'est le même manque que F4 : de la donnée d'atelier.
+            // ⚠️ Le BOUTON de bascule reste : ce n'est pas une décoration, c'est une interaction —
+            //   et la maquette n'en a aucune. Le retirer supprimerait une fonction, pas un écart.
+            //   ⇒ arbitrage, pas conformité.
 
             VillePeinteMontee = true;
         }

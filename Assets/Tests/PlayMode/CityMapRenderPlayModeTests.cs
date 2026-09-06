@@ -137,6 +137,23 @@ namespace MafiaCleanCity.CityMap.Tests
                 StringAssert.Contains(CityMapEnums.DisplayName(cell.Model), cell.Label.text,
                     "cell label must show the district's display name");
             }
+
+            // ⛔ LA LÉGENDE À PASTILLES N'EXISTE QUE SUR LE REPLI (F6). Garde STRUCTURELLE — elle ne
+            // lit aucun pixel : elle compte des objets nommés dans l'arbre, donc elle survit à un
+            // changement de palette, de taille et de résolution. Et elle est BILATÉRALE : « zéro sur
+            // la ville peinte » seul serait satisfait par une légende supprimée PARTOUT, ce qui
+            // retirerait du repli un élément qui lui appartient. Deux régimes, deux comptes.
+            int itemsLegende = 0;
+            foreach (Transform t in controller.GetComponentsInChildren<Transform>(true))
+                if (t.name == "LegendItem") itemsLegende++;
+            if (controller.VillePeinteMontee)
+                Assert.AreEqual(0, itemsLegende,
+                    $"{itemsLegende} pastilles de légende sur la ville peinte : la maquette n'en " +
+                    "porte aucune, et ce sont les seuls aplats saturés de l'écran");
+            else
+                Assert.AreEqual(4, itemsLegende,
+                    $"{itemsLegende} pastilles sur le repli en deux colonnes : la légende de contrôle " +
+                    "y appartient, elle n'a pas été retirée du dépôt mais d'UN montage");
         }
     }
 }
