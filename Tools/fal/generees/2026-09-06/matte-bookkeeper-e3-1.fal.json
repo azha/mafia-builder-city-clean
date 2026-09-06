@@ -1,0 +1,15 @@
+{
+  "modele": "fal-ai/birefnet",
+  "source": "Tools/fal/generees/2026-09-06/portrait-bookkeeper-e3-1.png",
+  "parametres": {
+    "model": "General Use (Heavy)",
+    "operating_resolution": "1024x1024",
+    "output_format": "png",
+    "refine_foreground": true
+  },
+  "largeur": 1024,
+  "hauteur": 1024,
+  "request_id": "01a07789-49e4-7593-bf69-4317ea796019",
+  "duree_s": 5.0,
+  "genere_le": "2026-09-06T18:24:45+0200"
+}

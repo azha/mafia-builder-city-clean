@@ -24,15 +24,23 @@ def luminance(px):
 
 
 def mesures(im):
-    """Contraste du sujet (bande centrale) contre le fond (coins), et part de pixels clairs."""
+    """Contraste du sujet contre son fond, et part de pixels qui S'EN ECARTENT, a 26 px.
+
+    Corrige le 2026-09-06 : la v1 ne regardait que les pixels PLUS CLAIRS que le fond. Sur un lot
+    serigraphie encre-sombre-sur-papier-clair elle a rendu « contraste 1,00 / 1,07 / 1,07 et 0,0 % » —
+    trois valeurs quasi identiques et toutes fausses, la signature d'un instrument qui mesure autre
+    chose. Les grandeurs sont desormais SANS DIRECTION : l'ecart au fond compte des deux cotes, et le
+    contraste prend l'extreme le plus eloigne du fond."""
     p = im.convert("RGB")
     w, h = p.size
     coins = [p.getpixel((4, 4)), p.getpixel((w - 5, 4)), p.getpixel((4, h - 5)), p.getpixel((w - 5, h - 5))]
     fond = sum(luminance(c) for c in coins) / 4
     petit = p.resize((26, 26), Image.LANCZOS)
     vals = [luminance(petit.getpixel((x, y))) for y in range(26) for x in range(26)]
-    clairs = sum(1 for v in vals if v > fond + 40) / len(vals)
-    return fond, (max(vals) + 5) / (fond + 5), clairs
+    ecart = sum(1 for v in vals if abs(v - fond) > 40) / len(vals)
+    extreme = max(vals) if (max(vals) - fond) >= (fond - min(vals)) else min(vals)
+    hi, lo = max(fond, extreme), min(fond, extreme)
+    return fond, (hi + 5) / (lo + 5), ecart
 
 
 def main():
@@ -52,13 +60,13 @@ def main():
             pl.paste(im.resize((t, t), Image.LANCZOS), (ox, y + (max(TAILLES) - t)))
             ox += t + 10
         fond, contraste, clairs = mesures(im)
-        d.text((x, y + max(TAILLES) + 6), f"71·40·26 px  fond {fond:.0f}  contraste {contraste:.2f}:1  clairs {clairs*100:.0f}%",
+        d.text((x, y + max(TAILLES) + 6), f"71·40·26 px  fond {fond:.0f}  contraste {contraste:.2f}:1  ecart {clairs*100:.0f}%",
                fill=(138, 151, 156))
     pl.save(sortie)
     print(sortie)
     for nom, im in items:
         fond, contraste, clairs = mesures(im)
-        print(f"  {nom:<12} fond L={fond:>5.1f} · contraste max/fond {contraste:.2f}:1 · pixels clairs à 26 px {clairs*100:.1f} %")
+        print(f"  {nom:<12} fond L={fond:>5.1f} · contraste max/fond {contraste:.2f}:1 · ecart au fond à 26 px {clairs*100:.1f} %")
 
 
 if __name__ == "__main__":
