@@ -411,7 +411,23 @@ namespace MafiaCleanCity.Operational.Autonomy
             cardRt.anchorMax = new Vector2(0.5f, 1f);
             cardRt.pivot = new Vector2(0.5f, 1f);
             cardRt.sizeDelta = new Vector2(600, 640);
-            cardRt.anchoredPosition = new Vector2(0, -28);
+            // ⛔⛔ LE `-28` IGNORAIT CE QUE LE CHROME MANGE, ET IL ÉTAIT SEUL À LE FAIRE OU PRESQUE.
+            //    Mesuré le 2026-09-06 sur les 32 locataires du shell : **28 lisent
+            //    `ShellChrome`, QUATRE non** — celui-ci, le Dashboard, la Filière et l'aperçu de
+            //    pipeline. La carte s'ancrait donc 28 unités sous le HAUT DU CANVAS, alors que le
+            //    bandeau en occupe 275 (mesuré ce jour, médaillon compris) : son en-tête passait
+            //    derrière la barre. `ContentSlot` couvre tout le canvas PAR CONCEPTION — pour
+            //    qu'un fond plein écran passe SOUS les barres — donc s'y ancrer sans lire l'inset
+            //    est le défaut que ce contrat existe pour éviter, et il est déjà documenté mot
+            //    pour mot chez `ShellChrome` et chez `AppShell.ConstruireLocataire`.
+            //    ⚠️ Le FOND, lui, garde son plein écran : c'est exactement ce que le contrat
+            //      prescrit pour un fond. Seule la carte — ce qui porte du texte lisible — se
+            //      décale. Les deux règles vivent dans le même écran et ne se confondent pas.
+            //    ⚠️ HORS SHELL, `TopInsetPx` vaut ZÉRO et le comportement est byte-identique à
+            //      avant : c'est le contrat écrit de `ShellChrome` (« sans shell il n'y a pas de
+            //      barres »), pas un repli silencieux — les tests qui montent ce locataire seul
+            //      voient donc exactement la géométrie qu'ils voyaient.
+            cardRt.anchoredPosition = new Vector2(0, -(MafiaCleanCity.Shell.ShellChrome.TopInsetPx + 28f));
             card.AddComponent<Image>().color = CardBg;
             VerticalLayoutGroup vlg = card.AddComponent<VerticalLayoutGroup>();
             vlg.padding = new RectOffset(20, 20, 18, 18);
