@@ -136,6 +136,20 @@ namespace MafiaCleanCity.CityMap
         public Sprite VillePeinteSprite { get; private set; }
         public RectTransform VillePeinteRect => villePeinteRt;
         public IReadOnlyList<string> DistrictsSansAncre => districtsSansAncre;
+
+        /// <summary>L'angle DÉCLARÉ par le fichier d'ancres pour un quartier, en convention d'image
+        /// — la DONNÉE, pas ce que la scène en a fait.
+        /// ⛔ Existe pour qu'une falsifiable puisse comparer le rendu à sa source. Ma première garde
+        /// d'inclinaison lisait l'angle sur le `Transform` qu'elle testait : en inversant le signe
+        /// du correctif, l'attendu s'inversait avec lui et la garde restait VERTE sur le monde
+        /// qu'elle existait pour interdire. *Le contrôle et son sujet ne doivent pas partager leur
+        /// support* — ici le support était le transform lui-même.</summary>
+        public float AngleAncreDeclare(string nomCanonique)
+        {
+            if (ancres == null || string.IsNullOrEmpty(nomCanonique)) return 0f;
+            AncreDistrictDto a;
+            return ancres.TryGetValue(nomCanonique.ToUpperInvariant(), out a) && a != null ? a.angle_deg : 0f;
+        }
         private RectTransform villePeinteRt;
         private RectTransform marqueursRt;
         private Dictionary<string, AncreDistrictDto> ancres;
@@ -631,6 +645,18 @@ namespace MafiaCleanCity.CityMap
             rt.pivot = new Vector2(0.5f, 0.5f);
             rt.sizeDelta = new Vector2(MarqueurLargeur, MarqueurHauteur);
             rt.anchoredPosition = Vector2.zero;
+            // ⛔ LE NOM SUIT LA TRAME DE SON QUARTIER (③ F4). Le juge a mesuré une amplitude de
+            // **17,4°** sur sept quartiers de la maquette (LES BASSINS −10,21° … DÉPÔT-EST +7,23°)
+            // contre **±0,4°** en jeu : tous les noms redressés à l'horizontale. L'angle n'est pas
+            // dérivable d'une image — c'est une propriété du PROFIL de trame, six profils, six
+            // angles (amplitude réelle 28°, le juge n'avait aucun quartier `glass`), lue dans la
+            // source d'auteur par l'atelier et livrée dans le fichier d'ancres.
+            // ⚠️ LE SIGNE EST LE PIÈGE, et le fichier le dit : sa convention est celle de l'IMAGE
+            //   (0° horizontal, positif HORAIRE, y vers le bas) tandis qu'Unity tourne à l'inverse.
+            //   D'où le `-`. *Une garde sur le signe de la constante serait satisfaite par les deux
+            //   mondes* — c'est l'aiguille inversée ; celle de ce lot lit de quel côté tombe
+            //   l'extrémité d'un nom, pas le signe qu'on a écrit.
+            rt.localRotation = Quaternion.Euler(0f, 0f, ancre != null ? -ancre.angle_deg : 0f);
 
             // ⛔⛔ LA PLAQUE OPAQUE EST PARTIE, ET ELLE PORTAIT CINQ DES DIX ÉCARTS DE ③.
             // Un juge ⊥ a mesuré (`carte/r1-2026-09-06`) : `Image` sur la cellule, `Color.gray`,

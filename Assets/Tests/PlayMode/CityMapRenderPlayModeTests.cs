@@ -143,6 +143,43 @@ namespace MafiaCleanCity.CityMap.Tests
             // changement de palette, de taille et de résolution. Et elle est BILATÉRALE : « zéro sur
             // la ville peinte » seul serait satisfait par une légende supprimée PARTOUT, ce qui
             // retirerait du repli un élément qui lui appartient. Deux régimes, deux comptes.
+            // ⛔⛔ L'INCLINAISON DES NOMS — ET LA GARDE NE LIT PAS LE SIGNE DE LA CONSTANTE.
+            // Le fichier d'ancres est en convention d'IMAGE (0° horizontal, positif HORAIRE, y vers
+            // le bas) et Unity tourne à l'inverse : une garde assertant « le signe passé à `Euler`
+            // est l'opposé de `angle_deg` » serait vraie dans les DEUX mondes — celui où la
+            // convention est respectée et celui où on l'a inversée deux fois. C'est l'aiguille
+            // inversée du socle : *l'inversion est une propriété du CÔTÉ*, pas de la suite.
+            // ⇒ On lit DE QUEL CÔTÉ tombe l'extrémité : pour un angle horaire (positif), le bout
+            //   DROIT du nom doit être PLUS BAS à l'écran que le bout gauche, et réciproquement.
+            if (controller.VillePeinteMontee)
+            {
+                // ⛔⛔ L'ATTENDU VIENT DE LA DONNÉE, PAS DU TRANSFORM — et ma première version
+                // faisait l'inverse. Elle lisait l'angle sur `localEulerAngles`, c'est-à-dire sur
+                // l'objet même qu'elle teste : en inversant le signe du correctif, l'attendu
+                // s'inversait avec lui, les deux « extrêmes » échangeaient de place et la garde
+                // restait **VERTE** sur le monde qu'elle existait pour interdire. Mesuré par le
+                // contrôle positif, pas par relecture. *Le contrôle et son sujet ne doivent pas
+                // partager leur support.*
+                DistrictCellView plusHoraire = null, plusAntiHoraire = null;
+                float maxA = float.NegativeInfinity, minA = float.PositiveInfinity;
+                foreach (DistrictCellView c in controller.Cells)
+                {
+                    float a = controller.AngleAncreDeclare(c.Model.name_canonical);
+                    if (a > maxA) { maxA = a; plusHoraire = c; }
+                    if (a < minA) { minA = a; plusAntiHoraire = c; }
+                }
+                Debug.Log($"[CARTE-ANGLES] le plus horaire : {plusHoraire?.Model.name_canonical} " +
+                          $"({maxA:F1}°) · le plus anti-horaire : {plusAntiHoraire?.Model.name_canonical} " +
+                          $"({minA:F1}°) · amplitude {maxA - minA:F1}°");
+                // Anti-dégénérescence : si tous les marqueurs sont à plat, les deux « extrêmes »
+                // décrivent le même monde et les assertions de côté seraient vraies pour rien.
+                Assert.Greater(maxA - minA, 10f,
+                    $"l'amplitude des inclinaisons vaut {maxA - minA:F1}° : les noms sont tous à plat " +
+                    "ou presque, et la trame de chaque quartier ne se lit plus (source : 28°)");
+                AssertePenche(plusHoraire, +1, maxA);
+                AssertePenche(plusAntiHoraire, -1, minA);
+            }
+
             int itemsLegende = 0;
             foreach (Transform t in controller.GetComponentsInChildren<Transform>(true))
                 if (t.name == "LegendItem") itemsLegende++;
@@ -154,6 +191,26 @@ namespace MafiaCleanCity.CityMap.Tests
                 Assert.AreEqual(4, itemsLegende,
                     $"{itemsLegende} pastilles sur le repli en deux colonnes : la légende de contrôle " +
                     "y appartient, elle n'a pas été retirée du dépôt mais d'UN montage");
+        }
+
+        /// <summary>Le bout DROIT du nom est-il du bon côté ? `sens = +1` pour un angle horaire (le
+        /// bout droit descend), `−1` pour l'inverse. On lit des coins de `RectTransform` EN MONDE,
+        /// jamais la constante qu'on a écrite.</summary>
+        private static void AssertePenche(DistrictCellView cellule, int sens, float angle)
+        {
+            Assert.IsNotNull(cellule, "aucune cellule à mesurer");
+            var rt = (RectTransform)cellule.Label.transform;
+            var coins = new Vector3[4];
+            rt.GetWorldCorners(coins);   // 0 = bas-gauche, 3 = bas-droite
+            float denivele = coins[3].y - coins[0].y;   // > 0 : le bout droit est plus HAUT
+            Assert.Greater(Mathf.Abs(denivele), 0.5f,
+                $"« {cellule.Model.name_canonical} » est posé à plat alors que {angle:F1}° sont " +
+                "attendus — la mesure de côté n'aurait rien à départager");
+            Assert.AreEqual(sens, denivele < 0f ? +1 : -1,
+                $"« {cellule.Model.name_canonical} » penche du MAUVAIS CÔTÉ : {angle:F1}° en " +
+                "convention d'image (positif = horaire, le bout droit descend), et son bout droit " +
+                $"est {(denivele > 0f ? "plus HAUT" : "plus BAS")} de {Mathf.Abs(denivele):F2} que " +
+                "son bout gauche. Le signe de la constante ne dit rien : c'est le côté qui décide.");
         }
     }
 }
