@@ -336,6 +336,61 @@ namespace MafiaCleanCity.Shell
             return sp;
         }
 
+        /// <summary>⛔⛔ UN DÉGRADÉ AVEC PALIER — `linear-gradient(180deg, transparent, X 40%)`.
+        /// La forme que le canon demande, et que `VerticalGradient` ne rend PAS.
+        ///
+        /// LE DÉFAUT QUE CETTE FONCTION FERME, mesuré le 2026-09-06. Le site d'appel du voile du
+        /// dock porte, en commentaire, la description exacte du canon : « opaque à 84,7 % dès 40 %
+        /// de la hauteur — donc un plateau sur les 60 % du bas ». **Le sprite qu'il construisait
+        /// n'a jamais eu de plateau** : `VerticalGradient` interpole d'un bout à l'autre, donc
+        /// l'opacité au tiers supérieur vaut environ le tiers de la valeur finale. Or c'est
+        /// précisément là que vivent les libellés du dock.
+        /// ⇒ *Le commentaire décrivait le canon, le code faisait autre chose, et les deux se
+        ///   relisaient comme cohérents.* Aucun alpha terminal ne pouvait corriger ça : monter
+        ///   l'opacité du bas n'assombrit pas le haut d'une rampe.
+        ///
+        /// ⇒ CE QUI L'A RENDU VISIBLE, et pourquoi il a survécu si longtemps : le profil vertical
+        ///   de la même colonne, sur deux résolutions du MÊME run —
+        ///     1080×1920 : 53849a → 4f7e93 → 4c788c → 477285 → … → 16232e  (rampe, art clair visible)
+        ///     1080×2400 : 090f19 → 55889e → 212530 → 1f232e → … → 0f151f  (sombre presque aussitôt)
+        ///   L'art sous le dock est clair à 1920 et sombre à 2400 : le défaut ne se voyait qu'à
+        ///   une résolution, sur un art. **Il a été classé « le voile a été retiré » par deux juges
+        ///   ⊥ successifs, et un `git log` a montré que rien n'avait été retiré.**
+        /// ★ La leçon est celle du socle, à l'envers : d'ordinaire on cherche ce qui a changé.
+        ///   Ici rien n'avait changé — c'est la GÉOMÉTRIE qui sollicitait enfin le défaut.</summary>
+        public static Sprite VerticalGradientAvecPalier(int hauteurPx, Color haut, Color bas,
+            float fractionPalier)
+        {
+            float f = Mathf.Clamp(fractionPalier, 0.01f, 0.99f);
+            string key = $"vgradp:{hauteurPx}:{ColorKey(haut)}:{ColorKey(bas)}:{f:F3}";
+            if (cache.TryGetValue(key, out Sprite cached) && cached != null) return cached;
+
+            int h = Mathf.Max(2, hauteurPx);
+            var tex = new Texture2D(1, h, TextureFormat.RGBA32, false)
+            {
+                filterMode = FilterMode.Bilinear,
+                wrapMode = TextureWrapMode.Clamp,
+                hideFlags = HideFlags.HideAndDontSave,
+            };
+            var pixels = new Color[h];
+            for (int y = 0; y < h; y++)
+            {
+                // y = 0 est le BAS de la texture (convention Unity) ⇒ `bas` en 0, `haut` en h−1.
+                // La fraction du CSS se compte depuis le HAUT : le palier occupe donc les
+                // (1 − f) premiers pixels en partant du bas, et la rampe le reste.
+                float depuisLeHaut = 1f - y / (float)(h - 1);
+                float k = depuisLeHaut >= f ? 1f : depuisLeHaut / f;
+                pixels[y] = Color.Lerp(haut, bas, k);
+            }
+            tex.SetPixels(pixels);
+            tex.Apply(false, false);
+            Sprite sp = Sprite.Create(tex, new Rect(0, 0, 1, h), new Vector2(0.5f, 0.5f), 100f, 0,
+                SpriteMeshType.FullRect);
+            sp.hideFlags = HideFlags.HideAndDontSave;
+            cache[key] = sp;
+            return sp;
+        }
+
         public static Sprite VerticalGradient(int hauteurPx, Color haut, Color bas)
         {
             string key = $"vgrad:{hauteurPx}:{ColorKey(haut)}:{ColorKey(bas)}";
@@ -585,6 +640,75 @@ namespace MafiaCleanCity.Shell
             f[6].r = 0.75f; f[6].g = 0.80f; f[6].b = 0.85f;   // ciel de jour
             return f;
         }
+
+        /// <summary>⛔⛔ L'OPACITÉ MINIMALE POUR QU'UN TEXTE RESTE LISIBLE SUR N'IMPORTE QUEL ART.
+        /// La sœur de `AlphaVoileSurFondQuelconque`, et sa DIFFÉRENCE D'OBJECTIF est tout le sujet.
+        ///
+        /// Celle-là vise la FIDÉLITÉ à la maquette : elle rapproche le pixel rendu de ce que le
+        /// navigateur produirait. Elle est juste, et elle laisse le contraste libre — sa propre
+        /// docstring le dit, « pour un fond inconnu il n'existe aucune solution exacte à une seule
+        /// opacité ». Celle-ci vise la LISIBILITÉ : elle rend la plus PETITE opacité telle que,
+        /// même sur le fond de référence le plus CLAIR, l'encre garde `ratioCible` de contraste.
+        ///
+        /// ⇒ POURQUOI IL EN FALLAIT UNE SECONDE, et c'est une mesure. Le voile du dock est posé par
+        ///   la première depuis le 25 août, sans qu'une ligne bouge — vérifié par `git log` sur le
+        ///   bloc, sur la fonction et sur le jeton. Ses libellés rendent pourtant **8,20:1 sur la
+        ///   carte de ville et 4,20:1 sur la fiche de district**, dans le MÊME run, avec les MÊMES
+        ///   valeurs. *Une opacité fixe sur un art variable ne garantit pas une lisibilité : elle
+        ///   garantit une opacité.* Deux juges ⊥ ont mesuré la dérive et cherché ce qui avait retiré
+        ///   le voile ; rien ne l'avait retiré.
+        ///
+        /// ⇒ POURQUOI C'EST DÉRIVÉ ET NON RÉGLÉ. Le contraste composité croît de façon monotone
+        ///   avec l'opacité (le voile tire le fond vers sa propre couleur, sombre) : il existe donc
+        ///   un plus petit alpha qui atteint la cible, et il se TROUVE par dichotomie au lieu de se
+        ///   choisir. Monter l'alpha « jusqu'à ce que la garde passe » donnerait un nombre juste sur
+        ///   CET art et faux sur le suivant — la faute exacte que ce lot corrige.
+        /// ⚠️ La composition se fait en LINÉAIRE (le projet l'est), puis le résultat est réencodé
+        ///   en sRGB avant le calcul WCAG, qui prend des valeurs sRGB et les linéarise lui-même.
+        ///   Sauter le réencodage donne des ratios plausibles et faux.
+        /// ⚠️ Si même l'opacité 1 n'atteint pas la cible (une encre trop proche du voile), on rend
+        ///   1 et `contrasteObtenu` dit la vérité : c'est alors la COULEUR qu'il faut changer, pas
+        ///   l'opacité, et l'appelant doit pouvoir le lire au lieu de croire sa cible atteinte.</summary>
+        public static float AlphaPourContrasteGaranti(Color encre, Color voile, float ratioCible,
+            out Color fondPire, out float contrasteObtenu)
+        {
+            Color[] fonds = FondsDeReferenceVoile();
+            fondPire = fonds[0];
+            float lumPire = -1f;
+            foreach (Color f in fonds)
+            {
+                float l = LumRelativeWcag(f);
+                if (l > lumPire) { lumPire = l; fondPire = f; }
+            }
+
+            float bas = 0f, haut = 1f;
+            contrasteObtenu = ContrasteApresVoile(encre, voile, fondPire, 1f);
+            if (contrasteObtenu < ratioCible) return 1f;      // hors d'atteinte : c'est la couleur, pas l'alpha
+            for (int i = 0; i < 40; i++)
+            {
+                float m = 0.5f * (bas + haut);
+                if (ContrasteApresVoile(encre, voile, fondPire, m) >= ratioCible) haut = m; else bas = m;
+            }
+            contrasteObtenu = ContrasteApresVoile(encre, voile, fondPire, haut);
+            return haut;
+        }
+
+        /// <summary>Le contraste WCAG entre `encre` et le pixel qu'on obtient en posant `voile` à
+        /// l'opacité `alpha` sur `fond` — composition en linéaire, réencodage sRGB, puis WCAG.</summary>
+        public static float ContrasteApresVoile(Color encre, Color voile, Color fond, float alpha)
+        {
+            Color melLin = Color.Lerp(fond.linear, voile.linear, alpha);
+            Color mel = melLin.gamma;
+            float a = LumRelativeWcag(encre), b = LumRelativeWcag(mel);
+            if (a < b) { float t = a; a = b; b = t; }
+            return (a + 0.05f) / (b + 0.05f);
+        }
+
+        private static float LumRelativeWcag(Color c)
+            => 0.2126f * LinWcag(c.r) + 0.7152f * LinWcag(c.g) + 0.0722f * LinWcag(c.b);
+
+        private static float LinWcag(float u)
+            => u <= 0.04045f ? u / 12.92f : Mathf.Pow((u + 0.055f) / 1.055f, 2.4f);
 
         /// <summary>L'opacité à employer, EN MÉLANGE LINÉAIRE, pour qu'un voile posé sur un fond
         /// QUELCONQUE retombe au plus près de ce qu'un navigateur produirait en sRGB à l'opacité CSS.

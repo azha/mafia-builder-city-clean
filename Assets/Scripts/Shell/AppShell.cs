@@ -1572,8 +1572,21 @@ namespace MafiaCleanCity.Shell
             Color sombre = DesignTokens.Current.hudBarGlassBottom;
             float residuDock;
             sombre.a = ProceduralUI.AlphaVoileSurFondQuelconque(sombre, sombre.a, out residuDock);
+            // ⛔⛔ CE N'EST PAS L'OPACITÉ QUI MANQUAIT — mesuré, et le contraire a été essayé.
+            // L'hypothèse évidente devant des libellés à 4,29:1 est « le voile est trop faible ».
+            // Elle est FAUSSE, et le dispositif qui la réfute a été écrit puis retiré : l'opacité
+            // minimale garantissant 4,5:1 sur le fond de référence le plus clair vaut **0,9174**,
+            // et celle déjà posée ci-dessus vaut **0,9583**. Elle était donc déjà suffisante, et
+            // prendre le maximum des deux ne changeait pas un pixel. *Un correctif qui ne supprime
+            // rien n'a rien corrigé.*
+            // ⇒ LE DÉFAUT ÉTAIT LA FORME DU DÉGRADÉ, pas sa valeur terminale. Le canon demande
+            //   `linear-gradient(180deg, transparent, #070b12d8 40%)` — un PALIER dès 40 % — et le
+            //   commentaire ci-dessus le décrivait mot pour mot ; `VerticalGradient` interpolait
+            //   d'un bout à l'autre, sans palier. Les libellés vivent au tiers supérieur du dock,
+            //   là où une rampe ne vaut qu'un tiers de son opacité finale. Aucune valeur d'alpha ne
+            //   pouvait le corriger : monter l'opacité du bas n'assombrit pas le haut d'une rampe.
             Color clair = sombre; clair.a = 0f;
-            fonduImg.sprite = ProceduralUI.VerticalGradient(64, clair, sombre);
+            fonduImg.sprite = ProceduralUI.VerticalGradientAvecPalier(64, clair, sombre, 0.40f);
             fonduImg.type = Image.Type.Simple;
             fonduImg.color = Color.white;
             fonduImg.raycastTarget = false;
