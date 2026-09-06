@@ -452,6 +452,202 @@ namespace MafiaCleanCity.Shell.Tests
             return (offenders, sampled, examples);
         }
 
+        /// <summary>㊲/① — CE QUE LE CADRAN DESSINE, et non ce qu'il ne dépasse pas.
+        ///
+        /// ⛔ POURQUOI CET ORACLE EXISTE. Un juge ⊥ (r5 de ①) a relevé QUATRE défauts du cadran
+        /// pendant que `HUDv31` rendait 26/27 — et le seul rouge était `DA6`, qui n'avait jamais
+        /// tourné (API muette en batchmode). Réparé, `DA6` reste aveugle : sa propriété est le
+        /// DÉBORDEMENT. Les vingt-six autres sont structurels ou géométriques.
+        /// ⇒ **Aucun oracle de ce dépôt ne regardait ce que le cadran DESSINE.** Corriger le pivot
+        ///   ou l'arc sans celui-ci produirait un vert de plus que personne ne peut opposer.
+        ///
+        /// Les quatre grandeurs, et leur valeur au CANON (`hud-topbar-reference-source.html`,
+        /// mesures du r5) :
+        ///   1. **pivot** : à ~0,15 R du centre, **EN DESSOUS** (0,147 R au r5, 0,150 au r6 — les
+        ///      deux tours concordent en signe et en ordre, la tolérance les couvre tous les deux).
+        ///      Le jeu le met 0,145 R au-dessus —
+        ///      même distance, côté opposé : écart 0,29 R = 11,7 px CSS. *La distance ne discrimine
+        ///      pas, seul le CÔTÉ le fait* — la leçon de l'aiguille inversée, appliquée au pivot.
+        ///   2. **segment neutre** : **29,45°** de piste nue entre la zone froide et la zone
+        ///      chaude. ⚠️ Cette valeur vient de la SOURCE, pas d'un rapport : le SVG fait courir le
+        ///      froid de 180° à 90° et le chaud de 60,55° à 0°, donc l'intervalle vaut
+        ///      90 − 60,55 = 29,45. Deux tours de juge en ont donné deux mesures différentes (27°
+        ///      au r5, 39° au r6) — *un nombre repris d'un rapport sans être recompté est un fait
+        ///      DÉDUIT*, y compris quand le rapport est rigoureux. On mesure contre la source.
+        ///   3. **lunette intérieure** : un second anneau, en retrait de la jante.
+        ///   4. **fond radial** : la face est un dégradé (`hudGaugeFaceInner` → `…Outer`), pas un
+        ///      aplat.
+        /// ⚠️ CE QUE CETTE QUATRIÈME MESURE NE COUVRE PAS, et il faut le dire : le juge écrit
+        ///   « cadran plat, amplitude inter-secteurs 1,1 L contre 19,3 ». Sa grandeur est la
+        ///   variation entre SECTEURS ANGULAIRES du cadran ; la mienne est la variation RADIALE du
+        ///   fond, du centre vers le bord. Ce sont deux propriétés distinctes, et la mienne est
+        ///   VERTE (écart 0,1267 mesuré) : le dégradé radial existe. **L'amplitude inter-secteurs
+        ///   reste donc NON COUVERTE par cet oracle** — publier le dénominateur plutôt que laisser
+        ///   croire que les quatre findings sont sous garde.
+        /// ⚠️ MONDE DÉGÉNÉRÉ ÉCRIT : un cadran ENTIÈREMENT nu satisferait « pas de recouvrement des
+        ///   deux zones » (il n'y a pas de zones) et « pas de pivot du mauvais côté » (il n'y a pas
+        ///   de pivot). Chaque mesure porte donc son plancher : les deux arcs doivent EXISTER avant
+        ///   qu'on mesure ce qui les sépare, et le pivot doit exister avant qu'on regarde son côté.
+        /// ⚠️ Cet oracle est ROUGE au moment où il est écrit, sur les quatre — c'est sa raison
+        ///   d'être. Le vert viendra du correctif, pas d'une tolérance.</summary>
+        [UnityTest]
+        public IEnumerator DA7_CompositionDuCadran_PivotSegmentNeutreLunetteEtFond()
+        {
+            yield return WaitTopBarLoaded(BootShell());
+            yield return new WaitForEndOfFrame();
+
+            Transform manoT = shell.TopBar.transform.Find("Manometre");
+            Assert.IsNotNull(manoT, "Manometre doit exister");
+            var manoRect = (RectTransform)manoT;
+            float rayon = manoRect.rect.width / 2f;
+            Assert.Greater(rayon, 5f, "anti-vacuité : le médaillon doit avoir une taille réelle");
+
+            // ── 1. LE PIVOT — structurel, aucun pixel : sa position est un rect. ────────────────
+            // ⛔ LES QUATRE ÉCARTS SE COLLECTENT, ILS NE SE LÈVENT PAS UN PAR UN. Première version :
+            // quatre `Assert` successifs — NUnit s'arrête au premier `throw`, donc le run ne disait
+            // que « le pivot est du mauvais côté » et les trois autres restaient invisibles. *Un
+            // rouge en masque un autre dans le même test*, et corriger le premier ne révèle pas le
+            // second : seul le balayage de la CLASSE les montre ensemble. Ici la classe fait quatre.
+            var ecarts = new List<string>();
+
+            Transform pivotT = manoT.Find("NeedleCenter");
+            Assert.IsNotNull(pivotT, "le pivot de l'aiguille doit exister — sans lui, rien à situer");
+            float pivotY = ((RectTransform)pivotT).anchoredPosition.y;
+            float pivotFraction = pivotY / rayon;
+            Debug.Log($"[CADRAN] pivot y={pivotY:F2} u · {pivotFraction:F3} R " +
+                      $"({(pivotFraction < 0f ? "EN DESSOUS" : "AU-DESSUS")} du centre) · canon −0,147 R");
+            if (pivotFraction >= 0f)
+                ecarts.Add($"PIVOT : à {pivotFraction:F3} R, du MAUVAIS CÔTÉ du centre — le canon le " +
+                           "pose EN DESSOUS (−0,147 R). La distance ne discrimine pas, seul le côté.");
+            else if (Mathf.Abs(pivotFraction + 0.150f) > 0.02f)
+                ecarts.Add($"PIVOT : à {pivotFraction:F3} R du centre au lieu de −0,150 R.");
+
+            // ── 2. LA LUNETTE INTÉRIEURE — structurelle elle aussi. ────────────────────────────
+            // ⚠️ PAS SEULEMENT « elle existe » : une lunette à alpha nul, sans sprite, ou aussi
+            // large que le boîtier satisferait une garde de présence tout en ne rendant RIEN. Le
+            // socle le dit sur le halo de titre : une garde sur les PARAMÈTRES n'est pas une garde
+            // sur l'EFFET. Faute de pouvoir discriminer un liseré à α = 0,165 sur une face sombre
+            // avec mon échantillonneur, celle-ci reste une garde de FORME — et je le déclare plutôt
+            // que de la laisser passer pour une garde d'effet.
+            Transform lunetteT = manoT.Find("Lunette");
+            if (lunetteT == null)
+                ecarts.Add("LUNETTE : absente — le canon pose un liseré clair à l'intérieur du bord " +
+                           "(`box-shadow: inset …#ffffff2a`), et rien dans l'arbre ne le porte.");
+            else
+            {
+                var img2 = lunetteT.GetComponent<Image>();
+                var lrt = (RectTransform)lunetteT;
+                if (img2 == null || img2.sprite == null || img2.color.a < 0.02f)
+                    ecarts.Add("LUNETTE : présente dans l'arbre mais elle ne peut rien rendre " +
+                               $"(sprite={(img2 != null && img2.sprite != null ? "oui" : "non")}, " +
+                               $"alpha={(img2 != null ? img2.color.a : 0f):F3}).");
+                else if (lrt.rect.width >= manoRect.rect.width)
+                    ecarts.Add($"LUNETTE : large de {lrt.rect.width:F1} pour un boîtier de " +
+                               $"{manoRect.rect.width:F1} — elle n'est pas À L'INTÉRIEUR du bord.");
+            }
+
+            // ── 3 et 4 — sur les PIXELS, par le chemin qui fonctionne ici. ─────────────────────
+            var coins = new Vector3[4];
+            manoRect.GetWorldCorners(coins);
+            float cx = (coins[0].x + coins[2].x) / 2f;
+            float cy = (coins[0].y + coins[1].y) / 2f;
+            float rPx = (coins[2].x - coins[0].x) / 2f;
+            Texture2D img = RendreLEcran();
+            try
+            {
+                // 3. LE SEGMENT NEUTRE : on balaie l'arc à son rayon médian et on classe chaque
+                //    degré en froid / chaud / ni l'un ni l'autre. Le segment est le plus long run
+                //    de « ni l'un ni l'autre » ENTRE les deux zones.
+                // ⛔ ON CLASSE PAR LA DIRECTION DE LA TEINTE, PAS PAR DISTANCE À LA COULEUR PURE.
+                // Première version : `Proche(pixel, hudGaugeArcCold, 0,22)` ⇒ **0° froid** pour 82°
+                // chaud, et le plancher anti-vacuité a tiré — correctement. Cause : les deux arcs
+                // sont composés sur la face à des opacités DIFFÉRENTES (froid 0,333, chaud 0,533),
+                // donc le froid s'éloigne bien plus de son jeton que le chaud. Une distance absolue
+                // à la couleur pure mesure l'OPACITÉ autant que la teinte.
+                // ⇒ Le mélange préserve la DIRECTION de la teinte quelle que soit l'opacité : un
+                //   pixel de l'arc froid a ses canaux vert et bleu au-dessus du rouge, un pixel de
+                //   l'arc chaud a son rouge au-dessus des deux autres. C'est ce signe qu'on lit.
+                // ⚠️ Avec un plancher d'écart, sinon le fond bleu nuit — dont le bleu dépasse aussi
+                //   le rouge — serait compté comme « froid » sur toute la circonférence.
+                int nFroid = 0, nChaud = 0, neutreMax = 0, neutreCourant = 0;
+                // ⚠️ Les BORNES, pas seulement les comptes : un compte dit combien de degrés sont
+                // peints, jamais OÙ. Deux arcs qui se recouvrent et deux arcs séparés peuvent
+                // rendre le même compte — et c'est la carte `fillAmount → angle` qu'il faut lire
+                // pour corriger, le code déclarant lui-même cette relation non linéaire.
+                int froidMin = 999, froidMax = -999, chaudMin = 999, chaudMax = -999;
+                bool vuFroid = false;
+                for (int deg = -95; deg <= 95; deg++)
+                {
+                    float a = (90f - deg) * Mathf.Deg2Rad;
+                    int px = Mathf.RoundToInt(cx + Mathf.Cos(a) * rPx * 0.45f);
+                    int py = Mathf.RoundToInt(cy + Mathf.Sin(a) * rPx * 0.45f);
+                    if (px < 0 || py < 0 || px >= img.width || py >= img.height) continue;
+                    Color c = img.GetPixel(px, py);
+                    float ecartFroid = Mathf.Min(c.g, c.b) - c.r;
+                    float ecartChaud = c.r - Mathf.Max(c.g, c.b);
+                    bool estFroid = ecartFroid > 0.06f;
+                    bool estChaud = ecartChaud > 0.06f;
+                    if (estFroid) { nFroid++; vuFroid = true; neutreCourant = 0;
+                                    if (deg < froidMin) froidMin = deg; if (deg > froidMax) froidMax = deg; }
+                    else if (estChaud) { nChaud++; neutreCourant = 0;
+                                    if (deg < chaudMin) chaudMin = deg; if (deg > chaudMax) chaudMax = deg; }
+                    else if (vuFroid && nChaud == 0)
+                    {
+                        neutreCourant++;
+                        if (neutreCourant > neutreMax) neutreMax = neutreCourant;
+                    }
+                }
+                Debug.Log($"[CADRAN] arc : froid {froidMin}..{froidMax}° ({nFroid}°) · " +
+                          $"chaud {chaudMin}..{chaudMax}° ({nChaud}°) · " +
+                          $"segment neutre le plus long entre les deux = {neutreMax}° (source SVG 29,45°)");
+                // ⛔ PLANCHERS : sans eux, un cadran SANS arcs rendrait « 0 froid, 0 chaud, segment
+                //    indéfini » et l'assertion suivante serait vraie ou fausse pour rien.
+                Assert.Greater(nFroid, 30, "anti-vacuité : la zone froide doit exister pour qu'on " +
+                                           "puisse mesurer ce qui la sépare de la chaude");
+                Assert.Greater(nChaud, 30, "anti-vacuité : la zone chaude doit exister");
+                if (neutreMax < 20)
+                    ecarts.Add($"SEGMENT NEUTRE : {neutreMax}° au lieu de 29,45° (SVG : froid 180→90, " +
+                               "chaud 60,55→0) — les deux zones se touchent ou se recouvrent, et le " +
+                               "cadran passe de « froid | neutre | chaud » à un dégradé continu.");
+
+                // 4. LE FOND RADIAL : la face doit s'assombrir du centre vers le bord.
+                float lCentre = Luminance(EchantillonAnneau(img, cx, cy, rPx * 0.12f));
+                float lBord = Luminance(EchantillonAnneau(img, cx, cy, rPx * 0.72f));
+                Debug.Log($"[CADRAN] fond : L(0,12 R)={lCentre:F4} · L(0,72 R)={lBord:F4} · " +
+                          $"écart={lCentre - lBord:F4} (canon : dégradé radial, donc écart > 0)");
+                if (lCentre - lBord <= 0.02f)
+                    ecarts.Add($"FOND : plat — écart de luminance {lCentre - lBord:F4} entre 0,12 R " +
+                               "et 0,72 R, là où le canon en fait un dégradé radial.");
+            }
+            finally { Object.DestroyImmediate(img); }
+
+            Assert.IsEmpty(ecarts,
+                "le cadran ne compose pas ce que le canon dessine :\n  · " + string.Join("\n  · ", ecarts));
+        }
+
+        private static bool Proche(Color a, Color b, float tol) =>
+            Mathf.Abs(a.r - b.r) < tol && Mathf.Abs(a.g - b.g) < tol && Mathf.Abs(a.b - b.b) < tol;
+
+        private static float Luminance(Color c) => 0.2126f * c.r + 0.7152f * c.g + 0.0722f * c.b;
+
+        /// <summary>La couleur MOYENNE d'un anneau — jamais un pixel unique : l'aiguille, le pivot
+        /// et les deux libellés traversent le disque, et un échantillon isolé tomberait dessus une
+        /// fois sur trois. La moyenne de 72 points les dilue sans les exclure, et c'est déclaré.</summary>
+        private static Color EchantillonAnneau(Texture2D img, float cx, float cy, float r)
+        {
+            float sr = 0f, sg = 0f, sb = 0f; int n = 0;
+            for (int i = 0; i < 72; i++)
+            {
+                float a = i * 5f * Mathf.Deg2Rad;
+                int px = Mathf.RoundToInt(cx + Mathf.Cos(a) * r);
+                int py = Mathf.RoundToInt(cy + Mathf.Sin(a) * r);
+                if (px < 0 || py < 0 || px >= img.width || py >= img.height) continue;
+                Color c = img.GetPixel(px, py);
+                sr += c.r; sg += c.g; sb += c.b; n++;
+            }
+            return n == 0 ? Color.black : new Color(sr / n, sg / n, sb / n);
+        }
+
         /// <summary>Rend le canvas du shell dans une texture AUX DIMENSIONS DE L'ÉCRAN, par le
         /// chemin qui fonctionne dans ce batchmode : une caméra hors-écran et une `RenderTexture`.
         ///

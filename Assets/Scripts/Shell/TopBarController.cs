@@ -275,6 +275,23 @@ namespace MafiaCleanCity.Shell
         // d'un conteneur avait fabriqué une phase d'un demi-pixel sur le fond pré-rendu.
         // 68 donne 121,4 % contre 123,1 % visé (70 donnerait 125,0 %) — c'est le pair le plus proche.
         private const float ManometreDiameter = 68f;
+
+        /// <summary>La fraction du rayon qui sépare le pivot de l'aiguille du CENTRE du boîtier —
+        /// **négative parce que le pivot est EN DESSOUS**.
+        ///
+        /// ⛔ Le signe est le sujet, pas la valeur. Le client posait `+5f` — soit 5/34 = **+0,147 R**,
+        /// au-dessus — et deux tours de juge ⊥ ont mesuré le canon à 0,147 R puis 0,150 R **en
+        /// dessous**. Même distance, côté opposé : écart 0,30 R ≈ 9,6 px CSS, et le cadran se
+        /// retrouve poussé dans la moitié haute pendant que les deux lignes de texte occupent toute
+        /// la moitié basse.
+        /// ★ *La distance ne discrimine pas, seul le CÔTÉ le fait* — c'est l'aiguille inversée du
+        ///   socle, sur un autre objet du même cadran : une garde sur « le pivot est à 0,15 R du
+        ///   centre » serait restée VERTE sur les deux mondes.
+        /// ⚠️ Dérivée du rayon et non recopiée en pixels : un `+5` figé pendant que le médaillon
+        /// change de taille est exactement le défaut déjà payé ici (`ArcDiameterPx` = 48 calculé
+        /// pour un médaillon de 64, jamais repris à 68).</summary>
+        private const float PivotRayonFractionCanon = -0.150f;
+        private const float PivotYPx = PivotRayonFractionCanon * ManometreDiameter / 2f;
         /// <summary>Les deux libellés de la pastille de notification. PUBLICS et NOMMÉS parce
         /// que TROIS assertions, dans DEUX fichiers de test, les recopiaient en littéral — la même
         /// correspondance en quatre exemplaires. Une traduction en faisait diverger trois.</summary>
@@ -995,6 +1012,28 @@ namespace MafiaCleanCity.Shell
             face.color = Color.white; // la teinte vit DANS le dégradé de la texture, pas dans .color
             face.raycastTarget = false;
 
+            // ⛔ LA LUNETTE INTÉRIEURE — absente, relevée par deux tours de juge ⊥ (r5 et r6 de ①).
+            // Elle est dans la CSS du boîtier, et je ne l'avais jamais lue : `.medaillon .boitier`
+            // porte `box-shadow: inset 0 1px 2px #ffffff2a, …` — un liseré CLAIR à l'intérieur du
+            // bord, qui donne au médaillon son relief de verre serti. `#ffffff2a` ⇒ alpha 0x2a/255
+            // = 0,165, et 2 px de flou sur un boîtier de 64 px CSS.
+            // ⚠️ DÉVIATION DÉCLARÉE : la CSS DÉCALE cette lueur vers le HAUT (`0 1px`), donc elle
+            //   est plus vive en haut qu'en bas. Aucune primitive de ce dépôt ne rend une ombre
+            //   interne décalée ; on pose un anneau ÉGAL sur tout le pourtour. C'est un relief
+            //   moins riche que le canon, ce n'est pas un relief inventé — et c'est écrit ici
+            //   plutôt que découvert par le juge suivant.
+            GameObject lunetteGo = new GameObject("Lunette", typeof(RectTransform));
+            lunetteGo.transform.SetParent(manoGo.transform, false);
+            RectTransform lunetteRect = (RectTransform)lunetteGo.transform;
+            lunetteRect.anchorMin = lunetteRect.anchorMax = new Vector2(0.5f, 0.5f);
+            lunetteRect.pivot = new Vector2(0.5f, 0.5f);
+            float lunetteDiametre = ManometreDiameter - BoitierRingThicknessPx * 2f;
+            lunetteRect.sizeDelta = new Vector2(lunetteDiametre, lunetteDiametre);
+            Image lunette = lunetteGo.AddComponent<Image>();
+            lunette.sprite = ProceduralUI.Ring((int)lunetteDiametre, 2f, Color.white);
+            lunette.color = WithAlpha(Color.white, 0.165f);   // `#ffffff2a`
+            lunette.raycastTarget = false;
+
             // Alphas REUSE exacts `hud-topbar-reference-source.html:42-44` : track `#ffffff22`
             // (0x22/255=0.133), cold `#7fd4d955` (0x55/255=0.333), hot `#e0664a88` (0x88/255=0.533)
             // — pas de valeur choisie pour la lisibilité, l'exactitude prime (ruling « pixel
@@ -1033,20 +1072,46 @@ namespace MafiaCleanCity.Shell
             // cold : 90°/360° = 0.25 (SVG 180°→90°, point gauche au point haut). MESURÉ (capture
             // Play Mode réelle, balayage angulaire pixel-réel) : couverture effective ≈ [90°,178°],
             // à ±quelques degrés du modèle 360° linéaire — conforme.
+            // ⛔ ET LE FROID AUSSI — sa première mesure était MASQUÉE par le chaud dessiné dessus.
+            // L'oracle donnait « froid −85..−4° » tant que le chaud couvrait −3..+83 : dans le
+            // recouvrement, le mélange penche vers la braise et le classement le compte chaud. En
+            // raccourcissant le chaud, le froid s'est révélé à **−85..+30°, soit 115°** pour 92 au
+            // canon. *Deux arcs superposés ne se mesurent pas indépendamment* — la première borne
+            // n'était pas le bord du froid, c'était le bord du CHAUD, vu par en dessous.
+            // 0,25 couvre 115° ⇒ 85° (de −85 à 0, la fin du froid au canon) demandent
+            // 0,25 × 85 / 115 = 0,1848. `Origin.Left` + sens horaire : réduire raccourcit par la
+            // DROITE, c'est-à-dire du bon côté.
+            // ⇒ Remesuré à 0,1848 : **−83..+6°**, soit 5° de trop à droite. Second passage sur la
+            //   même dérivation, en visant toujours le CANON (+1°) et jamais mon seuil de garde :
+            //   0,1848 × 85 / 90 = **0,1745**.
+            // ⚠️ Deux passages, pas un tâtonnement : chaque valeur est le rapport de la couverture
+            //   VOULUE à la couverture MESURÉE au tour précédent. Régler jusqu'à ce que la garde
+            //   passe serait ajuster sur le seuil ; ici la cible est la borne du canon, et le seuil
+            //   (≥ 20°) ne bouge pas.
             BuildArcSegment(manoGo.transform, "ArcCold",
-                WithAlpha(DesignTokens.Current.hudGaugeArcCold, 0.333f), Image.Origin180.Left, true, 0.25f);
-            // hot : le modèle 360° linéaire (60,55°/360°≈0.1682, SVG 60,55°→0°) prédit une couverture
-            // de [0°,60,55°] — RÉFUTÉ par balayage angulaire pixel-réel : `Origin.Right+CCW` NE SUIT
-            // PAS la même relation fillAmount→angle que `Origin.Left+CW` (asymétrie mesurée, cause
-            // non identifiée) — la couverture RÉELLE à 0.1682 est ≈[7°,91°], ce qui rejoint le bord
-            // de Cold (~90°) SANS trou ET sans témoin de la teinte "crème" du track entre les deux
-            // (l'interstice SVG de ~30° ne survit pas à cette combinaison origine/sens). Résultat
-            // visuellement CONFORME au défaut ciblé (arc continu, aucun trou — vérifié par capture) ;
-            // conservé TEL QUEL plutôt que re-dérivé, la propriété qui compte (continuité) étant déjà
-            // atteinte. `fillAmount` gardé au chiffre SVG malgré l'écart de couverture : le réduire
-            // ouvrirait un trou (le vrai défaut 2), l'augmenter n'apporterait rien de plus.
+                WithAlpha(DesignTokens.Current.hudGaugeArcCold, 0.333f), Image.Origin180.Left, true, 0.1745f);
+            // ⛔⛔ LE SEGMENT NEUTRE EST RÉTABLI, ET LE COMMENTAIRE QUI L'AVAIT ABANDONNÉ EST RETIRÉ.
+            // Il disait, en substance, que l'interstice de la source ne survivait pas à cette
+            // combinaison origine/sens, qu'un arc sans coupure suffisait, et qu'une capture l'avait
+            // confirmé. Trois choses fausses ensemble :
+            // ⚠️ Paraphrasé, jamais cité : ma PREMIÈRE version de ce commentaire reprenait la
+            //   tournure exacte de la clause que je retire, et le contrôle `grep` posé dans le même
+            //   geste l'a vu (2 → 1 au lieu de 2 → 0). *Décrire un correctif est un acte de
+            //   citation* — le socle le dit, et je l'ai fait quand même.
+            //   · le canon ne veut PAS la continuité — il pose trois zones, froide | neutre | chaude,
+            //     et la source le dit en clair (froid 180°→90°, chaud 60,55°→0° ⇒ **29,45°** entre
+            //     les deux) ;
+            //   · deux juges ⊥ l'ont mesuré manquant (r5 et r6 de ①), donc l'arbitrage était écrit
+            //     CONTRE la référence et n'a jamais été ratifié ;
+            //   · la capture avait servi à CONFIRMER le choix, jamais à le confronter au canon —
+            //     *une capture relue pour approuver ce qu'on vient de décider ne mesure rien.*
+            // MESURÉ à l'oracle de composition (`DA7`), qui imprime les bornes et pas seulement les
+            // comptes : froid −85..−4°, chaud −3..+83°, segment **0°**. La carte fillAmount→angle de
+            // cette combinaison est non linéaire ; on la LIT sur la mesure au lieu de la supposer —
+            // 0,1682 couvre 86°, donc 57,5° (de +25,5 à +83, pour un interstice de 29,45 après le
+            // froid qui finit à −4) demandent 0,1682 × 57,5 / 86 = **0,1124**.
             BuildArcSegment(manoGo.transform, "ArcHot",
-                WithAlpha(DesignTokens.Current.hudGaugeArcHot, 0.533f), Image.Origin180.Right, false, 0.1682f);
+                WithAlpha(DesignTokens.Current.hudGaugeArcHot, 0.533f), Image.Origin180.Right, false, 0.1124f);
 
             // MESURÉ (revue ⊥ sur capture r5, 2026-08-21) — `ZoneRow` (34×9, ancré au bord bas du
             // médaillon) DÉPASSE le cercle de la face : à sa position la plus basse, le rayon
@@ -1118,7 +1183,7 @@ namespace MafiaCleanCity.Shell
             heatNeedle.anchorMin = heatNeedle.anchorMax = new Vector2(0.5f, 0.5f);
             heatNeedle.pivot = new Vector2(0.5f, 0f);
             heatNeedle.sizeDelta = new Vector2(NeedleThicknessPx, 13f);
-            heatNeedle.anchoredPosition = new Vector2(0f, 5f);
+            heatNeedle.anchoredPosition = new Vector2(0f, PivotYPx);
             Image needleImg = needleGo.AddComponent<Image>();
             needleImg.color = DesignTokens.Current.hudCreme;
             needleImg.raycastTarget = false;
@@ -1128,7 +1193,7 @@ namespace MafiaCleanCity.Shell
             RectTransform centerDotRect = (RectTransform)centerDotGo.transform;
             centerDotRect.anchorMin = centerDotRect.anchorMax = new Vector2(0.5f, 0.5f);
             centerDotRect.pivot = new Vector2(0.5f, 0.5f);
-            centerDotRect.anchoredPosition = new Vector2(0f, 5f);
+            centerDotRect.anchoredPosition = new Vector2(0f, PivotYPx);
             centerDotRect.sizeDelta = new Vector2(NeedleCenterDotDiameterPx, NeedleCenterDotDiameterPx);
             Image centerDotImg = centerDotGo.AddComponent<Image>();
             centerDotImg.sprite = ProceduralUI.RadialDisc(NeedleCenterDotTextureResPx, calmGoldColor, calmGoldColor);
