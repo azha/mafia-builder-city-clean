@@ -1,0 +1,13 @@
+{
+  "modele": "fal-ai/flux/dev",
+  "prompt": "His understudy, a woman in her early thirties, mixed heritage, hair tied back, a zip-up fleece over a work shirt, no make-up, guarded and reading the room. Dark crime-drama portrait, late 1980s to early 1990s, the register of The Sopranos and The Wire: ordinary people in everyday clothes, NOT gangster-movie elegance. NO tailored suit, NO wide-lapel jacket, NO necktie, NO pocket square, nothing sharp or expensive. Bust, head and shoulders, front view, filling the square frame. Heavy chiaroscuro: one hard warm key light raking from the left, deep black shadow on the other side. Muted desaturated palette, dark blue-grey ground, no saturated colour, no text, no logo, no watermark. Painted poster illustration: flat areas of colour, thick contours, heavy simplification, no photorealism, no lens blur.",
+  "seed": 63,
+  "largeur": 1024,
+  "hauteur": 1024,
+  "etapes": 28,
+  "guidance": 3.5,
+  "request_id": "01a07874-f2e1-7ed3-8747-e9747d68d4c8",
+  "duree_s": 5.7,
+  "cout_usd_estime": 0.025,
+  "genere_le": "2026-09-06T22:42:10+0200"
+}

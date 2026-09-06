@@ -1,0 +1,15 @@
+{
+  "modele": "fal-ai/birefnet",
+  "source": "Tools/fal/generees/2026-09-06/wire-chef-1.png",
+  "parametres": {
+    "model": "General Use (Heavy)",
+    "operating_resolution": "1024x1024",
+    "output_format": "png",
+    "refine_foreground": true
+  },
+  "largeur": 1024,
+  "hauteur": 1024,
+  "request_id": "01a07875-2653-78b1-bf19-9133a5a36ea5",
+  "duree_s": 5.6,
+  "genere_le": "2026-09-06T22:42:22+0200"
+}

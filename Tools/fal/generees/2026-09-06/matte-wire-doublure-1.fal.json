@@ -1,0 +1,15 @@
+{
+  "modele": "fal-ai/birefnet",
+  "source": "Tools/fal/generees/2026-09-06/wire-doublure-1.png",
+  "parametres": {
+    "model": "General Use (Heavy)",
+    "operating_resolution": "1024x1024",
+    "output_format": "png",
+    "refine_foreground": true
+  },
+  "largeur": 1024,
+  "hauteur": 1024,
+  "request_id": "01a07875-5033-7662-8892-4b5ac8ba5419",
+  "duree_s": 5.0,
+  "genere_le": "2026-09-06T22:42:33+0200"
+}
