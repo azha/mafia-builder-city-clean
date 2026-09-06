@@ -10,8 +10,8 @@
   }
  },
  "provenance": {
-  "date": "2026-09-06T06:46:03",
-  "back_main": "b357e7a4",
+  "date": "2026-09-06T07:04:39",
+  "back_main": "4fee60b9",
   "game_back": "mafia-clean-city-game-back 2026-09-04T08:41:42.667221302Z",
   "compte": "demo_capture@example.test",
   "jour_de_jeu": 50,
@@ -21,14 +21,14 @@
   "dossier": "carte",
   "symbole": "③",
   "controleur": "CityMapController",
-  "X-Request-Id": "6e63d365-842d-4830-9159-624e4c9969ed",
-  "X-Server-Processed-At": "2026-09-06T04:46:03.426Z",
+  "X-Request-Id": "8f2ef677-9c7e-40b4-b19a-02f99a2e04c1",
+  "X-Server-Processed-At": "2026-09-06T05:04:39.737Z",
   "X-Api-Version": "1"
  },
  "corps": {
   "response_meta": {
-   "request_id_echo": "6e63d365-842d-4830-9159-624e4c9969ed",
-   "server_processed_at": "2026-09-06T04:46:03.426Z",
+   "request_id_echo": "8f2ef677-9c7e-40b4-b19a-02f99a2e04c1",
+   "server_processed_at": "2026-09-06T05:04:39.737Z",
    "api_version": 1,
    "correlation_id_echo": null
   },

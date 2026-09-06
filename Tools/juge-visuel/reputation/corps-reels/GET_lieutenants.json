@@ -1,17 +1,12 @@
 {
- "route": "/v1/lieutenants/",
- "route_appelee": "/v1/lieutenants/01a07502-dcb0-78c5-b930-10673e460814",
+ "route": "/v1/lieutenants",
+ "route_appelee": "/v1/lieutenants",
  "methode": "GET",
  "statut": 200,
- "params": {
-  "lieutenantId": {
-   "valeur": "01a07502-dcb0-78c5-b930-10673e460814",
-   "source": "lu dans le corps de `lieutenants` (clé parmi ['lieutenant_id'])"
-  }
- },
+ "params": {},
  "provenance": {
-  "date": "2026-09-06T06:46:03",
-  "back_main": "b357e7a4",
+  "date": "2026-09-06T07:04:39",
+  "back_main": "4fee60b9",
   "game_back": "mafia-clean-city-game-back 2026-09-04T08:41:42.667221302Z",
   "compte": "demo_capture@example.test",
   "jour_de_jeu": 50,
@@ -21,42 +16,45 @@
   "dossier": "reputation",
   "symbole": "㊲",
   "controleur": "ReputationScreenController",
-  "X-Request-Id": "4b58d5e1-edf7-413f-8a7d-d39b614a8c3b",
-  "X-Server-Processed-At": "2026-09-06T04:46:03.624Z",
+  "X-Request-Id": "75fd8ccd-ef59-4b57-b6e8-a5b0b6fc4d20",
+  "X-Server-Processed-At": "2026-09-06T05:04:39.950Z",
   "X-Api-Version": "1"
  },
  "corps": {
   "response_meta": {
-   "request_id_echo": "4b58d5e1-edf7-413f-8a7d-d39b614a8c3b",
-   "server_processed_at": "2026-09-06T04:46:03.624Z",
+   "request_id_echo": "75fd8ccd-ef59-4b57-b6e8-a5b0b6fc4d20",
+   "server_processed_at": "2026-09-06T05:04:39.950Z",
    "api_version": 1,
    "correlation_id_echo": null
   },
   "payload": {
    "data": {
-    "name": "Lt. Oster",
-    "archetype": "COOK",
-    "granted_role": "executor",
-    "mode": "delegated",
-    "op_state_band": "IDLE",
-    "rule_count_band": "NONE",
-    "tenure_bucket": "FRESH",
-    "script_revision_cost": "COST_1",
-    "reassignment_disruption": "DISRUPT_SHORT",
-    "role_efficiency_bonus": "BONUS_NONE",
-    "reassign_availability": "AVAILABLE",
-    "budget_bands": {
-     "PRODUCTION_OPS": "depleted"
-    },
-    "cue_bands": {},
-    "drift_phase": "DIRECT_ALIGNED",
-    "standing_order": {
-     "freshness": "NONE",
-     "promotion_suggested": false
-    },
-    "trust_budget_bucket": "high",
-    "flag_frequency_band": "none",
-    "script_source": ""
+    "lieutenants": [
+     {
+      "lieutenant_id": "01a07502-dcb0-78c5-b930-10673e460814",
+      "name": "Lt. Oster",
+      "archetype": "COOK",
+      "op_state_band": "IDLE",
+      "rule_count_band": "NONE",
+      "tenure_bucket": "FRESH"
+     },
+     {
+      "lieutenant_id": "01a07502-df80-7922-bbad-d474dbb9a724",
+      "name": "Lt. Brasse",
+      "archetype": "COOK",
+      "op_state_band": "IDLE",
+      "rule_count_band": "NONE",
+      "tenure_bucket": "FRESH"
+     },
+     {
+      "lieutenant_id": "01a07502-df83-7d11-a65e-3b6e50a7dabb",
+      "name": "Lt. Sallo",
+      "archetype": "COOK",
+      "op_state_band": "IDLE",
+      "rule_count_band": "NONE",
+      "tenure_bucket": "FRESH"
+     }
+    ]
    }
   }
  }

@@ -1,0 +1,49 @@
+{
+ "route": "/v1/operational/precursors?building_id=",
+ "route_appelee": "/v1/operational/precursors?building_id=bdbc099d-eaba-4935-9bcd-e1272796385c",
+ "methode": "GET",
+ "statut": 200,
+ "params": {
+  "buildingId": {
+   "valeur": "bdbc099d-eaba-4935-9bcd-e1272796385c",
+   "source": "lu dans le corps de `city/district/1/interior` (clé parmi ['building', 'building_id'])"
+  }
+ },
+ "provenance": {
+  "date": "2026-09-06T07:04:39",
+  "back_main": "4fee60b9",
+  "game_back": "mafia-clean-city-game-back 2026-09-04T08:41:42.667221302Z",
+  "compte": "demo_capture@example.test",
+  "jour_de_jeu": 50,
+  "horloge_game_minute": 72013,
+  "horloge_source": "city_sim_clock.game_minute scopée sur player_id (lecture en base : aucune route joueur ne la projette — forme F)",
+  "district_du_joueur_mesure": 1,
+  "dossier": "ecran_appro",
+  "symbole": "㉚",
+  "controleur": "ChaineDApproScreenController",
+  "X-Request-Id": "e7ec8a5e-1ff1-4ba8-b6ee-75e0e0fa63b6",
+  "X-Server-Processed-At": "2026-09-06T05:04:40.211Z",
+  "X-Api-Version": "1"
+ },
+ "corps": {
+  "response_meta": {
+   "request_id_echo": "e7ec8a5e-1ff1-4ba8-b6ee-75e0e0fa63b6",
+   "server_processed_at": "2026-09-06T05:04:40.211Z",
+   "api_version": 1,
+   "correlation_id_echo": null
+  },
+  "payload": {
+   "data": {
+    "building": "bdbc099d-eaba-4935-9bcd-e1272796385c",
+    "precursor_type": "PYRALIN",
+    "stock_band": "NONE",
+    "has_pending_order": false,
+    "has_arrived_order": false,
+    "stock_liters_label": "0 L",
+    "price_trend_bucket": "UP",
+    "scarcity_active": false,
+    "supplier_pressure_bucket": "FRESH"
+   }
+  }
+ }
+}

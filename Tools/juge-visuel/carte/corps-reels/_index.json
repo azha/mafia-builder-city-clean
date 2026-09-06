@@ -2,8 +2,10 @@
  "dossier": "carte",
  "symbole": "③",
  "controleur": "CityMapController",
- "date": "2026-09-06T06:46:03",
- "back_main": "b357e7a4",
+ "date": "2026-09-06T07:04:39",
+ "back_main": "4fee60b9",
+ "horloge_game_minute": 72013,
+ "jour_de_jeu": 50,
  "compte": "demo_capture@example.test",
  "note": "routes = celles du DOSSIER de code du contrôleur et de ses classes *Client. DEUX SENS, et le second manquait : elles sont parfois PLUS LARGES que l'écran (le juge-donnees filtre), et parfois PLUS ÉTROITES que le domaine — une route du domaine que le code de l'écran n'appelle pas N'APPARAÎT PAS ICI, par construction et non par échec. Mesuré le 2026-09-06 sur screen_c2 : POST .../laundering/stage existe côté back et le client la référence 0 fois, donc elle est absente de cet index. ⛔ Une absence ici se lit « pas dans la surface de code de l'écran », JAMAIS « pas de corps » ni « pas regardée » — confronter au mandat du dossier pour la trancher.",
  "comptes": {
@@ -28,7 +30,7 @@
    "etat": "mutation"
   },
   {
-   "fichier": "GET_city_district_districtId_heat.json",
+   "fichier": "GET_city_district_id_heat.json",
    "route": "/v1/city/district/{districtId}/heat",
    "methode": "GET",
    "statut": 200,
@@ -42,14 +44,14 @@
    "etat": "appelée"
   },
   {
-   "fichier": "GET_i18n_bundle_locale.json",
+   "fichier": "GET_i18n_bundle_locale_fr.json",
    "route": "/v1/i18n/bundle?locale=",
    "methode": "GET",
    "statut": 200,
    "etat": "appelée"
   },
   {
-   "fichier": "POST_operational_dealer_id_collect.json",
+   "fichier": "POST_operational_dealer_dealerId_collect.json",
    "route": "/v1/operational/dealer/{id}/collect",
    "methode": "POST",
    "statut": null,
@@ -76,8 +78,5 @@
    "statut": 200,
    "etat": "appelée"
   }
- ],
- "horloge_game_minute": 72013,
- "jour_de_jeu": 50,
- "horloge_note": "relue en base sur `city_sim_clock` scopée au joueur, APRÈS la passe, et identique aux deux empreintes qui l'encadrent (72013 avant, 72013 après). Champ ajouté post-capture parce que le générateur ne l'écrivait pas dans le manifeste — le code est corrigé, la prochaine passe l'écrira elle-même."
+ ]
 }

@@ -10,8 +10,8 @@
   }
  },
  "provenance": {
-  "date": "2026-09-06T06:46:03",
-  "back_main": "b357e7a4",
+  "date": "2026-09-06T07:04:39",
+  "back_main": "4fee60b9",
   "game_back": "mafia-clean-city-game-back 2026-09-04T08:41:42.667221302Z",
   "compte": "demo_capture@example.test",
   "jour_de_jeu": 50,
@@ -21,14 +21,14 @@
   "dossier": "autonomie",
   "symbole": "㉔",
   "controleur": "AutonomyInboxController",
-  "X-Request-Id": "9936b051-b58f-4a65-aab1-e597089561be",
-  "X-Server-Processed-At": "2026-09-06T04:46:04.108Z",
+  "X-Request-Id": "0c1d2902-e29e-4725-986e-4ced46be4477",
+  "X-Server-Processed-At": "2026-09-06T05:04:40.461Z",
   "X-Api-Version": "1"
  },
  "corps": {
   "response_meta": {
-   "request_id_echo": "9936b051-b58f-4a65-aab1-e597089561be",
-   "server_processed_at": "2026-09-06T04:46:04.108Z",
+   "request_id_echo": "0c1d2902-e29e-4725-986e-4ced46be4477",
+   "server_processed_at": "2026-09-06T05:04:40.461Z",
    "api_version": 1,
    "correlation_id_echo": null
   },

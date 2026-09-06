@@ -4,8 +4,8 @@
  "statut": null,
  "non_appelee": "mutation — pas de corps réel sans changer l'état du compte de démo la veille des juges",
  "provenance": {
-  "date": "2026-09-06T06:46:03",
-  "back_main": "b357e7a4",
+  "date": "2026-09-06T07:04:11",
+  "back_main": "4fee60b9",
   "game_back": "mafia-clean-city-game-back 2026-09-04T08:41:42.667221302Z",
   "compte": "demo_capture@example.test",
   "jour_de_jeu": 50,

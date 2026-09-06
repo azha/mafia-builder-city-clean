@@ -5,8 +5,8 @@
  "statut": 200,
  "params": {},
  "provenance": {
-  "date": "2026-09-06T06:46:03",
-  "back_main": "b357e7a4",
+  "date": "2026-09-06T07:04:39",
+  "back_main": "4fee60b9",
   "game_back": "mafia-clean-city-game-back 2026-09-04T08:41:42.667221302Z",
   "compte": "demo_capture@example.test",
   "jour_de_jeu": 50,
@@ -16,14 +16,14 @@
   "dossier": "accueil",
   "symbole": "④",
   "controleur": "DashboardController",
-  "X-Request-Id": "80838a07-ac38-480f-9441-294759126fe8",
-  "X-Server-Processed-At": "2026-09-06T04:46:03.488Z",
+  "X-Request-Id": "a7f954e8-0ed2-4d42-b778-b742b00b031e",
+  "X-Server-Processed-At": "2026-09-06T05:04:39.790Z",
   "X-Api-Version": "1"
  },
  "corps": {
   "response_meta": {
-   "request_id_echo": "80838a07-ac38-480f-9441-294759126fe8",
-   "server_processed_at": "2026-09-06T04:46:03.488Z",
+   "request_id_echo": "a7f954e8-0ed2-4d42-b778-b742b00b031e",
+   "server_processed_at": "2026-09-06T05:04:39.790Z",
    "api_version": 1,
    "correlation_id_echo": null
   },

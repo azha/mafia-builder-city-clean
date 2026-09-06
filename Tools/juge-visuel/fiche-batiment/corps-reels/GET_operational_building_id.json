@@ -10,8 +10,8 @@
   }
  },
  "provenance": {
-  "date": "2026-09-06T06:46:03",
-  "back_main": "b357e7a4",
+  "date": "2026-09-06T07:04:39",
+  "back_main": "4fee60b9",
   "game_back": "mafia-clean-city-game-back 2026-09-04T08:41:42.667221302Z",
   "compte": "demo_capture@example.test",
   "jour_de_jeu": 50,
@@ -21,14 +21,14 @@
   "dossier": "fiche-batiment",
   "symbole": "②",
   "controleur": "BuildingCardController",
-  "X-Request-Id": "4147dacd-ef56-4f00-b12d-61ff1b93e63d",
-  "X-Server-Processed-At": "2026-09-06T04:46:04.041Z",
+  "X-Request-Id": "e477b061-d861-4a95-b033-73c1dc29a4c9",
+  "X-Server-Processed-At": "2026-09-06T05:04:40.391Z",
   "X-Api-Version": "1"
  },
  "corps": {
   "response_meta": {
-   "request_id_echo": "4147dacd-ef56-4f00-b12d-61ff1b93e63d",
-   "server_processed_at": "2026-09-06T04:46:04.041Z",
+   "request_id_echo": "e477b061-d861-4a95-b033-73c1dc29a4c9",
+   "server_processed_at": "2026-09-06T05:04:40.391Z",
    "api_version": 1,
    "correlation_id_echo": null
   },

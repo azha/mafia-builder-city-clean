@@ -180,10 +180,52 @@ def routes_avec_methode(ctl):
         corrige[(route, verbe)] = verbe
     out = corrige
 
+    # ⛔ DEUX NOMS DE PARAMÈTRE, UNE SEULE ROUTE. `/v1/x/{districtId}/y` et `/v1/x/{id}/y` sont la
+    #    MÊME route : le nom du placeholder est une convention d'écriture, pas une adresse. Les
+    #    garder toutes deux produisait deux entrées qui réclamaient le même fichier — ma garde de
+    #    collision l'a attrapé au premier rejeu, en refusant d'écrire plutôt qu'en écrasant.
+    #    On garde la forme la plus NOMMÉE (`{districtId}` plutôt que `{id}`) : elle porte de
+    #    l'information que la résolution de paramètre utilise.
+    anonyme = re.compile(r"\{[A-Za-z_]+\}")
+
+    def forme(route):
+        """La FORME d'une route : noms de paramètres effacés, et une barre finale EST un
+        paramètre — `/v1/x/` désigne `/v1/x/{id}`, c'est ce que le back en fait. Sans cette
+        seconde règle, les deux s'écrivaient sous le même nom de fichier (mesuré le 2026-09-06 :
+        `reputation` annonçait un roster et portait le détail d'un lieutenant)."""
+        # TROIS formes du même paramètre, trouvées une par une par la garde de collision :
+        #   `{nomExplicite}` · une barre finale nue · un identifiant LITTÉRAL (`/1`, un uuid)
+        # Une déclaration qui donne un exemple concret décrit la même route que sa forme
+        # paramétrée — les garder toutes deux réclamait un seul fichier pour deux routes.
+        r = UUID_OU_NUM.sub("/{id}", route)
+        r = anonyme.sub("{}", r)
+        return r[:-1] + "/{}" if r.endswith("/") else r
+
+    par_forme = {}
+    # tri : à forme égale on garde la plus EXPLICITE — une route nommée bat `{id}`, et `{id}`
+    # bat une barre finale nue (qui ne dit même pas qu'il y a un paramètre).
+    # à forme égale, on garde la plus EXPLICITE, dans cet ordre de préférence :
+    #   1. elle porte un paramètre NOMMÉ (`{categoryId}`) — c'est ce nom qui sert à le résoudre
+    #   2. plutôt que `{id}` générique
+    #   3. plutôt qu'un identifiant littéral (`/1`) ou une barre finale nue, qui n'annoncent
+    #      même pas qu'il y a un paramètre
+    for route, verbe in sorted(out, key=lambda k: (forme(k[0]), k[1],
+                                                   "{" not in k[0], k[0].endswith("/"),
+                                                   k[0].count("{id}"), k[0])):
+        par_forme.setdefault((forme(route), verbe), (route, verbe))
+    out = {v: v[1] for v in par_forme.values()}
+
     # préfixe nu dans le code : la route réelle est l'intérieur du district
     for k in [k for k in list(out) if k[0] == "/v1/city/district/"]:
         out.pop(k)
-    out.setdefault(("/v1/city/district/{districtId}/interior", "GET"), "GET")
+    # ⛔ N'AJOUTER QUE SI LA FORME N'EST PAS DÉJÀ LÀ. Mesuré le 2026-09-06 : cette ligne ajoutait
+    #    `{districtId}` alors que le balayage avait déjà `{id}` — la même route sous deux noms de
+    #    paramètre, donc DEUX entrées réclamant UN fichier. C'est cette ligne qui fabriquait la
+    #    collision, pas le balayage ; le dédoublonnage au-dessus ne pouvait rien puisqu'il
+    #    s'exécute AVANT elle. (Trouvé en instrumentant, pas en relisant : mon raisonnement
+    #    portait sur la mauvaise paire et concluait que c'était impossible.)
+    if not any(forme(r) == "/v1/city/district/{}/interior" and v == "GET" for r, v in out):
+        out[("/v1/city/district/{districtId}/interior", "GET")] = "GET"
 
     return sorted(out)          # [(route, verbe), …] — une route à deux verbes rend DEUX entrées
 
@@ -503,7 +545,11 @@ def main(argv):
                         print(f"   ✗ {r['sym']} {appelable} → {st} {err.get('code', '')} {str(err.get('message', ''))[:90]}")
             # ⛔ LE NOM DU FICHIER SUIT LA ROUTE APPELÉE, décidé APRÈS l'appel — sinon un
             #    `/v1/x/` que le back résout en `/v1/x/{id}` s'écrit sous le nom de `/v1/x`.
-            vrai = slug_reel(route, doc.get("route_appelee"), methode)
+            # ⛔ Le REPLI (route non appelée) doit nommer par la forme PARAMÉTRÉE, pas par la
+            #    route déclarée : `/v1/x/` déclare une route de détail, mais son slug efface la
+            #    barre finale et percute `/v1/x`. Mesuré le 2026-09-06 sur `ecran_demolition`.
+            declaree = parametrer(route)[0] or route
+            vrai = slug_reel(declaree, doc.get("route_appelee"), methode)
             if vrai != os.path.basename(fichier):
                 fichier = os.path.join(d, vrai)
             # ⛔ GARDE DE COLLISION — la classe, pas l'instance. Deux routes qui produiraient le

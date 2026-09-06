@@ -10,8 +10,8 @@
   }
  },
  "provenance": {
-  "date": "2026-09-06T06:46:03",
-  "back_main": "b357e7a4",
+  "date": "2026-09-06T07:04:39",
+  "back_main": "4fee60b9",
   "game_back": "mafia-clean-city-game-back 2026-09-04T08:41:42.667221302Z",
   "compte": "demo_capture@example.test",
   "jour_de_jeu": 50,
@@ -21,14 +21,14 @@
   "dossier": "reputation",
   "symbole": "㊲",
   "controleur": "ReputationScreenController",
-  "X-Request-Id": "0fe1b34a-ec30-4fba-9c1d-bfe06003f1c7",
-  "X-Server-Processed-At": "2026-09-06T04:46:03.631Z",
+  "X-Request-Id": "56b3a0bd-e5b3-475b-ae9c-25a400a593be",
+  "X-Server-Processed-At": "2026-09-06T05:04:39.953Z",
   "X-Api-Version": "1"
  },
  "corps": {
   "response_meta": {
-   "request_id_echo": "0fe1b34a-ec30-4fba-9c1d-bfe06003f1c7",
-   "server_processed_at": "2026-09-06T04:46:03.631Z",
+   "request_id_echo": "56b3a0bd-e5b3-475b-ae9c-25a400a593be",
+   "server_processed_at": "2026-09-06T05:04:39.953Z",
    "api_version": 1,
    "correlation_id_echo": null
   },
