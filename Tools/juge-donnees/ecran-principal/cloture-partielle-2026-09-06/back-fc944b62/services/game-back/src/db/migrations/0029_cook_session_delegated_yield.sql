@@ -1,0 +1,33 @@
+-- 0029_cook_session_delegated_yield.sql — schema_operational_chain.md §3 (cook_session, Table 4). PALIMPSEST §3.2 (forward-only).
+-- IMPLEMENTS: Phase 11b / COOK efficiency-bonus carrot (tenure inertia yield bonus, Idea #38) / Task C1. R9.3: this matches
+--             src/db/schema/operational_chain.ts byte-for-byte. ONLY ADDS — no existing table/column/enum is redefined or
+--             dropped: 1 NEW nullable column on "cook_session" (delegated_yield_permille). This is an ALTER, NOT a CREATE:
+--             the 15 canonical operational-chain tables ALREADY exist (0017_operational_chain.sql) and cook_session was
+--             extended by 0019/0022 (substance_type/current_stage members) + the Ash levers (refining_passes /
+--             damaged_pauses_during_cook). 0029 ADDs only the CAPTURE-AT-START tenure yield multiplier the COOK delegation
+--             binding stamps. Every other table is UNCHANGED (git diff = empty except the addition).
+--             ADD COLUMN with NO DEFAULT (nullable) = metadata-only in PG (no table rewrite), safe on a populated table; any
+--             already-running / already-completed cook retro-fills delegated_yield_permille=NULL → byte-identical behavior
+--             (a player-MANUAL cook or a non-delegated cook leaves it NULL; C2 reads NULL as ×1 — no yield change).
+-- COLUMN (BO-only — NEVER projected to the player surface; the permille is an internal computed yield lever):
+--   delegated_yield_permille : the tenure efficiency-bonus yield MULTIPLIER, captured AT START by the COOK delegation
+--     binding (lieutenant module) as a permille (×1000) int — yieldMultiplier(bonus, curve) × 1000, where bonus is derived
+--     from the delegated lieutenant's tenure streak (bucketForStreak → effectsForBucket → role_efficiency_bonus). A FRESH
+--     lieutenant → BONUS_NONE → 1.0 → 1000 (no change). NULL = a player-manual cook or a non-delegated cook (C2 treats NULL
+--     as ×1). CAPTURE-AT-START avoids a production→lieutenant circular dep: the binding (which owns the tenure bucket + the
+--     efficiency-bonus curve) computes it once at startCook; C2 APPLIES it at COOK_ADVANCE completion knowing nothing about tenure.
+-- INDEX: NONE. delegated_yield_permille is read per-cook by the cook_session PK at completion (already indexed); no read
+--        filters BY this column, so no secondary index is warranted day-1 (cf. schema_operational_chain.md §6 — calque
+--        refining_passes / the Ash purity levers, which added no index either).
+-- GRANT: NONE needed. "cook_session" ALREADY has GRANT SELECT, INSERT (0013 §"Read+append everywhere", ALL TABLES) AND
+--        GRANT UPDATE (0017 §"Mutate only NON-append-only tables"). A table-level GRANT (no column list) covers columns
+--        ADDED later → the NEW column is SELECT/INSERT/UPDATE-able by app_rw with no re-GRANT (the binding INSERTs it at
+--        startCook; C2 reads it at completion). (calque refining_passes 0019/0022 / target_building_id 0027 — same
+--        table-level grant inheritance.)
+
+-- ===== cook_session (existant, §3 Table 4) — 1 colonne AJOUTÉE (Phase-11b COOK tenure yield bonus) =====
+-- delegated_yield_permille: le multiplicateur de rendement (efficiency-bonus tenure) CAPTURÉ AU START par le binding COOK
+--   délégué, en permille (×1000) — yieldMultiplier(bonus, curve) × 1000. NULL = cook manuel joueur OU cook non-délégué
+--   (C2 le lit comme ×1). FRESH ⇒ BONUS_NONE ⇒ 1.0 ⇒ 1000. BO-only ; JAMAIS projeté surface joueur. (§3 NEW)
+ALTER TABLE "cook_session"
+  ADD COLUMN "delegated_yield_permille" integer NULL;

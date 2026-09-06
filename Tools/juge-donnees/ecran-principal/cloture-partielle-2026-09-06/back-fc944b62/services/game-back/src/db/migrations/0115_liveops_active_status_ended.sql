@@ -1,0 +1,31 @@
+-- migration 0115: `live_ops_active_status` — ADD the terminal `ENDED` enum member (04e-B C5/DD-B4 fix, G8)
+-- Plan: docs/superpowers/plans/2026-07-06-04e-B-liveops-plan.md C5 (LiveOpsCadenceController) + the
+--         DD-B4 remediation (post-review, controller-decided, recorded 2026-07-06).
+-- Decisions: docs/superpowers/specs/2026-07-06-04e-B-liveops-decisions.md §2.3 (DD-B4 — full reasoning)
+--         + §5 (migration allocation — this is 0115; C6/C7 renumbered 0116/0117).
+-- R9.3: backported to docs/tech/09_data_model/schema_live_ops_event_active.md (UPDATED) +
+--       docs/superpowers/specs/2026-07-06-04e-B-liveops-design.md §3.2/§3.8/§13 (UPDATED) — same commit.
+--
+-- PROBLEM (the BLOCKING C5 ⊥ review finding this fixes): `live_ops_event_active`'s revert path
+-- (`LiveOpsEventService.deactivateLiveOpsEvent` + the timed sweep) DELETEd the parent row on revert.
+-- The C5 cadence rule (b) "max 1 high-impact event per real-time week" counts high-impact rows with
+-- `started_at` in the trailing 7 real days — REGARDLESS of status (that query is, and stays, correct).
+-- But because a reverted row was DELETEd, a high-impact event whose duration is SHORTER than the
+-- 7-day cadence window (e.g. E-LO-04's canon default 3 real days) would auto-revert, vanish from the
+-- count, and silently let a 2nd high-impact event fire in the same real week — a canon-cap bypass.
+--
+-- FIX: revert now RETAINS the `live_ops_event_active` row and transitions its `status` to a NEW
+-- terminal value `ENDED` instead of DELETEing it (`effect_modifier` children are still DELETEd first,
+-- unchanged — the revert-guarantee is intact; only the PARENT row now persists as durable activation
+-- history). This migration ONLY adds the enum member; the write-path change
+-- (`live-ops-event.service.ts`) and the ch09/design mirrors land in the SAME commit.
+--
+-- ADD VALUE PG-native (PAS recreate-enum, qui casserait toute row/colonne existante référençant
+-- `live_ops_active_status`). Sous PG ≥ 12 (stack postgres:16, confirmé 0019_substance_schema_foundation.sql)
+-- `ALTER TYPE … ADD VALUE` s'exécute DANS un bloc transactionnel (MigrationRunner: BEGIN … COMMIT par
+-- fichier) ; l'unique restriction PG = la valeur ajoutée ne peut PAS être UTILISÉE (DML / default /
+-- comparaison) dans la MÊME transaction que l'ADD. Cette migration ne fait QUE l'ADD (aucune DML
+-- l'utilisant dans ce fichier — le premier UPDATE …SET status='ENDED' arrive au runtime, dans une
+-- transaction ultérieure) → conforme au MigrationRunner. IF NOT EXISTS = idempotent (re-run au boot
+-- inoffensif, mirrors 0019's own precedent for an ADD VALUE migration in this exact runner).
+ALTER TYPE "live_ops_active_status" ADD VALUE IF NOT EXISTS 'ENDED';

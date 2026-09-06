@@ -1,0 +1,255 @@
+{
+ "route": "/v1/session/open",
+ "methode": "POST",
+ "statut": 200,
+ "params": {
+  "client_version": "da4-corps-reels"
+ },
+ "provenance": {
+  "date": "2026-09-06T11:02:54",
+  "back_main": "fc944b62",
+  "game_back": "mafia-clean-city-game-back 2026-09-04T08:41:42.667221302Z",
+  "compte": "demo_capture@example.test",
+  "jour_de_jeu": 50,
+  "horloge_game_minute": 72118,
+  "horloge_source": "city_sim_clock.game_minute scopée sur player_id (lecture en base : aucune route joueur ne la projette — forme F)",
+  "district_du_joueur_mesure": 1,
+  "dossier": "accueil",
+  "symbole": "④",
+  "controleur": "DashboardController",
+  "X-Request-Id": "15ae3893-b8cd-4760-bbd1-cb906f4f4780",
+  "X-Server-Processed-At": "2026-09-06T09:02:54.137Z",
+  "X-Api-Version": "1"
+ },
+ "corps": {
+  "response_meta": {
+   "request_id_echo": "15ae3893-b8cd-4760-bbd1-cb906f4f4780",
+   "server_processed_at": "2026-09-06T09:02:54.137Z",
+   "api_version": 1,
+   "correlation_id_echo": null
+  },
+  "payload": {
+   "data": {
+    "session_id": "d62202a7-bb25-4b09-98f7-4114af5813de",
+    "hl_card": {
+     "card_id": "145be025-bcb8-4649-9c08-e1aebd0ea2ca",
+     "decision_type_key": "AUTONOMY_REPORTS_PENDING",
+     "impact_bucket": "moderate",
+     "urgency_bucket": "low",
+     "options": [
+      {
+       "label": "hl.option.autonomy_reports.review_now"
+      },
+      {
+       "label": "hl.option.autonomy_reports.leave_pending"
+      }
+     ],
+     "structural": false
+    },
+    "queue": [
+     {
+      "exception_id": "065afc55-e5e5-4e81-8a35-abf90545c5b9",
+      "lieutenant_id": "01a075d7-6aed-728e-8f0a-b5dbd5caedee",
+      "lieutenant": {
+       "id": "01a075d7-6aed-728e-8f0a-b5dbd5caedee",
+       "name": "Lt. Rook"
+      },
+      "event_descriptor": "exc_demo_teach_heat",
+      "event_descriptor_i18n": null,
+      "candidate_actions": [
+       {
+        "id": "teach_heat",
+        "label": "Teach: pause on high heat",
+        "add_rule_dsl": "WHEN EVENT(heat,>=,0.5) THEN PAUSE_OPS @90;",
+        "projected_consequence": "Ops pause whenever heat spikes",
+        "method": "ONE_TIME"
+       },
+       {
+        "id": "let_ride",
+        "label": "Let it ride",
+        "add_rule_dsl": null,
+        "projected_consequence": "The risk stays",
+        "method": "ONE_TIME"
+       }
+      ],
+      "suggested_action": {
+       "id": "teach_heat",
+       "label": "Teach: pause on high heat",
+       "add_rule_dsl": "WHEN EVENT(heat,>=,0.5) THEN PAUSE_OPS @90;",
+       "projected_consequence": "Ops pause whenever heat spikes",
+       "method": "ONE_TIME"
+      },
+      "confidence_band": "confident",
+      "priority_band": "critical",
+      "severity_band": "SEVERE",
+      "resolution_status": "pending"
+     },
+     {
+      "exception_id": "790757ab-f94f-421b-8ce4-31b8efb5dd55",
+      "lieutenant_id": "01a075d7-6aed-728e-8f0a-b5dbd5caedee",
+      "lieutenant": {
+       "id": "01a075d7-6aed-728e-8f0a-b5dbd5caedee",
+       "name": "Lt. Rook"
+      },
+      "event_descriptor": "exc_demo_raid_style",
+      "event_descriptor_i18n": null,
+      "candidate_actions": [
+       {
+        "id": "fix_quiet",
+        "label": "Repair quietly",
+        "effect": {
+         "type": "REPAIR",
+         "target_building_id": "cb1c9120-6c71-4c9a-9f64-79337d803223"
+        },
+        "add_rule_dsl": null,
+        "projected_consequence": "Costs cash, sheds no heat",
+        "method": "ONE_TIME"
+       },
+       {
+        "id": "pay_off",
+        "label": "Bribe the inspector",
+        "effect": {
+         "type": "BRIBE",
+         "target_building_id": "cb1c9120-6c71-4c9a-9f64-79337d803223"
+        },
+        "add_rule_dsl": null,
+        "projected_consequence": "Cheaper but riskier",
+        "method": "ONE_TIME"
+       },
+       {
+        "id": "lay_low",
+        "label": "Lay low",
+        "effect": {
+         "type": "LAY_LOW",
+         "target_building_id": "cb1c9120-6c71-4c9a-9f64-79337d803223"
+        },
+        "add_rule_dsl": null,
+        "projected_consequence": "Free, ops slow down",
+        "method": "LAY_LOW"
+       }
+      ],
+      "suggested_action": {
+       "id": "fix_quiet",
+       "label": "Repair quietly",
+       "effect": {
+        "type": "REPAIR",
+        "target_building_id": "cb1c9120-6c71-4c9a-9f64-79337d803223"
+       },
+       "add_rule_dsl": null,
+       "projected_consequence": "Costs cash, sheds no heat",
+       "method": "ONE_TIME"
+      },
+      "confidence_band": "confident",
+      "priority_band": "critical",
+      "severity_band": "MODERATE",
+      "resolution_status": "pending"
+     },
+     {
+      "exception_id": "f0f860c9-70ef-4390-a9d4-40187587c962",
+      "lieutenant_id": null,
+      "lieutenant": null,
+      "event_descriptor": "Citywide heat is high — your operations are under pressure.",
+      "event_descriptor_i18n": {
+       "key": "exception.heat_pressure.card.descriptor",
+       "params": {}
+      },
+      "candidate_actions": [
+       {
+        "id": "acknowledge",
+        "label": "Acknowledge the pressure",
+        "method": "ONE_TIME",
+        "label_i18n": {
+         "key": "exception.heat_pressure.acknowledge.label",
+         "params": {}
+        },
+        "add_rule_dsl": null,
+        "projected_consequence": "You note the heat; no automatic action is taken.",
+        "projected_consequence_i18n": {
+         "key": "exception.heat_pressure.acknowledge.consequence",
+         "params": {}
+        }
+       },
+       {
+        "id": "escalate",
+        "label": "Escalate for review",
+        "method": "ESCALATE",
+        "label_i18n": {
+         "key": "exception.heat_pressure.escalate.label",
+         "params": {}
+        },
+        "add_rule_dsl": null,
+        "projected_consequence": "The card is archived for later review.",
+        "projected_consequence_i18n": {
+         "key": "exception.heat_pressure.escalate.consequence",
+         "params": {}
+        }
+       },
+       {
+        "id": "lay_low",
+        "label": "Lay low across all operations",
+        "method": "LAY_LOW",
+        "label_i18n": {
+         "key": "exception.heat_pressure.lay_low.label",
+         "params": {}
+        },
+        "add_rule_dsl": null,
+        "projected_consequence": "You reduce exposure across the board; a one-shot mitigation, no standing rule.",
+        "projected_consequence_i18n": {
+         "key": "exception.heat_pressure.lay_low.consequence",
+         "params": {}
+        }
+       }
+      ],
+      "suggested_action": {
+       "id": "acknowledge",
+       "label": "Acknowledge the pressure",
+       "method": "ONE_TIME",
+       "label_i18n": {
+        "key": "exception.heat_pressure.acknowledge.label",
+        "params": {}
+       },
+       "add_rule_dsl": null,
+       "projected_consequence": "You note the heat; no automatic action is taken.",
+       "projected_consequence_i18n": {
+        "key": "exception.heat_pressure.acknowledge.consequence",
+        "params": {}
+       }
+      },
+      "confidence_band": "confident",
+      "priority_band": "urgent",
+      "severity_band": "SEVERE",
+      "resolution_status": "pending"
+     }
+    ],
+    "backlog_badge": false,
+    "queue_pressure_band": "normal",
+    "structural_budget": {
+     "used": 0,
+     "cap_reached": false
+    },
+    "flag_review": {
+     "pending_review_count": 0,
+     "auto_open": false
+    },
+    "settling_glance": {
+     "settling_count": 0,
+     "all_clear": true
+    },
+    "friction_glance": {
+     "friction_bucket": "balanced",
+     "penalty_active": false
+    },
+    "compression_glance": {
+     "stress_bucket": "calm",
+     "week_state": "none",
+     "forced": false
+    },
+    "onboarding": {
+     "funnel_step": "HOME_FIRST",
+     "first_decision_recorded": false
+    },
+    "opened_game_day": 50
+   }
+  }
+ }
+}

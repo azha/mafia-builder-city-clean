@@ -1,0 +1,58 @@
+{
+ "route": "/v1/city/district/{districtId}/heat",
+ "route_appelee": "/v1/city/district/1/heat",
+ "methode": "GET",
+ "statut": 200,
+ "params": {
+  "districtId": {
+   "valeur": 1,
+   "source": "lu dans le corps de `city/district/1/interior` (clé parmi ['district_id', 'district'])"
+  }
+ },
+ "provenance": {
+  "date": "2026-09-06T11:02:54",
+  "back_main": "fc944b62",
+  "game_back": "mafia-clean-city-game-back 2026-09-04T08:41:42.667221302Z",
+  "compte": "demo_capture@example.test",
+  "jour_de_jeu": 50,
+  "horloge_game_minute": 72118,
+  "horloge_source": "city_sim_clock.game_minute scopée sur player_id (lecture en base : aucune route joueur ne la projette — forme F)",
+  "district_du_joueur_mesure": 1,
+  "dossier": "ecran-principal",
+  "symbole": "①",
+  "controleur": "DistrictInteriorScreenController",
+  "X-Request-Id": "e71f9405-9486-48d7-afa9-c8ab44d1dc36",
+  "X-Server-Processed-At": "2026-09-06T09:02:55.031Z",
+  "X-Api-Version": "1"
+ },
+ "corps": {
+  "response_meta": {
+   "request_id_echo": "e71f9405-9486-48d7-afa9-c8ab44d1dc36",
+   "server_processed_at": "2026-09-06T09:02:55.031Z",
+   "api_version": 1,
+   "correlation_id_echo": null
+  },
+  "payload": {
+   "data": {
+    "district": "district-1",
+    "district_bucket": "COLD",
+    "citywide_bucket": "BURNING",
+    "escalated": false,
+    "buildings": [
+     {
+      "building": "111846f8-1aac-4a1c-8b33-ad371ffec44d",
+      "heat_bucket": "COLD",
+      "name_i18n": {
+       "key": "game.fiction.building.name",
+       "params": {
+        "enseigne": "Colis Kofi",
+        "district": "Les Bassins",
+        "block": "1"
+       }
+      }
+     }
+    ]
+   }
+  }
+ }
+}
