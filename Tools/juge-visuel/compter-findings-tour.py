@@ -18,7 +18,7 @@ if not rapports:
     print(f'⛔ aucun rapport r*-{date}/rapport.md sous {racine}', file=sys.stderr); sys.exit(2)
 tot = {'BLOQUANT': 0, 'MAJEUR': 0, 'MINEUR': 0}; n_tot = 0
 for f in rapports:
-    rows = [l for l in f.read_text(encoding='utf-8').splitlines() if re.match(r'^\| `?(?!C\d)[A-Za-z]{1,2}\d+`? \|', l)]
+    rows = [l for l in f.read_text(encoding='utf-8').splitlines() if re.match(r'^\| (?:\*\*|`)?(?!C\d)[A-Za-z]{1,2}\d+(?:\*\*|`)? \|', l)]
     c = {k: 0 for k in tot}; autres = 0
     for l in rows:
         cells = [x.strip(' *`') for x in l.split('|')]
