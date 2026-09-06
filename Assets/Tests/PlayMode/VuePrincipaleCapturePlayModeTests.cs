@@ -273,6 +273,17 @@ namespace MafiaCleanCity.Capture.Tests
         // la propriété qu'on regarde. Ici on ne teste rien : on veut simplement pouvoir REGARDER
         // l'écran dans son éclairage de nuit, que personne n'avait encore vu en jeu.
         [UnityTest]
+        // ⛔ CATÉGORIE DE MÉTHODE — posée pour pouvoir demander CETTE capture SEULE.
+        //    Sans elle, la seule façon de demander la nuit était la catégorie de CLASSE `Capture`,
+        //    qui sélectionne aussi `Capture_Detail_ApresTampon_SousChrome_MUTE` — laquelle CONSOMME
+        //    une carte du compte gelé `demo_capture`. Répondre à une question de cadrage en
+        //    dépensant la base de preuves qu'on a gelée exprès n'est pas un compromis, c'est une
+        //    perte sèche.
+        // ⚠️ Le filtre Unity matche par PRÉFIXE : `Capture` sélectionne donc `CaptureNuit` aussi,
+        //    et le compte de `Capture` est INCHANGÉ par cet ajout. C'est ce que le contrôle en deux
+        //    comptes vérifie — un ajout de catégorie qui ferait bouger le compte de la catégorie
+        //    englobante serait un changement de population déguisé en étiquette.
+        [Category("CaptureNuit")]
         public IEnumerator Capture_VuePrincipale_Nuit()
         {
             // ⛔ LE PRÉAMBULE « signer un compte frais puis ouvrir sa session » EST PARTI AVEC
