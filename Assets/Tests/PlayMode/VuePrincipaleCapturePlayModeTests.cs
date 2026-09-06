@@ -1788,6 +1788,28 @@ namespace MafiaCleanCity.Capture.Tests
                 "pas parce que tout s'est bien passé.");
             int etapesServies = ecran.DernierChargement.stages == null
                 ? 0 : ecran.DernierChargement.stages.Length;
+            // ⛔ DIAGNOSTIC PERMANENT — CE QUE L'ÉCRAN A REÇU, pas ce que le corps commité contient.
+            // Mesuré le 2026-09-06 : la planche affiche « rien n'attend » sur les QUATRE étapes,
+            // alors que le corps du pipeline de la même passe, du même compte, à la même minute de
+            // jeu et sur la MÊME chaîne (`nodes[0]`, identifiant vérifié) porte `has_cash=true` sur
+            // l'étape 2. Les trois maillons sont pourtant corrects à la lecture : le DTO déclare le
+            // champ au nom exact et porte `[Serializable]`, le client parse la bonne enveloppe, et
+            // le rendu teste le bon booléen. ★ Et `terminal`, un booléen de la MÊME classe, parse :
+            // l'image montre « LA SORTIE » sur l'étape 4. *Un champ qui tombe seul dans une classe
+            // qui parse n'a aucune cause lisible* — donc la mesure suivante est à l'EXÉCUTION.
+            // ⇒ Cette ligne n'est pas un débogage jetable : elle imprime, à chaque capture, l'état
+            //   RÉELLEMENT parsé. C'est ce qui manquait pour départager « le corps reçu diffère du
+            //   corps capturé » de « le parsing perd ce champ », et ça reste utile après : une
+            //   planche vaut ce que vaut le corps qui l'a produite, et il n'était nulle part.
+            var recu = new System.Text.StringBuilder($"[㊵ REÇU] stages={etapesServies}");
+            for (int s = 0; s < etapesServies; s++)
+            {
+                var e = ecran.DernierChargement.stages[s];
+                recu.Append($" · [{s + 1}] band={e?.cleanliness_band ?? "null"}")
+                    .Append($" terminal={(e != null && e.terminal)}")
+                    .Append($" has_cash={(e != null && e.has_cash)}");
+            }
+            Debug.Log(recu.ToString());
             Assert.Greater(etapesServies, 0,
                 "le compte de ce run ne sert AUCUNE étape : la planche montrerait l'écran « aucun " +
                 "nœud », qui est un rendu CORRECT et non un défaut. Ce n'est pas l'écran qu'il faut " +
