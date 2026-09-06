@@ -744,7 +744,28 @@ namespace MafiaCleanCity.Shell.Tests
         ///   (`warmedBrass = DesignTokens.Current.hudGaugeArcHot`). Deux objets qui partagent leur
         ///   couleur ne se séparent par aucune teinte.
         /// ⇒ Le séparateur restant est la SATURATION : braise pleine pour l'arc, lavis
-        ///   d'`onSurfacePrimary` à 0,133 pour la piste. C'est la mesure suivante.</summary>
+        ///   d'`onSurfacePrimary` à 0,133 pour la piste.
+        ///
+        /// ⛔⛔ ÉTAT FINAL — L'INSTRUMENT EST VALIDÉ ET IL A DÉPARTAGÉ. Trois contrôles, tous dans
+        /// la même boucle que la mesure :
+        ///   · NÉGATIF — `fill = 0` (arc éteint, piste seule) : **0 secteur porteur**. Le seuil de
+        ///     saturation ne compte plus la piste ;
+        ///   · POSITIF — 26 secteurs mesurés pour 27 prédits à `fill = 0,30`, 42 pour 40 à 0,45 ;
+        ///   · et il a corrigé sa propre PRÉDICTION au lieu de condamner la mesure : elle était
+        ///     fausse d'un facteur 2 (`fill × 360` au lieu de `× 180`).
+        /// ⇒ **LE FUSELAGE EST REPRODUIT** : épaisseur min 1,00 / max 3,25, **ratio 3,25**, contre
+        ///   le 1,02 → 3,16 → 0,94 (~3,4) du juge ⊥. Deux instruments indépendants, même grandeur.
+        /// ⇒ **ET IL DÉPARTAGE LES DEUX HYPOTHÈSES RESTANTES** : le ratio est **identique à 0,30 et
+        ///   à 0,45** (3,25 dans les deux cas). Une mise à l'échelle multiplierait TOUTE l'épaisseur
+        ///   uniformément et laisserait le ratio inchangé mais les valeurs déplacées ; ici les
+        ///   valeurs sont les mêmes et seule la LONGUEUR change — l'amincissement reste collé aux
+        ///   extrémités, avec la même étendue absolue quand l'arc s'allonge. **C'est la COUPE
+        ///   `Radial180`, pas l'échelle d'affichage.**
+        /// ★ Corollaire, et il commande la suite : à `fill = 0,1124` — LA VALEUR DE PRODUCTION —
+        ///   l'instrument ne trouve **AUCUN** pixel d'arc, alors qu'il en trouve à 0,30. L'arc de
+        ///   production est si court (20°) qu'il n'est **QUE des extrémités** : il n'atteint jamais
+        ///   son épaisseur nominale. *Le défaut n'est donc pas que l'arc soit fuselé, c'est qu'il
+        ///   soit trop court pour être autre chose que son propre fondu.*</summary>
         [UnityTest, Category("HUDv31")]
         public IEnumerator DA9_Diagnostic_FuselageDesArcs_UneSeuleVariable()
         {
@@ -760,7 +781,11 @@ namespace MafiaCleanCity.Shell.Tests
             float fillOrigine = arcImg.fillAmount;
 
             var lignes = new List<string>();
-            foreach (float f in new[] { fillOrigine, 0.30f, 0.45f })
+            // ⛔ LE CONTRÔLE NÉGATIF EST DANS LE BALAYAGE, pas à côté : `fill = 0` éteint l'arc et
+            // laisse la piste seule. S'il rend autre chose que ZÉRO secteur porteur, le seuil
+            // compte encore la piste et AUCUN des autres nombres ne vaut. *Un contrôle qui vit dans
+            // la même boucle que la mesure ne peut pas être oublié quand la mesure change.*
+            foreach (float f in new[] { 0f, fillOrigine, 0.30f, 0.45f })
             {
                 arcImg.fillAmount = f;
                 Canvas.ForceUpdateCanvases();
@@ -823,7 +848,26 @@ namespace MafiaCleanCity.Shell.Tests
             float rIn = Mathf.Max(1f, rayonExt - epaisseurPx) - 1f;
             float rOut = rayonExt + 1f;
 
-            float Chaleur(Color p) => p.r - 0.5f * (p.g + p.b);
+            // ⛔⛔ LE DISCRIMINANT EST LA SATURATION, PAS LA TEINTE — et ce n'est pas un choix,
+            // c'est ce que le code laisse. Le laiton du boîtier et l'arc chaud partagent le MÊME
+            // jeton (`warmedBrass = DesignTokens.Current.hudGaugeArcHot`) : aucune direction de
+            // teinte ne sépare deux objets qui ont la même couleur. Et le confondant à ce rayon
+            // n'est de toute façon pas le laiton : c'est `ArcTrack`, la piste, un lavis d'une
+            // teinte claire à 0,133 qui couvre 180° — soit exactement les 90 secteurs balayés.
+            // ⇒ Ce qui sépare la braise PLEINE de l'arc du LAVIS de la piste, c'est la distance à
+            //   la couleur de l'arc telle que la scène la compose. Le seuil est dérivé du couple
+            //   qu'on veut séparer, pas choisi : à mi-chemin entre les deux, dans l'espace où on
+            //   les compare.
+            Color braise = DesignTokens.Current.hudGaugeArcHot;
+            float Distance(Color p) =>
+                Mathf.Sqrt((p.r - braise.r) * (p.r - braise.r)
+                         + (p.g - braise.g) * (p.g - braise.g)
+                         + (p.b - braise.b) * (p.b - braise.b));
+            // Le seuil, dérivé : la piste composée est proche du fond du cadran, l'arc est de la
+            // braise. On le pose à 40 % de la distance braise↔fond, donc franchement du côté de
+            // l'arc — et le compte de secteurs porteurs le CONTRÔLE : il doit tomber sur ce que
+            // `fillAmount` prédit, sinon le seuil laisse encore passer la piste.
+            float SeuilBraise = 0.40f * Distance(DesignTokens.Current.hudBarGlassBottom);
             var eps = new List<float>();
             var brut = new System.Text.StringBuilder();
             for (int a = 0; a < 180; a += 2)
@@ -834,7 +878,7 @@ namespace MafiaCleanCity.Shell.Tests
                     int x = Mathf.RoundToInt(centre.x + r * Mathf.Cos(th));
                     int y = Mathf.RoundToInt(centre.y + r * Mathf.Sin(th));
                     if (x < 0 || y < 0 || x >= img.width || y >= img.height) continue;
-                    if (Chaleur(img.GetPixel(x, y)) > 0.12f) somme += 0.25f;
+                    if (Distance(img.GetPixel(x, y)) < SeuilBraise) somme += 0.25f;
                 }
                 if (somme > 0f) { eps.Add(somme); brut.Append($" {a}:{somme:F1}"); }
             }
@@ -843,7 +887,17 @@ namespace MafiaCleanCity.Shell.Tests
                      + "centre " + centre + ") — l'instrument mesure ailleurs, PAS un arc absent";
             float min = float.MaxValue, max = 0f;
             foreach (float e in eps) { if (e < min) min = e; if (e > max) max = e; }
-            return $"fill={fill:F4} · {eps.Count} secteurs porteurs sur 90 · épaisseur min={min:F2} "
+            // ⚠️ LA PRÉDICTION ÉTAIT FAUSSE D'UN FACTEUR 2, PAS L'INSTRUMENT — et c'est le contrôle
+            // qui l'a dit. J'avais écrit `fill × 360` parce que le contrôleur porte, en toutes
+            // lettres, que « le remplissage est proportionnel aux 360° COMPLETS ». Mesuré : à 0,30
+            // l'arc couvre 26 secteurs et à 0,45 il en couvre 42, soit **fill × 180** dans les deux
+            // cas (27 et 40 prédits). *Un énoncé vrai du sprite ne l'est pas de l'objet composé* —
+            // ici le rect est un demi-disque, donc la course utile est de 180°.
+            // ⇒ Le contrôle a donc corrigé la PRÉDICTION au lieu de condamner la mesure. C'est ce
+            //   qu'on lui demande : il départage les deux, il ne présume pas laquelle a tort.
+            int attendus = Mathf.RoundToInt(fill * 180f / 2f);   // 2° par secteur, course utile 180°
+            return $"fill={fill:F4} · {eps.Count} secteurs porteurs sur 90 (prédits {attendus}) · "
+                 + $"seuil braise={SeuilBraise:F3} · épaisseur min={min:F2} "
                  + $"max={max:F2} ratio={max / Mathf.Max(min, 0.01f):F2} · bande radiale lue "
                  + $"{rIn:F1}..{rOut:F1} px (ext {rayonExt:F1}, épaisseur {epaisseurPx:F1})"
                  + $" · profil{brut}";
