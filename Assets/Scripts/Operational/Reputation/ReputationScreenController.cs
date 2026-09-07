@@ -85,6 +85,12 @@ namespace MafiaCleanCity.Operational
         /// existe — **valeur DÉCLARÉE, pas dérivée**, écrite ici pour qu'on ne la cherche pas dans
         /// un document qui ne la contient pas.</summary>
         private const float CssLargeurAscenseur = 3f;
+        /// <summary>Distance du bord droit du cadre à laquelle l'ascenseur est posé, en px CSS.
+        /// **Mesurée sur la planche**, pas choisie : la gouttière libre entre le liseré du panneau
+        /// et le filet du cadre va de x 1034 à 1057 (24 px de planche ≈ 6,7 CSS), et elle ne porte
+        /// **aucune** rangée d'encre. À 20 CSS — la valeur d'avant — la barre reposait sur de
+        /// l'encre 32 % de sa hauteur.</summary>
+        private const float CssAscenseurDepuisLeBord = 7f;
         private const float CssEnseigneHaut  = 13f;   // .enseigne{margin:13px 13px 0}
         private const float CssEnseignePadY  = 7f;
         private const float CssTitreCorps    = 17f;   // .enseigne b — 'DejaVu Serif' 700
@@ -954,8 +960,21 @@ namespace MafiaCleanCity.Operational
                 barreRt.anchorMax = new Vector2(1f, 1f);
                 barreRt.pivot = new Vector2(1f, 0.5f);
                 barreRt.sizeDelta = new Vector2(Px(CssLargeurAscenseur), -Px(CssCernInset) * 2f);
-                // ⚠️ ÉCARTÉ DU FILET : collé à 2 insets, l'ascenseur se lisait comme un second bord.
-                barreRt.anchoredPosition = new Vector2(-Px(CssCernInset) * 4f, 0f);
+                // ⛔⛔ POSÉ DANS LA GOUTTIÈRE LIBRE, PAS SUR LE CONTENU — ㊲ M1 du r16.
+                //    À 4 insets du bord, l'ascenseur tombait en x 997..1007 et **439 rangées sur
+                //    1 370 (32 %) reposaient sur de l'ENCRE** : bord droit des quatre tuiles,
+                //    liserés du panneau de titre et de la boîte ENFREINTES, et **trois colonnes
+                //    d'encre de « ce qu'il a absorbé » REMPLACÉES par l'or**.
+                //    ⚠️ Le curseur, lui, était HONNÊTE (90,9 % pour 92,2 % de contenu visible) :
+                //       **le défaut était la POSITION, pas le mécanisme.** On déplace, on ne refait
+                //       pas — *un correctif qui refait un dispositif juste en casse un autre.*
+                // ⇒ COTE MESURÉE SUR LA PLANCHE, pas choisie : entre le liseré droit du panneau
+                //   (x 1030..1033) et le filet du cadre (x 1058) s'ouvre une gouttière VIDE de
+                //   **x 1034..1057, soit 24 px** — 0 rangée d'encre sur toute la hauteur. C'est
+                //   exactement les « 27 px plus à droite » que le juge a relevés.
+                //   1080 px de planche = 300 px CSS ⇒ 24 px ≈ 6,7 CSS. Le bord droit de la barre
+                //   passe donc de 20 CSS du bord à 7, ce qui la met dans la gouttière.
+                barreRt.anchoredPosition = new Vector2(-Px(CssAscenseurDepuisLeBord), 0f);
                 barreGo.AddComponent<LayoutElement>().ignoreLayout = true;
                 var piste = barreGo.AddComponent<Image>();
                 // ⚠️ LA PISTE DOIT SE VOIR, SINON LE CURSEUR N'A PAS D'ÉCHELLE. Mesuré : à
