@@ -1395,6 +1395,52 @@ namespace MafiaCleanCity.Operational.Tests
             }
             m.EnableKeyword(TMPro.ShaderUtilities.Keyword_Underlay);
 
+            // ⛔⛔ ET LE BALAYAGE QUI DÉCIDE : une PLANCHE par valeur de dilatation, écrite sur
+            //    disque, mesurée HORS UNITY avec la recette du juge. Rendre et mesurer sont
+            //    séparés à dessein — c'est la seule façon de comparer ma courbe à la sienne dans
+            //    la MÊME unité (`P(d)` en points de luminance) plutôt que dans la mienne (px
+            //    changés), et c'est ce décalage d'unité qui m'obligeait à lui renvoyer le choix.
+            // ⚠️ Rendu à 1080 de large, comme sa référence (`reference-1080x2102.png`, 1080 px =
+            //    300 CSS) : les distances en px sont alors directement comparables. Une courbe
+            //    mesurée à une autre largeur ne se compare pas — c'est le piège de résolution que
+            //    ce lot vient déjà de payer une fois.
+            {
+                string dossier = System.Environment.GetEnvironmentVariable("MAFIA_HALO_SORTIE");
+                if (!string.IsNullOrEmpty(dossier))
+                {
+                    var rtP = new RenderTexture(1080, 2400, 24, RenderTextureFormat.ARGB32);
+                    var camP = new GameObject("SondeHaloPlanche").AddComponent<Camera>();
+                    camP.targetTexture = rtP; camP.orthographic = true;
+                    camP.backgroundColor = Color.black; camP.clearFlags = CameraClearFlags.SolidColor;
+                    canvas.renderMode = RenderMode.ScreenSpaceCamera; canvas.worldCamera = camP;
+                    var texP = new Texture2D(1080, 2400, TextureFormat.RGB24, false);
+                    // ⛔ ON BALAIE LA DOUCEUR, PAS LA DILATATION — mesuré : `UnderlayDilate` ne
+                    //    porte le halo que de 2 px (0,12) à 3 px (0,40), quand la référence en
+                    //    demande **18**. La dilatation ÉLARGIT l'encre ; c'est la douceur qui
+                    //    étale la décroissance, et le juge décrit précisément un RAYONNEMENT
+                    //    (plateau 1 px, mi-valeur ~6, extinction ~18), pas une tache élargie.
+                    //    *J'ai balayé le mauvais bouton pendant deux tours parce que « dilate »
+                    //    est le mot qui ressemble à « étendue ».*
+                    foreach (float v in new[] { 0.55f, 0.70f, 0.85f, 1.00f })
+                    {
+                        m.SetFloat(TMPro.ShaderUtilities.ID_UnderlaySoftness, v);
+                        Canvas.ForceUpdateCanvases();
+                        LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform)canvas.transform);
+                        camP.Render();
+                        RenderTexture.active = rtP;
+                        texP.ReadPixels(new Rect(0, 0, 1080, 2400), 0, 0); texP.Apply();
+                        RenderTexture.active = null;
+                        string chemin = $"{dossier}/halo-douceur-{v:F2}.png".Replace(",", ".");
+                        System.IO.File.WriteAllBytes(chemin, texP.EncodeToPNG());
+                        Debug.Log($"[HALO-PLANCHE] douceur {v:F2} écrite → {chemin}");
+                    }
+                    m.SetFloat(TMPro.ShaderUtilities.ID_UnderlaySoftness, dou);
+                    canvas.renderMode = modeAvant; canvas.worldCamera = camAvant;
+                    Object.DestroyImmediate(camP.gameObject); Object.DestroyImmediate(texP);
+                    rtP.Release(); Object.DestroyImmediate(rtP);
+                }
+            }
+
             // ⛔ ET LE BALAYAGE DE L'AMPLITUDE — c'est ELLE que le juge mesure (un excès de
             //    luminance), pas la dilatation. Livrée à α 0,282 (= CssHaloOpacite × 1/2,13).
             //    On lit le SEUIL sur la courbe au lieu de choisir une valeur.
