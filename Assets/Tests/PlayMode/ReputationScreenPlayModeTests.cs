@@ -1316,7 +1316,16 @@ namespace MafiaCleanCity.Operational.Tests
                       + $" · fontStyle {cible.fontStyle} · fonte « {(cible.font != null ? cible.font.name : "null")} »"
                       + $" · partagé « {(cible.fontSharedMaterial != null ? cible.fontSharedMaterial.name : "null")} »");
 
-            var rt = new RenderTexture(256, 256, 24, RenderTextureFormat.ARGB32);
+            // ⛔⛔ LA RÉSOLUTION EST LA VARIABLE, PAS UN DÉTAIL DE SONDE. L'`Underlay` de TMP
+            //    s'exprime en unités liées au GLYPHE : à 256×256 un compteur occupe une fraction
+            //    bien plus grande du cadre qu'à 1080×1920, donc l'effet y rend proportionnellement
+            //    plus de pixels. **Mes 145 px à 256 pouvaient valoir 0 à 1920 sans qu'aucune valeur
+            //    ne soit fausse.** ⇒ Juger une grandeur dépendante de l'échelle sur un rendu qui
+            //    n'est pas à l'échelle livrée est le piège de résolution que ce socle documente —
+            //    et ma première sonde était du mauvais côté.
+            foreach (var (LARG, HAUT) in new[] { (256, 256), (1080, 1920) })
+            {
+            var rt = new RenderTexture(LARG, HAUT, 24, RenderTextureFormat.ARGB32);
             var camGo = new GameObject("SondeHaloCam");
             var cam = camGo.AddComponent<Camera>();
             cam.targetTexture = rt; cam.orthographic = true;
@@ -1326,13 +1335,13 @@ namespace MafiaCleanCity.Operational.Tests
             canvas.renderMode = RenderMode.ScreenSpaceCamera; canvas.worldCamera = cam;
 
             float dilAvant = float.IsNaN(dil) ? 0f : dil;
-            var tex = new Texture2D(256, 256, TextureFormat.RGB24, false);
+            var tex = new Texture2D(LARG, HAUT, TextureFormat.RGB24, false);
             System.Func<Color32[]> rendre = () =>
             {
                 Canvas.ForceUpdateCanvases();
                 cam.Render();
                 RenderTexture.active = rt;
-                tex.ReadPixels(new Rect(0, 0, 256, 256), 0, 0); tex.Apply();
+                tex.ReadPixels(new Rect(0, 0, LARG, HAUT), 0, 0); tex.Apply();
                 RenderTexture.active = null;
                 return tex.GetPixels32();
             };
@@ -1349,7 +1358,7 @@ namespace MafiaCleanCity.Operational.Tests
             int encreBase = 0;
             for (int k = 0; k < refPx.Length; k++)
                 if (refPx[k].r + refPx[k].g + refPx[k].b > 60) encreBase++;
-            Debug.Log($"[HALO-BALAYAGE] plancher anti-vacuité : {encreBase} px d'encre à l'écran (réglage LIVRÉ)");
+            Debug.Log($"[HALO-BALAYAGE {LARG}x{HAUT}] plancher anti-vacuité : {encreBase} px d'encre à l'écran (réglage LIVRÉ)");
 
             float[] pas = { 0f, 0.12f, 0.25f, 0.4f, 0.6f, 0.8f, 1f };
             for (int k = 0; k < pas.Length; k++)
@@ -1363,7 +1372,7 @@ namespace MafiaCleanCity.Operational.Tests
                           + Mathf.Abs(px[q].b - refPx[q].b);
                     if (d > 8) { changes++; if (d > ampliMax) ampliMax = d; }
                 }
-                Debug.Log($"[HALO-BALAYAGE] dilate {pas[k]:F2} ⇒ {changes} px CHANGÉS vs le réglage livré"
+                Debug.Log($"[HALO-BALAYAGE {LARG}x{HAUT}] dilate {pas[k]:F2} ⇒ {changes} px CHANGÉS vs le réglage livré"
                           + $" (amplitude max {ampliMax})");
             }
             m.SetFloat(TMPro.ShaderUtilities.ID_UnderlayDilate, dilAvant);
@@ -1381,7 +1390,7 @@ namespace MafiaCleanCity.Operational.Tests
                           + Mathf.Abs(px[q].b - refPx[q].b);
                     if (d > 8) changes++;
                 }
-                Debug.Log($"[HALO-CONTROLE] mot-clé UNDERLAY ÉTEINT ⇒ {changes} px changés — "
+                Debug.Log($"[HALO-CONTROLE {LARG}x{HAUT}] mot-clé UNDERLAY ÉTEINT ⇒ {changes} px changés — "
                           + "si 0, la sonde est aveugle et aucun de ses zéros ne vaut");
             }
             m.EnableKeyword(TMPro.ShaderUtilities.Keyword_Underlay);
@@ -1403,7 +1412,7 @@ namespace MafiaCleanCity.Operational.Tests
                               + Mathf.Abs(px[q].b - refPx[q].b);
                         if (d > 8) { changes++; if (d > ampliMax) ampliMax = d; }
                     }
-                    Debug.Log($"[HALO-AMPLITUDE] alpha {av:F3} ⇒ {changes} px changés vs le livré"
+                    Debug.Log($"[HALO-AMPLITUDE {LARG}x{HAUT}] alpha {av:F3} ⇒ {changes} px changés vs le livré"
                               + $" (amplitude max {ampliMax})");
                 }
                 m.SetColor(TMPro.ShaderUtilities.ID_UnderlayColor, colAvant);
@@ -1416,6 +1425,7 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.Greater(encreBase, 50,
                 $"seulement {encreBase} px rendus : l'image est vide et aucun compte de halo n'aurait "
                 + "de sens. La sonde refuse de conclure plutôt que de rendre un zéro.");
+            }
         }
 
     }
