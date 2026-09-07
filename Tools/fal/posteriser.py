@@ -31,7 +31,15 @@ from pathlib import Path
 
 from PIL import Image
 
-RAMPE = ["#161c2b", "#2c3242", "#b08d3e", "#eae0c8"]
+# ⚠️ Le premier jeton était `#161c2b`, hérité d'un mandat qui citait un « hudBg » — **ce jeton n'existe
+# pas** dans `canon_palette_extract.json`, vérifié le 2026-09-07 : les proches sont `mapRootBg #1a1c24`,
+# `nightBackground #212b36`, `lieutenantMedallionOuter #0f1622`. 207 portraits ont été posés dessus.
+# ⇒ Règle tranchée : **le fond d'une pièce est celui du CONTENANT où elle s'affiche, jamais un fond
+# global.** Les portraits vivent dans un médaillon ⇒ `lieutenantMedallionOuter`. Un portrait posé sur
+# une autre valeur se détacherait d'un liseré qui n'existe pas dans la maquette.
+# ⛔ Et ça NE SE GÉNÉRALISE PAS : une famille qui s'affiche ailleurs prend le fond de SON contenant.
+RAMPE = ["#0f1622", "#2c3242", "#b08d3e", "#eae0c8"]   # lieutenantMedallionOuter · hudGaugeFaceInner
+                                                        # · hudHairlineGold · hudCreme — 4 jetons réels
 # Répartition des encres, en part de pixels du sujet. Les quantiles ÉGAUX (défaut) donnent un quart
 # de laiton et un quart de crème : beaucoup d'or à pleine taille, mais c'est CE qui porte l'image à
 # 26 px. Mesuré : égal → 30,2 % d'écart au fond à 26 px ; pondéré ombre-dominant (0,52/0,28/0,14/0,06)

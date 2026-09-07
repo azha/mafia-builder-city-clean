@@ -8,8 +8,8 @@ et les **129 tuiles Kenney sont référencées 0 fois**. La question « et qui l
 l'art du dépôt.
 
 Toutes les pièces sont en **PNG, RGB opaque, 1024×1024** sauf les décors (**1080×2400**). Aucune n'a de
-canal alpha : le fond fait partie de l'image (aplat au jeton `#161c2b` pour les visages, matière pleine
-pour les textures). ⇒ `alphaIsTransparency` est **sans objet**, et un `Image` suffit — pas de masque.
+canal alpha : le fond fait partie de l'image (aplat au jeton `#0f1622` = `lieutenantMedallionOuter` pour les
+visages, matière pleine pour les textures). ⇒ `alphaIsTransparency` est **sans objet**, et un `Image` suffit — pas de masque.
 
 ---
 
@@ -103,6 +103,17 @@ vente · vitrine`
 ⚠️ **Contrainte de SENS, pas de forme** (ruling user « ça plafonne et ça BLOQUE, rien n'est jamais
 perdu ») : un état vide doit se lire « **il n'y a rien encore** », jamais « tu as raté quelque chose ».
 Un état vide lu comme une perte est un **défaut**, même s'il est joli. Les 22 sont dessinés dans ce ton.
+
+★★ **Et la consigne doit nommer le SENS, pas seulement l'objet — sinon le modèle remplit.** Mesuré sur
+deux séries successives : sur la première, le portant à manteaux est sorti **plein** ; refonte complète,
+et sur la suivante c'est le casier à journaux qui est sorti **plein**. *Un défaut qui survit à une
+refonte en changeant d'objet n'est pas dans le dessin, il est dans la consigne.* ⇒ Le prompt dit
+désormais, explicitement : **« the container is EMPTY — nothing was taken away, the work has simply not
+started yet »**. Sans cette phrase, un « rack à journaux » devient un rack **de** journaux.
+⚠️ Corollaire mesuré sur le même lot : un finding du juge portait sur des trous de punaise et un cordon
+dénoué lus comme « on a retiré ce qui était affiché » — **ils étaient dans MON prompt**, pas dans une
+hallucination du modèle. Le juge avait écrit ne pas pouvoir trancher faute d'avoir les prompts. *Avant
+d'accuser un modèle d'avoir inventé, relire ce qu'on lui a demandé.*
 
 ## 5. Les décors de scène — 4 · la clé est le **profil de district + jour/nuit**
 
