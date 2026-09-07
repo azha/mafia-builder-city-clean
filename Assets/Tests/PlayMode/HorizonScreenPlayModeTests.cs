@@ -176,7 +176,7 @@ namespace MafiaCleanCity.Operational.Tests
             MafiaCleanCity.Tests.CaptureSupport.GarderLaCapture(chemin);
         }
 
-        // ═══ 3. L'ÉCHELLE DES PALIERS (TD-408) — sur des états FABRIQUÉS ════════════════════
+        // ═══ 3. LE BLOC DE PROGRESSION (TD-408) — sur des états FABRIQUÉS ════════════════════
 
         /// <summary>Les textes de l'échelle, dans l'ordre de l'arbre.</summary>
         private static List<string> BarreauxAffiches(GameObject racine)

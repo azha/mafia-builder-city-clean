@@ -80,7 +80,7 @@ namespace MafiaCleanCity.Operational
                 dto => DernierChargement = dto,
                 (code, msg) => { DernierCodeErreur = code; DerniereErreur = msg; });
 
-            // ⛔ L'ÉCHELLE DES PALIERS vient d'une SECONDE route, et son échec est NON FATAL :
+            // ⛔ LE BLOC DE PROGRESSION vient d'une SECONDE route, et son échec est NON FATAL :
             // ㊱ existait avant elle et doit continuer d'afficher son flux si elle tombe. Une
             // échelle absente est un manque ; un écran blanc est une panne.
             // ⚠️ On RÉUTILISE `ProgressionClient`, qui appelait déjà `/v1/progression` pour
@@ -157,11 +157,10 @@ namespace MafiaCleanCity.Operational
             //      `listeRoot`, c'est-à-dire exactement dans les 753 px qui étaient sans encre. Le
             //      vide se remplit sans qu'on ait à retirer quoi que ce soit.
             //    ⇒ *J'ai retiré un bloc pour faire de la place à un texte qui allait ailleurs.*
-            // ⚠️ RESTE DÉCLARÉ, PAS FERMÉ : le titre « L'ÉCHELLE DES PALIERS » rend **0 occurrence
-            //    dans TOUT l'atelier** (contrôle positif : « palier » seul y apparaît 4 244 fois,
-            //    donc le motif voit ce corpus). C'est un libellé inventé, montré au joueur, et je
-            //    n'ai **aucun texte ratifié pour le remplacer** — l'inventer serait refaire la
-            //    faute que ce lot corrige. Dette de vocabulaire, à trancher avec la maquette.
+            // ✅ FERMÉ, ET PAS COMME ANNONCÉ : j'avais écrit « dette de vocabulaire, à trancher
+            //    avec la maquette », en supposant qu'un libellé sans source appelait un
+            //    remplaçant. Il n'en appelait pas — il appelait sa SUPPRESSION. Le bloc n'a plus
+            //    d'en-tête (voir `RendreEchelle`) ; le mécanisme, lui, est intact.
             RendreEchelle(DerniereProgression);
 
             // ⛔ LE PANNEAU DIT LE TROU, il ne le masque pas — et c'est la maquette qui l'exige :
@@ -199,8 +198,8 @@ namespace MafiaCleanCity.Operational
 
             // ⛔⛔ LE MESSAGE DE L'ÉTAT VIDE — ㊱ B3/B4. Sans lui, la liste vide laissait
             //    **753 px (209 CSS) strictement sans encre**, soit 66 % de la boîte et 37 % du rect
-            //    libre, pendant qu'un bloc « L'ÉCHELLE DES PALIERS » — chaîne qui rend **0
-            //    occurrence dans toute la source de l'atelier** — occupait la place du message.
+            //    libre, pendant qu'un bloc coiffé d'un en-tête sans aucune source dans l'atelier
+            //    occupait la place du message (cet en-tête est depuis retiré).
             //    ⇒ *Deux écrans voisins ont fourni le vocabulaire ; personne n'a vérifié qu'il
             //      appartenait à celui-ci.* Les deux phrases ci-dessous sont, elles, dans le cadre
             //      #117 : 1 occurrence chacune dans le générateur ET dans le HTML ratifié.
@@ -260,7 +259,7 @@ namespace MafiaCleanCity.Operational
             }
         }
 
-        /// <summary>L'ÉCHELLE DES PALIERS, sous les cartes — le contexte qui manquait à ㊱.
+        /// <summary>Le bloc de progression, sous les cartes — le contexte qui manquait à ㊱.
         ///
         /// ⛔ CE QUE CET ÉCRAN MONTRAIT AVANT : une carte, ou rien, sans jamais dire de QUOI cette
         /// carte était un barreau. TD-408 demandait « rendre l'écran capable d'afficher deux
@@ -288,9 +287,15 @@ namespace MafiaCleanCity.Operational
             v.childControlWidth = true; v.childControlHeight = true;
             v.childForceExpandWidth = true; v.childForceExpandHeight = false;
 
-            TextMeshProUGUI enseigne = NouveauTexte(bloc.transform, "TitreEchelle",
-                Lib("L'ÉCHELLE DES PALIERS"), 8.5f, TexteFaible);
-            enseigne.fontStyle = TMPro.FontStyles.Bold;
+            // ⛔ CE BLOC N'A PLUS D'EN-TÊTE, ET C'EST DÉLIBÉRÉ. Il en portait un — un libellé
+            //    en capitales dont le balayage rend **0 occurrence dans TOUT l'atelier** (contrôle
+            //    positif : « palier » seul y apparaît 4 244 fois, donc le motif voit le corpus).
+            //    Le MÉCANISME, lui, a une source : `progress_to_next` est servi par le back et
+            //    deux gardes le protègent. ⇒ *C'est le texte qui était inventé, pas le dispositif.*
+            //    ⚠️ Et on n'en écrit pas un autre : sans texte ratifié, un en-tête de remplacement
+            //      referait exactement la faute qu'on retire. Un bloc sans en-tête se lit ; un
+            //      en-tête inventé se croit. C'est la règle que
+            //      `ScreenC6S3_CranInconnu_SeMontreTelQuel` fait respecter un cran plus bas.
 
             foreach (int barreau in BarreauxDeLEchelle)
             {
