@@ -17,10 +17,11 @@ source ./verdict-log-unity.sh
 
 T=$(mktemp -d); trap 'rm -rf "$T"' EXIT
 ko=0; n=0
-essai(){ # essai <nom> <attendu> <em> <wd> <rc_in> <<< contenu du journal
-  local nom="$1" att="$2" em="$3" wd="$4" rcin="$5"
+essai(){ # essai <nom> <attendu> <em> <wd> <rc_in> [contenu console] <<< contenu du journal
+  local nom="$1" att="$2" em="$3" wd="$4" rcin="$5" cons="${6:-}"
   cat > "$T/log"
-  local got; got=$(verdict_log "$T/log" "$em" "$wd" "$rcin")
+  printf '%s' "$cons" > "$T/console"
+  local got; got=$(verdict_log "$T/log" "$em" "$wd" "$rcin" "$T/console")
   n=$((n+1))
   if [[ "$got" == "$att" ]]; then printf '  ✅ %-46s → %s\n' "$nom" "$got"
   else printf '  ⛔ %-46s → %s (attendu %s)\n' "$nom" "$got" "$att"; ko=1; fi
@@ -86,12 +87,35 @@ L
 #    fonction serait resté vert avec un drapeau mal posé. On lance donc le HARNAIS ENTIER — drapeau,
 #    source, appel, message, code de sortie — sur un FAUX éditeur qui écrit le journal du cas à
 #    essayer. (`$UNITY` est overridable ; c'est écrit en tête du harnais depuis W4.P4a.)
+# ⛔ LA FORME RÉELLE, mesurée sur un vrai abandon : le préfixe n'est QUE sur la console, le
+#    journal ne porte que la raison nue. C'est le cas que la première version du verdict ne pouvait
+#    pas voir — elle ne lisait que le journal, donc elle était inerte là où ça compte.
+essai "abandon vu SEULEMENT sur la console (forme réelle)" 3 1 1 0 \
+  "Aborting batchmode due to failure:
+executeMethod method 'X' in class 'MafiaCI' could not be found.
+" <<'L'
+executeMethod method 'X' in class 'MafiaCI' could not be found.
+Argument was -executeMethod MafiaCI.X
+Internal_EditorApplicationQuit
+L
+# moitié négative de CE cas : une console SAINE ne doit rien déclencher, sinon la détection dirait
+# oui à toute console non vide.
+essai "console saine : ne déclenche rien" 0 1 1 0 \
+  "Unity 6000.4.6f1 démarrage
+MafiaCI: filtre par défaut
+" <<'L'
+MafiaCI: RunPlayModeTests finished — passed=13 failed=0
+L
+
 echo "— le harnais ENTIER, sur un faux éditeur (câblage, pas seulement verdict)"
 cat > "$T/faux-unity" <<'FU'
 #!/usr/bin/env bash
 prev=""; L=""
 for a in "$@"; do [ "$prev" = "-logFile" ] && L="$a"; prev="$a"; done
 cat "$SCENARIO" > "$L"
+# ⚠️ La console est écrite sur STDOUT — la forme réelle d'Unity, mesurée : le préfixe d'abandon
+#    ne va QUE là, jamais dans le -logFile.
+[ -n "${SCENARIO_CONSOLE:-}" ] && cat "$SCENARIO_CONSOLE"
 sleep 6
 exit ${FAUX_RC:-0}
 FU
@@ -99,8 +123,8 @@ chmod +x "$T/faux-unity"
 e2e(){ # e2e <nom> <attendu> <scénario> [args du harnais…]
   local nom="$1" att="$2" sc="$3"; shift 3
   printf '%s' "$sc" > "$T/sc"
-  SCENARIO="$T/sc" UNITY="$T/faux-unity" LOG_FILE="$T/e2e.log" TIMEOUT_S=40 \
-    ./run-unity-check.sh "$@" >/dev/null 2>&1
+  SCENARIO="$T/sc" SCENARIO_CONSOLE="${SCENARIO_CONSOLE:-}" UNITY="$T/faux-unity" \
+    LOG_FILE="$T/e2e.log" TIMEOUT_S=40 ./run-unity-check.sh "$@" >/dev/null 2>&1
   local got=$?; n=$((n+1))
   if [[ "$got" == "$att" ]]; then printf '  ✅ %-46s → RC=%s\n' "$nom" "$got"
   else printf '  ⛔ %-46s → RC=%s (attendu %s)\n' "$nom" "$got" "$att"; ko=1; fi
@@ -120,6 +144,15 @@ e2e "classe absente : RC=0 AVANT, refusé maintenant" 3 \
     "Aborting batchmode due to failure: executeMethod class 'MafiaCI.Absent' could not be found.
 Internal_EditorApplicationQuit
 " -executeMethod MafiaCI.Absent
+# ⛔ ET LE MÊME CAS DANS SA FORME RÉELLE : le préfixe UNIQUEMENT sur la console. C'est celui-ci
+#    qui atteste que la CAPTURE fonctionne — sans elle, ce cas rendrait 3 par la branche
+#    structurelle et on ne saurait pas que la détection d'abandon est morte.
+printf "Aborting batchmode due to failure:\nexecuteMethod class 'MafiaCI.Absent' could not be found.\n" > "$T/sc-console"
+SCENARIO_CONSOLE="$T/sc-console" e2e "abandon RÉEL : préfixe seulement sur la console" 3 \
+    "executeMethod class 'MafiaCI.Absent' could not be found.
+Internal_EditorApplicationQuit
+" -executeMethod MafiaCI.Absent
+unset SCENARIO_CONSOLE
 
 echo
-if [[ $ko == 0 ]]; then echo "✅ verdict : $n/$n — 12 sur la fonction, 4 sur le harnais entier ; 3 faux verts fermés, aucun code existant modifié"; else echo "⛔ verdict : au moins un cas faux"; exit 1; fi
+if [[ $ko == 0 ]]; then echo "✅ verdict : $n/$n — 14 sur la fonction, 5 sur le harnais entier ; 3 faux verts fermés, aucun code existant modifié"; else echo "⛔ verdict : au moins un cas faux"; exit 1; fi

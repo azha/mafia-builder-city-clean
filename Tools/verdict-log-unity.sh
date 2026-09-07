@@ -45,9 +45,21 @@
 #    diagnostic plus précis (124 dit « délai », 3 dirait seulement « pas fini »).
 RC_ABANDON=3
 
-# verdict_log <journal> <executeMethod:0|1> <chien_de_garde:0|1> <rc_entrant> → rc sortant
+# ⛔⛔ MESURÉ SUR UN VRAI ABANDON (run réel, 2026-09-07 02:20) : `Aborting batchmode due to
+#    failure:` **N'EST PAS DANS LE `-logFile`** — 0 occurrence, ancrée ou non. Unity l'écrit sur la
+#    CONSOLE ; le journal ne porte que la raison nue (`executeMethod method '…' could not be
+#    found.`). ⇒ La détection ci-dessous, écrite sur le seul journal, **ne pouvait pas se
+#    déclencher** : elle était DÉCORATIVE, et un dispositif inerte ressemble trait pour trait à un
+#    dispositif appliqué. Seule la branche structurelle (`-executeMethod` sans marqueur de travail)
+#    mordait — c'est elle qui a rendu le RC=3 mesuré.
+# ⇒ D'où le 5ᵉ paramètre : le fichier où le harnais CAPTURE la console. La détection y regarde
+#   aussi, et couvre alors les six motifs au lieu d'aucun. Absent ⇒ on n'en tient pas compte, donc
+#   tout appelant existant garde son comportement.
+# ⚠️ La capture se fait par une REDIRECTION, jamais par un pipe : `cmd | tee` rend le code de
+#    sortie de `tee`, et ce harnais existe précisément pour ne pas le perdre.
+# verdict_log <journal> <executeMethod:0|1> <chien_de_garde:0|1> <rc_entrant> [console] → rc sortant
 verdict_log(){
-  local f="$1" em="$2" wd="$3" rc="$4"
+  local f="$1" em="$2" wd="$3" rc="$4" cons="${5:-}"
   if [[ "$wd" == 1 ]]; then
     if grep -qE 'MafiaCI: RunPlayModeTests finished' "$f" 2>/dev/null; then
       if grep -qE 'RunPlayModeTests finished — passed=[0-9]+ failed=0( |$)' "$f" 2>/dev/null; then rc=0; else rc=1; fi
@@ -60,12 +72,23 @@ verdict_log(){
       rc=0   # chemin compile nu : `-quit` A été passé, le quit atteste bien qu'il a été atteint
     fi
   fi
-  if [[ "$rc" == 0 ]] && grep -qE '^Aborting batchmode due to failure:' "$f" 2>/dev/null; then
-    rc=$RC_ABANDON
+  if [[ "$rc" == 0 ]]; then
+    if grep -qE '^Aborting batchmode due to failure:' "$f" 2>/dev/null; then rc=$RC_ABANDON
+    elif [[ -n "$cons" ]] && grep -qE '^Aborting batchmode due to failure:' "$cons" 2>/dev/null; then rc=$RC_ABANDON
+    fi
   fi
   echo "$rc"
 }
 
 # La ligne d'abandon, pour la RAPPORTER à l'appelant : un code de sortie dit qu'il y a un défaut,
 # jamais lequel. (Le harnais imprime déjà ses lignes `error CS` de la même façon.)
-motif_abandon(){ grep -E '^Aborting batchmode due to failure:' "$1" 2>/dev/null | head -3; }
+# ⚠️ DEUX LIGNES, pas une : Unity imprime le préfixe puis la RAISON sur la ligne SUIVANTE. Un
+#    `grep` du seul préfixe rend « l'éditeur a abandonné » sans jamais dire pourquoi — un code de
+#    sortie dit qu'il y a un défaut, jamais lequel, et c'est aussi vrai d'un message tronqué.
+motif_abandon(){
+  local f
+  for f in "$@"; do
+    [[ -n "$f" && -f "$f" ]] || continue
+    grep -A2 -E '^Aborting batchmode due to failure:' "$f" 2>/dev/null | head -6
+  done
+}

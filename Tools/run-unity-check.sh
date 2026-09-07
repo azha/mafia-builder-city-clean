@@ -109,7 +109,18 @@ SECONDS=0                              # bash : compteur d'écoulé, remis à 0 
 # ⚠️ Ce chien de garde NE MASQUE PAS un vrai blocage : sans marqueur, rien n'est tué et le
 #    `timeout` tranche exactement comme avant. Il ne se déclenche qu'après une preuve écrite que
 #    le travail est fini. Et le code de sortie est relu SUR LE MARQUEUR (failed=), jamais supposé.
-timeout "$TIMEOUT_S" "$UNITY" -batchmode "${EXTRA_ARGS[@]}" -projectPath "$WT" -logFile "$LOG" "$@" &
+# ⛔ LA CONSOLE EST CAPTURÉE À CÔTÉ DU JOURNAL — mesuré le 2026-09-07 sur un vrai abandon :
+#    `Aborting batchmode due to failure:` n'apparaît **nulle part** dans le `-logFile`. Unity
+#    l'écrit sur sa sortie standard. Sans cette capture, toute garde écrite sur le journal seul est
+#    inerte pour les six motifs d'abandon.
+# ⚠️ SUBSTITUTION DE PROCESSUS, PAS UN PIPE. `cmd | tee` rendrait le code de sortie de `tee` — le
+#    piège que ce harnais existe pour éviter, nommé dans son en-tête. Ici `wait` rend bien celui de
+#    `timeout`. Et `tee` garde la sortie sur le terminal : aucun appelant existant ne voit de
+#    différence.
+CONSOLE="$LOG.console"
+: > "$CONSOLE"
+timeout "$TIMEOUT_S" "$UNITY" -batchmode "${EXTRA_ARGS[@]}" -projectPath "$WT" -logFile "$LOG" "$@" \
+  > >(tee -a "$CONSOLE") 2>&1 &
 UNITY_WAITER=$!
 WATCHDOG_FIRED=0
 while kill -0 "$UNITY_WAITER" 2>/dev/null; do
@@ -132,7 +143,7 @@ ELAPSED_S=$SECONDS
 # Le marqueur fait FOI sur le verdict quand le chien de garde a mordu : le RC d'un process terminé
 # par signal ne dit rien des tests. `failed=0` ⇒ 0, sinon 1. Absence de marqueur de test (phase de
 # compile) ⇒ on garde le RC, et la garde `error CS` plus bas reste seule juge.
-RC=$(verdict_log "$LOG" "$EXECUTE_METHOD" "$WATCHDOG_FIRED" "$RC")
+RC=$(verdict_log "$LOG" "$EXECUTE_METHOD" "$WATCHDOG_FIRED" "$RC" "$CONSOLE")
 
 # Durée + issue, écrites dans le log préservé (si KEEP_LOG) ET sur stdout — jamais uniquement
 # déduites après coup. `timeout` rend 124 s'IL a dû tuer le process (délai dépassé) ; tout AUTRE
@@ -162,7 +173,7 @@ echo "$DURATION_LINE"
 
 if [[ "$RC" == "$RC_ABANDON" ]]; then
   echo "run-unity-check: L'ÉDITEUR A ABANDONNÉ OU LE TRAVAIL N'A PAS EU LIEU (RC=$RC_ABANDON) — ce cas rendait RC=0 avant le 2026-09-07" >&2
-  motif_abandon "$LOG" >&2 || true
+  motif_abandon "$LOG" "$CONSOLE" >&2 || true
   if [[ "$EXECUTE_METHOD" == 1 ]] && ! grep -qE 'MafiaCI: RunPlayModeTests finished' "$LOG" 2>/dev/null; then
     echo "run-unity-check: aucun marqueur 'MafiaCI: RunPlayModeTests finished' — la méthode n'a jamais fini" >&2
   fi
@@ -170,9 +181,9 @@ fi
 
 if grep -qF 'error CS' "$LOG"; then
   grep -F 'error CS' "$LOG"
-  [[ "$KEEP_LOG" == 0 ]] && rm -f "$LOG"
+  [[ "$KEEP_LOG" == 0 ]] && rm -f "$LOG" "$CONSOLE"
   exit 1
 fi
 
-[[ "$KEEP_LOG" == 0 ]] && rm -f "$LOG"
+[[ "$KEEP_LOG" == 0 ]] && rm -f "$LOG" "$CONSOLE"
 exit $RC
