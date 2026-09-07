@@ -1,0 +1,13 @@
+{
+  "modele": "fal-ai/flux/dev",
+  "prompt": "A cork PIN BOARD in a wooden frame with a ball of string on its bottom rail, the cork grain and frame clearly visible, nothing pinned. Painted illustration in a rough back room lit by a bare buzzing bulb, a slice of cold light from a doorway. HARD STREET: chipped layered paint, rust bleeding from screws, gaffer tape, torn poster residue, a spray tag, water stains, cable stapled to the wall, everything repaired badly and used hard. Rough loaded brush, heavy texture, grime in every join, nothing pristine, nothing glossy. Warm amber bulb against cold doorway light, dirty cream, rust orange, deep shadow. ⚠ The OBJECT ITSELF must be unmistakable and take at least half the frame — it is NOT a blank panel, NOT an empty white rectangle; its structure, its fittings and its purpose must be legible at a glance. The LOWER THIRD stays calm and unlit so text can sit on it. NOBODY present, no people, no hands, nothing on the floor. Late-1980s dockside. NO readable text, no letters, NO SIGNATURE, no logo, no watermark, no frame. It is EMPTY — nothing was taken away, the work has simply not started yet.",
+  "seed": 59,
+  "largeur": 1072,
+  "hauteur": 1072,
+  "etapes": 28,
+  "guidance": 3.5,
+  "request_id": "01a079a9-80ae-7721-9f32-b13b25b1401f",
+  "duree_s": 8.0,
+  "cout_usd_estime": 0.05,
+  "genere_le": "2026-09-07T04:19:14+0200"
+}

@@ -26,26 +26,41 @@ usage : posteriser.py <image.png> <sortie.png> [matte.png] [#hex,#hex,...] [--fr
 Deux encres suffisent pour une silhouette sans visage (UNKNOWN) : au-delà, la quantification
 fabrique du moucheté sur un aplat uni — mesuré ici même.
 """
+import json
 import sys
 from pathlib import Path
 
 from PIL import Image
 
 # ⚠️ Le premier jeton était `#161c2b`, hérité d'un mandat qui citait un « hudBg » — **ce jeton n'existe
-# pas** dans `canon_palette_extract.json`, vérifié le 2026-09-07 : les proches sont `mapRootBg #1a1c24`,
-# `nightBackground #212b36`, `lieutenantMedallionOuter #0f1622`. 207 portraits ont été posés dessus.
-# ⇒ Règle tranchée : **le fond d'une pièce est celui du CONTENANT où elle s'affiche, jamais un fond
-# global.** Les portraits vivent dans un médaillon ⇒ `lieutenantMedallionOuter`. Un portrait posé sur
-# une autre valeur se détacherait d'un liseré qui n'existe pas dans la maquette.
-# ⛔ Et ça NE SE GÉNÉRALISE PAS : une famille qui s'affiche ailleurs prend le fond de SON contenant.
-RAMPE = ["#0f1622", "#2c3242", "#b08d3e", "#eae0c8"]   # lieutenantMedallionOuter · hudGaugeFaceInner
-                                                        # · hudHairlineGold · hudCreme — 4 jetons réels
-# Répartition des encres, en part de pixels du sujet. Les quantiles ÉGAUX (défaut) donnent un quart
-# de laiton et un quart de crème : beaucoup d'or à pleine taille, mais c'est CE qui porte l'image à
-# 26 px. Mesuré : égal → 30,2 % d'écart au fond à 26 px ; pondéré ombre-dominant (0,52/0,28/0,14/0,06)
-# → 12,6 %, soit exactement le niveau de l'illustration non postérisée. Pondérer rend le portrait plus
-# canonique de près et lui retire son seul avantage de loin. Le défaut suit la mesure ; `--poids` permet
-# de trancher autrement en connaissance de cause.
+# pas** dans le canon, et 209 portraits ont été posés dessus sans qu'aucune garde puisse le voir : une
+# couleur inventée est une couleur valide.
+# ⇒ Règle : **le fond d'une pièce est celui du CONTENANT où elle s'affiche.** Les portraits vivent dans
+# un médaillon ⇒ `lieutenantMedallionOuter`. Ça NE SE GÉNÉRALISE PAS : une autre famille lit le jeton de
+# SON contenant.
+# ⛔ Et la rampe est désormais une liste de **NOMS DE JETONS, résolus dans l'asset** — jamais des
+# littéraux. Recopier la valeur d'un jeton donne « la bonne valeur par le mauvais chemin » : le juge
+# compare des pixels et dit conforme, la garde compte les accès au jeton et dit zéro, **les deux
+# instruments sont aveugles au même endroit**, et ça ne se trahit que le jour où le jeton bouge.
+RAMPE_JETONS = ["lieutenantMedallionOuter", "hudGaugeFaceInner", "hudHairlineGold", "hudCreme"]
+ASSET_PALETTE = Path(__file__).resolve().parents[2] / "Assets/Editor/CanonPaletteExtract/canon_palette_extract.json"
+
+
+def jeton(nom: str, asset: Path = None) -> str:
+    """Résout un nom de jeton dans l'asset du canon. **Un nom absent est FATAL** — c'est la garde qui
+    manquait le jour où « hudBg » est entré dans un mandat."""
+    chemin = asset or ASSET_PALETTE
+    table = {t["name"]: t["hex"] for t in json.loads(chemin.read_text())["tokens"]}
+    if nom not in table:
+        sys.exit(f"jeton inconnu « {nom} » dans {chemin.name} — une couleur inventée est une couleur valide, "
+                 f"donc on refuse de peindre. Jetons proches : {[n for n in table if nom[:4].lower() in n.lower()][:5]}")
+    return table[nom]
+
+
+def rampe_du_canon(asset: Path = None):
+    return [jeton(n, asset) for n in RAMPE_JETONS]
+
+
 POIDS_EGAL = None
 POIDS_OMBRE = (0.52, 0.28, 0.14, 0.06)
 POIDS = POIDS_EGAL
@@ -69,7 +84,7 @@ def main() -> None:
     src = Image.open(args[0]).convert("RGB")
     sortie = Path(args[1])
     matte_p = args[2] if len(args) > 2 and args[2].lower().endswith(".png") else None
-    rampe = [rgb(c) for c in (args[3].split(",") if len(args) > 3 else RAMPE)]
+    rampe = [rgb(c) for c in (args[3].split(",") if len(args) > 3 else rampe_du_canon())]
     taille = src.size
     if adoucir:
         # 2× AVANT le seuillage : les frontières tombent alors sur une grille deux fois plus fine, et

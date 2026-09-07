@@ -1,0 +1,13 @@
+{
+  "modele": "fal-ai/flux/dev",
+  "prompt": "A bare leather desk blotter with an empty pen tray. Painted illustration of ONE object, filling the frame, seen head-on, in a rough back room lit by a bare buzzing bulb with a slice of cold light from a doorway. HARD STREET: chipped and layered paint, rust bleeding from every screw, silver gaffer tape holding a corner, torn poster paper and sticker residue, a spray tag across the wall, water stains, cable stapled along the wall, everything repaired badly and used hard for years. Rough loaded brush, heavy texture, grime in every join, nothing pristine, nothing precious, nothing glossy. Warm amber bulb against cold doorway light, dirty cream, rust orange, deep shadow. ⚠ The LOWER THIRD of the image must stay CALM and UNCLUTTERED — a plain shadowed surface with no tags, no posters, no detail, so that text can be laid over it. NOBODY present, no people, no hands, nothing on the floor. Late-1980s dockside. NO readable text, no letters, no words, NO SIGNATURE, no initials, no logo, no watermark, no painted frame, no border. The container is EMPTY — nothing was taken away, nothing is lost, the work has simply not started yet.",
+  "seed": 53,
+  "largeur": 1072,
+  "hauteur": 1072,
+  "etapes": 28,
+  "guidance": 3.5,
+  "request_id": "01a079a7-57de-7623-91ce-6a81895ab4e3",
+  "duree_s": 9.8,
+  "cout_usd_estime": 0.05,
+  "genere_le": "2026-09-07T04:16:54+0200"
+}
