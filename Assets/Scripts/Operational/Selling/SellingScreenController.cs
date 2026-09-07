@@ -364,6 +364,20 @@ namespace MafiaCleanCity.Operational.Selling
             //    emploie le jeton NOMMÉ et jamais le littéral (un littéral qui recopie la valeur
             //    d'un jeton est invisible à toute garde qui balaie les accès au jeton).
             GameObject cerne = NewUI("Cerne", transform);
+            // ⛔⛔ UN RECOUVREMENT PLEIN ÉCRAN NE PEUT PAS ÊTRE UNE RANGÉE D'UN GROUPE DE LAYOUT.
+            //    `gameObject` porte un `VerticalLayoutGroup` avec `childControlWidth/Height = true`
+            //    (:342-348) : le groupe RÉÉCRIT les ancres et les offsets de chacun de ses enfants.
+            //    Sans cette ligne, les quatre lignes qui suivent sont annulées à la frame suivante
+            //    et le cerne devient une RANGÉE de la pile — mesuré sur planche : une « pilule »
+            //    de 1010 × 20 px entre l'enseigne et les compteurs, et ZÉRO pixel doré sur les
+            //    quatre bords (0/667 gauche · 0/667 droit · 0/357 haut · 0/357 bas).
+            //    ★★ ET C'EST POURQUOI MON PROPRE CONTRÔLE NE POUVAIT PAS LE VOIR : j'avais écrit
+            //       « un `ProceduralUI` a-t-il tourné sur le châssis ? ». La réponse était OUI.
+            //       *Un sprite qui rend dans un rect écrasé rend quand même.* Une garde sur
+            //       « le mécanisme s'est exécuté » ne voit jamais « il s'est exécuté dans le
+            //       mauvais rect » — la garde sur les PARAMÈTRES contre la garde sur l'EFFET,
+            //       appliquée à la géométrie au lieu de l'opacité.
+            cerne.AddComponent<LayoutElement>().ignoreLayout = true;
             var cerneRt = (RectTransform)cerne.transform;
             cerneRt.anchorMin = Vector2.zero; cerneRt.anchorMax = Vector2.one;
             cerneRt.offsetMin = new Vector2(Px(5f), Px(5f));
