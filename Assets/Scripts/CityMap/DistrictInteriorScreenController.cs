@@ -621,6 +621,33 @@ namespace MafiaCleanCity.CityMap
                         cellsRt.anchoredPosition + ((RectTransform)cell.transform).anchoredPosition);
                 }
 
+                // ⛔⛔ L'INVENTAIRE DE LA HIÉRARCHIE — le seul instrument qui puisse voir ce qu'aucun
+                //    `grep` ne trouvera. Un juge ⊥ a mesuré les badges sur une maille de pas
+                //    `hauteur d'écran / 10`, et le balayage du code rend ZÉRO partout : pas de
+                //    `Screen.height`, pas de `/10`, pas de `GridLayoutGroup`, dans tout
+                //    `Assets/Scripts`. Le modèle qui prédit les DIX abscisses mesurées aux deux
+                //    résolutions, sans aucun paramètre libre, est un conteneur CARRÉ de côté égal à
+                //    la hauteur d'écran, centré sur la demi-largeur, avec des enfants à ancres
+                //    fractionnaires multiples de 0,1.
+                //    ⇒ *Une fraction d'ancre vit dans le `RectTransform`, donc dans la scène — pas
+                //      dans le code.* C'est précisément la classe de placement qu'une recherche
+                //      textuelle ne peut pas voir, par construction. L'inventaire la confirme ou la
+                //      réfute ; il ne la suppose pas.
+                var pile = new System.Text.StringBuilder("[HIÉRARCHIE]");
+                for (Transform t = cellsRt; t != null; t = t.parent)
+                {
+                    var r = t as RectTransform;
+                    if (r == null) { pile.Append($" ← {t.name}(non-Rect)"); continue; }
+                    pile.Append($" ← {t.name} anc[{r.anchorMin.x:0.###},{r.anchorMin.y:0.###}]"
+                                + $"[{r.anchorMax.x:0.###},{r.anchorMax.y:0.###}]"
+                                + $" sd[{r.sizeDelta.x:0.#},{r.sizeDelta.y:0.#}]"
+                                + $" rect[{r.rect.width:0.#}x{r.rect.height:0.#}]"
+                                + $" sc[{t.localScale.x:0.###}]");
+                }
+                Debug.Log(pile.ToString());
+                Debug.Log($"[HIÉRARCHIE] Screen={Screen.width}x{Screen.height} · scaleFactor={scaleFactor:0.######} "
+                          + $"· un conteneur CARRÉ de côté H ferait rect[{Screen.height / scaleFactor:0.#}] en unités canvas");
+
                 Debug.Log($"[ANCRAGE] {ancragesParPivot} cellule(s) posée(s) sur `pivot_px`, "
                           + $"{ancragesParGrille} sur la GRILLE DE SECOURS "
                           + $"(carte d'ancrage {(anchorMap?.parcelles == null ? "ABSENTE" : anchorMap.parcelles.Length + " parcelles")})"
