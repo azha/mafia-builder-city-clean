@@ -1,0 +1,41 @@
+{
+ "route": "/v1/friction/nodes/{buildingId}",
+ "route_appelee": "/v1/friction/nodes/bea32c47-e1fd-4385-92c7-3f83eaa16dbb",
+ "methode": "GET",
+ "statut": 200,
+ "params": {
+  "buildingId": {
+   "valeur": "bea32c47-e1fd-4385-92c7-3f83eaa16dbb",
+   "source": "lu dans le corps de `city/district/1/interior` (clé parmi ['building', 'building_id'])"
+  }
+ },
+ "provenance": {
+  "date": "2026-09-04T10:15:48",
+  "back_main": "6ff684db",
+  "game_back": "mafia-clean-city-game-back 2026-09-04T08:14:29.844933926Z",
+  "compte": "operational_demo@example.test",
+  "dossier": "ecran_demolition",
+  "symbole": "㉝",
+  "controleur": "DemolitionScreenController",
+  "X-Request-Id": "e8f82e22-b014-42c0-9770-2d8fc13d358f",
+  "X-Server-Processed-At": "2026-09-04T08:15:51.909Z",
+  "X-Api-Version": "1"
+ },
+ "corps": {
+  "response_meta": {
+   "request_id_echo": "e8f82e22-b014-42c0-9770-2d8fc13d358f",
+   "server_processed_at": "2026-09-04T08:15:51.909Z",
+   "api_version": 1,
+   "correlation_id_echo": null
+  },
+  "payload": {
+   "data": {
+    "output_value_bucket": "high",
+    "friction_load_bucket": "balanced",
+    "output_to_friction_ratio_bucket": "good",
+    "decommission_cost_bucket": "cheap",
+    "neighbor_count": 0
+   }
+  }
+ }
+}
