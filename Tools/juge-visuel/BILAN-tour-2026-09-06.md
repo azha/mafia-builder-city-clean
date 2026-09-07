@@ -340,3 +340,34 @@ local `~/project/mafia-unity-correcteur`, d'où les blobs ont été lus.
   portait sur la mauvaise grandeur** — segments au lieu d'allumés, rang au lieu de source ; la grandeur juste était dans la CSS et le compteur du
   cadre, pas dans l'image. Addenda dans les deux dossiers JD. Tiennent sans réserve : ㉝ D9 (destructeur, routé en tête) et ①/㉟ D1 (deux CTA
   morts, un énoncé daté faux — même défaut par les deux bouts).
+
+## 9. Clôture de la session `mafia-juge` — 07/09 16:45, ruling user « coupe toutes les sessions » (relayé par f2)
+
+**Aucun juge en vol. Rien n'est lancé après cette ligne.** Branche `juge/conformite-2026-09-06`, tout poussé.
+
+| état | compte | détail |
+|---|---|---|
+| **Rendus** | 18 rapports visuels · 5 tables de données | visuels : ㊲ r16, ① r9, ㊱ ㉟ ㉜ ㉚ ㉘ ㉛ ㉝ ㉞ ㉙ ㊳ ⑭ ⑮ ⑰ ㉓ r1 (+ ㊲ r15, ㉞ jugé sur une planche d'un autre écran) — 309 findings, 38 B / 125 M / 146 m, tous NON APPROUVÉ ; données : ⑮ ㉟ ㊳ ㉝ ① (clôture) |
+| **Rétractés** | 2 | ㉟ D10 (segments ≠ allumés) · ㊳ Q3 (taxonomie par source) — par la mesure de f2, addenda dans les dossiers ; ㊳ D7 amendé en défaut client |
+| **Suspendus** | 55 | `SUSPENSION-back-04-09-2026-09-07.md` : 45 findings « dépend des données = oui » + 10 nommés — **planches antérieures à la recréation du conteneur back** (image du 04-09 : 674 messages, 0 `news_beat.*`). ㊳ B1 en est SORTI (défaut client établi par la JD). |
+| **Non commencés** | r2 des 14 · r17 ㊲ · r10 ① · ⑯ ⑤ ⑱ ㉔ ⑥ ⑨ (blob changé par le contenu, pas par un correctif) · JD des 13 autres écrans · ④ ⑪ ㉕ ⑲ ② (aucune maquette) · ⑬ ⑳ ㉑ ⑱ (aucune planche) | aucun GO émis ; la recapture groupée n'a pas lieu cette nuit |
+
+### Ce qui reste EN ATTENTE, et ce qui le débloque
+
+- **Les 55 findings suspendus** attendent **une recapture groupée sur conteneur RECRÉÉ** (pas un rebuild : le conteneur tournait sur une image plus
+  vieille que la dernière construite), avec **journal joint** (identité `[DemoIdentityResolver]`, empreinte avant/après). Sans recapture, ils ne sont ni
+  fermés ni rouverts : *un finding suspendu attend une mesure ; un finding rétracté n'existe plus*.
+- **Les `DÉDUIT` d'identité du back** (SHA de l'image, dans les 5 dossiers JD) attendent que **`server_build_ref` soit servi** (`response_meta`) **par une
+  image construite APRÈS son commit** — le back n'imprime aujourd'hui ni SHA ni horodatage (4 routes en 404, 0 `GIT_SHA`/`BUILD_SHA` dans la source, le
+  Dockerfile et le compose). Tant que la clé n'est pas servie, on ne sait pas ce qu'on a mesuré.
+- **Les GO r2/r17/r10** attendent : ㊲ M1 (position de l'ascenseur) + M2 (largeur, carte dans le panneau) posés ; ① après le semis d'ancres de blender
+  (23/40 sur la rue) et les correctifs de classe (matière, `.tel.chaud` 2/4) ; les 14 r1 après leurs correctifs de classe — *jamais un r2 sur un blob
+  changé par le contenu seul*.
+- **La table d'attribution DA-3** : 4 lignes fausses par 4 mécanismes (doublon `planche_le_coffre` → ㉒ ; `planche_signer_l_ordre` monte
+  `LieutenantScreenController` ; ⑮/⑰ croisés ; cadres de ㉟ = #108–113) — corrigées chez f2 sauf la dernière, à reporter ; l'instrument
+  `verifier-index-source.py` (contrôle positif ⑮/⑰) et `verifier-index-planches.py` restent à rejouer après chaque édition de l'INDEX.
+- **Le mandat de skill** est amendé (`68899284`, animation) ; le générateur porte la doctrine de la nuit (zéro au-delà d'une distance, cadre pointillé
+  Sliced, diagnostic servi au joueur, rampe non uniforme, états vides de référence ㉛ ㉙, liens communs posés par `preparer()`).
+- **Recommandations en suspens pour qui reprend** : joindre le journal à chaque campagne ; un compte gelé se documente par son empreinte à chaque campagne
+  (il a dérivé : 72 013 → 72 155, et il n'est plus gelé) ; la maquette de série 2 est REJETÉE par l'user (front.md:315) ; ㉝ D9 (le joueur suit l'écran et
+  perd sa parcelle) et ①/㉟ D1 (deux CTA morts, un énoncé daté faux) sont les deux correctifs les plus rentables de la nuit.
