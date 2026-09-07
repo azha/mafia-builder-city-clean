@@ -1,0 +1,83 @@
+<div class="etiquette">Il a tout dit</div>
+<div class="tel">
+<div class="scene district" style="background-position:center 50%;filter:brightness(.18)">
+</div>
+<div class="voile-scene">
+</div>
+<div class="ecran">
+<div class="barre">
+<div class="aile">
+<span class="lib">Argent</span>
+<span class="val">$ 24 850</span>
+</div>
+<div class="mano">[SVG]<span class="val">tiède</span>
+<span class="lib">Heat</span>
+</div>
+<div class="aile droite">
+<span class="lib">Jour 12</span>
+<span class="val">Matin</span>
+</div>
+</div>
+<div class="panneau">
+<div class="parl6" style="height:462px">
+<div class="pl-tete">
+<h3>Il a tout dit</h3>
+<p>Il ne reste plus rien à protéger de ce côté-là.</p>
+</div>
+<div class="pl-body">
+<div class="pl-vitre">
+<div class="pl-av">[SVG]</div>
+<div class="pl-qui">
+<b>Lt. Tull</b>
+<i>un de vos coursiers · poursuivi pour <span style="color:#e08a5a">un crime</span>
+</i>
+</div>
+<div class="pl-jours">
+<b>1</b>
+<i>jours avant<br>le jugement</i>
+</div>
+</div>
+<div class="pl-titron" style="margin-top:11px">Ce qu'il sait — et ce qui est déjà sorti</div>
+<div class="pl-sait">
+<div class="pl-item lache">
+<div class="pt">
+</div>
+<span>où est la planque</span>
+<em>SORTI</em>
+</div>
+<div class="pl-item lache">
+<div class="pt">
+</div>
+<span>qui est le lieutenant</span>
+<em>SORTI</em>
+</div>
+<div class="pl-item lache">
+<div class="pt">
+</div>
+<span>un segment de route</span>
+<em>SORTI</em>
+</div>
+<div class="pl-item lache">
+<div class="pt">
+</div>
+<span>le nom d'un coin de vente</span>
+<em>SORTI</em>
+</div>
+<div class="pl-item lache">
+<div class="pt">
+</div>
+<span>l'horaire des tournées</span>
+<em>SORTI</em>
+</div>
+</div>
+</div>
+<div class="pl-bas">
+<div class="pl-dit">
+<b>Lt. Rin :</b> « Il a tout vidé. Il n'y a plus rien à sauver de ce côté. »</div>
+<div class="pl-rien">L'affaire suit son cours. <b>Ce qui est sorti est sorti</b> — c'est ailleurs qu'il faut réparer maintenant.</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>

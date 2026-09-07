@@ -1,0 +1,66 @@
+<div class="etiquette">Il y a un arrangement</div>
+<div class="tel">
+<div class="scene district" style="background-position:center 50%;filter:brightness(.18)">
+</div>
+<div class="voile-scene">
+</div>
+<div class="ecran">
+<div class="barre">
+<div class="aile">
+<span class="lib">Argent</span>
+<span class="val">$ 24 850</span>
+</div>
+<div class="mano">[SVG]<span class="val">tiède</span>
+<span class="lib">Heat</span>
+</div>
+<div class="aile droite">
+<span class="lib">Jour 12</span>
+<span class="val">Matin</span>
+</div>
+</div>
+<div class="panneau">
+<div class="parl6" style="height:462px">
+<div class="pl-tete">
+<h3>Il y a un arrangement possible</h3>
+<p>On peut clore tout de suite, à un prix.</p>
+</div>
+<div class="pl-body">
+<div class="pl-vitre">
+<div class="pl-av">[SVG]</div>
+<div class="pl-qui">
+<b>Lt. Tull</b>
+<i>un de vos coursiers · poursuivi pour <span style="color:#d9ab4e">un délit sérieux</span>
+</i>
+</div>
+<div class="pl-jours">
+<b>6</b>
+<i>jours avant<br>le jugement</i>
+</div>
+</div>
+<div class="pl-titron" style="margin-top:11px">Ce qu'on peut faire</div>
+<div class="pl-choix">
+<div class="n">
+<b>Accepter l'accord</b>
+<i>il plaide, la peine tombe tout de suite — et l'affaire s'arrête là</i>
+</div>
+<div class="tag" style="color:#8d99a6">SANS FRAIS</div>
+</div>
+<div class="pl-choix risque">
+<div class="n">
+<b>Faire classer par la filière</b>
+<i>l'affaire disparaît — seulement si la charge est légère</i>
+</div>
+<div class="tag" style="color:#d9ab4e">ÇA SE PAIE</div>
+</div>
+</div>
+<div class="pl-bas">
+<div class="pl-dit">
+<b>Lt. Rin :</b> « À vous de dire. L'accord ferme le dossier proprement. La filière le fait disparaître, mais elle s'en souviendra. »</div>
+<div class="pl-geste">ACCEPTER L'ACCORD<small>il plaide, et c'est fini</small>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
