@@ -231,3 +231,22 @@ local `~/project/mafia-unity-correcteur`, d'où les blobs ont été lus.
   **aucun des 14 dossiers en vol n'en dépend** (⑪ et ㉒ ne sont pas lancés — ㉒ était déjà « source ambiguë »). La garde sort en
   non-zéro tant que le doublon existe : l'INDEX est à corriger par qui l'a généré (`construire-dossiers.py`), sur ce que la planche MONTRE,
   jamais sur le nom. Table sujet→écran de fal (`da/portraits-lieutenants`) : cinq contradictions, réconciliation remise à plus tard.
+
+### 8.quinquies — 07/09 09:00–10:30 : premiers rendus (㊲ r16 · ㊱ ㉟ ㉘ ㉜ r1) et une classe transversale
+
+| écran | tour | verdict | B | M | m | tête |
+|---|---|---|---|---|---|---|
+| ㊲ | r16 (`3465929`) | NON APPROUVÉ | 0 | 3 | 8 | halo : déclaration VÉRIFIÉE (existe, centré, sans soudure, portée 3 ≤ 6) ⇒ arbitrage TD-685 ; ascenseur posé SUR le contenu ; panneau −89 px ; visage hors chevelure |
+| ㊱ | r1 état vide | NON APPROUVÉ | 4 | 6 | 6 | le vide S'EXCUSE (copie de diagnostic du cadre #116 servie au joueur, message de #117 absent) ; peau perdue (cerne or absent, boîtes en or, titre `#ffd240`) |
+| ㉟ | r1 | NON APPROUVÉ | 3 | 11 | 7 | châssis absent (invariant 6/6 cadres), vide à 74 %, anglais ; la RÉFÉRENCE porte un artefact d'animation figé (blender) |
+| ㉘ | r1 (#56) | NON APPROUVÉ | 2 | 6 | 14 | matière liège inexistante (1 teinte / 673), composition perdue, 4 bandes → `#0d0d0d` ; section « courriers » hors maquette |
+| ㉜ | r1 | NON APPROUVÉ | 0 | 1 | 9 | fidèle (jetons d=0, capitales 0–1 px) ; jeton ACTIF au-dessus d'un geste MORT — aucun cadre n'apparie les deux |
+
+- **Classe transversale (f2, 10:20) : « la matière ne passe pas »** — ㊱ marine → neutre plat, ㉟ saturation 0,383 → 0,0079, ㉘ liège 1 teinte / 673, ombres 0,00 :
+  structure, information, français, contrastes passent ; la MATIÈRE non ⇒ *erreur de MODÈLE*, routée au correcteur comme mesure de classe
+  (« la couche de matière atteint-elle l'écran ? ») avant tout correctif d'instance. Aucun juge seul ne pouvait la voir : elle n'apparaît que côte à côte.
+- Règle de f2 gardée : **une excuse globale (substitution de police) se vérifie PAR ÉLÉMENT** — là où la CSS ne demande pas Georgia, l'écart est réel (㉟ m3).
+- Règle gardée : **un canon rendu en image ne montre pas ce que sa CSS déclare** (losange « absent du PNG » = mesure sur le rendu, pas sur le canon).
+- Défaut de dossier récurrent, corrigé à la source : `hud-canon-1176.png` absent au départ de 4 passes (lien posé par `preparer()` depuis `4073b84`) ;
+  le PNG du canon porte des pastilles ①..⑥ qui polluent les bbox verticales — mesure due : un canon sans pastilles.
+- Journal non joint sur toutes les campagnes du 06/09 ⇒ « deux déclarations opposées, pas l'image contre une mesure » (㉟ M11, ㉘) — à écrire à chaque tour.
