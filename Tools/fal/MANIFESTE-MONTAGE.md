@@ -118,6 +118,25 @@ fonds portrait par extension — ils demandent un recadrage, donc l'atelier.
 
 ---
 
+## Réponse directe au blocage de `mafia-unity` : « quel écran demande quoi »
+
+Le montage bute sur l'**intention**, pas sur la mécanique. Pour mes familles, l'intention est écrite et
+opposable :
+
+| ce qu'un écran veut afficher | ce qu'il demande | avec quelle clé |
+|---|---|---|
+| le visage d'un lieutenant | `visage-NNN.png` | `visagePourLieutenant(lieutenant.id, dejaPrisDansLaVue)` — **hachage + sondage** |
+| le visage d'un dealer | `dl-<prénom>.png` | le prénom que `dealerNameRef` dérive déjà de l'id |
+| le visage d'un avocat | `av-<nom>.png` | `lawyers.name` (persisté, « Maître X ») |
+| le visage du joueur | `don.png` | constante |
+| un rival | `tarcum-freres.png` · `gorge-operateur.png` · `coil-marque.png` | `rival_key` — et **Saltline n'en a pas** |
+| le fond de matière d'un écran | `matieres/<nom>.png` | **l'écran lui-même** — table §3, une ligne par écran |
+| l'écran est vide | `aplat/vide-<écran>.png` | **l'écran + « aucune donnée »**, table §4 |
+| le décor derrière tout | `decors/DISTRICT_*_1080x2400.png` | profil de district + jour/nuit |
+
+⇒ **`planches/reference-par-ecran.png` est la version visuelle de ce tableau** : pour les 20 écrans, la
+matière, l'état vide et l'encre. C'est la cible à confronter aux captures après montage.
+
 ## Ce qu'il reste à décider, et qui n'est pas à moi
 
 1. **Le chemin de destination** sous `Assets/` et la convention de nom (`import_settings.md` impose

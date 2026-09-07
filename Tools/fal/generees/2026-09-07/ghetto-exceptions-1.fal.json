@@ -1,0 +1,13 @@
+{
+  "modele": "fal-ai/flux/dev",
+  "prompt": "A wooden in-tray, completely empty. Painted illustration of ONE object, filling the frame, seen head-on, lit by a bare warm bulb: real volume, WORN and STREET — chipped paint, gaffer tape, rust bleeding at the screws, scuffed edges, cigarette burns, a strip of peeling sticker residue, cheap materials repaired rather than replaced. Rough brush, visible texture, nothing pristine, nothing glossy, nothing precious. Warm amber light, brass, dirty cream, deep warm shadow. NOBODY present, no people, no hands, no clutter on the floor. Late-1980s dockside back room. NO TEXT, no letters, NO SIGNATURE, no initials, no logo, no watermark, no painted frame. The container is EMPTY — nothing taken away, the work has simply not started yet.",
+  "seed": 47,
+  "largeur": 1072,
+  "hauteur": 1072,
+  "etapes": 28,
+  "guidance": 3.5,
+  "request_id": "01a0790e-2173-7481-9298-95ae25353d5d",
+  "duree_s": 7.8,
+  "cout_usd_estime": 0.05,
+  "genere_le": "2026-09-07T01:29:31+0200"
+}
