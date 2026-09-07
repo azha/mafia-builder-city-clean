@@ -76,11 +76,13 @@ TABLE = [
       cadres=[(S6, [98, 99, 100])], nominal=(S6, 98), planche="planche_la_vitrine_1080x2400.png",
       confiance="déduite", note="déduit par titre (98-100) — le contrôleur dit « cadres 48-50 », numérotation d'une autre série ; canon compte/boutique-canon.png"),
  dict(sym="⑮", ctl="InspectionScreenController", dossier="police", chemin="Plus → LES INSPECTIONS",
-      cadres=[(S6, list(range(31, 36)))], nominal=(S6, 31), planche="planche_les_inspections_1080x2400.png",
-      confiance="mesurée", note="le contrôleur cite les cadres 31-35 ; canon police/inspections-canon.png"),
+      cadres=[(S6, list(range(31, 36)))], nominal=(S6, 32), planche="planche_les_inspections_1080x2400.png",
+      confiance="mesurée", note="le contrôleur cite les cadres 31-35 ; canon police/inspections-canon.png. "
+                               "⛔ NOMINAUX ÉCHANGÉS le 2026-09-07 : ⑮ portait 31 et ⑰ portait 32, c'était l'INVERSE. Établi à la source par le juge du r1 puis re-vérifié dans ecrans-brennar-6.html : le cadre 31 parle de « précinct » et porte belief + patrol_heat PAR PRÉCINCT (⑰), le cadre 32 de « dispatch / registre » (⑮) ; 34 et 35 « précinct » aussi. Confirmé par la luminance : contenu 15,5 capture / 22,7 canon série 2 / 141,2 cadre 31 — l'écart vers le canon est 17x plus petit. ⇒ Les DEUX dossiers faisaient rendre la référence de l'autre. ⇒ 3e attribution fausse de cette table (coffre, carnet, police) et TROIS MÉCANISMES DIFFÉRENTS : doublon, planche d'un autre écran, cadres croisés. Une table écrite à la main depuis des preuves n'a jamais été confrontée à sa source ligne par ligne. "),
  dict(sym="⑰", ctl="PrecinctScreenController", dossier="police", chemin="Plus → LE COMMISSARIAT",
-      cadres=[(S6, list(range(31, 36)))], nominal=(S6, 32), planche="planche_le_commissariat_1080x2400.png",
-      confiance="déduite", note="partage les cadres 31-35 avec ⑮ ; canon police/commissariat-canon.png"),
+      cadres=[(S6, list(range(31, 36)))], nominal=(S6, 31), planche="planche_le_commissariat_1080x2400.png",
+      confiance="déduite", note="partage les cadres 31-35 avec ⑮ ; canon police/commissariat-canon.png. "
+                               "⛔ NOMINAUX ÉCHANGÉS le 2026-09-07 : ⑮ portait 31 et ⑰ portait 32, c'était l'INVERSE. Établi à la source par le juge du r1 puis re-vérifié dans ecrans-brennar-6.html : le cadre 31 parle de « précinct » et porte belief + patrol_heat PAR PRÉCINCT (⑰), le cadre 32 de « dispatch / registre » (⑮) ; 34 et 35 « précinct » aussi. Confirmé par la luminance : contenu 15,5 capture / 22,7 canon série 2 / 141,2 cadre 31 — l'écart vers le canon est 17x plus petit. ⇒ Les DEUX dossiers faisaient rendre la référence de l'autre. ⇒ 3e attribution fausse de cette table (coffre, carnet, police) et TROIS MÉCANISMES DIFFÉRENTS : doublon, planche d'un autre écran, cadres croisés. Une table écrite à la main depuis des preuves n'a jamais été confrontée à sa source ligne par ligne. "),
  dict(sym="⑭", ctl="CompressionScreenController", dossier="compression", chemin="Plus → LA SEMAINE",
       cadres=[(S4, list(range(25, 31))), (S6, list(range(14, 20)))], nominal=(S4, 25), planche="planche_la_semaine_1080x2400.png",
       confiance="mesurée", note="le contrôleur cite série 4 cadres 25-30 (non ratifiée au 02/09)"),
