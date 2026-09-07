@@ -1,0 +1,107 @@
+{
+ "dossier": "ecran-principal",
+ "tour": "r9",
+ "sym": "①",
+ "nom": "L'intérieur de district (« le HUD de Brennar »)",
+ "canon": "hors canon",
+ "controleur": "DistrictInteriorScreenController (+ le chrome du shell : bandeau, médaillon, dock)",
+ "but": "l'écran que l'user désigne comme le plus important : voir son quartier vivant, repérer ses bâtiments, en toucher un pour lire ce qu'il vaut (la `.fiche`) et décider quoi en faire (COLLECTER · BLANCHIR · AMÉLIORER). Le bandeau porte l'argent, le manomètre de chaleur, le jour.",
+ "chemin": "session réelle → carte de ville → ENTRER dans le district (16) → [pour les captures « fiche »] appui sur le premier bâtiment.",
+ "etats": "trois planches du commit `d5ddc40` (`correcteur/ecrans`, 07/09 04:27 — « district : planches recapturées APRÈS le correctif du snap, avec leur journal et leurs empreintes ») : district sous chrome (2400) ; fiche OUVERTE à 1920 et à 2400. Descend de `78a90aa` (correctif `SnapToScreenPixel`), `d495284` (planches du r7), `fd0e21e` (r8) — VÉRIFIÉ ; 3 blobs ≠ r8 et ≠ r7, vérifiés (sha256 dans `captures-provenance.md`). **Le journal du run est JOINT** (`journal-joint.md`, 78 lignes, commité avec les planches) — première fois pour ①. Pas de témoin ⑥ (dock famille) ce tour. Le quart de jour est celui du compte photographié ; la référence est de NUIT.",
+ "references": [
+  [
+   "ecran-canon.png",
+   "rendu ratifié du `.tel` de `hud-brennar.html` (HUD v3.1 validé user, `5983267`), téléphone SEUL",
+   "1176×2091",
+   "×3,0",
+   "392 CSS = 1176 px"
+  ],
+  [
+   "mesure-canon.txt",
+   "géométrie du canon mesurée au navigateur",
+   "—",
+   "—",
+   "—"
+  ],
+  [
+   "maquette-hud-brennar.png",
+   "un AUTRE rendu de la même page (1680×3240) — non mesuré, ne pas s'en servir comme référence principale",
+   "1680×3240",
+   "?",
+   "—"
+  ]
+ ],
+ "source_md": "- **Source HTML/CSS** : `/home/erutheone/project/atelier3d-mafia/hud-brennar.html` (aide de lecture ; l'image gagne). Les jetons de couleur sont ceux de `DesignTokens.asset` (74) + le `:root` de l'atelier.\n- Rendu par `Tools/rendre-maquette.py` (2026-08-25) : `.tel` isolé, collé en 0,0, recadré à 392×697 CSS × 3, assertion de non-rognage passée.",
+ "captures": [
+  [
+   "capture-district-1080x2400.png",
+   "1080×2400 — PRINCIPALE",
+   "district seul, sous chrome, fiche fermée — APRÈS le correctif du snap (`78a90aa`)",
+   "2026-09-07 04:27 (`d5ddc40`)",
+   "screen_1_district_sous_chrome_1080x2400.png — sha256 b94df804…"
+  ],
+  [
+   "capture-fiche-1080x1920.png",
+   "1080×1920 (native de l'art)",
+   "fiche OUVERTE sur le premier bâtiment, 3 actions — après le correctif du snap",
+   "2026-09-07 04:27 (`d5ddc40`)",
+   "vue_principale_fiche.png — sha256 1f2b037d…"
+  ],
+  [
+   "capture-fiche-1080x2400.png",
+   "1080×2400",
+   "fiche OUVERTE, même bâtiment — après le correctif du snap",
+   "2026-09-07 04:27 (`d5ddc40`)",
+   "vue_principale_fiche_1080x2400.png — sha256 3bfeffee…"
+  ]
+ ],
+ "captures_note": "- **Ce que le lot DÉCLARE (`fd0e21e` → `d5ddc40`) — à vérifier, pas à croire** :\n  - **`78a90aa` — `SnapToScreenPixel` arrondissait des unités de MONDE (1 unité = 192 px pendant la capture ⇒ ±96 px de déplacement des cellules, badges, libellés de type, glyphes, marqueurs de lieutenant) ; il arrondit désormais dans le repère ÉCRAN.** Le correcteur a mesuré, dans la même frame, 39 sites : résidu médian **0,48 px** contre **85,42 px** pour l'ancien calcul. ⇒ **Toutes les positions 2D de la vue district des tours r3→r8 étaient déformées par l'instrument** : elles ne sont PAS une baseline (voir `grandeurs-r8.md` §C). Tu remesures les positions à neuf.\n  - Le journal le dit lui-même : « *mon instrument établit que le déplacement de l'instrument a disparu, pas que l'image est juste* ». ⇒ le correctif est prouvé sur la MESURE, pas sur la MISE EN PAGE : **un badge peut être à sa place géométrique et sur le mauvais bâtiment — c'est exactement ce que tu juges.**\n  - **Réconciliation de `mafia-blender` (07/09 ~08:10, instrument commité chez lui, non fourni)** : badge → ancre **0,60 px max sur 8/11 appariements** (le snap marche) ; **ancre → bâtiment : 23/40 ancres à plus de 3 m d'un bâtiment** (elles désignent de la rue). Contrôle de son instrument : sur la planche d'AVANT, 0/11 appariements, résidu médian 42,35 px (rapport 137×). ⇒ **Un badge posé sur du trottoir / un toit vide n'est plus un artefact : c'est un vrai défaut, dont la cause est la CARTE D'ANCRAGE (destinataire `mafia-blender`), pas le rendu du client.** Classe-le ainsi, et compte-les.\n  - Ruling user qui le rend grave : « **tout doit être construit, on n'est pas un city builder** » — le sprite du joueur se pose SUR un bâtiment existant, jamais sur du sol nu. Une ancre sur la rue viole une décision de l'user, ce n'est pas une imprécision.\n  - Aucun autre correctif de ① n'est déclaré entre le r8 et ces planches (halo du cerclage, arcs, voile du bandeau, volute droite, aiguille, pivot… : NON déclarés corrigés) — remesure-les ; un écart RÉCURRENT (r7, r8, r9) est un fond/arbitrage, pas un correctif de plus.\n- ⚠️ **Identité — JOURNAL JOINT** (`journal-joint.md`) : `[DemoIdentityResolver] régime=défaut identité=operational_demo@example.test` ; empreinte AVANT et APRÈS la capture **77 353 min · 17 bâtiments · 3 lt · 2 planques · 314 cartes · 6/6 — IDENTIQUE** (la capture n'a rien muté). Cet écran passe par le résolveur du client et n'appelle pas l'identité de capture gelée : **c'est une propriété du chemin, pas un oubli**. ⇒ **Ne compare AUCUNE grandeur de contenu de cette planche à une planche d'une campagne `demo_capture`** (314 cartes contre 6–8 : deux mondes). Les valeurs (argent, chaleur, jour, nombres de la fiche) sont « non vérifié » ; la FORME est jugée. Le journal dit aussi : `capture : passed=1 failed=0 declares=1 comptes=1` ; lancé avec la seule paire `MAFIA_CAPTURE_*`, catégorie `CaptureDistrict`. Lis le journal, cite-le ; ne le crois pas sur ce que tu peux mesurer.\n- Gardes du test : bâtiments > 0, `TopBar` présent, district actif, fiche portant le bâtiment cliqué et **exactement 3** boutons d'action. Les deux captures « fiche » sont hors écran (RenderTexture, layout refait à chaque résolution) — pas deux recadrages d'une même image.\n- ⚠️ **② la fiche bâtiment (`screen_2a`) n'a pas de dossier de juge à elle : elle se juge ICI**, contre `.fiche` du canon (366×169 CSS).\n- État BRÛLANT ⇒ les 4 règles `.tel.chaud` de `hud-brennar.html` (l. 31, 41, 64, 65) sont le témoin, pas le PNG calme.\n",
+ "echelle": "## Échelle — OBLIGATOIRE, jamais déduite par le juge\n\n| | px de l'image | largeur CSS de référence | facteur |\n|---|---|---|---|\n| RÉFÉRENCE `ecran-canon.png` (`.tel` de `hud-brennar.html`, 392 CSS) | 1176 | 392 | **×3,0** |\n| CAPTURES (chrome ET intérieur de district dessinés à `LargeurHudBrennar = 392`) | 1080 | 392 | **×2,755** |\n| | | **rapport capture ÷ référence** | **0,918** |\n\n- ⇒ Ramène toute mesure en px CSS (÷3,0 sur la référence, ÷2,755 sur les captures) avant de conclure. Un rond de\n  dock de 46 CSS fait 138 px sur la référence et **126,7 px** sur chaque capture — les deux sont justes.\n- Géométrie du canon mesurée AU NAVIGATEUR (`Tools/mesurer-maquette.py`, `mesure-canon.txt` copié dans ce dossier) :\n  `.tel` 392×696,88 · `.fiche` 366×169,19 à (13 ; 424,52) · `.dock` 390×90,17 · `.rond` 46 · `.medaillon` 64 ·\n  `.aile.gauche` 96×33,55 · `.aile.droite` 97,95×26,31.\n- Géométrie des captures, DÉRIVÉE du code (rect non imprimé, log non préservé) : canvas 1280 u de large,\n  `scaleFactor` 0,84375 ⇒ 1280×2844,4 u à 1080×2400 et 1280×2275,6 u à 1080×1920.\n- ⚠️ **Le fond de district n'est JAMAIS mis à l'échelle** : art natif 1080×1920 posé au pixel (propriété certifiée\n  bit-exacte). À 1080×2400, ce que l'art ne couvre pas est un panneau de couleur DÉCLARÉE (`DistrictSceneBackdrop`),\n  jamais nu. Des bandes unies ne sont pas un défaut de cadrage ; leur ÉTENDUE et leur lecture, si.\n- ⚠️ Le canon montre un gros plan sur un bâtiment héros ; les captures sont au palier « district entier ». Ne\n  compte pas la quantité d'art visible comme un écart : juge le CHROME, la FICHE, le DOCK, la palette, le rythme.\n- Ce que la normalisation ne couvre pas : les rapports INTERNES (fiche/dock, médaillon/bandeau) restent réels.\n",
+ "non_fourni_extra": "\n- **les tours r1→r8 existent** — pas fournis ; seule `grandeurs-r8.md` t'est donnée (mesures, jamais de verdict ; ses POSITIONS de district sont déformées, dis-le si tu les cites) ;\n- aucun témoin ⑥ ce tour ; aucune paire T/T+1 ; aucun corps réel comparable (compte vivant) ; l'instrument de réconciliation de blender n'est pas fourni (ses nombres sont DÉCLARÉS) ;",
+ "assumes_intro": "\n⚠️ Cette table date du tour r2 (2026-08-25). Depuis : les 18 districts ont un nom de fiction, chaque bâtiment porte `name_i18n` (S2-a résolu), le bundle `fr` fait 674 clés, et l'écran a été repris. **Plusieurs de ces assumés sont peut-être PÉRIMÉS** — si la capture montre un nom là où la table dit « type », c'est la table qui a vieilli, pas un écart : note-le comme tel.\n\n⚠️ Relu pour le r9 : phase « — » hors district = état VOULU ; ronds du dock vides = arbitrage user connu ; état BRÛLANT ⇒ témoin `.tel.chaud` ; **les positions de badges/cellules/libellés ne sont PLUS un artefact d'instrument après `78a90aa`** — un badge sur la rue est un écart (cause : carte d'ancrage, destinataire blender).\n",
+ "assumes": [
+  [
+   "les 3 chiffres de la fiche (`$ 2 400` · `$ 180/h` · `12%`) remplacés par des BANDES qualitatives",
+   "le DTO ne porte que des bandes (R2.2 : jamais de scalaire en projection joueur) ; les trois cases gardent position et rôle",
+   "une case vide, un scalaire inventé, ou trois cases qui ne s'alignent plus"
+  ],
+  [
+   "le nom du bâtiment remplacé par son TYPE — **peut-être périmé** (`name_i18n` par bâtiment depuis C3)",
+   "au r2 : aucun nom en base ; depuis : `…/heat` porte `name_i18n`",
+   "un nom vide, une clé brute"
+  ],
+  [
+   "le nom du district affiché là où le canon n'en met pas",
+   "le back projette `name` (18 noms de fiction depuis le 2026-09-02) ; on met en forme",
+   "un slug (`Verge-A`), un identifiant"
+  ],
+  [
+   "l'heure (« 21:40 ») remplacée par le quart du jour (« Aube »…)",
+   "aucune minute de jeu côté client (forme F, `game_minute` non projeté — lot back)",
+   "un libellé anglais ou vide"
+  ],
+  [
+   "libellés du dock : ACCUEIL · FAMILLE · FILIÈRE · PLUS (canon : EMPIRE · FAMILLE · MARCHÉ · PLUS)",
+   "ce sont les destinations qui EXISTENT ; nommer un écran absent serait un mensonge d'interface",
+   "un 5ᵉ onglet, un libellé coupé, une casse non uniforme"
+  ],
+  [
+   "les ronds du dock VIDES (canon : icône 20×20)",
+   "l'user a dit « j'aime pas les icônes » — ARBITRAGE ouvert, à remonter tel quel",
+   "—"
+  ],
+  [
+   "un bouton RETOUR (flèche) en haut à gauche, absent du canon (volute décorative)",
+   "on est DANS un district : il faut pouvoir en sortir",
+   "qu'il recouvre l'aile gauche du bandeau"
+  ],
+  [
+   "référence de NUIT, capture au quart de jour du compte",
+   "état du monde, pas de l'écran — la palette globale et la luminance moyenne ne sont pas comparables ; restreins la palette au CHROME et à la FICHE",
+   "—"
+  ]
+ ],
+ "client_captures": "- Client au moment des captures : `d5ddc40` (`correcteur/ecrans`, 07/09 04:27), arbre de rendu = le commit des planches à 1 commit près (le journal ne l'imprime pas)",
+ "couverture_go": "```\n(a) deux résolutions 1920+2400            OUI pour la fiche ; district 2400 seulement\n(b) paire T / T+1 seconde                  NON\n(c) onglet actif asserté                   DÉCLARÉ dans le journal JOINT (« passed=1 failed=0 declares=1 comptes=1 »)\n(d) [CHROME-ALIMENTE] par planche          à LIRE dans `journal-joint.md` (non transcrit ici)\n(e) blob ≠ précédente + descendance        VÉRIFIÉ par l'orchestrateur (3 blobs ≠ r8 ; d5ddc40 descend de 78a90aa, d495284, fd0e21e)\n(g) SHA de l'arbre imprimé au run          NON imprimé\n(i) identité                               JOINTE (journal) : régime=défaut identité=operational_demo@example.test ; empreinte identique avant/après\n```",
+ "compte": "`operational_demo@example.test` — **régime=défaut**, JOURNAL JOINT (`journal-joint.md`) : empreinte 77 353 · 17 · 3 · 2 · 314 cartes, identique avant/après. Valeurs non comparables au canon ni à aucune campagne `demo_capture` ⇒ non vérifié ; FORME jugée"
+}
