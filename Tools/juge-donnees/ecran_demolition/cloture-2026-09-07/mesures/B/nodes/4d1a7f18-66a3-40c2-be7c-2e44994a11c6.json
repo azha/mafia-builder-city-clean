@@ -1,0 +1,1 @@
+{"response_meta":{"request_id_echo":"61a5dfaf-e878-4d68-b401-21955fe780c4","server_processed_at":"2026-09-07T04:24:46.296Z","api_version":1,"correlation_id_echo":null},"payload":{"data":{"output_value_bucket":"medium","friction_load_bucket":"light","output_to_friction_ratio_bucket":"good","decommission_cost_bucket":"moderate","neighbor_count":0}}}

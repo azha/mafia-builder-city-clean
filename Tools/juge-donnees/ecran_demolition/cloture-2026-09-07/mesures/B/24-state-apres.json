@@ -1,0 +1,2 @@
+{"response_meta":{"request_id_echo":"1427b1a1-0a89-4c16-9579-8631828c0c61","server_processed_at":"2026-09-07T04:25:25.408Z","api_version":1,"correlation_id_echo":null},"payload":{"data":{"friction_bucket":"balanced","penalty_active":false,"friction_node_count":3,"perimeter_site_count":3}}}
+#HTTP=200

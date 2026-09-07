@@ -1,0 +1,6 @@
+lieutenants n = 2
+cles lieutenant = ['lieutenant_id', 'name']
+exemple = {"lieutenant_id": "01a07a1b-c78e-7c18-8b77-aa2c78d84f9e", "name": "Lt. Ferrand"}
+blocks n = 40 cles = ['block_id', 'x', 'y']
+grid = {"width": 10, "height": 4}
+exemple batiment = {"building": "7ec3e492-0a01-4d68-9ed2-70568fb739a0", "block_id": 1501, "name_i18n": {"key": "game.fiction.building.name", "params": {"enseigne": "Ferblanterie Tull", "district": "La Lisière", "block": "1501"}}, "operational_type": "lab", "conversion_band": "OPERATIONAL", "shell_state": "STANDING", "condition_band": "SOUND", "revenue_band": "IDLE", "revenue_chain": "UNWIRED", "activity_band": "IDLE", "relance_band": "RELAUNCHABLE", "harvest_band": "NOTHING", "lieutenant_ids": ["01a07a1b-c78e-7c18-8b77-aa2c78d84f9e", "01a07a1b-c790-79d0-94ef-e1372c0c787d"], "lapse_phase_bucket": "WITHIN_WINDOW", "maintenance_in_progress": false}

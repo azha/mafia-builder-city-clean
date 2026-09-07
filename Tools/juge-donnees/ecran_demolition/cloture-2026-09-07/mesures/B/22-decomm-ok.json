@@ -1,0 +1,2 @@
+{"response_meta":{"request_id_echo":"82077ef3-0e0f-404a-829c-b41a583452d9","server_processed_at":"2026-09-07T04:25:25.379Z","api_version":1,"correlation_id_echo":null},"payload":{"data":{"decommissioned":true,"freed_block_id":1502,"neighbor_count":0}}}
+#HTTP=200

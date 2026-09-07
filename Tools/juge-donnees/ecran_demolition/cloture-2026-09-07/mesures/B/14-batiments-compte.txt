@@ -1,0 +1,5 @@
+16.json name= La Lisière buildings= 4
+districts_vides= 17
+TOTAL_batiments= 4
+cles_batiment= ['activity_band', 'block_id', 'building', 'condition_band', 'conversion_band', 'harvest_band', 'lapse_phase_bucket', 'lieutenant_ids', 'maintenance_in_progress', 'name_i18n', 'operational_type', 'relance_band', 'revenue_band', 'revenue_chain', 'shell_state']
+cles_interior= ['bank_side', 'blocks', 'buildings', 'day_phase', 'district', 'district_id', 'grid', 'lieutenants', 'name', 'name_canonical', 'profile']

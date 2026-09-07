@@ -1,0 +1,12 @@
+friction/state apres pick = {"friction_bucket": "balanced", "penalty_active": false, "friction_node_count": 3, "perimeter_site_count": 3}
+interior16 top keys = ['bank_side', 'blocks', 'buildings', 'day_phase', 'district', 'district_id', 'grid', 'lieutenants', 'name', 'name_canonical', 'profile']
+buildings = 3
+   1501 lab STANDING OPERATIONAL lt= 2
+   1503 front_shop STANDING OPERATIONAL lt= 0
+   1504 cash_safehouse STANDING OPERATIONAL lt= 0
+blocks n = 40
+lieutenants n = 2
+day_phase = DAWN
+grid type/keys = ['height', 'width']
+district = "district-16"
+name_i18n = {"key": "game.fiction.building.name", "params": {"enseigne": "Ferblanterie Tull", "district": "La Lisière", "block": "1501"}}

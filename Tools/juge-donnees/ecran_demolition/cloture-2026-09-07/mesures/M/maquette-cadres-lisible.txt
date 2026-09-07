@@ -1,0 +1,308 @@
+============================== LIGNE 5069 ==============================
+<div class="dm-tete">
+<h3>L'organisation frotte</h3>
+<p>Plus vous tenez de choses, plus elles se gênent entre elles.</p>
+</div>
+<div class="dm-body">
+<div class="dm-glob">
+<div class="gros" style="color:#d97a6a">7</div>
+<div class="q">
+<b>Ça grince partout</b>
+<i>7 endroits se gênent entre eux. Chacun coûte un peu de ce que les autres rapportent.</i>
+</div>
+</div>
+<div class="dm-penal">
+<b>Tout produit moins en ce moment.</b> Tant que ça grince, chaque site rend en dessous de ce qu'il devrait. Ça s'arrête quand on allège.</div>
+</div>
+<div class="dm-bas">
+<div class="dm-dit">
+<b>Lt. Rin :</b> « On a trop de choses au même endroit. Il va falloir en enlever une. »</div>
+<div class="dm-geste">VOIR CE QUI COÛTE LE PLUS<small>site par site</small>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="cadre">
+<div class="etiquette">Ce bâtiment vous coûte</div>
+<div class="tel">
+<div class="scene district" style="background-position:center 50%;filter:brightness(.18)">
+</div>
+<div class="voile-scene">
+</div>
+<div class="ecran">
+<div class="barre">
+<div class="aile">
+<span class="lib">Argent</span>
+<span class="val">$ 24 850</span>
+</div>
+
+============================== LIGNE 5071 ==============================
+<div class="dm-tete">
+<h3>Ce bâtiment vous coûte</h3>
+<p>Ce qu'il rapporte, ce qu'il gêne, et ce qu'il coûterait de le raser.</p>
+</div>
+<div class="dm-body">
+<div class="dm-fiche">
+<h4>Imprimerie Skeld — Les Friches, îlot 1604<span>fiche du site</span>
+</h4>
+<div class="l">
+<u>ce qu'il rapporte</u>
+<b style="color:#d97a6a">presque rien</b>
+</div>
+<div class="l">
+<u>ce qu'il gêne autour</u>
+<b style="color:#d97a6a">ça grince partout</b>
+</div>
+<div class="l">
+<u>au total</u>
+<b style="color:#d97a6a">il coûte plus qu'il ne rapporte</b>
+</div>
+<div class="l">
+<u>le raser coûterait</u>
+<b style="color:#d9ab4e">raisonnable</b>
+</div>
+<div class="l">
+<u>voisins touchés</u>
+<b>3</b>
+</div>
+<div class="dm-verdict">Il vous coûte plus qu'il ne vous rapporte.<i>Le garder, c'est payer pour gêner les autres.</i>
+</div>
+</div>
+</div>
+<div class="dm-bas">
+<div class="dm-dit">
+<b>Lt. Rin :</b> « Celui-là, on le garde par habitude. Il gêne les trois d'à côté et il ne rend presque rien. »</div>
+<div class="dm-geste rouge">LE RASER<small>c'est votre décision du jour</small>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="cadre">
+<div class="etiquette">Le raser — confirmer</div>
+<div class="tel">
+<div class="scene district" style="background-position:center 50%;filter:brightness(.18)">
+</div>
+<div class="voile-scene">
+</div>
+<div class="ecran">
+<div class="barre">
+<div class="aile">
+<span class="lib">Argent</span>
+<span class="val">$ 24 850</span>
+</div>
+
+============================== LIGNE 5073 ==============================
+<div class="dm-tete">
+<h3>Le raser</h3>
+<p>La parcelle sera libre. Les voisins le sentiront.</p>
+</div>
+<div class="dm-body">
+<div class="dm-fiche">
+<h4>Imprimerie Skeld — Les Friches, îlot 1604<span>fiche du site</span>
+</h4>
+<div class="l">
+<u>ce qu'il rapporte</u>
+<b style="color:#d97a6a">presque rien</b>
+</div>
+<div class="l">
+<u>ce qu'il gêne autour</u>
+<b style="color:#d97a6a">ça grince partout</b>
+</div>
+<div class="l">
+<u>au total</u>
+<b style="color:#d97a6a">il coûte plus qu'il ne rapporte</b>
+</div>
+<div class="l">
+<u>le raser coûterait</u>
+<b style="color:#d9ab4e">raisonnable</b>
+</div>
+<div class="l">
+<u>voisins touchés</u>
+<b>3</b>
+</div>
+<div class="dm-verdict">Il vous coûte plus qu'il ne vous rapporte.<i>Le garder, c'est payer pour gêner les autres.</i>
+</div>
+</div>
+</div>
+<div class="dm-bas">
+<div class="dm-dit">Une fois rasé, <b>on ne le remet pas</b>. La parcelle restera libre le temps de choisir quoi y mettre.</div>
+<div class="dm-geste rouge">CONFIRMER — LE RASER<small>et libérer la parcelle</small>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="cadre">
+<div class="etiquette">Vous avez déjà tranché aujourd'hui</div>
+<div class="tel">
+<div class="scene district" style="background-position:center 50%;filter:brightness(.18)">
+</div>
+<div class="voile-scene">
+</div>
+<div class="ecran">
+<div class="barre">
+<div class="aile">
+<span class="lib">Argent</span>
+<span class="val">$ 24 850</span>
+</div>
+
+============================== LIGNE 5075 ==============================
+<div class="dm-tete">
+<h3>Le raser</h3>
+<p>La parcelle sera libre. Les voisins le sentiront.</p>
+</div>
+<div class="dm-body">
+<div class="dm-fiche">
+<h4>Imprimerie Skeld — Les Friches, îlot 1604<span>fiche du site</span>
+</h4>
+<div class="l">
+<u>ce qu'il rapporte</u>
+<b style="color:#d97a6a">presque rien</b>
+</div>
+<div class="l">
+<u>ce qu'il gêne autour</u>
+<b style="color:#d97a6a">ça grince partout</b>
+</div>
+<div class="l">
+<u>au total</u>
+<b style="color:#d97a6a">il coûte plus qu'il ne rapporte</b>
+</div>
+<div class="l">
+<u>le raser coûterait</u>
+<b style="color:#d9ab4e">raisonnable</b>
+</div>
+<div class="l">
+<u>voisins touchés</u>
+<b>3</b>
+</div>
+<div class="dm-verdict">Il vous coûte plus qu'il ne vous rapporte.<i>Le garder, c'est payer pour gêner les autres.</i>
+</div>
+</div>
+</div>
+<div class="dm-bas">
+<div class="dm-dit">Vous avez déjà tranché une chose de structure aujourd'hui.</div>
+<div class="dm-geste mort">CONFIRMER — LE RASER<small>plus de décision aujourd'hui</small>
+</div>
+<div class="dm-rien">Raser un site compte comme <b>la décision de structure du jour</b>, au même titre que confier ou reprendre une charge. Ce sera pour demain.</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="cadre">
+<div class="etiquette">La parcelle est libre</div>
+<div class="tel">
+<div class="scene district" style="background-position:center 50%;filter:brightness(.18)">
+</div>
+<div class="voile-scene">
+</div>
+<div class="ecran">
+<div class="barre">
+<div class="aile">
+<span class="lib">Argent</span>
+<span class="val">$ 24 850</span>
+</div>
+
+============================== LIGNE 5077 ==============================
+<div class="dm-tete">
+<h3>La parcelle est libre</h3>
+<p>Deux offres, classées. Elles ne restent pas ouvertes longtemps.</p>
+</div>
+<div class="dm-body">
+<div class="dm-parcelle">
+<b>Parcelle libre — Les Friches, îlot 1604</b>
+<i>ce qu'il y avait là n'y est plus. 3 voisins ont respiré.</i>
+</div>
+<div class="dm-titron">Ce qu'on peut y mettre</div>
+<div class="dm-offre un">
+<div class="rg">1</div>
+<div class="q">
+<b>Un entrepôt</b>
+<i>proche des routes déjà tenues — peu de friction</i>
+</div>
+<div class="tag" style="color:#d9ab4e">LE MIEUX PLACÉ</div>
+</div>
+<div class="dm-offre">
+<div class="rg">2</div>
+<div class="q">
+<b>Une façade</b>
+<i>plus discret, mais loin de tout</i>
+</div>
+<div class="tag" style="color:#8f9285">AUTRE OPTION</div>
+</div>
+</div>
+<div class="dm-bas">
+<div class="dm-dit">
+<b>Lt. Rin :</b> « Deux propositions. La première est mieux placée. Elles ne resteront pas sur la table. »</div>
+<div class="dm-geste">PRENDRE LA PREMIÈRE<small>l'entrepôt, près des routes tenues</small>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="cadre">
+<div class="etiquette">L'offre s'est fermée</div>
+<div class="tel">
+<div class="scene district" style="background-position:center 50%;filter:brightness(.18)">
+</div>
+<div class="voile-scene">
+</div>
+<div class="ecran">
+<div class="barre">
+<div class="aile">
+<span class="lib">Argent</span>
+<span class="val">$ 24 850</span>
+</div>
+
+============================== LIGNE 5079 ==============================
+<div class="dm-tete">
+<h3>Cette offre est fermée</h3>
+<p>On a trop attendu, ou quelqu'un l'a prise avant.</p>
+</div>
+<div class="dm-body">
+<div class="dm-parcelle">
+<b>Parcelle libre — Les Friches, îlot 1604</b>
+<i>ce qu'il y avait là n'y est plus. 3 voisins ont respiré.</i>
+</div>
+<div class="dm-titron">Ce qu'on peut y mettre</div>
+<div class="dm-offre un close">
+<div class="rg">1</div>
+<div class="q">
+<b>Un entrepôt</b>
+<i>proche des routes déjà tenues — peu de friction</i>
+</div>
+<div class="tag" style="color:#987979">DÉJÀ PRISE</div>
+</div>
+<div class="dm-offre">
+<div class="rg">2</div>
+<div class="q">
+<b>Une façade</b>
+<i>plus discret, mais loin de tout</i>
+</div>
+<div class="tag" style="color:#8f9285">AUTRE OPTION</div>
+</div>
+</div>
+<div class="dm-bas">
+<div class="dm-dit">
+<b>Lt. Rin :</b> « Trop tard pour celle-là. »</div>
+<div class="dm-geste">PRENDRE L'AUTRE<small>tant qu'elle est encore là</small>
+</div>
+<div class="dm-rien">Une offre de remplacement <b>se ferme</b> — prise, expirée, ou retirée. Ce n'est pas une liste qui attend.</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+

@@ -1,0 +1,6 @@
+n_buildings = 3
+cles = ['block_id', 'building', 'district_id', 'district_name', 'lieutenant_ids', 'name_i18n', 'operational_type']
+  1501 16 'La Lisière' lab lt= 2
+  1503 16 'La Lisière' front_shop lt= 0
+  1504 16 'La Lisière' cash_safehouse lt= 0
+name_i18n exemple = {"key": "game.fiction.building.name", "params": {"enseigne": "Ferblanterie Tull", "district": "La Lisière", "block": "1501"}}
