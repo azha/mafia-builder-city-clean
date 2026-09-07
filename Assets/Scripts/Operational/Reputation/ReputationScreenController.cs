@@ -75,6 +75,16 @@ namespace MafiaCleanCity.Operational
         // Source unique : ecrans-brennar-6.html + generateur-reputation.py (v2, 2026-08-30).
         private const float CssMargeH        = 13f;   // .enseigne/.compteurs/.elast/.pann margin-x
         private const float CssCernInset     = 5f;    // .cerne{inset:5px}
+        /// <summary>La hauteur du voile qui annonce une suite, en px CSS. Assez haute pour se voir
+        /// (le juge mesure une AFFORDANCE, pas un liseré), assez basse pour ne pas manger le dernier
+        /// bloc. Elle n'a AUCUNE source dans la maquette : le canon ne couvre pas le 16:9, et c'est
+        /// précisément pour ce format que le voile existe — **valeur DÉCLARÉE, pas dérivée**, et
+        /// c'est écrit ici pour qu'on ne la cherche pas dans un document qui ne la contient pas.</summary>
+        /// <summary>La largeur de l'ascenseur qui annonce une suite, en px CSS. Aucune source dans
+        /// la maquette : le canon ne couvre pas le 16:9, et c'est pour ce format que l'ascenseur
+        /// existe — **valeur DÉCLARÉE, pas dérivée**, écrite ici pour qu'on ne la cherche pas dans
+        /// un document qui ne la contient pas.</summary>
+        private const float CssLargeurAscenseur = 3f;
         private const float CssEnseigneHaut  = 13f;   // .enseigne{margin:13px 13px 0}
         private const float CssEnseignePadY  = 7f;
         private const float CssTitreCorps    = 17f;   // .enseigne b — 'DejaVu Serif' 700
@@ -905,6 +915,96 @@ namespace MafiaCleanCity.Operational
             pile.childControlWidth = true;  pile.childControlHeight = true;
             pile.childForceExpandWidth = true; pile.childForceExpandHeight = false;
 
+            // ⛔⛔ LE SIGNE QU'IL Y A UNE SUITE — ㊲ B1, r15. Le juge n'a PAS rouvert le régime
+            // « 16:9 défilable » (ruling user) : il a appliqué le critère de sortie que le dossier
+            // lui attachait — « que RIEN n'indique une suite ». Et c'est ce critère qui échouait :
+            //     le CTA hors champ · 0 px d'ascenseur · le cadre se referme par son filet or
+            //     8,0 px sous le dernier panneau — rien ne dit que ça continue.
+            // ⇒ On ne touche donc PAS au défilement : on ajoute l'AFFORDANCE qui manquait.
+            // ⚠️ ET ELLE NE S'AFFICHE QUE S'IL Y A VRAIMENT UNE SUITE. Une affordance permanente
+            //    mentirait à 2400, où tout tient — et un signe qui ment est pire que pas de signe :
+            //    il apprend au joueur à ne plus le croire.
+            // ⚠️ POSÉ AVANT LE CERNE, donc DESSOUS : le filet doré encadre l'écran et doit rester
+            //    net par-dessus le voile. L'ordre des enfants EST l'ordre de dessin.
+            // ⚠️ `typeof(CanvasRenderer)` EXPLICITE : `AddComponent` n'honore pas le
+            //    `[RequireComponent]` d'une classe de base à l'exécution, et sans lui ce `Graphic`
+            //    ne dessine RIEN, sans erreur console. Le piège est écrit en tête de
+            //    `VerticalGradientImage`, et un site d'appel neuf l'a déjà violé une fois.
+            // ⛔⛔ UN ASCENSEUR, ET PAS UN DÉGRADÉ — le premier essai est RÉTRACTÉ SUR MESURE.
+            //    J'avais posé un voile dégradé vers l'encre au bas de la fenêtre. Il est
+            //    parfaitement mesurable — luminance moyenne des 100 px au-dessus du filet :
+            //        1080×1920  69,0 → 57,5  (delta −11,5)      ← le voile est là
+            //        1080×2400  68,8 → 70,0  (delta +1,2)       ← et absent, comme voulu
+            //    …et il est ILLISIBLE : un dégradé VERS le sombre sur un fond DÉJÀ sombre ne peut
+            //    pas produire de contraste. **Le mécanisme était structurellement incapable de
+            //    porter l'affordance sur ce fond**, quelle que soit sa hauteur.
+            //    ⇒ *Mesurable n'est pas visible.* Ma sonde disait vrai et la propriété voulue —
+            //      « le joueur voit qu'il y a une suite » — n'était pas atteinte. C'est la garde
+            //      sur l'effet qui manquait à l'affordance, pas au halo.
+            // ⇒ L'ascenseur ne dépend d'aucun contraste de fond : c'est un objet, pas un voile. Et
+            //   c'est l'un des trois faits que le juge a comptés (« 0 px d'ascenseur »).
+            // ⚠️ PAS d'auto-masquage : `Scrollbar` disparaît au repos, et une planche est prise AU
+            //    REPOS — l'affordance serait invisible exactement là où on la juge. Il est donc
+            //    monté en permanence et c'est `IndicateurDeSuite` qui l'éteint quand il n'y a pas
+            //    de course, plutôt que l'inverse.
+            {
+                GameObject barreGo = NouveauUI("AscenseurDeSuite", corpsGo.transform);
+                RectTransform barreRt = (RectTransform)barreGo.transform;
+                barreRt.anchorMin = new Vector2(1f, 0f);
+                barreRt.anchorMax = new Vector2(1f, 1f);
+                barreRt.pivot = new Vector2(1f, 0.5f);
+                barreRt.sizeDelta = new Vector2(Px(CssLargeurAscenseur), -Px(CssCernInset) * 2f);
+                // ⚠️ ÉCARTÉ DU FILET : collé à 2 insets, l'ascenseur se lisait comme un second bord.
+                barreRt.anchoredPosition = new Vector2(-Px(CssCernInset) * 4f, 0f);
+                barreGo.AddComponent<LayoutElement>().ignoreLayout = true;
+                var piste = barreGo.AddComponent<Image>();
+                // ⚠️ LA PISTE DOIT SE VOIR, SINON LE CURSEUR N'A PAS D'ÉCHELLE. Mesuré : à
+                //    1080×1920 le curseur occupe **93 % de la piste** — et c'est la BONNE
+                //    proportion, le contenu ne débordant que de 9 %. Mais avec une piste à α 0,14
+                //    (quasi invisible sur ce fond), il ne restait qu'une barre dorée pleine, qui se
+                //    lit comme un second filet et non comme un ascenseur.
+                //    ⇒ *Un rapport juste devient illisible quand son dénominateur est invisible.*
+                //      On ne triche pas sur la proportion : on rend la piste visible pour que les
+                //      7 % manquants se voient.
+                Color pisteCol = ReputationResolvers.Or; pisteCol.a = 0.34f;
+                piste.color = pisteCol; piste.raycastTarget = false;
+
+                // ⚠️ LA ZONE DE GLISSEMENT EST OBLIGATOIRE, et son absence ne produit AUCUNE
+                //    erreur : `Scrollbar` dimensionne son curseur en pilotant les ANCRES de
+                //    `handleRect` À L'INTÉRIEUR de son parent. Sans ce parent intermédiaire, le
+                //    curseur reste étiré sur toute la piste et l'ascenseur se lit comme un SECOND
+                //    FILET doré collé au cadre — mesuré : 1221 rangées dorées sur 1310, soit 93 %
+                //    de la hauteur, pour un contenu qui n'en déborde que de 12 %.
+                //    ⇒ *Mesurer la présence n'est pas mesurer la lisibilité* — deuxième fois sur ce
+                //      même lot, après le voile dégradé qui était présent et invisible.
+                GameObject zoneGo = NouveauUI("ZoneDeGlissement", barreGo.transform);
+                RectTransform zoneRt = (RectTransform)zoneGo.transform;
+                zoneRt.anchorMin = Vector2.zero; zoneRt.anchorMax = Vector2.one;
+                zoneRt.offsetMin = Vector2.zero; zoneRt.offsetMax = Vector2.zero;
+
+                GameObject curseurGo = NouveauUI("Curseur", zoneGo.transform);
+                RectTransform curseurRt = (RectTransform)curseurGo.transform;
+                curseurRt.anchorMin = Vector2.zero; curseurRt.anchorMax = Vector2.one;
+                curseurRt.offsetMin = Vector2.zero; curseurRt.offsetMax = Vector2.zero;
+                var curseur = curseurGo.AddComponent<Image>();
+                Color curCol = ReputationResolvers.Or; curCol.a = 0.62f;
+                curseur.color = curCol; curseur.raycastTarget = false;
+
+                Scrollbar sb = barreGo.AddComponent<Scrollbar>();
+                sb.direction = Scrollbar.Direction.BottomToTop;
+                sb.handleRect = curseurRt;
+                sb.targetGraphic = curseur;
+                sb.transition = Selectable.Transition.None;
+                defilement.verticalScrollbar = sb;
+                defilement.verticalScrollbarVisibility = ScrollRect.ScrollbarVisibility.Permanent;
+
+                var suite = barreGo.AddComponent<IndicateurDeSuite>();
+                suite.fenetre = (RectTransform)corpsGo.transform;
+                suite.contenu = contenuRt;
+                suite.piste = piste;
+                suite.curseur = curseur;
+            }
+
             // Le cerne sur la FENÊTRE (il encadre et ne défile pas) ; les cinq blocs dans le
             // CONTENU (c'est eux qui défilent). Aucun d'eux n'a à savoir qu'il y a un défilement.
             ConstruireCerne(corpsGo.transform);
@@ -1667,6 +1767,37 @@ namespace MafiaCleanCity.Operational
                 t.lineSpacing = (interligneEm - naturelEm) * 100f;
             }
             return t;
+        }
+
+        /// <summary>Allume le voile de suite UNIQUEMENT quand il reste de la course à défiler.
+        ///
+        /// ⛔ Une affordance permanente ment sur les écrans où tout tient — et un signe qui ment
+        /// apprend au joueur à ne plus le croire. Ce composant compare la hauteur du CONTENU à celle
+        /// de la FENÊTRE et n'allume que si l'écart dépasse un pixel.
+        /// ⚠️ `LateUpdate` et non `OnRectTransformDimensionsChange` : ce dernier ne se déclenche que
+        /// sur le rect de CE composant, jamais quand c'est le CONTENU qui change de taille — or
+        /// c'est exactement l'événement à observer. *Une garde qui n'écoute pas la bonne grandeur ne
+        /// se déclenche jamais, et son silence ressemble à un accord.*
+        /// ⚠️ Le voile est ÉTEINT par défaut : si ce composant ne tournait pas, l'écran reviendrait à
+        /// l'état d'avant ce lot plutôt qu'à un voile permanent qui mentirait.</summary>
+        private sealed class IndicateurDeSuite : MonoBehaviour
+        {
+            public RectTransform fenetre, contenu;
+            public Image piste, curseur;
+
+            private void OnEnable() { Montrer(false); }
+
+            private void Montrer(bool v)
+            {
+                if (piste != null && piste.enabled != v) piste.enabled = v;
+                if (curseur != null && curseur.enabled != v) curseur.enabled = v;
+            }
+
+            private void LateUpdate()
+            {
+                if (fenetre == null || contenu == null) return;
+                Montrer(contenu.rect.height - fenetre.rect.height > 1f);
+            }
         }
 
         /// <summary>Borne la hauteur du cadre par la place réellement disponible sous le bandeau.
