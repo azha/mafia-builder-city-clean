@@ -10,3 +10,13 @@
 | M11 « aucune planque n'existe encore » contre 2 planques d'empreinte | deux DÉCLARATIONS opposées (journal non joint) — **pas monté en écart** ; il faut une recapture AVEC journal pour trancher | r2, avec journal |
 
 Pour le dossier r2 : table d'assumés à porter — (1) « AFFECTER UN DEALER » absent (dépendance back L3, rendu proprement = pas de bouton fantôme ni de libellé de repli) ; (2) les libellés de la maquette en retard (`HEAT`, `$`) ne sont pas des écarts.
+
+## Correction f2 (10:40) — R1 : le ruling « sans animation » était PÉRIMÉ (renversé le soir du 27/08 : « animé le truc »)
+
+L'animation n'est pas un écart ; le rendu figé à t = 0 avec `animation-delay: −2,6 s` (t = 34,7 % du cycle, opacity 0,45, translateY ≈ +62 px)
+est le DISPOSITIF qui rend l'animation visible sur une capture (note de l'atelier, verbatim). **Ce qui reste du finding** : le trait coupe la
+ligne de « Mira » — *le défaut n'est pas que l'animation traverse du texte, c'est que la CAPTURE le fige dessus* ⇒ correctif décidé : un
+`animation-delay` propre à ㉟ pour que t = 0 tombe entre deux rangées (paramètre de CAPTURE, pas d'animation) ; blender vérifie la classe
+(9 règles identiques sur ≥ 6 écrans). ㉟ reste NON APPROUVÉ ; B3 déjà fermé par `mafia-unity`, qui a mesuré que le châssis n'est jamais
+construit (`ProceduralUI` : 0 appel dans `Construire()`) — la saturation 0,0079 mesurée est exactement celle du jeton de fond.
+Règle de f2 : *un ruling cité par l'orchestrateur est une DÉCLARATION, à vérifier comme une clôture de correcteur.*
