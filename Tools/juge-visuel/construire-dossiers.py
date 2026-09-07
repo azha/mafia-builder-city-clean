@@ -55,8 +55,14 @@ TABLE = [
       cadres=[(S1, ["organigramme (rangée « La Famille »)"])], nominal=None, planche="famille_1080x2400.png",
       confiance="mesurée", note="référence = Tools/family-organigramme-reference-1120.png (1120×1850) et famille/ecran-canon.png ; ⑦ ⑧ sont des sections du même contrôleur"),
  dict(sym="⑪", ctl="LaunderingController", dossier="coffre", chemin="onglet FILIÈRE",
-      cadres=[], nominal=None, planche="",
+      cadres=[], nominal=None, planche="planche_la_filiere_1080x2400.png",
       confiance="aucune", note="aucun cadre de série 4/6 ne dessine le pipeline ; coffre/ecran-canon.png est le seul canon. "
+                               "✅ PLANCHE RÉTABLIE le 2026-09-07, par MESURE cette fois : la suite écrit "
+                               "CapturerLocataire<LaunderingController>(shell, \"la_filiere\", …) "
+                               "(PlancheEcransManquantsCapturePlayModeTests.cs:128) et le fichier existe. "
+                               "⇒ La planche de ⑪ est planche_la_filiere, jamais planche_le_coffre — "
+                               "cette dernière est écrite en montant ProfileScreenController, c'est celle de ㉒. "
+                               "Le doublon ne se tranchait donc pas au NOM mais au LOCATAIRE MONTÉ par la suite. "
                                "⛔ PLANCHE RETIRÉE le 2026-09-07 : cette ligne portait planche_le_coffre_1080x2400.png, "
                                "que ㉒ porte AUSSI — un seul fichier, deux écrans, deux contrôleurs. Mon attribution ici "
                                "reposait sur le seul NOM (dossier « coffre » ≈ nom du fichier), celle de ㉒ sur une note "
