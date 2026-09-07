@@ -643,6 +643,12 @@ def preparer(e):
     for nom, src in LIENS[e['dossier']]:
         assert src.exists(), f'source absente : {src}'
         lien(d / nom, src)
+    # amendement 2026-09-07 (défaut de dossier ㊲ r16 : `hud-canon-1176.png` annoncé par dossier.md, jamais lié) : les liens COMMUNS
+    # à tout écran sous chrome sont posés ici, pas à la main — sauf dans le dossier qui EST le canon du HUD.
+    if e['dossier'] != 'ecran-principal':
+        for nom, src in LIENS_COMMUNS:
+            assert src.exists(), f'source absente : {src}'
+            lien(d / nom, src)
     (d / 'dossier.md').write_text(ecran_md(e), encoding='utf-8')
     # contrôle : chaque image liée s'ouvre et a la taille annoncée dans la table
     from PIL import Image
