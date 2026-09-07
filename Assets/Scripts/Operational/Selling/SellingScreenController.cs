@@ -212,9 +212,9 @@ namespace MafiaCleanCity.Operational.Selling
                   d.activity_band == "COMPROMISED" ? Braise : Creme2, DesignTokens.Current.primaryFont);
 
             // la caisse : cinq CRANS, jamais une barre continue
-            Crans(r.transform, "Caisse", d.cash_band, 5, CaisseRang(d.cash_band));
+            Crans(r.transform, "Caisse", Caisse(d.cash_band), 5, CaisseRang(d.cash_band));
             // la marge : quatre traits
-            Crans(r.transform, "Marge", d.margin_band, 4, MargeRang(d.margin_band));
+            Crans(r.transform, "Marge", Marge(d.margin_band), 4, MargeRang(d.margin_band));
 
             // le geste impossible, montré éteint
             GameObject ramasser = Bloc("Ramasser", r.transform, false, Px(1f));
@@ -253,7 +253,9 @@ namespace MafiaCleanCity.Operational.Selling
                 LayoutElement le = c.AddComponent<LayoutElement>();
                 le.preferredWidth = Px(9f); le.preferredHeight = Px(7f); le.flexibleWidth = 0f;
             }
-            Texte(l.transform, "Val", Lisible(bande), Px(7f), Creme, DesignTokens.Current.primaryFont);
+            // ⛔ `bande` est désormais un libellé DÉJÀ RÉSOLU par l'appelant, pas une valeur
+            //    d'enum : `Lisible()` ici rendait « Moderate » et « Standard » au joueur.
+            Texte(l.transform, "Val", bande, Px(7f), Creme, DesignTokens.Current.primaryFont);
         }
 
         private static int CaisseRang(string b) =>
@@ -261,6 +263,34 @@ namespace MafiaCleanCity.Operational.Selling
 
         private static int MargeRang(string b) =>
             b == "HIGH_PREMIUM" ? 4 : b == "PREMIUM" ? 3 : b == "ELEVATED" ? 2 : b == "STANDARD" ? 1 : 0;
+
+        /// <summary>La caisse du dealer, en français. Domaine LU À L'ANCRE, jamais recopié d'un
+        /// commentaire : `selling.projection.service.ts:45` — `DealerCashBand = 'NONE' | 'LOW' |
+        /// 'MODERATE' | 'HIGH' | 'FULL'`.
+        ///
+        /// ⛔ POURQUOI CETTE FONCTION EXISTE. Ces bandes passaient par `Lisible()`, le pis-aller qui
+        /// remplace les `_` par des espaces et capitalise. Un juge ⊥ a mesuré le résultat à l'écran :
+        /// **« Moderate » et « Standard »** — de l'ANGLAIS servi au joueur, sur le seul contenu que
+        /// cet écran affiche encore. *Un pis-aller de dé-slug ne traduit pas : il montre l'enum.*
+        /// C'est la classe exacte de `decision.type.*` (TD-535), où l'Accueil affichait
+        /// « AUTONOMY REPORTS PENDING » au centre d'une interface française.
+        /// ⚠️ Et le repli reste NOMMÉ (`—`) plutôt que dé-sluggé : une valeur neuve doit se voir
+        /// comme inconnue, pas se déguiser en mot anglais plausible.</summary>
+        private static string Caisse(string b) =>
+            b == "NONE" ? "VIDE" : b == "LOW" ? "PEU" : b == "MODERATE" ? "MOYENNE"
+            : b == "HIGH" ? "PLEINE" : b == "FULL" ? "DÉBORDE" : "—";
+
+        /// <summary>La marge, en français. Domaine LU À L'ANCRE : `selling.projection.service.ts:59`
+        /// — `DealerMarginBand = 'STANDARD' | 'ELEVATED' | 'PREMIUM' | 'HIGH_PREMIUM'`.
+        ///
+        /// ⚠️ TROIS DES QUATRE MOTS VIENNENT DE LA MAQUETTE, LE QUATRIÈME EST DÉRIVÉ ET JE LE DIS.
+        /// La maquette écrit « au tarif », « au-dessus », « cher » — trois mots pour quatre valeurs.
+        /// `HIGH_PREMIUM` n'a pas de mot ratifié ; « très cher » est dérivé de « cher » par la même
+        /// gradation, et il est à faire ratifier. *Inventer un mot de fiction en silence serait un
+        /// choix de DA déguisé en montage* — celui-ci est déclaré, donc réfutable.</summary>
+        private static string Marge(string b) =>
+            b == "STANDARD" ? "AU TARIF" : b == "ELEVATED" ? "AU-DESSUS"
+            : b == "PREMIUM" ? "CHER" : b == "HIGH_PREMIUM" ? "TRÈS CHER" : "—";
 
         private static string Activite(string b) =>
             b == "WORKING" ? "AU POSTE" : b == "IDLE" ? "INACTIF"
