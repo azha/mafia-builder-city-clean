@@ -1,0 +1,54 @@
+PRÉCÉDENT — familles de bandes déjà traduites dans le bundle :
+  .band.  : 10
+     famille.band.bas = [##..] Bas
+     famille.band.depleted = [....] Depleted
+     famille.band.epuise = [....] Épuisé
+     famille.band.full = [####] Full
+     famille.band.inconnu = [?] Inconnu
+     famille.band.low = [##..] Low
+     famille.band.nominal = [###.] Nominal
+     famille.band.normal = [###.] Normal
+     famille.band.plein = [####] Plein
+     famille.band.unknown = [?] Unknown
+  .etat.  : 45
+     accueil.etat.a_flot = À flot
+     accueil.etat.broke = À sec
+     accueil.etat.confortable = Confortable
+     accueil.etat.correct = Correct
+     accueil.etat.en_cours = En cours
+     accueil.etat.fauche = Fauché
+     accueil.etat.flush = Bien garni
+     accueil.etat.high = Élevé
+     accueil.etat.in_progress = En cours
+     accueil.etat.inconnu = Inconnu
+     accueil.etat.juste = Juste
+     accueil.etat.locked = Verrouillé
+     accueil.etat.low = Faible
+     accueil.etat.moderate = Moyen
+
+préfixes d écran (39) : ['accueil', 'ambient', 'appro', 'autonomie', 'blanchiment', 'boutique', 'building', 'carnet', 'carte', 'conflit', 'core_loops', 'delegation', 'demolition', 'distribution', 'district', 'error', 'exception', 'exception_detail', 'exceptions', 'famille', 'filiere', 'forensic', 'game', 'horizon', 'journal', 'live_ops', 'loi', 'news_beat', 'onboarding', 'pipeline', 'political', 'press', 'profil', 'random_world', 'reglages', 'reputation', 'revue', 'semaine', 'tutorial']
+
+les 11 valeurs que l écran ⑮ AFFICHE ont-elles une clé ?
+   EMPTY            -> 0 []
+   LIGHT            -> 0 []
+   MODERATE         -> 1 ['accueil.etat.moderate']
+   HEAVY            -> 0 []
+   SATURATED        -> 0 []
+   NOMINAL          -> 1 ['famille.band.nominal']
+   BACKLOGGED       -> 0 []
+   BUDGET_CUT       -> 0 []
+   SURGE            -> 0 []
+   NONE             -> 1 ['building.cover.none']
+   SOME             -> 0 []
+   MANY             -> 0 []
+   PREDOMINANT      -> 0 []
+   SCHEDULED        -> 0 []
+   INFORMANT        -> 0 []
+   FALSE_REPORT     -> 0 []
+   GENUINE_REPORT   -> 0 []
+   CASCADE          -> 0 []
+   FORENSIC         -> 0 []
+   LOW              -> 3 ['accueil.etat.low', 'building.raid_risk.low', 'famille.band.low']
+   MEDIUM           -> 0 []
+   HIGH             -> 2 ['accueil.etat.high', 'building.raid_risk.high']
+   CRITICAL         -> 0 []

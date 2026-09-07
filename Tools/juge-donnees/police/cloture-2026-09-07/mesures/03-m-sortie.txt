@@ -1,0 +1,38 @@
+longueur du cadre 32 : 4959
+
+--- commentaire d'intention ---
+<!-- 32 : le listing de dispatch — 18 × GET /v1/city/district/:id/inspection (queue_load EMPTY/LIGHT mesurés, dispatcher_regime NOMINAL/BACKLOGGED vivants, type_distribution 6 origines dont FORENSIC vivante — Q3) ; tout-ou-rien (D2) -->
+
+--- cardinal des lignes de district --- 18
+ 1 {"dd": "LES BASSINS", "nn": " 3", "pch": "LEGERE", "rg": "NOMINAL", "sr": "PROGRAMMEE ▓▓▓ INDIC ▓"}
+ 2 {"dd": "QUAI-NORD", "nn": " 0", "pch": "VIDE", "rg": "NOMINAL", "sr": "—"}
+ 3 {"dd": "SARNES", "nn": " 1", "pch": "LEGERE", "rg": "NOMINAL", "sr": "PROGRAMMEE ▓"}
+ 4 {"dd": "LA COLONNE", "nn": " 0", "pch": "VIDE", "rg": "NOMINAL", "sr": "—"}
+ 5 {"dd": "HAUTES-MARCHES", "nn": " 4", "pch": "LEGERE", "rg": "ARRIERE", "sr": "PROGRAMMEE ▓▓ FORENSIQUE ▓▓"}
+ 6 {"dd": "VERRIER", "nn": " 0", "pch": "VIDE", "rg": "NOMINAL", "sr": "—"}
+ 7 {"dd": "SAINT-BRAND", "nn": " 1", "pch": "LEGERE", "rg": "NOMINAL", "sr": "CASCADE ▓"}
+ 8 {"dd": "LE TREILLIS", "nn": " 0", "pch": "VIDE", "rg": "NOMINAL", "sr": "—"}
+ 9 {"dd": "MARNE-BASSE", "nn": " 2", "pch": "LEGERE", "rg": "NOMINAL", "sr": "PROGRAMMEE ▓▓"}
+10 {"dd": "ORSEL", "nn": " 0", "pch": "VIDE", "rg": "NOMINAL", "sr": "—"}
+11 {"dd": "LES ENTREPÔTS", "nn": " 0", "pch": "VIDE", "rg": "NOMINAL", "sr": "—"}
+12 {"dd": "DÉPÔT-EST", "nn": " 1", "pch": "LEGERE", "rg": "NOMINAL", "sr": "INDIC ▓"}
+13 {"dd": "LE VERRE", "nn": " 0", "pch": "VIDE", "rg": "NOMINAL", "sr": "—"}
+14 {"dd": "PLACE DES COMPTES", "nn": " 0", "pch": "VIDE", "rg": "NOMINAL", "sr": "—"}
+15 {"dd": "LA CHANCELLERIE", "nn": " 1", "pch": "LEGERE", "rg": "NOMINAL", "sr": "PROGRAMMEE ▓"}
+16 {"dd": "LA LISIÈRE", "nn": " 3", "pch": "LEGERE", "rg": "NOMINAL", "sr": "PROGRAMMEE ▓▓ FORENSIQUE ▓"}
+17 {"dd": "LES FRICHES", "nn": " 0", "pch": "VIDE", "rg": "NOMINAL", "sr": "—"}
+18 {"dd": "PONT-GRIS", "nn": " 0", "pch": "VIDE", "rg": "NOMINAL", "sr": "—"}
+
+--- colonnes ---
+[('dd', 'DISTRICT'), ('nn', 'N'), ('pch', 'CHARGE'), ('rg', 'REGIME'), ('sr', 'ORIGINES')]
+
+--- tete-l --- ['<span>BPD · REGISTRE DE DISPATCH</span><span>12H · JOUR 26</span>']
+--- pied-l --- ['18 DISTRICTS · TOUT OU RIEN : LA POLICE OUVRE SES FILES PARTOUT À LA FOIS']
+--- barre (aile/mano) --- [('lib', 'ARGENT'), ('val', '24 850,00 €'), ('val', 'Tiède'), ('lib', 'CHALEUR'), ('lib', 'JOUR 26'), ('val', 'Nuit')]
+
+--- domaines observés par colonne ---
+  dd: 18 valeurs distinctes -> ['DÉPÔT-EST', 'HAUTES-MARCHES', 'LA CHANCELLERIE', 'LA COLONNE', 'LA LISIÈRE', 'LE TREILLIS', 'LE VERRE', 'LES BASSINS', 'LES ENTREPÔTS', 'LES FRICHES', 'MARNE-BASSE', 'ORSEL', 'PLACE DES COMPTES', 'PONT-GRIS', 'QUAI-NORD', 'SAINT-BRAND', 'SARNES', 'VERRIER']
+  nn: 5 valeurs distinctes -> [' 0', ' 1', ' 2', ' 3', ' 4']
+  pch: 2 valeurs distinctes -> ['LEGERE', 'VIDE']
+  rg: 2 valeurs distinctes -> ['ARRIERE', 'NOMINAL']
+  sr: 8 valeurs distinctes -> ['CASCADE ▓', 'INDIC ▓', 'PROGRAMMEE ▓', 'PROGRAMMEE ▓▓', 'PROGRAMMEE ▓▓ FORENSIQUE ▓', 'PROGRAMMEE ▓▓ FORENSIQUE ▓▓', 'PROGRAMMEE ▓▓▓ INDIC ▓', '—']
