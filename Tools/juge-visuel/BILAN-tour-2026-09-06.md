@@ -334,3 +334,9 @@ local `~/project/mafia-unity-correcteur`, d'où les blobs ont été lus.
   `harvest_band`) ⇒ les lots suivants sont des lots CLIENT ; et **des énoncés datés faux en production** (① `:2058`, ㉝ `:460` « aucune route », ㉟ « aucune planque »).
 - Deux juges ont protégé la pile d'eux-mêmes : ㊳ n'a pas exercé `ambient/attend` (état partagé par toute la ville) ; ㉝/① une seule mutation chacun.
 - Le SHA du back dans l'image reste DÉDUIT partout (aucune route ne l'imprime) ; deux juges l'ont daté par le COMPORTEMENT (clé neuve servie).
+- **Deux RÉTRACTATIONS par la mesure de f2 (16:30), pas des suspensions** : ㉟ D10 (4 crans pour 5 paliers — faux : 4 segments encodent 5 états,
+  0..4 allumés, tous dessinés) ; ㊳ Q3 (« la une sans source » — faux : la hiérarchie est une taxonomie par SOURCE, trois routes, le compteur
+  01/04/03 le dit ; `severity_band` EST servi par `random-world/active`, D7 devient un défaut client). Motif commun : **la mesure était juste et
+  portait sur la mauvaise grandeur** — segments au lieu d'allumés, rang au lieu de source ; la grandeur juste était dans la CSS et le compteur du
+  cadre, pas dans l'image. Addenda dans les deux dossiers JD. Tiennent sans réserve : ㉝ D9 (destructeur, routé en tête) et ①/㉟ D1 (deux CTA
+  morts, un énoncé daté faux — même défaut par les deux bouts).
