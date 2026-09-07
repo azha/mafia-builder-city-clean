@@ -589,7 +589,7 @@ namespace MafiaCleanCity.CityMap
                     return ba.y != bb.y ? ba.y.CompareTo(bb.y) : ba.x.CompareTo(bb.x);
                 });
 
-                ancragesParPivot = 0; ancragesParGrille = 0; ancrages.Clear();
+                ancragesParPivot = 0; ancragesParGrille = 0; ancrages.Clear(); identitesBadges.Clear();
                 foreach (DistrictInteriorBuildingDto building in ordered)
                 {
                     if (!blockByBlockId.TryGetValue(building.block_id, out DistrictInteriorBlockDto block))
@@ -645,6 +645,7 @@ namespace MafiaCleanCity.CityMap
                                 + $" sc[{t.localScale.x:0.###}]");
                 }
                 Debug.Log(pile.ToString());
+                Debug.Log($"[IDENTITÉ-BADGE] {identitesBadges.Count} badge(s) · {string.Join(" · ", identitesBadges)}");
                 Debug.Log($"[HIÉRARCHIE] Screen={Screen.width}x{Screen.height} · scaleFactor={scaleFactor:0.######} "
                           + $"· un conteneur CARRÉ de côté H ferait rect[{Screen.height / scaleFactor:0.#}] en unités canvas");
 
@@ -774,6 +775,7 @@ namespace MafiaCleanCity.CityMap
         // Compteurs de RÉGIME d'ancrage — remis à zéro à chaque rendu, imprimés après la boucle.
         private int ancragesParPivot, ancragesParGrille;
         private readonly System.Collections.Generic.List<string> ancrages = new System.Collections.Generic.List<string>();
+        private readonly System.Collections.Generic.List<string> identitesBadges = new System.Collections.Generic.List<string>();
 
         private GameObject BuildBuildingCell(RectTransform sceneRt, int x, int y, DistrictInteriorBuildingDto building,
             DistrictBackgroundAnchorDto anchorMap, float scaleFactor)
@@ -1153,8 +1155,20 @@ namespace MafiaCleanCity.CityMap
         private void BuildStatePip(Transform cell, string nom, int rang, Color teinte,
             float footprintW, float footprintOffsetX, float footprintBottomMargin, float cellH)
         {
+            // ⛔ LA LIGNE D'IDENTITÉ — le dernier fait manquant du fil « maille ». Un juge ⊥ mesure
+            //    11 anneaux dorés EXACTEMENT sur une maille de pas `hauteur de canvas / 10`, et
+            //    l'inventaire a montré que les cellules sont posées sur des pivots IRRÉGULIERS.
+            //    Les deux ne peuvent pas être vrais du même objet ⇒ la prémisse la plus faible est
+            //    l'IDENTITÉ des anneaux, jamais mise à l'épreuve : *la taille est compatible, elle
+            //    n'établit pas l'identité — deux objets de même diamètre restent deux objets.*
+            //    ⇒ On imprime la position ÉCRAN du badge (Canvas ScreenSpaceOverlay ⇒ `position`
+            //      EST en pixels d'écran). Si elle tombe sur la maille, ce SONT les badges et les
+            //      cellules ne sont pas où le pivot dit ; sinon, il existe une seconde couche
+            //      d'anneaux dorés que personne n'a encore nommée. Une ligne, et le fil se ferme.
             RectTransform badge = EnsureOwnershipBadge(cell, footprintW, footprintOffsetX,
                 footprintBottomMargin, cellH);
+            if (badge != null)
+                identitesBadges.Add($"{cell.name}→écran[{badge.position.x:0.#},{badge.position.y:0.#}]");
             float d = badge.sizeDelta.x;
             GameObject go = NewUI(nom, badge);
             var rt = (RectTransform)go.transform;
