@@ -1,0 +1,18 @@
+code HTTP + corps :
+HTTP 200
+{
+    "response_meta": {
+        "request_id_echo": "adc81616-b94e-44cf-8bf3-a7f999d0bcb2",
+        "server_processed_at": "2026-09-07T04:33:43.738Z",
+        "api_version": 1,
+        "correlation_id_echo": null
+    },
+    "payload": {
+        "data": {
+            "front_shop_id": "e0c38061-cb5f-42c0-9294-31eb84c0cfa1",
+            "safehouse_id": "4b29152f-d7b1-404f-bc2c-3a5ba8388711",
+            "node_id": "7866d6ba-628b-4cff-908a-46920f1c9a97",
+            "deviation": false
+        }
+    }
+}

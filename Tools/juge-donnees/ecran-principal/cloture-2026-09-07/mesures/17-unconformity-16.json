@@ -1,0 +1,1 @@
+{"response_meta":{"request_id_echo":"33a0b645-1dab-41d3-8473-5c48aeabf596","server_processed_at":"2026-09-07T04:34:36.021Z","api_version":1,"correlation_id_echo":null},"payload":{"data":{"district":"district-16","audit_pin_presence":"NONE","buildings":[{"building":"building-e0c38061-cb5f-42c0-9294-31eb84c0cfa1","audit_pin_active":false,"deviation_bucket":"NOMINAL"}]}}}
