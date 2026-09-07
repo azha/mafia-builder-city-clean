@@ -88,3 +88,8 @@ sym contrôleur                       | PLANCHE          | détail
 
 35 lignes · nominal : {'CONFIRMÉ': 21, 'NON': 11, 'FAUX': 3} · planche : {'NON ÉTABLI': 16, 'CONFIRMÉ': 17, 'FAUX': 2} · contrôle positif (⑮/⑰ FAUX) OK
 ```
+
+## Relecture au CONTENU après la table (2026-09-07 14:15)
+
+- **⑤ : le FAUX de l'instrument est un faux positif.** Les cinq cadres S4 #4–8 sont tous titrés « Décision du jour » (#4 « la carte distribuée » = nominal légitime ; #5 « rien ne se détache » ; #6 « le budget est pris » ; #7 « après le tampon » ; #8 « avec les lots back L-a + L-b + L-c ») ; le score de DashboardController venait de mots de route partagés (`autonomy`, `exceptions`) présents dans le texte des rapports d'autonomie de #4. ⇒ **⑤ #4 CONFIRMÉ au contenu** ; #8 est une variante d'état, pas un autre écran.
+- **⑮ : #32 tient** (« dispatch / registre » lu dans la source) ; le #33 proposé par l'instrument (score 3) est un cadre d'état du même groupe — le nominal se tranchera au contenu de la capture au r2.

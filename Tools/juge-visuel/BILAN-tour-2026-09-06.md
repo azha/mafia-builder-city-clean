@@ -313,3 +313,8 @@ local `~/project/mafia-unity-correcteur`, d'où les blobs ont été lus.
   (annotation `<!-- N -->` rattachée au mauvais segment ; `.*?` qui avalait un segment) — *un instrument qui confirme la ligne fausse est pire que pas d'instrument*.
 - Nouvelle classe candidate : **cadre PLEIN troué, décentré** (⑰ M1 366 px +277 ; ㉓ M5 343 px +28,5 %) — cause non enquêtée, distincte du 9-slice.
 - Défaut de gabarit corrigé : la ligne « Animation : AUCUNE » coexistait avec l'amendement dans `dossier.md` (juge ㉓) — retirée.
+- **SUSPENSION (f2, 14:10)** : le conteneur back tournait sur une image du 04-09 pendant toutes les captures ⇒ les findings qui dépendent de la valeur
+  servie (libellés bruts, comptes, anglais par locale absente) sont **suspendus, pas rétractés** (`SUSPENSION-back-04-09-2026-09-07.md` : 45 marqués
+  « données = oui » par les juges + 10 nommés par f2) ; la forme tient, les 18 verdicts tiennent. Recapture groupée sur conteneur recréé après les verdicts.
+  Règle : *« rebuild » ne suffit pas, il faut RECRÉER le conteneur* — et le journal de run doit imprimer l'image/le SHA du back.
+- ⑤ #4 confirmé au contenu (faux positif de l'instrument) ; ⑮ #32 tenu ; ⑪ rétabli par f2 (`9d822b2b`) ; ㉞ = table titre → locataire de la suite, routé.
