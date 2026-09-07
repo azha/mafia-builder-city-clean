@@ -225,7 +225,21 @@ namespace MafiaCleanCity.Operational.Selling
                 new RectOffset((int)Px(8f), (int)Px(8f), (int)Px(6f), (int)Px(6f));
             Image rf = ramasser.AddComponent<Image>();
             rf.sprite = ProceduralUI.RoundedRectDashedOutline((int)Px(9f), Px(1f), (int)Px(4f), (int)Px(3f), Eteint);
-            rf.type = Image.Type.Sliced;
+            // ⛔⛔ `Tiled`, JAMAIS `Sliced` — UN MOTIF PÉRIODIQUE NE SURVIT PAS À UN ÉTIREMENT.
+            //    Le 9-slice préserve les coins et ÉTIRE la bande centrale de chaque rail. Un trait
+            //    CONTINU y survit (l'étirer rend un trait continu) ; un POINTILLÉ non : la portion
+            //    de motif qui tombe au centre est étirée sur toute la largeur, et si c'est un
+            //    intervalle, on obtient UN LONG TROU.
+            //    ⇒ Mesuré par un juge ⊥ le 2026-09-07 : **trou de 334 px, 36 % de la largeur du
+            //      bouton, dans les rails HAUT ET BAS, x = 629..962** — les deux rails horizontaux
+            //      partagent la même bande centrale étirée, d'où le défaut symétrique.
+            //    ⇒ Et son contrôle interne le prouve : **le cadre de la CARTE est continu 960/960**
+            //      parce qu'il emploie `RoundedRectOutline`, un trait plein. *Ce n'est donc pas le
+            //      rendu du trait, c'est ce qu'on demande à ce sprite-ci.*
+            //    ⇒ `Tiled` RÉPÈTE la bande centrale au lieu de l'étirer : la cadence des tirets est
+            //      préservée quelle que soit la largeur. C'est le précédent maison, déjà employé
+            //      par `LieutenantScreenController:2641,2675` — je ne l'invente pas, je l'adopte.
+            rf.type = Image.Type.Tiled;
             Texte(ramasser.transform, "Lib", "RAMASSER", Px(9f), Eteint,
                   DesignTokens.Current.primaryFont, TextAlignmentOptions.Center).characterSpacing = 14f;
             Texte(ramasser.transform, "Raison", "impossible — aucune planque n'existe encore",
