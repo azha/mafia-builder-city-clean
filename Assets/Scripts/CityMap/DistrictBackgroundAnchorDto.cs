@@ -79,6 +79,37 @@ namespace MafiaCleanCity.CityMap
             return new Vector2(localX, localY);
         }
 
+        /// <summary>Décalage horizontal, DANS la parcelle, du `rang`-ième bâtiment sur `total`
+        /// qui l'occupent — en pixels image, à convertir comme n'importe quel pixel.
+        ///
+        /// ⛔ POURQUOI CE HELPER EXISTE. `FindParcel` rend UNE parcelle par (x,y) : deux bâtiments
+        /// du même bloc reçoivent donc le MÊME pivot, à la position près. Mesuré en jeu le
+        /// 2026-09-07 : 13 bâtiments pour 11 BLOCS DISTINCTS. Le juge l'a vu par ses deux bouts —
+        /// un libellé en pâté (deux chaînes superposées) et trois marqueurs de lieutenant empilés
+        /// sur un seul bâtiment — sans qu'aucune garde ne le dise, parce que
+        /// *l'écart minimal entre ANCRES est une propriété des ancres, et la superposition est une
+        /// propriété de la CLÉ : aucun écart entre ancres ne sépare deux bâtiments qui PARTAGENT
+        /// une ancre.*
+        ///
+        /// ⛔ ET CE N'EST PAS UNE DÉRIVATION DE GÉOMÉTRIE. Le contrat de ce fichier interdit à Unity
+        /// de re-dériver la base `(origine, ex, ey, ez)`. Ici on ne dérive rien : on répartit à
+        /// l'intérieur d'une largeur que L'ATELIER fournit pour cette parcelle précise
+        /// (`largeur_px`). Le `total`-ième d'un total de N reçoit la fraction (k+1)/(N+1) de cette
+        /// largeur, centrée — une répartition, pas un calcul de projection.
+        ///
+        /// `total <= 1` rend EXACTEMENT 0 : le cas mono-occupant ne bouge pas d'un pixel, et aucune
+        /// garde existante sur les positions ne peut changer de valeur à cause de ce lot.</summary>
+        public static float EtalementDansParcelle(DistrictBackgroundParcelDto parcelle, int rang, int total,
+                                                 float largeurDeRepliPx)
+        {
+            if (total <= 1 || rang < 0 || rang >= total) return 0f;
+            // `largeur_px` absente ou nulle (parcelle non mesurée) ⇒ repli DÉCLARÉ sur la largeur
+            // que l'appelant connaît (celle du sprite), jamais un nombre écrit ici.
+            float largeur = parcelle != null && parcelle.largeur_px > 0f ? parcelle.largeur_px : largeurDeRepliPx;
+            if (largeur <= 0f) return 0f;
+            return largeur * (((rang + 1f) / (total + 1f)) - 0.5f);
+        }
+
         /// <summary>Combine les deux : le bloc (x,y) → position locale compensée relative au centre
         /// du fond, ou null si ce bloc n'a pas d'ancre dans CETTE carte (fond sans couverture pour
         /// ce district — repli déclaré côté appelant, jamais un crash).</summary>

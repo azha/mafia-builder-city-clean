@@ -589,12 +589,31 @@ namespace MafiaCleanCity.CityMap
                     return ba.y != bb.y ? ba.y.CompareTo(bb.y) : ba.x.CompareTo(bb.x);
                 });
 
+                // Un bloc → la liste ORDONNÉE des identifiants de bâtiments qui l'occupent.
+                var rangsParBloc = new Dictionary<int, List<string>>();
+                foreach (DistrictInteriorBuildingDto b2 in ordered)
+                {
+                    if (!rangsParBloc.TryGetValue(b2.block_id, out List<string> l))
+                        rangsParBloc[b2.block_id] = l = new List<string>();
+                    l.Add(b2.building);
+                }
+                foreach (List<string> l in rangsParBloc.Values)
+                    l.Sort(System.StringComparer.Ordinal);
+
                 ancragesParPivot = 0; ancragesParGrille = 0; ancrages.Clear(); identitesBadges.Clear();
                 foreach (DistrictInteriorBuildingDto building in ordered)
                 {
                     if (!blockByBlockId.TryGetValue(building.block_id, out DistrictInteriorBlockDto block))
                         continue; // D2 garantit l'appartenance ; défensif.
-                    GameObject cell = BuildBuildingCell(cellsRt, block.x, block.y, building, anchorMap, scaleFactor);
+                    // ⛔ L'ordre DANS le bloc doit être STABLE d'un run à l'autre, sinon deux
+                    //    captures du même compte échangent deux bâtiments et un juge lit un
+                    //    déplacement là où rien n'a bougé. `ordered` est trié sur (y,x) du BLOC :
+                    //    à l'intérieur d'un bloc ces deux clés sont égales, donc le tri ne départage
+                    //    rien et l'ordre serait celui du serveur. On classe donc sur l'identifiant.
+                    int total = rangsParBloc.TryGetValue(building.block_id, out var rangs) ? rangs.Count : 1;
+                    int rang = rangs != null ? rangs.IndexOf(building.building) : 0;
+                    GameObject cell = BuildBuildingCell(cellsRt, block.x, block.y, building, anchorMap, scaleFactor,
+                                                        rang < 0 ? 0 : rang, total);
                     // ⚠️ AVANT CE LOT, AUCUN BÂTIMENT N'ÉTAIT CLIQUABLE — mesuré, zéro `Button` et
                     // zéro `onClick` dans tout l'écran principal du jeu. Le badge de possession
                     // était décoratif.
@@ -832,7 +851,7 @@ namespace MafiaCleanCity.CityMap
         public System.Collections.Generic.IReadOnlyList<string> NoeudsHorsCadre => horsCadre;
 
         private GameObject BuildBuildingCell(RectTransform sceneRt, int x, int y, DistrictInteriorBuildingDto building,
-            DistrictBackgroundAnchorDto anchorMap, float scaleFactor)
+            DistrictBackgroundAnchorDto anchorMap, float scaleFactor, int rangDansBloc = 0, int totalDansBloc = 1)
         {
             BuildingSpriteSlots slots = BuildingSpriteSlots.Current;
             Sprite baseSprite = slots != null ? slots.Resolve(building.operational_type) : null;
@@ -870,8 +889,24 @@ namespace MafiaCleanCity.CityMap
                             ? $" px[{parcelleLue.pivot_px[0]:0.0},{parcelleLue.pivot_px[1]:0.0}]"
                             : " GRILLE"));
             Vector2 localPos = pivotLocal ?? new Vector2(x * 100f, -y * 100f);
+            // ⛔ DEUX BÂTIMENTS D'UN MÊME BLOC PARTAGENT LEUR PIVOT — `FindParcel` est clé par (x,y).
+            //    Mesuré en jeu le 2026-09-07 : 13 bâtiments pour 11 blocs distincts. Sans cet
+            //    étalement ils se posent AU MÊME PIXEL : un seul bâtiment visible, les libellés en
+            //    pâté, et les marqueurs de lieutenant de l'un empilés sur l'autre.
+            //    ★ Aucun écart entre ANCRES ne peut réparer ça : la superposition est une propriété
+            //      de la CLÉ, pas des ancres. Le semis d'ancres ne l'atteint donc pas.
+            //    L'étalement est en pixels IMAGE : il se convertit par le même `scaleFactor` que le
+            //    pivot, sinon il vaudrait autre chose à chaque résolution.
+            localPos.x += DistrictBackgroundAnchor.EtalementDansParcelle(
+                parcelleLue, rangDansBloc, totalDansBloc, cellSize.x * scaleFactor) / scaleFactor;
 
-            GameObject cell = NewUI($"Cell_{x}_{y}", sceneRt);
+            // Le NOM doit rester unique, sinon l'appariement par nom cesse d'apparier sans le dire
+            // (`DistrictInteriorLieutenantMarkersPlayModeTests` a dû cesser de prendre le premier
+            // venu pour cette raison exacte). Le mono-occupant garde `Cell_x_y` mot pour mot : les
+            // six sites de test qui le cherchent par ce nom ne bougent pas.
+            string nomCellule = totalDansBloc > 1 && rangDansBloc > 0
+                ? $"Cell_{x}_{y}_{rangDansBloc + 1}" : $"Cell_{x}_{y}";
+            GameObject cell = NewUI(nomCellule, sceneRt);
             RectTransform cellRt = (RectTransform)cell.transform;
             cellRt.anchorMin = cellRt.anchorMax = new Vector2(0.5f, 0.5f);
             cellRt.pivot = new Vector2(0.5f, 0f); // bas-centre — §4 : "le pivot bas-centre du sprite s'y pose"
