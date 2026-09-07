@@ -1,0 +1,6 @@
+# sortie de mesures/17_unicite_regle_css.sh — 2026-09-07
+  '.jetons-lib.lecture{' : 1
+  '.lecture{'            : 1
+  CONTROLE + 'font-family:Georgia,serif' : 48
+  corps, dedupliques :
+    .jetons-lib.lecture{margin-top:8px;font-family:Georgia,serif;font-size:14px;letter-spacing:.03em;text-transform:none;color:var(--or-vif);padding:0 14px}

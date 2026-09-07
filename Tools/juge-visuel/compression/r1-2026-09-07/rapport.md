@@ -128,6 +128,16 @@ changeait.
 
 **Compte : 4 BLOQUANT · 1 MAJEUR · 4 MINEUR.**
 
+> **Contrôle d'unicité de la citation CSS de `M1` et `B2`** (`mesures/17_unicite_regle_css.sh`, sortie
+> jointe). `ecrans-brennar-4.html` porte **trois** blocs `<style>` (15 082 + 358 369 + 148 061 octets) :
+> une seconde définition plus bas écraserait la première et rendrait ma citation fausse. Comptes pris
+> dans un `$( )` (la couche d'affichage du proxy fausse tout compte lu au terminal) :
+> `.jetons-lib.lecture{` → **1** · `.lecture{` → **1** (le même corps : les deux motifs matchent le
+> même texte) · aucune autre règle finissant par `.lecture`. Contrôle positif du motif :
+> `font-family:Georgia,serif` → **48**, donc l'outillage ne rend pas zéro pour la mauvaise raison.
+> ⇒ `color: var(--or-vif)` et `padding: 0 14px` sont les **seules** déclarations de cette classe :
+> `M1` et `B2` s'appuient sur un fait **compté**, plus sur une lecture unique.
+
 ---
 
 ### Table à part — ASSUMÉ (non compté ; vérifié « rendu proprement »)
@@ -302,6 +312,7 @@ Tous dans `mesures/`. Chacun imprime la taille des images qu'il ouvre et porte a
 | `14_parties_absentes.py` | bbox de chaque partie, des deux côtés | + : titre et ligne de lecture rendent de l'encre des 2 côtés ; − : bande de vide pur = AUCUNE encre |
 | `15_aiguille.py` | côté des arcs et de l'aiguille du médaillon | + : les deux arcs doivent tomber de côtés OPPOSÉS |
 | `16_vide_seuil_bas.py` | balayage du vide de 25/255 à **1/255** | + : à 2/255 la sonde voit la plaque du dock (88 794 px) et le texte (4 311 px) |
+| `17_unicite_regle_css.sh` (+ `.out`) | la règle CSS citée par `M1`/`B2` est-elle unique dans les 3 blocs `<style>` ? | + : `font-family:Georgia,serif` doit rendre **48**, pas 0 ; comptes pris dans un `$( )` |
 
 Crops joints : `crop_ligne_debordante.png`, `crop_A_ampute.png`, `crop_fin_ligne.png`,
 `crop_titre.png`, `crop_bandeau.png`, `crop_collision.png`, `crop_collision_canon.png`,
