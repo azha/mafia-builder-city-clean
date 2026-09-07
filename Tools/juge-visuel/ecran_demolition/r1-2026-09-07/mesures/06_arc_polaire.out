@@ -1,0 +1,18 @@
+=== CANON (controle positif : arc annulaire connu) ===
+OUVERT hud-canon-1176.png (1176, 2091)
+  HUD anneau n=2834 bbox x[440..779] y[21..290] centre=(609.5,155.5) R=152.0 (zone=(440, 10, 780, 320), y exclus=(9999, 9999))
+  HUD teal : n=265  r/R p05=0.48 p95=0.57  LARGEUR de bande=0.09  |  angles -70..95 deg
+  HUD chaud : n=860  r/R p05=0.22 p95=0.91  LARGEUR de bande=0.69  |  angles -95..95 deg
+
+=== CAPTURE ===
+OUVERT capture-1080x2400.png (1080, 2400)
+  CAP anneau n=1250 bbox x[449..630] y[19..200] centre=(539.5,109.5) R=90.5 (zone=(380, 0, 700, 240), y exclus=(135, 150))
+  CAP teal : n=1000  r/R p05=0.41 p95=0.52  LARGEUR de bande=0.11  |  angles -87..9 deg
+  CAP chaud : n=626  r/R p05=0.45 p95=0.95  LARGEUR de bande=0.50  |  angles -95..95 deg
+
+=== AIGUILLE : demi-plan ou tombe la pointe (blanc creme sur cadran) ===
+  HUD pointe la plus lointaine : r=80.6 (53% R)  angle=-43 deg (0=haut, + = DROITE)  (219, 212, 192)
+  CAP pointe la plus lointaine : r=31.7 (35% R)  angle=+85 deg (0=haut, + = DROITE)  (234, 224, 200)
+
+=== CAPTURE : recouvrement montant / medaillon (recalcule avec le bon centre) ===
+  montant : x max = 446 ; bord gauche du medaillon = 449.0 ; recouvrement = 0.0 px

@@ -1,0 +1,43 @@
+OUVERT reference (1080, 2102) / capture (1080, 2400)
+
+=== CONTROLE POSITIF sur la REFERENCE (jeton CSS attendu vs mesure) ===
+  dm-tete fond           attendu #1e1f1b=(30, 31, 27)  mesure #1e1f1b=(30, 31, 27)  ecart max/canal=0  n=7500  OK
+  dm-body fond haut      attendu #20211d=(32, 33, 29)  mesure #1d1e1b=(29, 30, 27)  ecart max/canal=3  n=3200  OK
+  dm-fiche fond          attendu #e9e4d4=(233, 228, 212)  mesure #e9e4d4=(233, 228, 212)  ecart max/canal=0  n=4000  OK
+  dm-fiche filet g.      attendu #8c7a3f=(140, 122, 63)  mesure #e9e4d4=(233, 228, 212)  ecart max/canal=149  n=1400  ECART
+  dm-verdict fond        attendu #8c2f36=(140, 47, 54)  mesure #8c2f36=(140, 47, 54)  ecart max/canal=0  n=8000  OK
+  dm-bas fond            attendu #141a21=(20, 26, 33)  mesure #141a21=(20, 26, 33)  ecart max/canal=0  n=6000  OK
+  dm-bas filet haut      attendu #2c3640=(44, 54, 64)  mesure #2c3640=(44, 54, 64)  ecart max/canal=0  n=2000  OK
+  dm-geste.rouge fond    attendu #241214=(36, 18, 20)  mesure #241214=(36, 18, 20)  ecart max/canal=0  n=12000  OK
+  dm-geste.rouge bord    attendu #5c2a2a=(92, 42, 42)  mesure #5c2a2a=(92, 42, 42)  ecart max/canal=0  n=1200  OK
+  -> 8/9 aplats de la reference retrouves a <=6/255
+  CONTROLE NEGATIF fiche #e9e4d4 vs verdict #8c2f36 -> ecart max/canal=181 (doit etre grand)
+
+=== CAPTURE : aplats mesures, compares au jeton CSS du CHASSIS demo6 ===
+  dm-tete fond           jeton #1e1f1b=(30, 31, 27)  mesure #1c1c1c=(28, 28, 28)  ecart max/canal=3  n=10500  EGAL
+  dm-tete filet bas      jeton #3a3c34=(58, 60, 52)  mesure #3b3d35=(59, 61, 53)  ecart max/canal=1  n=1500  EGAL
+  dm-body fond           jeton #20211d=(32, 33, 29)  mesure #1d1e1b=(29, 30, 27)  ecart max/canal=3  n=2860  EGAL
+  dm-glob fond           jeton #232520=(35, 37, 32)  mesure #222622=(34, 38, 34)  ecart max/canal=2  n=7200  EGAL
+  dm-glob bord haut      jeton #3c3e35=(60, 62, 53)  mesure #3b3b33=(59, 59, 51)  ecart max/canal=3  n=1500  EGAL
+  dm-bas fond            jeton #141a21=(20, 26, 33)  mesure #161c22=(22, 28, 34)  ecart max/canal=2  n=6000  EGAL
+  dm-geste fond          jeton #241c11=(36, 28, 17)  mesure #221c0d=(34, 28, 13)  ecart max/canal=4  n=12000  EGAL
+  dm-geste bord haut     jeton #5a4a2a=(90, 74, 42)  mesure #5a492a=(90, 73, 42)  ecart max/canal=1  n=1200  EGAL
+  rangee fond            jeton #232520=(35, 37, 32)  mesure #222622=(34, 38, 34)  ecart max/canal=2  n=14000  EGAL
+  rangee bord haut       jeton #3c3e35=(60, 62, 53)  mesure #3d3d35=(61, 61, 53)  ecart max/canal=1  n=1500  EGAL
+
+=== ENCRE (couleur des glyphes) ===
+  REF h3 titre         fond=#1e1f1b   encre=#eef3f9=(238, 243, 249)   n=29250  dmax=642
+  REF p sous-titre     fond=#1e1f1b   encre=#8f9285=(143, 146, 133)   n=25500  dmax=334
+  CAP h3 titre         fond=#1c1c1c   encre=#eef3f9=(238, 243, 249)   n=24975  dmax=646
+  CAP p sous-titre     fond=#1c1c1c   encre=#8d9083=(141, 144, 131)   n=25650  dmax=338
+  CAP glob .gros 13    fond=#222622   encre=#9aa6b3=(154, 166, 179)   n=9800  dmax=624
+  CAP glob .q b        fond=#222622   encre=#eef3f9=(238, 243, 249)   n=8225  dmax=624
+  CAP glob .q i        fond=#222622   encre=#8f9285=(143, 146, 133)   n=22950  dmax=316
+  CAP rangee titre     fond=#222622   encre=#eef3f9=(238, 243, 249)   n=10400  dmax=624
+  CAP rangee sous      fond=#222622   encre=#8f9285=(143, 146, 133)   n=14400  dmax=316
+  CAP rangee statut    fond=#222622   encre=#8f9285=(143, 146, 133)   n=2400  dmax=316
+  CAP dm-dit           fond=#161c22   encre=#161c22=(22, 28, 34)   n=38200  dmax=559
+  CAP geste libelle    fond=#221c0d   encre=#d9ab4d=(217, 171, 77)   n=28700  dmax=390
+  CAP geste small      fond=#221c0d   encre=#978768=(151, 135, 104)   n=6000  dmax=323
+  REF dm-dit           fond=#141a21   encre=#cdd6e0=(205, 214, 224)   n=38200  dmax=651
+  REF geste libelle    fond=#241214   encre=#d97a6a=(217, 122, 106)   n=20400  dmax=371

@@ -1,0 +1,71 @@
+4995|   <!-- SÉRIE 6 · ㉝ RASER UN SITE (2026-08-27) : la friction, la fiche du site, et les deux offres qui se ferment. Statique. Générateur : generateur-demol.py -->
+4996| <style>
+4997| /* ═══ ㉝ RASER UN SITE — préfixé .demo6, statique ═══ */
+4998| 
+4999| .demo6{position:relative;height:100%;display:flex;flex-direction:column;overflow:hidden;
+5000|   font-family:'DejaVu Sans',sans-serif;color:#e7ecf3;background:linear-gradient(180deg,#20211d,#191a17 58%,#141513)}
+5001| .demo6 *{box-sizing:border-box}
+5002| .demo6 .dm-tete{flex:none;padding:11px 13px 9px;border-bottom:1px solid #3a3c34;background:#1e1f1b}
+5003| .demo6 .dm-tete h3{margin:0;font:700 12px/1.15 'DejaVu Serif';color:#eef3f9;letter-spacing:.3px}
+5004| .demo6 .dm-tete p{margin:4px 0 0;font:7px/1.35 'DejaVu Sans';color:#8f9285}
+5005| .demo6 .dm-body{flex:1;min-height:0;overflow:hidden;padding:10px 13px 0}
+5006| .demo6 .dm-titron{font:600 6.6px/1 'DejaVu Sans';letter-spacing:1.5px;color:#8f9285;text-transform:uppercase;margin:0 0 7px}
+5007| /* ── la fiche cartonnée ── */
+5008| .demo6 .dm-fiche{background:#e9e4d4;color:#2a2a22;border-radius:2px;padding:10px 11px 11px;
+5009|   box-shadow:0 3px 10px #00000055;position:relative}
+5010| .demo6 .dm-fiche::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:#8c7a3f;
+5011|   border-radius:2px 0 0 2px}
+5012| .demo6 .dm-fiche h4{margin:0 0 8px 6px;font:700 10px/1.15 'DejaVu Serif';
+5013|   display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+5014| .demo6 .dm-fiche h4 span{font:6.2px/1 'DejaVu Sans';letter-spacing:1.1px;color:#7f7a63;text-transform:uppercase}
+5015| .demo6 .dm-fiche .l{display:flex;justify-content:space-between;gap:9px;padding:4.5px 0 4.5px 6px;
+5016|   border-top:1px dotted #c2bda4}
+5017| .demo6 .dm-fiche .l u{text-decoration:none;font:6.5px/1.3 'DejaVu Sans';letter-spacing:.9px;
+5018|   text-transform:uppercase;color:#7f7a63}
+5019| .demo6 .dm-fiche .l b{font:700 8.4px/1.2 'DejaVu Sans';text-align:right}
+5020| .demo6 .dm-verdict{margin:9px 0 0 6px;padding:7px 9px;border-radius:2px;background:#8c2f36;color:#f6efe2;
+5021|   font:700 8px/1.35 'DejaVu Sans'}
+5022| .demo6 .dm-verdict i{display:block;font:6.4px/1.35 'DejaVu Sans';font-weight:400;font-style:normal;
+5023|   color:#f0d8cf;margin-top:3px}
+5024| /* ── l'état global ── */
+5025| .demo6 .dm-glob{display:flex;align-items:center;gap:11px;padding:10px 11px;border-radius:3px;
+5026|   background:#232520;border:1px solid #3c3e35}
+5027| .demo6 .dm-glob .gros{font:700 15px/1 'DejaVu Serif';flex:none}
+5028| .demo6 .dm-glob .q{flex:1;min-width:0}
+5029| .demo6 .dm-glob .q b{display:block;font:700 9px/1.15 'DejaVu Serif';color:#eef3f9}
+5030| .demo6 .dm-glob .q i{display:block;font:6.5px/1.3 'DejaVu Sans';font-style:normal;color:#8f9285;margin-top:3px}
+5031| .demo6 .dm-penal{margin-top:8px;padding:7px 9px;border-radius:2px;background:#2e2114;border:1px solid #8a6a22;
+5032|   font:7.2px/1.35 'DejaVu Sans';color:#e8d3a4}
+5033| .demo6 .dm-penal b{color:#f0dfc4}
+5034| /* ── la parcelle libérée et ses deux offres ── */
+5035| .demo6 .dm-parcelle{border:2px dashed #5a5c4e;border-radius:3px;padding:9px 10px;text-align:center;
+5036|   background:#1c1e19;margin-bottom:9px}
+5037| .demo6 .dm-parcelle b{display:block;font:700 9px/1.15 'DejaVu Serif';color:#c9cbb8}
+5038| .demo6 .dm-parcelle i{display:block;font:6.4px/1.3 'DejaVu Sans';font-style:normal;color:#8f9285;margin-top:3px}
+5039| .demo6 .dm-offre{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:3px;margin-bottom:5px;
+5040|   background:#232520;border:1px solid #3c3e35}
+5041| .demo6 .dm-offre.un{border-color:#5a4a2a;background:#262117}
+5042| .demo6 .dm-offre.close{opacity:.45}
+5043| .demo6 .dm-offre .rg{width:20px;height:20px;flex:none;border-radius:50%;background:#3c3e35;
+5044|   display:flex;align-items:center;justify-content:center;font:700 9px 'DejaVu Serif';color:#c9cbb8}
+5045| .demo6 .dm-offre.un .rg{background:#5a4a2a;color:#f0dfc4}
+5046| .demo6 .dm-offre .q{flex:1;min-width:0}
+5047| .demo6 .dm-offre .q b{display:block;font:700 9px/1.1 'DejaVu Serif';color:#eef3f9}
+5048| .demo6 .dm-offre .q i{display:block;font:6.4px/1.25 'DejaVu Sans';font-style:normal;color:#8f9285;margin-top:2px}
+5049| .demo6 .dm-offre .tag{font:700 6.6px/1 'DejaVu Sans';letter-spacing:.8px;flex:none;border:1px solid currentColor;
+5050|   border-radius:2px;padding:3px 5px}
+5051| /* ── le bas ── */
+5052| .demo6 .dm-bas{flex:none;position:relative;z-index:3;background:#141a21;border-top:2px solid #2c3640;padding:9px 13px 15px}
+5053| .demo6 .dm-dit{font:italic 8.6px/1.4 'DejaVu Serif';color:#cdd6e0}
+5054| .demo6 .dm-dit b{font-style:normal;color:#eef3f9;font-weight:700}
+5055| .demo6 .dm-geste{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 11px;
+5056|   border-radius:3px;border:1px solid #5a4a2a;background:#241c11;margin-top:9px;
+5057|   font:700 9.5px/1 'DejaVu Sans';letter-spacing:.7px;color:#d9ab4e}
+5058| .demo6 .dm-geste small{font:6.5px/1 'DejaVu Sans';font-weight:400;letter-spacing:0;color:#9a8a6a;text-align:right}
+5059| .demo6 .dm-geste.rouge{border-color:#5c2a2a;background:#241214;color:#d97a6a}
+5060| .demo6 .dm-geste.rouge small{color:#a07a76}
+5061| .demo6 .dm-geste.mort{border-color:#4a3a3a;background:#1c1414;color:#8b6a6a}
+5062| .demo6 .dm-geste.mort small{color:#7a6060}
+5063| .demo6 .dm-rien{margin-top:9px;padding:8px 10px;border-left:2px solid #3b4650;font:6.9px/1.35 'DejaVu Sans';color:#8d99a6}
+5064| .demo6 .dm-rien b{color:#cdd6e0;font-weight:600}
+5065| 

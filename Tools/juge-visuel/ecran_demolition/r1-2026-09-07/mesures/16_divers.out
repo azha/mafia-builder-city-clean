@@ -1,0 +1,12 @@
+OUVERT cap (1080, 2400)
+  encre doree du montant : x max=446, sur les lignes y=71..97
+     y=71 : bord gauche du disque x=457.6  ->  jeu = 11.6 px
+     y=84 : bord gauche du disque x=452.7  ->  jeu = 6.7 px
+     y=97 : bord gauche du disque x=449.9  ->  jeu = 3.9 px
+
+  Part de la hauteur de contenu (145..2152 = 2007 px) :
+     bande d'ornement (medaillon/losange)    145.. 232 =   87 px =  4.3 %
+     dm-tete                                 232.. 398 =  166 px =  8.3 %
+     dm-glob                                 435.. 610 =  175 px =  8.7 %
+     titron + liste (jusqu'a la coupe)       645..1817 = 1172 px = 58.4 %
+     dm-bas                                 1817..2152 =  335 px = 16.7 %

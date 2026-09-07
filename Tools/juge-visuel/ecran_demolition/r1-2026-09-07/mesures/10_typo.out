@@ -1,0 +1,27 @@
+OUVERT ref (1080, 2102) / cap (1080, 2400)
+=== REFERENCE ===
+  h3 'C' de Ce batiment      : 1re lettre x=51..82  encre y=480..509  HAUTEUR=30 px = 8.33 CSS
+  p  'C' de Ce qu'il rapporte : 1re lettre x=51..66  encre y=543..559  HAUTEUR=17 px = 4.72 CSS
+  fiche h4 'I' d'Imprimerie  : 1re lettre x=105..179  encre y=640..689  HAUTEUR=50 px = 13.89 CSS
+  fiche .l u 'C' (CE QU'IL)  : 1re lettre x=106..108  encre y=790..792  HAUTEUR=3 px = 0.83 CSS
+  fiche .l b 'p' presque->1re : 1re lettre x=772..774  encre y=790..792  HAUTEUR=3 px = 0.83 CSS
+  dm-dit 'L' de Lt.          : 1re lettre x=50..85  encre y=1827..1850  HAUTEUR=24 px = 6.67 CSS
+  geste 'L' de LE RASER      : 1re lettre x=95..113  encre y=1976..2000  HAUTEUR=25 px = 6.94 CSS
+  [controle negatif]
+  bande vide sous la fiche   : 0 colonne d'encre  [sonde muette]
+
+=== CAPTURE ===
+  h3 'L' de L'organisation   : 1re lettre x=48..75  encre y=280..312  HAUTEUR=33 px = 9.17 CSS
+  p  'P' de Plus vous tenez  : 1re lettre x=49..60  encre y=341..360  HAUTEUR=20 px = 5.56 CSS
+  glob .gros '1' de 13       : 1re lettre x=100..117  encre y=501..541  HAUTEUR=41 px = 11.39 CSS
+  glob .q b 'C' de Ca tient  : 1re lettre x=232..246  encre y=484..501  HAUTEUR=18 px = 5.00 CSS
+  glob .q i '1' de 13 endroits : 1re lettre x=240..251  encre y=528..541  HAUTEUR=14 px = 3.89 CSS
+  rangee titre 'C' de Colis  : 1re lettre x=84..106  encre y=760..783  HAUTEUR=24 px = 6.67 CSS
+  rangee sous 'U' de Un point : 1re lettre x=85..97  encre y=803..820  HAUTEUR=18 px = 5.00 CSS
+  rangee statut 'l' de libre : 1re lettre x=949..950  encre y=780..797  HAUTEUR=18 px = 5.00 CSS
+  dm-dit 'D' de Dima         : 1re lettre x=47..84  encre y=1854..1899  HAUTEUR=46 px = 12.78 CSS
+  geste 'V' de VOIR          : 1re lettre x=86..111  encre y=1992..2017  HAUTEUR=26 px = 7.22 CSS
+  geste small 'l' de le plus : 1re lettre x=813..815  encre y=2002..2019  HAUTEUR=18 px = 5.00 CSS
+  dm-titron 'V' de VOS 17 SITES : 1re lettre x=47..62  encre y=658..675  HAUTEUR=18 px = 5.00 CSS
+  [controle negatif]
+  bande vide entre titron et rangee : 0 colonne d'encre  [sonde muette]

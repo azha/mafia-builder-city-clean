@@ -1,0 +1,38 @@
+OUVERT cap (1080, 2400) ref (1080, 2102)
+
+=== CONTROLE POSITIF : pointille reel de la REFERENCE (.dm-fiche .l, 1px dotted #c2bda4) ===
+   separateur pointille de la fiche   y= 790 : 151 runs (0 longs)  couverture 453/930 =  48.7%  trous>=8px : aucun
+   separateur pointille de la fiche   y= 862 : 151 runs (0 longs)  couverture 453/930 =  48.7%  trous>=8px : aucun
+   separateur pointille de la fiche   y= 934 : 151 runs (0 longs)  couverture 453/930 =  48.7%  trous>=8px : aucun
+   separateur pointille de la fiche   y=1005 : 151 runs (0 longs)  couverture 453/930 =  48.7%  trous>=8px : aucun
+   separateur pointille de la fiche   y=1077 : 151 runs (0 longs)  couverture 453/930 =  48.7%  trous>=8px : aucun
+
+=== CONTROLE NEGATIF : rails PLEINS de la REFERENCE ===
+   filet 2px plein de .dm-bas         y=1782 :   1 runs (1 longs)  couverture 960/960 = 100.0%  trous>=8px : aucun
+
+=== CAPTURE : tous les rails horizontaux de cartes (haut ET bas) ===
+   dm-glob — rail HAUT                y= 437 :   1 runs (1 longs)  couverture 980/984 =  99.6%  trous>=8px : aucun
+   dm-glob — rail BAS                 y= 608 :   1 runs (1 longs)  couverture 978/984 =  99.4%  trous>=8px : aucun
+   rangee 1 — rail HAUT               y= 727 :   1 runs (1 longs)  couverture 984/984 = 100.0%  trous>=8px : aucun
+   rangee 1 — rail BAS                y= 852 :   1 runs (1 longs)  couverture 982/984 =  99.8%  trous>=8px : aucun
+   rangee 2 — rail HAUT               y= 874 :   1 runs (1 longs)  couverture 982/984 =  99.8%  trous>=8px : aucun
+   rangee 2 — rail BAS                y=1000 :   1 runs (1 longs)  couverture 980/984 =  99.6%  trous>=8px : aucun
+   rangee 3 — rail HAUT               y=1022 :   1 runs (1 longs)  couverture 984/984 = 100.0%  trous>=8px : aucun
+   rangee 3 — rail BAS                y=1148 :   1 runs (1 longs)  couverture 980/984 =  99.6%  trous>=8px : aucun
+   rangee 4 — rail HAUT               y=1170 :   1 runs (1 longs)  couverture 984/984 = 100.0%  trous>=8px : aucun
+   rangee 4 — rail BAS                y=1295 :   1 runs (1 longs)  couverture 982/984 =  99.8%  trous>=8px : aucun
+   rangee 5 — rail HAUT               y=1317 :   1 runs (1 longs)  couverture 984/984 = 100.0%  trous>=8px : aucun
+   rangee 5 — rail BAS                y=1443 :   1 runs (1 longs)  couverture 980/984 =  99.6%  trous>=8px : aucun
+   rangee 6 — rail HAUT               y=1465 :   1 runs (1 longs)  couverture 984/984 = 100.0%  trous>=8px : aucun
+   rangee 6 — rail BAS                y=1590 :   1 runs (1 longs)  couverture 982/984 =  99.8%  trous>=8px : aucun
+   rangee 7 — rail HAUT               y=1612 :   1 runs (1 longs)  couverture 982/984 =  99.8%  trous>=8px : aucun
+   rangee 7 — rail BAS                y=1738 :   1 runs (1 longs)  couverture 980/984 =  99.6%  trous>=8px : aucun
+   rangee 8 (coupee) — rail HAUT      y=1760 :   1 runs (1 longs)  couverture 984/984 = 100.0%  trous>=8px : aucun
+
+   CTA — rail HAUT                    y=1956 :   1 runs (1 longs)  couverture 978/984 =  99.4%  trous>=8px : aucun
+   CTA — rail BAS                     y=2096 :   1 runs (1 longs)  couverture 974/984 =  99.0%  trous>=8px : aucun
+   filet bas de .dm-tete              y= 396 :   1 runs (1 longs)  couverture 1040/1040 = 100.0%  trous>=8px : aucun
+
+=== CAPTURE : existe-t-il un bord POINTILLE quelque part ? (jeton .dm-parcelle #5a5c4e) ===
+   #5a5c4e (bord tirete de .dm-parcelle) dans toute la zone de contenu : n=1717  lignes=(161, 1816)
+   [meme sonde sur la REFERENCE, ou .dm-parcelle est aussi absent]      : n=42  lignes=(482, 1893)

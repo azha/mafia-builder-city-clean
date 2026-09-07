@@ -1,0 +1,30 @@
+OUVERT cap (1080, 2400) ref (1080, 2102)
+
+=== rangees : hauteur et ecart ===
+   rangee 1 : haut=725  bas=854  hauteur=129 px (35.83 CSS)  ecart au suivant=18 px
+   rangee 2 : haut=872  bas=1002  hauteur=130 px (36.11 CSS)  ecart au suivant=18 px
+   rangee 3 : haut=1020  bas=1150  hauteur=130 px (36.11 CSS)  ecart au suivant=18 px
+   rangee 4 : haut=1168  bas=1297  hauteur=129 px (35.83 CSS)  ecart au suivant=18 px
+   rangee 5 : haut=1315  bas=1445  hauteur=130 px (36.11 CSS)  ecart au suivant=18 px
+   rangee 6 : haut=1463  bas=1592  hauteur=129 px (35.83 CSS)  ecart au suivant=18 px
+   rangee 7 : haut=1610  bas=1740  hauteur=130 px (36.11 CSS)  ecart au suivant=18 px
+   rangee 8 : haut=1758  bas=None  hauteur=COUPEE px (- CSS)  ecart au suivant=- px
+   -> .dm-offre margin-bottom CSS = 5 -> attendu 18,0 px ; mesure = 18 px (constant sur 7 intervalles)
+
+=== rangee 8 : part visible ===
+   haut=1758  .dm-bas commence a 1817  =>  visible = 59 px sur 129  (46 %)
+
+=== rayon d'arrondi (coin haut-gauche) : 1er y ou le bord vertical apparait ===
+   rangee 1 (jeton .dm-offre radius 3 CSS = 10,8 px) : a dy=0 le bord est a x=51 (offset 5) ; a dy=39 offset 0  -> rayon ~5 px (1.4 CSS)
+   carte dm-glob (radius 3 CSS = 10,8 px) : a dy=0 le bord est a x=53 (offset 7) ; a dy=39 offset 0  -> rayon ~7 px (1.9 CSS)
+   CTA dm-geste (radius 3 CSS = 10,8 px) : a dy=0 le bord est a x=55 (offset 9) ; a dy=39 offset 0  -> rayon ~9 px (2.5 CSS)
+   [controle negatif] coin du bandeau (carre) :
+   bandeau x=0,y=0 : a dy=0 le bord est a x=0 (offset 0) ; a dy=39 offset 0  -> rayon ~0 px (0.0 CSS)
+
+=== inset du texte dans la rangee 1 ===
+   bord interieur gauche de la carte = 50 ; 1re encre du titre a x=84  -> inset = 34 px = 9,4 CSS  (.dm-offre padding-left = 10 CSS = 36 px)
+   statut 'libre' : x = (949, 995)   bord interieur droit = 1030 (.dm-offre padding-right = 10 CSS = 36 px -> attendu fin a 994)
+
+=== REFERENCE : .dm-geste (temoin de forme du CTA) ===
+   REF CTA : haut=1938 bas=2043 -> hauteur=105 px (29.17 CSS) ; libelle sur 1 ligne
+   CAP CTA : haut=1954 bas=2098 -> hauteur=144 px (40.00 CSS) ; libelle sur 2 lignes
