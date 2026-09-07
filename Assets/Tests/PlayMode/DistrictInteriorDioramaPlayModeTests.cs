@@ -291,8 +291,24 @@ namespace MafiaCleanCity.CityMap.Tests
                 //     donc directement, par ÉGALITÉ D'ENSEMBLES sur les noms — jamais un `contains`
                 //     (qui resterait vert avec un intrus en plus), jamais un compte (qui reste vert
                 //     si un nœud attendu disparaît pendant qu'un intrus apparaît).
+                // ⛔ `TitreVoile` AJOUTÉ LE 2026-09-07 — et c'est la garde qui avait tort, pas l'écran.
+                // Le voile du titre est arrivé avec `5a3ad92` (« B1 : le titre du district a enfin un
+                // fond — 1,70:1 → 5,32 »), un correctif de contraste RATIFIÉ ; le jeu attendu ici
+                // n'avait pas été touché depuis le 2026-08-25. La rupture est nette et datée :
+                //     06-09 09:38 · 09:41 · 09:56 · 15:23 · 15:28   VERT   (scopé ET complet)
+                //     06-09 15:59  ← `5a3ad92` introduit `TitreVoile`
+                //     07-09 02:41 · 02:47 · 02:49 · 02:50           ROUGE  (scopé ET complet)
+                // ⇒ Ni un intermittent, ni une co-tenance : une RÉGRESSION DE GARDE. Le message le
+                //   disait déjà mot pour mot — « Expected … FicheBatiment / But was … · TitreVoile ».
+                // ⚠️ ET C'EST BIEN UNE EXTENSION, PAS UN ASSOUPLISSEMENT : l'assertion reste une
+                //   ÉGALITÉ D'ENSEMBLES, donc toujours exhaustive dans les deux sens — un nom en
+                //   trop et un nom manquant restent l'un et l'autre rouges. La propriété protégée
+                //   est intacte ; c'est son inventaire qui avait vieilli.
+                // ⚠️ `TitreVoile` est construit SANS condition (`DistrictInteriorScreenController`,
+                //   bloc du voile), donc présent aux QUATRE phases — vérifié avant de l'ajouter, car
+                //   un nom conditionnel ajouté inconditionnellement aurait fait rougir les autres.
                 var attendus = new System.Collections.Generic.SortedSet<string>
-                    { "DistrictSceneBackdrop", "DistrictTitle", "DistrictScene", "FicheBatiment" };
+                    { "DistrictSceneBackdrop", "DistrictTitle", "DistrictScene", "FicheBatiment", "TitreVoile" };
                 var trouves = new System.Collections.Generic.SortedSet<string>();
                 for (int i = 0; i < diorama.ScreenRoot.childCount; i++)
                     trouves.Add(diorama.ScreenRoot.GetChild(i).name);
