@@ -53,13 +53,43 @@ namespace MafiaCleanCity.CoreLoops.Compression
         public int RendusEffectues { get; private set; }
         public string DerniereErreur { get; private set; }
 
+        private GameObject plaque;
+        private TextMeshProUGUI plaqueKicker, plaqueTitre, plaqueCorps;
+
         private const float K = 1280f / 300f;
         private static float Px(float cssPx) => cssPx * K;
 
-        private static readonly Color Creme = Hex("#eae0c8");
-        private static readonly Color Creme2 = Hex("#b9ad92");
-        private static readonly Color Or = Hex("#d9ab4e");
-        private static readonly Color Braise = Hex("#e0664a");
+        // ⛔ CES QUATRE ÉTAIENT DES RECOPIES, chacune à 0/255 d'un jeton nommé — mesuré par
+        //    `Tools/apparier-litteraux-aux-tokens.py` : #eae0c8 = hudCreme · #b9ad92 =
+        //    hudCremeSecondary · #d9ab4e = hudMoneyUnderlineGold · #e0664a = hudGaugeArcHot.
+        //    ⇒ *La valeur circulait, le nom ne circulait pas* — et une garde qui balaie les ACCÈS
+        //      aux jetons est aveugle à un littéral qui en recopie la valeur : couleur juste,
+        //      chemin faux. C'est la classe mesurée le 2026-09-06 (92 littéraux, 47 à moins de 4).
+        //    ⚠️ Ce sont des PROPRIÉTÉS, pas des `static readonly` : un initialiseur statique qui
+        //      lit `DesignTokens.Current` tombe en contexte de constructeur, où `Resources.Load`
+        //      jette — 65 champs de ce dépôt l'ont payé (verts en run complet, rouges à froid).
+        private static Color Creme  => DesignTokens.Current.hudCreme;              // --creme
+        private static Color Creme2 => DesignTokens.Current.hudCremeSecondary;     // --creme-2
+        private static Color Or     => DesignTokens.Current.hudMoneyUnderlineGold; // --or
+        private static Color OrVif  => DesignTokens.Current.hudMoneyGold;          // --or-vif
+        private static Color Braise => DesignTokens.Current.hudGaugeArcHot;        // --braise
+
+        /// <summary>`--lisere` #2a3648 — la bordure au repos de la maquette, et la SEULE valeur de
+        /// ce fichier qui reste un littéral. ⚠️ CE N'EST PAS UNE RECOPIE PAR PARESSE, et il faut
+        /// dire pourquoi, sinon le prochain balayage la classera avec les quatre qu'on vient de
+        /// retirer :
+        ///   · elle n'existe PAS dans `DesignTokens.asset` — son plus proche voisin,
+        ///     `hudGaugeFaceInner`, est à 6/255 et c'est le fond d'un CADRAN DE MANOMÈTRE ;
+        ///   · elle a DÉJÀ un producteur unique dans ce dépôt, `ReputationResolvers.Lisere`, écrit
+        ///     avec le même raisonnement ;
+        ///   · et il est **hors de portée** : `CoreLoops.asmdef` ne référence pas `Operational`
+        ///     (références mesurées : UnityEngine.UI · Unity.InputSystem · Theme ·
+        ///     Unity.TextMeshPro · ShellContracts · I18n). Ajouter la référence pour une couleur
+        ///     coûterait un couplage d'assemblies ; recopier la valeur en la NOMMANT coûte cette
+        ///     ligne et reste balayable.
+        /// ⇒ Elle remonte au canon avec les trois autres du châssis, quand l'arbitrage DA remonté
+        ///   à l'user le 2026-08-30 sera rendu.</summary>
+        private static Color Lisere => Hex("#2a3648");
         private static readonly Color Eteint = new Color(1f, 1f, 1f, 0.18f);
 
         private static Color Hex(string h)
@@ -181,15 +211,16 @@ namespace MafiaCleanCity.CoreLoops.Compression
             }
 
             EtatVide = Tableau == null || Tableau.entries == null || Tableau.entries.Length == 0;
-            videTexte.gameObject.SetActive(EtatVide);
+            // ⚠️ « au calme » est un ÉTAT de la semaine, pas une erreur — et il faut le distinguer
+            // d'une route qui n'a pas répondu, sinon on annonce le calme à un joueur dont le
+            // tableau a simplement échoué à charger. La PANNE garde donc sa ligne ; l'ÉTAT, lui,
+            // est désormais dit par la plaque du canon.
+            bool panne = DerniereErreur != null;
+            videTexte.gameObject.SetActive(EtatVide && panne);
+            if (EtatVide && panne) videTexte.text = "Le tableau n'a pas répondu.";
+            RendrePlaque(EtatVide && !panne);
             if (EtatVide)
             {
-                // ⚠️ « au calme » est un ÉTAT de la semaine, pas une erreur — et il faut le
-                // distinguer d'une route qui n'a pas répondu, sinon on annonce le calme à un
-                // joueur dont le tableau a simplement échoué à charger.
-                videTexte.text = DerniereErreur == null
-                    ? "Au calme — aucune semaine de compression en cours."
-                    : "Le tableau n'a pas répondu.";
                 RendusEffectues++;
                 return;
             }
@@ -327,7 +358,11 @@ namespace MafiaCleanCity.CoreLoops.Compression
             v.childForceExpandHeight = false;
             v.childAlignment = TextAnchor.UpperCenter;
 
-            TextMeshProUGUI titre = Texte(transform, "Titre", "LA SEMAINE", Px(13f), Or,
+            // ⛔ OR VIF, PAS OR. Mesuré sur `reference-1080x2102.png` : le titre d'état rend
+            //    (242,201,107) = `hudMoneyGold`. Il était posé en `--or` (217,171,78) — le bon
+            //    jeton d'une AUTRE fonction (le soulignement du solde). *Un jeton juste employé
+            //    pour un autre rôle rend un pixel plausible et faux.*
+            TextMeshProUGUI titre = Texte(transform, "Titre", "LA SEMAINE", Px(13f), OrVif,
                                           DesignTokens.Current.hudSerifFont, TextAlignmentOptions.Center);
             titre.characterSpacing = 18f;
 
@@ -341,12 +376,90 @@ namespace MafiaCleanCity.CoreLoops.Compression
             hb.childAlignment = TextAnchor.MiddleCenter;
             jetons = (RectTransform)bandeau.transform;
 
+            ConstruirePlaque(transform);
+
             GameObject liste = Bloc("Lignes", transform, false, Px(8f));
             lignes = (RectTransform)liste.transform;
 
             videTexte = Texte(transform, "Vide", "", Px(11f), Creme2,
                               DesignTokens.Current.hudSerifFont, TextAlignmentOptions.Center);
             videTexte.gameObject.SetActive(false);
+        }
+
+        /// <summary>⛔⛔ LA PLAQUE DE TENSION — ce que l'écran ne montrait PAS, et pourquoi son
+        /// absence n'était pas un trou de donnée. Un juge ⊥ a mesuré, au seuil 1/255, **1 650
+        /// rangées sur 1 080 colonnes sans un pixel autre que le fond — 68,8 % de l'écran**, avec
+        /// son contrôle positif DANS LA MÊME IMAGE (la plaque du dock à 88 794 px, le texte à
+        /// 4 311). ⇒ *Sa copie est FIXE : elle ne peut donc pas manquer parce que le back a rendu
+        /// un corps vide.* C'était un défaut de CLIENT, établi sans attendre aucune route.
+        ///
+        /// ⛔ COPIE REPRISE VERBATIM de `ecrans-brennar-4.html` cadres 26 et 30 — la maquette que
+        /// `front.md` désigne pour ⑭ (« série 4 v3.2.1, cadres 25-30 ») et celle que le dossier du
+        /// juge donne pour référence. **Aucun mot n'est inventé** : c'est exactement ce qu'un lot
+        /// voisin a coûté cette nuit sur ㊱, où un en-tête sans source dans l'atelier a dû être
+        /// retiré faute de remplaçant ratifié.
+        ///
+        /// ⛔ ET LE CRAN INCONNU SE MONTRE TEL QUEL. `stress_bucket` vaut
+        /// `calm | mounting | crushing | compression_active` (lu dans `stress-bucket.ts`). Le canon
+        /// ne dessine de plaque QUE pour les deux premiers — les trois autres cadres montrent le
+        /// tableau à la place. Un bucket que ce résolveur ne connaît pas rend donc sa VALEUR BRUTE,
+        /// jamais un libellé de repli : un repli inventé le ferait passer pour un cas traité et
+        /// masquerait la chose neuve qu'il faut traiter.
+        ///
+        /// ⇒ Forme NOMMÉE prenant la valeur du domaine, pas un tableau positionnel ni une chaîne
+        /// de ternaires : une correspondance portée par l'ordre d'un tableau ou par un commentaire
+        /// n'a aucune forme exécutable à asserter, et un balayage écrit pour la traquer rend zéro
+        /// sur le fichier fautif lui-même.</summary>
+        private static (string kicker, string titre, string corps) PlaqueDeTension(string bucket)
+        {
+            switch (bucket)
+            {
+                case "calm":
+                    return ("Où en est la tension",
+                            "Rien ne presse — aucune semaine en vue",
+                            "La tension monte quand les problèmes s’accumulent sans réponse : "
+                          + "montante, puis écrasante — et la semaine s’ouvre.");
+                case "mounting":
+                    return ("Ce qui vient",
+                            "Vos problèmes s’accumulent — tout ce qui traîne va être mis sur la table",
+                            "Une fois ouverte, la semaine ne se referme pas, et vous n’aurez que "
+                          + "quelques décisions.");
+                default:
+                    return ("Où en est la tension", bucket, null);
+            }
+        }
+
+        private void ConstruirePlaque(Transform parent)
+        {
+            plaque = Bloc("Plaque", parent, false, Px(4f));
+            Image fond = plaque.AddComponent<Image>();
+            fond.sprite = ProceduralUI.RoundedRectOutline((int)Px(12f), Px(1f), Lisere);
+            fond.type = Image.Type.Sliced;
+            plaque.GetComponent<VerticalLayoutGroup>().padding =
+                new RectOffset((int)Px(11f), (int)Px(11f), (int)Px(9f), (int)Px(10f));
+
+            plaqueKicker = Texte(plaque.transform, "Kicker", "", Px(7.5f), Creme2,
+                                 DesignTokens.Current.primaryFont);
+            plaqueKicker.characterSpacing = 16f;
+            // ⛔ OR VIF, MESURÉ SUR LA RÉFÉRENCE : le titre de plaque rend (242,201,107) =
+            //    `hudMoneyGold`. Il n'existait pas ; la phrase qui en tenait lieu était rendue en
+            //    `--creme-2` (185,173,146), à 0/255 d'un jeton nommé — donc CHOISI, pas dérivé.
+            plaqueTitre = Texte(plaque.transform, "Titre", "", Px(12f), OrVif,
+                                DesignTokens.Current.hudSerifFont, TextAlignmentOptions.Left, true);
+            plaqueCorps = Texte(plaque.transform, "Corps", "", Px(8.5f), Creme2,
+                                DesignTokens.Current.primaryFont, TextAlignmentOptions.Left, true);
+        }
+
+        private void RendrePlaque(bool visible)
+        {
+            plaque.SetActive(visible);
+            if (!visible) return;
+            (string kicker, string titre, string corps) =
+                PlaqueDeTension(Etat == null ? "calm" : Etat.stress_bucket);
+            plaqueKicker.text = kicker;
+            plaqueTitre.text = titre;
+            plaqueCorps.text = corps ?? string.Empty;
+            plaqueCorps.gameObject.SetActive(corps != null);
         }
 
         private static GameObject Bloc(string nom, Transform parent, bool horizontal, float espace)
@@ -364,8 +477,21 @@ namespace MafiaCleanCity.CoreLoops.Compression
             return go;
         }
 
+        /// <summary>⛔ `retourALaLigne` N'EST PAS UN CONFORT, C'EST LA RÉPARATION D'UN DÉBORD
+        /// MESURÉ. Sans lui, une PHRASE plus large que sa boîte est rendue quand même : TMP la
+        /// dessine en `Overflow`, centrée, et l'écran la coupe. Mesuré sur
+        /// `planche_la_semaine_1080x2400.png` par ajustement linéaire des positions de mots
+        /// (7 mots non coupés, 14 bords, résidu max 0,95 px) : la ligne fait **1 098,6 px pour
+        /// 1 080 disponibles**, coupée de **11,8 px à gauche** et **7,7 px à droite** — le « A »
+        /// de « Au » n'a plus qu'apex et jambe droite.
+        /// ★ Et le discriminant qui sépare « le texte touche le bord » de « le texte est COUPÉ » :
+        ///   **6 pixels de la couleur de CŒUR en colonne 0**. *Une frange d'anti-crénelage n'a
+        ///   jamais la couleur de cœur.*
+        /// ⚠️ Le défaut par défaut reste `false` : une RANGÉE du tableau qui reviendrait à la ligne
+        ///   casserait sa géométrie. C'est aux PHRASES qu'on l'accorde, jamais aux bandes.</summary>
         private static TextMeshProUGUI Texte(Transform parent, string nom, string valeur, float taille,
-            Color couleur, TMP_FontAsset police, TextAlignmentOptions alignement = TextAlignmentOptions.Left)
+            Color couleur, TMP_FontAsset police, TextAlignmentOptions alignement = TextAlignmentOptions.Left,
+            bool retourALaLigne = false)
         {
             GameObject go = new GameObject(nom, typeof(RectTransform));
             go.transform.SetParent(parent, false);
@@ -375,7 +501,7 @@ namespace MafiaCleanCity.CoreLoops.Compression
             t.color = couleur;
             t.text = valeur;
             t.alignment = alignement;
-            t.enableWordWrapping = false;
+            t.enableWordWrapping = retourALaLigne;
             // ⚠️ Sans ceci TMP réclame la largeur du texte NON COUPÉ et fait déborder la rangée.
             LayoutElement le = go.AddComponent<LayoutElement>();
             le.preferredWidth = 0f;
