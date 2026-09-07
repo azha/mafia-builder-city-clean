@@ -293,3 +293,23 @@ local `~/project/mafia-unity-correcteur`, d'où les blobs ont été lus.
   a jugé contre le canon de série 2 (`etats/inspections-canon.png`) ; ⑰ (en vol) tourne sur #32 avec le canon « commissariat » en secours.
   ⇒ Pour un r2 : rendre #32 pour ⑮ et #31 pour ⑰ ; la table est chez f2/DA. Règle : *une attribution par le titre n'est fiable que là où elle est
   tautologique* (f2, sur la table de fal) — ici les deux titres partageaient le groupe.
+
+### 8.septies — 07/09 12:30–14:00 : lot C rendu (14/14 jamais-jugés), vérification exhaustive de l'INDEX
+
+| écran | tour | verdict | B | M | m | tête |
+|---|---|---|---|---|---|---|
+| ⑭ | r1 (v4-29 / canon vide) | NON APPROUVÉ | 4 | 1 | 4 | corps de l'écran absent (68,8 % sans un pixel) ; ligne de lecture coupée au bord ; « Calm · None » ; plaque à copie FIXE = défaut client établi |
+| ⑮ | r1 (canon série 2) | NON APPROUVÉ | 3 | 6 | 9 | 11 valeurs en anglais ; action absente ; « district district-1 » ; 44 % de vide ; 5 couleurs hors palette ; référence #31 = ⑰ |
+| ⑰ | r1 (canon série 2 + source #31) | NON APPROUVÉ | 3 | 6 | 7 | actions en langage de serveur (2ᵉ zone la plus lourde) ; 8 pastilles rouges vides ; inventaire absent (51,5 % noir) ; cadre troué PLEIN décentré (≠ 9-slice) |
+| ㉓ | r1 | NON APPROUVÉ | 3 | 9 | 5 | rayon des extras absent ; solde devenu ALARME braise ×5,4 (identique au filet du bandeau) ; matière ÷28 ; cadre troué plein décentré (2ᵉ écran) |
+
+- Compte du 07/09 : **18 rapports · 309 findings · 38 B / 125 M / 146 m** — tous NON APPROUVÉ.
+- **Série 2 = direction REJETÉE par l'user** (`front.md:315-317`, « très menu option, aucune gamification ») ⇒ ⑭ A5, ⑮ A5, ⑰ génération sont des ÉCARTS
+  (client en retard d'une direction), pas des arbitrages — reclassés par f2.
+- **Vérification exhaustive de l'INDEX** (`VERIF-INDEX-2026-09-07.md`, `verifier-index-source.py`, contrôle positif ⑮/⑰) : nominal 21 CONFIRMÉ · 3 FAUX
+  (⑤ #4 → #8 à confirmer ; ⑮ ; ⑰) · 11 NON ÉTABLI ; planche 17 CONFIRMÉ · **2 FAUX : `planche_le_coffre` monte `ProfileScreenController` (= ㉒, la ligne ⑪ est la
+  fausse) ; `planche_signer_l_ordre` monte `LieutenantScreenController` (la CAUSE de ㉞ : la table titre → locataire de la suite)** · 16 NON ÉTABLI (captures
+  du chemin joueur : le locataire monté n'est pas nommé — le journal trancherait). L'instrument a rougi deux fois sur son contrôle positif avant de parler
+  (annotation `<!-- N -->` rattachée au mauvais segment ; `.*?` qui avalait un segment) — *un instrument qui confirme la ligne fausse est pire que pas d'instrument*.
+- Nouvelle classe candidate : **cadre PLEIN troué, décentré** (⑰ M1 366 px +277 ; ㉓ M5 343 px +28,5 %) — cause non enquêtée, distincte du 9-slice.
+- Défaut de gabarit corrigé : la ligne « Animation : AUCUNE » coexistait avec l'amendement dans `dossier.md` (juge ㉓) — retirée.
