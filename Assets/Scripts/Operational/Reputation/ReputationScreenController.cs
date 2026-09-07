@@ -576,13 +576,13 @@ namespace MafiaCleanCity.Operational
         {
             AAfficheEtatVide = true;
             VoyantsAllumes = 0;
-            sousTitre.text = "LE MIROIR EST INDISPONIBLE";
+            sousTitre.text = "LE MIROIR N'A PAS RÉPONDU";
             // Le panneau AUSSI — sinon il garderait la prose du chargement précédent (« vous vous
             // écartez de vos propres règles ») sur un écran qui annonce ne rien savoir. Même
             // défaut que des voyants restés allumés ou qu'une liste de règles non vidée : chaque
             // chemin d'échec doit remettre TOUT ce qu'il a pu laisser derrière lui.
             MajPanneau("CE QUE L’ON NE SAIT PAS",
-                "Le miroir ne répond pas",
+                "Le miroir n'a pas répondu",
                 "impossible de lire ce que votre lieutenant a retenu de vous. Ce n’est pas un " +
                 "verdict neutre : c’est une absence de verdict.",
                 ReputationResolvers.Muet);

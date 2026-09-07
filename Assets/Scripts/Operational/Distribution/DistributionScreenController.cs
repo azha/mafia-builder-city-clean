@@ -791,7 +791,7 @@ namespace MafiaCleanCity.Operational
             ViderEnfants(corkboardRoot);
             ViderEnfants(couriersRoot);
             ViderEnfants(piedRoot);
-            titreTexte.text = Libelle.De("distribution", "titre", "La distribution est indisponible");
+            titreTexte.text = Libelle.De("distribution", "titre", "La distribution n'a pas répondu");
             sousTitreTexte.text = string.IsNullOrEmpty(DerniereErreur)
                 ? Libelle.De("distribution", "sous_titre", "Réessayez dans un instant.")
                 : DerniereErreur;

@@ -362,8 +362,8 @@ namespace MafiaCleanCity.Operational
             MajCompteur(0, -1, -1, "À PORTÉE");
             MajCompteur(1, -1, -1, "DÉJÀ PRISES");
             MajCompteur(2, -1, -1, "ONT RECULÉ");
-            MajPanneau("L'HORIZON EST INDISPONIBLE",
-                "Le serveur n'a pas répondu",
+            MajPanneau("L'HORIZON N'A PAS RÉPONDU",
+                "L'horizon n'a pas répondu",
                 "l'écran ne montre rien plutôt que de montrer un horizon périmé — ce qui était à "
                 + "portée il y a une minute ne l'est peut-être plus.");
         }

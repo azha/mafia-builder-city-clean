@@ -611,7 +611,7 @@ namespace MafiaCleanCity.Operational
             ViderEnfants(ficheRoot);
             ViderEnfants(piedRoot);
             ViderEnfants(chaineRoot);
-            titreTexte.text = Libelle.De("appro", "titre", "La chaîne d'appro est indisponible");
+            titreTexte.text = Libelle.De("appro", "titre", "La chaîne d'appro n'a pas répondu");
             sousTitreTexte.text = string.IsNullOrEmpty(DerniereErreur)
                 ? Libelle.De("appro", "sous_titre", "Réessayez dans un instant.")
                 : DerniereErreur;

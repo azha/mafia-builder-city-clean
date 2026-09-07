@@ -362,7 +362,7 @@ namespace MafiaCleanCity.Operational
         private void RendreEtatIndisponible()
         {
             ViderListe();
-            sousTitre.text = Lib("LA FILIÈRE NE RÉPOND PAS");
+            sousTitre.text = Lib("LA FILIÈRE N'A PAS RÉPONDU");
             MajCompteur(0, 0, Lib("ÉTAPES"));
             MajCompteur(1, 0, Lib("PROPRE AU BOUT"));
             MajCompteur(2, 0, Lib("ÉCARTS"));

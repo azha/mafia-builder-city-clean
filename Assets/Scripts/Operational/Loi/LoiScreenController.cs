@@ -450,7 +450,7 @@ namespace MafiaCleanCity.Operational
             ViderEnfants(recruteRoot);
             ViderEnfants(affairesRoot);
             ViderEnfants(erreurRoot);
-            titreTexte.text = Libelle.De("loi", "titre", "Le parloir est indisponible");
+            titreTexte.text = Libelle.De("loi", "titre", "Le parloir n'a pas répondu");
             sousTitreTexte.text = string.IsNullOrEmpty(DerniereErreur)
                 ? Libelle.De("loi", "sous_titre", "Réessayez dans un instant.")
                 : DerniereErreur;

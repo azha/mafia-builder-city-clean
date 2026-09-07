@@ -927,7 +927,7 @@ namespace MafiaCleanCity.Operational
         {
             Vider(zoneCentrale);
             Vider(pied);
-            EcrireTete("L'état de la friction est indisponible",
+            EcrireTete("L'état de la friction n'a pas répondu",
                        "On n'a pas pu lire ce que vous tenez. Rien n'a été changé.");
             ConstruireRien(zoneCentrale, "Raison", " : " + (DerniereErreur ?? "inconnue"));
         }

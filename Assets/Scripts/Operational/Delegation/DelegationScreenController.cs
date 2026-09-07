@@ -578,7 +578,7 @@ namespace MafiaCleanCity.Operational
         {
             Vider(zoneCentrale);
             Vider(pied);
-            EcrireTete("Le tableau de service est indisponible",
+            EcrireTete("Le tableau de service n'a pas répondu",
                        "On n'a pas pu lire ce que vous tenez. Rien n'a été changé.");
             ConstruireNote(zoneCentrale, DerniereErreur ?? "raison inconnue");
         }

@@ -340,7 +340,7 @@ namespace MafiaCleanCity.Operational
             {
                 TextMeshProUGUI err = NouveauTexteFiche(tableRoot, "VendettaIndisponible",
                     Libelle.De("conflit", "bloc",
-                        "Le compte des envois précédents est indisponible pour l'instant."),
+                        "Le compte des envois précédents n'a pas répondu."),
                     7.5f, RougeMauvais, false);
                 err.enableWordWrapping = true;
                 TrackText(err.text);
@@ -532,7 +532,7 @@ namespace MafiaCleanCity.Operational
             ViderEnfants(tableRoot);
             ViderEnfants(piedRoot);
             ViderEnfants(erreurRoot);
-            titreTexte.text = Libelle.De("conflit", "titre", "Le conflit est indisponible");
+            titreTexte.text = Libelle.De("conflit", "titre", "Le conflit n'a pas répondu");
             sousTitreTexte.text = string.IsNullOrEmpty(DerniereErreur)
                 ? Libelle.De("conflit", "sous_titre", "Réessayez dans un instant.")
                 : DerniereErreur;

@@ -173,7 +173,7 @@ namespace MafiaCleanCity.Operational
             //   porte l'écart avec SA DATE, comme ㊲ porte les siens.
             // ⚠️ À re-mesurer : la pile a été reconstruite après cette mesure, et le maillon de
             //   blanchiment dont dépend l'épingle d'audit a été fermé entre-temps.
-            MajPanneau(Lib("CE QUE CET ÉCRAN NE PEUT PAS VOUS DIRE"),
+            MajPanneau(Lib("CE QUE LE SERVEUR NE DIT PAS"),
                 Lib("Une bande sans source ressemble à une bande mesurée"),
                 "au 2 septembre 2026, « train de vie » rend « calme » alors qu'aucune ligne ne le "
                 + "mesure pour vous : c'est la valeur par défaut du serveur. Le corps ne dit pas "

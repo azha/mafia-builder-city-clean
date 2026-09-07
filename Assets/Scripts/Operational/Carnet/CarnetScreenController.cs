@@ -248,7 +248,7 @@ namespace MafiaCleanCity.Operational
         private void RendreEtatIndisponibleNomme()
         {
             titreEcran.text = Lib("Les ordres de ce soir");
-            sousTitre.text = Lib("le carnet ne répond pas");
+            sousTitre.text = Lib("le carnet n'a pas répondu");
             compte.text = "";
             ViderCreneaux();
             for (int i = 1; i <= 8; i++) Creneau(i, null, null);
@@ -293,7 +293,7 @@ namespace MafiaCleanCity.Operational
             // rendent 404 et la documentation ne porte que `/v1/admin/political-events/*`.
             // ★ Le dire plutôt que d'omettre le cadre : un écran amputé sans explication se lit
             //   comme un écran fini.
-            MajPanneau(Lib("CE QUE CET ÉCRAN NE PEUT PAS VOUS DIRE"),
+            MajPanneau(Lib("CE QUE LE SERVEUR NE DIT PAS"),
                 Lib("Ce que la ville prépare"),
                 Lib("le calendrier politique n'a aucune route joueur — seul l'administrateur y "
                     + "accède. La maquette le dessine ; le serveur ne le sert à personne."));
