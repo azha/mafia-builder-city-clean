@@ -20,3 +20,15 @@ ligne de « Mira » — *le défaut n'est pas que l'animation traverse du texte,
 (9 règles identiques sur ≥ 6 écrans). ㉟ reste NON APPROUVÉ ; B3 déjà fermé par `mafia-unity`, qui a mesuré que le châssis n'est jamais
 construit (`ProceduralUI` : 0 appel dans `Construire()`) — la saturation 0,0079 mesurée est exactement celle du jeton de fond.
 Règle de f2 : *un ruling cité par l'orchestrateur est une DÉCLARATION, à vérifier comme une clôture de correcteur.*
+
+## Mesures back de f2 (10:55) sur les trois « sans source identifiée » de ㉟
+
+| absence relevée par le juge | mesure back | réparation |
+|---|---|---|
+| « Brindle » (m7) | **RÉFUTÉ** : `substance: "BRINDLE"`, enum fermée et servie — si l'écran affiche « Brindle », c'est le CLIENT qui met la capitale | client (casse) |
+| district (M9) | en base, déjà lu par le domaine de la vente (lane de prix clée par district) ⇒ **forme F**, refermée (`district_name`, sous le nom de fiction) | back, refermé |
+| lek (M9) | en base, gate la vente (`lek_score > 0`) ⇒ **forme F**, refermée (`lek_band`) | back, refermé |
+| tarif (M9) | ⛔ PAS une forme F : R2.2 interdit le prix brut, `margin_band` en est la projection — mais elle répond à une AUTRE question (palier de la SUBSTANCE, pas ce qu'on gagne ICI) ⇒ **trou d'information RÉEL**, comblé par une bande de PRIX DE LANE commandée | back, commandé |
+
+La route sert 8 clés, le contrôleur n'en ajoute aucune (vérifié par f2) ⇒ l'inventaire de ce que ㉟ peut montrer est fermé. Règle gardée :
+*« sans source identifiée » laisse la mesure possible ; « le back ne sert pas » la ferme.* Trois absences semblables, trois réparations différentes.
