@@ -148,6 +148,16 @@ public static class MafiaCI
         // `passed=4 failed=0 declares=4 comptes=4` avec CarteIcones, couverture 6/10,
         // zéro réseau, zéro écriture, zéro semis.
         "IconesArchetype",
+        // Bloc partagé + châssis de ㉟ (2026-09-07) — verts AVANT inscription, dans le même
+        // créneau : `passed=5 failed=0 declares=5 comptes=5`, catégories RÉELLEMENT exécutées
+        // = [BlocPartage, ChassisVente]. Zéro réseau, zéro écriture, zéro semis : les deux
+        // suites fabriquent leur monde (bloc partagé construit, canvas monté à la main).
+        // ⚠️ `BlocPartage` a rougi DEUX fois avant ce vert, et jamais sur le code qu'elle juge :
+        //    d'abord parce que ses deux relevés n'étaient pas pris au même instant de frame,
+        //    puis parce que `Canvas.scaleFactor` vaut 1,000000 dans la frame de sa création —
+        //    ×2 exactement sur toute la géométrie. Elle porte donc un rendu de CHAUFFE.
+        "BlocPartage",
+        "ChassisVente",
     };
     // ⚠️ UNION AU MERGE (3e fois sur cette ligne le 2026-09-03) — et la règle est
     // toujours la même : on unit ce qui est PORTÉ, jamais les deux listes. Une entrée

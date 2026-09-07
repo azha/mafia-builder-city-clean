@@ -166,9 +166,32 @@ namespace MafiaCleanCity.CityMap.Tests
             hote = new GameObject("Diorama_BlocPartage_F3");
             var d = hote.AddComponent<DistrictInteriorScreenController>();
 
+            // ⛔⛔ LE `yield` AVANT LA MESURE, ET IL EST LE SUJET DU TEST AUTANT QUE L'ORDRE.
+            //    La v1 lisait `sens1` IMMÉDIATEMENT après `Render()` et `sens2` APRÈS une frame :
+            //    deux variables bougeaient ensemble — l'ordre de la réponse ET l'instant de la
+            //    mesure. Rouge mesuré : attendu -119,00000762939453, obtenu autre chose.
+            //    `SnapToScreenPixel` ARRONDIT une position MONDE, qui dépend d'un canvas déjà
+            //    posé : les deux relevés n'étaient donc pas comparables, et le rouge n'accusait
+            //    pas le code qu'il prétendait juger.
+            //    ★ C'est la faute que ce dépôt écrit partout — *deux variables qui bougent
+            //      ensemble ne départagent rien* — commise ici DANS le test écrit pour attraper
+            //      un défaut de déterminisme. Les deux relevés sont désormais pris au MÊME point
+            //      du cycle de frame.
+            // ⛔⛔⛔ RENDU DE CHAUFFE, ET IL EST OBLIGATOIRE — mesuré, pas supposé.
+            //    Sans lui : premier relevé -119,000008, second -238,000015. EXACTEMENT ×2, et la
+            //    cause n'est pas l'ordre de la réponse : `Canvas.scaleFactor` lu dans la frame de
+            //    son propre `AddComponent` rend 1,000000 — une valeur PLAUSIBLE, pas une erreur.
+            //    Or `cellSize` divise par ce facteur, donc TOUTE la géométrie du premier rendu est
+            //    à une autre échelle. Le test aurait accusé le tri d'un défaut qui appartient au
+            //    cycle de vie du canvas.
+            //    ⇒ Le rendu de chauffe est jeté ; les deux relevés comparés se font ensuite sur un
+            //      canvas POSÉ, et l'ordre de la réponse redevient la seule variable.
             d.Render(GrilleDeuxBlocs(new[] { Batiment("bat-aaa", 7), Batiment("bat-bbb", 7), Batiment("bat-ccc", 8) }));
-            float[] sens1 = CellulesSousLeBloc(d, 0, 0).Select(r => r.anchoredPosition.x).OrderBy(v => v).ToArray();
             yield return null;
+
+            d.Render(GrilleDeuxBlocs(new[] { Batiment("bat-aaa", 7), Batiment("bat-bbb", 7), Batiment("bat-ccc", 8) }));
+            yield return null;
+            float[] sens1 = CellulesSousLeBloc(d, 0, 0).Select(r => r.anchoredPosition.x).OrderBy(v => v).ToArray();
 
             // MÊME contenu, ordre de réponse INVERSÉ — la seule variable qui change
             d.Render(GrilleDeuxBlocs(new[] { Batiment("bat-bbb", 7), Batiment("bat-aaa", 7), Batiment("bat-ccc", 8) }));
