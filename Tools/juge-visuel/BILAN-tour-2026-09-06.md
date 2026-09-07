@@ -287,3 +287,9 @@ local `~/project/mafia-unity-correcteur`, d'où les blobs ont été lus.
   dépôt et rend les trois autres indéfendables ; (d) **chrome : 2 des 4 règles `.tel.chaud` non appliquées** (㉙ : `.heatpct` crème, d = 126/255)
   alors que `23d9fc6` du 06/09 déclare « les quatre règles `.chaud` (deux manquaient) » ⇒ correctif déclaré, deux encore absentes — routé au
   correcteur (*avant d'écrire « fermé », exécuter la falsifiable qui rougirait*).
+- **⑮ r1 rendu (3B/6M/9m)** — et **3ᵉ défaut d'attribution de la table DA-3, d'un 3ᵉ mécanisme** : les cadres nominaux de ⑮ et ⑰ sont CROISÉS
+  (mandats : ⑮ → #31, ⑰ → #32 ; source `ecrans-brennar-6.html` relue : #31 = « précinct » = ⑰, #32 = « dispatch / registre » = ⑮). Après le
+  doublon (`planche_le_coffre`) et la planche d'un autre écran (㉞), une attribution par TITRE qui inverse deux frères d'un même groupe. Le juge ⑮
+  a jugé contre le canon de série 2 (`etats/inspections-canon.png`) ; ⑰ (en vol) tourne sur #32 avec le canon « commissariat » en secours.
+  ⇒ Pour un r2 : rendre #32 pour ⑮ et #31 pour ⑰ ; la table est chez f2/DA. Règle : *une attribution par le titre n'est fiable que là où elle est
+  tautologique* (f2, sur la table de fal) — ici les deux titres partageaient le groupe.
