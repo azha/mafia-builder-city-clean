@@ -141,8 +141,9 @@ DOCTRINE = """## Règles de doctrine applicables
 - **Espace de mélange** : la maquette est composée en sRGB par Chrome, le client en LINÉAIRE
   (`m_ActiveColorSpace: 1`) ; un écart SYSTÉMATIQUE de même signe sur plusieurs translucidités est une erreur
   de modèle, pas N erreurs.
-- **Animation : AUCUNE sur un nouvel écran** (ruling user 2026-08-27). Aucune paire T/T+1 s n'est fournie ce
-  tour : à écrire en non-vérifié.
+- **Animation : VOULUE sur les écrans neufs** (ruling user du 27/08 au SOIR, « animé le truc, tout en restant dark/mafieux » — la version de
+  13h42 « sans animation » est renversée ; mandat de skill amendé `68899284`). Aucune paire T/T+1 s n'est fournie ce tour : un pixel qui bouge
+  n'est PAS un écart ; ce qui se juge, c'est où tombe une image FIGÉE (voir plus bas) — écris en « non vérifié » ce que l'image seule ne dit pas.
 - **Identité photographiée** (ruling f2 2026-09-06 ~07:20, payé sur ㊵) : une planche prise SANS la paire
   `MAFIA_DEMO_IDENTIFIER`/`MAFIA_DEMO_PASSWORD` photographie `operational_demo` (repli `[SerializeField]`) et RIEN sur
   l'image ne le dit. Avant de comparer une VALEUR de la planche à un corps `demo_capture`, le dossier doit citer la
@@ -437,7 +438,7 @@ E.append(dict(
     assumes=[
         ("compteur ENFREINTES à « — » et non « 00 »", "aucune clé du corps ne porte ce compte (`boss_mirror_violation_ring` écrit, jamais projeté — juge-données É6) ; un « 00 » dirait « aucune » là où la vérité est « le serveur ne le dit pas »", "que le tiret n'ait ni la couleur ni la position des deux autres chiffres — un trou doit se lire comme un trou, pas comme une panne"),
         ("le col rendu par un TRIANGLE plein, sans le liseré du SVG", "pas de primitive de chemin dans le client ; le triangle porte le signal ouvert/fermé par sa largeur", "que ce ne soit pas un triangle (remplissage aire/boîte ~0,9 au lieu de ~0,43), qu'il ne soit pas centré sur l'axe du cou, qu'il recouvre le cou"),
-        ("le reflet du miroir est FIXE", "la maquette l'anime (7,5 s) mais le rendu ratifié le fige à 34,7 % de course ; aucune animation sur cet écran (ruling)", "qu'il soit absent, ou ailleurs que dans le tiers haut du panneau"),
+        ("le reflet du miroir est FIXE", "la maquette l'anime (7,5 s) mais le rendu ratifié le fige à 34,7 % de course ; le ruling « sans animation » est renversé (soir du 27/08) : un reflet fixe n'est pas un écart, un reflet qui bouge non plus", "qu'il soit absent, ou ailleurs que dans le tiers haut du panneau"),
         ("4 couleurs hors `DesignTokens` (Encre, Panneau, Liseré, Vert)", "arbitrage DA escaladé, non tranché — dette de CODE, pas de rendu", "que la couleur RENDUE s'écarte de la maquette"),
         ("le nom du lieutenant est celui du compte, pas « Salvatore »", "`lieutenant.name` est projeté depuis C3 (L0.4) ; la mention « non projeté (L0.4) » d'un tour précédent est un DÉFAUT si elle subsiste (juge-données clôture D2)", "« SALVATORE » en dur, ou la mention « non projeté » encore visible"),
         ("pas de section « gages » (`restraint`)", "omise sans `counterparty_id` (É4) ; sur le compte de démo elle peut être absente", "une place réservée vide"),
