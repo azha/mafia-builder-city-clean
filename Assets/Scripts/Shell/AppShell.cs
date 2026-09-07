@@ -1640,8 +1640,10 @@ namespace MafiaCleanCity.Shell
             // (Tools/charpente-item0-2-3-design.md) PROUVE cette porte atteignable par un
             // geste de production plutôt que de l'affirmer en prose.
             // Les libellés sont désormais ceux du canon EXACTEMENT (décision A tranchée) : Empire ·
-            // Famille · Filière · Plus (« Marché » au jalon 4 — pas avant que screen_b1 existe, un
-            // bouton qui ment étant pire qu'un bouton absent).
+            // Famille · Filière · Plus. ⚠️ Le sort de l'onglet Filière au jalon 4 est décrit à
+            // l'ANCRE UNIQUE `DockRatifie` ci-dessous — il y en avait DEUX exemplaires, tous deux
+            // faux de la même façon, et corriger l'un laissait l'autre en vie. Le principe qui
+            // motivait le report tient toujours : un bouton qui ment est pire qu'un bouton absent.
             //
             // UNE seule liste ordonnée (`DockRatifie`, design §3.1) : les TROIS sites qui en
             // dépendaient — cette construction, `RebatirChromePourResolutionCourante`, et l'ordre
@@ -1659,7 +1661,12 @@ namespace MafiaCleanCity.Shell
         {
             (Tab.Empire,   "Empire"),
             (Tab.Org,      "Famille"),
-            (Tab.Pipeline, "Filière"),   // « Marché » au jalon 4 — pas avant que screen_b1 existe
+            // ⚠️ Jalon 4 : cet onglet doit être RÉAFFECTÉ au marché des substances (㉑), pas
+            // voir son libellé réécrit. Il monte `LaunderingController` (:792, mono-nœud) : ne
+            // changer que le mot ferait pointer un nom de marché sur le blanchiment, qui est un
+            // autre écran. Déclencheur = ㉑ MONTÉ dans ce client — aujourd'hui zéro fichier ; sa
+            // maquette est ratifiée depuis le 2026-08-27, et une maquette ne monte rien.
+            (Tab.Pipeline, "Filière"),
             (Tab.More,     "Plus"),
         };
 

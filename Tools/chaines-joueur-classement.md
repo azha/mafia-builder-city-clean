@@ -1,45 +1,72 @@
 # Chaînes joueur qui parlent du SYSTÈME au lieu de parler AU joueur
 
-Population mesurée par `Tools/chaines-joueur.py` (contrôles verts) : **1122 chaînes affichées, 829 textes distincts, 142 fichiers**.
+Population mesurée par `Tools/chaines-joueur.py` (contrôles verts) : **1120 chaînes affichées, 826 textes distincts**.
 
-Verdicts posés **par lecture**. Le vocabulaire d'atelier n'a servi qu'au rappel ; il a produit cinq fausses accusations, gardées ici comme contrôle négatif.
+Chaque motif porte sa valeur **attendue** ; `--verifier` rougit dans les deux sens (la classe revient / l'épingle est périmée).
 
-## A — INSTRUCTION DE DÉVELOPPEUR SERVIE AU JOUEUR — 7
+## A — INSTRUCTION DE DÉVELOPPEUR SERVIE AU JOUEUR — 3
 
-- `Operational/Autonomy/AutonomyInboxController.cs:254`
-  > Boîte d'autonomie indisponible — vérifier la pile
-  — dit au joueur d'inspecter la pile Docker
-- `Operational/BuildingCard/BuildingCardController.cs:851`
-  > Failed to load building. Check the seeder + stack.
-  — dit au joueur de lancer le seeder
-- `Operational/Dashboard/DashboardController.cs:425`
-  > Check the seeder + stack.
-  — dit au joueur de lancer le seeder
-- `Operational/Exceptions/ExceptionQueueController.cs:510`
-  > File indisponible — vérifier la pile
-  — dit au joueur d'inspecter la pile Docker
-- `Operational/Horizon/HorizonScreenController.cs:145`
-  > aujourd'hui. Quelqu'un doit écrire les textes.
-  — dit au joueur qu'un texte reste à écrire
-- `Operational/Laundering/LaunderingController.cs:233`
-  > Failed to load the node. Check the seeder + stack.
-  — dit au joueur de lancer le seeder
-- `Operational/Laundering/PipelineOverviewController.cs:194`
-  > Failed to load the pipeline. Check the seeder + stack.
-  — dit au joueur de lancer le seeder
+- `—`
+  > (plus aucune occurrence)
+  — CLOS — disait au joueur d'inspecter la pile Docker
+- `—`
+  > (plus aucune occurrence)
+  — CLOS — disait au joueur de lancer le seeder (4 sites)
+- `—`
+  > (plus aucune occurrence)
+  — CLOS — s'adressait au studio, pas au joueur
+
+## E — ÉNONCÉ DATÉ SERVI AU JOUEUR — 1
+
+- `—`
+  > (plus aucune occurrence)
+  — CLOS — date de mesure servie au joueur ; le fichier disait lui-même « à re-mesurer »
+
+## D — DIVULGATION — 1
+
+- `—`
+  > (plus aucune occurrence)
+  — CLOS — mesuré côté back : /v1/me est scopé au compte du jeton, aucune route ne rend l'adresse d'un tiers. La phrase disait VRAI et présentait le droit d'accès comme une faiblesse. Le masquage reste.
+
+## C — IDENTIFIANT INTERNE RENDU TEL QUEL — 4
+
+- `CityMap/DistrictCellView.cs:53`
+  > {CityMapEnums.DisplayName(dto)}    ·    {dto.profile}    ·    {dto.block_count} blocs
+  — ⚠️ ROUTÉ ATELIER — glass|lattice|spine|stack|tidewater|verge servis bruts, AUCUN résolveur n'existe ⇒ six mots de fiction à écrire, ce n'est pas une correction. ⛔ ET IL Y A UN SECOND SITE que cet outil ne peut pas voir : CityMapController:1052 passe la VARIABLE (`DetailRow("Profile", cell.Model.profile)`) — la population ne contient que des LITTÉRAUX.
+- `Shell/OrgVitalsPanelController.cs:192`
+  > Heat: Unavailable ({raison})
+  — ⚠️ LOT ANGLAIS — le panneau entier est encore anglais (`RenderBar(heatText, "Heat", …)`, idem Friction/Stress) ; la conversion i18n du 2026-09-03 n'a converti que Cohésion. Je ne devance pas ce lot.
+- `—`
+  > (plus aucune occurrence)
+  — CLOS — la raison nommait un verbe HTTP
+- `—`
+  > (plus aucune occurrence)
+  — CLOS — « agrégat ». ⚠️ « indisponible » conservé : CharpenteAccueilPanneaux l'asserte
+
+## R — REVENDIQUÉ PUIS RETIRÉ : mesuré DÉLIBÉRÉ en ouvrant la cible — 3
+
+- `Onboarding/TutorialScreenController.cs:180`
+  > l'identifiant tient lieu de contenu
+  — RETIRÉ DE C — même doctrine du trou honnête : l'écran DIT que l'identifiant remplace un texte non écrit. Aucun commentaire ne le ratifie explicitement ⇒ laissé en l'état plutôt que tranché sans maquette.
+- `Operational/Horizon/HorizonScreenController.cs:181`
+  > (sans clé)
+  — RETIRÉ DE C — HorizonScreenController:180 porte, en code, « Le titre EST la clé : c'est ce que la maquette ratifiée montre ».
+- `Operational/Lieutenant/LieutenantScreenController.cs:3137`
+  > Palier de vocabulaire {VocabularyTier} — conditions débloquées (AND_IF)
+  — RETIRÉ DE C — c'est le token de la GRAMMAIRE BACK que le joueur écrit dans ses règles. LieutenantUiExtensionPlayModeTests:607 asserte que ces tokens sont exposés « grounded VERBATIM in the backend grammar », et RuleEditorTier2:219 épingle la source sérialisée. L'afficher est délibéré.
 
 ## B — L'ARCHITECTURE COMME EXPLICATION (dire le trou est la doctrine ; le dire avec les mots de l'atelier ne l'est pas) — 53
 
-- `Account/Profile/ProfileScreenController.cs:164`
+- `Account/Profile/ProfileScreenController.cs:163`
   > ⛔ aucune route ne l'écrit : elle ne peut pas être changée
   — « route »
-- `Account/Profile/ProfileScreenController.cs:168`
+- `Account/Profile/ProfileScreenController.cs:167`
   > aucune route de mutation de profil n'existe
   — « route de mutation »
-- `Account/Profile/ProfileScreenController.cs:169`
+- `Account/Profile/ProfileScreenController.cs:168`
   > aucune route TOTP n'existe
   — « route » + sigle de protocole
-- `Account/Profile/ProfileScreenController.cs:170`
+- `Account/Profile/ProfileScreenController.cs:169`
   > aucun domaine de sauvegarde — l'emplacement n'existe que comme article
   — « domaine »
 - `Account/Settings/SettingsScreenController.cs:136`
@@ -142,12 +169,9 @@ Verdicts posés **par lecture**. Le vocabulaire d'atelier n'a servi qu'au rappel
   > la route répond, et elle répond « rien » : ce n'est pas une panne, c'est un 
   — « route »
 - `Operational/Forensic/ForensicScreenController.cs:176`
-  > lesquelles de ces trois bandes reposent sur des données — cet écran ne peut 
-  — « cet écran »
-- `Operational/Forensic/ForensicScreenController.cs:176`
-  > mesure pour vous : c'est la valeur par défaut du serveur. Le corps ne dit pas 
-  — « valeur par défaut » + « le corps » = corps de réponse
-- `Operational/Forensic/ForensicScreenController.cs:195`
+  > distingue une fois affichées. Cet écran ne peut donc pas trancher, et il 
+  — « cet écran » ⚠️ motif re-casé : ma réécriture a mis une majuscule à « Cet », et le fragment minuscule rendait 0 — un zéro de CASSE, pas de suppression
+- `Operational/Forensic/ForensicScreenController.cs:194`
   > la route n'a rien rendu. Ce n'est pas « tout va bien » : c'est « on ne sait pas ».
   — « route » = endpoint
 - `Operational/Horizon/HorizonScreenController.cs:131`
@@ -155,7 +179,7 @@ Verdicts posés **par lecture**. Le vocabulaire d'atelier n'a servi qu'au rappel
   — « serveur »
 - `Operational/Horizon/HorizonScreenController.cs:145`
   > contient que des messages d'erreur. Voilà l'écran tel qu'il s'afficherait 
-  — « l'écran tel qu'il s'afficherait »
+  — « l'écran tel qu'il s'afficherait » — CONSERVÉ : c'est le cadre ratifié de la maquette
 - `Operational/Horizon/HorizonScreenController.cs:145`
   > le serveur ne propose aucune capacité pour l'instant — ce n'est pas une 
   — « serveur » + « capacité »
@@ -165,9 +189,6 @@ Verdicts posés **par lecture**. Le vocabulaire d'atelier n'a servi qu'au rappel
 - `Operational/Horizon/HorizonScreenController.cs:290`
   > le serveur ne dit pas ce qui manque pour y arriver
   — « serveur »
-- `Operational/Horizon/HorizonScreenController.cs:365`
-  > Le serveur n'a pas répondu
-  — « serveur » LÀ OÙ SIX ÉCRANS NOMMENT UN SUJET DE FICTION
 - `Operational/Horizon/HorizonScreenController.cs:365`
   > l'écran ne montre rien plutôt que de montrer un horizon périmé — ce qui était à 
   — « l'écran »
@@ -185,48 +206,18 @@ Verdicts posés **par lecture**. Le vocabulaire d'atelier n'a servi qu'au rappel
   — « serveur »
 - `Operational/Reputation/ReputationScreenController.cs:528`
   >  : c’est un maillon manquant, pas un choix d’écran.
-  — « choix d'écran » (apostrophe typographique)
+  — « choix d'écran » (apostrophe typographique — le fragment ASCII rendait 0)
 - `Operational/Reputation/ReputationScreenController.cs:528`
   > l’enregistrent — le vôtre et le sien. Le serveur dit 
   — « serveur »
+- `—`
+  > (plus aucune occurrence)
+  — CLOS INCIDEMMENT — « valeur par défaut » + « le corps » (= corps de réponse) vivaient dans la MÊME phrase que l'énoncé daté de E. Les retirer ensemble était le seul geste possible ; je le déclare plutôt que de le compter comme un gain de B.
+- `—`
+  > (plus aucune occurrence)
+  — CLOS — le SEPTIÈME de la formule maison, le seul qui nommait la machine. Six écrans disent « Le profil / la file / le commissariat / le tableau / la vitrine / l'état du tutoriel n'a pas répondu » ; ㉜ disait « le serveur ». Repris sur le patron de son jumeau structurel (Reputation:579-584 : titre « LE MIROIR EST INDISPONIBLE » + sous-titre « Le miroir ne répond pas »).
 
-## C — IDENTIFIANT INTERNE RENDU TEL QUEL — 7
-
-- `CityMap/DistrictCellView.cs:53`
-  > {CityMapEnums.DisplayName(dto)}    ·    {dto.profile}    ·    {dto.block_count} blocs
-  — champ de DTO interpolé BRUT, à côté d'un libellé résolu dans la même ligne
-- `Onboarding/TutorialScreenController.cs:180`
-  > l'identifiant tient lieu de contenu
-  — « identifiant »
-- `Operational/Horizon/HorizonScreenController.cs:181`
-  > (sans clé)
-  — « clé »
-- `Operational/Lieutenant/LieutenantScreenController.cs:3137`
-  > Palier de vocabulaire {VocabularyTier} — conditions débloquées (AND_IF)
-  — nom du combinateur EN CODE, servi comme libellé de bouton
-- `Shell/OrgVitalsPanelController.cs:104`
-  > fetch failed
-  — message d'exception réseau, en anglais
-- `Shell/OrgVitalsPanelController.cs:180`
-  > Cohésion : indisponible (pas d'agrégat pour la ville)
-  — « agrégat »
-- `Shell/OrgVitalsPanelController.cs:191`
-  > Heat: Unavailable ({raison})
-  — anglais + raison technique interpolée
-
-## D — DIVULGATION — 1
-
-- `Account/Profile/ProfileScreenController.cs:162`
-  > ⚠️ masquée à l'affichage seulement — le serveur la rend en clair
-  — dit au joueur que le masquage de son adresse est cosmétique
-
-## E — ÉNONCÉ DATÉ SERVI AU JOUEUR — 1
-
-- `Operational/Forensic/ForensicScreenController.cs:176`
-  > au 2 septembre 2026, « train de vie » rend « calme » alors qu'aucune ligne ne le 
-  — date de mesure servie au joueur — et le commentaire du fichier dit lui-même « à re-mesurer »
-
-## HORS CLASSE — le mot d'atelier a ici son sens ORDINAIRE (contrôle négatif) — 6
+## N — HORS CLASSE : le mot d'atelier a ici son sens ORDINAIRE (contrôle négatif) — 6
 
 - `CityMap/DistrictInteriorScreenController.cs:1667`
   > Commerce-écran

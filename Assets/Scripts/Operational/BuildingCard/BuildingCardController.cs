@@ -848,7 +848,7 @@ namespace MafiaCleanCity.Operational
         {
             ClearRows();
             titleText.text = "BÂTIMENT OPÉRATIONNEL";
-            typeText.text = "Failed to load building. Check the seeder + stack.";
+            typeText.text = "La fiche du bâtiment n'a pas répondu.";
             TrackText(titleText, titleText.text);
             TrackText(typeText, typeText.text);
         }

@@ -175,11 +175,10 @@ namespace MafiaCleanCity.Operational
             //   blanchiment dont dépend l'épingle d'audit a été fermé entre-temps.
             MajPanneau(Lib("CE QUE CET ÉCRAN NE PEUT PAS VOUS DIRE"),
                 Lib("Une bande sans source ressemble à une bande mesurée"),
-                "au 2 septembre 2026, « train de vie » rend « calme » alors qu'aucune ligne ne le "
-                + "mesure pour vous : c'est la valeur par défaut du serveur. Le corps ne dit pas "
-                + "lesquelles de ces trois bandes reposent sur des données — cet écran ne peut "
-                + "donc pas les distinguer, et il préfère vous le dire plutôt que de les "
-                + "présenter toutes les trois comme des faits.");
+                "une bande peut être posée par défaut au lieu d'être mesurée, et rien ne les "
+                + "distingue une fois affichées. Cet écran ne peut donc pas trancher, et il "
+                + "préfère vous le dire plutôt que de vous les présenter toutes les trois "
+                + "comme des faits.");
         }
 
         /// <summary>Repli NOMMÉ sur échec réseau — jamais une exception, jamais un écran noir

@@ -251,7 +251,7 @@ namespace MafiaCleanCity.Operational.Autonomy
         {
             ClearRows();
             headerText.text = "RAPPORTS D'AUTONOMIE";
-            TextMeshProUGUI err = NewText("Error", rowsArea, "Boîte d'autonomie indisponible — vérifier la pile", 14, TextAlignmentOptions.Left);
+            TextMeshProUGUI err = NewText("Error", rowsArea, "La boîte n'a pas répondu.", 14, TextAlignmentOptions.Left);
             err.color = AccentSevere;
             AddLayoutElement(err.gameObject, minHeight: 24, flexibleHeight: 0);
             TrackText(headerText, headerText.text);

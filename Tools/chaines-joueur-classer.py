@@ -1,20 +1,27 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Classe la population de `chaines-joueur.py` par la PROPRIÉTÉ demandée :
-« cette phrase serait-elle comprise par quelqu'un qui ne sait pas comment le jeu est fabriqué ? »
+"""Classe la population de `chaines-joueur.py` — et la TIENT, par un cliquet.
 
-⛔ LES VERDICTS SONT POSÉS PAR LECTURE, PAS PAR MOTIF, et c'est délibéré : la question porte sur
-une propriété de langue, et un balayage sur des MOTS y répond à côté. Le vocabulaire d'atelier
-n'a servi qu'au RAPPEL — s'assurer que la lecture n'avait rien laissé — puis chaque hit a été
-ouvert. Ce rappel a produit CINQ FAUSSES ACCUSATIONS (classe « - ») : dans les cinq, le mot
-d'atelier a son sens ordinaire, et `Commerce-écran` est même la traduction maison de
-`FRONT_SHOP`, où « écran » veut dire paravent. ⇒ Ce sont elles le contrôle négatif du
-classement : sans elles, rien ne prouverait que le critère n'est pas le mot.
+⛔ LES VERDICTS SONT POSÉS PAR LECTURE, PAS PAR MOTIF. La question est une propriété de langue
+(« quelqu'un qui ne sait pas comment le jeu est fabriqué comprendrait-il ? ») et une propriété ne
+se met pas en regex. Le vocabulaire d'atelier n'a servi qu'au RAPPEL, puis chaque hit a été
+OUVERT. Ce rappel a produit six fausses accusations (classe `N`) : le mot y a son sens ordinaire,
+et `Commerce-écran` est la traduction maison de `FRONT_SHOP`, où « écran » veut dire paravent.
+⇒ Elles restent ici : sans elles, rien ne prouverait que le critère est la propriété, pas le mot.
 
-⛔ UN FRAGMENT QUI NE MATCHE RIEN EST UN FRAGMENT FAUX, PAS UNE ABSENCE. Trois l'ont été ici et
-aucun ne disait « cette chaîne n'existe pas » : une apostrophe TYPOGRAPHIQUE (U+2019 et non '),
-une négation omise, et un faux négatif de l'extracteur. Le script REFUSE de compter un fragment
-sans cible : il le liste en tête et sort non nul.
+⛔⛔ CHAQUE MOTIF PORTE SA VALEUR ATTENDUE, ET LE CLIQUET ROUGIT DANS LES DEUX SENS.
+Un motif à `0` n'est PAS « satisfait » par défaut : la première version de ce fichier passait au
+rouge après les correctifs, en criant « fragment sans cible » sur les dix motifs que le lot venait
+justement de fermer. C'est l'inversion classique — *un contrôle qui exige la présence de ce qu'on
+supprime accuse le correctif*. La forme juste, celle que le socle prescrit : écrire l'attendu
+AVANT et APRÈS, et faire rougir tout écart.
+  · `n > attendu`  ⇒ la classe REVIENT (quelqu'un a réécrit la phrase fautive ailleurs)
+  · `n < attendu`  ⇒ l'épingle est PÉRIMÉE (la chaîne a bougé) — à re-mesurer, pas à ignorer
+⇒ Les motifs de B et N sont épinglés à leur valeur mesurée : ils ne sont pas corrigés, ils sont
+  SURVEILLÉS. Un 54ᵉ « le serveur … » ferait rougir le cliquet le jour où il est écrit.
+
+⚠️ CE QUE CE CLIQUET NE VOIT PAS, et il faut le dire : il surveille les FORMULATIONS connues.
+Une phrase de la même classe écrite avec d'autres mots passe. Il ferme la récidive, pas la classe.
 """
 import collections, subprocess, sys, pathlib
 
@@ -23,111 +30,134 @@ B = "B — L'ARCHITECTURE COMME EXPLICATION (dire le trou est la doctrine ; le d
 C = "C — IDENTIFIANT INTERNE RENDU TEL QUEL"
 D = "D — DIVULGATION"
 E = "E — ÉNONCÉ DATÉ SERVI AU JOUEUR"
-N = "HORS CLASSE — le mot d'atelier a ici son sens ORDINAIRE (contrôle négatif)"
+R = "R — REVENDIQUÉ PUIS RETIRÉ : mesuré DÉLIBÉRÉ en ouvrant la cible"
+N = "N — HORS CLASSE : le mot d'atelier a ici son sens ORDINAIRE (contrôle négatif)"
 
+# (classe, fragment, attendu, pourquoi)
 VERDICTS = [
- (A, "vérifier la pile",                        "dit au joueur d'inspecter la pile Docker"),
- (A, "Check the seeder + stack",                "dit au joueur de lancer le seeder"),
- (A, "Quelqu'un doit écrire les textes",        "dit au joueur qu'un texte reste à écrire"),
- (B, "la route n'a rien rendu",                 "« route » = endpoint"),
- (B, "aucune route ne dit ce qu'elles",         "« route »"),
- (B, "aucune route ne connaît",                 "« route »"),
- (B, "Aucune route ne liste vos bâtiments",     "« route »"),
- (B, "Aucune route connue pour l'instant",      "« route » = endpoint, alors que l'écran voisin dit « CETTE ROUTE » pour un itinéraire"),
- (B, "aucune route n'existe encore",            "« route »"),
- (B, "la route voisine vise les affaires",      "« route voisine »"),
- (B, "aucune route de mutation de profil",      "« route de mutation »"),
- (B, "aucune route TOTP",                       "« route » + sigle de protocole"),
- (B, "aucune route ne l'écrit",                 "« route »"),
- (B, "aucune route de déconnexion joueur",      "« route joueur »"),
- (B, "aucune route joueur",                     "« route joueur » + « maquette » + « serveur »"),
- (B, "la route répond, et elle répond",         "« route »"),
- (B, "n'ont aucune surface joueur",             "« surface joueur »"),
- (B, "le domaine RGPD n'a pas de surface",      "« domaine » + « surface joueur »"),
- (B, "aucun domaine de sauvegarde",             "« domaine »"),
- (B, "chacune vit sur sa propre route",         "« route » + « service »"),
- (B, "aucune n'est branchée",                   "« branché » = câblé"),
- (B, "Aucune n'est branchée",                   "« branché »"),
- (B, "CE QUE LE SERVEUR ENVOIE VRAIMENT",       "« serveur »"),
- (B, "CE QUE LE SERVEUR NE DIT PAS",            "« serveur »"),
- (B, "CE QUE LE SERVEUR NE SERT PAS ENCORE",    "« serveur » + « servir » technique"),
- (B, "serveur la refuse tant que",              "« serveur »"),
- (B, "Le serveur a refusé",                     "« serveur »"),
- (B, "Le serveur ne peut pas dire",             "« serveur »"),
- (B, "On demande au serveur",                   "« serveur »"),
- (B, "Le serveur refusera",                     "« serveur »"),
- (B, "le serveur n'a rien rendu",               "« serveur »"),
- (B, "Le serveur n'a pas répondu",              "« serveur » LÀ OÙ SIX ÉCRANS NOMMENT UN SUJET DE FICTION"),
- (B, "le serveur ne propose aucune capacité",   "« serveur » + « capacité »"),
- (B, "le serveur ne rend que des clés",         "« clés de traduction » + « dictionnaire du jeu »"),
- (B, "le serveur ne dit pas ce qui manque",     "« serveur »"),
- (B, "le serveur rend des clés et un gabarit",  "« clés » + « gabarit à trous »"),
- (B, "le serveur refuse de juger",              "« serveur »"),
- (B, "Le serveur dit",                          "« serveur »"),
- (B, "c'est la valeur par défaut du serveur",   "« valeur par défaut » + « le corps » = corps de réponse"),
- (B, "cet écran ne peut",                       "« cet écran »"),
- (B, "CE QUE CET ÉCRAN SAIT",                   "« cet écran »"),
- (B, "CE QUE CET ÉCRAN NE PEUT PAS",            "« cet écran »"),
- (B, "rien sur cet écran n'en crée",            "« cet écran »"),
- (B, "pas un choix d’écran",               "« choix d'écran » (apostrophe typographique)"),
- (B, "l'écran ne montre rien plutôt que",       "« l'écran »"),
- (B, "Voilà l'écran tel qu'il s'afficherait",   "« l'écran tel qu'il s'afficherait »"),
- (B, "trou de",                                 "« trou de surface »"),
- (B, "Le même lot",                             "« lot » = lot de livraison du programme"),
- (B, "la seule grandeur servie",                "« grandeur servie »"),
- (B, "n'expose pas encore son vendeur",         "« expose »"),
- (B, "vérifié serveur",                         "« vérifié serveur »"),
- (B, "Scène indisponible pour ce quart",        "« Scène » + « quart horaire »"),
- (B, "à ouvrir depuis la fiche opérationnelle", "renvoie à un autre écran par son nom interne"),
- (C, "AND_IF",                                  "nom du combinateur EN CODE, servi comme libellé de bouton"),
- (C, "pas d'agrégat pour la ville",             "« agrégat »"),
- (C, "(sans clé)",                              "« clé »"),
- (C, "l'identifiant tient lieu de contenu",     "« identifiant »"),
- (C, "{dto.profile}",                           "champ de DTO interpolé BRUT, à côté d'un libellé résolu dans la même ligne"),
- (C, "fetch failed",                            "message d'exception réseau, en anglais"),
- (C, "Heat: Unavailable",                       "anglais + raison technique interpolée"),
- (D, "le serveur la rend en clair",             "dit au joueur que le masquage de son adresse est cosmétique"),
- (E, "au 2 septembre 2026",                     "date de mesure servie au joueur — et le commentaire du fichier dit lui-même « à re-mesurer »"),
- (N, "À QUOI ÇA SERT",                          "« servir » ordinaire"),
- (N, "est en route",                            "« en route » = en chemin"),
- (N, "CETTE ROUTE",                             "l'itinéraire du courrier, pas un endpoint"),
- (N, "se sert de gens",                         "« se servir de »"),
- (N, "Commerce-écran",                          "traduction maison de FRONT_SHOP : « écran » = paravent"),
+ (A, "vérifier la pile",                        0, "CLOS — disait au joueur d'inspecter la pile Docker"),
+ (A, "Check the seeder + stack",                0, "CLOS — disait au joueur de lancer le seeder (4 sites)"),
+ (A, "Quelqu'un doit écrire les textes",        0, "CLOS — s'adressait au studio, pas au joueur"),
+
+ (E, "au 2 septembre 2026",                     0, "CLOS — date de mesure servie au joueur ; le fichier disait lui-même « à re-mesurer »"),
+ (D, "le serveur la rend en clair",             0, "CLOS — mesuré côté back : /v1/me est scopé au compte du jeton, aucune route ne rend l'adresse d'un tiers. La phrase disait VRAI et présentait le droit d'accès comme une faiblesse. Le masquage reste."),
+
+ (C, "pas d'agrégat pour la ville",             0, "CLOS — « agrégat ». ⚠️ « indisponible » conservé : CharpenteAccueilPanneaux l'asserte"),
+ (C, "fetch failed",                            0, "CLOS — la raison nommait un verbe HTTP"),
+ (C, "{dto.profile}",                           1, "⚠️ ROUTÉ ATELIER — glass|lattice|spine|stack|tidewater|verge servis bruts, AUCUN résolveur n'existe ⇒ six mots de fiction à écrire, ce n'est pas une correction. ⛔ ET IL Y A UN SECOND SITE que cet outil ne peut pas voir : CityMapController:1052 passe la VARIABLE (`DetailRow(\"Profile\", cell.Model.profile)`) — la population ne contient que des LITTÉRAUX."),
+ (C, "Heat: Unavailable",                       1, "⚠️ LOT ANGLAIS — le panneau entier est encore anglais (`RenderBar(heatText, \"Heat\", …)`, idem Friction/Stress) ; la conversion i18n du 2026-09-03 n'a converti que Cohésion. Je ne devance pas ce lot."),
+
+ (R, "AND_IF",                                  1, "RETIRÉ DE C — c'est le token de la GRAMMAIRE BACK que le joueur écrit dans ses règles. LieutenantUiExtensionPlayModeTests:607 asserte que ces tokens sont exposés « grounded VERBATIM in the backend grammar », et RuleEditorTier2:219 épingle la source sérialisée. L'afficher est délibéré."),
+ (R, "(sans clé)",                              2, "RETIRÉ DE C — HorizonScreenController:180 porte, en code, « Le titre EST la clé : c'est ce que la maquette ratifiée montre »."),
+ (R, "l'identifiant tient lieu de contenu",     1, "RETIRÉ DE C — même doctrine du trou honnête : l'écran DIT que l'identifiant remplace un texte non écrit. Aucun commentaire ne le ratifie explicitement ⇒ laissé en l'état plutôt que tranché sans maquette."),
+
+ (B, "la route n'a rien rendu",                 4, "« route » = endpoint"),
+ (B, "aucune route ne dit ce qu'elles",         2, "« route »"),
+ (B, "aucune route ne connaît",                 2, "« route »"),
+ (B, "Aucune route ne liste vos bâtiments",     1, "« route »"),
+ (B, "Aucune route connue pour l'instant",      2, "« route » = endpoint, alors que l'écran voisin dit « CETTE ROUTE » pour un itinéraire"),
+ (B, "aucune route n'existe encore",            1, "« route »"),
+ (B, "la route voisine vise les affaires",      1, "« route voisine »"),
+ (B, "aucune route de mutation de profil",      1, "« route de mutation »"),
+ (B, "aucune route TOTP",                       1, "« route » + sigle de protocole"),
+ (B, "aucune route ne l'écrit",                 1, "« route »"),
+ (B, "aucune route de déconnexion joueur",      1, "« route joueur »"),
+ (B, "aucune route joueur",                     1, "« route joueur » + « maquette » + « serveur »"),
+ (B, "la route répond, et elle répond",         1, "« route »"),
+ (B, "n'ont aucune surface joueur",             1, "« surface joueur »"),
+ (B, "le domaine RGPD n'a pas de surface",      1, "« domaine » + « surface joueur »"),
+ (B, "aucun domaine de sauvegarde",             1, "« domaine »"),
+ (B, "chacune vit sur sa propre route",         1, "« route » + « service »"),
+ (B, "aucune n'est branchée",                   1, "« branché » = câblé"),
+ (B, "Aucune n'est branchée",                   1, "« branché »"),
+ (B, "CE QUE LE SERVEUR ENVOIE VRAIMENT",       6, "« serveur »"),
+ (B, "CE QUE LE SERVEUR NE DIT PAS",            2, "« serveur »"),
+ (B, "CE QUE LE SERVEUR NE SERT PAS ENCORE",    1, "« serveur » + « servir » technique"),
+ (B, "serveur la refuse tant que",              1, "« serveur »"),
+ (B, "Le serveur a refusé",                     5, "« serveur »"),
+ (B, "Le serveur ne peut pas dire",             1, "« serveur »"),
+ (B, "On demande au serveur",                   1, "« serveur »"),
+ (B, "Le serveur refusera",                     1, "« serveur »"),
+ (B, "le serveur n'a rien rendu",               1, "« serveur »"),
+ (B, "Le serveur n'a pas répondu",              0, "CLOS — le SEPTIÈME de la formule maison, le seul qui nommait la machine. Six écrans disent « Le profil / la file / le commissariat / le tableau / la vitrine / l'état du tutoriel n'a pas répondu » ; ㉜ disait « le serveur ». Repris sur le patron de son jumeau structurel (Reputation:579-584 : titre « LE MIROIR EST INDISPONIBLE » + sous-titre « Le miroir ne répond pas »)."),
+ (B, "le serveur ne propose aucune capacité",   1, "« serveur » + « capacité »"),
+ (B, "le serveur ne rend que des clés",         1, "« clés de traduction » + « dictionnaire du jeu »"),
+ (B, "le serveur ne dit pas ce qui manque",     1, "« serveur »"),
+ (B, "le serveur rend des clés et un gabarit",  1, "« clés » + « gabarit à trous »"),
+ (B, "le serveur refuse de juger",              1, "« serveur »"),
+ (B, "Le serveur dit",                          1, "« serveur »"),
+ (B, "c'est la valeur par défaut du serveur",   0, "CLOS INCIDEMMENT — « valeur par défaut » + « le corps » (= corps de réponse) vivaient dans la MÊME phrase que l'énoncé daté de E. Les retirer ensemble était le seul geste possible ; je le déclare plutôt que de le compter comme un gain de B."),
+ (B, "écran ne peut donc pas",                  1, "« cet écran » ⚠️ motif re-casé : ma réécriture a mis une majuscule à « Cet », et le fragment minuscule rendait 0 — un zéro de CASSE, pas de suppression"),
+ (B, "CE QUE CET ÉCRAN SAIT",                   3, "« cet écran »"),
+ (B, "CE QUE CET ÉCRAN NE PEUT PAS",            2, "« cet écran »"),
+ (B, "rien sur cet écran n'en crée",            2, "« cet écran »"),
+ (B, "pas un choix d’écran",                    1, "« choix d'écran » (apostrophe typographique — le fragment ASCII rendait 0)"),
+ (B, "l'écran ne montre rien plutôt que",       1, "« l'écran »"),
+ (B, "Voilà l'écran tel qu'il s'afficherait",   1, "« l'écran tel qu'il s'afficherait » — CONSERVÉ : c'est le cadre ratifié de la maquette"),
+ (B, "trou de",                                 1, "« trou de surface »"),
+ (B, "Le même lot",                             1, "« lot » = lot de livraison du programme"),
+ (B, "la seule grandeur servie",                1, "« grandeur servie »"),
+ (B, "n'expose pas encore son vendeur",         1, "« expose »"),
+ (B, "vérifié serveur",                         1, "« vérifié serveur »"),
+ (B, "Scène indisponible pour ce quart",        1, "« Scène » + « quart horaire »"),
+ (B, "à ouvrir depuis la fiche opérationnelle", 1, "renvoie à un autre écran par son nom interne"),
+
+ (N, "À QUOI ÇA SERT",                          1, "« servir » ordinaire"),
+ (N, "est en route",                            1, "« en route » = en chemin"),
+ (N, "CETTE ROUTE",                             1, "l'itinéraire du courrier, pas un endpoint"),
+ (N, "se sert de gens",                         2, "« se servir de »"),
+ (N, "Commerce-écran",                          3, "traduction maison de FRONT_SHOP : « écran » = paravent"),
 ]
 
-ORDRE = [A, B, C, D, E, N]
+ORDRE = [A, E, D, C, R, B, N]
+
+
+def mesurer():
+    racine = pathlib.Path(__file__).resolve().parent.parent
+    s = subprocess.run([sys.executable, str(racine / 'Tools' / 'chaines-joueur.py'), '--controle'],
+                       cwd=racine, capture_output=True, text=True)
+    if s.returncode != 0:
+        sys.stderr.write(s.stderr)
+        sys.stderr.write("⛔ l'extracteur est ROUGE : on ne classe pas une population dont les "
+                         "contrôles ne passent pas.\n")
+        sys.exit(1)
+    return [l.split('\t') for l in s.stdout.splitlines() if l.count('\t') == 2]
 
 
 def main():
-    racine = pathlib.Path(__file__).resolve().parent.parent
-    sortie = subprocess.run([sys.executable, str(racine / 'Tools' / 'chaines-joueur.py'),
-                             '--controle'], cwd=racine, capture_output=True, text=True)
-    if sortie.returncode != 0:
-        sys.stderr.write(sortie.stderr)
-        sys.stderr.write("⛔ l'extracteur a rendu ROUGE : on ne classe pas une population "
-                         "dont les contrôles ne passent pas.\n")
-        return 1
-    rows = [l.split('\t') for l in sortie.stdout.splitlines() if l.count('\t') == 2]
+    verifier = '--verifier' in sys.argv
+    rows = mesurer()
     textes = collections.OrderedDict()
     for f, via, t in rows:
         textes.setdefault(t, f.replace('Assets/Scripts/', ''))
 
-    classe, orphelins = collections.defaultdict(list), []
-    for cl, frag, pourquoi in VERDICTS:
-        hits = [(t, f) for t, f in textes.items() if frag in t]
-        if not hits:
-            orphelins.append(frag); continue
-        for t, f in hits:
+    ecarts, classe = [], collections.defaultdict(list)
+    for cl, frag, attendu, pourquoi in VERDICTS:
+        n = sum(1 for f, via, t in rows if frag in t)
+        if n != attendu:
+            ecarts.append((frag, attendu, n))
+        vus = collections.OrderedDict((t, f) for t, f in textes.items() if frag in t)
+        for t, f in vus.items():
             classe[cl].append((f, t, pourquoi))
+        if not vus and attendu == 0:
+            classe[cl].append(("—", "(plus aucune occurrence)", pourquoi))
+
+    if verifier:
+        for frag, attendu, n in ecarts:
+            sens = "LA CLASSE REVIENT" if n > attendu else "ÉPINGLE PÉRIMÉE (la chaîne a bougé)"
+            print(f"⛔ {sens} : attendu {attendu}, mesuré {n} — « {frag} »", file=sys.stderr)
+        print(f"{len(VERDICTS)} motifs · {len(ecarts)} écart(s) · population {len(rows)}",
+              file=sys.stderr)
+        return 1 if ecarts else 0
 
     out = ["# Chaînes joueur qui parlent du SYSTÈME au lieu de parler AU joueur", "",
            f"Population mesurée par `Tools/chaines-joueur.py` (contrôles verts) : "
-           f"**{len(rows)} chaînes affichées, {len(textes)} textes distincts, 142 fichiers**.", "",
-           "Verdicts posés **par lecture**. Le vocabulaire d'atelier n'a servi qu'au rappel ; "
-           "il a produit cinq fausses accusations, gardées ici comme contrôle négatif.", ""]
-    if orphelins:
-        out += ["## ⛔ FRAGMENTS SANS CIBLE — un motif qui rend zéro est un motif FAUX", ""]
-        out += [f"- `{o}`" for o in orphelins] + [""]
+           f"**{len(rows)} chaînes affichées, {len(textes)} textes distincts**.", "",
+           "Chaque motif porte sa valeur **attendue** ; `--verifier` rougit dans les deux sens "
+           "(la classe revient / l'épingle est périmée).", ""]
+    if ecarts:
+        out += ["## ⛔ ÉCARTS AU CLIQUET", ""] + \
+               [f"- `{f}` — attendu {a}, mesuré {n}" for f, a, n in ecarts] + [""]
     for cl in ORDRE:
         if not classe[cl]: continue
         out += [f"## {cl} — {len(classe[cl])}", ""]
@@ -135,11 +165,6 @@ def main():
             out += [f"- `{f}`", f"  > {t}", f"  — {pourquoi}"]
         out += [""]
     print('\n'.join(out))
-    if orphelins:
-        sys.stderr.write(f"⛔ {len(orphelins)} fragment(s) sans cible — classement non fiable.\n")
-        return 1
-    total = sum(len(classe[c]) for c in ORDRE if c != N)
-    sys.stderr.write(f"{total} chaînes de la classe · {len(classe[N])} fausses accusations écartées\n")
     return 0
 
 

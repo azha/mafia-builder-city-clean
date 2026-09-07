@@ -149,7 +149,7 @@ namespace MafiaCleanCity.Operational
                       + "panne, c'est un état : rien n'est encore à portée."
                     : "le serveur ne rend que des clés de traduction, et le dictionnaire du jeu ne "
                       + "contient que des messages d'erreur. Voilà l'écran tel qu'il s'afficherait "
-                      + "aujourd'hui. Quelqu'un doit écrire les textes.");
+                      + "aujourd'hui.");
         }
 
         /// <summary>Les cartes du flux. Chacune porte son titre (une CLÉ), son statut, son coût en
@@ -363,7 +363,7 @@ namespace MafiaCleanCity.Operational
             MajCompteur(1, -1, -1, "DÉJÀ PRISES");
             MajCompteur(2, -1, -1, "ONT RECULÉ");
             MajPanneau("L'HORIZON EST INDISPONIBLE",
-                "Le serveur n'a pas répondu",
+                "L'horizon ne répond pas",
                 "l'écran ne montre rien plutôt que de montrer un horizon périmé — ce qui était à "
                 + "portée il y a une minute ne l'est peut-être plus.");
         }
