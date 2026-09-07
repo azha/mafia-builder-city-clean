@@ -305,3 +305,45 @@ contrôles) · **`06_oracle_point`** (oracle B) · `07_sonde_texte` · `08/09_li
 
 **Données** : `cartes-ascii.txt` (11 cartes de luminance autour des ancrages) · `batiments.json`
 (les 18 boîtes déclarées).
+
+---
+
+## Addendum — ce que l'image montre (question du coordinateur, 2026-09-07)
+
+Question posée sans hypothèse : scène vue **de côté** ou carte vue **de dessus** ? Réponse par ce que
+je vois et ce que j'ai mesuré ; **aucun verdict ci-dessus n'est modifié**. Scripts `38`/`39`.
+
+1. **L'axe vertical du monde est l'axe vertical de l'image.** L'arête de coin de T3 (silhouette
+   gauche, transition sol pâle → paroi sombre) est traçable de `y=510` à `y=630` : `x` passe de
+   **717 à 718**, soit **+1 px pour 120 px de hauteur** (pente 0,008). Une arête de bâtiment court
+   donc **verticalement** dans l'image sur 120 px, avec un mur d'un côté et le sol de l'autre —
+   objet qui n'existe pas dans une vue de dessus.
+2. **Il y a des murs, et ils sont hauts.** T3 présente **340 px de façade** entre sa ligne de toit
+   (`y≈450`) et son pied (`y≈790`). Sur une seule colonne de cette façade (`x=770`) je compte
+   **6 rangées de fenêtres éclairées empilées** (`y = 530, 544, 557, 570, 586, 633`, pas ≈ 13 px) ;
+   même compte sur T1 (`x=250` : 6 rangées, `y = 555…642`). Six étages superposés le long d'une
+   verticale : c'est un élévation, pas un plan.
+3. **Toits ET façades sont visibles en même temps.** Mes 18 masses présentent chacune un plan de
+   toit *plus* une ou deux faces verticales : les ancrages de G1, G2, G3, G4 et G11 sont tombés sur
+   des **façades** (dont deux faces à l'ombre), ceux de G6 et G8 sur des **toits**. Une carte vue de
+   dessus n'offre que des toits.
+4. **Le mobilier est à l'échelle de la rue** : lampadaires avec leur flaque de lumière au sol,
+   voitures garées, étals de marché sous auvents rayés, grue de quai, péniche amarrée, un piéton,
+   guirlandes d'ampoules, et des enseignes lisibles au niveau du trottoir — « LE VERGE D'OR »,
+   « BRENNAR COAL & ICE », « CHEZ MARA », « ENTREPÔT 5 ».
+5. **Le bas de l'image est une étendue d'eau vue de biais**, pas un aplat : teinte teal stable
+   `(41,82,107)`, `B−R = +66` de `y≈1500` à `y≈1700` (colonne x=300), bordée par une arête de quai
+   nette (le liseré clair à `y≈1334` sous G10), avec des **reflets spéculaires et des traînées
+   verticales de lumière** — la signature d'une surface réfléchissante en perspective.
+6. **Ce que je ne trouve nulle part** : aucun polygone de quartier, aucun libellé de district,
+   aucune légende, aucun aplat de zone. La seule couche « carte » est l'**overlay UI** des 11
+   marqueurs de badge sur leur maille de 192 px — posée *par-dessus* la scène, et (§ hypothèse
+   ci-dessus) sans lien mesurable avec sa géométrie.
+7. **Non mesuré, et je ne le déduis pas** : je n'ai **pas** testé les lignes de fuite horizontales.
+   Je sais que les verticales du monde restent verticales ; je n'ai comparé la pente d'**aucune paire
+   de droites parallèles du monde** ni la taille apparente d'objets identiques à deux profondeurs.
+   Je ne tranche donc **pas** entre caméra **perspective** et caméra **orthographique/isométrique** —
+   cela ne change rien au point 1 à 6. La mesure qui trancherait : les pentes des rainures parallèles
+   de la dalle du quai à deux hauteurs d'image, ou la hauteur en pixels de deux lampadaires identiques.
+
+**l'image montre : une scène 3-D de ville vue DE CÔTÉ en 3/4 plongeant — rues, façades de six étages, toits, quai et plan d'eau —, surmontée d'une couche de marqueurs d'interface ; ce n'est pas une carte vue de dessus.**
