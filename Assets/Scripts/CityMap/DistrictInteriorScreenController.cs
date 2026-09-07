@@ -646,6 +646,56 @@ namespace MafiaCleanCity.CityMap
                 }
                 Debug.Log(pile.ToString());
                 Debug.Log($"[IDENTITÉ-BADGE] {identitesBadges.Count} badge(s) · {string.Join(" · ", identitesBadges)}");
+
+                // ⛔⛔ LA GARDE DE BORNES — une PROPRIÉTÉ, pas un compte, et elle ferme la CLASSE.
+                //    Mesuré le 2026-09-07 : 4 badges de possession sur 11 sont posés HORS CADRE
+                //    (x = −83, −70, −71 ; y = −56,9). Construits, positionnés, invisibles. Un
+                //    joueur qui possède ces bâtiments ne voit rien, et rien ne le lui dit.
+                //    ⛔ AUCUNE falsifiable ne pouvait le voir : elles comptent des NŒUDS
+                //    (« 2 affectations ⇒ 2 marqueurs »), jamais des PIXELS VISIBLES.
+                //    ★★ Et c'est MOT POUR MOT le défaut que `BuildLieutenantMarkers` documente
+                //    pour les MARQUEURS en août — « les trois falsifiables qui existaient étaient
+                //    VERTES pendant ce temps » — jamais fermé du côté des BADGES. *Le correctif
+                //    d'août a écrit sa propre classe dans son commentaire et ne l'a pas fermée ;
+                //    personne n'est allé voir le jumeau.* Poser ici une garde sur les seuls badges
+                //    referait la même faute un cran plus loin : la garde porte donc sur TOUT nœud
+                //    d'interface positionné, quel qu'il soit.
+                var canvasRt = cellsRt.GetComponentInParent<Canvas>()?.transform as RectTransform;
+                if (canvasRt != null)
+                {
+                    // ⛔⛔ LE CADRE EST CELUI DU CANVAS, PAS `Screen` — et ma première version a fait
+                    //    l'erreur exacte que ce fil passe la nuit à diagnostiquer chez les autres.
+                    //    En batchmode `Screen` vaut 640×480 (la vue de jeu par défaut) pendant que
+                    //    `CapturerA` rend hors écran à 1080×1920 : la garde a rapporté 66 puis
+                    //    71 nœuds « hors cadre » qui sont parfaitement visibles sur la planche.
+                    //    *Un instrument bâti sur la mauvaise grandeur accuse au hasard, et il accuse
+                    //    beaucoup* — 71 faux positifs auraient noyé les 4 vrais.
+                    //    ⇒ Le cadre qui compte est celui où le rendu a lieu : les coins du CANVAS.
+                    Vector3[] coinsCadre = new Vector3[4];
+                    canvasRt.GetWorldCorners(coinsCadre);
+                    var cadre = new Rect(coinsCadre[0].x, coinsCadre[0].y,
+                                         coinsCadre[2].x - coinsCadre[0].x,
+                                         coinsCadre[2].y - coinsCadre[0].y);
+                    horsCadre.Clear();
+                    foreach (var rt in canvasRt.GetComponentsInChildren<RectTransform>(false))
+                    {
+                        var g = rt.GetComponent<UnityEngine.UI.Graphic>();
+                        // ⚠️ On ne juge que ce qui DESSINE et qui est ACTIF : un conteneur vide hors
+                        //    cadre ne trompe personne, et un objet désactivé n'est pas un défaut.
+                        if (g == null || !g.enabled || !g.gameObject.activeInHierarchy) continue;
+                        Vector3[] c = new Vector3[4];
+                        rt.GetWorldCorners(c);
+                        var r = new Rect(c[0].x, c[0].y, c[2].x - c[0].x, c[2].y - c[0].y);
+                        // ⛔ ENTIÈREMENT dehors, jamais « déborde un peu » : un élément partiellement
+                        //    coupé peut être voulu (défilement, animation d'entrée). Ce qui n'est
+                        //    jamais voulu, c'est un objet dont AUCUN pixel n'atteint le cadre.
+                        if (!r.Overlaps(cadre)) horsCadre.Add($"{rt.name}@[{r.x:0.#},{r.y:0.#}]");
+                    }
+                    Debug.Log($"[HORS-CADRE] {horsCadre.Count} nœud(s) dessinant ENTIÈREMENT hors du "
+                              + $"cadre CANVAS [{cadre.width:0.#}x{cadre.height:0.#}] (et non `Screen`, "
+                              + $"qui vaut {Screen.width}x{Screen.height} en batchmode)"
+                              + (horsCadre.Count > 0 ? " ⚠️ invisibles pour le joueur : " + string.Join(" · ", horsCadre) : ""));
+                }
                 Debug.Log($"[HIÉRARCHIE] Screen={Screen.width}x{Screen.height} · scaleFactor={scaleFactor:0.######} "
                           + $"· un conteneur CARRÉ de côté H ferait rect[{Screen.height / scaleFactor:0.#}] en unités canvas");
 
@@ -776,6 +826,10 @@ namespace MafiaCleanCity.CityMap
         private int ancragesParPivot, ancragesParGrille;
         private readonly System.Collections.Generic.List<string> ancrages = new System.Collections.Generic.List<string>();
         private readonly System.Collections.Generic.List<string> identitesBadges = new System.Collections.Generic.List<string>();
+        /// <summary>Les nœuds qui DESSINENT entièrement hors du cadre — publié pour qu'une garde
+        /// puisse l'asserter sans re-parcourir l'arbre, et pour que le compte soit lisible.</summary>
+        private readonly System.Collections.Generic.List<string> horsCadre = new System.Collections.Generic.List<string>();
+        public System.Collections.Generic.IReadOnlyList<string> NoeudsHorsCadre => horsCadre;
 
         private GameObject BuildBuildingCell(RectTransform sceneRt, int x, int y, DistrictInteriorBuildingDto building,
             DistrictBackgroundAnchorDto anchorMap, float scaleFactor)
