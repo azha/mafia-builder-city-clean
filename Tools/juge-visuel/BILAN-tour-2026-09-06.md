@@ -226,3 +226,8 @@ local `~/project/mafia-unity-correcteur`, d'où les blobs ont été lus.
   `ecran_*` de `1d3d412` VIDES écartées. **Lot A lancé 08:30 : ㊱ ㉟ ㉜ ㉚ ㉘** ; lots B (㉛ ㉝ ㉞ ㉙ ㊳) et C (⑮ ⑰ ⑭ ㉓) à suivre.
 - Les six rejugeables sans correctif (⑯ ⑤ ⑱ ㉔ ⑥ ⑨) ne sont PAS rejugés (blob changé par le CONTENU, pas par un correctif — mesuré par f2).
 - États vides : la « réserve 614×204 » n'est pas un objet du client (`etats-vides/maquette-2026-09-07/addendum-reserve-614x204.md`).
+- **Défaut de l'INDEX (f2, 08:50)** : `planche_le_coffre_1080x2400.png` attribuée à ⑪ (l.13) ET ㉒ (l.25). Classe balayée
+  (`verifier-index-planches.py`, contrôle positif intégré) : **1 fichier sur 30 en doublon**, 31 attributions, 4 lignes sans planche ;
+  **aucun des 14 dossiers en vol n'en dépend** (⑪ et ㉒ ne sont pas lancés — ㉒ était déjà « source ambiguë »). La garde sort en
+  non-zéro tant que le doublon existe : l'INDEX est à corriger par qui l'a généré (`construire-dossiers.py`), sur ce que la planche MONTRE,
+  jamais sur le nom. Table sujet→écran de fal (`da/portraits-lieutenants`) : cinq contradictions, réconciliation remise à plus tard.
