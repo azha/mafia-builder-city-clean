@@ -214,3 +214,15 @@ local `~/project/mafia-unity-correcteur`, d'où les blobs ont été lus.
 - **File hors district transmise à f2** (07:35) : 14 écrans jamais jugés avec planche commitée et référence (㉟ ㉓ ⑮ ⑰ ⑭ ㊳ ㉜ ㉚ ㉘
   ㉛ ㉝ ㉞ ㉙ ㊱-vide), 8 rejugeables dont la planche `fd0e21e` diffère du blob jugé (⑯ ㊴ ㊵ ⑤ ⑱ ㉔ ⑥ ⑨) — r2 seulement si `fd0e21e`
   descend d'un correctif. Identité demandée PAR CAMPAGNE (5 commits de planches, 0 journal joint).
+
+### 8.quater — 07/09 08:00–08:40 : dégel du district, ㊲ r16, lot A des jamais-jugés
+
+- **㊲ r16** sur `3465929` (affordance `ebee935` + halo underlay `c292d0f`, identité `régime=défaut operational_demo` déclarée) — lancé 07:50.
+- **① r9** sur `d5ddc40` (après `78a90aa` : le snap arrondit dans le repère ÉCRAN ; journal JOINT pour la première fois ; `operational_demo`,
+  314 cartes) — lancé 08:40. Séparation de blender transmise : badge → ancre 0,60 px (8/11) ; ancre → bâtiment 23/40 sur la rue ⇒ un badge
+  sur la rue est un écart RÉEL, cause carte d'ancrage, destinataire blender.
+- **14 dossiers r1** des écrans jamais jugés construits (`0c7a4bc`) : identité par CAMPAGNE (corps de commit ; `31d8e43` MUETTE), dérive du
+  compte gelé écrite (72 013 → 72 118 → 72 155 min ; 17 → 20 bâtiments ; 6 → 8 cartes) ⇒ *deux campagnes = deux mondes*, 4 planches
+  `ecran_*` de `1d3d412` VIDES écartées. **Lot A lancé 08:30 : ㊱ ㉟ ㉜ ㉚ ㉘** ; lots B (㉛ ㉝ ㉞ ㉙ ㊳) et C (⑮ ⑰ ⑭ ㉓) à suivre.
+- Les six rejugeables sans correctif (⑯ ⑤ ⑱ ㉔ ⑥ ⑨) ne sont PAS rejugés (blob changé par le CONTENU, pas par un correctif — mesuré par f2).
+- États vides : la « réserve 614×204 » n'est pas un objet du client (`etats-vides/maquette-2026-09-07/addendum-reserve-614x204.md`).
