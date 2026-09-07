@@ -278,3 +278,12 @@ local `~/project/mafia-unity-correcteur`, d'où les blobs ont été lus.
 - Classes tenues : « la matière ne passe pas » (㊱ ㉟ ㉘ ㉚ ㉛ ㊳ ㉙) ; « texte de diagnostic servi au joueur » (㊱ ㉚ ㉙ M11) ; « la maquette n'énumère que
   les états imaginés » (㉜ ㉝ ㉛ ㉙) ; « liste tranchée par le bas du contenant » (㉝ ㊳) ; « `#ffd240` = accentGold au lieu du jeton » (㊱ ㉛) ;
   « cadre pointillé troué » (㉟ ; cherchée et absente sur ㉝).
+- **Arbitrages tranchés par f2 (12:30)** : (a) **corps de texte +9..+53 % (㉚ ㉛ ㉙) = DÉRIVE, pas décision** — une hausse délibérée serait UNIFORME
+  (on agrandit une rampe, on ne redéfinit pas quatre valeurs à des taux différents ; les boîtes sont à l'échelle) ⇒ les findings tiennent ;
+  si l'user trouve les écrans illisibles, la réponse est une rampe révisée et uniforme (question de doctrine, pas d'arbitrage) ;
+  (b) **« diagnostic servi au joueur » = une PRATIQUE**, 3 instances (㊱ ㉚ ㉙) — balayage routé par f2 : *quels écrans affichent une chaîne qui
+  parle du système au lieu de parler au joueur ?* ; le ton existe légitimement dans un cadre DÉDIÉ (#64 de ㉙, #116 de ㊱) — c'est son
+  montage au mauvais endroit qui est le défaut ; (c) **deux états vides conformes sur six** (㉛ ㉙) : la forme juste existe deux fois dans le
+  dépôt et rend les trois autres indéfendables ; (d) **chrome : 2 des 4 règles `.tel.chaud` non appliquées** (㉙ : `.heatpct` crème, d = 126/255)
+  alors que `23d9fc6` du 06/09 déclare « les quatre règles `.chaud` (deux manquaient) » ⇒ correctif déclaré, deux encore absentes — routé au
+  correcteur (*avant d'écrire « fermé », exécuter la falsifiable qui rougirait*).

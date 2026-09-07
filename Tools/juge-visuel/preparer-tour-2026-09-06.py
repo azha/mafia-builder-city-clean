@@ -183,6 +183,13 @@ DOCTRINE = """## Règles de doctrine applicables
   raison, entiers trop propres) est d'abord un soupçon sur la CHAÎNE DE CAPTURE, pas sur l'écran : dis-le, mesure le pas et le
   résidu, et mets-le en « non vérifié » avec la mesure hors image (les appelants de `SnapToScreenPixel`). Tant que ce correctif n'est
   pas posé, aucune planche de district prise par cette chaîne ne montre la mise en page réelle.
+- **Classe connue : « diagnostic servi au joueur »** (㊱ ㉚ ㉙) — une chaîne qui parle du SYSTÈME (« le serveur… », « cet écran ne sait pas
+  encore… », « aucune route… », « ce n'est pas branché ») au lieu de parler au joueur : écart de SENS, signale-le comme classe sans le
+  re-dériver ; le ton peut exister légitimement dans un cadre DÉDIÉ de la maquette (état d'erreur) — c'est son montage dans l'état nominal
+  qui est le défaut. **États vides conformes à citer** : ㉛ (« Aucune affaire en cours. Une affaire naît d'une descente — rien sur cet écran
+  n'en crée ») et ㉙ (« il vous en manque un — ce n'est pas cassé »).
+- **Corps de texte agrandi de façon NON uniforme** (+9 % et +53 % sur le même écran, boîtes à l'échelle) = dérive de la rampe typographique,
+  pas une décision : c'est un écart. Une hausse délibérée serait uniforme.
 - **Classe connue : un cadre POINTILLÉ TROUÉ, trou symétrique et central sur les deux rails horizontaux** (㉟ r1 : 334 px, 36 %, x 629..962,
   identique sur deux campagnes ; contrôle : le cadre PLEIN de la carte est continu 960/960). Cause mesurée par f2 : un bord périodique
   (`RoundedRectDashedOutline`) posé en `Image.Type.Sliced` — le 9-slice ÉTIRE la bande centrale ; un trait continu y survit, un pointillé
