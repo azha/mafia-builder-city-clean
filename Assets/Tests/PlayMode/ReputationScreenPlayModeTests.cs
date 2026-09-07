@@ -1262,5 +1262,161 @@ namespace MafiaCleanCity.Operational.Tests
             while (t != null) { pile.Push(t.name); t = t.parent; }
             return string.Join("/", pile);
         }
+
+        /// <summary>⛔⛔ LA SONDE D'EFFET DU HALO — elle REND et COMPTE, elle ne lit aucun paramètre.
+        ///
+        /// Le juge du r15 a mesuré que l'`Underlay` des compteurs ne produit **aucun pixel** :
+        /// `P(2) = 0,02 pt` contre 25,11 en référence, `P(d≥3) = 0,00` exactement, et la luminance
+        /// identique à 2, 4, 10, 20 et 30 px du glyphe dans toutes les directions. Pourtant les
+        /// trois paramètres sont posés, valides, dans leur plage, et portés par le `fontMaterial`.
+        /// ⇒ *Une garde sur les PARAMÈTRES d'un effet n'est pas une garde sur son EFFET* — la classe
+        ///   que ce dépôt a déjà payée sur le halo du titre (`0,2 → 0 px`), repayée à l'identique.
+        ///   **Quatrième état du même défaut** : absent, trop fort, mal placé, absent.
+        ///
+        /// Cette sonde ne corrige rien et n'asserte aucun seuil choisi. Elle imprime DEUX choses :
+        ///   1. **l'état RELU du matériau** après montage complet — le mot-clé est-il encore actif,
+        ///      les valeurs encore posées ? C'est ce qui départage « paramètre faux » de « matériau
+        ///      remplacé après coup ». Soupçon : `fontMaterial` rend une INSTANCE, et
+        ///      `fontStyle = Bold` est posé APRÈS la configuration (`ReputationScreenController`
+        ///      1104 puis 1113) — si TMP échange la fonte grasse, l'instance configurée est jetée.
+        ///      *Ordre d'application, pas valeur.*
+        ///   2. **un BALAYAGE de la dilatation**, avec le compte de pixels rendus à chaque pas — la
+        ///      courbe qui dit **où l'effet commence à exister**, au lieu de supposer qu'une valeur
+        ///      non nulle produit quelque chose.
+        /// ⚠️ Le matériau de PRODUCTION est relu sur l'objet, jamais re-paramétré par la sonde : une
+        ///    sonde qui se configure elle-même prouve que la librairie sait faire l'effet, pas que
+        ///    l'objet livré le porte.
+        /// ⚠️ PLANCHER ANTI-VACUITÉ : on compte d'abord l'encre. Sans encre, l'image est vide et
+        ///    tout compte de halo vaudrait zéro pour la mauvaise raison.</summary>
+        [UnityTest]
+        [Category("ScreenB3")]
+        public IEnumerator B3H1_SondeDEffet_LeHaloDesCompteurs_RendDesPixelsOuNEnRendPas()
+        {
+            yield return OuvrirJoueurFrais();
+            var ecran = MonterEcran();
+            yield return ecran.Charger(lieutenantId);
+
+            GameObject racine = RacineEcran();
+            TMPro.TMP_Text cible = null;
+            foreach (var tx in racine.GetComponentsInChildren<TMPro.TMP_Text>(true))
+                if (tx.gameObject.name == "Nombre") { cible = tx; break; }
+            Assert.IsNotNull(cible, "aucun compteur « Nombre » monté — la sonde n'a rien à mesurer");
+
+            TMPro.ShaderUtilities.GetShaderPropertyIDs();
+            Material m = cible.fontMaterial;
+            bool motCle = m.IsKeywordEnabled(TMPro.ShaderUtilities.Keyword_Underlay);
+            float dil = m.HasProperty(TMPro.ShaderUtilities.ID_UnderlayDilate)
+                        ? m.GetFloat(TMPro.ShaderUtilities.ID_UnderlayDilate) : float.NaN;
+            float dou = m.HasProperty(TMPro.ShaderUtilities.ID_UnderlaySoftness)
+                        ? m.GetFloat(TMPro.ShaderUtilities.ID_UnderlaySoftness) : float.NaN;
+            Color col = m.HasProperty(TMPro.ShaderUtilities.ID_UnderlayColor)
+                        ? m.GetColor(TMPro.ShaderUtilities.ID_UnderlayColor) : Color.clear;
+            Debug.Log($"[HALO-ETAT] matériau « {m.name} » · mot-clé UNDERLAY {(motCle ? "ACTIF" : "ÉTEINT")}"
+                      + $" · dilate {dil:F3} · douceur {dou:F3} · couleur alpha {col.a:F3}"
+                      + $" · fontStyle {cible.fontStyle} · fonte « {(cible.font != null ? cible.font.name : "null")} »"
+                      + $" · partagé « {(cible.fontSharedMaterial != null ? cible.fontSharedMaterial.name : "null")} »");
+
+            var rt = new RenderTexture(256, 256, 24, RenderTextureFormat.ARGB32);
+            var camGo = new GameObject("SondeHaloCam");
+            var cam = camGo.AddComponent<Camera>();
+            cam.targetTexture = rt; cam.orthographic = true;
+            cam.backgroundColor = Color.black; cam.clearFlags = CameraClearFlags.SolidColor;
+            Canvas canvas = racine.GetComponentInParent<Canvas>();
+            RenderMode modeAvant = canvas.renderMode; Camera camAvant = canvas.worldCamera;
+            canvas.renderMode = RenderMode.ScreenSpaceCamera; canvas.worldCamera = cam;
+
+            float dilAvant = float.IsNaN(dil) ? 0f : dil;
+            var tex = new Texture2D(256, 256, TextureFormat.RGB24, false);
+            System.Func<Color32[]> rendre = () =>
+            {
+                Canvas.ForceUpdateCanvases();
+                cam.Render();
+                RenderTexture.active = rt;
+                tex.ReadPixels(new Rect(0, 0, 256, 256), 0, 0); tex.Apply();
+                RenderTexture.active = null;
+                return tex.GetPixels32();
+            };
+
+            // ⛔⛔ MESURE DIFFÉRENTIELLE — le premier essai comptait l'ENCRE DE TOUT L'ÉCRAN et
+            //    rendait **47 541 px à chaque valeur de dilatation, zéro compris**. Verdict
+            //    UNIFORME ⇒ l'instrument mesurait autre chose : le halo d'un compteur est une
+            //    poignée de pixels noyée dans 73 % de l'image. *Un compte global n'a pas la
+            //    sensibilité de la question posée.*
+            // ⇒ On compte donc les pixels qui CHANGENT entre deux réglages. Si le halo existe,
+            //   bouger sa dilatation doit déplacer quelque chose ; si rien ne bouge sur toute la
+            //   plage, l'effet n'est pas rendu — et c'est une réponse, pas un silence.
+            Color32[] refPx = rendre();
+            int encreBase = 0;
+            for (int k = 0; k < refPx.Length; k++)
+                if (refPx[k].r + refPx[k].g + refPx[k].b > 60) encreBase++;
+            Debug.Log($"[HALO-BALAYAGE] plancher anti-vacuité : {encreBase} px d'encre à l'écran (réglage LIVRÉ)");
+
+            float[] pas = { 0f, 0.12f, 0.25f, 0.4f, 0.6f, 0.8f, 1f };
+            for (int k = 0; k < pas.Length; k++)
+            {
+                m.SetFloat(TMPro.ShaderUtilities.ID_UnderlayDilate, pas[k]);
+                Color32[] px = rendre();
+                int changes = 0, ampliMax = 0;
+                for (int q = 0; q < px.Length; q++)
+                {
+                    int d = Mathf.Abs(px[q].r - refPx[q].r) + Mathf.Abs(px[q].g - refPx[q].g)
+                          + Mathf.Abs(px[q].b - refPx[q].b);
+                    if (d > 8) { changes++; if (d > ampliMax) ampliMax = d; }
+                }
+                Debug.Log($"[HALO-BALAYAGE] dilate {pas[k]:F2} ⇒ {changes} px CHANGÉS vs le réglage livré"
+                          + $" (amplitude max {ampliMax})");
+            }
+            m.SetFloat(TMPro.ShaderUtilities.ID_UnderlayDilate, dilAvant);
+
+            // ⚠️ CONTRÔLE DE SENSIBILITÉ DE L'INSTRUMENT — sans lui, « 0 px changés » ne distingue
+            //    pas « l'effet ne rend rien » de « ma sonde ne voit rien ». On éteint le mot-clé :
+            //    si l'image ne bouge toujours pas, c'est la SONDE qui est aveugle, pas le halo.
+            m.DisableKeyword(TMPro.ShaderUtilities.Keyword_Underlay);
+            {
+                Color32[] px = rendre();
+                int changes = 0;
+                for (int q = 0; q < px.Length; q++)
+                {
+                    int d = Mathf.Abs(px[q].r - refPx[q].r) + Mathf.Abs(px[q].g - refPx[q].g)
+                          + Mathf.Abs(px[q].b - refPx[q].b);
+                    if (d > 8) changes++;
+                }
+                Debug.Log($"[HALO-CONTROLE] mot-clé UNDERLAY ÉTEINT ⇒ {changes} px changés — "
+                          + "si 0, la sonde est aveugle et aucun de ses zéros ne vaut");
+            }
+            m.EnableKeyword(TMPro.ShaderUtilities.Keyword_Underlay);
+
+            // ⛔ ET LE BALAYAGE DE L'AMPLITUDE — c'est ELLE que le juge mesure (un excès de
+            //    luminance), pas la dilatation. Livrée à α 0,282 (= CssHaloOpacite × 1/2,13).
+            //    On lit le SEUIL sur la courbe au lieu de choisir une valeur.
+            {
+                Color colAvant = col;
+                foreach (float av in new[] { 0f, 0.15f, 0.282f, 0.45f, 0.6f, 0.8f, 1f })
+                {
+                    Color c2 = colAvant; c2.a = av;
+                    m.SetColor(TMPro.ShaderUtilities.ID_UnderlayColor, c2);
+                    Color32[] px = rendre();
+                    int changes = 0, ampliMax = 0;
+                    for (int q = 0; q < px.Length; q++)
+                    {
+                        int d = Mathf.Abs(px[q].r - refPx[q].r) + Mathf.Abs(px[q].g - refPx[q].g)
+                              + Mathf.Abs(px[q].b - refPx[q].b);
+                        if (d > 8) { changes++; if (d > ampliMax) ampliMax = d; }
+                    }
+                    Debug.Log($"[HALO-AMPLITUDE] alpha {av:F3} ⇒ {changes} px changés vs le livré"
+                              + $" (amplitude max {ampliMax})");
+                }
+                m.SetColor(TMPro.ShaderUtilities.ID_UnderlayColor, colAvant);
+            }
+
+            canvas.renderMode = modeAvant; canvas.worldCamera = camAvant;
+            Object.DestroyImmediate(camGo); Object.DestroyImmediate(tex);
+            rt.Release(); Object.DestroyImmediate(rt);
+
+            Assert.Greater(encreBase, 50,
+                $"seulement {encreBase} px rendus : l'image est vide et aucun compte de halo n'aurait "
+                + "de sens. La sonde refuse de conclure plutôt que de rendre un zéro.");
+        }
+
     }
 }
