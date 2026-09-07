@@ -301,7 +301,15 @@ namespace MafiaCleanCity.CoreLoops.Compression
             bf.sprite = budget
                 ? ProceduralUI.RoundedRectOutline((int)Px(9f), Px(1f), teinte)
                 : ProceduralUI.RoundedRectDashedOutline((int)Px(9f), Px(1f), (int)Px(4f), (int)Px(3f), Eteint);
-            bf.type = Image.Type.Sliced;
+            // ⛔ LE TYPE SUIT LE SPRITE, PAS LE SITE — et c'est ce que la correction de classe a
+            //    failli manquer. Ce site pose DEUX contours selon l'état : un trait CONTINU
+            //    (`RoundedRectOutline`, qui veut `Sliced` : l'étirement préserve un trait plein)
+            //    et un POINTILLÉ (`RoundedRectDashedOutline`, qui veut `Tiled` : sa section
+            //    centrale porte UNE période, et `Sliced` l'étirerait en une longue barre).
+            //    ⇒ Basculer le site entier en `Tiled` aurait réparé le pointillé en cassant le
+            //      trait plein. *Une correction de classe posée sur le SITE au lieu de l'OBJET
+            //      échange un défaut contre un autre.*
+            bf.type = budget ? Image.Type.Sliced : Image.Type.Tiled;
             Texte(b.transform, "Lib", libelle, Px(8.5f), budget ? teinte : Eteint,
                   DesignTokens.Current.primaryFont, TextAlignmentOptions.Center).characterSpacing = 10f;
 

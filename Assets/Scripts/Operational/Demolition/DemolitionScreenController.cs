@@ -766,7 +766,15 @@ namespace MafiaCleanCity.Operational
             bord.sprite = ProceduralUI.RoundedRectDashedOutline(
                 PxTrait(CssRayonMoyen), PxTrait(CssFiletEpais),
                 PxTrait(CssFiletEpais * 3f), PxTrait(CssFiletEpais * 3f), Color.white);
-            bord.type = Image.Type.Sliced;
+            // ⛔ `Tiled`, PAS `Sliced` — et c'est le générateur lui-même qui le dit : « un contour
+            //    de rectangle arrondi en POINTILLÉS, à utiliser en `Image.Type.Tiled` ». Les deux
+            //    respectent le `border` du sprite et gardent les coins ; `Sliced` ÉTIRE la section
+            //    centrale — qui porte exactement UNE période de pointillé — et la transforme en une
+            //    longue barre, tandis que `Tiled` la RÉPÈTE. Mesuré par un juge ⊥ sur un cadre brisé :
+            //    334 px de trou, 36 %, symétrique haut et bas parce que les deux rails partagent la
+            //    même bande. ⇒ Classe fermée sur les 7 sites, pas seulement sur celui du rapport ;
+            //    le remède était DÉJÀ en production sur deux sites de `LieutenantScreenController`.
+            bord.type = Image.Type.Tiled;
             bord.color = DemolitionResolvers.ParcelleBord;
             bord.raycastTarget = false;
             VerticalLayoutGroup vp = parc.AddComponent<VerticalLayoutGroup>();
