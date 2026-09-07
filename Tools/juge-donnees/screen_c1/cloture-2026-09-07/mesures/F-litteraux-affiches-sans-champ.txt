@@ -1,0 +1,55 @@
+═══ TOUT CE QUE L'ÉCRAN AFFICHE SANS VENIR D'UN CHAMP DTO ═══
+
+── a) appels Lib("…") — littéraux routés vers journal.bloc.<slug> (ligne 654-655) ──
+   : 249  Lib("RIEN NE BOUGE")
+   : 249  Lib("CE QUI SE DIT CE MATIN")
+   : 251  Lib("À LA UNE")
+   : 252  Lib("DANS LA RUE")
+   : 253  Lib("EN COURS")
+   : 263  Lib("POURQUOI C'EST VIDE")
+   : 264  Lib("Le journal suit le monde, pas vous")
+   : 265  Lib("ces trois listes se remplissent avec ce que la ville fait. Aucune ne ")
+   : 274  Lib("CE QUE LE SERVEUR ENVOIE VRAIMENT")
+   : 275  Lib("Aucune de ces brèves n'a de texte")
+   : 276  Lib("le serveur rend des clés et un gabarit à trous ; les titres restent à ")
+   : 296  Lib("EN ATTENTE DU MATIN")
+   : 297  Lib("À LA UNE")
+   : 298  Lib("DANS LA RUE")
+   : 299  Lib("EN COURS")
+   : 300  Lib("CE QUE CET ÉCRAN SAIT POUR L'INSTANT")
+   : 301  Lib("Le journal n'a pas encore été ouvert")
+   : 302  Lib("les trois listes n'ont pas été demandées — ce n'est ni « rien ne bouge » ni ")
+   : 335  Lib("Rien ce matin.\nLa ville a passé une nuit tranquille.")
+   : 408  Lib("ÇA COMMENCE")
+   : 409  Lib("ÇA SE DÉPLOIE")
+   : 410  Lib("ÇA RETOMBE")
+   : 411  Lib("ÇA TRAÎNE")
+   : 412  Lib("ÇA NE PARTIRA PAS")
+   : 413  Lib("PHASE INCONNUE")
+   : 437  Lib("LE JOURNAL N'EST PAS ARRIVÉ")
+   : 438  Lib("À LA UNE")
+   : 439  Lib("DANS LA RUE")
+   : 440  Lib("EN COURS")
+   : 446  Lib("CE QUE LE SERVEUR ENVOIE VRAIMENT")
+   : 447  Lib("Pas de réponse")
+   : 448  Lib("la route n'a rien rendu. Ce n'est pas « la ville est calme » : c'est « on ")
+   : 495  Lib("Le journal")
+   => 33 littéral(aux) sur ligne active
+
+── b) littéraux passés DIRECTEMENT à NouveauTexte (sans Lib) ──
+   : 500  nom="SousTitre"  texte=""
+   : 528  nom="Nombre"  texte="00"
+   : 532  nom="Libelle"  texte=""
+   : 602  nom="SurTitre"  texte=""
+   : 604  nom="Titre"  texte=""
+   : 606  nom="Texte"  texte=""
+
+── c) valeurs DÉRIVÉES / mises en forme (pas un champ tel quel) ──
+   : 311  compteurNombre[i].text = valeur < 100 ? valeur.ToString("00") : valeur.ToString();
+   : 390  NouveauTexte(go.transform, "Titre", cle ?? "(sans clé)", Px(11f), TexteFort,
+   : 395  dessous = string.IsNullOrEmpty(dessous) ? fraicheur : dessous + " · " + fraicheur;
+
+── d) CONTROLE POSITIF : le motif Lib( trouve-t-il un cas connu ? ──
+   'À LA UNE' : 3 occurrence(s)
+── e) CONTROLE NEGATIF ──
+   'Lib("ZZZ")' : 0

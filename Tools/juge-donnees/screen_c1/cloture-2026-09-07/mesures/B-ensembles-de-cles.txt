@@ -1,0 +1,39 @@
+═══ B — ENSEMBLES DE CLÉS MESURÉS (compte FRAIS, 2026-09-07, conteneur recréé) ═══
+
+── GET /v1/news/feed ──
+  cles enveloppe data : ['beats', 'nextCursor']
+  nextCursor = None
+  len(beats) = 20
+  cles d'UN beat (union sur 20 beats) : ['beat_id', 'category', 'district', 'frame_tag_i18n_key', 'headline_i18n_key', 'headline_params', 'headline_params_fields', 'outlet_i18n_key', 'recency_band']
+  cardinal = 9
+  formes de headline_params observees : {('district', 'outlet', 'subject'): 20}
+  cles headline_params_fields (union) : ['district', 'outlet', 'subject']
+  valeurs distinctes category              : ['arts', 'brennar_local', 'business']
+  valeurs distinctes recency_band          : ['settling']
+  valeurs distinctes frame_tag_i18n_key    : ['None']
+  valeurs distinctes outlet_i18n_key       : ['press.outlet.brennar_daily_star.name', 'press.outlet.free_weekly.name', 'press.outlet.tilbey_weekly.name']
+  valeurs distinctes district              : ['district-1', 'district-10', 'district-11', 'district-12', 'district-13', 'district-14', 'district-15', 'district-16', 'district-17', 'district-18', 'district-2', 'district-4', 'district-6']
+  valeurs distinctes headline_i18n_key     : ['news_beat.digest.ambient_micro.brennar_daily_star.headline', 'news_beat.digest.ambient_micro.free_weekly.headline', 'news_beat.digest.ambient_micro.tilbey_weekly.headline', 'news_beat.hindsight.op_ed.free_weekly.headline']
+
+── GET /v1/ambient/feed ──
+  cles enveloppe data : ['events', 'limit', 'offset', 'total'] | total = 3 limit = 20 offset = 0
+  cles d'UN event : ['channel', 'descriptor_i18n_key', 'district', 'event_id', 'kind', 'recency_band'] | cardinal = 6
+  valeurs distinctes kind                  : ['bar_rumor', 'building_inspection']
+  valeurs distinctes channel               : ['bar_talk', 'constant_hum']
+  valeurs distinctes recency_band          : ['fresh']
+  valeurs distinctes district              : ['district-16']
+  valeurs distinctes descriptor_i18n_key   : ['ambient.micro_event.bar_rumor', 'ambient.micro_event.building_inspection']
+
+── GET /v1/random-world/active ──
+  cles enveloppe data : ['events'] | len(events) = 1
+  cles d'UN event : ['district', 'event_id', 'phase_band', 'recency_band', 'severity_band', 'template_i18n_key'] | cardinal = 6
+  valeurs distinctes template_i18n_key     : ['random_world.template.hollow_at_the_corner']
+  valeurs distinctes severity_band         : ['faint']
+  valeurs distinctes phase_band            : ['lingering']
+  valeurs distinctes recency_band          : ['fresh']
+  valeurs distinctes district              : ['district-16']
+
+── GET /v1/random-world/known-couplings ──
+  cles enveloppe data : ['couplings'] | len(couplings) = 0  ⇒ MESURÉ À VIDE
+
+  premier beat_id (pour /news/beats/:id) : 6247c7bd-3802-48d2-ae12-6b74cf74803e

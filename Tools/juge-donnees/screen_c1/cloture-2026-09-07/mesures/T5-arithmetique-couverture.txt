@@ -1,0 +1,8 @@
+   11  GET /v1/news/feed
+   14  GET /v1/news/beats/:id
+   10  GET /v1/ambient/feed
+    7  GET /v1/random-world/active
+    5  GET /v1/random-world/known-couplings
+    2  GET /v1/i18n/bundle
+  ───
+  49  |B| (clés comptées PAR ROUTE — une même clé sur 2 routes compte 2 fois)

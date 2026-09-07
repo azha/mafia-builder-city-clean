@@ -1,0 +1,28 @@
+═══ BALAYAGE : quels CONTRÔLEURS portent un mot du domaine ㊳ ? ═══
+motifs (14) : ['news_beat', 'newsBeat', 'news/', 'ambient', 'random_world', 'randomWorld', 'random-world', 'press.outlet', 'headline', 'descriptor_i18n_key', 'template_i18n_key', 'recency_band', 'phase_band', 'coupling']
+
+  [ADMIN       ] ./operational/ambient/ambient-admin.controller.ts
+                 {'ambient': 4}
+  [TEST        ] ./operational/ambient/ambient-test.controller.ts
+                 {'ambient': 22}
+  [JOUEUR/AUTRE] ./operational/ambient/ambient.controller.ts
+                 {'ambient': 4}
+  [TEST        ] ./operational/effect_engine/effect-engine-test.controller.ts
+                 {'random_world': 2, 'randomWorld': 19, 'random-world': 4}
+  [ADMIN       ] ./operational/news_beat/news-admin.controller.ts
+                 {'news_beat': 1, 'newsBeat': 2, 'ambient': 2, 'random_world': 2}
+  [TEST        ] ./operational/news_beat/news-test.controller.ts
+                 {'news_beat': 1, 'newsBeat': 47, 'news/': 10, 'ambient': 1}
+  [JOUEUR/AUTRE] ./operational/news_beat/news.controller.ts
+                 {'news/': 2}
+  [ADMIN       ] ./operational/random_world/random-world-admin.controller.ts
+                 {'random_world': 1, 'random-world': 7, 'coupling': 2}
+  [TEST        ] ./operational/random_world/random-world-test.controller.ts
+                 {'random_world': 5, 'randomWorld': 3, 'random-world': 8}
+  [JOUEUR/AUTRE] ./operational/random_world/random-world.controller.ts
+                 {'random-world': 5, 'coupling': 2}
+
+  => 10 controleurs touches, dont 3 hors -test./-admin.
+
+═══ CONTROLE NEGATIF : un mot qui ne doit rien rendre ═══
+  'zzzz_inexistant' : 0 controleur(s)

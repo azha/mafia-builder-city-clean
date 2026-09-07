@@ -1,0 +1,114 @@
+n_messages = 886
+
+--- prefixes racine (compte) ---
+  154  news_beat
+  148  famille
+  101  exception
+   64  error
+   49  building
+   26  district
+   25  accueil
+   25  journal
+   21  reputation
+   21  filiere
+   20  carnet
+   17  exceptions
+   16  horizon
+   16  random_world
+   15  game
+   12  forensic
+   12  conflit
+   12  political
+   11  tutorial
+   11  core_loops
+   11  distribution
+   11  loi
+   10  appro
+   10  carte
+   10  live_ops
+    9  autonomie
+    9  press
+    8  blanchiment
+    7  exception_detail
+    7  ambient
+    4  demolition
+    3  pipeline
+    2  delegation
+    2  profil
+    2  reglages
+    2  revue
+    1  onboarding
+    1  boutique
+    1  semaine
+
+--- prefixes du domaine ㊳ ---
+news_beat.        154
+press.              9
+ambient.            7
+random_world.      16
+journal.           25
+
+--- toutes les cles press.* ---
+    press.journalist.dunmore.name => Hettie Dunmore
+    press.journalist.marens.name => Juna Marens
+    press.journalist.okonkwo.name => Ifeoma Okonkwo
+    press.journalist.praile.name => Denis Praile
+    press.journalist.tellan.name => Emeric Tellan
+    press.journalist.vasse.name => Solene Vasse
+    press.outlet.brennar_daily_star.name => Brennar Daily Star
+    press.outlet.free_weekly.name => The Free Weekly
+    press.outlet.tilbey_weekly.name => The Tilbey Weekly
+
+--- toutes les cles ambient.* ---
+    ambient.micro_event.bar_rumor => une rumeur de comptoir
+    ambient.micro_event.building_inspection => une inspection d'immeuble
+    ambient.micro_event.corner_fight => une bagarre au coin de la rue
+    ambient.micro_event.delayed_shipment => une livraison en retard
+    ambient.micro_event.noisy_block => un pâté de maisons bruyant
+    ambient.micro_event.stalled_tram => un tramway en panne
+    ambient.off_hours_drift.card => Vos opérations en dehors des heures ouvrées montrent une chaleur élevée ces dernières semaines
+
+--- toutes les cles random_world.* ---
+    random_world.coupling.pair.erlang_stash__deal_lek => ce que tient votre planque et ce que la rue vient disputer
+    random_world.coupling.pair.offhours_hum__bpd_attention => travailler en dehors des heures et l'endroit où la police regarde ensuite
+    random_world.template.absconding => la disparition
+    random_world.template.apparent_recovery => l'embellie apparente
+    random_world.template.cry_wolf_fatigue => la lassitude des fausses alertes
+    random_world.template.dialect_drift => la dérive des usages
+    random_world.template.festival_misread => le malentendu de la fête
+    random_world.template.halgren_tannery_hailstorm => la grêle sur la tannerie Halgren
+    random_world.template.hollow_at_the_corner => le vide au coin de la rue
+    random_world.template.permanent_residue => le résidu qui ne part plus
+    random_world.template.quorum_on_stadler_row => le basculement de Stadler Row
+    random_world.template.risk_compensation => la prise de risque compensatoire
+    random_world.template.sideways_failure => la panne de biais
+    random_world.template.standing_ground => le quartier qui tient
+    random_world.template.triage_night => la nuit de triage
+    random_world.template.trough_cycle => le creux
+
+--- toutes les cles journal.* ---
+    journal.bloc.a_la_une => À LA UNE
+    journal.bloc.aucune_de_ces_breves_n_a_de_texte => Aucune de ces brèves n'a de texte
+    journal.bloc.ca_commence => ÇA COMMENCE
+    journal.bloc.ca_ne_partira_pas => ÇA NE PARTIRA PAS
+    journal.bloc.ca_retombe => ÇA RETOMBE
+    journal.bloc.ca_se_deploie => ÇA SE DÉPLOIE
+    journal.bloc.ca_traine => ÇA TRAÎNE
+    journal.bloc.ce_que_cet_ecran_sait_pour_l_instant => CE QUE CET ÉCRAN SAIT POUR L'INSTANT
+    journal.bloc.ce_que_le_serveur_envoie_vraiment => CE QUE LE SERVEUR ENVOIE VRAIMENT
+    journal.bloc.ce_qui_se_dit_ce_matin => CE QUI SE DIT CE MATIN
+    journal.bloc.ces_trois_listes_se_remplissent_avec_ce_que_la_ville_fait_aucune_ne_depend_de_vos_gestes => ces trois listes se remplissent avec ce que la ville fait. Aucune ne dépend de vos gestes.
+    journal.bloc.dans_la_rue => DANS LA RUE
+    journal.bloc.en_attente_du_matin => EN ATTENTE DU MATIN
+    journal.bloc.en_cours => EN COURS
+    journal.bloc.la_route_n_a_rien_rendu_ce_n_est_pas_la_ville_est_calme_c_est_on_ne_sait_pas_ce_qu_elle_a_fait_cette_nuit => la route n'a rien rendu. Ce n'est pas « la ville est calme » : c'est « on ne sait pas ce qu'elle a fait cette nuit ».
+    journal.bloc.le_journal => Le journal
+    journal.bloc.le_journal_n_a_pas_encore_ete_ouvert => Le journal n'a pas encore été ouvert
+    journal.bloc.le_journal_n_est_pas_arrive => LE JOURNAL N'EST PAS ARRIVÉ
+    journal.bloc.le_journal_suit_le_monde_pas_vous => Le journal suit le monde, pas vous
+    journal.bloc.le_serveur_rend_des_cles_et_un_gabarit_a_trous_les_titres_restent_a_ecrire_voila_le_journal_tel_qu_il_s_afficherait_aujourd_hui => le serveur rend des clés et un gabarit à trous ; les titres restent à écrire. Voilà le journal tel qu'il s'afficherait aujourd'hui.
+    journal.bloc.les_trois_listes_n_ont_pas_ete_demandees_ce_n_est_ni_rien_ne_bouge_ni_pas_de_reponse_c_est_pas_encore => les trois listes n'ont pas été demandées — ce n'est ni « rien ne bouge » ni « pas de réponse », c'est « pas encore ».
+    journal.bloc.pas_de_reponse => Pas de réponse
+    journal.bloc.phase_inconnue => PHASE INCONNUE
+    journal.bloc.pourquoi_c_est_vide => POURQUOI C'EST VIDE
+    journal.bloc.rien_ne_bouge => RIEN NE BOUGE

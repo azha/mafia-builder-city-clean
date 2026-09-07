@@ -1,0 +1,59 @@
+═══ Q3 — le back distingue-t-il une « UNE » (rang / poids / is_headline) ? ═══
+
+A. Colonnes de la table `news_beat` (db/schema/news_beat.ts) :
+    ['id', 'game_day', 'thread_id', 'template_id', 'outlet_key', 'journalist_key', 'district_id', 'beat_category', 'frame', 'headline_i18n_key', 'body_i18n_key', 'params', 'source_attribution', 'fodder_refs', 'created_at'] (15 colonnes)
+
+B. Un mot de rang parmi ces colonnes ?
+   salience      : —
+   rank          : —
+   priority      : —
+   weight        : —
+   is_headline   : —
+   headline_rank : —
+   featured      : —
+   lead          : —
+   top           : —
+   score         : —
+   importance    : —
+   prominence    : —
+
+C. Le mot 'salience' dans TOUT le module news_beat (lignes actives) :
+   brennar-daily.service.ts:541  if (!payload.frames || payload.frames.length === 0 || !payload.salience || !payload.outletKeysByFrame) {
+   brennar-daily.service.ts:543  `three_outlet_storm thread ${thread.id} has no frames/salience/outletKeysByFrame (payload-less/malformed) — sk
+   brennar-daily.service.ts:552  const salience: Record<string, number> = { ...payload.salience };
+   brennar-daily.service.ts:553  let advancedThrough = payload.salienceAdvancedThroughGameDay;
+   brennar-daily.service.ts:566  const dayRng = makeRng(`news:${thread.id}:salience:${day}`);
+   brennar-daily.service.ts:569  salience[frame] = (salience[frame] ?? 0) + computeStormDailySalienceIncrement(tier, recurrenceToday, dayRng);
+   brennar-daily.service.ts:581  const lockCheck = evaluateStormLock(salience, newsBeatTunables.stormLockMargin);
+   brennar-daily.service.ts:583  frameLock = { winningFrame: lockCheck.winningFrame, salienceRatio: lockCheck.salienceRatio, lockedAtGameDay: g
+   brennar-daily.service.ts:598  salience,
+   brennar-daily.service.ts:599  salienceAdvancedThroughGameDay: advancedThrough,
+   news-beat-generator.service.ts:113  readonly salience: Readonly<Record<string, number>>;
+   news-beat-generator.service.ts:118  readonly salienceAdvancedThroughGameDay: number;
+   => 22 occurrence(s) en ligne ACTIVE
+
+D. Où vit la salience ? (colonne vs jsonb)
+   news_thread.payload (jsonb) — en-tete du schema:23 : « salience vector + FrameLock for storm »
+   ⇒ AUCUNE colonne de rang sur news_beat ; la salience est un etat INTERNE de thread, jamais projete.
+
+E. Ordre du feed (news-beat.repository.ts listFeedBeats) :
+   :651  .orderBy(desc(newsDailyRun.game_day))
+   :669  .orderBy(newsThread.opened_at_game_day);
+   :689  .orderBy(ambientMicroEvent.id);
+   :702  return this.db.select().from(newsThread).where(eq(newsThread.status, 'open')).orderBy(newsThread.id);
+   :807  .orderBy(desc(newsDailyRun.game_day))
+   :847  .orderBy(desc(newsDailyRun.game_day))
+   :974  .orderBy(desc(newsBeat.created_at), desc(newsBeat.id))
+   :995  const rows = await this.db.select().from(newsDailyRun).orderBy(desc(newsDailyRun.game_day)).limit(1);
+   :1008  .orderBy(newsDailyRun.game_day)
+   :1026  .orderBy(desc(newsBeat.created_at), desc(newsBeat.id))
+   :1036  return this.db.select().from(newsThread).where(inArray(newsThread.id, [...ids])).orderBy(newsThread.id);
+   :1047  ? await query.where(eq(newsThread.status, status)).orderBy(desc(newsThread.created_at)).limit(limit)
+   :1048  : await query.orderBy(desc(newsThread.created_at)).limit(limit);
+   :1058  return this.db.select().from(newsBeat).where(eq(newsBeat.thread_id, threadId)).orderBy(newsBeat.game_day);
+
+F. La projection joueur porte-t-elle un champ de rang ?
+   NewsFeedBeatView = ['beat_id', 'headline_i18n_key', 'headline_params', 'headline_params_fields', 'category', 'outlet_i18n_key', 'frame_tag_i18n_key', 'district', 'recency_band'] (9 champs)
+
+G. CONTROLE POSITIF : le motif sait-il trouver un mot present ?
+   'category' dans les colonnes : ['beat_category']

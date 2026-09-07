@@ -1,0 +1,519 @@
+=== SOURCE: ecrans-brennar-6.html lignes 6118-6139 (bloc « LE JOURNAL & LA RUE (NEUF) ») ===
+  <!-- LE JOURNAL & LA RUE (NEUF) · généré par generateur-journal.py -->
+<div class="cadre">
+<div class="etiquette">Le journal — ce qui se dit ce matin</div>
+<div class="tel">
+<div class="scene district" style="background-position:center 50%;filter:brightness(.24)">
+</div>
+<div class="voile-scene">
+</div>
+<div class="ecran">
+<div class="barre">
+<div class="aile">
+<span class="lib">Argent</span>
+<span class="val">$ 24 850</span>
+</div>
+        <div class="mano">
+<svg viewBox="0 0 40 26">
+<path d="M5 22 A15 15 0 0 1 35 22" fill="none" stroke="#ffffff22" stroke-width="3"/>
+<path d="M5 22 A15 15 0 0 1 20 7" fill="none" stroke="#7fd4d955" stroke-width="3"/>
+<path d="M29 10 A15 15 0 0 1 35 22" fill="none" stroke="#e0664a88" stroke-width="3"/>
+<line x1="20" y1="22" x2="20" y2="9" stroke="#eae0c8" stroke-width="1.6" stroke-linecap="round" transform="rotate(-40 20 22)"/>
+<circle cx="20" cy="22" r="1.8" fill="#b08d3e"/>
+</svg>
+<span class="val">tiède</span>
+<span class="lib">Heat</span>
+</div>
+        <div class="aile droite">
+<span class="lib">Jour 12</span>
+<span class="val">Matin</span>
+</div>
+</div>
+<div class="panneau">
+<div class="jrn6" style="height:462px">
+<div class="cerne">
+</div>
+<div class="enseigne">
+<b>Le journal</b>
+<i>ce qui se dit ce matin</i>
+</div>
+<div class="compteurs">
+<div class="fen">
+<b>01</b>
+<span>à la une</span>
+</div>
+<div class="fen">
+<b>04</b>
+<span>dans la rue</span>
+</div>
+<div class="fen">
+<b>03</b>
+<span>en cours</span>
+</div>
+</div>
+<div class="elast">
+<div class="une">
+<div class="jrn">
+<b>LE CLAIRON DE BRENNAR</b>
+<span style="color:#f2c96b">ce matin</span>
+</div>
+<h5>Un corps repêché sous le pont de Stack</h5>
+<span class="cle">news.beat.body_found · Dépôt-Est</span>
+<span class="angle">fait divers</span>
+</div>
+<div class="brv">
+<span class="pt" style="background:#f2c96b">
+</span>
+<div>
+<b>Une file devant la pharmacie de La Lisière</b>
+<span>ambient.queue_pharmacy · La Lisière</span>
+</div>
+<span class="qd" style="color:#f2c96b">ce matin</span>
+</div>
+<div class="brv">
+<span class="pt" style="background:#f2c96b">
+</span>
+<div>
+<b>Deux camions la nuit derrière l’entrepôt</b>
+<span>ambient.night_trucks · Les Entrepôts</span>
+</div>
+<span class="qd" style="color:#f2c96b">ce matin</span>
+</div>
+<div class="brv">
+<span class="pt" style="background:#b9ad92">
+</span>
+<div>
+<b>Le curé de Marne-Basse a fermé sa porte</b>
+<span>ambient.church_closed · Marne-Basse</span>
+</div>
+<span class="qd" style="color:#b9ad92">hier</span>
+</div>
+</div>
+<div class="pied">
+<span class="cta6">Y PRÊTER ATTENTION</span>
+<div class="note6">on peut <u>assister</u> à ce qui se passe — c’est le seul geste que la rue accepte</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="cadre">
+<div class="etiquette">Ce qui arrive à la ville</div>
+<div class="tel">
+<div class="scene district" style="background-position:center 50%;filter:brightness(.24)">
+</div>
+<div class="voile-scene">
+</div>
+<div class="ecran">
+<div class="barre">
+<div class="aile">
+<span class="lib">Argent</span>
+<span class="val">$ 24 850</span>
+</div>
+        <div class="mano">
+<svg viewBox="0 0 40 26">
+<path d="M5 22 A15 15 0 0 1 35 22" fill="none" stroke="#ffffff22" stroke-width="3"/>
+<path d="M5 22 A15 15 0 0 1 20 7" fill="none" stroke="#7fd4d955" stroke-width="3"/>
+<path d="M29 10 A15 15 0 0 1 35 22" fill="none" stroke="#e0664a88" stroke-width="3"/>
+<line x1="20" y1="22" x2="20" y2="9" stroke="#eae0c8" stroke-width="1.6" stroke-linecap="round" transform="rotate(-40 20 22)"/>
+<circle cx="20" cy="22" r="1.8" fill="#b08d3e"/>
+</svg>
+<span class="val">tiède</span>
+<span class="lib">Heat</span>
+</div>
+        <div class="aile droite">
+<span class="lib">Jour 12</span>
+<span class="val">Matin</span>
+</div>
+</div>
+<div class="panneau">
+<div class="jrn6" style="height:462px">
+<div class="cerne">
+</div>
+<div class="enseigne">
+<b>Le journal</b>
+<i>ce qui arrive à la ville</i>
+</div>
+<div class="compteurs">
+<div class="fen">
+<b>03</b>
+<span>en cours</span>
+</div>
+<div class="fen">
+<b>01</b>
+<span>définitif</span>
+</div>
+<div class="fen">
+<b>02</b>
+<span>compris</span>
+</div>
+</div>
+<div class="elast">
+<div class="evt">
+<div class="hd">
+<b>Le port est bloqué</b>
+<span class="ph" style="color:#ff9e3d">ça se déploie</span>
+</div>
+<span class="cle">rw.template.port_strike · Les Bassins</span>
+<span class="gv">
+<u class="">
+</u>
+<u class="">
+</u>
+<u class="">
+</u>
+</span>
+<span style="font:5.8px/1 'DejaVu Sans';color:#8a979c;margin-left:6px">ça pèse</span>
+</div>
+<div class="evt perm">
+<div class="hd">
+<b>La rivière a débordé</b>
+<span class="ph" style="color:#ff5a4d">ça ne partira pas</span>
+</div>
+<span class="cle">rw.template.flood · Orsel</span>
+<span class="gv">
+<u class="">
+</u>
+<u class="">
+</u>
+<u class="off">
+</u>
+</span>
+<span style="font:5.8px/1 'DejaVu Sans';color:#8a979c;margin-left:6px">on en parle</span>
+</div>
+<div class="evt">
+<div class="hd">
+<b>Un vieux s’est éteint</b>
+<span class="ph" style="color:#f2c96b">ça commence</span>
+</div>
+<span class="cle">rw.template.hollow_death · La Lisière</span>
+<span class="gv">
+<u class="">
+</u>
+<u class="off">
+</u>
+<u class="off">
+</u>
+</span>
+<span style="font:5.8px/1 'DejaVu Sans';color:#8a979c;margin-left:6px">à peine</span>
+</div>
+</div>
+<div class="pann">
+<i>les phases</i>
+<b>Quatre passent, une seule reste</b>
+<small>un événement commence, se déploie, retombe, ou <u>traîne</u>. La cinquième phase ne dit pas « longtemps » : elle dit <u>ça ne partira pas</u>.</small>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="cadre">
+<div class="etiquette">La rivière ne se retirera pas</div>
+<div class="tel">
+<div class="scene district" style="background-position:center 50%;filter:brightness(.24)">
+</div>
+<div class="voile-scene">
+</div>
+<div class="ecran">
+<div class="barre">
+<div class="aile">
+<span class="lib">Argent</span>
+<span class="val">$ 24 850</span>
+</div>
+        <div class="mano">
+<svg viewBox="0 0 40 26">
+<path d="M5 22 A15 15 0 0 1 35 22" fill="none" stroke="#ffffff22" stroke-width="3"/>
+<path d="M5 22 A15 15 0 0 1 20 7" fill="none" stroke="#7fd4d955" stroke-width="3"/>
+<path d="M29 10 A15 15 0 0 1 35 22" fill="none" stroke="#e0664a88" stroke-width="3"/>
+<line x1="20" y1="22" x2="20" y2="9" stroke="#eae0c8" stroke-width="1.6" stroke-linecap="round" transform="rotate(-40 20 22)"/>
+<circle cx="20" cy="22" r="1.8" fill="#b08d3e"/>
+</svg>
+<span class="val">tiède</span>
+<span class="lib">Heat</span>
+</div>
+        <div class="aile droite">
+<span class="lib">Jour 12</span>
+<span class="val">Matin</span>
+</div>
+</div>
+<div class="panneau">
+<div class="jrn6" style="height:462px">
+<div class="cerne">
+</div>
+<div class="enseigne">
+<b>Le journal</b>
+<i>ce qui ne partira pas</i>
+</div>
+<div class="compteurs">
+<div class="fen">
+<b>03</b>
+<span>en cours</span>
+</div>
+<div class="fen">
+<b>01</b>
+<span>définitif</span>
+</div>
+<div class="fen">
+<b>02</b>
+<span>compris</span>
+</div>
+</div>
+<div class="elast">
+<div class="evt perm">
+<div class="hd">
+<b>La rivière a débordé</b>
+<span class="ph" style="color:#ff5a4d">ça ne partira pas</span>
+</div>
+<span class="cle">rw.template.flood · Orsel</span>
+<span class="gv">
+<u class="">
+</u>
+<u class="">
+</u>
+<u class="off">
+</u>
+</span>
+<span style="font:5.8px/1 'DejaVu Sans';color:#8a979c;margin-left:6px">on en parle</span>
+</div>
+</div>
+<div class="pann">
+<i>lattice-c</i>
+<b style="color:#ff5a4d">La rivière ne se retirera pas</b>
+<small>les autres événements ont une phase qui les emmène vers la sortie. Celui-ci n’en a pas. <u>Le quartier a changé</u>, et il faudra faire avec — ce n’est plus une nouvelle, c’est une donnée.</small>
+</div>
+<div class="pied">
+<span class="cta6 eteint">RIEN À FAIRE — C’EST ACQUIS</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="cadre">
+<div class="etiquette">Ce que vous avez compris</div>
+<div class="tel">
+<div class="scene district" style="background-position:center 50%;filter:brightness(.24)">
+</div>
+<div class="voile-scene">
+</div>
+<div class="ecran">
+<div class="barre">
+<div class="aile">
+<span class="lib">Argent</span>
+<span class="val">$ 24 850</span>
+</div>
+        <div class="mano">
+<svg viewBox="0 0 40 26">
+<path d="M5 22 A15 15 0 0 1 35 22" fill="none" stroke="#ffffff22" stroke-width="3"/>
+<path d="M5 22 A15 15 0 0 1 20 7" fill="none" stroke="#7fd4d955" stroke-width="3"/>
+<path d="M29 10 A15 15 0 0 1 35 22" fill="none" stroke="#e0664a88" stroke-width="3"/>
+<line x1="20" y1="22" x2="20" y2="9" stroke="#eae0c8" stroke-width="1.6" stroke-linecap="round" transform="rotate(-40 20 22)"/>
+<circle cx="20" cy="22" r="1.8" fill="#b08d3e"/>
+</svg>
+<span class="val">tiède</span>
+<span class="lib">Heat</span>
+</div>
+        <div class="aile droite">
+<span class="lib">Jour 12</span>
+<span class="val">Matin</span>
+</div>
+</div>
+<div class="panneau">
+<div class="jrn6" style="height:462px">
+<div class="cerne">
+</div>
+<div class="enseigne">
+<b>Le journal</b>
+<i>ce que vous avez compris</i>
+</div>
+<div class="compteurs">
+<div class="fen">
+<b>02</b>
+<span>couplages compris</span>
+</div>
+<div class="fen">
+<b>03</b>
+<span>en cours</span>
+</div>
+<div class="fen">
+<b>01</b>
+<span>définitif</span>
+</div>
+</div>
+<div class="elast">
+<div class="cpl">
+<b>le port bloqué</b>
+<span class="fl">→</span>
+<b class="t">le prix du pyralin</b>
+</div>
+<div class="cpl">
+<b>les patrouilles de nuit</b>
+<span class="fl">→</span>
+<b class="t">la marge des dealers</b>
+</div>
+<div class="cpl vide6">
+<b>?</b>
+<span class="fl">→</span>
+<b class="t">?</b>
+</div>
+<div class="apres">et tout ce que vous n’avez pas encore compris —<br>la maison ne dit pas combien il en reste</div>
+</div>
+<div class="pann">
+<i>ce que vous avez compris</i>
+<b>La ville a des causes, et vous les apprenez</b>
+<small>le serveur garde ce que vous avez <u>découvert</u> : que telle chose en pousse une autre, et <u>dans quel sens</u>. Ça se remplit en jouant, jamais en achetant.</small>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="cadre">
+<div class="etiquette">Rien ce matin</div>
+<div class="tel">
+<div class="scene district" style="background-position:center 50%;filter:brightness(.24)">
+</div>
+<div class="voile-scene">
+</div>
+<div class="ecran">
+<div class="barre">
+<div class="aile">
+<span class="lib">Argent</span>
+<span class="val">$ 24 850</span>
+</div>
+        <div class="mano">
+<svg viewBox="0 0 40 26">
+<path d="M5 22 A15 15 0 0 1 35 22" fill="none" stroke="#ffffff22" stroke-width="3"/>
+<path d="M5 22 A15 15 0 0 1 20 7" fill="none" stroke="#7fd4d955" stroke-width="3"/>
+<path d="M29 10 A15 15 0 0 1 35 22" fill="none" stroke="#e0664a88" stroke-width="3"/>
+<line x1="20" y1="22" x2="20" y2="9" stroke="#eae0c8" stroke-width="1.6" stroke-linecap="round" transform="rotate(-40 20 22)"/>
+<circle cx="20" cy="22" r="1.8" fill="#b08d3e"/>
+</svg>
+<span class="val">tiède</span>
+<span class="lib">Heat</span>
+</div>
+        <div class="aile droite">
+<span class="lib">Jour 12</span>
+<span class="val">Matin</span>
+</div>
+</div>
+<div class="panneau">
+<div class="jrn6" style="height:462px">
+<div class="cerne">
+</div>
+<div class="enseigne">
+<b>Le journal</b>
+<i>rien ne bouge</i>
+</div>
+<div class="compteurs">
+<div class="fen">
+<b>00</b>
+<span>à la une</span>
+</div>
+<div class="fen">
+<b>00</b>
+<span>dans la rue</span>
+</div>
+<div class="fen">
+<b>00</b>
+<span>en cours</span>
+</div>
+</div>
+<div class="elast">
+<div class="rien">Rien ce matin.<br>La ville a passé une nuit tranquille.</div>
+</div>
+<div class="pann">
+<i>pourquoi c’est vide</i>
+<b>Le journal suit le monde, pas vous</b>
+<small>ces trois listes se remplissent avec ce que <u>la ville</u> fait. Aucune ne dépend de vos gestes.</small>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="cadre">
+<div class="etiquette">Ce qui manque encore</div>
+<div class="tel">
+<div class="scene district" style="background-position:center 50%;filter:brightness(.24)">
+</div>
+<div class="voile-scene">
+</div>
+<div class="ecran">
+<div class="barre">
+<div class="aile">
+<span class="lib">Argent</span>
+<span class="val">$ 24 850</span>
+</div>
+        <div class="mano">
+<svg viewBox="0 0 40 26">
+<path d="M5 22 A15 15 0 0 1 35 22" fill="none" stroke="#ffffff22" stroke-width="3"/>
+<path d="M5 22 A15 15 0 0 1 20 7" fill="none" stroke="#7fd4d955" stroke-width="3"/>
+<path d="M29 10 A15 15 0 0 1 35 22" fill="none" stroke="#e0664a88" stroke-width="3"/>
+<line x1="20" y1="22" x2="20" y2="9" stroke="#eae0c8" stroke-width="1.6" stroke-linecap="round" transform="rotate(-40 20 22)"/>
+<circle cx="20" cy="22" r="1.8" fill="#b08d3e"/>
+</svg>
+<span class="val">tiède</span>
+<span class="lib">Heat</span>
+</div>
+        <div class="aile droite">
+<span class="lib">Jour 12</span>
+<span class="val">Matin</span>
+</div>
+</div>
+<div class="panneau">
+<div class="jrn6" style="height:462px">
+<div class="cerne">
+</div>
+<div class="enseigne">
+<b>Le journal</b>
+<i>ce qui manque encore</i>
+</div>
+<div class="compteurs">
+<div class="fen">
+<b>01</b>
+<span>à la une</span>
+</div>
+<div class="fen">
+<b>04</b>
+<span>dans la rue</span>
+</div>
+<div class="fen">
+<b>03</b>
+<span>en cours</span>
+</div>
+</div>
+<div class="pann">
+<span class="lot">L1</span>
+<i>maillon manquant</i>
+<b>Écrire les titres et les brèves</b>
+<small>tout est en clés : titre, journal, angle, descripteur, gabarit — cinquième écran à buter dessus</small>
+</div>
+<div class="pann">
+<span class="lot">L2</span>
+<i>maillon manquant</i>
+<b>Les titres sont des gabarits à trous</b>
+<small>`headline_params` est un objet libre ; sans le texte on ignore même combien de trous</small>
+</div>
+<div class="pann">
+<span class="lot">L3</span>
+<i>maillon manquant</i>
+<b>Aller à un enterrement</b>
+<small>la route existe et c’est le seul geste non économique du domaine ; rien ne le relie à un événement affiché</small>
+</div>
+<div class="pann">
+<span class="lot">L4</span>
+<i>maillon manquant</i>
+<b>Le détail d’un article</b>
+<small>une route rend le détail d’une brève de presse ; aucun écran ne l’ouvre</small>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+</div>
+<!-- ═══ fin LE JOURNAL & LA RUE (NEUF) ═══ -->
