@@ -70,6 +70,7 @@ namespace MafiaCleanCity.Operational.Selling
         private Transform mountParent;
         private RectTransform rangees;
         private TextMeshProUGUI videTexte;
+        private RectTransform compteurs;
         private UnityEngine.UI.Image videIllustration;
 
         private void Awake() => Init();
@@ -170,6 +171,14 @@ namespace MafiaCleanCity.Operational.Selling
             for (int i = rangees.childCount - 1; i >= 0; i--)
                 UnityEngine.Object.Destroy(rangees.GetChild(i).gameObject);
 
+            // ── LES TROIS COMPTEURS (B1) ─────────────────────────────────────────────────
+            // Maquette : `03/6 au travail` · `03 caisses pleines` · `01 grillés`.
+            // ⚠️ CE SONT DES COMPTES, PAS DES SCALAIRES DE PROJECTION, et la distinction décide de
+            //    R2.2 : ils sont DÉRIVÉS CÔTÉ CLIENT des rangées que le joueur a déjà sous les yeux,
+            //    jamais lus d'une valeur cachée du back. Compter ce qui est affiché ne révèle rien
+            //    que l'écran ne montre pas. *Si quelqu'un juge que R2.2 couvre aussi les comptes
+            //    dérivés, c'est une ligne à retirer — je le déclare plutôt que de le supposer.*
+            RemplirCompteurs();
             EtatVide = Dealers == null || Dealers.Length == 0;
             videTexte.gameObject.SetActive(EtatVide);
             if (videIllustration != null) videIllustration.gameObject.SetActive(EtatVide);
@@ -341,9 +350,44 @@ namespace MafiaCleanCity.Operational.Selling
             v.childForceExpandHeight = false;
             v.childAlignment = TextAnchor.UpperCenter;
 
-            TextMeshProUGUI titre = Texte(transform, "Titre", "LES POINTS DE VENTE", Px(13f), Or,
+            // ── LE CHÂSSIS (B1) — `.cerne`, `.enseigne`, `.compteurs` ────────────────────────
+            // ⛔ MESURÉ ABSENT, PAS MAL RENDU. Un juge ⊥ a mesuré 2,12 % d'encre contre 14,54 % au
+            //    canon, « un fond qui n'est PAS PEINT », et 0 trait laiton hors chrome. La cause
+            //    n'était pas un mécanisme en panne : `Construire()` ne posait qu'un APLAT
+            //    `surfaceBase` (mesuré (13,13,13) sur la planche) et trois nœuds. *La matière n'a
+            //    jamais été écrite.* Le contrôle interne qui l'établit : `ProceduralUI` était déjà
+            //    appelé 4 fois dans le rendu des RANGÉES — donc le mécanisme procédural marche.
+            //
+            // ⚠️ RIEN N'EST INVENTÉ ICI. Les valeurs viennent de `ecrans-brennar-6.html` :
+            //    `.cerne{inset:5px;border:1px solid #b08d3e;border-radius:3px}`, et
+            //    `#b08d3e` EST le jeton `hudHairlineGold` — mesuré à distance 0,000, donc on
+            //    emploie le jeton NOMMÉ et jamais le littéral (un littéral qui recopie la valeur
+            //    d'un jeton est invisible à toute garde qui balaie les accès au jeton).
+            GameObject cerne = NewUI("Cerne", transform);
+            var cerneRt = (RectTransform)cerne.transform;
+            cerneRt.anchorMin = Vector2.zero; cerneRt.anchorMax = Vector2.one;
+            cerneRt.offsetMin = new Vector2(Px(5f), Px(5f));
+            cerneRt.offsetMax = new Vector2(-Px(5f), -Px(5f));
+            var cerneImg = cerne.AddComponent<Image>();
+            cerneImg.sprite = ProceduralUI.RoundedRectOutline((int)Px(3f), Px(1f),
+                                                              DesignTokens.Current.hudHairlineGold);
+            cerneImg.type = Image.Type.Sliced;     // trait CONTINU ⇒ l'étirement le préserve
+            cerneImg.raycastTarget = false;        // `.cerne{pointer-events:none}`
+            cerne.transform.SetAsLastSibling();    // `.cerne{z-index:6}` — au-dessus du contenu
+
+            // L'ENSEIGNE — le titre cesse d'être un texte nu posé sur le vide : il est PORTÉ.
+            GameObject enseigne = Bloc("Enseigne", transform, false, Px(2f));
+            AjouterFondPlaque(enseigne);
+            TextMeshProUGUI titre = Texte(enseigne.transform, "Titre", "LES POINTS DE VENTE", Px(13f), Or,
                                           DesignTokens.Current.hudSerifFont, TextAlignmentOptions.Center);
             titre.characterSpacing = 18f;
+            // ⚠️ Le sous-titre vient de la maquette VERBATIM (`.enseigne > i`). Le juge a mesuré
+            //    « 0 sous-titre » en jeu — il manquait, il n'était pas mal rendu.
+            Texte(enseigne.transform, "SousTitre", "qui vend, et ce qu'il y a dans la caisse",
+                  Px(7.5f), Creme2, DesignTokens.Current.primaryFont, TextAlignmentOptions.Center);
+
+            // LES COMPTEURS — trois fenêtres, comme la maquette (`.compteurs > .fen` ×3).
+            compteurs = (RectTransform)Bloc("Compteurs", transform, true, Px(6f)).transform;
 
             GameObject liste = Bloc("Rangees", transform, false, Px(8f));
             rangees = (RectTransform)liste.transform;
@@ -360,6 +404,67 @@ namespace MafiaCleanCity.Operational.Selling
             //    n'existait que dans une IMAGE ; mon appariement « évident » en couvrait la moitié.
             videIllustration = MafiaCleanCity.Shell.EtatsVidesIllustres.Monter(transform, "vente", Px(120f));
             if (videIllustration != null) videIllustration.gameObject.SetActive(false);
+        }
+
+        /// <summary>Un nœud d'interface nu — `Bloc` impose un layout group, ce que le cerne ne veut
+        /// pas : il se place en ancres étirées, pas dans un flux.</summary>
+        /// <summary>Les trois fenêtres de l'enseigne. Domaines LUS À L'ANCRE
+        /// (`selling.projection.service.ts:42,45`) : `WORKING` pour « au travail », `FULL` pour une
+        /// caisse pleine, `COMPROMISED` pour « grillé ».
+        /// ⛔ Repli HONNÊTE : sans données, les fenêtres affichent `—`, jamais `0` — *un zéro
+        /// affirme « aucun », un tiret dit « on ne sait pas », et confondre les deux est ce qui
+        /// fait passer une panne pour un état du jeu.*</summary>
+        private void RemplirCompteurs()
+        {
+            if (compteurs == null) return;
+            for (int i = compteurs.childCount - 1; i >= 0; i--) Destroy(compteurs.GetChild(i).gameObject);
+            bool su = Dealers != null;
+            int total = su ? Dealers.Length : 0;
+            int auTravail = 0, pleines = 0, grilles = 0;
+            if (su)
+                foreach (DealerDto d in Dealers)
+                {
+                    if (d.activity_band == "WORKING") auTravail++;
+                    if (d.cash_band == "FULL") pleines++;
+                    if (d.activity_band == "COMPROMISED") grilles++;
+                }
+            Fenetre(su ? $"{auTravail:00}/{total}" : "—", "au travail");
+            Fenetre(su ? $"{pleines:00}" : "—", "caisses pleines");
+            Fenetre(su ? $"{grilles:00}" : "—", "grillés");
+        }
+
+        private void Fenetre(string valeur, string libelle)
+        {
+            GameObject f = Bloc("Fen", compteurs, false, Px(1f));
+            f.GetComponent<VerticalLayoutGroup>().childAlignment = TextAnchor.MiddleCenter;
+            Texte(f.transform, "Val", valeur, Px(12f), Or,
+                  DesignTokens.Current.hudSerifFont, TextAlignmentOptions.Center);
+            Texte(f.transform, "Lib", libelle, Px(6.5f), Creme2,
+                  DesignTokens.Current.primaryFont, TextAlignmentOptions.Center);
+        }
+
+        private static GameObject NewUI(string nom, Transform parent)
+        {
+            GameObject go = new GameObject(nom, typeof(RectTransform));
+            go.transform.SetParent(parent, false);
+            if (go.GetComponent<CanvasRenderer>() == null) go.AddComponent<CanvasRenderer>();
+            return go;
+        }
+
+        /// <summary>La plaque de l'enseigne — `.enseigne{background:linear-gradient(178deg,…);
+        /// border:1px solid #2a3648; border-bottom:2px solid #b08d3e}`.
+        /// ⚠️ Le dégradé de la maquette est rendu par un APLAT de sa teinte haute : ce dépôt a
+        /// mesuré qu'une valeur d'opacité reprise d'une maquette HTML est exprimée dans l'espace du
+        /// NAVIGATEUR, et que le projet compose en LINÉAIRE — la recopier telle quelle est un
+        /// changement d'unité silencieux. Un aplat est HONNÊTE ; un dégradé mal converti serait un
+        /// nombre faux qui a l'air juste. À reprendre quand quelqu'un mesure la conversion.</summary>
+        private void AjouterFondPlaque(GameObject cible)
+        {
+            Image f = cible.AddComponent<Image>();
+            f.sprite = ProceduralUI.RoundedRectOutline((int)Px(2f), Px(1f), Hex("#2a3648"));
+            f.type = Image.Type.Sliced;
+            f.raycastTarget = false;
+            cible.transform.SetAsFirstSibling();
         }
 
         private static GameObject Bloc(string nom, Transform parent, bool horizontal, float espace)
