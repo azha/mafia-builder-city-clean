@@ -1,0 +1,106 @@
+<div class="cadre"><div class="etiquette">Ce qui manque encore</div><div class="tel"><div class="scene district" style="background-position:center 50%;filter:brightness(.24)"></div><div class="voile-scene"></div><div class="ecran"><div class="barre"><div class="aile"><span class="lib">Argent</span><span class="val">$ 24 850</span></div>
+        <div class="mano"><svg viewBox="0 0 40 26"><path d="M5 22 A15 15 0 0 1 35 22" fill="none" stroke="#ffffff22" stroke-width="3"/><path d="M5 22 A15 15 0 0 1 20 7" fill="none" stroke="#7fd4d955" stroke-width="3"/><path d="M29 10 A15 15 0 0 1 35 22" fill="none" stroke="#e0664a88" stroke-width="3"/><line x1="20" y1="22" x2="20" y2="9" stroke="#eae0c8" stroke-width="1.6" stroke-linecap="round" transform="rotate(-40 20 22)"/><circle cx="20" cy="22" r="1.8" fill="#b08d3e"/></svg><span class="val">tiède</span><span class="lib">Heat</span></div>
+        <div class="aile droite"><span class="lib">Jour 12</span><span class="val">Matin</span></div></div><div class="panneau"><div class="hrz6" style="height:462px"><div class="cerne"></div><div class="enseigne"><b>L’horizon</b><i>ce qui manque encore</i></div><div class="compteurs"><div class="fen"><b>02<span style="color:#8a979c">/5</span></b><span>à portée</span></div><div class="fen"><b>01</b><span>déjà prises</span></div><div class="fen"><b>01</b><span>ont reculé</span></div></div><div class="pann"><span class="lot">L1</span><i>maillon manquant</i><b>Écrire les noms et les descriptions</b><small>trois textes par carte, plus un par condition — rien de tout ça n’existe</small></div><div class="pann"><span class="lot">L2</span><i>maillon manquant</i><b>Dire de combien de jetons on dispose</b><small>le coût est servi, le solde ne l’est pas : « payable » est un booléen, sans le reste</small></div><div class="pann"><span class="lot">L3</span><i>maillon manquant</i><b>Le plan d’exécution</b><small>deux routes existent et rendent des plans ; aucun écran ne les a jamais montrés</small></div><div class="pann"><span class="lot">L4</span><i>maillon manquant</i><b>Passer un palier</b><small>une route de plus, jamais reliée à un geste joueur</small></div></div></div></div></div></div>
+
+</div>
+<!-- ═══ fin L'HORIZON (screen_c6) ═══ -->
+
+
+
+
+
+
+
+
+
+<!-- ═══ LA RÉPUTATION (screen_b3) ═══ -->
+<style>
+/* ═══ SÉRIE 6 — LA RÉPUTATION (screen_b3) ═══ */
+
+@keyframes rep6-lampe{0%,100%{opacity:.84}50%{opacity:1}}
+@keyframes rep6-veille{0%,100%{filter:brightness(1)}50%{filter:brightness(1.32)}}
+@keyframes rep6-scan{0%{transform:translateY(-6px);opacity:0}12%{opacity:.45}
+  88%{opacity:.45}100%{transform:translateY(190px);opacity:0}}
+.rep6{position:relative;height:100%;display:flex;flex-direction:column;overflow:hidden;
+  font-family:'DejaVu Sans',sans-serif;color:#eae0c8;background:
+  radial-gradient(72% 40% at 50% 22%, rgba(217,171,78,.15), rgba(0,0,0,0) 66%),
+  radial-gradient(90% 60% at 50% 96%, rgba(127,212,217,.07), rgba(0,0,0,0) 70%),
+  linear-gradient(178deg,#111823 0%,#0b1016 54%,#0d0f10 100%)}
+.rep6 *{box-sizing:border-box}
+.rep6 .cerne{position:absolute;inset:5px;border:1px solid #b08d3e;border-radius:3px;
+  box-shadow:inset 0 0 0 1px #0b1016, 0 0 12px #b08d3e26;pointer-events:none;z-index:6}
+.rep6 .enseigne{flex:none;margin:13px 13px 0;position:relative;z-index:2;text-align:center;
+  background:linear-gradient(178deg,rgba(11,17,27,.91),rgba(13,19,30,.85));
+  border:1px solid #2a3648;border-bottom:2px solid #b08d3e;
+  box-shadow:inset 0 1px 0 #ffffff0f;padding:7px 11px 8px}
+.rep6 .enseigne b{display:block;font:700 17px/1 'DejaVu Serif';letter-spacing:.2em;color:#f2c96b}
+.rep6 .enseigne i{display:block;font:700 6.4px/1 'DejaVu Sans';font-style:normal;
+  letter-spacing:.34em;color:#b9ad92;margin-top:5px;text-transform:uppercase}
+.rep6 .compteurs{flex:none;display:flex;gap:6px;margin:9px 13px 0;position:relative;z-index:2}
+.rep6 .fen{flex:1;background:#0a0e16;border:1px solid #2a3648;padding:4px 4px 3px;
+  text-align:center;box-shadow:inset 0 0 10px #7fd4d91f}
+.rep6 .fen b{display:block;font:700 14px/1 'DejaVu Sans';color:#7fd4d9;
+  font-variant-numeric:tabular-nums;letter-spacing:.06em;text-shadow:0 0 8px #7fd4d999}
+.rep6 .fen b span{display:inline;font-size:9px;letter-spacing:0}
+.rep6 .fen>span{display:block;font:700 5.4px/1.1 'DejaVu Sans';letter-spacing:.16em;
+  color:#8a979c;margin-top:3px;text-transform:uppercase}
+.rep6 .elast{flex:1;min-height:0;overflow:hidden;margin:9px 13px 0;position:relative;z-index:2;
+  background:#0d0f10;border:1px solid #2a3648;padding:7px 8px;
+  display:flex;flex-direction:column;box-shadow:inset 0 0 22px #00000099}
+.rep6 .elast::after{content:"";position:absolute;left:0;right:0;top:0;height:2px;
+  background:linear-gradient(90deg,transparent,#7fd4d9,transparent);
+  animation:rep6-scan 7.5s linear infinite;animation-delay:-2.6s;pointer-events:none}
+.rep6 .pann{flex:none;margin:9px 13px 0;position:relative;z-index:2;padding:8px 10px 9px;
+  background:#111823;border:1px solid #2a3648;box-shadow:inset 0 0 18px #00000066}
+.rep6 .pann i{display:block;font:700 5.6px/1 'DejaVu Sans';font-style:normal;
+  letter-spacing:.19em;color:#8a979c;text-transform:uppercase}
+.rep6 .pann b{display:block;font:700 13px/1.15 'DejaVu Serif';margin-top:5px;color:#eae0c8}
+.rep6 .pann small{display:block;font:6.6px/1.4 'DejaVu Sans';color:#b9ad92;margin-top:4px}
+.rep6 .pann small u{text-decoration:none;color:#f2c96b;font-weight:700}
+.rep6 .lot{float:right;font:700 6px/1 'DejaVu Sans';color:#7fd4d9;letter-spacing:.09em}
+.rep6 .pied{flex:none;padding:9px 13px 14px;position:relative;z-index:2}
+.rep6 .cta6{display:block;text-align:center;padding:8px;border:1px solid #b08d3e;
+  background:#16191b;font:700 8.5px/1 'DejaVu Sans';letter-spacing:.11em;color:#f2c96b;
+  text-transform:uppercase}
+.rep6 .cta6.eteint{border-color:#2a3648;color:#6b737d;background:#111823}
+.rep6 .note6{margin-top:5px;font:6.4px/1.4 'DejaVu Sans';color:#8a979c;text-align:center}
+.rep6 .note6 u{text-decoration:none;color:#f2c96b;font-weight:700}
+
+.rep6 .mir6{display:flex;gap:10px;align-items:stretch}
+.rep6 .prt{flex:none;width:118px;background:#111823;border:1px solid #b08d3e;
+  padding:8px 8px 9px;text-align:center;display:flex;flex-direction:column;justify-content:flex-start}
+.rep6 .prt i{display:block;font:700 5.6px/1.3 'DejaVu Sans';font-style:normal;letter-spacing:.14em;
+  color:#8a979c;text-transform:uppercase;margin-bottom:5px}
+.rep6 .prt svg{display:block;margin:0 auto}
+.rep6 .prt b{display:block;font:700 8.6px/1.25 'DejaVu Serif';margin-top:6px}
+.rep6 .prt .ref{display:block;font:5px/1.25 'DejaVu Sans';color:#6b737d;margin-top:2px}
+.rep6 .lect{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.rep6 .tl{display:flex;align-items:center;gap:7px;padding:5px 8px;background:#111823;
+  border:1px solid #2a3648}
+.rep6 .tl.on{border-color:#b08d3e;background:#16191b}
+.rep6 .tl .lum{width:7px;height:7px;border-radius:50%;flex:none;background:#2a3648}
+.rep6 .tl.on .lum{background:#f2c96b;box-shadow:0 0 7px #f2c96b99}
+.rep6 .tl div{flex:1;min-width:0}
+.rep6 .tl b{display:block;font:700 7.4px/1.2 'DejaVu Sans';color:#b9ad92}
+.rep6 .tl.on b{color:#eae0c8}
+.rep6 .tl small{display:block;font:5.4px/1.2 'DejaVu Sans';color:#6b737d;margin-top:1px}
+.rep6 .verdict{display:flex;align-items:baseline;gap:8px;margin-top:2px}
+.rep6 .verdict b{font:700 10px/1.2 'DejaVu Serif'}
+.rep6 .verdict span{font:6.4px/1.3 'DejaVu Sans';color:#8a979c}
+.rep6 .regles{display:flex;flex-direction:column;gap:3px;overflow:hidden}
+.rep6 .rg6{display:flex;align-items:flex-start;gap:7px;padding:5px 8px;background:#111823;
+  border:1px solid #2a3648}
+.rep6 .rg6 .sc{width:3px;align-self:stretch;flex:none;border-radius:1px}
+.rep6 .rg6 div{flex:1;min-width:0}
+.rep6 .rg6 b{display:block;font:700 8.2px/1.2 'DejaVu Sans';color:#eae0c8}
+.rep6 .rg6 span{display:block;font:5.8px/1.2 'DejaVu Sans';color:#6b737d;margin-top:2px}
+.rep6 .noms{display:flex;flex-wrap:wrap;gap:3px;margin-top:5px}
+.rep6 .nm{font:700 6.4px/1 'DejaVu Sans';color:#b9ad92;background:#0d0f10;
+  border:1px solid #2a3648;padding:3px 6px;letter-spacing:.05em}
+.rep6 .veille6{animation:rep6-veille 3.4s ease-in-out infinite}
+.rep6 .rien{flex:1;display:flex;align-items:center;justify-content:center;text-align:center;
+  font:italic 8px/1.5 'DejaVu Serif';color:#6b737d;padding:0 22px}
+</style>
+
+<div class="rangee">
+  <!-- LA RÉPUTATION (screen_b3) · généré par generateur-reputation.py -->
