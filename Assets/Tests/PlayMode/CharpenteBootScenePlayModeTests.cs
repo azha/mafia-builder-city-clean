@@ -100,14 +100,58 @@ namespace MafiaCleanCity.Shell.Tests
         /// &lt;AppShell&gt;()` nu répondrait « oui » pour un shell construit par un test, pour un objet
         /// `DontDestroyOnLoad`, ou pour n'importe quelle scène additive — c'est-à-dire pour tout SAUF
         /// la propriété qu'on mesure.</summary>
+        /// ⛔⛔ CETTE SONDE FUSIONNAIT DEUX CAUSES SOUS UN SEUL VERDICT — TD-682, 2026-09-07.
+        /// Elle rend `null` aussi bien quand la scène est INUTILISABLE que quand elle ne PORTE PAS
+        /// de shell, et l'assertion appelante attribue ce `null` à la seconde : « aucun AppShell
+        /// dans la scène de démarrage du build ». **Dix-sept gardes de charpente rougissent sur ce
+        /// message, et la mesure INNOCENTE la scène** — le journal montre `AppShell:Start()` →
+        /// `EnsureInitialized()` → `BuildLayout()` → `TopBarController:Awake()`, le chrome
+        /// entièrement construit, `Boot.unity` propre, une seule classe `AppShell`, zéro
+        /// `DontDestroyOnLoad`.
+        /// ⇒ *Un message d'échec qui fusionne deux causes envoie l'enquête dans une seule
+        ///   direction, et celle qu'il nomme est fausse dans un cas sur deux.* Le premier geste
+        ///   n'est donc pas d'ouvrir la scène : c'est de SÉPARER LES DEUX VERDICTS.
+        /// ⚠️ Et le contrôle positif de cette sonde rougit AVEC elle (« la sonde ne trouve pas le
+        ///   shell là où il est ») : *quand un instrument ET son contrôle tombent ensemble, c'est
+        ///   le monde du run qui est faux, pas la cible.* D'où le journal ci-dessous — il imprime
+        ///   ce que la sonde A VU, pas ce qu'on suppose qu'elle voit.
+        private static string diagnosticSonde;
+
+        /// <summary>L'INSTRUMENT, et il est scopé à UNE scène par construction. Un `FindFirstObjectByType
+        /// &lt;AppShell&gt;()` nu répondrait « oui » pour un shell construit par un test, pour un objet
+        /// `DontDestroyOnLoad`, ou pour n'importe quelle scène additive — c'est-à-dire pour tout SAUF
+        /// la propriété qu'on mesure.</summary>
         private static AppShell SondeShellDansLaScene(Scene scene)
         {
-            if (!scene.IsValid() || !scene.isLoaded) return null;
-            foreach (GameObject racine in scene.GetRootGameObjects())
+            if (!scene.IsValid() || !scene.isLoaded)
+            {
+                diagnosticSonde = $"la scène est INUTILISABLE (IsValid={scene.IsValid()}, "
+                                + $"isLoaded={scene.isLoaded}) — ce n'est PAS « pas d'AppShell »";
+                Debug.Log($"[SONDE-SHELL] {diagnosticSonde}");
+                return null;
+            }
+            GameObject[] racines = scene.GetRootGameObjects();
+            foreach (GameObject racine in racines)
             {
                 AppShell trouve = racine.GetComponentInChildren<AppShell>(true);
-                if (trouve != null) return trouve;
+                if (trouve != null)
+                {
+                    diagnosticSonde = null;
+                    return trouve;
+                }
             }
+            // ⚠️ LE SECOND VERDICT, et il porte ses FAITS : combien de racines, lesquelles, et si
+            //    un `AppShell` existe AILLEURS dans le processus. Ce dernier point départage
+            //    « la scène n'en a pas » de « il y en a un, mais pas dans cette scène-ci » — deux
+            //    mondes que le message d'origine confondait aussi.
+            var noms = new System.Text.StringBuilder();
+            for (int i = 0; i < racines.Length && i < 12; i++)
+                noms.Append(i == 0 ? "" : ", ").Append(racines[i].name);
+            AppShell ailleurs = UnityEngine.Object.FindFirstObjectByType<AppShell>(FindObjectsInactive.Include);
+            diagnosticSonde = $"scène chargée ({scene.path}) mais AUCUN AppShell parmi ses "
+                            + $"{racines.Length} racine(s) [{noms}] · un AppShell existe ailleurs "
+                            + $"dans le processus : {(ailleurs != null ? "OUI, scène « " + ailleurs.gameObject.scene.path + " »" : "NON")}";
+            Debug.Log($"[SONDE-SHELL] {diagnosticSonde}");
             return null;
         }
 
@@ -155,7 +199,7 @@ namespace MafiaCleanCity.Shell.Tests
 
             AppShell shell = SondeShellDansLaScene(sceneDeDemarrage);
             Assert.IsNotNull(shell,
-                $"aucun AppShell dans la scène de démarrage du build ({sceneDeDemarrage.path}) — " +
+                $"la sonde n'a pas rendu de shell — DIAGNOSTIC : {diagnosticSonde}\n" +
                 "les 24 montages d'Assets/Tests prouvent que le shell marche, jamais qu'un joueur le rencontre.");
 
             // Le shell trouvé APPARTIENT à la scène du build. C'est cette égalité, et elle seule, qui
