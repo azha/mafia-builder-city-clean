@@ -63,10 +63,16 @@ namespace MafiaCleanCity.Operational.Selling
 
         /// <summary>POST /v1/operational/dealer/:id/collect — ramasser la caisse.
         ///
-        /// ⛔⛔ CET APPEL ÉCHOUE POUR TOUT JOUEUR, PARTOUT, ET C'EST MESURÉ. La route exige une
-        /// planque possédée, et RIEN NE CRÉE JAMAIS DE LIGNE `safehouses` : 0 écrivain dans
-        /// `services/` et `scripts/`, re-mesuré le 2026-09-02 avec contrôle positif (693 appels
-        /// `.insert(&lt;table&gt;)` dans le même corpus, donc le motif mord). TD-358.
+        /// ⛔⛔ ÉNONCÉ PÉRIMÉ, RETIRÉ LE 2026-09-07 — et il ne trompait pas un lecteur, il
+        /// DÉSARMAIT UN GESTE. Ce bloc affirmait, au présent et sans réserve, que la table des
+        /// planques n'avait aucun écrivain de production. Re-mesuré statiquement dans le back :
+        /// `onboarding-grant.service.ts:411` appelle `createSafehouse` DANS la transaction du don
+        /// de bienvenue — donc tout joueur neuf en a une. Le lot planque a refermé ce maillon, et
+        /// TROIS fichiers du client affirmaient encore l'inverse, chacun en éteignant son action.
+        /// ★ C'est la forme la plus coûteuse de l'énoncé daté : il ne se contente pas de mentir,
+        ///   il retire une action au joueur, et il a l'air rigoureux — daté, chiffré, sourcé.
+        /// ⚠️ CE QUI RESTE VRAI : la route exige une planque POSSÉDÉE, et cet écran ne lit pas
+        /// encore laquelle. Le blocage est désormais CÔTÉ CLIENT, et c'est une autre affaire.
         /// ⇒ L'écran montre le bouton ÉTEINT avec sa raison, il ne le masque pas : *un geste
         /// impossible qu'on masque devient un geste qu'on croit ne pas exister ; montré éteint, il
         /// devient une promesse datée.* Symptôme visible de la même chaîne : `cash_band` monte

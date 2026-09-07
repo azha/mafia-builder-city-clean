@@ -19,9 +19,12 @@ namespace MafiaCleanCity.Operational.Selling
     // back sont DISCRETS (NONE|LOW|MODERATE|HIGH|FULL). *Une barre continue mentirait sur la
     // précision de la donnée* — elle laisserait croire à un montant là où il n'y a qu'un palier.
     //
-    // ⛔ ET LA CHAÎNE MORTE QUE CET ÉCRAN DÉCLARE AU LIEU DE LA MASQUER : `collect` exige une
-    // planque possédée, et rien ne crée jamais de ligne `safehouses` (0 écrivain, re-mesuré le
-    // 2026-09-02 avec contrôle positif ; TD-358). RAMASSER échoue pour tout joueur, partout.
+    // ⛔⛔ ÉNONCÉ PÉRIMÉ, RETIRÉ LE 2026-09-07. Ce bloc affirmait que la table des planques
+    // n'avait aucun écrivain de production. Re-mesuré dans le back : le don de bienvenue en crée
+    // une pour tout joueur neuf. L'affirmation ne trompait pas un lecteur — elle ÉTEIGNAIT LE
+    // SEUL GESTE DE L'ÉCRAN, sur trois fichiers à la fois.
+    // ⚠️ CE QUI RESTE VRAI, et c'est plus étroit : cet écran ne lit pas encore la planque du
+    // joueur, donc il n'a pas l'identifiant que la route réclame. Le manque est CÔTÉ CLIENT.
     // ⇒ Le bouton est montré ÉTEINT, avec la raison écrite à l'écran. *Un geste impossible qu'on
     // masque devient un geste qu'on croit ne pas exister ; montré éteint, il devient une promesse
     // datée* — et le jour où la planque existe, c'est cette ligne qui devra changer, pas la
@@ -251,7 +254,7 @@ namespace MafiaCleanCity.Operational.Selling
             rf.type = Image.Type.Tiled;
             Texte(ramasser.transform, "Lib", "RAMASSER", Px(9f), Eteint,
                   DesignTokens.Current.primaryFont, TextAlignmentOptions.Center).characterSpacing = 14f;
-            Texte(ramasser.transform, "Raison", "impossible — aucune planque n'existe encore",
+            Texte(ramasser.transform, "Raison", "pas encore relié à votre planque",
                   Px(6.8f), Creme2, DesignTokens.Current.primaryFont, TextAlignmentOptions.Center)
                 .enableWordWrapping = true;
         }

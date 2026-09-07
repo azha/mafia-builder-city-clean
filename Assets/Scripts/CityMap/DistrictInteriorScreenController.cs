@@ -2266,10 +2266,17 @@ namespace MafiaCleanCity.CityMap
         ///   · COLLECTER  — `POST /v1/operational/dealer/:id/collect` EXISTE, joueur, sous
         ///     `JwtAuthGuard`. Mais il prend un id de DEALER, pas de bâtiment ; la jointure
         ///     bâtiment→dealer n'est pas projetée dans `DistrictInteriorBuildingDto`.
-        ///   · BLANCHIR   — `POST /v1/operational/laundering/inject` existe et est joueur, et rend
-        ///     **404 POUR TOUT LE MONDE, DANS TOUS LES ENVIRONNEMENTS** : rien ne crée jamais de
-        ///     ligne `safehouses` (0 écrivain dans `services/`, 0 dans les 147 migrations — chaîne
-        ///     morte TD-358). Le câbler livrerait un bouton qui échoue toujours.
+        ///   · BLANCHIR   — `POST /v1/operational/laundering/inject` existe et est joueur.
+        ///     ⛔⛔ ÉNONCÉ PÉRIMÉ, RETIRÉ LE 2026-09-07 — et il ne trompait pas un lecteur, il
+        /// DÉSARMAIT UN GESTE. Ce bloc affirmait, au présent et sans réserve, que la table des
+        /// planques n'avait aucun écrivain de production. Re-mesuré statiquement dans le back :
+        /// `onboarding-grant.service.ts:411` appelle `createSafehouse` DANS la transaction du don
+        /// de bienvenue — donc tout joueur neuf en a une. Le lot planque a refermé ce maillon, et
+        /// TROIS fichiers du client affirmaient encore l'inverse, chacun en éteignant son action.
+        /// ★ C'est la forme la plus coûteuse de l'énoncé daté : il ne se contente pas de mentir,
+        ///   il retire une action au joueur, et il a l'air rigoureux — daté, chiffré, sourcé.
+        ///     ⚠️ CE QUI RESTE VRAI : cet écran ne lit pas la planque du joueur, donc il n'a pas
+        ///     l'identifiant à poster. Le manque a changé de côté, il n'a pas disparu.
         ///   · AMÉLIORER  — l'upgrade de palier vit sur `BuildingCardController`, un autre écran.
         /// ⇒ Tant qu'une action n'a pas son chemin PROUVÉ de bout en bout, elle DIT son état au lieu
         /// de faire semblant. Un bouton qui ne fait rien est pire qu'un bouton absent — il promet
@@ -2284,7 +2291,7 @@ namespace MafiaCleanCity.CityMap
                     ficheSortie.text = "Collecte : ce bâtiment n'expose pas encore son vendeur.";
                     break;
                 case "BLANCHIR":
-                    ficheSortie.text = "Blanchiment : aucune planque — la filière n'est pas ouverte.";
+                    ficheSortie.text = "Blanchiment : cet écran ne sait pas encore quelle planque utiliser.";
                     break;
                 default:
                     ficheSortie.text = "Amélioration : à ouvrir depuis la fiche opérationnelle.";
