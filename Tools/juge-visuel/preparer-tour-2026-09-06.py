@@ -183,6 +183,10 @@ DOCTRINE = """## Règles de doctrine applicables
   raison, entiers trop propres) est d'abord un soupçon sur la CHAÎNE DE CAPTURE, pas sur l'écran : dis-le, mesure le pas et le
   résidu, et mets-le en « non vérifié » avec la mesure hors image (les appelants de `SnapToScreenPixel`). Tant que ce correctif n'est
   pas posé, aucune planche de district prise par cette chaîne ne montre la mise en page réelle.
+- **Un zéro exact au-delà d'une distance dit « rien AU-DELÀ », pas « rien »** (㊲ r15 : `P(2) = 0,02`, `P(d≥3) = 0,00` lus comme
+  « aucun pixel » — l'effet existait, plus court que la première distance de la sonde). ⇒ Pour tout halo / lueur / ombre : mesurer
+  AUSSI `d = 1` et la luminance BRUTE au bord de l'encre, et écrire la portée (dernier d où l'excès > 0,5) avant de conclure « absent ».
+  Une fenêtre d'observation plus large que l'effet rend un zéro parfait qui ressemble à une absence.
 - **Libellés anglais dans la RÉFÉRENCE** (`HEAT`, `$ 24 850`…) : ruling user 2026-09-02 « fr réel » — le client a
   raison, la maquette est en retard ; à noter UNE fois comme « maquette à mettre à jour », jamais comme écart d'écran.
 - **Or** : s'il diffère, dire dans quel SENS — *plus jaune* (un jeton `accentGold #ffd23f` là où l'art veut
