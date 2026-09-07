@@ -1,0 +1,53 @@
+# Inventaire F — usages de chaque champ DTO dans les 3 fichiers de l'écran (archive fd0e21e)
+# fichiers scannés : SellingScreenController.cs SellingClient.cs SellingDtos.cs
+
+dealer                      usages '.dealer' (controleur+client) = 1   | déclaré dans SellingDtos.cs = 1
+activity_band               usages '.activity_band' (controleur+client) = 2   | déclaré dans SellingDtos.cs = 1
+cash_band                   usages '.cash_band' (controleur+client) = 1   | déclaré dans SellingDtos.cs = 1
+substance                   usages '.substance' (controleur+client) = 1   | déclaré dans SellingDtos.cs = 1
+margin_band                 usages '.margin_band' (controleur+client) = 1   | déclaré dans SellingDtos.cs = 1
+addiction_loyalty_status    usages '.addiction_loyalty_status' (controleur+client) = 0   | déclaré dans SellingDtos.cs = 1
+withdrawn                   usages '.withdrawn' (controleur+client) = 0   | déclaré dans SellingDtos.cs = 1
+name_i18n                   usages '.name_i18n' (controleur+client) = 0   | déclaré dans SellingDtos.cs = 0
+district_name               usages '.district_name' (controleur+client) = 0   | déclaré dans SellingDtos.cs = 0
+lek_band                    usages '.lek_band' (controleur+client) = 0   | déclaré dans SellingDtos.cs = 0
+lane_band                   usages '.lane_band' (controleur+client) = 0   | déclaré dans SellingDtos.cs = 0
+safehouse_id                usages '.safehouse_id' (controleur+client) = 0   | déclaré dans SellingDtos.cs = 1
+
+# Contrôle POSITIF du motif : un champ dont on SAIT qu'il est lu doit rendre > 0
+188:            GameObject r = Bloc("Dealer_" + d.dealer, rangees, false, Px(4f));
+206:            Texte(tete.transform, "Nom", Lisible(d.substance), Px(11.5f), Creme,
+211:            Texte(tete.transform, "Activite", Activite(d.activity_band), Px(7.5f),
+212:                  d.activity_band == "COMPROMISED" ? Braise : Creme2, DesignTokens.Current.primaryFont);
+215:            Crans(r.transform, "Caisse", d.cash_band, 5, CaisseRang(d.cash_band));
+217:            Crans(r.transform, "Marge", d.margin_band, 4, MargeRang(d.margin_band));
+
+# Contrôle NÉGATIF : les 4 champs servis mais jamais nommés, motif SANS le point (plus large)
+  name_i18n      occurrences (motif large, 3 fichiers) = 0
+  district_name  occurrences (motif large, 3 fichiers) = 0
+  lek_band       occurrences (motif large, 3 fichiers) = 0
+  lane_band      occurrences (motif large, 3 fichiers) = 0
+  prenom         occurrences (motif large, 3 fichiers) = 0
+  i18n           occurrences (motif large, 3 fichiers) = 1
+
+# Recompte par OCCURRENCE (le grep -c ci-dessus compte des LIGNES)
+  .dealer                     occurrences = 1
+  .activity_band              occurrences = 2
+  .cash_band                  occurrences = 2
+  .substance                  occurrences = 1
+  .margin_band                occurrences = 2
+  .addiction_loyalty_status   occurrences = 0
+  .withdrawn                  occurrences = 0
+  .safehouse_id               occurrences = 0
+
+# Les 3 méthodes du client : appelées par le contrôleur ?
+  client.ListDealers  appels dans le contrôleur = 1
+  client.GetDealer    appels dans le contrôleur = 0
+  client.Collect      appels dans le contrôleur = 0
+
+# Compteurs publics déclarés et jamais écrits
+  CollectTentatives  sites d'écriture = 0
+  RendusEffectues    sites d'écriture = 2
+  DerniereErreur     sites d'écriture = 1
+  EtatVide           sites d'écriture = 1
+  Dealers            sites d'écriture = 1

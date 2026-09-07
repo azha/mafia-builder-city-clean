@@ -1,0 +1,527 @@
+====================================================================================================
+CADRE #108 — étiquette: La vente — qui vend et ce qu'il y a dans la caisse
+====================================================================================================
+class="vnt6" style="height:462px">
+<div class="cerne">
+<div class="enseigne">
+<b>La vente
+<i>qui vend, et ce qu’il y a dans la caisse
+<div class="compteurs">
+<div class="fen">
+<b>03
+<span style="color:#8a979c">/6
+<span>au travail
+<div class="fen">
+<b>03
+<span>caisses pleines
+<div class="fen">
+<b>01
+<span>grillés
+<div class="elast">
+<div class="liste">
+<div class="dl">[SVG]
+<div class="qui">
+<b>Oskar
+<small>La Lisière · lek 12 · cher
+<span class="marge">
+<u class="">
+<u class="">
+<u class="">
+<u class="off">
+<div class="dr">
+<span class="et" style="color:#7db36a">au travail
+<span class="jg" style="width:44px">
+<i style="background:#f2c96b;opacity:1">
+<i style="background:#f2c96b;opacity:1">
+<i style="background:#f2c96b;opacity:1">
+<i style="background:#f2c96b;opacity:1">
+<div class="dl">[SVG]
+<div class="qui">
+<b>Mira
+<small>Dépôt-Est · lek 4 · au-dessus
+<span class="marge">
+<u class="">
+<u class="">
+<u class="off">
+<u class="off">
+<div class="dr">
+<span class="et" style="color:#7db36a">au travail
+<span class="jg" style="width:44px">
+<i style="background:#d9ab4e;opacity:1">
+<i style="background:#d9ab4e;opacity:1">
+<i style="background:#2a3648;opacity:.55">
+<i style="background:#2a3648;opacity:.55">
+<div class="dl">[SVG]
+<div class="qui">
+<b>Joran
+<small>Les Entrepôts · lek 9 · au tarif
+<span class="marge">
+<u class="">
+<u class="off">
+<u class="off">
+<u class="off">
+<div class="dr">
+<span class="et" style="color:#8a979c">au repos
+<span class="jg" style="width:44px">
+<i style="background:#d9ab4e;opacity:1">
+<i style="background:#2a3648;opacity:.55">
+<i style="background:#2a3648;opacity:.55">
+<i style="background:#2a3648;opacity:.55">
+<div class="dl">[SVG]
+<div class="qui">
+<b>Tamsin
+<small>Place des Comptes · lek 3 · très cher
+<span class="marge">
+<u class="">
+<u class="">
+<u class="">
+<u class="">
+<div class="dr">
+<span class="et" style="color:#7db36a">au travail
+<span class="jg" style="width:44px">
+<i style="background:#f2c96b;opacity:1">
+<i style="background:#f2c96b;opacity:1">
+<i style="background:#f2c96b;opacity:1">
+<i style="background:#2a3648;opacity:.55">
+<div class="dl mort">[SVG]
+<div class="qui">
+<b>Ilse
+<small>Orsel · lek 7 · au tarif
+<span class="marge">
+<u class="">
+<u class="off">
+<u class="off">
+<u class="off">
+<div class="dr">
+<span class="et" style="color:#ff5a4d">grillé
+<span class="jg" style="width:44px">
+<i style="background:#f2c96b;opacity:1">
+<i style="background:#f2c96b;opacity:1">
+<i style="background:#f2c96b;opacity:1">
+<i style="background:#2a3648;opacity:.55">
+<div class="dl mort">[SVG]
+<div class="qui">
+<b>Dov
+<small>Les Friches · lek 1 · au tarif
+<span class="marge">
+<u class="">
+<u class="off">
+<u class="off">
+<u class="off">
+<div class="dr">
+<span class="et" style="color:#7a838d">pas là
+<span class="jg" style="width:44px">
+<i style="background:#2a3648;opacity:.55">
+<i style="background:#2a3648;opacity:.55">
+<i style="background:#2a3648;opacity:.55">
+<i style="background:#2a3648;opacity:.55">
+<div class="pied">
+<span class="cta6">AFFECTER UN DEALER
+<div class="note6">deux caisses sont déjà en haut de l’échelle — 
+<u>et rien ne les vide
+<div
+
+====================================================================================================
+CADRE #109 — étiquette: La caisse de Oskar — pleine à ras
+====================================================================================================
+class="vnt6" style="height:462px">
+<div class="cerne">
+<div class="enseigne">
+<b>La vente
+<i>la caisse de Oskar
+<div class="compteurs">
+<div class="fen">
+<b>03
+<span style="color:#8a979c">/6
+<span>au travail
+<div class="fen">
+<b>03
+<span>caisses pleines
+<div class="fen">
+<b>01
+<span>grillés
+<div class="elast">
+<div class="liste">
+<div class="dl pris">[SVG]
+<div class="qui">
+<b>Oskar
+<small>La Lisière · lek 12 · cher
+<span class="marge">
+<u class="">
+<u class="">
+<u class="">
+<u class="off">
+<div class="dr">
+<span class="et" style="color:#7db36a">au travail
+<span class="jg" style="width:44px">
+<i style="background:#f2c96b;opacity:1">
+<i style="background:#f2c96b;opacity:1">
+<i style="background:#f2c96b;opacity:1">
+<i style="background:#f2c96b;opacity:1">
+<div class="dl">[SVG]
+<div class="qui">
+<b>Mira
+<small>Dépôt-Est · lek 4 · au-dessus
+<span class="marge">
+<u class="">
+<u class="">
+<u class="off">
+<u class="off">
+<div class="dr">
+<span class="et" style="color:#7db36a">au travail
+<span class="jg" style="width:44px">
+<i style="background:#d9ab4e;opacity:1">
+<i style="background:#d9ab4e;opacity:1">
+<i style="background:#2a3648;opacity:.55">
+<i style="background:#2a3648;opacity:.55">
+<div class="dl">[SVG]
+<div class="qui">
+<b>Joran
+<small>Les Entrepôts · lek 9 · au tarif
+<span class="marge">
+<u class="">
+<u class="off">
+<u class="off">
+<u class="off">
+<div class="dr">
+<span class="et" style="color:#8a979c">au repos
+<span class="jg" style="width:44px">
+<i style="background:#d9ab4e;opacity:1">
+<i style="background:#2a3648;opacity:.55">
+<i style="background:#2a3648;opacity:.55">
+<i style="background:#2a3648;opacity:.55">
+<div class="dl">[SVG]
+<div class="qui">
+<b>Tamsin
+<small>Place des Comptes · lek 3 · très cher
+<span class="marge">
+<u class="">
+<u class="">
+<u class="">
+<u class="">
+<div class="dr">
+<span class="et" style="color:#7db36a">au travail
+<span class="jg" style="width:44px">
+<i style="background:#f2c96b;opacity:1">
+<i style="background:#f2c96b;opacity:1">
+<i style="background:#f2c96b;opacity:1">
+<i style="background:#2a3648;opacity:.55">
+<div class="pann">
+<div class="fiche">
+<div class="gd">[SVG]
+<div>
+<i>Oskar · La Lisière · lek 12
+<b>Caisse pleine à ras
+<small>il vend 
+<u>brindle au lek 12, 
+<u>cher, et il travaille. Sa caisse est au dernier palier — au-delà, la bande ne monte plus.
+<div class="pied">
+<span class="cta6">RAMASSER LA CAISSE
+<div
+
+====================================================================================================
+CADRE #110 — étiquette: Ramasser — nulle part où la porter
+====================================================================================================
+class="vnt6" style="height:462px">
+<div class="cerne">
+<div class="enseigne">
+<b>La vente
+<i>le ramassage
+<div class="compteurs">
+<div class="fen">
+<b>03
+<span style="color:#8a979c">/6
+<span>au travail
+<div class="fen">
+<b>03
+<span>caisses pleines
+<div class="fen">
+<b>01
+<span>grillés
+<div class="elast">
+<div class="liste">
+<div class="dl pris">[SVG]
+<div class="qui">
+<b>Oskar
+<small>La Lisière · lek 12 · cher
+<span class="marge">
+<u class="">
+<u class="">
+<u class="">
+<u class="off">
+<div class="dr">
+<span class="et" style="color:#7db36a">au travail
+<span class="jg" style="width:44px">
+<i style="background:#f2c96b;opacity:1">
+<i style="background:#f2c96b;opacity:1">
+<i style="background:#f2c96b;opacity:1">
+<i style="background:#f2c96b;opacity:1">
+<div class="dl">[SVG]
+<div class="qui">
+<b>Mira
+<small>Dépôt-Est · lek 4 · au-dessus
+<span class="marge">
+<u class="">
+<u class="">
+<u class="off">
+<u class="off">
+<div class="dr">
+<span class="et" style="color:#7db36a">au travail
+<span class="jg" style="width:44px">
+<i style="background:#d9ab4e;opacity:1">
+<i style="background:#d9ab4e;opacity:1">
+<i style="background:#2a3648;opacity:.55">
+<i style="background:#2a3648;opacity:.55">
+<div class="dl">[SVG]
+<div class="qui">
+<b>Joran
+<small>Les Entrepôts · lek 9 · au tarif
+<span class="marge">
+<u class="">
+<u class="off">
+<u class="off">
+<u class="off">
+<div class="dr">
+<span class="et" style="color:#8a979c">au repos
+<span class="jg" style="width:44px">
+<i style="background:#d9ab4e;opacity:1">
+<i style="background:#2a3648;opacity:.55">
+<i style="background:#2a3648;opacity:.55">
+<i style="background:#2a3648;opacity:.55">
+<div class="dl">[SVG]
+<div class="qui">
+<b>Tamsin
+<small>Place des Comptes · lek 3 · très cher
+<span class="marge">
+<u class="">
+<u class="">
+<u class="">
+<u class="">
+<div class="dr">
+<span class="et" style="color:#7db36a">au travail
+<span class="jg" style="width:44px">
+<i style="background:#f2c96b;opacity:1">
+<i style="background:#f2c96b;opacity:1">
+<i style="background:#f2c96b;opacity:1">
+<i style="background:#2a3648;opacity:.55">
+<div class="pann" style="border-color:#ff5a4d">
+<i style="color:#ff5a4d">le ramassage
+<b style="color:#ff5a4d">Nulle part où la porter
+<small>ramasser une caisse veut dire la déposer dans une 
+<u>planque — et vous n’en avez aucune. Il n’existe aujourd’hui 
+<u>aucun moyen d’en obtenir une : l’argent reste chez le dealer.
+<div class="pied">
+<span class="cta6 eteint">RAMASSER — IMPOSSIBLE
+<div
+
+====================================================================================================
+CADRE #111 — étiquette: Ilse s'est fait prendre
+====================================================================================================
+class="vnt6" style="height:462px">
+<div class="cerne">
+<div class="enseigne">
+<b>La vente
+<i>Ilse s’est fait prendre
+<div class="compteurs">
+<div class="fen">
+<b>03
+<span style="color:#8a979c">/6
+<span>au travail
+<div class="fen">
+<b>03
+<span>caisses pleines
+<div class="fen">
+<b>01
+<span>grillés
+<div class="elast">
+<div class="liste">
+<div class="dl">[SVG]
+<div class="qui">
+<b>Oskar
+<small>La Lisière · lek 12 · cher
+<span class="marge">
+<u class="">
+<u class="">
+<u class="">
+<u class="off">
+<div class="dr">
+<span class="et" style="color:#7db36a">au travail
+<span class="jg" style="width:44px">
+<i style="background:#f2c96b;opacity:1">
+<i style="background:#f2c96b;opacity:1">
+<i style="background:#f2c96b;opacity:1">
+<i style="background:#f2c96b;opacity:1">
+<div class="dl">[SVG]
+<div class="qui">
+<b>Mira
+<small>Dépôt-Est · lek 4 · au-dessus
+<span class="marge">
+<u class="">
+<u class="">
+<u class="off">
+<u class="off">
+<div class="dr">
+<span class="et" style="color:#7db36a">au travail
+<span class="jg" style="width:44px">
+<i style="background:#d9ab4e;opacity:1">
+<i style="background:#d9ab4e;opacity:1">
+<i style="background:#2a3648;opacity:.55">
+<i style="background:#2a3648;opacity:.55">
+<div class="dl">[SVG]
+<div class="qui">
+<b>Joran
+<small>Les Entrepôts · lek 9 · au tarif
+<span class="marge">
+<u class="">
+<u class="off">
+<u class="off">
+<u class="off">
+<div class="dr">
+<span class="et" style="color:#8a979c">au repos
+<span class="jg" style="width:44px">
+<i style="background:#d9ab4e;opacity:1">
+<i style="background:#2a3648;opacity:.55">
+<i style="background:#2a3648;opacity:.55">
+<i style="background:#2a3648;opacity:.55">
+<div class="dl">[SVG]
+<div class="qui">
+<b>Tamsin
+<small>Place des Comptes · lek 3 · très cher
+<span class="marge">
+<u class="">
+<u class="">
+<u class="">
+<u class="">
+<div class="dr">
+<span class="et" style="color:#7db36a">au travail
+<span class="jg" style="width:44px">
+<i style="background:#f2c96b;opacity:1">
+<i style="background:#f2c96b;opacity:1">
+<i style="background:#f2c96b;opacity:1">
+<i style="background:#2a3648;opacity:.55">
+<div class="dl pris mort">[SVG]
+<div class="qui">
+<b>Ilse
+<small>Orsel · lek 7 · au tarif
+<span class="marge">
+<u class="">
+<u class="off">
+<u class="off">
+<u class="off">
+<div class="dr">
+<span class="et" style="color:#ff5a4d">grillé
+<span class="jg" style="width:44px">
+<i style="background:#f2c96b;opacity:1">
+<i style="background:#f2c96b;opacity:1">
+<i style="background:#f2c96b;opacity:1">
+<i style="background:#2a3648;opacity:.55">
+<div class="dl mort">[SVG]
+<div class="qui">
+<b>Dov
+<small>Les Friches · lek 1 · au tarif
+<span class="marge">
+<u class="">
+<u class="off">
+<u class="off">
+<u class="off">
+<div class="dr">
+<span class="et" style="color:#7a838d">pas là
+<span class="jg" style="width:44px">
+<i style="background:#2a3648;opacity:.55">
+<i style="background:#2a3648;opacity:.55">
+<i style="background:#2a3648;opacity:.55">
+<i style="background:#2a3648;opacity:.55">
+<div class="pann" style="border-color:#ff5a4d">
+<div class="fiche">
+<div class="gd">[SVG]
+<div>
+<i>Ilse · Orsel · lek 7
+<b style="color:#ff5a4d">Grillé, et il s’est retiré
+<small>sa caisse était 
+<u>bien remplie quand il a décroché. La bande ne dit pas ce qu’il en a fait.
+<div
+
+====================================================================================================
+CADRE #112 — étiquette: Aucun dealer — rien ne rentre
+====================================================================================================
+class="vnt6" style="height:462px">
+<div class="cerne">
+<div class="enseigne">
+<b>La vente
+<i>personne sur les points de vente
+<div class="compteurs">
+<div class="fen">
+<b>00
+<span style="color:#8a979c">/0
+<span>au travail
+<div class="fen">
+<b>00
+<span>caisses pleines
+<div class="fen">
+<b>00
+<span>grillés
+<div class="elast">
+<div class="rien">Aucun dealer sur un point de vente.<br>Rien ne rentre.
+<div class="pann">
+<i>par où commencer
+<b>Il faut poser quelqu’un quelque part
+<small>affecter un dealer demande 
+<u>un point de vente et 
+<u>la case qu’il couvre. Les deux se choisissent sur la carte du quartier.
+<div class="pied">
+<span class="cta6">AFFECTER UN DEALER
+<div
+
+====================================================================================================
+CADRE #113 — étiquette: Ce qui manque encore
+====================================================================================================
+class="vnt6" style="height:462px">
+<div class="cerne">
+<div class="enseigne">
+<b>La vente
+<i>ce qu’on saurait, si le back le disait
+<div class="compteurs">
+<div class="fen">
+<b>03
+<span style="color:#8a979c">/6
+<span>au travail
+<div class="fen">
+<b>03
+<span>caisses pleines
+<div class="fen">
+<b>01
+<span>grillés
+<div class="pann">
+<span class="lot">L1
+<i>maillon manquant
+<b>Obtenir une planque
+<small>sans elle, ramasser n’aboutit jamais — et c’est tout le bout de la chaîne d’argent qui est bloqué derrière
+<div class="pann">
+<span class="lot">L2
+<i>maillon manquant
+<b>Savoir combien il y a dans la caisse
+<small>la bande dit « pleine à ras » et s’arrête là ; rien ne dit ce que ça vaut
+<div class="pann">
+<span class="lot">L3
+<i>maillon manquant
+<b>Choisir le point de vente depuis cet écran
+<small>affecter exige un identifiant de point et une case ; aucune route ne les liste
+<div class="pann">
+<span class="lot">L4
+<i>maillon manquant
+<b>Ce que devient la caisse d’un dealer grillé
+<small>la projection se tait, et le joueur n’a aucun moyen de savoir
+
+
+<!-- ═══ fin LA VENTE (screen NEUF) ═══ -->
+
+
+
+<!-- ═══ L'HORIZON (screen_c6) ═══ -->
+
+
+
+<div class="rangee">
+  <!-- L'HORIZON (screen_c6) · généré par generateur-horizon.py -->
+<div
+

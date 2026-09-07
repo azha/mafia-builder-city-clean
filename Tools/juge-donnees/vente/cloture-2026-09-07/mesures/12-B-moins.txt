@@ -1,0 +1,20 @@
+# B⁻ — recompte dans un $( ), jamais lu au terminal (piège de la couche d'affichage, socle)
+# population : services/game-back/src/**/*.ts, HORS db/schema, db/migrations, et tout chemin contenant 'test'
+
+  operating_hours_start = 0
+  operating_hours_end = 0
+  coverage_lek_tile_id = 21
+  substance_specialization = 8
+  current_state = 39
+  float_cents = 84
+  home_building_id = 49
+
+# CONTRÔLE POSITIF du protocole : une colonne certainement lue doit être > 0
+  substance_specialization (attendu > 0) = 8
+# CONTRÔLE NÉGATIF : un nom qui n'existe pas doit rendre 0
+  colonne_qui_nexiste_pas_xyz (attendu 0) = 0
+
+# Les sites réels de operating_hours (arbre ENTIER de services/game-back, sans filtre)
+/home/erutheone/project/mafia-clean-city/services/game-back/src/db/schema/operational_chain.ts:232:    operating_hours_start:    smallint('operating_hours_start').notNull().default(0),                                     // game-hour (§68)
+/home/erutheone/project/mafia-clean-city/services/game-back/src/db/schema/operational_chain.ts:233:    operating_hours_end:      smallint('operating_hours_end').notNull().default(23),                                      // game-hour (§69)
+  -- total lignes (dans un $( )) = 2
