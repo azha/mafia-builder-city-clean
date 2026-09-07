@@ -183,6 +183,13 @@ DOCTRINE = """## Règles de doctrine applicables
   raison, entiers trop propres) est d'abord un soupçon sur la CHAÎNE DE CAPTURE, pas sur l'écran : dis-le, mesure le pas et le
   résidu, et mets-le en « non vérifié » avec la mesure hors image (les appelants de `SnapToScreenPixel`). Tant que ce correctif n'est
   pas posé, aucune planche de district prise par cette chaîne ne montre la mise en page réelle.
+- **Classe connue : un cadre POINTILLÉ TROUÉ, trou symétrique et central sur les deux rails horizontaux** (㉟ r1 : 334 px, 36 %, x 629..962,
+  identique sur deux campagnes ; contrôle : le cadre PLEIN de la carte est continu 960/960). Cause mesurée par f2 : un bord périodique
+  (`RoundedRectDashedOutline`) posé en `Image.Type.Sliced` — le 9-slice ÉTIRE la bande centrale ; un trait continu y survit, un pointillé
+  non. Sites en Sliced : Demolition, Selling, Profile, Settings, Precinct, DecisionDetail ; remède maison en production : `Image.Type.Tiled`.
+  ⇒ Si tu le vois : MESURE-LE (largeur du trou, symétrie haut/bas, centrage), puis classe-le dans cette classe (destinataire : propriétaire de
+  l'écran) sans ré-enquêter le mécanisme. ⚠️ Un trou NI symétrique NI central est une AUTRE cause : la classe est un raccourci de classement,
+  jamais de mesure.
 - **Animation — le mandat est PÉRIMÉ sur ce point** (f2, 07/09 10:40) : « un nouvel écran est SANS animation » cite le ruling de 13h42 du
   27/08, renversé le soir même (« animé le truc, tout en restant dark/mafieux ») ; les animations sont revenues par défaut sur les écrans neufs
   et le poseur du marché EXIGE désormais les `@keyframes`. ⇒ Un mouvement mesuré entre T et T+1 n'est PAS un écart ; une référence rendue à

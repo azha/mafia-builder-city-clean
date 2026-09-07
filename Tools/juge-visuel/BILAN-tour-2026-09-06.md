@@ -253,3 +253,8 @@ local `~/project/mafia-unity-correcteur`, d'où les blobs ont été lus.
 - **Amendement de skill à proposer (mandat-juge.md, piège « Un nouvel écran est SANS animation (ruling 2026-08-27) »)** : PÉRIMÉ — renversé
   le soir du 27/08 ; le mandat, passé VERBATIM aux juges, leur fait classer MAJEUR tout pixel qui bouge. La doctrine du générateur porte la
   correction depuis `4561547`+ ; le fichier de skill (dépôt back, ratifié user) est à amender par qui le tient. ㉚ r1 rendu (1B/13M/12m).
+- **Classe transversale (f2, 11:05) : cadre pointillé troué = bord périodique en `Image.Type.Sliced`** (le 9-slice étire la bande centrale ;
+  6 sites, remède `Tiled` déjà en production sur 2). Le contrôle négatif du juge ㉟ (« le cadre plein de la carte est continu 960/960 »)
+  portait déjà la différence explicative — *un contrôle négatif qui compare deux objets porte la cause, encore faut-il le lire comme tel*.
+  Entrée dans la doctrine du générateur ; les 5 autres sites ne sont PAS corrigés pendant que les juges regardent (correction groupée après
+  verdicts, recapture unique) ⇒ les mesures en vol restent valides.
