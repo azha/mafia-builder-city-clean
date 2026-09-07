@@ -39,8 +39,19 @@
 
 | fichier | résolution | rect imprimé par le test | état | test |
 |---|---|---|---|---|
-| `Assets/Screenshots/ecran_demolition_1080x1920.png` | 1080×1920 | <ligne du log> | <jour> | `EcranDemolitionC1_CapturerPourLeJugeVisuel_DeuxResolutions` |
-| `Assets/Screenshots/ecran_demolition_1080x2400.png` | 1080×2400 | <ligne du log> | <jour> | `EcranDemolitionC1_CapturerPourLeJugeVisuel_DeuxResolutions` |
+| `Assets/Screenshots/planche_raser_un_site_1080x2400.png` | 1080×2400 | <ligne du log> | <jour> | campagne `PhotoPlanche` |
+
+⛔⛔ **CE DOSSIER POINTAIT SUR DEUX PLANCHES VIDES — corrigé le 2026-09-07.**
+Les deux captures `ecran_demolition_…` mesurent **0,000 % d'encre**. **Cause à l'inventaire, TD-541** :
+`MonterEcran()` n'appelle jamais `SetToken`, l'amorce sort immédiatement, et la capture est prise **une
+frame après la création** — écran monté, **jamais chargé**. Elles ne photographient que la charpente.
+⇒ **La planche qui fait foi est celle qui passe par le chemin du joueur** — `planche_raser_un_site`,
+**3,457 %** d'encre, et c'est celle que la table de `construire-dossiers.py` désigne pour ㉝ depuis le
+2026-09-04 (`confiance="mesurée"`, le contrôleur cite m-79..84, nominal 80).
+⚠️ **Ce dossier est ANTÉRIEUR à cette table** et n'est pas une sortie du générateur : la correction de
+la table ne pouvait pas l'atteindre. *Celui qui est généré suit, celui qui est écrit à la main reste.*
+⇒ **Un juge l'aurait suivi et aurait jugé la charpente en croyant juger l'écran.** Voir
+`Tools/juge-visuel/ecran_delegation/dossier.md` pour le balayage complet de la classe (4 sur 124).
 
 - Garde anti-vide du test : pixels hors du fond dominant > 0 (plancher bas — squelette non rempli).
 - Commit du client au moment des captures : `<sha>` (une capture est une mesure DATÉE, pas une

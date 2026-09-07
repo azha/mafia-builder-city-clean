@@ -55,8 +55,14 @@ TABLE = [
       cadres=[(S1, ["organigramme (rangée « La Famille »)"])], nominal=None, planche="famille_1080x2400.png",
       confiance="mesurée", note="référence = Tools/family-organigramme-reference-1120.png (1120×1850) et famille/ecran-canon.png ; ⑦ ⑧ sont des sections du même contrôleur"),
  dict(sym="⑪", ctl="LaunderingController", dossier="coffre", chemin="onglet FILIÈRE",
-      cadres=[], nominal=None, planche="planche_le_coffre_1080x2400.png",
-      confiance="aucune", note="aucun cadre de série 4/6 ne dessine le pipeline ; coffre/ecran-canon.png est le seul canon"),
+      cadres=[], nominal=None, planche="",
+      confiance="aucune", note="aucun cadre de série 4/6 ne dessine le pipeline ; coffre/ecran-canon.png est le seul canon. "
+                               "⛔ PLANCHE RETIRÉE le 2026-09-07 : cette ligne portait planche_le_coffre_1080x2400.png, "
+                               "que ㉒ porte AUSSI — un seul fichier, deux écrans, deux contrôleurs. Mon attribution ici "
+                               "reposait sur le seul NOM (dossier « coffre » ≈ nom du fichier), celle de ㉒ sur une note "
+                               "explicite. Un rattachement par ressemblance de mot est exactement le critère qui a produit "
+                               "un faux positif sur icon_sandpile ici. Ce que cette planche MONTRE se lit sur l'image : "
+                               "à re-remplir par mesure, jamais par le nom."),
  dict(sym="⑯", ctl="DailyReviewScreenController", dossier="revue-du-jour", chemin="Plus → LA REVUE DU JOUR",
       cadres=[(S4, list(range(0, 4))), (S6, list(range(0, 4)))], nominal=(S4, 0), planche="revue_du_jour_seuil-force-0.1_1080x2400.png",
       confiance="mesurée", note="série 4 cadres 0-3 = le canon ratifié (revue-du-jour/v4-0..3.png)"),
