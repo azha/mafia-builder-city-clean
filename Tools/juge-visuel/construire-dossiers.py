@@ -128,8 +128,24 @@ TABLE = [
                                "⇒ Un nominal est l'état que la CAPTURE montre, jamais l'état le plus représentatif du "
                                "groupe : il se mesure sur la planche, pas se choisit sur la maquette."),
  dict(sym="㉞", ctl="CarnetScreenController", dossier="carnet", chemin="Plus → LES ORDRES DU SOIR",
-      cadres=[(S6, list(range(85, 92)))], nominal=(S6, 85), planche="planche_signer_l_ordre_1080x2400.png",
-      confiance="déduite", note="cadres 85-91 (ordres du soir, rejouer, ce qui arrive) par le titre ; nom de planche à confirmer"),
+      cadres=[(S6, list(range(85, 92)))], nominal=(S6, 85), planche="",
+      confiance="déduite", note="cadres 85-91 (ordres du soir, rejouer, ce qui arrive) par le titre. "
+                               "⛔ PLANCHE RETIRÉE le 2026-09-07 : planche_signer_l_ordre_1080x2400.png NE PHOTOGRAPHIE "
+                               "PAS cet écran. Elle montre une fiche de LIEUTENANT (Lt. Halde, Cuisinier, Au repos, "
+                               "AUTONOMIE / RÉAFFECTER / ÉDITEUR DE RÈGLES, 23 lignes de Diagnostics). Mesuré par le juge "
+                               "du r1, non uniforme donc discriminant : l'aplat crème #efe7d6, élément héros du carnet, "
+                               "couvre 34,361 % de la référence, 0,144 % de la capture — et 0,436 % du canon HUD, un écran "
+                               "SANS carnet, soit 3x plus que la capture. Luminance de contenu 143,0 -> 28,8. Ni doublon "
+                               "d'assemblage (écart minimal 40,2 % avec les 22 autres planches) ni fichier corrompu "
+                               "(sha256 identique au dépôt). "
+                               "⚠️ ET CE CHAMP PORTAIT DÉJÀ SON PROPRE AVERTISSEMENT — « nom de planche à confirmer » — "
+                               "et un juge a été routé dessus quand même : la mise en garde vivait dans une PROSE que le "
+                               "générateur ne lit pas, et il a émis la planche comme les autres. "
+                               "⇒ Un champ qui porte son doute dans un commentaire est consommé comme un fait. Le doute "
+                               "doit vivre dans la DONNÉE (ici : chaîne vide), jamais dans la note. "
+                               "⇒ Deuxième attribution fausse de cette table après planche_le_coffre — et la première "
+                               "invisible à la garde des doublons, puisqu'elle ne concerne qu'UNE ligne : une planche "
+                               "attribuée à un seul écran peut aussi être la mauvaise. À re-remplir par MESURE."),
  dict(sym="㉙", ctl="ConflitScreenController", dossier="ecran_conflit", chemin="Plus → LE CONFLIT",
       cadres=[(S6, list(range(59, 67)))], nominal=(S6, 59), planche="planche_le_conflit_1080x2400.png",
       confiance="déduite", note="cadres 59-66 (la table du fond) par le titre ; rivaux en noms de fiction NON servis (§C-2)"),
