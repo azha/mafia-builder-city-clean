@@ -44,7 +44,7 @@ SERIALISES = ('.unity', '.prefab', '.asset', '.mat', '.controller', '.spriteatla
 # ⛔ Cliquet. Ce nombre est une DONNÉE mesurée le 2026-09-07, pas un objectif : il doit
 #    DESCENDRE quand on monte de l'art, et il ne doit jamais monter sans qu'on le sache.
 #    Une épingle sur une donnée rougit à l'événement ; une prose datée ne rougit jamais.
-PLANCHER_2026_09_07 = 513
+PLANCHER_2026_09_07 = 510
 
 
 def guid(meta):
@@ -80,9 +80,25 @@ def mesurer(racine='Assets'):
                     cs.append(t)
     SER, CS = '\n'.join(serial), '\n'.join(cs)
 
-    # M2 : les chemins atteints par Resources.Load — littéraux ET constantes résolues.
-    consts = dict(re.findall(r'const\s+string\s+(\w+)\s*=\s*"([^"]*)"', CS))
+    # ⛔⛔ M2 NE PEUT PAS SUIVRE LA FORME DE L'APPEL — TROISIÈME ÉLARGISSEMENT, ET LE PLUS
+    #    INSTRUCTIF. Les versions précédentes lisaient le littéral passé à `Resources.Load`, puis
+    #    aussi les `const` résolues. Le 2026-09-07, un refactor a sorti le mécanisme dans un type
+    #    partagé (`FamilleDIcones`) qui reçoit son dossier en ARGUMENT DE CONSTRUCTEUR et appelle
+    #    `Resources.Load(champ + clé + suffixe)`. Plus aucun littéral au site d'appel ⇒ l'instrument
+    #    a compté 18 icônes MONTÉES, VERTES EN JEU, comme orphelines, et le cliquet a rougi sur un
+    #    montage RÉUSSI. *Un détecteur qui suit la FORME de l'appel est battu par le premier
+    #    refactor qui la change — et il l'est dans le sens qui accuse.*
+    # ⇒ On ne suit donc plus l'appel : on demande si le NOM DU DOSSIER apparaît dans un littéral
+    #    C# quelconque. Un dossier sous `Resources` que personne ne nomme nulle part est
+    #    injoignable ; un dossier nommé quelque part est joignable par une forme qu'on n'a pas à
+    #    énumérer. ⚠️ C'est délibérément PLUS LARGE : ça peut compter joignable un dossier dont le
+    #    nom coïncide avec un littéral sans rapport. Le compte penche donc vers « monté », et c'est
+    #    le bon sens de l'erreur pour un chiffre qui sert de cliquet — un faux « orphelin » bloque
+    #    un lot réussi, un faux « monté » ne fait que sous-estimer la dette, qu'on mesure par
+    #    ailleurs.
+    litteraux = set(re.findall(r'"([^"\n]{2,120})"', CS))
     chemins = set(re.findall(r'Resources\.Load<[^>]*>\("([^"]*)"', CS))
+    consts = dict(re.findall(r'const\s+string\s+(\w+)\s*=\s*"([^"]*)"', CS))
     for ident in re.findall(r'Resources\.Load<[^>]*>\(\s*([A-Za-z_]\w*)\s*[\),+]', CS):
         if ident in consts:
             chemins.add(consts[ident])
@@ -96,7 +112,10 @@ def mesurer(racine='Assets'):
         pre = prefixe(p)
         if g and g in SER:
             c = 'M1 GUID sérialisé'
-        elif pre is not None and any(x.rstrip('/') == pre or x.startswith(pre + '/') for x in chemins):
+        elif pre is not None and (
+                any(x.rstrip('/') == pre or x.startswith(pre + '/') for x in chemins)
+                or any(pre in lit for lit in litteraux)
+                or (pre and any(pre.split('/')[-1] in lit for lit in litteraux))):
             c = 'M2 Resources + chemin C#'
         elif pre is not None:
             c = 'M2? sous Resources, chemin C# INTROUVABLE'
