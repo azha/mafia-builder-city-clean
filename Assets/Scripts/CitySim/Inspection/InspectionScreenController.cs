@@ -79,6 +79,7 @@ namespace MafiaCleanCity.CitySim.Inspection
         private TextMeshProUGUI sousTitre;
         private TextMeshProUGUI batonTexte;
         private TextMeshProUGUI videTexte;
+        private UnityEngine.UI.Image videIllustration;
 
         private void Awake() => Init();
 
@@ -156,6 +157,7 @@ namespace MafiaCleanCity.CitySim.Inspection
 
             EtatVide = File == null;
             videTexte.gameObject.SetActive(EtatVide);
+            if (videIllustration != null) videIllustration.gameObject.SetActive(EtatVide);
             if (EtatVide)
             {
                 // ⚠️ 404 = « pas encore de file », pas « panne ». Les confondre ferait accuser le
@@ -348,6 +350,15 @@ namespace MafiaCleanCity.CitySim.Inspection
                               DesignTokens.Current.hudSerifFont, TextAlignmentOptions.Center);
             videTexte.enableWordWrapping = true;
             videTexte.gameObject.SetActive(false);
+
+            // ── L'ILLUSTRATION D'ÉTAT VIDE (⑮ Les inspections) ──────────────────────────────────
+            // ⛔ Elle ACCOMPAGNE le message, elle ne le remplace pas : le message NOMME,
+            //    l'image lève seulement le doute « vide ou CASSÉ ? ». `null` n'enlève rien.
+            // ⚠️ Sujet « police » ← `Tools/fal/TABLE-SUJET-ECRAN.md` : il couvre ⑮ ET ⑰.
+            //    Mon appariement « évident » n'en voyait qu'un — la moitié du travail avec
+            //    l'apparence de la totalité.
+            videIllustration = MafiaCleanCity.Shell.EtatsVidesIllustres.Monter(transform, "police", Px(120f));
+            if (videIllustration != null) videIllustration.gameObject.SetActive(false);
         }
 
         private static GameObject Bloc(string nom, Transform parent, bool horizontal, float espace)

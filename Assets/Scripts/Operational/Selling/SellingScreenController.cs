@@ -70,6 +70,7 @@ namespace MafiaCleanCity.Operational.Selling
         private Transform mountParent;
         private RectTransform rangees;
         private TextMeshProUGUI videTexte;
+        private UnityEngine.UI.Image videIllustration;
 
         private void Awake() => Init();
 
@@ -171,6 +172,7 @@ namespace MafiaCleanCity.Operational.Selling
 
             EtatVide = Dealers == null || Dealers.Length == 0;
             videTexte.gameObject.SetActive(EtatVide);
+            if (videIllustration != null) videIllustration.gameObject.SetActive(EtatVide);
             if (EtatVide)
             {
                 videTexte.text = DerniereErreur == null
@@ -335,6 +337,15 @@ namespace MafiaCleanCity.Operational.Selling
             videTexte = Texte(transform, "Vide", "", Px(11f), Creme2,
                               DesignTokens.Current.hudSerifFont, TextAlignmentOptions.Center);
             videTexte.gameObject.SetActive(false);
+            // ── L'ILLUSTRATION D'ÉTAT VIDE (㉟ La vente) ────────────────────────────────────────
+            // ⛔ ELLE NE REMPLACE PAS LE MESSAGE, elle l'accompagne. Le message NOMME (« … »),
+            //    l'illustration lève seulement le doute « vide ou CASSÉ ? ». Un écran sans image
+            //    reste lisible ; un écran sans message ne l'est pas. C'est pourquoi le montage
+            //    est ADDITIF et que `null` n'enlève rien.
+            // ⚠️ Sujet « vente » ← `Tools/fal/TABLE-SUJET-ECRAN.md`, la table de l'auteur. Elle
+            //    n'existait que dans une IMAGE ; mon appariement « évident » en couvrait la moitié.
+            videIllustration = MafiaCleanCity.Shell.EtatsVidesIllustres.Monter(transform, "vente", Px(120f));
+            if (videIllustration != null) videIllustration.gameObject.SetActive(false);
         }
 
         private static GameObject Bloc(string nom, Transform parent, bool horizontal, float espace)
