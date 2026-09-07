@@ -126,9 +126,63 @@ def mesurer(racine='Assets'):
     return cls, det, len(pngs)
 
 
+# ⛔⛔ « 510 ORPHELINS » N'EST PAS « 510 CHOSES À MONTER », ET LE NOMBRE NU INVITE AU
+#    MAUVAIS GESTE. Chaque famille est écartée pour une RAISON MESURÉE, et une famille écartée
+#    avec sa raison est une décision ; sans raison, c'est un oubli qui ressemble à une décision.
+#    ⚠️ Ces raisons sont DATÉES : chacune nomme le fait qui la fonde, pour qu'on puisse la
+#    re-mesurer au lieu de la croire. Si le fait change, la classe change.
+RAISONS = [
+    ('Assets/Art/Kenney',
+     "pack de tuiles TIERS, pas produit pour ce jeu (porte ses propres Preview/Sample). "
+     "Rien à monter : ce n'est pas de l'art du projet."),
+    ('Assets/Art/District/Sprites',
+     "sprites de bâtiment et calques de nuit RETIRÉS PAR ARBITRAGE (2026-08-22) : le fond peint "
+     "porte déjà les bâtiments. Vérifié dans le code — `FondPorteDejaLesBatiments = true`, "
+     "`spriteImg.enabled = !FondPorteDejaLesBatiments`, et les TROIS appels de `TryBuildOverlay` "
+     "sont précédés d'un `if (FondPorteDejaLesBatiments) { … return; }`. Orphelins par DÉCISION, "
+     "pas par oubli — les monter contredirait l'arbitrage."),
+    ('Assets/Art/Sprites/Batiments', "même famille que ci-dessus (jour/nuit + calques `ov_*`)."),
+    ('Assets/Art/Buildings',
+     "placeholders `sprite_environment_placeholder_*`, remplacés par le fond peint."),
+    ('Assets/Art/Icons',
+     "24 familles d'icônes ; le critère de montage est « un écran cite-t-il ses sujets comme "
+     "VALEUR DE DOMAINE CITÉE ». 2 familles montées, 2 mûres mais en attente d'une planche "
+     "(poser un glyphe sur un écran qu'on ne peut pas regarder, c'est décider de sa lisibilité "
+     "sans mesure), 15 sans aucun écran demandeur — les monter serait le défaut à l'envers."),
+]
+
+
+def classer(det):
+    par_dossier = collections.Counter()
+    for (c, d), l in det.items():
+        if c.startswith(('ORPHELIN', 'M2?')):
+            par_dossier[d] += len(l)
+    reste = dict(par_dossier)
+    print("\nORPHELINS PAR RAISON — un compte nu invite au mauvais geste\n")
+    total = 0
+    for prefixe, pourquoi in RAISONS:
+        n = sum(v for d, v in par_dossier.items() if d.startswith(prefixe))
+        for d in list(reste):
+            if d.startswith(prefixe):
+                reste.pop(d)
+        if n:
+            total += n
+            print(f"  {n:5d}  {prefixe}")
+            print(f"         {pourquoi}\n")
+    if reste:
+        n = sum(reste.values())
+        total += n
+        print(f"  {n:5d}  NON CLASSÉ — {', '.join(sorted(reste))}")
+        print("         ⚠️ aucune raison écrite : c'est une mesure DUE, pas une tache.\n")
+    print(f"  ⇒ {total} orphelins classés · « à monter » ≠ ce nombre")
+
+
 def main():
     cls, det, tot = mesurer()
     orph = cls['ORPHELIN'] + cls['M2? sous Resources, chemin C# INTROUVABLE']
+    if '--classer' in sys.argv:
+        classer(det)
+        return 0
     if '--lister' in sys.argv:
         cible = sys.argv[sys.argv.index('--lister') + 1]
         for (c, d), l in sorted(det.items()):
