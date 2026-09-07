@@ -93,3 +93,67 @@ planches que rien d'autre n'aurait distinguées d'une réussite.**
 (A′ et `Comparator_Red`) qui rendent 19 rouges non attribuables tant qu'ils ne sont pas levés.
 **Non établi** : aucune cause. *Un message cité n'est pas un diagnostic — c'est ce que le test
 avait à dire, et que personne n'avait lu.*
+
+---
+
+# SUITE — la classe A levée sans porte : la scène est INTACTE, la sonde regarde ailleurs
+
+**Mesuré le 2026-09-07, en lisant le YAML de la scène et le journal du run — aucune porte prise.**
+
+## ✅ Ce qui ferme la question du programme
+
+```
+① Assets/Scenes/Boot.unity     GameObject « AppShell »  ·  m_IsActive: 1
+                               MonoBehaviour guid ad5185042500e9ae2ac5cf750ce5f31d · m_Enabled: 1
+   EditorBuildSettings         enabled: 1 · path: Assets/Scenes/Boot.unity · index de build 0
+② dans CE run, entre le chargement de la scène et le FAIL de F0.1-a :
+   AppShell:Start() → EnsureInitialized → BuildLayout → TopBarController:Awake → BuildVolutes
+   [DemoIdentityResolver] régime=env identité=demo_capture@example.test
+③ `DontDestroyOnLoad` dans tout Assets/Scripts : 0   ⇒ le shell ne quitte pas sa scène
+```
+
+⇒ **La charpente n'est PAS régressée. Les 17 accusent l'instrument, pas la scène.**
+⇒ *`F0_1a` dit « les 24 montages d'Assets/Tests prouvent que le shell marche, jamais qu'un joueur
+le rencontre ». C'est une phrase juste — mais ce n'est pas ce que ces 17 rouges mesurent.*
+
+## ⛔ Pourquoi `F0_1b` ne pouvait pas être levée par lecture
+
+```
+oracle python sur les blobs (grep -c sur `git show` a menti deux fois de plus) :
+   98ae7be  01:42   « SONDE-SHELL » = 0
+   d3eedb6  03:10   « SONDE-SHELL » = 2      ⇐ le diagnostic est né LÀ
+   le run           00:36 → 02:41
+   journal, 135 069 lignes : 0 ligne « [SONDE-SHELL] »
+```
+⇒ **L'instrument capable de départager les deux mondes a été écrit APRÈS le run qui les confond,
+et il n'a jamais tourné.** *Ce n'est pas « lever un rouge », c'est faire tourner une sonde qui
+existe déjà.*
+
+## ⇒ La cause PROBABLE — cohérente avec les cinq observations, NON tranchée
+
+```
+SetUp (UnitySetUp)  détruit TOUT AppShell du processus, quelle que soit sa scène,
+                    en DestroyImmediate, AVANT de charger
+juste avant le FAIL « SetUp — 1 AppShell … résiduels détruits avant le chargement »
+                    « Loaded scene 'Assets/Scenes/Boot.unity' »
+sur tout le run     24 × « Loaded scene 'Assets/Scenes/Boot.unity' »  ·  0 déchargement nommé
+                    41 × « There are 2 audio listeners » (Boot.unity n'en porte qu'UN)
+la sonde lit        SceneManager.GetSceneByBuildIndex(0)
+```
+⇒ **Quand plusieurs copies de `Boot.unity` sont chargées en même temps, `GetSceneByBuildIndex(0)`
+est AMBIGU** : il rend une copie ancienne, dont un `SetUp` précédent a détruit l'AppShell, pendant
+que la copie fraîche démarre le sien dans une scène que la sonde ne regarde jamais.
+
+⚠️ **Hypothèse, pas mesure.** Et **le « 0 déchargement » peut être un artefact de journalisation** —
+Unity logue les chargements ; je n'ai pas établi qu'il logue les déchargements. *Un diagnostic
+cohérent avec cinq observations reste un diagnostic tant qu'une sixième ne l'a pas tranché.*
+
+⇒ ★ **Et si elle est juste, la garde qui la ferme n'est pas un `Assert` de plus** : la sonde ne doit
+pas désigner sa scène par un INDEX que plusieurs copies partagent. *Un identifiant ambigu ne se
+durcit pas, il se remplace.*
+
+## Ce qu'il faut pour trancher — petit, et scopé
+
+Un run `MAFIA_CI_CATEGORIES=Charpente` (nom **lu** dans les quatre fichiers, pas de mémoire) sur
+l'arbre courant. La sonde imprime la réponse en une ligne. ⇒ **Un « OUI » portant le MÊME chemin
+que la scène examinée est la signature exacte du double chargement.**
