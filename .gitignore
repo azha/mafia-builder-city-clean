@@ -72,3 +72,9 @@ mono_crash.mem.*.blob
 # artefacts de build local — jamais versionnés (APK ~108 Mo)
 Builds/
 .utmp/
+
+# Les outils de mesure de Tools/ sont des scripts Python : un simple import en crée un
+# cache que le prochain `git add -A` emporterait. Rien de fatal, mais du bruit dans un
+# arbre partagé par plusieurs sessions.
+__pycache__/
+*.pyc
