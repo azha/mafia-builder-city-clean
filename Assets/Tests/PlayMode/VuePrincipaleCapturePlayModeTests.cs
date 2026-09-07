@@ -368,6 +368,17 @@ namespace MafiaCleanCity.Capture.Tests
             //   même mode d'échec en batchmode et n'ont PAS été repassés — chacun peut avoir sa
             //   raison d'être lancé depuis l'éditeur, et ce n'est pas à cette passe d'en décider.
             yield return CapturerA(1080, 1920, "Assets/Screenshots/vue_principale_nuit_1080x1920.png");
+            // ⛔ LA SECONDE RÉSOLUTION N'EST PAS UN CONFORT : ELLE TRANCHE UNE QUESTION OUVERTE.
+            //    Un juge ⊥ a mesuré les centres de badge sur une maille de pas 192 px, et blender a
+            //    trouvé que 192 = hauteur d'écran / 10. Le `CanvasScaler` est calé sur la LARGEUR
+            //    (1280 → 1080, facteur 0,84375, indépendant de la hauteur), donc une valeur CANVAS
+            //    fixe rend le MÊME nombre de pixels écran aux deux résolutions.
+            //    ⇒ pas = 240 px à 2400  ⇒ la maille suit la HAUTEUR D'ÉCRAN
+            //      pas = 192 px à 2400  ⇒ c'est une valeur canvas fixe
+            //    Une seule capture départage, là où trois hypothèses successives ont échoué.
+            //    ⚠️ Et la doctrine l'exige déjà : 0 test du dépôt ne fixait de résolution jusqu'au
+            //    2026-08-21, tout était certifié en paysage sur un projet en portrait.
+            yield return CapturerA(1080, 2400, "Assets/Screenshots/vue_principale_nuit_1080x2400.png");
             Debug.Log($"[CAPTURE] vue de nuit — batiments={batiments} ecran={Screen.width}x{Screen.height}");
         }
 

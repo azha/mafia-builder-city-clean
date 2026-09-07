@@ -589,6 +589,7 @@ namespace MafiaCleanCity.CityMap
                     return ba.y != bb.y ? ba.y.CompareTo(bb.y) : ba.x.CompareTo(bb.x);
                 });
 
+                ancragesParPivot = 0; ancragesParGrille = 0; ancrages.Clear();
                 foreach (DistrictInteriorBuildingDto building in ordered)
                 {
                     if (!blockByBlockId.TryGetValue(building.block_id, out DistrictInteriorBlockDto block))
@@ -619,7 +620,16 @@ namespace MafiaCleanCity.CityMap
                     playerBuildingLocalPositions.Add(
                         cellsRt.anchoredPosition + ((RectTransform)cell.transform).anchoredPosition);
                 }
-            }
+
+                Debug.Log($"[ANCRAGE] {ancragesParPivot} cellule(s) posée(s) sur `pivot_px`, "
+                          + $"{ancragesParGrille} sur la GRILLE DE SECOURS "
+                          + $"(carte d'ancrage {(anchorMap?.parcelles == null ? "ABSENTE" : anchorMap.parcelles.Length + " parcelles")})"
+                          + (ancragesParGrille > 0
+                             ? " ⚠️ une cellule sur la grille de secours n'est PAS sur son bâtiment"
+                             : "")
+                          + $"\n[ANCRAGE] blocs distincts={new System.Collections.Generic.HashSet<string>(ancrages).Count} "
+                          + $"sur {ancrages.Count} cellule(s) — deux cellules au MÊME bloc se superposent au pixel près"
+                          + $"\n[ANCRAGE] {string.Join(" · ", ancrages)}");            }
 
             // nav-district — pièce manquante mesurée (le fond fait 1920px de haut, la fenêtre n'en
             // montre que 720, sans aucun mécanisme de défilement — Tools/district-v2-reimport-
@@ -734,6 +744,10 @@ namespace MafiaCleanCity.CityMap
         /// du fond, §2.2) et positionné au pixel `pivot_px` lu dans <paramref name="anchorMap"/>
         /// (pp-F2/F-calage) — ou une grille de secours déterministe si ce bloc n'a pas d'ancre
         /// (profil sans fond en vague 1 : voir RenderNightDiorama et implementation-notes.md).</summary>
+        // Compteurs de RÉGIME d'ancrage — remis à zéro à chaque rendu, imprimés après la boucle.
+        private int ancragesParPivot, ancragesParGrille;
+        private readonly System.Collections.Generic.List<string> ancrages = new System.Collections.Generic.List<string>();
+
         private GameObject BuildBuildingCell(RectTransform sceneRt, int x, int y, DistrictInteriorBuildingDto building,
             DistrictBackgroundAnchorDto anchorMap, float scaleFactor)
         {
@@ -752,6 +766,26 @@ namespace MafiaCleanCity.CityMap
             // testée au pixel près (seul verge/district 16 porte pp-F2 — voir implementation-notes.md
             // § Deviations). Elle garde néanmoins C9/C10/lieutenant-markers vivants pour tout profil
             // synthétique de test (ex. "lattice") qui n'a pas de fond en vague 1.
+            // ⛔⛔ UN DISPOSITIF CONDITIONNEL DOIT DÉCLARER SON RÉGIME. Mesuré le 2026-09-07 : un
+            //    juge ⊥ a trouvé les 11 centres de badge EXACTEMENT sur une maille régulière
+            //    (résidu 0,0000 px), pendant que l'atelier mesurait les 51 ancres du fichier à
+            //    0,00 m de leur bâtiment. **Les deux mesures étaient justes** — et personne ne
+            //    pouvait les départager, parce que RIEN ne disait quelle branche avait servi.
+            //    Une régularité parfaite ne peut pas venir des pivots (mesuré : 51 abscisses
+            //    distinctes, 20 pas différents) ; elle ne peut venir que de la grille ci-dessous.
+            //    Le compte imprimé ferme la question en un run au lieu d'une hypothèse de plus.
+            if (pivotLocal.HasValue) ancragesParPivot++; else ancragesParGrille++;
+            // ⛔ ET LES VALEURS, PAS SEULEMENT LA BRANCHE. Déclarer quelle branche a servi laisse
+            //    encore la moitié du chemin dans le noir : *une branche vérifiée avec des données
+            //    non vérifiées ne prouve rien sur le résultat*. Deux lectures restaient compatibles
+            //    avec « 13/13 sur pivot » — que les pivots lus soient eux-mêmes une maille, ou que
+            //    l'objet mesuré ne soit pas la cellule. On imprime donc le bloc, le pivot LU et la
+            //    position POSÉE, pour que la maille se voie ou s'infirme sans une hypothèse de plus.
+            DistrictBackgroundParcelDto parcelleLue = DistrictBackgroundAnchor.FindParcel(anchorMap, x, y);
+            ancrages.Add($"({x},{y})"
+                         + (parcelleLue?.pivot_px != null && parcelleLue.pivot_px.Length >= 2
+                            ? $" px[{parcelleLue.pivot_px[0]:0.0},{parcelleLue.pivot_px[1]:0.0}]"
+                            : " GRILLE"));
             Vector2 localPos = pivotLocal ?? new Vector2(x * 100f, -y * 100f);
 
             GameObject cell = NewUI($"Cell_{x}_{y}", sceneRt);
