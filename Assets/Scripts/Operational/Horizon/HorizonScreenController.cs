@@ -128,12 +128,40 @@ namespace MafiaCleanCity.Operational
                 else if (c.affordable) aPortee++;
             }
 
-            sousTitre.text = Lib("CE QUE LE SERVEUR NE DIT PAS");
+            // ⛔⛔ LE SOUS-TITRE VENAIT DU CADRE DE DIAGNOSTIC — ㊱ B1 du r1, et la mesure est
+            //    indépendante du juge : « CE QUE LE SERVEUR NE DIT PAS » rend **0 occurrence** dans
+            //    `ecrans-brennar-6.html`, la maquette ratifiée. Le texte affiché au joueur
+            //    n'existait NULLE PART dans le canon.
+            //    ⇒ Le commentaire d'à côté disait « c'est la maquette qui l'exige » : **la chaîne
+            //      qu'il prétendait exigée n'y est pas.** *Une justification écrite n'est pas une
+            //      mesure, et celle-ci pointait vers un cadre d'ATELIER* — le #116, étiqueté
+            //      « Sans les textes — l'écran tel qu'il s'affiche AUJOURD'HUI », c'est-à-dire de
+            //      la copie de diagnostic écrite POUR NOUS. Le cadre qui porte le contenu est le
+            //      #117, et ses deux textes rendent 1 occurrence chacun dans le générateur ET dans
+            //      le HTML.
+            //    ⇒ Et ça violait le ruling user sur le vide — « ça plafonne et ça BLOQUE, rien
+            //      n'est perdu » : quatre fois « serveur », plus « panne » et « capacité ».
+            //      *L'écran ne plafonnait pas, il s'excusait.*
+            sousTitre.text = cartes.Length == 0 ? Lib("rien à l'horizon") : Lib("ce qui manque encore");
             MajCompteur(0, aPortee, cartes.Length, Lib("À PORTÉE"));
             MajCompteur(1, prises, -1, Lib("DÉJÀ PRISES"));
             MajCompteur(2, reculees, -1, Lib("ONT RECULÉ"));
 
             RendreCartes(cartes);
+            // ⛔ J'AVAIS VERROUILLÉ L'ÉCHELLE SUR `cartes.Length > 0`, ET DEUX GARDES ONT EU RAISON
+            //    DE ROUGIR : `ScreenC6S3_LEchelle_MarqueLeCourant_EtGriseLesFranchis` (« 4 barreaux
+            //    attendus, vus : [] ») et `ScreenC6S3_CranInconnu_SeMontreTelQuel`. L'échelle doit
+            //    se rendre quel que soit le nombre de cartes — elle porte `progress_to_next`, qui
+            //    existe indépendamment de l'horizon.
+            //    ⇒ **Et le verrou était INUTILE** : le message d'état vide est rendu dans
+            //      `listeRoot`, c'est-à-dire exactement dans les 753 px qui étaient sans encre. Le
+            //      vide se remplit sans qu'on ait à retirer quoi que ce soit.
+            //    ⇒ *J'ai retiré un bloc pour faire de la place à un texte qui allait ailleurs.*
+            // ⚠️ RESTE DÉCLARÉ, PAS FERMÉ : le titre « L'ÉCHELLE DES PALIERS » rend **0 occurrence
+            //    dans TOUT l'atelier** (contrôle positif : « palier » seul y apparaît 4 244 fois,
+            //    donc le motif voit ce corpus). C'est un libellé inventé, montré au joueur, et je
+            //    n'ai **aucun texte ratifié pour le remplacer** — l'inventer serait refaire la
+            //    faute que ce lot corrige. Dette de vocabulaire, à trancher avec la maquette.
             RendreEchelle(DerniereProgression);
 
             // ⛔ LE PANNEAU DIT LE TROU, il ne le masque pas — et c'est la maquette qui l'exige :
@@ -142,14 +170,20 @@ namespace MafiaCleanCity.Operational
             // dictionnaire du jeu ne contient aujourd'hui que des messages d'erreur.
             // ★ C'est la même règle que sur ㊲ : afficher un nom inventé serait plus joli et
             //   faux. Ici le dessin lui-même a tranché en faveur du vrai.
-            MajPanneau(Lib("CE QUE LE SERVEUR ENVOIE VRAIMENT"),
-                cartes.Length == 0 ? Lib("Rien à l'horizon") : Lib("Aucune de ces cartes n'a de nom"),
-                cartes.Length == 0
-                    ? "le serveur ne propose aucune capacité pour l'instant — ce n'est pas une "
-                      + "panne, c'est un état : rien n'est encore à portée."
-                    : "le serveur ne rend que des clés de traduction, et le dictionnaire du jeu ne "
-                      + "contient que des messages d'erreur. Voilà l'écran tel qu'il s'afficherait "
-                      + "aujourd'hui. Quelqu'un doit écrire les textes.");
+            // ⛔ L'ÉTAT VIDE PARLE DÉSORMAIS AU JOUEUR, avec les mots du cadre #117 — repris
+            //    VERBATIM de la maquette, pas reformulés. L'état NON VIDE garde son constat sur les
+            //    clés de traduction : c'est un trou réel du back, il ne s'invente pas de noms.
+            if (cartes.Length == 0)
+                MajPanneau(Lib("pourquoi c'est vide"),
+                    Lib("Les cartes viennent du monde, pas du menu"),
+                    "une possibilité apparaît quand ce que vous faites remplit ses conditions. "
+                    + "Rien ici ne s'achète directement.");
+            else
+                MajPanneau(Lib("CE QUE LE SERVEUR ENVOIE VRAIMENT"),
+                    Lib("Aucune de ces cartes n'a de nom"),
+                    "le serveur ne rend que des clés de traduction, et le dictionnaire du jeu ne "
+                    + "contient que des messages d'erreur. Voilà l'écran tel qu'il s'afficherait "
+                    + "aujourd'hui. Quelqu'un doit écrire les textes.");
         }
 
         /// <summary>Les cartes du flux. Chacune porte son titre (une CLÉ), son statut, son coût en
@@ -162,6 +196,28 @@ namespace MafiaCleanCity.Operational
         {
             for (int i = listeRoot.childCount - 1; i >= 0; i--)
                 UnityEngine.Object.Destroy(listeRoot.GetChild(i).gameObject);
+
+            // ⛔⛔ LE MESSAGE DE L'ÉTAT VIDE — ㊱ B3/B4. Sans lui, la liste vide laissait
+            //    **753 px (209 CSS) strictement sans encre**, soit 66 % de la boîte et 37 % du rect
+            //    libre, pendant qu'un bloc « L'ÉCHELLE DES PALIERS » — chaîne qui rend **0
+            //    occurrence dans toute la source de l'atelier** — occupait la place du message.
+            //    ⇒ *Deux écrans voisins ont fourni le vocabulaire ; personne n'a vérifié qu'il
+            //      appartenait à celui-ci.* Les deux phrases ci-dessous sont, elles, dans le cadre
+            //      #117 : 1 occurrence chacune dans le générateur ET dans le HTML ratifié.
+            if (cartes.Length == 0)
+            {
+                GameObject vide = NouveauUI("MessageVide", listeRoot);
+                VerticalLayoutGroup pv = vide.AddComponent<VerticalLayoutGroup>();
+                pv.childAlignment = TextAnchor.MiddleCenter;
+                pv.spacing = Px(4f);
+                pv.childControlWidth = true; pv.childControlHeight = true;
+                pv.childForceExpandWidth = true; pv.childForceExpandHeight = false;
+                var t1 = NouveauTexte(vide.transform, "Ligne1", Lib("Rien ne s'ouvre pour l'instant."), 11f, TexteFaible);
+                t1.alignment = TMPro.TextAlignmentOptions.Center;
+                var t2 = NouveauTexte(vide.transform, "Ligne2", Lib("L'horizon se remplit en jouant."), 11f, TexteFaible);
+                t2.alignment = TMPro.TextAlignmentOptions.Center;
+                return;
+            }
 
             foreach (HorizonCardDto c in cartes)
             {
@@ -358,7 +414,10 @@ namespace MafiaCleanCity.Operational
             // sont peut-être plus là. ㊲ a payé exactement ce défaut sur sa liste de règles.
             RendreCartes(new HorizonCardDto[0]);
             Cartes = new HorizonCardDto[0];
-            sousTitre.text = "CE QUE LE SERVEUR NE DIT PAS";
+            // ⚠️ Le chemin d'ERREUR n'a pas de cadre ratifié — la maquette n'en dessine pas. On
+            //    dit donc l'ÉTAT, pas le diagnostic : « CE QUE LE SERVEUR NE DIT PAS » était de la
+            //    copie d'équipe ici aussi, et elle n'est nulle part dans le canon.
+            sousTitre.text = Lib("indisponible");
             MajCompteur(0, -1, -1, "À PORTÉE");
             MajCompteur(1, -1, -1, "DÉJÀ PRISES");
             MajCompteur(2, -1, -1, "ONT RECULÉ");
