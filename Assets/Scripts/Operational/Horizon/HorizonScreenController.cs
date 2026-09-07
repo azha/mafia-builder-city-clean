@@ -448,8 +448,43 @@ namespace MafiaCleanCity.Operational
         private const float CssCompteurNb    = 14f;
         private const float CssCompteurLib   = 5.4f;
 
-        private static Color FondCarte   => DesignTokens.Current.surfaceCard;
-        private static Color FondRecule   => DesignTokens.Current.surfaceCard;
+        // ⛔⛔ LES COULEURS DE CET ÉCRAN VIENNENT DU CHÂSSIS DE LA SÉRIE 6, PAS DE `DesignTokens`
+        //    — et ce n'est pas un choix, c'est ce que la planche mesure. Confrontation
+        //    `screen_c6/reference-1080x2102.png` ↔ `screen_c6_horizon_etat-vide_…_1080x2400.png`,
+        //    distances sur les FLOATS de l'asset (jamais sur un hex de commentaire) :
+        //
+        //        cerne des boîtes   canon (42,54,72)     posé `hudHairlineGold` (176,141,62)  ⇒ 232
+        //        titres             canon (242,201,107)  posé `accentGold`      (255,210,63)  ⇒  66
+        //        fond des cartes    canon (17,24,35)     posé `surfaceCard`     (22,25,27)    ⇒  18
+        //        fond des compteurs canon (10,14,22)     posé `surfaceCard`                   ⇒  27
+        //
+        //    ⇒ L'OR DU CANON EST CELUI DU CADRE EXTÉRIEUR, et il avait été posé sur les boîtes
+        //      INTÉRIEURES. Mesuré sur la planche : à x=21 le filet doré (176,141,62) est le cadre
+        //      de l'écran ; à x=50, le cerne du conteneur vaut (42,54,72). *Un jeton juste employé
+        //      au mauvais rang produit un écran entièrement doré là où le canon n'a qu'un liseré.*
+        //    ⚠️ CONSÉQUENCE À DÉCLARER : ce cadre extérieur doré n'existe PAS dans le jeu (mesuré :
+        //      bord gauche à plat sur (13,13,13) au-dessus de l'enseigne). Après ce lot, l'écran
+        //      n'a donc plus d'or que sur ses deux titres. *Ce n'est pas une régression, c'est le
+        //      cadre manquant qui devient visible* — il est déclaré, pas corrigé ici.
+        //
+        // ⛔ POURQUOI `ReputationResolvers` ET PAS UN JETON. Trois de ces valeurs (`--encre`,
+        //    `--panneau`, `--lisere`) N'EXISTENT PAS dans `DesignTokens.asset`, et elles ne peuvent
+        //    pas y être ajoutées par ce lot : `CanonPaletteBridgePlayModeTests` exige une BIJECTION
+        //    et épingle l'arité en dur. C'est un arbitrage de DA, remonté à l'user le 2026-08-30.
+        //    Un producteur unique existe déjà pour ces trois-là — ㊲ les a payées avant nous, avec
+        //    leurs voisins trompeurs mesurés. ⇒ On le LIT, on ne recopie rien.
+        //    ⚠️ Le nom ment : ce ne sont pas les couleurs de ㊲, ce sont celles du châssis que les
+        //      deux écrans partagent. **Le renommage est dû**, et il attend que les verdicts de ㊲
+        //      soient rendus — toucher ce fichier pendant qu'un juge le regarde déplacerait sa
+        //      cible. *Une seconde copie « en attendant » ferait deux producteurs d'une même
+        //      grandeur, qui ne s'accordent qu'aujourd'hui.*
+        //
+        // ⚠️ UNE CINQUIÈME VALEUR RESTE NON APPARIÉE, et c'est la plus dangereuse des cinq : le fond
+        //    de l'enseigne vaut (13,19,29) au canon, et son plus proche jeton est `hudBarGlassBottom`
+        //    à **1/255**. ⇒ Assez proche pour qu'on le substitue de bonne foi, et c'est le fond du
+        //    BANDEAU du shell : le jeton pris pour ce qu'il n'est pas. **Non substitué, déclaré.**
+        private static Color FondCarte   => ReputationResolvers.Panneau;
+        private static Color FondRecule   => ReputationResolvers.Panneau;
         private static Color AccentRecule => HeatBucketResolver.SeverityColor(HeatBucketResolver.Severity.Severe);
         private static Color TexteFort   => DesignTokens.Current.hudCreme;
         private static Color TexteFaible => DesignTokens.Current.hudCremeSecondary;
@@ -582,7 +617,7 @@ namespace MafiaCleanCity.Operational
         {
             GameObject go = NouveauUI("Enseigne", parent);
             AjouterFond(go, DesignTokens.Current.surfaceCard);
-            Contour(go, DesignTokens.Current.hudHairlineGold);
+            Contour(go, ReputationResolvers.Lisere);
             AjouterLayout(go, Px(CssHautEnseigne));
 
             VerticalLayoutGroup v = go.AddComponent<VerticalLayoutGroup>();
@@ -592,7 +627,7 @@ namespace MafiaCleanCity.Operational
             v.childAlignment = TextAnchor.MiddleCenter;
 
             TextMeshProUGUI titre = NouveauTexte(go.transform, "Titre", Lib("L'horizon"),
-                                                 CssTitreCorps, DesignTokens.Current.accentGold);
+                                                 CssTitreCorps, DesignTokens.Current.hudMoneyGold);
             titre.alignment = TextAlignmentOptions.Center;
             titre.characterSpacing = 20f;
             titre.fontStyle = TMPro.FontStyles.Bold;
@@ -616,8 +651,8 @@ namespace MafiaCleanCity.Operational
             for (int i = 0; i < 3; i++)
             {
                 GameObject fen = NouveauUI("Fenetre" + i, go.transform);
-                AjouterFond(fen, DesignTokens.Current.surfaceCard);
-                Contour(fen, DesignTokens.Current.hudHairlineGold);
+                AjouterFond(fen, ReputationResolvers.Encre);
+                Contour(fen, ReputationResolvers.Lisere);
                 // Trois tiers ÉGAUX : sans `preferredWidth = 0`, la largeur vient du CONTENU et
                 // « DÉJÀ PRISES » écraserait « À PORTÉE ». Payé sur ㊲.
                 LayoutElement le = fen.AddComponent<LayoutElement>();
@@ -648,7 +683,7 @@ namespace MafiaCleanCity.Operational
         {
             GameObject go = NouveauUI("Liste", parent);
             AjouterFond(go, DesignTokens.Current.surfaceBase);
-            Contour(go, DesignTokens.Current.hudHairlineGold);
+            Contour(go, ReputationResolvers.Lisere);
             LayoutElement le = go.AddComponent<LayoutElement>();
             le.minHeight = Px(120f); le.flexibleHeight = 1f;
 
@@ -666,8 +701,8 @@ namespace MafiaCleanCity.Operational
         private void ConstruirePanneau(Transform parent)
         {
             GameObject go = NouveauUI("Panneau", parent);
-            AjouterFond(go, DesignTokens.Current.surfaceCard);
-            Contour(go, DesignTokens.Current.hudHairlineGold);
+            AjouterFond(go, ReputationResolvers.Panneau);
+            Contour(go, ReputationResolvers.Lisere);
             AjouterLayout(go, Px(CssHautPann));
 
             VerticalLayoutGroup v = go.AddComponent<VerticalLayoutGroup>();
@@ -679,7 +714,7 @@ namespace MafiaCleanCity.Operational
             pannSurTitre = NouveauTexte(go.transform, "SurTitre", "", 5.6f, TexteFaible);
             pannSurTitre.characterSpacing = 19f;
             pannSurTitre.fontStyle = TMPro.FontStyles.Bold;
-            pannTitre = NouveauTexte(go.transform, "Titre", "", 13f, DesignTokens.Current.accentGold);
+            pannTitre = NouveauTexte(go.transform, "Titre", "", 13f, DesignTokens.Current.hudMoneyGold);
             pannTitre.fontStyle = TMPro.FontStyles.Bold;
             pannTitre.font = DesignTokens.Current.hudSerifFont;
             pannTexte = NouveauTexte(go.transform, "Texte", "", 8f, TexteFaible);
