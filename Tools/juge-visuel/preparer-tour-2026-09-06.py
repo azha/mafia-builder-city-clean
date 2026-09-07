@@ -276,8 +276,7 @@ def ecran_md(e):
 |---|---|---|---|---|
 {caps}
 
-- Client au moment des captures : `76ee3cc` (`main`, 2026-09-04 11:23 — « les QUINZE planches reprises sur le
-  MÊME bundle (674 clés) ») ; ce dossier est préparé sur `{SHA}`. Une capture est une mesure DATÉE.
+{e.get('client_captures', '- Client au moment des captures : `76ee3cc` (`main`, 2026-09-04 11:23 — « les QUINZE planches reprises sur le MÊME bundle (674 clés) »)')} ; ce dossier est préparé sur `{SHA}`. Une capture est une mesure DATÉE.
 - Compte photographié : {e.get('compte', "celui du shell par défaut, `operational_demo@example.test` (`AppShell.cs:104`), garni par le seeder — **pas un compte frais** ; son état au moment de la capture n'est pas re-mesurable ici")}.
 - Gardes du test (`CaptureSousShell` / `CapturerA`) : locataire réellement monté, feuille nommée par l'appelant,
   contenu chargé, rect ≥ 200×200, **compte de TEINTES distinctes** (pas « non noir » — un aplat satisfait « non

@@ -1,0 +1,65 @@
+{
+ "dossier": "compte",
+ "tour": "r1-㉓",
+ "sym": "㉓",
+ "nom": "La vitrine (IAP Shop)",
+ "canon": "screen_c2",
+ "controleur": "ShopScreenController",
+ "but": "le catalogue, le solde, l'achat, les entitlements, la restauration (front.md « Montre »)",
+ "chemin": "Plus → LA VITRINE",
+ "etats": "PREMIER TOUR (r1) — aucune planche jugée avant. 2 capture(s), 2 campagne(s) : `03efb90` 06/09 14:56 · `cf99604` 06/09 15:31. Planches = blobs commités sur `main` du client (`fd0e21e` est le tip de la base de preuve du 06/09 soir) ; aucun correctif d'écran antérieur ⇒ pas de descendance à vérifier, pas de tour précédent.",
+ "references": [
+  [
+   "reference-㉓-1080x2102.png",
+   "rendu du cadre nominal (`ecrans-brennar-6.html` #98)",
+   "1080×2102",
+   "×3,6",
+   "300 CSS = 1080 px"
+  ],
+  [
+   "etats/boutique-canon.png",
+   "canon de la série 2 (catalogue)",
+   "900×1752",
+   "×3,0",
+   "300 CSS = 900 px"
+  ],
+  [
+   "etats/boutique-extra-possede.png",
+   "canon de la série 2 (un extra possédé)",
+   "900×1752",
+   "×3,0",
+   "300 CSS = 900 px"
+  ],
+  [
+   "etats/vide-maquette-vitrine.png",
+   "maquette d'ÉTAT VIDE de l'atelier (`4e6697f`, `da/portraits-lieutenants`) — asset NON monté dans le client : juge le SENS, pas le pixel",
+   "1024×1024",
+   "inconnu",
+   "largeur 1024 px — échelle à établir par le juge (largeur / 300 CSS si c'est un .tel)"
+  ]
+ ],
+ "source_md": "- **Source HTML/CSS** (aide de lecture, ne prime JAMAIS sur l'image) : `/home/erutheone/project/atelier3d-mafia/ecrans-brennar-6.html` (atelier `9fd7b6f` ;\n  références rendues au SHA `3c02f72`). Les cadres sont les `<div class=\"cadre\">` numérotés **0-based** ; ceux de cet\n  écran, avec la ligne où chacun commence :\n  - #98 (l.5478) — La vitrine — les extras  ⇐ **cadre NOMINAL, rendu en référence**\n  - #99 (l.5481) — La caisse — les jetons\n  - #100 (l.5484) — Zéro jeton — l'état terminal\n  Le châssis commun (jetons de couleur, primitives) est `/home/erutheone/project/atelier3d-mafia/chassis6.py` — plusieurs classes ne sont\n  DÉFINIES que là. La CSS sert à NOMMER les valeurs voulues (hex, px, états) ; si CSS et image divergent, l'image gagne.\n- **Rendu** : `Tools/rendre-tel.py <page> <index> <sortie> 3.6` — Chrome sans tête, fenêtre généreuse puis recadrage\n  à 300×584 CSS × 3,6 = 1080×2102, assertion de taille en sortie (anti-crop payé deux fois ici).\n- ⚠️ **Témoin** : la référence rendue est le cadre NOMINAL. Si la capture montre un AUTRE état (liste vide, semaine\n  en cours, rapport traité…), choisis le cadre d'état homologue dans `etats/` (quand ce répertoire existe dans le\n  dossier — sinon il n'y a que la SOURCE, et c'est dit ici) — et dis lequel.",
+ "client_captures": "- Client au moment des captures : `03efb90` (`main` du client, 06/09 14:56) / `cf99604` (`main` du client, 06/09 15:31) — une capture par campagne, voir la table",
+ "captures": [
+  [
+   "capture-1080x2400.png",
+   "1080×2400 — PRINCIPALE",
+   "sous chrome, par la suite de l'écran (`LaVitrineCapturePlayModeTests`) — campagne `cf99604` (06/09 15:31)",
+   "06/09 15:31 (`cf99604`)",
+   "la_vitrine_1080x2400.png — sha256 409de4c2…"
+  ],
+  [
+   "capture-planche-1080x2400.png",
+   "1080×2400",
+   "surimpression sous chrome (test de planche) — autre campagne — campagne `03efb90` (06/09 14:56)",
+   "06/09 14:56 (`03efb90`)",
+   "planche_la_vitrine_1080x2400.png — sha256 dcc13c25…"
+  ]
+ ],
+ "captures_note": "- **Identité par campagne — DÉCLARÉE par le CORPS DE COMMIT (aucun journal joint dans l'arbre ; `journal-declare.txt` transcrit), jamais relue** :\n  - `03efb90` (06/09 14:56) : « empreinte du compte gelé identique avant/après » : **72 118** · 17 bâtiments · 3 lt · 2 planques · 7 cartes — DÉCLARÉ (compte gelé `demo_capture`).\n  - `cf99604` (06/09 15:31) : « avec la paire » + empreinte du compte gelé **72 118** · 17 · 3 · 2 · 7 · 1 — DÉCLARÉ (`demo_capture`).\n- ⚠️ **Le compte « gelé » a DÉRIVÉ entre les campagnes** (empreintes lues dans les corps de commit par f2) : 06:56 → 72 013 min / 17 bât. / 6 cartes · 14:56 et 15:31 → 72 118 / 17 / 7 · 20:53 → 72 155 / 20 / 8. Chaque campagne est stable EN SON SEIN ; **deux planches de campagnes différentes photographient DEUX MONDES** : un écart de CONTENU entre elles n'est pas un défaut d'écran — ne conclus jamais à une régression entre deux campagnes. La comparaison se fait planche ↔ maquette, jamais planche ↔ planche.\n- **Contenu déclaré par les corps de commit** : le corps de commit `1d3d412` signalait sur `la_vitrine` : « — jetons », un tiret à la place de la valeur, corps vide ; `fd0e21e` dit l'avoir RESTAURÉE telle quelle (non recapturée) — la planche `cf99604` est donc celle de 15:31. Vérifie le tiret ; un tiret là où la maquette met un nombre est un écart de SENS (le joueur ne sait pas combien il a).\n- **Planches `planche_*`** : écran monté en **SURIMPRESSION sous le chrome** par le test de planche `PlancheEcransManquantsCapturePlayModeTests` (déclaré par la suite qui écrit ce nom de fichier) — le chemin joueur (menu Plus) n'est PAS exercé par cette capture ; le chrome (bandeau, dock) est celui du shell, alimenté ou non (mesure-le : témoin `.tel.chaud` si BRÛLANT, phase « — » hors district = voulu).\n",
+ "couverture_go": "```\n(a) deux résolutions 1920+2400            NON — 2400 seulement\n(b) paire T / T+1 seconde                  NON\n(c) onglet actif asserté                   NON déclaré (surimpression : le chemin joueur n'est pas exercé)\n(d) [CHROME-ALIMENTE] par planche          NON déclaré — à mesurer sur l'image\n(e) blob commité, présent, premier tour     VÉRIFIÉ par l'orchestrateur (sha256 dans `captures-provenance.md`) ; aucun correctif antérieur\n(g) SHA de l'arbre imprimé au run          NON imprimé (« dernier commit » = commit du PNG)\n(i) identité                               DÉCLARÉE par corps de commit, par campagne (ci-dessus) ; journal non joint\n```",
+ "assumes_intro": "\n⚠️ Premier tour : **aucune table d'écarts assumés** n'a été inventoriée pour cet écran — tu classes toi-même (ASSUMÉ n'existe donc que pour les règles de doctrine ci-dessous). Un rapport juge-données mode maquette existe pour cet écran (`Tools/juge-donnees/compte/maquette-2026-08-25/rapport.md`) : il n'est PAS fourni (tu ne lis aucun rapport) ; ses défauts de données n'ont pas été transcrits ici — si une valeur affichée te paraît sans source, classe-la « non vérifié », pas écart. Rappels : phase « — » hors district = état VOULU ; ronds du dock vides = arbitrage user connu ; CHALEUR/HEAT ou anglais dans la RÉFÉRENCE = maquette en retard (blender), jamais un écart ; une clé i18n BRUTE ou un libellé de repli visible sur la CAPTURE = écart de SENS ; cadre de style (sombre, napolitain, mafieux, fin 80s–début 90s) : divergence de DIRECTION = ARBITRAGE, jeton/matière/asset absent = écart.\n- **États vides (priorité 1 de l'user, 07/09 00:40)** : un état vide se juge au SENS — « *ça plafonne et ça BLOQUE, rien n'est perdu* ». Un vide qui se lit comme une perte, une punition ou un écran cassé est un défaut de SENS (BLOQUANT si c'est la première lecture) ; un vide qui dit ce qui manque et comment l'obtenir est conforme même sans illustration. Les illustrations d'état vide de l'atelier (`etats/vide-maquette-*.png`, quand fournies) ne sont montées dans AUCUN écran du client (0 `Resources.Load` d'illustration d'état vide, mesuré par le correcteur) : elles servent à juger le SENS voulu, pas à retrouver une image au pixel — leur absence à l'écran n'est pas un écart, c'est un montage qui n'existe pas encore (arbitrage/lot).\n",
+ "assumes": [],
+ "non_fourni_extra": "\n- aucun tour précédent, aucune grandeur antérieure ;\n- aucun journal joint (identités DÉCLARÉES par corps de commit dans `journal-declare.txt`) ; aucune paire T/T+1 ; aucun corps réel comparable (les corps de `corps-reels/` du dossier de l'écran datent du 04/09 sur `operational_demo`, pas du compte gelé : NON comparables en valeur) ;\n- les cadres d'ÉTAT de la maquette ne sont PAS rendus ce tour (aucun rendu possible) — seule la SOURCE HTML/CSS des cadres du groupe est lisible ; le cadre nominal seul est rendu ;\n",
+ "compte": "compte de CAPTURE `demo_capture@example.test` (gelé, puis dérivant entre campagnes — voir la note) — identité DÉCLARÉE par corps de commit, non relue ; valeurs non comparables à la référence ni aux corps ⇒ non vérifié ; FORME jugée"
+}
