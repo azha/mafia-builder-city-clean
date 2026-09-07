@@ -118,8 +118,15 @@ TABLE = [
       cadres=[(S6, list(range(67, 73)))], nominal=(S6, 67), planche="planche_la_loi_1080x2400.png",
       confiance="déduite", note="cadres 67-72 (le parloir, l'avocat) par le titre"),
  dict(sym="㉝", ctl="DemolitionScreenController", dossier="ecran_demolition", chemin="Plus → RASER UN SITE",
-      cadres=[(S6, list(range(79, 85)))], nominal=(S6, 80), planche="planche_raser_un_site_1080x2400.png",
-      confiance="mesurée", note="le contrôleur cite m-79..84 ; nominal = 80 « Ce bâtiment vous coûte »"),
+      cadres=[(S6, list(range(79, 85)))], nominal=(S6, 79), planche="planche_raser_un_site_1080x2400.png",
+      confiance="mesurée", note="le contrôleur cite m-79..84. ⛔ NOMINAL CORRIGÉ le 2026-09-07, 80 → 79 : "
+                               "le juge du r1 a mesuré que la CAPTURE montre 79 (« L'organisation frotte ») et non 80 "
+                               "(« Ce bâtiment vous coûte »), prouvé par 4 marqueurs de source dont VOIR CE QUI COÛTE "
+                               "LE PLUS, 1 seule occurrence dans toute la page, en 79. Le dossier faisait donc rendre "
+                               "la mauvaise référence, et la couche globale devenait incomparable (luminance ×8 : la "
+                               "fiche crème de 80, 29,2 % de l'image, absente de 79 — cet écart n'accusait rien). "
+                               "⇒ Un nominal est l'état que la CAPTURE montre, jamais l'état le plus représentatif du "
+                               "groupe : il se mesure sur la planche, pas se choisit sur la maquette."),
  dict(sym="㉞", ctl="CarnetScreenController", dossier="carnet", chemin="Plus → LES ORDRES DU SOIR",
       cadres=[(S6, list(range(85, 92)))], nominal=(S6, 85), planche="planche_signer_l_ordre_1080x2400.png",
       confiance="déduite", note="cadres 85-91 (ordres du soir, rejouer, ce qui arrive) par le titre ; nom de planche à confirmer"),
