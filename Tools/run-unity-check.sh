@@ -52,10 +52,19 @@ if [[ -z "${WT:-}" ]]; then
 fi
 : "${LOG_FILE:=}"
 
+# ⛔⛔ CE DRAPEAU EST LA CLÉ DU CORRECTIF DU 2026-09-07 : le harnais servait DEUX RÉGIMES par une
+#    seule branche de verdict, sans jamais savoir dans lequel il était. `-quit` n'est passé QUE sur
+#    le chemin compile ; en tirer « le quit observé prouve que le travail est fini » est donc vrai
+#    ici et faux sur le chemin `-executeMethod`. On mémorise le régime au lieu de le supposer.
 EXTRA_ARGS=(-quit)
+EXECUTE_METHOD=0
 for a in "$@"; do
-  if [[ "$a" == "-executeMethod" ]]; then EXTRA_ARGS=(); fi
+  if [[ "$a" == "-executeMethod" ]]; then EXTRA_ARGS=(); EXECUTE_METHOD=1; fi
 done
+# Le verdict vit dans un fichier à part pour une seule raison : il devient essayable sur des
+# journaux synthétiques (`Tools/verdict-controle.sh`, 12/12), sans la porte Unity ni les ~15 min
+# d'un run. Le contrôle appelle CE code — jamais une copie.
+source "$(dirname "${BASH_SOURCE[0]}")/verdict-log-unity.sh"
 
 if [[ -n "$LOG_FILE" ]]; then
   LOG="$LOG_FILE"
@@ -123,13 +132,7 @@ ELAPSED_S=$SECONDS
 # Le marqueur fait FOI sur le verdict quand le chien de garde a mordu : le RC d'un process terminé
 # par signal ne dit rien des tests. `failed=0` ⇒ 0, sinon 1. Absence de marqueur de test (phase de
 # compile) ⇒ on garde le RC, et la garde `error CS` plus bas reste seule juge.
-if [[ "$WATCHDOG_FIRED" == 1 ]]; then
-  if grep -qE 'MafiaCI: RunPlayModeTests finished' "$LOG" 2>/dev/null; then
-    if grep -qE 'RunPlayModeTests finished — passed=[0-9]+ failed=0( |$)' "$LOG" 2>/dev/null; then RC=0; else RC=1; fi
-  else
-    RC=0                               # compile atteint son -quit : pas d'erreur CS ⇒ succès
-  fi
-fi
+RC=$(verdict_log "$LOG" "$EXECUTE_METHOD" "$WATCHDOG_FIRED" "$RC")
 
 # Durée + issue, écrites dans le log préservé (si KEEP_LOG) ET sur stdout — jamais uniquement
 # déduites après coup. `timeout` rend 124 s'IL a dû tuer le process (délai dépassé) ; tout AUTRE
@@ -142,10 +145,28 @@ elif [[ "$RC" -gt 128 ]]; then
 else
   ISSUE="sortie normale (RC=$RC)"
 fi
-if [[ "$WATCHDOG_FIRED" == 1 ]]; then ISSUE="$ISSUE · CHIEN DE GARDE: travail fini, sortie bloquée par le hook MCP ⇒ process terminé par nous"; fi
+# ⚠️ CE MESSAGE AFFIRMAIT « travail fini » DANS TOUS LES CAS — y compris sur un abandon, où le
+#    travail n'a jamais commencé (mesuré 2026-09-07 : la ligne s'imprimait telle quelle sous un
+#    `Aborting batchmode`). Le chien de garde n'observe pas « le travail est fini », il observe UN
+#    MARQUEUR ; lequel change tout. Il dit désormais lequel il a vu, jamais ce qu'il en déduit.
+if [[ "$WATCHDOG_FIRED" == 1 ]]; then
+  if grep -qE 'MafiaCI: RunPlayModeTests finished' "$LOG" 2>/dev/null; then
+    ISSUE="$ISSUE · CHIEN DE GARDE: marqueur de tests vu (travail fini), sortie bloquée par le hook MCP ⇒ process terminé par nous"
+  else
+    ISSUE="$ISSUE · CHIEN DE GARDE: quit observé SANS marqueur de tests — le travail n'est pas attesté"
+  fi
+fi
 DURATION_LINE="MafiaCI-harness: elapsed=${ELAPSED_S}s timeout=${TIMEOUT_S}s issue=[$ISSUE]"
 echo "$DURATION_LINE"
 [[ -n "${LOG_FILE:-}" ]] && echo "$DURATION_LINE" >> "$LOG"
+
+if [[ "$RC" == "$RC_ABANDON" ]]; then
+  echo "run-unity-check: L'ÉDITEUR A ABANDONNÉ OU LE TRAVAIL N'A PAS EU LIEU (RC=$RC_ABANDON) — ce cas rendait RC=0 avant le 2026-09-07" >&2
+  motif_abandon "$LOG" >&2 || true
+  if [[ "$EXECUTE_METHOD" == 1 ]] && ! grep -qE 'MafiaCI: RunPlayModeTests finished' "$LOG" 2>/dev/null; then
+    echo "run-unity-check: aucun marqueur 'MafiaCI: RunPlayModeTests finished' — la méthode n'a jamais fini" >&2
+  fi
+fi
 
 if grep -qF 'error CS' "$LOG"; then
   grep -F 'error CS' "$LOG"
