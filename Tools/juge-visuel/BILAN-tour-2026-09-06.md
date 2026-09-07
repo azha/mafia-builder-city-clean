@@ -318,3 +318,19 @@ local `~/project/mafia-unity-correcteur`, d'où les blobs ont été lus.
   « données = oui » par les juges + 10 nommés par f2) ; la forme tient, les 18 verdicts tiennent. Recapture groupée sur conteneur recréé après les verdicts.
   Règle : *« rebuild » ne suffit pas, il faut RECRÉER le conteneur* — et le journal de run doit imprimer l'image/le SHA du back.
 - ⑤ #4 confirmé au contenu (faux positif de l'instrument) ; ⑮ #32 tenu ; ⑪ rétabli par f2 (`9d822b2b`) ; ㉞ = table titre → locataire de la suite, routé.
+
+### 8.octies — 07/09 14:30–16:15 : cinq juges-données en clôture, sur conteneur RECRÉÉ (compte frais, jamais les comptes partagés)
+
+| écran | clés B | rendues F | défauts | questions | lots back | tête |
+|---|---|---|---|---|---|---|
+| ⑮ | 13 (+4 action) | 13 | 7 | 9 | 3 | l'action (tarif 50 mesuré par POST) et le nom du district servis, jamais affichés ; 11 enums anglais (0 clé `police.*`) ; 1 district figé sur 18 |
+| ㉟ | 11 (f2 : 8 — DIVERGENT, image datée par sonde) | 4 (4 non désérialisées, dont le NOM) | 10 (2 B) | 9 | 2 | **un compte frais possède une planque, l'écran dit le contraire** ; RAMASSER = décor, posterait `{}` ⇒ 422 ; cadres = #108–113 (4ᵉ attribution fausse) |
+| ㊳ | 49 (6 routes) | 7 | 11 (3 B) | 12 | 4 | les 13 clés brutes SONT au bundle (886/154/9 confirmés) mais aucun résolveur ⇒ B1 tient, cause client ; 35/5 = clipping ; phase 3/5 (unions ≠) |
+| ㉝ | 80 | 17 | 11 | 12 | 3 | **le CTA « PRENDRE LA PREMIÈRE » mène à un 409 certain (le joueur perd tout, mesuré)** ; `perimeter_site_count` = cache (0 pour 4 sites), lue par personne ; « 17 = opérationnels » réfuté ; `me/buildings` jamais appelée |
+| ① | 51 | 11 (31 jetées) | 10 | 8 | 5 | **BLANCHIR désarmé par un énoncé daté FAUX en prod** (planque à J0, inject 200) ; heat local servi (DTO existant) non appelé ; médaillon sans donnée ⇒ 9/11 identiques par construction ; `game_minute` forme F exacte |
+
+- Règle confirmée cinq fois : *« sans source identifiée » laisse la mesure possible* — trois « sans source » de ㉟ avaient trois réparations différentes.
+- Classe transversale des JD : **le back a refermé, le client n'a pas suivi** (㉟ district/lek/`lane_band`, ㉝ `perimeter_site_count`, ㊳ les 13 clés, ① planque/inject,
+  `harvest_band`) ⇒ les lots suivants sont des lots CLIENT ; et **des énoncés datés faux en production** (① `:2058`, ㉝ `:460` « aucune route », ㉟ « aucune planque »).
+- Deux juges ont protégé la pile d'eux-mêmes : ㊳ n'a pas exercé `ambient/attend` (état partagé par toute la ville) ; ㉝/① une seule mutation chacun.
+- Le SHA du back dans l'image reste DÉDUIT partout (aucune route ne l'imprime) ; deux juges l'ont daté par le COMPORTEMENT (clé neuve servie).
