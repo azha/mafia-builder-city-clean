@@ -11,6 +11,24 @@ Toutes les pièces sont en **PNG, RGB opaque, 1024×1024** sauf les décors (**1
 canal alpha : le fond fait partie de l'image (aplat au jeton `#0f1622` = `lieutenantMedallionOuter` pour les
 visages, matière pleine pour les textures). ⇒ `alphaIsTransparency` est **sans objet**, et un `Image` suffit — pas de masque.
 
+## ⛔ CE QUI EST LIVRÉ vs CE QUI EST ARCHIVE — à lire avant de monter quoi que ce soit
+
+**`generees/<date>/aplat/` et `generees/<date>/matieres/` et `decors/` = LA SÉRIE LIVRÉE.**
+**Tout le reste du dossier daté = L'ARCHIVE des tirages**, y compris les passes abandonnées.
+
+`generer.py` écrit chaque tirage sous son propre slug (`vide2-…`, `rue2-…`, `visage-042-1`…) et n'écrase
+jamais rien : deux générations du même sujet sont deux fichiers. **Le retenu est ensuite INSTALLÉ** sous
+son nom canonique dans `aplat/`. ⇒ Un préfixe d'archive n'est **pas** une déclaration de registre, et le
+numéro le plus grand n'est **pas** le plus récent retenu.
+
+⚠️ Exemple mesuré le 2026-09-07, parce qu'il a coûté une question : `vide4-*` n'a que **11 sujets sur
+22** — c'est une passe **abandonnée** (registre « la lampe », rendue caduque par l'arbitrage du cran le
+plus loin), pas un sous-ensemble voulu. Les 22 installés viennent, par empreinte, de `rue2` ×14 +
+`rue3` ×8. **Ce fait n'existait que dans ma tête et n'était reconstructible que par MD5** — il est ici
+désormais.
+
+⇒ **Ne montez jamais un fichier d'archive. Montez `aplat/`, `matieres/`, `decors/`.**
+
 ---
 
 ## 1. Les visages de lieutenants — 150 · la clé est l'**identifiant**
@@ -144,6 +162,12 @@ opposable :
 | le fond de matière d'un écran | `matieres/<nom>.png` | **l'écran lui-même** — table §3, une ligne par écran |
 | l'écran est vide | `aplat/vide-<écran>.png` | **l'écran + « aucune donnée »**, table §4 |
 | le décor derrière tout | `decors/DISTRICT_*_1080x2400.png` | profil de district + jour/nuit |
+
+⚠️ **Mes 22 sujets d'état vide sont nommés par DOMAINE** (`appro`, `famille`, `journal`…) parce qu'ils
+sont dérivés de la table « un écran une matière » de `front.md`. **L'appariement sujet → écran existe,
+mais il vit dans la planche, pas dans les noms de fichiers.** Un inventaire côté client qui balaie autre
+chose (les champs `videTexte`, par exemple) est une **population différente** : les deux ensembles
+doivent être confrontés, pas supposés égaux — « état vide » ne désigne pas la même chose des deux côtés.
 
 ⇒ **`planches/reference-par-ecran.png` est la version visuelle de ce tableau** : pour les 20 écrans, la
 matière, l'état vide et l'encre. C'est la cible à confronter aux captures après montage.
