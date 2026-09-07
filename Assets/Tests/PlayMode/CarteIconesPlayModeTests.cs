@@ -189,10 +189,24 @@ namespace MafiaCleanCity.CityMap.Tests
 
         private static RectTransform Cellule(DistrictInteriorScreenController d, int x, int y)
         {
-            var cell = d.ScreenRoot.GetComponentsInChildren<RectTransform>(true)
-                .FirstOrDefault(rt => rt.name == $"Cell_{x}_{y}");
-            Assert.IsNotNull(cell, $"Cell_{x}_{y} doit exister dans l'arbre rendu");
-            return cell;
+            var candidats = d.ScreenRoot.GetComponentsInChildren<RectTransform>(true)
+                .Where(rt => rt.name == $"Cell_{x}_{y}").ToArray();
+            Assert.IsNotEmpty(candidats, $"Cell_{x}_{y} doit exister dans l'arbre rendu");
+            // ⛔⛔ REFUSER DE CHOISIR PLUTÔT QUE PRENDRE LE PREMIER. Mesuré en jeu le 2026-09-07 :
+            //    le monde réel porte **13 bâtiments sur 11 BLOCS DISTINCTS**, parce que la boucle de
+            //    rendu itère sur les BÂTIMENTS et pose la cellule à `block.x, block.y`. Deux
+            //    bâtiments d'un même bloc produisent donc **deux `GameObject` du même nom**, à la
+            //    même position, au pixel près.
+            //    ⇒ `Transform.Find` et `FirstOrDefault` rendent le PREMIER — donc cette garde
+            //      mesurait la bonne propriété sur le MAUVAIS OBJET, en silence, une fois sur deux.
+            //      *Une garde qui ne peut pas savoir laquelle des deux elle regarde doit le DIRE,
+            //      pas trancher au hasard.* Le rouge ci-dessous est la seule réponse honnête : il
+            //      nomme l'ambiguïté au lieu de la moyenner.
+            Assert.AreEqual(1, candidats.Length,
+                $"⛔ {candidats.Length} nœuds nommés `Cell_{x}_{y}` — l'appariement par NOM ne "
+                + "distingue plus les deux, et le test mesurerait celui que l'arbre a mis en premier. "
+                + "Apparier par bâtiment (ou rendre le nom unique) avant de rien conclure de ce bloc.");
+            return candidats[0];
         }
 
         private static DistrictInteriorDto Grille(string[] types)
