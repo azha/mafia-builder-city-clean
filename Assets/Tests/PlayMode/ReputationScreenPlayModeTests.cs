@@ -524,6 +524,31 @@ namespace MafiaCleanCity.Operational.Tests
         [Category("ScreenB3")]
         public IEnumerator B3S4_LeMiroirEstElastique_EtLeContenuNeLaissePasUnTiersDeVide()
         {
+            // ⛔⛔ LE RÉGIME D'ABORD, ET IL EST ÉPINGLÉ — sans quoi cette garde mesure sous des
+            //    insets qu'elle ne connaît pas. `ShellChrome` est une classe STATIQUE : ses insets
+            //    survivent d'un test à l'autre dans le même processus (TD-681). Or la hauteur du
+            //    cadre vaut `min(462 CSS, zone libre)` et la zone libre est
+            //    `hauteur − insetHaut − insetBas` : **les deux mesures de cette garde dépendent
+            //    donc d'un état qu'un VOISIN a laissé.** Elle pouvait être verte à 1920 et rouge à
+            //    2400 pour une raison sans rapport avec l'élasticité — ou l'inverse.
+            //    ⇒ On publie une paire CONNUE (hors shell : 0 / 0, le régime le plus simple et le
+            //      seul qu'un test sans shell puisse honnêtement revendiquer), on ASSERTE qu'elle
+            //      a été vue, on l'IMPRIME, et on rend l'état d'origine à la fin.
+            //    ★ *Un dispositif conditionnel qui ne déclare pas son régime est indiscernable
+            //      d'un dispositif inerte* — et ici il n'était même pas conditionnel : il était
+            //      SILENCIEUX sur ce dont il dépendait.
+            float insetHautAvant = MafiaCleanCity.Shell.ShellChrome.TopInsetPx;
+            float insetBasAvant  = MafiaCleanCity.Shell.ShellChrome.BottomInsetPx;
+            MafiaCleanCity.Shell.ShellChrome.PublierInsets(0f, 0f);
+            Assert.AreEqual(0f, MafiaCleanCity.Shell.ShellChrome.TopInsetPx, 0.001f,
+                "l'inset HAUT publié n'a pas été vu — la garde mesurerait sous un chrome inconnu");
+            Assert.AreEqual(0f, MafiaCleanCity.Shell.ShellChrome.BottomInsetPx, 0.001f,
+                "l'inset BAS publié n'a pas été vu — la garde mesurerait sous un chrome inconnu");
+            Debug.Log($"[REGIME-B3S4] insets épinglés à 0/0 pour la durée de cette garde ; "
+                    + $"état trouvé en entrant : haut={insetHautAvant:F1} bas={insetBasAvant:F1} "
+                    + $"(non nul ⇒ un voisin l'avait laissé, et c'est exactement ce que cette "
+                    + $"épingle empêche de subir en silence).");
+
             yield return OuvrirJoueurFrais();
             var ecran = MonterEcran();
             yield return ecran.Charger(lieutenantId);
@@ -566,6 +591,9 @@ namespace MafiaCleanCity.Operational.Tests
             canvas.renderMode = modeAvant;
             canvas.worldCamera = camAvant;
             Canvas.ForceUpdateCanvases();
+            // Le régime rendu à l'état où on l'a trouvé — un test qui épingle un état global et ne
+            // le rend pas déplace le monde de tous ses voisins, ce qui est la faute qu'il corrige.
+            MafiaCleanCity.Shell.ShellChrome.PublierInsets(insetHautAvant, insetBasAvant);
 
             // Contrôle de prémisse : sans cette mesure, un « Miroir » introuvable rendrait -1 des
             // deux côtés et l'égalité passerait pour une élasticité absente plutôt que pour un
