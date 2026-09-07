@@ -86,6 +86,40 @@ namespace MafiaCleanCity.Tests
             yield return exc.GetQueue(token, d => file = d, (c, m) => excErr = $"{c}: {m}");
             releve.Add(Ligne("ExceptionDetailController", "queue", file?.Length, excErr, ref lues));
 
+            // ── LES 8 CANDIDATS DU SECOND BALAYAGE (2026-09-07) ──────────────────────────────
+            // ⚠️ CANDIDATS, pas findings : ils ne portent AUCUN littéral d'état vide, ce qui ne dit
+            //    pas qu'ils rendent une zone blanche. Plusieurs sont du chrome ou des fiches d'objet
+            //    UNIQUE, où « collection vide » n'a peut-être aucun sens. On sonde ce qui est
+            //    sondable SANS identifiant, et on écrit « non établi » pour le reste — *une case
+            //    « non établi » est pleine, pas un échec*, et la remplir au jugé dans le sens
+            //    rassurant serait la même faute que de la remplir dans le sens alarmant.
+            var monde = new WorldApiClient { BaseUrl = BaseUrl };
+            List<DistrictDto> districts = null; string dErr = null;
+            yield return monde.GetDistricts(d => districts = d, e => dErr = e);
+            releve.Add(Ligne("CityMapController · OrgVitalsPanel", "districts", districts?.Count, dErr, ref lues));
+
+            var blanch = new MafiaCleanCity.Operational.LaunderingClient { BaseUrl = BaseUrl };
+            MafiaCleanCity.Operational.LaunderingNodesDto noeuds = null; string bErr = null;
+            yield return blanch.GetLaunderingNodes(token, d => noeuds = d, (c, m) => bErr = $"{c}: {m}");
+            // ⛔⛔ ET CETTE LIGNE NE PARLE PAS DE CES DEUX ÉCRANS — je l'écris parce que je l'ai
+            //    d'abord crue. `LaunderingController` et `PipelineOverviewController` travaillent
+            //    sur UN nœud DÉSIGNÉ (`GetLaunderingPipeline(id, …)`, `[Header("Target laundering
+            //    node")]`), pas sur la collection. Un `nodes = 0` est donc un fait sur la ROUTE,
+            //    jamais sur leur rendu.
+            //    ⇒ *J'ai attribué une collection à un écran d'après le CLIENT qu'il construit, pas
+            //      d'après ce qu'il LIT.* Construire un client ne dit pas quelle route on appelle,
+            //      ni avec quels arguments — c'est la même faute que d'apparier par proximité.
+            releve.Add(Ligne("route /laundering/nodes (AUCUN écran ne la rend en liste)", "nodes",
+                             noeuds?.nodes?.Length, bErr, ref lues));
+
+            // ⛔ NON SONDABLES SANS IDENTIFIANT — écrits, pas devinés.
+            releve.Add("BuildingCardController           (fiche)        ⛔ NON ÉTABLI — exige un buildingId");
+            releve.Add("LaunderingController             (fiche)        ⛔ NON ÉTABLI — rend UN nœud désigné");
+            releve.Add("PipelineOverviewController       (fiche)        ⛔ NON ÉTABLI — rend UN nœud désigné");
+            releve.Add("ExceptionDetailController        (fiche)        ⛔ NON ÉTABLI — exige un exceptionId");
+            releve.Add("DashboardController              (chrome)       ⛔ NON ÉTABLI — pas de collection isolée");
+            releve.Add("HomeChromeController             (chrome)       ⛔ NON ÉTABLI — aucun client, pur chrome");
+
             Debug.Log("[VIDE-NEUF] collections d'un compte qui vient de s'inscrire :\n  "
                       + string.Join("\n  ", releve));
 
