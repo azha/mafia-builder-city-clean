@@ -1,0 +1,55 @@
+taille source : 1080 x 1920 = 2073600 px
+frontieres (mesurees par 04) : bandeau [0,142)  scene [142,1684)  dock [1684,1920)
+aire scene = 1665360 px (80.3% de l'image) ; bandeau 7.4% ; dock 12.3%
+
+== CONTROLE DE LA REGLE 'EAU' (g-r>=30 et b-r>=45) ==
+  POSITIF eau plein          frac_eau=1.000  attendu=EAU  OK
+  POSITIF eau pres du quai   frac_eau=0.946  attendu=EAU  OK
+  NEGATIF sol nu haut        frac_eau=0.000  attendu=PAS EAU  OK
+  NEGATIF quai dalle         frac_eau=0.000  attendu=PAS EAU  OK
+  NEGATIF toit ardoise       frac_eau=0.000  attendu=PAS EAU  OK
+  NEGATIF facade eclairee    frac_eau=0.000  attendu=PAS EAU  OK
+  NEGATIF lointain sombre    frac_eau=0.000  attendu=PAS EAU  OK
+  -> regle EAU VALIDEE
+
+== CONTROLE DU CLASSIFIEUR DE BLOCS (seuil 0.60, pris dans l'ecart 0.470/0.735 de 03) ==
+  POSITIF tour gauche        frac_bati=0.958 (n=24 blocs) attendu=BATI OK
+  POSITIF immeuble central   frac_bati=0.837 (n=49 blocs) attendu=BATI OK
+  POSITIF usine              frac_bati=0.812 (n=48 blocs) attendu=BATI OK
+  NEGATIF sol nu haut        frac_bati=0.205 (n=44 blocs) attendu=NON BATI OK
+  NEGATIF bord d'ombre       frac_bati=0.000 (n=33 blocs) attendu=NON BATI OK
+  NEGATIF eau                frac_bati=0.000 (n=66 blocs) attendu=NON BATI OK
+  NEGATIF quai dalle         frac_bati=0.333 (n=21 blocs) attendu=NON BATI OK
+
+== AIRES (scene = 1665360 px) ==
+  bati                772015 px   46.4% de la scene   37.2% de l'ecran
+  sol_nu              644615 px   38.7% de la scene   31.1% de l'ecran
+  eau                 200856 px   12.1% de la scene    9.7% de l'ecran
+  overlay_chrome       47874 px    2.9% de la scene    2.3% de l'ecran
+
+== SENSIBILITE : part BATIE de la scene selon le seuil de bloc ==
+  seuil=0.50 -> bati =  52.6% de la scene
+  seuil=0.55 -> bati =  49.0% de la scene
+  seuil=0.60 -> bati =  46.4% de la scene
+  seuil=0.65 -> bati =  43.8% de la scene
+  seuil=0.70 -> bati =  41.1% de la scene
+
+== REPARTITION PAR TIERS DE L'ECRAN (640 px chacun) ==
+  tiers 1 (y    0- 639) : bandeau=22.2%  eau= 0.1%  bati=18.5%  sol_nu=52.3%  overlay_chrome= 6.9%
+  tiers 2 (y  640-1279) : eau= 0.1%  bati=72.5%  sol_nu=27.4%
+  tiers 3 (y 1280-1919) : dock=36.9%  eau=28.8%  bati=20.7%  sol_nu=13.6%
+
+== LUMINANCE ET PIXELS CHAUDS (r-b>=8 : lumiere artificielle) PAR BANDE DE 160 px ==
+  (le fond de nuit est bleu : un pixel ou R depasse B est eclaire par une lampe/fenetre)
+  y    0- 159 [scene  ] L_moy=  32.6   pixels chauds= 7.47%
+  y  160- 319 [scene  ] L_moy=  41.5   pixels chauds= 1.58%
+  y  320- 479 [scene  ] L_moy=  60.8   pixels chauds= 0.22%
+  y  480- 639 [scene  ] L_moy=  74.9   pixels chauds= 8.89%
+  y  640- 799 [scene  ] L_moy=  74.0   pixels chauds=20.27%
+  y  800- 959 [scene  ] L_moy=  92.7   pixels chauds=49.61%
+  y  960-1119 [scene  ] L_moy=  83.5   pixels chauds=24.34%
+  y 1120-1279 [scene  ] L_moy=  75.6   pixels chauds= 5.80%
+  y 1280-1439 [scene  ] L_moy=  81.1   pixels chauds= 7.03%
+  y 1440-1599 [scene  ] L_moy=  77.6   pixels chauds= 1.33%
+  y 1600-1759 [scene  ] L_moy=  61.9   pixels chauds= 0.00%
+  y 1760-1919 [dock   ] L_moy=  25.9   pixels chauds= 1.66%

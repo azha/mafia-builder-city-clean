@@ -1,0 +1,22 @@
+taille source : 1080 x 1920
+ecrit 03_amplitude_locale.png (amplitude locale 9x9 de la luminance)
+
+== CONTROLES : la grandeur separe-t-elle ce qu'on veut ? ==
+-- POSITIFS (du bati : doit sortir HAUT) --
+bati tour gauche             zone=( 230, 470)-( 350, 640) n= 20400  med= 51  p90=181  frac(amp>=12)=0.852
+bati immeuble central        zone=( 400, 420)-( 580, 610) n= 34200  med= 40  p90=161  frac(amp>=12)=0.767
+bati usine (quai)            zone=( 470,1180)-( 790,1300) n= 38400  med= 27  p90=112  frac(amp>=12)=0.735
+bati commerces gauche        zone=(  60, 900)-( 330,1010) n= 29700  med= 38  p90=126  frac(amp>=12)=0.782
+-- NEGATIFS (pas du bati : doit sortir BAS) --
+sol nu plat (haut)           zone=( 100, 300)-( 400, 420) n= 36000  med=  5  p90= 15  frac(amp>=12)=0.239
+sol nu plat (droite)         zone=( 620, 300)-( 900, 400) n= 28000  med=  3  p90= 27  frac(amp>=12)=0.223
+eau plein                    zone=( 150,1600)-( 700,1700) n= 55000  med=  2  p90=  4  frac(amp>=12)=0.007
+quai dalle nue               zone=( 820,1360)-(1030,1450) n= 18900  med= 11  p90= 36  frac(amp>=12)=0.470
+-- NEGATIF DISCRIMINANT (BORD D'OMBRE sur sol nu : doit sortir BAS aussi) --
+bord d'ombre sur sol nu      zone=(   0, 270)-( 300, 330) n= 18000  med=  5  p90= 14  frac(amp>=12)=0.186
+bord d'ombre diagonal        zone=( 700, 200)-(1000, 290) n= 27000  med=  2  p90= 23  frac(amp>=12)=0.153
+
+== VERDICT SUR LA GRANDEUR ==
+plancher des positifs = 0.735
+plafond  des negatifs = 0.470
+SEPARATION

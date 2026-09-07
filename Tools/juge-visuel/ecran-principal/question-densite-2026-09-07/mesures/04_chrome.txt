@@ -1,0 +1,19 @@
+taille source : 1080 x 1920
+
+-- bandeau haut : recherche de la regle orange (R-B>40 et R>90) --
+  y=120 : 117/540 colonnes oranges
+  y=121 : 117/540 colonnes oranges
+  y=122 : 119/540 colonnes oranges
+  y=123 : 118/540 colonnes oranges
+  y=141 : 456/540 colonnes oranges
+  y=142 : 458/540 colonnes oranges
+
+-- medaillon : bbox de l'anneau orange dans y<260 --
+  bbox anneau = x[380..699] y[17..231]  centre=(540,124) rayon~160
+
+-- bandeau de lieu : colonne x=900, y 200..300 --
+  y=230  L 28.7 -> 20.5
+
+-- dock : voile puis panneau opaque (x=20 et x=1060) --
+  x=  20 : eau de reference RGB=(38,79,103)  debut du voile y=1684  opacite pleine y=1769
+  x=1060 : eau de reference RGB=(41,82,107)  debut du voile y=1687  opacite pleine y=1771

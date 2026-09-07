@@ -1,0 +1,16 @@
+taille source : 1080 x 1920
+blocs BATIS=1348  blocs SOL NU=1143
+
+== PLUS GRANDES PLAGES DE SOL NU CONTIGU ==
+  #1 :  486 blocs = 279936 px = 13.5% de l'ECRAN   bbox x[0..1080] y[262..718]
+  #2 :  103 blocs =  59328 px =  2.9% de l'ECRAN   bbox x[648..1080] y[1174..1582]
+  #3 :   86 blocs =  49536 px =  2.4% de l'ECRAN   bbox x[192..504] y[982..1342]
+  #4 :   80 blocs =  46080 px =  2.2% de l'ECRAN   bbox x[552..1080] y[142..238]
+  #5 :   80 blocs =  46080 px =  2.2% de l'ECRAN   bbox x[0..528] y[142..238]
+
+== A COMPARER : plus grandes masses BATIES contigues ==
+  #1 : 1266 blocs = 729216 px = 35.2% de l'ECRAN   bbox x[0..1080] y[406..1534]
+  #2 :   17 blocs =   9792 px =  0.5% de l'ECRAN   bbox x[744..984] y[1438..1534]
+  #3 :    5 blocs =   2880 px =  0.1% de l'ECRAN   bbox x[360..456] y[262..310]
+
+ecrit 12_vides.png
