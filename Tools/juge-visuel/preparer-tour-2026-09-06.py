@@ -121,7 +121,9 @@ POLICES_BLOC = f"""- **Polices — ce qui a RÉELLEMENT rendu la référence** (
   chasse est un **ARBITRAGE** ; la **hauteur de capitale**, elle, se compare (c'est l'image approuvée).
   ⚠️ **Lis la `font-family` de TA source et applique la table `fc-match` ci-dessus** — ce que la référence a montré
   dépend de la source : SÉRIE 6 (`ecrans-brennar-6.html`) demande `'DejaVu Sans'` (84 règles) ⇒ rendue par DejaVu
-  Sans elle-même, référence et client partagent la MÊME police sur le sans-sérif ; FAMILLE demande
+  Sans elle-même, référence et client partagent la MÊME police sur le sans-sérif — **mais PAS sur le sérif** : la même source demande
+  `Georgia,serif` (69 règles) ⇒ Noto Serif à la référence, DejaVu Serif au client (défaut de dossier attrapé au ㊲ r15 : le bloc ne
+  citait que le sans) ; FAMILLE demande
   `"Segoe UI",Roboto,system-ui` ⇒ Noto Sans (écart de chasse = ARBITRAGE, +10 % mesuré par le juge ⑥) ; HUD
   (`hud-brennar.html`) demande `"Segoe UI",Roboto,system-ui,sans-serif` pour le corps ⇒ Noto Sans, et
   `Georgia,"Times New Roman",serif` pour titre, valeurs d'aile, heure, `.heatpct`, `.stats b` ⇒ Noto Serif. Aucune
