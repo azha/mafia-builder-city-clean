@@ -64,3 +64,48 @@ d'implémentation — et tant qu'elle n'est pas faite, `max(préféré, fenêtre
 
 ⛔ **RIEN N'EST IMPLÉMENTÉ ICI.** La branche retirée reste déclarée : *la colonne de tuiles à
 465 px est ce que la décision transmise sacrifiait* — et cette mesure dit qu'il n'y a pas lieu.
+
+---
+
+# ⑰ M1 et ㉓ M5 : la « seconde classe » n'existe pas — c'est la PREMIÈRE, et son asymétrie est mécanique
+
+**Consigne reçue** : *« deux écrans, même signature, cause inconnue — c'est le seul défaut de forme
+qui reste sans explication. Cherche la CAUSE avant le correctif. »* Le juge avait écarté le
+9-slice en appliquant sa propre réserve : *« si le trou n'est ni symétrique ni central, c'en est une
+autre. »*
+
+## La mesure, sur les deux planches
+
+```
+⑰ le commissariat   y 895-899   [(60,636),(997,1019)]   trou 361-375 px (37 %)   décentrage +277
+㉓ la vitrine        y 733-737   [(85,629),(963,994)]    trou 334 px (37 %)       décentré à droite
+```
+⇒ **Les deux nombres du rapport se reproduisent au pixel** (366 px et +277 annoncés).
+
+## ⇒ LE MODÈLE QUI LES PRÉDIT — « `Sliced` étire UNE période »
+
+`RoundedRectDashedOutline` construit un sprite dont **la section centrale porte exactement UNE
+période** de pointillé : `trait Px(4)` puis `vide Px(3)`. En `Image.Type.Sliced`, cette section est
+**ÉTIRÉE** sur toute la largeur. ⇒ Le rendu n'est donc pas « un cadre brisé » : c'est **un seul
+tiret et un seul vide**, aux proportions de la période.
+
+```
+                         prédit          mesuré ⑰        mesuré ㉓
+vide / centre            3/7 = 42,9 %    37-40 %          37 %
+décentrage du vide       2/7 × C ≈ 261   +277             à droite
+```
+⇒ ★★ **L'ASYMÉTRIE N'EST PAS LA SIGNATURE D'UNE AUTRE CAUSE : ELLE EST LA CAUSE.** Une période
+4/3 est asymétrique par construction ; son image étirée place le tiret d'abord et le vide ensuite,
+donc **le vide tombe à droite du centre, de 2/7 de la section étirée**. ⇒ *La réserve du juge —
+« ni symétrique ni central ⇒ autre classe » — écartait précisément la classe qui produit ça.*
+⚠️ *Une garde de CLASSEMENT dérivée d'un seul exemple (le cadre où trait et vide étaient égaux)
+exclut les instances où le paramètre diffère.* Le raccourci était juste sur son exemple et faux
+sur la classe.
+
+## ⇒ Conséquence : rien de neuf à corriger
+
+Les deux sites sont `Precinct:223` et `Shop:295`, **tous deux dans la population des sept déjà
+basculés en `Tiled`** (commit précédent). ⇒ **`b2a08b3` ferme ⑰ M1 et ㉓ M5 sans une ligne de plus.**
+⚠️ **Non vérifié en jeu** : les deux écrans ne sont pas recapturés. La prédiction est chiffrée et
+falsifiable — *le trou doit disparaître entièrement, pas rétrécir* — et c'est la planche qui
+tranchera.
