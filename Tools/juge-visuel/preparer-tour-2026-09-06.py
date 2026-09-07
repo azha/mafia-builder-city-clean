@@ -175,6 +175,12 @@ DOCTRINE = """## Règles de doctrine applicables
   filet du bandeau `.barre::after` (l. 31), valeur de l'aile droite (l. 41), `.heatpct` (l. 64), boîtier du médaillon (l. 65) — toutes
   en `--braise` (224,102,74). ⇒ Pour ces quatre parties le témoin est la CSS `.chaud`, pas le PNG calme : un filet ou un boîtier
   braise n'est pas un laiton faux (défaut de dossier attrapé au ㊲ r14 : la règle n'était écrite que dans les dossiers ①).
+- **L'instrument de capture peut DÉFORMER ce qu'il mesure** (2026-09-07 : `SnapToScreenPixel` arrondit des positions MONDE ; pendant
+  la capture 1 unité = 192 px ⇒ cellules, badges, libellés et glyphes du district déplacés jusqu'à ±96 px, et une « maille » à résidu
+  0,0 qui n'existait pas). ⇒ Une position suspectement RONDE ou RÉGULIÈRE sur une planche (multiples d'un pas, alignements sans
+  raison, entiers trop propres) est d'abord un soupçon sur la CHAÎNE DE CAPTURE, pas sur l'écran : dis-le, mesure le pas et le
+  résidu, et mets-le en « non vérifié » avec la mesure hors image (les appelants de `SnapToScreenPixel`). Tant que ce correctif n'est
+  pas posé, aucune planche de district prise par cette chaîne ne montre la mise en page réelle.
 - **Libellés anglais dans la RÉFÉRENCE** (`HEAT`, `$ 24 850`…) : ruling user 2026-09-02 « fr réel » — le client a
   raison, la maquette est en retard ; à noter UNE fois comme « maquette à mettre à jour », jamais comme écart d'écran.
 - **Or** : s'il diffère, dire dans quel SENS — *plus jaune* (un jeton `accentGold #ffd23f` là où l'art veut
