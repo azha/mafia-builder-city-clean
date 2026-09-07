@@ -144,6 +144,10 @@ public static class MafiaCI
         // une garde qui n'a jamais tourné n'est pas une garde. Mesuré sous surcharge :
         // `passed=2 failed=0 declares=2 comptes=2`, couverture 12/12, zéro réseau, zéro écriture.
         "CarteIcones",
+        // Glyphes d'archétype (2026-09-07) — vert AVANT inscription :
+        // `passed=4 failed=0 declares=4 comptes=4` avec CarteIcones, couverture 6/10,
+        // zéro réseau, zéro écriture, zéro semis.
+        "IconesArchetype",
     };
     // ⚠️ UNION AU MERGE (3e fois sur cette ligne le 2026-09-03) — et la règle est
     // toujours la même : on unit ce qui est PORTÉ, jamais les deux listes. Une entrée

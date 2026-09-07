@@ -54,37 +54,19 @@ namespace MafiaCleanCity.CityMap
         /// est sous un `Resources` entre dans le build SANS élagage, donc embarquer les 4 coûterait
         /// 4× pour 3 jamais lues. 48 est la seule qui ne s'AGRANDIT jamais (bande de libellé la plus
         /// haute mesurée bien en deçà).</summary>
-        private const string Prefixe = "BuildingIcons/icon_building_";
-        private const string Suffixe = "_48";
-
-        // ⛔ JAMAIS un initialiseur de champ statique : `Resources.Load` JETTE en contexte de
-        //    constructeur, et ce dépôt a mesuré la conséquence (65 champs `static readonly Color`
-        //    verts en suite complète, rouges en run scopé à froid — le voisin chauffait le cache).
-        //    Le cache se remplit donc à l'appel, jamais au chargement du type.
-        private static readonly Dictionary<string, Sprite> Cache = new Dictionary<string, Sprite>();
+        // ⇒ Le mécanisme vit désormais dans `FamilleDIcones` (ShellContracts), partagé avec la
+        //    famille des archétypes. Ce fichier garde son NOM et sa documentation : il reste le
+        //    visage de CE domaine, et ses appelants n'ont pas bougé.
+        private static readonly MafiaCleanCity.Shell.FamilleDIcones Famille =
+            new MafiaCleanCity.Shell.FamilleDIcones("BuildingIcons", "icon_building_", "_48");
 
         /// <summary>Le glyphe d'un `operational_type`, ou `null` si l'atelier n'en a pas produit.
-        /// `null` est une réponse LÉGITIME et le consommateur doit la traiter en masquant : un repli
-        /// partagé remettrait 6 types sous la même image, c'est-à-dire exactement le défaut que le
-        /// libellé de type existe pour réparer.</summary>
-        public static Sprite Pour(string operationalType)
-        {
-            if (string.IsNullOrEmpty(operationalType)) return null;
-            if (Cache.TryGetValue(operationalType, out var connu)) return connu;
-            var s = Resources.Load<Sprite>(Prefixe + operationalType + Suffixe);
-            Cache[operationalType] = s;   // le null est mémorisé AUSSI — sinon un type sans icône
-                                          // repaie un Resources.Load par cellule et par rendu.
-            return s;
-        }
+        /// `null` est une réponse LÉGITIME et le consommateur doit la traiter en MASQUANT.</summary>
+        public static Sprite Pour(string operationalType) => Famille.Pour(operationalType);
 
         /// <summary>Pour les détecteurs : combien de types de l'enum ont réellement un glyphe.
         /// ⛔ Ne PAS mémoriser ce compte dans un champ — il doit se recalculer, sinon il gèle la
         /// couverture du jour où on l'a écrit et devient une prose datée avec un `int` devant.</summary>
-        public static int CompteCouverts(IEnumerable<string> types)
-        {
-            int n = 0;
-            foreach (var t in types) if (Pour(t) != null) n++;
-            return n;
-        }
+        public static int CompteCouverts(IEnumerable<string> types) => Famille.CompteCouverts(types);
     }
 }

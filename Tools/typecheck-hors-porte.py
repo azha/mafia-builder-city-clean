@@ -152,12 +152,18 @@ def main():
         sys.exit(rc)
 
     proj, extra = a[0], a[1:]
+    # ⛔ LES `--frais` SE CHAÎNENT, dans l'ordre donné. Sans ça, la deuxième assembly fraîche est
+    #    compilée contre la DLL PÉRIMÉE de la première, et rend un CS0234 sur un type que je viens
+    #    d'écrire — mesuré ici même. *La correction posée pour `--tout` (ordre topologique + DLL
+    #    réinjectées) n'avait pas été appliquée au chemin `--frais`* : une règle déclarée
+    #    universelle, appliquée là où on l'a vue et pas là où elle mord aussi.
     subst = {}
     for nom in frais:
-        r, _, out = compile_un(f'{nom}.csproj', [e for e in extra if f'/{nom}/' in e], muet=True)
+        r, _, out = compile_un(f'{nom}.csproj', [e for e in extra if f'/{nom}/' in e],
+                               subst=subst, muet=True)
         if r:
             print(f"⛔ l'assembly fraîche {nom} ne compile pas — recompile-la seule d'abord")
-            compile_un(f'{nom}.csproj', [e for e in extra if f'/{nom}/' in e])
+            compile_un(f'{nom}.csproj', [e for e in extra if f'/{nom}/' in e], subst=subst)
             sys.exit(1)
         print(f"[frais] {nom}.dll recompilée depuis les sources ⇒ les dépendantes pointent dessus")
         subst[nom] = out
