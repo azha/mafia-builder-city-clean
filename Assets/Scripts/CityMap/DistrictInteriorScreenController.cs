@@ -1042,7 +1042,19 @@ namespace MafiaCleanCity.CityMap
                 labelRt.anchorMax = new Vector2(1f, 0f);
                 labelRt.pivot = new Vector2(0.5f, 0f);
                 labelRt.sizeDelta = new Vector2(0, cellH * 0.2f);
-                labelRt.anchoredPosition = Vector2.zero;
+                // ⛔ LE LIBELLÉ SE PLIE, L'ANCRE NON. Une parcelle du fond est à 2,66 px du bord
+                //    (mesuré sur `VERGE_D_JOUR_FINAL.json`), et le semis en rapproche d'autres :
+                //    un libellé centré sur elle sort du cadre et devient illisible. Borner le
+                //    BÂTIMENT le sortirait de son ancre — c'est-à-dire défaire le troc de
+                //    l'atelier (23 ancres remises sur la chaussée contre 4 libellés rognés).
+                //    ★ L'ancre dit OÙ EST le bâtiment : une donnée du monde. Le libellé dit
+                //      COMMENT ON LE NOMME : une contrainte de mise en page. Seul le second se plie.
+                //    Le décalage est RELATIF à la cellule (le libellé en est enfant), donc on pose
+                //    l'écart entre le centre replié et le centre réel.
+                float demiCadreX = anchorMap?.image != null && scaleFactor > 0f
+                    ? (anchorMap.image.w / scaleFactor) * 0.5f : 0f;
+                float replieX = DistrictBackgroundAnchor.ReplierDansLeCadre(localPos.x, cellW, demiCadreX);
+                labelRt.anchoredPosition = new Vector2(replieX - localPos.x, 0f);
                 label.color = DesignTokens.Current.onSurfacePrimary;
                 TrackText(label);
 
@@ -1076,7 +1088,9 @@ namespace MafiaCleanCity.CityMap
                     iconRt.pivot = new Vector2(0.5f, 0f);
                     iconRt.sizeDelta = new Vector2(cote, cote);
                     // Posé SUR la bande du libellé, jamais dedans : le libellé occupe cellH*0.2.
-                    iconRt.anchoredPosition = new Vector2(0f, cellH * 0.2f);
+                    // Le glyphe SUIT le libellé : ils se lisent comme un bloc, et les séparer
+                    // serait un défaut pire que celui qu'on répare.
+                    iconRt.anchoredPosition = new Vector2(replieX - localPos.x, cellH * 0.2f);
                 }
             }
 

@@ -110,6 +110,31 @@ namespace MafiaCleanCity.CityMap
             return largeur * (((rang + 1f) / (total + 1f)) - 0.5f);
         }
 
+        /// <summary>Ramène le CENTRE d'une boîte de largeur `largeur` à l'intérieur d'un cadre de
+        /// demi-largeur `demiLargeurCadre`, et rend le centre corrigé.
+        ///
+        /// ⛔ CE QUI SE PLIE ET CE QUI NE SE PLIE PAS. `PixelToFondLocal` ne borne rien, et c'est
+        /// VOULU : elle convertit un pixel d'ancre, et *l'ancre dit OÙ EST le bâtiment* — c'est une
+        /// donnée du monde. Le semis a délibérément rapproché des ancres des bords (troc mesuré par
+        /// l'atelier : 23 ancres sorties de la chaussée contre 4 libellés rognés). Borner le
+        /// BÂTIMENT rendrait ces 23. ⇒ **On plie le LIBELLÉ, qui dit seulement COMMENT ON LE NOMME
+        /// et relève de la mise en page.** Ce helper n'est donc JAMAIS appliqué à un pivot.
+        ///
+        /// ⚠️ TROIS RÉGIMES, tous déclarés plutôt que silencieux :
+        ///   · cadre ou largeur inconnus (≤ 0) ⇒ on ne bouge RIEN. Inventer un cadre depuis rien
+        ///     déplacerait des libellés sur tout profil sans fond, sans que rien ne le dise.
+        ///   · boîte PLUS LARGE que le cadre ⇒ centrée. Aucune position ne la fait tenir ; centrée
+        ///     est la moins fausse, et surtout elle est DÉTERMINISTE (un `Clamp` naïf y colle la
+        ///     boîte sur un bord au hasard de l'arrondi).
+        ///   · sinon ⇒ le centre est borné pour que les deux bords tiennent.</summary>
+        public static float ReplierDansLeCadre(float centreX, float largeur, float demiLargeurCadre)
+        {
+            if (largeur <= 0f || demiLargeurCadre <= 0f) return centreX;
+            if (largeur >= 2f * demiLargeurCadre) return 0f;
+            float demi = largeur * 0.5f;
+            return Mathf.Clamp(centreX, -demiLargeurCadre + demi, demiLargeurCadre - demi);
+        }
+
         /// <summary>Combine les deux : le bloc (x,y) → position locale compensée relative au centre
         /// du fond, ou null si ce bloc n'a pas d'ancre dans CETTE carte (fond sans couverture pour
         /// ce district — repli déclaré côté appelant, jamais un crash).</summary>
