@@ -258,3 +258,23 @@ local `~/project/mafia-unity-correcteur`, d'où les blobs ont été lus.
   portait déjà la différence explicative — *un contrôle négatif qui compare deux objets porte la cause, encore faut-il le lire comme tel*.
   Entrée dans la doctrine du générateur ; les 5 autres sites ne sont PAS corrigés pendant que les juges regardent (correction groupée après
   verdicts, recapture unique) ⇒ les mesures en vol restent valides.
+
+### 8.sexies — 07/09 10:30–12:15 : lot B rendu, ① r9 rendu, ㉞ retirée de la table
+
+| écran | tour | verdict | B | M | m | tête |
+|---|---|---|---|---|---|---|
+| ㉚ | r1 | NON APPROUVÉ | 1 | 13 | 12 | bouche-trou de développement affiché au joueur ; CTA retourné et flottant ; papier-document perdu (sérif demandé par la CSS) ; texte ×1,44 |
+| ㉝ | r1 (#79) | NON APPROUVÉ | 1 | 4 | 5 | liste « VOS 17 SITES » (aucun cadre) coupée à mi-carte, 7/17 lisibles ; « Ça tient » contre « 13 endroits se gênent » ; référence #80 ≠ homologue (nominal de f2 corrigé `b63d911`) |
+| ㉛ | r1 (#68) | NON APPROUVÉ | 1 | 6 | 11 | **état vide CONFORME au sens (premier de la nuit)** ; bande basse `.pl-bas` absente ; typo non uniforme +9..+53 % ; sérif→sans opposable |
+| ㉞ | r1 | NON APPROUVÉ | 1 | 1 | 4 | **la planche ne photographie PAS ㉞** (fiche de lieutenant + diagnostics ; crème 34,4 % → 0,14 %, canon sans carnet 0,44 %) — retirée de la table de f2 (`967e704`) ; chrome : aile ARGENT +48,2 CSS |
+| ㊳ | r1 (#125) | NON APPROUVÉ | 4 | 12 | 4 | 10 clés i18n brutes en TITRE ; « à la une » absent (3,1:1 → 1,00:1) ; dernière carte tranchée ; pied absent ; « rien n'est tracé, tout est rempli » ; trait teal mesuré (67,5 CSS, coupe une ligne), non compté |
+| ㉙ | r1 (#59) | NON APPROUVÉ | 2 | 12 | 8 | serviette crème `.ordre` absente (l'écran n'a plus de sujet) ; bande d'action absente ; sépia → bleu-gris ; état vide conforme au sens ; 0 keyframes dans `.cfl6` |
+| ① | r9 (`d5ddc40`) | NON APPROUVÉ | 3 | 14 | 11 | voile du bandeau RÉPARÉ (4,3/255) ; 9/11 pastilles bit-identiques, libellé de type 5 px ; 2 sur sol nu + 1 double ancre + 3 lieutenants empilés (blender) ; médaillon récurrent ; arcs 1,7× confirmé |
+
+- Compte du 07/09 après ces rendus : 15 rapports · 271 findings (㉙ inclus).
+- Leçons de dossier : **une garde d'unicité ne vérifie pas la justesse** (㉞ : une planche à un seul écran peut être la mauvaise ; le doute « à confirmer »
+  vivait dans une prose que le générateur ne lit pas — f2) ; **un nominal est l'état que la CAPTURE montre** (㉝) ; le canon HUD sert de contrôle négatif
+  (㉞ : un écran sans carnet en montre 3× plus que la capture) ; ㉛ = exemple de référence pour les états vides.
+- Classes tenues : « la matière ne passe pas » (㊱ ㉟ ㉘ ㉚ ㉛ ㊳ ㉙) ; « texte de diagnostic servi au joueur » (㊱ ㉚ ㉙ M11) ; « la maquette n'énumère que
+  les états imaginés » (㉜ ㉝ ㉛ ㉙) ; « liste tranchée par le bas du contenant » (㉝ ㊳) ; « `#ffd240` = accentGold au lieu du jeton » (㊱ ㉛) ;
+  « cadre pointillé troué » (㉟ ; cherchée et absente sur ㉝).
