@@ -162,6 +162,19 @@ namespace MafiaCleanCity.Operational.Tests
 
             yield return CapturerA(1080, 2400,
                 "Assets/Screenshots/screen_c6_horizon_etat-vide_1080x2400.png");
+            // ⛔ LA SECONDE RÉSOLUTION N'EST PAS UN DOUBLON, ET SON ABSENCE EST UNE CLASSE.
+            //    Mesuré le 2026-09-07 sur `Assets/Tests/PlayMode` : **11 captures rendent DEUX
+            //    résolutions, 37 n'en rendent qu'une** — dont celle-ci. ⚠️ Les 37 ne sont pas 37
+            //    défauts : les planches « sous chrome » de `VuePrincipaleCapturePlayModeTests`
+            //    sont délibérément uniques, et mon balayage ne sait pas distinguer « devrait en
+            //    avoir deux » de « n'en veut qu'une ». **C'est une population nommée, pas un
+            //    verdict.**
+            //    ⇒ Ici elle est due : l'état VIDE est exactement celui où la hauteur décide de ce
+            //      qu'on voit. Le 2400 ouvre 232 px au-dessus du cadre que le 1920 n'ouvre pas —
+            //      mesuré sur ㊲, où le même écart rendait un manque invisible à 1920 et béant à
+            //      2400. *La résolution ne crée pas le défaut, elle le rend visible.*
+            yield return CapturerA(1080, 1920,
+                "Assets/Screenshots/screen_c6_horizon_etat-vide_1080x1920.png");
 
         }
 
