@@ -2,26 +2,21 @@
  "dossier": "carnet",
  "symbole": "㉞",
  "controleur": "CarnetScreenController",
- "date": "2026-09-04T10:15:48",
- "back_main": "6ff684db",
- "compte": "operational_demo@example.test",
- "note": "routes = celles du DOSSIER de code du contrôleur et de ses classes *Client (parfois plus larges que l'écran) ; le juge-donnees filtre",
+ "date": "2026-09-06T11:02:54",
+ "back_main": "fc944b62",
+ "horloge_game_minute": 72118,
+ "jour_de_jeu": 50,
+ "compte": "demo_capture@example.test",
+ "note": "routes = celles du DOSSIER de code du contrôleur et de ses classes *Client. DEUX SENS, et le second manquait : elles sont parfois PLUS LARGES que l'écran (le juge-donnees filtre), et parfois PLUS ÉTROITES que le domaine — une route du domaine que le code de l'écran n'appelle pas N'APPARAÎT PAS ICI, par construction et non par échec. Mesuré le 2026-09-06 sur screen_c2 : POST .../laundering/stage existe côté back et le client la référence 0 fois, donc elle est absente de cet index. ⛔ Une absence ici se lit « pas dans la surface de code de l'écran », JAMAIS « pas de corps » ni « pas regardée » — confronter au mandat du dossier pour la trancher.",
  "comptes": {
   "appelées": 7,
   "sans instance": 0,
-  "mutations": 4,
+  "mutations": 3,
   "erreurs": 1
  },
  "routes": [
   {
-   "fichier": "POST_ambient_attend.json",
-   "route": "/v1/ambient/attend/",
-   "methode": "POST",
-   "statut": null,
-   "etat": "mutation"
-  },
-  {
-   "fichier": "POST_ambient_attend_id.json",
+   "fichier": "POST_ambient_attend_attendId.json",
    "route": "/v1/ambient/attend/{id}",
    "methode": "POST",
    "statut": null,
@@ -30,6 +25,13 @@
   {
    "fichier": "GET_ambient_feed.json",
    "route": "/v1/ambient/feed",
+   "methode": "GET",
+   "statut": 200,
+   "etat": "appelée"
+  },
+  {
+   "fichier": "GET_city_district_id_interior.json",
+   "route": "/v1/city/district/{districtId}/interior",
    "methode": "GET",
    "statut": 200,
    "etat": "appelée"
@@ -47,13 +49,6 @@
    "methode": "GET",
    "statut": 403,
    "etat": "erreur"
-  },
-  {
-   "fichier": "GET_news_beats.json",
-   "route": "/v1/news/beats/",
-   "methode": "GET",
-   "statut": 200,
-   "etat": "appelée"
   },
   {
    "fichier": "GET_news_beats_id.json",
@@ -77,7 +72,7 @@
    "etat": "appelée"
   },
   {
-   "fichier": "POST_random-world_hollow.json",
+   "fichier": "POST_random-world_hollow_hollowId.json",
    "route": "/v1/random-world/hollow/",
    "methode": "POST",
    "statut": null,

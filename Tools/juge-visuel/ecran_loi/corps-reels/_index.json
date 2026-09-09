@@ -2,17 +2,26 @@
  "dossier": "ecran_loi",
  "symbole": "㉛",
  "controleur": "LoiScreenController",
- "date": "2026-09-04T10:15:48",
- "back_main": "6ff684db",
- "compte": "operational_demo@example.test",
- "note": "routes = celles du DOSSIER de code du contrôleur et de ses classes *Client (parfois plus larges que l'écran) ; le juge-donnees filtre",
+ "date": "2026-09-06T11:02:54",
+ "back_main": "fc944b62",
+ "horloge_game_minute": 72118,
+ "jour_de_jeu": 50,
+ "compte": "demo_capture@example.test",
+ "note": "routes = celles du DOSSIER de code du contrôleur et de ses classes *Client. DEUX SENS, et le second manquait : elles sont parfois PLUS LARGES que l'écran (le juge-donnees filtre), et parfois PLUS ÉTROITES que le domaine — une route du domaine que le code de l'écran n'appelle pas N'APPARAÎT PAS ICI, par construction et non par échec. Mesuré le 2026-09-06 sur screen_c2 : POST .../laundering/stage existe côté back et le client la référence 0 fois, donc elle est absente de cet index. ⛔ Une absence ici se lit « pas dans la surface de code de l'écran », JAMAIS « pas de corps » ni « pas regardée » — confronter au mandat du dossier pour la trancher.",
  "comptes": {
-  "appelées": 1,
+  "appelées": 2,
   "sans instance": 1,
   "mutations": 5,
   "erreurs": 0
  },
  "routes": [
+  {
+   "fichier": "GET_city_district_id_interior.json",
+   "route": "/v1/city/district/{districtId}/interior",
+   "methode": "GET",
+   "statut": 200,
+   "etat": "appelée"
+  },
   {
    "fichier": "GET_me_legal.json",
    "route": "/v1/me/legal",
@@ -21,21 +30,21 @@
    "etat": "appelée"
   },
   {
-   "fichier": "POST_me_legal_cases.json",
+   "fichier": "POST_me_legal_cases_caseId.json",
    "route": "/v1/me/legal/cases/",
    "methode": "POST",
    "statut": null,
    "etat": "mutation"
   },
   {
-   "fichier": "POST_me_legal_cases_id_payoff.json",
+   "fichier": "POST_me_legal_cases_caseId_payoff.json",
    "route": "/v1/me/legal/cases/{id}/payoff",
    "methode": "POST",
    "statut": null,
    "etat": "mutation"
   },
   {
-   "fichier": "POST_me_legal_cases_id_plea.json",
+   "fichier": "POST_me_legal_cases_caseId_plea.json",
    "route": "/v1/me/legal/cases/{id}/plea",
    "methode": "POST",
    "statut": null,
@@ -49,14 +58,14 @@
    "etat": "mutation"
   },
   {
-   "fichier": "GET_me_legal_lawyers.json",
+   "fichier": "GET_me_legal_lawyers_lawyerId.json",
    "route": "/v1/me/legal/lawyers/",
    "methode": "GET",
    "statut": null,
    "etat": "sans instance"
   },
   {
-   "fichier": "PUT_me_legal_lawyers_id_retainer.json",
+   "fichier": "PUT_me_legal_lawyers_lawyerId_retainer.json",
    "route": "/v1/me/legal/lawyers/{id}/retainer",
    "methode": "PUT",
    "statut": null,

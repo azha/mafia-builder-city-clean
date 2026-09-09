@@ -6,25 +6,29 @@
  "params": {
   "districtId": {
    "valeur": 1,
-   "source": "lu dans le corps de `session/open` (clé parmi ['home_district_id', 'district_id', 'district'])"
+   "source": "lu dans le corps de `city/district/1/interior` (clé parmi ['district_id', 'district'])"
   }
  },
  "provenance": {
-  "date": "2026-09-04T10:15:48",
-  "back_main": "6ff684db",
-  "game_back": "mafia-clean-city-game-back 2026-09-04T08:14:29.844933926Z",
-  "compte": "operational_demo@example.test",
+  "date": "2026-09-06T11:02:54",
+  "back_main": "fc944b62",
+  "game_back": "mafia-clean-city-game-back 2026-09-04T08:41:42.667221302Z",
+  "compte": "demo_capture@example.test",
+  "jour_de_jeu": 50,
+  "horloge_game_minute": 72118,
+  "horloge_source": "city_sim_clock.game_minute scopée sur player_id (lecture en base : aucune route joueur ne la projette — forme F)",
+  "district_du_joueur_mesure": 1,
   "dossier": "police",
   "symbole": "⑮",
   "controleur": "InspectionScreenController",
-  "X-Request-Id": "e6fd6e51-91b8-4ce0-8300-11dde0a6b160",
-  "X-Server-Processed-At": "2026-09-04T08:15:50.785Z",
+  "X-Request-Id": "51ec1557-7bea-4a3d-beb8-eeb0f0847f4e",
+  "X-Server-Processed-At": "2026-09-06T09:02:54.648Z",
   "X-Api-Version": "1"
  },
  "corps": {
   "response_meta": {
-   "request_id_echo": "e6fd6e51-91b8-4ce0-8300-11dde0a6b160",
-   "server_processed_at": "2026-09-04T08:15:50.785Z",
+   "request_id_echo": "51ec1557-7bea-4a3d-beb8-eeb0f0847f4e",
+   "server_processed_at": "2026-09-06T09:02:54.648Z",
    "api_version": 1,
    "correlation_id_echo": null
   },
@@ -35,7 +39,7 @@
     "dispatcher_regime": "NOMINAL",
     "severity_distribution": {
      "LOW": "PREDOMINANT",
-     "MEDIUM": "SOME",
+     "MEDIUM": "NONE",
      "HIGH": "NONE",
      "CRITICAL": "NONE"
     },

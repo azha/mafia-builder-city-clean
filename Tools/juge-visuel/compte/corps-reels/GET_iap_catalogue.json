@@ -5,21 +5,25 @@
  "statut": 200,
  "params": {},
  "provenance": {
-  "date": "2026-09-04T10:15:48",
-  "back_main": "6ff684db",
-  "game_back": "mafia-clean-city-game-back 2026-09-04T08:14:29.844933926Z",
-  "compte": "operational_demo@example.test",
+  "date": "2026-09-06T11:02:54",
+  "back_main": "fc944b62",
+  "game_back": "mafia-clean-city-game-back 2026-09-04T08:41:42.667221302Z",
+  "compte": "demo_capture@example.test",
+  "jour_de_jeu": 50,
+  "horloge_game_minute": 72118,
+  "horloge_source": "city_sim_clock.game_minute scopée sur player_id (lecture en base : aucune route joueur ne la projette — forme F)",
+  "district_du_joueur_mesure": 1,
   "dossier": "compte",
   "symbole": "㉓",
   "controleur": "ShopScreenController",
-  "X-Request-Id": "4aee0303-b391-4318-b4f3-1cf637e32818",
-  "X-Server-Processed-At": "2026-09-04T08:15:50.714Z",
+  "X-Request-Id": "9a74ec25-6f9a-49b8-93a0-15e720e49142",
+  "X-Server-Processed-At": "2026-09-06T09:02:54.622Z",
   "X-Api-Version": "1"
  },
  "corps": {
   "response_meta": {
-   "request_id_echo": "4aee0303-b391-4318-b4f3-1cf637e32818",
-   "server_processed_at": "2026-09-04T08:15:50.714Z",
+   "request_id_echo": "9a74ec25-6f9a-49b8-93a0-15e720e49142",
+   "server_processed_at": "2026-09-06T09:02:54.622Z",
    "api_version": 1,
    "correlation_id_echo": null
   },

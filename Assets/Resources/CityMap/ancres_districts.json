@@ -176,5 +176,15 @@
   }
  ],
  "angle_convention": "convention de l'IMAGE : 0° = horizontale, POSITIF = sens HORAIRE (y descend, comme en SVG et en pixels). ⚠️ Unity tourne à l'inverse : rt.localRotation = Quaternion.Euler(0, 0, -angle_deg).",
- "angle_source": "atelier3d-mafia/geo_brennar.py, champ `rot` de chaque quartier — valeur AUTEURE, pas une mesure. C'est elle que la maquette applique et que le juge a mesurée sur l'image rendue (F4)."
+ "angle_source": "atelier3d-mafia/geo_brennar.py, champ `rot` de chaque quartier — valeur AUTEURE, pas une mesure. C'est elle que la maquette applique et que le juge a mesurée sur l'image rendue (F4).",
+ "nom_ancrage": {
+  "_": "Ce que le point (x_px, y_px) désigne POUR LE LETTRAGE. Mesuré, pas supposé : l'ancre est rigoureusement la position du <text> de la référence (écart max 0,000 px sur 18).",
+  "x": "CENTRE horizontal du nom (`text-anchor: middle` dans le CSS de la maquette).",
+  "y": "LIGNE DE BASE alphabétique du nom — PAS son centre vertical. Aucun `dominant-baseline` n'est déclaré sur les 54 `.nomq`, et le défaut SVG est `alphabetic`.",
+  "consequence": "Les noms sont en CAPITALES : l'encre monte de la ligne de base, donc son centre est à cap/2 AU-DESSUS de l'ancre. Un client qui CENTRE l'étiquette sur l'ancre la pose cap/2 trop BAS — c'est le finding F8.",
+  "correctif": "poser la LIGNE DE BASE du texte sur l'ancre ; ou, si l'on centre, remonter de cap/2. En TMP : aligner sur la baseline plutôt que sur le milieu.",
+  "controle": "cap mesurée par le juge en maquette = 16,0 px (F3) ⇒ décalage prédit +8,0 px ; mesuré +8,4 px de médiane, 7/7 du même signe (F8). Écart 0,4 px.",
+  "non_explique": "la DISPERSION des dy (+5,7 à +12,5). Une convention donne un décalage constant ; la plage vient probablement des hauteurs de capitale réelles par mot (15–19 px en maquette, F3) et de la comparaison d'un mot incliné à un mot horizontal — que le juge signale lui-même comme non vérifié.",
+  "pas_de_champ_duplique": "`nom_x_frac`/`nom_y_frac` ne sont PAS ajoutés : ils seraient égaux à `x_frac`/`y_frac`. Deux sources pour une valeur finissent par diverger."
+ }
 }

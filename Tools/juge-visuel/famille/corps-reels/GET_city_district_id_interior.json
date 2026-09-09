@@ -1,0 +1,263 @@
+{
+ "route": "/v1/city/district/{districtId}/interior",
+ "route_appelee": "/v1/city/district/1/interior",
+ "methode": "GET",
+ "statut": 200,
+ "params": {
+  "districtId": {
+   "valeur": 1,
+   "source": "lu dans le corps de `city/district/1/interior` (clé parmi ['district_id', 'district'])"
+  }
+ },
+ "provenance": {
+  "date": "2026-09-06T11:02:54",
+  "back_main": "fc944b62",
+  "game_back": "mafia-clean-city-game-back 2026-09-04T08:41:42.667221302Z",
+  "compte": "demo_capture@example.test",
+  "jour_de_jeu": 50,
+  "horloge_game_minute": 72118,
+  "horloge_source": "city_sim_clock.game_minute scopée sur player_id (lecture en base : aucune route joueur ne la projette — forme F)",
+  "district_du_joueur_mesure": 1,
+  "dossier": "famille",
+  "symbole": "⑥",
+  "controleur": "LieutenantScreenController",
+  "X-Request-Id": "bdc10b62-6578-4d38-a122-0e513fe64fb4",
+  "X-Server-Processed-At": "2026-09-06T09:02:54.474Z",
+  "X-Api-Version": "1"
+ },
+ "corps": {
+  "response_meta": {
+   "request_id_echo": "bdc10b62-6578-4d38-a122-0e513fe64fb4",
+   "server_processed_at": "2026-09-06T09:02:54.474Z",
+   "api_version": 1,
+   "correlation_id_echo": null
+  },
+  "payload": {
+   "data": {
+    "district": "district-1",
+    "district_id": 1,
+    "profile": "tidewater",
+    "name_canonical": "Tidewater-1",
+    "name": "Les Bassins",
+    "bank_side": "north",
+    "grid": {
+     "width": 10,
+     "height": 4
+    },
+    "blocks": [
+     {
+      "block_id": 1,
+      "x": 0,
+      "y": 0
+     },
+     {
+      "block_id": 2,
+      "x": 1,
+      "y": 0
+     },
+     {
+      "block_id": 3,
+      "x": 2,
+      "y": 0
+     },
+     {
+      "block_id": 4,
+      "x": 3,
+      "y": 0
+     },
+     {
+      "block_id": 5,
+      "x": 4,
+      "y": 0
+     },
+     {
+      "block_id": 6,
+      "x": 5,
+      "y": 0
+     },
+     {
+      "block_id": 7,
+      "x": 6,
+      "y": 0
+     },
+     {
+      "block_id": 8,
+      "x": 7,
+      "y": 0
+     },
+     {
+      "block_id": 9,
+      "x": 8,
+      "y": 0
+     },
+     {
+      "block_id": 10,
+      "x": 9,
+      "y": 0
+     },
+     {
+      "block_id": 11,
+      "x": 0,
+      "y": 1
+     },
+     {
+      "block_id": 12,
+      "x": 1,
+      "y": 1
+     },
+     {
+      "block_id": 13,
+      "x": 2,
+      "y": 1
+     },
+     {
+      "block_id": 14,
+      "x": 3,
+      "y": 1
+     },
+     {
+      "block_id": 15,
+      "x": 4,
+      "y": 1
+     },
+     {
+      "block_id": 16,
+      "x": 5,
+      "y": 1
+     },
+     {
+      "block_id": 17,
+      "x": 6,
+      "y": 1
+     },
+     {
+      "block_id": 18,
+      "x": 7,
+      "y": 1
+     },
+     {
+      "block_id": 19,
+      "x": 8,
+      "y": 1
+     },
+     {
+      "block_id": 20,
+      "x": 9,
+      "y": 1
+     },
+     {
+      "block_id": 21,
+      "x": 0,
+      "y": 2
+     },
+     {
+      "block_id": 22,
+      "x": 1,
+      "y": 2
+     },
+     {
+      "block_id": 23,
+      "x": 2,
+      "y": 2
+     },
+     {
+      "block_id": 24,
+      "x": 3,
+      "y": 2
+     },
+     {
+      "block_id": 25,
+      "x": 4,
+      "y": 2
+     },
+     {
+      "block_id": 26,
+      "x": 5,
+      "y": 2
+     },
+     {
+      "block_id": 27,
+      "x": 6,
+      "y": 2
+     },
+     {
+      "block_id": 28,
+      "x": 7,
+      "y": 2
+     },
+     {
+      "block_id": 29,
+      "x": 8,
+      "y": 2
+     },
+     {
+      "block_id": 30,
+      "x": 9,
+      "y": 2
+     },
+     {
+      "block_id": 31,
+      "x": 0,
+      "y": 3
+     },
+     {
+      "block_id": 32,
+      "x": 1,
+      "y": 3
+     },
+     {
+      "block_id": 33,
+      "x": 2,
+      "y": 3
+     },
+     {
+      "block_id": 34,
+      "x": 3,
+      "y": 3
+     },
+     {
+      "block_id": 35,
+      "x": 4,
+      "y": 3
+     },
+     {
+      "block_id": 36,
+      "x": 5,
+      "y": 3
+     },
+     {
+      "block_id": 37,
+      "x": 6,
+      "y": 3
+     }
+    ],
+    "day_phase": "DAWN",
+    "buildings": [
+     {
+      "building": "111846f8-1aac-4a1c-8b33-ad371ffec44d",
+      "block_id": 1,
+      "name_i18n": {
+       "key": "game.fiction.building.name",
+       "params": {
+        "enseigne": "Colis Kofi",
+        "district": "Les Bassins",
+        "block": "1"
+       }
+      },
+      "operational_type": "distribution_hub",
+      "conversion_band": "OPERATIONAL",
+      "shell_state": "STANDING",
+      "condition_band": "SOUND",
+      "revenue_band": "IDLE",
+      "revenue_chain": "UNWIRED",
+      "activity_band": "IDLE",
+      "lieutenant_ids": [],
+      "lapse_phase_bucket": "WITHIN_WINDOW",
+      "maintenance_in_progress": false
+     }
+    ],
+    "lieutenants": []
+   }
+  }
+ }
+}

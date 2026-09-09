@@ -5,21 +5,25 @@
  "statut": 200,
  "params": {},
  "provenance": {
-  "date": "2026-09-04T10:15:48",
-  "back_main": "6ff684db",
-  "game_back": "mafia-clean-city-game-back 2026-09-04T08:14:29.844933926Z",
-  "compte": "operational_demo@example.test",
+  "date": "2026-09-06T11:02:54",
+  "back_main": "fc944b62",
+  "game_back": "mafia-clean-city-game-back 2026-09-04T08:41:42.667221302Z",
+  "compte": "demo_capture@example.test",
+  "jour_de_jeu": 50,
+  "horloge_game_minute": 72118,
+  "horloge_source": "city_sim_clock.game_minute scopée sur player_id (lecture en base : aucune route joueur ne la projette — forme F)",
+  "district_du_joueur_mesure": 1,
   "dossier": "ecran_delegation",
   "symbole": "㉜",
   "controleur": "DelegationScreenController",
-  "X-Request-Id": "91beb2cf-3afc-4a76-a873-d8151a8dd1ab",
-  "X-Server-Processed-At": "2026-09-04T08:15:51.441Z",
+  "X-Request-Id": "195d6bd3-a3e9-4ebf-859e-d5c7249f6d43",
+  "X-Server-Processed-At": "2026-09-06T09:02:54.861Z",
   "X-Api-Version": "1"
  },
  "corps": {
   "response_meta": {
-   "request_id_echo": "91beb2cf-3afc-4a76-a873-d8151a8dd1ab",
-   "server_processed_at": "2026-09-04T08:15:51.441Z",
+   "request_id_echo": "195d6bd3-a3e9-4ebf-859e-d5c7249f6d43",
+   "server_processed_at": "2026-09-06T09:02:54.861Z",
    "api_version": 1,
    "correlation_id_echo": null
   },
@@ -38,8 +42,8 @@
      {
       "category_key": "LIEUTENANT_HIRING",
       "category_id": 2,
-      "mastery_bucket": "ELIGIBLE",
-      "progress_band": "HIGH",
+      "mastery_bucket": "NASCENT",
+      "progress_band": "LOW",
       "delegation_state": "SELF",
       "recovery": false,
       "recall_scar": false
@@ -47,7 +51,7 @@
      {
       "category_key": "SUPPLY_SOURCING",
       "category_id": 4,
-      "mastery_bucket": "ELIGIBLE",
+      "mastery_bucket": "PRACTICED",
       "progress_band": "HIGH",
       "delegation_state": "SELF",
       "recovery": false,

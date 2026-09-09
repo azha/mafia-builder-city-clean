@@ -2,12 +2,14 @@
  "dossier": "fiche-batiment",
  "symbole": "②",
  "controleur": "BuildingCardController",
- "date": "2026-09-04T10:15:48",
- "back_main": "6ff684db",
- "compte": "operational_demo@example.test",
- "note": "routes = celles du DOSSIER de code du contrôleur et de ses classes *Client (parfois plus larges que l'écran) ; le juge-donnees filtre",
+ "date": "2026-09-06T11:02:54",
+ "back_main": "fc944b62",
+ "horloge_game_minute": 72118,
+ "jour_de_jeu": 50,
+ "compte": "demo_capture@example.test",
+ "note": "routes = celles du DOSSIER de code du contrôleur et de ses classes *Client. DEUX SENS, et le second manquait : elles sont parfois PLUS LARGES que l'écran (le juge-donnees filtre), et parfois PLUS ÉTROITES que le domaine — une route du domaine que le code de l'écran n'appelle pas N'APPARAÎT PAS ICI, par construction et non par échec. Mesuré le 2026-09-06 sur screen_c2 : POST .../laundering/stage existe côté back et le client la référence 0 fois, donc elle est absente de cet index. ⛔ Une absence ici se lit « pas dans la surface de code de l'écran », JAMAIS « pas de corps » ni « pas regardée » — confronter au mandat du dossier pour la trancher.",
  "comptes": {
-  "appelées": 2,
+  "appelées": 3,
   "sans instance": 3,
   "mutations": 17,
   "erreurs": 0
@@ -28,6 +30,13 @@
    "etat": "mutation"
   },
   {
+   "fichier": "GET_city_district_id_interior.json",
+   "route": "/v1/city/district/{districtId}/interior",
+   "methode": "GET",
+   "statut": 200,
+   "etat": "appelée"
+  },
+  {
    "fichier": "GET_economy_wallet.json",
    "route": "/v1/economy/wallet",
    "methode": "GET",
@@ -42,14 +51,14 @@
    "etat": "mutation"
   },
   {
-   "fichier": "GET_operational_appointment_id.json",
+   "fichier": "GET_operational_appointment_appointmentId.json",
    "route": "/v1/operational/appointment/{id}",
    "methode": "GET",
    "statut": null,
    "etat": "sans instance"
   },
   {
-   "fichier": "POST_operational_appointment_id_honor.json",
+   "fichier": "POST_operational_appointment_appointmentId_honor.json",
    "route": "/v1/operational/appointment/{id}/honor",
    "methode": "POST",
    "statut": null,
@@ -63,49 +72,49 @@
    "etat": "appelée"
   },
   {
-   "fichier": "POST_operational_building_id_convert.json",
+   "fichier": "POST_operational_building_buildingId_convert.json",
    "route": "/v1/operational/building/{id}/convert",
    "methode": "POST",
    "statut": null,
    "etat": "mutation"
   },
   {
-   "fichier": "POST_operational_building_id_deposit-cash.json",
+   "fichier": "POST_operational_building_buildingId_deposit-cash.json",
    "route": "/v1/operational/building/{id}/deposit-cash",
    "methode": "POST",
    "statut": null,
    "etat": "mutation"
   },
   {
-   "fichier": "POST_operational_building_id_repair.json",
+   "fichier": "POST_operational_building_buildingId_repair.json",
    "route": "/v1/operational/building/{id}/repair",
    "methode": "POST",
    "statut": null,
    "etat": "mutation"
   },
   {
-   "fichier": "POST_operational_building_id_upgrade-hub-tier.json",
+   "fichier": "POST_operational_building_buildingId_upgrade-hub-tier.json",
    "route": "/v1/operational/building/{id}/upgrade-hub-tier",
    "methode": "POST",
    "statut": null,
    "etat": "mutation"
   },
   {
-   "fichier": "POST_operational_building_id_upgrade-money-holding-tier.json",
+   "fichier": "POST_operational_building_buildingId_upgrade-money-holding-tier.json",
    "route": "/v1/operational/building/{id}/upgrade-money-holding-tier",
    "methode": "POST",
    "statut": null,
    "etat": "mutation"
   },
   {
-   "fichier": "POST_operational_building_id_upgrade-tier.json",
+   "fichier": "POST_operational_building_buildingId_upgrade-tier.json",
    "route": "/v1/operational/building/{id}/upgrade-tier",
    "methode": "POST",
    "statut": null,
    "etat": "mutation"
   },
   {
-   "fichier": "POST_operational_building_id_withdraw-cash.json",
+   "fichier": "POST_operational_building_buildingId_withdraw-cash.json",
    "route": "/v1/operational/building/{id}/withdraw-cash",
    "methode": "POST",
    "statut": null,
@@ -119,28 +128,28 @@
    "etat": "mutation"
   },
   {
-   "fichier": "POST_operational_grow-house_id_plant.json",
+   "fichier": "POST_operational_grow-house_grow-houseId_plant.json",
    "route": "/v1/operational/grow-house/{id}/plant",
    "methode": "POST",
    "statut": null,
    "etat": "mutation"
   },
   {
-   "fichier": "GET_operational_grow-session_id.json",
+   "fichier": "GET_operational_grow-session_grow-sessionId.json",
    "route": "/v1/operational/grow-session/{id}",
    "methode": "GET",
    "statut": null,
    "etat": "sans instance"
   },
   {
-   "fichier": "POST_operational_grow-session_id_tend.json",
+   "fichier": "POST_operational_grow-session_grow-sessionId_tend.json",
    "route": "/v1/operational/grow-session/{id}/tend",
    "methode": "POST",
    "statut": null,
    "etat": "mutation"
   },
   {
-   "fichier": "POST_operational_lab_id_cook.json",
+   "fichier": "POST_operational_lab_labId_cook.json",
    "route": "/v1/operational/lab/{id}/cook",
    "methode": "POST",
    "statut": null,
@@ -161,7 +170,7 @@
    "etat": "mutation"
   },
   {
-   "fichier": "GET_operational_storage_id.json",
+   "fichier": "GET_operational_storage_storageId.json",
    "route": "/v1/operational/storage/{id}",
    "methode": "GET",
    "statut": null,

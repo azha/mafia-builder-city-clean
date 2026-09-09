@@ -5,91 +5,34 @@
  "statut": 200,
  "params": {},
  "provenance": {
-  "date": "2026-09-04T10:15:48",
-  "back_main": "6ff684db",
-  "game_back": "mafia-clean-city-game-back 2026-09-04T08:14:29.844933926Z",
-  "compte": "operational_demo@example.test",
+  "date": "2026-09-06T11:02:54",
+  "back_main": "fc944b62",
+  "game_back": "mafia-clean-city-game-back 2026-09-04T08:41:42.667221302Z",
+  "compte": "demo_capture@example.test",
+  "jour_de_jeu": 50,
+  "horloge_game_minute": 72118,
+  "horloge_source": "city_sim_clock.game_minute scopée sur player_id (lecture en base : aucune route joueur ne la projette — forme F)",
+  "district_du_joueur_mesure": 1,
   "dossier": "carnet",
   "symbole": "㉞",
   "controleur": "CarnetScreenController",
-  "X-Request-Id": "09b8b655-93e0-470f-8bf2-b7660e100812",
-  "X-Server-Processed-At": "2026-09-04T08:15:52.030Z",
+  "X-Request-Id": "a13da6d2-cfa0-45bb-b09a-bb492d665837",
+  "X-Server-Processed-At": "2026-09-06T09:02:54.981Z",
   "X-Api-Version": "1"
  },
  "corps": {
   "response_meta": {
-   "request_id_echo": "09b8b655-93e0-470f-8bf2-b7660e100812",
-   "server_processed_at": "2026-09-04T08:15:52.030Z",
+   "request_id_echo": "a13da6d2-cfa0-45bb-b09a-bb492d665837",
+   "server_processed_at": "2026-09-06T09:02:54.981Z",
    "api_version": 1,
    "correlation_id_echo": null
   },
   "payload": {
    "data": {
-    "cue_stack_id": "11cd3530-77b3-4d70-91b0-ef3e3d586331",
-    "state": "pending",
+    "cue_stack_id": null,
+    "state": null,
     "committed_at": null,
-    "slots": [
-     {
-      "slot_id": "e4739715-d0ba-48cc-82c2-eb3a26107471",
-      "slot_type": "MAINTENANCE_BATCH",
-      "target_ref": {
-       "id": "b24d9c27-c376-45ec-a4e9-7796b4ec68f5",
-       "kind": "building"
-      },
-      "dependencies": [],
-      "drag_order": 1,
-      "status": "pending",
-      "outcome": null,
-      "estimated_time_bucket": "QUICK",
-      "prerequisite_satisfaction_bucket": "SATISFIED",
-      "dependency_conflict_bucket": "NONE"
-     },
-     {
-      "slot_id": "0189d2fe-4be5-4e32-a5c7-8a3b9351ef1a",
-      "slot_type": "MAINTENANCE_BATCH",
-      "target_ref": {
-       "id": "1811761f-0b98-414a-a3f2-a3097104fff4",
-       "kind": "building"
-      },
-      "dependencies": [],
-      "drag_order": 2,
-      "status": "pending",
-      "outcome": null,
-      "estimated_time_bucket": "QUICK",
-      "prerequisite_satisfaction_bucket": "SATISFIED",
-      "dependency_conflict_bucket": "NONE"
-     },
-     {
-      "slot_id": "dfee9f2f-1ae0-4dbe-8a99-afd244d90557",
-      "slot_type": "RECRUITMENT_STEP",
-      "target_ref": {
-       "id": "e81df1ca-aa4e-4fa7-ac1b-998acb5dfe46",
-       "kind": "candidate"
-      },
-      "dependencies": [],
-      "drag_order": 3,
-      "status": "pending",
-      "outcome": null,
-      "estimated_time_bucket": "QUICK",
-      "prerequisite_satisfaction_bucket": "SATISFIED",
-      "dependency_conflict_bucket": "NONE"
-     },
-     {
-      "slot_id": "c817881b-258a-48ee-8a85-c48db0767b99",
-      "slot_type": "RECRUITMENT_STEP",
-      "target_ref": {
-       "id": "3d02adce-0b39-4126-9cd5-b341caed552f",
-       "kind": "candidate"
-      },
-      "dependencies": [],
-      "drag_order": 4,
-      "status": "pending",
-      "outcome": null,
-      "estimated_time_bucket": "QUICK",
-      "prerequisite_satisfaction_bucket": "SATISFIED",
-      "dependency_conflict_bucket": "NONE"
-     }
-    ]
+    "slots": []
    }
   }
  }

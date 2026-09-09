@@ -2,10 +2,12 @@
  "dossier": "ecran-principal",
  "symbole": "①",
  "controleur": "DistrictInteriorScreenController",
- "date": "2026-09-04T10:15:48",
- "back_main": "6ff684db",
- "compte": "operational_demo@example.test",
- "note": "routes = celles du DOSSIER de code du contrôleur et de ses classes *Client (parfois plus larges que l'écran) ; le juge-donnees filtre",
+ "date": "2026-09-06T11:02:54",
+ "back_main": "fc944b62",
+ "horloge_game_minute": 72118,
+ "jour_de_jeu": 50,
+ "compte": "demo_capture@example.test",
+ "note": "routes = celles du DOSSIER de code du contrôleur et de ses classes *Client. DEUX SENS, et le second manquait : elles sont parfois PLUS LARGES que l'écran (le juge-donnees filtre), et parfois PLUS ÉTROITES que le domaine — une route du domaine que le code de l'écran n'appelle pas N'APPARAÎT PAS ICI, par construction et non par échec. Mesuré le 2026-09-06 sur screen_c2 : POST .../laundering/stage existe côté back et le client la référence 0 fois, donc elle est absente de cet index. ⛔ Une absence ici se lit « pas dans la surface de code de l'écran », JAMAIS « pas de corps » ni « pas regardée » — confronter au mandat du dossier pour la trancher.",
  "comptes": {
   "appelées": 4,
   "sans instance": 0,
@@ -28,7 +30,7 @@
    "etat": "mutation"
   },
   {
-   "fichier": "GET_city_district_districtId_heat.json",
+   "fichier": "GET_city_district_id_heat.json",
    "route": "/v1/city/district/{districtId}/heat",
    "methode": "GET",
    "statut": 200,
@@ -49,7 +51,7 @@
    "etat": "appelée"
   },
   {
-   "fichier": "POST_operational_dealer_id_collect.json",
+   "fichier": "POST_operational_dealer_dealerId_collect.json",
    "route": "/v1/operational/dealer/{id}/collect",
    "methode": "POST",
    "statut": null,

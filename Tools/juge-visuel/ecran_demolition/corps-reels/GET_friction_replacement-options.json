@@ -1,23 +1,36 @@
 {
- "route": "/v1/friction/replacement-options/",
+ "route": "/v1/friction/replacement-options",
+ "route_appelee": "/v1/friction/replacement-options",
  "methode": "GET",
- "statut": null,
- "sans_instance": {
-  "optionId": "aucune instance sur le compte de démo — attendue dans ['friction/replacement-options'] (clés ['option_id', 'id'])"
- },
- "params": {
-  "optionId": {
-   "valeur": null,
-   "source": "aucune instance sur le compte de démo — attendue dans ['friction/replacement-options'] (clés ['option_id', 'id'])"
-  }
- },
+ "statut": 200,
+ "params": {},
  "provenance": {
-  "date": "2026-09-04T10:15:48",
-  "back_main": "6ff684db",
-  "game_back": "mafia-clean-city-game-back 2026-09-04T08:14:29.844933926Z",
-  "compte": "operational_demo@example.test",
+  "date": "2026-09-06T11:02:54",
+  "back_main": "fc944b62",
+  "game_back": "mafia-clean-city-game-back 2026-09-04T08:41:42.667221302Z",
+  "compte": "demo_capture@example.test",
+  "jour_de_jeu": 50,
+  "horloge_game_minute": 72118,
+  "horloge_source": "city_sim_clock.game_minute scopée sur player_id (lecture en base : aucune route joueur ne la projette — forme F)",
+  "district_du_joueur_mesure": 1,
   "dossier": "ecran_demolition",
   "symbole": "㉝",
-  "controleur": "DemolitionScreenController"
+  "controleur": "DemolitionScreenController",
+  "X-Request-Id": "1ae5bf65-d7c3-4054-b55f-98109619bdb8",
+  "X-Server-Processed-At": "2026-09-06T09:02:54.960Z",
+  "X-Api-Version": "1"
+ },
+ "corps": {
+  "response_meta": {
+   "request_id_echo": "1ae5bf65-d7c3-4054-b55f-98109619bdb8",
+   "server_processed_at": "2026-09-06T09:02:54.960Z",
+   "api_version": 1,
+   "correlation_id_echo": null
+  },
+  "payload": {
+   "data": {
+    "options": []
+   }
+  }
  }
 }

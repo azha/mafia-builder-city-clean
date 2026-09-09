@@ -1,42 +1,46 @@
 {
  "route": "/v1/operational/building/{id}",
- "route_appelee": "/v1/operational/building/bea32c47-e1fd-4385-92c7-3f83eaa16dbb",
+ "route_appelee": "/v1/operational/building/111846f8-1aac-4a1c-8b33-ad371ffec44d",
  "methode": "GET",
  "statut": 200,
  "params": {
   "buildingId": {
-   "valeur": "bea32c47-e1fd-4385-92c7-3f83eaa16dbb",
+   "valeur": "111846f8-1aac-4a1c-8b33-ad371ffec44d",
    "source": "lu dans le corps de `city/district/1/interior` (clé parmi ['building', 'building_id'])"
   }
  },
  "provenance": {
-  "date": "2026-09-04T10:15:48",
-  "back_main": "6ff684db",
-  "game_back": "mafia-clean-city-game-back 2026-09-04T08:14:29.844933926Z",
-  "compte": "operational_demo@example.test",
+  "date": "2026-09-06T11:02:54",
+  "back_main": "fc944b62",
+  "game_back": "mafia-clean-city-game-back 2026-09-04T08:41:42.667221302Z",
+  "compte": "demo_capture@example.test",
+  "jour_de_jeu": 50,
+  "horloge_game_minute": 72118,
+  "horloge_source": "city_sim_clock.game_minute scopée sur player_id (lecture en base : aucune route joueur ne la projette — forme F)",
+  "district_du_joueur_mesure": 1,
   "dossier": "fiche-batiment",
   "symbole": "②",
   "controleur": "BuildingCardController",
-  "X-Request-Id": "e7435023-dc6b-4706-aa7b-718dfe8c1a6e",
-  "X-Server-Processed-At": "2026-09-04T08:15:52.367Z",
+  "X-Request-Id": "a02cbb4e-5eb2-4617-8d1f-b56456fc71e2",
+  "X-Server-Processed-At": "2026-09-06T09:02:55.065Z",
   "X-Api-Version": "1"
  },
  "corps": {
   "response_meta": {
-   "request_id_echo": "e7435023-dc6b-4706-aa7b-718dfe8c1a6e",
-   "server_processed_at": "2026-09-04T08:15:52.367Z",
+   "request_id_echo": "a02cbb4e-5eb2-4617-8d1f-b56456fc71e2",
+   "server_processed_at": "2026-09-06T09:02:55.065Z",
    "api_version": 1,
    "correlation_id_echo": null
   },
   "payload": {
    "data": {
-    "building": "bea32c47-e1fd-4385-92c7-3f83eaa16dbb",
+    "building": "111846f8-1aac-4a1c-8b33-ad371ffec44d",
     "block_id": 1,
     "district_id": 1,
     "name_i18n": {
      "key": "game.fiction.building.name",
      "params": {
-      "enseigne": "Transit Marrek",
+      "enseigne": "Colis Kofi",
       "district": "Les Bassins",
       "block": "1"
      }
@@ -63,7 +67,7 @@
     "capacity_band": "NONE",
     "yield_band": "NONE",
     "forfeiture_band": "NONE",
-    "raid_risk": "ELEVATED",
+    "raid_risk": "LOW",
     "lapse_phase_bucket": "WITHIN_WINDOW",
     "days_until_maintenance_due": 30,
     "maintenance_in_progress": false
