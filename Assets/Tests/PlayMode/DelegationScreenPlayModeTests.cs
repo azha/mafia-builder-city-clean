@@ -128,27 +128,35 @@ namespace MafiaCleanCity.Operational.Tests
         //   `Capture<Ecran>` serait emporté par une demande de `Capture` — le piège qui a mordu
         //   trois sessions le 2026-09-02 (`["HUD"]`→`HUDv31`, `["CaptureDetail"]`→
         //   `CaptureDetailMutant`, et ma propre série de noms, refusée par ma propre garde).
-        /// <summary>⛔⛔ CETTE CAPTURE MONTRE LA CHARPENTE, PAS L'ÉCRAN — ET C'EST MESURÉ, pas
-        /// supposé. `MonterEcran()` n'appelle JAMAIS `SetToken` : l'amorce de l'écran sort
-        /// immédiatement (`if (string.IsNullOrEmpty(token)) yield break;`), aucune route n'est
-        /// appelée, aucune donnée n'arrive. La capture rend donc 8 à 9 teintes — sur N'IMPORTE
-        /// QUEL compte, y compris `operational_demo`.
-        /// ⇒ La garde de teintes de B (> 12) rougit ici pour une raison STRUCTURELLE, pas parce
-        ///   que le compte serait vide : changer de compte ne changerait rien.
-        /// ⇒ Mesure qui tranche : les mêmes écrans capturés SOUS LE SHELL, avec jeton et données
-        ///   (`PlancheEcransCapturePlayModeTests`), rendent **591** teintes pour ㉜, **541** pour
-        ///   ㉝ et **765** pour ⑧. L'écart n'est pas un état vide, c'est une absence de montage.
-        /// ⇒ *Deux captures du même écran ne mesurent pas la même chose : celle qui fait foi est
-        ///   celle qui passe par le chemin du joueur.* La planche est l'oracle ; celle-ci ne
-        ///   prouve que la construction de la mise en page.
-        /// ⚠️ Ne PAS la « réparer » en abaissant le seuil de la garde : ce serait relâcher une
-        ///   assertion qui a raison. Soit on lui donne un jeton et elle devient une vraie
-        ///   capture, soit elle sort du périmètre de la garde de teintes. TD-541.</summary>
+        /// <summary>Capture authentifiée du contenu, pas seulement de sa charpente. Avant TD-541,
+        /// `MonterEcran()` ne donnait aucun jeton : l'amorce sortait sans requête et la caméra
+        /// photographiait un fond uniforme. Le test signe désormais avec l'identité de campagne,
+        /// exige un corps et un rendu abouti, puis seulement écrit les PNG. Mesure du correctif :
+        /// 3,252 % et 2,602 % d'encre aux deux résolutions, contre 0,000 % auparavant.</summary>
         [UnityTest, Category("PhotoEcranDelegation")]
         public IEnumerator EcranDelegationC1_CapturerPourLeJugeVisuel_DeuxResolutions()
         {
-            MonterEcran();
+            var auth = new MafiaCleanCity.CityMap.AuthClient { BaseUrl = BaseUrl };
+            string erreurConnexion = null;
+            token = null;
+            var (identifiant, motDePasse) =
+                MafiaCleanCity.Shell.Tests.CaptureSousShell.IdentiteDeCaptureOuEchoue("ecran_delegation");
+            yield return auth.SignIn(identifiant, motDePasse,
+                t => token = t, e => erreurConnexion = e);
+            Assert.IsNull(erreurConnexion, $"connexion au compte de capture échouée : {erreurConnexion}");
+
+            var ecran = MonterEcran();
+            // Laisser Start constater l'absence de jeton, puis déclencher exactement UN chargement.
             yield return null;
+            ecran.SetToken(token);
+            yield return ecran.Charger();
+            yield return null;
+
+            Assert.IsNull(ecran.DerniereErreur,
+                $"la route a échoué (code {ecran.DernierCodeErreur} — {ecran.DerniereErreur}) : " +
+                "la capture montrerait l'état d'indisponibilité, pas la délégation");
+            Assert.IsNotNull(ecran.DernierChargement, "aucun corps reçu — rien à photographier");
+            Assert.Greater(ecran.RendusEffectues, 0, "le corps est arrivé mais aucun rendu n'a abouti");
 
             yield return CapturerA(1080, 1920, "Assets/Screenshots/ecran_delegation_1080x1920.png");
             yield return CapturerA(1080, 2400, "Assets/Screenshots/ecran_delegation_1080x2400.png");

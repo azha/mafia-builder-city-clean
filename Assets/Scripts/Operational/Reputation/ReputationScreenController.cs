@@ -287,16 +287,16 @@ namespace MafiaCleanCity.Operational
         private IEnumerator Amorcer()
         {
             if (string.IsNullOrEmpty(token)) yield break;   // monté hors session : rien à charger
-            if (corpsImposeParUnTest) yield break;          // un test tient l'écran : ne pas l'écraser
+            if (corpsImposeParUnTest || chargementExpliciteDemande) yield break;
             string id = null;
             yield return client.GetPremierLieutenantId(token, v => id = v,
                 code => Debug.LogWarning($"[b3] liste des lieutenants indisponible (HTTP {code}) — "
                                          + "l'écran reste sur son état vide nommé"));
             // ⛔ RELU APRÈS CHAQUE `yield` : le test a pu poser le drapeau pendant l'appel réseau.
             // Ne le lire qu'à l'entrée laisserait passer exactement la course qu'on ferme.
-            if (corpsImposeParUnTest) yield break;
+            if (corpsImposeParUnTest || chargementExpliciteDemande) yield break;
             if (string.IsNullOrEmpty(id)) yield break;
-            yield return Charger(id);
+            yield return ChargerInterne(id, null);
         }
 
         private void EnsureInitialized()
@@ -323,8 +323,20 @@ namespace MafiaCleanCity.Operational
         /// pas 404.</summary>
         public IEnumerator Charger(string lieutenantId, string counterpartyId = null)
         {
+            // Un appel explicite désigne le corps à afficher. Sans cet arbitrage, `Start()` peut
+            // lancer l'amorce au même moment, lire le premier lieutenant puis rendre sa réponse
+            // par-dessus celle demandée par l'appelant. Le défaut dépendait seulement de l'ordre
+            // des réponses réseau : le test 404 devenait vert ou rouge selon l'état du cache i18n.
+            chargementExpliciteDemande = true;
+            if (amorce != null) { StopCoroutine(amorce); amorce = null; }
+            yield return ChargerInterne(lieutenantId, counterpartyId);
+        }
+
+        private IEnumerator ChargerInterne(string lieutenantId, string counterpartyId)
+        {
             EnsureInitialized();
             LieutenantIdCourant = lieutenantId;
+            DernierChargement = null;
             DerniereErreur = null;
             DernierCodeErreur = 0;
 
@@ -418,6 +430,7 @@ namespace MafiaCleanCity.Operational
         /// ⇒ Le drapeau est consulté à CHAQUE reprise d'`Amorcer`, pas seulement à son entrée :
         ///   la coroutine peut être déjà partie quand le test le pose.</summary>
         private bool corpsImposeParUnTest;
+        private bool chargementExpliciteDemande;
         private Coroutine amorce;
         private Coroutine nomEnVol;
 

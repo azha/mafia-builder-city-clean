@@ -135,13 +135,26 @@ namespace MafiaCleanCity.Shell.Tests
             string chemin = SceneUtility.GetScenePathByBuildIndex(0);
             Assert.IsNotEmpty(chemin, "la scène d'index de build 0 n'a pas de chemin");
 
+            var handlesAvant = new HashSet<int>();
+            for (int i = 0; i < SceneManager.sceneCount; i++)
+                handlesAvant.Add(SceneManager.GetSceneAt(i).handle);
+
             AsyncOperation chargement = SceneManager.LoadSceneAsync(0, LoadSceneMode.Additive);
             Assert.IsNotNull(chargement, "LoadSceneAsync(0) a refusé l'index de build 0");
             while (!chargement.isDone) yield return null;
 
-            sceneDeDemarrage = SceneManager.GetSceneByBuildIndex(0);
+            sceneDeDemarrage = default;
+            for (int i = 0; i < SceneManager.sceneCount; i++)
+            {
+                Scene candidate = SceneManager.GetSceneAt(i);
+                if (candidate.path == chemin && !handlesAvant.Contains(candidate.handle))
+                {
+                    sceneDeDemarrage = candidate;
+                    break;
+                }
+            }
             Assert.IsTrue(sceneDeDemarrage.IsValid() && sceneDeDemarrage.isLoaded,
-                "la scène d'index de build 0 n'est pas chargée");
+                "la NOUVELLE instance de la scène d'index 0 n'est pas identifiable après chargement");
             Assert.AreEqual(chemin, sceneDeDemarrage.path,
                 "la scène chargée n'est pas celle de l'index de build 0");
 
