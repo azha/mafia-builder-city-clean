@@ -2187,17 +2187,78 @@ namespace MafiaCleanCity.CityMap
         // DistrictMapNavigation.cs (même assembly CityMap) puisse re-snapper le pan à l'échelle de
         // référence après chaque déplacement, plutôt que de dupliquer ce mécanisme (R9.3, généralisé
         // à "un mécanisme se réutilise, jamais ne se recopie"). Comportement INCHANGÉ.
+        // ⛔⛔⛔ CETTE FONCTION ARRONDISSAIT UNE POSITION **MONDE** EN CROYANT ARRONDIR DES PIXELS
+        //    D'ÉCRAN — corrigé le 2026-09-07. Sa justesse reposait sur une prémisse ÉCRITE juste
+        //    au-dessus : « Canvas ScreenSpaceOverlay ⇒ `position` coïncide avec les coordonnées
+        //    écran ». Vraie en Overlay, où 1 unité ≈ 1 px. **Fausse pendant une CAPTURE**, où le
+        //    canvas bascule en `ScreenSpaceCamera` et où 1 unité vaut ~192 px : le même
+        //    `Mathf.Round` quantifie alors sur une grille de 192.
+        //    ⇒ MESURÉ sur 11 badges de district (TD-684) : déplacement médian **59 à 80 px**, max
+        //      99 à 109, et **4 à 6 badges sur 11 finissent à plus d'une demi-largeur de bâtiment**
+        //      de leur position vraie. Le modèle de grille est confirmé en x (`540 + wx·192`,
+        //      5/5 des abscisses reproduites) — ce n'est pas une hypothèse.
+        // ⇒ *Le nom disait « pixel d'écran » et le code lisait des unités de monde.* Un nom qui
+        //   décrit l'INTENTION pendant que le code lit une AUTRE grandeur est le pire des deux :
+        //   un lecteur vérifie que l'arrondi existe, le trouve, et conclut que c'est le bon.
+        //
+        // ⇒ LE CORRECTIF FAIT CE QUE LE NOM DIT, DANS LES DEUX MODES, plutôt que de borner le
+        //   dégât à l'Overlay : on passe explicitement par l'espace ÉCRAN (`WorldToScreenPoint`),
+        //   on y arrondit, et on revient en local par `ScreenPointToLocalPointInRectangle` —
+        //   c'est-à-dire par la conversion inverse EXACTE, jamais par un ratio recalculé.
+        //   *Une grandeur qui existe comme OBJET se mesure sur l'objet* : la caméra du canvas est
+        //   lue sur le canvas, pas supposée.
+        // ⚠️ CE QUE CE CORRECTIF NE FERME PAS, et il faut le dire : il rend l'arrondi juste **pour
+        //    le mode actif AU MOMENT DE L'APPEL**. Si un appelant snappe en Overlay puis bascule en
+        //    caméra pour capturer, l'arrondi reste celui de l'ancien mode — exactement comme avant.
+        //    C'est pour ça que `DistrictMapNavigation` re-snappe après chaque pan, et c'est le même
+        //    remède ici : re-snapper après une bascule, pas se fier au premier calcul.
+        // ⚠️ TROIS OBJETS, CINQ SITES, TRAITEMENT UNIFORME — vérifié avant d'écrire : `fondRt`
+        //    (:493), `cellRt` (:767) et `sceneRt` (nav :154/:171/:196). Aucun n'envoie une grandeur
+        //    d'une autre nature, donc un correctif dans la fonction les couvre tous les cinq.
+        //    *Quand une fonction devient générale, ses gardes restent celles du premier usage* —
+        //    ici elles étaient celles de l'Overlay, et trois appelants sur cinq n'y sont pas.
         internal static void SnapToScreenPixel(RectTransform rt)
         {
-            Vector3 pos = rt.position;
-            Vector3 snapped = new Vector3(Mathf.Round(pos.x), Mathf.Round(pos.y), pos.z);
-            if (snapped == pos) return;
-            Vector3 lossyScale = rt.lossyScale;
-            Vector3 deltaWorld = snapped - pos;
-            Vector2 localDelta = new Vector2(
-                Mathf.Abs(lossyScale.x) > 1e-6f ? deltaWorld.x / lossyScale.x : 0f,
-                Mathf.Abs(lossyScale.y) > 1e-6f ? deltaWorld.y / lossyScale.y : 0f);
-            rt.anchoredPosition += localDelta;
+            RectTransform parent = rt.parent as RectTransform;
+            if (parent == null) return;
+            Canvas canvas = rt.GetComponentInParent<Canvas>();
+            // ⚠️ `null` EST la valeur juste en Overlay — `WorldToScreenPoint` l'exige, et lui passer
+            //    une caméra là-bas rendrait un point faux sans le moindre avertissement.
+            Camera cam = (canvas != null && canvas.renderMode != RenderMode.ScreenSpaceOverlay)
+                ? canvas.worldCamera : null;
+
+            Vector2 ecran = RectTransformUtility.WorldToScreenPoint(cam, rt.position);
+            Vector2 vise = new Vector2(Mathf.Round(ecran.x), Mathf.Round(ecran.y));
+            if (vise == ecran) return;
+
+            // Le retour en local passe par la conversion INVERSE exacte, appliquée aux DEUX points :
+            // leur différence est le delta local cherché, sans aucun ratio recalculé.
+            Vector2 localAvant, localApres;
+            if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(parent, ecran, cam, out localAvant)) return;
+            if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(parent, vise, cam, out localApres)) return;
+
+            // ⛔ LE CONTRÔLE QUI PROUVE LE CORRECTIF, DANS LE MÊME APPEL — pas deux runs, pas une
+            //    capture « qui a l'air mieux ». *Une amélioration visible n'atteste pas du
+            //    correctif qu'on vient d'écrire* : ce dépôt a payé un espacement corrigé dans le
+            //    mauvais conteneur, remesuré INCHANGÉ par le juge suivant.
+            // ⇒ On calcule ce que l'ANCIEN code aurait posé (arrondi de la position MONDE) et on
+            //   convertit son résultat en pixels d'ÉCRAN : la différence EST le déplacement que le
+            //   défaut introduisait. Les deux nombres viennent de la même passe, du même objet, à
+            //   la même frame — une seule variable, aucune capture à comparer.
+            Vector3 posMonde = rt.position;
+            Vector2 ecranAncien = RectTransformUtility.WorldToScreenPoint(
+                cam, new Vector3(Mathf.Round(posMonde.x), Mathf.Round(posMonde.y), posMonde.z));
+            // ⚠️ SILENCIEUX QUAND LE DÉFAUT NE MORD PAS : `DistrictMapNavigation` re-snappe à
+            //    chaque pan, et journaliser en Overlay noierait le signal sous le bruit du jeu.
+            //    Le journal ne parle que là où l'ancien code aurait déplacé de plus d'un pixel —
+            //    c'est-à-dire exactement là où il fallait le voir, et nulle part ailleurs.
+            if ((ecranAncien - ecran).magnitude > 1f)
+            Debug.Log($"[SNAP-ECRAN] {rt.name} · mode {(cam == null ? "Overlay" : "Camera")}"
+                      + $" · écran ({ecran.x:F2},{ecran.y:F2}) → ({vise.x:F0},{vise.y:F0})"
+                      + $" · déplacement CORRIGÉ {(vise - ecran).magnitude:F2} px"
+                      + $" · déplacement de l'ANCIEN code {(ecranAncien - ecran).magnitude:F2} px");
+
+            rt.anchoredPosition += (localApres - localAvant);
         }
     }
 

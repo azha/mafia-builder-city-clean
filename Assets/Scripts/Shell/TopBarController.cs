@@ -176,11 +176,44 @@ namespace MafiaCleanCity.Shell
                 Canvas canvasParent = GetComponentInParent<Canvas>();
                 float scaleFactor = (canvasParent != null && canvasParent.scaleFactor > 0.0001f)
                     ? canvasParent.scaleFactor : 1f;   // anti-vacuité : jamais une division par 0
-                float echelle = transform.lossyScale.y / scaleFactor;
+
+                // ⛔⛔⛔ `k` SE LIT SUR LE NŒUD QUI LE PORTE — corrigé le 2026-09-07, TD-659.
+                // `lossyScale` est le PRODUIT des échelles de tous les ancêtres, donc il vaut ce
+                // que vaut la chaîne AU MOMENT OÙ ON LE LIT — et à la republication elle n'est pas
+                // encore appliquée. Mesuré sur trois passes du même écran, géométrie identique
+                // (`debordLocal` constant à 32,21 partout) :
+                //     lossyScale 1,633 · scaleFactor 0,500 ⇒ échelle 3,265 ⇒ sortie 105,17
+                //     lossyScale 0,011 · scaleFactor 0,844 ⇒ échelle 0,014 ⇒ sortie   0,44
+                //     lossyScale 0,014 · scaleFactor 0,844 ⇒ échelle 0,017 ⇒ sortie   0,55
+                // **Un facteur 148 sur une géométrie qui n'a pas bougé.** Et ce sont les passes
+                // suivantes qui gouvernent ce que le locataire lit : l'inset publié perdait tout
+                // son débord après le premier montage, sur TOUS les écrans.
+                // ⇒ CE QUE ÇA A COÛTÉ, mesuré sur la planche de ㊲ à 1080×1920 : le losange du
+                //   médaillon — canonique, relevé sur la référence du HUD, signalé ABSENT par deux
+                //   juges — atterrit à y 215..235, soit **49 px SOUS le filet haut du cadre**, sur
+                //   le mot « miroir ». L'écran ne lui réserve rien parce que la barre publie 0,44
+                //   au lieu de 105,17. *Le losange n'est pas mal placé : sa place n'est pas
+                //   réservée.*
+                // ⇒ `TopBarEchelle.localScale` est POSÉ par `AppShell` (`localScale = (k,k,1)`,
+                //   `k = Px(1f)`) : c'est une valeur ÉCRITE, pas une valeur dérivée d'une passe de
+                //   layout, donc elle ne peut pas s'effondrer. C'est la même règle que
+                //   « une grandeur qui existe comme OBJET se MESURE sur l'objet » — appliquée cette
+                //   fois au nœud qui PORTE l'échelle, pas au produit qui la traverse.
+                // ⚠️ LE RÉGIME EST DÉCLARÉ dans le journal : un dispositif conditionnel qui ne dit
+                //    pas s'il s'est appliqué ressemble trait pour trait à un dispositif inerte. Le
+                //    repli existe pour les hiérarchies de test qui n'ont pas de nœud d'échelle.
+                Transform noeudEchelle = transform.parent;
+                bool surLeNoeud = noeudEchelle != null
+                                  && noeudEchelle.name == "TopBarEchelle"
+                                  && noeudEchelle.localScale.y > 0.0001f;
+                float echelle = surLeNoeud
+                    ? noeudEchelle.localScale.y
+                    : transform.lossyScale.y / scaleFactor;
                 if (echelle <= 0.0001f) echelle = 1f;   // anti-vacuité : jamais une division/produit par 0
                 Debug.Log($"[DEBORD-BANDEAU] barre.yMin {selfRt.rect.yMin:F2} · mano.min.y "
                           + $"{manoBottomY:F2} · debordLocal(MAQUETTE) {debordLocal:F2} · lossyScale "
-                          + $"{transform.lossyScale.y:F3} · scaleFactor {scaleFactor:F3} · échelle "
+                          + $"{transform.lossyScale.y:F3} · scaleFactor {scaleFactor:F3} · régime "
+                          + $"{(surLeNoeud ? "NOEUD" : "repli lossyScale")} · échelle "
                           + $"{echelle:F3} ⇒ sortie(CANVAS) {(debordLocal * echelle):F2}");
                 return debordLocal * echelle;
             }

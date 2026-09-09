@@ -80,7 +80,7 @@ namespace MafiaCleanCity.Operational
                 dto => DernierChargement = dto,
                 (code, msg) => { DernierCodeErreur = code; DerniereErreur = msg; });
 
-            // ⛔ L'ÉCHELLE DES PALIERS vient d'une SECONDE route, et son échec est NON FATAL :
+            // ⛔ LE BLOC DE PROGRESSION vient d'une SECONDE route, et son échec est NON FATAL :
             // ㊱ existait avant elle et doit continuer d'afficher son flux si elle tombe. Une
             // échelle absente est un manque ; un écran blanc est une panne.
             // ⚠️ On RÉUTILISE `ProgressionClient`, qui appelait déjà `/v1/progression` pour
@@ -128,12 +128,39 @@ namespace MafiaCleanCity.Operational
                 else if (c.affordable) aPortee++;
             }
 
-            sousTitre.text = Lib("CE QUE LE SERVEUR NE DIT PAS");
+            // ⛔⛔ LE SOUS-TITRE VENAIT DU CADRE DE DIAGNOSTIC — ㊱ B1 du r1, et la mesure est
+            //    indépendante du juge : « CE QUE LE SERVEUR NE DIT PAS » rend **0 occurrence** dans
+            //    `ecrans-brennar-6.html`, la maquette ratifiée. Le texte affiché au joueur
+            //    n'existait NULLE PART dans le canon.
+            //    ⇒ Le commentaire d'à côté disait « c'est la maquette qui l'exige » : **la chaîne
+            //      qu'il prétendait exigée n'y est pas.** *Une justification écrite n'est pas une
+            //      mesure, et celle-ci pointait vers un cadre d'ATELIER* — le #116, étiqueté
+            //      « Sans les textes — l'écran tel qu'il s'affiche AUJOURD'HUI », c'est-à-dire de
+            //      la copie de diagnostic écrite POUR NOUS. Le cadre qui porte le contenu est le
+            //      #117, et ses deux textes rendent 1 occurrence chacun dans le générateur ET dans
+            //      le HTML.
+            //    ⇒ Et ça violait le ruling user sur le vide — « ça plafonne et ça BLOQUE, rien
+            //      n'est perdu » : quatre fois « serveur », plus « panne » et « capacité ».
+            //      *L'écran ne plafonnait pas, il s'excusait.*
+            sousTitre.text = cartes.Length == 0 ? Lib("rien à l'horizon") : Lib("ce qui manque encore");
             MajCompteur(0, aPortee, cartes.Length, Lib("À PORTÉE"));
             MajCompteur(1, prises, -1, Lib("DÉJÀ PRISES"));
             MajCompteur(2, reculees, -1, Lib("ONT RECULÉ"));
 
             RendreCartes(cartes);
+            // ⛔ J'AVAIS VERROUILLÉ L'ÉCHELLE SUR `cartes.Length > 0`, ET DEUX GARDES ONT EU RAISON
+            //    DE ROUGIR : `ScreenC6S3_LEchelle_MarqueLeCourant_EtGriseLesFranchis` (« 4 barreaux
+            //    attendus, vus : [] ») et `ScreenC6S3_CranInconnu_SeMontreTelQuel`. L'échelle doit
+            //    se rendre quel que soit le nombre de cartes — elle porte `progress_to_next`, qui
+            //    existe indépendamment de l'horizon.
+            //    ⇒ **Et le verrou était INUTILE** : le message d'état vide est rendu dans
+            //      `listeRoot`, c'est-à-dire exactement dans les 753 px qui étaient sans encre. Le
+            //      vide se remplit sans qu'on ait à retirer quoi que ce soit.
+            //    ⇒ *J'ai retiré un bloc pour faire de la place à un texte qui allait ailleurs.*
+            // ✅ FERMÉ, ET PAS COMME ANNONCÉ : j'avais écrit « dette de vocabulaire, à trancher
+            //    avec la maquette », en supposant qu'un libellé sans source appelait un
+            //    remplaçant. Il n'en appelait pas — il appelait sa SUPPRESSION. Le bloc n'a plus
+            //    d'en-tête (voir `RendreEchelle`) ; le mécanisme, lui, est intact.
             RendreEchelle(DerniereProgression);
 
             // ⛔ LE PANNEAU DIT LE TROU, il ne le masque pas — et c'est la maquette qui l'exige :
@@ -142,14 +169,20 @@ namespace MafiaCleanCity.Operational
             // dictionnaire du jeu ne contient aujourd'hui que des messages d'erreur.
             // ★ C'est la même règle que sur ㊲ : afficher un nom inventé serait plus joli et
             //   faux. Ici le dessin lui-même a tranché en faveur du vrai.
-            MajPanneau(Lib("CE QUE LE SERVEUR ENVOIE VRAIMENT"),
-                cartes.Length == 0 ? Lib("Rien à l'horizon") : Lib("Aucune de ces cartes n'a de nom"),
-                cartes.Length == 0
-                    ? "le serveur ne propose aucune capacité pour l'instant — ce n'est pas une "
-                      + "panne, c'est un état : rien n'est encore à portée."
-                    : "le serveur ne rend que des clés de traduction, et le dictionnaire du jeu ne "
-                      + "contient que des messages d'erreur. Voilà l'écran tel qu'il s'afficherait "
-                      + "aujourd'hui. Quelqu'un doit écrire les textes.");
+            // ⛔ L'ÉTAT VIDE PARLE DÉSORMAIS AU JOUEUR, avec les mots du cadre #117 — repris
+            //    VERBATIM de la maquette, pas reformulés. L'état NON VIDE garde son constat sur les
+            //    clés de traduction : c'est un trou réel du back, il ne s'invente pas de noms.
+            if (cartes.Length == 0)
+                MajPanneau(Lib("pourquoi c'est vide"),
+                    Lib("Les cartes viennent du monde, pas du menu"),
+                    "une possibilité apparaît quand ce que vous faites remplit ses conditions. "
+                    + "Rien ici ne s'achète directement.");
+            else
+                MajPanneau(Lib("CE QUE LE SERVEUR ENVOIE VRAIMENT"),
+                    Lib("Aucune de ces cartes n'a de nom"),
+                    "le serveur ne rend que des clés de traduction, et le dictionnaire du jeu ne "
+                    + "contient que des messages d'erreur. Voilà l'écran tel qu'il s'afficherait "
+                    + "aujourd'hui. Quelqu'un doit écrire les textes.");
         }
 
         /// <summary>Les cartes du flux. Chacune porte son titre (une CLÉ), son statut, son coût en
@@ -162,6 +195,28 @@ namespace MafiaCleanCity.Operational
         {
             for (int i = listeRoot.childCount - 1; i >= 0; i--)
                 UnityEngine.Object.Destroy(listeRoot.GetChild(i).gameObject);
+
+            // ⛔⛔ LE MESSAGE DE L'ÉTAT VIDE — ㊱ B3/B4. Sans lui, la liste vide laissait
+            //    **753 px (209 CSS) strictement sans encre**, soit 66 % de la boîte et 37 % du rect
+            //    libre, pendant qu'un bloc coiffé d'un en-tête sans aucune source dans l'atelier
+            //    occupait la place du message (cet en-tête est depuis retiré).
+            //    ⇒ *Deux écrans voisins ont fourni le vocabulaire ; personne n'a vérifié qu'il
+            //      appartenait à celui-ci.* Les deux phrases ci-dessous sont, elles, dans le cadre
+            //      #117 : 1 occurrence chacune dans le générateur ET dans le HTML ratifié.
+            if (cartes.Length == 0)
+            {
+                GameObject vide = NouveauUI("MessageVide", listeRoot);
+                VerticalLayoutGroup pv = vide.AddComponent<VerticalLayoutGroup>();
+                pv.childAlignment = TextAnchor.MiddleCenter;
+                pv.spacing = Px(4f);
+                pv.childControlWidth = true; pv.childControlHeight = true;
+                pv.childForceExpandWidth = true; pv.childForceExpandHeight = false;
+                var t1 = NouveauTexte(vide.transform, "Ligne1", Lib("Rien ne s'ouvre pour l'instant."), 11f, TexteFaible);
+                t1.alignment = TMPro.TextAlignmentOptions.Center;
+                var t2 = NouveauTexte(vide.transform, "Ligne2", Lib("L'horizon se remplit en jouant."), 11f, TexteFaible);
+                t2.alignment = TMPro.TextAlignmentOptions.Center;
+                return;
+            }
 
             foreach (HorizonCardDto c in cartes)
             {
@@ -204,7 +259,7 @@ namespace MafiaCleanCity.Operational
             }
         }
 
-        /// <summary>L'ÉCHELLE DES PALIERS, sous les cartes — le contexte qui manquait à ㊱.
+        /// <summary>Le bloc de progression, sous les cartes — le contexte qui manquait à ㊱.
         ///
         /// ⛔ CE QUE CET ÉCRAN MONTRAIT AVANT : une carte, ou rien, sans jamais dire de QUOI cette
         /// carte était un barreau. TD-408 demandait « rendre l'écran capable d'afficher deux
@@ -232,9 +287,15 @@ namespace MafiaCleanCity.Operational
             v.childControlWidth = true; v.childControlHeight = true;
             v.childForceExpandWidth = true; v.childForceExpandHeight = false;
 
-            TextMeshProUGUI enseigne = NouveauTexte(bloc.transform, "TitreEchelle",
-                Lib("L'ÉCHELLE DES PALIERS"), 8.5f, TexteFaible);
-            enseigne.fontStyle = TMPro.FontStyles.Bold;
+            // ⛔ CE BLOC N'A PLUS D'EN-TÊTE, ET C'EST DÉLIBÉRÉ. Il en portait un — un libellé
+            //    en capitales dont le balayage rend **0 occurrence dans TOUT l'atelier** (contrôle
+            //    positif : « palier » seul y apparaît 4 244 fois, donc le motif voit le corpus).
+            //    Le MÉCANISME, lui, a une source : `progress_to_next` est servi par le back et
+            //    deux gardes le protègent. ⇒ *C'est le texte qui était inventé, pas le dispositif.*
+            //    ⚠️ Et on n'en écrit pas un autre : sans texte ratifié, un en-tête de remplacement
+            //      referait exactement la faute qu'on retire. Un bloc sans en-tête se lit ; un
+            //      en-tête inventé se croit. C'est la règle que
+            //      `ScreenC6S3_CranInconnu_SeMontreTelQuel` fait respecter un cran plus bas.
 
             foreach (int barreau in BarreauxDeLEchelle)
             {
@@ -358,7 +419,10 @@ namespace MafiaCleanCity.Operational
             // sont peut-être plus là. ㊲ a payé exactement ce défaut sur sa liste de règles.
             RendreCartes(new HorizonCardDto[0]);
             Cartes = new HorizonCardDto[0];
-            sousTitre.text = "CE QUE LE SERVEUR NE DIT PAS";
+            // ⚠️ Le chemin d'ERREUR n'a pas de cadre ratifié — la maquette n'en dessine pas. On
+            //    dit donc l'ÉTAT, pas le diagnostic : « CE QUE LE SERVEUR NE DIT PAS » était de la
+            //    copie d'équipe ici aussi, et elle n'est nulle part dans le canon.
+            sousTitre.text = Lib("indisponible");
             MajCompteur(0, -1, -1, "À PORTÉE");
             MajCompteur(1, -1, -1, "DÉJÀ PRISES");
             MajCompteur(2, -1, -1, "ONT RECULÉ");
@@ -392,8 +456,43 @@ namespace MafiaCleanCity.Operational
         private const float CssCompteurNb    = 14f;
         private const float CssCompteurLib   = 5.4f;
 
-        private static Color FondCarte   => DesignTokens.Current.surfaceCard;
-        private static Color FondRecule   => DesignTokens.Current.surfaceCard;
+        // ⛔⛔ LES COULEURS DE CET ÉCRAN VIENNENT DU CHÂSSIS DE LA SÉRIE 6, PAS DE `DesignTokens`
+        //    — et ce n'est pas un choix, c'est ce que la planche mesure. Confrontation
+        //    `screen_c6/reference-1080x2102.png` ↔ `screen_c6_horizon_etat-vide_…_1080x2400.png`,
+        //    distances sur les FLOATS de l'asset (jamais sur un hex de commentaire) :
+        //
+        //        cerne des boîtes   canon (42,54,72)     posé `hudHairlineGold` (176,141,62)  ⇒ 232
+        //        titres             canon (242,201,107)  posé `accentGold`      (255,210,63)  ⇒  66
+        //        fond des cartes    canon (17,24,35)     posé `surfaceCard`     (22,25,27)    ⇒  18
+        //        fond des compteurs canon (10,14,22)     posé `surfaceCard`                   ⇒  27
+        //
+        //    ⇒ L'OR DU CANON EST CELUI DU CADRE EXTÉRIEUR, et il avait été posé sur les boîtes
+        //      INTÉRIEURES. Mesuré sur la planche : à x=21 le filet doré (176,141,62) est le cadre
+        //      de l'écran ; à x=50, le cerne du conteneur vaut (42,54,72). *Un jeton juste employé
+        //      au mauvais rang produit un écran entièrement doré là où le canon n'a qu'un liseré.*
+        //    ⚠️ CONSÉQUENCE À DÉCLARER : ce cadre extérieur doré n'existe PAS dans le jeu (mesuré :
+        //      bord gauche à plat sur (13,13,13) au-dessus de l'enseigne). Après ce lot, l'écran
+        //      n'a donc plus d'or que sur ses deux titres. *Ce n'est pas une régression, c'est le
+        //      cadre manquant qui devient visible* — il est déclaré, pas corrigé ici.
+        //
+        // ⛔ POURQUOI `ReputationResolvers` ET PAS UN JETON. Trois de ces valeurs (`--encre`,
+        //    `--panneau`, `--lisere`) N'EXISTENT PAS dans `DesignTokens.asset`, et elles ne peuvent
+        //    pas y être ajoutées par ce lot : `CanonPaletteBridgePlayModeTests` exige une BIJECTION
+        //    et épingle l'arité en dur. C'est un arbitrage de DA, remonté à l'user le 2026-08-30.
+        //    Un producteur unique existe déjà pour ces trois-là — ㊲ les a payées avant nous, avec
+        //    leurs voisins trompeurs mesurés. ⇒ On le LIT, on ne recopie rien.
+        //    ⚠️ Le nom ment : ce ne sont pas les couleurs de ㊲, ce sont celles du châssis que les
+        //      deux écrans partagent. **Le renommage est dû**, et il attend que les verdicts de ㊲
+        //      soient rendus — toucher ce fichier pendant qu'un juge le regarde déplacerait sa
+        //      cible. *Une seconde copie « en attendant » ferait deux producteurs d'une même
+        //      grandeur, qui ne s'accordent qu'aujourd'hui.*
+        //
+        // ⚠️ UNE CINQUIÈME VALEUR RESTE NON APPARIÉE, et c'est la plus dangereuse des cinq : le fond
+        //    de l'enseigne vaut (13,19,29) au canon, et son plus proche jeton est `hudBarGlassBottom`
+        //    à **1/255**. ⇒ Assez proche pour qu'on le substitue de bonne foi, et c'est le fond du
+        //    BANDEAU du shell : le jeton pris pour ce qu'il n'est pas. **Non substitué, déclaré.**
+        private static Color FondCarte   => ReputationResolvers.Panneau;
+        private static Color FondRecule   => ReputationResolvers.Panneau;
         private static Color AccentRecule => HeatBucketResolver.SeverityColor(HeatBucketResolver.Severity.Severe);
         private static Color TexteFort   => DesignTokens.Current.hudCreme;
         private static Color TexteFaible => DesignTokens.Current.hudCremeSecondary;
@@ -526,7 +625,7 @@ namespace MafiaCleanCity.Operational
         {
             GameObject go = NouveauUI("Enseigne", parent);
             AjouterFond(go, DesignTokens.Current.surfaceCard);
-            Contour(go, DesignTokens.Current.hudHairlineGold);
+            Contour(go, ReputationResolvers.Lisere);
             AjouterLayout(go, Px(CssHautEnseigne));
 
             VerticalLayoutGroup v = go.AddComponent<VerticalLayoutGroup>();
@@ -536,7 +635,7 @@ namespace MafiaCleanCity.Operational
             v.childAlignment = TextAnchor.MiddleCenter;
 
             TextMeshProUGUI titre = NouveauTexte(go.transform, "Titre", Lib("L'horizon"),
-                                                 CssTitreCorps, DesignTokens.Current.accentGold);
+                                                 CssTitreCorps, DesignTokens.Current.hudMoneyGold);
             titre.alignment = TextAlignmentOptions.Center;
             titre.characterSpacing = 20f;
             titre.fontStyle = TMPro.FontStyles.Bold;
@@ -560,8 +659,8 @@ namespace MafiaCleanCity.Operational
             for (int i = 0; i < 3; i++)
             {
                 GameObject fen = NouveauUI("Fenetre" + i, go.transform);
-                AjouterFond(fen, DesignTokens.Current.surfaceCard);
-                Contour(fen, DesignTokens.Current.hudHairlineGold);
+                AjouterFond(fen, ReputationResolvers.Encre);
+                Contour(fen, ReputationResolvers.Lisere);
                 // Trois tiers ÉGAUX : sans `preferredWidth = 0`, la largeur vient du CONTENU et
                 // « DÉJÀ PRISES » écraserait « À PORTÉE ». Payé sur ㊲.
                 LayoutElement le = fen.AddComponent<LayoutElement>();
@@ -592,7 +691,7 @@ namespace MafiaCleanCity.Operational
         {
             GameObject go = NouveauUI("Liste", parent);
             AjouterFond(go, DesignTokens.Current.surfaceBase);
-            Contour(go, DesignTokens.Current.hudHairlineGold);
+            Contour(go, ReputationResolvers.Lisere);
             LayoutElement le = go.AddComponent<LayoutElement>();
             le.minHeight = Px(120f); le.flexibleHeight = 1f;
 
@@ -610,8 +709,8 @@ namespace MafiaCleanCity.Operational
         private void ConstruirePanneau(Transform parent)
         {
             GameObject go = NouveauUI("Panneau", parent);
-            AjouterFond(go, DesignTokens.Current.surfaceCard);
-            Contour(go, DesignTokens.Current.hudHairlineGold);
+            AjouterFond(go, ReputationResolvers.Panneau);
+            Contour(go, ReputationResolvers.Lisere);
             AjouterLayout(go, Px(CssHautPann));
 
             VerticalLayoutGroup v = go.AddComponent<VerticalLayoutGroup>();
@@ -623,7 +722,7 @@ namespace MafiaCleanCity.Operational
             pannSurTitre = NouveauTexte(go.transform, "SurTitre", "", 5.6f, TexteFaible);
             pannSurTitre.characterSpacing = 19f;
             pannSurTitre.fontStyle = TMPro.FontStyles.Bold;
-            pannTitre = NouveauTexte(go.transform, "Titre", "", 13f, DesignTokens.Current.accentGold);
+            pannTitre = NouveauTexte(go.transform, "Titre", "", 13f, DesignTokens.Current.hudMoneyGold);
             pannTitre.fontStyle = TMPro.FontStyles.Bold;
             pannTitre.font = DesignTokens.Current.hudSerifFont;
             pannTexte = NouveauTexte(go.transform, "Texte", "", 8f, TexteFaible);

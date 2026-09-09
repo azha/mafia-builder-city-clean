@@ -100,14 +100,58 @@ namespace MafiaCleanCity.Shell.Tests
         /// &lt;AppShell&gt;()` nu répondrait « oui » pour un shell construit par un test, pour un objet
         /// `DontDestroyOnLoad`, ou pour n'importe quelle scène additive — c'est-à-dire pour tout SAUF
         /// la propriété qu'on mesure.</summary>
+        /// ⛔⛔ CETTE SONDE FUSIONNAIT DEUX CAUSES SOUS UN SEUL VERDICT — TD-682, 2026-09-07.
+        /// Elle rend `null` aussi bien quand la scène est INUTILISABLE que quand elle ne PORTE PAS
+        /// de shell, et l'assertion appelante attribue ce `null` à la seconde : « aucun AppShell
+        /// dans la scène de démarrage du build ». **Dix-sept gardes de charpente rougissent sur ce
+        /// message, et la mesure INNOCENTE la scène** — le journal montre `AppShell:Start()` →
+        /// `EnsureInitialized()` → `BuildLayout()` → `TopBarController:Awake()`, le chrome
+        /// entièrement construit, `Boot.unity` propre, une seule classe `AppShell`, zéro
+        /// `DontDestroyOnLoad`.
+        /// ⇒ *Un message d'échec qui fusionne deux causes envoie l'enquête dans une seule
+        ///   direction, et celle qu'il nomme est fausse dans un cas sur deux.* Le premier geste
+        ///   n'est donc pas d'ouvrir la scène : c'est de SÉPARER LES DEUX VERDICTS.
+        /// ⚠️ Et le contrôle positif de cette sonde rougit AVEC elle (« la sonde ne trouve pas le
+        ///   shell là où il est ») : *quand un instrument ET son contrôle tombent ensemble, c'est
+        ///   le monde du run qui est faux, pas la cible.* D'où le journal ci-dessous — il imprime
+        ///   ce que la sonde A VU, pas ce qu'on suppose qu'elle voit.
+        private static string diagnosticSonde;
+
+        /// <summary>L'INSTRUMENT, et il est scopé à UNE scène par construction. Un `FindFirstObjectByType
+        /// &lt;AppShell&gt;()` nu répondrait « oui » pour un shell construit par un test, pour un objet
+        /// `DontDestroyOnLoad`, ou pour n'importe quelle scène additive — c'est-à-dire pour tout SAUF
+        /// la propriété qu'on mesure.</summary>
         private static AppShell SondeShellDansLaScene(Scene scene)
         {
-            if (!scene.IsValid() || !scene.isLoaded) return null;
-            foreach (GameObject racine in scene.GetRootGameObjects())
+            if (!scene.IsValid() || !scene.isLoaded)
+            {
+                diagnosticSonde = $"la scène est INUTILISABLE (IsValid={scene.IsValid()}, "
+                                + $"isLoaded={scene.isLoaded}) — ce n'est PAS « pas d'AppShell »";
+                Debug.Log($"[SONDE-SHELL] {diagnosticSonde}");
+                return null;
+            }
+            GameObject[] racines = scene.GetRootGameObjects();
+            foreach (GameObject racine in racines)
             {
                 AppShell trouve = racine.GetComponentInChildren<AppShell>(true);
-                if (trouve != null) return trouve;
+                if (trouve != null)
+                {
+                    diagnosticSonde = null;
+                    return trouve;
+                }
             }
+            // ⚠️ LE SECOND VERDICT, et il porte ses FAITS : combien de racines, lesquelles, et si
+            //    un `AppShell` existe AILLEURS dans le processus. Ce dernier point départage
+            //    « la scène n'en a pas » de « il y en a un, mais pas dans cette scène-ci » — deux
+            //    mondes que le message d'origine confondait aussi.
+            var noms = new System.Text.StringBuilder();
+            for (int i = 0; i < racines.Length && i < 12; i++)
+                noms.Append(i == 0 ? "" : ", ").Append(racines[i].name);
+            AppShell ailleurs = UnityEngine.Object.FindFirstObjectByType<AppShell>(FindObjectsInactive.Include);
+            diagnosticSonde = $"scène chargée ({scene.path}) mais AUCUN AppShell parmi ses "
+                            + $"{racines.Length} racine(s) [{noms}] · un AppShell existe ailleurs "
+                            + $"dans le processus : {(ailleurs != null ? "OUI, scène « " + ailleurs.gameObject.scene.path + " »" : "NON")}";
+            Debug.Log($"[SONDE-SHELL] {diagnosticSonde}");
             return null;
         }
 
@@ -155,7 +199,7 @@ namespace MafiaCleanCity.Shell.Tests
 
             AppShell shell = SondeShellDansLaScene(sceneDeDemarrage);
             Assert.IsNotNull(shell,
-                $"aucun AppShell dans la scène de démarrage du build ({sceneDeDemarrage.path}) — " +
+                $"la sonde n'a pas rendu de shell — DIAGNOSTIC : {diagnosticSonde}\n" +
                 "les 24 montages d'Assets/Tests prouvent que le shell marche, jamais qu'un joueur le rencontre.");
 
             // Le shell trouvé APPARTIENT à la scène du build. C'est cette égalité, et elle seule, qui
@@ -391,6 +435,85 @@ namespace MafiaCleanCity.Shell.Tests
         // exige l'ÉGALITÉ : aucune valeur exprimée en pixels d'écran ne peut la satisfaire, quel que
         // soit le nombre mesuré à la première lecture.
         // ─────────────────────────────────────────────────────────────────────────────────────────
+        /// <summary>⛔⛔⛔ LE DÉBORD DOIT SURVIVRE À UNE REPUBLICATION — et la garde d'à côté ne le
+        /// voyait pas, parce qu'elle ne LIT QU'UNE FOIS.
+        ///
+        /// MESURÉ le 2026-09-07 en instrumentant le getter : sur cinq publications d'un même run,
+        ///     `debordLocal` (MAQUETTE) = **32,21 aux cinq**, `barre.yMin` et `mano.min.y`
+        ///     identiques — la géométrie ne bouge pas d'un centième ;
+        ///     `lossyScale` = **1,633** à la première, **0,011** aux suivantes — facteur 148 ;
+        ///     sortie = **105,17** puis **0,44**.
+        /// ⇒ Le débord n'est pas mal MESURÉ : il est bien mesuré, puis multiplié par une échelle qui
+        ///   n'existe pas encore. Une échelle de 0,011 sur un objet visible est absurde — le bandeau
+        ///   est lu pendant que son nœud d'échelle n'est pas appliqué.
+        /// ⇒ ET CE SONT LES PUBLICATIONS SUIVANTES QUI GOUVERNENT ce que le locataire lit : l'inset
+        ///   publié perd donc tout son débord après le premier montage, sur TOUS les écrans.
+        ///
+        /// ⛔ POURQUOI LA GARDE D'À CÔTÉ NE POUVAIT PAS L'ATTRAPER, alors qu'elle porte le bon
+        /// plancher (`> 4f`) : elle lit la propriété **une seule fois**, au premier montage, là où
+        /// elle vaut 105. *Une garde qui échantillonne une fois ne voit pas une grandeur qui se
+        /// dégrade à la deuxième.* Ce n'est pas un seuil à durcir, c'est un échantillon à ajouter.
+        ///
+        /// ⚠️ ET CE N'EST PAS UNE INVARIANCE SUR LA SORTIE, délibérément. Une garde « la seconde
+        /// publication doit égaler la première » serait satisfaite en **gelant une échelle fausse** :
+        /// les deux côtés d'un rapport faux, figés ensemble, ne rougissent jamais. C'est pourquoi le
+        /// plancher `> 4f` est réasserté APRÈS la republication — il porte sur la VALEUR, que seule
+        /// une échelle réelle peut produire, et pas sur l'égalité de deux lectures.
+        /// ★ *Une invariance posée sans savoir ce qui la casse se satisfait en gelant la mauvaise
+        ///   moitié* — et je l'aurais écrite ainsi si la mesure n'était pas venue avant.</summary>
+        /// ⛔⛔⛔ CONTRÔLE POSITIF EXÉCUTÉ LE 2026-09-07 01:40 — **ELLE NE ROUGIT PAS, DONC ELLE
+        /// N'EST PAS ENCORE UNE GARDE.** Sortie : `débord AVANT republication 105,1738 · APRÈS
+        /// 105,1738 (rapport 1,000)` ; suite `Charpente` **40/40**.
+        /// ⇒ Le défaut existe pourtant : le MÊME journal, dans un run `CaptureReputation` lancé cinq
+        ///   minutes plus tard, rend `lossyScale 1,633 → 0,011` et la sortie `105,17 → 0,44`.
+        /// ⇒ **C'est donc le DÉCLENCHEUR qui est faux, pas la propriété.** `RebatirChromePourResolution
+        ///   Courante()` ne reproduit pas l'effondrement : il rebâtit le chrome **sans que `Screen`
+        ///   change**, alors que la capture BASCULE la résolution après le montage — et c'est la
+        ///   bascule qui laisse lire un `lossyScale` non appliqué.
+        /// ★ *La question n'était pas « la propriété est-elle la bonne » mais « le scénario est-il
+        ///   DIMENSIONNÉ pour produire ce que je mesure ».* Je l'avais posée pour le halo et pas pour
+        ///   ma propre garde — le dispositif de sécurité neuf est le texte le moins relu du lot.
+        /// ⇒ `[Ignore]` PLUTÔT QUE SUPPRIMÉE : verte, elle CERTIFIERAIT l'absence d'un défaut mesuré
+        ///   ailleurs — pire que rien. Ignorée, elle reste visible avec sa cause et son correctif.
+        /// ⇒ CE QU'IL LUI FAUT : un déclencheur qui change réellement la résolution (le chemin de
+        ///   `MesurerEtCapturer`), donc une garde de catégorie CAPTURE et non `Charpente`.
+        [UnityTest]
+        [Ignore("Contrôle positif ÉCHOUÉ : ne rougit pas sur le défaut mesuré (105,17 → 105,17 ici, " +
+                "105,17 → 0,44 dans un run de capture). Le déclencheur — rebâtir le chrome sans " +
+                "changer Screen — ne reproduit pas l'effondrement. À réarmer avec une bascule de " +
+                "résolution ; verte, elle certifierait le défaut. TD-659.")]
+        public IEnumerator BLOQUANT_EffectiveBottomOverhangPx_SurvitAUneRepublication()
+        {
+            yield return ChargerLaSceneDeDemarrageDuBuild();
+            AppShell shell = SondeShellDansLaScene(sceneDeDemarrage);
+            Assert.IsNotNull(shell, $"aucun AppShell dans la scène de démarrage ({sceneDeDemarrage.path})");
+            Assert.IsNotNull(shell.TopBar, "le shell doit porter un TopBarController");
+
+            float avant = shell.TopBar.EffectiveBottomOverhangPx;
+            Assert.Greater(avant, 4f,
+                "ANTI-VACUITÉ, et c'est la PRÉCONDITION du test : le médaillon doit réellement " +
+                "déborder au premier montage, sinon la republication n'a rien à dégrader et ce test " +
+                "serait vert à vide.");
+
+            // La republication, c'est-à-dire le geste qui a produit l'effondrement : le chrome se
+            // rebâtit et republie ses insets à sa toute fin.
+            shell.RebatirChromePourResolutionCourante();
+            yield return null;
+
+            float apres = shell.TopBar.EffectiveBottomOverhangPx;
+
+            // INCONDITIONNEL — un dispositif doit imprimer qu'il se soit activé ou non.
+            Debug.Log($"[Charpente] débord AVANT republication {avant:F4} · APRÈS {apres:F4} " +
+                      $"(rapport {(avant > 0.0001f ? apres / avant : 0f):F3})");
+
+            Assert.Greater(apres, 4f,
+                $"LE DÉBORD S'EST EFFONDRÉ À LA REPUBLICATION : {avant:F4} → {apres:F4}. La " +
+                "géométrie ne bouge pas (mesuré : `debordLocal` constant à 32,21 sur cinq passes) ; " +
+                "c'est `lossyScale` qui est lu avant que le nœud d'échelle du bandeau ne soit " +
+                "appliqué (1,633 → 0,011). Tout locataire monté après le premier lit alors un inset " +
+                "amputé de son débord, et pose son contenu sous le chrome.");
+        }
+
         [UnityTest]
         public IEnumerator BLOQUANT_EffectiveBottomOverhangPx_EstEnUnitesDeCanvas_InvariantAuScaleFactor()
         {

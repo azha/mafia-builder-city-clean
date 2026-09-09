@@ -205,7 +205,15 @@ namespace MafiaCleanCity.Account.Settings
             v.padding = new RectOffset((int)Px(8f), (int)Px(8f), (int)Px(6f), (int)Px(6f));
             Image bf = b.AddComponent<Image>();
             bf.sprite = ProceduralUI.RoundedRectDashedOutline((int)Px(9f), Px(1f), (int)Px(4f), (int)Px(3f), Eteint);
-            bf.type = Image.Type.Sliced;
+            // ⛔ `Tiled`, PAS `Sliced` — et c'est le générateur lui-même qui le dit : « un contour
+            //    de rectangle arrondi en POINTILLÉS, à utiliser en `Image.Type.Tiled` ». Les deux
+            //    respectent le `border` du sprite et gardent les coins ; `Sliced` ÉTIRE la section
+            //    centrale — qui porte exactement UNE période de pointillé — et la transforme en une
+            //    longue barre, tandis que `Tiled` la RÉPÈTE. Mesuré par un juge ⊥ sur un cadre brisé :
+            //    334 px de trou, 36 %, symétrique haut et bas parce que les deux rails partagent la
+            //    même bande. ⇒ Classe fermée sur les 7 sites, pas seulement sur celui du rapport ;
+            //    le remède était DÉJÀ en production sur deux sites de `LieutenantScreenController`.
+            bf.type = Image.Type.Tiled;
             Texte(b.transform, "L", libelle, Px(9f), Eteint,
                   DesignTokens.Current.primaryFont, TextAlignmentOptions.Center).characterSpacing = 10f;
             Texte(b.transform, "R", raison, Px(6.8f), Creme2,

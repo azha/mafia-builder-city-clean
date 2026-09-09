@@ -84,9 +84,25 @@ namespace MafiaCleanCity.Shell.Tests
             var panel = NewBarePanel();
             panel.SetQueue("dummy-token", new[] { SyntheticCard("a", "HIGH"), SyntheticCard("b", "LOW") });
 
-            Assert.AreEqual(2, panel.RenderedSeverityLabels.Count);
-            Assert.IsTrue(panel.RenderedSeverityLabels.Contains("High"));
-            Assert.IsTrue(panel.RenderedSeverityLabels.Contains("Low"));
+            // ⛔ CES TROIS ASSERTIONS ÉTAIENT NUES, et leur rouge l'a prouvé : dans le run complet
+            //    du 2026-09-07, ce test est tombé sur « Expected: True / But was: False » — SANS
+            //    un mot. Un balayage des 46 rouges par leur MESSAGE l'a classé « non classable » :
+            //    impossible de savoir ce qu'il cherchait, donc impossible de décider s'il accusait
+            //    le code ou son propre monde.
+            //    ⇒ *Un rouge qui ne dit pas ce qu'il cherchait est un rouge qu'on ne peut pas
+            //      classer* — et une assertion booléenne nue est une garde qui refuse de coopérer
+            //      avec celui qui la lira. Les assertions ne changent PAS : seul leur message naît.
+            string vus = panel.RenderedSeverityLabels.Count == 0
+                ? "(aucun)"
+                : string.Join(" | ", panel.RenderedSeverityLabels);
+            Assert.AreEqual(2, panel.RenderedSeverityLabels.Count,
+                $"deux cartes de sévérités DISTINCTES (HIGH, LOW) ont été posées : le panneau doit "
+              + $"rendre deux libellés de sévérité, un par carte — rendus : [{vus}]");
+            Assert.IsTrue(panel.RenderedSeverityLabels.Contains("High"),
+                $"la carte de sévérité HIGH doit porter le libellé « High » — la couleur n'est "
+              + $"jamais seule différenciatrice (C5-F1) — rendus : [{vus}]");
+            Assert.IsTrue(panel.RenderedSeverityLabels.Contains("Low"),
+                $"la carte de sévérité LOW doit porter le libellé « Low » — rendus : [{vus}]");
             Assert.AreNotEqual(panel.RenderedSeverityLabels[0], panel.RenderedSeverityLabels[1],
                 "two DISTINCT severities produce two DISTINCT labels (a constant label would pass a single-severity check)");
         }

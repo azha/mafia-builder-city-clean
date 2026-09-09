@@ -91,16 +91,75 @@ namespace MafiaCleanCity.Shell.Tests
                            "que rien ne voyait parce qu'aucune garde ne lisait l'échelle SUR l'image.");
         }
 
+        /// <summary>⛔⛔ UN SEUL NOM POUR DEUX USAGES REND TOUTE SUITE COMPLÈTE STRUCTURELLEMENT
+        /// PARTIELLE — mesuré le 2026-09-07, des DEUX côtés dans le même run :
+        /// <code>
+        ///   suite complète AVEC la paire  →  14 rouges : « recruit failed (404): building … is not
+        ///                                    a player-owned operational building » — le compte GELÉ
+        ///                                    n'a pas ce que les tests FONCTIONNELS exigent
+        ///   suite complète SANS la paire  →   3 rouges : « capture refusée » — les CAPTURES, elles,
+        ///                                    l'exigent
+        /// </code>
+        /// ⇒ Le compte n'a pas un « bon » réglage : il en a DEUX, et aucune invocation ne pouvait
+        /// satisfaire les deux familles. **Et le compteur ne le dit jamais** : chaque run est vert sur
+        /// sa moitié et rouge sur l'autre, et on lit ça comme des défauts au lieu d'un régime.
+        /// *Un run qui rend un compte plausible pour n'avoir mesuré que la moitié du dépôt est pire
+        /// qu'un run qui échoue* — un échec s'investigue, un compte plausible se cite.
+        ///
+        /// ⇒ D'où `MAFIA_CAPTURE_IDENTIFIER`/`MAFIA_CAPTURE_PASSWORD` : un nom PROPRE aux captures.
+        /// Exporter cette paire-là et laisser `MAFIA_DEMO_*` non posée fait enfin tourner les deux
+        /// familles dans le même processus — les captures signent avec le compte gelé, les tests
+        /// fonctionnels avec le compte par défaut.
+        /// ⚠️ ADDITIF STRICT : `MAFIA_DEMO_*` reste acceptée en REPLI, donc toute invocation
+        /// existante (et les cinq documentées dans les notes de charpente) continue de marcher à
+        /// l'identique. Aucune ligne de commande n'est cassée par ce lot.
+        /// ⚠️ ET LE RÉGIME EST DÉCLARÉ, jamais supposé : sans ça, une capture signée sous le repli
+        /// ressemble trait pour trait à une capture signée sous la paire propre. *Une planche ne dit
+        /// pas d'elle-même QUI elle photographie.*
+        ///
+        /// ⚠️ PORTÉE, écrite à côté du compte parce qu'un correctif sans sa portée se lit plus large
+        /// qu'il n'est : ceci couvre les captures qui signent EXPLICITEMENT avec le couple rendu ici
+        /// (㊲ `screen_b3`, ㊳ `screen_c1`, ㊵ `screen_c2`). La famille `planche_*` passe, elle, par la
+        /// résolution du CLIENT (`DemoIdentityResolver`, qui lit `MAFIA_DEMO_*`) — elle n'est pas
+        /// couverte, et elle n'est pas non plus dans le filtre du run complet (`PhotoPlanche`,
+        /// `PhotoChantierC`, `PhotoManquants`, `PhotoEditeurRegles` : 538 découverts, 421 déclarés).
+        /// Elle attend TD-682 de toute façon, qui bloque tout ce qui monte la scène de démarrage.</summary>
+        public const string CaptureIdentifierEnvVar = "MAFIA_CAPTURE_IDENTIFIER";
+        public const string CapturePasswordEnvVar = "MAFIA_CAPTURE_PASSWORD";
+        public const string DemoIdentifierEnvVar = "MAFIA_DEMO_IDENTIFIER";
+        public const string DemoPasswordEnvVar = "MAFIA_DEMO_PASSWORD";
+
+        /// <summary>La résolution PURE, sans environnement : essayable sur des entrées fabriquées,
+        /// donc sans la porte Unity et sans toucher aux vraies variables. Rend le couple ET le nom du
+        /// régime — `null` en identifiant quand aucune paire n'est COMPLÈTE.
+        /// ⚠️ Une paire à moitié posée (identifiant sans mot de passe) ne compte PAS : c'est la
+        /// seconde direction que la garde d'origine ne couvrait pas, nommée dans `DemoIdentityResolver`
+        /// (« `MAFIA_DEMO_PASSWORD` posé SEUL, identifiant absent »).</summary>
+        public static (string identifiant, string motDePasse, string regime) ResoudreIdentiteDeCapture(
+            string idCapture, string mdpCapture, string idDemo, string mdpDemo)
+        {
+            bool captureComplete = !string.IsNullOrWhiteSpace(idCapture) && !string.IsNullOrWhiteSpace(mdpCapture);
+            if (captureComplete) return (idCapture, mdpCapture, "MAFIA_CAPTURE_*");
+            bool demoComplete = !string.IsNullOrWhiteSpace(idDemo) && !string.IsNullOrWhiteSpace(mdpDemo);
+            if (demoComplete) return (idDemo, mdpDemo, "MAFIA_DEMO_* (repli)");
+            return (null, null, "AUCUNE");
+        }
+
         public static (string identifiant, string motDePasse) IdentiteDeCaptureOuEchoue(string quoi)
         {
-            string id = System.Environment.GetEnvironmentVariable("MAFIA_DEMO_IDENTIFIER");
-            string mdp = System.Environment.GetEnvironmentVariable("MAFIA_DEMO_PASSWORD");
-            Assert.IsFalse(string.IsNullOrWhiteSpace(id) || string.IsNullOrWhiteSpace(mdp),
-                $"capture refusée ({quoi}) : la paire `MAFIA_DEMO_IDENTIFIER`/`MAFIA_DEMO_PASSWORD` " +
-                "n'est pas exportée. Sans elle le client retombe sur son identité par défaut et la " +
-                "planche photographierait UN AUTRE COMPTE, sans que rien dans l'image ne le dise — " +
-                "c'est arrivé trois fois le 2026-09-06. Exporter la paire du compte de capture, ou " +
-                "ne pas lancer les catégories de capture.");
+            var (id, mdp, regime) = ResoudreIdentiteDeCapture(
+                System.Environment.GetEnvironmentVariable(CaptureIdentifierEnvVar),
+                System.Environment.GetEnvironmentVariable(CapturePasswordEnvVar),
+                System.Environment.GetEnvironmentVariable(DemoIdentifierEnvVar),
+                System.Environment.GetEnvironmentVariable(DemoPasswordEnvVar));
+            Assert.IsNotNull(id,
+                $"capture refusée ({quoi}) : ni `{CaptureIdentifierEnvVar}`/`{CapturePasswordEnvVar}` " +
+                $"ni `{DemoIdentifierEnvVar}`/`{DemoPasswordEnvVar}` n'est exportée COMPLÈTE (les deux " +
+                "moitiés d'une même paire). Sans elle le client retombe sur son identité par défaut et " +
+                "la planche photographierait UN AUTRE COMPTE, sans que rien dans l'image ne le dise — " +
+                "c'est arrivé trois fois le 2026-09-06. Exporter la paire du compte de capture, ou ne " +
+                "pas lancer les catégories de capture.");
+            Debug.Log($"[IDENTITE-CAPTURE] {quoi} : régime {regime} — la capture signera avec « {id} »");
             return (id, mdp);
         }
 

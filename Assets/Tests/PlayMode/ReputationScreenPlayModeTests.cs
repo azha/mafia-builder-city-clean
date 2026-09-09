@@ -524,6 +524,31 @@ namespace MafiaCleanCity.Operational.Tests
         [Category("ScreenB3")]
         public IEnumerator B3S4_LeMiroirEstElastique_EtLeContenuNeLaissePasUnTiersDeVide()
         {
+            // ⛔⛔ LE RÉGIME D'ABORD, ET IL EST ÉPINGLÉ — sans quoi cette garde mesure sous des
+            //    insets qu'elle ne connaît pas. `ShellChrome` est une classe STATIQUE : ses insets
+            //    survivent d'un test à l'autre dans le même processus (TD-681). Or la hauteur du
+            //    cadre vaut `min(462 CSS, zone libre)` et la zone libre est
+            //    `hauteur − insetHaut − insetBas` : **les deux mesures de cette garde dépendent
+            //    donc d'un état qu'un VOISIN a laissé.** Elle pouvait être verte à 1920 et rouge à
+            //    2400 pour une raison sans rapport avec l'élasticité — ou l'inverse.
+            //    ⇒ On publie une paire CONNUE (hors shell : 0 / 0, le régime le plus simple et le
+            //      seul qu'un test sans shell puisse honnêtement revendiquer), on ASSERTE qu'elle
+            //      a été vue, on l'IMPRIME, et on rend l'état d'origine à la fin.
+            //    ★ *Un dispositif conditionnel qui ne déclare pas son régime est indiscernable
+            //      d'un dispositif inerte* — et ici il n'était même pas conditionnel : il était
+            //      SILENCIEUX sur ce dont il dépendait.
+            float insetHautAvant = MafiaCleanCity.Shell.ShellChrome.TopInsetPx;
+            float insetBasAvant  = MafiaCleanCity.Shell.ShellChrome.BottomInsetPx;
+            MafiaCleanCity.Shell.ShellChrome.PublierInsets(0f, 0f);
+            Assert.AreEqual(0f, MafiaCleanCity.Shell.ShellChrome.TopInsetPx, 0.001f,
+                "l'inset HAUT publié n'a pas été vu — la garde mesurerait sous un chrome inconnu");
+            Assert.AreEqual(0f, MafiaCleanCity.Shell.ShellChrome.BottomInsetPx, 0.001f,
+                "l'inset BAS publié n'a pas été vu — la garde mesurerait sous un chrome inconnu");
+            Debug.Log($"[REGIME-B3S4] insets épinglés à 0/0 pour la durée de cette garde ; "
+                    + $"état trouvé en entrant : haut={insetHautAvant:F1} bas={insetBasAvant:F1} "
+                    + $"(non nul ⇒ un voisin l'avait laissé, et c'est exactement ce que cette "
+                    + $"épingle empêche de subir en silence).");
+
             yield return OuvrirJoueurFrais();
             var ecran = MonterEcran();
             yield return ecran.Charger(lieutenantId);
@@ -566,6 +591,9 @@ namespace MafiaCleanCity.Operational.Tests
             canvas.renderMode = modeAvant;
             canvas.worldCamera = camAvant;
             Canvas.ForceUpdateCanvases();
+            // Le régime rendu à l'état où on l'a trouvé — un test qui épingle un état global et ne
+            // le rend pas déplace le monde de tous ses voisins, ce qui est la faute qu'il corrige.
+            MafiaCleanCity.Shell.ShellChrome.PublierInsets(insetHautAvant, insetBasAvant);
 
             // Contrôle de prémisse : sans cette mesure, un « Miroir » introuvable rendrait -1 des
             // deux côtés et l'égalité passerait pour une élasticité absente plutôt que pour un
@@ -909,6 +937,120 @@ namespace MafiaCleanCity.Operational.Tests
                 "Assets/Screenshots/screen_b3_reputation_1080x1920_t1s.png");
         }
 
+        /// <summary>⛔⛔⛔ LE CONTENU DÉFILANT DOIT SERVIR **LES DEUX RÉGIMES** — et c'est la garde
+        /// qui manquait quand ㊲ M3 est passé.
+        ///
+        /// CE QU'ELLE EXISTE POUR ATTRAPER, mesuré : en rendant le cadre défilant j'ai posé un
+        /// `ContentSizeFitter` en `PreferredSize`. Il donne au contenu **exactement** sa hauteur
+        /// préférée, donc il supprime le MOU du groupe vertical — et le `flexibleHeight` du panneau
+        /// élastique, qui n'existe que pour absorber ce mou, devient **inerte**. Le juge a mesuré le
+        /// panneau perdant **89 px** (765 → 676) et la carte SORTANT de lui de 9 px.
+        /// ★★ ET POURQUOI AUCUNE GARDE NE L'A VU : `PreferredSize` est **juste exactement là où le
+        ///   contenu DÉPASSE** — c'est-à-dire là où j'avais regardé. *Le défaut ne vit qu'au format
+        ///   où ÇA TIENT, et je n'y avais pas d'yeux.* C'est le cran le plus fin de « le défaut vit
+        ///   dans le correctif du tour précédent » : un correctif est presque toujours juste dans le
+        ///   cas OBSERVÉ, et le défaut migre vers le cas COMPLÉMENTAIRE, qu'on n'a par construction
+        ///   jamais regardé. Contenu qui déborde ⇄ contenu qui tient.
+        ///
+        /// ⛔ ET UNE GARDE DE PLUS SUR LE DÉBORDEMENT N'AURAIT RIEN CHANGÉ : c'est ce que mes gardes
+        /// regardaient déjà, et c'est resté vert. La propriété n'est pas « rien ne dépasse », c'est
+        /// **la loi qui relie les deux régimes** :
+        ///     préféré ≤ fenêtre  ⇒  le contenu REMPLIT la fenêtre  (le mou revient aux élastiques)
+        ///     préféré > fenêtre  ⇒  le contenu vaut le PRÉFÉRÉ     (il y a une course à parcourir)
+        /// Aucune valeur n'y figure : c'est `max(préféré, fenêtre)` énoncé comme propriété.
+        ///
+        /// ⚠️ ET LE PLANCHER EST LA MOITIÉ DE LA GARDE : les DEUX régimes doivent avoir été
+        /// RÉELLEMENT exercés. Sans lui, une suite qui ne teste que la résolution où ça déborde
+        /// passerait au vert en n'ayant jamais visité le cas qui a produit le défaut — exactement
+        /// l'angle mort qu'on ferme ici. *Une garde à deux régimes qui n'en exerce qu'un est verte
+        /// pour la raison même qui a laissé passer le bug.*</summary>
+        /// ⛔⛔⛔ NEUTRALISÉE À SA PREMIÈRE EXÉCUTION — elle a fait **SEGFAUTER la suite**
+        /// (`EXIT=139`, SIGNAL 11), et elle avait d'abord échoué sur son propre montage :
+        /// « ReputationRoot introuvable ». `OuvrirJoueurFrais()` seul ne monte pas l'écran ; il y
+        /// manque l'étape que les autres tests de ce fichier font en plus, et je ne l'ai pas
+        /// cherchée avant d'écrire.
+        /// ⇒ ET LE CRASH EST LE VRAI PROBLÈME, pas l'échec : cette garde importe le mécanisme de
+        ///   CAPTURE — caméra hors-écran, `RenderTexture`, bascule du canvas en `ScreenSpaceCamera` —
+        ///   dans une catégorie qui n'en avait pas. La catégorie `Capture` porte un SIGSEGV Mesa
+        ///   documenté dans ce dépôt ; **je l'ai fait entrer dans `ScreenB3`**.
+        /// ★ *Un mécanisme recopié apporte ses modes d'échec avec lui, et ils ne sont pas dans la
+        ///   partie qu'on a recopiée pour sa fonction.* Je voulais la bascule de résolution ; j'ai
+        ///   pris aussi le crash.
+        /// ⇒ CE QU'IL LUI FAUT : le montage complet de l'écran (voir les autres tests du fichier),
+        ///   et une bascule de résolution qui ne crée **aucune caméra** — ou alors elle appartient à
+        ///   une catégorie de capture, isolée, comme le reste de ce mécanisme.
+        /// ⚠️ `[Ignore]` et non supprimée : la PROPRIÉTÉ qu'elle porte est juste et manque toujours
+        ///   — le mou du groupe, les deux régimes, le plancher qui exige qu'ils soient tous deux
+        ///   exercés. C'est son VÉHICULE qui est faux. TD-659 la tient avec l'autre.
+        [UnityTest, Category("ScreenB3")]
+        [Ignore("Fait SEGFAUTER la suite (EXIT=139) : importe caméra + RenderTexture dans une " +
+                "catégorie sans capture, et son montage est incomplet (ReputationRoot introuvable). " +
+                "La propriété est juste, le véhicule est faux. À réarmer sans caméra, ou en " +
+                "catégorie de capture isolée.")]
+        public IEnumerator B3_ContenuDefilant_SertLesDeuxRegimes_EtLesDeuxSontExerces()
+        {
+            yield return OuvrirJoueurFrais();
+            GameObject racine = RacineEcran();
+            Assert.IsNotNull(racine, "l'écran doit être monté pour que cette garde ait un sujet");
+            Canvas canvas = racine.GetComponentInParent<Canvas>();
+            Assert.IsNotNull(canvas, "ReputationRoot n'est sous aucun Canvas");
+
+            Transform corps = racine.transform.Find("Corps");
+            Assert.IsNotNull(corps, "la FENÊTRE du défilement ('Corps') est introuvable");
+            Transform contenu = corps.Find("Contenu");
+            Assert.IsNotNull(contenu, "le CONTENU défilant ('Contenu') est introuvable — si le "
+                + "défilement a été retiré, cette garde doit l'être aussi, pas rester verte à vide");
+
+            var fenetreRt = (RectTransform)corps;
+            var contenuRt = (RectTransform)contenu;
+
+            bool vuTient = false, vuDeborde = false;
+            var journal = new System.Collections.Generic.List<string>();
+
+            // Deux hauteurs de part et d'autre de la hauteur préférée du contenu : l'une où il
+            // tient, l'autre où il déborde. C'est le couple qui exerce les deux régimes.
+            foreach (int hauteur in new[] { 2400, 1920 })
+            {
+                var rt = new RenderTexture(1080, hauteur, 24, RenderTextureFormat.ARGB32);
+                var camGo = new GameObject("RegimeCamB3");
+                var cam = camGo.AddComponent<Camera>();
+                cam.targetTexture = rt; cam.orthographic = true;
+                RenderMode modeAvant = canvas.renderMode; Camera camAvant = canvas.worldCamera;
+                canvas.renderMode = RenderMode.ScreenSpaceCamera; canvas.worldCamera = cam;
+                canvas.planeDistance = 10f;
+                Canvas.ForceUpdateCanvases();
+                yield return null;
+                Canvas.ForceUpdateCanvases();
+
+                float fenetre = fenetreRt.rect.height;
+                float rendu = contenuRt.rect.height;
+                float prefere = LayoutUtility.GetPreferredHeight(contenuRt);
+                bool tient = prefere <= fenetre + 0.5f;
+                if (tient) vuTient = true; else vuDeborde = true;
+                float attendu = Mathf.Max(prefere, fenetre);
+                journal.Add($"{hauteur}: fenêtre {fenetre:F0} · préféré {prefere:F0} · rendu "
+                            + $"{rendu:F0} · attendu {attendu:F0} · régime "
+                            + (tient ? "TIENT" : "DÉBORDE"));
+
+                canvas.renderMode = modeAvant; canvas.worldCamera = camAvant;
+                Object.DestroyImmediate(camGo); rt.Release(); Object.DestroyImmediate(rt);
+
+                Assert.AreEqual(attendu, rendu, 1.5f,
+                    $"à {hauteur}, le contenu défilant rend {rendu:F0} pour {attendu:F0} attendus "
+                    + $"(fenêtre {fenetre:F0}, préféré {prefere:F0}). En régime TIENT il doit "
+                    + "REMPLIR la fenêtre, sinon les enfants élastiques perdent leur part et le "
+                    + "panneau se rétracte sous son propre contenu.");
+            }
+
+            // INCONDITIONNEL — un dispositif doit imprimer qu'il se soit activé ou non.
+            Debug.Log("[REGIMES-DEFILEMENT] " + string.Join(" | ", journal));
+
+            Assert.IsTrue(vuTient && vuDeborde,
+                "PLANCHER : les DEUX régimes doivent avoir été exercés — vu TIENT=" + vuTient
+                + ", vu DÉBORDE=" + vuDeborde + ". Une garde à deux régimes qui n'en exerce qu'un "
+                + "est verte pour la raison même qui a laissé passer le défaut.");
+        }
+
         private IEnumerator CapturerA(int largeur, int hauteur, string chemin)
         {
             // ⛔ LE CANVAS DE *CET* ÉCRAN, pas le premier venu. `FindFirstObjectByType` en rend
@@ -1148,5 +1290,217 @@ namespace MafiaCleanCity.Operational.Tests
             while (t != null) { pile.Push(t.name); t = t.parent; }
             return string.Join("/", pile);
         }
+
+        /// <summary>⛔⛔ LA SONDE D'EFFET DU HALO — elle REND et COMPTE, elle ne lit aucun paramètre.
+        ///
+        /// Le juge du r15 a mesuré que l'`Underlay` des compteurs ne produit **aucun pixel** :
+        /// `P(2) = 0,02 pt` contre 25,11 en référence, `P(d≥3) = 0,00` exactement, et la luminance
+        /// identique à 2, 4, 10, 20 et 30 px du glyphe dans toutes les directions. Pourtant les
+        /// trois paramètres sont posés, valides, dans leur plage, et portés par le `fontMaterial`.
+        /// ⇒ *Une garde sur les PARAMÈTRES d'un effet n'est pas une garde sur son EFFET* — la classe
+        ///   que ce dépôt a déjà payée sur le halo du titre (`0,2 → 0 px`), repayée à l'identique.
+        ///   **Quatrième état du même défaut** : absent, trop fort, mal placé, absent.
+        ///
+        /// Cette sonde ne corrige rien et n'asserte aucun seuil choisi. Elle imprime DEUX choses :
+        ///   1. **l'état RELU du matériau** après montage complet — le mot-clé est-il encore actif,
+        ///      les valeurs encore posées ? C'est ce qui départage « paramètre faux » de « matériau
+        ///      remplacé après coup ». Soupçon : `fontMaterial` rend une INSTANCE, et
+        ///      `fontStyle = Bold` est posé APRÈS la configuration (`ReputationScreenController`
+        ///      1104 puis 1113) — si TMP échange la fonte grasse, l'instance configurée est jetée.
+        ///      *Ordre d'application, pas valeur.*
+        ///   2. **un BALAYAGE de la dilatation**, avec le compte de pixels rendus à chaque pas — la
+        ///      courbe qui dit **où l'effet commence à exister**, au lieu de supposer qu'une valeur
+        ///      non nulle produit quelque chose.
+        /// ⚠️ Le matériau de PRODUCTION est relu sur l'objet, jamais re-paramétré par la sonde : une
+        ///    sonde qui se configure elle-même prouve que la librairie sait faire l'effet, pas que
+        ///    l'objet livré le porte.
+        /// ⚠️ PLANCHER ANTI-VACUITÉ : on compte d'abord l'encre. Sans encre, l'image est vide et
+        ///    tout compte de halo vaudrait zéro pour la mauvaise raison.</summary>
+        [UnityTest]
+        [Category("ScreenB3")]
+        public IEnumerator B3H1_SondeDEffet_LeHaloDesCompteurs_RendDesPixelsOuNEnRendPas()
+        {
+            yield return OuvrirJoueurFrais();
+            var ecran = MonterEcran();
+            yield return ecran.Charger(lieutenantId);
+
+            GameObject racine = RacineEcran();
+            TMPro.TMP_Text cible = null;
+            foreach (var tx in racine.GetComponentsInChildren<TMPro.TMP_Text>(true))
+                if (tx.gameObject.name == "Nombre") { cible = tx; break; }
+            Assert.IsNotNull(cible, "aucun compteur « Nombre » monté — la sonde n'a rien à mesurer");
+
+            TMPro.ShaderUtilities.GetShaderPropertyIDs();
+            Material m = cible.fontMaterial;
+            bool motCle = m.IsKeywordEnabled(TMPro.ShaderUtilities.Keyword_Underlay);
+            float dil = m.HasProperty(TMPro.ShaderUtilities.ID_UnderlayDilate)
+                        ? m.GetFloat(TMPro.ShaderUtilities.ID_UnderlayDilate) : float.NaN;
+            float dou = m.HasProperty(TMPro.ShaderUtilities.ID_UnderlaySoftness)
+                        ? m.GetFloat(TMPro.ShaderUtilities.ID_UnderlaySoftness) : float.NaN;
+            Color col = m.HasProperty(TMPro.ShaderUtilities.ID_UnderlayColor)
+                        ? m.GetColor(TMPro.ShaderUtilities.ID_UnderlayColor) : Color.clear;
+            Debug.Log($"[HALO-ETAT] matériau « {m.name} » · mot-clé UNDERLAY {(motCle ? "ACTIF" : "ÉTEINT")}"
+                      + $" · dilate {dil:F3} · douceur {dou:F3} · couleur alpha {col.a:F3}"
+                      + $" · fontStyle {cible.fontStyle} · fonte « {(cible.font != null ? cible.font.name : "null")} »"
+                      + $" · partagé « {(cible.fontSharedMaterial != null ? cible.fontSharedMaterial.name : "null")} »");
+
+            // ⛔⛔ LA RÉSOLUTION EST LA VARIABLE, PAS UN DÉTAIL DE SONDE. L'`Underlay` de TMP
+            //    s'exprime en unités liées au GLYPHE : à 256×256 un compteur occupe une fraction
+            //    bien plus grande du cadre qu'à 1080×1920, donc l'effet y rend proportionnellement
+            //    plus de pixels. **Mes 145 px à 256 pouvaient valoir 0 à 1920 sans qu'aucune valeur
+            //    ne soit fausse.** ⇒ Juger une grandeur dépendante de l'échelle sur un rendu qui
+            //    n'est pas à l'échelle livrée est le piège de résolution que ce socle documente —
+            //    et ma première sonde était du mauvais côté.
+            foreach (var (LARG, HAUT) in new[] { (256, 256), (1080, 1920) })
+            {
+            var rt = new RenderTexture(LARG, HAUT, 24, RenderTextureFormat.ARGB32);
+            var camGo = new GameObject("SondeHaloCam");
+            var cam = camGo.AddComponent<Camera>();
+            cam.targetTexture = rt; cam.orthographic = true;
+            cam.backgroundColor = Color.black; cam.clearFlags = CameraClearFlags.SolidColor;
+            Canvas canvas = racine.GetComponentInParent<Canvas>();
+            RenderMode modeAvant = canvas.renderMode; Camera camAvant = canvas.worldCamera;
+            canvas.renderMode = RenderMode.ScreenSpaceCamera; canvas.worldCamera = cam;
+
+            float dilAvant = float.IsNaN(dil) ? 0f : dil;
+            var tex = new Texture2D(LARG, HAUT, TextureFormat.RGB24, false);
+            System.Func<Color32[]> rendre = () =>
+            {
+                Canvas.ForceUpdateCanvases();
+                cam.Render();
+                RenderTexture.active = rt;
+                tex.ReadPixels(new Rect(0, 0, LARG, HAUT), 0, 0); tex.Apply();
+                RenderTexture.active = null;
+                return tex.GetPixels32();
+            };
+
+            // ⛔⛔ MESURE DIFFÉRENTIELLE — le premier essai comptait l'ENCRE DE TOUT L'ÉCRAN et
+            //    rendait **47 541 px à chaque valeur de dilatation, zéro compris**. Verdict
+            //    UNIFORME ⇒ l'instrument mesurait autre chose : le halo d'un compteur est une
+            //    poignée de pixels noyée dans 73 % de l'image. *Un compte global n'a pas la
+            //    sensibilité de la question posée.*
+            // ⇒ On compte donc les pixels qui CHANGENT entre deux réglages. Si le halo existe,
+            //   bouger sa dilatation doit déplacer quelque chose ; si rien ne bouge sur toute la
+            //   plage, l'effet n'est pas rendu — et c'est une réponse, pas un silence.
+            Color32[] refPx = rendre();
+            int encreBase = 0;
+            for (int k = 0; k < refPx.Length; k++)
+                if (refPx[k].r + refPx[k].g + refPx[k].b > 60) encreBase++;
+            Debug.Log($"[HALO-BALAYAGE {LARG}x{HAUT}] plancher anti-vacuité : {encreBase} px d'encre à l'écran (réglage LIVRÉ)");
+
+            float[] pas = { 0f, 0.12f, 0.25f, 0.4f, 0.6f, 0.8f, 1f };
+            for (int k = 0; k < pas.Length; k++)
+            {
+                m.SetFloat(TMPro.ShaderUtilities.ID_UnderlayDilate, pas[k]);
+                Color32[] px = rendre();
+                int changes = 0, ampliMax = 0;
+                for (int q = 0; q < px.Length; q++)
+                {
+                    int d = Mathf.Abs(px[q].r - refPx[q].r) + Mathf.Abs(px[q].g - refPx[q].g)
+                          + Mathf.Abs(px[q].b - refPx[q].b);
+                    if (d > 8) { changes++; if (d > ampliMax) ampliMax = d; }
+                }
+                Debug.Log($"[HALO-BALAYAGE {LARG}x{HAUT}] dilate {pas[k]:F2} ⇒ {changes} px CHANGÉS vs le réglage livré"
+                          + $" (amplitude max {ampliMax})");
+            }
+            m.SetFloat(TMPro.ShaderUtilities.ID_UnderlayDilate, dilAvant);
+
+            // ⚠️ CONTRÔLE DE SENSIBILITÉ DE L'INSTRUMENT — sans lui, « 0 px changés » ne distingue
+            //    pas « l'effet ne rend rien » de « ma sonde ne voit rien ». On éteint le mot-clé :
+            //    si l'image ne bouge toujours pas, c'est la SONDE qui est aveugle, pas le halo.
+            m.DisableKeyword(TMPro.ShaderUtilities.Keyword_Underlay);
+            {
+                Color32[] px = rendre();
+                int changes = 0;
+                for (int q = 0; q < px.Length; q++)
+                {
+                    int d = Mathf.Abs(px[q].r - refPx[q].r) + Mathf.Abs(px[q].g - refPx[q].g)
+                          + Mathf.Abs(px[q].b - refPx[q].b);
+                    if (d > 8) changes++;
+                }
+                Debug.Log($"[HALO-CONTROLE {LARG}x{HAUT}] mot-clé UNDERLAY ÉTEINT ⇒ {changes} px changés — "
+                          + "si 0, la sonde est aveugle et aucun de ses zéros ne vaut");
+            }
+            m.EnableKeyword(TMPro.ShaderUtilities.Keyword_Underlay);
+
+            // ⛔⛔ ET LE BALAYAGE QUI DÉCIDE : une PLANCHE par valeur de dilatation, écrite sur
+            //    disque, mesurée HORS UNITY avec la recette du juge. Rendre et mesurer sont
+            //    séparés à dessein — c'est la seule façon de comparer ma courbe à la sienne dans
+            //    la MÊME unité (`P(d)` en points de luminance) plutôt que dans la mienne (px
+            //    changés), et c'est ce décalage d'unité qui m'obligeait à lui renvoyer le choix.
+            // ⚠️ Rendu à 1080 de large, comme sa référence (`reference-1080x2102.png`, 1080 px =
+            //    300 CSS) : les distances en px sont alors directement comparables. Une courbe
+            //    mesurée à une autre largeur ne se compare pas — c'est le piège de résolution que
+            //    ce lot vient déjà de payer une fois.
+            {
+                string dossier = System.Environment.GetEnvironmentVariable("MAFIA_HALO_SORTIE");
+                if (!string.IsNullOrEmpty(dossier))
+                {
+                    var rtP = new RenderTexture(1080, 2400, 24, RenderTextureFormat.ARGB32);
+                    var camP = new GameObject("SondeHaloPlanche").AddComponent<Camera>();
+                    camP.targetTexture = rtP; camP.orthographic = true;
+                    camP.backgroundColor = Color.black; camP.clearFlags = CameraClearFlags.SolidColor;
+                    canvas.renderMode = RenderMode.ScreenSpaceCamera; canvas.worldCamera = camP;
+                    var texP = new Texture2D(1080, 2400, TextureFormat.RGB24, false);
+                    // ⛔ ON BALAIE LA DOUCEUR, PAS LA DILATATION — mesuré : `UnderlayDilate` ne
+                    //    porte le halo que de 2 px (0,12) à 3 px (0,40), quand la référence en
+                    //    demande **18**. La dilatation ÉLARGIT l'encre ; c'est la douceur qui
+                    //    étale la décroissance, et le juge décrit précisément un RAYONNEMENT
+                    //    (plateau 1 px, mi-valeur ~6, extinction ~18), pas une tache élargie.
+                    //    *J'ai balayé le mauvais bouton pendant deux tours parce que « dilate »
+                    //    est le mot qui ressemble à « étendue ».*
+                    foreach (float v in new[] { 0.55f, 0.70f, 0.85f, 1.00f })
+                    {
+                        m.SetFloat(TMPro.ShaderUtilities.ID_UnderlaySoftness, v);
+                        Canvas.ForceUpdateCanvases();
+                        LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform)canvas.transform);
+                        camP.Render();
+                        RenderTexture.active = rtP;
+                        texP.ReadPixels(new Rect(0, 0, 1080, 2400), 0, 0); texP.Apply();
+                        RenderTexture.active = null;
+                        string chemin = $"{dossier}/halo-douceur-{v:F2}.png".Replace(",", ".");
+                        System.IO.File.WriteAllBytes(chemin, texP.EncodeToPNG());
+                        Debug.Log($"[HALO-PLANCHE] douceur {v:F2} écrite → {chemin}");
+                    }
+                    m.SetFloat(TMPro.ShaderUtilities.ID_UnderlaySoftness, dou);
+                    canvas.renderMode = modeAvant; canvas.worldCamera = camAvant;
+                    Object.DestroyImmediate(camP.gameObject); Object.DestroyImmediate(texP);
+                    rtP.Release(); Object.DestroyImmediate(rtP);
+                }
+            }
+
+            // ⛔ ET LE BALAYAGE DE L'AMPLITUDE — c'est ELLE que le juge mesure (un excès de
+            //    luminance), pas la dilatation. Livrée à α 0,282 (= CssHaloOpacite × 1/2,13).
+            //    On lit le SEUIL sur la courbe au lieu de choisir une valeur.
+            {
+                Color colAvant = col;
+                foreach (float av in new[] { 0f, 0.15f, 0.282f, 0.45f, 0.6f, 0.8f, 1f })
+                {
+                    Color c2 = colAvant; c2.a = av;
+                    m.SetColor(TMPro.ShaderUtilities.ID_UnderlayColor, c2);
+                    Color32[] px = rendre();
+                    int changes = 0, ampliMax = 0;
+                    for (int q = 0; q < px.Length; q++)
+                    {
+                        int d = Mathf.Abs(px[q].r - refPx[q].r) + Mathf.Abs(px[q].g - refPx[q].g)
+                              + Mathf.Abs(px[q].b - refPx[q].b);
+                        if (d > 8) { changes++; if (d > ampliMax) ampliMax = d; }
+                    }
+                    Debug.Log($"[HALO-AMPLITUDE {LARG}x{HAUT}] alpha {av:F3} ⇒ {changes} px changés vs le livré"
+                              + $" (amplitude max {ampliMax})");
+                }
+                m.SetColor(TMPro.ShaderUtilities.ID_UnderlayColor, colAvant);
+            }
+
+            canvas.renderMode = modeAvant; canvas.worldCamera = camAvant;
+            Object.DestroyImmediate(camGo); Object.DestroyImmediate(tex);
+            rt.Release(); Object.DestroyImmediate(rt);
+
+            Assert.Greater(encreBase, 50,
+                $"seulement {encreBase} px rendus : l'image est vide et aucun compte de halo n'aurait "
+                + "de sens. La sonde refuse de conclure plutôt que de rendre un zéro.");
+            }
+        }
+
     }
 }

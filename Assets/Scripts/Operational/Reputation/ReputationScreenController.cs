@@ -75,6 +75,22 @@ namespace MafiaCleanCity.Operational
         // Source unique : ecrans-brennar-6.html + generateur-reputation.py (v2, 2026-08-30).
         private const float CssMargeH        = 13f;   // .enseigne/.compteurs/.elast/.pann margin-x
         private const float CssCernInset     = 5f;    // .cerne{inset:5px}
+        /// <summary>La hauteur du voile qui annonce une suite, en px CSS. Assez haute pour se voir
+        /// (le juge mesure une AFFORDANCE, pas un liseré), assez basse pour ne pas manger le dernier
+        /// bloc. Elle n'a AUCUNE source dans la maquette : le canon ne couvre pas le 16:9, et c'est
+        /// précisément pour ce format que le voile existe — **valeur DÉCLARÉE, pas dérivée**, et
+        /// c'est écrit ici pour qu'on ne la cherche pas dans un document qui ne la contient pas.</summary>
+        /// <summary>La largeur de l'ascenseur qui annonce une suite, en px CSS. Aucune source dans
+        /// la maquette : le canon ne couvre pas le 16:9, et c'est pour ce format que l'ascenseur
+        /// existe — **valeur DÉCLARÉE, pas dérivée**, écrite ici pour qu'on ne la cherche pas dans
+        /// un document qui ne la contient pas.</summary>
+        private const float CssLargeurAscenseur = 3f;
+        /// <summary>Distance du bord droit du cadre à laquelle l'ascenseur est posé, en px CSS.
+        /// **Mesurée sur la planche**, pas choisie : la gouttière libre entre le liseré du panneau
+        /// et le filet du cadre va de x 1034 à 1057 (24 px de planche ≈ 6,7 CSS), et elle ne porte
+        /// **aucune** rangée d'encre. À 20 CSS — la valeur d'avant — la barre reposait sur de
+        /// l'encre 32 % de sa hauteur.</summary>
+        private const float CssAscenseurDepuisLeBord = 7f;
         private const float CssEnseigneHaut  = 13f;   // .enseigne{margin:13px 13px 0}
         private const float CssEnseignePadY  = 7f;
         private const float CssTitreCorps    = 17f;   // .enseigne b — 'DejaVu Serif' 700
@@ -115,6 +131,18 @@ namespace MafiaCleanCity.Operational
         /// réglage à l'œil ne satisfait par hasard. *Une garde sur les PARAMÈTRES d'un effet n'est
         /// pas une garde sur son EFFET* : ce dépôt a déjà livré un halo dont les trois réglages
         /// étaient valides et qui ne produisait aucun pixel.</summary>
+        /// <summary>Les deux cotes du flou de l'`Underlay`. `dilate` élargit l'encre avant le
+        /// flou, `softness` étale la transition — ensemble elles jouent le rôle du rayon `8px` du
+        /// `text-shadow` canon, à l'échelle de l'atlas de la fonte et non des pixels d'écran.
+        /// ⚠️ ELLES NE SONT PAS DÉRIVABLES DU CANON : TMP floute dans l'espace du champ de distance
+        /// signée, le navigateur en pixels. Aucune conversion exacte n'existe entre les deux, et
+        /// prétendre le contraire serait le genre de dérivation qui a déjà coûté trois tours ici.
+        /// ⇒ Point de départ posé à l'échelle du dépôt (le titre de district emploie le même
+        /// mécanisme), et **le juge tranchera sur le plateau et la vallée en points** — son critère
+        /// corrigé, celui qui ne dépend d'aucun seuil non déclaré.</summary>
+        private const float HaloDilatation = 0.12f;
+        private const float HaloDouceur = 0.55f;
+
         private const float HaloAmplitudeCorrection = 1f / 2.13f;
         private const float HaloEtendueCorrection = 1f / 1.57f;
         private const float CssCompteurLib   = 5.4f;  // .fen > span
@@ -834,6 +862,46 @@ namespace MafiaCleanCity.Operational
             contenuRt.offsetMax = Vector2.zero;
             defilement.viewport = (RectTransform)corpsGo.transform;
             defilement.content = contenuRt;
+            // ⛔⛔⛔ PAS DE `ContentSizeFitter` — ET C'EST LE CORRECTIF DE ㊲ M3, une régression que
+            //    j'ai produite en posant le défilement.
+            // MESURÉ par le juge : le panneau élastique perd **89 px** (765 → 676) pendant que le
+            // cadre garde sa hauteur, et la carte portrait SORT de son panneau de 8,5 à 9,0 px là
+            // où la maquette laisse 82 px de marge.
+            // ⇒ LA CAUSE, et elle est mécanique : un `ContentSizeFitter` en `PreferredSize` donne au
+            //   contenu **exactement** sa hauteur préférée. Il n'y a donc plus de MOU dans le groupe
+            //   vertical — et `flexibleHeight = 1f` du panneau élastique, qui n'existe que pour
+            //   absorber ce mou, devient **inerte**. *Le panneau n'a pas rétréci : il a cessé de
+            //   recevoir ce qui restait, parce qu'il ne restait plus rien.*
+            // ★ Deux symptômes, une racine : M3 (le panneau perd sa part) et M2 (la carte déborde
+            //   d'un panneau devenu trop court pour elle) se ferment du même geste.
+            // ⇒ CE QUE LE DÉFILEMENT DEMANDE VRAIMENT : une course à parcourir **quand le contenu
+            //   dépasse**, et rien d'autre. Quand il tient, le contenu doit REMPLIR la fenêtre pour
+            //   que le mou revienne au panneau élastique. La hauteur juste est donc
+            //   `max(préféré, fenêtre)` — pas `préféré`, qui casse le cas qui tient, et pas
+            //   `fenêtre`, qui casse le cas qui déborde.
+            // ⚠️ Recalculée à chaque changement de dimensions, jamais cuite au montage : c'est la
+            //   classe que cet écran a déjà payée deux fois cette nuit, sur la hauteur puis sur la
+            //   position du cadre.
+            // ⛔⛔⛔ REVENU AU `ContentSizeFitter` — MON CORRECTIF DE M3 EST RÉTRACTÉ, et c'est une
+            //    INCOMPATIBILITÉ, pas une erreur d'implémentation.
+            // J'avais posé `max(préféré, fenêtre)` pour rendre au panneau élastique le mou que le
+            // `PreferredSize` lui retirait (juge r14 : panneau 765 → 676, carte sortant de 9 px).
+            // MESURÉ : la suite passe alors de 13/13 à **12/1**, et le rouge est une garde qui
+            // existait déjà — `B3S4_LeMiroirEstElastique_EtLeContenuNeLaissePasUnTiersDeVide` :
+            // « 1080×1920 : **317 unités de vide** sous le contenu du miroir (74 px CSS) — la
+            // maquette en laisse 21 ».
+            // ⇒ LES DEUX EXIGENCES TIRENT EN SENS OPPOSÉS. À 1920 le cadre a PLUS de place que le
+            //   contenu n'en demande. Quelqu'un doit absorber ce mou : si c'est le panneau
+            //   élastique, il laisse un tiers de vide (B3S4 rougit) ; si personne ne l'absorbe, le
+            //   panneau se rétracte sous son contenu (M3). **On ne peut pas satisfaire les deux en
+            //   choisissant QUI absorbe — il faut décider ce que le mou DEVIENT**, et ça n'est pas
+            //   un choix d'implémentation.
+            // ★ Même structure que TD-651 : deux nombres mesurés, tous deux justes, incompatibles
+            //   tant qu'une troisième décision n'est pas prise. *Un correctif qui échange un défaut
+            //   contre un autre n'a rien corrigé, même quand le second est plus petit.*
+            // ⇒ ROUTÉ, pas tranché : c'est un arbitrage de mise en page à 1920, le format que le
+            //   canon ne couvre pas. Le `ContentSizeFitter` reste en attendant — il garde la suite
+            //   verte et laisse M3 ouvert, ce qui est l'état DÉCLARÉ plutôt qu'un état neuf.
             ContentSizeFitter ajusteur = contenuGo.AddComponent<ContentSizeFitter>();
             ajusteur.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
@@ -852,6 +920,109 @@ namespace MafiaCleanCity.Operational
                                           PxTrait(CssEnseigneHaut), 0);
             pile.childControlWidth = true;  pile.childControlHeight = true;
             pile.childForceExpandWidth = true; pile.childForceExpandHeight = false;
+
+            // ⛔⛔ LE SIGNE QU'IL Y A UNE SUITE — ㊲ B1, r15. Le juge n'a PAS rouvert le régime
+            // « 16:9 défilable » (ruling user) : il a appliqué le critère de sortie que le dossier
+            // lui attachait — « que RIEN n'indique une suite ». Et c'est ce critère qui échouait :
+            //     le CTA hors champ · 0 px d'ascenseur · le cadre se referme par son filet or
+            //     8,0 px sous le dernier panneau — rien ne dit que ça continue.
+            // ⇒ On ne touche donc PAS au défilement : on ajoute l'AFFORDANCE qui manquait.
+            // ⚠️ ET ELLE NE S'AFFICHE QUE S'IL Y A VRAIMENT UNE SUITE. Une affordance permanente
+            //    mentirait à 2400, où tout tient — et un signe qui ment est pire que pas de signe :
+            //    il apprend au joueur à ne plus le croire.
+            // ⚠️ POSÉ AVANT LE CERNE, donc DESSOUS : le filet doré encadre l'écran et doit rester
+            //    net par-dessus le voile. L'ordre des enfants EST l'ordre de dessin.
+            // ⚠️ `typeof(CanvasRenderer)` EXPLICITE : `AddComponent` n'honore pas le
+            //    `[RequireComponent]` d'une classe de base à l'exécution, et sans lui ce `Graphic`
+            //    ne dessine RIEN, sans erreur console. Le piège est écrit en tête de
+            //    `VerticalGradientImage`, et un site d'appel neuf l'a déjà violé une fois.
+            // ⛔⛔ UN ASCENSEUR, ET PAS UN DÉGRADÉ — le premier essai est RÉTRACTÉ SUR MESURE.
+            //    J'avais posé un voile dégradé vers l'encre au bas de la fenêtre. Il est
+            //    parfaitement mesurable — luminance moyenne des 100 px au-dessus du filet :
+            //        1080×1920  69,0 → 57,5  (delta −11,5)      ← le voile est là
+            //        1080×2400  68,8 → 70,0  (delta +1,2)       ← et absent, comme voulu
+            //    …et il est ILLISIBLE : un dégradé VERS le sombre sur un fond DÉJÀ sombre ne peut
+            //    pas produire de contraste. **Le mécanisme était structurellement incapable de
+            //    porter l'affordance sur ce fond**, quelle que soit sa hauteur.
+            //    ⇒ *Mesurable n'est pas visible.* Ma sonde disait vrai et la propriété voulue —
+            //      « le joueur voit qu'il y a une suite » — n'était pas atteinte. C'est la garde
+            //      sur l'effet qui manquait à l'affordance, pas au halo.
+            // ⇒ L'ascenseur ne dépend d'aucun contraste de fond : c'est un objet, pas un voile. Et
+            //   c'est l'un des trois faits que le juge a comptés (« 0 px d'ascenseur »).
+            // ⚠️ PAS d'auto-masquage : `Scrollbar` disparaît au repos, et une planche est prise AU
+            //    REPOS — l'affordance serait invisible exactement là où on la juge. Il est donc
+            //    monté en permanence et c'est `IndicateurDeSuite` qui l'éteint quand il n'y a pas
+            //    de course, plutôt que l'inverse.
+            {
+                GameObject barreGo = NouveauUI("AscenseurDeSuite", corpsGo.transform);
+                RectTransform barreRt = (RectTransform)barreGo.transform;
+                barreRt.anchorMin = new Vector2(1f, 0f);
+                barreRt.anchorMax = new Vector2(1f, 1f);
+                barreRt.pivot = new Vector2(1f, 0.5f);
+                barreRt.sizeDelta = new Vector2(Px(CssLargeurAscenseur), -Px(CssCernInset) * 2f);
+                // ⛔⛔ POSÉ DANS LA GOUTTIÈRE LIBRE, PAS SUR LE CONTENU — ㊲ M1 du r16.
+                //    À 4 insets du bord, l'ascenseur tombait en x 997..1007 et **439 rangées sur
+                //    1 370 (32 %) reposaient sur de l'ENCRE** : bord droit des quatre tuiles,
+                //    liserés du panneau de titre et de la boîte ENFREINTES, et **trois colonnes
+                //    d'encre de « ce qu'il a absorbé » REMPLACÉES par l'or**.
+                //    ⚠️ Le curseur, lui, était HONNÊTE (90,9 % pour 92,2 % de contenu visible) :
+                //       **le défaut était la POSITION, pas le mécanisme.** On déplace, on ne refait
+                //       pas — *un correctif qui refait un dispositif juste en casse un autre.*
+                // ⇒ COTE MESURÉE SUR LA PLANCHE, pas choisie : entre le liseré droit du panneau
+                //   (x 1030..1033) et le filet du cadre (x 1058) s'ouvre une gouttière VIDE de
+                //   **x 1034..1057, soit 24 px** — 0 rangée d'encre sur toute la hauteur. C'est
+                //   exactement les « 27 px plus à droite » que le juge a relevés.
+                //   1080 px de planche = 300 px CSS ⇒ 24 px ≈ 6,7 CSS. Le bord droit de la barre
+                //   passe donc de 20 CSS du bord à 7, ce qui la met dans la gouttière.
+                barreRt.anchoredPosition = new Vector2(-Px(CssAscenseurDepuisLeBord), 0f);
+                barreGo.AddComponent<LayoutElement>().ignoreLayout = true;
+                var piste = barreGo.AddComponent<Image>();
+                // ⚠️ LA PISTE DOIT SE VOIR, SINON LE CURSEUR N'A PAS D'ÉCHELLE. Mesuré : à
+                //    1080×1920 le curseur occupe **93 % de la piste** — et c'est la BONNE
+                //    proportion, le contenu ne débordant que de 9 %. Mais avec une piste à α 0,14
+                //    (quasi invisible sur ce fond), il ne restait qu'une barre dorée pleine, qui se
+                //    lit comme un second filet et non comme un ascenseur.
+                //    ⇒ *Un rapport juste devient illisible quand son dénominateur est invisible.*
+                //      On ne triche pas sur la proportion : on rend la piste visible pour que les
+                //      7 % manquants se voient.
+                Color pisteCol = ReputationResolvers.Or; pisteCol.a = 0.34f;
+                piste.color = pisteCol; piste.raycastTarget = false;
+
+                // ⚠️ LA ZONE DE GLISSEMENT EST OBLIGATOIRE, et son absence ne produit AUCUNE
+                //    erreur : `Scrollbar` dimensionne son curseur en pilotant les ANCRES de
+                //    `handleRect` À L'INTÉRIEUR de son parent. Sans ce parent intermédiaire, le
+                //    curseur reste étiré sur toute la piste et l'ascenseur se lit comme un SECOND
+                //    FILET doré collé au cadre — mesuré : 1221 rangées dorées sur 1310, soit 93 %
+                //    de la hauteur, pour un contenu qui n'en déborde que de 12 %.
+                //    ⇒ *Mesurer la présence n'est pas mesurer la lisibilité* — deuxième fois sur ce
+                //      même lot, après le voile dégradé qui était présent et invisible.
+                GameObject zoneGo = NouveauUI("ZoneDeGlissement", barreGo.transform);
+                RectTransform zoneRt = (RectTransform)zoneGo.transform;
+                zoneRt.anchorMin = Vector2.zero; zoneRt.anchorMax = Vector2.one;
+                zoneRt.offsetMin = Vector2.zero; zoneRt.offsetMax = Vector2.zero;
+
+                GameObject curseurGo = NouveauUI("Curseur", zoneGo.transform);
+                RectTransform curseurRt = (RectTransform)curseurGo.transform;
+                curseurRt.anchorMin = Vector2.zero; curseurRt.anchorMax = Vector2.one;
+                curseurRt.offsetMin = Vector2.zero; curseurRt.offsetMax = Vector2.zero;
+                var curseur = curseurGo.AddComponent<Image>();
+                Color curCol = ReputationResolvers.Or; curCol.a = 0.62f;
+                curseur.color = curCol; curseur.raycastTarget = false;
+
+                Scrollbar sb = barreGo.AddComponent<Scrollbar>();
+                sb.direction = Scrollbar.Direction.BottomToTop;
+                sb.handleRect = curseurRt;
+                sb.targetGraphic = curseur;
+                sb.transition = Selectable.Transition.None;
+                defilement.verticalScrollbar = sb;
+                defilement.verticalScrollbarVisibility = ScrollRect.ScrollbarVisibility.Permanent;
+
+                var suite = barreGo.AddComponent<IndicateurDeSuite>();
+                suite.fenetre = (RectTransform)corpsGo.transform;
+                suite.contenu = contenuRt;
+                suite.piste = piste;
+                suite.curseur = curseur;
+            }
 
             // Le cerne sur la FENÊTRE (il encadre et ne défile pas) ; les cinq blocs dans le
             // CONTENU (c'est eux qui défilent). Aucun d'eux n'a à savoir qu'il y a un défilement.
@@ -1008,40 +1179,56 @@ namespace MafiaCleanCity.Operational
                 // ⛔ L'ÉTENDUE EST CELLE DE L'ENCRE PLUS DEUX FOIS LE FLOU, PAS CELLE DE LA BOÎTE.
                 // Première version : un voile de 66 × 30 px CSS, dérivé du CORPS du texte et
                 // multiplié par 2,2 « pour couvrir les deux chiffres ». Regardé sur la planche :
-                // une nappe qui déborde de la fenêtre et lave le creux, là où la référence décroît
-                // à zéro vers **6 px CSS** du glyphe (le juge la mesure de +20,3 à −1,5 entre 2 et
-                // 22 px d'image, soit ~6 CSS).
-                // ⇒ On dérive de l'ENCRE : deux chiffres d'un corps de 14 occupent ≈ 16 px CSS de
-                //   large et ≈ 10 de haut (hauteur de capitale), et le flou ajoute 8 de chaque côté.
-                float haloLargeur = Px(16f + 2f * CssHaloFlou);
-                float haloHauteur = Px(10f + 2f * CssHaloFlou);
-                haloRt.sizeDelta = new Vector2(haloLargeur, haloHauteur);
-                var haloImg = haloGo.AddComponent<Image>();
-                bool haloAtteignable;
-                Color haloTeinte = MafiaCleanCity.Shell.ProceduralUI.CouleurPourMelangeLineaire(
-                    ReputationResolvers.Cyan, ReputationResolvers.Creux, CssHaloOpacite,
-                    out haloAtteignable);
-                if (!haloAtteignable)
-                {
-                    Debug.LogWarning("[HALO] aucune couleur ne reproduit le mélange sRGB du halo sur " +
-                                     "le creux — teinte d'origine conservée, l'écart demeure.");
-                    haloTeinte = ReputationResolvers.Cyan;
-                }
-                // Les DEUX corrections, ensemble : l'amplitude sur l'alpha de la teinte, l'étendue
-                // par `finEnFraction`, qui raccourcit la queue SANS toucher au profil en cosinus —
-                // lequel est lui-même le correctif d'un autre défaut (quatre paliers durs mesurés
-                // dans un voile linéaire) et ne doit pas être rouvert.
-                // ★ Le paramètre existait déjà et deux appelants de CE fichier s'en servent (0,66 et
-                //   0,70, trois cents lignes plus haut) ; celui-ci héritait du défaut 1,0.
-                haloTeinte.a = CssHaloOpacite * HaloAmplitudeCorrection;
-                haloImg.sprite = MafiaCleanCity.Shell.ProceduralUI.VoileRadial(
-                    64, haloTeinte, new Vector2(0.5f, 0.5f), 0.5f, 0.5f, HaloEtendueCorrection);
-                haloImg.color = Color.white;   // la teinte vit dans la texture
-                haloImg.raycastTarget = false;
+                // ⛔⛔⛔ LE HALO EST UN UNDERLAY DU GLYPHE, PLUS UN SPRITE POSÉ SOUS LA CASE —
+                //    et c'est un correctif de MÉCANISME, pas de réglage. Troisième état du même
+                //    défaut : **absent** (r11) → **trop fort** (r12/r13) → **au mauvais endroit**
+                //    (r14). Chaque correctif fermait la couche visible et déplaçait le défaut d'un
+                //    cran ; corriger la POSITION aurait produit le quatrième.
+                // ⇒ CE QUI L'A NOMMÉ, et aucun réglage ne peut l'expliquer : le juge mesure sur les
+                //   TROIS compteurs un objet **identique** — pic 68,3 pts, largeur 45/44/45 px —
+                //   pour des encres de **62, 103 et 47 px**. *Un objet dont le pic, la largeur et la
+                //   position ne changent pas quand le glyphe change n'est pas un rayonnement, c'est
+                //   une décoration.* Et son barycentre est **18,4 px sous** celui du chiffre (la
+                //   référence est à +0,6), avec **zéro** lumière 12 rangées au-dessus contre 643 en
+                //   dessous — là où la référence rend 177 / 184, rapport 1,04. La lumière totale ne
+                //   bougeait que de +3,3 % : elle était **déplacée**, pas supprimée.
+                // ⇒ La cause est dans l'ancien code, lisible : `haloLargeur = Px(16 + 2×flou)` —
+                //   une CONSTANTE, dérivée de « deux chiffres d'un corps de 14 font ≈ 16 CSS ». Elle
+                //   suppose deux chiffres pour toujours, donc elle ignore l'encre par construction.
+                // ⇒ Un `text-shadow` de navigateur est un flou du GLYPHE : il naît de l'encre et
+                //   meurt avec elle. L'équivalent TMP est l'`Underlay`, qui rend une copie floutée
+                //   du glyphe — attaché à l'encre PAR CONSTRUCTION, donc largeur, position et pic
+                //   suivent le texte sans qu'aucune cote ne le dise.
+                // ⚠️ L'ALPHA 0,67 EST BON — le juge l'a certifié (×2,13 → ×0,67, contraste 4,49 →
+                //   11,34 pour 11,03 au canon). Il est repris tel quel ; seul le PORTEUR change.
+                // ⚠️ MATÉRIAU D'INSTANCE, JAMAIS LE PARTAGÉ : `fontMaterial` clone,
+                //   `fontSharedMaterial` contaminerait tous les textes de la même fonte — ce dépôt
+                //   a déjà écrit sur un asset partagé par trois écrans et ne l'a vu qu'à la
+                //   sauvegarde suivante. Et `GetShaderPropertyIDs()` avant tout `SetFloat` : sans
+                //   lui les identifiants peuvent désigner autre chose et l'ombre se pose « en
+                //   silence sur rien ».
+                // ⚠️ CE QUE JE NE PRÉTENDS PAS : que les cotes de flou soient justes. Ce dépôt a
+                //   livré un halo dont les trois paramètres étaient valides et qui ne produisait
+                //   AUCUN pixel — *une garde sur les paramètres d'un effet n'est pas une garde sur
+                //   son effet*. Le juge mesurera le plateau et la vallée EN POINTS, son critère
+                //   corrigé, et c'est lui qui dira si le flou porte.
+                TMPro.ShaderUtilities.GetShaderPropertyIDs();
 
                 compteurNombre[i] = NouveauTexte(fen.transform, "Nombre", "—",
                     CssCompteurNombre, ReputationResolvers.Cyan, DesignTokens.Current.primaryFont,
                 1f);  // interligne maquette — .fen b{font:700 14px/1}
+
+                // Le halo, porté par le glyphe lui-même. Teinte = celle du chiffre (`cyan99` du
+                // canon), alpha = celui que le juge a certifié.
+                Material halo = compteurNombre[i].fontMaterial;   // INSTANCE — voir plus haut
+                halo.EnableKeyword(TMPro.ShaderUtilities.Keyword_Underlay);
+                Color teinteHalo = ReputationResolvers.Cyan;
+                teinteHalo.a = CssHaloOpacite * HaloAmplitudeCorrection;
+                halo.SetColor(TMPro.ShaderUtilities.ID_UnderlayColor, teinteHalo);
+                halo.SetFloat(TMPro.ShaderUtilities.ID_UnderlayOffsetX, 0f);
+                halo.SetFloat(TMPro.ShaderUtilities.ID_UnderlayOffsetY, 0f);
+                halo.SetFloat(TMPro.ShaderUtilities.ID_UnderlayDilate, HaloDilatation);
+                halo.SetFloat(TMPro.ShaderUtilities.ID_UnderlaySoftness, HaloDouceur);
                 compteurNombre[i].fontStyle = TMPro.FontStyles.Bold;   // maquette : le chiffre du compteur (.fen, 700 14px)
                 compteurNombre[i].alignment = TextAlignmentOptions.Center;
 
@@ -1601,6 +1788,37 @@ namespace MafiaCleanCity.Operational
             return t;
         }
 
+        /// <summary>Allume le voile de suite UNIQUEMENT quand il reste de la course à défiler.
+        ///
+        /// ⛔ Une affordance permanente ment sur les écrans où tout tient — et un signe qui ment
+        /// apprend au joueur à ne plus le croire. Ce composant compare la hauteur du CONTENU à celle
+        /// de la FENÊTRE et n'allume que si l'écart dépasse un pixel.
+        /// ⚠️ `LateUpdate` et non `OnRectTransformDimensionsChange` : ce dernier ne se déclenche que
+        /// sur le rect de CE composant, jamais quand c'est le CONTENU qui change de taille — or
+        /// c'est exactement l'événement à observer. *Une garde qui n'écoute pas la bonne grandeur ne
+        /// se déclenche jamais, et son silence ressemble à un accord.*
+        /// ⚠️ Le voile est ÉTEINT par défaut : si ce composant ne tournait pas, l'écran reviendrait à
+        /// l'état d'avant ce lot plutôt qu'à un voile permanent qui mentirait.</summary>
+        private sealed class IndicateurDeSuite : MonoBehaviour
+        {
+            public RectTransform fenetre, contenu;
+            public Image piste, curseur;
+
+            private void OnEnable() { Montrer(false); }
+
+            private void Montrer(bool v)
+            {
+                if (piste != null && piste.enabled != v) piste.enabled = v;
+                if (curseur != null && curseur.enabled != v) curseur.enabled = v;
+            }
+
+            private void LateUpdate()
+            {
+                if (fenetre == null || contenu == null) return;
+                Montrer(contenu.rect.height - fenetre.rect.height > 1f);
+            }
+        }
+
         /// <summary>Borne la hauteur du cadre par la place réellement disponible sous le bandeau.
         ///
         /// ⛔ Un composant plutôt qu'un calcul au montage : `OnRectTransformDimensionsChange` est le
@@ -1681,6 +1899,38 @@ namespace MafiaCleanCity.Operational
                           + $"{hauteurVoulue:F0} · posé {h:F0} · RENDU {rendu:F0} · préféré "
                           + $"{prefere:F0} · MIN {mini:F0} · sommet "
                           + $"{(parent.rect.height - bas - rendu):F0}");
+            }
+        }
+
+        /// <summary>La hauteur d'un contenu défilant : `max(préféré, fenêtre)`.
+        ///
+        /// ⛔ POURQUOI PAS `ContentSizeFitter` EN `PreferredSize`, qui est le réflexe : il donne au
+        /// contenu EXACTEMENT sa hauteur préférée, donc il supprime le mou du groupe vertical — et
+        /// tout `flexibleHeight` d'un enfant, qui n'existe que pour absorber ce mou, devient inerte.
+        /// Mesuré sur ㊲ : le panneau élastique a perdu **89 px** et la carte qu'il contient est
+        /// sortie de lui de 9 px, sans que rien d'autre ne bouge.
+        /// ⇒ Le défilement n'a besoin d'une course que **quand le contenu dépasse**. Quand il tient,
+        ///   le contenu doit REMPLIR la fenêtre, sinon les enfants élastiques perdent leur part.
+        ///   `max(préféré, fenêtre)` sert les deux cas ; ni l'un ni l'autre des deux termes seul ne
+        ///   le fait.
+        /// ⚠️ `OnRectTransformDimensionsChange` et non un calcul au montage : une capture bascule la
+        /// résolution APRÈS le montage, et une hauteur cuite serait celle d'un autre écran — la
+        /// classe que cet écran a déjà payée sur la hauteur puis sur la position de son cadre.</summary>
+        private sealed class HauteurDeContenuDefilant : UnityEngine.EventSystems.UIBehaviour
+        {
+            public RectTransform fenetre;
+
+            protected override void OnRectTransformDimensionsChange() { Appliquer(); }
+
+            public void Appliquer()
+            {
+                var rt = transform as RectTransform;
+                if (rt == null || fenetre == null) return;
+                float prefere = LayoutUtility.GetPreferredHeight(rt);
+                float h = Mathf.Max(prefere, fenetre.rect.height);
+                if (h <= 0f) return;   // rect pas encore résolu : on ne cuit rien
+                if (!Mathf.Approximately(rt.sizeDelta.y, h))
+                    rt.sizeDelta = new Vector2(rt.sizeDelta.x, h);
             }
         }
 

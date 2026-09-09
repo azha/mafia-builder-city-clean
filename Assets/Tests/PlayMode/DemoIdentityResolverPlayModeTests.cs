@@ -911,4 +911,69 @@ namespace MafiaCleanCity.CityMap.Tests
                 "prouveraient rien.");
         }
     }
+    /// <summary>⛔ LA PRÉCÉDENCE DES DEUX PAIRES D'IDENTITÉ DE CAPTURE, sur des entrées FABRIQUÉES.
+    ///
+    /// Elle existe parce qu'un seul nom désignait deux usages, et que la suite complète l'a montré
+    /// des DEUX côtés le même jour : avec `MAFIA_DEMO_*`, 14 tests fonctionnels rougissent (le compte
+    /// gelé n'a pas de bâtiment possédé) ; sans elle, 3 captures refusent d'écrire. **Aucune
+    /// invocation ne pouvait satisfaire les deux familles**, et le compteur ne le disait jamais.
+    ///
+    /// ⚠️ Aucune vraie variable d'environnement n'est lue ni posée ici : la fonction sous test est
+    /// PURE et reçoit ses quatre valeurs. C'est ce qui la rend essayable sans la porte Unity — et ce
+    /// qui empêche ce contrôle de dépendre du régime sous lequel il tourne, défaut payé cette nuit
+    /// même sur un contrôle qui partageait le processus de son sujet.</summary>
+    [Category("DemoIdentity")]
+    public class IdentiteDeCapturePrecedenceTests
+    {
+        private static (string id, string mdp, string regime) Resoudre(string ic, string mc, string id_, string md)
+            => MafiaCleanCity.Shell.Tests.CaptureSousShell.ResoudreIdentiteDeCapture(ic, mc, id_, md);
+
+        [Test]
+        public void LaPaireDeCapture_GagneSurLaPaireDeDemo_EtLeRegimeEstDeclare()
+        {
+            var r = Resoudre("cap@x.test", "cap-pw", "demo@x.test", "demo-pw");
+            Assert.AreEqual("cap@x.test", r.id, "la paire propre aux captures doit primer");
+            Assert.AreEqual("MAFIA_CAPTURE_*", r.regime,
+                "le régime doit être DÉCLARÉ : sans lui, une capture signée sous le repli ressemble " +
+                "trait pour trait à une capture signée sous la paire propre");
+        }
+
+        [Test]
+        public void SansPaireDeCapture_OnRetombeSurLaPaireDeDemo_ADDITIF()
+        {
+            var r = Resoudre(null, null, "demo@x.test", "demo-pw");
+            Assert.AreEqual("demo@x.test", r.id,
+                "le repli est ce qui rend ce lot ADDITIF : toute ligne de commande existante marche encore");
+            Assert.AreEqual("MAFIA_DEMO_* (repli)", r.regime);
+        }
+
+        [Test]
+        public void UnePaireÀMoitiéPosée_NeComptePas_EtLaisseLaMainAuRepli()
+        {
+            // La seconde direction que la garde d'origine ne couvrait pas : un `export` oublié.
+            var r = Resoudre("cap@x.test", null, "demo@x.test", "demo-pw");
+            Assert.AreEqual("demo@x.test", r.id,
+                "un identifiant de capture SANS son mot de passe ne constitue pas une paire");
+            var r2 = Resoudre(null, "cap-pw", "demo@x.test", "demo-pw");
+            Assert.AreEqual("demo@x.test", r2.id, "et symétriquement, un mot de passe seul non plus");
+        }
+
+        [Test]
+        public void AucunePaire_RendUnIdentifiantNul_PourQueLAppelantREFUSE()
+        {
+            var r = Resoudre(null, null, null, null);
+            Assert.IsNull(r.id, "sans paire complète, la capture doit être REFUSÉE, jamais repliée en silence");
+            Assert.AreEqual("AUCUNE", r.regime);
+        }
+
+        [Test]
+        public void DesBlancs_ValentUneAbsence_JamaisUneIdentité()
+        {
+            var r = Resoudre("   ", "  ", "demo@x.test", "demo-pw");
+            Assert.AreEqual("demo@x.test", r.id, "une variable posée mais vide n'est pas une identité");
+            var r2 = Resoudre("   ", "  ", " ", " ");
+            Assert.IsNull(r2.id, "et quatre blancs ne font pas une paire");
+        }
+    }
+
 }

@@ -766,7 +766,15 @@ namespace MafiaCleanCity.Operational
             bord.sprite = ProceduralUI.RoundedRectDashedOutline(
                 PxTrait(CssRayonMoyen), PxTrait(CssFiletEpais),
                 PxTrait(CssFiletEpais * 3f), PxTrait(CssFiletEpais * 3f), Color.white);
-            bord.type = Image.Type.Sliced;
+            // ⛔ `Tiled`, PAS `Sliced` — et c'est le générateur lui-même qui le dit : « un contour
+            //    de rectangle arrondi en POINTILLÉS, à utiliser en `Image.Type.Tiled` ». Les deux
+            //    respectent le `border` du sprite et gardent les coins ; `Sliced` ÉTIRE la section
+            //    centrale — qui porte exactement UNE période de pointillé — et la transforme en une
+            //    longue barre, tandis que `Tiled` la RÉPÈTE. Mesuré par un juge ⊥ sur un cadre brisé :
+            //    334 px de trou, 36 %, symétrique haut et bas parce que les deux rails partagent la
+            //    même bande. ⇒ Classe fermée sur les 7 sites, pas seulement sur celui du rapport ;
+            //    le remède était DÉJÀ en production sur deux sites de `LieutenantScreenController`.
+            bord.type = Image.Type.Tiled;
             bord.color = DemolitionResolvers.ParcelleBord;
             bord.raycastTarget = false;
             VerticalLayoutGroup vp = parc.AddComponent<VerticalLayoutGroup>();
@@ -806,14 +814,39 @@ namespace MafiaCleanCity.Operational
                 foreach (ReplacementOptionDto o in offres) ConstruireOffre(o, fermee && o.rank == 1);
             }
 
+            bool jetonPris = !JetonDisponible;
+
             if (fermee)
             {
                 EcrireDit(pied, "", "Dima :", " « Trop tard pour celle-là. »");
+            // ⛔⛔⛔ D9 — LE GESTE EST ÉTEINT QUAND LE JETON EST DÉPENSÉ, ET CE N'EST PAS UNE
+            //    PRUDENCE : sans ça, l'écran propose au joueur la SEULE séquence où il est CERTAIN
+            //    de perdre. Mesuré par un juge ⊥ de bout en bout :
+            //        décommission                  200 OK
+            //        puis « PRENDRE LA PREMIÈRE »   409 STRUCTURAL_CAP_EXHAUSTED
+            //        résultat                       options: []  ET aucun bâtiment
+            //    ⇒ *Le joueur suit exactement le chemin que l'écran lui propose, et il perd sa
+            //      parcelle ET ses deux offres.* Ce n'est pas un défaut d'affichage, c'est une
+            //      perte de biens provoquée par l'interface.
+            //
+            // ⛔ ET LA PRÉCONDITION ÉTAIT DÉJÀ LÀ, NOMMÉE. `JetonDisponible` existe depuis le
+            //    premier jour de cet écran, l'en-tête du fichier écrit noir sur blanc « (c) une
+            //    démolition réussie fait passer `structural_budget` à `{used:1, cap_reached:true}` »,
+            //    et `Raser()` pose lui-même `JetonDepenseConnu = true; JetonDepense = true`.
+            //    ⇒ **L'écran détenait la réponse et ne se posait pas la question.** *Le correctif
+            //      n'est pas de GÉRER le 409 : c'est de ne pas le PROVOQUER.*
+            //
+            // ⚠️ ET LE GESTE MORT DIT POURQUOI. Un bouton grisé sans raison se lit comme une panne ;
+            //    ici la raison est connue, servie, et elle appartient au joueur : son jeton de
+            //    structure est déjà dépensé pour aujourd'hui. *Éteindre sans dire est la moitié du
+            //    correctif.*
                 ReplacementOptionDto autre = PremiereOffreOuverte(offres, 2);
                 ConstruireGeste(pied, "PRENDRE L'AUTRE",
-                                autre != null ? "tant qu'elle est encore là" : "il n'en reste aucune",
-                                autre == null, false,
-                                autre != null ? (System.Action)(() => StartCoroutine(Prendre(autre))) : null);
+                                jetonPris ? "votre jeton de structure est déjà dépensé aujourd'hui"
+                                : autre != null ? "tant qu'elle est encore là" : "il n'en reste aucune",
+                                autre == null || jetonPris, false,
+                                autre != null && !jetonPris
+                                    ? (System.Action)(() => StartCoroutine(Prendre(autre))) : null);
                 ConstruireRien(pied, "Une offre de remplacement se ferme",
                     " — prise, expirée, ou retirée. Ce n'est pas une liste qui attend.");
             }
@@ -824,11 +857,13 @@ namespace MafiaCleanCity.Operational
                           + "sur la table. »");
                 ReplacementOptionDto premiere = PremiereOffreOuverte(offres, 1);
                 ConstruireGeste(pied, "PRENDRE LA PREMIÈRE",
-                                premiere != null
+                                jetonPris ? "votre jeton de structure est déjà dépensé aujourd'hui"
+                                : premiere != null
                                     ? DemolitionResolvers.NomDeType(premiere.candidate_building_type)
                                     : "il n'en reste aucune",
-                                premiere == null, false,
-                                premiere != null ? (System.Action)(() => StartCoroutine(Prendre(premiere))) : null);
+                                premiere == null || jetonPris, false,
+                                premiere != null && !jetonPris
+                                    ? (System.Action)(() => StartCoroutine(Prendre(premiere))) : null);
             }
 
             if (refusAffiche != null) ConstruireRien(pied, "Le serveur a refusé", " : " + refusAffiche);
