@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Linq;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
@@ -128,7 +129,12 @@ namespace MafiaCleanCity.Capture.Tests
             // repos ne PROUVE pas l'interaction : elle montre exactement ce que montrait l'écran
             // quand aucun bâtiment n'était cliquable. Celle-ci ouvre la fiche par le même chemin
             // qu'un joueur — `OuvrirFiche`, ce que le `Button` de la cellule appelle.
-            DistrictInteriorBuildingDto premier = district.LastFetch.buildings[0];
+            // La référence montre un bar : ouvrir en priorité le commerce de façade rend la
+            // comparaison de la fiche et de BLANCHIR sémantiquement opposable, au lieu de choisir
+            // l'ordre technique du tableau (souvent un laboratoire).
+            DistrictInteriorBuildingDto premier = district.LastFetch.buildings
+                .FirstOrDefault(b => b != null && b.operational_type == "front_shop")
+                ?? district.LastFetch.buildings[0];
             district.OuvrirFiche(premier);
             for (int i = 0; i < 8; i++) yield return null;
 

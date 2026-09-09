@@ -175,6 +175,8 @@ namespace MafiaCleanCity.CityMap
         public int RenderedLieutenantMarkerCount { get; private set; }
 
         private CityProjectionsClient projections;
+        private WorldApiClient world;
+        private string sessionBearer;
         private bool initialized;
         private Transform mountParent;
         private RectTransform root;
@@ -202,6 +204,7 @@ namespace MafiaCleanCity.CityMap
             if (initialized) return;
             initialized = true;
             projections = new CityProjectionsClient { BaseUrl = baseUrl };
+            world = new WorldApiClient { BaseUrl = baseUrl };
         }
 
         /// <summary>U-14 (D9) — le seam d'injection : le montant fournit le porteur + le district
@@ -209,6 +212,11 @@ namespace MafiaCleanCity.CityMap
         public IEnumerator SetSession(string bearer, int districtId)
         {
             EnsureInitialized();
+            sessionBearer = bearer;
+            // Une même instance peut être réutilisée après changement de joueur : une poignée de
+            // planque appartient à la session qui l'a servie et ne doit jamais survivre au seam.
+            FicheSafehouseId = null;
+            DernierBlanchiment = null;
             LastFetchSucceeded = false;
             LastErrorCode = 0;
             // ⛔ SANS CETTE LIGNE, LE RÉSOLVEUR EST MUET ET PERSONNE NE LE VOIT — `Traduire` rend
@@ -1832,6 +1840,15 @@ namespace MafiaCleanCity.CityMap
         private TextMeshProUGUI ficheTitre, ficheType, ficheSortie;
         private TextMeshProUGUI[] ficheStatValeurs = new TextMeshProUGUI[3];
         private TextMeshProUGUI[] ficheStatLibelles = new TextMeshProUGUI[3];
+        private string ficheOperationalType;
+        private bool blanchimentEnCours;
+
+        // Hooks du geste réel, lisibles par le test sans exposer les détails de rendu.
+        public string FicheSafehouseId { get; private set; }
+        public int FicheBlanchimentTentatives { get; private set; }
+        public int FicheBlanchimentReussites { get; private set; }
+        public DistrictLaunderOutcome DernierBlanchiment { get; private set; }
+        public const int FicheBlanchimentMontantCents = 25_000;
 
         /// <summary>Le bâtiment actuellement ouvert dans la fiche — `null` si elle est fermée.
         /// Test hook : une falsifiable peut vérifier QUEL bâtiment est ouvert, pas seulement qu'une
@@ -2189,6 +2206,7 @@ namespace MafiaCleanCity.CityMap
         {
             if (ficheRoot == null || b == null) return;
             FicheBuildingId = b.building;
+            ficheOperationalType = b.operational_type;
 
             ficheTitre.text = ResoudreNomBatiment(b);
             ficheType.text = LibellesBatiment.Conversion(b.conversion_band);
@@ -2259,6 +2277,7 @@ namespace MafiaCleanCity.CityMap
         public void FermerFiche()
         {
             FicheBuildingId = null;
+            ficheOperationalType = null;
             if (ficheRoot != null) ficheRoot.gameObject.SetActive(false);
         }
 
@@ -2275,8 +2294,8 @@ namespace MafiaCleanCity.CityMap
         /// TROIS fichiers du client affirmaient encore l'inverse, chacun en éteignant son action.
         /// ★ C'est la forme la plus coûteuse de l'énoncé daté : il ne se contente pas de mentir,
         ///   il retire une action au joueur, et il a l'air rigoureux — daté, chiffré, sourcé.
-        ///     ⚠️ CE QUI RESTE VRAI : cet écran ne lit pas la planque du joueur, donc il n'a pas
-        ///     l'identifiant à poster. Le manque a changé de côté, il n'a pas disparu.
+        ///     Cet écran découvre désormais la planque par les projections joueur et poste le petit
+        ///     lot depuis un commerce de façade ; aucun id de démo n'est codé en dur.
         ///   · AMÉLIORER  — l'upgrade de palier vit sur `BuildingCardController`, un autre écran.
         /// ⇒ Tant qu'une action n'a pas son chemin PROUVÉ de bout en bout, elle DIT son état au lieu
         /// de faire semblant. Un bouton qui ne fait rien est pire qu'un bouton absent — il promet
@@ -2291,11 +2310,99 @@ namespace MafiaCleanCity.CityMap
                     ficheSortie.text = "Collecte : ce bâtiment n'expose pas encore son vendeur.";
                     break;
                 case "BLANCHIR":
-                    ficheSortie.text = "Blanchiment : cet écran ne sait pas encore quelle planque utiliser.";
+                    if (ficheOperationalType != "front_shop")
+                    {
+                        ficheSortie.text = "Blanchiment : choisissez un commerce de façade.";
+                        break;
+                    }
+                    if (string.IsNullOrEmpty(sessionBearer) || string.IsNullOrEmpty(FicheBuildingId))
+                    {
+                        ficheSortie.text = "Blanchiment indisponible : session absente.";
+                        break;
+                    }
+                    if (!blanchimentEnCours)
+                        StartCoroutine(BlanchirDepuisFiche());
                     break;
                 default:
                     ficheSortie.text = "Amélioration : à ouvrir depuis la fiche opérationnelle.";
                     break;
+            }
+        }
+
+        /// <summary>Action réelle du bouton canonique « BLANCHIR ». La fiche garde exactement sa
+        /// géométrie : seul son listener, auparavant informatif, rejoint maintenant l'endpoint
+        /// opérationnel existant.</summary>
+        public IEnumerator BlanchirDepuisFiche()
+        {
+            if (blanchimentEnCours) yield break;
+            if (ficheOperationalType != "front_shop" || string.IsNullOrEmpty(FicheBuildingId) ||
+                string.IsNullOrEmpty(sessionBearer)) yield break;
+
+            blanchimentEnCours = true;
+            FicheBlanchimentTentatives++;
+            DernierBlanchiment = null;
+            if (ficheSortie != null) ficheSortie.text = "Recherche de la planque…";
+
+            if (string.IsNullOrEmpty(FicheSafehouseId))
+                yield return TrouverPlanquePourFiche();
+
+            if (string.IsNullOrEmpty(FicheSafehouseId))
+            {
+                if (ficheSortie != null) ficheSortie.text = "Blanchiment indisponible : aucune planque.";
+                blanchimentEnCours = false;
+                yield break;
+            }
+
+            string frontShopId = FicheBuildingId;
+            DistrictLaunderOutcome outcome = null;
+            yield return projections.InjectLaundering(frontShopId, FicheSafehouseId, FicheBlanchimentMontantCents,
+                sessionBearer, r => outcome = r);
+            DernierBlanchiment = outcome;
+            if (outcome != null && outcome.Ok)
+            {
+                FicheBlanchimentReussites++;
+                if (ficheSortie != null) ficheSortie.text = "Petit lot confié à la filière.";
+            }
+            else if (ficheSortie != null)
+            {
+                string raison = outcome != null && !string.IsNullOrEmpty(outcome.Message)
+                    ? outcome.Message : "réponse absente";
+                ficheSortie.text = "Blanchiment indisponible : " + raison;
+            }
+            blanchimentEnCours = false;
+        }
+
+        /// <summary>Privilégie le district déjà affiché, puis parcourt le monde servi si la planque
+        /// du joueur vit ailleurs. Le premier résultat stable suffit à l'endpoint d'injection.</summary>
+        private IEnumerator TrouverPlanquePourFiche()
+        {
+            FicheSafehouseId = null;
+            int districtAffiche = LastFetch != null ? LastFetch.district_id : 0;
+            if (districtAffiche > 0)
+                yield return LirePlanqueDuDistrict(districtAffiche);
+            if (!string.IsNullOrEmpty(FicheSafehouseId)) yield break;
+
+            List<DistrictDto> districts = null;
+            yield return world.GetDistricts(d => districts = d, _ => { });
+            if (districts == null) yield break;
+            foreach (DistrictDto district in districts)
+            {
+                if (district == null || district.id == districtAffiche) continue;
+                yield return LirePlanqueDuDistrict(district.id);
+                if (!string.IsNullOrEmpty(FicheSafehouseId)) yield break;
+            }
+        }
+
+        private IEnumerator LirePlanqueDuDistrict(int districtId)
+        {
+            StashDto stash = null;
+            yield return projections.Stash(districtId, sessionBearer, s => stash = s, _ => { });
+            if (stash?.safehouses == null) yield break;
+            foreach (SafehouseDto safehouse in stash.safehouses)
+            {
+                if (safehouse == null || string.IsNullOrEmpty(safehouse.safehouse_id)) continue;
+                FicheSafehouseId = safehouse.safehouse_id;
+                yield break;
             }
         }
 

@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Text;
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -89,5 +90,59 @@ namespace MafiaCleanCity.CityMap
         /// payload.data; onMissing(code) otherwise (e.g. an out-of-range district id → VALIDATION_FAILED).</summary>
         public IEnumerator Interior(int districtId, string token, Action<DistrictInteriorDto> ok, Action<long> missing) =>
             Get(D(districtId, "interior"), token, j => ok(JsonUtility.FromJson<DistrictInteriorEnvelope>(j)?.payload?.data), missing);
+
+        /// <summary>Action portée par la fiche intégrée. Elle vit ici pour respecter le sens de
+        /// dépendance CityMap ← Operational tout en utilisant le même endpoint serveur.</summary>
+        public IEnumerator InjectLaundering(string frontShopId, string safehouseId, int amountCents,
+            string token, Action<DistrictLaunderOutcome> done)
+        {
+            string url = $"{BaseUrl.TrimEnd('/')}/v1/operational/laundering/inject";
+            string body = JsonUtility.ToJson(new DistrictLaunderRequestDto
+            {
+                front_shop_id = frontShopId,
+                safehouse_id = safehouseId,
+                amount_cents = amountCents,
+            });
+            var outcome = new DistrictLaunderOutcome();
+            using (var req = new UnityWebRequest(url, UnityWebRequest.kHttpVerbPOST))
+            {
+                req.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(body));
+                req.downloadHandler = new DownloadHandlerBuffer();
+                req.timeout = TimeoutSeconds;
+                req.SetRequestHeader("Content-Type", "application/json");
+                if (!string.IsNullOrEmpty(token)) req.SetRequestHeader("Authorization", "Bearer " + token);
+                req.SetRequestHeader("Idempotency-Key", Guid.NewGuid().ToString());
+                yield return req.SendWebRequest();
+
+                outcome.HttpStatus = req.responseCode;
+                outcome.Ok = req.result == UnityWebRequest.Result.Success;
+                if (outcome.Ok)
+                {
+                    try
+                    {
+                        outcome.NodeId = JsonUtility.FromJson<DistrictLaunderEnvelope>(req.downloadHandler.text)
+                            ?.payload?.data?.node_id;
+                        outcome.Ok = !string.IsNullOrEmpty(outcome.NodeId);
+                        outcome.Message = outcome.Ok ? "ok" : "la réponse ne contient aucun nœud";
+                    }
+                    catch
+                    {
+                        outcome.Ok = false;
+                        outcome.Message = "la réponse du service est illisible";
+                    }
+                }
+                else
+                {
+                    switch (req.responseCode)
+                    {
+                        case 401: outcome.Message = "la session a expiré"; break;
+                        case 409: outcome.Message = "les fonds ou la capacité sont insuffisants"; break;
+                        case 422: outcome.Message = "le lot n'est pas accepté"; break;
+                        default: outcome.Message = "le service est indisponible"; break;
+                    }
+                }
+            }
+            done?.Invoke(outcome);
+        }
     }
 }

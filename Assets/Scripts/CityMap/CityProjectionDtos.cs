@@ -186,6 +186,28 @@ namespace MafiaCleanCity.CityMap
         public DistrictBuildingNameI18nDto name_i18n;
     }
 
+    // Action de fiche : formes minimales de l'injection, gardées dans CityMap afin que la couche
+    // basse n'ait pas à référencer l'assembly Operational (qui dépend déjà de CityMap).
+    [Serializable]
+    public class DistrictLaunderRequestDto
+    {
+        public string front_shop_id;
+        public string safehouse_id;
+        public int amount_cents;
+    }
+
+    [Serializable] public class DistrictLaunderResultDto { public string node_id; }
+    [Serializable] public class DistrictLaunderResultPayload { public DistrictLaunderResultDto data; }
+    [Serializable] public class DistrictLaunderEnvelope { public DistrictLaunderResultPayload payload; }
+
+    public class DistrictLaunderOutcome
+    {
+        public bool Ok;
+        public long HttpStatus;
+        public string NodeId;
+        public string Message;
+    }
+
     /// <summary>Un lieutenant du district, tel que servi par `…/interior`. Mesuré en direct le
     /// 2026-09-02 (compte de démo, district 16) : deux clés, DEUX CHAÎNES — `lieutenant_id` (uuid,
     /// jointure vers `DistrictInteriorBuildingDto.lieutenant_ids`) et `name` (ex. "Lt. Wend").
