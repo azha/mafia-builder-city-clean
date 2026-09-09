@@ -1656,16 +1656,14 @@ namespace MafiaCleanCity.Shell
 
         /// <summary>L'ORDRE du dock, défini UNE FOIS (items 0.2/0.3, design §3.1). Les TROIS sites
         /// qui en dépendaient — `BuildTabBar`, `RebatirChromePourResolutionCourante`, et l'ordre que
-        /// lit `RefreshTabButtonVisuals` — le LISENT, ils ne le recopient plus.</summary>
+        /// lit `RefreshTabButtonVisuals` — le LISENT, ils ne le recopient plus.
+        /// ⚠️ Jalon 4 : l'onglet Filière doit être RÉAFFECTÉ au marché des substances (㉑), pas
+        /// seulement renommé. Il monte encore `LaunderingController` : changer le mot seul ferait
+        /// pointer un nom de marché sur un autre écran. Déclencheur = ㉑ monté dans ce client.</summary>
         private static readonly (Tab onglet, string libelle)[] DockRatifie =
         {
             (Tab.Empire,   "Empire"),
             (Tab.Org,      "Famille"),
-            // ⚠️ Jalon 4 : cet onglet doit être RÉAFFECTÉ au marché des substances (㉑), pas
-            // voir son libellé réécrit. Il monte `LaunderingController` (:792, mono-nœud) : ne
-            // changer que le mot ferait pointer un nom de marché sur le blanchiment, qui est un
-            // autre écran. Déclencheur = ㉑ MONTÉ dans ce client — aujourd'hui zéro fichier ; sa
-            // maquette est ratifiée depuis le 2026-08-27, et une maquette ne monte rien.
             (Tab.Pipeline, "Filière"),
             (Tab.More,     "Plus"),
         };

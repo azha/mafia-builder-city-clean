@@ -137,8 +137,10 @@ namespace MafiaCleanCity.Theme.Tests
 
         // ── La mesure réelle — Assets/Scripts, allowlist figée par le design (D5, re-mesurée ici) ──
 
-        // 11 entrées : les 11 liaisons post-D5 (12 liaisons mesurées par D5, MOINS AppShell.cs:255
-        // repointé sur chromeTabActive). "Shell/TopBarController.cs" avait été ajouté ici par le
+        // 10 entrées après convergence des nouveaux écrans : les cinq accès apparus dans Carnet,
+        // Journal, Filière et Loi ont été confrontés aux références puis repointés sur leurs vrais
+        // jetons (crème, hudMoneyGold ou hudMoneyUnderlineGold). DailyReview n'accède plus non plus
+        // à accentGold. "Shell/TopBarController.cs" avait été ajouté ici par le
         // round HUD v3.1 du 2026-08-21 (247ed3b, `InitPalette` composait un filet/anneau par alpha
         // depuis `accentGold`) — RETIRÉ NOMMÉMENT par la boucle ⊥ pixel-perfect qui a suivi
         // (même jour) : la root cause du ruling user était PRÉCISÉMENT cette composition depuis un
@@ -157,7 +159,6 @@ namespace MafiaCleanCity.Theme.Tests
             "Operational/Laundering/LaunderingController.cs",
             "Operational/Laundering/PipelineOverviewController.cs",
             "Operational/Lieutenant/LieutenantScreenController.cs",
-            "Shell/DailyReviewScreenController.cs",
             "Shell/ExceptionQueuePanelController.cs",
             "Shell/HighestLeverageCardController.cs",
         };

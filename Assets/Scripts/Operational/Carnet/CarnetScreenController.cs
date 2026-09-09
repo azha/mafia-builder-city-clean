@@ -345,7 +345,7 @@ namespace MafiaCleanCity.Operational
             pannSur = NouveauTexte(go.transform, "SurTitre", "", Px(7f),
                 DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont);
             pannTitre = NouveauTexte(go.transform, "Titre", "", Px(12f),
-                DesignTokens.Current.accentGold, DesignTokens.Current.hudSerifFont);
+                DesignTokens.Current.hudCreme, DesignTokens.Current.hudSerifFont);
             pannTexte = NouveauTexte(go.transform, "Texte", "", Px(8.5f),
                 DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont);
         }

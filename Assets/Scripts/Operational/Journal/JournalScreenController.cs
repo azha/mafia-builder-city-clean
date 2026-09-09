@@ -467,7 +467,9 @@ namespace MafiaCleanCity.Operational
         private static Color FondBloc    => DesignTokens.Current.surfaceCard;
         private static Color TexteFort   => DesignTokens.Current.hudCreme;
         private static Color TexteFaible => DesignTokens.Current.hudCremeSecondary;
-        private static Color AccentOr    => DesignTokens.Current.accentGold;
+        // Référence screen_c1 : #f2c96b. accentGold (#ffd23f) est plus jaune de
+        // (+13,+9,-43) et a été refusé par le juge visuel sur les trois planches.
+        private static Color AccentOr    => DesignTokens.Current.hudMoneyGold;
         private static Color AccentVif   => HeatBucketResolver.SeverityColor(
                                                 HeatBucketResolver.Severity.Severe);
 

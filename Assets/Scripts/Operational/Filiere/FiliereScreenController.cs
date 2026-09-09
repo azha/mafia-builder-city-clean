@@ -536,7 +536,7 @@ namespace MafiaCleanCity.Operational
             ve.childControlWidth = true; ve.childControlHeight = true;
             ve.childForceExpandWidth = true; ve.childForceExpandHeight = false;
             TextMeshProUGUI titre = NouveauTexte(ens.transform, "Titre", Lib("La filière"),
-                Px(19f), DesignTokens.Current.accentGold, DesignTokens.Current.hudSerifFont);
+                Px(19f), DesignTokens.Current.hudMoneyGold, DesignTokens.Current.hudSerifFont);
             titre.alignment = TextAlignmentOptions.Center;
             titre.characterSpacing = 14f;
             sousTitre = NouveauTexte(ens.transform, "SousTitre", "", Px(7.5f),
@@ -611,7 +611,7 @@ namespace MafiaCleanCity.Operational
             pannSur = NouveauTexte(pan.transform, "SurTitre", "", Px(7.5f),
                 DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont);
             pannTitre = NouveauTexte(pan.transform, "Titre", "", Px(13f),
-                DesignTokens.Current.accentGold, DesignTokens.Current.hudSerifFont);
+                DesignTokens.Current.hudCreme, DesignTokens.Current.hudSerifFont);
             pannTexte = NouveauTexte(pan.transform, "Texte", "", Px(9f),
                 DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont);
 

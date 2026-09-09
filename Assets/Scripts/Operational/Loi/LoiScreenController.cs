@@ -336,7 +336,7 @@ namespace MafiaCleanCity.Operational
                 "boutique");
             ConstruireCarteAvocat(recruteRoot, "La filière",
                 "ça coûte cher — et ça peut se retourner", "À VOS RISQUES",
-                DesignTokens.Current.accentGold, "corruption_pipeline");
+                DesignTokens.Current.hudMoneyUnderlineGold, "corruption_pipeline");
 
             TextMeshProUGUI info = NouveauTexteFiche(recruteRoot, "InfoFiliere",
                 Libelle.De("loi", "bloc",

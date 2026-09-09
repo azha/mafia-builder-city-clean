@@ -602,20 +602,27 @@ namespace MafiaCleanCity.Shell.Tests
             return (total, files);
         }
 
-        // Allowlist MESURÉE (pas devinée) après le fix B2/F2 — 12 fichiers, 32 occurrences (script
-        // Python indépendant sur Assets/Scripts, re-vérifiable via la même commande).
+        // Allowlist MESURÉE (pas devinée) après intégration des écrans Appro, Distribution et Loi :
+        // 16 fichiers, 40 occurrences. Chacun de ces trois écrans ajoute exactement les deux rôles
+        // sémantiques bon/mauvais (accentSuccess/accentDanger), jamais une correspondance de bucket.
+        // Conflit et Forensic rejoignent aussi la population avec un usage de gravité chacun ;
+        // DailyReview en est sorti puisqu'il ne lit plus directement ces jetons.
         private static readonly HashSet<string> ExpectedSeverityTokenFiles = new HashSet<string>
         {
             "CityMap/DistrictInteriorScreenController.cs",
             "Operational/Autonomy/AutonomyInboxController.cs",
             "Operational/BuildingCard/BuildingCardController.cs",
+            "Operational/ChaineDAppro/ChaineDApproScreenController.cs",
+            "Operational/Conflit/ConflitScreenController.cs",
             "Operational/Dashboard/DashboardController.cs",
+            "Operational/Distribution/DistributionScreenController.cs",
             "Operational/Exceptions/ExceptionDetailController.cs",
             "Operational/Exceptions/ExceptionQueueController.cs",
+            "Operational/Forensic/ForensicScreenController.cs",
             "Operational/Laundering/LaunderingController.cs",
             "Operational/Laundering/PipelineOverviewController.cs",
             "Operational/Lieutenant/LieutenantScreenController.cs",
-            "Shell/DailyReviewScreenController.cs",
+            "Operational/Loi/LoiScreenController.cs",
             "Shell/ExceptionQueuePanelController.cs",
             "ShellContracts/HeatBucketResolver.cs",
         };
@@ -635,7 +642,7 @@ namespace MafiaCleanCity.Shell.Tests
         //   fichier qu'elle surveillait déjà, là où un contrôle par ENSEMBLE DE FICHIERS seul serait
         //   resté vert (le fichier était déjà dedans). C'est exactement pourquoi le TOTAL est gardé
         //   en plus de l'ensemble : les deux ferment des angles morts différents.
-        private const int ExpectedSeverityTokenTotal = 34;
+        private const int ExpectedSeverityTokenTotal = 40;
 
         // ── motif 2 — littéraux de bucket (ferme l'angle mort du motif 1, IMPORTANT-2) ──────
         private static readonly string[] BucketLiterals = { "\"COLD\"", "\"WARM\"", "\"HOT\"", "\"BURNING\"" };

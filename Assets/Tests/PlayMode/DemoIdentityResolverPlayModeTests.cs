@@ -681,9 +681,8 @@ namespace MafiaCleanCity.CityMap.Tests
             }
         }
 
-        // Population RÉELLE, mesurée par oracle Python répliquant ce scanner EXACTEMENT, sur
-        // l'arbre livré de cette ronde (voir le commit pour le compte AVANT/APRÈS) : 10 appels
-        // `.SetIdentity(` répartis sur 5 fichiers, classés un par un (jamais seulement comptés) :
+        // Population RÉELLE, remesurée après la convergence des captures du 2026-09-04 : 6 appels
+        // `.SetIdentity(` répartis sur 4 fichiers, classés un par un (jamais seulement comptés) :
         //   A — identité délibérément INVALIDE (l'échec voulu doit survivre à tout environnement) :
         //       CharpenteOuvertureSessionOverlayPlayModeTests.cs (1), NavigationPlayModeTests.cs (1,
         //       NavF3).
@@ -693,7 +692,10 @@ namespace MafiaCleanCity.CityMap.Tests
         //       par un second éditeur) : NavigationPlayModeTests.cs (1, MountShellAtCityTab, fan-out
         //       5 [UnityTest]), AppShellPlayModeTests.cs (2, shells A et B du même test).
         //   C — compte FRAIS créé par le test lui-même (signup, jetable, zéro risque de collision) :
-        //       HudPlayModeTests.cs (1), VuePrincipaleCapturePlayModeTests.cs (4).
+        //       HudPlayModeTests.cs (1).
+        // Les 4 appels de VuePrincipaleCapturePlayModeTests ont été retirés volontairement : les
+        // captures doivent photographier le compte servi, pas quatre comptes frais et vides. La
+        // garde n'avait pas été rebasée sur ce retrait pourtant explicite (146e5198).
         // Un 4ᵉ site (Accueil:341, ronde 2) posait le défaut sérialisé OCTET POUR OCTET — un no-op
         // devenu, sous B2, une désactivation silencieuse de la surcharge — RETIRÉ en ronde 3 plutôt
         // que reclassé : AccueilPanneauxGeometriePhotoPlayModeTests.cs n'appelle donc plus
@@ -704,10 +706,9 @@ namespace MafiaCleanCity.CityMap.Tests
             "PlayMode/AppShellPlayModeTests.cs",
             "PlayMode/CharpenteOuvertureSessionOverlayPlayModeTests.cs",
             "PlayMode/HudPlayModeTests.cs",
-            "PlayMode/VuePrincipaleCapturePlayModeTests.cs",
         };
 
-        private const int ExpectedExplicitIdentityOverrideCount = 10;
+        private const int ExpectedExplicitIdentityOverrideCount = 6;
 
         // Chemin, relatif à Assets/Tests, du fichier hébergeant CE scanner et ses `[TestCase]`
         // fabriqués — voir ScanDirectoryExcludingFile ci-dessus.
