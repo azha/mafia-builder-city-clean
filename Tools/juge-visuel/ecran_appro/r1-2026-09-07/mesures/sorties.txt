@@ -1,0 +1,1051 @@
+########## 01_geometrie.py ##########
+OUVERT ../reference-1080x2102.png  taille=1080x2102
+  --- frontieres de luminance (|delta| >= 6) ---
+   y=   3    60.8 ->   15.6  (d= -45.1)
+   y=  45    21.4 ->   32.2  (d= +10.8)
+   y=  64    32.1 ->   21.2  (d= -10.9)
+   y=  81    21.4 ->   28.5  (d=  +7.0)
+   y=  82    28.5 ->   39.0  (d= +10.6)
+   y=  92    33.2 ->   40.1  (d=  +6.9)
+   y= 115    42.4 ->   50.7  (d=  +8.3)
+   y= 117    50.1 ->   25.3  (d= -24.8)
+   y= 166    25.1 ->   17.7  (d=  -7.4)
+   y= 434    12.3 ->   27.4  (d= +15.2)
+   y= 489    34.7 ->   85.8  (d= +51.0)
+   y= 490    85.8 ->  116.6  (d= +30.9)
+   y= 491   116.6 ->  124.8  (d=  +8.2)
+   y= 492   124.8 ->  116.2  (d=  -8.6)
+   y= 493   116.2 ->  104.3  (d= -11.9)
+   y= 499   101.7 ->  111.5  (d=  +9.7)
+   y= 502   108.2 ->   91.2  (d= -17.1)
+   y= 509    97.8 ->  118.6  (d= +20.8)
+   y= 510   118.6 ->  133.5  (d= +14.9)
+   y= 511   133.5 ->  123.5  (d=  -9.9)
+   y= 512   123.5 ->   39.1  (d= -84.5)
+   y= 513    39.1 ->   28.8  (d= -10.3)
+   y= 548    29.9 ->   55.9  (d= +25.9)
+   y= 549    55.9 ->   68.3  (d= +12.5)
+   y= 550    68.3 ->   53.2  (d= -15.1)
+   y= 554    51.6 ->   62.3  (d= +10.7)
+   y= 556    57.5 ->   47.8  (d=  -9.7)
+   y= 560    52.4 ->   67.7  (d= +15.3)
+   y= 562    65.6 ->   31.7  (d= -33.9)
+   y= 604    27.4 ->   53.5  (d= +26.0)
+   y= 607    53.5 ->   25.4  (d= -28.1)
+   y= 643    21.7 ->  210.6  (d=+188.9)
+   y= 692   207.9 ->  196.6  (d= -11.3)
+   y= 709   193.7 ->  184.0  (d=  -9.7)
+   y= 711   185.7 ->  211.0  (d= +25.3)
+   y= 749   212.2 ->  185.8  (d= -26.4)
+   y= 752   185.8 ->  212.2  (d= +26.4)
+   y= 772   206.9 ->  198.2  (d=  -8.6)
+   y= 776   203.1 ->  191.3  (d= -11.8)
+   y= 777   191.3 ->  182.4  (d=  -8.9)
+   y= 793   190.6 ->  208.9  (d= +18.3)
+   y= 817   212.2 ->  185.7  (d= -26.5)
+   y= 820   185.7 ->  212.2  (d= +26.5)
+   y= 840   209.3 ->  203.3  (d=  -6.0)
+   y= 841   203.3 ->  190.8  (d= -12.5)
+   y= 843   189.5 ->  197.7  (d=  +8.2)
+   y= 845   200.3 ->  192.5  (d=  -7.8)
+   y= 846   192.5 ->  185.9  (d=  -6.6)
+   y= 862   187.9 ->  209.3  (d= +21.5)
+   y= 885   212.2 ->  185.7  (d= -26.5)
+   y= 888   185.7 ->  212.1  (d= +26.4)
+   y= 913   208.6 ->  199.0  (d=  -9.6)
+   y= 914   199.0 ->  191.2  (d=  -7.8)
+   y= 930   197.1 ->  210.1  (d= +13.1)
+   y= 953   212.1 ->  185.7  (d= -26.4)
+   y= 956   185.6 ->  212.1  (d= +26.5)
+   y= 977   206.3 ->  194.1  (d= -12.2)
+   y= 979   193.5 ->  200.5  (d=  +7.0)
+   y= 981   202.1 ->  183.1  (d= -19.0)
+   y= 982   183.1 ->  168.5  (d= -14.6)
+   y= 985   159.6 ->  170.0  (d= +10.4)
+   y= 986   170.0 ->  179.5  (d=  +9.4)
+   y= 988   179.6 ->  173.4  (d=  -6.2)
+   y= 991   172.6 ->  179.2  (d=  +6.6)
+   y= 997   175.5 ->  182.0  (d=  +6.5)
+   y= 998   182.0 ->  208.0  (d= +26.1)
+   y=1050   212.1 ->   91.0  (d=-121.1)
+   y=1078    93.3 ->  108.2  (d= +14.9)
+   y=1079   108.2 ->  118.3  (d= +10.0)
+   y=1087   119.8 ->  111.7  (d=  -8.1)
+   y=1093   113.9 ->   94.2  (d= -19.8)
+   y=1118    92.4 ->  118.5  (d= +26.1)
+   y=1119   118.5 ->  137.1  (d= +18.7)
+   y=1120   137.1 ->  122.1  (d= -15.1)
+   y=1121   122.1 ->  114.6  (d=  -7.4)
+   y=1123   112.5 ->  120.1  (d=  +7.6)
+   y=1125   125.5 ->  114.9  (d= -10.6)
+   y=1129   114.3 ->  128.8  (d= +14.5)
+   y=1131   126.6 ->   94.4  (d= -32.2)
+   y=1148    91.2 ->   98.6  (d=  +7.4)
+   y=1161   101.9 ->   91.2  (d= -10.7)
+   y=1188    91.0 ->  212.0  (d=+120.9)
+   y=1209   212.0 ->  193.9  (d= -18.1)
+   y=1227   192.8 ->   16.0  (d=-176.8)
+   y=1780    18.0 ->   52.6  (d= +34.6)
+   y=1787    52.6 ->   25.4  (d= -27.3)
+   y=1827    28.7 ->   36.5  (d=  +7.8)
+   y=1833    35.1 ->   44.6  (d=  +9.5)
+   y=1834    44.6 ->   94.6  (d= +50.0)
+   y=1836    92.4 ->   75.8  (d= -16.6)
+   y=1843    77.3 ->   68.8  (d=  -8.5)
+   y=1844    68.8 ->   62.2  (d=  -6.6)
+   y=1846    65.5 ->   72.7  (d=  +7.1)
+   y=1848    77.6 ->   94.5  (d= +16.9)
+   y=1850    99.9 ->   37.9  (d= -62.0)
+   y=1851    37.9 ->   28.5  (d=  -9.4)
+   y=1938    25.4 ->   69.9  (d= +44.5)
+   y=1941    70.3 ->   29.1  (d= -41.2)
+   y=1976    29.2 ->   49.4  (d= +20.1)
+   y=1985    51.3 ->   65.1  (d= +13.8)
+   y=1986    65.1 ->   71.9  (d=  +6.8)
+   y=1987    71.9 ->   65.0  (d=  -7.0)
+   y=1996    61.8 ->   71.7  (d=  +9.9)
+   y=1998    68.9 ->   54.4  (d= -14.5)
+   y=2001    50.8 ->   30.7  (d= -20.1)
+   y=2040    29.2 ->   70.4  (d= +41.2)
+   y=2043    69.9 ->   25.4  (d= -44.5)
+   y=2085    24.9 ->   15.4  (d=  -9.6)
+
+OUVERT ../capture-1080x2400.png  taille=1080x2400
+  --- frontieres de luminance (|delta| >= 6) ---
+   y=  28    20.7 ->   27.7  (d=  +7.0)
+   y=  71    22.6 ->   33.4  (d= +10.9)
+   y=  72    33.4 ->   44.8  (d= +11.3)
+   y=  74    42.8 ->   36.2  (d=  -6.6)
+   y=  87    33.1 ->   40.7  (d=  +7.6)
+   y=  95    31.1 ->   38.6  (d=  +7.5)
+   y=  98    37.2 ->   22.7  (d= -14.6)
+   y= 118    23.1 ->   52.8  (d= +29.7)
+   y= 124    52.6 ->   24.9  (d= -27.7)
+   y= 130    24.5 ->   31.5  (d=  +7.0)
+   y= 141    27.6 ->  103.1  (d= +75.5)
+   y= 143   102.8 ->   27.5  (d= -75.3)
+   y= 145    23.8 ->   16.5  (d=  -7.4)
+   y= 294    18.0 ->   24.6  (d=  +6.5)
+   y= 306    27.5 ->   38.7  (d= +11.1)
+   y= 307    38.7 ->   84.3  (d= +45.6)
+   y= 308    84.3 ->  111.1  (d= +26.8)
+   y= 309   111.1 ->  124.1  (d= +13.0)
+   y= 310   124.1 ->  132.0  (d=  +7.9)
+   y= 312   137.4 ->  143.8  (d=  +6.4)
+   y= 315   143.3 ->  129.2  (d= -14.1)
+   y= 316   129.2 ->  112.9  (d= -16.3)
+   y= 317   112.9 ->  103.0  (d=  -9.9)
+   y= 320    99.8 ->  107.8  (d=  +8.0)
+   y= 321   107.8 ->  119.4  (d= +11.6)
+   y= 328   117.8 ->  103.8  (d= -13.9)
+   y= 329   103.8 ->   95.3  (d=  -8.5)
+   y= 334   105.1 ->  116.3  (d= +11.2)
+   y= 335   116.3 ->  130.0  (d= +13.6)
+   y= 341   118.7 ->  108.7  (d= -10.0)
+   y= 342   108.7 ->   85.7  (d= -22.9)
+   y= 343    85.7 ->   21.5  (d= -64.3)
+   y= 344    21.5 ->   13.0  (d=  -8.5)
+   y= 382    13.8 ->   26.5  (d= +12.7)
+   y= 383    26.5 ->   45.3  (d= +18.8)
+   y= 384    45.3 ->   52.5  (d=  +7.2)
+   y= 404    51.0 ->   39.7  (d= -11.3)
+   y= 418    44.8 ->   30.7  (d= -14.1)
+   y= 419    30.7 ->   15.9  (d= -14.9)
+   y= 490    17.4 ->   23.9  (d=  +6.4)
+   y= 491    23.9 ->   52.2  (d= +28.3)
+   y= 492    52.2 ->   64.5  (d= +12.3)
+   y= 494    65.6 ->   54.7  (d= -10.9)
+   y= 495    54.7 ->   47.5  (d=  -7.2)
+   y= 499    45.0 ->   54.3  (d=  +9.3)
+   y= 502    57.7 ->   49.7  (d=  -8.0)
+   y= 503    49.7 ->   41.8  (d=  -7.9)
+   y= 508    48.6 ->   58.7  (d= +10.2)
+   y= 509    58.7 ->   68.7  (d= +10.0)
+   y= 511    65.9 ->   52.1  (d= -13.8)
+   y= 512    52.1 ->   17.4  (d= -34.8)
+   y= 535    16.3 ->   27.5  (d= +11.2)
+   y= 556    27.6 ->   14.5  (d= -13.1)
+   y= 608    13.0 ->  201.7  (d=+188.7)
+   y= 665   191.2 ->  181.8  (d=  -9.4)
+   y= 694   187.4 ->  197.5  (d= +10.1)
+   y= 740   200.5 ->  192.2  (d=  -8.3)
+   y= 747   195.3 ->  183.9  (d= -11.4)
+   y= 748   183.9 ->  174.0  (d=  -9.9)
+   y= 758   171.7 ->  178.0  (d=  +6.2)
+   y= 766   182.1 ->  200.9  (d= +18.8)
+   y= 823   196.1 ->  182.8  (d= -13.2)
+   y= 841   185.5 ->  194.5  (d=  +9.0)
+   y= 899   195.6 ->  188.2  (d=  -7.4)
+   y= 917   191.2 ->  200.8  (d=  +9.6)
+   y= 967   198.3 ->  192.1  (d=  -6.2)
+   y= 974   197.1 ->  161.0  (d= -36.1)
+   y= 975   161.0 ->  141.8  (d= -19.3)
+   y= 976   141.8 ->  133.1  (d=  -8.7)
+   y= 978   136.0 ->  151.6  (d= +15.6)
+   y= 979   151.6 ->  159.3  (d=  +7.7)
+   y= 981   158.9 ->  149.9  (d=  -8.9)
+   y= 985   143.5 ->  159.8  (d= +16.3)
+   y= 988   165.3 ->  155.5  (d=  -9.8)
+   y= 989   155.5 ->  141.9  (d= -13.6)
+   y= 991   143.5 ->  149.8  (d=  +6.3)
+   y= 992   149.8 ->  173.6  (d= +23.8)
+   y= 993   173.6 ->  200.9  (d= +27.3)
+   y=1055   201.7 ->   13.0  (d=-188.7)
+   y=1104    13.6 ->   31.7  (d= +18.1)
+   y=1107    36.9 ->   29.2  (d=  -7.6)
+   y=1127    27.7 ->   13.3  (d= -14.4)
+   y=1160    17.8 ->   59.9  (d= +42.1)
+   y=1161    59.9 ->   88.9  (d= +29.0)
+   y=1163    93.8 ->   70.0  (d= -23.8)
+   y=1164    70.0 ->   54.8  (d= -15.2)
+   y=1167    53.5 ->   66.8  (d= +13.3)
+   y=1168    66.8 ->   77.4  (d= +10.5)
+   y=1170    76.5 ->   59.3  (d= -17.2)
+   y=1171    59.3 ->   51.4  (d=  -7.9)
+   y=1175    57.4 ->   78.9  (d= +21.4)
+   y=1176    78.9 ->   88.9  (d= +10.1)
+   y=1177    88.9 ->   76.9  (d= -12.0)
+   y=1178    76.9 ->   40.4  (d= -36.5)
+   y=1179    40.4 ->   13.8  (d= -26.6)
+   y=1198    16.3 ->   26.5  (d= +10.2)
+   y=1216    24.5 ->   14.5  (d= -10.1)
+   y=1279    18.9 ->   36.0  (d= +17.1)
+   y=1280    36.0 ->   61.7  (d= +25.7)
+   y=1281    61.7 ->   69.2  (d=  +7.5)
+   y=1283    64.8 ->   49.2  (d= -15.6)
+   y=1287    44.9 ->   56.5  (d= +11.6)
+   y=1290    58.9 ->   43.0  (d= -16.0)
+   y=1295    47.4 ->   58.5  (d= +11.1)
+   y=1296    58.5 ->   66.2  (d=  +7.7)
+   y=1298    61.5 ->   43.4  (d= -18.1)
+   y=1299    43.4 ->   15.4  (d= -28.0)
+   y=1375    13.0 ->  156.7  (d=+143.7)
+   y=1428   156.6 ->  149.4  (d=  -7.2)
+   y=1429   149.4 ->  132.6  (d= -16.8)
+   y=1457   135.2 ->  152.4  (d= +17.2)
+   y=1512   156.7 ->   13.0  (d=-143.7)
+   y=2324    16.7 ->   31.9  (d= +15.2)
+   y=2325    31.9 ->   41.2  (d=  +9.3)
+   y=2327    39.2 ->   31.8  (d=  -7.4)
+   y=2334    38.4 ->   31.8  (d=  -6.6)
+   y=2339    29.9 ->   36.3  (d=  +6.4)
+   y=2342    35.0 ->   16.8  (d= -18.2)
+
+CONTROLE POSITIF  largeurs egales : 1080 1080 -> True
+CONTROLE NEGATIF  hauteurs differentes : 2102 2400 -> True
+
+########## 02_regions.py ##########
+OUVERT ../reference-1080x2102.png  taille=1080x2102
+  papier  bandes(>=0.40 de la ligne) : [(643, 1049, 407), (1188, 1226, 39)]
+  rouge   bandes(>=0.25 de la ligne) : [(1050, 1187, 138)]
+  or      bandes(>=0.25 de la ligne) : AUCUNE
+     papier y=643..1049 (h=407) : x=50..1029 larg=980
+     papier y=1188..1226 (h=39) : x=50..1029 larg=980
+
+OUVERT ../capture-1080x2400.png  taille=1080x2400
+  papier  bandes(>=0.40 de la ligne) : [(608, 1054, 447)]
+  rouge   bandes(>=0.25 de la ligne) : AUCUNE
+  or      bandes(>=0.25 de la ligne) : [(1375, 1511, 137)]
+     papier y=608..1054 (h=447) : x=57..1022 larg=966
+
+CONTROLE NEGATIF : aucune classe 'vert' n'est definie -> non applicable ; a la place,
+  la classe 'rouge' DOIT etre presente sur la reference (bloc penurie) et l'absence en jeu est le finding.
+
+########## 03_bandes_fond.py ##########
+OUVERT ../reference-1080x2102.png  taille=1080x2102
+  changements de MEDIANE de ligne (>=4/255 sur un canal) :
+   y=   3  (58, 67, 86) -> (10, 15, 23)  (d=63)
+   y= 434  (8, 12, 16) -> (30, 27, 22)  (d=22)
+   y= 490  (30, 27, 22) -> (69, 57, 60)  (d=39)
+   y= 491  (69, 57, 60) -> (115, 106, 92)  (d=49)
+   y= 492  (115, 106, 92) -> (95, 82, 70)  (d=24)
+   y= 493  (95, 82, 70) -> (30, 27, 22)  (d=65)
+   y= 499  (30, 27, 22) -> (30, 33, 22)  (d=6)
+   y= 500  (30, 33, 22) -> (36, 33, 22)  (d=6)
+   y= 501  (36, 33, 22) -> (30, 27, 22)  (d=6)
+   y= 509  (30, 27, 22) -> (141, 118, 103)  (d=111)
+   y= 510  (141, 118, 103) -> (213, 192, 168)  (d=74)
+   y= 511  (213, 192, 168) -> (115, 94, 86)  (d=98)
+   y= 512  (115, 94, 86) -> (30, 27, 22)  (d=85)
+   y= 604  (30, 27, 22) -> (58, 53, 44)  (d=28)
+   y= 607  (58, 53, 44) -> (27, 25, 22)  (d=31)
+   y= 643  (24, 22, 20) -> (239, 231, 214)  (d=215)
+   y= 749  (239, 231, 214) -> (195, 183, 158)  (d=56)
+   y= 752  (195, 183, 158) -> (239, 231, 214)  (d=56)
+   y= 817  (239, 231, 214) -> (195, 183, 158)  (d=56)
+   y= 820  (195, 183, 158) -> (239, 231, 214)  (d=56)
+   y= 885  (239, 231, 214) -> (195, 183, 158)  (d=56)
+   y= 888  (195, 183, 158) -> (239, 231, 214)  (d=56)
+   y= 953  (239, 231, 214) -> (195, 183, 158)  (d=56)
+   y= 956  (195, 183, 158) -> (239, 231, 214)  (d=56)
+   y= 984  (239, 231, 214) -> (230, 208, 193)  (d=23)
+   y= 985  (230, 208, 193) -> (239, 227, 210)  (d=19)
+   y= 986  (239, 227, 210) -> (239, 231, 214)  (d=4)
+   y=1050  (239, 231, 214) -> (168, 64, 47)  (d=167)
+   y=1188  (168, 64, 47) -> (239, 231, 214)  (d=167)
+   y=1209  (239, 231, 214) -> (203, 191, 164)  (d=50)
+   y=1227  (203, 191, 164) -> (17, 15, 13)  (d=186)
+   y=1780  (19, 17, 18) -> (44, 54, 64)  (d=46)
+   y=1787  (44, 54, 64) -> (20, 26, 33)  (d=31)
+   y=1835  (20, 26, 33) -> (31, 43, 38)  (d=17)
+   y=1836  (31, 43, 38) -> (20, 26, 33)  (d=17)
+   y=1848  (20, 26, 33) -> (25, 37, 44)  (d=11)
+   y=1849  (25, 37, 44) -> (20, 26, 33)  (d=11)
+   y=1938  (20, 26, 33) -> (90, 74, 42)  (d=70)
+   y=1941  (90, 74, 42) -> (36, 28, 17)  (d=54)
+   y=1986  (36, 28, 17) -> (36, 28, 22)  (d=5)
+   y=1987  (36, 28, 22) -> (36, 28, 17)  (d=5)
+   y=1996  (36, 28, 17) -> (36, 28, 32)  (d=15)
+   y=1997  (36, 28, 32) -> (36, 28, 17)  (d=15)
+   y=2040  (36, 28, 17) -> (90, 74, 42)  (d=54)
+   y=2043  (90, 74, 42) -> (20, 26, 33)  (d=70)
+   y=2085  (20, 26, 33) -> (11, 16, 22)  (d=11)
+  medianes demandees :
+   y= 200  (9, 14, 21)  #090e15
+   y= 500  (36, 33, 22)  #242116
+   y= 800  (239, 231, 214)  #efe7d6
+   y=1300  (22, 20, 17)  #161411
+   y=1500  (21, 19, 17)  #151311
+   y=1700  (20, 18, 18)  #141212
+   y=1850  (20, 26, 33)  #141a21
+   y=1900  (20, 26, 33)  #141a21
+   y=2000  (36, 28, 17)  #241c11
+   y=2080  (20, 26, 33)  #141a21
+
+OUVERT ../capture-1080x2400.png  taille=1080x2400
+  changements de MEDIANE de ligne (>=4/255 sur un canal) :
+   y= 141  (13, 20, 26) -> (220, 101, 73)  (d=207)
+   y= 143  (220, 102, 73) -> (13, 13, 13)  (d=207)
+   y= 309  (13, 13, 13) -> (130, 131, 132)  (d=119)
+   y= 310  (130, 131, 132) -> (184, 187, 187)  (d=56)
+   y= 311  (184, 187, 187) -> (231, 234, 235)  (d=48)
+   y= 312  (231, 234, 235) -> (238, 241, 242)  (d=7)
+   y= 314  (238, 241, 242) -> (224, 226, 227)  (d=15)
+   y= 315  (224, 226, 227) -> (170, 172, 173)  (d=54)
+   y= 316  (170, 172, 173) -> (13, 13, 13)  (d=160)
+   y= 321  (13, 13, 13) -> (77, 78, 78)  (d=65)
+   y= 322  (77, 78, 78) -> (50, 51, 51)  (d=27)
+   y= 323  (50, 51, 51) -> (81, 82, 82)  (d=31)
+   y= 324  (81, 82, 82) -> (89, 90, 90)  (d=8)
+   y= 326  (87, 88, 89) -> (98, 99, 100)  (d=11)
+   y= 327  (98, 99, 100) -> (13, 13, 13)  (d=87)
+   y= 334  (13, 13, 13) -> (70, 71, 71)  (d=58)
+   y= 335  (70, 71, 71) -> (150, 152, 152)  (d=81)
+   y= 336  (150, 152, 152) -> (197, 199, 200)  (d=48)
+   y= 337  (197, 199, 200) -> (177, 179, 180)  (d=20)
+   y= 338  (177, 179, 180) -> (155, 157, 157)  (d=23)
+   y= 339  (155, 157, 157) -> (119, 121, 121)  (d=36)
+   y= 340  (119, 121, 121) -> (13, 13, 13)  (d=108)
+   y= 608  (13, 13, 13) -> (234, 224, 200)  (d=221)
+   y= 975  (234, 224, 200) -> (204, 194, 170)  (d=30)
+   y= 976  (204, 194, 170) -> (193, 182, 157)  (d=13)
+   y= 977  (193, 182, 157) -> (185, 177, 153)  (d=8)
+   y= 978  (185, 177, 153) -> (234, 224, 200)  (d=49)
+   y= 984  (233, 223, 199) -> (195, 186, 165)  (d=38)
+   y= 985  (195, 186, 165) -> (234, 224, 200)  (d=39)
+   y=1055  (234, 224, 200) -> (13, 13, 13)  (d=221)
+   y=1161  (13, 13, 13) -> (60, 63, 66)  (d=53)
+   y=1162  (60, 63, 66) -> (89, 94, 99)  (d=33)
+   y=1163  (89, 94, 99) -> (13, 13, 13)  (d=86)
+   y=1375  (13, 13, 13) -> (217, 171, 77)  (d=204)
+   y=1512  (217, 171, 77) -> (13, 13, 13)  (d=204)
+  medianes demandees :
+   y=  80  (13, 18, 27)  #0d121b
+   y= 200  (13, 13, 13)  #0d0d0d
+   y= 300  (13, 13, 13)  #0d0d0d
+   y= 700  (234, 224, 200)  #eae0c8
+   y=1200  (13, 13, 13)  #0d0d0d
+   y=1300  (13, 13, 13)  #0d0d0d
+   y=1600  (13, 13, 13)  #0d0d0d
+   y=1900  (13, 13, 13)  #0d0d0d
+   y=2200  (13, 14, 17)  #0d0e11
+   y=2300  (13, 16, 24)  #0d1018
+   y=2380  (13, 18, 28)  #0d121c
+
+CONTROLE POSITIF ref y=800 (plein papier) : (239, 231, 214) attendu ~ (239,231,214) #efe7d6
+CONTROLE NEGATIF ref y=1400 (fond) : (22, 20, 17)
+
+########## 04_bon_details.py ##########
+OUVERT ../reference-1080x2102.png taille=1080x2102
+  BON bbox = x 50..1029 (larg 980)  y 510..1226 (haut 717)
+  marges laterales : gauche=50 droite=50
+  bandes non-papier DANS le bon (y0,y1,h) + transitions moy :
+    y= 512.. 642 h=131  encre=1.00  transitions=0  med=(30, 27, 22)
+    y= 749.. 751 h= 3  encre=0.49  transitions=302  med=(239, 231, 214)
+    y= 817.. 819 h= 3  encre=0.49  transitions=302  med=(239, 231, 214)
+    y= 885.. 887 h= 3  encre=0.49  transitions=302  med=(239, 231, 214)
+    y= 953.. 955 h= 3  encre=0.49  transitions=302  med=(239, 231, 214)
+    y= 982.. 985 h= 4  encre=0.40  transitions=98  med=(236, 227, 210)
+    y= 990.. 990 h= 1  encre=0.35  transitions=98  med=(239, 231, 214)
+    y=1050..1187 h=138  encre=0.93  transitions=27  med=(172, 73, 52)
+    y=1209..1224 h=16  encre=0.50  transitions=63  med=(239, 231, 214)
+
+OUVERT ../capture-1080x2400.png taille=1080x2400
+  BON bbox = x 57..1022 (larg 966)  y 310..1054 (haut 745)
+  marges laterales : gauche=57 droite=57
+  bandes non-papier DANS le bon (y0,y1,h) + transitions moy :
+    y= 312.. 607 h=296  encre=0.93  transitions=9  med=(13, 13, 13)
+    y= 974.. 985 h=12  encre=0.42  transitions=112  med=(234, 224, 200)
+    y= 988.. 991 h= 4  encre=0.37  transitions=67  med=(234, 224, 200)
+
+CONTROLE NEGATIF (bande de papier nue, ref y 660..690, x 200..800) :
+   AUCUN filet -> la sonde ne fabrique pas de faux positif
+
+########## 05_bbox_bon.py ##########
+OUVERT ../reference-1080x2102.png taille=1080x2102
+  runs contigus de papier (>=30 lignes) : [(643, 1049), (1188, 1226)]
+   y=643..1049 h=407 | x=50..1029 larg=980 = 90.74% de l'ecran | marges g=50 d=50
+   y=1188..1226 h=39 | x=50..1029 larg=980 = 90.74% de l'ecran | marges g=50 d=50
+OUVERT ../capture-1080x2400.png taille=1080x2400
+  runs contigus de papier (>=30 lignes) : [(608, 1054)]
+   y=608..1054 h=447 | x=57..1022 larg=966 = 89.44% de l'ecran | marges g=57 d=57
+CONTROLE NEGATIF ref y=1400 : part de papier = 0.000
+CONTROLE POSITIF attendu CSS : 274/300 = 91.33%
+
+########## 06_lignes_texte.py ##########
+=== REFERENCE : interieur du bon (x 90..990, y 645..1225), fond papier #efe7d6
+  taille image (1080, 2102)
+   y= 683.. 718 h= 36  x=  91.. 985
+   y= 749.. 751 h=  3  x=  90.. 990
+   y= 770.. 799 h= 30  x=  90.. 989
+   y= 817.. 819 h=  3  x=  90.. 990
+   y= 839.. 868 h= 30  x=  90.. 989
+   y= 885.. 887 h=  3  x=  90.. 990
+   y= 907.. 935 h= 29  x=  91.. 988
+   y= 953.. 955 h=  3  x=  90.. 990
+   y= 974..1003 h= 30  x=  91.. 988
+   y=1050..1187 h=138  x=  90.. 990
+   y=1209..1225 h= 17  x=  90.. 985
+
+=== CAPTURE : interieur du bon (x 90..990, y 610..1052), fond papier #eae0c8
+  taille image (1080, 2400)
+   y= 650.. 705 h= 56  x= 105.. 976
+   y= 740.. 772 h= 33  x= 101.. 977
+   y= 815.. 848 h= 34  x= 102.. 978
+   y= 891.. 923 h= 33  x= 104.. 977
+   y= 965.. 999 h= 35  x= 104.. 978
+
+=== REFERENCE : entete + zone haute (x 40..1040, y 434..640), fond #1e1b16
+   y= 477.. 520 h= 44  x=  51.. 945
+   y= 543.. 564 h= 22  x=  51.. 907
+
+=== CAPTURE : zone titre (x 40..1040, y 200..607), fond #0d0d0d
+   y= 200.. 203 h=  4  x= 513.. 566
+   y= 217.. 229 h= 13  x= 531.. 548
+   y= 290.. 343 h= 54  x=  60..1001
+   y= 366.. 378 h= 13  x= 252.. 296
+   y= 381.. 431 h= 51  x=  63.. 386
+   y= 483.. 515 h= 33  x=  60.. 975
+   y= 527.. 556 h= 30  x=  61.. 411
+
+=== REFERENCE : bas (x 40..1040, y 1787..2101), fond #141a21
+   y=1825..1856 h= 32  x=  50.. 979
+   y=1876..1894 h= 19  x=  51.. 140
+   y=1938..2042 h=105  x=  50..1029
+
+=== CAPTURE : bas (x 40..1040, y 1060..1560), fond #0d0d0d
+   y=1099..1126 h= 28  x=  60.. 513
+   y=1152..1181 h= 30  x=  60.. 972
+   y=1191..1216 h= 26  x=  60.. 240
+   y=1271..1305 h= 35  x=  56..1019
+   y=1319..1338 h= 20  x=  56.. 156
+   y=1341..1341 h=  1  x=  54..  58
+   y=1344..1344 h=  1  x=  53..  57
+   y=1375..1511 h=137  x=  57..1022
+
+CONTROLE NEGATIF (ref y1300..1400, fond nu) : 0 bande(s)
+CONTROLE POSITIF (bon de la reference) : 11 bandes trouvees (>=5 attendu)
+
+########## 07_hauteur_capitale.py ##########
+OUVERT reference taille (1080, 2102)
+OUVERT capture   taille (1080, 2400)
+  REF titre h3   'C' de Commander    y= 480.. 512  CAP =  33 px =  9.17 CSS
+  CAP titre      'C' de Commander    y= 294.. 343  CAP =  50 px = 13.89 CSS
+  REF sous-titre 'S' de Sans         y= 543.. 561  CAP =  19 px =  5.28 CSS
+  CAP sous-titre 'S' de Sans         y= 483.. 512  CAP =  30 px =  8.33 CSS
+  REF bon h4     'P' de Pyralin      y= 684.. 710  CAP =  27 px =  7.50 CSS
+  CAP bon h4     'P' de Pyralin      y= 655.. 693  CAP =  39 px = 10.83 CSS
+  REF label      'A' de A QUOI       y= 767.. 788  CAP =  22 px =  6.11 CSS
+  CAP label      'A' de A QUOI       y= 735.. 758  CAP =  24 px =  6.67 CSS
+  REF CTA        'E' de EN COMM.     y=1976..2000  CAP =  25 px =  6.94 CSS
+  CAP CTA        'E' de EN COMM.     y=1428..1456  CAP =  29 px =  8.06 CSS
+  REF bon span   'B' de BON DE       y= 695.. 710  CAP =  16 px =  4.44 CSS
+  CAP bon span   'B' de BON DE       y= 650.. 670  CAP =  21 px =  5.83 CSS
+
+CONTROLE POSITIF : REF titre attendu 31,5 px (12 CSS DejaVu Serif, ratio cap 0,729)
+CONTROLE NEGATIF (ref x300..340 y1300..1380, zone vide) : aucune encre
+
+########## 08_serif_ou_sans.py ##########
+OUVERT reference (1080, 2102)
+OUVERT capture   (1080, 2400)
+
+--- CONTROLES sur la REFERENCE (police DECLAREE par la CSS) ---
+  REF titre h3        [DejaVu Serif decl.]   attendu SERIF  ratio pied/fut = 0.973
+  REF 'Pyralin' h4    [DejaVu Serif decl.]   attendu SERIF  ratio pied/fut = 1.025
+  REF citation .dit   [DejaVu Serif decl.]   attendu SERIF  ratio pied/fut = 0.812
+  REF sous-titre p    [DejaVu Sans decl.]    attendu SANS   ratio pied/fut = 1.234
+  REF libelles .l u   [DejaVu Sans decl.]    attendu SANS   ratio pied/fut = 0.000
+  REF CTA .geste      [DejaVu Sans decl.]    attendu SANS   ratio pied/fut = 0.953
+  SERIF : min=0.812 max=1.025 | SANS : min=0.000 max=1.234 | separation = NON -> instrument NON RECEVABLE
+  seuil de decision = 1.023
+
+--- MESURES sur la CAPTURE ---
+  CAP titre 'Commander de la matiere'  ratio = 0.843  -> SANS
+  CAP 'Pyralin' h4                     ratio = 0.792  -> SANS
+  CAP citation 'Nestor : ...'          ratio = 0.592  -> SANS
+  CAP sous-titre                       ratio = 1.040  -> SERIF
+  CAP libelles 'LE PRIX'               ratio = 0.000  -> SANS
+  CAP CTA 'EN COMMANDER'               ratio = 0.981  -> SANS
+
+########## 09_mots.py ##########
+OUVERT ../reference-1080x2102.png (1080, 2102) | ../capture-1080x2400.png (1080, 2400)
+  REF h4  (Pyralin + BON DE COMMANDE)            2 mots : [(91, 232), (703, 985)]
+  CAP h4  (Pyralin + BON DE COMMANDE)            2 mots : [(105, 308), (663, 976)]
+  REF ligne1 (A QUOI CA SERT / pour le brindle)  6 mots : [(89, 105), (120, 187), (205, 238), (254, 321), (741, 857), (872, 989)]
+  CAP ligne1 (A QUOI CA SERT / pour le brindle)  6 mots : [(101, 198), (214, 248), (263, 329), (698, 783), (799, 828), (846, 977)]
+  REF titre h3                                   5 mots : [(51, 353), (371, 426), (447, 490), (510, 701), (720, 945)]
+  CAP titre ligne1                               4 mots : [(60, 496), (522, 606), (637, 692), (726, 1001)]
+  REF CTA                                        3 mots : [(95, 143), (165, 438), (617, 986)]
+  CAP CTA                                        2 mots : [(112, 165), (189, 493)]
+
+CONTROLE NEGATIF (ref y1300..1340 vide) : 0 mot(s)
+
+########## 10_oracle_police.py ##########
+ORACLE — rapport largeur d'encre / hauteur de capitale, par fonte
+chaine       | SerifBold  | SansBold   | SerifBook  | SansBook   | SansItal   | SerifItal  | SansCondBold
+Pyralin      | 5.384      | 5.205      | 4.815      | 4.425      | 4.548      | 4.849      | 4.692     
+pour le brindle | 11.397     | 11.233     | 10.240     | 9.815      | 9.959      | 10.226     | 10.103    
+Commander    | 9.301      | 9.226      | 8.438      | 8.377      | 8.466      | 8.521      | 8.301     
+matière      | 5.856      | 5.836      | 5.267      | 5.116      | 5.240      | 5.226      | 5.253     
+la           | 1.336      | 1.185      | 1.185      | 0.979      | 1.089      | 1.110      | 1.062     
+de           | 1.719      | 1.788      | 1.562      | 1.568      | 1.596      | 1.610      | 1.610     
+
+MESURE sur les images (largeur d'encre / hauteur de capitale de la MEME chaine) :
+  Pyralin     REF 5.259 -> SansBold     (ecart  1.0%)   |   CAP 5.231 -> SansBold     (ecart  0.5%)   [REF declare DejaVu Serif Bold]
+  Commander   REF 9.182 -> SansBold     (ecart  0.5%)   |   CAP 8.740 -> SerifItal    (ecart  2.5%)   [REF declare DejaVu Serif Bold (titre h3)]
+  matière     REF 5.818 -> SansBold     (ecart  0.3%)   |   CAP 5.520 -> SerifBook    (ecart  4.6%)   [REF declare DejaVu Serif Bold (titre h3)]
+  la          REF 1.333 -> SerifBold    (ecart  0.2%)   |   CAP 1.120 -> SerifItal    (ecart  0.9%)   [REF declare DejaVu Serif Bold (titre h3)]
+  de          REF 1.697 -> SerifBold    (ecart  1.3%)   |   CAP 1.700 -> SerifBold    (ecart  1.1%)   [REF declare DejaVu Serif Bold (titre h3)]
+
+########## 11_oracle_forme.py ##########
+OUVERT ../reference-1080x2102.png (1080, 2102) | ../capture-1080x2400.png (1080, 2400)
+CTRL+ REF 'Pyralin'        (CSS 700 DejaVu Serif)    -> SerifBold    (desaccord 0.189 ; 2e = SerifBook 0.467 ; marge 147%)  OK
+      classement : SerifBold=0.189, SerifBook=0.467, SansBold=0.483, SansBoldItal=0.485, SansBook=0.630, SansItal=0.642, SerifItal=0.678
+CTRL+ REF 'pour le brindle'(CSS 700 DejaVu Sans )    -> SansBold     (desaccord 0.201 ; 2e = SerifBold 0.364 ; marge 81%)  OK
+      classement : SansBold=0.201, SerifBold=0.364, SansBoldItal=0.384, SansBook=0.477, SerifBook=0.535, SerifItal=0.553, SansItal=0.595
+CTRL+ REF 'Commander'      (CSS 700 DejaVu Serif)    -> SerifBold    (desaccord 0.172 ; 2e = SansBold 0.295 ; marge 71%)  OK
+      classement : SerifBold=0.172, SansBold=0.295, SansBoldItal=0.381, SerifBook=0.416, SerifItal=0.512, SansBook=0.521, SansItal=0.523
+CTRL+ REF 'Sans elle,'     (CSS 400 DejaVu Sans )    -> SansBold     (desaccord 0.636 ; 2e = SerifBold 0.647 ; marge 2%)  *** ECHEC DU CONTROLE (attendu SansBook) ***
+      classement : SansBold=0.636, SerifBold=0.647, SansBoldItal=0.676, SerifBook=0.702, SansBook=0.709, SansItal=0.754, SerifItal=0.756
+MES   CAP 'Pyralin'                                  -> SansBold     (desaccord 0.091 ; 2e = SansBoldItal 0.330 ; marge 261%)
+      classement : SansBold=0.091, SansBoldItal=0.330, SansBook=0.389, SerifBold=0.499, SerifBook=0.501, SansItal=0.509, SerifItal=0.622
+MES   CAP 'pour le brindle'                          -> SansBold     (desaccord 0.729 ; 2e = SansBoldItal 0.739 ; marge 1%)
+      classement : SansBold=0.729, SansBoldItal=0.739, SerifBold=0.742, SansBook=0.808, SerifItal=0.816, SansItal=0.816, SerifBook=0.817
+MES   CAP 'Commander'                                -> SansBold     (desaccord 0.084 ; 2e = SansBoldItal 0.268 ; marge 219%)
+      classement : SansBold=0.084, SansBoldItal=0.268, SerifBold=0.330, SansBook=0.495, SansItal=0.502, SerifBook=0.503, SerifItal=0.558
+MES   CAP 'Sans'                                     -> SansBold     (desaccord 0.237 ; 2e = SansBook 0.264 ; marge 11%)
+      classement : SansBold=0.237, SansBook=0.264, SerifBold=0.346, SansBoldItal=0.347, SerifBook=0.410, SansItal=0.427, SerifItal=0.528
+
+INSTRUMENT RECEVABLE : False
+
+########## 12_oracle_forme_v2.py ##########
+OUVERT ../reference-1080x2102.png (1080, 2102) | ../capture-1080x2400.png (1080, 2400)
+CTRL+ REF titre 'Commander'      [CSS 700 DejaVu Serif] -> SerifBold     [SERIF]  desaccord=0.164  2e=SansBold 0.298  marge= 82%  OK
+CTRL+ REF bon  'Pyralin'         [CSS 700 DejaVu Serif] -> SerifBold     [SERIF]  desaccord=0.192  2e=SerifBook 0.469  marge=144%  OK
+CTRL+ REF cit. 'vide.'           [CSS ital DejaVu Serif] -> SerifBoldItal [SERIF]  desaccord=0.250  2e=SerifItal 0.321  marge= 28%  *** ECHEC (attendu SerifItal) ***
+CTRL+ REF s-titre 'fournisseur,' [CSS 400 DejaVu Sans] -> SansBook      [SANS]  desaccord=0.282  2e=SerifBold 0.527  marge= 87%  OK
+CTRL+ REF bon  'pour le brindle' [CSS 700 DejaVu Sans] -> SansBold      [SANS]  desaccord=0.212  2e=SerifBold 0.371  marge= 76%  OK
+MES   CAP titre 'Commander'                         -> SansBold      [SANS]  desaccord=0.100  2e=SansBoldItal 0.262  marge=163%
+MES   CAP bon  'Pyralin'                            -> SansBold      [SANS]  desaccord=0.089  2e=SansBoldItal 0.329  marge=270%
+MES   CAP cit. 'vide.'                              -> SansItal      [SANS]  desaccord=0.415  2e=SansBoldItal 0.437  marge=  5%
+MES   CAP s-titre 'fournisseur,'                    -> SansBook      [SANS]  desaccord=0.275  2e=SerifBold 0.524  marge= 90%
+MES   CAP bon  'pour le brindle'                    -> SansBold      [SANS]  desaccord=0.091  2e=SerifBold 0.340  marge=272%
+MES   REF libelle 'PRIX'                            -> SansBook      [SANS]  desaccord=0.362  2e=SansBold 0.370  marge=  2%
+MES   CAP libelle 'PRIX'                            -> SansBook      [SANS]  desaccord=0.346  2e=SansBold 0.496  marge= 43%
+MES   REF CTA 'COMMANDER'                           -> SansBold      [SANS]  desaccord=0.175  2e=SansBoldItal 0.330  marge= 88%
+MES   CAP CTA 'COMMANDER'                           -> SansBold      [SANS]  desaccord=0.168  2e=SansBoldItal 0.342  marge=104%
+
+INSTRUMENT RECEVABLE (5/5 controles) : False
+
+########## 13_couleurs.py ##########
+OUVERT ../reference-1080x2102.png (1080, 2102) | ../capture-1080x2400.png (1080, 2400)
+
+--- APLATS ---
+  REF fond ecran (haut de panneau)   (26, 24, 21)       #1a1815   gradient #1c1a17->#111014
+  REF fond ecran (milieu du vide)    (21, 19, 16)       #151310   gradient
+  REF fond ecran (bas du vide)       (19, 18, 18)       #131212   gradient
+  CAP fond ecran (haut)              (13, 13, 13)       #0d0d0d   
+  CAP fond ecran (milieu)            (13, 13, 13)       #0d0d0d   
+  CAP fond ecran (bas, av. dock)     (13, 13, 13)       #0d0d0d   
+  REF bandeau entete .entete         (30, 27, 22)       #1e1b16   CSS #1e1b16
+  REF filet .entete border-bottom    (58, 53, 44)       #3a352c   CSS #3a352c
+  REF papier .bon                    (239, 231, 214)    #efe7d6   CSS #efe7d6
+  CAP papier .bon                    (234, 224, 200)    #eae0c8   
+  REF bloc .penurie                  (168, 64, 47)      #a8402f   CSS #a8402f
+  REF filet pointille .l             (239, 231, 214)    #efe7d6   CSS dotted #c3b79e
+  REF bande perforee .bon::after     (203, 191, 164)    #cbbfa4   CSS #cbbfa4
+  REF bande .bas                     (20, 26, 33)       #141a21   CSS #141a21
+  REF filet .bas border-top          (44, 54, 64)       #2c3640   CSS #2c3640
+  REF fond CTA .geste                (36, 28, 17)       #241c11   CSS #241c11
+  REF bord CTA .geste                (90, 74, 42)       #5a4a2a   CSS #5a4a2a
+  CAP fond CTA                       (217, 171, 77)     #d9ab4d   
+
+--- ENCRES (coeur du trait) ---
+  REF titre h3                   (240, 223, 196)    #f0dfc4  (n=2953)  CSS #f0dfc4
+  CAP titre                      (238, 241, 242)    #eef1f2  (n=4709)  
+  REF sous-titre .entete p       (154, 143, 120)    #9a8f78  (n=1885)  CSS #9a8f78
+  CAP sous-titre                 (138, 151, 156)    #8a979c  (n=3022)  
+  REF 'Pyralin' h4               (42, 33, 24)       #2a2118  (n=383)  CSS #2a2118
+  CAP 'Pyralin'                  (34, 22, 0)        #221600  (n=795)  
+  REF 'BON DE COMMANDE'          (138, 127, 107)    #8a7f6b  (n=452)  CSS #8a7f6b
+  CAP 'BON DE COMMANDE'          (185, 173, 146)    #b9ad92  (n=659)  
+  REF libelle .l u               (136, 124, 111)    #887c6f  (n=684)  CSS #7a6d58
+  CAP libelle                    (192, 181, 154)    #c0b59a  (n=712)  
+  REF valeur noire .l b          (42, 33, 24)       #2a2118  (n=647)  CSS #2a2118
+  CAP valeur noire               (34, 22, 0)        #221600  (n=867)  
+  REF valeur rouge .l b.rouge    (168, 64, 47)      #a8402f  (n=1169)  CSS #a8402f
+  CAP valeur rouge               (255, 90, 77)      #ff5a4d  (n=1298)  
+  REF citation .dit              (205, 214, 224)    #cdd6e0  (n=2316)  CSS #cdd6e0
+  CAP citation                   (138, 151, 156)    #8a979c  (n=2750)  
+  REF 'Lt. Kane' .dit b          (238, 243, 249)    #eef3f9  (n=467)  CSS #eef3f9
+  CAP 'Nestor'                   (138, 151, 156)    #8a979c  (n=472)  
+  REF CTA libelle .geste         (217, 171, 78)     #d9ab4e  (n=859)  CSS #d9ab4e
+  CAP CTA libelle                (34, 22, 0)        #221600  (n=1107)  
+  REF CTA small                  (154, 138, 106)    #9a8a6a  (n=776)  CSS #9a8a6a
+  CAP titron 'LA CHAINE'         (138, 151, 156)    #8a979c  (n=1271)  CSS .titron #8a8069
+  CAP texte bouche-trou          (184, 194, 204)    #b8c2cc  (n=2738)  
+
+CONTROLE NEGATIF (fenetre a cheval papier/fond, ref x300 y1225..1235) : #11100d -> valeur intermediaire attendue
+
+########## 14_contraste.py ##########
+  cas                                               ratio  verdict (doctrine : >=3 grand, >=4,5 petit)
+  REF titre h3            #f0dfc4 / #1e1b16        13.12:1  OK
+  CAP titre               #eef1f2 / #0d0d0d        17.12:1  OK
+  REF sous-titre          #9a8f78 / #1e1b16         5.37:1  OK
+  CAP sous-titre          #8a979c / #0d0d0d         6.47:1  OK
+  REF 'Pyralin'           #2a2118 / #efe7d6        12.84:1  OK
+  CAP 'Pyralin'           #221600 / #eae0c8        13.52:1  OK
+  REF 'BON DE COMMANDE'   #8a7f6b / #efe7d6         3.20:1  SOUS LE SEUIL (4.5)
+  CAP 'BON DE COMMANDE'   #b9ad92 / #eae0c8         1.69:1  SOUS LE SEUIL (4.5)
+  REF libelle .l u        #887c6f / #efe7d6         3.31:1  SOUS LE SEUIL (4.5)
+  CAP libelle             #c0b59a / #eae0c8         1.55:1  SOUS LE SEUIL (4.5)
+  REF valeur noire        #2a2118 / #efe7d6        12.84:1  OK
+  CAP valeur noire        #221600 / #eae0c8        13.52:1  OK
+  REF valeur rouge        #a8402f / #efe7d6         4.96:1  OK
+  CAP valeur rouge        #ff5a4d / #eae0c8         2.34:1  SOUS LE SEUIL (4.5)
+  REF citation            #cdd6e0 / #141a21        11.91:1  OK
+  CAP citation            #8a979c / #0d0d0d         6.47:1  OK
+  REF CTA libelle         #d9ab4e / #241c11         7.91:1  OK
+  CAP CTA libelle         #221600 / #d9ab4d         8.36:1  OK
+  REF CTA small           #9a8a6a / #241c11         4.98:1  OK
+  CAP titron              #8a979c / #0d0d0d         6.47:1  OK
+  CAP texte bouche-trou   #b8c2cc / #0d0d0d        10.76:1  OK
+
+CONTROLE POSITIF (calcul direct #f0dfc4/#1e1b16) : 13.12:1
+CONTROLE NEGATIF (encre = fond) : 1.00:1
+
+########## 15_chrome_gouttiere.py ##########
+OUVERT ../capture-1080x2400.png (1080, 2400)
+  filet braise du bandeau : lignes [141, 142] couleur (220, 101, 73)
+  CONTROLE NEGATIF (meme sonde sur la reference, compte tiede) : RIEN -> la sonde ne fabrique pas de faux positif
+  haut du dock (1re ligne non #0d0d0d en remontant du bas) : y=2184  (couleur (13, 14, 16))
+  1re ligne de dock reellement encree (>20 col) : y=1500 ; derniere : y=2341
+  ZONE DE CONTENU capture : y=143..1499  hauteur=1357 px = 376.9 CSS
+  ZONE DE CONTENU reference (.appr6, CSS height:462px) : y=439..2101 hauteur=1663 px = 462 CSS
+
+  positions NORMALISEES (0 = haut de zone de contenu, 1 = bas)
+   REFERENCE (439 -> 2102, h=1663)          |  CAPTURE (143 -> 1500, h=1357)
+     haut du panneau                    0.000
+     titre (haut de capitale)           0.025
+     filet .entete                      0.099
+     haut du bon                        0.123
+     bloc .penurie                      0.367
+     bas du bon (perforation incluse)   0.473
+     filet haut de .bas                 0.806
+     citation l1                        0.833
+     haut du CTA                        0.901
+     bas du CTA                         0.964
+     bas de l'ecran                     1.000
+     ---
+     bas du bandeau                     0.000
+     losange d'ornement                 0.055
+     titre l1 (haut de capitale)        0.111
+     haut du bon                        0.343
+     bas du bon                         0.671
+     titron 'LA CHAINE'                 0.704
+     bouche-trou l1                     0.744
+     citation l1                        0.831
+     haut du CTA                        0.908
+     bas du CTA                         1.008
+     haut du dock                       1.000
+     bas de l'ecran                     1.663
+
+  GOUTTIERE : contenu sous le bandeau ? 1re encre du contenu a y=217 > 143 -> OK
+  GOUTTIERE : derniere encre de contenu (bas du CTA) y=1511 < haut du dock 1500 -> OK
+
+########## 16_dock.py ##########
+OUVERT ../capture-1080x2400.png (1080, 2400)
+  1re ligne dont la MEDIANE quitte #0d0d0d (en descendant de 1600) : y=2171  (13, 13, 15)
+  1re ligne ENCREE (>25 colonnes a plus de 16/255 du fond) : y=2180
+  a y=2250 : 4 groupes de colonnes -> [(196, 321), (384, 508), (571, 695), (758, 883)]
+  CONTROLE NEGATIF (1600..2100) : 0 ligne(s) encree(s) -> OK, zone nue
+
+  ZONE DE CONTENU capture : y=143..2179  hauteur=2037 px = 565.8 CSS
+  vide sous le CTA : y=1512..2179 = 668 px = 185.6 CSS = 32.8% de la zone de contenu
+  vide de la REFERENCE (entre bas du bon 1226 et filet .bas 1780) = 553 px = 153.6 CSS = 33.3% du panneau
+  vide de la CAPTURE au meme endroit (bas du bon 1054 -> titron 1099) = 44 px = 2.2%
+
+  positions NORMALISEES capture (0 = bas du bandeau, 1 = haut du dock, h=2037)
+    bas du bandeau         y= 143  0.000
+    losange                y= 217  0.036
+    titre l1 cap           y= 294  0.074
+    sous-titre l1          y= 483  0.167
+    haut du bon            y= 608  0.228
+    bas du bon             y=1054  0.447
+    titron                 y=1099  0.469
+    bouche-trou l1         y=1152  0.495
+    citation l1            y=1271  0.554
+    haut du CTA            y=1375  0.605
+    bas du CTA             y=1511  0.672
+    haut du dock           y=2180  1.000
+
+########## 17_cta_et_bandes.py ##########
+OUVERT ../reference-1080x2102.png (1080, 2102)
+OUVERT ../capture-1080x2400.png (1080, 2400)
+
+--- CTA ---
+  REF : bbox x50..1029 y1938..2042 ; larg=980 haut=105
+        bord haut y=1939 #5a4a2a | fond y=1990 #241c11 | bord gauche x=51 #5a4a2a
+  CAP : bbox x57..1022 y1375..1511 ; larg=966 haut=137
+        bord haut y=1376 #d9ab4d | fond y=1440 #d9ab4d | bord gauche x=58 #d9ab4d
+  CONTROLE : REF bord #5a4a2a != fond #241c11 -> bord PRESENT
+             CAP bord #d9ab4d vs fond #d9ab4d -> AUCUN bord distinct
+  encre dans la MOITIE DROITE du CTA :
+    REF x540..1020 y1950..2030, fond #241c11 -> 2154 px
+    CAP x540..1015 y1390..1500, fond #d9ab4d -> 0 px
+
+--- BANDE .entete (titre) ---
+  REF : fond #1e1b16 de y=439 a 603, filet #3a352c a y=604..606
+  CAP : fond autour du titre y=250..280 #0d0d0d ; y=560..600 #0d0d0d
+  -> ecart entre 'au-dessus du titre' et 'sous le sous-titre' dans la CAPTURE : 0/255 -> AUCUNE bande distincte
+  filet horizontal cherche entre y=560 et 607 dans la CAPTURE : AUCUN
+
+--- MARGES INTERNES DU BON ---
+  REF : bord gauche du bon x=50 ; 1re encre 'Pyralin' x=91  -> padding gauche = 41 px = 11.4 CSS (CSS declare 11px)
+  CAP : bord gauche du bon x=57 ; 1re encre 'Pyralin' x=105 -> padding gauche = 48 px = 13.3 CSS
+  REF : haut du bon y=643 ; haut de capitale 'P' y=684 -> 41 px = 11.4 CSS
+  CAP : haut du bon y=608 ; haut de capitale 'P' y=655 -> 47 px = 13.1 CSS
+  REF : derniere encre du bon (perforation) y=1226 ; derniere ligne de texte y=1003 (avant penurie)
+  CAP : derniere encre y=999 ; bas du bon y=1054 -> padding bas = 55 px = 15.3 CSS
+
+########## 18_couche_globale.py ##########
+OUVERT ../reference-1080x2102.png taille=1080x2102 -> zone panneau .appr6 y=439..2101
+  palette (8 classes) :
+    #efe7d6   22.9%  L=231.5
+    #161411   20.2%  L= 20.2
+    #131211   18.7%  L= 18.1
+    #211d16   15.1%  L= 29.3
+    #141a21   12.7%  L= 25.2
+    #a76351    8.2%  L=112.2
+    somme des 8 = 100.0%
+  luminance moyenne = 80.4/255 | temperature moyenne (R-B) = +16.96
+  densite d'encre (ecart >30/255 au fond dominant #efe7d6) = 76.7%
+
+OUVERT ../capture-1080x2400.png taille=1080x2400 -> zone entre bandeau et dock y=143..2179
+  palette (8 classes) :
+    #0d0d0d   70.1%  L= 13.0
+    #eae0c8   18.3%  L=224.4
+    #b29257    7.7%  L=148.5
+    #0d0d0e    1.2%  L= 13.1
+    #0f0d0d    1.1%  L= 13.4
+    #eef1f2    1.0%  L=240.4
+    somme des 8 = 100.0%
+  luminance moyenne = 67.0/255 | temperature moyenne (R-B) = +15.04
+  densite d'encre (ecart >30/255 au fond dominant #0d0d0d) = 27.9%
+
+CONTROLE NEGATIF (bande uniforme, ref y1400..1450) :
+OUVERT ../reference-1080x2102.png taille=1080x2102 -> zone bande nue y=1400..1450
+  palette (8 classes) :
+    #151310   88.8%  L= 19.2
+    #161411    6.8%  L= 20.2
+    #151311    1.9%  L= 19.3
+    #141210    1.9%  L= 18.3
+    #3a4356    0.6%  L= 66.5
+    somme des 8 = 100.0%
+  luminance moyenne = 19.4/255 | temperature moyenne (R-B) = +4.74
+  densite d'encre (ecart >30/255 au fond dominant #151310) = 0.6%
+
+
+########## 19_bandeau.py ##########
+OUVERT ../capture-1080x2400.png (1080, 2400)
+  anneau du medaillon : x=449..630 y=19..200  centre x=539.5  diametre=182 px
+  valeur ARGENT (encre entre y=45 et 110) : x=82..469
+  bord gauche de l'anneau du medaillon : x=449
+  ecart valeur -> medaillon : -20 px  -> CHEVAUCHEMENT
+  pixels d'encre de la valeur ARGENT tombant DANS le disque du medaillon : 366
+  CONTROLE NEGATIF (sonde braise sur y1600..1700) : 0 pixel(s)
+
+########## 20_rayons_ombre.py ##########
+OUVERT reference (1080, 2102)
+OUVERT capture   (1080, 2400)
+  REF bon   coin haut-gauche y=643.. : retrait=(5, [55, 53, 52, 51, 51, 51, 50, 50]) px  (CSS 2px = 7,2 px)
+  CAP bon   coin haut-gauche y=608.. : retrait=(0, [57, 57, 57, 57, 57, 57, 57, 57]) px
+  REF CTA   coin haut-gauche y=1938..: retrait=(8, [58, 56, 54, 53, 52, 52, 51, 51]) px (CSS 3px = 10,8 px)
+  CAP CTA   coin haut-gauche y=1375..: retrait=(0, [57, 57, 57, 57, 57, 57, 57, 57]) px
+  CONTROLE NEGATIF (bord droit, ref bon y=800..824) : retrait=(0, [50, 50, 50, 50, 50, 50, 50, 50]) px
+
+--- OMBRE PORTEE sous le bon (CSS ref : box-shadow 0 3px 10px #00000055) ---
+  REF sous le bon (y1227..1250, x300..800) : [(1227, 15.0), (1228, 15.3), (1229, 15.0), (1230, 15.7), (1231, 15.0), (1232, 16.0), (1233, 15.3), (1234, 16.0), (1235, 15.3), (1236, 16.3), (1237, 16.0), (1238, 17.0), (1239, 16.0), (1240, 17.0), (1241, 16.3), (1242, 17.3), (1243, 16.7), (1244, 17.7), (1245, 17.0), (1246, 18.0), (1247, 17.3), (1248, 18.3)]
+  CAP sous le bon (y1055..1078, x300..800) : [(1055, 13.0), (1056, 13.0), (1057, 13.0), (1058, 13.0), (1059, 13.0), (1060, 13.0), (1061, 13.0), (1062, 13.0), (1063, 13.0), (1064, 13.0), (1065, 13.0), (1066, 13.0), (1067, 13.0), (1068, 13.0), (1069, 13.0), (1070, 13.0), (1071, 13.0), (1072, 13.0), (1073, 13.0), (1074, 13.0), (1075, 13.0), (1076, 13.0)]
+  REF au-dessus du bon (y620..642) : [(620, 23.7), (621, 23.7), (622, 23.7), (623, 23.7), (624, 23.7), (625, 23.7), (626, 23.7), (627, 23.7), (628, 23.7), (629, 23.7), (630, 23.7), (631, 23.7), (632, 23.3), (633, 23.0), (634, 22.7), (635, 22.7), (636, 22.7), (637, 22.7), (638, 22.7), (639, 22.3), (640, 22.3), (641, 22.0)]
+  CAP au-dessus du bon (y585..607) : [(585, 13.0), (586, 13.0), (587, 13.0), (588, 13.0), (589, 13.0), (590, 13.0), (591, 13.0), (592, 13.0), (593, 13.0), (594, 13.0), (595, 13.0), (596, 13.0), (597, 13.0), (598, 13.0), (599, 13.0), (600, 13.0), (601, 13.0), (602, 13.0), (603, 13.0), (604, 13.0), (605, 13.0), (606, 13.0)]
+
+########## 21_echelles.py ##########
+OUVERT ../reference-1080x2102.png (1080, 2102) | ../capture-1080x2400.png (1080, 2400)
+
+  libelle 'LE' (majuscules sans accent) : REF (909, 925, 17)  CAP (891, 909, 19)
+
+  --- BOITES : rapport capture / reference ---
+    largeur de l'ecran          1080 ->  1080   x1.000
+    largeur du bon               980 ->   966   x0.986
+    largeur du CTA               980 ->   966   x0.986
+    marge laterale du bon         50 ->    57   x1.140
+    padding gauche du bon         41 ->    48   x1.171
+    padding haut du bon           41 ->    47   x1.146
+    pas des lignes du bon         68 ->    75   x1.103
+    hauteur du CTA               105 ->   137   x1.305
+  --- TYPE : rapport capture / reference ---
+    titre (cap)                   33 ->    50   x1.515
+    sous-titre (cap)              19 ->    30   x1.579
+    'Pyralin' (cap)               27 ->    39   x1.444
+    'BON DE COMMANDE' (cap)       16 ->    21   x1.312
+    libelle 'LE' (cap)            17 ->    19   x1.118
+    CTA 'EN' (cap)                25 ->    29   x1.160
+
+  mediane BOITES = 1.140 (min 0.986 max 1.305)
+  mediane TYPE   = 1.444 (min 1.118 max 1.579)
+  CONTROLE POSITIF : largeur d'ecran 1080/1080 = 1.000
+  CONTROLE NEGATIF : hauteurs d'image 2400/2102 = 1.142 -> ce rapport n'est PAS l'echelle du contenu
+
+########## 22_inventaire_bandes.py ##########
+OUVERT ../reference-1080x2102.png taille=1080x2102 — REFERENCE, panneau .appr6 (y439..2101)
+   y= 477.. 520 h= 44   x=   0..1078
+   y= 542.. 563 h= 22   x=   0..1078
+   y= 643..1226 h=584   x=   0..1078
+   y=1825..1856 h= 32   x=   0..1078
+   y=1876..1893 h= 18   x=   0..1078
+   y=1938..2042 h=105   x=   0..1078
+   y=2071..2074 h=  4   x=  18..1078
+   -> 7 bandes
+
+OUVERT ../capture-1080x2400.png taille=1080x2400 — CAPTURE, zone de contenu (y143..2179)
+   y= 143.. 203 h= 61   x= 452.. 628
+   y= 222.. 224 h=  3   x= 532.. 548
+   y= 293.. 343 h= 51   x=   0..1078
+   y= 369.. 378 h= 10   x= 252.. 296
+   y= 382.. 419 h= 38   x=  64.. 386
+   y= 483.. 512 h= 30   x=  60.. 974
+   y= 534.. 556 h= 23   x=  60.. 410
+   y= 608..1054 h=447   x=   0..1078
+   y=1104..1126 h= 23   x=  60.. 512
+   y=1153..1178 h= 26   x=   0..1078
+   y=1191..1216 h= 26   x=  60.. 240
+   y=1272..1305 h= 34   x=  58..1020
+   y=1319..1338 h= 20   x=  56.. 156
+   y=1375..1511 h=137   x=   0..1078
+   y=2179..2179 h=  1   x= 254.. 824
+   -> 15 bandes
+
+OUVERT ../reference-1080x2102.png taille=1080x2102 — CONTROLE NEGATIF reference y1300..1700 (vide)
+   -> 0 bandes
+
+
+########## 23_lignes_du_bon.py ##########
+OUVERT ../reference-1080x2102.png (1080, 2102) | ../capture-1080x2400.png (1080, 2400)
+
+  REFERENCE — lignes du bon (CSS : gap 9px = 32,4 px minimum)
+    ligne 1 : 2 groupe(s) [(89, 321), (741, 989)]  -> ecart libelle/valeur = 420 px
+    ligne 2 : 2 groupe(s) [(90, 362), (538, 989)]  -> ecart libelle/valeur = 176 px
+    ligne 3 : 2 groupe(s) [(91, 196), (766, 988)]  -> ecart libelle/valeur = 570 px
+    ligne 4 : 2 groupe(s) [(91, 333), (528, 988)]  -> ecart libelle/valeur = 195 px
+
+  CAPTURE — lignes du bon
+    ligne 1 : 2 groupe(s) [(101, 329), (698, 977)]  -> ecart libelle/valeur = 369 px
+    ligne 2 : 2 groupe(s) [(102, 367), (580, 978)]  -> ecart libelle/valeur = 213 px
+    ligne 3 : 2 groupe(s) [(104, 205), (726, 977)]  -> ecart libelle/valeur = 521 px
+    ligne 4 : 2 groupe(s) [(104, 343), (375, 978)]  -> ecart libelle/valeur = 32 px
+
+  ALIGNEMENT 'Pyralin' / 'BON DE COMMANDE' (CSS align-items:baseline)
+    REF 'Pyralin' (683, 718)   'BON DE COMMANDE' (694, 710)  -> ecart de ligne de base = 8 px
+       (note : le 'y' de Pyralin descend sous la ligne de base ; bas de capitale REF mesure 710/710)
+    CAP 'Pyralin' (653, 705)   'BON DE COMMANDE' (650, 670)  -> ecart de ligne de base = 23 px
+
+  CONTROLE NEGATIF (titre l1 vs l2 de la capture, connus desalignes) : bas l1=343, bas l2=431 -> 88 px
+
+########## 24_collision_argent.py ##########
+OUVERT ../capture-1080x2400.png (1080, 2400)
+  encre OR de la valeur ARGENT : x=176..446  (252 colonnes)
+  CONTROLE NEGATIF (anneau braise seul, x449..470 y20..40) : 0 px or
+  medaillon : centre (549.5,109.5) rayon exterieur 150.0  bord gauche x=400
+  pixels d'encre OR tombant DANS le disque exterieur du medaillon : 294
+  ecart bord droit de l'encre OR (x=446) -> bord gauche de l'anneau (x=400) : -46 px
+  colonnes d'encre or au-dela de x=420 : [427, 428, 429, 430, 431, 432, 433, 434, 435, 436, 437, 438, 439, 440, 441, 442, 443, 444, 445, 446]
+
+########## 25_collision_v2.py ##########
+OUVERT ../capture-1080x2400.png (1080, 2400)
+  traversee y=110 : [(449, 451), (628, 630)]
+  traversee y=300 : []
+  bord gauche de l'anneau a la hauteur du centre : x=449
+  encre OR (valeur ARGENT) : derniere colonne x=446
+  ECART encre OR -> anneau : 3 px  => PAS de chevauchement, contact a 3 px
+  colonnes or du dernier glyphe : x=400..446 (largeur 47)
+  profil vertical d'encre du dernier glyphe (x, nb de lignes encrees) :
+    [(400, 7), (401, 5), (402, 5), (403, 4), (404, 4), (405, 4), (406, 5), (407, 6), (408, 10), (409, 23), (410, 21), (411, 17), (412, 11), (413, 0), (414, 0), (415, 0), (416, 0), (417, 0), (418, 0), (419, 0), (420, 0), (421, 0), (422, 0), (423, 0), (424, 0), (425, 0), (426, 0), (427, 2), (428, 4), (429, 4), (430, 9), (431, 15), (432, 19), (433, 22), (434, 14), (435, 11), (436, 9), (437, 9), (438, 8), (439, 8), (440, 6), (441, 7), (442, 5), (443, 7), (444, 12), (445, 11), (446, 6), (447, 0), (448, 0)]
+  fond entre x=350..400 : #0d101b
+  fond entre x=410..445 : #0d101b
+  fond entre x=452..470 : #281f22
+
+########## 26_temperature.py ##########
+  partie                       reference              capture                  d(R-B)     d(L)  zone
+  fond, haut de panneau        #1a1815 R-B=  +5 L= 24.2  #0d0d0d R-B=  +0 L= 13.0        -5    -11.2  sur fond sombre
+  fond, milieu                 #151310 R-B=  +5 L= 19.2  #0d0d0d R-B=  +0 L= 13.0        -5     -6.2  sur fond sombre
+  fond, bas                    #131212 R-B=  +1 L= 18.2  #0d0d0d R-B=  +0 L= 13.0        -1     -5.2  sur fond sombre
+  titre                        #f0dfc4 R-B= +44 L=224.7  #eef1f2 R-B=  -4 L=240.4       -48    +15.8  sur fond sombre
+  sous-titre                   #9a8f78 R-B= +34 L=143.7  #8a979c R-B= -18 L=148.6       -52     +4.9  sur fond sombre
+  citation                     #cdd6e0 R-B= -19 L=212.8  #8a979c R-B= -18 L=148.6        +1    -64.2  sur fond sombre
+  nom du lieutenant            #eef3f9 R-B= -11 L=242.4  #8a979c R-B= -18 L=148.6        -7    -93.8  sur fond sombre
+  titron (CSS ref)             #8a8069 R-B= +33 L=128.5  #8a979c R-B= -18 L=148.6       -51    +20.1  sur fond sombre
+  papier du bon                #efe7d6 R-B= +25 L=231.5  #eae0c8 R-B= +34 L=224.4        +9     -7.1  sur le papier
+  libelle de ligne             #887c6f R-B= +25 L=125.6  #c0b59a R-B= +38 L=181.4       +13    +55.8  sur le papier
+  etiquette BON DE COMMANDE    #8a7f6b R-B= +31 L=127.9  #b9ad92 R-B= +39 L=173.6        +8    +45.7  sur le papier
+  valeur noire                 #2a2118 R-B= +18 L= 34.3  #221600 R-B= +34 L= 23.0       +16    -11.3  sur le papier
+  valeur rouge                 #a8402f R-B=+121 L= 84.9  #ff5a4d R-B=+178 L=124.1       +57    +39.3  sur le papier
+
+  sur FOND SOMBRE : 7/8 parties refroidissent (d(R-B) < 0)
+  sur le PAPIER : d(R-B) = [('papier du bon', 9), ('libelle de ligne', 13), ('etiquette BON DE COMMANDE', 8), ('valeur noire', 16), ('valeur rouge', 57)]
+
+  CONTROLE POSITIF #efe7d6 : R-B = +25 (attendu +25)
+  CONTROLE NEGATIF #808080 : R-B = +0 (attendu 0)
+
+########## 27_chrome_canon.py ##########
+OUVERT ../hud-canon-1176.png 1176x2091 | ../capture-1080x2400.png 1080x2400 | facteur canon->capture = 0.91837
+  CONTROLE POSITIF : 1176 x 0.91837 = 1080.0 (attendu 1080)
+  CONTROLE NEGATIF : 2091 x 0.91837 = 1920.3, la capture fait 2400 -> hauteurs NON homothetiques
+
+--- BANDEAU : filet du bas ---
+  canon   (calme, filet laiton)  : lignes [153, 154, 155]  couleur #9d823b
+  capture (chaud, filet braise)  : lignes [141, 142]  couleur #dc6549
+  hauteur de bandeau : canon 153 px -> attendu en capture 140.5 px ; mesure 141 px  (ecart +0.5 px = +0.3%)
+
+--- MEDAILLON : anneau, diametre, centre ---
+  canon   : x 0..1175  y 21..259  diametre 1176  centre x 587.5
+  capture : x 449..630  y 19..200  diametre 182  centre x 539.5
+  diametre : canon 1176 -> attendu 1080.0 ; mesure 182  (ecart -898.0 px = -83.1%)
+  centrage : canon 587.5/1176 = 0.4996 ; capture 539.5/1080 = 0.4995
+
+--- BARRE SOUS ARGENT (canon : segment or + reliquat gris) ---
+  canon   y=120..135 x=40..320 : {'or': (48, 198, 151), 'gris': (199, 269, 71)}
+  capture y=110..125 x=40..300 : {'or': (176, 299, 124)}
+
+--- AILE DROITE : bandes d'encre ---
+  canon   x 820..1170 : [(38, 40, 1095, 1099), (43, 107, 832, 1160)]
+  capture x 760..1075 : [(28, 48, 940, 1034), (87, 89, 999, 1033)]
+
+--- COIN GAUCHE : la capture porte-t-elle quelque chose que le canon n'a pas ? ---
+  canon   x 0..120, y 20..130 : encre = 1743 px
+  capture x 0..120, y 20..130 : encre = 100 px
+
+--- DOCK ---
+  canon   : 1re ligne encree y=1568 (soit 0.750 de la hauteur) ; 7 ronds [(0, 38), (88, 401), (431, 434), (741, 744), (774, 777), (1084, 1087), (1137, 1175)]
+  capture : 1re ligne encree y=2180 (soit 0.908 de la hauteur) ; 4 ronds [(196, 321), (384, 508), (571, 695), (758, 883)]
+  diametre du 1er rond : canon 39 -> attendu 35.8 ; mesure 126 (ecart +251.8%)
+  entraxe : canon 88 -> attendu 80.8 ; capture 188
+
+########## 28_chrome_canon_v2.py ##########
+OUVERT ../hud-canon-1176.png 1176x2091 | ../capture-1080x2400.png 1080x2400 | facteur = 0.91837
+
+--- MEDAILLON : traversee horizontale a la hauteur du centre ---
+  canon   y=100 : anneau [(494, 496), (679, 681)]  diametre exterieur = 188 px
+  canon   y=110 : anneau [(492, 495), (680, 683)]  diametre exterieur = 192 px
+  canon   y=120 : anneau [(492, 495), (680, 683)]  diametre exterieur = 192 px
+  capture y=100 : anneau [(449, 452), (627, 630)]  diametre exterieur = 182 px  (attendu depuis le canon : voir ci-dessous)
+  capture y=110 : anneau [(449, 451), (628, 630)]  diametre exterieur = 182 px  (attendu depuis le canon : voir ci-dessous)
+  => canon 192 px -> attendu 176.3 ; capture 182  (ecart +5.7 px = +3.2 %)
+  epaisseur de l'anneau : canon 4 -> attendu 3.7 ; capture 3
+  bas de l'anneau : canon y=299 ; capture y=231
+
+--- AILE GAUCHE : libelle ARGENT, valeur, jauge ---
+  canon   libelle ARGENT (clair, y20..48)  : (49, 173, 33, 49, 495)
+  capture libelle ARGENT (clair, y18..44)  : (177, 282, 27, 45, 608)
+  canon   valeur or (y55..115)             : (50, 519, 55, 117, 1852)
+  capture valeur or (y45..105)             : (179, 446, 71, 101, 1874)
+  canon   jauge or  (y120..136)            : (48, 592, 120, 136, 1041)
+  capture jauge or  (y108..126)            : (176, 545, 118, 126, 1311)
+  canon   reliquat gris de la jauge        : (199, 546, 120, 130, 498)
+  capture reliquat gris de la jauge        : None
+
+--- COIN GAUCHE (fleche retour ?) ---
+  canon   x 0..150 y 20..130, encre claire : (48, 149, 33, 103, 1128)
+  capture x 0..150 y 20..130, encre claire : (82, 104, 66, 78, 99)
+
+--- DOCK (fenetre bornee au bas de chaque image) ---
+  canon   : 1re ligne y=1830 ; ronds [(45, 116), (959, 1024), (1051, 1175)]
+  capture : 1re ligne y=2182 ; ronds [(196, 321), (383, 509), (570, 696), (758, 883)]
+  diametre du 1er rond : canon 72 -> attendu 66.1 ; capture 126  (ecart +90.6 %)
+  entraxe              : canon 914 -> attendu 839.4 ; capture 187  (ecart -77.7 %)
+  1er rond, bord gauche: canon 45 -> attendu 41.3 ; capture 196
+
+########## 29_chrome_canon_v3.py ##########
+OUVERT ../hud-canon-1176.png 1176x2091 | ../capture-1080x2400.png 1080x2400 | facteur canon->capture = 0.91837
+
+--- 1. MEDAILLON, borne a la colonne centrale ---
+  canon   anneau : x 440..739  y 21..290  (5251 px)
+  capture anneau : x 420..679  y 19..231  (2374 px)
+  diametre : canon 300 -> attendu 275.5 ; capture 260  (-5.6 %)
+  debordement sous le filet : canon bas 290 - filet 155 = 135 px -> attendu 124.0 ; capture bas 231 - filet 142 = 89 px
+
+--- 2. AILE GAUCHE, bornee a x<440 ---
+  canon   libelle (48, 173, 33, 50) | valeur (50, 231, 63, 103)
+          jauge or (48, 198, 122, 127) | reliquat gris (199, 269, 122, 127)
+  capture libelle (177, 282, 27, 45) | valeur (179, 439, 71, 101)
+          jauge or (176, 379, 118, 123) | reliquat gris None
+  bord gauche du bloc ARGENT : canon x=48 -> attendu 44.1 ; capture x=177  (ecart +132.9 px = +12.3 % de la largeur)
+  jauge : canon or 48..198 + gris 199..269 ⇒ piste totale 48..269, remplissage 68 %
+  jauge : capture or 176..379 + gris AUCUN ⇒ pas de piste : le remplissage n'est plus lisible comme une fraction
+  CONTROLE NEGATIF (sonde 'or' bornee x<440 dans la bande du medaillon y150..200) : rien -> la sonde n'entre pas dans le medaillon
+
+--- 3. AILE DROITE ---
+  canon   x 700..1176 : [(44, 66, 832, 1120), (77, 107, 1023, 1124)]
+  capture x 650..1080 : [(28, 48, 940, 1033), (87, 89, 999, 1033)]
+
+--- 4. COIN GAUCHE : ce que la capture ajoute ---
+  canon   x 0..170 y 20..135 : (48, 169, 33, 103, 1351)
+  capture x 0..170 y 20..135 : (82, 104, 66, 78, 99)
+  (le bloc ARGENT du canon commence a x=48 ; celui de la capture a x=177)
+
+########## 30_chrome_final.py ##########
+OUVERT ../hud-canon-1176.png 1176x2091 | ../capture-1080x2400.png 1080x2400 | facteur = 0.91837
+
+1. MEDAILLON
+   canon   : y 21..290  hauteur 270 ; diametre a mi-hauteur 192
+   capture : y 19..231  hauteur 213 ; diametre a mi-hauteur 182
+   diametre : canon 192 -> attendu 176.3 ; capture 182  (+5.7 px = +3.2 % ; tolerance 1,5 % de 1080 = 16,2 px)
+   debordement sous le filet : canon 135 px -> attendu 124.0 ; capture 89 px  (-35.0 px)
+   CONTROLE NEGATIF (capture y=250, hors medaillon) : 0 groupe
+
+2. JAUGE SOUS ARGENT — la piste est-elle absente, ou PLEINE ?
+   canon   : or 48..198 (151 px) + gris 199..269 (71 px) ⇒ piste 48..269 = 222 px, remplie a 68 %
+   piste attendue en capture : 222 x 0.91837 = 203.9 px
+   capture : or 176..379 = 204 px, aucun gris
+   => 204 px mesures contre 203.9 attendus : ecart +0.1 px ⇒ la piste n'est pas absente, elle est PLEINE (100 %)
+
+3. AILE DROITE — alignement a droite
+   canon   ligne 1 finit a x=1120 -> attendu 1028.6 ; capture 1033  (+4.4 px)
+   canon   ligne 2 finit a x=1124 -> attendu 1032.2 ; capture 1033  (+0.8 px)
+   contenu : canon 'JOUR 12 · SOIREE' (x832..1120, 289 px) + '21:40' (x1023..1124, h=31 px)
+             capture 'JOUR 50' (x940..1033, 94 px) + '—' (x999..1033, h=3 px)
+
+4. BLOC ARGENT — decalage
+   canon x=48 -> attendu 44.1 ; capture x=177  (+132.9 px = +12.3 % de la largeur d'ecran)
+   encre claire dans x 0..170 : canon 1351 px (le libelle ARGENT) ; capture 99 px (un glyphe isole x82..104 y66..78)
+

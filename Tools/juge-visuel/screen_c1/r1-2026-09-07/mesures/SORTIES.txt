@@ -1,0 +1,804 @@
+########## mesures/01_reperes.py ##########
+=== reference-1080x2102.png ===
+  OUVERT reference-1080x2102.png  taille=1080x2102
+  largeur=1080 (controle positif: doit valoir 1080 -> OK)
+  61 frontieres (|delta median| >= 3):
+    y=    3    66.5 ->   14.6  (-51.9)
+    y=  434    12.6 ->   26.4  (+13.9)
+    y=  452    32.2 ->  142.7  (+110.6)
+    y=  455   142.7 ->   15.4  (-127.4)
+    y=  458    15.4 ->   20.0  (+4.6)
+    y=  459    20.0 ->   25.2  (+5.2)
+    y=  481    25.5 ->   52.7  (+27.3)
+    y=  484    52.7 ->   30.7  (-22.1)
+    y=  487    30.7 ->   23.4  (-7.2)
+    y=  488    23.4 ->   17.4  (-6.0)
+    y=  640    20.4 ->  142.7  (+122.3)
+    y=  647   142.7 ->   29.7  (-113.1)
+    y=  679    30.5 ->   52.7  (+22.3)
+    y=  682    52.7 ->   23.7  (-29.1)
+    y=  790    23.6 ->   52.7  (+29.2)
+    y=  793    52.7 ->   31.4  (-21.3)
+    y=  825    31.1 ->   52.7  (+21.7)
+    y=  828    52.7 ->    9.9  (-42.9)
+    y=  854    11.9 ->   52.7  (+40.9)
+    y=  857    52.7 ->   23.3  (-29.4)
+    y=  926    23.3 ->  142.7  (+119.4)
+    y=  929   142.7 ->   23.3  (-119.4)
+    y=  970    24.6 ->   30.3  (+5.7)
+    y=  971    30.3 ->   23.3  (-7.0)
+    y=  988    24.6 ->   28.9  (+4.3)
+    y=  989    28.9 ->   23.3  (-5.6)
+    y= 1068    23.3 ->   57.8  (+34.5)
+    y= 1071    57.8 ->   66.0  (+8.2)
+    y= 1073    66.6 ->   63.2  (-3.4)
+    y= 1075    60.5 ->   63.6  (+3.2)
+    y= 1076    63.6 ->   23.3  (-40.3)
+    y= 1185    23.3 ->   52.7  (+29.4)
+    y= 1188    52.7 ->   14.6  (-38.1)
+    y= 1203    14.6 ->   52.7  (+38.1)
+    y= 1206    52.7 ->   23.3  (-29.4)
+    y= 1308    23.3 ->   52.7  (+29.4)
+    y= 1311    52.7 ->   14.6  (-38.1)
+    y= 1322    14.6 ->   52.7  (+38.1)
+    y= 1325    52.7 ->   23.3  (-29.4)
+    y= 1427    23.3 ->   52.7  (+29.4)
+    y= 1430    52.7 ->   14.6  (-38.1)
+    y= 1441    14.6 ->   52.7  (+38.1)
+    y= 1444    52.7 ->   23.3  (-29.4)
+    y= 1547    23.3 ->   52.7  (+29.4)
+    y= 1550    52.7 ->   14.6  (-38.1)
+    y= 1867     9.9 ->   52.7  (+42.9)
+    y= 1870    52.7 ->   21.9  (-30.8)
+    y= 1902    21.9 ->  142.7  (+120.8)
+    y= 1905   142.7 ->   24.5  (-118.2)
+    y= 1993    24.5 ->  142.7  (+118.2)
+    y= 1996   142.7 ->   22.6  (-120.2)
+    y= 2024    22.0 ->   26.2  (+4.2)
+    y= 2025    26.2 ->   31.5  (+5.3)
+    y= 2026    31.5 ->   27.2  (-4.4)
+    y= 2035    26.2 ->   44.3  (+18.1)
+    y= 2036    44.3 ->   27.3  (-17.0)
+    y= 2037    27.3 ->   23.7  (-3.6)
+    y= 2073    18.8 ->   15.4  (-3.4)
+    y= 2076    15.4 ->  142.7  (+127.4)
+    y= 2079   142.7 ->   29.8  (-112.9)
+    y= 2085    28.1 ->   15.4  (-12.8)
+
+=== capture-1080x2400.png ===
+  OUVERT capture-1080x2400.png  taille=1080x2400
+  largeur=1080 (controle positif: doit valoir 1080 -> OK)
+  35 frontieres (|delta median| >= 3):
+    y=  138    18.9 ->  134.6  (+115.6)
+    y=  143   135.8 ->   13.0  (-122.8)
+    y=  267    13.0 ->   22.4  (+9.4)
+    y=  451    22.4 ->   13.0  (-9.4)
+    y=  483    13.0 ->   22.4  (+9.4)
+    y=  642    22.4 ->   13.0  (-9.4)
+    y=  674    13.0 ->   22.4  (+9.4)
+    y=  770    22.4 ->  151.3  (+128.9)
+    y=  771   151.3 ->   22.4  (-128.9)
+    y=  888    22.4 ->   13.0  (-9.4)
+    y=  906    13.0 ->   22.4  (+9.4)
+    y= 1002    22.4 ->  138.8  (+116.4)
+    y= 1003   138.8 ->   22.4  (-116.4)
+    y= 1121    22.4 ->   13.0  (-9.4)
+    y= 1139    13.0 ->   22.4  (+9.4)
+    y= 1217    22.4 ->   86.0  (+63.5)
+    y= 1218    86.0 ->   22.4  (-63.5)
+    y= 1234    22.4 ->  125.7  (+103.3)
+    y= 1235   125.7 ->  138.2  (+12.5)
+    y= 1236   138.2 ->   22.4  (-115.8)
+    y= 1353    22.4 ->   13.0  (-9.4)
+    y= 1371    13.0 ->   22.4  (+9.4)
+    y= 1449    22.4 ->   41.4  (+19.0)
+    y= 1450    41.4 ->   22.4  (-19.0)
+    y= 1467    22.4 ->   26.9  (+4.5)
+    y= 1468    26.9 ->   22.4  (-4.5)
+    y= 1585    22.4 ->   13.0  (-9.4)
+    y= 1603    13.0 ->   22.4  (+9.4)
+    y= 1681    22.4 ->   37.5  (+15.0)
+    y= 1682    37.5 ->   22.4  (-15.0)
+    y= 1699    22.4 ->  188.5  (+166.0)
+    y= 1700   188.5 ->   22.4  (-166.0)
+    y= 1752    22.4 ->   13.0  (-9.4)
+    y= 1784    13.0 ->   22.4  (+9.4)
+    y= 2116    22.4 ->   13.0  (-9.4)
+
+=== capture-ecran-seul-1080x2400.png ===
+  OUVERT capture-ecran-seul-1080x2400.png  taille=1080x2400
+  largeur=1080 (controle positif: doit valoir 1080 -> OK)
+  44 frontieres (|delta median| >= 3):
+    y=  267    13.0 ->   22.4  (+9.4)
+    y=  451    22.4 ->   13.0  (-9.4)
+    y=  483    13.0 ->   22.4  (+9.4)
+    y=  642    22.4 ->   13.0  (-9.4)
+    y=  675    15.1 ->   22.4  (+7.3)
+    y=  752    22.4 ->   88.3  (+65.8)
+    y=  753    88.3 ->   80.2  (-8.0)
+    y=  754    80.2 ->   22.4  (-57.8)
+    y=  769    22.4 ->   36.0  (+13.5)
+    y=  770    36.0 ->  147.4  (+111.4)
+    y=  771   147.4 ->   22.4  (-124.9)
+    y=  888    22.4 ->   13.0  (-9.4)
+    y=  906    13.0 ->   22.4  (+9.4)
+    y=  984    22.4 ->   63.8  (+41.4)
+    y=  985    63.8 ->  109.3  (+45.4)
+    y=  986   109.3 ->   22.4  (-86.8)
+    y= 1002    22.4 ->  152.8  (+130.4)
+    y= 1003   152.8 ->   61.4  (-91.4)
+    y= 1004    61.4 ->   22.4  (-39.0)
+    y= 1121    22.4 ->   13.0  (-9.4)
+    y= 1139    13.0 ->   22.4  (+9.4)
+    y= 1217    22.4 ->  128.8  (+106.4)
+    y= 1218   128.8 ->   22.4  (-106.4)
+    y= 1234    22.4 ->  138.5  (+116.0)
+    y= 1235   138.5 ->  112.2  (-26.2)
+    y= 1236   112.2 ->   22.4  (-89.8)
+    y= 1353    22.4 ->   13.0  (-9.4)
+    y= 1371    13.0 ->   22.4  (+9.4)
+    y= 1449    22.4 ->  141.2  (+118.8)
+    y= 1450   141.2 ->   75.4  (-65.8)
+    y= 1451    75.4 ->   22.4  (-53.0)
+    y= 1466    22.4 ->  126.8  (+104.4)
+    y= 1467   126.8 ->  166.7  (+39.9)
+    y= 1468   166.7 ->   80.7  (-85.9)
+    y= 1469    80.7 ->   22.4  (-58.3)
+    y= 1585    22.4 ->   13.0  (-9.4)
+    y= 1603    13.0 ->   22.4  (+9.4)
+    y= 1698    22.4 ->   80.6  (+58.2)
+    y= 1699    80.6 ->  108.4  (+27.9)
+    y= 1700   108.4 ->   22.4  (-86.0)
+    y= 1751    22.4 ->   18.3  (-4.1)
+    y= 1752    18.3 ->   13.0  (-5.3)
+    y= 1784    13.0 ->   22.4  (+9.4)
+    y= 2116    22.4 ->   13.0  (-9.4)
+
+=== capture-ecran-seul-1080x1920.png ===
+  OUVERT capture-ecran-seul-1080x1920.png  taille=1080x1920
+  largeur=1080 (controle positif: doit valoir 1080 -> OK)
+  30 frontieres (|delta median| >= 3):
+    y=  267    13.0 ->   22.4  (+9.4)
+    y=  451    22.4 ->   13.0  (-9.4)
+    y=  483    13.0 ->   22.4  (+9.4)
+    y=  642    22.4 ->   13.0  (-9.4)
+    y=  675    15.1 ->   22.4  (+7.3)
+    y=  752    22.4 ->   88.3  (+65.8)
+    y=  753    88.3 ->   80.2  (-8.0)
+    y=  754    80.2 ->   22.4  (-57.8)
+    y=  769    22.4 ->   36.0  (+13.5)
+    y=  770    36.0 ->  147.4  (+111.4)
+    y=  771   147.4 ->   22.4  (-124.9)
+    y=  888    22.4 ->   13.0  (-9.4)
+    y=  906    13.0 ->   22.4  (+9.4)
+    y=  984    22.4 ->   63.8  (+41.4)
+    y=  985    63.8 ->  109.3  (+45.4)
+    y=  986   109.3 ->   22.4  (-86.8)
+    y= 1002    22.4 ->  152.8  (+130.4)
+    y= 1003   152.8 ->   61.4  (-91.4)
+    y= 1004    61.4 ->   22.4  (-39.0)
+    y= 1121    22.4 ->   13.0  (-9.4)
+    y= 1139    13.0 ->   22.4  (+9.4)
+    y= 1217    22.4 ->  128.8  (+106.4)
+    y= 1218   128.8 ->   22.4  (-106.4)
+    y= 1234    22.4 ->  138.5  (+116.0)
+    y= 1235   138.5 ->  112.2  (-26.2)
+    y= 1236   112.2 ->   22.4  (-89.8)
+    y= 1271    22.4 ->   18.3  (-4.1)
+    y= 1272    18.3 ->   13.0  (-5.3)
+    y= 1304    13.0 ->   22.4  (+9.4)
+    y= 1636    22.4 ->   13.0  (-9.4)
+
+
+########## mesures/02_coupe.py ##########
+=== capture-1080x2400.png  taille=1080x2400 ===
+  carte1             y=674-888 h= 214  derniere encre y=858  marge_sous_encre= 29px  px_encre_3_dernieres_rangees=0
+  carte2             y=906-1121 h= 215  derniere encre y=1090  marge_sous_encre= 30px  px_encre_3_dernieres_rangees=0
+  carte3             y=1139-1353 h= 214  derniere encre y=1322  marge_sous_encre= 30px  px_encre_3_dernieres_rangees=0
+  carte4             y=1371-1585 h= 214  derniere encre y=1554  marge_sous_encre= 30px  px_encre_3_dernieres_rangees=0
+  carte5 DERNIERE    y=1603-1752 h= 149  derniere encre y=1751  marge_sous_encre=  0px  px_encre_3_dernieres_rangees=12
+
+=== capture-ecran-seul-1080x2400.png  taille=1080x2400 ===
+  carte1             y=675-888 h= 213  derniere encre y=858  marge_sous_encre= 29px  px_encre_3_dernieres_rangees=0
+  carte5 DERNIERE    y=1603-1752 h= 149  derniere encre y=1747  marge_sous_encre=  4px  px_encre_3_dernieres_rangees=0
+
+=== capture-ecran-seul-1080x1920.png  taille=1080x1920 ===
+  carte1             y=675-888 h= 213  derniere encre y=858  marge_sous_encre= 29px  px_encre_3_dernieres_rangees=0
+  carte2             y=906-1121 h= 215  derniere encre y=1090  marge_sous_encre= 30px  px_encre_3_dernieres_rangees=0
+  carte3 DERNIERE    y=1139-1272 h= 133  derniere encre y=1271  marge_sous_encre=  0px  px_encre_3_dernieres_rangees=294
+
+
+########## mesures/05_filets.py ##########
+=== reference-1080x2102.png  taille=1080x2102 ===
+  FILETS HORIZONTAUX chauds (>378 px/rangee) : 13 groupe(s)
+    y=452-454 (3px) largeur max 1030px
+    y=640-646 (7px) largeur max 986px
+    y=926-928 (3px) largeur max 852px
+    y=969-970 (2px) largeur max 408px
+    y=978-979 (2px) largeur max 386px
+    y=988-989 (2px) largeur max 442px
+    y=1236-1236 (1px) largeur max 392px
+    y=1246-1246 (1px) largeur max 389px
+    y=1355-1355 (1px) largeur max 399px
+    y=1474-1474 (1px) largeur max 391px
+    y=1902-1904 (3px) largeur max 986px
+    y=1993-1995 (3px) largeur max 986px
+    y=2076-2078 (3px) largeur max 1026px
+  COLONNES chaudes (>525 px) : [(21, 1612), (22, 1615), (23, 1617), (1056, 1617), (1057, 1615), (1058, 1612)]
+  CONTROLE POSITIF reference : 13 filets attendus >=4 -> OK
+  CONTROLE POSITIF reference : 6 colonnes attendues >=2 (cerne g/d) -> OK
+
+=== capture-1080x2400.png  taille=1080x2400 ===
+  FILETS HORIZONTAUX chauds (>378 px/rangee) : 17 groupe(s)
+    y=138-142 (5px) largeur max 938px
+    y=752-753 (2px) largeur max 483px
+    y=770-771 (2px) largeur max 519px
+    y=984-985 (2px) largeur max 473px
+    y=1002-1003 (2px) largeur max 523px
+    y=1216-1217 (2px) largeur max 487px
+    y=1234-1235 (2px) largeur max 522px
+    y=1448-1449 (2px) largeur max 500px
+    y=1466-1467 (2px) largeur max 500px
+    y=1680-1682 (3px) largeur max 502px
+    y=1699-1700 (2px) largeur max 542px
+    y=1878-1879 (2px) largeur max 438px
+    y=1899-1901 (3px) largeur max 443px
+    y=1937-1938 (2px) largeur max 483px
+    y=1952-1952 (1px) largeur max 434px
+    y=1975-1976 (2px) largeur max 416px
+    y=1989-1989 (1px) largeur max 394px
+  COLONNES chaudes (>600 px) : []
+
+=== capture-ecran-seul-1080x2400.png  taille=1080x2400 ===
+  FILETS HORIZONTAUX chauds (>378 px/rangee) : 21 groupe(s)
+    y=751-753 (3px) largeur max 503px
+    y=760-760 (1px) largeur max 379px
+    y=770-771 (2px) largeur max 527px
+    y=984-985 (2px) largeur max 492px
+    y=992-993 (2px) largeur max 385px
+    y=1002-1003 (2px) largeur max 536px
+    y=1216-1217 (2px) largeur max 513px
+    y=1234-1235 (2px) largeur max 525px
+    y=1448-1450 (3px) largeur max 524px
+    y=1466-1468 (3px) largeur max 545px
+    y=1680-1682 (3px) largeur max 484px
+    y=1689-1689 (1px) largeur max 385px
+    y=1699-1700 (2px) largeur max 515px
+    y=1878-1880 (3px) largeur max 465px
+    y=1889-1889 (1px) largeur max 385px
+    y=1899-1901 (3px) largeur max 465px
+    y=1937-1938 (2px) largeur max 502px
+    y=1944-1945 (2px) largeur max 381px
+    y=1951-1953 (3px) largeur max 454px
+    y=1975-1976 (2px) largeur max 464px
+    y=1989-1990 (2px) largeur max 412px
+  COLONNES chaudes (>600 px) : []
+
+=== capture-ecran-seul-1080x1920.png  taille=1080x1920 ===
+  FILETS HORIZONTAUX chauds (>378 px/rangee) : 16 groupe(s)
+    y=751-753 (3px) largeur max 503px
+    y=760-760 (1px) largeur max 379px
+    y=770-771 (2px) largeur max 527px
+    y=984-985 (2px) largeur max 492px
+    y=992-993 (2px) largeur max 385px
+    y=1002-1003 (2px) largeur max 536px
+    y=1216-1217 (2px) largeur max 513px
+    y=1234-1235 (2px) largeur max 525px
+    y=1398-1400 (3px) largeur max 465px
+    y=1409-1409 (1px) largeur max 385px
+    y=1419-1421 (3px) largeur max 465px
+    y=1457-1458 (2px) largeur max 502px
+    y=1464-1465 (2px) largeur max 381px
+    y=1471-1473 (3px) largeur max 454px
+    y=1495-1496 (2px) largeur max 464px
+    y=1509-1510 (2px) largeur max 412px
+  COLONNES chaudes (>480 px) : []
+
+
+########## mesures/06_traits_continus.py ##########
+=== reference-1080x2102.png  taille=1080x2102 ===
+  TRAITS CONTINUS CHAUD (run>648px) : 6 groupe(s)
+    y=452-454 (3px) run max 1030px
+    y=640-646 (7px) run max 980px
+    y=926-928 (3px) run max 846px
+    y=1902-1904 (3px) run max 980px
+    y=1993-1995 (3px) run max 980px
+    y=2076-2078 (3px) run max 1026px
+  TRAITS CONTINUS FROID (run>648px) : 12 groupe(s)
+    y=0-2 (3px) run max 960px
+    y=481-483 (3px) run max 980px
+    y=825-827 (3px) run max 980px
+    y=854-856 (3px) run max 916px
+    y=1185-1187 (3px) run max 916px
+    y=1203-1205 (3px) run max 916px
+    y=1308-1310 (3px) run max 916px
+    y=1322-1324 (3px) run max 916px
+    y=1427-1429 (3px) run max 916px
+    y=1441-1443 (3px) run max 916px
+    y=1547-1549 (3px) run max 916px
+    y=1867-1869 (3px) run max 980px
+  CONTROLE POSITIF chaud  y=641 run=976 (attendu >600) -> OK
+  CONTROLE NEGATIF chaud  y=1236 (texte) run=17 (attendu <120) -> OK
+  CONTROLE POSITIF froid  y=1185 run=916 (attendu >600) -> OK
+
+=== capture-1080x2400.png  taille=1080x2400 ===
+  TRAITS CONTINUS CHAUD (run>648px) : 0 groupe(s)
+  TRAITS CONTINUS FROID (run>648px) : 0 groupe(s)
+
+=== capture-ecran-seul-1080x2400.png  taille=1080x2400 ===
+  TRAITS CONTINUS CHAUD (run>648px) : 0 groupe(s)
+  TRAITS CONTINUS FROID (run>648px) : 0 groupe(s)
+
+=== capture-ecran-seul-1080x1920.png  taille=1080x1920 ===
+  TRAITS CONTINUS CHAUD (run>648px) : 0 groupe(s)
+  TRAITS CONTINUS FROID (run>648px) : 0 groupe(s)
+
+
+########## mesures/07_bords.py ##########
+=== REFERENCE (temoins) ===
+  [reference-1080x2102.png    1080x2102] CTRL+ bord haut breve 1          x=540 y=1178..1196
+      ext=(17, 24, 35) int=(13, 15, 16)  rangees etrangeres=3 -> BORD OUI
+      1178:(17, 24, 35) 1179:(17, 24, 35) 1180:(17, 24, 35) 1181:(17, 24, 35) 1182:(17, 24, 35) 1183:(17, 24, 35) 1184:(17, 24, 35) 1185:(42, 54, 72) 1186:(42, 54, 72) 1187:(42, 54, 72) 1188:(13, 15, 16) 1189:(13, 15, 16) 1190:(13, 15, 16) 1191:(13, 15, 16) 1192:(13, 15, 16) 1193:(13, 15, 16) 1194:(13, 15, 16) 1195:(13, 15, 16)
+  [reference-1080x2102.png    1080x2102] CTRL- plein aplat interieur      x=540 y=1250..1262
+      ext=(17, 24, 35) int=(17, 24, 35)  rangees etrangeres=0 -> BORD NON
+      1250:(17, 24, 35) 1251:(17, 24, 35) 1252:(17, 24, 35) 1253:(17, 24, 35) 1254:(17, 24, 35) 1255:(17, 24, 35) 1256:(17, 24, 35) 1257:(17, 24, 35) 1258:(17, 24, 35) 1259:(17, 24, 35) 1260:(17, 24, 35) 1261:(17, 24, 35)
+  CONTROLE POSITIF : 3 rangees etrangeres (attendu >=1) -> OK
+  CONTROLE NEGATIF : 0 rangees etrangeres (attendu 0)   -> OK
+
+=== CAPTURE PRINCIPALE ===
+  [capture-1080x2400.png      1080x2400] bord haut carte 1                x=540 y=666..684
+      ext=(13, 13, 13) int=(22, 22, 28)  rangees etrangeres=0 -> BORD NON
+      666:(13, 13, 13) 667:(13, 13, 13) 668:(13, 13, 13) 669:(13, 13, 13) 670:(13, 13, 13) 671:(13, 13, 13) 672:(13, 13, 13) 673:(13, 13, 13) 674:(22, 22, 28) 675:(22, 22, 28) 676:(22, 22, 28) 677:(22, 22, 28) 678:(22, 22, 28) 679:(22, 22, 28) 680:(22, 22, 28) 681:(22, 22, 28) 682:(22, 22, 28) 683:(22, 22, 28)
+  [capture-1080x2400.png      1080x2400] bord bas carte 1                 x=540 y=880..898
+      ext=(22, 22, 28) int=(13, 13, 13)  rangees etrangeres=0 -> BORD NON
+      880:(22, 22, 28) 881:(22, 22, 28) 882:(22, 22, 28) 883:(22, 22, 28) 884:(22, 22, 28) 885:(22, 22, 28) 886:(22, 22, 28) 887:(22, 22, 28) 888:(13, 13, 13) 889:(13, 13, 13) 890:(13, 13, 13) 891:(13, 13, 13) 892:(13, 13, 13) 893:(13, 13, 13) 894:(13, 13, 13) 895:(13, 13, 13) 896:(13, 13, 13) 897:(13, 13, 13)
+  [capture-1080x2400.png      1080x2400] bord haut compteur central       x=540 y=475..493
+      ext=(13, 13, 13) int=(22, 22, 28)  rangees etrangeres=0 -> BORD NON
+      475:(13, 13, 13) 476:(13, 13, 13) 477:(13, 13, 13) 478:(13, 13, 13) 479:(13, 13, 13) 480:(13, 13, 13) 481:(13, 13, 13) 482:(13, 13, 13) 483:(22, 22, 28) 484:(22, 22, 28) 485:(22, 22, 28) 486:(22, 22, 28) 487:(22, 22, 28) 488:(22, 22, 28) 489:(22, 22, 28) 490:(22, 22, 28) 491:(22, 22, 28) 492:(22, 22, 28)
+  [capture-1080x2400.png      1080x2400] bord haut enseigne               x=540 y=259..277
+      ext=(13, 13, 13) int=(22, 22, 28)  rangees etrangeres=0 -> BORD NON
+      259:(13, 13, 13) 260:(13, 13, 13) 261:(13, 13, 13) 262:(13, 13, 13) 263:(13, 13, 13) 264:(13, 13, 13) 265:(13, 13, 13) 266:(13, 13, 13) 267:(22, 22, 28) 268:(22, 22, 28) 269:(22, 22, 28) 270:(22, 22, 28) 271:(22, 22, 28) 272:(22, 22, 28) 273:(22, 22, 28) 274:(22, 22, 28) 275:(22, 22, 28) 276:(22, 22, 28)
+  [capture-1080x2400.png      1080x2400] bord haut panneau explicatif     x=540 y=1776..1794
+      ext=(13, 13, 13) int=(22, 22, 28)  rangees etrangeres=0 -> BORD NON
+      1776:(13, 13, 13) 1777:(13, 13, 13) 1778:(13, 13, 13) 1779:(13, 13, 13) 1780:(13, 13, 13) 1781:(13, 13, 13) 1782:(13, 13, 13) 1783:(13, 13, 13) 1784:(22, 22, 28) 1785:(22, 22, 28) 1786:(22, 22, 28) 1787:(22, 22, 28) 1788:(22, 22, 28) 1789:(22, 22, 28) 1790:(22, 22, 28) 1791:(22, 22, 28) 1792:(22, 22, 28) 1793:(22, 22, 28)
+
+=== bords LATERAUX (colonnes) : y fixe, x variable ===
+  [reference-1080x2102.png    1080x2102] CTRL+ bord gauche breve          y=1250 x=74..92
+      ext=(10, 12, 13) int=(17, 24, 35)  colonnes etrangeres=3 -> BORD OUI
+      74:(10, 12, 13) 75:(10, 12, 13) 76:(10, 12, 13) 77:(10, 12, 13) 78:(11, 12, 13) 79:(11, 12, 13) 80:(11, 12, 13) 81:(11, 12, 13) 82:(42, 54, 72) 83:(42, 54, 72) 84:(42, 54, 72) 85:(17, 24, 35) 86:(17, 24, 35) 87:(17, 24, 35) 88:(17, 24, 35) 89:(17, 24, 35) 90:(17, 24, 35) 91:(17, 24, 35)
+  [capture-1080x2400.png      1080x2400] bord gauche carte 1              y=780 x=30..48
+      ext=(13, 13, 13) int=(22, 22, 28)  colonnes etrangeres=0 -> BORD NON
+      30:(13, 13, 13) 31:(13, 13, 13) 32:(13, 13, 13) 33:(13, 13, 13) 34:(13, 13, 13) 35:(13, 13, 13) 36:(13, 13, 13) 37:(13, 13, 13) 38:(13, 13, 13) 39:(13, 13, 13) 40:(13, 13, 13) 41:(13, 13, 13) 42:(13, 13, 13) 43:(13, 13, 13) 44:(13, 13, 13) 45:(13, 13, 13) 46:(22, 22, 28) 47:(22, 22, 28)
+  [capture-1080x2400.png      1080x2400] bord droit carte 1               y=780 x=1032..1050
+      ext=(22, 22, 28) int=(13, 13, 13)  colonnes etrangeres=0 -> BORD NON
+      1032:(22, 22, 28) 1033:(22, 22, 28) 1034:(13, 13, 13) 1035:(13, 13, 13) 1036:(13, 13, 13) 1037:(13, 13, 13) 1038:(13, 13, 13) 1039:(13, 13, 13) 1040:(13, 13, 13) 1041:(13, 13, 13) 1042:(13, 13, 13) 1043:(13, 13, 13) 1044:(13, 13, 13) 1045:(13, 13, 13) 1046:(13, 13, 13) 1047:(13, 13, 13) 1048:(13, 13, 13) 1049:(13, 13, 13)
+
+########## mesures/09_palette.py ##########
+=== reference-1080x2102.png  taille=1080x2102  zone=contenu .jrn6 x18..1062 y434..2097 ===
+  luminance moyenne = 30.09
+  densite d'encre (L>45) = 9.43 %
+  couleur moyenne = (26,30,33)   B-R = +7.09
+  palette dominante :
+    (16, 16, 32)        34.18 %   B-R=+16
+    (0, 16, 16)         15.94 %   B-R=+16
+    (0, 0, 16)          14.02 %   B-R=+16
+    (0, 0, 0)           11.87 %   B-R= +0
+    (16, 16, 16)        10.98 %   B-R= +0
+    (32, 48, 64)         2.75 %   B-R=+32
+  CONTROLE POSITIF somme des 6 premieres parts = 89.7 % (<=100) -> OK
+
+=== capture-1080x2400.png  taille=1080x2400  zone=contenu (sous bandeau, sur dock) x18..1062 y150..2160 ===
+  luminance moyenne = 28.89
+  densite d'encre (L>45) = 5.34 %
+  couleur moyenne = (29,28,30)   B-R = +1.16
+  palette dominante :
+    (16, 16, 16)        73.53 %   B-R= +0
+    (0, 0, 0)           20.87 %   B-R= +0
+    (224, 224, 192)      1.49 %   B-R=-32
+    (176, 160, 144)      0.81 %   B-R=-32
+    (240, 208, 64)       0.73 %   B-R=-176
+    (160, 144, 128)      0.12 %   B-R=-32
+  CONTROLE POSITIF somme des 6 premieres parts = 97.6 % (<=100) -> OK
+
+=== capture-ecran-seul-1080x2400.png  taille=1080x2400  zone=contenu x18..1062 y150..2160 ===
+  luminance moyenne = 29.11
+  densite d'encre (L>45) = 6.02 %
+  couleur moyenne = (29,28,30)   B-R = +0.99
+  palette dominante :
+    (16, 16, 16)        72.51 %   B-R= +0
+    (0, 0, 0)           21.30 %   B-R= +0
+    (224, 224, 192)      0.94 %   B-R=-32
+    (176, 160, 144)      0.58 %   B-R=-32
+    (240, 208, 64)       0.46 %   B-R=-176
+    (160, 144, 128)      0.19 %   B-R=-32
+  CONTROLE POSITIF somme des 6 premieres parts = 96.0 % (<=100) -> OK
+
+
+########## mesures/10_typo.py ##########
+=== hauteur de CAPITALE / de CHIFFRE ===
+-- reference --
+  [reference-1080x2102.png    1080x2102] titre : capitale L                 encre x=306..329 y=515..559 h= 45px = 12.50 CSS  n=634 
+  [reference-1080x2102.png    1080x2102] sous-titre CAPS (bande entiere)    encre x=299..771 y=589..608 h= 20px =  5.56 CSS  n=2537 
+  [reference-1080x2102.png    1080x2102] compteur chiffres "01"             encre x=170..237 y=701..739 h= 39px = 10.83 CSS  n=1304 
+  [reference-1080x2102.png    1080x2102] libelle "A LA UNE" CAPS            encre x=143..264 y=757..774 h= 18px =  5.00 CSS  n=686 
+  [reference-1080x2102.png    1080x2102] manchette CAPS (L de LE)           encre x=118..144 y=886..905 h= 20px =  5.56 CSS  n=193 
+  [reference-1080x2102.png    1080x2102] titre une : capitale U             encre x=118..154 y=959..990 h= 32px =  8.89 CSS  n=491 
+  [reference-1080x2102.png    1080x2102] breve : capitale U                 encre x=159..189 y=1229..1249 h= 21px =  5.83 CSS  n=344 
+  [reference-1080x2102.png    1080x2102] CTA capitale Y                     encre x=330..346 y=1935..1957 h= 23px =  6.39 CSS  n=193 
+  [reference-1080x2102.png    1080x2102] CTRL NEGATIF bande vide            AUCUNE ENCRE
+-- capture principale --
+  [capture-1080x2400.png      1080x2400] titre : capitale L                 encre x=325..359 y=306..355 h= 50px = 13.89 CSS  n=534 
+  [capture-1080x2400.png      1080x2400] sous-titre CAPS (bande entiere)    encre x=327..751 y=370..399 h= 30px =  8.33 CSS  n=1659 
+  [capture-1080x2400.png      1080x2400] compteur chiffres "20"             encre x=161..221 y=511..551 h= 41px = 11.39 CSS  n=861 
+  [capture-1080x2400.png      1080x2400] libelle "A LA UNE" CAPS            encre x=130..257 y=564..585 h= 22px =  6.11 CSS  n=565 
+  [capture-1080x2400.png      1080x2400] cle outlet (bas-de-casse)          encre x=81..109 y=708..727 h= 20px =  5.56 CSS  n=195 
+  [capture-1080x2400.png      1080x2400] titre carte : "n" de news          encre x=80..109 y=751..789 h= 39px = 10.83 CSS  n=280 
+  [capture-1080x2400.png      1080x2400] sur-titre CE QUE LE SERV.          encre x=94..508 y=1865..1874 h= 10px =  2.78 CSS  n=186 
+  [capture-1080x2400.png      1080x2400] titre panneau : capitale A         encre x=82..119 y=1880..1944 h= 65px = 18.06 CSS  n=422 
+  [capture-1080x2400.png      1080x2400] CTRL NEGATIF bande vide            AUCUNE ENCRE
+
+CONTROLE POSITIF sous-titre reference : 20 px ; CSS 6.4px x3.6 = 23.0 attendu -> OK
+sous-titre capture : 30 px ; delta = +10 px (+50.0 %)
+
+########## mesures/11_typo2.py ##########
+=== REFERENCE : enseigne ===
+  [reference-1080x2102.png    1080x2102] enseigne (titre + sous-titre)  fenetre x300..780 y470..650
+      bande y=513..573  h= 61px = 16.94 CSS
+      bande y=589..608  h= 20px =  5.56 CSS
+      bande y=640..646  h=  7px =  1.94 CSS
+=== CAPTURE : enseigne ===
+  [capture-1080x2400.png      1080x2400] enseigne (titre + sous-titre)  fenetre x300..780 y260..460
+      bande y=304..370  h= 67px = 18.61 CSS
+      bande y=384..406  h= 23px =  6.39 CSS
+
+=== REFERENCE : compteur gauche ===
+  [reference-1080x2102.png    1080x2102] fen 01 / A LA UNE  fenetre x140..270 y670..800
+      bande y=701..739  h= 39px = 10.83 CSS
+      bande y=761..774  h= 14px =  3.89 CSS
+=== CAPTURE : compteur gauche ===
+  [capture-1080x2400.png      1080x2400] fen 20 / A LA UNE  fenetre x120..280 y480..645
+      bande y=511..551  h= 41px = 11.39 CSS
+      bande y=569..585  h= 17px =  4.72 CSS
+
+=== REFERENCE : hero .une ===
+  [reference-1080x2102.png    1080x2102] une : manchette/h5/cle/chip  fenetre x110..950 y850..1190
+      bande y=886..906  h= 21px =  5.83 CSS
+      bande y=926..928  h=  3px =  0.83 CSS
+      bande y=957..998  h= 42px = 11.67 CSS
+      bande y=1009..1041  h= 33px =  9.17 CSS
+      bande y=1066..1086  h= 21px =  5.83 CSS
+      bande y=1121..1135  h= 15px =  4.17 CSS
+=== CAPTURE : carte 1 ===
+  [capture-1080x2400.png      1080x2400] carte 1 : outlet/headline/district  fenetre x70..1010 y670..890
+      bande y=703..727  h= 25px =  6.94 CSS
+      bande y=742..780  h= 39px = 10.83 CSS
+      bande y=788..826  h= 39px = 10.83 CSS
+      bande y=839..857  h= 19px =  5.28 CSS
+
+=== CAPTURE : panneau explicatif ===
+  [capture-1080x2400.png      1080x2400] panneau explicatif  fenetre x70..1010 y1790..2115
+      bande y=1821..1844  h= 24px =  6.67 CSS
+      bande y=1865..1902  h= 38px = 10.56 CSS
+      bande y=1928..1960  h= 33px =  9.17 CSS
+      bande y=1966..1998  h= 33px =  9.17 CSS
+      bande y=2005..2035  h= 31px =  8.61 CSS
+=== REFERENCE : pied (CTA + note) ===
+  [reference-1080x2102.png    1080x2102] CTA + note  fenetre x60..1020 y1890..2070
+      bande y=1902..1904  h=  3px =  0.83 CSS
+      bande y=1929..1933  h=  5px =  1.39 CSS
+      bande y=1935..1958  h= 24px =  6.67 CSS
+      bande y=1993..1995  h=  3px =  0.83 CSS
+      bande y=2019..2041  h= 23px =  6.39 CSS
+
+########## mesures/12_contraste.py ##########
+CONTROLE POSITIF blanc/noir = 21.00 (attendu 21.00) -> OK
+CONTROLE NEGATIF (22,22,28) sur lui-meme = 1.00 (attendu 1.00) -> OK
+
+  [reference-1080x2102.png    1080x2102] titre Le journal (grand)         encre=(242, 201, 107)   fond=(13, 19, 29)    ratio= 11.83:1  seuil=3.0  OK
+  [reference-1080x2102.png    1080x2102] sous-titre CAPS (petit)          encre=(185, 173, 146)   fond=(15, 20, 30)    ratio=  8.30:1  seuil=4.5  OK
+  [reference-1080x2102.png    1080x2102] libelle compteur (petit)         encre=(138, 151, 156)   fond=(10, 15, 23)    ratio=  6.39:1  seuil=4.5  OK
+  [reference-1080x2102.png    1080x2102] titre une h5 (grand)             encre=(234, 224, 200)   fond=(17, 24, 35)    ratio= 13.57:1  seuil=3.0  OK
+  [reference-1080x2102.png    1080x2102] cle .cle (petit)                 encre=(234, 224, 200)   fond=(17, 24, 35)    ratio= 13.57:1  seuil=4.5  OK
+  [reference-1080x2102.png    1080x2102] chip FAIT DIVERS (petit)         encre=(110, 133, 141)   fond=(17, 24, 35)    ratio=  4.58:1  seuil=4.5  OK
+  [reference-1080x2102.png    1080x2102] note6 pied (petit)               encre=(242, 201, 107)   fond=(18, 23, 25)    ratio= 11.48:1  seuil=4.5  OK
+  [capture-1080x2400.png      1080x2400] titre Le journal (grand)         encre=(255, 210, 64)    fond=(22, 22, 28)    ratio= 12.48:1  seuil=3.0  OK
+  [capture-1080x2400.png      1080x2400] sous-titre CAPS (petit)          encre=(185, 173, 146)   fond=(22, 22, 28)    ratio=  8.11:1  seuil=4.5  OK
+  [capture-1080x2400.png      1080x2400] libelle compteur (petit)         encre=(185, 173, 146)   fond=(22, 22, 28)    ratio=  8.11:1  seuil=4.5  OK
+  [capture-1080x2400.png      1080x2400] cle outlet or (petit)            encre=(255, 210, 64)    fond=(22, 22, 28)    ratio= 12.48:1  seuil=4.5  OK
+  [capture-1080x2400.png      1080x2400] titre carte serif (grand)        encre=(234, 224, 200)   fond=(22, 22, 28)    ratio= 13.72:1  seuil=3.0  OK
+  [capture-1080x2400.png      1080x2400] district . fresh (petit)         encre=(185, 173, 146)   fond=(22, 22, 28)    ratio=  8.11:1  seuil=4.5  OK
+  [capture-1080x2400.png      1080x2400] corps panneau explicatif (petit) encre=(185, 173, 146)   fond=(22, 22, 28)    ratio=  8.11:1  seuil=4.5  OK
+
+########## mesures/15_fond.py ##########
+=== 1. DECOR entre bandeau et panneau (centre exclu : le medaillon/losange y sont) ===
+  [reference-1080x2102.png    1080x2102] REFERENCE gauche (decor ville attendu)   x60..420 y210..420  L_moy= 12.01  sd=  3.95  teintes=  159
+  [reference-1080x2102.png    1080x2102] REFERENCE droite                         x660..1020 y210..420  L_moy= 11.07  sd=  3.38  teintes=  190
+  [capture-1080x2400.png      1080x2400] CAPTURE sous chrome gauche               x60..420 y155..262  L_moy= 13.00  sd=  0.00  teintes=    1
+  [capture-1080x2400.png      1080x2400] CAPTURE sous chrome droite               x660..1020 y155..262  L_moy= 13.00  sd=  0.00  teintes=    1
+
+=== 2. CONTROLES ===
+  [capture-1080x2400.png      1080x2400] CTRL NEGATIF vrai aplat (gouttiere)      x200..900 y660..672  L_moy= 13.00  sd=  0.00  teintes=    1
+  CONTROLE POSITIF decor reference sd=3.95 (attendu >4) -> ECHEC
+  CONTROLE NEGATIF aplat sd=0.00 teintes=1 (attendu sd<1, teintes<=3) -> OK
+
+=== 3. DEGRADE du fond du panneau (echantillons dans les GOUTTIERES, sans encre) ===
+  [reference-1080x2102.png    1080x2102] REFERENCE .jrn6
+      y= 462  (23, 28, 36)      L= 27.5  B-R=+13
+      y= 668  (36, 37, 37)      L= 36.8  B-R= +1
+      y= 838  (9, 11, 12)       L= 10.6  B-R= +3
+      y=1197  (13, 15, 16)      L= 14.6  B-R= +3
+      y=1316  (13, 15, 16)      L= 14.6  B-R= +3
+      y=1560  (13, 15, 16)      L= 14.6  B-R= +3
+      y=1880  (18, 26, 28)      L= 24.4  B-R=+10
+      y=2065  (20, 28, 29)      L= 26.4  B-R= +9
+  [capture-1080x2400.png      1080x2400] CAPTURE
+      y= 270  (22, 22, 28)      L= 22.4  B-R= +6
+      y= 468  (13, 13, 13)      L= 13.0  B-R= +0
+      y= 666  (13, 13, 13)      L= 13.0  B-R= +0
+      y= 898  (13, 13, 13)      L= 13.0  B-R= +0
+      y=1362  (13, 13, 13)      L= 13.0  B-R= +0
+      y=1594  (13, 13, 13)      L= 13.0  B-R= +0
+      y=1768  (13, 13, 13)      L= 13.0  B-R= +0
+      y=2110  (22, 22, 28)      L= 22.4  B-R= +6
+
+########## mesures/16_balayage.py ##########
+OUVERT reference-1080x2102.png taille=1080x2102
+  CONTROLE POSITIF chiffres compteurs y701..739 : 7754 px teal (attendu >200)
+  CONTROLE NEGATIF titre or y513..573 : 0 px teal (attendu 0)
+
+  rangees teal DANS .elast (y 828..1866), x 100..960 :
+    y=971    70 px teal   ->  146 px sous le haut de .elast =  40.6 CSS
+    y=973    61 px teal   ->  148 px sous le haut de .elast =  41.1 CSS
+    y=974    66 px teal   ->  149 px sous le haut de .elast =  41.4 CSS
+    y=986    61 px teal   ->  161 px sous le haut de .elast =  44.7 CSS
+    y=987    65 px teal   ->  162 px sous le haut de .elast =  45.0 CSS
+    y=1068   798 px teal   ->  243 px sous le haut de .elast =  67.5 CSS
+    y=1069   799 px teal   ->  244 px sous le haut de .elast =  67.8 CSS
+    y=1070   799 px teal   ->  245 px sous le haut de .elast =  68.1 CSS
+    y=1071   777 px teal   ->  246 px sous le haut de .elast =  68.3 CSS
+    y=1072   769 px teal   ->  247 px sous le haut de .elast =  68.6 CSS
+    y=1073   759 px teal   ->  248 px sous le haut de .elast =  68.9 CSS
+    y=1074   765 px teal   ->  249 px sous le haut de .elast =  69.2 CSS
+    y=1075   767 px teal   ->  250 px sous le haut de .elast =  69.4 CSS
+    y=1080    69 px teal   ->  255 px sous le haut de .elast =  70.8 CSS
+    y=1234    64 px teal   ->  409 px sous le haut de .elast = 113.6 CSS
+    y=1237    84 px teal   ->  412 px sous le haut de .elast = 114.4 CSS
+    y=1238    68 px teal   ->  413 px sous le haut de .elast = 114.7 CSS
+    y=1239    66 px teal   ->  414 px sous le haut de .elast = 115.0 CSS
+    y=1240    63 px teal   ->  415 px sous le haut de .elast = 115.3 CSS
+    y=1242    65 px teal   ->  417 px sous le haut de .elast = 115.8 CSS
+    y=1243    64 px teal   ->  418 px sous le haut de .elast = 116.1 CSS
+    y=1244    66 px teal   ->  419 px sous le haut de .elast = 116.4 CSS
+    y=1245    92 px teal   ->  420 px sous le haut de .elast = 116.7 CSS
+    y=1248    71 px teal   ->  423 px sous le haut de .elast = 117.5 CSS
+    y=1272    77 px teal   ->  447 px sous le haut de .elast = 124.2 CSS
+    y=1274    85 px teal   ->  449 px sous le haut de .elast = 124.7 CSS
+    y=1275    61 px teal   ->  450 px sous le haut de .elast = 125.0 CSS
+    y=1281    62 px teal   ->  456 px sous le haut de .elast = 126.7 CSS
+    y=1282    77 px teal   ->  457 px sous le haut de .elast = 126.9 CSS
+    y=1283    62 px teal   ->  458 px sous le haut de .elast = 127.2 CSS
+    y=1353    71 px teal   ->  528 px sous le haut de .elast = 146.7 CSS
+    y=1354    63 px teal   ->  529 px sous le haut de .elast = 146.9 CSS
+    y=1356    80 px teal   ->  531 px sous le haut de .elast = 147.5 CSS
+    y=1357    67 px teal   ->  532 px sous le haut de .elast = 147.8 CSS
+    y=1358    67 px teal   ->  533 px sous le haut de .elast = 148.1 CSS
+    y=1359    61 px teal   ->  534 px sous le haut de .elast = 148.3 CSS
+    y=1361    62 px teal   ->  536 px sous le haut de .elast = 148.9 CSS
+    y=1363    63 px teal   ->  538 px sous le haut de .elast = 149.4 CSS
+    y=1364    83 px teal   ->  539 px sous le haut de .elast = 149.7 CSS
+    y=1367    65 px teal   ->  542 px sous le haut de .elast = 150.6 CSS
+    y=1391    80 px teal   ->  566 px sous le haut de .elast = 157.2 CSS
+    y=1393    81 px teal   ->  568 px sous le haut de .elast = 157.8 CSS
+    y=1401    72 px teal   ->  576 px sous le haut de .elast = 160.0 CSS
+    y=1402    62 px teal   ->  577 px sous le haut de .elast = 160.3 CSS
+    y=1475    74 px teal   ->  650 px sous le haut de .elast = 180.6 CSS
+    y=1476    64 px teal   ->  651 px sous le haut de .elast = 180.8 CSS
+    y=1477    64 px teal   ->  652 px sous le haut de .elast = 181.1 CSS
+    y=1482    62 px teal   ->  657 px sous le haut de .elast = 182.5 CSS
+    y=1483    81 px teal   ->  658 px sous le haut de .elast = 182.8 CSS
+    y=1511    80 px teal   ->  686 px sous le haut de .elast = 190.6 CSS
+    y=1513    87 px teal   ->  688 px sous le haut de .elast = 191.1 CSS
+    y=1515    64 px teal   ->  690 px sous le haut de .elast = 191.7 CSS
+    y=1516    72 px teal   ->  691 px sous le haut de .elast = 191.9 CSS
+    y=1517    72 px teal   ->  692 px sous le haut de .elast = 192.2 CSS
+    y=1518    65 px teal   ->  693 px sous le haut de .elast = 192.5 CSS
+    y=1520    64 px teal   ->  695 px sous le haut de .elast = 193.1 CSS
+    y=1521    85 px teal   ->  696 px sous le haut de .elast = 193.3 CSS
+    y=1522    64 px teal   ->  697 px sous le haut de .elast = 193.6 CSS
+
+  bandes d'ENCRE du bloc heros (rappel de 11_typo2) : 886-906 manchette | 926-928 filet | 957-998 h5-l1 | 1009-1041 h5-l2 | 1066-1086 .cle | 1121-1135 chip
+  -> la rangee croisee par le trait est nommee dans le rapport.
+    couleur du trait a x=700, y=1069 : (49, 79, 89)
+    couleur du trait a x=700, y=1072 : (49, 79, 89)
+    couleur du trait a x=700, y=1075 : (49, 79, 89)
+    encre claire (L>70) sur y=1066 : 4 px
+    encre claire (L>70) sur y=1072 : 505 px
+    encre claire (L>70) sur y=1080 : 153 px
+    encre claire (L>70) sur y=1086 : 10 px
+
+########## mesures/17_compteurs.py ##########
+  [reference-1080x2102.png    1080x2102] REFERENCE .fen (fond .jrn6 sombre) y=700
+      tuile 1: x=27..96  largeur=  70px =  19.44 CSS
+      tuile 2: x=148..253  largeur= 106px =  29.44 CSS
+      tuile 3: x=315..430  largeur= 116px =  32.22 CSS
+      tuile 4: x=482..592  largeur= 111px =  30.83 CSS
+      tuile 5: x=649..764  largeur= 116px =  32.22 CSS
+      tuile 6: x=816..927  largeur= 112px =  31.11 CSS
+      tuile 7: x=983..1052  largeur=  70px =  19.44 CSS
+      gouttiere 1:  51px = 14.17 CSS
+      gouttiere 2:  61px = 16.94 CSS
+      gouttiere 3:  51px = 14.17 CSS
+      gouttiere 4:  56px = 15.56 CSS
+      gouttiere 5:  51px = 14.17 CSS
+      gouttiere 6:  55px = 15.28 CSS
+      ETENDUE totale = 1026px = 285.00 CSS (controle : ~274 CSS -> ECART)
+  [capture-1080x2400.png      1080x2400] CAPTURE tuiles compteurs           y=520
+      tuile 1: x=46..336  largeur= 291px =  80.83 CSS
+      tuile 2: x=358..708  largeur= 351px =  97.50 CSS
+      tuile 3: x=730..1033  largeur= 304px =  84.44 CSS
+      gouttiere 1:  21px =  5.83 CSS
+      gouttiere 2:  21px =  5.83 CSS
+      ETENDUE totale = 988px = 274.44 CSS (controle : ~274 CSS -> OK)
+
+  CONTROLE NEGATIF (rangee de gouttiere, aucune tuile attendue) :
+  [capture-1080x2400.png      1080x2400] CAPTURE gouttiere y=666            y=666
+
+=== hauteurs comparees (CSS) ===
+  REFERENCE .fen      : y679..793  = 114px = 31.67 CSS   (CSS source: 4+14+3+6+3+2 = 32)
+  CAPTURE  tuile      : y483..642  = 159px = 44.17 CSS
+  delta = +12.50 CSS = +39.5 %
+
+########## mesures/18_tuiles_ref.py ##########
+OUVERT reference-1080x2102.png taille=1080x2102
+  bordure haute des .fen y=680 : 3 segment(s)
+     tuile 1: x=50..361  largeur= 312px =  86.67 CSS
+     tuile 2: x=384..695  largeur= 312px =  86.67 CSS
+     tuile 3: x=718..1029  largeur= 312px =  86.67 CSS
+     gouttiere 1: 22px = 6.11 CSS
+     gouttiere 2: 22px = 6.11 CSS
+     ETENDUE = 980px = 272.22 CSS
+  CONTROLE POSITIF : 3 segments (attendu 3) -> OK
+  CONTROLE NEGATIF (hors bordure) y=660 : 0 segment(s)
+  CONTROLE NEGATIF : 0 segments (attendu 0) -> OK
+
+  CAPTURE (rappel 17_compteurs) : 80.83 / 97.50 / 84.44 CSS, gouttieres 5.83 CSS
+  REFERENCE : 86.67 / 86.67 / 86.67 CSS
+  ecart max entre tuiles  REFERENCE = 0.00 CSS (0.0 %)
+  ecart max entre tuiles  CAPTURE   = 16.67 CSS (20.6 %)
+
+########## mesures/19_verif_croisee.py ##########
+=== or du titre 'Le journal' (jeton) sur les 3 planches ===
+  [capture-1080x2400.png            1080x2400] or = (255, 210, 64)   ecart a #f2c96b(242,201,107) = (+13,+9,-43)
+  [capture-ecran-seul-1080x2400.png 1080x2400] or = (255, 210, 64)   ecart a #f2c96b(242,201,107) = (+13,+9,-43)
+  [capture-ecran-seul-1080x1920.png 1080x1920] or = (255, 210, 64)   ecart a #f2c96b(242,201,107) = (+13,+9,-43)
+
+=== largeur du bloc de contenu (remplissage 22,22,28) ===
+  [reference] bordures froides mesurees par 08_structure : x47..1032 = 986px = 273.9 CSS
+  [capture-1080x2400.png            (1080, 2400)] y=300 : x=46..1033  988px = 274.44 CSS -> OK
+  [capture-ecran-seul-1080x2400.png (1080, 2400)] y=300 : x=46..1033  988px = 274.44 CSS -> OK
+  [capture-ecran-seul-1080x1920.png (1080, 1920)] y=330 : x=46..1033  988px = 274.44 CSS -> OK
+
+=== 1920 : reperes verticaux identiques a 2400 ? ===
+  enseigne 267-451 / compteurs 483-642 / carte1 675-888 / carte2 906-1121 : identiques (01_reperes)
+  1920 : la liste s'arrete a y=1272 (carte 3 tranchee) ; le panneau explicatif
+         occupe 1304-1636 ; il reste 1920-1636 = 284 px de vide sous lui.
+  2400 : la liste s'arrete a y=1752 (carte 5 tranchee) ; panneau 1784-2116 ;
+         il reste 2400-2116 = 284 px (le dock y loge sous chrome).
+
+########## mesures/04_echantillon.py ##########
+=== REFERENCE ===
+  [reference-1080x2102.png      1080x2102] titre "Le journal"                 y=490-560  encre=(242, 201, 107)  fond=(13, 19, 28)  Lencre=202.9 Lfond=18.4
+  [reference-1080x2102.png      1080x2102] sous-titre CE QUI SE DIT           y=585-605  encre=(185, 173, 146)  fond=(14, 20, 30)  Lencre=173.6 Lfond=19.4
+  [reference-1080x2102.png      1080x2102] compteur "01"                      y=690-730  encre=(127, 212, 217)  fond=(11, 17, 25)  Lencre=194.3 Lfond=16.3
+  [reference-1080x2102.png      1080x2102] libelle A LA UNE                   y=755-775  encre=(138, 151, 156)  fond=(9, 15, 23)  Lencre=148.6 Lfond=14.3
+  [reference-1080x2102.png      1080x2102] manchette LE CLAIRON               y=885-915  encre=(242, 201, 107)  fond=(17, 24, 35)  Lencre=202.9 Lfond=23.3
+  [reference-1080x2102.png      1080x2102] titre une (h5)                     y=950-1010  encre=(234, 224, 200)  fond=(17, 24, 35)  Lencre=224.4 Lfond=23.3
+  [reference-1080x2102.png      1080x2102] chip FAIT DIVERS                   y=1060-1090  encre=(109, 133, 141)  fond=(17, 24, 35)  Lencre=128.5 Lfond=23.3
+  [reference-1080x2102.png      1080x2102] breve b                            y=1225-1255  encre=(234, 224, 200)  fond=(17, 24, 35)  Lencre=224.4 Lfond=23.3
+  [reference-1080x2102.png      1080x2102] breve cle                          y=1265-1290  encre=(107, 115, 125)  fond=(17, 24, 35)  Lencre=114.0 Lfond=23.3
+  [reference-1080x2102.png      1080x2102] CTA Y PRETER ATTENTION             y=1930-1965  encre=(242, 201, 107)  fond=(22, 25, 27)  Lencre=202.9 Lfond=24.5
+  [reference-1080x2102.png      1080x2102] CONTROLE NEGATIF bord bas          y=2100-2102  encre=(11, 16, 22)  fond=(11, 16, 22)  Lencre=15.4 Lfond=15.4
+
+=== CAPTURE PRINCIPALE (sous chrome) ===
+  [capture-1080x2400.png        1080x2400] titre "Le journal"                 y=290-350  encre=(255, 210, 64)  fond=(22, 22, 28)  Lencre=209.0 Lfond=22.4
+  [capture-1080x2400.png        1080x2400] sous-titre CE QUI SE DIT           y=375-400  encre=(185, 173, 146)  fond=(22, 22, 28)  Lencre=173.6 Lfond=22.4
+  [capture-1080x2400.png        1080x2400] compteur "20"                      y=505-555  encre=(127, 212, 217)  fond=(22, 22, 28)  Lencre=194.3 Lfond=22.4
+  [capture-1080x2400.png        1080x2400] libelle A LA UNE                   y=565-590  encre=(185, 173, 146)  fond=(22, 22, 28)  Lencre=173.6 Lfond=22.4
+  [capture-1080x2400.png        1080x2400] cle outlet (or)                    y=700-725  encre=(255, 210, 64)  fond=(22, 22, 28)  Lencre=209.0 Lfond=22.4
+  [capture-1080x2400.png        1080x2400] cle headline (titre)               y=740-800  encre=(234, 224, 200)  fond=(22, 22, 28)  Lencre=224.4 Lfond=22.4
+  [capture-1080x2400.png        1080x2400] district-N . fresh                 y=835-860  encre=(185, 173, 146)  fond=(22, 22, 28)  Lencre=173.6 Lfond=22.4
+  [capture-1080x2400.png        1080x2400] sur-titre CE QUE LE SERVEUR        y=1855-1885  encre=(255, 210, 64)  fond=(22, 22, 28)  Lencre=209.0 Lfond=22.4
+  [capture-1080x2400.png        1080x2400] titre panneau explicatif           y=1875-1935  encre=(255, 210, 64)  fond=(22, 22, 28)  Lencre=209.0 Lfond=22.4
+  [capture-1080x2400.png        1080x2400] CONTROLE NEGATIF bas nu            y=2350-2400  encre=(13, 19, 29)  fond=(13, 18, 27)  Lencre=18.4 Lfond=17.6
+
+########## mesures/08_structure.py ##########
+OUVERT reference-1080x2102.png taille=1080x2102
+
+-- traits CHAUDS (laiton) --
+  y= 453  x=26..1053  (1028px = 285.6 CSS)  n=1028
+  y= 643  x=21..1058  (1038px = 288.3 CSS)  n=984
+  y= 927  x=21..1058  (1038px = 288.3 CSS)  n=852
+  y=1903  x=21..1058  (1038px = 288.3 CSS)  n=986
+  y=1994  x=21..1058  (1038px = 288.3 CSS)  n=986
+  y=2077  x=28..1051  (1024px = 284.4 CSS)  n=1024
+
+-- traits FROIDS (#2a3648) --
+  y= 482  x=0..1079  (1080px = 300.0 CSS)  n=986
+  y= 826  x=0..1079  (1080px = 300.0 CSS)  n=986
+  y= 855  x=0..1079  (1080px = 300.0 CSS)  n=928
+  y=1186  x=0..1079  (1080px = 300.0 CSS)  n=928
+  y=1204  x=0..1079  (1080px = 300.0 CSS)  n=928
+  y=1309  x=0..1079  (1080px = 300.0 CSS)  n=928
+  y=1868  x=0..1079  (1080px = 300.0 CSS)  n=986
+
+-- colonnes du cerne --
+  x=[21, 22, 23, 1056, 1057, 1058]
+  colonne x=22 : chaud de y=457 a y=2071  hauteur=1615px = 448.6 CSS
+  CONTROLE POSITIF cerne : 448.6 CSS attendu 452.0 (462-2x5) -> ECHEC
+
+-- CAPTURE 1080x2400 : boites (bornes du profil 01) en px et en CSS(/3.6) --
+  enseigne          y=267-451  h= 184px =   51.1 CSS
+  compteurs         y=483-642  h= 159px =   44.2 CSS
+  carte1            y=674-888  h= 214px =   59.4 CSS
+  carte2            y=906-1121  h= 215px =   59.7 CSS
+  carte3            y=1139-1353  h= 214px =   59.4 CSS
+  carte4            y=1371-1585  h= 214px =   59.4 CSS
+  carte5            y=1603-1752  h= 149px =   41.4 CSS
+  pann. explicatif  y=1784-2116  h= 332px =   92.2 CSS
+  OUVERT capture-1080x2400.png taille=1080x2400
+  enseigne          y=300: remplissage x=46..1033 (988px = 274.4 CSS)
+  compteur          y=520: remplissage x=46..1033 (988px = 274.4 CSS)
+  carte1            y=780: remplissage x=46..1033 (988px = 274.4 CSS)
+  pann. explicatif  y=1850: remplissage x=46..1033 (988px = 274.4 CSS)
+
+########## mesures/20_verifs_finales.py ##########
+OUVERT reference-1080x2102.png taille=1080x2102
+
+(a) bornes horizontales des cartes (rangee de bordure haute)
+    .une bord haut   y=855 : x=0..1079  largeur=1080px = 300.00 CSS   n=928
+    .brv1 bord haut  y=1203 : x=0..1079  largeur=1080px = 300.00 CSS   n=928
+    .elast bord haut y=826 : x=0..1079  largeur=1080px = 300.00 CSS   n=986
+    CONTROLE : .elast doit faire ~274 CSS et .une/.brv ~258 CSS (274 - 2x1 bord - 2x7 retrait)
+
+(b) bas de la .barre : premiere rangee sous laquelle la STRUCTURE (decor) apparait
+    y= 120  L_moy= 15.21  sd=14.04  teintes=6
+    y= 124  L_moy= 14.16  sd= 0.48  teintes=5
+    y= 128  L_moy= 14.16  sd= 0.48  teintes=5
+    y= 132  L_moy= 14.18  sd= 0.48  teintes=5
+    y= 136  L_moy= 14.43  sd= 0.27  teintes=6
+    y= 140  L_moy= 14.44  sd= 0.27  teintes=5
+    y= 144  L_moy= 14.45  sd= 0.25  teintes=5
+    y= 148  L_moy= 14.45  sd= 0.26  teintes=6
+    y= 152  L_moy= 14.42  sd= 0.38  teintes=9
+    y= 156  L_moy= 14.39  sd= 0.56  teintes=9
+    y= 160  L_moy= 14.36  sd= 0.69  teintes=12
+    y= 164  L_moy= 14.32  sd= 0.85  teintes=11
+    y= 168  L_moy= 14.29  sd= 0.88  teintes=11
+    y= 172  L_moy= 14.25  sd= 0.97  teintes=11
+    y= 176  L_moy= 14.21  sd= 1.07  teintes=14
+    y= 180  L_moy= 14.11  sd= 1.20  teintes=20
+    y= 184  L_moy= 13.80  sd= 1.60  teintes=19
+    y= 188  L_moy= 13.49  sd= 1.87  teintes=26
+    y= 192  L_moy= 13.21  sd= 2.08  teintes=22
+    y= 196  L_moy= 12.88  sd= 2.24  teintes=25
+    y= 200  L_moy= 12.63  sd= 2.39  teintes=20
+    y= 204  L_moy= 12.32  sd= 2.47  teintes=22
+    y= 208  L_moy= 11.91  sd= 2.62  teintes=23
+    y= 212  L_moy= 11.79  sd= 2.59  teintes=17
+    y= 216  L_moy= 11.59  sd= 2.57  teintes=21
+    y= 220  L_moy= 11.28  sd= 2.52  teintes=20
+    y= 224  L_moy= 10.98  sd= 2.44  teintes=17
+    y= 228  L_moy= 10.87  sd= 2.19  teintes=19
+    y= 232  L_moy= 10.53  sd= 2.02  teintes=17
+    y= 236  L_moy= 10.19  sd= 1.77  teintes=22
+    y= 240  L_moy=  9.92  sd= 1.43  teintes=18
+    y= 244  L_moy=  9.56  sd= 0.72  teintes=16
+    y= 248  L_moy=  9.11  sd= 0.36  teintes=10
+    y= 252  L_moy=  9.15  sd= 0.36  teintes=5
+    y= 256  L_moy=  8.80  sd= 0.02  teintes=2
+
+OUVERT capture-1080x2400.png taille=1080x2400
+(c) couleur du SUR-TITRE (bande 1821-1844) et du TITRE (bande 1865-1902) du panneau
+    sur-titre CE QUE LE SERVEUR ENVOIE VRAIMENT    encre=(185, 173, 146)
+    titre  Aucune de ces breves n a de texte       encre=(255, 210, 64)
+    CONTROLE : les deux doivent DIFFERER si le sur-titre est gris et le titre or

@@ -1,0 +1,4 @@
+# Lignes de journal DÉCLARÉES par la ligne GO de f2 (2026-09-07 05:20) — transcrites, NON relues (aucun fichier joint au commit a341fd9)
+[CADRE-B3] 1080x2400 · cadre 462,00 css (voulu 462,00) · haut à 550,4 u · inset 275,0
+[CADRE-B3] 1080x1920 · cadre 393,21 css               · haut à 275,0 u = l'inset EXACTEMENT
+capture ㊲ : passed=1 failed=0 declares=1 comptes=1

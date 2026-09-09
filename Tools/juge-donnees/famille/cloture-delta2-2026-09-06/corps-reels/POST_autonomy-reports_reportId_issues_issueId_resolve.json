@@ -1,0 +1,19 @@
+{
+ "route": "/v1/autonomy-reports/{reportId}/issues/{issueId}/resolve",
+ "methode": "POST",
+ "statut": null,
+ "non_appelee": "mutation — pas de corps réel sans changer l'état du compte de démo la veille des juges",
+ "provenance": {
+  "date": "2026-09-06T11:02:54",
+  "back_main": "fc944b62",
+  "game_back": "mafia-clean-city-game-back 2026-09-04T08:41:42.667221302Z",
+  "compte": "demo_capture@example.test",
+  "jour_de_jeu": 50,
+  "horloge_game_minute": 72118,
+  "horloge_source": "city_sim_clock.game_minute scopée sur player_id (lecture en base : aucune route joueur ne la projette — forme F)",
+  "district_du_joueur_mesure": 1,
+  "dossier": "famille",
+  "symbole": "⑥",
+  "controleur": "LieutenantScreenController"
+ }
+}

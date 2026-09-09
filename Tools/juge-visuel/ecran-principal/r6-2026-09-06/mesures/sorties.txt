@@ -1,0 +1,1025 @@
+########## m03_capitale.py
+== m03 capitale sous-pixel ==
+  [ouvert] ../ecran-canon.png (1176, 2091)
+  --- REFERENCE (x3) ---
+    ARGENT ref  (fenetre A)        plateau= 28.89  haut=  32.02 bas=  50.67  capitale =  18.64 px =  6.21 CSS
+    ARGENT ref  (fenetre B, +/-2px) plateau= 28.89  haut=  32.02 bas=  50.67  capitale =  18.64 px =  6.21 CSS
+    controle positif : |A-B| = 0.000 CSS
+
+  [ouvert] ../capture-fiche-1080x1920.png (1080, 1920)
+  --- 1080x1920 (x2.7551) ---
+    ARGENT jeu  (fenetre A)        plateau= 33.76  haut=  27.19 bas=  45.57  capitale =  18.38 px =  6.67 CSS
+    ARGENT jeu  (fenetre B)        plateau= 33.76  haut=  27.19 bas=  45.57  capitale =  18.38 px =  6.67 CSS
+    controle positif : |A-B| = 0.000 CSS
+
+  [ouvert] ../capture-fiche-1080x2400.png (1080, 2400)
+  --- 1080x2400 (x2.7551) ---
+    ARGENT jeu  (fenetre A)        plateau= 34.66  haut=  27.14 bas=  45.54  capitale =  18.40 px =  6.68 CSS
+    ARGENT jeu  (fenetre B)        plateau= 34.66  haut=  27.14 bas=  45.54  capitale =  18.40 px =  6.68 CSS
+    controle positif : |A-B| = 0.000 CSS
+
+  [ouvert] ../capture-district-1080x2400.png (1080, 2400)
+  --- district 2400 (x2.7551) ---
+    ARGENT jeu  (fenetre A)        plateau= 34.66  haut=  27.14 bas=  45.54  capitale =  18.40 px =  6.68 CSS
+    ARGENT jeu  (fenetre B)        plateau= 34.66  haut=  27.14 bas=  45.54  capitale =  18.40 px =  6.68 CSS
+    controle positif : |A-B| = 0.000 CSS
+
+
+########## m08_ronds_ref.py
+  [ouvert] ../ecran-canon.png (1176, 2091)
+  [ouvert] ../capture-fiche-1080x2400.png (1080, 2400)
+  [ouvert] ../capture-fiche-1080x1920.png (1080, 1920)
+== m08 ronds : REFERENCE (y=1920) ==
+    ref rond 1: fond L=16.5 remplissage L=199.0 pic L=50.4
+       bord G   87.33..  89.00 (larg 1.67, pic 199.0) | bord D   99.00.. 100.67 (larg 1.67, pic 199.0)
+       DIAMETRE (nominal, bord exterieur a bord exterieur) = 13.33 CSS  centre = 94.00
+    ref rond 2: pas 2 bords (1)
+    ref rond 3: fond L=13.0 remplissage L=30.3 pic L=50.4
+       bord G  207.00.. 208.00 (larg 1.00, pic 50.4) | bord D  252.00.. 253.00 (larg 1.00, pic 54.5)
+       DIAMETRE (nominal, bord exterieur a bord exterieur) = 46.00 CSS  centre = 230.00
+    ref rond 4: fond L=19.8 remplissage L=165.9 pic L=50.4
+       bord G  292.67.. 295.00 (larg 2.33, pic 199.0) | bord D  301.00.. 303.67 (larg 2.67, pic 199.0)
+       DIAMETRE (nominal, bord exterieur a bord exterieur) = 11.00 CSS  centre = 298.17
+== m08 ronds : JEU 1080x2400 (y=2240, fond plat) ==
+    jeu24 rond 1: fond L=32.7 remplissage L=36.2 pic L=84.0
+       bord G   71.14..  71.87 (larg 0.73, pic 84.0) | bord D  116.15.. 116.87 (larg 0.73, pic 85.0)
+       DIAMETRE (nominal, bord exterieur a bord exterieur) = 45.73 CSS  centre = 94.01
+    jeu24 rond 2: fond L=32.7 remplissage L=36.2 pic L=96.0
+       bord G  139.01.. 139.74 (larg 0.73, pic 96.0) | bord D  184.02.. 185.11 (larg 1.09, pic 90.0)
+       DIAMETRE (nominal, bord exterieur a bord exterieur) = 46.10 CSS  centre = 162.06
+    jeu24 rond 3: fond L=32.7 remplissage L=36.2 pic L=90.0
+       bord G  206.89.. 207.98 (larg 1.09, pic 90.0) | bord D  252.26.. 252.99 (larg 0.73, pic 96.0)
+       DIAMETRE (nominal, bord exterieur a bord exterieur) = 46.10 CSS  centre = 229.94
+    jeu24 rond 4: fond L=32.7 remplissage L=36.2 pic L=85.0
+       bord G  275.13.. 275.85 (larg 0.73, pic 85.0) | bord D  320.13.. 320.86 (larg 0.73, pic 84.0)
+       DIAMETRE (nominal, bord exterieur a bord exterieur) = 45.73 CSS  centre = 297.99
+== m08 ronds : JEU 1080x1920 (y=1760, fond CLAIR = eau) ==
+    jeu19 rond 1: fond L=104.4 remplissage L=36.2 pic L=105.4
+       bord G   67.15..  67.51 (larg 0.36, pic 105.2) | bord D  119.05.. 119.41 (larg 0.36, pic 105.2)
+       DIAMETRE (nominal, bord exterieur a bord exterieur) = 52.27 CSS  centre = 93.28
+    jeu19 rond 2: fond L=105.2 remplissage L=36.2 pic L=105.2
+       bord G  135.39.. 137.20 (larg 1.81, pic 105.2) | bord D  186.93.. 187.65 (larg 0.73, pic 105.2)
+       DIAMETRE (nominal, bord exterieur a bord exterieur) = 52.27 CSS  centre = 161.52
+    jeu19 rond 3: pas 2 bords (1)
+    jeu19 rond 4: fond L=104.4 remplissage L=36.2 pic L=105.2
+       bord G  271.13.. 272.22 (larg 1.09, pic 105.2) | bord D  321.95.. 322.67 (larg 0.73, pic 105.2)
+       DIAMETRE (nominal, bord exterieur a bord exterieur) = 51.54 CSS  centre = 296.90
+
+== couleur du cerclage lue au SOMMET du rond (trait horizontal, peu d'AA) ==
+    ref rond1 sommet: y=1899 (633.00 CSS) couleur (199, 199, 199) L=199.0
+    jeu24 rond1 sommet: y=2180 (791.26 CSS) couleur (85, 86, 89) L=86.0
+
+########## m09_libelles_dock.py
+== m09 libelles du dock ==
+  [ouvert] ../ecran-canon.png (1176, 2091)
+  REFERENCE (y 2004..2040 px)
+    EMPIRE ref             CSS x   75.33.. 111.67 (chasse  36.33) y  671.00.. 677.00 (capitale  6.00) centre x=  93.50  n=632
+    FAMILLE ref            CSS x  141.00.. 182.00 (chasse  41.00) y  671.00.. 677.00 (capitale  6.00) centre x= 161.50  n=640
+    MARCHE ref             CSS x  209.33.. 249.67 (chasse  40.33) y  669.00.. 677.00 (capitale  8.00) centre x= 229.50  n=656
+    PLUS ref               CSS x  286.00.. 309.33 (chasse  23.33) y  670.67.. 677.00 (capitale  6.33) centre x= 297.67  n=341
+
+  [ouvert] ../capture-fiche-1080x1920.png (1080, 1920)
+  jeu 1080x1920 (y 1838..1872 px)
+    EMPIRE jeu             CSS x   75.50.. 112.52 (chasse  37.02) y  669.30.. 675.84 (capitale  6.53) centre x=  94.01  n=680
+    FAMILLE jeu            CSS x  141.56.. 182.93 (chasse  41.38) y  669.30.. 675.84 (capitale  6.53) centre x= 162.24  n=638
+    FILIERE jeu            CSS x  211.24.. 249.36 (chasse  38.11) y  667.85.. 675.84 (capitale  7.99) centre x= 230.30  n=625
+    PLUS jeu               CSS x  286.38.. 309.97 (chasse  23.59) y  669.30.. 675.84 (capitale  6.53) centre x= 298.17  n=355
+
+  [ouvert] ../capture-fiche-1080x2400.png (1080, 2400)
+  jeu 1080x2400 (y 2318..2352 px)
+    EMPIRE jeu             CSS x   75.50.. 112.52 (chasse  37.02) y  843.53.. 850.06 (capitale  6.53) centre x=  94.01  n=695
+    FAMILLE jeu            CSS x  141.56.. 182.93 (chasse  41.38) y  843.53.. 850.06 (capitale  6.53) centre x= 162.24  n=679
+    FILIERE jeu            CSS x  211.24.. 249.36 (chasse  38.11) y  842.07.. 850.06 (capitale  7.99) centre x= 230.30  n=642
+    PLUS jeu               CSS x  286.38.. 309.97 (chasse  23.59) y  843.53.. 850.06 (capitale  6.53) centre x= 298.17  n=385
+
+
+########## m13_fitcircle.py
+== m13 ajustement du boitier ==
+  [ouvert] ../ecran-canon.png (1176, 2091)
+    REFERENCE: centre (587.40;116.52) px  R(pic)=93.21 px  n=109  residu median=0.23 px
+      -> CSS centre (195.80;38.84)  R=31.07 CSS
+  [ouvert] ../capture-district-1080x2400.png (1080, 2400)
+    JEU district 2400: centre (538.44;109.68) px  R(pic)=90.18 px  n=109  residu median=0.74 px
+      -> CSS centre (195.44;39.81)  R=32.73 CSS
+  [ouvert] ../capture-fiche-1080x1920.png (1080, 1920)
+    JEU fiche 1920: centre (538.55;109.49) px  R(pic)=89.93 px  n=109  residu median=0.68 px
+      -> CSS centre (195.47;39.74)  R=32.64 CSS
+
+########## m14_radial2.py
+  [ouvert] ../ecran-canon.png (1176, 2091)
+  [ouvert] ../capture-district-1080x2400.png (1080, 2400)
+  rayon CSS |  REF L   REF(R-B) |  JEU L   JEU(R-B)
+    18.00      37.8    -20.4  |    62.4     -1.1
+    18.25      37.6    -20.6  |    53.5     -5.3
+    18.50      37.6    -20.7  |    48.0     -8.4
+    18.75      37.3    -20.5  |    44.8    -10.4
+    19.00      36.7    -20.6  |    42.1    -11.5
+    19.25      37.1    -20.6  |    41.8    -11.5
+    19.50      37.2    -20.6  |    41.0    -11.5
+    19.75      36.2    -21.0  |    39.1    -12.0
+    20.00      35.5    -21.8  |    37.2    -12.4
+    20.25      35.4    -21.9  |    35.8    -12.7
+    20.50      35.5    -22.3  |    33.5    -13.2
+    20.75      35.4    -22.4  |    30.6    -13.8
+    21.00      35.3    -22.3  |    28.3    -14.3
+    21.25      35.5    -22.4  |    27.9    -14.1
+    21.50      35.4    -22.8  |    28.1    -13.9
+    21.75      35.1    -23.0  |    27.8    -13.8
+    22.00      35.1    -23.5  |    27.7    -13.6
+    22.25      35.1    -23.6  |    28.0    -13.2
+    22.50      35.0    -23.5  |    27.7    -13.1
+    22.75      35.0    -23.9  |    26.9    -13.0
+    23.00      34.8    -24.3  |    27.3    -12.6
+    23.25      34.9    -24.7  |    26.7    -12.6
+    23.50      34.8    -24.6  |    26.3    -12.6
+    23.75      34.9    -24.9  |    26.0    -12.4
+    24.00      34.8    -25.5  |    25.5    -12.4
+    24.25      34.8    -25.8  |    24.9    -12.5
+    24.50      34.7    -25.8  |    23.8    -12.8
+    24.75      34.6    -26.3  |    23.8    -12.7
+    25.00      34.6    -26.8  |    23.1    -12.7
+    25.25      34.6    -26.9  |    23.6    -12.4
+    25.50      34.7    -26.9  |    24.5    -11.8
+    25.75      34.7    -27.5  |    25.0    -11.4
+    26.00      34.7    -28.0  |    24.3    -11.5
+    26.25      34.9    -27.7  |    23.4    -11.5
+    26.50      37.8    -25.3  |    22.2    -11.7
+    26.75      48.1    -18.3  |    21.9    -11.7
+    27.00      53.8    -14.8  |    22.1    -11.5
+    27.25      53.7    -14.5  |    22.2    -11.4
+    27.50      48.7    -14.7  |    21.5    -11.5
+    27.75      34.5    -15.5  |    19.2    -12.1
+    28.00      27.0    -15.9  |    17.8    -12.4
+    28.25      26.9    -15.7  |    17.8    -12.0
+    28.50      27.4    -15.4  |    17.9    -11.6
+    28.75      28.1    -15.0  |    18.5    -11.2
+    29.00      29.1    -14.7  |    19.0    -11.0
+    29.25      30.3    -14.3  |    19.6    -10.9
+    29.50      32.1    -13.9  |    21.1    -10.8
+    29.75      34.2    -13.6  |    22.9    -10.4
+    30.00      36.6    -13.2  |    25.7     -8.4
+    30.25      39.6    -12.0  |    29.7     -3.4
+    30.50      63.3     16.5  |    36.0      5.4
+    30.75     116.9     83.3  |    46.1     19.9
+    31.00     140.7    111.8  |    59.1     38.3
+    31.25     142.7    114.0  |    73.5     57.7
+    31.50     142.7    113.9  |    87.5     75.6
+    31.75     133.0    103.1  |   100.4     91.3
+    32.00      78.5     44.2  |   110.7    103.5
+    32.25      31.3     -4.8  |   117.3    111.2
+    32.50      24.1    -12.6  |   120.0    114.3
+    32.75      24.4    -12.9  |   117.8    111.7
+    33.00      24.9    -13.0  |   110.9    103.7
+    33.25      25.3    -13.1  |   100.3     91.2
+    33.50      25.6    -13.2  |    87.3     75.3
+    33.75      26.0    -13.4  |    72.5     56.1
+    34.00      26.4    -13.5  |    57.2     34.9
+    34.25      26.7    -13.8  |    44.8     16.5
+    34.50      26.8    -14.4  |    36.5      3.3
+    34.75      27.3    -14.7  |    31.5     -5.2
+    35.00      28.1    -14.9  |    28.8    -10.0
+    35.25      28.9    -15.0  |    27.9    -11.9
+    35.50      29.9    -14.8  |    28.2    -11.9
+    35.75      30.4    -14.9  |    29.0    -11.2
+    36.00      30.8    -15.1  |    29.5    -10.8
+    36.25      31.2    -15.3  |    29.7    -10.5
+    36.50      31.5    -15.5  |    29.8    -10.3
+    36.75      31.7    -15.7  |    31.2     -8.9
+    37.00      32.0    -15.9  |    31.4     -8.5
+    37.25      32.4    -16.1  |    31.0     -8.7
+    37.50      32.7    -16.4  |    30.8     -8.9
+    37.75      32.7    -16.9  |    30.7     -8.9
+    38.00      32.6    -17.5  |    30.5     -9.1
+    38.25      32.5    -18.2  |    29.8    -10.0
+    38.50      32.7    -18.3  |    29.0    -10.9
+    38.75      34.2    -18.2  |    28.3    -11.7
+    39.00      35.2    -18.1  |    28.2    -11.9
+    39.25      36.2    -17.9  |    29.2    -11.2
+    39.50      37.0    -17.9  |    30.8    -10.0
+    39.75      37.7    -18.1  |    33.4     -8.1
+
+########## m15_arc.py
+== m15 arc du cadran ==
+  [ouvert] ../ecran-canon.png (1176, 2091)
+  [ouvert] ../capture-district-1080x2400.png (1080, 2400)
+  [ouvert] ../capture-fiche-1080x1920.png (1080, 1920)
+  --- REFERENCE (centre px 587.4;116.5, R=93.2px=31.07CSS) ---
+     teal: n=658  rayon/R median=0.4431  min=0.368 max=0.749
+        secteurs angulaires (deg): [(89, 198)]
+     braise: n=396  rayon/R median=0.4840  min=0.426 max=0.554
+        secteurs angulaires (deg): [(0, 50), (342, 359)]
+  --- JEU district 2400 (centre px 538.4;109.7, R=90.2px=32.73CSS) ---
+     teal: n=965  rayon/R median=0.4622  min=0.362 max=0.550
+        secteurs angulaires (deg): [(68, 179)]
+     braise: n=686  rayon/R median=0.4870  min=0.400 max=0.556
+        secteurs angulaires (deg): [(0, 94)]
+  --- JEU fiche 1920 (centre px 538.5;109.5, R=89.9px=32.64CSS) ---
+     teal: n=965  rayon/R median=0.4623  min=0.363 max=0.550
+        secteurs angulaires (deg): [(68, 179)]
+     braise: n=686  rayon/R median=0.4864  min=0.399 max=0.556
+        secteurs angulaires (deg): [(0, 94)]
+
+########## m16_arc2.py
+== m16 arc : epaisseur + couleur ==
+  [ouvert] ../ecran-canon.png (1176, 2091)
+  [ouvert] ../capture-district-1080x2400.png (1080, 2400)
+  --- REFERENCE ---
+     teal: couleur mediane (67, 100, 111)  L=93.8  n=658
+     braise: couleur mediane (131, 69, 61)  L=81.6  n=396
+     teal — epaisseur radiale (convention : extension du masque de classe)
+         100 deg : r/R 0.377..0.463  ep=0.0864 R = 2.68 CSS  (n=18)
+         120 deg : r/R 0.368..0.749  ep=0.3809 R = 11.83 CSS  (n=22)
+         140 deg : r/R 0.372..0.456  ep=0.0838 R = 2.60 CSS  (n=16)
+         160 deg : r/R 0.397..0.484  ep=0.0879 R = 2.73 CSS  (n=19)
+         180 deg : r/R 0.433..0.519  ep=0.0858 R = 2.67 CSS  (n=18)
+     braise — epaisseur radiale (convention : extension du masque de classe)
+          10 deg : r/R 0.443..0.521  ep=0.0778 R = 2.42 CSS  (n=18)
+          20 deg : r/R 0.439..0.510  ep=0.0715 R = 2.22 CSS  (n=16)
+          30 deg : r/R 0.432..0.509  ep=0.0773 R = 2.40 CSS  (n=18)
+          40 deg : r/R 0.427..0.504  ep=0.0770 R = 2.39 CSS  (n=19)
+  --- JEU district 2400 ---
+     teal: couleur mediane (97, 132, 136)  L=124.8  n=965
+     braise: couleur mediane (169, 101, 89)  L=114.6  n=686
+     teal — epaisseur radiale (convention : extension du masque de classe)
+         100 deg : r/R 0.389..0.550  ep=0.1606 R = 5.26 CSS  (n=35)
+         120 deg : r/R 0.372..0.541  ep=0.1693 R = 5.54 CSS  (n=34)
+         140 deg : r/R 0.364..0.544  ep=0.1803 R = 5.90 CSS  (n=35)
+         160 deg : r/R 0.362..0.541  ep=0.1791 R = 5.86 CSS  (n=36)
+         180 deg : (vide)
+     braise — epaisseur radiale (convention : extension du masque de classe)
+          10 deg : r/R 0.469..0.556  ep=0.0875 R = 2.86 CSS  (n=18)
+          20 deg : r/R 0.419..0.548  ep=0.1298 R = 4.25 CSS  (n=29)
+          30 deg : r/R 0.407..0.546  ep=0.1389 R = 4.55 CSS  (n=29)
+          40 deg : r/R 0.403..0.546  ep=0.1435 R = 4.70 CSS  (n=30)
+
+########## m17_modele.py
+== m17a fond du cadran : 4 sondes symetriques a 0.55 R (hors arc) ==
+  [ouvert] ../ecran-canon.png (1176, 2091)
+  [ouvert] ../capture-district-1080x2400.png (1080, 2400)
+    REFERENCE 225 deg a 0.55R : (26, 32, 45) L=31.7
+    REFERENCE 315 deg a 0.55R : (21, 27, 40) L=26.7
+    REFERENCE 135 deg a 0.25R : (39, 45, 60) L=44.8
+    REFERENCE  45 deg a 0.25R : (34, 40, 54) L=39.7
+    REFERENCE AMPLITUDE entre les 4 sondes : (18, 18, 20)
+    JEU 2400 225 deg a 0.55R : (24, 28, 40) L=28.0
+    JEU 2400 315 deg a 0.55R : (25, 30, 41) L=29.7
+    JEU 2400 135 deg a 0.25R : (34, 39, 53) L=38.9
+    JEU 2400  45 deg a 0.25R : (35, 41, 54) L=40.7
+    JEU 2400 AMPLITUDE entre les 4 sondes : (11, 13, 14)
+
+== m17b modele de melange sur l'arc ==
+    fond canon sous l'arc (0.44R, 70 deg, creneau neutre) : (36, 42, 56)
+    fond jeu   (0.44R, 270 deg)                            : (28, 33, 45)
+    [teal] source (127, 212, 217) alpha=0.333
+       CANON mesure (67, 100, 111) | prediction sRGB (66, 99, 110) d=  2.0 | prediction LINEAIRE (81, 133, 139) d= 45.5
+       JEU   mesure (97, 132, 136) | prediction sRGB (61, 93, 102) d= 63.1 | prediction LINEAIRE (79, 132, 137) d= 17.9
+    [braise] source (224, 102, 74) alpha=0.533
+       CANON mesure (131, 69, 61) | prediction sRGB (136, 74, 66) d=  8.6 | prediction LINEAIRE (171, 81, 66) d= 41.7
+       JEU   mesure (169, 101, 89) | prediction sRGB (133, 70, 60) d= 55.8 | prediction LINEAIRE (170, 79, 62) d= 34.6
+
+########## m18_fond_cadran.py
+== m18 fond du cadran ==
+  [ouvert] ../ecran-canon.png (1176, 2091)
+  [ouvert] ../capture-district-1080x2400.png (1080, 2400)
+  [ouvert] ../capture-fiche-1080x1920.png (1080, 1920)
+    REFERENCE (controle positif : gradient attendu, clair en haut-gauche = secteur 135-180) — anneau 0.58..0.72 R, secteurs de 45 deg
+       secteur   0- 45 : n= 623  (25, 32, 46)  L= 31.5
+       secteur  45- 90 : n= 613  (32, 39, 54)  L= 38.6
+       secteur  90-135 : n= 616  (38, 45, 62)  L= 44.7
+       secteur 135-180 : n= 615  (34, 42, 57)  L= 41.4
+       secteur 180-225 : n= 616  (26, 34, 48)  L= 33.3
+       secteur 225-270 : n= 612  (21, 28, 41)  L= 27.5
+       secteur 270-315 : n= 612  (19, 26, 39)  L= 25.5
+       secteur 315-360 : n= 621  (20, 27, 41)  L= 26.5
+       AMPLITUDE inter-secteurs : RGB (19, 19, 23)   L 19.3
+       plus clair : secteur 90-135  |  plus sombre : secteur 270-315
+    JEU district 2400 — anneau 0.58..0.72 R, secteurs de 45 deg
+       secteur   0- 45 : n= 576  (20, 25, 35)  L= 24.7
+       secteur  45- 90 : n= 587  (20, 25, 35)  L= 24.7
+       secteur  90-135 : n= 586  (20, 24, 35)  L= 23.9
+       secteur 135-180 : n= 580  (20, 24, 34)  L= 23.9
+       secteur 180-225 : n= 535  (19, 24, 34)  L= 23.7
+       secteur 225-270 : n= 415  (20, 25, 35)  L= 24.7
+       secteur 270-315 : n= 445  (20, 25, 36)  L= 24.7
+       secteur 315-360 : n= 527  (20, 25, 35)  L= 24.7
+       AMPLITUDE inter-secteurs : RGB (1, 1, 2)   L 1.1
+       plus clair : secteur 270-315  |  plus sombre : secteur 180-225
+    JEU fiche 1920 — anneau 0.58..0.72 R, secteurs de 45 deg
+       secteur   0- 45 : n= 575  (20, 25, 35)  L= 24.7
+       secteur  45- 90 : n= 585  (20, 25, 35)  L= 24.7
+       secteur  90-135 : n= 576  (20, 24, 35)  L= 23.9
+       secteur 135-180 : n= 583  (20, 24, 35)  L= 23.9
+       secteur 180-225 : n= 527  (19, 24, 34)  L= 23.7
+       secteur 225-270 : n= 414  (20, 25, 35)  L= 24.7
+       secteur 270-315 : n= 455  (20, 25, 36)  L= 24.7
+       secteur 315-360 : n= 518  (20, 25, 35)  L= 24.7
+       AMPLITUDE inter-secteurs : RGB (1, 1, 2)   L 1.1
+       plus clair : secteur 270-315  |  plus sombre : secteur 180-225
+
+########## m21_pivot3.py
+== m21 pivot (masque serre laiton) ==
+  [ouvert] ../ecran-canon.png (1176, 2091)
+  [ouvert] ../capture-district-1080x2400.png (1080, 2400)
+  [ouvert] ../capture-fiche-1080x1920.png (1080, 1920)
+    REFERENCE: n=80  bbox 10x10 px = 3.33x3.33 CSS  centre px (587.50;130.50)
+       offset / centre du boitier : dx=+0.03 CSS  dy=+4.66 CSS = +0.1499 R vertical  [+ = SOUS le centre]
+    JEU district 2400: n=127  bbox 12x13 px = 4.36x4.72 CSS  centre px (539.50;96.00)
+       offset / centre du boitier : dx=+0.38 CSS  dy=-4.97 CSS = -0.1517 R vertical  [+ = SOUS le centre]
+    JEU fiche 1920: n=127  bbox 12x13 px = 4.36x4.72 CSS  centre px (539.50;96.00)
+       offset / centre du boitier : dx=+0.35 CSS  dy=-4.90 CSS = -0.1500 R vertical  [+ = SOUS le centre]
+
+== aiguille (creme (234,224,200) +-30) ==
+    REFERENCE (37% : aiguille + texte creme melanges): n=469  pointe a 15.82 CSS du pivot, angle 131.6 deg, epaisseur moyenne ~3.29 CSS
+    JEU 2400: n=615  pointe a 25.06 CSS du pivot, angle 318.2 deg, epaisseur moyenne ~3.23 CSS
+
+########## m22_fiche.py
+== m22 filet superieur de la fiche ==
+  [ouvert] ../ecran-canon.png (1176, 2091)
+  [ouvert] ../capture-fiche-1080x1920.png (1080, 1920)
+  [ouvert] ../capture-fiche-1080x2400.png (1080, 2400)
+    REFERENCE (x=588): pic R-B=114 a y=1280 (426.67 CSS) ; filet y 426.67..427.67 CSS (epaisseur 1.00 CSS) ; couleur (176, 141, 62)
+    JEU 1920 (x=540): pic R-B=115 a y=1172 (425.39 CSS) ; filet y 425.39..426.48 CSS (epaisseur 1.09 CSS) ; couleur (176, 141, 61)
+    JEU 2400 (x=540): pic R-B=115 a y=1652 (599.61 CSS) ; filet y 599.61..600.70 CSS (epaisseur 1.09 CSS) ; couleur (176, 141, 61)
+
+== bords lateraux du panneau (scan horizontal a mi-hauteur du panneau) ==
+    REFERENCE y=1500 (500 CSS): dedans L=17.6 dehors L=50.9 seuil 34.2
+       bord G 12.77 CSS   bord D 378.93 CSS   LARGEUR 366.16 CSS
+    JEU 1920 y=1320 (479 CSS): dedans L=18.6 dehors L=87.7 seuil 53.1
+       bord G 8.80 CSS   bord D 379.78 CSS   LARGEUR 370.98 CSS
+    JEU 2400 y=1800 (653 CSS): dedans L=21.2 dehors L=126.9 seuil 74.0
+       bord G 11.80 CSS   bord D 380.01 CSS   LARGEUR 368.22 CSS
+
+########## m23_tete.py
+== m23 tete de fiche ==
+  [ouvert] ../ecran-canon.png (1176, 2091)
+  REFERENCE : panneau haut (filet) = 426.67 CSS ; fenetre x 30..362 CSS
+    ref titre+sous-titre: fond L=19.2 pic L=202.9 seuil 111.0
+       bande d'encre y  428.67.. 438.67 CSS (hauteur 10.00)  x  352.00.. 359.67
+       bande d'encre y  446.33.. 457.33 CSS (hauteur 11.00)  x  124.33.. 265.67
+       bande d'encre y  468.33.. 469.67 CSS (hauteur  1.33)  x  229.33.. 245.67
+       bande d'encre y  470.33.. 478.00 CSS (hauteur  7.67)  x  122.33.. 268.33
+  [ouvert] ../capture-fiche-1080x1920.png (1080, 1920)
+
+  JEU 1080x1920 : panneau haut (filet) = 425.39 CSS
+    jeu titre+sous-titre: fond L=17.7 pic L=202.9 seuil 110.3
+       bande d'encre y  445.36.. 457.70 CSS (hauteur 12.34)  x   31.21.. 360.42
+       bande d'encre y  468.22.. 469.31 CSS (hauteur  1.09)  x  170.59.. 171.68
+       bande d'encre y  469.67.. 476.57 CSS (hauteur  6.90)  x  152.81.. 239.56
+
+########## m24_capitale_titre.py
+== m24 ==
+  [ouvert] ../ecran-canon.png (1176, 2091)
+  REFERENCE titre 'LE VERGE D\'OR' (y 446.33..457.33 CSS)
+    ref — 11 groupes d'encre ; seuil 111.5
+       x  124.33.. 132.33  y  446.33.. 456.67  h=10.67 CSS
+       x  136.00.. 144.33  y  446.33.. 456.67  h=10.67 CSS
+       x  153.67.. 164.33  y  446.33.. 457.00  h=11.00 CSS
+       x  167.33.. 175.67  y  446.33.. 456.67  h=10.67 CSS
+       x  179.33.. 189.00  y  446.33.. 456.67  h=10.67 CSS
+       x  192.33.. 202.33  y  446.33.. 456.67  h=10.67 CSS
+       x  205.67.. 214.00  y  446.33.. 456.67  h=10.67 CSS
+       x  223.67.. 233.67  y  446.33.. 456.67  h=10.67 CSS
+       x  237.67.. 238.67  y  446.33.. 450.00  h= 4.00 CSS
+       x  242.33.. 252.33  y  446.33.. 457.00  h=11.00 CSS
+       x  256.00.. 265.67  y  446.33.. 456.67  h=10.67 CSS
+  [ouvert] ../capture-fiche-1080x1920.png (1080, 1920)
+
+  JEU titre (y 445.36..457.70 CSS)
+    jeu — 36 groupes d'encre ; seuil 110.5
+       x   31.21..  38.11  y  446.44.. 454.79  h= 8.71 CSS
+       x   40.29..  46.10  y  445.36.. 455.16  h=10.16 CSS
+       x   48.64..  55.17  y  448.62.. 457.33  h= 9.07 CSS
+       x   58.07..  64.24  y  448.62.. 455.16  h= 6.90 CSS
+       x   66.79..  71.87  y  448.62.. 454.79  h= 6.53 CSS
+       x   74.41..  80.21  y  448.62.. 455.16  h= 6.90 CSS
+       x   82.76..  86.75  y  446.81.. 455.16  h= 8.71 CSS
+       x   89.29..  92.19  y  446.44.. 454.79  h= 8.71 CSS
+       x   94.73.. 100.54  y  448.62.. 455.16  h= 6.90 CSS
+       x  103.44.. 109.98  y  448.62.. 454.79  h= 6.53 CSS
+       x  118.33.. 121.59  y  446.44.. 454.79  h= 8.71 CSS
+       x  124.50.. 127.04  y  446.08.. 454.79  h= 9.07 CSS
+       x  129.94.. 140.10  y  448.62.. 454.79  h= 6.53 CSS
+       x  148.45.. 158.98  y  451.53.. 451.89  h= 0.73 CSS
+       x  167.33.. 174.22  y  446.44.. 454.79  h= 8.71 CSS
+       x  176.76.. 182.93  y  448.62.. 455.16  h= 6.90 CSS
+       x  190.92.. 197.81  y  446.44.. 454.79  h= 8.71 CSS
+       x  200.36.. 203.26  y  446.44.. 454.79  h= 8.71 CSS
+       x  205.80.. 210.52  y  448.62.. 455.16  h= 6.90 CSS
+       x  213.42.. 216.33  y  446.44.. 454.79  h= 8.71 CSS
+       x  219.23.. 224.67  y  445.36.. 455.16  h=10.16 CSS
+       x  227.58.. 232.66  y  448.62.. 454.79  h= 6.53 CSS
+       x  235.20.. 240.64  y  448.62.. 455.16  h= 6.90 CSS
+       x  243.55.. 245.73  y  453.70.. 456.61  h= 3.27 CSS
+       x  254.07.. 257.34  y  445.36.. 454.79  h= 9.80 CSS
+       x  259.52.. 262.42  y  446.08.. 454.79  h= 9.07 CSS
+       x  265.33.. 271.13  y  448.62.. 455.16  h= 6.90 CSS
+       x  273.67.. 278.03  y  447.17.. 455.16  h= 8.35 CSS
+       x  286.74.. 291.10  y  446.08.. 454.79  h= 9.07 CSS
+       x  295.45.. 300.90  y  446.44.. 455.16  h= 9.07 CSS
+       x  304.53.. 310.33  y  446.08.. 455.16  h= 9.44 CSS
+       x  314.33.. 318.68  y  446.08.. 454.79  h= 9.07 CSS
+       x  322.67.. 324.49  y  453.70.. 456.61  h= 3.27 CSS
+       x  333.20.. 340.10  y  448.62.. 454.79  h= 6.53 CSS
+       x  343.36.. 346.63  y  446.08.. 449.71  h= 3.99 CSS
+       x  356.07.. 360.42  y  446.08.. 454.79  h= 9.07 CSS
+
+########## m26_filet2.py
+== m26 filet du bandeau ==
+  [ouvert] ../ecran-canon.png (1176, 2091)
+  [ouvert] ../capture-fiche-1080x1920.png (1080, 1920)
+  [ouvert] ../capture-district-1080x2400.png (1080, 2400)
+    REFERENCE x=20 CSS : pic R-B=139 a y=169=56.33 CSS couleur (217, 171, 78)
+        -> filet y 56.00..57.00 CSS  ep=1.00 CSS
+    REFERENCE x=300 CSS : pic R-B=114 a y=153=51.00 CSS couleur (176, 141, 62)
+        -> filet y 51.00..52.00 CSS  ep=1.00 CSS
+    REFERENCE x=350 CSS : pic R-B=60 a y=155=51.67 CSS couleur (113, 95, 53)
+        -> filet y 51.00..52.00 CSS  ep=1.00 CSS
+
+    JEU 1920 x=20 CSS : pic R-B=42 a y=138=50.09 CSS couleur (119, 89, 77)
+        -> filet y 50.09..51.90 CSS  ep=1.81 CSS
+    JEU 1920 x=300 CSS : pic R-B=134 a y=138=50.09 CSS couleur (200, 126, 66)
+        -> filet y 50.09..51.90 CSS  ep=1.81 CSS
+    JEU 1920 x=350 CSS : pic R-B=82 a y=138=50.09 CSS couleur (156, 105, 74)
+        -> filet y 50.09..51.90 CSS  ep=1.81 CSS
+
+== barre de ratio : balayage y pour trouver la bande doree la plus large ==
+    REFERENCE: y=123=41.00 CSS, 151 px dores, x 16.00..66.00 CSS (largeur 50.33) couleur (217, 171, 78)
+       epaisseur verticale a x=41.0 CSS : 2.00 CSS (y 40.67..42.33)
+       piste a droite : (90, 99, 118) (90, 99, 118) (90, 99, 118)
+    JEU 1920: y=121=43.92 CSS, 211 px dores, x 63.88..164.79 CSS (largeur 101.27) couleur (217, 171, 77)
+       epaisseur verticale a x=102.0 CSS : 2.18 CSS (y 42.83..44.64)
+       piste a droite : (46, 54, 62) (15, 19, 28) (21, 26, 36)
+
+########## m27_ailes.py
+== m27 ailes ==
+  [ouvert] ../ecran-canon.png (1176, 2091)
+  REFERENCE
+    montant $ 24 850 (ref)         x   16.67..  77.33  y  21.00.. 34.67  L= 60.67 H=13.67  (dernier px image = 1175, soit 391.67 CSS)
+    lib JOUR 12 SOIREE (ref)       x  336.33.. 373.67  y  12.67.. 18.33  L= 37.33 H= 5.67  (dernier px image = 1175, soit 391.67 CSS)
+    val 21:40 (ref)                x  336.33.. 375.00  y  20.00.. 36.00  L= 38.67 H=16.00  (dernier px image = 1175, soit 391.67 CSS)
+
+  [ouvert] ../capture-fiche-1080x1920.png (1080, 1920)
+  JEU 1920
+    montant (jeu)                  x   64.97.. 167.69  y  24.32.. 42.10  L=102.72 H=17.79  (dernier px image = 1079, soit 391.64 CSS)
+    lib JOUR 50 (jeu)              x  341.19.. 375.30  y  10.16.. 17.79  L= 34.12 H= 7.62  (dernier px image = 1079, soit 391.64 CSS)
+    val Aube (jeu)                 x  339.73.. 375.30  y  25.41.. 35.93  L= 35.57 H=10.53  (dernier px image = 1079, soit 391.64 CSS)
+
+  [ouvert] ../capture-fiche-1080x2400.png (1080, 2400)
+  JEU 2400
+    montant (jeu)                  x   64.97.. 169.87  y  21.05.. 42.10  L=104.90 H=21.05  (dernier px image = 1079, soit 391.64 CSS)
+    lib JOUR 50 (jeu)              x  341.19.. 375.30  y  10.16.. 17.79  L= 34.12 H= 7.62  (dernier px image = 1079, soit 391.64 CSS)
+    val Aube (jeu)                 x  339.37.. 375.30  y  25.41.. 35.93  L= 35.93 H=10.53  (dernier px image = 1079, soit 391.64 CSS)
+
+
+########## m28_glyphes.py
+== m28 glyphes des ailes ==
+  [ouvert] ../ecran-canon.png (1176, 2091)
+  REFERENCE montant
+    ref $ 24 850 (seuil 112.2) — 6 glyphes
+       x   16.67..  23.67  y  21.00.. 34.33  h=13.67
+       x   30.00..  36.67  y  22.00.. 33.00  h=11.33
+       x   38.67..  46.33  y  22.00.. 33.00  h=11.33
+       x   52.33..  59.33  y  22.00.. 33.33  h=11.67
+       x   61.33..  68.00  y  22.00.. 33.33  h=11.67
+       x   70.00..  77.00  y  22.00.. 33.00  h=11.33
+  REFERENCE aile droite lib
+    ref JOUR 12 SOIREE (seuil 97.0) — 6 glyphes
+       x  336.33.. 339.67  y  14.33.. 19.67  h= 5.67
+       x  343.00.. 348.33  y  14.33.. 19.67  h= 5.67
+       x  351.33.. 353.00  y  14.67.. 19.67  h= 5.33
+       x  356.33.. 360.00  y  14.67.. 19.67  h= 5.33
+       x  363.67.. 366.67  y  12.67.. 19.67  h= 7.33
+       x  370.33.. 373.33  y  14.67.. 19.67  h= 5.33
+  REFERENCE aile droite val
+    ref 21:40 (seuil 124.0) — 6 glyphes
+       x  336.33.. 339.67  y  19.33.. 20.33  h= 1.33
+       x  341.00.. 347.67  y  19.33.. 35.33  h=16.33
+       x  349.33.. 354.33  y  19.33.. 35.33  h=16.33
+       x  356.67.. 358.67  y  19.33.. 35.67  h=16.67
+       x  359.33.. 367.33  y  19.33.. 35.33  h=16.33
+       x  368.67.. 374.67  y  19.33.. 35.67  h=16.67
+  [ouvert] ../capture-fiche-1080x1920.png (1080, 1920)
+
+  JEU montant
+    jeu montant (seuil 131.7) — 5 glyphes
+       x   63.88.. 141.19  y  25.77.. 43.19  h=17.79
+       x  143.37.. 149.54  y  25.77.. 35.21  h= 9.80
+       x  154.99.. 161.88  y  25.77.. 35.21  h= 9.80
+       x  163.33.. 163.33  y  36.66.. 42.83  h= 6.53
+       x  167.33.. 167.33  y  24.32.. 24.32  h= 0.36
+  JEU aile droite lib
+    jeu JOUR 50 (seuil 116.5) — 6 glyphes
+       x  341.19.. 343.00  y  10.53.. 17.42  h= 7.26
+       x  344.81.. 349.90  y  10.16.. 15.97  h= 6.17
+       x  351.71.. 355.70  y  10.53.. 15.97  h= 5.81
+       x  357.88.. 361.87  y  10.53.. 15.97  h= 5.81
+       x  366.23.. 369.50  y  10.53.. 15.97  h= 5.81
+       x  371.31.. 374.94  y  10.16.. 15.97  h= 6.17
+  JEU aile droite val
+    jeu Aube (seuil 144.4) — 4 glyphes
+       x  339.73.. 349.53  y  25.77.. 35.57  h=10.16
+       x  350.26.. 357.88  y  28.67.. 35.57  h= 7.26
+       x  359.33.. 366.59  y  25.41.. 35.57  h=10.53
+       x  368.41.. 374.94  y  28.31.. 35.57  h= 7.62
+
+########## m30_euro2.py
+== m30 degagement ARGENT <-> medaillon (medaillon exclu de la sonde) ==
+  [ouvert] ../capture-fiche-1080x1920.png (1080, 1920)
+    JEU 1920: n=456 px d'encre hors medaillon ; le plus a droite x=444 (161.16 CSS) y=72 (26.13 CSS)
+       bord gauche du cerclage a y=26.13 CSS : x=157.89 CSS
+       >>> DEGAGEMENT = -3.27 CSS
+  [ouvert] ../capture-fiche-1080x2400.png (1080, 2400)
+    JEU 2400: n=465 px d'encre hors medaillon ; le plus a droite x=444 (161.16 CSS) y=72 (26.13 CSS)
+       bord gauche du cerclage a y=26.13 CSS : x=157.89 CSS
+       >>> DEGAGEMENT = -3.27 CSS
+
+########## m32_volutes2.py
+== m32 volutes du bandeau — critere d'AMPLITUDE ==
+  [ouvert] ../ecran-canon.png (1176, 2091)
+  CONTROLE POSITIF (reference)
+    REF volute gauche                      fenetre CSS x 4..30 y 18..30 : mediane L=  23.4 pic L= 208.5  AMPLITUDE= 185.1  (n=2808)
+    REF volute droite                      fenetre CSS x 362..388 y 18..24.5 : mediane L=  24.7 pic L= 179.6  AMPLITUDE= 154.9  (n=1482)
+  CONTROLE NEGATIF (bandeau vide, memes hauteurs)
+    REF zone vide                          fenetre CSS x 215..245 y 18..30 : mediane L=  24.9 pic L= 142.7  AMPLITUDE= 117.9  (n=3240)
+
+  [ouvert] ../capture-fiche-1080x1920.png (1080, 1920)
+    JEU 1920 volute gauche                 fenetre CSS x 4..30 y 18..30 : mediane L=  62.2 pic L=  64.2  AMPLITUDE=   2.0  (n=2343)
+    JEU 1920 volute droite                 fenetre CSS x 362..388 y 18..24.5 : mediane L=  63.3 pic L=  64.2  AMPLITUDE=   0.9  (n=1278)
+    JEU 1920 zone vide (controle negatif)  fenetre CSS x 215..245 y 18..30 : mediane L=  60.3 pic L= 135.2  AMPLITUDE=  74.9  (n=2739)
+
+  [ouvert] ../capture-district-1080x2400.png (1080, 2400)
+    JEU district 2400 volute gauche        fenetre CSS x 4..30 y 18..30 : mediane L=  19.9 pic L=  20.7  AMPLITUDE=   0.7  (n=2343)
+    JEU district 2400 volute droite        fenetre CSS x 362..388 y 18..24.5 : mediane L=  19.9 pic L=  20.7  AMPLITUDE=   0.7  (n=1278)
+    JEU district 2400 zone vide (controle negatif) fenetre CSS x 215..245 y 18..30 : mediane L=  19.9 pic L= 134.3  AMPLITUDE= 114.4  (n=2739)
+
+
+########## m31_volutes_actif.py
+== m31a volutes du bandeau (fenetres CSS x 4..29 / 363..388, y 18..30) ==
+  [ouvert] ../ecran-canon.png (1176, 2091)
+    REF volute GAUCHE  (controle positif): fond L=21.7 pic L=208.5 seuil 115.1 -> n=228 px  x 17.00..23.67 y 21.00..29.67 CSS
+    REF volute DROITE  (controle positif): fond L=23.2 pic L=224.4 seuil 123.8 -> n=232 px  x 363.00..374.67 y 18.00..29.67 CSS
+  [ouvert] ../capture-fiche-1080x1920.png (1080, 1920)
+    JEU 1920 volute GAUCHE: fond L=61.2 pic L=64.2 seuil 62.7 -> n=651 px  x 3.99..28.67 y 24.32..29.76 CSS
+    JEU 1920 volute DROITE: fond L=63.4 pic L=224.4 seuil 143.9 -> n=71 px  x 362.96..374.58 y 28.31..29.76 CSS
+  [ouvert] ../capture-fiche-1080x2400.png (1080, 2400)
+    JEU 2400 volute GAUCHE: fond L=19.9 pic L=21.4 seuil 20.7 -> n=1173 px  x 3.99..28.67 y 23.96..29.76 CSS
+    JEU 2400 volute DROITE: fond L=19.9 pic L=224.4 seuil 122.2 -> n=74 px  x 362.96..374.58 y 28.31..29.76 CSS
+  [ouvert] ../capture-district-1080x2400.png (1080, 2400)
+    JEU district 2400 volute GAUCHE: fond L=19.9 pic L=21.4 seuil 20.7 -> n=1173 px  x 3.99..28.67 y 23.96..29.76 CSS
+    JEU district 2400 volute DROITE: fond L=19.9 pic L=224.4 seuil 122.2 -> n=74 px  x 362.96..374.58 y 28.31..29.76 CSS
+
+== m31b indicateur d'onglet ACTIF (barre laiton sous un rond) + pastille (disque or) ==
+    REF barre active + pastille (controle positif, dock entier): 243 px  x 87.00..249.00 y 663.67..669.67 CSS  couleur (176, 141, 62)
+  [ouvert] ../capture-fiche-1080x1920.png (1080, 1920)
+    JEU 1920 bande sous les ronds: 0 px laiton/or
+    JEU 1920 bande des ronds (pastille): 0 px laiton/or
+  [ouvert] ../capture-fiche-1080x2400.png (1080, 2400)
+    JEU 2400 bande sous les ronds: 0 px laiton/or
+    JEU 2400 bande des ronds (pastille): 0 px laiton/or
+
+########## m33_contraste.py
+== m33 contrastes ==
+  [ouvert] ../capture-district-1080x2400.png (1080, 2400)
+  [ouvert] ../capture-fiche-1080x1920.png (1080, 1920)
+  [ouvert] ../capture-fiche-1080x2400.png (1080, 2400)
+  [ouvert] ../ecran-canon.png (1176, 2091)
+  nom de district
+    JEU district 2400 « La Lisiere »: boite CSS x 8.35..38.47 y 87.47..91.83 (capitale~4.72)
+       encre (233, 223, 199)  fond (146, 161, 180)  contour (45, 50, 53)
+       CONTRASTE encre/fond = 1.99:1   encre/contour = 9.79:1   contour/fond = 4.93:1
+    JEU fiche 1920 « La Lisiere »: boite CSS x 8.35..123.04 y 87.11..99.09 (capitale~12.34)
+       encre (249, 255, 255)  fond (91, 103, 120)  contour (32, 37, 46)
+       CONTRASTE encre/fond = 5.68:1   encre/contour = 15.21:1   contour/fond = 2.68:1
+  libelles du dock (creme sur voile)
+    JEU 1920 EMPIRE: boite CSS x 75.86..112.16 y 669.67..675.47 (capitale~6.17)
+       encre (185, 173, 146)  fond (47, 77, 91)  contour (46, 75, 90)
+       CONTRASTE encre/fond = 4.05:1   encre/contour = 4.16:1   contour/fond = 1.03:1
+    JEU 2400 EMPIRE: boite CSS x 75.50..112.16 y 843.53..849.70 (capitale~6.53)
+       encre (185, 173, 146)  fond (20, 25, 36)  contour (20, 25, 36)
+       CONTRASTE encre/fond = 7.92:1   encre/contour = 7.92:1   contour/fond = 1.00:1
+    REF EMPIRE: boite CSS x 75.67..105.33 y 671.00..676.67 (capitale~6.00)
+       encre (184, 172, 145)  fond (11, 16, 25)  contour (9, 14, 23)
+       CONTRASTE encre/fond = 8.48:1   encre/contour = 8.60:1   contour/fond = 1.01:1
+  bandeau
+    JEU 1920 JOUR 50: boite CSS x 341.19..374.94 y 10.16..17.42 (capitale~7.62)
+       encre (185, 173, 146)  fond (54, 60, 70)  contour (54, 60, 70)
+       CONTRASTE encre/fond = 5.00:1   encre/contour = 5.00:1   contour/fond = 1.00:1
+    JEU 1920 ARGENT: boite CSS x 64.24..102.36 y 9.80..16.33 (capitale~6.90)
+       encre (185, 173, 146)  fond (53, 60, 70)  contour (51, 57, 68)
+       CONTRASTE encre/fond = 5.01:1   encre/contour = 5.23:1   contour/fond = 1.04:1
+  fiche
+    JEU 1920 titre de fiche: boite CSS x 31.21..360.42 y 445.36..457.33 (capitale~12.34)
+       encre (242, 201, 106)  fond None  contour (11, 18, 30)
+Traceback (most recent call last):
+  File "/home/erutheone/project/mafia-unity-J/Tools/juge-visuel/ecran-principal/r6-2026-09-06/mesures/m33_contraste.py", line 35, in <module>
+    find_text(c,86,1224,994,1264,S_CAP,'JEU 1920 titre de fiche')
+  File "/home/erutheone/project/mafia-unity-J/Tools/juge-visuel/ecran-principal/r6-2026-09-06/mesures/m33_contraste.py", line 20, in find_text
+    print(f"       CONTRASTE encre/fond = {contrast(ink,bgc):.2f}:1   encre/contour = {contrast(ink,dk):.2f}:1   contour/fond = {contrast(dk,bgc):.2f}:1")
+                                           ^^^^^^^^^^^^^^^^^
+  File "/home/erutheone/project/mafia-unity-J/Tools/juge-visuel/ecran-principal/r6-2026-09-06/mesures/lib.py", line 31, in contrast
+    la,lb=rel_lum(a),rel_lum(b)
+                     ^^^^^^^^^^
+  File "/home/erutheone/project/mafia-unity-J/Tools/juge-visuel/ecran-principal/r6-2026-09-06/mesures/lib.py", line 28, in rel_lum
+    return 0.2126*srgb_lin(c[0])+0.7152*srgb_lin(c[1])+0.0722*srgb_lin(c[2])
+                           ~^^^
+TypeError: 'NoneType' object is not subscriptable
+
+########## m36_labels2.py
+== m36 libelles du manometre (masque medaillon) ==
+  [ouvert] ../capture-fiche-1080x1920.png (1080, 1920)
+  [ouvert] ../ecran-canon.png (1176, 2091)
+  [ouvert] ../capture-district-1080x2400.png (1080, 2400)
+  centre du boitier : REF x=195.80 CSS  JEU x=195.47 CSS
+    REF « 37% »: CSS x 184.67..207.00 (l=22.67) y 31.67..45.00 (h=13.67) centre x=195.83 | couleur coeur (234, 224, 200) | coin le plus loin = 0.428 R | n=739
+    REF « HEAT »: CSS x 185.00..205.67 (l=21.00) y 50.67..55.33 (h=5.00) centre x=195.33 | couleur coeur (184, 172, 145) | coin le plus loin = 0.634 R | n=257
+    JEU « Brulant » (1920): CSS x 168.78..214.51 (l=46.10) y 44.28..55.90 (h=11.98) centre x=191.64 | couleur coeur (234, 224, 200) | coin le plus loin = 0.956 R | n=736
+    JEU « CHALEUR » (1920): CSS x 170.59..212.70 (l=42.47) y 55.17..64.24 (h=9.44) centre x=191.64 | couleur coeur (185, 173, 146) | coin le plus loin = 1.070 R | n=498
+    JEU « Brulant » (district 2400): CSS x 177.49..214.51 (l=37.39) y 44.28..52.27 (h=8.35) centre x=196.00 | couleur coeur (234, 224, 200) | coin le plus loin = 0.696 R | n=719
+    JEU « CHALEUR » (district 2400): CSS x 178.94..212.70 (l=34.12) y 58.07..63.16 (h=5.44) centre x=195.82 | couleur coeur (185, 173, 146) | coin le plus loin = 0.887 R | n=460
+
+########## m37_fiche_bas.py
+== m37 bas de fiche ==
+  [ouvert] ../ecran-canon.png (1176, 2091)
+  [ouvert] ../capture-fiche-1080x1920.png (1080, 1920)
+  REFERENCE
+    ref stats+actions (seuil 111.9)
+       y  495.33.. 507.00 (h 11.67)  x   63.33.. 320.00
+       y  516.00.. 517.33 (h  1.33)  x   53.00..  54.00
+       y  518.00.. 524.00 (h  6.00)  x   51.33.. 336.33
+  JEU 1920
+    jeu stats+actions (seuil 120.6)
+       y  494.72.. 509.24 (h 14.52)  x   51.90.. 321.22
+       y  516.50.. 517.59 (h  1.09)  x  197.81.. 296.90
+       y  517.95.. 524.48 (h  6.53)  x   64.61.. 317.23
+
+  boutons — ligne de mi-hauteur
+    REF boutons (y=1668=556.00 CSS, seuil 93.8)
+       bouton x   29.00..  46.33  largeur  17.33 CSS
+       bouton x  116.00.. 134.33  largeur  18.33 CSS
+       ecart 1-2 : 69.67 CSS
+    JEU boutons (y=1462=530.65 CSS, seuil 19.7)
+
+########## m38_boutons.py
+== m38 boutons ==
+  [ouvert] ../ecran-canon.png (1176, 2091)
+  [ouvert] ../capture-fiche-1080x1920.png (1080, 1920)
+    REF bouton OR (COLLECTER): x   30.00.. 133.00 (l=103.33) y  541.00.. 578.33 (h=37.67) n=32529
+       couleur haut (232, 196, 105)  bas (202, 156, 57)
+    JEU bouton OR (COLLECTER): x   29.04.. 130.30 (l=101.63) y  540.09.. 579.29 (h=39.56) n=27692
+       couleur haut (232, 196, 105)  bas (200, 153, 55)
+  bords des boutons LIGNE (scan a mi-hauteur du bloc actions)
+    REF (y=558.67 CSS, base L=24.5 pic 224.4 seuil 114.5) : 126.67..133.00 | 161.67..163.00 | 165.33..167.00 | 170.67..172.33 | 179.33..180.67 | 182.00..183.33 | 188.00..189.00 | 190.00..191.67 | 193.67..195.00 | 198.33..200.00 | 207.33..208.67 | 212.33..213.67 | 218.00..219.33 | 223.33..225.00 | 227.33..228.67 | 272.33..273.67 | 275.00..276.33 | 281.00..282.00 | 282.67..284.00 | 286.33..287.33 | 288.00..289.33 | 293.00..294.67 | 301.00..302.33 | 309.33..310.67 | 314.33..316.00 | 320.33..322.00 | 325.33..326.67 | 329.00..330.67 | 334.33..335.67 | 342.00..343.67 | 346.00..347.33
+    JEU (y=551.70 CSS, base L=26.2 pic 185.6 seuil 97.9) : 123.41..133.21
+
+########## m39_2400.py
+== m39 1080x2400 : bandes unies ==
+  [ouvert] ../capture-district-1080x2400.png (1080, 2400)
+  [ouvert] ../capture-fiche-1080x2400.png (1080, 2400)
+  district 2400 — colonne x=540 px (196 CSS) : segments de couleur CONSTANTE (>=8 px)
+     y    0.00..   5.81 CSS (  17 px) couleur (15, 16, 31) L=16.9
+     y    6.17..  17.42 CSS (  32 px) couleur (16, 18, 31) L=18.5
+     y   17.79..  25.41 CSS (  22 px) couleur (16, 20, 31) L=19.9
+     y   26.86..  36.30 CSS (  27 px) couleur (16, 21, 31) L=20.7
+     y   36.66..  49.73 CSS (  37 px) couleur (17, 23, 32) L=22.4
+     y   51.90..  86.75 CSS (  97 px) couleur (34, 38, 49) L=37.9
+     y   92.56.. 166.60 CSS ( 205 px) couleur (150, 164, 183) L=162.4
+     y  168.05.. 172.41 CSS (  13 px) couleur (69, 83, 103) L=81.5
+     y  172.77.. 182.93 CSS (  29 px) couleur (69, 84, 105) L=82.3
+     y  188.01.. 203.26 CSS (  43 px) couleur (110, 119, 132) L=118.0
+     y  203.99.. 212.70 CSS (  25 px) couleur (109, 118, 133) L=117.2
+     y  214.87.. 224.31 CSS (  27 px) couleur (109, 118, 133) L=117.2
+     y  224.67.. 235.56 CSS (  31 px) couleur (110, 120, 134) L=118.9
+     y  238.10.. 249.72 CSS (  33 px) couleur (108, 119, 133) L=117.7
+     y  250.08.. 252.99 CSS (   9 px) couleur (110, 120, 135) L=119.0
+     y  253.35.. 303.07 CSS ( 138 px) couleur (108, 119, 133) L=117.7
+     y  307.79.. 326.67 CSS (  53 px) couleur (107, 117, 132) L=116.0
+     y  505.61.. 511.78 CSS (  18 px) couleur (151, 169, 190) L=166.7
+     y  516.13.. 523.03 CSS (  20 px) couleur (151, 171, 193) L=168.3
+     y  585.10.. 591.63 CSS (  19 px) couleur (84, 133, 154) L=124.1
+     y  591.99.. 597.07 CSS (  15 px) couleur (84, 134, 156) L=125.0
+     y  602.88.. 700.52 CSS ( 270 px) couleur (85, 135, 157) L=126.0
+     y  701.97.. 737.54 CSS (  99 px) couleur (85, 135, 157) L=126.0
+     y  738.27.. 782.91 CSS ( 124 px) couleur (85, 135, 158) L=126.0
+     y  784.00.. 790.17 CSS (  18 px) couleur (34, 37, 48) L=37.2
+     y  790.53.. 801.06 CSS (  30 px) couleur (32, 36, 47) L=35.9
+     y  801.42.. 806.87 CSS (  16 px) couleur (30, 35, 46) L=34.7
+     y  807.23.. 813.76 CSS (  19 px) couleur (29, 34, 44) L=33.7
+     y  814.13.. 822.47 CSS (  24 px) couleur (28, 32, 43) L=31.9
+     y  822.84.. 828.28 CSS (  16 px) couleur (26, 31, 42) L=30.7
+     y  828.64.. 834.09 CSS (  16 px) couleur (25, 30, 40) L=29.7
+     y  834.45.. 840.62 CSS (  18 px) couleur (24, 28, 39) L=27.9
+     y  840.99.. 847.16 CSS (  18 px) couleur (22, 27, 38) L=26.7
+     y  847.52.. 852.24 CSS (  14 px) couleur (21, 26, 36) L=25.7
+     y  852.60.. 856.23 CSS (  11 px) couleur (20, 24, 35) L=23.9
+     y  856.59.. 860.95 CSS (  13 px) couleur (18, 24, 34) L=23.4
+     y  861.31.. 866.39 CSS (  15 px) couleur (17, 22, 33) L=21.7
+     y  866.76.. 870.75 CSS (  12 px) couleur (15, 21, 32) L=20.5
+
+  fiche 2400 — colonne x=540 px (196 CSS) : segments de couleur CONSTANTE (>=8 px)
+     y    0.00..   5.81 CSS (  17 px) couleur (15, 16, 31) L=16.9
+     y    6.17..  17.42 CSS (  32 px) couleur (16, 18, 31) L=18.5
+     y   17.79..  25.41 CSS (  22 px) couleur (16, 20, 31) L=19.9
+     y   26.86..  36.30 CSS (  27 px) couleur (16, 21, 31) L=20.7
+     y   36.66..  49.73 CSS (  37 px) couleur (17, 23, 32) L=22.4
+     y   51.90..  86.75 CSS (  97 px) couleur (34, 38, 49) L=37.9
+     y   92.56.. 166.60 CSS ( 205 px) couleur (150, 164, 183) L=162.4
+     y  168.05.. 172.41 CSS (  13 px) couleur (69, 83, 103) L=81.5
+     y  172.77.. 182.93 CSS (  29 px) couleur (69, 84, 105) L=82.3
+     y  188.01.. 203.26 CSS (  43 px) couleur (110, 119, 132) L=118.0
+     y  203.99.. 212.70 CSS (  25 px) couleur (109, 118, 133) L=117.2
+     y  214.87.. 224.31 CSS (  27 px) couleur (109, 118, 133) L=117.2
+     y  224.67.. 235.56 CSS (  31 px) couleur (110, 120, 134) L=118.9
+     y  238.10.. 249.72 CSS (  33 px) couleur (108, 119, 133) L=117.7
+     y  250.08.. 252.99 CSS (   9 px) couleur (110, 120, 135) L=119.0
+     y  253.35.. 303.07 CSS ( 138 px) couleur (108, 119, 133) L=117.7
+     y  307.79.. 326.67 CSS (  53 px) couleur (107, 117, 132) L=116.0
+     y  505.61.. 511.78 CSS (  18 px) couleur (151, 169, 190) L=166.7
+     y  516.13.. 523.03 CSS (  20 px) couleur (151, 171, 193) L=168.3
+     y  585.10.. 591.63 CSS (  19 px) couleur (84, 133, 154) L=124.1
+     y  591.99.. 597.07 CSS (  15 px) couleur (84, 134, 156) L=125.0
+     y  601.79.. 620.67 CSS (  53 px) couleur (14, 24, 36) L=22.7
+     y  629.74.. 659.87 CSS (  84 px) couleur (14, 23, 35) L=22.0
+     y  660.23.. 663.86 CSS (  11 px) couleur (13, 22, 33) L=20.9
+     y  664.22.. 699.79 CSS (  99 px) couleur (12, 21, 31) L=19.8
+     y  700.16.. 713.95 CSS (  39 px) couleur (12, 19, 30) L=18.3
+     y  753.87.. 768.76 CSS (  42 px) couleur (9, 15, 26) L=14.5
+     y  769.12.. 782.91 CSS (  39 px) couleur (85, 135, 157) L=126.0
+     y  784.00.. 790.17 CSS (  18 px) couleur (34, 37, 48) L=37.2
+     y  790.53.. 801.06 CSS (  30 px) couleur (32, 36, 47) L=35.9
+     y  801.42.. 806.87 CSS (  16 px) couleur (30, 35, 46) L=34.7
+     y  807.23.. 813.76 CSS (  19 px) couleur (29, 34, 44) L=33.7
+     y  814.13.. 822.47 CSS (  24 px) couleur (28, 32, 43) L=31.9
+     y  822.84.. 828.28 CSS (  16 px) couleur (26, 31, 42) L=30.7
+     y  828.64.. 834.09 CSS (  16 px) couleur (25, 30, 40) L=29.7
+     y  834.45.. 840.62 CSS (  18 px) couleur (24, 28, 39) L=27.9
+     y  840.99.. 847.16 CSS (  18 px) couleur (22, 27, 38) L=26.7
+     y  847.52.. 852.24 CSS (  14 px) couleur (21, 26, 36) L=25.7
+     y  852.60.. 856.23 CSS (  11 px) couleur (20, 24, 35) L=23.9
+     y  856.59.. 860.95 CSS (  13 px) couleur (18, 24, 34) L=23.4
+     y  861.31.. 866.39 CSS (  15 px) couleur (17, 22, 33) L=21.7
+     y  866.76.. 870.75 CSS (  12 px) couleur (15, 21, 32) L=20.5
+
+
+########## m41_aiguille2.py
+== m41 aiguille (quadrant au-dessus du pivot) ==
+  [ouvert] ../ecran-canon.png (1176, 2091)
+  [ouvert] ../capture-district-1080x2400.png (1080, 2400)
+    REFERENCE (bande 37% exclue): 0 px
+    JEU district 2400: n=122 px  pointe a 35.8 px = 12.99 CSS du pivot, angle 28.4 deg
+       epaisseur moyenne = n/L = 3.41 px = 1.24 CSS ; longueur en R = 0.397
+
+########## m42_palette.py
+== m42 couche globale — bandeau et fiche ==
+  [ouvert] ../ecran-canon.png (1176, 2091)
+  [ouvert] ../capture-fiche-1080x1920.png (1080, 1920)
+  [ouvert] ../capture-district-1080x2400.png (1080, 2400)
+  BANDEAU (y 0..51 CSS, x 0..392)
+    REFERENCE bandeau: aire 1176x153 px ; L moyenne=31.5 ; mediane=23.3
+       (18, 25, 36)   93.5 %  L= 24.3
+       (83, 91, 95)    1.4 %  L= 89.6
+       (177, 167, 144)    0.8 %  L=167.5
+       (49, 55, 68)    0.7 %  L= 54.7
+       (175, 140, 61)    0.7 %  L=141.7
+       (241, 200, 106)    0.7 %  L=201.9
+    JEU 1920 bandeau: aire 1080x138 px ; L moyenne=65.8 ; mediane=61.4
+       (53, 59, 69)   48.0 %  L= 58.4
+       (59, 67, 77)   32.5 %  L= 66.0
+       (23, 28, 39)    8.5 %  L= 27.7
+       (76, 78, 83)    5.2 %  L= 77.9
+       (160, 106, 77)    1.8 %  L=115.4
+       (216, 172, 80)    1.0 %  L=174.7
+    JEU district 2400 bandeau: aire 1080x138 px ; L moyenne=30.2 ; mediane=20.7
+       (16, 21, 31)   92.8 %  L= 20.7
+       (159, 100, 55)    1.2 %  L=109.3
+       (216, 171, 79)    1.0 %  L=173.9
+       (241, 200, 105)    1.0 %  L=201.9
+       (180, 169, 144)    0.7 %  L=169.5
+       (233, 224, 202)    0.7 %  L=224.3
+
+  FICHE (panneau entier)
+    REFERENCE fiche: aire 1098x508 px ; L moyenne=34.9 ; mediane=19.5
+       (13, 20, 31)   89.4 %  L= 19.3
+       (217, 175, 82)    4.3 %  L=177.2
+       (235, 196, 104)    1.3 %  L=197.6
+       (203, 157, 59)    1.0 %  L=159.7
+       (233, 223, 199)    0.8 %  L=223.4
+       (56, 61, 69)    0.7 %  L= 60.5
+    JEU 1920 fiche: aire 1014x465 px ; L moyenne=37.3 ; mediane=19.5
+       (14, 20, 31)   88.8 %  L= 19.5
+       (216, 176, 83)    4.5 %  L=177.8
+       (235, 196, 103)    1.3 %  L=197.6
+       (203, 157, 59)    1.0 %  L=159.7
+       (233, 223, 199)    0.8 %  L=223.4
+       (53, 59, 70)    0.7 %  L= 58.5
+
+  DOCK (bande, y 605..696 CSS)
+    REFERENCE dock: aire 1176x271 px ; L moyenne=29.4 ; mediane=21.4
+       (16, 21, 29)   88.9 %  L= 20.5
+       (44, 55, 69)    2.2 %  L= 53.7
+       (56, 72, 81)    2.0 %  L= 69.2
+       (75, 91, 91)    1.8 %  L= 87.6
+       (100, 78, 52)    1.4 %  L= 80.8
+       (164, 163, 150)    0.8 %  L=162.3
+    JEU 1920 dock: aire 1080x252 px ; L moyenne=78.4 ; mediane=81.1
+       (49, 79, 94)   18.4 %  L= 73.7
+       (74, 119, 138)   15.6 %  L=110.8
+       (82, 132, 153)   14.8 %  L=122.9
+       (23, 36, 48)   13.5 %  L= 34.1
+       (54, 87, 103)   12.8 %  L= 81.1
+       (18, 26, 39)   10.9 %  L= 25.2
+    JEU district 2400 dock: aire 1080x252 px ; L moyenne=34.8 ; mediane=28.2
+       (23, 28, 39)   93.0 %  L= 27.7
+       (84, 135, 157)    4.5 %  L=125.7
+       (85, 85, 85)    1.3 %  L= 85.0
+       (180, 168, 142)    0.4 %  L=168.7
+       (137, 178, 213)    0.2 %  L=171.8
+       (145, 136, 115)    0.2 %  L=136.4
+
+########## m43_voile.py
+== m43 voile du dock ==
+  [ouvert] ../ecran-canon.png (1176, 2091)
+  [ouvert] ../capture-fiche-1080x1920.png (1080, 1920)
+  [ouvert] ../capture-district-1080x2400.png (1080, 2400)
+    REFERENCE x=333 CSS (x=1000 px = 333.3 CSS)
+       y  593.33 CSS  (10, 16, 25)  L=  15.4
+       y  601.33 CSS  (31, 32, 36)  L=  32.1
+       y  609.33 CSS  (21, 28, 34)  L=  26.9
+       y  617.33 CSS  (57, 42, 33)  L=  44.5
+       y  625.33 CSS  (55, 40, 31)  L=  42.5
+       y  633.33 CSS  (59, 48, 37)  L=  49.5
+       y  641.33 CSS  (24, 25, 27)  L=  24.9
+       y  649.33 CSS  (20, 21, 25)  L=  21.1
+       y  657.33 CSS  (23, 23, 27)  L=  23.3
+       y  665.33 CSS  (10, 15, 23)  L=  14.5
+       y  673.33 CSS  (16, 20, 25)  L=  19.5
+       y  681.33 CSS  (24, 24, 28)  L=  24.3
+       y  689.33 CSS  (16, 19, 25)  L=  18.8
+
+    JEU 1920 x=356 CSS (x=980 px = 355.7 CSS)
+       y  580.74 CSS  (9, 15, 26)  L=  14.5
+       y  589.45 CSS  (9, 15, 25)  L=  14.4
+       y  598.16 CSS  (85, 136, 158)  L= 126.7
+       y  606.87 CSS  (85, 135, 157)  L= 126.0
+       y  615.59 CSS  (81, 130, 151)  L= 121.1
+       y  624.30 CSS  (77, 123, 144)  L= 114.7
+       y  633.01 CSS  (73, 118, 137)  L= 109.8
+       y  641.72 CSS  (69, 110, 129)  L= 102.7
+       y  650.43 CSS  (64, 103, 121)  L=  96.0
+       y  659.14 CSS  (57, 93, 110)  L=  86.6
+       y  667.85 CSS  (52, 85, 100)  L=  79.1
+       y  676.56 CSS  (45, 73, 87)  L=  68.1
+       y  685.27 CSS  (36, 60, 73)  L=  55.8
+       y  693.99 CSS  (25, 42, 53)  L=  39.2
+
+    JEU district 2400 x=356 CSS (x=980 px = 355.7 CSS)
+       y  754.96 CSS  (85, 136, 158)  L= 126.7
+       y  763.67 CSS  (85, 135, 157)  L= 126.0
+       y  772.39 CSS  (84, 135, 157)  L= 125.7
+       y  781.10 CSS  (85, 135, 157)  L= 126.0
+       y  789.81 CSS  (33, 37, 47)  L=  36.9
+       y  798.52 CSS  (31, 35, 46)  L=  34.9
+       y  807.23 CSS  (29, 34, 44)  L=  33.7
+       y  815.94 CSS  (28, 32, 43)  L=  31.9
+       y  824.65 CSS  (26, 30, 41)  L=  29.9
+       y  833.36 CSS  (24, 29, 39)  L=  28.7
+       y  842.07 CSS  (22, 27, 38)  L=  26.7
+       y  850.79 CSS  (20, 25, 36)  L=  24.7
+       y  859.50 CSS  (18, 23, 34)  L=  22.7
+       y  868.21 CSS  (15, 21, 31)  L=  20.4
+
+########## m44_res.py
+  [ouvert] ../capture-fiche-1080x1920.png (1080, 1920)
+  [ouvert] ../capture-fiche-1080x2400.png (1080, 2400)
+  [ouvert] ../capture-district-1080x2400.png (1080, 2400)
+== m44a difference pixel entre les deux planches 2400 (fiche vs district) ==
+    px differents (echantillon 1/4) = 118337 ; bande y 339.7..768.8 CSS
+    -> le chrome (y<339.7 CSS) est IDENTIQUE bit pour bit entre les deux planches 2400
+
+== m44b fiche a 1080x2400 : geometrie ==
+    2400 fiche (y=653 CSS): bord G 11.80  bord D 380.01  largeur 368.22 CSS
+    1920 fiche (y=472 CSS): bord G 11.03  bord D 379.86  largeur 368.83 CSS
+    2400 titre de fiche: x 190.19..253.71 y 602.52..616.67 h=14.52
+    1920 titre de fiche: x 31.21..360.42 y 445.36..457.33 h=12.34
+
+== m44c bandeau : 1920 vs 2400, meme chrome ? (encre d'ARGENT) ==
+    1920 ARGENT: x 64.24..102.36 y 9.80..16.33 h=6.90
+    2400 ARGENT: x 64.24..102.36 y 9.80..16.33 h=6.90
+
+########## m45_filet_couleur.py
+== m45 couleur du filet du bandeau ==
+  [ouvert] ../ecran-canon.png (1176, 2091)
+  [ouvert] ../capture-fiche-1080x1920.png (1080, 1920)
+  [ouvert] ../capture-district-1080x2400.png (1080, 2400)
+    REFERENCE (y 49..53 CSS): n=30 colonnes ; couleur MEDIANE du pic (176, 141, 62) L=142.7 ; pic le plus clair (176, 141, 62)
+    JEU 1920 (y 48..53 CSS): n=30 colonnes ; couleur MEDIANE du pic (200, 126, 66) L=137.4 ; pic le plus clair (200, 126, 66)
+    JEU district 2400 (y 48..53 CSS): n=30 colonnes ; couleur MEDIANE du pic (200, 126, 66) L=137.4 ; pic le plus clair (200, 126, 66)
+
+  couleur du CERCLAGE du medaillon au sommet (trait horizontal)
+    REF : (41, 46, 59) (37, 43, 56) (35, 41, 53)
+    JEU : (196, 123, 65) (181, 113, 61) (154, 96, 54) (121, 76, 46)
+
+########## m45b_filet_coupe.py
+  [ouvert] ../ecran-canon.png (1176, 2091)
+  [ouvert] ../capture-district-1080x2400.png (1080, 2400)
+  [ouvert] ../capture-fiche-1080x1920.png (1080, 1920)
+REF filet, colonne x=900 px (300 CSS)
+   y 148    49.33 CSS  (22, 29, 41)  R-B= -19
+   y 149    49.67 CSS  (22, 29, 42)  R-B= -20
+   y 150    50.00 CSS  (22, 29, 41)  R-B= -19
+   y 151    50.33 CSS  (22, 30, 41)  R-B= -19
+   y 152    50.67 CSS  (22, 30, 41)  R-B= -19
+   y 153    51.00 CSS  (176, 141, 62)  R-B= 114
+   y 154    51.33 CSS  (176, 141, 62)  R-B= 114
+   y 155    51.67 CSS  (176, 141, 62)  R-B= 114
+   y 156    52.00 CSS  (72, 90, 108)  R-B= -36
+   y 157    52.33 CSS  (72, 90, 108)  R-B= -36
+   y 158    52.67 CSS  (72, 90, 108)  R-B= -36
+
+JEU 2400 filet, colonne x=826 px (300 CSS)
+   y 134    48.64 CSS  (17, 24, 32)  R-B= -15
+   y 135    49.00 CSS  (17, 24, 32)  R-B= -15
+   y 136    49.36 CSS  (17, 24, 32)  R-B= -15
+   y 137    49.73 CSS  (17, 24, 32)  R-B= -15
+   y 138    50.09 CSS  (200, 126, 66)  R-B= 134
+   y 139    50.45 CSS  (200, 126, 66)  R-B= 134
+   y 140    50.81 CSS  (200, 126, 66)  R-B= 134
+   y 141    51.18 CSS  (200, 126, 66)  R-B= 134
+   y 142    51.54 CSS  (200, 126, 66)  R-B= 134
+   y 143    51.90 CSS  (34, 38, 49)  R-B= -15
+   y 144    52.27 CSS  (34, 38, 49)  R-B= -15
+   y 145    52.63 CSS  (34, 38, 49)  R-B= -15
+
+fondu horizontal du filet (couleur au coeur du trait)
+   x=   5 CSS   CANON (37, 39, 42)   JEU2400 (57, 41, 35)   JEU1920 (81, 76, 80)
+   x=  20 CSS   CANON (63, 58, 45)   JEU2400 (109, 70, 44)   JEU1920 (119, 90, 78)
+   x=  40 CSS   CANON (109, 91, 52)   JEU2400 (148, 94, 53)   JEU1920 (153, 103, 74)
+   x=  60 CSS   CANON (151, 123, 57)   JEU2400 (178, 112, 60)   JEU1920 (179, 116, 70)
+   x= 100 CSS   CANON (176, 141, 62)   JEU2400 (200, 126, 66)   JEU1920 (200, 126, 66)
+   x= 140 CSS   CANON (176, 141, 62)   JEU2400 (200, 126, 66)   JEU1920 (200, 126, 66)
+   x= 240 CSS   CANON (173, 138, 61)   JEU2400 (200, 126, 66)   JEU1920 (200, 126, 66)
+   x= 300 CSS   CANON (176, 141, 62)   JEU2400 (200, 126, 66)   JEU1920 (200, 126, 66)
+   x= 350 CSS   CANON (112, 95, 53)   JEU2400 (151, 95, 53)   JEU1920 (156, 105, 75)
+   x= 380 CSS   CANON (52, 50, 43)   JEU2400 (86, 56, 39)   JEU1920 (102, 84, 81)
+   x= 388 CSS   CANON (29, 31, 37)   JEU2400 (53, 39, 35)   JEU1920 (80, 77, 82)
+
+########## m46_stats.py
+== m46 separateurs de stats ==
+  [ouvert] ../ecran-canon.png (1176, 2091)
+  [ouvert] ../capture-fiche-1080x1920.png (1080, 1920)
+    REF (y 513 CSS, entre valeurs et libelles) (y=513.33 CSS, base L=18.3 pic 34.2 seuil 23.9) : 140.00 | 251.67
+    JEU (y 515 CSS) (y=515.41 CSS, base L=19.1 pic 33.5 seuil 24.1) : 140.10 | 191.64 | 250.63
+
+    REF libelles de stats: 4 cellules
+       x   51.33.. 116.00  centre   83.67
+       x  174.00.. 217.33  centre  195.67
+       x  278.00.. 301.33  centre  289.67
+       x  306.67.. 336.67  centre  321.67
+    JEU libelles de stats: 3 cellules
+       x   64.61.. 104.17  centre   84.39
+       x  176.04.. 213.79  centre  194.91
+       x  294.36.. 317.59  centre  305.98
+
+########## m47_degagement.py
+== m47 degagement ARGENT <-> medaillon ==
+  [ouvert] ../capture-fiche-1080x1920.png (1080, 1920)
+    JEU 1920: encre la plus a droite x=444 (161.16 CSS) a y=72 (26.13 CSS)
+       fond de goldness sur la ligne = -41.5 ; pied du halo (base+8) a x=446 (161.88 CSS)
+       >>> DEGAGEMENT = 0.73 CSS
+       (reference geometrique : bord exterieur nominal du cerclage a x=164.62 CSS)
+  [ouvert] ../capture-fiche-1080x2400.png (1080, 2400)
+    JEU 2400: encre la plus a droite x=444 (161.16 CSS) a y=72 (26.13 CSS)
+       fond de goldness sur la ligne = -41.5 ; pied du halo (base+8) a x=446 (161.88 CSS)
+       >>> DEGAGEMENT = 0.73 CSS
+       (reference geometrique : bord exterieur nominal du cerclage a x=164.61 CSS)
+
+== m48a CAPACITE de la sonde doree sur les MEMES captures ==
+  [ouvert] ../capture-fiche-1080x1920.png (1080, 1920)
+  [ouvert] ../capture-fiche-1080x2400.png (1080, 2400)
+  [ouvert] ../ecran-canon.png (1176, 2091)
+    JEU 1920 — filet du bandeau (doit trouver): 5128 px dores  x 22.1..369.5 y 43.6..54.1 CSS
+    JEU 1920 — bouton OR de la fiche (doit trouver): 29135 px dores  x 29.0..130.3 y 540.1..579.3 CSS
+    JEU 1920 — TOUTE la bande du dock: 0 px dores
+    JEU 2400 — TOUTE la bande du dock: 0 px dores
+    REF   — TOUTE la bande du dock (controle positif): 1357 px dores  x 76.0..331.7 y 611.0..676.7 CSS
+
+== m48b FORME, sans hypothese de couleur : sous chaque rond (bande de 8 CSS) ==
+  REFERENCE (le rond ACTIF est EMPIRE : un trait laiton 14x2 CSS y est attendu)
+        ref sous rond 1 (x 84..104 CSS, y 662,7..668,0): mediane L=  11.4 pic  142.7 min    6.7  AMPLITUDE= 131.4
+        ref sous rond 2 (x 152..172 CSS, y 662,7..668,0): mediane L=  10.5 pic   13.5 min    7.7  AMPLITUDE=   3.0
+        ref sous rond 3 (x 220..240 CSS, y 662,7..668,0): mediane L=  10.4 pic   14.7 min    7.4  AMPLITUDE=   4.2
+        ref sous rond 4 (x 288..308 CSS, y 662,7..668,0): mediane L=  16.0 pic   25.0 min    8.6  AMPLITUDE=   9.0
+  JEU 1920
+        jeu sous rond 1: mediane L=  81.1 pic   84.7 min   78.1  AMPLITUDE=   3.6
+        jeu sous rond 2: mediane L=  81.1 pic   84.7 min   78.1  AMPLITUDE=   3.6
+        jeu sous rond 3: mediane L=  81.1 pic  164.2 min   78.1  AMPLITUDE=  83.0
+        jeu sous rond 4: mediane L=  81.1 pic   84.7 min   78.1  AMPLITUDE=   3.6
+
+== m48c FORME : coin haut-droit de chaque rond (pastille attendue sur FAMILLE au canon) ==
+        ref coin rond 1: mediane L=  26.2 pic   28.1 min   23.5  AMPLITUDE=   1.9
+        ref coin rond 2: mediane L=  25.9 pic  174.1 min   13.5  AMPLITUDE= 148.2
+        ref coin rond 3: mediane L=  66.0 pic   97.8 min   26.5  AMPLITUDE=  31.8
+        ref coin rond 4: mediane L=  91.6 pic  100.9 min   41.6  AMPLITUDE=   9.3
+        jeu coin rond 1: mediane L= 121.2 pic  124.2 min  117.3  AMPLITUDE=   3.0
+        jeu coin rond 2: mediane L= 121.1 pic  124.0 min  117.3  AMPLITUDE=   2.9
+        jeu coin rond 3: mediane L= 121.1 pic  124.2 min  117.3  AMPLITUDE=   3.1
+        jeu coin rond 4: mediane L= 121.1 pic  124.2 min  117.3  AMPLITUDE=   3.1

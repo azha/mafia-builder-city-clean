@@ -1,0 +1,87 @@
+{
+ "dossier": "screen_c1",
+ "symbole": "㊳",
+ "controleur": "JournalScreenController",
+ "date": "2026-09-04T10:15:48",
+ "back_main": "6ff684db",
+ "compte": "operational_demo@example.test",
+ "note": "routes = celles du DOSSIER de code du contrôleur et de ses classes *Client (parfois plus larges que l'écran) ; le juge-donnees filtre",
+ "comptes": {
+  "appelées": 6,
+  "sans instance": 0,
+  "mutations": 4,
+  "erreurs": 0
+ },
+ "routes": [
+  {
+   "fichier": "POST_ambient_attend.json",
+   "route": "/v1/ambient/attend/",
+   "methode": "POST",
+   "statut": null,
+   "etat": "mutation"
+  },
+  {
+   "fichier": "POST_ambient_attend_id.json",
+   "route": "/v1/ambient/attend/{id}",
+   "methode": "POST",
+   "statut": null,
+   "etat": "mutation"
+  },
+  {
+   "fichier": "GET_ambient_feed.json",
+   "route": "/v1/ambient/feed",
+   "methode": "GET",
+   "statut": 200,
+   "etat": "appelée"
+  },
+  {
+   "fichier": "GET_news_beats.json",
+   "route": "/v1/news/beats/",
+   "methode": "GET",
+   "statut": 200,
+   "etat": "appelée"
+  },
+  {
+   "fichier": "GET_news_beats_id.json",
+   "route": "/v1/news/beats/{id}",
+   "methode": "GET",
+   "statut": 200,
+   "etat": "appelée"
+  },
+  {
+   "fichier": "GET_news_feed.json",
+   "route": "/v1/news/feed",
+   "methode": "GET",
+   "statut": 200,
+   "etat": "appelée"
+  },
+  {
+   "fichier": "GET_random-world_active.json",
+   "route": "/v1/random-world/active",
+   "methode": "GET",
+   "statut": 200,
+   "etat": "appelée"
+  },
+  {
+   "fichier": "POST_random-world_hollow.json",
+   "route": "/v1/random-world/hollow/",
+   "methode": "POST",
+   "statut": null,
+   "etat": "mutation"
+  },
+  {
+   "fichier": "POST_random-world_hollow_eventId_attend-funeral.json",
+   "route": "/v1/random-world/hollow/{eventId}/attend-funeral",
+   "methode": "POST",
+   "statut": null,
+   "etat": "mutation"
+  },
+  {
+   "fichier": "GET_random-world_known-couplings.json",
+   "route": "/v1/random-world/known-couplings",
+   "methode": "GET",
+   "statut": 200,
+   "etat": "appelée"
+  }
+ ]
+}

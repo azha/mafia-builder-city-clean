@@ -1,0 +1,108 @@
+{
+    "response_meta": {
+        "request_id_echo": "15bfd854-84c0-44a6-adee-a787254d38e0",
+        "server_processed_at": "2026-09-07T04:25:04.200Z",
+        "api_version": 1,
+        "correlation_id_echo": null
+    },
+    "payload": {
+        "data": {
+            "session_id": "ce80b572-5235-474e-9fbd-c5df6ffa89b0",
+            "hl_card": null,
+            "queue": [
+                {
+                    "exception_id": "28ca893b-c437-4e0e-b4f0-7b4513e52d14",
+                    "lieutenant_id": "01a07a1c-b5ec-70ed-9508-bf06492a9228",
+                    "lieutenant": {
+                        "id": "01a07a1c-b5ec-70ed-9508-bf06492a9228",
+                        "name": "Lt. Rin"
+                    },
+                    "event_descriptor": "onboarding.preseed_exception.card",
+                    "event_descriptor_i18n": {
+                        "key": "onboarding.preseed_exception.card",
+                        "params": {}
+                    },
+                    "candidate_actions": [
+                        {
+                            "id": "acknowledge",
+                            "label": "Acknowledge the lab status",
+                            "method": "ONE_TIME",
+                            "label_i18n": {
+                                "key": "exception.onboarding_preseed.acknowledge.label",
+                                "params": {}
+                            },
+                            "add_rule_dsl": null,
+                            "projected_consequence": "You note it; no automatic action is taken.",
+                            "projected_consequence_i18n": {
+                                "key": "exception.onboarding_preseed.acknowledge.consequence",
+                                "params": {}
+                            }
+                        },
+                        {
+                            "id": "escalate",
+                            "label": "Escalate for review",
+                            "method": "ESCALATE",
+                            "label_i18n": {
+                                "key": "exception.onboarding_preseed.escalate.label",
+                                "params": {}
+                            },
+                            "add_rule_dsl": null,
+                            "projected_consequence": "The card is archived for later review.",
+                            "projected_consequence_i18n": {
+                                "key": "exception.onboarding_preseed.escalate.consequence",
+                                "params": {}
+                            }
+                        }
+                    ],
+                    "suggested_action": {
+                        "id": "acknowledge",
+                        "label": "Acknowledge the lab status",
+                        "method": "ONE_TIME",
+                        "label_i18n": {
+                            "key": "exception.onboarding_preseed.acknowledge.label",
+                            "params": {}
+                        },
+                        "add_rule_dsl": null,
+                        "projected_consequence": "You note it; no automatic action is taken.",
+                        "projected_consequence_i18n": {
+                            "key": "exception.onboarding_preseed.acknowledge.consequence",
+                            "params": {}
+                        }
+                    },
+                    "confidence_band": "confident",
+                    "priority_band": "watching",
+                    "severity_band": "MILD",
+                    "resolution_status": "pending"
+                }
+            ],
+            "backlog_badge": false,
+            "queue_pressure_band": "normal",
+            "structural_budget": {
+                "used": 0,
+                "cap_reached": false
+            },
+            "flag_review": {
+                "pending_review_count": 0,
+                "auto_open": false
+            },
+            "settling_glance": {
+                "settling_count": 0,
+                "all_clear": true
+            },
+            "friction_glance": {
+                "friction_bucket": "light",
+                "penalty_active": false
+            },
+            "compression_glance": {
+                "stress_bucket": "calm",
+                "week_state": "none",
+                "forced": false
+            },
+            "onboarding": {
+                "funnel_step": "HOME_FIRST",
+                "first_decision_recorded": false
+            },
+            "opened_game_day": 1
+        }
+    }
+}

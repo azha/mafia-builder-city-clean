@@ -1,0 +1,22 @@
+BACK  random-world.projection.service.ts:47  RandomWorldPhaseBand = ['onset', 'unfolding', 'receding', 'lingering', 'permanent'] (5 membres)
+BACK  :46  RandomWorldSeverityBand = ['faint', 'noticeable', 'heavy']
+BACK  :48  RandomWorldRecencyBand  = ['fresh', 'settling', 'fading']
+
+FRONT JournalScreenController.cs:404-415  PhaseEnMots cases = ['starting', 'unfolding', 'settling', 'lingering', 'permanent'] (5 cas)
+      default: présent
+
+── CONFRONTATION ──
+  membres back SANS cas front (=> affiches BRUTS en anglais) : ['onset', 'receding']
+  cas front SANS membre back  (=> code MORT)                 : ['settling', 'starting']
+  couverture = 3/5
+
+── CONTROLE POSITIF (le motif SAIT trouver un cas connu) ──
+  'unfolding' dans cases : True | 'lingering' : True
+── CONTROLE NEGATIF ──
+  'zzz' dans cases : False
+
+── OU vit le mot 'settling' cote back ? (piege du MOT PARTAGE) ──
+   :33  //   - `recency_band` ('fresh'|'settling'|'fading'), from `gameDay - started_at_game_day` (mirrors
+   :34  //     `AmbientProjectionService`'s 3-band recency shape): < 7 days → 'fresh'; < 30 days → 'settling';
+   :48  export type RandomWorldRecencyBand = 'fresh' | 'settling' | 'fading';
+   :146  if (elapsed < 30) return 'settling';

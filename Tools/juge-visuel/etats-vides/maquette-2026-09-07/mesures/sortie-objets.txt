@@ -1,0 +1,14 @@
+== CONTROLE POSITIF ==
+  synthetique (300, 300) -> 1 composante(s) : [(800, (100, 200, 139, 219))] [attendu 1 de 800 px, boite (100,200,139,219)] -> OK
+
+== E3 vide-coffre.png (1024, 1024) : objets ocre isoles sur le SOL a gauche du coffre (x 0..330, y 860..1010) ==
+   composante de 5355 px, boite x=178..329 y=940..1009 (152x70 px, soit 14.8 % de la largeur)
+   composante de 290 px, boite x=152..185 y=933..943 (34x11 px, soit 3.3 % de la largeur)
+   composante de 86 px, boite x=0..5 y=985..1009 (6x25 px, soit 0.6 % de la largeur)
+   composante de 51 px, boite x=197..211 y=977..984 (15x8 px, soit 1.5 % de la largeur)
+
+== L'OR EMPLOYE vs les jetons dores du canon (ecart Tchebychev par canal) ==
+   #b08d3e (employe) vs --or       #d9ab4e : delta=(-41, -30, -16) max=41
+   #b08d3e (employe) vs --or-vif   #f2c96b : delta=(-66, -60, -45) max=66
+   #b08d3e (employe) vs --laiton   #b08d3e : delta=(0, 0, 0) max=0
+   #b08d3e (employe) vs --creme-2  #b9ad92 : delta=(-9, -32, -84) max=84

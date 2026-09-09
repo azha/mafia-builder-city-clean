@@ -1,0 +1,17 @@
+═══ URL construites par JournalClient (lignes actives) ═══
+   :  30  using (UnityWebRequest req = UnityWebRequest.Get(BaseUrl.TrimEnd('/') + "/v1/news/feed"))
+   :  52  using (UnityWebRequest req = UnityWebRequest.Get(BaseUrl.TrimEnd('/') + "/v1/news/beats/" + UnityWebRequest.EscapeURL(id)))
+   :  74  using (UnityWebRequest req = UnityWebRequest.Get(BaseUrl.TrimEnd('/') + "/v1/ambient/feed"))
+   :  98  using (var req = new UnityWebRequest(BaseUrl.TrimEnd('/') + "/v1/ambient/attend/" + UnityWebRequest.EscapeURL(id), "POST"))
+   : 128  using (UnityWebRequest req = UnityWebRequest.Get(BaseUrl.TrimEnd('/') + "/v1/random-world/active"))
+   : 150  using (UnityWebRequest req = UnityWebRequest.Get(BaseUrl.TrimEnd('/') + "/v1/random-world/known-couplings"))
+   : 174  using (var req = new UnityWebRequest(BaseUrl.TrimEnd('/') + "/v1/random-world/hollow/" + UnityWebRequest.EscapeURL(eventId) + "/attend-funeral", "POST"))
+
+═══ Le client passe-t-il un paramètre de requête ? ═══
+   'limit' dans une URL construite : 0
+   'offset' dans une URL construite : 0
+   'cursor' dans une URL construite : 0
+   'category' dans une URL construite : 0
+   '?' dans une URL construite : 0
+
+   CONTROLE POSITIF : 'v1/news/feed' dans une URL construite : 1

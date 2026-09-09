@@ -1,0 +1,73 @@
+{
+ "dossier": "ecran-principal",
+ "symbole": "①",
+ "controleur": "DistrictInteriorScreenController",
+ "date": "2026-09-04T10:15:48",
+ "back_main": "6ff684db",
+ "compte": "operational_demo@example.test",
+ "note": "routes = celles du DOSSIER de code du contrôleur et de ses classes *Client (parfois plus larges que l'écran) ; le juge-donnees filtre",
+ "comptes": {
+  "appelées": 4,
+  "sans instance": 0,
+  "mutations": 4,
+  "erreurs": 0
+ },
+ "routes": [
+  {
+   "fichier": "POST_auth_signin.json",
+   "route": "/v1/auth/signin",
+   "methode": "POST",
+   "statut": null,
+   "etat": "mutation"
+  },
+  {
+   "fichier": "POST_auth_signup.json",
+   "route": "/v1/auth/signup",
+   "methode": "POST",
+   "statut": null,
+   "etat": "mutation"
+  },
+  {
+   "fichier": "GET_city_district_districtId_heat.json",
+   "route": "/v1/city/district/{districtId}/heat",
+   "methode": "GET",
+   "statut": 200,
+   "etat": "appelée"
+  },
+  {
+   "fichier": "GET_city_district_id_interior.json",
+   "route": "/v1/city/district/{id}/interior",
+   "methode": "GET",
+   "statut": 200,
+   "etat": "appelée"
+  },
+  {
+   "fichier": "GET_i18n_bundle_locale.json",
+   "route": "/v1/i18n/bundle?locale=",
+   "methode": "GET",
+   "statut": 200,
+   "etat": "appelée"
+  },
+  {
+   "fichier": "POST_operational_dealer_id_collect.json",
+   "route": "/v1/operational/dealer/{id}/collect",
+   "methode": "POST",
+   "statut": null,
+   "etat": "mutation"
+  },
+  {
+   "fichier": "POST_operational_laundering_inject.json",
+   "route": "/v1/operational/laundering/inject",
+   "methode": "POST",
+   "statut": null,
+   "etat": "mutation"
+  },
+  {
+   "fichier": "GET_world_districts.json",
+   "route": "/v1/world/districts",
+   "methode": "GET",
+   "statut": 200,
+   "etat": "appelée"
+  }
+ ]
+}

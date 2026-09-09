@@ -1,0 +1,182 @@
+[
+ {
+  "id": "T1",
+  "box": [
+   222,
+   492,
+   366,
+   715
+  ],
+  "nom": "immeuble-tour bleu (G1)"
+ },
+ {
+  "id": "T2",
+  "box": [
+   398,
+   404,
+   578,
+   612
+  ],
+  "nom": "immeuble olive (G2)"
+ },
+ {
+  "id": "T3",
+  "box": [
+   714,
+   448,
+   1008,
+   792
+  ],
+  "nom": "grand immeuble bleu (G3)"
+ },
+ {
+  "id": "T4",
+  "box": [
+   0,
+   588,
+   126,
+   742
+  ],
+  "nom": "immeuble bord gauche"
+ },
+ {
+  "id": "T5",
+  "box": [
+   30,
+   678,
+   214,
+   832
+  ],
+  "nom": "immeuble bleu (G4)"
+ },
+ {
+  "id": "T6",
+  "box": [
+   352,
+   648,
+   474,
+   742
+  ],
+  "nom": "commerce store raye"
+ },
+ {
+  "id": "T7",
+  "box": [
+   196,
+   742,
+   346,
+   872
+  ],
+  "nom": "commerce toit ardoise (sous G5)"
+ },
+ {
+  "id": "T8",
+  "box": [
+   428,
+   686,
+   702,
+   930
+  ],
+  "nom": "Le Verge d Or (G6)"
+ },
+ {
+  "id": "T9",
+  "box": [
+   940,
+   636,
+   1080,
+   838
+  ],
+  "nom": "immeuble olive droite"
+ },
+ {
+  "id": "T10",
+  "box": [
+   896,
+   750,
+   930,
+   782
+  ],
+  "nom": "etal / comptoir en bois (G7)"
+ },
+ {
+  "id": "T11",
+  "box": [
+   58,
+   884,
+   302,
+   1064
+  ],
+  "nom": "batiment toit vert (G8)"
+ },
+ {
+  "id": "T12",
+  "box": [
+   196,
+   912,
+   344,
+   1040
+  ],
+  "nom": "batiment gris bas"
+ },
+ {
+  "id": "T13",
+  "box": [
+   0,
+   996,
+   100,
+   1116
+  ],
+  "nom": "entrepot brique ENTREPOT 5"
+ },
+ {
+  "id": "T14",
+  "box": [
+   806,
+   888,
+   1002,
+   1036
+  ],
+  "nom": "CHEZ MARA rouge"
+ },
+ {
+  "id": "T15",
+  "box": [
+   1000,
+   884,
+   1080,
+   1064
+  ],
+  "nom": "immeuble bord droit"
+ },
+ {
+  "id": "T16",
+  "box": [
+   540,
+   1050,
+   900,
+   1400
+  ],
+  "nom": "BRENNAR COAL & ICE (G11)"
+ },
+ {
+  "id": "T18",
+  "box": [
+   940,
+   1120,
+   1080,
+   1330
+  ],
+  "nom": "immeubles bord droit bas"
+ },
+ {
+  "id": "T19",
+  "box": [
+   430,
+   586,
+   560,
+   700
+  ],
+  "nom": "immeuble a chateau d eau (sous G2)"
+ }
+]

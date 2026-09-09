@@ -1,0 +1,15 @@
+taille source : 1080 x 1920
+ecrit 11_haut_releve.png (bande y142-478, gamma 0.38)
+
+== (b) SIGNATURE D'UN BATIMENT HABITE : haut de l'ecran vs coeur ==
+-- TEMOINS du coeur (batiments habites) --
+  immeuble central (Laboratoire)     n= 34200  L_moy= 65.3  L_max=251  fenetres/lampes=20.71%  detail= 76.7%
+  tour gauche                        n= 20400  L_moy= 77.4  L_max=248  fenetres/lampes=18.83%  detail= 85.2%
+  usine du quai                      n= 38400  L_moy= 67.6  L_max=246  fenetres/lampes= 5.84%  detail= 73.5%
+-- HAUT DE L'ECRAN --
+  bloc gris coin haut-DROIT          n= 38000  L_moy= 45.4  L_max= 80  fenetres/lampes= 0.00%  detail= 11.9%
+  bloc gris coin haut-GAUCHE         n= 29400  L_moy= 44.3  L_max=125  fenetres/lampes= 1.00%  detail= 18.5%
+  plan de sol, centre haut           n= 85000  L_moy= 54.6  L_max=157  fenetres/lampes= 0.16%  detail= 26.8%
+
+  lecture : un bloc a 0.00%% de fenetres et un detail effondre n'est pas 'sombre',
+            il est SANS FENETRES ET SANS DETAIL.

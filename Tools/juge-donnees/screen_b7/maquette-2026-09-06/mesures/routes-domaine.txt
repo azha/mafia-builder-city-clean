@@ -1,0 +1,61 @@
+# Balayage exhaustif des décorateurs de route — services/game-back/src, 2026-09-06
+# total *.controller.ts = 148 | total décorateurs = 1030
+# chemins portant un mot du domaine = 53
+TEST --- Post   _test/combat/drive-dead-hand-intel-discovery             ./operational/conflict/combat/combat-test.controller.ts:1620
+TEST --- Post   _test/combat/drive-degrade-register-intel                ./operational/conflict/combat/combat-test.controller.ts:2395
+TEST --- Get    _test/infowar/read-erosion-intel                         ./operational/conflict/infowar/infowar-test.controller.ts:430
+TEST --- Post   _test/rival/set-intel-mode                               ./operational/conflict/rival/rival-test.controller.ts:486
+TEST --- Get    _test/rival/intel-mode                                   ./operational/conflict/rival/rival-test.controller.ts:510
+TEST --- Get    _test/distribution/read-suspicion                        ./operational/distribution/distribution-test.controller.ts:1645
+PROD --- Get    players/:id/forensic-state                               ./operational/forensic/forensic-admin.controller.ts:159
+PROD --- Put    tunables/forensic                                        ./operational/forensic/forensic-admin.controller.ts:281
+TEST --- Post   _test/forensic/seed-ledger-ring                          ./operational/forensic/forensic-test.controller.ts:538
+TEST --- Get    _test/forensic/read-ledger-ring                          ./operational/forensic/forensic-test.controller.ts:653
+TEST --- Post   _test/forensic/delete-player                             ./operational/forensic/forensic-test.controller.ts:688
+TEST --- Get    _test/forensic/read-recipe-table                         ./operational/forensic/forensic-test.controller.ts:733
+TEST --- Post   _test/forensic/seed-effluent-state                       ./operational/forensic/forensic-test.controller.ts:754
+TEST --- Get    _test/forensic/read-effluent-state                       ./operational/forensic/forensic-test.controller.ts:887
+TEST --- Post   _test/forensic/seed-lifestyle-state                      ./operational/forensic/forensic-test.controller.ts:917
+TEST --- Get    _test/forensic/read-lifestyle-state                      ./operational/forensic/forensic-test.controller.ts:996
+TEST --- Get    _test/forensic/tunables-probe                            ./operational/forensic/forensic-test.controller.ts:1040
+TEST --- Post   _test/forensic/record-receipt                            ./operational/forensic/forensic-test.controller.ts:1098
+TEST --- Post   _test/forensic/seed-ring-digits                          ./operational/forensic/forensic-test.controller.ts:1132
+TEST --- Post   _test/forensic/run-weekly-audit-tick                     ./operational/forensic/forensic-test.controller.ts:1232
+TEST --- Get    _test/forensic/read-soft-flag-ring                       ./operational/forensic/forensic-test.controller.ts:1270
+TEST --- Get    _test/forensic/read-declaration-ledger                   ./operational/forensic/forensic-test.controller.ts:1315
+TEST --- Post   _test/forensic/seed-soft-flag-ring                       ./operational/forensic/forensic-test.controller.ts:1373
+TEST --- Post   _test/forensic/trigger-hard-audit-check                  ./operational/forensic/forensic-test.controller.ts:1474
+TEST --- Get    _test/forensic/read-wallet                               ./operational/forensic/forensic-test.controller.ts:1513
+TEST --- Post   _test/forensic/record-throughput                         ./operational/forensic/forensic-test.controller.ts:1550
+TEST --- Get    _test/forensic/read-workshop-state                       ./operational/forensic/forensic-test.controller.ts:1580
+TEST --- Post   _test/forensic/update-block-register                     ./operational/forensic/forensic-test.controller.ts:1611
+TEST --- Get    _test/forensic/read-block-register                       ./operational/forensic/forensic-test.controller.ts:1637
+TEST --- Post   _test/forensic/seed-lab-building                         ./operational/forensic/forensic-test.controller.ts:1667
+TEST --- Post   _test/forensic/assign-bookkeeper                         ./operational/forensic/forensic-test.controller.ts:1748
+TEST --- Post   _test/forensic/run-inspector-scan                        ./operational/forensic/forensic-test.controller.ts:1839
+TEST --- Post   _test/forensic/drop-inspection-queue                     ./operational/forensic/forensic-test.controller.ts:1883
+TEST --- Post   _test/forensic/populate-lifestyle                        ./operational/forensic/forensic-test.controller.ts:1935
+TEST --- Post   _test/forensic/run-monthly-tick                          ./operational/forensic/forensic-test.controller.ts:2154
+TEST --- Post   _test/forensic/advance-tail-ramp                         ./operational/forensic/forensic-test.controller.ts:2213
+TEST --- Post   _test/forensic/push-queue-entry                          ./operational/forensic/forensic-test.controller.ts:2277
+TEST --- Post   _test/forensic/dispatch-queue                            ./operational/forensic/forensic-test.controller.ts:2420
+TEST --- Get    _test/forensic/read-inspection-queue                     ./operational/forensic/forensic-test.controller.ts:2471
+TEST --- Get    _test/forensic/captured-events                           ./operational/forensic/forensic-test.controller.ts:2507
+TEST --- Post   _test/forensic/run-environmental-scan                    ./operational/forensic/forensic-test.controller.ts:2531
+TEST --- Get    _test/forensic/read-projection                           ./operational/forensic/forensic-test.controller.ts:2574
+TEST --- Post   _test/forensic/record-soft-flag                          ./operational/forensic/forensic-test.controller.ts:2610
+TEST --- Post   _test/forensic/populate-lifestyle-existing               ./operational/forensic/forensic-test.controller.ts:2649
+TEST --- Post   _test/forensic/attempt-ownership-mutation                ./operational/forensic/forensic-test.controller.ts:2694
+PROD JWT Get    me/forensic                                              ./operational/forensic/forensic.controller.ts:52
+TEST --- Post   _test/ia/seed-intel-purchase                             ./operational/internal_affairs/ia-test.controller.ts:534
+TEST --- Get    _test/ia/read-intel-purchase                             ./operational/internal_affairs/ia-test.controller.ts:590
+TEST --- Post   _test/ia/buy-intel                                       ./operational/internal_affairs/ia-test.controller.ts:1139
+TEST --- Post   _test/ia/actor-status                                    ./operational/internal_affairs/ia-test.controller.ts:1209
+PROD JWT Get    me/internal-affairs/actors                               ./operational/internal_affairs/internal-affairs.controller.ts:61
+PROD JWT Post   me/internal-affairs/actors/:ref/intel                    ./operational/internal_affairs/internal-affairs.controller.ts:76
+TEST --- Get    _test/liveops/lever-audit                                ./operational/liveops/live-ops-test.controller.ts:535
+
+# ROUTES JOUEUR DU DOMAINE (PROD + JWT) :
+  Get /v1/me/forensic   ./operational/forensic/forensic.controller.ts:52
+  Get /v1/me/internal-affairs/actors   ./operational/internal_affairs/internal-affairs.controller.ts:61
+  Post /v1/me/internal-affairs/actors/:ref/intel   ./operational/internal_affairs/internal-affairs.controller.ts:76

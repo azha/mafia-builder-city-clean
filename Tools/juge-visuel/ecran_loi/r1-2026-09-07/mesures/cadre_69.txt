@@ -1,0 +1,84 @@
+<div class="etiquette">Il commence à parler</div>
+<div class="tel">
+<div class="scene district" style="background-position:center 50%;filter:brightness(.18)">
+</div>
+<div class="voile-scene">
+</div>
+<div class="ecran">
+<div class="barre">
+<div class="aile">
+<span class="lib">Argent</span>
+<span class="val">$ 24 850</span>
+</div>
+<div class="mano">[SVG]<span class="val">tiède</span>
+<span class="lib">Heat</span>
+</div>
+<div class="aile droite">
+<span class="lib">Jour 12</span>
+<span class="val">Matin</span>
+</div>
+</div>
+<div class="panneau">
+<div class="parl6" style="height:462px">
+<div class="pl-tete">
+<h3>Il commence à parler</h3>
+<p>Ce qu'il lâche ne se rattrape pas. Voilà ce qui est déjà sorti.</p>
+</div>
+<div class="pl-body">
+<div class="pl-vitre">
+<div class="pl-av">[SVG]</div>
+<div class="pl-qui">
+<b>Lt. Tull</b>
+<i>un de vos coursiers · poursuivi pour <span style="color:#d9ab4e">un délit sérieux</span>
+</i>
+</div>
+<div class="pl-jours">
+<b>5</b>
+<i>jours avant<br>le jugement</i>
+</div>
+</div>
+<div class="pl-titron" style="margin-top:11px">Ce qu'il sait — et ce qui est déjà sorti</div>
+<div class="pl-sait">
+<div class="pl-item lache">
+<div class="pt">
+</div>
+<span>où est la planque</span>
+<em>SORTI</em>
+</div>
+<div class="pl-item lache">
+<div class="pt">
+</div>
+<span>qui est le lieutenant</span>
+<em>SORTI</em>
+</div>
+<div class="pl-item lache">
+<div class="pt">
+</div>
+<span>un segment de route</span>
+<em>SORTI</em>
+</div>
+<div class="pl-item">
+<div class="pt">
+</div>
+<span>le nom d'un coin de vente</span>
+<em>mineur</em>
+</div>
+<div class="pl-item">
+<div class="pt">
+</div>
+<span>l'horaire des tournées</span>
+<em>mineur</em>
+</div>
+</div>
+</div>
+<div class="pl-bas">
+<div class="pl-dit">
+<b>Lt. Rin :</b> « Il a donné la planque et le nom de Lt. Hara. Ce qui est sorti ne rentrera pas. »</div>
+<div class="pl-geste">LUI PRENDRE UN VRAI AVOCAT<small>ça n'efface pas ce qui est dit</small>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>

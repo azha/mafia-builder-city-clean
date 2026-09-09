@@ -1,0 +1,23 @@
+== CONTROLE POSITIF ==
+  synthetique (1024, 1024) : bande gardee x=220..803 (584 px) ; 2 barres de 100x200, une hors bande une dedans
+  -> clair total 40000 px, perdu 20000 px = 50.0% [attendu 50,0%] ; centre de gravite vertical 0.488 [attendu 0,488]
+  controle NEGATIF (tout le clair dans la bande) -> perdu 0.0% [attendu 0,0%]
+  -> OK
+
+== CADRAGE (B) PLEIN CADRE : bande gardee = 56.8 % de la largeur ==
+    id  fichier                  taille     clair (% du cadre)  etendue p01..p99  clair PERDU  centre grav. vert.
+    E1  vide-appro.png           1024x1024    20.4%            x=   2..1021        25.6%      0.579 (milieu)
+    E2  vide-carnet.png          1024x1024    20.0%            x=  84..1010        16.1%      0.631 (milieu)
+    E3  vide-coffre.png          1024x1024    18.6%            x=   6.. 969        20.1%      0.607 (milieu)
+    E4  vide-conflit.png         1024x1024    20.3%            x=   2..1021        34.5%      0.444 (milieu)
+    E5  vide-distribution.png    1024x1024    19.9%            x= 126.. 882        11.4%      0.694 (bas)
+    E6  vide-exceptions.png      1024x1024    19.9%            x=   2..1021        34.3%      0.645 (milieu)
+    E7  vide-famille.png         1024x1024    20.2%            x= 234.. 864         2.1%      0.235 (haut)
+    E8  vide-journal.png         1024x1024    20.3%            x=   2..1021        45.5%      0.536 (milieu)
+    E9  vide-marche.png          1024x1024    20.0%            x=   2.. 637        56.9%      0.369 (milieu)
+    E10 vide-recrutement.png     1024x1024    20.0%            x=   2..1021        37.2%      0.677 (bas)
+    E11 vide-revue.png           1024x1024    20.0%            x= 278.. 751         0.0%      0.332 (haut)
+    E12 vide-vitrine.png         1024x1024    20.1%            x=  22..1002        38.0%      0.713 (bas)
+
+    (bande gardee en plein cadre : x = 220..803)
+    (A) BANDEAU pleine largeur 1080x1080 dans un rect libre 1080x1900 : 0 px coupe, 820 px libres sous l'image.

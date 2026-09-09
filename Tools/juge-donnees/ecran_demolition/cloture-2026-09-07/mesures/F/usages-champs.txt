@@ -1,0 +1,56 @@
+### GetFrictionStateResponseDto
+   friction_bucket              1   DemolitionScreenController.cs:428
+   penalty_active               1   DemolitionScreenController.cs:463
+   friction_node_count          1   DemolitionScreenController.cs:427
+   perimeter_site_count         0   
+### GetFrictionNodesResponseDto
+   output_value_bucket          3   DemolitionScreenController.cs:687 DemolitionScreenController.cs:688 DemolitionScreenController.cs:898
+   friction_load_bucket         3   DemolitionScreenController.cs:690 DemolitionScreenController.cs:691 DemolitionScreenController.cs:899
+   output_to_friction_ratio_bucket 5   DemolitionScreenController.cs:344 DemolitionScreenController.cs:566 DemolitionScreenController.cs:693 DemolitionScreenController.cs:694 DemolitionScreenController.cs:702
+   decommission_cost_bucket     2   DemolitionScreenController.cs:696 DemolitionScreenController.cs:697
+   neighbor_count               1   DemolitionScreenController.cs:699
+### PostFrictionNodesDecommissionResponseDto
+   decommissioned               1   DemolitionScreenController.cs:962
+   freed_block_id               2   DemolitionScreenController.cs:277 DemolitionScreenController.cs:964
+### ReplacementOptionDto
+   id                           2   DemolitionScreenController.cs:310 DemolitionScreenController.cs:981
+   candidate_building_type      2   DemolitionScreenController.cs:828 DemolitionScreenController.cs:891
+   rank                         5   DemolitionScreenController.cs:806 DemolitionScreenController.cs:840 DemolitionScreenController.cs:847 DemolitionScreenController.cs:848 DemolitionScreenController.cs:875
+   projected                    3   DemolitionScreenController.cs:897 DemolitionScreenController.cs:898 DemolitionScreenController.cs:899
+### DistrictBuildingDto
+   building                     6   DemolitionScreenController.cs:328 DemolitionScreenController.cs:329 DemolitionScreenController.cs:343 DemolitionScreenController.cs:565 DemolitionScreenController.cs:944 DemolitionScreenController.cs:958
+   block_id                     2   DemolitionScreenController.cs:538 DemolitionScreenController.cs:1003
+   operational_type             1   DemolitionScreenController.cs:564
+   shell_state                  0   
+   condition_band               0   
+   revenue_band                 0   
+   activity_band                0   
+   lieutenant_ids               3   DemolitionScreenController.cs:537 DemolitionScreenController.cs:603 DemolitionScreenController.cs:604
+   name_i18n                    2   DemolitionScreenController.cs:1001 DemolitionScreenController.cs:1002
+   conversion_band              0   
+   revenue_chain                0   
+   maintenance_in_progress      0   
+   lapse_phase_bucket           0   
+   harvest_band                 0   
+   relance_band                 0   
+### WorldDistrictDto
+   id                           2   DemolitionScreenController.cs:310 DemolitionScreenController.cs:981
+   name                         1   DemolitionScreenController.cs:314
+   name_canonical               0   
+   profile                      0   
+   bank_side                    0   
+   control_state                0   
+   block_count                  0   
+   precinct_id                  0   
+### GetCityDistrictInteriorResponseDto
+   district_id                  0   
+   buildings                    2   DemolitionScreenController.cs:311 DemolitionScreenController.cs:312
+### Refus
+   code                         1   DemolitionClient.cs:216
+   message                      7   DemolitionScreenController.cs:260 DemolitionScreenController.cs:267 DemolitionScreenController.cs:302 DemolitionScreenController.cs:946 DemolitionScreenController.cs:960 DemolitionScreenController.cs:983 DemolitionClient.cs:217
+   statut                       0   
+   user_facing_i18n_key         0   
+   payload_vars                 0   
+### PickDto
+   picked                       0   
+   building_id                  0   

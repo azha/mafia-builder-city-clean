@@ -1,0 +1,16 @@
+OUVERT cap 1080x2400  ref 1080x2102
+
+=== sonde : jetons DONT ON SAIT qu'ils sont dans la capture (controle positif) ===
+   #241c11 fond CTA         n= 31052  lignes y=(1959, 2093)
+   #3c3e35 bord de carte    n= 17075  lignes y=(289, 1815)
+   #141a21 fond dm-bas      n= 53200  lignes y=(145, 2151)
+
+=== sonde : jetons de .dm-penal, cherches dans TOUTE la zone de contenu ===
+   .dm-penal fond #2e2114       (tol  8) n=  1081  lignes y=(151, 2093)
+   .dm-penal bord #8a6a22       (tol 12) n=   160  lignes y=(1988, 2057)
+   .dm-penal texte #e8d3a4      (tol 12) n=     0  lignes y=None
+
+=== filet 2px de .dm-bas #2c3640 ===
+   REFERENCE [controle positif] n=  7518  lignes y=(1780, 1786)
+   CAPTURE                       n=    83  lignes y=(1854, 1878)
+   CAPTURE, zone de contenu ENTIERE n=    97  lignes y=(502, 1914)

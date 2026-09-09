@@ -1,0 +1,17 @@
+{
+ "_": "EMPREINTE DE RÉFÉRENCE du compte de capture, après TD-642. Toute passe (corps OU planches) la prend AVANT et APRÈS et exige l'égalité : si une colonne bouge, le monde a changé entre les deux et la base est à refaire. Six colonnes, pas une — l'empreinte précédente ne lisait que l'horloge, et c'est ainsi qu'un re-semis des lieutenants est passé (TD-642).",
+ "back_main": "fc944b62",
+ "compte": "demo_capture@example.test",
+ "empreinte": {
+  "batiments_n": "17",
+  "cartes_levier_n": "7",
+  "horloge_game_minute": "72118",
+  "lieutenants_n": "3",
+  "lieutenants_noms": "Lt. Halde·Lt. Rook·Lt. Sallo",
+  "planques_n": "2"
+ },
+ "instrument": "Tools/juge-visuel/empreinte-compte.py <player_id> [--json]",
+ "player_id": "01a074ce-60f3-7a91-8dbd-41d9be0bd2fc",
+ "prise_le": "2026-09-06T11:03:56",
+ "regle": "une base = UN état. Le 7ᵉ levier fait partie de cet état, il ne se corrige pas."
+}

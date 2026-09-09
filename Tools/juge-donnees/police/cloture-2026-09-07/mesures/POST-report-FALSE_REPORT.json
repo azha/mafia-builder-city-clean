@@ -1,0 +1,1 @@
+{"response_meta":{"request_id_echo":"42a3060a-15f4-4567-9259-6c671f9642d4","server_processed_at":"2026-09-07T04:28:24.625Z","api_version":1,"correlation_id_echo":null},"payload":{"data":{"report_id":"3ee30bdd-0e09-43c7-91f0-376efcf85b71","entry_type":"FALSE_REPORT","cost_resolved":50,"backlash_triggered":false}}}

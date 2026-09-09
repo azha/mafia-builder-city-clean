@@ -1,0 +1,90 @@
+{
+ "dossier": "exceptions",
+ "tour": "r1",
+ "sym": "⑨",
+ "nom": "La file d'exceptions (Exception Queue)",
+ "canon": "screen_5",
+ "controleur": "ExceptionQueueController",
+ "but": "la file des exceptions qui attendent le patron : lire d'un coup d'œil COMBIEN attendent et QUI (lieutenant, motif, urgence), trier / filtrer, et résoudre — au comptoir, une par une ou par lot. C'est l'écran qui portera bientôt l'arrestation d'un lieutenant (avocat, défendre ou non) : ce tour est sa LIGNE DE BASE avant qu'il grossisse.",
+ "chemin": "Accueil → la file d'exceptions (aussi depuis le menu Plus, « LE DOSSIER »), compte gelé.",
+ "etats": "un seul : le compte gelé `demo_capture` (6 exceptions en attente d'après les corps, dont Lt. Sallo). Les cadres d'ÉTATS de la maquette (vide « personne ne fait la queue », « après le tampon », « avec les lots back », le détail ⑩) ne sont PAS photographiés — ne pas les classer défaut, les citer en non vérifié.",
+ "references": [
+  [
+   "reference-⑨-1080x2102.png",
+   "rendu du cadre NOMINAL `ecrans-brennar-4.html` #14 « Exceptions — la file au comptoir » — ratifié (contrôleur cite série 4 cadre 14, user « ok c'est bien » 2026-08-26 ; ratification par délégation 2026-09-02)",
+   "1080×2102",
+   "×3,6",
+   "300 CSS = 1080 px"
+  ],
+  [
+   "aide-serie6-cadre9.txt",
+   "⚠️ AIDE seulement : la série 6 (`ecrans-brennar-6.html` #9, l. 764, « Exceptions — l'ardoise : ils… ») est la RE-RENDITION avec le vocabulaire de la fiction (noms, « fr réel ») — non rendue en image ici ; un libellé anglais ou de substitution dans la référence série 4 = maquette en retard, pas un écart",
+   "—",
+   "—",
+   "—"
+  ],
+  [
+   "v4-14.png / v4-16.png / v4-17.png / v4-18.png",
+   "cadres d'ÉTATS série 4 (#14 nominal, #16 vide, #17 après le tampon, #18 avec les lots back) rendus à ×3 (900 px) — aides de lecture, PAS des références ratifiées à cette échelle",
+   "900×1752",
+   "×3",
+   "300 CSS = 900 px"
+  ],
+  [
+   "ecran-canon.png / ecran-canon-vide.png",
+   "canon HUD antérieur (900×1752, ×3) — aide de lecture seulement",
+   "900×1752",
+   "×3",
+   "300 CSS = 900 px"
+  ]
+ ],
+ "source_md": "- **Source HTML/CSS** (aide de lecture, ne prime JAMAIS sur l'image) : `/home/erutheone/project/atelier3d-mafia/ecrans-brennar-4.html`\n  (atelier `3c02f72`) — cadres `<div class=\"cadre\">` numérotés **0-based** : **#14 (l. 811) — Exceptions — la file au comptoir ⇐ NOMINAL,\n  rendu en référence** · #15 (l. 825) — le détail (⑩, hors mandat) · #16 (l. 842) — personne ne fait la queue · #17 (l. 853) — après le\n  tampon, le suivant s'avance · #18 (l. 866) — avec les lots back. Série 6 (`ecrans-brennar-6.html`, fiction) : #9 (l. 764) nominal,\n  #11–13 (l. 770–776) états. Le châssis commun (jetons, primitives) est en tête de chaque fichier.",
+ "captures": [
+  [
+   "capture-1080x2400.png",
+   "1080×2400 — PRINCIPALE",
+   "compte gelé, sous chrome",
+   "2026-09-06 14:56 (`03efb90`, campagne TD-615 post-Bold)",
+   "`screen_5_exceptions_sous_chrome_1080x2400.png` — sha256 `c63a9fe6…`"
+  ],
+  [
+   "capture-sans-chrome-declaree-1080x2400.png",
+   "1080×2400",
+   "DÉCLARÉE sans chrome par son nom — à VÉRIFIER (sur ③ la planche homonyme portait bandeau et dock)",
+   "2026-09-06 14:56 (`03efb90`)",
+   "`screen_5_exceptions_1080x2400.png` — sha256 `93a1da63…`"
+  ]
+ ],
+ "compte": "`demo_capture@example.test`, compte GELÉ à la minute 72 118 (base `a0623a5`, empreinte 72118 · 17 · 3 · 2 inchangée jusqu'à 15:15Z, les planches datent de 12:56Z). ⚠️ **La ligne de journal `[DemoIdentityResolver] régime=env …` de CE run n'est PAS jointe** (campagne de recapture `03efb90`, dont une catégorie au moins a tourné sans la paire d'identité) ⇒ par la règle du dossier, les VALEURS (noms, compte d'exceptions, montants) vont en « non vérifié » tant que l'identité n'est pas établie ; **la FORME se juge**. Indice à relever, sans conclure : le compte gelé porte 6 exceptions en attente dont **Lt. Sallo** (corps) — inventorie ce que la planche montre (combien de rangées, quels noms) sans le compter comme écart",
+ "captures_note": "- **Ligne de base** : premier tour de cet écran — aucune déclaration de correctif, aucune grandeur antérieure. Mesure TOUT ce qui se voit.\n- **Chrome** : ARGENT / JOUR peuvent porter un tiret et le médaillon être vide (course de capture, planches antérieures à `9fa198a`) — si c'est le cas, dis-le en tête et ne juge pas le chrome ; la phase à « — » hors district est un état VOULU (ASSUMÉ). Sinon le chrome se juge contre le HUD canon.\n- **Vocabulaire** : la référence série 4 peut porter des libellés de substitution ou anglais ; la série 6 (#9) porte la fiction — un libellé de la fiction dans le jeu contre un placeholder dans la référence = maquette en retard, pas un écart (règle du dossier).\n- **Convention de bord** : déclare-la.\n- ⚠️ Ces planches sont POST-Bold (TD-615, `6aadd9e` 14:45 < `03efb90` 14:56) : les graisses se comparent.",
+ "echelle": "## Échelle — OBLIGATOIRE, jamais déduite par le juge\n\n| | px de l'image | largeur CSS de référence | facteur |\n|---|---|---|---|\n| RÉFÉRENCE (cadre de série 4 — cadre #14, MÊME planchier `.tel` de 300 CSS que la série 6/4, `.tel` 300 CSS) | 1080 | 300 | **×3,6** |\n| CAPTURE (contenu de l'écran, dessiné à `LargeurEcransBrennar6 = 300`) | 1080 | 300 | **×3,6** |\n| | | **rapport capture ÷ référence** | **1,00** |\n\n- ⇒ Pour le CONTENU de l'écran, référence et capture sont **à la même échelle** : 1 px CSS = 3,6 px des\n  deux côtés. Un écart de taille sur le contenu est donc un écart RÉEL, pas un artefact d'instrument.\n- ⚠️ **Le CHROME (bandeau haut + dock du bas) n'est PAS à cette échelle.** Il est construit par le shell\n  d'après `hud-brennar.html` (`.tel` de **392 CSS**) : `AppShell.Px(css) = css × 1280/392` — soit\n  **×2,755 px par px CSS à 1080 de large** (`Assets/Scripts/Shell/AppShell.cs:1583`, `EchelleMaquette.cs:87`).\n  Le cadre de série 4 — cadre #14, MÊME planchier `.tel` de 300 CSS que la série 6 dessine sa propre barre et son propre dock à 300 CSS : ce sont des ÉVOCATIONS du\n  chrome, pas le chrome. ⇒ **Le chrome se juge contre le canon du HUD** (`Tools/juge-visuel/ecran-principal/ecran-canon.png`,\n  1176 px = 392 CSS, ×3) **et le contenu contre le cadre de série 4 — cadre #14, MÊME planchier `.tel` de 300 CSS que la série 6**. Une différence de hauteur de\n  bandeau entre le cadre de série 4 — cadre #14, MÊME planchier `.tel` de 300 CSS que la série 6 et la capture est ASSUMÉE (chrome partagé), pas un défaut de l'écran.\n- Hauteurs : référence **584 CSS** (2102 px, `.tel` en 9:17,5) ; capture **666,7 CSS** (2400 px, 9:20).\n  La différence (82,7 CSS) est absorbée par la zone de contenu ENTRE le bandeau et le dock : aligne le\n  haut du contenu sur le bas du bandeau, et le bas du contenu sur le haut du dock — jamais par le pixel absolu.\n- Géométrie de la capture, DÉRIVÉE du code (le log du run n'a pas été préservé, donc **aucun rect imprimé\n  n'est fourni**) : `CanvasScaler` 1280 de large, `matchWidthOrHeight = 0` ⇒ canvas **1280 × 2844,4 unités**,\n  `scaleFactor = 1080/1280 = 0,84375` (`AppShell.cs:1201-1202`, `:1270` ; même valeur mesurée au tour r8 de\n  ㊲ le 2026-08-31). Le bandeau fait 52 CSS-HUD = **143 px** ; le dock, `TabDockHauteurCss` (somme de\n  cinq constantes, `AppShell.cs:1547`) — mesure-le sur l'image, ne le déduis pas.\n- ⚠️ Ce que la normalisation NE couvre PAS : les rapports INTERNES (un bloc deux fois trop haut par rapport à\n  son voisin, une rangée aux tuiles inégales) sont invariants d'échelle et restent des défauts réels.\n",
+ "assumes_intro": "\n⚠️ Table écrite pour le r1 (2026-09-06 soir) depuis les corps de la base gelée et les règles du programme — pas de juge-données préalable sur ⑨.\n",
+ "assumes": [
+  [
+   "les noms de lieutenants et les motifs sont ceux du COMPTE GELÉ (Lt. Sallo, Rook, Halde…), pas ceux de la maquette",
+   "données : la maquette écrit des noms de fiction de série 4 ; le back sert le roster réel",
+   "un slug, une clé i18n brute, un mot anglais, un nom vide"
+  ],
+  [
+   "le NOMBRE d'exceptions diffère de la maquette",
+   "données : 6 en attente sur le compte gelé (corps `GET_exceptions_queue`)",
+   "une liste vide sans l'état « personne ne fait la queue », une rangée tronquée, un chevauchement"
+  ],
+  [
+   "un tiret « — » à la place de la PHASE (aile droite du bandeau)",
+   "état VOULU hors district",
+   "un tiret sur ARGENT/JOUR ou un médaillon vide (course de capture) — à dire en tête"
+  ],
+  [
+   "ronds du dock sans icône",
+   "arbitrage user connu (« j'aime pas les icônes »)",
+   "un rond coupé, un libellé de repli"
+  ],
+  [
+   "les chiffres de la maquette (montants, jours) rendus en BANDES ou avec d'autres valeurs",
+   "R2.2 + données",
+   "un scalaire inventé, un format anglais (« $10,000.00 »)"
+  ]
+ ],
+ "non_fourni_extra": "\n- aucune capture des cadres d'états (#16 vide, #17 après tampon, #18 lots back) ni du détail ⑩ ;\n- le journal du run de `03efb90` (identité non établie — voir *compte*) ;\n- pas de 2ᵉ résolution (1920) ;"
+}

@@ -1,0 +1,196 @@
+═══ CHAMPS DÉCLARÉS DANS JournalDtos.cs ═══
+
+  GetNewsFeedResponseDto (1 champ(s))
+     NewsBeatDto[]                beats
+
+  NewsBeatDto (7 champ(s))
+     string                       beat_id
+     string                       headline_i18n_key
+     string                       category
+     string                       outlet_i18n_key
+     string                       frame_tag_i18n_key
+     string                       district
+     string                       recency_band
+
+  GetNewsFeedPayload (2 champ(s))
+     GetNewsFeedResponseDto       data
+     GetNewsFeedPayload           payload
+
+  GetNewsBeatsPayload (6 champ(s))
+     GetNewsBeatsResponseDto      data
+     GetNewsBeatsPayload          payload
+     AmbientEventDto[]            events
+     int                          total
+     int                          limit
+     int                          offset
+
+  AmbientEventDto (6 champ(s))
+     string                       event_id
+     string                       district
+     string                       kind
+     string                       channel
+     string                       descriptor_i18n_key
+     string                       recency_band
+
+  GetAmbientFeedPayload (2 champ(s))
+     GetAmbientFeedResponseDto    data
+     GetAmbientFeedPayload        payload
+
+  PostAmbientAttendPayload (2 champ(s))
+     PostAmbientAttendResponseDto data
+     PostAmbientAttendPayload     payload
+
+  GetRandomWorldActiveResponseDto (1 champ(s))
+     RandomWorldEventDto[]        events
+
+  RandomWorldEventDto (6 champ(s))
+     string                       event_id
+     string                       template_i18n_key
+     string                       district
+     string                       severity_band
+     string                       phase_band
+     string                       recency_band
+
+  GetRandomWorldActivePayload (3 champ(s))
+     GetRandomWorldActiveResponseDto data
+     GetRandomWorldActivePayload  payload
+     string[]                     couplings
+
+  GetRandomWorldKnownCouplingsPayload (2 champ(s))
+     GetRandomWorldKnownCouplingsResponseDto data
+     GetRandomWorldKnownCouplingsPayload payload
+
+  PostRandomWorldHollowAttendFuneralPayload (2 champ(s))
+     PostRandomWorldHollowAttendFuneralResponseDto data
+     PostRandomWorldHollowAttendFuneralPayload payload
+
+  TOTAL champs declares = 40
+
+═══ USAGES DANS JournalScreenController.cs (lignes ACTIVES seulement — commentaires exclus) ═══
+
+  .beats                      1 site(s) actif(s)
+      :237  NewsBeatDto[] breves = dto != null && dto.beats != null ? dto.beats : new NewsBeatDto[0];
+
+  .beat_id                    0 site(s) actif(s)
+
+  .headline_i18n_key          1 site(s) actif(s)
+      :344  Ligne(b.outlet_i18n_key, b.headline_i18n_key, b.district, b.recency_band, false);
+
+  .category                   0 site(s) actif(s)
+
+  .outlet_i18n_key            1 site(s) actif(s)
+      :344  Ligne(b.outlet_i18n_key, b.headline_i18n_key, b.district, b.recency_band, false);
+
+  .frame_tag_i18n_key         0 site(s) actif(s)
+
+  .district                   3 site(s) actif(s)
+      :344  Ligne(b.outlet_i18n_key, b.headline_i18n_key, b.district, b.recency_band, false);
+      :349  Ligne(null, a.descriptor_i18n_key, a.district, a.recency_band, false);
+      :358  Ligne(PhaseEnMots(m.phase_band), m.template_i18n_key, m.district,
+
+  .recency_band               3 site(s) actif(s)
+      :344  Ligne(b.outlet_i18n_key, b.headline_i18n_key, b.district, b.recency_band, false);
+      :349  Ligne(null, a.descriptor_i18n_key, a.district, a.recency_band, false);
+      :359  m.recency_band, acquis);
+
+  .data                       0 site(s) actif(s)
+
+  .payload                    0 site(s) actif(s)
+
+  .data                       0 site(s) actif(s)
+
+  .payload                    0 site(s) actif(s)
+
+  .events                     4 site(s) actif(s)
+      :238  AmbientEventDto[] rue = DernierAmbient != null && DernierAmbient.events != null
+      :239  ? DernierAmbient.events : new AmbientEventDto[0];
+      :240  RandomWorldEventDto[] monde = DernierMonde != null && DernierMonde.events != null
+      :241  ? DernierMonde.events : new RandomWorldEventDto[0];
+
+  .total                      0 site(s) actif(s)
+
+  .limit                      0 site(s) actif(s)
+
+  .offset                     0 site(s) actif(s)
+
+  .event_id                   0 site(s) actif(s)
+
+  .district                   3 site(s) actif(s)
+      :344  Ligne(b.outlet_i18n_key, b.headline_i18n_key, b.district, b.recency_band, false);
+      :349  Ligne(null, a.descriptor_i18n_key, a.district, a.recency_band, false);
+      :358  Ligne(PhaseEnMots(m.phase_band), m.template_i18n_key, m.district,
+
+  .kind                       0 site(s) actif(s)
+
+  .channel                    0 site(s) actif(s)
+
+  .descriptor_i18n_key        1 site(s) actif(s)
+      :349  Ligne(null, a.descriptor_i18n_key, a.district, a.recency_band, false);
+
+  .recency_band               3 site(s) actif(s)
+      :344  Ligne(b.outlet_i18n_key, b.headline_i18n_key, b.district, b.recency_band, false);
+      :349  Ligne(null, a.descriptor_i18n_key, a.district, a.recency_band, false);
+      :359  m.recency_band, acquis);
+
+  .data                       0 site(s) actif(s)
+
+  .payload                    0 site(s) actif(s)
+
+  .data                       0 site(s) actif(s)
+
+  .payload                    0 site(s) actif(s)
+
+  .events                     4 site(s) actif(s)
+      :238  AmbientEventDto[] rue = DernierAmbient != null && DernierAmbient.events != null
+      :239  ? DernierAmbient.events : new AmbientEventDto[0];
+      :240  RandomWorldEventDto[] monde = DernierMonde != null && DernierMonde.events != null
+      :241  ? DernierMonde.events : new RandomWorldEventDto[0];
+
+  .event_id                   0 site(s) actif(s)
+
+  .template_i18n_key          1 site(s) actif(s)
+      :358  Ligne(PhaseEnMots(m.phase_band), m.template_i18n_key, m.district,
+
+  .district                   3 site(s) actif(s)
+      :344  Ligne(b.outlet_i18n_key, b.headline_i18n_key, b.district, b.recency_band, false);
+      :349  Ligne(null, a.descriptor_i18n_key, a.district, a.recency_band, false);
+      :358  Ligne(PhaseEnMots(m.phase_band), m.template_i18n_key, m.district,
+
+  .severity_band              0 site(s) actif(s)
+
+  .phase_band                 2 site(s) actif(s)
+      :357  bool acquis = m.phase_band == "permanent";
+      :358  Ligne(PhaseEnMots(m.phase_band), m.template_i18n_key, m.district,
+
+  .recency_band               3 site(s) actif(s)
+      :344  Ligne(b.outlet_i18n_key, b.headline_i18n_key, b.district, b.recency_band, false);
+      :349  Ligne(null, a.descriptor_i18n_key, a.district, a.recency_band, false);
+      :359  m.recency_band, acquis);
+
+  .data                       0 site(s) actif(s)
+
+  .payload                    0 site(s) actif(s)
+
+  .couplings                  0 site(s) actif(s)
+
+  .data                       0 site(s) actif(s)
+
+  .payload                    0 site(s) actif(s)
+
+  .data                       0 site(s) actif(s)
+
+  .payload                    0 site(s) actif(s)
+
+═══ CONTROLE POSITIF : un champ dont on SAIT qu'il est lu ═══
+  .beats  -> 1 site(s)  (attendu >=1)
+═══ CONTROLE NEGATIF ═══
+  .champ_qui_nexiste_pas -> 0
+
+═══ MÉTHODES DE JournalClient APPELÉES PAR LE CONTRÔLEUR ═══
+  client.GetNewsFeed                            1 appel(s)   -> :183
+  client.GetNewsBeats                           0 appel(s)   ⇒ JAMAIS APPELÉE
+  client.GetAmbientFeed                         1 appel(s)   -> :187
+  client.PostAmbientAttend                      0 appel(s)   ⇒ JAMAIS APPELÉE
+  client.GetRandomWorldActive                   1 appel(s)   -> :190
+  client.GetRandomWorldKnownCouplings           0 appel(s)   ⇒ JAMAIS APPELÉE
+  client.PostRandomWorldHollowAttendFuneral     0 appel(s)   ⇒ JAMAIS APPELÉE

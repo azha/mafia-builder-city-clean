@@ -1,0 +1,54 @@
+--- toutes les cles district.* du bundle ---
+    district.type_batiment.atelier_de_presse => Atelier de presse
+    district.type_batiment.bureau => Bureau
+    district.type_batiment.cache => Cache
+    district.type_batiment.cash_safehouse => Planque à liquide
+    district.type_batiment.coffre => Coffre
+    district.type_batiment.commerce_ecran => Commerce-écran
+    district.type_batiment.dealer_spot_front => Façade de point de vente
+    district.type_batiment.distribution_hub => Plateforme de distribution
+    district.type_batiment.front_shop => Boutique-écran
+    district.type_batiment.grow_house => Serre
+    district.type_batiment.lab => Labo
+    district.type_batiment.laboratoire => Laboratoire
+    district.type_batiment.laboratoire_specialise => Laboratoire spécialisé
+    district.type_batiment.money_holding => Dépôt d'argent
+    district.type_batiment.office => Bureau
+    district.type_batiment.planque => Planque
+    district.type_batiment.point_de_vente => Point de vente
+    district.type_batiment.press_house => Imprimerie
+    district.type_batiment.raffinerie => Raffinerie
+    district.type_batiment.refinery => Raffinerie
+    district.type_batiment.relais => Relais
+    district.type_batiment.serre => Serre
+    district.type_batiment.specialized_lab => Labo spécialisé
+    district.type_batiment.stash => Réserve
+    district.type_batiment.terrain_vague => Terrain vague
+    district.type_batiment.vacant_lot => Terrain vague
+
+--- une cle pour 'district-13' ? (3 formes cherchees) ---
+   [ABSENT ] district.district-13.name
+   [ABSENT ] district.13.name
+   [ABSENT ] district-13
+
+--- une cle pour les bandes de fraicheur ? ---
+   [ABSENT ] ambient.recency_band.fresh
+   [ABSENT ] news_beat.recency_band.fresh
+   [ABSENT ] recency_band.fresh
+   [ABSENT ] journal.bloc.fresh
+   toute cle contenant 'fresh'   : ['error.auth.refresh_invalid', 'error.auth.refresh_expired']
+   toute cle contenant 'settling': ['error.cue_stack.settling_compound_required', 'famille.disruption.long_settling', 'famille.disruption.medium_settling', 'famille.disruption.short_settling', 'famille.disruption.very_long_settling', 'famille.opstate.settling_in']
+   toute cle contenant 'fading'  : []
+
+--- une cle pour les bandes de phase / severite ? ---
+   onset       : 0 cle(s) []
+   unfolding   : 0 cle(s) []
+   receding    : 0 cle(s) []
+   lingering   : 0 cle(s) []
+   permanent   : 1 cle(s) ['random_world.template.permanent_residue']
+   faint       : 0 cle(s) []
+   noticeable  : 0 cle(s) []
+   heavy       : 0 cle(s) []
+
+--- CONTROLE POSITIF : un mot dont on SAIT qu'il matche ---
+   'coupling' : 2 cles

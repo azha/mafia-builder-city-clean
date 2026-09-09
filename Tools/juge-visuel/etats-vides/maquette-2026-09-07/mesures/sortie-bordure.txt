@@ -1,0 +1,19 @@
+== CONTROLE POSITIF ==
+  synthetique (200, 200) cadre creme de 16 px pose : anneau 0..23 = #161c2b 30% #2c3242 0% #b08d3e 0% #eae0c8 70% ; epaisseur mesuree 16 px [attendu 16]
+  temoin interieur 60..83 : #161c2b 100% [attendu 100] -> OK
+  controle NEGATIF aplat sombre sans cadre -> epaisseur 0 px [attendu 0] -> OK
+
+== BORD : anneau exterieur 0..23 px vs temoin interieur 60..83 px ==
+    id  fichier                  taille    anneau 0..23 (part par encre)                       clair anneau / clair temoin  epaisseur cadre
+    E1  vide-appro.png           1024x1024  #161c2b 12.6% #2c3242 14.5% #b08d3e 72.9% #eae0c8  0.0%    72.9% /   0.0%    16 px
+    E2  vide-carnet.png          1024x1024  #161c2b 36.1% #2c3242 55.1% #b08d3e  8.8% #eae0c8  0.0%     8.8% /   0.7%     0 px
+    E3  vide-coffre.png          1024x1024  #161c2b  6.6% #2c3242 60.8% #b08d3e 20.4% #eae0c8 12.1%    32.5% /  19.6%     0 px
+    E4  vide-conflit.png         1024x1024  #161c2b  4.0% #2c3242  8.5% #b08d3e 50.3% #eae0c8 37.2%    87.5% /  14.2%    20 px
+    E5  vide-distribution.png    1024x1024  #161c2b 64.6% #2c3242 20.0% #b08d3e 14.1% #eae0c8  1.3%    15.4% /  17.8%     0 px
+    E6  vide-exceptions.png      1024x1024  #161c2b 10.7% #2c3242 10.0% #b08d3e 23.5% #eae0c8 55.7%    79.2% /  14.6%    20 px
+    E7  vide-famille.png         1024x1024  #161c2b 48.6% #2c3242 36.2% #b08d3e 11.0% #eae0c8  4.2%    15.2% /  15.1%     0 px
+    E8  vide-journal.png         1024x1024  #161c2b  2.6% #2c3242  8.4% #b08d3e 29.9% #eae0c8 59.2%    89.0% /  20.3%    20 px
+    E9  vide-marche.png          1024x1024  #161c2b  0.2% #2c3242 58.1% #b08d3e 32.3% #eae0c8  9.4%    41.7% /  44.5%     0 px
+    E10 vide-recrutement.png     1024x1024  #161c2b 12.5% #2c3242  9.7% #b08d3e 28.7% #eae0c8 49.1%    77.8% /  20.6%    20 px
+    E11 vide-revue.png           1024x1024  #161c2b 95.2% #2c3242  0.3% #b08d3e  0.3% #eae0c8  4.3%     4.5% /   6.3%     0 px
+    E12 vide-vitrine.png         1024x1024  #161c2b 65.4% #2c3242  2.5% #b08d3e 29.9% #eae0c8  2.2%    32.1% /  26.5%     0 px

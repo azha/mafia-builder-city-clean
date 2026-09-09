@@ -1,0 +1,53 @@
+{
+ "route": "/v1/city/district/{id}/inspection",
+ "route_appelee": "/v1/city/district/1/inspection",
+ "methode": "GET",
+ "statut": 200,
+ "params": {
+  "districtId": {
+   "valeur": 1,
+   "source": "lu dans le corps de `session/open` (clé parmi ['home_district_id', 'district_id', 'district'])"
+  }
+ },
+ "provenance": {
+  "date": "2026-09-04T10:15:48",
+  "back_main": "6ff684db",
+  "game_back": "mafia-clean-city-game-back 2026-09-04T08:14:29.844933926Z",
+  "compte": "operational_demo@example.test",
+  "dossier": "police",
+  "symbole": "⑮",
+  "controleur": "InspectionScreenController",
+  "X-Request-Id": "e6fd6e51-91b8-4ce0-8300-11dde0a6b160",
+  "X-Server-Processed-At": "2026-09-04T08:15:50.785Z",
+  "X-Api-Version": "1"
+ },
+ "corps": {
+  "response_meta": {
+   "request_id_echo": "e6fd6e51-91b8-4ce0-8300-11dde0a6b160",
+   "server_processed_at": "2026-09-04T08:15:50.785Z",
+   "api_version": 1,
+   "correlation_id_echo": null
+  },
+  "payload": {
+   "data": {
+    "district": "district-1",
+    "queue_load": "MODERATE",
+    "dispatcher_regime": "NOMINAL",
+    "severity_distribution": {
+     "LOW": "PREDOMINANT",
+     "MEDIUM": "SOME",
+     "HIGH": "NONE",
+     "CRITICAL": "NONE"
+    },
+    "type_distribution": {
+     "SCHEDULED": "PREDOMINANT",
+     "INFORMANT": "NONE",
+     "FALSE_REPORT": "NONE",
+     "GENUINE_REPORT": "NONE",
+     "CASCADE": "NONE",
+     "FORENSIC": "NONE"
+    }
+   }
+  }
+ }
+}

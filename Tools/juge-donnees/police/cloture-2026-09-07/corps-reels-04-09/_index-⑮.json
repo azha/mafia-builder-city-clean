@@ -1,0 +1,31 @@
+{
+ "dossier": "police",
+ "symbole": "⑮",
+ "controleur": "InspectionScreenController",
+ "date": "2026-09-04T10:15:48",
+ "back_main": "6ff684db",
+ "compte": "operational_demo@example.test",
+ "note": "routes = celles du DOSSIER de code du contrôleur et de ses classes *Client (parfois plus larges que l'écran) ; le juge-donnees filtre",
+ "comptes": {
+  "appelées": 1,
+  "sans instance": 0,
+  "mutations": 1,
+  "erreurs": 0
+ },
+ "routes": [
+  {
+   "fichier": "GET_city_district_id_inspection.json",
+   "route": "/v1/city/district/{id}/inspection",
+   "methode": "GET",
+   "statut": 200,
+   "etat": "appelée"
+  },
+  {
+   "fichier": "POST_city_inspection_report.json",
+   "route": "/v1/city/inspection/report",
+   "methode": "POST",
+   "statut": null,
+   "etat": "mutation"
+  }
+ ]
+}

@@ -1,0 +1,63 @@
+=== m32 marqueurs de batiment ===
+  [ouvre] capture-district-1080x2400.png     (1080, 2400) district2400
+   [district2400] 572 composantes ambre, 11 candidates, 11 MARQUEURS
+      B01 ( 490, 783) px = (177.85,284.20) CSS  anneau 0.59  coeur L 0.0297  couronne L 0.0065  [art y=  543]
+      B02 ( 803, 855) px = (291.46,310.33) CSS  anneau 0.59  coeur L 0.0297  couronne L 0.0065  [art y=  615]
+      B03 ( 296, 883) px = (107.44,320.50) CSS  anneau 0.59  coeur L 0.0297  couronne L 0.0065  [art y=  643]
+      B04 ( 905, 911) px = (328.48,330.66) CSS  anneau 0.59  coeur L 0.0297  couronne L 0.0066  [art y=  671]
+      B05 ( 576, 946) px = (209.07,343.36) CSS  anneau 0.59  coeur L 0.0297  couronne L 0.0069  [art y=  706]
+      B06 ( 305, 947) px = (110.70,343.73) CSS  anneau 0.59  coeur L 0.0297  couronne L 0.0065  [art y=  707]
+      B07 ( 136,1027) px = ( 49.36,372.76) CSS  anneau 0.59  coeur L 0.0297  couronne L 0.0067  [art y=  787]
+      B08 ( 587,1102) px = (213.06,399.99) CSS  anneau 0.59  coeur L 0.0297  couronne L 0.0066  [art y=  862]
+      B09 ( 149,1222) px = ( 54.08,443.54) CSS  anneau 0.59  coeur L 0.0297  couronne L 0.0065  [art y=  982]
+      B10 ( 723,1480) px = (262.42,537.19) CSS  anneau 0.59  coeur L 0.0297  couronne L 0.0066  [art y= 1240]
+      B11 ( 148,1496) px = ( 53.72,542.99) CSS  anneau 0.59  coeur L 0.0297  couronne L 0.0069  [art y= 1256]
+   CONTROLE POSITIF : (491, 784) retrouve : True
+
+  [ouvre] capture-fiche-1080x1920.png        (1080, 1920) fiche1920
+   [fiche1920] 598 composantes ambre, 17 candidates, 17 MARQUEURS
+      B01 ( 490, 543) px = (177.85,197.09) CSS  anneau 0.59  coeur L 0.0297  couronne L 0.0065  [art y=  543]
+      B02 ( 803, 615) px = (291.46,223.22) CSS  anneau 0.59  coeur L 0.0297  couronne L 0.0065  [art y=  615]
+      B03 ( 296, 643) px = (107.44,233.39) CSS  anneau 0.59  coeur L 0.0297  couronne L 0.0065  [art y=  643]
+      B04 ( 905, 671) px = (328.48,243.55) CSS  anneau 0.59  coeur L 0.0297  couronne L 0.0066  [art y=  671]
+      B05 ( 576, 706) px = (209.07,256.25) CSS  anneau 0.59  coeur L 0.0297  couronne L 0.0069  [art y=  706]
+      B06 ( 305, 707) px = (110.70,256.61) CSS  anneau 0.59  coeur L 0.0297  couronne L 0.0065  [art y=  707]
+      B07 ( 136, 787) px = ( 49.36,285.65) CSS  anneau 0.59  coeur L 0.0297  couronne L 0.0067  [art y=  787]
+      B08 ( 587, 862) px = (213.06,312.87) CSS  anneau 0.59  coeur L 0.0297  couronne L 0.0066  [art y=  862]
+      B09 ( 149, 982) px = ( 54.08,356.43) CSS  anneau 0.59  coeur L 0.0297  couronne L 0.0065  [art y=  982]
+      B10 ( 147,1243) px = ( 53.36,451.16) CSS  anneau 0.56  coeur L 0.0075  couronne L 0.0075  [art y= 1243]
+      B11 ( 193,1243) px = ( 70.05,451.16) CSS  anneau 0.62  coeur L 0.0073  couronne L 0.0075  [art y= 1243]
+      B12 ( 651,1243) px = (236.29,451.16) CSS  anneau 0.53  coeur L 0.0060  couronne L 0.0060  [art y= 1243]
+      B13 ( 749,1243) px = (271.86,451.16) CSS  anneau 0.66  coeur L 0.0068  couronne L 0.0070  [art y= 1243]
+      B14 ( 930,1243) px = (337.56,451.16) CSS  anneau 0.69  coeur L 0.0061  couronne L 0.0061  [art y= 1243]
+      B15 ( 256,1244) px = ( 92.92,451.53) CSS  anneau 0.66  coeur L 0.0065  couronne L 0.0074  [art y= 1244]
+      B16 ( 169,1245) px = ( 61.34,451.89) CSS  anneau 0.81  coeur L 0.0460  couronne L 0.0069  [art y= 1245]
+      B17 ( 517,1245) px = (187.65,451.89) CSS  anneau 0.72  coeur L 0.0229  couronne L 0.0060  [art y= 1245]
+   CONTROLE POSITIF : (491, 544) retrouve : True
+
+  [ouvre] capture-fiche-1080x2400.png        (1080, 2400) fiche2400
+   [fiche2400] 629 composantes ambre, 19 candidates, 19 MARQUEURS
+      B01 ( 490, 783) px = (177.85,284.20) CSS  anneau 0.59  coeur L 0.0297  couronne L 0.0065  [art y=  543]
+      B02 ( 803, 855) px = (291.46,310.33) CSS  anneau 0.59  coeur L 0.0297  couronne L 0.0065  [art y=  615]
+      B03 ( 296, 883) px = (107.44,320.50) CSS  anneau 0.59  coeur L 0.0297  couronne L 0.0065  [art y=  643]
+      B04 ( 905, 911) px = (328.48,330.66) CSS  anneau 0.59  coeur L 0.0297  couronne L 0.0066  [art y=  671]
+      B05 ( 576, 946) px = (209.07,343.36) CSS  anneau 0.59  coeur L 0.0297  couronne L 0.0069  [art y=  706]
+      B06 ( 305, 947) px = (110.70,343.73) CSS  anneau 0.59  coeur L 0.0297  couronne L 0.0065  [art y=  707]
+      B07 ( 136,1027) px = ( 49.36,372.76) CSS  anneau 0.59  coeur L 0.0297  couronne L 0.0067  [art y=  787]
+      B08 ( 587,1102) px = (213.06,399.99) CSS  anneau 0.59  coeur L 0.0297  couronne L 0.0066  [art y=  862]
+      B09 ( 149,1222) px = ( 54.08,443.54) CSS  anneau 0.59  coeur L 0.0297  couronne L 0.0065  [art y=  982]
+      B10 ( 723,1480) px = (262.42,537.19) CSS  anneau 0.59  coeur L 0.0297  couronne L 0.0066  [art y= 1240]
+      B11 ( 148,1496) px = ( 53.72,542.99) CSS  anneau 0.59  coeur L 0.0297  couronne L 0.0069  [art y= 1256]
+      B12 ( 147,1723) px = ( 53.36,625.39) CSS  anneau 0.56  coeur L 0.0073  couronne L 0.0074  [art y= 1483]
+      B13 ( 193,1723) px = ( 70.05,625.39) CSS  anneau 0.62  coeur L 0.0070  couronne L 0.0074  [art y= 1483]
+      B14 ( 651,1723) px = (236.29,625.39) CSS  anneau 0.53  coeur L 0.0065  couronne L 0.0064  [art y= 1483]
+      B15 ( 749,1723) px = (271.86,625.39) CSS  anneau 0.66  coeur L 0.0060  couronne L 0.0061  [art y= 1483]
+      B16 ( 930,1723) px = (337.56,625.39) CSS  anneau 0.69  coeur L 0.0079  couronne L 0.0080  [art y= 1483]
+      B17 ( 256,1724) px = ( 92.92,625.75) CSS  anneau 0.66  coeur L 0.0064  couronne L 0.0068  [art y= 1484]
+      B18 ( 169,1725) px = ( 61.34,626.11) CSS  anneau 0.81  coeur L 0.0471  couronne L 0.0079  [art y= 1485]
+      B19 ( 517,1725) px = (187.65,626.11) CSS  anneau 0.72  coeur L 0.0220  couronne L 0.0073  [art y= 1485]
+   CONTROLE POSITIF : (491, 784) retrouve : True
+
+   CONCORDANCE (coordonnees ART) : district2400 11 ; fiche1920 17 ; fiche2400 19 ; communs aux 3 : 9
+   a 2400 pas a 1920 : [(148, 1256), (723, 1240)]
+   a 1920 pas a 2400 : [(147, 1243), (169, 1245), (193, 1243), (256, 1244), (517, 1245), (651, 1243), (749, 1243), (930, 1243)]

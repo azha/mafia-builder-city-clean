@@ -1,0 +1,10 @@
+OUVERT hud-canon-1176.png (1176, 2091)  centre=(609.5,155.5) R=152.0
+   teal             : n= 263  angles -70..-16  (median -44)  r/R 0.48..0.56  | pixel le + loin: angle -35 a r/R=0.57
+   chaud            : n= 369  angles -91..+91  (median +30)  r/R 0.31..0.71  | pixel le + loin: angle -89 a r/R=0.72
+   creme(aiguille)  : n= 207  angles -67..+7  (median -42)  r/R 0.30..0.50  | pixel le + loin: angle -43 a r/R=0.53
+
+OUVERT capture-1080x2400.png (1080, 2400)  centre=(539.5,109.5) R=90.5
+   teal             : n=1000  angles -87..+9  (median -39)  r/R 0.41..0.52  | pixel le + loin: angle -87 a r/R=0.52
+   chaud            : n= 404  angles +22..+86  (median +54)  r/R 0.45..0.52  | pixel le + loin: angle +22 a r/R=0.52
+   creme(aiguille)  : n=  45  angles +81..+92  (median +86)  r/R 0.30..0.34  | pixel le + loin: angle +85 a r/R=0.35
+

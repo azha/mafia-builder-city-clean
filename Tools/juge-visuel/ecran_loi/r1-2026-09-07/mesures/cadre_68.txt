@@ -1,0 +1,62 @@
+<div class="etiquette">Lui trouver un avocat</div>
+<div class="tel">
+<div class="scene district" style="background-position:center 50%;filter:brightness(.18)">
+</div>
+<div class="voile-scene">
+</div>
+<div class="ecran">
+<div class="barre">
+<div class="aile">
+<span class="lib">Argent</span>
+<span class="val">$ 24 850</span>
+</div>
+<div class="mano">[SVG]<span class="val">tiède</span>
+<span class="lib">Heat</span>
+</div>
+<div class="aile droite">
+<span class="lib">Jour 12</span>
+<span class="val">Matin</span>
+</div>
+</div>
+<div class="panneau">
+<div class="parl6" style="height:462px">
+<div class="pl-tete">
+<h3>Lui trouver un avocat</h3>
+<p>Trois façons de le défendre. Aucune n'est sans revers.</p>
+</div>
+<div class="pl-body">
+<div class="pl-titron">Qui peut le défendre</div>
+<div class="pl-choix pris">
+<div class="n">
+<b>Commis d'office</b>
+<i>gratuit — il fait ce qu'il peut</i>
+</div>
+<div class="tag" style="color:#7fc99a">EN PLACE</div>
+</div>
+<div class="pl-choix">
+<div class="n">
+<b>Un cabinet</b>
+<i>ça coûte — il connaît les juges</i>
+</div>
+<div class="tag" style="color:#8d99a6">DISPONIBLE</div>
+</div>
+<div class="pl-choix risque">
+<div class="n">
+<b>La filière</b>
+<i>ça coûte cher — et ça peut se retourner</i>
+</div>
+<div class="tag" style="color:#d9ab4e">À VOS RISQUES</div>
+</div>
+<div class="pl-rien" style="margin-top:10px">La <b>filière</b> fait classer une affaire sans procès — mais elle se sert de gens qui, un jour, peuvent parler à leur tour.</div>
+</div>
+<div class="pl-bas">
+<div class="pl-dit">
+<b>Lt. Rin :</b> « Le commis d'office ne coûte rien et ne gagne rien. Le cabinet coûte. La filière, elle, se paie deux fois. »</div>
+<div class="pl-geste">PRENDRE LE CABINET<small>ça part du compte tout de suite</small>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>

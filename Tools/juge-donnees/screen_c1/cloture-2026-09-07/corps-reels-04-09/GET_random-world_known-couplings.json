@@ -1,0 +1,32 @@
+{
+ "route": "/v1/random-world/known-couplings",
+ "route_appelee": "/v1/random-world/known-couplings",
+ "methode": "GET",
+ "statut": 200,
+ "params": {},
+ "provenance": {
+  "date": "2026-09-04T10:15:48",
+  "back_main": "6ff684db",
+  "game_back": "mafia-clean-city-game-back 2026-09-04T08:14:29.844933926Z",
+  "compte": "operational_demo@example.test",
+  "dossier": "screen_c1",
+  "symbole": "㊳",
+  "controleur": "JournalScreenController",
+  "X-Request-Id": "281da140-5d63-48bb-9e16-a40bce278add",
+  "X-Server-Processed-At": "2026-09-04T08:15:51.037Z",
+  "X-Api-Version": "1"
+ },
+ "corps": {
+  "response_meta": {
+   "request_id_echo": "281da140-5d63-48bb-9e16-a40bce278add",
+   "server_processed_at": "2026-09-04T08:15:51.037Z",
+   "api_version": 1,
+   "correlation_id_echo": null
+  },
+  "payload": {
+   "data": {
+    "couplings": []
+   }
+  }
+ }
+}

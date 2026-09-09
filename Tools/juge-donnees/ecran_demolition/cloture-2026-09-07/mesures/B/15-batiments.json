@@ -1,0 +1,101 @@
+[
+ {
+  "building": "7ec3e492-0a01-4d68-9ed2-70568fb739a0",
+  "block_id": 1501,
+  "name_i18n": {
+   "key": "game.fiction.building.name",
+   "params": {
+    "enseigne": "Ferblanterie Tull",
+    "district": "La Lisi\u00e8re",
+    "block": "1501"
+   }
+  },
+  "operational_type": "lab",
+  "conversion_band": "OPERATIONAL",
+  "shell_state": "STANDING",
+  "condition_band": "SOUND",
+  "revenue_band": "IDLE",
+  "revenue_chain": "UNWIRED",
+  "activity_band": "IDLE",
+  "relance_band": "RELAUNCHABLE",
+  "harvest_band": "NOTHING",
+  "lieutenant_ids": [
+   "01a07a1b-c78e-7c18-8b77-aa2c78d84f9e",
+   "01a07a1b-c790-79d0-94ef-e1372c0c787d"
+  ],
+  "lapse_phase_bucket": "WITHIN_WINDOW",
+  "maintenance_in_progress": false
+ },
+ {
+  "building": "4d1a7f18-66a3-40c2-be7c-2e44994a11c6",
+  "block_id": 1502,
+  "name_i18n": {
+   "key": "game.fiction.building.name",
+   "params": {
+    "enseigne": "Cave Marr",
+    "district": "La Lisi\u00e8re",
+    "block": "1502"
+   }
+  },
+  "operational_type": "stash",
+  "conversion_band": "OPERATIONAL",
+  "shell_state": "STANDING",
+  "condition_band": "SOUND",
+  "revenue_band": "IDLE",
+  "revenue_chain": "UNWIRED",
+  "activity_band": "IDLE",
+  "relance_band": "NOT_APPLICABLE",
+  "harvest_band": "NOTHING",
+  "lieutenant_ids": [],
+  "lapse_phase_bucket": "WITHIN_WINDOW",
+  "maintenance_in_progress": false
+ },
+ {
+  "building": "846bf412-4d66-4274-8c3b-8d81f2ba16ba",
+  "block_id": 1503,
+  "name_i18n": {
+   "key": "game.fiction.building.name",
+   "params": {
+    "enseigne": "Cordonnerie Sarre",
+    "district": "La Lisi\u00e8re",
+    "block": "1503"
+   }
+  },
+  "operational_type": "front_shop",
+  "conversion_band": "OPERATIONAL",
+  "shell_state": "STANDING",
+  "condition_band": "SOUND",
+  "revenue_band": "IDLE",
+  "revenue_chain": "UNWIRED",
+  "activity_band": "IDLE",
+  "relance_band": "NOT_APPLICABLE",
+  "harvest_band": "NOTHING",
+  "lieutenant_ids": [],
+  "lapse_phase_bucket": "WITHIN_WINDOW",
+  "maintenance_in_progress": false
+ },
+ {
+  "building": "c3a717d4-cbf6-4dad-9ab4-feaebe77d85c",
+  "block_id": 1504,
+  "name_i18n": {
+   "key": "game.fiction.building.name",
+   "params": {
+    "enseigne": "Consigne de la Threnny",
+    "district": "La Lisi\u00e8re",
+    "block": "1504"
+   }
+  },
+  "operational_type": "cash_safehouse",
+  "conversion_band": "OPERATIONAL",
+  "shell_state": "STANDING",
+  "condition_band": "SOUND",
+  "revenue_band": "IDLE",
+  "revenue_chain": "UNWIRED",
+  "activity_band": "IDLE",
+  "relance_band": "NOT_APPLICABLE",
+  "harvest_band": "NOTHING",
+  "lieutenant_ids": [],
+  "lapse_phase_bucket": "WITHIN_WINDOW",
+  "maintenance_in_progress": false
+ }
+]

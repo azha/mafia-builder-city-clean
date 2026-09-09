@@ -1,0 +1,20 @@
+== CONTROLE POSITIF ==
+  contraste --creme/--encre = 14.54:1  (symetrique : 14.54) ; contraste(x,x) = 1.00
+  synthetique (200, 200) bande calme posee a y=120..159 -> trouvee y=120 (h=40) sigma=0.000
+  sur la bande : p05=p50=p95=0.0118/0.0118/0.0118 ; contraste creme=12.95:1 encre=1.12:1
+  -> OK
+
+== ZONE CALME (fenetre 614x204 = 60%x20%, pas 8 px) ==
+    id  fichier                  taille    x,y de la fenetre  sigma(luma 0-255)   L p05/p50/p95     creme p50  encre p50  creme p95(pire)
+    E1  vide-appro.png           1024x1024  ( 312,  24) haut    sigma=  0.24   0.0118/0.0118/0.0118    12.95:1   1.12:1    12.95:1
+    E2  vide-carnet.png          1024x1024  ( 360, 192) haut    sigma=  0.00   0.0118/0.0118/0.0118    12.95:1   1.12:1    12.95:1
+    E3  vide-coffre.png          1024x1024  (   0, 312) milieu  sigma= 34.58   0.0118/0.0118/0.2863    12.95:1   1.12:1     2.38:1
+    E4  vide-conflit.png         1024x1024  (  24, 376) milieu  sigma= 14.13   0.0118/0.0118/0.0321    12.95:1   1.12:1     9.74:1
+    E5  vide-distribution.png    1024x1024  (   0,   8) haut    sigma=  6.05   0.0118/0.0118/0.0161    12.95:1   1.12:1    12.09:1
+    E6  vide-exceptions.png      1024x1024  (  32, 320) milieu  sigma=  6.31   0.0118/0.0118/0.0321    12.95:1   1.12:1     9.74:1
+    E7  vide-famille.png         1024x1024  ( 392, 816) bas     sigma= 17.49   0.0118/0.0118/0.0321    12.95:1   1.12:1     9.74:1
+    E8  vide-journal.png         1024x1024  ( 136, 712) bas     sigma= 24.45   0.0118/0.0124/0.1051    12.81:1   1.14:1     5.16:1
+    E9  vide-marche.png          1024x1024  ( 200, 352) milieu  sigma=  0.00   0.0118/0.0118/0.0118    12.95:1   1.12:1    12.95:1
+    E10 vide-recrutement.png     1024x1024  ( 272,  24) haut    sigma= 11.83   0.0118/0.0321/0.0321     9.74:1   1.49:1     9.74:1
+    E11 vide-revue.png           1024x1024  ( 200, 624) bas     sigma=  3.62   0.0254/0.0321/0.0321     9.74:1   1.49:1     9.74:1
+    E12 vide-vitrine.png         1024x1024  ( 280, 456) milieu  sigma= 28.54   0.0118/0.0118/0.0499    12.95:1   1.12:1     8.00:1

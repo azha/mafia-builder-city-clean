@@ -1,0 +1,44 @@
+taille source : 1080 x 1920 = 2073600 px
+
+== 1. OU COMMENCE ET FINIT LA VILLE (part batie par ligne, hors eau/overlay) ==
+  premiere ligne a >=30% de bati : y=478
+  derniere ligne a >=30% de bati : y=1576
+
+== 2. LES 5 BANDES DE L'ECRAN ==
+  bandeau (chrome)         y    0- 141   142 px de haut    7.40% de l'ecran
+  plan vide du haut        y  142- 477   336 px de haut   17.50% de l'ecran
+  bande batie (la ville)   y  478-1576  1099 px de haut   57.24% de l'ecran
+  eau nue                  y 1577-1683   107 px de haut    5.57% de l'ecran
+  dock (chrome)            y 1684-1919   236 px de haut   12.29% de l'ecran
+  CONTROLE somme = total : 2073600 px vs 2073600 px -> OK
+
+== 3. COMPOSITION ET LUMINANCE DE CHAQUE BANDE ==
+  bandeau (chrome)         L_moy=  29.0  chauds= 7.50%  | chrome=100.0%
+  plan vide du haut        L_moy=  51.5  chauds= 1.22%  | bati= 9.6%  sol_nu=77.2%  overlay=13.2%
+  bande batie (la ville)   L_moy=  80.0  chauds=17.08%  | bati=62.1%  sol_nu=30.7%  eau= 7.2%
+  eau nue                  L_moy=  75.0  chauds= 0.00%  | sol_nu= 0.3%  eau=99.7%
+  dock (chrome)            L_moy=  33.0  chauds= 1.13%  | chrome=100.0%
+
+== 4. L'EAU : largeur d'eau NUE par ligne (part de la largeur d'ecran) ==
+  y=1400  eau sur   89/1080 px =   8.2% de la largeur  ~~~~
+  y=1420  eau sur   79/1080 px =   7.3% de la largeur  ~~~~
+  y=1440  eau sur   73/1080 px =   6.8% de la largeur  ~~~~
+  y=1460  eau sur  106/1080 px =   9.8% de la largeur  ~~~~~
+  y=1480  eau sur  202/1080 px =  18.7% de la largeur  ~~~~~~~~~~~
+  y=1500  eau sur  481/1080 px =  44.5% de la largeur  ~~~~~~~~~~~~~~~~~~~~~~~~~~
+  y=1520  eau sur  688/1080 px =  63.7% de la largeur  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  y=1540  eau sur  908/1080 px =  84.1% de la largeur  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  y=1560  eau sur  947/1080 px =  87.7% de la largeur  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  y=1580  eau sur 1069/1080 px =  99.0% de la largeur  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  y=1600  eau sur 1071/1080 px =  99.2% de la largeur  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  y=1620  eau sur 1080/1080 px = 100.0% de la largeur  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  y=1640  eau sur 1080/1080 px = 100.0% de la largeur  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  y=1660  eau sur 1080/1080 px = 100.0% de la largeur  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  y=1680  eau sur 1080/1080 px = 100.0% de la largeur  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  aire d'eau totale dans la scene : 200960 px = 9.7% de l'ecran
+
+== 5. CONTRASTE ENTRE LE VIDE DU HAUT ET LA VILLE ==
+  plan vide du haut : L=54.9
+  bande batie       : L=80.0
+  eau nue           : L=75.0
+  la ville est 1.46x plus lumineuse que le plan vide du haut

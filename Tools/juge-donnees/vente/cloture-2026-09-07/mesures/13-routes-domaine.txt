@@ -1,0 +1,21 @@
+# Temps 1 — balayage du MOT DU DOMAINE dans TOUS les contrôleurs
+# population = **/*.controller.ts de services/game-back/src ; motif 'dealer' (grep -i)
+fichiers .controller.ts au total          = 148
+contrôleurs contenant 'dealer'            = 5
+  dont NON-_test                          = 3
+
+-- liste NON-_test :
+   operational/market/market.controller.ts
+   operational/political/political.controller.ts
+   operational/selling/selling.controller.ts
+
+-- routes joueur du domaine dans selling.controller.ts :
+   63:  @Post('operational/dealer/assign')
+   94:  @Post('operational/dealer/:id/collect')
+   121:  @Get('operational/dealer/:id')
+   138:  @Get('operational/dealers')
+   nombre de routes 'operational/dealer*'  = 4
+   nombre de @UseGuards(JwtAuthGuard)      = 4
+
+-- CONTRÔLE POSITIF du motif : un contrôleur qu'on SAIT porteur doit sortir
+   selling.controller.ts trouvé = 1

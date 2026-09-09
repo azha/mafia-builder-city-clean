@@ -1,0 +1,21 @@
+OUVERT ref (1080, 2102) / cap (1080, 2400)
+CONTROLE  blanc/noir = 21.00:1   identique = 1.00:1
+
+  REF  fiche .l u (petit)       encre=(194,189,164) fond=(233,228,212)  contraste= 1.49:1  seuil=4.5  SOUS LE SEUIL
+  REF  h3 titre (grand)         encre=(238,243,249) fond=( 30, 31, 27)  contraste=14.86:1  seuil=3.0  OK
+  REF  p sous-titre (petit)     encre=(143,146,133) fond=( 30, 31, 27)  contraste= 5.22:1  seuil=4.5  OK
+  REF  dm-dit (petit)           encre=(238,243,249) fond=( 20, 26, 33)  contraste=15.69:1  seuil=4.5  OK
+  REF  geste libelle (grand)    encre=(217,122,106) fond=( 36, 18, 20)  contraste= 5.93:1  seuil=3.0  OK
+  CAP  h3 titre (grand)         encre=(238,243,249) fond=( 28, 28, 28)  contraste=15.28:1  seuil=3.0  OK
+  CAP  p sous-titre (petit)     encre=(143,146,133) fond=( 28, 28, 28)  contraste= 5.37:1  seuil=4.5  OK
+  CAP  dm-titron (petit)        encre=(143,146,133) fond=( 29, 30, 26)  contraste= 5.28:1  seuil=4.5  OK
+  CAP  glob .gros (grand)       encre=(154,166,179) fond=( 34, 38, 34)  contraste= 6.20:1  seuil=3.0  OK
+  CAP  glob .q b (grand)        encre=(238,243,249) fond=( 34, 38, 34)  contraste=13.76:1  seuil=3.0  OK
+  CAP  glob .q i (petit)        encre=(143,146,133) fond=( 34, 38, 34)  contraste= 4.84:1  seuil=4.5  OK
+  CAP  rangee titre (grand)     encre=(238,243,249) fond=( 34, 38, 34)  contraste=13.76:1  seuil=3.0  OK
+  CAP  rangee sous (petit)      encre=(143,146,133) fond=( 34, 38, 34)  contraste= 4.84:1  seuil=4.5  OK
+  CAP  rangee statut (petit)    encre=(143,146,133) fond=( 34, 38, 34)  contraste= 4.84:1  seuil=4.5  OK
+  CAP  statut 'travaille' or    encre=( 61, 61, 53) fond=( 34, 38, 34)  contraste= 1.40:1  seuil=4.5  SOUS LE SEUIL
+  CAP  dm-dit (petit)           encre=(205,214,224) fond=( 22, 28, 34)  contraste=11.68:1  seuil=4.5  OK
+  CAP  geste libelle (grand)    encre=(217,171, 77) fond=( 34, 28, 13)  contraste= 7.97:1  seuil=3.0  OK
+  CAP  geste small (petit)      encre=(154,138,106) fond=( 34, 28, 13)  contraste= 5.01:1  seuil=4.5  OK

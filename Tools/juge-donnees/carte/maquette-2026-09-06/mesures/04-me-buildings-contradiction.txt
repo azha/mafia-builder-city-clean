@@ -1,0 +1,45 @@
+# 04 — la contradiction `me/buildings` : deux specs PARCOURS s'opposent sur le MÊME statut
+
+## (a) la route EXISTE et elle est CÂBLÉE (trois ancres)
+  services/game-back/src/citysim/district_interior/player-buildings.controller.ts:88-91
+       */
+      @Get('me/buildings')
+      @UseGuards(JwtAuthGuard)
+      async list(@Req() req: RequestWithAccount): Promise<PlayerBuildingsResponse> {
+        const playerId = await this.resolvePlayerId(req.account!.account_id);
+  services/game-back/src/citysim/district_interior/district-interior.module.ts : controllers
+    29:  controllers: [DistrictInteriorController, PlayerBuildingsController],
+  services/game-back/src/app.module.ts:268
+        DistrictInteriorModule,
+
+## (b) la spec PARCOURS de CET ÉCRAN asserte 404 sur cette même route
+  tests/e2e/parcours/03_carte.parcours.spec.ts:121-138
+      test("★ quatre chemins que la maquette suppose n'existent pas — et le 404 ne le dit pas", async ({ request }) => {
+        const auth = await joueurNeuf(request);
+    
+        // LE CONTRÔLE qui donne son sens aux quatre 404 : une route du même préfixe répond 200. Sans lui,
+        // un 404 de routeur et un 404 d'état sont littéralement la même réponse.
+        expect(
+          (await request.get(`${BASE_URL}/v1/city/district/1/heat`, { headers: auth })).status(),
+          'contrôle : le préfixe city/ est bien routé',
+        ).toBe(200);
+    
+        for (const chemin of ['city/buildings', 'me/buildings', 'city/audit-pins', 'city/overlays']) {
+          const r = await request.get(`${BASE_URL}/v1/${chemin}`, { headers: auth });
+          expect(r.status(), chemin).toBe(404);
+          // ⚠️ Le code est le MÊME que celui d'une ressource absente. C'est mesuré, pas supposé : aucun
+          // contrôleur du dépôt ne déclare ces quatre chemins. Le client ne peut donc pas distinguer
+          // « rien à afficher » de « route inexistante » — il doit le savoir d'avance.
+          expect((await json(r)).payload.error!.code, chemin).toBe('RESOURCE_NOT_FOUND');
+        }
+      });
+
+## (c) une AUTRE spec parcours asserte 200 sur la même route
+  tests/e2e/operational/me_buildings_td534.parcours.spec.ts:73
+        const mine = await call(request, 'get', '/v1/me/buildings', { token, expect: 200, quoi: 'me/buildings' });
+
+## (d) des 4 chemins que 03_carte déclare inexistants, 1 existe désormais
+  city/buildings   -> AUCUN contrôleur ne le déclare
+  me/buildings     -> ['citysim/district_interior/player-buildings.controller.ts:89']
+  city/audit-pins  -> AUCUN contrôleur ne le déclare
+  city/overlays    -> AUCUN contrôleur ne le déclare

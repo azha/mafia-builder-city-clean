@@ -1,0 +1,74 @@
+# 03 — `home_district_id` : une clé du CORPS RÉEL que le back n'émet PAS
+
+## (a) le corps réel en porte 13
+  clés de payload.data : 13
+   - backlog_badge
+   - compression_glance
+   - flag_review
+   - friction_glance
+   - hl_card
+   - home_district_id
+   - onboarding
+   - opened_game_day
+   - queue
+   - queue_pressure_band
+   - session_id
+   - settling_glance
+   - structural_budget
+
+## (b) l'interface du back en déclare 12 (source de vérité, lue ligne à ligne)
+  services/game-back/src/session/session-open-sequence.service.ts:231-247
+    export interface SessionOpenSequencePayload {
+      session_id: string;
+      hl_card: HighestLeverageCardProjection | null;
+      queue: ExceptionCardProjection[];
+      backlog_badge: boolean;
+      queue_pressure_band: QueuePressureBand;
+      structural_budget: { used: number; cap_reached: boolean };
+      flag_review: FlagReviewGlance;
+      settling_glance: SettlingGlance;
+      friction_glance: FrictionGlance;
+      compression_glance: CompressionGlance;
+      onboarding: OnboardingGlance;
+      /** W3.U1 C2 (design D3/§3-bis) — le jour de jeu AUQUEL cette session a ouvert : la MÊME valeur que
+       *  `openedGameDay` reçu en argument par `build()`, jamais recalculée ni re-lue (un seul read d'horloge,
+       *  déjà fait par l'appelant — P3-B C6's "ONE clock read" discipline). Alimente le `TopBar` (temps
+       *  in-game) et Daily Review ("Day N") côté client — le MÊME trou de surface (§1.3.d/§1.3.e #3, #23). */
+      opened_game_day: number;
+    }
+
+## (c) l'E2E ÉPINGLE « EXACTEMENT 12 clés »
+  tests/e2e/onboarding/tutorial_overlay_session_open_non_regression.spec.ts:177
+      test('(1) session/open payload keeps EXACTLY its 12 top-level keys — no OVERLAY field re-grafted', async ({ request }) => {
+        const callsign = nextCallsign('ob6c1');
+        const { status, data } = await signup(request, callsign);
+        expect(status, 'signup 201').toBe(201);
+        const token = data.access_token!;
+    
+        const opened = await openSession(request, token);
+        expect(opened.status, 'session/open 200').toBe(200);
+        const keys = Object.keys(opened.data ?? {}).sort();
+    
+        expect(keys, `session/open payload is EXACTLY the 12 known keys (11 + W3.U1's opened_game_day) — no overlay field re-grafted (${JSON.stringify(keys)})`).toEqual(
+          EXPECTED_TOP_LEVEL_KEYS,
+        );
+      });
+
+## (d) AUCUNE occurrence de home_district_id comme CLÉ DE RÉPONSE (back + tests/e2e)
+#      Les 2 seuls hits du back sont un `const homeDistrictId` LOCAL de la table RIVAL_HOME_DISTRICT
+#      (tempo-exposure.service.ts:97-98) — classés en ouvrant le corps : ni l'un ni l'autre n'est projeté.
+  /home/erutheone/project/mafia-clean-city/services/game-back/src : 2 occurrence(s) ['/home/erutheone/project/mafia-clean-city/services/game-back/src/operational/conflict/rival/tempo-exposure.service.ts:97', '/home/erutheone/project/mafia-clean-city/services/game-back/src/operational/conflict/rival/tempo-exposure.service.ts:98']
+  /home/erutheone/project/mafia-clean-city/tests/e2e : 0 occurrence(s) []
+  CONTRÔLE POSITIF sur le même balayage : 'opened_game_day'
+    -> 25 occurrences (le motif SAIT trouver une clé de session/open)
+
+## (e) LA CAUSE : l'instrument de capture INJECTE la clé
+  /home/erutheone/project/mafia-unity-J/Tools/juge-visuel/capturer-corps-reels.py:229-235
+        home = None
+        for d in range(1, 19):
+            st, b, _ = pile.get(f"/v1/city/district/{d}/interior")
+            if st == 200 and (b.get("payload", {}).get("data", {}) or {}).get("buildings"):
+                home = d; pile.corps["interior"] = b; pile.corps["session/open"]["payload"]["data"]["home_district_id"] = d
+                break
+        print(f"district du joueur (bâtiments présents) : {home}")
+        total = {"appelées": 0, "sans instance": 0, "mutations": 0, "erreurs": 0}

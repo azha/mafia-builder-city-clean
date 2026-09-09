@@ -1,0 +1,52 @@
+OUVERT cap (1080, 2400) ref (1080, 2102)
+
+=== bord haut exact du .dm-tete (capture) : mediane de ligne, x 700..1030 ===
+   y=225 (31, 32, 28)
+   y=226 (31, 32, 28)
+   y=227 (31, 32, 28)
+   y=228 (31, 32, 28)
+   y=229 (31, 32, 28)
+   y=230 (31, 32, 28)
+   y=231 (31, 32, 28)
+   y=232 (28, 28, 28)  <==
+   y=233 (28, 28, 28)
+   y=234 (28, 28, 28)
+   y=235 (28, 28, 28)
+   y=236 (28, 28, 28)
+   y=237 (28, 28, 28)
+   y=238 (28, 28, 28)
+   y=239 (28, 28, 28)
+   y=240 (28, 28, 28)
+   y=241 (28, 28, 28)
+   y=242 (28, 28, 28)
+   y=243 (28, 28, 28)
+   y=244 (28, 28, 28)
+
+=== statut dore d'une rangee (Reparation Ilm) ===
+   rangee 5  fond=(34, 38, 34) encre=(217, 171, 77)  contraste=7.22:1
+       vs dm-geste #d9ab4e       ecart max/canal = 1
+       vs accentGold #ffd23f     ecart max/canal = 39
+       vs hudMoneyGold #f2c96b   ecart max/canal = 30
+   rangee 6  fond=(34, 38, 34) encre=(217, 171, 77)  contraste=7.22:1
+       vs dm-geste #d9ab4e       ecart max/canal = 1
+       vs accentGold #ffd23f     ecart max/canal = 39
+       vs hudMoneyGold #f2c96b   ecart max/canal = 30
+
+=== REF fiche .l u  (libelle majuscule sur carton) ===
+   fond=(233, 228, 212) encre=(127, 122, 99) contraste=3.39:1  (CSS #7f7a63 sur #e9e4d4 -> attendu ~3,4:1)
+
+=== densite d'encre et luminance moyenne (zone de CONTENU seulement) ===
+   REFERENCE (contenu .demo6, cadre #80)  n=198690  luminance moyenne=0.2573
+      (216, 216, 192)   29.2%
+      (24, 24, 0)   14.9%
+      (24, 24, 24)   14.2%
+      (0, 24, 24)   11.4%
+      (0, 24, 0)    8.7%
+      (120, 24, 48)    5.8%
+   CAPTURE  (contenu, sous bandeau / sur dock)  n=240840  luminance moyenne=0.0324
+      (24, 24, 24)   71.7%
+      (24, 24, 0)   10.0%
+      (0, 24, 24)    9.6%
+      (48, 48, 48)    3.0%
+      (0, 24, 0)    1.3%
+      (216, 240, 240)    0.9%

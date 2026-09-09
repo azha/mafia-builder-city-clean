@@ -1,0 +1,56 @@
+n news_beat.* = 154
+
+--- sous-prefixes news_beat.<x> ---
+   32  news_beat.cooper_affair
+   32  news_beat.digest
+   32  news_beat.three_outlet_storm
+   16  news_beat.hindsight
+   16  news_beat.slow_page
+    8  news_beat.folded_page
+    8  news_beat.frame_tag
+    8  news_beat.sourceless_beat
+    2  news_beat.wire_day
+
+--- news_beat.digest.* (les cles de titre du digest) ---
+    news_beat.digest.ambient_micro.body => {outlet} relève une scène de rue : {subject}, {district}.
+    news_beat.digest.ambient_micro.brennar_daily_star.body => Un certain nombre de faits mineurs ont été consignés à {district} cette semaine. Aucun ne paraîtrait, à ce stade, appeler un examen complémentaire. Le relevé est conservé.
+    news_beat.digest.ambient_micro.brennar_daily_star.headline => Faits mineurs consignés à {district}
+    news_beat.digest.ambient_micro.free_weekly.body => Des petites choses. Des choses de coin de rue. Ce qu'aucun officiel ne compte et que tout le quartier remarque. Noté ici, donc, puisqu'il faut bien que quelqu'un le fasse.
+    news_beat.digest.ambient_micro.free_weekly.headline => Pendant ce temps, à {district}
+    news_beat.digest.ambient_micro.headline => Petites histoires de {district}
+    news_beat.digest.ambient_micro.tilbey_weekly.body => Les petites choses de {district} cette semaine — le genre qui ne fait jamais la une et dont on parle tout le temps au comptoir.
+    news_beat.digest.ambient_micro.tilbey_weekly.headline => Petites nouvelles de {district}, qui restent des nouvelles
+    news_beat.digest.live_ops.body => {outlet} rapporte une évolution à l'échelle de la ville : {subject}.
+    news_beat.digest.live_ops.brennar_daily_star.body => Un avis de portée générale circule dans l'ensemble de la ville. Ses effets pratiques, pour autant qu'ils puissent être appréciés à ce stade, paraîtraient variables ; il est recommandé aux habitants de se reporter à l'avis lui-même.
+    news_beat.digest.live_ops.brennar_daily_star.headline => Un avis de portée générale est en circulation
+    news_beat.digest.live_ops.free_weekly.body => Encore un avis pour tout Brennar. Tout le monde est concerné ; personne n'a été consulté. À l'heure qu'il est, il est sur tous les murs.
+    news_beat.digest.live_ops.free_weekly.headline => Nouvel avis. Toute la ville. C'est noté
+    news_beat.digest.live_ops.headline => Un avis circule dans toute la ville
+    news_beat.digest.live_ops.tilbey_weekly.body => Un nouvel avis circule en ville. Ce qu'il veut dire dépend, comme toujours, de la rue où l'on habite. Ici, on compare déjà au comptoir.
+    news_beat.digest.live_ops.tilbey_weekly.headline => Un avis pour toute la ville, et ce qu'il veut dire dans nos rues
+    news_beat.digest.political.body => {outlet} couvre une évolution politique : {subject}.
+    news_beat.digest.political.brennar_daily_star.body => Les travaux se poursuivraient à l'hôtel de ville ; un communiqué serait attendu en temps utile. Les services concernés n'ont pas souhaité en préjuger le contenu.
+    news_beat.digest.political.brennar_daily_star.headline => Les délibérations se poursuivraient à l'hôtel de ville
+    news_beat.digest.political.free_weekly.body => Des réunions, des déclarations, la météo habituelle de l'hôtel de ville. Ce que ça veut dire pour le quartier : on verra bien. Ce que le quartier en attend : pas grand-chose.
+    news_beat.digest.political.free_weekly.headline => L'hôtel de ville a fait un truc
+    news_beat.digest.political.headline => Les affaires de l'hôtel de ville, en bref
+    news_beat.digest.political.tilbey_weekly.body => Quelque chose bouge à l'hôtel de ville, et ici on a appris à lire ça comme les marins lisent le temps. Quoi qu'il tombe, ça tombe d'abord sur des rues comme les nôtres.
+    news_beat.digest.political.tilbey_weekly.headline => L'hôtel de ville s'agite ; les quartiers en prennent note
+    news_beat.digest.random_world.body => {outlet} relève un trouble non résolu, en lien avec {subject}, à {district}.
+    news_beat.digest.random_world.brennar_daily_star.body => Un trouble à {district} demeurerait, semble-t-il, non résolu. Les circonstances seraient à l'examen des services compétents ; aucun calendrier n'a été communiqué.
+    news_beat.digest.random_world.brennar_daily_star.headline => Trouble consigné à {district}
+    news_beat.digest.random_world.free_weekly.body => Le truc de {district} ? Toujours en cours. Personne, là-haut, n'a dit un mot. Le quartier n'en attendait pas.
+    news_beat.digest.random_world.free_weekly.headline => Toujours en cours, à {district}
+    news_beat.digest.random_world.headline => Des troubles signalés à {district}
+    news_beat.digest.random_world.tilbey_weekly.body => Au comptoir, à {district}, on dit que les ennuis ne sont pas retombés. On veille les uns sur les autres et on attend, encore, que quelqu'un dise quelque chose d'officiel.
+    news_beat.digest.random_world.tilbey_weekly.headline => Les ennuis de {district} ne sont pas retombés, disent les voisins
+
+--- news_beat.frame_tag.* ---
+    news_beat.frame_tag.accident => angle accident
+    news_beat.frame_tag.corruption => angle corruption
+    news_beat.frame_tag.episodic => angle cas isolé
+    news_beat.frame_tag.human_interest => angle humain
+    news_beat.frame_tag.neighborhood_failure => angle abandon du quartier
+    news_beat.frame_tag.organized_crime => angle crime organisé
+    news_beat.frame_tag.scandal => angle scandale
+    news_beat.frame_tag.thematic => angle de fond

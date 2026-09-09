@@ -1,0 +1,54 @@
+{
+ "route": "/v1/city/district/{districtId}/heat",
+ "route_appelee": "/v1/city/district/1/heat",
+ "methode": "GET",
+ "statut": 200,
+ "params": {
+  "districtId": {
+   "valeur": 1,
+   "source": "lu dans le corps de `session/open` (clé parmi ['home_district_id', 'district_id', 'district'])"
+  }
+ },
+ "provenance": {
+  "date": "2026-09-04T10:15:48",
+  "back_main": "6ff684db",
+  "game_back": "mafia-clean-city-game-back 2026-09-04T08:14:29.844933926Z",
+  "compte": "operational_demo@example.test",
+  "dossier": "ecran-principal",
+  "symbole": "①",
+  "controleur": "DistrictInteriorScreenController",
+  "X-Request-Id": "617935e3-1f76-4ad9-89d8-5ab5f936f162",
+  "X-Server-Processed-At": "2026-09-04T08:15:52.243Z",
+  "X-Api-Version": "1"
+ },
+ "corps": {
+  "response_meta": {
+   "request_id_echo": "617935e3-1f76-4ad9-89d8-5ab5f936f162",
+   "server_processed_at": "2026-09-04T08:15:52.243Z",
+   "api_version": 1,
+   "correlation_id_echo": null
+  },
+  "payload": {
+   "data": {
+    "district": "district-1",
+    "district_bucket": "WARM",
+    "citywide_bucket": "COLD",
+    "escalated": false,
+    "buildings": [
+     {
+      "building": "bea32c47-e1fd-4385-92c7-3f83eaa16dbb",
+      "heat_bucket": "WARM",
+      "name_i18n": {
+       "key": "game.fiction.building.name",
+       "params": {
+        "enseigne": "Transit Marrek",
+        "district": "Les Bassins",
+        "block": "1"
+       }
+      }
+     }
+    ]
+   }
+  }
+ }
+}

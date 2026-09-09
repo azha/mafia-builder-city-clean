@@ -1,0 +1,15 @@
+{
+ "route": "/v1/friction/nodes/{buildingId}/decommission",
+ "methode": "POST",
+ "statut": null,
+ "non_appelee": "mutation — pas de corps réel sans changer l'état du compte de démo la veille des juges",
+ "provenance": {
+  "date": "2026-09-04T10:15:48",
+  "back_main": "6ff684db",
+  "game_back": "mafia-clean-city-game-back 2026-09-04T08:14:29.844933926Z",
+  "compte": "operational_demo@example.test",
+  "dossier": "ecran_demolition",
+  "symbole": "㉝",
+  "controleur": "DemolitionScreenController"
+ }
+}

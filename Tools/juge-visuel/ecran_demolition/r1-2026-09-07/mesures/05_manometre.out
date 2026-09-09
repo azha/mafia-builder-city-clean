@@ -1,0 +1,47 @@
+=== CAPTURE : anneau braise ===
+OUVERT capture-1080x2400.png (1080, 2400)
+  CAP anneau: n=1654  bbox x[380..699] y[19..200]  centre=(539.5,109.5)  R_ext=125.0
+  CAP  angle(deg) | rayon interieur du materiau non-fond (px) | couleur a ce rayon
+      -70 | 26.2 (21% de R) | (33, 39, 52)
+      -60 | 26.2 (21% de R) | (34, 39, 52)
+      -50 | 26.2 (21% de R) | (33, 38, 52)
+      -40 | 26.2 (21% de R) | (33, 38, 52)
+      -30 | 26.2 (21% de R) | (34, 39, 52)
+      -20 | 26.2 (21% de R) | (33, 39, 52)
+      -10 | 26.2 (21% de R) | (34, 39, 52)
+       +0 | 26.2 (21% de R) | (33, 38, 52)
+      +10 | 26.2 (21% de R) | (34, 39, 52)
+      +20 | 26.2 (21% de R) | (33, 39, 52)
+      +30 | 26.2 (21% de R) | (34, 39, 52)
+      +40 | 26.2 (21% de R) | (33, 38, 52)
+      +50 | 26.2 (21% de R) | (33, 38, 52)
+      +60 | 26.2 (21% de R) | (34, 39, 52)
+      +70 | 26.2 (21% de R) | (33, 39, 52)
+  CAP  rayon interieur : min=26.2 max=26.2 amplitude=0.0 px (0% de R)
+
+=== CANON : anneau laiton ===
+OUVERT hud-canon-1176.png (1176, 2091)
+  HUD anneau: n=2774  bbox x[440..759] y[21..290]  centre=(599.5,155.5)  R_ext=147.0
+  HUD  angle(deg) | rayon interieur du materiau non-fond (px) | couleur a ce rayon
+      -70 | 110.2 (75% de R) | (40, 42, 46)
+      -60 | 114.7 (78% de R) | (32, 36, 46)
+      -50 | 119.1 (81% de R) | (33, 38, 49)
+      -40 | 30.9 (21% de R) | (31, 37, 51)
+      -30 | 30.9 (21% de R) | (176, 141, 62)
+      -20 | 30.9 (21% de R) | (125, 104, 58)
+      -10 | 30.9 (21% de R) | (32, 38, 52)
+       +0 | 30.9 (21% de R) | (31, 37, 51)
+      +10 | 120.5 (82% de R) | (31, 37, 48)
+      +20 | 116.1 (79% de R) | (32, 37, 48)
+      +30 | (rien)
+      +40 | (rien)
+      +50 | (rien)
+      +60 | (rien)
+      +70 | (rien)
+  HUD  rayon interieur : min=30.9 max=120.5 amplitude=89.7 px (61% de R)
+
+=== CAPTURE : ARGENT vs medaillon (collision) ===
+  pixels dores du montant : n=1874   x de 179 a 446
+  couleur mediane de l'encre doree = (242,201,106)
+  bord GAUCHE du medaillon (anneau braise) x=414.5 ; extremite droite du montant x=446
+  -> recouvrement = 31.5 px

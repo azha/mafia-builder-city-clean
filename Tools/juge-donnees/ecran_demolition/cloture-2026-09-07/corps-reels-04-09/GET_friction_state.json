@@ -1,0 +1,34 @@
+{
+ "route": "/v1/friction/state",
+ "route_appelee": "/v1/friction/state",
+ "methode": "GET",
+ "statut": 200,
+ "params": {},
+ "provenance": {
+  "date": "2026-09-04T10:15:48",
+  "back_main": "6ff684db",
+  "game_back": "mafia-clean-city-game-back 2026-09-04T08:14:29.844933926Z",
+  "compte": "operational_demo@example.test",
+  "dossier": "ecran_demolition",
+  "symbole": "㉝",
+  "controleur": "DemolitionScreenController",
+  "X-Request-Id": "b42f529a-ff15-4fe0-929e-33561b5e80fb",
+  "X-Server-Processed-At": "2026-09-04T08:15:51.945Z",
+  "X-Api-Version": "1"
+ },
+ "corps": {
+  "response_meta": {
+   "request_id_echo": "b42f529a-ff15-4fe0-929e-33561b5e80fb",
+   "server_processed_at": "2026-09-04T08:15:51.945Z",
+   "api_version": 1,
+   "correlation_id_echo": null
+  },
+  "payload": {
+   "data": {
+    "friction_bucket": "balanced",
+    "penalty_active": false,
+    "friction_node_count": 9
+   }
+  }
+ }
+}

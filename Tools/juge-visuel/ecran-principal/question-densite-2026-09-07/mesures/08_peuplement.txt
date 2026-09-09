@@ -1,0 +1,30 @@
+taille source : 1080 x 1920
+
+== MARQUEURS JOUABLES (anneau ambre : R>=150, R-B>=90, G-B>=55) ==
+  pixels ambre dans la scene : 5292
+  MARQUEURS RETENUS : 0
+  -- controle positif : un marqueur repere A L'OEIL vers (348,551) est-il dans la liste ? NON -> detecteur faux
+  -- controle negatif : aucun marqueur ne doit tomber dans l'eau libre (y>1560, x<700) : 0
+
+== SOURCES DE LUMIERE (L>=150 et R>=B) ==
+  pixels clairs+chauds : 44938 (2.70% de la scene)
+  taches distinctes >=25 px : 228
+    y    0- 199 :   7 taches
+    y  200- 399 :   7 taches
+    y  400- 599 :  34 taches
+    y  600- 799 :  58 taches
+    y  800- 999 :  58 taches
+    y 1000-1199 :  38 taches
+    y 1200-1399 :  20 taches
+    y 1400-1599 :   6 taches
+
+== OCCUPATION DE L'EAU ==
+  aire d'eau visible (y 1400-1684) : 193160 px
+  composantes non-eau >=200 px dans la bande d'eau : 5
+    n=111616 px  bbox x[84..1079] y[1400..1577]
+    n=   967 px  bbox x[0..41] y[1406..1444]
+    n=   320 px  bbox x[860..878] y[1579..1600]
+    n=   293 px  bbox x[658..676] y[1535..1554]
+    n=   287 px  bbox x[52..73] y[1400..1417]
+
+ecrit 08_peuplement.png (vert=marqueurs, magenta=taches lumineuses)

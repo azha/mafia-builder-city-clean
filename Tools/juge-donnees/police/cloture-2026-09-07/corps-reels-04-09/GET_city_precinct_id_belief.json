@@ -1,0 +1,23 @@
+{
+ "route": "/v1/city/precinct/{id}/belief",
+ "methode": "GET",
+ "statut": null,
+ "sans_instance": {
+  "precinctId": "aucune instance sur le compte de démo — attendue dans un corps du dossier (clés ['precinctId'])"
+ },
+ "params": {
+  "precinctId": {
+   "valeur": null,
+   "source": "aucune instance sur le compte de démo — attendue dans un corps du dossier (clés ['precinctId'])"
+  }
+ },
+ "provenance": {
+  "date": "2026-09-04T10:15:48",
+  "back_main": "6ff684db",
+  "game_back": "mafia-clean-city-game-back 2026-09-04T08:14:29.844933926Z",
+  "compte": "operational_demo@example.test",
+  "dossier": "police",
+  "symbole": "⑰",
+  "controleur": "PrecinctScreenController"
+ }
+}

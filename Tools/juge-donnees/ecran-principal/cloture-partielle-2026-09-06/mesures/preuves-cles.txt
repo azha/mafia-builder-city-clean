@@ -1,0 +1,72 @@
+# PREUVES — juge données ⊥ ① — 2026-09-06 (tout depuis les archives FIGÉES du dossier)
+
+## Q1 — .bandeau-alerte
+F  front-43ac9cb/.../Shell/TopBarController.cs:1433-1439  "Le bandeau éphémère lui-même est HORS
+   PÉRIMÈTRE de ce lot (consigné — voir Deviations)... Ce qui reste : un hook de DONNÉES headless
+   (`notificationText`, alpha 0)"
+F  TopBarController.cs:1505-1508  NewText("Notification", ..., WithAlpha(...onSurfacePrimary, 0f))  ⇒ alpha 0
+F  TopBarController.cs:298-299    LibelleNotifActive="[!] Nouveau" / LibelleNotifCalme="[ ] Calme"
+F  TopBarController.cs:456,492    NotificationActive = backlogBadge ; notificationText.text = ...
+F  grep notificationText → 6 sites, TOUS dans TopBarController.cs (aucun chrome visible)
+B  corps-reels/_voisin_POST_session_open.json  backlog_badge = false ; queue n=3
+B  corps-reels/_voisin_GET_exceptions_queue.json  backlog_badge = false ; exceptions n=6 (pending),
+   dont 368a88cd = Lt. Sallo (MILD/watching)  ⇒ « Sal » de la maquette
+B  corps-reels/_voisin_GET_autonomy-reports.json  reports n=1, issues n=2, decided=null (les deux)
+B  session/open hl_card.decision_type_key = "AUTONOMY_REPORTS_PENDING"
+B  back-fc944b62/.../core_loops/core-loops-tunables.ts:400-403
+   "exception_backlog_badge_threshold — pending-count threshold for the soft `backlog_badge`.
+    Default 10, 4..30"   ⇒ 6 pending < 10 ⇒ false CORRECT
+B  back .../exceptions/exceptions.controller.ts:65  backlog_badge = "the player-wide" (volume)
+
+## Q2 — barre de ratio
+M  hud-brennar.html:59-60  .ratio{width:74px;height:2px;background:#5a6376} / .ratio i{background:var(--or)}
+M  hud-brennar.html:157    <span class="ratio"><i style="width:68%"></i></span>          ⇒ 68 % EN DUR
+M  hud-brennar.html:211-212 annotation ① « la part propre (or) contre sale (gris) — le ratio du blanchiment »
+F  TopBarController.cs:354  MoneyUnderlineWidthPx = 74f  // REUSE exact — hud-brennar.html:59 `.ratio{width:74px}`
+   ⇒ REUSE de la largeur du CONTENEUR (la piste), PAS du remplissage
+F  TopBarController.cs:956-965  UN SEUL GameObject "Underline" + UN SEUL Image, couleur hudMoneyUnderlineGold
+   ⇒ aucune piste #5a6376, aucun second Image
+F  TopBarController.cs:914-916  « Le soulignement N'ENCODE PAS un ratio propre/sale — aucune donnée
+   client ne porte cette information ... jamais une valeur dérivée d'un champ inexistant (R2.2) »
+B  back .../operational/laundering/laundering.controller.ts:170-171  @Get('operational/laundering') @UseGuards(JwtAuthGuard)
+B  back .../operational/laundering/laundering.projection.service.ts:47,61,78  cleanliness_band: CleanlinessBucket
+B  idem :18  « DIRTY | PARTIAL | MOSTLY_CLEAN | CLEAN »
+B  idem :13-15,28-30  « the raw [0,1] cleanliness float NEVER exposed » / « The E2E scans the payload
+   recursively and rejects any raw scalar »  ⇒ R2.2 INTERDIT le scalaire continu de la maquette
+
+## Défaut heat_bucket
+B  corps-reels/GET_city_district_id_heat.json  buildings[0].heat_bucket = "COLD" (route statut 200, appelée par ①)
+F  front .../CityMap/WorldDtos.cs:141  public string heat_bucket;
+F  grep -rn heat_bucket sur TOUT Assets/Scripts → total 1 = la déclaration. ZÉRO lecture.
+F  contrôle POSITIF même arbre : citywide_bucket → 9 occurrences (le motif fonctionne)
+M  hud-brennar.html:189  <b style="color:var(--braise)">12%</b><span>Heat local</span>
+F  DistrictInteriorScreenController.cs:1979-1981 « ce DTO ne porte AUCUNE chaleur par bâtiment » (vrai
+   pour l'interior DTO, mais la route heat sœur est DÉJÀ appelée)
+B  heat district_bucket = "COLD" (district du joueur) vs citywide_bucket = "BURNING" (ce qu'affiche le médaillon)
+
+## Défaut énoncé daté BLANCHIR
+F  DistrictInteriorScreenController.cs:2037-2040  « rend 404 POUR TOUT LE MONDE, DANS TOUS LES
+   ENVIRONNEMENTS : rien ne crée jamais de ligne `safehouses` (0 écrivain dans `services/`, 0 dans
+   les 147 migrations — chaîne morte TD-358) »
+B  back-fc944b62 .../operational/laundering_persistence/laundering-persistence.service.ts:82  createSafehouse(
+B  idem :104  INSERT INTO ${safehouse} (player_id, building_id, slot_count, ...)
+B  back .../onboarding/onboarding-grant.service.ts:411  await this.launderingPersistence.createSafehouse(tx, ...)
+   ⇒ APPELANT DE PRODUCTION (welcome grant)
+B  corps-reels/empreinte-reference.json  planques_n = "2"   ⇒ le compte des planches A 2 planques
+F  message en dur :2055  "Blanchiment : aucune planque — la filière n'est pas ouverte."  ⇒ FAUX ici
+⚠ NON MESURÉ : que inject rendrait 200. Garde AUSSI un front_shop OPERATIONAL possédé
+   (laundering.service.ts:114-118) ; stack interdite.
+
+## Défaut LibellesBatiment.Type
+B  back .../db/schema/operational_chain.ts:27-31  pgEnum building_operational_type, 12 membres MINUSCULES :
+   front_shop, cash_safehouse, stash, lab, grow_house, refinery, press_house, distribution_hub,
+   office, dealer_spot_front, money_holding, specialized_lab
+B  corps réel interior : operational_type = "distribution_hub" (minuscule)
+F  LibellesBatiment.cs:24-40  switch sur MAJUSCULES (GROW_HOUSE, LAB, DISTRIBUTION_HUB, ...)
+F  DistrictInteriorScreenController.cs:1940  LibellesBatiment.Type(b.operational_type) — AUCUNE normalisation
+   ⇒ default → CasseDeTitre → "Distribution hub" au lieu de "Relais"
+F  6 membres du résolveur absents du back : SAFEHOUSE, WAREHOUSE, GARAGE, CLUB, BAR, RESTAURANT
+   6 membres du back absents du résolveur : cash_safehouse, stash, refinery, press_house,
+   dealer_spot_front, specialized_lab
+F  LibellesBatiment.cs:12 « ses 13 champs sont tous des bandes qualitatives » + « ne porte NI nom » —
+   PÉRIMÉ : name_i18n a été ajouté le 2026-09-02 et EST consommé (ResoudreNomBatiment :1937-1951)

@@ -1,0 +1,97 @@
+{
+ "dossier": "famille",
+ "symbole": "⑥",
+ "controleur": "LieutenantScreenController",
+ "date": "2026-09-06T06:46:03",
+ "back_main": "b357e7a4",
+ "compte": "demo_capture@example.test",
+ "note": "routes = celles du DOSSIER de code du contrôleur et de ses classes *Client. DEUX SENS, et le second manquait : elles sont parfois PLUS LARGES que l'écran (le juge-donnees filtre), et parfois PLUS ÉTROITES que le domaine — une route du domaine que le code de l'écran n'appelle pas N'APPARAÎT PAS ICI, par construction et non par échec. Mesuré le 2026-09-06 sur screen_c2 : POST .../laundering/stage existe côté back et le client la référence 0 fois, donc elle est absente de cet index. ⛔ Une absence ici se lit « pas dans la surface de code de l'écran », JAMAIS « pas de corps » ni « pas regardée » — confronter au mandat du dossier pour la trancher.",
+ "comptes": {
+  "appelées": 3,
+  "sans instance": 0,
+  "mutations": 8,
+  "erreurs": 0
+ },
+ "routes": [
+  {
+   "fichier": "POST_auth_signin.json",
+   "route": "/v1/auth/signin",
+   "methode": "POST",
+   "statut": null,
+   "etat": "mutation"
+  },
+  {
+   "fichier": "POST_auth_signup.json",
+   "route": "/v1/auth/signup",
+   "methode": "POST",
+   "statut": null,
+   "etat": "mutation"
+  },
+  {
+   "fichier": "GET_autonomy-reports.json",
+   "route": "/v1/autonomy-reports",
+   "methode": "GET",
+   "statut": 200,
+   "etat": "appelée"
+  },
+  {
+   "fichier": "POST_autonomy-reports_reportId_issues_issueId_resolve.json",
+   "route": "/v1/autonomy-reports/{reportId}/issues/{issueId}/resolve",
+   "methode": "POST",
+   "statut": null,
+   "etat": "mutation"
+  },
+  {
+   "fichier": "POST_lieutenants.json",
+   "route": "/v1/lieutenants",
+   "methode": "POST",
+   "statut": null,
+   "etat": "mutation"
+  },
+  {
+   "fichier": "GET_lieutenants_id.json",
+   "route": "/v1/lieutenants/{id}",
+   "methode": "GET",
+   "statut": 200,
+   "etat": "appelée"
+  },
+  {
+   "fichier": "POST_lieutenants_id_autonomy_decision.json",
+   "route": "/v1/lieutenants/{id}/autonomy/decision",
+   "methode": "POST",
+   "statut": null,
+   "etat": "mutation"
+  },
+  {
+   "fichier": "POST_lieutenants_id_behavior-script.json",
+   "route": "/v1/lieutenants/{id}/behavior-script",
+   "methode": "POST",
+   "statut": null,
+   "etat": "mutation"
+  },
+  {
+   "fichier": "POST_lieutenants_id_behavior-script_validate.json",
+   "route": "/v1/lieutenants/{id}/behavior-script/validate",
+   "methode": "POST",
+   "statut": null,
+   "etat": "mutation"
+  },
+  {
+   "fichier": "POST_lieutenants_id_reassign.json",
+   "route": "/v1/lieutenants/{id}/reassign",
+   "methode": "POST",
+   "statut": null,
+   "etat": "mutation"
+  },
+  {
+   "fichier": "GET_progression.json",
+   "route": "/v1/progression",
+   "methode": "GET",
+   "statut": 200,
+   "etat": "appelée"
+  }
+ ],
+ "horloge_game_minute": 72013,
+ "jour_de_jeu": 50,
+ "horloge_note": "relue en base sur `city_sim_clock` scopée au joueur, APRÈS la passe, et identique aux deux empreintes qui l'encadrent (72013 avant, 72013 après). Champ ajouté post-capture parce que le générateur ne l'écrivait pas dans le manifeste — le code est corrigé, la prochaine passe l'écrira elle-même."
+}

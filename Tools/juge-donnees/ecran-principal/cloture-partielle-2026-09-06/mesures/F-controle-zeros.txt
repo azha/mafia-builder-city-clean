@@ -1,0 +1,15 @@
+--- CONTRÔLE POSITIF (doivent être NON NULS) ---
+  day_phase          nu= 18  DistrictInteriorScreenController.cs:9 TopBarController.cs:4 AppShell.cs:4 DayPhaseResolver.cs:1
+  citywide_bucket    nu=  5  AppShell.cs:5
+--- SUSPECTS (0 au motif pointé) ---
+  shell_state        nu=  2  DistrictInteriorScreenController.cs:2
+  district_id        nu=  2  DistrictTinted.cs:2
+  grid               nu=  0  — ZÉRO CONFIRMÉ (motif nu)
+  lieutenants        nu=  6  DistrictInteriorScreenController.cs:6
+  district_bucket    nu=  0  — ZÉRO CONFIRMÉ (motif nu)
+  escalated          nu=  0  — ZÉRO CONFIRMÉ (motif nu)
+  heat_bucket        nu=  0  — ZÉRO CONFIRMÉ (motif nu)
+  session_id         nu=  0  — ZÉRO CONFIRMÉ (motif nu)
+  flag_review        nu=  0  — ZÉRO CONFIRMÉ (motif nu)
+  settling_glance    nu=  0  — ZÉRO CONFIRMÉ (motif nu)
+  onboarding         nu=  0  — ZÉRO CONFIRMÉ (motif nu)

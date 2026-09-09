@@ -1,0 +1,48 @@
+========================================================================
+DistrictInteriorBuildingDto
+  building                     3  DistrictInteriorScreenController.cs:3
+  block_id                     3  DistrictInteriorScreenController.cs:3
+  operational_type             9  DistrictInteriorScreenController.cs:9
+  conversion_band              1  DistrictInteriorScreenController.cs:1
+  shell_state                  0  — AUCUN SITE
+  condition_band               3  DistrictInteriorScreenController.cs:3
+  revenue_band                 2  DistrictInteriorScreenController.cs:2
+  revenue_chain                2  DistrictInteriorScreenController.cs:2
+  activity_band                1  DistrictInteriorScreenController.cs:1
+  lapse_phase_bucket           1  DistrictInteriorScreenController.cs:1
+  maintenance_in_progress      1  DistrictInteriorScreenController.cs:1
+  lieutenant_ids               3  DistrictInteriorScreenController.cs:3
+  name_i18n                    4  DistrictInteriorScreenController.cs:4
+========================================================================
+DistrictInteriorDto
+  district                     2  DistrictInteriorScreenController.cs:2
+  district_id                  0  — AUCUN SITE
+  profile                      2  DistrictInteriorScreenController.cs:1 DistrictCellView.cs:1
+  name                         3  DistrictInteriorScreenController.cs:3
+  name_canonical               2  DistrictInteriorScreenController.cs:2
+  bank_side                    1  DistrictCellView.cs:1
+  grid                         0  — AUCUN SITE
+  blocks                       2  DistrictInteriorScreenController.cs:2
+  day_phase                    3  DistrictInteriorScreenController.cs:1 AppShell.cs:1 DayPhaseResolver.cs:1
+  buildings                    4  DistrictInteriorScreenController.cs:4
+  lieutenants                  0  — AUCUN SITE
+========================================================================
+HeatDto/interior-heat
+  district_bucket              0  — AUCUN SITE
+  citywide_bucket              1  AppShell.cs:1
+  escalated                    0  — AUCUN SITE
+  heat_bucket                  0  — AUCUN SITE
+========================================================================
+SessionDto(12 clés)
+  session_id                   0  — AUCUN SITE
+  hl_card                      3  AppShell.cs:3
+  queue                        3  AppShell.cs:3
+  backlog_badge                1  AppShell.cs:1
+  queue_pressure_band          1  AppShell.cs:1
+  structural_budget            4  AppShell.cs:4
+  flag_review                  0  — AUCUN SITE
+  settling_glance              0  — AUCUN SITE
+  friction_glance              1  AppShell.cs:1
+  compression_glance           2  AppShell.cs:2
+  onboarding                   0  — AUCUN SITE
+  opened_game_day              1  AppShell.cs:1

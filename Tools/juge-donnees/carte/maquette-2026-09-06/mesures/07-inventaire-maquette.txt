@@ -1,0 +1,78 @@
+# 07 — inventaire M : ce que la maquette DESSINE, compté dans la source
+source : /home/erutheone/project/atelier3d-mafia/ecrans-brennar-6.html
+cadres 22 (l.846, nominal · ratifié = reference-1080x2102.png), 23 (l.875), 24 (l.904)
+
+== cadre 22 (nominal) — lignes 846..874
+   groupes de quartier <g class="q …">                        18
+   noms de quartier <text class="nomq">                       18
+   nappes de chaleur <path class="nappe …">                   2
+     dont warm / hot / burning                                2 / 0 / 0
+   classes h-* portées par un quartier (warm/cold/hot/burning) 2/16/0/0
+   quartier `mien`                                            1
+   quartier `choisi`                                          0
+   drapeau escalated <g class="pin-esc">                      1
+   écussons precinct <g class="ecusson …">                    6
+     formes d'écusson employées                               ['chasse', 'soup', 'veille']
+   marqueur « moi »                                           1
+   pastilles de bâtiment <g class="bat">                      0
+   ponts <g class="pont">                                     2
+   parcs                                                      3
+   tours (glass)                                              15
+   bande de sélection .bande-carte                            0
+   tampon ENTRER .tampon-plan                                 0
+   pied .carte-pied                                           1
+   TEXTE du pied     : Brennar, la nuit — deux rives, dix-huit quartiers · pincez pour approcher, touchez un quartier
+   TEXTE gravé       : ['LE PORT']
+   TEXTE gravé       : ['LE THRENNY']
+   TEXTE gravé       : ['VOUS ÊTES ICI · ⌂ 4']
+   BARRE du haut     : | | Argent | | $ 24 850 | | | [manomètre svg] | tiède | | Heat | | | | Jour 26 | | Nuit |
+
+== cadre 23 (quartier touché) — lignes 875..903
+   groupes de quartier <g class="q …">                        18
+   noms de quartier <text class="nomq">                       18
+   nappes de chaleur <path class="nappe …">                   2
+     dont warm / hot / burning                                2 / 0 / 0
+   classes h-* portées par un quartier (warm/cold/hot/burning) 2/16/0/0
+   quartier `mien`                                            1
+   quartier `choisi`                                          1
+   drapeau escalated <g class="pin-esc">                      1
+   écussons precinct <g class="ecusson …">                    6
+     formes d'écusson employées                               ['chasse', 'soup', 'veille']
+   marqueur « moi »                                           1
+   pastilles de bâtiment <g class="bat">                      0
+   ponts <g class="pont">                                     2
+   parcs                                                      3
+   tours (glass)                                              15
+   bande de sélection .bande-carte                            1
+   tampon ENTRER .tampon-plan                                 1
+   pied .carte-pied                                           0
+   TEXTE de la bande : | | Les Bassins | | rive nord · le port · 37 blocs · | tiède | · ⚑ descente en cours · précinct 1 en chasse | | | ENTRER | dans le quartier |
+   TEXTE gravé       : ['LE PORT']
+   TEXTE gravé       : ['LE THRENNY']
+   TEXTE gravé       : ['VOUS ÊTES ICI · ⌂ 4']
+   BARRE du haut     : | | Argent | | $ 24 850 | | | [manomètre svg] | tiède | | Heat | | | | Jour 26 | | Nuit |
+
+== cadre 24 (approcher — chez vous) — lignes 904..932
+   groupes de quartier <g class="q …">                        18
+   noms de quartier <text class="nomq">                       18
+   nappes de chaleur <path class="nappe …">                   2
+     dont warm / hot / burning                                2 / 0 / 0
+   classes h-* portées par un quartier (warm/cold/hot/burning) 2/16/0/0
+   quartier `mien`                                            1
+   quartier `choisi`                                          1
+   drapeau escalated <g class="pin-esc">                      1
+   écussons precinct <g class="ecusson …">                    6
+     formes d'écusson employées                               ['chasse', 'soup', 'veille']
+   marqueur « moi »                                           1
+   pastilles de bâtiment <g class="bat">                      4
+   ponts <g class="pont">                                     2
+   parcs                                                      3
+   tours (glass)                                              15
+   bande de sélection .bande-carte                            1
+   tampon ENTRER .tampon-plan                                 1
+   pied .carte-pied                                           0
+   TEXTE de la bande : | | La Lisière — chez vous | | rive sud · 40 blocs · froid · | 4 bâtiments | : le labo, la planque, la façade, le coffre · précinct 6 en chasse | | | ENTRER | dans le district |
+   TEXTE gravé       : ['LE PORT']
+   TEXTE gravé       : ['LE THRENNY']
+   BARRE du haut     : | | Argent | | $ 24 850 | | | [manomètre svg] | tiède | | Heat | | | | Jour 26 | | Nuit |
+

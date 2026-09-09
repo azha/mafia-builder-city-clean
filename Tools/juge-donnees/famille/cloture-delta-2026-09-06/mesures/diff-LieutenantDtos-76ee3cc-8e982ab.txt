@@ -1,0 +1,37 @@
+--- /tmp/claude-1000/-home-erutheone-project-mafia-clean-city/da1ad8c2-082e-4fce-9435-d4d5ef4fc1c6/scratchpad/jd6/OLD_LieutenantDtos.cs	2026-09-06 10:17:00.007541677 +0200
++++ /home/erutheone/project/mafia-unity-J/Tools/juge-donnees/famille/cloture-delta-2026-09-06/front-8e982ab/Assets/Scripts/Operational/Lieutenant/LieutenantDtos.cs	2026-09-06 09:36:33.000000000 +0200
+@@ -88,6 +88,16 @@
+     [Serializable]
+     public class LieutenantBands
+     {
++        /// <summary>⛔ SERVI DEPUIS TOUJOURS ET LU PAR PERSONNE — `reassign_availability`
++        /// (AVAILABLE | ON_COOLDOWN | …). Mesuré le 2026-09-06 : **0 site actif** dans tout
++        /// `Assets/Scripts`, alors que `GET /v1/lieutenants/:id` le rend (corps commité,
++        /// `demo_capture`, horloge 72 013, valeur `AVAILABLE`).
++        /// ⇒ CE QUE SON ABSENCE COÛTAIT : `ReassignChosen()` gardait l'authentification, la
++        ///   sélection et le bâtiment de destination — **jamais la disponibilité**. Un joueur en
++        ///   période de latence voyait donc le geste offert, le confirmait, et récoltait un 409.
++        ///   *Un geste impossible qu'on laisse cliquer n'est pas une erreur de serveur : c'est
++        ///   une promesse que l'écran n'avait pas le droit de faire.*</summary>
++        public string reassign_availability;
+         public string archetype;        // COOK | SECURITY | BOOKKEEPER | LOGISTICS | LAUNDERING | DISTRIBUTION | UNKNOWN
+         public string granted_role;     // advisory | executor | delegated_owner | cohort_overseer (CLOSED 07 domain)
+         public string mode;             // tasked | delegated (CLOSED 07 domain)
+@@ -113,6 +123,17 @@
+     public class RosterRow
+     {
+         public string lieutenant_id;    // uuid identity of the lieutenant (the Open key; opaque, not a scalar)
++        /// <summary>⛔⛔ LE NOM ÉTAIT SERVI ET LE CLIENT LE JETAIT — forme F, côté client.
++        /// Mesuré le 2026-09-06 sur le corps de `GET /v1/lieutenants` (`demo_capture`, horloge
++        /// 72 013) : le serveur rend **six** clés — `lieutenant_id · name · archetype ·
++        /// op_state_band · rule_count_band · tenure_bucket` — et ce DTO n'en déclarait que
++        /// **cinq**. `JsonUtility` ignore en silence ce qu'il ne sait pas nommer.
++        /// ⇒ Conséquence à l'écran, relevée par le juge ⊥ à la bbox : l'organigramme affichait
++        ///   l'ARCHÉTYPE à la place du nom, et les trois lieutenants du compte étant tous `COOK`,
++        ///   le joueur lisait **« Cuisinier » trois fois** au lieu de `Lt. Oster / Lt. Brasse /
++        ///   Lt. Sallo`. *Un champ absent d'un DTO ne lève rien : il se voit à l'écran, sous la
++        ///   forme d'un autre champ qui prend sa place.*</summary>
++        public string name;             // le nom de fiction du lieutenant (servi ; jamais dérivé côté client)
+         public string archetype;        // COOK | SECURITY | BOOKKEEPER | LOGISTICS | LAUNDERING | DISTRIBUTION | UNKNOWN
+         public string op_state_band;    // PAUSED | ACTIVE | IDLE — the delegated operational state band
+         public string rule_count_band;  // NONE | FEW | MANY — the behavior-script rule count as a band (never the raw count)

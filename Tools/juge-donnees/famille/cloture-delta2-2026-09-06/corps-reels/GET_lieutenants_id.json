@@ -1,0 +1,63 @@
+{
+ "route": "/v1/lieutenants/{id}",
+ "route_appelee": "/v1/lieutenants/01a075d7-6aed-728e-8f0a-b5dbd5caedee",
+ "methode": "GET",
+ "statut": 200,
+ "params": {
+  "lieutenantId": {
+   "valeur": "01a075d7-6aed-728e-8f0a-b5dbd5caedee",
+   "source": "lu dans le corps de `lieutenants` (clé parmi ['lieutenant_id'])"
+  }
+ },
+ "provenance": {
+  "date": "2026-09-06T11:02:54",
+  "back_main": "fc944b62",
+  "game_back": "mafia-clean-city-game-back 2026-09-04T08:41:42.667221302Z",
+  "compte": "demo_capture@example.test",
+  "jour_de_jeu": 50,
+  "horloge_game_minute": 72118,
+  "horloge_source": "city_sim_clock.game_minute scopée sur player_id (lecture en base : aucune route joueur ne la projette — forme F)",
+  "district_du_joueur_mesure": 1,
+  "dossier": "famille",
+  "symbole": "⑥",
+  "controleur": "LieutenantScreenController",
+  "X-Request-Id": "27ff23b2-df4c-4f79-ba1f-39f420fb5821",
+  "X-Server-Processed-At": "2026-09-06T09:02:54.490Z",
+  "X-Api-Version": "1"
+ },
+ "corps": {
+  "response_meta": {
+   "request_id_echo": "27ff23b2-df4c-4f79-ba1f-39f420fb5821",
+   "server_processed_at": "2026-09-06T09:02:54.490Z",
+   "api_version": 1,
+   "correlation_id_echo": null
+  },
+  "payload": {
+   "data": {
+    "name": "Lt. Rook",
+    "archetype": "COOK",
+    "granted_role": "executor",
+    "mode": "delegated",
+    "op_state_band": "IDLE",
+    "rule_count_band": "NONE",
+    "tenure_bucket": "FRESH",
+    "script_revision_cost": "COST_1",
+    "reassignment_disruption": "DISRUPT_SHORT",
+    "role_efficiency_bonus": "BONUS_NONE",
+    "reassign_availability": "AVAILABLE",
+    "budget_bands": {
+     "PRODUCTION_OPS": "depleted"
+    },
+    "cue_bands": {},
+    "drift_phase": "DIRECT_ALIGNED",
+    "standing_order": {
+     "freshness": "NONE",
+     "promotion_suggested": false
+    },
+    "trust_budget_bucket": "high",
+    "flag_frequency_band": "none",
+    "script_source": ""
+   }
+  }
+ }
+}

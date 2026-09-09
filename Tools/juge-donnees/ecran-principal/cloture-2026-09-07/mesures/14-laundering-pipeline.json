@@ -1,0 +1,1 @@
+{"response_meta":{"request_id_echo":"0c1b80d3-848b-4208-8246-7c64883d6136","server_processed_at":"2026-09-07T04:33:55.144Z","api_version":1,"correlation_id_echo":null},"payload":{"data":{"stages":[{"node":"7866d6ba-628b-4cff-908a-46920f1c9a97","cleanliness_band":"PARTIAL","terminal":true,"has_cash":true}]}}}

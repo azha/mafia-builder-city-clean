@@ -1,0 +1,22 @@
+══════════════════════════════════════════════════════════════════════════════════════════
+planche-screen_c1_journal_sous_chrome_1080x2400.png (fd0e21e? -> 31d8e43, 20/13/02)
+  occurrences lues a l'image : 10  | distinctes : 6
+   [PRESENT] news_beat.digest.ambient_micro.brennar_daily_star.headline  =>  'Faits mineurs consignés à {district}'
+   [PRESENT] news_beat.digest.ambient_micro.free_weekly.headline  =>  'Pendant ce temps, à {district}'
+   [PRESENT] news_beat.digest.ambient_micro.tilbey_weekly.headline  =>  'Petites nouvelles de {district}, qui restent des nouvelles'
+   [PRESENT] press.outlet.brennar_daily_star.name  =>  'Brennar Daily Star'
+   [PRESENT] press.outlet.free_weekly.name  =>  'The Free Weekly'
+   [PRESENT] press.outlet.tilbey_weekly.name  =>  'The Tilbey Weekly'
+══════════════════════════════════════════════════════════════════════════════════════════
+planche-screen_c1_1080x2400.png (15/16/04)
+  occurrences lues a l'image : 10  | distinctes : 7
+   [PRESENT] news_beat.digest.ambient_micro.brennar_daily_star.headline  =>  'Faits mineurs consignés à {district}'
+   [PRESENT] news_beat.digest.ambient_micro.free_weekly.headline  =>  'Pendant ce temps, à {district}'
+   [PRESENT] news_beat.digest.ambient_micro.tilbey_weekly.headline  =>  'Petites nouvelles de {district}, qui restent des nouvelles'
+   [PRESENT] news_beat.hindsight.op_ed.free_weekly.headline  =>  'Les avertissements étaient là. Et tout le monde qui les ignorait aussi'
+   [PRESENT] press.outlet.brennar_daily_star.name  =>  'Brennar Daily Star'
+   [PRESENT] press.outlet.free_weekly.name  =>  'The Free Weekly'
+   [PRESENT] press.outlet.tilbey_weekly.name  =>  'The Tilbey Weekly'
+
+═ CONTROLE NEGATIF (une cle qui NE DOIT PAS exister) ═
+   [ABSENT ] news_beat.digest.ambient_micro.journal_inexistant.headline

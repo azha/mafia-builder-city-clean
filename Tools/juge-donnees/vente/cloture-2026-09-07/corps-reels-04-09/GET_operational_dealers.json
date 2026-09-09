@@ -1,0 +1,48 @@
+{
+ "route": "/v1/operational/dealers",
+ "route_appelee": "/v1/operational/dealers",
+ "methode": "GET",
+ "statut": 200,
+ "params": {},
+ "provenance": {
+  "date": "2026-09-04T10:15:48",
+  "back_main": "6ff684db",
+  "game_back": "mafia-clean-city-game-back 2026-09-04T08:14:29.844933926Z",
+  "compte": "operational_demo@example.test",
+  "dossier": "vente",
+  "symbole": "㉟",
+  "controleur": "SellingScreenController",
+  "X-Request-Id": "34431889-b298-4c07-bce9-88fd6bb8466e",
+  "X-Server-Processed-At": "2026-09-04T08:15:50.663Z",
+  "X-Api-Version": "1"
+ },
+ "corps": {
+  "response_meta": {
+   "request_id_echo": "34431889-b298-4c07-bce9-88fd6bb8466e",
+   "server_processed_at": "2026-09-04T08:15:50.663Z",
+   "api_version": 1,
+   "correlation_id_echo": null
+  },
+  "payload": {
+   "data": {
+    "dealers": [
+     {
+      "dealer": "6f495ed5-6739-4d1a-9467-d4435329bf30",
+      "name_i18n": {
+       "key": "game.fiction.dealer.name",
+       "params": {
+        "prenom": "Ilse"
+       }
+      },
+      "activity_band": "WORKING",
+      "cash_band": "MODERATE",
+      "substance": "BRINDLE",
+      "margin_band": "STANDARD",
+      "addiction_loyalty_status": null,
+      "withdrawn": false
+     }
+    ]
+   }
+  }
+ }
+}

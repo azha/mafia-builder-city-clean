@@ -1,0 +1,65 @@
+# 06 — valeurs possibles de chaque clé, lues à la SOURCE qui les contraint
+
+## districtProfile (pgEnum, 6) — db/schema/world_geography.ts:14-21
+  export const districtProfile = pgEnum('district_profile', [
+    'tidewater',
+    'spine',
+    'lattice',
+    'stack',
+    'glass',
+    'verge',
+  ]);
+## bankSide (pgEnum, 2) — db/schema/world_geography.ts:23
+  export const bankSide = pgEnum('bank_side', ['north', 'south']);
+## thrennyEdgeType (pgEnum, 2) — db/schema/world_geography.ts:25
+  export const thrennyEdgeType = pgEnum('threnny_edge_type', ['bridge', 'ferry']);
+## ControlStateBucket (union TS, 4) — citysim/world/world-geography.repository.ts:52
+  /** Closed qualitative domain for territorial control (P5 — never a raw scalar). */
+  export type ControlStateBucket = 'UNCONTESTED' | 'CONTESTED' | 'PLAYER_HELD' | 'RIVAL_HELD';
+   ⚠️ MAIS la projection écrit un LITTÉRAL — world-geography.repository.ts:90
+        control_state: 'UNCONTESTED' as const, // P5 default qualitative bucket (never a raw scalar)
+   ⇒ 4 valeurs déclarées, 1 SEULE atteignable aujourd'hui. Mesuré : 18/18 UNCONTESTED dans le corps réel.
+
+## HeatBucket (union TS, 4) — citysim/events/city-event-bus.ts:484
+  export type HeatBucket = 'COLD' | 'WARM' | 'HOT' | 'BURNING';
+## PoliceBeliefBucket (union TS, 4) — citysim/police_memory/police_memory.projection.service.ts:30
+  export type PoliceBeliefBucket = 'DORMANT' | 'WATCHFUL' | 'SUSPICIOUS' | 'HUNTING';
+## DayPhase (union TS, 4) — citysim/district_interior/district-interior.controller.ts:53
+  export type DayPhase = 'DAWN' | 'DAY' | 'DUSK' | 'NIGHT';
+   producteur UNIQUE de day_phase (balayage du back) : district-interior.controller.ts:148
+## building_operational_type (pgEnum, 12) — db/schema/operational_chain.ts:27-31
+  export const buildingOperationalType = pgEnum('building_operational_type', [
+    'front_shop', 'cash_safehouse', 'stash', 'lab', 'grow_house', 'refinery',
+    'press_house', 'distribution_hub', 'office', 'dealer_spot_front', 'money_holding',
+    'specialized_lab',
+  ]); // building_types.md §38 (11 membres) + production_secondaries.md §Ash (specialized_lab — Ash building, §7.10.2 ; appended via ALTER TYPE ADD VALUE migration 0022)
+
+## les 6 traversées du Threnny, semées (4 bridge + 2 ferry) — db/migrations/0016_world_geography_seed.sql
+  INSERT INTO "threnny_edges" ("id", "edge_type", "north_district_id", "south_district_id", "inspection_queue_district_id")
+  VALUES
+    (1, 'bridge',  1,  8,  1),   -- Tidewater-1 <-> Lattice-A   (queue: Tidewater-1)
+    (2, 'bridge',  4, 13, 13),   -- Spine-A     <-> Glass-1      (queue: Glass-1)
+    (3, 'bridge', 11, 16, 11),   -- Stack-1     <-> Verge-A      (queue: Stack-1)
+    (4, 'bridge',  7, 10,  7),   -- Spine-D     <-> Lattice-C    (queue: Spine-D)
+    (5, 'ferry',   3, 15,  3),   -- Tidewater-3 <-> Glass-3      (queue: Tidewater-3)
+    (6, 'ferry',  12, 18, 18)    -- Stack-2     <-> Verge-C      (queue: Verge-C)
+  ON CONFLICT ("id") DO NOTHING;
+  ⇒ compte : {'bridge': 4, 'ferry': 2} total 6
+
+## le kit de départ : 4 bâtiments, district 16 (= « La Lisière ») — onboarding/onboarding-grant.service.ts:132-147
+  // SMALLEST id among the 3 seeded `verge`-profile districts) is FIXED, not randomized — deterministic
+  // E2E stability, same posture the design names explicitly.
+  const VERGE_A_DISTRICT_ID = 16;
+  
+  // The 4 grant buildings: type + its index in the 12-member `building_operational_type` pgEnum
+  // (`operational_chain.ts:27-31` — `['front_shop', 'cash_safehouse', 'stash', 'lab', …]`, so
+  // front_shop=0, cash_safehouse=1, stash=2, lab=3). CASH_SAFEHOUSE_FORBIDDEN_DISTRICT='glass'
+  // (`real-estate.service.ts:184`) never applies here — Verge ≠ Glass, by construction of D7 (the
+  // design leaves this re-asserted in the E2E falsifiable, not enforced in code, since the chosen
+  // district makes it structurally unreachable).
+  const GRANT_BUILDINGS: ReadonlyArray<{ operationalType: M1OperationalType; buildingTypeIndex: number }> = [
+    { operationalType: 'lab', buildingTypeIndex: 3 },
+    { operationalType: 'stash', buildingTypeIndex: 2 },
+    { operationalType: 'front_shop', buildingTypeIndex: 0 },
+    { operationalType: 'cash_safehouse', buildingTypeIndex: 1 },
+  ];

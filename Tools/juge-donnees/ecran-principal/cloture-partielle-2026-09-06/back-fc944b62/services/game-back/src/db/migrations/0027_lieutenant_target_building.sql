@@ -1,0 +1,33 @@
+-- 0027_lieutenant_target_building.sql — schema_lieutenant.md §2/§3/§4 (lieutenant, Phase-7 vector #7 lieutenant archetypes). PALIMPSEST §3.2 (forward-only).
+-- IMPLEMENTS: Phase 7 / vector #7 (lieutenant archetypes — generalize + SECURITY/LOGISTICS/BOOKKEEPER) / Task 0. R9.3: this matches
+--             src/db/schema/lieutenant.ts byte-for-byte. ONLY ADDS — no existing table/column/enum is redefined:
+--             1 NEW nullable column on "lieutenant" (target_building_id). This is the ONLY schema-touching task of the
+--             whole vector (the T1-T4 bindings are pure code, no schema). This is an ALTER, NOT a CREATE: the 7 canonical
+--             lieutenant tables ALREADY exist (0004_lieutenant.sql) and were extended once by 0026 (granted_role / mode /
+--             assigned_building_id / delegation_paused + behavior_script source / valid). 0027 ADDs only the dispatch
+--             destination column the LOGISTICS archetype needs. Every other table (Phase-1, the 9 Phase-2 T0 tables, raid
+--             0018, substance/cold-chain 0019/0020, addiction/luxury 0021/0022, cultivation 0023, courier-dispatch 0024,
+--             money_holding 0025, lieutenant/DSL 0026) is UNCHANGED (git diff = empty except the addition).
+--             ADD COLUMN with NO DEFAULT (nullable) = metadata-only in PG (no table rewrite), safe on a populated table; any
+--             already-recruited lieutenant retro-fills target_building_id=NULL → byte-identical behavior (COOK/SECURITY/
+--             BOOKKEEPER leave it null; only LOGISTICS sets it). Same forward-only ADD-COLUMN spirit as assigned_building_id 0026.
+-- FK: target_building_id → buildings(building_id) — SAME reference shape as assigned_building_id (0026 §3): no ON DELETE
+--     specified → NO ACTION by default (PG): if the destination building disappears with a LOGISTICS lieutenant pointing
+--     at it, the dispatch fails — a consistency guard; the service detaches first. (calque assigned_building_id 0026.)
+-- INDEX: NONE. The LOGISTICS binding reads target_building_id per-lieutenant by the lieutenant PK (already indexed) when
+--        the tick selects delegated lieutenants by assigned_building_id (lieutenant_assigned_building_idx, 0026) — no read
+--        filters BY target_building_id, so no secondary index is warranted day-1 (cf. schema_lieutenant.md §6).
+-- GRANT: NONE needed. "lieutenant" ALREADY has GRANT SELECT, INSERT (0013 §"Read+append everywhere", ALL TABLES) AND
+--        GRANT UPDATE, DELETE (0013 §"Mutate only NON-append-only tables" — listed explicitly). A table-level GRANT (no
+--        column list) covers columns ADDED later → the NEW column is SELECT/INSERT/UPDATE-able by app_rw with no re-GRANT
+--        (recruit INSERTs / re-target UPDATE it). (calque assigned_building_id 0026 / hub_tier 0024 / lab_tier 0022 — same
+--        table-level grant inheritance.)
+
+-- ===== lieutenant (existant, §4.1) — 1 colonne AJOUTÉE (Phase-7 LOGISTICS dispatch destination) =====
+-- target_building_id: le bâtiment DESTINATION du dispatch que l'archétype LOGISTICS sert (NULL si non-LOGISTICS).
+--   FK → buildings(building_id) (pas d'ON DELETE spécifié → NO ACTION par défaut PG — même garde de cohérence que
+--   assigned_building_id 0026 ; le service détache d'abord). NEW — la table 09 (dérivée GDD L115-186) ne modélisait pas
+--   une seconde référence bâtiment ; le LOGISTICS binding (T4) a besoin d'une SOURCE (assigned_building_id 0026) ET d'une
+--   DESTINATION (cette colonne) ; COOK/SECURITY/BOOKKEEPER la laissent NULL. (§4.1 NEW)
+ALTER TABLE "lieutenant"
+  ADD COLUMN "target_building_id" uuid NULL REFERENCES "buildings"("building_id");

@@ -1,0 +1,37 @@
+appels Lib( = 33   littéraux DISTINCTS = 26
+cles journal.bloc.* dans le bundle fr = 25
+
+── appariement par VALEUR (robuste : ne suppose aucune regle de slug) ──
+   [OK     ] journal.bloc.aucune_de_ces_breves_n_a_de_texte
+   [OK     ] journal.bloc.ce_que_cet_ecran_sait_pour_l_instant
+   [OK     ] journal.bloc.ce_que_le_serveur_envoie_vraiment
+   [OK     ] journal.bloc.ce_qui_se_dit_ce_matin
+   [OK     ] journal.bloc.dans_la_rue
+   [OK     ] journal.bloc.en_attente_du_matin
+   [OK     ] journal.bloc.en_cours
+   [OK     ] journal.bloc.le_journal_n_est_pas_arrive
+   [OK     ] journal.bloc.le_journal
+   [OK     ] journal.bloc.le_journal_n_a_pas_encore_ete_ouvert
+   [OK     ] journal.bloc.le_journal_suit_le_monde_pas_vous
+   [OK     ] journal.bloc.phase_inconnue
+   [OK     ] journal.bloc.pourquoi_c_est_vide
+   [OK     ] journal.bloc.pas_de_reponse
+   [OK     ] journal.bloc.rien_ne_bouge
+   [ABSENT ] 'Rien ce matin.\\nLa ville a passé une nuit tranquille.'
+   [OK     ] journal.bloc.ces_trois_listes_se_remplissent_avec_ce_que_la_ville_fait_aucune_ne_depend_de_vos_gestes
+   [OK     ] journal.bloc.la_route_n_a_rien_rendu_ce_n_est_pas_la_ville_est_calme_c_est_on_ne_sait_pas_ce_qu_elle_a_fait_cette_nuit
+   [OK     ] journal.bloc.le_serveur_rend_des_cles_et_un_gabarit_a_trous_les_titres_restent_a_ecrire_voila_le_journal_tel_qu_il_s_afficherait_aujourd_hui
+   [OK     ] journal.bloc.les_trois_listes_n_ont_pas_ete_demandees_ce_n_est_ni_rien_ne_bouge_ni_pas_de_reponse_c_est_pas_encore
+   [OK     ] journal.bloc.a_la_une
+   [OK     ] journal.bloc.ca_commence
+   [OK     ] journal.bloc.ca_ne_partira_pas
+   [OK     ] journal.bloc.ca_retombe
+   [OK     ] journal.bloc.ca_se_deploie
+   [OK     ] journal.bloc.ca_traine
+
+   => 25/26 littéraux ont une entrée dans le bundle ; 1 sans entrée (repli sur le littéral)
+
+── cles journal.bloc.* du bundle qu'AUCUN littéral n'appelle ──
+
+── CONTROLE POSITIF/NEGATIF ──
+   'À LA UNE' apparie : True | 'ZZZ' apparie : False

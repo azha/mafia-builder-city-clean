@@ -1,0 +1,26 @@
+taille source : 1080 x 1920
+composantes ambre rejetees (taille/forme) : 254
+MARQUEURS RETENUS : 17
+   ( 539, 223) n=162 bbox=18x17
+   ( 347, 552) n= 52 bbox=14x14
+   ( 539, 552) n= 52 bbox=14x14
+   ( 731, 552) n= 52 bbox=14x14
+   ( 155, 744) n= 52 bbox=14x14
+   ( 347, 744) n= 52 bbox=14x14
+   ( 539, 744) n= 52 bbox=14x14
+   ( 923, 744) n= 52 bbox=14x14
+   (1021, 744) n= 34 bbox=12x14
+   ( 502, 901) n= 95 bbox=14x12
+   ( 526, 906) n= 91 bbox=10x11
+   ( 282, 917) n=203 bbox=17x17
+   ( 658, 919) n= 96 bbox=13x11
+   ( 155, 936) n= 52 bbox=14x14
+   ( 539, 936) n= 52 bbox=14x14
+   ( 155,1320) n= 52 bbox=14x14
+   ( 731,1320) n= 52 bbox=14x14
+
+-- CONTROLE POSITIF : le marqueur temoin repere a l'oeil vers (348,551) est-il trouve ? OUI
+-- CONTROLE POSITIF 2 : un second temoin vers (540,551) ? OUI
+-- CONTROLE NEGATIF : marqueurs dans l'eau libre (y>1560 et x<700) : 0 (attendu 0)
+-- CONTROLE NEGATIF : marqueurs dans le ciel/sol vide du haut (y<430) : 1 (attendu 0)
+ecrit 09_marqueurs.png

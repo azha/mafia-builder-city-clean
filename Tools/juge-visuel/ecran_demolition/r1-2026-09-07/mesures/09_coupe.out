@@ -1,0 +1,47 @@
+OUVERT cap (1080, 2400)
+  CAPTURE colonne DROITE (hors texte du bas)  (x 700..1020)
+     y=1790 (34, 38, 34)
+     y=1795 (34, 38, 34)
+     y=1800 (34, 38, 34)
+     y=1805 (34, 38, 34)
+     y=1810 (34, 38, 34)
+     y=1815 (34, 38, 34)
+     y=1816 (28, 31, 27)  <==
+     y=1817 (22, 28, 34)  <==
+     y=1820 (22, 28, 34)
+     y=1825 (22, 28, 34)
+     y=1830 (22, 28, 34)
+
+  CAPTURE : recherche du filet (44,54,64) +-8 sur y=1780..1840, x=700..1020
+     -> 0 ligne(s) : []
+
+OUVERT ref (1080, 2102)
+  REFERENCE [controle positif] filet #2c3640 trouve sur 7 lignes : y=[1780, 1781, 1782, 1783, 1784, 1785, 1786]
+  CAPTURE [controle negatif, bande d'aplat y=900..960] : 0 ligne(s)
+
+=== encre de la derniere rangee (Laverie) : ou s'arrete-t-elle ? ===
+     y=1792  px d'encre= 11
+     y=1793  px d'encre= 40
+     y=1794  px d'encre= 48
+     y=1795  px d'encre= 46
+     y=1796  px d'encre= 40
+     y=1797  px d'encre= 37
+     y=1798  px d'encre= 33
+     y=1799  px d'encre= 34
+     y=1800  px d'encre=159
+     y=1801  px d'encre=173
+     y=1802  px d'encre=157
+     y=1803  px d'encre=132
+     y=1804  px d'encre=130
+     y=1805  px d'encre=122
+     y=1806  px d'encre=134
+     y=1807  px d'encre=148
+     y=1808  px d'encre=149
+     y=1809  px d'encre=143
+     y=1810  px d'encre=120
+     y=1811  px d'encre=129
+     y=1812  px d'encre=133
+     y=1813  px d'encre=132
+     y=1814  px d'encre=154
+     y=1815  px d'encre=192
+     y=1816  px d'encre=172
