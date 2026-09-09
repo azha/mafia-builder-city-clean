@@ -29,9 +29,23 @@ usage : campagne-visages.py <n> <index de départ>   → écrit les prompts et l
 import random
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 RACINE = Path(__file__).resolve().parent
+# ⚠️ Le dossier d'archive est DATÉ, et `generer.py` écrit dans celui du JOUR. Un lot long traverse
+# minuit : le 2026-09-06, les cinq derniers visages ont été écrits dans `2026-09-07/` pendant que ce
+# script les cherchait dans `2026-09-06/` — cinq « ÉCHEC de génération » alors que les images
+# existaient. ⇒ On cherche dans TOUS les dossiers datés, jamais dans un seul figé à l'heure du départ.
+ARCHIVE = RACINE / "generees"
+
+
+def trouver(motif):
+    """Le fichier peut être tombé dans le dossier de la veille OU du lendemain — chercher les deux."""
+    for jour in sorted(ARCHIVE.glob("20*"), reverse=True):
+        for f in sorted(jour.glob(motif)):
+            return f
+    return None
 
 BASE = ("Dark crime-drama portrait, late 1980s to early 1990s, the register of The Sopranos and The Wire: "
         "an ordinary person in everyday clothes, NOT gangster-movie elegance. NO tailored suit, NO wide-lapel "
@@ -93,30 +107,32 @@ def prompts(n, depart):
 def main() -> None:
     n = int(sys.argv[1])
     depart = int(sys.argv[2]) if len(sys.argv) > 2 else 0
-    dossier = RACINE / "generees/2026-09-06"
+    dossier = ARCHIVE / time.strftime("%Y-%m-%d")
+    dossier.mkdir(parents=True, exist_ok=True)
+    (dossier / "aplat").mkdir(exist_ok=True)
     tmp = RACINE / "prompts-visages"
     tmp.mkdir(exist_ok=True)
     for k, sujet in enumerate(prompts(n, depart), start=depart + 1):
         slug = f"visage-{k:03d}"
-        if list(dossier.glob(f"{slug}-*.png")):
+        if trouver(f"{slug}-*.png"):
             continue
         p = tmp / f"{slug}.txt"
         p.write_text(f"{sujet} {BASE}\n")
         subprocess.run([sys.executable, str(RACINE / "generer.py"), "--prompt-fichier", str(p),
                         "--largeur", "1024", "--hauteur", "1024", "--seed", "63", "--slug", slug],
                        check=False, capture_output=True)
-        src = next(iter(dossier.glob(f"{slug}-*.png")), None)
+        src = trouver(f"{slug}-*.png")
         if src is None:
             print(f"{slug} ÉCHEC de génération", flush=True)
             continue
         subprocess.run([sys.executable, str(RACINE / "detourer.py"), str(src), "--slug", f"matte-{slug}"],
                        check=False, capture_output=True)
-        matte = next(iter(dossier.glob(f"matte-{slug}-*.png")), None)
+        matte = trouver(f"matte-{slug}-*.png")
         if matte is None:
             print(f"{slug} ÉCHEC de détourage", flush=True)
             continue
         subprocess.run([sys.executable, str(RACINE / "posteriser.py"), str(src),
-                        str(dossier / "aplat" / f"{slug}.png"), str(matte)],
+                        str(src.parent / "aplat" / f"{slug}.png"), str(matte)],
                        check=False, capture_output=True)
         print(f"{slug} ok — {sujet[:70]}", flush=True)
 

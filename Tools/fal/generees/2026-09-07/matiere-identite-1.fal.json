@@ -1,0 +1,13 @@
+{
+  "modele": "fal-ai/flux/dev",
+  "prompt": "A stiff identity-card stock: pale grey-green guilloche security pattern, fine engine-turned lines, unprinted. Seamless tileable texture, flat orthographic top-down view, even diffuse light, no vignette, no shadow of any object, no border, no frame, edge to edge, no perspective, no objects lying on it, no text, no letters, no logo, no watermark. Photographic material study, muted and desaturated.",
+  "seed": 7,
+  "largeur": 1024,
+  "hauteur": 1024,
+  "etapes": 28,
+  "guidance": 3.5,
+  "request_id": "01a078e8-c2a8-72b1-a00a-2d72cbe8effc",
+  "duree_s": 18.9,
+  "cout_usd_estime": 0.025,
+  "genere_le": "2026-09-07T00:48:53+0200"
+}

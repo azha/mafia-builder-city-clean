@@ -1,0 +1,13 @@
+{
+  "modele": "fal-ai/flux/dev",
+  "prompt": "An open safe with completely bare shelves and a brass dial. Painted illustration of ONE object, filling the frame, seen head-on, lit by a single warm lamp INSIDE the scene: real volume, soft shading, believable materials, restrained contours — not a flat two-tone texture, not a glossy cartoon. WARM above all: amber and honey light on the object, brass, worn wood and cream, deep warm shadow; blue-grey only in the shadow side. Inviting and lived-in. NOBODY present, no people, no hands. Nothing on the floor around it, no clutter, no scattered objects. Late-1980s port city. NO TEXT, no letters, NO SIGNATURE, no artist mark, no initials, no logo, no watermark, no painted frame, no border. The mood is CALM and WAITING — the container is EMPTY, nothing has been taken away, the work has simply not started yet.",
+  "seed": 47,
+  "largeur": 1072,
+  "hauteur": 1072,
+  "etapes": 28,
+  "guidance": 3.5,
+  "request_id": "01a0790d-6a23-7f93-ae7a-f7c72328decd",
+  "duree_s": 7.6,
+  "cout_usd_estime": 0.05,
+  "genere_le": "2026-09-07T01:28:44+0200"
+}

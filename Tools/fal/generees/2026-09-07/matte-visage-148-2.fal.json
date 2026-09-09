@@ -1,0 +1,15 @@
+{
+  "modele": "fal-ai/birefnet",
+  "source": "Tools/fal/generees/2026-09-06/visage-148-1.png",
+  "parametres": {
+    "model": "General Use (Heavy)",
+    "operating_resolution": "1024x1024",
+    "output_format": "png",
+    "refine_foreground": true
+  },
+  "largeur": 1024,
+  "hauteur": 1024,
+  "request_id": "01a078d0-e808-7cd0-900f-eff23d91411e",
+  "duree_s": 5.0,
+  "genere_le": "2026-09-07T00:22:35+0200"
+}

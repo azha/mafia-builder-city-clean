@@ -1,0 +1,13 @@
+{
+  "modele": "fal-ai/flux/dev",
+  "prompt": "A cork pin board with two pins and a loose loop of string in one corner, warm lamp light across it. Painted illustration of ONE object, filling the frame, seen head-on, in the SAME register as a warm night scene lit by a single sodium lamp: real volume, soft shading, believable materials, restrained contours — not a flat two-tone texture, not a glossy cartoon. WARM above all: amber and honey light pooling on the object, brass, worn wood and cream, deep warm shadow. The blue-grey is only the shadow side, never the dominant. Inviting, lived-in, a place you would want to be. Late-1980s port city. No text, no letters, no logo, no watermark, no grain, no photorealism.",
+  "seed": 31,
+  "largeur": 1024,
+  "hauteur": 1024,
+  "etapes": 28,
+  "guidance": 3.5,
+  "request_id": "01a078f7-b666-7701-8309-418d4c2f9d94",
+  "duree_s": 5.9,
+  "cout_usd_estime": 0.025,
+  "genere_le": "2026-09-07T01:05:00+0200"
+}

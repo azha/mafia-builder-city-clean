@@ -1,0 +1,13 @@
+{
+  "modele": "fal-ai/flux/dev",
+  "prompt": "The inside of a safe door: dark enamelled steel with a fine crackle finish, brass hinge plate, no dials. Seamless tileable texture, flat orthographic top-down view, even diffuse light, no vignette, no shadow of any object, no border, no frame, edge to edge, no perspective, no objects lying on it, no text, no letters, no logo, no watermark. Photographic material study, muted and desaturated.",
+  "seed": 7,
+  "largeur": 1024,
+  "hauteur": 1024,
+  "etapes": 28,
+  "guidance": 3.5,
+  "request_id": "01a078e9-7884-7a31-b065-784901946b61",
+  "duree_s": 6.1,
+  "cout_usd_estime": 0.025,
+  "genere_le": "2026-09-07T00:49:27+0200"
+}

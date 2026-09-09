@@ -1,0 +1,13 @@
+{
+  "modele": "fal-ai/flux/dev",
+  "prompt": "A bare leather desk blotter with an empty pen tray, filling the frame. ONE object filling the whole square frame, seen close and head-on, cropped by the edges — no bare wall behind it, no visible lamp, no empty floor, no room. The light comes from OFF-FRAME, warm and raking. NOBODY present, no people, no hands. Late 1980s. Muted desaturated palette: near-black, dark blue-grey, warm brass, cream. No saturated colour, no text, no letters, no logo, no watermark. Painted poster illustration: flat areas of colour, thick contours, heavy simplification, no photorealism. The mood is CALM and WAITING — nothing has gone wrong, nothing is lost, the work has simply not started yet.",
+  "seed": 31,
+  "largeur": 1024,
+  "hauteur": 1024,
+  "etapes": 28,
+  "guidance": 3.5,
+  "request_id": "01a078f2-1d62-7112-a7da-efa19471a79e",
+  "duree_s": 6.4,
+  "cout_usd_estime": 0.025,
+  "genere_le": "2026-09-07T00:58:54+0200"
+}

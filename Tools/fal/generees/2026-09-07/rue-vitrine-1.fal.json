@@ -1,0 +1,13 @@
+{
+  "modele": "fal-ai/flux/dev",
+  "prompt": "A shop display case with three completely bare shelves. Painted illustration of ONE object, filling the frame, seen head-on, in a rough back room lit by a buzzing bare bulb and a slice of cold light from a doorway. HARD STREET: chipped and layered paint, rust bleeding down from every screw, silver gaffer tape holding a corner together, torn poster paper and sticker residue on the wall behind, spray-can tags across the surface, water stains, a cracked tile, cable stapled along the wall, the object repaired badly and used hard for years. Rough loaded brush, heavy texture, grime in every join, nothing pristine, nothing precious, nothing glossy. Warm amber bulb against cold doorway light, dirty cream, rust orange, deep shadow. NOBODY present, no people, no hands, no clutter on the floor. Late-1980s dockside. NO readable text, no letters, no words, NO SIGNATURE, no initials, no logo, no watermark, no painted frame. The container is EMPTY — nothing was taken away, the work has simply not started yet.",
+  "seed": 47,
+  "largeur": 1072,
+  "hauteur": 1072,
+  "etapes": 28,
+  "guidance": 3.5,
+  "request_id": "01a07913-8371-7b21-976a-848d62376d93",
+  "duree_s": 8.0,
+  "cout_usd_estime": 0.05,
+  "genere_le": "2026-09-07T01:35:24+0200"
+}

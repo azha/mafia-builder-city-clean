@@ -1,0 +1,13 @@
+{
+  "modele": "fal-ai/flux/dev",
+  "prompt": "A woman in her fifties, heavy-set and thick-necked, with hair scraped back into a bun, a baseball cap worn backwards, heavy dark brows, wearing a heavy wool overcoat. Dark crime-drama portrait, late 1980s to early 1990s, the register of The Sopranos and The Wire: an ordinary person in everyday clothes, NOT gangster-movie elegance. NO tailored suit, NO wide-lapel jacket, NO necktie, nothing sharp or expensive. Bust, head and shoulders, front view, filling the square frame. Heavy chiaroscuro: one hard warm key light raking from the left, deep black shadow on the other side. Muted desaturated palette, dark blue-grey ground, no saturated colour, no text, no logo, no watermark. Painted poster illustration: flat areas of colour, thick contours, heavy simplification, no photorealism, no lens blur.",
+  "seed": 63,
+  "largeur": 1024,
+  "hauteur": 1024,
+  "etapes": 28,
+  "guidance": 3.5,
+  "request_id": "01a078b7-2319-7aa0-9569-ce4791ba3b7c",
+  "duree_s": 5.9,
+  "cout_usd_estime": 0.025,
+  "genere_le": "2026-09-06T23:54:28+0200"
+}

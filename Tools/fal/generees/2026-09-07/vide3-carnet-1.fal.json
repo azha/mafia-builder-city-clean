@@ -1,0 +1,13 @@
+{
+  "modele": "fal-ai/flux/dev",
+  "prompt": "A ruled order book lying open with a pen across it. Painted illustration of ONE object, filling the frame, seen head-on, lit by a single warm lamp INSIDE the scene: real volume, soft shading, believable materials, restrained contours — not a flat two-tone texture, not a glossy cartoon. WARM above all: amber and honey light pooling on the object, brass, worn wood and cream, deep warm shadow; the blue-grey is only the shadow side, never dominant. Inviting and lived-in. NOBODY present, no people, no hands. Late-1980s port city. No text, no letters, no logo, no watermark, no grain, no photorealism. The mood is CALM and WAITING — nothing has gone wrong, nothing is lost, the work has simply not started yet.",
+  "seed": 31,
+  "largeur": 1024,
+  "hauteur": 1024,
+  "etapes": 28,
+  "guidance": 3.5,
+  "request_id": "01a07904-1544-7980-b473-171ad8d7619e",
+  "duree_s": 6.8,
+  "cout_usd_estime": 0.025,
+  "genere_le": "2026-09-07T01:18:32+0200"
+}
