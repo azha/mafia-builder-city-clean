@@ -1903,6 +1903,25 @@ namespace MafiaCleanCity.Operational.Lieutenant
         // builder palette + the status bands + the read-only script follow). An empty roster renders a friendly empty
         // line, never an error. R2.2: every cell is a worded band/label — the uuid stays on the Open button's closure,
         // never shown; no raw scalar leaks.
+        /// <summary>Rendre le roster à partir de données FOURNIES, sans réseau — même contrat que
+        /// `DistrictInteriorScreenController.Render(dto)` : données en entrée, interface en sortie.
+        ///
+        /// ⛔ CE N'EST PAS UN CROCHET DE TEST, et la distinction est ce qui rend l'ajout légitime.
+        /// La forme normale de cet écran est « je vais chercher, puis je rends » ; celle-ci est
+        /// « on me donne, je rends », et c'est la seule qui permette d'observer un cas que la
+        /// donnée réelle n'offre pas. Sans elle, la seule façon d'atteindre une ligne de roster en
+        /// test passe par le SEEDER opérationnel — qui recrée les bâtiments du joueur ET avance
+        /// l'horloge. *Un test qui exige de semer pour observer un pixel paie le prix d'un lot de
+        /// données pour une question d'affichage*, et il le fait sur un compte partagé.
+        ///
+        /// ⚠️ Elle ne remplace pas le chemin réseau : celui-ci reste le seul qui prouve qu'un
+        /// joueur arrive ici. Elle prouve ce que le rendu FAIT d'une donnée, pas qu'on l'obtient.</summary>
+        public void RendreRosterDepuis(RosterRow[] rows)
+        {
+            CurrentRoster = rows ?? System.Array.Empty<RosterRow>();
+            RenderRoster();
+        }
+
         private void RenderRoster()
         {
             if (Destroyed || rosterRows == null) return;
@@ -2474,6 +2493,36 @@ namespace MafiaCleanCity.Operational.Lieutenant
             // identifie, et lui seul est en serif crème.
             if (nomServi)
             {
+                // ── LE GLYPHE DESSINÉ DE L'ARCHÉTYPE, devant le métier (2026-09-07) ──
+                // ⛔⛔ ET C'EST ICI, PAS DANS `BuildRosterRow`. Ma première pose est allée dans ce
+                //    dernier — qui porte déjà un glyphe TEXTE et ressemble trait pour trait au
+                //    constructeur de rang. Mesuré à l'oracle : `BuildRosterRow` compte **une seule
+                //    occurrence dans tout le fichier, sa propre définition** — zéro appelant. Le
+                //    glyphe y aurait été parfaitement construit et jamais affiché.
+                //    ⇒ *Un constructeur d'interface sans appelant est la forme A appliquée au code
+                //      d'écran : il compile, il se relit comme vivant, et rien ne rougit.* Trois
+                //      créneaux de porte pour s'en apercevoir, et seule l'énumération de ce que
+                //      l'arbre contenait RÉELLEMENT l'a montré — le compte nu disait « 0 » sans
+                //      dire qu'il n'y avait aucun nœud de ce nom nulle part.
+                // ⇒ Le libellé NOMME, le glyphe fait RECONNAÎTRE : le glyphe se pose DEVANT le
+                //   métier et ne le remplace pas. 2 dessins sur 12 seulement parlent d'eux-mêmes.
+                // ⚠️ Aucun repli PARTAGÉ quand l'atelier n'a rien dessiné (4 archétypes sur 10) :
+                //   la ligne n'affiche alors pas de glyphe, et le métier reste — il portait déjà
+                //   seul l'information avant ce lot. Un glyphe faux mettrait deux archétypes sous
+                //   la même image, exactement ce que les libellés existent pour réparer.
+                Sprite dessinArchetype = ArchetypeIcons.Pour(row.archetype);
+                if (dessinArchetype != null)
+                {
+                    GameObject gGo = NewUI("GlyphArchetype", puceLigne.transform);
+                    Image gImg = gGo.AddComponent<Image>();
+                    gImg.sprite = dessinArchetype;
+                    gImg.preserveAspect = true;
+                    gImg.color = DesignTokens.Current.hudCremeSecondary;  // la teinte du métier qu'il accompagne
+                    gImg.raycastTarget = false;
+                    AddLayoutElement(gGo, minWidth: FX(20), preferredWidth: FX(20),
+                                     minHeight: FX(20), flexibleWidth: 0, flexibleHeight: 0);
+                }
+
                 TextMeshProUGUI metierTxt = NewText("Metier", puceLigne.transform, metier,
                                                     FamilleRoleTaille, TextAlignmentOptions.Left);
                 metierTxt.color = DesignTokens.Current.hudCremeSecondary;

@@ -159,8 +159,7 @@ namespace MafiaCleanCity.Account.Profile
             Texte(corps, "Etat", Lisible(Profil.lifecycle_state), Px(8.5f), Creme2,
                   DesignTokens.Current.primaryFont, TextAlignmentOptions.Center).characterSpacing = 12f;
 
-            Champ("Adresse", Masquer(Profil.email),
-                  "⚠️ masquée à l'affichage seulement — le serveur la rend en clair");
+            Champ("Adresse", Masquer(Profil.email), null);
             Champ("Langue", Profil.locale,
                   "⛔ aucune route ne l'écrit : elle ne peut pas être changée");
             Champ("Compte", Court(Profil.account_id), null);

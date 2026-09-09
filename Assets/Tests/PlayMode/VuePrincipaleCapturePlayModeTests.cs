@@ -285,6 +285,20 @@ namespace MafiaCleanCity.Capture.Tests
         //   d'avant, inchangé.
         // ⚠️ Toute catégorie AJOUTÉE ici doit repasser ce balayage : deux noms distincts n'isolent
         //    pas si l'un commence par l'autre.
+        // ★ LE CONTRÔLE EN DEUX COMPTES, et la moitié qu'on ne mesurera JAMAIS. Deux sessions ont
+        //   posé cet attribut en parallèle le 2026-09-07 ; leurs deux contrôles se complètent :
+        //     « CaptureNuit » ⇒ 0 -> 1 test, et c'est celui-ci   (mesuré À L'EXÉCUTION : declares=1)
+        //     « Capture »     ⇒ 16 -> 16, INCHANGÉ                (mesuré STATIQUEMENT, et pour toujours)
+        //   Le second ne sera jamais mesuré en exécution : le mesurer demanderait de lancer
+        //   `Capture`, donc de consommer la carte que cet attribut existe précisément pour
+        //   protéger. *Une moitié de contrôle qui reste statique par CONSTRUCTION doit le dire —
+        //   sinon le lecteur suivant la croira exécutée.*
+        // ⚠️ ET LE MERGE N'A RIEN VU. Les deux poses ont fusionné SANS CONFLIT, en laissant DEUX
+        //   `[Category("CaptureNuit")]` sur la même méthode, de part et d'autre de `[UnityTest]` :
+        //   NUnit accepte les catégories multiples, donc ça compilait et passait. *Un doublon
+        //   d'attribut n'est pas un conflit de texte — git ne le voit pas, et il ne rougit nulle
+        //   part.* Résolu à la main en gardant CE bloc-ci, dont le balayage de population est une
+        //   mesure et non une déduction.
         [Category("CaptureNuit")]
         [UnityTest]
         public IEnumerator Capture_VuePrincipale_Nuit()
@@ -354,6 +368,17 @@ namespace MafiaCleanCity.Capture.Tests
             //   même mode d'échec en batchmode et n'ont PAS été repassés — chacun peut avoir sa
             //   raison d'être lancé depuis l'éditeur, et ce n'est pas à cette passe d'en décider.
             yield return CapturerA(1080, 1920, "Assets/Screenshots/vue_principale_nuit_1080x1920.png");
+            // ⛔ LA SECONDE RÉSOLUTION N'EST PAS UN CONFORT : ELLE TRANCHE UNE QUESTION OUVERTE.
+            //    Un juge ⊥ a mesuré les centres de badge sur une maille de pas 192 px, et blender a
+            //    trouvé que 192 = hauteur d'écran / 10. Le `CanvasScaler` est calé sur la LARGEUR
+            //    (1280 → 1080, facteur 0,84375, indépendant de la hauteur), donc une valeur CANVAS
+            //    fixe rend le MÊME nombre de pixels écran aux deux résolutions.
+            //    ⇒ pas = 240 px à 2400  ⇒ la maille suit la HAUTEUR D'ÉCRAN
+            //      pas = 192 px à 2400  ⇒ c'est une valeur canvas fixe
+            //    Une seule capture départage, là où trois hypothèses successives ont échoué.
+            //    ⚠️ Et la doctrine l'exige déjà : 0 test du dépôt ne fixait de résolution jusqu'au
+            //    2026-08-21, tout était certifié en paysage sur un projet en portrait.
+            yield return CapturerA(1080, 2400, "Assets/Screenshots/vue_principale_nuit_1080x2400.png");
             Debug.Log($"[CAPTURE] vue de nuit — batiments={batiments} ecran={Screen.width}x{Screen.height}");
         }
 

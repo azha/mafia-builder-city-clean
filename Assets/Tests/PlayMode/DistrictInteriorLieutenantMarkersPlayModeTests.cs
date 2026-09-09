@@ -86,10 +86,20 @@ namespace MafiaCleanCity.CityMap.Tests
         private static int MarkersUnderCell(DistrictInteriorScreenController diorama, int x, int y)
         {
             RectTransform[] all = diorama.ScreenRoot.GetComponentsInChildren<RectTransform>(true);
-            RectTransform cell = null;
+            // ⛔⛔ NE PLUS PRENDRE LE PREMIER. Mesuré en jeu le 2026-09-07 : 13 bâtiments pour
+            //    11 BLOCS DISTINCTS ⇒ deux bâtiments d'un même bloc produisent DEUX nœuds du même
+            //    nom, à la même position. Le `break` d'origine rendait le premier venu, donc cette
+            //    garde comptait les marqueurs de la MAUVAISE cellule sans que rien ne le signale.
+            //    *Un appariement par nom cesse d'apparier dès que le nom cesse d'être unique — et
+            //    il ne le dit jamais de lui-même.*
+            var candidats = new System.Collections.Generic.List<RectTransform>();
             foreach (RectTransform rt in all)
-                if (rt.name == $"Cell_{x}_{y}") { cell = rt; break; }
-            Assert.IsNotNull(cell, $"Cell_{x}_{y} doit exister dans l'arbre rendu");
+                if (rt.name == $"Cell_{x}_{y}") candidats.Add(rt);
+            Assert.IsNotEmpty(candidats, $"Cell_{x}_{y} doit exister dans l'arbre rendu");
+            Assert.AreEqual(1, candidats.Count,
+                $"⛔ {candidats.Count} nœuds nommés `Cell_{x}_{y}` — deux bâtiments partagent ce "
+                + "bloc. Cette garde compterait les marqueurs de l'un en croyant mesurer l'autre.");
+            RectTransform cell = candidats[0];
             int count = 0;
             for (int i = 0; i < cell.childCount; i++)
                 if (cell.GetChild(i).name.StartsWith("LieutenantMarker_")) count++;

@@ -191,7 +191,7 @@ namespace MafiaCleanCity.Operational
         {
             ClearRows();
             titleText.text = "FILIÈRE DE BLANCHIMENT";
-            subtitleText.text = "Failed to load the pipeline. Check the seeder + stack.";
+            subtitleText.text = "La filière n'a pas répondu.";
             TrackText(titleText.text);
             TrackText(subtitleText.text);
         }

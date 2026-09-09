@@ -422,7 +422,7 @@ namespace MafiaCleanCity.Operational
             walletGlyphText.color = TextSecondary;
             walletBandText.text = "Wallet unavailable";
             walletBandText.color = TextSecondary;
-            walletCaptionText.text = "Check the seeder + stack.";
+            walletCaptionText.text = "Le portefeuille n'a pas répondu.";
             TrackText(headerText, headerText.text);
             TrackText(walletGlyphText, walletGlyphText.text);
             TrackText(walletBandText, walletBandText.text);

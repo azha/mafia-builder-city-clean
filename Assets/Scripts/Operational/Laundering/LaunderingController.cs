@@ -230,7 +230,7 @@ namespace MafiaCleanCity.Operational
         {
             ClearRows();
             titleText.text = "FILIÈRE DE BLANCHIMENT";
-            subtitleText.text = "Failed to load the node. Check the seeder + stack.";
+            subtitleText.text = "La filière n'a pas répondu.";
             TrackText(titleText, titleText.text);
             TrackText(subtitleText, subtitleText.text);
         }

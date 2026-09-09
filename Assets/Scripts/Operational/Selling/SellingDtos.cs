@@ -17,6 +17,16 @@ namespace MafiaCleanCity.Operational.Selling
         public string margin_band;                // STANDARD → HIGH_PREMIUM
         public string addiction_loyalty_status;
         public bool withdrawn;
+        /// <summary>⛔ FORME G — SERVI, JAMAIS DÉCLARÉ, DONC JAMAIS ARRIVÉ. `JsonUtility` ignore
+        /// EN SILENCE toute clé qu'aucun champ ne déclare : la donnée traverse le réseau, entre
+        /// dans le processus et disparaît sans journal, sans erreur, sans avertissement.
+        /// Mesuré sur un corps de SUCCÈS réel et commité
+        /// (`Tools/juge-visuel/vente/corps-reels/GET_operational_dealers.json`, statut 200,
+        /// 2026-09-04, compte `operational_demo`, back `6ff684db`) : 8 clés servies, 7 déclarées,
+        /// et la manquante est le NOM que la maquette met en TÊTE de chaque rangée.
+        /// ⚠️ Un inventaire de ROUTES compte cette clé SERVIE ; un balayage de RÉSOLVEURS la compte
+        /// NON RENDUE ; ni l'un ni l'autre ne dit qu'elle n'est jamais ARRIVÉE.</summary>
+        public string name_i18n;
     }
 
     [System.Serializable] public class DealerListData { public DealerDto[] dealers; }

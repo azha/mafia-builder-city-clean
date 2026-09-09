@@ -139,7 +139,26 @@ public static class MafiaCI
     //   partie du correctif, sinon le prochain lot repaie ces quatre runs.
     // ⚠️ Ce n'est PAS un défaut des écrans : ils chargent et se capturent correctement en isolé.
     private static readonly string[] Categories =
-        { "W4P4a", "W3UDA", "W3U1", "W3U2", "Charpente", "DemoIdentity", "ScreenB3", "ShellSurimpression", "CaptureDistrict", "CaptureReputation", "CaptureFamille", "Joignabilite", "ScreenCarte", "CaptureCarte", "EcranAutonomy", "EcranExceptions", "EcranRegleLieutenant", "EcranTenureLieutenant", "EcranUiLieutenant", "EcranRegleTier2", "EcranAppro", "ScreenB7", "ScreenC1", "ScreenC6", "EcranDelegation", "ScreenC2", "EcranDemolition", "ScreenC3", "EcranLoi", "EcranConflit", "Ecran10", "I18n", "I18nReseau", "BundleReel", "JUGE", "CaptureDetail", "CaptureExceptions", "CaptureFiche", "CaptureSousChrome", "CaptureHorizon", "CaptureForensic", "FicheTete", "Graisses" };
+        { "W4P4a", "W3UDA", "W3U1", "W3U2", "Charpente", "DemoIdentity", "ScreenB3", "ShellSurimpression", "CaptureDistrict", "CaptureReputation", "CaptureFamille", "Joignabilite", "ScreenCarte", "CaptureCarte", "EcranAutonomy", "EcranExceptions", "EcranRegleLieutenant", "EcranTenureLieutenant", "EcranUiLieutenant", "EcranRegleTier2", "EcranAppro", "ScreenB7", "ScreenC1", "ScreenC6", "EcranDelegation", "ScreenC2", "EcranDemolition", "ScreenC3", "EcranLoi", "EcranConflit", "Ecran10", "I18n", "I18nReseau", "BundleReel", "JUGE", "CaptureDetail", "CaptureExceptions", "CaptureFiche", "CaptureSousChrome", "CaptureHorizon", "CaptureForensic", "FicheTete", "Graisses",
+        // Montage de l'art (2026-09-07) — entre au filtre AVEC son compte vert, jamais avant :
+        // une garde qui n'a jamais tourné n'est pas une garde. Mesuré sous surcharge :
+        // `passed=2 failed=0 declares=2 comptes=2`, couverture 12/12, zéro réseau, zéro écriture.
+        "CarteIcones",
+        // Glyphes d'archétype (2026-09-07) — vert AVANT inscription :
+        // `passed=4 failed=0 declares=4 comptes=4` avec CarteIcones, couverture 6/10,
+        // zéro réseau, zéro écriture, zéro semis.
+        "IconesArchetype",
+        // Bloc partagé + châssis de ㉟ (2026-09-07) — verts AVANT inscription, dans le même
+        // créneau : `passed=5 failed=0 declares=5 comptes=5`, catégories RÉELLEMENT exécutées
+        // = [BlocPartage, ChassisVente]. Zéro réseau, zéro écriture, zéro semis : les deux
+        // suites fabriquent leur monde (bloc partagé construit, canvas monté à la main).
+        // ⚠️ `BlocPartage` a rougi DEUX fois avant ce vert, et jamais sur le code qu'elle juge :
+        //    d'abord parce que ses deux relevés n'étaient pas pris au même instant de frame,
+        //    puis parce que `Canvas.scaleFactor` vaut 1,000000 dans la frame de sa création —
+        //    ×2 exactement sur toute la géométrie. Elle porte donc un rendu de CHAUFFE.
+        "BlocPartage",
+        "ChassisVente",
+    };
     // ⚠️ UNION AU MERGE (3e fois sur cette ligne le 2026-09-03) — et la règle est
     // toujours la même : on unit ce qui est PORTÉ, jamais les deux listes. Une entrée
     // sans porteur affirme une couverture qui n'existe pas ; une entrée portée qu'on

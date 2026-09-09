@@ -141,6 +141,16 @@ namespace MafiaCleanCity.CityMap
         public string revenue_band;          // IDLE | EARNING
         public string revenue_chain;         // WIRED | UNWIRED
         public string activity_band;         // IDLE | ACTIVE
+        // ⛔ FORME G, deux instances de plus. Ces deux bandes sont SERVIES et n'étaient déclarées
+        // nulle part ⇒ `JsonUtility` les jetait en silence.
+        // ⚠️ PROVENANCE DIFFÉRENTE DE `name_i18n`, et je la déclare : celles-ci viennent d'une
+        //    mesure de la session voisine (2026-09-07, compte de démo, les 3 valeurs de
+        //    `relance_band` et 2 des 3 de `harvest_band` observées), PAS d'un corps que je tiens.
+        //    Je n'ai pas de corps figé qui les porte — les miens datent du 2026-08-25 et du
+        //    2026-09-04. Déclarer un champ non servi ne coûte rien (il reste `""`) ; ne pas
+        //    déclarer un champ servi coûte la donnée. L'asymétrie tranche, la mesure reste datée.
+        public string relance_band;          // RUNNING | RELAUNCHABLE | NOT_APPLICABLE
+        public string harvest_band;          // NOTHING | AVAILABLE | FULL
         public string lapse_phase_bucket;    // WITHIN_WINDOW | SOFT | HARD | CRITICAL — binding 5
         public bool maintenance_in_progress; // binding 5
         // D10/§C2-bis (B-7, W3.U2 C10 amendé) — poignées de ressources possédées (JAMAIS un scalaire

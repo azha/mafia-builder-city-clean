@@ -182,7 +182,7 @@ namespace MafiaCleanCity.Operational
                     Lib("Aucune de ces cartes n'a de nom"),
                     "le serveur ne rend que des clés de traduction, et le dictionnaire du jeu ne "
                     + "contient que des messages d'erreur. Voilà l'écran tel qu'il s'afficherait "
-                    + "aujourd'hui. Quelqu'un doit écrire les textes.");
+                    + "aujourd'hui.");
         }
 
         /// <summary>Les cartes du flux. Chacune porte son titre (une CLÉ), son statut, son coût en

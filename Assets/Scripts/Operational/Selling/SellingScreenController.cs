@@ -19,9 +19,12 @@ namespace MafiaCleanCity.Operational.Selling
     // back sont DISCRETS (NONE|LOW|MODERATE|HIGH|FULL). *Une barre continue mentirait sur la
     // précision de la donnée* — elle laisserait croire à un montant là où il n'y a qu'un palier.
     //
-    // ⛔ ET LA CHAÎNE MORTE QUE CET ÉCRAN DÉCLARE AU LIEU DE LA MASQUER : `collect` exige une
-    // planque possédée, et rien ne crée jamais de ligne `safehouses` (0 écrivain, re-mesuré le
-    // 2026-09-02 avec contrôle positif ; TD-358). RAMASSER échoue pour tout joueur, partout.
+    // ⛔⛔ ÉNONCÉ PÉRIMÉ, RETIRÉ LE 2026-09-07. Ce bloc affirmait que la table des planques
+    // n'avait aucun écrivain de production. Re-mesuré dans le back : le don de bienvenue en crée
+    // une pour tout joueur neuf. L'affirmation ne trompait pas un lecteur — elle ÉTEIGNAIT LE
+    // SEUL GESTE DE L'ÉCRAN, sur trois fichiers à la fois.
+    // ⚠️ CE QUI RESTE VRAI, et c'est plus étroit : cet écran ne lit pas encore la planque du
+    // joueur, donc il n'a pas l'identifiant que la route réclame. Le manque est CÔTÉ CLIENT.
     // ⇒ Le bouton est montré ÉTEINT, avec la raison écrite à l'écran. *Un geste impossible qu'on
     // masque devient un geste qu'on croit ne pas exister ; montré éteint, il devient une promesse
     // datée* — et le jour où la planque existe, c'est cette ligne qui devra changer, pas la
@@ -70,6 +73,8 @@ namespace MafiaCleanCity.Operational.Selling
         private Transform mountParent;
         private RectTransform rangees;
         private TextMeshProUGUI videTexte;
+        private RectTransform compteurs;
+        private UnityEngine.UI.Image videIllustration;
 
         private void Awake() => Init();
 
@@ -169,8 +174,17 @@ namespace MafiaCleanCity.Operational.Selling
             for (int i = rangees.childCount - 1; i >= 0; i--)
                 UnityEngine.Object.Destroy(rangees.GetChild(i).gameObject);
 
+            // ── LES TROIS COMPTEURS (B1) ─────────────────────────────────────────────────
+            // Maquette : `03/6 au travail` · `03 caisses pleines` · `01 grillés`.
+            // ⚠️ CE SONT DES COMPTES, PAS DES SCALAIRES DE PROJECTION, et la distinction décide de
+            //    R2.2 : ils sont DÉRIVÉS CÔTÉ CLIENT des rangées que le joueur a déjà sous les yeux,
+            //    jamais lus d'une valeur cachée du back. Compter ce qui est affiché ne révèle rien
+            //    que l'écran ne montre pas. *Si quelqu'un juge que R2.2 couvre aussi les comptes
+            //    dérivés, c'est une ligne à retirer — je le déclare plutôt que de le supposer.*
+            RemplirCompteurs();
             EtatVide = Dealers == null || Dealers.Length == 0;
             videTexte.gameObject.SetActive(EtatVide);
+            if (videIllustration != null) videIllustration.gameObject.SetActive(EtatVide);
             if (EtatVide)
             {
                 videTexte.text = DerniereErreur == null
@@ -212,9 +226,9 @@ namespace MafiaCleanCity.Operational.Selling
                   d.activity_band == "COMPROMISED" ? Braise : Creme2, DesignTokens.Current.primaryFont);
 
             // la caisse : cinq CRANS, jamais une barre continue
-            Crans(r.transform, "Caisse", d.cash_band, 5, CaisseRang(d.cash_band));
+            Crans(r.transform, "Caisse", Caisse(d.cash_band), 5, CaisseRang(d.cash_band));
             // la marge : quatre traits
-            Crans(r.transform, "Marge", d.margin_band, 4, MargeRang(d.margin_band));
+            Crans(r.transform, "Marge", Marge(d.margin_band), 4, MargeRang(d.margin_band));
 
             // le geste impossible, montré éteint
             GameObject ramasser = Bloc("Ramasser", r.transform, false, Px(1f));
@@ -223,10 +237,24 @@ namespace MafiaCleanCity.Operational.Selling
                 new RectOffset((int)Px(8f), (int)Px(8f), (int)Px(6f), (int)Px(6f));
             Image rf = ramasser.AddComponent<Image>();
             rf.sprite = ProceduralUI.RoundedRectDashedOutline((int)Px(9f), Px(1f), (int)Px(4f), (int)Px(3f), Eteint);
-            rf.type = Image.Type.Sliced;
+            // ⛔⛔ `Tiled`, JAMAIS `Sliced` — UN MOTIF PÉRIODIQUE NE SURVIT PAS À UN ÉTIREMENT.
+            //    Le 9-slice préserve les coins et ÉTIRE la bande centrale de chaque rail. Un trait
+            //    CONTINU y survit (l'étirer rend un trait continu) ; un POINTILLÉ non : la portion
+            //    de motif qui tombe au centre est étirée sur toute la largeur, et si c'est un
+            //    intervalle, on obtient UN LONG TROU.
+            //    ⇒ Mesuré par un juge ⊥ le 2026-09-07 : **trou de 334 px, 36 % de la largeur du
+            //      bouton, dans les rails HAUT ET BAS, x = 629..962** — les deux rails horizontaux
+            //      partagent la même bande centrale étirée, d'où le défaut symétrique.
+            //    ⇒ Et son contrôle interne le prouve : **le cadre de la CARTE est continu 960/960**
+            //      parce qu'il emploie `RoundedRectOutline`, un trait plein. *Ce n'est donc pas le
+            //      rendu du trait, c'est ce qu'on demande à ce sprite-ci.*
+            //    ⇒ `Tiled` RÉPÈTE la bande centrale au lieu de l'étirer : la cadence des tirets est
+            //      préservée quelle que soit la largeur. C'est le précédent maison, déjà employé
+            //      par `LieutenantScreenController:2641,2675` — je ne l'invente pas, je l'adopte.
+            rf.type = Image.Type.Tiled;
             Texte(ramasser.transform, "Lib", "RAMASSER", Px(9f), Eteint,
                   DesignTokens.Current.primaryFont, TextAlignmentOptions.Center).characterSpacing = 14f;
-            Texte(ramasser.transform, "Raison", "impossible — aucune planque n'existe encore",
+            Texte(ramasser.transform, "Raison", "pas encore relié à votre planque",
                   Px(6.8f), Creme2, DesignTokens.Current.primaryFont, TextAlignmentOptions.Center)
                 .enableWordWrapping = true;
         }
@@ -253,7 +281,9 @@ namespace MafiaCleanCity.Operational.Selling
                 LayoutElement le = c.AddComponent<LayoutElement>();
                 le.preferredWidth = Px(9f); le.preferredHeight = Px(7f); le.flexibleWidth = 0f;
             }
-            Texte(l.transform, "Val", Lisible(bande), Px(7f), Creme, DesignTokens.Current.primaryFont);
+            // ⛔ `bande` est désormais un libellé DÉJÀ RÉSOLU par l'appelant, pas une valeur
+            //    d'enum : `Lisible()` ici rendait « Moderate » et « Standard » au joueur.
+            Texte(l.transform, "Val", bande, Px(7f), Creme, DesignTokens.Current.primaryFont);
         }
 
         private static int CaisseRang(string b) =>
@@ -261,6 +291,34 @@ namespace MafiaCleanCity.Operational.Selling
 
         private static int MargeRang(string b) =>
             b == "HIGH_PREMIUM" ? 4 : b == "PREMIUM" ? 3 : b == "ELEVATED" ? 2 : b == "STANDARD" ? 1 : 0;
+
+        /// <summary>La caisse du dealer, en français. Domaine LU À L'ANCRE, jamais recopié d'un
+        /// commentaire : `selling.projection.service.ts:45` — `DealerCashBand = 'NONE' | 'LOW' |
+        /// 'MODERATE' | 'HIGH' | 'FULL'`.
+        ///
+        /// ⛔ POURQUOI CETTE FONCTION EXISTE. Ces bandes passaient par `Lisible()`, le pis-aller qui
+        /// remplace les `_` par des espaces et capitalise. Un juge ⊥ a mesuré le résultat à l'écran :
+        /// **« Moderate » et « Standard »** — de l'ANGLAIS servi au joueur, sur le seul contenu que
+        /// cet écran affiche encore. *Un pis-aller de dé-slug ne traduit pas : il montre l'enum.*
+        /// C'est la classe exacte de `decision.type.*` (TD-535), où l'Accueil affichait
+        /// « AUTONOMY REPORTS PENDING » au centre d'une interface française.
+        /// ⚠️ Et le repli reste NOMMÉ (`—`) plutôt que dé-sluggé : une valeur neuve doit se voir
+        /// comme inconnue, pas se déguiser en mot anglais plausible.</summary>
+        private static string Caisse(string b) =>
+            b == "NONE" ? "VIDE" : b == "LOW" ? "PEU" : b == "MODERATE" ? "MOYENNE"
+            : b == "HIGH" ? "PLEINE" : b == "FULL" ? "DÉBORDE" : "—";
+
+        /// <summary>La marge, en français. Domaine LU À L'ANCRE : `selling.projection.service.ts:59`
+        /// — `DealerMarginBand = 'STANDARD' | 'ELEVATED' | 'PREMIUM' | 'HIGH_PREMIUM'`.
+        ///
+        /// ⚠️ TROIS DES QUATRE MOTS VIENNENT DE LA MAQUETTE, LE QUATRIÈME EST DÉRIVÉ ET JE LE DIS.
+        /// La maquette écrit « au tarif », « au-dessus », « cher » — trois mots pour quatre valeurs.
+        /// `HIGH_PREMIUM` n'a pas de mot ratifié ; « très cher » est dérivé de « cher » par la même
+        /// gradation, et il est à faire ratifier. *Inventer un mot de fiction en silence serait un
+        /// choix de DA déguisé en montage* — celui-ci est déclaré, donc réfutable.</summary>
+        private static string Marge(string b) =>
+            b == "STANDARD" ? "AU TARIF" : b == "ELEVATED" ? "AU-DESSUS"
+            : b == "PREMIUM" ? "CHER" : b == "HIGH_PREMIUM" ? "TRÈS CHER" : "—";
 
         private static string Activite(string b) =>
             b == "WORKING" ? "AU POSTE" : b == "IDLE" ? "INACTIF"
@@ -295,9 +353,58 @@ namespace MafiaCleanCity.Operational.Selling
             v.childForceExpandHeight = false;
             v.childAlignment = TextAnchor.UpperCenter;
 
-            TextMeshProUGUI titre = Texte(transform, "Titre", "LES POINTS DE VENTE", Px(13f), Or,
+            // ── LE CHÂSSIS (B1) — `.cerne`, `.enseigne`, `.compteurs` ────────────────────────
+            // ⛔ MESURÉ ABSENT, PAS MAL RENDU. Un juge ⊥ a mesuré 2,12 % d'encre contre 14,54 % au
+            //    canon, « un fond qui n'est PAS PEINT », et 0 trait laiton hors chrome. La cause
+            //    n'était pas un mécanisme en panne : `Construire()` ne posait qu'un APLAT
+            //    `surfaceBase` (mesuré (13,13,13) sur la planche) et trois nœuds. *La matière n'a
+            //    jamais été écrite.* Le contrôle interne qui l'établit : `ProceduralUI` était déjà
+            //    appelé 4 fois dans le rendu des RANGÉES — donc le mécanisme procédural marche.
+            //
+            // ⚠️ RIEN N'EST INVENTÉ ICI. Les valeurs viennent de `ecrans-brennar-6.html` :
+            //    `.cerne{inset:5px;border:1px solid #b08d3e;border-radius:3px}`, et
+            //    `#b08d3e` EST le jeton `hudHairlineGold` — mesuré à distance 0,000, donc on
+            //    emploie le jeton NOMMÉ et jamais le littéral (un littéral qui recopie la valeur
+            //    d'un jeton est invisible à toute garde qui balaie les accès au jeton).
+            GameObject cerne = NewUI("Cerne", transform);
+            // ⛔⛔ UN RECOUVREMENT PLEIN ÉCRAN NE PEUT PAS ÊTRE UNE RANGÉE D'UN GROUPE DE LAYOUT.
+            //    `gameObject` porte un `VerticalLayoutGroup` avec `childControlWidth/Height = true`
+            //    (:342-348) : le groupe RÉÉCRIT les ancres et les offsets de chacun de ses enfants.
+            //    Sans cette ligne, les quatre lignes qui suivent sont annulées à la frame suivante
+            //    et le cerne devient une RANGÉE de la pile — mesuré sur planche : une « pilule »
+            //    de 1010 × 20 px entre l'enseigne et les compteurs, et ZÉRO pixel doré sur les
+            //    quatre bords (0/667 gauche · 0/667 droit · 0/357 haut · 0/357 bas).
+            //    ★★ ET C'EST POURQUOI MON PROPRE CONTRÔLE NE POUVAIT PAS LE VOIR : j'avais écrit
+            //       « un `ProceduralUI` a-t-il tourné sur le châssis ? ». La réponse était OUI.
+            //       *Un sprite qui rend dans un rect écrasé rend quand même.* Une garde sur
+            //       « le mécanisme s'est exécuté » ne voit jamais « il s'est exécuté dans le
+            //       mauvais rect » — la garde sur les PARAMÈTRES contre la garde sur l'EFFET,
+            //       appliquée à la géométrie au lieu de l'opacité.
+            cerne.AddComponent<LayoutElement>().ignoreLayout = true;
+            var cerneRt = (RectTransform)cerne.transform;
+            cerneRt.anchorMin = Vector2.zero; cerneRt.anchorMax = Vector2.one;
+            cerneRt.offsetMin = new Vector2(Px(5f), Px(5f));
+            cerneRt.offsetMax = new Vector2(-Px(5f), -Px(5f));
+            var cerneImg = cerne.AddComponent<Image>();
+            cerneImg.sprite = ProceduralUI.RoundedRectOutline((int)Px(3f), Px(1f),
+                                                              DesignTokens.Current.hudHairlineGold);
+            cerneImg.type = Image.Type.Sliced;     // trait CONTINU ⇒ l'étirement le préserve
+            cerneImg.raycastTarget = false;        // `.cerne{pointer-events:none}`
+            cerne.transform.SetAsLastSibling();    // `.cerne{z-index:6}` — au-dessus du contenu
+
+            // L'ENSEIGNE — le titre cesse d'être un texte nu posé sur le vide : il est PORTÉ.
+            GameObject enseigne = Bloc("Enseigne", transform, false, Px(2f));
+            AjouterFondPlaque(enseigne);
+            TextMeshProUGUI titre = Texte(enseigne.transform, "Titre", "LES POINTS DE VENTE", Px(13f), Or,
                                           DesignTokens.Current.hudSerifFont, TextAlignmentOptions.Center);
             titre.characterSpacing = 18f;
+            // ⚠️ Le sous-titre vient de la maquette VERBATIM (`.enseigne > i`). Le juge a mesuré
+            //    « 0 sous-titre » en jeu — il manquait, il n'était pas mal rendu.
+            Texte(enseigne.transform, "SousTitre", "qui vend, et ce qu'il y a dans la caisse",
+                  Px(7.5f), Creme2, DesignTokens.Current.primaryFont, TextAlignmentOptions.Center);
+
+            // LES COMPTEURS — trois fenêtres, comme la maquette (`.compteurs > .fen` ×3).
+            compteurs = (RectTransform)Bloc("Compteurs", transform, true, Px(6f)).transform;
 
             GameObject liste = Bloc("Rangees", transform, false, Px(8f));
             rangees = (RectTransform)liste.transform;
@@ -305,6 +412,76 @@ namespace MafiaCleanCity.Operational.Selling
             videTexte = Texte(transform, "Vide", "", Px(11f), Creme2,
                               DesignTokens.Current.hudSerifFont, TextAlignmentOptions.Center);
             videTexte.gameObject.SetActive(false);
+            // ── L'ILLUSTRATION D'ÉTAT VIDE (㉟ La vente) ────────────────────────────────────────
+            // ⛔ ELLE NE REMPLACE PAS LE MESSAGE, elle l'accompagne. Le message NOMME (« … »),
+            //    l'illustration lève seulement le doute « vide ou CASSÉ ? ». Un écran sans image
+            //    reste lisible ; un écran sans message ne l'est pas. C'est pourquoi le montage
+            //    est ADDITIF et que `null` n'enlève rien.
+            // ⚠️ Sujet « vente » ← `Tools/fal/TABLE-SUJET-ECRAN.md`, la table de l'auteur. Elle
+            //    n'existait que dans une IMAGE ; mon appariement « évident » en couvrait la moitié.
+            videIllustration = MafiaCleanCity.Shell.EtatsVidesIllustres.Monter(transform, "vente", Px(120f));
+            if (videIllustration != null) videIllustration.gameObject.SetActive(false);
+        }
+
+        /// <summary>Un nœud d'interface nu — `Bloc` impose un layout group, ce que le cerne ne veut
+        /// pas : il se place en ancres étirées, pas dans un flux.</summary>
+        /// <summary>Les trois fenêtres de l'enseigne. Domaines LUS À L'ANCRE
+        /// (`selling.projection.service.ts:42,45`) : `WORKING` pour « au travail », `FULL` pour une
+        /// caisse pleine, `COMPROMISED` pour « grillé ».
+        /// ⛔ Repli HONNÊTE : sans données, les fenêtres affichent `—`, jamais `0` — *un zéro
+        /// affirme « aucun », un tiret dit « on ne sait pas », et confondre les deux est ce qui
+        /// fait passer une panne pour un état du jeu.*</summary>
+        private void RemplirCompteurs()
+        {
+            if (compteurs == null) return;
+            for (int i = compteurs.childCount - 1; i >= 0; i--) Destroy(compteurs.GetChild(i).gameObject);
+            bool su = Dealers != null;
+            int total = su ? Dealers.Length : 0;
+            int auTravail = 0, pleines = 0, grilles = 0;
+            if (su)
+                foreach (DealerDto d in Dealers)
+                {
+                    if (d.activity_band == "WORKING") auTravail++;
+                    if (d.cash_band == "FULL") pleines++;
+                    if (d.activity_band == "COMPROMISED") grilles++;
+                }
+            Fenetre(su ? $"{auTravail:00}/{total}" : "—", "au travail");
+            Fenetre(su ? $"{pleines:00}" : "—", "caisses pleines");
+            Fenetre(su ? $"{grilles:00}" : "—", "grillés");
+        }
+
+        private void Fenetre(string valeur, string libelle)
+        {
+            GameObject f = Bloc("Fen", compteurs, false, Px(1f));
+            f.GetComponent<VerticalLayoutGroup>().childAlignment = TextAnchor.MiddleCenter;
+            Texte(f.transform, "Val", valeur, Px(12f), Or,
+                  DesignTokens.Current.hudSerifFont, TextAlignmentOptions.Center);
+            Texte(f.transform, "Lib", libelle, Px(6.5f), Creme2,
+                  DesignTokens.Current.primaryFont, TextAlignmentOptions.Center);
+        }
+
+        private static GameObject NewUI(string nom, Transform parent)
+        {
+            GameObject go = new GameObject(nom, typeof(RectTransform));
+            go.transform.SetParent(parent, false);
+            if (go.GetComponent<CanvasRenderer>() == null) go.AddComponent<CanvasRenderer>();
+            return go;
+        }
+
+        /// <summary>La plaque de l'enseigne — `.enseigne{background:linear-gradient(178deg,…);
+        /// border:1px solid #2a3648; border-bottom:2px solid #b08d3e}`.
+        /// ⚠️ Le dégradé de la maquette est rendu par un APLAT de sa teinte haute : ce dépôt a
+        /// mesuré qu'une valeur d'opacité reprise d'une maquette HTML est exprimée dans l'espace du
+        /// NAVIGATEUR, et que le projet compose en LINÉAIRE — la recopier telle quelle est un
+        /// changement d'unité silencieux. Un aplat est HONNÊTE ; un dégradé mal converti serait un
+        /// nombre faux qui a l'air juste. À reprendre quand quelqu'un mesure la conversion.</summary>
+        private void AjouterFondPlaque(GameObject cible)
+        {
+            Image f = cible.AddComponent<Image>();
+            f.sprite = ProceduralUI.RoundedRectOutline((int)Px(2f), Px(1f), Hex("#2a3648"));
+            f.type = Image.Type.Sliced;
+            f.raycastTarget = false;
+            cible.transform.SetAsFirstSibling();
         }
 
         private static GameObject Bloc(string nom, Transform parent, bool horizontal, float espace)

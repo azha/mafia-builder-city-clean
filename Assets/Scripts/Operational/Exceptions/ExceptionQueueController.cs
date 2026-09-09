@@ -507,7 +507,7 @@ $"{QuiParle(c)} · {ExceptionBandes.Ligne(c.severity_band, c.priority_band)}", 8
         {
             ClearRows();
             headerText.text = "EXCEPTIONS";
-            TextMeshProUGUI err = NewText("Error", rowsArea, Lib("File indisponible — vérifier la pile"), 14, TextAlignmentOptions.Left);
+            TextMeshProUGUI err = NewText("Error", rowsArea, Lib("Le comptoir n'a pas répondu."), 14, TextAlignmentOptions.Left);
             err.color = AccentSevere;
             AddLayoutElement(err.gameObject, minHeight: 24, flexibleHeight: 0);
             TrackText(headerText, headerText.text);

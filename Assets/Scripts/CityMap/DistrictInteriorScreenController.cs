@@ -589,11 +589,31 @@ namespace MafiaCleanCity.CityMap
                     return ba.y != bb.y ? ba.y.CompareTo(bb.y) : ba.x.CompareTo(bb.x);
                 });
 
+                // Un bloc → la liste ORDONNÉE des identifiants de bâtiments qui l'occupent.
+                var rangsParBloc = new Dictionary<int, List<string>>();
+                foreach (DistrictInteriorBuildingDto b2 in ordered)
+                {
+                    if (!rangsParBloc.TryGetValue(b2.block_id, out List<string> l))
+                        rangsParBloc[b2.block_id] = l = new List<string>();
+                    l.Add(b2.building);
+                }
+                foreach (List<string> l in rangsParBloc.Values)
+                    l.Sort(System.StringComparer.Ordinal);
+
+                ancragesParPivot = 0; ancragesParGrille = 0; ancrages.Clear(); identitesBadges.Clear();
                 foreach (DistrictInteriorBuildingDto building in ordered)
                 {
                     if (!blockByBlockId.TryGetValue(building.block_id, out DistrictInteriorBlockDto block))
                         continue; // D2 garantit l'appartenance ; défensif.
-                    GameObject cell = BuildBuildingCell(cellsRt, block.x, block.y, building, anchorMap, scaleFactor);
+                    // ⛔ L'ordre DANS le bloc doit être STABLE d'un run à l'autre, sinon deux
+                    //    captures du même compte échangent deux bâtiments et un juge lit un
+                    //    déplacement là où rien n'a bougé. `ordered` est trié sur (y,x) du BLOC :
+                    //    à l'intérieur d'un bloc ces deux clés sont égales, donc le tri ne départage
+                    //    rien et l'ordre serait celui du serveur. On classe donc sur l'identifiant.
+                    int total = rangsParBloc.TryGetValue(building.block_id, out var rangs) ? rangs.Count : 1;
+                    int rang = rangs != null ? rangs.IndexOf(building.building) : 0;
+                    GameObject cell = BuildBuildingCell(cellsRt, block.x, block.y, building, anchorMap, scaleFactor,
+                                                        rang < 0 ? 0 : rang, total);
                     // ⚠️ AVANT CE LOT, AUCUN BÂTIMENT N'ÉTAIT CLIQUABLE — mesuré, zéro `Button` et
                     // zéro `onClick` dans tout l'écran principal du jeu. Le badge de possession
                     // était décoratif.
@@ -619,7 +639,94 @@ namespace MafiaCleanCity.CityMap
                     playerBuildingLocalPositions.Add(
                         cellsRt.anchoredPosition + ((RectTransform)cell.transform).anchoredPosition);
                 }
-            }
+
+                // ⛔⛔ L'INVENTAIRE DE LA HIÉRARCHIE — le seul instrument qui puisse voir ce qu'aucun
+                //    `grep` ne trouvera. Un juge ⊥ a mesuré les badges sur une maille de pas
+                //    `hauteur d'écran / 10`, et le balayage du code rend ZÉRO partout : pas de
+                //    `Screen.height`, pas de `/10`, pas de `GridLayoutGroup`, dans tout
+                //    `Assets/Scripts`. Le modèle qui prédit les DIX abscisses mesurées aux deux
+                //    résolutions, sans aucun paramètre libre, est un conteneur CARRÉ de côté égal à
+                //    la hauteur d'écran, centré sur la demi-largeur, avec des enfants à ancres
+                //    fractionnaires multiples de 0,1.
+                //    ⇒ *Une fraction d'ancre vit dans le `RectTransform`, donc dans la scène — pas
+                //      dans le code.* C'est précisément la classe de placement qu'une recherche
+                //      textuelle ne peut pas voir, par construction. L'inventaire la confirme ou la
+                //      réfute ; il ne la suppose pas.
+                var pile = new System.Text.StringBuilder("[HIÉRARCHIE]");
+                for (Transform t = cellsRt; t != null; t = t.parent)
+                {
+                    var r = t as RectTransform;
+                    if (r == null) { pile.Append($" ← {t.name}(non-Rect)"); continue; }
+                    pile.Append($" ← {t.name} anc[{r.anchorMin.x:0.###},{r.anchorMin.y:0.###}]"
+                                + $"[{r.anchorMax.x:0.###},{r.anchorMax.y:0.###}]"
+                                + $" sd[{r.sizeDelta.x:0.#},{r.sizeDelta.y:0.#}]"
+                                + $" rect[{r.rect.width:0.#}x{r.rect.height:0.#}]"
+                                + $" sc[{t.localScale.x:0.###}]");
+                }
+                Debug.Log(pile.ToString());
+                Debug.Log($"[IDENTITÉ-BADGE] {identitesBadges.Count} badge(s) · {string.Join(" · ", identitesBadges)}");
+
+                // ⛔⛔ LA GARDE DE BORNES — une PROPRIÉTÉ, pas un compte, et elle ferme la CLASSE.
+                //    Mesuré le 2026-09-07 : 4 badges de possession sur 11 sont posés HORS CADRE
+                //    (x = −83, −70, −71 ; y = −56,9). Construits, positionnés, invisibles. Un
+                //    joueur qui possède ces bâtiments ne voit rien, et rien ne le lui dit.
+                //    ⛔ AUCUNE falsifiable ne pouvait le voir : elles comptent des NŒUDS
+                //    (« 2 affectations ⇒ 2 marqueurs »), jamais des PIXELS VISIBLES.
+                //    ★★ Et c'est MOT POUR MOT le défaut que `BuildLieutenantMarkers` documente
+                //    pour les MARQUEURS en août — « les trois falsifiables qui existaient étaient
+                //    VERTES pendant ce temps » — jamais fermé du côté des BADGES. *Le correctif
+                //    d'août a écrit sa propre classe dans son commentaire et ne l'a pas fermée ;
+                //    personne n'est allé voir le jumeau.* Poser ici une garde sur les seuls badges
+                //    referait la même faute un cran plus loin : la garde porte donc sur TOUT nœud
+                //    d'interface positionné, quel qu'il soit.
+                var canvasRt = cellsRt.GetComponentInParent<Canvas>()?.transform as RectTransform;
+                if (canvasRt != null)
+                {
+                    // ⛔⛔ LE CADRE EST CELUI DU CANVAS, PAS `Screen` — et ma première version a fait
+                    //    l'erreur exacte que ce fil passe la nuit à diagnostiquer chez les autres.
+                    //    En batchmode `Screen` vaut 640×480 (la vue de jeu par défaut) pendant que
+                    //    `CapturerA` rend hors écran à 1080×1920 : la garde a rapporté 66 puis
+                    //    71 nœuds « hors cadre » qui sont parfaitement visibles sur la planche.
+                    //    *Un instrument bâti sur la mauvaise grandeur accuse au hasard, et il accuse
+                    //    beaucoup* — 71 faux positifs auraient noyé les 4 vrais.
+                    //    ⇒ Le cadre qui compte est celui où le rendu a lieu : les coins du CANVAS.
+                    Vector3[] coinsCadre = new Vector3[4];
+                    canvasRt.GetWorldCorners(coinsCadre);
+                    var cadre = new Rect(coinsCadre[0].x, coinsCadre[0].y,
+                                         coinsCadre[2].x - coinsCadre[0].x,
+                                         coinsCadre[2].y - coinsCadre[0].y);
+                    horsCadre.Clear();
+                    foreach (var rt in canvasRt.GetComponentsInChildren<RectTransform>(false))
+                    {
+                        var g = rt.GetComponent<UnityEngine.UI.Graphic>();
+                        // ⚠️ On ne juge que ce qui DESSINE et qui est ACTIF : un conteneur vide hors
+                        //    cadre ne trompe personne, et un objet désactivé n'est pas un défaut.
+                        if (g == null || !g.enabled || !g.gameObject.activeInHierarchy) continue;
+                        Vector3[] c = new Vector3[4];
+                        rt.GetWorldCorners(c);
+                        var r = new Rect(c[0].x, c[0].y, c[2].x - c[0].x, c[2].y - c[0].y);
+                        // ⛔ ENTIÈREMENT dehors, jamais « déborde un peu » : un élément partiellement
+                        //    coupé peut être voulu (défilement, animation d'entrée). Ce qui n'est
+                        //    jamais voulu, c'est un objet dont AUCUN pixel n'atteint le cadre.
+                        if (!r.Overlaps(cadre)) horsCadre.Add($"{rt.name}@[{r.x:0.#},{r.y:0.#}]");
+                    }
+                    Debug.Log($"[HORS-CADRE] {horsCadre.Count} nœud(s) dessinant ENTIÈREMENT hors du "
+                              + $"cadre CANVAS [{cadre.width:0.#}x{cadre.height:0.#}] (et non `Screen`, "
+                              + $"qui vaut {Screen.width}x{Screen.height} en batchmode)"
+                              + (horsCadre.Count > 0 ? " ⚠️ invisibles pour le joueur : " + string.Join(" · ", horsCadre) : ""));
+                }
+                Debug.Log($"[HIÉRARCHIE] Screen={Screen.width}x{Screen.height} · scaleFactor={scaleFactor:0.######} "
+                          + $"· un conteneur CARRÉ de côté H ferait rect[{Screen.height / scaleFactor:0.#}] en unités canvas");
+
+                Debug.Log($"[ANCRAGE] {ancragesParPivot} cellule(s) posée(s) sur `pivot_px`, "
+                          + $"{ancragesParGrille} sur la GRILLE DE SECOURS "
+                          + $"(carte d'ancrage {(anchorMap?.parcelles == null ? "ABSENTE" : anchorMap.parcelles.Length + " parcelles")})"
+                          + (ancragesParGrille > 0
+                             ? " ⚠️ une cellule sur la grille de secours n'est PAS sur son bâtiment"
+                             : "")
+                          + $"\n[ANCRAGE] blocs distincts={new System.Collections.Generic.HashSet<string>(ancrages).Count} "
+                          + $"sur {ancrages.Count} cellule(s) — deux cellules au MÊME bloc se superposent au pixel près"
+                          + $"\n[ANCRAGE] {string.Join(" · ", ancrages)}");            }
 
             // nav-district — pièce manquante mesurée (le fond fait 1920px de haut, la fenêtre n'en
             // montre que 720, sans aucun mécanisme de défilement — Tools/district-v2-reimport-
@@ -734,8 +841,17 @@ namespace MafiaCleanCity.CityMap
         /// du fond, §2.2) et positionné au pixel `pivot_px` lu dans <paramref name="anchorMap"/>
         /// (pp-F2/F-calage) — ou une grille de secours déterministe si ce bloc n'a pas d'ancre
         /// (profil sans fond en vague 1 : voir RenderNightDiorama et implementation-notes.md).</summary>
+        // Compteurs de RÉGIME d'ancrage — remis à zéro à chaque rendu, imprimés après la boucle.
+        private int ancragesParPivot, ancragesParGrille;
+        private readonly System.Collections.Generic.List<string> ancrages = new System.Collections.Generic.List<string>();
+        private readonly System.Collections.Generic.List<string> identitesBadges = new System.Collections.Generic.List<string>();
+        /// <summary>Les nœuds qui DESSINENT entièrement hors du cadre — publié pour qu'une garde
+        /// puisse l'asserter sans re-parcourir l'arbre, et pour que le compte soit lisible.</summary>
+        private readonly System.Collections.Generic.List<string> horsCadre = new System.Collections.Generic.List<string>();
+        public System.Collections.Generic.IReadOnlyList<string> NoeudsHorsCadre => horsCadre;
+
         private GameObject BuildBuildingCell(RectTransform sceneRt, int x, int y, DistrictInteriorBuildingDto building,
-            DistrictBackgroundAnchorDto anchorMap, float scaleFactor)
+            DistrictBackgroundAnchorDto anchorMap, float scaleFactor, int rangDansBloc = 0, int totalDansBloc = 1)
         {
             BuildingSpriteSlots slots = BuildingSpriteSlots.Current;
             Sprite baseSprite = slots != null ? slots.Resolve(building.operational_type) : null;
@@ -752,9 +868,45 @@ namespace MafiaCleanCity.CityMap
             // testée au pixel près (seul verge/district 16 porte pp-F2 — voir implementation-notes.md
             // § Deviations). Elle garde néanmoins C9/C10/lieutenant-markers vivants pour tout profil
             // synthétique de test (ex. "lattice") qui n'a pas de fond en vague 1.
+            // ⛔⛔ UN DISPOSITIF CONDITIONNEL DOIT DÉCLARER SON RÉGIME. Mesuré le 2026-09-07 : un
+            //    juge ⊥ a trouvé les 11 centres de badge EXACTEMENT sur une maille régulière
+            //    (résidu 0,0000 px), pendant que l'atelier mesurait les 51 ancres du fichier à
+            //    0,00 m de leur bâtiment. **Les deux mesures étaient justes** — et personne ne
+            //    pouvait les départager, parce que RIEN ne disait quelle branche avait servi.
+            //    Une régularité parfaite ne peut pas venir des pivots (mesuré : 51 abscisses
+            //    distinctes, 20 pas différents) ; elle ne peut venir que de la grille ci-dessous.
+            //    Le compte imprimé ferme la question en un run au lieu d'une hypothèse de plus.
+            if (pivotLocal.HasValue) ancragesParPivot++; else ancragesParGrille++;
+            // ⛔ ET LES VALEURS, PAS SEULEMENT LA BRANCHE. Déclarer quelle branche a servi laisse
+            //    encore la moitié du chemin dans le noir : *une branche vérifiée avec des données
+            //    non vérifiées ne prouve rien sur le résultat*. Deux lectures restaient compatibles
+            //    avec « 13/13 sur pivot » — que les pivots lus soient eux-mêmes une maille, ou que
+            //    l'objet mesuré ne soit pas la cellule. On imprime donc le bloc, le pivot LU et la
+            //    position POSÉE, pour que la maille se voie ou s'infirme sans une hypothèse de plus.
+            DistrictBackgroundParcelDto parcelleLue = DistrictBackgroundAnchor.FindParcel(anchorMap, x, y);
+            ancrages.Add($"({x},{y})"
+                         + (parcelleLue?.pivot_px != null && parcelleLue.pivot_px.Length >= 2
+                            ? $" px[{parcelleLue.pivot_px[0]:0.0},{parcelleLue.pivot_px[1]:0.0}]"
+                            : " GRILLE"));
             Vector2 localPos = pivotLocal ?? new Vector2(x * 100f, -y * 100f);
+            // ⛔ DEUX BÂTIMENTS D'UN MÊME BLOC PARTAGENT LEUR PIVOT — `FindParcel` est clé par (x,y).
+            //    Mesuré en jeu le 2026-09-07 : 13 bâtiments pour 11 blocs distincts. Sans cet
+            //    étalement ils se posent AU MÊME PIXEL : un seul bâtiment visible, les libellés en
+            //    pâté, et les marqueurs de lieutenant de l'un empilés sur l'autre.
+            //    ★ Aucun écart entre ANCRES ne peut réparer ça : la superposition est une propriété
+            //      de la CLÉ, pas des ancres. Le semis d'ancres ne l'atteint donc pas.
+            //    L'étalement est en pixels IMAGE : il se convertit par le même `scaleFactor` que le
+            //    pivot, sinon il vaudrait autre chose à chaque résolution.
+            localPos.x += DistrictBackgroundAnchor.EtalementDansParcelle(
+                parcelleLue, rangDansBloc, totalDansBloc, cellSize.x * scaleFactor) / scaleFactor;
 
-            GameObject cell = NewUI($"Cell_{x}_{y}", sceneRt);
+            // Le NOM doit rester unique, sinon l'appariement par nom cesse d'apparier sans le dire
+            // (`DistrictInteriorLieutenantMarkersPlayModeTests` a dû cesser de prendre le premier
+            // venu pour cette raison exacte). Le mono-occupant garde `Cell_x_y` mot pour mot : les
+            // six sites de test qui le cherchent par ce nom ne bougent pas.
+            string nomCellule = totalDansBloc > 1 && rangDansBloc > 0
+                ? $"Cell_{x}_{y}_{rangDansBloc + 1}" : $"Cell_{x}_{y}";
+            GameObject cell = NewUI(nomCellule, sceneRt);
             RectTransform cellRt = (RectTransform)cell.transform;
             cellRt.anchorMin = cellRt.anchorMax = new Vector2(0.5f, 0.5f);
             cellRt.pivot = new Vector2(0.5f, 0f); // bas-centre — §4 : "le pivot bas-centre du sprite s'y pose"
@@ -890,9 +1042,56 @@ namespace MafiaCleanCity.CityMap
                 labelRt.anchorMax = new Vector2(1f, 0f);
                 labelRt.pivot = new Vector2(0.5f, 0f);
                 labelRt.sizeDelta = new Vector2(0, cellH * 0.2f);
-                labelRt.anchoredPosition = Vector2.zero;
+                // ⛔ LE LIBELLÉ SE PLIE, L'ANCRE NON. Une parcelle du fond est à 2,66 px du bord
+                //    (mesuré sur `VERGE_D_JOUR_FINAL.json`), et le semis en rapproche d'autres :
+                //    un libellé centré sur elle sort du cadre et devient illisible. Borner le
+                //    BÂTIMENT le sortirait de son ancre — c'est-à-dire défaire le troc de
+                //    l'atelier (23 ancres remises sur la chaussée contre 4 libellés rognés).
+                //    ★ L'ancre dit OÙ EST le bâtiment : une donnée du monde. Le libellé dit
+                //      COMMENT ON LE NOMME : une contrainte de mise en page. Seul le second se plie.
+                //    Le décalage est RELATIF à la cellule (le libellé en est enfant), donc on pose
+                //    l'écart entre le centre replié et le centre réel.
+                float demiCadreX = anchorMap?.image != null && scaleFactor > 0f
+                    ? (anchorMap.image.w / scaleFactor) * 0.5f : 0f;
+                float replieX = DistrictBackgroundAnchor.ReplierDansLeCadre(localPos.x, cellW, demiCadreX);
+                labelRt.anchoredPosition = new Vector2(replieX - localPos.x, 0f);
                 label.color = DesignTokens.Current.onSurfacePrimary;
                 TrackText(label);
+
+                // ── LE GLYPHE DE TYPE, au-dessus du libellé (2026-09-07) ────────────────────────
+                // Arbitrage de DA : LIBELLÉ D'ABORD, GLYPHE ENSUITE, JAMAIS GLYPHE SEUL. Sur les
+                // 11 icônes produites, 2 seulement parlent d'elles-mêmes (l'épingle, la maison
+                // pleine) — un hexagone ne dit pas « laboratoire », un écusson ne dit pas
+                // « planque ». Le libellé NOMME, le glyphe fait RECONNAÎTRE au coup d'œil suivant :
+                // ils se complètent, ils ne se remplacent pas. Le glyphe est donc ajouté SANS rien
+                // retirer au libellé, et son absence n'enlève rien à ce qui est lisible.
+                //
+                // ⛔ `null` EST TRAITÉ EN MASQUANT, jamais par un repli partagé. `specialized_lab`
+                //    n'a pas d'icône (couverture 11/12) : lui donner le glyphe d'un voisin
+                //    remettrait deux types sous la même image — le défaut exact que le libellé
+                //    ci-dessus existe pour réparer. Un glyphe faux est pire qu'un glyphe absent.
+                Sprite glyphe = BuildingIcons.Pour(building.operational_type);
+                if (glyphe != null)
+                {
+                    var iconGo = new GameObject("TypeIcon", typeof(RectTransform));
+                    iconGo.transform.SetParent(cell.transform, false);
+                    Image iconImg = iconGo.AddComponent<Image>();
+                    iconImg.sprite = glyphe;
+                    iconImg.preserveAspect = true;
+                    iconImg.color = DesignTokens.Current.onSurfacePrimary;
+                    // ⚠️ Carré, borné par la DEUX dimensions de la cellule : les cellules mesurées
+                    //    vont de 105 à 460 px de large, et un glyphe dimensionné sur la seule
+                    //    largeur déborderait la bande basse sur les cellules larges.
+                    float cote = Mathf.Min(cellH * 0.22f, cellW * 0.45f);
+                    RectTransform iconRt = (RectTransform)iconGo.transform;
+                    iconRt.anchorMin = iconRt.anchorMax = new Vector2(0.5f, 0f);
+                    iconRt.pivot = new Vector2(0.5f, 0f);
+                    iconRt.sizeDelta = new Vector2(cote, cote);
+                    // Posé SUR la bande du libellé, jamais dedans : le libellé occupe cellH*0.2.
+                    // Le glyphe SUIT le libellé : ils se lisent comme un bloc, et les séparer
+                    // serait un défaut pire que celui qu'on répare.
+                    iconRt.anchoredPosition = new Vector2(replieX - localPos.x, cellH * 0.2f);
+                }
             }
 
             // C9 (§3, §1.5 — U-10) : les 5 bindings lumineux. C10 (D10/§C2-bis) : les marqueurs de
@@ -1059,8 +1258,20 @@ namespace MafiaCleanCity.CityMap
         private void BuildStatePip(Transform cell, string nom, int rang, Color teinte,
             float footprintW, float footprintOffsetX, float footprintBottomMargin, float cellH)
         {
+            // ⛔ LA LIGNE D'IDENTITÉ — le dernier fait manquant du fil « maille ». Un juge ⊥ mesure
+            //    11 anneaux dorés EXACTEMENT sur une maille de pas `hauteur de canvas / 10`, et
+            //    l'inventaire a montré que les cellules sont posées sur des pivots IRRÉGULIERS.
+            //    Les deux ne peuvent pas être vrais du même objet ⇒ la prémisse la plus faible est
+            //    l'IDENTITÉ des anneaux, jamais mise à l'épreuve : *la taille est compatible, elle
+            //    n'établit pas l'identité — deux objets de même diamètre restent deux objets.*
+            //    ⇒ On imprime la position ÉCRAN du badge (Canvas ScreenSpaceOverlay ⇒ `position`
+            //      EST en pixels d'écran). Si elle tombe sur la maille, ce SONT les badges et les
+            //      cellules ne sont pas où le pivot dit ; sinon, il existe une seconde couche
+            //      d'anneaux dorés que personne n'a encore nommée. Une ligne, et le fil se ferme.
             RectTransform badge = EnsureOwnershipBadge(cell, footprintW, footprintOffsetX,
                 footprintBottomMargin, cellH);
+            if (badge != null)
+                identitesBadges.Add($"{cell.name}→écran[{badge.position.x:0.#},{badge.position.y:0.#}]");
             float d = badge.sizeDelta.x;
             GameObject go = NewUI(nom, badge);
             var rt = (RectTransform)go.transform;
@@ -2055,10 +2266,17 @@ namespace MafiaCleanCity.CityMap
         ///   · COLLECTER  — `POST /v1/operational/dealer/:id/collect` EXISTE, joueur, sous
         ///     `JwtAuthGuard`. Mais il prend un id de DEALER, pas de bâtiment ; la jointure
         ///     bâtiment→dealer n'est pas projetée dans `DistrictInteriorBuildingDto`.
-        ///   · BLANCHIR   — `POST /v1/operational/laundering/inject` existe et est joueur, et rend
-        ///     **404 POUR TOUT LE MONDE, DANS TOUS LES ENVIRONNEMENTS** : rien ne crée jamais de
-        ///     ligne `safehouses` (0 écrivain dans `services/`, 0 dans les 147 migrations — chaîne
-        ///     morte TD-358). Le câbler livrerait un bouton qui échoue toujours.
+        ///   · BLANCHIR   — `POST /v1/operational/laundering/inject` existe et est joueur.
+        ///     ⛔⛔ ÉNONCÉ PÉRIMÉ, RETIRÉ LE 2026-09-07 — et il ne trompait pas un lecteur, il
+        /// DÉSARMAIT UN GESTE. Ce bloc affirmait, au présent et sans réserve, que la table des
+        /// planques n'avait aucun écrivain de production. Re-mesuré statiquement dans le back :
+        /// `onboarding-grant.service.ts:411` appelle `createSafehouse` DANS la transaction du don
+        /// de bienvenue — donc tout joueur neuf en a une. Le lot planque a refermé ce maillon, et
+        /// TROIS fichiers du client affirmaient encore l'inverse, chacun en éteignant son action.
+        /// ★ C'est la forme la plus coûteuse de l'énoncé daté : il ne se contente pas de mentir,
+        ///   il retire une action au joueur, et il a l'air rigoureux — daté, chiffré, sourcé.
+        ///     ⚠️ CE QUI RESTE VRAI : cet écran ne lit pas la planque du joueur, donc il n'a pas
+        ///     l'identifiant à poster. Le manque a changé de côté, il n'a pas disparu.
         ///   · AMÉLIORER  — l'upgrade de palier vit sur `BuildingCardController`, un autre écran.
         /// ⇒ Tant qu'une action n'a pas son chemin PROUVÉ de bout en bout, elle DIT son état au lieu
         /// de faire semblant. Un bouton qui ne fait rien est pire qu'un bouton absent — il promet
@@ -2073,7 +2291,7 @@ namespace MafiaCleanCity.CityMap
                     ficheSortie.text = "Collecte : ce bâtiment n'expose pas encore son vendeur.";
                     break;
                 case "BLANCHIR":
-                    ficheSortie.text = "Blanchiment : aucune planque — la filière n'est pas ouverte.";
+                    ficheSortie.text = "Blanchiment : cet écran ne sait pas encore quelle planque utiliser.";
                     break;
                 default:
                     ficheSortie.text = "Amélioration : à ouvrir depuis la fiche opérationnelle.";

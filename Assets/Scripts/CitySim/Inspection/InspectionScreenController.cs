@@ -75,9 +75,11 @@ namespace MafiaCleanCity.CitySim.Inspection
         private bool initialise;
         private Transform mountParent;
         private RectTransform corps;
+        private Image glypheRegime;
         private TextMeshProUGUI sousTitre;
         private TextMeshProUGUI batonTexte;
         private TextMeshProUGUI videTexte;
+        private UnityEngine.UI.Image videIllustration;
 
         private void Awake() => Init();
 
@@ -155,6 +157,7 @@ namespace MafiaCleanCity.CitySim.Inspection
 
             EtatVide = File == null;
             videTexte.gameObject.SetActive(EtatVide);
+            if (videIllustration != null) videIllustration.gameObject.SetActive(EtatVide);
             if (EtatVide)
             {
                 // ⚠️ 404 = « pas encore de file », pas « panne ». Les confondre ferait accuser le
@@ -170,6 +173,19 @@ namespace MafiaCleanCity.CitySim.Inspection
             sousTitre.text = $"district {File.district} · {Lisible(File.dispatcher_regime)}";
             sousTitre.color = File.dispatcher_regime == "SURGE"
                            || File.dispatcher_regime == "BACKLOGGED" ? Braise : Creme2;
+
+            // ⛔ `null` ⇒ ON MASQUE, jamais un repli partagé : il mettrait deux régimes sous la même
+            //    image, et le régime est précisément ce que cette ligne existe pour distinguer.
+            //    La couverture est pleine aujourd'hui (4/4) ; le jour où le back ajoute un
+            //    cinquième régime, ce chemin le traite sans rien afficher de faux — un changement
+            //    de DONNÉE qu'aucun compilateur ne verrait.
+            if (glypheRegime != null)
+            {
+                Sprite d = DispatcherIcons.Pour(File.dispatcher_regime);
+                glypheRegime.sprite = d;
+                glypheRegime.enabled = d != null;
+                glypheRegime.color = sousTitre.color;   // le glyphe suit l'encre du libellé qu'il accompagne
+            }
 
             // la charge : cinq crans, parce que les paliers du back sont cinq et DISCRETS
             Crans(corps, "Charge", File.queue_load, 5, ChargeRang(File.queue_load));
@@ -300,6 +316,26 @@ namespace MafiaCleanCity.CitySim.Inspection
             sousTitre = Texte(transform, "Sous", $"district {districtId}", Px(8.5f), Creme2,
                               DesignTokens.Current.primaryFont, TextAlignmentOptions.Center);
 
+            // ── LE GLYPHE DU RÉGIME DE DISPATCHER (2026-09-07) ────────────────────────────────
+            // ⛔ POSÉ AU-DESSUS DU SOUS-TITRE, PAS À CÔTÉ. Le sous-titre est une ligne CENTRÉE dans
+            //    une pile verticale : mettre un glyphe « à côté » exigerait de transformer la ligne
+            //    en rangée horizontale, c'est-à-dire de restructurer la mise en page d'un écran qui
+            //    a une planche mais **aucune référence ratifiée** (pas de dossier de juge pour
+            //    `les_inspections`). *Restructurer ce qu'on ne peut pas comparer à une référence,
+            //    c'est décider de sa conformité sans mesure.* Un nœud de plus dans la pile respecte
+            //    l'idiome existant et ne déplace rien.
+            // ⇒ Le libellé NOMME (il reste, intact), le glyphe fait RECONNAÎTRE.
+            var glypheGo = new GameObject("GlyphRegime", typeof(RectTransform));
+            glypheGo.transform.SetParent(transform, false);
+            glypheRegime = glypheGo.AddComponent<Image>();
+            glypheRegime.preserveAspect = true;
+            glypheRegime.raycastTarget = false;
+            glypheRegime.enabled = false;   // rien tant qu'un régime n'est pas connu
+            LayoutElement leGlyphe = glypheGo.AddComponent<LayoutElement>();
+            leGlyphe.preferredWidth = Px(11f); leGlyphe.minWidth = Px(11f);
+            leGlyphe.preferredHeight = Px(11f); leGlyphe.minHeight = Px(11f);
+            leGlyphe.flexibleWidth = 0f; leGlyphe.flexibleHeight = 0f;
+
             // ★ le retour de bâton : figé jusqu'au prochain geste, parce qu'aucune route ne
             // permet de le relire une fois passé.
             batonTexte = Texte(transform, "Baton", "", Px(9f), Braise,
@@ -314,6 +350,15 @@ namespace MafiaCleanCity.CitySim.Inspection
                               DesignTokens.Current.hudSerifFont, TextAlignmentOptions.Center);
             videTexte.enableWordWrapping = true;
             videTexte.gameObject.SetActive(false);
+
+            // ── L'ILLUSTRATION D'ÉTAT VIDE (⑮ Les inspections) ──────────────────────────────────
+            // ⛔ Elle ACCOMPAGNE le message, elle ne le remplace pas : le message NOMME,
+            //    l'image lève seulement le doute « vide ou CASSÉ ? ». `null` n'enlève rien.
+            // ⚠️ Sujet « police » ← `Tools/fal/TABLE-SUJET-ECRAN.md` : il couvre ⑮ ET ⑰.
+            //    Mon appariement « évident » n'en voyait qu'un — la moitié du travail avec
+            //    l'apparence de la totalité.
+            videIllustration = MafiaCleanCity.Shell.EtatsVidesIllustres.Monter(transform, "police", Px(120f));
+            if (videIllustration != null) videIllustration.gameObject.SetActive(false);
         }
 
         private static GameObject Bloc(string nom, Transform parent, bool horizontal, float espace)
