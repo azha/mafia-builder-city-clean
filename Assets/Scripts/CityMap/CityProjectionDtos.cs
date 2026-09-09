@@ -29,7 +29,29 @@ namespace MafiaCleanCity.CityMap
     [Serializable] public class ThroughputEnvelope { public ThroughputPayload payload; }
     [Serializable] public class ThroughputPayload { public ThroughputDto data; }
 
-    [Serializable] public class StashDto { public string district; public string district_blocking_band; public bool any_high_blocking_alert; }
+    /// <summary>Une planque telle que projetée par `GET /v1/city/district/:id/stash`.
+    /// `safehouse_id` est la poignée exigée par les gestes de collecte/blanchiment ; `building_id`
+    /// permet de la raccorder à la ville. Les autres champs restent qualitatifs, à l'exception du
+    /// nombre structurel de cases du modèle Erlang.</summary>
+    [Serializable]
+    public class SafehouseDto
+    {
+        public string safehouse_id;
+        public string building_id;
+        public int slot_count;
+        public string load_bucket;
+        public string blocking_band;
+        public bool high_blocking_alert;
+    }
+
+    [Serializable]
+    public class StashDto
+    {
+        public string district;
+        public string district_blocking_band;
+        public bool any_high_blocking_alert;
+        public SafehouseDto[] safehouses;
+    }
     [Serializable] public class StashEnvelope { public StashPayload payload; }
     [Serializable] public class StashPayload { public StashDto data; }
 

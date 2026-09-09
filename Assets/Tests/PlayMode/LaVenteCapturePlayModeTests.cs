@@ -5,6 +5,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 using UnityEngine.UI;
 using MafiaCleanCity.Operational.Selling;
+using MafiaCleanCity.Tests;
 
 namespace MafiaCleanCity.Shell.Tests
 {
@@ -26,6 +27,16 @@ namespace MafiaCleanCity.Shell.Tests
     public class LaVenteCapturePlayModeTests
     {
         private Scene sceneDeDemarrage;
+
+        [OneTimeSetUp]
+        public void SemerLaCaisseDeLaCapture()
+        {
+            // La capture doit être rejouable après le test de collecte, qui vide précisément la
+            // caisse qu'elle veut montrer. Le seeder reconstruit l'état `operational_demo` auquel
+            // AppShell se connecte par défaut ; on ne dépend donc jamais de l'ordre des suites.
+            SeederSupport.RunSeeder(
+                SeederSupport.OperationalSeeder, SeederSupport.OperationalMarker);
+        }
 
         private IEnumerator ChargerLaSceneDeDemarrageDuBuild()
         {
@@ -99,14 +110,30 @@ namespace MafiaCleanCity.Shell.Tests
             Assert.IsNotNull(vente,
                 "SellingScreenController non monté sous l'onglet More — la capture montrerait une destination vide");
 
-            // Laisser le chargement (signin → review → roster) aboutir : une capture prise avant
-            // rendrait un comptoir vide et l'écran aurait l'air correct.
+            // Laisser le chargement COMPLET (signin → review → roster → découverte de planque)
+            // aboutir : `Dealers` est affecté avant la dernière requête, donc l'attendre seul
+            // autoriserait une capture intermédiaire où RAMASSER est encore désactivé.
             float charge = 0f;
-            while (charge < 20f && vente.Dealers == null && !vente.EtatVide)
+            while (charge < 30f && vente.RendusEffectues == 0)
             {
                 charge += Time.deltaTime;
                 yield return null;
             }
+            Assert.Greater(vente.RendusEffectues, 0,
+                "le rendu complet de ㉟ n'a pas abouti — la capture serait intermédiaire");
+            Assert.IsNull(vente.DerniereErreur,
+                $"le chargement de ㉟ a échoué : {vente.DerniereErreur}");
+            Assert.IsNotEmpty(vente.SafehouseId,
+                "aucune planque découverte — la capture ne pourrait pas montrer RAMASSER actif");
+            Button ramasserActif = null;
+            foreach (Button bouton in vente.GetComponentsInChildren<Button>(true))
+                if (bouton.gameObject.name == "Ramasser" && bouton.interactable)
+                {
+                    ramasserActif = bouton;
+                    break;
+                }
+            Assert.IsNotNull(ramasserActif,
+                "aucun vrai bouton RAMASSER actif — la capture ne prouverait pas le geste livré");
             // diagnostic AVANT de conclure : où l'écran est-il réellement, et est-il visible ?
             RectTransform vrt = (RectTransform)vente.transform;
             string chaine = "";

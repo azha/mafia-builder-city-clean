@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Text;
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -63,25 +64,18 @@ namespace MafiaCleanCity.Operational.Selling
 
         /// <summary>POST /v1/operational/dealer/:id/collect — ramasser la caisse.
         ///
-        /// ⛔⛔ ÉNONCÉ PÉRIMÉ, RETIRÉ LE 2026-09-07 — et il ne trompait pas un lecteur, il
-        /// DÉSARMAIT UN GESTE. Ce bloc affirmait, au présent et sans réserve, que la table des
-        /// planques n'avait aucun écrivain de production. Re-mesuré statiquement dans le back :
-        /// `onboarding-grant.service.ts:411` appelle `createSafehouse` DANS la transaction du don
-        /// de bienvenue — donc tout joueur neuf en a une. Le lot planque a refermé ce maillon, et
-        /// TROIS fichiers du client affirmaient encore l'inverse, chacun en éteignant son action.
-        /// ★ C'est la forme la plus coûteuse de l'énoncé daté : il ne se contente pas de mentir,
-        ///   il retire une action au joueur, et il a l'air rigoureux — daté, chiffré, sourcé.
-        /// ⚠️ CE QUI RESTE VRAI : la route exige une planque POSSÉDÉE, et cet écran ne lit pas
-        /// encore laquelle. Le blocage est désormais CÔTÉ CLIENT, et c'est une autre affaire.
-        /// ⇒ L'écran montre le bouton ÉTEINT avec sa raison, il ne le masque pas : *un geste
-        /// impossible qu'on masque devient un geste qu'on croit ne pas exister ; montré éteint, il
-        /// devient une promesse datée.* Symptôme visible de la même chaîne : `cash_band` monte
-        /// jusqu'à FULL et rien ne la vide.</summary>
-        public IEnumerator Collect(string dealerId, string bearer,
+        /// Le corps contient obligatoirement la poignée de planque découverte par le client. La
+        /// version précédente postait `{}` : le bouton existait, mais toute activation aurait
+        /// produit un 422 avant même d'atteindre la mécanique de collecte.</summary>
+        public IEnumerator Collect(string dealerId, string safehouseId, string bearer,
             Action<CollectData> onOk, Action<long, string> onErr)
         {
-            using (UnityWebRequest req = UnityWebRequest.Post(Url($"dealer/{dealerId}/collect"), "{}", "application/json"))
+            string body = JsonUtility.ToJson(new CollectData { safehouse_id = safehouseId });
+            using (var req = new UnityWebRequest(Url($"dealer/{dealerId}/collect"), UnityWebRequest.kHttpVerbPOST))
             {
+                req.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(body));
+                req.downloadHandler = new DownloadHandlerBuffer();
+                req.SetRequestHeader("Content-Type", "application/json");
                 req.timeout = TimeoutSeconds;
                 if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
                 yield return req.SendWebRequest();

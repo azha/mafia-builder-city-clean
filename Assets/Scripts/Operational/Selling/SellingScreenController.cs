@@ -1,6 +1,8 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using MafiaCleanCity.CityMap;
 using MafiaCleanCity.Shell;
 using MafiaCleanCity.Theme;
 using TMPro;
@@ -23,13 +25,9 @@ namespace MafiaCleanCity.Operational.Selling
     // n'avait aucun écrivain de production. Re-mesuré dans le back : le don de bienvenue en crée
     // une pour tout joueur neuf. L'affirmation ne trompait pas un lecteur — elle ÉTEIGNAIT LE
     // SEUL GESTE DE L'ÉCRAN, sur trois fichiers à la fois.
-    // ⚠️ CE QUI RESTE VRAI, et c'est plus étroit : cet écran ne lit pas encore la planque du
-    // joueur, donc il n'a pas l'identifiant que la route réclame. Le manque est CÔTÉ CLIENT.
-    // ⇒ Le bouton est montré ÉTEINT, avec la raison écrite à l'écran. *Un geste impossible qu'on
-    // masque devient un geste qu'on croit ne pas exister ; montré éteint, il devient une promesse
-    // datée* — et le jour où la planque existe, c'est cette ligne qui devra changer, pas la
-    // découverte que l'écran ne le proposait pas.
-    // ⚠️ Symptôme visible de la même chaîne : `cash_band` monte jusqu'à FULL et RIEN ne la vide.
+    // CORRIGÉ : l'écran découvre maintenant une planque par le parcours joueur documenté par le
+    // backend (`world/districts` puis `city/district/:id/stash`), transmet son `safehouse_id` au
+    // POST de collecte, puis recharge les bandes. La caisse peut donc réellement redescendre.
     //
     // ⚠️ MAQUETTE NON RATIFIÉE au 2026-09-02 (juge-données ✗, ratification user ✗) — cet écran est
     // bâti sur la SURFACE MESURÉE, pas sur un dessin approuvé. À re-confronter à la maquette dès
@@ -50,6 +48,9 @@ namespace MafiaCleanCity.Operational.Selling
         /// dépend d'aucun champ, d'aucun ordre de requêtes, et elle survivra à l'ajout d'un appel.</summary>
         public int RendusEffectues { get; private set; }
         public int CollectTentatives { get; private set; }
+        public int CollectReussites { get; private set; }
+        public string SafehouseId { get; private set; }
+        public bool RecherchePlanqueTerminee { get; private set; }
         public string DerniereErreur { get; private set; }
 
         private const float K = 1280f / 300f;
@@ -68,6 +69,8 @@ namespace MafiaCleanCity.Operational.Selling
         }
 
         private SellingClient client;
+        private WorldApiClient world;
+        private CityProjectionsClient projections;
         private string token;
         private bool initialise;
         private Transform mountParent;
@@ -75,6 +78,7 @@ namespace MafiaCleanCity.Operational.Selling
         private TextMeshProUGUI videTexte;
         private RectTransform compteurs;
         private UnityEngine.UI.Image videIllustration;
+        private TextMeshProUGUI actionTexte;
 
         private void Awake() => Init();
 
@@ -83,7 +87,21 @@ namespace MafiaCleanCity.Operational.Selling
             if (initialise) return;
             initialise = true;
             client = new SellingClient { BaseUrl = baseUrl };
+            world = new WorldApiClient { BaseUrl = baseUrl };
+            projections = new CityProjectionsClient { BaseUrl = baseUrl };
             Construire();
+        }
+
+        /// <summary>Repointe ensemble les trois clients qui composent le parcours. Utile au build
+        /// configuré comme aux tests qui visent la stack locale.</summary>
+        public void SetBaseUrl(string url)
+        {
+            if (string.IsNullOrWhiteSpace(url)) return;
+            baseUrl = url;
+            Init();
+            client.BaseUrl = url;
+            world.BaseUrl = url;
+            projections.BaseUrl = url;
         }
 
         /// <summary>⛔ CE CONTRÔLEUR NE SE PLACE PLUS LUI-MÊME, ET C'EST UNE DÉCISION MESURÉE.
@@ -164,8 +182,76 @@ namespace MafiaCleanCity.Operational.Selling
 
         private IEnumerator Charger(string bearer)
         {
+            DerniereErreur = null;
             yield return client.ListDealers(bearer, d => Dealers = d,
                                             (c, m) => DerniereErreur = $"{c}: {m}");
+            if (Dealers != null)
+                yield return TrouverPlanque(bearer);
+            Rendre();
+        }
+
+        /// <summary>Découvre la première planque possédée sans id de test ni district codé en dur.
+        /// Le backend ne fournit aujourd'hui qu'une projection par district : on parcourt donc la
+        /// liste publique du monde dans son ordre stable et on s'arrête au premier résultat.</summary>
+        private IEnumerator TrouverPlanque(string bearer)
+        {
+            SafehouseId = null;
+            RecherchePlanqueTerminee = false;
+            List<DistrictDto> districts = null;
+            string worldError = null;
+            yield return world.GetDistricts(d => districts = d, e => worldError = e);
+
+            if (districts != null)
+            {
+                foreach (DistrictDto district in districts)
+                {
+                    StashDto stash = null;
+                    yield return projections.Stash(district.id, bearer, s => stash = s, _ => { });
+                    if (stash?.safehouses == null || stash.safehouses.Length == 0) continue;
+                    SafehouseDto candidate = stash.safehouses[0];
+                    if (candidate == null || string.IsNullOrEmpty(candidate.safehouse_id)) continue;
+                    SafehouseId = candidate.safehouse_id;
+                    break;
+                }
+            }
+
+            RecherchePlanqueTerminee = true;
+            if (string.IsNullOrEmpty(SafehouseId) && !string.IsNullOrEmpty(worldError))
+                DerniereErreur = worldError;
+        }
+
+        /// <summary>Ramasse toute la caisse du dealer vers la planque découverte, puis relit les
+        /// bandes afin que l'écran montre le résultat de la mutation plutôt qu'un succès optimiste.</summary>
+        public IEnumerator Collecter(string dealerId)
+        {
+            if (string.IsNullOrEmpty(dealerId) || string.IsNullOrEmpty(SafehouseId) || string.IsNullOrEmpty(token))
+            {
+                DerniereErreur = "Aucune planque n'est disponible pour cette collecte.";
+                if (actionTexte != null) actionTexte.text = DerniereErreur;
+                yield break;
+            }
+
+            CollectTentatives++;
+            CollectData resultat = null;
+            long code = 0;
+            yield return client.Collect(dealerId, SafehouseId, token,
+                d => resultat = d, (c, _) => code = c);
+
+            if (resultat == null)
+            {
+                DerniereErreur = code == 409
+                    ? "Cette caisse est vide ou la planque est pleine."
+                    : "La collecte n'a pas abouti.";
+                if (actionTexte != null) actionTexte.text = DerniereErreur;
+                yield break;
+            }
+
+            CollectReussites++;
+            DerniereErreur = null;
+            if (actionTexte != null) actionTexte.text = "La caisse a rejoint votre planque.";
+
+            yield return client.ListDealers(token, d => Dealers = d,
+                (c, m) => DerniereErreur = $"{c}: {m}");
             Rendre();
         }
 
@@ -230,13 +316,17 @@ namespace MafiaCleanCity.Operational.Selling
             // la marge : quatre traits
             Crans(r.transform, "Marge", Marge(d.margin_band), 4, MargeRang(d.margin_band));
 
-            // le geste impossible, montré éteint
+            // Le geste réel. Une caisse vide reste visible mais éteinte ; sans planque, la raison
+            // nomme le maillon manquant. Dans les autres états, le bouton appelle le vrai POST.
             GameObject ramasser = Bloc("Ramasser", r.transform, false, Px(1f));
             ramasser.GetComponent<VerticalLayoutGroup>().childAlignment = TextAnchor.MiddleCenter;
             ramasser.GetComponent<VerticalLayoutGroup>().padding =
                 new RectOffset((int)Px(8f), (int)Px(8f), (int)Px(6f), (int)Px(6f));
             Image rf = ramasser.AddComponent<Image>();
-            rf.sprite = ProceduralUI.RoundedRectDashedOutline((int)Px(9f), Px(1f), (int)Px(4f), (int)Px(3f), Eteint);
+            bool caisseVide = d.cash_band == "NONE";
+            bool actionPossible = !caisseVide && !string.IsNullOrEmpty(SafehouseId);
+            Color teinteAction = actionPossible ? Or : Eteint;
+            rf.sprite = ProceduralUI.RoundedRectDashedOutline((int)Px(9f), Px(1f), (int)Px(4f), (int)Px(3f), teinteAction);
             // ⛔⛔ `Tiled`, JAMAIS `Sliced` — UN MOTIF PÉRIODIQUE NE SURVIT PAS À UN ÉTIREMENT.
             //    Le 9-slice préserve les coins et ÉTIRE la bande centrale de chaque rail. Un trait
             //    CONTINU y survit (l'étirer rend un trait continu) ; un POINTILLÉ non : la portion
@@ -252,11 +342,23 @@ namespace MafiaCleanCity.Operational.Selling
             //      préservée quelle que soit la largeur. C'est le précédent maison, déjà employé
             //      par `LieutenantScreenController:2641,2675` — je ne l'invente pas, je l'adopte.
             rf.type = Image.Type.Tiled;
-            Texte(ramasser.transform, "Lib", "RAMASSER", Px(9f), Eteint,
+            Button bouton = ramasser.AddComponent<Button>();
+            bouton.targetGraphic = rf;
+            bouton.interactable = actionPossible;
+            if (actionPossible)
+            {
+                string dealerId = d.dealer;
+                bouton.onClick.AddListener(() => StartCoroutine(Collecter(dealerId)));
+            }
+            Texte(ramasser.transform, "Lib", "RAMASSER", Px(9f), teinteAction,
                   DesignTokens.Current.primaryFont, TextAlignmentOptions.Center).characterSpacing = 14f;
-            Texte(ramasser.transform, "Raison", "pas encore relié à votre planque",
-                  Px(6.8f), Creme2, DesignTokens.Current.primaryFont, TextAlignmentOptions.Center)
-                .enableWordWrapping = true;
+            if (!actionPossible)
+            {
+                string raison = caisseVide ? "caisse vide" : "aucune planque disponible";
+                Texte(ramasser.transform, "Raison", raison,
+                      Px(6.8f), Creme2, DesignTokens.Current.primaryFont, TextAlignmentOptions.Center)
+                    .enableWordWrapping = true;
+            }
         }
 
         /// <summary>Une jauge à CRANS — un cran par palier servi, allumé ou non. Pas une barre :
@@ -405,6 +507,10 @@ namespace MafiaCleanCity.Operational.Selling
 
             // LES COMPTEURS — trois fenêtres, comme la maquette (`.compteurs > .fen` ×3).
             compteurs = (RectTransform)Bloc("Compteurs", transform, true, Px(6f)).transform;
+
+            actionTexte = Texte(transform, "RetourAction", "", Px(7.5f), Creme2,
+                                 DesignTokens.Current.primaryFont, TextAlignmentOptions.Center);
+            actionTexte.enableWordWrapping = true;
 
             GameObject liste = Bloc("Rangees", transform, false, Px(8f));
             rangees = (RectTransform)liste.transform;
