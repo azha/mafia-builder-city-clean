@@ -216,6 +216,8 @@ namespace MafiaCleanCity.CityMap
             // Une même instance peut être réutilisée après changement de joueur : une poignée de
             // planque appartient à la session qui l'a servie et ne doit jamais survivre au seam.
             FicheSafehouseId = null;
+            FicheDealerId = null;
+            DerniereCollecte = null;
             DernierBlanchiment = null;
             LastFetchSucceeded = false;
             LastErrorCode = 0;
@@ -1841,10 +1843,15 @@ namespace MafiaCleanCity.CityMap
         private TextMeshProUGUI[] ficheStatValeurs = new TextMeshProUGUI[3];
         private TextMeshProUGUI[] ficheStatLibelles = new TextMeshProUGUI[3];
         private string ficheOperationalType;
+        private bool collecteEnCours;
         private bool blanchimentEnCours;
 
         // Hooks du geste réel, lisibles par le test sans exposer les détails de rendu.
         public string FicheSafehouseId { get; private set; }
+        public string FicheDealerId { get; private set; }
+        public int FicheCollecteTentatives { get; private set; }
+        public int FicheCollecteReussites { get; private set; }
+        public DistrictCollectOutcome DerniereCollecte { get; private set; }
         public int FicheBlanchimentTentatives { get; private set; }
         public int FicheBlanchimentReussites { get; private set; }
         public DistrictLaunderOutcome DernierBlanchiment { get; private set; }
@@ -2207,6 +2214,8 @@ namespace MafiaCleanCity.CityMap
             if (ficheRoot == null || b == null) return;
             FicheBuildingId = b.building;
             ficheOperationalType = b.operational_type;
+            FicheDealerId = null;
+            DerniereCollecte = null;
 
             ficheTitre.text = ResoudreNomBatiment(b);
             ficheType.text = LibellesBatiment.Conversion(b.conversion_band);
@@ -2278,13 +2287,14 @@ namespace MafiaCleanCity.CityMap
         {
             FicheBuildingId = null;
             ficheOperationalType = null;
+            FicheDealerId = null;
             if (ficheRoot != null) ficheRoot.gameObject.SetActive(false);
         }
 
         /// <summary>⚠️ CE QUE CHAQUE ACTION FAIT VRAIMENT, MESURÉ AVANT D'ÊTRE CÂBLÉ.
-        ///   · COLLECTER  — `POST /v1/operational/dealer/:id/collect` EXISTE, joueur, sous
-        ///     `JwtAuthGuard`. Mais il prend un id de DEALER, pas de bâtiment ; la jointure
-        ///     bâtiment→dealer n'est pas projetée dans `DistrictInteriorBuildingDto`.
+        ///   · COLLECTER  — `POST /v1/operational/dealer/:id/collect` existe et la projection
+        ///     `/dealers` sert `dealer_spot_id` : la fiche joint donc le bâtiment touché au dealer,
+        ///     découvre la planque possédée, puis poste les deux poignées réelles.
         ///   · BLANCHIR   — `POST /v1/operational/laundering/inject` existe et est joueur.
         ///     ⛔⛔ ÉNONCÉ PÉRIMÉ, RETIRÉ LE 2026-09-07 — et il ne trompait pas un lecteur, il
         /// DÉSARMAIT UN GESTE. Ce bloc affirmait, au présent et sans réserve, que la table des
@@ -2307,7 +2317,18 @@ namespace MafiaCleanCity.CityMap
             switch (laquelle)
             {
                 case "COLLECTER":
-                    ficheSortie.text = "Collecte : ce bâtiment n'expose pas encore son vendeur.";
+                    if (ficheOperationalType != "dealer_spot_front")
+                    {
+                        ficheSortie.text = "Collecte : choisissez un point de vente.";
+                        break;
+                    }
+                    if (string.IsNullOrEmpty(sessionBearer) || string.IsNullOrEmpty(FicheBuildingId))
+                    {
+                        ficheSortie.text = "Collecte indisponible : session absente.";
+                        break;
+                    }
+                    if (!collecteEnCours)
+                        StartCoroutine(CollecterDepuisFiche());
                     break;
                 case "BLANCHIR":
                     if (ficheOperationalType != "front_shop")
@@ -2327,6 +2348,72 @@ namespace MafiaCleanCity.CityMap
                     ficheSortie.text = "Amélioration : à ouvrir depuis la fiche opérationnelle.";
                     break;
             }
+        }
+
+        /// <summary>Action réelle du CTA canonique « COLLECTER ». La jointure ne repose sur aucun
+        /// id de démo : elle compare le bâtiment ouvert au `dealer_spot_id` servi au joueur.</summary>
+        public IEnumerator CollecterDepuisFiche()
+        {
+            if (collecteEnCours) yield break;
+            if (ficheOperationalType != "dealer_spot_front" || string.IsNullOrEmpty(FicheBuildingId) ||
+                string.IsNullOrEmpty(sessionBearer)) yield break;
+
+            collecteEnCours = true;
+            FicheCollecteTentatives++;
+            FicheDealerId = null;
+            DerniereCollecte = null;
+            string dealerSpotId = FicheBuildingId;
+            if (ficheSortie != null) ficheSortie.text = "Recherche du vendeur et de la planque…";
+
+            if (string.IsNullOrEmpty(FicheSafehouseId))
+                yield return TrouverPlanquePourFiche();
+
+            if (string.IsNullOrEmpty(FicheSafehouseId))
+            {
+                if (ficheSortie != null) ficheSortie.text = "Collecte indisponible : aucune planque.";
+                collecteEnCours = false;
+                yield break;
+            }
+
+            DistrictDealerDto[] dealers = null;
+            long dealersStatus = 0;
+            yield return projections.Dealers(sessionBearer, d => dealers = d, code => dealersStatus = code);
+            if (dealers != null)
+            {
+                foreach (DistrictDealerDto dealer in dealers)
+                {
+                    if (dealer == null || dealer.dealer_spot_id != dealerSpotId) continue;
+                    FicheDealerId = dealer.dealer;
+                    break;
+                }
+            }
+
+            if (string.IsNullOrEmpty(FicheDealerId))
+            {
+                if (ficheSortie != null)
+                    ficheSortie.text = dealersStatus == 401
+                        ? "Collecte indisponible : la session a expiré."
+                        : "Collecte indisponible : aucun vendeur affecté.";
+                collecteEnCours = false;
+                yield break;
+            }
+
+            DistrictCollectOutcome outcome = null;
+            yield return projections.CollectDealer(FicheDealerId, FicheSafehouseId, sessionBearer,
+                r => outcome = r);
+            DerniereCollecte = outcome;
+            if (outcome != null && outcome.Ok)
+            {
+                FicheCollecteReussites++;
+                if (ficheSortie != null) ficheSortie.text = "Caisse confiée à la planque.";
+            }
+            else if (ficheSortie != null)
+            {
+                string raison = outcome != null && !string.IsNullOrEmpty(outcome.Message)
+                    ? outcome.Message : "réponse absente";
+                ficheSortie.text = "Collecte indisponible : " + raison;
+            }
+            collecteEnCours = false;
         }
 
         /// <summary>Action réelle du bouton canonique « BLANCHIR ». La fiche garde exactement sa

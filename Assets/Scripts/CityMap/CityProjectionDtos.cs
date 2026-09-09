@@ -208,6 +208,34 @@ namespace MafiaCleanCity.CityMap
         public string Message;
     }
 
+    // Action de fiche COLLECTER : projection volontairement minimale. Le serveur sert d'autres
+    // bandes au panneau ㉟, mais la fiche n'a besoin que des deux identités qui réalisent la
+    // jointure bâtiment → dealer et de la bande de caisse utile au diagnostic.
+    [Serializable]
+    public class DistrictDealerDto
+    {
+        public string dealer;
+        public string dealer_spot_id;
+        public string cash_band;
+    }
+
+    [Serializable] public class DistrictDealerListData { public DistrictDealerDto[] dealers; }
+    [Serializable] public class DistrictDealerListPayload { public DistrictDealerListData data; }
+    [Serializable] public class DistrictDealerListEnvelope { public DistrictDealerListPayload payload; }
+
+    [Serializable] public class DistrictCollectRequestDto { public string safehouse_id; }
+    [Serializable] public class DistrictCollectResultDto { public string safehouse_id; }
+    [Serializable] public class DistrictCollectResultPayload { public DistrictCollectResultDto data; }
+    [Serializable] public class DistrictCollectEnvelope { public DistrictCollectResultPayload payload; }
+
+    public class DistrictCollectOutcome
+    {
+        public bool Ok;
+        public long HttpStatus;
+        public string SafehouseId;
+        public string Message;
+    }
+
     /// <summary>Un lieutenant du district, tel que servi par `…/interior`. Mesuré en direct le
     /// 2026-09-02 (compte de démo, district 16) : deux clés, DEUX CHAÎNES — `lieutenant_id` (uuid,
     /// jointure vers `DistrictInteriorBuildingDto.lieutenant_ids`) et `name` (ex. "Lt. Wend").

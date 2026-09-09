@@ -158,6 +158,12 @@ public static class MafiaCI
         //    ×2 exactement sur toute la géométrie. Elle porte donc un rendu de CHAUFFE.
         "BlocPartage",
         "ChassisVente",
+        // Gestes de la fiche canonique (2026-09-09) — inscrits seulement après le run combiné
+        // réel : 4/4 avec FicheTete, dont collecte + blanchiment contre la pile Docker, chacun
+        // propriétaire de son semis. Leur absence du filtre rendrait les CTA à nouveau décoratifs
+        // sans que le gate principal ne le voie.
+        "FicheBlanchiment",
+        "FicheCollecte",
     };
     // ⚠️ UNION AU MERGE (3e fois sur cette ligne le 2026-09-03) — et la règle est
     // toujours la même : on unit ce qui est PORTÉ, jamais les deux listes. Une entrée

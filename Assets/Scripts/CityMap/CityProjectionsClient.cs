@@ -91,6 +91,60 @@ namespace MafiaCleanCity.CityMap
         public IEnumerator Interior(int districtId, string token, Action<DistrictInteriorDto> ok, Action<long> missing) =>
             Get(D(districtId, "interior"), token, j => ok(JsonUtility.FromJson<DistrictInteriorEnvelope>(j)?.payload?.data), missing);
 
+        /// <summary>Projection minimale des dealers pour relier la fiche du bâtiment au geste de
+        /// collecte. `dealer_spot_id` est une identité de bâtiment possédé, jamais la tuile de lek.</summary>
+        public IEnumerator Dealers(string token, Action<DistrictDealerDto[]> ok, Action<long> missing) =>
+            Get($"{BaseUrl.TrimEnd('/')}/v1/operational/dealers", token,
+                j => ok(JsonUtility.FromJson<DistrictDealerListEnvelope>(j)?.payload?.data?.dealers), missing);
+
+        /// <summary>POST /v1/operational/dealer/:id/collect depuis le CTA de la fiche.</summary>
+        public IEnumerator CollectDealer(string dealerId, string safehouseId, string token,
+            Action<DistrictCollectOutcome> done)
+        {
+            string url = $"{BaseUrl.TrimEnd('/')}/v1/operational/dealer/{dealerId}/collect";
+            string body = JsonUtility.ToJson(new DistrictCollectRequestDto { safehouse_id = safehouseId });
+            var outcome = new DistrictCollectOutcome();
+            using (var req = new UnityWebRequest(url, UnityWebRequest.kHttpVerbPOST))
+            {
+                req.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(body));
+                req.downloadHandler = new DownloadHandlerBuffer();
+                req.timeout = TimeoutSeconds;
+                req.SetRequestHeader("Content-Type", "application/json");
+                if (!string.IsNullOrEmpty(token)) req.SetRequestHeader("Authorization", "Bearer " + token);
+                req.SetRequestHeader("Idempotency-Key", Guid.NewGuid().ToString());
+                yield return req.SendWebRequest();
+
+                outcome.HttpStatus = req.responseCode;
+                outcome.Ok = req.result == UnityWebRequest.Result.Success;
+                if (outcome.Ok)
+                {
+                    try
+                    {
+                        outcome.SafehouseId = JsonUtility.FromJson<DistrictCollectEnvelope>(req.downloadHandler.text)
+                            ?.payload?.data?.safehouse_id;
+                        outcome.Ok = !string.IsNullOrEmpty(outcome.SafehouseId);
+                        outcome.Message = outcome.Ok ? "ok" : "la réponse ne contient aucune planque";
+                    }
+                    catch
+                    {
+                        outcome.Ok = false;
+                        outcome.Message = "la réponse du service est illisible";
+                    }
+                }
+                else
+                {
+                    switch (req.responseCode)
+                    {
+                        case 401: outcome.Message = "la session a expiré"; break;
+                        case 409: outcome.Message = "la caisse est vide ou la planque est pleine"; break;
+                        case 422: outcome.Message = "la collecte n'est pas acceptée"; break;
+                        default: outcome.Message = "le service est indisponible"; break;
+                    }
+                }
+            }
+            done?.Invoke(outcome);
+        }
+
         /// <summary>Action portée par la fiche intégrée. Elle vit ici pour respecter le sens de
         /// dépendance CityMap ← Operational tout en utilisant le même endpoint serveur.</summary>
         public IEnumerator InjectLaundering(string frontShopId, string safehouseId, int amountCents,
