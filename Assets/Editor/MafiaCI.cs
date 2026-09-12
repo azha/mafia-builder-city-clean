@@ -164,6 +164,11 @@ public static class MafiaCI
         // sans que le gate principal ne le voie.
         "FicheBlanchiment",
         "FicheCollecte",
+        // ㉟ RAMASSER (2026-09-12) — vert AVANT inscription, run combiné réel contre la pile dev
+        // qui sert les 12 clés (dealer_spot_id compris) :
+        // `passed=5 failed=0 declares=5 comptes=5`, catégories RÉELLEMENT exécutées =
+        // [FicheBlanchiment, FicheCollecte, Graisses, PhotoVente, VenteRamassage].
+        "VenteRamassage",
     };
     // ⚠️ UNION AU MERGE (3e fois sur cette ligne le 2026-09-03) — et la règle est
     // toujours la même : on unit ce qui est PORTÉ, jamais les deux listes. Une entrée
