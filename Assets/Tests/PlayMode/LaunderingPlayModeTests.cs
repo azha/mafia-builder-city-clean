@@ -231,10 +231,10 @@ namespace MafiaCleanCity.Operational.Tests
             // 3) the UI reflects it: the rendered texts include the cleanliness band label
             //    + the deviation flag's qualitative label (never a raw scalar).
             var texts = controller.RenderedTexts;
-            Assert.IsTrue(texts.Any(t => t == "Cleanliness"), "cleanliness row label rendered");
+            Assert.IsTrue(texts.Any(t => t == "Propreté"), "cleanliness row label rendered");
             Assert.IsTrue(texts.Any(t => t == "Dirty"), "cleanliness band 'Dirty' rendered (the DIRTY band)");
-            Assert.IsTrue(texts.Any(t => t == "Deviation"), "deviation row label rendered");
-            Assert.IsTrue(texts.Any(t => t == "Conforming"),
+            Assert.IsTrue(texts.Any(t => t == "Écart"), "deviation row label rendered");
+            Assert.IsTrue(texts.Any(t => t == "dans les clous"),
                 "deviation flag rendered as 'Conforming' (deviation_active == false)");
             Assert.IsTrue(texts.Any(t => t.Contains("Inject")), "Stage-1 Inject affordance rendered");
 

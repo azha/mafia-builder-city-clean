@@ -215,11 +215,11 @@ namespace MafiaCleanCity.Operational
             // The Stage-1 node, rendered as a pipeline node card.
             // Cleanliness band — SemanticBar row: glyph (shape) + label + qualitative band value.
             // F2: shape glyph is present alongside colour (colour is never the sole carrier).
-            AddStatusRow("Cleanliness", CleanlinessLabel(node.cleanliness_band),
+            AddStatusRow("Propreté", CleanlinessLabel(node.cleanliness_band),
                 CleanlinessGlyph(node.cleanliness_band), CleanlinessAccent(node.cleanliness_band));
 
             // Deviation flag — the host front-shop's audit pin. Active = an audit/unconformity badge.
-            AddStatusRow("Deviation", node.deviation_active ? "Audit pin active" : "Conforming",
+            AddStatusRow("Écart", node.deviation_active ? "épingle d'audit posée" : "dans les clous",
                 node.deviation_active ? "[!]" : "[ok]",
                 node.deviation_active ? AccentSevere : AccentMild);
 
@@ -247,7 +247,7 @@ namespace MafiaCleanCity.Operational
             // The Stage-1 Inject affordance. Inject needs a front-shop + safehouse target — wired by
             // the caller/test via Inject(frontShopId, safehouseId, amount). The visible button proves
             // the affordance is present; the actual launder is driven through Inject().
-            AddActionButton(actionBar, "Inject (launder)", () => { /* needs front-shop + safehouse targets; driven via Inject() */ });
+            AddActionButton(actionBar, "Injecter", () => { /* needs front-shop + safehouse targets; driven via Inject() */ });
 
             // ⛔ ⑨ LA FILIÈRE N'AVAIT AUCUN CHEMIN JOUEUR — mesuré sur les 11 écrans montables du
             //    client : `PipelineOverviewController` était le SEUL sans aucune voie depuis le shell

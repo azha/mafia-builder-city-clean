@@ -278,11 +278,11 @@ namespace MafiaCleanCity.Operational.Tests
                 "Pipeline deviation flag is COHERENT with the live node projection");
 
             var nodeTexts = laundering.RenderedTexts;
-            Assert.IsTrue(nodeTexts.Any(t => t == "Cleanliness"), "Pipeline renders the cleanliness row");
+            Assert.IsTrue(nodeTexts.Any(t => t == "Propreté"), "Pipeline renders the cleanliness row");
             Assert.IsTrue(nodeTexts.Any(t => t == CleanlinessLabelFor(liveCleanliness)),
                 $"Pipeline renders the live cleanliness band label '{CleanlinessLabelFor(liveCleanliness)}' in {Dump(nodeTexts)}");
-            Assert.IsTrue(nodeTexts.Any(t => t == "Deviation"), "Pipeline renders the deviation row");
-            Assert.IsTrue(nodeTexts.Any(t => t == (liveDeviation ? "Audit pin active" : "Conforming")),
+            Assert.IsTrue(nodeTexts.Any(t => t == "Écart"), "Pipeline renders the deviation row");
+            Assert.IsTrue(nodeTexts.Any(t => t == (liveDeviation ? "épingle d'audit posée" : "dans les clous")),
                 $"Pipeline renders the live deviation flag (live deviation={liveDeviation})");
             AssertNoRawScalar(nodeTexts, "Filière");
 
