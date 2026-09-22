@@ -240,7 +240,7 @@ namespace MafiaCleanCity.Operational
             compte.text = "";
             ViderCreneaux();
             for (int i = 1; i <= 8; i++) Creneau(i, null, null);
-            MajPanneau(Lib("CE QUE CET ÉCRAN SAIT POUR L'INSTANT"),
+            MajPanneau(Lib("CE QU'ON SAIT POUR L'INSTANT"),
                 Lib("Rien n'a encore été demandé"),
                 Lib("ce n'est ni « aucun ordre » ni « pas de réponse », c'est « pas encore »."));
         }
@@ -252,8 +252,8 @@ namespace MafiaCleanCity.Operational
             compte.text = "";
             ViderCreneaux();
             for (int i = 1; i <= 8; i++) Creneau(i, null, null);
-            MajPanneau(Lib("CE QUE LE SERVEUR ENVOIE VRAIMENT"), Lib("Pas de réponse"),
-                Lib("la route n'a rien rendu. Ce n'est pas « la soirée est vide » : c'est « on ne "
+            MajPanneau(Lib("CE QU'ON SAIT VRAIMENT"), Lib("Pas de réponse"),
+                Lib("on n'a pas eu de réponse. Ce n'est pas « la soirée est vide » : c'est « on ne "
                     + "sait pas ce qui est prévu »."));
         }
 
@@ -283,8 +283,8 @@ namespace MafiaCleanCity.Operational
                 // dise qu'elle existe.
                 MajPanneau(Lib("CE QUI S'OUVRIRA PLUS TARD"),
                     Lib("Rejouer une soirée — verrouillé"),
-                    Lib("une suite d'ordres qu'on met de côté et qu'on relance d'un geste. Le "
-                        + "serveur la refuse tant que le palier 2 n'est pas atteint."));
+                    Lib("une suite d'ordres qu'on met de côté et qu'on relance d'un geste. Cette "
+                        + "façon de faire s'ouvre plus tard — il faut d'abord monter d'un palier."));
                 return;
             }
 
@@ -293,10 +293,10 @@ namespace MafiaCleanCity.Operational
             // rendent 404 et la documentation ne porte que `/v1/admin/political-events/*`.
             // ★ Le dire plutôt que d'omettre le cadre : un écran amputé sans explication se lit
             //   comme un écran fini.
-            MajPanneau(Lib("CE QUE LE SERVEUR NE DIT PAS"),
+            MajPanneau(Lib("CE QUE LA VILLE NE DIT PAS"),
                 Lib("Ce que la ville prépare"),
-                Lib("le calendrier politique n'a aucune route joueur — seul l'administrateur y "
-                    + "accède. La maquette le dessine ; le serveur ne le sert à personne."));
+                Lib("ce que la ville prépare, personne ne vous le rapporte encore. Ce sera ici "
+                    + "le jour où quelqu'un le fera."));
 
         }
 
