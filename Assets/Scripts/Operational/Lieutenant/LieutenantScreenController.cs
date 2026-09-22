@@ -2859,16 +2859,16 @@ namespace MafiaCleanCity.Operational.Lieutenant
             LieutenantBands b = CurrentBands;
             if (b == null)
             {
-                AddReassignConfirmLine("Loading lieutenant… reopen Reassign once the card has loaded.", AccentModerate);
+                AddReassignConfirmLine("Le lieutenant arrive… rouvrez « Réaffecter » quand sa fiche est là.", AccentModerate);
                 return;
             }
 
-            AddReassignConfirmLine("Confirm reassignment? It resets tenure and starts a settling window.", TextPrimary);
+            AddReassignConfirmLine("Confirmer la réaffectation ? Son ancienneté repart de zéro, et il lui faudra le temps de s'installer.", TextPrimary);
             // The PROJECTED settling (the move's disruption) — the CURRENT reassignment_disruption band, worded.
-            AddReassignConfirmLine($"Projected settling: {DisruptionLabel(b.reassignment_disruption)}", DisruptionAccent(b.reassignment_disruption));
+            AddReassignConfirmLine($"Installation prévue : {DisruptionLabel(b.reassignment_disruption)}", DisruptionAccent(b.reassignment_disruption));
             // What the move FORFEITS — the CURRENT tenure bucket + the yield bonus you'd lose (worded bands).
-            AddReassignConfirmLine($"Tenure forfeited: {TenureBucketLabel(b.tenure_bucket)}", TenureBucketAccent(b.tenure_bucket));
-            AddReassignConfirmLine($"Yield bonus lost: {EfficiencyBonusLabel(b.role_efficiency_bonus)}", EfficiencyBonusAccent(b.role_efficiency_bonus));
+            AddReassignConfirmLine($"Ancienneté perdue : {TenureBucketLabel(b.tenure_bucket)}", TenureBucketAccent(b.tenure_bucket));
+            AddReassignConfirmLine($"Rendement perdu : {EfficiencyBonusLabel(b.role_efficiency_bonus)}", EfficiencyBonusAccent(b.role_efficiency_bonus));
 
             // The Confirm / Cancel decision pair.
             AddActionButton(reassignConfirm, Lib("Confirmer la réaffectation"), () => StartCoroutine(ReassignChosen()));
@@ -3402,7 +3402,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             hlg.childForceExpandWidth = false; hlg.childForceExpandHeight = true;
             AddLayoutElement(row, minHeight: 30, flexibleHeight: 0);
 
-            AddCycleButton(row.transform, "AND_IF", () => string.IsNullOrEmpty(rule.condKind) ? "NONE" : rule.condKind, () =>
+            AddCycleButton(row.transform, "AND_IF", () => string.IsNullOrEmpty(rule.condKind) ? "aucune" : rule.condKind, () =>
             {
                 CycleConditionKind(rule);
                 RenderRuleRows();
