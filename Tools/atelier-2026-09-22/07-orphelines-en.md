@@ -1,4 +1,4 @@
-# 07 — Les 50 clés orphelines (et les 3 « même clé ») : la valeur `en`, réécrite pour coller au nouveau `fr`
+# 07 — Les 51 clés orphelines (et les 3 « même clé ») : la valeur `en`, réécrite pour coller au nouveau `fr`
 
 Atelier / DA, 2026-09-22. Source : `mafia-builder-city-clean/Tools/juge-donnees/i18n/orphelines-2026-09-22.{md,json}` (client `4bddb0aa`). Le texte `fr` est celui de la table (colonne « texte FR exact du littéral ») ; ce fichier donne l'`en` de la **nouvelle** clé, pour que f7 applique `fr` et `en` en une passe. Contrôle fait à l'écriture : l'ensemble des 28 clés ci-dessous est ÉGAL à l'ensemble des clés « nouvelle » du JSON (script, pas relecture).
 
@@ -109,3 +109,16 @@ Les 43 lignes ci-dessus ne changent pas. Contrôle fait à l'écriture : l'ensem
 
 - Même vocabulaire que ④ d3/d4 : *vault* pour `money_holding` (« la banque » ; *bank* nomme la rive en anglais), *seizure* pour la saisie d'audit, *on deposit* pour ce qui est déposé. `district.type_batiment.banque` garde l'anglais servi par l'ancienne clé `.coffre` (« Vault ») : le type n'a changé de nom qu'en français.
 - Les bandes de rendement gardent la minuscule du `fr` (« rien ne rentre », « ça rapporte ») : ce sont des valeurs de ligne, pas des titres.
+
+## Complément du 2026-09-22 — la 51ᵉ, antérieure aux lots (`a4b2afa6`, table `4dfaccc3`)
+
+| clé | fr (table) | en |
+|---|---|---|
+| `accueil.vitals.cohesion_indisponible_pour_l_ensemble_de_la_ville` | Cohésion : indisponible pour l'ensemble de la ville | Cohesion: unavailable for the city as a whole |
+
+- Proposition de f7 : « Cohesion: unavailable for the whole city ». **Ratifiée avec un mot de plus** : en anglais, *unavailable for the
+  whole city* se lit aussi « indisponible pour toute la ville », c'est-à-dire pour tout le monde — alors que la mesure existe PAR
+  QUARTIER et manque seulement pour la ville prise en bloc. *For the city as a whole* ne se lit que dans ce sens.
+- L'ancienne valeur servie disait « Cohesion: unavailable (no citywide aggregate) » : le mot d'architecture était **aggregate**, comme
+  « agrégat » côté fr (classe C du classement, close). *Citywide* n'est pas en cause — le client l'emploie ailleurs (« Citywide heat »,
+  ④ annexe a) — mais l'anglais gagne ici à dire le même contraste que le fr : un quartier, oui ; la ville entière, non.
