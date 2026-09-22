@@ -1,1 +1,1 @@
-# Identités des campagnes — NON FOURNI le 2026-09-22 : aucune campagne de capture encore pour ce tour. À joindre (ligne [DemoIdentityResolver] du journal du run) avec les captures.
+# Identités des campagnes — NON FOURNI le 2026-09-22 : aucune campagne de capture encore pour ce tour. À joindre (ligne [IDENTITE-CONNECTEE] planche_les_inspections : /v1/me email=… · CONFORME du journal du run — PhotoPlanche, RECAPTURE §2.4 ; SHA de l'arbre du run, qui DOIT contenir 55e674db — RECAPTURE §2.6) avec les captures.

@@ -29,7 +29,7 @@ Mesuré dans `Assets/Tests` (attribut `[Category]` de la méthode qui écrit le 
 | ㉞ Les ordres du soir | `carnet` r1 | m1 m2 / — | `screen_c3_sous_chrome_1080x2400.png` | `PhotoScreenC3SousChrome` | ⛔ le r1 a jugé `planche_signer_l_ordre_1080x2400.png`, qui est une fiche de LIEUTENANT (TABLE, 07/09) : la bonne planche est celle du chemin joueur Plus → LES ORDRES DU SOIR |
 | ㊳ Le journal | `screen_c1` r1 | M12 / B1 M12 nv7 | `screen_c1_journal_sous_chrome_1080x2400.png` · `screen_c1_1080x{1920,2400}.png` | `CaptureJournal` · `PhotoScreenC1` | |
 | ㊱ L'horizon | `screen_c6` r1 | B3 m6 / — | `screen_c6_horizon_etat-vide_sous_chrome_1080x2400.png` · `screen_c6_horizon_etat-vide_1080x2400.png` | `CaptureSousChrome` · `CaptureHorizon` | depuis `55e674db`, les deux signent avec la paire du RUN. ⚠️ Les deux assertent « 0 carte » (état vide) : c'est une propriété du compte du run — décision et repli au §2.5. `screen_c6_1080x{1920,2400}` (ScreenC6C1) : planche SANS donnée (écran monté sans jeton ni chargement), inutile pour B3/m6 — hors créneau (§5a) |
-| ① L'intérieur du district | `ecran-principal` r9 | M7 M8 M14 m4 m5 m11 / — | `screen_1_district_sous_chrome_1080x2400.png` · `screen_2a_fiche_sous_chrome_1080x{2400,1920}.png` | `CaptureDistrict` · `CaptureSousChrome` | le district signe par le résolveur du client, qui lit `MAFIA_DEMO_*` (§2.4) : le 07/09, lancé avec `MAFIA_CAPTURE_*` seule, il a photographié `operational_demo` (`journal-recapture-district-2026-09-07.md`) |
+| ① L'intérieur du district | `ecran-principal` r9 | M7 M8 M14 m4 m5 m11 / — | `screen_1_district_sous_chrome_1080x2400.png` · `screen_2a_fiche_sous_chrome_1080x{2400,1920}.png` | `CaptureDistrict` · `CaptureSousChrome` | le district signe par le résolveur du client : le 07/09, avant `55e674db`, il ne lisait que `MAFIA_DEMO_*` et, lancé avec `MAFIA_CAPTURE_*` seule, il a photographié `operational_demo` (`journal-recapture-district-2026-09-07.md`). La règle du §2.4 ferme ce trou **sur un arbre qui contient `55e674db`** — pas sur `main` au 22/09 (§2.6) |
 
 Compte : 45 (A) + 10 (B) = 55 lignes, 50 constats distincts, 15 écrans, 14 dossiers.
 
@@ -103,8 +103,15 @@ Chaque planche voyage avec l'état des DEUX côtés (conteneur back + arbre clie
 5. **Dans chaque dossier r2** : les planches en COPIE (jamais en lien — `verifier-captures-dossier.py` rougit sur un lien), leur
    `sha256`, le dernier commit du PNG, l'arbre de rendu (SHA imprimé au run, sinon « non imprimé »), et la ligne d'identité du
    journal, dans `captures-provenance.md` ; le journal du run joint (`journal-declare.txt` cesse de dire « non fourni »).
-6. **L'arbre client** : `main` du jour (ou la branche nommée), SHA écrit — une planche prise sur un arbre en retard accuse le
-   travail qu'il ne contient pas (㉟ le 07/09).
+6. **L'arbre client** : la branche nommée, SHA écrit — une planche prise sur un arbre en retard accuse le travail qu'il ne
+   contient pas (㉟ le 07/09).
+   ⛔ **L'arbre du run DOIT contenir `55e674db`**, sinon ni la règle de paire ni la garde d'effet n'existent. Mesuré le 22/09 à 22:40 :
+   `main` (`9b5d6117`) ne le contient PAS — 0 appel à `IdentiteConnecteeOuEchoue` sous `Assets/`, 0 lecture de `MAFIA_CAPTURE_IDENTIFIER`
+   sous `Assets/Scripts` ; il vit sur `gate/cumul-client-2026-09-22` (`443489ec` : 9 appels, 1 lecture). Un run sur `main` avec la paire
+   sous `MAFIA_CAPTURE_*` seule — et `MAFIA_DEMO_*` absente, comme §2.4 l'exige — signe avec le défaut sérialisé `operational_demo`,
+   SANS garde qui le dise : la faute du 07/09 à l'identique. Contrôle AVANT la porte, dans l'arbre du run :
+   `git merge-base --is-ancestor 55e674db HEAD && echo contient || echo 'NE CONTIENT PAS — faute'`. Tant que le cumul n'est pas mergé,
+   « `main` du jour » ne suffit pas.
 
 ### 2.5 Un run = une paire — à quel compte chaque comparaison se fait (tranché le 2026-09-22, après `55e674db`)
 
