@@ -19,7 +19,7 @@ namespace MafiaCleanCity.Shell
     //    porte (il lit les .csproj générés par Unity) : un CS0246 sur du code juste, déjà payé le 04/09.
     //
     // 7 clés servies par bâtiment, 7 déclarées — la forme G est tenue à la source.
-    [Serializable] public class NomDeBatimentParamsDto { public string enseigne; public string district; public string block; }
+    [Serializable] public class NomDeBatimentParamsDto { public string enseigne; public string district; public string block; public string rang; }   // `rang` : servi avec la clé `game.fiction.building.name.rang` (1/17 sur la démo, corps du 22/09)
     [Serializable] public class NomDeBatimentI18nDto { public string key; public NomDeBatimentParamsDto @params; }
 
     [Serializable]
