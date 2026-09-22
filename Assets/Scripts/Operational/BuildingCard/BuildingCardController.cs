@@ -352,28 +352,28 @@ namespace MafiaCleanCity.Operational
         public IEnumerator OrderPyralin(int quantityUnits = 10)
         {
             yield return RunAction(c => client.OrderPrecursors(buildingId, quantityUnits, Token, c),
-                "Ordered Pyralin", "Order failed");
+                "Pyralin commandé", "Impossible de commander");
         }
 
         /// <summary>Lab action: start a Brindle cook.</summary>
         public IEnumerator StartCook()
         {
             yield return RunAction(c => client.StartCook(buildingId, Token, c),
-                "Cook started", "Cook unavailable");
+                "Cuisson lancée", "Impossible de lancer la cuisson");
         }
 
         /// <summary>Front-shop action: inject dirty cash to launder (front-shop = this building).</summary>
         public IEnumerator Inject(string safehouseId, int amountCents)
         {
             yield return RunAction(c => client.Inject(buildingId, safehouseId, amountCents, Token, c),
-                "Cash injected", "Inject unavailable");
+                "Argent injecté", "Impossible d'injecter");
         }
 
         /// <summary>Convert affordance: convert this building to an M1 operational type.</summary>
         public IEnumerator Convert(string operationalType, string coverQuality = "weak")
         {
             yield return RunAction(c => client.Convert(buildingId, operationalType, coverQuality, Token, c),
-                "Conversion requested", "Convert unavailable");
+                "Ouverture demandée", "Impossible d'ouvrir");
         }
 
         /// <summary>Phase-2b recovery action: repair a DAMAGED building (empty body; id is the path param).
@@ -381,7 +381,7 @@ namespace MafiaCleanCity.Operational
         public IEnumerator Repair()
         {
             yield return RunAction(c => client.Repair(buildingId, Token, c),
-                "Repair underway", "Repair unavailable");
+                "Réparation lancée", "Impossible de réparer");
             // Refresh the card so it reflects REPAIRING (+ the wallet band debited). Only if the building id
             // is intact (it always is here). The reload re-renders → the Repair button drops away (now REPAIRING).
             yield return LoadBuilding(buildingId);
@@ -403,7 +403,7 @@ namespace MafiaCleanCity.Operational
         public IEnumerator UpgradeTier()
         {
             yield return RunAction(c => client.UpgradeTier(buildingId, Token, c),
-                "Lab tier upgraded", "Upgrade unavailable");
+                "Labo agrandi", "Impossible d'agrandir");
             // Reload so the card reflects the new lab_tier_band (+ the wallet band debited).
             yield return LoadBuilding(buildingId);
         }
@@ -412,7 +412,7 @@ namespace MafiaCleanCity.Operational
         public IEnumerator StartCookAsh()
         {
             yield return RunAction(c => client.StartCookAsh(buildingId, RefiningPasses, Token, c),
-                "Ash cook started", "Cook unavailable");
+                "Cuisson d'ash lancée", "Impossible de lancer la cuisson");
         }
 
         /// <summary>Appointment action: book an Ash appointment at a Glass venue (the ONLY Ash sale path). On success the
@@ -420,7 +420,7 @@ namespace MafiaCleanCity.Operational
         public IEnumerator BookAppointment(string glassVenueBuildingId)
         {
             yield return RunAction(c => client.BookAppointment(glassVenueBuildingId, Token, c),
-                "Appointment booked", "Booking unavailable");
+                "Rendez-vous réservé", "Impossible de réserver");
             if (LastActionOutcome != null && LastActionOutcome.Ok && !string.IsNullOrEmpty(LastActionOutcome.ResultId))
             {
                 AppointmentId = LastActionOutcome.ResultId;
@@ -436,7 +436,7 @@ namespace MafiaCleanCity.Operational
         {
             if (string.IsNullOrEmpty(AppointmentId)) yield break;
             yield return RunAction(c => client.HonorAppointment(AppointmentId, Token, c),
-                "Appointment honored", "Honor unavailable");
+                "Rendez-vous honoré", "Impossible d'honorer le rendez-vous");
             yield return RefreshAppointment();
             if (Destroyed) yield break; // torn down during the refresh round-trip → don't render dead UI.
             if (CardLoaded && CurrentCard != null) Render(CurrentCard); // re-render to show HONORED + the payout band.
@@ -469,7 +469,7 @@ namespace MafiaCleanCity.Operational
         public IEnumerator Plant()
         {
             yield return RunAction(c => client.Plant(buildingId, SelectedPrecursor, Token, c),
-                "Planted", "Plant unavailable");
+                "Planté", "Impossible de planter");
             // The Post parser returns the new grow_session_id (the uuid) as ResultId on success → track it so the
             // grow surface (the grow_session-scoped projection) loads on the re-render below.
             if (LastActionOutcome != null && LastActionOutcome.Ok && !string.IsNullOrEmpty(LastActionOutcome.ResultId))
@@ -485,7 +485,7 @@ namespace MafiaCleanCity.Operational
         {
             if (string.IsNullOrEmpty(GrowSessionId)) yield break;
             yield return RunAction(c => client.Tend(GrowSessionId, Token, c),
-                "Tended", "Tend unavailable");
+                "Culture soignée", "Impossible de soigner la culture");
             // Re-load the card so the grow surface reflects the new husbandry_band + tend_due (server-authoritative).
             yield return LoadBuilding(buildingId);
         }
@@ -523,7 +523,7 @@ namespace MafiaCleanCity.Operational
         public IEnumerator UpgradeHubTier()
         {
             yield return RunAction(c => client.UpgradeHubTier(buildingId, Token, c),
-                "Hub tier upgraded", "Upgrade unavailable");
+                "Relais agrandi", "Impossible d'agrandir");
             // Reload so the card reflects the new hub_tier_band (+ the wallet band debited).
             yield return LoadBuilding(buildingId);
         }
@@ -537,7 +537,7 @@ namespace MafiaCleanCity.Operational
             string vehicle = (SelectedVehicle ?? "FOOT").ToLowerInvariant(); // the wire wants lowercase foot/bike/car.
             yield return RunAction(
                 c => client.Dispatch(DispatchFromBuildingId, DispatchToBuildingId, cargoGrams, vehicle, Token, c),
-                "Courier dispatched", "Dispatch unavailable");
+                "Coursier parti", "Impossible d'envoyer le coursier");
             // Reload so the roster_band reflects the new in-transit shipment (OPEN → BUSY → FULL).
             yield return LoadBuilding(buildingId);
         }
@@ -559,7 +559,7 @@ namespace MafiaCleanCity.Operational
         public IEnumerator UpgradeMoneyHoldingTier()
         {
             yield return RunAction(c => client.UpgradeMoneyHoldingTier(buildingId, Token, c),
-                "Holding tier upgraded", "Upgrade unavailable");
+                "Caisse agrandie", "Impossible d'agrandir");
             // Reload so the card reflects the new money_holding_tier_band (+ the wallet band debited).
             yield return LoadBuilding(buildingId);
         }
@@ -571,7 +571,7 @@ namespace MafiaCleanCity.Operational
         public IEnumerator DepositCash()
         {
             yield return RunAction(c => client.DepositCash(buildingId, TransferAmountCents, Token, c),
-                "Cash deposited", "Deposit unavailable");
+                "Argent déposé", "Impossible de déposer");
             // Reload so the held / capacity / yield bands reflect the new hold (NONE → LOW/MODERATE…; OPEN → BUSY → FULL).
             yield return LoadBuilding(buildingId);
         }
@@ -583,9 +583,23 @@ namespace MafiaCleanCity.Operational
         public IEnumerator WithdrawCash()
         {
             yield return RunAction(c => client.WithdrawCash(buildingId, TransferAmountCents, Token, c),
-                "Cash withdrawn", "Withdraw unavailable");
+                "Argent retiré", "Impossible de retirer");
             // Reload so the held / capacity / yield / forfeiture bands reflect the drained hold.
             yield return LoadBuilding(buildingId);
+        }
+
+        /// <summary>⛔ ATELIER ④ c2-bis (2026-09-22) — CE QUI SUIT LE TIRET. Avant : le `message` de
+        /// DÉVELOPPEUR de l'enveloppe d'erreur (anglais), ou « request failed (N) … » — la classe que ① a
+        /// close (« la raison nommait un verbe HTTP »). Désormais : « {échec} — {texte de la clé
+        /// user_facing_i18n_key} » quand le bundle la connaît, sinon « {échec}. » seul. Jamais le message,
+        /// jamais un code. Pure : testée avec un catalogue chargé pour le test (`LigneDActionTests`, I18n).</summary>
+        public static string LigneDAction(ActionOutcome outcome, string succes, string echec)
+        {
+            if (outcome != null && outcome.Ok) return succes;
+            string cle = outcome?.CleI18n;
+            return MafiaCleanCity.I18n.I18nCatalog.Connait(cle)
+                ? $"{echec} — {MafiaCleanCity.I18n.I18nCatalog.Traduire(cle)}"
+                : $"{echec}.";
         }
 
         private IEnumerator RunAction(System.Func<System.Action<ActionOutcome>, IEnumerator> call,
@@ -599,10 +613,7 @@ namespace MafiaCleanCity.Operational
             // before touching actionStatusText (a destroyed serialized TextMeshProUGUI → NullReferenceException).
             if (Destroyed) yield break;
 
-            // F2: surface a human message, never a raw HTTP code, to the player.
-            string line = outcome.Ok
-                ? (string.IsNullOrEmpty(outcome.ResultId) ? okPrefix : $"{okPrefix}")
-                : $"{errPrefix} — {outcome.Message}";
+            string line = LigneDAction(outcome, okPrefix, errPrefix);
             if (actionStatusText != null) actionStatusText.text = line;
             TrackText(actionStatusText, line);
         }
@@ -880,7 +891,7 @@ namespace MafiaCleanCity.Operational
                 RepairButtonShown = true;
                 bool affordable = CanAfford(card.repair_cost, WalletBand);
                 RepairButtonAffordable = affordable;
-                string repairLabel = $"Réparer ({RepairCostLabel(card.repair_cost)})";
+                string repairLabel = "Réparer";   // atelier c1 : la bande de coût attend sa clé au back (lot E) — jamais une bande anglaise
                 repairButton = AddActionButton(actionBar, repairLabel, () => StartCoroutine(Repair()));
                 SetButtonInteractable(repairButton, affordable);
                 if (!affordable)
@@ -1065,7 +1076,7 @@ namespace MafiaCleanCity.Operational
             }
 
             // A Convert affordance is always offered (no-op if already operational — backend 409s cleanly).
-            AddActionButton(actionBar, "Aménager", () => StartCoroutine(Convert(card.operational_type)));
+            AddActionButton(actionBar, "Ouvrir", () => StartCoroutine(Convert(card.operational_type)));
 
             actionStatusText = NewText("ActionStatus", actionBar, "", 14, TextAlignmentOptions.Left);
             actionStatusText.color = DesignTokens.Current.onSurfaceMutedAlt;

@@ -376,7 +376,8 @@ namespace MafiaCleanCity.Operational
         public long HttpStatus;     // the HTTP status the call returned
         public string Endpoint;     // which endpoint was hit (for the E2E wiring assertion)
         public string ResultId;     // order_id / cook_session_id / node_id when present
-        public string Message;      // human-readable: success summary or mapped error message
+        public string Message;      // DIAGNOSTIC : le `message` de développeur de l'enveloppe (jamais montré au joueur, atelier c2-bis)
+        public string CleI18n;      // `user_facing_i18n_key` de l'enveloppe d'erreur — ce que le joueur lit, via le bundle
 
         public override string ToString() =>
             $"ActionOutcome(ok={Ok}, http={HttpStatus}, endpoint={Endpoint}, id={ResultId}, msg={Message})";

@@ -116,6 +116,7 @@ namespace MafiaCleanCity.Operational
                 {
                     outcome.Ok = false;
                     outcome.Message = ReadableError(req);
+                    outcome.CleI18n = CleUtilisateur(req);
                 }
             }
             done?.Invoke(outcome);
@@ -448,6 +449,15 @@ namespace MafiaCleanCity.Operational
         // error envelope's `message` (a human sentence) rather than a raw HTTP code to
         // the player (F2: never a bare 503/ERR_NETWORK). The status is kept separately
         // on the outcome for the wiring assertion / logs.
+        /// <summary>La clé `user_facing_i18n_key` de l'enveloppe d'erreur, ou null (atelier c2-bis).</summary>
+        private static string CleUtilisateur(UnityWebRequest req)
+        {
+            string text = req.downloadHandler != null ? req.downloadHandler.text : null;
+            if (string.IsNullOrEmpty(text)) return null;
+            try { return JsonUtility.FromJson<OpErrorEnvelope>(text)?.payload?.error?.user_facing_i18n_key; }
+            catch { return null; }
+        }
+
         private static string ReadableError(UnityWebRequest req)
         {
             string text = req.downloadHandler != null ? req.downloadHandler.text : null;
