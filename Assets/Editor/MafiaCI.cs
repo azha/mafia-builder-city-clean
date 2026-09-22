@@ -169,6 +169,14 @@ public static class MafiaCI
         // `passed=5 failed=0 declares=5 comptes=5`, catégories RÉELLEMENT exécutées =
         // [FicheBlanchiment, FicheCollecte, Graisses, PhotoVente, VenteRamassage].
         "VenteRamassage",
+        // ⑮ le registre des 18 districts + le dépôt (2026-09-22) — vert AVANT inscription, seul,
+        // contre la pile dev : `passed=5 failed=0 declares=5 comptes=5`, catégories RÉELLEMENT
+        // exécutées = [Inspection], elapsed=77s. Un semis (le seeder, propriétaire), 18 + 1 + 1
+        // lectures et un dépôt FONDÉ par run sur le compte semé ; un compte frais par test de
+        // premier jour. ⚠️ Son premier run (13:32) avait un rouge, et c'était le TEST qui avait
+        // tort — « un compte frais ne possède rien » — pas l'écran : la planque est donnée à
+        // l'arrivée. Le compte ci-dessus est celui du run qui a suivi la correction.
+        "Inspection",
     };
     // ⚠️ UNION AU MERGE (3e fois sur cette ligne le 2026-09-03) — et la règle est
     // toujours la même : on unit ce qui est PORTÉ, jamais les deux listes. Une entrée
