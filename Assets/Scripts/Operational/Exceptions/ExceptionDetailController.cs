@@ -49,6 +49,25 @@ namespace MafiaCleanCity.Operational.Exceptions
         /// <summary>La feuille de CE détail (montée sous le Canvas partagé : jamais la chercher par son nom).</summary>
         public GameObject FeuillePourTest => sheetGo;
 
+        // ⑩-1b — D09 (décision de l'orchestrateur, 23/09) : TOUTE issue servie est atteignable depuis la main.
+        //   · une carte se CHOISIT au toucher ; le tampon dit et envoie le choix (par défaut : la suggérée) ;
+        //   · le talon se DÉPLIE au toucher : les issues restantes, en cartes sombres ;
+        //   · « Escalader » est une carte du talon quand AUCUNE issue servie ne porte `method ESCALATE` (elle envoie ESCALATE
+        //     avec l'id suggéré, comme l'ancien bouton) ; quand une issue la porte, c'est elle qu'on montre, sans doublon.
+        /// <summary>Une carte touchable de la main (rôle ou talon déplié) — la couture des gardes d'atteignabilité.</summary>
+        public sealed class CarteTouchable { public CandidateActionDto Action; public bool Escalade; public Button Bouton; }
+        private readonly List<CarteTouchable> cartesTouchables = new List<CarteTouchable>();
+        public IReadOnlyList<CarteTouchable> CartesPourTest => cartesTouchables;
+        private bool talonDeplie;
+        private CandidateActionDto selection;
+        private bool selectionEscalade;
+        private Button talonBouton, tamponBouton;
+        public Button TalonPourTest => talonBouton;
+        public Button TamponPourTest => tamponBouton;
+        public bool TalonDeplie => talonDeplie;
+        /// <summary>L'id de l'issue choisie, « ESCALADER » pour la carte synthétique.</summary>
+        public string SelectionId => selectionEscalade ? "ESCALADER" : (selection != null ? selection.id : null);
+
         private readonly List<string> renderedTexts = new List<string>();
         private TMP_FontAsset font;
         private RectTransform body;
@@ -113,6 +132,16 @@ namespace MafiaCleanCity.Operational.Exceptions
             return "ONE_TIME";
         }
 
+        /// <summary>⑩-1b — le `method` ENVOYÉ : « lui apprendre » coché sur une issue qui porte une règle ⇒ ADD_RULE ; sinon le
+        /// `method` SERVI (D4, comme le tampon de ⑨-1 — l'issue `escalate` de la carte de chaleur part en ESCALATE) ; sans
+        /// `method` servi (pile antérieure à D4) ⇒ la dérivation `MethodFor`, déclarée.</summary>
+        public static string MethodPour(CandidateActionDto a, bool addAsRule)
+        {
+            if (addAsRule && a != null && !string.IsNullOrEmpty(a.add_rule_dsl)) return "ADD_RULE";
+            if (a != null && !string.IsNullOrEmpty(a.method)) return a.method;
+            return MethodFor(a, addAsRule);
+        }
+
         /// <summary>Toggle "Add as rule" (canon 5a) — re-renders so teachable candidates show/hide their DSL preview.</summary>
         public void SetAddAsRule(bool on)
         {
@@ -123,7 +152,7 @@ namespace MafiaCleanCity.Operational.Exceptions
         /// <summary>Resolve via ONE candidate (method derived). Public coroutine — the PlayMode test drives it.</summary>
         public IEnumerator ResolveWith(CandidateActionDto candidate)
         {
-            yield return DoResolve(MethodFor(candidate, AddAsRule), candidate != null ? candidate.id : "", candidate);
+            yield return DoResolve(MethodPour(candidate, AddAsRule), candidate != null ? candidate.id : "", candidate);
         }
 
         /// <summary>Escalate the card (ESCALATE; chosen_action_id = the suggested action's id).</summary>
@@ -255,8 +284,10 @@ namespace MafiaCleanCity.Operational.Exceptions
             // `.carte:nth-child(2){translateY(-8px)}`). Le reste part au TALON, qui n'est pas un
             // ornement mais le CARDINAL des issues non montrées.
             RendreMain(c);
-            AddButton("escalate", Lib("Escalate"), () => StartCoroutine(Escalate()));
-            AddButton("back", Lib("Back"), Back);
+            // ⑩-1b — D09 : plus de bouton « Escalate » (l'escalade est une carte : servie, ou synthétique dans le talon).
+            // « Retour » seulement HORS shell : sous shell, le retour est le geste du shell ; hors shell (montage autonome),
+            // sans lui la main n'aurait d'autre sortie que la résolution.
+            if (mountParent == null) AddButton("back", Lib("Back"), Back);
         }
 
         // ── ⑩ : les constantes de la maquette, lues à la source (série 4, largeur 300) ──
@@ -287,6 +318,8 @@ namespace MafiaCleanCity.Operational.Exceptions
         /// par la maquette elle-même) : on affiche la réplique et le talon, sans main.</summary>
         private void RendreMain(ExceptionCardDto c)
         {
+            cartesTouchables.Clear();
+            talonBouton = null; tamponBouton = null;
             string idSug = c.suggested_action != null ? c.suggested_action.id : "";
             CandidateActionDto sug = null, apprendre = null, risquee = null;
             var restantes = new List<CandidateActionDto>();
@@ -301,6 +334,12 @@ namespace MafiaCleanCity.Operational.Exceptions
                     restantes.Add(ca);
                 }
             if (sug == null) sug = c.suggested_action;
+            if (selection == null && !selectionEscalade) selection = sug;
+
+            // ⑩-1b — l'escalade est-elle SERVIE comme issue ? (le `method`, ou le type d'effet pour une pile antérieure à D4)
+            bool escaladeServie = EstEscalade(sug);
+            if (c.candidate_actions != null)
+                foreach (CandidateActionDto ca in c.candidate_actions) escaladeServie |= EstEscalade(ca);
 
             GameObject main = NewUI("Main", body);
             HorizontalLayoutGroup h = main.AddComponent<HorizontalLayoutGroup>();
@@ -318,13 +357,20 @@ namespace MafiaCleanCity.Operational.Exceptions
 
             // Le talon : le CARDINAL des issues qu'on ne montre pas. Zéro ⇒ pas de talon (le
             // dessin n'en met pas quand la main tient entière).
-            if (restantes.Count > 0)
+            int caches = restantes.Count + (escaladeServie ? 0 : 1);
+            if (caches > 0)
             {
                 GameObject talon = NewUI("Talon", main.transform);
-                talon.AddComponent<Image>().color = AccentSevere;
+                Image talonImg = talon.AddComponent<Image>();
+                talonImg.color = AccentSevere;
+                // ⑩-1b — le talon se DÉPLIE au toucher (D09 a) : sans lui, les issues hors des trois rôles sont des routes
+                // mortes (mesuré : `lay_low` de la carte de chaleur).
+                talonBouton = talon.AddComponent<Button>();
+                talonBouton.targetGraphic = talonImg;
+                talonBouton.onClick.AddListener(() => { talonDeplie = !talonDeplie; Render(); });
                 AddLayoutElement(talon, minWidth: PxD(CssTalonL), preferredWidth: PxD(CssTalonL),
                                  minHeight: PxD(CssTalonH), flexibleHeight: 0, flexibleWidth: 0);
-                TextMeshProUGUI t = NewText("TalonNb", talon.transform, "+" + restantes.Count,
+                TextMeshProUGUI t = NewText("TalonNb", talon.transform, "+" + caches,
                                             (int)PxD(CssCarteT), TextAlignmentOptions.Center);
                 t.color = TextPrimary;
                 // ⛔ SANS CET ÉTIREMENT, TMP N'A AUCUNE PLACE OÙ POSER LES CARACTÈRES. Le talon
@@ -339,28 +385,80 @@ namespace MafiaCleanCity.Operational.Exceptions
                 var trt = (RectTransform)t.transform;
                 trt.anchorMin = Vector2.zero; trt.anchorMax = Vector2.one;
                 trt.offsetMin = Vector2.zero; trt.offsetMax = Vector2.zero;
-                TrackText(t, "+" + restantes.Count);
+                TrackText(t, "+" + caches);
+            }
+
+            // ⑩-1b — le talon DÉPLIÉ : les issues restantes, en cartes sombres, puis « Escalader » si aucune issue ne la porte.
+            if (talonDeplie && caches > 0)
+            {
+                GameObject deplie = NewUI("TalonDeplie", body);
+                HorizontalLayoutGroup hd = deplie.AddComponent<HorizontalLayoutGroup>();
+                hd.spacing = PxD(CssMainEcart);
+                hd.childAlignment = TextAnchor.LowerCenter;
+                hd.childControlWidth = true; hd.childControlHeight = true;
+                hd.childForceExpandWidth = true; hd.childForceExpandHeight = false;
+                foreach (CandidateActionDto r in restantes)
+                    Carte(deplie.transform, string.Empty, r, sombre: true, levee: false);
+                if (!escaladeServie)
+                    Carte(deplie.transform, string.Empty,
+                          new CandidateActionDto { id = idSug, label = TexteEscalader(), method = "ESCALATE" },
+                          sombre: true, levee: false, escalade: true);
             }
 
             // Le tampon — l'action suggérée, en un seul geste. `POST /v1/exceptions/:id/resolve`
             // est la SEULE route d'écriture de cet écran (maquette : « un seul geste, une route »).
-            if (sug != null)
+            // ⑩-1b — le tampon envoie le CHOIX (la suggérée tant qu'on n'a rien touché).
+            if (selectionEscalade)
+                tamponBouton = AddButtonTo(body, "tampon", TexteEscalader(), () => StartCoroutine(Escalate()), track: false);
+            else if (selection != null)
             {
-                CandidateActionDto capture = sug;
-                AddButtonTo(body, "tampon", sug.label, () => StartCoroutine(ResolveWith(capture)), track: false);
+                CandidateActionDto capture = selection;
+                tamponBouton = AddButtonTo(body, "tampon", Texte(capture.label, capture.label_i18n),
+                                           () => StartCoroutine(ResolveWith(capture)), track: false);
             }
+        }
+
+        /// <summary>Choisir une carte de la main : le tampon la dit et l'enverra.</summary>
+        private void Choisir(CandidateActionDto a, bool escalade)
+        {
+            selection = escalade ? null : a;
+            selectionEscalade = escalade;
+            Render();
+        }
+
+        private static bool EstEscalade(CandidateActionDto a) =>
+            a != null && (string.Equals(a.method, "ESCALATE", StringComparison.OrdinalIgnoreCase)
+                          || (a.effect != null && string.Equals(a.effect.type, "ESCALATE", StringComparison.OrdinalIgnoreCase)));
+
+        /// <summary>« Escalader » — la clé SERVIE de l'ancien bouton (`exception_detail.bloc.escalate`, fr « Escalader »), repli
+        /// en français : le littéral anglais « Escalate » de l'ancien bouton ne doit pas atteindre l'écran hors catalogue.</summary>
+        private static string TexteEscalader()
+        {
+            const string cle = "exception_detail.bloc.escalate";
+            return MafiaCleanCity.I18n.I18nCatalog.Connait(cle) ? MafiaCleanCity.I18n.I18nCatalog.Traduire(cle) : "Escalader";
         }
 
         /// <summary>Une carte de la main. `l` (le rôle) est un libellé FERMÉ — il est suivi ;
         /// `t` (le titre) et `c` (la conséquence) sont du texte producteur — chrome, non suivi.</summary>
-        private void Carte(Transform parent, string role, CandidateActionDto a, bool sombre, bool levee)
+        private void Carte(Transform parent, string role, CandidateActionDto a, bool sombre, bool levee, bool escalade = false)
         {
-            GameObject carte = NewUI("Carte_" + (a != null ? a.id : role), parent);
+            GameObject carte = NewUI((escalade ? "Carte_Escalader_" : "Carte_") + (a != null ? a.id : role), parent);
             // ⛔ LA MAQUETTE DIT L'INVERSE DE CE QUE J'AVAIS ÉCRIT. `.carte` est CLAIRE à
             // texte sombre ; `.carte.sombre` est foncée à texte crème. Je peignais les DEUX en
             // foncé tout en colorant le titre de la claire en `surfaceBase` — texte sombre sur
             // fond sombre, illisible. J'avais implémenté la moitié de la règle.
-            carte.AddComponent<Image>().color = sombre ? RowBg : DesignTokens.Current.hudCreme;
+            Image fondCarte = carte.AddComponent<Image>();
+            fondCarte.color = sombre ? RowBg : DesignTokens.Current.hudCreme;
+            // ⑩-1b — une carte se CHOISIT au toucher (D09) : le tampon la dit et l'enverra.
+            if (a != null)
+            {
+                Button choix = carte.AddComponent<Button>();
+                choix.targetGraphic = fondCarte;
+                CandidateActionDto capture = a;
+                bool escaladeCapture = escalade;
+                choix.onClick.AddListener(() => Choisir(capture, escaladeCapture));
+                cartesTouchables.Add(new CarteTouchable { Action = a, Escalade = escalade, Bouton = choix });
+            }
             VerticalLayoutGroup v = carte.AddComponent<VerticalLayoutGroup>();
             int pad = (int)PxD(8f);
             v.padding = new RectOffset(pad, pad, pad, (int)PxD(7f));
@@ -473,7 +571,7 @@ namespace MafiaCleanCity.Operational.Exceptions
 
         private void AddButton(string idStable, string label, UnityEngine.Events.UnityAction onClick) => AddButtonTo(body, idStable, label, onClick, track: true);
 
-        private void AddButtonTo(Transform parent, string idStable, string label, UnityEngine.Events.UnityAction onClick, bool track = true)
+        private Button AddButtonTo(Transform parent, string idStable, string label, UnityEngine.Events.UnityAction onClick, bool track = true)
         {
             GameObject btn = NewUI("Btn_" + idStable, parent);
             Image img = btn.AddComponent<Image>();
@@ -486,6 +584,7 @@ namespace MafiaCleanCity.Operational.Exceptions
             t.color = CtaColor;
             Stretch((RectTransform)t.transform, new Vector2(10, 2), new Vector2(-10, -2));
             if (track) TrackText(t, label);
+            return b;
         }
 
         // W3.U1 C1 (design D2) — optional parent-of-mount the AppShell renseigne BEFORE Start() runs.

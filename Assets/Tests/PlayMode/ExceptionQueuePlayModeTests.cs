@@ -545,8 +545,10 @@ namespace MafiaCleanCity.Operational.Tests
             CollectionAssert.Contains(textes, "Suggéré");
             CollectionAssert.Contains(textes, "Risqué");
             CollectionAssert.Contains(textes, "Lui apprendre");
-            CollectionAssert.Contains(textes, "+2",
-                "cinq issues, trois montrées ⇒ le talon doit porter « +2 » : c'est un cardinal, " +
+            // ⑩-1b (D09 b, décision de l'orchestrateur du 23/09) : aucune de ces issues ne porte `method ESCALATE` ⇒
+            // « Escalader » est une issue de plus, au talon. Cinq issues servies, trois montrées, plus l'escalade ⇒ « +3 ».
+            CollectionAssert.Contains(textes, "+3",
+                "cinq issues, trois montrées, plus « Escalader » ⇒ le talon doit porter « +3 » : c'est un cardinal, " +
                 "pas un ornement");
             ctl.LastDetail.Back();
             yield return null;
@@ -569,8 +571,10 @@ namespace MafiaCleanCity.Operational.Tests
                 "une carte à une seule issue ne doit pas inventer de carte « risquée » pour " +
                 "remplir le dessin");
             CollectionAssert.DoesNotContain(t2, "Lui apprendre");
-            Assert.IsFalse(t2.Contains("+0") || t2.Contains("+1"),
-                "aucune issue restante ⇒ pas de talon du tout");
+            // ⑩-1b (D09 b) : une seule issue servie, sans ESCALATE ⇒ le talon ne porte QUE « Escalader » (« +1 ») — sans
+            // lui, l'escalade serait inatteignable sur cette carte. Jamais « +0 ».
+            Assert.IsFalse(t2.Contains("+0"), "un talon vide ne se dessine pas");
+            CollectionAssert.Contains(t2, "+1", "la seule issue cachée est « Escalader »");
         }
 
         /// <summary>Monte ⑨ SANS réseau et rend des cartes FABRIQUÉES.
