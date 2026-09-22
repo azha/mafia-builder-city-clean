@@ -374,3 +374,78 @@ catégorie CLDR `one` couvre **0 et 1** : les branches exactes `=0`, `=1` passen
 - Côté client (CLIENT-2) : `Traduire(clé, {count})` remplace la composition `EnLettres(n) + " attendent …"` ; `exceptions.nombre.*` reste
   pour ses autres usages.
 - Contrôle écrit avec ce paquet : aucune branche ne contient de chiffre ni de `#`, et chaque clé a les mêmes branches en fr et en en.
+
+---
+
+## 3.11 S03 — la cible nommée : `{enseigne}`, sans article ni genre (2026-09-23)
+
+> Le back sert le bâtiment visé sur la carte (`406ae440`, `building: { id, name_i18n } | null`, `params.enseigne`). L'enseigne est **nue** :
+> les 72 de `common/building-signs.ts` (6 par type) sont des noms propres sans article : « Pressing Varne », « Laverie du Quai »,
+> « Consigne de la Threnny », « Épargne Sallo ». On ne sait ni leur article ni leur genre (« Laverie » est féminin, « Pressing » masculin).
+> **Règle de ce lot** : `{enseigne}` n'est jamais précédée d'un article ou d'une contraction (au, du, le…), ni suivie d'un mot qui s'accorde
+> avec elle (participe, adjectif, pronom). Clés composées par le client, placeholder `{enseigne}`. fr avec `’`.
+> Vérifié : `python3 Tools/atelier-2026-09-22/verifier-11-enseigne.py` (clés dérivées, placeholder, article, accord ; la longueur du tampon sur les 72 enseignes).
+
+### 1. Le lieu de la bulle, quand la cible a un nom
+
+| clé | fr | en | remplace |
+|---|---|---|---|
+| `exceptions.bloc.chez_enseigne` | chez {enseigne} | at {enseigne} | « au bâtiment touché » (`exceptions.bloc.au_batiment_touche`), dans `Contexte` (`ExceptionQueueController.cs:743`, partagé ⑨/⑩), quand `building.name_i18n` est servi |
+
+- **« chez »**, pas « au bâtiment {enseigne} » : « à » appelle l'article, et c'est lui qu'on ne connaît pas. « Chez » prend un nom propre
+  **nu**, et c'est ainsi qu'on désigne une enseigne en français (« chez Pressing Varne », « chez Laverie du Quai »). « Au bâtiment Laverie
+  du Quai » se lit, mais comme une adresse administrative. La maquette dit « au Verge d’Or » parce que ce nom-là porte son article.
+- La bulle compose « · rôle · chez Pressing Varne ». Le « · » reste au code.
+- Sans nom (`building` null, ou `name_i18n` null : le bâtiment n'est plus au joueur) : « au bâtiment touché », inchangé.
+
+### 2. Le libellé du tampon, pour une réparation nommée
+
+| clé | fr | en | remplace |
+|---|---|---|---|
+| `exceptions.bloc.reparer_enseigne` | Réparer {enseigne} | Repair {enseigne} | `exception.raid.repair.label` « Réparer le bâtiment » / « Repair the building » |
+
+- Le client le passe en capitales, comme aujourd'hui : « RÉPARER PRESSING VARNE ». C'est le « RÉPARER {LE VERGE D’OR} » du cadre 18, sans
+  l'article que seul ce nom-là porte. Au tampon, qui est un ordre de travail, l'article tombe naturellement.
+- **Seulement là où le libellé dit « le bâtiment »** : le nom le remplace, il ne s'ajoute pas. « Réparer tout de suite » et « Réparer
+  lentement (moins cher) » (`exception.equipment_failure.repair_{immediate,slow}.label`) ne nomment rien et restent tels quels : la bulle, juste
+  au-dessus, dit déjà « chez {enseigne} ».
+- ⚠️ **Longueur** (à mesurer par CLIENT-2 dans le tampon) : la maquette pose « RÉPARER LE VERGE D’OR », 21 signes. La plus longue des 72
+  donne **32 signes** : « RÉPARER TRAITEMENT DES EAUX DORN ». Si ça ne tient pas, on réduit le corps du texte ; on ne coupe pas le nom.
+
+### 3. La phrase d'après, quand la réparation est nommée
+
+Même patron que `exceptions.apres.<issue>` (§3.10 A), avec un segment `.enseigne`, comme `game.fiction.building.name.rang` à côté de
+`game.fiction.building.name`. Le client prend la variante nommée si `building.name_i18n` est servi, sinon la phrase actuelle.
+
+| clé | fr | en |
+|---|---|---|
+| `exceptions.apres.repairing.enseigne` | {enseigne} se remet en marche, avec le temps | {enseigne} is coming back, in its own time |
+| `exceptions.apres.repairing_slow.enseigne` | {enseigne} se remet en marche, lentement — c’est moins cher | {enseigne} is coming back slowly — it costs less |
+| `exceptions.apres.deferred.enseigne` | Réparation remise : {enseigne} reste à l’arrêt | Repair put off: {enseigne} stays shut |
+
+- Les trois phrases de §3.10 qui disent « le bâtiment », à un mot près. Le nom est le sujet, et aucun mot ne s'accorde avec lui : « se
+  remet », « reste » ne varient pas (« Laverie du Quai se remet en marche », « Pressing Varne reste à l’arrêt »).
+- **`demolished` reste sans nom** : « Pressing Varne est rasé », mais « Laverie du Quai est rasée ». Le participe prendrait le genre de
+  l'enseigne, et on ne le connaît pas. « Le bâtiment est rasé ; l’îlot est libre » dit tout.
+- En en, les trois phrases font du nom le sujet, comme en fr (*it*, *its* pour un commerce : aucun genre).
+
+### 4. L'en des deux sous-titres du tampon de ⑩ (`ExceptionDetailController.cs:450-451`, `SousTitreMain`)
+
+Clés dérivées par `Libelle.De("exception_detail", "bloc", …)` (`:641-642`) ; aucune n'est servie à `83b4f291`.
+
+| clé | fr (le littéral du client) | en |
+|---|---|---|
+| `exception_detail.bloc.appui_long_la_carte_se_ferme_le_batiment_lui_se_repare_avec_le_temps` | appui long — la carte se ferme ; le bâtiment, lui, se répare avec le temps | long press — the card closes; the building mends in its own time |
+| `exception_detail.bloc.appui_long_la_carte_se_ferme` | appui long — la carte se ferme | long press — the card closes |
+
+- Le premier est déjà au §3.5 (cadre 15) : même en, mot pour mot.
+- **Il reste sans nom**, exprès : « {enseigne}, lui, se répare » demanderait « lui » ou « elle » selon l'enseigne. Le tampon, juste
+  au-dessus, porte déjà le nom (« RÉPARER PRESSING VARNE »).
+
+### 5. Deux points pour le back (vus en mesurant)
+
+- **Le repli `Local sans enseigne`** (`building-signs.ts:41`, pour un type hors domaine) donnerait « chez Local sans enseigne » et « RÉPARER
+  LOCAL SANS ENSEIGNE ». Sur la carte, mieux vaut `name_i18n: null` dans ce cas : le client retombe alors sur « au bâtiment touché », sans
+  avoir à comparer une chaîne.
+- « Remise du 3 » porte un chiffre, mais c'est le nom lui-même, pas un scalaire. Ce n'est pas un cas R2.2, et c'est déjà servi ailleurs.
+
