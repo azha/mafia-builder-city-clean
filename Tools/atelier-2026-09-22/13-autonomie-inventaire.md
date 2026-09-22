@@ -89,7 +89,7 @@ pas la donnée (règle posée au `05-…`). Le client met en capitales et retire
 | l'aide de liste | ▲▼ choisir · OK lire | ▲▼ select · OK read | fixe |
 | le délai | Sans réponse, la 1 s'appliquera seule | No answer, and 1 applies itself | **sourcé** : `default_on_timeout` applique l'option A quand l'âge atteint `backlog_cap_cycles` (3 par défaut, `lieutenant-tunables.ts:187-189`) |
 | la répétition | Le même homme, chaque cycle | The same person, every cycle | dérivé : même `lieutenant_id` sur plusieurs rapports ouverts |
-| envoyé | Envoyé · {heure} | Sent · {time} | ⚠️ **pas de source** : le rapport n'a pas d'horodatage (un cycle, pas une heure) — voir §4 |
+| envoyé | Envoyé | Sent | ✅ **sans heure** (tranché le 23/09 : le rapport porte un cycle, pas un horodatage ; maquette corrigée, atelier `ec4c09a`) |
 | la réponse | Réponse | Reply | `outcome` de `resolve` |
 | message suivant | Message suivant | Next message | fixe |
 | aucun message | Aucun message · Vos lieutenants agissent dans leur marge | No messages · Your lieutenants are acting within their margin | `reports.length == 0` |
@@ -152,10 +152,9 @@ Un geste, un nom : l'atelier recommande ceux de ㉔ (la maquette, dans la voix d
 | `DEFERRED` | C'est remis à plus tard. | Put off. |
 | `NOOP` | Rien n'a pu se faire. | Nothing could be done. |
 
-⚠️ **Le cadre 29 dessine un état impossible** : Lt. Marr (LOGISTICS) répond **2** (= `HOLD`, « Retenir le chargement ») et la dalle
+✅ **Corrigé (atelier `ec4c09a`)** — *note d'origine :* **le cadre 29 dessinait un état impossible** : Lt. Marr (LOGISTICS) répond **2** (= `HOLD`, « Retenir le chargement ») et la dalle
 affiche `NOOP` « … il n'y avait rien à retenir ». Or `hold.handler.ts` ne renvoie **que** `HELD`, jamais `NOOP`. Le `NOOP` d'une réponse
-logistique vient de l'option **1** (`DISPATCH_NOW` : rien à expédier). ⇒ La maquette est à corriger : « Réponse 1 · Rien n'a pu se faire.
-Il n'y avait rien à expédier. »
+logistique vient de l'option **1** (`DISPATCH_NOW` : rien à expédier). ⇒ Tranché : la maquette garde la réponse 2 et montre l'état réel, `HELD` — « LE CHARGEMENT ATTEND. » (le mot, pas le jeton brut).
 
 ---
 
@@ -172,9 +171,9 @@ Il n'y avait rien à expédier. »
 
 ### 4.2 Ce que la maquette dessine sans source (à trancher)
 
-1. **L'heure** (« 21:40 », « Envoyé · 21:41 ») : le rapport n'a qu'un **cycle**, aucun horodatage. Soit l'heure disparaît (« ce cycle »
-   suffit), soit le back projette un horodatage de jeu (lot).
-2. **L'état impossible du cadre 29** (`HOLD` → `NOOP`) : à corriger dans la maquette (§3.3).
+1. ✅ **L'heure — tranché (23/09)** : elle sort de la maquette (aucune source ; on n'écrit pas une donnée inventée). Si l'user la veut,
+   c'est une commande back. Atelier `ec4c09a`.
+2. ✅ **Le cadre 29** : ramené à l'état réel `HELD` (atelier `ec4c09a`).
 3. **Le nom du lieutenant** : pas sur le rapport ; une jointure client suffit (pas de lot).
 
 ### 4.3 Ce qui a changé depuis le cadre, et depuis le juge r1
@@ -192,4 +191,24 @@ Il n'y avait rien à expédier. »
 ### 4.4 Ce que l'user a à décider
 
 (a) **Le burner** comme forme de ㉔ — c'est ce que la série 6 dessine et ce que le r1 exige (F1, F2) ; le client construit aujourd'hui autre
-chose. (b) **L'heure** : la retirer, ou commander un horodatage au back. (c) **Un nom par geste** entre ㉔ et ⑥ (§3.3).
+chose. **Seule décision encore ouverte** : (b) l'heure et (c) un nom par geste sont tranchés par les règles (orchestrateur, 23/09) — §5.
+
+---
+
+## 5. Un geste, un nom — la table pour CLIENT-1 (tranché le 2026-09-23)
+
+Les trois gestes de `POST /v1/lieutenants/:id/autonomy/decision` prennent les mots de ㉔ (la maquette, cadre 28), **sur ⑥ aussi**. Sites
+mesurés sur `gate/cumul-client-2026-09-22` (`bb47e048`) : **3, tous dans `LieutenantScreenController.cs`** ; aucun autre littéral du client
+ne nomme ces gestes, et aucun test ne cite leur libellé ni leur identifiant d'objet.
+
+| `kind` | site ⑥ (aujourd'hui) | clé servie aujourd'hui (fr / en) | mot de ㉔ (fr) | en | clé dérivée neuve |
+|---|---|---|---|---|---|
+| `reset_budget` | `:2974` `Lib("Remettre le budget à zéro")` | `famille.ecran.remettre_le_budget_a_zero` — Remettre le budget à zéro / Reset budget | **Lui rendre sa marge** | Give them their margin back | `famille.ecran.lui_rendre_sa_marge` |
+| `raise_ceiling` | `:2975` `Lib("Relever le plafond")` | `famille.ecran.relever_le_plafond` — Relever le plafond / Raise ceiling | **Lui élargir sa marge** | Widen their margin | `famille.ecran.lui_elargir_sa_marge` |
+| `override_one_shot` | `:2976` `Lib("Forcer une fois")` | `famille.ecran.forcer_une_fois` — Forcer une fois / Override one-shot | **Laisser passer celle-ci** | Let this one through | `famille.ecran.laisser_passer_celle_ci` |
+
+- **Au back** : servir les trois clés neuves (fr + en ci-dessus) ; les trois anciennes deviennent orphelines à la bascule du client.
+- **Au client** : le premier argument d'`AddActionButton` (`"remettre_le_budget_a_zero"`…) est un identifiant d'objet, pas un texte ;
+  aucun test ne le lit — le garder ou l'aligner est un choix du client, sans effet joueur.
+- Les sous-titres de ㉔ (« il repart la fenêtre pleine », « pour de bon · décision structurelle », « une fois, sans toucher la règle »,
+  §3.3) valent aussi pour ⑥ s'il affiche une aide sous le bouton.
