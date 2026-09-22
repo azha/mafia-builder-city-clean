@@ -64,26 +64,26 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.Greater(d.rows.Count, 15, "rich panel aggregates many projection rows");
 
             // District facts.
-            Assert.IsTrue(d.rows.Any(r => r.label == "Control"), "control_state row present");
+            Assert.IsTrue(d.rows.Any(r => r.label == "Contrôle"), "control_state row present");
 
             // Heat — the seeded BURNING value, surfaced through the authenticated projection.
-            DetailRow heat = d.rows.First(r => r.label == "Heat — district");
+            DetailRow heat = d.rows.First(r => r.label == "Chaleur — le quartier");
             Assert.IsTrue(heat.available, "heat available");
             Assert.AreEqual("BURNING", heat.value, "district 3 seeded BURNING");
 
             // Flow returns data even for a lightly-advanced player.
-            DetailRow flow = d.rows.First(r => r.label == "Flow backpressure");
+            DetailRow flow = d.rows.First(r => r.label == "Refoulement");
             Assert.IsTrue(flow.available, "flow projection returned data");
             Assert.IsFalse(string.IsNullOrEmpty(flow.value), "flow has a backpressure band");
 
             // Police belief (precinct-derived) is wired too.
-            Assert.IsTrue(d.rows.Any(r => r.label.StartsWith("Police belief")), "belief row present");
+            Assert.IsTrue(d.rows.Any(r => r.label.StartsWith("Ce qu'ils croient")), "belief row present");
 
             // The slow-cadence projections now carry real data (the heavy-advance seed fired
             // nightly/12h/30-min): cohesion, inspection and patrol are no longer n/a.
-            Assert.IsTrue(d.rows.First(r => r.label == "Cohesion").available, "cohesion populated after heavy advance");
-            Assert.IsTrue(d.rows.First(r => r.label == "Inspection queue").available, "inspection populated after heavy advance");
-            Assert.IsTrue(d.rows.First(r => r.label.StartsWith("Patrol heat")).available, "patrol populated after heavy advance");
+            Assert.IsTrue(d.rows.First(r => r.label == "Cohésion").available, "cohesion populated after heavy advance");
+            Assert.IsTrue(d.rows.First(r => r.label == "File d'inspection").available, "inspection populated after heavy advance");
+            Assert.IsTrue(d.rows.First(r => r.label.StartsWith("La patrouille")).available, "patrol populated after heavy advance");
 
             // Close.
             controller.HideDetail();

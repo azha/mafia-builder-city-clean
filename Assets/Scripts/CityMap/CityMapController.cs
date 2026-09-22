@@ -1050,14 +1050,14 @@ namespace MafiaCleanCity.CityMap
             if (cell != null)
             {
                 detail.rows.Add(new DetailRow(TissuDeDistrict.LibelleDeLigne, TissuDeDistrict.Valeur(cell.Model.profile)));
-                detail.rows.Add(new DetailRow("Blocks", cell.Model.block_count.ToString()));
-                detail.rows.Add(new DetailRow("Bank", cell.Model.bank_side));
-                detail.rows.Add(new DetailRow("Control", cell.Model.control_state, true, true, CityMapEnums.ColorFor(cell.State)));
+                detail.rows.Add(new DetailRow("Blocs", cell.Model.block_count.ToString()));
+                detail.rows.Add(new DetailRow("Rive", cell.Model.bank_side == "north" ? "nord" : cell.Model.bank_side == "south" ? "sud" : cell.Model.bank_side));
+                detail.rows.Add(new DetailRow("Contrôle", cell.Model.control_state, true, true, CityMapEnums.ColorFor(cell.State)));
             }
 
             if (!IsAuthenticated)
             {
-                detail.rows.Add(new DetailRow("Projections", "sign-in required", false));
+                detail.rows.Add(new DetailRow("Relevés", "ouvrez une session", false));
                 FinishDetail(detail);
                 yield break;
             }
@@ -1071,58 +1071,58 @@ namespace MafiaCleanCity.CityMap
             {
                 HeatBucket db = CityMapEnums.ParseHeatBucket(heat.district_bucket);
                 HeatBucket cbk = CityMapEnums.ParseHeatBucket(heat.citywide_bucket);
-                detail.rows.Add(new DetailRow("Heat — district", heat.district_bucket, true, true, CityMapEnums.HeatColorFor(db)));
-                detail.rows.Add(new DetailRow("Heat — citywide", heat.citywide_bucket, true, true, CityMapEnums.HeatColorFor(cbk)));
-                detail.rows.Add(new DetailRow("Heat — escalated", heat.escalated ? "YES" : "no"));
+                detail.rows.Add(new DetailRow("Chaleur — le quartier", heat.district_bucket, true, true, CityMapEnums.HeatColorFor(db)));
+                detail.rows.Add(new DetailRow("Chaleur — la ville", heat.citywide_bucket, true, true, CityMapEnums.HeatColorFor(cbk)));
+                detail.rows.Add(new DetailRow("Descente", heat.escalated ? "oui" : "non"));
             }
-            else detail.rows.Add(Missing("Heat"));
+            else detail.rows.Add(Missing("Chaleur"));
 
             FlowDto flow = null; bool flowOk = false;
             yield return proj.Flow(districtId, Token, f => { flow = f; flowOk = true; }, _ => { });
-            detail.rows.Add(flowOk && flow != null ? new DetailRow("Flow backpressure", flow.backpressure) : Missing("Flow backpressure"));
+            detail.rows.Add(flowOk && flow != null ? new DetailRow("Refoulement", flow.backpressure) : Missing("Refoulement"));
 
             ThroughputDto thr = null; bool thrOk = false;
             yield return proj.Throughput(districtId, Token, t => { thr = t; thrOk = true; }, _ => { });
             if (thrOk && thr != null)
             {
-                detail.rows.Add(new DetailRow("Exposure", thr.exposure_band));
-                detail.rows.Add(new DetailRow("Network cleanliness", thr.network_cleanliness));
+                detail.rows.Add(new DetailRow("Exposition", thr.exposure_band));
+                detail.rows.Add(new DetailRow("Propreté du réseau", thr.network_cleanliness));
             }
-            else detail.rows.Add(Missing("Throughput"));
+            else detail.rows.Add(Missing("Débit"));
 
             StashDto stash = null; bool stashOk = false;
             yield return proj.Stash(districtId, Token, s => { stash = s; stashOk = true; }, _ => { });
-            detail.rows.Add(stashOk && stash != null ? new DetailRow("Stash blocking", stash.district_blocking_band) : Missing("Stash blocking"));
+            detail.rows.Add(stashOk && stash != null ? new DetailRow("Réserve qui bloque", stash.district_blocking_band) : Missing("Réserve qui bloque"));
 
             BufferDto buf = null; bool bufOk = false;
             yield return proj.Buffer(districtId, Token, b => { buf = b; bufOk = true; }, _ => { });
             if (bufOk && buf != null)
             {
-                detail.rows.Add(new DetailRow("Buffer load", buf.district_load_band));
-                detail.rows.Add(new DetailRow("Buffer tail", buf.district_tail_band));
+                detail.rows.Add(new DetailRow("Tampon — charge", buf.district_load_band));
+                detail.rows.Add(new DetailRow("Tampon — traîne", buf.district_tail_band));
             }
-            else detail.rows.Add(Missing("Buffer"));
+            else detail.rows.Add(Missing("Tampon"));
 
             InspectionDto insp = null; bool inspOk = false;
             yield return proj.Inspection(districtId, Token, x => { insp = x; inspOk = true; }, _ => { });
             if (inspOk && insp != null)
             {
-                detail.rows.Add(new DetailRow("Inspection queue", insp.queue_load));
-                detail.rows.Add(new DetailRow("Dispatcher regime", insp.dispatcher_regime));
+                detail.rows.Add(new DetailRow("File d'inspection", insp.queue_load));
+                detail.rows.Add(new DetailRow("Régime du dispatch", insp.dispatcher_regime));
             }
-            else detail.rows.Add(Missing("Inspection queue"));
+            else detail.rows.Add(Missing("File d'inspection"));
 
             UnconformityDto unc = null; bool uncOk = false;
             yield return proj.Unconformity(districtId, Token, u => { unc = u; uncOk = true; }, _ => { });
-            detail.rows.Add(uncOk && unc != null ? new DetailRow("Audit pins", unc.audit_pin_presence) : Missing("Audit pins"));
+            detail.rows.Add(uncOk && unc != null ? new DetailRow("Épingles d'audit", unc.audit_pin_presence) : Missing("Épingles d'audit"));
 
             LeksDto leks = null; bool leksOk = false;
             yield return proj.Leks(districtId, Token, l => { leks = l; leksOk = true; }, _ => { });
-            detail.rows.Add(leksOk && leks != null ? new DetailRow("Deal leks", (leks.leks?.Count ?? 0).ToString()) : Missing("Deal leks"));
+            detail.rows.Add(leksOk && leks != null ? new DetailRow("Coins de vente", (leks.leks?.Count ?? 0).ToString()) : Missing("Coins de vente"));
 
             CohesionDto coh = null; bool cohOk = false;
             yield return proj.Cohesion(districtId, Token, c => { coh = c; cohOk = true; }, _ => { });
-            detail.rows.Add(cohOk && coh != null ? new DetailRow("Cohesion", coh.cohesion_state) : Missing("Cohesion"));
+            detail.rows.Add(cohOk && coh != null ? new DetailRow("Cohésion", coh.cohesion_state) : Missing("Cohésion"));
 
             // 2026-09-02 — precinct_id SERVI par le district (cell.Model), passé explicitement à
             // Belief/Patrol : c'est la valeur d'AUTORITÉ (CityProjectionsClient.PrecinctForDistrict
@@ -1134,15 +1134,15 @@ namespace MafiaCleanCity.CityMap
 
             BeliefDto bel = null; bool belOk = false;
             yield return proj.Belief(districtId, Token, b => { bel = b; belOk = true; }, _ => { }, servedPrecinct);
-            detail.rows.Add(belOk && bel != null ? new DetailRow($"Police belief (P{precinct})", bel.belief) : Missing($"Police belief (P{precinct})"));
+            detail.rows.Add(belOk && bel != null ? new DetailRow($"Ce qu'ils croient (précinct {precinct})", bel.belief) : Missing($"Ce qu'ils croient (précinct {precinct})"));
 
             PatrolDto pat = null; bool patOk = false;
             yield return proj.Patrol(districtId, Token, p => { pat = p; patOk = true; }, _ => { }, servedPrecinct);
-            detail.rows.Add(patOk && pat != null ? new DetailRow($"Patrol heat (P{precinct})", pat.patrol_heat) : Missing($"Patrol heat (P{precinct})"));
+            detail.rows.Add(patOk && pat != null ? new DetailRow($"La patrouille (précinct {precinct})", pat.patrol_heat) : Missing($"La patrouille (précinct {precinct})"));
 
             WhisperDto whi = null; bool whiOk = false;
             yield return proj.Whisper(Token, w => { whi = w; whiOk = true; }, _ => { });
-            detail.rows.Add(whiOk && whi != null ? new DetailRow("Citizen whisper (city)", whi.whisper_index) : Missing("Citizen whisper"));
+            detail.rows.Add(whiOk && whi != null ? new DetailRow("Ce qui se dit (la ville)", whi.whisper_index) : Missing("Ce qui se dit (la ville)"));
 
             FinishDetail(detail);
         }
