@@ -264,6 +264,53 @@ namespace MafiaCleanCity.Operational.Exceptions
             return string.IsNullOrWhiteSpace(mot) ? repli : mot.Trim();
         }
 
+        private static readonly Dictionary<string, string> PhrasesApres =
+            new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                { "REPAIRING", "Le bâtiment se remet en marche, avec le temps" },   // RATIFIÉ — cadre 17, à l'octet
+                { "REPAIRING_SLOW", "Le bâtiment se remet en marche, lentement — c'est moins cher" },
+                { "BRIBE_SUCCEEDED", "La descente n'a pas eu lieu : le bâtiment repart, la chaleur baisse" },
+                { "BRIBE_FAILED", "L'argent est parti, et ça s'est retourné : la chaleur monte" },
+                { "LAID_LOW", "On se fait oublier : la chaleur retombe, le bâtiment reste touché" },
+                { "TAUGHT", "C'est une règle, désormais : la prochaine fois, ça se règle sans vous" },
+                { "DEFERRED", "Réparation remise : le bâtiment reste à l'arrêt" },
+                { "DEMOLISHED", "Le bâtiment est rasé ; l'îlot est libre" },
+                { "ESCALATED", "Archivé : à relire à tête reposée" },
+                { "RESOLVED", "C'est réglé, pour cette fois" },
+            };
+
+        /// <summary>⑨-6 — la phrase SOUS le cachet de l'après (cadre 17) : `exceptions.apres.<issue>`, une par issue, repli =
+        /// les phrases de l'atelier (`11-exceptions-inventaire.md` §3.10 A, `da146da5`) — ce qui s'est PASSÉ, sans genre.
+        /// Issue hors domaine ⇒ `null` (pas de phrase), jamais l'enum.</summary>
+        public static string PhraseApres(string outcome)
+        {
+            if (string.IsNullOrWhiteSpace(outcome)) return null;
+            string valeur = outcome.Trim();
+            if (!PhrasesApres.TryGetValue(valeur, out string repli)) return null;
+            string phrase = MafiaCleanCity.I18n.Libelle.ParValeur("exceptions", "apres", valeur, repli);
+            return string.IsNullOrWhiteSpace(phrase) ? repli : phrase.Trim();
+        }
+
+        /// <summary>⑨-6 — une phrase à COMPTE servie en pluriel ICU à branches exactes écrites en lettres (`=0` … `=6`,
+        /// `other` « Plusieurs », jamais `#` — atelier §3.10 B). Le nombre part en paramètre, il n'est jamais affiché.
+        /// ⛔ Une valeur servie qui porte un CHIFFRE (l'ancienne forme à `#`) est refusée : un texte suivi ne porte pas de
+        /// chiffre isolé (R2.2). Clé absente ou refusée ⇒ le repli du client (le nombre en lettres, composé).</summary>
+        public static string CompteEnLettres(string cle, int n, string repli)
+        {
+            if (MafiaCleanCity.I18n.I18nCatalog.Connait(cle))
+            {
+                string t = MafiaCleanCity.I18n.I18nCatalog.Traduire(cle,
+                    new Dictionary<string, string> { { "count", n.ToString(System.Globalization.CultureInfo.InvariantCulture) } });
+                if (!string.IsNullOrWhiteSpace(t))
+                {
+                    bool chiffre = false;
+                    foreach (char ch in t) if (char.IsDigit(ch)) { chiffre = true; break; }
+                    if (!chiffre) return t.Trim();
+                }
+            }
+            return repli;
+        }
+
         /// <summary>Le domaine d'abord (hors domaine ⇒ `Inconnue`, le catalogue n'est pas consulté), puis la clé dérivée
         /// de la valeur servie, repli = le mot de l'atelier. La MAJUSCULE INITIALE se pose ICI, une fois, sur le servi comme
         /// sur le repli : le back et l'atelier écrivent en minuscules, les écrans affichent « Grave · Critique » (ou en

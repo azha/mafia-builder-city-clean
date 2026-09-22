@@ -16,8 +16,10 @@ namespace MafiaCleanCity.Operational.Tests
     //   R17bis  la carte tranchée garde la première place, `.parti` (sans bouton, .28, rail gris), le suivant s'avance (▼) ;
     //           « Deux attendent encore » ; le bloc de l'après entre la file et la bulle : cachet « EN RÉPARATION »,
     //           « Lt. Kane retourne au travail », « Le bâtiment se remet en marche, avec le temps » ; le cachet HORS du masque
-    //   R17ter  pas de phrase inventée : autre issue sans clé ⇒ pas de titre, avec clé servie ⇒ la conséquence servie ; la
-    //           ville n'a pas de surtitre ; une carte que le serveur sert encore n'est pas « partie »
+    //   R17ter  une phrase par issue (atelier §3.10 A, `exceptions.apres.<issue>`) : les 10, ≠ enum, la clé servie l'emporte,
+    //           hors domaine ⇒ pas de phrase ; la ville n'a pas de surtitre ; une carte que le serveur sert encore n'est pas partie
+    //   R17quint les comptes en lettres (§3.10 B) : 0, 1, 2 et 7 par les pluriels servis à branches exactes (en fr, `one` couvre
+    //           0 ET 1) ; sans clé, le repli composé ; une valeur servie à CHIFFRE (l'ancien `#`) est refusée (R2.2)
     //   R17quater  par la vraie résolution (coutures, aucune requête) : l'après apparaît, puis disparaît au rechargement suivant
     [Category("EcranFile")]
     public class ExceptionsApresPlayModeTests
@@ -104,7 +106,7 @@ namespace MafiaCleanCity.Operational.Tests
             // Un écran VIDE d'abord : `RendreFile` vide la file par `Destroy`, différé à la fin de la frame — un premier rendu
             // à trois cartes laisserait ses attendants dans l'arbre pendant ce test synchrone.
             NouvelEcran();
-            ecran.PoserApresPourTest(Kane(), "REPAIRING", Reparer(), new[] { Ville(), Marr() });
+            ecran.PoserApresPourTest(Kane(), "REPAIRING", new[] { Ville(), Marr() });
 
             GameObject parti = ecran.PartiPourTest;
             Assert.IsNotNull(parti, "la carte tranchée garde sa place (cadre 17)");
@@ -136,19 +138,57 @@ namespace MafiaCleanCity.Operational.Tests
         [Test]
         public void R17ter_PasDePhraseInventee_LaVilleSansSurtitre_LeServeurFaitFoi()
         {
-            Assert.IsNull(ExceptionQueueController.TitreApres("LAID_LOW", new CandidateActionDto { projected_consequence = "You lie low." }),
-                "une autre issue sans clé : pas de titre, jamais la prose producteur");
-            var avecCle = new CandidateActionDto { projected_consequence_i18n = new I18nRefDto { key = "exception.heat.lay_low.projected_consequence" } };
-            I18nCatalog.ChargerPourTest("fr", new Dictionary<string, string>
-                { { "exception.heat.lay_low.projected_consequence", "on se fait oublier quelques jours" } });
-            Assert.AreEqual("On se fait oublier quelques jours", ExceptionQueueController.TitreApres("LAID_LOW", avecCle));
+            foreach (string v in ExceptionBandes.DomaineIssue)
+            {
+                string phrase = ExceptionBandes.PhraseApres(v);
+                Assert.IsFalse(string.IsNullOrWhiteSpace(phrase), $"{v} : une phrase par issue");
+                Assert.IsFalse(phrase.ToUpperInvariant().Contains(v), $"{v} : jamais l'enum");
+            }
+            Assert.AreEqual("Le bâtiment se remet en marche, avec le temps", ExceptionBandes.PhraseApres("REPAIRING"), "cadre 17, à l'octet");
+            Assert.IsNull(ExceptionBandes.PhraseApres("EXPLODED"), "hors domaine : pas de phrase");
+            I18nCatalog.ChargerPourTest("en", new Dictionary<string, string>
+                { { "exceptions.apres.laid_low", "Lying low: the heat eases, the building stays damaged" } });
+            Assert.AreEqual("Lying low: the heat eases, the building stays damaged", ExceptionBandes.PhraseApres("LAID_LOW"),
+                "la clé dérivée de la valeur servie");
+            I18nCatalog.Oublier();
             Assert.IsNull(ExceptionQueueController.KickerApres(Ville()), "la ville ne « retourne » nulle part");
 
             NouvelEcran(Kane(), Marr());
-            ecran.PoserApresPourTest(Kane(), "REPAIRING", Reparer(), new[] { Kane(), Marr() });
+            ecran.PoserApresPourTest(Kane(), "REPAIRING", new[] { Kane(), Marr() });
             Assert.IsFalse(ecran.ApresPresent, "le serveur sert encore la carte : elle n'est pas partie");
             Assert.IsNull(ecran.PartiPourTest);
             Assert.IsFalse(ecran.ApresBloc.activeSelf);
+        }
+
+        private const string Ambiance =
+            "{count, plural, =0 {Personne ne fait la queue — la routine tient} =1 {Un seul attend vos ordres — la file est calme} " +
+            "=2 {Deux attendent vos ordres — la file est calme} =3 {Trois attendent vos ordres — la file est calme} " +
+            "=4 {Quatre attendent vos ordres — la file est calme} =5 {Cinq attendent vos ordres — la file est calme} " +
+            "=6 {Six attendent vos ordres — la file est calme} other {Plusieurs attendent vos ordres — la file est calme}}";
+        private const string Encore =
+            "{count, plural, =1 {Un seul attend encore} =2 {Deux attendent encore} =3 {Trois attendent encore} " +
+            "=4 {Quatre attendent encore} =5 {Cinq attendent encore} =6 {Six attendent encore} other {Plusieurs attendent encore}}";
+
+        [Test]
+        public void R17quint_LesComptesEnLettres_ZeroUnDeuxSept()
+        {
+            I18nCatalog.ChargerPourTest("fr", new Dictionary<string, string>
+                { { "exceptions.file.ambiance", Ambiance }, { "exceptions.file.attendent_encore", Encore } });
+            Assert.AreEqual("Personne ne fait la queue — la routine tient", ExceptionQueueController.LigneAmbiance(0));
+            Assert.AreEqual("Un seul attend vos ordres — la file est calme", ExceptionQueueController.LigneAmbiance(1),
+                "=1 avant `one` (qui couvre 0 ET 1 en français)");
+            Assert.AreEqual("Deux attendent vos ordres — la file est calme", ExceptionQueueController.LigneAmbiance(2));
+            Assert.AreEqual("Plusieurs attendent vos ordres — la file est calme", ExceptionQueueController.LigneAmbiance(7));
+            Assert.AreEqual("Un seul attend encore", ExceptionBandes.CompteEnLettres("exceptions.file.attendent_encore", 1, "x"));
+            Assert.AreEqual("Deux attendent encore", ExceptionBandes.CompteEnLettres("exceptions.file.attendent_encore", 2, "x"));
+            Assert.AreEqual("Plusieurs attendent encore", ExceptionBandes.CompteEnLettres("exceptions.file.attendent_encore", 7, "x"));
+
+            I18nCatalog.ChargerPourTest("fr", new Dictionary<string, string>
+                { { "exceptions.file.ambiance", "{count, plural, =0 {Personne} other {# attendent vos ordres — la file est calme}}" } });
+            Assert.AreEqual("Trois attendent vos ordres — la file est calme", ExceptionQueueController.LigneAmbiance(3),
+                "la forme à `#` rend « 3 attendent » : refusée, le repli en lettres");
+            I18nCatalog.Oublier();
+            Assert.AreEqual("Plusieurs attendent vos ordres — la file est calme", ExceptionQueueController.LigneAmbiance(7), "le repli");
         }
 
         [UnityTest]

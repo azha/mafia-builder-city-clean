@@ -174,7 +174,7 @@ namespace MafiaCleanCity.Operational.Exceptions
             isLoading = true;
             // ⑨-6 — l'après-tampon ne vit que jusqu'au rechargement SUIVANT celui de la résolution (un retour de ⑩, un
             // nouveau passage) : il dit ce qui vient d'arriver, pas ce qui est arrivé un jour.
-            if (!garderTranchee) { trancheeCarte = null; trancheeIssue = null; trancheeAction = null; }
+            if (!garderTranchee) { trancheeCarte = null; trancheeIssue = null; }
             garderTranchee = false;
             QueueLoaded = false;
             QueueError = null;
@@ -242,7 +242,7 @@ namespace MafiaCleanCity.Operational.Exceptions
             detail.SurResolution = (carte, issue, action) =>
             {
                 if (Destroyed) return;
-                MontrerApres(carte, issue, action);
+                MontrerApres(carte, issue);
             };
             detail.Init(card, Token, baseUrl, onBack: () => { if (!Destroyed) StartCoroutine(LoadQueue()); });
             LastDetail = detail;
@@ -285,13 +285,13 @@ namespace MafiaCleanCity.Operational.Exceptions
             else if (ApresPresent)
             {
                 // ⑨-6 — cadre 17 : « Deux attendent encore », sans la seconde moitié (la file vient de bouger).
-                ligneAmbiance.text = n == 1 ? "Un seul attend encore" : EnLettres(n) + " attendent encore";
+                ligneAmbiance.text = ExceptionBandes.CompteEnLettres("exceptions.file.attendent_encore", n,
+                    n == 1 ? "Un seul attend encore" : EnLettres(n) + " attendent encore");
                 TrackText(ligneAmbiance, ligneAmbiance.text);
             }
             else
             {
-                ligneAmbiance.text = (n == 1 ? "Un seul attend vos ordres" : EnLettres(n) + " attendent vos ordres")
-                                     + " — la file est calme";
+                ligneAmbiance.text = LigneAmbiance(n);
                 TrackText(ligneAmbiance, ligneAmbiance.text);
             }
             RendreApres();
@@ -388,23 +388,20 @@ namespace MafiaCleanCity.Operational.Exceptions
         /// été réalignée sur la maquette (« … — la routine tient », atelier §3.4 ; servie à `aea5ef7c`). ⚠️ Seule la branche
         /// `=0` est lue ici : `other` pose `#` en CHIFFRES, et un texte suivi ne porte pas de chiffre isolé (R2.2) — la ligne
         /// de la file garde ses nombres en lettres. Repli : le mot de la maquette.</summary>
-        public static string AmbianceVide()
-        {
-            const string cle = "exceptions.file.ambiance";
-            if (MafiaCleanCity.I18n.I18nCatalog.Connait(cle))
-            {
-                string t = MafiaCleanCity.I18n.I18nCatalog.Traduire(cle,
-                    new System.Collections.Generic.Dictionary<string, string> { { "count", "0" } });
-                if (!string.IsNullOrWhiteSpace(t)) return t;
-            }
-            return "Personne ne fait la queue — la routine tient";
-        }
+        public static string AmbianceVide() => LigneAmbiance(0);
+
+        /// <summary>La ligne d'ambiance, tous comptes : `exceptions.file.ambiance`, réécrite par l'atelier en branches exactes
+        /// `=0` … `=6` + `other`, en lettres (§3.10 B) — `ExceptionBandes.CompteEnLettres`, qui refuse une valeur à chiffre
+        /// (l'ancienne branche `other {# …}`). Repli : la composition du client, le nombre en lettres.</summary>
+        public static string LigneAmbiance(int n) =>
+            ExceptionBandes.CompteEnLettres("exceptions.file.ambiance", n,
+                n == 0 ? "Personne ne fait la queue — la routine tient"
+                       : (n == 1 ? "Un seul attend vos ordres" : EnLettres(n) + " attendent vos ordres") + " — la file est calme");
 
         // ================================================================ ⑨-6 après le tampon
 
         private ExceptionCardDto trancheeCarte;
         private string trancheeIssue;
-        private CandidateActionDto trancheeAction;
         private bool garderTranchee;
         private GameObject apresBloc;
         private TextMeshProUGUI apresCachet, apresKicker, apresTitre;
@@ -420,22 +417,22 @@ namespace MafiaCleanCity.Operational.Exceptions
 
         /// <summary>L'après d'une résolution, d'où qu'elle vienne (le tampon de ⑨, la main de ⑩) : la carte tranchée garde sa
         /// place le temps du rechargement qui suit.</summary>
-        private IEnumerator ApresPuisRecharger(ExceptionCardDto c, string issue, CandidateActionDto action)
+        private IEnumerator ApresPuisRecharger(ExceptionCardDto c, string issue)
         {
-            trancheeCarte = c; trancheeIssue = issue; trancheeAction = action;
+            trancheeCarte = c; trancheeIssue = issue;
             garderTranchee = true;
             yield return LoadQueue();
         }
 
-        private void MontrerApres(ExceptionCardDto c, string issue, CandidateActionDto action) =>
-            StartCoroutine(ApresPuisRecharger(c, issue, action));
+        private void MontrerApres(ExceptionCardDto c, string issue) =>
+            StartCoroutine(ApresPuisRecharger(c, issue));
 
         /// <summary>Test hook — pose l'après d'une résolution sans réseau, puis rend la file donnée (le serveur l'a déjà
         /// retirée : c'est la file RECHARGÉE).</summary>
-        public void PoserApresPourTest(ExceptionCardDto tranchee, string outcome, CandidateActionDto choisie, ExceptionCardDto[] fileRechargee)
+        public void PoserApresPourTest(ExceptionCardDto tranchee, string outcome, ExceptionCardDto[] fileRechargee)
         {
             EnsureInitialized();
-            trancheeCarte = tranchee; trancheeIssue = outcome; trancheeAction = choisie;
+            trancheeCarte = tranchee; trancheeIssue = outcome;
             Cards = fileRechargee ?? System.Array.Empty<ExceptionCardDto>();
             Render();
         }
@@ -512,7 +509,7 @@ namespace MafiaCleanCity.Operational.Exceptions
             apresKicker.text = kicker ?? string.Empty;
             if (kicker != null) TrackText(apresKicker, kicker);
 
-            string titre = TitreApres(trancheeIssue, trancheeAction);
+            string titre = ExceptionBandes.PhraseApres(trancheeIssue);
             apresTitre.gameObject.SetActive(titre != null);
             apresTitre.text = titre ?? string.Empty;
             if (titre != null) TrackText(apresTitre, titre);
@@ -527,34 +524,6 @@ namespace MafiaCleanCity.Operational.Exceptions
             string nom = c.lieutenant != null ? c.lieutenant.name : null;
             if (string.IsNullOrWhiteSpace(nom)) return null;
             return nom.Trim() + " " + Lib("retourne au travail");
-        }
-
-        /// <summary>La phrase de l'après. ⚠️ La maquette n'en écrit QU'UNE, pour `REPAIRING` (cadre 17) : « Le bâtiment se remet
-        /// en marche, avec le temps ». Pour les neuf autres issues, pas de phrase inventée : la conséquence SERVIE de l'action
-        /// choisie, et seulement sa CLÉ (`projected_consequence_i18n`, connue du catalogue) — sa prose est du texte producteur,
-        /// parfois anglais. Ni l'une ni l'autre ⇒ pas de titre (le cachet et le surtitre suffisent). Décision client, au mandat
-        /// du juge.</summary>
-        public static string TitreApres(string outcome, CandidateActionDto choisie)
-        {
-            if (string.Equals(outcome, "REPAIRING", System.StringComparison.OrdinalIgnoreCase))
-                return Lib("Le bâtiment se remet en marche, avec le temps");
-            I18nRefDto cle = choisie != null ? choisie.projected_consequence_i18n : null;
-            if (cle != null && !string.IsNullOrEmpty(cle.key) && MafiaCleanCity.I18n.I18nCatalog.Connait(cle.key))
-            {
-                string t = MafiaCleanCity.I18n.I18nCatalog.Traduire(cle.key);
-                if (!string.IsNullOrWhiteSpace(t)) return ExceptionBandes.Initiale(t.Trim());
-            }
-            return null;
-        }
-
-        /// <summary>L'action que le tampon a envoyée (son `id`), pour lire sa conséquence servie.</summary>
-        private static CandidateActionDto ActionChoisie(ExceptionCardDto c, string id)
-        {
-            if (c == null) return null;
-            if (c.candidate_actions != null)
-                foreach (CandidateActionDto a in c.candidate_actions)
-                    if (a != null && a.id == id) return a;
-            return c.suggested_action != null && c.suggested_action.id == id ? c.suggested_action : null;
         }
 
         /// <summary>`filter:grayscale(1)` sur une couleur : la luminance CSS (0,2126 / 0,7152 / 0,0722, en sRGB).</summary>
@@ -1051,7 +1020,7 @@ namespace MafiaCleanCity.Operational.Exceptions
             if (DerniereIssue != null)
             {
                 // ⑨-6 — la carte tranchée garde sa place (cadre 17) le temps du rechargement qui suit.
-                yield return ApresPuisRecharger(c, DerniereIssue, ActionChoisie(c, choix.Value.id));
+                yield return ApresPuisRecharger(c, DerniereIssue);
             }
         }
 
