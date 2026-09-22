@@ -117,17 +117,22 @@ namespace MafiaCleanCity.Shell.Tests
         /// ressemble trait pour trait à une capture signée sous la paire propre. *Une planche ne dit
         /// pas d'elle-même QUI elle photographie.*
         ///
-        /// ⚠️ PORTÉE, écrite à côté du compte parce qu'un correctif sans sa portée se lit plus large
-        /// qu'il n'est : ceci couvre les captures qui signent EXPLICITEMENT avec le couple rendu ici
-        /// (㊲ `screen_b3`, ㊳ `screen_c1`, ㊵ `screen_c2`). La famille `planche_*` passe, elle, par la
-        /// résolution du CLIENT (`DemoIdentityResolver`, qui lit `MAFIA_DEMO_*`) — elle n'est pas
-        /// couverte, et elle n'est pas non plus dans le filtre du run complet (`PhotoPlanche`,
-        /// `PhotoChantierC`, `PhotoManquants`, `PhotoEditeurRegles` : 538 découverts, 421 déclarés).
-        /// Elle attend TD-682 de toute façon, qui bloque tout ce qui monte la scène de démarrage.</summary>
-        public const string CaptureIdentifierEnvVar = "MAFIA_CAPTURE_IDENTIFIER";
-        public const string CapturePasswordEnvVar = "MAFIA_CAPTURE_PASSWORD";
-        public const string DemoIdentifierEnvVar = "MAFIA_DEMO_IDENTIFIER";
-        public const string DemoPasswordEnvVar = "MAFIA_DEMO_PASSWORD";
+        /// ⛔⛔ CORRIGÉ LE 2026-09-22 — L'ANNONCE ET LA CONNEXION AVAIENT DEUX SOURCES. Cette aide
+        /// annonçait la paire de capture (« la capture signera avec X ») et JETAIT le couple rendu ;
+        /// la famille `planche_*` signait par `DemoIdentityResolver`, qui ne lisait que `MAFIA_DEMO_*`.
+        /// Avec la seule paire `MAFIA_CAPTURE_*` exportée, la planche imprimait « demo_capture » et
+        /// photographiait `operational_demo` (DA, RECAPTURE-2026-09-22 §2.4 et §5). Une garde sur le
+        /// PARAMÈTRE qui certifiait un effet que le code ne produisait pas.
+        /// ⇒ UNE source : la règle vit dans `DemoIdentityResolver.ResoudreIdentiteDeCapture`, le shell
+        ///   l'applique (rang 2a, identité « operational » seulement), et cette aide annonce le
+        ///   résultat de la MÊME règle. ⇒ ET une garde sur l'EFFET : `IdentiteConnecteeOuEchoue` lit
+        ///   `GET /v1/me` avec le jeton réellement utilisé et compare à l'identité annoncée — aucune
+        ///   planche n'est écrite si elles diffèrent. Les constantes ci-dessous sont celles du
+        ///   résolveur, pas des copies.</summary>
+        public const string CaptureIdentifierEnvVar = MafiaCleanCity.CityMap.DemoIdentityResolver.CaptureIdentifierEnvVar;
+        public const string CapturePasswordEnvVar = MafiaCleanCity.CityMap.DemoIdentityResolver.CapturePasswordEnvVar;
+        public const string DemoIdentifierEnvVar = MafiaCleanCity.CityMap.DemoIdentityResolver.OperationalIdentifierEnvVar;
+        public const string DemoPasswordEnvVar = MafiaCleanCity.CityMap.DemoIdentityResolver.OperationalPasswordEnvVar;
 
         /// <summary>La résolution PURE, sans environnement : essayable sur des entrées fabriquées,
         /// donc sans la porte Unity et sans toucher aux vraies variables. Rend le couple ET le nom du
@@ -137,13 +142,7 @@ namespace MafiaCleanCity.Shell.Tests
         /// (« `MAFIA_DEMO_PASSWORD` posé SEUL, identifiant absent »).</summary>
         public static (string identifiant, string motDePasse, string regime) ResoudreIdentiteDeCapture(
             string idCapture, string mdpCapture, string idDemo, string mdpDemo)
-        {
-            bool captureComplete = !string.IsNullOrWhiteSpace(idCapture) && !string.IsNullOrWhiteSpace(mdpCapture);
-            if (captureComplete) return (idCapture, mdpCapture, "MAFIA_CAPTURE_*");
-            bool demoComplete = !string.IsNullOrWhiteSpace(idDemo) && !string.IsNullOrWhiteSpace(mdpDemo);
-            if (demoComplete) return (idDemo, mdpDemo, "MAFIA_DEMO_* (repli)");
-            return (null, null, "AUCUNE");
-        }
+            => MafiaCleanCity.CityMap.DemoIdentityResolver.ResoudreIdentiteDeCapture(idCapture, mdpCapture, idDemo, mdpDemo);
 
         public static (string identifiant, string motDePasse) IdentiteDeCaptureOuEchoue(string quoi)
         {
@@ -174,6 +173,29 @@ namespace MafiaCleanCity.Shell.Tests
         ///
         /// `sonde` : appelée juste après l'écriture du PNG, pour imprimer la géométrie propre à un
         /// écran. *Mesure, pas déduction* — trois hypothèses plausibles valent moins qu'un log.</summary>
+        /// <summary>⛔ LA GARDE SUR L'EFFET, pas sur le paramètre : `GET /v1/me` avec le jeton RÉELLEMENT
+        /// utilisé, comparé à l'identité annoncée (`email` ou `handle`, sans casse). Différents ⇒ la
+        /// capture est refusée avant tout PNG, et le message nomme les deux comptes.</summary>
+        public static IEnumerator IdentiteConnecteeOuEchoue(string jeton, string annonce, string quoi)
+        {
+            Assert.IsFalse(string.IsNullOrEmpty(jeton),
+                $"capture refusée ({quoi}) : aucun jeton — rien ne dit quel compte l'écran photographierait");
+            var client = new MafiaCleanCity.Operational.DashboardClient { BaseUrl = "http://localhost" };
+            MafiaCleanCity.Operational.MeDto me = null; string err = null;
+            yield return client.GetMe(jeton, m => me = m, (c, m) => err = $"{c}: {m}");
+            Assert.IsNull(err, $"capture refusée ({quoi}) : GET /v1/me n'a pas répondu ({err}) — identité non vérifiable");
+            Assert.IsNotNull(me, $"capture refusée ({quoi}) : GET /v1/me sans corps — identité non vérifiable");
+            string a = (annonce ?? "").Trim();
+            bool conforme = string.Equals(a, (me.email ?? "").Trim(), System.StringComparison.OrdinalIgnoreCase)
+                         || string.Equals(a, (me.handle ?? "").Trim(), System.StringComparison.OrdinalIgnoreCase);
+            Debug.Log($"[IDENTITE-CONNECTEE] {quoi} : /v1/me email={me.email} handle={me.handle} · annoncée « {a} » · "
+                      + (conforme ? "CONFORME" : "⛔ DIFFÉRENTE"));
+            Assert.IsTrue(conforme,
+                $"capture refusée ({quoi}) : la planche ANNONCE « {a} » mais le jeton utilisé est celui de "
+                + $"« {me.email} » (handle {me.handle}). C'est le défaut du 2026-09-22 (DA §2.4) : l'annonce et la "
+                + "connexion n'ont pas la même source. Aucune planche n'est écrite.");
+        }
+
         public static IEnumerator CapturerLocataire<T>(AppShell shell, string nom,
                                                        System.Func<T, RectTransform, bool> charge,
                                                        List<string> echecs,
@@ -187,7 +209,11 @@ namespace MafiaCleanCity.Shell.Tests
         {
             // AVANT TOUT : sans la paire, on n'écrit rien. Placé en tête pour qu'aucun PNG ne
             // parte, pas même celui d'un écran qui se serait monté correctement.
-            IdentiteDeCaptureOuEchoue($"planche_{nom}");
+            var (identiteAnnoncee, _) = IdentiteDeCaptureOuEchoue($"planche_{nom}");
+            // le jeton du shell arrive par sa propre ouverture de session : on l'attend, borné
+            float limiteJeton = Time.realtimeSinceStartup + 20f;
+            while (string.IsNullOrEmpty(shell.Token) && Time.realtimeSinceStartup < limiteJeton) yield return null;
+            yield return IdentiteConnecteeOuEchoue(shell.Token, identiteAnnoncee, $"planche_{nom}");
             string chemin = $"Assets/Screenshots/planche_{nom}_{largeur}x{hauteur}.png";
 
             // ⛔⛔ CE QU'UNE CAPTURE PRÉCÉDENTE LAISSE À L'ÉCRAN CONTAMINE LA SUIVANTE — mesuré le

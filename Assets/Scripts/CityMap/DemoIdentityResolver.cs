@@ -30,6 +30,16 @@ namespace MafiaCleanCity.CityMap
     //      Population des appelants et sa garde d'ensemble : voir `ExpectedExplicitIdentitySites`
     //      dans `DemoIdentityResolverPlayModeTests.cs`.
     //   2. Variable d'ENVIRONNEMENT — configuration de POSTE (quel éditeur, quel compte).
+    //      2a. Pour l'identité « operational » SEULEMENT : la paire de CAPTURE (`MAFIA_CAPTURE_*`),
+    //          si elle est COMPLÈTE, passe devant `MAFIA_DEMO_*`. Ajouté le 2026-09-22 : la planche
+    //          ANNONÇAIT la paire de capture (`CaptureSousShell`) et le shell SIGNAIT avec
+    //          `MAFIA_DEMO_*` ou le défaut — une garde sur le PARAMÈTRE qui certifiait un effet que
+    //          le code ne produisait pas. La règle vit ICI, une fois (`ResoudreIdentiteDeCapture`),
+    //          et l'aide de capture annonce le résultat de CETTE règle, jamais la sienne.
+    //          ⚠️ Même exposition que le contournement du 22/09 (« exporter la paire sous les deux
+    //          noms ») : un run qui exporte `MAFIA_CAPTURE_*` fait signer TOUS les écrans
+    //          « operational » avec le compte de capture — c'est un run de capture, pas un gate.
+    //      2b. `MAFIA_DEMO_*` (et `MAFIA_CITYMAP_*` pour la carte, que la capture ne touche jamais).
     //   3. Défaut `[SerializeField]` SÉRIALISÉ — le cas nominal, aucun appelant n'a d'opinion. Seule
     //      scène qui le sérialise : `Assets/Scenes/Boot.unity:416-417`, valeur = le défaut C#
     //      (`operational_demo@example.test`/`operational-demo-pw`), aucune divergence mesurée.
@@ -131,6 +141,43 @@ namespace MafiaCleanCity.CityMap
         public const string CityMapIdentifierEnvVar = "MAFIA_CITYMAP_IDENTIFIER";
         public const string CityMapPasswordEnvVar = "MAFIA_CITYMAP_PASSWORD";
 
+        /// <summary>La paire propre aux captures (rang 2a de la précédence, tête de fichier).</summary>
+        public const string CaptureIdentifierEnvVar = "MAFIA_CAPTURE_IDENTIFIER";
+        public const string CapturePasswordEnvVar = "MAFIA_CAPTURE_PASSWORD";
+
+        /// <summary>Une paire n'existe que COMPLÈTE : identifiant ET mot de passe, non blancs. Le même
+        /// prédicat sert au shell (<see cref="Resolve"/>) et à l'annonce de la capture
+        /// (<see cref="ResoudreIdentiteDeCapture"/>) — c'est ce qui garantit qu'ils ne divergent pas.</summary>
+        public static bool PaireComplete(string identifiant, string motDePasse) =>
+            !string.IsNullOrWhiteSpace(identifiant) && !string.IsNullOrWhiteSpace(motDePasse);
+
+        /// <summary>LA RÈGLE, pure : paire de capture complète → elle ; sinon paire de démo complète →
+        /// elle ; sinon RIEN (l'appelant refuse, il ne replie jamais en silence). Déplacée ici depuis
+        /// `CaptureSousShell` (Assets/Tests) le 2026-09-22, pour que le shell l'applique aussi.</summary>
+        public static (string identifiant, string motDePasse, string regime) ResoudreIdentiteDeCapture(
+            string idCapture, string mdpCapture, string idDemo, string mdpDemo)
+        {
+            if (PaireComplete(idCapture, mdpCapture)) return (idCapture, mdpCapture, "MAFIA_CAPTURE_*");
+            if (PaireComplete(idDemo, mdpDemo)) return (idDemo, mdpDemo, "MAFIA_DEMO_* (repli)");
+            return (null, null, "AUCUNE");
+        }
+
+        /// <summary>La décision de <see cref="Resolve"/>, PURE (aucune lecture d'environnement) — pour
+        /// que la précédence se teste avec des littéraux, sans écrire dans l'environnement partagé
+        /// par les suites co-tenantes du même process.</summary>
+        public static (string identifier, string password) ResoudreSansEnvironnement(
+            bool identiteOperationnelle, string idCapture, string mdpCapture,
+            string envIdentifier, string envPassword,
+            string fallbackIdentifier, string fallbackPassword, bool allowEnvironmentOverride)
+        {
+            if (!allowEnvironmentOverride) return (fallbackIdentifier, fallbackPassword);
+            if (identiteOperationnelle && PaireComplete(idCapture, mdpCapture)) return (idCapture, mdpCapture);
+            bool identifierIsSet = !string.IsNullOrWhiteSpace(envIdentifier);
+            bool passwordIsSet = !string.IsNullOrWhiteSpace(envPassword);
+            return (identifierIsSet ? envIdentifier : fallbackIdentifier,
+                    passwordIsSet ? envPassword : fallbackPassword);
+        }
+
         /// <summary>La paire RÉELLEMENT utilisée pour un sign-in. Quand
         /// <paramref name="allowEnvironmentOverride"/> est vrai (le défaut — comportement inchangé
         /// pour tout appelant sans opinion, rangs 2/3 de la précédence documentée en tête de
@@ -154,11 +201,14 @@ namespace MafiaCleanCity.CityMap
         {
             if (!allowEnvironmentOverride) return (fallbackIdentifier, fallbackPassword);
 
+            bool operationnelle = identifierEnvVar == OperationalIdentifierEnvVar;   // rang 2a : capture, operational seulement
+            string idCapture = operationnelle ? Environment.GetEnvironmentVariable(CaptureIdentifierEnvVar) : null;
+            string mdpCapture = operationnelle ? Environment.GetEnvironmentVariable(CapturePasswordEnvVar) : null;
             string envIdentifier = Environment.GetEnvironmentVariable(identifierEnvVar);
             string envPassword = Environment.GetEnvironmentVariable(passwordEnvVar);
             bool identifierIsSet = !string.IsNullOrWhiteSpace(envIdentifier);
             bool passwordIsSet = !string.IsNullOrWhiteSpace(envPassword);
-            if (identifierIsSet != passwordIsSet)
+            if (!PaireComplete(idCapture, mdpCapture) && identifierIsSet != passwordIsSet)
             {
                 // RONDE 4 (revue ⊥ ronde 3, I1) : paire à MOITIÉ posée — voir « CONCLUSION CORRIGÉE »
                 // en tête de fichier pour la direction dangereuse (mot de passe seul posé, identifiant
@@ -170,9 +220,9 @@ namespace MafiaCleanCity.CityMap
                     "retombent indépendamment (revue ⊥ m7) ; une identité MIXTE ou un repli partiel " +
                     "en résultera.");
             }
-            string identifier = identifierIsSet ? envIdentifier : fallbackIdentifier;
-            string password = passwordIsSet ? envPassword : fallbackPassword;
-            return (identifier, password);
+            // UNE décision, pure et testée avec des littéraux — Resolve ne fait que lire l'environnement.
+            return ResoudreSansEnvironnement(operationnelle, idCapture, mdpCapture, envIdentifier, envPassword,
+                                             fallbackIdentifier, fallbackPassword, allowEnvironmentOverride: true);
         }
 
         /// <summary>Résout PUIS signe — le seul site de production autorisé à effectuer l'appel
@@ -213,6 +263,10 @@ namespace MafiaCleanCity.CityMap
         private static string DescribeRegime(string identifierEnvVar, bool allowEnvironmentOverride)
         {
             if (!allowEnvironmentOverride) return "explicite";
+            if (identifierEnvVar == OperationalIdentifierEnvVar
+                && PaireComplete(Environment.GetEnvironmentVariable(CaptureIdentifierEnvVar),
+                                 Environment.GetEnvironmentVariable(CapturePasswordEnvVar)))
+                return "capture";
             string env = Environment.GetEnvironmentVariable(identifierEnvVar);
             return string.IsNullOrWhiteSpace(env) ? "défaut" : "env";
         }

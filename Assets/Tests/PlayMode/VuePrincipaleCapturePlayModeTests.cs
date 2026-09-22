@@ -862,17 +862,21 @@ namespace MafiaCleanCity.Capture.Tests
         
         public IEnumerator Capture_FicheBatiment()
         {
-            // ⛔ LE COMPTE DE DÉMO, PAS UN SIGNUP FRAIS. Mesuré au tour précédent :
-            // `GET /v1/me/buildings` rend une liste VIDE sur un compte neuf — le kit octroyé par
-            // `session/open` porte des lieutenants, pas des bâtiments. Une fiche de bâtiment n'a
-            // alors rien à montrer, et la capture serait un cadre vide parfaitement valide.
+            // ⛔ UN COMPTE SEMÉ, PAS UN SIGNUP FRAIS. ⚠️ Le fait qui justifiait ce choix est PÉRIMÉ :
+            // « `GET /v1/me/buildings` rend une liste vide sur un compte neuf » — mesuré le 2026-09-22,
+            // un signup frais y porte 4 bâtiments (lab, stash, front_shop, cash_safehouse, La Lisière).
+            // Le choix tient pour une autre raison : le compte semé montre une fiche RICHE, et c'est
+            // lui que le juge compare aux corps réels.
             // ⚠️ On se CONNECTE au compte de démo, on ne le RESEEDE pas : le seeder remet son monde
             // à zéro et effacerait le travail des autres sessions qui s'y appuient.
             var auth = new AuthClient { BaseUrl = BaseUrl };
             string token = null, err = null;
-            yield return auth.SignIn("operational_demo@example.test", "operational-demo-pw",
-                                     t => token = t, e => err = e);
-            Assert.IsNull(err, $"connexion au compte de démo échouée : {err}");
+            // identité : la règle UNIQUE du résolveur (paire de capture, sinon démo) — plus de littéraux
+            // (DA, RECAPTURE-2026-09-22 §5.2) ; le compte photographié est celui que le RUN exporte.
+            var (idCapture, mdpCapture) = MafiaCleanCity.Shell.Tests.CaptureSousShell.IdentiteDeCaptureOuEchoue("capture_fiche_batiment");
+            yield return auth.SignIn(idCapture, mdpCapture, t => token = t, e => err = e);
+            Assert.IsNull(err, $"connexion au compte de capture « {idCapture} » échouée : {err}");
+            yield return MafiaCleanCity.Shell.Tests.CaptureSousShell.IdentiteConnecteeOuEchoue(token, idCapture, "capture_fiche_batiment");
             Assert.IsFalse(string.IsNullOrEmpty(token), "le compte de démo doit rendre un jeton");
 
             var sessionClient = new SessionClient { BaseUrl = BaseUrl };
@@ -1000,9 +1004,12 @@ namespace MafiaCleanCity.Capture.Tests
             // session back).
             var auth = new AuthClient { BaseUrl = BaseUrl };
             string token = null, err = null;
-            yield return auth.SignIn("operational_demo@example.test", "operational-demo-pw",
-                                     t => token = t, e => err = e);
-            Assert.IsNull(err, $"connexion au compte de démo échouée : {err}");
+            // identité : la règle UNIQUE du résolveur (paire de capture, sinon démo) — plus de littéraux
+            // (DA, RECAPTURE-2026-09-22 §5.2) ; le compte photographié est celui que le RUN exporte.
+            var (idCapture, mdpCapture) = MafiaCleanCity.Shell.Tests.CaptureSousShell.IdentiteDeCaptureOuEchoue("capture_ecran_exceptions");
+            yield return auth.SignIn(idCapture, mdpCapture, t => token = t, e => err = e);
+            Assert.IsNull(err, $"connexion au compte de capture « {idCapture} » échouée : {err}");
+            yield return MafiaCleanCity.Shell.Tests.CaptureSousShell.IdentiteConnecteeOuEchoue(token, idCapture, "capture_ecran_exceptions");
 
             var sessionClient = new SessionClient { BaseUrl = BaseUrl };
             SessionOpenDto payload = null;

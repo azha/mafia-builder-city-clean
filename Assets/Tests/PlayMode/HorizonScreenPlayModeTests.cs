@@ -138,9 +138,12 @@ namespace MafiaCleanCity.Operational.Tests
         {
             var auth = new AuthClient { BaseUrl = BaseUrl };
             string token = null, err = null;
-            yield return auth.SignIn("operational_demo@example.test", "operational-demo-pw",
-                                     t => token = t, e => err = e);
-            Assert.IsNull(err, $"connexion au compte de démo échouée : {err}");
+            // identité : la règle UNIQUE du résolveur (paire de capture, sinon démo) — plus de littéraux
+            // (DA, RECAPTURE-2026-09-22 §5.2) ; le compte photographié est celui que le RUN exporte.
+            var (idCapture, mdpCapture) = MafiaCleanCity.Shell.Tests.CaptureSousShell.IdentiteDeCaptureOuEchoue("screen_c6_horizon_etat-vide");
+            yield return auth.SignIn(idCapture, mdpCapture, t => token = t, e => err = e);
+            Assert.IsNull(err, $"connexion au compte de capture « {idCapture} » échouée : {err}");
+            yield return MafiaCleanCity.Shell.Tests.CaptureSousShell.IdentiteConnecteeOuEchoue(token, idCapture, "screen_c6_horizon_etat-vide");
 
             HorizonScreenController ecran = MonterEcran();
             ecran.SetToken(token);

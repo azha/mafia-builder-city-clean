@@ -808,8 +808,9 @@ namespace MafiaCleanCity.CityMap.Tests
         // même forme, même ScanDirectory, que la garde `SigninUrl`/`SignupUrl` ci-dessus.
         //
         // Population RÉELLE mesurée (oracle Python, substring littérale, identifiant complet
-        // `allowEnvironmentOverride`, portée Assets/Scripts) : 13 au total — CityMap/
-        // DemoIdentityResolver.cs (11, la déclaration du paramètre et son usage interne),
+        // `allowEnvironmentOverride`, portée Assets/Scripts) : 16 au total (re-mesuré le 2026-09-22,
+        // après la règle de capture ; 13 avant) — CityMap/DemoIdentityResolver.cs (14, la déclaration
+        // du paramètre, son usage interne et la décision pure `ResoudreSansEnvironnement`),
         // Shell/AppShell.cs (2, le seul passeur de production, en accord avec
         // `!identityExplicitlySet`). Assets/Editor : 0.
         private const string AllowEnvironmentOverrideToken = "allowEnvironmentOverride";
@@ -974,6 +975,61 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.AreEqual("demo@x.test", r.id, "une variable posée mais vide n'est pas une identité");
             var r2 = Resoudre("   ", "  ", " ", " ");
             Assert.IsNull(r2.id, "et quatre blancs ne font pas une paire");
+        }
+
+        // ═══ 2026-09-22 — L'ANNONCE ET LA CONNEXION ONT UNE SEULE SOURCE ════════════════════════════
+        // Le défaut mesuré par la DA (RECAPTURE §2.4) : la planche annonçait la paire de capture, le
+        // shell signait avec MAFIA_DEMO_* ou le défaut. Ces tests sont PURS (aucune variable
+        // d'environnement écrite) : ils comparent la règle que la capture ANNONCE à la décision que
+        // le shell APPLIQUE, sur les mêmes entrées. Sur l'ancien code, le premier cas de la matrice
+        // (capture complète + démo différente) rendait « cap » d'un côté et « demo » de l'autre.
+        private static string Shell(string ic, string mc, string id_, string md, bool operationnelle = true, bool autorise = true)
+            => DemoIdentityResolver.ResoudreSansEnvironnement(operationnelle, ic, mc, id_, md,
+                   "defaut@x.test", "defaut-pw", autorise).identifier;
+
+        [Test]
+        public void LAnnonceDeLaCapture_EstLIdentiteQueLeShellUtilisera_SurToutesLesEntrees()
+        {
+            string[] ids = { "cap@x.test", null, "  " };
+            string[] mdps = { "cap-pw", null };
+            string[] dids = { "demo@x.test", null };
+            string[] dmdps = { "demo-pw", null };
+            int compares = 0;
+            foreach (var ic in ids) foreach (var mc in mdps) foreach (var id_ in dids) foreach (var md in dmdps)
+            {
+                var annonce = Resoudre(ic, mc, id_, md);
+                if (annonce.id == null) continue;   // la capture REFUSE : rien n'est annoncé, rien à comparer
+                Assert.AreEqual(annonce.id, Shell(ic, mc, id_, md),
+                    $"entrées ({ic ?? "∅"}, {(mc == null ? "∅" : "…")}, {id_ ?? "∅"}, {(md == null ? "∅" : "…")}) : la planche "
+                    + $"annonce « {annonce.id} » ({annonce.regime}) et le shell signerait avec un autre compte");
+                compares++;
+            }
+            Assert.GreaterOrEqual(compares, 4, $"seulement {compares} comparaison(s) — la matrice ne mord pas");
+        }
+
+        [Test]
+        public void LaPaireDeCapture_NeSertQuALIdentiteOperationnelle_JamaisALaCarte()
+        {
+            Assert.AreEqual("cap@x.test", Shell("cap@x.test", "cap-pw", "demo@x.test", "demo-pw"),
+                "identité « operational » : la paire de capture complète passe devant MAFIA_DEMO_*");
+            Assert.AreEqual("carte@x.test", Shell("cap@x.test", "cap-pw", "carte@x.test", "carte-pw", operationnelle: false),
+                "identité de la carte (MAFIA_CITYMAP_*) : la capture ne la touche jamais");
+        }
+
+        [Test]
+        public void UnAppelExplicite_BatLaPaireDeCapture()
+        {
+            Assert.AreEqual("defaut@x.test", Shell("cap@x.test", "cap-pw", "demo@x.test", "demo-pw", autorise: false),
+                "rang 1 (appel explicite) : ni la capture ni la démo ne passent devant");
+        }
+
+        [Test]
+        public void UneMoitieDePaireDeCapture_NeCapturePasLeShell()
+        {
+            Assert.AreEqual("demo@x.test", Shell("cap@x.test", null, "demo@x.test", "demo-pw"),
+                "un identifiant de capture sans mot de passe n'est pas une paire : le shell reste sur la démo");
+            Assert.IsFalse(DemoIdentityResolver.PaireComplete("cap@x.test", " "));
+            Assert.IsTrue(DemoIdentityResolver.PaireComplete("cap@x.test", "cap-pw"));
         }
     }
 
