@@ -132,7 +132,7 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.IsTrue(controller.UpgradeTierButtonShown, "Upgrade-tier button shown on a sub-MASTER specialized_lab");
             Assert.AreEqual("FLUSH", controller.WalletBand, "seeded wallet band is FLUSH");
             Assert.IsTrue(controller.UpgradeTierButtonAffordable, "Upgrade affordable with a FLUSH wallet");
-            Assert.IsTrue(texts.Any(t => t == "Upgrade lab tier"), "Upgrade-tier button label rendered");
+            Assert.IsTrue(texts.Any(t => t == "Agrandir le labo"), "Upgrade-tier button label rendered");
 
             // The refining-passes selector is shown (the Ash cook-start time↔purity lever).
             Assert.IsTrue(texts.Any(t => t.StartsWith("PASSES DE RAFFINAGE")), "refining-passes selector section rendered");

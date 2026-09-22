@@ -129,7 +129,7 @@ namespace MafiaCleanCity.Operational.Tests
 
             // The Repair button is present on a DAMAGED building.
             Assert.IsTrue(controller.RepairButtonShown, "Repair button is shown on a DAMAGED building");
-            Assert.IsTrue(texts.Any(t => t.StartsWith("Repair (")), "Repair button label (with the cost band) rendered");
+            Assert.IsTrue(texts.Any(t => t.StartsWith("Réparer (")), "Repair button label (with the cost band) rendered");
 
             // R2.2: no raw scalar leaks client-side.
             AssertNoRawScalar(texts);
@@ -207,7 +207,7 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.IsFalse(texts.Any(t => t.StartsWith("Raided — seized")), "no raid notification on a healthy building");
             // NO Repair button on a non-DAMAGED building.
             Assert.IsFalse(controller.RepairButtonShown, "no Repair button on a healthy (OPERATIONAL) building");
-            Assert.IsFalse(texts.Any(t => t.StartsWith("Repair (")), "no Repair button label on a healthy building");
+            Assert.IsFalse(texts.Any(t => t.StartsWith("Réparer (")), "no Repair button label on a healthy building");
 
             AssertNoRawScalar(texts);
             Debug.Log($"[BuildingCardRaidE2E] healthy card — structural={card.structural_state} raid_risk={card.raid_risk}");

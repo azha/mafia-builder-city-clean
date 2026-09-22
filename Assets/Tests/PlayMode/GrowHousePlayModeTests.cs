@@ -145,7 +145,7 @@ namespace MafiaCleanCity.Operational.Tests
             // The Tend button is shown + ENABLED (tend_due=true → server-authoritative the tend is available).
             Assert.IsTrue(controller.TendButtonShown, "Tend button shown on a grow_house with an active (non-DONE) grow");
             Assert.IsTrue(controller.TendButtonEnabled, "Tend button enabled when tend_due=true (the current stage is un-tended)");
-            Assert.IsTrue(texts.Any(t => t == "Tend crop"), "Tend button label rendered");
+            Assert.IsTrue(texts.Any(t => t == "Soigner la culture"), "Tend button label rendered");
 
             // R2.2: no raw scalar leaks client-side (no tend_count / grams / ticks / heat / stage int).
             AssertNoRawScalar(texts);

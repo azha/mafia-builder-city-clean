@@ -880,13 +880,13 @@ namespace MafiaCleanCity.Operational
                 RepairButtonShown = true;
                 bool affordable = CanAfford(card.repair_cost, WalletBand);
                 RepairButtonAffordable = affordable;
-                string repairLabel = $"Repair ({RepairCostLabel(card.repair_cost)})";
+                string repairLabel = $"Réparer ({RepairCostLabel(card.repair_cost)})";
                 repairButton = AddActionButton(actionBar, repairLabel, () => StartCoroutine(Repair()));
                 SetButtonInteractable(repairButton, affordable);
                 if (!affordable)
                 {
                     // F2: a readable reason, never a raw number, beside the disabled button.
-                    string reason = "Repair (insufficient cash)";
+                    string reason = "Réparer — pas assez d'argent";
                     TextMeshProUGUI hint = NewText("RepairHint", actionBar, reason, 13, TextAlignmentOptions.Left);
                     hint.color = AccentSevere;
                     AddLayoutElement(hint.gameObject, minHeight: 18, flexibleHeight: 0);
@@ -906,11 +906,11 @@ namespace MafiaCleanCity.Operational
                 UpgradeTierButtonShown = true;
                 bool affordable = CanAffordUpgrade(WalletBand);
                 UpgradeTierButtonAffordable = affordable;
-                Button upgradeBtn = AddActionButton(actionBar, "Upgrade lab tier", () => StartCoroutine(UpgradeTier()));
+                Button upgradeBtn = AddActionButton(actionBar, "Agrandir le labo", () => StartCoroutine(UpgradeTier()));
                 SetButtonInteractable(upgradeBtn, affordable);
                 if (!affordable)
                 {
-                    string reason = "Upgrade lab tier (insufficient cash)";
+                    string reason = "Agrandir le labo — pas assez d'argent";
                     TextMeshProUGUI hint = NewText("UpgradeHint", actionBar, reason, 13, TextAlignmentOptions.Left);
                     hint.color = AccentSevere;
                     AddLayoutElement(hint.gameObject, minHeight: 18, flexibleHeight: 0);
@@ -932,11 +932,11 @@ namespace MafiaCleanCity.Operational
                 UpgradeHubTierButtonShown = true;
                 bool affordable = CanAffordUpgrade(WalletBand);
                 UpgradeHubTierButtonAffordable = affordable;
-                Button upgradeBtn = AddActionButton(actionBar, "Upgrade hub tier", () => StartCoroutine(UpgradeHubTier()));
+                Button upgradeBtn = AddActionButton(actionBar, "Agrandir le relais", () => StartCoroutine(UpgradeHubTier()));
                 SetButtonInteractable(upgradeBtn, affordable);
                 if (!affordable)
                 {
-                    string reason = "Upgrade hub tier (insufficient cash)";
+                    string reason = "Agrandir le relais — pas assez d'argent";
                     TextMeshProUGUI hint = NewText("HubUpgradeHint", actionBar, reason, 13, TextAlignmentOptions.Left);
                     hint.color = AccentSevere;
                     AddLayoutElement(hint.gameObject, minHeight: 18, flexibleHeight: 0);
@@ -958,11 +958,11 @@ namespace MafiaCleanCity.Operational
                 UpgradeMoneyHoldingTierButtonShown = true;
                 bool affordable = CanAffordUpgrade(WalletBand);
                 UpgradeMoneyHoldingTierButtonAffordable = affordable;
-                Button upgradeBtn = AddActionButton(actionBar, "Upgrade holding tier", () => StartCoroutine(UpgradeMoneyHoldingTier()));
+                Button upgradeBtn = AddActionButton(actionBar, "Agrandir la caisse", () => StartCoroutine(UpgradeMoneyHoldingTier()));
                 SetButtonInteractable(upgradeBtn, affordable);
                 if (!affordable)
                 {
-                    string reason = "Upgrade holding tier (insufficient cash)";
+                    string reason = "Agrandir la caisse — pas assez d'argent";
                     TextMeshProUGUI hint = NewText("MoneyHoldingUpgradeHint", actionBar, reason, 13, TextAlignmentOptions.Left);
                     hint.color = AccentSevere;
                     AddLayoutElement(hint.gameObject, minHeight: 18, flexibleHeight: 0);
@@ -973,22 +973,22 @@ namespace MafiaCleanCity.Operational
             switch (card.operational_type)
             {
                 case "lab":
-                    AddActionButton(actionBar, "Order Pyralin", () => StartCoroutine(OrderPyralin()));
-                    AddActionButton(actionBar, "Start Cook", () => StartCoroutine(StartCook()));
+                    AddActionButton(actionBar, "Commander du pyralin", () => StartCoroutine(OrderPyralin()));
+                    AddActionButton(actionBar, "Lancer une cuisson", () => StartCoroutine(StartCook()));
                     break;
                 case "specialized_lab":
                     // Ash cook — the refining-passes selector (the time↔purity lever) + the Start Ash Cook button. The
                     // selector worded count (no raw number leaks — it's a deliberate label "+N passes" inside our own UI,
                     // but to keep the no-raw-scalar guard simple we word the passes count rather than print a bare digit).
                     AddRefiningPassesSelector(actionBar);
-                    AddActionButton(actionBar, "Start Ash Cook", () => StartCoroutine(StartCookAsh()));
+                    AddActionButton(actionBar, "Lancer une cuisson d'ash", () => StartCoroutine(StartCookAsh()));
                     // Honor affordance — only when a SCHEDULED appointment is tracked for this lab (the Ash sale path).
                     if (CurrentAppointment != null && CurrentAppointment.status == "SCHEDULED")
-                        AddActionButton(actionBar, "Honor appointment", () => StartCoroutine(HonorAppointment()));
+                        AddActionButton(actionBar, "Honorer le rendez-vous", () => StartCoroutine(HonorAppointment()));
                     break;
                 case "front_shop":
                     // Inject needs a safehouse target — wired by the caller/test via Inject(safehouseId, amount).
-                    AddActionButton(actionBar, "Inject (launder)", () => { /* needs safehouse target; driven via Inject() */ });
+                    AddActionButton(actionBar, "Injecter", () => { /* needs safehouse target; driven via Inject() */ });
                     break;
                 case "grow_house":
                     // Phase-3 vector #3: the cultivation affordances.
@@ -1006,12 +1006,12 @@ namespace MafiaCleanCity.Operational
                         TendButtonShown = true;
                         bool tendDue = CurrentGrow.tend_due;
                         TendButtonEnabled = tendDue;
-                        Button tendBtn = AddActionButton(actionBar, "Tend crop", () => StartCoroutine(Tend()));
+                        Button tendBtn = AddActionButton(actionBar, "Soigner la culture", () => StartCoroutine(Tend()));
                         SetButtonInteractable(tendBtn, tendDue);
                         if (!tendDue)
                         {
                             // F2: a readable reason beside the disabled button (this stage is already tended).
-                            string reason = "Tend crop (already tended this stage)";
+                            string reason = "Soigner la culture — déjà fait à ce stade";
                             TextMeshProUGUI hint = NewText("TendHint", actionBar, reason, 13, TextAlignmentOptions.Left);
                             hint.color = DesignTokens.Current.onSurfaceSecondaryAlt;
                             AddLayoutElement(hint.gameObject, minHeight: 18, flexibleHeight: 0);
@@ -1023,7 +1023,7 @@ namespace MafiaCleanCity.Operational
                         // Idle grow_house (no active grow) → the plant selector + Plant button.
                         PlantSelectorShown = true;
                         AddPlantSelector(actionBar);
-                        AddActionButton(actionBar, "Plant", () => StartCoroutine(Plant()));
+                        AddActionButton(actionBar, "Planter", () => StartCoroutine(Plant()));
                     }
                     break;
                 case "distribution_hub":
@@ -1034,11 +1034,11 @@ namespace MafiaCleanCity.Operational
                     AddVehicleSelector(actionBar, card);
                     bool dispatchReady = !string.IsNullOrEmpty(DispatchFromBuildingId)
                         && !string.IsNullOrEmpty(DispatchToBuildingId);
-                    Button dispatchBtn = AddActionButton(actionBar, "Dispatch courier", () => StartCoroutine(Dispatch()));
+                    Button dispatchBtn = AddActionButton(actionBar, "Envoyer un coursier", () => StartCoroutine(Dispatch()));
                     SetButtonInteractable(dispatchBtn, dispatchReady);
                     if (!dispatchReady)
                     {
-                        string reason = "Dispatch courier (choose a source + destination)";
+                        string reason = "Envoyer un coursier — choisissez d'où ça part et où ça va";
                         TextMeshProUGUI hint = NewText("DispatchHint", actionBar, reason, 13, TextAlignmentOptions.Left);
                         hint.color = DesignTokens.Current.onSurfaceSecondaryAlt;
                         AddLayoutElement(hint.gameObject, minHeight: 18, flexibleHeight: 0);
@@ -1054,8 +1054,8 @@ namespace MafiaCleanCity.Operational
                     DepositActionShown = true;
                     WithdrawActionShown = true;
                     AddTransferAmountSelector(actionBar);
-                    AddActionButton(actionBar, "Deposit cash", () => StartCoroutine(DepositCash()));
-                    AddActionButton(actionBar, "Withdraw cash", () => StartCoroutine(WithdrawCash()));
+                    AddActionButton(actionBar, "Déposer", () => StartCoroutine(DepositCash()));
+                    AddActionButton(actionBar, "Retirer", () => StartCoroutine(WithdrawCash()));
                     break;
                 case "stash":
                 case "cash_safehouse":
@@ -1065,7 +1065,7 @@ namespace MafiaCleanCity.Operational
             }
 
             // A Convert affordance is always offered (no-op if already operational — backend 409s cleanly).
-            AddActionButton(actionBar, "Convert", () => StartCoroutine(Convert(card.operational_type)));
+            AddActionButton(actionBar, "Aménager", () => StartCoroutine(Convert(card.operational_type)));
 
             actionStatusText = NewText("ActionStatus", actionBar, "", 14, TextAlignmentOptions.Left);
             actionStatusText.color = DesignTokens.Current.onSurfaceMutedAlt;

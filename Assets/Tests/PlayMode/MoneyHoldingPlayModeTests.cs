@@ -162,13 +162,13 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.IsTrue(controller.UpgradeMoneyHoldingTierButtonShown, "Upgrade-holding-tier button shown on a sub-MAX vault");
             Assert.AreEqual("FLUSH", controller.WalletBand, "seeded wallet band is FLUSH");
             Assert.IsTrue(controller.UpgradeMoneyHoldingTierButtonAffordable, "Upgrade affordable with a FLUSH wallet");
-            Assert.IsTrue(texts.Any(t => t == "Upgrade holding tier"), "Upgrade-holding-tier button label rendered");
+            Assert.IsTrue(texts.Any(t => t == "Agrandir la caisse"), "Upgrade-holding-tier button label rendered");
 
             // The deposit + withdraw actions + the amount selector are shown (the server-authoritative transfer affordances).
             Assert.IsTrue(controller.DepositActionShown, "the deposit-cash action is shown on a vault card");
             Assert.IsTrue(controller.WithdrawActionShown, "the withdraw-cash action is shown on a vault card");
-            Assert.IsTrue(texts.Any(t => t == "Deposit cash"), "deposit button label rendered");
-            Assert.IsTrue(texts.Any(t => t == "Withdraw cash"), "withdraw button label rendered");
+            Assert.IsTrue(texts.Any(t => t == "Déposer"), "deposit button label rendered");
+            Assert.IsTrue(texts.Any(t => t == "Retirer"), "withdraw button label rendered");
             Assert.IsTrue(texts.Any(t => t.StartsWith("MONTANT DU TRANSFERT")), "transfer-amount selector section rendered");
 
             // R2.2: no raw scalar leaks client-side (no held cents / tier int / yield rate / tick / forfeiture tick).

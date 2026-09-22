@@ -137,7 +137,7 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.IsTrue(controller.UpgradeHubTierButtonShown, "Upgrade-hub-tier button shown on a sub-MAX distribution_hub");
             Assert.AreEqual("FLUSH", controller.WalletBand, "seeded wallet band is FLUSH");
             Assert.IsTrue(controller.UpgradeHubTierButtonAffordable, "Upgrade affordable with a FLUSH wallet");
-            Assert.IsTrue(texts.Any(t => t == "Upgrade hub tier"), "Upgrade-hub-tier button label rendered");
+            Assert.IsTrue(texts.Any(t => t == "Agrandir le relais"), "Upgrade-hub-tier button label rendered");
 
             // The dispatch vehicle selector is shown (the server-authoritative foot/bike/car picker).
             Assert.IsTrue(controller.VehicleSelectorShown, "the dispatch vehicle selector is shown on a hub card");
