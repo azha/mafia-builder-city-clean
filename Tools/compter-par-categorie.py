@@ -120,7 +120,7 @@ def main():
     rev = sys.argv[sys.argv.index('--rev') + 1] if '--rev' in sys.argv else None
     detail = '--detail' in sys.argv
     decl, exe, ign = collections.Counter(), collections.Counter(), []
-    vues = collections.Counter(); diff = []
+    vues = collections.Counter(); portees = set(); diff = []
     tot_d = tot_e = 0
     for f, t in fichiers(rev):
         for classe, meth, cc, cm, n, ignoree in feuilles(t):
@@ -136,6 +136,7 @@ def main():
                     if x in propres: decl[x] += n
             if e:
                 tot_e += n
+                portees |= toutes
                 for c in toutes:
                     if any(c.startswith(x) for x in filtre): vues[c] += n
                 for x in filtre:
@@ -146,6 +147,12 @@ def main():
     print(f"DÉCLARÉS (règle MafiaCI) : {tot_d}   ·   EXÉCUTÉS attendus (règle Unity) : {tot_e}   ·   dont [Ignore] : {len(ign)}")
     for x in filtre: print(f"  {x:22s} déclarés {decl[x]:4d} · exécutés {exe[x]:4d}")
     print("catégories RÉELLEMENT prises (attendu) :", ', '.join(sorted(vues)))
+    # ⛔ CE QUE MAFIACI IMPRIME n'est PAS la ligne ci-dessus : « catégories RÉELLEMENT exécutées » est l'UNION de toutes les
+    #    catégories PORTÉES par les tests exécutés, y compris celles qu'aucune entrée du filtre ne demande. Mesuré le 22/09
+    #    (créneau 558289a0) : 15 listées pour 14 prises — `EcranDemolitionC1`, pris par sa classe `EcranDemolition`, porte aussi
+    #    `PhotoEcranDemolition`. Le runbook avait annoncé 14 en confondant les deux.
+    print(f"catégories PORTÉES par les tests pris — la ligne « RÉELLEMENT exécutées » de MafiaCI ({len(portees)}) :",
+          ', '.join(sorted(portees)))
     if ign: print("[Ignore] :", ', '.join(ign))
     if diff:
         print(f"⛔ {len(diff)} feuille(s) où les deux règles divergent :")
