@@ -127,6 +127,7 @@ namespace MafiaCleanCity.Operational.Exceptions
                 new MafiaCleanCity.I18n.I18nClient { BaseUrl = baseUrl }, Token);
 
             yield return LoadQueue();
+            yield return ChargerRoster();   // ⑨-3 — le rôle des attendants, par jointure
         }
 
         public IEnumerator SignIn()
@@ -316,71 +317,164 @@ namespace MafiaCleanCity.Operational.Exceptions
             Render();
         }
 
+        // ================================================================ ⑨-3 qui attend
+
+        /// <summary>⑨-3 — LA FILE AU COMPTOIR, cadre 14 (`.file`, `.attendant`, `.rail`, `.ville-b`) :
+        ///   `.file{display:flex; align-items:flex-end; gap:10px; padding:0 10px}` — tassée à GAUCHE, alignée par le BAS
+        ///     (juge r1 m3, m4 : elle s'étirait sur toute la largeur et s'alignait par le haut) ;
+        ///   `.attendant` 60px, opacité .78 ; `.premier` 74px, opacité 1, chevron ▼ or-vif 9px au-dessus (r1 M9) ;
+        ///   `.medl` carré arrondi 44 / r14 (58 / r18 pour le premier) AVEC le buste des lieutenants (r1 B2) ou, pour la
+        ///     ville, un « B » or-vif Georgia 20 gras (`.ville-b`, r1 m7) — `MedaillonAuComptoir`, sans anneau ni halo or ;
+        ///   `.rail` 34×3 : braise = grave, or = modérée, cyan = légère (r1 M3 : trois rails gris ; m5 : taille constante) ;
+        ///   `b` le NOM (serif, 10px, crème — même taille pour tous, r1 m6) ; `small` « rôle · gravité · priorité »
+        ///     (6,5px, capitales, crème-2) — le rôle par jointure `GET /v1/lieutenants` (`archetype`), absent tant qu'elle
+        ///     n'a pas répondu ;
+        ///   au-delà de TROIS : un « +N » à la suite (r1 M8 : « Cinq attendent » pour trois dessinés). ⚠️ La maquette ne
+        ///     montre jamais plus de trois attendants : ce « +N » est une décision client, au style du nom, à juger.
+        /// Chaque attendant ouvre SA carte (⑩) au toucher, comme avant.</summary>
         private void RendreFile()
         {
             for (int i = fileRoot.childCount - 1; i >= 0; i--)
                 UnityEngine.Object.Destroy(fileRoot.GetChild(i).gameObject);
 
+            Sprite buste = Resources.Load<Sprite>(MedaillonAuComptoir.CheminBusteLieutenant);
             for (int i = 0; i < Cards.Length && i < 3; i++)
             {
                 ExceptionCardDto c = Cards[i];
                 bool premier = i == 0;
                 GameObject a = NewUI($"Attendant{i}", fileRoot);
 
-                // ⛔ CHAQUE ATTENDANT OUVRE SA PROPRE CARTE — c'est LE chemin joueur vers ⑩.
-                // Avant : seul le tampon ouvrait, et toujours celle du PREMIER. Les deux autres
-                // attendants étaient dessinés, alignés, lisibles… et morts au toucher. Un écran
-                // qui montre trois interlocuteurs et n'en laisse joindre qu'un ment sur ce qu'il
-                // propose, sans qu'aucune garde structurelle ne s'en aperçoive : les trois
-                // existent, aux bonnes places, avec les bonnes valeurs.
+                // ⛔ CHAQUE ATTENDANT OUVRE SA PROPRE CARTE — c'est LE chemin joueur vers ⑩ (capture par valeur).
                 Image fondA = a.AddComponent<Image>();
                 fondA.color = new Color(0f, 0f, 0f, 0f);   // cible de toucher, invisible
                 Button ba = a.AddComponent<Button>();
                 ba.targetGraphic = fondA;
-                ExceptionCardDto carteDeCetAttendant = c;   // capture par valeur : sinon les
-                ba.onClick.AddListener(() => OpenDetail(carteDeCetAttendant)); // trois ouvrent la dernière
+                ExceptionCardDto carteDeCetAttendant = c;
+                ba.onClick.AddListener(() => OpenDetail(carteDeCetAttendant));
+                if (!premier) a.AddComponent<CanvasGroup>().alpha = 0.78f;   // `.attendant{opacity:.78}`
 
                 VerticalLayoutGroup v = a.AddComponent<VerticalLayoutGroup>();
                 v.spacing = Px(3f);
                 v.childControlWidth = true; v.childControlHeight = true;
-                v.childForceExpandWidth = true; v.childForceExpandHeight = false;
-                v.childAlignment = TextAnchor.UpperCenter;
-                AddLayoutElement(a, preferredWidth: Px(premier ? 74f : 60f));
+                v.childForceExpandWidth = false; v.childForceExpandHeight = false;
+                v.childAlignment = TextAnchor.LowerCenter;
+                AddLayoutElement(a, preferredWidth: Px(premier ? 74f : 60f), minWidth: Px(premier ? 74f : 60f));
 
-                GameObject med = NewUI("Medaillon", a.transform);
-                Image mi = med.AddComponent<Image>();
-                mi.color = premier ? AccentSevere : TextSecondary;
-                AddLayoutElement(med, preferredHeight: Px(premier ? 58f : 44f));
+                if (premier)
+                {
+                    TextMeshProUGUI chevron = NouveauTexteMaquette(a.transform, "Chevron", "▼", 9f, OrVif);
+                    chevron.alignment = TextAlignmentOptions.Center;
+                }
 
-                // Le rail sous le médaillon PORTE la sévérité — c'est le canal de la maquette.
+                bool ville = !ExceptionBandes.ParleUnLieutenant(c);
+                GameObject med = MedaillonAuComptoir.Construire(a.transform, "Medaillon",
+                    Px(premier ? 58f : 44f), Px(premier ? 18f : 14f), Mathf.Max(1f, Px(1f)), ville ? null : buste);
+                if (ville)
+                {
+                    TextMeshProUGUI b = NouveauTexteMaquette(med.transform, "VilleB", "B", 20f, OrVif);
+                    b.font = DesignTokens.Current.hudSerifFont;
+                    b.fontStyle = FontStyles.Bold;
+                    b.alignment = TextAlignmentOptions.Center;
+                    b.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+                    var brt = (RectTransform)b.transform;
+                    brt.anchorMin = Vector2.zero; brt.anchorMax = Vector2.one;
+                    brt.offsetMin = Vector2.zero; brt.offsetMax = Vector2.zero;
+                }
+
+                // Le rail sous le médaillon PORTE la gravité — le canal de la maquette.
                 GameObject rail = NewUI("Rail", a.transform);
-                rail.AddComponent<Image>().color = SeverityAccent(c.severity_band);
-                AddLayoutElement(rail, preferredHeight: Px(3f));
+                rail.AddComponent<Image>().color = CouleurRail(c.severity_band);
+                AddLayoutElement(rail, preferredWidth: Px(34f), minWidth: Px(34f), preferredHeight: Px(3f), minHeight: Px(3f));
 
-                TextMeshProUGUI nom = NouveauTexteMaquette(a.transform, "Nom",
-                    QuiParle(c), premier ? 11f : 9.5f, TextPrimary);
+                TextMeshProUGUI nom = NouveauTexteMaquette(a.transform, "Nom", QuiParle(c), 10f, Creme);
+                nom.font = DesignTokens.Current.hudSerifFont;
                 nom.alignment = TextAlignmentOptions.Center;
                 TrackText(nom, nom.text);
 
-                TextMeshProUGUI bandes = NouveauTexteMaquette(a.transform, "Bandes",
-                    ExceptionBandes.Ligne(c.severity_band, c.priority_band), 8f, TextSecondary);
+                TextMeshProUGUI bandes = NouveauTexteMaquette(a.transform, "Bandes", LigneAttendant(c), 6.5f, Creme2);
+                bandes.fontStyle = FontStyles.UpperCase;
+                bandes.characterSpacing = 10f;                  // `letter-spacing:.1em`
                 bandes.alignment = TextAlignmentOptions.Center;
+                bandes.enableWordWrapping = true;
                 TrackText(bandes, bandes.text);
 
-                // screen_a8 : la catégorie de couche conflit, EN TOUTES LETTRES.
-                // ⛔ Le canon la veut « doublée texte » (F2/a11y) — donc pas d'icône seule, et
-                // surtout pas une couleur seule. Rien n'est dessiné quand la catégorie n'est pas
-                // reconnue : une pastille par défaut aurait la même forme qu'une pastille mesurée.
+                // screen_a8 : la catégorie de couche conflit, EN TOUTES LETTRES (inchangé).
                 string cat = CategorieConflit(c);
                 if (cat != null)
                 {
-                    TextMeshProUGUI pastille = NouveauTexteMaquette(a.transform, "Categorie",
-                                                                    cat, 7.5f, TextSecondary);
+                    TextMeshProUGUI pastille = NouveauTexteMaquette(a.transform, "Categorie", cat, 6.5f, Creme2);
                     pastille.alignment = TextAlignmentOptions.Center;
                     TrackText(pastille, pastille.text);
                 }
             }
+
+            int enPlus = Cards.Length - 3;
+            if (enPlus > 0)
+            {
+                // CHROME, non suivi : un compte de cartes, pas un scalaire de simulation (même statut que le sous-titre du
+                // tampon et le compte d'escalades).
+                TextMeshProUGUI plus = NouveauTexteMaquette(fileRoot, "EnPlus", "+" + enPlus, 10f, Creme2);
+                plus.font = DesignTokens.Current.hudSerifFont;
+                plus.alignment = TextAlignmentOptions.Bottom;
+            }
         }
+
+        /// <summary>La couleur du rail d'une gravité — `.rail.g` braise, `.rail.m` or, `.rail.l` cyan ; hors domaine ⇒ la
+        /// teinte neutre, jamais celle de « léger ».</summary>
+        public static Color CouleurRail(string gravite)
+        {
+            switch (ExceptionBandes.RangGravite(gravite))
+            {
+                case 2:  return DesignTokens.Current.hudGaugeArcHot;          // --braise
+                case 1:  return DesignTokens.Current.hudMoneyUnderlineGold;   // --or
+                case 0:  return DesignTokens.Current.hudGaugeArcCold;         // --cyan
+                default: return DesignTokens.Current.onSurfaceSecondary;
+            }
+        }
+
+        /// <summary>« rôle · gravité · priorité » (`.attendant small`). Le rôle vient de la JOINTURE (`archetype` de
+        /// `GET /v1/lieutenants`, mot de `FamilleLabels`) ; sans lui (la ville, ou la jointure pas encore revenue), la
+        /// ligne commence à la gravité — jamais un rôle inventé.</summary>
+        public string LigneAttendant(ExceptionCardDto c)
+        {
+            string role = RoleDe(c);
+            string bandes = ExceptionBandes.Ligne(c.severity_band, c.priority_band);
+            return string.IsNullOrEmpty(role) ? bandes : role + " · " + bandes;
+        }
+
+        private string RoleDe(ExceptionCardDto c)
+        {
+            if (roster == null || !ExceptionBandes.ParleUnLieutenant(c)) return null;
+            foreach (MafiaCleanCity.Operational.Lieutenant.RosterRow r in roster)
+                if (r != null && r.lieutenant_id == c.lieutenant_id && !string.IsNullOrEmpty(r.archetype))
+                    return MafiaCleanCity.Operational.FamilleLabels.Archetype(r.archetype);
+            return null;
+        }
+
+        private MafiaCleanCity.Operational.Lieutenant.RosterRow[] roster;
+
+        /// <summary>La jointure du rôle : `GET /v1/lieutenants`, APRÈS la file, non bloquante (si elle échoue, les rôles
+        /// manquent, l'écran reste lisible) ; puis la file est redessinée.</summary>
+        private IEnumerator ChargerRoster()
+        {
+            MafiaCleanCity.Operational.Lieutenant.RosterRow[] r = null;
+            yield return new MafiaCleanCity.Operational.Lieutenant.LieutenantClient { BaseUrl = baseUrl }
+                .ListLieutenants(Token, rows => r = rows, (code, msg) => { });
+            if (Destroyed || r == null) yield break;
+            roster = r;
+            Render();
+        }
+
+        /// <summary>Test hook — pose le roster sans réseau (même effet que `ChargerRoster` quand il revient).</summary>
+        public void PoserRosterPourTest(MafiaCleanCity.Operational.Lieutenant.RosterRow[] r)
+        {
+            roster = r;
+            Render();
+        }
+
+        private static Color Creme => DesignTokens.Current.hudCreme;
+        private static Color Creme2 => DesignTokens.Current.hudCremeSecondary;
+        private static Color OrVif => DesignTokens.Current.hudMoneyGold;
 
         /// <summary>Le premier de la file PARLE : médaillon + bulle avec son nom, le contexte, les
         /// deux bandes en pastilles, et sa réplique. C'est le cœur de la mise en scène ratifiée —
@@ -733,7 +827,8 @@ $"{QuiParle(c)} · {ExceptionBandes.Ligne(c.severity_band, c.priority_band)}", 8
             hf.spacing = Px(CssFileEcart);
             hf.childControlWidth = true; hf.childControlHeight = true;
             hf.childForceExpandWidth = false; hf.childForceExpandHeight = false;
-            hf.childAlignment = TextAnchor.LowerCenter;
+            hf.childAlignment = TextAnchor.LowerLeft;                   // `.file{align-items:flex-end}`, tassée à gauche
+            hf.padding = new RectOffset(PxI(10f), PxI(10f), 0, 0);      // `.file{padding:0 10px}`
             AddLayoutElement(fileRoot.gameObject, preferredHeight: Px(CssFileHaut));
 
             parleRoot = (RectTransform)NewUI("Parle", comptoirGo.transform).transform;
