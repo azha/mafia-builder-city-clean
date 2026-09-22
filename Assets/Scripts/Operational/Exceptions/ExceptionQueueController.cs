@@ -757,7 +757,8 @@ namespace MafiaCleanCity.Operational.Exceptions
         {
             string tete = Lib("suggéré · appui long — sa main");
             if (autres <= 0) return tete + " ›";
-            return tete + " : " + autres + (autres == 1 ? Lib(" autre issue") : Lib(" autres issues")) + " ›";
+            // l'espace est ICI, pas dans le littéral : une valeur servie ne le porterait pas (le slug le rogne)
+            return tete + " : " + autres + " " + (autres == 1 ? Lib("autre issue") : Lib("autres issues")) + " ›";
         }
 
         private static string LibelleAction(CandidateActionDto a)

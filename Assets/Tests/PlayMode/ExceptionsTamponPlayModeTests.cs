@@ -140,6 +140,14 @@ namespace MafiaCleanCity.Operational.Tests
             Image papier = ecran.TamponAppuiLong.GetComponent<Image>();
             Texture2D tex = papier.sprite.texture;
             Assert.Greater(tex.GetPixel(tex.width / 2, tex.height / 2).a, 0.99f, "papier PLEIN, jamais un contour teint");
+
+            // SERVIE, la clé rend « autres issues » SANS l'espace du littéral (le slug le rogne) : l'espace est dans le code
+            MafiaCleanCity.I18n.I18nCatalog.ChargerPourTest("fr", new System.Collections.Generic.Dictionary<string, string>
+            {
+                { "exceptions.bloc.autres_issues", "autres issues" }, { "exceptions.bloc.autre_issue", "autre issue" },
+            });
+            Assert.AreEqual("suggéré · appui long — sa main : 5 autres issues ›", ExceptionQueueController.SousTitreTampon(5));
+            Assert.AreEqual("suggéré · appui long — sa main : 1 autre issue ›", ExceptionQueueController.SousTitreTampon(1));
         }
     }
 }
