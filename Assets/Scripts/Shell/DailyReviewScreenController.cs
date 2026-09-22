@@ -539,23 +539,31 @@ namespace MafiaCleanCity.Shell
             return dernier.Length == 0 ? "" : char.ToUpperInvariant(dernier[0]) + dernier.Substring(1);
         }
 
-        private static int ReservePastilles(string bucket)
+        // ⛔ LA BANDE DU MILIEU S'APPELLE `standard`, PAS `normal` — lue dans le TYPE du back
+        //    (`convergence.ts:39` : `TrustBudgetBucket = 'low' | 'standard' | 'high'`), confirmée par le
+        //    corps réel `juge-donnees/revue-du-jour/maquette-2026-08-25/mesures/flag-review-standard.json`.
+        //    Ces deux tables attendaient `"normal"` : un lieutenant à trois jetons sur cinq s'affichait
+        //    0 pastille et « RÉSERVE · — », sans rien signaler, comme une bande inconnue.
+        //    Même classe que le badge « NOUVELLE » mort sur `"new"` (`AncienneteChip`) : une valeur
+        //    SUPPOSÉE au lieu d'être lue dans le domaine. « NORMALE » reste le MOT de la maquette ; ce
+        //    qui change, c'est la valeur servie qui l'allume.
+        public static int ReservePastilles(string bucket)
         {
             switch (bucket)
             {
                 case "high": return 3;
-                case "normal": return 2;
+                case "standard": return 2;
                 case "low": return 1;
                 default: return 0;
             }
         }
 
-        private static string ReserveLibelle(string bucket)
+        public static string ReserveLibelle(string bucket)
         {
             switch (bucket)
             {
                 case "high": return "ÉLEVÉE";
-                case "normal": return "NORMALE";
+                case "standard": return "NORMALE";
                 case "low": return "FAIBLE";
                 default: return "—";
             }
