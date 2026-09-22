@@ -338,7 +338,7 @@ namespace MafiaCleanCity.CityMap
             // périmètre JUGE-D1 : ce repli ne couvre plus DAWN/DAY/DUSK (tous rendent un fond héros
             // désormais), seulement un `day_phase` inconnu.
             TextMeshProUGUI label = NewText("FallbackLabel", panel.transform,
-                "Scène indisponible pour ce quart horaire — réessayez plus tard.",
+                "La ville ne se laisse pas voir à cette heure — revenez dans un moment.",
                 16, TextAlignmentOptions.Center);
             Stretch((RectTransform)label.transform, new Vector2(24, 24), new Vector2(-24, -24));
             label.color = DesignTokens.Current.onSurfaceSecondary;
@@ -2345,7 +2345,7 @@ namespace MafiaCleanCity.CityMap
                         StartCoroutine(BlanchirDepuisFiche());
                     break;
                 default:
-                    ficheSortie.text = "Amélioration : à ouvrir depuis la fiche opérationnelle.";
+                    ficheSortie.text = "Améliorer : ça se fait sur la fiche du bâtiment.";
                     break;
             }
         }
@@ -2393,7 +2393,7 @@ namespace MafiaCleanCity.CityMap
                 if (ficheSortie != null)
                     ficheSortie.text = dealersStatus == 401
                         ? "Collecte indisponible : la session a expiré."
-                        : "Collecte indisponible : aucun vendeur affecté.";
+                        : "Rien à ramasser : personne ne tient ce point de vente.";
                 collecteEnCours = false;
                 yield break;
             }
