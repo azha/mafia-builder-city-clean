@@ -5,16 +5,10 @@ using UnityEngine.Networking;
 
 namespace MafiaCleanCity.CitySim.Inspection
 {
-    // ⑮ — les 2 routes joueur d'`inspection.controller.ts`, toutes deux sous `JwtAuthGuard`
-    // (mesuré 2026-09-02). `inspection-test.controller.ts` n'est pas câblé : c'est un seam.
-    //
-    // ⛔ S12-a — LE BACK EST SCOPÉ DISTRICT, PAS JOUEUR. Il n'existe AUCUNE route qui rende la
-    // file de tous les districts : le canon en veut un agrégat, le back en sert un par district.
-    // Un écran qui promettrait « votre file » ferait donc 18 appels, ou mentirait. Celui-ci
-    // interroge UN district et le dit dans son titre — *mieux vaut un écran honnête sur un
-    // district qu'un agrégat qu'aucune route ne peut fournir.*
-    //
-    // ⚠️ S12-d — `inspection` rend 404 sur compte neuf. Traité comme un état, pas comme une panne.
+    // Les 2 routes joueur d'`inspection.controller.ts` (sous `JwtAuthGuard`) + la route publique des
+    // noms de districts. ⛔ LA LECTURE EST SCOPÉE DISTRICT : `GET /v1/city/district/:id/inspection` rend
+    // UN district, et aucune route ne rend les 18 — le registre de la maquette #32 coûte 18 appels
+    // (juge de données du 07/09, lot L2 côté back : « l'agrégat est à une projection de distance »).
     public class InspectionClient
     {
         public string BaseUrl = "http://localhost";
@@ -23,9 +17,8 @@ namespace MafiaCleanCity.CitySim.Inspection
         private string Url(string leaf) => $"{BaseUrl.TrimEnd('/')}/v1/{leaf}";
 
         /// <summary>GET /v1/city/district/:id/inspection — la file d'UN district.
-        /// ⚠️ L'identifiant est un ENTIER (`IntParam` côté back), pas un uuid : passer un uuid
-        /// de joueur ici produit un 400. Les deux identifiants du domaine n'ont pas la même
-        /// forme et le mélange est un défaut déjà relevé par le juge de données (D3).</summary>
+        /// 404 = « pas de file » : sur un compte qui n'a jamais vécu le tick de dispatch (12 h), c'est
+        /// l'état NORMAL des 18 districts à la fois (S12-d), pas une panne.</summary>
         public IEnumerator LireFile(int districtId, string bearer,
             Action<FileData> onOk, Action<long, string> onErr)
         {
@@ -47,20 +40,40 @@ namespace MafiaCleanCity.CitySim.Inspection
             }
         }
 
+        /// <summary>GET /v1/world/districts — les 18 noms de fiction (« Les Bassins » … « Pont-Gris »),
+        /// route publique, servie 200 × 18 lignes × 9 clés (mesuré 2026-09-22). Le registre nomme les
+        /// districts par ce nom, jamais par le slug `district-1` de la file (défaut D5 du juge).</summary>
+        public IEnumerator LireDistricts(string bearer,
+            Action<DistrictNomDto[]> onOk, Action<long, string> onErr)
+        {
+            using (UnityWebRequest req = UnityWebRequest.Get(Url("world/districts")))
+            {
+                req.timeout = TimeoutSeconds;
+                if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
+                yield return req.SendWebRequest();
+                if (req.result != UnityWebRequest.Result.Success)
+                {
+                    onErr?.Invoke(req.responseCode, req.error ?? "network error");
+                    yield break;
+                }
+                DistrictsNomsData dto = null;
+                try { dto = JsonUtility.FromJson<DistrictsNomsEnvelope>(req.downloadHandler.text)?.payload?.data; }
+                catch (Exception ex) { onErr?.Invoke(req.responseCode, "parse error: " + ex.Message); yield break; }
+                if (dto == null || dto.districts == null) { onErr?.Invoke(req.responseCode, "corps sans `payload.data.districts`"); yield break; }
+                onOk?.Invoke(dto.districts);
+            }
+        }
+
         /// <summary>POST /v1/city/inspection/report — corps `{ building_id, entry_type }`.
-        ///
-        /// ★★ LE RETOUR DE BÂTON N'EST PAS UNE ROUTE : c'est `backlash_triggered` dans CETTE
-        /// réponse (S12-b). Un écran qui chercherait un endpoint « backlash » n'en trouverait
-        /// aucun et conclurait que le mécanisme n'existe pas. Il existe — il est un EFFET du
-        /// dépôt de rapport, visible une seule fois, au moment où on le déclenche. C'est donc le
-        /// seul instant où l'écran peut le montrer, et le rater c'est le perdre.
-        ///
-        /// ⚠️ `building_id` est un ENTIER, `entry_type` vaut FALSE_REPORT ou GENUINE_REPORT — les
-        /// deux seules valeurs servies.</summary>
-        public IEnumerator Deposer(int buildingId, string typeEntree, string bearer,
+        /// `building_id` est l'UUID d'un bâtiment POSSÉDÉ (contrôle d'appartenance côté back,
+        /// `inspection.controller.ts:154-160`) — la forme entière est un proxy hérité. Réponse 201 :
+        /// `{ report_id, entry_type, cost_resolved, backlash_triggered }`, 4 clés mesurées.
+        /// ★ `backlash_triggered` est un FRONT : vrai une seule fois, au dépôt qui fait basculer la
+        /// police, jamais relisible par une route. Le rater, c'est le perdre (S12-b).</summary>
+        public IEnumerator Deposer(string buildingId, string typeEntree, string bearer,
             Action<RapportData> onOk, Action<long, string> onErr)
         {
-            string corps = "{\"building_id\":" + buildingId + ",\"entry_type\":\"" + typeEntree + "\"}";
+            string corps = "{\"building_id\":\"" + Echapper(buildingId) + "\",\"entry_type\":\"" + Echapper(typeEntree) + "\"}";
             using (UnityWebRequest req = UnityWebRequest.Post(Url("city/inspection/report"), corps, "application/json"))
             {
                 req.timeout = TimeoutSeconds;
@@ -78,5 +91,8 @@ namespace MafiaCleanCity.CitySim.Inspection
                 onOk?.Invoke(dto);
             }
         }
+
+        private static string Echapper(string s) =>
+            (s ?? string.Empty).Replace("\\", "\\\\").Replace("\"", "\\\"");
     }
 }

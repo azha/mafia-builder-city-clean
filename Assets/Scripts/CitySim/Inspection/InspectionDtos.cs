@@ -68,4 +68,21 @@ namespace MafiaCleanCity.CitySim.Inspection
     }
     [Serializable] public class RapportEnvelope { public RapportPayload payload; }
     [Serializable] public class RapportPayload { public RapportData data; }
+
+    // ── GET /v1/world/districts — les 18 NOMS ───────────────────────────────────────────────────
+    // Le DTO complet (9 clés) vit dans `CityMap` (`DistrictDto`, `WorldDtos.cs:18`), une assembly que
+    // `CitySim` ne référence pas — et une référence d'asmdef ajoutée serait invisible au typecheck
+    // hors porte (il lit les .csproj générés). On ne déclare ici que ce que le registre lit, comme
+    // ㉝ l'a fait (`DemolitionDtos.cs:167`). Corps réel : 200, 18 lignes, 9 clés, 2026-09-22.
+    [Serializable]
+    public class DistrictNomDto
+    {
+        public int id;
+        public string name;                // fiction française (« Les Bassins ») ; peut être vide sur un monde ancien
+        public string name_canonical;      // repli (« Tidewater-1 »)
+    }
+
+    [Serializable] public class DistrictsNomsData { public DistrictNomDto[] districts; }
+    [Serializable] public class DistrictsNomsPayload { public DistrictsNomsData data; }
+    [Serializable] public class DistrictsNomsEnvelope { public DistrictsNomsPayload payload; }
 }
