@@ -54,3 +54,7 @@ dépliait.
 Falsifiables (EcranFile, `ExceptionsMainAtteignablePlayModeTests`) : chaque issue servie d'une carte part depuis ⑩, comptée sur les
 requêtes émises par la couture de résolution (R19, R19bis) ; sur une carte sans issue ESCALATE, la carte « Escalader » envoie ESCALATE
 avec l'id suggéré (R19bis) ; ni bouton « Escalate », ni « Retour » sous shell (R19ter).
+
+**Plus de planche « après tampon » pour ⑩ (2026-09-23)** : ⑩ se refermant sur la résolution, l'ancienne
+`screen_5a_detail_apres-tampon_sous_chrome_1080x2400.png` est retirée ; l'après se juge sur ⑨
+(`screen_5_file_apres-resolution_sous_chrome_1080x2400.png`, voir mandat-⑨). La planche de ⑩ reste `screen_5a_detail_main-de-cartes_…`.

@@ -52,3 +52,10 @@ La maquette ratifiée ne dessine pas ces états ; le client y a pris une décisi
 | **l'après ne dure qu'un rechargement** | ⑨-6c | la tranchée reste en place jusqu'au rechargement SUIVANT celui de la résolution (retour de ⑩, nouvelle résolution) ; une carte que le serveur sert encore n'est jamais « partie » | l'après dit ce qui vient d'arriver ; le serveur fait foi | — (comportement, pas de pixel) |
 | **la phrase vide dans la plaque, pas dans la ligne** | ⑨-6a `4849066e` | à 0 carte : ni ligne du soir, ni file, ni bulle, ni tampon ; trois grands tabourets et la plaque « Ce soir, au Verge d’Or » / « … — la routine tient » | cadre 16 : pas de `.ligne-soir` | — (dessiné par la maquette ; noté pour la bascule) |
 | **le compte des escalades en chiffres, un seul ressort** | ⑨-6b `b3b7b85d` | `.n-or` en chiffres (non suivi R2.2) ; les deux `margin-left:auto` de la CSS remplacés par UN ressort devant la légende | un seul ressort en `HorizontalLayoutGroup` | la légende et le compte collés à droite, contre la flèche : l'écart à la maquette se voit-il ? |
+
+**Planche de l'après, sous chrome (2026-09-23, CLIENT UNITY, au merge de b909fbae)** : `Assets/Screenshots/screen_5_file_apres-resolution_sous_chrome_1080x2400.png`,
+produite par `VuePrincipaleCapturePlayModeTests.Capture_Detail_ApresTampon_SousChrome_MUTE` — le MÊME geste qu'avant (une résolution
+réelle de `exc_demo_one_time`, une seule, sur le compte de capture), mais photographié sur ⑨ (cadre 17 : la tranchée, son cachet),
+puisque ⑩ se referme sur la résolution (c1e6752c). Remplace `screen_5a_detail_apres-tampon_…` (retiré) : un nom qui annonçait ⑩ en
+montrant ⑨. La garde de la planche : `ApresPresent` et `ApresCachet` non vide avant la capture, racine cherchée SOUS le shell.
+Première production due à l'étape 8 (avec la paire).

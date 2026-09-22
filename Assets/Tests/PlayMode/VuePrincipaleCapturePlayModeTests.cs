@@ -1473,12 +1473,24 @@ namespace MafiaCleanCity.Capture.Tests
             Assert.IsNotEmpty(detail.LastOutcome,
                 "le back doit rendre un `outcome` — c'est TOUT l'objet de cette capture");
             Debug.Log($"[APRES-TAMPON] outcome = {detail.LastOutcome}");
-            for (int i = 0; i < 45; i++) yield return null;
 
-            LisibiliteDuTexte(detail.gameObject);
+            // ⛔ ⑩ SE REFERME APRÈS UNE RÉSOLUTION RÉUSSIE (CLIENT-2 c1e6752c, ⑩-1) : l'hôte du détail est détruit et l'APRÈS
+            //    s'affiche sur ⑨ (cadre 17 — la carte tranchée garde sa place le temps du rechargement, avec son cachet).
+            //    Photographier `detail.gameObject` photographierait un objet détruit. Le GESTE ne change pas (même carte, une
+            //    seule résolution, même compte) ; ce qui est photographié change, rendu nécessaire par le comportement, et le
+            //    nom du PNG suit son sujet (mandats ⑨ et ⑩, 23/09) — un nom qui annoncerait ⑩ en montrant ⑨ mentirait au juge.
+            float ta = Time.realtimeSinceStartup;
+            while ((!file.QueueLoaded || !file.ApresPresent) && Time.realtimeSinceStartup - ta < 30f) yield return null;
+            Assert.IsTrue(file.ApresPresent, "⑨ doit montrer l'APRÈS de la carte tranchée (cadre 17) — sinon la planche est vide de son sujet");
+            Assert.IsFalse(string.IsNullOrEmpty(file.ApresCachet), "l'après porte son cachet — c'est ce que la planche montre");
+            for (int i = 0; i < 30; i++) yield return null;   // laisser le rendu de l'après se poser
+
+            GameObject racineFile = RacineSous(shell.ShellCanvas.transform, "ExceptionQueueRoot");   // TD-576 (ii)
+            Assert.IsNotNull(racineFile, "⑨ n'a construit aucune racine sous le chrome");
+            LisibiliteDuTexte(racineFile);
 
             yield return CapturerA(1080, 2400,
-                "Assets/Screenshots/screen_5a_detail_apres-tampon_sous_chrome_1080x2400.png");
+                "Assets/Screenshots/screen_5_file_apres-resolution_sous_chrome_1080x2400.png");
         }
 
         [UnityTest]
