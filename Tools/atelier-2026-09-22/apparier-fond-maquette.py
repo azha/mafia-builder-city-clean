@@ -29,9 +29,12 @@ from PIL import Image
 
 def fond_embarque(page, classe):
     s = open(page, encoding='utf-8').read()
-    m = re.search(r'\.scene\.' + re.escape(classe) + r'\s*\{\s*background-image:\s*url\(data:image/\w+;base64,([A-Za-z0-9+/=]+)\)', s)
+    # `classe` seule ⇒ `.scene.<classe>` (séries 4 et 6) ; un sélecteur complet commençant par « . » est pris tel quel
+    # (série 1 : `.fond-ville`, posé dans un <style> en FIN de page — ajouté le 2026-09-23).
+    sel = classe if classe.startswith('.') else '.scene.' + classe
+    m = re.search(re.escape(sel) + r'\s*\{\s*background-image:\s*url\(data:image/\w+;base64,([A-Za-z0-9+/=]+)\)', s)
     if not m:
-        sys.exit(f'FAUTE : aucune règle `.scene.{classe}` à fond embarqué dans {page}')
+        sys.exit(f'FAUTE : aucune règle `{sel}` à fond embarqué dans {page}')
     data = base64.b64decode(m.group(1))
     return Image.open(io.BytesIO(data)).convert('RGB'), len(data)
 
@@ -67,7 +70,7 @@ def main():
     page, classe, nuit, *cands = sys.argv[1:]
     ref, octets = fond_embarque(page, classe)
     ref_l = np.asarray(ref.convert('L'), dtype=np.float32)
-    print(f'fond `.scene.{classe}` de {page} : {ref.size[0]}x{ref.size[1]}, {octets} octets')
+    print(f'fond `{classe if classe.startswith(".") else ".scene." + classe}` de {page} : {ref.size[0]}x{ref.size[1]}, {octets} octets')
     print(f'contrôle POSITIF (le fond contre lui-même) : {float(np.abs(ref_l - ref_l).mean()):.2f}/255')
     resultats = []
     for c in cands:
