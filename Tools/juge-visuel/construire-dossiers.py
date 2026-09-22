@@ -315,6 +315,12 @@ def main(argv):
               "**déduite** (par le titre du cadre), **aucune** (pas de maquette de série 4/6 — une ligne est une ligne, pas une absence)." % sha, "",
               "`corps` = `<dossier>/corps-reels/` (§DA-4, `capturer-corps-reels.py`) : réponses RÉELLES des routes du dossier de code du contrôleur sur la pile dev, "
               "compte de démo — « a/s/m/e » = appelées (2xx) / sans instance sur ce compte / mutations non appelées / erreurs HTTP réelles du back (404, 409, 403 : des faits, pas des trous).", "",
+              # ⚠️ paragraphe écrit À LA MAIN dans l'INDEX le 2026-09-06 (b7e8ea18) et PERDU à chaque régénération tant qu'il ne vivait
+              #    pas ici — porté dans le générateur le 2026-09-22 (même classe que les cellules `nominal_note` / `extras` de la TABLE).
+              "⚠️ Ces corps ont été pris sur un back **daté** — la provenance voyage avec chaque fichier (`back_main`, image, date, compte). "
+              "Ne pas se demander « sont-ils à jour ? » de mémoire : `python3 verifier-fraicheur-corps.py` compare le SHA que les corps déclarent "
+              "à `main` du back aujourd'hui, et ne signale que les corps dont une source touchée peut changer la réponse. Il ne rejoue rien "
+              "(la pile dev est requise pour ça, donc jamais pendant un gate).", "",
               "| sym | écran (front.md) | contrôleur | dossier | cadres | référence | planche en jeu | état front.md | confiance | corps |",
               "|---|---|---|---|---|---|---|---|---|---|"]
     for r in TABLE + HORS_APPSHELL:

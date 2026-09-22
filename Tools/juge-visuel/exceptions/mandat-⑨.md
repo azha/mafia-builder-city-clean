@@ -18,7 +18,7 @@
 | `exceptions/reference-⑨-1080x2102.png` | cadre nominal `ecrans-brennar-4.html` #14 rendu | 1080×2102 | ×3.6 | 300 CSS = 1080 px |
 | `exceptions/ecran-canon-vide.png` | canon existant (900×1752, ×3) | — | ×3 | 300 CSS = 900 px |
 | `exceptions/ecran-canon.png` | canon existant (900×1752, ×3) | — | ×3 | 300 CSS = 900 px |
-- **Cadres de la maquette** : `ecrans-brennar-4.html` 14, 16, 17, 18 · `ecrans-brennar-6.html` 9, 11, 12, 13 — atelier `20d006d`. Cadres d'ÉTATS : les autres numéros du groupe.
+- **Cadres de la maquette** : `ecrans-brennar-4.html` 14, 16, 17, 18 · `ecrans-brennar-6.html` 9, 11, 12, 13 — atelier `0ccd8d5`. Cadres d'ÉTATS : les autres numéros du groupe.
 - **Attribution cadre ↔ écran** : mesurée. le contrôleur cite série 4 cadre 14, ratifié (« ok c'est bien », 2026-08-26)
 - ⚠️ La référence fait **1080×2102** (le `.tel` de l'atelier est en 9:17,5) ; la capture fait 1080×2400
   (9:20). On aligne par PARTIES, en % de la largeur — pas par le pixel absolu.

@@ -231,4 +231,5 @@ un écran qui listerait les options sans en-tête perdrait l'avertissement.
   valeurs à réaligner, après mesure de leurs autres lecteurs) ; §3.5 et §3.6 (les clés d'écran, au lot i18n de ⑨).
 - **À l'user** : « légère », « à surveiller », « sans urgence », « il le croit », « il hésite », et le choix « descente » plutôt que « raid ».
   L'anneau `.medl.don` sur le premier de la file (même question que ⑯).
-- **Re-rendu des références ⑨/⑩** (bustes corrigés, `18432fd`) : au signal de l'orchestrateur.
+- ✅ **Références ⑨/⑩ re-rendues** au signal (atelier `0ccd8d5` : bustes à la capuche, anneau du Don retiré) : `reference-⑨`, `reference-⑩`,
+  `v4-14`, `v4-15`, `v4-17`, `v4-18` (`v4-16` inchangé au pixel, non recommité). L'anneau n'est plus un arbitrage : c'est la marque du Don seul.

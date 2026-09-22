@@ -15,9 +15,9 @@
 > - **Client (⑯-5)** : `ui_element_buste_lieutenant` pour tout lieutenant, **sans art neuf**. Le manque chiffré au §4 tombe à zéro.
 > - **Maquette corrigée** : atelier `8509195`. Les neuf billets de v4-0, v4-2 et v4-3 passent à `#buste-lieutenant`, et la note de
 >   scène de v4-3 (« le buste suit `archetype` ») est réécrite en citant la décision.
-> - ⏸ **Re-rendu de la référence de ⑯** (`revue-du-jour/v4-*.png`, `reference-1080x2102.png`) : **après le signal de
->   l'orchestrateur** (porte Unity et CPU pris par le gate client).
-> - ⚠️ **Reste à arbitrer, non touché** : la classe `.medl.don` (`ecrans-brennar-4.html:44`, bordure `--or-vif`) est l'anneau que la
+> - ✅ **Référence de ⑯ re-rendue** au signal de l'orchestrateur (atelier `0ccd8d5`) : `reference-1080x2102.png`, `v4-0`, `v4-2`, `v4-3`
+>   (`v4-1` inchangé : écart d'anticrénelage seul, restauré) — `rendre-references-serie4-2026-09-22.py`.
+> - ✅ **Tranché** (orchestrateur, 22/09) : l'anneau est la marque du Don seul — retiré (atelier `0ccd8d5`). *Note d'origine :* la classe `.medl.don` (`ecrans-brennar-4.html:44`, bordure `--or-vif`) est l'anneau que la
 >   décision du 02/09 réserve au Don. Elle est posée sur le **premier billet** de v4-0, v4-2 et v4-3 (Lt. Hara), et sur ⑨/⑩ (cadres 14,
 >   15, 17, 18). Si l'anneau est la marque du Don, un lieutenant ne le porte pas. S'il signifie autre chose sur ⑯, comme « celui qui
 >   parle en premier », c'est un second sens pour la même forme.
