@@ -792,7 +792,7 @@ namespace MafiaCleanCity.Operational
                 // Unlocked-vehicles row — the categorical vehicle modes the hub unlocks (FOOT always; +BIKE/CAR on an
                 // operational hub). A worded list (never speeds; R2.2). The "[~]" glyph reads as "fleet/modes available".
                 VehiclesShown = true;
-                AddStatusRow("Vehicles", AvailableVehiclesLabel(card.available_vehicles), "[~]", AccentMild);
+                AddStatusRow("Véhicules", AvailableVehiclesLabel(card.available_vehicles), "[~]", AccentMild);
             }
 
             // ----- Phase-5 vector #5a (money_holding clean-cash vault) surface — ONLY for a money_holding. The tier row reads
@@ -821,21 +821,21 @@ namespace MafiaCleanCity.Operational
                 if (!string.IsNullOrEmpty(card.held_band))
                 {
                     HeldBandShown = true;
-                    AddStatusRow("Held", HeldLabel(card.held_band), HeldGlyph(card.held_band), HeldAccent(card.held_band));
+                    AddStatusRow("En dépôt", HeldLabel(card.held_band), HeldGlyph(card.held_band), HeldAccent(card.held_band));
                 }
                 // Capacity-fill band row — how full the vault is (OPEN / BUSY / FULL — never the raw held/cap). FULL telegraphs
                 // that a further deposit is refused (409 OVER_CAPACITY) — upgrade the tier or withdraw to make room.
                 if (!string.IsNullOrEmpty(card.capacity_band) && card.capacity_band != "NONE")
                 {
                     CapacityBandShown = true;
-                    AddStatusRow("Capacity", CapacityLabel(card.capacity_band),
+                    AddStatusRow("Capacité", CapacityLabel(card.capacity_band),
                         CapacityGlyph(card.capacity_band), CapacityAccent(card.capacity_band));
                 }
                 // Yield band row — IDLE (nothing held) / EARNING (the passive yield accrues each tick; never the raw rate).
                 if (!string.IsNullOrEmpty(card.yield_band) && card.yield_band != "NONE")
                 {
                     YieldBandShown = true;
-                    AddStatusRow("Yield", YieldLabel(card.yield_band), YieldGlyph(card.yield_band), YieldAccent(card.yield_band));
+                    AddStatusRow("Rendement", YieldLabel(card.yield_band), YieldGlyph(card.yield_band), YieldAccent(card.yield_band));
                 }
                 // Forfeiture WARNING alert — telegraphed so the player can react BEFORE the seizure. PENDING (the audit is armed,
                 // the deadline is comfortably ahead) / IMMINENT (the deadline is near/at — react NOW). A distinct warning glyph
@@ -845,9 +845,9 @@ namespace MafiaCleanCity.Operational
                     ForfeitureWarningShown = true;
                     bool imminent = card.forfeiture_band == "IMMINENT";
                     string warn = imminent
-                        ? "Under audit (imminent) — withdraw or diversify NOW"
-                        : "Under audit (pending) — withdraw or diversify to react";
-                    AddStatusRow("Forfeiture", warn, imminent ? "[!!]" : "[!]",
+                        ? "Audit imminent — retirez ou répartissez maintenant"
+                        : "Audit en vue — retirez ou répartissez pour réagir";
+                    AddStatusRow("Saisie", warn, imminent ? "[!!]" : "[!]",
                         imminent ? AccentSevere : AccentModerate);
                 }
             }
@@ -1635,8 +1635,8 @@ namespace MafiaCleanCity.Operational
         {
             switch (b)
             {
-                case "IDLE": return Cle("yield", "Idle");
-                case "EARNING": return Cle("yield", "Earning");
+                case "IDLE": return Bande("yield", "IDLE", "rien ne rentre");
+                case "EARNING": return Bande("yield", "EARNING", "ça rapporte");
                 default: return b;
             }
         }

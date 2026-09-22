@@ -278,6 +278,11 @@ SOURCE = [
  (L, "Float collected", 0, "⑪ RunAction (:186)"),
  (L, "Collect unavailable", 0, "⑪ RunAction (:186)"),
  (B, "Caisse confiée à la planque", 0, "① (:2408) — le même geste que ㉟ dit autrement ; aligné sur « La caisse a rejoint votre planque. » (atelier d1)"),
+ (L, "Vehicles", 1, "② ligne (:795) fermée ; reste DistributionClient.cs:123, hors ② (voir le corps du commit)"),
+ (L, "Capacity", 0, "② ligne (:831)"),
+ (L, "Forfeiture", 0, "② ligne (:850)"),
+ (L, "Under audit", 0, "② avertissements (:848, :849)"),
+ (L, "withdraw or diversify", 0, "② avertissements (:848, :849)"),
 ]
 
 

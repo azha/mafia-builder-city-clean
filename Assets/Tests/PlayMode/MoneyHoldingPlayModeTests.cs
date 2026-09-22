@@ -145,14 +145,14 @@ namespace MafiaCleanCity.Operational.Tests
             var texts = controller.RenderedTexts;
             Assert.IsTrue(texts.Any(t => t == "Holding tier"), "holding-tier row label rendered");
             Assert.IsTrue(texts.Any(t => t == "Moyen"), "holding-tier band value 'Medium' rendered");
-            Assert.IsTrue(texts.Any(t => t == "Held"), "held row label rendered");
+            Assert.IsTrue(texts.Any(t => t == "En dépôt"), "held row label rendered");
             Assert.IsTrue(texts.Any(t => t == "Moderate"), "held band value 'Moderate' rendered");
-            Assert.IsTrue(texts.Any(t => t == "Capacity"), "capacity row label rendered");
+            Assert.IsTrue(texts.Any(t => t == "Capacité"), "capacity row label rendered");
             Assert.IsTrue(texts.Any(t => t == "Occupée"), "capacity band value 'Busy' rendered");
-            Assert.IsTrue(texts.Any(t => t == "Yield"), "yield row label rendered");
-            Assert.IsTrue(texts.Any(t => t == "Earning"), "yield band value 'Earning' rendered");
+            Assert.IsTrue(texts.Any(t => t == "Rendement"), "yield row label rendered");
+            Assert.IsTrue(texts.Any(t => t == "ça rapporte"), "yield band value 'Earning' rendered");
             // The forfeiture warning telegraphs the audit so the player can react (withdraw or diversify).
-            Assert.IsTrue(texts.Any(t => t.Contains("under audit") || t.Contains("Under audit")),
+            Assert.IsTrue(texts.Any(t => t.StartsWith("Audit ")),
                 "the forfeiture warning telegraphs the audit");
             Assert.IsTrue(texts.Any(t => t.Contains("withdraw or diversify")),
                 "the forfeiture warning tells the player how to react");
