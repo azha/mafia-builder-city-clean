@@ -234,7 +234,7 @@ namespace MafiaCleanCity.Shell
             commitGo.AddComponent<Image>().color = DesignTokens.Current.accentGold;
             CommitButton = commitGo.AddComponent<LongPressButton>();
             CommitButton.OnLongPressCompleted += () => StartCoroutine(RequestCommit());
-            TextMeshProUGUI commitLabel = NewChildText(commitGo.transform, "Commit (hold)", 15);
+            TextMeshProUGUI commitLabel = NewChildText(commitGo.transform, "Tamponner — appui long", 15);
             commitLabel.color = DesignTokens.Current.surfaceBase;
 
             GameObject skipGo = new GameObject("SkipButton", typeof(RectTransform));

@@ -90,6 +90,7 @@ VERDICTS = [
  (L, "Tenure forfeited", 0, "⑥ (:2870)"),
  (L, "Yield bonus lost", 0, "⑥ (:2871)"),
  (L, "NONE", 0, "⑥ libellé du cycleur AND_IF sans condition (:3405) — la valeur interne « NONE » reste (logique :3410/:3411/:3470/:3476)"),
+ (L, "Commit (hold)", 0, "⑤ bouton (:237)"),
  (N, "Aucune route connue pour l'instant",      0, "CLOS lot C 22/09 (㉘ la distribution) — était : « route » = endpoint, alors que l'écran voisin dit « CETTE ROUTE » pour un itinéraire"),
  (B, "aucune route n'existe encore",            0, "CLOS lot C 22/09 (⑰ le commissariat) — était : « route »"),
  (B, "la route voisine vise les affaires",      0, "CLOS lot C 22/09 (⑰ le commissariat) — était : « route voisine »"),
