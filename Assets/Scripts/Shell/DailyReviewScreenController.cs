@@ -77,7 +77,7 @@ namespace MafiaCleanCity.Shell
         private sealed class BilletVue
         {
             public CanvasGroup Bulle;
-            public Image Jeton;
+            public Image Jeton, Buste;
             public TextMeshProUGUI Coche, Verbe, Sous;
             public Button Rendre;
             public LongPressButton Garder;
@@ -390,14 +390,59 @@ namespace MafiaCleanCity.Shell
             hlg.childAlignment = TextAnchor.LowerLeft;
 
             // ── le buste ─────────────────────────────────────────────────────────────────────
+            // ⑯-5 — `.medl` + `.billet .medl` : un CARRÉ ARRONDI de 40 (rayon 14), pas un disque ;
+            // face = `radial-gradient(circle at 38% 30%, #243048, #0f1622 66%)` (les jetons
+            // `lieutenantMedallionInner/Outer`) + rayons `rgba(255,255,255,.05)` ; bord 1px laiton ;
+            // `overflow:hidden` ; le buste REPOSE sur le bord bas (`align-items:flex-end`), boîte 74 %.
+            // Avant : un disque procédural SANS buste (le juge r1 l'avait vu sur une capture auxiliaire :
+            // « une rosace dorée sans silhouette ») — et ses rayons en LAITON plein au lieu du blanc à .05.
+            // Le buste : `ui_element_buste_lieutenant` pour TOUT lieutenant, comme ⑥ et ① (arbitrage de
+            // l'orchestrateur, recommandé par l'atelier `09-…`, d2bf698b) : le Don garde sa silhouette, et
+            // une même personne a la même tête sur les trois écrans. Géométrie identique à la maquette
+            // (empreintes des chemins, atelier).
             GameObject medl = new GameObject("Medaillon", typeof(RectTransform));
             medl.transform.SetParent(billet.transform, false);
-            Image medlImg = medl.AddComponent<Image>();
-            medlImg.sprite = ProceduralUI.MedallionFace((int)Px(40f),
+            // le masque arrondi, REMPLI de la couleur de bord du dégradé : les coins du carré, hors du
+            // disque de la face, prennent la teinte où le dégradé radial s'achève (#0f1622 dès 66 %).
+            Image forme = medl.AddComponent<Image>();
+            forme.sprite = ProceduralUI.RoundedRectMask((int)Px(14f));
+            forme.type = Image.Type.Sliced;
+            forme.color = DesignTokens.Current.lieutenantMedallionOuter;
+            Mask coupe = medl.AddComponent<Mask>();
+            coupe.showMaskGraphic = true;
+            Color rayon = Color.white; rayon.a = 0.05f;
+            GameObject face = new GameObject("Face", typeof(RectTransform));
+            face.transform.SetParent(medl.transform, false);
+            Etirer((RectTransform)face.transform, 0f);
+            face.AddComponent<LayoutElement>().ignoreLayout = true;
+            Image faceImg = face.AddComponent<Image>();
+            faceImg.sprite = ProceduralUI.MedallionFace((int)Px(40f),
                 DesignTokens.Current.lieutenantMedallionInner,
                 DesignTokens.Current.lieutenantMedallionOuter,
-                Laiton);
-            medlImg.type = Image.Type.Simple;
+                rayon);
+            faceImg.raycastTarget = false;
+            Image buste = null;
+            Sprite silhouette = Resources.Load<Sprite>(BusteLieutenant);
+            if (silhouette != null)
+            {
+                GameObject bg = new GameObject("Buste", typeof(RectTransform));
+                bg.transform.SetParent(medl.transform, false);
+                bg.AddComponent<LayoutElement>().ignoreLayout = true;
+                RectTransform brt = (RectTransform)bg.transform;
+                brt.anchorMin = brt.anchorMax = new Vector2(0.5f, 0f);
+                brt.pivot = new Vector2(0.5f, 0f);
+                // `.medl svg{width:74%;height:74%}`, bas sur le bord intérieur (1px de bordure). ⚠️ ⑥
+                // emploie 0,688 et 3,6 % : des corrections MESURÉES par un juge sur SON médaillon rond.
+                // Rien ne dit qu'elles valent pour ce carré : la CSS fait foi jusqu'à une mesure sur ⑯.
+                brt.sizeDelta = new Vector2(Px(40f) * 0.74f, Px(40f) * 0.74f);
+                brt.anchoredPosition = new Vector2(0f, Px(1f));
+                buste = bg.AddComponent<Image>();
+                buste.sprite = silhouette;
+                buste.color = Color.white;      // `#cfc4a6` est CUIT dans le PNG : ne pas teinter (⑥)
+                buste.preserveAspect = true;
+                buste.raycastTarget = false;
+            }
+            Filet(medl.transform, "Bord", 0f, Px(14f), Laiton);
             LayoutElement medlLe = medl.AddComponent<LayoutElement>();
             medlLe.preferredWidth = Px(40f);
             medlLe.preferredHeight = Px(40f);
@@ -566,7 +611,7 @@ namespace MafiaCleanCity.Shell
                   DesignTokens.Current.primaryFont, TextAlignmentOptions.Center);
             billets[card.flag_id ?? ""] = new BilletVue
             {
-                Bulle = bulleGroupe, Jeton = jetonImg, Coche = coche, Verbe = verbe, Sous = sous,
+                Bulle = bulleGroupe, Jeton = jetonImg, Buste = buste, Coche = coche, Verbe = verbe, Sous = sous,
                 Rendre = rendre, Garder = garder,
             };
 
@@ -706,6 +751,7 @@ namespace MafiaCleanCity.Shell
         public string BilletVerbe(string flagId) => billets.TryGetValue(flagId, out BilletVue b) ? b.Verbe.text : null;
         public string BilletSous(string flagId) => billets.TryGetValue(flagId, out BilletVue b) ? b.Sous.text : null;
         public string BilletCoche(string flagId) => billets.TryGetValue(flagId, out BilletVue b) ? b.Coche.text : null;
+        public Image BilletBuste(string flagId) => billets.TryGetValue(flagId, out BilletVue b) ? b.Buste : null;
         public bool TamponSigne => lotSigne > 0 && tamponCachet != null && tamponCachet.activeSelf;
         public bool TamponGesteActif => BatchConfirmButton != null && BatchConfirmButton.enabled;
         public Image TamponFond => tamponFond;
@@ -716,6 +762,9 @@ namespace MafiaCleanCity.Shell
         public string DernierePhrase { get; private set; }
 
         private const string PrefixeRoutine = "core_loops.flag_discipline.routine.";
+
+        /// <summary>⑯-5 — le buste de TOUT lieutenant de ⑯, le même que ⑥ et ① (`Resources/Lieutenant/`).</summary>
+        public const string BusteLieutenant = "Lieutenant/ui_element_buste_lieutenant";
 
         /// <summary>⑯-4 — la phrase d'un billet : un TITRE à la première personne, au passé composé (ce
         /// que le lieutenant a FAIT de la routine), et un MOTIF qui dit l'écart à l'habitude, jamais un
