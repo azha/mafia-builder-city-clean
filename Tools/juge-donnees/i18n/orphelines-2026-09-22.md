@@ -79,6 +79,42 @@ Le littéral a changé mais son slug non (`Libelle.Slug` ne garde que lettres et
 | `building.yield.idle` | Idle | Idle | rien ne rentre | BuildingCardController.cs:1638 · `443b4cec` |
 | `building.yield.earning` | Earning | Earning | ça rapporte | BuildingCardController.cs:1639 · `443b4cec` |
 
+## Famille `district.type_batiment` — servie contre DEMANDÉE
+
+**26 clé(s) servie(s)** sous ce préfixe · **13 demandée(s)** par le client (13 site(s), tous à argument littéral) · sites à argument VARIABLE : **aucun** — une clé sans site est donc demandée NULLE PART, pas « peut-être ».
+
+⇒ **14 servie(s) et demandée(s) nulle part** · **1 demandée(s) et non servie(s)**.
+
+| clé | valeur servie (fr) | demandée par | verdict |
+|---|---|---|---|
+| `district.type_batiment.atelier_de_presse` | Atelier de presse | DistrictInteriorScreenController.cs:1735 | demandée |
+| `district.type_batiment.banque` | ∅ | DistrictInteriorScreenController.cs:1733 | ⚠️ DEMANDÉE, NON SERVIE (repli du littéral à l'écran) |
+| `district.type_batiment.bureau` | Bureau | DistrictInteriorScreenController.cs:1734 | demandée |
+| `district.type_batiment.cache` | Cache | DistrictInteriorScreenController.cs:1725 | demandée |
+| `district.type_batiment.cash_safehouse` | Planque à liquide | — | ⛔ SERVIE, DEMANDÉE NULLE PART |
+| `district.type_batiment.coffre` | Coffre | — | ⛔ SERVIE, DEMANDÉE NULLE PART |
+| `district.type_batiment.commerce_ecran` | Commerce-écran | DistrictInteriorScreenController.cs:1726 | demandée |
+| `district.type_batiment.dealer_spot_front` | Façade de point de vente | — | ⛔ SERVIE, DEMANDÉE NULLE PART |
+| `district.type_batiment.distribution_hub` | Plateforme de distribution | — | ⛔ SERVIE, DEMANDÉE NULLE PART |
+| `district.type_batiment.front_shop` | Boutique-écran | — | ⛔ SERVIE, DEMANDÉE NULLE PART |
+| `district.type_batiment.grow_house` | Serre | — | ⛔ SERVIE, DEMANDÉE NULLE PART |
+| `district.type_batiment.lab` | Labo | — | ⛔ SERVIE, DEMANDÉE NULLE PART |
+| `district.type_batiment.laboratoire` | Laboratoire | DistrictInteriorScreenController.cs:1724 | demandée |
+| `district.type_batiment.laboratoire_specialise` | Laboratoire spécialisé | DistrictInteriorScreenController.cs:1729 | demandée |
+| `district.type_batiment.money_holding` | Dépôt d'argent | — | ⛔ SERVIE, DEMANDÉE NULLE PART |
+| `district.type_batiment.office` | Bureau | — | ⛔ SERVIE, DEMANDÉE NULLE PART |
+| `district.type_batiment.planque` | Planque | DistrictInteriorScreenController.cs:1727 | demandée |
+| `district.type_batiment.point_de_vente` | Point de vente | DistrictInteriorScreenController.cs:1728 | demandée |
+| `district.type_batiment.press_house` | Imprimerie | — | ⛔ SERVIE, DEMANDÉE NULLE PART |
+| `district.type_batiment.raffinerie` | Raffinerie | DistrictInteriorScreenController.cs:1730 | demandée |
+| `district.type_batiment.refinery` | Raffinerie | — | ⛔ SERVIE, DEMANDÉE NULLE PART |
+| `district.type_batiment.relais` | Relais | DistrictInteriorScreenController.cs:1732 | demandée |
+| `district.type_batiment.serre` | Serre | DistrictInteriorScreenController.cs:1731 | demandée |
+| `district.type_batiment.specialized_lab` | Labo spécialisé | — | ⛔ SERVIE, DEMANDÉE NULLE PART |
+| `district.type_batiment.stash` | Réserve | — | ⛔ SERVIE, DEMANDÉE NULLE PART |
+| `district.type_batiment.terrain_vague` | Terrain vague | DistrictInteriorScreenController.cs:1736 | demandée |
+| `district.type_batiment.vacant_lot` | Terrain vague | — | ⛔ SERVIE, DEMANDÉE NULLE PART |
+
 ## Ce que la table ne contient pas
 - Les littéraux réécrits dont l'ancienne clé n'était PAS servie : aucune orpheline (leur nouvelle clé manque aussi, mais l'ancienne manquait déjà ; une clé jamais servie ne se voit pas dans le bundle).
 - Les phrases composées (`Or(…)` au milieu, ㊲ :558/:572) : pas un littéral, pas une clé.

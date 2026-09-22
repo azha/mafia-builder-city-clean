@@ -98,6 +98,27 @@ def par_valeur(texte, fichier):
     for dom, role, val, repli in PARVALEUR.findall(texte): out[f'{dom}.{role}.{slug(val)}'] = dechappe(repli)
     return out
 
+# ⛔ FAMILLE — « cette clé, qui la DEMANDE ? ». Une clé servie que plus personne ne demande ne se voit pas dans un bundle : elle
+#    ressemble trait pour trait à une clé vivante. Demandé par f7 le 2026-09-22 sur `district.type_batiment.*`, où le back porte
+#    DEUX familles (slug français et slug anglais) dont il n'émet aucune. On compte les SITES du couple (domaine, rôle) dans
+#    `Assets`, littéraux ET à argument variable : un site à argument variable pourrait demander n'importe quelle clé de la famille,
+#    donc sa présence interdit de conclure « demandée nulle part ».
+def sites_de_famille(domaine, role, racine=None):
+    # racine ABSOLUE (même défaut que `git()` : le répertoire courant n'a rien à voir avec le dépôt).
+    racine = racine or pathlib.Path(__file__).resolve().parents[3] / 'Assets'
+    tous = re.compile(r'Libelle\.(?:De|CleDe|ParValeur)\(\s*"' + domaine + r'"\s*,\s*"' + role + r'"\s*,')
+    litt = re.compile(r'Libelle\.(?:De|CleDe|ParValeur)\(\s*"' + domaine + r'"\s*,\s*"' + role + r'"\s*,\s*"((?:[^"\\]|\\.)*)"')
+    demandes, variables = {}, []
+    for f in sorted(racine.rglob('*.cs')):
+        t = sans_commentaires(f.read_text(encoding='utf-8', errors='replace'))
+        for m in litt.finditer(t):
+            cle = f'{domaine}.{role}.{slug(dechappe(m.group(1)))}'
+            demandes.setdefault(cle, []).append(f"{f.name}:{t.count(chr(10), 0, m.start()) + 1}")
+        n = len(tous.findall(t)) - len(litt.findall(t))
+        if n > 0: variables.append(f"{f.name} ({n})")
+    return demandes, variables
+
+
 def git(*a):
     # ⛔ DEPUIS LA RACINE DU DÉPÔT, quel que soit le répertoire courant : le filtre `-- Assets/Scripts` est un chemin RELATIF
     #    au répertoire courant. Lancé depuis `Tools/juge-donnees/i18n` (là où sont les bundles), il ne voyait AUCUN fichier et
@@ -130,7 +151,34 @@ def lot_de(commit, lots):
         if commit in (git('rev-list', plage) or '').split(): return nom
     return '—'
 
-def ecrire_md(chemin, lignes, meme_cle, non_apparies, lots, meta, fr, base, fin):
+def section_famille(spec, fr):
+    domaine, role = spec.split('.', 1)
+    servies = {k: v for k, v in fr.items() if k.startswith(spec + '.')}
+    demandes, variables = sites_de_famille(domaine, role)
+    md = lambda t: (t or '∅').replace('|', '\\|').replace('\n', ' ')
+    zero = [k for k in servies if k not in demandes]
+    absentes = [k for k in demandes if k not in servies]
+    if not demandes and not variables:
+        # ⛔ Un couple (domaine, rôle) sans AUCUN site n'est pas une mesure : c'est un scan qui n'a rien lu — le premier essai du
+        #    22/09 rendait « 0 demandée » sur 26 servies parce que la racine était relative au répertoire courant.
+        print(f"⛔ famille {spec} : AUCUN site trouvé dans Assets — scan vide, pas une mesure", file=sys.stderr)
+        sys.exit(2)
+    L = ["", f"## Famille `{spec}` — servie contre DEMANDÉE", "",
+         f"**{len(servies)} clé(s) servie(s)** sous ce préfixe · **{len(demandes)} demandée(s)** par le client "
+         f"({sum(len(v) for v in demandes.values())} site(s), tous à argument littéral) · sites à argument VARIABLE : "
+         + (', '.join(variables) if variables else "**aucun** — une clé sans site est donc demandée NULLE PART, pas « peut-être »") + ".", "",
+         f"⇒ **{len(zero)} servie(s) et demandée(s) nulle part** · **{len(absentes)} demandée(s) et non servie(s)**.", "",
+         "| clé | valeur servie (fr) | demandée par | verdict |", "|---|---|---|---|"]
+    for k in sorted(set(servies) | set(demandes)):
+        sites = demandes.get(k)
+        verdict = ("demandée" if sites and k in servies
+                   else "⛔ SERVIE, DEMANDÉE NULLE PART" if not sites
+                   else "⚠️ DEMANDÉE, NON SERVIE (repli du littéral à l'écran)")
+        L.append(f"| `{k}` | {md(servies.get(k))} | {', '.join(sites) if sites else '—'} | {verdict} |")
+    return L
+
+
+def ecrire_md(chemin, lignes, meme_cle, non_apparies, lots, meta, fr, base, fin, familles=(), fr_famille=None):
     rows = unique(lignes, lots)
     perimees = [r for r in rows if not r.get('nouvelle_derivee_a_la_fin')]
     par_lot = collections.Counter(r['lot'] for r in rows)
@@ -179,6 +227,8 @@ def ecrire_md(chemin, lignes, meme_cle, non_apparies, lots, meta, fr, base, fin)
                      f"{m['fichier'].split('/')[-1]}:{m['ligne']} · `{m['commit']}` |")
     else:
         L.append("(aucune)")
+    for spec in familles:
+        L += section_famille(spec, fr_famille if fr_famille is not None else fr)
     L += ["", "## Ce que la table ne contient pas",
           "- Les littéraux réécrits dont l'ancienne clé n'était PAS servie : aucune orpheline (leur nouvelle clé manque aussi, mais "
           "l'ancienne manquait déjà ; une clé jamais servie ne se voit pas dans le bundle).",
@@ -198,6 +248,11 @@ def main():
     #    en silence changerait le périmètre de la table. Clé introuvable dans ce commit ⇒ échec, jamais une ligne inventée.
     anterieures = [tuple(x.split(':', 1)) for x in sys.argv[sys.argv.index('--anterieure') + 1].split(',')] \
         if '--anterieure' in sys.argv else []
+    # `--famille <domaine>.<role>[,…]` + `--famille-bundle <fichier>` : la section « qui demande quoi », mesurée contre le bundle
+    # SERVI AUJOURD'HUI (la pile reconstruite), pas contre celui de la plage — les deux questions n'ont pas la même date.
+    familles = [x for x in sys.argv[sys.argv.index('--famille') + 1].split(',') if x] if '--famille' in sys.argv else []
+    fr_famille = json.load(open(sys.argv[sys.argv.index('--famille-bundle') + 1]))['payload']['data']['messages'] \
+        if '--famille-bundle' in sys.argv else None
     for c, _ in anterieures:
         lots.append((f'antérieure {c[:8]}', f'{c}~1..{c}'))
     gardees = {git('rev-parse', c).strip(): k for c, k in anterieures}
@@ -311,7 +366,7 @@ def main():
     for n in non_apparies:
         print("⛔ NON APPARIÉ", n, file=sys.stderr)
     if sortie_md:
-        ecrire_md(sortie_md, lignes, meme_cle, non_apparies, lots, meta, fr, base, fin)
+        ecrire_md(sortie_md, lignes, meme_cle, non_apparies, lots, meta, fr, base, fin, familles, fr_famille)
     for m in meme_cle:
         print(f"MÊME CLÉ, valeur servie à corriger : {m['cle']} fr={m['servie_fr']!r} → littéral {m['texte_fr']!r}", file=sys.stderr)
     print(f"{len(lignes)} orpheline(s) · {len(meme_cle)} même(s) clé(s) à valeur servie périmée · "
