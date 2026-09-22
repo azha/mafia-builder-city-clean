@@ -143,7 +143,7 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.IsTrue(controller.ForfeitureWarningShown, "the forfeiture WARNING is shown on a PENDING vault");
 
             var texts = controller.RenderedTexts;
-            Assert.IsTrue(texts.Any(t => t == "Holding tier"), "holding-tier row label rendered");
+            Assert.IsTrue(texts.Any(t => t == "Taille de la banque"), "holding-tier row label rendered");
             Assert.IsTrue(texts.Any(t => t == "Moyen"), "holding-tier band value 'Medium' rendered");
             Assert.IsTrue(texts.Any(t => t == "En dépôt"), "held row label rendered");
             Assert.IsTrue(texts.Any(t => t == "Moderate"), "held band value 'Moderate' rendered");
@@ -162,7 +162,7 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.IsTrue(controller.UpgradeMoneyHoldingTierButtonShown, "Upgrade-holding-tier button shown on a sub-MAX vault");
             Assert.AreEqual("FLUSH", controller.WalletBand, "seeded wallet band is FLUSH");
             Assert.IsTrue(controller.UpgradeMoneyHoldingTierButtonAffordable, "Upgrade affordable with a FLUSH wallet");
-            Assert.IsTrue(texts.Any(t => t == "Agrandir la caisse"), "Upgrade-holding-tier button label rendered");
+            Assert.IsTrue(texts.Any(t => t == "Agrandir la banque"), "Upgrade-holding-tier button label rendered");
 
             // The deposit + withdraw actions + the amount selector are shown (the server-authoritative transfer affordances).
             Assert.IsTrue(controller.DepositActionShown, "the deposit-cash action is shown on a vault card");

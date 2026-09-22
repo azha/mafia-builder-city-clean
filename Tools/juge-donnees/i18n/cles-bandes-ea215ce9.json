@@ -284,6 +284,15 @@
   "exceptions.queue_pressure.saturated": {
    "en": "Saturated",
    "fr": "saturée"
+  },
+  "building.yield.earning": {
+   "en": "Earning",
+   "fr": "Earning"
+  },
+  "building.yield.idle": {
+   "en": "Idle",
+   "fr": "Idle"
   }
- }
+ },
+ "note": "71 clés du lot E (17 familles posées par f7) + les 2 `building.yield.*`, keyées AVANT le lot E et repassées par leur valeur en tranche 3 (443b4cec) : 73. Lues dans string_table.ts à ea215ce9 (EN_MESSAGES :191-192, FR_MESSAGES :1819-1820)."
 }

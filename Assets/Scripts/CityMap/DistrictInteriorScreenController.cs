@@ -1730,7 +1730,7 @@ namespace MafiaCleanCity.CityMap
                 case "refinery": return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Raffinerie");
                 case "grow_house": return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Serre");
                 case "distribution_hub": return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Relais");
-                case "money_holding": return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Coffre");
+                case "money_holding": return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Banque");
                 case "office": return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Bureau");
                 case "press_house": return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Atelier de presse");
                 case "": case null: return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Terrain vague");

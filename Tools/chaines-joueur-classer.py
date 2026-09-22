@@ -115,6 +115,7 @@ VERDICTS = [
  (L, "Saturated", 0, "chrome HomeChrome:143 — bande de pression traduite par la clé de sa valeur (lot E) ; « Normal » / « Warning » / « Unknown » non épinglés (mots trop courants)"),
  (L, "< Crop", 0, "② sélecteur (:2053)"),
  (L, "Crop >", 0, "② sélecteur (:2062)"),
+ (L, "Agrandir la caisse", 0, "② bouton (:973) — money_holding = la banque (d4)"),
  (N, "Aucune route connue pour l'instant",      0, "CLOS lot C 22/09 (㉘ la distribution) — était : « route » = endpoint, alors que l'écran voisin dit « CETTE ROUTE » pour un itinéraire"),
  (B, "aucune route n'existe encore",            0, "CLOS lot C 22/09 (⑰ le commissariat) — était : « route »"),
  (B, "la route voisine vise les affaires",      0, "CLOS lot C 22/09 (⑰ le commissariat) — était : « route voisine »"),
@@ -283,6 +284,9 @@ SOURCE = [
  (L, "Forfeiture", 0, "② ligne (:850)"),
  (L, "Under audit", 0, "② avertissements (:848, :849)"),
  (L, "withdraw or diversify", 0, "② avertissements (:848, :849)"),
+ (L, "Caisse agrandie", 0, "② RunAction (:562) — d4"),
+ (L, "Holding tier", 0, "② ligne (:816) — d4"),
+ (L, "le coffre a le dernier mot", 0, "② légende du montant (:2141) — d4"),
 ]
 
 

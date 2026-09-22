@@ -27,7 +27,7 @@ namespace MafiaCleanCity.CityMap
                 case "GROW_HOUSE": return "Serre";
                 case "LAB": return "Laboratoire";
                 case "DISTRIBUTION_HUB": return "Relais";
-                case "MONEY_HOLDING": return "Coffre";
+                case "MONEY_HOLDING": return "Banque";
                 case "FRONT_SHOP": return "Commerce-écran";
                 case "SAFEHOUSE": return "Planque";
                 case "WAREHOUSE": return "Entrepôt";

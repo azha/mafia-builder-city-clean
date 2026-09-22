@@ -559,7 +559,7 @@ namespace MafiaCleanCity.Operational
         public IEnumerator UpgradeMoneyHoldingTier()
         {
             yield return RunAction(c => client.UpgradeMoneyHoldingTier(buildingId, Token, c),
-                "Caisse agrandie", "Impossible d'agrandir");
+                "Banque agrandie", "Impossible d'agrandir");
             // Reload so the card reflects the new money_holding_tier_band (+ the wallet band debited).
             yield return LoadBuilding(buildingId);
         }
@@ -813,7 +813,7 @@ namespace MafiaCleanCity.Operational
                 if (!string.IsNullOrEmpty(card.money_holding_tier_band) && card.money_holding_tier_band != "NONE")
                 {
                     MoneyHoldingTierShown = true;
-                    AddStatusRow("Holding tier", MoneyHoldingTierLabel(card.money_holding_tier_band),
+                    AddStatusRow("Taille de la banque", MoneyHoldingTierLabel(card.money_holding_tier_band),
                         MoneyHoldingTierGlyph(card.money_holding_tier_band), MoneyHoldingTierAccent(card.money_holding_tier_band));
                 }
                 // Held-magnitude band row — how much clean cash is held (NONE → MASSIVE; never raw cents). A higher hold earns
@@ -970,11 +970,11 @@ namespace MafiaCleanCity.Operational
                 UpgradeMoneyHoldingTierButtonShown = true;
                 bool affordable = CanAffordUpgrade(WalletBand);
                 UpgradeMoneyHoldingTierButtonAffordable = affordable;
-                Button upgradeBtn = AddActionButton(actionBar, "Agrandir la caisse", () => StartCoroutine(UpgradeMoneyHoldingTier()));
+                Button upgradeBtn = AddActionButton(actionBar, "Agrandir la banque", () => StartCoroutine(UpgradeMoneyHoldingTier()));
                 SetButtonInteractable(upgradeBtn, affordable);
                 if (!affordable)
                 {
-                    string reason = "Agrandir la caisse — pas assez d'argent";
+                    string reason = "Agrandir la banque — pas assez d'argent";
                     TextMeshProUGUI hint = NewText("MoneyHoldingUpgradeHint", actionBar, reason, 13, TextAlignmentOptions.Left);
                     hint.color = AccentSevere;
                     AddLayoutElement(hint.gameObject, minHeight: 18, flexibleHeight: 0);
@@ -1099,7 +1099,7 @@ namespace MafiaCleanCity.Operational
                 case "refinery": return Bande("type", "refinery", "Raffinerie");
                 case "grow_house": return Bande("type", "grow_house", "Serre");
                 case "distribution_hub": return Bande("type", "distribution_hub", "Relais");
-                case "money_holding": return Bande("type", "money_holding", "Caisse");
+                case "money_holding": return Bande("type", "money_holding", "Banque");
                 case "": case null: return "Pas encore ouvert";   // aucune valeur servie ⇒ aucune clé ; famille « Ouvrir » (orchestration 22/09)
                 default: return t;
             }
@@ -2138,7 +2138,7 @@ namespace MafiaCleanCity.Operational
         // — the UI does NOT pre-decide; it surfaces the server verdict on the action.
         private void AddTransferAmountSelector(Transform parent)
         {
-            string label = NewSectionLabel(parent, "MONTANT DU TRANSFERT — le coffre a le dernier mot");
+            string label = NewSectionLabel(parent, "MONTANT DU TRANSFERT — la banque a le dernier mot");
             TrackText(null, label);
 
             GameObject row = NewUI("TransferAmountRow", parent);

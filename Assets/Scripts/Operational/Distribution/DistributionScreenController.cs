@@ -229,7 +229,7 @@ namespace MafiaCleanCity.Operational
                 case "specialized_lab":
                 case "lab": return "le labo";
                 case "refinery": return "la raffinerie";
-                case "money_holding": return "la caisse";
+                case "money_holding": return "la banque";
                 case "stash": return "la planque";
                 case "front_shop": return "la boutique";
                 case "dealer_spot_front": return "le comptoir";
