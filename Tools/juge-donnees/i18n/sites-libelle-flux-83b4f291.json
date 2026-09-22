@@ -1,0 +1,288 @@
+{
+ "Assets/Scripts/Operational/ChaineDAppro/ChaineDApproScreenController.cs": [
+  {
+   "cle": "appro.bloc.a_quoi_ca_sert",
+   "litteral": "À QUOI ÇA SERT",
+   "flux": "B",
+   "methode": "ConstruireLigne",
+   "servie": false
+  },
+  {
+   "cle": "appro.bloc.ce_qu_il_en_reste",
+   "litteral": "CE QU'IL EN RESTE",
+   "flux": "B",
+   "methode": "ConstruireLigne",
+   "servie": false
+  },
+  {
+   "cle": "appro.bloc.des_maillons_existent_mais_cet_ecran_ne_sait_pas_encore_les_afficher",
+   "litteral": "Des maillons existent, mais cet écran ne sait pas encore les afficher.",
+   "flux": "A",
+   "methode": "AppliquerChaine",
+   "servie": false
+  },
+  {
+   "cle": "appro.bloc.la_commande",
+   "litteral": "LA COMMANDE",
+   "flux": "B",
+   "methode": "ConstruireLigne",
+   "servie": false
+  },
+  {
+   "cle": "appro.bloc.le_fournisseur",
+   "litteral": "LE FOURNISSEUR",
+   "flux": "B",
+   "methode": "ConstruireLigne",
+   "servie": false
+  },
+  {
+   "cle": "appro.bloc.le_prix",
+   "litteral": "LE PRIX",
+   "flux": "B",
+   "methode": "ConstruireLigne",
+   "servie": false
+  },
+  {
+   "cle": "appro.bloc.nestor_l_etagere_est_vide_sans_pyralin_je_ne_rallume_pas",
+   "litteral": "Nestor : « L'étagère est vide. Sans pyralin, je ne rallume pas. »",
+   "flux": "A",
+   "methode": "RendrePied",
+   "servie": false
+  },
+  {
+   "cle": "appro.bloc.rien_a_remonter_pour_l_instant_la_chaine_ne_connait_aucun_maillon_sur_ce_compte",
+   "litteral": "Rien à remonter pour l'instant — la chaîne ne connaît aucun maillon sur ce compte.",
+   "flux": "A",
+   "methode": "AppliquerChaine",
+   "servie": false
+  },
+  {
+   "cle": "appro.bloc.votre_lieutenant_on_en_a_besoin_et_il_n_y_en_a_plus",
+   "litteral": "Votre lieutenant : « On en a besoin, et il n'y en a plus. »",
+   "flux": "A",
+   "methode": "RendrePied",
+   "servie": false
+  },
+  {
+   "cle": "appro.sous_titre.elle_est_payee_et_partie_il_n_y_a_plus_qu_a_attendre",
+   "litteral": "Elle est payée et partie. Il n'y a plus qu'à attendre.",
+   "flux": "A",
+   "methode": "RendreTitre",
+   "servie": false
+  },
+  {
+   "cle": "appro.sous_titre.le_stock_est_reconstitue_vous_pouvez_commander_a_nouveau",
+   "litteral": "Le stock est reconstitué. Vous pouvez commander à nouveau.",
+   "flux": "A",
+   "methode": "RendreTitre",
+   "servie": false
+  },
+  {
+   "cle": "appro.sous_titre.sans_elle_aucun_labo_ne_rallume_le_fournisseur_lui_a_ses_humeurs",
+   "litteral": "Sans elle, aucun labo ne rallume. Le fournisseur, lui, a ses humeurs.",
+   "flux": "A",
+   "methode": "RendreTitre",
+   "servie": false
+  },
+  {
+   "cle": "appro.titre.commander_de_la_matiere_premiere",
+   "litteral": "Commander de la matière première",
+   "flux": "A",
+   "methode": "RendreTitre",
+   "servie": false
+  },
+  {
+   "cle": "appro.titre.la_commande_est_arrivee",
+   "litteral": "La commande est arrivée",
+   "flux": "A",
+   "methode": "RendreTitre",
+   "servie": false
+  },
+  {
+   "cle": "appro.titre.la_commande_est_en_route",
+   "litteral": "La commande est en route",
+   "flux": "A",
+   "methode": "RendreTitre",
+   "servie": false
+  }
+ ],
+ "Assets/Scripts/Operational/Distribution/DistributionScreenController.cs": [
+  {
+   "cle": "distribution.bloc.a_traverser",
+   "litteral": "À TRAVERSER",
+   "flux": "B",
+   "methode": "ConstruireLigne",
+   "servie": false
+  },
+  {
+   "cle": "distribution.bloc.cette_route",
+   "litteral": "CETTE ROUTE",
+   "flux": "B",
+   "methode": "ConstruireLigne",
+   "servie": false
+  },
+  {
+   "cle": "distribution.bloc.d_ou_ca_part",
+   "litteral": "D'OÙ ÇA PART",
+   "flux": "B",
+   "methode": "ConstruireEtiquette",
+   "servie": false
+  },
+  {
+   "cle": "distribution.bloc.il_est_parti_a_la_nuit_ca_serpente_mais_c_est_la_seule_qui_evite_le_pont_du_threnny",
+   "litteral": "Il est parti à la nuit. Ça serpente, mais c'est la seule qui évite le pont du Threnny.",
+   "flux": "A",
+   "methode": "RendrePied",
+   "servie": false
+  },
+  {
+   "cle": "distribution.bloc.la_marchandise_est_prete_au_labo_dites_moi_qui_part_et_par_ou_et_je_l_enverrai_ce_soir",
+   "litteral": "La marchandise est prête au labo. Dites-moi qui part et par où, et je l'enverrai ce soir.",
+   "flux": "A",
+   "methode": "RendrePied",
+   "servie": false
+  },
+  {
+   "cle": "distribution.bloc.le_chemin",
+   "litteral": "LE CHEMIN",
+   "flux": "B",
+   "methode": "ConstruireLigne",
+   "servie": false
+  },
+  {
+   "cle": "distribution.bloc.livre_le_carton_est_au_comptoir_personne_n_a_rien_vu",
+   "litteral": "Livré. Le carton est au comptoir, personne n'a rien vu.",
+   "flux": "A",
+   "methode": "RendrePied",
+   "servie": false
+  },
+  {
+   "cle": "distribution.bloc.ou_ca_va",
+   "litteral": "OÙ ÇA VA",
+   "flux": "B",
+   "methode": "ConstruireEtiquette",
+   "servie": false
+  },
+  {
+   "cle": "distribution.bouton.envoyer_ce_soir",
+   "litteral": "ENVOYER CE SOIR",
+   "flux": "A",
+   "methode": "RendrePied",
+   "servie": false
+  },
+  {
+   "cle": "distribution.bouton.tendre_une_autre_ficelle",
+   "litteral": "TENDRE UNE AUTRE FICELLE",
+   "flux": "A",
+   "methode": "RendrePied",
+   "servie": false
+  },
+  {
+   "cle": "distribution.sous_titre.la_marchandise_est_arrivee_voila_ce_que_le_trajet_a_coute_a_la_route",
+   "litteral": "La marchandise est arrivée. Voilà ce que le trajet a coûté à la route.",
+   "flux": "A",
+   "methode": "RendreTitre",
+   "servie": false
+  },
+  {
+   "cle": "distribution.sous_titre.on_choisit_d_ou_ca_part_ou_ca_va_et_par_quel_chemin",
+   "litteral": "On choisit d'où ça part, où ça va, et par quel chemin.",
+   "flux": "A",
+   "methode": "RendreTitre",
+   "servie": false
+  },
+  {
+   "cle": "distribution.sous_titre.un_coursier_est_parti_voila_le_chemin_qu_il_prend",
+   "litteral": "Un coursier est parti. Voilà le chemin qu'il prend.",
+   "flux": "A",
+   "methode": "RendreTitre",
+   "servie": false
+  },
+  {
+   "cle": "distribution.titre.c_est_livre",
+   "litteral": "C'est livré",
+   "flux": "A",
+   "methode": "RendreTitre",
+   "servie": false
+  },
+  {
+   "cle": "distribution.titre.ce_qui_est_sur_la_route",
+   "litteral": "Ce qui est sur la route",
+   "flux": "A",
+   "methode": "RendreTitre",
+   "servie": false
+  },
+  {
+   "cle": "distribution.titre.l_envoi_de_ce_soir",
+   "litteral": "L'envoi de ce soir",
+   "flux": "A",
+   "methode": "RendreTitre",
+   "servie": false
+  }
+ ],
+ "Assets/Scripts/Operational/Loi/LoiScreenController.cs": [
+  {
+   "cle": "loi.badge.a_vos_risques",
+   "litteral": "À VOS RISQUES",
+   "flux": "B",
+   "methode": "ConstruireCarteAvocat",
+   "servie": false
+  },
+  {
+   "cle": "loi.badge.disponible",
+   "litteral": "DISPONIBLE",
+   "flux": "B",
+   "methode": "ConstruireCarteAvocat",
+   "servie": false
+  },
+  {
+   "cle": "loi.badge.en_place",
+   "litteral": "EN PLACE",
+   "flux": "B",
+   "methode": "ConstruireCarteAvocat",
+   "servie": false
+  },
+  {
+   "cle": "loi.bloc.ca_coute_cher_et_ca_peut_se_retourner",
+   "litteral": "ça coûte cher — et ça peut se retourner",
+   "flux": "B",
+   "methode": "ConstruireCarteAvocat",
+   "servie": false
+  },
+  {
+   "cle": "loi.bloc.ca_coute_il_connait_les_juges",
+   "litteral": "ça coûte — il connaît les juges",
+   "flux": "B",
+   "methode": "ConstruireCarteAvocat",
+   "servie": false
+  },
+  {
+   "cle": "loi.bloc.commis_d_office",
+   "litteral": "Commis d'office",
+   "flux": "B",
+   "methode": "ConstruireCarteAvocat",
+   "servie": false
+  },
+  {
+   "cle": "loi.bloc.gratuit_il_fait_ce_qu_il_peut",
+   "litteral": "gratuit — il fait ce qu'il peut",
+   "flux": "B",
+   "methode": "ConstruireCarteAvocat",
+   "servie": false
+  },
+  {
+   "cle": "loi.bloc.la_filiere",
+   "litteral": "La filière",
+   "flux": "B",
+   "methode": "ConstruireCarteAvocat",
+   "servie": false
+  },
+  {
+   "cle": "loi.bloc.un_cabinet",
+   "litteral": "Un cabinet",
+   "flux": "B",
+   "methode": "ConstruireCarteAvocat",
+   "servie": false
+  }
+ ]
+}

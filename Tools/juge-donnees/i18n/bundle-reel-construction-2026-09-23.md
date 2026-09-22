@@ -130,3 +130,29 @@ aide). La garde, sur le vrai rendu, a rougi sur 26 clés non servies, toutes ant
 - `loi.bloc.la_filiere (LoiScreenController)`
 - `loi.badge.a_vos_risques (LoiScreenController)`
 - `loi.bloc.ca_coute_cher_et_ca_peut_se_retourner (LoiScreenController)`
+
+## Dette complète : 42 (2026-09-23 ~01:50, pile 83b4f291) — mesurée sur ce que le code SAIT rendre
+Le rejeu de 01:42 a vu 4 clés de plus que celui de 01:34 : Distribution rendait « livré » au lieu d'« en route ». Une dette mesurée
+au run dépend de l'état du compte. Cause statique : un littéral ASSIGNÉ à une variable (`titre = "C'est livré"`), puis
+`Libelle.De("distribution","titre", titre)` — `sites-libelle.py` ne suivait pas l'assignation.
+`sites-libelle-flux.py` (neuf) suit deux flux : (A) le local assigné dans la même méthode, (B) le paramètre (littéral passé par
+un appelant du même fichier) ; contrôle positif intégré sur les 4 sites de Distribution (sortie 1 s'ils ne sont plus vus).
+Dette = direct (0) ∪ flux (40) ∪ vu par la garde (30) = **42**. Vus par la garde et par AUCUN statique : 2
+(`loi.bouton.mettre_sous_retention`, la longue phrase de `filiere.bloc.chaque_etape_…`).
+**Nouvelles au-delà des 26 envoyées : 16** —
+- `appro.bloc.la_commande`
+- `appro.bloc.nestor_l_etagere_est_vide_sans_pyralin_je_ne_rallume_pas`
+- `appro.bloc.rien_a_remonter_pour_l_instant_la_chaine_ne_connait_aucun_maillon_sur_ce_compte`
+- `appro.bloc.votre_lieutenant_on_en_a_besoin_et_il_n_y_en_a_plus`
+- `appro.sous_titre.elle_est_payee_et_partie_il_n_y_a_plus_qu_a_attendre`
+- `appro.sous_titre.sans_elle_aucun_labo_ne_rallume_le_fournisseur_lui_a_ses_humeurs`
+- `appro.titre.commander_de_la_matiere_premiere`
+- `appro.titre.la_commande_est_en_route`
+- `distribution.bloc.la_marchandise_est_prete_au_labo_dites_moi_qui_part_et_par_ou_et_je_l_enverrai_ce_soir`
+- `distribution.bloc.livre_le_carton_est_au_comptoir_personne_n_a_rien_vu`
+- `distribution.bouton.envoyer_ce_soir`
+- `distribution.bouton.tendre_une_autre_ficelle`
+- `distribution.sous_titre.la_marchandise_est_arrivee_voila_ce_que_le_trajet_a_coute_a_la_route`
+- `distribution.sous_titre.on_choisit_d_ou_ca_part_ou_ca_va_et_par_quel_chemin`
+- `distribution.titre.c_est_livre`
+- `distribution.titre.l_envoi_de_ce_soir`
