@@ -290,6 +290,50 @@ namespace MafiaCleanCity.Operational.Exceptions
             return string.IsNullOrWhiteSpace(nom.@params.enseigne) ? null : nom.@params.enseigne.Trim();
         }
 
+        /// <summary>S03 — une clé à `{enseigne}` (atelier §3.11, `b761a235`) : la valeur servie si le catalogue la connaît, sinon
+        /// le repli fr de l'atelier. L'enseigne entre NUE : ni article ni contraction devant, aucun mot accordé derrière.</summary>
+        public static string AvecEnseigne(string cle, string repli, string enseigne)
+        {
+            if (MafiaCleanCity.I18n.I18nCatalog.Connait(cle))
+            {
+                string t = MafiaCleanCity.I18n.I18nCatalog.Traduire(cle, new Dictionary<string, string> { { "enseigne", enseigne } });
+                if (!string.IsNullOrWhiteSpace(t)) return t.Trim();
+            }
+            return repli.Replace("{enseigne}", enseigne);
+        }
+
+        /// <summary>La clé du SEUL libellé servi qui dit « le bâtiment » (« Réparer le bâtiment ») : c'est lui que le nom remplace.
+        /// « Réparer tout de suite », « Réparer lentement » ne nomment rien et restent tels quels (atelier §3.11 §2).</summary>
+        public const string CleReparerLeBatiment = "exception.raid.repair.label";
+
+        /// <summary>S03 — le libellé d'une action, NOMMÉ quand il dit « le bâtiment » et que la carte vise une enseigne servie :
+        /// « Réparer {enseigne} » (`exceptions.bloc.reparer_enseigne`). Sinon le libellé servi, inchangé.</summary>
+        public static string LibelleNomme(ExceptionCardDto c, CandidateActionDto a, string libelleServi)
+        {
+            string e = EnseigneVisee(c);
+            if (e == null || a == null || a.label_i18n == null || a.label_i18n.key != CleReparerLeBatiment) return libelleServi;
+            return AvecEnseigne("exceptions.bloc.reparer_enseigne", "Réparer {enseigne}", e);
+        }
+
+        private static readonly Dictionary<string, string> PhrasesApresNommees =
+            new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                { "REPAIRING", "{enseigne} se remet en marche, avec le temps" },
+                { "REPAIRING_SLOW", "{enseigne} se remet en marche, lentement — c’est moins cher" },
+                { "DEFERRED", "Réparation remise : {enseigne} reste à l’arrêt" },
+            };
+
+        /// <summary>S03 — la phrase de l'après, NOMMÉE (`exceptions.apres.<issue>.enseigne`, atelier §3.11 §3) pour les trois issues
+        /// qui disaient « le bâtiment » ; `DEMOLISHED` reste sans nom (le participe prendrait le genre de l'enseigne). Sans enseigne,
+        /// la phrase de §3.10.</summary>
+        public static string PhraseApres(string outcome, string enseigne)
+        {
+            if (!string.IsNullOrWhiteSpace(enseigne) && !string.IsNullOrWhiteSpace(outcome)
+                && PhrasesApresNommees.TryGetValue(outcome.Trim(), out string repli))
+                return AvecEnseigne("exceptions.apres." + MafiaCleanCity.I18n.Libelle.Slug(outcome.Trim()) + ".enseigne", repli, enseigne.Trim());
+            return PhraseApres(outcome);
+        }
+
         /// <summary>⑨-6 — la phrase SOUS le cachet de l'après (cadre 17) : `exceptions.apres.<issue>`, une par issue, repli =
         /// les phrases de l'atelier (`11-exceptions-inventaire.md` §3.10 A, `da146da5`) — ce qui s'est PASSÉ, sans genre.
         /// Issue hors domaine ⇒ `null` (pas de phrase), jamais l'enum.</summary>

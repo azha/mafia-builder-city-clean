@@ -514,10 +514,11 @@ namespace MafiaCleanCity.Operational.Exceptions
             apresKicker.text = kicker ?? string.Empty;
             if (kicker != null) TrackText(apresKicker, kicker);
 
-            string titre = ExceptionBandes.PhraseApres(trancheeIssue);
+            string enseigneApres = ExceptionBandes.EnseigneVisee(trancheeCarte);
+            string titre = ExceptionBandes.PhraseApres(trancheeIssue, enseigneApres);
             apresTitre.gameObject.SetActive(titre != null);
             apresTitre.text = titre ?? string.Empty;
-            if (titre != null) TrackText(apresTitre, titre);
+            if (titre != null && enseigneApres == null) TrackText(apresTitre, titre);
         }
 
         /// <summary>« {nom} retourne au travail » (atelier §3.5, à la place de « Le cuisinier est reparti » : « Le
@@ -724,7 +725,9 @@ namespace MafiaCleanCity.Operational.Exceptions
 
             ExceptionCardDto c = Cards[0];
             // ⑩-1 — la bulle est construite par `ParleurAuComptoir`, le code que ⑩ partage (même dessin, cadres 14 et 15).
-            Parleur().Construire(parleRoot, c, ContexteDuPremier(c), RepliqueDuPremier(c),
+            ParleurAuComptoir parleur = Parleur();
+            parleur.ContexteSuivi = ExceptionBandes.EnseigneVisee(c) == null;
+            parleur.Construire(parleRoot, c, ContexteDuPremier(c), RepliqueDuPremier(c),
                 ExceptionBandes.Gravite(c.severity_band), ExceptionBandes.Priorite(c.priority_band));
         }
 
@@ -739,7 +742,11 @@ namespace MafiaCleanCity.Operational.Exceptions
         {
             var parts = new List<string>();
             if (!string.IsNullOrEmpty(role)) parts.Add(role);
+            string enseigne = ExceptionBandes.EnseigneVisee(c);
             if (!ExceptionBandes.ParleUnLieutenant(c)) parts.Add(Lib("toute la ville"));
+            // S03 — la cible NOMMÉE (atelier §3.11 §1) : « chez {enseigne} », jamais une contraction devinée ; sans nom servi,
+            // « au bâtiment touché » comme avant.
+            else if (enseigne != null) parts.Add(ExceptionBandes.AvecEnseigne("exceptions.bloc.chez_enseigne", "chez {enseigne}", enseigne));
             else if (VisUnBatiment(c)) parts.Add(Lib("au bâtiment touché"));
             return parts.Count == 0 ? null : "· " + string.Join(" · ", parts);
         }
@@ -791,7 +798,9 @@ namespace MafiaCleanCity.Operational.Exceptions
             (string method, string id)? choix = ChoixDuTampon(c);
 
             // Le libellé : l'action suggérée, en toutes lettres (par sa clé i18n si servie, sa prose sinon).
-            string action = choix.HasValue ? LibelleAction(c.suggested_action).ToUpperInvariant() : Lib("OUVRIR SA MAIN");
+            string servi = choix.HasValue ? LibelleAction(c.suggested_action) : null;
+            string nomme = choix.HasValue ? ExceptionBandes.LibelleNomme(c, c.suggested_action, servi) : null;
+            string action = choix.HasValue ? nomme.ToUpperInvariant() : Lib("OUVRIR SA MAIN");
             // ⚠️ Le sous-titre n'est PAS SUIVI quand il porte le compte des issues, et c'est la règle de ce fichier, pas une
             //    dérogation : « sa main : 5 autres issues » porte un CHIFFRE, que la maquette écrit (cadres 14 et 17). Ce n'est
             //    pas un scalaire de simulation — la cible de R2.2 — mais le compte des CHOIX du joueur, qu'il voit dans sa main.
@@ -802,7 +811,8 @@ namespace MafiaCleanCity.Operational.Exceptions
             TamponAuComptoir.Rendu r = new TamponAuComptoir(Px, PxI, TrackText).Construire(tamponRoot, action, sous,
                 suivreSous: !choix.HasValue,
                 surTap: () => OpenDetail(carte),
-                surAppuiLong: choix.HasValue ? (Action)(() => { if (!Destroyed) StartCoroutine(ResoudreLaSuggestion()); }) : null);
+                surAppuiLong: choix.HasValue ? (Action)(() => { if (!Destroyed) StartCoroutine(ResoudreLaSuggestion()); }) : null,
+                suivreLibelle: nomme == servi);   // S03 : un libellé nommé porte l'enseigne servie (non suivi, voir ParleurAuComptoir)
             tamponLibelle = r.Libelle;
             tamponSous = r.Sous;
             tamponAppui = r.Appui;
@@ -884,6 +894,7 @@ namespace MafiaCleanCity.Operational.Exceptions
         public string DerniereIssue { get; private set; }
         public string DerniereErreurResolution { get; private set; }
         public string TamponLibelleTexte => tamponLibelle != null ? tamponLibelle.text : null;
+        public TextMeshProUGUI TamponLibellePourTest => tamponLibelle;
         public string TamponSousTexte => tamponSous != null ? tamponSous.text : null;
         public LongPressButton TamponAppuiLong => tamponAppui;
 

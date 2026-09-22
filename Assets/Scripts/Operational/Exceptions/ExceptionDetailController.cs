@@ -241,6 +241,7 @@ namespace MafiaCleanCity.Operational.Exceptions
             // de « Je fais quoi ? » en italique. Le code est `ParleurAuComptoir`, partagé avec ⑨. Avant : « Votre lieutenant »
             // en gras et une ligne « Grave · Critique · Confident ».
             ParleurAuComptoir parleur = Parleur();
+            parleur.ContexteSuivi = ExceptionBandes.EnseigneVisee(c) == null;
             RectTransform rangee = parleur.ConstruireRangee(body, 10f);
             parleur.Construire(rangee, c, ExceptionQueueController.Contexte(RoleDuLocuteur, c), RepliqueMain(c),
                 ExceptionBandes.Gravite(c.severity_band), ExceptionBandes.Priorite(c.priority_band),
@@ -424,11 +425,14 @@ namespace MafiaCleanCity.Operational.Exceptions
             {
                 GameObject cadre = NewUI("Tampon", body);
                 AddLayoutElement(cadre, minHeight: PxD(CssTamponHaut), preferredHeight: PxD(CssTamponHaut), flexibleHeight: 0);
-                string libelle = selectionEscalade ? TexteEscalader() : Texte(selection.label, selection.label_i18n);
+                string servi = selectionEscalade ? TexteEscalader() : Texte(selection.label, selection.label_i18n);
+                // S03 — « Réparer {enseigne} » quand le libellé servi dit « le bâtiment » et que la carte vise une enseigne.
+                string libelle = selectionEscalade ? servi : ExceptionBandes.LibelleNomme(CurrentCard, selection, servi);
                 tampon = new TamponAuComptoir(PxD, PxDI, TrackText).Construire(cadre.transform,
                     (libelle ?? string.Empty).ToUpperInvariant(), SousTitreMain(selectionEscalade ? null : selection),
                     suivreSous: true, surTap: null,
-                    surAppuiLong: () => { if (!Destroyed) StartCoroutine(ResoudreLeChoix()); });
+                    surAppuiLong: () => { if (!Destroyed) StartCoroutine(ResoudreLeChoix()); },
+                    suivreLibelle: libelle == servi);
             }
         }
 

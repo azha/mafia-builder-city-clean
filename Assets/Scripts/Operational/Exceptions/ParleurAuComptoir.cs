@@ -23,6 +23,10 @@ namespace MafiaCleanCity.Operational.Exceptions
         private readonly Func<float, int> pxI;
         private readonly Action<TextMeshProUGUI, string> suivre;
 
+        /// <summary>S03 — le contexte entre-t-il au corpus suivi ? Non quand il porte une ENSEIGNE servie : un nom propre peut porter
+        /// un chiffre (« Remise du 3 », atelier §3.11 §5) qui n'est pas un scalaire (R2.2) — même statut que le compte d'escalades.</summary>
+        public bool ContexteSuivi { get; set; } = true;
+
         public ParleurAuComptoir(Func<float, float> px, Func<float, int> pxI, Action<TextMeshProUGUI, string> suivre)
         {
             this.px = px;
@@ -91,7 +95,7 @@ namespace MafiaCleanCity.Operational.Exceptions
                 ctx.fontStyle = FontStyles.UpperCase;
                 ctx.characterSpacing = 14f;                      // `.bulle .qui{letter-spacing:.14em}`
                 ctx.enableWordWrapping = true;
-                suivre(ctx, ctx.text);
+                if (ContexteSuivi) suivre(ctx, ctx.text);
             }
 
             GameObject rangPastilles = NewUI("Pastilles", bulle.transform);

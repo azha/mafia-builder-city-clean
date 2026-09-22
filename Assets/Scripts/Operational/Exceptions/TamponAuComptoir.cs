@@ -46,7 +46,8 @@ namespace MafiaCleanCity.Operational.Exceptions
 
         /// <summary>Le tampon, étiré dans `parent`. `suivreSous` : le sous-titre entre-t-il au corpus suivi (⑨ : non quand il
         /// porte le compte des issues, R2.2). `surTap` null ⇒ pas de tap ; `surAppuiLong` null ⇒ pas d'appui long.</summary>
-        public Rendu Construire(Transform parent, string libelle, string sousTitre, bool suivreSous, Action surTap, Action surAppuiLong)
+        public Rendu Construire(Transform parent, string libelle, string sousTitre, bool suivreSous, Action surTap, Action surAppuiLong,
+                                bool suivreLibelle = true)
         {
             var r = new Rendu();
             GameObject t = NewUI("TamponBouton", parent);
@@ -70,8 +71,14 @@ namespace MafiaCleanCity.Operational.Exceptions
             r.Libelle.alignment = TextAlignmentOptions.Center;
             r.Libelle.characterSpacing = 22f;             // `.tampon{letter-spacing:.22em}`
             r.Libelle.fontStyle = FontStyles.Bold;        // `.tampon{font-weight:800}`
-            r.Libelle.enableWordWrapping = true;
-            suivre(r.Libelle, r.Libelle.text);
+            // S03 — UNE ligne, et le CORPS se réduit si elle ne tient pas ; le texte n'est JAMAIS coupé (atelier §3.11 §2 : « RÉPARER
+            // TRAITEMENT DES EAUX DORN », 32 signes, contre 21 dans la maquette). Plancher déclaré : 7 px CSS.
+            r.Libelle.enableWordWrapping = false;
+            r.Libelle.overflowMode = TextOverflowModes.Overflow;
+            r.Libelle.enableAutoSizing = true;
+            r.Libelle.fontSizeMax = Px(12f);
+            r.Libelle.fontSizeMin = Px(7f);
+            if (suivreLibelle) suivre(r.Libelle, r.Libelle.text);
 
             Color encreSous = Encre; encreSous.a = 0.85f;  // `.tampon small{opacity:.85}` sur fond CONNU (le papier)
             r.Sous = Texte(t.transform, "SousTexte", sousTitre, 8.5f, encreSous);
