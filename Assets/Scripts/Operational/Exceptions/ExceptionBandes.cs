@@ -20,12 +20,10 @@ namespace MafiaCleanCity.Operational.Exceptions
     /// domaine, elle devient balayable et testable — c'est la séquence que ce dépôt a payée sur les
     /// trois mappings « bucket de chaleur → apparence ».
     ///
-    /// ⚠️ PAS DE CLÉ i18n INVENTÉE, ET C'EST DÉLIBÉRÉ. Mesuré sur le bundle `fr` RÉEL servi par
-    /// `GET /v1/i18n/bundle` (**675 clés**) : aucune clé de gravité ni d'urgence n'y est servie —
-    /// `Severe` 0, `Urgent` 0, `TEACH` 0 ; `Moderate` ne rend que `messages.accueil.etat.moderate`,
-    /// qui appartient à un autre écran. Poser un `Lib()` sur une clé non servie ajouterait un REPLI,
-    /// et une garde de ce dépôt existe exactement pour ça. Le mot français est ici la valeur
-    /// RATIFIÉE du client ; la clé se crée côté back, au lot i18n, jamais par un slug improvisé.
+    /// ⚠️ PAS DE CLÉ i18n INVENTÉE — et aujourd'hui elles sont SERVIES. Mesuré le 06/09 sur le bundle `fr` réel (675
+    /// clés) : aucune clé de gravité ni d'urgence. Le client n'a pas improvisé de slug ; l'atelier a proposé la forme
+    /// (`11-exceptions-inventaire.md` §3.2) et le back la sert à `aea5ef7c`. ⑨-5 la lit par `Libelle.ParValeur` : la
+    /// clé vient de la VALEUR servie, le repli est le mot de l'atelier.
     ///
     /// ⛔ LE DOMAINE EST LU À LA SOURCE, PAS SUR LA CAPTURE. Le juge voyait quatre valeurs ; le back
     /// en déclare **sept** (`exceptions.projection.service.ts:13-14` et `:79`) :
@@ -35,12 +33,9 @@ namespace MafiaCleanCity.Operational.Exceptions
     /// casses diffèrent, donc la comparaison est insensible à la casse — s'aligner sur celle qu'on a
     /// vue serait un piège de plus.
     ///
-    /// ⚠️⚠️ QUATRE VALEURS SUR SEPT SONT RATIFIÉES, TROIS NE LE SONT PAS, ET C'EST ÉCRIT ICI PLUTÔT
-    /// QUE MASQUÉ. La maquette montre `GRAVE · CRITIQUE` et `MODÉRÉE · URGENTE` — donc `SEVERE`,
-    /// `MODERATE`, `critical` et `urgent`. Elle ne montre **jamais** `MILD`, `silent` ni `watching` :
-    /// ce sont des cartes trop basses pour atteindre le haut de la file. Leurs libellés ci-dessous
-    /// sont mon choix, pas une valeur ratifiée, et ils attendent un arbitrage. Les laisser en anglais
-    /// aurait été pire — la doctrine ne dit pas « aucun repli anglais sauf ceux qu'on n'a pas vus ».
+    /// ⚠️⚠️ QUATRE VALEURS SUR SEPT SONT DESSINÉES PAR LA MAQUETTE (`GRAVE · CRITIQUE`, `MODÉRÉE · URGENTE`). Les trois
+    /// autres (`MILD`, `watching`, `silent`) ont reçu leurs mots de l'atelier le 22/09 (§3.2) : « légère », « à surveiller »,
+    /// « sans urgence » — « Silencieuse », le choix du client, décrivait la carte et non son rang.
     ///
     /// ⚠️ ET LA VALEUR INATTENDUE NE SE TAIT PAS. Une bande absente ou inconnue rend `—`, jamais un
     /// mot anglais et jamais le mot le plus proche : un trou se montre, il ne se déguise pas. C'est
@@ -62,29 +57,53 @@ namespace MafiaCleanCity.Operational.Exceptions
         /// (`priority_band : silent | watching | urgent | critical`).</summary>
         public static readonly string[] DomainePriorite = { "silent", "watching", "urgent", "critical" };
 
+        /// <summary>⑨-5 (2026-09-23) — LES MOTS SONT SERVIS, LE CLIENT GARDE LES REPLIS DE L'ATELIER. Le back sert
+        /// `exceptions.gravite.<valeur>`, `exceptions.priorite.<valeur>` et `exception_detail.confiance.<valeur>` (la forme
+        /// proposée par l'atelier, `11-exceptions-inventaire.md` §3.2, servie à `aea5ef7c`). La clé se dérive de la VALEUR
+        /// servie (`Libelle.ParValeur`), jamais du mot affiché. Les replis sont les mots de l'atelier, en minuscules comme il
+        /// les écrit : « légère » et « sans urgence » ne sont plus des choix du client (« Silencieuse » décrivait la carte,
+        /// pas son rang). ⚠️ Le repli n'est PAS la valeur servie à `aea5ef7c` pour `mild` et `silent` : celle-ci portait la
+        /// justification de l'atelier en plus du mot (défaut du back, signalé le 23/09).
+        /// ⛔ Le DOMAINE reste fermé ici : une valeur hors domaine rend `Inconnue` SANS consulter le catalogue — une clé
+        /// servie pour `HIGH` ne rouvrirait pas l'ancien domaine en silence.</summary>
         private static readonly Dictionary<string, string> Gravites =
             new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
             {
-                { "SEVERE", "Grave" },        // RATIFIÉ — maquette, rangées 1 et 3
-                { "MODERATE", "Modérée" },    // RATIFIÉ — maquette, rangée 2
-                { "MILD", "Légère" },         // NON ratifié — la maquette ne montre pas cette bande
+                { "SEVERE", "grave" },        // RATIFIÉ — maquette, rangées 1 et 3
+                { "MODERATE", "modérée" },    // RATIFIÉ — maquette, rangée 2
+                { "MILD", "légère" },         // atelier §3.2
             };
 
         private static readonly Dictionary<string, string> Priorites =
             new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
             {
-                { "critical", "Critique" },   // RATIFIÉ — maquette, rangées 1 et 2
-                { "urgent", "Urgente" },      // RATIFIÉ — maquette, rangée 3
-                { "watching", "À surveiller" }, // NON ratifié
-                { "silent", "Silencieuse" },    // NON ratifié
+                { "critical", "critique" },     // RATIFIÉ — maquette, rangées 1 et 2
+                { "urgent", "urgente" },        // RATIFIÉ — maquette, rangée 3
+                { "watching", "à surveiller" }, // atelier §3.2
+                { "silent", "sans urgence" },   // atelier §3.2
             };
 
-        /// <summary>Le libellé français d'une bande de gravité. Insensible à la casse — le back
-        /// envoie des majuscules pour celle-ci et des minuscules pour l'autre.</summary>
-        public static string Gravite(string bande) => Resoudre(Gravites, bande);
+        /// <summary>Le domaine de la CONFIANCE (`ExceptionDtos.confidence_band`, casse canon `ConfidenceBucket`).</summary>
+        public static readonly string[] DomaineConfiance = { "tentative", "likely", "confident" };
 
-        /// <summary>Le libellé français d'une bande de priorité.</summary>
-        public static string Priorite(string bande) => Resoudre(Priorites, bande);
+        private static readonly Dictionary<string, string> Confiances =
+            new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                { "confident", "il est sûr" },  // RATIFIÉ — cadre 15, `.chip.conf.conf-h`
+                { "likely", "il le croit" },    // atelier §3.2
+                { "tentative", "il hésite" },   // atelier §3.2
+            };
+
+        /// <summary>Le libellé d'une bande de gravité. Insensible à la casse — le back
+        /// envoie des majuscules pour celle-ci et des minuscules pour l'autre.</summary>
+        public static string Gravite(string bande) => Resoudre("exceptions", "gravite", Gravites, bande);
+
+        /// <summary>Le libellé d'une bande de priorité.</summary>
+        public static string Priorite(string bande) => Resoudre("exceptions", "priorite", Priorites, bande);
+
+        /// <summary>⑨-5 — ce que le lieutenant pense de sa propre suggestion (⑩). Remplace `Cap(confidence_band)`, qui
+        /// affichait l'enum anglais capitalisé (« Likely »).</summary>
+        public static string Confiance(string bande) => Resoudre("exception_detail", "confiance", Confiances, bande);
 
         /// <summary>La ligne « gravité · priorité » telle que la maquette la compose. Un seul site
         /// de composition : les deux appelants de ⑨ écrivaient le séparateur chacun de leur côté,
@@ -210,10 +229,21 @@ namespace MafiaCleanCity.Operational.Exceptions
             return t.Contains(" ") ? $"« {t} »" : t;
         }
 
-        private static string Resoudre(Dictionary<string, string> table, string bande)
+        /// <summary>Le domaine d'abord (hors domaine ⇒ `Inconnue`, le catalogue n'est pas consulté), puis la clé dérivée
+        /// de la valeur servie, repli = le mot de l'atelier. La MAJUSCULE INITIALE se pose ICI, une fois, sur le servi comme
+        /// sur le repli : le back et l'atelier écrivent en minuscules, les écrans affichent « Grave · Critique » (ou en
+        /// capitales par style, ce qui revient au même).</summary>
+        private static string Resoudre(string domaine, string role, Dictionary<string, string> table, string bande)
         {
             if (string.IsNullOrWhiteSpace(bande)) return Inconnue;
-            return table.TryGetValue(bande.Trim(), out string libelle) ? libelle : Inconnue;
+            string valeur = bande.Trim();
+            if (!table.TryGetValue(valeur, out string repli)) return Inconnue;
+            string mot = MafiaCleanCity.I18n.Libelle.ParValeur(domaine, role, valeur, repli);
+            return Initiale(string.IsNullOrWhiteSpace(mot) ? repli : mot.Trim());
         }
+
+        /// <summary>« à surveiller » → « À surveiller » ; le reste du mot est intact.</summary>
+        public static string Initiale(string mot) =>
+            string.IsNullOrEmpty(mot) ? mot : char.ToUpperInvariant(mot[0]) + mot.Substring(1);
     }
 }

@@ -175,14 +175,10 @@ namespace MafiaCleanCity.Operational.Exceptions
             AddLayoutElement(quiTxt.gameObject, minHeight: PxD(14f), flexibleHeight: 0);
             TrackText(quiTxt, qui);
 
-            // Les trois bandes, en pastilles — libellés FERMÉS, suivis par le corpus de balayage.
-            // ⚠️ La CONFIANCE reste capitalisée telle quelle : son domaine
-            //    (`tentative|likely|confident`) n'apparaît sur AUCUNE maquette, donc je n'ai pas de
-            //    valeur ratifiée pour elle et je n'en invente pas trois de plus dans le même geste.
-            //    C'est un anglais qui reste, il est nommé, et il part à l'arbitrage avec les trois
-            //    autres non ratifiés. *Un trou déclaré est une propriété ; un trou comblé au
-            //    jugé est un piège.*
-            string pastilles = $"{ExceptionBandes.Ligne(c.severity_band, c.priority_band)} · {Cap(c.confidence_band)}";
+            // Les trois bandes, en pastilles — libellés FERMÉS, suivis par le corpus de balayage. ⑨-5 : la CONFIANCE passe
+            // par `ExceptionBandes.Confiance` (clé `exception_detail.confiance.<valeur>`, repli de l'atelier §3.2) ; elle
+            // affichait l'enum anglais capitalisé (« Likely »).
+            string pastilles = $"{ExceptionBandes.Ligne(c.severity_band, c.priority_band)} · {ExceptionBandes.Confiance(c.confidence_band)}";
             TextMeshProUGUI chips = NewText("Chips", body, pastilles, (int)PxD(CssChipCorps * 1.4f),
                                             TextAlignmentOptions.Left);
             chips.color = SeverityTeinte(c.severity_band);
@@ -485,9 +481,6 @@ namespace MafiaCleanCity.Operational.Exceptions
             Stretch((RectTransform)t.transform, new Vector2(10, 2), new Vector2(-10, -2));
             if (track) TrackText(t, label);
         }
-
-        private static string Cap(string b) =>
-            string.IsNullOrEmpty(b) ? "Unknown" : char.ToUpperInvariant(b[0]) + b.Substring(1).ToLowerInvariant();
 
         // W3.U1 C1 (design D2) — optional parent-of-mount the AppShell renseigne BEFORE Start() runs.
         // See DashboardController.mountParent for the full rationale (byte-identical mechanism here).
