@@ -52,11 +52,28 @@
   → « Solide ». **La température** (féminin, celle du bâtiment) : « Froide, idéale » → « Se réchauffe » → « Trop chaude » — « Trop » dit
   ce que « Hot » veut dire ici : un défaut, pas un état neutre.
 - « En réparation » est le mot du cachet de ⑨ (`11-…` §3.7, « EN RÉPARATION ») : une seule forme pour un seul état.
-- ⚠️ **Registre des tutoriels** : ils **tutoient** (« tes consignes », « Tranche », « la ville tourne sans toi »), alors que le jeu
-  **vouvoie** partout ailleurs (« Vos lieutenants ont tenu la ligne », « votre parole », « vous n'avez encore donné aucune règle »). L'en
-  ne voit pas la différence ; le fr, si. Hors de ce paquet (le fr servi est recopié tel quel) : **à trancher par l'user** — je recommande
-  le vouvoiement, celui de tous les écrans cités dans ces paquets.
+- ✅ **Registre des tutoriels — tranché par le canon** (`pluralization_and_gender.md:209`, « Vouvoiement systématique en FR vers le
+  joueur ») : 6 tutoriels tutoyaient ; leur fr est réécrit au « vous » dans la section « Vouvoiement » ci-dessous. Les 14 en du paquet
+  restent tels quels.
 - `onboarding.preseed_exception.card` et `tutorial.exception_card.onboarding_preseed` portent la **même** phrase : deux clés pour une
   carte. Le back dira laquelle a un demandeur.
 - Les 14 clés `building.{cover,raid_risk,setup,structural,temperature}.*` n'ont **aucun littéral** qui les demande dans les deux arbres
   client ; elles peuvent arriver par une clé servie (`*_i18n`) que le client traduit telle quelle. Le fr est donné dans les deux cas.
+
+## Vouvoiement — les tutoriels réécrits au « vous » (canon, 2026-09-23)
+
+Le canon tranche : « **Vouvoiement systématique en FR** vers le joueur » (`docs/tech/19_i18n_strategy/pluralization_and_gender.md:209`),
+confirmé par `translation_workflow.md:122` (« vouvoiement par défaut envers le joueur »). Balayage de la famille entière, registre FR
+(`e75cf69d`) : **12 clés** `tutorial.*` / `onboarding.*`, dont **6 tutoient** — 4 par un pronom (« tes », « tu », « ta », « toi »), 2 par un
+impératif (« Réduis, ou encaisse », « Tranche, ou laisse ») ; les 6 autres n'adressent personne. Hors de ces deux familles, **0** valeur FR
+ne porte un pronom de 2ᵉ personne du singulier (les impératifs, eux, ne se détectent pas par un motif : balayage limité aux pronoms).
+Vérifié : `python3 Tools/atelier-2026-09-22/verifier-vouvoiement.py`. L'en du paquet ci-dessus ne change pas (« you » est neutre).
+
+| clé | fr servi (tutoie) | fr réécrit (vouvoie) |
+|---|---|---|
+| `tutorial.compression_week` | Semaine de compression : l'organisation est sous tension. Réduis, ou encaisse. | Semaine de compression : l'organisation est sous tension. Réduisez, ou encaissez. |
+| `tutorial.cue_stack_intro` | La pile du jour ordonne tes consignes. Le premier créneau part en premier. | La pile du jour ordonne vos consignes. Le premier créneau part en premier. |
+| `tutorial.daily_review_intro` | Chaque matin, la Revue liste ce qui a dévié de la routine. Tranche, ou laisse. | Chaque matin, la Revue liste ce qui a dévié de la routine. Tranchez, ou laissez. |
+| `tutorial.graduation` | Un lieutenant a fini son apprentissage. Il décide seul, dans le cadre que tu fixes. | Un lieutenant a fini son apprentissage. Il décide seul, dans le cadre que vous fixez. |
+| `tutorial.possibility_horizon_intro` | L'horizon montre ce que tes lieutenants peuvent apprendre ensuite. | L'horizon montre ce que vos lieutenants peuvent apprendre ensuite. |
+| `tutorial.queue_runs_dry` | La file est vide. Rien n'attend ta décision : la ville tourne sans toi. | La file est vide. Rien n'attend votre décision : la ville tourne sans vous. |
