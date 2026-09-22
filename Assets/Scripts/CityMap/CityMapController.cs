@@ -1049,7 +1049,7 @@ namespace MafiaCleanCity.CityMap
 
             if (cell != null)
             {
-                detail.rows.Add(new DetailRow("Profile", cell.Model.profile));
+                detail.rows.Add(new DetailRow(TissuDeDistrict.LibelleDeLigne, TissuDeDistrict.Valeur(cell.Model.profile)));
                 detail.rows.Add(new DetailRow("Blocks", cell.Model.block_count.ToString()));
                 detail.rows.Add(new DetailRow("Bank", cell.Model.bank_side));
                 detail.rows.Add(new DetailRow("Control", cell.Model.control_state, true, true, CityMapEnums.ColorFor(cell.State)));

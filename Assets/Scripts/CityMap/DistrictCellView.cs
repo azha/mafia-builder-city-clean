@@ -52,7 +52,7 @@ namespace MafiaCleanCity.CityMap
                 // jamais une réécriture de la donnée — `.ToUpperInvariant()` ici l'a fait rougir.
                 label.text = compact
                     ? CityMapEnums.DisplayName(dto)
-                    : $"{CityMapEnums.DisplayName(dto)}    ·    {dto.profile}    ·    {dto.block_count} blocs";
+                    : $"{CityMapEnums.DisplayName(dto)}    ·    {TissuDeDistrict.EnLigne(dto.profile)}    ·    {dto.block_count} blocs";
         }
 
         /// <summary>Wire the heat badge UI (built by the controller). Hidden until heat is set.</summary>
