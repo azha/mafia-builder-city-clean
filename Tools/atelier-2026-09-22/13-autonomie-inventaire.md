@@ -88,7 +88,7 @@ pas la donnée (règle posée au `05-…`). Le client met en capitales et retire
 | les touches | Lire · OK · Options · Retour · Suivant | Read · OK · Options · Back · Next | fixe |
 | l'aide de liste | ▲▼ choisir · OK lire | ▲▼ select · OK read | fixe |
 | le délai | Sans réponse, la 1 s'appliquera seule | No answer, and 1 applies itself | **sourcé** : `default_on_timeout` applique l'option A quand l'âge atteint `backlog_cap_cycles` (3 par défaut, `lieutenant-tunables.ts:187-189`) |
-| la répétition | Le même homme, chaque cycle | The same person, every cycle | dérivé : même `lieutenant_id` sur plusieurs rapports ouverts |
+| la répétition | La même personne, chaque cycle *(la maquette dit « le même homme » : genré, remplacé)* | The same person, every cycle | dérivé : même `lieutenant_id` sur plusieurs rapports ouverts |
 | envoyé | Envoyé | Sent | ✅ **sans heure** (tranché le 23/09 : le rapport porte un cycle, pas un horodatage ; maquette corrigée, atelier `ec4c09a`) |
 | la réponse | Réponse | Reply | `outcome` de `resolve` |
 | message suivant | Message suivant | Next message | fixe |
