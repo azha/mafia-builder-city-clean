@@ -2405,7 +2405,7 @@ namespace MafiaCleanCity.CityMap
             if (outcome != null && outcome.Ok)
             {
                 FicheCollecteReussites++;
-                if (ficheSortie != null) ficheSortie.text = "Caisse confiée à la planque.";
+                if (ficheSortie != null) ficheSortie.text = "La caisse a rejoint votre planque.";
             }
             else if (ficheSortie != null)
             {

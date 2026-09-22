@@ -171,7 +171,7 @@ namespace MafiaCleanCity.Operational
         public IEnumerator Inject(string frontShopId, string safehouseId, int amountCents)
         {
             yield return RunAction(c => client.Inject(frontShopId, safehouseId, amountCents, Token, c),
-                "Cash injected", "Inject unavailable");
+                "Argent injecté", "Impossible d'injecter");
             // Reflect the post-inject node state in the pipeline view (cleanliness may have moved;
             // deviation may have flipped). Best-effort re-load — never blocks the action outcome.
             if (LastActionOutcome != null && LastActionOutcome.Ok && !string.IsNullOrEmpty(nodeId))
@@ -183,7 +183,7 @@ namespace MafiaCleanCity.Operational
         public IEnumerator Collect(string dealerId, string safehouseId)
         {
             yield return RunAction(c => client.Collect(dealerId, safehouseId, Token, c),
-                "Float collected", "Collect unavailable");
+                "La caisse a rejoint votre planque.", "Impossible de ramasser");
         }
 
         private IEnumerator RunAction(System.Func<System.Action<ActionOutcome>, IEnumerator> call,
@@ -194,7 +194,7 @@ namespace MafiaCleanCity.Operational
             LastActionOutcome = outcome;
 
             // F2: surface a human message, never a raw HTTP code, to the player.
-            string line = outcome.Ok ? okPrefix : $"{errPrefix} — {outcome.Message}";
+            string line = BuildingCardController.LigneDAction(outcome, okPrefix, errPrefix);   // c2-bis, la règle de ②
             if (actionStatusText != null) actionStatusText.text = line;
             TrackText(actionStatusText, line);
         }

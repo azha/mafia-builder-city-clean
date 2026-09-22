@@ -162,6 +162,7 @@ namespace MafiaCleanCity.Operational
                 {
                     outcome.Ok = false;
                     outcome.Message = ReadableError(req);
+                    outcome.CleI18n = BuildingCardClient.CleUtilisateur(req);
                 }
             }
             done?.Invoke(outcome);

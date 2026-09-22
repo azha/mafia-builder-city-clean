@@ -450,7 +450,7 @@ namespace MafiaCleanCity.Operational
         // the player (F2: never a bare 503/ERR_NETWORK). The status is kept separately
         // on the outcome for the wiring assertion / logs.
         /// <summary>La clé `user_facing_i18n_key` de l'enveloppe d'erreur, ou null (atelier c2-bis).</summary>
-        private static string CleUtilisateur(UnityWebRequest req)
+        internal static string CleUtilisateur(UnityWebRequest req)
         {
             string text = req.downloadHandler != null ? req.downloadHandler.text : null;
             if (string.IsNullOrEmpty(text)) return null;

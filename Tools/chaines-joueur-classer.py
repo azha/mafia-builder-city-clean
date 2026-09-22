@@ -205,8 +205,8 @@ SOURCE = [
  (L, "Order failed", 0, "② RunAction (:355)"),
  (L, "Cook started", 0, "② RunAction (:362)"),
  (L, "Cook unavailable", 0, "② RunAction (:362, :415)"),
- (L, "Cash injected", 1, "② RunAction (:369) fermé ; reste ⑪ LaunderingController:174 (hors annexe c, signalé)"),
- (L, "Inject unavailable", 1, "② RunAction (:369) fermé ; reste ⑪ LaunderingController:174 (hors annexe c, signalé)"),
+ (L, "Cash injected", 0, "② RunAction (:369) fermé ; reste ⑪ LaunderingController:174 (hors annexe c, signalé) · lot D t3 22/09, ⑪ (1→0)"),
+ (L, "Inject unavailable", 0, "② RunAction (:369) fermé ; reste ⑪ LaunderingController:174 (hors annexe c, signalé) · lot D t3 22/09, ⑪ (1→0)"),
  (L, "Conversion requested", 0, "② RunAction (:376) → Ouverture demandée"),
  (L, "Convert unavailable", 0, "② RunAction (:376) → Impossible d'ouvrir"),
  (L, "Repair unavailable", 0, "② RunAction (:384)"),
@@ -273,6 +273,9 @@ SOURCE = [
  (L, "Scheduled", 0, "② AppointmentStatusLabel — bande servie traduite par la clé de sa VALEUR (lot E, Libelle.ParValeur) ; le mot anglais ne revient pas"),
  (L, "Premium", 0, "② PayoutLabel — bande servie traduite par la clé de sa VALEUR (lot E, Libelle.ParValeur) ; le mot anglais ne revient pas"),
  (L, "Massive", 0, "② HeldLabel — bande servie traduite par la clé de sa VALEUR (lot E, Libelle.ParValeur) ; le mot anglais ne revient pas"),
+ (L, "Float collected", 0, "⑪ RunAction (:186)"),
+ (L, "Collect unavailable", 0, "⑪ RunAction (:186)"),
+ (B, "Caisse confiée à la planque", 0, "① (:2408) — le même geste que ㉟ dit autrement ; aligné sur « La caisse a rejoint votre planque. » (atelier d1)"),
 ]
 
 
