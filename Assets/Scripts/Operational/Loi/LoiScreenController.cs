@@ -417,7 +417,7 @@ namespace MafiaCleanCity.Operational
 
                 TextMeshProUGUI note = NouveauTexteFiche(affairesRoot, "AffairesNote",
                     Libelle.De("loi", "bloc",
-                        "Une affaire naît d'une descente — rien sur cet écran n'en crée."), 7.5f,
+                        "Une affaire naît d'une descente — rien ici n'en crée."), 7.5f,
                     DesignTokens.Current.onSurfaceMuted, false);
                 note.enableWordWrapping = true;
                 TrackText(note.text);

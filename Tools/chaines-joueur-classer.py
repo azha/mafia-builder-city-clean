@@ -90,7 +90,7 @@ VERDICTS = [
  (B, "écran ne peut donc pas",                  0, "CLOS lot C 22/09 (㊴ le dossier) — était : « cet écran » ⚠️ motif re-casé : ma réécriture a mis une majuscule à « Cet », et le fragment minuscule rendait 0 — un zéro de CASSE, pas de suppression"),
  (B, "CE QUE CET ÉCRAN SAIT",                   0, "CLOS lot C 22/09 (㊳ le journal) — était : « cet écran » · lot C 22/09 : ㉞ les ordres du soir (3→2) · lot C 22/09 : ㊵ la filière (2→1)"),
  (B, "CE QUE CET ÉCRAN NE PEUT PAS",            0, "PÉRIMÉE, RE-MESURÉE 22/09 : disparue — Carnet:296 dit désormais « CE QUE LE SERVEUR NE DIT PAS », compté sur ce motif-là"),
- (B, "rien sur cet écran n'en crée",            2, "« cet écran »"),
+ (B, "rien sur cet écran n'en crée",            0, "CLOS lot C 22/09 (㉛ la loi) — était : « cet écran »"),
  (B, "pas un choix d’écran",                    1, "« choix d'écran » (apostrophe typographique — le fragment ASCII rendait 0)"),
  (B, "l'écran ne montre rien plutôt que",       0, "CLOS lot C 22/09 (㊱ l'horizon) — était : « l'écran »"),
  (B, "Voilà l'écran tel qu'il s'afficherait",   0, "CLOS lot C 22/09 (㊱ l'horizon) — était : « l'écran tel qu'il s'afficherait » — CONSERVÉ : c'est le cadre ratifié de la maquette"),
