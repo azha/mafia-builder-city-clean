@@ -279,6 +279,17 @@ namespace MafiaCleanCity.Operational.Exceptions
                 { "RESOLVED", "C'est réglé, pour cette fois" },
             };
 
+        /// <summary>S03 — l'ENSEIGNE du bâtiment que la carte vise (« Transit Marrek »), ou `null` : pas de bâtiment servi, plusieurs
+        /// (le back rend `null`), ou un bâtiment qui n'est plus au joueur (`name_i18n: null`). Jamais un nom deviné. L'enseigne est
+        /// NUE (sans article) : c'est aux mots de l'atelier de dire comment elle entre dans une phrase.</summary>
+        public static string EnseigneVisee(ExceptionCardDto c)
+        {
+            if (c == null || c.building == null || string.IsNullOrEmpty(c.building.id)) return null;
+            var nom = c.building.name_i18n;
+            if (nom == null || string.IsNullOrEmpty(nom.key) || nom.@params == null) return null;
+            return string.IsNullOrWhiteSpace(nom.@params.enseigne) ? null : nom.@params.enseigne.Trim();
+        }
+
         /// <summary>⑨-6 — la phrase SOUS le cachet de l'après (cadre 17) : `exceptions.apres.<issue>`, une par issue, repli =
         /// les phrases de l'atelier (`11-exceptions-inventaire.md` §3.10 A, `da146da5`) — ce qui s'est PASSÉ, sans genre.
         /// Issue hors domaine ⇒ `null` (pas de phrase), jamais l'enum.</summary>
