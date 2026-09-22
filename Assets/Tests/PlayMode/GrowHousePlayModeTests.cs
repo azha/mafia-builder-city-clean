@@ -129,18 +129,18 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.IsTrue(controller.GrowStageShown, "the grow-stage row is shown on a grow_house with an active grow");
             Assert.IsTrue(controller.HusbandryShown, "the husbandry row is shown on a grow_house with an active grow");
             var texts = controller.RenderedTexts;
-            Assert.IsTrue(texts.Any(t => t == "Grow stage"), "grow-stage row label rendered");
+            Assert.IsTrue(texts.Any(t => t == "Pousse"), "grow-stage row label rendered");
             Assert.IsTrue(texts.Any(t => t == "Mid"), "grow-stage band value 'Mid' rendered");
-            Assert.IsTrue(texts.Any(t => t == "Husbandry"), "husbandry row label rendered");
+            Assert.IsTrue(texts.Any(t => t == "Soin"), "husbandry row label rendered");
             Assert.IsTrue(texts.Any(t => t == "On track"), "husbandry band value 'On track' rendered");
-            Assert.IsTrue(texts.Any(t => t == "Crop"), "crop row label rendered");
+            Assert.IsTrue(texts.Any(t => t == "Culture"), "crop row label rendered");
             Assert.IsTrue(texts.Any(t => t == "Verdant root"), "crop value 'Verdant root' rendered (the planted precursor)");
 
             // The raid-risk band is REUSED from the building card (an active grow is hot → above LOW). Assert it is a known
             // band and the gauge row rendered (the exact level varies with the city's accumulated heat).
             Assert.Contains(card.raid_risk, RaidRiskBands, "raid_risk is a known band");
             Assert.AreNotEqual("LOW", card.raid_risk, "an active grow makes the grow_house hot → raid_risk climbs above LOW");
-            Assert.IsTrue(texts.Any(t => t == "Raid risk"), "raid-risk row label rendered (REUSE the vector-#1 surface)");
+            Assert.IsTrue(texts.Any(t => t == "Risque de descente"), "raid-risk row label rendered (REUSE the vector-#1 surface)");
 
             // The Tend button is shown + ENABLED (tend_due=true → server-authoritative the tend is available).
             Assert.IsTrue(controller.TendButtonShown, "Tend button shown on a grow_house with an active (non-DONE) grow");

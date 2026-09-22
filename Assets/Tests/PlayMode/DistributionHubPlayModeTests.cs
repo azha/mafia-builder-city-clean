@@ -125,9 +125,9 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.IsTrue(controller.RosterShown, "the roster row is shown on a distribution_hub");
             Assert.IsTrue(controller.VehiclesShown, "the unlocked-vehicles row is shown on a distribution_hub");
             var texts = controller.RenderedTexts;
-            Assert.IsTrue(texts.Any(t => t == "Hub tier"), "hub-tier row label rendered");
+            Assert.IsTrue(texts.Any(t => t == "Taille du relais"), "hub-tier row label rendered");
             Assert.IsTrue(texts.Any(t => t == "Medium"), "hub-tier band value 'Medium' rendered");
-            Assert.IsTrue(texts.Any(t => t == "Roster"), "roster row label rendered");
+            Assert.IsTrue(texts.Any(t => t == "Équipe"), "roster row label rendered");
             Assert.IsTrue(texts.Any(t => t == "Busy"), "roster band value 'Busy' rendered");
             Assert.IsTrue(texts.Any(t => t == "Vehicles"), "vehicles row label rendered");
             Assert.IsTrue(texts.Any(t => t.Contains("Bike") && t.Contains("Car")), "unlocked-vehicles list rendered (Foot, Bike, Car)");

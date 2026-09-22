@@ -114,9 +114,9 @@ namespace MafiaCleanCity.Operational.Tests
             var texts = controller.RenderedTexts;
             Assert.IsTrue(texts.Any(t => t == "Substance"), "cold-chain Substance row label rendered");
             Assert.IsTrue(texts.Any(t => t == "Crick"), "substance value 'Crick' rendered");
-            Assert.IsTrue(texts.Any(t => t == "Temperature"), "cold-chain Temperature row label rendered");
+            Assert.IsTrue(texts.Any(t => t == "Température"), "cold-chain Temperature row label rendered");
             Assert.IsTrue(texts.Any(t => t == "Optimal (cold)"), "temperature band 'Optimal (cold)' rendered");
-            Assert.IsTrue(texts.Any(t => t == "Cold chain"), "cold-chain status row label rendered");
+            Assert.IsTrue(texts.Any(t => t == "Chaîne du froid"), "cold-chain status row label rendered");
             Assert.IsTrue(texts.Any(t => t == "Stable"), "not-degrading rendered as 'Stable'");
 
             // R2.2: no raw scalar leaks client-side (no °C / grams / rate / ticks).
@@ -152,7 +152,7 @@ namespace MafiaCleanCity.Operational.Tests
 
             Assert.IsFalse(controller.ColdChainShown, "no cold-chain row on a non-cold-chain (Brindle) lab");
             var texts = controller.RenderedTexts;
-            Assert.IsFalse(texts.Any(t => t == "Temperature"), "no Temperature row on a Brindle lab");
+            Assert.IsFalse(texts.Any(t => t == "Température"), "no Temperature row on a Brindle lab");
             Assert.IsFalse(texts.Any(t => t == "Optimal (cold)"), "no cold-chain temperature band on a Brindle lab");
             AssertNoRawScalar(texts);
 

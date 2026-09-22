@@ -122,10 +122,10 @@ namespace MafiaCleanCity.Operational.Tests
             // and the raid notification ("Raided — seized …").
             var texts = controller.RenderedTexts;
             Assert.IsTrue(texts.Any(t => t == "Damaged"), "structural band 'Damaged' rendered");
-            Assert.IsTrue(texts.Any(t => t == "Raid risk"), "raid-risk row label rendered");
+            Assert.IsTrue(texts.Any(t => t == "Risque de descente"), "raid-risk row label rendered");
             string riskLabel = RaidRiskWord(card.raid_risk);
             Assert.IsTrue(texts.Any(t => t == riskLabel), $"raid-risk band '{riskLabel}' rendered");
-            Assert.IsTrue(texts.Any(t => t.StartsWith("Raided — seized")), "raid notification rendered");
+            Assert.IsTrue(texts.Any(t => t.StartsWith("Descente — saisi")), "raid notification rendered");
 
             // The Repair button is present on a DAMAGED building.
             Assert.IsTrue(controller.RepairButtonShown, "Repair button is shown on a DAMAGED building");
@@ -200,11 +200,11 @@ namespace MafiaCleanCity.Operational.Tests
 
             var texts = controller.RenderedTexts;
             // The raid-risk row is readable on a healthy building too.
-            Assert.IsTrue(texts.Any(t => t == "Raid risk"), "raid-risk row label rendered on a healthy building");
+            Assert.IsTrue(texts.Any(t => t == "Risque de descente"), "raid-risk row label rendered on a healthy building");
             string riskLabel = RaidRiskWord(card.raid_risk);
             Assert.IsTrue(texts.Any(t => t == riskLabel), $"healthy raid-risk band '{riskLabel}' rendered");
             // No raid notification on a non-raided building.
-            Assert.IsFalse(texts.Any(t => t.StartsWith("Raided — seized")), "no raid notification on a healthy building");
+            Assert.IsFalse(texts.Any(t => t.StartsWith("Descente — saisi")), "no raid notification on a healthy building");
             // NO Repair button on a non-DAMAGED building.
             Assert.IsFalse(controller.RepairButtonShown, "no Repair button on a healthy (OPERATIONAL) building");
             Assert.IsFalse(texts.Any(t => t == "Réparer"), "no Repair button label on a healthy building");

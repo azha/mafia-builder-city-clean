@@ -106,6 +106,8 @@ VERDICTS = [
  (L, "[<>] Arbitrage", 0, "㉔ (:373)"),
  (L, "Exposition accrue", 0, "㉔ (:374)"),
  (L, "Coût d'opportunité", 0, "㉔ (:375)"),
+ (L, "Degrading", 0, "② valeur (:678)"),
+ (L, "Stable", 0, "② valeur (:678)"),
  (N, "Aucune route connue pour l'instant",      0, "CLOS lot C 22/09 (㉘ la distribution) — était : « route » = endpoint, alors que l'écran voisin dit « CETTE ROUTE » pour un itinéraire"),
  (B, "aucune route n'existe encore",            0, "CLOS lot C 22/09 (⑰ le commissariat) — était : « route »"),
  (B, "la route voisine vise les affaires",      0, "CLOS lot C 22/09 (⑰ le commissariat) — était : « route voisine »"),
@@ -218,6 +220,18 @@ SOURCE = [
  (L, "Deposit unavailable", 0, "② RunAction (:574)"),
  (L, "Cash withdrawn", 0, "② RunAction (:586)"),
  (L, "Withdraw unavailable", 0, "② RunAction (:586)"),
+ (L, "Raid risk", 0, "② ligne (:652)"),
+ (L, "Raided — seized", 0, "② alerte (:659)"),
+ (L, "Temperature", 0, "② ligne (:675)"),
+ (L, "Cold chain", 0, "② ligne (:678)"),
+ (L, "Lab tier", 0, "② ligne (:704)"),
+ (L, "Purity", 0, "② ligne (:714)"),
+ (L, "Appointment", 0, "② ligne (:724)"),
+ (L, "Payout", 0, "② ligne (:726)"),
+ (L, "Grow stage", 0, "② ligne (:746)"),
+ (L, "Husbandry", 0, "② ligne (:750)"),
+ (L, "Hub tier", 0, "② ligne (:770)"),
+ (L, "Setup", 0, "② ligne (:629)"),
 ]
 
 

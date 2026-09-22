@@ -637,10 +637,10 @@ namespace MafiaCleanCity.Operational
 
             // Status rows — each line: glyph (shape) + label + qualitative band value.
             // F2: shape glyph is present alongside colour (colour is never the sole carrier).
-            AddStatusRow("Setup", SetupLabel(card.setup_state), SetupGlyph(card.setup_state), SetupAccent(card.setup_state));
-            AddStatusRow("Operational", card.operational ? "Yes" : "No",
+            AddStatusRow("Mise en place", SetupLabel(card.setup_state), SetupGlyph(card.setup_state), SetupAccent(card.setup_state));
+            AddStatusRow("En service", card.operational ? "oui" : "non",
                 card.operational ? "[#]" : "[ ]", card.operational ? AccentMild : AccentSevere);
-            AddStatusRow("Cover", CoverLabel(card.cover_band), CoverGlyph(card.cover_band), CoverAccent(card.cover_band));
+            AddStatusRow("Couverture", CoverLabel(card.cover_band), CoverGlyph(card.cover_band), CoverAccent(card.cover_band));
 
             // ⛔ L'ENTRETIEN — donnée REÇUE et JETÉE jusqu'ici. `lapse_phase_bucket` et
             // `days_until_maintenance_due` sont dans le DTO depuis qu'il existe, et aucune ligne
@@ -660,15 +660,15 @@ namespace MafiaCleanCity.Operational
             AddStatusRow("Structure", StructuralLabel(card.structural_state),
                 StructuralGlyph(card.structural_state), StructuralAccent(card.structural_state));
             // Raid-risk band gauge (LOW → IMMINENT) — a filled-bar glyph + worded band label.
-            AddStatusRow("Raid risk", RaidRiskLabel(card.raid_risk),
+            AddStatusRow("Risque de descente", RaidRiskLabel(card.raid_risk),
                 RaidRiskGlyph(card.raid_risk), RaidRiskAccent(card.raid_risk));
 
             // Raid notification/flag — shown only when this building was recently raided. The seized amount is a
             // qualitative band (NEVER raw grams; R2.2). A warning glyph carries the alert alongside colour (F2).
             if (card.recently_raided)
             {
-                string notif = $"Raided — seized {SeizedLabel(card.seized_amount)}";
-                AddStatusRow("Alert", notif, "[!]", AccentSevere);
+                string notif = $"Descente — saisi : {SeizedLabel(card.seized_amount)}";
+                AddStatusRow("Alerte", notif, "[!]", AccentSevere);
             }
 
             // ----- Phase-2b vector #2 (Crick) cold-chain surface — ONLY when the storage projection carries a
@@ -683,10 +683,10 @@ namespace MafiaCleanCity.Operational
                 // Substance row — surfaces which substance this cold chain protects (Crick).
                 AddStatusRow("Substance", SubstanceLabel(storage.substance_type), "[*]", AccentMild);
                 // Temperature band row — the qualitative cold-chain status (OPTIMAL_COLD / MODERATE / HOT).
-                AddStatusRow("Temperature", TemperatureLabel(storage.temperature_status),
+                AddStatusRow("Température", TemperatureLabel(storage.temperature_status),
                     TemperatureGlyph(storage.temperature_status), TemperatureAccent(storage.temperature_status));
                 // Degrading indicator row — Stable vs Degrading (a boolean, never a raw rate).
-                AddStatusRow("Cold chain", storage.degrading ? "Degrading" : "Stable",
+                AddStatusRow("Chaîne du froid", storage.degrading ? "se dégrade" : "stable",
                     storage.degrading ? "[v]" : "[=]", storage.degrading ? AccentSevere : AccentMild);
             }
 
@@ -712,7 +712,7 @@ namespace MafiaCleanCity.Operational
                 if (!string.IsNullOrEmpty(card.lab_tier_band) && card.lab_tier_band != "NONE")
                 {
                     LabTierShown = true;
-                    AddStatusRow("Lab tier", LabTierLabel(card.lab_tier_band),
+                    AddStatusRow("Taille du labo", LabTierLabel(card.lab_tier_band),
                         LabTierGlyph(card.lab_tier_band), LabTierAccent(card.lab_tier_band));
                 }
 
@@ -722,7 +722,7 @@ namespace MafiaCleanCity.Operational
                 if (st != null && !string.IsNullOrEmpty(st.purity_band))
                 {
                     PurityBandShown = true;
-                    AddStatusRow("Purity", PurityLabel(st.purity_band),
+                    AddStatusRow("Pureté", PurityLabel(st.purity_band),
                         PurityGlyph(st.purity_band), PurityAccent(st.purity_band));
                 }
             }
@@ -732,9 +732,9 @@ namespace MafiaCleanCity.Operational
             // band + the payout band only (never raw ticks/cents); F2: a distinct glyph per status alongside colour.
             if (CurrentAppointment != null && !string.IsNullOrEmpty(CurrentAppointment.status))
             {
-                AddStatusRow("Appointment", AppointmentStatusLabel(CurrentAppointment.status),
+                AddStatusRow("Rendez-vous", AppointmentStatusLabel(CurrentAppointment.status),
                     AppointmentStatusGlyph(CurrentAppointment.status), AppointmentStatusAccent(CurrentAppointment.status));
-                AddStatusRow("Payout", PayoutLabel(CurrentAppointment.payout_band),
+                AddStatusRow("Gain", PayoutLabel(CurrentAppointment.payout_band),
                     PayoutGlyph(CurrentAppointment.payout_band), PayoutAccent(CurrentAppointment.payout_band));
             }
 
@@ -751,14 +751,14 @@ namespace MafiaCleanCity.Operational
                 && !string.IsNullOrEmpty(CurrentGrow.grow_stage_band))
             {
                 // Crop row — surfaces which growable precursor this grow_house is cultivating (the planted substance).
-                AddStatusRow("Crop", GrowablePrecursorLabel(SelectedPrecursor), "[*]", AccentMild);
+                AddStatusRow("Culture", GrowablePrecursorLabel(SelectedPrecursor), "[*]", AccentMild);
                 // Grow-stage band row — the qualitative growth phase (EARLY → DONE) with a rising filled-bar glyph.
                 GrowStageShown = true;
-                AddStatusRow("Grow stage", GrowStageLabel(CurrentGrow.grow_stage_band),
+                AddStatusRow("Pousse", GrowStageLabel(CurrentGrow.grow_stage_band),
                     GrowStageGlyph(CurrentGrow.grow_stage_band), GrowStageAccent(CurrentGrow.grow_stage_band));
                 // Husbandry band row — the qualitative tend trajectory (WITHERED → THRIVING) — the husbandry payoff signal.
                 HusbandryShown = true;
-                AddStatusRow("Husbandry", HusbandryLabel(CurrentGrow.husbandry_band),
+                AddStatusRow("Soin", HusbandryLabel(CurrentGrow.husbandry_band),
                     HusbandryGlyph(CurrentGrow.husbandry_band), HusbandryAccent(CurrentGrow.husbandry_band));
             }
 
@@ -778,7 +778,7 @@ namespace MafiaCleanCity.Operational
                 if (!string.IsNullOrEmpty(card.hub_tier_band) && card.hub_tier_band != "NONE")
                 {
                     HubTierShown = true;
-                    AddStatusRow("Hub tier", HubTierLabel(card.hub_tier_band),
+                    AddStatusRow("Taille du relais", HubTierLabel(card.hub_tier_band),
                         HubTierGlyph(card.hub_tier_band), HubTierAccent(card.hub_tier_band));
                 }
                 // Roster-occupancy band row — how much of the player's concurrent-shipment capacity is in use (OPEN / BUSY /
@@ -786,7 +786,7 @@ namespace MafiaCleanCity.Operational
                 if (!string.IsNullOrEmpty(card.roster_band) && card.roster_band != "NONE")
                 {
                     RosterShown = true;
-                    AddStatusRow("Roster", RosterLabel(card.roster_band),
+                    AddStatusRow("Équipe", RosterLabel(card.roster_band),
                         RosterGlyph(card.roster_band), RosterAccent(card.roster_band));
                 }
                 // Unlocked-vehicles row — the categorical vehicle modes the hub unlocks (FOOT always; +BIKE/CAR on an
