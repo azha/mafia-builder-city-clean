@@ -1,0 +1,146 @@
+{
+ "dossier": "reputation",
+ "tour": "r17",
+ "sym": "㊲",
+ "precedent": "r16-2026-09-07",
+ "prepare_le": "2026-09-22",
+ "prepare_par": "atelier / DA — preparer-r4-famille-r17-miroir-2026-09-22.py",
+ "client": "5544ecd2",
+ "cumul": "81803f0a",
+ "atelier": "8509195",
+ "classement": [
+  {
+   "id": "M1",
+   "gravite": "MAJEUR",
+   "ecart": "à 1920, l'ascenseur posé SUR le contenu",
+   "classement": "À REJUGER",
+   "pourquoi": "correctif client `0d66e2e8` (gouttière libre) — la planche 1920 le tranche"
+  },
+  {
+   "id": "M2",
+   "gravite": "MAJEUR",
+   "ecart": "panneau élastique −11,6 %, la carte portrait en sort par le bas",
+   "classement": "À REJUGER",
+   "pourquoi": "le paragraphe du bloc bas est RÉÉCRIT (`240bbe34`) : son nombre de lignes fixe la hauteur laissée au panneau élastique ; la référence garde 3 lignes, le client peut en rendre un autre nombre"
+  },
+  {
+   "id": "M3",
+   "gravite": "MAJEUR",
+   "ecart": "le visage déborde de la chevelure",
+   "classement": "TENU",
+   "pourquoi": "portrait inchangé des deux côtés (`ReputationPortrait.cs` non touché ; référence au pixel près sur la carte)"
+  },
+  {
+   "id": "m1",
+   "gravite": "MINEUR",
+   "ecart": "col en V +54,4 % d'aire",
+   "classement": "TENU",
+   "pourquoi": "non touché"
+  },
+  {
+   "id": "m2",
+   "gravite": "MINEUR",
+   "ecart": "reflet du miroir +68 % et bord à bord",
+   "classement": "À REJUGER",
+   "pourquoi": "la RÉFÉRENCE a changé : son reflet ne traverse plus la carte (56,3 → 41,4 sur la bande) — l'écart se re-mesure contre #120 re-rendu"
+  },
+  {
+   "id": "m3",
+   "gravite": "MINEUR",
+   "ecart": "boîte de compteur sans dégradé intérieur",
+   "classement": "TENU",
+   "pourquoi": "compteurs au pixel près dans la référence ; client non touché"
+  },
+  {
+   "id": "m4",
+   "gravite": "MINEUR",
+   "ecart": "lueur ambrée sous le rail haut",
+   "classement": "TENU",
+   "pourquoi": "non touché"
+  },
+  {
+   "id": "m5",
+   "gravite": "MINEUR",
+   "ecart": "aparté « ce qu'il a absorbé » en 2 lignes au lieu de 3",
+   "classement": "TENU",
+   "pourquoi": "texte de l'aparté inchangé des deux côtés"
+  },
+  {
+   "id": "m6",
+   "gravite": "MINEUR",
+   "ecart": "marges et hors-tout du cadre",
+   "classement": "TENU",
+   "pourquoi": "non touché"
+  },
+  {
+   "id": "m7",
+   "gravite": "MINEUR",
+   "ecart": "boîte du CTA 6 px plus basse",
+   "classement": "TENU",
+   "pourquoi": "non touché"
+  },
+  {
+   "id": "m8",
+   "gravite": "MINEUR",
+   "ecart": "filet or sous le sous-titre 6 px plus haut",
+   "classement": "TENU",
+   "pourquoi": "non touché"
+  },
+  {
+   "id": "A3",
+   "gravite": "ASSUMÉ",
+   "ecart": "le reflet est FIXE, dans le tiers haut",
+   "classement": "À RE-VÉRIFIER",
+   "pourquoi": "même cause que `m2` : le reflet de la référence a changé"
+  },
+  {
+   "id": "R4",
+   "gravite": "ARBITRAGE",
+   "ecart": "libellés de la maquette en retard (HEAT, tiède, $ 24 850, JOUR 12)",
+   "classement": "CADUC (3 sur 4)",
+   "pourquoi": "la référence re-rendue dit « CHALEUR », « Tiède », « 24 850,00 € » ; « JOUR 12 » reste une valeur de maquette"
+  }
+ ],
+ "a_verifier": [
+  {
+   "ou": "bloc bas, état vierge (#120)",
+   "texte": "… pas parce qu’il est médiocre. Et personne ne jugera votre constance tant qu’il n’a pas assez vu : indéterminé, jamais au milieu d’une jauge.",
+   "source": "① classe B ; client `240bbe34` ; référence `reference-1080x2102.png`"
+  },
+  {
+   "ou": "bloc bas, état de dérive (#121) — si le compte du run le sert",
+   "texte": "… On vous dit que vous dérivez, jamais sur quelle règle : ce n’est pas un choix, c’est ce qui manque encore.",
+   "source": "① classe B ; client `240bbe34` ; `reference-derive-1080x2102.png`"
+  }
+ ],
+ "captures_attendues": [
+  {
+   "fichier": "screen_b3_reputation_sous_chrome_1080x2400.png",
+   "commande": "`MAFIA_CI_CATEGORIES=CaptureReputation` (`VuePrincipaleCapturePlayModeTests.Capture_EcranReputation_SousChrome`, préfixe unique : 1 catégorie)",
+   "montre": "le miroir sous chrome, par le chemin joueur Plus → LA RÉPUTATION ; l'ÉTAT montré dépend du compte du run (vierge #120, dérive #121, indéterminé avec absorbé #144)",
+   "identite": "`[DemoIdentityResolver] régime=… identité=…` (pas de garde `[IDENTITE-CONNECTEE]` dans cette méthode)"
+  },
+  {
+   "fichier": "screen_b3_reputation_sous_chrome_1080x1920.png",
+   "commande": "même méthode",
+   "montre": "la 1920 — c'est elle qui tranche `M1`",
+   "identite": "idem"
+  },
+  {
+   "fichier": "temoin-menu-plus-1080x2400.png (← `menu_plus_1080x2400.png`)",
+   "commande": "même méthode",
+   "montre": "témoin ⑱ : donne l'inset haut du contenu (méthode du r16, `R2`)",
+   "identite": "idem"
+  }
+ ],
+ "polices_fc_match": {
+  "Georgia": "\"Noto Serif\" \"Regular\"",
+  "DejaVu Sans": "\"DejaVu Sans\" \"Book\"",
+  "Courier New": "\"Liberation Mono\" \"Regular\"",
+  "sans-serif": "\"Noto Sans\" \"Regular\"",
+  "serif": "\"Noto Serif\" \"Regular\"",
+  "Times New Roman": "\"Liberation Serif\" \"Regular\"",
+  "Segoe UI": "\"Noto Sans\" \"Regular\""
+ },
+ "captures": []
+}

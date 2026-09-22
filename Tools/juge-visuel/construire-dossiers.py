@@ -44,7 +44,9 @@ ECHELLE = 3.6
 TABLE = [
  dict(sym="③", ctl="CityMapController", dossier="carte", chemin="onglet EMPIRE (défaut)",
       cadres=[(S6, list(range(22, 25)))], nominal=(S6, 22), planche="carte_ville_1080x2400.png",
-      confiance="mesurée", note="ville peinte livrée le 03/09 (TD-494) ; cadres 22-24 avec les noms de fiction (TD-492)"),
+      confiance="mesurée", note="ville peinte livrée le 03/09 (TD-494) ; cadres 22-24 avec les noms de fiction (TD-492)",
+      nominal_note="cadre 22, Brennar la nuit",
+      extras=[("carte/reference-chez-vous-1080x2102.png", "cadre 24 « approcher : chez vous », rendu le 2026-09-22 (atelier 868ab87) — la bande de La Lisière liste les quatre bâtiments du joueur : « le labo, la planque, la façade, la banque » (money_holding = « la banque », ④ d4)")]),
  dict(sym="④", ctl="DashboardController", dossier="accueil", chemin="surimpression à l'ouverture de session (acquisition), puis Accueil",
       cadres=[], nominal=None, planche="planche_l_accueil_1080x2400.png",
       confiance="aucune", note="AUCUNE maquette (front.md:1609 « [ ] maquetté ») — les cadres 20-21 « Le Bureau du patron » sont ⑱ le menu Plus (front.md:1567), corrigé par l'orchestrateur le 03/09"),
@@ -74,10 +76,15 @@ TABLE = [
       confiance="mesurée", note="série 4 cadres 0-3 = le canon ratifié (revue-du-jour/v4-0..3.png)"),
  dict(sym="㊲", ctl="ReputationScreenController", dossier="reputation", chemin="Plus → LA RÉPUTATION",
       cadres=[(S6, list(range(119, 125)))], nominal=(S6, 120), planche="screen_b3_reputation_sous_chrome_1080x2400.png",
-      confiance="mesurée", note="le contrôleur cite m-120.png"),
+      confiance="mesurée", note="le contrôleur cite m-120.png",
+      # ⛔ Le nominal est le cadre 120 — MESURÉ le 2026-09-22 (PNG commité ↔ rendu de 120 : 2,4 % ; ↔ 119 : 24,6 %) ;
+      #    l'INDEX écrit à la main disait « cadre 119 ». Re-rendu le 2026-09-22 (atelier 20d006d : « personne ne jugera »).
+      extras=[("reputation/reference-derive-1080x2102.png", "cadre 121, rendu le 2026-09-22 — « on vous dit que vous dérivez… ce qui manque encore » (atelier 20d006d)"),
+              ("reputation/reference-indetermine-1080x2102.png", "cadre 144, F12 — cohérence `indeterminate` AVEC de l'absorbé, l'état réel du compte que les six lignes ne couvraient pas")]),
  dict(sym="㉟", ctl="SellingScreenController", dossier="vente", chemin="Plus → LA VENTE",
-      cadres=[(S6, list(range(108, 114)))], nominal=(S6, 108), planche="planche_la_vente_1080x2400.png",
-      confiance="déduite", note="⛔ CADRES CORRIGÉS le 2026-09-07, 107-112 -> 108-113 et nominal 107 -> 108. Le juge-données a mesuré que #107 appartient à ㉗ : ses 47 occurrences de `vnt6` sont le bloc <style>, pas du contenu. ⇒ Un compte d'occurrences d'une classe CSS ne distingue pas la DÉCLARATION de l'USAGE, et la déclaration est toujours la plus dense. 4e attribution fausse de cette table (coffre, carnet, police, vente) — 4e mécanisme. cadres 107-112 « La vente » par le titre ; dealers en prénoms servis (§DA-2)"),
+      cadres=[(S6, list(range(107, 113)))], nominal=(S6, 107), planche="planche_la_vente_1080x2400.png",
+      confiance="mesurée", note="⛔ RÉTABLI 107-112 / nominal 107 le 2026-09-22, MESURÉ sur le TEXTE AFFICHÉ (pas sur une classe CSS) : le cadre 107 porte l'étiquette « La vente — qui vend et ce qu'il y a dans la caisse » et dessine les six dealers + « AFFECTER UN DEALER » (c'est l'état nominal) ; 108 est « La caisse de Oskar » (un état) ; 113 est « L'horizon — ce qui s'ouvre et à quel prix » (㊱, déjà dans SA plage 113-118). Le PNG commité `vente/reference-1080x2102.png` EST le cadre 107 (7,1 % d'écart, dû au lot de vocabulaire de l'atelier ; 34,3 % contre 108) — le juge r1 a comparé au bon cadre. La « correction » du 2026-09-07 (107-112 -> 108-113, « #107 appartient à ㉗ : ses 47 occurrences de `vnt6` sont le bloc <style> ») déduisait l'appartenance d'un cadre de l'endroit où sa CSS est déclarée : le segment de 107 CONTIENT le <style> de la rangée ET son contenu — une déclaration dense n'exclut pas l'usage, elle le précède. ⇒ 5e mécanisme d'attribution fausse : corriger une table sur un compte de classe CSS sans relire le cadre. dealers en prénoms servis (§DA-2)",
+      extras=[("vente/reference-ramasser-1080x2102.png", "cadre 109 « Ramasser — nulle part où la porter », le cadre d'état homologue de la capture r1 (demandé par le juge r1, point 3), rendu le 2026-09-22 après le gate (atelier 20d006d). ⚠️ Son texte « Il n'existe aujourd'hui aucun moyen d'en obtenir une » (une planque) est PÉRIMÉ : la planque est donnée à l'arrivée depuis le 31/08 (㊵·142) — à lire comme maquette en retard, jamais comme le texte attendu à l'écran")]),
  dict(sym="㉓", ctl="ShopScreenController", dossier="compte", chemin="Plus → LA VITRINE",
       cadres=[(S6, [98, 99, 100])], nominal=(S6, 98), planche="planche_la_vitrine_1080x2400.png",
       confiance="déduite", note="déduit par titre (98-100) — le contrôleur dit « cadres 48-50 », numérotation d'une autre série ; canon compte/boutique-canon.png"),
@@ -94,10 +101,14 @@ TABLE = [
       confiance="mesurée", note="le contrôleur cite série 4 cadres 25-30 (non ratifiée au 02/09)"),
  dict(sym="㊴", ctl="ForensicScreenController", dossier="screen_b7", chemin="Plus → LE DOSSIER",
       cadres=[(S6, list(range(131, 137)))], nominal=(S6, 131), planche="screen_b7_dossier_sous_chrome_1080x2400.png",
-      confiance="déduite", note="cadres 131-136 « Le dossier » par le titre"),
+      confiance="déduite", note="cadres 131-136 « Le dossier » par le titre",
+      nominal_note="cadre 131, RE-RENDUE le 2026-09-06 : E1 — le palier de train de vie est celui d'UN LIEUTENANT, pas du joueur",
+      extras=[("screen_b7/reference-vocabulaire-1080x2102.png", "cadre 143, LES 12 CRANS — les cadres d'état n'en montrent que 6 ; c'est le témoin que le juge réclamait en classant « l'échelle de chaque piste a disparu »")]),
  dict(sym="㊳", ctl="JournalScreenController", dossier="screen_c1", chemin="Plus → LE JOURNAL & LA RUE",
       cadres=[(S6, list(range(125, 131)))], nominal=(S6, 125), planche="screen_c1_journal_sous_chrome_1080x2400.png",
-      confiance="mesurée", note="le contrôleur cite les cadres 125 et 129"),
+      confiance="mesurée", note="le contrôleur cite les cadres 125 et 129",
+      nominal_note="cadre 125",
+      extras=[("screen_c1/reference-vocabulaire-1080x2102.png", "cadre 145, LES 11 CRANS — `fading` et `lingering` sont servis et n'avaient aucun dessin")]),
  dict(sym="㊵", ctl="FiliereScreenController", dossier="screen_c2", chemin="Plus → LA FILIÈRE",
       cadres=[(S6, list(range(137, 143)))], nominal=(S6, 137), planche="screen_c2_filiere_sous_chrome_1080x2400.png",
       confiance="mesurée", note="le contrôleur cite le cadre 142 (« ce qui manque encore »)"),
@@ -115,7 +126,8 @@ TABLE = [
       confiance="déduite", note="cadres 113-118 « L'horizon » par le titre ; liste vide par construction sur le compte de démo"),
  dict(sym="㉜", ctl="DelegationScreenController", dossier="ecran_delegation", chemin="Plus → CE QUE VOUS AVEZ CONFIÉ",
       cadres=[(S6, list(range(73, 79)))], nominal=(S6, 73), planche="planche_ce_que_vous_avez_confie_1080x2400.png",
-      confiance="mesurée", note="le contrôleur cite m-73..78"),
+      confiance="mesurée", note="le contrôleur cite m-73..78",
+      extras=[("ecran_delegation/reference-reserve-1080x2102.png", "cadre 78, rendu le 2026-09-22 — la réserve : « Personne ne les tient encore », « rien derrière » (atelier 20d006d)")]),
  dict(sym="㉚", ctl="ChaineDApproScreenController", dossier="ecran_appro", chemin="Plus → LA CHAÎNE D'APPRO",
       cadres=[(S6, list(range(48, 54)))], nominal=(S6, 48), planche="planche_la_chaine_d_appro_1080x2400.png",
       confiance="mesurée", note="le contrôleur cite m-48 (repos) .. m-53 (délégué)"),
@@ -124,7 +136,9 @@ TABLE = [
       confiance="mesurée", note="le contrôleur cite m-54 (repos) .. m-58"),
  dict(sym="㉛", ctl="LoiScreenController", dossier="ecran_loi", chemin="Plus → LA LOI",
       cadres=[(S6, list(range(67, 73)))], nominal=(S6, 67), planche="planche_la_loi_1080x2400.png",
-      confiance="déduite", note="cadres 67-72 (le parloir, l'avocat) par le titre"),
+      confiance="déduite", note="cadres 67-72 (le parloir, l'avocat) par le titre",
+      nominal_note="cadre 67, l'arrestation",
+      extras=[("ecran_loi/reference-avocat-1080x2102.png", "cadre 68, LE CHOIX D'AVOCAT — rendue le 2026-09-06 : sans elle `Loi:339` était non vérifiable, ni écran faux ni maquette fausse, pas de référence")]),
  dict(sym="㉝", ctl="DemolitionScreenController", dossier="ecran_demolition", chemin="Plus → RASER UN SITE",
       cadres=[(S6, list(range(79, 85)))], nominal=(S6, 79), planche="planche_raser_un_site_1080x2400.png",
       confiance="mesurée", note="le contrôleur cite m-79..84. ⛔ NOMINAL CORRIGÉ le 2026-09-07, 80 → 79 : "
@@ -156,7 +170,8 @@ TABLE = [
                                "attribuée à un seul écran peut aussi être la mauvaise. À re-remplir par MESURE."),
  dict(sym="㉙", ctl="ConflitScreenController", dossier="ecran_conflit", chemin="Plus → LE CONFLIT",
       cadres=[(S6, list(range(59, 67)))], nominal=(S6, 59), planche="planche_le_conflit_1080x2400.png",
-      confiance="déduite", note="cadres 59-66 (la table du fond) par le titre ; rivaux en noms de fiction NON servis (§C-2)"),
+      confiance="déduite", note="cadres 59-66 (la table du fond) par le titre ; rivaux en noms de fiction NON servis (§C-2)",
+      extras=[("ecran_conflit/reference-manque-1080x2102.png", "cadre 64, rendu le 2026-09-22 — « Ce qu'on ne peut pas faire » : « Personne n'y touche encore », « rien derrière » (atelier 20d006d)")]),
 ]
 # Écrans que le shell ne monte PAS lui-même mais qui existent (montés par un autre locataire) —
 # une ligne chacun, pour que le juge les trouve aussi.
@@ -175,7 +190,9 @@ HORS_APPSHELL = [
       confiance="déduite", note="cadre 15 « Exception — sa main » par le titre"),
  dict(sym="㉔", ctl="AutonomyInboxController", dossier="autonomie", chemin="Accueil → rapports d'autonomie",
       cadres=[(S6, list(range(25, 31)))], nominal=(S6, 25), planche="planche_l_autonomie_1080x2400.png",
-      confiance="déduite", note="cadres 25-30 « Autonomie » (le burner) par le titre"),
+      confiance="déduite", note="cadres 25-30 « Autonomie » (le burner) par le titre",
+      extras=[("autonomie/reference-message-1080x2102.png", "cadre 26, rendu le 2026-09-23 — le message ouvert, « CE CYCLE » sans heure (le rapport n'a pas d'horodatage ; atelier ec4c09a)"),
+              ("autonomie/reference-reponse-1080x2102.png", "cadre 29, rendu le 2026-09-23 — la réponse 2 (HOLD) rend HELD, « LE CHARGEMENT ATTEND. » ; l'ancien NOOP était impossible (atelier ec4c09a)")]),
  dict(sym="⑬", ctl="CueStack (sections)", dossier="pile-du-jour", chemin="depuis une exception résolue",
       cadres=[(S4, list(range(19, 25)))], nominal=(S4, 19), planche="",
       confiance="déduite", note="série 4 cadres 19-24 « Pile du jour » ; canon pile-du-jour/v4-19..24.png"),
@@ -300,6 +317,12 @@ def main(argv):
               "**déduite** (par le titre du cadre), **aucune** (pas de maquette de série 4/6 — une ligne est une ligne, pas une absence)." % sha, "",
               "`corps` = `<dossier>/corps-reels/` (§DA-4, `capturer-corps-reels.py`) : réponses RÉELLES des routes du dossier de code du contrôleur sur la pile dev, "
               "compte de démo — « a/s/m/e » = appelées (2xx) / sans instance sur ce compte / mutations non appelées / erreurs HTTP réelles du back (404, 409, 403 : des faits, pas des trous).", "",
+              # ⚠️ paragraphe écrit À LA MAIN dans l'INDEX le 2026-09-06 (b7e8ea18) et PERDU à chaque régénération tant qu'il ne vivait
+              #    pas ici — porté dans le générateur le 2026-09-22 (même classe que les cellules `nominal_note` / `extras` de la TABLE).
+              "⚠️ Ces corps ont été pris sur un back **daté** — la provenance voyage avec chaque fichier (`back_main`, image, date, compte). "
+              "Ne pas se demander « sont-ils à jour ? » de mémoire : `python3 verifier-fraicheur-corps.py` compare le SHA que les corps déclarent "
+              "à `main` du back aujourd'hui, et ne signale que les corps dont une source touchée peut changer la réponse. Il ne rejoue rien "
+              "(la pile dev est requise pour ça, donc jamais pendant un gate).", "",
               "| sym | écran (front.md) | contrôleur | dossier | cadres | référence | planche en jeu | état front.md | confiance | corps |",
               "|---|---|---|---|---|---|---|---|---|---|"]
     for r in TABLE + HORS_APPSHELL:
@@ -307,6 +330,13 @@ def main(argv):
         cad = " · ".join(f"`{p}` {', '.join(map(str, ix))}" for p, ix in r["cadres"]) or "aucune maquette de série 4/6"
         nb = sum(1 for x in TABLE + HORS_APPSHELL if x["dossier"] == r["dossier"])
         ref = (f"`{r['dossier']}/reference-{r['sym'] + '-' if nb > 1 else ''}1080x2102.png`") if r["nominal"] else "—"
+        # ⛔ Les références NOMMÉES vivent dans la TABLE, jamais écrites à la main dans l'INDEX : le 2026-09-22 une
+        #    régénération a effacé quatre cellules écrites à la main (㊲ ㊴ ㊳ ㉛) — une donnée qui n'a qu'une copie, dans
+        #    un fichier généré, disparaît à la première régénération.
+        if r.get("nominal_note"):
+            ref += f" ({r['nominal_note']})"
+        for fichier, pourquoi in r.get("extras", []):
+            ref += f" + `{fichier}` ({pourquoi})"
         planche = r["planche"]
         pe = ("existe" if planche and os.path.exists(os.path.join(CLIENT, "Assets/Screenshots", planche)) else ("ABSENTE" if planche else "—"))
         corps = "—"

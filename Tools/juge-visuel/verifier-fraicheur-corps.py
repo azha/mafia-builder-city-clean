@@ -36,7 +36,9 @@ def shas_des_corps():
     vus = {}
     for p in sorted(glob.glob('*/corps-reels/*.json')):
         j = json.load(open(p, encoding='utf8'))
-        sha = j.get('provenance', {}).get('back_main') or j.get('back_main')
+        # le SHA SERVI par la pile (2026-09-22) prime sur `main` du dépôt : c'est lui que les corps décrivent
+        sha = (j.get('provenance', {}).get('back_served') or j.get('back_served')
+               or j.get('provenance', {}).get('back_main') or j.get('back_main'))
         vus.setdefault(sha, []).append(p)
     return vus
 

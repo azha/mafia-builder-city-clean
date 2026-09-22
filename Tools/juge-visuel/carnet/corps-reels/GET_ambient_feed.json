@@ -5,137 +5,126 @@
  "statut": 200,
  "params": {},
  "provenance": {
-  "date": "2026-09-06T11:02:54",
-  "back_main": "fc944b62",
-  "game_back": "mafia-clean-city-game-back 2026-09-04T08:41:42.667221302Z",
-  "compte": "demo_capture@example.test",
-  "jour_de_jeu": 50,
-  "horloge_game_minute": 72118,
+  "date": "2026-09-22T13:23:16",
+  "back_main": "11559fff",
+  "back_served": "03cf564c",
+  "game_back": "mafia-clean-city-game-back 2026-09-14T01:13:06.637480618Z",
+  "compte": "operational_demo@example.test",
+  "jour_de_jeu": 55,
+  "horloge_game_minute": 79905,
   "horloge_source": "city_sim_clock.game_minute scopée sur player_id (lecture en base : aucune route joueur ne la projette — forme F)",
   "district_du_joueur_mesure": 1,
   "dossier": "carnet",
   "symbole": "㉞",
   "controleur": "CarnetScreenController",
-  "X-Request-Id": "5a112714-c723-4f2c-817a-759c29a3c3d5",
-  "X-Server-Processed-At": "2026-09-06T09:02:54.973Z",
+  "X-Request-Id": "3fa7d997-e2aa-49d9-a0b5-6ff0e433f650",
+  "X-Server-Processed-At": "2026-09-22T11:23:20.278Z",
   "X-Api-Version": "1"
  },
  "corps": {
   "response_meta": {
-   "request_id_echo": "5a112714-c723-4f2c-817a-759c29a3c3d5",
-   "server_processed_at": "2026-09-06T09:02:54.973Z",
+   "request_id_echo": "3fa7d997-e2aa-49d9-a0b5-6ff0e433f650",
+   "server_processed_at": "2026-09-22T11:23:20.278Z",
    "api_version": 1,
-   "correlation_id_echo": null
+   "correlation_id_echo": null,
+   "server_build_ref": {
+    "git_sha": "03cf564c921dd6dec8ba6692b004c5d1b4d0e0a6",
+    "built_at": "2026-09-14T01:12:31Z"
+   }
   },
   "payload": {
    "data": {
     "events": [
      {
-      "event_id": "3310cdd8-6336-4e07-a6b7-a4aa67088df6",
-      "district": "district-13",
+      "event_id": "2cb01c35-4a3b-43f1-a383-7b5acf9c03f5",
+      "district": "district-16",
       "kind": "corner_fight",
       "channel": "constant_hum",
       "descriptor_i18n_key": "ambient.micro_event.corner_fight",
       "recency_band": "fresh"
      },
      {
-      "event_id": "add3dbb7-93aa-4110-8cff-4fff80548eb0",
-      "district": "district-11",
-      "kind": "noisy_block",
-      "channel": "constant_hum",
-      "descriptor_i18n_key": "ambient.micro_event.noisy_block",
-      "recency_band": "fresh"
-     },
-     {
-      "event_id": "a2cbdc03-d796-4053-8109-a927e6ddabbc",
-      "district": "district-11",
+      "event_id": "f2586f70-3410-4ae6-b17c-64c3ece3b9d2",
+      "district": "district-16",
       "kind": "corner_fight",
       "channel": "constant_hum",
       "descriptor_i18n_key": "ambient.micro_event.corner_fight",
       "recency_band": "fresh"
      },
      {
-      "event_id": "3226af0f-56be-49a1-aa33-6ca0a8bd46c3",
+      "event_id": "afb13e7c-b35b-445c-a19d-6fad7d623a5b",
       "district": "district-11",
-      "kind": "delayed_shipment",
-      "channel": "trade_channel",
-      "descriptor_i18n_key": "ambient.micro_event.delayed_shipment",
-      "recency_band": "fresh"
-     },
-     {
-      "event_id": "d2f1d64a-3068-460e-83cc-f77cc7e202a5",
-      "district": "district-1",
-      "kind": "noisy_block",
-      "channel": "constant_hum",
-      "descriptor_i18n_key": "ambient.micro_event.noisy_block",
-      "recency_band": "fresh"
-     },
-     {
-      "event_id": "f237252f-48df-423d-ad3e-7cda7b995494",
-      "district": "district-1",
       "kind": "stalled_tram",
       "channel": "trade_channel",
       "descriptor_i18n_key": "ambient.micro_event.stalled_tram",
       "recency_band": "fresh"
      },
      {
-      "event_id": "b8985040-9768-44c8-bca3-cb8ab3eae116",
-      "district": "district-16",
+      "event_id": "9b2e0091-5d1d-43a9-8386-eea07a387c82",
+      "district": "district-11",
+      "kind": "noisy_block",
+      "channel": "constant_hum",
+      "descriptor_i18n_key": "ambient.micro_event.noisy_block",
+      "recency_band": "fresh"
+     },
+     {
+      "event_id": "52dc2dbe-c202-4fc3-b2b5-bc54958bcc78",
+      "district": "district-11",
+      "kind": "noisy_block",
+      "channel": "constant_hum",
+      "descriptor_i18n_key": "ambient.micro_event.noisy_block",
+      "recency_band": "fresh"
+     },
+     {
+      "event_id": "543b9a93-b49e-44c4-8f5a-0bba9257fc45",
+      "district": "district-1",
+      "kind": "noisy_block",
+      "channel": "constant_hum",
+      "descriptor_i18n_key": "ambient.micro_event.noisy_block",
+      "recency_band": "fresh"
+     },
+     {
+      "event_id": "b03934a5-8a55-447f-a295-02f6a7d6c0a8",
+      "district": "district-13",
+      "kind": "stalled_tram",
+      "channel": "trade_channel",
+      "descriptor_i18n_key": "ambient.micro_event.stalled_tram",
+      "recency_band": "fading"
+     },
+     {
+      "event_id": "1d6d8de9-ac23-4708-adf8-377de67ef8eb",
+      "district": "district-13",
+      "kind": "noisy_block",
+      "channel": "constant_hum",
+      "descriptor_i18n_key": "ambient.micro_event.noisy_block",
+      "recency_band": "fading"
+     },
+     {
+      "event_id": "0ba3ed32-e36c-4f8a-a42f-6fbd7d1b4bb1",
+      "district": "district-11",
       "kind": "bar_rumor",
       "channel": "bar_talk",
       "descriptor_i18n_key": "ambient.micro_event.bar_rumor",
-      "recency_band": "fresh"
+      "recency_band": "fading"
      },
      {
-      "event_id": "634bf01c-50f4-4792-9042-6900b5066237",
-      "district": "district-16",
-      "kind": "stalled_tram",
-      "channel": "trade_channel",
-      "descriptor_i18n_key": "ambient.micro_event.stalled_tram",
-      "recency_band": "fresh"
+      "event_id": "9b6cc67d-41af-4ca1-bad4-dc6a041ccd71",
+      "district": "district-1",
+      "kind": "bar_rumor",
+      "channel": "bar_talk",
+      "descriptor_i18n_key": "ambient.micro_event.bar_rumor",
+      "recency_band": "fading"
      },
      {
-      "event_id": "11498fa0-389f-489b-bd9e-ddf162d6ebb1",
-      "district": "district-13",
-      "kind": "delayed_shipment",
-      "channel": "trade_channel",
-      "descriptor_i18n_key": "ambient.micro_event.delayed_shipment",
-      "recency_band": "fresh"
-     },
-     {
-      "event_id": "031db4a9-c6d8-4657-8b6f-ca7ae5533cf0",
-      "district": "district-13",
-      "kind": "building_inspection",
-      "channel": "constant_hum",
-      "descriptor_i18n_key": "ambient.micro_event.building_inspection",
-      "recency_band": "fresh"
-     },
-     {
-      "event_id": "fa5e543c-7e08-426a-a156-467071948b41",
-      "district": "district-11",
+      "event_id": "433eef76-9577-4eae-b21d-4b5424d170a4",
+      "district": "district-1",
       "kind": "noisy_block",
       "channel": "constant_hum",
       "descriptor_i18n_key": "ambient.micro_event.noisy_block",
-      "recency_band": "fresh"
-     },
-     {
-      "event_id": "b9ec28fb-75d8-48e4-9fff-ff8501687dd9",
-      "district": "district-11",
-      "kind": "delayed_shipment",
-      "channel": "trade_channel",
-      "descriptor_i18n_key": "ambient.micro_event.delayed_shipment",
-      "recency_band": "fresh"
-     },
-     {
-      "event_id": "ce670c8e-7953-470b-a4cc-757d108ee505",
-      "district": "district-1",
-      "kind": "building_inspection",
-      "channel": "constant_hum",
-      "descriptor_i18n_key": "ambient.micro_event.building_inspection",
-      "recency_band": "fresh"
+      "recency_band": "fading"
      }
     ],
-    "total": 13,
+    "total": 11,
     "limit": 20,
     "offset": 0
    }

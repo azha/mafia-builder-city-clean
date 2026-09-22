@@ -5,37 +5,43 @@
  "statut": 200,
  "params": {},
  "provenance": {
-  "date": "2026-09-06T11:02:54",
-  "back_main": "fc944b62",
-  "game_back": "mafia-clean-city-game-back 2026-09-04T08:41:42.667221302Z",
-  "compte": "demo_capture@example.test",
-  "jour_de_jeu": 50,
-  "horloge_game_minute": 72118,
+  "date": "2026-09-22T13:23:16",
+  "back_main": "11559fff",
+  "back_served": "03cf564c",
+  "game_back": "mafia-clean-city-game-back 2026-09-14T01:13:06.637480618Z",
+  "compte": "operational_demo@example.test",
+  "jour_de_jeu": 55,
+  "horloge_game_minute": 79905,
   "horloge_source": "city_sim_clock.game_minute scopée sur player_id (lecture en base : aucune route joueur ne la projette — forme F)",
   "district_du_joueur_mesure": 1,
   "dossier": "vente",
   "symbole": "㉟",
   "controleur": "SellingScreenController",
-  "X-Request-Id": "a5683ab9-4ecf-4610-b0ca-8da6c25e706e",
-  "X-Server-Processed-At": "2026-09-06T09:02:54.606Z",
+  "X-Request-Id": "c6760249-034c-4492-959a-480e5f9a13be",
+  "X-Server-Processed-At": "2026-09-22T11:23:18.935Z",
   "X-Api-Version": "1"
  },
  "corps": {
   "response_meta": {
-   "request_id_echo": "a5683ab9-4ecf-4610-b0ca-8da6c25e706e",
-   "server_processed_at": "2026-09-06T09:02:54.606Z",
+   "request_id_echo": "c6760249-034c-4492-959a-480e5f9a13be",
+   "server_processed_at": "2026-09-22T11:23:18.935Z",
    "api_version": 1,
-   "correlation_id_echo": null
+   "correlation_id_echo": null,
+   "server_build_ref": {
+    "git_sha": "03cf564c921dd6dec8ba6692b004c5d1b4d0e0a6",
+    "built_at": "2026-09-14T01:12:31Z"
+   }
   },
   "payload": {
    "data": {
     "dealers": [
      {
-      "dealer": "d608dc2b-c438-4b37-a157-5e99792b7ef3",
+      "dealer": "dd81f8ad-c8d8-45d8-a3cd-3e1ee2a636c2",
+      "dealer_spot_id": "a88b2139-e33e-45db-b911-d6b574c83af9",
       "name_i18n": {
        "key": "game.fiction.dealer.name",
        "params": {
-        "prenom": "Yusuf"
+        "prenom": "Teo"
        }
       },
       "activity_band": "WORKING",
@@ -43,7 +49,10 @@
       "substance": "BRINDLE",
       "margin_band": "STANDARD",
       "addiction_loyalty_status": null,
-      "withdrawn": false
+      "withdrawn": false,
+      "district_name": "La Lisière",
+      "lek_band": "HIGH",
+      "lane_band": "FAST"
      }
     ]
    }

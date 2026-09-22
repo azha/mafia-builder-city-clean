@@ -27,7 +27,8 @@ X-Server-Processed-At). `_index.json` par dossier récapitule. `INDEX.md` gagne 
 via `construire-dossiers.py --sans-rendu` (lancé à la fin).
 
 Usage :  python3 Tools/juge-visuel/capturer-corps-reels.py [--controle] [--base http://localhost]
-Env    :  MAFIA_DEMO_IDENTIFIER / MAFIA_DEMO_PASSWORD (repli : le compte de provision-demo-riche.mjs)
+Env    :  sans --compte : MAFIA_DEMO_IDENTIFIER / MAFIA_DEMO_PASSWORD (repli : le compte de provision-demo-riche.mjs)
+          avec --compte : le mot de passe vient de MAFIA_CAPTURE_PASSWORD, puis MAFIA_DEMO_PASSWORD (voir `resoudre_mot_de_passe`)
 """
 import datetime, importlib.util, json, os, re, subprocess, sys, urllib.request, urllib.error, uuid
 
@@ -40,6 +41,30 @@ cd = importlib.util.module_from_spec(spec); spec.loader.exec_module(cd)
 BASE = os.environ.get("STACK_BASE_URL", "http://localhost")
 IDENT = os.environ.get("MAFIA_DEMO_IDENTIFIER", "operational_demo@example.test")
 PASSWD = os.environ.get("MAFIA_DEMO_PASSWORD", "operational-demo-pw")
+DEMO_DEFAUT = ("operational_demo@example.test", "operational-demo-pw")
+
+
+def resoudre_mot_de_passe(compte, env):
+    """Le mot de passe du compte nommé par `--compte`, et le NOM de la variable qui l'a fourni (jamais la valeur).
+
+    ⛔ Décision du 2026-09-22 (client, relayée par l'orchestrateur) : la paire du compte de capture n'existe plus que sous
+       `MAFIA_CAPTURE_*` — exporter `MAFIA_DEMO_*` sur ce compte le ferait MUTER dès qu'une suite fonctionnelle tourne dans
+       le même shell (les suites de lieutenants effacent et recrutent sur le compte connecté). Ce capteur lisait
+       `MAFIA_DEMO_PASSWORD` seul : sans ce changement, une passe de corps sur le compte de capture échouait à la connexion.
+    ⇒ Par PAIRE, pas par variable : un mot de passe ne sert que si l'identifiant de SA paire est absent ou égal au compte
+       demandé — sinon on enverrait le mot de passe d'un compte à un autre.
+    Rend (mot_de_passe, source) ou (None, raison)."""
+    for ident_var, mdp_var, etiquette in (("MAFIA_CAPTURE_IDENTIFIER", "MAFIA_CAPTURE_PASSWORD", "MAFIA_CAPTURE_PASSWORD"),
+                                          ("MAFIA_DEMO_IDENTIFIER", "MAFIA_DEMO_PASSWORD", "MAFIA_DEMO_PASSWORD (repli)")):
+        mdp = (env.get(mdp_var) or "").strip()
+        ident = (env.get(ident_var) or "").strip()
+        if mdp and (not ident or ident.lower() == compte.strip().lower()):
+            return mdp, etiquette
+    if compte.strip().lower() == DEMO_DEFAUT[0]:
+        return DEMO_DEFAUT[1], "défaut du compte de démo (provision-demo-riche.mjs)"
+    return None, (f"aucune variable ne porte le mot de passe de « {compte} » : exporter MAFIA_CAPTURE_IDENTIFIER et "
+                  "MAFIA_CAPTURE_PASSWORD (une paire COMPLÈTE, même compte) — ou passer --motdepasse, qui reste visible "
+                  "dans la liste des processus")
 
 # paramètre → (clés candidates dans les corps reçus, corps à consulter d'abord)
 PARAMS = {
@@ -448,17 +473,30 @@ def main(argv):
     global IDENT, PASSWD
     opts = _lire_drapeaux(argv)
     controle = opts["controle"]
+    source_mdp = "MAFIA_DEMO_PASSWORD ou défaut"
     if opts["ident"]:
         IDENT = opts["ident"]
+        if not opts["passwd"]:
+            PASSWD, source_mdp = resoudre_mot_de_passe(IDENT, os.environ)
+            if PASSWD is None:
+                print("⛔ " + source_mdp); sys.exit(2)
     if opts["passwd"]:
         PASSWD = opts["passwd"]
+        source_mdp = "--motdepasse (⚠️ visible dans la liste des processus)"
     print(f"COMPTE CAPTURÉ : {IDENT}   (source : "
-          f"{'--compte' if opts['ident'] else 'MAFIA_DEMO_IDENTIFIER ou défaut'})")
+          f"{'--compte' if opts['ident'] else 'MAFIA_DEMO_IDENTIFIER ou défaut'}) · mot de passe : {source_mdp}")
     date = datetime.datetime.now().isoformat(timespec="seconds")
     back_sha = subprocess.run(["git", "-C", BACK, "rev-parse", "--short", "main"], capture_output=True, text=True).stdout.strip()
     image = subprocess.run(["docker", "inspect", "-f", "{{.Config.Image}} {{.Created}}", "mafia-clean-city-game-back-1"], capture_output=True, text=True).stdout.strip()
     pile = Pile(); st = pile.connecter()
-    print(f"session/open : {st} · back main {back_sha} · game-back {image[:60]}")
+    # ⛔ LE SHA QUE LA PILE SERT N'EST PAS `main` DU DÉPÔT. Le 2026-09-22, `main` était à 11559fff
+    #    et la pile servait 03cf564c (image du 14/09) : une provenance qui ne porte que `back_main`
+    #    dit « à jour » d'un back que personne ne sert. `server_build_ref` est gelé dans CHAQUE
+    #    réponse (`response_meta`) ; il vit dans la provenance, pas dans le corps (jamais injecté).
+    back_served = (((pile.corps.get("session/open") or {}).get("response_meta") or {})
+                   .get("server_build_ref") or {}).get("git_sha")
+    back_served = back_served[:8] if isinstance(back_served, str) else None
+    print(f"session/open : {st} · back main {back_sha} · SERVI {back_served} · game-back {image[:60]}")
     # amorces : les corps qui fournissent les ids des routes paramétrées
     for r in ("/v1/lieutenants", "/v1/world/districts", "/v1/flag-review", "/v1/me/legal", "/v1/news/feed", "/v1/meta/horizon-feed",
               "/v1/ambient/feed", "/v1/random-world/active", "/v1/friction/replacement-options", "/v1/supply-chain/graph",
@@ -518,7 +556,7 @@ def main(argv):
             # `jour_de_jeu` : la seule horloge que ce compte expose à cet outil. C'est un JOUR,
             # pas la minute que lit l'empreinte du back — l'écrire quand même, daté et nommé,
             # vaut mieux qu'une base de preuve sans aucune horloge.
-            prov = {"date": date, "back_main": back_sha, "game_back": image, "compte": IDENT,
+            prov = {"date": date, "back_main": back_sha, "back_served": back_served, "game_back": image, "compte": IDENT,
                     "jour_de_jeu": jour_de_jeu,
                     "horloge_game_minute": minute_de_jeu,
                     "horloge_source": source_horloge,
@@ -576,12 +614,22 @@ def main(argv):
         if not controle:
             partage = sum(1 for x in cd.TABLE + cd.HORS_APPSHELL if x["dossier"] == r["dossier"]) > 1
             nom_index = f"_index-{r['sym']}.json" if partage else "_index.json"
-            json.dump({"dossier": r["dossier"], "symbole": r["sym"], "controleur": r["ctl"], "date": date, "back_main": back_sha, "horloge_game_minute": minute_de_jeu, "jour_de_jeu": jour_de_jeu, "compte": IDENT,
+            json.dump({"dossier": r["dossier"], "symbole": r["sym"], "controleur": r["ctl"], "date": date, "back_main": back_sha, "back_served": back_served, "horloge_game_minute": minute_de_jeu, "jour_de_jeu": jour_de_jeu, "compte": IDENT,
                        "note": "routes = celles du DOSSIER de code du contrôleur et de ses classes *Client. DEUX SENS, et le second manquait : elles sont parfois PLUS LARGES que l'écran (le juge-donnees filtre), et parfois PLUS ÉTROITES que le domaine — une route du domaine que le code de l'écran n'appelle pas N'APPARAÎT PAS ICI, par construction et non par échec. Mesuré le 2026-09-06 sur screen_c2 : POST .../laundering/stage existe côté back et le client la référence 0 fois, donc elle est absente de cet index. ⛔ Une absence ici se lit « pas dans la surface de code de l'écran », JAMAIS « pas de corps » ni « pas regardée » — confronter au mandat du dossier pour la trancher.",
                        "comptes": c, "routes": idx}, open(os.path.join(d, nom_index), "w", encoding="utf-8"), ensure_ascii=False, indent=1)
         for k in total: total[k] += c[k]
         lignes.append(f"| `{r['dossier']}` | {r['sym']} | {len(routes)} | {c['appelées']} | {c['sans instance']} | {c['mutations']} | {c['erreurs']} |")
     print("\n".join(lignes)); print("TOTAL", total)
+    # ⛔ La docstring promettait « INDEX.md gagne une colonne corps via construire-dossiers.py --sans-rendu (lancé à la
+    #    fin) » et rien ne le lançait : mesuré le 2026-09-22, l'INDEX est resté au 04/09 après une capture complète.
+    #    Une prose qui décrit un geste absent est pire qu'une prose muette : on la croit. Le geste, maintenant :
+    #    `--sans-rendu` par défaut (un rendu headless n'a rien à faire dans une capture de corps).
+    r_idx = subprocess.run([sys.executable, os.path.join(ICI, "construire-dossiers.py"), "--sans-rendu"],
+                           capture_output=True, text=True)
+    if r_idx.returncode != 0:
+        print("⛔ construire-dossiers.py --sans-rendu a échoué — l'INDEX n'est PAS à jour :", (r_idx.stderr or r_idx.stdout)[-400:])
+        sys.exit(1)
+    print("INDEX.md :", (r_idx.stdout.strip().splitlines() or ["(rien imprimé)"])[-1])
     return 0
 
 

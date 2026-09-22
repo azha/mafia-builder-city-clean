@@ -1,46 +1,51 @@
 {
  "route": "/v1/operational/building/{id}",
- "route_appelee": "/v1/operational/building/111846f8-1aac-4a1c-8b33-ad371ffec44d",
+ "route_appelee": "/v1/operational/building/b03705b3-e2a4-40e7-aa40-10876c24704a",
  "methode": "GET",
  "statut": 200,
  "params": {
   "buildingId": {
-   "valeur": "111846f8-1aac-4a1c-8b33-ad371ffec44d",
+   "valeur": "b03705b3-e2a4-40e7-aa40-10876c24704a",
    "source": "lu dans le corps de `city/district/1/interior` (clé parmi ['building', 'building_id'])"
   }
  },
  "provenance": {
-  "date": "2026-09-06T11:02:54",
-  "back_main": "fc944b62",
-  "game_back": "mafia-clean-city-game-back 2026-09-04T08:41:42.667221302Z",
-  "compte": "demo_capture@example.test",
-  "jour_de_jeu": 50,
-  "horloge_game_minute": 72118,
+  "date": "2026-09-22T13:23:16",
+  "back_main": "11559fff",
+  "back_served": "03cf564c",
+  "game_back": "mafia-clean-city-game-back 2026-09-14T01:13:06.637480618Z",
+  "compte": "operational_demo@example.test",
+  "jour_de_jeu": 55,
+  "horloge_game_minute": 79905,
   "horloge_source": "city_sim_clock.game_minute scopée sur player_id (lecture en base : aucune route joueur ne la projette — forme F)",
   "district_du_joueur_mesure": 1,
   "dossier": "fiche-batiment",
   "symbole": "②",
   "controleur": "BuildingCardController",
-  "X-Request-Id": "a02cbb4e-5eb2-4617-8d1f-b56456fc71e2",
-  "X-Server-Processed-At": "2026-09-06T09:02:55.065Z",
+  "X-Request-Id": "aebac323-9818-4885-ab38-dfe6ca771093",
+  "X-Server-Processed-At": "2026-09-22T11:23:20.641Z",
   "X-Api-Version": "1"
  },
  "corps": {
   "response_meta": {
-   "request_id_echo": "a02cbb4e-5eb2-4617-8d1f-b56456fc71e2",
-   "server_processed_at": "2026-09-06T09:02:55.065Z",
+   "request_id_echo": "aebac323-9818-4885-ab38-dfe6ca771093",
+   "server_processed_at": "2026-09-22T11:23:20.641Z",
    "api_version": 1,
-   "correlation_id_echo": null
+   "correlation_id_echo": null,
+   "server_build_ref": {
+    "git_sha": "03cf564c921dd6dec8ba6692b004c5d1b4d0e0a6",
+    "built_at": "2026-09-14T01:12:31Z"
+   }
   },
   "payload": {
    "data": {
-    "building": "111846f8-1aac-4a1c-8b33-ad371ffec44d",
+    "building": "b03705b3-e2a4-40e7-aa40-10876c24704a",
     "block_id": 1,
     "district_id": 1,
     "name_i18n": {
      "key": "game.fiction.building.name",
      "params": {
-      "enseigne": "Colis Kofi",
+      "enseigne": "Messagerie Sarre",
       "district": "Les Bassins",
       "block": "1"
      }
@@ -67,7 +72,7 @@
     "capacity_band": "NONE",
     "yield_band": "NONE",
     "forfeiture_band": "NONE",
-    "raid_risk": "LOW",
+    "raid_risk": "ELEVATED",
     "lapse_phase_bucket": "WITHIN_WINDOW",
     "days_until_maintenance_due": 30,
     "maintenance_in_progress": false
