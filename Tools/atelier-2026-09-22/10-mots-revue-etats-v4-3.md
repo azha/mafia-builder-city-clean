@@ -240,7 +240,7 @@ CLIENT-1 range le dernier cran de chaque piste en ÉVÉNEMENT (« Franchi »), s
 | `forensic.evenement.convoque` | `lifestyle_alarm_bucket = subpoenaed` | Convoqué | Summoned |
 
 1. **La casse de phrase est ratifiée** : l'écran dit déjà ses gravités en phrases (« Rien ne dépasse », « On vous regarde », « Ça se voit de
-   loin », `ForensicScreenController.cs:568-570`) ; la maquette écrit en minuscules parce qu'elle place ces mots sous un intitulé, pas
+   loin », `ForensicScreenController.cs:590-592` à `ae661b46`) ; la maquette écrit en minuscules parce qu'elle place ces mots sous un intitulé, pas
    parce que la donnée est minuscule. Le §4 ci-dessus (minuscules) est remplacé par cette table pour ces quatre valeurs.
 2. **`glaring` → « Ça saute aux yeux » est ratifié** : c'est le mot que le cadre 143 lui donne. « Ça se voit de loin » reste le mot de la
    GRAVITÉ « Criant » (`visible` y est rangé) : les deux ne se recouvrent plus, puisque `glaring` sort de l'échelle pour devenir un
