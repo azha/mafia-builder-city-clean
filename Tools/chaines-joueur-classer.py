@@ -188,6 +188,14 @@ ORDRE = [A, E, D, C, R, B, L, N]
 # (classe, fragment, attendu, pourquoi)
 SOURCE = [
  (N, "pas encore relevé", 1, "TÉMOIN POSITIF du compteur de source, français et ratifié (atelier ④, ③:1043) — mesuré 0 dans la population de l'extracteur (seam `DetailRow`), 1 ici"),
+ # 2026-09-22 (gate client, partie 1) — cinq chaînes joueur SORTIES du champ de l'extracteur par leur correctif : les textes
+ # exposés par une propriété (㉛) ou une constante (chrome) pour que les tests les LISENT au lieu de les recopier. L'extracteur ne
+ # lit ni les corps de propriétés ni les constantes : population 1145 → 1140, exactement ces cinq (comparaison avant/après).
+ (N, "Vous n'avez encore engagé personne.", 1, "㉛ état vide du roster — `LoiScreenController.MessageRosterVide`, lu par EcranLoiE1"),
+ (N, "Aucune affaire en cours.", 1, "㉛ état vide des affaires — `LoiScreenController.MessageAffairesVide`, lu par EcranLoiE1"),
+ (N, "Une affaire naît d'une descente — rien ici n'en crée.", 1, "㉛ note de l'état vide (atelier, ebf97d1e) — `LoiScreenController.NoteAffaires`, lue par EcranLoiE1"),
+ (N, "Friction", 4, "chrome, nom de barre — `OrgVitalsPanelController.NomFriction` ; les 3 autres littéraux qui le contiennent sont des noms de méthode de ㉝ (`DemolitionResolvers.LireFriction…`, `PhraseDeFriction`, `CouleurDeFriction`) : 3 ⇒ la barre a perdu son nom"),
+ (N, "Tension", 1, "chrome, nom de barre (8166447a) — `OrgVitalsPanelController.NomTension`, lu par CharpenteAccueilPanneaux…C2"),
  (L, "Repair underway", 0, "② message d'action de `RunAction` (:384), anglais HORS lot atelier (aucune copie livrée) — signalé ; n'est plus le témoin positif (remplacé par « pas encore relevé », ③) · lot D t2 22/09, ② RunAction (1→0)"),
  (B, "GET /v1/world/districts indisponible",       0, "CLOS lot C 22/09 (㉚:197) — sous-titre de panne via `DerniereErreur` (:612) ; déplacé de VERDICTS où il mesurait 0 par construction"),
  (B, "aucun des 18 districts ne porte de bâtiment", 0, "CLOS lot C 22/09 (㉚:228) — même chemin ; remplacé par l'état réel lu dans me/buildings"),

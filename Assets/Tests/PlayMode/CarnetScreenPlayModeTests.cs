@@ -253,7 +253,7 @@ namespace MafiaCleanCity.Operational.Tests
             // `boutons[7]` resterait vert en photographiant l'écran du voisin le jour où une
             // entrée est insérée avant. *Le nom est une donnée stable, l'indice est un accident
             // d'ordre.*
-            const string NOM = "MenuPlus_LES ORDRES DU SOIR";
+            const string NOM = "MenuPlus_les_ordres_du_soir";   // l'ID STABLE de l'entrée (AppShell.DestinationsPlus), jamais son libellé affiché (22/09)
             shell.ActivateTab(AppShell.Tab.More);
             yield return null;
             Button entree = Object.FindObjectsByType<Button>(FindObjectsSortMode.None)

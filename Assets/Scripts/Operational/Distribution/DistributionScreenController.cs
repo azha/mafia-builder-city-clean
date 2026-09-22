@@ -516,13 +516,13 @@ namespace MafiaCleanCity.Operational
                 return;
             }
 
-            ConstruireLigne(lignes.transform, "LE CHEMIN",
+            ConstruireLigne(lignes.transform, "le_chemin", "LE CHEMIN",
                 DistributionResolvers.TexteChemin(route.sinuosity_bucket),
                 DesignTokens.Current.onSurfacePrimary);
-            ConstruireLigne(lignes.transform, "À TRAVERSER",
+            ConstruireLigne(lignes.transform, "a_traverser", "À TRAVERSER",
                 DistributionResolvers.TexteTraverser(route.river_crossings_count_bucket),
                 DesignTokens.Current.onSurfacePrimary);
-            ConstruireLigne(lignes.transform, "CETTE ROUTE",
+            ConstruireLigne(lignes.transform, "cette_route", "CETTE ROUTE",
                 DistributionResolvers.TexteRouteState(route.route_state),
                 DistributionResolvers.CouleurRouteState(route.route_state, VertBon, DesignTokens.Current.onSurfacePrimary));
         }
@@ -555,9 +555,9 @@ namespace MafiaCleanCity.Operational
             return chip;
         }
 
-        private void ConstruireLigne(Transform parent, string libelleLitteral, string valeur, Color couleurValeur)
+        private void ConstruireLigne(Transform parent, string idStable, string libelleLitteral, string valeur, Color couleurValeur)
         {
-            GameObject ligne = NouveauUI("Ligne_" + Libelle.Slug(libelleLitteral), parent);
+            GameObject ligne = NouveauUI("Ligne_" + idStable, parent);
             HorizontalLayoutGroup h = ligne.AddComponent<HorizontalLayoutGroup>();
             h.childControlWidth = true; h.childControlHeight = true;
             h.childForceExpandWidth = true; h.childForceExpandHeight = false;

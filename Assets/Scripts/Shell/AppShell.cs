@@ -758,15 +758,15 @@ namespace MafiaCleanCity.Shell
         // ⚠️ La garde de joignabilité ne peut PAS le voir : elle demande « chaque locataire a-t-il
         //   un chemin ? », et deux chemins valent un. Le doublon est une propriété du MENU, et le
         //   contrôle qui mord est un compte de contrôleurs DISTINCTS.
-        private (string libelle, System.Action monter)[] DestinationsPlus() => new (string, System.Action)[]
+        private (string idStable, string libelle, System.Action monter)[] DestinationsPlus() => new (string, string, System.Action)[]
         {
-            ("LA RÉPUTATION", () => MountTenant<ReputationScreenController>()),
+            ("la_reputation", "LA RÉPUTATION", () => MountTenant<ReputationScreenController>()),
             // ⑯ arrivée par `pilote-F`, qui la montait comme HANDLER de `Tab.More`. Ce contrat a
             // changé le 2026-09-02 (l'onglet est devenu un MENU) : elle descend donc d'un cran, en
             // ENTRÉE. Résoudre le conflit en gardant simplement le menu aurait supprimé en silence
             // le seul chemin joueur de cet écran — *un conflit se résout sur les deux INTENTIONS,
             // pas sur le côté le plus récent.*
-            ("LA REVUE DU JOUR", () => MountTenant<DailyReviewScreenController>()),
+            ("la_revue_du_jour", "LA REVUE DU JOUR", () => MountTenant<DailyReviewScreenController>()),
 
             // ⛔⛔ LES NEUF SANS PORTE (chantier joignabilité, 2026-09-02). Mesuré sur la POPULATION
             // — les 22 `IShellTenant` du client, obtenus par réflexion, pas par une liste — puis
@@ -778,29 +778,29 @@ namespace MafiaCleanCity.Shell
             // invention — sauf deux, signalés plus bas. Littéraux et non traduits : ce dépôt n'a
             // AUCUN helper i18n (balayage : zéro `I18n.`/`Traduire`/`Localise` dans les écrans), et
             // en introduire un ici serait une décision d'architecture déguisée en ajout de menu.
-            ("LA VENTE",             () => MountTenant<SellingScreenController>()),      // ㉟
-            ("LA VITRINE",           () => MountTenant<ShopScreenController>()),         // ㉓
-            ("LES INSPECTIONS",      () => MountTenant<InspectionScreenController>()),   // ⑮
-            ("LE COMMISSARIAT",      () => MountTenant<PrecinctScreenController>()),     // ⑰
-            ("LA SEMAINE",           () => MountTenant<CompressionScreenController>()),  // ⑭
-            ("LE DOSSIER",           () => MountTenant<ForensicScreenController>()),     // ㊴
+            ("la_vente", "LA VENTE", () => MountTenant<SellingScreenController>()),      // ㉟
+            ("la_vitrine", "LA VITRINE", () => MountTenant<ShopScreenController>()),         // ㉓
+            ("les_inspections", "LES INSPECTIONS", () => MountTenant<InspectionScreenController>()),   // ⑮
+            ("le_commissariat", "LE COMMISSARIAT", () => MountTenant<PrecinctScreenController>()),     // ⑰
+            ("la_semaine", "LA SEMAINE", () => MountTenant<CompressionScreenController>()),  // ⑭
+            ("le_dossier", "LE DOSSIER", () => MountTenant<ForensicScreenController>()),     // ㊴
             // ⚠️ Libellé pris de la maquette ratifiée (cadres 125-130, « Le journal — ce qui se
             // dit ce matin ») et non inventé. « & LA RUE » parce que l'écran porte DEUX flux que
             // le joueur ne distingue pas par leur route : la une (`news/feed`) et les brèves de
             // la rue (`ambient/feed`). Un libellé « LE JOURNAL » seul cacherait la moitié.
-            ("LE JOURNAL & LA RUE",  () => MountTenant<JournalScreenController>()),      // ㊳
+            ("le_journal_la_rue", "LE JOURNAL & LA RUE", () => MountTenant<JournalScreenController>()),      // ㊳
             // ⚠️ ADDITIF, pas un remplacement. L'onglet « FILIÈRE » du dock monte toujours ⑪
             // (`LaunderingController`, mono-nœud). ㊵ montre la filière ENTIÈRE et son état de
             // cassure ; savoir lequel des deux mérite la bulle du dock est une décision de DOCK,
             // pas un effet de bord d'un ajout de menu. Elle est CONSIGNÉE ici, pas prise.
-            ("LA FILIÈRE",           () => MountTenant<FiliereScreenController>()),      // ㊵
-            ("LA PREMIÈRE FOIS",     () => MountTenant<TutorialScreenController>()),     // ㉕
+            ("la_filiere", "LA FILIÈRE", () => MountTenant<FiliereScreenController>()),      // ㊵
+            ("la_premiere_fois", "LA PREMIÈRE FOIS", () => MountTenant<TutorialScreenController>()),     // ㉕
 
             // ⚠️ ㉒ — sa planche s'appelle `planche_le_coffre` et l'écran écrit « LE COFFRE » dans
             // son propre corps, MAIS `front.md` donne déjà ce nom à ⑪ Pipeline. Deux écrans pour un
             // nom : c'est une collision du CANON, pas un choix de menu, et je ne la tranche pas en
             // douce. Le menu dit donc « VOTRE PROFIL », sans ambiguïté ; l'arbitrage remonte.
-            ("VOTRE PROFIL",         () => MountTenant<ProfileScreenController>()),      // ㉒
+            ("votre_profil", "VOTRE PROFIL", () => MountTenant<ProfileScreenController>()),      // ㉒
 
             // ⑲ — ARRIVÉ SANS PORTE PAR `pilote-F`, ET C'EST LA GARDE QUI L'A DIT. Le matin même,
             // `SettingsScreenController` n'existait pas : je l'avais compté parmi les trois écrans
@@ -808,12 +808,12 @@ namespace MafiaCleanCity.Shell
             // `LocataireJoignabilitePlayModeTests` l'a immédiatement classé orphelin — le DIXIÈME,
             // exactement le cas pour lequel elle a été écrite. *Une garde de classe ne prouve sa
             // valeur qu'en attrapant le membre qu'on n'a pas vu arriver.*
-            ("LES RÉGLAGES",         () => MountTenant<SettingsScreenController>()),     // ⑲
+            ("les_reglages", "LES RÉGLAGES", () => MountTenant<SettingsScreenController>()),     // ⑲
 
             // ⚠️ ㊱ — sa liste est VIDE PAR CONSTRUCTION sur le compte de démo : TD-408 mesure
             // qu'au plus UNE carte peut être surfacée pour un joueur. Un écran vide ici n'est donc
             // pas un défaut de montage, et il ne faut pas partir le chercher comme tel.
-            ("L'HORIZON DES POSSIBLES", () => MountTenant<HorizonScreenController>()),   // ㊱
+            ("l_horizon_des_possibles", "L'HORIZON DES POSSIBLES", () => MountTenant<HorizonScreenController>()),   // ㊱
 
             // ㉜ — le tableau de service. Le libellé est le TITRE DE LA PLANCHE (m-75), pas le
             // nom de la classe : c'est l'état que le joueur vient consulter (« ce que vous avez
@@ -822,9 +822,9 @@ namespace MafiaCleanCity.Shell
             // ㉞ : les trois doivent en donner la MÊME lecture, sinon le joueur croit avoir trois
             // budgets. La source unique est `structural_budget` de `session/open`, que le shell
             // tient déjà (`LastSessionOpen`) ; aucun des trois ne rouvre de session pour le lire.
-            ("CE QUE VOUS AVEZ CONFIÉ", () => MountTenant<DelegationScreenController>()), // ㉜
+            ("ce_que_vous_avez_confie", "CE QUE VOUS AVEZ CONFIÉ", () => MountTenant<DelegationScreenController>()), // ㉜
 
-            ("LA CHAÎNE D'APPRO", () => MountTenant<ChaineDApproScreenController>()), // ㉚
+            ("la_chaine_d_appro", "LA CHAÎNE D'APPRO", () => MountTenant<ChaineDApproScreenController>()), // ㉚
 
             // ㊳ — AJOUTÉE AU MERGE DU 2026-09-03 PAR LA GARDE, PAS PAR LECTURE. `pilote-B` a livré
             // `JournalScreenController` sans sa ligne ici : `LocataireJoignabilitePlayModeTests` l'a
@@ -844,18 +844,18 @@ namespace MafiaCleanCity.Shell
             // ont été prises) : le libellé est le TITRE DU BANDEAU de la maquette de repos
             // (m-54, « L'envoi de ce soir » aurait été trop long pour une entrée de menu — REUSE
             // du nom court déjà porté par le brief et par `Tools/juge-visuel/ecran_distribution/`).
-            ("LA DISTRIBUTION", () => MountTenant<DistributionScreenController>()), // ㉘
+            ("la_distribution", "LA DISTRIBUTION", () => MountTenant<DistributionScreenController>()), // ㉘
 
             // ㉛ — « le parloir ». Libellé en CAPITALES, patron des entrées voisines (aucune
             // planche de menu ne nomme cet écran — même situation que ㉘, ajoutée le même jour).
-            ("LA LOI", () => MountTenant<LoiScreenController>()), // ㉛
+            ("la_loi", "LA LOI", () => MountTenant<LoiScreenController>()), // ㉛
 
             // ㉝ — raser un site. Deuxième des trois écrans qui partagent le jeton de structure,
             // et le seul qui le DÉPENSE de façon irréversible : une démolition ne se rejoue pas.
             // Mesuré le 2026-09-03 : après un `decommission` réussi, `structural_budget` passe à
             // `{used:1, cap_reached:true}` — donc ㉜ doit éteindre son geste dans la même session,
             // et il le fait, en lisant la même source (`JetonDeStructure`).
-            ("RASER UN SITE", () => MountTenant<DemolitionScreenController>()),           // ㉝
+            ("raser_un_site", "RASER UN SITE", () => MountTenant<DemolitionScreenController>()),           // ㉝
 
             // ㉞ — « les ordres du soir ». AJOUTÉE PAR LA GARDE, deuxième fois de la journée après
             // ㊳ : `pilote-B` a livré `CarnetScreenController` sans sa ligne ici, et
@@ -867,7 +867,7 @@ namespace MafiaCleanCity.Shell
             // qu'il ne doit pas avoir de porte. Ce n'est pas le cas ici — il en aura une, autant
             // que ce soit maintenant. Un écran titré et vide est ce que ce régime livre déjà
             // (⑪ et ⑫ sont capturés sans données et consignés) ; un écran sans porte, non.
-            ("LES ORDRES DU SOIR", () => MountTenant<CarnetScreenController>()),         // ㉞
+            ("les_ordres_du_soir", "LES ORDRES DU SOIR", () => MountTenant<CarnetScreenController>()),         // ㉞
 
             // ㉞ — les ordres du soir. ⚠️ CET ÉCRAN N'EST PAS DE MOI : il est arrivé par `main`
             // (session B, à qui ㉞ a été réattribué) SANS entrée, et la garde de joignabilité l'a
@@ -879,7 +879,7 @@ namespace MafiaCleanCity.Shell
 
             // ㉙ — « la table du fond », version 2 dite lisible. Même situation que ㉘/㉛ : aucune
             // planche de menu ne nomme cet écran, le libellé vient du chantier lui-même.
-            ("LE CONFLIT", () => MountTenant<ConflitScreenController>()), // ㉙
+            ("le_conflit", "LE CONFLIT", () => MountTenant<ConflitScreenController>()), // ㉙
         };
 
         /// <summary>Monte le menu « Plus » : une entrée par destination, chacune montant son écran.
@@ -968,9 +968,9 @@ namespace MafiaCleanCity.Shell
             ContentSizeFitter ajuste = contenu.AddComponent<ContentSizeFitter>();
             ajuste.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
-            foreach ((string libelle, System.Action monter) in DestinationsPlus())
+            foreach ((string idStable, string libelle, System.Action monter) in DestinationsPlus())
             {
-                GameObject entree = new GameObject($"MenuPlus_{libelle}", typeof(RectTransform));
+                GameObject entree = new GameObject($"MenuPlus_{idStable}", typeof(RectTransform));
                 entree.transform.SetParent(contenu.transform, false);
                 Image fond = entree.AddComponent<Image>();
                 fond.color = DesignTokens.Current.surfaceRow;

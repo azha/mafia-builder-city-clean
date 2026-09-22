@@ -155,12 +155,17 @@ namespace MafiaCleanCity.Shell
         }
         private void RenderFriction()
         {
-            RenderBar(frictionText, "Friction", FrictionBucketRendered, FrictionLabel(FrictionBucketRendered));
+            RenderBar(frictionText, NomFriction, FrictionBucketRendered, FrictionLabel(FrictionBucketRendered));
         }
         private void RenderStress()
         {
-            RenderBar(stressText, "Tension", StressBucketRendered, StressLabel(StressBucketRendered));
+            RenderBar(stressText, NomTension, StressBucketRendered, StressLabel(StressBucketRendered));
         }
+
+        /// <summary>Les noms des barres — UNE source : le panneau les rend (`RenderBar`), les tests les lisent ICI. Mesuré le
+        /// 2026-09-22 : `CharpenteAccueilPanneaux…C2` cherchait « Stress: » en dur et a rougi quand 8166447a a traduit la barre.</summary>
+        public const string NomFriction = "Friction";
+        public const string NomTension = "Tension";
 
         private void RenderBar(TextMeshProUGUI text, string name, string bucketValue, string label)
         {

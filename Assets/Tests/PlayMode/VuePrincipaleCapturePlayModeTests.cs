@@ -1745,7 +1745,7 @@ namespace MafiaCleanCity.Capture.Tests
             {
                 if (!b.gameObject.name.StartsWith("MenuPlus_")) continue;
                 libellesVus.Add(b.gameObject.name);
-                if (b.gameObject.name == "MenuPlus_LE DOSSIER") entree = b;
+                if (b.gameObject.name == "MenuPlus_le_dossier") entree = b;
             }
             Assert.IsNotNull(entree,
                 "l'entrée « LE DOSSIER » est absente du menu « Plus » — ㊴ n'est plus atteignable " +
@@ -1918,7 +1918,7 @@ namespace MafiaCleanCity.Capture.Tests
             {
                 if (!b.gameObject.name.StartsWith("MenuPlus_")) continue;
                 libellesVus.Add(b.gameObject.name);
-                if (b.gameObject.name == "MenuPlus_LE JOURNAL & LA RUE") entree = b;
+                if (b.gameObject.name == "MenuPlus_le_journal_la_rue") entree = b;
             }
             Assert.IsNotNull(entree,
                 "l'entrée « LE JOURNAL & LA RUE » est absente du menu — ㊳ n'est pas atteignable. " +
@@ -2062,7 +2062,7 @@ namespace MafiaCleanCity.Capture.Tests
             {
                 if (!b.gameObject.name.StartsWith("MenuPlus_")) continue;
                 libellesVus.Add(b.gameObject.name);
-                if (b.gameObject.name == "MenuPlus_LA FILIÈRE") entree = b;
+                if (b.gameObject.name == "MenuPlus_la_filiere") entree = b;
             }
             Assert.IsNotNull(entree,
                 "l'entrée « LA FILIÈRE » est absente du menu — ㊵ n'est pas atteignable. " +

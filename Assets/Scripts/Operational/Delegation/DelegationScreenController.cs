@@ -566,7 +566,7 @@ namespace MafiaCleanCity.Operational
             // La planche n'en montre que six : on montre les huit, parce que le texte du bas parle
             // de huit et qu'un écran qui se contredit lui-même est pire qu'un écran qui déborde.
             foreach (var r in DelegationCatalogue.Reserve)
-                ConstruirePlaqueGrise(zoneCentrale, r.libelle, r.sous);
+                ConstruirePlaqueGrise(zoneCentrale, r.cle, r.libelle, r.sous);
 
             EcrireDit(pied, "Huit charges existent dans le jeu et ", "personne n'y touche encore", ".");
             ConstruireRien(pied, "Elles existent, mais il n'y a rien derrière",
@@ -1049,9 +1049,9 @@ namespace MafiaCleanCity.Operational
 
         /// <summary>`.sv-plaque.gris{opacity:.5}` — une charge de la réserve : pas de tenant, pas
         /// de geste, et le texte le dit.</summary>
-        private void ConstruirePlaqueGrise(Transform parent, string libelle, string sous)
+        private void ConstruirePlaqueGrise(Transform parent, string idStable, string libelle, string sous)
         {
-            GameObject go = NouveauUI("Reserve_" + libelle, parent);
+            GameObject go = NouveauUI("Reserve_" + idStable, parent);
             AjouterPlaqueArrondie(go, DelegationResolvers.PlaqueFondGrise,
                                   DelegationResolvers.PlaqueBordGrise, CssRayonPetit);
             LayoutElement le = go.AddComponent<LayoutElement>();
@@ -1126,32 +1126,32 @@ namespace MafiaCleanCity.Operational
             h4.fontStyle = FontStyles.Bold;
             h4.margin = new Vector4(0f, 0f, 0f, Px(CssApercuTitreBas));
 
-            LigneApercu(go.transform, "CE QU'IL A APPRIS",
+            LigneApercu(go.transform, "ce_qu_il_a_appris", "CE QU'IL A APPRIS",
                         DelegationResolvers.PhraseDeChute(p.drop_bucket),
                         DelegationResolvers.CouleurDeChute(p.drop_bucket));
-            LigneApercu(go.transform, "POUR TOUT REGAGNER",
+            LigneApercu(go.transform, "pour_tout_regagner", "POUR TOUT REGAGNER",
                         DelegationResolvers.PhraseDeRecuperation(p.recovery_bucket),
                         DelegationResolvers.TexteVif);
-            LigneApercu(go.transform, "CE QU'ON LUI DOIT",
+            LigneApercu(go.transform, "ce_qu_on_lui_doit", "CE QU'ON LUI DOIT",
                         DelegationResolvers.PhraseDIndemnite(p.severance_bucket),
                         DelegationResolvers.CouleurDIndemnite(p.severance_bucket));
-            LigneApercu(go.transform, "IL VOUS EN VEUT",
+            LigneApercu(go.transform, "il_vous_en_veut", "IL VOUS EN VEUT",
                         "pendant " + DelegationResolvers.PhraseDeFenetre(p.window_days_band),
                         DelegationResolvers.TexteVif);
             // ⚠️ Ces deux lignes sont CONDITIONNELLES dans la maquette (`if successeur` / `if
             // penalite`) : absentes, elles ne laissent pas de ligne vide. Une ligne « — » à leur
             // place ferait croire à une valeur nulle là où il n'y a pas de sujet.
             if (!string.IsNullOrEmpty(p.suspended_successor_key))
-                LigneApercu(go.transform, "CELUI QU'IL FORMAIT", "s'arrête aussi", DelegationResolvers.Rouge);
+                LigneApercu(go.transform, "celui_qu_il_formait", "CELUI QU'IL FORMAIT", "s'arrête aussi", DelegationResolvers.Rouge);
             if (p.re_delegation_penalty)
-                LigneApercu(go.transform, "SI VOUS RECONFIEZ PLUS TARD", "ça coûtera plus", DelegationResolvers.Rouge);
+                LigneApercu(go.transform, "si_vous_reconfiez_plus_tard", "SI VOUS RECONFIEZ PLUS TARD", "ça coûtera plus", DelegationResolvers.Rouge);
         }
 
         /// <summary>`.sv-apercu .l{display:flex;justify-content:space-between;padding:4.5px 0;
         /// border-top:1px dotted #3b4650}` — le filet du HAUT, sauf sur la première.</summary>
-        private void LigneApercu(Transform parent, string libelle, string valeur, Color couleur)
+        private void LigneApercu(Transform parent, string idStable, string libelle, string valeur, Color couleur)
         {
-            GameObject go = NouveauUI("Ligne_" + libelle, parent);
+            GameObject go = NouveauUI("Ligne_" + idStable, parent);
             if (parent.childCount > 2) AjouterFiletHaut(go, DelegationResolvers.ApercuBord, CssFilet);
             HorizontalLayoutGroup h = go.AddComponent<HorizontalLayoutGroup>();
             h.padding = new RectOffset(0, 0, PxTrait(CssApercuLignePad), PxTrait(CssApercuLignePad));

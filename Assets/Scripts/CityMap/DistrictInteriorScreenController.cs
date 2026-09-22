@@ -2054,11 +2054,11 @@ namespace MafiaCleanCity.CityMap
             // ── les trois actions ─────────────────────────────────────────────────────────────
             // `.actions{gap:9px}` · `.btn{flex:1}` ⇒ (332 − 2×9) / 3 = 104,667 chacun.
             float largeurBouton = (largeurContenu - 2f * 9f) / 3f;
-            BuildFicheBouton(corps.transform, "COLLECTER", or: true, action: () => ActionFiche("COLLECTER"),
+            BuildFicheBouton(corps.transform, "COLLECTER", "COLLECTER", or: true, action: () => ActionFiche("COLLECTER"),
                              x: 0f, largeur: largeurBouton);
-            BuildFicheBouton(corps.transform, "BLANCHIR", or: false, action: () => ActionFiche("BLANCHIR"),
+            BuildFicheBouton(corps.transform, "BLANCHIR", "BLANCHIR", or: false, action: () => ActionFiche("BLANCHIR"),
                              x: largeurBouton + 9f, largeur: largeurBouton);
-            BuildFicheBouton(corps.transform, "AMÉLIORER", or: false, action: () => ActionFiche("AMÉLIORER"),
+            BuildFicheBouton(corps.transform, "AMÉLIORER", "AMÉLIORER", or: false, action: () => ActionFiche("AMÉLIORER"),
                              x: 2f * (largeurBouton + 9f), largeur: largeurBouton);
 
             // Le retour d'une action. Posé EN SURIMPRESSION de la rangée d'actions plutôt qu'à sa
@@ -2102,10 +2102,10 @@ namespace MafiaCleanCity.CityMap
 
         /// <summary>Un bouton de la fiche. `.btn.or` = le SEUL coloré (dégradé d'or, encre sombre) ;
         /// `.btn.ligne` = un bouton-filet. Le canon insiste : « une seule action colorée ».</summary>
-        private void BuildFicheBouton(Transform parent, string libelle, bool or,
+        private void BuildFicheBouton(Transform parent, string idStable, string libelle, bool or,
                                       UnityEngine.Events.UnityAction action, float x, float largeur)
         {
-            GameObject go = NewUI($"Btn_{libelle}", parent);
+            GameObject go = NewUI($"Btn_{idStable}", parent);
             // `.actions` y=114,38 h=39,81 — mesuré au navigateur, posé, jamais réparti.
             PoserColonne((RectTransform)go.transform, x, largeur, 114.38f, 39.81f);
             // ⛔⛔ LE REMPLISSAGE PREND LA FORME DU TRACÉ, il ne se contente plus de vivre dessous.
