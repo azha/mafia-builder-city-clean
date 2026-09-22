@@ -25,3 +25,19 @@ Exclues avec raison : 12 Capture* + 3 Photo* (paire d'identité non posée, aucu
 | `LitterauxDeCouleurPlayModeTests.AucunLitteralDeCouleurNeRecopieUnTokenNomme` (Palette) | « TD-612 — 49 littéral(aux) … dans 11 fichier(s) » | **15 de CLIENT-2** (RevueDuJourDecor ×14 ⑯-7, DailyReviewScreenController:690 ⑯-3) · **34 ANTÉRIEURS** (9 fichiers, commits du 02-03/09, ancêtres de 569e3534 : la garde était déjà rouge avant ces lots) | les 15 passent par leurs tokens |
 
 Porte rendue 23:43:43 (`--atlas-vus`) après `git checkout -- Assets/Fonts/ Assets/Screenshots/` (réécrits par Charpente : DejaVuSerif SDF.asset + 3 planches accueil_panneaux).
+
+---
+
+# Créneau client-2 (→ 23:53:22) sur `ccd255c3` (après merge du cumul CLIENT-1 15ba04fb)
+
+Réimportation : error CS 0 · compiler errors 0 · Aborting 0 · compilation 6,72 s · Missing 0 · `sprite_environment_bar_nuit.png` importé sous le guid écrit à la main (c168d6bd…) · porcelain 0. typecheck --tout sans --frais 17/17 (ShellContracts 18 sources avec DecorAuComptoir, Tests 139, aucun hors .csproj).
+
+```
+MafiaCI: RunPlayModeTests started — 640 test(s) découverts (arbre PlayMode entier ; le filtre de catégories s'applique à l'exécution, voir passed= ci-dessous) — DÉCLARÉS SOUS LE FILTRE : 47
+MafiaCI: RunPlayModeTests finished — passed=47 failed=0 skipped=0 inconclusive=0 declares=47 comptes=47
+MafiaCI: catégories RÉELLEMENT exécutées = [EcranFile, EcranRevue, Palette]
+```
+
+Attendu : 47 · 47 · [EcranFile, EcranRevue, Palette] — **égal**. **R11 (le bar MONTÉ) : PASSED**, R11bis, R11ter, R10ter corrigé : PASSED. Palette 5/5 (0 littéral : 34 fermés par CLIENT-1, 15 par f60d14f6). EcranRevue 32/32 après la refonte DecorAuComptoir (⑨-2a) et le R8bis neuf.
+
+Porte rendue 23:53:22. Aucune capture, rien à restaurer.
