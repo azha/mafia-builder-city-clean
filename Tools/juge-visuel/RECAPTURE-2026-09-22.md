@@ -155,9 +155,16 @@ vers `constats-a-rejuger*.md` quand il existe.
 | `vente/r2-2026-09-22` | généré | #107 + témoin #109 (rendu après le gate, §4) | 6 | `constats-a-rejuger.md` (0 à rejuger) |
 | `compte/r2-㉓-2026-09-22` · `ecran_delegation/r2` · `ecran_demolition/r2` · `compression/r2` · `ecran_appro/r2` · `ecran_distribution/r2` · `ecran_loi/r2` · `ecran_conflit/r2` · `carnet/r2` · `screen_c1/r2` · `screen_c6/r2` · `ecran-principal/r10` | générés | nominal + nommées | 1 à 6 | — |
 
+**Deux écrans DÉJÀ jugés sont à rejuger après la recapture, et ils n'ont pas de dossier** — compté par l'atelier sur le `front.md` de
+l'arbre back (39 sections d'écran, motif `[x] **jugé…**`, 2 trouvés ; le client en comptait 2 aussi, `443489ec`) :
+- **⑥ La Famille** — APPROUVÉ au r3 (06/09), réécrit depuis par `f1bcd5d3` (dialogue de réaffectation) et `a3404347` (cadenas des
+  primitives). Sa référence NE change pas (organigramme de `ecrans-brennar.html` + `famille/ecran-canon.png`) : le tour vérifie le
+  TEXTE sur une capture fraîche, il ne re-mesure pas la maquette.
+- **㊲ Le miroir** — APPROUVÉ **SOUS RÉSERVE** au r8 (la nuance compte), et sa référence #120 a été RE-RENDUE le 22/09 (texte changé).
+⇒ Un verdict rendu avant une réécriture ne couvre pas le texte réécrit. MANDAT §5-bis porte les deux lignes pour le juge.
+
 Au top du client : poser les captures, remplir la table des écarts ASSUMÉS depuis le `juge-donnees` mode maquette de l'écran, puis
-lancer le juge sur le répertoire (§3 du skill). ㊲ n'est pas dans les 55 mais sa référence #120 a changé de TEXTE le 22/09 : à écrire
-dans le mandat de son prochain tour.
+lancer le juge sur le répertoire (§3 du skill).
 
 ## 4. Le témoin #109 de ㉟ — rendu après le gate
 
