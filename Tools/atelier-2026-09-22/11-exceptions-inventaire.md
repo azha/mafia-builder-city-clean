@@ -272,3 +272,37 @@ seul que la maquette dessine (« EN RÉPARATION », cadre 17) :
 - Clés proposées, sur le patron de `Libelle.ParValeur` (la clé se dérive de la VALEUR servie) : `exception_detail.outcome.<valeur en
   minuscules>` — `exception_detail.outcome.repairing`, `…bribe_succeeded`, etc. Une valeur inconnue garde le repli du client (`—`),
   jamais l'enum brut.
+
+---
+
+## 3.8 TD-690 — ⑨/⑩ : les 18 clés dont le bundle anglais sert du français (paquet vérifié contre le classement du back)
+
+Classement du back : `tests/e2e/conventions/_en-egal-fr-classement.txt` (`e75cf69d`, branche `back/s5-revue-du-jour`), 18 clés
+`DEFAUT_FR_DANS_EN` sous `exceptions.*` et `exception_detail.*`. `exceptions.nombre.six` y est classée `MOT_IDENTIQUE` (« Six » : même
+mot) — à juste titre, hors paquet. Ce paquet reprend le §3.1, une ligne par clé ; le fr est la valeur servie, recopiée à l'octet.
+Vérifié : `python3 Tools/atelier-2026-09-22/verifier-en-egal-fr.py <ce fichier> "## 3.8" exceptions. exception_detail.`
+
+| clé | classe | fr (servi) | en (proposé) |
+|---|---|---|---|
+| `exceptions.locuteur.la_ville` | `DEFAUT_FR_DANS_EN` | La ville | The city |
+| `exceptions.bloc.escalades_archivees` | `DEFAUT_FR_DANS_EN` | Escalades archivées | Archived escalations |
+| `exceptions.bloc.a_relire_a_tete_reposee` | `DEFAUT_FR_DANS_EN` | à relire à tête reposée | to go over with a clear head |
+| `exceptions.bloc.il_attend_une_consigne` | `DEFAUT_FR_DANS_EN` | il attend une consigne | waiting for your orders |
+| `exceptions.bloc.ouvrir` | `DEFAUT_FR_DANS_EN` | Ouvrir | Open |
+| `exceptions.bloc.file_indisponible_verifier_la_pile` | `DEFAUT_FR_DANS_EN` | File indisponible — vérifier la pile | Queue unavailable — check the stack |
+| `exceptions.categorie.conflit` | `DEFAUT_FR_DANS_EN` | CONFLIT | CONFLICT |
+| `exceptions.categorie.diplomatie` | `DEFAUT_FR_DANS_EN` | DIPLOMATIE | DIPLOMACY |
+| `exceptions.categorie.renseignement` | `DEFAUT_FR_DANS_EN` | RENSEIGNEMENT | INTELLIGENCE |
+| `exceptions.nombre.deux` | `DEFAUT_FR_DANS_EN` | Deux | Two |
+| `exceptions.nombre.trois` | `DEFAUT_FR_DANS_EN` | Trois | Three |
+| `exceptions.nombre.quatre` | `DEFAUT_FR_DANS_EN` | Quatre | Four |
+| `exceptions.nombre.cinq` | `DEFAUT_FR_DANS_EN` | Cinq | Five |
+| `exceptions.nombre.plusieurs` | `DEFAUT_FR_DANS_EN` | Plusieurs | Several |
+| `exception_detail.bloc.risque` | `DEFAUT_FR_DANS_EN` | Risqué | Risky |
+| `exception_detail.bloc.suggere` | `DEFAUT_FR_DANS_EN` | Suggéré | Suggested |
+| `exception_detail.bloc.lui_apprendre` | `DEFAUT_FR_DANS_EN` | Lui apprendre | Teach them |
+| `exception_detail.bloc.resolu` | `DEFAUT_FR_DANS_EN` | Résolu ✓ | Resolved ✓ |
+
+- « waiting for your orders », « Teach them » : sans pronom genré, la carte pouvant être celle d'une lieutenante.
+- ⚠️ `exception_detail.bloc.resolu` et `exception_detail.bloc.issue` vont ensemble à l'écran (« Résolu ✓ · Résultat : … ») : voir §3.7
+  pour le libellé qui remplace « Problème : ».
