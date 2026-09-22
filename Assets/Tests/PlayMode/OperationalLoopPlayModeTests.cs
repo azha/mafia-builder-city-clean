@@ -250,7 +250,7 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.AreEqual("lab", card.operational_type, "operational_type is lab (the produce anchor)");
 
             var cardTexts = buildingCard.RenderedTexts;
-            Assert.IsTrue(cardTexts.Any(t => t.Contains("Lab")), "Building Card renders the 'Lab' type label");
+            Assert.IsTrue(cardTexts.Any(t => t.Contains("Labo")), "Building Card renders the 'Lab' type label");
             Assert.IsTrue(cardTexts.Any(t => t == "Operational"), "Building Card renders the 'Operational' band");
             Assert.IsTrue(cardTexts.Any(t => t == "Yes"), "Building Card renders operational=true as 'Yes'");
             AssertNoRawScalar(cardTexts, "BuildingCard");

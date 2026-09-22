@@ -122,9 +122,9 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.IsTrue(controller.PurityBandShown, "the purity-band row is shown for a cooked Ash batch");
             var texts = controller.RenderedTexts;
             Assert.IsTrue(texts.Any(t => t == "Taille du labo"), "lab-tier row label rendered");
-            Assert.IsTrue(texts.Any(t => t == "Refined"), "lab-tier band value 'Refined' rendered");
+            Assert.IsTrue(texts.Any(t => t == "Affiné"), "lab-tier band value 'Refined' rendered");
             Assert.IsTrue(texts.Any(t => t == "Pureté"), "purity row label rendered");
-            Assert.IsTrue(texts.Any(t => t == "Crystalline"), "purity band value 'Crystalline' rendered");
+            Assert.IsTrue(texts.Any(t => t == "Cristalline"), "purity band value 'Crystalline' rendered");
             Assert.IsTrue(texts.Any(t => t == "Ash"), "substance value 'Ash' rendered (the storage substance row)");
 
             // The Upgrade-tier affordance is present on a sub-MASTER lab (REFINED → can upgrade to MASTER); the seeded
@@ -164,7 +164,7 @@ namespace MafiaCleanCity.Operational.Tests
 
             // Re-render the card so the appointment panel appears (SCHEDULED) + the Honor affordance shows.
             yield return controller.LoadBuilding(specializedLabId);
-            Assert.IsTrue(controller.RenderedTexts.Any(t => t == "Scheduled"),
+            Assert.IsTrue(controller.RenderedTexts.Any(t => t == "Réservé"),
                 "appointment status band 'Scheduled' rendered after refresh");
 
             // HONOR the appointment → it sells the Ash at the venue (the ONLY Ash sale path) → HONORED.
@@ -182,8 +182,8 @@ namespace MafiaCleanCity.Operational.Tests
                 "a CRYSTALLINE-batch honor realizes the PREMIUM payout band");
 
             var texts = controller.RenderedTexts;
-            Assert.IsTrue(texts.Any(t => t == "Honored"), "appointment status band 'Honored' rendered after honor");
-            Assert.IsTrue(texts.Any(t => t == "Premium"), "payout band 'Premium' rendered after honor");
+            Assert.IsTrue(texts.Any(t => t == "Honoré"), "appointment status band 'Honored' rendered after honor");
+            Assert.IsTrue(texts.Any(t => t == "Exceptionnel"), "payout band 'Premium' rendered after honor");
 
             // A second honor on the now-HONORED appointment → a well-formed 409 (double-honor is rejected server-side).
             yield return controller.HonorAppointment();

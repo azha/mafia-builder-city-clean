@@ -891,7 +891,8 @@ namespace MafiaCleanCity.Operational
                 RepairButtonShown = true;
                 bool affordable = CanAfford(card.repair_cost, WalletBand);
                 RepairButtonAffordable = affordable;
-                string repairLabel = "Réparer";   // atelier c1 : la bande de coût attend sa clé au back (lot E) — jamais une bande anglaise
+                string cout = RepairCostLabel(card.repair_cost);
+                string repairLabel = cout == null ? "Réparer" : $"Réparer · {cout}";   // atelier c1 : « Réparer · gros frais … »
                 repairButton = AddActionButton(actionBar, repairLabel, () => StartCoroutine(Repair()));
                 SetButtonInteractable(repairButton, affordable);
                 if (!affordable)
@@ -1089,17 +1090,17 @@ namespace MafiaCleanCity.Operational
         {
             switch (t)
             {
-                case "lab": return "Lab";
-                case "stash": return "Stash";
-                case "front_shop": return "Front shop";
-                case "cash_safehouse": return "Cash safehouse";
-                case "dealer_spot_front": return "Dealer-spot front";
-                case "specialized_lab": return "Specialized lab";
-                case "refinery": return "Refinery";
-                case "grow_house": return "Grow house";
-                case "distribution_hub": return "Distribution hub";
-                case "money_holding": return "Money holding";
-                case "": case null: return "Not converted";
+                case "lab": return Bande("type", "lab", "Labo");
+                case "stash": return Bande("type", "stash", "Réserve");
+                case "front_shop": return Bande("type", "front_shop", "Commerce-écran");
+                case "cash_safehouse": return Bande("type", "cash_safehouse", "Planque");
+                case "dealer_spot_front": return Bande("type", "dealer_spot_front", "Coin de vente");
+                case "specialized_lab": return Bande("type", "specialized_lab", "Labo spécialisé");
+                case "refinery": return Bande("type", "refinery", "Raffinerie");
+                case "grow_house": return Bande("type", "grow_house", "Serre");
+                case "distribution_hub": return Bande("type", "distribution_hub", "Relais");
+                case "money_holding": return Bande("type", "money_holding", "Caisse");
+                case "": case null: return "Pas encore ouvert";   // aucune valeur servie ⇒ aucune clé ; famille « Ouvrir » (orchestration 22/09)
                 default: return t;
             }
         }
@@ -1192,10 +1193,10 @@ namespace MafiaCleanCity.Operational
         {
             switch (b)
             {
-                case "HIGH": return "a heavy haul";
-                case "MODERATE": return "a moderate haul";
-                case "LOW": return "a light haul";
-                case "NONE": return "nothing";
+                case "HIGH": return Bande("seized_amount", "HIGH", "une grosse prise");
+                case "MODERATE": return Bande("seized_amount", "MODERATE", "une prise moyenne");
+                case "LOW": return Bande("seized_amount", "LOW", "une petite prise");
+                case "NONE": return Bande("seized_amount", "NONE", "rien");
                 default: return b;
             }
         }
@@ -1205,11 +1206,11 @@ namespace MafiaCleanCity.Operational
         {
             switch (b)
             {
-                case "MAJOR": return "major cost";
-                case "MODERATE": return "moderate cost";
-                case "MINOR": return "minor cost";
-                case "NONE": return "no cost";
-                default: return b;
+                case "MAJOR": return Bande("repair_cost", "MAJOR", "gros frais");
+                case "MODERATE": return Bande("repair_cost", "MODERATE", "frais moyens");
+                case "MINOR": return Bande("repair_cost", "MINOR", "petits frais");
+                case "NONE": return Bande("repair_cost", "NONE", "sans frais");
+                default: return null;   // bande inconnue : le bouton dit « Réparer » seul (atelier c1)
             }
         }
 
@@ -1258,9 +1259,9 @@ namespace MafiaCleanCity.Operational
         {
             switch (b)
             {
-                case "BASIC": return "Basic";
-                case "REFINED": return "Refined";
-                case "MASTER": return "Master";
+                case "BASIC": return Bande("lab_tier", "BASIC", "Simple");
+                case "REFINED": return Bande("lab_tier", "REFINED", "Affiné");
+                case "MASTER": return Bande("lab_tier", "MASTER", "Maître");
                 default: return b;
             }
         }
@@ -1285,10 +1286,10 @@ namespace MafiaCleanCity.Operational
         {
             switch (b)
             {
-                case "CUT": return "Cut";
-                case "STANDARD": return "Standard";
-                case "PURE": return "Pure";
-                case "CRYSTALLINE": return "Crystalline";
+                case "CUT": return Bande("purity", "CUT", "Coupée");
+                case "STANDARD": return Bande("purity", "STANDARD", "Courante");
+                case "PURE": return Bande("purity", "PURE", "Pure");
+                case "CRYSTALLINE": return Bande("purity", "CRYSTALLINE", "Cristalline");
                 default: return b;
             }
         }
@@ -1321,9 +1322,9 @@ namespace MafiaCleanCity.Operational
         {
             switch (s)
             {
-                case "SCHEDULED": return "Scheduled";
-                case "HONORED": return "Honored";
-                case "EXPIRED": return "Expired";
+                case "SCHEDULED": return Bande("appointment", "SCHEDULED", "Réservé");
+                case "HONORED": return Bande("appointment", "HONORED", "Honoré");
+                case "EXPIRED": return Bande("appointment", "EXPIRED", "Passé");
                 default: return s;
             }
         }
@@ -1341,12 +1342,12 @@ namespace MafiaCleanCity.Operational
         {
             switch (b)
             {
-                case "PENDING": return "Pending";
-                case "NONE": return "Lost";
-                case "MODEST": return "Modest";
-                case "FAIR": return "Fair";
-                case "STRONG": return "Strong";
-                case "PREMIUM": return "Premium";
+                case "PENDING": return Bande("payout", "PENDING", "En attente");
+                case "NONE": return Bande("payout", "NONE", "Perdu");
+                case "MODEST": return Bande("payout", "MODEST", "Modeste");
+                case "FAIR": return Bande("payout", "FAIR", "Correct");
+                case "STRONG": return Bande("payout", "STRONG", "Fort");
+                case "PREMIUM": return Bande("payout", "PREMIUM", "Exceptionnel");
                 default: return b;
             }
         }
@@ -1383,10 +1384,10 @@ namespace MafiaCleanCity.Operational
         {
             switch (b)
             {
-                case "EARLY": return "Early";
-                case "MID": return "Mid";
-                case "LATE": return "Late";
-                case "DONE": return "Ready to harvest";
+                case "EARLY": return Bande("grow_stage", "EARLY", "Début");
+                case "MID": return Bande("grow_stage", "MID", "Milieu");
+                case "LATE": return Bande("grow_stage", "LATE", "Fin");
+                case "DONE": return Bande("grow_stage", "DONE", "À récolter");
                 default: return b;
             }
         }
@@ -1414,9 +1415,9 @@ namespace MafiaCleanCity.Operational
         {
             switch (b)
             {
-                case "WITHERED": return "Withered";
-                case "ON_TRACK": return "On track";
-                case "THRIVING": return "Thriving";
+                case "WITHERED": return Bande("husbandry", "WITHERED", "Flétrie");
+                case "ON_TRACK": return Bande("husbandry", "ON_TRACK", "En bonne voie");
+                case "THRIVING": return Bande("husbandry", "THRIVING", "Florissante");
                 default: return b;
             }
         }
@@ -1448,9 +1449,9 @@ namespace MafiaCleanCity.Operational
         {
             switch (p)
             {
-                case "verdant_root_extract": return "Verdant root";
-                case "lull_resin": return "Lull resin";
-                case "glass_lily": return "Glass lily";
+                case "verdant_root_extract": return Bande("precursor", "verdant_root_extract", "Racine verdoyante");
+                case "lull_resin": return Bande("precursor", "lull_resin", "Résine de lull");
+                case "glass_lily": return Bande("precursor", "glass_lily", "Lys de verre");
                 default: return p;
             }
         }
@@ -1462,11 +1463,11 @@ namespace MafiaCleanCity.Operational
         {
             switch (b)
             {
-                case "SMALL": return "Small";
-                case "MEDIUM": return "Medium";
-                case "LARGE": return "Large";
-                case "MAJOR": return "Major";
-                case "MAX": return "Max";
+                case "SMALL": return Bande("hub_tier", "SMALL", "Petit");
+                case "MEDIUM": return Bande("hub_tier", "MEDIUM", "Moyen");
+                case "LARGE": return Bande("hub_tier", "LARGE", "Grand");
+                case "MAJOR": return Bande("hub_tier", "MAJOR", "Majeur");
+                case "MAX": return Bande("hub_tier", "MAX", "Maximal");
                 default: return b;
             }
         }
@@ -1495,9 +1496,9 @@ namespace MafiaCleanCity.Operational
         {
             switch (b)
             {
-                case "OPEN": return "Open";
-                case "BUSY": return "Busy";
-                case "FULL": return "Full";
+                case "OPEN": return Bande("roster", "OPEN", "Ouverte");
+                case "BUSY": return Bande("roster", "BUSY", "Occupée");
+                case "FULL": return Bande("roster", "FULL", "Pleine");
                 default: return b;
             }
         }
@@ -1523,9 +1524,9 @@ namespace MafiaCleanCity.Operational
         {
             switch (v)
             {
-                case "FOOT": return "Foot";
-                case "BIKE": return "Bike";
-                case "CAR": return "Car";
+                case "FOOT": return Bande("vehicle", "FOOT", "À pied");
+                case "BIKE": return Bande("vehicle", "BIKE", "Vélo");
+                case "CAR": return Bande("vehicle", "CAR", "Voiture");
                 default: return v;
             }
         }
@@ -1544,11 +1545,11 @@ namespace MafiaCleanCity.Operational
         {
             switch (b)
             {
-                case "SMALL": return "Small";
-                case "MEDIUM": return "Medium";
-                case "LARGE": return "Large";
-                case "MAJOR": return "Major";
-                case "MAX": return "Max";
+                case "SMALL": return Bande("money_holding_tier", "SMALL", "Petit");
+                case "MEDIUM": return Bande("money_holding_tier", "MEDIUM", "Moyen");
+                case "LARGE": return Bande("money_holding_tier", "LARGE", "Grand");
+                case "MAJOR": return Bande("money_holding_tier", "MAJOR", "Majeur");
+                case "MAX": return Bande("money_holding_tier", "MAX", "Maximal");
                 default: return b;
             }
         }
@@ -1576,11 +1577,11 @@ namespace MafiaCleanCity.Operational
         {
             switch (b)
             {
-                case "NONE": return "Empty";
-                case "LOW": return "Low";
-                case "MODERATE": return "Moderate";
-                case "HIGH": return "High";
-                case "MASSIVE": return "Massive";
+                case "NONE": return Bande("held", "NONE", "Vide");
+                case "LOW": return Bande("held", "LOW", "Peu");
+                case "MODERATE": return Bande("held", "MODERATE", "Moyen");
+                case "HIGH": return Bande("held", "HIGH", "Beaucoup");
+                case "MASSIVE": return Bande("held", "MASSIVE", "Énorme");
                 default: return b;
             }
         }
@@ -1608,9 +1609,9 @@ namespace MafiaCleanCity.Operational
         {
             switch (b)
             {
-                case "OPEN": return "Open";
-                case "BUSY": return "Busy";
-                case "FULL": return "Full";
+                case "OPEN": return Bande("capacity", "OPEN", "Ouverte");
+                case "BUSY": return Bande("capacity", "BUSY", "Occupée");
+                case "FULL": return Bande("capacity", "FULL", "Pleine");
                 default: return b;
             }
         }
@@ -1886,6 +1887,13 @@ namespace MafiaCleanCity.Operational
         /// <summary>Le passage par clé vit dans `MafiaCleanCity.I18n.Libelle` — partagé par
         /// les neuf écrans à convertir, pas recopié dans chacun. Voir ce fichier pour le contrat
         /// (repli byte-identique) et pour ce qui n'a PAS le droit d'y passer (valeurs calculées).</summary>
+        /// <summary>Lot E (2026-09-22) — une BANDE servie : la clé est `building.<famille>.<valeur servie>`
+        /// (`Libelle.ParValeur`), la forme posée par le back dans `string_table.ts` ; le repli est le texte
+        /// français de l'atelier (égal au fr du back, vérifié par `Tools/juge-donnees/i18n/cles-bandes.py`),
+        /// affiché tant que la clé n'est pas servie. Jamais la clé tirée du mot anglais.</summary>
+        private static string Bande(string famille, string valeurServie, string repli) =>
+            MafiaCleanCity.I18n.Libelle.ParValeur("building", famille, valeurServie, repli);
+
         internal static string Cle(string role, string litteral) =>
             MafiaCleanCity.I18n.Libelle.De("building", role, litteral);
 

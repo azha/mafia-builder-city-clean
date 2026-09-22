@@ -144,11 +144,11 @@ namespace MafiaCleanCity.Operational.Tests
 
             var texts = controller.RenderedTexts;
             Assert.IsTrue(texts.Any(t => t == "Holding tier"), "holding-tier row label rendered");
-            Assert.IsTrue(texts.Any(t => t == "Medium"), "holding-tier band value 'Medium' rendered");
+            Assert.IsTrue(texts.Any(t => t == "Moyen"), "holding-tier band value 'Medium' rendered");
             Assert.IsTrue(texts.Any(t => t == "Held"), "held row label rendered");
             Assert.IsTrue(texts.Any(t => t == "Moderate"), "held band value 'Moderate' rendered");
             Assert.IsTrue(texts.Any(t => t == "Capacity"), "capacity row label rendered");
-            Assert.IsTrue(texts.Any(t => t == "Busy"), "capacity band value 'Busy' rendered");
+            Assert.IsTrue(texts.Any(t => t == "Occupée"), "capacity band value 'Busy' rendered");
             Assert.IsTrue(texts.Any(t => t == "Yield"), "yield row label rendered");
             Assert.IsTrue(texts.Any(t => t == "Earning"), "yield band value 'Earning' rendered");
             // The forfeiture warning telegraphs the audit so the player can react (withdraw or diversify).

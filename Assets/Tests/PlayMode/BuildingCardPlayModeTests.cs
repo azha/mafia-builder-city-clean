@@ -233,7 +233,7 @@ namespace MafiaCleanCity.Operational.Tests
 
             // The UI reflects it: the rendered texts include the type + the OPERATIONAL band label.
             var texts = controller.RenderedTexts;
-            Assert.IsTrue(texts.Any(t => t.Contains("Lab")), "type label 'Lab' rendered");
+            Assert.IsTrue(texts.Any(t => t.Contains("Labo")), "type label 'Lab' rendered");
             Assert.IsTrue(texts.Any(t => t == "Operational"), "setup band 'Operational' rendered");
             Assert.IsTrue(texts.Any(t => t == "Yes"), "operational=true rendered as 'Yes'");
             Assert.IsTrue(texts.Any(t => t == "Weak"), "cover band 'Weak' rendered");

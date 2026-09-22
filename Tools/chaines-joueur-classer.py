@@ -257,6 +257,21 @@ SOURCE = [
  (L, "Citizen whisper", 0, "③ ligne (:1145)"),
  (L, "🔒 Tier", 0, "RuleModel:210 (MakeLabel)"),
  (L, "🔒 soon", 0, "RuleModel:211 (MakeLabel)"),
+ (L, "heavy haul", 0, "② SeizedLabel — bande servie traduite par la clé de sa VALEUR (lot E, Libelle.ParValeur) ; le mot anglais ne revient pas"),
+ (L, "major cost", 0, "② RepairCostLabel — bande servie traduite par la clé de sa VALEUR (lot E, Libelle.ParValeur) ; le mot anglais ne revient pas"),
+ (L, "Ready to harvest", 0, "② GrowStageLabel — bande servie traduite par la clé de sa VALEUR (lot E, Libelle.ParValeur) ; le mot anglais ne revient pas"),
+ (L, "Verdant root", 0, "② GrowablePrecursorLabel — bande servie traduite par la clé de sa VALEUR (lot E, Libelle.ParValeur) ; le mot anglais ne revient pas"),
+ (L, "Specialized lab", 0, "② TypeLabel — bande servie traduite par la clé de sa VALEUR (lot E, Libelle.ParValeur) ; le mot anglais ne revient pas"),
+ (L, "Dealer-spot front", 0, "② TypeLabel — bande servie traduite par la clé de sa VALEUR (lot E, Libelle.ParValeur) ; le mot anglais ne revient pas"),
+ (L, "Cash safehouse", 0, "② TypeLabel — bande servie traduite par la clé de sa VALEUR (lot E, Libelle.ParValeur) ; le mot anglais ne revient pas"),
+ (L, "Distribution hub", 0, "② TypeLabel — bande servie traduite par la clé de sa VALEUR (lot E, Libelle.ParValeur) ; le mot anglais ne revient pas"),
+ (L, "Money holding", 0, "② TypeLabel — bande servie traduite par la clé de sa VALEUR (lot E, Libelle.ParValeur) ; le mot anglais ne revient pas"),
+ (L, "Crystalline", 0, "② PurityLabel — bande servie traduite par la clé de sa VALEUR (lot E, Libelle.ParValeur) ; le mot anglais ne revient pas"),
+ (L, "Withered", 0, "② HusbandryLabel — bande servie traduite par la clé de sa VALEUR (lot E, Libelle.ParValeur) ; le mot anglais ne revient pas"),
+ (L, "Thriving", 0, "② HusbandryLabel — bande servie traduite par la clé de sa VALEUR (lot E, Libelle.ParValeur) ; le mot anglais ne revient pas"),
+ (L, "Scheduled", 0, "② AppointmentStatusLabel — bande servie traduite par la clé de sa VALEUR (lot E, Libelle.ParValeur) ; le mot anglais ne revient pas"),
+ (L, "Premium", 0, "② PayoutLabel — bande servie traduite par la clé de sa VALEUR (lot E, Libelle.ParValeur) ; le mot anglais ne revient pas"),
+ (L, "Massive", 0, "② HeldLabel — bande servie traduite par la clé de sa VALEUR (lot E, Libelle.ParValeur) ; le mot anglais ne revient pas"),
 ]
 
 

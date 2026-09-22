@@ -132,9 +132,9 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.IsTrue(texts.Any(t => t == "Pousse"), "grow-stage row label rendered");
             Assert.IsTrue(texts.Any(t => t == "Mid"), "grow-stage band value 'Mid' rendered");
             Assert.IsTrue(texts.Any(t => t == "Soin"), "husbandry row label rendered");
-            Assert.IsTrue(texts.Any(t => t == "On track"), "husbandry band value 'On track' rendered");
+            Assert.IsTrue(texts.Any(t => t == "En bonne voie"), "husbandry band value 'On track' rendered");
             Assert.IsTrue(texts.Any(t => t == "Culture"), "crop row label rendered");
-            Assert.IsTrue(texts.Any(t => t == "Verdant root"), "crop value 'Verdant root' rendered (the planted precursor)");
+            Assert.IsTrue(texts.Any(t => t == "Racine verdoyante"), "crop value 'Verdant root' rendered (the planted precursor)");
 
             // The raid-risk band is REUSED from the building card (an active grow is hot → above LOW). Assert it is a known
             // band and the gauge row rendered (the exact level varies with the city's accumulated heat).
@@ -186,7 +186,7 @@ namespace MafiaCleanCity.Operational.Tests
             // The Tend button is shown but now DISABLED (server-authoritative — the stage is tended).
             Assert.IsTrue(controller.TendButtonShown, "Tend button still shown (an active non-DONE grow)");
             Assert.IsFalse(controller.TendButtonEnabled, "Tend button disabled after tending (tend_due=false this stage)");
-            Assert.IsTrue(controller.RenderedTexts.Any(t => t == "Thriving"), "husbandry band 'Thriving' rendered after the tend");
+            Assert.IsTrue(controller.RenderedTexts.Any(t => t == "Florissante"), "husbandry band 'Thriving' rendered after the tend");
 
             // A second tend on the now-tended stage → a well-formed 409 (one tend per stage, server-authoritative).
             yield return controller.Tend();
