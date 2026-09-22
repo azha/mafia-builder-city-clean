@@ -78,3 +78,24 @@ de **2 unités** au moins (la façade et la planque sont en trait de 2) — à 2
 1. **Le dessin de Filière** (§2) — sur planche.
 2. **Le double sens** Empire = bureau, Plus = réglages / nœud de production (§1) : garder le canon, ou dessiner des icônes propres au dock.
 3. Rappel : les dossiers de juge classent aujourd'hui « ronds du dock vides » en **arbitrage user**. Le montage le ferme.
+
+## 4. GO livré (2026-09-23) — tout sous `Tools/dock/`, rien sous `Assets/` (CLIENT-1 monte)
+
+| quoi | fichier |
+|---|---|
+| le rastériseur (PIL, ×16, sans navigateur) | `Tools/dock/rasterise-icones-dock.py` |
+| les 3 variantes de Filière | `Tools/dock/source/icon_dock_filiere.svg` (A · nœuds et pointe), `…_carre.svg` (B · nœuds carrés), `…_maillons.svg` (C · maillons, en trait comme le bureau et les réglages) |
+| les rasters 64 et 96 | `Tools/dock/icones/dock_{empire,famille,plus,filiere,filiere_carre,filiere_maillons,temoin_dependance}_{64,96}.png` — 14 fichiers |
+| la planche pour l'user | `Tools/dock/planche-dock-2026-09-23.png` (script `Tools/dock/planche-dock.py`) |
+
+**Contrôles** (sortie de `rasterise-icones-dock.py`, 0 défaut) :
+- **bbox contre la géométrie** : les 14 rasters tombent à ≤ 1 px des bornes calculées sur le SVG (demi-trait compris).
+- **forme contre le client** : re-rendues à 32 px et binarisées, les trois icônes existantes diffèrent des 32 px du client de **0**
+  (Empire), **2** (Famille) et **16** (Plus, 8,7 %) pixels. ⚠️ Mesuré au passage : les rasters du client sont **binaires** (alpha 0/255,
+  sans anticrénelage) — une comparaison en niveaux de gris accusait l'anticrénelage, pas le dessin. Les 16 pixels de l'engrenage sont un
+  liseré : le client dessine le trait plus mince que son SVG ; nos 64/96 suivent le SVG (contrôle bbox). Le dessin n'est pas changé.
+- **teinte** : la planche pose les icônes en gris `invert(.78)` = (199,199,199), relu sur le pixel le plus opaque de chaque icône.
+
+**La planche** : le dock réel du canon du HUD (validé), les ronds nettoyés, nos icônes à 20 CSS × 3 = 60 px ; trois rangées (A, B, C), une
+rangée témoin (la flèche de dépendance à la place de Filière) ; la légende pose les deux décisions à trancher d'un coup (forme de Filière,
+double sens Empire = bureau / Plus = réglages = nœud de production).
