@@ -201,7 +201,9 @@ namespace MafiaCleanCity.Operational.Tests
         {
             Assert.AreEqual(ForensicResolvers.Gravite.Calme,     ForensicResolvers.NiveauDe("quiet"));
             Assert.AreEqual(ForensicResolvers.Gravite.Surveille, ForensicResolvers.NiveauDe("watched"));
-            Assert.AreEqual(ForensicResolvers.Gravite.Criant,    ForensicResolvers.NiveauDe("glaring"));
+            Assert.AreEqual(ForensicResolvers.Gravite.Criant,    ForensicResolvers.NiveauDe("visible"));
+            // 22/09 : `glaring` est le DERNIER cran de sa piste — un événement (cadre 143), plus une gravité
+            Assert.AreEqual(ForensicResolvers.Gravite.Franchi,   ForensicResolvers.NiveauDe("glaring"));
 
             Assert.AreEqual(ForensicResolvers.Gravite.Inconnu, ForensicResolvers.NiveauDe("smouldering"),
                 "un mot que le serveur inventerait doit rester INCONNU, pas devenir « calme »");
@@ -211,6 +213,33 @@ namespace MafiaCleanCity.Operational.Tests
             // et la phrase montre le mot du serveur plutôt qu'une paraphrase rassurante
             Assert.AreEqual("smouldering", ForensicResolvers.Phrase("smouldering"));
             Assert.AreEqual("—", ForensicResolvers.Phrase(null));
+        }
+
+        /// <summary>⛔ UNE FALSIFIABLE PAR VALEUR SERVIE (22/09, classe « le client compare une valeur que le back ne sert pas »,
+        /// mesurée par CLIENT-2) : les douze valeurs des trois domaines du back (`forensic.projection.service.ts:79/98/118`) —
+        /// chacune doit rendre un texte NON VIDE et DIFFÉRENT de la valeur brute. Avant : `flagged`, `audited`, `subpoenaed`
+        /// sortaient brutes (« Inconnu »). Et le dernier cran de chaque piste est un ÉVÉNEMENT (`Franchi`), jamais une gravité.</summary>
+        [Test]
+        public void ScreenB7_ChaqueValeurServie_RendUnTexte_EtLeDernierCranEstUnEvenement()
+        {
+            string[] servies = { "clean", "watched", "flagged", "audited",       // AuditRiskBucket
+                                 "clear", "faint", "visible", "glaring",          // EffluentVisibilityBucket
+                                 "quiet", "noticed", "watched", "subpoenaed" };   // LifestyleAlarmBucket
+            foreach (string v in servies)
+            {
+                string texte = ForensicResolvers.Phrase(v);
+                Assert.IsFalse(string.IsNullOrWhiteSpace(texte), $"« {v} » rend un texte vide");
+                Assert.AreNotEqual(v, texte, $"« {v} » sort BRUTE : aucune correspondance pour une valeur que le back sert");
+                Assert.AreNotEqual(ForensicResolvers.Gravite.Inconnu, ForensicResolvers.NiveauDe(v), $"« {v} » est rangée « Inconnu »");
+                Assert.DoesNotThrow(() => ForensicResolvers.CouleurPour(ForensicResolvers.NiveauDe(v)), $"« {v} » n'a pas de couleur");
+            }
+            foreach (string evenement in new[] { "audited", "glaring", "subpoenaed" })
+                Assert.AreEqual(ForensicResolvers.Gravite.Franchi, ForensicResolvers.NiveauDe(evenement),
+                    $"« {evenement} » est le dernier cran de sa piste : un événement, pas une gravité de plus (cadre 143)");
+            Assert.AreEqual(ForensicResolvers.Gravite.Surveille, ForensicResolvers.NiveauDe("flagged"),
+                "« flagged » est un cran de surveillance, SOUS « audited » (atelier ca69012c §4)");
+            Assert.AreNotEqual(ForensicResolvers.Phrase("watched"), ForensicResolvers.Phrase("flagged"),
+                "« flagged » a SON mot (« un dossier est ouvert »), pas la phrase générique de sa gravité");
         }
 
         private IEnumerator CapturerA(int largeur, int hauteur, string chemin)
