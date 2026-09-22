@@ -392,64 +392,15 @@ namespace MafiaCleanCity.Shell
             hlg.childAlignment = TextAnchor.LowerLeft;
 
             // ── le buste ─────────────────────────────────────────────────────────────────────
-            // ⑯-5 — `.medl` + `.billet .medl` : un CARRÉ ARRONDI de 40 (rayon 14), pas un disque ;
-            // face = `radial-gradient(circle at 38% 30%, #243048, #0f1622 66%)` (les jetons
-            // `lieutenantMedallionInner/Outer`) + rayons `rgba(255,255,255,.05)` ; bord 1px laiton ;
-            // `overflow:hidden` ; le buste REPOSE sur le bord bas (`align-items:flex-end`), boîte 74 %.
-            // Avant : un disque procédural SANS buste (le juge r1 l'avait vu sur une capture auxiliaire :
-            // « une rosace dorée sans silhouette ») — et ses rayons en LAITON plein au lieu du blanc à .05.
-            // Le buste : `ui_element_buste_lieutenant` pour TOUT lieutenant, comme ⑥ et ① (arbitrage de
-            // l'orchestrateur, recommandé par l'atelier `09-…`, d2bf698b) : le Don garde sa silhouette, et
-            // une même personne a la même tête sur les trois écrans. Géométrie identique à la maquette
-            // (empreintes des chemins, atelier).
-            GameObject medl = new GameObject("Medaillon", typeof(RectTransform));
-            medl.transform.SetParent(billet.transform, false);
-            // le masque arrondi, REMPLI de la couleur de bord du dégradé : les coins du carré, hors du
-            // disque de la face, prennent la teinte où le dégradé radial s'achève (#0f1622 dès 66 %).
-            Image forme = medl.AddComponent<Image>();
-            forme.sprite = ProceduralUI.RoundedRectMask((int)Px(14f));
-            forme.type = Image.Type.Sliced;
-            forme.color = DesignTokens.Current.lieutenantMedallionOuter;
-            Mask coupe = medl.AddComponent<Mask>();
-            coupe.showMaskGraphic = true;
-            Color rayon = Color.white; rayon.a = 0.05f;
-            GameObject face = new GameObject("Face", typeof(RectTransform));
-            face.transform.SetParent(medl.transform, false);
-            Etirer((RectTransform)face.transform, 0f);
-            face.AddComponent<LayoutElement>().ignoreLayout = true;
-            Image faceImg = face.AddComponent<Image>();
-            faceImg.sprite = ProceduralUI.MedallionFace((int)Px(40f),
-                DesignTokens.Current.lieutenantMedallionInner,
-                DesignTokens.Current.lieutenantMedallionOuter,
-                rayon);
-            faceImg.raycastTarget = false;
-            Image buste = null;
+            // ⑯-5 → ⑯-9 — le médaillon du billet (`.medl` + `.billet .medl` : carré arrondi 40, rayon 14, face radiale, rayons
+            // blancs .05, bord 1px laiton, buste posé en bas à 74 %) passe par `MedaillonAuComptoir` (ShellContracts), le MÊME
+            // code que la file de ⑨ : deux codes du même médaillon divergeraient au premier correctif. Le buste reste
+            // `ui_element_buste_lieutenant` pour tout lieutenant (arbitrage de l'orchestrateur, atelier 09-…, d2bf698b).
+            // ⚠️ ⑥ emploie 0,688 et 3,6 % : des corrections MESURÉES par un juge sur SON médaillon rond. La CSS fait foi ici.
             Sprite silhouette = Resources.Load<Sprite>(BusteLieutenant);
-            if (silhouette != null)
-            {
-                GameObject bg = new GameObject("Buste", typeof(RectTransform));
-                bg.transform.SetParent(medl.transform, false);
-                bg.AddComponent<LayoutElement>().ignoreLayout = true;
-                RectTransform brt = (RectTransform)bg.transform;
-                brt.anchorMin = brt.anchorMax = new Vector2(0.5f, 0f);
-                brt.pivot = new Vector2(0.5f, 0f);
-                // `.medl svg{width:74%;height:74%}`, bas sur le bord intérieur (1px de bordure). ⚠️ ⑥
-                // emploie 0,688 et 3,6 % : des corrections MESURÉES par un juge sur SON médaillon rond.
-                // Rien ne dit qu'elles valent pour ce carré : la CSS fait foi jusqu'à une mesure sur ⑯.
-                brt.sizeDelta = new Vector2(Px(40f) * 0.74f, Px(40f) * 0.74f);
-                brt.anchoredPosition = new Vector2(0f, Px(1f));
-                buste = bg.AddComponent<Image>();
-                buste.sprite = silhouette;
-                buste.color = Color.white;      // `#cfc4a6` est CUIT dans le PNG : ne pas teinter (⑥)
-                buste.preserveAspect = true;
-                buste.raycastTarget = false;
-            }
-            Filet(medl.transform, "Bord", 0f, Px(14f), Laiton);
-            LayoutElement medlLe = medl.AddComponent<LayoutElement>();
-            medlLe.preferredWidth = Px(40f);
-            medlLe.preferredHeight = Px(40f);
-            medlLe.flexibleWidth = 0f;
-            medlLe.flexibleHeight = 0f;
+            GameObject medl = MedaillonAuComptoir.Construire(billet.transform, "Medaillon", Px(40f), Px(14f), Px(1f), silhouette);
+            Transform busteT = medl.transform.Find("Buste");
+            Image buste = busteT != null ? busteT.GetComponent<Image>() : null;
 
             // ── la bulle : c'est LUI qui parle ───────────────────────────────────────────────
             GameObject bulle = new GameObject("Bulle", typeof(RectTransform));
