@@ -161,12 +161,12 @@ namespace MafiaCleanCity.Account.Profile
 
             Champ("Adresse", Masquer(Profil.email), null);
             Champ("Langue", Profil.locale,
-                  "⛔ aucune route ne l'écrit : elle ne peut pas être changée");
+                  "réglée le jour où vous avez ouvert le compte — elle ne se change pas encore");
             Champ("Compte", Court(Profil.account_id), null);
 
-            Manque("Changer le mot de passe", "aucune route de mutation de profil n'existe");
-            Manque("Double authentification", "aucune route TOTP n'existe");
-            Manque("Vos sauvegardes", "aucun domaine de sauvegarde — l'emplacement n'existe que comme article");
+            Manque("Changer le mot de passe", "pas encore : la clé est celle du premier jour");
+            Manque("Double authentification", "pas encore : la maison ne demande qu'une clé");
+            Manque("Vos dossiers", "pas encore : un second dossier s'achète à la vitrine, mais aucun ne s'ouvre encore ici");
             RendusEffectues++;
         }
 
