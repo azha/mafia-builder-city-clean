@@ -69,6 +69,8 @@ VERDICTS = [
  (L, "Withdraw cash", 0, "② bouton (:1058)"),
  (L, "Convert", 0, "② bouton (:1068) ; « Plant » (:1026) N'EST PAS épinglé : sous-chaîne de « Planter »"),
  (L, "Inject (launder)", 1, "② bouton (:991) ; il reste ⑪ LaunderingController:250, fermé par son commit"),
+ (L, "EXCEPTION", 0, "⑨:509 en-tête de panne, ⑩:566/569/591 en-tête de la main"),
+ (L, "See all exceptions", 0, "panneau du shell (:236)"),
  (N, "Aucune route connue pour l'instant",      0, "CLOS lot C 22/09 (㉘ la distribution) — était : « route » = endpoint, alors que l'écran voisin dit « CETTE ROUTE » pour un itinéraire"),
  (B, "aucune route n'existe encore",            0, "CLOS lot C 22/09 (⑰ le commissariat) — était : « route »"),
  (B, "la route voisine vise les affaires",      0, "CLOS lot C 22/09 (⑰ le commissariat) — était : « route voisine »"),

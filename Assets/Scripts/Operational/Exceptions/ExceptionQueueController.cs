@@ -506,7 +506,7 @@ $"{QuiParle(c)} · {ExceptionBandes.Ligne(c.severity_band, c.priority_band)}", 8
         private void RenderError()
         {
             ClearRows();
-            headerText.text = "EXCEPTIONS";
+            headerText.text = "L'ARDOISE";
             TextMeshProUGUI err = NewText("Error", rowsArea, Lib("Le comptoir n'a pas répondu."), 14, TextAlignmentOptions.Left);
             err.color = AccentSevere;
             AddLayoutElement(err.gameObject, minHeight: 24, flexibleHeight: 0);

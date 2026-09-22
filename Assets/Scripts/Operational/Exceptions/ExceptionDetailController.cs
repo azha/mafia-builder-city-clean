@@ -563,10 +563,10 @@ namespace MafiaCleanCity.Operational.Exceptions
             vlg.childForceExpandHeight = false;
 
             // Header.
-            TextMeshProUGUI headerText = NewText("Header", card.transform, "EXCEPTION", 24, TextAlignmentOptions.Left);
+            TextMeshProUGUI headerText = NewText("Header", card.transform, "SA MAIN", 24, TextAlignmentOptions.Left);
             headerText.fontStyle = FontStyles.Bold;
             AddLayoutElement(headerText.gameObject, minHeight: 32, flexibleHeight: 0);
-            TrackText(headerText, "EXCEPTION");
+            TrackText(headerText, "SA MAIN");
 
             // Body rows area.
             GameObject bodyGo = NewUI("BodyArea", card.transform);
@@ -587,8 +587,8 @@ namespace MafiaCleanCity.Operational.Exceptions
             if (body != null)
                 for (int i = body.childCount - 1; i >= 0; i--)
                     UnityEngine.Object.Destroy(body.GetChild(i).gameObject);
-            // Re-track the static header "EXCEPTION" (it lives outside body but is part of the corpus).
-            renderedTexts.Add("EXCEPTION");
+            // Re-track the static header "SA MAIN" (it lives outside body but is part of the corpus).
+            renderedTexts.Add("SA MAIN");
         }
 
         // --------------------------------------------------------------- helpers (verbatim DashboardController)

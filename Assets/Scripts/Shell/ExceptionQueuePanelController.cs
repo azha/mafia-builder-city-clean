@@ -233,7 +233,7 @@ namespace MafiaCleanCity.Shell
             vaBtn.onClick.AddListener(() => StartCoroutine(ViewAll()));
             LayoutElement vaLe = viewAllGo.AddComponent<LayoutElement>();
             vaLe.minHeight = 32;
-            TextMeshProUGUI vaLabel = NewText(viewAllGo.transform, "See all exceptions", 200);
+            TextMeshProUGUI vaLabel = NewText(viewAllGo.transform, "Voir l'ardoise ›", 200);
         }
 
         private TextMeshProUGUI NewText(Transform parent, string value, float preferredWidth)
