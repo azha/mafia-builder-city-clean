@@ -2119,7 +2119,7 @@ namespace MafiaCleanCity.Operational
         // — the UI does NOT pre-decide; it surfaces the server verdict on the action.
         private void AddTransferAmountSelector(Transform parent)
         {
-            string label = NewSectionLabel(parent, "MONTANT DU TRANSFERT (vérifié serveur)");
+            string label = NewSectionLabel(parent, "MONTANT DU TRANSFERT — le coffre a le dernier mot");
             TrackText(null, label);
 
             GameObject row = NewUI("TransferAmountRow", parent);

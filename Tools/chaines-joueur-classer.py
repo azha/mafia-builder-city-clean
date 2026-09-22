@@ -98,7 +98,7 @@ VERDICTS = [
  (B, "Le même lot",                             1, "« lot » = lot de livraison du programme"),
  (B, "la seule grandeur servie",                1, "« grandeur servie »"),
  (B, "n'expose pas encore son vendeur",         0, "PÉRIMÉE, RE-MESURÉE 22/09 : disparue — DistrictInterior:2235 dit désormais « Collecte indisponible : aucun vendeur affecté. » (:2396), hors classe"),
- (B, "vérifié serveur",                         1, "« vérifié serveur »"),
+ (B, "vérifié serveur",                         0, "CLOS lot C 22/09 (② la fiche du bâtiment) — était : « vérifié serveur »"),
  (B, "Scène indisponible pour ce quart",        0, "CLOS lot C 22/09 (① l'intérieur du district) — était : « Scène » + « quart horaire »"),
  (B, "à ouvrir depuis la fiche opérationnelle", 0, "CLOS lot C 22/09 (① l'intérieur du district) — était : renvoie à un autre écran par son nom interne"),
 
