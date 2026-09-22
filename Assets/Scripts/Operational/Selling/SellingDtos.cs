@@ -28,6 +28,18 @@ namespace MafiaCleanCity.Operational.Selling
         /// ⚠️ Un inventaire de ROUTES compte cette clé SERVIE ; un balayage de RÉSOLVEURS la compte
         /// NON RENDUE ; ni l'un ni l'autre ne dit qu'elle n'est jamais ARRIVÉE.</summary>
         public string name_i18n;
+        /// <summary>⛔ FORME G, seconde mesure (2026-09-22) — TROIS clés servies, jamais déclarées,
+        /// donc jamais arrivées. Corps de SUCCÈS vivant, statut 200, commité :
+        /// `Tools/juge-donnees/vente/forme-G-2026-09-22/GET_operational_dealers.json`
+        /// (compte `operational_demo`, back `03cf564c`, X-Request-Id
+        /// 6d52636f-214e-4491-be1e-65773828af04) : 12 clés servies, 9 déclarées avant ce commit.
+        /// Domaines lus dans le back (`selling.projection.service.ts` l.124-143 et
+        /// `market/lane-clearing-zone.ts` l.31) — des libellés fermés, jamais un scalaire de sim.
+        /// ⚠️ DÉCLARÉ ≠ RENDU : ces trois champs ARRIVENT désormais ; aucun résolveur ne les peint
+        /// encore (la copie est à l'atelier).</summary>
+        public string district_name;              // nomDeDistrict(district_id) — string | null (« La Lisière »)
+        public string lek_band;                   // ABSENT | LOW | MEDIUM | HIGH
+        public string lane_band;                  // FAST | STEADY | SCATTERED | null (lane_c absent)
     }
 
     [System.Serializable] public class DealerListData { public DealerDto[] dealers; }

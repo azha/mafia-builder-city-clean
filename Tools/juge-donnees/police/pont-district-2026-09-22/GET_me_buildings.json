@@ -1,0 +1,326 @@
+{
+ "route": "/v1/me/buildings",
+ "route_appelee": "/v1/me/buildings",
+ "methode": "GET",
+ "statut": 200,
+ "params": {},
+ "provenance": {
+  "date": "2026-09-22T10:47:00",
+  "back_main": "03cf564c",
+  "back_main_source": "GIT_SHA du conteneur + response_meta.server_build_ref.git_sha (03cf564c921dd6dec8ba6692b004c5d1b4d0e0a6, built_at 2026-09-14T01:12:31Z)",
+  "game_back": "mafia-clean-city-game-back 2026-09-14T01:13:06.637480618Z",
+  "compte": "operational_demo@example.test",
+  "jour_de_jeu": 55,
+  "horloge_source": "opened_game_day du corps de POST /v1/session/open de la même minute",
+  "dossier": "police",
+  "symbole": "⑮",
+  "controleur": "InspectionScreenController",
+  "pourquoi": "pont « sélection de district » de ⑮ : `home_district_id` n'existe pas dans le back (0 occurrence dans services/game-back/src à c7464f54 ⊇ 03cf564c ; POST /v1/session/open sert 12 clés sans elle ; capturer-corps-reels.py l.46/283 : c'était une clé INJECTÉE par l'outil, retirée le 2026-09-06). Cette route est la source en UN appel des (district_id, district_name) des bâtiments du joueur — le client ne l'appelle nulle part aujourd'hui.",
+  "repartition_mesuree": {
+   "1 · Les Bassins": 1,
+   "11 · Les Entrepôts": 1,
+   "13 · Le Verre": 2,
+   "16 · La Lisière": 13
+  },
+  "outil": "à la main (curl + Bearer du signin par identifiants par défaut du seeder), PAS capturer-corps-reels.py",
+  "X-Request-Id": "a3e84ef9-8643-4f83-b76b-fb2306c6bc93",
+  "X-Server-Processed-At": "2026-09-22T10:51:12.092Z",
+  "X-Api-Version": "1"
+ },
+ "corps": {
+  "response_meta": {
+   "request_id_echo": "a3e84ef9-8643-4f83-b76b-fb2306c6bc93",
+   "server_processed_at": "2026-09-22T10:51:12.092Z",
+   "api_version": 1,
+   "correlation_id_echo": null,
+   "server_build_ref": {
+    "git_sha": "03cf564c921dd6dec8ba6692b004c5d1b4d0e0a6",
+    "built_at": "2026-09-14T01:12:31Z"
+   }
+  },
+  "payload": {
+   "data": {
+    "buildings": [
+     {
+      "building": "1d2d2b04-7c50-4bc8-8a9a-2a3e20433ab6",
+      "block_id": 1,
+      "district_id": 1,
+      "district_name": "Les Bassins",
+      "operational_type": "distribution_hub",
+      "name_i18n": {
+       "key": "game.fiction.building.name",
+       "params": {
+        "enseigne": "Transit Marrek",
+        "district": "Les Bassins",
+        "block": "1"
+       }
+      },
+      "lieutenant_ids": []
+     },
+     {
+      "building": "9d2670f6-77c7-4fc9-b13c-c5eda66573b7",
+      "block_id": 1001,
+      "district_id": 11,
+      "district_name": "Les Entrepôts",
+      "operational_type": "refinery",
+      "name_i18n": {
+       "key": "game.fiction.building.name",
+       "params": {
+        "enseigne": "Traitement des eaux Dorn",
+        "district": "Les Entrepôts",
+        "block": "1001"
+       }
+      },
+      "lieutenant_ids": []
+     },
+     {
+      "building": "d1e4fe6d-f0cb-4c95-be14-390c6300fb35",
+      "block_id": 1201,
+      "district_id": 13,
+      "district_name": "Le Verre",
+      "operational_type": "specialized_lab",
+      "name_i18n": {
+       "key": "game.fiction.building.name",
+       "params": {
+        "enseigne": "Mesures Tull",
+        "district": "Le Verre",
+        "block": "1201"
+       }
+      },
+      "lieutenant_ids": []
+     },
+     {
+      "building": "f3a9ec15-4b76-4a6d-9d0d-525147b46009",
+      "block_id": 1209,
+      "district_id": 13,
+      "district_name": "Le Verre",
+      "operational_type": "money_holding",
+      "name_i18n": {
+       "key": "game.fiction.building.name",
+       "params": {
+        "enseigne": "Épargne Sallo",
+        "district": "Le Verre",
+        "block": "1209"
+       }
+      },
+      "lieutenant_ids": []
+     },
+     {
+      "building": "0814db65-76cc-49b1-9ee8-bfa5a7c86340",
+      "block_id": 1501,
+      "district_id": 16,
+      "district_name": "La Lisière",
+      "operational_type": "lab",
+      "name_i18n": {
+       "key": "game.fiction.building.name",
+       "params": {
+        "enseigne": "Outillage Halde",
+        "district": "La Lisière",
+        "block": "1501"
+       }
+      },
+      "lieutenant_ids": [
+       "01a09334-d55b-780e-8445-8410594754df"
+      ]
+     },
+     {
+      "building": "9a507d55-c9ed-4fab-97f3-b47f1174a1e9",
+      "block_id": 1501,
+      "district_id": 16,
+      "district_name": "La Lisière",
+      "operational_type": "lab",
+      "name_i18n": {
+       "key": "game.fiction.building.name.rang",
+       "params": {
+        "enseigne": "Soudure Varne",
+        "district": "La Lisière",
+        "block": "1501",
+        "rang": "2"
+       }
+      },
+      "lieutenant_ids": [
+       "01a09334-e08a-728b-8ddf-9491d4f12cee",
+       "01a09334-e08e-767c-ba54-874b5d0c4e21"
+      ]
+     },
+     {
+      "building": "15b4ffef-4551-4b68-8bfb-fe4295a2bce8",
+      "block_id": 1502,
+      "district_id": 16,
+      "district_name": "La Lisière",
+      "operational_type": "stash",
+      "name_i18n": {
+       "key": "game.fiction.building.name",
+       "params": {
+        "enseigne": "Cellier Marrek",
+        "district": "La Lisière",
+        "block": "1502"
+       }
+      },
+      "lieutenant_ids": []
+     },
+     {
+      "building": "9eabdc60-3344-4c57-a5bc-c1e54db98ea2",
+      "block_id": 1503,
+      "district_id": 16,
+      "district_name": "La Lisière",
+      "operational_type": "front_shop",
+      "name_i18n": {
+       "key": "game.fiction.building.name",
+       "params": {
+        "enseigne": "Clés-Minute Rook",
+        "district": "La Lisière",
+        "block": "1503"
+       }
+      },
+      "lieutenant_ids": []
+     },
+     {
+      "building": "e59c1b7c-3cef-4edd-bbc2-02f722418e6f",
+      "block_id": 1503,
+      "district_id": 16,
+      "district_name": "La Lisière",
+      "operational_type": "stash",
+      "name_i18n": {
+       "key": "game.fiction.building.name",
+       "params": {
+        "enseigne": "Réserve Ferrand",
+        "district": "La Lisière",
+        "block": "1503"
+       }
+      },
+      "lieutenant_ids": []
+     },
+     {
+      "building": "8fc382d7-0508-4c72-9ed8-c6bf2e361935",
+      "block_id": 1504,
+      "district_id": 16,
+      "district_name": "La Lisière",
+      "operational_type": "cash_safehouse",
+      "name_i18n": {
+       "key": "game.fiction.building.name",
+       "params": {
+        "enseigne": "Garde Quist",
+        "district": "La Lisière",
+        "block": "1504"
+       }
+      },
+      "lieutenant_ids": []
+     },
+     {
+      "building": "9ceece4a-0746-48ce-a032-71677d7ab5a0",
+      "block_id": 1505,
+      "district_id": 16,
+      "district_name": "La Lisière",
+      "operational_type": "dealer_spot_front",
+      "name_i18n": {
+       "key": "game.fiction.building.name",
+       "params": {
+        "enseigne": "Snack Ruel",
+        "district": "La Lisière",
+        "block": "1505"
+       }
+      },
+      "lieutenant_ids": []
+     },
+     {
+      "building": "47d2588e-9346-4401-9eea-dc0781aed185",
+      "block_id": 1507,
+      "district_id": 16,
+      "district_name": "La Lisière",
+      "operational_type": "front_shop",
+      "name_i18n": {
+       "key": "game.fiction.building.name",
+       "params": {
+        "enseigne": "Pressing Varne",
+        "district": "La Lisière",
+        "block": "1507"
+       }
+      },
+      "lieutenant_ids": []
+     },
+     {
+      "building": "f7f5d4bc-8e22-4f17-80b3-cd378b750f8a",
+      "block_id": 1509,
+      "district_id": 16,
+      "district_name": "La Lisière",
+      "operational_type": "cash_safehouse",
+      "name_i18n": {
+       "key": "game.fiction.building.name",
+       "params": {
+        "enseigne": "Garde Quist",
+        "district": "La Lisière",
+        "block": "1509"
+       }
+      },
+      "lieutenant_ids": []
+     },
+     {
+      "building": "79a36791-1cc3-40ca-add2-e2b72f0f2bdc",
+      "block_id": 1511,
+      "district_id": 16,
+      "district_name": "La Lisière",
+      "operational_type": "front_shop",
+      "name_i18n": {
+       "key": "game.fiction.building.name",
+       "params": {
+        "enseigne": "Clés-Minute Rook",
+        "district": "La Lisière",
+        "block": "1511"
+       }
+      },
+      "lieutenant_ids": []
+     },
+     {
+      "building": "481938b8-49d5-4cfc-8f7c-d96ff9c770e1",
+      "block_id": 1513,
+      "district_id": 16,
+      "district_name": "La Lisière",
+      "operational_type": "front_shop",
+      "name_i18n": {
+       "key": "game.fiction.building.name",
+       "params": {
+        "enseigne": "Cordonnerie Sarre",
+        "district": "La Lisière",
+        "block": "1513"
+       }
+      },
+      "lieutenant_ids": []
+     },
+     {
+      "building": "fad4b25d-b510-4143-a92b-86859e6ef2cd",
+      "block_id": 1515,
+      "district_id": 16,
+      "district_name": "La Lisière",
+      "operational_type": "front_shop",
+      "name_i18n": {
+       "key": "game.fiction.building.name",
+       "params": {
+        "enseigne": "Laverie du Quai",
+        "district": "La Lisière",
+        "block": "1515"
+       }
+      },
+      "lieutenant_ids": []
+     },
+     {
+      "building": "a4647d03-08ba-4193-937b-a3482c19bb63",
+      "block_id": 1518,
+      "district_id": 16,
+      "district_name": "La Lisière",
+      "operational_type": "grow_house",
+      "name_i18n": {
+       "key": "game.fiction.building.name",
+       "params": {
+        "enseigne": "Horticulture Tegg",
+        "district": "La Lisière",
+        "block": "1518"
+       }
+      },
+      "lieutenant_ids": []
+     }
+    ]
+   }
+  }
+ }
+}
