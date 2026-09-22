@@ -31,6 +31,8 @@ namespace MafiaCleanCity.Operational.Tests
         public void TearDown()
         {
             MafiaCleanCity.I18n.I18nCatalog.Oublier();
+            // l'écran se monte sous le Canvas (`BuildLayout`), PAS sous `hostGo` : sa racine part à la main
+            if (ecran != null && ecran.Decor != null) Object.DestroyImmediate(ecran.Decor.transform.parent.gameObject);
             if (hostGo != null) Object.DestroyImmediate(hostGo);
             ecran = null; hostGo = null;
         }
@@ -94,7 +96,8 @@ namespace MafiaCleanCity.Operational.Tests
         {
             NouvelEcran(Raid("They turned the building over last night."));
             GameObject parleur = null;
-            foreach (Transform t in hostGo.GetComponentsInChildren<Transform>(true))
+            // la racine de CET écran (le décor en est le premier enfant, R11) : il se monte sous le Canvas, pas sous `hostGo`
+            foreach (Transform t in ecran.Decor.transform.parent.GetComponentsInChildren<Transform>(true))
                 if (t.name == "MedaillonParleur") parleur = t.gameObject;
             Assert.IsNotNull(parleur, "le médaillon de celui qui parle");
             Assert.IsNotNull(parleur.transform.Find("Buste"));
