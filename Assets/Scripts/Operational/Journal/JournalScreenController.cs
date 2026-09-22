@@ -271,10 +271,10 @@ namespace MafiaCleanCity.Operational
                 // pas supposé : les titres servis sont des CLÉS (`news_beat.digest.…`), et le
                 // dictionnaire ne les porte pas. C'est le maillon L1 que la maquette déclare
                 // elle-même au cadre 130, confirmé par le corps réel.
-                MajPanneau(Lib("CE QUE LE SERVEUR ENVOIE VRAIMENT"),
+                MajPanneau(Lib("CE QU'ON SAIT VRAIMENT"),
                     Lib("Aucune de ces brèves n'a de texte"),
-                    Lib("le serveur rend des clés et un gabarit à trous ; les titres restent à "
-                        + "écrire. Voilà le journal tel qu'il s'afficherait aujourd'hui."));
+                    Lib("les brèves sont arrivées sans leur texte : le journal de ce matin n'a que des "
+                        + "titres à trous. Voilà ce qu'on peut vous montrer aujourd'hui."));
             }
         }
 
@@ -297,7 +297,7 @@ namespace MafiaCleanCity.Operational
             MajCompteur(0, 0, Lib("À LA UNE"));
             MajCompteur(1, 0, Lib("DANS LA RUE"));
             MajCompteur(2, 0, Lib("EN COURS"));
-            MajPanneau(Lib("CE QUE CET ÉCRAN SAIT POUR L'INSTANT"),
+            MajPanneau(Lib("CE QU'ON SAIT POUR L'INSTANT"),
                 Lib("Le journal n'a pas encore été ouvert"),
                 Lib("les trois listes n'ont pas été demandées — ce n'est ni « rien ne bouge » ni "
                     + "« pas de réponse », c'est « pas encore »."));
@@ -443,9 +443,9 @@ namespace MafiaCleanCity.Operational
             // que ce repli existe pour dire. Les compteurs à zéro sont identiques dans les deux
             // cas ; seul ce texte les sépare. Sans lui, une panne de route se lirait comme une
             // nuit tranquille.
-            MajPanneau(Lib("CE QUE LE SERVEUR ENVOIE VRAIMENT"),
+            MajPanneau(Lib("CE QU'ON SAIT VRAIMENT"),
                 Lib("Pas de réponse"),
-                Lib("la route n'a rien rendu. Ce n'est pas « la ville est calme » : c'est « on "
+                Lib("on n'a pas eu de réponse. Ce n'est pas « la ville est calme » : c'est « on "
                     + "ne sait pas ce qu'elle a fait cette nuit »."));
         }
 
