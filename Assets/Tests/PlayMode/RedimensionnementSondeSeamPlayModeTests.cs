@@ -31,6 +31,12 @@ namespace MafiaCleanCity.Shell.Tests
     [Category("Charpente")]
     public class RedimensionnementSondeSeamPlayModeTests
     {
+        // ⛔ TD-576, CLASSE « CATALOGUE » (2026-09-23) — cette classe charge le catalogue i18n (directement, ou en montant un
+        // écran / le shell / la scène du build qui l'amorce) et ne le rendait JAMAIS : global statique, il passait à la classe
+        // suivante. Mesuré : le 1er cas d'`ArchetypeServi_…` a hérité d'un bundle réel laissé en amont. Rendu à chaque test ;
+        // la garde de sortie de MafiaCI nomme toute classe qui le laisserait encore chargé.
+        [TearDown] public void OublierLeCatalogue() => MafiaCleanCity.I18n.I18nCatalog.Oublier();
+
         private GameObject shellGo;
         private AppShell shell;
 

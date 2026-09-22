@@ -346,7 +346,14 @@ public static class MafiaCI
                           "filtre n'ont produit AUCUN résultat (ni succès, ni échec, ni ignoré). Une " +
                           "exception non gérée interrompt la suite : les suivants ne tournent jamais et " +
                           "leur nom n'apparaît nulle part. Ce run ne prouve rien sur eux.");
-            EditorApplication.Exit(failed > 0 || tronquee || filtreVide ? 1 : 0);
+            if (catalogueSurvivant.Count > 0)
+                Debug.Log($"MafiaCI: ⛔ CATALOGUE i18n SURVIVANT en sortie de {catalogueSurvivant.Count} classe(s) : [" +
+                          string.Join(", ", catalogueSurvivant) + "] — chacune a laissé `I18nCatalog` chargé pour la " +
+                          "classe suivante (TD-576, classe « catalogue »). Chacune est NOMMÉE ici, et le catalogue a été " +
+                          "rendu après elle : la suivante est jugée sur ses propres gestes.");
+            else
+                Debug.Log("MafiaCI: catalogue i18n rendu en sortie de CHAQUE classe (0 survivant).");
+            EditorApplication.Exit(failed > 0 || tronquee || filtreVide || catalogueSurvivant.Count > 0 ? 1 : 0);
         }
 
         // ⛔⛔ UNE LIGNE PAR TEST, ET CE N'EST PAS DU CONFORT (mesuré 2026-09-02).
@@ -367,9 +374,29 @@ public static class MafiaCI
             Debug.Log($"MafiaCI: RUN {test.FullName}");
         }
 
+        // ⛔ TD-576, CLASSE « CATALOGUE » (2026-09-23) — LA GARDE DE SORTIE, UNE SEULE, POUR TOUTES LES CLASSES.
+        // `I18nCatalog` est un global STATIQUE : une classe qui le laisse chargé le passe à la suivante, qui mesure alors
+        // l'état d'avant (mesuré : le 1er cas d'`ArchetypeServi_…` a lu un bundle réel laissé en amont, sans qu'aucune
+        // trace dise par qui). Ni un `ITestAction` d'assembly (le lanceur d'Unity ne lit que la méthode et sa classe) ni
+        // un `AfterTest` (il tourne AVANT le `[TearDown]`) ne voient la sortie d'une classe ; ce rappel, si : il arrive
+        // après tous ses TearDown, dans le même domaine. ⇒ La classe qui sort catalogue chargé est NOMMÉE, compte dans
+        // le code de sortie, et le catalogue est rendu après elle — la suivante est jugée sur ses propres gestes.
+        private readonly System.Collections.Generic.List<string> catalogueSurvivant = new System.Collections.Generic.List<string>();
+
         public void TestFinished(ITestResultAdaptor result)
         {
-            if (result.HasChildren) return;
+            if (result.HasChildren)
+            {
+                // une CLASSE de test : un nœud qui porte un type et aucune méthode (un TestCase paramétré porte sa méthode)
+                if (result.Test.TypeInfo != null && result.Test.Method == null
+                    && MafiaCleanCity.I18n.I18nCatalog.Charge)
+                {
+                    catalogueSurvivant.Add(result.Test.Name);
+                    Debug.Log($"MafiaCI: ⛔ CATALOGUE SURVIVANT en sortie de {result.Test.FullName} — rendu maintenant.");
+                    MafiaCleanCity.I18n.I18nCatalog.Oublier();
+                }
+                return;
+            }
             if (result.TestStatus == TestStatus.Failed)
                 Debug.LogError($"MafiaCI: FAIL {result.FullName} — {result.Message}");
             else
