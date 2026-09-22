@@ -33,7 +33,7 @@
 | `reference-⑰-1080x2102.png` | rendu du cadre nominal (`ecrans-brennar-6.html` #31 « La police — le tableau : ce qu’ils savent ») | 1080×2102 | ×3,6 | 300 CSS = 1080 px |
 | `etats/*-canon.png`, `etats/*-vide.png` (s'ils existent) | canons antérieurs (série 2, ×3,0) — témoins d'ÉTAT, jamais la référence | 900×1752 | ×3,0 | 300 CSS = 900 px |
 
-- **Source HTML/CSS** (aide de lecture, ne prime JAMAIS sur l'image) : `/home/erutheone/project/atelier3d-mafia/ecrans-brennar-6.html` (atelier `20d006d`).
+- **Source HTML/CSS** (aide de lecture, ne prime JAMAIS sur l'image) : `/home/erutheone/project/atelier3d-mafia/ecrans-brennar-6.html` (atelier `868ab87`).
   Les cadres sont les `<div class="cadre">` numérotés **0-based** ; ceux de cet écran :
   - #31 (l.1043) — La police — le tableau : ce qu’ils savent  ⇐ **cadre NOMINAL, rendu en référence**
   - #32 (l.1080) — La police — le registre de dispatch
@@ -64,8 +64,8 @@
 | `planche_le_commissariat_1080x2400.png` | `MAFIA_CI_CATEGORIES=PhotoPlanche` | sous chrome, surimpression (test de planche) | **NON FOURNI** — à poser au créneau |
 
 - Protocole de planche : `RECAPTURE-2026-09-22.md` §2 (conteneur RECRÉÉ, horodatage de l'image lu PENDANT le run, empreinte à
-  deux propriétés avant/après, un run = une paire exportée sous `MAFIA_CAPTURE_*` ET `MAFIA_DEMO_*` — le capteur de corps ne lit que
-  la seconde —, sha256 + preuve d'identité jointe : `[IDENTITE-CONNECTEE] … CONFORME` ou `[DemoIdentityResolver]` selon la catégorie,
+  deux propriétés avant/après, un run = une paire, exportée sous `MAFIA_CAPTURE_*` SEULEMENT — `MAFIA_DEMO_*` posé = faute —,
+  sha256 + preuve d'identité jointe : `[IDENTITE-CONNECTEE] … CONFORME` ou `[DemoIdentityResolver]` selon la catégorie,
   §2.4 ; `[IDENTITE-CAPTURE]` n'est PAS une preuve).
 - **Corps réels comparables** : `police/corps-reels/` est sur `operational_demo` (22/09, pile `03cf564c`) ; il est REPRIS sur le
   compte du run, dans la fenêtre du créneau, par `passe-synchrone.py` (RECAPTURE §2.5). La provenance de chaque fichier dit le compte :
@@ -118,4 +118,4 @@
   fichier `constats-a-rejuger` s'il existe (ce sont des périmètres, pas des jugements) ;
 - pour l'instant : toute capture.
 
-Préparé sur le client `7c2b6298` (branche `da/2026-09-22`), atelier `20d006d`.
+Préparé sur le client `048559b1` (branche `da/2026-09-22`), atelier `868ab87`.

@@ -170,8 +170,8 @@ def preparer(r, sym, tour, captures, susp, fm, controle):
 {capt_rows}
 
 - Protocole de planche : `RECAPTURE-2026-09-22.md` §2 (conteneur RECRÉÉ, horodatage de l'image lu PENDANT le run, empreinte à
-  deux propriétés avant/après, un run = une paire exportée sous `MAFIA_CAPTURE_*` ET `MAFIA_DEMO_*` — le capteur de corps ne lit que
-  la seconde —, sha256 + preuve d'identité jointe : `[IDENTITE-CONNECTEE] … CONFORME` ou `[DemoIdentityResolver]` selon la catégorie,
+  deux propriétés avant/après, un run = une paire, exportée sous `MAFIA_CAPTURE_*` SEULEMENT — `MAFIA_DEMO_*` posé = faute —,
+  sha256 + preuve d'identité jointe : `[IDENTITE-CONNECTEE] … CONFORME` ou `[DemoIdentityResolver]` selon la catégorie,
   §2.4 ; `[IDENTITE-CAPTURE]` n'est PAS une preuve).
 - **Corps réels comparables** : `{dossier}/corps-reels/` est sur `operational_demo` (22/09, pile `03cf564c`) ; il est REPRIS sur le
   compte du run, dans la fenêtre du créneau, par `passe-synchrone.py` (RECAPTURE §2.5). La provenance de chaque fichier dit le compte :

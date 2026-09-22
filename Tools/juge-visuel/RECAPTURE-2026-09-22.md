@@ -89,9 +89,15 @@ Chaque planche voyage avec l'état des DEUX côtés (conteneur back + arbre clie
      pour les sept autres (`PhotoScreenC3SousChrome`, `PhotoScreenC1`, `CaptureJournal`, `CaptureSousChrome`, `CaptureDistrict`,
      `PhotoVente`, `PhotoVitrine`), qui n'appellent pas cette garde, la ligne `[DemoIdentityResolver] régime=… identité=…` du journal
      joint. `[IDENTITE-CAPTURE] … signera avec « X »` n'est une preuve nulle part : elle dit ce que contient l'environnement.
-   - **Les deux noms restent exportés**, pour une autre raison qu'avant : Unity se contente maintenant de `MAFIA_CAPTURE_*`, mais le
-     capteur de corps réels (`capturer-corps-reels.py:41-42`, appelé par `passe-synchrone.py`) ne lit que `MAFIA_DEMO_*` — sans elles
-     il se connecterait au compte de démo, ou échouerait sur le mot de passe. Même compte, deux noms ; aucune valeur n'est écrite.
+   - **La paire n'existe QUE sous `MAFIA_CAPTURE_*`** (décision du 2026-09-22, mesurée par le client) : `~/.config/mafia/capture.env`
+     porte deux exports, `MAFIA_CAPTURE_IDENTIFIER` et `MAFIA_CAPTURE_PASSWORD`. ⛔ **`MAFIA_DEMO_*` posé = faute** : exportée sur le compte
+     de capture, une suite fonctionnelle lancée dans le même shell (les suites de lieutenants effacent et recrutent sur le compte
+     connecté) ferait muter le compte gelé. Contrôle de présence : les deux `MAFIA_CAPTURE_*` posées ET les deux `MAFIA_DEMO_*` absentes
+     (MANDAT §2, commande sans valeur affichée).
+   - Le capteur de corps réels suit : `capturer-corps-reels.py` résout le mot de passe du `--compte` par PAIRE — `MAFIA_CAPTURE_PASSWORD`
+     d'abord, `MAFIA_DEMO_PASSWORD` en repli, chacune seulement si l'identifiant de sa paire est absent ou égal au compte — et imprime le
+     NOM de la variable retenue, jamais la valeur (`resoudre_mot_de_passe`, 7 cas testés au 22/09, dont deux refus). `passe-synchrone.py`
+     annonce cette variable avant la passe, et **refuse de lancer si une `MAFIA_DEMO_*` est posée** (sortie 2, rien mesuré).
    - `MAFIA_CAPTURE_EXPECT_PLAYER` n'arme toujours qu'une capture (`CaptureFiliere`, comparaison du `player_id` servi) : option de
      témoin, hors de la valeur de §1.
 5. **Dans chaque dossier r2** : les planches en COPIE (jamais en lien — `verifier-captures-dossier.py` rougit sur un lien), leur
@@ -120,7 +126,7 @@ moment. **Mesuré** : les 229 corps réels de l'arbre ont été pris le 22/09 su
 **Décision : `CaptureHorizon` reste dans le run unique ; sa comparaison et sa garde sont re-basées sur le compte du run — comme les neuf
 autres.** Les corps réels des quatorze dossiers sont **repris dans la même fenêtre, sur le compte du run**, par
 `python3 Tools/juge-visuel/passe-synchrone.py --compte <email du run> --player-id <player_id>` (empreinte → corps → empreinte ; le mot de
-passe vient de `MAFIA_DEMO_PASSWORD`, jamais de la ligne de commande). Le `player_id` se lit sans ouvrir de session :
+passe vient de `MAFIA_CAPTURE_PASSWORD`, jamais de la ligne de commande — `--motdepasse` resterait visible dans la liste des processus). Le `player_id` se lit sans ouvrir de session :
 `docker compose -p mafia-clean-city exec -T pg psql -U mafia -d mafia_clean_city -tAc "SELECT player_id FROM player WHERE email='<email du run>';"`
 (requête validée le 22/09 sur `operational_demo` → `01a01f34…`).
 

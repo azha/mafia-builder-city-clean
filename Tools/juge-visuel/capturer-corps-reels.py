@@ -27,7 +27,8 @@ X-Server-Processed-At). `_index.json` par dossier récapitule. `INDEX.md` gagne 
 via `construire-dossiers.py --sans-rendu` (lancé à la fin).
 
 Usage :  python3 Tools/juge-visuel/capturer-corps-reels.py [--controle] [--base http://localhost]
-Env    :  MAFIA_DEMO_IDENTIFIER / MAFIA_DEMO_PASSWORD (repli : le compte de provision-demo-riche.mjs)
+Env    :  sans --compte : MAFIA_DEMO_IDENTIFIER / MAFIA_DEMO_PASSWORD (repli : le compte de provision-demo-riche.mjs)
+          avec --compte : le mot de passe vient de MAFIA_CAPTURE_PASSWORD, puis MAFIA_DEMO_PASSWORD (voir `resoudre_mot_de_passe`)
 """
 import datetime, importlib.util, json, os, re, subprocess, sys, urllib.request, urllib.error, uuid
 
@@ -40,6 +41,30 @@ cd = importlib.util.module_from_spec(spec); spec.loader.exec_module(cd)
 BASE = os.environ.get("STACK_BASE_URL", "http://localhost")
 IDENT = os.environ.get("MAFIA_DEMO_IDENTIFIER", "operational_demo@example.test")
 PASSWD = os.environ.get("MAFIA_DEMO_PASSWORD", "operational-demo-pw")
+DEMO_DEFAUT = ("operational_demo@example.test", "operational-demo-pw")
+
+
+def resoudre_mot_de_passe(compte, env):
+    """Le mot de passe du compte nommé par `--compte`, et le NOM de la variable qui l'a fourni (jamais la valeur).
+
+    ⛔ Décision du 2026-09-22 (client, relayée par l'orchestrateur) : la paire du compte de capture n'existe plus que sous
+       `MAFIA_CAPTURE_*` — exporter `MAFIA_DEMO_*` sur ce compte le ferait MUTER dès qu'une suite fonctionnelle tourne dans
+       le même shell (les suites de lieutenants effacent et recrutent sur le compte connecté). Ce capteur lisait
+       `MAFIA_DEMO_PASSWORD` seul : sans ce changement, une passe de corps sur le compte de capture échouait à la connexion.
+    ⇒ Par PAIRE, pas par variable : un mot de passe ne sert que si l'identifiant de SA paire est absent ou égal au compte
+       demandé — sinon on enverrait le mot de passe d'un compte à un autre.
+    Rend (mot_de_passe, source) ou (None, raison)."""
+    for ident_var, mdp_var, etiquette in (("MAFIA_CAPTURE_IDENTIFIER", "MAFIA_CAPTURE_PASSWORD", "MAFIA_CAPTURE_PASSWORD"),
+                                          ("MAFIA_DEMO_IDENTIFIER", "MAFIA_DEMO_PASSWORD", "MAFIA_DEMO_PASSWORD (repli)")):
+        mdp = (env.get(mdp_var) or "").strip()
+        ident = (env.get(ident_var) or "").strip()
+        if mdp and (not ident or ident.lower() == compte.strip().lower()):
+            return mdp, etiquette
+    if compte.strip().lower() == DEMO_DEFAUT[0]:
+        return DEMO_DEFAUT[1], "défaut du compte de démo (provision-demo-riche.mjs)"
+    return None, (f"aucune variable ne porte le mot de passe de « {compte} » : exporter MAFIA_CAPTURE_IDENTIFIER et "
+                  "MAFIA_CAPTURE_PASSWORD (une paire COMPLÈTE, même compte) — ou passer --motdepasse, qui reste visible "
+                  "dans la liste des processus")
 
 # paramètre → (clés candidates dans les corps reçus, corps à consulter d'abord)
 PARAMS = {
@@ -448,12 +473,18 @@ def main(argv):
     global IDENT, PASSWD
     opts = _lire_drapeaux(argv)
     controle = opts["controle"]
+    source_mdp = "MAFIA_DEMO_PASSWORD ou défaut"
     if opts["ident"]:
         IDENT = opts["ident"]
+        if not opts["passwd"]:
+            PASSWD, source_mdp = resoudre_mot_de_passe(IDENT, os.environ)
+            if PASSWD is None:
+                print("⛔ " + source_mdp); sys.exit(2)
     if opts["passwd"]:
         PASSWD = opts["passwd"]
+        source_mdp = "--motdepasse (⚠️ visible dans la liste des processus)"
     print(f"COMPTE CAPTURÉ : {IDENT}   (source : "
-          f"{'--compte' if opts['ident'] else 'MAFIA_DEMO_IDENTIFIER ou défaut'})")
+          f"{'--compte' if opts['ident'] else 'MAFIA_DEMO_IDENTIFIER ou défaut'}) · mot de passe : {source_mdp}")
     date = datetime.datetime.now().isoformat(timespec="seconds")
     back_sha = subprocess.run(["git", "-C", BACK, "rev-parse", "--short", "main"], capture_output=True, text=True).stdout.strip()
     image = subprocess.run(["docker", "inspect", "-f", "{{.Config.Image}} {{.Created}}", "mafia-clean-city-game-back-1"], capture_output=True, text=True).stdout.strip()

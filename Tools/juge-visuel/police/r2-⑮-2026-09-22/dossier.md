@@ -84,7 +84,8 @@
 - À fournir par l'orchestrateur au top du client, selon 2a du skill : `capture-1080x2400.png` (+ 1920 si la ligne GO le couvre),
   COPIES avec sha256 dans `captures-provenance.md`, la ligne d'identité du journal (`[DemoIdentityResolver] régime=env
   identité=…`) jointe, le SHA de l'arbre au run. Tant que cette table est vide, ce dossier ne s'instruit pas.
-- Compte photographié : **un run = une paire** (client `55e674db`) — la paire exportée par l'user sous `MAFIA_CAPTURE_*` et `MAFIA_DEMO_*`.
+- Compte photographié : **un run = une paire** (client `55e674db`) — la paire exportée par l'user sous `MAFIA_CAPTURE_*` SEULEMENT
+  (`MAFIA_DEMO_*` posé = faute, décision du 2026-09-22 — RECAPTURE §2.4).
   Preuve jointe exigée : la ligne `[IDENTITE-CONNECTEE] planche_les_inspections : /v1/me email=… · CONFORME` du journal du run (la garde
   qui compare le compte réellement connecté à l'annoncé) ; sans elle, les VALEURS de la planche ne se comparent à rien ; la FORME se juge.
 - **Corps réels comparables** : `Tools/juge-visuel/police/corps-reels/` est sur `operational_demo` (22/09, pile `03cf564c`) ; il est REPRIS

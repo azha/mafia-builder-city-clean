@@ -23,7 +23,7 @@ main dans une fenêtre courte : il s'exécute.
    Le script imprime laquelle des deux il emploie. Un dispositif qui ne déclare pas son régime
    ressemble trait pour trait à celui qui applique le bon.
 
-Usage : passe-synchrone.py --compte <email> [--motdepasse <mdp>] [--player-id <uuid>]
+Usage : passe-synchrone.py --compte <email> [--player-id <uuid>]   (mot de passe : MAFIA_CAPTURE_PASSWORD ; --motdepasse déconseillé)
 """
 import os
 import subprocess
@@ -75,6 +75,27 @@ def main():
         sys.exit(2)
     mdp = arg('--motdepasse')
     player_id = arg('--player-id')
+
+    # ⛔ Décision du 2026-09-22 : la paire du compte de capture n'existe que sous `MAFIA_CAPTURE_*`. `MAFIA_DEMO_*` posé dans le
+    #    shell du créneau est une FAUTE : une suite fonctionnelle lancée dans ce shell effacerait et recruterait sur le compte
+    #    connecté, et le compte gelé muterait. On refuse plutôt que de mesurer un monde que ce shell a pu déplacer.
+    demo = [v for v in ('MAFIA_DEMO_IDENTIFIER', 'MAFIA_DEMO_PASSWORD') if os.environ.get(v)]
+    if demo:
+        print('⛔ FAUTE : %s posée(s) dans ce shell. La paire de capture ne vit que sous MAFIA_CAPTURE_* ;' % ', '.join(demo))
+        print('   retirer MAFIA_DEMO_* (unset) avant la passe. Rien lancé.')
+        sys.exit(2)
+    if mdp:
+        print('⚠️ --motdepasse : la valeur est visible dans la liste des processus ; préférer MAFIA_CAPTURE_PASSWORD.')
+    else:
+        # le mot de passe est résolu par le capteur, avec la MÊME fonction : on l'annonce ici par son NOM, jamais sa valeur
+        import importlib.util
+        spec = importlib.util.spec_from_file_location('ccr', CAPTURE)
+        ccr = importlib.util.module_from_spec(spec); spec.loader.exec_module(ccr)
+        valeur, source = ccr.resoudre_mot_de_passe(compte, os.environ)
+        if valeur is None:
+            print('⛔ ' + source); sys.exit(2)
+        print('mot de passe : lu dans %s' % source)
+        del valeur
 
     occupe = gate_en_cours()
     if occupe is None:
