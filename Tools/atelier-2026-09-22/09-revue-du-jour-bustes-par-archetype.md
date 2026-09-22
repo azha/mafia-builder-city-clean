@@ -5,6 +5,23 @@
 > trois silhouettes différentes. La note de scène du cadre v4-3 dit « Le buste suit `archetype` de la même jointure (ferme E7
 > sans lot back) ». **Sources** : back `4841d7ad` ; client `8c1fd0e3` (arbre F, CLIENT-2) ; écart `06cc21d6`, ligne B03.
 
+
+> ## ✅ TRANCHÉ le 2026-09-22 (orchestrateur) — les §3 et §4 ci-dessous sont CADUCS
+>
+> La question n'était pas ouverte : le chantier « silhouettes contemporaines » du **2026-09-02** (client `7bfd196`) nomme les bustes
+> par **RÔLE**. `don` = le joueur, tête nue, avec l'anneau or-vif comme marque de rang ; `lieutenant` = capuche ; `homme` = casquette.
+> Les trois billets de ⑯ sont des lieutenants ⇒ **capuche pour les trois**. Le don de Sallo et la casquette de Tovah dans v4-0 sont
+> l'artefact du renommage mécanique, pas une intention. ⑥ et ① sont déjà conformes.
+> - **Client (⑯-5)** : `ui_element_buste_lieutenant` pour tout lieutenant, **sans art neuf**. Le manque chiffré au §4 tombe à zéro.
+> - **Maquette corrigée** : atelier `8509195`. Les neuf billets de v4-0, v4-2 et v4-3 passent à `#buste-lieutenant`, et la note de
+>   scène de v4-3 (« le buste suit `archetype` ») est réécrite en citant la décision.
+> - ⏸ **Re-rendu de la référence de ⑯** (`revue-du-jour/v4-*.png`, `reference-1080x2102.png`) : **après le signal de
+>   l'orchestrateur** (porte Unity et CPU pris par le gate client).
+> - ⚠️ **Reste à arbitrer, non touché** : la classe `.medl.don` (`ecrans-brennar-4.html:44`, bordure `--or-vif`) est l'anneau que la
+>   décision du 02/09 réserve au Don. Elle est posée sur le **premier billet** de v4-0, v4-2 et v4-3 (Lt. Hara), et sur ⑨/⑩ (cadres 14,
+>   15, 17, 18). Si l'anneau est la marque du Don, un lieutenant ne le porte pas. S'il signifie autre chose sur ⑯, comme « celui qui
+>   parle en premier », c'est un second sens pour la même forme.
+
 ---
 
 ## 1. Quels archétypes ⑯ peut afficher — lu dans le back, pas dans la maquette
