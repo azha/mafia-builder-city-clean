@@ -172,6 +172,10 @@ namespace MafiaCleanCity.Operational.Exceptions
                 yield break;
             }
             isLoading = true;
+            // ⑨-6 — l'après-tampon ne vit que jusqu'au rechargement SUIVANT celui de la résolution (un retour de ⑩, un
+            // nouveau passage) : il dit ce qui vient d'arriver, pas ce qui est arrivé un jour.
+            if (!garderTranchee) { trancheeCarte = null; trancheeIssue = null; trancheeAction = null; }
+            garderTranchee = false;
             QueueLoaded = false;
             QueueError = null;
             ExceptionCardDto[] cards = null;
@@ -249,6 +253,10 @@ namespace MafiaCleanCity.Operational.Exceptions
             ClearRows();
 
             int n = Cards.Length;
+            // ⑨-6 — le serveur fait foi : une carte tranchée qu'il sert encore n'est pas « partie ».
+            if (trancheeCarte != null)
+                foreach (ExceptionCardDto c in Cards)
+                    if (c != null && c.exception_id == trancheeCarte.exception_id) { trancheeCarte = null; trancheeIssue = null; break; }
             // ⑨-2 — `.zinc.haut` (66 %) quand la file attend ; `.zinc.haut.vide` (52 %) quand personne (cadre 16).
             if (decor != null) decor.AppliquerZinc(n == 0 ? ZincVide : ZincFile, DosFile);
             // ⑨-6 — personne (cadre 16) : ni ligne du soir, ni file, ni bulle, ni tampon ; les tabourets vides et la plaque
@@ -267,12 +275,19 @@ namespace MafiaCleanCity.Operational.Exceptions
                 TrackText(plaqueSurtitre, plaqueSurtitre.text);
                 TrackText(plaqueTitre, plaqueTitre.text);
             }
+            else if (ApresPresent)
+            {
+                // ⑨-6 — cadre 17 : « Deux attendent encore », sans la seconde moitié (la file vient de bouger).
+                ligneAmbiance.text = n == 1 ? "Un seul attend encore" : EnLettres(n) + " attendent encore";
+                TrackText(ligneAmbiance, ligneAmbiance.text);
+            }
             else
             {
                 ligneAmbiance.text = (n == 1 ? "Un seul attend vos ordres" : EnLettres(n) + " attendent vos ordres")
                                      + " — la file est calme";
                 TrackText(ligneAmbiance, ligneAmbiance.text);
             }
+            RendreApres();
 
             RendreFile();
             RendreParleur();
@@ -378,6 +393,158 @@ namespace MafiaCleanCity.Operational.Exceptions
             return "Personne ne fait la queue — la routine tient";
         }
 
+        // ================================================================ ⑨-6 après le tampon
+
+        private ExceptionCardDto trancheeCarte;
+        private string trancheeIssue;
+        private CandidateActionDto trancheeAction;
+        private bool garderTranchee;
+        private GameObject apresBloc;
+        private TextMeshProUGUI apresCachet, apresKicker, apresTitre;
+
+        /// <summary>La carte tranchée est-elle montrée (cadre 17) ?</summary>
+        public bool ApresPresent => trancheeCarte != null && trancheeIssue != null;
+        public GameObject ApresBloc => apresBloc;
+        public string ApresCachet => apresCachet != null ? apresCachet.text : null;
+        public string ApresKicker => apresKicker != null && apresKicker.gameObject.activeSelf ? apresKicker.text : null;
+        public string ApresTitre => apresTitre != null && apresTitre.gameObject.activeSelf ? apresTitre.text : null;
+        public GameObject PartiPourTest => fileRoot != null && fileRoot.Find("Parti") != null ? fileRoot.Find("Parti").gameObject : null;
+        public string LigneSoirTexte => ligneAmbiance != null ? ligneAmbiance.text : null;
+
+        /// <summary>Test hook — pose l'après d'une résolution sans réseau, puis rend la file donnée (le serveur l'a déjà
+        /// retirée : c'est la file RECHARGÉE).</summary>
+        public void PoserApresPourTest(ExceptionCardDto tranchee, string outcome, CandidateActionDto choisie, ExceptionCardDto[] fileRechargee)
+        {
+            EnsureInitialized();
+            trancheeCarte = tranchee; trancheeIssue = outcome; trancheeAction = choisie;
+            Cards = fileRechargee ?? System.Array.Empty<ExceptionCardDto>();
+            Render();
+        }
+
+        /// <summary>⑨-6 — LE BLOC DE LA CARTE TRANCHÉE, cadre 17 (`.apres`, `.tampon-diag.petit`) :
+        ///   `.apres` : le verre de `PlaqueAuComptoir.Apres` (radius 12, padding 10/12, .7/.88, bord #4f7f3f88) ;
+        ///   `.kicker` 7,5px capitales espacé .2em crème-2 ; `.titre` Georgia 13 crème ;
+        ///   `.tampon-diag.petit` : le CACHET, `right:10px; top:-10px; rotate(-8deg)`, 9px espacé .18em, gras, trait 2px
+        ///     #4f7f3f, encre #4f7f3f, fond #0a0f18 — il DÉBORDE du bloc (top:-10) : il vit donc HORS du verre masqué, frère
+        ///     du verre dans un conteneur sans masque.
+        /// Posé entre la file et la bulle, comme dans le cadre.</summary>
+        private void BuildApres(Transform parent)
+        {
+            apresBloc = NewUI("Apres", parent);
+            VerticalLayoutGroup v = apresBloc.AddComponent<VerticalLayoutGroup>();
+            v.childControlWidth = true; v.childControlHeight = true;
+            v.childForceExpandWidth = true; v.childForceExpandHeight = false;
+
+            GameObject verre = PlaqueAuComptoir.Construire(apresBloc.transform, "Verre", PlaqueAuComptoir.Apres(Px));
+            apresKicker = NouveauTexteMaquette(verre.transform, "Kicker", "", 7.5f, Creme2);
+            apresKicker.fontStyle = FontStyles.UpperCase;
+            apresKicker.characterSpacing = 20f;
+            apresTitre = NouveauTexteMaquette(verre.transform, "Titre", "", 13f, Creme);
+            apresTitre.font = DesignTokens.Current.hudSerifFont;
+            apresTitre.enableWordWrapping = true;
+
+            GameObject cachet = NewUI("Cachet", apresBloc.transform);
+            cachet.AddComponent<LayoutElement>().ignoreLayout = true;
+            RectTransform crt = (RectTransform)cachet.transform;
+            crt.anchorMin = crt.anchorMax = crt.pivot = new Vector2(1f, 1f);
+            crt.anchoredPosition = new Vector2(-Px(10f), Px(10f));
+            crt.localRotation = Quaternion.Euler(0f, 0f, 8f);   // CSS rotate(-8deg) tourne à gauche ; en Unity, à gauche = positif
+            Image fond = cachet.AddComponent<Image>();
+            fond.sprite = ProceduralUI.RoundedRectMask(Mathf.Max(1, PxI(3f)));
+            fond.type = Image.Type.Sliced;
+            Color nuit = DecorAuComptoir.Nuit; nuit.a = 1f;          // `background:#0a0f18` (plein)
+            fond.color = nuit;
+            fond.raycastTarget = false;
+            GameObject trait = NewUI("Trait", cachet.transform);
+            Stretch((RectTransform)trait.transform, Vector2.zero, Vector2.zero);
+            trait.AddComponent<LayoutElement>().ignoreLayout = true;
+            Image traitImg = trait.AddComponent<Image>();
+            traitImg.sprite = ProceduralUI.RoundedRectOutline(Mathf.Max(1, PxI(3f)), Mathf.Max(1f, Px(2f)), VertApres);
+            traitImg.type = Image.Type.Sliced;
+            traitImg.raycastTarget = false;
+            HorizontalLayoutGroup hc = cachet.AddComponent<HorizontalLayoutGroup>();
+            hc.padding = new RectOffset(PxI(7f), PxI(7f), PxI(2f), PxI(2f));
+            hc.childControlWidth = true; hc.childControlHeight = true;
+            ContentSizeFitter fit = cachet.AddComponent<ContentSizeFitter>();
+            fit.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+            fit.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            apresCachet = NouveauTexteMaquette(cachet.transform, "Mot", "", 9f, VertApres);
+            apresCachet.font = DesignTokens.Current.hudSerifFont;
+            apresCachet.fontStyle = FontStyles.Bold;
+            apresCachet.characterSpacing = 18f;
+            apresCachet.enableWordWrapping = false;
+
+            apresBloc.SetActive(false);
+        }
+
+        /// <summary>`#4f7f3f` — le vert de `.apres` et de son cachet (une résolution qui a tenu).</summary>
+        private static Color VertApres => Hex("#4f7f3f");
+
+        private void RendreApres()
+        {
+            bool montre = ApresPresent;
+            apresBloc.SetActive(montre);
+            if (!montre) return;
+            apresCachet.text = ExceptionBandes.Issue(trancheeIssue);
+            TrackText(apresCachet, apresCachet.text);
+
+            string kicker = KickerApres(trancheeCarte);
+            apresKicker.gameObject.SetActive(kicker != null);
+            apresKicker.text = kicker ?? string.Empty;
+            if (kicker != null) TrackText(apresKicker, kicker);
+
+            string titre = TitreApres(trancheeIssue, trancheeAction);
+            apresTitre.gameObject.SetActive(titre != null);
+            apresTitre.text = titre ?? string.Empty;
+            if (titre != null) TrackText(apresTitre, titre);
+        }
+
+        /// <summary>« {nom} retourne au travail » (atelier §3.5, à la place de « Le cuisinier est reparti » : « Le
+        /// {archétype} est reparti » ne tient pas pour « Logistique », qui nomme un domaine). Le NOM SERVI, sans article ni
+        /// accord. La ville ne « retourne » nulle part : pas de surtitre.</summary>
+        public static string KickerApres(ExceptionCardDto c)
+        {
+            if (!ExceptionBandes.ParleUnLieutenant(c)) return null;
+            string nom = c.lieutenant != null ? c.lieutenant.name : null;
+            if (string.IsNullOrWhiteSpace(nom)) return null;
+            return nom.Trim() + " " + Lib("retourne au travail");
+        }
+
+        /// <summary>La phrase de l'après. ⚠️ La maquette n'en écrit QU'UNE, pour `REPAIRING` (cadre 17) : « Le bâtiment se remet
+        /// en marche, avec le temps ». Pour les neuf autres issues, pas de phrase inventée : la conséquence SERVIE de l'action
+        /// choisie, et seulement sa CLÉ (`projected_consequence_i18n`, connue du catalogue) — sa prose est du texte producteur,
+        /// parfois anglais. Ni l'une ni l'autre ⇒ pas de titre (le cachet et le surtitre suffisent). Décision client, au mandat
+        /// du juge.</summary>
+        public static string TitreApres(string outcome, CandidateActionDto choisie)
+        {
+            if (string.Equals(outcome, "REPAIRING", System.StringComparison.OrdinalIgnoreCase))
+                return Lib("Le bâtiment se remet en marche, avec le temps");
+            I18nRefDto cle = choisie != null ? choisie.projected_consequence_i18n : null;
+            if (cle != null && !string.IsNullOrEmpty(cle.key) && MafiaCleanCity.I18n.I18nCatalog.Connait(cle.key))
+            {
+                string t = MafiaCleanCity.I18n.I18nCatalog.Traduire(cle.key);
+                if (!string.IsNullOrWhiteSpace(t)) return ExceptionBandes.Initiale(t.Trim());
+            }
+            return null;
+        }
+
+        /// <summary>L'action que le tampon a envoyée (son `id`), pour lire sa conséquence servie.</summary>
+        private static CandidateActionDto ActionChoisie(ExceptionCardDto c, string id)
+        {
+            if (c == null) return null;
+            if (c.candidate_actions != null)
+                foreach (CandidateActionDto a in c.candidate_actions)
+                    if (a != null && a.id == id) return a;
+            return c.suggested_action != null && c.suggested_action.id == id ? c.suggested_action : null;
+        }
+
+        /// <summary>`filter:grayscale(1)` sur une couleur : la luminance CSS (0,2126 / 0,7152 / 0,0722, en sRGB).</summary>
+        public static Color EnGris(Color c)
+        {
+            float y = 0.2126f * c.r + 0.7152f * c.g + 0.0722f * c.b;
+            return new Color(y, y, y, c.a);
+        }
+
         // ================================================================ ⑨-3 qui attend
 
         /// <summary>⑨-3 — LA FILE AU COMPTOIR, cadre 14 (`.file`, `.attendant`, `.rail`, `.ville-b`) :
@@ -399,67 +566,14 @@ namespace MafiaCleanCity.Operational.Exceptions
                 UnityEngine.Object.Destroy(fileRoot.GetChild(i).gameObject);
 
             Sprite buste = Resources.Load<Sprite>(MedaillonAuComptoir.CheminBusteLieutenant);
-            for (int i = 0; i < Cards.Length && i < 3; i++)
-            {
-                ExceptionCardDto c = Cards[i];
-                bool premier = i == 0;
-                GameObject a = NewUI($"Attendant{i}", fileRoot);
+            // ⑨-6 — cadre 17 : la carte tranchée garde la PREMIÈRE place, `.attendant.parti`, et le suivant s'avance. Trois
+            // places dessinées en tout, comme avant : la tranchée en prend une.
+            if (ApresPresent) Attendant(trancheeCarte, "Parti", premier: false, parti: true, buste);
+            int places = ApresPresent ? 2 : 3;
+            for (int i = 0; i < Cards.Length && i < places; i++)
+                Attendant(Cards[i], $"Attendant{i}", premier: i == 0, parti: false, buste);
 
-                // ⛔ CHAQUE ATTENDANT OUVRE SA PROPRE CARTE — c'est LE chemin joueur vers ⑩ (capture par valeur).
-                Image fondA = a.AddComponent<Image>();
-                fondA.color = new Color(0f, 0f, 0f, 0f);   // cible de toucher, invisible
-                Button ba = a.AddComponent<Button>();
-                ba.targetGraphic = fondA;
-                ExceptionCardDto carteDeCetAttendant = c;
-                ba.onClick.AddListener(() => OpenDetail(carteDeCetAttendant));
-                if (!premier) a.AddComponent<CanvasGroup>().alpha = 0.78f;   // `.attendant{opacity:.78}`
-
-                VerticalLayoutGroup v = a.AddComponent<VerticalLayoutGroup>();
-                v.spacing = Px(3f);
-                v.childControlWidth = true; v.childControlHeight = true;
-                v.childForceExpandWidth = false; v.childForceExpandHeight = false;
-                v.childAlignment = TextAnchor.LowerCenter;
-                AddLayoutElement(a, preferredWidth: Px(premier ? 74f : 60f), minWidth: Px(premier ? 74f : 60f));
-
-                if (premier)
-                {
-                    TextMeshProUGUI chevron = NouveauTexteMaquette(a.transform, "Chevron", "▼", 9f, OrVif);
-                    chevron.alignment = TextAlignmentOptions.Center;
-                }
-
-                bool ville = !ExceptionBandes.ParleUnLieutenant(c);
-                GameObject med = MedaillonAuComptoir.Construire(a.transform, "Medaillon",
-                    Px(premier ? 58f : 44f), Px(premier ? 18f : 14f), Mathf.Max(1f, Px(1f)), ville ? null : buste);
-                if (ville) LettreDeLaVille(med.transform, 20f);
-
-                // Le rail sous le médaillon PORTE la gravité — le canal de la maquette.
-                GameObject rail = NewUI("Rail", a.transform);
-                rail.AddComponent<Image>().color = CouleurRail(c.severity_band);
-                AddLayoutElement(rail, preferredWidth: Px(34f), minWidth: Px(34f), preferredHeight: Px(3f), minHeight: Px(3f));
-
-                TextMeshProUGUI nom = NouveauTexteMaquette(a.transform, "Nom", QuiParle(c), 10f, Creme);
-                nom.font = DesignTokens.Current.hudSerifFont;
-                nom.alignment = TextAlignmentOptions.Center;
-                TrackText(nom, nom.text);
-
-                TextMeshProUGUI bandes = NouveauTexteMaquette(a.transform, "Bandes", LigneAttendant(c), 6.5f, Creme2);
-                bandes.fontStyle = FontStyles.UpperCase;
-                bandes.characterSpacing = 10f;                  // `letter-spacing:.1em`
-                bandes.alignment = TextAlignmentOptions.Center;
-                bandes.enableWordWrapping = true;
-                TrackText(bandes, bandes.text);
-
-                // screen_a8 : la catégorie de couche conflit, EN TOUTES LETTRES (inchangé).
-                string cat = CategorieConflit(c);
-                if (cat != null)
-                {
-                    TextMeshProUGUI pastille = NouveauTexteMaquette(a.transform, "Categorie", cat, 6.5f, Creme2);
-                    pastille.alignment = TextAlignmentOptions.Center;
-                    TrackText(pastille, pastille.text);
-                }
-            }
-
-            int enPlus = Cards.Length - 3;
+            int enPlus = Cards.Length - places;
             if (enPlus > 0)
             {
                 // CHROME, non suivi : un compte de cartes, pas un scalaire de simulation (même statut que le sous-titre du
@@ -467,6 +581,72 @@ namespace MafiaCleanCity.Operational.Exceptions
                 TextMeshProUGUI plus = NouveauTexteMaquette(fileRoot, "EnPlus", "+" + enPlus, 10f, Creme2);
                 plus.font = DesignTokens.Current.hudSerifFont;
                 plus.alignment = TextAlignmentOptions.Bottom;
+            }
+        }
+
+        /// <summary>Un attendant de la file. `parti` (⑨-6, `.attendant.parti{opacity:.28; filter:grayscale(1)}`) : la carte
+        /// tranchée, SANS bouton (elle est réglée), sans chevron, à .28, le rail en gris. ⚠️ `grayscale(1)` n'est rendu que
+        /// sur le RAIL (luminance CSS 0,2126/0,7152/0,0722) : le buste est déjà un gris chaud cuit dans le PNG, et la face
+        /// du médaillon à .28 sur le bar ne se distingue plus d'un gris — approximation déclarée, à juger.</summary>
+        private void Attendant(ExceptionCardDto c, string nomGo, bool premier, bool parti, Sprite buste)
+        {
+            GameObject a = NewUI(nomGo, fileRoot);
+
+            if (!parti)
+            {
+                // ⛔ CHAQUE ATTENDANT OUVRE SA PROPRE CARTE — c'est LE chemin joueur vers ⑩ (capture par valeur).
+                Image fondA = a.AddComponent<Image>();
+                fondA.color = new Color(0f, 0f, 0f, 0f);   // cible de toucher, invisible
+                Button ba = a.AddComponent<Button>();
+                ba.targetGraphic = fondA;
+                ExceptionCardDto carteDeCetAttendant = c;
+                ba.onClick.AddListener(() => OpenDetail(carteDeCetAttendant));
+            }
+            if (parti) a.AddComponent<CanvasGroup>().alpha = 0.28f;         // `.attendant.parti{opacity:.28}`
+            else if (!premier) a.AddComponent<CanvasGroup>().alpha = 0.78f;   // `.attendant{opacity:.78}`
+
+            VerticalLayoutGroup v = a.AddComponent<VerticalLayoutGroup>();
+            v.spacing = Px(3f);
+            v.childControlWidth = true; v.childControlHeight = true;
+            v.childForceExpandWidth = false; v.childForceExpandHeight = false;
+            v.childAlignment = TextAnchor.LowerCenter;
+            AddLayoutElement(a, preferredWidth: Px(premier ? 74f : 60f), minWidth: Px(premier ? 74f : 60f));
+
+            if (premier)
+            {
+                TextMeshProUGUI chevron = NouveauTexteMaquette(a.transform, "Chevron", "▼", 9f, OrVif);
+                chevron.alignment = TextAlignmentOptions.Center;
+            }
+
+            bool ville = !ExceptionBandes.ParleUnLieutenant(c);
+            GameObject med = MedaillonAuComptoir.Construire(a.transform, "Medaillon",
+                Px(premier ? 58f : 44f), Px(premier ? 18f : 14f), Mathf.Max(1f, Px(1f)), ville ? null : buste);
+            if (ville) LettreDeLaVille(med.transform, 20f);
+
+            // Le rail sous le médaillon PORTE la gravité — le canal de la maquette.
+            GameObject rail = NewUI("Rail", a.transform);
+            rail.AddComponent<Image>().color = parti ? EnGris(CouleurRail(c.severity_band)) : CouleurRail(c.severity_band);
+            AddLayoutElement(rail, preferredWidth: Px(34f), minWidth: Px(34f), preferredHeight: Px(3f), minHeight: Px(3f));
+
+            TextMeshProUGUI nom = NouveauTexteMaquette(a.transform, "Nom", QuiParle(c), 10f, Creme);
+            nom.font = DesignTokens.Current.hudSerifFont;
+            nom.alignment = TextAlignmentOptions.Center;
+            TrackText(nom, nom.text);
+
+            TextMeshProUGUI bandes = NouveauTexteMaquette(a.transform, "Bandes", LigneAttendant(c), 6.5f, Creme2);
+            bandes.fontStyle = FontStyles.UpperCase;
+            bandes.characterSpacing = 10f;                  // `letter-spacing:.1em`
+            bandes.alignment = TextAlignmentOptions.Center;
+            bandes.enableWordWrapping = true;
+            TrackText(bandes, bandes.text);
+
+            // screen_a8 : la catégorie de couche conflit, EN TOUTES LETTRES (inchangé).
+            string cat = CategorieConflit(c);
+            if (cat != null)
+            {
+                TextMeshProUGUI pastille = NouveauTexteMaquette(a.transform, "Categorie", cat, 6.5f, Creme2);
+                pastille.alignment = TextAlignmentOptions.Center;
+                TrackText(pastille, pastille.text);
             }
         }
 
@@ -849,7 +1029,13 @@ namespace MafiaCleanCity.Operational.Exceptions
                 (code, msg) => DerniereErreurResolution = $"{code}: {msg}");
             resolutionEnCours = false;
             if (Destroyed) yield break;
-            if (DerniereIssue != null) yield return LoadQueue();
+            if (DerniereIssue != null)
+            {
+                // ⑨-6 — la carte tranchée garde sa place (cadre 17) le temps du rechargement qui suit.
+                trancheeCarte = c; trancheeIssue = DerniereIssue; trancheeAction = ActionChoisie(c, choix.Value.id);
+                garderTranchee = true;
+                yield return LoadQueue();
+            }
         }
 
         private bool resolutionEnCours;
@@ -1092,6 +1278,8 @@ namespace MafiaCleanCity.Operational.Exceptions
             hf.childAlignment = TextAnchor.LowerLeft;                   // `.file{align-items:flex-end}`, tassée à gauche
             hf.padding = new RectOffset(PxI(10f), PxI(10f), 0, 0);      // `.file{padding:0 10px}`
             AddLayoutElement(fileRoot.gameObject, preferredHeight: Px(CssFileHaut));
+
+            BuildApres(comptoirGo.transform);
 
             parleRoot = (RectTransform)NewUI("Parle", comptoirGo.transform).transform;
             HorizontalLayoutGroup hp = parleRoot.gameObject.AddComponent<HorizontalLayoutGroup>();

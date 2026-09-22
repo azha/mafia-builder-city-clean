@@ -229,6 +229,41 @@ namespace MafiaCleanCity.Operational.Exceptions
             return t.Contains(" ") ? $"« {t} »" : t;
         }
 
+        /// <summary>⑨-6 / ⑩-1 — le domaine de l'ISSUE d'une résolution (`outcome` de `POST /v1/exceptions/:id/resolve`), lu
+        /// dans les effets du back (atelier `11-exceptions-inventaire.md` §3.7 : un fichier:ligne par valeur).</summary>
+        public static readonly string[] DomaineIssue =
+        {
+            "RESOLVED", "ESCALATED", "REPAIRING", "REPAIRING_SLOW", "BRIBE_SUCCEEDED",
+            "BRIBE_FAILED", "LAID_LOW", "TAUGHT", "DEFERRED", "DEMOLISHED",
+        };
+
+        private static readonly Dictionary<string, string> Issues =
+            new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                { "RESOLVED", "RÉGLÉ" },
+                { "ESCALATED", "ARCHIVÉ" },
+                { "REPAIRING", "EN RÉPARATION" },       // RATIFIÉ — cadre 17
+                { "REPAIRING_SLOW", "RÉPARATION LENTE" },
+                { "BRIBE_SUCCEEDED", "ARRANGÉ" },
+                { "BRIBE_FAILED", "ÇA S'EST RETOURNÉ" },
+                { "LAID_LOW", "PROFIL BAS" },
+                { "TAUGHT", "RÈGLE APPRISE" },
+                { "DEFERRED", "REMIS À PLUS TARD" },
+                { "DEMOLISHED", "RASÉ" },
+            };
+
+        /// <summary>Le mot du CACHET d'une issue (`exception_detail.outcome.<valeur>`, servi à `aea5ef7c` ; repli : les mots de
+        /// l'atelier §3.7, en capitales comme un cachet). Une issue inconnue rend `Inconnue`, jamais l'enum brut. Pas de
+        /// majuscule initiale ici : le mot est déjà en capitales. ⑨ (après le tampon, cadre 17) et ⑩ le partagent.</summary>
+        public static string Issue(string outcome)
+        {
+            if (string.IsNullOrWhiteSpace(outcome)) return Inconnue;
+            string valeur = outcome.Trim();
+            if (!Issues.TryGetValue(valeur, out string repli)) return Inconnue;
+            string mot = MafiaCleanCity.I18n.Libelle.ParValeur("exception_detail", "outcome", valeur, repli);
+            return string.IsNullOrWhiteSpace(mot) ? repli : mot.Trim();
+        }
+
         /// <summary>Le domaine d'abord (hors domaine ⇒ `Inconnue`, le catalogue n'est pas consulté), puis la clé dérivée
         /// de la valeur servie, repli = le mot de l'atelier. La MAJUSCULE INITIALE se pose ICI, une fois, sur le servi comme
         /// sur le repli : le back et l'atelier écrivent en minuscules, les écrans affichent « Grave · Critique » (ou en
