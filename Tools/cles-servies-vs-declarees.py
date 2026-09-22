@@ -44,6 +44,9 @@ APPARIEMENTS = [
     # ⑯ B05 — `flag_frequency_band` DÉCLARÉ avant d'être servi (S5-e, back 71ae6f89). Le seul corps figé à cartes date du
     # 25/08, d'AVANT S5-e : la ligne dit « déclaré, non servi » jusqu'à ce qu'un corps vivant post-S5 soit figé ici.
     ("FlagCardDto", "flag-review-seeded.cards[]"),
+    # ⑯-8 — les params de `subject_name_i18n` (S5-a, back 04f35021), DÉCLARÉS avant d'être servis (union des 3 gabarits).
+    # Aucun corps figé ne les porte encore : la ligne rend « EXPLICITE VIDE » jusqu'au premier corps vivant post-S5.
+    ("SujetParamsDto", "flag-review-seeded.cards[].subject_name_i18n.params"),
 ]
 
 

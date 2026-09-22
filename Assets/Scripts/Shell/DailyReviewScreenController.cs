@@ -546,7 +546,7 @@ namespace MafiaCleanCity.Shell
             //    de production écrivent un motif par générateur, mais le seam de test `force-flag`
             //    écrit le motif générique `reason.deviation_detected` sur toutes ses cartes (corps
             //    réel du 25/08). Indexée sur le motif, la table dirait la même phrase partout.
-            (string titre, string motif) = PhraseDe(card.descriptor != null ? card.descriptor.key : null);
+            (string titre, string motif) = PhraseDuBillet(card);
             // ⛔ LE NEUVIÈME LITTÉRAL DE CET ÉCRAN VIVAIT ICI, DANS UNE BALISE DE TEXTE RICHE — et
             //    c'est le site que les DEUX instruments rataient. Il ne s'écrit pas `Hex("#…")` mais
             //    `<color=#…>` au milieu d'une chaîne : le motif de la garde exigeait un guillemet
@@ -772,6 +772,99 @@ namespace MafiaCleanCity.Shell
         public string DernierePhrase { get; private set; }
 
         private const string PrefixeRoutine = "core_loops.flag_discipline.routine.";
+
+        // ------------------------------------------------------------------ ⑯-8 la phrase de v4-3
+
+        /// <summary>⑯-8 — la phrase d'un billet, choisie par ce que la carte porte :
+        ///   · un SUJET résolu (`subject_name_i18n`, clé servie) ET une condition (`deviation_condition`) ⇒ la
+        ///     phrase de v4-3, sujet en gras (`PhraseDeCondition`) ;
+        ///   · sinon ⇒ la phrase de v4-0 de son générateur (`PhraseDe`), celle d'aujourd'hui. Tant que la pile
+        ///     ne sert pas S5, rien ne change à l'écran.</summary>
+        public static (string titre, string motif) PhraseDuBillet(FlagCardDto card)
+        {
+            string descriptorKey = card != null && card.descriptor != null ? card.descriptor.key : null;
+            string sujet = card != null ? SujetResolu(card.subject_name_i18n) : null;
+            if (sujet != null && card != null && !string.IsNullOrEmpty(card.deviation_condition))
+                return PhraseDeCondition(card.deviation_condition, descriptorKey, sujet);
+            return PhraseDe(descriptorKey);
+        }
+
+        /// <summary>Le nom du sujet, résolu par le catalogue — ou null si la carte n'en porte pas, ou si la clé
+        /// n'est pas servie. ⚠️ JAMAIS la clé nue : un billet qui dirait « la tournée game.fiction.route.named »
+        /// serait pire que la phrase de v4-0.</summary>
+        public static string SujetResolu(SujetRefDto sujet)
+        {
+            if (sujet == null || string.IsNullOrEmpty(sujet.key)) return null;
+            if (!MafiaCleanCity.I18n.I18nCatalog.Connait(sujet.key)) return null;
+            var p = new Dictionary<string, string>();
+            SujetParamsDto s = sujet.@params;
+            if (s != null)
+            {
+                Poser(p, "enseigne", s.enseigne); Poser(p, "district", s.district); Poser(p, "block", s.block);
+                Poser(p, "rang", s.rang); Poser(p, "depart", s.depart); Poser(p, "arrivee", s.arrivee);
+                Poser(p, "index", s.index);
+            }
+            string nom = MafiaCleanCity.I18n.I18nCatalog.Traduire(sujet.key, p);
+            return string.IsNullOrWhiteSpace(nom) ? null : nom;
+        }
+
+        private static void Poser(Dictionary<string, string> p, string cle, string valeur)
+        {
+            if (!string.IsNullOrEmpty(valeur)) p[cle] = valeur;
+        }
+
+        /// <summary>⑯-8 — les phrases de v4-3, une par `deviation_condition` (atelier
+        /// `10-mots-revue-etats-v4-3.md` §3, `8a1ea438`). Le sujet entre NU, sans article, après un nom commun
+        /// (« la tournée », « les comptes de ») : un nom libre, « départ → arrivée » et « n° 7 » y entrent sans
+        /// accord à calculer. Il est en GRAS (un nom propre) et en `<nobr>` : le nom d'une façade porte son propre
+        /// tiret (« Laverie du Quai — Sarnes… »), et l'atelier demande de ne jamais couper la ligne entre le nom
+        /// et ce tiret.
+        /// Domaine complet (`deviation-condition.ts`, 12 valeurs) — chaque valeur rend une phrase :
+        ///   · 4 conditions atteignables en production (tournées, façade) ⇒ leur phrase ;
+        ///   · `baseline` et `unrecorded` ⇒ le repli générique (arbitrage de l'orchestrateur : « rien d'anormal » ne
+        ///     se prétend pas, et `unrecorded` ne sait pas) ;
+        ///   · les 6 conditions du Lek, des précurseurs et de la réserve ⇒ la phrase de v4-0 de leur générateur :
+        ///     aucun chemin de production ne les atteint aujourd'hui, et l'atelier écrira leurs phrases avec
+        ///     leurs conditions.</summary>
+        public static (string titre, string motif) PhraseDeCondition(string condition, string descriptorKey, string sujet)
+        {
+            string gabarit, motif;
+            switch (condition)
+            {
+                case "route_saturated_or_severed":
+                    gabarit = Lib("phrase", "J’ai réacheminé la tournée {sujet}");
+                    motif = Lib("phrase", "— l’ancien trajet ne passait plus : saturé, ou coupé.");
+                    break;
+                case "route_meandering":
+                    gabarit = Lib("phrase", "J’ai replanifié la tournée {sujet}");
+                    motif = Lib("phrase", "— le trajet fait plus de détours que d’habitude.");
+                    break;
+                case "audit_pinned":
+                    gabarit = Lib("phrase", "J’ai rapproché les comptes de {sujet}");
+                    motif = Lib("phrase", "— la façade est épinglée pour un contrôle.");
+                    break;
+                case "buffer_loaded":
+                    gabarit = Lib("phrase", "J’ai rapproché les comptes de {sujet}");
+                    motif = Lib("phrase", "— il passe plus d’argent par la caisse que la façade ne peut en justifier.");
+                    break;
+                case "baseline":
+                case "unrecorded":
+                    return PhraseDe(null);
+                default:
+                    return PhraseDe(descriptorKey);
+            }
+            var p = new Dictionary<string, string> { { "sujet", "<nobr><b>" + sujet + "</b></nobr>" } };
+            return (MafiaCleanCity.I18n.IcuFormat.Formater(gabarit, p), motif);
+        }
+
+        /// <summary>Le domaine de `deviation_condition`, recopié de `deviation-condition.ts`
+        /// (`DEVIATION_CONDITIONS`, back `04f35021`) — exposé pour que les gardes balayent la population ENTIÈRE.</summary>
+        public static readonly string[] DomaineConditions =
+        {
+            "route_saturated_or_severed", "route_meandering", "audit_pinned", "buffer_loaded",
+            "dealer_compromised", "lek_rhythm_off", "precursor_scarcity", "precursor_price_rising",
+            "stash_filling", "stash_heated", "baseline", "unrecorded",
+        };
 
         /// <summary>⑯ B05 — la chip de fréquence. Domaine : `FlagFrequencyBand = 'none' | 'occasional' |
         /// 'frequent'` (`convergence.ts:35` ; `0` signalement sur 7 jours ⇒ `none`, sous le seuil ⇒ `occasional`).
