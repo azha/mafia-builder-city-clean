@@ -29,6 +29,7 @@ namespace MafiaCleanCity.Operational.Tests
         [TearDown]
         public void TearDown()
         {
+            MafiaCleanCity.CityMap.DemoIdentityResolver.SortirModeCapture(GetType().Name);   // mode capture levé en fin de test (22/09)
             GameObject reste = GameObject.Find("ForensicRoot");
             while (reste != null) { Object.DestroyImmediate(reste); reste = GameObject.Find("ForensicRoot"); }
             if (hostGo != null) Object.Destroy(hostGo);
@@ -167,9 +168,13 @@ namespace MafiaCleanCity.Operational.Tests
         {
             var auth = new AuthClient { BaseUrl = BaseUrl };
             string token = null, err = null;
-            yield return auth.SignIn("operational_demo@example.test", "operational-demo-pw",
+            // ⛔ PLUS D'IDENTITÉ EN DUR (22/09) : `operational_demo` était écrit ici, hors de la règle unique de 55e674db — la planche
+            // photographiait un compte que le RUN ne désignait pas. La règle du résolveur, puis la garde d'effet.
+            var (idCapture, mdpCapture) = MafiaCleanCity.Shell.Tests.CaptureSousShell.IdentiteDeCaptureOuEchoue("screen_b7_forensic");
+            yield return auth.SignIn(idCapture, mdpCapture,
                                      t => token = t, e => err = e);
-            Assert.IsNull(err, $"connexion au compte de démo échouée : {err}");
+            Assert.IsNull(err, $"connexion au compte de capture « {idCapture} » échouée : {err}");
+            yield return MafiaCleanCity.Shell.Tests.CaptureSousShell.IdentiteConnecteeOuEchoue(token, idCapture, "screen_b7_forensic");
 
             ForensicScreenController ecran = MonterEcran();
             ecran.SetToken(token);

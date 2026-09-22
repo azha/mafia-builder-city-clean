@@ -24,6 +24,11 @@ namespace MafiaCleanCity.Shell.Tests
     [Category("CaptureFamille")]
     public class FamilleCapturePlayModeTests
     {
+        /// <summary>Lève le MODE CAPTURE du résolveur en fin de test (posé par `IdentiteDeCaptureOuEchoue`).</summary>
+        [TearDown]
+        public void LeverLeModeCapture() =>
+            MafiaCleanCity.CityMap.DemoIdentityResolver.SortirModeCapture(GetType().Name);
+
         private Scene sceneDeDemarrage;
 
         private IEnumerator ChargerLaSceneDeDemarrageDuBuild()
@@ -53,12 +58,17 @@ namespace MafiaCleanCity.Shell.Tests
         [UnityTest]
         public IEnumerator Capture_Famille_1080x2400()
         {
+            // AVANT TOUT (et avant le shell : il résout son identité à son démarrage) : sans la paire, rien ne s'écrit.
+            var (identiteAnnoncee, _) = MafiaCleanCity.Shell.Tests.CaptureSousShell.IdentiteDeCaptureOuEchoue("famille");
             const int Largeur = 1080, Hauteur = 2400;
             const string Chemin = "Assets/Screenshots/famille_1080x2400.png";
 
             yield return ChargerLaSceneDeDemarrageDuBuild();
             AppShell shell = SondeShellDansLaScene(sceneDeDemarrage);
             Assert.IsNotNull(shell, "aucun AppShell dans la scène de démarrage du build");
+            // garde d'EFFET (22/09, « toute planche porte la preuve de l'effet ») — `GET /v1/me` avec le jeton réellement utilisé,
+            // confronté à l'identité annoncée, AVANT tout PNG.
+            yield return MafiaCleanCity.Shell.Tests.CaptureSousShell.ShellConnecteOuEchoue(shell, identiteAnnoncee, "famille");
 
             // L'acquisition de session du shell doit être RÉSOLUE avant de changer d'onglet :
             // elle rappelle l'onglet par défaut quand elle aboutit, et ramènerait de force la vue

@@ -918,6 +918,9 @@ namespace MafiaCleanCity.Operational.Tests
             yield return authDemo.SignIn(idCapture, mdpCapture,
                                          t => token = t, e => errDemo = e);
             Assert.IsNull(errDemo, $"connexion au compte de démo échouée : {errDemo}");
+            // garde d'EFFET (22/09, « toute planche porte la preuve de l'effet ») — `GET /v1/me` avec le jeton réellement utilisé,
+            // confronté à l'identité annoncée, AVANT tout PNG.
+            yield return MafiaCleanCity.Shell.Tests.CaptureSousShell.IdentiteConnecteeOuEchoue(token, idCapture, "screen_b3");
             yield return LirePremierLieutenant();
             Assert.IsNotNull(lieutenantId,
                 "aucun lieutenant sur le compte de démo — la capture n'aurait rien à montrer");
