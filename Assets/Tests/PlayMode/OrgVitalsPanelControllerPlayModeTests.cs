@@ -158,7 +158,13 @@ namespace MafiaCleanCity.Shell.Tests
         //  2. scénario dimensionné par un TICK — sans lui, RESOURCE_NOT_FOUND (anti-vacuité : on
         //     PROUVE l'échec pré-tick, pas seulement le succès post-tick) ;
         //  3. garde de capacité HTTP — la MÊME sonde sur heat trouve le champ homologue.
-        [UnityTest]
+        // ⛔ `Timeout(300000)` — 2026-09-22 (créneau 558289a0, décision de l'orchestrateur). Le délai de la requête
+        //    `_test/citysim/advance?ticks=2000` a été porté à 240 s le 21/08 (134-135 s mesurés au repos, voir plus bas),
+        //    mais le délai par DÉFAUT d'un test Unity est 180 s : c'est le runner qui coupait, à 180 s, avant que la
+        //    requête ait pu parler — « Timeout value of 180000 ms was exceeded », game-back à 72 % CPU sous un E2E
+        //    parallèle. Le « 240 » ne servait jamais. 300 s > 240 s : si l'avance est trop lente, c'est désormais la
+        //    REQUÊTE qui échoue, avec son erreur et son corps dans le message, pas le runner sans rien dire.
+        [UnityTest, Timeout(300000)]
         public IEnumerator C6F4_CohesionProbe_SuccessBodyRequired_TickDimensioned_CapacityGuarded()
         {
             string token = null, callsign = null;
