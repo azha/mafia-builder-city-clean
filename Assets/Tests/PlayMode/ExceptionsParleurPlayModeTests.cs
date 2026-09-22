@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using NUnit.Framework;
 using TMPro;
 using UnityEngine;
@@ -17,6 +18,9 @@ namespace MafiaCleanCity.Operational.Tests
     //           guillemets ni adresse ; un identifiant nu
     //   R13ter  la structure : médaillon 60 au buste, bulle masquée avec bord et QUEUE (juste avant elle, hors mise en page),
     //           nom en serif or-vif, deux pastilles « Grave » « Critique »
+//   R13quater  la réplique du raid SERVIE en clé (back `back/s5-revue-du-jour` 1f54235c : `event_descriptor_i18n`
+//           = { key: "exception.raid.card.descriptor", params: {} }) : la forme G porte `key` ET `params` ; la clé connue
+//           du catalogue remplace la prose ; clé absente du catalogue ou champ absent ⇒ le repli actuel (la prose servie)
     [Category("EcranFile")]
     public class ExceptionsParleurPlayModeTests
     {
@@ -110,6 +114,33 @@ namespace MafiaCleanCity.Operational.Tests
             Transform p = b.Find("Pastilles");
             Assert.AreEqual("Grave", p.Find("Gravite/Lib").GetComponent<TextMeshProUGUI>().text);
             Assert.AreEqual("Critique", p.Find("Priorite/Lib").GetComponent<TextMeshProUGUI>().text);
+        }
+
+        [Test]
+        public void R13quater_LaRepliqueDuRaid_ServieEnCle_EtSonRepli()
+        {
+            const string cle = "exception.raid.card.descriptor";
+            ExceptionCardDto lue = JsonUtility.FromJson<ExceptionCardDto>(
+                "{\"exception_id\":\"r\",\"event_descriptor\":\"They turned the building over last night.\"," +
+                "\"event_descriptor_i18n\":{\"key\":\"" + cle + "\",\"params\":{}}}");
+            Assert.AreEqual(cle, lue.event_descriptor_i18n.key, "forme G : la clé est déclarée");
+            Assert.IsNotNull(lue.event_descriptor_i18n.@params, "forme G : `params` est déclaré (objet vide)");
+
+            ExceptionCardDto raid = Raid("They turned the building over last night.");
+            raid.event_descriptor_i18n = lue.event_descriptor_i18n;
+            Assert.AreEqual("« Patron — they turned the building over last night. »",
+                ExceptionQueueController.RepliqueDuPremier(raid), "clé inconnue du catalogue ⇒ la prose servie");
+
+            MafiaCleanCity.I18n.I18nCatalog.ChargerPourTest("fr", new Dictionary<string, string>
+            {
+                { cle, "Ils ont retourné le bâtiment cette nuit. J’ai pas de consigne pour ça." },
+            });
+            Assert.AreEqual("« Patron — ils ont retourné le bâtiment cette nuit. J’ai pas de consigne pour ça. »",
+                ExceptionQueueController.RepliqueDuPremier(raid), "la clé servie, résolue comme tout I18nRef");
+
+            raid.event_descriptor_i18n = null;
+            Assert.AreEqual("« Patron — they turned the building over last night. »",
+                ExceptionQueueController.RepliqueDuPremier(raid), "sans le champ : le repli actuel");
         }
     }
 }

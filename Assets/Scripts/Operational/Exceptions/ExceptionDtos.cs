@@ -53,7 +53,14 @@ namespace MafiaCleanCity.Operational.Exceptions
     /// il est **vide sur les 12 références mesurées**. Le jour où il portera quelque chose, un
     /// paramètre non substitué restera VISIBLE dans le texte (`{nom}`) — le résolveur est écrit
     /// pour ça. Déclaré ici plutôt que découvert à l'écran.</summary>
-    [Serializable] public class I18nRefDto { public string key; }
+    [Serializable] public class I18nRefDto { public string key; public I18nParamsVidesDto @params; }
+
+    /// <summary>⑨ — `params` d'une `I18nRef` de cette route, DÉCLARÉ pour que l'oracle des clés servies le compte (forme G) :
+    /// il est `{}` sur toutes les références mesurées (corps du 06/09 ; raid `exception.raid.card.descriptor`, back
+    /// `1f54235c` : `params: {}`). Aucun champ, donc rien à lire — le jour où un producteur y met une clé, la ligne explicite
+    /// de l'oracle (`…event_descriptor_i18n.params`) la montrera SERVIE NON DÉCLARÉE, et le résolveur laissera l'accolade
+    /// visible (`{nom}`) plutôt que de deviner.</summary>
+    [Serializable] public class I18nParamsVidesDto { }
 
     [Serializable]
     public class ExceptionCardDto
