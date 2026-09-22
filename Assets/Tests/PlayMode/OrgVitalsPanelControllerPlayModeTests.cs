@@ -78,8 +78,26 @@ namespace MafiaCleanCity.Shell.Tests
         {
             var panel = NewBarePanel();
             Assert.IsTrue(panel.CohesionDeclaredUnavailable, "Cohesion is EXPLICITLY declared unavailable (a value, not silence)");
-            Assert.IsTrue(panel.RenderedTexts.Any(t => t.Contains("Unavailable")),
-                "the rendered text carries the NAMED state, never just an absent 4th bar");
+
+            // ⛔ LA GARDE VISE LE TEXTE DE COHÉSION, PAS LE PANNEAU — rouge du créneau du 2026-09-22 (558289a0).
+            //    Elle cherchait « Unavailable » dans N'IMPORTE QUEL texte rendu. Le texte de cohésion est français depuis
+            //    a4b2afa6 (07/09) ; la garde ne restait verte que dans un MONDE DÉGÉNÉRÉ : un AUTRE texte du panneau portait
+            //    le mot (la chaleur, « Heat: Unavailable (…) »). Le jour où la chaleur a été traduite (8166447a), elle a rougi —
+            //    elle n'avait jamais regardé la cohésion.
+            // ⇒ Le prédicat est d'abord éprouvé sur ce monde dégénéré et sur ses voisins : il doit y être FAUX. C'est la
+            //   propriété (texte de cohésion absent, anglais, ou sans l'état nommé ⇒ rouge), pas un commit.
+            Assert.IsFalse(CohesionNommeeIndisponible(new[] { "Heat: Unavailable (not requested yet)", "Friction : —" }),
+                "monde dégénéré : un AUTRE texte du panneau porte l'état et la cohésion est ABSENTE — le prédicat doit être faux");
+            Assert.IsFalse(CohesionNommeeIndisponible(new[] { "Cohesion: Unavailable citywide" }),
+                "cohésion en ANGLAIS : le prédicat doit être faux (ruling « i18n partout » : le texte de l'atelier, en français)");
+            Assert.IsFalse(CohesionNommeeIndisponible(new[] { "Cohésion : moyenne" }),
+                "cohésion rendue SANS l'état nommé : le prédicat doit être faux");
+            Assert.IsTrue(CohesionNommeeIndisponible(new[] { "Chaleur : — (x)", "Cohésion : indisponible pour l'ensemble de la ville" }),
+                "contrôle positif : le texte de l'atelier satisfait le prédicat");
+
+            Assert.IsTrue(CohesionNommeeIndisponible(panel.RenderedTexts),
+                "the COHESION text carries the NAMED state (« indisponible »), never just an absent 4th bar — vus : [" +
+                string.Join(" | ", panel.RenderedTexts) + "]");
 
             int cohesionCitywideFields = OrgVitalsPanelController.CountCitywideFields(typeof(CohesionDto));
             Assert.AreEqual(0, cohesionCitywideFields, "CohesionDto has ZERO citywide-named fields (D5: no citywide aggregate exists)");
@@ -89,6 +107,12 @@ namespace MafiaCleanCity.Shell.Tests
                 "CAPACITY GUARD: the SAME oracle applied to heat finds >= 1 — proves the oracle CAN see a citywide " +
                 "field when one exists, so cohesion's 0 is a real absence, not a mistargeted probe");
         }
+
+        /// <summary>Le texte de COHÉSION du panneau (et lui seul) nomme l'état « indisponible ». Le texte servi par le bundle
+        /// (« Cohésion : indisponible (…) ») et le repli de l'atelier commencent tous deux par « Cohésion ».</summary>
+        private static bool CohesionNommeeIndisponible(System.Collections.Generic.IEnumerable<string> textes) =>
+            textes.Any(t => t != null && t.StartsWith("Cohésion")
+                            && t.IndexOf("indisponible", System.StringComparison.OrdinalIgnoreCase) >= 0);
 
         // C6-F3 (à travers l'enveloppe) — la barre Heat est alimentée par une VRAIE requête sur
         // GET /v1/city/district/:id/heat, lue via payload.data, et le bucket rendu ÉGALE le champ
