@@ -1143,8 +1143,12 @@ namespace MafiaCleanCity.Operational.Exceptions
             pile.childForceExpandWidth = true; pile.childForceExpandHeight = false;
             pile.childAlignment = TextAnchor.LowerCenter;
 
+            // `.ligne-soir{font-family:Georgia,serif; font-size:11.5px; color:var(--creme); text-shadow:0 1px 3px #000}` — E04′
+            // (trouvé en confrontant l'écart, 23/09) : rendue en linéale et en `TextSecondary`, c'était le reste du r1 M6 (le texte
+            // DIT passe aux empattements). L'ombre portée n'est pas reprise.
             ligneAmbiance = NouveauTexteMaquette(comptoirGo.transform, "LigneSoir", "",
-                                                 CssLigneSoir, TextSecondary);
+                                                 CssLigneSoir, Creme);
+            ligneAmbiance.font = DesignTokens.Current.hudSerifFont;
             ligneAmbiance.alignment = TextAlignmentOptions.Center;
 
             fileRoot = (RectTransform)NewUI("File", comptoirGo.transform).transform;
