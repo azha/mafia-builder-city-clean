@@ -12,7 +12,7 @@ Contrôles :
   3. le côté SERVI est recopié à l'octet : pour `DEFAUT_FR_DANS_EN`, la colonne fr == `FR_MESSAGES` ; pour `DEFAUT_EN_DANS_FR`,
      la colonne en == `EN_MESSAGES` (le côté proposé est l'autre colonne) ;
   4. placeholders identiques entre fr et en, et avec la valeur servie ;
-  5. le côté proposé n'est PAS égal au côté servi (sinon ce n'est pas une correction).
+  5. le côté proposé n'est PAS égal au côté servi (sinon ce n'est pas une correction) — sauf « RETIRER … » : clé orpheline, à retirer.
 Les registres sont lus PAR LEUR NOM (EN_MESSAGES vient d'abord dans le fichier). Contrôle positif : une clé retirée du paquet est vue.
 
 Usage : verifier-en-egal-fr.py <paquet.md> <marqueur de titre> <préfixe> [<préfixe> …] [--ref <sha back>]
@@ -52,7 +52,8 @@ for l in show(CLASSEMENT).split('\n'):
     if c.startswith('DEFAUT_') and k.startswith(tuple(prefixes)): classes[k] = c
 
 doc = open(paquet, encoding='utf-8').read()
-i = doc.index(marqueur); j = doc.find('\n## ', i + 1); sec = doc[i:j if j > 0 else len(doc)]
+i = doc.index('\n' + marqueur) + 1          # le marqueur en DÉBUT de ligne : il peut aussi être cité dans le texte
+j = doc.find('\n## ', i + 1); sec = doc[i:j if j > 0 else len(doc)]
 mien = {}
 for l in sec.split('\n'):
     if l.startswith('| `') and l.count('|') >= 5:
@@ -67,6 +68,8 @@ for k, (cl, fr, en) in mien.items():
     if cl != classes[k]: defauts.append(f'{k} : classe {cl} ≠ classement {classes[k]}')
     servi, prop, cote = (fr, en, FR.get(k)) if classes[k] == 'DEFAUT_FR_DANS_EN' else (en, fr, EN.get(k))
     if servi != cote: defauts.append(f'{k} : côté servi {servi!r} ≠ back {cote!r}')
+    if prop.startswith('RETIRER'):      # clé ORPHELINE (aucun demandeur mesuré) : on ne la traduit pas, on la retire
+        continue
     if prop == servi: defauts.append(f'{k} : la proposition égale la valeur servie')
     if not (ph(fr) == ph(en) == ph(FR.get(k, ''))): defauts.append(f'{k} : placeholders {ph(fr)} / {ph(en)} / servi {ph(FR.get(k, ""))}')
 temoin = dict(mien); temoin.pop(next(iter(temoin)))
