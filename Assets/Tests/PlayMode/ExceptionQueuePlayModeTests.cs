@@ -352,10 +352,10 @@ namespace MafiaCleanCity.Operational.Tests
 
             // Pending cards remain after B (teach_idle + raid_style) → the digit-free alerts note shows.
             Assert.IsTrue(dash.PendingExceptions.Length > 0, "seeded pending cards expected");
-            Assert.IsTrue(dash.RenderedTexts.Any(t => t.Contains("Exceptions waiting")), "pending alerts note missing");
+            Assert.IsTrue(dash.RenderedTexts.Any(t => t.Contains("Des exceptions attendent")), "pending alerts note missing");
 
             // Vocab row label is tracked; its value (Tier digit) is chrome — assert via the hook, not the corpus.
-            Assert.IsTrue(dash.RenderedTexts.Any(t => t == "Vocabulary"), "vocabulary row label missing");
+            Assert.IsTrue(dash.RenderedTexts.Any(t => t == "Palier"), "vocabulary row label missing");
             Assert.IsNotNull(dash.CurrentProgression);
             Assert.That(new[] { "LOCKED", "IN_PROGRESS", "UNLOCKED" }, Does.Contain(dash.CurrentProgression.progress_to_next),
                 $"progress_to_next '{dash.CurrentProgression.progress_to_next}' not in closed set");

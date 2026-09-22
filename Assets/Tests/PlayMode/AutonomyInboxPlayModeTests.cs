@@ -350,7 +350,7 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.IsTrue(dash.DashboardLoaded);
 
             Assert.IsTrue(dash.PendingAutonomyReports.Length > 0, "the seeded report (issue 2 undecided) must still be open");
-            Assert.IsTrue(dash.RenderedTexts.Any(t => t.Contains("Autonomy reports waiting")), "autonomy alerts note missing");
+            Assert.IsTrue(dash.RenderedTexts.Any(t => t.Contains("Des rapports d'autonomie attendent")), "autonomy alerts note missing");
             foreach (string t in dash.RenderedTexts)
                 Assert.IsFalse(Regex.IsMatch(t, @"(?<![A-Za-z])\d+(\.\d+)?(?![A-Za-z])"), $"raw scalar leaked client-side: '{t}'");
 

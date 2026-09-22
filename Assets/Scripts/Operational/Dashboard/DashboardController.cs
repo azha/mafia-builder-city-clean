@@ -386,24 +386,24 @@ namespace MafiaCleanCity.Operational
             // ---- Citywide heat band + escalation flag (REUSE the heat projection).
             if (CurrentHeat != null)
             {
-                AddStatusRow("Citywide heat", HeatLabel(CurrentHeat.citywide_bucket),
+                AddStatusRow("Chaleur de la ville", HeatLabel(CurrentHeat.citywide_bucket),
                     HeatGlyph(CurrentHeat.citywide_bucket), HeatAccent(CurrentHeat.citywide_bucket));
-                AddStatusRow("Escalation", CurrentHeat.escalated ? "Escalating" : "Steady",
+                AddStatusRow("Descente", CurrentHeat.escalated ? "en cours" : "rien en cours",
                     CurrentHeat.escalated ? "[!]" : "[=]",
                     CurrentHeat.escalated ? AccentSevere : AccentMild);
             }
             else
             {
                 // Heat is JWT-gated + tick-gated; if it isn't available, say so honestly (no fabrication).
-                AddStatusRow("Citywide heat", "Unavailable", "[?]", TextSecondary);
+                AddStatusRow("Chaleur de la ville", "—", "[?]", TextSecondary);
             }
 
             // ---- Phase-20: the vocabulary-tier funnel line (GET /v1/progression). The "Tier N" digit is
             //      intentional UI chrome (the locked-teaser technique) — the VALUE is kept out of the scan corpus.
             if (CurrentProgression != null)
             {
-                AddStatusRow("Vocabulary",
-                    $"Tier {CurrentProgression.vocabulary_tier} — {ProgressLabel(CurrentProgression.progress_to_next)}",
+                AddStatusRow("Palier",
+                    $"Palier {CurrentProgression.vocabulary_tier} — {ProgressLabel(CurrentProgression.progress_to_next)}",
                     "[*]", AccentMild, trackValue: false);
             }
 
@@ -420,7 +420,7 @@ namespace MafiaCleanCity.Operational
             headerText.text = "Patron";
             walletGlyphText.text = "[?]";
             walletGlyphText.color = TextSecondary;
-            walletBandText.text = "Wallet unavailable";
+            walletBandText.text = "—";
             walletBandText.color = TextSecondary;
             walletCaptionText.text = "Le portefeuille n'a pas répondu.";
             TrackText(headerText, headerText.text);
@@ -439,21 +439,21 @@ namespace MafiaCleanCity.Operational
             var notes = new List<string>();
             if (CurrentHeat != null)
             {
-                if (CurrentHeat.escalated) notes.Add("Heat escalating citywide");
+                if (CurrentHeat.escalated) notes.Add("Descente en cours en ville");
                 string cb = CurrentHeat.citywide_bucket;
-                if (cb == "BURNING") notes.Add("Citywide heat BURNING");
-                else if (cb == "HOT") notes.Add("Citywide heat HOT");
+                if (cb == "BURNING") notes.Add("La ville brûle");
+                else if (cb == "HOT") notes.Add("La ville est chaude");
             }
-            if (PendingExceptions != null && PendingExceptions.Length > 0) notes.Add("Exceptions waiting");
-            if (PendingAutonomyReports != null && PendingAutonomyReports.Length > 0) notes.Add("Autonomy reports waiting");
+            if (PendingExceptions != null && PendingExceptions.Length > 0) notes.Add("Des exceptions attendent");
+            if (PendingAutonomyReports != null && PendingAutonomyReports.Length > 0) notes.Add("Des rapports d'autonomie attendent");
 
-            string line = notes.Count > 0 ? string.Join("  •  ", notes) : "No active alerts";
+            string line = notes.Count > 0 ? string.Join("  •  ", notes) : "Rien à signaler";
             Color accent = notes.Count > 0 ? AccentSevere : AccentMild;
             string glyph = notes.Count > 0 ? "[!]" : "[ok]";
 
             string label = NewSectionLabel(statusRows, "ALERTES");
             TrackText(null, label);
-            AddStatusRow("Alerts", line, glyph, accent);
+            AddStatusRow("Alertes", line, glyph, accent);
         }
 
         private void BuildNav()
@@ -464,11 +464,11 @@ namespace MafiaCleanCity.Operational
             string label = NewSectionLabel(navBar, "ALLER À");
             TrackText(null, label);
 
-            AddNavButton(navBar, "City Map", OpenCityMap);
-            AddNavButton(navBar, "Building Card", OpenBuildingCard);
+            AddNavButton(navBar, "La carte", OpenCityMap);
+            AddNavButton(navBar, "La fiche", OpenBuildingCard);
             AddNavButton(navBar, "Filière", OpenPipeline);
-            AddNavButton(navBar, "Exceptions", OpenExceptions);
-            AddNavButton(navBar, "Autonomy", OpenAutonomy);
+            AddNavButton(navBar, "L'ardoise", OpenExceptions);
+            AddNavButton(navBar, "Les télégrammes", OpenAutonomy);
         }
 
         // ----------------------------------------------------- band → label/glyph

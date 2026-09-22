@@ -270,17 +270,17 @@ namespace MafiaCleanCity.Operational.Tests
             string expectHeat = HeatLabelFor(liveHeatBand);
             Assert.IsTrue(texts.Any(t => t == expectHeat),
                 $"rendered citywide heat band label '{expectHeat}' (live={liveHeatBand}) present in {Dump(texts)}");
-            Assert.IsTrue(texts.Any(t => t == "Citywide heat"), "citywide heat row label rendered");
-            Assert.IsTrue(texts.Any(t => t == "Escalation"), "escalation row label rendered");
-            Assert.IsTrue(texts.Any(t => t == (liveEscalated ? "Escalating" : "Steady")),
+            Assert.IsTrue(texts.Any(t => t == "Chaleur de la ville"), "citywide heat row label rendered");
+            Assert.IsTrue(texts.Any(t => t == "Descente"), "escalation row label rendered");
+            Assert.IsTrue(texts.Any(t => t == (liveEscalated ? "en cours" : "rien en cours")),
                 $"escalation flag rendered (live escalated={liveEscalated})");
 
             // A minimal ALERTS line is present (derived strictly from the heat projection).
-            Assert.IsTrue(texts.Any(t => t == "Alerts"), "alerts row label rendered");
+            Assert.IsTrue(texts.Any(t => t == "Alertes"), "alerts row label rendered");
 
             // 4) nav buttons exist.
-            Assert.IsTrue(texts.Any(t => t == "City Map"), "City Map nav button rendered");
-            Assert.IsTrue(texts.Any(t => t == "Building Card"), "Building Card nav button rendered");
+            Assert.IsTrue(texts.Any(t => t == "La carte"), "City Map nav button rendered");
+            Assert.IsTrue(texts.Any(t => t == "La fiche"), "Building Card nav button rendered");
             Assert.IsTrue(texts.Any(t => t == "Filière"), "le bouton de navigation Filière est rendu (libellé FR — ruling « i18n partout »)");
 
             // 5) NO raw scalar client-side: every rendered string is a band/label/glyph/bool —
