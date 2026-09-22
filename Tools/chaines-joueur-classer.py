@@ -98,6 +98,8 @@ VERDICTS = [
  (B, "Le même lot",                             0, "CLOS lot C 22/09 (㊵ la filière) — était : « lot » = lot de livraison du programme"),
  (B, "la seule grandeur servie",                0, "CLOS lot C 22/09 (㊵ la filière) — était : « grandeur servie »"),
  (B, "n'expose pas encore son vendeur",         0, "PÉRIMÉE, RE-MESURÉE 22/09 : disparue — DistrictInterior:2235 dit désormais « Collecte indisponible : aucun vendeur affecté. » (:2396), hors classe"),
+ (B, "GET /v1/world/districts indisponible",     0, "CLOS lot C 22/09 (㉚:197) — atteignait le joueur en SOUS-TITRE de la panne via une variable (DerniereErreur, :612), donc invisible à chaines-joueur.py qui ne suit que les littéraux passés directement à un seam ; la panne se dit désormais avec la formule maison"),
+ (B, "aucun des 18 districts ne porte de bâtiment", 0, "CLOS lot C 22/09 (㉚:228) — même chemin (DerniereErreur) ; remplacé par l'état RÉEL lu dans me/buildings : « Rien à commander — vous ne tenez pas encore de labo. » / « Vous ne tenez encore aucun site. »"),
  (B, "vérifié serveur",                         0, "CLOS lot C 22/09 (② la fiche du bâtiment) — était : « vérifié serveur »"),
  (B, "Scène indisponible pour ce quart",        0, "CLOS lot C 22/09 (① l'intérieur du district) — était : « Scène » + « quart horaire »"),
  (B, "à ouvrir depuis la fiche opérationnelle", 0, "CLOS lot C 22/09 (① l'intérieur du district) — était : renvoie à un autre écran par son nom interne"),

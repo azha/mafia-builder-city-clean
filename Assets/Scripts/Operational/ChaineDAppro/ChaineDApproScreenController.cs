@@ -167,67 +167,49 @@ namespace MafiaCleanCity.Operational
             }
         }
 
-        // ═══ §4/§5 — Découverte du bâtiment ═════════════════════════════════════════════════════
+        // ═══ §4/§5 — Découverte du labo ═══════════════════════════════════════════════════════════
         //
-        // ⛔ AUCUNE ROUTE NE LISTE LES BÂTIMENTS DU JOUEUR (mesuré — la note back du district le
-        // dit aussi). Deux chemins possibles, per le brief : `supply-chain/graph` (un seul appel,
-        // MAIS le statut de population de `legs[]` sur ce compte n'a jamais été mesuré — et
-        // `nodes`, LUI, est confirmé VIDE, donc bâtir la découverte sur le même graphe qui sert
-        // ailleurs à PROUVER l'absence de données serait fragile par construction) ; ou balayer
-        // les districts.
-        // ⇒ TRANCHÉ : balayage districts → interior, REUSE de `MafiaCleanCity.CityMap.
-        // WorldApiClient`/`CityProjectionsClient` (DRY — pas de second client HTTP réécrit pour la
-        // même route). `DistrictDto.control_state` porte `PLAYER_HELD` : c'est le district que le
-        // joueur possède, donc celui où vit son kit de départ (labo compris — Nestor : « Sans
-        // pyralin, je ne rallume pas », donc un labo existe forcément sur un compte qui a
-        // débloqué cet écran).
-        // COÛT : 1 appel `GET /v1/world/districts` (sans auth) + 1 appel `GET .../interior` PAR
-        // district PLAYER_HELD rencontré, dans l'ordre, jusqu'au premier qui porte au moins un
-        // bâtiment. Cas courant mesuré ailleurs dans ce dépôt (un compte frais n'a qu'UN district
-        // possédé) : 2 appels. Pire cas : 1 + N si plusieurs districts sont possédés et que les
-        // premiers sont vides de bâtiments (non observé, mais non exclu).
+        // ★ UN APPEL : `GET /v1/me/buildings` liste les bâtiments du joueur (mesuré 2026-09-22 : 200,
+        // 17 bâtiments sur 4 districts pour le compte de démo ; 4 pour un compte frais, dont un `lab`
+        // — corps commité `Tools/juge-donnees/police/pont-district-2026-09-22/GET_me_buildings.json`).
+        // Avant, cet écran tenait pour mesuré qu'aucune route ne les listait et balayait les 18
+        // intérieurs de district : la route existait (`player-buildings.controller.ts:89`) et le
+        // client l'appelait 0 fois. Même famille que `safehouses` le 07/09.
+        // ⛔ ET IL PRENAIT LE PREMIER BÂTIMENT VENU : sur le compte de démo, le premier district
+        // scanné (1) porte un hub de distribution — la chaîne d'appro s'ouvrait donc sur un hub, pas
+        // sur un labo. Ici on cherche ce qui CUISINE (`lab`, `specialized_lab`, domaine
+        // `building_operational_type` à 12 membres) ; sans labo, l'écran le dit dans les mots de
+        // l'atelier (22/09), et sans aucun site aussi. Une panne réseau ne sort pas : la formule
+        // maison de `RendreEtatIndisponible` la dit, l'erreur technique va au journal.
         private IEnumerator DecouvrirBuildingId(Action<string> onOk, Action<string> onErr)
         {
-            var world = new WorldApiClient { BaseUrl = baseUrl };
-            List<DistrictDto> districts = null;
-            string errDistricts = null;
-            yield return world.GetDistricts(d => districts = d, e => errDistricts = e);
-            if (districts == null)
+            var mes = new MesBatimentsClient { BaseUrl = baseUrl };
+            BatimentPossedeDto[] possedes = null;
+            long codePanne = 0; string messagePanne = null;
+            yield return mes.Lire(token, bs => possedes = bs, (c, m) => { codePanne = c; messagePanne = m; });
+            if (possedes == null)
             {
-                onErr?.Invoke($"GET /v1/world/districts indisponible : {errDistricts}");
+                Debug.LogWarning($"[㉚] me/buildings indisponible : {codePanne} {messagePanne}");
+                onErr?.Invoke(null);   // null = panne : le sous-titre retombe sur « Réessayez dans un instant. »
                 yield break;
             }
-
-            var proj = new CityProjectionsClient { BaseUrl = baseUrl };
-            foreach (DistrictDto d in districts)
+            if (possedes.Length == 0)
             {
-                // ⛔ PAS DE FILTRE SUR `control_state` — mesuré le 2026-09-03 sur la pile de dev :
-                //    les 18 districts servis sont TOUS `UNCONTESTED`, aucun n'est `PLAYER_HELD`.
-                //    Le filtre écartait donc la totalité de la liste, la découverte ne trouvait
-                //    jamais rien, et l'écran restait vide en 20 s sans poser d'erreur — la capture
-                //    a rendu « chargement NON abouti · DerniereErreur=null ». *Un filtre qui ne
-                //    laisse rien passer ne se distingue pas d'une absence de données.*
-                //    Le seul critère qui discrimine vraiment est celui d'en dessous : ce district
-                //    porte-t-il au moins UN bâtiment du joueur ? `interior` est scopé au porteur du
-                //    jeton, donc sa liste `buildings` EST la réponse. `control_state` décrit qui
-                //    tient le district au sens du conflit, pas qui y possède un mur.
-
-                DistrictInteriorDto interior = null;
-                long codeInterior = 0;
-                yield return proj.Interior(d.id, token, i => interior = i, c => codeInterior = c);
-                if (interior != null && interior.buildings != null && interior.buildings.Length > 0)
-                {
-                    // Premier bâtiment du district possédé — pas de filtre sur `operational_type`
-                    // (12 membres back, jamais mesurés en entier ici) : filtrer sur un type précis
-                    // reviendrait à deviner lequel porte le labo. La route `precursors` elle-même
-                    // dira si CE bâtiment ne consomme rien (voir `RendreEtatIndisponible`).
-                    onOk?.Invoke(interior.buildings[0].building);
-                    yield break;
-                }
+                onErr?.Invoke(Libelle.De("appro", "etat", "Vous ne tenez encore aucun site."));
+                yield break;
             }
-            onErr?.Invoke("aucun des 18 districts ne porte de bâtiment pour ce compte — la " +
-                          "prémisse de cet écran (un kit de départ possédé) ne tient pas ici");
+            foreach (BatimentPossedeDto b in possedes)
+            {
+                if (b == null || string.IsNullOrEmpty(b.building) || !EstUnLabo(b.operational_type)) continue;
+                onOk?.Invoke(b.building);
+                yield break;
+            }
+            onErr?.Invoke(Libelle.De("appro", "etat", "Rien à commander — vous ne tenez pas encore de labo."));
         }
+
+        /// <summary>Les deux types qui cuisinent, dans le domaine `building_operational_type`.</summary>
+        private static bool EstUnLabo(string operationalType) =>
+            operationalType == "lab" || operationalType == "specialized_lab";
 
         // ═══ Chargement ══════════════════════════════════════════════════════════════════════
 
@@ -245,7 +227,7 @@ namespace MafiaCleanCity.Operational
             if (renduExpliciteDemande) yield break;   // un test a rendu pendant l'attente : on n'écrase pas
             if (string.IsNullOrEmpty(buildingId))
             {
-                DerniereErreur = errBuilding ?? "découverte du bâtiment : échec";
+                DerniereErreur = errBuilding;   // null = panne : RendreEtatIndisponible dit « Réessayez dans un instant. »
                 RendreEtatIndisponible();
                 yield break;
             }

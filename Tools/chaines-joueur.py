@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 """Extrait la POPULATION des chaînes réellement affichées au joueur par le client Unity.
 
+⚠️ LIMITE (mesurée 22/09 sur ㉚) : il ne suit que les littéraux passés DIRECTEMENT à un seam. Une chaîne
+qui atteint le joueur via une variable (`DerniereErreur` affichée en sous-titre, :612) lui échappe —
+deux phrases de dépôt sont passées ainsi ; elles sont épinglées à la main dans le cliquet.
+
 ⛔ CE QUE CET OUTIL EST, ET CE QU'IL N'EST PAS. Il EXTRAIT. Il ne CLASSE pas.
 « Cette phrase parle-t-elle du SYSTÈME au lieu de parler AU joueur ? » est un jugement
 de langue qui ne se met pas en motif. Extraire et filtrer dans la même passe interdit de
