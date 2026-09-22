@@ -27,14 +27,61 @@ namespace MafiaCleanCity.Operational.Tests
     public class ChaineDApproScreenPlayModeTests
     {
         private GameObject hostGo;
+        private HashSet<int> ecransAvant = new HashSet<int>();
+
+        // ⛔ TD-576, LA MÊME CLASSE (22/09) — le contrôleur CHARGE PAR LE RÉSEAU (`Charger()`), et le TearDown le
+        // détruisait en `Destroy` DIFFÉRÉ : il survivait une frame au test, sa coroutine en vol. Il n'écrit aucun
+        // `LogError`, donc son sursis n'avait encore accusé personne — c'est exactement la forme qui a produit le
+        // rouge d'Ecran9, en silence. ⇒ `DestroyImmediate`, et la garde de sortie ci-dessous.
+        private static IEnumerable<ChaineDApproScreenController> EcransVivants() =>
+            Object.FindObjectsByType<ChaineDApproScreenController>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+
+        /// <summary>Les écrans nés APRÈS le relevé du `[SetUp]` et encore vivants (un résidu d'une autre classe
+        /// est dans le relevé : il n'accuse pas celle-ci).</summary>
+        private List<string> Survivants()
+        {
+            var l = new List<string>();
+            foreach (var e in EcransVivants())
+                if (!ecransAvant.Contains(e.GetInstanceID())) l.Add(e.gameObject.name);
+            return l;
+        }
+
+        [SetUp]
+        public void ReleverLesEcrans()
+        {
+            ecransAvant = new HashSet<int>();
+            foreach (var e in EcransVivants()) ecransAvant.Add(e.GetInstanceID());
+        }
 
         [TearDown]
         public void TearDown()
         {
             GameObject reste = GameObject.Find("ChaineDApproRoot");
             while (reste != null) { Object.DestroyImmediate(reste); reste = GameObject.Find("ChaineDApproRoot"); }
-            if (hostGo != null) Object.Destroy(hostGo);
+            if (hostGo != null) Object.DestroyImmediate(hostGo);
             hostGo = null;
+
+            // ⛔ GARDE DE SORTIE : zéro écran né pendant ce test encore vivant. Rouge ICI, le test FAUTIF est nommé.
+            List<string> survivants = Survivants();
+            Assert.IsEmpty(survivants, "TD-576 : écran(s) orphelin(s) en sortie de test — " +
+                string.Join(", ", survivants) + ". Un montage hors de `hostGo` survit au TearDown.");
+        }
+
+        /// <summary>⛔ CONTRÔLE POSITIF de la garde de sortie : un écran monté hors de `hostGo` est NOMMÉ, et plus
+        /// rien une fois détruit. Hôte INACTIF : ni `Awake` ni `Start`, aucune requête.</summary>
+        [Test]
+        public void LaGardeDeSortie_NommeUnEcranOrphelin()
+        {
+            var orphelin = new GameObject("EcranOrphelinVolontaire");
+            orphelin.SetActive(false);
+            orphelin.AddComponent<ChaineDApproScreenController>();
+            try
+            {
+                CollectionAssert.Contains(Survivants(), "EcranOrphelinVolontaire",
+                    "la garde ne voit pas un écran monté hors de `hostGo` : elle ne mordrait jamais");
+            }
+            finally { Object.DestroyImmediate(orphelin); }
+            CollectionAssert.IsEmpty(Survivants(), "détruit en immédiat, il ne doit plus être compté");
         }
 
         /// <summary>La racine RÉELLE de l'écran n'est PAS `hostGo` : hors shell, le contrôleur
