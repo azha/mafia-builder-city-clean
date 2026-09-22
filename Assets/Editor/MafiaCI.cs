@@ -353,7 +353,14 @@ public static class MafiaCI
                           "rendu après elle : la suivante est jugée sur ses propres gestes.");
             else
                 Debug.Log("MafiaCI: catalogue i18n rendu en sortie de CHAQUE classe (0 survivant).");
-            EditorApplication.Exit(failed > 0 || tronquee || filtreVide || catalogueSurvivant.Count > 0 ? 1 : 0);
+            // ⛔ LE CODE DE SORTIE EST AUSSI IMPRIMÉ, parce que le harnais ne le VOIT PAS : quand son chien de garde tue
+            //    l'éditeur après le marqueur de fin, il relit `failed=` et non ce code — une suite tronquée, un filtre vide
+            //    ou un catalogue survivant sortaient donc RC=0 par ce chemin (mesuré le 23/09 avec la sonde du catalogue).
+            //    `verdict_log` lit désormais cette ligne ; son absence (anciens journaux) garde le verdict d'avant.
+            int code = failed > 0 || tronquee || filtreVide || catalogueSurvivant.Count > 0 ? 1 : 0;
+            Debug.Log($"MafiaCI: VERDICT code={code} (failed={failed} tronquee={(tronquee ? 1 : 0)} " +
+                      $"filtreVide={(filtreVide ? 1 : 0)} catalogueSurvivant={catalogueSurvivant.Count})");
+            EditorApplication.Exit(code);
         }
 
         // ⛔⛔ UNE LIGNE PAR TEST, ET CE N'EST PAS DU CONFORT (mesuré 2026-09-02).

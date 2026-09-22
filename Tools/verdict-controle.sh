@@ -67,7 +67,21 @@ MafiaCI: RunPlayModeTests finished — passed=13 failed=0
   test log: le harnais doit détecter "Aborting batchmode due to failure:" en début de ligne
 L
 
+essai "VERDICT code=0 avec failed=0 reste vert" 0 1 1 137 <<'L'
+MafiaCI: RunPlayModeTests finished — passed=13 failed=0
+MafiaCI: VERDICT code=0 (failed=0 tronquee=0 filtreVide=0 catalogueSurvivant=0)
+L
+essai "la phrase VERDICT dans la SORTIE D'UN TEST ne mord pas" 0 1 1 0 <<'L'
+MafiaCI: RunPlayModeTests finished — passed=13 failed=0
+  test log: un journal qui cite "MafiaCI: VERDICT code=1" au milieu d'une ligne
+L
+
 echo "— ce qui doit désormais ROUGIR (contrôle positif : c'était RC=0)"
+essai "catalogue survivant : failed=0 mais VERDICT code=1" 1 1 1 137 <<'L'
+MafiaCI: RunPlayModeTests finished — passed=1 failed=0
+MafiaCI: ⛔ CATALOGUE i18n SURVIVANT en sortie de 1 classe(s) : [SondeFuiteCataloguePlayModeTests]
+MafiaCI: VERDICT code=1 (failed=0 tronquee=0 filtreVide=0 catalogueSurvivant=1)
+L
 essai "classe d'executeMethod introuvable" 3 1 1 0 <<'L'
 Aborting batchmode due to failure: executeMethod class 'MafiaCI.Absent' could not be found.
 Internal_EditorApplicationQuit
@@ -155,4 +169,4 @@ Internal_EditorApplicationQuit
 unset SCENARIO_CONSOLE
 
 echo
-if [[ $ko == 0 ]]; then echo "✅ verdict : $n/$n — 14 sur la fonction, 5 sur le harnais entier ; 3 faux verts fermés, aucun code existant modifié"; else echo "⛔ verdict : au moins un cas faux"; exit 1; fi
+if [[ $ko == 0 ]]; then echo "✅ verdict : $n/$n — 17 sur la fonction, 5 sur le harnais entier ; 4 faux verts fermés (dont le VERDICT de MafiaCI, 23/09), aucun code existant modifié"; else echo "⛔ verdict : au moins un cas faux"; exit 1; fi

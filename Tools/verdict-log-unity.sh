@@ -63,6 +63,10 @@ verdict_log(){
   if [[ "$wd" == 1 ]]; then
     if grep -qE 'MafiaCI: RunPlayModeTests finished' "$f" 2>/dev/null; then
       if grep -qE 'RunPlayModeTests finished — passed=[0-9]+ failed=0( |$)' "$f" 2>/dev/null; then rc=0; else rc=1; fi
+      # ⛔ LE VERDICT DE MAFIACI PRIME SUR `failed=0` (23/09) : suite tronquée, filtre vide ou catalogue i18n survivant
+      #    sortent en code 1 de MafiaCI, mais le chien de garde tue l'éditeur et ce code n'arrivait jamais ici.
+      #    Ancrée en début de ligne ; absente (journal antérieur) ⇒ verdict inchangé.
+      if [[ "$rc" == 0 ]] && grep -qE '^MafiaCI: VERDICT code=[1-9]' "$f" 2>/dev/null; then rc=1; fi
     elif [[ "$em" == 1 ]]; then
       # ⛔ LE CAS QUI RENDAIT 0. `-executeMethod` demandé, l'éditeur a quitté, et AUCUNE trace que la
       #    méthode ait fini son travail. Comme `-quit` n'a jamais été passé sur ce chemin, ce quit
