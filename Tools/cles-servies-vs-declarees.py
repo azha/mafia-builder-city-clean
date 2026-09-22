@@ -29,12 +29,29 @@ import json, pathlib, re, sys, argparse, collections
 
 RACINE = pathlib.Path(__file__).resolve().parent.parent
 
+# ⛔ APPARIEMENTS EXPLICITES — (DTO, chemin de clés dans la notation de ce rapport : `<nom du fichier>.<clé>[].<clé>…`).
+# Le recouvrement ne suffit pas, mesuré le 2026-09-22 sur la classe même qu'il existe pour attraper :
+#   · `GET /v1/me/buildings` sert `name_i18n.params` avec {enseigne, district, block} sur 16 bâtiments et {…, rang} sur 1 ;
+#   · le DTO qui le DÉSÉRIALISE est `NomDeBatimentParamsDto` (ShellContracts), qui ne déclarait pas `rang` (7d2ebcde le lisait :
+#     typecheck ROUGE, correctif 16cabe79) ;
+#   · la descente automatique ne lit que le PREMIER objet d'une liste (3 clés), et saute les objets de moins de 4 clés ;
+#   · et même sans ces deux angles morts, le recouvrement aurait choisi `BuildingNameParamsDto` (Operational, qui déclare
+#     `rang` : 4/4 contre 3/4) et répondu « aucun écart ». *Apparier par ressemblance apparie ce qui se ressemble.*
+# ⇒ Une ligne ici = un couple (DTO, corps) énoncé par qui SAIT quel type désérialise quelle route. Elle lit l'UNION des clés
+#   de TOUS les objets au bout du chemin, sans plancher de taille ; un DTO ou un corps introuvable la rend ⛔ VIDE, jamais verte.
+APPARIEMENTS = [
+    ("NomDeBatimentParamsDto", "GET_me_buildings.buildings[].name_i18n.params"),   # forme G de ㉝, 16cabe79
+]
+
 
 def champs_des_dto(racine):
     """nom de classe -> ensemble des champs publics déclarés (ceux que JsonUtility peuple)."""
     out = {}
     decl = re.compile(r'\bclass\s+(\w+)\b')
-    champ = re.compile(r'^\s*public\s+(?:[\w\.\[\]<>]+)\s+(\w+)\s*;', re.M)
+    # ⛔ PAS D'ANCRE EN DÉBUT DE LIGNE : l'ancre `^\s*public` rendait invisibles les DTO écrits sur UNE ligne
+    # (`public class X { public string a; public string b; }`) — dont `NomDeBatimentParamsDto`, le DTO de la forme G de ㉝.
+    # Mesuré le 2026-09-22 par l'appariement explicite, qui l'a déclaré « introuvable » au lieu de passer vert.
+    champ = re.compile(r'(?<![\w.])public\s+(?:[\w\.\[\]<>]+)\s+(\w+)\s*;')
     for p in (racine / 'Assets' / 'Scripts').rglob('*.cs'):
         s = p.read_text(encoding='utf-8', errors='replace')
         for m in decl.finditer(s):
@@ -54,9 +71,8 @@ def champs_des_dto(racine):
     return out
 
 
-def corps_figes(racine):
-    """(chemin, provenance, chemin de clé, ensemble de clés) pour chaque objet d'un corps réel."""
-    res = []
+def donnees_figees(racine):
+    """(chemin, provenance, données) pour chaque corps réel figé sous `Tools/`."""
     for p in sorted((racine / 'Tools').rglob('*.json')):
         try:
             d = json.loads(p.read_text(encoding='utf-8'))
@@ -68,6 +84,32 @@ def corps_figes(racine):
             continue
         data = corps.get('payload', {}).get('data') if isinstance(corps, dict) else None
         data = data or (corps.get('data') if isinstance(corps, dict) else None) or corps
+        yield p, prov, data
+
+
+def cles_au_chemin(data, segments):
+    """(nombre d'objets, UNION de leurs clés) au bout du chemin — TOUS les éléments de chaque liste traversée."""
+    courants = [data]
+    for seg in segments:
+        liste = seg.endswith('[]')
+        cle = seg[:-2] if liste else seg
+        suivants = []
+        for o in courants:
+            if isinstance(o, dict) and cle in o:
+                v = o[cle]
+                if liste and isinstance(v, list): suivants.extend(v)
+                elif not liste: suivants.append(v)
+        courants = suivants
+    objets = [o for o in courants if isinstance(o, dict)]
+    ks = set()
+    for o in objets: ks |= set(o)
+    return len(objets), ks
+
+
+def corps_figes(racine):
+    """(chemin, provenance, chemin de clé, ensemble de clés) pour chaque objet d'un corps réel."""
+    res = []
+    for p, prov, data in donnees_figees(racine):
 
         def descendre(o, chemin):
             if isinstance(o, list):
@@ -89,7 +131,7 @@ def corps_figes(racine):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--dto', action='append', default=[],
-                    help='NomDto=chemin.de.cles — apparie explicitement un DTO à un corps')
+                    help='NomDto=fichier.cle[].cle — apparie explicitement un DTO à un corps (s\'ajoute à APPARIEMENTS)')
     ap.add_argument('--verifier', action='store_true')
     a = ap.parse_args()
 
@@ -122,7 +164,42 @@ def main():
         if fantomes:
             trouves[(best, 'déclaré, non servi', fantomes)].append((p, prov, chemin))
 
-    ecarts = sum(1 for (_, sens, _) in trouves if sens.startswith('SERVI'))
+    # Les appariements EXPLICITES — lus après le recouvrement, et imprimés même sans écart : une ligne qui ne dit rien
+    # ne se distingue pas d'une ligne qui n'a rien lu.
+    explicites = list(APPARIEMENTS)
+    for spec in a.dto:
+        nom, _, chemin = spec.partition('=')
+        explicites.append((nom.strip(), chemin.strip()))
+    vides = 0
+    lignes_explicites = []
+    for nom, chemin in explicites:
+        fichier, _, reste = chemin.partition('.')
+        segments = [x for x in reste.split('.') if x]
+        lus = [(p, prov) + cles_au_chemin(data, segments)
+               for p, prov, data in donnees_figees(RACINE) if p.stem == fichier]
+        lus = [x for x in lus if x[2] > 0]
+        if nom not in dtos or not lus:
+            vides += 1
+            quoi = f"DTO « {nom} » introuvable dans Assets/Scripts" if nom not in dtos else f"aucun objet lu sous « {chemin} »"
+            lignes_explicites.append(f"⛔ EXPLICITE VIDE  {nom} ← {chemin} : {quoi} — l'appariement ne mesure rien")
+            continue
+        f = dtos[nom]
+        for p, prov, n, ks in lus:
+            manquants, fantomes = tuple(sorted(ks - f)), tuple(sorted(f - ks))
+            if manquants:
+                trouves[(f'{nom} (explicite)', 'SERVI, NON DÉCLARÉ', manquants)].append((p, prov, chemin))
+            if fantomes:
+                trouves[(f'{nom} (explicite)', 'déclaré, non servi', fantomes)].append((p, prov, chemin))
+            lignes_explicites.append(
+                f"{'⛔' if manquants else '✓ '} explicite {nom} ← {chemin} : {n} objet(s), clés servies {sorted(ks)}, "
+                f"déclarées {sorted(f)} · servi non déclaré {list(manquants)} · déclaré non servi {list(fantomes)} "
+                f"· {p.relative_to(RACINE)}")
+    for l in lignes_explicites:
+        print(l)
+    if lignes_explicites:
+        print()
+
+    ecarts = sum(1 for (_, sens, _) in trouves if sens.startswith('SERVI')) + vides
     for (nom, sens, cles), lieux in sorted(trouves.items(), key=lambda kv: (-len(kv[1]), kv[0][0])):
         p, prov, chemin = lieux[0]
         date = (prov or {}).get('date', 'date inconnue')
