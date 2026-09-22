@@ -1,0 +1,3255 @@
+{
+ "Assets/Scripts/Account/Profile/ProfileScreenController.cs": [
+  {
+   "ligne": 150,
+   "methode": "Rendre",
+   "cle": "profil.bloc.aucun_profil",
+   "litteral": "Aucun profil.",
+   "servie": true
+  },
+  {
+   "ligne": 151,
+   "methode": "Rendre",
+   "cle": "profil.bloc.le_profil_n_a_pas_repondu",
+   "litteral": "Le profil n'a pas répondu.",
+   "servie": true
+  }
+ ],
+ "Assets/Scripts/Account/Settings/SettingsScreenController.cs": [
+  {
+   "ligne": 127,
+   "methode": "Rendre",
+   "cle": "reglages.bloc.aucun_reglage",
+   "litteral": "Aucun réglage.",
+   "servie": true
+  },
+  {
+   "ligne": 128,
+   "methode": "Rendre",
+   "cle": "reglages.bloc.les_reglages_n_ont_pas_repondu",
+   "litteral": "Les réglages n'ont pas répondu.",
+   "servie": true
+  }
+ ],
+ "Assets/Scripts/CityMap/CityMapController.cs": [
+  {
+   "ligne": 494,
+   "methode": "BuildListeEnColonnes",
+   "cle": "carte.bloc.carte_de_la_ville_districts",
+   "litteral": "CARTE DE LA VILLE — Districts",
+   "servie": true
+  },
+  {
+   "ligne": 520,
+   "methode": "BuildListeEnColonnes",
+   "cle": "carte.bloc.rive_nord",
+   "litteral": "Rive nord",
+   "servie": true
+  },
+  {
+   "ligne": 521,
+   "methode": "BuildListeEnColonnes",
+   "cle": "carte.bloc.rive_sud",
+   "litteral": "Rive sud",
+   "servie": true
+  },
+  {
+   "ligne": 546,
+   "methode": "UpdateToggleLabel",
+   "cle": "carte.bloc.chaleur_affichee",
+   "litteral": "Chaleur : affichée",
+   "servie": true
+  },
+  {
+   "ligne": 546,
+   "methode": "UpdateToggleLabel",
+   "cle": "carte.bloc.chaleur_masquee",
+   "litteral": "Chaleur : masquée",
+   "servie": true
+  },
+  {
+   "ligne": 860,
+   "methode": "BuildLegend",
+   "cle": "carte.bloc.libre",
+   "litteral": "Libre",
+   "servie": true
+  },
+  {
+   "ligne": 861,
+   "methode": "BuildLegend",
+   "cle": "carte.bloc.dispute",
+   "litteral": "Disputé",
+   "servie": true
+  },
+  {
+   "ligne": 862,
+   "methode": "BuildLegend",
+   "cle": "carte.bloc.a_vous",
+   "litteral": "À vous",
+   "servie": true
+  },
+  {
+   "ligne": 863,
+   "methode": "BuildLegend",
+   "cle": "carte.bloc.rival",
+   "litteral": "Rival",
+   "servie": true
+  }
+ ],
+ "Assets/Scripts/CityMap/DistrictInteriorScreenController.cs": [
+  {
+   "ligne": 1724,
+   "methode": "TypeLabel",
+   "cle": "district.type_batiment.laboratoire",
+   "litteral": "Laboratoire",
+   "servie": true
+  },
+  {
+   "ligne": 1725,
+   "methode": "TypeLabel",
+   "cle": "district.type_batiment.cache",
+   "litteral": "Cache",
+   "servie": true
+  },
+  {
+   "ligne": 1726,
+   "methode": "TypeLabel",
+   "cle": "district.type_batiment.commerce_ecran",
+   "litteral": "Commerce-écran",
+   "servie": true
+  },
+  {
+   "ligne": 1727,
+   "methode": "TypeLabel",
+   "cle": "district.type_batiment.planque",
+   "litteral": "Planque",
+   "servie": true
+  },
+  {
+   "ligne": 1728,
+   "methode": "TypeLabel",
+   "cle": "district.type_batiment.point_de_vente",
+   "litteral": "Point de vente",
+   "servie": true
+  },
+  {
+   "ligne": 1729,
+   "methode": "TypeLabel",
+   "cle": "district.type_batiment.laboratoire_specialise",
+   "litteral": "Laboratoire spécialisé",
+   "servie": true
+  },
+  {
+   "ligne": 1730,
+   "methode": "TypeLabel",
+   "cle": "district.type_batiment.raffinerie",
+   "litteral": "Raffinerie",
+   "servie": true
+  },
+  {
+   "ligne": 1731,
+   "methode": "TypeLabel",
+   "cle": "district.type_batiment.serre",
+   "litteral": "Serre",
+   "servie": true
+  },
+  {
+   "ligne": 1732,
+   "methode": "TypeLabel",
+   "cle": "district.type_batiment.relais",
+   "litteral": "Relais",
+   "servie": true
+  },
+  {
+   "ligne": 1733,
+   "methode": "TypeLabel",
+   "cle": "district.type_batiment.banque",
+   "litteral": "Banque",
+   "servie": true
+  },
+  {
+   "ligne": 1734,
+   "methode": "TypeLabel",
+   "cle": "district.type_batiment.bureau",
+   "litteral": "Bureau",
+   "servie": true
+  },
+  {
+   "ligne": 1735,
+   "methode": "TypeLabel",
+   "cle": "district.type_batiment.atelier_de_presse",
+   "litteral": "Atelier de presse",
+   "servie": true
+  },
+  {
+   "ligne": 1736,
+   "methode": "TypeLabel",
+   "cle": "district.type_batiment.terrain_vague",
+   "litteral": "Terrain vague",
+   "servie": true
+  }
+ ],
+ "Assets/Scripts/CoreLoops/Compression/CompressionScreenController.cs": [
+  {
+   "ligne": 333,
+   "methode": "Decider",
+   "cle": "semaine.bloc.un_autre_probleme_vient_d_apparaitre",
+   "litteral": "un autre problème vient d'apparaître",
+   "servie": true
+  }
+ ],
+ "Assets/Scripts/Economy/Shop/ShopScreenController.cs": [
+  {
+   "ligne": 187,
+   "methode": "Rendre",
+   "cle": "boutique.bloc.jetons",
+   "litteral": "— jetons",
+   "servie": true
+  }
+ ],
+ "Assets/Scripts/Operational/Autonomy/AutonomyInboxController.cs": [
+  {
+   "ligne": 377,
+   "methode": "OutcomeLabel",
+   "cle": "autonomie.etat.consequence_minime",
+   "litteral": "conséquence minime",
+   "servie": true
+  },
+  {
+   "ligne": 378,
+   "methode": "OutcomeLabel",
+   "cle": "autonomie.etat.un_compromis",
+   "litteral": "un compromis",
+   "servie": true
+  },
+  {
+   "ligne": 379,
+   "methode": "OutcomeLabel",
+   "cle": "autonomie.etat.on_s_expose",
+   "litteral": "on s'expose",
+   "servie": true
+  },
+  {
+   "ligne": 380,
+   "methode": "OutcomeLabel",
+   "cle": "autonomie.etat.on_laisse_passer_quelque_chose",
+   "litteral": "on laisse passer quelque chose",
+   "servie": true
+  },
+  {
+   "ligne": 381,
+   "methode": "OutcomeLabel",
+   "cle": "autonomie.etat.inconnu",
+   "litteral": "[?] Inconnu",
+   "servie": true
+  }
+ ],
+ "Assets/Scripts/Operational/BuildingCard/BuildingCardController.cs": [
+  {
+   "ligne": 1112,
+   "methode": "SetupLabel",
+   "cle": "building.setup.operational",
+   "litteral": "Operational",
+   "servie": true
+  },
+  {
+   "ligne": 1113,
+   "methode": "SetupLabel",
+   "cle": "building.setup.in_setup",
+   "litteral": "In setup",
+   "servie": true
+  },
+  {
+   "ligne": 1114,
+   "methode": "SetupLabel",
+   "cle": "building.setup.not_converted",
+   "litteral": "Not converted",
+   "servie": true
+  },
+  {
+   "ligne": 1127,
+   "methode": "CoverLabel",
+   "cle": "building.cover.strong",
+   "litteral": "Strong",
+   "servie": true
+  },
+  {
+   "ligne": 1128,
+   "methode": "CoverLabel",
+   "cle": "building.cover.standard",
+   "litteral": "Standard",
+   "servie": true
+  },
+  {
+   "ligne": 1129,
+   "methode": "CoverLabel",
+   "cle": "building.cover.weak",
+   "litteral": "Weak",
+   "servie": true
+  },
+  {
+   "ligne": 1130,
+   "methode": "CoverLabel",
+   "cle": "building.cover.none",
+   "litteral": "None",
+   "servie": true
+  },
+  {
+   "ligne": 1152,
+   "methode": "StructuralLabel",
+   "cle": "building.structural.intact",
+   "litteral": "Intact",
+   "servie": true
+  },
+  {
+   "ligne": 1153,
+   "methode": "StructuralLabel",
+   "cle": "building.structural.damaged",
+   "litteral": "Damaged",
+   "servie": true
+  },
+  {
+   "ligne": 1154,
+   "methode": "StructuralLabel",
+   "cle": "building.structural.repairing",
+   "litteral": "Repairing",
+   "servie": true
+  },
+  {
+   "ligne": 1169,
+   "methode": "RaidRiskLabel",
+   "cle": "building.raid_risk.low",
+   "litteral": "Low",
+   "servie": true
+  },
+  {
+   "ligne": 1170,
+   "methode": "RaidRiskLabel",
+   "cle": "building.raid_risk.elevated",
+   "litteral": "Elevated",
+   "servie": true
+  },
+  {
+   "ligne": 1171,
+   "methode": "RaidRiskLabel",
+   "cle": "building.raid_risk.high",
+   "litteral": "High",
+   "servie": true
+  },
+  {
+   "ligne": 1172,
+   "methode": "RaidRiskLabel",
+   "cle": "building.raid_risk.imminent",
+   "litteral": "Imminent",
+   "servie": true
+  },
+  {
+   "ligne": 1222,
+   "methode": "SubstanceLabel",
+   "cle": "building.substance.brindle",
+   "litteral": "Brindle",
+   "servie": true
+  },
+  {
+   "ligne": 1223,
+   "methode": "SubstanceLabel",
+   "cle": "building.substance.crick",
+   "litteral": "Crick",
+   "servie": true
+  },
+  {
+   "ligne": 1224,
+   "methode": "SubstanceLabel",
+   "cle": "building.substance.hush",
+   "litteral": "Hush",
+   "servie": true
+  },
+  {
+   "ligne": 1225,
+   "methode": "SubstanceLabel",
+   "cle": "building.substance.ash",
+   "litteral": "Ash",
+   "servie": true
+  },
+  {
+   "ligne": 1237,
+   "methode": "TemperatureLabel",
+   "cle": "building.temperature.optimal_cold",
+   "litteral": "Optimal (cold)",
+   "servie": true
+  },
+  {
+   "ligne": 1238,
+   "methode": "TemperatureLabel",
+   "cle": "building.temperature.warming",
+   "litteral": "Warming",
+   "servie": true
+  },
+  {
+   "ligne": 1239,
+   "methode": "TemperatureLabel",
+   "cle": "building.temperature.hot",
+   "litteral": "Hot",
+   "servie": true
+  }
+ ],
+ "Assets/Scripts/Operational/Carnet/CarnetScreenController.cs": [
+  {
+   "ligne": 238,
+   "methode": "RendreEtatInitial",
+   "cle": "carnet.bloc.les_ordres_de_ce_soir",
+   "litteral": "Les ordres de ce soir",
+   "servie": true
+  },
+  {
+   "ligne": 239,
+   "methode": "RendreEtatInitial",
+   "cle": "carnet.bloc.le_carnet_n_a_pas_encore_ete_ouvert",
+   "litteral": "le carnet n'a pas encore été ouvert",
+   "servie": true
+  },
+  {
+   "ligne": 243,
+   "methode": "RendreEtatInitial",
+   "cle": "carnet.bloc.ce_qu_on_sait_pour_l_instant",
+   "litteral": "CE QU'ON SAIT POUR L'INSTANT",
+   "servie": true
+  },
+  {
+   "ligne": 244,
+   "methode": "RendreEtatInitial",
+   "cle": "carnet.bloc.rien_n_a_encore_ete_demande",
+   "litteral": "Rien n'a encore été demandé",
+   "servie": true
+  },
+  {
+   "ligne": 245,
+   "methode": "RendreEtatInitial",
+   "cle": "carnet.bloc.ce_n_est_ni_aucun_ordre_ni_pas_de_reponse_c_est_pas_encore",
+   "litteral": "ce n'est ni « aucun ordre » ni « pas de réponse », c'est « pas encore ».",
+   "servie": true
+  },
+  {
+   "ligne": 250,
+   "methode": "RendreEtatIndisponibleNomme",
+   "cle": "carnet.bloc.les_ordres_de_ce_soir",
+   "litteral": "Les ordres de ce soir",
+   "servie": true
+  },
+  {
+   "ligne": 251,
+   "methode": "RendreEtatIndisponibleNomme",
+   "cle": "carnet.bloc.le_carnet_n_a_pas_repondu",
+   "litteral": "le carnet n'a pas répondu",
+   "servie": true
+  },
+  {
+   "ligne": 255,
+   "methode": "RendreEtatIndisponibleNomme",
+   "cle": "carnet.bloc.ce_qu_on_sait_vraiment",
+   "litteral": "CE QU'ON SAIT VRAIMENT",
+   "servie": true
+  },
+  {
+   "ligne": 255,
+   "methode": "RendreEtatIndisponibleNomme",
+   "cle": "carnet.bloc.pas_de_reponse",
+   "litteral": "Pas de réponse",
+   "servie": true
+  },
+  {
+   "ligne": 264,
+   "methode": "AppliquerEtat",
+   "cle": "carnet.bloc.les_ordres_de_ce_soir",
+   "litteral": "Les ordres de ce soir",
+   "servie": true
+  },
+  {
+   "ligne": 266,
+   "methode": "AppliquerEtat",
+   "cle": "carnet.bloc.aucun_ordre_pose_entre_quatre_et_huit_dans_l_ordre_ou_ils_partiront",
+   "litteral": "aucun ordre posé — entre quatre et huit, dans l'ordre où ils partiront",
+   "servie": true
+  },
+  {
+   "ligne": 267,
+   "methode": "AppliquerEtat",
+   "cle": "carnet.bloc.entre_quatre_et_huit_gestes_dans_l_ordre_ou_ils_partiront",
+   "litteral": "entre quatre et huit gestes, dans l'ordre où ils partiront",
+   "servie": true
+  },
+  {
+   "ligne": 268,
+   "methode": "AppliquerEtat",
+   "cle": "carnet.bloc.ordres_sur_8",
+   "litteral": " ORDRES SUR 8",
+   "servie": true
+  },
+  {
+   "ligne": 284,
+   "methode": "AppliquerEtat",
+   "cle": "carnet.bloc.ce_qui_s_ouvrira_plus_tard",
+   "litteral": "CE QUI S'OUVRIRA PLUS TARD",
+   "servie": true
+  },
+  {
+   "ligne": 285,
+   "methode": "AppliquerEtat",
+   "cle": "carnet.bloc.rejouer_une_soiree_verrouille",
+   "litteral": "Rejouer une soirée — verrouillé",
+   "servie": true
+  },
+  {
+   "ligne": 296,
+   "methode": "AppliquerEtat",
+   "cle": "carnet.bloc.ce_que_la_ville_ne_dit_pas",
+   "litteral": "CE QUE LA VILLE NE DIT PAS",
+   "servie": true
+  },
+  {
+   "ligne": 297,
+   "methode": "AppliquerEtat",
+   "cle": "carnet.bloc.ce_que_la_ville_prepare",
+   "litteral": "Ce que la ville prépare",
+   "servie": true
+  },
+  {
+   "ligne": 401,
+   "methode": "Creneau",
+   "cle": "carnet.bloc.rien",
+   "litteral": "— rien —",
+   "servie": true
+  },
+  {
+   "ligne": 497,
+   "methode": "BuildLayout",
+   "cle": "carnet.bloc.carnet_du_soir",
+   "litteral": "Carnet du soir",
+   "servie": true
+  }
+ ],
+ "Assets/Scripts/Operational/ChaineDAppro/ChaineDApproScreenController.cs": [
+  {
+   "ligne": 198,
+   "methode": "DecouvrirBuildingId",
+   "cle": "appro.etat.vous_ne_tenez_encore_aucun_site",
+   "litteral": "Vous ne tenez encore aucun site.",
+   "servie": true
+  },
+  {
+   "ligne": 207,
+   "methode": "DecouvrirBuildingId",
+   "cle": "appro.etat.rien_a_commander_vous_ne_tenez_pas_encore_de_labo",
+   "litteral": "Rien à commander — vous ne tenez pas encore de labo.",
+   "servie": true
+  },
+  {
+   "ligne": 402,
+   "methode": "RendreFiche",
+   "cle": "appro.bloc.bon_de_commande",
+   "litteral": "BON DE COMMANDE",
+   "servie": true
+  },
+  {
+   "ligne": 444,
+   "methode": "RendreFiche",
+   "cle": "appro.bloc.il_y_a_une_penurie_en_ville",
+   "litteral": "Il y a une pénurie en ville",
+   "servie": true
+  },
+  {
+   "ligne": 447,
+   "methode": "RendreFiche",
+   "cle": "appro.bloc.tout_le_monde_en_cherche_en_meme_temps_ca_se_paiera_plus_cher_et_plus_tard",
+   "litteral": "Tout le monde en cherche en même temps. Ça se paiera plus cher, et plus tard.",
+   "servie": true
+  },
+  {
+   "ligne": 485,
+   "methode": "RendrePied",
+   "cle": "appro.bloc.la_commande_est_payee_et_partie",
+   "litteral": "La commande est payée et partie.",
+   "servie": true
+  },
+  {
+   "ligne": 499,
+   "methode": "RendrePied",
+   "cle": "appro.bloc.rien_a_faire_de_plus_on_ne_l_accelere_pas_elle_arrivera_quand_le_fournisseur_l_aura_decide",
+   "litteral": "Rien à faire de plus. On ne l'accélère pas — elle arrivera quand le fournisseur l'aura décidé.",
+   "servie": true
+  },
+  {
+   "ligne": 511,
+   "methode": "RendrePied",
+   "cle": "appro.bloc.livraison_receptionnee",
+   "litteral": "Livraison réceptionnée.",
+   "servie": true
+  },
+  {
+   "ligne": 546,
+   "methode": "RendrePied",
+   "cle": "appro.bouton.en_commander",
+   "litteral": "EN COMMANDER",
+   "servie": true
+  },
+  {
+   "ligne": 569,
+   "methode": "AppliquerChaine",
+   "cle": "appro.bloc.la_chaine_en_remontant",
+   "litteral": "LA CHAÎNE, EN REMONTANT",
+   "servie": true
+  },
+  {
+   "ligne": 596,
+   "methode": "RendreEtatIndisponible",
+   "cle": "appro.titre.la_chaine_d_appro_n_a_pas_repondu",
+   "litteral": "La chaîne d'appro n'a pas répondu",
+   "servie": true
+  },
+  {
+   "ligne": 598,
+   "methode": "RendreEtatIndisponible",
+   "cle": "appro.sous_titre.reessayez_dans_un_instant",
+   "litteral": "Réessayez dans un instant.",
+   "servie": true
+  }
+ ],
+ "Assets/Scripts/Operational/Conflit/ConflitScreenController.cs": [
+  {
+   "ligne": 307,
+   "methode": "RendreTitre",
+   "cle": "conflit.titre.le_conflit",
+   "litteral": "Le conflit",
+   "servie": true
+  },
+  {
+   "ligne": 308,
+   "methode": "RendreTitre",
+   "cle": "conflit.sous_titre.ce_que_vos_hommes_rapportent_des_familles_rivales_et_qui_vous_reste_pour_y_retourner",
+   "litteral": "Ce que vos hommes rapportent des familles rivales, et qui vous reste pour y retourner.",
+   "servie": true
+  },
+  {
+   "ligne": 327,
+   "methode": "RendreTable",
+   "cle": "conflit.bloc.les_quatre_familles",
+   "litteral": "LES QUATRE FAMILLES",
+   "servie": true
+  },
+  {
+   "ligne": 333,
+   "methode": "RendreTable",
+   "cle": "conflit.bloc.dessinees_pas_renseignees_personne_ne_vous_dit_ce_qu_elles_preparent_ni_ce_qu_elles_possedent_on_frappe_a_l_aveugle",
+   "litteral": "Dessinées, pas renseignées : personne ne vous dit ce qu'elles préparent ni ce qu'elles possèdent — on frappe à l'aveugle.",
+   "servie": true
+  },
+  {
+   "ligne": 342,
+   "methode": "RendreTable",
+   "cle": "conflit.bloc.le_compte_des_envois_precedents_n_a_pas_repondu",
+   "litteral": "Le compte des envois précédents n'a pas répondu.",
+   "servie": true
+  },
+  {
+   "ligne": 432,
+   "methode": "RendrePied",
+   "cle": "conflit.bloc.qui_part_ce_soir",
+   "litteral": "QUI PART CE SOIR",
+   "servie": true
+  },
+  {
+   "ligne": 440,
+   "methode": "RendrePied",
+   "cle": "conflit.bloc.aucun_de_vos_lieutenants_n_est_du_genre_gros_bras",
+   "litteral": "Aucun de vos lieutenants n'est du genre Gros bras.",
+   "servie": true
+  },
+  {
+   "ligne": 495,
+   "methode": "RendrePied",
+   "cle": "conflit.bloc.dites_moi_qui_j_envoie_et_sur_quoi_je_pars_ce_soir_on_saura_demain",
+   "litteral": "Dites-moi qui j'envoie et sur quoi. Je pars ce soir, on saura demain.",
+   "servie": true
+  },
+  {
+   "ligne": 535,
+   "methode": "RendreEtatIndisponible",
+   "cle": "conflit.titre.le_conflit_n_a_pas_repondu",
+   "litteral": "Le conflit n'a pas répondu",
+   "servie": true
+  },
+  {
+   "ligne": 537,
+   "methode": "RendreEtatIndisponible",
+   "cle": "conflit.sous_titre.reessayez_dans_un_instant",
+   "litteral": "Réessayez dans un instant.",
+   "servie": true
+  }
+ ],
+ "Assets/Scripts/Operational/Dashboard/DashboardController.cs": [
+  {
+   "ligne": 533,
+   "methode": "ProgressLabel",
+   "cle": "accueil.etat.ouvert",
+   "litteral": "Ouvert",
+   "servie": true
+  },
+  {
+   "ligne": 534,
+   "methode": "ProgressLabel",
+   "cle": "accueil.etat.en_cours",
+   "litteral": "En cours",
+   "servie": true
+  },
+  {
+   "ligne": 535,
+   "methode": "ProgressLabel",
+   "cle": "accueil.etat.verrouille",
+   "litteral": "Verrouillé",
+   "servie": true
+  },
+  {
+   "ligne": 536,
+   "methode": "ProgressLabel",
+   "cle": "accueil.etat.inconnu",
+   "litteral": "Inconnu",
+   "servie": true
+  }
+ ],
+ "Assets/Scripts/Operational/Delegation/DelegationScreenController.cs": [
+  {
+   "ligne": 1105,
+   "methode": "ConstruirePlaqueGrise",
+   "cle": "delegation.bloc.rien_derriere",
+   "litteral": "rien derrière",
+   "servie": true
+  },
+  {
+   "ligne": 1124,
+   "methode": "ConstruireApercu",
+   "cle": "delegation.bloc.si_vous_reprenez_maintenant",
+   "litteral": "Si vous reprenez maintenant",
+   "servie": true
+  }
+ ],
+ "Assets/Scripts/Operational/Demolition/DemolitionScreenController.cs": [
+  {
+   "ligne": 692,
+   "methode": "ConstruireFiche",
+   "cle": "demolition.ecran.fiche_du_site",
+   "litteral": "FICHE DU SITE",
+   "servie": true
+  },
+  {
+   "ligne": 730,
+   "methode": "ConstruireFiche",
+   "cle": "demolition.ecran.il_vous_coute_plus_qu_il_ne_vous_rapporte",
+   "litteral": "Il vous coûte plus qu'il ne vous rapporte.",
+   "servie": true
+  },
+  {
+   "ligne": 733,
+   "methode": "ConstruireFiche",
+   "cle": "demolition.ecran.le_garder_c_est_payer_pour_gener_les_autres",
+   "litteral": "Le garder, c'est payer pour gêner les autres.",
+   "servie": true
+  },
+  {
+   "ligne": 815,
+   "methode": "RendreParcelle",
+   "cle": "demolition.ecran.ce_qu_on_peut_y_mettre",
+   "litteral": "CE QU'ON PEUT Y METTRE",
+   "servie": true
+  }
+ ],
+ "Assets/Scripts/Operational/Distribution/DistributionScreenController.cs": [
+  {
+   "ligne": 473,
+   "methode": "RendreCorkboard",
+   "cle": "distribution.bloc.destination_a_determiner",
+   "litteral": "destination à déterminer",
+   "servie": true
+  },
+  {
+   "ligne": 513,
+   "methode": "RendreCorkboard",
+   "cle": "distribution.bloc.aucune_route_tendue_pour_l_instant",
+   "litteral": "Aucune route tendue pour l'instant.",
+   "servie": true
+  },
+  {
+   "ligne": 588,
+   "methode": "RendreCouriers",
+   "cle": "distribution.bloc.vos_courriers",
+   "litteral": "VOS COURRIERS",
+   "servie": true
+  },
+  {
+   "ligne": 597,
+   "methode": "RendreCouriers",
+   "cle": "distribution.bloc.aucun_courrier_pour_l_instant",
+   "litteral": "Aucun courrier pour l'instant.",
+   "servie": true
+  },
+  {
+   "ligne": 661,
+   "methode": "RendreCouriers",
+   "cle": "distribution.bouton.acheter_un_velo",
+   "litteral": "ACHETER UN VÉLO",
+   "servie": true
+  },
+  {
+   "ligne": 714,
+   "methode": "RendrePied",
+   "cle": "distribution.bloc.la_regulation",
+   "litteral": "LA RÉGULATION",
+   "servie": true
+  },
+  {
+   "ligne": 728,
+   "methode": "RendrePied",
+   "cle": "distribution.bloc.il_est_en_chemin_on_ne_le_rappelle_pas_on_saura_a_l_arrivee",
+   "litteral": "Il est en chemin. On ne le rappelle pas — on saura à l'arrivée.",
+   "servie": true
+  },
+  {
+   "ligne": 739,
+   "methode": "RendrePied",
+   "cle": "distribution.bloc.aucune_destination_connue_pour_l_envoi_de_ce_soir",
+   "litteral": "Aucune destination connue pour l'envoi de ce soir.",
+   "servie": true
+  },
+  {
+   "ligne": 770,
+   "methode": "RendrePied",
+   "cle": "distribution.bloc.a_pied_ca_vide_le_stock_du_labo",
+   "litteral": "à pied · ça vide le stock du labo",
+   "servie": true
+  },
+  {
+   "ligne": 782,
+   "methode": "RendreEtatIndisponible",
+   "cle": "distribution.titre.la_distribution_n_a_pas_repondu",
+   "litteral": "La distribution n'a pas répondu",
+   "servie": true
+  },
+  {
+   "ligne": 784,
+   "methode": "RendreEtatIndisponible",
+   "cle": "distribution.sous_titre.reessayez_dans_un_instant",
+   "litteral": "Réessayez dans un instant.",
+   "servie": true
+  }
+ ],
+ "Assets/Scripts/Operational/Exceptions/ExceptionBandes.cs": [
+  {
+   "ligne": 186,
+   "methode": "Locuteur",
+   "cle": "exceptions.locuteur.la_ville",
+   "litteral": "La ville",
+   "servie": true
+  },
+  {
+   "ligne": 189,
+   "methode": "Locuteur",
+   "cle": "exceptions.locuteur.votre_lieutenant",
+   "litteral": "Votre lieutenant",
+   "servie": true
+  }
+ ],
+ "Assets/Scripts/Operational/Exceptions/ExceptionDetailController.cs": [
+  {
+   "ligne": 218,
+   "methode": "Render",
+   "cle": "exception_detail.bloc.resolu",
+   "litteral": "Résolu ✓",
+   "servie": true
+  },
+  {
+   "ligne": 222,
+   "methode": "Render",
+   "cle": "exception_detail.bloc.resolu",
+   "litteral": "Résolu ✓",
+   "servie": true
+  },
+  {
+   "ligne": 225,
+   "methode": "Render",
+   "cle": "exception_detail.bloc.issue",
+   "litteral": "Issue :",
+   "servie": true
+  },
+  {
+   "ligne": 230,
+   "methode": "Render",
+   "cle": "exception_detail.bloc.back",
+   "litteral": "Back",
+   "servie": true
+  },
+  {
+   "ligne": 256,
+   "methode": "Render",
+   "cle": "exception_detail.bloc.escalate",
+   "litteral": "Escalate",
+   "servie": true
+  },
+  {
+   "ligne": 257,
+   "methode": "Render",
+   "cle": "exception_detail.bloc.back",
+   "litteral": "Back",
+   "servie": true
+  },
+  {
+   "ligne": 313,
+   "methode": "RendreMain",
+   "cle": "exception_detail.bloc.risque",
+   "litteral": "Risqué",
+   "servie": true
+  },
+  {
+   "ligne": 314,
+   "methode": "RendreMain",
+   "cle": "exception_detail.bloc.suggere",
+   "litteral": "Suggéré",
+   "servie": true
+  },
+  {
+   "ligne": 315,
+   "methode": "RendreMain",
+   "cle": "exception_detail.bloc.lui_apprendre",
+   "litteral": "Lui apprendre",
+   "servie": true
+  }
+ ],
+ "Assets/Scripts/Operational/Exceptions/ExceptionQueueController.cs": [
+  {
+   "ligne": 273,
+   "methode": "EnLettres",
+   "cle": "exceptions.nombre.deux",
+   "litteral": "Deux",
+   "servie": true
+  },
+  {
+   "ligne": 274,
+   "methode": "EnLettres",
+   "cle": "exceptions.nombre.trois",
+   "litteral": "Trois",
+   "servie": true
+  },
+  {
+   "ligne": 275,
+   "methode": "EnLettres",
+   "cle": "exceptions.nombre.quatre",
+   "litteral": "Quatre",
+   "servie": true
+  },
+  {
+   "ligne": 276,
+   "methode": "EnLettres",
+   "cle": "exceptions.nombre.cinq",
+   "litteral": "Cinq",
+   "servie": true
+  },
+  {
+   "ligne": 277,
+   "methode": "EnLettres",
+   "cle": "exceptions.nombre.six",
+   "litteral": "Six",
+   "servie": true
+  },
+  {
+   "ligne": 278,
+   "methode": "EnLettres",
+   "cle": "exceptions.nombre.plusieurs",
+   "litteral": "Plusieurs",
+   "servie": true
+  },
+  {
+   "ligne": 556,
+   "methode": "ContexteDuPremier",
+   "cle": "exceptions.bloc.toute_la_ville",
+   "litteral": "toute la ville",
+   "servie": true
+  },
+  {
+   "ligne": 557,
+   "methode": "ContexteDuPremier",
+   "cle": "exceptions.bloc.au_batiment_touche",
+   "litteral": "au bâtiment touché",
+   "servie": true
+  },
+  {
+   "ligne": 583,
+   "methode": "RepliqueDuPremier",
+   "cle": "exceptions.bloc.patron",
+   "litteral": "Patron",
+   "servie": true
+  },
+  {
+   "ligne": 690,
+   "methode": "RendreTampon",
+   "cle": "exceptions.bloc.ouvrir_sa_main",
+   "litteral": "OUVRIR SA MAIN",
+   "servie": true
+  },
+  {
+   "ligne": 700,
+   "methode": "RendreTampon",
+   "cle": "exceptions.bloc.il_attend_une_consigne",
+   "litteral": "il attend une consigne",
+   "servie": true
+  },
+  {
+   "ligne": 758,
+   "methode": "SousTitreTampon",
+   "cle": "exceptions.bloc.suggere_appui_long_sa_main",
+   "litteral": "suggéré · appui long — sa main",
+   "servie": true
+  },
+  {
+   "ligne": 761,
+   "methode": "SousTitreTampon",
+   "cle": "exceptions.bloc.autre_issue",
+   "litteral": "autre issue",
+   "servie": true
+  },
+  {
+   "ligne": 761,
+   "methode": "SousTitreTampon",
+   "cle": "exceptions.bloc.autres_issues",
+   "litteral": "autres issues",
+   "servie": true
+  },
+  {
+   "ligne": 843,
+   "methode": "RendreLienEscalades",
+   "cle": "exceptions.bloc.escalades_archivees",
+   "litteral": "Escalades archivées",
+   "servie": true
+  },
+  {
+   "ligne": 848,
+   "methode": "RendreLienEscalades",
+   "cle": "exceptions.bloc.a_relire_a_tete_reposee",
+   "litteral": "à relire à tête reposée",
+   "servie": true
+  },
+  {
+   "ligne": 857,
+   "methode": "RenderError",
+   "cle": "exceptions.bloc.le_comptoir_n_a_pas_repondu",
+   "litteral": "Le comptoir n'a pas répondu.",
+   "servie": true
+  },
+  {
+   "ligne": 1082,
+   "methode": "CategorieConflit",
+   "cle": "exceptions.categorie.reputation",
+   "litteral": "RÉPUTATION",
+   "servie": true
+  },
+  {
+   "ligne": 1085,
+   "methode": "CategorieConflit",
+   "cle": "exceptions.categorie.diplomatie",
+   "litteral": "DIPLOMATIE",
+   "servie": true
+  },
+  {
+   "ligne": 1088,
+   "methode": "CategorieConflit",
+   "cle": "exceptions.categorie.renseignement",
+   "litteral": "RENSEIGNEMENT",
+   "servie": true
+  },
+  {
+   "ligne": 1092,
+   "methode": "CategorieConflit",
+   "cle": "exceptions.categorie.conflit",
+   "litteral": "CONFLIT",
+   "servie": true
+  }
+ ],
+ "Assets/Scripts/Operational/Filiere/FiliereScreenController.cs": [
+  {
+   "ligne": 300,
+   "methode": "AppliquerEtat",
+   "cle": "filiere.bloc.la_chaine_de_la_tete_a_la_sortie",
+   "litteral": "LA CHAÎNE, DE LA TÊTE À LA SORTIE",
+   "servie": true
+  },
+  {
+   "ligne": 314,
+   "methode": "AppliquerEtat",
+   "cle": "filiere.bloc.etapes",
+   "litteral": "ÉTAPES",
+   "servie": true
+  },
+  {
+   "ligne": 315,
+   "methode": "AppliquerEtat",
+   "cle": "filiere.bloc.propre_au_bout",
+   "litteral": "PROPRE AU BOUT",
+   "servie": true
+  },
+  {
+   "ligne": 316,
+   "methode": "AppliquerEtat",
+   "cle": "filiere.bloc.ecarts",
+   "litteral": "ÉCARTS",
+   "servie": true
+  },
+  {
+   "ligne": 320,
+   "methode": "AppliquerEtat",
+   "cle": "filiere.bloc.ce_que_la_chaine_fait_de_votre_argent",
+   "litteral": "CE QUE LA CHAÎNE FAIT DE VOTRE ARGENT",
+   "servie": true
+  },
+  {
+   "ligne": 321,
+   "methode": "AppliquerEtat",
+   "cle": "filiere.bloc.elle_le_lave_par_paliers_pas_d_un_coup",
+   "litteral": "Elle le lave par paliers, pas d'un coup",
+   "servie": true
+  },
+  {
+   "ligne": 344,
+   "methode": "Etape",
+   "cle": "filiere.bloc.etape",
+   "litteral": "ÉTAPE",
+   "servie": true
+  },
+  {
+   "ligne": 345,
+   "methode": "Etape",
+   "cle": "filiere.bloc.la_sortie",
+   "litteral": "LA SORTIE",
+   "servie": true
+  },
+  {
+   "ligne": 354,
+   "methode": "Etape",
+   "cle": "filiere.bloc.de_l_argent_attend_a_cette_etape",
+   "litteral": "de l'argent attend à cette étape",
+   "servie": true
+  },
+  {
+   "ligne": 355,
+   "methode": "Etape",
+   "cle": "filiere.bloc.rien_n_attend_a_cette_etape",
+   "litteral": "rien n'attend à cette étape",
+   "servie": true
+  },
+  {
+   "ligne": 365,
+   "methode": "RendreEtatIndisponible",
+   "cle": "filiere.bloc.la_filiere_n_a_pas_repondu",
+   "litteral": "LA FILIÈRE N'A PAS RÉPONDU",
+   "servie": true
+  },
+  {
+   "ligne": 366,
+   "methode": "RendreEtatIndisponible",
+   "cle": "filiere.bloc.etapes",
+   "litteral": "ÉTAPES",
+   "servie": true
+  },
+  {
+   "ligne": 367,
+   "methode": "RendreEtatIndisponible",
+   "cle": "filiere.bloc.propre_au_bout",
+   "litteral": "PROPRE AU BOUT",
+   "servie": true
+  },
+  {
+   "ligne": 368,
+   "methode": "RendreEtatIndisponible",
+   "cle": "filiere.bloc.ecarts",
+   "litteral": "ÉCARTS",
+   "servie": true
+  },
+  {
+   "ligne": 369,
+   "methode": "RendreEtatIndisponible",
+   "cle": "filiere.bloc.ce_qu_on_sait_vraiment",
+   "litteral": "CE QU'ON SAIT VRAIMENT",
+   "servie": true
+  },
+  {
+   "ligne": 369,
+   "methode": "RendreEtatIndisponible",
+   "cle": "filiere.bloc.pas_de_reponse",
+   "litteral": "Pas de réponse",
+   "servie": true
+  },
+  {
+   "ligne": 414,
+   "methode": "RendreAucunNoeud",
+   "cle": "filiere.bloc.aucun_nœud_pour_vous",
+   "litteral": "AUCUN NŒUD POUR VOUS",
+   "servie": true
+  },
+  {
+   "ligne": 415,
+   "methode": "RendreAucunNoeud",
+   "cle": "filiere.bloc.etapes",
+   "litteral": "ÉTAPES",
+   "servie": true
+  },
+  {
+   "ligne": 416,
+   "methode": "RendreAucunNoeud",
+   "cle": "filiere.bloc.propre_au_bout",
+   "litteral": "PROPRE AU BOUT",
+   "servie": true
+  },
+  {
+   "ligne": 417,
+   "methode": "RendreAucunNoeud",
+   "cle": "filiere.bloc.ecarts",
+   "litteral": "ÉCARTS",
+   "servie": true
+  },
+  {
+   "ligne": 419,
+   "methode": "RendreAucunNoeud",
+   "cle": "filiere.bloc.obtenir_une_planque",
+   "litteral": "Obtenir une planque",
+   "servie": true
+  },
+  {
+   "ligne": 422,
+   "methode": "RendreAucunNoeud",
+   "cle": "filiere.bloc.dire_combien_il_y_a_dans_la_filiere",
+   "litteral": "Dire combien il y a dans la filière",
+   "servie": true
+  },
+  {
+   "ligne": 423,
+   "methode": "RendreAucunNoeud",
+   "cle": "filiere.bloc.on_ne_vous_dira_que_si_c_est_propre_ni_combien_ni_depuis_quand_ni_a_quel_prix_c_est_voulu",
+   "litteral": "on ne vous dira que si c'est propre : ni combien, ni depuis quand, ni à quel prix. C'est voulu.",
+   "servie": true
+  },
+  {
+   "ligne": 425,
+   "methode": "RendreAucunNoeud",
+   "cle": "filiere.bloc.ce_que_la_filiere_ne_dit_pas",
+   "litteral": "CE QUE LA FILIÈRE NE DIT PAS",
+   "servie": true
+  },
+  {
+   "ligne": 426,
+   "methode": "RendreAucunNoeud",
+   "cle": "filiere.bloc.vous_n_avez_encore_aucun_nœud",
+   "litteral": "Vous n'avez encore aucun nœud",
+   "servie": true
+  },
+  {
+   "ligne": 444,
+   "methode": "Maillon",
+   "cle": "filiere.bloc.maillon_manquant",
+   "litteral": "MAILLON MANQUANT",
+   "servie": true
+  },
+  {
+   "ligne": 455,
+   "methode": "RendreEtatInitial",
+   "cle": "filiere.bloc.en_attente",
+   "litteral": "EN ATTENTE",
+   "servie": true
+  },
+  {
+   "ligne": 456,
+   "methode": "RendreEtatInitial",
+   "cle": "filiere.bloc.etapes",
+   "litteral": "ÉTAPES",
+   "servie": true
+  },
+  {
+   "ligne": 457,
+   "methode": "RendreEtatInitial",
+   "cle": "filiere.bloc.propre_au_bout",
+   "litteral": "PROPRE AU BOUT",
+   "servie": true
+  },
+  {
+   "ligne": 458,
+   "methode": "RendreEtatInitial",
+   "cle": "filiere.bloc.ecarts",
+   "litteral": "ÉCARTS",
+   "servie": true
+  },
+  {
+   "ligne": 459,
+   "methode": "RendreEtatInitial",
+   "cle": "filiere.bloc.ce_qu_on_sait_pour_l_instant",
+   "litteral": "CE QU'ON SAIT POUR L'INSTANT",
+   "servie": true
+  },
+  {
+   "ligne": 460,
+   "methode": "RendreEtatInitial",
+   "cle": "filiere.bloc.la_filiere_n_a_pas_encore_ete_interrogee",
+   "litteral": "La filière n'a pas encore été interrogée",
+   "servie": true
+  },
+  {
+   "ligne": 461,
+   "methode": "RendreEtatInitial",
+   "cle": "filiere.bloc.ce_n_est_ni_elle_est_vide_ni_elle_ne_repond_pas_c_est_pas_encore",
+   "litteral": "ce n'est ni « elle est vide » ni « elle ne répond pas », c'est « pas encore ».",
+   "servie": true
+  },
+  {
+   "ligne": 538,
+   "methode": "BuildLayout",
+   "cle": "filiere.bloc.la_filiere",
+   "litteral": "La filière",
+   "servie": true
+  }
+ ],
+ "Assets/Scripts/Operational/Forensic/ForensicScreenController.cs": [
+  {
+   "ligne": 163,
+   "methode": "AppliquerEtat",
+   "cle": "forensic.bloc.risque_d_audit",
+   "litteral": "RISQUE D'AUDIT",
+   "servie": true
+  },
+  {
+   "ligne": 164,
+   "methode": "AppliquerEtat",
+   "cle": "forensic.bloc.visibilite_des_rejets",
+   "litteral": "VISIBILITÉ DES REJETS",
+   "servie": true
+  },
+  {
+   "ligne": 165,
+   "methode": "AppliquerEtat",
+   "cle": "forensic.bloc.train_de_vie",
+   "litteral": "TRAIN DE VIE",
+   "servie": true
+  },
+  {
+   "ligne": 176,
+   "methode": "AppliquerEtat",
+   "cle": "forensic.bloc.ce_que_la_ville_ne_dit_pas",
+   "litteral": "CE QUE LA VILLE NE DIT PAS",
+   "servie": true
+  },
+  {
+   "ligne": 177,
+   "methode": "AppliquerEtat",
+   "cle": "forensic.bloc.une_piste_posee_par_habitude_ressemble_a_une_piste_relevee",
+   "litteral": "Une piste posée par habitude ressemble à une piste relevée",
+   "servie": true
+  },
+  {
+   "ligne": 193,
+   "methode": "RendreEtatIndisponible",
+   "cle": "forensic.bloc.ce_qu_on_sait_vraiment",
+   "litteral": "CE QU'ON SAIT VRAIMENT",
+   "servie": true
+  },
+  {
+   "ligne": 194,
+   "methode": "RendreEtatIndisponible",
+   "cle": "forensic.bloc.pas_de_reponse",
+   "litteral": "Pas de réponse",
+   "servie": true
+  },
+  {
+   "ligne": 279,
+   "methode": "ConstruireEnseigne",
+   "cle": "forensic.bloc.ce_qui_se_voit",
+   "litteral": "Ce qui se voit",
+   "servie": true
+  },
+  {
+   "ligne": 282,
+   "methode": "ConstruireEnseigne",
+   "cle": "forensic.bloc.trois_signaux_trois_bandes",
+   "litteral": "TROIS SIGNAUX, TROIS BANDES",
+   "servie": true
+  },
+  {
+   "ligne": 585,
+   "methode": "Phrase",
+   "cle": "forensic.cran.un_dossier_est_ouvert",
+   "litteral": "Un dossier est ouvert",
+   "servie": true
+  },
+  {
+   "ligne": 586,
+   "methode": "Phrase",
+   "cle": "forensic.evenement.ils_sont_venus",
+   "litteral": "Ils sont venus",
+   "servie": true
+  },
+  {
+   "ligne": 587,
+   "methode": "Phrase",
+   "cle": "forensic.evenement.ca_saute_aux_yeux",
+   "litteral": "Ça saute aux yeux",
+   "servie": true
+  },
+  {
+   "ligne": 588,
+   "methode": "Phrase",
+   "cle": "forensic.evenement.convocation_recue",
+   "litteral": "Convocation reçue",
+   "servie": true
+  },
+  {
+   "ligne": 592,
+   "methode": "Phrase",
+   "cle": "forensic.gravite.rien_ne_depasse",
+   "litteral": "Rien ne dépasse",
+   "servie": true
+  },
+  {
+   "ligne": 593,
+   "methode": "Phrase",
+   "cle": "forensic.gravite.on_vous_regarde",
+   "litteral": "On vous regarde",
+   "servie": true
+  },
+  {
+   "ligne": 594,
+   "methode": "Phrase",
+   "cle": "forensic.gravite.ca_se_voit_de_loin",
+   "litteral": "Ça se voit de loin",
+   "servie": true
+  }
+ ],
+ "Assets/Scripts/Operational/Horizon/HorizonScreenController.cs": [
+  {
+   "ligne": 145,
+   "methode": "AppliquerEtat",
+   "cle": "horizon.bloc.rien_a_l_horizon",
+   "litteral": "rien à l'horizon",
+   "servie": true
+  },
+  {
+   "ligne": 145,
+   "methode": "AppliquerEtat",
+   "cle": "horizon.bloc.ce_qui_manque_encore",
+   "litteral": "ce qui manque encore",
+   "servie": true
+  },
+  {
+   "ligne": 146,
+   "methode": "AppliquerEtat",
+   "cle": "horizon.bloc.a_portee",
+   "litteral": "À PORTÉE",
+   "servie": true
+  },
+  {
+   "ligne": 147,
+   "methode": "AppliquerEtat",
+   "cle": "horizon.bloc.deja_prises",
+   "litteral": "DÉJÀ PRISES",
+   "servie": true
+  },
+  {
+   "ligne": 148,
+   "methode": "AppliquerEtat",
+   "cle": "horizon.bloc.ont_recule",
+   "litteral": "ONT RECULÉ",
+   "servie": true
+  },
+  {
+   "ligne": 176,
+   "methode": "AppliquerEtat",
+   "cle": "horizon.bloc.pourquoi_c_est_vide",
+   "litteral": "pourquoi c'est vide",
+   "servie": true
+  },
+  {
+   "ligne": 177,
+   "methode": "AppliquerEtat",
+   "cle": "horizon.bloc.les_cartes_viennent_du_monde_pas_du_menu",
+   "litteral": "Les cartes viennent du monde, pas du menu",
+   "servie": true
+  },
+  {
+   "ligne": 181,
+   "methode": "AppliquerEtat",
+   "cle": "horizon.bloc.ce_qu_on_sait_vraiment",
+   "litteral": "CE QU'ON SAIT VRAIMENT",
+   "servie": true
+  },
+  {
+   "ligne": 182,
+   "methode": "AppliquerEtat",
+   "cle": "horizon.bloc.aucune_de_ces_cartes_n_a_encore_de_nom",
+   "litteral": "Aucune de ces cartes n'a encore de nom",
+   "servie": true
+  },
+  {
+   "ligne": 213,
+   "methode": "RendreCartes",
+   "cle": "horizon.bloc.rien_ne_s_ouvre_pour_l_instant",
+   "litteral": "Rien ne s'ouvre pour l'instant.",
+   "servie": true
+  },
+  {
+   "ligne": 215,
+   "methode": "RendreCartes",
+   "cle": "horizon.bloc.l_horizon_se_remplit_en_jouant",
+   "litteral": "L'horizon se remplit en jouant.",
+   "servie": true
+  },
+  {
+   "ligne": 255,
+   "methode": "RendreCartes",
+   "cle": "horizon.bloc.c_etait_a_portee_ca_s_est_eloigne",
+   "litteral": "C'était à portée. Ça s'est éloigné.",
+   "servie": true
+  },
+  {
+   "ligne": 310,
+   "methode": "RendreEchelle",
+   "cle": "horizon.bloc.palier",
+   "litteral": "Palier ",
+   "servie": true
+  },
+  {
+   "ligne": 351,
+   "methode": "RendreEchelle",
+   "cle": "horizon.bloc.on_ne_sait_pas_encore_ce_qui_manque_pour_y_arriver",
+   "litteral": "on ne sait pas encore ce qui manque pour y arriver",
+   "servie": true
+  },
+  {
+   "ligne": 370,
+   "methode": "EtatDuPalierAtteint",
+   "cle": "horizon.bloc.vous_n_avez_encore_rien_engage",
+   "litteral": "vous n'avez encore rien engagé",
+   "servie": true
+  },
+  {
+   "ligne": 371,
+   "methode": "EtatDuPalierAtteint",
+   "cle": "horizon.bloc.vous_avez_commence",
+   "litteral": "vous avez commencé",
+   "servie": true
+  },
+  {
+   "ligne": 372,
+   "methode": "EtatDuPalierAtteint",
+   "cle": "horizon.bloc.ce_palier_est_acquis",
+   "litteral": "ce palier est acquis",
+   "servie": true
+  },
+  {
+   "ligne": 373,
+   "methode": "EtatDuPalierAtteint",
+   "cle": "horizon.bloc.etat_inconnu",
+   "litteral": "état inconnu",
+   "servie": true
+  },
+  {
+   "ligne": 424,
+   "methode": "RendreEtatIndisponible",
+   "cle": "horizon.bloc.indisponible",
+   "litteral": "indisponible",
+   "servie": true
+  },
+  {
+   "ligne": 636,
+   "methode": "ConstruireEnseigne",
+   "cle": "horizon.bloc.l_horizon",
+   "litteral": "L'horizon",
+   "servie": true
+  }
+ ],
+ "Assets/Scripts/Operational/Journal/JournalScreenController.cs": [
+  {
+   "ligne": 249,
+   "methode": "AppliquerEtat",
+   "cle": "journal.bloc.rien_ne_bouge",
+   "litteral": "RIEN NE BOUGE",
+   "servie": true
+  },
+  {
+   "ligne": 249,
+   "methode": "AppliquerEtat",
+   "cle": "journal.bloc.ce_qui_se_dit_ce_matin",
+   "litteral": "CE QUI SE DIT CE MATIN",
+   "servie": true
+  },
+  {
+   "ligne": 251,
+   "methode": "AppliquerEtat",
+   "cle": "journal.bloc.a_la_une",
+   "litteral": "À LA UNE",
+   "servie": true
+  },
+  {
+   "ligne": 252,
+   "methode": "AppliquerEtat",
+   "cle": "journal.bloc.dans_la_rue",
+   "litteral": "DANS LA RUE",
+   "servie": true
+  },
+  {
+   "ligne": 253,
+   "methode": "AppliquerEtat",
+   "cle": "journal.bloc.en_cours",
+   "litteral": "EN COURS",
+   "servie": true
+  },
+  {
+   "ligne": 263,
+   "methode": "AppliquerEtat",
+   "cle": "journal.bloc.pourquoi_c_est_vide",
+   "litteral": "POURQUOI C'EST VIDE",
+   "servie": true
+  },
+  {
+   "ligne": 264,
+   "methode": "AppliquerEtat",
+   "cle": "journal.bloc.le_journal_suit_le_monde_pas_vous",
+   "litteral": "Le journal suit le monde, pas vous",
+   "servie": true
+  },
+  {
+   "ligne": 274,
+   "methode": "AppliquerEtat",
+   "cle": "journal.bloc.ce_qu_on_sait_vraiment",
+   "litteral": "CE QU'ON SAIT VRAIMENT",
+   "servie": true
+  },
+  {
+   "ligne": 275,
+   "methode": "AppliquerEtat",
+   "cle": "journal.bloc.aucune_de_ces_breves_n_a_de_texte",
+   "litteral": "Aucune de ces brèves n'a de texte",
+   "servie": true
+  },
+  {
+   "ligne": 296,
+   "methode": "RendreEtatInitial",
+   "cle": "journal.bloc.en_attente_du_matin",
+   "litteral": "EN ATTENTE DU MATIN",
+   "servie": true
+  },
+  {
+   "ligne": 297,
+   "methode": "RendreEtatInitial",
+   "cle": "journal.bloc.a_la_une",
+   "litteral": "À LA UNE",
+   "servie": true
+  },
+  {
+   "ligne": 298,
+   "methode": "RendreEtatInitial",
+   "cle": "journal.bloc.dans_la_rue",
+   "litteral": "DANS LA RUE",
+   "servie": true
+  },
+  {
+   "ligne": 299,
+   "methode": "RendreEtatInitial",
+   "cle": "journal.bloc.en_cours",
+   "litteral": "EN COURS",
+   "servie": true
+  },
+  {
+   "ligne": 300,
+   "methode": "RendreEtatInitial",
+   "cle": "journal.bloc.ce_qu_on_sait_pour_l_instant",
+   "litteral": "CE QU'ON SAIT POUR L'INSTANT",
+   "servie": true
+  },
+  {
+   "ligne": 301,
+   "methode": "RendreEtatInitial",
+   "cle": "journal.bloc.le_journal_n_a_pas_encore_ete_ouvert",
+   "litteral": "Le journal n'a pas encore été ouvert",
+   "servie": true
+  },
+  {
+   "ligne": 335,
+   "methode": "RendreListe",
+   "cle": "journal.bloc.rien_ce_matin_la_ville_a_passe_une_nuit_tranquille",
+   "litteral": "Rien ce matin.\\nLa ville a passé une nuit tranquille.",
+   "servie": true
+  },
+  {
+   "ligne": 413,
+   "methode": "PhaseEnMots",
+   "cle": "journal.bloc.ca_commence",
+   "litteral": "ÇA COMMENCE",
+   "servie": true
+  },
+  {
+   "ligne": 414,
+   "methode": "PhaseEnMots",
+   "cle": "journal.bloc.ca_se_deploie",
+   "litteral": "ÇA SE DÉPLOIE",
+   "servie": true
+  },
+  {
+   "ligne": 415,
+   "methode": "PhaseEnMots",
+   "cle": "journal.bloc.ca_retombe",
+   "litteral": "ÇA RETOMBE",
+   "servie": true
+  },
+  {
+   "ligne": 416,
+   "methode": "PhaseEnMots",
+   "cle": "journal.bloc.ca_traine",
+   "litteral": "ÇA TRAÎNE",
+   "servie": true
+  },
+  {
+   "ligne": 417,
+   "methode": "PhaseEnMots",
+   "cle": "journal.bloc.ca_ne_partira_pas",
+   "litteral": "ÇA NE PARTIRA PAS",
+   "servie": true
+  },
+  {
+   "ligne": 418,
+   "methode": "PhaseEnMots",
+   "cle": "journal.bloc.phase_inconnue",
+   "litteral": "PHASE INCONNUE",
+   "servie": true
+  },
+  {
+   "ligne": 442,
+   "methode": "RendreEtatIndisponible",
+   "cle": "journal.bloc.le_journal_n_est_pas_arrive",
+   "litteral": "LE JOURNAL N'EST PAS ARRIVÉ",
+   "servie": true
+  },
+  {
+   "ligne": 443,
+   "methode": "RendreEtatIndisponible",
+   "cle": "journal.bloc.a_la_une",
+   "litteral": "À LA UNE",
+   "servie": true
+  },
+  {
+   "ligne": 444,
+   "methode": "RendreEtatIndisponible",
+   "cle": "journal.bloc.dans_la_rue",
+   "litteral": "DANS LA RUE",
+   "servie": true
+  },
+  {
+   "ligne": 445,
+   "methode": "RendreEtatIndisponible",
+   "cle": "journal.bloc.en_cours",
+   "litteral": "EN COURS",
+   "servie": true
+  },
+  {
+   "ligne": 451,
+   "methode": "RendreEtatIndisponible",
+   "cle": "journal.bloc.ce_qu_on_sait_vraiment",
+   "litteral": "CE QU'ON SAIT VRAIMENT",
+   "servie": true
+  },
+  {
+   "ligne": 452,
+   "methode": "RendreEtatIndisponible",
+   "cle": "journal.bloc.pas_de_reponse",
+   "litteral": "Pas de réponse",
+   "servie": true
+  },
+  {
+   "ligne": 502,
+   "methode": "ConstruireEnseigne",
+   "cle": "journal.bloc.le_journal",
+   "litteral": "Le journal",
+   "servie": true
+  }
+ ],
+ "Assets/Scripts/Operational/Laundering/PureteResolvers.cs": [
+  {
+   "ligne": 36,
+   "methode": "Libelle",
+   "cle": "blanchiment.purete.propre",
+   "litteral": "Propre",
+   "servie": true
+  },
+  {
+   "ligne": 37,
+   "methode": "Libelle",
+   "cle": "blanchiment.purete.presque_propre",
+   "litteral": "Presque propre",
+   "servie": true
+  },
+  {
+   "ligne": 38,
+   "methode": "Libelle",
+   "cle": "blanchiment.purete.a_demi_propre",
+   "litteral": "À demi propre",
+   "servie": true
+  },
+  {
+   "ligne": 39,
+   "methode": "Libelle",
+   "cle": "blanchiment.purete.sale",
+   "litteral": "Sale",
+   "servie": true
+  },
+  {
+   "ligne": 43,
+   "methode": "Libelle",
+   "cle": "blanchiment.purete.proprete_inconnue",
+   "litteral": "Propreté inconnue",
+   "servie": true
+  }
+ ],
+ "Assets/Scripts/Operational/Lieutenant/FamilleLabels.cs": [
+  {
+   "ligne": 58,
+   "methode": "Archetype",
+   "cle": "famille.archetype.comptable",
+   "litteral": "Comptable",
+   "servie": true
+  },
+  {
+   "ligne": 59,
+   "methode": "Archetype",
+   "cle": "famille.archetype.securite",
+   "litteral": "Sécurité",
+   "servie": true
+  },
+  {
+   "ligne": 60,
+   "methode": "Archetype",
+   "cle": "famille.archetype.blanchiment",
+   "litteral": "Blanchiment",
+   "servie": true
+  },
+  {
+   "ligne": 61,
+   "methode": "Archetype",
+   "cle": "famille.archetype.logistique",
+   "litteral": "Logistique",
+   "servie": true
+  },
+  {
+   "ligne": 63,
+   "methode": "Archetype",
+   "cle": "famille.archetype.cuisinier",
+   "litteral": "Cuisinier",
+   "servie": true
+  },
+  {
+   "ligne": 64,
+   "methode": "Archetype",
+   "cle": "famille.archetype.distribution",
+   "litteral": "Distribution",
+   "servie": true
+  },
+  {
+   "ligne": 72,
+   "methode": "Archetype",
+   "cle": "famille.archetype.gros_bras",
+   "litteral": "Gros bras",
+   "servie": true
+  },
+  {
+   "ligne": 73,
+   "methode": "Archetype",
+   "cle": "famille.archetype.renseignement",
+   "litteral": "Renseignement",
+   "servie": true
+  },
+  {
+   "ligne": 74,
+   "methode": "Archetype",
+   "cle": "famille.archetype.intendant",
+   "litteral": "Intendant",
+   "servie": true
+  },
+  {
+   "ligne": 80,
+   "methode": "Archetype",
+   "cle": "famille.archetype.inconnu",
+   "litteral": "Inconnu",
+   "servie": true
+  },
+  {
+   "ligne": 110,
+   "methode": "Mode",
+   "cle": "famille.mode.delegue",
+   "litteral": "Délégué",
+   "servie": true
+  },
+  {
+   "ligne": 111,
+   "methode": "Mode",
+   "cle": "famille.mode.missionne",
+   "litteral": "Missionné",
+   "servie": true
+  },
+  {
+   "ligne": 154,
+   "methode": "Etat",
+   "cle": "famille.opstate.actif",
+   "litteral": "Actif",
+   "servie": true
+  },
+  {
+   "ligne": 155,
+   "methode": "Etat",
+   "cle": "famille.opstate.au_repos",
+   "litteral": "Au repos",
+   "servie": true
+  },
+  {
+   "ligne": 156,
+   "methode": "Etat",
+   "cle": "famille.opstate.en_pause",
+   "litteral": "En pause",
+   "servie": true
+  },
+  {
+   "ligne": 157,
+   "methode": "Etat",
+   "cle": "famille.opstate.prend_ses_marques",
+   "litteral": "Prend ses marques",
+   "servie": true
+  }
+ ],
+ "Assets/Scripts/Operational/Lieutenant/LieutenantScreenController.cs": [
+  {
+   "ligne": 431,
+   "methode": "RecruitChosen",
+   "cle": "famille.ecran.connectez_vous_d_abord",
+   "litteral": "Connectez-vous d'abord.",
+   "servie": true
+  },
+  {
+   "ligne": 466,
+   "methode": "RecruitChosen",
+   "cle": "famille.ecran.echec_du_recrutement",
+   "litteral": "Échec du recrutement.",
+   "servie": true
+  },
+  {
+   "ligne": 486,
+   "methode": "RefreshBands",
+   "cle": "famille.ecran.connectez_vous_d_abord",
+   "litteral": "Connectez-vous d'abord.",
+   "servie": true
+  },
+  {
+   "ligne": 487,
+   "methode": "RefreshBands",
+   "cle": "famille.ecran.recrutez_d_abord_un_lieutenant",
+   "litteral": "Recrutez d'abord un lieutenant.",
+   "servie": true
+  },
+  {
+   "ligne": 495,
+   "methode": "RefreshBands",
+   "cle": "famille.ecran.echec_de_l_etat",
+   "litteral": "Échec de l'état — ",
+   "servie": true
+  },
+  {
+   "ligne": 559,
+   "methode": "RefreshRoster",
+   "cle": "famille.ecran.connectez_vous_d_abord",
+   "litteral": "Connectez-vous d'abord.",
+   "servie": true
+  },
+  {
+   "ligne": 567,
+   "methode": "RefreshRoster",
+   "cle": "famille.ecran.echec_du_chargement_de_la_famille",
+   "litteral": "Échec du chargement de la famille — ",
+   "servie": true
+  },
+  {
+   "ligne": 599,
+   "methode": "OpenReassign",
+   "cle": "famille.ecran.connectez_vous_d_abord",
+   "litteral": "Connectez-vous d'abord.",
+   "servie": true
+  },
+  {
+   "ligne": 600,
+   "methode": "OpenReassign",
+   "cle": "famille.ecran.recrutez_ou_ouvrez_d_abord_un_lieutenant",
+   "litteral": "Recrutez ou ouvrez d'abord un lieutenant.",
+   "servie": true
+  },
+  {
+   "ligne": 622,
+   "methode": "ReassignChosen",
+   "cle": "famille.ecran.connectez_vous_d_abord",
+   "litteral": "Connectez-vous d'abord.",
+   "servie": true
+  },
+  {
+   "ligne": 623,
+   "methode": "ReassignChosen",
+   "cle": "famille.ecran.recrutez_ou_ouvrez_d_abord_un_lieutenant",
+   "litteral": "Recrutez ou ouvrez d'abord un lieutenant.",
+   "servie": true
+  },
+  {
+   "ligne": 624,
+   "methode": "ReassignChosen",
+   "cle": "famille.ecran.choisissez_un_batiment_de_destination",
+   "litteral": "Choisissez un bâtiment de destination.",
+   "servie": true
+  },
+  {
+   "ligne": 663,
+   "methode": "ReassignChosen",
+   "cle": "famille.ecran.reaffecte_anciennete_remise_a_zero_periode_de_stabilisation",
+   "litteral": "Réaffecté — ancienneté remise à zéro, période de stabilisation.",
+   "servie": true
+  },
+  {
+   "ligne": 679,
+   "methode": "ReassignChosen",
+   "cle": "famille.ecran.echec_de_la_reaffectation",
+   "litteral": "Échec de la réaffectation.",
+   "servie": true
+  },
+  {
+   "ligne": 769,
+   "methode": "ValidateRules",
+   "cle": "famille.ecran.connectez_vous_d_abord",
+   "litteral": "Connectez-vous d'abord.",
+   "servie": true
+  },
+  {
+   "ligne": 770,
+   "methode": "ValidateRules",
+   "cle": "famille.ecran.recrutez_d_abord_un_lieutenant",
+   "litteral": "Recrutez d'abord un lieutenant.",
+   "servie": true
+  },
+  {
+   "ligne": 778,
+   "methode": "ValidateRules",
+   "cle": "famille.ecran.script_valide",
+   "litteral": "Script valide ✓",
+   "servie": true
+  },
+  {
+   "ligne": 794,
+   "methode": "AttachRules",
+   "cle": "famille.ecran.connectez_vous_d_abord",
+   "litteral": "Connectez-vous d'abord.",
+   "servie": true
+  },
+  {
+   "ligne": 795,
+   "methode": "AttachRules",
+   "cle": "famille.ecran.recrutez_d_abord_un_lieutenant",
+   "litteral": "Recrutez d'abord un lieutenant.",
+   "servie": true
+  },
+  {
+   "ligne": 805,
+   "methode": "AttachRules",
+   "cle": "famille.ecran.attache",
+   "litteral": "Attaché ✓",
+   "servie": true
+  },
+  {
+   "ligne": 931,
+   "methode": "RenderBands",
+   "cle": "famille.ecran.archetype",
+   "litteral": "Archétype",
+   "servie": true
+  },
+  {
+   "ligne": 933,
+   "methode": "RenderBands",
+   "cle": "famille.ecran.role",
+   "litteral": "Rôle",
+   "servie": true
+  },
+  {
+   "ligne": 935,
+   "methode": "RenderBands",
+   "cle": "famille.ecran.mode",
+   "litteral": "Mode",
+   "servie": true
+  },
+  {
+   "ligne": 937,
+   "methode": "RenderBands",
+   "cle": "famille.ecran.etat",
+   "litteral": "État",
+   "servie": true
+  },
+  {
+   "ligne": 939,
+   "methode": "RenderBands",
+   "cle": "famille.ecran.regles",
+   "litteral": "Règles",
+   "servie": true
+  },
+  {
+   "ligne": 944,
+   "methode": "RenderBands",
+   "cle": "famille.ecran.anciennete",
+   "litteral": "Ancienneté",
+   "servie": true
+  },
+  {
+   "ligne": 947,
+   "methode": "RenderBands",
+   "cle": "famille.ecran.cout_de_reecriture",
+   "litteral": "Coût de réécriture",
+   "servie": true
+  },
+  {
+   "ligne": 949,
+   "methode": "RenderBands",
+   "cle": "famille.ecran.stabilisation_apres_transfert",
+   "litteral": "Stabilisation après transfert",
+   "servie": true
+  },
+  {
+   "ligne": 951,
+   "methode": "RenderBands",
+   "cle": "famille.ecran.gain_de_rendement",
+   "litteral": "Gain de rendement",
+   "servie": true
+  },
+  {
+   "ligne": 971,
+   "methode": "RenderScriptSource",
+   "cle": "famille.ecran.aucun_script_pour_l_instant",
+   "litteral": "(aucun script pour l'instant)",
+   "servie": true
+  },
+  {
+   "ligne": 1086,
+   "methode": "GrantedRoleLabel",
+   "cle": "famille.grantedrole.conseil",
+   "litteral": "Conseil",
+   "servie": true
+  },
+  {
+   "ligne": 1087,
+   "methode": "GrantedRoleLabel",
+   "cle": "famille.grantedrole.executant",
+   "litteral": "Exécutant",
+   "servie": true
+  },
+  {
+   "ligne": 1088,
+   "methode": "GrantedRoleLabel",
+   "cle": "famille.grantedrole.responsable_delegue",
+   "litteral": "Responsable délégué",
+   "servie": true
+  },
+  {
+   "ligne": 1089,
+   "methode": "GrantedRoleLabel",
+   "cle": "famille.grantedrole.chef_de_groupe",
+   "litteral": "Chef de groupe",
+   "servie": true
+  },
+  {
+   "ligne": 1110,
+   "methode": "RuleCountLabel",
+   "cle": "famille.rulecount.aucune_regle",
+   "litteral": "Aucune règle",
+   "servie": true
+  },
+  {
+   "ligne": 1111,
+   "methode": "RuleCountLabel",
+   "cle": "famille.rulecount.quelques_regles",
+   "litteral": "Quelques règles",
+   "servie": true
+  },
+  {
+   "ligne": 1112,
+   "methode": "RuleCountLabel",
+   "cle": "famille.rulecount.beaucoup_de_regles",
+   "litteral": "Beaucoup de règles",
+   "servie": true
+  },
+  {
+   "ligne": 1146,
+   "methode": "RevisionCostLabel",
+   "cle": "famille.revisioncost.reecrire_coute_peu",
+   "litteral": "Réécrire coûte peu",
+   "servie": true
+  },
+  {
+   "ligne": 1147,
+   "methode": "RevisionCostLabel",
+   "cle": "famille.revisioncost.reecrire_coute_cher",
+   "litteral": "Réécrire coûte cher",
+   "servie": true
+  },
+  {
+   "ligne": 1148,
+   "methode": "RevisionCostLabel",
+   "cle": "famille.revisioncost.reecrire_coute_tres_cher",
+   "litteral": "Réécrire coûte très cher",
+   "servie": true
+  },
+  {
+   "ligne": 1149,
+   "methode": "RevisionCostLabel",
+   "cle": "famille.revisioncost.reecrire_coute_enormement",
+   "litteral": "Réécrire coûte énormément",
+   "servie": true
+  },
+  {
+   "ligne": 1164,
+   "methode": "DisruptionLabel",
+   "cle": "famille.disruption.s_installe_vite",
+   "litteral": "S'installe vite",
+   "servie": true
+  },
+  {
+   "ligne": 1165,
+   "methode": "DisruptionLabel",
+   "cle": "famille.disruption.s_installe_normalement",
+   "litteral": "S'installe normalement",
+   "servie": true
+  },
+  {
+   "ligne": 1166,
+   "methode": "DisruptionLabel",
+   "cle": "famille.disruption.s_installe_lentement",
+   "litteral": "S'installe lentement",
+   "servie": true
+  },
+  {
+   "ligne": 1167,
+   "methode": "DisruptionLabel",
+   "cle": "famille.disruption.s_installe_tres_lentement",
+   "litteral": "S'installe très lentement",
+   "servie": true
+  },
+  {
+   "ligne": 1182,
+   "methode": "EfficiencyBonusLabel",
+   "cle": "famille.efficiencybonus.aucun_gain_de_rendement",
+   "litteral": "Aucun gain de rendement",
+   "servie": true
+  },
+  {
+   "ligne": 1183,
+   "methode": "EfficiencyBonusLabel",
+   "cle": "famille.efficiencybonus.petit_gain_de_rendement",
+   "litteral": "Petit gain de rendement",
+   "servie": true
+  },
+  {
+   "ligne": 1184,
+   "methode": "EfficiencyBonusLabel",
+   "cle": "famille.efficiencybonus.bon_gain_de_rendement",
+   "litteral": "Bon gain de rendement",
+   "servie": true
+  },
+  {
+   "ligne": 1185,
+   "methode": "EfficiencyBonusLabel",
+   "cle": "famille.efficiencybonus.gain_de_rendement_maximal",
+   "litteral": "Gain de rendement maximal",
+   "servie": true
+  },
+  {
+   "ligne": 1415,
+   "methode": "BuildRecruitSection",
+   "cle": "famille.ecran.recruter_choisir_un_role_et_affecter",
+   "litteral": "RECRUTER — choisir un rôle et affecter",
+   "servie": true
+  },
+  {
+   "ligne": 1430,
+   "methode": "BuildRecruitSection",
+   "cle": "famille.ecran.archetype",
+   "litteral": "Archétype",
+   "servie": true
+  },
+  {
+   "ligne": 1442,
+   "methode": "BuildRecruitSection",
+   "cle": "famille.ecran.batiment_affecte",
+   "litteral": "Bâtiment affecté",
+   "servie": true
+  },
+  {
+   "ligne": 1453,
+   "methode": "BuildRecruitSection",
+   "cle": "famille.ecran.batiment_cible_destination_planque",
+   "litteral": "Bâtiment cible (destination / planque)",
+   "servie": true
+  },
+  {
+   "ligne": 1495,
+   "methode": "BuildStatusSection",
+   "cle": "famille.ecran.etat_lieutenant_delegue",
+   "litteral": "ÉTAT — lieutenant délégué",
+   "servie": true
+  },
+  {
+   "ligne": 1497,
+   "methode": "BuildStatusSection",
+   "cle": "famille.ecran.rafraichir",
+   "litteral": "Rafraîchir",
+   "servie": true
+  },
+  {
+   "ligne": 1501,
+   "methode": "BuildStatusSection",
+   "cle": "famille.ecran.script_de_conduite",
+   "litteral": "Script de conduite",
+   "servie": true
+  },
+  {
+   "ligne": 1502,
+   "methode": "BuildStatusSection",
+   "cle": "famille.ecran.aucun_script_pour_l_instant",
+   "litteral": "(aucun script pour l'instant)",
+   "servie": true
+  },
+  {
+   "ligne": 1659,
+   "methode": "BuildFamilyHeader",
+   "cle": "famille.ecran.la_famille",
+   "litteral": "LA FAMILLE",
+   "servie": true
+  },
+  {
+   "ligne": 1674,
+   "methode": "BuildFamilyHeader",
+   "cle": "famille.ecran.la_famille",
+   "litteral": "LA FAMILLE",
+   "servie": true
+  },
+  {
+   "ligne": 1993,
+   "methode": "RenderRoster",
+   "cle": "famille.ecran.aucun_lieutenant_recrute",
+   "litteral": "Aucun lieutenant recruté",
+   "servie": true
+  },
+  {
+   "ligne": 1996,
+   "methode": "RenderRoster",
+   "cle": "famille.ecran.aucun_lieutenant_recrute",
+   "litteral": "Aucun lieutenant recruté",
+   "servie": true
+  },
+  {
+   "ligne": 2441,
+   "methode": "BuildDonRow",
+   "cle": "famille.ecran.le_don",
+   "litteral": "LE DON",
+   "servie": true
+  },
+  {
+   "ligne": 2445,
+   "methode": "BuildDonRow",
+   "cle": "famille.ecran.le_don",
+   "litteral": "LE DON",
+   "servie": true
+  },
+  {
+   "ligne": 2635,
+   "methode": "BuildFamilyLieutenantRow",
+   "cle": "famille.ecran.etat",
+   "litteral": "ÉTAT",
+   "servie": true
+  },
+  {
+   "ligne": 2692,
+   "methode": "BuildEquipeSlot",
+   "cle": "famille.ecran.aucune_equipe_rattachee",
+   "litteral": "Aucune équipe rattachée",
+   "servie": true
+  },
+  {
+   "ligne": 2695,
+   "methode": "BuildEquipeSlot",
+   "cle": "famille.ecran.aucune_equipe_rattachee",
+   "litteral": "Aucune équipe rattachée",
+   "servie": true
+  },
+  {
+   "ligne": 2725,
+   "methode": "BuildRecruitCta",
+   "cle": "famille.ecran.recruter_un_nouveau_lieutenant",
+   "litteral": "Recruter un nouveau lieutenant",
+   "servie": true
+  },
+  {
+   "ligne": 2728,
+   "methode": "BuildRecruitCta",
+   "cle": "famille.ecran.recruter_un_nouveau_lieutenant",
+   "litteral": "Recruter un nouveau lieutenant",
+   "servie": true
+  },
+  {
+   "ligne": 2798,
+   "methode": "BuildRosterRow",
+   "cle": "famille.ecran.ouvrir",
+   "litteral": "Ouvrir",
+   "servie": true
+  },
+  {
+   "ligne": 2828,
+   "methode": "BuildReassignSection",
+   "cle": "famille.ecran.reaffecter_deplacer_ce_lieutenant_remet_l_anciennete_a_zero",
+   "litteral": "RÉAFFECTER — déplacer ce lieutenant (remet l'ancienneté à zéro)",
+   "servie": true
+  },
+  {
+   "ligne": 2829,
+   "methode": "BuildReassignSection",
+   "cle": "famille.ecran.nouveau_batiment",
+   "litteral": "Nouveau bâtiment",
+   "servie": true
+  },
+  {
+   "ligne": 2840,
+   "methode": "BuildReassignSection",
+   "cle": "famille.ecran.nouveau_batiment_cible_destination_planque",
+   "litteral": "Nouveau bâtiment cible (destination / planque)",
+   "servie": true
+  },
+  {
+   "ligne": 2844,
+   "methode": "BuildReassignSection",
+   "cle": "famille.ecran.reaffecter",
+   "litteral": "Réaffecter…",
+   "servie": true
+  },
+  {
+   "ligne": 2919,
+   "methode": "RenderReassignConfirm",
+   "cle": "famille.ecran.confirmer_la_reaffectation",
+   "litteral": "Confirmer la réaffectation",
+   "servie": true
+  },
+  {
+   "ligne": 2920,
+   "methode": "RenderReassignConfirm",
+   "cle": "famille.ecran.garder_l_anciennete_annuler",
+   "litteral": "Garder l'ancienneté (annuler)",
+   "servie": true
+  },
+  {
+   "ligne": 2979,
+   "methode": "BuildAutonomySection",
+   "cle": "famille.ecran.lui_rendre_sa_marge",
+   "litteral": "Lui rendre sa marge",
+   "servie": true
+  },
+  {
+   "ligne": 2980,
+   "methode": "BuildAutonomySection",
+   "cle": "famille.ecran.lui_elargir_sa_marge",
+   "litteral": "Lui élargir sa marge",
+   "servie": true
+  },
+  {
+   "ligne": 2981,
+   "methode": "BuildAutonomySection",
+   "cle": "famille.ecran.laisser_passer_celle_ci",
+   "litteral": "Laisser passer celle-ci",
+   "servie": true
+  },
+  {
+   "ligne": 3020,
+   "methode": "RenderAutonomy",
+   "cle": "famille.ecran.aucun_budget_d_autonomie_pour_l_instant",
+   "litteral": "Aucun budget d'autonomie pour l'instant",
+   "servie": true
+  },
+  {
+   "ligne": 3024,
+   "methode": "RenderAutonomy",
+   "cle": "famille.ecran.aucun_budget_d_autonomie_pour_l_instant",
+   "litteral": "Aucun budget d'autonomie pour l'instant",
+   "servie": true
+  },
+  {
+   "ligne": 3095,
+   "methode": "Decide",
+   "cle": "famille.ecran.echec_de_la_decision",
+   "litteral": "Échec de la décision.",
+   "servie": true
+  },
+  {
+   "ligne": 3100,
+   "methode": "Decide",
+   "cle": "famille.ecran.decision_appliquee",
+   "litteral": "Décision appliquée ✓",
+   "servie": true
+  },
+  {
+   "ligne": 3108,
+   "methode": "CategoryLabel",
+   "cle": "famille.category.operations_de_production",
+   "litteral": "Opérations de production",
+   "servie": true
+  },
+  {
+   "ligne": 3109,
+   "methode": "CategoryLabel",
+   "cle": "famille.category.routage_logistique",
+   "litteral": "Routage logistique",
+   "servie": true
+  },
+  {
+   "ligne": 3110,
+   "methode": "CategoryLabel",
+   "cle": "famille.category.envoi_de_distribution",
+   "litteral": "Envoi de distribution",
+   "servie": true
+  },
+  {
+   "ligne": 3111,
+   "methode": "CategoryLabel",
+   "cle": "famille.category.flux_de_blanchiment",
+   "litteral": "Flux de blanchiment",
+   "servie": true
+  },
+  {
+   "ligne": 3112,
+   "methode": "CategoryLabel",
+   "cle": "famille.category.reponse_securite",
+   "litteral": "Réponse sécurité",
+   "servie": true
+  },
+  {
+   "ligne": 3113,
+   "methode": "CategoryLabel",
+   "cle": "famille.category.audit_comptable",
+   "litteral": "Audit comptable",
+   "servie": true
+  },
+  {
+   "ligne": 3114,
+   "methode": "CategoryLabel",
+   "cle": "famille.category.incident_transversal",
+   "litteral": "Incident transversal",
+   "servie": true
+  },
+  {
+   "ligne": 3115,
+   "methode": "CategoryLabel",
+   "cle": "famille.category.categorie_inconnue",
+   "litteral": "Catégorie inconnue",
+   "servie": true
+  },
+  {
+   "ligne": 3123,
+   "methode": "BandLabel",
+   "cle": "famille.band.plein",
+   "litteral": "[####] Plein",
+   "servie": true
+  },
+  {
+   "ligne": 3124,
+   "methode": "BandLabel",
+   "cle": "famille.band.normal",
+   "litteral": "[###.] Normal",
+   "servie": true
+  },
+  {
+   "ligne": 3125,
+   "methode": "BandLabel",
+   "cle": "famille.band.bas",
+   "litteral": "[##..] Bas",
+   "servie": true
+  },
+  {
+   "ligne": 3126,
+   "methode": "BandLabel",
+   "cle": "famille.band.epuise",
+   "litteral": "[....] Épuisé",
+   "servie": true
+  },
+  {
+   "ligne": 3127,
+   "methode": "BandLabel",
+   "cle": "famille.band.inconnu",
+   "litteral": "[?] Inconnu",
+   "servie": true
+  },
+  {
+   "ligne": 3139,
+   "methode": "BuildRuleBuilderSection",
+   "cle": "famille.ecran.editeur_de_regles_ecrire_un_script_de_conduite",
+   "litteral": "ÉDITEUR DE RÈGLES — écrire un script de conduite",
+   "servie": true
+  },
+  {
+   "ligne": 3161,
+   "methode": "BuildRuleBuilderSection",
+   "cle": "famille.ecran.ajouter_une_regle",
+   "litteral": "+ Ajouter une règle",
+   "servie": true
+  },
+  {
+   "ligne": 3162,
+   "methode": "BuildRuleBuilderSection",
+   "cle": "famille.ecran.valider",
+   "litteral": "Valider",
+   "servie": true
+  },
+  {
+   "ligne": 3163,
+   "methode": "BuildRuleBuilderSection",
+   "cle": "famille.ecran.attacher",
+   "litteral": "Attacher",
+   "servie": true
+  },
+  {
+   "ligne": 3166,
+   "methode": "BuildRuleBuilderSection",
+   "cle": "famille.ecran.diagnostics",
+   "litteral": "Diagnostics",
+   "servie": true
+  },
+  {
+   "ligne": 3200,
+   "methode": "RenderTierBadge",
+   "cle": "famille.ecran.palier_de_vocabulaire_1_conditions_verrouillees_resolvez_des_exceptions_et_enseignez_des_regles_pour_debloquer",
+   "litteral": "Palier de vocabulaire 1 — conditions verrouillées 🔒 (résolvez des exceptions et enseignez des règles pour débloquer)",
+   "servie": true
+  },
+  {
+   "ligne": 3215,
+   "methode": "BuildLockedTeaser",
+   "cle": "famille.ecran.verrouille_se_debloque_avec_la_progression",
+   "litteral": "🔒 Verrouillé — se débloque avec la progression",
+   "servie": true
+  },
+  {
+   "ligne": 3243,
+   "methode": "RenderLockedTeaser",
+   "cle": "famille.ecran.declencheurs",
+   "litteral": "Déclencheurs",
+   "servie": true
+  },
+  {
+   "ligne": 3247,
+   "methode": "RenderLockedTeaser",
+   "cle": "famille.ecran.actions",
+   "litteral": "Actions",
+   "servie": true
+  },
+  {
+   "ligne": 3253,
+   "methode": "RenderLockedTeaser",
+   "cle": "famille.ecran.combinateur",
+   "litteral": "Combinateur",
+   "servie": true
+  },
+  {
+   "ligne": 3284,
+   "methode": "RenderRuleRows",
+   "cle": "famille.ecran.aucune_regle_touchez_ajouter_une_regle",
+   "litteral": "(aucune règle — touchez « + Ajouter une règle »)",
+   "servie": true
+  }
+ ],
+ "Assets/Scripts/Operational/Loi/LoiScreenController.cs": [
+  {
+   "ligne": 214,
+   "methode": "RendreTitre",
+   "cle": "loi.titre.le_parloir",
+   "litteral": "Le parloir",
+   "servie": true
+  },
+  {
+   "ligne": 215,
+   "methode": "RendreTitre",
+   "cle": "loi.sous_titre.vos_avocats_et_ce_qu_ils_peuvent_faire_pour_vous",
+   "litteral": "Vos avocats, et ce qu'ils peuvent faire pour vous.",
+   "servie": true
+  },
+  {
+   "ligne": 233,
+   "methode": "RendreRoster",
+   "cle": "loi.bloc.vos_avocats",
+   "litteral": "VOS AVOCATS",
+   "servie": true
+  },
+  {
+   "ligne": 327,
+   "methode": "RendreRecrutement",
+   "cle": "loi.bloc.qui_peut_vous_defendre",
+   "litteral": "QUI PEUT VOUS DÉFENDRE",
+   "servie": true
+  },
+  {
+   "ligne": 353,
+   "methode": "RendreRecrutement",
+   "cle": "loi.bloc.vous_n_avez_encore_engage_personne",
+   "litteral": "Vous n'avez encore engagé personne.",
+   "servie": true
+  },
+  {
+   "ligne": 354,
+   "methode": "RendreRecrutement",
+   "cle": "loi.bloc.aucune_affaire_en_cours",
+   "litteral": "Aucune affaire en cours.",
+   "servie": true
+  },
+  {
+   "ligne": 355,
+   "methode": "RendreRecrutement",
+   "cle": "loi.bloc.une_affaire_nait_d_une_descente_rien_ici_n_en_cree",
+   "litteral": "Une affaire naît d'une descente — rien ici n'en crée.",
+   "servie": true
+  },
+  {
+   "ligne": 412,
+   "methode": "RendreAffaires",
+   "cle": "loi.bloc.affaires_en_cours",
+   "litteral": "AFFAIRES EN COURS",
+   "servie": true
+  },
+  {
+   "ligne": 459,
+   "methode": "RendreEtatIndisponible",
+   "cle": "loi.titre.le_parloir_n_a_pas_repondu",
+   "litteral": "Le parloir n'a pas répondu",
+   "servie": true
+  },
+  {
+   "ligne": 461,
+   "methode": "RendreEtatIndisponible",
+   "cle": "loi.sous_titre.reessayez_dans_un_instant",
+   "litteral": "Réessayez dans un instant.",
+   "servie": true
+  }
+ ],
+ "Assets/Scripts/Operational/Reputation/ReputationResolvers.cs": [
+  {
+   "ligne": 117,
+   "methode": "PosturePhrase",
+   "cle": "reputation.etat.il_vous_ecoute",
+   "litteral": "Il vous écoute",
+   "servie": true
+  },
+  {
+   "ligne": 118,
+   "methode": "PosturePhrase",
+   "cle": "reputation.etat.il_se_tient_a_carreau",
+   "litteral": "Il se tient à carreau",
+   "servie": true
+  },
+  {
+   "ligne": 119,
+   "methode": "PosturePhrase",
+   "cle": "reputation.etat.il_se_ferme",
+   "litteral": "Il se ferme",
+   "servie": true
+  },
+  {
+   "ligne": 120,
+   "methode": "PosturePhrase",
+   "cle": "reputation.etat.il_vous_en_veut",
+   "litteral": "Il vous en veut",
+   "servie": true
+  },
+  {
+   "ligne": 121,
+   "methode": "PosturePhrase",
+   "cle": "reputation.etat.posture_inconnue",
+   "litteral": "Posture inconnue",
+   "servie": true
+  },
+  {
+   "ligne": 163,
+   "methode": "CoherencePhrase",
+   "cle": "reputation.etat.vous_vous_y_tenez",
+   "litteral": "Vous vous y tenez",
+   "servie": true
+  },
+  {
+   "ligne": 164,
+   "methode": "CoherencePhrase",
+   "cle": "reputation.etat.vous_vous_en_ecartez",
+   "litteral": "Vous vous en écartez",
+   "servie": true
+  },
+  {
+   "ligne": 165,
+   "methode": "CoherencePhrase",
+   "cle": "reputation.etat.pas_encore_jugeable",
+   "litteral": "Pas encore jugeable",
+   "servie": true
+  },
+  {
+   "ligne": 166,
+   "methode": "CoherencePhrase",
+   "cle": "reputation.etat.coherence_inconnue",
+   "litteral": "Cohérence inconnue",
+   "servie": true
+  },
+  {
+   "ligne": 211,
+   "methode": "PoseSens",
+   "cle": "reputation.etat.la_comptabilite_tenue",
+   "litteral": "la comptabilité tenue",
+   "servie": true
+  },
+  {
+   "ligne": 212,
+   "methode": "PoseSens",
+   "cle": "reputation.etat.la_justice_envers_les_siens",
+   "litteral": "la justice envers les siens",
+   "servie": true
+  },
+  {
+   "ligne": 213,
+   "methode": "PoseSens",
+   "cle": "reputation.etat.la_ponctualite",
+   "litteral": "la ponctualité",
+   "servie": true
+  },
+  {
+   "ligne": 214,
+   "methode": "PoseSens",
+   "cle": "reputation.etat.la_discretion_devant_les_civils",
+   "litteral": "la discrétion devant les civils",
+   "servie": true
+  },
+  {
+   "ligne": 282,
+   "methode": "OffrePhrase",
+   "cle": "reputation.etat.on_vient_sans_garantie",
+   "litteral": "On vient sans garantie",
+   "servie": true
+  },
+  {
+   "ligne": 283,
+   "methode": "OffrePhrase",
+   "cle": "reputation.etat.on_demande_des_gages",
+   "litteral": "On demande des gages",
+   "servie": true
+  },
+  {
+   "ligne": 284,
+   "methode": "OffrePhrase",
+   "cle": "reputation.etat.offre_inconnue",
+   "litteral": "Offre inconnue",
+   "servie": true
+  }
+ ],
+ "Assets/Scripts/Operational/Reputation/ReputationScreenController.cs": [
+  {
+   "ligne": 487,
+   "methode": "Rendre",
+   "cle": "reputation.bloc.donner_une_regle",
+   "litteral": "DONNER UNE RÈGLE",
+   "servie": true
+  },
+  {
+   "ligne": 1119,
+   "methode": "ConstruireEnseigne",
+   "cle": "reputation.bloc.le_miroir",
+   "litteral": "Le miroir",
+   "servie": true
+  },
+  {
+   "ligne": 1433,
+   "methode": "ConstruireMiroir",
+   "cle": "reputation.bloc.ce_qu_il_a_absorbe_de_vos_regles",
+   "litteral": "ce qu’il a absorbé de vos règles",
+   "servie": true
+  },
+  {
+   "ligne": 1524,
+   "methode": "ConstruireListeDesRegles",
+   "cle": "reputation.bloc.les_regles_que_vous_avez_donnees",
+   "litteral": "LES RÈGLES QUE VOUS AVEZ DONNÉES",
+   "servie": true
+  },
+  {
+   "ligne": 1537,
+   "methode": "ConstruireListeDesRegles",
+   "cle": "reputation.bloc.vous_n_avez_encore_donne_aucune_regle_rien_ne_peut_donc_etre_enfreint",
+   "litteral": "vous n’avez encore donné aucune règle — rien ne peut donc être enfreint",
+   "servie": true
+  }
+ ],
+ "Assets/Scripts/Shell/DailyReviewScreenController.cs": [
+  {
+   "ligne": 336,
+   "methode": "Render",
+   "cle": "revue.bloc.ce_matin_au_verge_d_or",
+   "litteral": "Ce matin, au Verge d’Or",
+   "servie": true
+  },
+  {
+   "ligne": 337,
+   "methode": "Render",
+   "cle": "revue.bloc.vos_lieutenants_ont_tenu_la_ligne_rien_ne_reclame_votre_parole",
+   "litteral": "Vos lieutenants ont tenu la ligne — rien ne réclame votre parole",
+   "servie": true
+  },
+  {
+   "ligne": 362,
+   "methode": "MajRegistre",
+   "cle": "revue.bloc.confirmer_la_routine",
+   "litteral": "CONFIRMER LA ROUTINE · ",
+   "servie": true
+  },
+  {
+   "ligne": 369,
+   "methode": "MajRegistre",
+   "cle": "revue.bloc.appui_long_rien_d_autre_ne_vous_attend",
+   "litteral": "appui long — rien d’autre ne vous attend",
+   "servie": true
+  },
+  {
+   "ligne": 634,
+   "methode": "PeindreVerdict",
+   "cle": "revue.verdict.rendu",
+   "litteral": "RENDU",
+   "servie": true
+  },
+  {
+   "ligne": 636,
+   "methode": "PeindreVerdict",
+   "cle": "revue.verdict.il_garde_sa_confiance",
+   "litteral": "il garde sa confiance",
+   "servie": true
+  },
+  {
+   "ligne": 645,
+   "methode": "PeindreVerdict",
+   "cle": "revue.verdict.perdu",
+   "litteral": "PERDU",
+   "servie": true
+  },
+  {
+   "ligne": 662,
+   "methode": "TexteRemise",
+   "cle": "revue.verdict.jusqu_a_la_remise_hebdomadaire",
+   "litteral": "jusqu’à la remise hebdomadaire",
+   "servie": true
+  },
+  {
+   "ligne": 664,
+   "methode": "TexteRemise",
+   "cle": "revue.verdict.remise_demain",
+   "litteral": "remise demain",
+   "servie": true
+  },
+  {
+   "ligne": 697,
+   "methode": "PeindreLotSigne",
+   "cle": "revue.bloc.routines_signees",
+   "litteral": " ROUTINES SIGNÉES",
+   "servie": true
+  },
+  {
+   "ligne": 699,
+   "methode": "PeindreLotSigne",
+   "cle": "revue.bloc.d_un_seul_appui_le_registre_est_clos_pour_aujourd_hui",
+   "litteral": "d’un seul appui — le registre est clos pour aujourd’hui",
+   "servie": true
+  },
+  {
+   "ligne": 787,
+   "methode": "Poser",
+   "cle": "revue.phrase.j_ai_reachemine_la_tournee_sujet",
+   "litteral": "J’ai réacheminé la tournée {sujet}",
+   "servie": true
+  },
+  {
+   "ligne": 788,
+   "methode": "Poser",
+   "cle": "revue.phrase.l_ancien_trajet_ne_passait_plus_sature_ou_coupe",
+   "litteral": "— l’ancien trajet ne passait plus : saturé, ou coupé.",
+   "servie": true
+  },
+  {
+   "ligne": 791,
+   "methode": "Poser",
+   "cle": "revue.phrase.j_ai_replanifie_la_tournee_sujet",
+   "litteral": "J’ai replanifié la tournée {sujet}",
+   "servie": true
+  },
+  {
+   "ligne": 792,
+   "methode": "Poser",
+   "cle": "revue.phrase.le_trajet_fait_plus_de_detours_que_d_habitude",
+   "litteral": "— le trajet fait plus de détours que d’habitude.",
+   "servie": true
+  },
+  {
+   "ligne": 795,
+   "methode": "Poser",
+   "cle": "revue.phrase.j_ai_rapproche_les_comptes_de_sujet",
+   "litteral": "J’ai rapproché les comptes de {sujet}",
+   "servie": true
+  },
+  {
+   "ligne": 796,
+   "methode": "Poser",
+   "cle": "revue.phrase.la_facade_est_epinglee_pour_un_controle",
+   "litteral": "— la façade est épinglée pour un contrôle.",
+   "servie": true
+  },
+  {
+   "ligne": 799,
+   "methode": "Poser",
+   "cle": "revue.phrase.j_ai_rapproche_les_comptes_de_sujet",
+   "litteral": "J’ai rapproché les comptes de {sujet}",
+   "servie": true
+  },
+  {
+   "ligne": 800,
+   "methode": "Poser",
+   "cle": "revue.phrase.il_passe_plus_d_argent_par_la_caisse_que_la_facade_ne_peut_en_justifier",
+   "litteral": "— il passe plus d’argent par la caisse que la façade ne peut en justifier.",
+   "servie": true
+  },
+  {
+   "ligne": 833,
+   "methode": "FrequenceChip",
+   "cle": "revue.chip.signale_souvent",
+   "litteral": "signale souvent",
+   "servie": true
+  },
+  {
+   "ligne": 834,
+   "methode": "FrequenceChip",
+   "cle": "revue.chip.signale_rarement",
+   "litteral": "signale rarement",
+   "servie": true
+  },
+  {
+   "ligne": 869,
+   "methode": "FrequenceChip",
+   "cle": "revue.phrase.j_ai_replanifie_la_tournee_des_coursiers",
+   "litteral": "J’ai replanifié la tournée des coursiers",
+   "servie": true
+  },
+  {
+   "ligne": 870,
+   "methode": "FrequenceChip",
+   "cle": "revue.phrase.l_horaire_habituel_n_a_pas_ete_tenu",
+   "litteral": "— l’horaire habituel n’a pas été tenu.",
+   "servie": true
+  },
+  {
+   "ligne": 872,
+   "methode": "FrequenceChip",
+   "cle": "revue.phrase.j_ai_fait_tourner_le_coin_de_vente",
+   "litteral": "J’ai fait tourner le coin de vente",
+   "servie": true
+  },
+  {
+   "ligne": 873,
+   "methode": "FrequenceChip",
+   "cle": "revue.phrase.le_lek_tournait_hors_du_rythme_convenu",
+   "litteral": "— le Lek tournait hors du rythme convenu.",
+   "servie": true
+  },
+  {
+   "ligne": 875,
+   "methode": "FrequenceChip",
+   "cle": "revue.phrase.j_ai_rapproche_les_comptes_de_la_facade",
+   "litteral": "J’ai rapproché les comptes de la façade",
+   "servie": true
+  },
+  {
+   "ligne": 876,
+   "methode": "FrequenceChip",
+   "cle": "revue.phrase.la_caisse_declaree_s_ecarte_de_l_habitude",
+   "litteral": "— la caisse déclarée s’écarte de l’habitude.",
+   "servie": true
+  },
+  {
+   "ligne": 878,
+   "methode": "FrequenceChip",
+   "cle": "revue.phrase.j_ai_passe_la_commande_de_precurseurs",
+   "litteral": "J’ai passé la commande de précurseurs",
+   "servie": true
+  },
+  {
+   "ligne": 879,
+   "methode": "FrequenceChip",
+   "cle": "revue.phrase.le_marche_est_plus_tendu_que_d_habitude",
+   "litteral": "— le marché est plus tendu que d’habitude.",
+   "servie": true
+  },
+  {
+   "ligne": 881,
+   "methode": "FrequenceChip",
+   "cle": "revue.phrase.j_ai_allege_le_stock",
+   "litteral": "J’ai allégé le stock",
+   "servie": true
+  },
+  {
+   "ligne": 882,
+   "methode": "FrequenceChip",
+   "cle": "revue.phrase.il_etait_plus_charge_ou_plus_regarde_que_d_habitude",
+   "litteral": "— il était plus chargé, ou plus regardé, que d’habitude.",
+   "servie": true
+  },
+  {
+   "ligne": 884,
+   "methode": "FrequenceChip",
+   "cle": "revue.phrase.j_ai_suivi_la_routine",
+   "litteral": "J’ai suivi la routine",
+   "servie": true
+  },
+  {
+   "ligne": 885,
+   "methode": "FrequenceChip",
+   "cle": "revue.phrase.quelque_chose_s_ecartait_de_l_habitude",
+   "litteral": "— quelque chose s’écartait de l’habitude.",
+   "servie": true
+  }
+ ],
+ "Assets/Scripts/Shell/ExceptionQueuePanelController.cs": [
+  {
+   "ligne": 124,
+   "methode": "Render",
+   "cle": "accueil.file.aucune_exception_en_attente",
+   "litteral": "Aucune exception en attente",
+   "servie": true
+  },
+  {
+   "ligne": 224,
+   "methode": "BuildLayout",
+   "cle": "accueil.file.aucune_exception_en_attente",
+   "litteral": "Aucune exception en attente",
+   "servie": true
+  }
+ ],
+ "Assets/Scripts/Shell/HighestLeverageCardController.cs": [
+  {
+   "ligne": 153,
+   "methode": "Render",
+   "cle": "accueil.carte.aucune_decision_en_attente",
+   "litteral": "Aucune décision en attente",
+   "servie": true
+  },
+  {
+   "ligne": 156,
+   "methode": "Render",
+   "cle": "accueil.carte.rien_a_signaler",
+   "litteral": "Rien à signaler",
+   "servie": true
+  },
+  {
+   "ligne": 164,
+   "methode": "Render",
+   "cle": "accueil.carte.limite_de_structure_atteinte",
+   "litteral": "Limite de structure atteinte",
+   "servie": true
+  },
+  {
+   "ligne": 174,
+   "methode": "Render",
+   "cle": "accueil.carte.pret",
+   "litteral": "Prêt",
+   "servie": true
+  }
+ ],
+ "Assets/Scripts/Shell/HomeChromeController.cs": [
+  {
+   "ligne": 146,
+   "methode": "PressureLabel",
+   "cle": "exceptions.queue_pressure.normal",
+   "litteral": "(valeur) normal",
+   "servie": true
+  },
+  {
+   "ligne": 147,
+   "methode": "PressureLabel",
+   "cle": "exceptions.queue_pressure.warning",
+   "litteral": "(valeur) warning",
+   "servie": true
+  },
+  {
+   "ligne": 148,
+   "methode": "PressureLabel",
+   "cle": "exceptions.queue_pressure.saturated",
+   "litteral": "(valeur) saturated",
+   "servie": true
+  },
+  {
+   "ligne": 196,
+   "methode": "BuildLayout",
+   "cle": "accueil.chrome.la_revue_du_jour",
+   "litteral": "La revue du jour",
+   "servie": true
+  },
+  {
+   "ligne": 210,
+   "methode": "BuildLayout",
+   "cle": "accueil.chrome.les_exceptions",
+   "litteral": "Les exceptions",
+   "servie": true
+  }
+ ],
+ "Assets/Scripts/Shell/OrgVitalsPanelController.cs": [
+  {
+   "ligne": 185,
+   "methode": "RenderCohesionDeclaredUnavailable",
+   "cle": "accueil.vitals.cohesion_indisponible_pour_l_ensemble_de_la_ville",
+   "litteral": "Cohésion : indisponible pour l'ensemble de la ville",
+   "servie": true
+  }
+ ],
+ "Assets/Scripts/ShellContracts/WalletBandResolver.cs": [
+  {
+   "ligne": 36,
+   "methode": "Label",
+   "cle": "accueil.etat.a_flot",
+   "litteral": "À flot",
+   "servie": true
+  },
+  {
+   "ligne": 37,
+   "methode": "Label",
+   "cle": "accueil.etat.confortable",
+   "litteral": "Confortable",
+   "servie": true
+  },
+  {
+   "ligne": 38,
+   "methode": "Label",
+   "cle": "accueil.etat.correct",
+   "litteral": "Correct",
+   "servie": true
+  },
+  {
+   "ligne": 39,
+   "methode": "Label",
+   "cle": "accueil.etat.juste",
+   "litteral": "Juste",
+   "servie": true
+  },
+  {
+   "ligne": 40,
+   "methode": "Label",
+   "cle": "accueil.etat.fauche",
+   "litteral": "Fauché",
+   "servie": true
+  }
+ ]
+}

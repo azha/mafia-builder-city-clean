@@ -33,36 +33,11 @@ namespace MafiaCleanCity.Operational.Tests
         private GameObject shellGo;
         private AppShell shell;
 
-        /// <summary>DETTE DATÉE : les clés que le client demande et que le back ne sert pas — mesurée le 2026-09-23 contre
-        /// `string_table.ts` de 40128b53 (pile dev), sur l'arbre regroupé, par `Tools/juge-donnees/i18n/sites-libelle.py`
-        /// (borne basse). Elle ne s'allonge que par décision nommée ; elle RÉTRÉCIT quand le back sert (règle 2).</summary>
-        private static readonly HashSet<string> DetteDatee = new HashSet<string>
-        {
-            "appro.etat.rien_a_commander_vous_ne_tenez_pas_encore_de_labo",
-            "appro.etat.vous_ne_tenez_encore_aucun_site",
-            "appro.titre.la_chaine_d_appro_n_a_pas_repondu",
-            "carnet.bloc.ce_que_la_ville_ne_dit_pas",
-            "carnet.bloc.le_carnet_n_a_pas_repondu",
-            "conflit.bloc.le_compte_des_envois_precedents_n_a_pas_repondu",
-            "conflit.titre.le_conflit_n_a_pas_repondu",
-            "distribution.titre.la_distribution_n_a_pas_repondu",
-            "exceptions.bloc.autre_issue",
-            "exceptions.bloc.autres_issues",
-            "exceptions.bloc.le_comptoir_n_a_pas_repondu",
-            "exceptions.bloc.ouvrir_sa_main",
-            "exceptions.bloc.suggere_appui_long_sa_main",
-            "exceptions.locuteur.votre_lieutenant",
-            "filiere.bloc.ce_que_la_chaine_fait_de_votre_argent",
-            "filiere.bloc.de_l_argent_attend_a_cette_etape",
-            "filiere.bloc.elle_le_lave_par_paliers_pas_d_un_coup",
-            "filiere.bloc.etape",
-            "filiere.bloc.la_chaine_de_la_tete_a_la_sortie",
-            "filiere.bloc.la_filiere_n_a_pas_repondu",
-            "filiere.bloc.la_sortie",
-            "filiere.bloc.rien_n_attend_a_cette_etape",
-            "journal.bloc.rien_ce_matin_la_ville_a_passe_une_nuit_tranquille",
-            "loi.titre.le_parloir_n_a_pas_repondu",
-        };
+        /// <summary>DETTE DATÉE : les clés que le client demande et que le back ne sert pas. Ouverte le 2026-09-23 à 24 clés
+        /// (table de 40128b53) ; **24 → 0** le même jour contre la pile reconstruite sur 83b4f291 (1059 clés, 455 sites à
+        /// littéral tous servis — `Tools/juge-donnees/i18n/sites-libelle-83b4f291.json`). Vide, la garde est un ZÉRO STRICT :
+        /// tout repli observé rougit. Elle ne se rallonge que par décision nommée, datée, avec la table qui la mesure.</summary>
+        private static readonly HashSet<string> DetteDatee = new HashSet<string>();
 
         /// <summary>Les locataires MESURÉS — écrits à la main (anti-tautologie), et leur couverture vérifiée par réflexion.</summary>
         private static readonly (string nom, Func<AppShell, MonoBehaviour> monter)[] Mesures =

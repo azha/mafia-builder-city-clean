@@ -96,3 +96,7 @@ Chemin du jeu : shell réel → bundle amorcé → pour chaque locataire, compte
 désormais servies ; le merge de CLIENT-2 apporte 5 clés ⑨ non servies (`exceptions.locuteur.votre_lieutenant`, `exceptions.bloc.
 ouvrir_sa_main`, `.suggere_appui_long_sa_main`, `.autre_issue`, `.autres_issues`). Hors garde, écrit : les 4 panneaux du chrome
 (HomeChrome, OrgVitals, HighestLeverageCard, ExceptionQueuePanel) bâtis par le shell pendant sa propre acquisition.
+
+## Dette 24 → 0 (2026-09-23, pile reconstruite sur 83b4f291)
+Instantané versionné `string_table-83b4f291.ts` : 1059 clés ; `sites-libelle.py` : 455 sites à littéral dans 34 fichiers, **0 clé non
+servie**. `DetteDatee` est vide : la garde des locataires est un zéro strict. Reste hors garde : les 4 panneaux du chrome.
