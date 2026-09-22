@@ -79,7 +79,7 @@ titre, comme v4-3 le dessine.
 |---|---|---|---|---|
 | tournée nommée par le joueur | `route.route_name` (texte libre, facultatif) | « Le Circuit » | la tournée **Le Circuit** | the **Le Circuit** run |
 | tournée, cas principal | `game.fiction.route.named` = `{depart} → {arrivee}` | « Quai-Nord → Verrier » | la tournée **Quai-Nord → Verrier** | the **Quai-Nord → Verrier** run |
-| tournée, repli | `game.fiction.route.indexed` = `Route {index}` | « Route 7 » | la tournée **Route 7** | the **Route 7** run |
+| tournée, repli | `game.fiction.route.indexed` = **`n° {index}`** (réécrit, ci-dessous ; servi aujourd'hui : `Route {index}`) | « n° 7 » | la tournée **n° 7** | the **No. 7** run |
 | façade | `game.fiction.building.name` = `{enseigne} — {district}, îlot {block}` | « Laverie du Quai — Sarnes, îlot 12 » | les comptes de **Laverie du Quai — Sarnes, îlot 12** | the books at **Laverie du Quai — Sarnes, block 12** (si l'en du gabarit est servi, ci-dessous) |
 
 - ⚠️ **Au back** : le gabarit `game.fiction.building.name` est servi **identique en en** (`string_table.ts:2093`, « {enseigne} — {district},
@@ -90,6 +90,23 @@ titre, comme v4-3 le dessine.
 - ⚠️ **Deux tirets dans la même phrase de façade** : le nom servi contient `—` (« Laverie du Quai — Sarnes… ») et le motif commence par
   `— `. Le gras (le nom) et l'italique (le motif) les séparent à l'œil. **Au client** : garder les deux styles, sinon la phrase se lit
   mal ; et ne jamais couper la ligne entre le nom et son tiret.
+
+### Le gabarit de repli de la tournée — réécrit (orchestrateur, 2026-09-22 : « sa valeur est encore libre »)
+
+`routeNameRef` (`common/fiction-names.ts:210-222`) n'a **aucun appelant** dans le back à `4841d7ad` (0 site hors sa définition), ni
+le client côté cumul : ses deux gabarits sont encore libres, ⑯ sera le premier consommateur. Servi aujourd'hui, le repli donnerait
+« la tournée **Route 7** » : le nom de la chose, deux fois. On garde la phrase (« la tournée **{sujet}** », « the **{sujet}** run »),
+qui se lit juste avec un nom libre et avec « départ → arrivée », et on réécrit le repli pour qu'il se lise juste aussi :
+
+| clé exacte | placeholders | fr servi | **fr proposé** | en servi | **en proposé** |
+|---|---|---|---|---|---|
+| `game.fiction.route.indexed` | `{index}` (inchangé) | `Route {index}` | **`n° {index}`** | `Route {index}` | **`No. {index}`** |
+
+- fr : « J’ai réacheminé la tournée **n° 7** — … » ; en : « I rerouted the **No. 7** run — … ». Les deux se lisent comme on dit « la
+  ligne n° 9 », « the No. 9 bus ».
+- `game.fiction.route.named` (`{depart} → {arrivee}`) **ne change pas** : sans article, il reste réutilisable seul comme libellé.
+- Coût du choix, dit d'avance : un écran qui montrerait un jour ce repli **seul**, sans nom commun devant, lirait « n° 7 ». C'est
+  lisible sous un titre « Tournées », pas ailleurs ; un tel écran devra écrire son nom commun, comme ⑯ le fait.
 
 ### Les phrases
 
@@ -127,16 +144,15 @@ titre, comme v4-3 le dessine.
 
 | carte | avant | après | pourquoi |
 |---|---|---|---|
-| coursiers | « J’ai réacheminé **la tournée 7** — le nouveau trajet passe à deux rues du commissariat. » | « J’ai réacheminé **la tournée 7** — l’ancien trajet ne passait plus : saturé, ou coupé. » | le motif devient celui de `route_saturated_or_severed` : le back ne sait rien d'un commissariat |
+| coursiers | « J’ai réacheminé **la tournée 7** — le nouveau trajet passe à deux rues du commissariat. » | « J’ai réacheminé **la tournée n° 7** — l’ancien trajet ne passait plus : saturé, ou coupé. » | le motif devient celui de `route_saturated_or_severed` : le back ne sait rien d'un commissariat |
 | Lek | « Je tiens **le coin du Lek** malgré la surenchère — le droit de place a doublé — la recette peut y passer. » | « Je tiens **le coin de l’îlot 14, Marne-Basse** malgré la surenchère — … » + note « attend TD-359/360 » | l'étiquette de repli ; la carte reste, annotée |
-| façade | « J’ai rapproché les comptes **du lavomatic** — les recettes déclarées dépassent celles d’une laverie. » | « J’ai rapproché les comptes **du lavomatic** — il passe plus d’argent par la caisse que la façade ne peut en justifier. » | le motif devient celui de `buffer_loaded`, vrai pour toute enseigne |
+| façade | « J’ai rapproché les comptes **du lavomatic** — les recettes déclarées dépassent celles d’une laverie. » | « J’ai rapproché les comptes **de Laverie du Quai — Sarnes, îlot 12** — il passe plus d’argent par la caisse que la façade ne peut en justifier. » | le motif devient celui de `buffer_loaded`, vrai pour toute enseigne |
 
-- **« la tournée 7 » reste** (ruling de l'orchestrateur : l'index de repli est plausible). ⚠️ Le gabarit servi est `Route {index}` : à
-  l'écran, le repli se lira « la tournée **Route 7** », pas « la tournée 7 ». La maquette montre le repli, pas le cas principal
-  (« Quai-Nord → Verrier »). À trancher si la référence doit montrer le cas principal.
-- **« du lavomatic » reste** (ruling : la façade garde son nom réel, que le back projettera). ⚠️ « lavomatic » n'est pas une enseigne
-  servie : la liste du back (`common/building-signs.ts`) donne pour une façade « Laverie du Quai », « Pressing Varne »… et le nom servi
-  sera « Laverie du Quai — Sarnes, îlot 12 ». La maquette est en avance sur le nom, pas en désaccord avec la forme.
+- **« la tournée 7 » → « la tournée n° 7 »** (atelier `9e8a3e3`) : le repli tel qu'il sera servi avec le gabarit réécrit ci-dessus.
+  La maquette montre le repli, pas le cas principal (« Quai-Nord → Verrier ») ; c'est le choix de l'orchestrateur.
+- **« du lavomatic » → « de Laverie du Quai — Sarnes, îlot 12 »** (atelier `9e8a3e3`) : « lavomatic » n'était pas une enseigne
+  servie. « Laverie du Quai » est dans la liste du back pour une façade (`common/building-signs.ts`), « Sarnes » est un district servi,
+  et la forme est celle de `game.fiction.building.name`.
 - **Re-rendu de la référence de ⑯** : après le signal de l'orchestrateur.
 
 ---
