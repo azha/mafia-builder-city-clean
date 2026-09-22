@@ -1,0 +1,37 @@
+[seed] compte=operational_demo@example.test · gel=compte ordinaire · MAFIA_SEED_ALLOW_FROZEN=non posée
+[op-seed] reusing operational demo account 01a01f34-fceb-79f3-9662-d0930f144fee (player 01a01f34-fd4e-7771-83b0-b75efa6e8023)
+[op-seed] resetting prior operational state (idempotent)…
+[op-seed] purge : 25 DELETE en UNE transaction (1 appel psql, BEGIN/COMMIT)
+[op-seed] signed in (Bearer acquired)
+[op-seed] session closed (closed=true) — structural mutations now run session-less (D9, uncapped)
+[op-seed] 9 buildings purchased + converted (gutting; incl. Crick refinery f43cdf94-2f70-48b0-9cc7-d9b2aab40a46)
+[op-seed] setups fast-forwarded → 9 buildings operational
+[op-seed] Pyralin order delivered → 2 units in the lab
+[op-seed] secondary precursors delivered → 4 units (thalmite+garnet_salt) in the lab
+[op-seed] cook completed → 200 g Brindle in the lab
+[op-seed] verdant_root_extract order delivered → 2 units in the refinery
+[op-seed] crick refine completed → 200 g Crick in the refinery (cold-by-nature → OPTIMAL_COLD)
+[op-seed] specialized_lab built + upgraded → lab_tier=2 (REFINED band) in glass district 13
+[op-seed] glass_lily order delivered → 2 units in the specialized_lab
+[op-seed] ash cook completed → 200 g Ash, purity_score=75 (target 75 → CRYSTALLINE band)
+[op-seed] ash appointment booked → c11140b7-7276-4839-977b-7a631ebe0797 (status=scheduled; SCHEDULED) at glass venue ac992c09-3a73-4d7c-8756-7aee010bc059
+[op-seed] grow_house 8519da54-6386-4e39-859b-6e5fd2ed395e planted + advanced → grow_session=e0c710b0-4d64-4010-88b8-e09a0e20bb04 (stage_2|2|-; MID / ON_TRACK / tend_due)
+[op-seed] distribution_hub built + upgraded → hub_tier=2 (MEDIUM band) in tidewater district 1
+[op-seed] distribution_hub 341cc9d1-5700-4be7-8c48-01ec81e8153a dispatched 2 bike shipments → 2 in transit (BUSY roster band)
+[op-seed] money_holding e95f0669-b377-4a1a-bf8a-88403d18c35d built + upgraded + deposited → (tier|held_cents=2|5000000; MEDIUM / MODERATE / BUSY / EARNING — forfeiture armed in §13c)
+[op-seed] courier delivered → 60 g at the dealer-spot (courier at_destination)
+[op-seed] dealer sold 6 ticks → float 75000 cents (pinned for an on-boundary collect)
+[op-seed] runner collected → safehouse holds ~75000 cents
+[op-seed] launder inject#1 cleaned → wallet credited 0 cents
+[op-seed] dealer accrued display float → 62500 cents (uncollected — MODERATE band)
+[op-seed] launder inject#2 → node mid-pipeline (DIRTY, 75000 cents buffered)
+[op-seed] pipeline chained → 4 stages (head=ed265d48-b635-48bd-9f7e-b5b850cbe522 → 3 downstream)
+[op-seed] raid executed on block 1501 → lab structural_state=damaged (1 raid row(s))
+[op-seed] lab audit pin set (raid_risk floored at HIGH; heat≈0.81)
+[op-seed] stash (healthy control) structural_state=operational
+[op-seed] laundering head node re-pinned DIRTY after raid advance (cleanliness_at_output=0)
+[op-seed] money_holding forfeiture armed (scheduled_at_tick=179442, clock=79442 → PENDING band; far lead, never fires)
+[op-seed] phase-20 exception demo: COOK 01a0c8ca-0214-7076-8542-57ef591eccf9 + 4 pending cards (2 teach / 1 one-time / 1 raid-style)
+[op-seed] phase-21 autonomy demo: depleted PRODUCTION_OPS + open report 232f70d5-48ee-423e-a4ea-7493df42ac54 (2 issues)
+
+=== OPERATIONAL DEMO SEEDED ===

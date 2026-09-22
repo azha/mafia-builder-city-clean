@@ -1,0 +1,7 @@
+[seed] compte=operational_demo@example.test · gel=compte ordinaire · MAFIA_SEED_ALLOW_FROZEN=non posée
+[op-seed] reusing operational demo account 01a01f34-fceb-79f3-9662-d0930f144fee (player 01a01f34-fd4e-7771-83b0-b75efa6e8023)
+[op-seed] resetting prior operational state (idempotent)…
+ERROR:  division by zero
+[op-seed] CONTRÔLE D'ATOMICITÉ — sabotage après le DELETE des bâtiments du district, 25 DELETE dans le script : lieutenant 3→3 · dealer 1→1 · laundering_nodes 4→4 · building_operational_state 13→13 · buildings_district 13→13 · cibles_hors_district 4→4
+[op-seed] ATOMICITÉ PROUVÉE : 38 ligne(s) avant, 38 après, 0 entre — le sabotage a tout annulé (ERROR:  division by zero).
+[op-seed] contrôle terminé — AUCUN semis effectué (MAFIA_SEED_CONTROLE_PURGE=1).
