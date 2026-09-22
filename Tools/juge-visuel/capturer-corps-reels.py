@@ -589,6 +589,16 @@ def main(argv):
         for k in total: total[k] += c[k]
         lignes.append(f"| `{r['dossier']}` | {r['sym']} | {len(routes)} | {c['appelées']} | {c['sans instance']} | {c['mutations']} | {c['erreurs']} |")
     print("\n".join(lignes)); print("TOTAL", total)
+    # ⛔ La docstring promettait « INDEX.md gagne une colonne corps via construire-dossiers.py --sans-rendu (lancé à la
+    #    fin) » et rien ne le lançait : mesuré le 2026-09-22, l'INDEX est resté au 04/09 après une capture complète.
+    #    Une prose qui décrit un geste absent est pire qu'une prose muette : on la croit. Le geste, maintenant :
+    #    `--sans-rendu` par défaut (un rendu headless n'a rien à faire dans une capture de corps).
+    r_idx = subprocess.run([sys.executable, os.path.join(ICI, "construire-dossiers.py"), "--sans-rendu"],
+                           capture_output=True, text=True)
+    if r_idx.returncode != 0:
+        print("⛔ construire-dossiers.py --sans-rendu a échoué — l'INDEX n'est PAS à jour :", (r_idx.stderr or r_idx.stdout)[-400:])
+        sys.exit(1)
+    print("INDEX.md :", (r_idx.stdout.strip().splitlines() or ["(rien imprimé)"])[-1])
     return 0
 
 

@@ -1,0 +1,99 @@
+{
+ "dossier": "police",
+ "tour": "r2-⑮",
+ "sym": "⑮",
+ "nom": "Les inspections (MIS Inspection Queue)",
+ "canon": "screen_10",
+ "controleur": "InspectionScreenController",
+ "but": "la file d'inspection, la lecture payante, le dépôt de rapport, le flood backlash (front.md « Montre »)",
+ "chemin": "Plus → LES INSPECTIONS",
+ "prepare_le": "2026-09-22",
+ "prepare_par": "atelier / DA (session mafia-unity-DA)",
+ "client": "d0824c8c",
+ "atelier": "20d006d",
+ "etats": "NON FOURNI — aucune capture ; attendus : garni (#32), vide (texte ratifié), dépôt sans cible (#33)",
+ "references": [
+  [
+   "reference-⑮-1080x2102.png",
+   "rendu du cadre nominal (`ecrans-brennar-6.html` #32)",
+   "1080×2102",
+   "×3,6",
+   "300 CSS = 1080 px"
+  ],
+  [
+   "etats/cadre-31-tableau.png",
+   "#31 — nominal de ⑰, fourni comme frère",
+   "1080×2102",
+   "×3,6",
+   "300 CSS = 1080 px"
+  ],
+  [
+   "etats/cadre-33-signalement.png",
+   "#33",
+   "1080×2102",
+   "×3,6",
+   "300 CSS = 1080 px"
+  ],
+  [
+   "etats/cadre-34-retour-de-baton.png",
+   "#34",
+   "1080×2102",
+   "×3,6",
+   "300 CSS = 1080 px"
+  ],
+  [
+   "etats/cadre-35-lots-back.png",
+   "#35 (bas = note d'atelier)",
+   "1080×2102",
+   "×3,6",
+   "300 CSS = 1080 px"
+  ],
+  [
+   "etats/inspections-canon.png",
+   "canon série 2 garni",
+   "900×1752",
+   "×3,0",
+   "300 CSS = 900 px"
+  ],
+  [
+   "etats/inspections-vide.png",
+   "canon série 2 vide",
+   "900×1752",
+   "×3,0",
+   "300 CSS = 900 px"
+  ]
+ ],
+ "cadres": {
+  "31": {
+   "ligne": 1043,
+   "etiquette": "La police — le tableau : ce qu’ils savent"
+  },
+  "32": {
+   "ligne": 1080,
+   "etiquette": "La police — le registre de dispatch"
+  },
+  "33": {
+   "ligne": 1090,
+   "etiquette": "La police — déposer un signalement"
+  },
+  "34": {
+   "ligne": 1103,
+   "etiquette": "La police — le retour de bâton"
+  },
+  "35": {
+   "ligne": 1115,
+   "etiquette": "La police — avec les lots back"
+  }
+ },
+ "polices_fc_match": {
+  "Georgia": "\"Noto Serif\" \"Regular\"",
+  "DejaVu Sans": "\"DejaVu Sans\" \"Book\"",
+  "Courier New": "\"Liberation Mono\" \"Regular\"",
+  "sans-serif": "\"Noto Sans\" \"Regular\"",
+  "serif": "\"Noto Serif\" \"Regular\"",
+  "Times New Roman": "\"Liberation Serif\" \"Regular\"",
+  "Segoe UI": "\"Noto Sans\" \"Regular\""
+ },
+ "captures": [],
+ "defaut_de_dossier_r1_corrige": "la référence r1 était le cadre #31 (⑰) ; mesuré le 2026-09-22 : PNG commité ↔ rendu #31 = 0,3 % ; re-rendue depuis #32"
+}

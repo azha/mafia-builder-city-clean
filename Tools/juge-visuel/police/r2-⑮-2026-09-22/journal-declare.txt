@@ -1,0 +1,1 @@
+# Identités des campagnes — NON FOURNI le 2026-09-22 : aucune campagne de capture encore pour ce tour. À joindre (ligne [DemoIdentityResolver] du journal du run) avec les captures.
