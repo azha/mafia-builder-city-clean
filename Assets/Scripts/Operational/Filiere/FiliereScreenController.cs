@@ -366,8 +366,8 @@ namespace MafiaCleanCity.Operational
             MajCompteur(0, 0, Lib("ÉTAPES"));
             MajCompteur(1, 0, Lib("PROPRE AU BOUT"));
             MajCompteur(2, 0, Lib("ÉCARTS"));
-            MajPanneau(Lib("CE QUE LE SERVEUR ENVOIE VRAIMENT"), Lib("Pas de réponse"),
-                Lib("la route n'a rien rendu. Ce n'est pas « la filière est vide » : c'est « on "
+            MajPanneau(Lib("CE QU'ON SAIT VRAIMENT"), Lib("Pas de réponse"),
+                Lib("on n'a pas eu de réponse. Ce n'est pas « la filière est vide » : c'est « on "
                     + "ne sait pas où elle en est »."));
         }
 
@@ -417,15 +417,15 @@ namespace MafiaCleanCity.Operational
             MajCompteur(2, 0, Lib("ÉCARTS"));
 
             Maillon("1", Lib("Obtenir une planque"),
-                Lib("le premier maillon : sans elle, rien n'entre dans la filière. Le même lot "
-                    + "débloque le ramassage des caisses de dealers."));
+                Lib("le premier maillon : sans elle, rien n'entre dans la filière — et rien ne se "
+                    + "ramasse chez les dealers non plus."));
             Maillon("2", Lib("Dire combien il y a dans la filière"),
-                Lib("la propreté est la seule grandeur servie : ni montant, ni durée, ni frais."));
+                Lib("on ne vous dira que si c'est propre : ni combien, ni depuis quand, ni à quel prix. C'est voulu."));
 
             MajPanneau(Lib("CE QUE LA FILIÈRE NE DIT PAS"),
                 Lib("Vous n'avez encore aucun nœud"),
-                Lib("la route répond, et elle répond « rien » : ce n'est pas une panne, c'est un "
-                    + "état. Il faut une planque pour que la filière commence quelque part."));
+                Lib("ce n'est pas une panne, c'est un état : il n'y a rien à montrer tant qu'il n'y a "
+                    + "rien de monté. Il faut une planque pour que la filière commence quelque part."));
         }
 
         /// <summary>Un maillon manquant — le patron du cadre 142.</summary>
@@ -456,7 +456,7 @@ namespace MafiaCleanCity.Operational
             MajCompteur(0, 0, Lib("ÉTAPES"));
             MajCompteur(1, 0, Lib("PROPRE AU BOUT"));
             MajCompteur(2, 0, Lib("ÉCARTS"));
-            MajPanneau(Lib("CE QUE CET ÉCRAN SAIT POUR L'INSTANT"),
+            MajPanneau(Lib("CE QU'ON SAIT POUR L'INSTANT"),
                 Lib("La filière n'a pas encore été interrogée"),
                 Lib("ce n'est ni « elle est vide » ni « elle ne répond pas », c'est « pas encore »."));
         }
