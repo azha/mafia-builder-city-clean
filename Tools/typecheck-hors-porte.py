@@ -39,11 +39,19 @@ Il ne dit RIEN de ce que le code FAIT. Une garde qui compile et qui vérifie la 
 propriété passe ici en vert. La porte reste nécessaire — elle n'est simplement plus
 brûlée pour des fautes de frappe.
 """
-import os, re, shutil, subprocess, sys
+import atexit, os, re, shutil, subprocess, sys, tempfile
 
 U = '/home/erutheone/Unity/Hub/Editor/6000.4.6f1/Editor/Data'
 DOTNET, CSC = f'{U}/NetCoreRuntime/dotnet', f'{U}/DotNetSdkRoslyn/csc.dll'
-TMP = os.environ.get('TMPDIR', '/tmp') + '/typecheck-hors-porte'
+# ⛔ UN RÉPERTOIRE PAR EXÉCUTION, JAMAIS UN CHEMIN FIXE. La v1 écrivait `csc.rsp`, les DLL fraîches et la copie de
+#    sauvegarde du contrôle positif dans `/tmp/typecheck-hors-porte/`, PARTAGÉ par tous les arbres et toutes les sessions
+#    de la machine. Deux typechecks simultanés (CLIENT-1 et CLIENT-2 le font) peuvent donc compiler le `csc.rsp` de
+#    l'autre. Mesuré le 2026-09-23 : un contrôle positif a rendu « faute injectée ⇒ EXIT=0, citée : NON » sur un
+#    fichier que la même commande, rejouée trois fois aussitôt, voyait 3/3. La cause la plus probable est la course sur
+#    le fichier partagé ; elle n'est pas isolée. Le partage, lui, est un fait. ⚠️ Pire que le faux rouge : la même course
+#    peut rendre un FAUX VERT, en compilant les sources d'un autre arbre.
+TMP = tempfile.mkdtemp(prefix='typecheck-hors-porte-', dir=os.environ.get('TMPDIR', '/tmp'))
+atexit.register(shutil.rmtree, TMP, True)
 
 
 def compile_un(proj, extra=(), out=None, subst=None, muet=False):
