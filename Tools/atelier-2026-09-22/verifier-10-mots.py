@@ -53,9 +53,15 @@ print(f'§1 : {len(mien)} clé(s) dans le 10, {len(leur)} chez CLIENT-2 ({SHA_C2
 
 # §2 — core_loops.flag_discipline.*
 bk = show(BACK, SHA_BK, TABLE_BK)
+# ⛔ le fichier porte EN_MESSAGES PUIS FR_MESSAGES (l.53, l.1683 à 4841d7ad) : on lit le bloc FR PAR SON NOM, jamais « la 1re
+#    occurrence » — la v1 de ce script lisait l'EN, et passait parce que ces 11 valeurs sont identiques dans les deux registres.
+debut = bk.index('export const FR_MESSAGES'); fin = bk.index('\n};', debut)
 fr_bk = {}
-for m in re.finditer(r"'(" + re.escape(PREFIXE) + r"[\w.]+)':\s*\n?\s*'((?:[^'\\]|\\.)*)'", bk):
-    fr_bk.setdefault(m.group(1), m.group(2))                                   # 1re occurrence = registre FR
+for m in re.finditer(r"'(" + re.escape(PREFIXE) + r"[\w.]+)':\s*\n?\s*'((?:[^'\\]|\\.)*)'", bk[debut:fin]):
+    fr_bk[m.group(1)] = m.group(2)
+assert 'core_loops.flag_discipline.reason.stash_reorder' in fr_bk, 'contrôle positif : le bloc FR doit porter la clé'
+en_debut = bk.index('export const EN_MESSAGES'); assert en_debut < debut, 'ordre des registres changé : relire le fichier'
+print(f'registre FR lu par son nom (l.{bk[:debut].count(chr(10)) + 1})')
 mien2 = {}
 for l in s2.split('\n'):
     if l.startswith('| `…'):

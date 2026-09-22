@@ -39,7 +39,7 @@ Le fr est celui du fichier de CLIENT-2, à l'octet (apostrophe `’` U+2019, tir
 
 ## 2. ⑯ — les 11 clés `core_loops.flag_discipline.*` : l'`en` réel, et `stash_reorder` réécrit dans les deux langues
 
-Aujourd'hui l'en est le fr à l'octet (`string_table.ts:580-603` et `:2176-2199`). Les placeholders sont **exactement** ceux du fr
+Aujourd'hui l'en est le fr à l'octet (`EN_MESSAGES`, `string_table.ts:580-603` ; `FR_MESSAGES`, `:2176-2199`). Les placeholders sont **exactement** ceux du fr
 (garde TD-457 : params émis = placeholders du gabarit) — vérifié par script, §6.
 
 | clé | fr servi | fr proposé | en proposé |
@@ -82,8 +82,8 @@ titre, comme v4-3 le dessine.
 | tournée, repli | `game.fiction.route.indexed` = **`n° {index}`** (réécrit, ci-dessous ; servi aujourd'hui : `Route {index}`) | « n° 7 » | la tournée **n° 7** | the **No. 7** run |
 | façade | `game.fiction.building.name` = `{enseigne} — {district}, îlot {block}` | « Laverie du Quai — Sarnes, îlot 12 » | les comptes de **Laverie du Quai — Sarnes, îlot 12** | the books at **Laverie du Quai — Sarnes, block 12** (si l'en du gabarit est servi, ci-dessous) |
 
-- ⚠️ **Au back** : le gabarit `game.fiction.building.name` est servi **identique en en** (`string_table.ts:2093`, « {enseigne} — {district},
-  îlot {block} », et `.rang` « …, n° {rang} », `:2098`) : un joueur anglophone lira « îlot » et « n° ». En proposé : « {enseigne} — {district},
+- ⚠️ **Au back** : le gabarit `game.fiction.building.name` est servi **identique en en** (`EN_MESSAGES`, `string_table.ts:478` et `.rang` `:483` ;
+  le fr est à `:2093` et `:2098`) : « {enseigne} — {district}, îlot {block} » et « …, n° {rang} » : un joueur anglophone lira « îlot » et « n° ». En proposé : « {enseigne} — {district},
   block {block} » et « {enseigne} — {district}, block {block}, no. {rang} », mêmes placeholders. Les deux gabarits `route` sont neutres.
 - Le nom est inséré **nu, sans article**, après un nom commun (« la tournée », « les comptes de ») : c'est ce qui permet à un nom libre,
   à « A → B » et à « Route 7 » d'entrer dans la même phrase sans accord à calculer. Le gras le signale comme un nom propre.
