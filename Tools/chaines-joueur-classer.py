@@ -251,6 +251,8 @@ SOURCE = [
  (L, "Police belief", 0, "③ ligne (:1137)"),
  (L, "Patrol heat", 0, "③ ligne (:1141)"),
  (L, "Citizen whisper", 0, "③ ligne (:1145)"),
+ (L, "🔒 Tier", 0, "RuleModel:210 (MakeLabel)"),
+ (L, "🔒 soon", 0, "RuleModel:211 (MakeLabel)"),
 ]
 
 

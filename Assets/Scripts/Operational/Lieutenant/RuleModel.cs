@@ -203,12 +203,12 @@ namespace MafiaCleanCity.Operational.Lieutenant
         }
 
         // Build the teaser caption + an honest lock hint distinguishing the two backend rejection kinds:
-        //   tier == 1 (NOT_SUPPORTED_YET, a Tier-1 primitive not yet implemented in this build) → "{TOKEN}  🔒 soon".
-        //   tier >= 2 (TIER_NOT_UNLOCKED, gated behind tier progression)                        → "{TOKEN}  🔒 Tier {tier}".
+        //   tier == 1 (NOT_SUPPORTED_YET, a Tier-1 primitive not yet implemented in this build) → "{TOKEN}  🔒 pas encore".
+        //   tier >= 2 (TIER_NOT_UNLOCKED, gated behind tier progression)                        → "{TOKEN}  🔒 palier {tier}".
         private static string MakeLabel(string token, int tier) =>
             tier >= 2
-                ? $"{token}  🔒 Tier {tier.ToString(CultureInfo.InvariantCulture)}"
-                : $"{token}  🔒 soon";
+                ? $"{token}  🔒 palier {tier.ToString(CultureInfo.InvariantCulture)}"
+                : $"{token}  🔒 pas encore";
 
         /// <summary>The locked TRIGGER primitives — every trigger atom BEYOND the executable STATE/EVENT subset.
         /// TIME/LIFECYCLE/ORDER_LIFECYCLE are Tier-1 grammar primitives not yet implemented (NOT_SUPPORTED_YET);
