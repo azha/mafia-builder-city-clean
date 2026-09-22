@@ -51,3 +51,10 @@ heat-pressure, raid, cue-cascade, backpressure, ambient-drift, random-world. Les
    RuleEditorTier2 enseignent l'action enseignable du raid ; C inchangé sur le fond.
 4. MUTE : cible = carte heat-pressure, `candidate_actions[0]` ; mandat du juge mis à jour ; empreinte APRÈS = AVANT moins une résolution.
 5. Contrôle : ⑨ ne montre plus aucune prose anglaise sur le compte de démo (garde zéro repli des locataires + E16′/E18 du back).
+
+## Décision de l'orchestrateur (2026-09-23)
+Plan approuvé avec ses trois écarts : horloge accélérée (cartes et déclencheurs de production, jamais une carte écrite à la main ;
+le `_test/citysim/raid` direct est tranché par le back) ; la MUTE résout la 1ʳᵉ action d'une carte `heat_pressure`, écrit au mandat ;
+épingles et DSL enseigné re-mesurés. **Condition** : `provision-demo-riche.mjs` exécute ce seeder sur le compte de capture GELÉ ⇒ le lot
+passe par une **revue ⊥ (reviewer neuf, pas l'auteur) AVANT exécution**, et l'empreinte AVANT/APRÈS du compte de capture
+(`scripts/empreinte-compte.sh`) est la preuve de clôture.
