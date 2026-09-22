@@ -152,18 +152,38 @@ namespace MafiaCleanCity.CitySim.Inspection.Tests
         }
 
         [UnityTest]
-        public IEnumerator Depot_CompteFrais_SansBatiment_LeGesteEstRefuse()
+        public IEnumerator Depot_CompteFrais_LeKitDeDepartEstLaCible_EtLeDepotPasse()
         {
+            // ⛔ PRÉMISSE FAUSSE, PAYÉE AU PREMIER RUN (créneau du 22/09, 13:32) : « un compte frais ne
+            //    possède rien ». Faux — la planque est donnée à l'arrivée (㊵·142), donc `me/buildings`
+            //    n'est jamais vide et la cible existe dès le signup. L'état « aucun bâtiment à vous »
+            //    n'est atteignable par aucun compte réel ; il reste une garde de code, exercée ci-dessous
+            //    SANS jeton. Ce test prouve l'inverse de ce que je croyais : le dépôt passe sur un
+            //    compte frais (le juge l'avait mesuré : 201 sur son compte frais, 07/09).
             yield return OuvrirUnCompteFrais();
             var ecran = Monter();
             ecran.SetToken(token);
             yield return AttendreLeRendu(ecran);
 
-            Assert.IsNull(ecran.Cible, "un compte frais ne possède rien : pas de cible");
-            Assert.IsFalse(ecran.PeutDeposer, "sans bâtiment à soi, le geste doit être fermé");
+            Assert.IsNotNull(ecran.Cible, "un compte frais possède son kit de départ : la cible du dépôt existe dès le signup");
+            Assert.IsTrue(ecran.PeutDeposer, "avec une cible et un jeton, le geste est ouvert — même le premier jour");
+            yield return ecran.DeposerPourTest("GENUINE_REPORT");
+            Assert.IsNull(ecran.DerniereErreurDepot, $"le dépôt du premier jour a échoué : {ecran.DerniereErreurDepot}");
+            Assert.IsNotNull(ecran.DernierRapport, "la réponse à 4 clés n'est pas arrivée");
+            Assert.Greater(ecran.DernierRapport.cost_resolved, 0, "le prix est servi, même à un compte frais");
+        }
+
+        [UnityTest]
+        public IEnumerator Depot_SansJeton_LeGesteEstRefuse_EtLeRefusEstDit()
+        {
+            // la garde de code « pas de cible / pas de jeton » : aucune requête ne part, et le refus est dit
+            var ecran = Monter();
+            yield return null;
+            Assert.IsFalse(ecran.PeutDeposer, "sans jeton ni cible, le geste doit être fermé");
             yield return ecran.DeposerPourTest("GENUINE_REPORT");
             Assert.IsNull(ecran.DernierRapport, "aucune requête ne doit partir sans cible");
             Assert.IsNotNull(ecran.DerniereErreurDepot, "le refus est DIT, pas silencieux");
+            Assert.AreEqual(0, ecran.RendusEffectues, "aucun chargement n'a eu lieu : le refus n'a pas rendu l'écran");
         }
     }
 }
