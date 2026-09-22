@@ -28,42 +28,86 @@ Ecran9 n'avait pas de voisin fautif dans une AUTRE classe : l'orphelin naît dan
 - Pas de rejeu ce soir : il ira dans la prochaine partie 1 (Ecran9 ET la garde sur les 20 tests de la classe).
 
 ## La classe, par lecture des TearDown de la partie 1 dans l'ordre d'exécution (`gate-p1.log`, 86 classes)
-Outil : `orphelins-par-teardown.py <classes dans l'ordre>` — heuristique qui CLASSE, ne tranche pas ; chaque ligne signalée a été lue.
-Mesuré AVANT le correctif (arbre 159f7398) ; APRÈS, la ligne `ExceptionQueuePlayModeTests` passe à « rien » — l'outil voit la correction.
-⚠️ Il rate l'hôte de nav de `C` (le TearDown mentionnait `LastNav…` pour la file) : trouvé à la lecture, pas par l'outil.
+Outil : `orphelins-par-teardown.py p1-classes-ordre.txt` — heuristique qui CLASSE, ne tranche pas ; chaque ligne signalée est LUE.
+⛔ **Version 3.** La v1 comptait les COMMENTAIRES : « `MonterEcran()` seul », écrit dans un commentaire, a fait signaler ChaineDAppro S1
+comme un second montage — annoncé à l'orchestrateur comme « même forme, silencieuse » AVANT relecture du corps, puis corrigé : chaque test de
+ChaineDAppro appelle `MonterEcran()` UNE fois. La v2 retirait les commentaires mais prenait tout local TYPÉ (`GameObject host = new …`)
+pour un champ, et ratait les TearDown qui ne nomment pas leur type. La v3 : commentaires retirés (chaînes préservées), champ = déclaration
+de classe, `Destroy(` différé = sans `yield return` après lui, émetteur lu sur la classe (`AddComponent<…Controller|Shell|Screen>`).
+*Deux faux positifs de la même famille : un instrument qui lit du texte doit savoir ce qui, dans le texte, n'est pas du code.*
 
-**Écrasement d'un champ par un second montage dans le même test** (4 signalés) :
-- `ChaineDApproScreenPlayModeTests` (rang 37) : **même forme, SILENCIEUSE** — `EcranApproS1_…` appelle `MonterEcran()` deux fois (`hostGo` écrasé) ; le contrôleur charge par le réseau (`Charger()`), mais n'écrit AUCUN `LogError` : son orphelin ne peut pas accuser un voisin. Et le TearDown détruit `hostGo` en DIFFÉRÉ. Même correctif applicable — non fait ici, signalé.
-- `ExceptionQueuePlayModeTests` (rang 39) : **LA CAUSE** — corrigée ci-dessus.
-- `AccueilPanneauxGeometriePhotoPlayModeTests` (rang 49) : faux positif : les deux montages sont LOCAUX à une aide qui les détruit elle-même ; le TearDown attend une frame (`yield return null`) après son `Destroy`, et le SetUp balaie les résidus.
-- `AppShellPlayModeTests` (rang 51) : voulu : `StaleAbandonedShell_…` abandonne un shell EXPRÈS pour prouver qu'il ne fuit pas ; mais son TearDown détruit en différé (voir plus bas).
+**Écrasement d'un champ par un second montage** : **1** — `ExceptionQueuePlayModeTests` (rang 39), LA CAUSE, corrigée (bb47e048).
+Faux positifs des v1/v2, lus : ChaineDAppro S1 (commentaire), AccueilPanneauxGeometriePhoto et AppShell `StaleAbandonedShell` (locaux d'aide
+qui se détruisent eux-mêmes / abandon VOULU), VuePrincipaleCapture (locaux typés).
 
-**`Object.Destroy` DIFFÉRÉ au TearDown, sans frame d'attente** (16 classes, hors les écrasements) — la forme du 03/09
-(`lister-destructions-differees.py`). Aucune n'a produit le 401 d'Ecran9 : `gate-p1.log` ne porte qu'UN journal « [ExceptionQueue] load failed »
-(:49932, l'orphelin d'Ecran10 — la seconde occurrence du texte est la ligne FAIL :49951 qui le cite) ; `rejeu-p1.log` en porte deux (:50335, le même orphelin ; :50675, le `Back()` d'Ecran9 dans Ecran9). Elles restent des sursis partagés : shells (`shellGo` + `ShellCanvas`), dioramas de quartier
-(`bareHostGo`), `AutonomyInbox` (`controllerGo` + `LastNavGameObject`). Rang dans l'ordre d'exécution :
+**Hôte de navigation non démonté** : `ExceptionQueuePlayModeTests.C` (trouvé à la LECTURE, raté par l'outil ; corrigé, bb47e048) ;
+`VuePrincipaleCapture.Capture_Detail_ApresTampon_SousChrome_MUTE` — le détail est monté DANS le shell, détruit avec lui (en différé) :
+classe surveillée, et ce test MUTE le compte de démo (hors gate).
+
+**Locataire LOCAL jamais détruit** : **2, dans `VuePrincipaleCapturePlayModeTests` — NON corrigés (fichier de capture : proposition à l'orchestrateur)** :
+- `Capture_FicheBatiment` : `FicheCanvas` + `FicheStandalone` (`BuildingCardController`, jeton posé) — jamais détruits ;
+- `Capture_EcranExceptions` : `ExceptionsCanvas` + `ExceptionsStandalone` (`ExceptionQueueController`, jeton VALIDE) — jamais détruits.
+- ⚠️ Et ils ne font pas que vivre : trois tests SUIVANTS de la même classe (ordre alphabétique de NUnit) cherchent leur racine PAR NOM —
+  `Capture_EcranExceptions_FileVide_SousChrome` (:1334) et `Capture_EcranExceptions_SousChrome` (:1561) font
+  `GameObject.Find("ExceptionQueueRoot")`, `Capture_FicheBatiment_SousChrome` (:1254) `GameObject.Find("BuildingCardSheet")`. Avec
+  l'orphelin vivant, deux racines portent ce nom, et `Find` rend l'une OU l'autre : la garde A4 (« le contenu ne passe pas sous le dock »)
+  et le compte de nœuds peuvent MESURER L'ÉCRAN AUTONOME au lieu de celui du shell. Non prouvé que ce soit arrivé (l'ordre de `Find` n'est
+  pas spécifié) : c'est une garde qui PEUT certifier l'objet voisin.
+
+**`Destroy` DIFFÉRÉ au TearDown, sans `yield return` après — CLASSE SURVEILLÉE** (43 classes ; toutes à émetteur probable). La forme
+du 03/09 (`lister-destructions-differees.py`). Aucune n'a produit de rouge mesuré : non corrigées ce soir, sauf `ChaineDApproScreenPlayModeTests`
+(rang 37 : contrôleur qui charge par le réseau, sans `LogError` — la forme exacte de TD-576, en silence), corrigée avec la garde de sortie.
+Rang dans l'ordre d'exécution :
 - 2 `FicheTeteGeometriePlayModeTests`
 - 3 `VuePrincipaleCapturePlayModeTests`
 - 5 `CarteIconesPlayModeTests`
+- 6 `CityMapDetailPlayModeTests`
+- 8 `CityMapHeatPlayModeTests`
+- 9 `CityMapRenderPlayModeTests`
 - 13 `DistrictBackgroundPlayModeTests`
 - 14 `DistrictBlocPartagePlayModeTests`
 - 15 `DistrictInteriorAmbientLoopsPlayModeTests`
 - 17 `DistrictInteriorDioramaPlayModeTests`
 - 18 `DistrictInteriorLieutenantMarkersPlayModeTests`
 - 19 `DistrictInteriorLightingPlayModeTests`
+- 20 `DistrictInteriorScreenControllerPlayModeTests`
 - 21 `DistrictMapNavigationPlayModeTests`
 - 22 `DistrictSocleFootprintPlayModeTests`
+- 25 `FicheBlanchimentPlayModeTests`
+- 26 `FicheCollectePlayModeTests`
+- 29 `InspectionScreenPlayModeTests`
+- 32 `IconesArchetypePlayModeTests`
+- 33 `ChassisVenteRectPlayModeTests`
 - 34 `AutonomyInboxPlayModeTests`
+- 36 `BundleReelZeroRepliPlayModeTests`
+- 37 `ChaineDApproScreenPlayModeTests`
+- 38 `ConflitScreenPlayModeTests`
+- 40 `ForensicScreenPlayModeTests`
+- 42 `LieutenantRuleEditorPlayModeTests`
+- 43 `LieutenantTenureInertiaPlayModeTests`
+- 44 `LieutenantUiExtensionPlayModeTests`
+- 46 `LoiScreenPlayModeTests`
+- 47 `RuleEditorTier2PlayModeTests`
+- 48 `VenteRamassagePlayModeTests`
+- 51 `AppShellPlayModeTests`
+- 52 `CarteVillePlayModeTests`
+- 58 `DailyReviewScreenControllerPlayModeTests`
+- 59 `ExceptionQueuePanelControllerPlayModeTests`
+- 61 `HighestLeverageCardControllerPlayModeTests`
+- 62 `HomeChromeControllerPlayModeTests`
 - 63 `HudPlayModeTests`
 - 70 `NavigationPlayModeTests`
+- 71 `OrgVitalsPanelControllerPlayModeTests`
 - 72 `RedimensionnementSondeSeamPlayModeTests`
 - 74 `ShellSurimpressionAcquisitionPlayModeTests`
+- 75 `TopBarControllerPlayModeTests`
 
-**Rien de signalé** : 66 classes.
+**Rien de signalé** : 43 classes.
 
 ## La ligne pour TD-576 (le registre est `front.md` du back, que ce rôle ne peut pas écrire — à reporter par l'orchestrateur)
 > 22/09 — **cause d'Ecran9 nommée, dans sa PROPRE classe** : `MonterFileAvecCartes` écrasait `controllerGo`, Ecran10 monte deux files, la
 > première survivait avec un `LoadQueue` sans jeton (lancé par `Back()`) ; son 401 tombe pendant Ecran10 au rejeu (:50335, ignoré) et au début
 > d'Ecran9 au gate p1 (:49932 → FAIL :49951). Correctif : montages inscrits, `DestroyImmediate` de chacun et de son hôte de nav, garde de
-> sortie (0 locataire né pendant le test) + contrôle positif. Classe lue sur les 86 classes de la partie 1 : 1 autre écrasement (ChaineDAppro
-> S1, silencieux), 16 TearDown en `Destroy` différé sans attente. Rejeu : prochaine partie 1.
+> sortie (0 locataire né pendant le test) + contrôle positif. Classe lue sur les 86 classes de la partie 1 (classifieur v3) : 1 écrasement (la cause), 2 hôtes de nav, 2 locaux jamais détruits
+> (VuePrincipaleCapture, qui peuvent fausser 3 gardes par `GameObject.Find`), 43 TearDown en `Destroy` différé (classe surveillée ; ChaineDAppro corrigée).
+> Rejeu : prochaine partie 1.

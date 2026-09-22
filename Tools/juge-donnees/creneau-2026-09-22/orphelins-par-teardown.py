@@ -33,11 +33,17 @@ def methodes(s):
 for n,c in enumerate(ordre,1):
     if c not in src: print(f"{n:2} {c}: SOURCE INTROUVABLE"); continue
     p,s=src[c]
+    # ⛔ COMMENTAIRES RETIRÉS AVANT TOUT COMPTE (chaînes préservées : `"http://…"` n'est pas un commentaire).
+    # La v1 les comptait : « `MonterEcran()` seul » DANS un commentaire a fait signaler ChaineDAppro S1
+    # comme un second montage — un faux positif annoncé comme « même forme » avant d'être relu.
+    s=re.sub(r'("(?:\\.|[^"\\\n])*")|//[^\n]*', lambda m: m.group(1) or '', s)
     ms=methodes(s)
     td=''.join(b for a,nm,b in ms if 'TearDown' in a)
     tests=[(nm,b) for a,nm,b in ms if re.search(r'\[(Unity)?Test\b|\[TestCase',a)]
     aides={nm:b for a,nm,b in ms if not re.search(r'Test\b|TestCase|SetUp|TearDown',a)}
-    champs=set(re.findall(r'(?<![\w.])(\w+)\s*=\s*new GameObject\(',s))-set(re.findall(r'\bvar\s+(\w+)\s*=\s*new GameObject',s))
+    # Un CHAMP est déclaré au niveau de la classe (indentation 8) ; `GameObject x = new …` dans un corps est un LOCAL.
+    # La v2 prenait tout nom non-`var` pour un champ : les locaux TYPÉS de VuePrincipaleCapture sortaient en « écrasement ».
+    champs=set(re.findall(r'(?m)^ {8}(?:(?:private|protected|public|internal|static|readonly)\s+)*GameObject\s+(\w+)\s*[;=]',s))
     constats=[]
     # 1. écrasement : un test monte deux fois dans le même champ (directement ou via une aide)
     montA={nm for nm,b in aides.items() if any(re.search(rf'(?<![\w.]){f}\s*=\s*new GameObject',b) for f in champs)}
@@ -49,13 +55,17 @@ for n,c in enumerate(ordre,1):
     nav=[nm for nm,b in tests if re.search(r'\.Open(?:Nav|Exceptions|CityMap|BuildingCard|Pipeline|Autonomy|Detail)\s*\(',b)]
     if nav and 'LastNav' not in td and 'FindObjects' not in td: constats.append(f"HÔTE DE NAV non démonté ({len(nav)} test(s) : {', '.join(nav[:3])})")
     # 3. destruction différée d'un émetteur au TearDown
-    if re.search(r'Object\.Destroy\(|\bDestroy\(',td) and re.search(r'Controller|Client|Shell|Screen',td): constats.append("Destroy DIFFÉRÉ au TearDown")
+    # DIFFÉRÉ = un `Destroy(` (pas `DestroyImmediate`) sans `yield return` APRÈS lui dans le TearDown. L'émetteur se lit
+    # sur la CLASSE (un `AddComponent<…Controller|Shell|Screen>`), pas sur le texte du TearDown — la v2 ratait ChaineDAppro,
+    # dont le TearDown ne nomme que `hostGo`.
+    m_d=re.search(r'(?<!\w)(?:Object\.)?Destroy\(',td)
+    if m_d and not re.search(r'yield\s+return',td[m_d.end():]):
+        emet=re.search(r'AddComponent<[\w.\s]*?(Controller|Shell|Screen)\s*>',s)
+        constats.append("Destroy DIFFÉRÉ au TearDown" + (" (ÉMETTEUR probable)" if emet else " (objets nus)"))
     # 4. locataire local jamais détruit
     for nm,b in tests:
-        for v in re.findall(r'\bvar\s+(\w+)\s*=\s*new GameObject\([^;]*;',b):
-            pass
-        for v in re.findall(r'\bvar\s+(\w+)\s*=\s*new GameObject',b):
-            if re.search(rf'\b{v}\.AddComponent<\w*(Controller|Shell|Screen)',b) and not re.search(rf'Destroy\w*\(\s*{v}\b',b) and v not in td:
+        for v in re.findall(r'\b(?:var|GameObject)\s+(\w+)\s*=\s*new GameObject',b):
+            if re.search(rf'\b{v}\.AddComponent<[\w.\s]*?(Controller|Shell|Screen)\s*>',b) and not re.search(rf'Destroy\w*\(\s*{v}\b',b) and not re.search(rf'\b{v}\b',td):
                 constats.append(f"LOCAL non détruit {nm}:{v}")
     notd='' if td else ' · pas de TearDown'
     print(f"{n:2} {c} [{p.name}]{notd} : " + ('; '.join(constats) if constats else 'rien'))
