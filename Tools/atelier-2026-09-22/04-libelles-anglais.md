@@ -286,7 +286,7 @@ deux locales. En les réécrivant, leur slug change : ils entreront dans la proc
 | ligne (`7d675f9c`) | EN aujourd'hui | FR | EN |
 |---|---|---|---|
 | `:795` | Vehicles | Véhicules | Vehicles |
-| `:816` | Holding tier | Taille de l'officine *(voir d4)* | Counting-house size |
+| `:816` | Holding tier | Taille de la banque *(voir d4)* | Vault size |
 | `:824` | Held | En dépôt | On deposit |
 | `:831` | Capacity | Capacité | Capacity |
 | `:838` | Yield | Rendement | Yield |
@@ -303,23 +303,54 @@ Les valeurs qui vont avec :
 « rien ne rentre » est le mot de ㉟·111 ; « audit » celui de ㊴ (« RISQUE D'AUDIT ») ; les capitales « NOW » ne passent pas en français
 (la maison ne crie pas : l'urgence est portée par `[!!]` et la couleur sévère, déjà sur la ligne).
 
-### d4. ⛔ Une collision que j'ai créée : « caisse » désigne deux objets
+### d4. ⛔ Le nom de `money_holding` — une collision que j'ai créée, mesurée puis tranchée
 
-L'annexe b donnait « Caisse » au type `money_holding` (le coffre d'argent PROPRE qui rapporte), et l'annexe a « Agrandir la caisse ».
-Or « caisse » est, partout ailleurs dans le client, la caisse du DEALER : ㉟ (« La caisse de Oskar », « caisses pleines »,
-`SellingScreenController.cs:243-555`), l'intérieur du district (`:2408`), la carte (`CityProjectionsClient.cs:139`) — et d1 ci-dessus.
-Un joueur qui lit « Agrandir la caisse » sur la fiche d'un coffre peut croire agrandir celle de son dealer.
+**Le problème.** L'annexe b donnait « Caisse » au type `money_holding` (le bâtiment où l'argent PROPRE est déposé et rapporte), et
+l'annexe a « Agrandir la caisse ». Or « caisse » est partout ailleurs la caisse du DEALER.
 
-**Proposition : « l'officine »** pour `money_holding` (EN *counting house*) — le mot d'époque pour un bureau d'argent discret, qui coiffe
-ses enseignes servies (« Change Voss », « Crédit Hara », « Prêts Dorne », « Épargne Sallo »…). Sites à changer en même temps, sinon la
-fiche se contredit :
+**Le critère** (orchestrateur, 2026-09-22) : un mot compris par un joueur sans glossaire, et qui n'a AUCUN autre emploi dans le corpus —
+mesuré sur les trois supports, contrôle positif d'abord. **Instrument** : `Tools/atelier-2026-09-22/mesurer-mot-money-holding.py`
+(maquettes `atelier3d-mafia` en nœuds de texte seulement ; littéraux de `Assets/Scripts` sans commentaires ; littéraux de
+`string_table.ts`, clés exclues), lancé sur atelier `20d006d` · client `7d675f9c` · back `ea215ce9` :
 
-| site (`7d675f9c`) | aujourd'hui | avec « officine » |
-|---|---|---|
-| `BuildingCardController.cs:1101` (`TypeLabel`) | Money holding | Officine |
-| `:972` bouton · `:976` raison | Agrandir la caisse · … — pas assez d'argent | Agrandir l'officine · … — pas assez d'argent |
-| `:562` succès | Caisse agrandie | Officine agrandie |
-| `:816` titre de ligne | Holding tier | Taille de l'officine |
-| `DistributionScreenController.cs:232` | la caisse | l'officine |
+| mot | maquettes | client | back | ce que le mot désigne aujourd'hui |
+|---|---|---|---|---|
+| **caisse** (contrôle positif) | 30 | 12 | 10 | la caisse du DEALER (㉟ ×18, `Selling`, `CityProjectionsClient:139`, `DistrictInterior:2408`, back `:2042-2047`) · les caisses du labo (cadres 39-44, « Le labo ») · la caisse de la vitrine (㉓·99) · la caisse déclarée d'une façade (⑯·0) · **et `money_holding`** (② `:562`, `:972`, `:976`, `Distribution:232`) — ✅ l'instrument voit le corpus |
+| **coffre** | 15 | 3 | 1 | le COMPTE du joueur (㉒/㉖ « VOTRE COFFRE », « FERMER LE COFFRE » ×7 ; ㉑·105-106 « ça se rouvre au Coffre ») · le MENU (⑱·20-21 « Le coffre ») · l'ancien ⑪ (`ecrans-brennar.html` c2 « Coffre — tableau de bord » ×3) · **et déjà `money_holding`** (③·24 « le labo, la planque, la façade, le coffre », `DistrictInteriorScreenController.cs:1735`, `LibellesBatiment.cs:30`, back `district.type_batiment.coffre` = « Coffre », ② `:2133`) |
+| coffre-fort | 3 | 0 | 0 | le menu ⑱ (« Le coffre-fort = compte · réglages · boutique ») |
+| officine | 0 | 0 | 0 | — |
+| **banque** | **0** | **0** | **0** | — |
+| *EN* bank | 0 | 1 | 2 | la RIVE (`CityMapController.cs:511` « Banks », back « North bank » / « South bank ») |
+| *EN* **vault** | 0 | 0 | 1 | **`money_holding` lui-même** (`district.type_batiment.coffre` EN = « Vault ») — aucun autre emploi |
 
-À trancher par l'orchestrateur ou l'user (un mot de monde, pas une traduction) ; tant que ce n'est pas tranché, rien ne change.
+**La décision, dans l'ordre du critère :**
+1. **« coffre » collisionne** : il nomme déjà trois objets — le compte du joueur, le menu, l'ancien ⑪ — en plus de `money_holding`. Un
+   joueur qui lit « Le coffre » dans le menu puis « Coffre » sur un bâtiment de la carte ne peut pas savoir qu'il s'agit de deux choses.
+2. **« l'officine » est rejetée** sans collision : 0 emploi, mais en français courant le mot dit d'abord une pharmacie ou un atelier
+   clandestin — il demande le glossaire que le critère interdit.
+3. ⇒ **« la banque »**, troisième candidat, mesuré : **0 emploi sur les trois supports**, compris de tous, et c'est ce que le bâtiment
+   EST dans le jeu : on y dépose, ça rapporte, un audit peut le saisir (d3 : « En dépôt », « Rendement », « Saisie », « Audit
+   imminent ») ; ses enseignes servies le disent déjà (« Crédit Hara », « Prêts Dorne », « Épargne Sallo », « Change Voss »).
+4. **EN : « vault »** — pas « bank », qui en anglais nomme déjà la RIVE sur la carte et dans le registre. « Vault » n'a qu'un emploi
+   dans le corpus, et c'est ce type même : l'anglais ne change pas.
+
+**Les sites à changer ensemble** — dix, pas cinq : la mesure a trouvé le nom « Coffre » déjà posé sur ce type en plus de mes « caisse ».
+
+| support · site | aujourd'hui | FR | EN |
+|---|---|---|---|
+| client `BuildingCardController.cs:1101` (`TypeLabel`) | Money holding | Banque | Vault |
+| client `:972` bouton · `:976` raison | Agrandir la caisse · … — pas assez d'argent | Agrandir la banque · … — pas assez d'argent | Enlarge the vault · … — not enough money |
+| client `:562` succès | Caisse agrandie | Banque agrandie | Vault enlarged |
+| client `:816` titre de ligne | Holding tier | Taille de la banque | Vault size |
+| client `:2133` légende du montant | MONTANT DU TRANSFERT — le coffre a le dernier mot | MONTANT DU TRANSFERT — la banque a le dernier mot | TRANSFER AMOUNT — the vault has the last word |
+| client `DistributionScreenController.cs:232` | la caisse | la banque | the vault |
+| client `DistrictInteriorScreenController.cs:1735` | Coffre (clé `district.type_batiment.coffre`) | Banque (nouvelle clé dérivée `district.type_batiment.banque`) | Vault |
+| client `LibellesBatiment.cs:30` | Coffre | Banque | — (littéral sans clé) |
+| back `string_table.ts` `district.type_batiment.coffre` (FR `:2525` · EN `:922` à `ea215ce9`) | Coffre · Vault | nouvelle clé `district.type_batiment.banque` : Banque · Vault | — |
+| atelier `ecrans-brennar-6.html` ③·24 (légende « le labo, la planque, la façade, le coffre ») | le coffre | la banque | — |
+
+- `district.type_batiment.coffre` deviendra orpheline au changement du littéral (le slug change) : elle entrera dans la prochaine
+  table des orphelines du client, comme les autres.
+- Le compte du joueur (㉒/㉖ « VOTRE COFFRE »), le menu (⑱ « Le coffre ») et la caisse du dealer (㉟) **ne changent pas** : ce sont
+  eux qui gardent « coffre » et « caisse ».
+- L'user garde son veto. Le changement de la maquette ③·24 part avec la vague du client, pas avant.
