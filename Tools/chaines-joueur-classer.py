@@ -55,7 +55,7 @@ VERDICTS = [
  (B, "aucune route ne dit ce qu'elles",         0, "CLOS lot C 22/09 (㉙ le conflit) — était : « route » · lot C 22/09 : ㉙ le conflit (2→1)"),
  (B, "aucune route ne connaît",                 0, "CLOS lot C 22/09 (㉙ le conflit) — était : « route » · lot C 22/09 : ㉙ le conflit (2→1)"),
  (B, "Aucune route ne liste vos bâtiments",     1, "« route »"),
- (B, "Aucune route connue pour l'instant",      2, "« route » = endpoint, alors que l'écran voisin dit « CETTE ROUTE » pour un itinéraire"),
+ (N, "Aucune route connue pour l'instant",      0, "CLOS lot C 22/09 (㉘ la distribution) — était : « route » = endpoint, alors que l'écran voisin dit « CETTE ROUTE » pour un itinéraire"),
  (B, "aucune route n'existe encore",            0, "CLOS lot C 22/09 (⑰ le commissariat) — était : « route »"),
  (B, "la route voisine vise les affaires",      0, "CLOS lot C 22/09 (⑰ le commissariat) — était : « route voisine »"),
  (B, "aucune route de mutation de profil",      0, "CLOS lot C 22/09 (㉒ le compte) — était : « route de mutation »"),

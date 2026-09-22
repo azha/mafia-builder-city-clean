@@ -338,7 +338,7 @@ namespace MafiaCleanCity.Operational.Tests
             ecran.RendrePourTest(CouriersFabrique(Courier("IDLE")), ProjectionFabrique());
             yield return null;
 
-            CollectionAssert.Contains(ecran.RenderedTexts, "Aucune route connue pour l'instant.",
+            CollectionAssert.Contains(ecran.RenderedTexts, "Aucune route tendue pour l'instant.",
                 "l'état vide de la projection n'affiche pas le message honnête attendu");
         }
 

@@ -522,7 +522,7 @@ namespace MafiaCleanCity.Operational
             if (route == null)
             {
                 TextMeshProUGUI msg = NouveauTexteFiche(lignes.transform, "AucuneRoute",
-                    Libelle.De("distribution", "bloc", "Aucune route connue pour l'instant."),
+                    Libelle.De("distribution", "bloc", "Aucune route tendue pour l'instant."),
                     9f, DesignTokens.Current.onSurfaceMuted, false);
                 TrackText(msg.text);
                 return;
