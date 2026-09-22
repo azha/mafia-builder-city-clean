@@ -934,12 +934,12 @@ namespace MafiaCleanCity.Operational
 
         // ═══ Palette — locale, patron ㉚ (aucun token `DesignTokens` dédié à une fiche crème/liège
         // n'existe — ceux qui existent servent un AUTRE consommateur mesuré). ═══════════════════
-        private static readonly Color Creme = Hex("#eae0c8");
-        private static readonly Color EncreSombre = Hex("#241804");
+        private static Color Creme => DesignTokens.Current.hudCreme;
+        private static Color EncreSombre => DesignTokens.Current.ficheCtaOrEncre;
         // ⚠️ ESTIMÉ VISUELLEMENT SUR LA MAQUETTE, NON ÉCHANTILLONNÉ AU PIXEL (aucun outil de
         // lecture de pixel disponible cette passe — même trou que ㉚, voir implementation-notes.md).
         private static readonly Color Liege = Hex("#7a5230");
-        private static readonly Color Or = Hex("#d9ab4e");
+        private static Color Or => DesignTokens.Current.hudMoneyUnderlineGold;
         // ⛔⛔ TD-558 — la ficelle et l'épingle du panneau de liège. MESURÉES au pixel sur
         // `Tools/juge-visuel/v6/m-54.png` (python3/PIL, couleur la plus fréquente dans un carré
         // échantillon posé sur le trait / le cœur de l'épingle) — pas « estimées visuellement »
