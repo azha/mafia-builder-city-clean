@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using MafiaCleanCity.Theme;
 
 namespace MafiaCleanCity.Shell
 {
@@ -86,12 +87,12 @@ namespace MafiaCleanCity.Shell
             deg.raycastTarget = false;
             deg.sprite = DegradeVertical("degrade.jour", new[]
             {
-                (0.00f, Voile("#0a0f18", 0xb8)),
-                (0.16f, Voile("#0a0f18", 0x30)),
-                (0.44f, Voile("#0a0f18", 0x40)),
-                (0.60f, Voile("#0a0f18", 0xe8)),
-                (0.74f, Voile("#0a0f18", 0xff)),
-                (1.00f, Voile("#0a0f18", 0xff)),
+                (0.00f, Voile(Nuit, 0xb8)),
+                (0.16f, Voile(Nuit, 0x30)),
+                (0.44f, Voile(Nuit, 0x40)),
+                (0.60f, Voile(Nuit, 0xe8)),
+                (0.74f, Voile(Nuit, 0xff)),
+                (1.00f, Voile(Nuit, 0xff)),
             });
 
             // ── le zinc ──────────────────────────────────────────────────────────────────────────
@@ -109,9 +110,9 @@ namespace MafiaCleanCity.Shell
             basImg.raycastTarget = false;
             basImg.sprite = DegradeVertical("zinc.bas", new[]
             {
-                (0.00f, Hex("#13100b")),
-                (0.60f, Hex("#0a0f18")),
-                (1.00f, Hex("#0a0f18")),
+                (0.00f, Opaque(Socle)),
+                (0.60f, Opaque(Nuit)),
+                (1.00f, Opaque(Nuit)),
             });
 
             GameObject dosGo = Enfant("Dos", zincGo.transform);
@@ -136,7 +137,7 @@ namespace MafiaCleanCity.Shell
                 (0.55f, Hex("#6b4a12")),
                 (1.00f, Hex("#3a2a12")),
             });
-            Trait(plateauGo.transform, "FiletHaut", Px(2f), Voile("#d9ab4e", 0x88));
+            Trait(plateauGo.transform, "FiletHaut", Px(2f), Voile(Or, 0x88));
 
             AppliquerEtat(vide: false);
             MajUv();
@@ -266,9 +267,9 @@ namespace MafiaCleanCity.Shell
                 img.raycastTarget = false;
                 img.sprite = impaire
                     ? DegradeVertical("bouteille.impaire", new[]
-                        { (0f, Voile("#e0664a", 0x55)), (0.4f, Voile("#d9ab4e", 0x44)), (1f, Hex("#3a2a12")) })
+                        { (0f, Voile(Braise, 0x55)), (0.4f, Voile(Or, 0x44)), (1f, Hex("#3a2a12")) })
                     : DegradeVertical("bouteille.paire", new[]
-                        { (0f, Voile("#7fd4d9", 0x55)), (0.4f, Voile("#d9ab4e", 0x66)), (1f, Hex("#3a2a12")) });
+                        { (0f, Voile(Cyan, 0x55)), (0.4f, Voile(Or, 0x66)), (1f, Hex("#3a2a12")) });
                 img.color = new Color(1f, 1f, 1f, 0.8f);   // `opacity:.8`
             }
         }
@@ -316,6 +317,28 @@ namespace MafiaCleanCity.Shell
             rt.anchorMax = Vector2.one;
             rt.offsetMin = Vector2.zero;
             rt.offsetMax = Vector2.zero;
+        }
+
+        // ⛔ TD-612 (garde `LitterauxDeCouleurPlayModeTests`, catégorie Palette) : un littéral qui recopie la valeur d'un
+        //    token NOMMÉ (distance ≤ 4) passe par le token. Mesuré par le créneau du 22/09 (23:41) : ce fichier en portait 14,
+        //    tous des couleurs de la CSS du cadre qui coïncident avec la palette du projet. La CSS reste la source de la FORME
+        //    (arrêts, opacités) ; la TEINTE vient du token, pour suivre la palette si elle bouge.
+        //    ⚠️ `#0a0f18` (CSS) ↔ `lieutenantGlassBottom` #090e18 (d = 1,4) et `#13100b` ↔ `nightSocle` (d = 3,7) : la teinte
+        //    bouge d'un cheveu, c'est le prix de la règle. Seul le RVB du token est pris : chaque site pose SON opacité.
+        private static Color Nuit => DesignTokens.Current.lieutenantGlassBottom;
+        private static Color Socle => DesignTokens.Current.nightSocle;
+        private static Color Or => DesignTokens.Current.hudMoneyUnderlineGold;
+        private static Color Braise => DesignTokens.Current.hudGaugeArcHot;
+        private static Color Cyan => DesignTokens.Current.hudGaugeArcCold;
+
+        private static Color Opaque(Color c) => new Color(c.r, c.g, c.b, 1f);
+
+        /// <summary>Le RVB d'un token à l'opacité `aa` du NAVIGATEUR, même ajustement que `Voile(string, int)`.</summary>
+        private static Color Voile(Color rgb, int alphaCss)
+        {
+            Color c = Opaque(rgb);
+            c.a = ProceduralUI.AlphaVoileSurFondQuelconque(c, alphaCss / 255f, out _);
+            return c;
         }
 
         private static Color Hex(string h)

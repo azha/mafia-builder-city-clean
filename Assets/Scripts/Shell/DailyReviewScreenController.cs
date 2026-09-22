@@ -686,8 +686,9 @@ namespace MafiaCleanCity.Shell
             }
             else
             {
-                // `.jeton.perdu` : radial #3a3f4a → #1c2029, la marque en `--braise`, le verbe aussi.
-                b.Jeton.sprite = ProceduralUI.RadialDisc((int)Px(34f), Hex("#3a3f4a"), Hex("#1c2029"));
+                // `.jeton.perdu` : radial #3a3f4a → #1c2029, la marque en `--braise`, le verbe aussi. Le cœur passe par
+                // le token `mapChipBg` (#383d4c, d = 3,5 : TD-612, garde Palette) ; #1c2029 n'a aucun token proche.
+                b.Jeton.sprite = ProceduralUI.RadialDisc((int)Px(34f), DesignTokens.Current.mapChipBg, Hex("#1c2029"));
                 b.Coche.text = "✕";
                 b.Coche.color = Braise;
                 b.Verbe.text = Lib("verdict", "PERDU");

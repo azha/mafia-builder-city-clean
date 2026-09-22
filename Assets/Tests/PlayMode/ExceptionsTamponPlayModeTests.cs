@@ -98,7 +98,11 @@ namespace MafiaCleanCity.Operational.Tests
 
             Assert.IsNotNull(ecran.TamponAppuiLong, "une suggestion servie ⇒ le tampon porte l'appui long");
             ecran.TamponAppuiLong.SimulateCompletedLongPress();
-            for (int f = 0; f < 5 && ecran.DerniereIssue == null; f++) yield return null;
+            // ⛔ Attendre la FIN (issue lue ET file rechargée), pas seulement l'issue : `ResoudreLaSuggestion` pose l'issue,
+            //    PUIS recharge la file dans une coroutine imbriquée, une frame plus tard. La v1 de ce test sortait de la boucle
+            //    sur l'issue et lisait la file AVANT son rechargement — rouge au créneau du 22/09 (« Expected: 0 But was: 1 »),
+            //    un défaut du TEST, pas du tampon.
+            for (int f = 0; f < 10 && (ecran.DerniereIssue == null || ecran.Cards.Length != 0); f++) yield return null;
 
             Assert.AreEqual(1, envois, "UNE résolution émise");
             Assert.IsTrue(client.DerniereRequeteResolve.HasValue);
