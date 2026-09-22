@@ -163,71 +163,57 @@ namespace MafiaCleanCity.Operational
 
         // ═══ §3/§4 — Découverte du hub de distribution (et, si possible, d'une destination) ═════
         //
-        // ⛔ AUCUNE ROUTE NE LISTE LES BÂTIMENTS DU JOUEUR (même trou que ㉚). Balayage
-        // districts → interior, REUSE `MafiaCleanCity.CityMap.WorldApiClient`/
-        // `CityProjectionsClient` (DRY). Coût mesuré sur ce compte : le hub de distribution vit en
-        // district 1 (1er scanné) ; une destination `front_shop`/`dealer_spot_front` vit en
-        // district 16 — donc 16 appels `interior` dans le pire cas mesuré ici, jusqu'à 18 en
-        // pire cas théorique (aucun distribution_hub trouvé).
+        // ★ `GET /v1/me/buildings` liste les bâtiments du joueur en UN appel (mesuré 2026-09-22 : 200,
+        // 17 bâtiments sur 4 districts pour le compte de démo ; corps commité sous
+        // `Tools/juge-donnees/police/pont-district-2026-09-22/`). Avant, cet écran tenait pour mesuré
+        // qu'aucune route ne les listait et balayait jusqu'à 18 intérieurs — la route existait
+        // (`player-buildings.controller.ts:89`) et le client l'appelait 0 fois.
+        // Le hub (`from`) est le premier `distribution_hub` possédé ; la destination (`to`) reste un
+        // HEURISTIQUE (le premier point de vente hors du hub) — voir implementation-notes.md
+        // § Deviations. Sans destination, `ToBuildingId` reste `null` et `RendrePied` le dit.
+        // ⚠️ CE QUE `me/buildings` NE SERT PAS : le nom du lieutenant affecté (seulement ses ids) et le
+        // nom canon du district. Ils vivent dans l'intérieur du district — donc UN appel `interior`,
+        // celui du district du hub, au lieu de dix-huit. Les libellés de bâtiment portent le nom de
+        // fiction du district (`district_name`, servi par bâtiment).
         //
-        // ⛔⛔ CE QUI N'EST PAS RÉSOLU, ET NE PEUT PAS L'ÊTRE PAR CES 4 ROUTES : la « route »
+        // ⛔⛔ CE QUI N'EST PAS RÉSOLU, ET NE PEUT PAS L'ÊTRE PAR CES ROUTES : la « route »
         // affichée sur le liège (`sinuosity_bucket`/`river_crossings_count_bucket`/`route_state`)
         // n'a AUCUN identifiant de bâtiment — `dispatch` en exige deux. Ce hub-ci (`from`) est
-        // donc RÉEL et mesuré ; la destination (`to`) est un HEURISTIQUE (le premier point de
-        // vente du joueur trouvé, hors du hub) et non une lecture d'une route affichée — voir
-        // implementation-notes.md § Deviations. Si aucune destination n'est trouvée, `ToBuildingId`
-        // reste `null` et `RendrePied` le dit honnêtement plutôt que de fabriquer un id.
+        // donc RÉEL et mesuré ; la destination (`to`) est un HEURISTIQUE et non une lecture d'une
+        // route affichée.
         private IEnumerator DecouvrirRoute(Action onOk, Action<string> onErr)
         {
-            var world = new WorldApiClient { BaseUrl = baseUrl };
-            List<DistrictDto> districts = null;
-            string errDistricts = null;
-            yield return world.GetDistricts(d => districts = d, e => errDistricts = e);
-            if (districts == null)
+            var mes = new MesBatimentsClient { BaseUrl = baseUrl };
+            BatimentPossedeDto[] possedes = null;
+            string errMes = null;
+            yield return mes.Lire(token, bs => possedes = bs, (c, m) => errMes = $"{c} {m}");
+            if (possedes == null)
             {
-                onErr?.Invoke($"GET /v1/world/districts indisponible : {errDistricts}");
+                Debug.LogWarning($"[㉘] me/buildings indisponible : {errMes}");
+                onErr?.Invoke(null);   // null = panne : le sous-titre retombe sur la formule maison
                 yield break;
             }
-
-            var proj = new CityProjectionsClient { BaseUrl = baseUrl };
-            string fromId = null, fromLabel = null, toId = null, toLabel = null, lieutenantLabel = null;
-
-            foreach (DistrictDto d in districts)
-            {
-                DistrictInteriorDto interior = null;
-                long codeInterior = 0;
-                yield return proj.Interior(d.id, token, i => interior = i, c => codeInterior = c);
-                if (interior == null || interior.buildings == null) continue;
-
-                foreach (DistrictInteriorBuildingDto b in interior.buildings)
-                {
-                    if (fromId == null && b.operational_type == "distribution_hub")
-                    {
-                        fromId = b.building;
-                        fromLabel = LabelBatiment(b, interior);
-                        lieutenantLabel = LabelLieutenant(b, interior);
-                    }
-                    else if (fromId != null && toId == null && b.building != fromId &&
-                             (b.operational_type == "front_shop" || b.operational_type == "dealer_spot_front"))
-                    {
-                        toId = b.building;
-                        toLabel = LabelBatiment(b, interior);
-                    }
-                }
-                if (fromId != null && toId != null) break;
-            }
-
-            if (fromId == null)
+            BatimentPossedeDto hub = null, destination = null;
+            foreach (BatimentPossedeDto b in possedes)
+                if (b != null && !string.IsNullOrEmpty(b.building) && b.operational_type == "distribution_hub") { hub = b; break; }
+            if (hub == null)
             {
                 onErr?.Invoke("aucun distribution_hub trouvé parmi les districts possédés — la " +
                               "prémisse de cet écran (un hub de distribution) ne tient pas ici");
                 yield break;
             }
-            FromBuildingId = fromId;
-            FromLabel = fromLabel;
-            ToBuildingId = toId;   // peut rester null — voir RendrePied
-            ToLabel = toLabel;
-            LieutenantLabel = lieutenantLabel;
+            foreach (BatimentPossedeDto b in possedes)
+                if (b != null && !string.IsNullOrEmpty(b.building) && b.building != hub.building &&
+                    (b.operational_type == "front_shop" || b.operational_type == "dealer_spot_front")) { destination = b; break; }
+            // le nom du lieutenant ne vit que dans l'intérieur : UN appel, celui du district du hub
+            var proj = new CityProjectionsClient { BaseUrl = baseUrl };
+            DistrictInteriorDto interieurDuHub = null;
+            yield return proj.Interior(hub.district_id, token, i => interieurDuHub = i, _ => { });
+            FromBuildingId = hub.building;
+            FromLabel = LabelBatiment(hub);
+            ToBuildingId = destination?.building;   // peut rester null — voir RendrePied
+            ToLabel = destination == null ? null : LabelBatiment(destination);
+            LieutenantLabel = LabelLieutenant(hub.lieutenant_ids, interieurDuHub);
             onOk?.Invoke();
         }
 
@@ -257,26 +243,28 @@ namespace MafiaCleanCity.Operational
         /// Spine-B ») mais avec le VRAI `name_canonical` du district où vit le bâtiment
         /// DÉCOUVERT, jamais les littéraux fixes de la maquette (voir le commentaire de classe,
         /// point 2).</summary>
-        private static string LabelBatiment(DistrictInteriorBuildingDto b, DistrictInteriorDto district)
+        private static string LabelBatiment(BatimentPossedeDto b)
         {
             string typeNom = NomTypeBatiment(b.operational_type);
             string prefixMaj = typeNom.Length > 0
                 ? char.ToUpperInvariant(typeNom[0]) + typeNom.Substring(1)
                 : typeNom;
-            return string.IsNullOrEmpty(district.name_canonical)
+            // le nom de FICTION du district, servi par bâtiment (« La Lisière ») — le nom canon
+            // (« Verge-A ») ne vit que dans l'intérieur, qu'on n'appelle plus par district
+            return string.IsNullOrEmpty(b.district_name)
                 ? prefixMaj
-                : prefixMaj + " de " + district.name_canonical;
+                : prefixMaj + " de " + b.district_name;
         }
 
         /// <summary>Le nom du lieutenant assigné au bâtiment, joint via `lieutenant_ids[0]` →
         /// `district.lieutenants[].lieutenant_id` (forme mesurée : `Lt. Hara` sur le hub du
         /// compte de démo). `null` si le bâtiment n'a aucun lieutenant assigné — `RendrePied`
         /// retombe alors sur le pis-aller littéral de la maquette (« Dima »).</summary>
-        private static string LabelLieutenant(DistrictInteriorBuildingDto b, DistrictInteriorDto district)
+        private static string LabelLieutenant(string[] lieutenantIds, DistrictInteriorDto district)
         {
-            if (b.lieutenant_ids == null || b.lieutenant_ids.Length == 0 || district.lieutenants == null)
+            if (lieutenantIds == null || lieutenantIds.Length == 0 || district == null || district.lieutenants == null)
                 return null;
-            string id = b.lieutenant_ids[0];
+            string id = lieutenantIds[0];
             foreach (DistrictLieutenantDto l in district.lieutenants)
                 if (l.lieutenant_id == id) return l.name;
             return null;
@@ -295,7 +283,7 @@ namespace MafiaCleanCity.Operational
             if (renduExpliciteDemande) yield break;   // un test a rendu pendant l'attente : on n'écrase pas
             if (string.IsNullOrEmpty(FromBuildingId))
             {
-                DerniereErreur = errRoute ?? "découverte du hub de distribution : échec";
+                DerniereErreur = errRoute;   // null = panne : le sous-titre dit la formule maison
                 RendreEtatIndisponible();
                 yield break;
             }
