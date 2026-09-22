@@ -65,6 +65,8 @@ namespace MafiaCleanCity.Shell.Tests
         [UnityTest]
         public IEnumerator Capture_LaVente_1080x2400()
         {
+            // AVANT TOUT : sans la paire, rien ne s'écrit (patron `CapturerLocataire`).
+            var (identiteAnnoncee, _) = MafiaCleanCity.Shell.Tests.CaptureSousShell.IdentiteDeCaptureOuEchoue("la_vente");
             const int Largeur = 1080, Hauteur = 2400;
             // ⚠️ LE NOM PORTE LA MISE EN SCÈNE, et c'est délibéré. Le compte de démo ne peut pas produire de
             // signalements en balance de PRODUCTION — deux gardes disjointes s'y opposent (mesuré par la
@@ -90,6 +92,10 @@ namespace MafiaCleanCity.Shell.Tests
             }
             Assert.AreEqual(AppShell.Tab.Empire, shell.CurrentTab,
                 "acquisition de session du shell non résolue — toute capture prise ici serait celle d'un autre écran");
+            // garde d'EFFET (étape 8 du runbook, décision de l'orchestrateur du 22/09 : CONFORME partout) — `GET /v1/me` avec le jeton
+            // réellement utilisé, confronté à l'identité annoncée, AVANT tout PNG. `[DemoIdentityResolver]` ne dit que ce que le résolveur a
+            // appliqué, pas avec quoi le shell s'est connecté.
+            yield return MafiaCleanCity.Shell.Tests.CaptureSousShell.ShellConnecteOuEchoue(shell, identiteAnnoncee, "la_vente");
 
             shell.ActivateTab(AppShell.Tab.Empire);
             // ⑤ n'a pas d'onglet : c'est un écran de DÉTAIL, monté en surimpression quand le bloc

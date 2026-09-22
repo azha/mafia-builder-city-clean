@@ -196,6 +196,17 @@ namespace MafiaCleanCity.Shell.Tests
                 + "connexion n'ont pas la même source. Aucune planche n'est écrite.");
         }
 
+        /// <summary>La garde d'EFFET pour une capture SOUS SHELL : le jeton du shell arrive par sa propre ouverture de session,
+        /// on l'attend (borné), puis on le confronte à l'identité annoncée (`IdentiteConnecteeOuEchoue`, `GET /v1/me`). Extraite
+        /// de `CapturerLocataire` le 2026-09-22 pour être posée à l'identique dans les dix captures de la recapture qui ne
+        /// l'appelaient pas (décision de l'orchestrateur : « CONFORME partout »).</summary>
+        public static IEnumerator ShellConnecteOuEchoue(AppShell shell, string annonce, string quoi, float delaiJeton = 20f)
+        {
+            float limiteJeton = Time.realtimeSinceStartup + delaiJeton;
+            while (string.IsNullOrEmpty(shell.Token) && Time.realtimeSinceStartup < limiteJeton) yield return null;
+            yield return IdentiteConnecteeOuEchoue(shell.Token, annonce, quoi);
+        }
+
         public static IEnumerator CapturerLocataire<T>(AppShell shell, string nom,
                                                        System.Func<T, RectTransform, bool> charge,
                                                        List<string> echecs,
@@ -210,10 +221,7 @@ namespace MafiaCleanCity.Shell.Tests
             // AVANT TOUT : sans la paire, on n'écrit rien. Placé en tête pour qu'aucun PNG ne
             // parte, pas même celui d'un écran qui se serait monté correctement.
             var (identiteAnnoncee, _) = IdentiteDeCaptureOuEchoue($"planche_{nom}");
-            // le jeton du shell arrive par sa propre ouverture de session : on l'attend, borné
-            float limiteJeton = Time.realtimeSinceStartup + 20f;
-            while (string.IsNullOrEmpty(shell.Token) && Time.realtimeSinceStartup < limiteJeton) yield return null;
-            yield return IdentiteConnecteeOuEchoue(shell.Token, identiteAnnoncee, $"planche_{nom}");
+            yield return ShellConnecteOuEchoue(shell, identiteAnnoncee, $"planche_{nom}");
             string chemin = $"Assets/Screenshots/planche_{nom}_{largeur}x{hauteur}.png";
 
             // ⛔⛔ CE QU'UNE CAPTURE PRÉCÉDENTE LAISSE À L'ÉCRAN CONTAMINE LA SUIVANTE — mesuré le

@@ -141,6 +141,10 @@ namespace MafiaCleanCity.Operational.Tests
             yield return auth.SignIn(idCapture, mdpCapture,
                                      t => token = t, e => err = e);
             Assert.IsNull(err, $"connexion au compte de démo échouée : {err}");
+            // garde d'EFFET (étape 8 du runbook, décision de l'orchestrateur du 22/09 : CONFORME partout) — `GET /v1/me` avec le jeton
+            // réellement utilisé, confronté à l'identité annoncée, AVANT tout PNG. `[DemoIdentityResolver]` ne dit que ce que le résolveur a
+            // appliqué, pas avec quoi le shell s'est connecté.
+            yield return MafiaCleanCity.Shell.Tests.CaptureSousShell.IdentiteConnecteeOuEchoue(token, idCapture, "screen_c1");
 
             var ecran = MonterEcran();
             ecran.SetToken(token);

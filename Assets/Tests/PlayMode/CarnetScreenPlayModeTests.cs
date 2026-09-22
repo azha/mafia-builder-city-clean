@@ -220,6 +220,8 @@ namespace MafiaCleanCity.Operational.Tests
         [UnityTest, Category("PhotoScreenC3SousChrome")]
         public IEnumerator ScreenC3C2_CapturerSousLeChromeReel_ParLeCheminDuJoueur()
         {
+            // AVANT TOUT : sans la paire, rien ne s'écrit (patron `CapturerLocataire`).
+            var (identiteAnnoncee, _) = MafiaCleanCity.Shell.Tests.CaptureSousShell.IdentiteDeCaptureOuEchoue("screen_c3_sous_chrome");
             // ⛔⛔ AUCUN `SignUp`, AUCUN `SetIdentity` — ET C'EST LE CORRECTIF.
             // Cette capture ouvrait un compte FRAIS et l'imposait au shell. Elle photographiait
             // donc un monde vide : pas d'ordres, pas de suites, rien à montrer. Mesuré le
@@ -241,6 +243,10 @@ namespace MafiaCleanCity.Operational.Tests
                 yield return null;
             Assert.IsFalse(string.IsNullOrEmpty(shell.Token),
                 "le shell doit avoir acquis sa session avant qu'on ouvre le menu");
+            // garde d'EFFET (étape 8 du runbook, décision de l'orchestrateur du 22/09 : CONFORME partout) — `GET /v1/me` avec le jeton
+            // réellement utilisé, confronté à l'identité annoncée, AVANT tout PNG. `[DemoIdentityResolver]` ne dit que ce que le résolveur a
+            // appliqué, pas avec quoi le shell s'est connecté.
+            yield return MafiaCleanCity.Shell.Tests.CaptureSousShell.ShellConnecteOuEchoue(shell, identiteAnnoncee, "screen_c3_sous_chrome");
 
             // ⛔ L'ENTRÉE EST DÉSIGNÉE PAR SON NOM, jamais par son RANG dans la liste : un
             // `boutons[7]` resterait vert en photographiant l'écran du voisin le jour où une
