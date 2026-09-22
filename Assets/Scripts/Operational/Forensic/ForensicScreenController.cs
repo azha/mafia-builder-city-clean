@@ -577,13 +577,15 @@ namespace MafiaCleanCity.Operational
             // les valeurs qui ont LEUR mot dans la maquette ratifiée (série 6, cadres 132 et 143 — atelier ca69012c §4) passent
             // AVANT la phrase de leur gravité : « un dossier est ouvert » n'est pas « on vous regarde », et un événement n'a pas
             // de phrase de gravité. ⚠️ Casse de phrase, comme les trois phrases de gravité de cet écran (la maquette les écrit
-            // en minuscules dans une énumération « ils sont venus · ça saute aux yeux · convoqué »).
+            // en minuscules dans une énumération « ils sont venus · ça saute aux yeux · convoqué »). `subpoenaed` rend « Convocation
+            // reçue », la variante neutre de l'atelier (32e29ab8, 10 §8), retenue par l'orchestrateur le 22/09 : c'est le joueur qui
+            // est convoqué, et la bande ne dit pas son genre — « Convoqué » le présumait. Clé : forensic.evenement.convocation_recue.
             switch (string.IsNullOrEmpty(bande) ? "" : bande.Trim().ToLowerInvariant())
             {
                 case "flagged":    return MafiaCleanCity.I18n.Libelle.De("forensic", "cran", "Un dossier est ouvert");
                 case "audited":    return MafiaCleanCity.I18n.Libelle.De("forensic", "evenement", "Ils sont venus");
                 case "glaring":    return MafiaCleanCity.I18n.Libelle.De("forensic", "evenement", "Ça saute aux yeux");
-                case "subpoenaed": return MafiaCleanCity.I18n.Libelle.De("forensic", "evenement", "Convoqué");
+                case "subpoenaed": return MafiaCleanCity.I18n.Libelle.De("forensic", "evenement", "Convocation reçue");
             }
             switch (NiveauDe(bande))
             {

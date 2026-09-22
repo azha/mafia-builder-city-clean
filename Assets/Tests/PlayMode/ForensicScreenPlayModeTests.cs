@@ -240,6 +240,20 @@ namespace MafiaCleanCity.Operational.Tests
                 "« flagged » est un cran de surveillance, SOUS « audited » (atelier ca69012c §4)");
             Assert.AreNotEqual(ForensicResolvers.Phrase("watched"), ForensicResolvers.Phrase("flagged"),
                 "« flagged » a SON mot (« un dossier est ouvert »), pas la phrase générique de sa gravité");
+
+            // « Convocation reçue », pas « Convoqué » (22/09, variante neutre de l'atelier 32e29ab8) : la bande ne dit pas le
+            // genre du joueur. Le back sert CETTE clé — un littéral qui change change la clé, et ce test le voit.
+            const string cleConvocation = "forensic.evenement.convocation_recue";
+            MafiaCleanCity.I18n.Libelle.RemettreLesCompteurs();
+            string convocation = ForensicResolvers.Phrase("subpoenaed");
+            if (MafiaCleanCity.I18n.Libelle.NbReplis == 1)
+            {
+                Assert.AreEqual(cleConvocation, MafiaCleanCity.I18n.Libelle.DernierRepli, "« subpoenaed » ne dérive pas la clé que le back sert");
+                Assert.AreEqual("Convocation reçue", convocation, "« subpoenaed » : le repli n'est pas le mot retenu");
+            }
+            else
+                Assert.AreEqual(MafiaCleanCity.I18n.I18nCatalog.Traduire(cleConvocation), convocation,
+                    "« subpoenaed » : le mot servi n'est pas celui de la clé convocation_recue");
         }
 
         private IEnumerator CapturerA(int largeur, int hauteur, string chemin)
