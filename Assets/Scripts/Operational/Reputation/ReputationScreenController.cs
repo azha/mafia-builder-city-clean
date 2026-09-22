@@ -555,7 +555,7 @@ namespace MafiaCleanCity.Operational
                 MajPanneau("« PAS JUGEABLE » N’EST PAS « MOYEN »",
                     "Rien n’a encore déteint",
                     "ses quatre voyants sont éteints parce qu’il n’a " + Or("rien pris de vous") +
-                    " — pas parce qu’il est médiocre. Et le serveur refuse de juger votre " +
+                    " — pas parce qu’il est médiocre. Et personne ne jugera votre " +
                     "constance tant qu’il n’a pas assez vu : " + Or("indéterminé") +
                     ", jamais au milieu d’une jauge.",
                     ReputationResolvers.Creme);
@@ -569,9 +569,9 @@ namespace MafiaCleanCity.Operational
                 MajPanneau("CE QUI A CHANGÉ",
                     "Une règle donnée, une règle enfreinte",
                     "vous avez laissé passer ce que vous aviez interdit. Les deux cercles " +
-                    "l’enregistrent — le vôtre et le sien. Le serveur dit " + Or("que") +
+                    "l’enregistrent — le vôtre et le sien. On vous dit " + Or("que") +
                     " vous dérivez, jamais " + Or("sur quelle règle") +
-                    " : c’est un maillon manquant, pas un choix d’écran.",
+                    " : ce n’est pas un choix, c’est ce qui manque encore.",
                     ReputationResolvers.Ambre);
                 return;
             }
