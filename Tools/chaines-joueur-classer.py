@@ -113,6 +113,8 @@ VERDICTS = [
  (L, "[!] on s'expose", 0, "㉔ glyphe retiré (:379)"),
  (L, "[$] on laisse", 0, "㉔ glyphe retiré (:380)"),
  (L, "Saturated", 0, "chrome HomeChrome:143 — bande de pression traduite par la clé de sa valeur (lot E) ; « Normal » / « Warning » / « Unknown » non épinglés (mots trop courants)"),
+ (L, "< Crop", 0, "② sélecteur (:2053)"),
+ (L, "Crop >", 0, "② sélecteur (:2062)"),
  (N, "Aucune route connue pour l'instant",      0, "CLOS lot C 22/09 (㉘ la distribution) — était : « route » = endpoint, alors que l'écran voisin dit « CETTE ROUTE » pour un itinéraire"),
  (B, "aucune route n'existe encore",            0, "CLOS lot C 22/09 (⑰ le commissariat) — était : « route »"),
  (B, "la route voisine vise les affaires",      0, "CLOS lot C 22/09 (⑰ le commissariat) — était : « route voisine »"),

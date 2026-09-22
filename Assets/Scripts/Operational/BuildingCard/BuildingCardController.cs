@@ -2050,7 +2050,7 @@ namespace MafiaCleanCity.Operational
             hlg.childForceExpandHeight = true;
             AddLayoutElement(row, minHeight: 32, flexibleHeight: 0);
 
-            AddActionButton(row.transform, "< Crop", () => CyclePrecursor(-1));
+            AddActionButton(row.transform, "‹", () => CyclePrecursor(-1));
 
             string cropWord = GrowablePrecursorLabel(SelectedPrecursor);
             TextMeshProUGUI cropText = NewText("PlantSelectorValue", row.transform, cropWord, 15, TextAlignmentOptions.Center);
@@ -2059,7 +2059,7 @@ namespace MafiaCleanCity.Operational
             AddLayoutElement(cropText.gameObject, minWidth: 130, flexibleWidth: 0);
             TrackText(cropText, cropWord);
 
-            AddActionButton(row.transform, "Crop >", () => CyclePrecursor(1));
+            AddActionButton(row.transform, "›", () => CyclePrecursor(1));
         }
 
         // Cycle the selected growable precursor (wraps around the 3-member GROWABLE set). Re-renders the actions via
