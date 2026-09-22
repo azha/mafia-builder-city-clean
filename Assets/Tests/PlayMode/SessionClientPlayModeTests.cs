@@ -141,11 +141,14 @@ namespace MafiaCleanCity.Shell.Tests
             Assert.AreNotEqual(0, payload.opened_game_day,
                 "opened_game_day: DISTINCT FROM ZERO — the language default AND the undimensioned value on a " +
                 "non-tick base. This is the falsifiable that would catch the exact regression BLOCKING-1 named.");
+            // F14 (back f4883b7c) — la 14ᵉ clé : la phase de la session, dans le domaine fermé du district.
+            CollectionAssert.Contains(new[] { "DAWN", "DAY", "DUSK", "NIGHT" }, payload.day_phase,
+                $"day_phase « {payload.day_phase} » hors du domaine DAWN/DAY/DUSK/NIGHT — ou absente (back sans F14)");
             Assert.Greater(payload.opened_game_day, 0, "opened_game_day: a real, positive day count (epoch pinned to 1500 minutes)");
         }
 
         // C3-F2 (parité de forme, MOITIÉ cliente) — le nombre de champs du DTO client ÉGALE
-        // l'ensemble fermé de 12 clés que le design déclare (`session-open-sequence.service.ts:
+        // l'ensemble fermé de 14 clés (12 du design + 2 de F14, back f4883b7c) que le serveur déclare (`session-open-sequence.service.ts:
         // 229-246` sur CETTE branche — voir IMPORTANT-4 de la revue ⊥, l'ancre `229-251` était
         // fausse de 5 lignes). Reflection sur le TYPE, jamais un motif texte.
         // ⚠️ Revue ⊥ IMPORTANT-2 : CE test seul NE VOIT PAS un ajout/retrait côté SERVEUR — il
@@ -153,13 +156,13 @@ namespace MafiaCleanCity.Shell.Tests
         // ci-dessous qui ferme la boucle en comptant les clés du CORPS BRUT et en les comparant à
         // CE compte — les deux ENSEMBLE forment la parité que le design décrit (`design:760-762`).
         [Test]
-        public void C3F2_ClientDtoFieldCount_EqualsServerInterfaceKeyCount_Twelve()
+        public void C3F2_ClientDtoFieldCount_EqualsServerInterfaceKeyCount_Fourteen()
         {
             var fields = typeof(SessionOpenDto).GetFields(
                 System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.DeclaredOnly);
-            Assert.AreEqual(12, fields.Length,
-                $"SessionOpenDto must declare EXACTLY the 12 keys `session-open-sequence.service.ts:229-246` " +
-                $"declares (11 + opened_game_day, W3.U1 C2/D3) — found {fields.Length}: " +
+            Assert.AreEqual(14, fields.Length,
+                $"SessionOpenDto must declare EXACTLY the 14 keys `session-open-sequence.service.ts` declares " +
+                $"(11 + opened_game_day W3.U1 C2/D3 + opened_game_minute, day_phase F14 back f4883b7c) — found {fields.Length}: " +
                 string.Join(", ", fields.Select(f => f.Name)));
         }
 

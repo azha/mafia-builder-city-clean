@@ -78,7 +78,7 @@ namespace MafiaCleanCity.Shell
         public bool first_decision_recorded;
     }
 
-    // The FULL `POST /v1/session/open` response — a closed set of 12 top-level keys
+    // The FULL `POST /v1/session/open` response — a closed set of 14 top-level keys (12 → 14 : F14, back f4883b7c)
     // (`session-open-sequence.service.ts:229-246`, W3.U1 C2 GREW it additively with
     // `opened_game_day`). §3-bis of the design is the falsifiable that keeps this DTO's field COUNT
     // in lockstep with the server interface (C3-F2 — parity of FORM, never a re-typed shape check).
@@ -97,6 +97,15 @@ namespace MafiaCleanCity.Shell
         public CompressionGlanceDto compression_glance;
         public OnboardingGlanceDto onboarding;
         public int opened_game_day; // W3.U1 C2/D3 — the 12th key
+        // F14 (forme G, back f4883b7c `session-open-sequence.service.ts`) — la minute de jeu À L'OUVERTURE, FIGÉE (le nom le dit).
+        // DÉCLARÉE, JAMAIS AFFICHÉE comme une heure : une horloge figée se lit comme une horloge qui marche et devient
+        // fausse à mesure que la session vieillit ; la faire avancer côté client est interdit (§6.3). ① garde « JOUR N » +
+        // la phase ; une heure, si elle doit exister, reste au district, qui la projette à chaque récupération.
+        public int opened_game_minute; // 13th key
+        // F14 (forme G) — DAWN | DAY | DUSK | NIGHT, calculée par le back avec la fonction du district
+        // (`citysim/day-phase-quarter.ts`) sur le MÊME relevé d'horloge qu'`opened_game_day`. Hors district, c'est elle
+        // que la barre affiche (`AppShell.PhaseHorsDistrict`) ; absente (back plus ancien) ⇒ null ⇒ « — », comme avant.
+        public string day_phase;       // 14th key
     }
 
     [Serializable] public class SessionOpenPayload { public SessionOpenDto data; }
