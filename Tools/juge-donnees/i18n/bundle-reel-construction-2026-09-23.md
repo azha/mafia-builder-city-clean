@@ -25,7 +25,7 @@ Population : + la construction de ⑥ (jusqu'à 41 sites / 35 clés, statique ; 
 - `famille.ecran.lui_elargir_sa_marge`
 - `famille.ecran.laisser_passer_celle_ci`
 
-## Hors de toute garde — 20 clés non servies dans 10 autres écrans (à servir, ou à garder)
+## Hors de toute garde — 20 clés non servies dans 9 autres écrans (à servir, ou à garder)
 - `carnet.bloc.le_carnet_n_a_pas_repondu` — CarnetScreenController.cs:251 (RendreEtatIndisponibleNomme)
 - `carnet.bloc.ce_que_la_ville_ne_dit_pas` — CarnetScreenController.cs:296 (AppliquerEtat)
 - `appro.etat.vous_ne_tenez_encore_aucun_site` — ChaineDApproScreenController.cs:198 (DecouvrirBuildingId)
@@ -46,3 +46,42 @@ Population : + la construction de ⑥ (jusqu'à 41 sites / 35 clés, statique ; 
 - `journal.bloc.rien_ce_matin_la_ville_a_passe_une_nuit_tranquille` — JournalScreenController.cs:335 (RendreListe)
 - `loi.titre.le_parloir_n_a_pas_repondu` — LoiScreenController.cs:459 (RendreEtatIndisponible)
 - `revue.bloc.personne_au_comptoir_ce_matin` — DailyReviewScreenController.cs:282 (Render)
+
+## DETTE — les écrans SANS garde « zéro repli » (2026-09-23)
+Seul ⑥ (`LieutenantScreenController`) est mesuré par `BundleReel`. Tous les autres écrans qui passent par `Libelle` — **28 contrôleurs** —
+affichent le littéral français quand leur clé manque, sans que rien ne rougisse. Dont **9 avec des clés non servies aujourd'hui**
+(table `aea5ef7c`, section précédente) — en tête de liste. Forme à reprendre écran par écran : celle de `BundleReel` (bundle chargé,
+compteurs à zéro, PUIS construction ; plancher d'appels ; rejeu des résolveurs) — avec un point d'entrée hors réseau par écran.
+
+| écran (contrôleur) | sites Libelle à littéral | clés non servies (aea5ef7c) |
+|---|---|---|
+| `FiliereScreenController.cs` | 34 | 8 |
+| `ChaineDApproScreenController.cs` | 12 | 3 |
+| `CarnetScreenController.cs` | 19 | 2 |
+| `ConflitScreenController.cs` | 10 | 2 |
+| `JournalScreenController.cs` | 29 | 1 |
+| `ExceptionQueueController.cs` | 15 | 1 |
+| `DistributionScreenController.cs` | 11 | 1 |
+| `LoiScreenController.cs` | 10 | 1 |
+| `DailyReviewScreenController.cs` | 2 | 1 |
+| `BuildingCardController.cs` | 21 | 0 |
+| `HorizonScreenController.cs` | 20 | 0 |
+| `ForensicScreenController.cs` | 16 | 0 |
+| `DistrictInteriorScreenController.cs` | 13 | 0 |
+| `CityMapController.cs` | 9 | 0 |
+| `ExceptionDetailController.cs` | 9 | 0 |
+| `AutonomyInboxController.cs` | 5 | 0 |
+| `ReputationScreenController.cs` | 5 | 0 |
+| `HomeChromeController.cs` | 5 | 0 |
+| `DashboardController.cs` | 4 | 0 |
+| `DemolitionScreenController.cs` | 4 | 0 |
+| `HighestLeverageCardController.cs` | 4 | 0 |
+| `ProfileScreenController.cs` | 2 | 0 |
+| `SettingsScreenController.cs` | 2 | 0 |
+| `DelegationScreenController.cs` | 2 | 0 |
+| `ExceptionQueuePanelController.cs` | 2 | 0 |
+| `CompressionScreenController.cs` | 1 | 0 |
+| `ShopScreenController.cs` | 1 | 0 |
+| `OrgVitalsPanelController.cs` | 1 | 0 |
+
+Résolveurs partagés hors contrôleur (4 fichiers, sans garde propre ; `FamilleLabels` est rejoué par ⑥) : `FamilleLabels.cs` (16), `ReputationResolvers.cs` (16), `PureteResolvers.cs` (5), `WalletBandResolver.cs` (5).
