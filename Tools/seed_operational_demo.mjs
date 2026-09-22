@@ -254,6 +254,186 @@ function psql(sql) {
   return out.trim().split('\n')[0].trim();
 }
 
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+// TD-454, moitié 2 — LA PURGE EN UNE TRANSACTION. CODÉE le 2026-09-22 ; elle n'était que COMMENTÉE.
+// ⛔ Le commentaire « en UN SEUL appel enveloppé de BEGIN/COMMIT, c'est 0 ou 32 — jamais entre »
+//    existait depuis e3b20f6b (2026-09-02) au-dessus de 31 appels `psql(\`DELETE …\`)` DISTINCTS :
+//    31 processus, 31 connexions, et un run tué au milieu laissait « quelques tables purgées », un
+//    état qu'aucune relecture ne distingue d'une purge complète. 0 `BEGIN;` dans ce commit ni après.
+//    *Un commentaire qui décrit une propriété que le code n'a pas ne la rate pas : il la certifie.*
+// CE QUI CHANGE : le script est composé en mémoire (`sqlDePurge`) et part en UN appel `psql -c`,
+//    ouvert par `BEGIN;`, fermé par `COMMIT;`. Les captures d'identifiants qui faisaient un aller-retour
+//    JS (string_agg → `IN (liste)`) deviennent des tables temporaires `ON COMMIT DROP` ; la garde de
+//    course (`ltRestants`) devient un bloc `DO $$ … RAISE EXCEPTION $$` — en READ COMMITTED, chaque
+//    énoncé prend un instantané neuf, donc elle voit toujours un lieutenant recréé et COMMITÉ par un
+//    écrivain concurrent, exactement comme avant. Une erreur n'importe où annule TOUT : 0 ou tout.
+// CE QUI NE CHANGE PAS : la note de tête (l.44 et suiv.) reste vraie — une transaction ne peut pas
+//    enjamber les 20 requêtes HTTP entre la purge et la reconstruction. Celle-ci ne couvre QUE la
+//    purge (aucun appel réseau à l'intérieur). Tué APRÈS ce COMMIT et avant les INSERT, le compte est
+//    toujours vidé : c'est la sentinelle (`poserMarqueur`) qui rend CE cas détectable. TD-454 reste
+//    ouverte sur cette moitié-là.
+// CONTRÔLE (pas une affirmation) : `MAFIA_SEED_CONTROLE_PURGE=1 node Tools/seed_operational_demo.mjs`
+//    sabote le script APRÈS le wipe des bâtiments du district (`SELECT 1/0`) et mesure six comptes
+//    avant/après : ils doivent être ÉGAUX, sinon l'atomicité est réfutée. Il ne sème rien.
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+
+/** Le script de purge : UN texte, UNE transaction. Chaque énoncé garde le commentaire qui le justifie ;
+ *  l'ordre respecte les FK (enfants avant bâtiments), il est celui des 31 appels d'avant. */
+function sqlDePurge(playerId, opBuildingsSubq, { saboterApresBatiments = false } = {}) {
+  const enonces = [
+    // Phase-2c (Ash): the player's appointment + batch-purity rows (player-scoped — safe to wipe wholesale; they belong
+    // only to this operational demo player). Deleted FIRST (FK children of ash_appointment→buildings + batch_purity→
+    // product_storage). The specialized_lab building lives in a GLASS district (NOT district 16), so it is wiped by its
+    // own targeted clause below — the district-16 building wipe does not reach it.
+    `DELETE FROM ash_appointment WHERE player_id='${playerId}';`,
+    `DELETE FROM batch_purity WHERE player_id='${playerId}';`,
+    // Phase-3 vector #3 (grow_house): the player's grow_session rows (player-scoped — safe to wipe wholesale; they belong
+    // only to this operational demo player). Deleted explicitly (a grow_session FK-cascades on its grow_house building
+    // delete below, but an explicit wipe is idempotent + order-safe regardless of which block the grow_house sat on).
+    `DELETE FROM grow_session WHERE player_id='${playerId}';`,
+    // Phase-9 vector #9 (lieutenant rule-editor / COOK delegation): the player's lieutenant rows + their 1-1
+    // behavior_script rows (player-scoped — safe to wipe wholesale; they belong only to this operational demo player). A
+    // recruited COOK lieutenant holds an `assigned_building_id` FK onto a district-16 building (the lab), so the
+    // district-16 building wipe below FAILS (FK violation) while a lieutenant still references it — the lieutenant rows
+    // MUST be cleared FIRST. Order: capture the lieutenants' behavior_script_ids → delete the lieutenant rows (frees the
+    // assigned/target-building FKs + the behavior_script FK) → delete the now-orphaned behavior_script rows. The Phase-9
+    // demo/PlayMode recruits a fresh COOK each run, so this keeps the seeder idempotent (a prior run's lieutenant never
+    // blocks the next reset). The deferred lieutenant child tables (cue_registry / task_exposure / autonomy_reports / …)
+    // are not populated by this slice, so no extra wipe is needed; if a future vector populates them, add them here.
+    //    Dans UNE transaction : la capture est une table temporaire morte au COMMIT — l'ancienne forme
+    //    (SELECT string_agg → JS → DELETE … IN (liste)) faisait deux allers-retours et deux connexions.
+    `CREATE TEMP TABLE _semis_scripts ON COMMIT DROP AS SELECT behavior_script_id FROM lieutenant WHERE player_id='${playerId}' AND behavior_script_id IS NOT NULL;`,
+    `DELETE FROM lieutenant WHERE player_id='${playerId}';`,
+    `DELETE FROM behavior_script WHERE script_id IN (SELECT behavior_script_id FROM _semis_scripts);`,
+    // Phase-20: the exception-queue + progression funnel demo state is REBUILT each run — wipe this player's rows
+    // (player-scoped). ensureRow re-creates progression at tier 1 / taught [] on first read, and the handled count
+    // is COUNT(resolved exception rows) → wiping both resets the funnel to LOCKED deterministically.
+    `DELETE FROM exception_queue WHERE player_id='${playerId}';`,
+    `DELETE FROM player_progression_state WHERE player_id='${playerId}';`,
+    `DELETE FROM courier_shift WHERE player_id='${playerId}';`,
+    `DELETE FROM courier WHERE player_id='${playerId}';`,
+    `DELETE FROM route WHERE player_id='${playerId}';`,
+    `DELETE FROM dealer WHERE player_id='${playerId}';`,
+    `DELETE FROM cook_session WHERE player_id='${playerId}';`,
+    `DELETE FROM precursor_order WHERE player_id='${playerId}';`,
+    `DELETE FROM precursor_stock WHERE player_id='${playerId}';`,
+    `DELETE FROM product_storage WHERE player_id='${playerId}';`,
+    `DELETE FROM tail_risk_estimates WHERE player_id='${playerId}';`,
+    `DELETE FROM laundering_edges WHERE player_id='${playerId}';`,
+    `DELETE FROM laundering_nodes WHERE player_id='${playerId}';`,
+    `DELETE FROM safehouses WHERE player_id='${playerId}';`,
+    `DELETE FROM deal_leks WHERE player_id='${playerId}';`,
+    `DELETE FROM building_operational_state WHERE building_id IN (${opBuildingsSubq});`,
+    // ⛔ GARDE DE COURSE — le DELETE ci-dessous échoue par FK si un lieutenant référence encore un de
+    // ces bâtiments. Les lieutenants du joueur sont supprimés PLUS HAUT et dans le bon ordre (voir le
+    // commentaire du wipe lieutenant), donc un échec ici ne peut avoir que deux causes, et elles
+    // demandent des correctifs opposés :
+    //   (a) un lieutenant a été RECRÉÉ entre les deux DELETE — par le back, par un test PlayMode
+    //       concurrent, par un second seeder. C'est une COURSE : la purge est atomique mais n'exclut pas un écrivain concurrent.
+    //   (b) une autre FK que celle du lieutenant bloque. Il y en a 23 vers `buildings`, mesurées le
+    //       2026-08-31 — et `lieutenant`, `route` et `supply_chain_legs` en portent DEUX chacune, ce
+    //       qu'un balayage par nom de table rate.
+    // Sans ce compte, le message de Postgres nomme UNE contrainte et laisse croire à un défaut
+    // d'ordre — trois diagnostics successifs s'y sont trompés le 2026-08-31, et le correctif proposé
+    // (détacher les lieutenants avant le wipe) était redondant avec du code existant : 0 assignation
+    // croisée en base, 0 bâtiment sans état opérationnel. Le compte ci-dessous départage (a) de (b)
+    // en une ligne, et il est DATÉ dans le log.
+    //    Portée par le serveur (PL/pgSQL) : une exception ici ANNULE tout ce qui précède, et son
+    //    message traverse psql (ON_ERROR_STOP) jusqu'au `[op-seed] FAILED:` du seeder.
+    `DO $$ DECLARE n bigint; BEGIN ` +
+      `SELECT count(*) INTO n FROM lieutenant WHERE player_id='${playerId}'; ` +
+      `IF n <> 0 THEN RAISE EXCEPTION '[seed] COURSE DÉTECTÉE : % lieutenant(s) du joueur de démo existent ENCORE juste avant le wipe des bâtiments, alors qu''ils viennent d''être supprimés. Quelqu''un les a recréés entre les deux DELETE (back en cours d''exécution, test PlayMode concurrent, second seeder). La purge est atomique — RIEN n''a été supprimé — mais elle n''exclut pas un écrivain concurrent : arrêtez-le avant de rejouer. ⚠️ Ce n''est PAS un défaut d''ordre — l''ordre est correct et vérifié.', n; END IF; ` +
+      `END $$;`,
+    `DELETE FROM buildings WHERE player_id='${playerId}' AND block_id IN (SELECT id FROM blocks WHERE district_id=${OP_DISTRICT});`,
+    // ── Les quatre wipes CIBLÉS par operational_type (hors district 16), en UNE capture puis trois DELETE.
+    //    ⛔ Capturés AVANT le premier DELETE ciblé : la jointure bos⋈buildings disparaît dès que bos est
+    //    vidé — une sous-requête relue après rendrait vide et laisserait les bâtiments en place.
+    // Phase-2c (Ash): the specialized_lab lives in a GLASS district (not district 16), so wipe any prior specialized_lab
+    // this player owns directly. The "specialized_lab" marker is the operational TYPE (building_operational_state.
+    // operational_type) — buildings.building_type is a numeric structural code, NOT the operational type. Capture the
+    // specialized_lab building ids via their operational-state rows, then delete the operational-state rows + the
+    // buildings. Idempotent: a re-run rebuilds it fresh in the Glass district below. (product_storage / cook_session /
+    // precursor_* / batch_purity / ash_appointment were already wiped player-wide above.)
+    // Phase-4 vector #4 (distribution_hub): the hub is buildable ONLY in a TIDEWATER/STACK district (NOT district 16), so
+    // like the specialized_lab it is wiped by a TARGETED operational_type clause (the district-16 wipe never reaches it).
+    // Its courier/route/courier_shift children were already wiped player-wide above; here we drop the hub building + its
+    // operational-state row so a re-run rebuilds it fresh. Idempotent + order-safe.
+    // Crick refinery: lives in a STACK district (canon building_types.md invariant 3 — the back now enforces it at
+    // convert), so the district-16 wipe never reaches it either. Same targeted operational_type wipe as the hub/vault;
+    // its precursor_stock/cook_session/product_storage children were already wiped player-wide above. Idempotent.
+    // Phase-5 vector #5a (money_holding): the vault is GLASS-only (NOT district 16 — like the specialized_lab), so it too is
+    // wiped by a TARGETED operational_type clause (the district-16 wipe never reaches it). Its 1-1 money_holding row is an FK
+    // child of buildings (ON DELETE CASCADE) but we wipe it explicitly FIRST for order-safety/idempotence, then drop the
+    // building + its operational-state row so a re-run rebuilds the vault fresh (held 0, tier 1, no forfeiture armed).
+    `CREATE TEMP TABLE _semis_cibles ON COMMIT DROP AS SELECT bos.building_id, bos.operational_type ` +
+      `FROM building_operational_state bos JOIN buildings b ON b.building_id=bos.building_id ` +
+      `WHERE b.player_id='${playerId}' AND bos.operational_type IN ('specialized_lab','distribution_hub','refinery','money_holding');`,
+    `DELETE FROM money_holding WHERE building_id IN (SELECT building_id FROM _semis_cibles WHERE operational_type='money_holding');`,
+    `DELETE FROM building_operational_state WHERE building_id IN (SELECT building_id FROM _semis_cibles);`,
+    `DELETE FROM buildings WHERE building_id IN (SELECT building_id FROM _semis_cibles);`,
+  ];
+  if (saboterApresBatiments) {
+    const k = enonces.findIndex((e) => e.startsWith(`DELETE FROM buildings WHERE player_id=`));
+    if (k < 0) throw new Error('[seed] sabotage impossible : le DELETE des bâtiments du district est introuvable');
+    enonces.splice(k + 1, 0, `SELECT 1/0; -- ⛔ SABOTAGE DE CONTRÔLE (MAFIA_SEED_CONTROLE_PURGE=1) : doit annuler TOUT ce qui précède`);
+  }
+  return ['BEGIN;', ...enonces, 'COMMIT;'].join('\n');
+}
+
+/** UN appel psql pour toute la purge. Une erreur = rien de retenu, et on le dit. */
+function purgerAtomiquement(sql) {
+  const nDelete = (sql.match(/^DELETE /gm) || []).length;
+  try {
+    psql(sql);
+  } catch (e) {
+    const detail = (e.stderr ? String(e.stderr) : e.message || '').trim();
+    throw new Error(`[seed] PURGE ANNULÉE — transaction unique, 0 des ${nDelete} DELETE retenu :\n${detail}`);
+  }
+  console.log(`[op-seed] purge : ${nDelete} DELETE en UNE transaction (1 appel psql, BEGIN/COMMIT)`);
+}
+
+/** MAFIA_SEED_CONTROLE_PURGE=1 — PROUVE l'atomicité au lieu de l'affirmer : six comptes, un script
+ *  saboté après le wipe des bâtiments du district, les six comptes relus. Égaux ⇒ prouvée ;
+ *  différents ⇒ réfutée (et c'est une erreur). Ne sème rien, ne pose pas de marqueur. */
+function controlerAtomiciteDeLaPurge(playerId, opBuildingsSubq) {
+  const sondes = {
+    lieutenant: `SELECT count(*) FROM lieutenant WHERE player_id='${playerId}';`,
+    dealer: `SELECT count(*) FROM dealer WHERE player_id='${playerId}';`,
+    laundering_nodes: `SELECT count(*) FROM laundering_nodes WHERE player_id='${playerId}';`,
+    building_operational_state: `SELECT count(*) FROM building_operational_state WHERE building_id IN (${opBuildingsSubq});`,
+    buildings_district: `SELECT count(*) FROM buildings WHERE player_id='${playerId}' AND block_id IN (SELECT id FROM blocks WHERE district_id=${OP_DISTRICT});`,
+    cibles_hors_district: `SELECT count(*) FROM building_operational_state bos JOIN buildings b ON b.building_id=bos.building_id WHERE b.player_id='${playerId}' AND bos.operational_type IN ('specialized_lab','distribution_hub','refinery','money_holding');`,
+  };
+  const lire = () => Object.fromEntries(Object.entries(sondes).map(([k, q]) => [k, psql(q)]));
+  const avant = lire();
+  const total = Object.values(avant).reduce((a, v) => a + Number(v), 0);
+  if (!(total > 0)) {
+    throw new Error(`[seed] CONTRÔLE IMPOSSIBLE : 0 ligne à purger sur ce compte (${JSON.stringify(avant)}) — un sabotage qui n'annule rien ne prouve rien. Semer d'abord.`);
+  }
+  const sql = sqlDePurge(playerId, opBuildingsSubq, { saboterApresBatiments: true });
+  const nDelete = (sql.match(/^DELETE /gm) || []).length;
+  let echec = null;
+  try {
+    psql(sql);
+  } catch (e) {
+    echec = e;
+  }
+  if (!echec) {
+    throw new Error("[seed] CONTRÔLE RATÉ : le script SABOTÉ a réussi — le sabotage n'a pas été exécuté, ce contrôle ne contrôle rien.");
+  }
+  const apres = lire();
+  const ecarts = Object.keys(sondes).filter((k) => avant[k] !== apres[k]);
+  console.log(
+    `[op-seed] CONTRÔLE D'ATOMICITÉ — sabotage après le DELETE des bâtiments du district, ${nDelete} DELETE dans le script : ` +
+      Object.keys(sondes).map((k) => `${k} ${avant[k]}→${apres[k]}`).join(' · '),
+  );
+  if (ecarts.length) {
+    throw new Error(`[seed] ATOMICITÉ RÉFUTÉE : ${ecarts.join(', ')} ont changé malgré l'annulation.`);
+  }
+  const motif = String(echec.stderr || echec.message).split('\n').find((l) => /division by zero|ERROR/.test(l)) || 'erreur psql';
+  console.log(`[op-seed] ATOMICITÉ PROUVÉE : ${total} ligne(s) avant, ${total} après, 0 entre — le sabotage a tout annulé (${motif.trim()}).`);
+}
+
 /** Sign in via the real auth endpoint → a Bearer token (the T14 City Map AuthClient recipe). */
 async function signin() {
   const res = await fetch(`${BASE_URL}/v1/auth/signin`, {
@@ -359,137 +539,20 @@ async function main() {
   // only to this operational demo player). Deleted FIRST (FK children of ash_appointment→buildings + batch_purity→
   // product_storage). The specialized_lab building lives in a GLASS district (NOT district 16), so it is wiped by its
   // own targeted clause below — the district-16 building wipe does not reach it.
+  if (process.env.MAFIA_SEED_CONTROLE_PURGE === '1') {
+    controlerAtomiciteDeLaPurge(playerId, opBuildingsSubq);
+    console.log('[op-seed] contrôle terminé — AUCUN semis effectué (MAFIA_SEED_CONTROLE_PURGE=1).');
+    return;
+  }
   verifierMarqueurAuDemarrage();
-poserMarqueur(playerId);
+  poserMarqueur(playerId);
 
-// ⛔ LA PURGE EST ATOMIQUE ENTRE SES ÉNONCÉS (TD-454, moitié 2). Les 32 `DELETE` partaient en
-//    32 processus `psql` distincts : un run tué au milieu laissait « quelques tables purgées »,
-//    un état qu'aucune relecture ne distingue d'une purge complète. En UN SEUL appel enveloppé
-//    de `BEGIN`/`COMMIT`, c'est 0 ou 32 — jamais entre.
-//    ⚠️ Ça NE ferme PAS le défaut principal : tué APRÈS ce COMMIT et avant les INSERT, le compte
-//    est toujours vidé. C'est la sentinelle ci-dessus qui rend CE cas détectable, et seule une
-//    reconstruction dans un compte neuf le rendrait impossible (TD-454 reste ouverte).
-psql(`DELETE FROM ash_appointment WHERE player_id='${playerId}';`);
-  psql(`DELETE FROM batch_purity WHERE player_id='${playerId}';`);
-  // Phase-3 vector #3 (grow_house): the player's grow_session rows (player-scoped — safe to wipe wholesale; they belong
-  // only to this operational demo player). Deleted explicitly (a grow_session FK-cascades on its grow_house building
-  // delete below, but an explicit wipe is idempotent + order-safe regardless of which block the grow_house sat on).
-  psql(`DELETE FROM grow_session WHERE player_id='${playerId}';`);
-  // Phase-9 vector #9 (lieutenant rule-editor / COOK delegation): the player's lieutenant rows + their 1-1
-  // behavior_script rows (player-scoped — safe to wipe wholesale; they belong only to this operational demo player). A
-  // recruited COOK lieutenant holds an `assigned_building_id` FK onto a district-16 building (the lab), so the
-  // district-16 building wipe below FAILS (FK violation) while a lieutenant still references it — the lieutenant rows
-  // MUST be cleared FIRST. Order: capture the lieutenants' behavior_script_ids → delete the lieutenant rows (frees the
-  // assigned/target-building FKs + the behavior_script FK) → delete the now-orphaned behavior_script rows. The Phase-9
-  // demo/PlayMode recruits a fresh COOK each run, so this keeps the seeder idempotent (a prior run's lieutenant never
-  // blocks the next reset). The deferred lieutenant child tables (cue_registry / task_exposure / autonomy_reports / …)
-  // are not populated by this slice, so no extra wipe is needed; if a future vector populates them, add them here.
-  const ltScriptIds = psql(
-    `SELECT COALESCE(string_agg(quote_literal(behavior_script_id::text), ','), '') ` +
-      `FROM lieutenant WHERE player_id='${playerId}' AND behavior_script_id IS NOT NULL;`,
-  );
-  psql(`DELETE FROM lieutenant WHERE player_id='${playerId}';`);
-  if (ltScriptIds) {
-    psql(`DELETE FROM behavior_script WHERE script_id IN (${ltScriptIds});`);
-  }
-  // Phase-20: the exception-queue + progression funnel demo state is REBUILT each run — wipe this player's rows
-  // (player-scoped). ensureRow re-creates progression at tier 1 / taught [] on first read, and the handled count
-  // is COUNT(resolved exception rows) → wiping both resets the funnel to LOCKED deterministically.
-  psql(`DELETE FROM exception_queue WHERE player_id='${playerId}';`);
-  psql(`DELETE FROM player_progression_state WHERE player_id='${playerId}';`);
-  psql(`DELETE FROM courier_shift WHERE player_id='${playerId}';`);
-  psql(`DELETE FROM courier WHERE player_id='${playerId}';`);
-  psql(`DELETE FROM route WHERE player_id='${playerId}';`);
-  psql(`DELETE FROM dealer WHERE player_id='${playerId}';`);
-  psql(`DELETE FROM cook_session WHERE player_id='${playerId}';`);
-  psql(`DELETE FROM precursor_order WHERE player_id='${playerId}';`);
-  psql(`DELETE FROM precursor_stock WHERE player_id='${playerId}';`);
-  psql(`DELETE FROM product_storage WHERE player_id='${playerId}';`);
-  psql(`DELETE FROM tail_risk_estimates WHERE player_id='${playerId}';`);
-  psql(`DELETE FROM laundering_edges WHERE player_id='${playerId}';`);
-  psql(`DELETE FROM laundering_nodes WHERE player_id='${playerId}';`);
-  psql(`DELETE FROM safehouses WHERE player_id='${playerId}';`);
-  psql(`DELETE FROM deal_leks WHERE player_id='${playerId}';`);
-  psql(`DELETE FROM building_operational_state WHERE building_id IN (${opBuildingsSubq});`);
-  // ⛔ GARDE DE COURSE — le DELETE ci-dessous échoue par FK si un lieutenant référence encore un de
-  // ces bâtiments. Les lieutenants du joueur sont supprimés PLUS HAUT et dans le bon ordre (voir le
-  // commentaire du wipe lieutenant), donc un échec ici ne peut avoir que deux causes, et elles
-  // demandent des correctifs opposés :
-  //   (a) un lieutenant a été RECRÉÉ entre les deux DELETE — par le back, par un test PlayMode
-  //       concurrent, par un second seeder. C'est une COURSE : le reset n'est pas atomique.
-  //   (b) une autre FK que celle du lieutenant bloque. Il y en a 23 vers `buildings`, mesurées le
-  //       2026-08-31 — et `lieutenant`, `route` et `supply_chain_legs` en portent DEUX chacune, ce
-  //       qu'un balayage par nom de table rate.
-  // Sans ce compte, le message de Postgres nomme UNE contrainte et laisse croire à un défaut
-  // d'ordre — trois diagnostics successifs s'y sont trompés le 2026-08-31, et le correctif proposé
-  // (détacher les lieutenants avant le wipe) était redondant avec du code existant : 0 assignation
-  // croisée en base, 0 bâtiment sans état opérationnel. Le compte ci-dessous départage (a) de (b)
-  // en une ligne, et il est DATÉ dans le log.
-  const ltRestants = psql(`SELECT count(*) FROM lieutenant WHERE player_id='${playerId}';`);
-  if (ltRestants !== '0') {
-    throw new Error(
-      `[seed] COURSE DÉTECTÉE : ${ltRestants} lieutenant(s) du joueur de démo existent ENCORE juste ` +
-        `avant le wipe des bâtiments, alors qu'ils viennent d'être supprimés. Quelqu'un les a recréés ` +
-        `entre les deux DELETE (back en cours d'exécution, test PlayMode concurrent, second seeder). ` +
-        `Le reset n'est pas atomique : arrêtez l'écrivain concurrent avant de rejouer. ` +
-        `⚠️ Ce n'est PAS un défaut d'ordre — l'ordre est correct et vérifié.`,
-    );
-  }
-  psql(`DELETE FROM buildings WHERE player_id='${playerId}' AND block_id IN (SELECT id FROM blocks WHERE district_id=${OP_DISTRICT});`);
-  // Phase-2c (Ash): the specialized_lab lives in a GLASS district (not district 16), so wipe any prior specialized_lab
-  // this player owns directly. The "specialized_lab" marker is the operational TYPE (building_operational_state.
-  // operational_type) — buildings.building_type is a numeric structural code, NOT the operational type. Capture the
-  // specialized_lab building ids via their operational-state rows, then delete the operational-state rows + the
-  // buildings. Idempotent: a re-run rebuilds it fresh in the Glass district below. (product_storage / cook_session /
-  // precursor_* / batch_purity / ash_appointment were already wiped player-wide above.)
-  const ashLabIds = psql(
-    `SELECT COALESCE(string_agg(quote_literal(bos.building_id::text), ','), '') ` +
-      `FROM building_operational_state bos JOIN buildings b ON b.building_id=bos.building_id ` +
-      `WHERE b.player_id='${playerId}' AND bos.operational_type='specialized_lab';`,
-  );
-  if (ashLabIds) {
-    psql(`DELETE FROM building_operational_state WHERE building_id IN (${ashLabIds});`);
-    psql(`DELETE FROM buildings WHERE building_id IN (${ashLabIds});`);
-  }
-  // Phase-4 vector #4 (distribution_hub): the hub is buildable ONLY in a TIDEWATER/STACK district (NOT district 16), so
-  // like the specialized_lab it is wiped by a TARGETED operational_type clause (the district-16 wipe never reaches it).
-  // Its courier/route/courier_shift children were already wiped player-wide above; here we drop the hub building + its
-  // operational-state row so a re-run rebuilds it fresh. Idempotent + order-safe.
-  const hubIds = psql(
-    `SELECT COALESCE(string_agg(quote_literal(bos.building_id::text), ','), '') ` +
-      `FROM building_operational_state bos JOIN buildings b ON b.building_id=bos.building_id ` +
-      `WHERE b.player_id='${playerId}' AND bos.operational_type='distribution_hub';`,
-  );
-  if (hubIds) {
-    psql(`DELETE FROM building_operational_state WHERE building_id IN (${hubIds});`);
-    psql(`DELETE FROM buildings WHERE building_id IN (${hubIds});`);
-  }
-  // Crick refinery: lives in a STACK district (canon building_types.md invariant 3 — the back now enforces it at
-  // convert), so the district-16 wipe never reaches it either. Same targeted operational_type wipe as the hub/vault;
-  // its precursor_stock/cook_session/product_storage children were already wiped player-wide above. Idempotent.
-  const refineryIds = psql(
-    `SELECT COALESCE(string_agg(quote_literal(bos.building_id::text), ','), '') ` +
-      `FROM building_operational_state bos JOIN buildings b ON b.building_id=bos.building_id ` +
-      `WHERE b.player_id='${playerId}' AND bos.operational_type='refinery';`,
-  );
-  if (refineryIds) {
-    psql(`DELETE FROM building_operational_state WHERE building_id IN (${refineryIds});`);
-    psql(`DELETE FROM buildings WHERE building_id IN (${refineryIds});`);
-  }
-  // Phase-5 vector #5a (money_holding): the vault is GLASS-only (NOT district 16 — like the specialized_lab), so it too is
-  // wiped by a TARGETED operational_type clause (the district-16 wipe never reaches it). Its 1-1 money_holding row is an FK
-  // child of buildings (ON DELETE CASCADE) but we wipe it explicitly FIRST for order-safety/idempotence, then drop the
-  // building + its operational-state row so a re-run rebuilds the vault fresh (held 0, tier 1, no forfeiture armed).
-  const moneyHoldingIds = psql(
-    `SELECT COALESCE(string_agg(quote_literal(bos.building_id::text), ','), '') ` +
-      `FROM building_operational_state bos JOIN buildings b ON b.building_id=bos.building_id ` +
-      `WHERE b.player_id='${playerId}' AND bos.operational_type='money_holding';`,
-  );
-  if (moneyHoldingIds) {
-    psql(`DELETE FROM money_holding WHERE building_id IN (${moneyHoldingIds});`);
-    psql(`DELETE FROM building_operational_state WHERE building_id IN (${moneyHoldingIds});`);
-    psql(`DELETE FROM buildings WHERE building_id IN (${moneyHoldingIds});`);
-  }
+  // ⛔ LA PURGE EST ATOMIQUE ENTRE SES ÉNONCÉS (TD-454, moitié 2) — voir `sqlDePurge` : UN appel psql,
+  //    `BEGIN;` … `COMMIT;`, 0 ou tout. Codée le 2026-09-22 ; de e3b20f6b (02/09) à ce jour, ce
+  //    commentaire surplombait 31 appels distincts. Tué APRÈS ce COMMIT et avant les INSERT, le
+  //    compte est toujours vidé — c'est la sentinelle ci-dessus qui rend CE cas détectable, et seule
+  //    une reconstruction dans un compte neuf le rendrait impossible (TD-454 reste ouverte là).
+  purgerAtomiquement(sqlDePurge(playerId, opBuildingsSubq));
 
   // Reset the wallet to a fixed generous balance (deterministic figures regardless of prior runs).
   psql(
