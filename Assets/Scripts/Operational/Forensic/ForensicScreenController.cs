@@ -173,12 +173,11 @@ namespace MafiaCleanCity.Operational
             //   porte l'écart avec SA DATE, comme ㊲ porte les siens.
             // ⚠️ À re-mesurer : la pile a été reconstruite après cette mesure, et le maillon de
             //   blanchiment dont dépend l'épingle d'audit a été fermé entre-temps.
-            MajPanneau(Lib("CE QUE LE SERVEUR NE DIT PAS"),
-                Lib("Une bande sans source ressemble à une bande mesurée"),
-                "une bande peut être posée par défaut au lieu d'être mesurée, et rien ne les "
-                + "distingue une fois affichées. Cet écran ne peut donc pas trancher, et il "
-                + "préfère vous le dire plutôt que de vous les présenter toutes les trois "
-                + "comme des faits.");
+            MajPanneau(Lib("CE QUE LA VILLE NE DIT PAS"),
+                Lib("Une piste posée par habitude ressemble à une piste relevée"),
+                "une piste peut être posée par habitude au lieu d'être relevée, et rien ne les "
+                + "distingue une fois sur le liège. On ne peut donc pas trancher, et on préfère "
+                + "vous le dire que de vous présenter les trois comme des faits.");
         }
 
         /// <summary>Repli NOMMÉ sur échec réseau — jamais une exception, jamais un écran noir
@@ -191,9 +190,9 @@ namespace MafiaCleanCity.Operational
             MajSignal(0, "RISQUE D'AUDIT",        null);
             MajSignal(1, "VISIBILITÉ DES REJETS", null);
             MajSignal(2, "TRAIN DE VIE",          null);
-            MajPanneau(Lib("CE QUE LE SERVEUR ENVOIE VRAIMENT"),
+            MajPanneau(Lib("CE QU'ON SAIT VRAIMENT"),
                 Lib("Pas de réponse"),
-                "la route n'a rien rendu. Ce n'est pas « tout va bien » : c'est « on ne sait pas ».");
+                "on n'a pas eu de réponse. Ce n'est pas « tout va bien » : c'est « on ne sait pas ».");
         }
 
         // ═══ Construction de la mise en page ═════════════════════════════════════════════════
