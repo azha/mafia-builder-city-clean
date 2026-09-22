@@ -73,6 +73,25 @@ namespace MafiaCleanCity.I18n
 
         /// <summary>La clé qu'un littéral PRODUIRAIT — pour générer la liste à demander au back
         /// sans avoir à deviner ce que le code fera.</summary>
+        /// <summary>⛔ LA CLÉ SE DÉRIVE DE LA VALEUR SERVIE, JAMAIS DU MOT AFFICHÉ (lot E, 2026-09-22). Pour
+        /// une BANDE (valeur d'un domaine fermé que le back sert : `DISTRIBUTION_HUB`, `MAJOR`, `normal`),
+        /// la clé est `domaine.role.slug(valeurServie)` — exactement la forme que le back a posée dans
+        /// `string_table.ts` (`building.type.distribution_hub`). `De` ne convient pas : il dérive la clé
+        /// du LITTÉRAL, donc d'un mot, et un mot traduit changerait la clé. Tant que la clé n'est pas
+        /// servie, le REPLI (français, écrit par l'atelier) s'affiche — et il se COMPTE, comme dans `De`.</summary>
+        public static string ParValeur(string domaine, string role, string valeurServie, string repli)
+        {
+            if (string.IsNullOrEmpty(valeurServie)) return repli;
+            string slug = Slug(valeurServie);
+            if (slug.Length == 0) return repli;
+            string cle = domaine + "." + role + "." + slug;
+            NbAppels++;
+            if (I18nCatalog.Connait(cle)) return I18nCatalog.Traduire(cle);
+            NbReplis++;
+            DernierRepli = cle;
+            return repli;
+        }
+
         public static string CleDe(string domaine, string role, string litteral) =>
             domaine + "." + role + "." + Slug(litteral);
 

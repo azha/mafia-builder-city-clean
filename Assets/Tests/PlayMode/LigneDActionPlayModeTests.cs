@@ -51,4 +51,39 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.AreEqual("Réparation lancée", BuildingCardController.LigneDAction(o, "Réparation lancée", "Impossible de réparer"));
         }
     }
+
+    // Lot E (2026-09-22) : la clé d'une bande se dérive de la VALEUR SERVIE, jamais du mot ; le repli
+    // français s'affiche tant qu'elle n'est pas servie, et il se compte.
+    [Category("I18n")]
+    public class LibelleParValeurTests
+    {
+        [TearDown] public void Nettoyer() { I18nCatalog.Oublier(); Libelle.RemettreLesCompteurs(); }
+
+        [Test]
+        public void LaCleVientDeLaValeurServie_QuelleQueSoitSaCasse()
+        {
+            I18nCatalog.ChargerPourTest("fr", new Dictionary<string, string> { { "building.type.distribution_hub", "Relais" } });
+            Assert.AreEqual("Relais", Libelle.ParValeur("building", "type", "distribution_hub", "repli"));
+            Assert.AreEqual("Relais", Libelle.ParValeur("building", "type", "DISTRIBUTION_HUB", "repli"),
+                "la casse de la valeur servie ne décide pas : la clé est le slug, en minuscules");
+        }
+
+        [Test]
+        public void CleNonServie_LeRepliFrancais_EtIlSeCompte()
+        {
+            I18nCatalog.ChargerPourTest("fr", new Dictionary<string, string>());
+            Libelle.RemettreLesCompteurs();
+            Assert.AreEqual("gros frais", Libelle.ParValeur("building", "repair_cost", "MAJOR", "gros frais"));
+            Assert.AreEqual(1, Libelle.NbReplis, "un repli invisible ne se trouve pas en regardant : il se compte");
+            Assert.AreEqual("building.repair_cost.major", Libelle.DernierRepli, "la clé est celle de la valeur, pas du mot « gros frais »");
+        }
+
+        [Test]
+        public void ValeurVide_LeRepliSansDemanderDeCle()
+        {
+            Libelle.RemettreLesCompteurs();
+            Assert.AreEqual("Pas encore ouvert", Libelle.ParValeur("building", "type", null, "Pas encore ouvert"));
+            Assert.AreEqual(0, Libelle.NbAppels, "aucune valeur servie ⇒ aucune clé demandée");
+        }
+    }
 }

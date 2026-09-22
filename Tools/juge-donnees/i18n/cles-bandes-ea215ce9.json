@@ -1,0 +1,289 @@
+{
+ "source": "~/project/mafia-clean-city @ ea215ce9 : services/game-back/src/i18n/string_table.ts (EN_MESSAGES, FR_MESSAGES)",
+ "cles": {
+  "building.type.lab": {
+   "en": "Lab",
+   "fr": "Labo"
+  },
+  "building.type.stash": {
+   "en": "Stash",
+   "fr": "Réserve"
+  },
+  "building.type.front_shop": {
+   "en": "Front shop",
+   "fr": "Commerce-écran"
+  },
+  "building.type.cash_safehouse": {
+   "en": "Cash safehouse",
+   "fr": "Planque"
+  },
+  "building.type.dealer_spot_front": {
+   "en": "Dealer-spot front",
+   "fr": "Coin de vente"
+  },
+  "building.type.specialized_lab": {
+   "en": "Specialized lab",
+   "fr": "Labo spécialisé"
+  },
+  "building.type.refinery": {
+   "en": "Refinery",
+   "fr": "Raffinerie"
+  },
+  "building.type.grow_house": {
+   "en": "Grow house",
+   "fr": "Serre"
+  },
+  "building.type.distribution_hub": {
+   "en": "Distribution hub",
+   "fr": "Relais"
+  },
+  "building.type.money_holding": {
+   "en": "Money holding",
+   "fr": "Caisse"
+  },
+  "building.seized_amount.high": {
+   "en": "a heavy haul",
+   "fr": "une grosse prise"
+  },
+  "building.seized_amount.moderate": {
+   "en": "a moderate haul",
+   "fr": "une prise moyenne"
+  },
+  "building.seized_amount.low": {
+   "en": "a light haul",
+   "fr": "une petite prise"
+  },
+  "building.seized_amount.none": {
+   "en": "nothing",
+   "fr": "rien"
+  },
+  "building.repair_cost.major": {
+   "en": "major cost",
+   "fr": "gros frais"
+  },
+  "building.repair_cost.moderate": {
+   "en": "moderate cost",
+   "fr": "frais moyens"
+  },
+  "building.repair_cost.minor": {
+   "en": "minor cost",
+   "fr": "petits frais"
+  },
+  "building.repair_cost.none": {
+   "en": "no cost",
+   "fr": "sans frais"
+  },
+  "building.lab_tier.basic": {
+   "en": "Basic",
+   "fr": "Simple"
+  },
+  "building.lab_tier.refined": {
+   "en": "Refined",
+   "fr": "Affiné"
+  },
+  "building.lab_tier.master": {
+   "en": "Master",
+   "fr": "Maître"
+  },
+  "building.purity.cut": {
+   "en": "Cut",
+   "fr": "Coupée"
+  },
+  "building.purity.standard": {
+   "en": "Standard",
+   "fr": "Courante"
+  },
+  "building.purity.pure": {
+   "en": "Pure",
+   "fr": "Pure"
+  },
+  "building.purity.crystalline": {
+   "en": "Crystalline",
+   "fr": "Cristalline"
+  },
+  "building.appointment.scheduled": {
+   "en": "Scheduled",
+   "fr": "Réservé"
+  },
+  "building.appointment.honored": {
+   "en": "Honored",
+   "fr": "Honoré"
+  },
+  "building.appointment.expired": {
+   "en": "Expired",
+   "fr": "Passé"
+  },
+  "building.payout.pending": {
+   "en": "Pending",
+   "fr": "En attente"
+  },
+  "building.payout.none": {
+   "en": "Lost",
+   "fr": "Perdu"
+  },
+  "building.payout.modest": {
+   "en": "Modest",
+   "fr": "Modeste"
+  },
+  "building.payout.fair": {
+   "en": "Fair",
+   "fr": "Correct"
+  },
+  "building.payout.strong": {
+   "en": "Strong",
+   "fr": "Fort"
+  },
+  "building.payout.premium": {
+   "en": "Premium",
+   "fr": "Exceptionnel"
+  },
+  "building.grow_stage.early": {
+   "en": "Early",
+   "fr": "Début"
+  },
+  "building.grow_stage.mid": {
+   "en": "Mid",
+   "fr": "Milieu"
+  },
+  "building.grow_stage.late": {
+   "en": "Late",
+   "fr": "Fin"
+  },
+  "building.grow_stage.done": {
+   "en": "Ready to harvest",
+   "fr": "À récolter"
+  },
+  "building.husbandry.withered": {
+   "en": "Withered",
+   "fr": "Flétrie"
+  },
+  "building.husbandry.on_track": {
+   "en": "On track",
+   "fr": "En bonne voie"
+  },
+  "building.husbandry.thriving": {
+   "en": "Thriving",
+   "fr": "Florissante"
+  },
+  "building.precursor.verdant_root_extract": {
+   "en": "Verdant root",
+   "fr": "Racine verdoyante"
+  },
+  "building.precursor.lull_resin": {
+   "en": "Lull resin",
+   "fr": "Résine de lull"
+  },
+  "building.precursor.glass_lily": {
+   "en": "Glass lily",
+   "fr": "Lys de verre"
+  },
+  "building.hub_tier.small": {
+   "en": "Small",
+   "fr": "Petit"
+  },
+  "building.hub_tier.medium": {
+   "en": "Medium",
+   "fr": "Moyen"
+  },
+  "building.hub_tier.large": {
+   "en": "Large",
+   "fr": "Grand"
+  },
+  "building.hub_tier.major": {
+   "en": "Major",
+   "fr": "Majeur"
+  },
+  "building.hub_tier.max": {
+   "en": "Max",
+   "fr": "Maximal"
+  },
+  "building.money_holding_tier.small": {
+   "en": "Small",
+   "fr": "Petit"
+  },
+  "building.money_holding_tier.medium": {
+   "en": "Medium",
+   "fr": "Moyen"
+  },
+  "building.money_holding_tier.large": {
+   "en": "Large",
+   "fr": "Grand"
+  },
+  "building.money_holding_tier.major": {
+   "en": "Major",
+   "fr": "Majeur"
+  },
+  "building.money_holding_tier.max": {
+   "en": "Max",
+   "fr": "Maximal"
+  },
+  "building.roster.open": {
+   "en": "Open",
+   "fr": "Ouverte"
+  },
+  "building.roster.busy": {
+   "en": "Busy",
+   "fr": "Occupée"
+  },
+  "building.roster.full": {
+   "en": "Full",
+   "fr": "Pleine"
+  },
+  "building.capacity.open": {
+   "en": "Open",
+   "fr": "Ouverte"
+  },
+  "building.capacity.busy": {
+   "en": "Busy",
+   "fr": "Occupée"
+  },
+  "building.capacity.full": {
+   "en": "Full",
+   "fr": "Pleine"
+  },
+  "building.vehicle.foot": {
+   "en": "Foot",
+   "fr": "À pied"
+  },
+  "building.vehicle.bike": {
+   "en": "Bike",
+   "fr": "Vélo"
+  },
+  "building.vehicle.car": {
+   "en": "Car",
+   "fr": "Voiture"
+  },
+  "building.held.none": {
+   "en": "Empty",
+   "fr": "Vide"
+  },
+  "building.held.low": {
+   "en": "Low",
+   "fr": "Peu"
+  },
+  "building.held.moderate": {
+   "en": "Moderate",
+   "fr": "Moyen"
+  },
+  "building.held.high": {
+   "en": "High",
+   "fr": "Beaucoup"
+  },
+  "building.held.massive": {
+   "en": "Massive",
+   "fr": "Énorme"
+  },
+  "exceptions.queue_pressure.normal": {
+   "en": "Normal",
+   "fr": "normale"
+  },
+  "exceptions.queue_pressure.warning": {
+   "en": "Warning",
+   "fr": "tendue"
+  },
+  "exceptions.queue_pressure.saturated": {
+   "en": "Saturated",
+   "fr": "saturée"
+  }
+ }
+}
