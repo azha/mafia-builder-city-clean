@@ -237,7 +237,7 @@ CLIENT-1 range le dernier cran de chaque piste en ÉVÉNEMENT (« Franchi »), s
 | `forensic.cran.un_dossier_est_ouvert` | `audit_risk_bucket = flagged` | Un dossier est ouvert | A file is open |
 | `forensic.evenement.ils_sont_venus` | `audit_risk_bucket = audited` | Ils sont venus | They came |
 | `forensic.evenement.ca_saute_aux_yeux` | `effluent_visibility_bucket = glaring` | Ça saute aux yeux | It jumps out at you |
-| `forensic.evenement.convoque` | `lifestyle_alarm_bucket = subpoenaed` | Convoqué | Summoned |
+| `forensic.evenement.convoque` | `lifestyle_alarm_bucket = subpoenaed` | ~~Convoqué~~ **Convocation reçue** (retenu par l'orchestrateur, 2026-09-23) | ~~Summoned~~ **Summons received** |
 
 1. **La casse de phrase est ratifiée** : l'écran dit déjà ses gravités en phrases (« Rien ne dépasse », « On vous regarde », « Ça se voit de
    loin », `ForensicScreenController.cs:590-592` à `ae661b46`) ; la maquette écrit en minuscules parce qu'elle place ces mots sous un intitulé, pas
