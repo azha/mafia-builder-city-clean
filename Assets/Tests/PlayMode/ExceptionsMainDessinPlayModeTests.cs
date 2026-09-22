@@ -19,6 +19,11 @@ namespace MafiaCleanCity.Operational.Tests
     [Category("EcranFile")]
     public class ExceptionsMainDessinPlayModeTests
     {
+        // ⛔ TD-576, CLASSE « CATALOGUE » (2026-09-23) — cette classe monte ⑨ (`ExceptionQueueController`, qui amorce le
+        // catalogue i18n) et ne le rendait pas : entrée au cumul par le merge de b909fbae, vue par catalogue-sortie.py. Rendu à
+        // chaque test ; la garde de sortie de MafiaCI nomme toute classe qui le laisserait encore chargé.
+        [TearDown] public void OublierLeCatalogue() => MafiaCleanCity.I18n.I18nCatalog.Oublier();
+
         private readonly List<GameObject> montes = new List<GameObject>();
 
         [TearDown]
