@@ -2971,9 +2971,14 @@ namespace MafiaCleanCity.Operational.Lieutenant
             AddLayoutElement(rows, flexibleHeight: 0);
 
             // The 3 ceiling-decision buttons (spec kind strings are the stable API keys).
-            AddActionButton(parent, "remettre_le_budget_a_zero", Lib("Remettre le budget à zéro"), () => StartCoroutine(Decide("reset_budget")));
-            AddActionButton(parent, "relever_le_plafond", Lib("Relever le plafond"), () => StartCoroutine(Decide("raise_ceiling")));
-            AddActionButton(parent, "forcer_une_fois", Lib("Forcer une fois"), () => StartCoroutine(Decide("override_one_shot")));
+            // ⛔ UN GESTE, UN NOM (atelier 18013833, 13-autonomie-inventaire §5 ; orchestrateur 23/09) : les mots de ㉔
+            //    (maquette, cadre 28), sur ⑥ aussi — le joueur ne doit pas lire deux noms pour le même geste selon l'écran.
+            //    Les clés dérivées changent (`famille.ecran.lui_rendre_sa_marge`, `.lui_elargir_sa_marge`,
+            //    `.laisser_passer_celle_ci`) ; l'identifiant d'objet (1er argument) reste, il n'est pas un texte.
+            //    Falsifiables : `I18nCatalogPlayModeTests.GesteDAutonomie_PorteLeMotDe24_EtSaCle`.
+            AddActionButton(parent, "remettre_le_budget_a_zero", Lib("Lui rendre sa marge"), () => StartCoroutine(Decide("reset_budget")));
+            AddActionButton(parent, "relever_le_plafond", Lib("Lui élargir sa marge"), () => StartCoroutine(Decide("raise_ceiling")));
+            AddActionButton(parent, "forcer_une_fois", Lib("Laisser passer celle-ci"), () => StartCoroutine(Decide("override_one_shot")));
 
             // Phase-21 F2: the readable decision-failure detail (cooldown reason — carries ids/digits) renders as
             // CHROME: component-tracked only, never in the scan corpus (the tier-badge technique).

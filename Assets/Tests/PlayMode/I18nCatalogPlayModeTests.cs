@@ -236,5 +236,62 @@ namespace MafiaCleanCity.I18nTests
             Assert.AreEqual(servi, MafiaCleanCity.Operational.FamilleLabels.Archetype(archetype),
                 $"« {archetype} » : la clé est servie, l'anglophone doit lire « {servi} », pas le français");
         }
+
+        // ═══ ㉔ sur ⑥ — un geste, un nom ═══════════════════════════════════════════════════════
+
+        /// <summary>⛔ UNE FALSIFIABLE PAR GESTE D'AUTONOMIE : le bouton de ⑥ porte le mot de ㉔, et DEMANDE la clé que
+        /// le back servira. Sans catalogue, le mot français de l'atelier (et plus l'ancien) ; avec un catalogue `en`
+        /// qui ne sert QUE la clé neuve, le texte `en` — donc la clé dérivée est exactement celle-là. Écran bâti sur un
+        /// hôte INACTIF (`Start` ne part pas : ni connexion, ni requête), sous un canvas du test, détruit en immédiat.</summary>
+        [TestCase("Action_remettre_le_budget_a_zero", "Lui rendre sa marge", "Remettre le budget à zéro",
+                  "famille.ecran.lui_rendre_sa_marge", "Give them their margin back")]
+        [TestCase("Action_relever_le_plafond", "Lui élargir sa marge", "Relever le plafond",
+                  "famille.ecran.lui_elargir_sa_marge", "Widen their margin")]
+        [TestCase("Action_forcer_une_fois", "Laisser passer celle-ci", "Forcer une fois",
+                  "famille.ecran.laisser_passer_celle_ci", "Let this one through")]
+        public void GesteDAutonomie_PorteLeMotDe24_EtSaCle(string objet, string mot, string ancien, string cle, string en)
+        {
+            Assert.AreEqual(mot, LibelleDuBouton(objet, null), $"« {objet} » ne porte pas le mot de ㉔");
+            Assert.AreNotEqual(ancien, LibelleDuBouton(objet, null), $"« {objet} » porte encore l'ancien nom");
+            Assert.AreEqual(en, LibelleDuBouton(objet, new Dictionary<string, string> { { cle, en } }),
+                $"« {objet} » ne demande pas la clé « {cle} » : le texte servi n'arrive pas au bouton");
+        }
+
+        /// <summary>Bâtit ⑥ sans réseau et rend le texte du bouton `objet` (nom d'objet stable, jamais le libellé).</summary>
+        private static string LibelleDuBouton(string objet, Dictionary<string, string> catalogueEn)
+        {
+            I18nCatalog.Oublier();
+            if (catalogueEn != null) I18nCatalog.ChargerPourTest("en", catalogueEn);
+            bool avaitUnEventSystem = Object.FindFirstObjectByType<UnityEngine.EventSystems.EventSystem>() != null;
+            var canvasGo = new GameObject("GestesCanvas", typeof(RectTransform), typeof(Canvas));
+            var hote = new GameObject("GestesHote", typeof(RectTransform));
+            hote.SetActive(false);
+            try
+            {
+                var ecran = hote.AddComponent<MafiaCleanCity.Operational.Lieutenant.LieutenantScreenController>();
+                ecran.SetMountParent(canvasGo.transform);
+                ecran.PickedArchetype = "COOK";   // EnsureInitialized → BuildLayout, sans réseau
+                foreach (Transform t in canvasGo.GetComponentsInChildren<Transform>(true))
+                    if (t.name == objet)
+                    {
+                        var texte = t.GetComponentInChildren<TMPro.TextMeshProUGUI>(true);
+                        Assert.IsNotNull(texte, $"« {objet} » n'a pas de libellé");
+                        return texte.text;
+                    }
+                Assert.Fail($"aucun bouton « {objet} » sous l'écran bâti — l'identifiant d'objet a changé ?");
+                return null;
+            }
+            finally
+            {
+                Object.DestroyImmediate(hote);
+                Object.DestroyImmediate(canvasGo);
+                if (!avaitUnEventSystem)
+                {
+                    var es = Object.FindFirstObjectByType<UnityEngine.EventSystems.EventSystem>();
+                    if (es != null) Object.DestroyImmediate(es.gameObject);
+                }
+                I18nCatalog.Oublier();
+            }
+        }
 }
 }
