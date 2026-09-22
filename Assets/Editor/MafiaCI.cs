@@ -114,6 +114,11 @@ public static class MafiaCI
     //   `planche_la_distribution_1080x2400.png`, produite par `PhotoChantierC` sous la garde d'effet. Verte SEULE avant
     //   inscription : `passed=20 failed=0 declares=20 comptes=20`, catégories RÉELLEMENT exécutées = [EcranDistribution], sans
     //   paire d'identité (run du 22/09 23:29). Aucun test n'exige la paire : elle entre dans la PARTIE 1 du gate client.
+    // ✅ `EcranRevue` (⑯, 32 tests) et `EcranFile` (⑨, 18 tests) INSCRITES (2026-09-23) — écrans de CLIENT-2, entrés au cumul
+    //   par le merge de `ecrans/2026-09-23` (8d632ebd, 34aab08c). Sans elles, ⑯ et ⑨ n'étaient dans AUCUN gate. Vertes chez
+    //   CLIENT-2 : `passed=70 failed=0 declares=70 comptes=70`, [Ecran10, EcranExceptions, EcranFile, EcranRevue] (a3134d5f,
+    //   sur 13ed9869, pile aea5ef7c) ; la preuve sur CE cumul est la partie 1 qui suit le regroupement. Aucune n'exige la
+    //   paire, aucune n'écrit de PNG, aucune relation de préfixe (ni `EcranF…`/`EcranR…` inscrite ne les emporte) : PARTIE 1.
     // ✅ `Palette` INSCRITE (2026-09-22) — la garde TD-612 (« aucun littéral ne recopie un token nommé »). Née le 06/09
     //   (d665720d, 28696e43) pour ROUGIR sur son dénominateur mesuré, elle n'avait JAMAIS été inscrite : une garde rouge
     //   hors de tout filtre ne garde rien — c'est CLIENT-2 qui l'a trouvée rouge (34) en la lançant à la main. Fermée par ⑯
@@ -183,6 +188,9 @@ public static class MafiaCI
         "EcranDistribution",
         // Inscrite le 2026-09-22 — verte seule avant inscription (5/5), voir la note au-dessus du tableau.
         "Palette",
+        // Inscrites le 2026-09-23 au regroupement — ⑯ et ⑨ de CLIENT-2, voir la note au-dessus du tableau.
+        "EcranRevue",
+        "EcranFile",
     };
     // ⚠️ UNION AU MERGE (3e fois sur cette ligne le 2026-09-03) — et la règle est
     // toujours la même : on unit ce qui est PORTÉ, jamais les deux listes. Une entrée
