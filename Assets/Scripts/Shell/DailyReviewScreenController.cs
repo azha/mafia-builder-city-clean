@@ -79,6 +79,7 @@ namespace MafiaCleanCity.Shell
         {
             public CanvasGroup Bulle;
             public Image Jeton, Buste;
+            public TextMeshProUGUI Frequence;
             public TextMeshProUGUI Coche, Verbe, Sous;
             public Button Rendre;
             public LongPressButton Garder;
@@ -511,9 +512,12 @@ namespace MafiaCleanCity.Shell
                 : "—";
             Texte(qui.transform, "Nom", nom, Px(11.5f), OrVif, DesignTokens.Current.hudSerifFont);
 
-            // Les deux chips viennent de la JOINTURE client sur `GET /v1/lieutenants` (`tenure_bucket`).
-            // ⚠️ `flag_frequency_band` n'est PAS dans `RosterRow` : la chip « signale rarement /
-            // souvent » de la maquette n'a pas de source ici — non dessinée plutôt que fabriquée.
+            // ⑯ B05 — « signale rarement / souvent » : `flag_frequency_band`, servie SUR LA CARTE par le lot
+            // back S5-e (`71ae6f89`). Absente (pile sans S5) ou inconnue ⇒ aucune chip, jamais « — ».
+            TextMeshProUGUI frequence = null;
+            string texteFrequence = FrequenceChip(card.flag_frequency_band);
+            if (texteFrequence != null) frequence = Chip(qui.transform, texteFrequence.ToUpperInvariant(), Creme2);
+            // La chip « NOUVELLE » vient de la JOINTURE client sur `GET /v1/lieutenants` (`tenure_bucket`).
             string anciennete = AncienneteChip(card.lieutenant != null ? card.lieutenant.id : null);
             if (!string.IsNullOrEmpty(anciennete)) Chip(qui.transform, anciennete, Cyan);
 
@@ -612,7 +616,8 @@ namespace MafiaCleanCity.Shell
                   DesignTokens.Current.primaryFont, TextAlignmentOptions.Center);
             billets[card.flag_id ?? ""] = new BilletVue
             {
-                Bulle = bulleGroupe, Jeton = jetonImg, Buste = buste, Coche = coche, Verbe = verbe, Sous = sous,
+                Bulle = bulleGroupe, Jeton = jetonImg, Buste = buste, Frequence = frequence,
+                Coche = coche, Verbe = verbe, Sous = sous,
                 Rendre = rendre, Garder = garder,
             };
 
@@ -753,6 +758,9 @@ namespace MafiaCleanCity.Shell
         public string BilletSous(string flagId) => billets.TryGetValue(flagId, out BilletVue b) ? b.Sous.text : null;
         public string BilletCoche(string flagId) => billets.TryGetValue(flagId, out BilletVue b) ? b.Coche.text : null;
         public RectTransform Registre => registreRoot;
+        /// <summary>Le texte de la chip de fréquence du billet, ou null s'il n'en porte pas.</summary>
+        public string BilletFrequence(string flagId) =>
+            billets.TryGetValue(flagId, out BilletVue b) && b.Frequence != null ? b.Frequence.text : null;
         public Image BilletBuste(string flagId) => billets.TryGetValue(flagId, out BilletVue b) ? b.Buste : null;
         public bool TamponSigne => lotSigne > 0 && tamponCachet != null && tamponCachet.activeSelf;
         public bool TamponGesteActif => BatchConfirmButton != null && BatchConfirmButton.enabled;
@@ -764,6 +772,23 @@ namespace MafiaCleanCity.Shell
         public string DernierePhrase { get; private set; }
 
         private const string PrefixeRoutine = "core_loops.flag_discipline.routine.";
+
+        /// <summary>⑯ B05 — la chip de fréquence. Domaine : `FlagFrequencyBand = 'none' | 'occasional' |
+        /// 'frequent'` (`convergence.ts:35` ; `0` signalement sur 7 jours ⇒ `none`, sous le seuil ⇒ `occasional`).
+        /// La maquette (v4-0) dessine DEUX mots pour trois valeurs : « signale souvent » et « signale rarement ».
+        /// ⇒ `frequent` → souvent ; `occasional` ET `none` → rarement (« rarement » couvre zéro, et un lieutenant
+        /// dont le signalement en attente a plus de 7 jours tombe à `none`). Lecture de la maquette, à confirmer
+        /// par l'atelier. Toute autre valeur (casse comprise) ⇒ null : pas de chip plutôt qu'une bande déguisée.</summary>
+        public static string FrequenceChip(string bande)
+        {
+            switch (bande)
+            {
+                case "frequent": return Lib("chip", "signale souvent");
+                case "occasional":
+                case "none": return Lib("chip", "signale rarement");
+                default: return null;
+            }
+        }
 
         /// <summary>⑯-5 — le buste de TOUT lieutenant de ⑯, le même que ⑥ et ① (`Resources/Lieutenant/`).</summary>
         public const string BusteLieutenant = "Lieutenant/ui_element_buste_lieutenant";
@@ -885,7 +910,7 @@ namespace MafiaCleanCity.Shell
             return t;
         }
 
-        private static void Chip(Transform parent, string libelle, Color couleur)
+        private static TextMeshProUGUI Chip(Transform parent, string libelle, Color couleur)
         {
             GameObject go = new GameObject("Chip", typeof(RectTransform));
             go.transform.SetParent(parent, false);
@@ -901,6 +926,7 @@ namespace MafiaCleanCity.Shell
             TextMeshProUGUI t = Texte(go.transform, "Lib", libelle, Px(6.3f), couleur,
                                       DesignTokens.Current.primaryFont, TextAlignmentOptions.Center);
             t.characterSpacing = 8f;
+            return t;
         }
 
         // --------------------------------------------------------------- UI build

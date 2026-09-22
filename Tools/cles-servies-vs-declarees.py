@@ -41,6 +41,9 @@ RACINE = pathlib.Path(__file__).resolve().parent.parent
 #   de TOUS les objets au bout du chemin, sans plancher de taille ; un DTO ou un corps introuvable la rend ⛔ VIDE, jamais verte.
 APPARIEMENTS = [
     ("NomDeBatimentParamsDto", "GET_me_buildings.buildings[].name_i18n.params"),   # forme G de ㉝, 16cabe79
+    # ⑯ B05 — `flag_frequency_band` DÉCLARÉ avant d'être servi (S5-e, back 71ae6f89). Le seul corps figé à cartes date du
+    # 25/08, d'AVANT S5-e : la ligne dit « déclaré, non servi » jusqu'à ce qu'un corps vivant post-S5 soit figé ici.
+    ("FlagCardDto", "flag-review-seeded.cards[]"),
 ]
 
 

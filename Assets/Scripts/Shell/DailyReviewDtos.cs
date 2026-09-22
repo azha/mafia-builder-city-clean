@@ -21,6 +21,12 @@ namespace MafiaCleanCity.Shell
         public FlagDescriptorDto flag_reason;
         public int flagged_game_day;
         public string trust_budget_bucket;
+        // S5-e (back `71ae6f89`, `back/s5-revue-du-jour`) — la bande de fréquence de signalement du lieutenant,
+        // la même que `GET /v1/lieutenants/:id`. Type : `FlagFrequencyBand = 'none' | 'occasional' | 'frequent'`
+        // (`core_loops/flag_discipline/convergence.ts:35`). ABSENTE tant que la pile ne sert pas S5 (`main` =
+        // `4841d7ad`) : JsonUtility laisse alors `null`, et l'écran ne pose AUCUNE chip. Déclarée ici AVANT
+        // d'être servie : une clé servie qu'aucun champ ne déclare serait jetée en silence (forme G).
+        public string flag_frequency_band;
     }
 
     [Serializable]
