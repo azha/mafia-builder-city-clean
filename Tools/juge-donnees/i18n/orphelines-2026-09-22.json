@@ -6,8 +6,13 @@
    "built_at": "2026-09-14T01:12:31Z"
   },
   "cles_servies_fr": 886,
-  "client_plage": "9b5d6117..75ac1001",
-  "generateur": "python3 Tools/juge-donnees/i18n/orphelines.py <bundle-fr> <bundle-en> 9b5d6117 75ac1001 --json …"
+  "client_plage": "9b5d6117..0f058641",
+  "lots": {
+   "C": "061e7167..7d2ebcde",
+   "D t1": "34439c33..75ac1001",
+   "D t2": "4bddb0aa..0f058641"
+  },
+  "generateur": "python3 Tools/juge-donnees/i18n/orphelines.py <bundle-fr> <bundle-en> 9b5d6117 0f058641 --json … --md … --lots …"
  },
  "cles": [
   {
@@ -22,6 +27,7 @@
    "nouvelle": "carnet.bloc.ce_qu_on_sait_pour_l_instant",
    "texte_fr": "CE QU'ON SAIT POUR L'INSTANT",
    "nouvelle_deja_servie": false,
+   "nouvelle_derivee_a_la_fin": true,
    "commit": "ed4eafd3",
    "lot": "C"
   },
@@ -37,6 +43,7 @@
    "nouvelle": "carnet.bloc.ce_qu_on_sait_vraiment",
    "texte_fr": "CE QU'ON SAIT VRAIMENT",
    "nouvelle_deja_servie": false,
+   "nouvelle_derivee_a_la_fin": true,
    "commit": "ed4eafd3",
    "lot": "C"
   },
@@ -52,6 +59,7 @@
    "nouvelle": "carnet.bloc.on_n_a_pas_eu_de_reponse_ce_n_est_pas_la_soiree_est_vide_c_est_on_ne_sait_pas_ce_qui_est_prevu",
    "texte_fr": "on n'a pas eu de réponse. Ce n'est pas « la soirée est vide » : c'est « on ne sait pas ce qui est prévu ».",
    "nouvelle_deja_servie": false,
+   "nouvelle_derivee_a_la_fin": true,
    "commit": "ed4eafd3",
    "lot": "C"
   },
@@ -67,6 +75,7 @@
    "nouvelle": "carnet.bloc.une_suite_d_ordres_qu_on_met_de_cote_et_qu_on_relance_d_un_geste_cette_facon_de_faire_s_ouvre_plus_tard_il_faut_d_abord_monter_d_un_palier",
    "texte_fr": "une suite d'ordres qu'on met de côté et qu'on relance d'un geste. Cette façon de faire s'ouvre plus tard — il faut d'abord monter d'un palier.",
    "nouvelle_deja_servie": false,
+   "nouvelle_derivee_a_la_fin": true,
    "commit": "ed4eafd3",
    "lot": "C"
   },
@@ -82,6 +91,7 @@
    "nouvelle": "carnet.bloc.ce_que_la_ville_prepare_personne_ne_vous_le_rapporte_encore_ce_sera_ici_le_jour_ou_quelqu_un_le_fera",
    "texte_fr": "ce que la ville prépare, personne ne vous le rapporte encore. Ce sera ici le jour où quelqu'un le fera.",
    "nouvelle_deja_servie": false,
+   "nouvelle_derivee_a_la_fin": true,
    "commit": "ed4eafd3",
    "lot": "C"
   },
@@ -97,6 +107,7 @@
    "nouvelle": "conflit.bloc.dessinees_pas_renseignees_personne_ne_vous_dit_ce_qu_elles_preparent_ni_ce_qu_elles_possedent_on_frappe_a_l_aveugle",
    "texte_fr": "Dessinées, pas renseignées : personne ne vous dit ce qu'elles préparent ni ce qu'elles possèdent — on frappe à l'aveugle.",
    "nouvelle_deja_servie": false,
+   "nouvelle_derivee_a_la_fin": true,
    "commit": "ce25bd63",
    "lot": "C"
   },
@@ -112,6 +123,7 @@
    "nouvelle": "conflit.bloc.vous_avez_l_homme_personne_pour_lui_dire_ou_frapper_on_ne_sait_pas_encore_ou_ils_sont",
    "texte_fr": "Vous avez l'homme. Personne pour lui dire où frapper — on ne sait pas encore où ils sont.",
    "nouvelle_deja_servie": false,
+   "nouvelle_derivee_a_la_fin": true,
    "commit": "ce25bd63",
    "lot": "C"
   },
@@ -127,6 +139,7 @@
    "nouvelle": "filiere.bloc.ce_qu_on_sait_vraiment",
    "texte_fr": "CE QU'ON SAIT VRAIMENT",
    "nouvelle_deja_servie": false,
+   "nouvelle_derivee_a_la_fin": true,
    "commit": "30712f69",
    "lot": "C"
   },
@@ -142,6 +155,7 @@
    "nouvelle": "filiere.bloc.on_n_a_pas_eu_de_reponse_ce_n_est_pas_la_filiere_est_vide_c_est_on_ne_sait_pas_ou_elle_en_est",
    "texte_fr": "on n'a pas eu de réponse. Ce n'est pas « la filière est vide » : c'est « on ne sait pas où elle en est ».",
    "nouvelle_deja_servie": false,
+   "nouvelle_derivee_a_la_fin": true,
    "commit": "30712f69",
    "lot": "C"
   },
@@ -157,6 +171,7 @@
    "nouvelle": "filiere.bloc.le_premier_maillon_sans_elle_rien_n_entre_dans_la_filiere_et_rien_ne_se_ramasse_chez_les_dealers_non_plus",
    "texte_fr": "le premier maillon : sans elle, rien n'entre dans la filière — et rien ne se ramasse chez les dealers non plus.",
    "nouvelle_deja_servie": false,
+   "nouvelle_derivee_a_la_fin": true,
    "commit": "30712f69",
    "lot": "C"
   },
@@ -172,6 +187,7 @@
    "nouvelle": "filiere.bloc.on_ne_vous_dira_que_si_c_est_propre_ni_combien_ni_depuis_quand_ni_a_quel_prix_c_est_voulu",
    "texte_fr": "on ne vous dira que si c'est propre : ni combien, ni depuis quand, ni à quel prix. C'est voulu.",
    "nouvelle_deja_servie": false,
+   "nouvelle_derivee_a_la_fin": true,
    "commit": "30712f69",
    "lot": "C"
   },
@@ -187,6 +203,7 @@
    "nouvelle": "filiere.bloc.ce_n_est_pas_une_panne_c_est_un_etat_il_n_y_a_rien_a_montrer_tant_qu_il_n_y_a_rien_de_monte_il_faut_une_planque_pour_que_la_filiere_commence_quelque_part",
    "texte_fr": "ce n'est pas une panne, c'est un état : il n'y a rien à montrer tant qu'il n'y a rien de monté. Il faut une planque pour que la filière commence quelque part.",
    "nouvelle_deja_servie": false,
+   "nouvelle_derivee_a_la_fin": true,
    "commit": "30712f69",
    "lot": "C"
   },
@@ -202,6 +219,7 @@
    "nouvelle": "filiere.bloc.ce_qu_on_sait_pour_l_instant",
    "texte_fr": "CE QU'ON SAIT POUR L'INSTANT",
    "nouvelle_deja_servie": false,
+   "nouvelle_derivee_a_la_fin": true,
    "commit": "30712f69",
    "lot": "C"
   },
@@ -217,6 +235,7 @@
    "nouvelle": "forensic.bloc.une_piste_posee_par_habitude_ressemble_a_une_piste_relevee",
    "texte_fr": "Une piste posée par habitude ressemble à une piste relevée",
    "nouvelle_deja_servie": false,
+   "nouvelle_derivee_a_la_fin": true,
    "commit": "fcfa7446",
    "lot": "C"
   },
@@ -232,6 +251,7 @@
    "nouvelle": "forensic.bloc.ce_qu_on_sait_vraiment",
    "texte_fr": "CE QU'ON SAIT VRAIMENT",
    "nouvelle_deja_servie": false,
+   "nouvelle_derivee_a_la_fin": true,
    "commit": "fcfa7446",
    "lot": "C"
   },
@@ -247,6 +267,7 @@
    "nouvelle": "horizon.bloc.ce_qu_on_sait_vraiment",
    "texte_fr": "CE QU'ON SAIT VRAIMENT",
    "nouvelle_deja_servie": false,
+   "nouvelle_derivee_a_la_fin": true,
    "commit": "0bd5d3d8",
    "lot": "C"
   },
@@ -262,6 +283,7 @@
    "nouvelle": "horizon.bloc.aucune_de_ces_cartes_n_a_encore_de_nom",
    "texte_fr": "Aucune de ces cartes n'a encore de nom",
    "nouvelle_deja_servie": false,
+   "nouvelle_derivee_a_la_fin": true,
    "commit": "0bd5d3d8",
    "lot": "C"
   },
@@ -277,6 +299,7 @@
    "nouvelle": "horizon.bloc.on_ne_sait_pas_encore_ce_qui_manque_pour_y_arriver",
    "texte_fr": "on ne sait pas encore ce qui manque pour y arriver",
    "nouvelle_deja_servie": false,
+   "nouvelle_derivee_a_la_fin": true,
    "commit": "0bd5d3d8",
    "lot": "C"
   },
@@ -293,6 +316,7 @@
    "nouvelle": "journal.bloc.ce_qu_on_sait_vraiment",
    "texte_fr": "CE QU'ON SAIT VRAIMENT",
    "nouvelle_deja_servie": false,
+   "nouvelle_derivee_a_la_fin": true,
    "commit": "71e5c77f",
    "lot": "C"
   },
@@ -308,6 +332,7 @@
    "nouvelle": "journal.bloc.les_breves_sont_arrivees_sans_leur_texte_le_journal_de_ce_matin_n_a_que_des_titres_a_trous_voila_ce_qu_on_peut_vous_montrer_aujourd_hui",
    "texte_fr": "les brèves sont arrivées sans leur texte : le journal de ce matin n'a que des titres à trous. Voilà ce qu'on peut vous montrer aujourd'hui.",
    "nouvelle_deja_servie": false,
+   "nouvelle_derivee_a_la_fin": true,
    "commit": "71e5c77f",
    "lot": "C"
   },
@@ -323,6 +348,7 @@
    "nouvelle": "journal.bloc.ce_qu_on_sait_pour_l_instant",
    "texte_fr": "CE QU'ON SAIT POUR L'INSTANT",
    "nouvelle_deja_servie": false,
+   "nouvelle_derivee_a_la_fin": true,
    "commit": "71e5c77f",
    "lot": "C"
   },
@@ -338,6 +364,7 @@
    "nouvelle": "journal.bloc.on_n_a_pas_eu_de_reponse_ce_n_est_pas_la_ville_est_calme_c_est_on_ne_sait_pas_ce_qu_elle_a_fait_cette_nuit",
    "texte_fr": "on n'a pas eu de réponse. Ce n'est pas « la ville est calme » : c'est « on ne sait pas ce qu'elle a fait cette nuit ».",
    "nouvelle_deja_servie": false,
+   "nouvelle_derivee_a_la_fin": true,
    "commit": "71e5c77f",
    "lot": "C"
   },
@@ -353,6 +380,7 @@
    "nouvelle": "loi.bloc.une_affaire_nait_d_une_descente_rien_ici_n_en_cree",
    "texte_fr": "Une affaire naît d'une descente — rien ici n'en crée.",
    "nouvelle_deja_servie": false,
+   "nouvelle_derivee_a_la_fin": true,
    "commit": "ebf97d1e",
    "lot": "C"
   },
@@ -368,6 +396,7 @@
    "nouvelle": "distribution.bloc.aucune_route_tendue_pour_l_instant",
    "texte_fr": "Aucune route tendue pour l'instant.",
    "nouvelle_deja_servie": false,
+   "nouvelle_derivee_a_la_fin": true,
    "commit": "efdd1e7c",
    "lot": "C"
   },
@@ -381,11 +410,11 @@
    "servie_fr": "[~] Minimal",
    "servie_en": "[~] Minimal",
    "nouvelle": "autonomie.etat.consequence_minime",
-   "texte_fr": "[~] conséquence minime",
+   "texte_fr": "conséquence minime",
    "nouvelle_deja_servie": false,
+   "nouvelle_derivee_a_la_fin": true,
    "commit": "75ac1001",
-   "lot": "D t1",
-   "texte_fr_final": "conséquence minime"
+   "lot": "D t1"
   },
   {
    "ecran": "㉔ les télégrammes",
@@ -397,11 +426,11 @@
    "servie_fr": "[<>] Arbitrage",
    "servie_en": "[<>] Trade-off",
    "nouvelle": "autonomie.etat.un_compromis",
-   "texte_fr": "[<>] un compromis",
+   "texte_fr": "un compromis",
    "nouvelle_deja_servie": false,
+   "nouvelle_derivee_a_la_fin": true,
    "commit": "75ac1001",
-   "lot": "D t1",
-   "texte_fr_final": "un compromis"
+   "lot": "D t1"
   },
   {
    "ecran": "㉔ les télégrammes",
@@ -413,11 +442,11 @@
    "servie_fr": "[!] Exposition accrue",
    "servie_en": "[!] Increased exposure",
    "nouvelle": "autonomie.etat.on_s_expose",
-   "texte_fr": "[!] on s'expose",
+   "texte_fr": "on s'expose",
    "nouvelle_deja_servie": false,
+   "nouvelle_derivee_a_la_fin": true,
    "commit": "75ac1001",
-   "lot": "D t1",
-   "texte_fr_final": "on s'expose"
+   "lot": "D t1"
   },
   {
    "ecran": "㉔ les télégrammes",
@@ -429,11 +458,268 @@
    "servie_fr": "[$] Coût d'opportunité",
    "servie_en": "[$] Opportunity cost",
    "nouvelle": "autonomie.etat.on_laisse_passer_quelque_chose",
-   "texte_fr": "[$] on laisse passer quelque chose",
+   "texte_fr": "on laisse passer quelque chose",
    "nouvelle_deja_servie": false,
+   "nouvelle_derivee_a_la_fin": true,
    "commit": "75ac1001",
-   "lot": "D t1",
-   "texte_fr_final": "on laisse passer quelque chose"
+   "lot": "D t1"
+  },
+  {
+   "ecran": "② la fiche du bâtiment",
+   "fichier": "Assets/Scripts/Operational/BuildingCard/BuildingCardController.cs",
+   "sites": [
+    "BuildingCardController.cs:640"
+   ],
+   "ancienne": "building.row.setup",
+   "servie_fr": "Setup",
+   "servie_en": "Setup",
+   "nouvelle": "building.row.mise_en_place",
+   "texte_fr": "Mise en place",
+   "nouvelle_deja_servie": false,
+   "nouvelle_derivee_a_la_fin": true,
+   "commit": "ef78d079",
+   "lot": "D t2"
+  },
+  {
+   "ecran": "② la fiche du bâtiment",
+   "fichier": "Assets/Scripts/Operational/BuildingCard/BuildingCardController.cs",
+   "sites": [
+    "BuildingCardController.cs:641"
+   ],
+   "ancienne": "building.row.operational",
+   "servie_fr": "Operational",
+   "servie_en": "Operational",
+   "nouvelle": "building.row.en_service",
+   "texte_fr": "En service",
+   "nouvelle_deja_servie": false,
+   "nouvelle_derivee_a_la_fin": true,
+   "commit": "ef78d079",
+   "lot": "D t2"
+  },
+  {
+   "ecran": "② la fiche du bâtiment",
+   "fichier": "Assets/Scripts/Operational/BuildingCard/BuildingCardController.cs",
+   "sites": [
+    "BuildingCardController.cs:643"
+   ],
+   "ancienne": "building.row.cover",
+   "servie_fr": "Cover",
+   "servie_en": "Cover",
+   "nouvelle": "building.row.couverture",
+   "texte_fr": "Couverture",
+   "nouvelle_deja_servie": false,
+   "nouvelle_derivee_a_la_fin": true,
+   "commit": "ef78d079",
+   "lot": "D t2"
+  },
+  {
+   "ecran": "② la fiche du bâtiment",
+   "fichier": "Assets/Scripts/Operational/BuildingCard/BuildingCardController.cs",
+   "sites": [
+    "BuildingCardController.cs:663"
+   ],
+   "ancienne": "building.row.raid_risk",
+   "servie_fr": "Raid risk",
+   "servie_en": "Raid risk",
+   "nouvelle": "building.row.risque_de_descente",
+   "texte_fr": "Risque de descente",
+   "nouvelle_deja_servie": false,
+   "nouvelle_derivee_a_la_fin": true,
+   "commit": "ef78d079",
+   "lot": "D t2"
+  },
+  {
+   "ecran": "② la fiche du bâtiment",
+   "fichier": "Assets/Scripts/Operational/BuildingCard/BuildingCardController.cs",
+   "sites": [
+    "BuildingCardController.cs:671"
+   ],
+   "ancienne": "building.row.alert",
+   "servie_fr": "Alert",
+   "servie_en": "Alert",
+   "nouvelle": "building.row.alerte",
+   "texte_fr": "Alerte",
+   "nouvelle_deja_servie": false,
+   "nouvelle_derivee_a_la_fin": true,
+   "commit": "ef78d079",
+   "lot": "D t2"
+  },
+  {
+   "ecran": "② la fiche du bâtiment",
+   "fichier": "Assets/Scripts/Operational/BuildingCard/BuildingCardController.cs",
+   "sites": [
+    "BuildingCardController.cs:689"
+   ],
+   "ancienne": "building.row.cold_chain",
+   "servie_fr": "Cold chain",
+   "servie_en": "Cold chain",
+   "nouvelle": "building.row.chaine_du_froid",
+   "texte_fr": "Chaîne du froid",
+   "nouvelle_deja_servie": false,
+   "nouvelle_derivee_a_la_fin": true,
+   "commit": "ef78d079",
+   "lot": "D t2"
+  },
+  {
+   "ecran": "② la fiche du bâtiment",
+   "fichier": "Assets/Scripts/Operational/BuildingCard/BuildingCardController.cs",
+   "sites": [
+    "BuildingCardController.cs:715"
+   ],
+   "ancienne": "building.row.lab_tier",
+   "servie_fr": "Lab tier",
+   "servie_en": "Lab tier",
+   "nouvelle": "building.row.taille_du_labo",
+   "texte_fr": "Taille du labo",
+   "nouvelle_deja_servie": false,
+   "nouvelle_derivee_a_la_fin": true,
+   "commit": "ef78d079",
+   "lot": "D t2"
+  },
+  {
+   "ecran": "② la fiche du bâtiment",
+   "fichier": "Assets/Scripts/Operational/BuildingCard/BuildingCardController.cs",
+   "sites": [
+    "BuildingCardController.cs:725"
+   ],
+   "ancienne": "building.row.purity",
+   "servie_fr": "Purity",
+   "servie_en": "Purity",
+   "nouvelle": "building.row.purete",
+   "texte_fr": "Pureté",
+   "nouvelle_deja_servie": false,
+   "nouvelle_derivee_a_la_fin": true,
+   "commit": "ef78d079",
+   "lot": "D t2"
+  },
+  {
+   "ecran": "② la fiche du bâtiment",
+   "fichier": "Assets/Scripts/Operational/BuildingCard/BuildingCardController.cs",
+   "sites": [
+    "BuildingCardController.cs:735"
+   ],
+   "ancienne": "building.row.appointment",
+   "servie_fr": "Appointment",
+   "servie_en": "Appointment",
+   "nouvelle": "building.row.rendez_vous",
+   "texte_fr": "Rendez-vous",
+   "nouvelle_deja_servie": false,
+   "nouvelle_derivee_a_la_fin": true,
+   "commit": "ef78d079",
+   "lot": "D t2"
+  },
+  {
+   "ecran": "② la fiche du bâtiment",
+   "fichier": "Assets/Scripts/Operational/BuildingCard/BuildingCardController.cs",
+   "sites": [
+    "BuildingCardController.cs:737"
+   ],
+   "ancienne": "building.row.payout",
+   "servie_fr": "Payout",
+   "servie_en": "Payout",
+   "nouvelle": "building.row.gain",
+   "texte_fr": "Gain",
+   "nouvelle_deja_servie": false,
+   "nouvelle_derivee_a_la_fin": true,
+   "commit": "ef78d079",
+   "lot": "D t2"
+  },
+  {
+   "ecran": "② la fiche du bâtiment",
+   "fichier": "Assets/Scripts/Operational/BuildingCard/BuildingCardController.cs",
+   "sites": [
+    "BuildingCardController.cs:754"
+   ],
+   "ancienne": "building.row.crop",
+   "servie_fr": "Crop",
+   "servie_en": "Crop",
+   "nouvelle": "building.row.culture",
+   "texte_fr": "Culture",
+   "nouvelle_deja_servie": false,
+   "nouvelle_derivee_a_la_fin": true,
+   "commit": "ef78d079",
+   "lot": "D t2"
+  },
+  {
+   "ecran": "② la fiche du bâtiment",
+   "fichier": "Assets/Scripts/Operational/BuildingCard/BuildingCardController.cs",
+   "sites": [
+    "BuildingCardController.cs:757"
+   ],
+   "ancienne": "building.row.grow_stage",
+   "servie_fr": "Grow stage",
+   "servie_en": "Grow stage",
+   "nouvelle": "building.row.pousse",
+   "texte_fr": "Pousse",
+   "nouvelle_deja_servie": false,
+   "nouvelle_derivee_a_la_fin": true,
+   "commit": "ef78d079",
+   "lot": "D t2"
+  },
+  {
+   "ecran": "② la fiche du bâtiment",
+   "fichier": "Assets/Scripts/Operational/BuildingCard/BuildingCardController.cs",
+   "sites": [
+    "BuildingCardController.cs:761"
+   ],
+   "ancienne": "building.row.husbandry",
+   "servie_fr": "Husbandry",
+   "servie_en": "Husbandry",
+   "nouvelle": "building.row.soin",
+   "texte_fr": "Soin",
+   "nouvelle_deja_servie": false,
+   "nouvelle_derivee_a_la_fin": true,
+   "commit": "ef78d079",
+   "lot": "D t2"
+  },
+  {
+   "ecran": "② la fiche du bâtiment",
+   "fichier": "Assets/Scripts/Operational/BuildingCard/BuildingCardController.cs",
+   "sites": [
+    "BuildingCardController.cs:781"
+   ],
+   "ancienne": "building.row.hub_tier",
+   "servie_fr": "Hub tier",
+   "servie_en": "Hub tier",
+   "nouvelle": "building.row.taille_du_relais",
+   "texte_fr": "Taille du relais",
+   "nouvelle_deja_servie": false,
+   "nouvelle_derivee_a_la_fin": true,
+   "commit": "ef78d079",
+   "lot": "D t2"
+  },
+  {
+   "ecran": "② la fiche du bâtiment",
+   "fichier": "Assets/Scripts/Operational/BuildingCard/BuildingCardController.cs",
+   "sites": [
+    "BuildingCardController.cs:789"
+   ],
+   "ancienne": "building.row.roster",
+   "servie_fr": "Roster",
+   "servie_en": "Roster",
+   "nouvelle": "building.row.equipe",
+   "texte_fr": "Équipe",
+   "nouvelle_deja_servie": false,
+   "nouvelle_derivee_a_la_fin": true,
+   "commit": "ef78d079",
+   "lot": "D t2"
   }
- ]
+ ],
+ "meme_cle": [
+  {
+   "commit": "ef78d079",
+   "fichier": "Assets/Scripts/Operational/BuildingCard/BuildingCardController.cs",
+   "ligne": 686,
+   "cle": "building.row.temperature",
+   "servie_fr": "Temperature",
+   "servie_en": "Temperature",
+   "texte_fr": "Température",
+   "nouvelle_derivee_a_la_fin": false,
+   "textes_candidats": [
+    "Température",
+    "temperature"
+   ]
+  }
+ ],
+ "non_apparies": []
 }
