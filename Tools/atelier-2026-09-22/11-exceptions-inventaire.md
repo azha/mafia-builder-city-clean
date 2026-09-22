@@ -233,3 +233,42 @@ un écran qui listerait les options sans en-tête perdrait l'avertissement.
   L'anneau `.medl.don` sur le premier de la file (même question que ⑯).
 - ✅ **Références ⑨/⑩ re-rendues** au signal (atelier `0ccd8d5` : bustes à la capuche, anneau du Don retiré) : `reference-⑨`, `reference-⑩`,
   `v4-14`, `v4-15`, `v4-17`, `v4-18` (`v4-16` inchangé au pixel, non recommité). L'anneau n'est plus un arbitrage : c'est la marque du Don seul.
+
+---
+
+## 3.7 ⑩ — l'issue d'une carte : le libellé (« Problème : » est un contresens) et les 10 mots d'issue (2026-09-23)
+
+Mesuré par CLIENT-2 (`5e57bc6d`, écart D10) : après résolution, ⑩ affiche « Résolu ✓ · Issue : REPAIRING » — l'enum **brut** — et le
+libellé `exception_detail.bloc.issue` est servi en fr « **Problème :** ». C'est un faux ami : en français « l'issue » est le **résultat** ;
+en anglais « issue » est un **problème**, et c'est ce sens qui a été traduit. La route rend `{resolved, outcome}`
+(`exceptions.controller.ts:133`) ; `outcome` est le mot qu'un effet renvoie (`exceptions/effects/exception-effect.ts:19-24`).
+
+**Le libellé** : le client écrit « Issue : » ⇒ il passe à **« Résultat : »** (clé dérivée `exception_detail.bloc.resultat`), et
+`exception_detail.bloc.issue` devient orpheline, à retirer.
+
+| clé | fr | en |
+|---|---|---|
+| `exception_detail.bloc.resultat` | Résultat : | Outcome: |
+
+**Les 10 issues que ⑩ peut afficher** (lues dans les effets, back `4841d7ad`) — écrites comme un **cachet**, en capitales, sur le modèle du
+seul que la maquette dessine (« EN RÉPARATION », cadre 17) :
+
+| `outcome` | effet (fichier:ligne) | ce qui s'est passé | fr | en |
+|---|---|---|---|---|
+| `RESOLVED` | `one-time.handler.ts:18` | traitée une fois, sans effet | RÉGLÉ | HANDLED |
+| `ESCALATED` | `escalate.handler.ts:18` | archivée pour relecture | ARCHIVÉ | ARCHIVED |
+| `REPAIRING` | `repair.handler.ts:28`, `repair-immediate.handler.ts:58` | le bâtiment passe en réparation | EN RÉPARATION | UNDER REPAIR |
+| `REPAIRING_SLOW` | `repair-slow.handler.ts:56` | réparation au rabais, plus longue (0,6 × le coût, 7 jours) | RÉPARATION LENTE | SLOW REPAIR |
+| `BRIBE_SUCCEEDED` | `bribe.handler.ts:47` | le pot-de-vin a marché : le bâtiment repart, la chaleur baisse | ARRANGÉ | SQUARED AWAY |
+| `BRIBE_FAILED` | `bribe.handler.ts:47` | l'argent est parti, le bâtiment reste touché, la chaleur monte | ÇA S'EST RETOURNÉ | IT BACKFIRED |
+| `LAID_LOW` | `lay-low.handler.ts:34` | on se fait oublier ; le bâtiment reste touché | PROFIL BAS | LYING LOW |
+| `TAUGHT` | `add-rule.handler.ts:39` | une règle est ajoutée au script du lieutenant | RÈGLE APPRISE | RULE LEARNED |
+| `DEFERRED` | `defer-repair.handler.ts:38` | réparation remise : le bâtiment reste à l'arrêt | REMIS À PLUS TARD | PUT OFF |
+| `DEMOLISHED` | `demolish-replace.handler.ts:48` | le bâtiment est rasé, l'îlot se libère | RASÉ | RAZED |
+
+- Chaque mot reprend un mot déjà servi pour le même geste : « se retourner » (`exception.raid.bribe.projected_consequence`), « Se faire
+  oublier » (`lay_low.label`), « une règle » (cadre 15), « Raser » (㉝ « Raser un site »), « Escalades archivées ». Aucun n'est accordé à
+  une personne : ils disent ce qui arrive à la carte, pas au lieutenant.
+- Clés proposées, sur le patron de `Libelle.ParValeur` (la clé se dérive de la VALEUR servie) : `exception_detail.outcome.<valeur en
+  minuscules>` — `exception_detail.outcome.repairing`, `…bribe_succeeded`, etc. Une valeur inconnue garde le repli du client (`—`),
+  jamais l'enum brut.
