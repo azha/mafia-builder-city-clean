@@ -35,9 +35,10 @@ DUS = [
           "l'écrivait à la main) — re-rendu sur place : « personne ne jugera votre constance » (atelier 20d006d)"),
     (121, "Vous vous écartez de vos propres règles",    'reputation/reference-derive-1080x2102.png',
           "㊲·121 : « ce n'est pas un choix, c'est ce qui manque encore » (atelier 20d006d)"),
-    (108, "La caisse de Oskar — pleine à ras",          'vente/reference-1080x2102.png',
-          "㉟ : la TABLE a corrigé le nominal 107 → 108 le 2026-09-07 sans re-rendre le PNG — mesuré : le fichier commité était le "
-          "cadre 107 (7,1 % d'écart contre 34,3 % avec 108). Même classe de défaut que ⑮"),
+    # ㉟ : PAS de rendu. Le PNG commité est le cadre 107 et c'est le BON nominal (étiquette + texte affiché : les six
+    #    dealers, « AFFECTER UN DEALER ») ; c'est la TABLE qui avait tort depuis le 2026-09-07 (108-113 empiétait sur
+    #    ㊱·113). Rétablie 107-112 dans construire-dossiers.py le 2026-09-22. Une entrée (108 → nominal) a existé ici
+    #    pendant une heure : retirée avant tout rendu, la garde machine ayant refusé entre-temps.
     (32,  "La police — le registre de dispatch",        'police/reference-⑮-1080x2102.png',
           "⑮ nominal = 32 depuis l'échange du 2026-09-07 ; re-rendu au SHA du jour pour le tour r2"),
     (31,  "La police — le tableau : ce qu’ils savent",  'police/reference-⑰-1080x2102.png',
