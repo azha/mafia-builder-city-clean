@@ -32,7 +32,19 @@ namespace MafiaCleanCity.Operational.Exceptions
         public I18nRefDto projected_consequence_i18n;
         public string add_rule_dsl;           // the DSL rule ADD_RULE appends, or "" (not teachable)
         public ExceptionEffectDto effect;     // raid candidates only (empty-type instance otherwise)
+        // ⑨-0 (forme G) — `method: EffectType`, servi sur CHAQUE action (Lot 0 D4, `method-by-action-id.ts` : « stamped at
+        // every one of the 53 producer sites ») : la méthode que `POST …/resolve` attend pour CETTE action. Mesuré sur le corps
+        // du 06/09 : 13/13 actions, 6/6 suggestions. ⇒ L0.2 est fermé côté back ; ce champ était jeté par JsonUtility.
+        public string method;
+        // ⑨-0 (forme G) — l'étiquette du PRODUCTEUR (`HEAT_PRESSURE`, `onboarding_preseed`, … ; absente sur les autres).
+        // Technique : déclarée pour ne plus être jetée, jamais affichée.
+        public string source;
     }
+
+    /// <summary>⑨-0 — le lieutenant de la carte, `{id, name}` (C3, D7 : `projection.service.ts`, « la même forme que la
+    /// carte de flag »). Le back REFUSE la requête plutôt que de servir un id sans nom : un `name` vide ne vient que d'une
+    /// pile antérieure à C3. `null` côté serveur pour une carte de la ville ⇒ JsonUtility rend une instance VIDE.</summary>
+    [Serializable] public class ExceptionLieutenantDto { public string id; public string name; }
 
     /// <summary>Une référence i18n. FORME MESURÉE le 2026-09-02 sur le corps réel :
     /// `{"key":"exception.heat_pressure.card.descriptor","params":{}}` — un objet, pas une
@@ -41,13 +53,23 @@ namespace MafiaCleanCity.Operational.Exceptions
     /// il est **vide sur les 12 références mesurées**. Le jour où il portera quelque chose, un
     /// paramètre non substitué restera VISIBLE dans le texte (`{nom}`) — le résolveur est écrit
     /// pour ça. Déclaré ici plutôt que découvert à l'écran.</summary>
-    [Serializable] public class I18nRefDto { public string key; }
+    [Serializable] public class I18nRefDto { public string key; public I18nParamsVidesDto @params; }
+
+    /// <summary>⑨ — `params` d'une `I18nRef` de cette route, DÉCLARÉ pour que l'oracle des clés servies le compte (forme G) :
+    /// il est `{}` sur toutes les références mesurées (corps du 06/09 ; raid `exception.raid.card.descriptor`, back
+    /// `1f54235c` : `params: {}`). Aucun champ, donc rien à lire — le jour où un producteur y met une clé, la ligne explicite
+    /// de l'oracle (`…event_descriptor_i18n.params`) la montrera SERVIE NON DÉCLARÉE, et le résolveur laissera l'accolade
+    /// visible (`{nom}`) plutôt que de deviner.</summary>
+    [Serializable] public class I18nParamsVidesDto { }
 
     [Serializable]
     public class ExceptionCardDto
     {
         public string exception_id;
         public string lieutenant_id;          // "" when the card is not lieutenant-bound
+        /// <summary>⑨-0 (forme G) — servi depuis C3 (« Lt. Rook », « Lt. Sallo » sur le corps du 06/09) et JETÉ jusqu'ici :
+        /// ⑨ et ⑩ écrivaient « Votre lieutenant » (juge r1, M10).</summary>
+        public ExceptionLieutenantDto lieutenant;
         public string event_descriptor;       // i18n-key text (chrome)
         /// <summary>La référence i18n de la réplique — TD-452, ADDITIF : la prose reste.
         /// Mesuré : non nulle sur 2 cartes sur 6 (les producteurs), nulle sur les 4 du seeder,
@@ -59,6 +81,12 @@ namespace MafiaCleanCity.Operational.Exceptions
         public string priority_band;          // silent | watching | urgent | critical  (PriorityBucket canon — back lot-3 TD-072)
         public string severity_band;          // MILD | MODERATE | SEVERE  (SeverityEnum canon REUSE 08 — back lot-3 TD-072)
         public string resolution_status;      // pending | resolved | escalated | aged_out
+        /// <summary>⑨-0 (forme G) — `'ESCALATE'` quand la confiance brute est SOUS le seuil (« escalade suggérée »),
+        /// ABSENT sinon (JsonUtility ⇒ ""). Servi, jeté jusqu'ici.</summary>
+        public string suggested_disposition;
+        /// <summary>⑨-0 (forme G) — `ok | approaching | at_max` sur les cartes ADD_RULE d'un lieutenant : la charge de
+        /// ses règles. Avertissement seulement, ne bloque jamais. Servi, jeté jusqu'ici.</summary>
+        public string script_complexity_band;
     }
 
     [Serializable] public class ExceptionQueueData { public ExceptionCardDto[] exceptions; }

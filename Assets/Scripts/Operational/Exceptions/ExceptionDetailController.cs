@@ -163,16 +163,13 @@ namespace MafiaCleanCity.Operational.Exceptions
             // Maquette : « <b>Le cuisinier</b> · au bâtiment touché » + chips gravité/priorité/
             // confiance, puis la réplique entre guillemets.
             //
-            // ⚠️ LE RÔLE N'EST PAS DANS CE CORPS. La maquette le tire de `GET /v1/lieutenants`
-            // par jointure (`archetype`) — jointure que cet écran ne fait pas. Et `lieutenant`
-            // porte bien un `name` depuis peu, mais sa valeur est « Lieutenant » : le placeholder
-            // de TD-046, écrit par le chemin de recrutement de production lui-même sur 18 996
-            // lignes. Rien dans le corps ne distingue ce placeholder d'un vrai nom.
-            // ★ Donc on montre le RÔLE générique, pas le « nom ». Afficher « Lieutenant » comme
-            //   un nom serait le même mensonge que « SALVATORE » sur ㊲ : plus joli, et faux.
-            //   L'écart est déclaré ici avec sa date plutôt que masqué.
-            string qui = c.lieutenant_id != null && c.lieutenant_id.Length > 0
-                ? "Votre lieutenant" : "La ville";
+            // ⚠️ LE RÔLE N'EST PAS DANS CE CORPS : la maquette le tire de `GET /v1/lieutenants` par jointure
+            // (`archetype`) — lot ⑨-4.
+            // ⑨-0 — LE NOM, lui, EST dans le corps (`lieutenant.name`, C3) et il était jeté : le DTO ne déclarait pas
+            // `lieutenant`. L'ancien commentaire refusait d'afficher « Lieutenant » (le placeholder de TD-046) comme un
+            // nom ; mais le corps du 06/09 sert de VRAIS noms (« Lt. Rook », « Lt. Sallo »), et un placeholder servi est
+            // la donnée, pas un mensonge de l'écran. Un seul site, partagé avec ⑨ : `ExceptionBandes.Locuteur`.
+            string qui = ExceptionBandes.Locuteur(c);
             TextMeshProUGUI quiTxt = NewText("Qui", body, qui, (int)PxD(11f), TextAlignmentOptions.Left);
             quiTxt.fontStyle = FontStyles.Bold;
             AddLayoutElement(quiTxt.gameObject, minHeight: PxD(14f), flexibleHeight: 0);

@@ -176,6 +176,14 @@ def main():
         print(f"[frais] {nom}.dll recompilée depuis les sources ⇒ les dépendantes pointent dessus")
         subst[nom] = out
 
+    # ⛔ UN FICHIER NEUF D'UNE ASSEMBLY FRAÎCHE APPARTIENT À CELLE-CI, PAS À L'ASSEMBLY PRINCIPALE.
+    #    Le recompiler aussi dans la principale y crée un SECOND type du même nom, l'un venu de la DLL
+    #    fraîche, l'autre du fichier : CS0029 « … [Shell.dll] » vs « … [Fichier.cs] ». C'est un rouge de
+    #    l'INSTRUMENT qui accuse du code juste. Mesuré le 2026-09-23 sur le premier fichier NEUF passé
+    #    par --frais (`Assets/Scripts/Shell/RevueDuJourDecor.cs`) : tous les usages précédents ne
+    #    passaient que des fichiers de l'assembly principale, donc la liste servait aux deux sans dommage.
+    extra = [e for e in extra if not any(f'/{n}/' in e for n in frais)]
+
     rc, _, _ = compile_un(proj, extra, subst=subst)
 
     if controle and extra:

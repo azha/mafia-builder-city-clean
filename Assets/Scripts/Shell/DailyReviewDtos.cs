@@ -21,6 +21,36 @@ namespace MafiaCleanCity.Shell
         public FlagDescriptorDto flag_reason;
         public int flagged_game_day;
         public string trust_budget_bucket;
+        // S5-e (back `71ae6f89`, `back/s5-revue-du-jour`) — la bande de fréquence de signalement du lieutenant,
+        // la même que `GET /v1/lieutenants/:id`. Type : `FlagFrequencyBand = 'none' | 'occasional' | 'frequent'`
+        // (`core_loops/flag_discipline/convergence.ts:35`). ABSENTE tant que la pile ne sert pas S5 (`main` =
+        // `4841d7ad`) : JsonUtility laisse alors `null`, et l'écran ne pose AUCUNE chip. Déclarée ici AVANT
+        // d'être servie : une clé servie qu'aucun champ ne déclare serait jetée en silence (forme G).
+        public string flag_frequency_band;
+        // S5-a (forme A, back `04f35021`) — le NOM de ce que la routine concerne, `I18nRef | null`, À CÔTÉ du
+        // descriptor. Bâtiment ⇒ `game.fiction.building.name[.rang]` ; route ⇒ `game.fiction.route.named` ou
+        // `.indexed` (`common/fiction-names.ts`, `routeNameRef`). ⚠️ JsonUtility rend une INSTANCE VIDE (jamais
+        // null) quand le champ manque : l'absence se lit `key` vide.
+        public SujetRefDto subject_name_i18n;
+        // S5-b (forme A) — la condition qui a fait le score : `DeviationCondition`
+        // (`core_loops/flag_discipline/deviation-condition.ts`, 12 valeurs) ; `unrecorded` pour un signalement
+        // antérieur au lot. Absente (pile sans S5) ⇒ "" ⇒ la carte garde sa phrase de v4-0.
+        public string deviation_condition;
+    }
+
+    /// <summary>Une `I18nRef` AVEC ses paramètres — contrairement à `FlagDescriptorDto`, dont `params` est
+    /// jeté. JsonUtility ne lit pas un objet à clés libres : `params` est donc l'UNION DÉCLARÉE des
+    /// placeholders des trois gabarits que `subject_name_i18n` peut porter (forme G : un paramètre servi
+    /// qu'aucun champ ne déclare serait jeté en silence, et l'accolade resterait à l'écran).</summary>
+    [Serializable] public class SujetRefDto { public string key; public SujetParamsDto @params; }
+
+    /// <summary>`game.fiction.building.name` : enseigne, district, block (+ rang pour `.rang`) ;
+    /// `game.fiction.route.named` : depart, arrivee ; `game.fiction.route.indexed` : index.</summary>
+    [Serializable]
+    public class SujetParamsDto
+    {
+        public string enseigne; public string district; public string block; public string rang;
+        public string depart; public string arrivee; public string index;
     }
 
     [Serializable]

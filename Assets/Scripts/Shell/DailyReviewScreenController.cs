@@ -14,8 +14,8 @@ namespace MafiaCleanCity.Shell
     // cadres « trois jetons sur le zinc » / « personne au comptoir » / « après vos verdicts ».
     // La scène : le patron passe derrière le zinc avant l'ouverture. Un signalement, c'est un
     // homme qui a DÉPENSÉ UN JETON DE CONFIANCE pour poser une question — il est accoudé, son
-    // jeton posé devant lui. Le titre (`descriptor.key`) est sa phrase, le motif
-    // (`flag_reason.key`) sa seconde moitié en italique : c'est LUI qui parle, pas une fiche.
+    // jeton posé devant lui. Sa phrase — un titre, puis un motif en italique — est choisie par
+    // `descriptor.key` (⑯-4, `PhraseDe`) : c'est LUI qui parle, pas une fiche.
     //
     // LE JETON EST LE GESTE : le toucher = le lui rendre (`validate`) ; le GARDER en appui long =
     // `dismiss`, irréversible — donc le même geste que le tampon du registre (arbitrage E5 : le
@@ -54,11 +54,36 @@ namespace MafiaCleanCity.Shell
         public LongPressButton BatchConfirmButton { get; private set; }
 
         private RectTransform rowsRoot;
-        private TextMeshProUGUI emptyStateText;
+        private TextMeshProUGUI emptyStateText;   // le titre de la plaque du matin (⑯-2)
+        private GameObject plaqueVide;
+        private RectTransform registreRoot;       // ⑯-6
+        private RevueDuJourDecor decor;          // ⑯-7 la scène, le dégradé, le zinc
+        private GameObject tabourets;            // ⑯-7 v4-1, les trois tabourets vides
+        private TextMeshProUGUI plaqueSurtitre;
         private TextMeshProUGUI registreCompte;
         private GameObject tamponRoot;
         private TextMeshProUGUI tamponLibelle;
         private TextMeshProUGUI tamponSous;
+        private Image tamponFond;
+        private Image tamponBord;
+        private GameObject tamponCachet;
+        // ⑯-3 — l'état « après vos verdicts » survit à un re-rendu : `LoadRoster` re-rend les billets
+        // quand le roster arrive, et sans ces deux mémoires un verdict rendu entre-temps s'effacerait.
+        private readonly Dictionary<string, BilletVue> billets = new Dictionary<string, BilletVue>();
+        private readonly Dictionary<string, FlagVerdictResponseDto> verdicts = new Dictionary<string, FlagVerdictResponseDto>();
+        private int lotSigne;
+        private int? jourCourantPose;
+
+        /// <summary>Ce qu'un verdict change sur un billet déjà posé.</summary>
+        private sealed class BilletVue
+        {
+            public CanvasGroup Bulle;
+            public Image Jeton, Buste;
+            public TextMeshProUGUI Frequence;
+            public TextMeshProUGUI Coche, Verbe, Sous;
+            public Button Rendre;
+            public LongPressButton Garder;
+        }
         private RosterRow[] roster;
         private Transform mountParent;
         private DailyReviewClient client;
@@ -164,16 +189,37 @@ namespace MafiaCleanCity.Shell
         {
             EnsureInitialized();
             token = bearerToken;
-            yield return client.GetFlagReview(token, dto => LastLoadedReview = dto, (c, m) => { });
-            if (LastLoadedReview != null) Render(LastLoadedReview.cards);
+            FlagReviewResponseDto recu = null;
+            yield return client.GetFlagReview(token, dto => recu = dto, (c, m) => { });
+            if (recu != null) AppliquerRevue(recu);
         }
+
+        /// <summary>Le seul chemin par lequel une revue chargée devient un écran — celui de
+        /// `LoadReview`, et celui des tests qui posent un corps sans passer par le réseau. Un seul
+        /// chemin, pour qu'une garde qui l'exerce exerce ce que le joueur voit.</summary>
+        public void AppliquerRevue(FlagReviewResponseDto revue)
+        {
+            EnsureInitialized();
+            LastLoadedReview = revue;
+            if (revue != null) Render(revue.cards);
+        }
+
+        // ---- test hooks : le tampon, tel qu'il est posé sur le zinc ------------------------------
+        public bool TamponPresent => tamponRoot != null && tamponRoot.activeSelf;
+        public string TamponLibelleTexte => tamponLibelle != null ? tamponLibelle.text : null;
+        public string TamponSousTexte => tamponSous != null ? tamponSous.text : null;
+        public bool PlaqueDuMatinPresente => plaqueVide != null && plaqueVide.activeSelf;
+        public TextMeshProUGUI PlaqueDuMatinSurtitre => plaqueSurtitre;
+        public TextMeshProUGUI PlaqueDuMatinTitre => emptyStateText;
+        public RevueDuJourDecor Decor => decor;
+        public bool TabouretsPresents => tabourets != null && tabourets.activeSelf;
 
         public IEnumerator ValidateFlag(string flagId)
         {
             EnsureInitialized();
             ValidateRequestCount++;
             LastValidateError = null;
-            yield return client.Validate(token, flagId, dto => { }, (c, m) => LastValidateError = $"{c}: {m}");
+            yield return client.Validate(token, flagId, dto => AppliquerVerdict(flagId, dto), (c, m) => LastValidateError = $"{c}: {m}");
         }
 
         public IEnumerator DismissFlag(string flagId)
@@ -181,7 +227,7 @@ namespace MafiaCleanCity.Shell
             EnsureInitialized();
             DismissRequestCount++;
             LastDismissError = null;
-            yield return client.Dismiss(token, flagId, dto => { }, (c, m) => LastDismissError = $"{c}: {m}");
+            yield return client.Dismiss(token, flagId, dto => AppliquerVerdict(flagId, dto), (c, m) => LastDismissError = $"{c}: {m}");
         }
 
         /// <summary>Wired to `BatchConfirmButton.OnLongPressCompleted` — design C8-F2: batch confirm
@@ -193,7 +239,7 @@ namespace MafiaCleanCity.Shell
             BatchConfirmRequestCount++;
             LastBatchConfirmError = null;
             yield return client.BatchConfirm(token,
-                dto => LastBatchConfirmedCount = dto.batch_confirmed_count,
+                dto => { LastBatchConfirmedCount = dto.batch_confirmed_count; AppliquerLotSigne(dto.batch_confirmed_count); },
                 (c, m) => LastBatchConfirmError = $"{c}: {m}");
         }
 
@@ -252,42 +298,54 @@ namespace MafiaCleanCity.Shell
         private void Render(FlagCardDto[] cards)
         {
             for (int i = rowsRoot.childCount - 1; i >= 0; i--) UnityEngine.Object.Destroy(rowsRoot.GetChild(i).gameObject);
+            billets.Clear();
 
             int enAttente = LastLoadedReview != null ? LastLoadedReview.routine_pending_count : 0;
-            // ⛔⛔ LE BOUTON DE LOT NE SE FIE PLUS AU SEUL BOOLÉEN DU BACK, ET C'EST UNE MESURE.
-            // Sur le compte de démo : `cards: []`, `routine_pending_count: 156`,
-            // `batch_confirm_available: TRUE`. Le tampon était donc offert sur une file VIDE, et
-            // un clic aurait confirmé 156 routines que le joueur n'a jamais vues — un geste
-            // irréversible sur un écran qui ne montre rien.
-            // ⇒ La disponibilité côté serveur dit « le lot est techniquement possible » ; elle ne
-            // dit PAS « il y a quelque chose à trancher ». Ce sont deux propriétés distinctes, et
-            // les confondre transforme un état vide en piège. Le bouton exige donc les DEUX : le
-            // feu vert du back ET au moins une carte réellement affichée.
-            // ★ Même famille que la garde satisfaite par un monde dégénéré : le booléen était
-            // VRAI dans le monde exact où il ne fallait rien proposer.
-            bool tamponDisponible = LastLoadedReview != null
-                                 && LastLoadedReview.batch_confirm_available
-                                 && cards != null && cards.Length > 0;
+            // ⛔⛔ LE TAMPON SUIT LE BOOLÉEN DU BACK, Y COMPRIS SUR UNE FILE VIDE — ET C'EST UNE DÉCISION RATIFIÉE.
+            // Une version précédente exigeait aussi « au moins une carte affichée ». Elle partait d'une
+            // mesure juste (compte de démo : `cards: []`, `routine_pending_count: 156`,
+            // `batch_confirm_available: TRUE`) et d'une crainte juste : un geste irréversible sur des
+            // routines jamais vues. Mais la décision n'était pas au client, elle était déjà prise :
+            // le cadre v4-1 « personne au comptoir », ratifié par l'user (« nickel »), dessine le tampon
+            // « CONFIRMER LA ROUTINE · 9 » sur une journée SANS signalement. Clore la journée quand
+            // personne n'a rien demandé, c'est le geste même de cet écran.
+            // ⇒ Ce qui répond à la crainte est dans la maquette, pas dans une garde : le compte est
+            //   affiché EN ENTIER (JD-E3) et le geste exige un APPUI LONG (JD-E5).
+            // ⇒ Le back l'accepte, lu dans le CORPS (pas le docblock) : `batchConfirm` →
+            //   `UPDATE routine_items … WHERE status='pending'` (`flag-discipline.repository.ts:669-676`),
+            //   sans aucune condition sur les signalements ; `batch_confirm_available =
+            //   routinePendingCount > 0` (`flag-discipline.service.ts:295`).
+            // ★ La garde retirée n'était pas fausse sur le risque. Elle était plus STRICTE que le produit,
+            //   et c'est l'écran qui en payait le prix : juge-visuel r1 (2026-09-06), F2 BLOQUANT,
+            //   « l'action qui referme l'écran n'existe pas ».
+            bool tamponDisponible = LastLoadedReview != null && LastLoadedReview.batch_confirm_available;
 
             if (cards == null || cards.Length == 0)
             {
                 RenderedEmptyState = true;
                 RenderedCardCount = 0;
-                emptyStateText.gameObject.SetActive(true);
-                // « Personne au comptoir » — trois tabourets vides, le registre seul. Le texte est
-                // la scène, pas un état d'erreur : c'est une bonne nouvelle, pas un vide technique.
-                // ⚠️ L'état vide ne promet RIEN : il ne mentionne pas les routines en attente,
-                // parce qu'aucun geste ne permet de les traiter depuis ici. Nommer un nombre sans
-                // offrir de geste fabrique une attente que l'écran ne peut pas tenir.
-                emptyStateText.text = Lib("bloc", "Personne au comptoir ce matin.");
+                plaqueVide.SetActive(true);
+                tabourets.SetActive(true);
+                decor.AppliquerEtat(vide: true);
+                // « Personne au comptoir » — trois tabourets vides, le registre et son tampon. Le
+                // texte est la scène, pas un état d'erreur : c'est une bonne nouvelle, pas un vide
+                // technique. Le compte des routines est porté par le REGISTRE, et le tampon offre le
+                // geste qui les traite (v4-1) : le nombre affiché a toujours son geste en face.
+                // Mot pour mot le cadre v4-1. L'ancienne phrase (« Personne au comptoir ce matin. »)
+                // était la LÉGENDE du cadre, pas son texte : sa clé servie devient orpheline (⑯-2).
+                plaqueSurtitre.text = Lib("bloc", "Ce matin, au Verge d’Or");
+                emptyStateText.text = Lib("bloc", "Vos lieutenants ont tenu la ligne — rien ne réclame votre parole");
                 MajRegistre(enAttente, tamponDisponible, 0);
                 return;
             }
 
             RenderedEmptyState = false;
-            emptyStateText.gameObject.SetActive(false);
+            plaqueVide.SetActive(false);
+            tabourets.SetActive(false);
+            decor.AppliquerEtat(vide: false);
             RenderedCardCount = cards.Length;
             foreach (FlagCardDto card in cards) AddRow(card);
+            foreach (var v in verdicts) PeindreVerdict(v.Key, v.Value);
             MajRegistre(enAttente, tamponDisponible, cards.Length);
         }
 
@@ -302,10 +360,14 @@ namespace MafiaCleanCity.Shell
             {
                 tamponRoot.SetActive(tamponDisponible);
                 if (tamponLibelle != null) tamponLibelle.text = Lib("bloc", "CONFIRMER LA ROUTINE · ") + enAttente;
+                // Sans signalement : la phrase du cadre v4-1, mot pour mot — le tampon clôt la journée,
+                // « rien d’autre ne vous attend ». (Avant ⑯-1, cette branche disait « appui long » nu :
+                // elle ne s'affichait jamais, la garde retirait le tampon avant.)
                 if (tamponSous != null)
                     tamponSous.text = signalements > 0
                         ? "appui long — les " + signalements + " signalements restent à votre main"
-                        : "appui long";
+                        : Lib("bloc", "appui long — rien d’autre ne vous attend");
+                if (lotSigne > 0) PeindreLotSigne();
             }
         }
 
@@ -330,23 +392,21 @@ namespace MafiaCleanCity.Shell
             hlg.childAlignment = TextAnchor.LowerLeft;
 
             // ── le buste ─────────────────────────────────────────────────────────────────────
-            GameObject medl = new GameObject("Medaillon", typeof(RectTransform));
-            medl.transform.SetParent(billet.transform, false);
-            Image medlImg = medl.AddComponent<Image>();
-            medlImg.sprite = ProceduralUI.MedallionFace((int)Px(40f),
-                DesignTokens.Current.lieutenantMedallionInner,
-                DesignTokens.Current.lieutenantMedallionOuter,
-                Laiton);
-            medlImg.type = Image.Type.Simple;
-            LayoutElement medlLe = medl.AddComponent<LayoutElement>();
-            medlLe.preferredWidth = Px(40f);
-            medlLe.preferredHeight = Px(40f);
-            medlLe.flexibleWidth = 0f;
-            medlLe.flexibleHeight = 0f;
+            // ⑯-5 → ⑯-9 — le médaillon du billet (`.medl` + `.billet .medl` : carré arrondi 40, rayon 14, face radiale, rayons
+            // blancs .05, bord 1px laiton, buste posé en bas à 74 %) passe par `MedaillonAuComptoir` (ShellContracts), le MÊME
+            // code que la file de ⑨ : deux codes du même médaillon divergeraient au premier correctif. Le buste reste
+            // `ui_element_buste_lieutenant` pour tout lieutenant (arbitrage de l'orchestrateur, atelier 09-…, d2bf698b).
+            // ⚠️ ⑥ emploie 0,688 et 3,6 % : des corrections MESURÉES par un juge sur SON médaillon rond. La CSS fait foi ici.
+            Sprite silhouette = Resources.Load<Sprite>(BusteLieutenant);
+            GameObject medl = MedaillonAuComptoir.Construire(billet.transform, "Medaillon", Px(40f), Px(14f), Px(1f), silhouette);
+            Transform busteT = medl.transform.Find("Buste");
+            Image buste = busteT != null ? busteT.GetComponent<Image>() : null;
 
             // ── la bulle : c'est LUI qui parle ───────────────────────────────────────────────
             GameObject bulle = new GameObject("Bulle", typeof(RectTransform));
             bulle.transform.SetParent(billet.transform, false);
+            // `.billet.fait .bulle { opacity:.72 }` — un groupe, pas une couleur : le verdict l'atténue.
+            CanvasGroup bulleGroupe = bulle.AddComponent<CanvasGroup>();
             Image bulleFond = bulle.AddComponent<Image>();
             bulleFond.sprite = ProceduralUI.RoundedRectOutline((int)Px(12f), Px(1f), Hex("#ffffff2a"));
             bulleFond.type = Image.Type.Sliced;
@@ -403,9 +463,12 @@ namespace MafiaCleanCity.Shell
                 : "—";
             Texte(qui.transform, "Nom", nom, Px(11.5f), OrVif, DesignTokens.Current.hudSerifFont);
 
-            // Les deux chips viennent de la JOINTURE client sur `GET /v1/lieutenants` (`tenure_bucket`).
-            // ⚠️ `flag_frequency_band` n'est PAS dans `RosterRow` : la chip « signale rarement /
-            // souvent » de la maquette n'a pas de source ici — non dessinée plutôt que fabriquée.
+            // ⑯ B05 — « signale rarement / souvent » : `flag_frequency_band`, servie SUR LA CARTE par le lot
+            // back S5-e (`71ae6f89`). Absente (pile sans S5) ou inconnue ⇒ aucune chip, jamais « — ».
+            TextMeshProUGUI frequence = null;
+            string texteFrequence = FrequenceChip(card.flag_frequency_band);
+            if (texteFrequence != null) frequence = Chip(qui.transform, texteFrequence.ToUpperInvariant(), Creme2);
+            // La chip « NOUVELLE » vient de la JOINTURE client sur `GET /v1/lieutenants` (`tenure_bucket`).
             string anciennete = AncienneteChip(card.lieutenant != null ? card.lieutenant.id : null);
             if (!string.IsNullOrEmpty(anciennete)) Chip(qui.transform, anciennete, Cyan);
 
@@ -424,15 +487,17 @@ namespace MafiaCleanCity.Shell
             phrase.color = Creme;
             phrase.lineSpacing = -8f;
             phrase.enableWordWrapping = true;
-            // ⛔ AUCUNE CLÉ i18n N'EST SERVIE PAR CE BACK — mesuré au socle : 178 clés référencées,
-            // 0 servie. Afficher `descriptor.key` tel quel donne
-            // « core_loops.flag_discipline.routine.front_shop_reconciliation.descriptor » en pleine
-            // bulle, ce que la première capture montre. La maquette veut une PHRASE.
-            // ⇒ En attendant le bundle, on rend le dernier segment porteur, lisible, et le fait que
-            // ce soit un PIS-ALLER est écrit ici : le jour où `GET /v1/i18n/bundle` sert ces clés,
-            // c'est cette fonction qu'on remplace, pas la mise en page.
-            string titre = Lisible(card.descriptor != null ? card.descriptor.key : null);
-            string motif = Lisible(card.flag_reason != null ? card.flag_reason.key : null);
+            // ⑯-4 — LA PHRASE DU LIEUTENANT, choisie par `descriptor.key` (une clé par générateur).
+            // Avant : `Lisible()` découpait la clé technique (« Front shop reconciliation ») — un
+            // pis-aller déclaré, que le bundle NE POUVAIT PAS remplacer : il sert bien
+            // `routine.*.descriptor` et `reason.*`, mais à paramètres OPAQUES (`{route_id}`,
+            // `{building_id}`… — S5-a) et dans le registre d'une fiche (« Caisse — {building_id} »).
+            // La maquette ratifiée (v4-0) fait parler le lieutenant, sans aucun paramètre.
+            // ⚠️ La table s'indexe sur `descriptor.key`, PAS sur `flag_reason.key` : les générateurs
+            //    de production écrivent un motif par générateur, mais le seam de test `force-flag`
+            //    écrit le motif générique `reason.deviation_detected` sur toutes ses cartes (corps
+            //    réel du 25/08). Indexée sur le motif, la table dirait la même phrase partout.
+            (string titre, string motif) = PhraseDuBillet(card);
             // ⛔ LE NEUVIÈME LITTÉRAL DE CET ÉCRAN VIVAIT ICI, DANS UNE BALISE DE TEXTE RICHE — et
             //    c'est le site que les DEUX instruments rataient. Il ne s'écrit pas `Hex("#…")` mais
             //    `<color=#…>` au milieu d'une chaîne : le motif de la garde exigeait un guillemet
@@ -440,9 +505,12 @@ namespace MafiaCleanCity.Shell
             //    deux motifs* — la garde en porte désormais un troisième, avec son contrôle.
             //    La teinte se dérive du token, jamais recopiée : elle suivra la palette.
             string gris = ColorUtility.ToHtmlStringRGB(DesignTokens.Current.hudCremeSecondary);
+            // Le motif PORTE son tiret (« — l’horaire… ») : c'est lui qui est en italique, comme le
+            // `<i> — …</i>` du cadre.
             phrase.text = string.IsNullOrEmpty(motif)
                 ? titre
-                : titre + "<i><color=#" + gris + "> — " + motif + "</color></i>";
+                : titre + "<i><color=#" + gris + "> " + motif + "</color></i>";
+            DernierePhrase = phrase.text;
 
             // ── la colonne du jeton : le geste ───────────────────────────────────────────────
             GameObject col = new GameObject("JetonCol", typeof(RectTransform));
@@ -471,7 +539,7 @@ namespace MafiaCleanCity.Shell
             jetonLe.preferredWidth = Px(34f);
             jetonLe.preferredHeight = Px(34f);
             jetonLe.flexibleWidth = 0f;
-            Texte(jeton.transform, "Coche", "✓", Px(13f), Hex("#3a2a12"), DesignTokens.Current.primaryFont,
+            TextMeshProUGUI coche = Texte(jeton.transform, "Coche", "✓", Px(13f), Hex("#3a2a12"), DesignTokens.Current.primaryFont,
                   TextAlignmentOptions.Center, true);
 
             // LE GESTE, et il porte les deux verdicts sur le MÊME objet — c'est la maquette :
@@ -493,10 +561,16 @@ namespace MafiaCleanCity.Shell
                 StartCoroutine(ValidateFlag(card.flag_id));
             });
 
-            Texte(col.transform, "Rendre", "RENDRE", Px(7.5f), OrVif, DesignTokens.Current.primaryFont,
-                  TextAlignmentOptions.Center);
-            Texte(col.transform, "Garder", "garder · appui long", Px(6.3f), Creme2,
+            TextMeshProUGUI verbe = Texte(col.transform, "Rendre", "RENDRE", Px(7.5f), OrVif,
                   DesignTokens.Current.primaryFont, TextAlignmentOptions.Center);
+            TextMeshProUGUI sous = Texte(col.transform, "Garder", "garder · appui long", Px(6.3f), Creme2,
+                  DesignTokens.Current.primaryFont, TextAlignmentOptions.Center);
+            billets[card.flag_id ?? ""] = new BilletVue
+            {
+                Bulle = bulleGroupe, Jeton = jetonImg, Buste = buste, Frequence = frequence,
+                Coche = coche, Verbe = verbe, Sous = sous,
+                Rendre = rendre, Garder = garder,
+            };
 
             // la réserve — `trust_budget_bucket`, trois pastilles
             GameObject reserve = new GameObject("Reserve", typeof(RectTransform));
@@ -525,37 +599,318 @@ namespace MafiaCleanCity.Shell
                   Px(5.8f), Creme2, DesignTokens.Current.primaryFont, TextAlignmentOptions.Center);
         }
 
-        /// <summary>Pis-aller d'affichage tant qu'aucune clé i18n n'est servie : on prend le
-        /// segment porteur de la clé et on le rend lisible. Ce n'est PAS une traduction.</summary>
-        private static string Lisible(string cle)
+        // ---------------------------------------------------------- ⑯-3 après vos verdicts
+
+        /// <summary>⑯-3 — cadre v4-2 « après vos verdicts ». Un verdict ne retire pas le billet :
+        /// il reste sur le zinc, ATTÉNUÉ, et son jeton dit ce que la décision a coûté. La réponse du
+        /// back était jetée (`dto => { }`), alors qu'elle porte la seule clé qui rend l'économie du
+        /// jeton visible au moment où elle se joue : `token_returned` (juge-données Q2 ★★★,
+        /// `flag-discipline.service.ts:65-69` ; `true` sur validate `:223`, `false` sur dismiss `:262`).
+        /// Même chemin pour le jeu et pour les tests.</summary>
+        public void AppliquerVerdict(string flagId, FlagVerdictResponseDto verdict)
         {
-            if (string.IsNullOrEmpty(cle)) return "";
-            string[] parts = cle.Split('.');
-            string dernier = parts.Length >= 2 && (parts[parts.Length - 1] == "descriptor" ||
-                                                   parts[parts.Length - 1] == "reason")
-                ? parts[parts.Length - 2]
-                : parts[parts.Length - 1];
-            dernier = dernier.Replace('_', ' ');
-            return dernier.Length == 0 ? "" : char.ToUpperInvariant(dernier[0]) + dernier.Substring(1);
+            if (string.IsNullOrEmpty(flagId) || verdict == null || !verdict.resolved) return;
+            verdicts[flagId] = verdict;
+            PeindreVerdict(flagId, verdict);
         }
 
-        private static int ReservePastilles(string bucket)
+        private void PeindreVerdict(string flagId, FlagVerdictResponseDto verdict)
+        {
+            if (!billets.TryGetValue(flagId, out BilletVue b)) return;
+            // `.billet.fait .bulle { opacity:.72 }`. ⚠️ Opacité de GROUPE, appliquée telle quelle : le
+            // navigateur compose en sRGB et ce projet en linéaire, donc l'atténuation perçue diffère un
+            // peu — aucun ajustement n'existe pour un groupe (il vaut pour une couleur sur un fond).
+            // Non repris : `.billet.fait .medl { filter:saturate(.7) }` (aucun filtre en uGUI).
+            b.Bulle.alpha = 0.72f;
+            // Le geste est consommé : un second appel rend 409 (juge-données, E5 mesuré).
+            b.Rendre.interactable = false;
+            b.Garder.enabled = false;
+            if (verdict.token_returned)
+            {
+                // `.jeton.rendu` : le même or, poussé et tourné — `rotate(-12deg)` en CSS (sens
+                // anti-horaire à l'écran) = +12° en z dans Unity. `translateX(-10px)` non repris : le
+                // jeton est placé par son groupe de mise en page.
+                b.Jeton.rectTransform.localRotation = Quaternion.Euler(0f, 0f, 12f);
+                b.Verbe.text = Lib("verdict", "RENDU");
+                b.Verbe.color = OrVif;
+                b.Sous.text = Lib("verdict", "il garde sa confiance");
+            }
+            else
+            {
+                // `.jeton.perdu` : radial #3a3f4a → #1c2029, la marque en `--braise`, le verbe aussi. Le cœur passe par
+                // le token `mapChipBg` (#383d4c, d = 3,5 : TD-612, garde Palette) ; #1c2029 n'a aucun token proche.
+                b.Jeton.sprite = ProceduralUI.RadialDisc((int)Px(34f), DesignTokens.Current.mapChipBg, Hex("#1c2029"));
+                b.Coche.text = "✕";
+                b.Coche.color = Braise;
+                b.Verbe.text = Lib("verdict", "PERDU");
+                b.Verbe.color = Braise;
+                b.Sous.text = TexteRemise(JourCourant());
+            }
+        }
+
+        /// <summary>« remise dans N jours » — DÉRIVÉ, aucune clé ne le porte (juge-données Q7) :
+        /// les jetons se remettent à plat quand l'époque hebdomadaire avance,
+        /// `week_epoch = floor(game_day / 7)` (`flag-weekly-reset-tick.service.ts:22`), donc la
+        /// prochaine remise tombe au jour 7·(⌊j/7⌋+1), soit dans 7 − (j mod 7) jours. Jour 12 ⇒ 2 :
+        /// exactement le cadre v4-2.
+        /// ⚠️ Déduit de la source, pas observé : le tick WEEKLY tire à une minute qui n'est pas
+        /// forcément le début du jour. Jour inconnu ⇒ la phrase de l'annexe de la maquette, sans
+        /// chiffre, plutôt qu'un chiffre inventé.</summary>
+        public static string TexteRemise(int? jourCourant)
+        {
+            if (jourCourant == null || jourCourant.Value < 0)
+                return Lib("verdict", "jusqu’à la remise hebdomadaire");
+            int n = 7 - (jourCourant.Value % 7);
+            return n == 1 ? Lib("verdict", "remise demain") : "remise dans " + n + " jours";
+        }
+
+        /// <summary>Le jour courant n'est pas dans `GET /v1/flag-review` (S5-g) : il vient de
+        /// `session/open.opened_game_day`, que le shell tient déjà. Lu comme ⑤ le lit
+        /// (`DecisionDetailScreenController.cs:153`) — sans toucher `AppShell`.</summary>
+        private int? JourCourant()
+        {
+            if (jourCourantPose.HasValue) return jourCourantPose;
+            AppShell shell = FindFirstObjectByType<AppShell>();
+            return shell != null && shell.LastSessionOpen != null ? shell.LastSessionOpen.opened_game_day : (int?)null;
+        }
+
+        /// <summary>Test hook — pose le jour courant sans shell ni session.</summary>
+        public void PoserJourCourant(int jour) => jourCourantPose = jour;
+
+        /// <summary>⑯-3 — le tampon après l'appui long : `batch_confirmed_count` (`service.ts:311`)
+        /// était stocké et jamais rendu. Cadre v4-2 : « 17 ROUTINES SIGNÉES · d’un seul appui — le
+        /// registre est clos pour aujourd’hui », tampon vert, cachet « SIGNÉ ».
+        /// ⚠️ Un compte de 0 (second appel, idempotent — D13) ne signe RIEN : la maquette ne dessine
+        /// pas cet état, et « 0 ROUTINES SIGNÉES » affirmerait un geste qui n'a rien fait.</summary>
+        public void AppliquerLotSigne(int confirmees)
+        {
+            if (confirmees <= 0) return;
+            lotSigne = confirmees;
+            PeindreLotSigne();
+        }
+
+        private void PeindreLotSigne()
+        {
+            if (tamponRoot == null) return;
+            tamponFond.color = Hex("#dccfa9");
+            tamponBord.sprite = ProceduralUI.RoundedRectOutline((int)Px(11f), Px(2f), VertCachet);
+            tamponLibelle.text = lotSigne + Lib("bloc", " ROUTINES SIGNÉES");
+            tamponLibelle.color = VertCachet;
+            tamponSous.text = Lib("bloc", "d’un seul appui — le registre est clos pour aujourd’hui");
+            tamponSous.color = VertCachet;
+            tamponCachet.SetActive(true);
+            BatchConfirmButton.enabled = false;
+        }
+
+        // ---- test hooks : un billet après son verdict, le tampon après le lot -------------------
+        public bool BilletGesteActif(string flagId) =>
+            billets.TryGetValue(flagId, out BilletVue b) && b.Rendre.interactable && b.Garder.enabled;
+        public float BilletBulleAlpha(string flagId) => billets.TryGetValue(flagId, out BilletVue b) ? b.Bulle.alpha : -1f;
+        public string BilletVerbe(string flagId) => billets.TryGetValue(flagId, out BilletVue b) ? b.Verbe.text : null;
+        public string BilletSous(string flagId) => billets.TryGetValue(flagId, out BilletVue b) ? b.Sous.text : null;
+        public string BilletCoche(string flagId) => billets.TryGetValue(flagId, out BilletVue b) ? b.Coche.text : null;
+        public RectTransform Registre => registreRoot;
+        /// <summary>Le texte de la chip de fréquence du billet, ou null s'il n'en porte pas.</summary>
+        public string BilletFrequence(string flagId) =>
+            billets.TryGetValue(flagId, out BilletVue b) && b.Frequence != null ? b.Frequence.text : null;
+        public Image BilletBuste(string flagId) => billets.TryGetValue(flagId, out BilletVue b) ? b.Buste : null;
+        public bool TamponSigne => lotSigne > 0 && tamponCachet != null && tamponCachet.activeSelf;
+        public bool TamponGesteActif => BatchConfirmButton != null && BatchConfirmButton.enabled;
+        public Image TamponFond => tamponFond;
+
+        // ------------------------------------------------------------------ ⑯-4 la phrase
+
+        /// <summary>Test hook — le texte riche de la phrase du dernier billet posé.</summary>
+        public string DernierePhrase { get; private set; }
+
+        private const string PrefixeRoutine = "core_loops.flag_discipline.routine.";
+
+        // ------------------------------------------------------------------ ⑯-8 la phrase de v4-3
+
+        /// <summary>⑯-8 — la phrase d'un billet, choisie par ce que la carte porte :
+        ///   · un SUJET résolu (`subject_name_i18n`, clé servie) ET une condition (`deviation_condition`) ⇒ la
+        ///     phrase de v4-3, sujet en gras (`PhraseDeCondition`) ;
+        ///   · sinon ⇒ la phrase de v4-0 de son générateur (`PhraseDe`), celle d'aujourd'hui. Tant que la pile
+        ///     ne sert pas S5, rien ne change à l'écran.</summary>
+        public static (string titre, string motif) PhraseDuBillet(FlagCardDto card)
+        {
+            string descriptorKey = card != null && card.descriptor != null ? card.descriptor.key : null;
+            string sujet = card != null ? SujetResolu(card.subject_name_i18n) : null;
+            if (sujet != null && card != null && !string.IsNullOrEmpty(card.deviation_condition))
+                return PhraseDeCondition(card.deviation_condition, descriptorKey, sujet);
+            return PhraseDe(descriptorKey);
+        }
+
+        /// <summary>Le nom du sujet, résolu par le catalogue — ou null si la carte n'en porte pas, ou si la clé
+        /// n'est pas servie. ⚠️ JAMAIS la clé nue : un billet qui dirait « la tournée game.fiction.route.named »
+        /// serait pire que la phrase de v4-0.</summary>
+        public static string SujetResolu(SujetRefDto sujet)
+        {
+            if (sujet == null || string.IsNullOrEmpty(sujet.key)) return null;
+            if (!MafiaCleanCity.I18n.I18nCatalog.Connait(sujet.key)) return null;
+            var p = new Dictionary<string, string>();
+            SujetParamsDto s = sujet.@params;
+            if (s != null)
+            {
+                Poser(p, "enseigne", s.enseigne); Poser(p, "district", s.district); Poser(p, "block", s.block);
+                Poser(p, "rang", s.rang); Poser(p, "depart", s.depart); Poser(p, "arrivee", s.arrivee);
+                Poser(p, "index", s.index);
+            }
+            string nom = MafiaCleanCity.I18n.I18nCatalog.Traduire(sujet.key, p);
+            return string.IsNullOrWhiteSpace(nom) ? null : nom;
+        }
+
+        private static void Poser(Dictionary<string, string> p, string cle, string valeur)
+        {
+            if (!string.IsNullOrEmpty(valeur)) p[cle] = valeur;
+        }
+
+        /// <summary>⑯-8 — les phrases de v4-3, une par `deviation_condition` (atelier
+        /// `10-mots-revue-etats-v4-3.md` §3, `8a1ea438`). Le sujet entre NU, sans article, après un nom commun
+        /// (« la tournée », « les comptes de ») : un nom libre, « départ → arrivée » et « n° 7 » y entrent sans
+        /// accord à calculer. Il est en GRAS (un nom propre) et en `<nobr>` : le nom d'une façade porte son propre
+        /// tiret (« Laverie du Quai — Sarnes… »), et l'atelier demande de ne jamais couper la ligne entre le nom
+        /// et ce tiret.
+        /// Domaine complet (`deviation-condition.ts`, 12 valeurs) — chaque valeur rend une phrase :
+        ///   · 4 conditions atteignables en production (tournées, façade) ⇒ leur phrase ;
+        ///   · `baseline` et `unrecorded` ⇒ le repli générique (arbitrage de l'orchestrateur : « rien d'anormal » ne
+        ///     se prétend pas, et `unrecorded` ne sait pas) ;
+        ///   · les 6 conditions du Lek, des précurseurs et de la réserve ⇒ la phrase de v4-0 de leur générateur :
+        ///     aucun chemin de production ne les atteint aujourd'hui, et l'atelier écrira leurs phrases avec
+        ///     leurs conditions.</summary>
+        public static (string titre, string motif) PhraseDeCondition(string condition, string descriptorKey, string sujet)
+        {
+            string gabarit, motif;
+            switch (condition)
+            {
+                case "route_saturated_or_severed":
+                    gabarit = Lib("phrase", "J’ai réacheminé la tournée {sujet}");
+                    motif = Lib("phrase", "— l’ancien trajet ne passait plus : saturé, ou coupé.");
+                    break;
+                case "route_meandering":
+                    gabarit = Lib("phrase", "J’ai replanifié la tournée {sujet}");
+                    motif = Lib("phrase", "— le trajet fait plus de détours que d’habitude.");
+                    break;
+                case "audit_pinned":
+                    gabarit = Lib("phrase", "J’ai rapproché les comptes de {sujet}");
+                    motif = Lib("phrase", "— la façade est épinglée pour un contrôle.");
+                    break;
+                case "buffer_loaded":
+                    gabarit = Lib("phrase", "J’ai rapproché les comptes de {sujet}");
+                    motif = Lib("phrase", "— il passe plus d’argent par la caisse que la façade ne peut en justifier.");
+                    break;
+                case "baseline":
+                case "unrecorded":
+                    return PhraseDe(null);
+                default:
+                    return PhraseDe(descriptorKey);
+            }
+            var p = new Dictionary<string, string> { { "sujet", "<nobr><b>" + sujet + "</b></nobr>" } };
+            return (MafiaCleanCity.I18n.IcuFormat.Formater(gabarit, p), motif);
+        }
+
+        /// <summary>Le domaine de `deviation_condition`, recopié de `deviation-condition.ts`
+        /// (`DEVIATION_CONDITIONS`, back `04f35021`) — exposé pour que les gardes balayent la population ENTIÈRE.</summary>
+        public static readonly string[] DomaineConditions =
+        {
+            "route_saturated_or_severed", "route_meandering", "audit_pinned", "buffer_loaded",
+            "dealer_compromised", "lek_rhythm_off", "precursor_scarcity", "precursor_price_rising",
+            "stash_filling", "stash_heated", "baseline", "unrecorded",
+        };
+
+        /// <summary>⑯ B05 — la chip de fréquence. Domaine : `FlagFrequencyBand = 'none' | 'occasional' |
+        /// 'frequent'` (`convergence.ts:35` ; `0` signalement sur 7 jours ⇒ `none`, sous le seuil ⇒ `occasional`).
+        /// ⇒ `frequent` → « signale souvent » ; `occasional` → « signale rarement » ; **`none` → AUCUNE chip**.
+        /// Tranché par l'atelier (`10-…` §7, `4620fa78`) : la fenêtre compte les signalements des 7 derniers jours,
+        /// et chaque billet de ⑯ EST un signalement de ce lieutenant. `none` n'arrive donc que pour un billet de plus
+        /// d'une semaine, ce que la chip du jour (« J11 ») dit déjà. Dire « rarement » pour zéro dirait autre chose que
+        /// la donnée. (⑦ recevra un mot pour `none`, « ne signale rien » : ce n'est pas ⑯.)
+        /// Toute autre valeur (casse comprise) ⇒ null : pas de chip plutôt qu'une bande déguisée.</summary>
+        public static string FrequenceChip(string bande)
+        {
+            switch (bande)
+            {
+                case "frequent": return Lib("chip", "signale souvent");
+                case "occasional": return Lib("chip", "signale rarement");
+                default: return null;   // `none` compris : aucune chip (atelier 4620fa78)
+            }
+        }
+
+        /// <summary>⑯-5 — le buste de TOUT lieutenant de ⑯, le même que ⑥ et ① (`Resources/Lieutenant/`).</summary>
+        public const string BusteLieutenant = "Lieutenant/ui_element_buste_lieutenant";
+
+        /// <summary>⑯-4 — la phrase d'un billet : un TITRE à la première personne, au passé composé (ce
+        /// que le lieutenant a FAIT de la routine), et un MOTIF qui dit l'écart à l'habitude, jamais un
+        /// chiffre ni un nom propre. Une par générateur, indexée sur `descriptor.key`, sans paramètre.
+        /// SOURCE : atelier `Tools/atelier-2026-09-22/08-revue-du-jour-phrases-et-decor.md` (`b95dd8c7`).
+        ///   · courier_scheduling, lek_rotation, front_shop_reconciliation : le texte de v4-0, RATIFIÉ
+        ///     (« nickel », user, 2026-08-25), verbatim.
+        ///   · precursor_order, stash_reorder, et le REPLI : propositions de l'atelier dans le même
+        ///     registre, **NON RATIFIÉES** (veto de l'user ouvert). Leurs motifs disent l'UNION des
+        ///     conditions de leur score, parce que le back calcule la condition et la jette (S5-b) :
+        ///     un motif qui en choisirait une mentirait une fois sur deux.
+        ///     ⚠️ Ces deux phrases ne peuvent PAS s'afficher aujourd'hui : aucun archétype ne donne les
+        ///     rôles 2 ni 9 (`lieutenant-archetype.ts:213`), et `routine-item-generation.service.ts:117`
+        ///     saute le signalement faute de lieutenant. Leur preuve est donc un test de la TABLE.
+        ///   · le repli couvre une clé absente, inconnue, ou un générateur futur. C'est la phrase honnête
+        ///     d'un lieutenant qui signale sans pouvoir dire quoi.
+        /// « Vous validez ? » (fin du premier billet de v4-0 seulement, absent de v4-2) n'est PAS une
+        /// phrase de générateur : non repris.</summary>
+        public static (string titre, string motif) PhraseDe(string descriptorKey)
+        {
+            string generateur = descriptorKey != null && descriptorKey.StartsWith(PrefixeRoutine)
+                                && descriptorKey.EndsWith(".descriptor")
+                ? descriptorKey.Substring(PrefixeRoutine.Length,
+                                          descriptorKey.Length - PrefixeRoutine.Length - ".descriptor".Length)
+                : null;
+            switch (generateur)
+            {
+                case "courier_scheduling":
+                    return (Lib("phrase", "J’ai replanifié la tournée des coursiers"),
+                            Lib("phrase", "— l’horaire habituel n’a pas été tenu."));
+                case "lek_rotation":
+                    return (Lib("phrase", "J’ai fait tourner le coin de vente"),
+                            Lib("phrase", "— le Lek tournait hors du rythme convenu."));
+                case "front_shop_reconciliation":
+                    return (Lib("phrase", "J’ai rapproché les comptes de la façade"),
+                            Lib("phrase", "— la caisse déclarée s’écarte de l’habitude."));
+                case "precursor_order":
+                    return (Lib("phrase", "J’ai passé la commande de précurseurs"),
+                            Lib("phrase", "— le marché est plus tendu que d’habitude."));
+                case "stash_reorder":
+                    return (Lib("phrase", "J’ai allégé le stock"),
+                            Lib("phrase", "— il était plus chargé, ou plus regardé, que d’habitude."));
+                default:
+                    return (Lib("phrase", "J’ai suivi la routine"),
+                            Lib("phrase", "— quelque chose s’écartait de l’habitude."));
+            }
+        }
+
+        // ⛔ LA BANDE DU MILIEU S'APPELLE `standard`, PAS `normal` — lue dans le TYPE du back
+        //    (`convergence.ts:39` : `TrustBudgetBucket = 'low' | 'standard' | 'high'`), confirmée par le
+        //    corps réel `juge-donnees/revue-du-jour/maquette-2026-08-25/mesures/flag-review-standard.json`.
+        //    Ces deux tables attendaient `"normal"` : un lieutenant à trois jetons sur cinq s'affichait
+        //    0 pastille et « RÉSERVE · — », sans rien signaler, comme une bande inconnue.
+        //    Même classe que le badge « NOUVELLE » mort sur `"new"` (`AncienneteChip`) : une valeur
+        //    SUPPOSÉE au lieu d'être lue dans le domaine. « NORMALE » reste le MOT de la maquette ; ce
+        //    qui change, c'est la valeur servie qui l'allume.
+        public static int ReservePastilles(string bucket)
         {
             switch (bucket)
             {
                 case "high": return 3;
-                case "normal": return 2;
+                case "standard": return 2;
                 case "low": return 1;
                 default: return 0;
             }
         }
 
-        private static string ReserveLibelle(string bucket)
+        public static string ReserveLibelle(string bucket)
         {
             switch (bucket)
             {
                 case "high": return "ÉLEVÉE";
-                case "normal": return "NORMALE";
+                case "standard": return "NORMALE";
                 case "low": return "FAIBLE";
                 default: return "—";
             }
@@ -601,7 +956,7 @@ namespace MafiaCleanCity.Shell
             return t;
         }
 
-        private static void Chip(Transform parent, string libelle, Color couleur)
+        private static TextMeshProUGUI Chip(Transform parent, string libelle, Color couleur)
         {
             GameObject go = new GameObject("Chip", typeof(RectTransform));
             go.transform.SetParent(parent, false);
@@ -617,6 +972,7 @@ namespace MafiaCleanCity.Shell
             TextMeshProUGUI t = Texte(go.transform, "Lib", libelle, Px(6.3f), couleur,
                                       DesignTokens.Current.primaryFont, TextAlignmentOptions.Center);
             t.characterSpacing = 8f;
+            return t;
         }
 
         // --------------------------------------------------------------- UI build
@@ -664,17 +1020,121 @@ namespace MafiaCleanCity.Shell
             rvlg.childForceExpandHeight = false;
             rowsRoot = (RectTransform)rowsGo.transform;
 
-            GameObject emptyGo = new GameObject("EmptyState", typeof(RectTransform));
-            emptyGo.transform.SetParent(transform, false);
-            emptyStateText = emptyGo.AddComponent<TextMeshProUGUI>();
-            emptyStateText.font = DesignTokens.Current.hudSerifFont;
-            emptyStateText.fontSize = Px(11f);
-            emptyStateText.color = Creme2;
-            emptyStateText.alignment = TextAlignmentOptions.Center;
-            emptyStateText.gameObject.SetActive(false);
-
+            // ⑯-7 — v4-1 : les tabourets vides sont au comptoir, AU-DESSUS de la plaque (ordre du `.comptoir`).
+            tabourets = RevueDuJourDecor.ConstruireTabourets(transform);
+            tabourets.SetActive(false);
+            BuildPlaqueDuMatin();
             BuildRegistre();
             BuildTampon();
+
+            // ⑯-7 — le décor se pose EN DERNIER mais passe PREMIER enfant (`SetAsFirstSibling`) : il est
+            // dessiné sous tout le comptoir, et hors de la mise en page (`ignoreLayout`).
+            decor = RevueDuJourDecor.Construire(transform);
+        }
+
+        /// <summary>⑯-2 — LA PLAQUE DU MATIN (cadre v4-1, « personne au comptoir »). La version
+        /// précédente posait une phrase NUE, centrée, grise, en 11 px, sur le noir : le juge ⊥ r1
+        /// (2026-09-06) l'a mesurée contre le cadre ratifié — F3 plaque et surtitre absents, F4 or
+        /// devenu gris chaud, F6 hauteur de capitale −18,9 %, F7 centrée au lieu de ferrée à gauche.
+        /// Tout vient de la CSS du cadre (`ecrans-brennar-4.html`, `.plaque`, `.kicker`, `.titre`),
+        /// convertie par `Px`, jamais recopiée à l'œil :
+        ///   .plaque  border-radius 14 · padding 11/14/12 ·
+        ///            linear-gradient(160deg, rgba(22,33,53,.72), rgba(9,14,24,.88)) ·
+        ///            border 1px #ffffff24 · ::before inset 3px, border 1px #ffffff10, radius 11
+        ///   .kicker  8px · letter-spacing .22em · uppercase · --creme-2
+        ///   .titre   Georgia 15px · --or-vif · letter-spacing .04em · margin-top 2px
+        /// ⚠️ F5 (titre « en gras » selon le juge) N'EST PAS repris : la CSS ne pose AUCUNE graisse
+        ///    sur `.titre`. L'écart de fût mesuré relève plus probablement de l'arbitrage A1 (famille
+        ///    de police Noto/DejaVu) que d'un `font-weight` : poser un gras que la maquette n'écrit
+        ///    pas serait corriger l'instrument avec le sujet.</summary>
+        private void BuildPlaqueDuMatin()
+        {
+            plaqueVide = new GameObject("PlaqueDuMatin", typeof(RectTransform));
+            plaqueVide.transform.SetParent(transform, false);
+            // Le masque arrondit le verre : un `LinearGradient` est un carré, sans lui les coins
+            // sortent droits (même montage que les rangs de ⑥, `LieutenantScreenController`).
+            Image forme = plaqueVide.AddComponent<Image>();
+            forme.sprite = ProceduralUI.RoundedRectMask((int)Px(14f));
+            forme.type = Image.Type.Sliced;
+            Mask masque = plaqueVide.AddComponent<Mask>();
+            masque.showMaskGraphic = false;
+
+            // Les RVB de `.plaque` sont ceux des jetons de verre des lieutenants (#162135, #090e18) ;
+            // seules les OPACITÉS diffèrent (.72/.88 ici, .58/.74 là-bas). La plaque flotte sur le
+            // décor, donc sur un fond INCONNU : l'opacité CSS passe par l'ajustement déclaré de ①,
+            // jamais recopiée (le navigateur mélange en sRGB, ce projet en linéaire).
+            Color verreHaut = DesignTokens.Current.lieutenantGlassTop;
+            Color verreBas = DesignTokens.Current.lieutenantGlassBottom;
+            verreHaut.a = ProceduralUI.AlphaVoileSurFondQuelconque(verreHaut, 0.72f, out _);
+            verreBas.a = ProceduralUI.AlphaVoileSurFondQuelconque(verreBas, 0.88f, out _);
+            GameObject verre = new GameObject("Verre", typeof(RectTransform));
+            verre.transform.SetParent(plaqueVide.transform, false);
+            Etirer((RectTransform)verre.transform, 0f);
+            Image verreImg = verre.AddComponent<Image>();
+            verreImg.sprite = ProceduralUI.LinearGradient(64, 160f, verreHaut, verreBas);
+            verreImg.type = Image.Type.Simple;
+            verreImg.raycastTarget = false;
+            verre.AddComponent<LayoutElement>().ignoreLayout = true;
+
+            Filet(plaqueVide.transform, "Bord", 0f, Px(14f), Hex("#ffffff24"));
+            Filet(plaqueVide.transform, "FiletInterieur", Px(3f), Px(11f), Hex("#ffffff10"));
+
+            VerticalLayoutGroup v = plaqueVide.AddComponent<VerticalLayoutGroup>();
+            v.padding = new RectOffset((int)Px(14f), (int)Px(14f), (int)Px(11f), (int)Px(12f));
+            v.spacing = Px(2f);
+            v.childControlWidth = true;
+            v.childControlHeight = true;
+            v.childForceExpandWidth = true;
+            v.childForceExpandHeight = false;
+            v.childAlignment = TextAnchor.UpperLeft;
+
+            // texte posé au RENDU, pas ici : `Awake` précède le chargement du catalogue i18n.
+            plaqueSurtitre = Texte(plaqueVide.transform, "Surtitre", "",
+                                   Px(8f), Creme2, DesignTokens.Current.primaryFont);
+            plaqueSurtitre.fontStyle = FontStyles.UpperCase;
+            plaqueSurtitre.characterSpacing = 22f;
+
+            emptyStateText = Texte(plaqueVide.transform, "Titre", "", Px(15f), OrVif,
+                                   DesignTokens.Current.hudSerifFont);
+            emptyStateText.characterSpacing = 4f;
+            emptyStateText.enableWordWrapping = true;
+
+            plaqueVide.SetActive(false);
+        }
+
+        /// <summary>Un disque plein centré, hors mise en page (⑯-6, l'anneau de la pastille).</summary>
+        private static void Disque(Transform parent, string nom, float diametre, Color couleur)
+        {
+            GameObject go = new GameObject(nom, typeof(RectTransform));
+            go.transform.SetParent(parent, false);
+            go.AddComponent<LayoutElement>().ignoreLayout = true;
+            RectTransform rt = (RectTransform)go.transform;
+            rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.sizeDelta = new Vector2(diametre, diametre);
+            Image img = go.AddComponent<Image>();
+            img.sprite = ProceduralUI.RadialDisc((int)diametre, couleur, couleur);
+            img.raycastTarget = false;
+        }
+
+        private static void Etirer(RectTransform rt, float retrait)
+        {
+            rt.anchorMin = Vector2.zero;
+            rt.anchorMax = Vector2.one;
+            rt.offsetMin = new Vector2(retrait, retrait);
+            rt.offsetMax = new Vector2(-retrait, -retrait);
+        }
+
+        /// <summary>Un filet de bord, hors mise en page, en retrait de `retrait` sur les quatre côtés.</summary>
+        private static void Filet(Transform parent, string nom, float retrait, float rayon, Color couleur)
+        {
+            GameObject go = new GameObject(nom, typeof(RectTransform));
+            go.transform.SetParent(parent, false);
+            Etirer((RectTransform)go.transform, retrait);
+            Image img = go.AddComponent<Image>();
+            img.sprite = ProceduralUI.RoundedRectOutline((int)rayon, Px(1f), couleur);
+            img.type = Image.Type.Sliced;
+            img.raycastTarget = false;
+            go.AddComponent<LayoutElement>().ignoreLayout = true;
         }
 
         /// <summary>Le registre — un papier, pas un panneau : c'est le seul objet clair de l'écran,
@@ -686,6 +1146,23 @@ namespace MafiaCleanCity.Shell
             Image papier = reg.AddComponent<Image>();
             papier.sprite = ProceduralUI.VerticalGradient((int)Px(40f), PapierHaut, PapierBas);
             papier.type = Image.Type.Sliced;
+            registreRoot = (RectTransform)reg.transform;
+            // ⑯-6 — F11 : `.registre{transform:rotate(-.4deg)}`. Le cahier est POSÉ de travers sur le zinc : sans
+            // cette inclinaison, le juge r1 l'a vu, il « redevient une barre d'interface ». rotate(-.4deg) en CSS
+            // (anti-horaire à l'écran) = +0,4° en z. La rotation ne touche pas la mise en page.
+            registreRoot.localRotation = Quaternion.Euler(0f, 0f, 0.4f);
+            // ⑯-6 — F8 : `.registre::before` — le DOS du livre, 6px à gauche, toute la hauteur,
+            // `repeating-linear-gradient(180deg, #93402c 0 6px, #7a3322 6px 12px)`, hors mise en page.
+            GameObject tranche = new GameObject("Tranche", typeof(RectTransform));
+            tranche.transform.SetParent(reg.transform, false);
+            tranche.AddComponent<LayoutElement>().ignoreLayout = true;
+            RectTransform trt = (RectTransform)tranche.transform;
+            trt.anchorMin = Vector2.zero;
+            trt.anchorMax = new Vector2(0f, 1f);
+            trt.pivot = new Vector2(0f, 0.5f);
+            trt.offsetMin = Vector2.zero;
+            trt.offsetMax = new Vector2(Px(6f), 0f);
+            RayuresVerticales.Poser(tranche, Rouge, Hex("#7a3322"), Px(12f));
 
             HorizontalLayoutGroup h = reg.AddComponent<HorizontalLayoutGroup>();
             h.padding = new RectOffset((int)Px(10f), (int)Px(10f), (int)Px(8f), (int)Px(8f));
@@ -707,7 +1184,18 @@ namespace MafiaCleanCity.Shell
 
             GameObject pt = new GameObject("Pastille", typeof(RectTransform));
             pt.transform.SetParent(reg.transform, false);
-            pt.AddComponent<Image>().sprite = ProceduralUI.RadialDisc((int)Px(10f), VertCachet, VertCachet);
+            // ⑯-6 — F9 : `.registre .pt{box-shadow:0 0 0 2px #dccfa9, 0 0 0 3px #4f7f3f66}` — le point vert porte
+            // un liseré de papier (2px) puis un filet vert à .4 (1px). Le juge r1 : « la pastille perd son anneau ».
+            // Trois disques concentriques, du plus grand (dessous) au point (dessus), hors mise en page : la
+            // pastille garde sa place de 10. Le filet vert est à .4 sur un fond CONNU, le papier : sa couleur est
+            // donc résolue EXACTEMENT pour le mélange linéaire (`CouleurPourMelangeLineaire`), pas recopiée.
+            //   fond = le papier à mi-hauteur, milieu de #efe4c6 → #dccfa9 (la pastille est centrée en hauteur).
+            Color papierMilieu = Color.Lerp(PapierHaut, PapierBas, 0.5f);
+            Color filetVert = ProceduralUI.CouleurPourMelangeLineaire(VertCachet, papierMilieu, 0.4f, out _);
+            filetVert.a = 0.4f;
+            Disque(pt.transform, "Filet", Px(16f), filetVert);
+            Disque(pt.transform, "Lisere", Px(14f), PapierBas);
+            Disque(pt.transform, "Point", Px(10f), VertCachet);
             LayoutElement ptLe = pt.AddComponent<LayoutElement>();
             ptLe.preferredWidth = Px(10f);
             ptLe.preferredHeight = Px(10f);
@@ -729,7 +1217,7 @@ namespace MafiaCleanCity.Shell
             quoi.AddComponent<LayoutElement>().flexibleWidth = 1f;
             Texte(quoi.transform, "Titre", "La routine, tenue sans vous", Px(11.5f), EncrePapier,
                   DesignTokens.Current.hudSerifFont);
-            Texte(quoi.transform, "Sous", "rien n'a dévié", Px(8f), EncrePapier2,
+            Texte(quoi.transform, "Sous", "rien n’a dévié", Px(8f), EncrePapier2,
                   DesignTokens.Current.primaryFont);
 
             registreCompte = Texte(reg.transform, "Compte", "0", Px(18f), Rouge,
@@ -743,10 +1231,25 @@ namespace MafiaCleanCity.Shell
         {
             tamponRoot = new GameObject("Tampon", typeof(RectTransform));
             tamponRoot.transform.SetParent(transform, false);
-            Image fond = tamponRoot.AddComponent<Image>();
-            fond.sprite = ProceduralUI.RoundedRectOutline((int)Px(11f), Px(2f), Rouge);
-            fond.type = Image.Type.Sliced;
-            fond.color = Hex("#d9cca9");
+            // ⛔ LE PAPIER DU TAMPON ÉTAIT TRANSPARENT. `RoundedRectOutline` dessine un TRAIT (sa doc :
+            //    « ceci le fait pour un TRAIT ») : le fond #d9cca9 ne faisait que TEINDRE le contour
+            //    rouge, et l'intérieur laissait voir la scène. Jamais vu : le juge r1 n'a jamais eu de
+            //    tampon à mesurer (F2). ⇒ La surface pleine est un `RoundedRectMask` teint ; le bord
+            //    (`border:2px solid #93402c`) et le filet (`::before inset 3px #93402c55 r7`) sont posés
+            //    dessus, comme les deux filets de la plaque du matin.
+            tamponFond = tamponRoot.AddComponent<Image>();
+            tamponFond.sprite = ProceduralUI.RoundedRectMask((int)Px(11f));
+            tamponFond.type = Image.Type.Sliced;
+            tamponFond.color = Hex("#d9cca9");
+            GameObject bordGo = new GameObject("Bord", typeof(RectTransform));
+            bordGo.transform.SetParent(tamponRoot.transform, false);
+            Etirer((RectTransform)bordGo.transform, 0f);
+            tamponBord = bordGo.AddComponent<Image>();
+            tamponBord.sprite = ProceduralUI.RoundedRectOutline((int)Px(11f), Px(2f), Rouge);
+            tamponBord.type = Image.Type.Sliced;
+            tamponBord.raycastTarget = false;
+            bordGo.AddComponent<LayoutElement>().ignoreLayout = true;
+            Filet(tamponRoot.transform, "FiletInterieur", Px(3f), Px(7f), Hex("#93402c55"));
 
             VerticalLayoutGroup v = tamponRoot.AddComponent<VerticalLayoutGroup>();
             v.padding = new RectOffset((int)Px(12f), (int)Px(12f), (int)Px(10f), (int)Px(10f));
@@ -764,9 +1267,44 @@ namespace MafiaCleanCity.Shell
             tamponSous = Texte(tamponRoot.transform, "Sous", "appui long", Px(8.5f), Rouge,
                                DesignTokens.Current.primaryFont, TextAlignmentOptions.Center);
 
+            BuildCachet();
+
             BatchConfirmButton = tamponRoot.AddComponent<LongPressButton>();
             BatchConfirmButton.OnLongPressCompleted += () => StartCoroutine(RequestBatchConfirm());
             tamponRoot.SetActive(false);
+        }
+
+        /// <summary>`.cachet-rouge` : « SIGNÉ », Georgia 10px, espacement .2em, bord 2px #93402c,
+        /// encre #93402c, papier #efe4c6cc, `right:10px; top:-12px; rotate(-14deg)` — hors mise en
+        /// page, à cheval sur le bord haut du tampon. Caché jusqu'au lot signé.</summary>
+        private void BuildCachet()
+        {
+            tamponCachet = new GameObject("Cachet", typeof(RectTransform));
+            tamponCachet.transform.SetParent(tamponRoot.transform, false);
+            tamponCachet.AddComponent<LayoutElement>().ignoreLayout = true;
+            RectTransform rt = (RectTransform)tamponCachet.transform;
+            rt.anchorMin = rt.anchorMax = new Vector2(1f, 1f);
+            rt.pivot = new Vector2(1f, 0.5f);
+            rt.anchoredPosition = new Vector2(-Px(10f), 0f);
+            rt.localRotation = Quaternion.Euler(0f, 0f, 14f);
+            Image papier = tamponCachet.AddComponent<Image>();
+            papier.sprite = ProceduralUI.RoundedRectMask((int)Px(3f));
+            papier.type = Image.Type.Sliced;
+            papier.color = Hex("#efe4c6cc");
+            papier.raycastTarget = false;
+            Filet(tamponCachet.transform, "Bord", 0f, Px(3f), Rouge);
+            HorizontalLayoutGroup h = tamponCachet.AddComponent<HorizontalLayoutGroup>();
+            h.padding = new RectOffset((int)Px(8f), (int)Px(8f), (int)Px(3f), (int)Px(3f));
+            h.childControlWidth = true;
+            h.childControlHeight = true;
+            ContentSizeFitter ajuste = tamponCachet.AddComponent<ContentSizeFitter>();
+            ajuste.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+            ajuste.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            TextMeshProUGUI signe = Texte(tamponCachet.transform, "Signe", "SIGNÉ", Px(10f), Rouge,
+                                          DesignTokens.Current.hudSerifFont, TextAlignmentOptions.Center);
+            signe.characterSpacing = 20f;
+            signe.fontStyle = FontStyles.Bold;
+            tamponCachet.SetActive(false);
         }
 
         /// <summary>Jointure client — `tenure_bucket` par lieutenant, la maquette la pose comme

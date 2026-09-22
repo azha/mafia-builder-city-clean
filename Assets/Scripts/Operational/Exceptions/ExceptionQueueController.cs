@@ -127,6 +127,7 @@ namespace MafiaCleanCity.Operational.Exceptions
                 new MafiaCleanCity.I18n.I18nClient { BaseUrl = baseUrl }, Token);
 
             yield return LoadQueue();
+            yield return ChargerRoster();   // ⑨-3 — le rôle des attendants, par jointure
         }
 
         public IEnumerator SignIn()
@@ -247,6 +248,8 @@ namespace MafiaCleanCity.Operational.Exceptions
             ClearRows();
 
             int n = Cards.Length;
+            // ⑨-2 — `.zinc.haut` (66 %) quand la file attend ; `.zinc.haut.vide` (52 %) quand personne (cadre 16).
+            if (decor != null) decor.AppliquerZinc(n == 0 ? ZincVide : ZincFile, DosFile);
             ligneAmbiance.text = n == 0
                 ? "Personne ne fait la queue — le comptoir est vide"
                 : (n == 1 ? "Un seul attend vos ordres" : EnLettres(n) + " attendent vos ordres")
@@ -314,75 +317,171 @@ namespace MafiaCleanCity.Operational.Exceptions
             Render();
         }
 
+        // ================================================================ ⑨-3 qui attend
+
+        /// <summary>⑨-3 — LA FILE AU COMPTOIR, cadre 14 (`.file`, `.attendant`, `.rail`, `.ville-b`) :
+        ///   `.file{display:flex; align-items:flex-end; gap:10px; padding:0 10px}` — tassée à GAUCHE, alignée par le BAS
+        ///     (juge r1 m3, m4 : elle s'étirait sur toute la largeur et s'alignait par le haut) ;
+        ///   `.attendant` 60px, opacité .78 ; `.premier` 74px, opacité 1, chevron ▼ or-vif 9px au-dessus (r1 M9) ;
+        ///   `.medl` carré arrondi 44 / r14 (58 / r18 pour le premier) AVEC le buste des lieutenants (r1 B2) ou, pour la
+        ///     ville, un « B » or-vif Georgia 20 gras (`.ville-b`, r1 m7) — `MedaillonAuComptoir`, sans anneau ni halo or ;
+        ///   `.rail` 34×3 : braise = grave, or = modérée, cyan = légère (r1 M3 : trois rails gris ; m5 : taille constante) ;
+        ///   `b` le NOM (serif, 10px, crème — même taille pour tous, r1 m6) ; `small` « rôle · gravité · priorité »
+        ///     (6,5px, capitales, crème-2) — le rôle par jointure `GET /v1/lieutenants` (`archetype`), absent tant qu'elle
+        ///     n'a pas répondu ;
+        ///   au-delà de TROIS : un « +N » à la suite (r1 M8 : « Cinq attendent » pour trois dessinés). ⚠️ La maquette ne
+        ///     montre jamais plus de trois attendants : ce « +N » est une décision client, au style du nom, à juger.
+        /// Chaque attendant ouvre SA carte (⑩) au toucher, comme avant.</summary>
         private void RendreFile()
         {
             for (int i = fileRoot.childCount - 1; i >= 0; i--)
                 UnityEngine.Object.Destroy(fileRoot.GetChild(i).gameObject);
 
+            Sprite buste = Resources.Load<Sprite>(MedaillonAuComptoir.CheminBusteLieutenant);
             for (int i = 0; i < Cards.Length && i < 3; i++)
             {
                 ExceptionCardDto c = Cards[i];
                 bool premier = i == 0;
                 GameObject a = NewUI($"Attendant{i}", fileRoot);
 
-                // ⛔ CHAQUE ATTENDANT OUVRE SA PROPRE CARTE — c'est LE chemin joueur vers ⑩.
-                // Avant : seul le tampon ouvrait, et toujours celle du PREMIER. Les deux autres
-                // attendants étaient dessinés, alignés, lisibles… et morts au toucher. Un écran
-                // qui montre trois interlocuteurs et n'en laisse joindre qu'un ment sur ce qu'il
-                // propose, sans qu'aucune garde structurelle ne s'en aperçoive : les trois
-                // existent, aux bonnes places, avec les bonnes valeurs.
+                // ⛔ CHAQUE ATTENDANT OUVRE SA PROPRE CARTE — c'est LE chemin joueur vers ⑩ (capture par valeur).
                 Image fondA = a.AddComponent<Image>();
                 fondA.color = new Color(0f, 0f, 0f, 0f);   // cible de toucher, invisible
                 Button ba = a.AddComponent<Button>();
                 ba.targetGraphic = fondA;
-                ExceptionCardDto carteDeCetAttendant = c;   // capture par valeur : sinon les
-                ba.onClick.AddListener(() => OpenDetail(carteDeCetAttendant)); // trois ouvrent la dernière
+                ExceptionCardDto carteDeCetAttendant = c;
+                ba.onClick.AddListener(() => OpenDetail(carteDeCetAttendant));
+                if (!premier) a.AddComponent<CanvasGroup>().alpha = 0.78f;   // `.attendant{opacity:.78}`
 
                 VerticalLayoutGroup v = a.AddComponent<VerticalLayoutGroup>();
                 v.spacing = Px(3f);
                 v.childControlWidth = true; v.childControlHeight = true;
-                v.childForceExpandWidth = true; v.childForceExpandHeight = false;
-                v.childAlignment = TextAnchor.UpperCenter;
-                AddLayoutElement(a, preferredWidth: Px(premier ? 74f : 60f));
+                v.childForceExpandWidth = false; v.childForceExpandHeight = false;
+                v.childAlignment = TextAnchor.LowerCenter;
+                AddLayoutElement(a, preferredWidth: Px(premier ? 74f : 60f), minWidth: Px(premier ? 74f : 60f));
 
-                GameObject med = NewUI("Medaillon", a.transform);
-                Image mi = med.AddComponent<Image>();
-                mi.color = premier ? AccentSevere : TextSecondary;
-                AddLayoutElement(med, preferredHeight: Px(premier ? 58f : 44f));
+                if (premier)
+                {
+                    TextMeshProUGUI chevron = NouveauTexteMaquette(a.transform, "Chevron", "▼", 9f, OrVif);
+                    chevron.alignment = TextAlignmentOptions.Center;
+                }
 
-                // Le rail sous le médaillon PORTE la sévérité — c'est le canal de la maquette.
+                bool ville = !ExceptionBandes.ParleUnLieutenant(c);
+                GameObject med = MedaillonAuComptoir.Construire(a.transform, "Medaillon",
+                    Px(premier ? 58f : 44f), Px(premier ? 18f : 14f), Mathf.Max(1f, Px(1f)), ville ? null : buste);
+                if (ville) LettreDeLaVille(med.transform, 20f);
+
+                // Le rail sous le médaillon PORTE la gravité — le canal de la maquette.
                 GameObject rail = NewUI("Rail", a.transform);
-                rail.AddComponent<Image>().color = SeverityAccent(c.severity_band);
-                AddLayoutElement(rail, preferredHeight: Px(3f));
+                rail.AddComponent<Image>().color = CouleurRail(c.severity_band);
+                AddLayoutElement(rail, preferredWidth: Px(34f), minWidth: Px(34f), preferredHeight: Px(3f), minHeight: Px(3f));
 
-                TextMeshProUGUI nom = NouveauTexteMaquette(a.transform, "Nom",
-                    QuiParle(c), premier ? 11f : 9.5f, TextPrimary);
+                TextMeshProUGUI nom = NouveauTexteMaquette(a.transform, "Nom", QuiParle(c), 10f, Creme);
+                nom.font = DesignTokens.Current.hudSerifFont;
                 nom.alignment = TextAlignmentOptions.Center;
                 TrackText(nom, nom.text);
 
-                TextMeshProUGUI bandes = NouveauTexteMaquette(a.transform, "Bandes",
-                    ExceptionBandes.Ligne(c.severity_band, c.priority_band), 8f, TextSecondary);
+                TextMeshProUGUI bandes = NouveauTexteMaquette(a.transform, "Bandes", LigneAttendant(c), 6.5f, Creme2);
+                bandes.fontStyle = FontStyles.UpperCase;
+                bandes.characterSpacing = 10f;                  // `letter-spacing:.1em`
                 bandes.alignment = TextAlignmentOptions.Center;
+                bandes.enableWordWrapping = true;
                 TrackText(bandes, bandes.text);
 
-                // screen_a8 : la catégorie de couche conflit, EN TOUTES LETTRES.
-                // ⛔ Le canon la veut « doublée texte » (F2/a11y) — donc pas d'icône seule, et
-                // surtout pas une couleur seule. Rien n'est dessiné quand la catégorie n'est pas
-                // reconnue : une pastille par défaut aurait la même forme qu'une pastille mesurée.
+                // screen_a8 : la catégorie de couche conflit, EN TOUTES LETTRES (inchangé).
                 string cat = CategorieConflit(c);
                 if (cat != null)
                 {
-                    TextMeshProUGUI pastille = NouveauTexteMaquette(a.transform, "Categorie",
-                                                                    cat, 7.5f, TextSecondary);
+                    TextMeshProUGUI pastille = NouveauTexteMaquette(a.transform, "Categorie", cat, 6.5f, Creme2);
                     pastille.alignment = TextAlignmentOptions.Center;
                     TrackText(pastille, pastille.text);
                 }
             }
+
+            int enPlus = Cards.Length - 3;
+            if (enPlus > 0)
+            {
+                // CHROME, non suivi : un compte de cartes, pas un scalaire de simulation (même statut que le sous-titre du
+                // tampon et le compte d'escalades).
+                TextMeshProUGUI plus = NouveauTexteMaquette(fileRoot, "EnPlus", "+" + enPlus, 10f, Creme2);
+                plus.font = DesignTokens.Current.hudSerifFont;
+                plus.alignment = TextAlignmentOptions.Bottom;
+            }
         }
 
-        /// <summary>Le premier de la file PARLE : médaillon + bulle avec son nom, le contexte, les
-        /// deux bandes en pastilles, et sa réplique. C'est le cœur de la mise en scène ratifiée —
-        /// « le premier parle », et la file attend derrière.</summary>
+        /// <summary>La couleur du rail d'une gravité — `.rail.g` braise, `.rail.m` or, `.rail.l` cyan ; hors domaine ⇒ la
+        /// teinte neutre, jamais celle de « léger ».</summary>
+        public static Color CouleurRail(string gravite)
+        {
+            switch (ExceptionBandes.RangGravite(gravite))
+            {
+                case 2:  return DesignTokens.Current.hudGaugeArcHot;          // --braise
+                case 1:  return DesignTokens.Current.hudMoneyUnderlineGold;   // --or
+                case 0:  return DesignTokens.Current.hudGaugeArcCold;         // --cyan
+                default: return DesignTokens.Current.onSurfaceSecondary;
+            }
+        }
+
+        /// <summary>« rôle · gravité · priorité » (`.attendant small`). Le rôle vient de la JOINTURE (`archetype` de
+        /// `GET /v1/lieutenants`, mot de `FamilleLabels`) ; sans lui (la ville, ou la jointure pas encore revenue), la
+        /// ligne commence à la gravité — jamais un rôle inventé.</summary>
+        public string LigneAttendant(ExceptionCardDto c)
+        {
+            string role = RoleDe(c);
+            string bandes = ExceptionBandes.Ligne(c.severity_band, c.priority_band);
+            return string.IsNullOrEmpty(role) ? bandes : role + " · " + bandes;
+        }
+
+        private string RoleDe(ExceptionCardDto c)
+        {
+            if (roster == null || !ExceptionBandes.ParleUnLieutenant(c)) return null;
+            foreach (MafiaCleanCity.Operational.Lieutenant.RosterRow r in roster)
+                if (r != null && r.lieutenant_id == c.lieutenant_id && !string.IsNullOrEmpty(r.archetype))
+                    return MafiaCleanCity.Operational.FamilleLabels.Archetype(r.archetype);
+            return null;
+        }
+
+        private MafiaCleanCity.Operational.Lieutenant.RosterRow[] roster;
+
+        /// <summary>La jointure du rôle : `GET /v1/lieutenants`, APRÈS la file, non bloquante (si elle échoue, les rôles
+        /// manquent, l'écran reste lisible) ; puis la file est redessinée.</summary>
+        private IEnumerator ChargerRoster()
+        {
+            MafiaCleanCity.Operational.Lieutenant.RosterRow[] r = null;
+            yield return new MafiaCleanCity.Operational.Lieutenant.LieutenantClient { BaseUrl = baseUrl }
+                .ListLieutenants(Token, rows => r = rows, (code, msg) => { });
+            if (Destroyed || r == null) yield break;
+            roster = r;
+            Render();
+        }
+
+        /// <summary>Test hook — pose le roster sans réseau (même effet que `ChargerRoster` quand il revient).</summary>
+        public void PoserRosterPourTest(MafiaCleanCity.Operational.Lieutenant.RosterRow[] r)
+        {
+            roster = r;
+            Render();
+        }
+
+        private static Color Creme => DesignTokens.Current.hudCreme;
+        private static Color Creme2 => DesignTokens.Current.hudCremeSecondary;
+        private static Color OrVif => DesignTokens.Current.hudMoneyGold;
+
+        // ================================================================ ⑨-4 celui qui parle
+
+        /// <summary>⑨-4 — LE PREMIER DE LA FILE PARLE, cadre 14 (`.parle`, `.bulle`, `.chip`) — juge r1 M4 (la bulle avait
+        /// perdu nom en or, ligne de rôle, pastilles, queue, liseré, coins) et M5 (aucun coin arrondi, aucun liseré) :
+        ///   `.parle{display:flex; gap:10px; align-items:flex-end}` ; `.parle .medl` 60×60, rayon 18 (`MedaillonAuComptoir`,
+        ///     buste ou « B », sans or) ;
+        ///   `.bulle` : `linear-gradient(160deg, rgba(28,40,60,.9), rgba(12,18,30,.96))` (le bas par le jeton
+        ///     `hudBarGlassBottom`, d = 1,4 ; le haut #1c283c n'a pas de jeton proche), bord 1px #ffffff2a, rayon 14, la QUEUE
+        ///     (`::before`, carré de 12 tourné de 45°, à gauche, 10px du bas) ; ⚠️ le coin bas-gauche à 4px n'est pas repris
+        ///     (un seul rayon par sprite), la queue le recouvre ;
+        ///   `.qui b` le NOM, Georgia 12 or-vif ; `.qui` « · rôle · contexte », 8px capitales .14em crème-2 ;
+        ///   `.chip` gravité et priorité : 6,5px capitales, bord 1px et encre crème-2, rayon 7 (les classes `.sev-*`/`.pri-*`
+        ///     ne sont définies nulle part dans la page : c'est le `.chip` de base, ce que montre le PNG) ;
+        ///   `p` la RÉPLIQUE, Georgia 13 crème, interligne 1,3 — « Patron — … » quand un lieutenant parle en prose.
+        /// Le contexte : « toute la ville » pour la ville (cadre 17) ; « au bâtiment touché » quand une issue vise un bâtiment
+        /// (`effect.target_building_id`, cadre 14) ; rien sinon — jamais un lieu inventé.</summary>
         private void RendreParleur()
         {
             for (int i = parleRoot.childCount - 1; i >= 0; i--)
@@ -390,92 +489,340 @@ namespace MafiaCleanCity.Operational.Exceptions
             if (Cards.Length == 0) return;
 
             ExceptionCardDto c = Cards[0];
-            GameObject med = NewUI("MedaillonParleur", parleRoot);
-            med.AddComponent<Image>().color = AccentSevere;
-            AddLayoutElement(med, preferredWidth: Px(52f), preferredHeight: Px(52f));
+            bool ville = !ExceptionBandes.ParleUnLieutenant(c);
+            GameObject med = MedaillonAuComptoir.Construire(parleRoot, "MedaillonParleur", Px(60f), Px(18f),
+                Mathf.Max(1f, Px(1f)), ville ? null : Resources.Load<Sprite>(MedaillonAuComptoir.CheminBusteLieutenant));
+            if (ville) LettreDeLaVille(med.transform, 20f);
 
             GameObject bulle = NewUI("Bulle", parleRoot);
-            bulle.AddComponent<Image>().color = CardBg;
+            AddLayoutElement(bulle, flexibleWidth: 1);
+            Image forme = bulle.AddComponent<Image>();
+            forme.sprite = ProceduralUI.RoundedRectMask(PxI(14f));
+            forme.type = Image.Type.Sliced;
+            forme.color = Color.white;
+            bulle.AddComponent<Mask>().showMaskGraphic = false;
+            GameObject verre = NewUI("Verre", bulle.transform);
+            Stretch((RectTransform)verre.transform, Vector2.zero, Vector2.zero);
+            verre.AddComponent<LayoutElement>().ignoreLayout = true;
+            Image verreImg = verre.AddComponent<Image>();
+            verreImg.sprite = ProceduralUI.LinearGradient(64, 160f, VerreBulleHaut, VerreBulleBas);
+            verreImg.raycastTarget = false;
+            Filet(bulle.transform, "Bord", 0f, PxI(14f), Mathf.Max(1f, Px(1f)), Hex("#ffffff2a"));
+            Queue(parleRoot, bulle.transform.GetSiblingIndex());
+
             VerticalLayoutGroup v = bulle.AddComponent<VerticalLayoutGroup>();
             v.padding = new RectOffset(PxI(12f), PxI(12f), PxI(9f), PxI(9f));
-            v.spacing = Px(4f);
+            v.spacing = Px(3f);
             v.childControlWidth = true; v.childControlHeight = true;
             v.childForceExpandWidth = true; v.childForceExpandHeight = false;
-            AddLayoutElement(bulle, flexibleWidth: 1);
 
-            TextMeshProUGUI qui = NouveauTexteMaquette(bulle.transform, "Qui",
-$"{QuiParle(c)} · {ExceptionBandes.Ligne(c.severity_band, c.priority_band)}", 8f, TextSecondary);
-            TrackText(qui, qui.text);
+            TextMeshProUGUI nom = NouveauTexteMaquette(bulle.transform, "QuiNom", QuiParle(c), 12f, OrVif);
+            nom.font = DesignTokens.Current.hudSerifFont;
+            nom.fontStyle = FontStyles.Bold;
+            TrackText(nom, nom.text);
 
-            TextMeshProUGUI dit = NouveauTexteMaquette(bulle.transform, "Replique",
-                Replique(c),
-                10f, TextPrimary);
+            string contexte = ContexteDuPremier(c);
+            if (!string.IsNullOrEmpty(contexte))
+            {
+                TextMeshProUGUI ctx = NouveauTexteMaquette(bulle.transform, "QuiContexte", contexte, 8f, Creme2);
+                ctx.fontStyle = FontStyles.UpperCase;
+                ctx.characterSpacing = 14f;                      // `.bulle .qui{letter-spacing:.14em}`
+                ctx.enableWordWrapping = true;
+                TrackText(ctx, ctx.text);
+            }
+
+            GameObject pastilles = NewUI("Pastilles", bulle.transform);
+            HorizontalLayoutGroup hp = pastilles.AddComponent<HorizontalLayoutGroup>();
+            hp.spacing = Px(5f);
+            hp.childControlWidth = true; hp.childControlHeight = true;
+            hp.childForceExpandWidth = false; hp.childForceExpandHeight = false;
+            hp.childAlignment = TextAnchor.MiddleLeft;
+            Pastille(pastilles.transform, "Gravite", ExceptionBandes.Gravite(c.severity_band));
+            Pastille(pastilles.transform, "Priorite", ExceptionBandes.Priorite(c.priority_band));
+
+            TextMeshProUGUI dit = NouveauTexteMaquette(bulle.transform, "Replique", RepliqueDuPremier(c), 13f, Creme);
+            dit.font = DesignTokens.Current.hudSerifFont;
             dit.enableWordWrapping = true;
-            // ⚠️ Texte LIBRE du producteur : chrome, suivi au composant et pas au corpus (il peut
-            // légitimement porter des chiffres — c'est ce que dit l'en-tête R2.2 de ce fichier).
+            // ⚠️ Texte du PRODUCTEUR : chrome, suivi au composant et pas au corpus (il peut porter des chiffres — en-tête R2.2).
         }
 
-        /// <summary>Le tampon : l'action suggérée, en gros. La maquette la donne comme le geste par
-        /// défaut, l'appui long ouvrant la main complète (le détail ⑩).</summary>
+        /// <summary>Le contexte de celui qui parle, `.qui` après le nom : « rôle · lieu ». Chacun ABSENT quand la donnée
+        /// manque (pas de jointure, pas de cible) — jamais un mot de remplissage.</summary>
+        public string ContexteDuPremier(ExceptionCardDto c)
+        {
+            var parts = new List<string>();
+            string role = RoleDe(c);
+            if (!string.IsNullOrEmpty(role)) parts.Add(role);
+            if (!ExceptionBandes.ParleUnLieutenant(c)) parts.Add(Lib("toute la ville"));
+            else if (VisUnBatiment(c)) parts.Add(Lib("au bâtiment touché"));
+            return parts.Count == 0 ? null : "· " + string.Join(" · ", parts);
+        }
+
+        private static bool VisUnBatiment(ExceptionCardDto c)
+        {
+            if (c == null || c.candidate_actions == null) return false;
+            foreach (CandidateActionDto a in c.candidate_actions)
+                if (a != null && a.effect != null && !string.IsNullOrEmpty(a.effect.target_building_id)) return true;
+            return false;
+        }
+
+        /// <summary>La réplique du premier, cadre 14 : « Patron — ils ont retourné… » — l'adresse DEVANT, la première
+        /// lettre de la phrase servie passée en minuscule (atelier 11-… §3.3 : « ⑨ met l'adresse devant, et passe « Ils » en
+        /// minuscule »). Seulement quand un LIEUTENANT parle en PROSE (la règle des guillemets, `ExceptionBandes.Replique`) :
+        /// la ville parle sans guillemets et sans « Patron », un identifiant se montre nu.</summary>
+        public static string RepliqueDuPremier(ExceptionCardDto c)
+        {
+            string texte = TexteServeur(c);
+            bool lieutenant = ExceptionBandes.ParleUnLieutenant(c);
+            string brut = ExceptionBandes.Replique(texte, lieutenant);
+            if (!lieutenant || string.IsNullOrWhiteSpace(texte) || !texte.Trim().Contains(" ")) return brut;
+            string t = texte.Trim();
+            // minuscule initiale seulement devant une lettre suivie d'une minuscule : « Ils » → « ils », jamais « LT », « Lt. »
+            if (t.Length > 1 && char.IsUpper(t[0]) && char.IsLower(t[1]) && !t.StartsWith("Lt"))
+                t = char.ToLowerInvariant(t[0]) + t.Substring(1);
+            return "« " + Lib("Patron") + " — " + t + " »";
+        }
+
+        private void Pastille(Transform parent, string nom, string texte)
+        {
+            GameObject go = NewUI(nom, parent);
+            Image bord = go.AddComponent<Image>();
+            bord.sprite = ProceduralUI.RoundedRectOutline(PxI(7f), Mathf.Max(1f, Px(1f)), Creme2);
+            bord.type = Image.Type.Sliced;
+            bord.raycastTarget = false;
+            HorizontalLayoutGroup h = go.AddComponent<HorizontalLayoutGroup>();
+            h.padding = new RectOffset(PxI(5f), PxI(5f), PxI(1f), PxI(1f));
+            h.childControlWidth = true; h.childControlHeight = true;
+            h.childForceExpandWidth = false;
+            TextMeshProUGUI t = NouveauTexteMaquette(go.transform, "Lib", texte, 6.5f, Creme2);
+            t.fontStyle = FontStyles.UpperCase;
+            t.characterSpacing = 8f;                              // `.chip{letter-spacing:.08em}`
+            TrackText(t, t.text);
+        }
+
+        /// <summary>`.bulle::before{left:-7px; bottom:10px; 12×12; rotate(45deg)}` — la queue qui pointe vers le médaillon, de la
+        /// couleur du bas du verre. Elle DÉBORDE de la bulle (qui masque ses enfants) : elle vit donc dans la rangée `.parle`,
+        /// hors mise en page, JUSTE AVANT la bulle, placée par ancres depuis la CSS — médaillon 60 + écart 10 − 7 px de
+        /// débord, 10 px du bas (la rangée étire la bulle sur sa hauteur : leurs bas coïncident).</summary>
+        private void Queue(Transform rangee, int rangBulle)
+        {
+            GameObject q = NewUI("QueueBulle", rangee);
+            q.AddComponent<LayoutElement>().ignoreLayout = true;
+            RectTransform rt = (RectTransform)q.transform;
+            rt.anchorMin = rt.anchorMax = new Vector2(0f, 0f);
+            rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.sizeDelta = new Vector2(Px(12f), Px(12f));
+            rt.anchoredPosition = new Vector2(Px(60f + 10f - 7f + 6f), Px(10f + 6f));
+            rt.localRotation = Quaternion.Euler(0f, 0f, 45f);
+            Image img = q.AddComponent<Image>();
+            img.color = VerreBulleBas;
+            img.raycastTarget = false;
+            q.transform.SetSiblingIndex(rangBulle);
+        }
+
+        private void LettreDeLaVille(Transform medaillon, float corps)
+        {
+            TextMeshProUGUI b = NouveauTexteMaquette(medaillon, "VilleB", "B", corps, OrVif);
+            b.font = DesignTokens.Current.hudSerifFont;
+            b.fontStyle = FontStyles.Bold;
+            b.alignment = TextAlignmentOptions.Center;
+            b.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+            var brt = (RectTransform)b.transform;
+            brt.anchorMin = Vector2.zero; brt.anchorMax = Vector2.one;
+            brt.offsetMin = Vector2.zero; brt.offsetMax = Vector2.zero;
+        }
+
+        // `rgba(28,40,60,.9)` / `rgba(12,18,30,.96)` : le haut sans jeton proche (d = 7,3), le bas par `hudBarGlassBottom`
+        // (d = 1,4, TD-612). Opacités CSS passées par l'ajustement linéaire (la bulle flotte sur le décor).
+        private static Color VerreBulleHaut
+        {
+            get { Color c = Hex("#1c283c"); c.a = ProceduralUI.AlphaVoileSurFondQuelconque(c, 0.90f, out _); return c; }
+        }
+        private static Color VerreBulleBas
+        {
+            get
+            {
+                Color t = DesignTokens.Current.hudBarGlassBottom;
+                Color c = new Color(t.r, t.g, t.b, 1f);
+                c.a = ProceduralUI.AlphaVoileSurFondQuelconque(c, 0.96f, out _);
+                return c;
+            }
+        }
+
+        // ================================================================ ⑨-1 le tampon qui résout
+
+        /// <summary>⑨-1 — LE TAMPON, cadre 14 ratifié : `.tampon` crème (#d9cca9), bord 2px #93402c, filet intérieur
+        /// (inset 3px #93402c55), encre #93402c en capitales espacées (.22em), sous-titre « suggéré · appui long — sa main :
+        /// N autres issues › ». Même famille que le tampon de ⑯ (papier PLEIN : `RoundedRectMask` teint, jamais un contour teint).
+        /// DEUX GESTES sur le même objet, comme le jeton de ⑯ :
+        ///   · APPUI LONG ⇒ résoudre la suggérée, par la VRAIE route, avec le `method` et l'`id` SERVIS (Lot 0 D4 : L0.2 est
+        ///     fermé côté back — l'ancien commentaire de ce site disait l'inverse, voir l'écart 5e57bc6d §0.2) ;
+        ///   · TAP ⇒ ouvrir sa main (⑩), c'est le « › » du sous-titre.
+        /// Remplace un pavé corail plein à texte blanc (juge r1 M2 : contraste 2,71:1, sous le plancher) qui ouvrait ⑩ au tap
+        /// et ne résolvait jamais.</summary>
         private void RendreTampon()
         {
             for (int i = tamponRoot.childCount - 1; i >= 0; i--)
                 UnityEngine.Object.Destroy(tamponRoot.GetChild(i).gameObject);
+            tamponLibelle = null; tamponSous = null; tamponAppui = null;
             if (Cards.Length == 0) return;
 
-            GameObject t = NewUI("TamponBouton", tamponRoot);
-            Image fond = t.AddComponent<Image>();
-            fond.color = AccentSevere;
-            Stretch((RectTransform)t.transform, Vector2.zero, Vector2.zero);
-            Button b = t.AddComponent<Button>();
-            b.targetGraphic = fond;
             ExceptionCardDto c = Cards[0];
-            b.onClick.AddListener(() => OpenDetail(c));
+            (string method, string id)? choix = ChoixDuTampon(c);
+
+            GameObject t = NewUI("TamponBouton", tamponRoot);
+            Stretch((RectTransform)t.transform, Vector2.zero, Vector2.zero);
+            Image papier = t.AddComponent<Image>();
+            papier.sprite = ProceduralUI.RoundedRectMask(PxI(11f));
+            papier.type = Image.Type.Sliced;
+            papier.color = Hex("#d9cca9");
+            Filet(t.transform, "Bord", 0f, PxI(11f), Px(2f), EncreTampon);
+            Filet(t.transform, "FiletInterieur", Px(3f), PxI(7f), Px(1f), Hex("#93402c55"));
 
             VerticalLayoutGroup v = t.AddComponent<VerticalLayoutGroup>();
+            v.padding = new RectOffset(PxI(12f), PxI(12f), PxI(10f), PxI(10f));
+            v.spacing = Px(2f);
             v.childControlWidth = true; v.childControlHeight = true;
             v.childForceExpandWidth = true; v.childForceExpandHeight = false;
             v.childAlignment = TextAnchor.MiddleCenter;
 
-            // ⚠️ RECTIFICATION en cours d'écriture : j'avais noté que l'action suggérée était
-            // innommable à cause du défaut L0.2 (ids d'action et `method` du resolve sans table de
-            // liaison). C'est vrai pour RÉSOUDRE, pas pour AFFICHER — le corps porte
-            // `suggested_action.label`, et la maquette l'écrit en toutes lettres sur le tampon.
-            // ★ J'ai failli reporter sur l'affichage une limite qui ne pèse que sur l'action.
-            //   Une dette mal située fait renoncer à ce qu'elle n'empêche pas.
-            string action = c.suggested_action != null && !string.IsNullOrEmpty(c.suggested_action.label)
-                ? c.suggested_action.label.ToUpperInvariant()
-                : "OUVRIR SA MAIN";
-            TextMeshProUGUI libelle = NouveauTexteMaquette(t.transform, "Libelle",
-                action, 12f, TextPrimary);
-            libelle.alignment = TextAlignmentOptions.Center;
-            libelle.characterSpacing = 22f;   // `.tampon{letter-spacing:.22em}`
-            TrackText(libelle, libelle.text);
+            // Le libellé : l'action suggérée, en toutes lettres (par sa clé i18n si servie, sa prose sinon).
+            string action = choix.HasValue ? LibelleAction(c.suggested_action).ToUpperInvariant() : Lib("OUVRIR SA MAIN");
+            tamponLibelle = NouveauTexteMaquette(t.transform, "Libelle", action, 12f, EncreTampon);
+            tamponLibelle.alignment = TextAlignmentOptions.Center;
+            tamponLibelle.characterSpacing = 22f;             // `.tampon{letter-spacing:.22em}`
+            tamponLibelle.fontStyle = FontStyles.Bold;        // `.tampon{font-weight:800}`
+            tamponLibelle.enableWordWrapping = true;
+            TrackText(tamponLibelle, tamponLibelle.text);
 
-            // ⚠️ La maquette écrit ici l'action suggérée (« RÉPARER LE BÂTIMENT ») et annonce
-            // « appui long — sa main : 5 autres issues ». On ne peut PAS l'écrire aujourd'hui :
-            // le document de lot le mesure, `candidate_actions` et le `method` du resolve sont
-            // deux vocabulaires SANS table de liaison (défaut L0.2). Nommer une action suggérée
-            // reviendrait à inventer la correspondance que le back ne fournit pas.
-            // ⇒ Le bouton ouvre donc la main complète, où le joueur CHOISIT — c'est le geste que
-            //   la maquette met derrière l'appui long, promu geste principal tant que le maillon
-            //   manque. L'écran ne promet rien qu'il ne puisse tenir.
-            // ⛔ MESURÉ sur la capture du 2026-09-02 : ce sous-titre était en `TextSecondary`
-            // (`onSurfaceSecondary`, #8a979c) et son contraste sur l'aplat corail du tampon
-            // tombait à 0.096 — sous le seuil de 0.18 de `LisibiliteDuTexte`, quand le titre
-            // juste au-dessus mesurait 0.456.
-            // ★ `onSurfaceSecondary` est une encre pour la SURFACE sombre. Posée sur un accent,
-            //   elle n'est pas « discrète », elle est illisible. Sur un aplat d'accent, la
-            //   sourdine doit venir de l'ALPHA de l'encre sur accent — même famille que le titre,
-            //   atténuée — jamais d'un jeton fait pour un autre fond.
-            // C'est la faute que j'ai déjà commise sur ⑩ : un fond qu'on corrige change la
-            // contrainte sur TOUT ce qui est posé dessus, et rien ne vient le rappeler.
-            Color encreSurTampon = TextPrimary;
-            encreSurTampon.a = 0.8f;          // mesuré : contraste 0.365 sur le corail
-            TextMeshProUGUI sous = NouveauTexteMaquette(t.transform, "SousTexte",
-                Lib("il attend une consigne"), 8f, encreSurTampon);
-            sous.alignment = TextAlignmentOptions.Center;
-            TrackText(sous, sous.text);
+            Color encreSous = EncreTampon; encreSous.a = 0.85f;  // `.tampon small{opacity:.85}` sur fond CONNU (le papier)
+            tamponSous = NouveauTexteMaquette(t.transform, "SousTexte",
+                choix.HasValue ? SousTitreTampon(AutresIssues(c)) : Lib("il attend une consigne"), 8.5f, encreSous);
+            tamponSous.alignment = TextAlignmentOptions.Center;
+            tamponSous.enableWordWrapping = true;
+            // ⚠️ NON SUIVI, et c'est la règle de ce fichier, pas une dérogation : « sa main : 5 autres issues » porte un
+            //    CHIFFRE, que la maquette écrit (cadres 14 et 17). Ce n'est pas un scalaire de simulation — la cible de R2.2 —
+            //    mais le compte des CHOIX du joueur, qu'il voit dans sa main. Même statut que le compte d'escalades, déjà
+            //    du chrome (voir l'en-tête de `Render`). La garde `…_NoRawScalar` garde son motif entier.
+            if (!choix.HasValue) TrackText(tamponSous, tamponSous.text);
+
+            // Les deux gestes. `Button` tire AUSSI au relâchement d'un appui long : le tap est donc CONSOMMÉ quand l'appui
+            // long a abouti (même garde que le jeton de ⑯).
+            bool consomme = false;
+            Button tap = t.AddComponent<Button>();
+            tap.targetGraphic = papier;
+            ExceptionCardDto carte = c;
+            tap.onClick.AddListener(() =>
+            {
+                if (consomme) { consomme = false; return; }
+                OpenDetail(carte);
+            });
+            if (choix.HasValue)
+            {
+                tamponAppui = t.AddComponent<LongPressButton>();
+                tamponAppui.OnLongPressCompleted += () =>
+                {
+                    consomme = true;
+                    if (!Destroyed) StartCoroutine(ResoudreLaSuggestion());
+                };
+            }
+        }
+
+        /// <summary>Ce que l'appui long envoie : `(method, id)` de la suggestion SERVIE, ou null si la carte n'en porte pas
+        /// (`suggested_action` null ⇒ JsonUtility rend une instance vide : `id` vide). Le `method` est celui du back
+        /// (Lot 0 D4) ; ⚠️ s'il manque — pile antérieure à D4 seulement —, repli sur l'ancienne dérivation client
+        /// (`ExceptionDetailController.MethodFor`), déclaré ici plutôt que caché.</summary>
+        public static (string method, string id)? ChoixDuTampon(ExceptionCardDto c)
+        {
+            CandidateActionDto s = c != null ? c.suggested_action : null;
+            if (s == null || string.IsNullOrEmpty(s.id)) return null;
+            string method = !string.IsNullOrEmpty(s.method) ? s.method : ExceptionDetailController.MethodFor(s, false);
+            return (method, s.id);
+        }
+
+        /// <summary>Le nombre d'issues de sa main AUTRES que la suggérée — le « N autres issues » du sous-titre.</summary>
+        public static int AutresIssues(ExceptionCardDto c)
+        {
+            if (c == null || c.candidate_actions == null) return 0;
+            string idSug = c.suggested_action != null ? c.suggested_action.id : null;
+            int n = 0;
+            foreach (CandidateActionDto a in c.candidate_actions)
+                if (a != null && a.id != idSug) n++;
+            return n;
+        }
+
+        /// <summary>« suggéré · appui long — sa main : N autres issues › » (cadre 14 ; « 1 autre issue » au cadre 17).
+        /// ⚠️ Assemblé avec le nombre : `Libelle.De` ne prend pas de paramètre (dette X1, comme ⑯).</summary>
+        public static string SousTitreTampon(int autres)
+        {
+            string tete = Lib("suggéré · appui long — sa main");
+            if (autres <= 0) return tete + " ›";
+            // l'espace est ICI, pas dans le littéral : une valeur servie ne le porterait pas (le slug le rogne)
+            return tete + " : " + autres + " " + (autres == 1 ? Lib("autre issue") : Lib("autres issues")) + " ›";
+        }
+
+        private static string LibelleAction(CandidateActionDto a)
+        {
+            if (a == null) return string.Empty;
+            if (a.label_i18n != null && !string.IsNullOrEmpty(a.label_i18n.key)
+                && MafiaCleanCity.I18n.I18nCatalog.Connait(a.label_i18n.key))
+                return MafiaCleanCity.I18n.I18nCatalog.Traduire(a.label_i18n.key);
+            return a.label ?? string.Empty;
+        }
+
+        /// <summary>⑨-1 — résoudre la suggestion du PREMIER de la file, par `POST /v1/exceptions/:id/resolve` avec le
+        /// `method` et l'`id` servis. Puis la file est RECHARGÉE (le serveur fait foi ; l'état « après le tampon » de v4-17
+        /// est le lot ⑨-6). Public : la garde le pilote.</summary>
+        public IEnumerator ResoudreLaSuggestion()
+        {
+            EnsureInitialized();
+            if (Cards.Length == 0 || resolutionEnCours) yield break;
+            ExceptionCardDto c = Cards[0];
+            (string method, string id)? choix = ChoixDuTampon(c);
+            if (!choix.HasValue) yield break;
+            resolutionEnCours = true;
+            DerniereIssue = null;
+            DerniereErreurResolution = null;
+            yield return client.Resolve(c.exception_id, choix.Value.method, choix.Value.id, Token,
+                ok => DerniereIssue = ok.outcome,
+                (code, msg) => DerniereErreurResolution = $"{code}: {msg}");
+            resolutionEnCours = false;
+            if (Destroyed) yield break;
+            if (DerniereIssue != null) yield return LoadQueue();
+        }
+
+        private bool resolutionEnCours;
+        private TextMeshProUGUI tamponLibelle, tamponSous;
+        private LongPressButton tamponAppui;
+
+        // ---- test hooks ⑨-1
+        public ExceptionsClient ClientPourTest { get { EnsureInitialized(); return client; } }
+        public string DerniereIssue { get; private set; }
+        public string DerniereErreurResolution { get; private set; }
+        public string TamponLibelleTexte => tamponLibelle != null ? tamponLibelle.text : null;
+        public string TamponSousTexte => tamponSous != null ? tamponSous.text : null;
+        public LongPressButton TamponAppuiLong => tamponAppui;
+
+        private static Color EncreTampon => Hex("#93402c");
+
+        private static Color Hex(string h)
+        {
+            ColorUtility.TryParseHtmlString(h, out Color c);
+            return c;
+        }
+
+        /// <summary>Un filet arrondi hors mise en page, en retrait de `retrait` (le bord et le filet du tampon).</summary>
+        private static void Filet(Transform parent, string nom, float retrait, int rayon, float epaisseur, Color couleur)
+        {
+            GameObject go = NewUI(nom, parent);
+            RectTransform rt = (RectTransform)go.transform;
+            rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one;
+            rt.offsetMin = new Vector2(retrait, retrait); rt.offsetMax = new Vector2(-retrait, -retrait);
+            Image img = go.AddComponent<Image>();
+            img.sprite = ProceduralUI.RoundedRectOutline(rayon, epaisseur, couleur);
+            img.type = Image.Type.Sliced;
+            img.raycastTarget = false;
+            go.AddComponent<LayoutElement>().ignoreLayout = true;
         }
 
         /// <summary>Le lien vers les escalades archivées, « à relire à tête reposée ».</summary>
@@ -619,7 +966,8 @@ $"{QuiParle(c)} · {ExceptionBandes.Ligne(c.severity_band, c.priority_band)}", 8
             hf.spacing = Px(CssFileEcart);
             hf.childControlWidth = true; hf.childControlHeight = true;
             hf.childForceExpandWidth = false; hf.childForceExpandHeight = false;
-            hf.childAlignment = TextAnchor.LowerCenter;
+            hf.childAlignment = TextAnchor.LowerLeft;                   // `.file{align-items:flex-end}`, tassée à gauche
+            hf.padding = new RectOffset(PxI(10f), PxI(10f), 0, 0);      // `.file{padding:0 10px}`
             AddLayoutElement(fileRoot.gameObject, preferredHeight: Px(CssFileHaut));
 
             parleRoot = (RectTransform)NewUI("Parle", comptoirGo.transform).transform;
@@ -634,7 +982,45 @@ $"{QuiParle(c)} · {ExceptionBandes.Ligne(c.severity_band, c.priority_band)}", 8
 
             lienRoot = (RectTransform)NewUI("LienEscalades", comptoirGo.transform).transform;
             AddLayoutElement(lienRoot.gameObject, preferredHeight: Px(CssLienHaut));
+
+            // ⑨-2 — le décor, premier enfant de la racine, SOUS tout le comptoir, hors mise en page.
+            decor = DecorAuComptoir.Construire<DecorAuComptoir>(racineGo.transform, ParametresFile());
         }
+
+        // ================================================================ ⑨-2 le décor
+
+        /// <summary>⑨-2 — le décor de ⑨, cadres 14-18 (juge r1 B1 BLOQUANT : « la scène du comptoir est absente »,
+        /// 57 % du rect libre en noir pur). Source : atelier `11-exceptions-inventaire.md` §2.1 (`79ba0a03`) — le fond
+        /// `.scene.bar` est `bar_FINAL2.png` ENTIER (atelier `a026f50`, 1080×1350, sha256 8ad2255b…), prouvé au pixel
+        /// (écart 0,75/255), `background-position: center 20%`. Monté tel quel sous
+        /// `Assets/Art/Scenes/Resources/Scenes/sprite_environment_bar_nuit.png` (même patron que le Verge d'Or de ⑯).
+        /// Le même bar servira au Recrutement ⑳ : ce chemin n'est pas lié à ⑨.
+        /// `.degrade.fort` : #0a0f18 à d8 · 55 · 99 · f4 · ff (0, 18, 40, 56, 70 %). Zinc `.zinc.haut` 66 % (étagère 15 %),
+        /// `.zinc.haut.vide` 52 % quand personne n'attend (cadre 16).</summary>
+        public static DecorAuComptoir.Parametres ParametresFile() => new DecorAuComptoir.Parametres
+        {
+            CheminScene = CheminBar,
+            SourceLargeur = 1080f, SourceHauteur = 1350f,
+            Boite = new Rect(0f, 0f, 1080f, 1350f),
+            PositionVerticale = 0.20f,
+            CleDegrade = "degrade.fort",
+            Degrade = () => new[]
+            {
+                (0.00f, DecorAuComptoir.Voile(DecorAuComptoir.Nuit, 0xd8)),
+                (0.18f, DecorAuComptoir.Voile(DecorAuComptoir.Nuit, 0x55)),
+                (0.40f, DecorAuComptoir.Voile(DecorAuComptoir.Nuit, 0x99)),
+                (0.56f, DecorAuComptoir.Voile(DecorAuComptoir.Nuit, 0xf4)),
+                (0.70f, DecorAuComptoir.Voile(DecorAuComptoir.Nuit, 0xff)),
+                (1.00f, DecorAuComptoir.Voile(DecorAuComptoir.Nuit, 0xff)),
+            },
+            HauteurZinc = ZincFile, HauteurDos = DosFile,
+        };
+
+        public const string CheminBar = "Scenes/sprite_environment_bar_nuit";
+        public const float ZincFile = 0.66f, ZincVide = 0.52f, DosFile = 0.15f;
+
+        private DecorAuComptoir decor;
+        public DecorAuComptoir Decor => decor;
 
         private RectTransform racine, comptoir, fileRoot, parleRoot, tamponRoot, lienRoot;
         private TextMeshProUGUI ligneAmbiance;
@@ -659,13 +1045,10 @@ $"{QuiParle(c)} · {ExceptionBandes.Ligne(c.severity_band, c.priority_band)}", 8
         private int PxI(float css) =>
             EchelleMaquette.PxTrait(css, racine, EchelleMaquette.LargeurEcransBrennar4);
 
-        /// <summary>Qui parle. ⚠️ Le corps ne porte QUE `lieutenant_id` — le NOM du lieutenant
-        /// n'est pas projeté sur cette route, alors que la maquette l'écrit (« Cuisinier »,
-        /// « Logistique »). On montre donc « La ville » quand la carte n'est liée à personne, et un
-        /// libellé neutre sinon, plutôt qu'un nom inventé.
-        /// ★ Même règle que sur ㊲ : le trou se montre, il ne se comble pas. Y écrire un nom
-        ///   plausible serait le défaut exact que le juge données a trouvé là-bas.
-        /// Mesure du 2026-09-02 : `ExceptionCardDto` porte `lieutenant_id`, pas de champ de nom.</summary>
+        // ⑨-0 — L'ANCIEN COMMENTAIRE DE `QuiParle` ÉTAIT FAUX, et il faut le dire : il affirmait « le NOM du lieutenant
+        // n'est pas projeté sur cette route ». Il l'est depuis C3 (`lieutenant: {id, name}`, corps du 06/09 : « Lt. Rook »),
+        // et c'est le DTO qui le jetait (forme G). Un énoncé d'absence est daté : celui-ci avait expiré sans que rien ne
+        // rougisse, parce qu'un champ non déclaré ne lève rien.
         /// <summary>screen_a8 — la CATÉGORIE de couche conflit d'une exception, ou `null`.
         ///
         /// Le canon (`docs/tech/08a_conflict_layer_screens/screen_a8_…md`) fait de a8 une
@@ -711,8 +1094,7 @@ $"{QuiParle(c)} · {ExceptionBandes.Ligne(c.severity_band, c.priority_band)}", 8
             return null;
         }
 
-        private static string QuiParle(ExceptionCardDto c) =>
-            string.IsNullOrEmpty(c.lieutenant_id) ? MafiaCleanCity.I18n.Libelle.De("exceptions", "locuteur", "La ville") : "Votre lieutenant";
+        private static string QuiParle(ExceptionCardDto c) => ExceptionBandes.Locuteur(c);
 
         /// <summary>Item 0.6 — un littéral STATIQUE de ⑨ passe par `exceptions.bloc.<slug>`,
         /// repli sur le littéral (contrat de `Libelle`).
@@ -733,29 +1115,8 @@ $"{QuiParle(c)} · {ExceptionBandes.Ligne(c.severity_band, c.priority_band)}", 8
         ///   une dérivation côté client.
         /// ★ Décider ce qui N'A PAS le droit de devenir une clé demande plus d'attention que la
         ///   conversion elle-même.</summary>
-        /// <summary>La réplique du premier — LE point de passage du texte serveur de ⑨.
-        ///
-        /// Consomme `event_descriptor_i18n` quand le back l'envoie ET que le dictionnaire porte
-        /// la clé ; sinon la PROSE. Mesuré le 2026-09-02 : la référence est non nulle sur 2
-        /// cartes sur 6, et 11 des 12 clés demandées par ⑨/⑩ sont servies — donc ce branchement
-        /// change réellement ce que le joueur lit, contrairement à la mesure d'hier soir où le
-        /// recouvrement était nul.
-        ///
-        /// ⛔ ET IL RÈGLE UN DÉFAUT QUE LA CAPTURE SOUS CHROME AVAIT MONTRÉ : sur les 4 cartes du
-        /// seeder, `event_descriptor` n'est PAS de la prose — c'est un identifiant
-        /// (`exc_demo_teach_heat`), et ⑨ l'affichait entre guillemets comme une parole de
-        /// lieutenant. Un identifiant n'est pas une réplique : s'il n'a pas d'espace, il est
-        /// montré tel quel, sans guillemets, comme ㊱ montre ses clés.
-        /// ★ Mettre un identifiant technique dans la bouche d'un personnage, c'est le seul cas
-        ///   de la nuit où l'écran ne se contentait pas de taire une donnée : il en inventait
-        ///   une. Le trou se montre, il ne se déguise pas en dialogue.</summary>
-        private static string Replique(ExceptionCardDto c)
-        {
-            // La règle vit désormais dans `ExceptionBandes.Replique`, que ⑩ consomme aussi :
-            // elle était écrite ici seule, et l'écran de détail faisait l'inverse à un clic d'écart.
-            return ExceptionBandes.Replique(TexteServeur(c), ExceptionBandes.ParleUnLieutenant(c));
-        }
-
+        // ⑨-4 — `Replique(c)` est retirée : la réplique du premier passe par `RepliqueDuPremier` (la même règle des guillemets,
+        // `ExceptionBandes.Replique`, plus l'adresse « Patron — »), et `TexteServeur` reste le point de passage du texte serveur.
         /// <summary>Le texte serveur d'une carte : la référence i18n si elle est SERVIE, la prose
         /// sinon. `Connait` avant `Traduire` — une clé absente ne doit pas remplacer une prose
         /// lisible par une clé nue.</summary>

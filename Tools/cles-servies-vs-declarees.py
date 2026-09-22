@@ -41,6 +41,21 @@ RACINE = pathlib.Path(__file__).resolve().parent.parent
 #   de TOUS les objets au bout du chemin, sans plancher de taille ; un DTO ou un corps introuvable la rend ⛔ VIDE, jamais verte.
 APPARIEMENTS = [
     ("NomDeBatimentParamsDto", "GET_me_buildings.buildings[].name_i18n.params"),   # forme G de ㉝, 16cabe79
+    # ⑯ B05 — `flag_frequency_band` DÉCLARÉ avant d'être servi (S5-e, back 71ae6f89). Le seul corps figé à cartes date du
+    # 25/08, d'AVANT S5-e : la ligne dit « déclaré, non servi » jusqu'à ce qu'un corps vivant post-S5 soit figé ici.
+    ("FlagCardDto", "flag-review-seeded.cards[]"),
+    # ⑯-8 — les params de `subject_name_i18n` (S5-a, back 04f35021), DÉCLARÉS avant d'être servis (union des 3 gabarits).
+    # Aucun corps figé ne les porte encore : la ligne rend « EXPLICITE VIDE » jusqu'au premier corps vivant post-S5.
+    ("SujetParamsDto", "flag-review-seeded.cards[].subject_name_i18n.params"),
+    # ⑨-0 — la forme G de ⑨/⑩ : le recouvrement ne l'avait PAS vue sur le corps du 06/09 (il ne signalait que 2 clés, sur un
+    # corps plus ancien) ; les appariements explicites montraient lieutenant, script_complexity_band, suggested_disposition,
+    # method, source.
+    ("ExceptionCardDto", "GET_exceptions_queue.exceptions[]"),
+    ("CandidateActionDto", "GET_exceptions_queue.exceptions[].candidate_actions[]"),
+    ("CandidateActionDto", "GET_exceptions_queue.exceptions[].suggested_action"),
+    # ⑨ — la réplique du raid a sa clé (back 1f54235c : exception.raid.card.descriptor, params {}). La référence et ses params.
+    ("I18nRefDto", "GET_exceptions_queue.exceptions[].event_descriptor_i18n"),
+    ("I18nParamsVidesDto", "GET_exceptions_queue.exceptions[].event_descriptor_i18n.params"),
 ]
 
 
@@ -51,7 +66,11 @@ def champs_des_dto(racine):
     # ⛔ PAS D'ANCRE EN DÉBUT DE LIGNE : l'ancre `^\s*public` rendait invisibles les DTO écrits sur UNE ligne
     # (`public class X { public string a; public string b; }`) — dont `NomDeBatimentParamsDto`, le DTO de la forme G de ㉝.
     # Mesuré le 2026-09-22 par l'appariement explicite, qui l'a déclaré « introuvable » au lieu de passer vert.
-    champ = re.compile(r'(?<![\w.])public\s+(?:[\w\.\[\]<>]+)\s+(\w+)\s*;')
+    # ⛔ `@?` — un champ C# peut porter un mot-clé préfixé d'`@` (`public SujetParamsDto @params;`) : JsonUtility le
+    # sérialise sous le nom SANS `@` (`params`). Sans ce `@?`, l'oracle ne voyait pas le champ et déclarait « params » servi
+    # non déclaré sur une clé bel et bien déclarée. Mesuré le 2026-09-23 (⑨, I18nRefDto.@params ; et ⑯-8, SujetRefDto).
+    champ = re.compile(r'(?<![\w.])public\s+(?:[\w\.\[\]<>]+)\s+@?(\w+)\s*;')
+    serialisable = re.compile(r'\[Serializable\][^\[{};]*$')
     for p in (racine / 'Assets' / 'Scripts').rglob('*.cs'):
         s = p.read_text(encoding='utf-8', errors='replace')
         for m in decl.finditer(s):
@@ -67,7 +86,11 @@ def champs_des_dto(racine):
                 j += 1
             corps = s[i:j]
             f = set(champ.findall(corps))
-            if f: out.setdefault(nom, set()).update(f)
+            # ⛔ Une classe `[Serializable]` SANS champ est un DTO légitime (un objet servi VIDE, `params: {}`) : la taire la
+            # rendait « introuvable » et l'appariement explicite ne mesurait rien. Elle est enregistrée avec un ensemble
+            # vide ; les classes non sérialisables sans champ public (contrôleurs…) restent hors de l'oracle.
+            if f or serialisable.search(s[max(0, m.start() - 120):m.start()]):
+                out.setdefault(nom, set()).update(f)
     return out
 
 

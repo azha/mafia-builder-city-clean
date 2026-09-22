@@ -35,3 +35,14 @@
 
 ## Ce que ce dossier ne fournit pas
 - aucune capture prise pour ce mandat ; aucun rapport précédent lu ; pas de 2ᵉ résolution.
+
+## Décisions CLIENT, non dessinées par la maquette — à juger EXPLICITEMENT (ajouté le 2026-09-23, CLIENT-2)
+
+La maquette ratifiée ne dessine pas ces états ; le client y a pris une décision. Elles ne sont ni des écarts à la maquette
+(rien n'est dessiné en face) ni des arbitrages ouverts : le juge dit si la décision tient, sur l'image.
+
+| décision | lot | ce que fait l'écran | pourquoi | ce qu'il faut regarder |
+|---|---|---|---|---|
+| **« +N » au-delà de trois attendants** | ⑨-3 `8fee52e4` | la file dessine au plus trois attendants ; au-delà, un « +N » (serif 10px, crème-2) à leur suite | r1 M8 : « Cinq attendent » pour trois dessinés, rien n'expliquait la troncature. La maquette ne montre jamais plus de trois attendants. Chrome non suivi par R2.2 (compte de cartes, pas scalaire). | le « +N » se lit-il comme « d'autres attendent » ? sa place (après le troisième, aligné en bas) et son style (celui d'un nom, atténué) tiennent-ils face à la file ? |
+| **pas de halo or sur le premier de la file** | ⑨-3 `8fee52e4` | `.attendant.premier .medl{box-shadow:0 0 16px #d9ab4e55}` non repris ; ni anneau ni halo or | décision de l'orchestrateur (23/09) : l'or est la marque du Don, jamais sur un lieutenant — même règle que ⑯ | le premier se distingue-t-il encore assez (taille 58 contre 44, opacité 1 contre .78, ▼ or-vif) ? |
+| **coin bas-gauche de la bulle à 14 et non 4** | ⑨-4 `d8a01aff` | `.bulle{border-radius:14px 14px 14px 4px}` rendu à 14 partout | un rayon par sprite ; la queue (`::before`) recouvre ce coin | la queue masque-t-elle bien le coin, à 1080×2400 et à 1080×1920 ? |
