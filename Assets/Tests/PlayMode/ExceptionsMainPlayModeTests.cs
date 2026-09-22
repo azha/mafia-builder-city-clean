@@ -127,7 +127,9 @@ namespace MafiaCleanCity.Operational.Tests
             main.ClientPourTest.SubstitutResolvePourTest = r => new ResolveResponse { resolved = true, outcome = "REPAIRING" };
             yield return main.ResolveWith(Reparer());
 
-            for (int i = 0; i < 10 && !ecran.ApresPresent; i++) yield return null;
+            // `ApresPresent` est vrai dès que la file RETIENT la tranchée, avant que le rechargement ne la redessine : on attend
+            // le cachet lui-même (rouge du créneau de 01:2x, 23/09 : cachet vide à la première frame).
+            for (int i = 0; i < 30 && string.IsNullOrEmpty(ecran.ApresCachet); i++) yield return null;
             Assert.IsTrue(ecran.ApresPresent, "⑨ montre l'après de la résolution faite dans ⑩");
             Assert.AreEqual("EN RÉPARATION", ecran.ApresCachet);
             Assert.IsNotNull(ecran.PartiPourTest);

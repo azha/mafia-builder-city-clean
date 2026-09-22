@@ -193,8 +193,12 @@ namespace MafiaCleanCity.Operational.Exceptions
             Cards = cards;
             QueueLoaded = true;
             Render();
+            // ⑨-6 — le compte du pied, à chaque rechargement (une escalade le change). ⛔ AVANT de rendre le verrou : attendu
+            // APRÈS `isLoading = false`, il ouvrait une fenêtre où le `Boot()` concurrent démarrait SA charge (QueueLoaded = false,
+            // QueueError = null) pendant que celle-ci rendait la main — B_ResolveLoop lisait « QueueLoaded : False » sans erreur
+            // (créneau client-2 de 01:2x, 23/09 ; régression de b3b7b85d).
+            yield return ChargerEscalades();
             isLoading = false;
-            yield return ChargerEscalades();   // ⑨-6 — le compte du pied, à chaque rechargement (une escalade le change)
         }
 
         /// <summary>Open one card's detail (OpenNav idiom: host GameObject + AddComponent + Init). The card travels
