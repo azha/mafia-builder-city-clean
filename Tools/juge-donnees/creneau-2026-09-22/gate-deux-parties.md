@@ -5,7 +5,7 @@ direct ou par une aide du même fichier, de `IdentiteDeCaptureOuEchoue` / `Captu
 ⚠️ Remplace la version de de9e9e6d (39 + 12, 420 + 46) : la garde d'effet posée le 22/09 au soir sur les planches de compte a fait
 passer six catégories dans la partie 2 (CaptureCarte, CaptureDetail, CaptureFamille, CaptureForensic, CaptureReputation, ScreenB7).
 
-**Filtre par défaut de MafiaCI : 51 catégories, 473 tests.** Tests qui EXIGENT la paire de capture : **22** —
+**Filtre par défaut de MafiaCI : 52 catégories, 493 tests** (473 + les 20 d'`EcranDistribution`, inscrite le 22/09 à 23:29). Tests qui EXIGENT la paire de capture : **22** —
 
 - `CarnetScreenPlayModeTests.ScreenC3C2_CapturerSousLeChromeReel_ParLeCheminDuJoueur`
 - `DelegationScreenPlayModeTests.EcranDelegationC1_CapturerPourLeJugeVisuel_DeuxResolutions`
@@ -30,8 +30,9 @@ passer six catégories dans la partie 2 (CaptureCarte, CaptureDetail, CaptureFam
 - `VuePrincipaleCapturePlayModeTests.Capture_Horizon_SousChrome`
 - `VuePrincipaleCapturePlayModeTests.Capture_VuePrincipale_DistrictAvecBatiments_SousChromeV31`
 
-**Partie 2 (avec la paire)** : **18 catégories, 58 tests**. **Partie 1 (sans la paire)** : **33 catégories, 415 tests**.
-**Recouvrement : 0 test · 415 + 58 = 473 = le filtre par défaut.** ⚠️ `EcranDistribution` n'est pas au filtre par défaut (MafiaCI.cs:112).
+**Partie 2 (avec la paire)** : **18 catégories, 58 tests**. **Partie 1 (sans la paire)** : **34 catégories, 435 tests**.
+**Recouvrement : 0 test · 435 + 58 = 493 = le filtre par défaut.** `EcranDistribution` (20 tests, aucun n'exige la paire, aucune relation de
+préfixe) entre en partie 1 — verte seule avant inscription, `run-distribution.md`.
 
 **Étape 8** = partie 2 ∪ recapture ∪ CaptureFamille, CaptureReputation (dont les 2 captures des sous-vues de ⑥) : **25 catégories, 63 tests, dont 27 exigent la paire**, aucune relation de préfixe.
 
@@ -72,6 +73,7 @@ passer six catégories dans la partie 2 (CaptureCarte, CaptureDetail, CaptureFam
 | FicheCollecte | 1 | 1 |
 | VenteRamassage | 1 | 1 |
 | Inspection | 5 | 5 |
+| EcranDistribution | 20 | 20 |
 
 ## Partie 2 — avec la paire
 
