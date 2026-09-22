@@ -374,10 +374,10 @@ namespace MafiaCleanCity.Operational.Autonomy
         private static string OutcomeLabel(string b)
         {
             switch (b) {
-                case "MINIMAL": return MafiaCleanCity.I18n.Libelle.De("autonomie", "etat", "[~] conséquence minime");
-                case "TRADEOFF": return MafiaCleanCity.I18n.Libelle.De("autonomie", "etat", "[<>] un compromis");
-                case "ELEVATED_EXPOSURE": return MafiaCleanCity.I18n.Libelle.De("autonomie", "etat", "[!] on s'expose");
-                case "OPPORTUNITY_COST": return MafiaCleanCity.I18n.Libelle.De("autonomie", "etat", "[$] on laisse passer quelque chose");
+                case "MINIMAL": return MafiaCleanCity.I18n.Libelle.De("autonomie", "etat", "conséquence minime");
+                case "TRADEOFF": return MafiaCleanCity.I18n.Libelle.De("autonomie", "etat", "un compromis");
+                case "ELEVATED_EXPOSURE": return MafiaCleanCity.I18n.Libelle.De("autonomie", "etat", "on s'expose");
+                case "OPPORTUNITY_COST": return MafiaCleanCity.I18n.Libelle.De("autonomie", "etat", "on laisse passer quelque chose");
                 default: return MafiaCleanCity.I18n.Libelle.De("autonomie", "etat", "[?] Inconnu");
             }
         }
