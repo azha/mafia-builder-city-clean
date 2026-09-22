@@ -14,8 +14,8 @@ namespace MafiaCleanCity.Shell
     // cadres « trois jetons sur le zinc » / « personne au comptoir » / « après vos verdicts ».
     // La scène : le patron passe derrière le zinc avant l'ouverture. Un signalement, c'est un
     // homme qui a DÉPENSÉ UN JETON DE CONFIANCE pour poser une question — il est accoudé, son
-    // jeton posé devant lui. Le titre (`descriptor.key`) est sa phrase, le motif
-    // (`flag_reason.key`) sa seconde moitié en italique : c'est LUI qui parle, pas une fiche.
+    // jeton posé devant lui. Sa phrase — un titre, puis un motif en italique — est choisie par
+    // `descriptor.key` (⑯-4, `PhraseDe`) : c'est LUI qui parle, pas une fiche.
     //
     // LE JETON EST LE GESTE : le toucher = le lui rendre (`validate`) ; le GARDER en appui long =
     // `dismiss`, irréversible — donc le même geste que le tampon du registre (arbitrage E5 : le
@@ -486,15 +486,17 @@ namespace MafiaCleanCity.Shell
             phrase.color = Creme;
             phrase.lineSpacing = -8f;
             phrase.enableWordWrapping = true;
-            // ⛔ AUCUNE CLÉ i18n N'EST SERVIE PAR CE BACK — mesuré au socle : 178 clés référencées,
-            // 0 servie. Afficher `descriptor.key` tel quel donne
-            // « core_loops.flag_discipline.routine.front_shop_reconciliation.descriptor » en pleine
-            // bulle, ce que la première capture montre. La maquette veut une PHRASE.
-            // ⇒ En attendant le bundle, on rend le dernier segment porteur, lisible, et le fait que
-            // ce soit un PIS-ALLER est écrit ici : le jour où `GET /v1/i18n/bundle` sert ces clés,
-            // c'est cette fonction qu'on remplace, pas la mise en page.
-            string titre = Lisible(card.descriptor != null ? card.descriptor.key : null);
-            string motif = Lisible(card.flag_reason != null ? card.flag_reason.key : null);
+            // ⑯-4 — LA PHRASE DU LIEUTENANT, choisie par `descriptor.key` (une clé par générateur).
+            // Avant : `Lisible()` découpait la clé technique (« Front shop reconciliation ») — un
+            // pis-aller déclaré, que le bundle NE POUVAIT PAS remplacer : il sert bien
+            // `routine.*.descriptor` et `reason.*`, mais à paramètres OPAQUES (`{route_id}`,
+            // `{building_id}`… — S5-a) et dans le registre d'une fiche (« Caisse — {building_id} »).
+            // La maquette ratifiée (v4-0) fait parler le lieutenant, sans aucun paramètre.
+            // ⚠️ La table s'indexe sur `descriptor.key`, PAS sur `flag_reason.key` : les générateurs
+            //    de production écrivent un motif par générateur, mais le seam de test `force-flag`
+            //    écrit le motif générique `reason.deviation_detected` sur toutes ses cartes (corps
+            //    réel du 25/08). Indexée sur le motif, la table dirait la même phrase partout.
+            (string titre, string motif) = PhraseDe(card.descriptor != null ? card.descriptor.key : null);
             // ⛔ LE NEUVIÈME LITTÉRAL DE CET ÉCRAN VIVAIT ICI, DANS UNE BALISE DE TEXTE RICHE — et
             //    c'est le site que les DEUX instruments rataient. Il ne s'écrit pas `Hex("#…")` mais
             //    `<color=#…>` au milieu d'une chaîne : le motif de la garde exigeait un guillemet
@@ -502,9 +504,12 @@ namespace MafiaCleanCity.Shell
             //    deux motifs* — la garde en porte désormais un troisième, avec son contrôle.
             //    La teinte se dérive du token, jamais recopiée : elle suivra la palette.
             string gris = ColorUtility.ToHtmlStringRGB(DesignTokens.Current.hudCremeSecondary);
+            // Le motif PORTE son tiret (« — l’horaire… ») : c'est lui qui est en italique, comme le
+            // `<i> — …</i>` du cadre.
             phrase.text = string.IsNullOrEmpty(motif)
                 ? titre
-                : titre + "<i><color=#" + gris + "> — " + motif + "</color></i>";
+                : titre + "<i><color=#" + gris + "> " + motif + "</color></i>";
+            DernierePhrase = phrase.text;
 
             // ── la colonne du jeton : le geste ───────────────────────────────────────────────
             GameObject col = new GameObject("JetonCol", typeof(RectTransform));
@@ -705,18 +710,58 @@ namespace MafiaCleanCity.Shell
         public bool TamponGesteActif => BatchConfirmButton != null && BatchConfirmButton.enabled;
         public Image TamponFond => tamponFond;
 
-        /// <summary>Pis-aller d'affichage tant qu'aucune clé i18n n'est servie : on prend le
-        /// segment porteur de la clé et on le rend lisible. Ce n'est PAS une traduction.</summary>
-        private static string Lisible(string cle)
+        // ------------------------------------------------------------------ ⑯-4 la phrase
+
+        /// <summary>Test hook — le texte riche de la phrase du dernier billet posé.</summary>
+        public string DernierePhrase { get; private set; }
+
+        private const string PrefixeRoutine = "core_loops.flag_discipline.routine.";
+
+        /// <summary>⑯-4 — la phrase d'un billet : un TITRE à la première personne, au passé composé (ce
+        /// que le lieutenant a FAIT de la routine), et un MOTIF qui dit l'écart à l'habitude, jamais un
+        /// chiffre ni un nom propre. Une par générateur, indexée sur `descriptor.key`, sans paramètre.
+        /// SOURCE : atelier `Tools/atelier-2026-09-22/08-revue-du-jour-phrases-et-decor.md` (`b95dd8c7`).
+        ///   · courier_scheduling, lek_rotation, front_shop_reconciliation : le texte de v4-0, RATIFIÉ
+        ///     (« nickel », user, 2026-08-25), verbatim.
+        ///   · precursor_order, stash_reorder, et le REPLI : propositions de l'atelier dans le même
+        ///     registre, **NON RATIFIÉES** (veto de l'user ouvert). Leurs motifs disent l'UNION des
+        ///     conditions de leur score, parce que le back calcule la condition et la jette (S5-b) :
+        ///     un motif qui en choisirait une mentirait une fois sur deux.
+        ///     ⚠️ Ces deux phrases ne peuvent PAS s'afficher aujourd'hui : aucun archétype ne donne les
+        ///     rôles 2 ni 9 (`lieutenant-archetype.ts:213`), et `routine-item-generation.service.ts:117`
+        ///     saute le signalement faute de lieutenant. Leur preuve est donc un test de la TABLE.
+        ///   · le repli couvre une clé absente, inconnue, ou un générateur futur. C'est la phrase honnête
+        ///     d'un lieutenant qui signale sans pouvoir dire quoi.
+        /// « Vous validez ? » (fin du premier billet de v4-0 seulement, absent de v4-2) n'est PAS une
+        /// phrase de générateur : non repris.</summary>
+        public static (string titre, string motif) PhraseDe(string descriptorKey)
         {
-            if (string.IsNullOrEmpty(cle)) return "";
-            string[] parts = cle.Split('.');
-            string dernier = parts.Length >= 2 && (parts[parts.Length - 1] == "descriptor" ||
-                                                   parts[parts.Length - 1] == "reason")
-                ? parts[parts.Length - 2]
-                : parts[parts.Length - 1];
-            dernier = dernier.Replace('_', ' ');
-            return dernier.Length == 0 ? "" : char.ToUpperInvariant(dernier[0]) + dernier.Substring(1);
+            string generateur = descriptorKey != null && descriptorKey.StartsWith(PrefixeRoutine)
+                                && descriptorKey.EndsWith(".descriptor")
+                ? descriptorKey.Substring(PrefixeRoutine.Length,
+                                          descriptorKey.Length - PrefixeRoutine.Length - ".descriptor".Length)
+                : null;
+            switch (generateur)
+            {
+                case "courier_scheduling":
+                    return (Lib("phrase", "J’ai replanifié la tournée des coursiers"),
+                            Lib("phrase", "— l’horaire habituel n’a pas été tenu."));
+                case "lek_rotation":
+                    return (Lib("phrase", "J’ai fait tourner le coin de vente"),
+                            Lib("phrase", "— le Lek tournait hors du rythme convenu."));
+                case "front_shop_reconciliation":
+                    return (Lib("phrase", "J’ai rapproché les comptes de la façade"),
+                            Lib("phrase", "— la caisse déclarée s’écarte de l’habitude."));
+                case "precursor_order":
+                    return (Lib("phrase", "J’ai passé la commande de précurseurs"),
+                            Lib("phrase", "— le marché est plus tendu que d’habitude."));
+                case "stash_reorder":
+                    return (Lib("phrase", "J’ai allégé le stock"),
+                            Lib("phrase", "— il était plus chargé, ou plus regardé, que d’habitude."));
+                default:
+                    return (Lib("phrase", "J’ai suivi la routine"),
+                            Lib("phrase", "— quelque chose s’écartait de l’habitude."));
+            }
         }
 
         // ⛔ LA BANDE DU MILIEU S'APPELLE `standard`, PAS `normal` — lue dans le TYPE du back
