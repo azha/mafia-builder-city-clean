@@ -415,67 +415,179 @@ $"{QuiParle(c)} · {ExceptionBandes.Ligne(c.severity_band, c.priority_band)}", 8
             // légitimement porter des chiffres — c'est ce que dit l'en-tête R2.2 de ce fichier).
         }
 
-        /// <summary>Le tampon : l'action suggérée, en gros. La maquette la donne comme le geste par
-        /// défaut, l'appui long ouvrant la main complète (le détail ⑩).</summary>
+        // ================================================================ ⑨-1 le tampon qui résout
+
+        /// <summary>⑨-1 — LE TAMPON, cadre 14 ratifié : `.tampon` crème (#d9cca9), bord 2px #93402c, filet intérieur
+        /// (inset 3px #93402c55), encre #93402c en capitales espacées (.22em), sous-titre « suggéré · appui long — sa main :
+        /// N autres issues › ». Même famille que le tampon de ⑯ (papier PLEIN : `RoundedRectMask` teint, jamais un contour teint).
+        /// DEUX GESTES sur le même objet, comme le jeton de ⑯ :
+        ///   · APPUI LONG ⇒ résoudre la suggérée, par la VRAIE route, avec le `method` et l'`id` SERVIS (Lot 0 D4 : L0.2 est
+        ///     fermé côté back — l'ancien commentaire de ce site disait l'inverse, voir l'écart 5e57bc6d §0.2) ;
+        ///   · TAP ⇒ ouvrir sa main (⑩), c'est le « › » du sous-titre.
+        /// Remplace un pavé corail plein à texte blanc (juge r1 M2 : contraste 2,71:1, sous le plancher) qui ouvrait ⑩ au tap
+        /// et ne résolvait jamais.</summary>
         private void RendreTampon()
         {
             for (int i = tamponRoot.childCount - 1; i >= 0; i--)
                 UnityEngine.Object.Destroy(tamponRoot.GetChild(i).gameObject);
+            tamponLibelle = null; tamponSous = null; tamponAppui = null;
             if (Cards.Length == 0) return;
 
-            GameObject t = NewUI("TamponBouton", tamponRoot);
-            Image fond = t.AddComponent<Image>();
-            fond.color = AccentSevere;
-            Stretch((RectTransform)t.transform, Vector2.zero, Vector2.zero);
-            Button b = t.AddComponent<Button>();
-            b.targetGraphic = fond;
             ExceptionCardDto c = Cards[0];
-            b.onClick.AddListener(() => OpenDetail(c));
+            (string method, string id)? choix = ChoixDuTampon(c);
+
+            GameObject t = NewUI("TamponBouton", tamponRoot);
+            Stretch((RectTransform)t.transform, Vector2.zero, Vector2.zero);
+            Image papier = t.AddComponent<Image>();
+            papier.sprite = ProceduralUI.RoundedRectMask(PxI(11f));
+            papier.type = Image.Type.Sliced;
+            papier.color = Hex("#d9cca9");
+            Filet(t.transform, "Bord", 0f, PxI(11f), Px(2f), EncreTampon);
+            Filet(t.transform, "FiletInterieur", Px(3f), PxI(7f), Px(1f), Hex("#93402c55"));
 
             VerticalLayoutGroup v = t.AddComponent<VerticalLayoutGroup>();
+            v.padding = new RectOffset(PxI(12f), PxI(12f), PxI(10f), PxI(10f));
+            v.spacing = Px(2f);
             v.childControlWidth = true; v.childControlHeight = true;
             v.childForceExpandWidth = true; v.childForceExpandHeight = false;
             v.childAlignment = TextAnchor.MiddleCenter;
 
-            // ⚠️ RECTIFICATION en cours d'écriture : j'avais noté que l'action suggérée était
-            // innommable à cause du défaut L0.2 (ids d'action et `method` du resolve sans table de
-            // liaison). C'est vrai pour RÉSOUDRE, pas pour AFFICHER — le corps porte
-            // `suggested_action.label`, et la maquette l'écrit en toutes lettres sur le tampon.
-            // ★ J'ai failli reporter sur l'affichage une limite qui ne pèse que sur l'action.
-            //   Une dette mal située fait renoncer à ce qu'elle n'empêche pas.
-            string action = c.suggested_action != null && !string.IsNullOrEmpty(c.suggested_action.label)
-                ? c.suggested_action.label.ToUpperInvariant()
-                : "OUVRIR SA MAIN";
-            TextMeshProUGUI libelle = NouveauTexteMaquette(t.transform, "Libelle",
-                action, 12f, TextPrimary);
-            libelle.alignment = TextAlignmentOptions.Center;
-            libelle.characterSpacing = 22f;   // `.tampon{letter-spacing:.22em}`
-            TrackText(libelle, libelle.text);
+            // Le libellé : l'action suggérée, en toutes lettres (par sa clé i18n si servie, sa prose sinon).
+            string action = choix.HasValue ? LibelleAction(c.suggested_action).ToUpperInvariant() : Lib("OUVRIR SA MAIN");
+            tamponLibelle = NouveauTexteMaquette(t.transform, "Libelle", action, 12f, EncreTampon);
+            tamponLibelle.alignment = TextAlignmentOptions.Center;
+            tamponLibelle.characterSpacing = 22f;             // `.tampon{letter-spacing:.22em}`
+            tamponLibelle.fontStyle = FontStyles.Bold;        // `.tampon{font-weight:800}`
+            tamponLibelle.enableWordWrapping = true;
+            TrackText(tamponLibelle, tamponLibelle.text);
 
-            // ⚠️ La maquette écrit ici l'action suggérée (« RÉPARER LE BÂTIMENT ») et annonce
-            // « appui long — sa main : 5 autres issues ». On ne peut PAS l'écrire aujourd'hui :
-            // le document de lot le mesure, `candidate_actions` et le `method` du resolve sont
-            // deux vocabulaires SANS table de liaison (défaut L0.2). Nommer une action suggérée
-            // reviendrait à inventer la correspondance que le back ne fournit pas.
-            // ⇒ Le bouton ouvre donc la main complète, où le joueur CHOISIT — c'est le geste que
-            //   la maquette met derrière l'appui long, promu geste principal tant que le maillon
-            //   manque. L'écran ne promet rien qu'il ne puisse tenir.
-            // ⛔ MESURÉ sur la capture du 2026-09-02 : ce sous-titre était en `TextSecondary`
-            // (`onSurfaceSecondary`, #8a979c) et son contraste sur l'aplat corail du tampon
-            // tombait à 0.096 — sous le seuil de 0.18 de `LisibiliteDuTexte`, quand le titre
-            // juste au-dessus mesurait 0.456.
-            // ★ `onSurfaceSecondary` est une encre pour la SURFACE sombre. Posée sur un accent,
-            //   elle n'est pas « discrète », elle est illisible. Sur un aplat d'accent, la
-            //   sourdine doit venir de l'ALPHA de l'encre sur accent — même famille que le titre,
-            //   atténuée — jamais d'un jeton fait pour un autre fond.
-            // C'est la faute que j'ai déjà commise sur ⑩ : un fond qu'on corrige change la
-            // contrainte sur TOUT ce qui est posé dessus, et rien ne vient le rappeler.
-            Color encreSurTampon = TextPrimary;
-            encreSurTampon.a = 0.8f;          // mesuré : contraste 0.365 sur le corail
-            TextMeshProUGUI sous = NouveauTexteMaquette(t.transform, "SousTexte",
-                Lib("il attend une consigne"), 8f, encreSurTampon);
-            sous.alignment = TextAlignmentOptions.Center;
-            TrackText(sous, sous.text);
+            Color encreSous = EncreTampon; encreSous.a = 0.85f;  // `.tampon small{opacity:.85}` sur fond CONNU (le papier)
+            tamponSous = NouveauTexteMaquette(t.transform, "SousTexte",
+                choix.HasValue ? SousTitreTampon(AutresIssues(c)) : Lib("il attend une consigne"), 8.5f, encreSous);
+            tamponSous.alignment = TextAlignmentOptions.Center;
+            tamponSous.enableWordWrapping = true;
+            // ⚠️ NON SUIVI, et c'est la règle de ce fichier, pas une dérogation : « sa main : 5 autres issues » porte un
+            //    CHIFFRE, que la maquette écrit (cadres 14 et 17). Ce n'est pas un scalaire de simulation — la cible de R2.2 —
+            //    mais le compte des CHOIX du joueur, qu'il voit dans sa main. Même statut que le compte d'escalades, déjà
+            //    du chrome (voir l'en-tête de `Render`). La garde `…_NoRawScalar` garde son motif entier.
+            if (!choix.HasValue) TrackText(tamponSous, tamponSous.text);
+
+            // Les deux gestes. `Button` tire AUSSI au relâchement d'un appui long : le tap est donc CONSOMMÉ quand l'appui
+            // long a abouti (même garde que le jeton de ⑯).
+            bool consomme = false;
+            Button tap = t.AddComponent<Button>();
+            tap.targetGraphic = papier;
+            ExceptionCardDto carte = c;
+            tap.onClick.AddListener(() =>
+            {
+                if (consomme) { consomme = false; return; }
+                OpenDetail(carte);
+            });
+            if (choix.HasValue)
+            {
+                tamponAppui = t.AddComponent<LongPressButton>();
+                tamponAppui.OnLongPressCompleted += () =>
+                {
+                    consomme = true;
+                    if (!Destroyed) StartCoroutine(ResoudreLaSuggestion());
+                };
+            }
+        }
+
+        /// <summary>Ce que l'appui long envoie : `(method, id)` de la suggestion SERVIE, ou null si la carte n'en porte pas
+        /// (`suggested_action` null ⇒ JsonUtility rend une instance vide : `id` vide). Le `method` est celui du back
+        /// (Lot 0 D4) ; ⚠️ s'il manque — pile antérieure à D4 seulement —, repli sur l'ancienne dérivation client
+        /// (`ExceptionDetailController.MethodFor`), déclaré ici plutôt que caché.</summary>
+        public static (string method, string id)? ChoixDuTampon(ExceptionCardDto c)
+        {
+            CandidateActionDto s = c != null ? c.suggested_action : null;
+            if (s == null || string.IsNullOrEmpty(s.id)) return null;
+            string method = !string.IsNullOrEmpty(s.method) ? s.method : ExceptionDetailController.MethodFor(s, false);
+            return (method, s.id);
+        }
+
+        /// <summary>Le nombre d'issues de sa main AUTRES que la suggérée — le « N autres issues » du sous-titre.</summary>
+        public static int AutresIssues(ExceptionCardDto c)
+        {
+            if (c == null || c.candidate_actions == null) return 0;
+            string idSug = c.suggested_action != null ? c.suggested_action.id : null;
+            int n = 0;
+            foreach (CandidateActionDto a in c.candidate_actions)
+                if (a != null && a.id != idSug) n++;
+            return n;
+        }
+
+        /// <summary>« suggéré · appui long — sa main : N autres issues › » (cadre 14 ; « 1 autre issue » au cadre 17).
+        /// ⚠️ Assemblé avec le nombre : `Libelle.De` ne prend pas de paramètre (dette X1, comme ⑯).</summary>
+        public static string SousTitreTampon(int autres)
+        {
+            string tete = Lib("suggéré · appui long — sa main");
+            if (autres <= 0) return tete + " ›";
+            return tete + " : " + autres + (autres == 1 ? Lib(" autre issue") : Lib(" autres issues")) + " ›";
+        }
+
+        private static string LibelleAction(CandidateActionDto a)
+        {
+            if (a == null) return string.Empty;
+            if (a.label_i18n != null && !string.IsNullOrEmpty(a.label_i18n.key)
+                && MafiaCleanCity.I18n.I18nCatalog.Connait(a.label_i18n.key))
+                return MafiaCleanCity.I18n.I18nCatalog.Traduire(a.label_i18n.key);
+            return a.label ?? string.Empty;
+        }
+
+        /// <summary>⑨-1 — résoudre la suggestion du PREMIER de la file, par `POST /v1/exceptions/:id/resolve` avec le
+        /// `method` et l'`id` servis. Puis la file est RECHARGÉE (le serveur fait foi ; l'état « après le tampon » de v4-17
+        /// est le lot ⑨-6). Public : la garde le pilote.</summary>
+        public IEnumerator ResoudreLaSuggestion()
+        {
+            EnsureInitialized();
+            if (Cards.Length == 0 || resolutionEnCours) yield break;
+            ExceptionCardDto c = Cards[0];
+            (string method, string id)? choix = ChoixDuTampon(c);
+            if (!choix.HasValue) yield break;
+            resolutionEnCours = true;
+            DerniereIssue = null;
+            DerniereErreurResolution = null;
+            yield return client.Resolve(c.exception_id, choix.Value.method, choix.Value.id, Token,
+                ok => DerniereIssue = ok.outcome,
+                (code, msg) => DerniereErreurResolution = $"{code}: {msg}");
+            resolutionEnCours = false;
+            if (Destroyed) yield break;
+            if (DerniereIssue != null) yield return LoadQueue();
+        }
+
+        private bool resolutionEnCours;
+        private TextMeshProUGUI tamponLibelle, tamponSous;
+        private LongPressButton tamponAppui;
+
+        // ---- test hooks ⑨-1
+        public ExceptionsClient ClientPourTest { get { EnsureInitialized(); return client; } }
+        public string DerniereIssue { get; private set; }
+        public string DerniereErreurResolution { get; private set; }
+        public string TamponLibelleTexte => tamponLibelle != null ? tamponLibelle.text : null;
+        public string TamponSousTexte => tamponSous != null ? tamponSous.text : null;
+        public LongPressButton TamponAppuiLong => tamponAppui;
+
+        private static Color EncreTampon => Hex("#93402c");
+
+        private static Color Hex(string h)
+        {
+            ColorUtility.TryParseHtmlString(h, out Color c);
+            return c;
+        }
+
+        /// <summary>Un filet arrondi hors mise en page, en retrait de `retrait` (le bord et le filet du tampon).</summary>
+        private static void Filet(Transform parent, string nom, float retrait, int rayon, float epaisseur, Color couleur)
+        {
+            GameObject go = NewUI(nom, parent);
+            RectTransform rt = (RectTransform)go.transform;
+            rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one;
+            rt.offsetMin = new Vector2(retrait, retrait); rt.offsetMax = new Vector2(-retrait, -retrait);
+            Image img = go.AddComponent<Image>();
+            img.sprite = ProceduralUI.RoundedRectOutline(rayon, epaisseur, couleur);
+            img.type = Image.Type.Sliced;
+            img.raycastTarget = false;
+            go.AddComponent<LayoutElement>().ignoreLayout = true;
         }
 
         /// <summary>Le lien vers les escalades archivées, « à relire à tête reposée ».</summary>
