@@ -214,5 +214,27 @@ namespace MafiaCleanCity.I18nTests
                 "une clé absente doit rester LISIBLE comme une clé — c'est ce qui fait écrire le " +
                 "texte. Si elle sortait vide ou remplacée, le manque deviendrait invisible.");
         }
+
+        // ═══ ⑥ — les trois archétypes que le client croyait non servis ════════════════════════
+
+        /// <summary>⛔ UNE FALSIFIABLE PAR ARCHÉTYPE : la clé SERVIE produit le texte du CATALOGUE. Le
+        /// catalogue chargé est l'`en` du back (58ab315a) — un `return "Gros bras";` en dur, l'état
+        /// d'avant, rend le français et rougit ici. Sans catalogue, la clé DEMANDÉE est exactement celle
+        /// que le back sert (un littéral réécrit changerait la clé, et ce test le verrait).</summary>
+        [TestCase("MUSCLE",           "famille.archetype.gros_bras",     "Muscle",           "Gros bras")]
+        [TestCase("INTELLIGENCE",     "famille.archetype.renseignement", "Intelligence",     "Renseignement")]
+        [TestCase("FACILITY_MANAGER", "famille.archetype.intendant",     "Facility manager", "Intendant")]
+        public void ArchetypeServi_RendLeTexteDuCatalogue(string archetype, string cle, string servi, string repli)
+        {
+            Libelle.RemettreLesCompteurs();
+            Assert.AreEqual(repli, MafiaCleanCity.Operational.FamilleLabels.Archetype(archetype),
+                $"sans catalogue, « {archetype} » doit rendre le mot français de l'atelier");
+            Assert.AreEqual(cle, Libelle.DernierRepli,
+                $"« {archetype} » ne demande pas la clé que le back sert");
+
+            I18nCatalog.ChargerPourTest("en", new Dictionary<string, string> { { cle, servi } });
+            Assert.AreEqual(servi, MafiaCleanCity.Operational.FamilleLabels.Archetype(archetype),
+                $"« {archetype} » : la clé est servie, l'anglophone doit lire « {servi} », pas le français");
+        }
 }
 }

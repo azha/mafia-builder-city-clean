@@ -62,20 +62,16 @@ namespace MafiaCleanCity.Operational
                 // Traduits (noms communs), en attente de ratification par la maquette.
                 case "COOK": return Lib("Cuisinier");
                 case "DISTRIBUTION": return Lib("Distribution");
-                // ⛔⛔ CES TROIS-LÀ NE PASSENT PAS PAR `Lib`, ET C'EST MESURÉ, PAS PRUDENT. Le
-                //    bundle réel servi en `fr` porte 14 clés `famille.archetype.*` ; les trois que
-                //    `Libelle.De` dériverait de ces littéraux — un slug par littéral — n'y sont
-                //    PAS. Les faire passer par le catalogue ajouterait trois REPLIS, et la garde
-                //    `BundleReel_…_ZeroRepli` a exactement ce mode d'échec pour raison d'être :
-                //    « le back ne les sert pas, et l'écran l'affiche en français sans que rien ne
-                //    rougisse ». Le mot français est ici la valeur ratifiée du client, pas un
-                //    repli déguisé — et les trois clés sont inscrites en dette, routées au lot
-                //    i18n, plutôt qu'inventées ici.
-                //    ★ *Une clé qu'on invente pour « faire propre » est du français non traduisible
-                //      de plus, et le seul endroit où ça se voit est une garde de catalogue.*
-                case "MUSCLE": return "Gros bras";
-                case "INTELLIGENCE": return "Renseignement";
-                case "FACILITY_MANAGER": return "Intendant";
+                // ✅ CES TROIS-LÀ PASSENT PAR `Lib` (22/09) — leurs clés SONT servies, en `fr` ET en `en`
+                //    (`famille.archetype.gros_bras` / `.renseignement` / `.intendant`, table du back
+                //    58ab315a). Ce commentaire affirmait le contraire, sur une mesure du bundle d'avant
+                //    ces clés, et le mot français sortait donc tel quel à un anglophone.
+                //    ★ *Une mesure de catalogue a une date : « la clé n'est pas servie » était vrai le
+                //      jour où on l'a écrit, et le commentaire, lui, n'a pas de date d'expiration.*
+                //    Falsifiables : `I18nCatalogPlayModeTests.ArchetypeServi_RendLeTexteDuCatalogue`.
+                case "MUSCLE": return Lib("Gros bras");
+                case "INTELLIGENCE": return Lib("Renseignement");
+                case "FACILITY_MANAGER": return Lib("Intendant");
                 // ⛔ `UNKNOWN` EST UNE VALEUR RÉELLE DU DOMAINE, pas l'absence d'une valeur — le
                 //    back la produit (`lieutenant.projection.service.ts`). Tombée dans le `default`
                 //    elle sortait « Unknown » en casse de titre, c'est-à-dire l'anglais brut à
