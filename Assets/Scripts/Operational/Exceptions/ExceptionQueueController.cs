@@ -369,17 +369,7 @@ namespace MafiaCleanCity.Operational.Exceptions
                 bool ville = !ExceptionBandes.ParleUnLieutenant(c);
                 GameObject med = MedaillonAuComptoir.Construire(a.transform, "Medaillon",
                     Px(premier ? 58f : 44f), Px(premier ? 18f : 14f), Mathf.Max(1f, Px(1f)), ville ? null : buste);
-                if (ville)
-                {
-                    TextMeshProUGUI b = NouveauTexteMaquette(med.transform, "VilleB", "B", 20f, OrVif);
-                    b.font = DesignTokens.Current.hudSerifFont;
-                    b.fontStyle = FontStyles.Bold;
-                    b.alignment = TextAlignmentOptions.Center;
-                    b.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
-                    var brt = (RectTransform)b.transform;
-                    brt.anchorMin = Vector2.zero; brt.anchorMax = Vector2.one;
-                    brt.offsetMin = Vector2.zero; brt.offsetMax = Vector2.zero;
-                }
+                if (ville) LettreDeLaVille(med.transform, 20f);
 
                 // Le rail sous le médaillon PORTE la gravité — le canal de la maquette.
                 GameObject rail = NewUI("Rail", a.transform);
@@ -476,9 +466,22 @@ namespace MafiaCleanCity.Operational.Exceptions
         private static Color Creme2 => DesignTokens.Current.hudCremeSecondary;
         private static Color OrVif => DesignTokens.Current.hudMoneyGold;
 
-        /// <summary>Le premier de la file PARLE : médaillon + bulle avec son nom, le contexte, les
-        /// deux bandes en pastilles, et sa réplique. C'est le cœur de la mise en scène ratifiée —
-        /// « le premier parle », et la file attend derrière.</summary>
+        // ================================================================ ⑨-4 celui qui parle
+
+        /// <summary>⑨-4 — LE PREMIER DE LA FILE PARLE, cadre 14 (`.parle`, `.bulle`, `.chip`) — juge r1 M4 (la bulle avait
+        /// perdu nom en or, ligne de rôle, pastilles, queue, liseré, coins) et M5 (aucun coin arrondi, aucun liseré) :
+        ///   `.parle{display:flex; gap:10px; align-items:flex-end}` ; `.parle .medl` 60×60, rayon 18 (`MedaillonAuComptoir`,
+        ///     buste ou « B », sans or) ;
+        ///   `.bulle` : `linear-gradient(160deg, rgba(28,40,60,.9), rgba(12,18,30,.96))` (le bas par le jeton
+        ///     `hudBarGlassBottom`, d = 1,4 ; le haut #1c283c n'a pas de jeton proche), bord 1px #ffffff2a, rayon 14, la QUEUE
+        ///     (`::before`, carré de 12 tourné de 45°, à gauche, 10px du bas) ; ⚠️ le coin bas-gauche à 4px n'est pas repris
+        ///     (un seul rayon par sprite), la queue le recouvre ;
+        ///   `.qui b` le NOM, Georgia 12 or-vif ; `.qui` « · rôle · contexte », 8px capitales .14em crème-2 ;
+        ///   `.chip` gravité et priorité : 6,5px capitales, bord 1px et encre crème-2, rayon 7 (les classes `.sev-*`/`.pri-*`
+        ///     ne sont définies nulle part dans la page : c'est le `.chip` de base, ce que montre le PNG) ;
+        ///   `p` la RÉPLIQUE, Georgia 13 crème, interligne 1,3 — « Patron — … » quand un lieutenant parle en prose.
+        /// Le contexte : « toute la ville » pour la ville (cadre 17) ; « au bâtiment touché » quand une issue vise un bâtiment
+        /// (`effect.target_building_id`, cadre 14) ; rien sinon — jamais un lieu inventé.</summary>
         private void RendreParleur()
         {
             for (int i = parleRoot.childCount - 1; i >= 0; i--)
@@ -486,29 +489,164 @@ namespace MafiaCleanCity.Operational.Exceptions
             if (Cards.Length == 0) return;
 
             ExceptionCardDto c = Cards[0];
-            GameObject med = NewUI("MedaillonParleur", parleRoot);
-            med.AddComponent<Image>().color = AccentSevere;
-            AddLayoutElement(med, preferredWidth: Px(52f), preferredHeight: Px(52f));
+            bool ville = !ExceptionBandes.ParleUnLieutenant(c);
+            GameObject med = MedaillonAuComptoir.Construire(parleRoot, "MedaillonParleur", Px(60f), Px(18f),
+                Mathf.Max(1f, Px(1f)), ville ? null : Resources.Load<Sprite>(MedaillonAuComptoir.CheminBusteLieutenant));
+            if (ville) LettreDeLaVille(med.transform, 20f);
 
             GameObject bulle = NewUI("Bulle", parleRoot);
-            bulle.AddComponent<Image>().color = CardBg;
+            AddLayoutElement(bulle, flexibleWidth: 1);
+            Image forme = bulle.AddComponent<Image>();
+            forme.sprite = ProceduralUI.RoundedRectMask(PxI(14f));
+            forme.type = Image.Type.Sliced;
+            forme.color = Color.white;
+            bulle.AddComponent<Mask>().showMaskGraphic = false;
+            GameObject verre = NewUI("Verre", bulle.transform);
+            Stretch((RectTransform)verre.transform, Vector2.zero, Vector2.zero);
+            verre.AddComponent<LayoutElement>().ignoreLayout = true;
+            Image verreImg = verre.AddComponent<Image>();
+            verreImg.sprite = ProceduralUI.LinearGradient(64, 160f, VerreBulleHaut, VerreBulleBas);
+            verreImg.raycastTarget = false;
+            Filet(bulle.transform, "Bord", 0f, PxI(14f), Mathf.Max(1f, Px(1f)), Hex("#ffffff2a"));
+            Queue(parleRoot, bulle.transform.GetSiblingIndex());
+
             VerticalLayoutGroup v = bulle.AddComponent<VerticalLayoutGroup>();
             v.padding = new RectOffset(PxI(12f), PxI(12f), PxI(9f), PxI(9f));
-            v.spacing = Px(4f);
+            v.spacing = Px(3f);
             v.childControlWidth = true; v.childControlHeight = true;
             v.childForceExpandWidth = true; v.childForceExpandHeight = false;
-            AddLayoutElement(bulle, flexibleWidth: 1);
 
-            TextMeshProUGUI qui = NouveauTexteMaquette(bulle.transform, "Qui",
-$"{QuiParle(c)} · {ExceptionBandes.Ligne(c.severity_band, c.priority_band)}", 8f, TextSecondary);
-            TrackText(qui, qui.text);
+            TextMeshProUGUI nom = NouveauTexteMaquette(bulle.transform, "QuiNom", QuiParle(c), 12f, OrVif);
+            nom.font = DesignTokens.Current.hudSerifFont;
+            nom.fontStyle = FontStyles.Bold;
+            TrackText(nom, nom.text);
 
-            TextMeshProUGUI dit = NouveauTexteMaquette(bulle.transform, "Replique",
-                Replique(c),
-                10f, TextPrimary);
+            string contexte = ContexteDuPremier(c);
+            if (!string.IsNullOrEmpty(contexte))
+            {
+                TextMeshProUGUI ctx = NouveauTexteMaquette(bulle.transform, "QuiContexte", contexte, 8f, Creme2);
+                ctx.fontStyle = FontStyles.UpperCase;
+                ctx.characterSpacing = 14f;                      // `.bulle .qui{letter-spacing:.14em}`
+                ctx.enableWordWrapping = true;
+                TrackText(ctx, ctx.text);
+            }
+
+            GameObject pastilles = NewUI("Pastilles", bulle.transform);
+            HorizontalLayoutGroup hp = pastilles.AddComponent<HorizontalLayoutGroup>();
+            hp.spacing = Px(5f);
+            hp.childControlWidth = true; hp.childControlHeight = true;
+            hp.childForceExpandWidth = false; hp.childForceExpandHeight = false;
+            hp.childAlignment = TextAnchor.MiddleLeft;
+            Pastille(pastilles.transform, "Gravite", ExceptionBandes.Gravite(c.severity_band));
+            Pastille(pastilles.transform, "Priorite", ExceptionBandes.Priorite(c.priority_band));
+
+            TextMeshProUGUI dit = NouveauTexteMaquette(bulle.transform, "Replique", RepliqueDuPremier(c), 13f, Creme);
+            dit.font = DesignTokens.Current.hudSerifFont;
             dit.enableWordWrapping = true;
-            // ⚠️ Texte LIBRE du producteur : chrome, suivi au composant et pas au corpus (il peut
-            // légitimement porter des chiffres — c'est ce que dit l'en-tête R2.2 de ce fichier).
+            // ⚠️ Texte du PRODUCTEUR : chrome, suivi au composant et pas au corpus (il peut porter des chiffres — en-tête R2.2).
+        }
+
+        /// <summary>Le contexte de celui qui parle, `.qui` après le nom : « rôle · lieu ». Chacun ABSENT quand la donnée
+        /// manque (pas de jointure, pas de cible) — jamais un mot de remplissage.</summary>
+        public string ContexteDuPremier(ExceptionCardDto c)
+        {
+            var parts = new List<string>();
+            string role = RoleDe(c);
+            if (!string.IsNullOrEmpty(role)) parts.Add(role);
+            if (!ExceptionBandes.ParleUnLieutenant(c)) parts.Add(Lib("toute la ville"));
+            else if (VisUnBatiment(c)) parts.Add(Lib("au bâtiment touché"));
+            return parts.Count == 0 ? null : "· " + string.Join(" · ", parts);
+        }
+
+        private static bool VisUnBatiment(ExceptionCardDto c)
+        {
+            if (c == null || c.candidate_actions == null) return false;
+            foreach (CandidateActionDto a in c.candidate_actions)
+                if (a != null && a.effect != null && !string.IsNullOrEmpty(a.effect.target_building_id)) return true;
+            return false;
+        }
+
+        /// <summary>La réplique du premier, cadre 14 : « Patron — ils ont retourné… » — l'adresse DEVANT, la première
+        /// lettre de la phrase servie passée en minuscule (atelier 11-… §3.3 : « ⑨ met l'adresse devant, et passe « Ils » en
+        /// minuscule »). Seulement quand un LIEUTENANT parle en PROSE (la règle des guillemets, `ExceptionBandes.Replique`) :
+        /// la ville parle sans guillemets et sans « Patron », un identifiant se montre nu.</summary>
+        public static string RepliqueDuPremier(ExceptionCardDto c)
+        {
+            string texte = TexteServeur(c);
+            bool lieutenant = ExceptionBandes.ParleUnLieutenant(c);
+            string brut = ExceptionBandes.Replique(texte, lieutenant);
+            if (!lieutenant || string.IsNullOrWhiteSpace(texte) || !texte.Trim().Contains(" ")) return brut;
+            string t = texte.Trim();
+            // minuscule initiale seulement devant une lettre suivie d'une minuscule : « Ils » → « ils », jamais « LT », « Lt. »
+            if (t.Length > 1 && char.IsUpper(t[0]) && char.IsLower(t[1]) && !t.StartsWith("Lt"))
+                t = char.ToLowerInvariant(t[0]) + t.Substring(1);
+            return "« " + Lib("Patron") + " — " + t + " »";
+        }
+
+        private void Pastille(Transform parent, string nom, string texte)
+        {
+            GameObject go = NewUI(nom, parent);
+            Image bord = go.AddComponent<Image>();
+            bord.sprite = ProceduralUI.RoundedRectOutline(PxI(7f), Mathf.Max(1f, Px(1f)), Creme2);
+            bord.type = Image.Type.Sliced;
+            bord.raycastTarget = false;
+            HorizontalLayoutGroup h = go.AddComponent<HorizontalLayoutGroup>();
+            h.padding = new RectOffset(PxI(5f), PxI(5f), PxI(1f), PxI(1f));
+            h.childControlWidth = true; h.childControlHeight = true;
+            h.childForceExpandWidth = false;
+            TextMeshProUGUI t = NouveauTexteMaquette(go.transform, "Lib", texte, 6.5f, Creme2);
+            t.fontStyle = FontStyles.UpperCase;
+            t.characterSpacing = 8f;                              // `.chip{letter-spacing:.08em}`
+            TrackText(t, t.text);
+        }
+
+        /// <summary>`.bulle::before{left:-7px; bottom:10px; 12×12; rotate(45deg)}` — la queue qui pointe vers le médaillon, de la
+        /// couleur du bas du verre. Elle DÉBORDE de la bulle (qui masque ses enfants) : elle vit donc dans la rangée `.parle`,
+        /// hors mise en page, JUSTE AVANT la bulle, placée par ancres depuis la CSS — médaillon 60 + écart 10 − 7 px de
+        /// débord, 10 px du bas (la rangée étire la bulle sur sa hauteur : leurs bas coïncident).</summary>
+        private void Queue(Transform rangee, int rangBulle)
+        {
+            GameObject q = NewUI("QueueBulle", rangee);
+            q.AddComponent<LayoutElement>().ignoreLayout = true;
+            RectTransform rt = (RectTransform)q.transform;
+            rt.anchorMin = rt.anchorMax = new Vector2(0f, 0f);
+            rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.sizeDelta = new Vector2(Px(12f), Px(12f));
+            rt.anchoredPosition = new Vector2(Px(60f + 10f - 7f + 6f), Px(10f + 6f));
+            rt.localRotation = Quaternion.Euler(0f, 0f, 45f);
+            Image img = q.AddComponent<Image>();
+            img.color = VerreBulleBas;
+            img.raycastTarget = false;
+            q.transform.SetSiblingIndex(rangBulle);
+        }
+
+        private void LettreDeLaVille(Transform medaillon, float corps)
+        {
+            TextMeshProUGUI b = NouveauTexteMaquette(medaillon, "VilleB", "B", corps, OrVif);
+            b.font = DesignTokens.Current.hudSerifFont;
+            b.fontStyle = FontStyles.Bold;
+            b.alignment = TextAlignmentOptions.Center;
+            b.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+            var brt = (RectTransform)b.transform;
+            brt.anchorMin = Vector2.zero; brt.anchorMax = Vector2.one;
+            brt.offsetMin = Vector2.zero; brt.offsetMax = Vector2.zero;
+        }
+
+        // `rgba(28,40,60,.9)` / `rgba(12,18,30,.96)` : le haut sans jeton proche (d = 7,3), le bas par `hudBarGlassBottom`
+        // (d = 1,4, TD-612). Opacités CSS passées par l'ajustement linéaire (la bulle flotte sur le décor).
+        private static Color VerreBulleHaut
+        {
+            get { Color c = Hex("#1c283c"); c.a = ProceduralUI.AlphaVoileSurFondQuelconque(c, 0.90f, out _); return c; }
+        }
+        private static Color VerreBulleBas
+        {
+            get
+            {
+                Color t = DesignTokens.Current.hudBarGlassBottom;
+                Color c = new Color(t.r, t.g, t.b, 1f);
+                c.a = ProceduralUI.AlphaVoileSurFondQuelconque(c, 0.96f, out _);
+                return c;
+            }
         }
 
         // ================================================================ ⑨-1 le tampon qui résout
@@ -976,29 +1114,8 @@ $"{QuiParle(c)} · {ExceptionBandes.Ligne(c.severity_band, c.priority_band)}", 8
         ///   une dérivation côté client.
         /// ★ Décider ce qui N'A PAS le droit de devenir une clé demande plus d'attention que la
         ///   conversion elle-même.</summary>
-        /// <summary>La réplique du premier — LE point de passage du texte serveur de ⑨.
-        ///
-        /// Consomme `event_descriptor_i18n` quand le back l'envoie ET que le dictionnaire porte
-        /// la clé ; sinon la PROSE. Mesuré le 2026-09-02 : la référence est non nulle sur 2
-        /// cartes sur 6, et 11 des 12 clés demandées par ⑨/⑩ sont servies — donc ce branchement
-        /// change réellement ce que le joueur lit, contrairement à la mesure d'hier soir où le
-        /// recouvrement était nul.
-        ///
-        /// ⛔ ET IL RÈGLE UN DÉFAUT QUE LA CAPTURE SOUS CHROME AVAIT MONTRÉ : sur les 4 cartes du
-        /// seeder, `event_descriptor` n'est PAS de la prose — c'est un identifiant
-        /// (`exc_demo_teach_heat`), et ⑨ l'affichait entre guillemets comme une parole de
-        /// lieutenant. Un identifiant n'est pas une réplique : s'il n'a pas d'espace, il est
-        /// montré tel quel, sans guillemets, comme ㊱ montre ses clés.
-        /// ★ Mettre un identifiant technique dans la bouche d'un personnage, c'est le seul cas
-        ///   de la nuit où l'écran ne se contentait pas de taire une donnée : il en inventait
-        ///   une. Le trou se montre, il ne se déguise pas en dialogue.</summary>
-        private static string Replique(ExceptionCardDto c)
-        {
-            // La règle vit désormais dans `ExceptionBandes.Replique`, que ⑩ consomme aussi :
-            // elle était écrite ici seule, et l'écran de détail faisait l'inverse à un clic d'écart.
-            return ExceptionBandes.Replique(TexteServeur(c), ExceptionBandes.ParleUnLieutenant(c));
-        }
-
+        // ⑨-4 — `Replique(c)` est retirée : la réplique du premier passe par `RepliqueDuPremier` (la même règle des guillemets,
+        // `ExceptionBandes.Replique`, plus l'adresse « Patron — »), et `TexteServeur` reste le point de passage du texte serveur.
         /// <summary>Le texte serveur d'une carte : la référence i18n si elle est SERVIE, la prose
         /// sinon. `Connait` avant `Traduire` — une clé absente ne doit pas remplacer une prose
         /// lisible par une clé nue.</summary>
