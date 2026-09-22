@@ -1,4 +1,4 @@
-# 07 — Les 43 clés orphelines : la valeur `en`, réécrite pour coller au nouveau `fr`
+# 07 — Les 50 clés orphelines (et les 3 « même clé ») : la valeur `en`, réécrite pour coller au nouveau `fr`
 
 Atelier / DA, 2026-09-22. Source : `mafia-builder-city-clean/Tools/juge-donnees/i18n/orphelines-2026-09-22.{md,json}` (client `4bddb0aa`). Le texte `fr` est celui de la table (colonne « texte FR exact du littéral ») ; ce fichier donne l'`en` de la **nouvelle** clé, pour que f7 applique `fr` et `en` en une passe. Contrôle fait à l'écriture : l'ensemble des 28 clés ci-dessous est ÉGAL à l'ensemble des clés « nouvelle » du JSON (script, pas relecture).
 
@@ -85,3 +85,27 @@ Contrôle fait à l'écriture : l'ensemble des 28 clés ci-dessus + les 15 ci-de
 
 - L'`en` change là où le `fr` a changé de sens, pas seulement de langue : *tier* → **size** (« Taille du labo / du relais » : la bande dit une taille, pas un rang), *Operational* → **In service** (« En service »), *Grow stage* → **Growth** (« Pousse »), *Husbandry* → **Care** (« Soin »), *Roster* → **Crew** (« Équipe »). Ailleurs l'`en` servi disait déjà ce que dit le `fr`, et il est gardé (Setup, Cover, Raid risk, Alert, Cold chain, Purity, Appointment, Payout, Crop) — garder n'est pas recopier : chaque ligne a été relue contre son `fr`.
 - Titres de ligne : majuscule initiale, sans point, comme les 25 servis.
+
+## Complément du 2026-09-22 — tranche 3 et lot E (table finale, 50 clés, client `d33fc0dd`)
+
+Les 43 lignes ci-dessus ne changent pas. Contrôle fait à l'écriture : l'ensemble des clés des tables d'orphelines de ce fichier est ÉGAL aux 50 clés « nouvelle » du JSON de `d33fc0dd`, et l'ensemble des clés « même clé » ÉGAL à ses 3 entrées `meme_cle` (script, pas relecture).
+
+| clé | fr (table) | en |
+|---|---|---|
+| `building.row.vehicules` | Véhicules | Vehicles |
+| `building.row.en_depot` | En dépôt | On deposit |
+| `building.row.capacite` | Capacité | Capacity |
+| `building.row.rendement` | Rendement | Yield |
+| `building.row.saisie` | Saisie | Seizure |
+| `district.type_batiment.banque` | Banque | Vault |
+| `building.row.taille_de_la_banque` | Taille de la banque | Vault size |
+
+**Même clé, valeur servie périmée — les deux ajoutées par la table finale** (la troisième, `building.row.temperature`, est plus haut) :
+
+| clé | fr (table) | en |
+|---|---|---|
+| `building.yield.idle` | rien ne rentre | nothing coming in |
+| `building.yield.earning` | ça rapporte | earning |
+
+- Même vocabulaire que ④ d3/d4 : *vault* pour `money_holding` (« la banque » ; *bank* nomme la rive en anglais), *seizure* pour la saisie d'audit, *on deposit* pour ce qui est déposé. `district.type_batiment.banque` garde l'anglais servi par l'ancienne clé `.coffre` (« Vault ») : le type n'a changé de nom qu'en français.
+- Les bandes de rendement gardent la minuscule du `fr` (« rien ne rentre », « ça rapporte ») : ce sont des valeurs de ligne, pas des titres.
