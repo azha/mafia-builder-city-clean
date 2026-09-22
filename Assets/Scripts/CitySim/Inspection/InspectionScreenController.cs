@@ -268,14 +268,14 @@ namespace MafiaCleanCity.CitySim.Inspection
                     if (d != null && d.id == id)
                         return !string.IsNullOrEmpty(d.name) ? d.name
                              : !string.IsNullOrEmpty(d.name_canonical) ? d.name_canonical
-                             : $"district {id}";
-            return $"district {id}";
+                             : $"quartier {id}";
+            return $"quartier {id}";
         }
 
         private static string NomDeBatiment(BatimentPossedeDto b)
         {
             string enseigne = b.name_i18n != null && b.name_i18n.@params != null ? b.name_i18n.@params.enseigne : null;
-            string district = !string.IsNullOrEmpty(b.district_name) ? b.district_name : $"district {b.district_id}";
+            string district = !string.IsNullOrEmpty(b.district_name) ? b.district_name : $"quartier {b.district_id}";
             return string.IsNullOrEmpty(enseigne) ? $"un bâtiment de {district}" : $"{enseigne} — {district}";
         }
 

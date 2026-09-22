@@ -147,6 +147,8 @@ SOURCE = [
  (L, "Repair (", 0, "② bouton Réparer (:883, interpolé) et sa raison (:889) — invisibles à l'extracteur"),
  (L, "Tend crop (already", 0, "② raison (:1014) — invisible à l'extracteur"),
  (L, "choose a source", 0, "② raison (:1041) — invisible à l'extracteur"),
+ (L, "district {id}", 0, "⑮ repli du nom de quartier (:271, :272) — invisible à l'extracteur"),
+ (L, "district {b.district_id}", 0, "⑮ repli du district de la cible (:278) — invisible à l'extracteur"),
 ]
 
 
