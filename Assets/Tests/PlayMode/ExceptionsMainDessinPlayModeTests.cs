@@ -12,6 +12,9 @@ namespace MafiaCleanCity.Operational.Tests
     //   R20  l'éventail porté par la FACE (le créneau reste à la mise en page) : ♠ risquée tournée à −5° CSS (z > 0 en Unity) et
     //        descendue, ♦ suggérée droite et LEVÉE, ♣ apprendre à +5° (z < 0) et descendue ; face masquée (coins de 9), bord et
     //        filet intérieur ; encre bordeaux sur la claire, braise sur les sombres ; les cartes du talon déplié sans glyphe
+    //   R21  celui qui parle, au dessin de ⑨ (écart D03) : ⑩ ouvert depuis ⑨ porte le MÊME arbre de bulle (`ParleurAuComptoir`),
+    //        le nom servi, « · Cuisinier · au bâtiment touché » (le rôle PASSÉ par ⑨), trois pastilles dont « Il est sûr », et
+    //        « Je fais quoi ? » en italique dans les guillemets — ni pour la ville, ni pour un identifiant nu
     [Category("EcranFile")]
     public class ExceptionsMainDessinPlayModeTests
     {
@@ -34,10 +37,72 @@ namespace MafiaCleanCity.Operational.Tests
             severity_band = "SEVERE", priority_band = "critical", confidence_band = "confident",
             candidate_actions = new[]
             {
-                A("bribe", "BRIBE"), A("repair", "REPAIR"), A("teach", "ONE_TIME", "WHEN raid THEN repair"), A("lay_low", "LAY_LOW"),
+                A("bribe", "BRIBE"),
+                // un bâtiment visé ⇒ « au bâtiment touché » dans le contexte (R21)
+                new CandidateActionDto { id = "repair", label = "repair", method = "REPAIR",
+                                         effect = new ExceptionEffectDto { type = "REPAIR", target_building_id = "b-1" } },
+                A("teach", "ONE_TIME", "WHEN raid THEN repair"), A("lay_low", "LAY_LOW"),
             },
             suggested_action = A("repair", "REPAIR"),
         };
+
+        private static string[] Enfants(Transform t)
+        {
+            var n = new string[t.childCount];
+            for (int i = 0; i < t.childCount; i++) n[i] = t.GetChild(i).name;
+            return n;
+        }
+
+        private static Transform Trouver(Transform racine, string nom)
+        {
+            foreach (Transform t in racine.GetComponentsInChildren<Transform>(true))
+                if (t.name == nom) return t;
+            return null;
+        }
+
+        [Test]
+        public void R21_CeluiQuiParle_LeDessinDeNeuf()
+        {
+            var hote = new GameObject("ExceptionQueue", typeof(RectTransform));
+            montes.Add(hote);
+            var ecran = hote.AddComponent<ExceptionQueueController>();
+            ecran.RendrePourTest(new[] { Raid() });
+            montes.Add(ecran.Decor.transform.parent.gameObject);   // la racine de ⑨ vit sous le Canvas
+            ecran.PoserRosterPourTest(new[] { new MafiaCleanCity.Operational.Lieutenant.RosterRow { lieutenant_id = "lt-kane", archetype = "COOK" } });
+
+            ecran.OpenDetail(ecran.Cards[0]);
+            ExceptionDetailController d = ecran.LastDetail;
+            Assert.IsNotNull(d);
+            if (ecran.LastNavGameObject != null) montes.Add(ecran.LastNavGameObject);
+
+            Transform feuille = d.FeuillePourTest.transform;
+            Transform medDix = Trouver(feuille, "MedaillonParleur");
+            Assert.IsNotNull(medDix, "le médaillon de celui qui parle, sur ⑩");
+            Transform rangeeDix = medDix.parent;
+            Transform rangeeNeuf = ecran.ParlePourTest.transform;
+            CollectionAssert.AreEqual(new[] { "MedaillonParleur", "QueueBulle", "Bulle" }, Enfants(rangeeDix),
+                "le même arbre que ⑨ : médaillon, queue, bulle");
+            Assert.AreEqual("Parle", rangeeDix.name);
+            Assert.AreEqual("Parle", rangeeNeuf.name);
+
+            Transform bulle = rangeeDix.Find("Bulle");
+            Assert.AreEqual("Lt. Kane", bulle.Find("QuiNom").GetComponent<TextMeshProUGUI>().text);
+            Assert.AreEqual("· Cuisinier · au bâtiment touché", bulle.Find("QuiContexte").GetComponent<TextMeshProUGUI>().text,
+                "le rôle PASSÉ par ⑨ (sa jointure), le lieu de la carte");
+            Transform p = bulle.Find("Pastilles");
+            Assert.AreEqual("Grave", p.Find("Gravite/Lib").GetComponent<TextMeshProUGUI>().text);
+            Assert.AreEqual("Critique", p.Find("Priorite/Lib").GetComponent<TextMeshProUGUI>().text);
+            Assert.AreEqual("Il est sûr", p.Find("Confiance/Lib").GetComponent<TextMeshProUGUI>().text, "`.chip.conf` (⑨-5)");
+            StringAssert.EndsWith(" <i>Je fais quoi ?</i> »", bulle.Find("Replique").GetComponent<TextMeshProUGUI>().text);
+            StringAssert.StartsWith("« Patron — they turned", bulle.Find("Replique").GetComponent<TextMeshProUGUI>().text);
+
+            var ville = Raid(); ville.lieutenant_id = ""; ville.lieutenant = new ExceptionLieutenantDto();
+            ville.event_descriptor = "Citywide heat is high — your operations are under pressure.";
+            Assert.AreEqual("Citywide heat is high — your operations are under pressure.", ExceptionDetailController.RepliqueMain(ville),
+                "la ville ne pose pas de question");
+            var nu = Raid(); nu.event_descriptor = "exc_demo_raid_style";
+            Assert.AreEqual("exc_demo_raid_style", ExceptionDetailController.RepliqueMain(nu), "un identifiant nu non plus");
+        }
 
         private static Transform Face(ExceptionDetailController d, string id)
         {

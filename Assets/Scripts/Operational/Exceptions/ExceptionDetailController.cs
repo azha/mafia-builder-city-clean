@@ -46,6 +46,10 @@ namespace MafiaCleanCity.Operational.Exceptions
         public ExceptionsClient ClientPourTest { get { EnsureInitialized(); return client; } }
         /// <summary>Le décor de ⑩ — le bar de ⑨, zinc `.main-de-cartes` à 15 %.</summary>
         public MafiaCleanCity.Shell.DecorAuComptoir Decor { get; private set; }
+        /// <summary>⑩-1 — le rôle du locuteur (« Cuisinier »…), posé par la file AVANT `Init` : la jointure du roster est dans ⑨,
+        /// ⑩ ne la refait pas. Absent ⇒ pas de rôle dans le contexte (jamais inventé).</summary>
+        public string RoleDuLocuteur;
+
         /// <summary>La feuille de CE détail (montée sous le Canvas partagé : jamais la chercher par son nom).</summary>
         public GameObject FeuillePourTest => sheetGo;
 
@@ -228,34 +232,15 @@ namespace MafiaCleanCity.Operational.Exceptions
             // `lieutenant`. L'ancien commentaire refusait d'afficher « Lieutenant » (le placeholder de TD-046) comme un
             // nom ; mais le corps du 06/09 sert de VRAIS noms (« Lt. Rook », « Lt. Sallo »), et un placeholder servi est
             // la donnée, pas un mensonge de l'écran. Un seul site, partagé avec ⑨ : `ExceptionBandes.Locuteur`.
-            string qui = ExceptionBandes.Locuteur(c);
-            TextMeshProUGUI quiTxt = NewText("Qui", body, qui, (int)PxD(11f), TextAlignmentOptions.Left);
-            quiTxt.fontStyle = FontStyles.Bold;
-            AddLayoutElement(quiTxt.gameObject, minHeight: PxD(14f), flexibleHeight: 0);
-            TrackText(quiTxt, qui);
-
-            // Les trois bandes, en pastilles — libellés FERMÉS, suivis par le corpus de balayage. ⑨-5 : la CONFIANCE passe
-            // par `ExceptionBandes.Confiance` (clé `exception_detail.confiance.<valeur>`, repli de l'atelier §3.2) ; elle
-            // affichait l'enum anglais capitalisé (« Likely »).
-            string pastilles = $"{ExceptionBandes.Ligne(c.severity_band, c.priority_band)} · {ExceptionBandes.Confiance(c.confidence_band)}";
-            TextMeshProUGUI chips = NewText("Chips", body, pastilles, (int)PxD(CssChipCorps * 1.4f),
-                                            TextAlignmentOptions.Left);
-            chips.color = SeverityTeinte(c.severity_band);
-            AddLayoutElement(chips.gameObject, minHeight: PxD(11f), flexibleHeight: 0);
-            TrackText(chips, pastilles);
-
-            // La réplique — texte PRODUCTEUR (prose anglaise aujourd'hui, clé demain) : chrome,
-            // non suivi. Passe par le point unique `Texte()`.
-            TextMeshProUGUI desc = NewText("Descriptor", body,
-                // ⛔ LES GUILLEMETS ÉTAIENT INCONDITIONNELS : un identifiant technique se retrouvait
-                //    dans la bouche d'un lieutenant, alors que ⑨ — le même contenu, à un clic — a une
-                //    règle écrite qui l'interdit. La règle est partagée maintenant.
-                ExceptionBandes.Replique(Texte(c.event_descriptor, c.event_descriptor_i18n), ExceptionBandes.ParleUnLieutenant(c)),
-                (int)PxD(11.5f), TextAlignmentOptions.Left);
-            desc.textWrappingMode = TextWrappingModes.Normal;
-            desc.overflowMode = TextOverflowModes.Overflow;
-            desc.color = TextPrimary;
-            AddLayoutElement(desc.gameObject, minHeight: PxD(24f), flexibleHeight: 0);
+            // ⑩-1 — CELUI QUI PARLE, au dessin de ⑨ (cadre 15 = cadre 14, écart D03) : médaillon 60 au buste, bulle de verre,
+            // nom or-vif, « · rôle · lieu », TROIS pastilles (gravité, priorité, CONFIANCE — `.chip.conf`), la réplique suivie
+            // de « Je fais quoi ? » en italique. Le code est `ParleurAuComptoir`, partagé avec ⑨. Avant : « Votre lieutenant »
+            // en gras et une ligne « Grave · Critique · Confident ».
+            ParleurAuComptoir parleur = Parleur();
+            RectTransform rangee = parleur.ConstruireRangee(body, 10f);
+            parleur.Construire(rangee, c, ExceptionQueueController.Contexte(RoleDuLocuteur, c), RepliqueMain(c),
+                ExceptionBandes.Gravite(c.severity_band), ExceptionBandes.Priorite(c.priority_band),
+                ExceptionBandes.Confiance(c.confidence_band));
 
             // ⑩-1 — PLUS D'ÉTAT « RÉSOLU » ICI (écart D10 : « Résolu ✓ · Issue : REPAIRING · Back », l'enum BRUT, et
             // « Issue : » servi en fr « Problème : », un contresens). La carte se referme (`Fermer`) et ⑨ montre l'après
@@ -288,6 +273,22 @@ namespace MafiaCleanCity.Operational.Exceptions
             // « Retour » seulement HORS shell : sous shell, le retour est le geste du shell ; hors shell (montage autonome),
             // sans lui la main n'aurait d'autre sortie que la résolution.
             if (mountParent == null) AddButton("back", Lib("Back"), Back);
+        }
+
+        private ParleurAuComptoir Parleur() => new ParleurAuComptoir(PxD, PxDI, TrackText);
+
+        private int PxDI(float css) => MafiaCleanCity.Shell.EchelleMaquette.PxTrait(
+            css, body, MafiaCleanCity.Shell.EchelleMaquette.LargeurEcransBrennar4);
+
+        /// <summary>La réplique de ⑩ : celle de ⑨ (« Patron — … », la règle des guillemets), suivie, quand un lieutenant parle en
+        /// prose, de « <i>Je fais quoi ?</i> » DANS les guillemets (cadre 15 : « … J’ai pas de consigne pour ça. <i>Je fais
+        /// quoi ?</i> »). La ville et un identifiant nu ne posent pas de question.</summary>
+        public static string RepliqueMain(ExceptionCardDto c)
+        {
+            string r = ExceptionQueueController.RepliqueDuPremier(c);
+            const string fin = " »";
+            if (!ExceptionBandes.ParleUnLieutenant(c) || r == null || !r.StartsWith("« ") || !r.EndsWith(fin)) return r;
+            return r.Substring(0, r.Length - fin.Length) + " <i>" + Lib("Je fais quoi ?") + "</i>" + fin;
         }
 
         // ── ⑩ : les constantes de la maquette, lues à la source (série 4, largeur 300) ──
@@ -610,35 +611,6 @@ namespace MafiaCleanCity.Operational.Exceptions
             return prose ?? string.Empty;
         }
 
-        /// <summary>La teinte d'une gravité — fonction NOMMÉE (patron `HeatBucketResolver`),
-        /// jamais une chaîne de ternaires : une garde anti-régression ne voit pas sa cible dans
-        /// un ternaire. Une bande inconnue rend la teinte neutre, jamais celle de « bénin ».</summary>
-        private static Color SeverityTeinte(string bande)
-        {
-            switch ((bande ?? string.Empty).Trim().ToUpperInvariant())
-            {
-                case "MILD":     return AccentMild;
-                case "MODERATE": return AccentModerate;
-                case "SEVERE":   return AccentSevere;
-                default:         return TextSecondary;
-            }
-        }
-
-        /// <summary>Item 0.6 — un libellé d'affichage STATIQUE de ⑩ passe par
-        /// `exception_detail.bloc.<slug>`, repli sur le littéral.
-        ///
-        /// ⛔⛔ CE QUI NE DOIT JAMAIS PASSER PAR ICI, et c'est le cas le plus grave rencontré sur
-        /// ce chantier : `MethodFor` rend `"ADD_RULE"` / `"ONE_TIME"` / le type d'effet. Ces
-        /// chaînes ne s'affichent PAS — elles partent dans le CORPS de
-        /// `POST /v1/exceptions/:id/resolve` comme valeur de `method`.
-        /// ⇒ Les keyer serait sans effet aujourd'hui (repli = littéral) et **casserait la
-        ///   résolution le jour où le dictionnaire les porterait** : le client enverrait un
-        ///   `method` traduit. Et le serveur ne le dirait pas — TD-451 a montré qu'un corps mal
-        ///   formé rend **200**, ignore le champ, et consomme la carte quand même.
-        /// ★ Une chaîne qui VOYAGE vers le serveur n'est pas un libellé, même quand elle est
-        ///   écrite en majuscules lisibles. La question n'est pas « est-ce du texte ? » mais
-        ///   « qui le lit — un joueur ou un handler ? ».
-        /// ⚠️ De même, `"+" + restantes.Count` (le talon) est CALCULÉ : aucune clé n'en dérive.</summary>
         private static string Lib(string litteral) =>
             MafiaCleanCity.I18n.Libelle.De("exception_detail", "bloc", litteral);
 
