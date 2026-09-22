@@ -224,3 +224,29 @@ plus ») affirmerait une intention que la donnée n'a pas.
   fr et en ci-dessus, pour le lot i18n de ⑯. La maquette écrit en minuscules ; les capitales de l'écran sont le rendu (CSS), pas la donnée.
 - ⚠️ Ce n'est vrai QUE pour ⑯. Un écran qui montrerait la bande d'un lieutenant SANS carte (⑦, la fiche) verrait `none` au sens propre
   (« rien levé en 7 jours ») : là, un mot serait dû — proposé : « ne signale rien » / « hasn't flagged anything ».
+
+---
+
+## 8. ㊴ — les quatre mots de `ae661b46` (CLIENT-1) : ratifiés, avec leur en (2026-09-23)
+
+CLIENT-1 range le dernier cran de chaque piste en ÉVÉNEMENT (« Franchi »), selon le cadre **143** (« le dernier de chaque piste est un
+événement, pas un cran de plus »), et `flagged` en cran (`ForensicScreenController.cs`, `ae661b46`, sur `gate/cumul-client-2026-09-22`).
+
+| clé | valeur servie | fr | en |
+|---|---|---|---|
+| `forensic.cran.un_dossier_est_ouvert` | `audit_risk_bucket = flagged` | Un dossier est ouvert | A file is open |
+| `forensic.evenement.ils_sont_venus` | `audit_risk_bucket = audited` | Ils sont venus | They came |
+| `forensic.evenement.ca_saute_aux_yeux` | `effluent_visibility_bucket = glaring` | Ça saute aux yeux | It jumps out at you |
+| `forensic.evenement.convoque` | `lifestyle_alarm_bucket = subpoenaed` | Convoqué | Summoned |
+
+1. **La casse de phrase est ratifiée** : l'écran dit déjà ses gravités en phrases (« Rien ne dépasse », « On vous regarde », « Ça se voit de
+   loin », `ForensicScreenController.cs:568-570`) ; la maquette écrit en minuscules parce qu'elle place ces mots sous un intitulé, pas
+   parce que la donnée est minuscule. Le §4 ci-dessus (minuscules) est remplacé par cette table pour ces quatre valeurs.
+2. **`glaring` → « Ça saute aux yeux » est ratifié** : c'est le mot que le cadre 143 lui donne. « Ça se voit de loin » reste le mot de la
+   GRAVITÉ « Criant » (`visible` y est rangé) : les deux ne se recouvrent plus, puisque `glaring` sort de l'échelle pour devenir un
+   événement.
+- « Convoqué » garde le masculin de la maquette : la piste est le train de vie **d'un lieutenant** (cadre 131, E1 du juge ㊴). ⚠️ Une
+  lieutenante convoquée lira « Convoqué » — la bande ne dit pas de qui il s'agit, donc le participe ne peut pas s'accorder ; si l'user le
+  veut neutre : « Convocation reçue » / « Summons received ».
+- En en, « They came » et « Summoned » gardent la brièveté du fr ; « It jumps out at you » est la tournure anglaise de l'image
+  (« it's glaring » répéterait la clé).
