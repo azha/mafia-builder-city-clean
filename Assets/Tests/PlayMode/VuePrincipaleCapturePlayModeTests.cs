@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using UnityEngine;
@@ -26,13 +27,59 @@ namespace MafiaCleanCity.Capture.Tests
         private GameObject shellGo;
         private AppShell shell;
 
+        // ⛔⛔ TD-576 (22/09) — DEUX CAPTURES LAISSAIENT LEUR ÉCRAN VIVANT, ET TROIS GARDES POUVAIENT LE MESURER.
+        // `Capture_FicheBatiment` et `Capture_EcranExceptions` montent un écran AUTONOME (canvas + hôte, jeton posé)
+        // qu'aucun code ne détruisait : il vivait jusqu'à la fin du run. Et les tests suivants (ordre alphabétique de
+        // NUnit) cherchaient leur racine PAR NOM GLOBAL (« ExceptionQueueRoot », « BuildingCardSheet ») : deux objets
+        // du même nom, la recherche rend l'un OU l'autre, et la garde A4 pouvait certifier l'écran VOISIN.
+        // ⇒ (i) les hôtes autonomes sont INSCRITS et détruits en IMMÉDIAT au TearDown (même sur un rouge) ;
+        //   (ii) une racine se cherche SOUS le canvas de l'écran photographié (`RacineSous`), jamais par nom global ;
+        //   (iii) garde de sortie : aucun écran de ce fichier né pendant le test ne survit HORS du shell en démontage.
+        // Ce qui est photographié ne change pas, et le démontage du shell (donc le MUTE) non plus.
+        private readonly List<GameObject> hotesAutonomes = new List<GameObject>();
+        private HashSet<int> ecransAvant = new HashSet<int>();
+
+        private static IEnumerable<MonoBehaviour> EcransDuFichier() =>
+            Object.FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include, FindObjectsSortMode.None)
+                .Where(m => m is MafiaCleanCity.Operational.BuildingCardController
+                         || m is MafiaCleanCity.Operational.Exceptions.ExceptionQueueController
+                         || m is MafiaCleanCity.Operational.Exceptions.ExceptionDetailController);
+
+        /// <summary>La racine NOMMÉE sous `sous` — l'écran qu'on photographie, jamais un homonyme ailleurs dans la scène.</summary>
+        private static GameObject RacineSous(Transform sous, string nom)
+        {
+            if (sous == null) return null;
+            foreach (Transform t in sous.GetComponentsInChildren<Transform>(true))
+                if (t.name == nom) return t.gameObject;
+            return null;
+        }
+
+        [SetUp]
+        public void ReleverLesEcrans()
+        {
+            ecransAvant = new HashSet<int>(EcransDuFichier().Select(m => m.GetInstanceID()));
+            hotesAutonomes.Clear();
+        }
+
         [TearDown]
         public void TearDown()
         {
             MafiaCleanCity.CityMap.DemoIdentityResolver.SortirModeCapture(GetType().Name);   // mode capture levé en fin de test (voie 1, 22/09)
+            // (i) — les hôtes autonomes, en IMMÉDIAT : leurs contrôleurs ont un jeton et des requêtes.
+            foreach (GameObject go in hotesAutonomes) if (go != null) Object.DestroyImmediate(go);
+            hotesAutonomes.Clear();
+            // (iii) — relevé AVANT le démontage (inchangé, différé) du shell : ce qui vit sous lui part avec lui.
+            Transform racineShell = shellGo != null ? shellGo.transform : null;
+            Transform racineCanvas = shell != null && shell.ShellCanvas != null ? shell.ShellCanvas.transform.root : null;
+            List<string> survivants = EcransDuFichier()
+                .Where(m => !ecransAvant.Contains(m.GetInstanceID()))
+                .Where(m => m.transform.root != racineShell && m.transform.root != racineCanvas)
+                .Select(m => $"{m.GetType().Name}@{m.gameObject.name}").ToList();
             if (shell != null && shell.ShellCanvas != null) Object.Destroy(shell.ShellCanvas.gameObject);
             if (shellGo != null) Object.Destroy(shellGo);
             LogAssert.ignoreFailingMessages = false;
+            Assert.IsEmpty(survivants, "TD-576 : écran(s) de ce fichier vivant(s) HORS du shell en sortie de test — " +
+                string.Join(", ", survivants) + ". Un montage autonome non inscrit dans `hotesAutonomes` survit au run.");
         }
 
         [UnityTest]
@@ -915,6 +962,7 @@ namespace MafiaCleanCity.Capture.Tests
             sc.referenceResolution = new Vector2(1080, 2400);
 
             GameObject host = new GameObject("FicheStandalone");
+            hotesAutonomes.Add(host); hotesAutonomes.Add(canvasGo);   // TD-576 (i)
             var ecran = host.AddComponent<
                 MafiaCleanCity.Operational.BuildingCardController>();
             ecran.SetMountParent(canvasGo.transform);
@@ -1064,6 +1112,7 @@ namespace MafiaCleanCity.Capture.Tests
             sc.referenceResolution = new Vector2(1080, 2400);
 
             GameObject host = new GameObject("ExceptionsStandalone");
+            hotesAutonomes.Add(host); hotesAutonomes.Add(canvasGo);   // TD-576 (i)
             var ecran = host.AddComponent<
                 MafiaCleanCity.Operational.Exceptions.ExceptionQueueController>();
             ecran.SetMountParent(canvasGo.transform);
@@ -1097,7 +1146,7 @@ namespace MafiaCleanCity.Capture.Tests
             // revient à compter le contrôleur » — et je viens de le refaire à l'identique.
             // ★ Connaître un piège ne protège pas de lui : il se présente sous une autre forme,
             //   et c'est la même mesure qui le rattrape.
-            GameObject racineUI = GameObject.Find("ExceptionQueueRoot");
+            GameObject racineUI = RacineSous(canvasGo.transform, "ExceptionQueueRoot");   // TD-576 (ii)
             Assert.IsNotNull(racineUI, "⑨ n'a construit aucune racine d'interface");
             int noeuds = racineUI.GetComponentsInChildren<Transform>(true).Length;
             Assert.Greater(noeuds, 15,
@@ -1165,7 +1214,7 @@ namespace MafiaCleanCity.Capture.Tests
                 "la capture — une image nommée `_etat-vide_` qui montre des cartes ment deux fois.");
 
             Assert.IsNotNull(shell.TopBar, "le chrome haut doit exister");
-            GameObject racineUI = GameObject.Find("HorizonRoot");
+            GameObject racineUI = RacineSous(shell.ShellCanvas.transform, "HorizonRoot");   // TD-576 (ii)
             Assert.IsNotNull(racineUI, "㊱ n'a construit aucune racine sous le chrome");
 
             // ⛔ MESURER L'ÉCRAN, PAS LE CHROME. Ma première version de cette garde n'assertait
@@ -1251,7 +1300,7 @@ namespace MafiaCleanCity.Capture.Tests
             for (int i = 0; i < 60; i++) yield return null;
 
             Assert.IsNotNull(shell.TopBar, "le chrome haut doit exister");
-            var feuille = GameObject.Find("BuildingCardSheet");
+            var feuille = RacineSous(shell.ShellCanvas.transform, "BuildingCardSheet");   // TD-576 (ii)
             Assert.IsNotNull(feuille, "② n'a construit aucune fiche sous le chrome");
             int noeuds = feuille.GetComponentsInChildren<Transform>(true).Length;
             Assert.Greater(noeuds, 15, $"② doit avoir du contenu (mesuré {noeuds} nœuds)");
@@ -1331,7 +1380,7 @@ namespace MafiaCleanCity.Capture.Tests
             for (int i = 0; i < 30; i++) yield return null;
 
             Assert.IsNotNull(shell.TopBar, "le chrome haut doit exister");
-            GameObject racineUI = GameObject.Find("ExceptionQueueRoot");
+            GameObject racineUI = RacineSous(shell.ShellCanvas.transform, "ExceptionQueueRoot");   // TD-576 (ii)
             Assert.IsNotNull(racineUI, "⑨ n'a construit aucune racine sous le chrome");
 
             // GARDE A4 — même mesure que sur la file pleine : le contenu ne passe pas sous le dock.
@@ -1468,7 +1517,7 @@ namespace MafiaCleanCity.Capture.Tests
             for (int i = 0; i < 60; i++) yield return null;
 
             Assert.IsNotNull(file.LastDetail, "toucher un attendant doit ouvrir ⑩");
-            GameObject feuille = GameObject.Find("ExceptionDetailSheet");
+            GameObject feuille = RacineSous(shell.ShellCanvas.transform, "ExceptionDetailSheet");   // TD-576 (ii)
             Assert.IsNotNull(feuille, "⑩ n'a pas construit sa feuille");
             int noeuds = feuille.GetComponentsInChildren<Transform>(true).Length;
             Assert.Greater(noeuds, 15, $"⑩ doit avoir du contenu (mesuré {noeuds} nœuds)");
@@ -1558,7 +1607,7 @@ namespace MafiaCleanCity.Capture.Tests
 
             // Anti-vacuité : sous la racine CONSTRUITE, jamais sous le contrôleur — il ne porte
             // aucun enfant visuel, et compter ses enfants revient à le compter lui.
-            GameObject racineUI = GameObject.Find("ExceptionQueueRoot");
+            GameObject racineUI = RacineSous(shell.ShellCanvas.transform, "ExceptionQueueRoot");   // TD-576 (ii)
             Assert.IsNotNull(racineUI, "⑨ n'a construit aucune racine d'interface sous le chrome");
             int noeuds = racineUI.GetComponentsInChildren<Transform>(true).Length;
             Assert.Greater(noeuds, 15,

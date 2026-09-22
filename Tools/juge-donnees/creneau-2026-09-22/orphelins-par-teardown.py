@@ -65,7 +65,8 @@ for n,c in enumerate(ordre,1):
     # 4. locataire local jamais détruit
     for nm,b in tests:
         for v in re.findall(r'\b(?:var|GameObject)\s+(\w+)\s*=\s*new GameObject',b):
-            if re.search(rf'\b{v}\.AddComponent<[\w.\s]*?(Controller|Shell|Screen)\s*>',b) and not re.search(rf'Destroy\w*\(\s*{v}\b',b) and not re.search(rf'\b{v}\b',td):
+            if re.search(rf'\b{v}\.AddComponent<[\w.\s]*?(Controller|Shell|Screen)\s*>',b) and not re.search(rf'Destroy\w*\(\s*{v}\b',b) and not re.search(rf'\b{v}\b',td) \
+                    and not any(re.search(rf'\b{l}\b',td) and 'Destroy' in td for l in re.findall(rf'(\w+)\.Add\(\s*{v}\s*\)',b)):   # inscrit dans une liste que le TearDown détruit
                 constats.append(f"LOCAL non détruit {nm}:{v}")
     notd='' if td else ' · pas de TearDown'
     print(f"{n:2} {c} [{p.name}]{notd} : " + ('; '.join(constats) if constats else 'rien'))

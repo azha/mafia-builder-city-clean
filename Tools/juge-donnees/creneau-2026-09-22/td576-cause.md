@@ -104,6 +104,39 @@ Rang dans l'ordre d'exécution :
 
 **Rien de signalé** : 43 classes.
 
+## La classe voisine — une racine cherchée PAR NOM GLOBAL, qui peut rendre un homonyme (22/09, sur GO de l'orchestrateur)
+Outil : `find-nourrit-assertion.py` — tout `GameObject.Find("nom")` assigné dont le résultat (ou une grandeur tirée de lui) nourrit un
+`Assert.*` de la même méthode, dans tout `Assets/Tests`. Pour chacun : deux objets de ce nom peuvent-ils COEXISTER à cet instant ?
+Sources de coexistence mesurées sur les 127 classes (classifieur v3) : locaux jamais détruits = les 2 écrans autonomes de
+VuePrincipaleCapture (`BuildingCardController`, `ExceptionQueueController`) ; hôtes de nav jamais démontés = Dashboard et OperationalLoop
+(`Pipeline` → `LaunderingController`, aucun des noms cherchés) ; `Destroy` différé = sursis d'UNE frame, et chaque recherche vient après
+au moins une attente réseau.
+
+**Compte avant → après : 20 → 14 sites nourrissant une assertion (13 → 12 fichiers) ; sites À COEXISTENCE POSSIBLE : 3 → 0.**
+
+Corrigés ce soir (fichier de CAPTURE, `VuePrincipaleCapturePlayModeTests.cs`) — racine cherchée SOUS le canvas de l'écran photographié :
+| site | nom | coexistence possible avant ? |
+|---|---|---|
+| :1100 `Capture_EcranExceptions` | ExceptionQueueRoot | non (le premier de ce nom dans l'ordre ; sous son propre `canvasGo` désormais) |
+| :1168 `Capture_Horizon_SousChrome` | HorizonRoot | non (aucune fuite permanente de ce nom) |
+| :1254 `Capture_FicheBatiment_SousChrome` | BuildingCardSheet | **OUI** — `FicheStandalone` de `Capture_FicheBatiment`, jamais détruit, passe avant |
+| :1334 `Capture_EcranExceptions_FileVide_SousChrome` | ExceptionQueueRoot | **OUI** — `ExceptionsStandalone` de `Capture_EcranExceptions` |
+| :1471 `Capture_Detail_MainDeCartes_SousChrome` | ExceptionDetailSheet | non (les fuites permanentes passent APRÈS dans l'ordre alphabétique) |
+| :1561 `Capture_EcranExceptions_SousChrome` | ExceptionQueueRoot | **OUI** — idem :1334 |
+Avec (i) les deux écrans autonomes inscrits et détruits en IMMÉDIAT au TearDown, et (iii) une garde de sortie (aucun BuildingCard /
+ExceptionQueue / ExceptionDetail né pendant le test ne vit HORS du shell en démontage). Le MUTE et ce qui est photographié : inchangés.
+
+**Classe surveillée — 14 sites, 12 fichiers d'écran, coexistence NON possible à la mesure** : chacun est le `RacineEcran()` de sa classe
+(`GameObject.Find("<Écran>Root")` + `Assert.IsNotNull`), et le TearDown de CHAQUE classe détruit en boucle, en IMMÉDIAT, toute racine de ce
+nom (`while (reste != null) DestroyImmediate`) ; aucune fuite permanente mesurée ne construit ces noms. Ils redeviendraient à risque le
+jour où un test monte deux écrans du même type, ou laisse un hôte autonome : c'est ce que la garde de sortie de chaque classe corrigée
+nommerait, et ce que ces classes-ci n'ont pas encore.
+Carnet:50 · ChaineDAppro:92 · Conflit:48 · Delegation:48, :455 · Demolition:43 · Distribution:53, :375 (Ficelle) · Filiere:43 ·
+Forensic:44 · Horizon:44 · Journal:44 · Loi:47 · Reputation:57.
+
+**Preuve due** : aucun run ne l'a encore exercé — l'étape 8 (partie 2 ∪ recapture) est le prochain qui passe par ces six sites et par la
+garde de sortie ; inscrit au runbook.
+
 ## La ligne pour TD-576 (le registre est `front.md` du back, que ce rôle ne peut pas écrire — à reporter par l'orchestrateur)
 > 22/09 — **cause d'Ecran9 nommée, dans sa PROPRE classe** : `MonterFileAvecCartes` écrasait `controllerGo`, Ecran10 monte deux files, la
 > première survivait avec un `LoadQueue` sans jeton (lancé par `Back()`) ; son 401 tombe pendant Ecran10 au rejeu (:50335, ignoré) et au début
