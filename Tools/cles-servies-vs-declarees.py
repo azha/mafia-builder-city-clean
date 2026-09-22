@@ -47,6 +47,12 @@ APPARIEMENTS = [
     # ⑯-8 — les params de `subject_name_i18n` (S5-a, back 04f35021), DÉCLARÉS avant d'être servis (union des 3 gabarits).
     # Aucun corps figé ne les porte encore : la ligne rend « EXPLICITE VIDE » jusqu'au premier corps vivant post-S5.
     ("SujetParamsDto", "flag-review-seeded.cards[].subject_name_i18n.params"),
+    # ⑨-0 — la forme G de ⑨/⑩ : le recouvrement ne l'avait PAS vue sur le corps du 06/09 (il ne signalait que 2 clés, sur un
+    # corps plus ancien) ; les appariements explicites montraient lieutenant, script_complexity_band, suggested_disposition,
+    # method, source.
+    ("ExceptionCardDto", "GET_exceptions_queue.exceptions[]"),
+    ("CandidateActionDto", "GET_exceptions_queue.exceptions[].candidate_actions[]"),
+    ("CandidateActionDto", "GET_exceptions_queue.exceptions[].suggested_action"),
 ]
 
 

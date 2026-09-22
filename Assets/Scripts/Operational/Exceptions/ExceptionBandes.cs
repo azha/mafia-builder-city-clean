@@ -173,6 +173,23 @@ namespace MafiaCleanCity.Operational.Exceptions
         public static bool ParleUnLieutenant(ExceptionCardDto c) =>
             c != null && !string.IsNullOrEmpty(c.lieutenant_id);
 
+        /// <summary>⑨-0 — QUI parle, UN seul site pour ⑨ et ⑩ (ils l'écrivaient chacun de leur côté).
+        /// · la carte porte un lieutenant ⇒ son NOM servi (`lieutenant.name`, C3) ;
+        /// · pas de lieutenant ⇒ « La ville » ;
+        /// · un lieutenant SANS nom ⇒ « Votre lieutenant ». ⚠️ N'arrive que sur une pile antérieure à C3 : le back refuse
+        ///   aujourd'hui de servir un id sans nom (D7). Le repli reste lisible et DIT qu'il ne nomme personne.
+        /// ⚠️ Le nom est affiché TEL QU'IL EST SERVI, même « Lieutenant » (le placeholder de TD-046 écrit par le chemin
+        ///    de recrutement) : c'est la donnée, pas un défaut d'ici.</summary>
+        public static string Locuteur(ExceptionCardDto c)
+        {
+            if (!ParleUnLieutenant(c))
+                return MafiaCleanCity.I18n.Libelle.De("exceptions", "locuteur", "La ville");
+            string nom = c.lieutenant != null ? c.lieutenant.name : null;
+            return string.IsNullOrWhiteSpace(nom)
+                ? MafiaCleanCity.I18n.Libelle.De("exceptions", "locuteur", "Votre lieutenant")
+                : nom.Trim();
+        }
+
         /// <summary>LA RÈGLE, EN ENTIER (ratifiée par l'atelier le 22/09) :
         /// « » ⇔ (le locuteur est un lieutenant) ET (le texte est de la prose : il a une espace).
         /// La ville ne parle pas entre guillemets ; une clé ne parle jamais, quel que soit le locuteur.</summary>

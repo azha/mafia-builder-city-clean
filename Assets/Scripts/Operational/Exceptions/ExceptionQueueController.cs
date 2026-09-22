@@ -659,13 +659,10 @@ $"{QuiParle(c)} · {ExceptionBandes.Ligne(c.severity_band, c.priority_band)}", 8
         private int PxI(float css) =>
             EchelleMaquette.PxTrait(css, racine, EchelleMaquette.LargeurEcransBrennar4);
 
-        /// <summary>Qui parle. ⚠️ Le corps ne porte QUE `lieutenant_id` — le NOM du lieutenant
-        /// n'est pas projeté sur cette route, alors que la maquette l'écrit (« Cuisinier »,
-        /// « Logistique »). On montre donc « La ville » quand la carte n'est liée à personne, et un
-        /// libellé neutre sinon, plutôt qu'un nom inventé.
-        /// ★ Même règle que sur ㊲ : le trou se montre, il ne se comble pas. Y écrire un nom
-        ///   plausible serait le défaut exact que le juge données a trouvé là-bas.
-        /// Mesure du 2026-09-02 : `ExceptionCardDto` porte `lieutenant_id`, pas de champ de nom.</summary>
+        // ⑨-0 — L'ANCIEN COMMENTAIRE DE `QuiParle` ÉTAIT FAUX, et il faut le dire : il affirmait « le NOM du lieutenant
+        // n'est pas projeté sur cette route ». Il l'est depuis C3 (`lieutenant: {id, name}`, corps du 06/09 : « Lt. Rook »),
+        // et c'est le DTO qui le jetait (forme G). Un énoncé d'absence est daté : celui-ci avait expiré sans que rien ne
+        // rougisse, parce qu'un champ non déclaré ne lève rien.
         /// <summary>screen_a8 — la CATÉGORIE de couche conflit d'une exception, ou `null`.
         ///
         /// Le canon (`docs/tech/08a_conflict_layer_screens/screen_a8_…md`) fait de a8 une
@@ -711,8 +708,7 @@ $"{QuiParle(c)} · {ExceptionBandes.Ligne(c.severity_band, c.priority_band)}", 8
             return null;
         }
 
-        private static string QuiParle(ExceptionCardDto c) =>
-            string.IsNullOrEmpty(c.lieutenant_id) ? MafiaCleanCity.I18n.Libelle.De("exceptions", "locuteur", "La ville") : "Votre lieutenant";
+        private static string QuiParle(ExceptionCardDto c) => ExceptionBandes.Locuteur(c);
 
         /// <summary>Item 0.6 — un littéral STATIQUE de ⑨ passe par `exceptions.bloc.<slug>`,
         /// repli sur le littéral (contrat de `Libelle`).
