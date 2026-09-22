@@ -17,7 +17,7 @@
 |---|---|---|---|---|
 | `ecran-principal/ecran-canon-propre.png` | canon existant (900×1752, ×3) | — | ×3 | 300 CSS = 900 px |
 | `ecran-principal/ecran-canon.png` | canon existant (900×1752, ×3) | — | ×3 | 300 CSS = 900 px |
-- **Cadres de la maquette** : `hud-brennar.html` le HUD de Brennar — atelier `0ccd8d5`. Cadres d'ÉTATS : les autres numéros du groupe.
+- **Cadres de la maquette** : `hud-brennar.html` le HUD de Brennar — atelier `ec4c09a`. Cadres d'ÉTATS : les autres numéros du groupe.
 - **Attribution cadre ↔ écran** : mesurée. hors canon (front.md ①) ; canon ecran-principal/ecran-canon.png + mesure-canon.txt
 - ⚠️ La référence fait **1080×2102** (le `.tel` de l'atelier est en 9:17,5) ; la capture fait 1080×2400
   (9:20). On aligne par PARTIES, en % de la largeur — pas par le pixel absolu.

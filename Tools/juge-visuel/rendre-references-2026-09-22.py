@@ -53,6 +53,14 @@ DUS = [
     (33,  "La police — déposer un signalement",         R2 + '/etats/cadre-33-signalement.png', "⑮ état : déposer (D3 — 422 mesuré côté back)"),
     (34,  "La police — le retour de bâton",             R2 + '/etats/cadre-34-retour-de-baton.png', "⑮ état : représailles (backlash)"),
     (35,  "La police — avec les lots back",             R2 + '/etats/cadre-35-lots-back.png', "⑮ état : avec les lots back (cadre d'atelier, le bas est une note)"),
+    # ㉔ — re-rendu au signal du 2026-09-23 : le nominal (chrome actuel « ARGENT · CHALEUR », la référence datait du 03/09) et deux
+    #      références NOMMÉES pour les cadres corrigés ce soir (atelier ec4c09a : l'heure retirée ; le cadre 29 ramené à HELD).
+    (25,  "Autonomie — le burner : deux messages",     'autonomie/reference-1080x2102.png',
+          "㉔ nominal (INDEX) — chrome du 07/09 (« ARGENT · 24 850,00 € · CHALEUR ») ; la référence du 03/09 portait « $ · HEAT »"),
+    (26,  "Autonomie — un message : tapez 1 ou 2",     'autonomie/reference-message-1080x2102.png',
+          "㉔·26 : le message ouvert, « CE CYCLE » sans heure (le rapport n'a pas d'horodatage) — atelier ec4c09a"),
+    (29,  "Autonomie — après votre réponse",           'autonomie/reference-reponse-1080x2102.png',
+          "㉔·29 : la réponse 2 (HOLD) rend HELD, « LE CHARGEMENT ATTEND. » — l'ancien NOOP était impossible — atelier ec4c09a"),
 ]
 # `--seul <index>` : ne rend QUE ce cadre (ex. #109 après le gate). Sans lui, tout le DUS est re-rendu, et chaque PNG déjà commité
 # changerait de quelques pixels d'anticrénelage (mesuré : 0,021 % sur reference-derive) — un diff sans objet, et un objet LFS de plus.
