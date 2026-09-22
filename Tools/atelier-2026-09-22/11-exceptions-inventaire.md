@@ -130,15 +130,18 @@ choisi de ne PAS inventer de clé (« la clé se crée côté back, au lot i18n 
 |---|---|---|---|---|---|
 | gravité | `SEVERE` | grave | ratifié (cadres 14, 15, 18) | grave | severe |
 | gravité | `MODERATE` | modérée | ratifié (cadres 14, 17, 18) | modérée | moderate |
-| gravité | `MILD` | « Légère » (client) | **non ratifié**, jamais dessiné | **légère** — la suite naturelle de « grave · modérée » | mild |
+| gravité | `MILD` | « Légère » (client) | **non ratifié**, jamais dessiné | légère | mild |
 | priorité | `critical` | critique | ratifié (cadres 14, 15, 18) | critique | critical |
 | priorité | `urgent` | urgente | ratifié (cadres 14, 17, 18) | urgente | urgent |
 | priorité | `watching` | « À surveiller » (client) | **non ratifié** | **à surveiller** | to watch |
-| priorité | `silent` | « Silencieuse » (client) | **non ratifié** | **sans urgence** — « silencieuse » décrit la carte, pas son rang ; la suite se lit « critique · urgente · à surveiller · sans urgence » | no rush |
+| priorité | `silent` | « Silencieuse » (client) | **non ratifié** | sans urgence | no rush |
 | confiance | `confident` | il est sûr | ratifié (cadre 15, `.chip.conf.conf-h`) | il est sûr | they’re sure |
 | confiance | `likely` | — (aucun mot, ni maquette ni client) | **absent** | **il le croit** | they think so |
 | confiance | `tentative` | — | **absent** | **il hésite** | they’re unsure |
 
+- ⚠️ **Correction du 2026-09-23** : les cellules « fr proposé » de `MILD` et `silent` portaient le mot ET sa raison ; le back a servi la raison
+  avec le mot. La valeur est le mot seul — **« légère »** (la suite naturelle de « grave · modérée ») et **« sans urgence »** (« silencieuse »
+  décrit la carte, pas son rang ; la suite se lit « critique · urgente · à surveiller · sans urgence »).
 - La confiance dit **ce que le lieutenant pense de sa propre suggestion** (le flottant [0..1] de la carte). « il est sûr » est ratifié ;
   « il le croit » et « il hésite » en sont les deux crans du dessous, dans la même voix. En en, « they » : le lieutenant peut être une
   lieutenante.
