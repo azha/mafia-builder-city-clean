@@ -167,8 +167,12 @@ l'arbre back (39 sections d'écran, motif `[x] **jugé…**`, 2 trouvés ; le cl
 - **⑥ La Famille** — APPROUVÉ au r3 (06/09), réécrit depuis par `f1bcd5d3` (dialogue de réaffectation) et `a3404347` (cadenas des
   primitives). Sa référence NE change pas (organigramme de `ecrans-brennar.html` + `famille/ecran-canon.png`) : le tour vérifie le
   TEXTE sur une capture fraîche, il ne re-mesure pas la maquette.
-- **㊲ Le miroir** — APPROUVÉ **SOUS RÉSERVE** au r8 (la nuance compte), et sa référence #120 a été RE-RENDUE le 22/09 (texte changé).
+- **㊲ Le miroir** — `front.md` dit « jugé » au r8, mais il est EN RETARD : **r9 → r16 ont tous rendu NON APPROUVÉ**, le dernier (r16,
+  07/09) avec 3 majeurs et 8 mineurs. Sa référence #120 a été RE-RENDUE le 22/09 (texte changé). Le tour à ouvrir est le **r17**.
 ⇒ Un verdict rendu avant une réécriture ne couvre pas le texte réécrit. MANDAT §5-bis porte les deux lignes pour le juge.
+**Dossiers prêts, sans capture** : `famille/r4-2026-09-22/` (capture `CaptureFamille`) et `reputation/r17-2026-09-22/`
+(`CaptureReputation`) — hors de la valeur unique du §1 ; classement des constats précédents dans `famille/constats-a-rejuger.md` et
+`reputation/constats-a-rejuger-r17.md`.
 
 Au top du client : poser les captures, remplir la table des écarts ASSUMÉS depuis le `juge-donnees` mode maquette de l'écran, puis
 lancer le juge sur le répertoire (§3 du skill).

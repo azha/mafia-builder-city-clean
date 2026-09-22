@@ -1,0 +1,177 @@
+{
+ "dossier": "famille",
+ "tour": "r4",
+ "sym": "⑥",
+ "precedent": "r3-2026-09-06",
+ "prepare_le": "2026-09-22",
+ "prepare_par": "atelier / DA — preparer-r4-famille-r17-miroir-2026-09-22.py",
+ "client": "5544ecd2",
+ "cumul": "81803f0a",
+ "atelier": "8509195",
+ "classement": [
+  {
+   "id": "F1",
+   "gravite": "MINEUR",
+   "ecart": "bord haut du rang du Don gris au lieu d'or",
+   "classement": "TENU",
+   "pourquoi": "rien n'a touché le rang du Don (pas d'archétype ⇒ pas de glyphe)"
+  },
+  {
+   "id": "F2",
+   "gravite": "MINEUR",
+   "ecart": "bloc « qui » 19,7 % plus lâche (nom → pastille)",
+   "classement": "TENU",
+   "pourquoi": "la ligne de pastille garde sa hauteur mini (28 FX) ; le glyphe (20 FX) s'y loge à gauche — à re-constater, pas à re-dériver"
+  },
+  {
+   "id": "F3",
+   "gravite": "MINEUR",
+   "ecart": "rang du Don : deux lignes 30 % plus serrées",
+   "classement": "TENU",
+   "pourquoi": "non touché"
+  },
+  {
+   "id": "F4",
+   "gravite": "MINEUR",
+   "ecart": "halo du médaillon du Don à moins de la moitié",
+   "classement": "TENU",
+   "pourquoi": "non touché"
+  },
+  {
+   "id": "F5",
+   "gravite": "MINEUR",
+   "ecart": "ombre portée des rangs à 48 %",
+   "classement": "TENU",
+   "pourquoi": "non touché"
+  },
+  {
+   "id": "F6",
+   "gravite": "MINEUR",
+   "ecart": "anneau du bouton retour à −50 % d'énergie",
+   "classement": "TENU",
+   "pourquoi": "`Ring` : même rampe (1,5), seulement nommée"
+  },
+  {
+   "id": "F7",
+   "gravite": "MINEUR",
+   "ecart": "disque intérieur des médaillons plus sombre, moins bleu",
+   "classement": "TENU",
+   "pourquoi": "non touché"
+  },
+  {
+   "id": "F8",
+   "gravite": "MINEUR",
+   "ecart": "fond de tête en plaque pleine largeur",
+   "classement": "TENU",
+   "pourquoi": "non touché"
+  },
+  {
+   "id": "F9",
+   "gravite": "MINEUR",
+   "ecart": "texte de pastille +11,4 % de capitale",
+   "classement": "TENU",
+   "pourquoi": "le texte de la pastille (`TenureBucketLabel`) n'a changé ni de valeur ni de corps"
+  },
+  {
+   "id": "F10",
+   "gravite": "MINEUR",
+   "ecart": "rayon des coins des rangs −1,8 CSS",
+   "classement": "TENU",
+   "pourquoi": "non touché"
+  },
+  {
+   "id": "F11",
+   "gravite": "MINEUR",
+   "ecart": "haut des cartes plus bleu, liseré plat",
+   "classement": "TENU",
+   "pourquoi": "non touché"
+  },
+  {
+   "id": "F12",
+   "gravite": "MINEUR",
+   "ecart": "pointillé des emplacements vides plus clairsemé",
+   "classement": "TENU",
+   "pourquoi": "non touché"
+  },
+  {
+   "id": "F13",
+   "gravite": "MINEUR",
+   "ecart": "anneaux de médaillon −11 % d'énergie",
+   "classement": "TENU",
+   "pourquoi": "`Ring` : même rampe"
+  },
+  {
+   "id": "F14",
+   "gravite": "MINEUR",
+   "ecart": "rang du Don : « Vous » / « LE DON » au lieu de « Don V. » / « VOUS » (dépend des données)",
+   "classement": "TENU",
+   "pourquoi": "aucun commit n'a touché ces fentes"
+  }
+ ],
+ "a_verifier": [
+  {
+   "ou": "dialogue de réaffectation, chargement",
+   "texte": "Le lieutenant arrive… rouvrez « Réaffecter » quand sa fiche est là.",
+   "source": "④ annexe a, ⑥ `:2862`"
+  },
+  {
+   "ou": "dialogue de réaffectation, question",
+   "texte": "Confirmer la réaffectation ? Son ancienneté repart de zéro, et il lui faudra le temps de s'installer.",
+   "source": "④ annexe a, ⑥ `:2866`"
+  },
+  {
+   "ou": "dialogue de réaffectation, ligne 1",
+   "texte": "Installation prévue : {bande}",
+   "source": "④ annexe a, ⑥ `:2868`"
+  },
+  {
+   "ou": "dialogue de réaffectation, ligne 2",
+   "texte": "Ancienneté perdue : {bande}",
+   "source": "④ annexe a, ⑥ `:2870`"
+  },
+  {
+   "ou": "dialogue de réaffectation, ligne 3",
+   "texte": "Rendement perdu : {bande}",
+   "source": "④ annexe a, ⑥ `:2871`"
+  },
+  {
+   "ou": "éditeur de règles, cycleur `AND_IF` vide",
+   "texte": "aucune",
+   "source": "④ annexe a, ⑥ `:3405`"
+  },
+  {
+   "ou": "éditeur de règles, primitive verrouillée par palier",
+   "texte": "{JETON}  🔒 palier {n}",
+   "source": "④ annexe c3"
+  },
+  {
+   "ou": "éditeur de règles, primitive pas dans ce build",
+   "texte": "{JETON}  🔒 pas encore",
+   "source": "④ annexe c3"
+  }
+ ],
+ "captures_attendues": [
+  {
+   "fichier": "famille_1080x2400.png",
+   "commande": "`MAFIA_CI_CATEGORIES=CaptureFamille` (`FamilleCapturePlayModeTests`, préfixe unique : 1 catégorie)",
+   "montre": "l'organigramme, onglet FAMILLE — montre le glyphe d'archétype ; ne montre AUCUN des huit textes réécrits",
+   "identite": "`[DemoIdentityResolver] régime=… identité=…` (le test passe par le shell de la scène de build ; pas de garde `[IDENTITE-CONNECTEE]`)"
+  },
+  {
+   "fichier": "— (aucune catégorie aujourd'hui)",
+   "commande": "**aucun test de capture n'ouvre la réaffectation ni l'éditeur de règles** (mesuré sur `gate/cumul-client-2026-09-22` : 4 fichiers de test touchent ces vues, 0 capture)",
+   "montre": "les huit textes du tableau « à vérifier » — dette de CAPTURE, à écrire côté client ; tant qu'elle court, ces textes vont en « non vérifié »",
+   "identite": "—"
+  }
+ ],
+ "polices_fc_match": {
+  "Georgia": "\"Noto Serif\" \"Regular\"",
+  "DejaVu Sans": "\"DejaVu Sans\" \"Book\"",
+  "Courier New": "\"Liberation Mono\" \"Regular\"",
+  "sans-serif": "\"Noto Sans\" \"Regular\"",
+  "serif": "\"Noto Serif\" \"Regular\"",
+  "Times New Roman": "\"Liberation Serif\" \"Regular\"",
+  "Segoe UI": "\"Noto Sans\" \"Regular\""
+ },
+ "captures": []
+}
