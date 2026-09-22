@@ -51,3 +51,33 @@
   ma **justification** au lieu du mot — `exceptions.gravite.mild` = « légère — la suite naturelle de « grave · modérée » » et
   `exceptions.priorite.silent` = « sans urgence — « silencieuse » décrit la carte… ». La faute est à ma table (`11-…` §3.2, le mot et sa raison dans
   la même cellule), corrigée dans le même commit : les valeurs à servir sont **« légère »** et **« sans urgence »**.
+
+## `error.*` servies en anglais dans le bundle fr — 1 clé (ajout du 2026-09-23, back `f97a138d`)
+
+> **Mesure**, par nom, dans le back à `f97a138d` : `resolveBundle('fr')` = `errorKeyTemplates('fr')` ⊕ `EN_MESSAGES` ⊕ `FR_MESSAGES`.
+> `ERROR_CODES` (`protocol/error-codes.ts`) déclare **64** clés `error.*` ; `ERROR_TEXT_RATIFIED` en couvre **63** en `en` et **63** en `fr`
+> (le registre des erreurs déjà servies en fr) ; `EN_MESSAGES` et `FR_MESSAGES` n'en surchargent **aucune**. ⇒ Une seule clé tombe au
+> **REPLI** (l'humanisation du dernier segment, en anglais machine, identique dans les deux bundles) ; les 63 autres servent un fr ratifié
+> **différent** de son en. Aucune autre `error.*` n'a un fr en anglais.
+
+| clé | fr servi aujourd'hui | fr (à servir) | en servi aujourd'hui | en (à servir) |
+|---|---|---|---|---|
+| `error.engagements.muscle_lieutenant_required` | Muscle lieutenant required. | Seul un lieutenant du genre Gros bras peut partir sur ce coup. Envoyez-en un, ou recrutez-en un. | Muscle lieutenant required. | Only a Muscle-type lieutenant can go out on this one. Send one, or recruit one. |
+
+- **L'en n'était pas bon non plus** : « Muscle lieutenant required. » est le repli, pas un texte — un identifiant machine mis en phrase, qui ne
+  dit ni pourquoi ni quoi faire. Les 63 textes ratifiés tiennent tous en deux temps (**le constat, puis le geste** : « A lieutenant is still
+  assigned there. Reassign them first. ») ; celui-ci aussi.
+- **Le cas** (commentaire du code, TD-553) : le joueur a choisi un lieutenant **à lui** mais **du mauvais archétype** pour un conflit ;
+  le remède est d'en envoyer un Gros bras, ou d'en recruter un. D'où les deux gestes.
+- **Les mots du canon** : l'archétype se dit **« Gros bras »** / **« Muscle »** (`famille.archetype.gros_bras`), et l'écran du conflit le dit
+  déjà « du genre Gros bras » / « the Muscle type » (`conflit.bloc.aucun_de_vos_lieutenants_n_est_du_genre_gros_bras`) ; le conflit, c'est
+  « partir » la nuit (`conflit.bloc.dites_moi_qui_j_envoie_…` : « Dites-moi qui j'envoie… je pars ce soir ») ⇒ « partir sur ce coup »,
+  « Envoyez-en un ». Sans genre présumé : aucun pronom pour le lieutenant, « en un » renvoie au mot « lieutenant », comme dans le canon.
+- **Vouvoiement**, comme les 63 : « Envoyez », « recrutez ».
+- **Apostrophe** : la valeur fr n'en porte pas (« Seul un… ») — la question de `’` contre `'` (les 63 ratifiés ont la droite) ne se pose pas ici.
+- **Où poser le texte** : dans `ERROR_TEXT_RATIFIED` (`en` et `fr`), et dans sa source `docs/content/i18n-staging/error.{en,fr}.json`
+  (« recopiés, jamais réécrits ») ; le repli reste le filet des codes neufs.
+- ⚠️ **Vu en mesurant, hors paquet** : `conflit.bloc.c_est_lui_qui_part_la_nuit_…` (`ConflitScreenController.cs:447` au cumul `14eb2454`)
+  sert en en « **He**'s the one who goes out at night ». En fr, « lui » reprend **le Gros bras** — l'archétype, un nom masculin — et se tient ;
+  en anglais, « He » donne un genre à une personne, contre la règle (aucun genre présumé). En à redire, fr inchangé (la clé en dérive) :
+  « **That's** the one who goes out at night. You're missing one — nothing is broken, you simply don't have one yet. »
