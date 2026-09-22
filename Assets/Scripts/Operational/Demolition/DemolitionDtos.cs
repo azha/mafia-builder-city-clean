@@ -218,6 +218,7 @@ namespace MafiaCleanCity.Operational
         /// <summary>Le nom de fiction, en CLÉ i18n + paramètres — jamais une chaîne prête.
         /// `params.enseigne` porte le nom lisible (« Atelier Vesk »).</summary>
         public BuildingNameI18nDto name_i18n;
+        public string district_name;         // fiction, servie PAR BÂTIMENT par `me/buildings` (« La Lisière ») — l'intérieur ne la porte pas
     }
 
     // ⛔⛔ `BuildingNameI18nDto` / `BuildingNameParamsDto` NE SONT PAS REDÉCLARÉS ICI — ils

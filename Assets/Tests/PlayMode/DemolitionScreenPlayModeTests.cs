@@ -234,5 +234,31 @@ namespace MafiaCleanCity.Operational.Tests
         // MÉTIER ICI — ajouter ici les tests de PARCOURS (signup → session/open → la route) et
         // les tests d'état (AppliquerEtat sur un corps fabriqué via RendrePourTest), patron ㊲
         // §§ 1/3/5 de ReputationScreenPlayModeTests.
+
+        // ═══ La ligne de site (㉝·80) — la décision de mise en page, falsifiable ════════════════
+
+        [Test]
+        public void LigneDeSite_LEnseigneEstLeTitre_EtLeLieuVaEnSousLigne()
+        {
+            var b = new DistrictBuildingDto
+            {
+                building = "x", block_id = 1604, operational_type = "lab", district_name = "Les Friches",
+                name_i18n = new BuildingNameI18nDto
+                {
+                    key = "game.fiction.building.name",
+                    @params = new BuildingNameParamsDto { enseigne = "Imprimerie Skeld" },
+                },
+            };
+            Assert.AreEqual("Imprimerie Skeld", DemolitionScreenController.NomDuSite(b),
+                "le titre reste l'enseigne : « {enseigne} — {district}, îlot {n} » en titre ferait 41 caractères " +
+                "à 9 px serif gras dans ~200 px et déborderait sur les enseignes longues");
+            Assert.AreEqual("Les Friches, îlot 1604", DemolitionScreenController.LieuDuSite(b),
+                "le lieu (㉝·80) passe en sous-ligne, devant le verdict");
+            var sans = new DistrictBuildingDto { building = "y", block_id = 7, operational_type = "stash", district_name = "La Chancellerie" };
+            Assert.AreEqual("Local sans enseigne — La Chancellerie, îlot 7", DemolitionScreenController.NomDuSite(sans), "le repli ratifié porte le lieu");
+            Assert.AreEqual("", DemolitionScreenController.LieuDuSite(sans), "le titre de repli porte déjà le lieu : rien en sous-ligne");
+            Assert.AreEqual("Local sans enseigne — îlot 7", DemolitionScreenController.NomDuSite(new DistrictBuildingDto { building = "z", block_id = 7 }),
+                "sans district servi, l'îlot seul — jamais un district inventé");
+        }
     }
 }

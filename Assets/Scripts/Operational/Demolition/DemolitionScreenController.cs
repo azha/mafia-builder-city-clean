@@ -27,13 +27,15 @@ namespace MafiaCleanCity.Operational
     ///      ⇒ La thèse du chantier — ㉜, ㉝ et ㉞ partagent UN jeton — cesse d'être une
     ///        affirmation de document : c'est une mesure. Les trois lisent `JetonDeStructure`.
     ///
-    /// ⛔⛔ ET LE MAILLON QUI MANQUE, MESURÉ : **aucune route ne liste les bâtiments d'un joueur.**
-    /// `GET /v1/friction/nodes/{buildingId}` exige un UUID que rien ne sert. Le seul chemin joueur
-    /// est `GET /v1/world/districts` (18) puis `GET /v1/city/district/{id}/interior` jusqu'à en
-    /// trouver un qui porte des `buildings[]` — mesuré, il a fallu **16 districts sur 18** avant
-    /// de tomber sur les quatre du kit de départ. Cet écran fait donc ce balayage, et il le DIT
-    /// pendant qu'il le fait plutôt que de rester muet : dix-huit allers-retours réseau sans un
-    /// mot ressemblent à un écran gelé. Dette TD-534.
+    /// ★ LES SITES DU JOUEUR VIENNENT DE `GET /v1/me/buildings` — UN appel (mesuré 2026-09-22 : 200,
+    /// 17 bâtiments sur 4 districts pour le compte de démo, 4 pour un compte frais ; corps commité
+    /// `Tools/juge-donnees/police/pont-district-2026-09-22/GET_me_buildings.json`). Avant, cet écran
+    /// balayait les 18 intérieurs de district parce qu'il tenait pour mesuré qu'aucune route ne les
+    /// listait : la route existait (`player-buildings.controller.ts:89`) et le client l'appelait
+    /// 0 fois — le back avait refermé, le client affirmait encore l'inverse au joueur (même famille
+    /// que `safehouses` le 07/09). L'état vide n'est donc plus un trou dit au joueur : c'est un état
+    /// réel, rare (la planque est donnée à l'arrivée, ㊵·142). Dette TD-534 fermée par ce chemin.
+    /// La route sert aussi `district_name` par bâtiment : la ligne de site le porte (㉝·80).
     ///
     /// GÉOMÉTRIE — mêmes deux règles que partout : aucune valeur dérivée de `Screen.*` (tout passe
     /// par `EchelleMaquette.Px` contre `LargeurEcransBrennar6`), et aucune lecture de géométrie
@@ -82,7 +84,6 @@ namespace MafiaCleanCity.Operational
         /// <summary>Combien de districts il a fallu ouvrir avant d'en trouver un qui porte des
         /// bâtiments. Crochet de mesure autant que d'affichage : sans lui, le coût réel du seul
         /// chemin joueur vers un `building_id` n'est pas une propriété observable.</summary>
-        public int DistrictsBalayes { get; private set; }
 
         public enum EtatEcran { Global, Fiche, Demolir, Parcelle, Fermee }
 
@@ -95,6 +96,7 @@ namespace MafiaCleanCity.Operational
         private TextMeshProUGUI titreTete;
         private TextMeshProUGUI sousTitreTete;
         private DemolitionClient client;
+        private MesBatimentsClient batiments;
         private bool initialise;
 
         private DistrictBuildingDto batimentVise;
@@ -235,6 +237,7 @@ namespace MafiaCleanCity.Operational
             if (initialise) return;
             initialise = true;
             client = new DemolitionClient { BaseUrl = baseUrl };
+            batiments = new MesBatimentsClient { BaseUrl = baseUrl };
             BuildLayout();
         }
 
@@ -295,32 +298,20 @@ namespace MafiaCleanCity.Operational
         private IEnumerator TrouverLesBatiments()
         {
             DerniersBatiments = null;
-            DistrictsBalayes = 0;
             nomDistrictVise = null;
-            GetWorldDistrictsResponseDto monde = null;
-            yield return client.GetWorldDistricts(token, d => monde = d,
-                r => Debug.LogWarning($"[㉝] liste des districts indisponible : {r.message}"));
-            if (monde == null || monde.districts == null) yield break;
-
-            var trouves = new System.Collections.Generic.List<DistrictBuildingDto>();
-            foreach (WorldDistrictDto d in monde.districts)
+            BatimentPossedeDto[] possedes = null;
+            yield return batiments.Lire(token, bs => possedes = bs,
+                (c, m) => Debug.LogWarning($"[㉝] me/buildings indisponible : {c} {m}"));
+            if (possedes == null) yield break;
+            var trouves = new System.Collections.Generic.List<DistrictBuildingDto>(possedes.Length);
+            foreach (BatimentPossedeDto p in possedes)
             {
-                DistrictsBalayes++;
-                GetCityDistrictInteriorResponseDto interieur = null;
-                yield return client.GetCityDistrictInterior(token, d.id, x => interieur = x, _ => { });
-                if (interieur == null || interieur.buildings == null || interieur.buildings.Length == 0) continue;
-                trouves.AddRange(interieur.buildings);
-                if (nomDistrictVise == null)
-                    nomDistrictVise = !string.IsNullOrEmpty(interieur.name) ? interieur.name : d.name;
+                if (p == null || string.IsNullOrEmpty(p.building)) continue;
+                trouves.Add(DepuisMesBatiments(p));
+                if (nomDistrictVise == null && !string.IsNullOrEmpty(p.district_name)) nomDistrictVise = p.district_name;
             }
             DerniersBatiments = trouves.Count > 0 ? trouves.ToArray() : null;
             if (DerniersBatiments == null) yield break;
-
-            // ⛔ ET LES FICHES, PARCE QUE LE GESTE PROMET UN CLASSEMENT. « VOIR CE QUI COÛTE LE
-            // PLUS » n'est pas un libellé décoratif : sans les fiches, l'écran ne SAIT pas lequel
-            // coûte le plus, et le geste ouvrirait un site au hasard en prétendant le contraire.
-            // Une fiche par site, borné par le nombre de bâtiments du joueur — et chaque rangée
-            // porte alors son propre verdict, ce qui rend le classement VISIBLE plutôt que promis.
             fichesParSite.Clear();
             foreach (DistrictBuildingDto b in DerniersBatiments)
             {
@@ -330,6 +321,29 @@ namespace MafiaCleanCity.Operational
             }
             batimentVise = PireSite();
         }
+
+        /// <summary>`me/buildings` → la forme que l'écran rend. Les bandes d'état de l'intérieur
+        /// (shell, condition, revenue, activity) ne sont pas servies par cette route — cet écran ne
+        /// les lisait pas non plus ; elles restent nulles, déclarées.</summary>
+        private static DistrictBuildingDto DepuisMesBatiments(BatimentPossedeDto p) => new DistrictBuildingDto
+        {
+            building = p.building,
+            block_id = p.block_id,
+            operational_type = p.operational_type,
+            lieutenant_ids = p.lieutenant_ids,
+            district_name = p.district_name,
+            name_i18n = p.name_i18n == null ? null : new BuildingNameI18nDto
+            {
+                key = p.name_i18n.key,
+                @params = p.name_i18n.@params == null ? null : new BuildingNameParamsDto
+                {
+                    enseigne = p.name_i18n.@params.enseigne,
+                    district = p.name_i18n.@params.district,
+                    block = p.name_i18n.@params.block,
+                    rang = p.name_i18n.@params.rang,
+                },
+            },
+        };
 
         /// <summary>Le site au plus mauvais rapport — `poor` d'abord, puis `fair`, etc. Un site
         /// dont la fiche n'a pas été lue n'est jamais « le pire » : on ne classe pas sur une
@@ -497,7 +511,7 @@ namespace MafiaCleanCity.Operational
                                 : "aucun site trouvé",
                             !possible, false,
                             possible ? (System.Action)(() => StartCoroutine(OuvrirFiche(batimentVise))) : null);
-            if (refusAffiche != null) ConstruireRien(pied, "Le serveur a refusé", " : " + refusAffiche);
+            if (refusAffiche != null) ConstruireRien(pied, "Refusé", " : " + refusAffiche);
         }
 
         /// <summary>La liste des sites, et le COÛT du seul chemin joueur qui y mène. Elle n'est pas
@@ -515,7 +529,7 @@ namespace MafiaCleanCity.Operational
             // balayage complet, et l'annoncer sous le nom du premier district trouvé aurait été
             // faux dès qu'un joueur possède des sites dans deux endroits.
             string entete = DerniersBatiments == null || DerniersBatiments.Length == 0
-                ? "AUCUN SITE TROUVÉ"
+                ? "AUCUN SITE À VOUS"
                 : (DerniersBatiments.Length == 1 ? "VOTRE SITE" : $"VOS {DerniersBatiments.Length} SITES");
             NouveauTexte(titron.transform, "Texte", entete, Px(CssTitron),
                          DemolitionResolvers.Muet, DesignTokens.Current.primaryFont)
@@ -523,9 +537,7 @@ namespace MafiaCleanCity.Operational
 
             if (DerniersBatiments == null || DerniersBatiments.Length == 0)
             {
-                ConstruireRien(zoneCentrale, "Aucune route ne liste vos bâtiments",
-                    $" — on a ouvert {DistrictsBalayes} districts sans en trouver. C'est un trou de "
-                    + "surface, pas une ville vide.");
+                ConstruireRien(zoneCentrale, "Vous ne tenez encore aucun site", " — rien à raser.");
                 return;
             }
 
@@ -561,7 +573,8 @@ namespace MafiaCleanCity.Operational
             // Le type SEUL ne dit rien de ce qui intéresse le joueur ici. Quand la fiche a été
             // lue, la rangée porte son verdict — c'est ce qui rend le classement du geste visible
             // au lieu d'être promis.
-            string sous = DemolitionResolvers.NomDeType(b.operational_type);
+            string lieu = LieuDuSite(b);
+            string sous = (lieu.Length > 0 ? lieu + " · " : "") + DemolitionResolvers.NomDeType(b.operational_type);
             if (fichesParSite.TryGetValue(b.building, out GetFrictionNodesResponseDto fs))
                 sous += " · " + DemolitionResolvers.PhraseDeRapport(fs.output_to_friction_ratio_bucket);
             NouveauTexte(q.transform, "Sous", sous,
@@ -593,7 +606,7 @@ namespace MafiaCleanCity.Operational
             if (DerniereFiche == null)
             {
                 ConstruireRien(zoneCentrale, "La fiche n'est pas lisible",
-                    refusAffiche != null ? " : " + refusAffiche : " — le serveur n'a rien rendu.");
+                    refusAffiche != null ? " : " + refusAffiche : " — on n'a pas eu de réponse.");
             }
             else
             {
@@ -615,8 +628,8 @@ namespace MafiaCleanCity.Operational
                                 bloque || !JetonDisponible, true,
                                 (bloque || !JetonDisponible) ? null : (System.Action)(() => AllerA(EtatEcran.Demolir)));
                 if (bloque)
-                    ConstruireRien(pied, "Le serveur refusera",
-                        " tant qu'un lieutenant est affecté ici — il faut le réaffecter d'abord. "
+                    ConstruireRien(pied, "On ne rase pas un site où quelqu'un travaille",
+                        " — il faut d'abord le réaffecter. "
                         + "C'est écrit avant le geste plutôt que découvert après.");
             }
             else if (JetonDisponible)
@@ -634,7 +647,7 @@ namespace MafiaCleanCity.Operational
                     ", au même titre que confier ou reprendre une charge. Ce sera pour demain.");
             }
 
-            if (refusAffiche != null) ConstruireRien(pied, "Le serveur a refusé", " : " + refusAffiche);
+            if (refusAffiche != null) ConstruireRien(pied, "Refusé", " : " + refusAffiche);
         }
 
         /// <summary>`.dm-fiche` — la fiche cartonnée : crème sur fond sombre, dos brun à gauche,
@@ -866,7 +879,7 @@ namespace MafiaCleanCity.Operational
                                     ? (System.Action)(() => StartCoroutine(Prendre(premiere))) : null);
             }
 
-            if (refusAffiche != null) ConstruireRien(pied, "Le serveur a refusé", " : " + refusAffiche);
+            if (refusAffiche != null) ConstruireRien(pied, "Refusé", " : " + refusAffiche);
         }
 
         private static ReplacementOptionDto PremiereOffreOuverte(ReplacementOptionDto[] offres, int rang)
@@ -1031,11 +1044,27 @@ namespace MafiaCleanCity.Operational
         /// <summary>Le nom de fiction vient d'une CLÉ i18n avec ses paramètres — jamais une chaîne
         /// prête. `params.enseigne` porte le nom lisible ; sans lui on nomme par le bloc plutôt que
         /// d'afficher une clé technique à un joueur.</summary>
-        private static string NomDuSite(DistrictBuildingDto b)
+        public static string NomDuSite(DistrictBuildingDto b)
         {
             if (b?.name_i18n?.@params != null && !string.IsNullOrEmpty(b.name_i18n.@params.enseigne))
                 return b.name_i18n.@params.enseigne;
-            return b != null ? $"Site du bloc {b.block_id}" : "Ce site";
+            if (b == null) return "Ce site";
+            // le repli ratifié (㉝·80, vocabulaire servi `enseigne_inconnue`) : le lieu tient lieu de nom
+            return string.IsNullOrEmpty(b.district_name)
+                ? $"Local sans enseigne — îlot {b.block_id}"
+                : $"Local sans enseigne — {b.district_name}, îlot {b.block_id}";
+        }
+
+        /// <summary>Le lieu du site (㉝·80 « Imprimerie Skeld — Les Friches, îlot 1604 »), en SOUS-LIGNE.
+        /// ⛔ DÉCISION DE MISE EN PAGE (22/09) : « {enseigne} — {district}, îlot {n} » en TITRE ferait
+        /// 41 caractères à 9 px serif gras dans une colonne d'environ 200 px — il déborderait sur les
+        /// enseignes longues. Le titre reste l'enseigne, le lieu passe devant le verdict. Quand le titre
+        /// est déjà le repli « Local sans enseigne — … », il porte le lieu : rien en sous-ligne.</summary>
+        public static string LieuDuSite(DistrictBuildingDto b)
+        {
+            if (b?.name_i18n?.@params == null || string.IsNullOrEmpty(b.name_i18n.@params.enseigne)) return "";
+            if (string.IsNullOrEmpty(b.district_name)) return $"îlot {b.block_id}";
+            return $"{b.district_name}, îlot {b.block_id}";
         }
 
         // ═══ Construction de la mise en page ═════════════════════════════════════════════════
