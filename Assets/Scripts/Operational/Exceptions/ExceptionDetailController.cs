@@ -65,9 +65,13 @@ namespace MafiaCleanCity.Operational.Exceptions
         private bool talonDeplie;
         private CandidateActionDto selection;
         private bool selectionEscalade;
-        private Button talonBouton, tamponBouton;
+        private Button talonBouton;
+        private TamponAuComptoir.Rendu tampon;
         public Button TalonPourTest => talonBouton;
-        public Button TamponPourTest => tamponBouton;
+        /// <summary>⑩-1e — l'appui long du tampon (la seule façon de résoudre depuis la main).</summary>
+        public MafiaCleanCity.Shell.LongPressButton TamponAppuiPourTest => tampon != null ? tampon.Appui : null;
+        public string TamponLibelleTexte => tampon != null ? tampon.Libelle.text : null;
+        public string TamponSousTexte => tampon != null ? tampon.Sous.text : null;
         public bool TalonDeplie => talonDeplie;
         /// <summary>L'id de l'issue choisie, « ESCALADER » pour la carte synthétique.</summary>
         public string SelectionId => selectionEscalade ? "ESCALADER" : (selection != null ? selection.id : null);
@@ -320,7 +324,7 @@ namespace MafiaCleanCity.Operational.Exceptions
         private void RendreMain(ExceptionCardDto c)
         {
             cartesTouchables.Clear();
-            talonBouton = null; tamponBouton = null;
+            talonBouton = null; tampon = null;
             string idSug = c.suggested_action != null ? c.suggested_action.id : "";
             CandidateActionDto sug = null, apprendre = null, risquee = null;
             var restantes = new List<CandidateActionDto>();
@@ -414,14 +418,37 @@ namespace MafiaCleanCity.Operational.Exceptions
             // Le tampon — l'action suggérée, en un seul geste. `POST /v1/exceptions/:id/resolve`
             // est la SEULE route d'écriture de cet écran (maquette : « un seul geste, une route »).
             // ⑩-1b — le tampon envoie le CHOIX (la suggérée tant qu'on n'a rien touché).
-            if (selectionEscalade)
-                tamponBouton = AddButtonTo(body, "tampon", TexteEscalader(), () => StartCoroutine(Escalate()), track: false);
-            else if (selection != null)
+            // ⑩-1e — le TAMPON de ⑨ (`TamponAuComptoir`, écart D08) : papier crème, encre bordeaux, et l'APPUI LONG seul
+            // résout (« appui long — la carte se ferme ») ; le tap ne fait rien — choisir se fait sur les cartes.
+            if (selectionEscalade || selection != null)
             {
-                CandidateActionDto capture = selection;
-                tamponBouton = AddButtonTo(body, "tampon", Texte(capture.label, capture.label_i18n),
-                                           () => StartCoroutine(ResolveWith(capture)), track: false);
+                GameObject cadre = NewUI("Tampon", body);
+                AddLayoutElement(cadre, minHeight: PxD(CssTamponHaut), preferredHeight: PxD(CssTamponHaut), flexibleHeight: 0);
+                string libelle = selectionEscalade ? TexteEscalader() : Texte(selection.label, selection.label_i18n);
+                tampon = new TamponAuComptoir(PxD, PxDI, TrackText).Construire(cadre.transform,
+                    (libelle ?? string.Empty).ToUpperInvariant(), SousTitreMain(selectionEscalade ? null : selection),
+                    suivreSous: true, surTap: null,
+                    surAppuiLong: () => { if (!Destroyed) StartCoroutine(ResoudreLeChoix()); });
             }
+        }
+
+        /// <summary>⑩-1e — résoudre le CHOIX (la suggérée par défaut, la carte touchée sinon, « Escalader » si elle est choisie).
+        /// Public : les gardes le pilotent comme l'appui long.</summary>
+        public IEnumerator ResoudreLeChoix()
+        {
+            if (selectionEscalade) yield return Escalate();
+            else if (selection != null) yield return ResolveWith(selection);
+        }
+
+        /// <summary>Le sous-titre du tampon de ⑩ (atelier §3.5, cadre 15) : pour une RÉPARATION, la phrase entière de la maquette ;
+        /// sinon sa première moitié. Deux clés entières, jamais une concaténation.</summary>
+        public static string SousTitreMain(CandidateActionDto choix)
+        {
+            bool reparation = choix != null && (string.Equals(choix.method, "REPAIR", StringComparison.OrdinalIgnoreCase)
+                || (choix.effect != null && string.Equals(choix.effect.type, "REPAIR", StringComparison.OrdinalIgnoreCase)));
+            return reparation
+                ? Lib("appui long — la carte se ferme ; le bâtiment, lui, se répare avec le temps")
+                : Lib("appui long — la carte se ferme");
         }
 
         /// <summary>Choisir une carte de la main : le tampon la dit et l'enverra.</summary>

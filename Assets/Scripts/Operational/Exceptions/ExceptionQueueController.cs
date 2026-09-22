@@ -790,62 +790,22 @@ namespace MafiaCleanCity.Operational.Exceptions
             ExceptionCardDto c = Cards[0];
             (string method, string id)? choix = ChoixDuTampon(c);
 
-            GameObject t = NewUI("TamponBouton", tamponRoot);
-            Stretch((RectTransform)t.transform, Vector2.zero, Vector2.zero);
-            Image papier = t.AddComponent<Image>();
-            papier.sprite = ProceduralUI.RoundedRectMask(PxI(11f));
-            papier.type = Image.Type.Sliced;
-            papier.color = Hex("#d9cca9");
-            Filet(t.transform, "Bord", 0f, PxI(11f), Px(2f), EncreTampon);
-            Filet(t.transform, "FiletInterieur", Px(3f), PxI(7f), Px(1f), Hex("#93402c55"));
-
-            VerticalLayoutGroup v = t.AddComponent<VerticalLayoutGroup>();
-            v.padding = new RectOffset(PxI(12f), PxI(12f), PxI(10f), PxI(10f));
-            v.spacing = Px(2f);
-            v.childControlWidth = true; v.childControlHeight = true;
-            v.childForceExpandWidth = true; v.childForceExpandHeight = false;
-            v.childAlignment = TextAnchor.MiddleCenter;
-
             // Le libellé : l'action suggérée, en toutes lettres (par sa clé i18n si servie, sa prose sinon).
             string action = choix.HasValue ? LibelleAction(c.suggested_action).ToUpperInvariant() : Lib("OUVRIR SA MAIN");
-            tamponLibelle = NouveauTexteMaquette(t.transform, "Libelle", action, 12f, EncreTampon);
-            tamponLibelle.alignment = TextAlignmentOptions.Center;
-            tamponLibelle.characterSpacing = 22f;             // `.tampon{letter-spacing:.22em}`
-            tamponLibelle.fontStyle = FontStyles.Bold;        // `.tampon{font-weight:800}`
-            tamponLibelle.enableWordWrapping = true;
-            TrackText(tamponLibelle, tamponLibelle.text);
-
-            Color encreSous = EncreTampon; encreSous.a = 0.85f;  // `.tampon small{opacity:.85}` sur fond CONNU (le papier)
-            tamponSous = NouveauTexteMaquette(t.transform, "SousTexte",
-                choix.HasValue ? SousTitreTampon(AutresIssues(c)) : Lib("il attend une consigne"), 8.5f, encreSous);
-            tamponSous.alignment = TextAlignmentOptions.Center;
-            tamponSous.enableWordWrapping = true;
-            // ⚠️ NON SUIVI, et c'est la règle de ce fichier, pas une dérogation : « sa main : 5 autres issues » porte un
-            //    CHIFFRE, que la maquette écrit (cadres 14 et 17). Ce n'est pas un scalaire de simulation — la cible de R2.2 —
-            //    mais le compte des CHOIX du joueur, qu'il voit dans sa main. Même statut que le compte d'escalades, déjà
-            //    du chrome (voir l'en-tête de `Render`). La garde `…_NoRawScalar` garde son motif entier.
-            if (!choix.HasValue) TrackText(tamponSous, tamponSous.text);
-
-            // Les deux gestes. `Button` tire AUSSI au relâchement d'un appui long : le tap est donc CONSOMMÉ quand l'appui
-            // long a abouti (même garde que le jeton de ⑯).
-            bool consomme = false;
-            Button tap = t.AddComponent<Button>();
-            tap.targetGraphic = papier;
+            // ⚠️ Le sous-titre n'est PAS SUIVI quand il porte le compte des issues, et c'est la règle de ce fichier, pas une
+            //    dérogation : « sa main : 5 autres issues » porte un CHIFFRE, que la maquette écrit (cadres 14 et 17). Ce n'est
+            //    pas un scalaire de simulation — la cible de R2.2 — mais le compte des CHOIX du joueur, qu'il voit dans sa main.
+            //    Même statut que le compte d'escalades (voir l'en-tête de `Render`).
+            string sous = choix.HasValue ? SousTitreTampon(AutresIssues(c)) : Lib("il attend une consigne");
             ExceptionCardDto carte = c;
-            tap.onClick.AddListener(() =>
-            {
-                if (consomme) { consomme = false; return; }
-                OpenDetail(carte);
-            });
-            if (choix.HasValue)
-            {
-                tamponAppui = t.AddComponent<LongPressButton>();
-                tamponAppui.OnLongPressCompleted += () =>
-                {
-                    consomme = true;
-                    if (!Destroyed) StartCoroutine(ResoudreLaSuggestion());
-                };
-            }
+            // ⑩-1e — le tampon est `TamponAuComptoir`, le code que ⑩ partage. Tap ⇒ sa main (⑩) ; appui long ⇒ la suggestion.
+            TamponAuComptoir.Rendu r = new TamponAuComptoir(Px, PxI, TrackText).Construire(tamponRoot, action, sous,
+                suivreSous: !choix.HasValue,
+                surTap: () => OpenDetail(carte),
+                surAppuiLong: choix.HasValue ? (Action)(() => { if (!Destroyed) StartCoroutine(ResoudreLaSuggestion()); }) : null);
+            tamponLibelle = r.Libelle;
+            tamponSous = r.Sous;
+            tamponAppui = r.Appui;
         }
 
         /// <summary>Ce que l'appui long envoie : `(method, id)` de la suggestion SERVIE, ou null si la carte n'en porte pas
@@ -927,7 +887,6 @@ namespace MafiaCleanCity.Operational.Exceptions
         public string TamponSousTexte => tamponSous != null ? tamponSous.text : null;
         public LongPressButton TamponAppuiLong => tamponAppui;
 
-        private static Color EncreTampon => Hex("#93402c");
 
         private static Color Hex(string h)
         {

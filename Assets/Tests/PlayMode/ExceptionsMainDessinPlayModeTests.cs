@@ -12,6 +12,7 @@ namespace MafiaCleanCity.Operational.Tests
     //   R20  l'éventail porté par la FACE (le créneau reste à la mise en page) : ♠ risquée tournée à −5° CSS (z > 0 en Unity) et
     //        descendue, ♦ suggérée droite et LEVÉE, ♣ apprendre à +5° (z < 0) et descendue ; face masquée (coins de 9), bord et
     //        filet intérieur ; encre bordeaux sur la claire, braise sur les sombres ; les cartes du talon déplié sans glyphe
+    //        ⑩-1e : le tampon de ⑨ — papier plein, appui long seul, sous-titre entier pour une réparation, moitié sinon
     //   R21  celui qui parle, au dessin de ⑨ (écart D03) : ⑩ ouvert depuis ⑨ porte le MÊME arbre de bulle (`ParleurAuComptoir`),
     //        le nom servi, « · Cuisinier · au bâtiment touché » (le rôle PASSÉ par ⑨), trois pastilles dont « Il est sûr », et
     //        « Je fais quoi ? » en italique dans les guillemets — ni pour la ville, ni pour un identifiant nu
@@ -144,6 +145,19 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.AreEqual(braise, risquee.Find("Role").GetComponent<TextMeshProUGUI>().color, "`.carte.sombre .l{color:var(--braise)}`");
             Color bordeaux; ColorUtility.TryParseHtmlString("#93402c", out bordeaux);
             Assert.AreEqual(bordeaux, suggeree.Find("Role").GetComponent<TextMeshProUGUI>().color, "`.carte .l{color:#93402c}`");
+
+            // ⑩-1e — le tampon de ⑨ (D08) : papier plein, appui long seul, sous-titre de la maquette pour une réparation.
+            Assert.AreEqual("REPAIR", d.TamponLibelleTexte, "le choix (la suggérée), en capitales");
+            Assert.AreEqual("appui long — la carte se ferme ; le bâtiment, lui, se répare avec le temps", d.TamponSousTexte,
+                "cadre 15, la phrase entière pour une réparation");
+            Assert.IsNotNull(d.TamponAppuiPourTest, "l'appui long résout");
+            Assert.IsNull(d.TamponAppuiPourTest.GetComponent<Button>(), "pas de tap : on choisit sur les cartes, on signe au tampon");
+            Color papier = d.TamponAppuiPourTest.GetComponent<Image>().color;
+            Color attendu; ColorUtility.TryParseHtmlString("#d9cca9", out attendu);
+            Assert.AreEqual(attendu, papier, "papier PLEIN #d9cca9 (famille du tampon de ⑯ et de ⑨)");
+            foreach (var c in d.CartesPourTest)
+                if (!c.Escalade && c.Action.id == "bribe") { c.Bouton.onClick.Invoke(); break; }
+            Assert.AreEqual("appui long — la carte se ferme", d.TamponSousTexte, "une autre issue : la première moitié seulement");
 
             Assert.IsNotNull(d.TalonPourTest);
             d.TalonPourTest.onClick.Invoke();

@@ -83,7 +83,8 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.IsNotNull(cible, $"« {id} »{(escalade ? " (Escalader)" : "")} doit être une carte touchable de la main");
             cible.Bouton.onClick.Invoke();
             Assert.AreEqual(escalade ? "ESCALADER" : id, d.SelectionId, "le tampon dit le choix");
-            d.TamponPourTest.onClick.Invoke();
+            Assert.IsNotNull(d.TamponAppuiPourTest, "le tampon résout à l'appui long (⑩-1e)");
+            d.TamponAppuiPourTest.SimulateCompletedLongPress();
             for (int i = 0; i < 3; i++) yield return null;
         }
 
