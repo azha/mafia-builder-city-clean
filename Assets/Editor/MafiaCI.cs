@@ -114,6 +114,12 @@ public static class MafiaCI
     //   `planche_la_distribution_1080x2400.png`, produite par `PhotoChantierC` sous la garde d'effet. Verte SEULE avant
     //   inscription : `passed=20 failed=0 declares=20 comptes=20`, catégories RÉELLEMENT exécutées = [EcranDistribution], sans
     //   paire d'identité (run du 22/09 23:29). Aucun test n'exige la paire : elle entre dans la PARTIE 1 du gate client.
+    // ✅ `Palette` INSCRITE (2026-09-22) — la garde TD-612 (« aucun littéral ne recopie un token nommé »). Née le 06/09
+    //   (d665720d, 28696e43) pour ROUGIR sur son dénominateur mesuré, elle n'avait JAMAIS été inscrite : une garde rouge
+    //   hors de tout filtre ne garde rien — c'est CLIENT-2 qui l'a trouvée rouge (34) en la lançant à la main. Fermée par ⑯
+    //   (9) puis par les 5 commits par assembly du 22/09 (6d3e5bfc…15ba04fb, 34 → 0 au port Python). Verte SEULE avant
+    //   inscription : `passed=5 failed=0 declares=5 comptes=5`, catégories RÉELLEMENT exécutées = [Palette] (22/09 23:50).
+    //   Sans paire, sans relation de préfixe : PARTIE 1 du gate client.
     // ⚠️ `ScreenC2` et `FiliereSonde` sont inscrites, elles, parce qu'elles ont tourné VERTES dans
     // ce même run (28 passés / 1 échec — celui de la capture C1 de ㉘, retirée depuis). *Le même run tranche
     // dans les deux sens : il inscrit ce qui passe et refuse ce qui tombe.*
@@ -175,6 +181,8 @@ public static class MafiaCI
         "Inspection",
         // Réinscrite le 2026-09-22 — verte seule avant inscription (20/20), voir la note au-dessus du tableau.
         "EcranDistribution",
+        // Inscrite le 2026-09-22 — verte seule avant inscription (5/5), voir la note au-dessus du tableau.
+        "Palette",
     };
     // ⚠️ UNION AU MERGE (3e fois sur cette ligne le 2026-09-03) — et la règle est
     // toujours la même : on unit ce qui est PORTÉ, jamais les deux listes. Une entrée
