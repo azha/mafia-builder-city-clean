@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 
@@ -38,6 +39,12 @@ namespace MafiaCleanCity.I18n
         /// au lieu de dire seulement « il y en a ». Un compte nu ne dit pas ce qu'il compte.</summary>
         public static string DernierRepli { get; private set; }
 
+        /// <summary>TOUTES les clés retombées sur leur littéral depuis la dernière remise à zéro — pour qu'une garde compare
+        /// un ENSEMBLE à une dette datée (une 21ᵉ clé ET une clé devenue servie se voient), là où `DernierRepli` n'en nomme
+        /// qu'une. Ne change aucun rendu : seulement ce qui est compté (2026-09-23, garde zéro repli des locataires).</summary>
+        public static IReadOnlyCollection<string> ClesEnRepli => clesEnRepli;
+        private static readonly HashSet<string> clesEnRepli = new HashSet<string>();
+
         /// <summary>⛔ Réservé aux tests. Les compteurs sont STATIQUES et les suites PlayMode de ce
         /// dépôt tournent SÉRIELLES dans un seul processus : sans remise à zéro, un écran mesure
         /// les replis de son voisin et le verdict dépend de l'ordre des tests.</summary>
@@ -46,6 +53,7 @@ namespace MafiaCleanCity.I18n
             NbAppels = 0;
             NbReplis = 0;
             DernierRepli = null;
+            clesEnRepli.Clear();
         }
 
         public static string De(string domaine, string role, string litteral)
@@ -68,6 +76,7 @@ namespace MafiaCleanCity.I18n
             //   repli sur un écran monté avec le bundle réel, ce qu'aucune capture ne prouve.
             NbReplis++;
             DernierRepli = cle;
+            clesEnRepli.Add(cle);
             return litteral;
         }
 
@@ -89,6 +98,7 @@ namespace MafiaCleanCity.I18n
             if (I18nCatalog.Connait(cle)) return I18nCatalog.Traduire(cle);
             NbReplis++;
             DernierRepli = cle;
+            clesEnRepli.Add(cle);
             return repli;
         }
 

@@ -85,3 +85,14 @@ compteurs à zéro, PUIS construction ; plancher d'appels ; rejeu des résolveur
 | `OrgVitalsPanelController.cs` | 1 | 0 |
 
 Résolveurs partagés hors contrôleur (4 fichiers, sans garde propre ; `FamilleLabels` est rejoué par ⑥) : `FamilleLabels.cs` (16), `ReputationResolvers.cs` (16), `PureteResolvers.cs` (5), `WalletBandResolver.cs` (5).
+
+## La garde générique (23/09, code seulement — run après le gate du back)
+`ZeroRepliDesLocatairesPlayModeTests` (catégorie BundleReel) : UNE forme pour les 25 locataires du shell qui passent par `Libelle`
+(les 7 autres — Inspection, Precinct, Tutorial, Laundering, PipelineOverview, Selling, DecisionDetail — exclus avec leur raison :
+aucun site à littéral ; couverture vérifiée par réflexion, tout nouveau locataire rougit tant qu'il n'est pas classé).
+Chemin du jeu : shell réel → bundle amorcé → pour chaque locataire, compteurs à zéro → `MonterLocataireEnSurimpression<T>` → 3 s →
+`Libelle.ClesEnRepli` → démontage immédiat. Deux règles : (1) repli observé ⊆ dette datée ; (2) aucune clé de la dette n'est servie.
+**Dette datée recalculée contre la pile réelle (40128b53) et l'arbre regroupé : 24 clés, pas 20** — ⑥ (3 gestes) et ⑯ (1) sont
+désormais servies ; le merge de CLIENT-2 apporte 5 clés ⑨ non servies (`exceptions.locuteur.votre_lieutenant`, `exceptions.bloc.
+ouvrir_sa_main`, `.suggere_appui_long_sa_main`, `.autre_issue`, `.autres_issues`). Hors garde, écrit : les 4 panneaux du chrome
+(HomeChrome, OrgVitals, HighestLeverageCard, ExceptionQueuePanel) bâtis par le shell pendant sa propre acquisition.
