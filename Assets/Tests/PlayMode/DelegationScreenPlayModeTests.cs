@@ -442,7 +442,7 @@ namespace MafiaCleanCity.Operational.Tests
             string tout = TexteDeLEcran();
             foreach (var c in DelegationCatalogue.Reserve)
                 StringAssert.Contains(c.libelle, tout, $"la réserve n'affiche pas « {c.libelle} »");
-            StringAssert.Contains("aucune n'est branchée", tout);
+            StringAssert.Contains("personne n'y touche encore", tout);
         }
 
         private static string TexteDeLEcran()

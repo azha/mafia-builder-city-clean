@@ -476,7 +476,7 @@ namespace MafiaCleanCity.Operational
                 ConstruireGeste(pied, "EN CONFIER UNE", "aucune n'est encore prête", true, null);
             }
 
-            if (refusAffiche != null) ConstruireRien(pied, "Le serveur a refusé", " : " + refusAffiche);
+            if (refusAffiche != null) ConstruireRien(pied, "Refusé", " : " + refusAffiche);
         }
 
         // ── m-74 — confier ───────────────────────────────────────────────────────────────────
@@ -515,7 +515,7 @@ namespace MafiaCleanCity.Operational
                             !possible,
                             possible ? (System.Action)(() => StartCoroutine(Confier(visee, candidat))) : null);
 
-            if (refusAffiche != null) ConstruireRien(pied, "Le serveur a refusé", " : " + refusAffiche);
+            if (refusAffiche != null) ConstruireRien(pied, "Refusé", " : " + refusAffiche);
         }
 
         // ── m-76 — reprendre ─────────────────────────────────────────────────────────────────
@@ -531,8 +531,8 @@ namespace MafiaCleanCity.Operational
 
             if (apercuCourant != null) ConstruireApercu(zoneCentrale, apercuCourant);
             else ConstruireNote(zoneCentrale, refusAffiche != null
-                ? "Le serveur ne peut pas dire ce que ça coûterait : " + refusAffiche
-                : "On demande au serveur ce que ça coûterait…");
+                ? "On ne peut pas vous dire ce que ça coûterait : " + refusAffiche
+                : "On demande ce que ça coûterait…");
 
             ConstruireNote(zoneCentrale,
                 "Ceci est un avertissement, pas un mur : le jeu vous laissera le faire.");
@@ -553,7 +553,7 @@ namespace MafiaCleanCity.Operational
         private void RendreReserve()
         {
             EcrireTete("Ce qui n'est pas encore à confier",
-                       "Huit autres charges existent dans le jeu. Aucune n'est branchée.");
+                       "Huit autres charges existent dans le jeu. Personne ne les tient encore.");
 
             ConstruireTitronCliquable(zoneCentrale, "◂  EXISTENT, MAIS PERSONNE N'Y TOUCHE",
                                       () => AllerA(EtatEcran.Tableau));
@@ -568,8 +568,8 @@ namespace MafiaCleanCity.Operational
             foreach (var r in DelegationCatalogue.Reserve)
                 ConstruirePlaqueGrise(zoneCentrale, r.libelle, r.sous);
 
-            EcrireDit(pied, "Huit charges existent dans le jeu et ", "aucune n'est branchée", ".");
-            ConstruireRien(pied, "Elles sont déclarées côté serveur mais n'ont aucune surface joueur",
+            EcrireDit(pied, "Huit charges existent dans le jeu et ", "personne n'y touche encore", ".");
+            ConstruireRien(pied, "Elles existent, mais il n'y a rien derrière",
                 " — ni pour les confier, ni même pour les voir bouger. Tant que c'est le cas, la "
                 + "délégation ne porte que sur quatre choses.");
         }
