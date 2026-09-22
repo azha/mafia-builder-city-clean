@@ -173,6 +173,9 @@ namespace MafiaCleanCity.Operational.Exceptions
         public static bool ParleUnLieutenant(ExceptionCardDto c) =>
             c != null && !string.IsNullOrEmpty(c.lieutenant_id);
 
+        /// <summary>LA RÈGLE, EN ENTIER (ratifiée par l'atelier le 22/09) :
+        /// « » ⇔ (le locuteur est un lieutenant) ET (le texte est de la prose : il a une espace).
+        /// La ville ne parle pas entre guillemets ; une clé ne parle jamais, quel que soit le locuteur.</summary>
         public static string Replique(string texteServeur, bool parleUnLieutenant)
         {
             if (string.IsNullOrWhiteSpace(texteServeur)) return Inconnue;

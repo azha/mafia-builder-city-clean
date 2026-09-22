@@ -46,9 +46,10 @@ namespace MafiaCleanCity.CitySim.Inspection
     // le juge l'a laissée en « arbitrage produit ». Elle n'est pas rendue ici — quand le produit
     // tranche, elle entre comme une colonne de plus, pas comme un écran de plus.
     //
-    // ⚠️ Deux textes d'état sont de cette session, pas de l'atelier (⑮ n'est pas dans son lot du
-    // 22/09) : « La police n'a pas encore ouvert ses files… » et « aucun bâtiment à vous ». À faire
-    // ratifier ; le reste des mots est celui des cadres #32/#33/#34, repris tel quel.
+    // Les mots sont ceux des cadres #32/#33/#34, repris tels quels ; les trois textes d'état hors
+    // cadre (le registre pas encore ouvert, « aucun bâtiment à vous », le signalement non pris) sont
+    // RATIFIÉS par l'atelier le 22/09 — le mot du cadre 32 est « registre », pas « file », et les
+    // nombres s'écrivent en lettres dans les cadres (« dix-huit quartiers »).
     public class InspectionScreenController : MonoBehaviour, IShellTenant
     {
         [Header("Backend")]
@@ -221,7 +222,7 @@ namespace MafiaCleanCity.CitySim.Inspection
             if (EtatVide)
             {
                 videTexte.text = DerniereErreur == null
-                    ? "La police n'a pas encore ouvert ses files — elle les ouvre sur les 18 districts à la fois."
+                    ? "La police n'a pas encore ouvert son registre — elle l'ouvre sur les dix-huit quartiers d'un coup."
                     : "La file n'a pas répondu.";
                 RendreDepot();
                 RendusEffectues++;
@@ -250,7 +251,7 @@ namespace MafiaCleanCity.CitySim.Inspection
             else if (DerniereErreurDepot != null)
             {
                 prixTexte.gameObject.SetActive(true);
-                prixTexte.text = "Le dépôt n'a pas abouti.";
+                prixTexte.text = "Le signalement n'a pas été pris.";
             }
             else prixTexte.gameObject.SetActive(false);
             // ★ le retour de bâton (#34) : figé jusqu'au prochain geste, parce qu'aucune route ne le relit
