@@ -48,8 +48,9 @@ namespace MafiaCleanCity.CitySim.Inspection
     //
     // Les mots sont ceux des cadres #32/#33/#34, repris tels quels ; les trois textes d'état hors
     // cadre (le registre pas encore ouvert, « aucun bâtiment à vous », le signalement non pris) sont
-    // RATIFIÉS par l'atelier le 22/09 — le mot du cadre 32 est « registre », pas « file », et les
-    // nombres s'écrivent en lettres dans les cadres (« dix-huit quartiers »).
+    // RATIFIÉS par l'atelier le 22/09 — ratification corrigée par le pied du cadre 32 lui-même :
+    // « 18 DISTRICTS · TOUT OU RIEN : LA POLICE OUVRE SES FILES PARTOUT À LA FOIS » — « files » et
+    // « 18 districts » sont les mots de la maquette.
     public class InspectionScreenController : MonoBehaviour, IShellTenant
     {
         [Header("Backend")]
@@ -222,7 +223,7 @@ namespace MafiaCleanCity.CitySim.Inspection
             if (EtatVide)
             {
                 videTexte.text = DerniereErreur == null
-                    ? "La police n'a pas encore ouvert son registre — elle l'ouvre sur les dix-huit quartiers d'un coup."
+                    ? "La police n'a pas encore ouvert ses files — elle les ouvre sur les 18 districts à la fois."
                     : "La file n'a pas répondu.";
                 RendreDepot();
                 RendusEffectues++;
