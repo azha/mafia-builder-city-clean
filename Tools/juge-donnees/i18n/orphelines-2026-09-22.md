@@ -1,19 +1,19 @@
-# Clés i18n orphelines — produites par `orphelines.py` sur `9b5d6117..0f058641`
+# Clés i18n orphelines — produites par `orphelines.py` sur `9b5d6117..1eca10cd`
 
-**43 clés uniques** (C : 24, D t1 : 4, D t2 : 15), 44 sites. Une ligne = une clé que le bundle SERT et que plus aucun littéral ne demande (orpheline), et la clé que le littéral réécrit dérive désormais (manquante : l'écran se replie sur le littéral français, `Libelle.NbReplis` monte). ⛔ Table PRODUITE par le script — ne pas l'éditer à la main, le rejouer.
+**50 clés uniques** (C : 24, D t1 : 4, D t2 : 15, D t3 : 7), 51 sites. Une ligne = une clé que le bundle SERT et que plus aucun littéral ne demande (orpheline), et la clé que le littéral réécrit dérive désormais (manquante : l'écran se replie sur le littéral français, `Libelle.NbReplis` monte). ⛔ Table PRODUITE par le script — ne pas l'éditer à la main, le rejouer.
 
 ## Provenance
 - Bundle : `GET /v1/i18n/bundle?locale=fr|en`, compte `operational_demo`, 2026-09-22, X-Request-Id (fr) `21c7a480-af55-4959-b606-3929378e93f8`, `server_build_ref` `03cf564c` (built_at 2026-09-14T01:12:31Z), **886 clés par locale** — l'image de la pile dev, pas `string_table.ts` du cumul back. Corps joints : `bundle-fr-2026-09-22.json`, `bundle-en-2026-09-22.json`.
-- Client : `9b5d6117..0f058641` sur `gate/cumul-client-2026-09-22`. Lots : C = `061e7167..7d2ebcde` · D t1 = `34439c33..75ac1001` · D t2 = `4bddb0aa..0f058641`.
+- Client : `9b5d6117..1eca10cd` sur `gate/cumul-client-2026-09-22`. Lots : C = `061e7167..7d2ebcde` · D t1 = `34439c33..75ac1001` · D t2 = `4bddb0aa..0f058641` · E = `7d675f9c..348ec0a7` · D t3 = `348ec0a7..1eca10cd`.
 - Méthode : un littéral retiré n'est listé que si sa clé dérivée, dans un domaine que le fichier emploie, est SERVIE, et si le fichier d'arrivée ne la demande plus (même texte sur une ligne qui nomme son rôle ⇒ encore demandée). Fichiers entiers aux deux versions de chaque commit, `"…" + "…"` reconstitués, `$"…"` exclus, appariement ancien → nouveau par différence locale à chaque bloc de diff : **0 bloc non apparié**.
-- ⚠️ Anglais : pour 23/43 clés la valeur `en` servie est une vraie traduction ; un joueur en `en` voit désormais le littéral français par repli. L'ancienne valeur `en` est dans le JSON (`servie_en`), à réécrire.
+- ⚠️ Anglais : pour 24/50 clés la valeur `en` servie est une vraie traduction ; un joueur en `en` voit désormais le littéral français par repli. L'ancienne valeur `en` est dans le JSON (`servie_en`), à réécrire.
 
 ## Pour f7 — la falsifiable d'égalité d'ensembles
-Après application sur `string_table.ts` puis rebuild : (1) les 43 clés « nouvelle » ⊂ clés servies `fr`, chacune avec exactement le « texte FR » de la table ; (2) les 43 clés « ancienne » ∩ clés servies = ∅ (ou gardées, dit) ; (3) les 1 clé(s) de la section « même clé » servent le texte FR de la table. Contrôle client : `Libelle.NbReplis` sur ces écrans montés avec le bundle réel (patron `BundleReel`).
+Après application sur `string_table.ts` puis rebuild : (1) les 50 clés « nouvelle » ⊂ clés servies `fr`, chacune avec exactement le « texte FR » de la table ; (2) les 50 clés « ancienne » ∩ clés servies = ∅ (ou gardées, dit) ; (3) les 3 clé(s) de la section « même clé » servent le texte FR de la table. Contrôle client : `Libelle.NbReplis` sur ces écrans montés avec le bundle réel (patron `BundleReel`).
 
 ## Orphelines
 
-Nouvelle clé encore dérivée à `0f058641` (texte FR = celui de `0f058641`) : **43/43**
+Nouvelle clé encore dérivée à `1eca10cd` (texte FR = celui de `1eca10cd`) : **50/50**
 
 | # | écran · site(s) | ancienne clé servie (orpheline) | valeur servie aujourd'hui (fr) | nouvelle clé dérivée attendue | texte FR exact du littéral | commit · lot |
 |---|---|---|---|---|---|---|
@@ -60,6 +60,13 @@ Nouvelle clé encore dérivée à `0f058641` (texte FR = celui de `0f058641`) : 
 | 41 | ② la fiche du bâtiment · BuildingCardController.cs:761 | `building.row.husbandry` | Husbandry | `building.row.soin` | Soin | `ef78d079` · D t2 |
 | 42 | ② la fiche du bâtiment · BuildingCardController.cs:781 | `building.row.hub_tier` | Hub tier | `building.row.taille_du_relais` | Taille du relais | `ef78d079` · D t2 |
 | 43 | ② la fiche du bâtiment · BuildingCardController.cs:789 | `building.row.roster` | Roster | `building.row.equipe` | Équipe | `ef78d079` · D t2 |
+| 44 | ② la fiche du bâtiment · BuildingCardController.cs:795 | `building.row.vehicles` | Vehicles | `building.row.vehicules` | Véhicules | `443b4cec` · D t3 |
+| 45 | ② la fiche du bâtiment · BuildingCardController.cs:824 | `building.row.held` | Held | `building.row.en_depot` | En dépôt | `443b4cec` · D t3 |
+| 46 | ② la fiche du bâtiment · BuildingCardController.cs:831 | `building.row.capacity` | Capacity | `building.row.capacite` | Capacité | `443b4cec` · D t3 |
+| 47 | ② la fiche du bâtiment · BuildingCardController.cs:838 | `building.row.yield` | Yield | `building.row.rendement` | Rendement | `443b4cec` · D t3 |
+| 48 | ② la fiche du bâtiment · BuildingCardController.cs:850 | `building.row.forfeiture` | Forfeiture | `building.row.saisie` | Saisie | `443b4cec` · D t3 |
+| 49 | DistrictInterior · DistrictInteriorScreenController.cs:1733 | `district.type_batiment.coffre` | Coffre | `district.type_batiment.banque` | Banque | `1eca10cd` · D t3 |
+| 50 | ② la fiche du bâtiment · BuildingCardController.cs:816 | `building.row.holding_tier` | Holding tier | `building.row.taille_de_la_banque` | Taille de la banque | `1eca10cd` · D t3 |
 
 ## Même clé — la valeur SERVIE est périmée
 
@@ -68,6 +75,8 @@ Le littéral a changé mais son slug non (`Libelle.Slug` ne garde que lettres et
 | clé | valeur servie (fr) | valeur servie (en) | texte FR attendu | site · commit |
 |---|---|---|---|---|
 | `building.row.temperature` | Temperature | Temperature | Température | BuildingCardController.cs:686 · `ef78d079` |
+| `building.yield.idle` | Idle | Idle | rien ne rentre | BuildingCardController.cs:1638 · `443b4cec` |
+| `building.yield.earning` | Earning | Earning | ça rapporte | BuildingCardController.cs:1639 · `443b4cec` |
 
 ## Ce que la table ne contient pas
 - Les littéraux réécrits dont l'ancienne clé n'était PAS servie : aucune orpheline (leur nouvelle clé manque aussi, mais l'ancienne manquait déjà ; une clé jamais servie ne se voit pas dans le bundle).

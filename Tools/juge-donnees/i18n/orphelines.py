@@ -87,6 +87,17 @@ def expressions(texte):
         k += 1
     return out
 
+BANDE = re.compile(r'Bande\("([a-z_]+)", "([^"]+)", "((?:[^"\\]|\\.)*)"\)')
+PARVALEUR = re.compile(r'Libelle\.ParValeur\("([a-z_]+)", "([a-z_]+)", "([^"]+)", "((?:[^"\\]|\\.)*)"\)')
+
+def par_valeur(texte, fichier):
+    """clé → repli, pour les sites keyés par la VALEUR servie (`Libelle.ParValeur`, `Bande` de ② = domaine building)."""
+    out = {}
+    if fichier.endswith('BuildingCardController.cs'):
+        for role, val, repli in BANDE.findall(texte): out[f'building.{role}.{slug(val)}'] = dechappe(repli)
+    for dom, role, val, repli in PARVALEUR.findall(texte): out[f'{dom}.{role}.{slug(val)}'] = dechappe(repli)
+    return out
+
 def git(*a):
     r = subprocess.run(['git', *a], capture_output=True, text=True)
     return r.stdout if r.returncode == 0 else None
@@ -100,7 +111,8 @@ def unique(lignes, lots):
     for l in lignes:
         k = l['ancienne']; site = f"{l['fichier'].split('/')[-1]}:{l['ligne']}"
         if k in uniq:
-            assert uniq[k]['nouvelle'] == l['nouvelle'], k
+            if uniq[k]['nouvelle'] != l['nouvelle']:
+                uniq[k].setdefault('conflits', []).append(f"{site} → {l['nouvelle']} ({l['commit']})"); continue
             uniq[k]['sites'].append(site); continue
         base = l['fichier'].split('/')[-1].replace('ScreenController.cs', '').replace('Controller.cs', '')
         uniq[k] = dict(ecran=ECRANS.get(base, base), fichier=l['fichier'], sites=[site], ancienne=k,
@@ -149,7 +161,8 @@ def ecrire_md(chemin, lignes, meme_cle, non_apparies, lots, meta, fr, base, fin)
          "| # | écran · site(s) | ancienne clé servie (orpheline) | valeur servie aujourd'hui (fr) | nouvelle clé dérivée attendue | texte FR exact du littéral | commit · lot |",
          "|---|---|---|---|---|---|---|"]
     for i, r in enumerate(rows, 1):
-        L.append(f"| {i} | {r['ecran']} · {', '.join(r['sites'])} | `{r['ancienne']}` | {md(r['servie_fr'])} | `{r['nouvelle']}`"
+        conflit = f" ⛔ conflit : {'; '.join(r['conflits'])}" if r.get('conflits') else ''
+        L.append(f"| {i} | {r['ecran']} · {', '.join(r['sites'])}{conflit} | `{r['ancienne']}` | {md(r['servie_fr'])} | `{r['nouvelle']}`"
                  f"{' (déjà servie !)' if r['nouvelle_deja_servie'] else ''} | {md(r['texte_fr'])} | `{r['commit']}` · {r['lot']} |")
     L += ["", "## Même clé — la valeur SERVIE est périmée", "",
           "Le littéral a changé mais son slug non (`Libelle.Slug` ne garde que lettres et chiffres, sans accents) : la clé est "
@@ -190,6 +203,7 @@ def main():
             domaines = set(re.findall(r'Libelle\.De\(\s*"([a-z_]+)"', A + B))
             if not domaines: continue
             eA, eB = expressions(A), expressions(B)
+            valeurB = par_valeur(B, f)
             ops = difflib.SequenceMatcher(None, A.split('\n'), B.split('\n'), autojunk=False).get_opcodes()
             for tag, i1, i2, j1, j2 in ops:
                 if tag == 'equal': continue
@@ -210,16 +224,26 @@ def main():
                     cles = [k for k in par_slug.get(slug(x[2]), []) if k.split('.', 1)[0] in domaines]
                     if cles: servis.append((x, cles))
                 if not servis: continue
-                if len(r) != len(a):
-                    non_apparies.append((c, f, i1 + 1, [x[2][:60] for x in r], [x[2][:60] for x in a]))
+                avant_bloc = len(lignes)
                 for x, cles in servis:
                     idx = r.index(x); nouveau = a[idx][2] if idx < len(a) and len(r) == len(a) else None
+                    if nouveau is not None and not slug(nouveau):
+                        # le remplaçant n'a ni lettre ni chiffre (« ‹ », « — ») : il ne peut dériver aucune clé, donc
+                        # le littéral retiré n'était pas le site keyé (même slug par coïncidence : « < Crop » / « Crop »).
+                        continue
                     for k in cles:
                         dom, role, _ = k.split('.', 2)
                         # ENCORE DEMANDÉE ? Même texte, dans la version d'arrivée, sur une ligne qui nomme le rôle
                         # (`Cle("setup", "Operational")`) : la clé n'est pas orpheline, seul un autre rôle l'est.
                         lignesB = B.split('\n')
                         if any(y[2] == x[2] and f'"{role}"' in ' '.join(lignesB[y[0]:y[1] + 1]) for y in eB):
+                            continue
+                        if k in valeurB:
+                            # encore demandée, par sa VALEUR (lot E : `Cle(role, "Idle")` → `Bande(role, "IDLE", repli)`) :
+                            # même clé, et c'est la valeur servie qui s'affiche — à corriger au back si elle diffère du repli.
+                            if fr[k] != valeurB[k]:
+                                meme_cle.append(dict(commit=c[:8], fichier=f, ligne=x[0] + 1, cle=k, servie_fr=fr[k],
+                                                     servie_en=en.get(k), texte_fr=valeurB[k], par_valeur=True))
                             continue
                         if nouveau is not None and f'{dom}.{role}.{slug(nouveau)}' == k:
                             # MÊME clé (le slug n'a pas changé : « Temperature » / « Température ») : pas une
@@ -231,6 +255,10 @@ def main():
                                            ancien_texte=x[2], servie_fr=fr[k], servie_en=en.get(k),
                                            nouvelle=(f'{dom}.{role}.{slug(nouveau)}' if nouveau is not None else None),
                                            texte_fr=nouveau, nouvelle_deja_servie=(nouveau is not None and f'{dom}.{role}.{slug(nouveau)}' in fr)))
+                if len(lignes) > avant_bloc and len(r) != len(a):
+                    # un bloc NON APPARIÉ ne compte que s'il a produit une orpheline : sinon ses correspondances de slug
+                    # étaient des clés encore demandées sous leur rôle (lot E : « Standard » ≠ `building.cover.standard`).
+                    non_apparies.append((c, f, i1 + 1, [x[2][:60] for x in r], [x[2][:60] for x in a]))
     # ⛔ LE TEXTE À SERVIR EST CELUI DE LA FIN DE PLAGE, pas celui du commit qui a produit l'orpheline : un littéral
     #    réécrit une seconde fois sans changer de slug (㉔ : glyphes retirés en tranche 2) garde sa clé, et c'est la
     #    DERNIÈRE version que le back doit servir — sinon l'ancien texte revient à l'écran par le bundle.
@@ -240,6 +268,11 @@ def main():
         if f not in cache: cache[f] = expressions(git('show', f'{fin}:{f}') or '')
         cle = l.get('nouvelle') or l.get('cle')
         if cle is None: continue
+        if l.get('par_valeur'):
+            v = par_valeur(git('show', f'{fin}:{f}') or '', f)
+            l['nouvelle_derivee_a_la_fin'] = cle in v
+            if cle in v: l['texte_fr'] = v[cle]
+            continue
         dom, role, _ = cle.split('.', 2)
         textes = sorted({x[2] for x in cache[f] if f'{dom}.{role}.{slug(x[2])}' == cle})
         if len(textes) == 1: l['texte_fr'] = textes[0]; l['nouvelle_derivee_a_la_fin'] = True

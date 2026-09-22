@@ -6,13 +6,15 @@
    "built_at": "2026-09-14T01:12:31Z"
   },
   "cles_servies_fr": 886,
-  "client_plage": "9b5d6117..0f058641",
+  "client_plage": "9b5d6117..1eca10cd",
   "lots": {
    "C": "061e7167..7d2ebcde",
    "D t1": "34439c33..75ac1001",
-   "D t2": "4bddb0aa..0f058641"
+   "D t2": "4bddb0aa..0f058641",
+   "E": "7d675f9c..348ec0a7",
+   "D t3": "348ec0a7..1eca10cd"
   },
-  "generateur": "python3 Tools/juge-donnees/i18n/orphelines.py <bundle-fr> <bundle-en> 9b5d6117 0f058641 --json … --md … --lots …"
+  "generateur": "python3 Tools/juge-donnees/i18n/orphelines.py <bundle-fr> <bundle-en> 9b5d6117 1eca10cd --json … --md … --lots …"
  },
  "cles": [
   {
@@ -703,6 +705,118 @@
    "nouvelle_derivee_a_la_fin": true,
    "commit": "ef78d079",
    "lot": "D t2"
+  },
+  {
+   "ecran": "② la fiche du bâtiment",
+   "fichier": "Assets/Scripts/Operational/BuildingCard/BuildingCardController.cs",
+   "sites": [
+    "BuildingCardController.cs:795"
+   ],
+   "ancienne": "building.row.vehicles",
+   "servie_fr": "Vehicles",
+   "servie_en": "Vehicles",
+   "nouvelle": "building.row.vehicules",
+   "texte_fr": "Véhicules",
+   "nouvelle_deja_servie": false,
+   "nouvelle_derivee_a_la_fin": true,
+   "commit": "443b4cec",
+   "lot": "D t3"
+  },
+  {
+   "ecran": "② la fiche du bâtiment",
+   "fichier": "Assets/Scripts/Operational/BuildingCard/BuildingCardController.cs",
+   "sites": [
+    "BuildingCardController.cs:824"
+   ],
+   "ancienne": "building.row.held",
+   "servie_fr": "Held",
+   "servie_en": "Held",
+   "nouvelle": "building.row.en_depot",
+   "texte_fr": "En dépôt",
+   "nouvelle_deja_servie": false,
+   "nouvelle_derivee_a_la_fin": true,
+   "commit": "443b4cec",
+   "lot": "D t3"
+  },
+  {
+   "ecran": "② la fiche du bâtiment",
+   "fichier": "Assets/Scripts/Operational/BuildingCard/BuildingCardController.cs",
+   "sites": [
+    "BuildingCardController.cs:831"
+   ],
+   "ancienne": "building.row.capacity",
+   "servie_fr": "Capacity",
+   "servie_en": "Capacity",
+   "nouvelle": "building.row.capacite",
+   "texte_fr": "Capacité",
+   "nouvelle_deja_servie": false,
+   "nouvelle_derivee_a_la_fin": true,
+   "commit": "443b4cec",
+   "lot": "D t3"
+  },
+  {
+   "ecran": "② la fiche du bâtiment",
+   "fichier": "Assets/Scripts/Operational/BuildingCard/BuildingCardController.cs",
+   "sites": [
+    "BuildingCardController.cs:838"
+   ],
+   "ancienne": "building.row.yield",
+   "servie_fr": "Yield",
+   "servie_en": "Yield",
+   "nouvelle": "building.row.rendement",
+   "texte_fr": "Rendement",
+   "nouvelle_deja_servie": false,
+   "nouvelle_derivee_a_la_fin": true,
+   "commit": "443b4cec",
+   "lot": "D t3"
+  },
+  {
+   "ecran": "② la fiche du bâtiment",
+   "fichier": "Assets/Scripts/Operational/BuildingCard/BuildingCardController.cs",
+   "sites": [
+    "BuildingCardController.cs:850"
+   ],
+   "ancienne": "building.row.forfeiture",
+   "servie_fr": "Forfeiture",
+   "servie_en": "Forfeiture",
+   "nouvelle": "building.row.saisie",
+   "texte_fr": "Saisie",
+   "nouvelle_deja_servie": false,
+   "nouvelle_derivee_a_la_fin": true,
+   "commit": "443b4cec",
+   "lot": "D t3"
+  },
+  {
+   "ecran": "DistrictInterior",
+   "fichier": "Assets/Scripts/CityMap/DistrictInteriorScreenController.cs",
+   "sites": [
+    "DistrictInteriorScreenController.cs:1733"
+   ],
+   "ancienne": "district.type_batiment.coffre",
+   "servie_fr": "Coffre",
+   "servie_en": "Vault",
+   "nouvelle": "district.type_batiment.banque",
+   "texte_fr": "Banque",
+   "nouvelle_deja_servie": false,
+   "nouvelle_derivee_a_la_fin": true,
+   "commit": "1eca10cd",
+   "lot": "D t3"
+  },
+  {
+   "ecran": "② la fiche du bâtiment",
+   "fichier": "Assets/Scripts/Operational/BuildingCard/BuildingCardController.cs",
+   "sites": [
+    "BuildingCardController.cs:816"
+   ],
+   "ancienne": "building.row.holding_tier",
+   "servie_fr": "Holding tier",
+   "servie_en": "Holding tier",
+   "nouvelle": "building.row.taille_de_la_banque",
+   "texte_fr": "Taille de la banque",
+   "nouvelle_deja_servie": false,
+   "nouvelle_derivee_a_la_fin": true,
+   "commit": "1eca10cd",
+   "lot": "D t3"
   }
  ],
  "meme_cle": [
@@ -719,6 +833,28 @@
     "Température",
     "temperature"
    ]
+  },
+  {
+   "commit": "443b4cec",
+   "fichier": "Assets/Scripts/Operational/BuildingCard/BuildingCardController.cs",
+   "ligne": 1638,
+   "cle": "building.yield.idle",
+   "servie_fr": "Idle",
+   "servie_en": "Idle",
+   "texte_fr": "rien ne rentre",
+   "par_valeur": true,
+   "nouvelle_derivee_a_la_fin": true
+  },
+  {
+   "commit": "443b4cec",
+   "fichier": "Assets/Scripts/Operational/BuildingCard/BuildingCardController.cs",
+   "ligne": 1639,
+   "cle": "building.yield.earning",
+   "servie_fr": "Earning",
+   "servie_en": "Earning",
+   "texte_fr": "ça rapporte",
+   "par_valeur": true,
+   "nouvelle_derivee_a_la_fin": true
   }
  ],
  "non_apparies": []
