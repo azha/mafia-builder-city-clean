@@ -32,6 +32,34 @@ namespace MafiaCleanCity.Operational.Tests
     {
         private GameObject controllerGo;
 
+        // ⛔⛔ TD-576, LA CAUSE (22/09) — UN CHAMP ÉCRASÉ N'EST PLUS DÉTRUIT. `MonterFileAvecCartes`
+        // écrivait `controllerGo` ; `Ecran10` l'appelle DEUX fois, et le `[TearDown]` ne détruisait
+        // que le second contrôleur. Le premier (« riche ») survivait au test avec son `LoadQueue` en
+        // vol — lancé par `Back()`, SANS jeton — et son 401 tombait où la latence le posait : PENDANT
+        // Ecran10 au rejeu (qui l'ignore, vert), au DÉBUT d'Ecran9 au gate p1 (rouge). Même forme
+        // pour `C` : l'hôte `Nav_Exceptions` du tableau de bord n'était démonté par personne.
+        // ⇒ Tout ce qu'un test monte est INSCRIT ici, détruit en IMMÉDIAT au TearDown, et la garde
+        //   de sortie (`SurvivantsDeLaClasse`) exige qu'aucun locataire né pendant le test ne vive encore.
+        private readonly List<GameObject> montes = new List<GameObject>();
+        private HashSet<int> locatairesAvant = new HashSet<int>();
+
+        private static IEnumerable<MonoBehaviour> LocatairesDeLaClasse() =>
+            Object.FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include, FindObjectsSortMode.None)
+                .Where(m => m is ExceptionQueueController || m is ExceptionDetailController || m is DashboardController);
+
+        /// <summary>Les locataires de la classe nés APRÈS le relevé du `[SetUp]` et encore vivants. Un
+        /// résidu d'une AUTRE classe est dans le relevé : il n'accuse pas ce test — c'est à sa classe de le dire.</summary>
+        private List<string> SurvivantsDeLaClasse() =>
+            LocatairesDeLaClasse().Where(m => !locatairesAvant.Contains(m.GetInstanceID()))
+                .Select(m => $"{m.GetType().Name}@{m.gameObject.name}").ToList();
+
+        [SetUp]
+        public void ReleverLesLocataires()
+        {
+            locatairesAvant = new HashSet<int>(LocatairesDeLaClasse().Select(m => m.GetInstanceID()));
+            montes.Clear();
+        }
+
         // Discovered from the seeder's stdout (see RunSeeder).
         private static string demoEmail;
         private static string demoPassword;
@@ -79,10 +107,45 @@ namespace MafiaCleanCity.Operational.Tests
             // ⇒ `DestroyImmediate` arrête les coroutines SYNCHRONEMENT, avant que le test
             //   suivant ne commence. Un objet « détruit » qui vit encore une frame n'est pas
             //   détruit : il est en sursis, et ce sursis est partagé.
-            var queue = controllerGo != null ? controllerGo.GetComponent<ExceptionQueueController>() : null;
-            if (queue != null && queue.LastNavGameObject != null) Object.DestroyImmediate(queue.LastNavGameObject);
-            if (controllerGo != null) Object.DestroyImmediate(controllerGo);
+            // ★ ET TOUT CE QUI A ÉTÉ MONTÉ, PAS SEULEMENT LE DERNIER (voir `montes`) — avec l'hôte de
+            //   navigation de chacun, file OU tableau de bord.
+            if (controllerGo != null && !montes.Contains(controllerGo)) montes.Add(controllerGo);
+            foreach (GameObject go in montes)
+            {
+                if (go == null) continue;
+                var queue = go.GetComponent<ExceptionQueueController>();
+                if (queue != null && queue.LastNavGameObject != null) Object.DestroyImmediate(queue.LastNavGameObject);
+                var dash = go.GetComponent<DashboardController>();
+                if (dash != null && dash.LastNavGameObject != null) Object.DestroyImmediate(dash.LastNavGameObject);
+                if (go != null) Object.DestroyImmediate(go);
+            }
+            montes.Clear();
             controllerGo = null;
+
+            // ⛔ GARDE DE SORTIE : zéro locataire de la classe né pendant ce test. Rouge ICI, c'est le
+            //   test FAUTIF qui est nommé — et non le suivant, à qui l'orphelin aurait parlé.
+            List<string> survivants = SurvivantsDeLaClasse();
+            Assert.IsEmpty(survivants, "TD-576 : locataire(s) orphelin(s) en sortie de test — " +
+                string.Join(", ", survivants) + ". Un montage non inscrit dans `montes` survit au TearDown.");
+        }
+
+        /// <summary>⛔ CONTRÔLE POSITIF de la garde de sortie : un locataire monté HORS de `montes` doit
+        /// être NOMMÉ par `SurvivantsDeLaClasse`, et plus rien une fois détruit. Sans lui, une garde qui
+        /// ne trouve jamais rien (un filtre de type faux, un relevé qui englobe tout) passerait au vert.
+        /// L'hôte est INACTIF : `Start` ne part pas, aucune requête.</summary>
+        [Test]
+        public void LaGardeDeSortie_NommeUnLocataireOrphelin()
+        {
+            var orphelin = new GameObject("OrphelinVolontaire");
+            orphelin.SetActive(false);
+            orphelin.AddComponent<ExceptionQueueController>();
+            try
+            {
+                CollectionAssert.Contains(SurvivantsDeLaClasse(), "ExceptionQueueController@OrphelinVolontaire",
+                    "la garde ne voit pas un contrôleur monté hors de `montes` : elle ne mordrait jamais");
+            }
+            finally { Object.DestroyImmediate(orphelin); }
+            CollectionAssert.IsEmpty(SurvivantsDeLaClasse(), "détruit en immédiat, il ne doit plus être compté");
         }
 
         // Seed THIS fixture's precondition immediately before its tests run. Seeding in
@@ -526,8 +589,10 @@ namespace MafiaCleanCity.Operational.Tests
         private IEnumerator MonterFileAvecCartes(string[] ids, System.Action<ExceptionQueueController> pret)
         {
             LogAssert.ignoreFailingMessages = true;
-            controllerGo = new GameObject("ExceptionQueueScreen");
-            var ctl = controllerGo.AddComponent<ExceptionQueueController>();
+            // ⛔ INSCRIT, jamais écrasé : Ecran10 monte deux files dans le même test (TD-576, voir `montes`).
+            var hote = new GameObject("ExceptionQueueScreen");
+            montes.Add(hote);
+            var ctl = hote.AddComponent<ExceptionQueueController>();
 
             // laisser Boot() partir, échouer, et finir de rendre son comptoir vide
             for (int i = 0; i < 12; i++) yield return null;
