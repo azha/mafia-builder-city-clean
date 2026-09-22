@@ -20,12 +20,10 @@ namespace MafiaCleanCity.Operational.Exceptions
     /// domaine, elle devient balayable et testable — c'est la séquence que ce dépôt a payée sur les
     /// trois mappings « bucket de chaleur → apparence ».
     ///
-    /// ⚠️ PAS DE CLÉ i18n INVENTÉE, ET C'EST DÉLIBÉRÉ. Mesuré sur le bundle `fr` RÉEL servi par
-    /// `GET /v1/i18n/bundle` (**675 clés**) : aucune clé de gravité ni d'urgence n'y est servie —
-    /// `Severe` 0, `Urgent` 0, `TEACH` 0 ; `Moderate` ne rend que `messages.accueil.etat.moderate`,
-    /// qui appartient à un autre écran. Poser un `Lib()` sur une clé non servie ajouterait un REPLI,
-    /// et une garde de ce dépôt existe exactement pour ça. Le mot français est ici la valeur
-    /// RATIFIÉE du client ; la clé se crée côté back, au lot i18n, jamais par un slug improvisé.
+    /// ⚠️ PAS DE CLÉ i18n INVENTÉE — et aujourd'hui elles sont SERVIES. Mesuré le 06/09 sur le bundle `fr` réel (675
+    /// clés) : aucune clé de gravité ni d'urgence. Le client n'a pas improvisé de slug ; l'atelier a proposé la forme
+    /// (`11-exceptions-inventaire.md` §3.2) et le back la sert à `aea5ef7c`. ⑨-5 la lit par `Libelle.ParValeur` : la
+    /// clé vient de la VALEUR servie, le repli est le mot de l'atelier.
     ///
     /// ⛔ LE DOMAINE EST LU À LA SOURCE, PAS SUR LA CAPTURE. Le juge voyait quatre valeurs ; le back
     /// en déclare **sept** (`exceptions.projection.service.ts:13-14` et `:79`) :
@@ -35,12 +33,9 @@ namespace MafiaCleanCity.Operational.Exceptions
     /// casses diffèrent, donc la comparaison est insensible à la casse — s'aligner sur celle qu'on a
     /// vue serait un piège de plus.
     ///
-    /// ⚠️⚠️ QUATRE VALEURS SUR SEPT SONT RATIFIÉES, TROIS NE LE SONT PAS, ET C'EST ÉCRIT ICI PLUTÔT
-    /// QUE MASQUÉ. La maquette montre `GRAVE · CRITIQUE` et `MODÉRÉE · URGENTE` — donc `SEVERE`,
-    /// `MODERATE`, `critical` et `urgent`. Elle ne montre **jamais** `MILD`, `silent` ni `watching` :
-    /// ce sont des cartes trop basses pour atteindre le haut de la file. Leurs libellés ci-dessous
-    /// sont mon choix, pas une valeur ratifiée, et ils attendent un arbitrage. Les laisser en anglais
-    /// aurait été pire — la doctrine ne dit pas « aucun repli anglais sauf ceux qu'on n'a pas vus ».
+    /// ⚠️⚠️ QUATRE VALEURS SUR SEPT SONT DESSINÉES PAR LA MAQUETTE (`GRAVE · CRITIQUE`, `MODÉRÉE · URGENTE`). Les trois
+    /// autres (`MILD`, `watching`, `silent`) ont reçu leurs mots de l'atelier le 22/09 (§3.2) : « légère », « à surveiller »,
+    /// « sans urgence » — « Silencieuse », le choix du client, décrivait la carte et non son rang.
     ///
     /// ⚠️ ET LA VALEUR INATTENDUE NE SE TAIT PAS. Une bande absente ou inconnue rend `—`, jamais un
     /// mot anglais et jamais le mot le plus proche : un trou se montre, il ne se déguise pas. C'est
@@ -62,29 +57,53 @@ namespace MafiaCleanCity.Operational.Exceptions
         /// (`priority_band : silent | watching | urgent | critical`).</summary>
         public static readonly string[] DomainePriorite = { "silent", "watching", "urgent", "critical" };
 
+        /// <summary>⑨-5 (2026-09-23) — LES MOTS SONT SERVIS, LE CLIENT GARDE LES REPLIS DE L'ATELIER. Le back sert
+        /// `exceptions.gravite.<valeur>`, `exceptions.priorite.<valeur>` et `exception_detail.confiance.<valeur>` (la forme
+        /// proposée par l'atelier, `11-exceptions-inventaire.md` §3.2, servie à `aea5ef7c`). La clé se dérive de la VALEUR
+        /// servie (`Libelle.ParValeur`), jamais du mot affiché. Les replis sont les mots de l'atelier, en minuscules comme il
+        /// les écrit : « légère » et « sans urgence » ne sont plus des choix du client (« Silencieuse » décrivait la carte,
+        /// pas son rang). ⚠️ Le repli n'est PAS la valeur servie à `aea5ef7c` pour `mild` et `silent` : celle-ci portait la
+        /// justification de l'atelier en plus du mot (défaut du back, signalé le 23/09).
+        /// ⛔ Le DOMAINE reste fermé ici : une valeur hors domaine rend `Inconnue` SANS consulter le catalogue — une clé
+        /// servie pour `HIGH` ne rouvrirait pas l'ancien domaine en silence.</summary>
         private static readonly Dictionary<string, string> Gravites =
             new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
             {
-                { "SEVERE", "Grave" },        // RATIFIÉ — maquette, rangées 1 et 3
-                { "MODERATE", "Modérée" },    // RATIFIÉ — maquette, rangée 2
-                { "MILD", "Légère" },         // NON ratifié — la maquette ne montre pas cette bande
+                { "SEVERE", "grave" },        // RATIFIÉ — maquette, rangées 1 et 3
+                { "MODERATE", "modérée" },    // RATIFIÉ — maquette, rangée 2
+                { "MILD", "légère" },         // atelier §3.2
             };
 
         private static readonly Dictionary<string, string> Priorites =
             new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
             {
-                { "critical", "Critique" },   // RATIFIÉ — maquette, rangées 1 et 2
-                { "urgent", "Urgente" },      // RATIFIÉ — maquette, rangée 3
-                { "watching", "À surveiller" }, // NON ratifié
-                { "silent", "Silencieuse" },    // NON ratifié
+                { "critical", "critique" },     // RATIFIÉ — maquette, rangées 1 et 2
+                { "urgent", "urgente" },        // RATIFIÉ — maquette, rangée 3
+                { "watching", "à surveiller" }, // atelier §3.2
+                { "silent", "sans urgence" },   // atelier §3.2
             };
 
-        /// <summary>Le libellé français d'une bande de gravité. Insensible à la casse — le back
-        /// envoie des majuscules pour celle-ci et des minuscules pour l'autre.</summary>
-        public static string Gravite(string bande) => Resoudre(Gravites, bande);
+        /// <summary>Le domaine de la CONFIANCE (`ExceptionDtos.confidence_band`, casse canon `ConfidenceBucket`).</summary>
+        public static readonly string[] DomaineConfiance = { "tentative", "likely", "confident" };
 
-        /// <summary>Le libellé français d'une bande de priorité.</summary>
-        public static string Priorite(string bande) => Resoudre(Priorites, bande);
+        private static readonly Dictionary<string, string> Confiances =
+            new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                { "confident", "il est sûr" },  // RATIFIÉ — cadre 15, `.chip.conf.conf-h`
+                { "likely", "il le croit" },    // atelier §3.2
+                { "tentative", "il hésite" },   // atelier §3.2
+            };
+
+        /// <summary>Le libellé d'une bande de gravité. Insensible à la casse — le back
+        /// envoie des majuscules pour celle-ci et des minuscules pour l'autre.</summary>
+        public static string Gravite(string bande) => Resoudre("exceptions", "gravite", Gravites, bande);
+
+        /// <summary>Le libellé d'une bande de priorité.</summary>
+        public static string Priorite(string bande) => Resoudre("exceptions", "priorite", Priorites, bande);
+
+        /// <summary>⑨-5 — ce que le lieutenant pense de sa propre suggestion (⑩). Remplace `Cap(confidence_band)`, qui
+        /// affichait l'enum anglais capitalisé (« Likely »).</summary>
+        public static string Confiance(string bande) => Resoudre("exception_detail", "confiance", Confiances, bande);
 
         /// <summary>La ligne « gravité · priorité » telle que la maquette la compose. Un seul site
         /// de composition : les deux appelants de ⑨ écrivaient le séparateur chacun de leur côté,
@@ -210,10 +229,158 @@ namespace MafiaCleanCity.Operational.Exceptions
             return t.Contains(" ") ? $"« {t} »" : t;
         }
 
-        private static string Resoudre(Dictionary<string, string> table, string bande)
+        /// <summary>⑨-6 / ⑩-1 — le domaine de l'ISSUE d'une résolution (`outcome` de `POST /v1/exceptions/:id/resolve`), lu
+        /// dans les effets du back (atelier `11-exceptions-inventaire.md` §3.7 : un fichier:ligne par valeur).</summary>
+        public static readonly string[] DomaineIssue =
+        {
+            "RESOLVED", "ESCALATED", "REPAIRING", "REPAIRING_SLOW", "BRIBE_SUCCEEDED",
+            "BRIBE_FAILED", "LAID_LOW", "TAUGHT", "DEFERRED", "DEMOLISHED",
+        };
+
+        private static readonly Dictionary<string, string> Issues =
+            new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                { "RESOLVED", "RÉGLÉ" },
+                { "ESCALATED", "ARCHIVÉ" },
+                { "REPAIRING", "EN RÉPARATION" },       // RATIFIÉ — cadre 17
+                { "REPAIRING_SLOW", "RÉPARATION LENTE" },
+                { "BRIBE_SUCCEEDED", "ARRANGÉ" },
+                { "BRIBE_FAILED", "ÇA S'EST RETOURNÉ" },
+                { "LAID_LOW", "PROFIL BAS" },
+                { "TAUGHT", "RÈGLE APPRISE" },
+                { "DEFERRED", "REMIS À PLUS TARD" },
+                { "DEMOLISHED", "RASÉ" },
+            };
+
+        /// <summary>Le mot du CACHET d'une issue (`exception_detail.outcome.<valeur>`, servi à `aea5ef7c` ; repli : les mots de
+        /// l'atelier §3.7, en capitales comme un cachet). Une issue inconnue rend `Inconnue`, jamais l'enum brut. Pas de
+        /// majuscule initiale ici : le mot est déjà en capitales. ⑨ (après le tampon, cadre 17) et ⑩ le partagent.</summary>
+        public static string Issue(string outcome)
+        {
+            if (string.IsNullOrWhiteSpace(outcome)) return Inconnue;
+            string valeur = outcome.Trim();
+            if (!Issues.TryGetValue(valeur, out string repli)) return Inconnue;
+            string mot = MafiaCleanCity.I18n.Libelle.ParValeur("exception_detail", "outcome", valeur, repli);
+            return string.IsNullOrWhiteSpace(mot) ? repli : mot.Trim();
+        }
+
+        private static readonly Dictionary<string, string> PhrasesApres =
+            new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                { "REPAIRING", "Le bâtiment se remet en marche, avec le temps" },   // RATIFIÉ — cadre 17, à l'octet
+                { "REPAIRING_SLOW", "Le bâtiment se remet en marche, lentement — c'est moins cher" },
+                { "BRIBE_SUCCEEDED", "La descente n'a pas eu lieu : le bâtiment repart, la chaleur baisse" },
+                { "BRIBE_FAILED", "L'argent est parti, et ça s'est retourné : la chaleur monte" },
+                { "LAID_LOW", "On se fait oublier : la chaleur retombe, le bâtiment reste touché" },
+                { "TAUGHT", "C'est une règle, désormais : la prochaine fois, ça se règle sans vous" },
+                { "DEFERRED", "Réparation remise : le bâtiment reste à l'arrêt" },
+                { "DEMOLISHED", "Le bâtiment est rasé ; l'îlot est libre" },
+                { "ESCALATED", "Archivé : à relire à tête reposée" },
+                { "RESOLVED", "C'est réglé, pour cette fois" },
+            };
+
+        /// <summary>S03 — l'ENSEIGNE du bâtiment que la carte vise (« Transit Marrek »), ou `null` : pas de bâtiment servi, plusieurs
+        /// (le back rend `null`), ou un bâtiment qui n'est plus au joueur (`name_i18n: null`). Jamais un nom deviné. L'enseigne est
+        /// NUE (sans article) : c'est aux mots de l'atelier de dire comment elle entre dans une phrase.</summary>
+        public static string EnseigneVisee(ExceptionCardDto c)
+        {
+            if (c == null || c.building == null || string.IsNullOrEmpty(c.building.id)) return null;
+            var nom = c.building.name_i18n;
+            if (nom == null || string.IsNullOrEmpty(nom.key) || nom.@params == null) return null;
+            return string.IsNullOrWhiteSpace(nom.@params.enseigne) ? null : nom.@params.enseigne.Trim();
+        }
+
+        /// <summary>S03 — une clé à `{enseigne}` (atelier §3.11, `b761a235`) : la valeur servie si le catalogue la connaît, sinon
+        /// le repli fr de l'atelier. L'enseigne entre NUE : ni article ni contraction devant, aucun mot accordé derrière.</summary>
+        public static string AvecEnseigne(string cle, string repli, string enseigne)
+        {
+            if (MafiaCleanCity.I18n.I18nCatalog.Connait(cle))
+            {
+                string t = MafiaCleanCity.I18n.I18nCatalog.Traduire(cle, new Dictionary<string, string> { { "enseigne", enseigne } });
+                if (!string.IsNullOrWhiteSpace(t)) return t.Trim();
+            }
+            return repli.Replace("{enseigne}", enseigne);
+        }
+
+        /// <summary>La clé du SEUL libellé servi qui dit « le bâtiment » (« Réparer le bâtiment ») : c'est lui que le nom remplace.
+        /// « Réparer tout de suite », « Réparer lentement » ne nomment rien et restent tels quels (atelier §3.11 §2).</summary>
+        public const string CleReparerLeBatiment = "exception.raid.repair.label";
+
+        /// <summary>S03 — le libellé d'une action, NOMMÉ quand il dit « le bâtiment » et que la carte vise une enseigne servie :
+        /// « Réparer {enseigne} » (`exceptions.bloc.reparer_enseigne`). Sinon le libellé servi, inchangé.</summary>
+        public static string LibelleNomme(ExceptionCardDto c, CandidateActionDto a, string libelleServi)
+        {
+            string e = EnseigneVisee(c);
+            if (e == null || a == null || a.label_i18n == null || a.label_i18n.key != CleReparerLeBatiment) return libelleServi;
+            return AvecEnseigne("exceptions.bloc.reparer_enseigne", "Réparer {enseigne}", e);
+        }
+
+        private static readonly Dictionary<string, string> PhrasesApresNommees =
+            new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                { "REPAIRING", "{enseigne} se remet en marche, avec le temps" },
+                { "REPAIRING_SLOW", "{enseigne} se remet en marche, lentement — c’est moins cher" },
+                { "DEFERRED", "Réparation remise : {enseigne} reste à l’arrêt" },
+            };
+
+        /// <summary>S03 — la phrase de l'après, NOMMÉE (`exceptions.apres.<issue>.enseigne`, atelier §3.11 §3) pour les trois issues
+        /// qui disaient « le bâtiment » ; `DEMOLISHED` reste sans nom (le participe prendrait le genre de l'enseigne). Sans enseigne,
+        /// la phrase de §3.10.</summary>
+        public static string PhraseApres(string outcome, string enseigne)
+        {
+            if (!string.IsNullOrWhiteSpace(enseigne) && !string.IsNullOrWhiteSpace(outcome)
+                && PhrasesApresNommees.TryGetValue(outcome.Trim(), out string repli))
+                return AvecEnseigne("exceptions.apres." + MafiaCleanCity.I18n.Libelle.Slug(outcome.Trim()) + ".enseigne", repli, enseigne.Trim());
+            return PhraseApres(outcome);
+        }
+
+        /// <summary>⑨-6 — la phrase SOUS le cachet de l'après (cadre 17) : `exceptions.apres.<issue>`, une par issue, repli =
+        /// les phrases de l'atelier (`11-exceptions-inventaire.md` §3.10 A, `da146da5`) — ce qui s'est PASSÉ, sans genre.
+        /// Issue hors domaine ⇒ `null` (pas de phrase), jamais l'enum.</summary>
+        public static string PhraseApres(string outcome)
+        {
+            if (string.IsNullOrWhiteSpace(outcome)) return null;
+            string valeur = outcome.Trim();
+            if (!PhrasesApres.TryGetValue(valeur, out string repli)) return null;
+            string phrase = MafiaCleanCity.I18n.Libelle.ParValeur("exceptions", "apres", valeur, repli);
+            return string.IsNullOrWhiteSpace(phrase) ? repli : phrase.Trim();
+        }
+
+        /// <summary>⑨-6 — une phrase à COMPTE servie en pluriel ICU à branches exactes écrites en lettres (`=0` … `=6`,
+        /// `other` « Plusieurs », jamais `#` — atelier §3.10 B). Le nombre part en paramètre, il n'est jamais affiché.
+        /// ⛔ Une valeur servie qui porte un CHIFFRE (l'ancienne forme à `#`) est refusée : un texte suivi ne porte pas de
+        /// chiffre isolé (R2.2). Clé absente ou refusée ⇒ le repli du client (le nombre en lettres, composé).</summary>
+        public static string CompteEnLettres(string cle, int n, string repli)
+        {
+            if (MafiaCleanCity.I18n.I18nCatalog.Connait(cle))
+            {
+                string t = MafiaCleanCity.I18n.I18nCatalog.Traduire(cle,
+                    new Dictionary<string, string> { { "count", n.ToString(System.Globalization.CultureInfo.InvariantCulture) } });
+                if (!string.IsNullOrWhiteSpace(t))
+                {
+                    bool chiffre = false;
+                    foreach (char ch in t) if (char.IsDigit(ch)) { chiffre = true; break; }
+                    if (!chiffre) return t.Trim();
+                }
+            }
+            return repli;
+        }
+
+        /// <summary>Le domaine d'abord (hors domaine ⇒ `Inconnue`, le catalogue n'est pas consulté), puis la clé dérivée
+        /// de la valeur servie, repli = le mot de l'atelier. La MAJUSCULE INITIALE se pose ICI, une fois, sur le servi comme
+        /// sur le repli : le back et l'atelier écrivent en minuscules, les écrans affichent « Grave · Critique » (ou en
+        /// capitales par style, ce qui revient au même).</summary>
+        private static string Resoudre(string domaine, string role, Dictionary<string, string> table, string bande)
         {
             if (string.IsNullOrWhiteSpace(bande)) return Inconnue;
-            return table.TryGetValue(bande.Trim(), out string libelle) ? libelle : Inconnue;
+            string valeur = bande.Trim();
+            if (!table.TryGetValue(valeur, out string repli)) return Inconnue;
+            string mot = MafiaCleanCity.I18n.Libelle.ParValeur(domaine, role, valeur, repli);
+            return Initiale(string.IsNullOrWhiteSpace(mot) ? repli : mot.Trim());
         }
+
+        /// <summary>« à surveiller » → « À surveiller » ; le reste du mot est intact.</summary>
+        public static string Initiale(string mot) =>
+            string.IsNullOrEmpty(mot) ? mot : char.ToUpperInvariant(mot[0]) + mot.Substring(1);
     }
 }

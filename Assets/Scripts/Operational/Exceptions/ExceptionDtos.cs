@@ -45,6 +45,7 @@ namespace MafiaCleanCity.Operational.Exceptions
     /// carte de flag »). Le back REFUSE la requête plutôt que de servir un id sans nom : un `name` vide ne vient que d'une
     /// pile antérieure à C3. `null` côté serveur pour une carte de la ville ⇒ JsonUtility rend une instance VIDE.</summary>
     [Serializable] public class ExceptionLieutenantDto { public string id; public string name; }
+    [Serializable] public class ExceptionBatimentDto { public string id; public MafiaCleanCity.Shell.NomDeBatimentI18nDto name_i18n; }
 
     /// <summary>Une référence i18n. FORME MESURÉE le 2026-09-02 sur le corps réel :
     /// `{"key":"exception.heat_pressure.card.descriptor","params":{}}` — un objet, pas une
@@ -75,6 +76,11 @@ namespace MafiaCleanCity.Operational.Exceptions
         /// Mesuré : non nulle sur 2 cartes sur 6 (les producteurs), nulle sur les 4 du seeder,
         /// dont les libellés sont EN BASE et hors de portée du back (TD-453).</summary>
         public I18nRefDto event_descriptor_i18n;
+        /// <summary>S03 (back `406ae440`, maquette ⑨ cadre 18) — le bâtiment que la carte VISE : l'unique `target_building_id` de
+        /// ses actions, avec son nom de fiction (la MÊME forme que `/me/buildings` : `NomDeBatimentI18nDto`). `null` quand les
+        /// actions n'en visent aucun ou plusieurs ; `name_i18n: null` si le bâtiment n'est plus au joueur. ⚠️ JsonUtility rend
+        /// une INSTANCE VIDE pour `null` : lire par `ExceptionBandes.EnseigneVisee`, jamais `building != null`.</summary>
+        public ExceptionBatimentDto building;
         public CandidateActionDto[] candidate_actions;
         public CandidateActionDto suggested_action;
         public string confidence_band;        // tentative | likely | confident  (closed, casse canon ConfidenceBucket — back lot-3 TD-072)
@@ -92,6 +98,19 @@ namespace MafiaCleanCity.Operational.Exceptions
     [Serializable] public class ExceptionQueueData { public ExceptionCardDto[] exceptions; }
     [Serializable] public class ExceptionQueuePayload { public ExceptionQueueData data; }
     [Serializable] public class ExceptionQueueEnvelope { public ExceptionQueuePayload payload; }
+
+    /// <summary>⑨-6 — `GET /v1/exceptions/escalations?limit=&offset=` (back `exceptions.controller.ts:87-102`) →
+    /// `{ escalations, total, limit, offset }`. ⑨ ne lit que `total` (le pied « Escalades archivées », cadres 14 et 16) ;
+    /// les quatre clés sont DÉCLARÉES quand même (forme G : l'oracle compare servi et déclaré dans les deux sens).</summary>
+    [Serializable] public class EscalationsResponseDto
+    {
+        public ExceptionCardDto[] escalations;
+        public int total;
+        public int limit;
+        public int offset;
+    }
+    [Serializable] public class EscalationsPayload { public EscalationsResponseDto data; }
+    [Serializable] public class EscalationsEnvelope { public EscalationsPayload payload; }
 
     // POST /v1/exceptions/:id/resolve { method, chosen_action_id } → { resolved: true, outcome }.
     [Serializable] public class ResolveRequest { public string method; public string chosen_action_id; }

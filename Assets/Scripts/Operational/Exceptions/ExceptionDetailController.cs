@@ -35,6 +35,47 @@ namespace MafiaCleanCity.Operational.Exceptions
         private Action onBack;
         private ExceptionsClient client;
 
+        /// <summary>⑩-1 — LA CARTE SE FERME APRÈS LA RÉSOLUTION (cadre 15 → 17 ; écart D10) : la maquette ne montre pas d'état
+        /// « résolu » sur ⑩ — la main se referme et ⑨ montre l'après (la carte tranchée, son cachet). Posé par la file :
+        /// (carte, issue servie, action envoyée). Absent (montage autonome), la fermeture rappelle `onBack`.</summary>
+        public Action<ExceptionCardDto, string, CandidateActionDto> SurResolution;
+        private bool ferme;
+        /// <summary>La carte s'est refermée (résolue ou quittée) ; un second geste ne rappelle rien.</summary>
+        public bool Ferme => ferme;
+        /// <summary>Couture de test : le client de CE détail (ses coutures coupent le réseau, `ExceptionsClient`).</summary>
+        public ExceptionsClient ClientPourTest { get { EnsureInitialized(); return client; } }
+        /// <summary>Le décor de ⑩ — le bar de ⑨, zinc `.main-de-cartes` à 15 %.</summary>
+        public MafiaCleanCity.Shell.DecorAuComptoir Decor { get; private set; }
+        /// <summary>⑩-1 — le rôle du locuteur (« Cuisinier »…), posé par la file AVANT `Init` : la jointure du roster est dans ⑨,
+        /// ⑩ ne la refait pas. Absent ⇒ pas de rôle dans le contexte (jamais inventé).</summary>
+        public string RoleDuLocuteur;
+
+        /// <summary>La feuille de CE détail (montée sous le Canvas partagé : jamais la chercher par son nom).</summary>
+        public GameObject FeuillePourTest => sheetGo;
+
+        // ⑩-1b — D09 (décision de l'orchestrateur, 23/09) : TOUTE issue servie est atteignable depuis la main.
+        //   · une carte se CHOISIT au toucher ; le tampon dit et envoie le choix (par défaut : la suggérée) ;
+        //   · le talon se DÉPLIE au toucher : les issues restantes, en cartes sombres ;
+        //   · « Escalader » est une carte du talon quand AUCUNE issue servie ne porte `method ESCALATE` (elle envoie ESCALATE
+        //     avec l'id suggéré, comme l'ancien bouton) ; quand une issue la porte, c'est elle qu'on montre, sans doublon.
+        /// <summary>Une carte touchable de la main (rôle ou talon déplié) — la couture des gardes d'atteignabilité.</summary>
+        public sealed class CarteTouchable { public CandidateActionDto Action; public bool Escalade; public Button Bouton; }
+        private readonly List<CarteTouchable> cartesTouchables = new List<CarteTouchable>();
+        public IReadOnlyList<CarteTouchable> CartesPourTest => cartesTouchables;
+        private bool talonDeplie;
+        private CandidateActionDto selection;
+        private bool selectionEscalade;
+        private Button talonBouton;
+        private TamponAuComptoir.Rendu tampon;
+        public Button TalonPourTest => talonBouton;
+        /// <summary>⑩-1e — l'appui long du tampon (la seule façon de résoudre depuis la main).</summary>
+        public MafiaCleanCity.Shell.LongPressButton TamponAppuiPourTest => tampon != null ? tampon.Appui : null;
+        public string TamponLibelleTexte => tampon != null ? tampon.Libelle.text : null;
+        public string TamponSousTexte => tampon != null ? tampon.Sous.text : null;
+        public bool TalonDeplie => talonDeplie;
+        /// <summary>L'id de l'issue choisie, « ESCALADER » pour la carte synthétique.</summary>
+        public string SelectionId => selectionEscalade ? "ESCALADER" : (selection != null ? selection.id : null);
+
         private readonly List<string> renderedTexts = new List<string>();
         private TMP_FontAsset font;
         private RectTransform body;
@@ -99,6 +140,16 @@ namespace MafiaCleanCity.Operational.Exceptions
             return "ONE_TIME";
         }
 
+        /// <summary>⑩-1b — le `method` ENVOYÉ : « lui apprendre » coché sur une issue qui porte une règle ⇒ ADD_RULE ; sinon le
+        /// `method` SERVI (D4, comme le tampon de ⑨-1 — l'issue `escalate` de la carte de chaleur part en ESCALATE) ; sans
+        /// `method` servi (pile antérieure à D4) ⇒ la dérivation `MethodFor`, déclarée.</summary>
+        public static string MethodPour(CandidateActionDto a, bool addAsRule)
+        {
+            if (addAsRule && a != null && !string.IsNullOrEmpty(a.add_rule_dsl)) return "ADD_RULE";
+            if (a != null && !string.IsNullOrEmpty(a.method)) return a.method;
+            return MethodFor(a, addAsRule);
+        }
+
         /// <summary>Toggle "Add as rule" (canon 5a) — re-renders so teachable candidates show/hide their DSL preview.</summary>
         public void SetAddAsRule(bool on)
         {
@@ -109,19 +160,19 @@ namespace MafiaCleanCity.Operational.Exceptions
         /// <summary>Resolve via ONE candidate (method derived). Public coroutine — the PlayMode test drives it.</summary>
         public IEnumerator ResolveWith(CandidateActionDto candidate)
         {
-            yield return DoResolve(MethodFor(candidate, AddAsRule), candidate != null ? candidate.id : "");
+            yield return DoResolve(MethodPour(candidate, AddAsRule), candidate != null ? candidate.id : "", candidate);
         }
 
         /// <summary>Escalate the card (ESCALATE; chosen_action_id = the suggested action's id).</summary>
         public IEnumerator Escalate()
         {
             string suggestedId = CurrentCard != null && CurrentCard.suggested_action != null ? CurrentCard.suggested_action.id : "";
-            yield return DoResolve("ESCALATE", suggestedId);
+            yield return DoResolve("ESCALATE", suggestedId, CurrentCard != null ? CurrentCard.suggested_action : null);
         }
 
-        private IEnumerator DoResolve(string method, string chosenActionId)
+        private IEnumerator DoResolve(string method, string chosenActionId, CandidateActionDto action)
         {
-            if (CurrentCard == null || resolving) yield break;
+            if (CurrentCard == null || resolving || ferme) yield break;
             resolving = true;
             LastError = null;
             ResolveResponse res = null;
@@ -138,13 +189,29 @@ namespace MafiaCleanCity.Operational.Exceptions
                 yield break;
             }
             LastOutcome = res.outcome;
-            Render();
+            Fermer(res.outcome, action);
+        }
+
+        /// <summary>⑩-1 — la main se referme sur une résolution réussie : l'hôte est détruit (OnDestroy emporte le décor et
+        /// la feuille), puis la file reçoit l'issue (`SurResolution`) — ou, sans elle, le retour ordinaire.</summary>
+        private void Fermer(string outcome, CandidateActionDto action)
+        {
+            if (ferme) return;
+            ferme = true;
+            var surResolution = SurResolution;
+            Action cb = onBack;
+            ExceptionCardDto carte = CurrentCard;
+            if (this != null) Destroy(gameObject);
+            if (surResolution != null) surResolution(carte, outcome, action);
+            else cb?.Invoke();
         }
 
         /// <summary>Back to the queue: destroy this host (OnDestroy tears down the backdrop/sheet) + let the
-        /// queue re-fetch.</summary>
+        /// queue re-fetch. ⑩-1 : sans effet une fois la carte refermée — la file a déjà été rappelée.</summary>
         public void Back()
         {
+            if (ferme) return;
+            ferme = true;
             Action cb = onBack;
             if (this != null) Destroy(gameObject);
             cb?.Invoke();
@@ -153,7 +220,7 @@ namespace MafiaCleanCity.Operational.Exceptions
         // ---- render ----
         private void Render()
         {
-            if (Destroyed || body == null) return;
+            if (Destroyed || ferme || body == null) return;
             ExceptionCardDto c = CurrentCard;
             if (c == null) return;
 
@@ -169,67 +236,21 @@ namespace MafiaCleanCity.Operational.Exceptions
             // `lieutenant`. L'ancien commentaire refusait d'afficher « Lieutenant » (le placeholder de TD-046) comme un
             // nom ; mais le corps du 06/09 sert de VRAIS noms (« Lt. Rook », « Lt. Sallo »), et un placeholder servi est
             // la donnée, pas un mensonge de l'écran. Un seul site, partagé avec ⑨ : `ExceptionBandes.Locuteur`.
-            string qui = ExceptionBandes.Locuteur(c);
-            TextMeshProUGUI quiTxt = NewText("Qui", body, qui, (int)PxD(11f), TextAlignmentOptions.Left);
-            quiTxt.fontStyle = FontStyles.Bold;
-            AddLayoutElement(quiTxt.gameObject, minHeight: PxD(14f), flexibleHeight: 0);
-            TrackText(quiTxt, qui);
+            // ⑩-1 — CELUI QUI PARLE, au dessin de ⑨ (cadre 15 = cadre 14, écart D03) : médaillon 60 au buste, bulle de verre,
+            // nom or-vif, « · rôle · lieu », TROIS pastilles (gravité, priorité, CONFIANCE — `.chip.conf`), la réplique suivie
+            // de « Je fais quoi ? » en italique. Le code est `ParleurAuComptoir`, partagé avec ⑨. Avant : « Votre lieutenant »
+            // en gras et une ligne « Grave · Critique · Confident ».
+            ParleurAuComptoir parleur = Parleur();
+            parleur.ContexteSuivi = ExceptionBandes.EnseigneVisee(c) == null;
+            RectTransform rangee = parleur.ConstruireRangee(body, 10f);
+            parleur.Construire(rangee, c, ExceptionQueueController.Contexte(RoleDuLocuteur, c), RepliqueMain(c),
+                ExceptionBandes.Gravite(c.severity_band), ExceptionBandes.Priorite(c.priority_band),
+                ExceptionBandes.Confiance(c.confidence_band));
 
-            // Les trois bandes, en pastilles — libellés FERMÉS, suivis par le corpus de balayage.
-            // ⚠️ La CONFIANCE reste capitalisée telle quelle : son domaine
-            //    (`tentative|likely|confident`) n'apparaît sur AUCUNE maquette, donc je n'ai pas de
-            //    valeur ratifiée pour elle et je n'en invente pas trois de plus dans le même geste.
-            //    C'est un anglais qui reste, il est nommé, et il part à l'arbitrage avec les trois
-            //    autres non ratifiés. *Un trou déclaré est une propriété ; un trou comblé au
-            //    jugé est un piège.*
-            string pastilles = $"{ExceptionBandes.Ligne(c.severity_band, c.priority_band)} · {Cap(c.confidence_band)}";
-            TextMeshProUGUI chips = NewText("Chips", body, pastilles, (int)PxD(CssChipCorps * 1.4f),
-                                            TextAlignmentOptions.Left);
-            chips.color = SeverityTeinte(c.severity_band);
-            AddLayoutElement(chips.gameObject, minHeight: PxD(11f), flexibleHeight: 0);
-            TrackText(chips, pastilles);
-
-            // La réplique — texte PRODUCTEUR (prose anglaise aujourd'hui, clé demain) : chrome,
-            // non suivi. Passe par le point unique `Texte()`.
-            TextMeshProUGUI desc = NewText("Descriptor", body,
-                // ⛔ LES GUILLEMETS ÉTAIENT INCONDITIONNELS : un identifiant technique se retrouvait
-                //    dans la bouche d'un lieutenant, alors que ⑨ — le même contenu, à un clic — a une
-                //    règle écrite qui l'interdit. La règle est partagée maintenant.
-                ExceptionBandes.Replique(Texte(c.event_descriptor, c.event_descriptor_i18n), ExceptionBandes.ParleUnLieutenant(c)),
-                (int)PxD(11.5f), TextAlignmentOptions.Left);
-            desc.textWrappingMode = TextWrappingModes.Normal;
-            desc.overflowMode = TextOverflowModes.Overflow;
-            desc.color = TextPrimary;
-            AddLayoutElement(desc.gameObject, minHeight: PxD(24f), flexibleHeight: 0);
-
-            // ---- L'APRÈS-TAMPON : le mot que le back rend ----
-            // Les DIX `outcome` émis, un par handler (inventaire de la session back, 2026-09-02) :
-            //   RESOLVED · ESCALATED · TAUGHT · DEFERRED · DEMOLISHED · LAID_LOW ·
-            //   REPAIRING · REPAIRING_SLOW · BRIBE_SUCCEEDED · BRIBE_FAILED
-            // ⚠️ `BRIBE_SUCCEEDED` / `BRIBE_FAILED` sont NON DÉTERMINISTES — tirage dans le
-            // handler. Une capture de cet état-là n'est PAS reproductible : si on en prend une,
-            // son nom doit le dire, sinon quelqu'un la rejouera et lira une régression là où il
-            // n'y a qu'un tirage.
-            // ⛔ On affiche le mot du serveur TEL QUEL, sans le traduire en « réussi / échoué » :
-            // dix valeurs fermées dont deux aléatoires, c'est au serveur de les nommer.
-            // ---- Resolved state: show outcome + Back, then return. ----
-            if (!string.IsNullOrEmpty(LastOutcome))
-            {
-                TextMeshProUGUI resolved = NewText("Resolved", body, Lib("Résolu ✓"), 16, TextAlignmentOptions.Left);
-                resolved.color = AccentMild;
-                resolved.fontStyle = FontStyles.Bold;
-                AddLayoutElement(resolved.gameObject, minHeight: 22, flexibleHeight: 0);
-                TrackText(resolved, Lib("Résolu ✓"));
-
-                // Outcome — producer free text (enum value may carry letters but qualitative): CHROME, TextPrimary.
-                TextMeshProUGUI outcomeText = NewText("Outcome", body, Lib("Issue :") + " " + LastOutcome, 14, TextAlignmentOptions.Left);
-                outcomeText.color = TextPrimary;
-                AddLayoutElement(outcomeText.gameObject, minHeight: 20, flexibleHeight: 0);
-                // chrome — NOT tracked
-
-                AddButton("back", Lib("Back"), Back);
-                return;
-            }
+            // ⑩-1 — PLUS D'ÉTAT « RÉSOLU » ICI (écart D10 : « Résolu ✓ · Issue : REPAIRING · Back », l'enum BRUT, et
+            // « Issue : » servi en fr « Problème : », un contresens). La carte se referme (`Fermer`) et ⑨ montre l'après
+            // avec le mot de l'issue (`ExceptionBandes.Issue`, cadre 17). ⚠️ `BRIBE_SUCCEEDED` / `BRIBE_FAILED` restent
+            // NON DÉTERMINISTES (tirage dans le handler) : une capture de l'après d'un pot-de-vin doit le dire dans son nom.
 
             // ---- Error line (if present — producer text, chrome). ----
             if (!string.IsNullOrEmpty(LastError))
@@ -253,8 +274,26 @@ namespace MafiaCleanCity.Operational.Exceptions
             // `.carte:nth-child(2){translateY(-8px)}`). Le reste part au TALON, qui n'est pas un
             // ornement mais le CARDINAL des issues non montrées.
             RendreMain(c);
-            AddButton("escalate", Lib("Escalate"), () => StartCoroutine(Escalate()));
-            AddButton("back", Lib("Back"), Back);
+            // ⑩-1b — D09 : plus de bouton « Escalate » (l'escalade est une carte : servie, ou synthétique dans le talon).
+            // « Retour » seulement HORS shell : sous shell, le retour est le geste du shell ; hors shell (montage autonome),
+            // sans lui la main n'aurait d'autre sortie que la résolution.
+            if (mountParent == null) AddButton("back", Lib("Back"), Back);
+        }
+
+        private ParleurAuComptoir Parleur() => new ParleurAuComptoir(PxD, PxDI, TrackText);
+
+        private int PxDI(float css) => MafiaCleanCity.Shell.EchelleMaquette.PxTrait(
+            css, body, MafiaCleanCity.Shell.EchelleMaquette.LargeurEcransBrennar4);
+
+        /// <summary>La réplique de ⑩ : celle de ⑨ (« Patron — … », la règle des guillemets), suivie, quand un lieutenant parle en
+        /// prose, de « <i>Je fais quoi ?</i> » DANS les guillemets (cadre 15 : « … J’ai pas de consigne pour ça. <i>Je fais
+        /// quoi ?</i> »). La ville et un identifiant nu ne posent pas de question.</summary>
+        public static string RepliqueMain(ExceptionCardDto c)
+        {
+            string r = ExceptionQueueController.RepliqueDuPremier(c);
+            const string fin = " »";
+            if (!ExceptionBandes.ParleUnLieutenant(c) || r == null || !r.StartsWith("« ") || !r.EndsWith(fin)) return r;
+            return r.Substring(0, r.Length - fin.Length) + " <i>" + Lib("Je fais quoi ?") + "</i>" + fin;
         }
 
         // ── ⑩ : les constantes de la maquette, lues à la source (série 4, largeur 300) ──
@@ -285,6 +324,8 @@ namespace MafiaCleanCity.Operational.Exceptions
         /// par la maquette elle-même) : on affiche la réplique et le talon, sans main.</summary>
         private void RendreMain(ExceptionCardDto c)
         {
+            cartesTouchables.Clear();
+            talonBouton = null; tampon = null;
             string idSug = c.suggested_action != null ? c.suggested_action.id : "";
             CandidateActionDto sug = null, apprendre = null, risquee = null;
             var restantes = new List<CandidateActionDto>();
@@ -299,6 +340,12 @@ namespace MafiaCleanCity.Operational.Exceptions
                     restantes.Add(ca);
                 }
             if (sug == null) sug = c.suggested_action;
+            if (selection == null && !selectionEscalade) selection = sug;
+
+            // ⑩-1b — l'escalade est-elle SERVIE comme issue ? (le `method`, ou le type d'effet pour une pile antérieure à D4)
+            bool escaladeServie = EstEscalade(sug);
+            if (c.candidate_actions != null)
+                foreach (CandidateActionDto ca in c.candidate_actions) escaladeServie |= EstEscalade(ca);
 
             GameObject main = NewUI("Main", body);
             HorizontalLayoutGroup h = main.AddComponent<HorizontalLayoutGroup>();
@@ -310,19 +357,31 @@ namespace MafiaCleanCity.Operational.Exceptions
                              flexibleHeight: 0);
 
             // L'ORDRE EST CELUI DU DESSIN : risquée, suggérée (levée, au milieu), apprendre.
-            if (risquee != null)   Carte(main.transform, Lib("Risqué"),        risquee,   sombre: true,  levee: false);
-            if (sug != null)       Carte(main.transform, Lib("Suggéré"),       sug,       sombre: false, levee: true);
-            if (apprendre != null) Carte(main.transform, Lib("Lui apprendre"), apprendre, sombre: true,  levee: false);
+            // ⑩-1c — l'éventail du cadre 15 : risquée ♠ à −5°, descendue de 6 ; suggérée ♦ droite, LEVÉE de 8 ; apprendre ♣ à
+            // +5°, descendue de 6. Le rôle décide de la place, pas l'ordre du tableau.
+            if (risquee != null)   Carte(main.transform, Lib("Risqué"),        risquee,   sombre: true,  levee: false,
+                                         glyphe: "♠", rotationCss: -5f, translateYCss: 6f);
+            if (sug != null)       Carte(main.transform, Lib("Suggéré"),       sug,       sombre: false, levee: true,
+                                         glyphe: "♦", rotationCss: 0f, translateYCss: -CssCarteLeve);
+            if (apprendre != null) Carte(main.transform, Lib("Lui apprendre"), apprendre, sombre: true,  levee: false,
+                                         glyphe: "♣", rotationCss: 5f, translateYCss: 6f);
 
             // Le talon : le CARDINAL des issues qu'on ne montre pas. Zéro ⇒ pas de talon (le
             // dessin n'en met pas quand la main tient entière).
-            if (restantes.Count > 0)
+            int caches = restantes.Count + (escaladeServie ? 0 : 1);
+            if (caches > 0)
             {
                 GameObject talon = NewUI("Talon", main.transform);
-                talon.AddComponent<Image>().color = AccentSevere;
+                Image talonImg = talon.AddComponent<Image>();
+                talonImg.color = AccentSevere;
+                // ⑩-1b — le talon se DÉPLIE au toucher (D09 a) : sans lui, les issues hors des trois rôles sont des routes
+                // mortes (mesuré : `lay_low` de la carte de chaleur).
+                talonBouton = talon.AddComponent<Button>();
+                talonBouton.targetGraphic = talonImg;
+                talonBouton.onClick.AddListener(() => { talonDeplie = !talonDeplie; Render(); });
                 AddLayoutElement(talon, minWidth: PxD(CssTalonL), preferredWidth: PxD(CssTalonL),
                                  minHeight: PxD(CssTalonH), flexibleHeight: 0, flexibleWidth: 0);
-                TextMeshProUGUI t = NewText("TalonNb", talon.transform, "+" + restantes.Count,
+                TextMeshProUGUI t = NewText("TalonNb", talon.transform, "+" + caches,
                                             (int)PxD(CssCarteT), TextAlignmentOptions.Center);
                 t.color = TextPrimary;
                 // ⛔ SANS CET ÉTIREMENT, TMP N'A AUCUNE PLACE OÙ POSER LES CARACTÈRES. Le talon
@@ -337,78 +396,224 @@ namespace MafiaCleanCity.Operational.Exceptions
                 var trt = (RectTransform)t.transform;
                 trt.anchorMin = Vector2.zero; trt.anchorMax = Vector2.one;
                 trt.offsetMin = Vector2.zero; trt.offsetMax = Vector2.zero;
-                TrackText(t, "+" + restantes.Count);
+                TrackText(t, "+" + caches);
+            }
+
+            // ⑩-1b — le talon DÉPLIÉ : les issues restantes, en cartes sombres, puis « Escalader » si aucune issue ne la porte.
+            if (talonDeplie && caches > 0)
+            {
+                GameObject deplie = NewUI("TalonDeplie", body);
+                HorizontalLayoutGroup hd = deplie.AddComponent<HorizontalLayoutGroup>();
+                hd.spacing = PxD(CssMainEcart);
+                hd.childAlignment = TextAnchor.LowerCenter;
+                hd.childControlWidth = true; hd.childControlHeight = true;
+                hd.childForceExpandWidth = true; hd.childForceExpandHeight = false;
+                foreach (CandidateActionDto r in restantes)
+                    Carte(deplie.transform, string.Empty, r, sombre: true, levee: false);
+                if (!escaladeServie)
+                    Carte(deplie.transform, string.Empty,
+                          new CandidateActionDto { id = idSug, label = TexteEscalader(), method = "ESCALATE" },
+                          sombre: true, levee: false, escalade: true);
             }
 
             // Le tampon — l'action suggérée, en un seul geste. `POST /v1/exceptions/:id/resolve`
             // est la SEULE route d'écriture de cet écran (maquette : « un seul geste, une route »).
-            if (sug != null)
+            // ⑩-1b — le tampon envoie le CHOIX (la suggérée tant qu'on n'a rien touché).
+            // ⑩-1e — le TAMPON de ⑨ (`TamponAuComptoir`, écart D08) : papier crème, encre bordeaux, et l'APPUI LONG seul
+            // résout (« appui long — la carte se ferme ») ; le tap ne fait rien — choisir se fait sur les cartes.
+            if (selectionEscalade || selection != null)
             {
-                CandidateActionDto capture = sug;
-                AddButtonTo(body, "tampon", sug.label, () => StartCoroutine(ResolveWith(capture)), track: false);
+                GameObject cadre = NewUI("Tampon", body);
+                AddLayoutElement(cadre, minHeight: PxD(CssTamponHaut), preferredHeight: PxD(CssTamponHaut), flexibleHeight: 0);
+                string servi = selectionEscalade ? TexteEscalader() : Texte(selection.label, selection.label_i18n);
+                // S03 — « Réparer {enseigne} » quand le libellé servi dit « le bâtiment » et que la carte vise une enseigne.
+                string libelle = selectionEscalade ? servi : ExceptionBandes.LibelleNomme(CurrentCard, selection, servi);
+                tampon = new TamponAuComptoir(PxD, PxDI, TrackText).Construire(cadre.transform,
+                    (libelle ?? string.Empty).ToUpperInvariant(), SousTitreMain(selectionEscalade ? null : selection),
+                    suivreSous: true, surTap: null,
+                    surAppuiLong: () => { if (!Destroyed) StartCoroutine(ResoudreLeChoix()); },
+                    suivreLibelle: libelle == servi);
             }
         }
 
-        /// <summary>Une carte de la main. `l` (le rôle) est un libellé FERMÉ — il est suivi ;
-        /// `t` (le titre) et `c` (la conséquence) sont du texte producteur — chrome, non suivi.</summary>
-        private void Carte(Transform parent, string role, CandidateActionDto a, bool sombre, bool levee)
+        /// <summary>⑩-1e — résoudre le CHOIX (la suggérée par défaut, la carte touchée sinon, « Escalader » si elle est choisie).
+        /// Public : les gardes le pilotent comme l'appui long.</summary>
+        public IEnumerator ResoudreLeChoix()
         {
-            GameObject carte = NewUI("Carte_" + (a != null ? a.id : role), parent);
-            // ⛔ LA MAQUETTE DIT L'INVERSE DE CE QUE J'AVAIS ÉCRIT. `.carte` est CLAIRE à
-            // texte sombre ; `.carte.sombre` est foncée à texte crème. Je peignais les DEUX en
-            // foncé tout en colorant le titre de la claire en `surfaceBase` — texte sombre sur
-            // fond sombre, illisible. J'avais implémenté la moitié de la règle.
-            carte.AddComponent<Image>().color = sombre ? RowBg : DesignTokens.Current.hudCreme;
-            VerticalLayoutGroup v = carte.AddComponent<VerticalLayoutGroup>();
-            int pad = (int)PxD(8f);
-            v.padding = new RectOffset(pad, pad, pad, (int)PxD(7f));
-            v.spacing = PxD(2f);
-            v.childControlWidth = true; v.childControlHeight = true;
-            v.childForceExpandWidth = true; v.childForceExpandHeight = false;
+            if (selectionEscalade) yield return Escalate();
+            else if (selection != null) yield return ResolveWith(selection);
+        }
+
+        /// <summary>Le sous-titre du tampon de ⑩ (atelier §3.5, cadre 15) : pour une RÉPARATION, la phrase entière de la maquette ;
+        /// sinon sa première moitié. Deux clés entières, jamais une concaténation.</summary>
+        public static string SousTitreMain(CandidateActionDto choix)
+        {
+            bool reparation = choix != null && (string.Equals(choix.method, "REPAIR", StringComparison.OrdinalIgnoreCase)
+                || (choix.effect != null && string.Equals(choix.effect.type, "REPAIR", StringComparison.OrdinalIgnoreCase)));
+            return reparation
+                ? Lib("appui long — la carte se ferme ; le bâtiment, lui, se répare avec le temps")
+                : Lib("appui long — la carte se ferme");
+        }
+
+        /// <summary>Choisir une carte de la main : le tampon la dit et l'enverra.</summary>
+        private void Choisir(CandidateActionDto a, bool escalade)
+        {
+            selection = escalade ? null : a;
+            selectionEscalade = escalade;
+            Render();
+        }
+
+        private static bool EstEscalade(CandidateActionDto a) =>
+            a != null && (string.Equals(a.method, "ESCALATE", StringComparison.OrdinalIgnoreCase)
+                          || (a.effect != null && string.Equals(a.effect.type, "ESCALATE", StringComparison.OrdinalIgnoreCase)));
+
+        /// <summary>« Escalader » — la clé SERVIE de l'ancien bouton (`exception_detail.bloc.escalate`, fr « Escalader »), repli
+        /// en français : le littéral anglais « Escalate » de l'ancien bouton ne doit pas atteindre l'écran hors catalogue.</summary>
+        private static string TexteEscalader()
+        {
+            const string cle = "exception_detail.bloc.escalate";
+            return MafiaCleanCity.I18n.I18nCatalog.Connait(cle) ? MafiaCleanCity.I18n.I18nCatalog.Traduire(cle) : "Escalader";
+        }
+
+        /// <summary>Une carte de la main. `l` (le rôle) est un libellé FERMÉ — il est suivi ;
+        /// `t` (le titre) et `c` (la conséquence) sont du texte producteur — chrome, non suivi.
+        /// ⑩-1c — AU DESSIN DU CADRE 15 (`.carte`, `.carte.sombre`, `.carte:nth-child(n)`, `.carte .s`) :
+        ///   le CRÉNEAU est mis en page par la main ; la FACE, dessinée, porte `rotate` et `translateY` — un groupe de mise en
+        ///     page réécrit la position de ses enfants, un `translateY` posé sur le créneau serait effacé (c'était le cas de
+        ///     la « levée » d'avant) ;
+        ///   face : rayon 9, `linear-gradient(170deg, #efe4c6, #d9cca9 60%, #c9b98f)` (sombre : #3a3630 → #26221d), bord 1px
+        ///     #6b4a12 (sombre #00000088), filet intérieur à 3px (`inset 0 0 0 4px` : #93402c66, #93402c pour la suggérée,
+        ///     #ffffff22 sur la sombre) ; les ombres portées (`0 8px 18px #000c`) ne sont pas reprises ;
+        ///   `.l` Georgia 8 capitales .14em #93402c (sombre : braise) ; `.t` Georgia 11,5 gras #2b1d0e (crème) ; `.c` 7,5
+        ///     italique #5a4629 (crème-2) ; `justify-content:space-between` : un ressort entre le titre et la conséquence ;
+        ///   `.s` le GLYPHE, Georgia 11, `top:6px; right:7px`, #93402c (sombre : braise) — ♠ risqué, ♦ suggéré, ♣ lui apprendre ;
+        ///     les cartes du talon déplié n'en portent pas (la maquette n'en dessine pas).
+        /// Rotation : `rotate(θ)` CSS tourne dans le sens horaire pour θ &gt; 0, Unity dans l'autre ⇒ z = −θ. `translateY(+y)`
+        /// CSS descend, Unity monte ⇒ y = −y.</summary>
+        private void Carte(Transform parent, string role, CandidateActionDto a, bool sombre, bool levee,
+                           bool escalade = false, string glyphe = null, float rotationCss = 0f, float translateYCss = 0f)
+        {
+            GameObject carte = NewUI((escalade ? "Carte_Escalader_" : "Carte_") + (a != null ? a.id : role), parent);
             AddLayoutElement(carte, preferredWidth: PxD(CssCarteLargeur),
                              minHeight: PxD(CssCarteLargeur * CssCarteRatio), flexibleHeight: 0);
 
-            // La suggérée est LEVÉE — c'est le seul signal de rang dans le dessin, et il ne tient
-            // pas dans la couleur seule : le rôle est écrit en toutes lettres juste dessous.
-            if (levee)
+            GameObject face = NewUI("Face", carte.transform);
+            RectTransform frt = (RectTransform)face.transform;
+            frt.anchorMin = Vector2.zero; frt.anchorMax = Vector2.one;
+            frt.offsetMin = Vector2.zero; frt.offsetMax = Vector2.zero;
+            frt.anchoredPosition = new Vector2(0f, -PxD(translateYCss));
+            frt.localRotation = Quaternion.Euler(0f, 0f, -rotationCss);
+
+            Image fondCarte = face.AddComponent<Image>();
+            fondCarte.sprite = MafiaCleanCity.Shell.ProceduralUI.RoundedRectMask(Mathf.Max(1, (int)PxD(CssCarteRayon)));
+            fondCarte.type = Image.Type.Sliced;
+            fondCarte.color = Color.white;
+            face.AddComponent<Mask>().showMaskGraphic = false;
+
+            GameObject verre = NewUI("Verre", face.transform);
+            Etirer(verre, 0f);
+            Image verreImg = verre.AddComponent<Image>();
+            verreImg.sprite = sombre
+                ? MafiaCleanCity.Shell.DecorAuComptoir.DegradeVertical("carte.sombre",
+                      new[] { (0f, Hex("#3a3630")), (1f, Hex("#26221d")) })
+                : MafiaCleanCity.Shell.DecorAuComptoir.DegradeVertical("carte.claire",
+                      new[] { (0f, Hex("#efe4c6")), (0.6f, Hex("#d9cca9")), (1f, Hex("#c9b98f")) });
+            verreImg.raycastTarget = false;
+
+            GameObject bord = NewUI("Bord", face.transform);
+            Etirer(bord, 0f);
+            Image bordImg = bord.AddComponent<Image>();
+            bordImg.sprite = MafiaCleanCity.Shell.ProceduralUI.RoundedRectOutline(Mathf.Max(1, (int)PxD(CssCarteRayon)), Mathf.Max(1f, PxD(1f)),
+                                                             sombre ? Hex("#00000088") : Hex("#6b4a12"));
+            bordImg.type = Image.Type.Sliced;
+            bordImg.raycastTarget = false;
+
+            GameObject filet = NewUI("FiletInterieur", face.transform);
+            Etirer(filet, PxD(3f));
+            Image filetImg = filet.AddComponent<Image>();
+            filetImg.sprite = MafiaCleanCity.Shell.ProceduralUI.RoundedRectOutline(Mathf.Max(1, (int)PxD(CssCarteRayon - 3f)), Mathf.Max(1f, PxD(1f)),
+                                                              sombre ? Hex("#ffffff22") : (levee ? Bordeaux : Hex("#93402c66")));
+            filetImg.type = Image.Type.Sliced;
+            filetImg.raycastTarget = false;
+
+            // ⑩-1b — une carte se CHOISIT au toucher (D09) : le tampon la dit et l'enverra.
+            if (a != null)
             {
-                var rt = (RectTransform)carte.transform;
-                rt.anchoredPosition = new Vector2(rt.anchoredPosition.x, PxD(CssCarteLeve));
+                Button choix = carte.AddComponent<Button>();
+                choix.targetGraphic = fondCarte;
+                CandidateActionDto capture = a;
+                bool escaladeCapture = escalade;
+                choix.onClick.AddListener(() => Choisir(capture, escaladeCapture));
+                cartesTouchables.Add(new CarteTouchable { Action = a, Escalade = escalade, Bouton = choix });
             }
 
-            TextMeshProUGUI lib = NewText("Role", carte.transform, role, (int)PxD(CssCarteL),
-                                          TextAlignmentOptions.Left);
-            // ⛔ LE RÔLE SUIT LE FOND DE SA CARTE, pas son rang. J'avais mis l'or sur la
-            // carte SUGGÉRÉE pour la distinguer — et comme cette carte est CLAIRE, l'or (0,82)
-            // s'est retrouvé sur du crème (0,88) : écart 0,06, illisible. La maquette le dit
-            // autrement : `.carte .l{color:#93402c}` (brique SOMBRE sur carte claire) et
-            // `.carte.sombre .l{color:var(--braise)}` (braise sur carte foncée).
-            // ★ Ce qui distingue la suggérée n'est PAS sa couleur de libellé : c'est sa position
-            //   (levée, au milieu) et le fond clair lui-même. J'ai voulu ajouter un signal là où
-            //   le dessin en avait déjà deux, et j'ai cassé la lisibilité pour l'ajouter.
-            lib.color = sombre ? AccentModerate : DesignTokens.Current.surfaceBase;
+            Color encre = sombre ? Braise : Bordeaux;
+            if (!string.IsNullOrEmpty(glyphe))
+            {
+                TextMeshProUGUI s = NewText("Glyphe", face.transform, glyphe, (int)PxD(11f), TextAlignmentOptions.TopRight);
+                s.font = DesignTokens.Current.hudSerifFont;
+                s.color = encre;
+                s.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+                RectTransform srt = (RectTransform)s.transform;
+                srt.anchorMin = srt.anchorMax = srt.pivot = new Vector2(1f, 1f);
+                srt.sizeDelta = new Vector2(PxD(14f), PxD(14f));
+                srt.anchoredPosition = new Vector2(-PxD(7f), -PxD(6f));
+            }
+
+            VerticalLayoutGroup v = face.AddComponent<VerticalLayoutGroup>();
+            v.padding = new RectOffset((int)PxD(8f), (int)PxD(8f), (int)PxD(8f), (int)PxD(7f));
+            v.spacing = PxD(1f);
+            v.childControlWidth = true; v.childControlHeight = true;
+            v.childForceExpandWidth = true; v.childForceExpandHeight = false;
+
+            TextMeshProUGUI lib = NewText("Role", face.transform, role, (int)PxD(CssCarteL), TextAlignmentOptions.Left);
+            // ⛔ LE RÔLE SUIT LE FOND DE SA CARTE, pas son rang (`.carte .l{color:#93402c}`, `.carte.sombre .l{color:var(--braise)}`) :
+            // l'or sur le crème de la suggérée était illisible (écart 0,06). Ce qui distingue la suggérée, c'est sa levée et son fond.
+            lib.font = DesignTokens.Current.hudSerifFont;
+            lib.fontStyle = FontStyles.UpperCase;
+            lib.characterSpacing = 14f;
+            lib.color = encre;
             TrackText(lib, role);
 
-            TextMeshProUGUI titre = NewText("Titre", carte.transform,
+            TextMeshProUGUI titre = NewText("Titre", face.transform,
                 a != null ? Texte(a.label, a.label_i18n) : "—", (int)PxD(CssCarteT), TextAlignmentOptions.Left);
+            titre.font = DesignTokens.Current.hudSerifFont;
             titre.fontStyle = FontStyles.Bold;
-            titre.color = sombre ? TextPrimary : DesignTokens.Current.surfaceBase;
-            // ⛔ UNE CARTE DE 100 px CSS A BESOIN DE RETOURS À LA LIGNE. `NewText` pose
-            // `NoWrap` + `Truncate` : la capture montrait « Escalate for r » et « The card is
-            // archived for », coupés en plein mot. Un titre tronqué ressemble à un libellé
-            // court — rien ne signale la coupe.
+            titre.color = sombre ? DesignTokens.Current.hudCreme : Hex("#2b1d0e");
+            // ⛔ UNE CARTE DE 100 px CSS A BESOIN DE RETOURS À LA LIGNE (« Escalate for r », coupé en plein mot, sinon).
             titre.textWrappingMode = TextWrappingModes.Normal;
             titre.overflowMode = TextOverflowModes.Overflow;
 
+            AddLayoutElement(NewUI("Ressort", face.transform), flexibleHeight: 1);
+
             if (a != null && !string.IsNullOrEmpty(a.projected_consequence))
             {
-                TextMeshProUGUI cons = NewText("Consequence", carte.transform,
+                TextMeshProUGUI cons = NewText("Consequence", face.transform,
                     Texte(a.projected_consequence, a.projected_consequence_i18n), (int)PxD(CssCarteC), TextAlignmentOptions.Left);
                 cons.fontStyle = FontStyles.Italic;
-                cons.color = sombre ? TextSecondary : DesignTokens.Current.surfaceCard;
+                cons.color = sombre ? DesignTokens.Current.hudCremeSecondary : Hex("#5a4629");
                 cons.textWrappingMode = TextWrappingModes.Normal;
                 cons.overflowMode = TextOverflowModes.Overflow;
             }
+        }
+
+        /// <summary>`#93402c` — l'encre bordeaux des cartes claires (`.carte .l`, `.carte .s`), celle du tampon de ⑨.</summary>
+        private static Color Bordeaux => Hex("#93402c");
+        /// <summary>`var(--braise)` — l'encre des cartes sombres (même jeton que le rail « grave » de ⑨).</summary>
+        private static Color Braise => DesignTokens.Current.hudGaugeArcHot;
+
+        private static Color Hex(string h)
+        {
+            ColorUtility.TryParseHtmlString(h, out Color c);
+            return c;
+        }
+
+        private static void Etirer(GameObject go, float retrait)
+        {
+            RectTransform rt = (RectTransform)go.transform;
+            rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one;
+            rt.offsetMin = new Vector2(retrait, retrait); rt.offsetMax = new Vector2(-retrait, -retrait);
+            go.AddComponent<LayoutElement>().ignoreLayout = true;
         }
 
         /// <summary>LE POINT UNIQUE de passage des textes serveur.
@@ -437,41 +642,12 @@ namespace MafiaCleanCity.Operational.Exceptions
             return prose ?? string.Empty;
         }
 
-        /// <summary>La teinte d'une gravité — fonction NOMMÉE (patron `HeatBucketResolver`),
-        /// jamais une chaîne de ternaires : une garde anti-régression ne voit pas sa cible dans
-        /// un ternaire. Une bande inconnue rend la teinte neutre, jamais celle de « bénin ».</summary>
-        private static Color SeverityTeinte(string bande)
-        {
-            switch ((bande ?? string.Empty).Trim().ToUpperInvariant())
-            {
-                case "MILD":     return AccentMild;
-                case "MODERATE": return AccentModerate;
-                case "SEVERE":   return AccentSevere;
-                default:         return TextSecondary;
-            }
-        }
-
-        /// <summary>Item 0.6 — un libellé d'affichage STATIQUE de ⑩ passe par
-        /// `exception_detail.bloc.<slug>`, repli sur le littéral.
-        ///
-        /// ⛔⛔ CE QUI NE DOIT JAMAIS PASSER PAR ICI, et c'est le cas le plus grave rencontré sur
-        /// ce chantier : `MethodFor` rend `"ADD_RULE"` / `"ONE_TIME"` / le type d'effet. Ces
-        /// chaînes ne s'affichent PAS — elles partent dans le CORPS de
-        /// `POST /v1/exceptions/:id/resolve` comme valeur de `method`.
-        /// ⇒ Les keyer serait sans effet aujourd'hui (repli = littéral) et **casserait la
-        ///   résolution le jour où le dictionnaire les porterait** : le client enverrait un
-        ///   `method` traduit. Et le serveur ne le dirait pas — TD-451 a montré qu'un corps mal
-        ///   formé rend **200**, ignore le champ, et consomme la carte quand même.
-        /// ★ Une chaîne qui VOYAGE vers le serveur n'est pas un libellé, même quand elle est
-        ///   écrite en majuscules lisibles. La question n'est pas « est-ce du texte ? » mais
-        ///   « qui le lit — un joueur ou un handler ? ».
-        /// ⚠️ De même, `"+" + restantes.Count` (le talon) est CALCULÉ : aucune clé n'en dérive.</summary>
         private static string Lib(string litteral) =>
             MafiaCleanCity.I18n.Libelle.De("exception_detail", "bloc", litteral);
 
         private void AddButton(string idStable, string label, UnityEngine.Events.UnityAction onClick) => AddButtonTo(body, idStable, label, onClick, track: true);
 
-        private void AddButtonTo(Transform parent, string idStable, string label, UnityEngine.Events.UnityAction onClick, bool track = true)
+        private Button AddButtonTo(Transform parent, string idStable, string label, UnityEngine.Events.UnityAction onClick, bool track = true)
         {
             GameObject btn = NewUI("Btn_" + idStable, parent);
             Image img = btn.AddComponent<Image>();
@@ -484,10 +660,8 @@ namespace MafiaCleanCity.Operational.Exceptions
             t.color = CtaColor;
             Stretch((RectTransform)t.transform, new Vector2(10, 2), new Vector2(-10, -2));
             if (track) TrackText(t, label);
+            return b;
         }
-
-        private static string Cap(string b) =>
-            string.IsNullOrEmpty(b) ? "Unknown" : char.ToUpperInvariant(b[0]) + b.Substring(1).ToLowerInvariant();
 
         // W3.U1 C1 (design D2) — optional parent-of-mount the AppShell renseigne BEFORE Start() runs.
         // See DashboardController.mountParent for the full rationale (byte-identical mechanism here).
@@ -517,10 +691,14 @@ namespace MafiaCleanCity.Operational.Exceptions
             }
             Transform root = mountParent != null ? mountParent : canvas.transform; // W3.U1 D2
 
-            // Full-screen ardoise backdrop.
+            // ⑩-1 — LE DÉCOR, plus l'ardoise (écart D01) : ⑩ est la main du même comptoir que ⑨, au zinc `.main-de-cartes`
+            // (15 %, cadre 15) — il montre presque tout le bar. Le fond reste un attrape-gestes plein écran (transparent) :
+            // ⑩ passe AU-DESSUS de ⑨, et rien ne doit traverser jusqu'à la file.
             backdropGo = NewUI("ExceptionDetailBackdrop", root);
             Stretch((RectTransform)backdropGo.transform, Vector2.zero, Vector2.zero);
-            backdropGo.AddComponent<Image>().color = SurfaceBg;
+            backdropGo.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0f);
+            Decor = MafiaCleanCity.Shell.DecorAuComptoir.Construire<MafiaCleanCity.Shell.DecorAuComptoir>(
+                backdropGo.transform, ParametresMain());
 
             // The detail card, anchored top-centre.
             sheetGo = NewUI("ExceptionDetailSheet", root);
@@ -550,20 +728,16 @@ namespace MafiaCleanCity.Operational.Exceptions
             cardRt.pivot = new Vector2(0.5f, 0.5f);
             cardRt.offsetMin = new Vector2(margeX, margeX + MafiaCleanCity.Shell.ShellChrome.BottomInsetPx);
             cardRt.offsetMax = new Vector2(-margeX, -(margeX + MafiaCleanCity.Shell.ShellChrome.TopInsetPx));
-            card.AddComponent<Image>().color = CardBg;
+            // ⑩-1 — ni feuille `CardBg` ni en-tête « SA MAIN » (écart D01, D02 : la maquette n'a ni l'une ni l'autre). Le
+            // contenu est COLLÉ EN BAS, comme le `.comptoir` de ⑨ (`margin-top:auto`) ; le décor occupe le haut.
             VerticalLayoutGroup vlg = card.AddComponent<VerticalLayoutGroup>();
-            vlg.padding = new RectOffset(20, 20, 18, 18);
+            vlg.padding = new RectOffset(0, 0, 0, 0);
             vlg.spacing = 10;
             vlg.childControlWidth = true;
             vlg.childControlHeight = true;
             vlg.childForceExpandWidth = true;
             vlg.childForceExpandHeight = false;
-
-            // Header.
-            TextMeshProUGUI headerText = NewText("Header", card.transform, "SA MAIN", 24, TextAlignmentOptions.Left);
-            headerText.fontStyle = FontStyles.Bold;
-            AddLayoutElement(headerText.gameObject, minHeight: 32, flexibleHeight: 0);
-            TrackText(headerText, "SA MAIN");
+            vlg.childAlignment = TextAnchor.LowerCenter;
 
             // Body rows area.
             GameObject bodyGo = NewUI("BodyArea", card.transform);
@@ -574,8 +748,20 @@ namespace MafiaCleanCity.Operational.Exceptions
             bvlg.childForceExpandWidth = true;
             bvlg.childForceExpandHeight = false;
             body = (RectTransform)bodyGo.transform;
-            AddLayoutElement(bodyGo, flexibleHeight: 1);
+            bvlg.childAlignment = TextAnchor.LowerCenter;
         }
+
+        /// <summary>⑩-1 — le bar de ⑨ (`ExceptionQueueController.ParametresFile`, même scène, même dégradé fort), au zinc de la
+        /// main : `.zinc.main-de-cartes{height:15%}`, `.plateau{top:0}` — pas d'étagère au-dessus du plateau.</summary>
+        public static MafiaCleanCity.Shell.DecorAuComptoir.Parametres ParametresMain()
+        {
+            MafiaCleanCity.Shell.DecorAuComptoir.Parametres p = ExceptionQueueController.ParametresFile();
+            p.HauteurZinc = ZincMain;
+            p.HauteurDos = 0f;
+            return p;
+        }
+
+        public const float ZincMain = 0.15f;
 
         // ---- body helpers ----
         private void ClearBody()
@@ -584,8 +770,6 @@ namespace MafiaCleanCity.Operational.Exceptions
             if (body != null)
                 for (int i = body.childCount - 1; i >= 0; i--)
                     UnityEngine.Object.Destroy(body.GetChild(i).gameObject);
-            // Re-track the static header "SA MAIN" (it lives outside body but is part of the corpus).
-            renderedTexts.Add("SA MAIN");
         }
 
         // --------------------------------------------------------------- helpers (verbatim DashboardController)

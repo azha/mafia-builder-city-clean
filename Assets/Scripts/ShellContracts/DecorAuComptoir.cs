@@ -193,7 +193,12 @@ namespace MafiaCleanCity.Shell
 
         /// <summary>v4-1 — `.tabourets.vides` : trois tabourets vides au comptoir, opacité .85.
         /// Posés par l'écran DANS sa mise en page (ils appartiennent au `.comptoir`, pas au décor).</summary>
-        public static GameObject ConstruireTabourets(Transform parent)
+        public static GameObject ConstruireTabourets(Transform parent) =>
+            ConstruireTabourets(parent, Px, 34f, new RectOffset(0, 0, 0, (int)Px(4f)));
+
+        /// <summary>⑨-6 — la même rangée à l'échelle de l'écran qui la pose (`px`), avec le pied et les marges de sa variante :
+        /// `.tabourets.grands.vides` (cadre 16) = pied 38, `padding:0 6px`, `margin:2px 0 8px`.</summary>
+        public static GameObject ConstruireTabourets(Transform parent, System.Func<float, float> px, float piedCss, RectOffset marges)
         {
             GameObject rangee = new GameObject("Tabourets", typeof(RectTransform));
             rangee.transform.SetParent(parent, false);
@@ -203,7 +208,7 @@ namespace MafiaCleanCity.Shell
             h.childControlHeight = true;
             h.childForceExpandWidth = true;
             h.childForceExpandHeight = false;
-            h.padding = new RectOffset(0, 0, 0, (int)Px(4f));
+            h.padding = marges;
             CanvasGroup g = rangee.AddComponent<CanvasGroup>();
             g.alpha = 0.85f;
             g.blocksRaycasts = false;
@@ -217,9 +222,9 @@ namespace MafiaCleanCity.Shell
                 v.childControlHeight = true;
                 v.childForceExpandWidth = false;
                 v.childForceExpandHeight = false;
-                v.spacing = -Px(3f);   // `.pied{margin-top:-3px}`
-                Ovale(tab.transform, "Siege", Px(40f), Px(22f), Hex("#6b4a12"), Hex("#2a1c10"));
-                Ovale(tab.transform, "Pied", Px(34f), Px(9f), Hex("#a8823a"), Hex("#4a3520"));
+                v.spacing = -px(3f);   // `.pied{margin-top:-3px}`
+                Ovale(tab.transform, "Siege", px(40f), px(22f), Hex("#6b4a12"), Hex("#2a1c10"));
+                Ovale(tab.transform, "Pied", px(piedCss), px(9f), Hex("#a8823a"), Hex("#4a3520"));
             }
             return rangee;
         }

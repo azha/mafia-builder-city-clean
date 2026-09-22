@@ -11,6 +11,8 @@ namespace MafiaCleanCity.Operational.Tests
     // `payload.data`. Désérialisé par le MÊME appel que `ExceptionsClient` (JsonUtility sur l'enveloppe), sans réseau.
     //   F0     lieutenant.name, method, source, suggested_disposition, script_complexity_band ARRIVENT dans le DTO
     //   F0bis  le locuteur : le nom servi ; la ville sans lieutenant ; « Votre lieutenant » seulement sans nom (pile pré-C3)
+    //   F0ter  S03 (back 406ae440) : `building` déclaré — l'enseigne visée ARRIVE ; `null`, `name_i18n: null` ou champ absent ⇒
+    //          aucune enseigne (JsonUtility rend une instance vide : jamais « building != null » seul)
     [Category("EcranFile")]
     public class ExceptionsFormeGPlayModeTests
     {
@@ -67,6 +69,24 @@ namespace MafiaCleanCity.Operational.Tests
 
             var sansNom = new ExceptionCardDto { lieutenant_id = "x", lieutenant = new ExceptionLieutenantDto { id = "x", name = "" } };
             Assert.AreEqual("Votre lieutenant", ExceptionBandes.Locuteur(sansNom), "pile antérieure à C3 : le repli qui ne nomme personne");
+        }
+
+        private static ExceptionCardDto Carte(string building) => JsonUtility.FromJson<ExceptionQueueEnvelope>(
+            "{\"payload\":{\"data\":{\"exceptions\":[{\"exception_id\":\"r\"" + building + "}]}}}").payload.data.exceptions[0];
+
+        [Test]
+        public void F0ter_LeBatimentVise_EnseigneOuRien()
+        {
+            ExceptionCardDto nomme = Carte(",\"building\":{\"id\":\"b-1\",\"name_i18n\":{\"key\":\"game.fiction.building.name\"," +
+                "\"params\":{\"enseigne\":\"Transit Marrek\",\"district\":\"Les Bassins\",\"block\":\"1\"}}}");
+            Assert.AreEqual("b-1", nomme.building.id);
+            Assert.AreEqual("Les Bassins", nomme.building.name_i18n.@params.district, "la forme de /me/buildings, entière");
+            Assert.AreEqual("Transit Marrek", ExceptionBandes.EnseigneVisee(nomme));
+
+            Assert.IsNull(ExceptionBandes.EnseigneVisee(Carte(",\"building\":null")), "aucun ou plusieurs bâtiments visés");
+            Assert.IsNull(ExceptionBandes.EnseigneVisee(Carte(",\"building\":{\"id\":\"b-2\",\"name_i18n\":null}")),
+                "le bâtiment n'est plus au joueur : pas de nom deviné");
+            Assert.IsNull(ExceptionBandes.EnseigneVisee(Carte("")), "pile antérieure à 406ae440 : le champ n'existe pas");
         }
     }
 }

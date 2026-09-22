@@ -117,6 +117,11 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.AreEqual("+2", plus.GetComponent<TextMeshProUGUI>().text);
             Assert.AreEqual(TextAnchor.LowerLeft, file.GetComponent<HorizontalLayoutGroup>().childAlignment,
                 "`.file{align-items:flex-end}` et tassée à gauche (m3, m4)");
+
+            // E04′ — la ligne du soir est DITE : Georgia crème (`.ligne-soir`), reste du r1 M6.
+            TextMeshProUGUI ligne = ecran.LigneSoir.GetComponent<TextMeshProUGUI>();
+            Assert.AreSame(DesignTokens.Current.hudSerifFont, ligne.font, "`.ligne-soir{font-family:Georgia}`");
+            Assert.AreEqual(DesignTokens.Current.hudCreme, ligne.color, "`.ligne-soir{color:var(--creme)}`");
         }
     }
 }
