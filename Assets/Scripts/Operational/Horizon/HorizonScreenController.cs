@@ -178,11 +178,10 @@ namespace MafiaCleanCity.Operational
                     "une possibilité apparaît quand ce que vous faites remplit ses conditions. "
                     + "Rien ici ne s'achète directement.");
             else
-                MajPanneau(Lib("CE QUE LE SERVEUR ENVOIE VRAIMENT"),
-                    Lib("Aucune de ces cartes n'a de nom"),
-                    "le serveur ne rend que des clés de traduction, et le dictionnaire du jeu ne "
-                    + "contient que des messages d'erreur. Voilà l'écran tel qu'il s'afficherait "
-                    + "aujourd'hui.");
+                MajPanneau(Lib("CE QU'ON SAIT VRAIMENT"),
+                    Lib("Aucune de ces cartes n'a encore de nom"),
+                    "personne n'a encore mis de mot sur ces cartes : leur titre est un numéro "
+                    + "d'ordre. Ce qui s'ouvre se lit à ses conditions et à son prix.");
         }
 
         /// <summary>Les cartes du flux. Chacune porte son titre (une CLÉ), son statut, son coût en
@@ -349,7 +348,7 @@ namespace MafiaCleanCity.Operational
                 // zéro lot, et c'est la thèse de l'écran.
                 if (leSuivant)
                     NouveauTexte(bloc.transform, "EtatSuivant",
-                        "    " + Lib("le serveur ne dit pas ce qui manque pour y arriver"),
+                        "    " + Lib("on ne sait pas encore ce qui manque pour y arriver"),
                         8.5f, TexteFaible);
             }
         }
@@ -436,7 +435,7 @@ namespace MafiaCleanCity.Operational
             MajPanneau("POURQUOI C'EST VIDE",
                 
                 "L'horizon n'a pas répondu",
-                "l'écran ne montre rien plutôt que de montrer un horizon périmé — ce qui était à "
+                "on préfère ne rien montrer qu'un horizon périmé — ce qui était à "
                 + "portée il y a une minute ne l'est peut-être plus.");
         }
 
