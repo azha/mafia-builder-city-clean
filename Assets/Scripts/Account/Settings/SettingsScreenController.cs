@@ -133,10 +133,10 @@ namespace MafiaCleanCity.Account.Settings
             Section("LA LANGUE");
             foreach (string l in SettingsClient.Langues) Langue(l);
 
-            Section("CE QUE LE SERVEUR NE DIT PAS");
-            Manque("Se déconnecter", "aucune route de déconnexion joueur");
-            Manque("Supprimer mon compte", "le domaine RGPD n'a pas de surface joueur");
-            Manque("Les autres préférences", "chacune vit sur sa propre route — il n'y a pas de service de réglages");
+            Section("CE QUI NE S'OUVRE PAS ENCORE");
+            Manque("Se déconnecter", "pas encore : la session se ferme avec l'appareil, pas d'ici");
+            Manque("Tout effacer", "pas encore : « et ne plus jamais revenir » n'a pas encore de guichet");
+            Manque("Les autres préférences", "pas encore : chaque réglage se prend là où il sert, il n'y a pas encore de tiroir pour les ranger ensemble");
             RendusEffectues++;
         }
 
