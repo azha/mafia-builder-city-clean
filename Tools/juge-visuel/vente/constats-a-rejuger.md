@@ -10,3 +10,6 @@ Ce qui était faux, c'est la **TABLE** de `construire-dossiers.py` : « corrigé
 | `M9` `M11` `m7` | MAJEUR / MAJEUR / MINEUR | **tenus — dépendent des DONNÉES** (déjà classés ainsi par le juge) | valeurs du compte de capture, non comparables sans la ligne d'identité jointe ; rien à voir avec le cadre |
 
 **Compte** : 21 constats — **21 tenus · 0 à rejuger · 0 caduc**. Aucun re-jugement dû au cadre. Ce qui reste dû au r1 (point 3 de sa lecture globale) : le cadre d'état homologue de la capture, **#109 « Ramasser — nulle part où la porter »**, n'était pas rendu — à rendre pour le r2 (`Tools/rendre-tel.py … 109 … 3.6`, à ajouter aux `extras` de la TABLE), ce n'est pas une erreur de référence, c'est un témoin manquant.
+
+**Mise à jour du 2026-09-22 (16:22)** : le témoin #109 est rendu (`vente/reference-ramasser-1080x2102.png`, 1080×2102, anti-crop vert) et
+fourni au dossier `vente/r2-2026-09-22/`. ⚠️ Son texte « aucun moyen d'en obtenir une » (une planque) est périmé depuis le 31/08 (㊵·142).

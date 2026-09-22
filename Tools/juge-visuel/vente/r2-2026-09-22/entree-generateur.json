@@ -8,12 +8,16 @@
  "chemin": "Plus → LA VENTE",
  "prepare_le": "2026-09-22",
  "prepare_par": "atelier / DA — preparer-r2-2026-09-22.py",
- "client": "e2e4fc4b",
+ "client": "7c2b6298",
  "atelier": "20d006d",
  "references": [
   [
    "reference-1080x2102.png",
    "rendu du cadre nominal (`ecrans-brennar-6.html` #107 « La vente — qui vend et ce qu'il y a dans la caisse »)"
+  ],
+  [
+   "reference-ramasser-1080x2102.png",
+   "cadre 109 « Ramasser — nulle part où la porter », le cadre d'état homologue de la capture r1 (demandé par le juge r1, point 3), rendu le 2026-09-22 après le gate (atelier 20d006d). ⚠️ Son texte « Il n'existe aujourd'hui aucun moyen d'en obtenir une » (une planque) est PÉRIMÉ : la planque est donnée à l'arrivée depuis le 31/08 (㊵·142) — à lire comme maquette en retard, jamais comme le texte attendu à l'écran"
   ]
  ],
  "cadres": {

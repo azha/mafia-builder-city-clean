@@ -34,7 +34,7 @@
 | fichier (dans ce dossier) | rôle | taille px | facteur | largeur CSS ↔ largeur écran |
 |---|---|---|---|---|
 | `reference-1080x2102.png` | rendu du cadre nominal (`ecrans-brennar-6.html` #107 « La vente — qui vend et ce qu'il y a dans la caisse ») | 1080×2102 | ×3,6 | 300 CSS = 1080 px |
-| `reference-ramasser-1080x2102.png` | **NON RENDU au 2026-09-22** — cadre 109 « Ramasser — nulle part où la porter », le cadre d'état homologue de la capture r1 (demandé par le juge r1, point 3) — À RENDRE après le gate du 2026-09-22 (rendre-references-2026-09-22.py) | — | — | — |
+| `reference-ramasser-1080x2102.png` | cadre 109 « Ramasser — nulle part où la porter », le cadre d'état homologue de la capture r1 (demandé par le juge r1, point 3), rendu le 2026-09-22 après le gate (atelier 20d006d). ⚠️ Son texte « Il n'existe aujourd'hui aucun moyen d'en obtenir une » (une planque) est PÉRIMÉ : la planque est donnée à l'arrivée depuis le 31/08 (㊵·142) — à lire comme maquette en retard, jamais comme le texte attendu à l'écran | 1080×2102 | ×3,6 | 300 CSS = 1080 px |
 | `etats/*-canon.png`, `etats/*-vide.png` (s'ils existent) | canons antérieurs (série 2, ×3,0) — témoins d'ÉTAT, jamais la référence | 900×1752 | ×3,0 | 300 CSS = 900 px |
 
 - **Source HTML/CSS** (aide de lecture, ne prime JAMAIS sur l'image) : `/home/erutheone/project/atelier3d-mafia/ecrans-brennar-6.html` (atelier `20d006d`).
@@ -124,4 +124,4 @@
   fichier `constats-a-rejuger` s'il existe (ce sont des périmètres, pas des jugements) ;
 - pour l'instant : toute capture.
 
-Préparé sur le client `e2e4fc4b` (branche `da/2026-09-22`), atelier `20d006d`.
+Préparé sur le client `7c2b6298` (branche `da/2026-09-22`), atelier `20d006d`.

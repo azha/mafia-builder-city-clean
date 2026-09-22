@@ -120,4 +120,4 @@
   fichier `constats-a-rejuger` s'il existe (ce sont des périmètres, pas des jugements) ;
 - pour l'instant : toute capture.
 
-Préparé sur le client `e2e4fc4b` (branche `da/2026-09-22`), atelier `20d006d`.
+Préparé sur le client `7c2b6298` (branche `da/2026-09-22`), atelier `20d006d`.

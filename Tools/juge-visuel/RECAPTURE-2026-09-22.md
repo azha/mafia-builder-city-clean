@@ -1,9 +1,7 @@
 # RECAPTURE 2026-09-22 — le créneau qui tranche les 55 constats suspendus du 07/09
 
-> INACHEVÉ : le témoin #109 de ㉟ (§4) n'est PAS rendu — fenêtre de gate back au moment de l'écriture (aucun rendu headless
-> pendant un gate) ; il est inscrit dans `rendre-references-2026-09-22.py` et se rend en une commande après le gate. Tout le
-> reste est écrit. Préparé par l'atelier (DA) ; **aucune capture n'a été lancée par l'atelier** — c'est le créneau du client ou
-> du juge, avec la paire `MAFIA_CAPTURE_*` qui est chez l'user.
+> Préparé par l'atelier (DA). **Aucune capture n'a été lancée par l'atelier** — c'est le créneau du client ou du juge, avec la
+> paire du compte de capture, qui est chez l'user (§2.4). Les références sont toutes rendues (témoin #109 compris, §4).
 
 Source des 55 : `SUSPENSION-back-04-09-2026-09-07.md` — 45 constats marqués « dépend des données = oui » (section A) + 10 nommés
 par f2 comme dépendant de l'image du 04-09 (section B ; 5 recoupent A). Ils sont SUSPENDUS, pas rétractés : ils attendent une
@@ -148,19 +146,23 @@ vers `constats-a-rejuger*.md` quand il existe.
 |---|---|---|---|---|
 | `police/r2-⑮-2026-09-22` | écrit à la main (forme de référence) | #32 + états 31/33/34/35 | 4 | `constats-a-rejuger-⑮.md` (11/18 à reprendre) |
 | `police/r2-⑰-2026-09-22` | généré | #31 | 3 | `constats-a-rejuger-⑰.md` (7/16 à reprendre) |
-| `vente/r2-2026-09-22` | généré | #107 | 6 | `constats-a-rejuger.md` (0 — témoin #109 manquant, §4) |
+| `vente/r2-2026-09-22` | généré | #107 + témoin #109 (rendu après le gate, §4) | 6 | `constats-a-rejuger.md` (0 à rejuger) |
 | `compte/r2-㉓-2026-09-22` · `ecran_delegation/r2` · `ecran_demolition/r2` · `compression/r2` · `ecran_appro/r2` · `ecran_distribution/r2` · `ecran_loi/r2` · `ecran_conflit/r2` · `carnet/r2` · `screen_c1/r2` · `screen_c6/r2` · `ecran-principal/r10` | générés | nominal + nommées | 1 à 6 | — |
 
 Au top du client : poser les captures, remplir la table des écarts ASSUMÉS depuis le `juge-donnees` mode maquette de l'écran, puis
 lancer le juge sur le répertoire (§3 du skill). ㊲ n'est pas dans les 55 mais sa référence #120 a changé de TEXTE le 22/09 : à écrire
 dans le mandat de son prochain tour.
 
-## 4. Le témoin #109 de ㉟ — à rendre après le gate
+## 4. Le témoin #109 de ㉟ — rendu après le gate
 
-Le juge r1 de ㉟ l'a demandé (« Ramasser — nulle part où la porter », le cadre d'état homologue de la capture, non rendu ce tour-là).
-Inscrit dans `rendre-references-2026-09-22.py` (`vente/reference-ramasser-1080x2102.png`, index apparié à son étiquette) et dans les
-`extras` de la TABLE. **Non rendu au moment d'écrire** (gate back en cours) : `python3 Tools/juge-visuel/rendre-references-2026-09-22.py`
-dès que la machine est libre, puis `construire-dossiers.py --sans-rendu` et commit.
+Le juge r1 de ㉟ l'avait demandé (« Ramasser — nulle part où la porter », le cadre d'état homologue de sa capture, non rendu ce
+tour-là). **Rendu le 2026-09-22 à 16:22**, gate fini (0 conteneur `mcc-e2e`), porte Unity libre, aucun run batchmode :
+`python3 Tools/juge-visuel/rendre-references-2026-09-22.py --seul 109` — étiquette appariée à l'index (« Ramasser — nulle part où la
+porter » ✅), fenêtre plus grande que le contenu et assertion anti-crop (« non rogné » contre 300×585 CSS à ×3,6), sortie relue à
+**1080×2102**, 40 % de pixels non noirs, atelier `20d006d`. Fichier : `vente/reference-ramasser-1080x2102.png`, dans les `extras` de la
+TABLE, donc dans l'INDEX et lié dans `vente/r2-2026-09-22/`.
+⚠️ Son texte dit « Il n'existe aujourd'hui aucun moyen d'en obtenir une » (une planque) : c'est PÉRIMÉ — la planque est donnée à
+l'arrivée depuis le 31/08 (㊵·142). La description de la référence le dit au juge : maquette en retard, jamais le texte attendu à l'écran.
 
 ## 5. Dettes mesurées pendant la préparation — sans id (numérotées par l'orchestrateur au merge)
 

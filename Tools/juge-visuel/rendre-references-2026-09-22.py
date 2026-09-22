@@ -15,7 +15,7 @@ une image qui porte le registre qu'on vient de retirer, et rend un faux écart. 
 jamais à la place. ⑮ : nominal 32 (le registre de dispatch, échangé avec ⑰ le 2026-09-07) rendu
 au SHA du jour, et ses quatre cadres d'état rendus dans le dossier du tour r2.
 
-Usage : rendre-references-2026-09-22.py [--verifier]
+Usage : rendre-references-2026-09-22.py [--verifier] [--seul <index>]
 """
 import importlib.util, os, subprocess, sys
 
@@ -51,6 +51,14 @@ DUS = [
     (34,  "La police — le retour de bâton",             R2 + '/etats/cadre-34-retour-de-baton.png', "⑮ état : représailles (backlash)"),
     (35,  "La police — avec les lots back",             R2 + '/etats/cadre-35-lots-back.png', "⑮ état : avec les lots back (cadre d'atelier, le bas est une note)"),
 ]
+# `--seul <index>` : ne rend QUE ce cadre (ex. #109 après le gate). Sans lui, tout le DUS est re-rendu, et chaque PNG déjà commité
+# changerait de quelques pixels d'anticrénelage (mesuré : 0,021 % sur reference-derive) — un diff sans objet, et un objet LFS de plus.
+# Les gardes restent celles de `rendre-references-dues.py` : étiquette appariée, machine libre, taille relue sur le fichier écrit.
+if '--seul' in sys.argv:
+    seul = int(sys.argv[sys.argv.index('--seul') + 1])
+    DUS = [d for d in DUS if d[0] == seul]
+    if not DUS:
+        print('⛔ --seul %d : aucun cadre de cet index dans le DUS' % seul); sys.exit(2)
 dues.DUS = DUS
 if __name__ == '__main__':
     dues.main()
