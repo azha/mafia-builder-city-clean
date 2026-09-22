@@ -1,6 +1,6 @@
 # INDEX — écran → dossier de juge → cadres (généré, `construire-dossiers.py`, 2026-09-22)
 
-Un juge à contexte vierge part d'ici. `dossier` est sous `Tools/juge-visuel/` ; `référence` = le cadre nominal rendu à ×3,6 (1080×2102, anti-crop vérifié) ; `cadres` = page de l'atelier + numéros (index 0-based = numéro du cadre) au SHA atelier `20d006d`. `confiance` dit comment le rattachement cadre ↔ écran a été établi : **mesurée** (le contrôleur ou un dossier cite le cadre), **déduite** (par le titre du cadre), **aucune** (pas de maquette de série 4/6 — une ligne est une ligne, pas une absence).
+Un juge à contexte vierge part d'ici. `dossier` est sous `Tools/juge-visuel/` ; `référence` = le cadre nominal rendu à ×3,6 (1080×2102, anti-crop vérifié) ; `cadres` = page de l'atelier + numéros (index 0-based = numéro du cadre) au SHA atelier `868ab87`. `confiance` dit comment le rattachement cadre ↔ écran a été établi : **mesurée** (le contrôleur ou un dossier cite le cadre), **déduite** (par le titre du cadre), **aucune** (pas de maquette de série 4/6 — une ligne est une ligne, pas une absence).
 
 `corps` = `<dossier>/corps-reels/` (§DA-4, `capturer-corps-reels.py`) : réponses RÉELLES des routes du dossier de code du contrôleur sur la pile dev, compte de démo — « a/s/m/e » = appelées (2xx) / sans instance sur ce compte / mutations non appelées / erreurs HTTP réelles du back (404, 409, 403 : des faits, pas des trous).
 
@@ -8,7 +8,7 @@ Un juge à contexte vierge part d'ici. `dossier` est sous `Tools/juge-visuel/` ;
 
 | sym | écran (front.md) | contrôleur | dossier | cadres | référence | planche en jeu | état front.md | confiance | corps |
 |---|---|---|---|---|---|---|---|---|---|
-| ③ | City Map `screen_2` | `CityMapController` | `carte` | `ecrans-brennar-6.html` 22, 23, 24 | `carte/reference-1080x2102.png` | `carte_ville_1080x2400.png` (existe) | · « La Carte de Brennar » | mesurée | 6a/0s/4m/0e |
+| ③ | City Map `screen_2` | `CityMapController` | `carte` | `ecrans-brennar-6.html` 22, 23, 24 | `carte/reference-1080x2102.png` (cadre 22, Brennar la nuit) + `carte/reference-chez-vous-1080x2102.png` (cadre 24 « approcher : chez vous », rendu le 2026-09-22 (atelier 868ab87) — la bande de La Lisière liste les quatre bâtiments du joueur : « le labo, la planque, la façade, la banque » (money_holding = « la banque », ④ d4)) | `carte_ville_1080x2400.png` (existe) | · « La Carte de Brennar » | mesurée | 6a/0s/4m/0e |
 | ④ | Home Dashboard `screen_1` | `DashboardController` | `accueil` | aucune maquette de série 4/6 | — | `planche_l_accueil_1080x2400.png` (existe) | · l'ouverture de session (décision B) | aucune | 10a/0s/5m/0e |
 | ⑤ | Decision Detail `screen_1a` | `DecisionDetailScreenController` | `decision-du-jour` | `ecrans-brennar-4.html` 4, 5, 6, 7, 8 · `ecrans-brennar-6.html` 4, 5, 6, 7, 8 | `decision-du-jour/reference-1080x2102.png` | `decision_du_jour_1080x2400.png` (existe) | — | mesurée | 5a/0s/5m/0e |
 | ⑥ | Org Chart `screen_3` | `LieutenantScreenController` | `famille` | `ecrans-brennar.html` organigramme (rangée « La Famille ») | — | `famille_1080x2400.png` (existe) | · « La Famille »  ★ *déclencheur de §S4* | mesurée | 5a/0s/8m/0e |

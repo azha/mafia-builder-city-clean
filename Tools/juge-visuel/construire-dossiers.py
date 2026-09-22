@@ -44,7 +44,9 @@ ECHELLE = 3.6
 TABLE = [
  dict(sym="③", ctl="CityMapController", dossier="carte", chemin="onglet EMPIRE (défaut)",
       cadres=[(S6, list(range(22, 25)))], nominal=(S6, 22), planche="carte_ville_1080x2400.png",
-      confiance="mesurée", note="ville peinte livrée le 03/09 (TD-494) ; cadres 22-24 avec les noms de fiction (TD-492)"),
+      confiance="mesurée", note="ville peinte livrée le 03/09 (TD-494) ; cadres 22-24 avec les noms de fiction (TD-492)",
+      nominal_note="cadre 22, Brennar la nuit",
+      extras=[("carte/reference-chez-vous-1080x2102.png", "cadre 24 « approcher : chez vous », rendu le 2026-09-22 (atelier 868ab87) — la bande de La Lisière liste les quatre bâtiments du joueur : « le labo, la planque, la façade, la banque » (money_holding = « la banque », ④ d4)")]),
  dict(sym="④", ctl="DashboardController", dossier="accueil", chemin="surimpression à l'ouverture de session (acquisition), puis Accueil",
       cadres=[], nominal=None, planche="planche_l_accueil_1080x2400.png",
       confiance="aucune", note="AUCUNE maquette (front.md:1609 « [ ] maquetté ») — les cadres 20-21 « Le Bureau du patron » sont ⑱ le menu Plus (front.md:1567), corrigé par l'orchestrateur le 03/09"),

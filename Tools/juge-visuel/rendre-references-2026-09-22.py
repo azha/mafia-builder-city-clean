@@ -41,6 +41,9 @@ DUS = [
     #    pendant une heure : retirée avant tout rendu, la garde machine ayant refusé entre-temps.
     (109, "Ramasser — nulle part où la porter",         'vente/reference-ramasser-1080x2102.png',
           "㉟ : le cadre d'état homologue de la capture r1, jamais rendu — demandé par le juge r1 (point 3). À rendre APRÈS le gate du 22/09"),
+    (24,  "La Carte — approcher : chez vous",           'carte/reference-chez-vous-1080x2102.png',
+          "③ : la bande « La Lisière — chez vous » liste les quatre bâtiments du joueur ; « le coffre » → « la banque » (atelier 868ab87, "
+          "d4). Le nominal de ③ est le cadre 22, qui ne porte pas cette liste : sans ce rendu, aucune référence ne montrait le mot changé"),
     (32,  "La police — le registre de dispatch",        'police/reference-⑮-1080x2102.png',
           "⑮ nominal = 32 depuis l'échange du 2026-09-07 ; re-rendu au SHA du jour pour le tour r2"),
     (31,  "La police — le tableau : ce qu’ils savent",  'police/reference-⑰-1080x2102.png',
