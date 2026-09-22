@@ -237,6 +237,13 @@ namespace MafiaCleanCity.Operational.Exceptions
                 detail = LastNavGameObject.AddComponent<ExceptionDetailController>();
             }
             Debug.Log($"[DIAG-OPEN] detail={(detail == null ? "NULL" : "construit")}");
+            // ⑩-1 — une résolution dans ⑩ referme la main et montre l'APRÈS ici (cadre 17), comme le tampon de ⑨-6c.
+            // Posé AVANT `Init`, qui rend déjà.
+            detail.SurResolution = (carte, issue, action) =>
+            {
+                if (Destroyed) return;
+                MontrerApres(carte, issue, action);
+            };
             detail.Init(card, Token, baseUrl, onBack: () => { if (!Destroyed) StartCoroutine(LoadQueue()); });
             LastDetail = detail;
         }
@@ -410,6 +417,18 @@ namespace MafiaCleanCity.Operational.Exceptions
         public string ApresTitre => apresTitre != null && apresTitre.gameObject.activeSelf ? apresTitre.text : null;
         public GameObject PartiPourTest => fileRoot != null && fileRoot.Find("Parti") != null ? fileRoot.Find("Parti").gameObject : null;
         public string LigneSoirTexte => ligneAmbiance != null ? ligneAmbiance.text : null;
+
+        /// <summary>L'après d'une résolution, d'où qu'elle vienne (le tampon de ⑨, la main de ⑩) : la carte tranchée garde sa
+        /// place le temps du rechargement qui suit.</summary>
+        private IEnumerator ApresPuisRecharger(ExceptionCardDto c, string issue, CandidateActionDto action)
+        {
+            trancheeCarte = c; trancheeIssue = issue; trancheeAction = action;
+            garderTranchee = true;
+            yield return LoadQueue();
+        }
+
+        private void MontrerApres(ExceptionCardDto c, string issue, CandidateActionDto action) =>
+            StartCoroutine(ApresPuisRecharger(c, issue, action));
 
         /// <summary>Test hook — pose l'après d'une résolution sans réseau, puis rend la file donnée (le serveur l'a déjà
         /// retirée : c'est la file RECHARGÉE).</summary>
@@ -1032,9 +1051,7 @@ namespace MafiaCleanCity.Operational.Exceptions
             if (DerniereIssue != null)
             {
                 // ⑨-6 — la carte tranchée garde sa place (cadre 17) le temps du rechargement qui suit.
-                trancheeCarte = c; trancheeIssue = DerniereIssue; trancheeAction = ActionChoisie(c, choix.Value.id);
-                garderTranchee = true;
-                yield return LoadQueue();
+                yield return ApresPuisRecharger(c, DerniereIssue, ActionChoisie(c, choix.Value.id));
             }
         }
 

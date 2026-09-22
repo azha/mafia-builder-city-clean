@@ -35,6 +35,20 @@ namespace MafiaCleanCity.Operational.Exceptions
         private Action onBack;
         private ExceptionsClient client;
 
+        /// <summary>⑩-1 — LA CARTE SE FERME APRÈS LA RÉSOLUTION (cadre 15 → 17 ; écart D10) : la maquette ne montre pas d'état
+        /// « résolu » sur ⑩ — la main se referme et ⑨ montre l'après (la carte tranchée, son cachet). Posé par la file :
+        /// (carte, issue servie, action envoyée). Absent (montage autonome), la fermeture rappelle `onBack`.</summary>
+        public Action<ExceptionCardDto, string, CandidateActionDto> SurResolution;
+        private bool ferme;
+        /// <summary>La carte s'est refermée (résolue ou quittée) ; un second geste ne rappelle rien.</summary>
+        public bool Ferme => ferme;
+        /// <summary>Couture de test : le client de CE détail (ses coutures coupent le réseau, `ExceptionsClient`).</summary>
+        public ExceptionsClient ClientPourTest { get { EnsureInitialized(); return client; } }
+        /// <summary>Le décor de ⑩ — le bar de ⑨, zinc `.main-de-cartes` à 15 %.</summary>
+        public MafiaCleanCity.Shell.DecorAuComptoir Decor { get; private set; }
+        /// <summary>La feuille de CE détail (montée sous le Canvas partagé : jamais la chercher par son nom).</summary>
+        public GameObject FeuillePourTest => sheetGo;
+
         private readonly List<string> renderedTexts = new List<string>();
         private TMP_FontAsset font;
         private RectTransform body;
@@ -109,19 +123,19 @@ namespace MafiaCleanCity.Operational.Exceptions
         /// <summary>Resolve via ONE candidate (method derived). Public coroutine — the PlayMode test drives it.</summary>
         public IEnumerator ResolveWith(CandidateActionDto candidate)
         {
-            yield return DoResolve(MethodFor(candidate, AddAsRule), candidate != null ? candidate.id : "");
+            yield return DoResolve(MethodFor(candidate, AddAsRule), candidate != null ? candidate.id : "", candidate);
         }
 
         /// <summary>Escalate the card (ESCALATE; chosen_action_id = the suggested action's id).</summary>
         public IEnumerator Escalate()
         {
             string suggestedId = CurrentCard != null && CurrentCard.suggested_action != null ? CurrentCard.suggested_action.id : "";
-            yield return DoResolve("ESCALATE", suggestedId);
+            yield return DoResolve("ESCALATE", suggestedId, CurrentCard != null ? CurrentCard.suggested_action : null);
         }
 
-        private IEnumerator DoResolve(string method, string chosenActionId)
+        private IEnumerator DoResolve(string method, string chosenActionId, CandidateActionDto action)
         {
-            if (CurrentCard == null || resolving) yield break;
+            if (CurrentCard == null || resolving || ferme) yield break;
             resolving = true;
             LastError = null;
             ResolveResponse res = null;
@@ -138,13 +152,29 @@ namespace MafiaCleanCity.Operational.Exceptions
                 yield break;
             }
             LastOutcome = res.outcome;
-            Render();
+            Fermer(res.outcome, action);
+        }
+
+        /// <summary>⑩-1 — la main se referme sur une résolution réussie : l'hôte est détruit (OnDestroy emporte le décor et
+        /// la feuille), puis la file reçoit l'issue (`SurResolution`) — ou, sans elle, le retour ordinaire.</summary>
+        private void Fermer(string outcome, CandidateActionDto action)
+        {
+            if (ferme) return;
+            ferme = true;
+            var surResolution = SurResolution;
+            Action cb = onBack;
+            ExceptionCardDto carte = CurrentCard;
+            if (this != null) Destroy(gameObject);
+            if (surResolution != null) surResolution(carte, outcome, action);
+            else cb?.Invoke();
         }
 
         /// <summary>Back to the queue: destroy this host (OnDestroy tears down the backdrop/sheet) + let the
-        /// queue re-fetch.</summary>
+        /// queue re-fetch. ⑩-1 : sans effet une fois la carte refermée — la file a déjà été rappelée.</summary>
         public void Back()
         {
+            if (ferme) return;
+            ferme = true;
             Action cb = onBack;
             if (this != null) Destroy(gameObject);
             cb?.Invoke();
@@ -153,7 +183,7 @@ namespace MafiaCleanCity.Operational.Exceptions
         // ---- render ----
         private void Render()
         {
-            if (Destroyed || body == null) return;
+            if (Destroyed || ferme || body == null) return;
             ExceptionCardDto c = CurrentCard;
             if (c == null) return;
 
@@ -198,34 +228,10 @@ namespace MafiaCleanCity.Operational.Exceptions
             desc.color = TextPrimary;
             AddLayoutElement(desc.gameObject, minHeight: PxD(24f), flexibleHeight: 0);
 
-            // ---- L'APRÈS-TAMPON : le mot que le back rend ----
-            // Les DIX `outcome` émis, un par handler (inventaire de la session back, 2026-09-02) :
-            //   RESOLVED · ESCALATED · TAUGHT · DEFERRED · DEMOLISHED · LAID_LOW ·
-            //   REPAIRING · REPAIRING_SLOW · BRIBE_SUCCEEDED · BRIBE_FAILED
-            // ⚠️ `BRIBE_SUCCEEDED` / `BRIBE_FAILED` sont NON DÉTERMINISTES — tirage dans le
-            // handler. Une capture de cet état-là n'est PAS reproductible : si on en prend une,
-            // son nom doit le dire, sinon quelqu'un la rejouera et lira une régression là où il
-            // n'y a qu'un tirage.
-            // ⛔ On affiche le mot du serveur TEL QUEL, sans le traduire en « réussi / échoué » :
-            // dix valeurs fermées dont deux aléatoires, c'est au serveur de les nommer.
-            // ---- Resolved state: show outcome + Back, then return. ----
-            if (!string.IsNullOrEmpty(LastOutcome))
-            {
-                TextMeshProUGUI resolved = NewText("Resolved", body, Lib("Résolu ✓"), 16, TextAlignmentOptions.Left);
-                resolved.color = AccentMild;
-                resolved.fontStyle = FontStyles.Bold;
-                AddLayoutElement(resolved.gameObject, minHeight: 22, flexibleHeight: 0);
-                TrackText(resolved, Lib("Résolu ✓"));
-
-                // Outcome — producer free text (enum value may carry letters but qualitative): CHROME, TextPrimary.
-                TextMeshProUGUI outcomeText = NewText("Outcome", body, Lib("Issue :") + " " + LastOutcome, 14, TextAlignmentOptions.Left);
-                outcomeText.color = TextPrimary;
-                AddLayoutElement(outcomeText.gameObject, minHeight: 20, flexibleHeight: 0);
-                // chrome — NOT tracked
-
-                AddButton("back", Lib("Back"), Back);
-                return;
-            }
+            // ⑩-1 — PLUS D'ÉTAT « RÉSOLU » ICI (écart D10 : « Résolu ✓ · Issue : REPAIRING · Back », l'enum BRUT, et
+            // « Issue : » servi en fr « Problème : », un contresens). La carte se referme (`Fermer`) et ⑨ montre l'après
+            // avec le mot de l'issue (`ExceptionBandes.Issue`, cadre 17). ⚠️ `BRIBE_SUCCEEDED` / `BRIBE_FAILED` restent
+            // NON DÉTERMINISTES (tirage dans le handler) : une capture de l'après d'un pot-de-vin doit le dire dans son nom.
 
             // ---- Error line (if present — producer text, chrome). ----
             if (!string.IsNullOrEmpty(LastError))
@@ -510,10 +516,14 @@ namespace MafiaCleanCity.Operational.Exceptions
             }
             Transform root = mountParent != null ? mountParent : canvas.transform; // W3.U1 D2
 
-            // Full-screen ardoise backdrop.
+            // ⑩-1 — LE DÉCOR, plus l'ardoise (écart D01) : ⑩ est la main du même comptoir que ⑨, au zinc `.main-de-cartes`
+            // (15 %, cadre 15) — il montre presque tout le bar. Le fond reste un attrape-gestes plein écran (transparent) :
+            // ⑩ passe AU-DESSUS de ⑨, et rien ne doit traverser jusqu'à la file.
             backdropGo = NewUI("ExceptionDetailBackdrop", root);
             Stretch((RectTransform)backdropGo.transform, Vector2.zero, Vector2.zero);
-            backdropGo.AddComponent<Image>().color = SurfaceBg;
+            backdropGo.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0f);
+            Decor = MafiaCleanCity.Shell.DecorAuComptoir.Construire<MafiaCleanCity.Shell.DecorAuComptoir>(
+                backdropGo.transform, ParametresMain());
 
             // The detail card, anchored top-centre.
             sheetGo = NewUI("ExceptionDetailSheet", root);
@@ -543,20 +553,16 @@ namespace MafiaCleanCity.Operational.Exceptions
             cardRt.pivot = new Vector2(0.5f, 0.5f);
             cardRt.offsetMin = new Vector2(margeX, margeX + MafiaCleanCity.Shell.ShellChrome.BottomInsetPx);
             cardRt.offsetMax = new Vector2(-margeX, -(margeX + MafiaCleanCity.Shell.ShellChrome.TopInsetPx));
-            card.AddComponent<Image>().color = CardBg;
+            // ⑩-1 — ni feuille `CardBg` ni en-tête « SA MAIN » (écart D01, D02 : la maquette n'a ni l'une ni l'autre). Le
+            // contenu est COLLÉ EN BAS, comme le `.comptoir` de ⑨ (`margin-top:auto`) ; le décor occupe le haut.
             VerticalLayoutGroup vlg = card.AddComponent<VerticalLayoutGroup>();
-            vlg.padding = new RectOffset(20, 20, 18, 18);
+            vlg.padding = new RectOffset(0, 0, 0, 0);
             vlg.spacing = 10;
             vlg.childControlWidth = true;
             vlg.childControlHeight = true;
             vlg.childForceExpandWidth = true;
             vlg.childForceExpandHeight = false;
-
-            // Header.
-            TextMeshProUGUI headerText = NewText("Header", card.transform, "SA MAIN", 24, TextAlignmentOptions.Left);
-            headerText.fontStyle = FontStyles.Bold;
-            AddLayoutElement(headerText.gameObject, minHeight: 32, flexibleHeight: 0);
-            TrackText(headerText, "SA MAIN");
+            vlg.childAlignment = TextAnchor.LowerCenter;
 
             // Body rows area.
             GameObject bodyGo = NewUI("BodyArea", card.transform);
@@ -567,8 +573,20 @@ namespace MafiaCleanCity.Operational.Exceptions
             bvlg.childForceExpandWidth = true;
             bvlg.childForceExpandHeight = false;
             body = (RectTransform)bodyGo.transform;
-            AddLayoutElement(bodyGo, flexibleHeight: 1);
+            bvlg.childAlignment = TextAnchor.LowerCenter;
         }
+
+        /// <summary>⑩-1 — le bar de ⑨ (`ExceptionQueueController.ParametresFile`, même scène, même dégradé fort), au zinc de la
+        /// main : `.zinc.main-de-cartes{height:15%}`, `.plateau{top:0}` — pas d'étagère au-dessus du plateau.</summary>
+        public static MafiaCleanCity.Shell.DecorAuComptoir.Parametres ParametresMain()
+        {
+            MafiaCleanCity.Shell.DecorAuComptoir.Parametres p = ExceptionQueueController.ParametresFile();
+            p.HauteurZinc = ZincMain;
+            p.HauteurDos = 0f;
+            return p;
+        }
+
+        public const float ZincMain = 0.15f;
 
         // ---- body helpers ----
         private void ClearBody()
@@ -577,8 +595,6 @@ namespace MafiaCleanCity.Operational.Exceptions
             if (body != null)
                 for (int i = body.childCount - 1; i >= 0; i--)
                     UnityEngine.Object.Destroy(body.GetChild(i).gameObject);
-            // Re-track the static header "SA MAIN" (it lives outside body but is part of the corpus).
-            renderedTexts.Add("SA MAIN");
         }
 
         // --------------------------------------------------------------- helpers (verbatim DashboardController)
