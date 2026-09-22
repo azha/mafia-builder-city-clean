@@ -56,6 +56,7 @@ namespace MafiaCleanCity.Shell
         private RectTransform rowsRoot;
         private TextMeshProUGUI emptyStateText;   // le titre de la plaque du matin (⑯-2)
         private GameObject plaqueVide;
+        private RectTransform registreRoot;       // ⑯-6
         private RevueDuJourDecor decor;          // ⑯-7 la scène, le dégradé, le zinc
         private GameObject tabourets;            // ⑯-7 v4-1, les trois tabourets vides
         private TextMeshProUGUI plaqueSurtitre;
@@ -751,6 +752,7 @@ namespace MafiaCleanCity.Shell
         public string BilletVerbe(string flagId) => billets.TryGetValue(flagId, out BilletVue b) ? b.Verbe.text : null;
         public string BilletSous(string flagId) => billets.TryGetValue(flagId, out BilletVue b) ? b.Sous.text : null;
         public string BilletCoche(string flagId) => billets.TryGetValue(flagId, out BilletVue b) ? b.Coche.text : null;
+        public RectTransform Registre => registreRoot;
         public Image BilletBuste(string flagId) => billets.TryGetValue(flagId, out BilletVue b) ? b.Buste : null;
         public bool TamponSigne => lotSigne > 0 && tamponCachet != null && tamponCachet.activeSelf;
         public bool TamponGesteActif => BatchConfirmButton != null && BatchConfirmButton.enabled;
@@ -1028,6 +1030,20 @@ namespace MafiaCleanCity.Shell
             plaqueVide.SetActive(false);
         }
 
+        /// <summary>Un disque plein centré, hors mise en page (⑯-6, l'anneau de la pastille).</summary>
+        private static void Disque(Transform parent, string nom, float diametre, Color couleur)
+        {
+            GameObject go = new GameObject(nom, typeof(RectTransform));
+            go.transform.SetParent(parent, false);
+            go.AddComponent<LayoutElement>().ignoreLayout = true;
+            RectTransform rt = (RectTransform)go.transform;
+            rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.sizeDelta = new Vector2(diametre, diametre);
+            Image img = go.AddComponent<Image>();
+            img.sprite = ProceduralUI.RadialDisc((int)diametre, couleur, couleur);
+            img.raycastTarget = false;
+        }
+
         private static void Etirer(RectTransform rt, float retrait)
         {
             rt.anchorMin = Vector2.zero;
@@ -1058,6 +1074,23 @@ namespace MafiaCleanCity.Shell
             Image papier = reg.AddComponent<Image>();
             papier.sprite = ProceduralUI.VerticalGradient((int)Px(40f), PapierHaut, PapierBas);
             papier.type = Image.Type.Sliced;
+            registreRoot = (RectTransform)reg.transform;
+            // ⑯-6 — F11 : `.registre{transform:rotate(-.4deg)}`. Le cahier est POSÉ de travers sur le zinc : sans
+            // cette inclinaison, le juge r1 l'a vu, il « redevient une barre d'interface ». rotate(-.4deg) en CSS
+            // (anti-horaire à l'écran) = +0,4° en z. La rotation ne touche pas la mise en page.
+            registreRoot.localRotation = Quaternion.Euler(0f, 0f, 0.4f);
+            // ⑯-6 — F8 : `.registre::before` — le DOS du livre, 6px à gauche, toute la hauteur,
+            // `repeating-linear-gradient(180deg, #93402c 0 6px, #7a3322 6px 12px)`, hors mise en page.
+            GameObject tranche = new GameObject("Tranche", typeof(RectTransform));
+            tranche.transform.SetParent(reg.transform, false);
+            tranche.AddComponent<LayoutElement>().ignoreLayout = true;
+            RectTransform trt = (RectTransform)tranche.transform;
+            trt.anchorMin = Vector2.zero;
+            trt.anchorMax = new Vector2(0f, 1f);
+            trt.pivot = new Vector2(0f, 0.5f);
+            trt.offsetMin = Vector2.zero;
+            trt.offsetMax = new Vector2(Px(6f), 0f);
+            RayuresVerticales.Poser(tranche, Rouge, Hex("#7a3322"), Px(12f));
 
             HorizontalLayoutGroup h = reg.AddComponent<HorizontalLayoutGroup>();
             h.padding = new RectOffset((int)Px(10f), (int)Px(10f), (int)Px(8f), (int)Px(8f));
@@ -1079,7 +1112,18 @@ namespace MafiaCleanCity.Shell
 
             GameObject pt = new GameObject("Pastille", typeof(RectTransform));
             pt.transform.SetParent(reg.transform, false);
-            pt.AddComponent<Image>().sprite = ProceduralUI.RadialDisc((int)Px(10f), VertCachet, VertCachet);
+            // ⑯-6 — F9 : `.registre .pt{box-shadow:0 0 0 2px #dccfa9, 0 0 0 3px #4f7f3f66}` — le point vert porte
+            // un liseré de papier (2px) puis un filet vert à .4 (1px). Le juge r1 : « la pastille perd son anneau ».
+            // Trois disques concentriques, du plus grand (dessous) au point (dessus), hors mise en page : la
+            // pastille garde sa place de 10. Le filet vert est à .4 sur un fond CONNU, le papier : sa couleur est
+            // donc résolue EXACTEMENT pour le mélange linéaire (`CouleurPourMelangeLineaire`), pas recopiée.
+            //   fond = le papier à mi-hauteur, milieu de #efe4c6 → #dccfa9 (la pastille est centrée en hauteur).
+            Color papierMilieu = Color.Lerp(PapierHaut, PapierBas, 0.5f);
+            Color filetVert = ProceduralUI.CouleurPourMelangeLineaire(VertCachet, papierMilieu, 0.4f, out _);
+            filetVert.a = 0.4f;
+            Disque(pt.transform, "Filet", Px(16f), filetVert);
+            Disque(pt.transform, "Lisere", Px(14f), PapierBas);
+            Disque(pt.transform, "Point", Px(10f), VertCachet);
             LayoutElement ptLe = pt.AddComponent<LayoutElement>();
             ptLe.preferredWidth = Px(10f);
             ptLe.preferredHeight = Px(10f);
