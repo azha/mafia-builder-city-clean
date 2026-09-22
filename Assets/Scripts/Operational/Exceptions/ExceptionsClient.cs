@@ -35,6 +35,45 @@ namespace MafiaCleanCity.Operational.Exceptions
         /// un consommateur de la pile à la fois, tour donné par l'orchestrateur).</summary>
         public Func<RequeteResolve, ResolveResponse> SubstitutResolvePourTest;
         public Func<ExceptionCardDto[]> SubstitutFilePourTest;
+        /// <summary>⑨-6 — le `total` des escalades ; `null` = la route a échoué.</summary>
+        public Func<int?> SubstitutEscalationsPourTest;
+
+        /// <summary>⛔ UNE COUTURE POSÉE = AUCUNE REQUÊTE. Un test qui substitue la file ou la résolution ne doit pas, par la
+        /// porte d'à côté (le compte des escalades, rechargé avec la file), toucher la pile dev.</summary>
+        private bool Substitue =>
+            SubstitutResolvePourTest != null || SubstitutFilePourTest != null || SubstitutEscalationsPourTest != null;
+
+        public static string ConstruireEscalations(string baseUrl) =>
+            $"{(baseUrl ?? string.Empty).TrimEnd('/')}/v1/exceptions/escalations?limit=1&offset=0";
+
+        /// <summary>⑨-6 — `GET /v1/exceptions/escalations` : seul le `total` sert (`limit=1`, le compte ne dépend pas de la
+        /// page). onOk(total) ; onErr sinon.
+        /// ⚠️ `JsonUtility` rend 0 pour un `total` ABSENT (un objet imbriqué manquant devient une instance par défaut) : sans
+        /// la clé dans le corps, on dirait « rien à relire » sans le savoir. Le corps doit donc PORTER `"total"`.</summary>
+        public IEnumerator GetEscalationsTotal(string bearer, Action<int> onOk, Action<long, string> onErr)
+        {
+            if (Substitue)
+            {
+                int? t = SubstitutEscalationsPourTest?.Invoke();
+                if (t.HasValue) onOk?.Invoke(t.Value);
+                else onErr?.Invoke(0, "escalations : substitué, sans total");
+                yield break;
+            }
+            using (UnityWebRequest req = UnityWebRequest.Get(ConstruireEscalations(BaseUrl)))
+            {
+                req.timeout = TimeoutSeconds;
+                if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
+                yield return req.SendWebRequest();
+
+                if (req.result != UnityWebRequest.Result.Success) { onErr?.Invoke(req.responseCode, ReadableError(req)); yield break; }
+                string texte = req.downloadHandler.text ?? string.Empty;
+                EscalationsResponseDto dto = null;
+                try { dto = JsonUtility.FromJson<EscalationsEnvelope>(texte)?.payload?.data; }
+                catch (Exception ex) { onErr?.Invoke(req.responseCode, "parse error: " + ex.Message); yield break; }
+                if (dto == null || !texte.Contains("\"total\"")) { onErr?.Invoke(req.responseCode, "escalations : pas de total servi"); yield break; }
+                onOk?.Invoke(dto.total);
+            }
+        }
 
         /// <summary>GET /v1/exceptions/queue — the player's PENDING cards, R2.2 band-projected.
         /// onOk(cards) on 2xx (empty array when none); onErr(code, message) otherwise.</summary>

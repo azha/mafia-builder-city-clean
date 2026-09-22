@@ -93,6 +93,19 @@ namespace MafiaCleanCity.Operational.Exceptions
     [Serializable] public class ExceptionQueuePayload { public ExceptionQueueData data; }
     [Serializable] public class ExceptionQueueEnvelope { public ExceptionQueuePayload payload; }
 
+    /// <summary>⑨-6 — `GET /v1/exceptions/escalations?limit=&offset=` (back `exceptions.controller.ts:87-102`) →
+    /// `{ escalations, total, limit, offset }`. ⑨ ne lit que `total` (le pied « Escalades archivées », cadres 14 et 16) ;
+    /// les quatre clés sont DÉCLARÉES quand même (forme G : l'oracle compare servi et déclaré dans les deux sens).</summary>
+    [Serializable] public class EscalationsResponseDto
+    {
+        public ExceptionCardDto[] escalations;
+        public int total;
+        public int limit;
+        public int offset;
+    }
+    [Serializable] public class EscalationsPayload { public EscalationsResponseDto data; }
+    [Serializable] public class EscalationsEnvelope { public EscalationsPayload payload; }
+
     // POST /v1/exceptions/:id/resolve { method, chosen_action_id } → { resolved: true, outcome }.
     [Serializable] public class ResolveRequest { public string method; public string chosen_action_id; }
     [Serializable] public class ResolveResponse { public bool resolved; public string outcome; }

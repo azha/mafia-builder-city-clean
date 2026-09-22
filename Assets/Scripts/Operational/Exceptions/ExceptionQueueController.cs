@@ -190,6 +190,7 @@ namespace MafiaCleanCity.Operational.Exceptions
             QueueLoaded = true;
             Render();
             isLoading = false;
+            yield return ChargerEscalades();   // ⑨-6 — le compte du pied, à chaque rechargement (une escalade le change)
         }
 
         /// <summary>Open one card's detail (OpenNav idiom: host GameObject + AddComponent + Init). The card travels
@@ -885,30 +886,92 @@ namespace MafiaCleanCity.Operational.Exceptions
             go.AddComponent<LayoutElement>().ignoreLayout = true;
         }
 
-        /// <summary>Le lien vers les escalades archivées, « à relire à tête reposée ».</summary>
+        // ================================================================ ⑨-6 le pied des escalades
+
+        private int? escaladesTotal;
+        /// <summary>Le `total` servi par `GET /v1/exceptions/escalations` ; `null` tant qu'il n'est pas revenu (ou en échec).</summary>
+        public int? EscaladesTotal => escaladesTotal;
+        private TextMeshProUGUI lienLegende, lienCompte;
+        public string LienLegende => lienLegende != null ? lienLegende.text : null;
+        /// <summary>Le compte en chiffres (`.n-or`), `null` quand il n'est pas dessiné.</summary>
+        public string LienCompte => lienCompte != null ? lienCompte.text : null;
+
+        /// <summary>Non bloquante, comme la jointure du roster : en échec, le pied garde sa légende neutre, sans compte.</summary>
+        private IEnumerator ChargerEscalades()
+        {
+            int? t = null;
+            yield return client.GetEscalationsTotal(Token, n => t = n, (code, msg) => { });
+            if (Destroyed || t == null) yield break;
+            escaladesTotal = t;
+            RendreLienEscalades();
+        }
+
+        /// <summary>Test hook — pose le total sans réseau (même effet que `ChargerEscalades` quand il revient).</summary>
+        public void PoserEscaladesPourTest(int? total)
+        {
+            EnsureInitialized();
+            escaladesTotal = total;
+            RendreLienEscalades();
+        }
+
+        /// <summary>⑨-6 — LE PIED, `.filet.lien` (cadres 14 et 16 ; juge r1 M7 : deux lignes centrées, ni compte ni chevron).
+        ///   `.filet` : padding 7, rayon 10, bord 1px #ffffff2a, fond #0a0f18cc ; `.filet.lien` : une RANGÉE, gap 6, alignée
+        ///     au centre, 10,5px, ni capitales ni espacement ;
+        ///   `span` « Escalades archivées » (crème) ; `small` 7,5px crème-2, `margin-left:auto` ; `.n-or` Georgia 13 or-vif ;
+        ///   `.fleche` « › » 14px or-vif.
+        /// La légende suit le `total` servi : 0 ⇒ « rien à relire » sans compte (cadre 16) ; &gt; 0 ⇒ « à relire à tête
+        /// reposée » et le compte (cadre 14) ; inconnu ⇒ la légende neutre, sans compte — jamais un zéro supposé.
+        /// ⚠️ Le compte est en CHIFFRES et n'est PAS suivi (R2.2 : un texte suivi ne porte pas de chiffre isolé) — il est du
+        ///    chrome, comme l'était déjà ce compte avant la refonte. Les deux `margin-left:auto` de la CSS partagent l'espace
+        ///    libre ; ici un seul ressort, devant la légende : le compte et la flèche la suivent.</summary>
         private void RendreLienEscalades()
         {
             for (int i = lienRoot.childCount - 1; i >= 0; i--)
                 UnityEngine.Object.Destroy(lienRoot.GetChild(i).gameObject);
+            lienLegende = null; lienCompte = null;
 
             GameObject l = NewUI("Filet", lienRoot);
-            l.AddComponent<Image>().color = CardBg;
             Stretch((RectTransform)l.transform, Vector2.zero, Vector2.zero);
-            VerticalLayoutGroup v = l.AddComponent<VerticalLayoutGroup>();
-            v.childControlWidth = true; v.childControlHeight = true;
-            v.childForceExpandWidth = true; v.childForceExpandHeight = false;
-            v.childAlignment = TextAnchor.MiddleCenter;
+            Image fond = l.AddComponent<Image>();
+            fond.sprite = ProceduralUI.RoundedRectMask(PxI(10f));
+            fond.type = Image.Type.Sliced;
+            fond.color = DecorAuComptoir.Voile(DecorAuComptoir.Nuit, 0xcc);
+            fond.raycastTarget = false;
+            GameObject bord = NewUI("Bord", l.transform);
+            Stretch((RectTransform)bord.transform, Vector2.zero, Vector2.zero);
+            bord.AddComponent<LayoutElement>().ignoreLayout = true;
+            Image bordImg = bord.AddComponent<Image>();
+            bordImg.sprite = ProceduralUI.RoundedRectOutline(PxI(10f), Mathf.Max(1f, Px(1f)), Blanc(0x2a));
+            bordImg.type = Image.Type.Sliced;
+            bordImg.raycastTarget = false;
 
-            TextMeshProUGUI titre = NouveauTexteMaquette(l.transform, "Titre",
-                Lib("Escalades archivées"), 9.5f, TextPrimary);
-            titre.alignment = TextAlignmentOptions.Center;
+            HorizontalLayoutGroup h = l.AddComponent<HorizontalLayoutGroup>();
+            h.padding = new RectOffset(PxI(7f), PxI(7f), PxI(7f), PxI(7f));
+            h.spacing = Px(6f);
+            h.childAlignment = TextAnchor.MiddleLeft;
+            h.childControlWidth = true; h.childControlHeight = true;
+            h.childForceExpandWidth = false; h.childForceExpandHeight = false;
+
+            TextMeshProUGUI titre = NouveauTexteMaquette(l.transform, "Titre", Lib("Escalades archivées"), 10.5f, Creme);
             TrackText(titre, titre.text);
 
-            TextMeshProUGUI leg = NouveauTexteMaquette(l.transform, "Legende",
-                Lib("à relire à tête reposée"), 7.5f, TextSecondary);
-            leg.alignment = TextAlignmentOptions.Center;
-            TrackText(leg, leg.text);
+            AddLayoutElement(NewUI("Ressort", l.transform), flexibleWidth: 1);
+
+            bool rien = escaladesTotal.HasValue && escaladesTotal.Value == 0;
+            lienLegende = NouveauTexteMaquette(l.transform, "Legende",
+                rien ? Lib("rien à relire") : Lib("à relire à tête reposée"), 7.5f, Creme2);
+            TrackText(lienLegende, lienLegende.text);
+
+            if (escaladesTotal.HasValue && escaladesTotal.Value > 0)
+            {
+                lienCompte = NouveauTexteMaquette(l.transform, "Compte", escaladesTotal.Value.ToString(), 13f, OrVif);
+                lienCompte.font = DesignTokens.Current.hudSerifFont;
+            }
+
+            NouveauTexteMaquette(l.transform, "Fleche", "›", 14f, OrVif);
         }
+
+        private static Color Blanc(int alphaCss) => new Color(1f, 1f, 1f, alphaCss / 255f);
 
         private void RenderError()
         {

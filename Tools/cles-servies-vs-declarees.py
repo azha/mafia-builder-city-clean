@@ -56,6 +56,9 @@ APPARIEMENTS = [
     # ⑨ — la réplique du raid a sa clé (back 1f54235c : exception.raid.card.descriptor, params {}). La référence et ses params.
     ("I18nRefDto", "GET_exceptions_queue.exceptions[].event_descriptor_i18n"),
     ("I18nParamsVidesDto", "GET_exceptions_queue.exceptions[].event_descriptor_i18n.params"),
+    # ⑨-6 — le pied « Escalades archivées » : `GET /v1/exceptions/escalations` (corps figés du 25/08, un vide et un à 1).
+    ("EscalationsResponseDto", "escalations-apres"),
+    ("EscalationsResponseDto", "escalations-vide"),
 ]
 
 
