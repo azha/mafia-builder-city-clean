@@ -55,3 +55,34 @@ Attendu par `compter-par-categorie.py EcranRevue` : déclarés 21 · exécutés 
 Tests purs : ils prouvent la STRUCTURE et les SOURCES (textes, jetons, états, UV, fond chargé). Ils ne prouvent pas le rendu : la 1080×1920, la 1080×2400 et les juges ⊥ attendent la paire `MAFIA_CAPTURE_*`.
 
 Logs complets (non commités) : `reimport-2199b9ad.log`, `ecranrevue-2199b9ad.log` dans le scratchpad de la session.
+
+---
+
+# Second créneau client-2 (→ 23:24:44) : réimportation + EcranRevue sur `327f27eb`
+
+Réimportation : error CS 0 · compiler errors 0 · Aborting 0 · compilation 5,61 s · porcelain 0. typecheck --tout sans --frais : 17/17 (Tests 136 sources, aucun hors .csproj).
+
+```
+MafiaCI: RunPlayModeTests started — 619 test(s) découverts (arbre PlayMode entier ; le filtre de catégories s'applique à l'exécution, voir passed= ci-dessous) — DÉCLARÉS SOUS LE FILTRE : 32
+MafiaCI: RunPlayModeTests finished — passed=32 failed=0 skipped=0 inconclusive=0 declares=32 comptes=32
+MafiaCI: catégories RÉELLEMENT exécutées = [EcranRevue]
+```
+
+Attendu (`compter-par-categorie.py EcranRevue`) : 32 · 32 · [EcranRevue] — **égal**. Les 11 tests jamais passés jusque-là (R5, R5bis, R6, R6bis, R8, R8bis, R8ter, R9, R9bis, R9ter, R9quater) sont VERTS.
+
+| test | verdict |
+|---|---|
+| `RevueDuJourBustePlayModeTests.R5_ChaqueBillet_PorteLeBusteDesLieutenants` | PASSED |
+| `RevueDuJourBustePlayModeTests.R5bis_TroisLieutenants_UnSeulBuste_JamaisCeluiDuDon` | PASSED |
+| `RevueDuJourConditionPlayModeTests.R9_ChaqueValeurDuDomaine_RendUnePhrase` | PASSED |
+| `RevueDuJourConditionPlayModeTests.R9bis_LesQuatreConditionsDeProduction_PortentLeSujet` | PASSED |
+| `RevueDuJourConditionPlayModeTests.R9quater_SurLaCarte_LeSujetDoitEtreServiPourChangerLaPhrase` | PASSED |
+| `RevueDuJourConditionPlayModeTests.R9ter_LesReplis` | PASSED |
+| `RevueDuJourFrequencePlayModeTests.R8_ChaqueValeurDuType_RendUneChip` | PASSED |
+| `RevueDuJourFrequencePlayModeTests.R8bis_ChampAbsentOuHorsDomaine_PasDeChip` | PASSED |
+| `RevueDuJourFrequencePlayModeTests.R8ter_SurUnBillet_LaChipSuitLeCorps` | PASSED |
+| `RevueDuJourRegistrePlayModeTests.R6_LeRegistreEstUnCahierPoseDeTravers_AvecSaTrancheEtSaPastilleCerclee` | PASSED |
+| `RevueDuJourRegistrePlayModeTests.R6bis_LesRayuresSeRepetent_ElleNeSEtirentPas` | PASSED |
+| `RevueDuJourVerdictsPlayModeTests.R3quint_LeLot_SigneLeRegistre_EtUnLotDeZeroNeSigneRien` | PASSED |
+
+Porte rendue 23:24:44 (`--atlas-vus`). Aucune capture, pile dev non consommée. ⚠️ Le lot suivant (`none` ⇒ aucune chip) modifie R8/R8bis APRÈS ce run : leurs nouvelles versions n'ont pas encore tourné.
