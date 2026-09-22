@@ -139,8 +139,14 @@ namespace MafiaCleanCity.Shell
             RebuildTracked();
         }
 
+        // Lot E (2026-09-22) : la bande de pression se traduit par la clé de sa VALEUR servie
+        // (`exceptions.queue_pressure.<valeur>`, cumul back ea215ce9), repli français de l'atelier ; une valeur
+        // absente n'est pas une valeur — le tiret, jamais « Unknown » (atelier ④, règle d'état vide).
         private static string PressureLabel(string b) =>
-            b == "normal" ? "Normal" : b == "warning" ? "Warning" : b == "saturated" ? "Saturated" : "Unknown";
+            b == "normal" ? MafiaCleanCity.I18n.Libelle.ParValeur("exceptions", "queue_pressure", "normal", "normale")
+          : b == "warning" ? MafiaCleanCity.I18n.Libelle.ParValeur("exceptions", "queue_pressure", "warning", "tendue")
+          : b == "saturated" ? MafiaCleanCity.I18n.Libelle.ParValeur("exceptions", "queue_pressure", "saturated", "saturée")
+          : "—";
 
         private void RebuildTracked()
         {

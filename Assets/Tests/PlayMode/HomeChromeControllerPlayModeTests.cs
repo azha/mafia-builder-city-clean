@@ -87,15 +87,15 @@ namespace MafiaCleanCity.Shell.Tests
 
             chrome.SetPressureBand("normal");
             Assert.AreEqual("normal", chrome.PressureBandRendered);
-            Assert.IsTrue(chrome.RenderedTexts.Any(t => t.Contains("Normal")));
+            Assert.IsTrue(chrome.RenderedTexts.Any(t => t.Contains("Pression : normale")));
 
             chrome.SetPressureBand("warning");
             Assert.AreEqual("warning", chrome.PressureBandRendered);
-            Assert.IsTrue(chrome.RenderedTexts.Any(t => t.Contains("Warning")));
+            Assert.IsTrue(chrome.RenderedTexts.Any(t => t.Contains("Pression : tendue")));
 
             chrome.SetPressureBand("saturated");
             Assert.AreEqual("saturated", chrome.PressureBandRendered);
-            Assert.IsTrue(chrome.RenderedTexts.Any(t => t.Contains("Saturated")));
+            Assert.IsTrue(chrome.RenderedTexts.Any(t => t.Contains("Pression : saturée")));
         }
 
         // The shortcut that opens Daily Review is wired (design: "deux raccourcis dont l'un ouvre
