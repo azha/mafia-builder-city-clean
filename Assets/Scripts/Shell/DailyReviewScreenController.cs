@@ -868,18 +868,19 @@ namespace MafiaCleanCity.Shell
 
         /// <summary>⑯ B05 — la chip de fréquence. Domaine : `FlagFrequencyBand = 'none' | 'occasional' |
         /// 'frequent'` (`convergence.ts:35` ; `0` signalement sur 7 jours ⇒ `none`, sous le seuil ⇒ `occasional`).
-        /// La maquette (v4-0) dessine DEUX mots pour trois valeurs : « signale souvent » et « signale rarement ».
-        /// ⇒ `frequent` → souvent ; `occasional` ET `none` → rarement (« rarement » couvre zéro, et un lieutenant
-        /// dont le signalement en attente a plus de 7 jours tombe à `none`). Lecture de la maquette, à confirmer
-        /// par l'atelier. Toute autre valeur (casse comprise) ⇒ null : pas de chip plutôt qu'une bande déguisée.</summary>
+        /// ⇒ `frequent` → « signale souvent » ; `occasional` → « signale rarement » ; **`none` → AUCUNE chip**.
+        /// Tranché par l'atelier (`10-…` §7, `4620fa78`) : la fenêtre compte les signalements des 7 derniers jours,
+        /// et chaque billet de ⑯ EST un signalement de ce lieutenant. `none` n'arrive donc que pour un billet de plus
+        /// d'une semaine, ce que la chip du jour (« J11 ») dit déjà. Dire « rarement » pour zéro dirait autre chose que
+        /// la donnée. (⑦ recevra un mot pour `none`, « ne signale rien » : ce n'est pas ⑯.)
+        /// Toute autre valeur (casse comprise) ⇒ null : pas de chip plutôt qu'une bande déguisée.</summary>
         public static string FrequenceChip(string bande)
         {
             switch (bande)
             {
                 case "frequent": return Lib("chip", "signale souvent");
-                case "occasional":
-                case "none": return Lib("chip", "signale rarement");
-                default: return null;
+                case "occasional": return Lib("chip", "signale rarement");
+                default: return null;   // `none` compris : aucune chip (atelier 4620fa78)
             }
         }
 

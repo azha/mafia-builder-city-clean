@@ -6,8 +6,9 @@ namespace MafiaCleanCity.Shell.Tests
 {
     // ⑯ B05 — la chip « signale rarement / souvent », servie SUR LA CARTE par le lot back S5-e (71ae6f89) :
     // `flag_frequency_band` ∈ `FlagFrequencyBand = 'none' | 'occasional' | 'frequent'` (convergence.ts:35).
-    //   R8     chacune des trois valeurs du TYPE rend une chip non vide (souvent / rarement / rarement)
-    //   R8bis  champ absent (pile sans S5) ou valeur hors domaine ⇒ PAS de chip, jamais « — »
+    //   R8     `frequent` et `occasional` rendent une chip non vide (souvent / rarement)
+    //   R8bis  `none` ⇒ AUCUNE chip (atelier 10-… §7, 4620fa78 : chaque billet est lui-même un signalement de la
+    //          fenêtre de 7 jours) ; champ absent ou hors domaine ⇒ pas de chip non plus, jamais « — »
     //   R8ter  sur un billet : la chip est posée pour `frequent`, absente quand le corps ne porte pas le champ
     [Category("EcranRevue")]
     public class RevueDuJourFrequencePlayModeTests
@@ -21,17 +22,17 @@ namespace MafiaCleanCity.Shell.Tests
         }
 
         [Test]
-        public void R8_ChaqueValeurDuType_RendUneChip()
+        public void R8_FrequentEtOccasional_RendentUneChip()
         {
             Assert.AreEqual("signale souvent", DailyReviewScreenController.FrequenceChip("frequent"));
             Assert.AreEqual("signale rarement", DailyReviewScreenController.FrequenceChip("occasional"));
-            Assert.AreEqual("signale rarement", DailyReviewScreenController.FrequenceChip("none"),
-                "`none` = aucun signalement sur 7 jours : « rarement » le couvre (la maquette dessine deux mots)");
         }
 
         [Test]
-        public void R8bis_ChampAbsentOuHorsDomaine_PasDeChip()
+        public void R8bis_None_ChampAbsentOuHorsDomaine_PasDeChip()
         {
+            Assert.IsNull(DailyReviewScreenController.FrequenceChip("none"),
+                "`none` : pas de chip sur ⑯ — « rarement » pour zéro dirait autre chose que la donnée");
             foreach (string v in new[] { null, "", "FREQUENT", "rare", "—" })
                 Assert.IsNull(DailyReviewScreenController.FrequenceChip(v), $"`{v ?? "null"}` n'est pas servie : aucune chip");
         }
