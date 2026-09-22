@@ -168,11 +168,25 @@ namespace MafiaCleanCity.Operational.Exceptions
         /// ⚠️ CE QU'ELLE NE FAIT PAS : traduire. Elle décide de la PRÉSENTATION — dialogue ou
         /// identifiant — pas du contenu. Un descripteur en identifiant reste un trou de données côté
         /// serveur ; cette fonction le rend visible au lieu de le maquiller.</summary>
-        public static string Replique(string texteServeur)
+        /// <summary>Le locuteur d'une carte : un lieutenant si la carte en porte un, sinon la ville.
+        /// C'est LUI qui décide des guillemets — pas le texte (voir `Replique`).</summary>
+        public static bool ParleUnLieutenant(ExceptionCardDto c) =>
+            c != null && !string.IsNullOrEmpty(c.lieutenant_id);
+
+        public static string Replique(string texteServeur, bool parleUnLieutenant)
         {
             if (string.IsNullOrWhiteSpace(texteServeur)) return Inconnue;
             string t = texteServeur.Trim();
-            // Pas d'espace ⇒ personne ne parle ainsi : c'est un identifiant, il se montre nu.
+            // ⛔ LA CONDITION EST LE LOCUTEUR, PAS LA PRÉSENCE D'UNE ESPACE (atelier, cadre ⑨·12,
+            //    2026-09-22) : la maquette réserve les guillemets à la PAROLE D'UN LIEUTENANT ; la
+            //    carte de la ville (`lieutenant_id` vide) s'affiche sans. Mesuré sur le corps vivant de
+            //    session/open du 22/09 : 3 cartes, 1 de la ville — « Citywide heat is high — … »
+            //    portait des « » à tort, parce qu'elle avait des espaces.
+            if (!parleUnLieutenant) return t;
+            // Pas d'espace ⇒ personne ne parle ainsi : c'est un identifiant, il se montre nu — MÊME
+            // dans la bouche d'un lieutenant. Les 2 cartes de lieutenant du même corps SONT des
+            // identifiants (`exc_demo_teach_heat`, `exc_demo_raid_style`) : les citer mettrait une
+            // clé dans sa bouche, le défaut que le juge a lu sur la planche. Le trou se montre.
             return t.Contains(" ") ? $"« {t} »" : t;
         }
 

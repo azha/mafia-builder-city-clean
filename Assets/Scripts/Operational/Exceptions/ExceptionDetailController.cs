@@ -198,7 +198,7 @@ namespace MafiaCleanCity.Operational.Exceptions
                 // ⛔ LES GUILLEMETS ÉTAIENT INCONDITIONNELS : un identifiant technique se retrouvait
                 //    dans la bouche d'un lieutenant, alors que ⑨ — le même contenu, à un clic — a une
                 //    règle écrite qui l'interdit. La règle est partagée maintenant.
-                ExceptionBandes.Replique(Texte(c.event_descriptor, c.event_descriptor_i18n)),
+                ExceptionBandes.Replique(Texte(c.event_descriptor, c.event_descriptor_i18n), ExceptionBandes.ParleUnLieutenant(c)),
                 (int)PxD(11.5f), TextAlignmentOptions.Left);
             desc.textWrappingMode = TextWrappingModes.Normal;
             desc.overflowMode = TextOverflowModes.Overflow;

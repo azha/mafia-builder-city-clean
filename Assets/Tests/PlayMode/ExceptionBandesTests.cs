@@ -142,5 +142,42 @@ namespace MafiaCleanCity.Operational.Exceptions.Tests
                             "les deux appelants de ⑨ écrivaient le séparateur chacun de leur côté ; "
                             + "une correspondance en deux exemplaires en fait diverger une");
         }
+
+        // ═══ Les guillemets de la ville (atelier ⑨·12, 2026-09-22) — le locuteur décide, pas le texte ═══
+
+        [Test]
+        public void LaVille_ParleSansGuillemets_MemeQuandSaPhraseADesEspaces()
+        {
+            const string ville = "Citywide heat is high — your operations are under pressure.";   // la carte de la ville, corps vivant du 22/09
+            string r = ExceptionBandes.Replique(ville, parleUnLieutenant: false);
+            Assert.AreEqual(ville, r, "la ville ne cite personne : sa carte s'affiche sans « »");
+            StringAssert.DoesNotContain("«", r);
+        }
+
+        [Test]
+        public void UnLieutenant_ParleEntreGuillemets()
+        {
+            string r = ExceptionBandes.Replique("On a trop de chaleur ici, patron.", parleUnLieutenant: true);
+            StringAssert.StartsWith("« ", r);
+            StringAssert.EndsWith(" »", r);
+        }
+
+        [Test]
+        public void UnIdentifiantNu_ResteNu_MemeDansLaBoucheDUnLieutenant()
+        {
+            const string cle = "exc_demo_teach_heat";   // une carte de lieutenant du corps vivant du 22/09 : un identifiant, pas une phrase
+            Assert.AreEqual(cle, ExceptionBandes.Replique(cle, parleUnLieutenant: true),
+                "citer un identifiant mettrait une clé dans la bouche d'un lieutenant — le trou se montre, il ne se déguise pas en dialogue");
+            Assert.AreEqual(ExceptionBandes.Inconnue, ExceptionBandes.Replique("  ", parleUnLieutenant: true));
+        }
+
+        [Test]
+        public void LeLocuteur_EstDecideParLaCarte_PasParLeTexte()
+        {
+            Assert.IsFalse(ExceptionBandes.ParleUnLieutenant(null));
+            Assert.IsFalse(ExceptionBandes.ParleUnLieutenant(new ExceptionCardDto { lieutenant_id = "" }), "lieutenant_id vide = la ville");
+            Assert.IsFalse(ExceptionBandes.ParleUnLieutenant(new ExceptionCardDto { lieutenant_id = null }), "lieutenant_id nul = la ville");
+            Assert.IsTrue(ExceptionBandes.ParleUnLieutenant(new ExceptionCardDto { lieutenant_id = "01a09334-d55b-780e-8445-8410594754df" }));
+        }
     }
 }

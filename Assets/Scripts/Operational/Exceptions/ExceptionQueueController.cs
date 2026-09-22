@@ -753,7 +753,7 @@ $"{QuiParle(c)} · {ExceptionBandes.Ligne(c.severity_band, c.priority_band)}", 8
         {
             // La règle vit désormais dans `ExceptionBandes.Replique`, que ⑩ consomme aussi :
             // elle était écrite ici seule, et l'écran de détail faisait l'inverse à un clic d'écart.
-            return ExceptionBandes.Replique(TexteServeur(c));
+            return ExceptionBandes.Replique(TexteServeur(c), ExceptionBandes.ParleUnLieutenant(c));
         }
 
         /// <summary>Le texte serveur d'une carte : la référence i18n si elle est SERVIE, la prose
