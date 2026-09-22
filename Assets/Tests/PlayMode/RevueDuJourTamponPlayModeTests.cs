@@ -7,7 +7,7 @@ namespace MafiaCleanCity.Shell.Tests
     // ⑯-1 — le tampon « CONFIRMER LA ROUTINE » sur une journée où personne n'est au comptoir.
     //
     // Cadre v4-1, ratifié par l'user : `cards: []` et le tampon est POSÉ, avec son compte et la
-    // phrase « appui long — rien d'autre ne vous attend ». Le client le retirait par une garde
+    // phrase « appui long — rien d’autre ne vous attend ». Le client le retirait par une garde
     // `cards.Length > 0` plus stricte que le produit (juge-visuel r1 2026-09-06, F2 BLOQUANT).
     // Le back accepte ce lot à zéro carte : `flag-discipline.repository.ts:669-676`.
     //
@@ -57,7 +57,8 @@ namespace MafiaCleanCity.Shell.Tests
             Assert.IsTrue(ecran.RenderedEmptyState, "précondition : la file est bien vide");
             Assert.IsTrue(ecran.TamponPresent, "v4-1 : le tampon est sur le zinc même sans signalement");
             StringAssert.EndsWith("9", ecran.TamponLibelleTexte, "le compte en entier (JD-E3), celui du registre");
-            Assert.AreEqual("appui long — rien d'autre ne vous attend", ecran.TamponSousTexte);
+            Assert.AreEqual("appui long — rien d’autre ne vous attend", ecran.TamponSousTexte,
+                "mot pour mot le cadre v4-1, apostrophe typographique comprise");
         }
 
         [Test]

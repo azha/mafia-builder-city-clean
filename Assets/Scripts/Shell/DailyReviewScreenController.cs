@@ -54,7 +54,9 @@ namespace MafiaCleanCity.Shell
         public LongPressButton BatchConfirmButton { get; private set; }
 
         private RectTransform rowsRoot;
-        private TextMeshProUGUI emptyStateText;
+        private TextMeshProUGUI emptyStateText;   // le titre de la plaque du matin (⑯-2)
+        private GameObject plaqueVide;
+        private TextMeshProUGUI plaqueSurtitre;
         private TextMeshProUGUI registreCompte;
         private GameObject tamponRoot;
         private TextMeshProUGUI tamponLibelle;
@@ -183,6 +185,9 @@ namespace MafiaCleanCity.Shell
         public bool TamponPresent => tamponRoot != null && tamponRoot.activeSelf;
         public string TamponLibelleTexte => tamponLibelle != null ? tamponLibelle.text : null;
         public string TamponSousTexte => tamponSous != null ? tamponSous.text : null;
+        public bool PlaqueDuMatinPresente => plaqueVide != null && plaqueVide.activeSelf;
+        public TextMeshProUGUI PlaqueDuMatinSurtitre => plaqueSurtitre;
+        public TextMeshProUGUI PlaqueDuMatinTitre => emptyStateText;
 
         public IEnumerator ValidateFlag(string flagId)
         {
@@ -293,18 +298,21 @@ namespace MafiaCleanCity.Shell
             {
                 RenderedEmptyState = true;
                 RenderedCardCount = 0;
-                emptyStateText.gameObject.SetActive(true);
+                plaqueVide.SetActive(true);
                 // « Personne au comptoir » — trois tabourets vides, le registre et son tampon. Le
                 // texte est la scène, pas un état d'erreur : c'est une bonne nouvelle, pas un vide
                 // technique. Le compte des routines est porté par le REGISTRE, et le tampon offre le
                 // geste qui les traite (v4-1) : le nombre affiché a toujours son geste en face.
-                emptyStateText.text = Lib("bloc", "Personne au comptoir ce matin.");
+                // Mot pour mot le cadre v4-1. L'ancienne phrase (« Personne au comptoir ce matin. »)
+                // était la LÉGENDE du cadre, pas son texte : sa clé servie devient orpheline (⑯-2).
+                plaqueSurtitre.text = Lib("bloc", "Ce matin, au Verge d’Or");
+                emptyStateText.text = Lib("bloc", "Vos lieutenants ont tenu la ligne — rien ne réclame votre parole");
                 MajRegistre(enAttente, tamponDisponible, 0);
                 return;
             }
 
             RenderedEmptyState = false;
-            emptyStateText.gameObject.SetActive(false);
+            plaqueVide.SetActive(false);
             RenderedCardCount = cards.Length;
             foreach (FlagCardDto card in cards) AddRow(card);
             MajRegistre(enAttente, tamponDisponible, cards.Length);
@@ -322,12 +330,12 @@ namespace MafiaCleanCity.Shell
                 tamponRoot.SetActive(tamponDisponible);
                 if (tamponLibelle != null) tamponLibelle.text = Lib("bloc", "CONFIRMER LA ROUTINE · ") + enAttente;
                 // Sans signalement : la phrase du cadre v4-1, mot pour mot — le tampon clôt la journée,
-                // « rien d'autre ne vous attend ». (Avant ⑯-1, cette branche disait « appui long » nu :
+                // « rien d’autre ne vous attend ». (Avant ⑯-1, cette branche disait « appui long » nu :
                 // elle ne s'affichait jamais, la garde retirait le tampon avant.)
                 if (tamponSous != null)
                     tamponSous.text = signalements > 0
                         ? "appui long — les " + signalements + " signalements restent à votre main"
-                        : Lib("bloc", "appui long — rien d'autre ne vous attend");
+                        : Lib("bloc", "appui long — rien d’autre ne vous attend");
             }
         }
 
@@ -694,17 +702,100 @@ namespace MafiaCleanCity.Shell
             rvlg.childForceExpandHeight = false;
             rowsRoot = (RectTransform)rowsGo.transform;
 
-            GameObject emptyGo = new GameObject("EmptyState", typeof(RectTransform));
-            emptyGo.transform.SetParent(transform, false);
-            emptyStateText = emptyGo.AddComponent<TextMeshProUGUI>();
-            emptyStateText.font = DesignTokens.Current.hudSerifFont;
-            emptyStateText.fontSize = Px(11f);
-            emptyStateText.color = Creme2;
-            emptyStateText.alignment = TextAlignmentOptions.Center;
-            emptyStateText.gameObject.SetActive(false);
-
+            BuildPlaqueDuMatin();
             BuildRegistre();
             BuildTampon();
+        }
+
+        /// <summary>⑯-2 — LA PLAQUE DU MATIN (cadre v4-1, « personne au comptoir »). La version
+        /// précédente posait une phrase NUE, centrée, grise, en 11 px, sur le noir : le juge ⊥ r1
+        /// (2026-09-06) l'a mesurée contre le cadre ratifié — F3 plaque et surtitre absents, F4 or
+        /// devenu gris chaud, F6 hauteur de capitale −18,9 %, F7 centrée au lieu de ferrée à gauche.
+        /// Tout vient de la CSS du cadre (`ecrans-brennar-4.html`, `.plaque`, `.kicker`, `.titre`),
+        /// convertie par `Px`, jamais recopiée à l'œil :
+        ///   .plaque  border-radius 14 · padding 11/14/12 ·
+        ///            linear-gradient(160deg, rgba(22,33,53,.72), rgba(9,14,24,.88)) ·
+        ///            border 1px #ffffff24 · ::before inset 3px, border 1px #ffffff10, radius 11
+        ///   .kicker  8px · letter-spacing .22em · uppercase · --creme-2
+        ///   .titre   Georgia 15px · --or-vif · letter-spacing .04em · margin-top 2px
+        /// ⚠️ F5 (titre « en gras » selon le juge) N'EST PAS repris : la CSS ne pose AUCUNE graisse
+        ///    sur `.titre`. L'écart de fût mesuré relève plus probablement de l'arbitrage A1 (famille
+        ///    de police Noto/DejaVu) que d'un `font-weight` : poser un gras que la maquette n'écrit
+        ///    pas serait corriger l'instrument avec le sujet.</summary>
+        private void BuildPlaqueDuMatin()
+        {
+            plaqueVide = new GameObject("PlaqueDuMatin", typeof(RectTransform));
+            plaqueVide.transform.SetParent(transform, false);
+            // Le masque arrondit le verre : un `LinearGradient` est un carré, sans lui les coins
+            // sortent droits (même montage que les rangs de ⑥, `LieutenantScreenController`).
+            Image forme = plaqueVide.AddComponent<Image>();
+            forme.sprite = ProceduralUI.RoundedRectMask((int)Px(14f));
+            forme.type = Image.Type.Sliced;
+            Mask masque = plaqueVide.AddComponent<Mask>();
+            masque.showMaskGraphic = false;
+
+            // Les RVB de `.plaque` sont ceux des jetons de verre des lieutenants (#162135, #090e18) ;
+            // seules les OPACITÉS diffèrent (.72/.88 ici, .58/.74 là-bas). La plaque flotte sur le
+            // décor, donc sur un fond INCONNU : l'opacité CSS passe par l'ajustement déclaré de ①,
+            // jamais recopiée (le navigateur mélange en sRGB, ce projet en linéaire).
+            Color verreHaut = DesignTokens.Current.lieutenantGlassTop;
+            Color verreBas = DesignTokens.Current.lieutenantGlassBottom;
+            verreHaut.a = ProceduralUI.AlphaVoileSurFondQuelconque(verreHaut, 0.72f, out _);
+            verreBas.a = ProceduralUI.AlphaVoileSurFondQuelconque(verreBas, 0.88f, out _);
+            GameObject verre = new GameObject("Verre", typeof(RectTransform));
+            verre.transform.SetParent(plaqueVide.transform, false);
+            Etirer((RectTransform)verre.transform, 0f);
+            Image verreImg = verre.AddComponent<Image>();
+            verreImg.sprite = ProceduralUI.LinearGradient(64, 160f, verreHaut, verreBas);
+            verreImg.type = Image.Type.Simple;
+            verreImg.raycastTarget = false;
+            verre.AddComponent<LayoutElement>().ignoreLayout = true;
+
+            Filet(plaqueVide.transform, "Bord", 0f, Px(14f), Hex("#ffffff24"));
+            Filet(plaqueVide.transform, "FiletInterieur", Px(3f), Px(11f), Hex("#ffffff10"));
+
+            VerticalLayoutGroup v = plaqueVide.AddComponent<VerticalLayoutGroup>();
+            v.padding = new RectOffset((int)Px(14f), (int)Px(14f), (int)Px(11f), (int)Px(12f));
+            v.spacing = Px(2f);
+            v.childControlWidth = true;
+            v.childControlHeight = true;
+            v.childForceExpandWidth = true;
+            v.childForceExpandHeight = false;
+            v.childAlignment = TextAnchor.UpperLeft;
+
+            // texte posé au RENDU, pas ici : `Awake` précède le chargement du catalogue i18n.
+            plaqueSurtitre = Texte(plaqueVide.transform, "Surtitre", "",
+                                   Px(8f), Creme2, DesignTokens.Current.primaryFont);
+            plaqueSurtitre.fontStyle = FontStyles.UpperCase;
+            plaqueSurtitre.characterSpacing = 22f;
+
+            emptyStateText = Texte(plaqueVide.transform, "Titre", "", Px(15f), OrVif,
+                                   DesignTokens.Current.hudSerifFont);
+            emptyStateText.characterSpacing = 4f;
+            emptyStateText.enableWordWrapping = true;
+
+            plaqueVide.SetActive(false);
+        }
+
+        private static void Etirer(RectTransform rt, float retrait)
+        {
+            rt.anchorMin = Vector2.zero;
+            rt.anchorMax = Vector2.one;
+            rt.offsetMin = new Vector2(retrait, retrait);
+            rt.offsetMax = new Vector2(-retrait, -retrait);
+        }
+
+        /// <summary>Un filet de bord, hors mise en page, en retrait de `retrait` sur les quatre côtés.</summary>
+        private static void Filet(Transform parent, string nom, float retrait, float rayon, Color couleur)
+        {
+            GameObject go = new GameObject(nom, typeof(RectTransform));
+            go.transform.SetParent(parent, false);
+            Etirer((RectTransform)go.transform, retrait);
+            Image img = go.AddComponent<Image>();
+            img.sprite = ProceduralUI.RoundedRectOutline((int)rayon, Px(1f), couleur);
+            img.type = Image.Type.Sliced;
+            img.raycastTarget = false;
+            go.AddComponent<LayoutElement>().ignoreLayout = true;
         }
 
         /// <summary>Le registre — un papier, pas un panneau : c'est le seul objet clair de l'écran,
@@ -759,7 +850,7 @@ namespace MafiaCleanCity.Shell
             quoi.AddComponent<LayoutElement>().flexibleWidth = 1f;
             Texte(quoi.transform, "Titre", "La routine, tenue sans vous", Px(11.5f), EncrePapier,
                   DesignTokens.Current.hudSerifFont);
-            Texte(quoi.transform, "Sous", "rien n'a dévié", Px(8f), EncrePapier2,
+            Texte(quoi.transform, "Sous", "rien n’a dévié", Px(8f), EncrePapier2,
                   DesignTokens.Current.primaryFont);
 
             registreCompte = Texte(reg.transform, "Compte", "0", Px(18f), Rouge,
