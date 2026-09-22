@@ -1,0 +1,439 @@
+{
+ "provenance": {
+  "bundle_request_id_fr": "21c7a480-af55-4959-b606-3929378e93f8",
+  "server_build_ref": {
+   "git_sha": "03cf564c921dd6dec8ba6692b004c5d1b4d0e0a6",
+   "built_at": "2026-09-14T01:12:31Z"
+  },
+  "cles_servies_fr": 886,
+  "client_plage": "9b5d6117..75ac1001",
+  "generateur": "python3 Tools/juge-donnees/i18n/orphelines.py <bundle-fr> <bundle-en> 9b5d6117 75ac1001 --json …"
+ },
+ "cles": [
+  {
+   "ecran": "㉞ les ordres du soir",
+   "fichier": "Assets/Scripts/Operational/Carnet/CarnetScreenController.cs",
+   "sites": [
+    "CarnetScreenController.cs:243"
+   ],
+   "ancienne": "carnet.bloc.ce_que_cet_ecran_sait_pour_l_instant",
+   "servie_fr": "CE QUE CET ÉCRAN SAIT POUR L'INSTANT",
+   "servie_en": "WHAT THIS SCREEN KNOWS SO FAR",
+   "nouvelle": "carnet.bloc.ce_qu_on_sait_pour_l_instant",
+   "texte_fr": "CE QU'ON SAIT POUR L'INSTANT",
+   "nouvelle_deja_servie": false,
+   "commit": "ed4eafd3",
+   "lot": "C"
+  },
+  {
+   "ecran": "㉞ les ordres du soir",
+   "fichier": "Assets/Scripts/Operational/Carnet/CarnetScreenController.cs",
+   "sites": [
+    "CarnetScreenController.cs:255"
+   ],
+   "ancienne": "carnet.bloc.ce_que_le_serveur_envoie_vraiment",
+   "servie_fr": "CE QUE LE SERVEUR ENVOIE VRAIMENT",
+   "servie_en": "WHAT THE SERVER ACTUALLY SENDS",
+   "nouvelle": "carnet.bloc.ce_qu_on_sait_vraiment",
+   "texte_fr": "CE QU'ON SAIT VRAIMENT",
+   "nouvelle_deja_servie": false,
+   "commit": "ed4eafd3",
+   "lot": "C"
+  },
+  {
+   "ecran": "㉞ les ordres du soir",
+   "fichier": "Assets/Scripts/Operational/Carnet/CarnetScreenController.cs",
+   "sites": [
+    "CarnetScreenController.cs:256"
+   ],
+   "ancienne": "carnet.bloc.la_route_n_a_rien_rendu_ce_n_est_pas_la_soiree_est_vide_c_est_on_ne_sait_pas_ce_qui_est_prevu",
+   "servie_fr": "la route n'a rien rendu. Ce n'est pas « la soirée est vide » : c'est « on ne sait pas ce qui est prévu ».",
+   "servie_en": "the route returned nothing. That's not “the evening is empty” — it's “we don't know what's planned”.",
+   "nouvelle": "carnet.bloc.on_n_a_pas_eu_de_reponse_ce_n_est_pas_la_soiree_est_vide_c_est_on_ne_sait_pas_ce_qui_est_prevu",
+   "texte_fr": "on n'a pas eu de réponse. Ce n'est pas « la soirée est vide » : c'est « on ne sait pas ce qui est prévu ».",
+   "nouvelle_deja_servie": false,
+   "commit": "ed4eafd3",
+   "lot": "C"
+  },
+  {
+   "ecran": "㉞ les ordres du soir",
+   "fichier": "Assets/Scripts/Operational/Carnet/CarnetScreenController.cs",
+   "sites": [
+    "CarnetScreenController.cs:286"
+   ],
+   "ancienne": "carnet.bloc.une_suite_d_ordres_qu_on_met_de_cote_et_qu_on_relance_d_un_geste_le_serveur_la_refuse_tant_que_le_palier_2_n_est_pas_atteint",
+   "servie_fr": "une suite d'ordres qu'on met de côté et qu'on relance d'un geste. Le serveur la refuse tant que le palier 2 n'est pas atteint.",
+   "servie_en": "a sequence of orders you set aside and replay in one move. The server refuses it until tier 2 is reached.",
+   "nouvelle": "carnet.bloc.une_suite_d_ordres_qu_on_met_de_cote_et_qu_on_relance_d_un_geste_cette_facon_de_faire_s_ouvre_plus_tard_il_faut_d_abord_monter_d_un_palier",
+   "texte_fr": "une suite d'ordres qu'on met de côté et qu'on relance d'un geste. Cette façon de faire s'ouvre plus tard — il faut d'abord monter d'un palier.",
+   "nouvelle_deja_servie": false,
+   "commit": "ed4eafd3",
+   "lot": "C"
+  },
+  {
+   "ecran": "㉞ les ordres du soir",
+   "fichier": "Assets/Scripts/Operational/Carnet/CarnetScreenController.cs",
+   "sites": [
+    "CarnetScreenController.cs:298"
+   ],
+   "ancienne": "carnet.bloc.le_calendrier_politique_n_a_aucune_route_joueur_seul_l_administrateur_y_accede_la_maquette_le_dessine_le_serveur_ne_le_sert_a_personne",
+   "servie_fr": "le calendrier politique n'a aucune route joueur — seul l'administrateur y accède. La maquette le dessine ; le serveur ne le sert à personne.",
+   "servie_en": "the political calendar has no player route — only the administrator can reach it. The mockup draws it; the server serves it to no one.",
+   "nouvelle": "carnet.bloc.ce_que_la_ville_prepare_personne_ne_vous_le_rapporte_encore_ce_sera_ici_le_jour_ou_quelqu_un_le_fera",
+   "texte_fr": "ce que la ville prépare, personne ne vous le rapporte encore. Ce sera ici le jour où quelqu'un le fera.",
+   "nouvelle_deja_servie": false,
+   "commit": "ed4eafd3",
+   "lot": "C"
+  },
+  {
+   "ecran": "㉙ le conflit",
+   "fichier": "Assets/Scripts/Operational/Conflit/ConflitScreenController.cs",
+   "sites": [
+    "ConflitScreenController.cs:334"
+   ],
+   "ancienne": "conflit.bloc.dessinees_pas_renseignees_aucune_route_ne_dit_ce_qu_elles_preparent_ni_ce_qu_elles_possedent",
+   "servie_fr": "Dessinées, pas renseignées : aucune route ne dit ce qu'elles préparent ni ce qu'elles possèdent.",
+   "servie_en": "Drawn, not informed: no route says what they're preparing or what they own.",
+   "nouvelle": "conflit.bloc.dessinees_pas_renseignees_personne_ne_vous_dit_ce_qu_elles_preparent_ni_ce_qu_elles_possedent_on_frappe_a_l_aveugle",
+   "texte_fr": "Dessinées, pas renseignées : personne ne vous dit ce qu'elles préparent ni ce qu'elles possèdent — on frappe à l'aveugle.",
+   "nouvelle_deja_servie": false,
+   "commit": "ce25bd63",
+   "lot": "C"
+  },
+  {
+   "ecran": "㉙ le conflit",
+   "fichier": "Assets/Scripts/Operational/Conflit/ConflitScreenController.cs",
+   "sites": [
+    "ConflitScreenController.cs:510"
+   ],
+   "ancienne": "conflit.bloc.vous_avez_l_homme_personne_pour_lui_dire_ou_frapper_aucune_route_ne_connait_encore_vos_rivaux",
+   "servie_fr": "Vous avez l'homme. Personne pour lui dire où frapper — aucune route ne connaît encore vos rivaux.",
+   "servie_en": "You have the man. No one to tell him where to strike — no route knows your rivals yet.",
+   "nouvelle": "conflit.bloc.vous_avez_l_homme_personne_pour_lui_dire_ou_frapper_on_ne_sait_pas_encore_ou_ils_sont",
+   "texte_fr": "Vous avez l'homme. Personne pour lui dire où frapper — on ne sait pas encore où ils sont.",
+   "nouvelle_deja_servie": false,
+   "commit": "ce25bd63",
+   "lot": "C"
+  },
+  {
+   "ecran": "㊵ la filière",
+   "fichier": "Assets/Scripts/Operational/Filiere/FiliereScreenController.cs",
+   "sites": [
+    "FiliereScreenController.cs:369"
+   ],
+   "ancienne": "filiere.bloc.ce_que_le_serveur_envoie_vraiment",
+   "servie_fr": "CE QUE LE SERVEUR ENVOIE VRAIMENT",
+   "servie_en": "WHAT THE SERVER ACTUALLY SENDS",
+   "nouvelle": "filiere.bloc.ce_qu_on_sait_vraiment",
+   "texte_fr": "CE QU'ON SAIT VRAIMENT",
+   "nouvelle_deja_servie": false,
+   "commit": "30712f69",
+   "lot": "C"
+  },
+  {
+   "ecran": "㊵ la filière",
+   "fichier": "Assets/Scripts/Operational/Filiere/FiliereScreenController.cs",
+   "sites": [
+    "FiliereScreenController.cs:370"
+   ],
+   "ancienne": "filiere.bloc.la_route_n_a_rien_rendu_ce_n_est_pas_la_filiere_est_vide_c_est_on_ne_sait_pas_ou_elle_en_est",
+   "servie_fr": "la route n'a rien rendu. Ce n'est pas « la filière est vide » : c'est « on ne sait pas où elle en est ».",
+   "servie_en": "the route returned nothing. That's not \\u201cthe pipeline is empty\\u201d — it's \\u201cwe don't know where it stands\\u201d.",
+   "nouvelle": "filiere.bloc.on_n_a_pas_eu_de_reponse_ce_n_est_pas_la_filiere_est_vide_c_est_on_ne_sait_pas_ou_elle_en_est",
+   "texte_fr": "on n'a pas eu de réponse. Ce n'est pas « la filière est vide » : c'est « on ne sait pas où elle en est ».",
+   "nouvelle_deja_servie": false,
+   "commit": "30712f69",
+   "lot": "C"
+  },
+  {
+   "ecran": "㊵ la filière",
+   "fichier": "Assets/Scripts/Operational/Filiere/FiliereScreenController.cs",
+   "sites": [
+    "FiliereScreenController.cs:420"
+   ],
+   "ancienne": "filiere.bloc.le_premier_maillon_sans_elle_rien_n_entre_dans_la_filiere_le_meme_lot_debloque_le_ramassage_des_caisses_de_dealers",
+   "servie_fr": "le premier maillon : sans elle, rien n'entre dans la filière. Le même lot débloque le ramassage des caisses de dealers.",
+   "servie_en": "the first link: without it, nothing enters the pipeline. The same batch unlocks collecting dealers' cash boxes.",
+   "nouvelle": "filiere.bloc.le_premier_maillon_sans_elle_rien_n_entre_dans_la_filiere_et_rien_ne_se_ramasse_chez_les_dealers_non_plus",
+   "texte_fr": "le premier maillon : sans elle, rien n'entre dans la filière — et rien ne se ramasse chez les dealers non plus.",
+   "nouvelle_deja_servie": false,
+   "commit": "30712f69",
+   "lot": "C"
+  },
+  {
+   "ecran": "㊵ la filière",
+   "fichier": "Assets/Scripts/Operational/Filiere/FiliereScreenController.cs",
+   "sites": [
+    "FiliereScreenController.cs:423"
+   ],
+   "ancienne": "filiere.bloc.la_proprete_est_la_seule_grandeur_servie_ni_montant_ni_duree_ni_frais",
+   "servie_fr": "la propreté est la seule grandeur servie : ni montant, ni durée, ni frais.",
+   "servie_en": "cleanliness is the only figure served: no amount, no duration, no fee.",
+   "nouvelle": "filiere.bloc.on_ne_vous_dira_que_si_c_est_propre_ni_combien_ni_depuis_quand_ni_a_quel_prix_c_est_voulu",
+   "texte_fr": "on ne vous dira que si c'est propre : ni combien, ni depuis quand, ni à quel prix. C'est voulu.",
+   "nouvelle_deja_servie": false,
+   "commit": "30712f69",
+   "lot": "C"
+  },
+  {
+   "ecran": "㊵ la filière",
+   "fichier": "Assets/Scripts/Operational/Filiere/FiliereScreenController.cs",
+   "sites": [
+    "FiliereScreenController.cs:427"
+   ],
+   "ancienne": "filiere.bloc.la_route_repond_et_elle_repond_rien_ce_n_est_pas_une_panne_c_est_un_etat_il_faut_une_planque_pour_que_la_filiere_commence_quelque_part",
+   "servie_fr": "la route répond, et elle répond « rien » : ce n'est pas une panne, c'est un état. Il faut une planque pour que la filière commence quelque part.",
+   "servie_en": "the route answers, and it answers “nothing”: that's not a failure, it's a state. You need a safehouse for the pipeline to start somewhere.",
+   "nouvelle": "filiere.bloc.ce_n_est_pas_une_panne_c_est_un_etat_il_n_y_a_rien_a_montrer_tant_qu_il_n_y_a_rien_de_monte_il_faut_une_planque_pour_que_la_filiere_commence_quelque_part",
+   "texte_fr": "ce n'est pas une panne, c'est un état : il n'y a rien à montrer tant qu'il n'y a rien de monté. Il faut une planque pour que la filière commence quelque part.",
+   "nouvelle_deja_servie": false,
+   "commit": "30712f69",
+   "lot": "C"
+  },
+  {
+   "ecran": "㊵ la filière",
+   "fichier": "Assets/Scripts/Operational/Filiere/FiliereScreenController.cs",
+   "sites": [
+    "FiliereScreenController.cs:459"
+   ],
+   "ancienne": "filiere.bloc.ce_que_cet_ecran_sait_pour_l_instant",
+   "servie_fr": "CE QUE CET ÉCRAN SAIT POUR L'INSTANT",
+   "servie_en": "WHAT THIS SCREEN KNOWS SO FAR",
+   "nouvelle": "filiere.bloc.ce_qu_on_sait_pour_l_instant",
+   "texte_fr": "CE QU'ON SAIT POUR L'INSTANT",
+   "nouvelle_deja_servie": false,
+   "commit": "30712f69",
+   "lot": "C"
+  },
+  {
+   "ecran": "㊴ le dossier",
+   "fichier": "Assets/Scripts/Operational/Forensic/ForensicScreenController.cs",
+   "sites": [
+    "ForensicScreenController.cs:177"
+   ],
+   "ancienne": "forensic.bloc.une_bande_sans_source_ressemble_a_une_bande_mesuree",
+   "servie_fr": "Une bande sans source ressemble à une bande mesurée",
+   "servie_en": "Une bande sans source ressemble à une bande mesurée",
+   "nouvelle": "forensic.bloc.une_piste_posee_par_habitude_ressemble_a_une_piste_relevee",
+   "texte_fr": "Une piste posée par habitude ressemble à une piste relevée",
+   "nouvelle_deja_servie": false,
+   "commit": "fcfa7446",
+   "lot": "C"
+  },
+  {
+   "ecran": "㊴ le dossier",
+   "fichier": "Assets/Scripts/Operational/Forensic/ForensicScreenController.cs",
+   "sites": [
+    "ForensicScreenController.cs:194"
+   ],
+   "ancienne": "forensic.bloc.ce_que_le_serveur_envoie_vraiment",
+   "servie_fr": "CE QUE LE SERVEUR ENVOIE VRAIMENT",
+   "servie_en": "CE QUE LE SERVEUR ENVOIE VRAIMENT",
+   "nouvelle": "forensic.bloc.ce_qu_on_sait_vraiment",
+   "texte_fr": "CE QU'ON SAIT VRAIMENT",
+   "nouvelle_deja_servie": false,
+   "commit": "fcfa7446",
+   "lot": "C"
+  },
+  {
+   "ecran": "㊱ l'horizon",
+   "fichier": "Assets/Scripts/Operational/Horizon/HorizonScreenController.cs",
+   "sites": [
+    "HorizonScreenController.cs:181"
+   ],
+   "ancienne": "horizon.bloc.ce_que_le_serveur_envoie_vraiment",
+   "servie_fr": "CE QUE LE SERVEUR ENVOIE VRAIMENT",
+   "servie_en": "CE QUE LE SERVEUR ENVOIE VRAIMENT",
+   "nouvelle": "horizon.bloc.ce_qu_on_sait_vraiment",
+   "texte_fr": "CE QU'ON SAIT VRAIMENT",
+   "nouvelle_deja_servie": false,
+   "commit": "0bd5d3d8",
+   "lot": "C"
+  },
+  {
+   "ecran": "㊱ l'horizon",
+   "fichier": "Assets/Scripts/Operational/Horizon/HorizonScreenController.cs",
+   "sites": [
+    "HorizonScreenController.cs:182"
+   ],
+   "ancienne": "horizon.bloc.aucune_de_ces_cartes_n_a_de_nom",
+   "servie_fr": "Aucune de ces cartes n'a de nom",
+   "servie_en": "Aucune de ces cartes n'a de nom",
+   "nouvelle": "horizon.bloc.aucune_de_ces_cartes_n_a_encore_de_nom",
+   "texte_fr": "Aucune de ces cartes n'a encore de nom",
+   "nouvelle_deja_servie": false,
+   "commit": "0bd5d3d8",
+   "lot": "C"
+  },
+  {
+   "ecran": "㊱ l'horizon",
+   "fichier": "Assets/Scripts/Operational/Horizon/HorizonScreenController.cs",
+   "sites": [
+    "HorizonScreenController.cs:352"
+   ],
+   "ancienne": "horizon.bloc.le_serveur_ne_dit_pas_ce_qui_manque_pour_y_arriver",
+   "servie_fr": "le serveur ne dit pas ce qui manque pour y arriver",
+   "servie_en": "the server doesn't say what's missing to get there",
+   "nouvelle": "horizon.bloc.on_ne_sait_pas_encore_ce_qui_manque_pour_y_arriver",
+   "texte_fr": "on ne sait pas encore ce qui manque pour y arriver",
+   "nouvelle_deja_servie": false,
+   "commit": "0bd5d3d8",
+   "lot": "C"
+  },
+  {
+   "ecran": "㊳ le journal",
+   "fichier": "Assets/Scripts/Operational/Journal/JournalScreenController.cs",
+   "sites": [
+    "JournalScreenController.cs:274",
+    "JournalScreenController.cs:446"
+   ],
+   "ancienne": "journal.bloc.ce_que_le_serveur_envoie_vraiment",
+   "servie_fr": "CE QUE LE SERVEUR ENVOIE VRAIMENT",
+   "servie_en": "WHAT THE SERVER ACTUALLY SENDS",
+   "nouvelle": "journal.bloc.ce_qu_on_sait_vraiment",
+   "texte_fr": "CE QU'ON SAIT VRAIMENT",
+   "nouvelle_deja_servie": false,
+   "commit": "71e5c77f",
+   "lot": "C"
+  },
+  {
+   "ecran": "㊳ le journal",
+   "fichier": "Assets/Scripts/Operational/Journal/JournalScreenController.cs",
+   "sites": [
+    "JournalScreenController.cs:276"
+   ],
+   "ancienne": "journal.bloc.le_serveur_rend_des_cles_et_un_gabarit_a_trous_les_titres_restent_a_ecrire_voila_le_journal_tel_qu_il_s_afficherait_aujourd_hui",
+   "servie_fr": "le serveur rend des clés et un gabarit à trous ; les titres restent à écrire. Voilà le journal tel qu'il s'afficherait aujourd'hui.",
+   "servie_en": "the server returns keys and a template with slots; the headlines are still to be written. Here is the paper as it would read today.",
+   "nouvelle": "journal.bloc.les_breves_sont_arrivees_sans_leur_texte_le_journal_de_ce_matin_n_a_que_des_titres_a_trous_voila_ce_qu_on_peut_vous_montrer_aujourd_hui",
+   "texte_fr": "les brèves sont arrivées sans leur texte : le journal de ce matin n'a que des titres à trous. Voilà ce qu'on peut vous montrer aujourd'hui.",
+   "nouvelle_deja_servie": false,
+   "commit": "71e5c77f",
+   "lot": "C"
+  },
+  {
+   "ecran": "㊳ le journal",
+   "fichier": "Assets/Scripts/Operational/Journal/JournalScreenController.cs",
+   "sites": [
+    "JournalScreenController.cs:300"
+   ],
+   "ancienne": "journal.bloc.ce_que_cet_ecran_sait_pour_l_instant",
+   "servie_fr": "CE QUE CET ÉCRAN SAIT POUR L'INSTANT",
+   "servie_en": "WHAT THIS SCREEN KNOWS SO FAR",
+   "nouvelle": "journal.bloc.ce_qu_on_sait_pour_l_instant",
+   "texte_fr": "CE QU'ON SAIT POUR L'INSTANT",
+   "nouvelle_deja_servie": false,
+   "commit": "71e5c77f",
+   "lot": "C"
+  },
+  {
+   "ecran": "㊳ le journal",
+   "fichier": "Assets/Scripts/Operational/Journal/JournalScreenController.cs",
+   "sites": [
+    "JournalScreenController.cs:448"
+   ],
+   "ancienne": "journal.bloc.la_route_n_a_rien_rendu_ce_n_est_pas_la_ville_est_calme_c_est_on_ne_sait_pas_ce_qu_elle_a_fait_cette_nuit",
+   "servie_fr": "la route n'a rien rendu. Ce n'est pas « la ville est calme » : c'est « on ne sait pas ce qu'elle a fait cette nuit ».",
+   "servie_en": "the route returned nothing. That's not “the city is quiet” — it's “we don't know what it did last night”.",
+   "nouvelle": "journal.bloc.on_n_a_pas_eu_de_reponse_ce_n_est_pas_la_ville_est_calme_c_est_on_ne_sait_pas_ce_qu_elle_a_fait_cette_nuit",
+   "texte_fr": "on n'a pas eu de réponse. Ce n'est pas « la ville est calme » : c'est « on ne sait pas ce qu'elle a fait cette nuit ».",
+   "nouvelle_deja_servie": false,
+   "commit": "71e5c77f",
+   "lot": "C"
+  },
+  {
+   "ecran": "㉛ la loi",
+   "fichier": "Assets/Scripts/Operational/Loi/LoiScreenController.cs",
+   "sites": [
+    "LoiScreenController.cs:420"
+   ],
+   "ancienne": "loi.bloc.une_affaire_nait_d_une_descente_rien_sur_cet_ecran_n_en_cree",
+   "servie_fr": "Une affaire naît d'une descente — rien sur cet écran n'en crée.",
+   "servie_en": "A case is born of a raid — nothing on this screen creates one.",
+   "nouvelle": "loi.bloc.une_affaire_nait_d_une_descente_rien_ici_n_en_cree",
+   "texte_fr": "Une affaire naît d'une descente — rien ici n'en crée.",
+   "nouvelle_deja_servie": false,
+   "commit": "ebf97d1e",
+   "lot": "C"
+  },
+  {
+   "ecran": "㉘ la distribution",
+   "fichier": "Assets/Scripts/Operational/Distribution/DistributionScreenController.cs",
+   "sites": [
+    "DistributionScreenController.cs:525"
+   ],
+   "ancienne": "distribution.bloc.aucune_route_connue_pour_l_instant",
+   "servie_fr": "Aucune route connue pour l'instant.",
+   "servie_en": "No known route yet.",
+   "nouvelle": "distribution.bloc.aucune_route_tendue_pour_l_instant",
+   "texte_fr": "Aucune route tendue pour l'instant.",
+   "nouvelle_deja_servie": false,
+   "commit": "efdd1e7c",
+   "lot": "C"
+  },
+  {
+   "ecran": "㉔ les télégrammes",
+   "fichier": "Assets/Scripts/Operational/Autonomy/AutonomyInboxController.cs",
+   "sites": [
+    "AutonomyInboxController.cs:372"
+   ],
+   "ancienne": "autonomie.etat.minimal",
+   "servie_fr": "[~] Minimal",
+   "servie_en": "[~] Minimal",
+   "nouvelle": "autonomie.etat.consequence_minime",
+   "texte_fr": "[~] conséquence minime",
+   "nouvelle_deja_servie": false,
+   "commit": "75ac1001",
+   "lot": "D t1",
+   "texte_fr_final": "conséquence minime"
+  },
+  {
+   "ecran": "㉔ les télégrammes",
+   "fichier": "Assets/Scripts/Operational/Autonomy/AutonomyInboxController.cs",
+   "sites": [
+    "AutonomyInboxController.cs:373"
+   ],
+   "ancienne": "autonomie.etat.arbitrage",
+   "servie_fr": "[<>] Arbitrage",
+   "servie_en": "[<>] Trade-off",
+   "nouvelle": "autonomie.etat.un_compromis",
+   "texte_fr": "[<>] un compromis",
+   "nouvelle_deja_servie": false,
+   "commit": "75ac1001",
+   "lot": "D t1",
+   "texte_fr_final": "un compromis"
+  },
+  {
+   "ecran": "㉔ les télégrammes",
+   "fichier": "Assets/Scripts/Operational/Autonomy/AutonomyInboxController.cs",
+   "sites": [
+    "AutonomyInboxController.cs:374"
+   ],
+   "ancienne": "autonomie.etat.exposition_accrue",
+   "servie_fr": "[!] Exposition accrue",
+   "servie_en": "[!] Increased exposure",
+   "nouvelle": "autonomie.etat.on_s_expose",
+   "texte_fr": "[!] on s'expose",
+   "nouvelle_deja_servie": false,
+   "commit": "75ac1001",
+   "lot": "D t1",
+   "texte_fr_final": "on s'expose"
+  },
+  {
+   "ecran": "㉔ les télégrammes",
+   "fichier": "Assets/Scripts/Operational/Autonomy/AutonomyInboxController.cs",
+   "sites": [
+    "AutonomyInboxController.cs:375"
+   ],
+   "ancienne": "autonomie.etat.cout_d_opportunite",
+   "servie_fr": "[$] Coût d'opportunité",
+   "servie_en": "[$] Opportunity cost",
+   "nouvelle": "autonomie.etat.on_laisse_passer_quelque_chose",
+   "texte_fr": "[$] on laisse passer quelque chose",
+   "nouvelle_deja_servie": false,
+   "commit": "75ac1001",
+   "lot": "D t1",
+   "texte_fr_final": "on laisse passer quelque chose"
+  }
+ ]
+}
