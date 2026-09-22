@@ -154,6 +154,11 @@ namespace MafiaCleanCity.Shell
         public string Token { get; private set; }
         public SessionOpenDto LastSessionOpen { get; private set; }
 
+        /// <summary>F14 — la phase affichée HORS district : celle que `session/open` projette (`day_phase`, figée à
+        /// l'ouverture), jamais dérivée côté client (§6.3), jamais celle d'un district quitté. `null` (pas de session, ou
+        /// back qui ne la sert pas encore) ⇒ `DayPhaseResolver` rend l'état nommé « — ».</summary>
+        public string PhaseHorsDistrict() => LastSessionOpen?.day_phase;
+
         /// <summary>Le nombre de locataires déjà montés À L'INSTANT où le dictionnaire a été
         /// amorcé — `-1` s'il ne l'a pas été. La garde lit CECI, pas `I18nCatalog.Charge` : un
         /// booléen « chargé » est vrai aussi quand on l'a chargé TROP TARD, c'est-à-dire après
@@ -246,10 +251,11 @@ namespace MafiaCleanCity.Shell
             // guard, not a design reinterpretation, consigned as a Deviation).
             CityTabDistrictId = -1;
             TopBar.SetLeadingAction(TopBarController.LeadingAction.None, null);
-            // §6.3 — hors district, état NOMMÉ ("—"), jamais la dernière valeur d'un district
-            // quitté (MÊME reset défensif que CityTabDistrictId ci-dessus, pour LA MÊME raison :
-            // toute activation d'onglet doit effacer ce qui n'a de sens qu'EN district).
-            TopBar.SetDayPhase(null);
+            // §6.3 — hors district, jamais la dernière valeur d'un district quitté (MÊME reset défensif
+            // que CityTabDistrictId ci-dessus, pour LA MÊME raison : toute activation d'onglet efface ce
+            // qui n'a de sens qu'EN district). F14 (23/09) : la valeur hors district est la phase de la
+            // SESSION, projetée par le back à l'ouverture — plus « — » par défaut quand elle est servie.
+            TopBar.SetDayPhase(PhaseHorsDistrict());
 
             switch (tab)
             {
@@ -388,7 +394,7 @@ namespace MafiaCleanCity.Shell
                 Debug.LogWarning($"[AppShell] district {districtId} : payload absent " +
                                  $"(code={tenant.LastErrorCode}) — repli déclaré affiché.");
                 tenant.Render(new DistrictInteriorDto { day_phase = "UNAVAILABLE" });
-                TopBar.SetDayPhase(null);
+                TopBar.SetDayPhase(PhaseHorsDistrict());   // F14 : le district n'a rien rendu — la phase de session
                 yield break;
             }
             tenant.Render(tenant.LastFetch);
