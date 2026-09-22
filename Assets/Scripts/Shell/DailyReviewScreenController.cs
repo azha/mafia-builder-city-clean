@@ -56,6 +56,8 @@ namespace MafiaCleanCity.Shell
         private RectTransform rowsRoot;
         private TextMeshProUGUI emptyStateText;   // le titre de la plaque du matin (⑯-2)
         private GameObject plaqueVide;
+        private RevueDuJourDecor decor;          // ⑯-7 la scène, le dégradé, le zinc
+        private GameObject tabourets;            // ⑯-7 v4-1, les trois tabourets vides
         private TextMeshProUGUI plaqueSurtitre;
         private TextMeshProUGUI registreCompte;
         private GameObject tamponRoot;
@@ -207,6 +209,8 @@ namespace MafiaCleanCity.Shell
         public bool PlaqueDuMatinPresente => plaqueVide != null && plaqueVide.activeSelf;
         public TextMeshProUGUI PlaqueDuMatinSurtitre => plaqueSurtitre;
         public TextMeshProUGUI PlaqueDuMatinTitre => emptyStateText;
+        public RevueDuJourDecor Decor => decor;
+        public bool TabouretsPresents => tabourets != null && tabourets.activeSelf;
 
         public IEnumerator ValidateFlag(string flagId)
         {
@@ -319,6 +323,8 @@ namespace MafiaCleanCity.Shell
                 RenderedEmptyState = true;
                 RenderedCardCount = 0;
                 plaqueVide.SetActive(true);
+                tabourets.SetActive(true);
+                decor.AppliquerEtat(vide: true);
                 // « Personne au comptoir » — trois tabourets vides, le registre et son tampon. Le
                 // texte est la scène, pas un état d'erreur : c'est une bonne nouvelle, pas un vide
                 // technique. Le compte des routines est porté par le REGISTRE, et le tampon offre le
@@ -333,6 +339,8 @@ namespace MafiaCleanCity.Shell
 
             RenderedEmptyState = false;
             plaqueVide.SetActive(false);
+            tabourets.SetActive(false);
+            decor.AppliquerEtat(vide: false);
             RenderedCardCount = cards.Length;
             foreach (FlagCardDto card in cards) AddRow(card);
             foreach (var v in verdicts) PeindreVerdict(v.Key, v.Value);
@@ -844,9 +852,16 @@ namespace MafiaCleanCity.Shell
             rvlg.childForceExpandHeight = false;
             rowsRoot = (RectTransform)rowsGo.transform;
 
+            // ⑯-7 — v4-1 : les tabourets vides sont au comptoir, AU-DESSUS de la plaque (ordre du `.comptoir`).
+            tabourets = RevueDuJourDecor.ConstruireTabourets(transform);
+            tabourets.SetActive(false);
             BuildPlaqueDuMatin();
             BuildRegistre();
             BuildTampon();
+
+            // ⑯-7 — le décor se pose EN DERNIER mais passe PREMIER enfant (`SetAsFirstSibling`) : il est
+            // dessiné sous tout le comptoir, et hors de la mise en page (`ignoreLayout`).
+            decor = RevueDuJourDecor.Construire(transform);
         }
 
         /// <summary>⑯-2 — LA PLAQUE DU MATIN (cadre v4-1, « personne au comptoir »). La version
