@@ -100,3 +100,33 @@ ouvrir_sa_main`, `.suggere_appui_long_sa_main`, `.autre_issue`, `.autres_issues`
 ## Dette 24 → 0 (2026-09-23, pile reconstruite sur 83b4f291)
 Instantané versionné `string_table-83b4f291.ts` : 1059 clés ; `sites-libelle.py` : 455 sites à littéral dans 34 fichiers, **0 clé non
 servie**. `DetteDatee` est vide : la garde des locataires est un zéro strict. Reste hors garde : les 4 panneaux du chrome.
+
+## Correction : la dette n'est pas 0, elle est de 26 — mesurée par la garde (rejeu 2026-09-23 01:34, pile 83b4f291)
+Le « 24 → 0 » précédent venait du compte STATIQUE, qui est une borne basse (il ne voit que les littéraux passés tels quels à une
+aide). La garde, sur le vrai rendu, a rougi sur 26 clés non servies, toutes antérieures (aucune nouvelle) — 4 écrans :
+- `appro.titre.la_commande_est_arrivee (ChaineDApproScreenController)`
+- `appro.sous_titre.le_stock_est_reconstitue_vous_pouvez_commander_a_nouveau (ChaineDApproScreenController)`
+- `appro.bloc.a_quoi_ca_sert (ChaineDApproScreenController)`
+- `appro.bloc.ce_qu_il_en_reste (ChaineDApproScreenController)`
+- `appro.bloc.le_prix (ChaineDApproScreenController)`
+- `appro.bloc.le_fournisseur (ChaineDApproScreenController)`
+- `appro.bloc.des_maillons_existent_mais_cet_ecran_ne_sait_pas_encore_les_afficher (ChaineDApproScreenController)`
+- `distribution.titre.ce_qui_est_sur_la_route (DistributionScreenController)`
+- `distribution.sous_titre.un_coursier_est_parti_voila_le_chemin_qu_il_prend (DistributionScreenController)`
+- `distribution.bloc.d_ou_ca_part (DistributionScreenController)`
+- `distribution.bloc.ou_ca_va (DistributionScreenController)`
+- `distribution.bloc.le_chemin (DistributionScreenController)`
+- `distribution.bloc.a_traverser (DistributionScreenController)`
+- `distribution.bloc.cette_route (DistributionScreenController)`
+- `distribution.bloc.il_est_parti_a_la_nuit_ca_serpente_mais_c_est_la_seule_qui_evite_le_pont_du_threnny (DistributionScreenController)`
+- `filiere.bloc.chaque_etape_rend_l_argent_un_peu_plus_propre_que_la_precedente_seule_la_derniere_credite_le_portefeuille_tant_qu_il_n_y_a_pas_de_sortie_il_n_y_a_pas_d_argent_seulement_une_file_d_attente (FiliereScreenController)`
+- `loi.bouton.mettre_sous_retention (LoiScreenController)`
+- `loi.bloc.commis_d_office (LoiScreenController)`
+- `loi.badge.en_place (LoiScreenController)`
+- `loi.bloc.gratuit_il_fait_ce_qu_il_peut (LoiScreenController)`
+- `loi.bloc.un_cabinet (LoiScreenController)`
+- `loi.badge.disponible (LoiScreenController)`
+- `loi.bloc.ca_coute_il_connait_les_juges (LoiScreenController)`
+- `loi.bloc.la_filiere (LoiScreenController)`
+- `loi.badge.a_vos_risques (LoiScreenController)`
+- `loi.bloc.ca_coute_cher_et_ca_peut_se_retourner (LoiScreenController)`

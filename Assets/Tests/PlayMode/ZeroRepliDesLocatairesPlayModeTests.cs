@@ -33,11 +33,40 @@ namespace MafiaCleanCity.Operational.Tests
         private GameObject shellGo;
         private AppShell shell;
 
-        /// <summary>DETTE DATÉE : les clés que le client demande et que le back ne sert pas. Ouverte le 2026-09-23 à 24 clés
-        /// (table de 40128b53) ; **24 → 0** le même jour contre la pile reconstruite sur 83b4f291 (1059 clés, 455 sites à
-        /// littéral tous servis — `Tools/juge-donnees/i18n/sites-libelle-83b4f291.json`). Vide, la garde est un ZÉRO STRICT :
-        /// tout repli observé rougit. Elle ne se rallonge que par décision nommée, datée, avec la table qui la mesure.</summary>
-        private static readonly HashSet<string> DetteDatee = new HashSet<string>();
+        /// <summary>DETTE DATÉE : les clés que le client demande et que le back ne sert pas — MESURÉE PAR CETTE GARDE, au rejeu du
+        /// 2026-09-23 01:34 contre la pile 83b4f291 (1059 clés) : 26 clés, sur 4 écrans (Appro 7, Distribution 8, Filière 1,
+        /// Loi 10). ⚠️ Le compte statique (`sites-libelle.py`) disait 0 : il ne voit que les littéraux passés TELS QUELS à une
+        /// aide ; ces 26 passent par des aides plus riches ou des chaînes composées — borne basse, le run a dit le vrai.
+        /// Elle ne s'allonge que par décision nommée ; elle RÉTRÉCIT quand le back sert (règle 2).</summary>
+        private static readonly HashSet<string> DetteDatee = new HashSet<string>
+        {
+            "appro.bloc.a_quoi_ca_sert",
+            "appro.bloc.ce_qu_il_en_reste",
+            "appro.bloc.des_maillons_existent_mais_cet_ecran_ne_sait_pas_encore_les_afficher",
+            "appro.bloc.le_fournisseur",
+            "appro.bloc.le_prix",
+            "appro.sous_titre.le_stock_est_reconstitue_vous_pouvez_commander_a_nouveau",
+            "appro.titre.la_commande_est_arrivee",
+            "distribution.bloc.a_traverser",
+            "distribution.bloc.cette_route",
+            "distribution.bloc.d_ou_ca_part",
+            "distribution.bloc.il_est_parti_a_la_nuit_ca_serpente_mais_c_est_la_seule_qui_evite_le_pont_du_threnny",
+            "distribution.bloc.le_chemin",
+            "distribution.bloc.ou_ca_va",
+            "distribution.sous_titre.un_coursier_est_parti_voila_le_chemin_qu_il_prend",
+            "distribution.titre.ce_qui_est_sur_la_route",
+            "filiere.bloc.chaque_etape_rend_l_argent_un_peu_plus_propre_que_la_precedente_seule_la_derniere_credite_le_portefeuille_tant_qu_il_n_y_a_pas_de_sortie_il_n_y_a_pas_d_argent_seulement_une_file_d_attente",
+            "loi.badge.a_vos_risques",
+            "loi.badge.disponible",
+            "loi.badge.en_place",
+            "loi.bloc.ca_coute_cher_et_ca_peut_se_retourner",
+            "loi.bloc.ca_coute_il_connait_les_juges",
+            "loi.bloc.commis_d_office",
+            "loi.bloc.gratuit_il_fait_ce_qu_il_peut",
+            "loi.bloc.la_filiere",
+            "loi.bloc.un_cabinet",
+            "loi.bouton.mettre_sous_retention",
+        };
 
         /// <summary>Les locataires MESURÉS — écrits à la main (anti-tautologie), et leur couverture vérifiée par réflexion.</summary>
         private static readonly (string nom, Func<AppShell, MonoBehaviour> monter)[] Mesures =
