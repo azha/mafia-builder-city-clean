@@ -22,6 +22,13 @@ namespace MafiaCleanCity.I18nTests
     {
         private const string BaseUrl = "http://localhost";
 
+        // ⛔ LA PRÉCONDITION SE POSE AU SETUP, PAS SEULEMENT AU TEARDOWN (23/09). Le catalogue est un global STATIQUE :
+        //    la classe le rendait après chacun de ses tests, jamais AVANT le premier. Mesuré à la partie 1 du cumul
+        //    regroupé : `InspectionScreenPlayModeTests` (juste avant) laisse le bundle RÉEL chargé ; le premier cas de
+        //    `ArchetypeServi_…` (MUSCLE) trouvait donc la clé servie — « Gros bras » rendu, AUCUN repli, `DernierRepli`
+        //    null — et rougissait ; les deux cas suivants, après le TearDown, passaient. Un test qui dépend de l'état
+        //    laissé par la classe d'avant mesure la classe d'avant.
+        [SetUp] public void SetUp() { I18nCatalog.Oublier(); Libelle.RemettreLesCompteurs(); }
         [TearDown] public void TearDown() => I18nCatalog.Oublier();
 
         // ═══ 1. Le repli : la clé, visible — jamais un texte inventé ═════════════════════════
