@@ -41,10 +41,16 @@ import os, re, sys, collections
 
 RACINE_EXCLUE = ('Assets/Screenshots',)
 SERIALISES = ('.unity', '.prefab', '.asset', '.mat', '.controller', '.spriteatlas')
-# ⛔ Cliquet. Ce nombre est une DONNÉE mesurée le 2026-09-07, pas un objectif : il doit
+# ⛔ Cliquet. Ce nombre est une DONNÉE mesurée (510 le 2026-09-07, 506 le 2026-09-22 — voir sous la constante), pas un objectif : il doit
 #    DESCENDRE quand on monte de l'art, et il ne doit jamais monter sans qu'on le sache.
 #    Une épingle sur une donnée rougit à l'événement ; une prose datée ne rougit jamais.
-PLANCHER_2026_09_07 = 510
+PLANCHER_2026_09_22 = 506
+# ⬇ 510 → 506 le 2026-09-22 (cumul client), EXPLIQUÉ avant d'être bougé :
+#   · les 4 sortis sont icon_dispatcher_{nominal,backlogged,budget_cut,surge}_48.png — DÉPLACÉS sous
+#     `Assets/Art/Icons/Resources/DispatcherIcons/` par 6777293b (09-07 03:06, UNE heure après le plancher posé par e586e70b) ;
+#   · leur consommateur est réel : `DispatcherIcons` (FamilleDIcones "DispatcherIcons", "icon_dispatcher_", "_48", chemin CONSTRUIT
+#     — la forme M2 que la v2 ratait) appelé par `InspectionScreenController.cs:311` (⑮, le glyphe du régime du dispatcher) ;
+#   · ce n'est pas le compteur : l'outil ACTUEL rejoué sur l'arbre de e586e70b rend 510, et 0 nouvel orphelin n'est entré depuis.
 
 
 def guid(meta):
@@ -194,20 +200,20 @@ def main():
           f"(exclus : {', '.join(RACINE_EXCLUE)})\n")
     for c, v in sorted(cls.items(), key=lambda x: -x[1]):
         print(f"  {v:5d}  {c}")
-    print(f"\n  ⇒ SANS CONSOMMATEUR : {orph}  (plancher du 2026-09-07 : {PLANCHER_2026_09_07})")
+    print(f"\n  ⇒ SANS CONSOMMATEUR : {orph}  (plancher du 2026-09-22 : {PLANCHER_2026_09_22})")
     print("\n  par dossier :")
     for (c, d), l in sorted(det.items(), key=lambda x: -len(x[1])):
         if c.startswith(('ORPHELIN', 'M2?')):
             print(f"  {len(l):5d}  {d}")
     if '--verifier' in sys.argv:
-        if orph > PLANCHER_2026_09_07:
-            print(f"\n⛔ ROUGE : {orph} orphelins contre {PLANCHER_2026_09_07} au plancher — "
-                  f"{orph - PLANCHER_2026_09_07} PNG de plus sans lecteur. De l'art vient d'être "
+        if orph > PLANCHER_2026_09_22:
+            print(f"\n⛔ ROUGE : {orph} orphelins contre {PLANCHER_2026_09_22} au plancher — "
+                  f"{orph - PLANCHER_2026_09_22} PNG de plus sans lecteur. De l'art vient d'être "
                   "produit sans être branché, ou un consommateur vient de disparaître.")
             return 1
-        if orph < PLANCHER_2026_09_07:
-            print(f"\n✅ {PLANCHER_2026_09_07 - orph} de moins qu'au plancher — DESCENDRE "
-                  f"`PLANCHER_2026_09_07` à {orph} dans ce fichier, sinon le cliquet autorise "
+        if orph < PLANCHER_2026_09_22:
+            print(f"\n✅ {PLANCHER_2026_09_22 - orph} de moins qu'au plancher — DESCENDRE "
+                  f"`PLANCHER_2026_09_22` à {orph} dans ce fichier, sinon le cliquet autorise "
                   "silencieusement le retour en arrière.")
         else:
             print("\n✅ inchangé")

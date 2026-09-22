@@ -747,14 +747,14 @@ namespace MafiaCleanCity.Operational
         // interdit de les recycler ici sans mesure. Les accents sémantiques (danger/succès), eux,
         // sont explicitement documentés comme génériques (« Accents sémantiques (sévérité
         // mild/moderate/severe + CTA) ») : réutilisés tels quels. ═══════════════════════════════
-        private static readonly Color Creme = Hex("#eae0c8");
-        private static readonly Color CremeSecondaire = Hex("#b9ad92");
+        private static Color Creme => DesignTokens.Current.hudCreme;
+        private static Color CremeSecondaire => DesignTokens.Current.hudCremeSecondary;
         // ⚠️ ESTIMÉ VISUELLEMENT SUR LA MAQUETTE, NON ÉCHANTILLONNÉ AU PIXEL — aucun outil de
         // lecture de pixel n'était disponible cette passe. À corriger par une sonde dédiée (patron
         // `Tools/mesure-geometrie-*.py`) avant tout jugement `juge-visuel`. Voir
         // implementation-notes.md § Deviations.
-        private static readonly Color EncreSombre = Hex("#241804");
-        private static readonly Color Or = Hex("#d9ab4e");
+        private static Color EncreSombre => DesignTokens.Current.ficheCtaOrEncre;
+        private static Color Or => DesignTokens.Current.hudMoneyUnderlineGold;
         private static Color RougeMauvais => DesignTokens.Current.accentDanger;
         private static Color VertBon => DesignTokens.Current.accentSuccess;
 

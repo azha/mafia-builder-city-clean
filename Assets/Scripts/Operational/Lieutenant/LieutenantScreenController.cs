@@ -101,6 +101,51 @@ namespace MafiaCleanCity.Operational.Lieutenant
         /// ⚠️ Renvoie `false` s'il n'y a rien à faire défiler : l'appelant doit pouvoir distinguer
         /// « amené dans le cadre » de « il n'y avait pas de vue défilante », au lieu de croire que
         /// le geste a réussi parce qu'il n'a pas échoué.</summary>
+        /// <summary>Le dialogue de réaffectation (f1bcd5d3) — UNE source : l'écran le rend, la capture
+        /// `Capture_Famille_Reaffectation_1080x2400` le lit ICI pour vérifier que le texte RÉÉCRIT est rendu avant le PNG.</summary>
+        public const string PhraseConfirmationReaffectation =
+            "Confirmer la réaffectation ? Son ancienneté repart de zéro, et il lui faudra le temps de s'installer.";
+        public const string PrefixeInstallation = "Installation prévue : ";
+        public const string PrefixeAnciennete = "Ancienneté perdue : ";
+        public const string PrefixeRendement = "Rendement perdu : ";
+
+        /// <summary>Les lignes RÉELLEMENT rendues du bloc de confirmation de réaffectation (les TMP, pas un état).</summary>
+        public System.Collections.Generic.List<string> LignesDeReaffectationRendues => TextesRendusSous(reassignConfirm, "ReassignLine");
+        /// <summary>Les lignes RÉELLEMENT rendues du cadenas de l'éditeur de règles (a3404347).</summary>
+        public System.Collections.Generic.List<string> LignesDuCadenasRendues => TextesRendusSous(lockedTeaserRows, "Locked");
+
+        private static System.Collections.Generic.List<string> TextesRendusSous(Transform racine, string nom)
+        {
+            var textes = new System.Collections.Generic.List<string>();
+            if (racine == null) return textes;
+            foreach (TextMeshProUGUI t in racine.GetComponentsInChildren<TextMeshProUGUI>(false))
+                if (t.gameObject.name == nom && t.gameObject.activeInHierarchy) textes.Add(t.text);
+            return textes;
+        }
+
+        /// <summary>Amène le bloc de réaffectation, puis le cadenas, DANS LE CADRE — même leçon que `FaireDefilerVersEditeur`
+        /// ci-dessous : rendu n'est pas visible. `false` s'il n'y a rien à faire défiler ou pas de cible.</summary>
+        public bool FaireDefilerVersReaffectation() => FaireDefilerVers(reassignConfirm);
+        public bool FaireDefilerVersCadenas() => FaireDefilerVers(lockedTeaserRows);
+
+        private bool FaireDefilerVers(RectTransform cible)
+        {
+            ScrollRect sr = defilementFeuille;
+            if (sr == null || sr.content == null || cible == null) return false;
+            Canvas.ForceUpdateCanvases();
+            RectTransform contenu = sr.content;
+            RectTransform vue = sr.viewport != null ? sr.viewport : (RectTransform)sr.transform;
+            float course = contenu.rect.height - vue.rect.height;
+            if (course <= 0f) return false;
+            Vector3[] coins = new Vector3[4];
+            cible.GetWorldCorners(coins);
+            float hautCible = contenu.InverseTransformPoint(coins[1]).y;          // coin haut-gauche, repère du contenu
+            float depuisLeHaut = contenu.rect.yMax - hautCible - 24f;            // une marge au-dessus de la cible
+            sr.verticalNormalizedPosition = 1f - Mathf.Clamp01(depuisLeHaut / course);
+            Canvas.ForceUpdateCanvases();
+            return true;
+        }
+
         public bool FaireDefilerVersEditeur()
         {
             // Le champ, jamais une recherche : voir sa note à la construction.
@@ -2863,12 +2908,12 @@ namespace MafiaCleanCity.Operational.Lieutenant
                 return;
             }
 
-            AddReassignConfirmLine("Confirmer la réaffectation ? Son ancienneté repart de zéro, et il lui faudra le temps de s'installer.", TextPrimary);
+            AddReassignConfirmLine(PhraseConfirmationReaffectation, TextPrimary);
             // The PROJECTED settling (the move's disruption) — the CURRENT reassignment_disruption band, worded.
-            AddReassignConfirmLine($"Installation prévue : {DisruptionLabel(b.reassignment_disruption)}", DisruptionAccent(b.reassignment_disruption));
+            AddReassignConfirmLine(PrefixeInstallation + DisruptionLabel(b.reassignment_disruption), DisruptionAccent(b.reassignment_disruption));
             // What the move FORFEITS — the CURRENT tenure bucket + the yield bonus you'd lose (worded bands).
-            AddReassignConfirmLine($"Ancienneté perdue : {TenureBucketLabel(b.tenure_bucket)}", TenureBucketAccent(b.tenure_bucket));
-            AddReassignConfirmLine($"Rendement perdu : {EfficiencyBonusLabel(b.role_efficiency_bonus)}", EfficiencyBonusAccent(b.role_efficiency_bonus));
+            AddReassignConfirmLine(PrefixeAnciennete + TenureBucketLabel(b.tenure_bucket), TenureBucketAccent(b.tenure_bucket));
+            AddReassignConfirmLine(PrefixeRendement + EfficiencyBonusLabel(b.role_efficiency_bonus), EfficiencyBonusAccent(b.role_efficiency_bonus));
 
             // The Confirm / Cancel decision pair.
             AddActionButton(reassignConfirm, "confirmer_la_reaffectation", Lib("Confirmer la réaffectation"), () => StartCoroutine(ReassignChosen()));

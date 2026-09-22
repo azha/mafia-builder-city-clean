@@ -422,6 +422,19 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.AreEqual("ça serpente — plus long, plus discret", DistributionResolvers.TexteChemin("meandering"));
         }
 
+        /// <summary>⛔ UNE FALSIFIABLE PAR VALEUR SERVIE (22/09) : les trois `sinuosity_bucket` du back rendent chacune un texte NON
+        /// VIDE et DIFFÉRENT de la valeur brute. Avant : `gnarled` sortait brut — le client testait `tortuous`, une hypothèse.</summary>
+        [Test]
+        public void EcranDistributionR1b_ChaqueSinuositeServie_RendUnTexte()
+        {
+            foreach (string v in new[] { "direct", "meandering", "gnarled" })
+            {
+                string texte = DistributionResolvers.TexteChemin(v);
+                Assert.IsFalse(string.IsNullOrWhiteSpace(texte), $"« {v} » rend un texte vide");
+                Assert.AreNotEqual(v, texte, $"« {v} » sort BRUTE : aucune correspondance pour une valeur que le back sert");
+            }
+        }
+
         [Test]
         public void EcranDistributionR2_ResolveurChemin_ReplyGracieuxSurValeurNonObservee()
         {
@@ -475,8 +488,8 @@ namespace MafiaCleanCity.Operational.Tests
                 "'direct' (MESURÉE) doit rester un segment droit");
             Assert.IsTrue(DistributionResolvers.FormeChaineSerpente("meandering"),
                 "'meandering' (MESURÉE) doit serpenter");
-            Assert.IsTrue(DistributionResolvers.FormeChaineSerpente("tortuous"),
-                "hypothèse m-57, jamais observée — doit quand même serpenter (repli, pas d'exception)");
+            Assert.IsTrue(DistributionResolvers.FormeChaineSerpente("gnarled"),
+                "'gnarled' (3e cran du back, route-finder.service.ts:199) doit serpenter");
             Assert.IsTrue(DistributionResolvers.FormeChaineSerpente("bogus_valeur_inconnue"),
                 "domaine NON confirmé fermé — une valeur inconnue serpente plutôt que de " +
                 "prétendre être le cas simple confirmé");

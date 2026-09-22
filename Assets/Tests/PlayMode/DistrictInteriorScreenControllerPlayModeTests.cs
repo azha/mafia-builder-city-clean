@@ -128,5 +128,22 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.IsNotNull(diorama.LastFetch, "parsé via payload.data");
             Assert.AreEqual(4, diorama.LastFetch.buildings?.Length ?? -1, "starter kit J0 — scénario dimensionné");
         }
+
+        /// <summary>⛔ UNE FALSIFIABLE PAR VALEUR SERVIE (22/09) : les 12 membres du pgEnum `building_operational_type` (back, en
+        /// minuscules) rendent chacun un vrai libellé — NON VIDE, différent de la valeur brute ET de sa casse de titre (le repli).
+        /// Avant : cas en MAJUSCULES, 0/12 appariés, tous sortaient par le repli.</summary>
+        [Test]
+        public void LibellesBatiment_ChaqueTypeServi_RendUnLibelle()
+        {
+            foreach (string v in new[] { "front_shop", "cash_safehouse", "stash", "lab", "grow_house", "refinery", "press_house",
+                                         "distribution_hub", "office", "dealer_spot_front", "money_holding", "specialized_lab" })
+            {
+                string texte = MafiaCleanCity.CityMap.LibellesBatiment.Type(v);
+                Assert.IsFalse(string.IsNullOrWhiteSpace(texte), $"« {v} » rend un texte vide");
+                Assert.AreNotEqual(v, texte, $"« {v} » sort BRUT");
+                Assert.AreNotEqual(v.Replace('_', ' '), texte.ToLowerInvariant(),
+                    $"« {v} » sort par le REPLI (casse de titre) : aucune correspondance pour un membre que le back sert");
+            }
+        }
     }
 }

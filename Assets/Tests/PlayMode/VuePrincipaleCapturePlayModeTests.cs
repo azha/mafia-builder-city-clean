@@ -192,6 +192,8 @@ namespace MafiaCleanCity.Capture.Tests
         [Category("CaptureCarte")]
         public IEnumerator Capture_CarteDeVille_SousChromeV31()
         {
+            // AVANT TOUT (et avant le shell : il résout son identité à son démarrage) : sans la paire, rien ne s'écrit.
+            var (identiteAnnoncee, _) = MafiaCleanCity.Shell.Tests.CaptureSousShell.IdentiteDeCaptureOuEchoue("screen_2_carte_sous_chrome");
             // ⛔ LE PRÉAMBULE « signer un compte frais puis ouvrir sa session » EST PARTI AVEC
             //    `SetIdentity` — il n'avait de sens que pour LUI. Il ouvrait une session sur un
             //    compte que le shell n'utilise plus : une vérification de disponibilité du back
@@ -211,6 +213,9 @@ namespace MafiaCleanCity.Capture.Tests
             float t0 = Time.realtimeSinceStartup;
             while (string.IsNullOrEmpty(shell.Token) && Time.realtimeSinceStartup - t0 < 30f) yield return null;
             Assert.IsFalse(string.IsNullOrEmpty(shell.Token), "le shell doit avoir acquis sa session");
+            // garde d'EFFET (22/09, « toute planche porte la preuve de l'effet ») — `GET /v1/me` avec le jeton réellement utilisé,
+            // confronté à l'identité annoncée, AVANT tout PNG.
+            yield return MafiaCleanCity.Shell.Tests.CaptureSousShell.ShellConnecteOuEchoue(shell, identiteAnnoncee, "screen_2_carte_sous_chrome");
 
             // Re-tap (idempotent-ish remount) : items 0.2/0.3 ont fusionné Tab.Home/Tab.City en
             // Tab.Empire — c'est déjà l'onglet par défaut, ce second appel remonte un
@@ -316,6 +321,8 @@ namespace MafiaCleanCity.Capture.Tests
         [UnityTest]
         public IEnumerator Capture_VuePrincipale_Nuit()
         {
+            // AVANT TOUT (et avant le shell : il résout son identité à son démarrage) : sans la paire, rien ne s'écrit.
+            var (identiteAnnoncee, _) = MafiaCleanCity.Shell.Tests.CaptureSousShell.IdentiteDeCaptureOuEchoue("vue_principale_nuit");
             // ⛔ LE PRÉAMBULE « signer un compte frais puis ouvrir sa session » EST PARTI AVEC
             //    `SetIdentity` — il n'avait de sens que pour LUI. Il ouvrait une session sur un
             //    compte que le shell n'utilise plus : une vérification de disponibilité du back
@@ -335,6 +342,9 @@ namespace MafiaCleanCity.Capture.Tests
             float t0 = Time.realtimeSinceStartup;
             while (string.IsNullOrEmpty(shell.Token) && Time.realtimeSinceStartup - t0 < 30f) yield return null;
             Assert.IsFalse(string.IsNullOrEmpty(shell.Token), "le shell doit avoir acquis sa session");
+            // garde d'EFFET (22/09, « toute planche porte la preuve de l'effet ») — `GET /v1/me` avec le jeton réellement utilisé,
+            // confronté à l'identité annoncée, AVANT tout PNG.
+            yield return MafiaCleanCity.Shell.Tests.CaptureSousShell.ShellConnecteOuEchoue(shell, identiteAnnoncee, "vue_principale_nuit");
             for (int i = 0; i < 30; i++) yield return null;
 
             shell.EnterDistrict(16);
@@ -1429,6 +1439,8 @@ namespace MafiaCleanCity.Capture.Tests
         [Category("CaptureDetail")]
         public IEnumerator Capture_Detail_MainDeCartes_SousChrome()
         {
+            // AVANT TOUT (et avant le shell : il résout son identité à son démarrage) : sans la paire, rien ne s'écrit.
+            var (identiteAnnoncee, _) = MafiaCleanCity.Shell.Tests.CaptureSousShell.IdentiteDeCaptureOuEchoue("screen_5a_detail_main-de-cartes_sous_chrome");
             LogAssert.ignoreFailingMessages = true;
             shellGo = new GameObject("DetailShell");
             shell = shellGo.AddComponent<AppShell>();
@@ -1436,6 +1448,9 @@ namespace MafiaCleanCity.Capture.Tests
             float t0 = Time.realtimeSinceStartup;
             while (string.IsNullOrEmpty(shell.Token) && Time.realtimeSinceStartup - t0 < 30f) yield return null;
             Assert.IsFalse(string.IsNullOrEmpty(shell.Token), "le shell doit avoir sa session");
+            // garde d'EFFET (22/09, « toute planche porte la preuve de l'effet ») — `GET /v1/me` avec le jeton réellement utilisé,
+            // confronté à l'identité annoncée, AVANT tout PNG.
+            yield return MafiaCleanCity.Shell.Tests.CaptureSousShell.ShellConnecteOuEchoue(shell, identiteAnnoncee, "screen_5a_detail_main-de-cartes_sous_chrome");
             for (int i = 0; i < 30; i++) yield return null;
 
             var file = shell.MonterLocataireEnSurimpression<
@@ -1595,6 +1610,8 @@ namespace MafiaCleanCity.Capture.Tests
         [Category("CaptureReputation")]
         public IEnumerator Capture_EcranReputation_SousChrome()
         {
+            // AVANT TOUT (et avant le shell : il résout son identité à son démarrage) : sans la paire, rien ne s'écrit.
+            var (identiteAnnoncee, _) = MafiaCleanCity.Shell.Tests.CaptureSousShell.IdentiteDeCaptureOuEchoue("screen_b3_reputation_sous_chrome");
             // ⛔ LE PRÉAMBULE « signer un compte frais puis ouvrir sa session » EST PARTI AVEC
             //    `SetIdentity` — il n'avait de sens que pour LUI. Il ouvrait une session sur un
             //    compte que le shell n'utilise plus : une vérification de disponibilité du back
@@ -1614,6 +1631,9 @@ namespace MafiaCleanCity.Capture.Tests
             float t0 = Time.realtimeSinceStartup;
             while (string.IsNullOrEmpty(shell.Token) && Time.realtimeSinceStartup - t0 < 30f) yield return null;
             Assert.IsFalse(string.IsNullOrEmpty(shell.Token), "le shell doit avoir acquis sa session");
+            // garde d'EFFET (22/09, « toute planche porte la preuve de l'effet ») — `GET /v1/me` avec le jeton réellement utilisé,
+            // confronté à l'identité annoncée, AVANT tout PNG.
+            yield return MafiaCleanCity.Shell.Tests.CaptureSousShell.ShellConnecteOuEchoue(shell, identiteAnnoncee, "screen_b3_reputation_sous_chrome");
 
             // ⚠️ 2026-09-02 — ㊲ n'est plus à UN clic : `Tab.More` ouvre le MENU des destinations,
             // et ㊲ en est la première entrée. **Cette capture suit donc le chemin RÉEL du joueur** —
@@ -1709,6 +1729,8 @@ namespace MafiaCleanCity.Capture.Tests
         [Category("CaptureDossier")]
         public IEnumerator Capture_LeDossier_SousChrome()
         {
+            // AVANT TOUT (et avant le shell : il résout son identité à son démarrage) : sans la paire, rien ne s'écrit.
+            var (identiteAnnoncee, _) = MafiaCleanCity.Shell.Tests.CaptureSousShell.IdentiteDeCaptureOuEchoue("screen_b7_dossier_sous_chrome");
             // ⛔ LE PRÉAMBULE « signer un compte frais puis ouvrir sa session » EST PARTI AVEC
             //    `SetIdentity` — il n'avait de sens que pour LUI. Il ouvrait une session sur un
             //    compte que le shell n'utilise plus : une vérification de disponibilité du back
@@ -1728,6 +1750,9 @@ namespace MafiaCleanCity.Capture.Tests
             float t0 = Time.realtimeSinceStartup;
             while (string.IsNullOrEmpty(shell.Token) && Time.realtimeSinceStartup - t0 < 30f) yield return null;
             Assert.IsFalse(string.IsNullOrEmpty(shell.Token), "le shell doit avoir acquis sa session");
+            // garde d'EFFET (22/09, « toute planche porte la preuve de l'effet ») — `GET /v1/me` avec le jeton réellement utilisé,
+            // confronté à l'identité annoncée, AVANT tout PNG.
+            yield return MafiaCleanCity.Shell.Tests.CaptureSousShell.ShellConnecteOuEchoue(shell, identiteAnnoncee, "screen_b7_dossier_sous_chrome");
 
             shell.ActivateTab(AppShell.Tab.More);
             for (int i = 0; i < 90; i++) yield return null;
@@ -2032,6 +2057,8 @@ namespace MafiaCleanCity.Capture.Tests
         [Category("CaptureFiliere")]
         public IEnumerator Capture_LaFiliere_SousChrome()
         {
+            // AVANT TOUT (et avant le shell : il résout son identité à son démarrage) : sans la paire, rien ne s'écrit.
+            var (identiteAnnoncee, _) = MafiaCleanCity.Shell.Tests.CaptureSousShell.IdentiteDeCaptureOuEchoue("screen_c2_filiere_sous_chrome");
             // ⛔ LE PRÉAMBULE « signer un compte frais puis ouvrir sa session » EST PARTI AVEC
             //    `SetIdentity` — il n'avait de sens que pour LUI. Il ouvrait une session sur un
             //    compte que le shell n'utilise plus : une vérification de disponibilité du back
@@ -2051,6 +2078,9 @@ namespace MafiaCleanCity.Capture.Tests
             float t0 = Time.realtimeSinceStartup;
             while (string.IsNullOrEmpty(shell.Token) && Time.realtimeSinceStartup - t0 < 30f) yield return null;
             Assert.IsFalse(string.IsNullOrEmpty(shell.Token), "le shell doit avoir acquis sa session");
+            // garde d'EFFET (22/09, « toute planche porte la preuve de l'effet ») — `GET /v1/me` avec le jeton réellement utilisé,
+            // confronté à l'identité annoncée, AVANT tout PNG.
+            yield return MafiaCleanCity.Shell.Tests.CaptureSousShell.ShellConnecteOuEchoue(shell, identiteAnnoncee, "screen_c2_filiere_sous_chrome");
 
             shell.ActivateTab(AppShell.Tab.More);
             for (int i = 0; i < 90; i++) yield return null;
@@ -2282,6 +2312,8 @@ namespace MafiaCleanCity.Capture.Tests
         
         public IEnumerator Capture_EcranLieutenants_SousChromeV31()
         {
+            // AVANT TOUT (et avant le shell : il résout son identité à son démarrage) : sans la paire, rien ne s'écrit.
+            var (identiteAnnoncee, _) = MafiaCleanCity.Shell.Tests.CaptureSousShell.IdentiteDeCaptureOuEchoue("screen_lieutenants_sous_chrome");
             // ⛔ LE PRÉAMBULE « signer un compte frais puis ouvrir sa session » EST PARTI AVEC
             //    `SetIdentity` — il n'avait de sens que pour LUI. Il ouvrait une session sur un
             //    compte que le shell n'utilise plus : une vérification de disponibilité du back
@@ -2301,6 +2333,9 @@ namespace MafiaCleanCity.Capture.Tests
             float t0 = Time.realtimeSinceStartup;
             while (string.IsNullOrEmpty(shell.Token) && Time.realtimeSinceStartup - t0 < 30f) yield return null;
             Assert.IsFalse(string.IsNullOrEmpty(shell.Token), "le shell doit avoir acquis sa session");
+            // garde d'EFFET (22/09, « toute planche porte la preuve de l'effet ») — `GET /v1/me` avec le jeton réellement utilisé,
+            // confronté à l'identité annoncée, AVANT tout PNG.
+            yield return MafiaCleanCity.Shell.Tests.CaptureSousShell.ShellConnecteOuEchoue(shell, identiteAnnoncee, "screen_lieutenants_sous_chrome");
 
             shell.ActivateTab(AppShell.Tab.Org);
             for (int i = 0; i < 90; i++) yield return null;

@@ -270,6 +270,21 @@ namespace MafiaCleanCity.Operational.Tests
         // MÉTIER ICI — ajouter ici les tests de PARCOURS (signup → session/open → la route) et
         // les tests d'état (AppliquerEtat sur un corps fabriqué via RendrePourTest), patron ㊲
         // §§ 1/3/5 de ReputationScreenPlayModeTests.
-    
-}
+
+        /// <summary>⛔ UNE FALSIFIABLE PAR VALEUR SERVIE (22/09) : les cinq `phase_band` du back (`random-world.projection.service.ts:47`)
+        /// rendent chacune un texte NON VIDE et DIFFÉRENT de la valeur brute. Avant : `onset` et `receding` sortaient bruts — le client
+        /// testait `starting` et `settling`, que le back ne sert pas.</summary>
+        [Test]
+        public void ScreenC1_ChaquePhaseServie_RendUnTexte()
+        {
+            foreach (string v in new[] { "onset", "unfolding", "receding", "lingering", "permanent" })
+            {
+                string texte = JournalScreenController.PhaseEnMots(v);
+                Assert.IsFalse(string.IsNullOrWhiteSpace(texte), $"« {v} » rend un texte vide");
+                Assert.AreNotEqual(v, texte, $"« {v} » sort BRUTE : aucune correspondance pour une phase que le back sert");
+            }
+            Assert.AreEqual("settling", JournalScreenController.PhaseEnMots("settling"),
+                "« settling » n'est PAS une phase (c'est une récence) : il doit sortir brut, pas passer pour « ça retombe »");
+        }
+    }
 }

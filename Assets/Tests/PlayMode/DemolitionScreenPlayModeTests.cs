@@ -130,6 +130,9 @@ namespace MafiaCleanCity.Operational.Tests
             yield return auth.SignIn(identifiant, motDePasse,
                 t => token = t, e => erreurConnexion = e);
             Assert.IsNull(erreurConnexion, $"connexion au compte de capture échouée : {erreurConnexion}");
+            // garde d'EFFET (22/09, « toute planche porte la preuve de l'effet ») — `GET /v1/me` avec le jeton réellement utilisé,
+            // confronté à l'identité annoncée, AVANT tout PNG.
+            yield return MafiaCleanCity.Shell.Tests.CaptureSousShell.IdentiteConnecteeOuEchoue(token, identifiant, "ecran_demolition");
 
             var ecran = MonterEcran();
             // Laisser Start constater l'absence de jeton, puis déclencher exactement UN chargement.

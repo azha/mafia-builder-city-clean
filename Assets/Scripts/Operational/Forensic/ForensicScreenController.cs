@@ -469,7 +469,11 @@ namespace MafiaCleanCity.Operational
         /// valeurs nommées par le canon, et rend `Inconnu` pour tout le reste — jamais une
         /// gravité par défaut, qui donnerait à une bande jamais vue l'apparence d'une bande
         /// mesurée.</summary>
-        public enum Gravite { Inconnu = 0, Calme, Surveille, Criant }
+        public enum Gravite { Inconnu = 0, Calme, Surveille, Criant, Franchi }
+        // ⛔ `Franchi` N'EST PAS UNE GRAVITÉ DE PLUS (22/09, atelier ca69012c §4, cadre 143 : « Le dernier de chaque piste est un
+        //    événement, pas un cran de plus — ils sont venus · ça saute aux yeux · convoqué »). Le DERNIER cran de chaque piste —
+        //    `audited`, `glaring`, `subpoenaed` — dit que quelque chose A EU LIEU ; le cadre 132 les compte « franchies ». Les ranger
+        //    en « Criant » (glaring) ou les laisser « Inconnu » (audited, subpoenaed) était une FORME fausse, pas un mot manquant.
 
         public static Gravite NiveauDe(string bande)
         {
@@ -491,15 +495,20 @@ namespace MafiaCleanCity.Operational
                 case "quiet":    case "clean":    case "dormant":
                 case "clear":                                     return Gravite.Calme;
                 case "watched":  case "elevated": case "noticed":
-                case "faint":                                     return Gravite.Surveille;
+                case "faint":
+                // `flagged` : le 3e cran de la piste comptable, SOUS `audited` — un cran de surveillance (atelier ca69012c §4).
+                case "flagged":                                   return Gravite.Surveille;
                 // ⚠️ QUATRE CRANS POUR TROIS GRAVITÉS : l'échelle des rejets en a un de plus que
                 // l'échelle d'affichage, donc DEUX crans doivent partager une gravité. Le choix
                 // n'est pas neutre et il est écrit ici : `visible` monte en « Criant » plutôt que
                 // de rejoindre `faint` en « Surveillé ». Sur un écran d'affaires internes,
                 // sous-déclarer une exposition coûte plus cher que sur-alerter — c'est la même
                 // raison qui interdit de rabattre une bande INCONNUE sur « calme ».
-                case "glaring":  case "critical": case "exposed":
+                case "critical": case "exposed":
                 case "visible":                                   return Gravite.Criant;
+                // le DERNIER cran de chaque piste (back : AuditRiskBucket, EffluentVisibilityBucket, LifestyleAlarmBucket,
+                // `forensic.projection.service.ts:79/98/118`) — un événement, voir `Gravite.Franchi`
+                case "audited":  case "glaring":  case "subpoenaed": return Gravite.Franchi;
                 default: return Gravite.Inconnu;
             }
         }
@@ -552,6 +561,8 @@ namespace MafiaCleanCity.Operational
                 //      référence pour son RÔLE (de l'or à ce rang) sans en mesurer la VALEUR.
                 case Gravite.Surveille: return DesignTokens.Current.hudMoneyGold;
                 case Gravite.Criant:    return DesignTokens.Current.accentWarning;
+                // la couleur d'un événement n'est pas dessinée à part par la maquette : celle du cran le plus haut, dit ici
+                case Gravite.Franchi:   return DesignTokens.Current.accentWarning;
                 case Gravite.Inconnu:   return DesignTokens.Current.onSurfaceMuted;
                 default: throw new System.ArgumentOutOfRangeException(nameof(g), g,
                     "ForensicResolvers.CouleurPour : membre de Gravite non résolu.");
@@ -563,6 +574,19 @@ namespace MafiaCleanCity.Operational
         /// le mot du serveur plutôt qu'une paraphrase rassurante.</summary>
         public static string Phrase(string bande)
         {
+            // les valeurs qui ont LEUR mot dans la maquette ratifiée (série 6, cadres 132 et 143 — atelier ca69012c §4) passent
+            // AVANT la phrase de leur gravité : « un dossier est ouvert » n'est pas « on vous regarde », et un événement n'a pas
+            // de phrase de gravité. ⚠️ Casse de phrase, comme les trois phrases de gravité de cet écran (la maquette les écrit
+            // en minuscules dans une énumération « ils sont venus · ça saute aux yeux · convoqué »). `subpoenaed` rend « Convocation
+            // reçue », la variante neutre de l'atelier (32e29ab8, 10 §8), retenue par l'orchestrateur le 22/09 : c'est le joueur qui
+            // est convoqué, et la bande ne dit pas son genre — « Convoqué » le présumait. Clé : forensic.evenement.convocation_recue.
+            switch (string.IsNullOrEmpty(bande) ? "" : bande.Trim().ToLowerInvariant())
+            {
+                case "flagged":    return MafiaCleanCity.I18n.Libelle.De("forensic", "cran", "Un dossier est ouvert");
+                case "audited":    return MafiaCleanCity.I18n.Libelle.De("forensic", "evenement", "Ils sont venus");
+                case "glaring":    return MafiaCleanCity.I18n.Libelle.De("forensic", "evenement", "Ça saute aux yeux");
+                case "subpoenaed": return MafiaCleanCity.I18n.Libelle.De("forensic", "evenement", "Convocation reçue");
+            }
             switch (NiveauDe(bande))
             {
                 case Gravite.Calme:     return MafiaCleanCity.I18n.Libelle.De("forensic", "gravite", "Rien ne dépasse");

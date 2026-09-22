@@ -63,10 +63,13 @@ namespace MafiaCleanCity.Economy.Shop
         private const float K = 1280f / 300f;
         private static float Px(float cssPx) => cssPx * K;
 
-        private static readonly Color Creme = Hex("#eae0c8");
-        private static readonly Color Creme2 = Hex("#b9ad92");
-        private static readonly Color Or = Hex("#d9ab4e");
-        private static readonly Color Braise = Hex("#e0664a");
+        private static Color Creme => DesignTokens.Current.hudCreme;
+        private static Color Creme2 => DesignTokens.Current.hudCremeSecondary;
+        private static Color Or => DesignTokens.Current.hudMoneyUnderlineGold;
+        private static Color Braise => DesignTokens.Current.hudGaugeArcHot;
+        // `#d9ab4e40` — l'or du canon à l'opacité PROPRE à ce site (0x40) : la teinte suit la palette
+        // (TD-612), l'opacité reste un choix de composition du site, donc elle reste ici.
+        private static Color OrLisere { get { Color c = DesignTokens.Current.hudMoneyUnderlineGold; c.a = 0x40 / 255f; return c; } }
         private static readonly Color Eteint = new Color(1f, 1f, 1f, 0.18f);
 
         private static Color Hex(string h)
@@ -209,7 +212,7 @@ namespace MafiaCleanCity.Economy.Shop
             GameObject r = Bloc("Sku_" + s.sku_id, etageres, false, Px(4f));
             Image fond = r.AddComponent<Image>();
             fond.sprite = ProceduralUI.RoundedRectOutline((int)Px(12f), Px(1f),
-                possede ? Hex("#d9ab4e40") : Hex("#ffffff24"));
+                possede ? OrLisere : Hex("#ffffff24"));
             fond.type = Image.Type.Sliced;
             r.GetComponent<VerticalLayoutGroup>().padding =
                 new RectOffset((int)Px(10f), (int)Px(10f), (int)Px(8f), (int)Px(9f));
@@ -357,7 +360,7 @@ namespace MafiaCleanCity.Economy.Shop
             vc.childAlignment = TextAnchor.MiddleCenter;
             vc.padding = new RectOffset((int)Px(8f), (int)Px(8f), (int)Px(6f), (int)Px(7f));
             Image cf = comptoir.AddComponent<Image>();
-            cf.sprite = ProceduralUI.RoundedRectOutline((int)Px(10f), Px(1f), Hex("#d9ab4e40"));
+            cf.sprite = ProceduralUI.RoundedRectOutline((int)Px(10f), Px(1f), OrLisere);
             cf.type = Image.Type.Sliced;
             soldeTexte = Texte(comptoir.transform, "Solde", "— jetons", Px(14f), Or,
                                DesignTokens.Current.hudSerifFont, TextAlignmentOptions.Center);

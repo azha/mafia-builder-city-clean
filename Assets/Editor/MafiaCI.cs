@@ -109,17 +109,13 @@ public static class MafiaCI
     //   qui n'existe pas ; (2) sa suite doit-elle tourner sous le juge ? une capture, non.
     //   La première est un compte, la seconde une décision — les confondre laisse passer les deux
     //   sortes d'erreur.
-    // ⛔⛔ `EcranDistribution` RETIRÉE AVANT D'ÊTRE POUSSÉE — DEUXIÈME FOIS QUE CE CONTRÔLE PAIE
-    // DANS LA JOURNÉE. Elle est arrivée inscrite par la branche du chantier C, sans avoir jamais
-    // été exécutée. Lancée avant de pousser :
-    //   FAIL DistributionScreenPlayModeTests.EcranDistributionC1_CapturerPourLeJugeVisuel_DeuxResolutions
-    //     — « capture 1080x1920 entièrement UNIFORME — l'écran n'a rien rendu hors de son propre fond »
-    // La pousser aurait rendu le juge ROUGE pour les cinq sessions, sur un défaut qui n'est pas
-    // le leur. (Le matin, le même contrôle avait intercepté `HUDv31`, qui fait planter l'éditeur.)
-    // ⇒ Elle revient ici quand ㉘ rend quelque chose — c'est au chantier C de le dire, pas à moi
-    //   de le supposer. Le défaut est signalé, pas corrigé : l'écran n'est pas de mon périmètre.
+    // ✅ `EcranDistribution` INSCRITE (2026-09-22) — ses 20 tests sont des parcours, des états et des résolveurs, AUCUNE capture :
+    //   la capture C1 qui la faisait tomber (image uniforme, 03/09) a été RETIRÉE par 6f4a57a3, et la planche de ㉘ est
+    //   `planche_la_distribution_1080x2400.png`, produite par `PhotoChantierC` sous la garde d'effet. Verte SEULE avant
+    //   inscription : `passed=20 failed=0 declares=20 comptes=20`, catégories RÉELLEMENT exécutées = [EcranDistribution], sans
+    //   paire d'identité (run du 22/09 23:29). Aucun test n'exige la paire : elle entre dans la PARTIE 1 du gate client.
     // ⚠️ `ScreenC2` et `FiliereSonde` sont inscrites, elles, parce qu'elles ont tourné VERTES dans
-    // ce même run (28 passés / 1 échec, l'échec étant le seul ci-dessus). *Le même run tranche
+    // ce même run (28 passés / 1 échec — celui de la capture C1 de ㉘, retirée depuis). *Le même run tranche
     // dans les deux sens : il inscrit ce qui passe et refuse ce qui tombe.*
     // ⛔⛔ `CaptureJournal` / `CaptureFiliere` / `CaptureDossier` NON INSCRITES — elles passent
     // SEULES et tombent EN GROUPE, et je n'ai pas su nommer le coupable. Les quatre mesures, dans
@@ -177,6 +173,8 @@ public static class MafiaCI
         // tort — « un compte frais ne possède rien » — pas l'écran : la planque est donnée à
         // l'arrivée. Le compte ci-dessus est celui du run qui a suivi la correction.
         "Inspection",
+        // Réinscrite le 2026-09-22 — verte seule avant inscription (20/20), voir la note au-dessus du tableau.
+        "EcranDistribution",
     };
     // ⚠️ UNION AU MERGE (3e fois sur cette ligne le 2026-09-03) — et la règle est
     // toujours la même : on unit ce qui est PORTÉ, jamais les deux listes. Une entrée

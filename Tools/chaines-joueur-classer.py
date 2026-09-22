@@ -196,6 +196,12 @@ SOURCE = [
  (N, "Une affaire naît d'une descente — rien ici n'en crée.", 1, "㉛ note de l'état vide (atelier, ebf97d1e) — `LoiScreenController.NoteAffaires`, lue par EcranLoiE1"),
  (N, "Friction", 4, "chrome, nom de barre — `OrgVitalsPanelController.NomFriction` ; les 3 autres littéraux qui le contiennent sont des noms de méthode de ㉝ (`DemolitionResolvers.LireFriction…`, `PhraseDeFriction`, `CouleurDeFriction`) : 3 ⇒ la barre a perdu son nom"),
  (N, "Tension", 1, "chrome, nom de barre (8166447a) — `OrgVitalsPanelController.NomTension`, lu par CharpenteAccueilPanneaux…C2"),
+ # 22/09 (captures des sous-vues de ⑥) — quatre textes du dialogue de réaffectation sortis du champ de l'extracteur par leur constante :
+ # population 1140 → 1136, exactement ces quatre (comparaison avant/après).
+ (N, "Confirmer la réaffectation ? Son ancienneté repart de zéro", 1, "⑥ dialogue de réaffectation (f1bcd5d3) — `LieutenantScreenController.PhraseConfirmationReaffectation`, lue par Capture_Famille_Reaffectation"),
+ (N, "Installation prévue : ", 1, "⑥ réaffectation — `PrefixeInstallation`"),
+ (N, "Ancienneté perdue : ", 1, "⑥ réaffectation — `PrefixeAnciennete`"),
+ (N, "Rendement perdu : ", 1, "⑥ réaffectation — `PrefixeRendement`"),
  (L, "Repair underway", 0, "② message d'action de `RunAction` (:384), anglais HORS lot atelier (aucune copie livrée) — signalé ; n'est plus le témoin positif (remplacé par « pas encore relevé », ③) · lot D t2 22/09, ② RunAction (1→0)"),
  (B, "GET /v1/world/districts indisponible",       0, "CLOS lot C 22/09 (㉚:197) — sous-titre de panne via `DerniereErreur` (:612) ; déplacé de VERDICTS où il mesurait 0 par construction"),
  (B, "aucun des 18 districts ne porte de bâtiment", 0, "CLOS lot C 22/09 (㉚:228) — même chemin ; remplacé par l'état réel lu dans me/buildings"),

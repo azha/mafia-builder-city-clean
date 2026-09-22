@@ -51,9 +51,9 @@ namespace MafiaCleanCity.Account.Settings
         private const float K = 1280f / 300f;
         private static float Px(float cssPx) => cssPx * K;
 
-        private static readonly Color Creme = Hex("#eae0c8");
-        private static readonly Color Creme2 = Hex("#b9ad92");
-        private static readonly Color Or = Hex("#d9ab4e");
+        private static Color Creme => DesignTokens.Current.hudCreme;
+        private static Color Creme2 => DesignTokens.Current.hudCremeSecondary;
+        private static Color Or => DesignTokens.Current.hudMoneyUnderlineGold;
         private static readonly Color Eteint = new Color(1f, 1f, 1f, 0.18f);
 
         private static Color Hex(string h)

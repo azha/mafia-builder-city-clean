@@ -448,26 +448,26 @@ namespace MafiaCleanCity.Operational.Tests
             Debug.Log($"[LieutenantE2E] full loop OK — bands archetype={b.archetype} mode={b.mode} rules={b.rule_count_band}");
         }
 
-        /// <summary>Le libellé attendu pour un état — copie ASSUMÉE de `OpStateLabel`, le
-        /// producteur que la ligne d'état emploie réellement (`:2579`/`:2591`).
-        /// ⚠️ C'est une TROISIÈME copie de la correspondance, et je l'écris en le sachant :
-        /// `OpStateLabel` est `private static`, donc inatteignable depuis ce test. Le choix est
-        /// entre une copie NOMMÉE comme telle, et une assertion sur `FamilleLabels.Etat` qui
-        /// viserait le MAUVAIS producteur — j'ai fait cette erreur sur le `mode` vingt minutes
-        /// plus tôt et le test est parti rouge en accusant l'écran.
-        /// ⇒ Elle disparaît le jour où TD-611 est fermée : un producteur unique et PUBLIC rend
-        ///   cette copie inutile. Tant qu'il y en a deux et qu'ils divergent, un test qui ne
-        ///   nomme pas le sien ment sur ce qu'il mesure.</summary>
-        private static string OpStateLabelAttendu(string s)
+        /// <summary>⛔ LE REPLI DE `FamilleLabels.Etat` EST ÉPINGLÉ ICI, parce que le test E2E ci-dessous ne
+        /// peut pas le voir. Il lisait jadis une COPIE du résolveur (`OpStateLabelAttendu`, écrite quand
+        /// `OpStateLabel` était privé — TD-611) ; TD-611 fermée, l'écran n'emploie plus que `Etat`, et la
+        /// copie avait divergé sur son `default` : elle demandait `famille.opstate.etat_inconnu` (clé que
+        /// le back ne sert pas), la production rend la casse de titre, sans clé. *Un test qui recopie la
+        /// fonction qu'il teste ne teste que sa copie* — et le parcours E2E ne sert que des bandes NOMMÉES
+        /// (ACTIVE, PAUSED), donc il ne passe jamais par le `default` : c'est ce test-ci qui le tient.
+        /// Rouge si le `default` change : un mot inventé, une clé demandée, ou « — » perdu pour l'absence.</summary>
+        [Test]
+        public void Etat_UneBandeInconnueSortEnCasseDeTitre_SansDemanderDeCle()
         {
-            switch (s)
-            {
-                case "SETTLING": return MafiaCleanCity.I18n.Libelle.De("famille", "opstate", "Prend ses marques");
-                case "ACTIVE":   return MafiaCleanCity.I18n.Libelle.De("famille", "opstate", "Actif");
-                case "PAUSED":   return MafiaCleanCity.I18n.Libelle.De("famille", "opstate", "En pause");
-                case "IDLE":     return MafiaCleanCity.I18n.Libelle.De("famille", "opstate", "Au repos");
-                default:         return MafiaCleanCity.I18n.Libelle.De("famille", "opstate", "État inconnu");
-            }
+            MafiaCleanCity.I18n.Libelle.RemettreLesCompteurs();
+            Assert.AreEqual("Retired", FamilleLabels.Etat("RETIRED"),
+                "une 5ᵉ bande doit se VOIR, lisible et brute — pas un mot qui la maquille");
+            Assert.AreEqual("On leave", FamilleLabels.Etat("ON_LEAVE"), "les `_` deviennent des espaces");
+            Assert.AreEqual("—", FamilleLabels.Etat(null), "l'absence de bande est « — », pas une chaîne vide");
+            Assert.AreEqual(0, MafiaCleanCity.I18n.Libelle.NbAppels,
+                "le repli ne demande AUCUNE clé au catalogue (dernière demandée : « " +
+                MafiaCleanCity.I18n.Libelle.DernierRepli + " ») : une clé inventée sur le repli serait " +
+                "une demande que le back ne sert pas");
         }
 
         // (2) DELEGATED STATUS (the proof): the delegated op_state_band tracks the ATTACHED rules — ACTIVE (the COOK
@@ -556,7 +556,7 @@ namespace MafiaCleanCity.Operational.Tests
                     "libellé, et le joueur lit un identifiant de serveur.");
             // Et la bande servie DOIT avoir produit un libellé quelque part — sinon « aucun code
             // brut » serait vrai simplement parce que RIEN n'est rendu sur l'état.
-            Assert.IsTrue(texts.Any(x => x == OpStateLabelAttendu(controller.CurrentBands.op_state_band)),
+            Assert.IsTrue(texts.Any(x => x == FamilleLabels.Etat(controller.CurrentBands.op_state_band)),   // le producteur de l'écran, pas une copie
                 $"l'état servi est « {controller.CurrentBands.op_state_band} » et aucun texte de " +
                 "l'écran ne porte le libellé correspondant : la valeur n'a pas atteint le rendu.");
 
