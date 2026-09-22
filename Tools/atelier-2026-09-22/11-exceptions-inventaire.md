@@ -306,3 +306,18 @@ Vérifié : `python3 Tools/atelier-2026-09-22/verifier-en-egal-fr.py <ce fichier
 - « waiting for your orders », « Teach them » : sans pronom genré, la carte pouvant être celle d'une lieutenante.
 - ⚠️ `exception_detail.bloc.resolu` et `exception_detail.bloc.issue` vont ensemble à l'écran (« Résolu ✓ · Résultat : … ») : voir §3.7
   pour le libellé qui remplace « Problème : ».
+
+---
+
+## 3.9 ⑨-4 — l'en des 3 clés neuves de CLIENT-2 (`d8a01aff`, 2026-09-23)
+
+Littéraux lus dans `ExceptionQueueController.cs` à `d8a01aff` (arbre F), clés dérivées par `Libelle.De("exceptions", "bloc", …)` (`:1132-1133`).
+Le tiret et les guillemets autour de l'adresse sont composés par le code (`"« " + Lib("Patron") + " — " + t + " »"`, `:583`) : seul le mot est une clé.
+
+| clé | fr (le littéral du client) | en | site |
+|---|---|---|---|
+| `exceptions.bloc.patron` | Patron | Boss | `:583`, l'adresse devant la réplique d'un lieutenant (cadre 14) |
+| `exceptions.bloc.toute_la_ville` | toute la ville | citywide | `:556`, le lieu quand c'est la ville qui parle (cadre 17) |
+| `exceptions.bloc.au_batiment_touche` | au bâtiment touché | at the building that was hit | `:557`, le lieu quand une issue vise un bâtiment (cadre 14) |
+
+Mêmes mots que le §3.3 (« Boss — ») et le §3.5 (« · citywide », « at the building that was hit ») : une traduction par mot.
