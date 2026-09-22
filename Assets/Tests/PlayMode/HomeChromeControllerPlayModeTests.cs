@@ -41,8 +41,11 @@ namespace MafiaCleanCity.Shell.Tests
 
             chrome.SetCompressionGlance(new CompressionGlanceDto { stress_bucket = "calm", week_state = "none", forced = false });
             Assert.IsFalse(chrome.BannerActive);
-            Assert.IsTrue(chrome.RenderedTexts.Any(t => t == "No banner"),
-                "the INACTIVE state is a NAMED value ('No banner'), never merely 'nothing rendered'");
+            // Atelier ④ (2026-09-22) : l'état inactif n'a PAS de texte — « pas de bandeau, pas de texte ».
+            // Les deux polarités restent assertées : le drapeau est faux ET aucun texte de chaufferie
+            // ne subsiste (un bandeau permanent rougirait ici).
+            Assert.IsFalse(chrome.RenderedTexts.Any(t => t.Contains("chaufferie")),
+                "l'état INACTIF ne porte aucun texte de bandeau (atelier ④ : « pas de bandeau, pas de texte »)");
         }
 
         // C7-F2 (les 5 états) — chacun atteint et asserté PAR SA VALEUR. Cible : compte d'états

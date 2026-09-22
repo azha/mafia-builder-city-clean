@@ -67,7 +67,7 @@ namespace MafiaCleanCity.Shell
             // état vide NOMMÉ". Un commentaire de production affirmait le contraire
             // (`AppShell.cs`, branche d'échec : "chacun rend son état vide NOMMÉ… jamais atteint et
             // blanc") — vrai désormais pour les 4 panneaux, plus seulement 3.
-            RenderHeatDeclaredUnavailable("not requested yet");
+            RenderHeatDeclaredUnavailable("pas encore demandée");
             RenderCohesionDeclaredUnavailable();
         }
 
@@ -101,7 +101,7 @@ namespace MafiaCleanCity.Shell
                 // B1 — un échec de fetch doit AUSSI porter un état nommé, jamais laisser le
                 // "pending" posé au build devenir un mensonge silencieux (une requête qui a déjà
                 // échoué n'est plus "en attente").
-                RenderHeatDeclaredUnavailable("no answer");
+                RenderHeatDeclaredUnavailable("pas de réponse");
             }
         }
 
@@ -151,7 +151,7 @@ namespace MafiaCleanCity.Shell
         private void RenderHeat()
         {
             HeatDeclaredUnavailable = false;
-            RenderBar(heatText, "Heat", HeatBucketRendered, HeatLabel(HeatBucketRendered));
+            RenderBar(heatText, "Chaleur", HeatBucketRendered, HeatLabel(HeatBucketRendered));
         }
         private void RenderFriction()
         {
@@ -159,7 +159,7 @@ namespace MafiaCleanCity.Shell
         }
         private void RenderStress()
         {
-            RenderBar(stressText, "Stress", StressBucketRendered, StressLabel(StressBucketRendered));
+            RenderBar(stressText, "Tension", StressBucketRendered, StressLabel(StressBucketRendered));
         }
 
         private void RenderBar(TextMeshProUGUI text, string name, string bucketValue, string label)
@@ -189,7 +189,7 @@ namespace MafiaCleanCity.Shell
         private void RenderHeatDeclaredUnavailable(string raison)
         {
             HeatDeclaredUnavailable = true;
-            heatText.text = $"Heat: Unavailable ({raison})";
+            heatText.text = $"Chaleur : — ({raison})";
             RebuildTrackedTexts();
         }
 

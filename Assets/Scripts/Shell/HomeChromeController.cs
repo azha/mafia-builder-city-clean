@@ -129,13 +129,13 @@ namespace MafiaCleanCity.Shell
 
         private void RenderBanner()
         {
-            bannerText.text = BannerActive ? $"Compression week: {BannerWeekStateRendered}" : "No banner";
+            bannerText.text = BannerActive ? $"La chaufferie — {BannerWeekStateRendered}" : "";
             RebuildTracked();
         }
 
         private void RenderPressure()
         {
-            pressureText.text = $"Pressure: {PressureLabel(PressureBandRendered)}";
+            pressureText.text = $"Pression : {PressureLabel(PressureBandRendered)}";
             RebuildTracked();
         }
 
