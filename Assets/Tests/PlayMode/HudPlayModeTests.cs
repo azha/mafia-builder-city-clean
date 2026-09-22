@@ -642,7 +642,14 @@ namespace MafiaCleanCity.Shell.Tests
         //   fichier qu'elle surveillait déjà, là où un contrôle par ENSEMBLE DE FICHIERS seul serait
         //   resté vert (le fichier était déjà dedans). C'est exactement pourquoi le TOTAL est gardé
         //   en plus de l'ensemble : les deux ferment des angles morts différents.
-        private const int ExpectedSeverityTokenTotal = 40;
+        // RE-AMENDÉ NOMMÉMENT 40 → 41 (2026-09-23) : `Operational/Forensic/ForensicScreenController.cs:565` (déjà sur
+        // l'allowlist, l'ENSEMBLE ne change pas) gagne UN accès à `accentWarning` — `case Gravite.Franchi`, ajouté par
+        // ae661b46 (㊴). Raison : le dernier cran de chaque piste (audited, glaring, subpoenaed) est un ÉVÉNEMENT, plus une
+        // gravité ; la maquette ne lui dessine pas de couleur propre, il prend celle du cran le plus haut (`Criant`, même
+        // token), et c'est écrit au site. Vu rouge par la partie 1 du cumul regroupé (23/09, 41 contre 40) — mesuré par
+        // `git grep -c` entre l'arbre vert c0790484 et HEAD, puis `git log -S` sur ce fichier.
+        // ★ Troisième fois : l'occurrence a été ajoutée par MOI, dans un lot dont la garde n'était pas au créneau.
+        private const int ExpectedSeverityTokenTotal = 41;
 
         // ── motif 2 — littéraux de bucket (ferme l'angle mort du motif 1, IMPORTANT-2) ──────
         private static readonly string[] BucketLiterals = { "\"COLD\"", "\"WARM\"", "\"HOT\"", "\"BURNING\"" };
