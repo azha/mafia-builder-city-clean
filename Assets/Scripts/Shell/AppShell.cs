@@ -1749,6 +1749,22 @@ namespace MafiaCleanCity.Shell
             le.flexibleHeight = 0f;
         }
 
+        private const float TabDockIconeCss = 20f;      // `.dockb .rond img{width:20px;height:20px}`
+        private const float TabDockIconeTeinte = 0.78f; // `filter:brightness(0) invert(.78)` — sRGB, voir AddTabButton
+
+        /// <summary>Le chemin `Resources` de l'icône d'un onglet du dock, `null` quand l'onglet n'en a pas (Filière :
+        /// en attente du choix de l'user). Public pour la falsifiable ; les chemins sont ÉCRITS, jamais construits.</summary>
+        public static string IconeDuDock(Tab tab)
+        {
+            switch (tab)
+            {
+                case Tab.Empire: return "DockIcons/dock_empire_64";
+                case Tab.Org:    return "DockIcons/dock_famille_64";
+                case Tab.More:   return "DockIcons/dock_plus_64";
+                default:         return null;   // Tab.Pipeline (Filière) : pas d'icône tant que la variante n'est pas choisie
+            }
+        }
+
         private void AddTabButton(Tab tab, string label)
         {
             GameObject btn = new GameObject($"Tab_{tab}", typeof(RectTransform));
@@ -1828,6 +1844,38 @@ namespace MafiaCleanCity.Shell
             joncImg.sprite = ProceduralUI.Ring(128, 128f * (Px(1f) / rondPx), jonc);
             joncImg.color = Color.white;
             joncImg.raycastTarget = false;
+
+            // ── L'ICÔNE (`.dockb .rond img{width:20px;height:20px;filter:brightness(0) invert(.78)}`) ──────────
+            // F13 du juge r1 de ⑯ : les ronds étaient VIDES. Art de l'atelier (f9e939af, rastérisé depuis le SVG,
+            // bbox ≤ 1 px), 64 px ≈ Px(20) = 65 : quasi 1:1. `brightness(0)` JETTE la couleur de la source — seule
+            // la forme compte — donc les fichiers sont la source en BLANC, alpha intact (provenance et dérivation :
+            // Tools/juge-donnees/dock/provenance-icones-2026-09-23.md), et `invert(.78)` est la teinte : 0,78 sRGB = 199. Projet en linéaire, sans
+            // `vertexColorAlwaysGammaSpace` : Unity convertit lui-même la couleur de sommet en linéaire, et l'alpha
+            // de ces icônes est BINAIRE (aucun pixel à mélanger) — la valeur sRGB est donc la bonne, la linéariser
+            // à la main la convertirait deux fois.
+            // ⛔ FILIÈRE N'A PAS D'ICÔNE, EXPRÈS : le canon n'en a pas (son 3ᵉ bouton est « Marché »), l'user choisit
+            //    la variante sur la planche. Un sprite PAR DÉFAUT (le carré blanc d'une Image sans sprite) serait pire
+            //    qu'un rond vide : aucun enfant n'est créé. Un chemin nommé mais introuvable se DIT, il ne se remplit pas.
+            string cheminIcone = IconeDuDock(tab);
+            if (cheminIcone != null)
+            {
+                Sprite icone = Resources.Load<Sprite>(cheminIcone);
+                if (icone == null)
+                    Debug.LogWarning($"[DOCK] icône « {cheminIcone} » introuvable — le rond reste vide, sans sprite par défaut.");
+                else
+                {
+                    GameObject iconeGo = new GameObject("Icone", typeof(RectTransform));
+                    iconeGo.transform.SetParent(rondGo.transform, false);
+                    RectTransform iconeRt = (RectTransform)iconeGo.transform;
+                    iconeRt.anchorMin = iconeRt.anchorMax = iconeRt.pivot = new Vector2(0.5f, 0.5f);
+                    iconeRt.sizeDelta = new Vector2(Px(TabDockIconeCss), Px(TabDockIconeCss));
+                    Image iconeImg = iconeGo.AddComponent<Image>();
+                    iconeImg.sprite = icone;
+                    iconeImg.preserveAspect = true;
+                    iconeImg.color = new Color(TabDockIconeTeinte, TabDockIconeTeinte, TabDockIconeTeinte, 1f);
+                    iconeImg.raycastTarget = false;
+                }
+            }
 
             // ── L'INDICATEUR D'ACTIF (`.dockb .pointe`) ─────────────────────────────────────
             // `width:14px;height:2px;background:var(--laiton);bottom:-4px` — un TIRET sous le rond,
