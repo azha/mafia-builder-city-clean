@@ -61,7 +61,7 @@ Le cadre 23 dessine la bande du quartier : `Les Bassins | rive nord · le port �
 | :889 | Repair (insufficient cash) | Réparer — pas assez d'argent |
 | :909 / :913 | Upgrade lab tier / … (insufficient cash) | Agrandir le labo / Agrandir le labo — pas assez d'argent |
 | :935 / :939 | Upgrade hub tier / … | Agrandir le relais / … — pas assez d'argent *(㉚·50 « le relais du milieu »)* |
-| :961 / :965 | Upgrade holding tier / … | Agrandir la caisse / … — pas assez d'argent *(enseignes `money_holding` : Change, Crédit, Caisse)* |
+| :961 / :965 | Upgrade holding tier / … | Agrandir la banque / … — pas assez d'argent *(corrigé le 2026-09-22 : j'avais écrit « la caisse », qui est la caisse du dealer — voir d4)* |
 | :976 | Order Pyralin | Commander du pyralin *(㉚·48)* |
 | :977 | Start Cook | Lancer une cuisson *(㉞·85)* |
 | :984 | Start Ash Cook | Lancer une cuisson d'ash |
@@ -87,7 +87,7 @@ Le cadre 23 dessine la bande du quartier : `Les Bassins | rive nord · le port �
 
 | fonction | valeurs EN (ordre du code) | FR ratifié |
 |---|---|---|
-| `TypeLabel` :1081-1091 | Lab · Stash · Front shop · Cash safehouse · Dealer-spot front · Specialized lab · Refinery · Grow house · Distribution hub · Money holding · Not converted | Labo · Réserve · Commerce-écran *(traduction maison, classe N)* · Planque · Coin de vente · Labo spécialisé · Raffinerie · Serre · Relais · Caisse · Pas aménagé |
+| `TypeLabel` :1081-1091 | Lab · Stash · Front shop · Cash safehouse · Dealer-spot front · Specialized lab · Refinery · Grow house · Distribution hub · Money holding · Not converted | Labo · Réserve · Commerce-écran *(traduction maison, classe N)* · Planque · Coin de vente · Labo spécialisé · Raffinerie · Serre · Relais · **Banque** *(corrigé le 2026-09-22 — j'avais écrit « Caisse », servi tel quel sous `building.type.money_holding` ; voir d4)* · Pas aménagé |
 | `SeizedLabel` | a heavy haul · a moderate haul · a light haul · nothing | une grosse prise · une prise moyenne · une petite prise · rien |
 | `RepairCostLabel` | major cost · moderate cost · minor cost · no cost | gros frais · frais moyens · petits frais · sans frais |
 | `LabTierLabel` :1250 | Basic · Refined · Master | Simple · Affiné · Maître |
@@ -217,7 +217,7 @@ Forme rendue : `{succès}` si la route répond 2xx, sinon `{échec} — {raison}
 | Cash injected / Inject unavailable | Argent injecté | Impossible d'injecter |
 | Lab tier upgraded / Upgrade unavailable | Labo agrandi | Impossible d'agrandir |
 | Hub tier upgraded / Upgrade unavailable | Relais agrandi | Impossible d'agrandir |
-| Holding tier upgraded / Upgrade unavailable | Caisse agrandie | Impossible d'agrandir |
+| Holding tier upgraded / Upgrade unavailable | Banque agrandie *(corrigé, d4)* | Impossible d'agrandir |
 | Appointment booked / Booking unavailable | Rendez-vous réservé | Impossible de réserver |
 | Appointment honored / Honor unavailable | Rendez-vous honoré | Impossible d'honorer le rendez-vous |
 | Planted / Plant unavailable | Planté | Impossible de planter |
@@ -226,7 +226,7 @@ Forme rendue : `{succès}` si la route répond 2xx, sinon `{échec} — {raison}
 | Cash deposited / Deposit unavailable | Argent déposé | Impossible de déposer |
 | Cash withdrawn / Withdraw unavailable | Argent retiré | Impossible de retirer |
 
-Mots pris à la maquette : « commander » (㉚·48), « lancer une cuisson » (㉞·85), « injecter » (㊵·140), « réservé » / « honoré » (㉕·92-93), « un coursier est parti » (㉘·55) ; « agrandir », « relais », « caisse » : annexe (a).
+Mots pris à la maquette : « commander » (㉚·48), « lancer une cuisson » (㉞·85), « injecter » (㊵·140), « réservé » / « honoré » (㉕·92-93), « un coursier est parti » (㉘·55) ; « agrandir », « relais » : annexe (a) ; « banque » : d4.
 
 **c2-bis. Ce qui suit le tiret — mesuré, et c'est un défaut de sens.** À `75ac1001`, `{raison}` est le `message` de DÉVELOPPEUR de l'enveloppe d'erreur du back (anglais), ou `request failed (N) …` quand il manque (`BuildingCardClient.cs`, `ReadableError`). Mes quatre formes françaises seraient donc suivies d'une phrase anglaise ou d'un code HTTP — la classe C que ① a déjà close (« la raison nommait un verbe HTTP »). **Règle** : `{échec} — {texte de user_facing_i18n_key}` quand le bundle connaît la clé (64 clés `error.*` servies en français, ex. `error.compression.budget_exhausted` « Il n'y a plus de place pour ceci aujourd'hui. Reprenez demain. ») ; sinon `{échec}.` seul. Jamais le `message`, jamais un code. Le câblage est au client ; la règle de texte est celle-ci.
 
@@ -306,7 +306,10 @@ Les valeurs qui vont avec :
 ### d4. ⛔ Le nom de `money_holding` — une collision que j'ai créée, mesurée puis tranchée
 
 **Le problème.** L'annexe b donnait « Caisse » au type `money_holding` (le bâtiment où l'argent PROPRE est déposé et rapporte), et
-l'annexe a « Agrandir la caisse ». Or « caisse » est partout ailleurs la caisse du DEALER.
+l'annexe a « Agrandir la caisse ». Or « caisse » est partout ailleurs la caisse du DEALER. ⛔ Et le mot est déjà SERVI : f7 l'a posé
+sous `building.type.money_holding` dans sa passe des bandes (mesuré par f7 à `ea215ce9`, :3163-3164) — si bien que le back donne à ce
+seul type **deux noms français** (« Coffre » par `district.type_batiment.coffre`, « Caisse » par `building.type.money_holding`) et deux
+anglais (« Vault », « Money holding »). Ma première table d4 ne citait que le premier ; corrigé ci-dessous.
 
 **Le critère** (orchestrateur, 2026-09-22) : un mot compris par un joueur sans glossaire, et qui n'a AUCUN autre emploi dans le corpus —
 mesuré sur les trois supports, contrôle positif d'abord. **Instrument** : `Tools/atelier-2026-09-22/mesurer-mot-money-holding.py`
@@ -315,7 +318,7 @@ mesuré sur les trois supports, contrôle positif d'abord. **Instrument** : `Too
 
 | mot | maquettes | client | back | ce que le mot désigne aujourd'hui |
 |---|---|---|---|---|
-| **caisse** (contrôle positif) | 30 | 12 | 10 | la caisse du DEALER (㉟ ×18, `Selling`, `CityProjectionsClient:139`, `DistrictInterior:2408`, back `:2042-2047`) · les caisses du labo (cadres 39-44, « Le labo ») · la caisse de la vitrine (㉓·99) · la caisse déclarée d'une façade (⑯·0) · **et `money_holding`** (② `:562`, `:972`, `:976`, `Distribution:232`) — ✅ l'instrument voit le corpus |
+| **caisse** (contrôle positif) | 30 | 12 | 10 | la caisse du DEALER (㉟ ×18, `Selling`, `CityProjectionsClient:139`, `DistrictInterior:2408`, back `:2042-2047`) · les caisses du labo (cadres 39-44, « Le labo ») · la caisse de la vitrine (㉓·99) · la caisse déclarée d'une façade (⑯·0) · **et `money_holding`** (② `:562`, `:972`, `:976`, `Distribution:232`, back `building.type.money_holding` :3164) — ✅ l'instrument voit le corpus |
 | **coffre** | 15 | 3 | 1 | le COMPTE du joueur (㉒/㉖ « VOTRE COFFRE », « FERMER LE COFFRE » ×7 ; ㉑·105-106 « ça se rouvre au Coffre ») · le MENU (⑱·20-21 « Le coffre ») · l'ancien ⑪ (`ecrans-brennar.html` c2 « Coffre — tableau de bord » ×3) · **et déjà `money_holding`** (③·24 « le labo, la planque, la façade, le coffre », `DistrictInteriorScreenController.cs:1735`, `LibellesBatiment.cs:30`, back `district.type_batiment.coffre` = « Coffre », ② `:2133`) |
 | coffre-fort | 3 | 0 | 0 | le menu ⑱ (« Le coffre-fort = compte · réglages · boutique ») |
 | officine | 0 | 0 | 0 | — |
@@ -334,7 +337,8 @@ mesuré sur les trois supports, contrôle positif d'abord. **Instrument** : `Too
 4. **EN : « vault »** — pas « bank », qui en anglais nomme déjà la RIVE sur la carte et dans le registre. « Vault » n'a qu'un emploi
    dans le corpus, et c'est ce type même : l'anglais ne change pas.
 
-**Les sites à changer ensemble** — dix, pas cinq : la mesure a trouvé le nom « Coffre » déjà posé sur ce type en plus de mes « caisse ».
+**Les sites à changer ensemble** — onze, pas cinq : la mesure a trouvé le nom « Coffre » déjà posé sur ce type, et f7 le « Caisse »
+qu'il avait servi depuis mon annexe b.
 
 | support · site | aujourd'hui | FR | EN |
 |---|---|---|---|
@@ -347,6 +351,7 @@ mesuré sur les trois supports, contrôle positif d'abord. **Instrument** : `Too
 | client `DistrictInteriorScreenController.cs:1735` | Coffre (clé `district.type_batiment.coffre`) | Banque (nouvelle clé dérivée `district.type_batiment.banque`) | Vault |
 | client `LibellesBatiment.cs:30` | Coffre | Banque | — (littéral sans clé) |
 | back `string_table.ts` `district.type_batiment.coffre` (FR `:2525` · EN `:922` à `ea215ce9`) | Coffre · Vault | nouvelle clé `district.type_batiment.banque` : Banque · Vault | — |
+| back `string_table.ts` `building.type.money_holding` (FR `:3163-3164` · EN `:1560-1561` à `ea215ce9`) | Caisse · Money holding | Banque · Vault — même clé, valeurs remplacées (tranché par l'orchestrateur, passe de f7) | — |
 | atelier `ecrans-brennar-6.html` ③·24 (légende « le labo, la planque, la façade, le coffre ») | le coffre | la banque | — |
 
 - `district.type_batiment.coffre` deviendra orpheline au changement du littéral (le slug change) : elle entrera dans la prochaine
