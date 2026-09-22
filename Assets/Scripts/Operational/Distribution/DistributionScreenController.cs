@@ -1042,16 +1042,17 @@ namespace MafiaCleanCity.Operational
     /// faire planter l'écran sur une vraie valeur back simplement non observée ici.</summary>
     public static class DistributionResolvers
     {
-        /// <summary>`sinuosity_bucket` — 2 valeurs MESURÉES (2026-09-03, 3 routes réelles) :
-        /// "direct" (1x), "meandering" (2x). "tortuous" est une HYPOTHÈSE DE CLÉ tirée de m-57
-        /// (jamais observée).</summary>
+        /// <summary>`sinuosity_bucket` — domaine du back `direct | meandering | gnarled` (`route-finder.service.ts:199`).
+        /// ⛔ Corrigé le 22/09 : le 3e cas testait "tortuous", une HYPOTHÈSE DE CLÉ tirée de m-57 que le back ne sert pas — `gnarled`
+        /// sortait BRUT (mesuré par CLIENT-2). Le libellé était déjà celui de la maquette (cadre 57, atelier ca69012c §4) : seule la
+        /// valeur du `case` était fausse.</summary>
         public static string TexteChemin(string bucket)
         {
             switch (bucket)
             {
                 case "direct": return "droit — le plus court";                    // m-54, MESURÉ
                 case "meandering": return "ça serpente — plus long, plus discret"; // m-55/56, MESURÉ
-                case "tortuous": return "tordu — beaucoup de détours";             // m-57 — hypothèse
+                case "gnarled": return "tordu — beaucoup de détours";              // m-57, cadre 57 — domaine du back
                 default: return string.IsNullOrEmpty(bucket) ? "chemin : état inconnu" : bucket;
             }
         }
@@ -1099,7 +1100,7 @@ namespace MafiaCleanCity.Operational
 
         /// <summary>`sinuosity_bucket` → le trait est-il une courbe qui SERPENTE ? Même valeur de
         /// domaine que `TexteChemin`. Seule "direct" (MESURÉE) est un segment DROIT confirmé ;
-        /// toute autre valeur — "meandering" (MESURÉE), "tortuous" (hypothèse m-57) ou une valeur
+        /// toute autre valeur — "meandering" (MESURÉE), "gnarled" (le 3e cran du back) ou une valeur
         /// inconnue — dessine une courbe : "direct" est le cas simple confirmé, pas la majorité
         /// du domaine, donc le repli va vers "ça serpente", pas vers "c'est droit".</summary>
         public static bool FormeChaineSerpente(string sinuosityBucket) => sinuosityBucket != "direct";
