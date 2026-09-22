@@ -68,7 +68,17 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.IsNull(err, $"signup a échoué : {err}");
             Assert.IsNotNull(jeton, "signup n'a pas rendu de jeton");
 
+            // ⛔⛔ LE DICTIONNAIRE AVANT LA CONSTRUCTION, ET LES COMPTEURS À ZÉRO ENTRE LES DEUX (23/09).
+            // L'hôte était ACTIF : `Start` → `BuildLayout` partait pendant que le bundle se chargeait, et les
+            // compteurs n'étaient remis à zéro qu'APRÈS — tout libellé bâti à la construction (les boutons, les
+            // titres de section : 41 sites / 35 clés de ⑥, mesurés) échappait donc à la garde, qui ne voyait que
+            // les ~60 appels rejoués par `RendreTousLesLibelles`. Trou nommé en posant les gestes de ㉔ : leurs
+            // trois clés n'étaient demandées par AUCUNE garde de catalogue.
+            // ⇒ Hôte INACTIF jusqu'au bundle chargé (c'est l'ordre du jeu : le shell amorce le catalogue avant de
+            //   monter un locataire — `CatalogueAvantMontagePlayModeTests`), compteurs à zéro, PUIS activation.
+            //   Rien ne change dans le code de l'écran ni dans son rendu en jeu : seul l'ordre de CE montage change.
             hote = new GameObject("EcranSignerLOrdre", typeof(RectTransform));
+            hote.SetActive(false);
             var ecran = hote.AddComponent<LieutenantScreenController>();
             ecran.SetToken(jeton);
             yield return ecran.AmorcerLeDictionnaire();
@@ -78,6 +88,9 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.IsTrue(I18nCatalog.Charge, "le bundle n'a pas été chargé — la mesure qui suit ne vaut rien");
             Assert.Greater(I18nCatalog.NbClesServies, 400,
                 $"le bundle ne sert que {I18nCatalog.NbClesServies} clés ; la pile dev n'a pas l'image à jour");
+            Libelle.RemettreLesCompteurs();
+            hote.SetActive(true);   // Start → BuildLayout (+ Boot : dictionnaire, roster) — COMPTÉS contre le bundle chargé
+            for (int i = 0; i < 10; i++) yield return null;
             apres(ecran);
         }
 
@@ -86,17 +99,22 @@ namespace MafiaCleanCity.Operational.Tests
         {
             LieutenantScreenController ecran = null;
             yield return MonterAvecBundleReel(e => ecran = e);
-            yield return null;
 
-            Libelle.RemettreLesCompteurs();
-            ecran.RendreTousLesLibelles();   // rejoue chaque résolveur de l'écran
+            // ⛔ LA CONSTRUCTION DOIT AVOIR ÉTÉ COMPTÉE — sinon la garde redevient celle d'avant (le rejeu seul), en
+            //    silence. Mesuré AVANT le rejeu : si `BuildLayout` avait tourné avant la remise à zéro, ce serait ~0.
+            int appelsConstruction = Libelle.NbAppels;
+            Assert.Greater(appelsConstruction, 30,
+                $"seulement {appelsConstruction} clés demandées par la CONSTRUCTION de l'écran — elle a tourné hors " +
+                "de la mesure, et les libellés bâtis (boutons, titres) échappent de nouveau à la garde");
+
+            ecran.RendreTousLesLibelles();   // rejoue chaque résolveur de l'écran — S'AJOUTE à la construction
             yield return null;
 
             // ⛔ PLANCHER ANTI-VACUITÉ D'ABORD. « 0 repli » est trivialement vrai sur un écran qui
             // n'a demandé AUCUNE clé — c'est l'état d'un écran qui ne s'est pas construit. La
             // garde de zéro ne vaut que couplée à un plancher d'APPELS.
-            Assert.Greater(Libelle.NbAppels, 30,
-                $"seulement {Libelle.NbAppels} clés demandées — l'écran n'a pas rejoué ses résolveurs, " +
+            Assert.Greater(Libelle.NbAppels - appelsConstruction, 30,
+                $"seulement {Libelle.NbAppels - appelsConstruction} clés demandées par le REJEU — l'écran n'a pas rejoué ses résolveurs, " +
                 "et l'assertion de zéro qui suit serait vraie À VIDE");
 
             Assert.AreEqual(0, Libelle.NbReplis,
