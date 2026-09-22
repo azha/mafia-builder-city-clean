@@ -44,8 +44,8 @@ PLAN = {
  'screen_c1':          ('㊳', 'r2',    [('CaptureJournal', ['screen_c1_journal_sous_chrome_1080x2400.png'], 'sous chrome'),
                                        ('PhotoScreenC1', ['screen_c1_1080x1920.png', 'screen_c1_1080x2400.png'], 'écran seul, deux résolutions')]),
  'screen_c6':          ('㊱', 'r2',    [('CaptureSousChrome', ['screen_c6_horizon_etat-vide_sous_chrome_1080x2400.png'], 'sous chrome (Capture_Horizon_SousChrome) — la catégorie produit AUSSI screen_2a_fiche_* et screen_5_* : surplus déclaré, non jugé ici'),
-                                       ('CaptureHorizon', ['screen_c6_horizon_etat-vide_1080x2400.png'], 'état vide, écran seul (ScreenC6C2)'),
-                                       ('— (aucune catégorie sûre)', ['screen_c6_1080x1920.png', 'screen_c6_1080x2400.png'], '⛔ ScreenC6C1 ne porte que la catégorie `Capture` nue — interdite (SIGSEGV Mesa, et elle emporte 14 catégories) ⇒ NON FOURNI ce tour ; dette : poser une catégorie spécifique sur ScreenC6C1')]),
+                                       ('CaptureHorizon', ['screen_c6_horizon_etat-vide_1080x2400.png'], "état vide, écran seul (ScreenC6C2) — ⚠️ signe EN DUR sur `operational_demo` (HorizonScreenPlayModeTests.cs:141) : identité par construction, aucune ligne [DemoIdentityResolver] ; comparable en valeur aux corps réels du 22/09 (même compte)"),
+                                       ('— (hors créneau)', ['screen_c6_1080x1920.png', 'screen_c6_1080x2400.png'], "ScreenC6C1 monte l'écran SANS jeton ni chargement : planche sans donnée servie, ne tranche aucun constat suspendu (RECAPTURE §5a) — NON FOURNI, et ce n'est pas un manque")]),
  'ecran-principal':    ('①', 'r10',   [('CaptureDistrict', ['screen_1_district_sous_chrome_1080x2400.png'], 'district sous chrome (planche photographiant operational_demo via le résolveur, cf. journal-recapture-district-2026-09-07.md)'),
                                        ('CaptureSousChrome', ['screen_2a_fiche_sous_chrome_1080x2400.png', 'screen_2a_fiche_sous_chrome_1080x1920.png'], 'la fiche sous chrome — surplus : screen_5_*, screen_c6_horizon_*')]),
 }
@@ -94,8 +94,10 @@ def preparer(r, sym, tour, captures, susp, fm, controle):
     refs = []
     if r['nominal'] and os.path.exists(os.path.join(cd.JV, dossier, ref_nom)):
         refs.append((ref_nom, f"rendu du cadre nominal (`{r['nominal'][0]}` #{idx_nominal} « {cadres.get(idx_nominal, ('?', '?'))[1]} »)" + (f" — {r['nominal_note']}" if r.get('nominal_note') else '')))
+    manquantes = []
     for fichier, pourquoi in r.get('extras', []):
-        refs.append((os.path.basename(fichier), pourquoi))
+        # ⛔ jamais de lien vers un PNG qui n'existe pas encore : un lien mort se lit « fichier introuvable » chez le juge
+        (refs if os.path.exists(os.path.join(cd.JV, fichier)) else manquantes).append((os.path.basename(fichier), pourquoi))
     if dossier == 'ecran-principal':
         refs.append(('hud-canon-1176.png', "le canon du HUD (`hud-brennar.html`, `.tel` de 392 CSS × 3 = 1176 px) — c'est LA référence de ① ; aucun cadre de série 4/6"))
     lignes_cadres = '\n'.join(f"  - #{i} (l.{cadres[i][0]}) — {cadres[i][1]}" + ('  ⇐ **cadre NOMINAL, rendu en référence**' if i == idx_nominal else '') for _, ixs in r['cadres'] for i in ixs if i in cadres)
@@ -111,7 +113,8 @@ def preparer(r, sym, tour, captures, susp, fm, controle):
     for canon in sorted(os.listdir(os.path.join(cd.JV, dossier))):
         if canon.endswith('-canon.png') or canon.endswith('-vide.png'):
             lien(f'../../{canon}', os.path.join(R, 'etats', canon))
-    ref_rows = '\n'.join(f"| `{n}` | {p} | 1080×2102 | ×3,6 | 300 CSS = 1080 px |" for n, p in refs) or '| — | aucune référence rendue pour cet écran (aucune maquette de série 4/6) | — | — | — |'
+    ref_rows = '\n'.join([f"| `{n}` | {p} | 1080×2102 | ×3,6 | 300 CSS = 1080 px |" for n, p in refs]
+                         + [f"| `{n}` | **NON RENDU au {DATE}** — {p} | — | — | — |" for n, p in manquantes]) or '| — | aucune référence rendue pour cet écran (aucune maquette de série 4/6) | — | — | — |'
     polices = '\n'.join(f"      {k:<18} →  {v}" for k, v in POLICES.items())
     dossier_md = f"""# Dossier du juge visuel — {sym} {f.get('nom', r['ctl'])} — {tour}-{sym if sym not in tour else ''} — {DATE}
 
@@ -167,7 +170,8 @@ def preparer(r, sym, tour, captures, susp, fm, controle):
 {capt_rows}
 
 - Protocole de planche : `RECAPTURE-2026-09-22.md` §2 (conteneur RECRÉÉ, horodatage de l'image lu PENDANT le run, empreinte à
-  deux propriétés avant/après, `MAFIA_CAPTURE_EXPECT_PLAYER` posée, sha256 + ligne d'identité ici).
+  deux propriétés avant/après, la paire du compte de capture exportée sous `MAFIA_CAPTURE_*` ET `MAFIA_DEMO_*` — le shell ne lit que
+  la seconde —, sha256 + ligne `[DemoIdentityResolver]` du journal ici ; `[IDENTITE-CAPTURE]` n'est PAS une preuve, §2.4).
 - **Corps réels comparables** : `{dossier}/corps-reels/` rejoués le 2026-09-22 sur la pile `03cf564c`, compte `operational_demo`
   (provenance dans chaque fichier). Comparables en VALEUR seulement si la capture est prise sur ce même compte — sinon, forme.
 

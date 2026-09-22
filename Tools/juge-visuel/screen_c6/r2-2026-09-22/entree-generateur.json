@@ -8,7 +8,7 @@
  "chemin": "Plus → L'HORIZON DES POSSIBLES",
  "prepare_le": "2026-09-22",
  "prepare_par": "atelier / DA — preparer-r2-2026-09-22.py",
- "client": "ba4d4e7b",
+ "client": "f0ac86c0",
  "atelier": "20d006d",
  "references": [
   [
@@ -55,15 +55,15 @@
    "fichiers": [
     "screen_c6_horizon_etat-vide_1080x2400.png"
    ],
-   "note": "état vide, écran seul (ScreenC6C2)"
+   "note": "état vide, écran seul (ScreenC6C2) — ⚠️ signe EN DUR sur `operational_demo` (HorizonScreenPlayModeTests.cs:141) : identité par construction, aucune ligne [DemoIdentityResolver] ; comparable en valeur aux corps réels du 22/09 (même compte)"
   },
   {
-   "categorie": "— (aucune catégorie sûre)",
+   "categorie": "— (hors créneau)",
    "fichiers": [
     "screen_c6_1080x1920.png",
     "screen_c6_1080x2400.png"
    ],
-   "note": "⛔ ScreenC6C1 ne porte que la catégorie `Capture` nue — interdite (SIGSEGV Mesa, et elle emporte 14 catégories) ⇒ NON FOURNI ce tour ; dette : poser une catégorie spécifique sur ScreenC6C1"
+   "note": "ScreenC6C1 monte l'écran SANS jeton ni chargement : planche sans donnée servie, ne tranche aucun constat suspendu (RECAPTURE §5a) — NON FOURNI, et ce n'est pas un manque"
   }
  ],
  "constats_suspendus": [

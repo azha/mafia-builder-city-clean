@@ -62,11 +62,12 @@
 | fichier attendu (copie dans ce dossier) | commande qui le produit | rôle / angle mort | état |
 |---|---|---|---|
 | `screen_c6_horizon_etat-vide_sous_chrome_1080x2400.png` | `MAFIA_CI_CATEGORIES=CaptureSousChrome` | sous chrome (Capture_Horizon_SousChrome) — la catégorie produit AUSSI screen_2a_fiche_* et screen_5_* : surplus déclaré, non jugé ici | **NON FOURNI** — à poser au créneau |
-| `screen_c6_horizon_etat-vide_1080x2400.png` | `MAFIA_CI_CATEGORIES=CaptureHorizon` | état vide, écran seul (ScreenC6C2) | **NON FOURNI** — à poser au créneau |
-| `screen_c6_1080x1920.png, screen_c6_1080x2400.png` | `MAFIA_CI_CATEGORIES=— (aucune catégorie sûre)` | ⛔ ScreenC6C1 ne porte que la catégorie `Capture` nue — interdite (SIGSEGV Mesa, et elle emporte 14 catégories) ⇒ NON FOURNI ce tour ; dette : poser une catégorie spécifique sur ScreenC6C1 | **NON FOURNI** — à poser au créneau |
+| `screen_c6_horizon_etat-vide_1080x2400.png` | `MAFIA_CI_CATEGORIES=CaptureHorizon` | état vide, écran seul (ScreenC6C2) — ⚠️ signe EN DUR sur `operational_demo` (HorizonScreenPlayModeTests.cs:141) : identité par construction, aucune ligne [DemoIdentityResolver] ; comparable en valeur aux corps réels du 22/09 (même compte) | **NON FOURNI** — à poser au créneau |
+| `screen_c6_1080x1920.png, screen_c6_1080x2400.png` | `MAFIA_CI_CATEGORIES=— (hors créneau)` | ScreenC6C1 monte l'écran SANS jeton ni chargement : planche sans donnée servie, ne tranche aucun constat suspendu (RECAPTURE §5a) — NON FOURNI, et ce n'est pas un manque | **NON FOURNI** — à poser au créneau |
 
 - Protocole de planche : `RECAPTURE-2026-09-22.md` §2 (conteneur RECRÉÉ, horodatage de l'image lu PENDANT le run, empreinte à
-  deux propriétés avant/après, `MAFIA_CAPTURE_EXPECT_PLAYER` posée, sha256 + ligne d'identité ici).
+  deux propriétés avant/après, la paire du compte de capture exportée sous `MAFIA_CAPTURE_*` ET `MAFIA_DEMO_*` — le shell ne lit que
+  la seconde —, sha256 + ligne `[DemoIdentityResolver]` du journal ici ; `[IDENTITE-CAPTURE]` n'est PAS une preuve, §2.4).
 - **Corps réels comparables** : `screen_c6/corps-reels/` rejoués le 2026-09-22 sur la pile `03cf564c`, compte `operational_demo`
   (provenance dans chaque fichier). Comparables en VALEUR seulement si la capture est prise sur ce même compte — sinon, forme.
 
@@ -117,4 +118,4 @@
   fichier `constats-a-rejuger` s'il existe (ce sont des périmètres, pas des jugements) ;
 - pour l'instant : toute capture.
 
-Préparé sur le client `ba4d4e7b` (branche `da/2026-09-22`), atelier `20d006d`.
+Préparé sur le client `f0ac86c0` (branche `da/2026-09-22`), atelier `20d006d`.

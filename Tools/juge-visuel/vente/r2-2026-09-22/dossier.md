@@ -34,6 +34,7 @@
 | fichier (dans ce dossier) | rôle | taille px | facteur | largeur CSS ↔ largeur écran |
 |---|---|---|---|---|
 | `reference-1080x2102.png` | rendu du cadre nominal (`ecrans-brennar-6.html` #107 « La vente — qui vend et ce qu'il y a dans la caisse ») | 1080×2102 | ×3,6 | 300 CSS = 1080 px |
+| `reference-ramasser-1080x2102.png` | **NON RENDU au 2026-09-22** — cadre 109 « Ramasser — nulle part où la porter », le cadre d'état homologue de la capture r1 (demandé par le juge r1, point 3) — À RENDRE après le gate du 2026-09-22 (rendre-references-2026-09-22.py) | — | — | — |
 | `etats/*-canon.png`, `etats/*-vide.png` (s'ils existent) | canons antérieurs (série 2, ×3,0) — témoins d'ÉTAT, jamais la référence | 900×1752 | ×3,0 | 300 CSS = 900 px |
 
 - **Source HTML/CSS** (aide de lecture, ne prime JAMAIS sur l'image) : `/home/erutheone/project/atelier3d-mafia/ecrans-brennar-6.html` (atelier `20d006d`).
@@ -69,7 +70,8 @@
 | `la_vente_1080x2400.png` | `MAFIA_CI_CATEGORIES=PhotoVente` | écran seul (LaVenteCapturePlayModeTests) | **NON FOURNI** — à poser au créneau |
 
 - Protocole de planche : `RECAPTURE-2026-09-22.md` §2 (conteneur RECRÉÉ, horodatage de l'image lu PENDANT le run, empreinte à
-  deux propriétés avant/après, `MAFIA_CAPTURE_EXPECT_PLAYER` posée, sha256 + ligne d'identité ici).
+  deux propriétés avant/après, la paire du compte de capture exportée sous `MAFIA_CAPTURE_*` ET `MAFIA_DEMO_*` — le shell ne lit que
+  la seconde —, sha256 + ligne `[DemoIdentityResolver]` du journal ici ; `[IDENTITE-CAPTURE]` n'est PAS une preuve, §2.4).
 - **Corps réels comparables** : `vente/corps-reels/` rejoués le 2026-09-22 sur la pile `03cf564c`, compte `operational_demo`
   (provenance dans chaque fichier). Comparables en VALEUR seulement si la capture est prise sur ce même compte — sinon, forme.
 
@@ -120,4 +122,4 @@
   fichier `constats-a-rejuger` s'il existe (ce sont des périmètres, pas des jugements) ;
 - pour l'instant : toute capture.
 
-Préparé sur le client `ba4d4e7b` (branche `da/2026-09-22`), atelier `20d006d`.
+Préparé sur le client `f0ac86c0` (branche `da/2026-09-22`), atelier `20d006d`.
