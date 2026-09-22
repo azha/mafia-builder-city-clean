@@ -36,9 +36,14 @@ namespace MafiaCleanCity.CityMap
     //          `MAFIA_DEMO_*` ou le défaut — une garde sur le PARAMÈTRE qui certifiait un effet que
     //          le code ne produisait pas. La règle vit ICI, une fois (`ResoudreIdentiteDeCapture`),
     //          et l'aide de capture annonce le résultat de CETTE règle, jamais la sienne.
-    //          ⚠️ Même exposition que le contournement du 22/09 (« exporter la paire sous les deux
-    //          noms ») : un run qui exporte `MAFIA_CAPTURE_*` fait signer TOUS les écrans
-    //          « operational » avec le compte de capture — c'est un run de capture, pas un gate.
+    //          ⛔ EN MODE CAPTURE SEULEMENT (corrigé le 2026-09-22, voie 1 de l'orchestrateur). Sans ce
+    //          bornage, une paire `MAFIA_CAPTURE_*` exportée faisait signer TOUS les écrans
+    //          « operational » avec le compte de capture GELÉ — y compris les suites fonctionnelles de
+    //          lieutenants, qui recrutent sur le compte connecté (mesuré : LieutenantScreenController
+    //          passe par ce résolveur). Le mode est posé par l'aide de capture
+    //          (`CaptureSousShell.IdentiteDeCaptureOuEchoue`, donc aussi `CapturerLocataire`), levé
+    //          par le TearDown de chaque classe de capture, et DÉCLARÉ au journal : « régime capture
+    //          ON / OFF ». Hors mode, la paire de capture n'existe pas pour ce résolveur.
     //      2b. `MAFIA_DEMO_*` (et `MAFIA_CITYMAP_*` pour la carte, que la capture ne touche jamais).
     //   3. Défaut `[SerializeField]` SÉRIALISÉ — le cas nominal, aucun appelant n'a d'opinion. Seule
     //      scène qui le sérialise : `Assets/Scenes/Boot.unity:416-417`, valeur = le défaut C#
@@ -148,6 +153,27 @@ namespace MafiaCleanCity.CityMap
         /// <summary>Une paire n'existe que COMPLÈTE : identifiant ET mot de passe, non blancs. Le même
         /// prédicat sert au shell (<see cref="Resolve"/>) et à l'annonce de la capture
         /// (<see cref="ResoudreIdentiteDeCapture"/>) — c'est ce qui garantit qu'ils ne divergent pas.</summary>
+        /// <summary>Le MODE CAPTURE : le rang 2a (paire `MAFIA_CAPTURE_*` → identité « operational ») ne
+        /// s'applique que tant qu'il est posé. Posé par l'aide de capture des tests, levé par leur
+        /// TearDown ; chaque bascule s'écrit au journal pour que le régime d'un run se lise, jamais ne
+        /// se suppose.</summary>
+        public static bool ModeCapture { get; private set; }
+
+        public static void EntrerModeCapture(string quoi)
+        {
+            if (ModeCapture) return;
+            ModeCapture = true;
+            Debug.Log($"[DemoIdentityResolver] régime capture ON ({quoi}) — une paire MAFIA_CAPTURE_* complète " +
+                      "devient l'identité operational jusqu'au TearDown de ce test");
+        }
+
+        public static void SortirModeCapture(string quoi)
+        {
+            if (!ModeCapture) return;
+            ModeCapture = false;
+            Debug.Log($"[DemoIdentityResolver] régime capture OFF ({quoi}) — la paire MAFIA_CAPTURE_* ne compte plus");
+        }
+
         public static bool PaireComplete(string identifiant, string motDePasse) =>
             !string.IsNullOrWhiteSpace(identifiant) && !string.IsNullOrWhiteSpace(motDePasse);
 
@@ -166,12 +192,12 @@ namespace MafiaCleanCity.CityMap
         /// que la précédence se teste avec des littéraux, sans écrire dans l'environnement partagé
         /// par les suites co-tenantes du même process.</summary>
         public static (string identifier, string password) ResoudreSansEnvironnement(
-            bool identiteOperationnelle, string idCapture, string mdpCapture,
+            bool identiteOperationnelle, bool modeCapture, string idCapture, string mdpCapture,
             string envIdentifier, string envPassword,
             string fallbackIdentifier, string fallbackPassword, bool allowEnvironmentOverride)
         {
             if (!allowEnvironmentOverride) return (fallbackIdentifier, fallbackPassword);
-            if (identiteOperationnelle && PaireComplete(idCapture, mdpCapture)) return (idCapture, mdpCapture);
+            if (identiteOperationnelle && modeCapture && PaireComplete(idCapture, mdpCapture)) return (idCapture, mdpCapture);
             bool identifierIsSet = !string.IsNullOrWhiteSpace(envIdentifier);
             bool passwordIsSet = !string.IsNullOrWhiteSpace(envPassword);
             return (identifierIsSet ? envIdentifier : fallbackIdentifier,
@@ -208,7 +234,7 @@ namespace MafiaCleanCity.CityMap
             string envPassword = Environment.GetEnvironmentVariable(passwordEnvVar);
             bool identifierIsSet = !string.IsNullOrWhiteSpace(envIdentifier);
             bool passwordIsSet = !string.IsNullOrWhiteSpace(envPassword);
-            if (!PaireComplete(idCapture, mdpCapture) && identifierIsSet != passwordIsSet)
+            if (!(ModeCapture && PaireComplete(idCapture, mdpCapture)) && identifierIsSet != passwordIsSet)
             {
                 // RONDE 4 (revue ⊥ ronde 3, I1) : paire à MOITIÉ posée — voir « CONCLUSION CORRIGÉE »
                 // en tête de fichier pour la direction dangereuse (mot de passe seul posé, identifiant
@@ -221,7 +247,7 @@ namespace MafiaCleanCity.CityMap
                     "en résultera.");
             }
             // UNE décision, pure et testée avec des littéraux — Resolve ne fait que lire l'environnement.
-            return ResoudreSansEnvironnement(operationnelle, idCapture, mdpCapture, envIdentifier, envPassword,
+            return ResoudreSansEnvironnement(operationnelle, ModeCapture, idCapture, mdpCapture, envIdentifier, envPassword,
                                              fallbackIdentifier, fallbackPassword, allowEnvironmentOverride: true);
         }
 
@@ -263,12 +289,15 @@ namespace MafiaCleanCity.CityMap
         private static string DescribeRegime(string identifierEnvVar, bool allowEnvironmentOverride)
         {
             if (!allowEnvironmentOverride) return "explicite";
-            if (identifierEnvVar == OperationalIdentifierEnvVar
+            bool paireDeCapture = identifierEnvVar == OperationalIdentifierEnvVar
                 && PaireComplete(Environment.GetEnvironmentVariable(CaptureIdentifierEnvVar),
-                                 Environment.GetEnvironmentVariable(CapturePasswordEnvVar)))
-                return "capture";
+                                 Environment.GetEnvironmentVariable(CapturePasswordEnvVar));
+            if (paireDeCapture && ModeCapture) return "capture";
             string env = Environment.GetEnvironmentVariable(identifierEnvVar);
-            return string.IsNullOrWhiteSpace(env) ? "défaut" : "env";
+            string regime = string.IsNullOrWhiteSpace(env) ? "défaut" : "env";
+            // hors mode, une paire de capture présente est IGNORÉE — et le journal le dit, pour qu'un run
+            // fonctionnel lancé avec la paire se voie au lieu de se supposer
+            return paireDeCapture ? regime + " (paire de capture présente, IGNORÉE hors mode capture)" : regime;
         }
     }
 }

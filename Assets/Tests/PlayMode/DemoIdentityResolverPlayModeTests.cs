@@ -983,9 +983,54 @@ namespace MafiaCleanCity.CityMap.Tests
         // d'environnement écrite) : ils comparent la règle que la capture ANNONCE à la décision que
         // le shell APPLIQUE, sur les mêmes entrées. Sur l'ancien code, le premier cas de la matrice
         // (capture complète + démo différente) rendait « cap » d'un côté et « demo » de l'autre.
-        private static string Shell(string ic, string mc, string id_, string md, bool operationnelle = true, bool autorise = true)
-            => DemoIdentityResolver.ResoudreSansEnvironnement(operationnelle, ic, mc, id_, md,
+        // `modeCapture` vaut vrai par défaut ici : les tests de cette section décrivent le rang 2a, qui n'existe qu'en mode
+        // capture depuis la voie 1 (22/09) ; le cas HORS mode est la falsifiable qui suit.
+        private static string Shell(string ic, string mc, string id_, string md, bool operationnelle = true, bool autorise = true,
+                                    bool modeCapture = true)
+            => DemoIdentityResolver.ResoudreSansEnvironnement(operationnelle, modeCapture, ic, mc, id_, md,
                    "defaut@x.test", "defaut-pw", autorise).identifier;
+
+        // ═══ 2026-09-22 (voie 1) — LE RANG 2a N'EXISTE QU'EN MODE CAPTURE ═══════════════════════════════════
+        // Mesuré : sans ce bornage, une paire de capture exportée faisait signer les suites FONCTIONNELLES de
+        // lieutenants avec le compte gelé, sur lequel elles recrutent. La falsifiable, pure (aucune variable
+        // d'environnement écrite) : hors mode, la paire ne change pas l'identité operational ; en mode, elle la prend.
+        [Test]
+        public void HorsModeCapture_UnePaireDeCaptureComplete_NeChangePasLIdentiteOperationnelle()
+        {
+            Assert.AreEqual("demo@x.test", Shell("cap@x.test", "cap-pw", "demo@x.test", "demo-pw", modeCapture: false),
+                "hors mode capture, la paire MAFIA_DEMO_* garde l'identité operational malgré une paire de capture complète");
+            Assert.AreEqual("defaut@x.test", Shell("cap@x.test", "cap-pw", null, null, modeCapture: false),
+                "hors mode capture et sans MAFIA_DEMO_*, c'est le défaut — jamais le compte de capture");
+            Assert.AreEqual("cap@x.test", Shell("cap@x.test", "cap-pw", "demo@x.test", "demo-pw", modeCapture: true),
+                "en mode capture, la paire de capture complète prend l'identité operational (contrôle positif)");
+            Assert.AreEqual("cap@x.test", Shell("cap@x.test", "cap-pw", null, null, modeCapture: true),
+                "en mode capture, même sans MAFIA_DEMO_* (capture.env ne porte plus que MAFIA_CAPTURE_*)");
+        }
+
+        [Test]
+        public void LeModeCapture_SePoseEtSeLeve_EtDeclareSonRegimeAuJournal()
+        {
+            bool avant = DemoIdentityResolver.ModeCapture;
+            try
+            {
+                DemoIdentityResolver.SortirModeCapture("falsifiable");
+                Assert.IsFalse(DemoIdentityResolver.ModeCapture, "levé, le mode capture doit être faux");
+                UnityEngine.TestTools.LogAssert.Expect(LogType.Log,
+                    new System.Text.RegularExpressions.Regex(@"\[DemoIdentityResolver\] régime capture ON \(falsifiable\)"));
+                DemoIdentityResolver.EntrerModeCapture("falsifiable");
+                Assert.IsTrue(DemoIdentityResolver.ModeCapture, "posé, le mode capture doit être vrai");
+                DemoIdentityResolver.EntrerModeCapture("falsifiable");   // idempotent : aucune seconde ligne ON attendue
+                UnityEngine.TestTools.LogAssert.Expect(LogType.Log,
+                    new System.Text.RegularExpressions.Regex(@"\[DemoIdentityResolver\] régime capture OFF \(falsifiable\)"));
+                DemoIdentityResolver.SortirModeCapture("falsifiable");
+                Assert.IsFalse(DemoIdentityResolver.ModeCapture, "levé de nouveau, le mode capture doit être faux");
+            }
+            finally
+            {
+                if (avant) DemoIdentityResolver.EntrerModeCapture("restauration");
+                else DemoIdentityResolver.SortirModeCapture("restauration");
+            }
+        }
 
         [Test]
         public void LAnnonceDeLaCapture_EstLIdentiteQueLeShellUtilisera_SurToutesLesEntrees()

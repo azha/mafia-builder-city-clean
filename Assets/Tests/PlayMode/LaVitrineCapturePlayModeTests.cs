@@ -25,6 +25,12 @@ namespace MafiaCleanCity.Shell.Tests
     [Category("PhotoVitrine")]
     public class LaVitrineCapturePlayModeTests
     {
+        /// <summary>Lève le MODE CAPTURE du résolveur en fin de test (voie 1, 22/09) : posé par
+        /// `IdentiteDeCaptureOuEchoue`, il ne doit jamais survivre au test qui l'a posé.</summary>
+        [TearDown]
+        public void LeverLeModeCapture() =>
+            MafiaCleanCity.CityMap.DemoIdentityResolver.SortirModeCapture(GetType().Name);
+
         private Scene sceneDeDemarrage;
 
         private IEnumerator ChargerLaSceneDeDemarrageDuBuild()

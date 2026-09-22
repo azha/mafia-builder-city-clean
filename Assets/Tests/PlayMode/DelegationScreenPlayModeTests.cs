@@ -28,6 +28,7 @@ namespace MafiaCleanCity.Operational.Tests
         [TearDown]
         public void TearDown()
         {
+            MafiaCleanCity.CityMap.DemoIdentityResolver.SortirModeCapture(GetType().Name);   // mode capture levé en fin de test (voie 1, 22/09)
             // ⛔ L'ÉTAT STATIQUE SE REND, SINON C'EST L'ORDRE DES VOISINS QUI DÉCIDE. Les suites
             // PlayMode de ce dépôt tournent SÉRIELLES dans UN processus : un `JetonDeStructure`
             // publié par un test survit à tous les suivants. Ce dépôt a déjà payé exactement ça

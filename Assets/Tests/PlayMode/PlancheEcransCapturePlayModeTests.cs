@@ -55,6 +55,12 @@ namespace MafiaCleanCity.Shell.Tests
     [Category("PhotoPlanche")]
     public class PlancheEcransCapturePlayModeTests
     {
+        /// <summary>Lève le MODE CAPTURE du résolveur en fin de test (voie 1, 22/09) : posé par
+        /// `IdentiteDeCaptureOuEchoue`, il ne doit jamais survivre au test qui l'a posé.</summary>
+        [TearDown]
+        public void LeverLeModeCapture() =>
+            MafiaCleanCity.CityMap.DemoIdentityResolver.SortirModeCapture(GetType().Name);
+
         private Scene sceneDeDemarrage;
 
         private IEnumerator ChargerLaSceneDeDemarrageDuBuild()
@@ -84,6 +90,9 @@ namespace MafiaCleanCity.Shell.Tests
         [UnityTest]
         public IEnumerator Capture_PlancheDesHuitEcrans_1080x2400()
         {
+            // AVANT le shell : son identité se résout à son démarrage, donc le mode capture doit déjà être posé —
+            // sinon il signerait hors mode et la garde d'effet de `CapturerLocataire` refuserait chaque planche.
+            MafiaCleanCity.Shell.Tests.CaptureSousShell.IdentiteDeCaptureOuEchoue("planche_huit_ecrans");
             yield return ChargerLaSceneDeDemarrageDuBuild();
             AppShell shell = SondeShellDansLaScene(sceneDeDemarrage);
             Assert.IsNotNull(shell, "aucun AppShell dans la scène de démarrage du build");

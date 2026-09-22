@@ -60,6 +60,7 @@ namespace MafiaCleanCity.Shell.Tests
         [UnityTearDown]
         public IEnumerator RendreLeMondeVide()
         {
+            MafiaCleanCity.CityMap.DemoIdentityResolver.SortirModeCapture(GetType().Name);   // mode capture levé en fin de test (voie 1, 22/09)
             Scene active = SceneManager.GetActiveScene();
             if (active.IsValid() && active.isLoaded)
                 foreach (GameObject r in active.GetRootGameObjects())
@@ -95,6 +96,9 @@ namespace MafiaCleanCity.Shell.Tests
         [UnityTest]
         public IEnumerator Capture_EditeurDeRegles_1080x2400()
         {
+            // AVANT le shell : son identité se résout à son démarrage, donc le mode capture doit déjà être posé —
+            // sinon il signerait hors mode et la garde d'effet de `CapturerLocataire` refuserait chaque planche.
+            MafiaCleanCity.Shell.Tests.CaptureSousShell.IdentiteDeCaptureOuEchoue("planche_editeur_de_regles");
             yield return ChargerLaSceneDeDemarrageDuBuild();
             AppShell shell = SondeShell(scene);
             Assert.IsNotNull(shell, "aucun AppShell dans la scène de démarrage");

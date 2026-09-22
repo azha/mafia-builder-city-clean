@@ -29,6 +29,7 @@ namespace MafiaCleanCity.Capture.Tests
         [TearDown]
         public void TearDown()
         {
+            MafiaCleanCity.CityMap.DemoIdentityResolver.SortirModeCapture(GetType().Name);   // mode capture levé en fin de test (voie 1, 22/09)
             if (shell != null && shell.ShellCanvas != null) Object.Destroy(shell.ShellCanvas.gameObject);
             if (shellGo != null) Object.Destroy(shellGo);
             LogAssert.ignoreFailingMessages = false;

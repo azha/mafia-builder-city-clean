@@ -63,6 +63,7 @@ namespace MafiaCleanCity.Operational.Tests
         [TearDown]
         public void TearDown()
         {
+            MafiaCleanCity.CityMap.DemoIdentityResolver.SortirModeCapture(GetType().Name);   // mode capture levé en fin de test (voie 1, 22/09)
             // ⚠️ La mise en page vit sous le Canvas, PAS sous hostGo : la détruire séparément.
             // Sans ça, deux « ReputationRoot » coexistent au test suivant et `GameObject.Find`
             // en rend un au hasard — une contamination qui rendrait les verdicts non

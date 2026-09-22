@@ -159,6 +159,9 @@ namespace MafiaCleanCity.Shell.Tests
                 "c'est arrivé trois fois le 2026-09-06. Exporter la paire du compte de capture, ou ne " +
                 "pas lancer les catégories de capture.");
             Debug.Log($"[IDENTITE-CAPTURE] {quoi} : régime {regime} — la capture signera avec « {id} »");
+            // le rang 2a du résolveur (la paire devient l'identité du SHELL) n'existe qu'en mode capture :
+            // posé ICI, levé par le TearDown de la classe de capture (voie 1, 22/09)
+            MafiaCleanCity.CityMap.DemoIdentityResolver.EntrerModeCapture(quoi);
             return (id, mdp);
         }
 
