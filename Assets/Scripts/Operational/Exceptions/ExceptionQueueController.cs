@@ -247,6 +247,8 @@ namespace MafiaCleanCity.Operational.Exceptions
             ClearRows();
 
             int n = Cards.Length;
+            // ⑨-2 — `.zinc.haut` (66 %) quand la file attend ; `.zinc.haut.vide` (52 %) quand personne (cadre 16).
+            if (decor != null) decor.AppliquerZinc(n == 0 ? ZincVide : ZincFile, DosFile);
             ligneAmbiance.text = n == 0
                 ? "Personne ne fait la queue — le comptoir est vide"
                 : (n == 1 ? "Un seul attend vos ordres" : EnLettres(n) + " attendent vos ordres")
@@ -746,7 +748,45 @@ $"{QuiParle(c)} · {ExceptionBandes.Ligne(c.severity_band, c.priority_band)}", 8
 
             lienRoot = (RectTransform)NewUI("LienEscalades", comptoirGo.transform).transform;
             AddLayoutElement(lienRoot.gameObject, preferredHeight: Px(CssLienHaut));
+
+            // ⑨-2 — le décor, premier enfant de la racine, SOUS tout le comptoir, hors mise en page.
+            decor = DecorAuComptoir.Construire<DecorAuComptoir>(racineGo.transform, ParametresFile());
         }
+
+        // ================================================================ ⑨-2 le décor
+
+        /// <summary>⑨-2 — le décor de ⑨, cadres 14-18 (juge r1 B1 BLOQUANT : « la scène du comptoir est absente »,
+        /// 57 % du rect libre en noir pur). Source : atelier `11-exceptions-inventaire.md` §2.1 (`79ba0a03`) — le fond
+        /// `.scene.bar` est `bar_FINAL2.png` ENTIER (atelier `a026f50`, 1080×1350, sha256 8ad2255b…), prouvé au pixel
+        /// (écart 0,75/255), `background-position: center 20%`. Monté tel quel sous
+        /// `Assets/Art/Scenes/Resources/Scenes/sprite_environment_bar_nuit.png` (même patron que le Verge d'Or de ⑯).
+        /// Le même bar servira au Recrutement ⑳ : ce chemin n'est pas lié à ⑨.
+        /// `.degrade.fort` : #0a0f18 à d8 · 55 · 99 · f4 · ff (0, 18, 40, 56, 70 %). Zinc `.zinc.haut` 66 % (étagère 15 %),
+        /// `.zinc.haut.vide` 52 % quand personne n'attend (cadre 16).</summary>
+        public static DecorAuComptoir.Parametres ParametresFile() => new DecorAuComptoir.Parametres
+        {
+            CheminScene = CheminBar,
+            SourceLargeur = 1080f, SourceHauteur = 1350f,
+            Boite = new Rect(0f, 0f, 1080f, 1350f),
+            PositionVerticale = 0.20f,
+            CleDegrade = "degrade.fort",
+            Degrade = () => new[]
+            {
+                (0.00f, DecorAuComptoir.Voile(DecorAuComptoir.Nuit, 0xd8)),
+                (0.18f, DecorAuComptoir.Voile(DecorAuComptoir.Nuit, 0x55)),
+                (0.40f, DecorAuComptoir.Voile(DecorAuComptoir.Nuit, 0x99)),
+                (0.56f, DecorAuComptoir.Voile(DecorAuComptoir.Nuit, 0xf4)),
+                (0.70f, DecorAuComptoir.Voile(DecorAuComptoir.Nuit, 0xff)),
+                (1.00f, DecorAuComptoir.Voile(DecorAuComptoir.Nuit, 0xff)),
+            },
+            HauteurZinc = ZincFile, HauteurDos = DosFile,
+        };
+
+        public const string CheminBar = "Scenes/sprite_environment_bar_nuit";
+        public const float ZincFile = 0.66f, ZincVide = 0.52f, DosFile = 0.15f;
+
+        private DecorAuComptoir decor;
+        public DecorAuComptoir Decor => decor;
 
         private RectTransform racine, comptoir, fileRoot, parleRoot, tamponRoot, lienRoot;
         private TextMeshProUGUI ligneAmbiance;
