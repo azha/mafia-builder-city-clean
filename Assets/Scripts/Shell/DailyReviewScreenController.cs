@@ -61,6 +61,25 @@ namespace MafiaCleanCity.Shell
         private GameObject tamponRoot;
         private TextMeshProUGUI tamponLibelle;
         private TextMeshProUGUI tamponSous;
+        private Image tamponFond;
+        private Image tamponBord;
+        private GameObject tamponCachet;
+        // ⑯-3 — l'état « après vos verdicts » survit à un re-rendu : `LoadRoster` re-rend les billets
+        // quand le roster arrive, et sans ces deux mémoires un verdict rendu entre-temps s'effacerait.
+        private readonly Dictionary<string, BilletVue> billets = new Dictionary<string, BilletVue>();
+        private readonly Dictionary<string, FlagVerdictResponseDto> verdicts = new Dictionary<string, FlagVerdictResponseDto>();
+        private int lotSigne;
+        private int? jourCourantPose;
+
+        /// <summary>Ce qu'un verdict change sur un billet déjà posé.</summary>
+        private sealed class BilletVue
+        {
+            public CanvasGroup Bulle;
+            public Image Jeton;
+            public TextMeshProUGUI Coche, Verbe, Sous;
+            public Button Rendre;
+            public LongPressButton Garder;
+        }
         private RosterRow[] roster;
         private Transform mountParent;
         private DailyReviewClient client;
@@ -194,7 +213,7 @@ namespace MafiaCleanCity.Shell
             EnsureInitialized();
             ValidateRequestCount++;
             LastValidateError = null;
-            yield return client.Validate(token, flagId, dto => { }, (c, m) => LastValidateError = $"{c}: {m}");
+            yield return client.Validate(token, flagId, dto => AppliquerVerdict(flagId, dto), (c, m) => LastValidateError = $"{c}: {m}");
         }
 
         public IEnumerator DismissFlag(string flagId)
@@ -202,7 +221,7 @@ namespace MafiaCleanCity.Shell
             EnsureInitialized();
             DismissRequestCount++;
             LastDismissError = null;
-            yield return client.Dismiss(token, flagId, dto => { }, (c, m) => LastDismissError = $"{c}: {m}");
+            yield return client.Dismiss(token, flagId, dto => AppliquerVerdict(flagId, dto), (c, m) => LastDismissError = $"{c}: {m}");
         }
 
         /// <summary>Wired to `BatchConfirmButton.OnLongPressCompleted` — design C8-F2: batch confirm
@@ -214,7 +233,7 @@ namespace MafiaCleanCity.Shell
             BatchConfirmRequestCount++;
             LastBatchConfirmError = null;
             yield return client.BatchConfirm(token,
-                dto => LastBatchConfirmedCount = dto.batch_confirmed_count,
+                dto => { LastBatchConfirmedCount = dto.batch_confirmed_count; AppliquerLotSigne(dto.batch_confirmed_count); },
                 (c, m) => LastBatchConfirmError = $"{c}: {m}");
         }
 
@@ -273,6 +292,7 @@ namespace MafiaCleanCity.Shell
         private void Render(FlagCardDto[] cards)
         {
             for (int i = rowsRoot.childCount - 1; i >= 0; i--) UnityEngine.Object.Destroy(rowsRoot.GetChild(i).gameObject);
+            billets.Clear();
 
             int enAttente = LastLoadedReview != null ? LastLoadedReview.routine_pending_count : 0;
             // ⛔⛔ LE TAMPON SUIT LE BOOLÉEN DU BACK, Y COMPRIS SUR UNE FILE VIDE — ET C'EST UNE DÉCISION RATIFIÉE.
@@ -315,6 +335,7 @@ namespace MafiaCleanCity.Shell
             plaqueVide.SetActive(false);
             RenderedCardCount = cards.Length;
             foreach (FlagCardDto card in cards) AddRow(card);
+            foreach (var v in verdicts) PeindreVerdict(v.Key, v.Value);
             MajRegistre(enAttente, tamponDisponible, cards.Length);
         }
 
@@ -336,6 +357,7 @@ namespace MafiaCleanCity.Shell
                     tamponSous.text = signalements > 0
                         ? "appui long — les " + signalements + " signalements restent à votre main"
                         : Lib("bloc", "appui long — rien d’autre ne vous attend");
+                if (lotSigne > 0) PeindreLotSigne();
             }
         }
 
@@ -377,6 +399,8 @@ namespace MafiaCleanCity.Shell
             // ── la bulle : c'est LUI qui parle ───────────────────────────────────────────────
             GameObject bulle = new GameObject("Bulle", typeof(RectTransform));
             bulle.transform.SetParent(billet.transform, false);
+            // `.billet.fait .bulle { opacity:.72 }` — un groupe, pas une couleur : le verdict l'atténue.
+            CanvasGroup bulleGroupe = bulle.AddComponent<CanvasGroup>();
             Image bulleFond = bulle.AddComponent<Image>();
             bulleFond.sprite = ProceduralUI.RoundedRectOutline((int)Px(12f), Px(1f), Hex("#ffffff2a"));
             bulleFond.type = Image.Type.Sliced;
@@ -501,7 +525,7 @@ namespace MafiaCleanCity.Shell
             jetonLe.preferredWidth = Px(34f);
             jetonLe.preferredHeight = Px(34f);
             jetonLe.flexibleWidth = 0f;
-            Texte(jeton.transform, "Coche", "✓", Px(13f), Hex("#3a2a12"), DesignTokens.Current.primaryFont,
+            TextMeshProUGUI coche = Texte(jeton.transform, "Coche", "✓", Px(13f), Hex("#3a2a12"), DesignTokens.Current.primaryFont,
                   TextAlignmentOptions.Center, true);
 
             // LE GESTE, et il porte les deux verdicts sur le MÊME objet — c'est la maquette :
@@ -523,10 +547,15 @@ namespace MafiaCleanCity.Shell
                 StartCoroutine(ValidateFlag(card.flag_id));
             });
 
-            Texte(col.transform, "Rendre", "RENDRE", Px(7.5f), OrVif, DesignTokens.Current.primaryFont,
-                  TextAlignmentOptions.Center);
-            Texte(col.transform, "Garder", "garder · appui long", Px(6.3f), Creme2,
+            TextMeshProUGUI verbe = Texte(col.transform, "Rendre", "RENDRE", Px(7.5f), OrVif,
                   DesignTokens.Current.primaryFont, TextAlignmentOptions.Center);
+            TextMeshProUGUI sous = Texte(col.transform, "Garder", "garder · appui long", Px(6.3f), Creme2,
+                  DesignTokens.Current.primaryFont, TextAlignmentOptions.Center);
+            billets[card.flag_id ?? ""] = new BilletVue
+            {
+                Bulle = bulleGroupe, Jeton = jetonImg, Coche = coche, Verbe = verbe, Sous = sous,
+                Rendre = rendre, Garder = garder,
+            };
 
             // la réserve — `trust_budget_bucket`, trois pastilles
             GameObject reserve = new GameObject("Reserve", typeof(RectTransform));
@@ -554,6 +583,119 @@ namespace MafiaCleanCity.Shell
             Texte(col.transform, "ReserveLib", "RÉSERVE · " + ReserveLibelle(card.trust_budget_bucket),
                   Px(5.8f), Creme2, DesignTokens.Current.primaryFont, TextAlignmentOptions.Center);
         }
+
+        // ---------------------------------------------------------- ⑯-3 après vos verdicts
+
+        /// <summary>⑯-3 — cadre v4-2 « après vos verdicts ». Un verdict ne retire pas le billet :
+        /// il reste sur le zinc, ATTÉNUÉ, et son jeton dit ce que la décision a coûté. La réponse du
+        /// back était jetée (`dto => { }`), alors qu'elle porte la seule clé qui rend l'économie du
+        /// jeton visible au moment où elle se joue : `token_returned` (juge-données Q2 ★★★,
+        /// `flag-discipline.service.ts:65-69` ; `true` sur validate `:223`, `false` sur dismiss `:262`).
+        /// Même chemin pour le jeu et pour les tests.</summary>
+        public void AppliquerVerdict(string flagId, FlagVerdictResponseDto verdict)
+        {
+            if (string.IsNullOrEmpty(flagId) || verdict == null || !verdict.resolved) return;
+            verdicts[flagId] = verdict;
+            PeindreVerdict(flagId, verdict);
+        }
+
+        private void PeindreVerdict(string flagId, FlagVerdictResponseDto verdict)
+        {
+            if (!billets.TryGetValue(flagId, out BilletVue b)) return;
+            // `.billet.fait .bulle { opacity:.72 }`. ⚠️ Opacité de GROUPE, appliquée telle quelle : le
+            // navigateur compose en sRGB et ce projet en linéaire, donc l'atténuation perçue diffère un
+            // peu — aucun ajustement n'existe pour un groupe (il vaut pour une couleur sur un fond).
+            // Non repris : `.billet.fait .medl { filter:saturate(.7) }` (aucun filtre en uGUI).
+            b.Bulle.alpha = 0.72f;
+            // Le geste est consommé : un second appel rend 409 (juge-données, E5 mesuré).
+            b.Rendre.interactable = false;
+            b.Garder.enabled = false;
+            if (verdict.token_returned)
+            {
+                // `.jeton.rendu` : le même or, poussé et tourné — `rotate(-12deg)` en CSS (sens
+                // anti-horaire à l'écran) = +12° en z dans Unity. `translateX(-10px)` non repris : le
+                // jeton est placé par son groupe de mise en page.
+                b.Jeton.rectTransform.localRotation = Quaternion.Euler(0f, 0f, 12f);
+                b.Verbe.text = Lib("verdict", "RENDU");
+                b.Verbe.color = OrVif;
+                b.Sous.text = Lib("verdict", "il garde sa confiance");
+            }
+            else
+            {
+                // `.jeton.perdu` : radial #3a3f4a → #1c2029, la marque en `--braise`, le verbe aussi.
+                b.Jeton.sprite = ProceduralUI.RadialDisc((int)Px(34f), Hex("#3a3f4a"), Hex("#1c2029"));
+                b.Coche.text = "✕";
+                b.Coche.color = Braise;
+                b.Verbe.text = Lib("verdict", "PERDU");
+                b.Verbe.color = Braise;
+                b.Sous.text = TexteRemise(JourCourant());
+            }
+        }
+
+        /// <summary>« remise dans N jours » — DÉRIVÉ, aucune clé ne le porte (juge-données Q7) :
+        /// les jetons se remettent à plat quand l'époque hebdomadaire avance,
+        /// `week_epoch = floor(game_day / 7)` (`flag-weekly-reset-tick.service.ts:22`), donc la
+        /// prochaine remise tombe au jour 7·(⌊j/7⌋+1), soit dans 7 − (j mod 7) jours. Jour 12 ⇒ 2 :
+        /// exactement le cadre v4-2.
+        /// ⚠️ Déduit de la source, pas observé : le tick WEEKLY tire à une minute qui n'est pas
+        /// forcément le début du jour. Jour inconnu ⇒ la phrase de l'annexe de la maquette, sans
+        /// chiffre, plutôt qu'un chiffre inventé.</summary>
+        public static string TexteRemise(int? jourCourant)
+        {
+            if (jourCourant == null || jourCourant.Value < 0)
+                return Lib("verdict", "jusqu’à la remise hebdomadaire");
+            int n = 7 - (jourCourant.Value % 7);
+            return n == 1 ? Lib("verdict", "remise demain") : "remise dans " + n + " jours";
+        }
+
+        /// <summary>Le jour courant n'est pas dans `GET /v1/flag-review` (S5-g) : il vient de
+        /// `session/open.opened_game_day`, que le shell tient déjà. Lu comme ⑤ le lit
+        /// (`DecisionDetailScreenController.cs:153`) — sans toucher `AppShell`.</summary>
+        private int? JourCourant()
+        {
+            if (jourCourantPose.HasValue) return jourCourantPose;
+            AppShell shell = FindFirstObjectByType<AppShell>();
+            return shell != null && shell.LastSessionOpen != null ? shell.LastSessionOpen.opened_game_day : (int?)null;
+        }
+
+        /// <summary>Test hook — pose le jour courant sans shell ni session.</summary>
+        public void PoserJourCourant(int jour) => jourCourantPose = jour;
+
+        /// <summary>⑯-3 — le tampon après l'appui long : `batch_confirmed_count` (`service.ts:311`)
+        /// était stocké et jamais rendu. Cadre v4-2 : « 17 ROUTINES SIGNÉES · d’un seul appui — le
+        /// registre est clos pour aujourd’hui », tampon vert, cachet « SIGNÉ ».
+        /// ⚠️ Un compte de 0 (second appel, idempotent — D13) ne signe RIEN : la maquette ne dessine
+        /// pas cet état, et « 0 ROUTINES SIGNÉES » affirmerait un geste qui n'a rien fait.</summary>
+        public void AppliquerLotSigne(int confirmees)
+        {
+            if (confirmees <= 0) return;
+            lotSigne = confirmees;
+            PeindreLotSigne();
+        }
+
+        private void PeindreLotSigne()
+        {
+            if (tamponRoot == null) return;
+            tamponFond.color = Hex("#dccfa9");
+            tamponBord.sprite = ProceduralUI.RoundedRectOutline((int)Px(11f), Px(2f), VertCachet);
+            tamponLibelle.text = lotSigne + Lib("bloc", " ROUTINES SIGNÉES");
+            tamponLibelle.color = VertCachet;
+            tamponSous.text = Lib("bloc", "d’un seul appui — le registre est clos pour aujourd’hui");
+            tamponSous.color = VertCachet;
+            tamponCachet.SetActive(true);
+            BatchConfirmButton.enabled = false;
+        }
+
+        // ---- test hooks : un billet après son verdict, le tampon après le lot -------------------
+        public bool BilletGesteActif(string flagId) =>
+            billets.TryGetValue(flagId, out BilletVue b) && b.Rendre.interactable && b.Garder.enabled;
+        public float BilletBulleAlpha(string flagId) => billets.TryGetValue(flagId, out BilletVue b) ? b.Bulle.alpha : -1f;
+        public string BilletVerbe(string flagId) => billets.TryGetValue(flagId, out BilletVue b) ? b.Verbe.text : null;
+        public string BilletSous(string flagId) => billets.TryGetValue(flagId, out BilletVue b) ? b.Sous.text : null;
+        public string BilletCoche(string flagId) => billets.TryGetValue(flagId, out BilletVue b) ? b.Coche.text : null;
+        public bool TamponSigne => lotSigne > 0 && tamponCachet != null && tamponCachet.activeSelf;
+        public bool TamponGesteActif => BatchConfirmButton != null && BatchConfirmButton.enabled;
+        public Image TamponFond => tamponFond;
 
         /// <summary>Pis-aller d'affichage tant qu'aucune clé i18n n'est servie : on prend le
         /// segment porteur de la clé et on le rend lisible. Ce n'est PAS une traduction.</summary>
@@ -864,10 +1006,25 @@ namespace MafiaCleanCity.Shell
         {
             tamponRoot = new GameObject("Tampon", typeof(RectTransform));
             tamponRoot.transform.SetParent(transform, false);
-            Image fond = tamponRoot.AddComponent<Image>();
-            fond.sprite = ProceduralUI.RoundedRectOutline((int)Px(11f), Px(2f), Rouge);
-            fond.type = Image.Type.Sliced;
-            fond.color = Hex("#d9cca9");
+            // ⛔ LE PAPIER DU TAMPON ÉTAIT TRANSPARENT. `RoundedRectOutline` dessine un TRAIT (sa doc :
+            //    « ceci le fait pour un TRAIT ») : le fond #d9cca9 ne faisait que TEINDRE le contour
+            //    rouge, et l'intérieur laissait voir la scène. Jamais vu : le juge r1 n'a jamais eu de
+            //    tampon à mesurer (F2). ⇒ La surface pleine est un `RoundedRectMask` teint ; le bord
+            //    (`border:2px solid #93402c`) et le filet (`::before inset 3px #93402c55 r7`) sont posés
+            //    dessus, comme les deux filets de la plaque du matin.
+            tamponFond = tamponRoot.AddComponent<Image>();
+            tamponFond.sprite = ProceduralUI.RoundedRectMask((int)Px(11f));
+            tamponFond.type = Image.Type.Sliced;
+            tamponFond.color = Hex("#d9cca9");
+            GameObject bordGo = new GameObject("Bord", typeof(RectTransform));
+            bordGo.transform.SetParent(tamponRoot.transform, false);
+            Etirer((RectTransform)bordGo.transform, 0f);
+            tamponBord = bordGo.AddComponent<Image>();
+            tamponBord.sprite = ProceduralUI.RoundedRectOutline((int)Px(11f), Px(2f), Rouge);
+            tamponBord.type = Image.Type.Sliced;
+            tamponBord.raycastTarget = false;
+            bordGo.AddComponent<LayoutElement>().ignoreLayout = true;
+            Filet(tamponRoot.transform, "FiletInterieur", Px(3f), Px(7f), Hex("#93402c55"));
 
             VerticalLayoutGroup v = tamponRoot.AddComponent<VerticalLayoutGroup>();
             v.padding = new RectOffset((int)Px(12f), (int)Px(12f), (int)Px(10f), (int)Px(10f));
@@ -885,9 +1042,44 @@ namespace MafiaCleanCity.Shell
             tamponSous = Texte(tamponRoot.transform, "Sous", "appui long", Px(8.5f), Rouge,
                                DesignTokens.Current.primaryFont, TextAlignmentOptions.Center);
 
+            BuildCachet();
+
             BatchConfirmButton = tamponRoot.AddComponent<LongPressButton>();
             BatchConfirmButton.OnLongPressCompleted += () => StartCoroutine(RequestBatchConfirm());
             tamponRoot.SetActive(false);
+        }
+
+        /// <summary>`.cachet-rouge` : « SIGNÉ », Georgia 10px, espacement .2em, bord 2px #93402c,
+        /// encre #93402c, papier #efe4c6cc, `right:10px; top:-12px; rotate(-14deg)` — hors mise en
+        /// page, à cheval sur le bord haut du tampon. Caché jusqu'au lot signé.</summary>
+        private void BuildCachet()
+        {
+            tamponCachet = new GameObject("Cachet", typeof(RectTransform));
+            tamponCachet.transform.SetParent(tamponRoot.transform, false);
+            tamponCachet.AddComponent<LayoutElement>().ignoreLayout = true;
+            RectTransform rt = (RectTransform)tamponCachet.transform;
+            rt.anchorMin = rt.anchorMax = new Vector2(1f, 1f);
+            rt.pivot = new Vector2(1f, 0.5f);
+            rt.anchoredPosition = new Vector2(-Px(10f), 0f);
+            rt.localRotation = Quaternion.Euler(0f, 0f, 14f);
+            Image papier = tamponCachet.AddComponent<Image>();
+            papier.sprite = ProceduralUI.RoundedRectMask((int)Px(3f));
+            papier.type = Image.Type.Sliced;
+            papier.color = Hex("#efe4c6cc");
+            papier.raycastTarget = false;
+            Filet(tamponCachet.transform, "Bord", 0f, Px(3f), Rouge);
+            HorizontalLayoutGroup h = tamponCachet.AddComponent<HorizontalLayoutGroup>();
+            h.padding = new RectOffset((int)Px(8f), (int)Px(8f), (int)Px(3f), (int)Px(3f));
+            h.childControlWidth = true;
+            h.childControlHeight = true;
+            ContentSizeFitter ajuste = tamponCachet.AddComponent<ContentSizeFitter>();
+            ajuste.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+            ajuste.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            TextMeshProUGUI signe = Texte(tamponCachet.transform, "Signe", "SIGNÉ", Px(10f), Rouge,
+                                          DesignTokens.Current.hudSerifFont, TextAlignmentOptions.Center);
+            signe.characterSpacing = 20f;
+            signe.fontStyle = FontStyles.Bold;
+            tamponCachet.SetActive(false);
         }
 
         /// <summary>Jointure client — `tenure_bucket` par lieutenant, la maquette la pose comme
