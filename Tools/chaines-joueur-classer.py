@@ -23,7 +23,7 @@ AVANT et APRÈS, et faire rougir tout écart.
 ⚠️ CE QUE CE CLIQUET NE VOIT PAS, et il faut le dire : il surveille les FORMULATIONS connues.
 Une phrase de la même classe écrite avec d'autres mots passe. Il ferme la récidive, pas la classe.
 """
-import collections, subprocess, sys, pathlib
+import collections, re, subprocess, sys, pathlib
 
 A = "A — INSTRUCTION DE DÉVELOPPEUR SERVIE AU JOUEUR"
 B = "B — L'ARCHITECTURE COMME EXPLICATION (dire le trou est la doctrine ; le dire avec les mots de l'atelier ne l'est pas)"
@@ -32,6 +32,7 @@ D = "D — DIVULGATION"
 E = "E — ÉNONCÉ DATÉ SERVI AU JOUEUR"
 R = "R — REVENDIQUÉ PUIS RETIRÉ : mesuré DÉLIBÉRÉ en ouvrant la cible"
 N = "N — HORS CLASSE : le mot d'atelier a ici son sens ORDINAIRE (contrôle négatif)"
+L = "L — LIBELLÉ RESTÉ EN ANGLAIS (lot D, atelier ④ `04-libelles-anglais.md` : le client écrit ce mot, en français)"
 
 # (classe, fragment, attendu, pourquoi)
 VERDICTS = [
@@ -98,8 +99,6 @@ VERDICTS = [
  (B, "Le même lot",                             0, "CLOS lot C 22/09 (㊵ la filière) — était : « lot » = lot de livraison du programme"),
  (B, "la seule grandeur servie",                0, "CLOS lot C 22/09 (㊵ la filière) — était : « grandeur servie »"),
  (B, "n'expose pas encore son vendeur",         0, "PÉRIMÉE, RE-MESURÉE 22/09 : disparue — DistrictInterior:2235 dit désormais « Collecte indisponible : aucun vendeur affecté. » (:2396), hors classe"),
- (B, "GET /v1/world/districts indisponible",     0, "CLOS lot C 22/09 (㉚:197) — atteignait le joueur en SOUS-TITRE de la panne via une variable (DerniereErreur, :612), donc invisible à chaines-joueur.py qui ne suit que les littéraux passés directement à un seam ; la panne se dit désormais avec la formule maison"),
- (B, "aucun des 18 districts ne porte de bâtiment", 0, "CLOS lot C 22/09 (㉚:228) — même chemin (DerniereErreur) ; remplacé par l'état RÉEL lu dans me/buildings : « Rien à commander — vous ne tenez pas encore de labo. » / « Vous ne tenez encore aucun site. »"),
  (B, "vérifié serveur",                         0, "CLOS lot C 22/09 (② la fiche du bâtiment) — était : « vérifié serveur »"),
  (B, "Scène indisponible pour ce quart",        0, "CLOS lot C 22/09 (① l'intérieur du district) — était : « Scène » + « quart horaire »"),
  (B, "à ouvrir depuis la fiche opérationnelle", 0, "CLOS lot C 22/09 (① l'intérieur du district) — était : renvoie à un autre écran par son nom interne"),
@@ -111,7 +110,40 @@ VERDICTS = [
  (N, "Commerce-écran",                          3, "traduction maison de FRONT_SHOP : « écran » = paravent"),
 ]
 
-ORDRE = [A, E, D, C, R, B, N]
+ORDRE = [A, E, D, C, R, B, L, N]
+
+# ⛔⛔ TÉMOINS DE SOURCE — pour les chaînes que `chaines-joueur.py` NE VOIT PAS.
+# Un motif de VERDICTS se compte dans la POPULATION de l'extracteur. Une chaîne qui atteint le joueur
+# par une variable (`DerniereErreur` en sous-titre), par une interpolation hors seam, ou par un seam que
+# l'extracteur ne connaît pas (`DetailRow(...)`, les notes jointes de ④) n'y est pas — un motif posé
+# sur elle mesure 0 À VIE, quoi qu'on écrive dans le code. Payé le 2026-09-22 : les deux épingles de
+# ㉚ (:197, :228) étaient de ce type, posées à 0, et ne pouvaient donc jamais rougir. *Un témoin qui ne
+# peut pas voir sa cible ne la garde pas : il certifie son absence.*
+# ⇒ Ceux-ci se comptent dans le TEXTE des littéraux de `Assets/Scripts/**/*.cs` (lignes de
+#   commentaire exclues). Même cliquet, même règle des deux sens. Le premier témoin est POSITIF : une
+#   chaîne vivante, vue par ce compteur ET invisible à l'extracteur (les deux comptes mesurés) ; s'il
+#   tombe à 0, le compteur est aveugle et tout le reste de la liste ne prouve plus rien.
+#   ⚠️ Un témoin positif VU par l'extracteur ne prouve pas la différence entre les deux compteurs :
+#   « Réessayez dans un instant. » (proposé d'abord) y est vu 8 fois — rejeté à la mesure.
+# (classe, fragment, attendu, pourquoi)
+SOURCE = [
+ (N, "Repair underway",                            1, "TÉMOIN POSITIF du compteur de source : ②:384, message d'action de `RunAction`, vivant — mesuré 0 dans la population de l'extracteur, 1 ici. À remplacer par un témoin français stable dès que ③ est traduit (lot D)"),
+ (B, "GET /v1/world/districts indisponible",       0, "CLOS lot C 22/09 (㉚:197) — sous-titre de panne via `DerniereErreur` (:612) ; déplacé de VERDICTS où il mesurait 0 par construction"),
+ (B, "aucun des 18 districts ne porte de bâtiment", 0, "CLOS lot C 22/09 (㉚:228) — même chemin ; remplacé par l'état réel lu dans me/buildings"),
+]
+
+
+def litteraux_source(racine):
+    """(fichier, ligne, texte) de chaque littéral "…" de Assets/Scripts, hors lignes de commentaire.
+    ⚠️ Ne suit pas une chaîne coupée en deux littéraux ("…" + "…") : choisir un fragment d'UN littéral."""
+    lit = re.compile(r'"(?:[^"\\\n]|\\.)*"')
+    for p in sorted((racine / 'Assets' / 'Scripts').rglob('*.cs')):
+        for n, l in enumerate(p.read_text(encoding='utf-8', errors='replace').splitlines(), 1):
+            t = l.strip()
+            if t.startswith('//') or t.startswith('*') or t.startswith('/*'):
+                continue
+            for m in lit.finditer(l):
+                yield p, n, m.group(0)[1:-1]
 
 
 def mesurer():
@@ -134,6 +166,17 @@ def main():
         textes.setdefault(t, f.replace('Assets/Scripts/', ''))
 
     ecarts, classe = [], collections.defaultdict(list)
+    racine = pathlib.Path(__file__).resolve().parent.parent
+    sources = list(litteraux_source(racine))
+    for cl, frag, attendu, pourquoi in SOURCE:
+        n = sum(1 for p, ln, t in sources if frag in t)
+        if n != attendu:
+            ecarts.append((frag + " [source]", attendu, n))
+        for p, ln, t in sources:
+            if frag in t:
+                classe[cl].append((f"{p.relative_to(racine / 'Assets' / 'Scripts')}:{ln}", t, pourquoi + " [témoin de source]"))
+        if attendu == 0 and not any(frag in t for p, ln, t in sources):
+            classe[cl].append(("—", "(plus aucune occurrence — témoin de source)", pourquoi))
     for cl, frag, attendu, pourquoi in VERDICTS:
         n = sum(1 for f, via, t in rows if frag in t)
         if n != attendu:
@@ -148,8 +191,8 @@ def main():
         for frag, attendu, n in ecarts:
             sens = "LA CLASSE REVIENT" if n > attendu else "ÉPINGLE PÉRIMÉE (la chaîne a bougé)"
             print(f"⛔ {sens} : attendu {attendu}, mesuré {n} — « {frag} »", file=sys.stderr)
-        print(f"{len(VERDICTS)} motifs · {len(ecarts)} écart(s) · population {len(rows)}",
-              file=sys.stderr)
+        print(f"{len(VERDICTS)} motifs · {len(SOURCE)} témoins de source · {len(ecarts)} écart(s) · "
+              f"population {len(rows)}", file=sys.stderr)
         return 1 if ecarts else 0
 
     out = ["# Chaînes joueur qui parlent du SYSTÈME au lieu de parler AU joueur", "",
