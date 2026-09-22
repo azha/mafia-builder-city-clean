@@ -1013,7 +1013,7 @@ namespace MafiaCleanCity.CityMap
             DistrictCellView cell = cells.FirstOrDefault(c => c.Model != null && c.Model.id == districtId);
             // 2026-09-02 — même repli que la tuile (CityMapEnums.DisplayName) : fiction d'abord,
             // name_canonical si le back n'en sert pas.
-            if (detailTitle != null) detailTitle.text = cell != null ? CityMapEnums.DisplayName(cell.Model) : $"District {districtId}";
+            if (detailTitle != null) detailTitle.text = cell != null ? CityMapEnums.DisplayName(cell.Model) : $"Quartier {districtId}";
             if (detailPanel != null) detailPanel.SetActive(true);
             ReserveSpaceForPanel(true);
             RefreshEnterInteractable(); // §3.2 — 1er point
@@ -1040,7 +1040,7 @@ namespace MafiaCleanCity.CityMap
             rootVlg.padding = new RectOffset(RootPadding, right, RootPadding, BottomPadding);
         }
 
-        private static DetailRow Missing(string label) => new DetailRow(label, "n/a (not ticked)", false);
+        private static DetailRow Missing(string label) => new DetailRow(label, "pas encore relevé", false);
 
         // Aggregate the per-district system projections into the detail view model.
         private IEnumerator BuildDetail(int districtId, DistrictCellView cell)

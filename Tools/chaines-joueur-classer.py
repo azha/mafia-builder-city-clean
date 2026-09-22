@@ -71,6 +71,7 @@ VERDICTS = [
  (L, "Inject (launder)", 1, "② bouton (:991) ; il reste ⑪ LaunderingController:250, fermé par son commit"),
  (L, "EXCEPTION", 0, "⑨:509 en-tête de panne, ⑩:566/569/591 en-tête de la main"),
  (L, "See all exceptions", 0, "panneau du shell (:236)"),
+ (L, "District {districtId}", 0, "③ titre de repli du panneau de détail (:1016)"),
  (N, "Aucune route connue pour l'instant",      0, "CLOS lot C 22/09 (㉘ la distribution) — était : « route » = endpoint, alors que l'écran voisin dit « CETTE ROUTE » pour un itinéraire"),
  (B, "aucune route n'existe encore",            0, "CLOS lot C 22/09 (⑰ le commissariat) — était : « route »"),
  (B, "la route voisine vise les affaires",      0, "CLOS lot C 22/09 (⑰ le commissariat) — était : « route voisine »"),
@@ -142,7 +143,8 @@ ORDRE = [A, E, D, C, R, B, L, N]
 #   « Réessayez dans un instant. » (proposé d'abord) y est vu 8 fois — rejeté à la mesure.
 # (classe, fragment, attendu, pourquoi)
 SOURCE = [
- (N, "Repair underway",                            1, "TÉMOIN POSITIF du compteur de source : ②:384, message d'action de `RunAction`, vivant — mesuré 0 dans la population de l'extracteur, 1 ici. À remplacer par un témoin français stable dès que ③ est traduit (lot D)"),
+ (N, "pas encore relevé", 1, "TÉMOIN POSITIF du compteur de source, français et ratifié (atelier ④, ③:1043) — mesuré 0 dans la population de l'extracteur (seam `DetailRow`), 1 ici"),
+ (L, "Repair underway", 1, "② message d'action de `RunAction` (:384), anglais HORS lot atelier (aucune copie livrée) — signalé ; n'est plus le témoin positif (remplacé par « pas encore relevé », ③)"),
  (B, "GET /v1/world/districts indisponible",       0, "CLOS lot C 22/09 (㉚:197) — sous-titre de panne via `DerniereErreur` (:612) ; déplacé de VERDICTS où il mesurait 0 par construction"),
  (B, "aucun des 18 districts ne porte de bâtiment", 0, "CLOS lot C 22/09 (㉚:228) — même chemin ; remplacé par l'état réel lu dans me/buildings"),
  (L, "insufficient cash", 0, "② les quatre raisons « pas assez d'argent » (:889, :913, :939, :965) — invisibles à l'extracteur"),
@@ -151,6 +153,7 @@ SOURCE = [
  (L, "choose a source", 0, "② raison (:1041) — invisible à l'extracteur"),
  (L, "district {id}", 0, "⑮ repli du nom de quartier (:271, :272) — invisible à l'extracteur"),
  (L, "district {b.district_id}", 0, "⑮ repli du district de la cible (:278) — invisible à l'extracteur"),
+ (L, "n/a (not ticked)", 0, "③ état d'une ligne non relevée (:1043, seam `DetailRow` invisible à l'extracteur)"),
 ]
 
 
