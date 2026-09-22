@@ -173,8 +173,8 @@ namespace MafiaCleanCity.CitySim.Precinct
                    PatrouilleMot(Patrouille != null ? Patrouille.patrol_heat : null));
 
             // ce qui manque, écrit — jamais un bouton qui ne peut pas aboutir
-            Manque("Recruter un greffier", "aucune route n'existe encore");
-            Manque("Acheter un renseignement", "la route voisine vise les affaires internes, pas ce commissariat");
+            Manque("Recruter un greffier", "pas encore : on n'a personne à acheter au greffe");
+            Manque("Acheter un renseignement", "pas encore : ce qui s'achète parle des affaires internes, pas de ce commissariat");
             RendusEffectues++;
         }
 
