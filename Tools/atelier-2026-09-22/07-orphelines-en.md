@@ -1,4 +1,4 @@
-# 07 — Les 28 clés orphelines : la valeur `en`, réécrite pour coller au nouveau `fr`
+# 07 — Les 43 clés orphelines : la valeur `en`, réécrite pour coller au nouveau `fr`
 
 Atelier / DA, 2026-09-22. Source : `mafia-builder-city-clean/Tools/juge-donnees/i18n/orphelines-2026-09-22.{md,json}` (client `4bddb0aa`). Le texte `fr` est celui de la table (colonne « texte FR exact du littéral ») ; ce fichier donne l'`en` de la **nouvelle** clé, pour que f7 applique `fr` et `en` en une passe. Contrôle fait à l'écriture : l'ensemble des 28 clés ci-dessous est ÉGAL à l'ensemble des clés « nouvelle » du JSON (script, pas relecture).
 
@@ -54,3 +54,34 @@ La table fixe le `fr` au littéral de `75ac1001` : « [~] conséquence minime »
 | `autonomie.etat.on_laisse_passer_quelque_chose` | on laisse passer quelque chose | we let something slip by |
 
 ⇒ À trancher par l'orchestrateur avant la passe de f7 : c4 appliqué (`fr` et `en` sans glyphe, ci-dessus) ou pas (`fr` de la table, et l'`en` prend le même glyphe devant : `[~] minor consequence`…). L'`en` de ce fichier est écrit SANS glyphe, parce que c4 est la décision de l'atelier.
+
+## Complément du 2026-09-22 — les 15 `building.row.*` (table régénérée, 43 clés, client `7d675f9c`)
+
+Contrôle fait à l'écriture : l'ensemble des 28 clés ci-dessus + les 15 ci-dessous est ÉGAL à l'ensemble des 43 clés « nouvelle » du JSON régénéré (script, pas relecture). Mesuré par le client : les 25 `building.row.*` sont servies en ANGLAIS dans les deux locales aujourd'hui ; le `fr` est celui de la table.
+
+| clé | fr (table) | en |
+|---|---|---|
+| `building.row.mise_en_place` | Mise en place | Setup |
+| `building.row.en_service` | En service | In service |
+| `building.row.couverture` | Couverture | Cover |
+| `building.row.risque_de_descente` | Risque de descente | Raid risk |
+| `building.row.alerte` | Alerte | Alert |
+| `building.row.chaine_du_froid` | Chaîne du froid | Cold chain |
+| `building.row.taille_du_labo` | Taille du labo | Lab size |
+| `building.row.purete` | Pureté | Purity |
+| `building.row.rendez_vous` | Rendez-vous | Appointment |
+| `building.row.gain` | Gain | Payout |
+| `building.row.culture` | Culture | Crop |
+| `building.row.pousse` | Pousse | Growth |
+| `building.row.soin` | Soin | Care |
+| `building.row.taille_du_relais` | Taille du relais | Hub size |
+| `building.row.equipe` | Équipe | Crew |
+
+**Même clé, valeur servie périmée** (section à part de la table) :
+
+| clé | fr (table) | en |
+|---|---|---|
+| `building.row.temperature` | Température | Temperature |
+
+- L'`en` change là où le `fr` a changé de sens, pas seulement de langue : *tier* → **size** (« Taille du labo / du relais » : la bande dit une taille, pas un rang), *Operational* → **In service** (« En service »), *Grow stage* → **Growth** (« Pousse »), *Husbandry* → **Care** (« Soin »), *Roster* → **Crew** (« Équipe »). Ailleurs l'`en` servi disait déjà ce que dit le `fr`, et il est gardé (Setup, Cover, Raid risk, Alert, Cold chain, Purity, Appointment, Payout, Crop) — garder n'est pas recopier : chaque ligne a été relue contre son `fr`.
+- Titres de ligne : majuscule initiale, sans point, comme les 25 servis.

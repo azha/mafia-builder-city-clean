@@ -248,3 +248,78 @@ Mots pris à la maquette : « commander » (㉚·48), « lancer une cuisson » (
 ⛔ **Correction du 2026-09-22 (mesurée sur la table des orphelines, `4bddb0aa`)** : j'avais écrit que le retrait changeait la clé dérivée. C'est faux — le slug ignore le glyphe (`autonomie.etat.consequence_minime` dérive de « [~] conséquence minime »). **La clé ne change pas ; c'est la VALEUR servie qui doit perdre le glyphe**, sinon `Libelle.De` le ramène à l'écran par le bundle. Les valeurs fr et en sans glyphe sont dans `07-orphelines-en.md`.
 
 **Compte de l'annexe c** : 1 bouton (4 bandes) · 4 messages demandés (+ la famille « Ouvrir », 6 entrées) · 28 messages en complément (14 paires) · 1 règle de raison · 2 légendes de cadenas · 1 décision de glyphes.
+
+---
+
+## Annexe d — hors annexe c, signalé par le client après la tranche 2 (`7d675f9c`)
+
+Lignes lues à `7d675f9c`.
+
+### d1. ⑪ `LaunderingController` — son propre `RunAction` (`:173-174`, `:185-186`)
+
+Même forme de rendu que ② : `{succès}`, ou `{échec} — {raison}` (la règle c2-bis s'applique : après le tiret, le texte de
+`user_facing_i18n_key` quand le bundle le connaît, sinon l'échec seul).
+
+| EN | FR succès | FR échec |
+|---|---|---|
+| Cash injected / Inject unavailable | Argent injecté | Impossible d'injecter |
+| Float collected / Collect unavailable | La caisse a rejoint votre planque. | Impossible de ramasser |
+
+- « Argent injecté » : la même paire que ② (annexe c2) — un geste, un mot, sur les deux écrans.
+- « Float » est la caisse du DEALER (le geste verse l'argent sale d'un dealer dans la planque). Le client a déjà une phrase pour ce
+  geste exact : « La caisse a rejoint votre planque. » (`SellingScreenController.cs:251`, ㉟) — reprise telle quelle. L'intérieur du
+  district dit le même geste autrement (« Caisse confiée à la planque. », `DistrictInteriorScreenController.cs:2408`) : à aligner sur
+  la phrase de ㉟ au même lot. « ramasser » est le verbe de ㉟·109.
+
+### d2. ② le sélecteur de culture — `« < Crop »` / `« Crop > »` (`:2045`, `:2054`)
+
+**« ‹ » et « › »**, seuls. La ligne porte déjà son titre (« PLANTER — choisir une culture ») et la valeur sitôt au centre (« Racine
+verdoyante »…) : le bouton n'a qu'à dire la direction. Le chevron simple est le signe de la maison (⑨·9 « sa main : 5 autres
+issues › », ⑱ « › », ㉜ « ◂ »). Si le client veut un mot (cible tactile étroite, trois contrôles sur 300 CSS) : « ‹ Culture » /
+« Culture › », EN « ‹ Crop » / « Crop › ».
+
+### d3. Complément, hors question — six titres de ligne de ② encore anglais à `7d675f9c`, et la garde de saisie
+
+Ils manquaient dans mon annexe a (les lignes du relais et du coffre d'argent propre, après `:778`) ; ils sont servis en anglais dans les
+deux locales. En les réécrivant, leur slug change : ils entreront dans la prochaine table des orphelines — `fr` et `en` sont donnés ici.
+
+| ligne (`7d675f9c`) | EN aujourd'hui | FR | EN |
+|---|---|---|---|
+| `:795` | Vehicles | Véhicules | Vehicles |
+| `:816` | Holding tier | Taille de l'officine *(voir d4)* | Counting-house size |
+| `:824` | Held | En dépôt | On deposit |
+| `:831` | Capacity | Capacité | Capacity |
+| `:838` | Yield | Rendement | Yield |
+| `:850` | Forfeiture | Saisie | Seizure |
+
+Les valeurs qui vont avec :
+
+| où | EN aujourd'hui | FR | EN |
+|---|---|---|---|
+| `YieldLabel` (clés `yield`, déjà keyées) `IDLE` · `EARNING` | Idle · Earning | rien ne rentre · ça rapporte | nothing coming in · earning |
+| `:848` (`IMMINENT`) | Under audit (imminent) — withdraw or diversify NOW | Audit imminent — retirez ou répartissez maintenant | Audit imminent — withdraw or spread it out now |
+| `:849` (`PENDING`) | Under audit (pending) — withdraw or diversify to react | Audit en vue — retirez ou répartissez pour réagir | Audit coming — withdraw or spread it out to react |
+
+« rien ne rentre » est le mot de ㉟·111 ; « audit » celui de ㊴ (« RISQUE D'AUDIT ») ; les capitales « NOW » ne passent pas en français
+(la maison ne crie pas : l'urgence est portée par `[!!]` et la couleur sévère, déjà sur la ligne).
+
+### d4. ⛔ Une collision que j'ai créée : « caisse » désigne deux objets
+
+L'annexe b donnait « Caisse » au type `money_holding` (le coffre d'argent PROPRE qui rapporte), et l'annexe a « Agrandir la caisse ».
+Or « caisse » est, partout ailleurs dans le client, la caisse du DEALER : ㉟ (« La caisse de Oskar », « caisses pleines »,
+`SellingScreenController.cs:243-555`), l'intérieur du district (`:2408`), la carte (`CityProjectionsClient.cs:139`) — et d1 ci-dessus.
+Un joueur qui lit « Agrandir la caisse » sur la fiche d'un coffre peut croire agrandir celle de son dealer.
+
+**Proposition : « l'officine »** pour `money_holding` (EN *counting house*) — le mot d'époque pour un bureau d'argent discret, qui coiffe
+ses enseignes servies (« Change Voss », « Crédit Hara », « Prêts Dorne », « Épargne Sallo »…). Sites à changer en même temps, sinon la
+fiche se contredit :
+
+| site (`7d675f9c`) | aujourd'hui | avec « officine » |
+|---|---|---|
+| `BuildingCardController.cs:1101` (`TypeLabel`) | Money holding | Officine |
+| `:972` bouton · `:976` raison | Agrandir la caisse · … — pas assez d'argent | Agrandir l'officine · … — pas assez d'argent |
+| `:562` succès | Caisse agrandie | Officine agrandie |
+| `:816` titre de ligne | Holding tier | Taille de l'officine |
+| `DistributionScreenController.cs:232` | la caisse | l'officine |
+
+À trancher par l'orchestrateur ou l'user (un mot de monde, pas une traduction) ; tant que ce n'est pas tranché, rien ne change.
