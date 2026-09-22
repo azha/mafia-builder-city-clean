@@ -371,7 +371,14 @@ namespace MafiaCleanCity.Shell.Tests
             shell.ExitToCityMap();
             yield return null;
 
-            Assert.AreEqual("—", shell.TopBar.DayPhaseText, "hors district : état NOMMÉ, jamais la dernière valeur d'un district quitté");
+            // F14 (23/09, pile 83b4f291) — hors district, la barre porte la phase de la SESSION (projetée par le back à
+            // l'ouverture, `AppShell.PhaseHorsDistrict`), plus « — » : le rouge de ce test au rejeu du 23/09 01:36 était cette
+            // règle ratifiée, pas un défaut. La propriété gardée reste la même : jamais la valeur du district QUITTÉ — la
+            // barre rend exactement le libellé de la phase de session, d'où qu'elle vienne.
+            Assert.IsNotNull(shell.PhaseHorsDistrict(),
+                "prémisse : la pile sert `day_phase` dans session/open (F14) — sans elle, cette assertion ne distingue rien");
+            Assert.AreEqual(DayPhaseResolver.Label(shell.PhaseHorsDistrict()), shell.TopBar.DayPhaseText,
+                "hors district : la phase de SESSION, jamais la dernière valeur d'un district quitté");
             Assert.AreEqual(-1, shell.CityTabDistrictId, "hors district : CityTabDistrictId == -1 — MÊME assertion que day_phase ci-dessus");
         }
 
