@@ -200,3 +200,27 @@ qu'aucune valeur servie ne soit sans dessin »). Le fr est donc celui de la maqu
 Rejouables : `python3 Tools/atelier-2026-09-22/verifier-10-mots.py`. Il compare l'ensemble des clés du §1 au fichier de CLIENT-2 à
 `d745a577`, l'ensemble des clés du §2 aux clés `core_loops.flag_discipline.*` du registre fr de `string_table.ts` à `4841d7ad`, les
 placeholders de chaque valeur (fr servi, fr proposé, en proposé) entre eux, et l'espace initiale de `routines_signees` dans les deux langues.
+
+---
+
+## 7. ⑯ — la chip de fréquence : `none` n'a PAS de chip (tranché le 2026-09-23)
+
+`flag_frequency_band` = `none | occasional | frequent` (`convergence.ts:35`, `:96-99`) : le nombre de signalements **levés** par ce
+lieutenant sur les 7 derniers jours de jeu, **en attente compris** (`flag-discipline.repository.ts:581-591`, `game_day > jour − 7`).
+La maquette v4-0 dessine deux mots ; le client range aujourd'hui `none` sous « rarement » (`DailyReviewScreenController.cs:881`, arbre F).
+
+**Décision : pour `none`, pas de chip.** Sur ⑯, chaque carte EST un signalement de ce lieutenant, et il compte dans la fenêtre s'il a
+moins de 7 jours ; `none` n'arrive donc que pour une carte **vieille de plus d'une semaine** — ce que la chip du jour (`J11`,
+`flagged_game_day`) dit déjà. « rarement » y serait faux (il ne signale plus rien dans la fenêtre), et un troisième mot (« ne signale
+plus ») affirmerait une intention que la donnée n'a pas.
+
+| valeur | fr | en | clé (dérivée par le client, `Lib("chip", …)`) |
+|---|---|---|---|
+| `frequent` | signale souvent | flags often | `revue.chip.signale_souvent` |
+| `occasional` | signale rarement | rarely flags | `revue.chip.signale_rarement` |
+| `none` | *(pas de chip)* | *(no chip)* | — |
+
+- Les deux clés ne sont servies par **aucun** registre aujourd'hui (`FR_MESSAGES` et `EN_MESSAGES` à `4841d7ad`, 0 clé `revue.chip.*`) :
+  fr et en ci-dessus, pour le lot i18n de ⑯. La maquette écrit en minuscules ; les capitales de l'écran sont le rendu (CSS), pas la donnée.
+- ⚠️ Ce n'est vrai QUE pour ⑯. Un écran qui montrerait la bande d'un lieutenant SANS carte (⑦, la fiche) verrait `none` au sens propre
+  (« rien levé en 7 jours ») : là, un mot serait dû — proposé : « ne signale rien » / « hasn't flagged anything ».
