@@ -335,7 +335,12 @@ namespace MafiaCleanCity.Operational.Autonomy
             AddLayoutElement(optBlock, flexibleHeight: 0);
 
             // label_key — CHROME (producer text, may carry digits/i18n keys).
-            TextMeshProUGUI labelText = NewText("LabelKey_" + choice, optBlock.transform, option.label_key, 12, TextAlignmentOptions.Left);
+            // ㉔:338 (atelier ④) — la clé d'option se résout par le BUNDLE, jamais affichée telle quelle quand il la
+            // sert. Mesuré le 2026-09-22 : le bundle fr sert 886 clés et 0 des 18 `autonomy.*` que le back
+            // émet (`autonomy.cook.now` …) — tant qu'il ne les sert pas, la clé se montre nue, comme avant.
+            string libelleOption = MafiaCleanCity.I18n.I18nCatalog.Connait(option.label_key)
+                ? MafiaCleanCity.I18n.I18nCatalog.Traduire(option.label_key) : option.label_key;
+            TextMeshProUGUI labelText = NewText("LabelKey_" + choice, optBlock.transform, libelleOption, 12, TextAlignmentOptions.Left);
             labelText.color = TextSecondary;
             AddLayoutElement(labelText.gameObject, minHeight: 16, flexibleHeight: 0);
             // CHROME: not TrackText'd
@@ -369,10 +374,10 @@ namespace MafiaCleanCity.Operational.Autonomy
         private static string OutcomeLabel(string b)
         {
             switch (b) {
-                case "MINIMAL": return MafiaCleanCity.I18n.Libelle.De("autonomie", "etat", "[~] Minimal");
-                case "TRADEOFF": return MafiaCleanCity.I18n.Libelle.De("autonomie", "etat", "[<>] Arbitrage");
-                case "ELEVATED_EXPOSURE": return MafiaCleanCity.I18n.Libelle.De("autonomie", "etat", "[!] Exposition accrue");
-                case "OPPORTUNITY_COST": return MafiaCleanCity.I18n.Libelle.De("autonomie", "etat", "[$] Coût d'opportunité");
+                case "MINIMAL": return MafiaCleanCity.I18n.Libelle.De("autonomie", "etat", "[~] conséquence minime");
+                case "TRADEOFF": return MafiaCleanCity.I18n.Libelle.De("autonomie", "etat", "[<>] un compromis");
+                case "ELEVATED_EXPOSURE": return MafiaCleanCity.I18n.Libelle.De("autonomie", "etat", "[!] on s'expose");
+                case "OPPORTUNITY_COST": return MafiaCleanCity.I18n.Libelle.De("autonomie", "etat", "[$] on laisse passer quelque chose");
                 default: return MafiaCleanCity.I18n.Libelle.De("autonomie", "etat", "[?] Inconnu");
             }
         }
