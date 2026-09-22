@@ -84,11 +84,12 @@
 - À fournir par l'orchestrateur au top du client, selon 2a du skill : `capture-1080x2400.png` (+ 1920 si la ligne GO le couvre),
   COPIES avec sha256 dans `captures-provenance.md`, la ligne d'identité du journal (`[DemoIdentityResolver] régime=env
   identité=…`) jointe, le SHA de l'arbre au run. Tant que cette table est vide, ce dossier ne s'instruit pas.
-- Compte photographié attendu : la paire `MAFIA_DEMO_IDENTIFIER`/`MAFIA_DEMO_PASSWORD` (compte de capture) — sans la ligne du
-  journal, les VALEURS de la planche ne se comparent à rien ; la FORME se juge.
-- **Corps réels comparables** : `Tools/juge-visuel/police/corps-reels/` a été REJOUÉ le 2026-09-22 sur la pile `03cf564c`, compte
-  `operational_demo` (provenance dans chaque fichier). Ils ne sont comparables en VALEUR que si la capture est prise sur ce même
-  compte — sinon, forme seulement.
+- Compte photographié : **un run = une paire** (client `55e674db`) — la paire exportée par l'user sous `MAFIA_CAPTURE_*` et `MAFIA_DEMO_*`.
+  Preuve jointe exigée : la ligne `[IDENTITE-CONNECTEE] planche_les_inspections : /v1/me email=… · CONFORME` du journal du run (la garde
+  qui compare le compte réellement connecté à l'annoncé) ; sans elle, les VALEURS de la planche ne se comparent à rien ; la FORME se juge.
+- **Corps réels comparables** : `Tools/juge-visuel/police/corps-reels/` est sur `operational_demo` (22/09, pile `03cf564c`) ; il est REPRIS
+  sur le compte du run dans la fenêtre du créneau (`passe-synchrone.py`, RECAPTURE §2.5). La provenance de chaque corps dit son compte :
+  s'il n'est pas celui de la planche, les VALEURS vont en « non vérifié ».
 
 ## Échelle — OBLIGATOIRE, jamais déduite par le juge
 

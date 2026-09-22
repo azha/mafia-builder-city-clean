@@ -64,10 +64,12 @@
 | `planche_ce_que_vous_avez_confie_1080x2400.png` | `MAFIA_CI_CATEGORIES=PhotoPlanche` | sous chrome, surimpression | **NON FOURNI** — à poser au créneau |
 
 - Protocole de planche : `RECAPTURE-2026-09-22.md` §2 (conteneur RECRÉÉ, horodatage de l'image lu PENDANT le run, empreinte à
-  deux propriétés avant/après, la paire du compte de capture exportée sous `MAFIA_CAPTURE_*` ET `MAFIA_DEMO_*` — le shell ne lit que
-  la seconde —, sha256 + ligne `[DemoIdentityResolver]` du journal ici ; `[IDENTITE-CAPTURE]` n'est PAS une preuve, §2.4).
-- **Corps réels comparables** : `ecran_delegation/corps-reels/` rejoués le 2026-09-22 sur la pile `03cf564c`, compte `operational_demo`
-  (provenance dans chaque fichier). Comparables en VALEUR seulement si la capture est prise sur ce même compte — sinon, forme.
+  deux propriétés avant/après, un run = une paire exportée sous `MAFIA_CAPTURE_*` ET `MAFIA_DEMO_*` — le capteur de corps ne lit que
+  la seconde —, sha256 + preuve d'identité jointe : `[IDENTITE-CONNECTEE] … CONFORME` ou `[DemoIdentityResolver]` selon la catégorie,
+  §2.4 ; `[IDENTITE-CAPTURE]` n'est PAS une preuve).
+- **Corps réels comparables** : `ecran_delegation/corps-reels/` est sur `operational_demo` (22/09, pile `03cf564c`) ; il est REPRIS sur le
+  compte du run, dans la fenêtre du créneau, par `passe-synchrone.py` (RECAPTURE §2.5). La provenance de chaque fichier dit le compte :
+  si elle ne dit pas celui de la planche, les VALEURS vont en « non vérifié » — la forme se juge.
 
 ## Échelle — OBLIGATOIRE, jamais déduite par le juge
 
@@ -116,4 +118,4 @@
   fichier `constats-a-rejuger` s'il existe (ce sont des périmètres, pas des jugements) ;
 - pour l'instant : toute capture.
 
-Préparé sur le client `f0ac86c0` (branche `da/2026-09-22`), atelier `20d006d`.
+Préparé sur le client `e2e4fc4b` (branche `da/2026-09-22`), atelier `20d006d`.

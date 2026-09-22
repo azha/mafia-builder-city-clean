@@ -30,7 +30,7 @@ Mesuré dans `Assets/Tests` (attribut `[Category]` de la méthode qui écrit le 
 | ㉙ Le conflit | `ecran_conflit` r1 | B1 B2 M9 m6 m7 m8 / — | `planche_le_conflit_1080x2400.png` | `PhotoChantierC` | |
 | ㉞ Les ordres du soir | `carnet` r1 | m1 m2 / — | `screen_c3_sous_chrome_1080x2400.png` | `PhotoScreenC3SousChrome` | ⛔ le r1 a jugé `planche_signer_l_ordre_1080x2400.png`, qui est une fiche de LIEUTENANT (TABLE, 07/09) : la bonne planche est celle du chemin joueur Plus → LES ORDRES DU SOIR |
 | ㊳ Le journal | `screen_c1` r1 | M12 / B1 M12 nv7 | `screen_c1_journal_sous_chrome_1080x2400.png` · `screen_c1_1080x{1920,2400}.png` | `CaptureJournal` · `PhotoScreenC1` | |
-| ㊱ L'horizon | `screen_c6` r1 | B3 m6 / — | `screen_c6_horizon_etat-vide_sous_chrome_1080x2400.png` · `screen_c6_horizon_etat-vide_1080x2400.png` | `CaptureSousChrome` · `CaptureHorizon` | ⚠️ `CaptureHorizon` (ScreenC6C2) signe **en dur** sur le compte de démo (`HorizonScreenPlayModeTests.cs:141`) : sa planche montre `operational_demo` quoi qu'on exporte (§5) ; les DEUX captures assertent « 0 carte » (état vide) — sur le compte de capture elles rougissent s'il porte des cartes : mesurer `GET /v1/meta/horizon-feed` sur ce compte AVANT le créneau. `screen_c6_1080x{1920,2400}` (ScreenC6C1) : planche SANS donnée (écran monté sans jeton ni chargement), inutile pour B3/m6 — hors créneau (§5) |
+| ㊱ L'horizon | `screen_c6` r1 | B3 m6 / — | `screen_c6_horizon_etat-vide_sous_chrome_1080x2400.png` · `screen_c6_horizon_etat-vide_1080x2400.png` | `CaptureSousChrome` · `CaptureHorizon` | depuis `55e674db`, les deux signent avec la paire du RUN. ⚠️ Les deux assertent « 0 carte » (état vide) : c'est une propriété du compte du run — décision et repli au §2.5. `screen_c6_1080x{1920,2400}` (ScreenC6C1) : planche SANS donnée (écran monté sans jeton ni chargement), inutile pour B3/m6 — hors créneau (§5a) |
 | ① L'intérieur du district | `ecran-principal` r9 | M7 M8 M14 m4 m5 m11 / — | `screen_1_district_sous_chrome_1080x2400.png` · `screen_2a_fiche_sous_chrome_1080x{2400,1920}.png` | `CaptureDistrict` · `CaptureSousChrome` | le district signe par le résolveur du client, qui lit `MAFIA_DEMO_*` (§2.4) : le 07/09, lancé avec `MAFIA_CAPTURE_*` seule, il a photographié `operational_demo` (`journal-recapture-district-2026-09-07.md`) |
 
 Compte : 45 (A) + 10 (B) = 55 lignes, 50 constats distincts, 15 écrans, 14 dossiers.
@@ -47,7 +47,7 @@ MAFIA_CI_CATEGORIES=PhotoPlanche,PhotoChantierC,PhotoScreenC3SousChrome,PhotoScr
   spécifique), `CaptureDetail` (a emporté un mutant une fois).
 - ⛔ **jamais `Screenshot`** (TD-625 : ses 11 tests appellent `File.Delete` sur des planches commitées avant de capturer, et n'ont
   jamais tourné).
-- `CaptureHorizon` reste dans la valeur : sa planche est sur `operational_demo` par construction (§2.4, §5), ce qui la rend comparable EN VALEUR aux corps réels du 22/09 (même compte) — à déclarer, pas à retirer. Le témoin d'identité `CaptureFiliere` (§2.4) n'est PAS dans la valeur : c'est une option.
+- `CaptureHorizon` reste dans la valeur : depuis `55e674db` elle signe avec la paire du run comme les neuf autres (« un run = une paire ») ; sa comparaison et sa garde sont re-basées sur ce compte (§2.5). Le témoin d'identité `CaptureFiliere` (§2.4) n'est PAS dans la valeur : c'est une option.
 - Surplus déclaré : `CaptureSousChrome` produit aussi `screen_5_exceptions_*` (⑨) — non jugé ce tour ; `PhotoPlanche` produit les 8
   planches de sa suite (dont `planche_signer_l_ordre`, la fiche de lieutenant) — les planches d'écrans hors des 55 changent aussi et
   **ne se commitent pas** sans juge (règle du 07/09).
@@ -79,35 +79,63 @@ Chaque planche voyage avec l'état des DEUX côtés (conteneur back + arbre clie
      un compte dont 17 bâtiments sur 20 sont postérieurs à son dernier tick n'est pas gelé même si l'empreinte ne bouge pas.
    - Écart entre avant et après ⇒ la campagne a MUTÉ le monde ⇒ planches et corps ne décrivent plus le même compte : à dire, à
      refaire. `passe-synchrone.py` fait la même chose pour les corps ; ici c'est pour les planches.
-4. **L'identité — deux noms pour UNE paire, et ce que chaque garde prouve vraiment** (mesuré dans le code le 2026-09-22) :
-   - le SHELL (toutes les planches sous chrome : `PhotoPlanche`, `PhotoChantierC`, `PhotoScreenC3SousChrome`, `CaptureSousChrome`,
-     `CaptureJournal`, `CaptureDistrict`) se connecte par `DemoIdentityResolver`, qui lit **`MAFIA_DEMO_IDENTIFIER` /
-     `MAFIA_DEMO_PASSWORD`** (`DemoIdentityResolver.cs:127-128`) et **jamais** `MAFIA_CAPTURE_*` ; sans elles il retombe sur
-     `operational_demo`. ⇒ **La paire du compte de capture doit être exportée AUSSI sous les noms `MAFIA_DEMO_*`**. La consigne
-     du 07/09 « `MAFIA_DEMO_*` retirées par `env -u` » faisait photographier `operational_demo` au shell — c'est ce que le journal de
-     district a lu ;
-   - `MAFIA_CAPTURE_IDENTIFIER` / `_PASSWORD` : lue par `CaptureSousShell.IdentiteDeCaptureOuEchoue`, qui asserte la **PRÉSENCE**
-     d'une paire (capture, sinon démo) et imprime `[IDENTITE-CAPTURE] … la capture signera avec « X »`. ⚠️ Sur les planches,
-     `CapturerLocataire` **jette** la paire qu'il vient de vérifier (`CaptureSousShell.cs:190`) : X est ce que dit l'environnement,
-     **pas** le compte que le shell a signé. Cette ligne n'est donc PAS une preuve d'identité. Elle ne l'est que pour les suites qui se
-     connectent elles-mêmes avec la paire retournée (`PhotoScreenC1` — `JournalScreenPlayModeTests.cs:140-141`) ;
-   - **la preuve d'identité est la ligne `[DemoIdentityResolver] régime=… identité=…`** du journal du run (écrite par le client à la
-     connexion, `DemoIdentityResolver.cs:196`) — une par suite, lue dans le journal JOINT, jamais recopiée d'un message ;
-   - `MAFIA_CAPTURE_EXPECT_PLAYER=<player_id>` n'arme **qu'une** capture sur quinze : `Capture_LaFiliere_SousChrome`
-     (`VuePrincipaleCapturePlayModeTests.cs:2165-2181`, catégorie `CaptureFiliere`), qui compare le `player_id` du portefeuille
-     SERVI à l'attendu. **Aucune des dix catégories de §1 ne la lit.** Option, au choix de l'orchestrateur : ajouter `CaptureFiliere`
-     (préfixe vérifié, n'emporte rien) comme TÉMOIN d'identité du run — c'est la seule garde qui compare une VALEUR servie ; son
-     coût : elle écrit aussi `screen_c2_filiere_sous_chrome_1080x2400.png` (surplus, non commité) et rougit si le compte ne sert
-     aucune étape de filière ;
-   - trois captures signent **en dur** sur le compte de démo et ignorent les deux paires : `CaptureHorizon` (`HorizonScreenPlayModeTests.cs:141`,
-     dans §1), `CaptureFiche` (`VuePrincipaleCapturePlayModeTests.cs:873`) et `CaptureExceptions` (`:1003`) — les deux dernières hors
-     des 55. Leur planche se déclare « `operational_demo` par construction » dans `captures-provenance.md`, et l'empreinte (§2.3) se
-     prend ALORS sur les deux comptes.
+4. **L'identité — mis à jour après `55e674db` (client, 2026-09-22) : une règle, une garde sur l'effet.**
+   - Le résolveur du client prend désormais la paire de CAPTURE (`MAFIA_CAPTURE_*`) si elle est complète, avant `MAFIA_DEMO_*`
+     (`DemoIdentityResolver.cs:33-42` à `55e674db`) ; les trois sites qui signaient en dur passent par la même règle. **Un run = une
+     paire** : toute catégorie de capture photographie le compte que le run exporte.
+   - La garde sur l'EFFET, `CaptureSousShell.IdentiteConnecteeOuEchoue`, lit `GET /v1/me` avec le jeton réellement utilisé et compare
+     son email/handle à l'identité annoncée ; elle imprime `[IDENTITE-CONNECTEE] … CONFORME` et refuse d'écrire la planche sinon. Sites
+     mesurés à `55e674db` : l'aide de planche `CapturerLocataire` (donc `PhotoPlanche` et `PhotoChantierC`), `CaptureHorizon`
+     (`HorizonScreenPlayModeTests.cs:146`), et deux captures hors créneau (`CaptureFiche`, `CaptureExceptions`).
+   - **Preuve d'identité par catégorie** : `[IDENTITE-CONNECTEE] … CONFORME` pour `PhotoPlanche`, `PhotoChantierC`, `CaptureHorizon` ;
+     pour les sept autres (`PhotoScreenC3SousChrome`, `PhotoScreenC1`, `CaptureJournal`, `CaptureSousChrome`, `CaptureDistrict`,
+     `PhotoVente`, `PhotoVitrine`), qui n'appellent pas cette garde, la ligne `[DemoIdentityResolver] régime=… identité=…` du journal
+     joint. `[IDENTITE-CAPTURE] … signera avec « X »` n'est une preuve nulle part : elle dit ce que contient l'environnement.
+   - **Les deux noms restent exportés**, pour une autre raison qu'avant : Unity se contente maintenant de `MAFIA_CAPTURE_*`, mais le
+     capteur de corps réels (`capturer-corps-reels.py:41-42`, appelé par `passe-synchrone.py`) ne lit que `MAFIA_DEMO_*` — sans elles
+     il se connecterait au compte de démo, ou échouerait sur le mot de passe. Même compte, deux noms ; aucune valeur n'est écrite.
+   - `MAFIA_CAPTURE_EXPECT_PLAYER` n'arme toujours qu'une capture (`CaptureFiliere`, comparaison du `player_id` servi) : option de
+     témoin, hors de la valeur de §1.
 5. **Dans chaque dossier r2** : les planches en COPIE (jamais en lien — `verifier-captures-dossier.py` rougit sur un lien), leur
    `sha256`, le dernier commit du PNG, l'arbre de rendu (SHA imprimé au run, sinon « non imprimé »), et la ligne d'identité du
    journal, dans `captures-provenance.md` ; le journal du run joint (`journal-declare.txt` cesse de dire « non fourni »).
 6. **L'arbre client** : `main` du jour (ou la branche nommée), SHA écrit — une planche prise sur un arbre en retard accuse le
    travail qu'il ne contient pas (㉟ le 07/09).
+
+### 2.5 Un run = une paire — à quel compte chaque comparaison se fait (tranché le 2026-09-22, après `55e674db`)
+
+**Le critère** : un juge compare une VALEUR de planche aux corps réels du dossier ; les deux doivent décrire le même compte, au même
+moment. **Mesuré** : les 229 corps réels de l'arbre ont été pris le 22/09 sur **`operational_demo`** (pile `03cf564c`) ; depuis
+`55e674db`, les planches des dix catégories sont prises sur **le compte du run**.
+
+| catégorie | dossiers (corps réels comparés) | corps réels aujourd'hui | planche après `55e674db` | garde qui dépend du compte |
+|---|---|---|---|---|
+| `PhotoPlanche` | `police` (⑮ ⑰), `vente`, `compte` (㉓), `ecran_delegation`, `ecran_demolition`, `compression` | `operational_demo`, 22/09 | compte du run | ⑰ : le compte riche sature les précincts (6/6 HUNTING) — lecture, pas garde |
+| `PhotoChantierC` | `ecran_appro`, `ecran_distribution`, `ecran_loi`, `ecran_conflit` | `operational_demo`, 22/09 | compte du run | — |
+| `PhotoScreenC3SousChrome` | `carnet` | `operational_demo`, 22/09 | compte du run | — |
+| `PhotoScreenC1`, `CaptureJournal` | `screen_c1` | `operational_demo`, 22/09 | compte du run | — |
+| `CaptureSousChrome`, `CaptureHorizon` | `screen_c6` | `operational_demo`, 22/09 — **0 carte** servie (`screen_c6/corps-reels/GET_meta_horizon-feed.json`) | compte du run | **« 0 carte »** (les deux captures ㊱) : rouge si le compte du run sert une carte |
+| `CaptureDistrict`, `CaptureSousChrome` (fiche) | `ecran-principal` | `operational_demo`, 22/09 | compte du run | — |
+| `PhotoVente` | `vente` | `operational_demo`, 22/09 | compte du run | — |
+| `PhotoVitrine` | `compte` (㉓) | `operational_demo`, 22/09 | compte du run | — |
+
+**Décision : `CaptureHorizon` reste dans le run unique ; sa comparaison et sa garde sont re-basées sur le compte du run — comme les neuf
+autres.** Les corps réels des quatorze dossiers sont **repris dans la même fenêtre, sur le compte du run**, par
+`python3 Tools/juge-visuel/passe-synchrone.py --compte <email du run> --player-id <player_id>` (empreinte → corps → empreinte ; le mot de
+passe vient de `MAFIA_DEMO_PASSWORD`, jamais de la ligne de commande). Le `player_id` se lit sans ouvrir de session :
+`docker compose -p mafia-clean-city exec -T pg psql -U mafia -d mafia_clean_city -tAc "SELECT player_id FROM player WHERE email='<email du run>';"`
+(requête validée le 22/09 sur `operational_demo` → `01a01f34…`).
+
+**Pourquoi pas un second run `operational_demo` pour ㊱ seul** : il ne dispenserait pas de la passe de corps. Les corps du 22/09 ne
+sont pas synchrones d'une planche prise un autre jour (l'horloge du compte avance, le seeder le regarnit) — `passe-synchrone.py`
+existe pour ça. Le second run ajouterait une porte Unity (~13 min d'éditeur partagé, mesure citée dans
+`PlancheEcransCapturePlayModeTests.cs:44-46`), une seconde paire exportée, une seconde empreinte, sans rien gagner en comparabilité.
+
+**Le repli, écrit d'avance** : si le compte du run sert au moins une carte d'horizon, les deux captures ㊱ rougissent PAR CONSTRUCTION
+(la garde « 0 carte » refuse d'appeler « état vide » un écran qui en montre) et ㊱ n'est pas recapturable sur ce compte. Alors, et
+seulement alors : un second run `MAFIA_CI_CATEGORIES=CaptureSousChrome,CaptureHorizon` avec la paire `operational_demo` (0 carte le
+22/09, à re-mesurer), une empreinte et une passe de corps `screen_c6` sur ce compte. Coût : une porte (~13 min) et un journal de plus.
+Le rouge n'est pas un échec du créneau : c'est la garde qui dit que l'état demandé n'existe pas sur ce compte.
 
 ## 3. Les dossiers r2 à instruire
 
@@ -145,20 +173,16 @@ Ce qui reste, et qui est la dette :
 1. `ScreenC6C1_CapturerPourLeJugeVisuel_DeuxResolutions` (`:107-114`) monte l'écran **sans jeton et sans `Charger()`** : ses planches
    `screen_c6_1080x{1920,2400}.png` montrent un écran SANS donnée servie. Elles ne peuvent trancher aucun constat qui dépend des
    données (㊱ B3, m6) — et rien dans leur nom ne le dit. Le juge r1 les a reçues comme « écran seul » à côté de l'état vide réel.
-2. `ScreenC6C2_CapturerEtatVide_ChargeParLeReseau` (`:136-165`, `CaptureHorizon`) se connecte avec l'identifiant et le mot de passe du
-   compte de démo **en littéraux** (`:141`) : elle ignore `MAFIA_CAPTURE_*` ET `MAFIA_DEMO_*`, et comme elle appelle `AuthClient`
-   directement, **aucune ligne `[DemoIdentityResolver]`** ne dit qui elle a photographié. Même forme dans `Capture_FicheBatiment`
-   (`VuePrincipaleCapturePlayModeTests.cs:873`) et `Capture_EcranExceptions` (`:1003`).
+2. ~~`ScreenC6C2` signe en dur sur le compte de démo~~ — **FERMÉ par `55e674db`** : la capture passe par la règle du résolveur et
+   par la garde d'effet (`HorizonScreenPlayModeTests.cs:146`) ; de même `CaptureFiche` (`VuePrincipaleCapturePlayModeTests.cs:879`) et
+   `CaptureExceptions` (`:1012`).
 3. `ScreenC6C1` n'a **aucune catégorie propre** (seulement `Capture`, interdite, et la catégorie de classe) : on ne peut pas la lancer
    seule. Même forme : `ScreenB7C1` (`ForensicScreenPlayModeTests.cs:107`) et `B3C1` (`ReputationScreenPlayModeTests.cs:889`).
-⇒ Pour le créneau : ㊱ se recapture par `CaptureSousChrome` (sous chrome, résolveur) et `CaptureHorizon` (écran seul, `operational_demo`
-par construction) ; `ScreenC6` n'est PAS dans la valeur.
+⇒ Pour le créneau : ㊱ se recapture par `CaptureSousChrome` et `CaptureHorizon`, sur le compte du run (§2.5) ; `ScreenC6` n'est PAS dans la valeur.
 
-**(b) L'aide de planche jette l'identité qu'elle vérifie.** `CaptureSousShell.CapturerLocataire` appelle `IdentiteDeCaptureOuEchoue`
-et ignore son retour (`CaptureSousShell.cs:190`) ; le shell signe par `DemoIdentityResolver`, qui ne lit que `MAFIA_DEMO_*`. ⇒ La ligne
-`[IDENTITE-CAPTURE] … signera avec « X »` peut nommer un compte que la planche ne montre pas. C'est la même famille que le repli
-silencieux du 06/09 (« un repli correct dans son contexte produit une valeur plausible ») : la garde de PRÉSENCE est verte, la ligne
-imprimée est fausse. Contournement pour ce créneau : exporter la paire sous les deux noms (§2.4) et lire `[DemoIdentityResolver]`.
+**(b) ~~L'aide de planche jette l'identité qu'elle vérifie~~ — FERMÉ par `55e674db`.** `CapturerLocataire` garde maintenant l'identité
+annoncée et la confronte au compte connecté (`IdentiteConnecteeOuEchoue`, `GET /v1/me`). Reste ouvert, et c'est écrit au §2.4 : sept
+catégories du créneau n'appellent pas cette garde ; leur preuve est `[DemoIdentityResolver]`.
 
 **(c) La valeur `MAFIA_CAPTURE_EXPECT_PLAYER` ne garde qu'une capture sur quinze** (`CaptureSousShell.cs:42`, déjà écrit par son auteur) —
 aucune des 55 n'est couverte par une garde de VALEUR. Rappel, pas une dette neuve.

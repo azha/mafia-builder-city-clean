@@ -244,6 +244,7 @@ Mots pris à la maquette : « commander » (㉚·48), « lancer une cuisson » (
 ### c4. ㉔ — les glyphes `[~] [<>] [!] [$]` devant les conséquences
 
 **Retirés.** Les quatre conséquences sont posées dans une seule couleur (`outcomeText.color = TextSecondary`, `AutonomyInboxController.cs:351`) : le glyphe ne double aucune couleur, le mot porte déjà le sens (la règle F2 « la couleur n'est jamais seule » est tenue par le mot), ㉔·26 n'en dessine aucun, et `[<>]` / `[$]` sont des codes privés qu'aucun joueur ne sait lire.
-⚠️ Ce n'est pas la règle de ⑨ : là, `[!!!]` double une échelle de gravité portée par la couleur, et il reste. Le retrait change le littéral, donc la clé dérivée par `Libelle.De` : à refaire côté client.
+⚠️ Ce n'est pas la règle de ⑨ : là, `[!!!]` double une échelle de gravité portée par la couleur, et il reste.
+⛔ **Correction du 2026-09-22 (mesurée sur la table des orphelines, `4bddb0aa`)** : j'avais écrit que le retrait changeait la clé dérivée. C'est faux — le slug ignore le glyphe (`autonomie.etat.consequence_minime` dérive de « [~] conséquence minime »). **La clé ne change pas ; c'est la VALEUR servie qui doit perdre le glyphe**, sinon `Libelle.De` le ramène à l'écran par le bundle. Les valeurs fr et en sans glyphe sont dans `07-orphelines-en.md`.
 
 **Compte de l'annexe c** : 1 bouton (4 bandes) · 4 messages demandés (+ la famille « Ouvrir », 6 entrées) · 28 messages en complément (14 paires) · 1 règle de raison · 2 légendes de cadenas · 1 décision de glyphes.
