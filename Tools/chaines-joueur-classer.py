@@ -52,8 +52,8 @@ VERDICTS = [
  (R, "l'identifiant tient lieu de contenu",     1, "RETIRÉ DE C — même doctrine du trou honnête : l'écran DIT que l'identifiant remplace un texte non écrit. Aucun commentaire ne le ratifie explicitement ⇒ laissé en l'état plutôt que tranché sans maquette."),
 
  (B, "la route n'a rien rendu",                 3, "« route » = endpoint · lot C 22/09 : ㉞ les ordres du soir (4→3)"),
- (B, "aucune route ne dit ce qu'elles",         2, "« route »"),
- (B, "aucune route ne connaît",                 2, "« route »"),
+ (B, "aucune route ne dit ce qu'elles",         0, "CLOS lot C 22/09 (㉙ le conflit) — était : « route » · lot C 22/09 : ㉙ le conflit (2→1)"),
+ (B, "aucune route ne connaît",                 0, "CLOS lot C 22/09 (㉙ le conflit) — était : « route » · lot C 22/09 : ㉙ le conflit (2→1)"),
  (B, "Aucune route ne liste vos bâtiments",     1, "« route »"),
  (B, "Aucune route connue pour l'instant",      2, "« route » = endpoint, alors que l'écran voisin dit « CETTE ROUTE » pour un itinéraire"),
  (B, "aucune route n'existe encore",            0, "CLOS lot C 22/09 (⑰ le commissariat) — était : « route »"),

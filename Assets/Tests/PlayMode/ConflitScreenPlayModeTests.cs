@@ -258,8 +258,8 @@ namespace MafiaCleanCity.Operational.Tests
             CollectionAssert.Contains(ecran.RenderedTexts,
                 "Dites-moi qui j'envoie et sur quoi. Je pars ce soir, on saura demain.");
             CollectionAssert.Contains(ecran.RenderedTexts,
-                "Vous avez l'homme. Personne pour lui dire où frapper — aucune route ne connaît " +
-                "encore vos rivaux.",
+                "Vous avez l'homme. Personne pour lui dire où frapper — on ne sait pas encore " +
+                "où ils sont.",
                 "même avec un MUSCLE trouvé, l'écran doit dire que la cible reste indécouvrable — " +
                 "aucun bouton cliquable n'est construit cette passe");
         }

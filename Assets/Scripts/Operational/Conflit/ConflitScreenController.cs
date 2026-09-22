@@ -331,7 +331,7 @@ namespace MafiaCleanCity.Operational
 
             TextMeshProUGUI note = NouveauTexteFiche(tableRoot, "TableNote",
                 Libelle.De("conflit", "bloc",
-                    "Dessinées, pas renseignées : aucune route ne dit ce qu'elles préparent ni ce qu'elles possèdent."),
+                    "Dessinées, pas renseignées : personne ne vous dit ce qu'elles préparent ni ce qu'elles possèdent — on frappe à l'aveugle."),
                 7.5f, DesignTokens.Current.onSurfaceMuted, false);
             note.enableWordWrapping = true;
             TrackText(note.text);
@@ -507,8 +507,8 @@ namespace MafiaCleanCity.Operational
             // exposée pour le jour où une route de cible existera.
             TextMeshProUGUI noteCible = NouveauTexteFiche(piedRoot, "PiedNoteCible",
                 Libelle.De("conflit", "bloc",
-                    "Vous avez l'homme. Personne pour lui dire où frapper — aucune route ne connaît " +
-                    "encore vos rivaux."),
+                    "Vous avez l'homme. Personne pour lui dire où frapper — on ne sait pas encore " +
+                    "où ils sont."),
                 8f, DesignTokens.Current.onSurfaceMuted, false);
             noteCible.enableWordWrapping = true;
             TrackText(noteCible.text);
