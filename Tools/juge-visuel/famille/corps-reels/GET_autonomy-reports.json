@@ -5,34 +5,39 @@
  "statut": 200,
  "params": {},
  "provenance": {
-  "date": "2026-09-06T11:02:54",
-  "back_main": "fc944b62",
-  "game_back": "mafia-clean-city-game-back 2026-09-04T08:41:42.667221302Z",
-  "compte": "demo_capture@example.test",
-  "jour_de_jeu": 50,
-  "horloge_game_minute": 72118,
+  "date": "2026-09-22T13:23:16",
+  "back_main": "11559fff",
+  "back_served": "03cf564c",
+  "game_back": "mafia-clean-city-game-back 2026-09-14T01:13:06.637480618Z",
+  "compte": "operational_demo@example.test",
+  "jour_de_jeu": 55,
+  "horloge_game_minute": 79905,
   "horloge_source": "city_sim_clock.game_minute scopée sur player_id (lecture en base : aucune route joueur ne la projette — forme F)",
   "district_du_joueur_mesure": 1,
   "dossier": "famille",
   "symbole": "⑥",
   "controleur": "LieutenantScreenController",
-  "X-Request-Id": "0698d430-16d5-4cab-ab57-9cc9cffc6b30",
-  "X-Server-Processed-At": "2026-09-06T09:02:54.469Z",
+  "X-Request-Id": "935f10cf-0d29-4ca4-a046-b26ab1b9a949",
+  "X-Server-Processed-At": "2026-09-22T11:23:18.380Z",
   "X-Api-Version": "1"
  },
  "corps": {
   "response_meta": {
-   "request_id_echo": "0698d430-16d5-4cab-ab57-9cc9cffc6b30",
-   "server_processed_at": "2026-09-06T09:02:54.469Z",
+   "request_id_echo": "935f10cf-0d29-4ca4-a046-b26ab1b9a949",
+   "server_processed_at": "2026-09-22T11:23:18.380Z",
    "api_version": 1,
-   "correlation_id_echo": null
+   "correlation_id_echo": null,
+   "server_build_ref": {
+    "git_sha": "03cf564c921dd6dec8ba6692b004c5d1b4d0e0a6",
+    "built_at": "2026-09-14T01:12:31Z"
+   }
   },
   "payload": {
    "data": {
     "reports": [
      {
-      "report_id": "b54c7528-de77-4644-b922-fc7f683fb08e",
-      "lieutenant_id": "01a075d7-6aed-728e-8f0a-b5dbd5caedee",
+      "report_id": "8247c90d-16e6-44aa-bc09-2ed2b114c0e9",
+      "lieutenant_id": "01a0c8d5-8822-7527-bb8e-ce6096ff1ceb",
       "backlog_age_cycles": 2,
       "issues": [
        {

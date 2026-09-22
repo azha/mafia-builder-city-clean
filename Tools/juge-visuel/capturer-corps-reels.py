@@ -458,7 +458,14 @@ def main(argv):
     back_sha = subprocess.run(["git", "-C", BACK, "rev-parse", "--short", "main"], capture_output=True, text=True).stdout.strip()
     image = subprocess.run(["docker", "inspect", "-f", "{{.Config.Image}} {{.Created}}", "mafia-clean-city-game-back-1"], capture_output=True, text=True).stdout.strip()
     pile = Pile(); st = pile.connecter()
-    print(f"session/open : {st} · back main {back_sha} · game-back {image[:60]}")
+    # ⛔ LE SHA QUE LA PILE SERT N'EST PAS `main` DU DÉPÔT. Le 2026-09-22, `main` était à 11559fff
+    #    et la pile servait 03cf564c (image du 14/09) : une provenance qui ne porte que `back_main`
+    #    dit « à jour » d'un back que personne ne sert. `server_build_ref` est gelé dans CHAQUE
+    #    réponse (`response_meta`) ; il vit dans la provenance, pas dans le corps (jamais injecté).
+    back_served = (((pile.corps.get("session/open") or {}).get("response_meta") or {})
+                   .get("server_build_ref") or {}).get("git_sha")
+    back_served = back_served[:8] if isinstance(back_served, str) else None
+    print(f"session/open : {st} · back main {back_sha} · SERVI {back_served} · game-back {image[:60]}")
     # amorces : les corps qui fournissent les ids des routes paramétrées
     for r in ("/v1/lieutenants", "/v1/world/districts", "/v1/flag-review", "/v1/me/legal", "/v1/news/feed", "/v1/meta/horizon-feed",
               "/v1/ambient/feed", "/v1/random-world/active", "/v1/friction/replacement-options", "/v1/supply-chain/graph",
@@ -518,7 +525,7 @@ def main(argv):
             # `jour_de_jeu` : la seule horloge que ce compte expose à cet outil. C'est un JOUR,
             # pas la minute que lit l'empreinte du back — l'écrire quand même, daté et nommé,
             # vaut mieux qu'une base de preuve sans aucune horloge.
-            prov = {"date": date, "back_main": back_sha, "game_back": image, "compte": IDENT,
+            prov = {"date": date, "back_main": back_sha, "back_served": back_served, "game_back": image, "compte": IDENT,
                     "jour_de_jeu": jour_de_jeu,
                     "horloge_game_minute": minute_de_jeu,
                     "horloge_source": source_horloge,
@@ -576,7 +583,7 @@ def main(argv):
         if not controle:
             partage = sum(1 for x in cd.TABLE + cd.HORS_APPSHELL if x["dossier"] == r["dossier"]) > 1
             nom_index = f"_index-{r['sym']}.json" if partage else "_index.json"
-            json.dump({"dossier": r["dossier"], "symbole": r["sym"], "controleur": r["ctl"], "date": date, "back_main": back_sha, "horloge_game_minute": minute_de_jeu, "jour_de_jeu": jour_de_jeu, "compte": IDENT,
+            json.dump({"dossier": r["dossier"], "symbole": r["sym"], "controleur": r["ctl"], "date": date, "back_main": back_sha, "back_served": back_served, "horloge_game_minute": minute_de_jeu, "jour_de_jeu": jour_de_jeu, "compte": IDENT,
                        "note": "routes = celles du DOSSIER de code du contrôleur et de ses classes *Client. DEUX SENS, et le second manquait : elles sont parfois PLUS LARGES que l'écran (le juge-donnees filtre), et parfois PLUS ÉTROITES que le domaine — une route du domaine que le code de l'écran n'appelle pas N'APPARAÎT PAS ICI, par construction et non par échec. Mesuré le 2026-09-06 sur screen_c2 : POST .../laundering/stage existe côté back et le client la référence 0 fois, donc elle est absente de cet index. ⛔ Une absence ici se lit « pas dans la surface de code de l'écran », JAMAIS « pas de corps » ni « pas regardée » — confronter au mandat du dossier pour la trancher.",
                        "comptes": c, "routes": idx}, open(os.path.join(d, nom_index), "w", encoding="utf-8"), ensure_ascii=False, indent=1)
         for k in total: total[k] += c[k]

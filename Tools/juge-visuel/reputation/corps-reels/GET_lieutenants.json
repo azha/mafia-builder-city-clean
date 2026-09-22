@@ -5,50 +5,55 @@
  "statut": 200,
  "params": {},
  "provenance": {
-  "date": "2026-09-06T11:02:54",
-  "back_main": "fc944b62",
-  "game_back": "mafia-clean-city-game-back 2026-09-04T08:41:42.667221302Z",
-  "compte": "demo_capture@example.test",
-  "jour_de_jeu": 50,
-  "horloge_game_minute": 72118,
+  "date": "2026-09-22T13:23:16",
+  "back_main": "11559fff",
+  "back_served": "03cf564c",
+  "game_back": "mafia-clean-city-game-back 2026-09-14T01:13:06.637480618Z",
+  "compte": "operational_demo@example.test",
+  "jour_de_jeu": 55,
+  "horloge_game_minute": 79905,
   "horloge_source": "city_sim_clock.game_minute scopée sur player_id (lecture en base : aucune route joueur ne la projette — forme F)",
   "district_du_joueur_mesure": 1,
   "dossier": "reputation",
   "symbole": "㊲",
   "controleur": "ReputationScreenController",
-  "X-Request-Id": "5c206e01-4454-46a9-931d-29ffc9e7d6ca",
-  "X-Server-Processed-At": "2026-09-06T09:02:54.580Z",
+  "X-Request-Id": "b08bec9f-8be4-463d-859f-95b7175106bc",
+  "X-Server-Processed-At": "2026-09-22T11:23:18.793Z",
   "X-Api-Version": "1"
  },
  "corps": {
   "response_meta": {
-   "request_id_echo": "5c206e01-4454-46a9-931d-29ffc9e7d6ca",
-   "server_processed_at": "2026-09-06T09:02:54.580Z",
+   "request_id_echo": "b08bec9f-8be4-463d-859f-95b7175106bc",
+   "server_processed_at": "2026-09-22T11:23:18.793Z",
    "api_version": 1,
-   "correlation_id_echo": null
+   "correlation_id_echo": null,
+   "server_build_ref": {
+    "git_sha": "03cf564c921dd6dec8ba6692b004c5d1b4d0e0a6",
+    "built_at": "2026-09-14T01:12:31Z"
+   }
   },
   "payload": {
    "data": {
     "lieutenants": [
      {
-      "lieutenant_id": "01a075d7-6aed-728e-8f0a-b5dbd5caedee",
-      "name": "Lt. Rook",
+      "lieutenant_id": "01a0c8d5-8822-7527-bb8e-ce6096ff1ceb",
+      "name": "Lt. Quist",
       "archetype": "COOK",
       "op_state_band": "IDLE",
       "rule_count_band": "NONE",
       "tenure_bucket": "FRESH"
      },
      {
-      "lieutenant_id": "01a075d7-6f77-7a36-99f4-313f0fd21cb6",
-      "name": "Lt. Sallo",
+      "lieutenant_id": "01a0c8d5-9124-7740-b4f0-8adf83729c20",
+      "name": "Lt. Varne",
       "archetype": "COOK",
       "op_state_band": "IDLE",
       "rule_count_band": "NONE",
       "tenure_bucket": "FRESH"
      },
      {
-      "lieutenant_id": "01a075d7-6f79-703e-9d99-60815dbb2eb9",
-      "name": "Lt. Halde",
+      "lieutenant_id": "01a0c8d5-912b-735f-9adc-98f74c6754be",
+      "name": "Lt. Marr",
       "archetype": "COOK",
       "op_state_band": "IDLE",
       "rule_count_band": "NONE",

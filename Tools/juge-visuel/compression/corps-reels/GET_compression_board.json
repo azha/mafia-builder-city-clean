@@ -5,27 +5,32 @@
  "statut": 404,
  "params": {},
  "provenance": {
-  "date": "2026-09-06T11:02:54",
-  "back_main": "fc944b62",
-  "game_back": "mafia-clean-city-game-back 2026-09-04T08:41:42.667221302Z",
-  "compte": "demo_capture@example.test",
-  "jour_de_jeu": 50,
-  "horloge_game_minute": 72118,
+  "date": "2026-09-22T13:23:16",
+  "back_main": "11559fff",
+  "back_served": "03cf564c",
+  "game_back": "mafia-clean-city-game-back 2026-09-14T01:13:06.637480618Z",
+  "compte": "operational_demo@example.test",
+  "jour_de_jeu": 55,
+  "horloge_game_minute": 79905,
   "horloge_source": "city_sim_clock.game_minute scopée sur player_id (lecture en base : aucune route joueur ne la projette — forme F)",
   "district_du_joueur_mesure": 1,
   "dossier": "compression",
   "symbole": "⑭",
   "controleur": "CompressionScreenController",
-  "X-Request-Id": "642dccef-a8bc-4f83-ad7a-0aa42c742fcf",
-  "X-Server-Processed-At": "2026-09-06T09:02:54.678Z",
+  "X-Request-Id": "17950260-2a4e-410c-b185-b778b763220d",
+  "X-Server-Processed-At": "2026-09-22T11:23:19.222Z",
   "X-Api-Version": "1"
  },
  "corps": {
   "response_meta": {
-   "request_id_echo": "642dccef-a8bc-4f83-ad7a-0aa42c742fcf",
-   "server_processed_at": "2026-09-06T09:02:54.678Z",
+   "request_id_echo": "17950260-2a4e-410c-b185-b778b763220d",
+   "server_processed_at": "2026-09-22T11:23:19.222Z",
    "api_version": 1,
-   "correlation_id_echo": null
+   "correlation_id_echo": null,
+   "server_build_ref": {
+    "git_sha": "03cf564c921dd6dec8ba6692b004c5d1b4d0e0a6",
+    "built_at": "2026-09-14T01:12:31Z"
+   }
   },
   "payload": {
    "error": {
@@ -34,12 +39,12 @@
     "user_facing_i18n_key": "error.resource.not_found",
     "payload_vars": null,
     "details": null,
-    "message": "no active compression board for player 01a074ce-60f3-7a91-8dbd-41d9be0bd2fc.",
+    "message": "no active compression board for player 01a01f34-fd4e-7771-83b0-b75efa6e8023.",
     "trace": {
-     "request_id_echo": "642dccef-a8bc-4f83-ad7a-0aa42c742fcf",
+     "request_id_echo": "17950260-2a4e-410c-b185-b778b763220d",
      "correlation_id": null,
      "trace_id": null,
-     "server_emitted_at": "2026-09-06T09:02:54.678Z"
+     "server_emitted_at": "2026-09-22T11:23:19.222Z"
     },
     "retryable_class": "NEVER",
     "retry_after_s": null

@@ -5,34 +5,39 @@
  "statut": 200,
  "params": {},
  "provenance": {
-  "date": "2026-09-06T11:02:54",
-  "back_main": "fc944b62",
-  "game_back": "mafia-clean-city-game-back 2026-09-04T08:41:42.667221302Z",
-  "compte": "demo_capture@example.test",
-  "jour_de_jeu": 50,
-  "horloge_game_minute": 72118,
+  "date": "2026-09-22T13:23:16",
+  "back_main": "11559fff",
+  "back_served": "03cf564c",
+  "game_back": "mafia-clean-city-game-back 2026-09-14T01:13:06.637480618Z",
+  "compte": "operational_demo@example.test",
+  "jour_de_jeu": 55,
+  "horloge_game_minute": 79905,
   "horloge_source": "city_sim_clock.game_minute scopée sur player_id (lecture en base : aucune route joueur ne la projette — forme F)",
   "district_du_joueur_mesure": 1,
   "dossier": "autonomie",
   "symbole": "㉔",
   "controleur": "AutonomyInboxController",
-  "X-Request-Id": "d5874085-2d77-4f99-85a1-23c4d039ee98",
-  "X-Server-Processed-At": "2026-09-06T09:02:55.131Z",
+  "X-Request-Id": "08fb4de4-cf1b-4ae0-a733-ffee7784d793",
+  "X-Server-Processed-At": "2026-09-22T11:23:20.876Z",
   "X-Api-Version": "1"
  },
  "corps": {
   "response_meta": {
-   "request_id_echo": "d5874085-2d77-4f99-85a1-23c4d039ee98",
-   "server_processed_at": "2026-09-06T09:02:55.131Z",
+   "request_id_echo": "08fb4de4-cf1b-4ae0-a733-ffee7784d793",
+   "server_processed_at": "2026-09-22T11:23:20.876Z",
    "api_version": 1,
-   "correlation_id_echo": null
+   "correlation_id_echo": null,
+   "server_build_ref": {
+    "git_sha": "03cf564c921dd6dec8ba6692b004c5d1b4d0e0a6",
+    "built_at": "2026-09-14T01:12:31Z"
+   }
   },
   "payload": {
    "data": {
     "reports": [
      {
-      "report_id": "b54c7528-de77-4644-b922-fc7f683fb08e",
-      "lieutenant_id": "01a075d7-6aed-728e-8f0a-b5dbd5caedee",
+      "report_id": "8247c90d-16e6-44aa-bc09-2ed2b114c0e9",
+      "lieutenant_id": "01a0c8d5-8822-7527-bb8e-ce6096ff1ceb",
       "backlog_age_cycles": 2,
       "issues": [
        {

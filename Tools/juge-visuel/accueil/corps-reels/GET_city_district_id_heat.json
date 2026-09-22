@@ -10,42 +10,47 @@
   }
  },
  "provenance": {
-  "date": "2026-09-06T11:02:54",
-  "back_main": "fc944b62",
-  "game_back": "mafia-clean-city-game-back 2026-09-04T08:41:42.667221302Z",
-  "compte": "demo_capture@example.test",
-  "jour_de_jeu": 50,
-  "horloge_game_minute": 72118,
+  "date": "2026-09-22T13:23:16",
+  "back_main": "11559fff",
+  "back_served": "03cf564c",
+  "game_back": "mafia-clean-city-game-back 2026-09-14T01:13:06.637480618Z",
+  "compte": "operational_demo@example.test",
+  "jour_de_jeu": 55,
+  "horloge_game_minute": 79905,
   "horloge_source": "city_sim_clock.game_minute scopée sur player_id (lecture en base : aucune route joueur ne la projette — forme F)",
   "district_du_joueur_mesure": 1,
   "dossier": "accueil",
   "symbole": "④",
   "controleur": "DashboardController",
-  "X-Request-Id": "ccb17d44-22c8-436f-bd24-379297e55955",
-  "X-Server-Processed-At": "2026-09-06T09:02:54.384Z",
+  "X-Request-Id": "30f572d9-1e28-4b4b-8edb-c04a14263378",
+  "X-Server-Processed-At": "2026-09-22T11:23:18.018Z",
   "X-Api-Version": "1"
  },
  "corps": {
   "response_meta": {
-   "request_id_echo": "ccb17d44-22c8-436f-bd24-379297e55955",
-   "server_processed_at": "2026-09-06T09:02:54.384Z",
+   "request_id_echo": "30f572d9-1e28-4b4b-8edb-c04a14263378",
+   "server_processed_at": "2026-09-22T11:23:18.018Z",
    "api_version": 1,
-   "correlation_id_echo": null
+   "correlation_id_echo": null,
+   "server_build_ref": {
+    "git_sha": "03cf564c921dd6dec8ba6692b004c5d1b4d0e0a6",
+    "built_at": "2026-09-14T01:12:31Z"
+   }
   },
   "payload": {
    "data": {
     "district": "district-1",
-    "district_bucket": "COLD",
+    "district_bucket": "WARM",
     "citywide_bucket": "BURNING",
     "escalated": false,
     "buildings": [
      {
-      "building": "111846f8-1aac-4a1c-8b33-ad371ffec44d",
-      "heat_bucket": "COLD",
+      "building": "b03705b3-e2a4-40e7-aa40-10876c24704a",
+      "heat_bucket": "WARM",
       "name_i18n": {
        "key": "game.fiction.building.name",
        "params": {
-        "enseigne": "Colis Kofi",
+        "enseigne": "Messagerie Sarre",
         "district": "Les Bassins",
         "block": "1"
        }
