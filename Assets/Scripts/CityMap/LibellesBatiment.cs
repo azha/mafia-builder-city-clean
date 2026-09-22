@@ -18,24 +18,30 @@ namespace MafiaCleanCity.CityMap
     /// </summary>
     public static class LibellesBatiment
     {
-        /// <summary>`operational_type` — 12 membres côté back, "" si le bâtiment n'est pas converti.</summary>
+        /// <summary>`operational_type` — les 12 membres du pgEnum `building_operational_type` (back, EN MINUSCULES :
+        /// `common/building-signs.ts:21`), "" si le bâtiment n'est pas converti.
+        /// ⛔ Corrigé le 22/09 (classe « le client compare une valeur que le back ne sert pas », mesurée par CLIENT-2) : les cas étaient
+        /// en MAJUSCULES — 0 des 12 membres servis n'était apparié, seul le repli `CasseDeTitre` servait. Et cinq cas (WAREHOUSE,
+        /// GARAGE, CLUB, BAR, RESTAURANT) ne sont dans AUCUN domaine du back : retirés. `SAFEHOUSE` était `cash_safehouse`.
+        /// Les mots : les six d'avant, et pour les six membres qui n'en avaient pas ici, ceux de `TypeLabel` (intérieur de district,
+        /// ratifiés au lot C) — « même concept, même mot sur le même écran » (DistrictInteriorScreenController.cs:1708-1716).</summary>
         public static string Type(string t)
         {
             switch (t)
             {
                 case "": case null: return "Bâtiment civil";
-                case "GROW_HOUSE": return "Serre";
-                case "LAB": return "Laboratoire";
-                case "DISTRIBUTION_HUB": return "Relais";
-                case "MONEY_HOLDING": return "Banque";
-                case "FRONT_SHOP": return "Commerce-écran";
-                case "SAFEHOUSE": return "Planque";
-                case "WAREHOUSE": return "Entrepôt";
-                case "GARAGE": return "Garage";
-                case "CLUB": return "Club";
-                case "BAR": return "Bar";
-                case "RESTAURANT": return "Restaurant";
-                case "OFFICE": return "Bureau";
+                case "grow_house": return "Serre";
+                case "lab": return "Laboratoire";
+                case "distribution_hub": return "Relais";
+                case "money_holding": return "Banque";
+                case "front_shop": return "Commerce-écran";
+                case "cash_safehouse": return "Planque";
+                case "office": return "Bureau";
+                case "stash": return "Cache";
+                case "dealer_spot_front": return "Point de vente";
+                case "specialized_lab": return "Laboratoire spécialisé";
+                case "refinery": return "Raffinerie";
+                case "press_house": return "Atelier de presse";
                 default: return CasseDeTitre(t);
             }
         }
