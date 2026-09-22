@@ -401,13 +401,18 @@ namespace MafiaCleanCity.Operational
         /// ⛔ Une phase INCONNUE s'affiche TELLE QUELLE. Le seul cran qui compte vraiment est
         /// celui qui ne s'en va pas ; rabattre l'inconnu sur « ça traîne » effacerait la seule
         /// distinction que cet écran existe pour montrer — même règle que la bande de ㊴.</summary>
-        private static string PhaseEnMots(string bande)
+        /// <summary>`phase_band` — le domaine du back est `onset | unfolding | receding | lingering | permanent`
+        /// (`random-world.projection.service.ts:47`). ⛔ Corrigé le 22/09 (classe « le client compare une valeur que le back ne sert
+        /// pas », mesurée par CLIENT-2) : le client testait `starting` et `settling` — `settling` est une valeur de RÉCENCE
+        /// (`RandomWorldRecencyBand`), pas une phase — donc `onset` et `receding` sortaient BRUTS. Mots : atelier ca69012c §4,
+        /// cadre 145, en capitales comme les autres phases de cet écran.</summary>
+        public static string PhaseEnMots(string bande)
         {
             switch (bande)
             {
-                case "starting":  return Lib("ÇA COMMENCE");
+                case "onset":     return Lib("ÇA COMMENCE");
                 case "unfolding": return Lib("ÇA SE DÉPLOIE");
-                case "settling":  return Lib("ÇA RETOMBE");
+                case "receding":  return Lib("ÇA RETOMBE");
                 case "lingering": return Lib("ÇA TRAÎNE");
                 case "permanent": return Lib("ÇA NE PARTIRA PAS");
                 default: return string.IsNullOrEmpty(bande) ? Lib("PHASE INCONNUE") : bande;
