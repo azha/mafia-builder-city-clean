@@ -21,7 +21,7 @@ Usage : python3 orphelines.py <bundle-fr.json> <bundle-en.json> <commit-de-base>
         [--json sortie.json] [--md table.md --lots "C=a..b,D t1=c..d,…"]
 La table Markdown est PRODUITE par ce script (source unique du français pour le back) : ne pas l'éditer à la main.
 """
-import json, re, subprocess, sys, unicodedata, difflib, collections
+import pathlib, json, re, subprocess, sys, unicodedata, difflib, collections
 
 def slug(s):
     out = []
@@ -99,7 +99,11 @@ def par_valeur(texte, fichier):
     return out
 
 def git(*a):
-    r = subprocess.run(['git', *a], capture_output=True, text=True)
+    # ⛔ DEPUIS LA RACINE DU DÉPÔT, quel que soit le répertoire courant : le filtre `-- Assets/Scripts` est un chemin RELATIF
+    #    au répertoire courant. Lancé depuis `Tools/juge-donnees/i18n` (là où sont les bundles), il ne voyait AUCUN fichier et
+    #    la table sortait vide sans erreur — mesuré le 22/09 en ajoutant `--anterieure`, dont le garde « non trouvée » a mordu.
+    r = subprocess.run(['git', *a], capture_output=True, text=True,
+                       cwd=pathlib.Path(__file__).resolve().parents[3])
     return r.stdout if r.returncode == 0 else None
 
 ECRANS = {'Carnet': '㉞ les ordres du soir', 'Conflit': '㉙ le conflit', 'Filiere': '㊵ la filière', 'Forensic': '㊴ le dossier',
@@ -188,12 +192,22 @@ def main():
     sortie_json = sys.argv[sys.argv.index('--json') + 1] if '--json' in sys.argv else None
     sortie_md = sys.argv[sys.argv.index('--md') + 1] if '--md' in sys.argv else None
     lots = [tuple(x.split('=', 1)) for x in sys.argv[sys.argv.index('--lots') + 1].split(',')] if '--lots' in sys.argv else []
+    # ⛔ `--anterieure COMMIT:CLÉ[,…]` — une orpheline NÉE HORS DE LA PLAGE, ajoutée à la demande (22/09 : la cohésion du chrome,
+    #    a4b2afa6 du 07/09, trouvée par la mesure des replis du créneau 558289a0). Le commit passe par la MÊME mécanique que la
+    #    plage, mais on n'en garde QUE la clé nommée : les autres réécritures de ce commit ne sont pas demandées, et les ajouter
+    #    en silence changerait le périmètre de la table. Clé introuvable dans ce commit ⇒ échec, jamais une ligne inventée.
+    anterieures = [tuple(x.split(':', 1)) for x in sys.argv[sys.argv.index('--anterieure') + 1].split(',')] \
+        if '--anterieure' in sys.argv else []
+    for c, _ in anterieures:
+        lots.append((f'antérieure {c[:8]}', f'{c}~1..{c}'))
+    gardees = {git('rev-parse', c).strip(): k for c, k in anterieures}
+    trouvees = set()
     meta = json.load(open(sys.argv[1])).get('response_meta', {})
     par_slug = collections.defaultdict(list)
     for k in fr:
         p = k.split('.', 2)
         if len(p) == 3: par_slug[p[2]].append(k)
-    commits = git('rev-list', '--reverse', f'{base}..{fin}').split()
+    commits = list(gardees) + git('rev-list', '--reverse', f'{base}..{fin}').split()
     lignes, non_apparies, meme_cle = [], [], []
     for c in commits:
         sujet = git('log', '-1', '--format=%s', c).strip()
@@ -251,6 +265,9 @@ def main():
                             meme_cle.append(dict(commit=c[:8], fichier=f, ligne=x[0] + 1, cle=k, servie_fr=fr[k],
                                                  servie_en=en.get(k), texte_fr=nouveau))
                             continue
+                        if c in gardees:
+                            if k != gardees[c]: continue
+                            trouvees.add(c)
                         lignes.append(dict(commit=c[:8], sujet=sujet, fichier=f, ligne=x[0] + 1, ancienne=k,
                                            ancien_texte=x[2], servie_fr=fr[k], servie_en=en.get(k),
                                            nouvelle=(f'{dom}.{role}.{slug(nouveau)}' if nouveau is not None else None),
@@ -259,6 +276,10 @@ def main():
                     # un bloc NON APPARIÉ ne compte que s'il a produit une orpheline : sinon ses correspondances de slug
                     # étaient des clés encore demandées sous leur rôle (lot E : « Standard » ≠ `building.cover.standard`).
                     non_apparies.append((c, f, i1 + 1, [x[2][:60] for x in r], [x[2][:60] for x in a]))
+    manquees = [f'{c[:8]}:{k}' for c, k in gardees.items() if c not in trouvees]
+    if manquees:
+        print(f"⛔ --anterieure : orpheline(s) NON TROUVÉE(S) dans leur commit : {', '.join(manquees)}", file=sys.stderr)
+        sys.exit(2)
     # ⛔ LE TEXTE À SERVIR EST CELUI DE LA FIN DE PLAGE, pas celui du commit qui a produit l'orpheline : un littéral
     #    réécrit une seconde fois sans changer de slug (㉔ : glyphes retirés en tranche 2) garde sa clé, et c'est la
     #    DERNIÈRE version que le back doit servir — sinon l'ancien texte revient à l'écran par le bundle.

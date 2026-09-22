@@ -12,11 +12,28 @@
    "D t1": "34439c33..75ac1001",
    "D t2": "4bddb0aa..0f058641",
    "E": "7d675f9c..348ec0a7",
-   "D t3": "348ec0a7..1eca10cd"
+   "D t3": "348ec0a7..1eca10cd",
+   "antérieure a4b2afa6": "a4b2afa6~1..a4b2afa6"
   },
   "generateur": "python3 Tools/juge-donnees/i18n/orphelines.py <bundle-fr> <bundle-en> 9b5d6117 1eca10cd --json … --md … --lots …"
  },
  "cles": [
+  {
+   "ecran": "OrgVitalsPanel",
+   "fichier": "Assets/Scripts/Shell/OrgVitalsPanelController.cs",
+   "sites": [
+    "OrgVitalsPanelController.cs:180"
+   ],
+   "ancienne": "accueil.vitals.cohesion_indisponible_pas_d_agregat_pour_la_ville",
+   "servie_fr": "Cohésion : indisponible (pas d'agrégat pour la ville)",
+   "servie_en": "Cohesion: unavailable (no citywide aggregate)",
+   "nouvelle": "accueil.vitals.cohesion_indisponible_pour_l_ensemble_de_la_ville",
+   "texte_fr": "Cohésion : indisponible pour l'ensemble de la ville",
+   "nouvelle_deja_servie": false,
+   "nouvelle_derivee_a_la_fin": true,
+   "commit": "a4b2afa6",
+   "lot": "antérieure a4b2afa6"
+  },
   {
    "ecran": "㉞ les ordres du soir",
    "fichier": "Assets/Scripts/Operational/Carnet/CarnetScreenController.cs",
