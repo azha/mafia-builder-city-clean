@@ -164,9 +164,25 @@ namespace MafiaCleanCity.Shell
         {
             EnsureInitialized();
             token = bearerToken;
-            yield return client.GetFlagReview(token, dto => LastLoadedReview = dto, (c, m) => { });
-            if (LastLoadedReview != null) Render(LastLoadedReview.cards);
+            FlagReviewResponseDto recu = null;
+            yield return client.GetFlagReview(token, dto => recu = dto, (c, m) => { });
+            if (recu != null) AppliquerRevue(recu);
         }
+
+        /// <summary>Le seul chemin par lequel une revue chargée devient un écran — celui de
+        /// `LoadReview`, et celui des tests qui posent un corps sans passer par le réseau. Un seul
+        /// chemin, pour qu'une garde qui l'exerce exerce ce que le joueur voit.</summary>
+        public void AppliquerRevue(FlagReviewResponseDto revue)
+        {
+            EnsureInitialized();
+            LastLoadedReview = revue;
+            if (revue != null) Render(revue.cards);
+        }
+
+        // ---- test hooks : le tampon, tel qu'il est posé sur le zinc ------------------------------
+        public bool TamponPresent => tamponRoot != null && tamponRoot.activeSelf;
+        public string TamponLibelleTexte => tamponLibelle != null ? tamponLibelle.text : null;
+        public string TamponSousTexte => tamponSous != null ? tamponSous.text : null;
 
         public IEnumerator ValidateFlag(string flagId)
         {
@@ -254,31 +270,34 @@ namespace MafiaCleanCity.Shell
             for (int i = rowsRoot.childCount - 1; i >= 0; i--) UnityEngine.Object.Destroy(rowsRoot.GetChild(i).gameObject);
 
             int enAttente = LastLoadedReview != null ? LastLoadedReview.routine_pending_count : 0;
-            // ⛔⛔ LE BOUTON DE LOT NE SE FIE PLUS AU SEUL BOOLÉEN DU BACK, ET C'EST UNE MESURE.
-            // Sur le compte de démo : `cards: []`, `routine_pending_count: 156`,
-            // `batch_confirm_available: TRUE`. Le tampon était donc offert sur une file VIDE, et
-            // un clic aurait confirmé 156 routines que le joueur n'a jamais vues — un geste
-            // irréversible sur un écran qui ne montre rien.
-            // ⇒ La disponibilité côté serveur dit « le lot est techniquement possible » ; elle ne
-            // dit PAS « il y a quelque chose à trancher ». Ce sont deux propriétés distinctes, et
-            // les confondre transforme un état vide en piège. Le bouton exige donc les DEUX : le
-            // feu vert du back ET au moins une carte réellement affichée.
-            // ★ Même famille que la garde satisfaite par un monde dégénéré : le booléen était
-            // VRAI dans le monde exact où il ne fallait rien proposer.
-            bool tamponDisponible = LastLoadedReview != null
-                                 && LastLoadedReview.batch_confirm_available
-                                 && cards != null && cards.Length > 0;
+            // ⛔⛔ LE TAMPON SUIT LE BOOLÉEN DU BACK, Y COMPRIS SUR UNE FILE VIDE — ET C'EST UNE DÉCISION RATIFIÉE.
+            // Une version précédente exigeait aussi « au moins une carte affichée ». Elle partait d'une
+            // mesure juste (compte de démo : `cards: []`, `routine_pending_count: 156`,
+            // `batch_confirm_available: TRUE`) et d'une crainte juste : un geste irréversible sur des
+            // routines jamais vues. Mais la décision n'était pas au client, elle était déjà prise :
+            // le cadre v4-1 « personne au comptoir », ratifié par l'user (« nickel »), dessine le tampon
+            // « CONFIRMER LA ROUTINE · 9 » sur une journée SANS signalement. Clore la journée quand
+            // personne n'a rien demandé, c'est le geste même de cet écran.
+            // ⇒ Ce qui répond à la crainte est dans la maquette, pas dans une garde : le compte est
+            //   affiché EN ENTIER (JD-E3) et le geste exige un APPUI LONG (JD-E5).
+            // ⇒ Le back l'accepte, lu dans le CORPS (pas le docblock) : `batchConfirm` →
+            //   `UPDATE routine_items … WHERE status='pending'` (`flag-discipline.repository.ts:669-676`),
+            //   sans aucune condition sur les signalements ; `batch_confirm_available =
+            //   routinePendingCount > 0` (`flag-discipline.service.ts:295`).
+            // ★ La garde retirée n'était pas fausse sur le risque. Elle était plus STRICTE que le produit,
+            //   et c'est l'écran qui en payait le prix : juge-visuel r1 (2026-09-06), F2 BLOQUANT,
+            //   « l'action qui referme l'écran n'existe pas ».
+            bool tamponDisponible = LastLoadedReview != null && LastLoadedReview.batch_confirm_available;
 
             if (cards == null || cards.Length == 0)
             {
                 RenderedEmptyState = true;
                 RenderedCardCount = 0;
                 emptyStateText.gameObject.SetActive(true);
-                // « Personne au comptoir » — trois tabourets vides, le registre seul. Le texte est
-                // la scène, pas un état d'erreur : c'est une bonne nouvelle, pas un vide technique.
-                // ⚠️ L'état vide ne promet RIEN : il ne mentionne pas les routines en attente,
-                // parce qu'aucun geste ne permet de les traiter depuis ici. Nommer un nombre sans
-                // offrir de geste fabrique une attente que l'écran ne peut pas tenir.
+                // « Personne au comptoir » — trois tabourets vides, le registre et son tampon. Le
+                // texte est la scène, pas un état d'erreur : c'est une bonne nouvelle, pas un vide
+                // technique. Le compte des routines est porté par le REGISTRE, et le tampon offre le
+                // geste qui les traite (v4-1) : le nombre affiché a toujours son geste en face.
                 emptyStateText.text = Lib("bloc", "Personne au comptoir ce matin.");
                 MajRegistre(enAttente, tamponDisponible, 0);
                 return;
@@ -302,10 +321,13 @@ namespace MafiaCleanCity.Shell
             {
                 tamponRoot.SetActive(tamponDisponible);
                 if (tamponLibelle != null) tamponLibelle.text = Lib("bloc", "CONFIRMER LA ROUTINE · ") + enAttente;
+                // Sans signalement : la phrase du cadre v4-1, mot pour mot — le tampon clôt la journée,
+                // « rien d'autre ne vous attend ». (Avant ⑯-1, cette branche disait « appui long » nu :
+                // elle ne s'affichait jamais, la garde retirait le tampon avant.)
                 if (tamponSous != null)
                     tamponSous.text = signalements > 0
                         ? "appui long — les " + signalements + " signalements restent à votre main"
-                        : "appui long";
+                        : Lib("bloc", "appui long — rien d'autre ne vous attend");
             }
         }
 
