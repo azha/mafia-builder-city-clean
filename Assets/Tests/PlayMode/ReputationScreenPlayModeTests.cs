@@ -885,8 +885,11 @@ namespace MafiaCleanCity.Operational.Tests
         ///
         /// ⚠️ `Canvas.scaleFactor` lu la frame de la création rend 1,0 — une valeur PLAUSIBLE et
         /// fausse. D'où les `yield return null` avant tout rendu : sans eux la capture mesure une
-        /// mise en page qui n'a jamais eu lieu.</summary>
-        [UnityTest, Category("Capture")]
+        /// mise en page qui n'a jamais eu lieu.
+        ///
+        /// Catégorie propre `PhotoScreenB3` (2026-09-22, gabarit de ㊳) : la classe porte `ScreenB3`,
+        /// qui couvre déjà cette méthode — ne pas la répéter ici.</summary>
+        [UnityTest, Category("Capture"), Category("PhotoScreenB3")]
         public IEnumerator B3C1_CapturerPourLeJugeVisuel_DeuxResolutions()
         {
             // ⛔⛔ LE COMPTE SERVI, PAS UN COMPTE FRAIS — et la nuance porte sur ce que le juge voit.

@@ -103,12 +103,92 @@ namespace MafiaCleanCity.Operational.Tests
         /// CanvasScaler change les unités).
         ///
         /// ⚠️ `Canvas.scaleFactor` lu la frame de la création rend 1,0 — plausible et faux, d'où
-        /// les `yield return null` avant tout rendu.</summary>
-        [UnityTest, Category("Capture")]
+        /// les `yield return null` avant tout rendu.
+        ///
+        /// ⛔⛔ CHARGÉE PAR LE RÉSEAU, SUR LE COMPTE DU RUN — dette c6 de l'atelier
+        /// (RECAPTURE-2026-09-22 §5a-1). Cette capture montait l'écran SANS jeton et SANS `Charger()` :
+        /// ses planches `screen_c6_1080x{1920,2400}.png` montraient la coquille (le titre, trois « — »,
+        /// rien d'autre) sous un nom qui ne le disait pas, et le juge r1 les a reçues comme « l'écran ».
+        /// ⇒ Elle charge désormais comme ScreenC6C2 (règle d'identité du résolveur, garde `/v1/me`, puis
+        ///   `Charger()`), et ne photographie que ce qu'un corps servi a RÉELLEMENT dessiné.
+        /// ⚠️ ÉTAT VIDE ⇒ EN ATTENTE, PAS ROUGE (patron `Capture_EcranExceptions_FileVide_SousChrome`) :
+        ///   sans carte, la planche serait l'état vide, que ScreenC6C2 prend déjà sous son nom
+        ///   `_etat-vide_` — et une image `screen_c6_…` qui montre le vide mentirait (voir ScreenC6C2).
+        ///   Le test s'ignore avec sa raison, n'écrit aucun PNG, et se réarme seul le jour où le compte
+        ///   porte une carte. (TD-408 : au plus UNE carte peut être surfacée, pour tout joueur.)
+        /// Catégorie propre `PhotoScreenC6` (préfixe `Photo`, gabarit de ㊳ : `Capture<Écran>` serait
+        /// emporté par une demande de `Capture`). La classe porte `ScreenC6`, qui couvre déjà cette
+        /// méthode : ne pas la répéter ici.</summary>
+        [UnityTest, Category("Capture"), Category("PhotoScreenC6")]
         public IEnumerator ScreenC6C1_CapturerPourLeJugeVisuel_DeuxResolutions()
         {
-            MonterEcran();
+            var auth = new AuthClient { BaseUrl = BaseUrl };
+            string token = null, err = null;
+            var (idCapture, mdpCapture) = MafiaCleanCity.Shell.Tests.CaptureSousShell.IdentiteDeCaptureOuEchoue("screen_c6");
+            yield return auth.SignIn(idCapture, mdpCapture, t => token = t, e => err = e);
+            Assert.IsNull(err, $"connexion au compte de capture « {idCapture} » échouée : {err}");
+            yield return MafiaCleanCity.Shell.Tests.CaptureSousShell.IdentiteConnecteeOuEchoue(token, idCapture, "screen_c6");
+
+            HorizonScreenController ecran = MonterEcran();
+            ecran.SetToken(token);
             yield return null;
+            yield return ecran.Charger();
+            yield return null;   // les enfants que `RendreCartes` détruit ne partent qu'en fin de frame
+
+            // Le vide RENDU et le vide SUBI ont la même image (patron ㊴).
+            Assert.IsNull(ecran.DerniereErreur,
+                $"la route a échoué (code {ecran.DernierCodeErreur} — {ecran.DerniereErreur}) : la capture " +
+                "montrerait l'écran d'indisponibilité, pas l'horizon");
+            Assert.IsNotNull(ecran.DernierChargement, "aucun corps reçu — rien à photographier");
+
+            int servies = 0;
+            foreach (HorizonCardDto c in ecran.DernierChargement.cards ?? new HorizonCardDto[0])
+                if (c != null) servies++;
+            Debug.Log($"[CAPTURE-ETAT] screen_c6 : {servies} carte(s) servie(s) · progression " +
+                      (ecran.DerniereProgression == null
+                          ? "ABSENTE" : $"palier {ecran.DerniereProgression.vocabulary_tier}"));
+            if (servies == 0)
+                Assert.Ignore("le compte de capture ne porte aucune carte : la planche serait l'état VIDE, " +
+                    "que ScreenC6C2 prend déjà sous son nom `_etat-vide_`. Rien à photographier sous " +
+                    "`screen_c6_…` — cette planche se prendra seule le jour où le compte portera une carte.");
+
+            // ⛔ LA GARDE « CONTENU RÉELLEMENT RENDU » — sur l'ARBRE, pas sur le corps : un corps reçu ne
+            // prouve pas que l'écran l'a dessiné. Chaque clause est fausse sur la coquille que cette
+            // capture photographiait (sous-titre vide, compteurs à « — », liste vide, aucune échelle).
+            Assert.IsNotNull(ecran.DerniereProgression,
+                "`/v1/progression` n'a pas répondu : l'écran reste entier (contrat non fatal), mais la " +
+                "planche le montrerait SANS son échelle, et le juge lirait l'absence comme la mise en page");
+            GameObject racine = RacineEcran();
+            var titresVides = new List<string>();
+            int cartesDessinees = 0, barreaux = 0, compteursVides = 0;
+            bool messageVide = false;
+            string sousTitre = null;
+            foreach (Transform tr in racine.GetComponentsInChildren<Transform>(true))
+            {
+                if (tr.name.StartsWith("Carte_"))
+                {
+                    cartesDessinees++;
+                    Transform t = tr.Find("Titre");
+                    TMPro.TextMeshProUGUI titre = t == null ? null : t.GetComponent<TMPro.TextMeshProUGUI>();
+                    if (titre == null || string.IsNullOrWhiteSpace(titre.text)) titresVides.Add(tr.name);
+                }
+                else if (tr.name == "MessageVide") messageVide = true;
+            }
+            foreach (TMPro.TextMeshProUGUI t in racine.GetComponentsInChildren<TMPro.TextMeshProUGUI>(true))
+            {
+                if (t.name.StartsWith("Barreau")) barreaux++;
+                else if (t.name == "SousTitre") sousTitre = t.text;
+                else if (t.name == "Nombre" && (string.IsNullOrWhiteSpace(t.text) || t.text == "—")) compteursVides++;
+            }
+            Assert.AreEqual(servies, cartesDessinees,
+                $"{servies} carte(s) servie(s), {cartesDessinees} dessinée(s) : la planche ne montrerait pas le corps reçu");
+            Assert.IsEmpty(titresVides, "des cartes sans titre dessiné : " + string.Join(", ", titresVides));
+            Assert.IsFalse(messageVide, "le message de l'état vide est dessiné alors que des cartes sont servies");
+            Assert.IsFalse(string.IsNullOrWhiteSpace(sousTitre),
+                "le sous-titre est vide : `AppliquerEtat` n'a pas tourné, c'est la coquille");
+            Assert.AreEqual(0, compteursVides,
+                $"{compteursVides} compteur(s) encore à « — » : la coquille, pas l'état servi");
+            Assert.AreEqual(4, barreaux, $"l'échelle doit poser ses 4 barreaux (2, 3, 4, 5) — vus : {barreaux}");
 
             yield return CapturerA(1080, 1920, "Assets/Screenshots/screen_c6_1080x1920.png");
             yield return CapturerA(1080, 2400, "Assets/Screenshots/screen_c6_1080x2400.png");

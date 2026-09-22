@@ -103,8 +103,15 @@ namespace MafiaCleanCity.Operational.Tests
         /// CanvasScaler change les unités).
         ///
         /// ⚠️ `Canvas.scaleFactor` lu la frame de la création rend 1,0 — plausible et faux, d'où
-        /// les `yield return null` avant tout rendu.</summary>
-        [UnityTest, Category("Capture")]
+        /// les `yield return null` avant tout rendu.
+        ///
+        /// Catégorie propre `PhotoScreenB7` (2026-09-22, gabarit de ㊳) : la classe porte `ScreenB7`,
+        /// qui couvre déjà cette méthode — ne pas la répéter ici.
+        /// ⚠️ DETTE OUVERTE, MÊME FORME QUE L'ANCIENNE `ScreenC6C1` : cette capture monte l'écran SANS
+        /// jeton et SANS `Charger()`, donc ses planches `screen_b7_1080x{1920,2400}.png` montrent la
+        /// coquille. Lancer `PhotoScreenB7` ne photographie AUCUNE donnée servie ; la planche chargée
+        /// est `ScreenB7C2` (`CaptureForensic`).</summary>
+        [UnityTest, Category("Capture"), Category("PhotoScreenB7")]
         public IEnumerator ScreenB7C1_CapturerPourLeJugeVisuel_DeuxResolutions()
         {
             MonterEcran();
