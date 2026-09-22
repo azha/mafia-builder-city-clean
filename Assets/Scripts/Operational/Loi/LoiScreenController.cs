@@ -238,7 +238,7 @@ namespace MafiaCleanCity.Operational
             if (roster == null || roster.Length == 0)
             {
                 TextMeshProUGUI vide = NouveauTexteFiche(rosterRoot, "RosterVide",
-                    Libelle.De("loi", "bloc", "Vous n'avez encore engagé personne."), 9f,
+                    MessageRosterVide, 9f,
                     DesignTokens.Current.onSurfaceMuted, false);
                 TrackText(vide.text);
                 return;
@@ -329,12 +329,12 @@ namespace MafiaCleanCity.Operational
             eyebrow.characterSpacing = 4f;
             TrackText(eyebrow.text);
 
-            ConstruireCarteAvocat(recruteRoot, "Commis d'office",
+            ConstruireCarteAvocat(recruteRoot, "commis_d_office", "Commis d'office",
                 "gratuit — il fait ce qu'il peut", "EN PLACE", VertBon, null);
-            ConstruireCarteAvocat(recruteRoot, "Un cabinet",
+            ConstruireCarteAvocat(recruteRoot, "un_cabinet", "Un cabinet",
                 "ça coûte — il connaît les juges", "DISPONIBLE", DesignTokens.Current.onSurfaceMuted,
                 "boutique");
-            ConstruireCarteAvocat(recruteRoot, "La filière",
+            ConstruireCarteAvocat(recruteRoot, "la_filiere", "La filière",
                 "ça coûte cher — et ça peut se retourner", "À VOS RISQUES",
                 DesignTokens.Current.hudMoneyUnderlineGold, "corruption_pipeline");
 
@@ -347,13 +347,20 @@ namespace MafiaCleanCity.Operational
             TrackText(info.text);
         }
 
+        /// <summary>Les trois messages de l'état vide — UNE source : l'écran les rend, les tests les lisent ICI. Mesuré le
+        /// 2026-09-22 (gate client, partie 1) : `EcranLoiE1` recopiait la troisième phrase et a rougi quand l'atelier l'a
+        /// réécrite (ebf97d1e) ; une seconde copie du texte diverge au premier lot de copie.</summary>
+        public static string MessageRosterVide => Libelle.De("loi", "bloc", "Vous n'avez encore engagé personne.");
+        public static string MessageAffairesVide => Libelle.De("loi", "bloc", "Aucune affaire en cours.");
+        public static string NoteAffaires => Libelle.De("loi", "bloc", "Une affaire naît d'une descente — rien ici n'en crée.");
+
         /// <summary>Une carte de m-68 — verbatim (titre/sous-titre/badge). `tier == null` ⇒
         /// carte informative sans bouton (« Commis d'office » : aucune route ne le recrute, il
         /// est le repli par défaut). `tier != null` ⇒ bouton câblé sur `RecruterAvocat(tier)`.</summary>
-        private void ConstruireCarteAvocat(Transform parent, string titreLitteral,
+        private void ConstruireCarteAvocat(Transform parent, string idStable, string titreLitteral,
             string sousTitreLitteral, string badgeLitteral, Color couleurBadge, string tier)
         {
-            GameObject carte = NouveauUI("Carte_" + Libelle.Slug(titreLitteral), parent);
+            GameObject carte = NouveauUI("Carte_" + idStable, parent);
             AjouterFond(carte, DesignTokens.Current.surfaceRow);
             VerticalLayoutGroup v = carte.AddComponent<VerticalLayoutGroup>();
             v.padding = new RectOffset(PxTrait(10f), PxTrait(10f), PxTrait(8f), PxTrait(8f));
@@ -411,13 +418,12 @@ namespace MafiaCleanCity.Operational
             if (n == 0)
             {
                 TextMeshProUGUI vide = NouveauTexteFiche(affairesRoot, "AffairesVide",
-                    Libelle.De("loi", "bloc", "Aucune affaire en cours."), 9f,
+                    MessageAffairesVide, 9f,
                     DesignTokens.Current.onSurfaceMuted, false);
                 TrackText(vide.text);
 
                 TextMeshProUGUI note = NouveauTexteFiche(affairesRoot, "AffairesNote",
-                    Libelle.De("loi", "bloc",
-                        "Une affaire naît d'une descente — rien ici n'en crée."), 7.5f,
+                    NoteAffaires, 7.5f,
                     DesignTokens.Current.onSurfaceMuted, false);
                 note.enableWordWrapping = true;
                 TrackText(note.text);

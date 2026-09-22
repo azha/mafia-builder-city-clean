@@ -215,11 +215,11 @@ namespace MafiaCleanCity.Operational
             // The Stage-1 node, rendered as a pipeline node card.
             // Cleanliness band — SemanticBar row: glyph (shape) + label + qualitative band value.
             // F2: shape glyph is present alongside colour (colour is never the sole carrier).
-            AddStatusRow("Propreté", CleanlinessLabel(node.cleanliness_band),
+            AddStatusRow("proprete", "Propreté", CleanlinessLabel(node.cleanliness_band),
                 CleanlinessGlyph(node.cleanliness_band), CleanlinessAccent(node.cleanliness_band));
 
             // Deviation flag — the host front-shop's audit pin. Active = an audit/unconformity badge.
-            AddStatusRow("Écart", node.deviation_active ? "épingle d'audit posée" : "dans les clous",
+            AddStatusRow("ecart", "Écart", node.deviation_active ? "épingle d'audit posée" : "dans les clous",
                 node.deviation_active ? "[!]" : "[ok]",
                 node.deviation_active ? AccentSevere : AccentMild);
 
@@ -247,7 +247,7 @@ namespace MafiaCleanCity.Operational
             // The Stage-1 Inject affordance. Inject needs a front-shop + safehouse target — wired by
             // the caller/test via Inject(frontShopId, safehouseId, amount). The visible button proves
             // the affordance is present; the actual launder is driven through Inject().
-            AddActionButton(actionBar, "Injecter", () => { /* needs front-shop + safehouse targets; driven via Inject() */ });
+            AddActionButton(actionBar, "injecter", "Injecter", () => { /* needs front-shop + safehouse targets; driven via Inject() */ });
 
             // ⛔ ⑨ LA FILIÈRE N'AVAIT AUCUN CHEMIN JOUEUR — mesuré sur les 11 écrans montables du
             //    client : `PipelineOverviewController` était le SEUL sans aucune voie depuis le shell
@@ -255,7 +255,7 @@ namespace MafiaCleanCity.Operational
             //    Il vit ici parce que c'est ici que le `nodeId` existe : sa route est
             //    `/v1/operational/laundering/:nodeId/pipeline`, et ce contrôleur est le seul écran qui
             //    en tient un (`LoadNode(id)`). *Un écran s'attache là où sa clé d'entrée est déjà.*
-            AddActionButton(actionBar, "Voir la filière", OuvrirFiliere);
+            AddActionButton(actionBar, "voir_la_filiere", "Voir la filière", OuvrirFiliere);
 
             actionStatusText = NewText("ActionStatus", actionBar, "", 14, TextAlignmentOptions.Left);
             actionStatusText.color = DesignTokens.Current.onSurfaceMutedAlt;
@@ -368,9 +368,9 @@ namespace MafiaCleanCity.Operational
             AddLayoutElement(actions, flexibleHeight: 1);
         }
 
-        private void AddStatusRow(string label, string value, string glyph, Color accent)
+        private void AddStatusRow(string idStable, string label, string value, string glyph, Color accent)
         {
-            GameObject row = NewUI("Row_" + label, statusRows);
+            GameObject row = NewUI("Row_" + idStable, statusRows);
             row.AddComponent<Image>().color = RowBg;
             HorizontalLayoutGroup hlg = row.AddComponent<HorizontalLayoutGroup>();
             hlg.padding = new RectOffset(10, 10, 6, 6);
@@ -453,9 +453,9 @@ namespace MafiaCleanCity.Operational
         private PipelineOverviewController filiereOuverte;
         private GameObject filiereHost;
 
-        private void AddActionButton(Transform parent, string label, UnityEngine.Events.UnityAction onClick)
+        private void AddActionButton(Transform parent, string idStable, string label, UnityEngine.Events.UnityAction onClick)
         {
-            GameObject btn = NewUI("Action_" + label.Replace(" ", ""), parent);
+            GameObject btn = NewUI("Action_" + idStable, parent);
             Image img = btn.AddComponent<Image>();
             img.color = DesignTokens.Current.surfaceRaised;
             Button b = btn.AddComponent<Button>();

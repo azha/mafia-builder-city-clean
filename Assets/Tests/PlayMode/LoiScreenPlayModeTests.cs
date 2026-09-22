@@ -332,10 +332,11 @@ namespace MafiaCleanCity.Operational.Tests
             ecran.RendrePourTest(Etat());
             yield return null;
 
-            CollectionAssert.Contains(ecran.RenderedTexts, "Vous n'avez encore engagé personne.");
-            CollectionAssert.Contains(ecran.RenderedTexts, "Aucune affaire en cours.");
-            CollectionAssert.Contains(ecran.RenderedTexts,
-                "Une affaire naît d'une descente — rien sur cet écran n'en crée.");
+            // Les textes viennent de l'ÉCRAN (une source), jamais d'une copie dans le test : le 2026-09-22, la copie de la
+            // troisième phrase a rougi quand l'atelier l'a réécrite (ebf97d1e, « rien ici n'en crée »).
+            CollectionAssert.Contains(ecran.RenderedTexts, LoiScreenController.MessageRosterVide);
+            CollectionAssert.Contains(ecran.RenderedTexts, LoiScreenController.MessageAffairesVide);
+            CollectionAssert.Contains(ecran.RenderedTexts, LoiScreenController.NoteAffaires);
         }
 
         [UnityTest]

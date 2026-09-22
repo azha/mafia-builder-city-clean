@@ -108,7 +108,7 @@ namespace MafiaCleanCity.Shell.Tests
             //   non interactive laisserait le second vert et la capture montrerait autre chose.
             shell.ActivateTab(AppShell.Tab.More);
             yield return null;
-            const string NomEntree = "MenuPlus_LA REVUE DU JOUR";
+            const string NomEntree = "MenuPlus_la_revue_du_jour";   // l'ID STABLE de l'entrée (AppShell.DestinationsPlus), jamais son libellé affiché (22/09)
             Button entree = null;
             foreach (Button b in Object.FindObjectsByType<Button>(FindObjectsSortMode.None))
             {

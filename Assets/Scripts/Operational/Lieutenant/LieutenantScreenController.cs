@@ -881,29 +881,29 @@ namespace MafiaCleanCity.Operational.Lieutenant
             //    phase du jour du bandeau. Jamais l'archétype, qui est la ligne d'en dessous : le
             //    défaut de D-1 était exactement de laisser une grandeur prendre la place d'une
             //    autre, et le repli est l'endroit le plus discret où le refaire.
-            AddStatusRow("Nom", string.IsNullOrWhiteSpace(b.name) ? "—" : b.name, "[*]", AccentMild);
+            AddStatusRow("nom", "Nom", string.IsNullOrWhiteSpace(b.name) ? "—" : b.name, "[*]", AccentMild);
             // archetype (COOK | SECURITY | LOGISTICS | BOOKKEEPER | LAUNDERING | DISTRIBUTION | UNKNOWN).
-            AddStatusRow(Lib("Archétype"), FamilleLabels.Archetype(b.archetype), "[*]", AccentMild);
+            AddStatusRow("archetype", Lib("Archétype"), FamilleLabels.Archetype(b.archetype), "[*]", AccentMild);
             // granted_role (advisory | executor | delegated_owner | cohort_overseer).
-            AddStatusRow(Lib("Rôle"), GrantedRoleLabel(b.granted_role), GrantedRoleGlyph(b.granted_role), AccentMild);
+            AddStatusRow("role", Lib("Rôle"), GrantedRoleLabel(b.granted_role), GrantedRoleGlyph(b.granted_role), AccentMild);
             // mode (tasked | delegated).
-            AddStatusRow(Lib("Mode"), FamilleLabels.Mode(b.mode), ModeGlyph(b.mode), AccentMild);
+            AddStatusRow("mode", Lib("Mode"), FamilleLabels.Mode(b.mode), ModeGlyph(b.mode), AccentMild);
             // op_state_band (SETTLING | ACTIVE | PAUSED | IDLE) — the delegated operational state (Phase-11 adds SETTLING).
-            AddStatusRow(Lib("État"), FamilleLabels.Etat(b.op_state_band), OpStateGlyph(b.op_state_band), OpStateAccent(b.op_state_band));
+            AddStatusRow("etat", Lib("État"), FamilleLabels.Etat(b.op_state_band), OpStateGlyph(b.op_state_band), OpStateAccent(b.op_state_band));
             // rule_count_band (NONE | FEW | MANY) — the behavior-script rule count as a band (never the raw count).
-            AddStatusRow(Lib("Règles"), RuleCountLabel(b.rule_count_band), RuleCountGlyph(b.rule_count_band), RuleCountAccent(b.rule_count_band));
+            AddStatusRow("regles", Lib("Règles"), RuleCountLabel(b.rule_count_band), RuleCountGlyph(b.rule_count_band), RuleCountAccent(b.rule_count_band));
 
             // ===== Phase-11 tenure-inertia chips (B1) — the tenure_bucket chip + the 3 effect chips. Each is a worded BAND
             // (NO digit leaks — R2.2): the bucket is DERIVED from the BO-only streak; the 3 effects are DERIVED from the bucket.
             // tenure_bucket (FRESH | ACCLIMATED | SEASONED | SENIOR | ENTRENCHED) — the tenure band.
-            AddStatusRow(Lib("Ancienneté"), TenureBucketLabel(b.tenure_bucket), TenureBucketGlyph(b.tenure_bucket), TenureBucketAccent(b.tenure_bucket));
+            AddStatusRow("anciennete", Lib("Ancienneté"), TenureBucketLabel(b.tenure_bucket), TenureBucketGlyph(b.tenure_bucket), TenureBucketAccent(b.tenure_bucket));
             TenureBucketShown = TenureBucketLabel(b.tenure_bucket); // B3 hook — the rendered bucket label.
             // script_revision_cost (COST_1..COST_MAX) — how costly re-scripting this lieutenant is (the inertia COST).
-            AddStatusRow(Lib("Coût de réécriture"), RevisionCostLabel(b.script_revision_cost), RevisionCostGlyph(b.script_revision_cost), RevisionCostAccent(b.script_revision_cost));
+            AddStatusRow("cout_de_reecriture", Lib("Coût de réécriture"), RevisionCostLabel(b.script_revision_cost), RevisionCostGlyph(b.script_revision_cost), RevisionCostAccent(b.script_revision_cost));
             // reassignment_disruption (DISRUPT_SHORT..DISRUPT_MAX) — the settling-window drag a move would incur (the inertia DRAG).
-            AddStatusRow(Lib("Stabilisation après transfert"), DisruptionLabel(b.reassignment_disruption), DisruptionGlyph(b.reassignment_disruption), DisruptionAccent(b.reassignment_disruption));
+            AddStatusRow("stabilisation_apres_transfert", Lib("Stabilisation après transfert"), DisruptionLabel(b.reassignment_disruption), DisruptionGlyph(b.reassignment_disruption), DisruptionAccent(b.reassignment_disruption));
             // role_efficiency_bonus (BONUS_NONE..BONUS_CAP) — the tenure yield REWARD (lost on a reassignment).
-            AddStatusRow(Lib("Gain de rendement"), EfficiencyBonusLabel(b.role_efficiency_bonus), EfficiencyBonusGlyph(b.role_efficiency_bonus), EfficiencyBonusAccent(b.role_efficiency_bonus));
+            AddStatusRow("gain_de_rendement", Lib("Gain de rendement"), EfficiencyBonusLabel(b.role_efficiency_bonus), EfficiencyBonusGlyph(b.role_efficiency_bonus), EfficiencyBonusAccent(b.role_efficiency_bonus));
 
             RenderScriptSource(b.script_source);
 
@@ -1407,7 +1407,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             AddLayoutElement(targetRow, flexibleHeight: 0);
             NewSectionLabel(targetRow.transform, Lib("Bâtiment cible (destination / planque)"));
 
-            recruitButton = AddActionButton(actionBar, RecruitButtonText(pickedArchetype), () => StartCoroutine(RecruitChosen()));
+            recruitButton = AddActionButton(actionBar, "recruter", RecruitButtonText(pickedArchetype), () => StartCoroutine(RecruitChosen()));
             recruitButtonLabel = recruitButton.GetComponentInChildren<TextMeshProUGUI>();
 
             outcomeText = NewText("Outcome", actionBar, "—", 15, TextAlignmentOptions.Left);
@@ -1449,7 +1449,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
         {
             NewSectionLabel(statusSection, Lib("ÉTAT — lieutenant délégué"));
 
-            refreshButton = AddActionButton(statusSection, Lib("Rafraîchir"), () => StartCoroutine(RefreshBands()));
+            refreshButton = AddActionButton(statusSection, "rafraichir", Lib("Rafraîchir"), () => StartCoroutine(RefreshBands()));
 
             // Script-source sub-label + the readable DSL block (the ONE allowed non-band field). Empty until a script is
             // attached (T3); shows "(aucun script pour l'instant)" so a fresh recruit reads clearly.
@@ -2750,7 +2750,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             // Open — select this lieutenant (→ RefreshBands loads its bands + switches the builder palette). The
             // lieutenant_id is captured in the closure (an opaque key); it is never rendered.
             string capturedId = row.lieutenant_id;
-            AddActionButton(go.transform, Lib("Ouvrir"), () => OpenLieutenant(capturedId));
+            AddActionButton(go.transform, "ouvrir", Lib("Ouvrir"), () => OpenLieutenant(capturedId));
 
             TrackText(g, ArchetypeGlyph(row.archetype));
             TrackText(label, FamilleLabels.Archetype(row.archetype));
@@ -2796,7 +2796,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
 
             // The "Reassign…" button opens the confirmation (it does NOT move immediately — the player confirms with the
             // projected cost in view). The confirmation's own Confirm button drives ReassignChosen().
-            boutonReaffecter = AddActionButton(reassignSection, Lib("Réaffecter…"), OpenReassign);
+            boutonReaffecter = AddActionButton(reassignSection, "reaffecter", Lib("Réaffecter…"), OpenReassign);
 
             // The confirmation block — built empty; RenderReassignConfirm fills it (the projected disruption + tenure/bonus lost
             // + a Confirm/Cancel pair) when ReassignConfirmOpen, and clears it otherwise.
@@ -2871,8 +2871,8 @@ namespace MafiaCleanCity.Operational.Lieutenant
             AddReassignConfirmLine($"Rendement perdu : {EfficiencyBonusLabel(b.role_efficiency_bonus)}", EfficiencyBonusAccent(b.role_efficiency_bonus));
 
             // The Confirm / Cancel decision pair.
-            AddActionButton(reassignConfirm, Lib("Confirmer la réaffectation"), () => StartCoroutine(ReassignChosen()));
-            AddActionButton(reassignConfirm, Lib("Garder l'ancienneté (annuler)"), CancelReassign);
+            AddActionButton(reassignConfirm, "confirmer_la_reaffectation", Lib("Confirmer la réaffectation"), () => StartCoroutine(ReassignChosen()));
+            AddActionButton(reassignConfirm, "garder_l_anciennete_annuler", Lib("Garder l'ancienneté (annuler)"), CancelReassign);
         }
 
         // One worded line in the confirmation block. Tracked for the no-raw-scalar scan (these are BAND-only sentences — no
@@ -2926,9 +2926,9 @@ namespace MafiaCleanCity.Operational.Lieutenant
             AddLayoutElement(rows, flexibleHeight: 0);
 
             // The 3 ceiling-decision buttons (spec kind strings are the stable API keys).
-            AddActionButton(parent, Lib("Remettre le budget à zéro"), () => StartCoroutine(Decide("reset_budget")));
-            AddActionButton(parent, Lib("Relever le plafond"), () => StartCoroutine(Decide("raise_ceiling")));
-            AddActionButton(parent, Lib("Forcer une fois"), () => StartCoroutine(Decide("override_one_shot")));
+            AddActionButton(parent, "remettre_le_budget_a_zero", Lib("Remettre le budget à zéro"), () => StartCoroutine(Decide("reset_budget")));
+            AddActionButton(parent, "relever_le_plafond", Lib("Relever le plafond"), () => StartCoroutine(Decide("raise_ceiling")));
+            AddActionButton(parent, "forcer_une_fois", Lib("Forcer une fois"), () => StartCoroutine(Decide("override_one_shot")));
 
             // Phase-21 F2: the readable decision-failure detail (cooldown reason — carries ids/digits) renders as
             // CHROME: component-tracked only, never in the scan corpus (the tier-badge technique).
@@ -3108,9 +3108,9 @@ namespace MafiaCleanCity.Operational.Lieutenant
             AddLayoutElement(rows, flexibleHeight: 0);
 
             // +Add rule / Validate / Attach controls.
-            AddActionButton(builderSection, Lib("+ Ajouter une règle"), () => AddRule(NewDefaultRule()));
-            AddActionButton(builderSection, Lib("Valider"), () => StartCoroutine(ValidateRules()));
-            AddActionButton(builderSection, Lib("Attacher"), () => StartCoroutine(AttachRules()));
+            AddActionButton(builderSection, "ajouter_une_regle", Lib("+ Ajouter une règle"), () => AddRule(NewDefaultRule()));
+            AddActionButton(builderSection, "valider", Lib("Valider"), () => StartCoroutine(ValidateRules()));
+            AddActionButton(builderSection, "attacher", Lib("Attacher"), () => StartCoroutine(AttachRules()));
 
             // The diagnostics area — RenderDiagnostics lists the 422 details here (cleared on a successful validate/attach).
             NewSectionLabel(builderSection, Lib("Diagnostics"));
@@ -3331,7 +3331,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             });
 
             int captured = index;
-            AddCompactButton(controls2.transform, "✕", () =>
+            AddCompactButton(controls2.transform, "supprimer_la_regle", "✕", () =>
             {
                 if (captured >= 0 && captured < rules.Count) rules.RemoveAt(captured);
                 RenderRuleRows();
@@ -3531,9 +3531,9 @@ namespace MafiaCleanCity.Operational.Lieutenant
         }
 
         // A small fixed-width button (e.g. the remove ✕).
-        private Button AddCompactButton(Transform parent, string label, UnityEngine.Events.UnityAction onClick, Color color)
+        private Button AddCompactButton(Transform parent, string idStable, string label, UnityEngine.Events.UnityAction onClick, Color color)
         {
-            GameObject btn = NewUI("Compact_" + label, parent);
+            GameObject btn = NewUI("Compact_" + idStable, parent);
             Image img = btn.AddComponent<Image>();
             img.color = DesignTokens.Current.surfaceRaised;
             Button b = btn.AddComponent<Button>();
@@ -3634,9 +3634,9 @@ namespace MafiaCleanCity.Operational.Lieutenant
 
         // A status row: glyph (shape — a11y: colour is never the sole differentiator) + label + value. Used by T2 to
         // render the bands; kept here so the shell shares the BuildingCard row vocabulary 1:1.
-        private void AddStatusRow(string label, string value, string glyph, Color accent)
+        private void AddStatusRow(string idStable, string label, string value, string glyph, Color accent)
         {
-            GameObject row = NewUI("Row_" + label, statusRows);
+            GameObject row = NewUI("Row_" + idStable, statusRows);
             row.AddComponent<Image>().color = RowBg;
             HorizontalLayoutGroup hlg = row.AddComponent<HorizontalLayoutGroup>();
             hlg.padding = new RectOffset(10, 10, 6, 6);
@@ -3672,9 +3672,9 @@ namespace MafiaCleanCity.Operational.Lieutenant
             TrackText(v, value);
         }
 
-        private Button AddActionButton(Transform parent, string label, UnityEngine.Events.UnityAction onClick)
+        private Button AddActionButton(Transform parent, string idStable, string label, UnityEngine.Events.UnityAction onClick)
         {
-            GameObject btn = NewUI("Action_" + label.Replace(" ", "").Replace("(", "").Replace(")", ""), parent);
+            GameObject btn = NewUI("Action_" + idStable, parent);
             Image img = btn.AddComponent<Image>();
             img.color = DesignTokens.Current.surfaceRaised;
             Button b = btn.AddComponent<Button>();

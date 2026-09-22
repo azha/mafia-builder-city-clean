@@ -230,7 +230,7 @@ namespace MafiaCleanCity.Operational.Exceptions
                 AddLayoutElement(outcomeText.gameObject, minHeight: 20, flexibleHeight: 0);
                 // chrome — NOT tracked
 
-                AddButton(Lib("Back"), Back);
+                AddButton("back", Lib("Back"), Back);
                 return;
             }
 
@@ -256,8 +256,8 @@ namespace MafiaCleanCity.Operational.Exceptions
             // `.carte:nth-child(2){translateY(-8px)}`). Le reste part au TALON, qui n'est pas un
             // ornement mais le CARDINAL des issues non montrées.
             RendreMain(c);
-            AddButton(Lib("Escalate"), () => StartCoroutine(Escalate()));
-            AddButton(Lib("Back"), Back);
+            AddButton("escalate", Lib("Escalate"), () => StartCoroutine(Escalate()));
+            AddButton("back", Lib("Back"), Back);
         }
 
         // ── ⑩ : les constantes de la maquette, lues à la source (série 4, largeur 300) ──
@@ -348,7 +348,7 @@ namespace MafiaCleanCity.Operational.Exceptions
             if (sug != null)
             {
                 CandidateActionDto capture = sug;
-                AddButtonTo(body, sug.label, () => StartCoroutine(ResolveWith(capture)), track: false);
+                AddButtonTo(body, "tampon", sug.label, () => StartCoroutine(ResolveWith(capture)), track: false);
             }
         }
 
@@ -472,11 +472,11 @@ namespace MafiaCleanCity.Operational.Exceptions
         private static string Lib(string litteral) =>
             MafiaCleanCity.I18n.Libelle.De("exception_detail", "bloc", litteral);
 
-        private void AddButton(string label, UnityEngine.Events.UnityAction onClick) => AddButtonTo(body, label, onClick, track: true);
+        private void AddButton(string idStable, string label, UnityEngine.Events.UnityAction onClick) => AddButtonTo(body, idStable, label, onClick, track: true);
 
-        private void AddButtonTo(Transform parent, string label, UnityEngine.Events.UnityAction onClick, bool track = true)
+        private void AddButtonTo(Transform parent, string idStable, string label, UnityEngine.Events.UnityAction onClick, bool track = true)
         {
-            GameObject btn = NewUI("Btn_" + label.Replace(" ", "").Replace(":", ""), parent);
+            GameObject btn = NewUI("Btn_" + idStable, parent);
             Image img = btn.AddComponent<Image>();
             img.color = DesignTokens.Current.surfaceRaised;
             Button b = btn.AddComponent<Button>();

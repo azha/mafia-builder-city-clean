@@ -696,19 +696,19 @@ namespace MafiaCleanCity.Operational
             etiq.GetComponent<LayoutElement>().flexibleWidth = 0f;
             Espaceur(go.transform, 8f);    // h4{margin-bottom:8px}
 
-            LigneDeFiche(go.transform, "CE QU'IL RAPPORTE",
+            LigneDeFiche(go.transform, "ce_qu_il_rapporte", "CE QU'IL RAPPORTE",
                          DemolitionResolvers.PhraseDeRendement(f.output_value_bucket),
                          DemolitionResolvers.CouleurDeRendement(f.output_value_bucket), false);
-            LigneDeFiche(go.transform, "CE QU'IL GÊNE AUTOUR",
+            LigneDeFiche(go.transform, "ce_qu_il_gene_autour", "CE QU'IL GÊNE AUTOUR",
                          DemolitionResolvers.PhraseDeFriction(f.friction_load_bucket),
                          DemolitionResolvers.CouleurDeFriction(f.friction_load_bucket), true);
-            LigneDeFiche(go.transform, "AU TOTAL",
+            LigneDeFiche(go.transform, "au_total", "AU TOTAL",
                          DemolitionResolvers.PhraseDeRapport(f.output_to_friction_ratio_bucket),
                          DemolitionResolvers.CouleurDeRapport(f.output_to_friction_ratio_bucket), true);
-            LigneDeFiche(go.transform, "LE RASER COÛTERAIT",
+            LigneDeFiche(go.transform, "le_raser_couterait", "LE RASER COÛTERAIT",
                          DemolitionResolvers.PhraseDeCout(f.decommission_cost_bucket),
                          DemolitionResolvers.CouleurDeCout(f.decommission_cost_bucket), true);
-            LigneDeFiche(go.transform, "VOISINS TOUCHÉS",
+            LigneDeFiche(go.transform, "voisins_touches", "VOISINS TOUCHÉS",
                          f.neighbor_count.ToString(System.Globalization.CultureInfo.InvariantCulture),
                          DemolitionResolvers.FicheEncre, true);
 
@@ -736,9 +736,9 @@ namespace MafiaCleanCity.Operational
             }
         }
 
-        private void LigneDeFiche(Transform parent, string libelle, string valeur, Color couleur, bool filet)
+        private void LigneDeFiche(Transform parent, string idStable, string libelle, string valeur, Color couleur, bool filet)
         {
-            GameObject go = NouveauUI("L_" + libelle, parent);
+            GameObject go = NouveauUI("L_" + idStable, parent);
             if (filet) AjouterFiletHaut(go, DemolitionResolvers.FicheFilet, CssFilet);
             HorizontalLayoutGroup h = go.AddComponent<HorizontalLayoutGroup>();
             h.padding = new RectOffset(0, 0, PxTrait(CssFicheLignePad), PxTrait(CssFicheLignePad));

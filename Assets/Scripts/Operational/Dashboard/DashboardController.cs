@@ -386,23 +386,23 @@ namespace MafiaCleanCity.Operational
             // ---- Citywide heat band + escalation flag (REUSE the heat projection).
             if (CurrentHeat != null)
             {
-                AddStatusRow("Chaleur de la ville", HeatLabel(CurrentHeat.citywide_bucket),
+                AddStatusRow("chaleur_de_la_ville", "Chaleur de la ville", HeatLabel(CurrentHeat.citywide_bucket),
                     HeatGlyph(CurrentHeat.citywide_bucket), HeatAccent(CurrentHeat.citywide_bucket));
-                AddStatusRow("Descente", CurrentHeat.escalated ? "en cours" : "rien en cours",
+                AddStatusRow("descente", "Descente", CurrentHeat.escalated ? "en cours" : "rien en cours",
                     CurrentHeat.escalated ? "[!]" : "[=]",
                     CurrentHeat.escalated ? AccentSevere : AccentMild);
             }
             else
             {
                 // Heat is JWT-gated + tick-gated; if it isn't available, say so honestly (no fabrication).
-                AddStatusRow("Chaleur de la ville", "—", "[?]", TextSecondary);
+                AddStatusRow("chaleur_de_la_ville", "Chaleur de la ville", "—", "[?]", TextSecondary);
             }
 
             // ---- Phase-20: the vocabulary-tier funnel line (GET /v1/progression). The "Tier N" digit is
             //      intentional UI chrome (the locked-teaser technique) — the VALUE is kept out of the scan corpus.
             if (CurrentProgression != null)
             {
-                AddStatusRow("Palier",
+                AddStatusRow("palier", "Palier",
                     $"Palier {CurrentProgression.vocabulary_tier} — {ProgressLabel(CurrentProgression.progress_to_next)}",
                     "[*]", AccentMild, trackValue: false);
             }
@@ -453,7 +453,7 @@ namespace MafiaCleanCity.Operational
 
             string label = NewSectionLabel(statusRows, "ALERTES");
             TrackText(null, label);
-            AddStatusRow("Alertes", line, glyph, accent);
+            AddStatusRow("alertes", "Alertes", line, glyph, accent);
         }
 
         private void BuildNav()
@@ -464,11 +464,11 @@ namespace MafiaCleanCity.Operational
             string label = NewSectionLabel(navBar, "ALLER À");
             TrackText(null, label);
 
-            AddNavButton(navBar, "La carte", OpenCityMap);
-            AddNavButton(navBar, "La fiche", OpenBuildingCard);
-            AddNavButton(navBar, "Filière", OpenPipeline);
-            AddNavButton(navBar, "L'ardoise", OpenExceptions);
-            AddNavButton(navBar, "Les télégrammes", OpenAutonomy);
+            AddNavButton(navBar, "CityMap", "La carte", OpenCityMap);
+            AddNavButton(navBar, "BuildingCard", "La fiche", OpenBuildingCard);
+            AddNavButton(navBar, "Filière", "Filière", OpenPipeline);
+            AddNavButton(navBar, "Exceptions", "L'ardoise", OpenExceptions);
+            AddNavButton(navBar, "Autonomy", "Les télégrammes", OpenAutonomy);
         }
 
         // ----------------------------------------------------- band → label/glyph
@@ -643,9 +643,9 @@ namespace MafiaCleanCity.Operational
             AddLayoutElement(nav, flexibleHeight: 1);
         }
 
-        private void AddStatusRow(string label, string value, string glyph, Color accent, bool trackValue = true)
+        private void AddStatusRow(string idStable, string label, string value, string glyph, Color accent, bool trackValue = true)
         {
-            GameObject row = NewUI("Row_" + label.Replace(" ", ""), statusRows);
+            GameObject row = NewUI("Row_" + idStable, statusRows);
             row.AddComponent<Image>().color = RowBg;
             HorizontalLayoutGroup hlg = row.AddComponent<HorizontalLayoutGroup>();
             hlg.padding = new RectOffset(10, 10, 6, 6);
@@ -691,9 +691,9 @@ namespace MafiaCleanCity.Operational
             return text;
         }
 
-        private void AddNavButton(Transform parent, string label, UnityEngine.Events.UnityAction onClick)
+        private void AddNavButton(Transform parent, string idStable, string label, UnityEngine.Events.UnityAction onClick)
         {
-            GameObject btn = NewUI("Nav_" + label.Replace(" ", ""), parent);
+            GameObject btn = NewUI("Nav_" + idStable, parent);
             Image img = btn.AddComponent<Image>();
             img.color = DesignTokens.Current.surfaceRaised;
             Button b = btn.AddComponent<Button>();

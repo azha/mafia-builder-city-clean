@@ -637,10 +637,10 @@ namespace MafiaCleanCity.Operational
 
             // Status rows — each line: glyph (shape) + label + qualitative band value.
             // F2: shape glyph is present alongside colour (colour is never the sole carrier).
-            AddStatusRow("Mise en place", SetupLabel(card.setup_state), SetupGlyph(card.setup_state), SetupAccent(card.setup_state));
-            AddStatusRow("En service", card.operational ? "oui" : "non",
+            AddStatusRow("mise_en_place", "Mise en place", SetupLabel(card.setup_state), SetupGlyph(card.setup_state), SetupAccent(card.setup_state));
+            AddStatusRow("en_service", "En service", card.operational ? "oui" : "non",
                 card.operational ? "[#]" : "[ ]", card.operational ? AccentMild : AccentSevere);
-            AddStatusRow("Couverture", CoverLabel(card.cover_band), CoverGlyph(card.cover_band), CoverAccent(card.cover_band));
+            AddStatusRow("couverture", "Couverture", CoverLabel(card.cover_band), CoverGlyph(card.cover_band), CoverAccent(card.cover_band));
 
             // ⛔ L'ENTRETIEN — donnée REÇUE et JETÉE jusqu'ici. `lapse_phase_bucket` et
             // `days_until_maintenance_due` sont dans le DTO depuis qu'il existe, et aucune ligne
@@ -653,14 +653,14 @@ namespace MafiaCleanCity.Operational
             // autres nombres que la maquette dessine (montant à collecter, pourcentage de heat)
             // sont bucketés puis JETÉS par le back, avec la consigne écrite « jamais les valeurs
             // brutes » — les afficher reviendrait à les inventer.
-            AddStatusRow("Entretien", EcheanceLabel(card.lapse_phase_bucket, card.days_until_maintenance_due),
+            AddStatusRow("entretien", "Entretien", EcheanceLabel(card.lapse_phase_bucket, card.days_until_maintenance_due),
                          LapseGlyph(card.lapse_phase_bucket), LapseAccent(card.lapse_phase_bucket));
 
             // ----- Phase-2b raid / repair / risk surface (a11y F2: glyph + text, never colour-only; R2.2: bands only) -----
-            AddStatusRow("Structure", StructuralLabel(card.structural_state),
+            AddStatusRow("structure", "Structure", StructuralLabel(card.structural_state),
                 StructuralGlyph(card.structural_state), StructuralAccent(card.structural_state));
             // Raid-risk band gauge (LOW → IMMINENT) — a filled-bar glyph + worded band label.
-            AddStatusRow("Risque de descente", RaidRiskLabel(card.raid_risk),
+            AddStatusRow("risque_de_descente", "Risque de descente", RaidRiskLabel(card.raid_risk),
                 RaidRiskGlyph(card.raid_risk), RaidRiskAccent(card.raid_risk));
 
             // Raid notification/flag — shown only when this building was recently raided. The seized amount is a
@@ -668,7 +668,7 @@ namespace MafiaCleanCity.Operational
             if (card.recently_raided)
             {
                 string notif = $"Descente — saisi : {SeizedLabel(card.seized_amount)}";
-                AddStatusRow("Alerte", notif, "[!]", AccentSevere);
+                AddStatusRow("alerte", "Alerte", notif, "[!]", AccentSevere);
             }
 
             // ----- Phase-2b vector #2 (Crick) cold-chain surface — ONLY when the storage projection carries a
@@ -681,12 +681,12 @@ namespace MafiaCleanCity.Operational
             {
                 ColdChainShown = true;
                 // Substance row — surfaces which substance this cold chain protects (Crick).
-                AddStatusRow("Substance", SubstanceLabel(storage.substance_type), "[*]", AccentMild);
+                AddStatusRow("substance", "Substance", SubstanceLabel(storage.substance_type), "[*]", AccentMild);
                 // Temperature band row — the qualitative cold-chain status (OPTIMAL_COLD / MODERATE / HOT).
-                AddStatusRow("Température", TemperatureLabel(storage.temperature_status),
+                AddStatusRow("temperature", "Température", TemperatureLabel(storage.temperature_status),
                     TemperatureGlyph(storage.temperature_status), TemperatureAccent(storage.temperature_status));
                 // Degrading indicator row — Stable vs Degrading (a boolean, never a raw rate).
-                AddStatusRow("Chaîne du froid", storage.degrading ? "se dégrade" : "stable",
+                AddStatusRow("chaine_du_froid", "Chaîne du froid", storage.degrading ? "se dégrade" : "stable",
                     storage.degrading ? "[v]" : "[=]", storage.degrading ? AccentSevere : AccentMild);
             }
 
@@ -705,14 +705,14 @@ namespace MafiaCleanCity.Operational
                 string labSubstance = (labStorage != null && !string.IsNullOrEmpty(labStorage.substance_type))
                     ? labStorage.substance_type
                     : "ASH";
-                AddStatusRow("Substance", SubstanceLabel(labSubstance), "[*]", AccentMild);
+                AddStatusRow("substance", "Substance", SubstanceLabel(labSubstance), "[*]", AccentMild);
 
                 // Lab-tier band row — the specialized_lab's standing (a higher band → purer Ash). Always shown for a
                 // specialized_lab (lab_tier_band is BASIC/REFINED/MASTER; NONE would only be a non-specialized_lab).
                 if (!string.IsNullOrEmpty(card.lab_tier_band) && card.lab_tier_band != "NONE")
                 {
                     LabTierShown = true;
-                    AddStatusRow("Taille du labo", LabTierLabel(card.lab_tier_band),
+                    AddStatusRow("taille_du_labo", "Taille du labo", LabTierLabel(card.lab_tier_band),
                         LabTierGlyph(card.lab_tier_band), LabTierAccent(card.lab_tier_band));
                 }
 
@@ -722,7 +722,7 @@ namespace MafiaCleanCity.Operational
                 if (st != null && !string.IsNullOrEmpty(st.purity_band))
                 {
                     PurityBandShown = true;
-                    AddStatusRow("Pureté", PurityLabel(st.purity_band),
+                    AddStatusRow("purete", "Pureté", PurityLabel(st.purity_band),
                         PurityGlyph(st.purity_band), PurityAccent(st.purity_band));
                 }
             }
@@ -732,9 +732,9 @@ namespace MafiaCleanCity.Operational
             // band + the payout band only (never raw ticks/cents); F2: a distinct glyph per status alongside colour.
             if (CurrentAppointment != null && !string.IsNullOrEmpty(CurrentAppointment.status))
             {
-                AddStatusRow("Rendez-vous", AppointmentStatusLabel(CurrentAppointment.status),
+                AddStatusRow("rendez_vous", "Rendez-vous", AppointmentStatusLabel(CurrentAppointment.status),
                     AppointmentStatusGlyph(CurrentAppointment.status), AppointmentStatusAccent(CurrentAppointment.status));
-                AddStatusRow("Gain", PayoutLabel(CurrentAppointment.payout_band),
+                AddStatusRow("gain", "Gain", PayoutLabel(CurrentAppointment.payout_band),
                     PayoutGlyph(CurrentAppointment.payout_band), PayoutAccent(CurrentAppointment.payout_band));
             }
 
@@ -751,14 +751,14 @@ namespace MafiaCleanCity.Operational
                 && !string.IsNullOrEmpty(CurrentGrow.grow_stage_band))
             {
                 // Crop row — surfaces which growable precursor this grow_house is cultivating (the planted substance).
-                AddStatusRow("Culture", GrowablePrecursorLabel(SelectedPrecursor), "[*]", AccentMild);
+                AddStatusRow("culture", "Culture", GrowablePrecursorLabel(SelectedPrecursor), "[*]", AccentMild);
                 // Grow-stage band row — the qualitative growth phase (EARLY → DONE) with a rising filled-bar glyph.
                 GrowStageShown = true;
-                AddStatusRow("Pousse", GrowStageLabel(CurrentGrow.grow_stage_band),
+                AddStatusRow("pousse", "Pousse", GrowStageLabel(CurrentGrow.grow_stage_band),
                     GrowStageGlyph(CurrentGrow.grow_stage_band), GrowStageAccent(CurrentGrow.grow_stage_band));
                 // Husbandry band row — the qualitative tend trajectory (WITHERED → THRIVING) — the husbandry payoff signal.
                 HusbandryShown = true;
-                AddStatusRow("Soin", HusbandryLabel(CurrentGrow.husbandry_band),
+                AddStatusRow("soin", "Soin", HusbandryLabel(CurrentGrow.husbandry_band),
                     HusbandryGlyph(CurrentGrow.husbandry_band), HusbandryAccent(CurrentGrow.husbandry_band));
             }
 
@@ -778,7 +778,7 @@ namespace MafiaCleanCity.Operational
                 if (!string.IsNullOrEmpty(card.hub_tier_band) && card.hub_tier_band != "NONE")
                 {
                     HubTierShown = true;
-                    AddStatusRow("Taille du relais", HubTierLabel(card.hub_tier_band),
+                    AddStatusRow("taille_du_relais", "Taille du relais", HubTierLabel(card.hub_tier_band),
                         HubTierGlyph(card.hub_tier_band), HubTierAccent(card.hub_tier_band));
                 }
                 // Roster-occupancy band row — how much of the player's concurrent-shipment capacity is in use (OPEN / BUSY /
@@ -786,13 +786,13 @@ namespace MafiaCleanCity.Operational
                 if (!string.IsNullOrEmpty(card.roster_band) && card.roster_band != "NONE")
                 {
                     RosterShown = true;
-                    AddStatusRow("Équipe", RosterLabel(card.roster_band),
+                    AddStatusRow("equipe", "Équipe", RosterLabel(card.roster_band),
                         RosterGlyph(card.roster_band), RosterAccent(card.roster_band));
                 }
                 // Unlocked-vehicles row — the categorical vehicle modes the hub unlocks (FOOT always; +BIKE/CAR on an
                 // operational hub). A worded list (never speeds; R2.2). The "[~]" glyph reads as "fleet/modes available".
                 VehiclesShown = true;
-                AddStatusRow("Véhicules", AvailableVehiclesLabel(card.available_vehicles), "[~]", AccentMild);
+                AddStatusRow("vehicules", "Véhicules", AvailableVehiclesLabel(card.available_vehicles), "[~]", AccentMild);
             }
 
             // ----- Phase-5 vector #5a (money_holding clean-cash vault) surface — ONLY for a money_holding. The tier row reads
@@ -813,7 +813,7 @@ namespace MafiaCleanCity.Operational
                 if (!string.IsNullOrEmpty(card.money_holding_tier_band) && card.money_holding_tier_band != "NONE")
                 {
                     MoneyHoldingTierShown = true;
-                    AddStatusRow("Taille de la banque", MoneyHoldingTierLabel(card.money_holding_tier_band),
+                    AddStatusRow("taille_de_la_banque", "Taille de la banque", MoneyHoldingTierLabel(card.money_holding_tier_band),
                         MoneyHoldingTierGlyph(card.money_holding_tier_band), MoneyHoldingTierAccent(card.money_holding_tier_band));
                 }
                 // Held-magnitude band row — how much clean cash is held (NONE → MASSIVE; never raw cents). A higher hold earns
@@ -821,21 +821,21 @@ namespace MafiaCleanCity.Operational
                 if (!string.IsNullOrEmpty(card.held_band))
                 {
                     HeldBandShown = true;
-                    AddStatusRow("En dépôt", HeldLabel(card.held_band), HeldGlyph(card.held_band), HeldAccent(card.held_band));
+                    AddStatusRow("en_depot", "En dépôt", HeldLabel(card.held_band), HeldGlyph(card.held_band), HeldAccent(card.held_band));
                 }
                 // Capacity-fill band row — how full the vault is (OPEN / BUSY / FULL — never the raw held/cap). FULL telegraphs
                 // that a further deposit is refused (409 OVER_CAPACITY) — upgrade the tier or withdraw to make room.
                 if (!string.IsNullOrEmpty(card.capacity_band) && card.capacity_band != "NONE")
                 {
                     CapacityBandShown = true;
-                    AddStatusRow("Capacité", CapacityLabel(card.capacity_band),
+                    AddStatusRow("capacite", "Capacité", CapacityLabel(card.capacity_band),
                         CapacityGlyph(card.capacity_band), CapacityAccent(card.capacity_band));
                 }
                 // Yield band row — IDLE (nothing held) / EARNING (the passive yield accrues each tick; never the raw rate).
                 if (!string.IsNullOrEmpty(card.yield_band) && card.yield_band != "NONE")
                 {
                     YieldBandShown = true;
-                    AddStatusRow("Rendement", YieldLabel(card.yield_band), YieldGlyph(card.yield_band), YieldAccent(card.yield_band));
+                    AddStatusRow("rendement", "Rendement", YieldLabel(card.yield_band), YieldGlyph(card.yield_band), YieldAccent(card.yield_band));
                 }
                 // Forfeiture WARNING alert — telegraphed so the player can react BEFORE the seizure. PENDING (the audit is armed,
                 // the deadline is comfortably ahead) / IMMINENT (the deadline is near/at — react NOW). A distinct warning glyph
@@ -847,7 +847,7 @@ namespace MafiaCleanCity.Operational
                     string warn = imminent
                         ? "Audit imminent — retirez ou répartissez maintenant"
                         : "Audit en vue — retirez ou répartissez pour réagir";
-                    AddStatusRow("Saisie", warn, imminent ? "[!!]" : "[!]",
+                    AddStatusRow("saisie", "Saisie", warn, imminent ? "[!!]" : "[!]",
                         imminent ? AccentSevere : AccentModerate);
                 }
             }
@@ -893,7 +893,7 @@ namespace MafiaCleanCity.Operational
                 RepairButtonAffordable = affordable;
                 string cout = RepairCostLabel(card.repair_cost);
                 string repairLabel = cout == null ? "Réparer" : $"Réparer · {cout}";   // atelier c1 : « Réparer · gros frais … »
-                repairButton = AddActionButton(actionBar, repairLabel, () => StartCoroutine(Repair()));
+                repairButton = AddActionButton(actionBar, "reparer", repairLabel, () => StartCoroutine(Repair()));
                 SetButtonInteractable(repairButton, affordable);
                 if (!affordable)
                 {
@@ -918,7 +918,7 @@ namespace MafiaCleanCity.Operational
                 UpgradeTierButtonShown = true;
                 bool affordable = CanAffordUpgrade(WalletBand);
                 UpgradeTierButtonAffordable = affordable;
-                Button upgradeBtn = AddActionButton(actionBar, "Agrandir le labo", () => StartCoroutine(UpgradeTier()));
+                Button upgradeBtn = AddActionButton(actionBar, "agrandir_le_labo", "Agrandir le labo", () => StartCoroutine(UpgradeTier()));
                 SetButtonInteractable(upgradeBtn, affordable);
                 if (!affordable)
                 {
@@ -944,7 +944,7 @@ namespace MafiaCleanCity.Operational
                 UpgradeHubTierButtonShown = true;
                 bool affordable = CanAffordUpgrade(WalletBand);
                 UpgradeHubTierButtonAffordable = affordable;
-                Button upgradeBtn = AddActionButton(actionBar, "Agrandir le relais", () => StartCoroutine(UpgradeHubTier()));
+                Button upgradeBtn = AddActionButton(actionBar, "agrandir_le_relais", "Agrandir le relais", () => StartCoroutine(UpgradeHubTier()));
                 SetButtonInteractable(upgradeBtn, affordable);
                 if (!affordable)
                 {
@@ -970,7 +970,7 @@ namespace MafiaCleanCity.Operational
                 UpgradeMoneyHoldingTierButtonShown = true;
                 bool affordable = CanAffordUpgrade(WalletBand);
                 UpgradeMoneyHoldingTierButtonAffordable = affordable;
-                Button upgradeBtn = AddActionButton(actionBar, "Agrandir la banque", () => StartCoroutine(UpgradeMoneyHoldingTier()));
+                Button upgradeBtn = AddActionButton(actionBar, "agrandir_la_banque", "Agrandir la banque", () => StartCoroutine(UpgradeMoneyHoldingTier()));
                 SetButtonInteractable(upgradeBtn, affordable);
                 if (!affordable)
                 {
@@ -985,22 +985,22 @@ namespace MafiaCleanCity.Operational
             switch (card.operational_type)
             {
                 case "lab":
-                    AddActionButton(actionBar, "Commander du pyralin", () => StartCoroutine(OrderPyralin()));
-                    AddActionButton(actionBar, "Lancer une cuisson", () => StartCoroutine(StartCook()));
+                    AddActionButton(actionBar, "commander_du_pyralin", "Commander du pyralin", () => StartCoroutine(OrderPyralin()));
+                    AddActionButton(actionBar, "lancer_une_cuisson", "Lancer une cuisson", () => StartCoroutine(StartCook()));
                     break;
                 case "specialized_lab":
                     // Ash cook — the refining-passes selector (the time↔purity lever) + the Start Ash Cook button. The
                     // selector worded count (no raw number leaks — it's a deliberate label "+N passes" inside our own UI,
                     // but to keep the no-raw-scalar guard simple we word the passes count rather than print a bare digit).
                     AddRefiningPassesSelector(actionBar);
-                    AddActionButton(actionBar, "Lancer une cuisson d'ash", () => StartCoroutine(StartCookAsh()));
+                    AddActionButton(actionBar, "lancer_une_cuisson_d_ash", "Lancer une cuisson d'ash", () => StartCoroutine(StartCookAsh()));
                     // Honor affordance — only when a SCHEDULED appointment is tracked for this lab (the Ash sale path).
                     if (CurrentAppointment != null && CurrentAppointment.status == "SCHEDULED")
-                        AddActionButton(actionBar, "Honorer le rendez-vous", () => StartCoroutine(HonorAppointment()));
+                        AddActionButton(actionBar, "honorer_le_rendez_vous", "Honorer le rendez-vous", () => StartCoroutine(HonorAppointment()));
                     break;
                 case "front_shop":
                     // Inject needs a safehouse target — wired by the caller/test via Inject(safehouseId, amount).
-                    AddActionButton(actionBar, "Injecter", () => { /* needs safehouse target; driven via Inject() */ });
+                    AddActionButton(actionBar, "injecter", "Injecter", () => { /* needs safehouse target; driven via Inject() */ });
                     break;
                 case "grow_house":
                     // Phase-3 vector #3: the cultivation affordances.
@@ -1018,7 +1018,7 @@ namespace MafiaCleanCity.Operational
                         TendButtonShown = true;
                         bool tendDue = CurrentGrow.tend_due;
                         TendButtonEnabled = tendDue;
-                        Button tendBtn = AddActionButton(actionBar, "Soigner la culture", () => StartCoroutine(Tend()));
+                        Button tendBtn = AddActionButton(actionBar, "soigner_la_culture", "Soigner la culture", () => StartCoroutine(Tend()));
                         SetButtonInteractable(tendBtn, tendDue);
                         if (!tendDue)
                         {
@@ -1035,7 +1035,7 @@ namespace MafiaCleanCity.Operational
                         // Idle grow_house (no active grow) → the plant selector + Plant button.
                         PlantSelectorShown = true;
                         AddPlantSelector(actionBar);
-                        AddActionButton(actionBar, "Planter", () => StartCoroutine(Plant()));
+                        AddActionButton(actionBar, "planter", "Planter", () => StartCoroutine(Plant()));
                     }
                     break;
                 case "distribution_hub":
@@ -1046,7 +1046,7 @@ namespace MafiaCleanCity.Operational
                     AddVehicleSelector(actionBar, card);
                     bool dispatchReady = !string.IsNullOrEmpty(DispatchFromBuildingId)
                         && !string.IsNullOrEmpty(DispatchToBuildingId);
-                    Button dispatchBtn = AddActionButton(actionBar, "Envoyer un coursier", () => StartCoroutine(Dispatch()));
+                    Button dispatchBtn = AddActionButton(actionBar, "envoyer_un_coursier", "Envoyer un coursier", () => StartCoroutine(Dispatch()));
                     SetButtonInteractable(dispatchBtn, dispatchReady);
                     if (!dispatchReady)
                     {
@@ -1066,8 +1066,8 @@ namespace MafiaCleanCity.Operational
                     DepositActionShown = true;
                     WithdrawActionShown = true;
                     AddTransferAmountSelector(actionBar);
-                    AddActionButton(actionBar, "Déposer", () => StartCoroutine(DepositCash()));
-                    AddActionButton(actionBar, "Retirer", () => StartCoroutine(WithdrawCash()));
+                    AddActionButton(actionBar, "deposer", "Déposer", () => StartCoroutine(DepositCash()));
+                    AddActionButton(actionBar, "retirer", "Retirer", () => StartCoroutine(WithdrawCash()));
                     break;
                 case "stash":
                 case "cash_safehouse":
@@ -1077,7 +1077,7 @@ namespace MafiaCleanCity.Operational
             }
 
             // A Convert affordance is always offered (no-op if already operational — backend 409s cleanly).
-            AddActionButton(actionBar, "Ouvrir", () => StartCoroutine(Convert(card.operational_type)));
+            AddActionButton(actionBar, "ouvrir", "Ouvrir", () => StartCoroutine(Convert(card.operational_type)));
 
             actionStatusText = NewText("ActionStatus", actionBar, "", 14, TextAlignmentOptions.Left);
             actionStatusText.color = DesignTokens.Current.onSurfaceMutedAlt;
@@ -1904,9 +1904,9 @@ namespace MafiaCleanCity.Operational
         /// c'est le seul endroit du fichier qui doit bouger dans ce cas.</summary>
         private static readonly string[] GlyphesLesPlusLarges = { "[#####]", "[$$$$$]" };
 
-        private void AddStatusRow(string label, string value, string glyph, Color accent)
+        private void AddStatusRow(string idStable, string label, string value, string glyph, Color accent)
         {
-            GameObject row = NewUI("Row_" + label, statusRows);
+            GameObject row = NewUI("Row_" + idStable, statusRows);
             row.AddComponent<Image>().color = RowBg;
             HorizontalLayoutGroup hlg = row.AddComponent<HorizontalLayoutGroup>();
             hlg.padding = new RectOffset(10, 10, 6, 6);
@@ -1962,9 +1962,9 @@ namespace MafiaCleanCity.Operational
             return text;
         }
 
-        private Button AddActionButton(Transform parent, string label, UnityEngine.Events.UnityAction onClick)
+        private Button AddActionButton(Transform parent, string idStable, string label, UnityEngine.Events.UnityAction onClick)
         {
-            GameObject btn = NewUI("Action_" + label.Replace(" ", "").Replace("(", "").Replace(")", ""), parent);
+            GameObject btn = NewUI("Action_" + idStable, parent);
             Image img = btn.AddComponent<Image>();
             img.color = DesignTokens.Current.surfaceRaised;
             Button b = btn.AddComponent<Button>();
@@ -2001,7 +2001,7 @@ namespace MafiaCleanCity.Operational
             hlg.childForceExpandHeight = true;
             AddLayoutElement(row, minHeight: 32, flexibleHeight: 0);
 
-            Button minus = AddActionButton(row.transform, "- Refine",
+            Button minus = AddActionButton(row.transform, "refine_moins", "- Refine",
                 () => SetRefiningPasses(RefiningPasses - 1));
             SetButtonInteractable(minus, RefiningPasses > 0);
 
@@ -2012,7 +2012,7 @@ namespace MafiaCleanCity.Operational
             AddLayoutElement(passesText.gameObject, minWidth: 110, flexibleWidth: 0);
             TrackText(passesText, passesWord);
 
-            Button plus = AddActionButton(row.transform, "+ Refine",
+            Button plus = AddActionButton(row.transform, "refine_plus", "+ Refine",
                 () => SetRefiningPasses(RefiningPasses + 1));
             SetButtonInteractable(plus, RefiningPasses < MaxRefiningPassesUi);
         }
@@ -2050,7 +2050,7 @@ namespace MafiaCleanCity.Operational
             hlg.childForceExpandHeight = true;
             AddLayoutElement(row, minHeight: 32, flexibleHeight: 0);
 
-            AddActionButton(row.transform, "‹", () => CyclePrecursor(-1));
+            AddActionButton(row.transform, "culture_precedente", "‹", () => CyclePrecursor(-1));
 
             string cropWord = GrowablePrecursorLabel(SelectedPrecursor);
             TextMeshProUGUI cropText = NewText("PlantSelectorValue", row.transform, cropWord, 15, TextAlignmentOptions.Center);
@@ -2059,7 +2059,7 @@ namespace MafiaCleanCity.Operational
             AddLayoutElement(cropText.gameObject, minWidth: 130, flexibleWidth: 0);
             TrackText(cropText, cropWord);
 
-            AddActionButton(row.transform, "›", () => CyclePrecursor(1));
+            AddActionButton(row.transform, "culture_suivante", "›", () => CyclePrecursor(1));
         }
 
         // Cycle the selected growable precursor (wraps around the 3-member GROWABLE set). Re-renders the actions via
@@ -2104,7 +2104,7 @@ namespace MafiaCleanCity.Operational
 
             // The cycle is enabled only when more than one vehicle is unlocked (a single-member foot-only set is fixed).
             bool multi = unlocked.Length > 1;
-            Button prev = AddActionButton(row.transform, "< Vehicle", () => CycleVehicle(-1, unlocked));
+            Button prev = AddActionButton(row.transform, "vehicule_precedent", "< Vehicle", () => CycleVehicle(-1, unlocked));
             SetButtonInteractable(prev, multi);
 
             string vehicleWord = VehicleLabel(SelectedVehicle);
@@ -2114,7 +2114,7 @@ namespace MafiaCleanCity.Operational
             AddLayoutElement(vehText.gameObject, minWidth: 110, flexibleWidth: 0);
             TrackText(vehText, vehicleWord);
 
-            Button next = AddActionButton(row.transform, "Vehicle >", () => CycleVehicle(1, unlocked));
+            Button next = AddActionButton(row.transform, "vehicule_suivant", "Vehicle >", () => CycleVehicle(1, unlocked));
             SetButtonInteractable(next, multi);
         }
 
@@ -2154,7 +2154,7 @@ namespace MafiaCleanCity.Operational
             int idx = System.Array.IndexOf(TransferAmountStepsCents, TransferAmountCents);
             if (idx < 0) idx = 1; // default → "Small" ($10k) if the current value is off-grid (defensive).
 
-            Button minus = AddActionButton(row.transform, "- Amount", () => CycleTransferAmount(-1));
+            Button minus = AddActionButton(row.transform, "montant_moins", "- Amount", () => CycleTransferAmount(-1));
             SetButtonInteractable(minus, idx > 0);
 
             string amountWord = TransferAmountLabel(TransferAmountCents);
@@ -2164,7 +2164,7 @@ namespace MafiaCleanCity.Operational
             AddLayoutElement(amountText.gameObject, minWidth: 110, flexibleWidth: 0);
             TrackText(amountText, amountWord);
 
-            Button plus = AddActionButton(row.transform, "+ Amount", () => CycleTransferAmount(1));
+            Button plus = AddActionButton(row.transform, "montant_plus", "+ Amount", () => CycleTransferAmount(1));
             SetButtonInteractable(plus, idx < TransferAmountStepsCents.Length - 1);
         }
 

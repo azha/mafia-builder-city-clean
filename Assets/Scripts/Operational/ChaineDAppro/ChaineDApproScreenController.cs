@@ -412,22 +412,22 @@ namespace MafiaCleanCity.Operational
             string usage = string.Equals(dto.precursor_type, "PYRALIN", StringComparison.OrdinalIgnoreCase)
                 ? "pour le brindle"                // m-48, verbatim — seul cas couvert par la mesure
                 : "sert à la production";           // pis-aller générique — aucune source pour les autres types
-            ConstruireLigne(ficheRoot, "À QUOI ÇA SERT", usage, EncreSombre);
+            ConstruireLigne(ficheRoot, "a_quoi_ca_sert", "À QUOI ÇA SERT", usage, EncreSombre);
 
             string valeurStock = ChaineDApproResolvers.TexteStock(dto.stock_band) + " · " +
                                   (dto.stock_liters_label ?? "?");   // label DÉJÀ formaté, affiché tel quel
-            ConstruireLigne(ficheRoot, "CE QU'IL EN RESTE", valeurStock,
+            ConstruireLigne(ficheRoot, "ce_qu_il_en_reste", "CE QU'IL EN RESTE", valeurStock,
                 dto.stock_band == "NONE" ? RougeMauvais : EncreSombre);
 
-            ConstruireLigne(ficheRoot, "LE PRIX", ChaineDApproResolvers.TextePrix(dto.price_trend_bucket),
+            ConstruireLigne(ficheRoot, "le_prix", "LE PRIX", ChaineDApproResolvers.TextePrix(dto.price_trend_bucket),
                 ChaineDApproResolvers.CouleurPrix(dto.price_trend_bucket, RougeMauvais, VertBon, EncreSombre));
 
-            ConstruireLigne(ficheRoot, "LE FOURNISSEUR",
+            ConstruireLigne(ficheRoot, "le_fournisseur", "LE FOURNISSEUR",
                 ChaineDApproResolvers.TextePressionFournisseur(dto.supplier_pressure_bucket),
                 ChaineDApproResolvers.CouleurPressionFournisseur(dto.supplier_pressure_bucket, RougeMauvais, EncreSombre));
 
             if (enCours)
-                ConstruireLigne(ficheRoot, "LA COMMANDE", "est en route", VertBon);   // m-49, verbatim
+                ConstruireLigne(ficheRoot, "la_commande", "LA COMMANDE", "est en route", VertBon);   // m-49, verbatim
 
             if (dto.scarcity_active)
             {
@@ -451,9 +451,9 @@ namespace MafiaCleanCity.Operational
             }
         }
 
-        private void ConstruireLigne(Transform parent, string libelleLitteral, string valeur, Color couleurValeur)
+        private void ConstruireLigne(Transform parent, string idStable, string libelleLitteral, string valeur, Color couleurValeur)
         {
-            GameObject ligne = NouveauUI("Ligne_" + Libelle.Slug(libelleLitteral), parent);
+            GameObject ligne = NouveauUI("Ligne_" + idStable, parent);
             HorizontalLayoutGroup h = ligne.AddComponent<HorizontalLayoutGroup>();
             h.childControlWidth = true; h.childControlHeight = true;
             h.childForceExpandWidth = true; h.childForceExpandHeight = false;

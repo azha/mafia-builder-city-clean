@@ -429,11 +429,12 @@ namespace MafiaCleanCity.Shell.Tests
             // sans jamais l'écrire dans un TextMeshProUGUI passerait quand même (précédent maison :
             // l'assertion équivalente sur HighestLeverageCard, plus haut, "le texte RENDU doit
             // porter…", pas seulement le test hook).
-            Assert.IsTrue(orgVitals.RenderedTexts.Any(t => t.StartsWith("Friction:")),
+            Assert.IsTrue(orgVitals.RenderedTexts.Any(t => t.StartsWith(OrgVitalsPanelController.NomFriction + ":")),
                 "Friction doit avoir été RENDU (un TextMeshProUGUI assigné), pas seulement stocké " +
                 "dans le test hook FrictionBucketRendered.");
-            Assert.IsTrue(orgVitals.RenderedTexts.Any(t => t.StartsWith("Stress:")),
-                "Stress doit avoir été RENDU, pas seulement stocké dans le test hook StressBucketRendered.");
+            // Le nom vient du PANNEAU (une source) : « Stress: » en dur a rougi le 2026-09-22, quand 8166447a l'a traduit en « Tension ».
+            Assert.IsTrue(orgVitals.RenderedTexts.Any(t => t.StartsWith(OrgVitalsPanelController.NomTension + ":")),
+                "la tension doit avoir été RENDUE, pas seulement stockée dans le test hook StressBucketRendered.");
 
             float ecoule = 0f;
             while (orgVitals.HeatBucketRendered == null && orgVitals.LastHeatError == null && ecoule < 15f)
