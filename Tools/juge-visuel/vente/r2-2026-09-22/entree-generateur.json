@@ -1,0 +1,106 @@
+{
+ "dossier": "vente",
+ "tour": "r2",
+ "sym": "㉟",
+ "nom": "La vente",
+ "canon": "",
+ "controleur": "SellingScreenController",
+ "chemin": "Plus → LA VENTE",
+ "prepare_le": "2026-09-22",
+ "prepare_par": "atelier / DA — preparer-r2-2026-09-22.py",
+ "client": "ba4d4e7b",
+ "atelier": "20d006d",
+ "references": [
+  [
+   "reference-1080x2102.png",
+   "rendu du cadre nominal (`ecrans-brennar-6.html` #107 « La vente — qui vend et ce qu'il y a dans la caisse »)"
+  ]
+ ],
+ "cadres": {
+  "107": {
+   "ligne": 5772,
+   "etiquette": "La vente — qui vend et ce qu'il y a dans la caisse"
+  },
+  "108": {
+   "ligne": 5775,
+   "etiquette": "La caisse de Oskar — pleine à ras"
+  },
+  "109": {
+   "ligne": 5778,
+   "etiquette": "Ramasser — nulle part où la porter"
+  },
+  "110": {
+   "ligne": 5781,
+   "etiquette": "Ilse s'est fait prendre"
+  },
+  "111": {
+   "ligne": 5784,
+   "etiquette": "Aucun dealer — rien ne rentre"
+  },
+  "112": {
+   "ligne": 5787,
+   "etiquette": "Ce qui manque encore"
+  }
+ },
+ "captures_attendues": [
+  {
+   "categorie": "PhotoPlanche",
+   "fichiers": [
+    "planche_la_vente_1080x2400.png"
+   ],
+   "note": "sous chrome, surimpression"
+  },
+  {
+   "categorie": "PhotoVente",
+   "fichiers": [
+    "la_vente_1080x2400.png"
+   ],
+   "note": "écran seul (LaVenteCapturePlayModeTests)"
+  }
+ ],
+ "constats_suspendus": [
+  {
+   "id": "B2",
+   "ecart": "L'écran est vide à 74,2 % et il ne l'est pas par manque de place.",
+   "section": "A"
+  },
+  {
+   "id": "M9",
+   "ecart": "La ligne « lieu · lek N · posture de prix » est absente : ni district, ni lek, ni tarif nulle part sur l'écran",
+   "section": "A"
+  },
+  {
+   "id": "M11",
+   "ecart": "Le texte de l'écran nie ce que l'empreinte déclarée compte : « aucune planque n'existe encore », alors que l'e",
+   "section": "A"
+  },
+  {
+   "id": "m7",
+   "ecart": "La carte est intitulée par un mot que la maquette emploie comme SUBSTANCE, pas comme personne : « Brindle ».",
+   "section": "A"
+  },
+  {
+   "id": "B3",
+   "ecart": "« Moderate » / « Standard » — idem (fermé par unity par ailleurs)",
+   "section": "B"
+  },
+  {
+   "id": "M11",
+   "ecart": "« aucune planque n'existe encore » contre 2 planques d'empreinte",
+   "section": "B"
+  }
+ ],
+ "constats_a_rejuger": [
+  "constats-a-rejuger.md"
+ ],
+ "polices_fc_match": {
+  "Georgia": "\"Noto Serif\" \"Regular\"",
+  "DejaVu Sans": "\"DejaVu Sans\" \"Book\"",
+  "Courier New": "\"Liberation Mono\" \"Regular\"",
+  "sans-serif": "\"Noto Sans\" \"Regular\"",
+  "serif": "\"Noto Serif\" \"Regular\"",
+  "Times New Roman": "\"Liberation Serif\" \"Regular\"",
+  "Segoe UI": "\"Noto Sans\" \"Regular\""
+ },
+ "captures": []
+}

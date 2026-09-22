@@ -1,0 +1,1 @@
+# NON FOURNI le 2026-09-22 : aucune campagne encore. À joindre au créneau : la ligne [DemoIdentityResolver] du journal du run, l'horodatage de l'image (built_at + server_build_ref) lu PENDANT le run, l'empreinte avant/après.

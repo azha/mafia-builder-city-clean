@@ -1,0 +1,80 @@
+{
+ "dossier": "police",
+ "tour": "r2-⑰",
+ "sym": "⑰",
+ "nom": "Precinct View",
+ "canon": "screen_9",
+ "controleur": "PrecinctScreenController",
+ "chemin": "Plus → LE COMMISSARIAT",
+ "prepare_le": "2026-09-22",
+ "prepare_par": "atelier / DA — preparer-r2-2026-09-22.py",
+ "client": "ba4d4e7b",
+ "atelier": "20d006d",
+ "references": [
+  [
+   "reference-⑰-1080x2102.png",
+   "rendu du cadre nominal (`ecrans-brennar-6.html` #31 « La police — le tableau : ce qu’ils savent »)"
+  ]
+ ],
+ "cadres": {
+  "31": {
+   "ligne": 1043,
+   "etiquette": "La police — le tableau : ce qu’ils savent"
+  },
+  "32": {
+   "ligne": 1080,
+   "etiquette": "La police — le registre de dispatch"
+  },
+  "33": {
+   "ligne": 1090,
+   "etiquette": "La police — déposer un signalement"
+  },
+  "34": {
+   "ligne": 1103,
+   "etiquette": "La police — le retour de bâton"
+  },
+  "35": {
+   "ligne": 1115,
+   "etiquette": "La police — avec les lots back"
+  }
+ },
+ "captures_attendues": [
+  {
+   "categorie": "PhotoPlanche",
+   "fichiers": [
+    "planche_le_commissariat_1080x2400.png"
+   ],
+   "note": "sous chrome, surimpression (test de planche)"
+  }
+ ],
+ "constats_suspendus": [
+  {
+   "id": "B3",
+   "ecart": "L'inventaire par commissariat — six fiches au canon série 2, six fiches punaisées au cadre #31 — est absent. L",
+   "section": "A"
+  },
+  {
+   "id": "m4",
+   "ecart": "oui (déclenché par la longueur de la valeur)",
+   "section": "A"
+  },
+  {
+   "id": "B3",
+   "ecart": "inventaire par commissariat absent — sous réserve du back (0 route district → précinct à cette date)",
+   "section": "B"
+  }
+ ],
+ "constats_a_rejuger": [
+  "constats-a-rejuger-⑰.md"
+ ],
+ "polices_fc_match": {
+  "Georgia": "\"Noto Serif\" \"Regular\"",
+  "DejaVu Sans": "\"DejaVu Sans\" \"Book\"",
+  "Courier New": "\"Liberation Mono\" \"Regular\"",
+  "sans-serif": "\"Noto Sans\" \"Regular\"",
+  "serif": "\"Noto Serif\" \"Regular\"",
+  "Times New Roman": "\"Liberation Serif\" \"Regular\"",
+  "Segoe UI": "\"Noto Sans\" \"Regular\""
+ },
+ "captures": []
+}

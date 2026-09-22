@@ -1,0 +1,97 @@
+{
+ "dossier": "ecran_demolition",
+ "tour": "r2",
+ "sym": "㉝",
+ "nom": "Raser un site",
+ "canon": "",
+ "controleur": "DemolitionScreenController",
+ "chemin": "Plus → RASER UN SITE",
+ "prepare_le": "2026-09-22",
+ "prepare_par": "atelier / DA — preparer-r2-2026-09-22.py",
+ "client": "ba4d4e7b",
+ "atelier": "20d006d",
+ "references": [
+  [
+   "reference-1080x2102.png",
+   "rendu du cadre nominal (`ecrans-brennar-6.html` #79 « L'organisation frotte »)"
+  ]
+ ],
+ "cadres": {
+  "79": {
+   "ligne": 5067,
+   "etiquette": "L'organisation frotte"
+  },
+  "80": {
+   "ligne": 5069,
+   "etiquette": "Ce bâtiment vous coûte"
+  },
+  "81": {
+   "ligne": 5071,
+   "etiquette": "Le raser — confirmer"
+  },
+  "82": {
+   "ligne": 5073,
+   "etiquette": "Vous avez déjà tranché aujourd'hui"
+  },
+  "83": {
+   "ligne": 5075,
+   "etiquette": "La parcelle est libre"
+  },
+  "84": {
+   "ligne": 5077,
+   "etiquette": "L'offre s'est fermée"
+  }
+ },
+ "captures_attendues": [
+  {
+   "categorie": "PhotoPlanche",
+   "fichiers": [
+    "planche_raser_un_site_1080x2400.png"
+   ],
+   "note": "sous chrome, surimpression"
+  }
+ ],
+ "constats_suspendus": [
+  {
+   "id": "M2",
+   "ecart": "Contradiction de sens dans le bloc d'état : le verdict `.q b` dit « Ça tient » pendant que le titre, le sous-t",
+   "section": "A"
+  },
+  {
+   "id": "M3",
+   "ecart": "Deux rangées strictement identiques (« Réparation Ilm · Un labo · c'est juste · quelqu'un y travaille ») et au",
+   "section": "A"
+  },
+  {
+   "id": "m2",
+   "ecart": "`.dm-penal` absent (la bande ambre « Tout produit moins en ce moment. »). Très probablement l'état calme — mai",
+   "section": "A"
+  },
+  {
+   "id": "m4",
+   "ecart": "Le grand nombre `.gros` est rendu en gris-bleu froid `#9aa6b3` là où le seul état écrit de la maquette met `#d",
+   "section": "A"
+  },
+  {
+   "id": "M2",
+   "ecart": "« Ça tient » contre « 13 endroits se gênent » sur 17 sites (comptes)",
+   "section": "B"
+  },
+  {
+   "id": "B1 (compte)",
+   "ecart": "17 sites annoncés, 7 lisibles — le NOMBRE ; la coupe à mi-carte reste un écart de forme",
+   "section": "B"
+  }
+ ],
+ "constats_a_rejuger": [],
+ "polices_fc_match": {
+  "Georgia": "\"Noto Serif\" \"Regular\"",
+  "DejaVu Sans": "\"DejaVu Sans\" \"Book\"",
+  "Courier New": "\"Liberation Mono\" \"Regular\"",
+  "sans-serif": "\"Noto Sans\" \"Regular\"",
+  "serif": "\"Noto Serif\" \"Regular\"",
+  "Times New Roman": "\"Liberation Serif\" \"Regular\"",
+  "Segoe UI": "\"Noto Sans\" \"Regular\""
+ },
+ "captures": []
+}

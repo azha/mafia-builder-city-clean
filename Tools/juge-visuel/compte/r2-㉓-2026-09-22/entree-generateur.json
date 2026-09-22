@@ -1,0 +1,67 @@
+{
+ "dossier": "compte",
+ "tour": "r2-㉓",
+ "sym": "㉓",
+ "nom": "IAP Shop",
+ "canon": "screen_c2",
+ "controleur": "ShopScreenController",
+ "chemin": "Plus → LA VITRINE",
+ "prepare_le": "2026-09-22",
+ "prepare_par": "atelier / DA — preparer-r2-2026-09-22.py",
+ "client": "ba4d4e7b",
+ "atelier": "20d006d",
+ "references": [
+  [
+   "reference-㉓-1080x2102.png",
+   "rendu du cadre nominal (`ecrans-brennar-6.html` #98 « La vitrine — les extras »)"
+  ]
+ ],
+ "cadres": {
+  "98": {
+   "ligne": 5478,
+   "etiquette": "La vitrine — les extras"
+  },
+  "99": {
+   "ligne": 5481,
+   "etiquette": "La caisse — les jetons"
+  },
+  "100": {
+   "ligne": 5484,
+   "etiquette": "Zéro jeton — l'état terminal"
+  }
+ },
+ "captures_attendues": [
+  {
+   "categorie": "PhotoPlanche",
+   "fichiers": [
+    "planche_la_vitrine_1080x2400.png"
+   ],
+   "note": "sous chrome, surimpression"
+  },
+  {
+   "categorie": "PhotoVitrine",
+   "fichiers": [
+    "la_vitrine_1080x2400.png"
+   ],
+   "note": "écran seul (LaVitrineCapturePlayModeTests)"
+  }
+ ],
+ "constats_suspendus": [
+  {
+   "id": "B3",
+   "ecart": "oui (la valeur) / non (la forme)",
+   "section": "A"
+  }
+ ],
+ "constats_a_rejuger": [],
+ "polices_fc_match": {
+  "Georgia": "\"Noto Serif\" \"Regular\"",
+  "DejaVu Sans": "\"DejaVu Sans\" \"Book\"",
+  "Courier New": "\"Liberation Mono\" \"Regular\"",
+  "sans-serif": "\"Noto Sans\" \"Regular\"",
+  "serif": "\"Noto Serif\" \"Regular\"",
+  "Times New Roman": "\"Liberation Serif\" \"Regular\"",
+  "Segoe UI": "\"Noto Sans\" \"Regular\""
+ },
+ "captures": []
+}

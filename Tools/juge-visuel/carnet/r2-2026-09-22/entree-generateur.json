@@ -1,0 +1,81 @@
+{
+ "dossier": "carnet",
+ "tour": "r2",
+ "sym": "㉞",
+ "nom": "Les ordres du soir",
+ "canon": "",
+ "controleur": "CarnetScreenController",
+ "chemin": "Plus → LES ORDRES DU SOIR",
+ "prepare_le": "2026-09-22",
+ "prepare_par": "atelier / DA — preparer-r2-2026-09-22.py",
+ "client": "ba4d4e7b",
+ "atelier": "20d006d",
+ "references": [
+  [
+   "reference-1080x2102.png",
+   "rendu du cadre nominal (`ecrans-brennar-6.html` #85 « Les ordres de ce soir »)"
+  ]
+ ],
+ "cadres": {
+  "85": {
+   "ligne": 5171,
+   "etiquette": "Les ordres de ce soir"
+  },
+  "86": {
+   "ligne": 5173,
+   "etiquette": "Deux ordres s'attendent"
+  },
+  "87": {
+   "ligne": 5175,
+   "etiquette": "Un endroit n'a pas fini de se poser"
+  },
+  "88": {
+   "ligne": 5177,
+   "etiquette": "Rejouer une soirée — pas encore"
+  },
+  "89": {
+   "ligne": 5179,
+   "etiquette": "Rejouer une soirée"
+  },
+  "90": {
+   "ligne": 5181,
+   "etiquette": "Ce qui s'est passé en ville"
+  },
+  "91": {
+   "ligne": 5183,
+   "etiquette": "Ce qui arrive"
+  }
+ },
+ "captures_attendues": [
+  {
+   "categorie": "PhotoScreenC3SousChrome",
+   "fichiers": [
+    "screen_c3_sous_chrome_1080x2400.png"
+   ],
+   "note": "sous le chrome RÉEL, par le chemin du joueur (Plus → LES ORDRES DU SOIR). ⛔ Le r1 a jugé `planche_signer_l_ordre_1080x2400.png`, qui photographie une fiche de LIEUTENANT, pas le carnet (TABLE, 2026-09-07)"
+  }
+ ],
+ "constats_suspendus": [
+  {
+   "id": "m1",
+   "ecart": "La valeur d'argent vient buter contre l'anneau du manomètre : il ne reste presque rien entre l'encre et la lue",
+   "section": "A"
+  },
+  {
+   "id": "m2",
+   "ecart": "La valeur d'argent est rendue nettement plus petite qu'au canon.",
+   "section": "A"
+  }
+ ],
+ "constats_a_rejuger": [],
+ "polices_fc_match": {
+  "Georgia": "\"Noto Serif\" \"Regular\"",
+  "DejaVu Sans": "\"DejaVu Sans\" \"Book\"",
+  "Courier New": "\"Liberation Mono\" \"Regular\"",
+  "sans-serif": "\"Noto Sans\" \"Regular\"",
+  "serif": "\"Noto Serif\" \"Regular\"",
+  "Times New Roman": "\"Liberation Serif\" \"Regular\"",
+  "Segoe UI": "\"Noto Sans\" \"Regular\""
+ },
+ "captures": []
+}

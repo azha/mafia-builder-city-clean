@@ -1,0 +1,96 @@
+{
+ "dossier": "ecran_loi",
+ "tour": "r2",
+ "sym": "㉛",
+ "nom": "La loi",
+ "canon": "",
+ "controleur": "LoiScreenController",
+ "chemin": "Plus → LA LOI",
+ "prepare_le": "2026-09-22",
+ "prepare_par": "atelier / DA — preparer-r2-2026-09-22.py",
+ "client": "ba4d4e7b",
+ "atelier": "20d006d",
+ "references": [
+  [
+   "reference-1080x2102.png",
+   "rendu du cadre nominal (`ecrans-brennar-6.html` #67 « Ils ont arrêté un de vos coursiers ») — cadre 67, l'arrestation"
+  ],
+  [
+   "reference-avocat-1080x2102.png",
+   "cadre 68, LE CHOIX D'AVOCAT — rendue le 2026-09-06 : sans elle `Loi:339` était non vérifiable, ni écran faux ni maquette fausse, pas de référence"
+  ]
+ ],
+ "cadres": {
+  "67": {
+   "ligne": 4888,
+   "etiquette": "Ils ont arrêté un de vos coursiers"
+  },
+  "68": {
+   "ligne": 4890,
+   "etiquette": "Lui trouver un avocat"
+  },
+  "69": {
+   "ligne": 4892,
+   "etiquette": "Il commence à parler"
+  },
+  "70": {
+   "ligne": 4894,
+   "etiquette": "Il a tout dit"
+  },
+  "71": {
+   "ligne": 4896,
+   "etiquette": "Il y a un arrangement"
+  },
+  "72": {
+   "ligne": 4898,
+   "etiquette": "Votre avocat est nerveux"
+  }
+ },
+ "captures_attendues": [
+  {
+   "categorie": "PhotoChantierC",
+   "fichiers": [
+    "planche_la_loi_1080x2400.png"
+   ],
+   "note": "sous chrome, surimpression"
+  }
+ ],
+ "constats_suspendus": [
+  {
+   "id": "M3",
+   "ecart": "oui (l'état « pris » dépend du compte)",
+   "section": "A"
+  },
+  {
+   "id": "M6",
+   "ecart": "oui (le jeton dépend de l'état de l'avocat)",
+   "section": "A"
+  },
+  {
+   "id": "m4",
+   "ecart": "`À VOS RISQUES` sort du jeu de jetons de la maquette : plus JAUNE. `#ffd240` est `accentGold` à 1/255 près, pa",
+   "section": "A"
+  },
+  {
+   "id": "m10",
+   "ecart": "La valeur ARGENT frôle le médaillon : plus aucun budget de largeur. ⚠️ *J'ai d'abord écrit « coupée » ; le zoo",
+   "section": "A"
+  },
+  {
+   "id": "m11",
+   "ecart": "Contradiction de lecture dans l'état vide : « Vous n'avez encore engagé personne. » est immédiatement suivi de",
+   "section": "A"
+  }
+ ],
+ "constats_a_rejuger": [],
+ "polices_fc_match": {
+  "Georgia": "\"Noto Serif\" \"Regular\"",
+  "DejaVu Sans": "\"DejaVu Sans\" \"Book\"",
+  "Courier New": "\"Liberation Mono\" \"Regular\"",
+  "sans-serif": "\"Noto Sans\" \"Regular\"",
+  "serif": "\"Noto Serif\" \"Regular\"",
+  "Times New Roman": "\"Liberation Serif\" \"Regular\"",
+  "Segoe UI": "\"Noto Sans\" \"Regular\""
+ },
+ "captures": []
+}

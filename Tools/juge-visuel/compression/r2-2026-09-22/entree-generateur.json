@@ -1,0 +1,106 @@
+{
+ "dossier": "compression",
+ "tour": "r2",
+ "sym": "⑭",
+ "nom": "Compression Week Board",
+ "canon": "screen_13",
+ "controleur": "CompressionScreenController",
+ "chemin": "Plus → LA SEMAINE",
+ "prepare_le": "2026-09-22",
+ "prepare_par": "atelier / DA — preparer-r2-2026-09-22.py",
+ "client": "ba4d4e7b",
+ "atelier": "20d006d",
+ "references": [
+  [
+   "reference-1080x2102.png",
+   "rendu du cadre nominal (`ecrans-brennar-4.html` #25 « Compression — la semaine s’annonce »)"
+  ]
+ ],
+ "cadres": {
+  "25": {
+   "ligne": 988,
+   "etiquette": "Compression — la semaine s’annonce"
+  },
+  "26": {
+   "ligne": 1000,
+   "etiquette": "Compression — la semaine s’est ouverte toute seule"
+  },
+  "27": {
+   "ligne": 1010,
+   "etiquette": "Compression — un problème en révèle un autre"
+  },
+  "28": {
+   "ligne": 1020,
+   "etiquette": "Compression — la semaine est close"
+  },
+  "29": {
+   "ligne": 1031,
+   "etiquette": "Compression — au calme"
+  },
+  "30": {
+   "ligne": 1041,
+   "etiquette": "Compression — avec les lots back"
+  },
+  "14": {
+   "ligne": 811,
+   "etiquette": "Exceptions — la file au comptoir"
+  },
+  "15": {
+   "ligne": 825,
+   "etiquette": "Exception — sa main de cartes (le détail)"
+  },
+  "16": {
+   "ligne": 842,
+   "etiquette": "Exceptions — personne ne fait la queue"
+  },
+  "17": {
+   "ligne": 853,
+   "etiquette": "Exceptions — après le tampon, le suivant s’avance"
+  },
+  "18": {
+   "ligne": 866,
+   "etiquette": "Exceptions — avec les lots back"
+  },
+  "19": {
+   "ligne": 895,
+   "etiquette": "Pile du jour — la planche du soir, à ranger"
+  }
+ },
+ "captures_attendues": [
+  {
+   "categorie": "PhotoPlanche",
+   "fichiers": [
+    "planche_la_semaine_1080x2400.png"
+   ],
+   "note": "sous chrome, surimpression"
+  }
+ ],
+ "constats_suspendus": [
+  {
+   "id": "B3",
+   "ecart": "oui (les deux mots sont les valeurs de l'état courant)",
+   "section": "A"
+  },
+  {
+   "id": "m4",
+   "ecart": "oui (dépend de la longueur du solde)",
+   "section": "A"
+  },
+  {
+   "id": "B3",
+   "ecart": "« Calm · None » — idem",
+   "section": "B"
+  }
+ ],
+ "constats_a_rejuger": [],
+ "polices_fc_match": {
+  "Georgia": "\"Noto Serif\" \"Regular\"",
+  "DejaVu Sans": "\"DejaVu Sans\" \"Book\"",
+  "Courier New": "\"Liberation Mono\" \"Regular\"",
+  "sans-serif": "\"Noto Sans\" \"Regular\"",
+  "serif": "\"Noto Serif\" \"Regular\"",
+  "Times New Roman": "\"Liberation Serif\" \"Regular\"",
+  "Segoe UI": "\"Noto Sans\" \"Regular\""
+ },
+ "captures": []
+}

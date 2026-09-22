@@ -39,6 +39,8 @@ DUS = [
     #    dealers, « AFFECTER UN DEALER ») ; c'est la TABLE qui avait tort depuis le 2026-09-07 (108-113 empiétait sur
     #    ㊱·113). Rétablie 107-112 dans construire-dossiers.py le 2026-09-22. Une entrée (108 → nominal) a existé ici
     #    pendant une heure : retirée avant tout rendu, la garde machine ayant refusé entre-temps.
+    (109, "Ramasser — nulle part où la porter",         'vente/reference-ramasser-1080x2102.png',
+          "㉟ : le cadre d'état homologue de la capture r1, jamais rendu — demandé par le juge r1 (point 3). À rendre APRÈS le gate du 22/09"),
     (32,  "La police — le registre de dispatch",        'police/reference-⑮-1080x2102.png',
           "⑮ nominal = 32 depuis l'échange du 2026-09-07 ; re-rendu au SHA du jour pour le tour r2"),
     (31,  "La police — le tableau : ce qu’ils savent",  'police/reference-⑰-1080x2102.png',

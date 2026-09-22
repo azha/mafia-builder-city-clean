@@ -1,0 +1,82 @@
+{
+ "dossier": "ecran_appro",
+ "tour": "r2",
+ "sym": "㉚",
+ "nom": "La chaîne d'appro",
+ "canon": "",
+ "controleur": "ChaineDApproScreenController",
+ "chemin": "Plus → LA CHAÎNE D'APPRO",
+ "prepare_le": "2026-09-22",
+ "prepare_par": "atelier / DA — preparer-r2-2026-09-22.py",
+ "client": "ba4d4e7b",
+ "atelier": "20d006d",
+ "references": [
+  [
+   "reference-1080x2102.png",
+   "rendu du cadre nominal (`ecrans-brennar-6.html` #48 « Commander — et il n'y a plus rien »)"
+  ]
+ ],
+ "cadres": {
+  "48": {
+   "ligne": 4583,
+   "etiquette": "Commander — et il n'y a plus rien"
+  },
+  "49": {
+   "ligne": 4585,
+   "etiquette": "La commande est en route"
+  },
+  "50": {
+   "ligne": 4587,
+   "etiquette": "Ça coince — un cran remonté"
+  },
+  "51": {
+   "ligne": 4589,
+   "etiquette": "Ça coince — deux crans remontés"
+  },
+  "52": {
+   "ligne": 4591,
+   "etiquette": "On a trouvé où ça coince"
+  },
+  "53": {
+   "ligne": 4593,
+   "etiquette": "Commander ne vous appartient plus"
+  }
+ },
+ "captures_attendues": [
+  {
+   "categorie": "PhotoChantierC",
+   "fichiers": [
+    "planche_la_chaine_d_appro_1080x2400.png"
+   ],
+   "note": "sous chrome, surimpression"
+  }
+ ],
+ "constats_suspendus": [
+  {
+   "id": "M1",
+   "ecart": "Le bloc `.penurie` est absent. C'est la seule surface saturée de la maquette et la phrase qui explique l'écran",
+   "section": "A"
+  },
+  {
+   "id": "m10",
+   "ecart": "Le bandeau est à 3 px de la collision : la valeur ARGENT s'arrête à 3 px de l'anneau du médaillon. Le montant",
+   "section": "A"
+  },
+  {
+   "id": "m11",
+   "ecart": "L'aile droite ne montre ni la phase ni l'heure. Le canon met le jour ET la phase sur la 1ʳᵉ ligne, puis l'heur",
+   "section": "A"
+  }
+ ],
+ "constats_a_rejuger": [],
+ "polices_fc_match": {
+  "Georgia": "\"Noto Serif\" \"Regular\"",
+  "DejaVu Sans": "\"DejaVu Sans\" \"Book\"",
+  "Courier New": "\"Liberation Mono\" \"Regular\"",
+  "sans-serif": "\"Noto Sans\" \"Regular\"",
+  "serif": "\"Noto Serif\" \"Regular\"",
+  "Times New Roman": "\"Liberation Serif\" \"Regular\"",
+  "Segoe UI": "\"Noto Sans\" \"Regular\""
+ },
+ "captures": []
+}

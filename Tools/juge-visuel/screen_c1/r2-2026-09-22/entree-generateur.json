@@ -1,0 +1,99 @@
+{
+ "dossier": "screen_c1",
+ "tour": "r2",
+ "sym": "㊳",
+ "nom": "Le journal & la rue",
+ "canon": "",
+ "controleur": "JournalScreenController",
+ "chemin": "Plus → LE JOURNAL & LA RUE",
+ "prepare_le": "2026-09-22",
+ "prepare_par": "atelier / DA — preparer-r2-2026-09-22.py",
+ "client": "ba4d4e7b",
+ "atelier": "20d006d",
+ "references": [
+  [
+   "reference-1080x2102.png",
+   "rendu du cadre nominal (`ecrans-brennar-6.html` #125 « Le journal — ce qui se dit ce matin ») — cadre 125"
+  ],
+  [
+   "reference-vocabulaire-1080x2102.png",
+   "cadre 145, LES 11 CRANS — `fading` et `lingering` sont servis et n'avaient aucun dessin"
+  ]
+ ],
+ "cadres": {
+  "125": {
+   "ligne": 6119,
+   "etiquette": "Le journal — ce qui se dit ce matin"
+  },
+  "126": {
+   "ligne": 6122,
+   "etiquette": "Ce qui arrive à la ville"
+  },
+  "127": {
+   "ligne": 6125,
+   "etiquette": "La rivière ne se retirera pas"
+  },
+  "128": {
+   "ligne": 6128,
+   "etiquette": "Ce que vous avez compris"
+  },
+  "129": {
+   "ligne": 6131,
+   "etiquette": "Rien ce matin"
+  },
+  "130": {
+   "ligne": 6134,
+   "etiquette": "Ce qui manque encore"
+  }
+ },
+ "captures_attendues": [
+  {
+   "categorie": "CaptureJournal",
+   "fichiers": [
+    "screen_c1_journal_sous_chrome_1080x2400.png"
+   ],
+   "note": "sous chrome"
+  },
+  {
+   "categorie": "PhotoScreenC1",
+   "fichiers": [
+    "screen_c1_1080x1920.png",
+    "screen_c1_1080x2400.png"
+   ],
+   "note": "écran seul, deux résolutions"
+  }
+ ],
+ "constats_suspendus": [
+  {
+   "id": "M12",
+   "ecart": "Un mot anglais et un identifiant technique atteignent l'écran sur la 3ᵉ ligne de chaque carte : `district-13 ·",
+   "section": "A"
+  },
+  {
+   "id": "B1",
+   "ecart": "10 clés i18n brutes en TITRE (press.outlet.*, news_beat.*) — 0 news_beat.* / 0 press.* servis par l'image du 04-09, 154 / 9 après recréation",
+   "section": "B"
+  },
+  {
+   "id": "M12",
+   "ecart": "« district-13 · fresh » (mot anglais)",
+   "section": "B"
+  },
+  {
+   "id": "non vérifié 7",
+   "ecart": "20 + 13 + 02 = 35 annoncés contre 5 cartes",
+   "section": "B"
+  }
+ ],
+ "constats_a_rejuger": [],
+ "polices_fc_match": {
+  "Georgia": "\"Noto Serif\" \"Regular\"",
+  "DejaVu Sans": "\"DejaVu Sans\" \"Book\"",
+  "Courier New": "\"Liberation Mono\" \"Regular\"",
+  "sans-serif": "\"Noto Sans\" \"Regular\"",
+  "serif": "\"Noto Serif\" \"Regular\"",
+  "Times New Roman": "\"Liberation Serif\" \"Regular\"",
+  "Segoe UI": "\"Noto Sans\" \"Regular\""
+ },
+ "captures": []
+}

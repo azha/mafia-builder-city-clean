@@ -1,0 +1,76 @@
+{
+ "dossier": "ecran_delegation",
+ "tour": "r2",
+ "sym": "㉜",
+ "nom": "Ce que vous avez confié",
+ "canon": "",
+ "controleur": "DelegationScreenController",
+ "chemin": "Plus → CE QUE VOUS AVEZ CONFIÉ",
+ "prepare_le": "2026-09-22",
+ "prepare_par": "atelier / DA — preparer-r2-2026-09-22.py",
+ "client": "ba4d4e7b",
+ "atelier": "20d006d",
+ "references": [
+  [
+   "reference-1080x2102.png",
+   "rendu du cadre nominal (`ecrans-brennar-6.html` #73 « Tout est encore à vous »)"
+  ],
+  [
+   "reference-reserve-1080x2102.png",
+   "cadre 78, rendu le 2026-09-22 — la réserve : « Personne ne les tient encore », « rien derrière » (atelier 20d006d)"
+  ]
+ ],
+ "cadres": {
+  "73": {
+   "ligne": 4971,
+   "etiquette": "Tout est encore à vous"
+  },
+  "74": {
+   "ligne": 4973,
+   "etiquette": "Confier l'approvisionnement"
+  },
+  "75": {
+   "ligne": 4975,
+   "etiquette": "Deux charges confiées"
+  },
+  "76": {
+   "ligne": 4977,
+   "etiquette": "Reprendre — ce que ça coûterait"
+  },
+  "77": {
+   "ligne": 4979,
+   "etiquette": "Vous avez déjà tranché aujourd'hui"
+  },
+  "78": {
+   "ligne": 4981,
+   "etiquette": "Les huit qui n'existent pas encore"
+  }
+ },
+ "captures_attendues": [
+  {
+   "categorie": "PhotoPlanche",
+   "fichiers": [
+    "planche_ce_que_vous_avez_confie_1080x2400.png"
+   ],
+   "note": "sous chrome, surimpression"
+  }
+ ],
+ "constats_suspendus": [
+  {
+   "id": "M1",
+   "ecart": "Jeton de décision ACTIF au-dessus d'un geste MORT — couplage qu'aucun cadre du groupe ne dessine ; le joueur l",
+   "section": "A"
+  }
+ ],
+ "constats_a_rejuger": [],
+ "polices_fc_match": {
+  "Georgia": "\"Noto Serif\" \"Regular\"",
+  "DejaVu Sans": "\"DejaVu Sans\" \"Book\"",
+  "Courier New": "\"Liberation Mono\" \"Regular\"",
+  "sans-serif": "\"Noto Sans\" \"Regular\"",
+  "serif": "\"Noto Serif\" \"Regular\"",
+  "Times New Roman": "\"Liberation Serif\" \"Regular\"",
+  "Segoe UI": "\"Noto Sans\" \"Regular\""
+ },
+ "captures": []
+}

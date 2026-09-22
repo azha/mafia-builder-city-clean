@@ -1,0 +1,109 @@
+{
+ "dossier": "ecran_conflit",
+ "tour": "r2",
+ "sym": "㉙",
+ "nom": "Le conflit",
+ "canon": "",
+ "controleur": "ConflitScreenController",
+ "chemin": "Plus → LE CONFLIT",
+ "prepare_le": "2026-09-22",
+ "prepare_par": "atelier / DA — preparer-r2-2026-09-22.py",
+ "client": "ba4d4e7b",
+ "atelier": "20d006d",
+ "references": [
+  [
+   "reference-1080x2102.png",
+   "rendu du cadre nominal (`ecrans-brennar-6.html` #59 « Le premier coup — on n'a jamais croisé personne »)"
+  ],
+  [
+   "reference-manque-1080x2102.png",
+   "cadre 64, rendu le 2026-09-22 — « Ce qu'on ne peut pas faire » : « Personne n'y touche encore », « rien derrière » (atelier 20d006d)"
+  ]
+ ],
+ "cadres": {
+  "59": {
+   "ligne": 4784,
+   "etiquette": "Le premier coup — on n'a jamais croisé personne"
+  },
+  "60": {
+   "ligne": 4786,
+   "etiquette": "Le septième coup — la vendetta est visible"
+  },
+  "61": {
+   "ligne": 4788,
+   "etiquette": "Deux choses ne collent pas"
+  },
+  "62": {
+   "ligne": 4790,
+   "etiquette": "Ce qui est en cours"
+  },
+  "63": {
+   "ligne": 4792,
+   "etiquette": "Ce qui est rentré"
+  },
+  "64": {
+   "ligne": 4794,
+   "etiquette": "Ce qu'on ne peut pas faire"
+  },
+  "65": {
+   "ligne": 4812,
+   "etiquette": "v1 — la table du fond"
+  },
+  "66": {
+   "ligne": 4814,
+   "etiquette": "v1 — il est rentré"
+  }
+ },
+ "captures_attendues": [
+  {
+   "categorie": "PhotoChantierC",
+   "fichiers": [
+    "planche_le_conflit_1080x2400.png"
+   ],
+   "note": "sous chrome, surimpression"
+  }
+ ],
+ "constats_suspendus": [
+  {
+   "id": "B1",
+   "ecart": "Le bloc `.ordre` — la serviette crème : portrait, phrase du plan (« On envoie *Lt. Kest* chez *La Coil*, sur *",
+   "section": "A"
+  },
+  {
+   "id": "B2",
+   "ecart": "La bande `.bas` — réplique du lieutenant (`.dit`) et CTA `.geste` « L'ENVOYER CE SOIR / on ne pourra plus le r",
+   "section": "A"
+  },
+  {
+   "id": "M9",
+   "ecart": "Vide terminal de 517 px non ancré sous le dernier texte : l'écran se lit comme inachevé.",
+   "section": "A"
+  },
+  {
+   "id": "m6",
+   "ecart": "Copie de l'historique changée et mot d'accroche perdu : « jamais / on ne les a pas croisés » → « on n'y est ja",
+   "section": "A"
+  },
+  {
+   "id": "m7",
+   "ecart": "Deux accrocs de copie dans le message d'état vide : « Gros bras » porte une capitale en milieu de phrase (libe",
+   "section": "A"
+  },
+  {
+   "id": "m8",
+   "ecart": "Chrome partagé : la valeur ARGENT touche l'anneau du médaillon.",
+   "section": "A"
+  }
+ ],
+ "constats_a_rejuger": [],
+ "polices_fc_match": {
+  "Georgia": "\"Noto Serif\" \"Regular\"",
+  "DejaVu Sans": "\"DejaVu Sans\" \"Book\"",
+  "Courier New": "\"Liberation Mono\" \"Regular\"",
+  "sans-serif": "\"Noto Sans\" \"Regular\"",
+  "serif": "\"Noto Serif\" \"Regular\"",
+  "Times New Roman": "\"Liberation Serif\" \"Regular\"",
+  "Segoe UI": "\"Noto Sans\" \"Regular\""
+ },
+ "captures": []
+}

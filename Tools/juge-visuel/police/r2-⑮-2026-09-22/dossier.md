@@ -18,6 +18,17 @@
   était le cadre #31 (⑰, le commissariat), pas #32. Ce tour-ci corrige cela : la référence est #32, rendue au SHA du jour (mesuré :
   le PNG commité avant ce jour était bien #31 à 0,3 % près). Tu ne lis pas le rapport r1.
 
+## Ce qu'on te demande de trancher — les constats SUSPENDUS de cet écran (lus dans `SUSPENSION-back-04-09-2026-09-07.md`)
+
+| id (r1) | écart | section |
+|---|---|---|
+| `B2` | oui (la chaîne) / non (la forme) — « district district-1 », identifiant brut | A |
+| `M1` | oui (le nombre de districts) / non (le résumé) — un seul district affiché | A |
+| `M4` | 44,3 % de la hauteur d'écran est un vide absolu entre la dernière rangée et le dock | A |
+| `B1` | 11 valeurs en anglais (None, Predominant, Moderate) — si la locale manquait à cette date | B |
+
+- **`police/constats-a-rejuger-⑮.md`** — le périmètre exact du re-jugement (7 tenus · 9 à rejuger · 2 caducs) : à lire AVANT de compter.
+
 ## Référence (fait autorité : l'IMAGE)
 
 | fichier (dans ce dossier) | rôle | taille px | facteur | largeur CSS ↔ largeur écran |

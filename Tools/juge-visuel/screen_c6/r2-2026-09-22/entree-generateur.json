@@ -1,0 +1,92 @@
+{
+ "dossier": "screen_c6",
+ "tour": "r2",
+ "sym": "㊱",
+ "nom": "L'horizon des possibles",
+ "canon": "",
+ "controleur": "HorizonScreenController",
+ "chemin": "Plus → L'HORIZON DES POSSIBLES",
+ "prepare_le": "2026-09-22",
+ "prepare_par": "atelier / DA — preparer-r2-2026-09-22.py",
+ "client": "ba4d4e7b",
+ "atelier": "20d006d",
+ "references": [
+  [
+   "reference-1080x2102.png",
+   "rendu du cadre nominal (`ecrans-brennar-6.html` #113 « L'horizon — ce qui s'ouvre et à quel prix »)"
+  ]
+ ],
+ "cadres": {
+  "113": {
+   "ligne": 5879,
+   "etiquette": "L'horizon — ce qui s'ouvre et à quel prix"
+  },
+  "114": {
+   "ligne": 5882,
+   "etiquette": "Le rabatteur a reculé"
+  },
+  "115": {
+   "ligne": 5885,
+   "etiquette": "Prendre le second couteau"
+  },
+  "116": {
+   "ligne": 5888,
+   "etiquette": "Sans les textes — l'écran tel qu'il s'affiche aujourd'hui"
+  },
+  "117": {
+   "ligne": 5891,
+   "etiquette": "Rien à l'horizon"
+  },
+  "118": {
+   "ligne": 5894,
+   "etiquette": "Ce qui manque encore"
+  }
+ },
+ "captures_attendues": [
+  {
+   "categorie": "CaptureSousChrome",
+   "fichiers": [
+    "screen_c6_horizon_etat-vide_sous_chrome_1080x2400.png"
+   ],
+   "note": "sous chrome (Capture_Horizon_SousChrome) — la catégorie produit AUSSI screen_2a_fiche_* et screen_5_* : surplus déclaré, non jugé ici"
+  },
+  {
+   "categorie": "CaptureHorizon",
+   "fichiers": [
+    "screen_c6_horizon_etat-vide_1080x2400.png"
+   ],
+   "note": "état vide, écran seul (ScreenC6C2)"
+  },
+  {
+   "categorie": "— (aucune catégorie sûre)",
+   "fichiers": [
+    "screen_c6_1080x1920.png",
+    "screen_c6_1080x2400.png"
+   ],
+   "note": "⛔ ScreenC6C1 ne porte que la catégorie `Capture` nue — interdite (SIGSEGV Mesa, et elle emporte 14 catégories) ⇒ NON FOURNI ce tour ; dette : poser une catégorie spécifique sur ScreenC6C1"
+  }
+ ],
+ "constats_suspendus": [
+  {
+   "id": "B3",
+   "ecart": "oui (le contenu « Palier n » vient d'une source non identifiée)",
+   "section": "A"
+  },
+  {
+   "id": "m6",
+   "ecart": "bloc « paliers » (déjà EN TROP, cf. `B3`)",
+   "section": "A"
+  }
+ ],
+ "constats_a_rejuger": [],
+ "polices_fc_match": {
+  "Georgia": "\"Noto Serif\" \"Regular\"",
+  "DejaVu Sans": "\"DejaVu Sans\" \"Book\"",
+  "Courier New": "\"Liberation Mono\" \"Regular\"",
+  "sans-serif": "\"Noto Sans\" \"Regular\"",
+  "serif": "\"Noto Serif\" \"Regular\"",
+  "Times New Roman": "\"Liberation Serif\" \"Regular\"",
+  "Segoe UI": "\"Noto Sans\" \"Regular\""
+ },
+ "captures": []
+}

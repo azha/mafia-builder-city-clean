@@ -1,0 +1,80 @@
+{
+ "dossier": "ecran-principal",
+ "tour": "r10",
+ "sym": "①",
+ "nom": "Intérieur de district",
+ "canon": "",
+ "controleur": "DistrictInteriorScreenController",
+ "chemin": "depuis la carte : ENTRER dans le quartier",
+ "prepare_le": "2026-09-22",
+ "prepare_par": "atelier / DA — preparer-r2-2026-09-22.py",
+ "client": "ba4d4e7b",
+ "atelier": "20d006d",
+ "references": [
+  [
+   "hud-canon-1176.png",
+   "le canon du HUD (`hud-brennar.html`, `.tel` de 392 CSS × 3 = 1176 px) — c'est LA référence de ① ; aucun cadre de série 4/6"
+  ]
+ ],
+ "cadres": {},
+ "captures_attendues": [
+  {
+   "categorie": "CaptureDistrict",
+   "fichiers": [
+    "screen_1_district_sous_chrome_1080x2400.png"
+   ],
+   "note": "district sous chrome (planche photographiant operational_demo via le résolveur, cf. journal-recapture-district-2026-09-07.md)"
+  },
+  {
+   "categorie": "CaptureSousChrome",
+   "fichiers": [
+    "screen_2a_fiche_sous_chrome_1080x2400.png",
+    "screen_2a_fiche_sous_chrome_1080x1920.png"
+   ],
+   "note": "la fiche sous chrome — surplus : screen_5_*, screen_c6_horizon_*"
+  }
+ ],
+ "constats_suspendus": [
+  {
+   "id": "M7",
+   "ecart": "oui, l'art sous le mot décide",
+   "section": "A"
+  },
+  {
+   "id": "M8",
+   "ecart": "oui (3 lieutenants au compte)",
+   "section": "A"
+  },
+  {
+   "id": "M14",
+   "ecart": "oui, la longueur du montant décide",
+   "section": "A"
+  },
+  {
+   "id": "m4",
+   "ecart": "Capitale du montant réduite de 16 % — vraisemblablement un ajustement à la largeur disponible.",
+   "section": "A"
+  },
+  {
+   "id": "m5",
+   "ecart": "Le titre de la fiche n'est plus un nom court centré mais une ligne pleine largeur, en corps réduit.",
+   "section": "A"
+  },
+  {
+   "id": "m11",
+   "ecart": "Le disque des marqueurs laisse transparaître l'art (verrière visible dans B05, cheminée dans B06), ce qui sali",
+   "section": "A"
+  }
+ ],
+ "constats_a_rejuger": [],
+ "polices_fc_match": {
+  "Georgia": "\"Noto Serif\" \"Regular\"",
+  "DejaVu Sans": "\"DejaVu Sans\" \"Book\"",
+  "Courier New": "\"Liberation Mono\" \"Regular\"",
+  "sans-serif": "\"Noto Sans\" \"Regular\"",
+  "serif": "\"Noto Serif\" \"Regular\"",
+  "Times New Roman": "\"Liberation Serif\" \"Regular\"",
+  "Segoe UI": "\"Noto Sans\" \"Regular\""
+ },
+ "captures": []
+}

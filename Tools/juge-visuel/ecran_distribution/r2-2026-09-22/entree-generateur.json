@@ -1,0 +1,78 @@
+{
+ "dossier": "ecran_distribution",
+ "tour": "r2",
+ "sym": "㉘",
+ "nom": "La distribution",
+ "canon": "",
+ "controleur": "DistributionScreenController",
+ "chemin": "Plus → LA DISTRIBUTION",
+ "prepare_le": "2026-09-22",
+ "prepare_par": "atelier / DA — preparer-r2-2026-09-22.py",
+ "client": "ba4d4e7b",
+ "atelier": "20d006d",
+ "references": [
+  [
+   "reference-1080x2102.png",
+   "rendu du cadre nominal (`ecrans-brennar-6.html` #54 « Envoyer — la ficelle à tendre »)"
+  ]
+ ],
+ "cadres": {
+  "54": {
+   "ligne": 4684,
+   "etiquette": "Envoyer — la ficelle à tendre"
+  },
+  "55": {
+   "ligne": 4686,
+   "etiquette": "En route — ça serpente"
+  },
+  "56": {
+   "ligne": 4688,
+   "etiquette": "Livré — mais la route s'use"
+  },
+  "57": {
+   "ligne": 4690,
+   "etiquette": "La route est coupée"
+  },
+  "58": {
+   "ligne": 4692,
+   "etiquette": "Ils ont pris Lt. Tull"
+  }
+ },
+ "captures_attendues": [
+  {
+   "categorie": "PhotoChantierC",
+   "fichiers": [
+    "planche_la_distribution_1080x2400.png"
+   ],
+   "note": "sous chrome, surimpression"
+  }
+ ],
+ "constats_suspendus": [
+  {
+   "id": "M5",
+   "ecart": "oui (existence) / non (forme)",
+   "section": "A"
+  },
+  {
+   "id": "m11",
+   "ecart": "Vocabulaire de fiction : l'écran écrit « VOS COURRIERS » là où la maquette dit coursier (l'homme qui porte), j",
+   "section": "A"
+  },
+  {
+   "id": "m12",
+   "ecart": "La légende du geste ne suit pas l'état : « à pied · ça vide le stock du labo » (conséquence d'un ENVOI) sous u",
+   "section": "A"
+  }
+ ],
+ "constats_a_rejuger": [],
+ "polices_fc_match": {
+  "Georgia": "\"Noto Serif\" \"Regular\"",
+  "DejaVu Sans": "\"DejaVu Sans\" \"Book\"",
+  "Courier New": "\"Liberation Mono\" \"Regular\"",
+  "sans-serif": "\"Noto Sans\" \"Regular\"",
+  "serif": "\"Noto Serif\" \"Regular\"",
+  "Times New Roman": "\"Liberation Serif\" \"Regular\"",
+  "Segoe UI": "\"Noto Sans\" \"Regular\""
+ },
+ "captures": []
+}
