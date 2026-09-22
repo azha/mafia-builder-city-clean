@@ -250,11 +250,28 @@ namespace MafiaCleanCity.Operational.Exceptions
             int n = Cards.Length;
             // ⑨-2 — `.zinc.haut` (66 %) quand la file attend ; `.zinc.haut.vide` (52 %) quand personne (cadre 16).
             if (decor != null) decor.AppliquerZinc(n == 0 ? ZincVide : ZincFile, DosFile);
-            ligneAmbiance.text = n == 0
-                ? "Personne ne fait la queue — le comptoir est vide"
-                : (n == 1 ? "Un seul attend vos ordres" : EnLettres(n) + " attendent vos ordres")
-                  + " — la file est calme";
-            TrackText(ligneAmbiance, ligneAmbiance.text);
+            // ⑨-6 — personne (cadre 16) : ni ligne du soir, ni file, ni bulle, ni tampon ; les tabourets vides et la plaque
+            // du soir les remplacent. La phrase vit dans la plaque, plus dans la ligne.
+            bool vide = n == 0;
+            ligneAmbiance.gameObject.SetActive(!vide);
+            fileRoot.gameObject.SetActive(!vide);
+            parleRoot.gameObject.SetActive(!vide);
+            tamponRoot.gameObject.SetActive(!vide);
+            tabouretsVides.SetActive(vide);
+            plaqueDuSoir.SetActive(vide);
+            if (vide)
+            {
+                plaqueSurtitre.text = Lib("Ce soir, au Verge d’Or");
+                plaqueTitre.text = AmbianceVide();
+                TrackText(plaqueSurtitre, plaqueSurtitre.text);
+                TrackText(plaqueTitre, plaqueTitre.text);
+            }
+            else
+            {
+                ligneAmbiance.text = (n == 1 ? "Un seul attend vos ordres" : EnLettres(n) + " attendent vos ordres")
+                                     + " — la file est calme";
+                TrackText(ligneAmbiance, ligneAmbiance.text);
+            }
 
             RendreFile();
             RendreParleur();
@@ -315,6 +332,49 @@ namespace MafiaCleanCity.Operational.Exceptions
 
             Cards = cartes ?? System.Array.Empty<ExceptionCardDto>();
             Render();
+        }
+
+        // ================================================================ ⑨-6 personne au comptoir
+
+        /// <summary>⑨-6 — L'ÉTAT VIDE, cadre 16 (`.comptoir.simple` : `.tabourets.grands.vides`, `.plaque`, `.filet.lien`).
+        ///   `.tabourets.grands` : trois tabourets vides, siège 40×22, pied 38×9, `padding:0 6px`, `margin:2px 0 8px`, .85 —
+        ///     `DecorAuComptoir.ConstruireTabourets`, le code de ⑯ à l'échelle de cette série ;
+        ///   `.plaque` : le verre de `PlaqueAuComptoir` (celui de la plaque du matin de ⑯), `.kicker` 8px capitales crème-2
+        ///     espacé .22em « Ce soir, au Verge d’Or », `.titre` Georgia 15 or-vif espacé .04em.
+        /// Bâti une fois, masqué ; `Render` bascule entre la file et lui.</summary>
+        private void BuildEtatVide(Transform parent)
+        {
+            tabouretsVides = DecorAuComptoir.ConstruireTabourets(parent, Px, 38f,
+                new RectOffset(PxI(6f), PxI(6f), PxI(2f), PxI(8f)));
+            tabouretsVides.name = "TabouretsVides";
+
+            plaqueDuSoir = PlaqueAuComptoir.Construire(parent, "PlaqueDuSoir", PlaqueAuComptoir.Plaque(Px));
+            plaqueSurtitre = NouveauTexteMaquette(plaqueDuSoir.transform, "Surtitre", "", 8f, Creme2);
+            plaqueSurtitre.fontStyle = FontStyles.UpperCase;
+            plaqueSurtitre.characterSpacing = 22f;
+            plaqueTitre = NouveauTexteMaquette(plaqueDuSoir.transform, "Titre", "", 15f, OrVif);
+            plaqueTitre.font = DesignTokens.Current.hudSerifFont;
+            plaqueTitre.characterSpacing = 4f;
+            plaqueTitre.enableWordWrapping = true;
+
+            tabouretsVides.SetActive(false);
+            plaqueDuSoir.SetActive(false);
+        }
+
+        /// <summary>La phrase de l'état vide. Le back sert `exceptions.file.ambiance` en pluriel ICU, dont la branche `=0` a
+        /// été réalignée sur la maquette (« … — la routine tient », atelier §3.4 ; servie à `aea5ef7c`). ⚠️ Seule la branche
+        /// `=0` est lue ici : `other` pose `#` en CHIFFRES, et un texte suivi ne porte pas de chiffre isolé (R2.2) — la ligne
+        /// de la file garde ses nombres en lettres. Repli : le mot de la maquette.</summary>
+        public static string AmbianceVide()
+        {
+            const string cle = "exceptions.file.ambiance";
+            if (MafiaCleanCity.I18n.I18nCatalog.Connait(cle))
+            {
+                string t = MafiaCleanCity.I18n.I18nCatalog.Traduire(cle,
+                    new System.Collections.Generic.Dictionary<string, string> { { "count", "0" } });
+                if (!string.IsNullOrWhiteSpace(t)) return t;
+            }
+            return "Personne ne fait la queue — la routine tient";
         }
 
         // ================================================================ ⑨-3 qui attend
@@ -980,6 +1040,8 @@ namespace MafiaCleanCity.Operational.Exceptions
             tamponRoot = (RectTransform)NewUI("Tampon", comptoirGo.transform).transform;
             AddLayoutElement(tamponRoot.gameObject, preferredHeight: Px(CssTamponHaut));
 
+            BuildEtatVide(comptoirGo.transform);
+
             lienRoot = (RectTransform)NewUI("LienEscalades", comptoirGo.transform).transform;
             AddLayoutElement(lienRoot.gameObject, preferredHeight: Px(CssLienHaut));
 
@@ -1024,6 +1086,18 @@ namespace MafiaCleanCity.Operational.Exceptions
 
         private RectTransform racine, comptoir, fileRoot, parleRoot, tamponRoot, lienRoot;
         private TextMeshProUGUI ligneAmbiance;
+
+        // ⑨-6 — l'état vide (cadre 16) : trois grands tabourets vides et la plaque du soir, à la place de la file.
+        private GameObject tabouretsVides, plaqueDuSoir;
+        private TextMeshProUGUI plaqueSurtitre, plaqueTitre;
+        public GameObject TabouretsVides => tabouretsVides;
+        public GameObject PlaqueDuSoir => plaqueDuSoir;
+        public string PlaqueDuSoirSurtitre => plaqueSurtitre != null ? plaqueSurtitre.text : null;
+        public string PlaqueDuSoirTitre => plaqueTitre != null ? plaqueTitre.text : null;
+        public GameObject LigneSoir => ligneAmbiance != null ? ligneAmbiance.gameObject : null;
+        public GameObject FilePourTest => fileRoot != null ? fileRoot.gameObject : null;
+        public GameObject ParlePourTest => parleRoot != null ? parleRoot.gameObject : null;
+        public GameObject TamponPourTest => tamponRoot != null ? tamponRoot.gameObject : null;
 
         // Les mesures de `ecrans-brennar-4.html`, en px CSS de CETTE maquette — jamais celles d'un
         // écran voisin, même quand le nombre coïncide.

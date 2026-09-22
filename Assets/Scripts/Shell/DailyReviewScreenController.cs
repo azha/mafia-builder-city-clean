@@ -1049,44 +1049,9 @@ namespace MafiaCleanCity.Shell
         ///    pas serait corriger l'instrument avec le sujet.</summary>
         private void BuildPlaqueDuMatin()
         {
-            plaqueVide = new GameObject("PlaqueDuMatin", typeof(RectTransform));
-            plaqueVide.transform.SetParent(transform, false);
-            // Le masque arrondit le verre : un `LinearGradient` est un carré, sans lui les coins
-            // sortent droits (même montage que les rangs de ⑥, `LieutenantScreenController`).
-            Image forme = plaqueVide.AddComponent<Image>();
-            forme.sprite = ProceduralUI.RoundedRectMask((int)Px(14f));
-            forme.type = Image.Type.Sliced;
-            Mask masque = plaqueVide.AddComponent<Mask>();
-            masque.showMaskGraphic = false;
-
-            // Les RVB de `.plaque` sont ceux des jetons de verre des lieutenants (#162135, #090e18) ;
-            // seules les OPACITÉS diffèrent (.72/.88 ici, .58/.74 là-bas). La plaque flotte sur le
-            // décor, donc sur un fond INCONNU : l'opacité CSS passe par l'ajustement déclaré de ①,
-            // jamais recopiée (le navigateur mélange en sRGB, ce projet en linéaire).
-            Color verreHaut = DesignTokens.Current.lieutenantGlassTop;
-            Color verreBas = DesignTokens.Current.lieutenantGlassBottom;
-            verreHaut.a = ProceduralUI.AlphaVoileSurFondQuelconque(verreHaut, 0.72f, out _);
-            verreBas.a = ProceduralUI.AlphaVoileSurFondQuelconque(verreBas, 0.88f, out _);
-            GameObject verre = new GameObject("Verre", typeof(RectTransform));
-            verre.transform.SetParent(plaqueVide.transform, false);
-            Etirer((RectTransform)verre.transform, 0f);
-            Image verreImg = verre.AddComponent<Image>();
-            verreImg.sprite = ProceduralUI.LinearGradient(64, 160f, verreHaut, verreBas);
-            verreImg.type = Image.Type.Simple;
-            verreImg.raycastTarget = false;
-            verre.AddComponent<LayoutElement>().ignoreLayout = true;
-
-            Filet(plaqueVide.transform, "Bord", 0f, Px(14f), Hex("#ffffff24"));
-            Filet(plaqueVide.transform, "FiletInterieur", Px(3f), Px(11f), Hex("#ffffff10"));
-
-            VerticalLayoutGroup v = plaqueVide.AddComponent<VerticalLayoutGroup>();
-            v.padding = new RectOffset((int)Px(14f), (int)Px(14f), (int)Px(11f), (int)Px(12f));
-            v.spacing = Px(2f);
-            v.childControlWidth = true;
-            v.childControlHeight = true;
-            v.childForceExpandWidth = true;
-            v.childForceExpandHeight = false;
-            v.childAlignment = TextAnchor.UpperLeft;
+            // ⑨-6 — le verre vient de `PlaqueAuComptoir`, le code que ⑨ partage (plaque du soir, bloc de l'après-tampon) :
+            // même arbre (Verre, Bord, FiletInterieur), mêmes grandeurs, mêmes sprites qu'avant la convergence.
+            plaqueVide = PlaqueAuComptoir.Construire(transform, "PlaqueDuMatin", PlaqueAuComptoir.Plaque(Px));
 
             // texte posé au RENDU, pas ici : `Awake` précède le chargement du catalogue i18n.
             plaqueSurtitre = Texte(plaqueVide.transform, "Surtitre", "",
