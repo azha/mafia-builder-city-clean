@@ -351,9 +351,14 @@ namespace MafiaCleanCity.Operational.Exceptions
                              flexibleHeight: 0);
 
             // L'ORDRE EST CELUI DU DESSIN : risquée, suggérée (levée, au milieu), apprendre.
-            if (risquee != null)   Carte(main.transform, Lib("Risqué"),        risquee,   sombre: true,  levee: false);
-            if (sug != null)       Carte(main.transform, Lib("Suggéré"),       sug,       sombre: false, levee: true);
-            if (apprendre != null) Carte(main.transform, Lib("Lui apprendre"), apprendre, sombre: true,  levee: false);
+            // ⑩-1c — l'éventail du cadre 15 : risquée ♠ à −5°, descendue de 6 ; suggérée ♦ droite, LEVÉE de 8 ; apprendre ♣ à
+            // +5°, descendue de 6. Le rôle décide de la place, pas l'ordre du tableau.
+            if (risquee != null)   Carte(main.transform, Lib("Risqué"),        risquee,   sombre: true,  levee: false,
+                                         glyphe: "♠", rotationCss: -5f, translateYCss: 6f);
+            if (sug != null)       Carte(main.transform, Lib("Suggéré"),       sug,       sombre: false, levee: true,
+                                         glyphe: "♦", rotationCss: 0f, translateYCss: -CssCarteLeve);
+            if (apprendre != null) Carte(main.transform, Lib("Lui apprendre"), apprendre, sombre: true,  levee: false,
+                                         glyphe: "♣", rotationCss: 5f, translateYCss: 6f);
 
             // Le talon : le CARDINAL des issues qu'on ne montre pas. Zéro ⇒ pas de talon (le
             // dessin n'en met pas quand la main tient entière).
@@ -439,16 +444,66 @@ namespace MafiaCleanCity.Operational.Exceptions
         }
 
         /// <summary>Une carte de la main. `l` (le rôle) est un libellé FERMÉ — il est suivi ;
-        /// `t` (le titre) et `c` (la conséquence) sont du texte producteur — chrome, non suivi.</summary>
-        private void Carte(Transform parent, string role, CandidateActionDto a, bool sombre, bool levee, bool escalade = false)
+        /// `t` (le titre) et `c` (la conséquence) sont du texte producteur — chrome, non suivi.
+        /// ⑩-1c — AU DESSIN DU CADRE 15 (`.carte`, `.carte.sombre`, `.carte:nth-child(n)`, `.carte .s`) :
+        ///   le CRÉNEAU est mis en page par la main ; la FACE, dessinée, porte `rotate` et `translateY` — un groupe de mise en
+        ///     page réécrit la position de ses enfants, un `translateY` posé sur le créneau serait effacé (c'était le cas de
+        ///     la « levée » d'avant) ;
+        ///   face : rayon 9, `linear-gradient(170deg, #efe4c6, #d9cca9 60%, #c9b98f)` (sombre : #3a3630 → #26221d), bord 1px
+        ///     #6b4a12 (sombre #00000088), filet intérieur à 3px (`inset 0 0 0 4px` : #93402c66, #93402c pour la suggérée,
+        ///     #ffffff22 sur la sombre) ; les ombres portées (`0 8px 18px #000c`) ne sont pas reprises ;
+        ///   `.l` Georgia 8 capitales .14em #93402c (sombre : braise) ; `.t` Georgia 11,5 gras #2b1d0e (crème) ; `.c` 7,5
+        ///     italique #5a4629 (crème-2) ; `justify-content:space-between` : un ressort entre le titre et la conséquence ;
+        ///   `.s` le GLYPHE, Georgia 11, `top:6px; right:7px`, #93402c (sombre : braise) — ♠ risqué, ♦ suggéré, ♣ lui apprendre ;
+        ///     les cartes du talon déplié n'en portent pas (la maquette n'en dessine pas).
+        /// Rotation : `rotate(θ)` CSS tourne dans le sens horaire pour θ &gt; 0, Unity dans l'autre ⇒ z = −θ. `translateY(+y)`
+        /// CSS descend, Unity monte ⇒ y = −y.</summary>
+        private void Carte(Transform parent, string role, CandidateActionDto a, bool sombre, bool levee,
+                           bool escalade = false, string glyphe = null, float rotationCss = 0f, float translateYCss = 0f)
         {
             GameObject carte = NewUI((escalade ? "Carte_Escalader_" : "Carte_") + (a != null ? a.id : role), parent);
-            // ⛔ LA MAQUETTE DIT L'INVERSE DE CE QUE J'AVAIS ÉCRIT. `.carte` est CLAIRE à
-            // texte sombre ; `.carte.sombre` est foncée à texte crème. Je peignais les DEUX en
-            // foncé tout en colorant le titre de la claire en `surfaceBase` — texte sombre sur
-            // fond sombre, illisible. J'avais implémenté la moitié de la règle.
-            Image fondCarte = carte.AddComponent<Image>();
-            fondCarte.color = sombre ? RowBg : DesignTokens.Current.hudCreme;
+            AddLayoutElement(carte, preferredWidth: PxD(CssCarteLargeur),
+                             minHeight: PxD(CssCarteLargeur * CssCarteRatio), flexibleHeight: 0);
+
+            GameObject face = NewUI("Face", carte.transform);
+            RectTransform frt = (RectTransform)face.transform;
+            frt.anchorMin = Vector2.zero; frt.anchorMax = Vector2.one;
+            frt.offsetMin = Vector2.zero; frt.offsetMax = Vector2.zero;
+            frt.anchoredPosition = new Vector2(0f, -PxD(translateYCss));
+            frt.localRotation = Quaternion.Euler(0f, 0f, -rotationCss);
+
+            Image fondCarte = face.AddComponent<Image>();
+            fondCarte.sprite = MafiaCleanCity.Shell.ProceduralUI.RoundedRectMask(Mathf.Max(1, (int)PxD(CssCarteRayon)));
+            fondCarte.type = Image.Type.Sliced;
+            fondCarte.color = Color.white;
+            face.AddComponent<Mask>().showMaskGraphic = false;
+
+            GameObject verre = NewUI("Verre", face.transform);
+            Etirer(verre, 0f);
+            Image verreImg = verre.AddComponent<Image>();
+            verreImg.sprite = sombre
+                ? MafiaCleanCity.Shell.DecorAuComptoir.DegradeVertical("carte.sombre",
+                      new[] { (0f, Hex("#3a3630")), (1f, Hex("#26221d")) })
+                : MafiaCleanCity.Shell.DecorAuComptoir.DegradeVertical("carte.claire",
+                      new[] { (0f, Hex("#efe4c6")), (0.6f, Hex("#d9cca9")), (1f, Hex("#c9b98f")) });
+            verreImg.raycastTarget = false;
+
+            GameObject bord = NewUI("Bord", face.transform);
+            Etirer(bord, 0f);
+            Image bordImg = bord.AddComponent<Image>();
+            bordImg.sprite = MafiaCleanCity.Shell.ProceduralUI.RoundedRectOutline(Mathf.Max(1, (int)PxD(CssCarteRayon)), Mathf.Max(1f, PxD(1f)),
+                                                             sombre ? Hex("#00000088") : Hex("#6b4a12"));
+            bordImg.type = Image.Type.Sliced;
+            bordImg.raycastTarget = false;
+
+            GameObject filet = NewUI("FiletInterieur", face.transform);
+            Etirer(filet, PxD(3f));
+            Image filetImg = filet.AddComponent<Image>();
+            filetImg.sprite = MafiaCleanCity.Shell.ProceduralUI.RoundedRectOutline(Mathf.Max(1, (int)PxD(CssCarteRayon - 3f)), Mathf.Max(1f, PxD(1f)),
+                                                              sombre ? Hex("#ffffff22") : (levee ? Bordeaux : Hex("#93402c66")));
+            filetImg.type = Image.Type.Sliced;
+            filetImg.raycastTarget = false;
+
             // ⑩-1b — une carte se CHOISIT au toucher (D09) : le tampon la dit et l'enverra.
             if (a != null)
             {
@@ -459,56 +514,74 @@ namespace MafiaCleanCity.Operational.Exceptions
                 choix.onClick.AddListener(() => Choisir(capture, escaladeCapture));
                 cartesTouchables.Add(new CarteTouchable { Action = a, Escalade = escalade, Bouton = choix });
             }
-            VerticalLayoutGroup v = carte.AddComponent<VerticalLayoutGroup>();
-            int pad = (int)PxD(8f);
-            v.padding = new RectOffset(pad, pad, pad, (int)PxD(7f));
-            v.spacing = PxD(2f);
-            v.childControlWidth = true; v.childControlHeight = true;
-            v.childForceExpandWidth = true; v.childForceExpandHeight = false;
-            AddLayoutElement(carte, preferredWidth: PxD(CssCarteLargeur),
-                             minHeight: PxD(CssCarteLargeur * CssCarteRatio), flexibleHeight: 0);
 
-            // La suggérée est LEVÉE — c'est le seul signal de rang dans le dessin, et il ne tient
-            // pas dans la couleur seule : le rôle est écrit en toutes lettres juste dessous.
-            if (levee)
+            Color encre = sombre ? Braise : Bordeaux;
+            if (!string.IsNullOrEmpty(glyphe))
             {
-                var rt = (RectTransform)carte.transform;
-                rt.anchoredPosition = new Vector2(rt.anchoredPosition.x, PxD(CssCarteLeve));
+                TextMeshProUGUI s = NewText("Glyphe", face.transform, glyphe, (int)PxD(11f), TextAlignmentOptions.TopRight);
+                s.font = DesignTokens.Current.hudSerifFont;
+                s.color = encre;
+                s.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+                RectTransform srt = (RectTransform)s.transform;
+                srt.anchorMin = srt.anchorMax = srt.pivot = new Vector2(1f, 1f);
+                srt.sizeDelta = new Vector2(PxD(14f), PxD(14f));
+                srt.anchoredPosition = new Vector2(-PxD(7f), -PxD(6f));
             }
 
-            TextMeshProUGUI lib = NewText("Role", carte.transform, role, (int)PxD(CssCarteL),
-                                          TextAlignmentOptions.Left);
-            // ⛔ LE RÔLE SUIT LE FOND DE SA CARTE, pas son rang. J'avais mis l'or sur la
-            // carte SUGGÉRÉE pour la distinguer — et comme cette carte est CLAIRE, l'or (0,82)
-            // s'est retrouvé sur du crème (0,88) : écart 0,06, illisible. La maquette le dit
-            // autrement : `.carte .l{color:#93402c}` (brique SOMBRE sur carte claire) et
-            // `.carte.sombre .l{color:var(--braise)}` (braise sur carte foncée).
-            // ★ Ce qui distingue la suggérée n'est PAS sa couleur de libellé : c'est sa position
-            //   (levée, au milieu) et le fond clair lui-même. J'ai voulu ajouter un signal là où
-            //   le dessin en avait déjà deux, et j'ai cassé la lisibilité pour l'ajouter.
-            lib.color = sombre ? AccentModerate : DesignTokens.Current.surfaceBase;
+            VerticalLayoutGroup v = face.AddComponent<VerticalLayoutGroup>();
+            v.padding = new RectOffset((int)PxD(8f), (int)PxD(8f), (int)PxD(8f), (int)PxD(7f));
+            v.spacing = PxD(1f);
+            v.childControlWidth = true; v.childControlHeight = true;
+            v.childForceExpandWidth = true; v.childForceExpandHeight = false;
+
+            TextMeshProUGUI lib = NewText("Role", face.transform, role, (int)PxD(CssCarteL), TextAlignmentOptions.Left);
+            // ⛔ LE RÔLE SUIT LE FOND DE SA CARTE, pas son rang (`.carte .l{color:#93402c}`, `.carte.sombre .l{color:var(--braise)}`) :
+            // l'or sur le crème de la suggérée était illisible (écart 0,06). Ce qui distingue la suggérée, c'est sa levée et son fond.
+            lib.font = DesignTokens.Current.hudSerifFont;
+            lib.fontStyle = FontStyles.UpperCase;
+            lib.characterSpacing = 14f;
+            lib.color = encre;
             TrackText(lib, role);
 
-            TextMeshProUGUI titre = NewText("Titre", carte.transform,
+            TextMeshProUGUI titre = NewText("Titre", face.transform,
                 a != null ? Texte(a.label, a.label_i18n) : "—", (int)PxD(CssCarteT), TextAlignmentOptions.Left);
+            titre.font = DesignTokens.Current.hudSerifFont;
             titre.fontStyle = FontStyles.Bold;
-            titre.color = sombre ? TextPrimary : DesignTokens.Current.surfaceBase;
-            // ⛔ UNE CARTE DE 100 px CSS A BESOIN DE RETOURS À LA LIGNE. `NewText` pose
-            // `NoWrap` + `Truncate` : la capture montrait « Escalate for r » et « The card is
-            // archived for », coupés en plein mot. Un titre tronqué ressemble à un libellé
-            // court — rien ne signale la coupe.
+            titre.color = sombre ? DesignTokens.Current.hudCreme : Hex("#2b1d0e");
+            // ⛔ UNE CARTE DE 100 px CSS A BESOIN DE RETOURS À LA LIGNE (« Escalate for r », coupé en plein mot, sinon).
             titre.textWrappingMode = TextWrappingModes.Normal;
             titre.overflowMode = TextOverflowModes.Overflow;
 
+            AddLayoutElement(NewUI("Ressort", face.transform), flexibleHeight: 1);
+
             if (a != null && !string.IsNullOrEmpty(a.projected_consequence))
             {
-                TextMeshProUGUI cons = NewText("Consequence", carte.transform,
+                TextMeshProUGUI cons = NewText("Consequence", face.transform,
                     Texte(a.projected_consequence, a.projected_consequence_i18n), (int)PxD(CssCarteC), TextAlignmentOptions.Left);
                 cons.fontStyle = FontStyles.Italic;
-                cons.color = sombre ? TextSecondary : DesignTokens.Current.surfaceCard;
+                cons.color = sombre ? DesignTokens.Current.hudCremeSecondary : Hex("#5a4629");
                 cons.textWrappingMode = TextWrappingModes.Normal;
                 cons.overflowMode = TextOverflowModes.Overflow;
             }
+        }
+
+        /// <summary>`#93402c` — l'encre bordeaux des cartes claires (`.carte .l`, `.carte .s`), celle du tampon de ⑨.</summary>
+        private static Color Bordeaux => Hex("#93402c");
+        /// <summary>`var(--braise)` — l'encre des cartes sombres (même jeton que le rail « grave » de ⑨).</summary>
+        private static Color Braise => DesignTokens.Current.hudGaugeArcHot;
+
+        private static Color Hex(string h)
+        {
+            ColorUtility.TryParseHtmlString(h, out Color c);
+            return c;
+        }
+
+        private static void Etirer(GameObject go, float retrait)
+        {
+            RectTransform rt = (RectTransform)go.transform;
+            rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one;
+            rt.offsetMin = new Vector2(retrait, retrait); rt.offsetMax = new Vector2(-retrait, -retrait);
+            go.AddComponent<LayoutElement>().ignoreLayout = true;
         }
 
         /// <summary>LE POINT UNIQUE de passage des textes serveur.
