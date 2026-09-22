@@ -257,5 +257,125 @@ namespace MafiaCleanCity.Shell.Tests
             if (camGo != null) Object.Destroy(camGo);
             Object.Destroy(rt);
         }
+
+        // ═══ ⑥ — DEUX SOUS-VUES RÉÉCRITES PAR LE CUMUL CLIENT QUE RIEN NE PHOTOGRAPHIAIT (mesuré par l'atelier sur 443489ec : 0) ═══
+        //  · le dialogue de réaffectation (f1bcd5d3 : « Confirmer la réaffectation ? … », « Installation prévue : », …) ;
+        //  · le cadenas de l'éditeur de règles (a3404347 : « 🔒 palier {n} » / « 🔒 pas encore »).
+        // Les deux : même compte que la capture de ⑥ (la paire du run, garde d'effet), sous-vue OUVERTE et amenée DANS LE CADRE,
+        // texte réécrit lu dans le RENDU (les TMP) et comparé à la source du code — jamais à une copie. AUCUNE écriture : on ouvre
+        // la confirmation, on ne la valide pas.
+
+        /// <summary>Monte ⑥ sous la garde d'effet, ouvre le PREMIER lieutenant du roster et attend sa fiche (bandes chargées).</summary>
+        private IEnumerator MonterLaFamilleEtOuvrirUnLieutenant(string quoi, System.Action<LieutenantScreenController> fin)
+        {
+            var (identiteAnnoncee, _) = MafiaCleanCity.Shell.Tests.CaptureSousShell.IdentiteDeCaptureOuEchoue(quoi);
+            yield return ChargerLaSceneDeDemarrageDuBuild();
+            AppShell shell = SondeShellDansLaScene(sceneDeDemarrage);
+            Assert.IsNotNull(shell, "aucun AppShell dans la scène de démarrage du build");
+            yield return MafiaCleanCity.Shell.Tests.CaptureSousShell.ShellConnecteOuEchoue(shell, identiteAnnoncee, quoi);
+            float attente = 0f;
+            while (shell.CurrentTab != AppShell.Tab.Empire && attente < 20f) { attente += Time.deltaTime; yield return null; }
+            Assert.AreEqual(AppShell.Tab.Empire, shell.CurrentTab, "acquisition de session du shell non résolue");
+            shell.ActivateTab(AppShell.Tab.Org);
+            LieutenantScreenController famille = null;
+            float montage = 0f;
+            while (montage < 15f && famille == null)
+            {
+                famille = shell.ContentSlot.GetComponentInChildren<LieutenantScreenController>(false);
+                montage += Time.deltaTime; yield return null;
+            }
+            Assert.IsNotNull(famille, "LieutenantScreenController non monté sous l'onglet Org");
+            float charge = 0f;
+            while (charge < 20f && (famille.CurrentRoster == null || famille.CurrentRoster.Length == 0)) { charge += Time.deltaTime; yield return null; }
+            Assert.IsTrue(famille.CurrentRoster != null && famille.CurrentRoster.Length > 0,
+                $"« {quoi} » : le compte de capture n'a aucun lieutenant — rien à ouvrir, la sous-vue ne peut pas être photographiée");
+            famille.OpenLieutenant(famille.CurrentRoster[0].lieutenant_id);
+            float bandes = 0f;
+            while (bandes < 20f && famille.CurrentBands == null) { bandes += Time.deltaTime; yield return null; }
+            Assert.IsNotNull(famille.CurrentBands, $"« {quoi} » : la fiche du lieutenant n'a pas chargé — la sous-vue montrerait l'attente");
+            fin(famille);
+        }
+
+        /// <summary>La prise de vue de `Capture_Famille_1080x2400`, sans rien y changer : canvas basculé sur une caméra de la taille
+        /// CIBLE, rendu, PNG, plancher d'encre, et le compte de teintes (un fond n'est pas un écran).</summary>
+        private IEnumerator Photographier(LieutenantScreenController famille, string chemin, int largeur, int hauteur)
+        {
+            Canvas.ForceUpdateCanvases();
+            yield return null; yield return null;
+            Canvas canvas = famille.GetComponentInParent<Canvas>();
+            if (canvas != null) canvas = canvas.rootCanvas;
+            Assert.IsNotNull(canvas, "l'écran monté n'est sous AUCUN canvas — rien ne serait rendu");
+            RenderMode modePrecedent = canvas.renderMode; Camera cameraPrecedente = canvas.worldCamera; float planPrecedent = canvas.planeDistance;
+            GameObject camGo = new GameObject("CaptureFamilleSousVueCam");
+            Camera cam = camGo.AddComponent<Camera>();
+            cam.clearFlags = CameraClearFlags.SolidColor; cam.backgroundColor = Color.black; cam.orthographic = true;
+            var rt = new RenderTexture(largeur, hauteur, 24, RenderTextureFormat.ARGB32);
+            cam.targetTexture = rt;
+            canvas.renderMode = RenderMode.ScreenSpaceCamera; canvas.worldCamera = cam; canvas.planeDistance = 10f;
+            Canvas.ForceUpdateCanvases();
+            yield return null;
+            RectTransform crt = (RectTransform)canvas.transform;
+            cam.orthographicSize = crt.rect.height / 2f; cam.aspect = crt.rect.width / crt.rect.height;
+            cam.Render();
+            RenderTexture prev = RenderTexture.active; RenderTexture.active = rt;
+            var tex = new Texture2D(largeur, hauteur, TextureFormat.RGB24, false);
+            tex.ReadPixels(new Rect(0, 0, largeur, hauteur), 0, 0); tex.Apply();
+            RenderTexture.active = prev;
+            canvas.renderMode = modePrecedent; canvas.worldCamera = cameraPrecedente; canvas.planeDistance = planPrecedent;
+            cam.targetTexture = null; Object.DestroyImmediate(camGo); rt.Release();
+            System.IO.File.WriteAllBytes(chemin, tex.EncodeToPNG());
+            MafiaCleanCity.Shell.Tests.CaptureSousShell.PlancherDEncre(tex, chemin);
+            var teintes = new System.Collections.Generic.HashSet<int>();
+            foreach (Color c in tex.GetPixels())
+                teintes.Add((Mathf.RoundToInt(c.r * 31) << 10) | (Mathf.RoundToInt(c.g * 31) << 5) | Mathf.RoundToInt(c.b * 31));
+            Debug.Log($"[CAPTURE] {chemin} {largeur}x{hauteur} — {teintes.Count} teintes distinctes");
+            Assert.Greater(teintes.Count, 12, $"{chemin} ne porte que {teintes.Count} teintes — c'est un fond, pas un écran rendu.");
+        }
+
+        [UnityTest]
+        public IEnumerator Capture_Famille_Reaffectation_1080x2400()
+        {
+            const string Chemin = "Assets/Screenshots/famille_reaffectation_1080x2400.png";
+            LieutenantScreenController famille = null;
+            yield return MonterLaFamilleEtOuvrirUnLieutenant("famille_reaffectation", f => famille = f);
+            famille.OpenReassign();   // ouvre la CONFIRMATION — on ne la valide jamais : aucune écriture
+            yield return null; yield return null;
+            Assert.IsTrue(famille.ReassignConfirmOpen, "le dialogue de réaffectation ne s'est pas ouvert");
+            var lignes = famille.LignesDeReaffectationRendues;
+            // le texte RÉÉCRIT (f1bcd5d3), lu dans le RENDU et comparé à la source du code
+            Assert.AreEqual(LieutenantScreenController.PhraseConfirmationReaffectation, lignes.Count > 0 ? lignes[0] : null,
+                "la première ligne rendue doit être la phrase de confirmation RÉÉCRITE — vues : [" + string.Join(" | ", lignes) + "]");
+            foreach (string prefixe in new[] { LieutenantScreenController.PrefixeInstallation, LieutenantScreenController.PrefixeAnciennete,
+                                               LieutenantScreenController.PrefixeRendement })
+                Assert.IsTrue(lignes.Exists(l => l.StartsWith(prefixe) && l.Length > prefixe.Length),
+                    $"aucune ligne rendue « {prefixe}… » avec sa valeur — vues : [{string.Join(" | ", lignes)}]");
+            Assert.IsTrue(famille.FaireDefilerVersReaffectation(), "rien à faire défiler : le bloc de réaffectation n'a pas pu être amené dans le cadre");
+            yield return Photographier(famille, Chemin, 1080, 2400);
+        }
+
+        [UnityTest]
+        public IEnumerator Capture_Famille_ReglesCadenas_1080x2400()
+        {
+            const string Chemin = "Assets/Screenshots/famille_regles_cadenas_1080x2400.png";
+            LieutenantScreenController famille = null;
+            yield return MonterLaFamilleEtOuvrirUnLieutenant("famille_regles_cadenas", f => famille = f);
+            yield return null;
+            var lignes = famille.LignesDuCadenasRendues;
+            // les libellés verrouillés RÉÉCRITS (a3404347), lus dans le RENDU et comparés à RuleModel (la source) ; le combinateur
+            // n'est affiché que sous le palier 2 (`ConditionEditorVisible`), comme l'écran le décide
+            string[] attendus = RuleModel.LockedPrimitiveLabels();
+            int verifies = 0;
+            for (int k = 0; k < attendus.Length; k++)
+            {
+                bool combinateur = k == attendus.Length - 1;
+                if (combinateur && famille.ConditionEditorVisible) continue;
+                Assert.IsTrue(lignes.Exists(l => l.Trim() == attendus[k].Trim()),
+                    $"le libellé verrouillé « {attendus[k]} » n'est pas rendu — vues : [{string.Join(" | ", lignes)}]");
+                verifies++;
+            }
+            Assert.Greater(verifies, 0, "aucun libellé verrouillé vérifié — le cadenas serait vide");
+            Assert.IsTrue(famille.FaireDefilerVersCadenas(), "rien à faire défiler : le cadenas n'a pas pu être amené dans le cadre");
+            yield return Photographier(famille, Chemin, 1080, 2400);
+        }
     }
 }

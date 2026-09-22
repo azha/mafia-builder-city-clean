@@ -5,12 +5,14 @@ direct ou par une aide du même fichier, de `IdentiteDeCaptureOuEchoue` / `Captu
 ⚠️ Remplace la version de de9e9e6d (39 + 12, 420 + 46) : la garde d'effet posée le 22/09 au soir sur les planches de compte a fait
 passer six catégories dans la partie 2 (CaptureCarte, CaptureDetail, CaptureFamille, CaptureForensic, CaptureReputation, ScreenB7).
 
-**Filtre par défaut de MafiaCI : 51 catégories, 468 tests.** Tests qui EXIGENT la paire de capture : **20** —
+**Filtre par défaut de MafiaCI : 51 catégories, 470 tests.** Tests qui EXIGENT la paire de capture : **22** —
 
 - `CarnetScreenPlayModeTests.ScreenC3C2_CapturerSousLeChromeReel_ParLeCheminDuJoueur`
 - `DelegationScreenPlayModeTests.EcranDelegationC1_CapturerPourLeJugeVisuel_DeuxResolutions`
 - `DemolitionScreenPlayModeTests.EcranDemolitionC1_CapturerPourLeJugeVisuel_DeuxResolutions`
 - `FamilleCapturePlayModeTests.Capture_Famille_1080x2400`
+- `FamilleCapturePlayModeTests.Capture_Famille_Reaffectation_1080x2400`
+- `FamilleCapturePlayModeTests.Capture_Famille_ReglesCadenas_1080x2400`
 - `FiliereScreenPlayModeTests.ScreenC2C1_CapturerPourLeJugeVisuel_DeuxResolutions`
 - `ForensicScreenPlayModeTests.ScreenB7C2_CapturerParLeReseau`
 - `HorizonScreenPlayModeTests.ScreenC6C1_CapturerPourLeJugeVisuel_DeuxResolutions`
@@ -28,10 +30,10 @@ passer six catégories dans la partie 2 (CaptureCarte, CaptureDetail, CaptureFam
 - `VuePrincipaleCapturePlayModeTests.Capture_Horizon_SousChrome`
 - `VuePrincipaleCapturePlayModeTests.Capture_VuePrincipale_DistrictAvecBatiments_SousChromeV31`
 
-**Partie 2 (avec la paire)** : **18 catégories, 54 tests**. **Partie 1 (sans la paire)** : **33 catégories, 414 tests**.
-**Recouvrement : 0 test · 414 + 54 = 468 = le filtre par défaut.**
+**Partie 2 (avec la paire)** : **18 catégories, 56 tests**. **Partie 1 (sans la paire)** : **33 catégories, 414 tests**.
+**Recouvrement : 0 test · 414 + 56 = 470 = le filtre par défaut.**
 
-**Étape 8** = partie 2 ∪ recapture ∪ CaptureFamille, CaptureReputation : **25 catégories, 59 tests, dont 25 exigent la paire**, aucune relation de préfixe.
+**Étape 8** = partie 2 ∪ recapture ∪ CaptureFamille, CaptureReputation (dont les 2 captures des sous-vues de ⑥) : **25 catégories, 61 tests, dont 27 exigent la paire**, aucune relation de préfixe.
 
 ## Partie 1 — sans la paire
 
@@ -79,7 +81,7 @@ passer six catégories dans la partie 2 (CaptureCarte, CaptureDetail, CaptureFam
 | CaptureDetail | 1 | 1 |
 | CaptureDistrict | 1 | 1 |
 | CaptureExceptions | 1 | 1 |
-| CaptureFamille | 1 | 1 |
+| CaptureFamille | 3 | 3 |
 | CaptureFiche | 1 | 1 |
 | CaptureForensic | 1 | 1 |
 | CaptureHorizon | 1 | 1 |
