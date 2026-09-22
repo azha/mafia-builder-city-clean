@@ -166,3 +166,84 @@ Le cadre 23 dessine la bande du quartier : `Les Bassins | rive nord · le port �
 ## Compte
 
 Classe (a), écrite par le client : **③** 26 libellés · **④** 14 · **②** 36 · **⑥** 6 · **⑨⑩** 3 · **⑤** 1 · chrome 7 · **⑪** 3 · **⑮** 1 · **㉔** 4 = **101 chaînes**, dont ~50 sont des libellés d'ACTION ou de raison (le périmètre nommé par TD-649 classe A) et le reste des titres de ligne du même geste. Classe (b), annexe : 15 fonctions de bande sur ② + 1 sur le chrome, à keyer au back avant tout repointage.
+
+---
+
+## Annexe c — ce que la tranche 1 du client (`75ac1001`) a laissé à l'atelier, pour la tranche 2
+
+Ajoutée le 2026-09-22 après la tranche 1 du lot D. Lignes lues au commit `75ac1001` (branche `gate/cumul-client-2026-09-22`).
+
+### c1. Le bouton de réparation — ② `BuildingCardController.cs:883`
+
+Proposé par le client : `Réparer ({bande})`. **Remplacé** par :
+
+| bande servie | bouton |
+|---|---|
+| `MAJOR` | Réparer · gros frais |
+| `MODERATE` | Réparer · frais moyens |
+| `MINOR` | Réparer · petits frais |
+| `NONE` | Réparer · sans frais |
+
+- Pourquoi : dans la maquette, un qualificatif suit le verbe après ` · ` sur une seule ligne (⑨·9 « suggéré · appui long », ㉞·85 « 4 ordres · cuisson, appro, deux passages ») ; la parenthèse n'est pas une forme de texte joueur de la maison. Le verbe est celui de la raison (« Réparer — pas assez d'argent », ratifiée plus haut, même forme que les trois « Agrandir … — pas assez d'argent »).
+- ⚠️ À `75ac1001` le bouton rend « Réparer (major cost) » : la bande passe encore par `RepairCostLabel`, qui est en annexe (b), donc à keyer au back d'abord. **Tant que la clé n'est pas servie, le bouton dit « Réparer » seul** — jamais une bande anglaise.
+
+### c2. Les messages de `RunAction` — ② `BuildingCardController.cs:350-590`
+
+Forme rendue : `{succès}` si la route répond 2xx, sinon `{échec} — {raison}` (`RunAction`, `:591-605`). Les quatre demandés :
+
+| EN (`75ac1001`) | FR |
+|---|---|
+| Repair underway | Réparation lancée |
+| Repair unavailable | Impossible de réparer |
+| Conversion requested | **avec** « Aménager » : Aménagement demandé · **sans** : Ouverture demandée |
+| Convert unavailable | **avec** : Impossible d'aménager · **sans** : Impossible d'ouvrir |
+
+**Le verbe de Convert, sans « Aménager » (sous veto user) : « Ouvrir ».** On ouvre un labo, une planque, un commerce ; la maquette l'emploie pour une installation (㊵·140 « Une première injection **ouvre** la filière »). ⚠️ Le choix vaut pour **toute la famille à la fois**, sinon la fiche se contredit d'une ligne à l'autre :
+
+| où | avec « Aménager » | sans (recommandé tant que le veto tient) |
+|---|---|---|
+| bouton `Convert` (annexe a, `:1068`) | Aménager | Ouvrir |
+| succès / échec | Aménagement demandé / Impossible d'aménager | Ouverture demandée / Impossible d'ouvrir |
+| `SetupLabel` (annexe b, clé `setup`) `OPERATIONAL` · `IN_SETUP` · `NOT_CONVERTED` | En service · En cours d'aménagement · Pas aménagé | Ouvert · Ouverture en cours · Pas encore ouvert |
+| `TypeLabel` « Not converted » (annexe b) | Pas aménagé | Pas encore ouvert |
+
+**Les douze autres paires du même `RunAction`** — hors de la question posée, mais sur la même ligne de code et absentes de ④ elles aussi ; données ici pour que la tranche 2 n'ait pas à revenir :
+
+| EN | FR succès | FR échec |
+|---|---|---|
+| Ordered Pyralin / Order failed | Pyralin commandé | Impossible de commander |
+| Cook started / Cook unavailable | Cuisson lancée | Impossible de lancer la cuisson |
+| Ash cook started / Cook unavailable | Cuisson d'ash lancée | Impossible de lancer la cuisson |
+| Cash injected / Inject unavailable | Argent injecté | Impossible d'injecter |
+| Lab tier upgraded / Upgrade unavailable | Labo agrandi | Impossible d'agrandir |
+| Hub tier upgraded / Upgrade unavailable | Relais agrandi | Impossible d'agrandir |
+| Holding tier upgraded / Upgrade unavailable | Caisse agrandie | Impossible d'agrandir |
+| Appointment booked / Booking unavailable | Rendez-vous réservé | Impossible de réserver |
+| Appointment honored / Honor unavailable | Rendez-vous honoré | Impossible d'honorer le rendez-vous |
+| Planted / Plant unavailable | Planté | Impossible de planter |
+| Tended / Tend unavailable | Culture soignée | Impossible de soigner la culture |
+| Courier dispatched / Dispatch unavailable | Coursier parti | Impossible d'envoyer le coursier |
+| Cash deposited / Deposit unavailable | Argent déposé | Impossible de déposer |
+| Cash withdrawn / Withdraw unavailable | Argent retiré | Impossible de retirer |
+
+Mots pris à la maquette : « commander » (㉚·48), « lancer une cuisson » (㉞·85), « injecter » (㊵·140), « réservé » / « honoré » (㉕·92-93), « un coursier est parti » (㉘·55) ; « agrandir », « relais », « caisse » : annexe (a).
+
+**c2-bis. Ce qui suit le tiret — mesuré, et c'est un défaut de sens.** À `75ac1001`, `{raison}` est le `message` de DÉVELOPPEUR de l'enveloppe d'erreur du back (anglais), ou `request failed (N) …` quand il manque (`BuildingCardClient.cs`, `ReadableError`). Mes quatre formes françaises seraient donc suivies d'une phrase anglaise ou d'un code HTTP — la classe C que ① a déjà close (« la raison nommait un verbe HTTP »). **Règle** : `{échec} — {texte de user_facing_i18n_key}` quand le bundle connaît la clé (64 clés `error.*` servies en français, ex. `error.compression.budget_exhausted` « Il n'y a plus de place pour ceci aujourd'hui. Reprenez demain. ») ; sinon `{échec}.` seul. Jamais le `message`, jamais un code. Le câblage est au client ; la règle de texte est celle-ci.
+
+### c3. Le cadenas des primitives — `RuleModel.cs:209-212` (`MakeLabel`)
+
+| cas (code du back) | EN | FR |
+|---|---|---|
+| `tier >= 2` — `TIER_NOT_UNLOCKED` | `{TOKEN}  🔒 Tier {n}` | `{TOKEN}  🔒 palier {n}` |
+| `tier == 1` — `NOT_SUPPORTED_YET` | `{TOKEN}  🔒 soon` | `{TOKEN}  🔒 pas encore` |
+
+- « palier » est le mot de la maquette (㉒·95 « PALIER », ㉞·88 « monter d'un palier ») ; en minuscule après le cadenas, comme une légende.
+- « soon » promettait une date que le back ne donne pas : `NOT_SUPPORTED_YET` veut dire « pas dans ce build ». « pas encore » est la forme maison de ce trou (①, ㉒, ⑲).
+- `{TOKEN}` (TIME, LIFECYCLE, PEER_EVENT…) reste tel quel : c'est le jeton de la grammaire que le joueur écrit (classe R, ratifié).
+
+### c4. ㉔ — les glyphes `[~] [<>] [!] [$]` devant les conséquences
+
+**Retirés.** Les quatre conséquences sont posées dans une seule couleur (`outcomeText.color = TextSecondary`, `AutonomyInboxController.cs:351`) : le glyphe ne double aucune couleur, le mot porte déjà le sens (la règle F2 « la couleur n'est jamais seule » est tenue par le mot), ㉔·26 n'en dessine aucun, et `[<>]` / `[$]` sont des codes privés qu'aucun joueur ne sait lire.
+⚠️ Ce n'est pas la règle de ⑨ : là, `[!!!]` double une échelle de gravité portée par la couleur, et il reste. Le retrait change le littéral, donc la clé dérivée par `Libelle.De` : à refaire côté client.
+
+**Compte de l'annexe c** : 1 bouton (4 bandes) · 4 messages demandés (+ la famille « Ouvrir », 6 entrées) · 28 messages en complément (14 paires) · 1 règle de raison · 2 légendes de cadenas · 1 décision de glyphes.
