@@ -32,7 +32,7 @@
 | « Tamponner — appui long » | veto user ouvert | **ouvert** |
 | les 3 phrases de ⑯ (`08-…`) | aucun | **ouvert** |
 | les 3 avocats de ㉛ | aucun registre ne ratifie la maquette de ㉛ (série 6, cadre 68) | **ouvert** |
-| les 5 bandes de ⑨/⑩ | ARBITRAGES **9** a ratifié « Grave · Critique · **Modéré** · **Urgent** » ; « il est sûr » est **ratifié** par la maquette de ⑨ (cadre 15, `11-…` §3.2) | **ouvert** pour « légère », « sans urgence », « il le croit », « il hésite ». ⚠️ Deux écarts à trancher avec : le back sert « **modérée** », « **urgente** » (au féminin, point 9 dit « Modéré · Urgent ») ; et la voix ratifiée « **il** est sûr » donne un genre au lieutenant, contre la règle (« A refusé de », « they ») |
+| les 5 bandes de ⑨/⑩ | ARBITRAGES **9** a ratifié « Grave · Critique · **Modéré** · **Urgent** » ; « il est sûr » est **ratifié** par la maquette de ⑨ (cadre 15, `11-…` §3.2) | **ouvert** pour « légère », « sans urgence », « il le croit », « il hésite ». ⚠️ **Corrigé le 2026-09-23 (mesure)** : la maquette RATIFIÉE de ⑨ (`ecrans-brennar-4.html`, atelier `72e4202`) porte le **féminin** — rangées de la file l.818 (cadre 14), l.860 (cadre 17), l.873 (cadre 18) : « logistique · **modérée** · **urgente** », « grave · **urgente** », « **modérée** · urgente » (ordre gravité · priorité) ; puce `chip pri-u` « **urgente** » l.862 (cadre 17) ; puces `sev-g` « grave » et `pri-c` « critique » l.820, l.832, l.875. La prémisse du point 9 (« libellés non ratifiés » ⇒ « Modéré · Urgent ») était **fausse** pour ces deux mots : c'est la maquette ratifiée qui l'emporte, et le féminin servi était **juste** ; et la voix ratifiée « **il** est sûr » donne un genre au lieutenant, contre la règle (« A refusé de », « they ») |
 | ~20 libellés fr de l'atelier | aucun | **ouvert** |
 | « chez {enseigne} » | aucun (proposé le 23/09, `11-…` §3.11) | **ouvert** |
 
@@ -54,7 +54,7 @@
 3. « Tamponner — appui long ».
 4. Les 3 phrases de ⑯.
 5. Les 3 avocats de ㉛.
-6. Les bandes « légère », « sans urgence », « il le croit », « il hésite » — avec les deux écarts du §2 (le féminin servi contre le point 9 ; le « il » ratifié contre la règle du genre).
+6. Les bandes « légère », « sans urgence », « il le croit », « il hésite » — avec l'écart du §2 (le « il » ratifié contre la règle du genre). Le féminin « modérée · urgente » est **tranché** par la maquette ratifiée de ⑨.
 7. Les ~20 libellés fr de l'atelier.
 8. « chez {enseigne} ».
 9. Le corpus `exception.*` (inscrit « user » au runbook ; le ruling du 30/08 peut le couvrir : à f2).
