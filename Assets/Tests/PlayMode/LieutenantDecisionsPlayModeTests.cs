@@ -207,5 +207,17 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.IsTrue(ctl.RenderedTexts.Contains(FamilleLabels.OrdrePermanent(ctl.CurrentBands.standing_order.freshness)),
                 $"la ligne Ordre permanent rend la fraîcheur RE-LUE ({ctl.CurrentBands.standing_order.freshness})");
         }
+        /// <summary>Table 55 (a6159d89) : le titre du cadre 1 porte le NOM servi, jamais « Il » (D13) ; sans nom, rien ; les deux
+        /// autres mots réalignés gardent leurs insécables (D17 : U+00A0 avant « : », U+202F avant « ? ») et leurs clés.</summary>
+        [Test]
+        public void Table55_TitreNomme_EtInsecables()
+        {
+            Assert.AreEqual("Lt. Kest écoute autre chose que vos ordres", LieutenantScreenController.TitreDeLaDerive("Lt. Kest"));
+            Assert.AreEqual("", LieutenantScreenController.TitreDeLaDerive(""), "sans nom : rien, aucun pronom deviné");
+            Assert.AreEqual("famille.ecran.ce_qui_est_ecoute_a_la_place",
+                MafiaCleanCity.I18n.Libelle.CleDe("famille", "ecran", "ce qui est écouté à la place\u00A0:"));
+            Assert.AreEqual("famille.question.en_faire_la_regle",
+                MafiaCleanCity.I18n.Libelle.CleDe("famille", "question", "En faire la règle\u202F?"), "la clé ne change pas (table 55)");
+        }
     }
 }

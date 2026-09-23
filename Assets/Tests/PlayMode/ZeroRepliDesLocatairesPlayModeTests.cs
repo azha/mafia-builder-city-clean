@@ -58,11 +58,11 @@ namespace MafiaCleanCity.Operational.Tests
             "famille.repere.ce_qu_il_reste",
             "famille.repere.l_heure",
             "famille.repere.ce_que_font_les_autres",
-            "famille.ecran.il_ecoute_autre_chose_que_vos_ordres",
+            "famille.ecran.nom_ecoute_autre_chose_que_vos_ordres",   // table 55 (a6159d89) : D13, clé nommée {nom}
             "famille.ecran.rappeler_l_ordre_direct",
             "famille.ecran.remettre_l_ecoute_a_zero",
             "famille.ecran.brouiller_un_repere",
-            "famille.ecran.ce_qu_il_ecoute_a_la_place",
+            "famille.ecran.ce_qui_est_ecoute_a_la_place",            // table 55 : D13 + D17
             "famille.question.en_faire_la_regle",
             "famille.ecran.son_ordre_du_moment_a_tenu_vous_pouvez_le_renouveler_le_retirer_ou_en_faire_sa_regle_par_defaut",
             "famille.ecran.en_faire_la_regle",

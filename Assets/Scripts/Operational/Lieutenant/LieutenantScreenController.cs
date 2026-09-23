@@ -320,6 +320,8 @@ namespace MafiaCleanCity.Operational.Lieutenant
         private TextMeshProUGUI decisionErrorText;
         // ⑦ LES DEUX DÉCISIONS (2026-09-23) — le signal qui dérive (cadre 1) et l'ordre permanent (cadre 2), maquette atelier 26.
         private RectTransform signalSection, ordreSection, reperesListe;
+        /// <summary>Le titre du cadre 1, rendu AVEC le nom servi (`RenderDecisions`) : table 55, clé nommée `{nom}` (D13).</summary>
+        private TextMeshProUGUI signalTitre;
         private Button promouvoirButton;
         private TextMeshProUGUI decisionsRefusText;
         /// <summary>Crochet de test : la dernière décision TOUCHÉE (« signal:kind[:repère] » ou « ordre:kind ») — la garde compare
@@ -3101,11 +3103,13 @@ namespace MafiaCleanCity.Operational.Lieutenant
         // lieutenant (`RefreshBands`) — les deux routes rendent `{ applied: true }`, AUCUN état : l'écran rend le GET, jamais une supposition.
         private void BuildDecisionsSections(Transform parent)
         {
-            // Cadre 1 — « Il écoute autre chose que vos ordres » : visible ssi drift_phase == DRIFTING.
+            // Cadre 1 — « {nom} écoute autre chose que vos ordres » (table 55, a6159d89 : D13, le nom servi plutôt que « Il ») : visible
+            // ssi drift_phase == DRIFTING. Le texte se pose au RENDU (`RenderDecisions`), quand le nom du lieutenant ouvert est connu.
             GameObject sig = NewUI("SignalDeriveSection", parent);
             ConfigurerPile(sig);
             signalSection = (RectTransform)sig.transform;
-            NewSectionLabel(signalSection, Lib("Il écoute autre chose que vos ordres"));
+            NewSectionLabel(signalSection, "");
+            signalTitre = signalSection.GetChild(signalSection.childCount - 1).GetComponent<TextMeshProUGUI>();
             AddActionButton(signalSection, "rappeler_l_ordre_direct", Lib("Rappeler l’ordre direct"),
                 () => StartCoroutine(DecideSignal("reinforce_direct_order", null)));
             AddActionButton(signalSection, "remettre_l_ecoute_a_zero", Lib("Remettre l’écoute à zéro"),
@@ -3115,7 +3119,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             GameObject liste = NewUI("ReperesABrouiller", signalSection);
             ConfigurerPile(liste);
             reperesListe = (RectTransform)liste.transform;
-            NewSectionLabel(reperesListe, Lib("ce qu’il écoute à la place :"));
+            NewSectionLabel(reperesListe, Lib("ce qui est écouté à la place\u00A0:"));   // table 55 : D13 et D17 (U+00A0 avant « : »)
             foreach (string cue in FamilleLabels.ReperesBrouillables)
             {
                 string repere = cue;   // capture par itération
@@ -3126,12 +3130,12 @@ namespace MafiaCleanCity.Operational.Lieutenant
             sig.SetActive(false);
             sectionsDetail.Add(signalSection);
 
-            // Cadre 2 — « En faire la règle ? » : visible ssi un ordre existe (freshness ≠ NONE) ; « En faire la règle » ssi
+            // Cadre 2 — « En faire la règle ? » (table 55 : U+202F avant « ? », D17) : visible ssi un ordre existe (freshness ≠ NONE) ; « En faire la règle » ssi
             // promotion_suggested (sinon le back refuse PROMOTE_TO_DEFAULT en 409 — un geste qu'on ne laisse pas toucher).
             GameObject ord = NewUI("OrdrePermanentSection", parent);
             ConfigurerPile(ord);
             ordreSection = (RectTransform)ord.transform;
-            NewSectionLabel(ordreSection, MafiaCleanCity.I18n.Libelle.De("famille", "question", "En faire la règle ?"));
+            NewSectionLabel(ordreSection, MafiaCleanCity.I18n.Libelle.De("famille", "question", "En faire la règle\u202F?"));
             TextMeshProUGUI phrase = NewText("OrdreQuestion", ordreSection,
                 Lib("Son ordre du moment a tenu. Vous pouvez le renouveler, le retirer, ou en faire sa règle par défaut."),
                 13, TextAlignmentOptions.Left);
@@ -3273,6 +3277,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             string fraicheur = b != null && b.standing_order != null ? b.standing_order.freshness : null;
             bool ordre = !string.IsNullOrEmpty(fraicheur) && fraicheur != "NONE";
             if (signalSection != null) signalSection.gameObject.SetActive(derive);
+            if (signalTitre != null) signalTitre.text = TitreDeLaDerive(b != null ? b.name : null);
             if (ordreSection != null) ordreSection.gameObject.SetActive(ordre);
             if (promouvoirButton != null) promouvoirButton.gameObject.SetActive(ordre && b.standing_order.promotion_suggested);
             if (donnerOrdreSection != null) donnerOrdreSection.gameObject.SetActive(b != null && fraicheur == "NONE");
@@ -3288,6 +3293,12 @@ namespace MafiaCleanCity.Operational.Lieutenant
                                                        : FamilleLabels.Repere(kv.Key) + " · " + FamilleLabels.Fiabilite(bande);
             }
         }
+
+        /// <summary>Cadre 1 — « {nom} écoute autre chose que vos ordres » (table 55, `famille.ecran.nom_ecoute_autre_chose_que_vos_ordres`).
+        /// Nom absent : rien (aucun pronom ni nom deviné ; la section n'est visible qu'avec un lieutenant ouvert).</summary>
+        public static string TitreDeLaDerive(string nom) =>
+            string.IsNullOrWhiteSpace(nom) ? "" : MafiaCleanCity.I18n.Libelle.Gabarit("famille.ecran.nom_ecoute_autre_chose_que_vos_ordres",
+                "{nom} écoute autre chose que vos ordres", new Dictionary<string, string> { { "nom", nom } });
 
         /// <summary>Cadre 1 — une décision sur le signal. PUBLIC : la garde la pilote. `repere` exigé pour disrupt_cue, null sinon.</summary>
         public IEnumerator DecideSignal(string kind, string repere)
