@@ -8,8 +8,17 @@ assemblage : ses clés comptent comme distinctes, sa valeur n'est pas celle de c
 Usage : python3 Tools/atelier-2026-09-22/somme-table.py <table.tsv> [...]"""
 import collections, sys
 rc = 0
+ATTENDUES = ['mot', 'cadres', 'classe', 'clé', 'fr', 'en', 'note']   # le format des tables de mots (37, 40, 43, 44, 46-48…)
 for f in sys.argv[1:]:
-    L = [l.rstrip('\n').split('\t') for l in open(f, encoding='utf-8')][1:]
+    toutes = [l.rstrip('\n').split('\t') for l in open(f, encoding='utf-8')]
+    tete = toutes[0] if toutes else []
+    # ⛔ REFUSER une table dont on ne reconnaît pas les colonnes, au lieu de mal compter (signalé par le back sur l'addendum de la 45 :
+    #    « statut » au lieu de « classe » — les « clés à deux valeurs » étaient un artefact de l'outil)
+    if tete[:len(ATTENDUES)] != ATTENDUES:
+        manquantes = [c for c in ATTENDUES if c not in tete]
+        print(f'⛔ {f} : colonnes non reconnues {tete} — attendues {ATTENDUES}' + (f' ; manquantes : {manquantes}' if manquantes else ' (ordre différent)'))
+        rc = 1; continue
+    L = toutes[1:]
     comp = [c for c in L if c[0].startswith('(')]
     par = collections.Counter(c[2] for c in L)
     avec = [c for c in L if c[2] != 'note' and c[3] and c[4]]
