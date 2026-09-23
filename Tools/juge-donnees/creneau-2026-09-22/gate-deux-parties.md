@@ -5,7 +5,7 @@ direct ou par une aide du même fichier, de `IdentiteDeCaptureOuEchoue` / `Captu
 ⚠️ Remplace la version de de9e9e6d (39 + 12, 420 + 46) : la garde d'effet posée le 22/09 au soir sur les planches de compte a fait
 passer six catégories dans la partie 2 (CaptureCarte, CaptureDetail, CaptureFamille, CaptureForensic, CaptureReputation, ScreenB7).
 
-**Filtre par défaut de MafiaCI : 55 catégories, 588 tests** (473 + les 20 d'`EcranDistribution`, inscrite le 22/09 à 23:29, + le contrôle positif de la garde de sortie TD-576, + les 3 falsifiables d'archétype de ⑥, + l'épingle du repli de `FamilleLabels.Etat`, + les 5 de `Palette`, inscrite le 22/09 à 23:50, + le contrôle positif de la garde de sortie de ChaineDAppro, + les 3 falsifiables des gestes de ㉔, + la falsifiable des icônes du dock, + `EcranRevue` 32 et `EcranFile` 18 inscrites au regroupement du 23/09, + les 2 de la garde zéro repli des locataires). Tests qui EXIGENT la paire de capture : **22** —
+**Filtre par défaut de MafiaCI : 55 catégories, 591 tests** (473 + les 20 d'`EcranDistribution`, inscrite le 22/09 à 23:29, + le contrôle positif de la garde de sortie TD-576, + les 3 falsifiables d'archétype de ⑥, + l'épingle du repli de `FamilleLabels.Etat`, + les 5 de `Palette`, inscrite le 22/09 à 23:50, + le contrôle positif de la garde de sortie de ChaineDAppro, + les 3 falsifiables des gestes de ㉔, + la falsifiable des icônes du dock, + `EcranRevue` 32 et `EcranFile` 18 inscrites au regroupement du 23/09, + les 2 de la garde zéro repli des locataires). Tests qui EXIGENT la paire de capture : **22** —
 
 - `CarnetScreenPlayModeTests.ScreenC3C2_CapturerSousLeChromeReel_ParLeCheminDuJoueur`
 - `DelegationScreenPlayModeTests.EcranDelegationC1_CapturerPourLeJugeVisuel_DeuxResolutions`
@@ -30,8 +30,8 @@ passer six catégories dans la partie 2 (CaptureCarte, CaptureDetail, CaptureFam
 - `VuePrincipaleCapturePlayModeTests.Capture_Horizon_SousChrome`
 - `VuePrincipaleCapturePlayModeTests.Capture_VuePrincipale_DistrictAvecBatiments_SousChromeV31`
 
-**Partie 2 (avec la paire)** : **18 catégories, 58 tests**. **Partie 1 (sans la paire)** : **37 catégories, 530 tests**.
-**Recouvrement : 0 test · 530 + 58 = 588 = le filtre par défaut.** (+27 au merge de b909fbae, +1 au merge de 1d9a6704 — EcranFile) `EcranDistribution` (20 tests, aucun n'exige la paire, aucune relation de
+**Partie 2 (avec la paire)** : **18 catégories, 58 tests**. **Partie 1 (sans la paire)** : **37 catégories, 533 tests**.
+**Recouvrement : 0 test · 533 + 58 = 591 = le filtre par défaut.** (+27 au merge de b909fbae, +1 au merge de 1d9a6704 — EcranFile, +3 de la garde L2 en d7b16069 — I18n) `EcranDistribution` (20 tests, aucun n'exige la paire, aucune relation de
 préfixe) entre en partie 1 — verte seule avant inscription, `run-distribution.md`.
 
 **Étape 8** = partie 2 ∪ recapture ∪ CaptureFamille, CaptureReputation (dont les 2 captures des sous-vues de ⑥) : **25 catégories, 63 tests, dont 27 exigent la paire**, aucune relation de préfixe.
@@ -59,7 +59,7 @@ préfixe) entre en partie 1 — verte seule avant inscription, `run-distribution
 | EcranLoi | 14 | 14 |
 | EcranConflit | 9 | 9 |
 | Ecran10 | 2 | 2 |
-| I18n | 23 | 23 |
+| I18n | 26 | 26 |
 | I18nReseau | 1 | 1 |
 | BundleReel | 4 | 4 |
 | JUGE | 2 | 2 |
