@@ -29,8 +29,9 @@ namespace MafiaCleanCity.Operational
     /// Aucun choix présélectionné. Un refus du POST s'écrit sous le bouton, jamais en message technique (`DerniereErreur`
     /// est un crochet de test). Une reprise après un échec réseau réémet la même Idempotency-Key.
     ///
-    /// Pas encore : l'historique « Depuis le début, chez … » (Coup n°N) attend `strike_index` servi (L3bis) — aucun rang
-    /// dérivé de l'ordre de la liste. Le panneau des manques (64) n'est pas un libellé (table 40 : note).
+    /// L'historique « Depuis le début, chez … » rend les envois réels de la famille sous la forme épicène « un envoi ».
+    /// Le rang optionnel « Coup n°N » attend toujours `strike_index` servi (L3bis) : aucun rang n'est dérivé de l'ordre.
+    /// Le panneau des manques (64) n'est pas un libellé (table 40 : note).
     ///
     /// GÉOMÉTRIE — deux règles héritées, non négociables (mesurées ailleurs dans ce dépôt) :
     ///  · aucune valeur dérivée de `Screen.*` ni d'un `rect` lu au montage — passer par
@@ -399,8 +400,8 @@ namespace MafiaCleanCity.Operational
         /// <summary>Cadre 63 — « Ce qui est rentré » : le DERNIER envoi rentré (le premier `resolved` de la liste, servie du plus
         /// récent au plus ancien par minute de jeu), son issue, ce qu'il a coûté et ce qu'il a fait chauffer. Rien si aucun
         /// envoi n'est rentré. Chaque ligne à valeur null est OMISE (aucun mot deviné). Le nom du lieutenant s'affiche s'il est
-        /// servi ; sinon la ligne commence par la famille. L'historique « Depuis le début, chez … » (Coup n°N) attend
-        /// `strike_index` (L3bis) ; « Y retourner » est un geste à route (L4).</summary>
+        /// servi ; sinon la ligne commence par la famille. L'historique groupe les envois réels de cette famille sans rang ;
+        /// « Coup n°N » attend toujours `strike_index` (L3bis). « Y retourner » est un geste à route (L4).</summary>
         private void RendreRentre(EngagementDto[] engagements)
         {
             ViderEnfants(rentreRoot);
@@ -418,7 +419,7 @@ namespace MafiaCleanCity.Operational
             LigneDEnvoi(rentreRoot, "Rentre_" + dernier.engagement_id, dernier,
                 Libelle.Gabarit("conflit.bloc.etait_chez_famille", "était chez {famille}",
                     new Dictionary<string, string> { { "famille", ConflitResolvers.FamilleDe(dernier) } }),
-                ConflitResolvers.Issue(dernier.outcome_bucket));
+                ConflitResolvers.Issue(dernier.outcome_bucket), dernier.outcome_bucket);
 
             string cout = ConflitResolvers.Cout(dernier.friction_consumed_bucket);
             if (cout != null)
@@ -426,6 +427,19 @@ namespace MafiaCleanCity.Operational
             string chaleur = ConflitResolvers.Chaleur(dernier.heat_increment_bucket);
             if (chaleur != null)
                 LigneDeMesure(rentreRoot, "Chaleur", Libelle.Gabarit("conflit.bloc.la_ville_a_chauffe", "la ville a chauffé"), chaleur);
+
+            // Cadre 63 révisé : l'historique est déjà dans la liste servie. Sans `strike_index`, chaque ligne dit seulement
+            // « un envoi » et son issue — jamais un rang déduit de la position dans le tableau.
+            string familleHistorique = dernier.target_rival_key;
+            EtiquetteDeSection(rentreRoot, "HistoriqueFamille",
+                Libelle.Gabarit("conflit.bloc.depuis_le_debut_chez_famille", "Depuis le début, chez {famille}",
+                    new Dictionary<string, string> { { "famille", ConflitResolvers.FamilleDe(dernier) } }));
+            if (engagements != null)
+                foreach (EngagementDto e in engagements)
+                    if (e != null && e.status == "resolved" && e.target_rival_key == familleHistorique)
+                        LigneHistorique(rentreRoot, "Historique_" + e.engagement_id,
+                            Libelle.Gabarit("conflit.bloc.un_homme_envoye", "un envoi"),
+                            ConflitResolvers.Issue(e.outcome_bucket), e.outcome_bucket);
 
             // Cadre 63 : la réplique (sans orateur : le nom est sur la ligne au-dessus, arbitrage du 23/09) et « Y retourner »,
             // dont les mots sont ceux de la 40 : « En envoyer un autre » · « même famille, autre cible ».
@@ -474,7 +488,7 @@ namespace MafiaCleanCity.Operational
                     LigneDEnvoi(enCoursRoot, "DejaRentre_" + e.engagement_id, e,
                         Libelle.Gabarit("conflit.bloc.etait_chez_famille", "était chez {famille}",
                             new Dictionary<string, string> { { "famille", ConflitResolvers.FamilleDe(e) } }),
-                        ConflitResolvers.Issue(e.outcome_bucket));
+                        ConflitResolvers.Issue(e.outcome_bucket), e.outcome_bucket);
             }
 
             TextMeshProUGUI dehors = NouveauTexteFiche(enCoursRoot, "HommesDehors",
@@ -508,7 +522,8 @@ namespace MafiaCleanCity.Operational
 
         /// <summary>Une ligne d'envoi (cadres 62-63) : à gauche le nom du lieutenant (s'il est servi) en gras et le lieu en
         /// italique, à droite l'issue ou « on ne peut plus le rappeler ». `droite` null ⇒ rien à droite.</summary>
-        private void LigneDEnvoi(Transform parent, string nomLigne, EngagementDto e, string lieu, string droite)
+        private void LigneDEnvoi(Transform parent, string nomLigne, EngagementDto e, string lieu, string droite,
+                                 string issueBucket = null)
         {
             GameObject ligne = NouveauUI(nomLigne, parent);
             AjouterFond(ligne, DesignTokens.Current.surfaceRow);
@@ -538,7 +553,8 @@ namespace MafiaCleanCity.Operational
             TrackText(ou.text);
 
             if (droite == null) return;
-            TextMeshProUGUI d = NouveauTexteFiche(ligne.transform, "Droite", droite, 8.5f, DesignTokens.Current.onSurfaceSecondary, false);
+            TextMeshProUGUI d = NouveauTexteFiche(ligne.transform, "Droite", droite, 8.5f,
+                issueBucket == null ? DesignTokens.Current.onSurfaceSecondary : CouleurIssue(issueBucket), false);
             d.alignment = TextAlignmentOptions.Right;
             d.enableWordWrapping = true;
             AddLayoutElement(d.gameObject, preferredWidth: Px(90f));
@@ -558,6 +574,32 @@ namespace MafiaCleanCity.Operational
             TrackText(l.text);
             TextMeshProUGUI m = NouveauTexteFiche(ligne.transform, "Mot", mot, 8.5f, DesignTokens.Current.onSurfacePrimary, true);
             TrackText(m.text);
+        }
+
+        /// <summary>Une ligne de l'historique par famille : libellé épicène à gauche, issue à droite. Aucun nom de lieutenant
+        /// ni rang n'est répété ici ; le détail du dernier retour vit déjà juste au-dessus.</summary>
+        private void LigneHistorique(Transform parent, string nom, string libelle, string issue, string issueBucket)
+        {
+            GameObject ligne = NouveauUI(nom, parent);
+            AjouterFond(ligne, DesignTokens.Current.surfaceRow);
+            HorizontalLayoutGroup hl = ligne.AddComponent<HorizontalLayoutGroup>();
+            hl.padding = new RectOffset(PxTrait(10f), PxTrait(10f), PxTrait(6f), PxTrait(6f));
+            hl.spacing = Px(8f);
+            hl.childControlWidth = true; hl.childControlHeight = true;
+            hl.childForceExpandWidth = false; hl.childForceExpandHeight = false;
+            hl.childAlignment = TextAnchor.MiddleLeft;
+            AddLayoutElement(ligne, flexibleHeight: 0);
+
+            TextMeshProUGUI gauche = NouveauTexteFiche(ligne.transform, "Libelle", libelle, 9f,
+                DesignTokens.Current.onSurfacePrimary, true);
+            AddLayoutElement(gauche.gameObject, flexibleWidth: 1);
+            TrackText(gauche.text);
+            if (issue == null) return;
+            TextMeshProUGUI droite = NouveauTexteFiche(ligne.transform, "Issue", issue, 8.5f,
+                CouleurIssue(issueBucket), true);
+            droite.alignment = TextAlignmentOptions.Right;
+            AddLayoutElement(droite.gameObject, preferredWidth: Px(90f));
+            TrackText(droite.text);
         }
 
         /// <summary>§1/§2 — La table des 4 familles (cadres 59-61) : le domaine clos de `target_rival_key`
@@ -1017,6 +1059,28 @@ namespace MafiaCleanCity.Operational
         /// <summary>Le laiton des gestes et du choix courant — le jeton des écrans voisins du chantier (`ChaineDApproScreenController.Or`),
         /// jamais `accentGold` (jaune CTA #ffd23f, liaisons gardées par `C5F2_AccentGoldBindings` ; D5).</summary>
         private static Color Or => DesignTokens.Current.hudMoneyUnderlineGold;
+
+        /// <summary>Couleurs des résultats du cadre 63, lues directement sur la maquette révisée : `hold` et `advance`
+        /// ont leurs encres propres ; `contested` et `breakthrough` réemploient l'or et la braise déjà nommés du canon.
+        /// `retreat`, non dessiné dans la maquette, reste sur la braise sémantique plutôt que d'inventer un cinquième ton.</summary>
+        private static Color CouleurIssue(string bucket)
+        {
+            switch (bucket)
+            {
+                case "contested": return DesignTokens.Current.hudMoneyUnderlineGold;
+                case "breakthrough":
+                case "retreat": return DesignTokens.Current.hudGaugeArcHot;
+                case "hold": return CouleurLocale("#987979");
+                case "advance": return CouleurLocale("#7fc99a");
+                default: return DesignTokens.Current.onSurfaceSecondary;
+            }
+        }
+
+        private static Color CouleurLocale(string html)
+        {
+            ColorUtility.TryParseHtmlString(html, out Color couleur);
+            return couleur;
+        }
 
         // ═══ Primitives — dupliquées par convention (aucun fichier du dépôt ne les partage,
         // mesuré sur `main` le 2026-09-02) ═════════════════════════════════════════════════════

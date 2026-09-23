@@ -538,6 +538,16 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.AreEqual("beaucoup", TexteSous("Cout", "Mot"));
             Assert.AreEqual("la ville a chauffé", TexteSous("Chaleur", "Libelle"));
             Assert.AreEqual("pas mal", TexteSous("Chaleur", "Mot"));
+            CollectionAssert.Contains(ecran.RenderedTexts, "Depuis le début, chez La Coil");
+            Assert.AreEqual("un envoi", TexteSous("Historique_r1", "Libelle"));
+            Assert.AreEqual("Rien obtenu", TexteSous("Historique_r1", "Issue"));
+            Assert.AreEqual("un envoi", TexteSous("Historique_r0", "Libelle"));
+            Assert.AreEqual("Percée", TexteSous("Historique_r0", "Issue"));
+            Assert.AreEqual(new Color32(0x98, 0x79, 0x79, 0xff), CouleurSous("Historique_r1", "Issue"),
+                "Rien obtenu garde l'encre sourde exacte de la maquette");
+            Assert.AreEqual(new Color32(0xe0, 0x66, 0x4a, 0xff), CouleurSous("Historique_r0", "Issue"),
+                "Percée garde la braise exacte de la maquette");
+            Assert.IsNull(TexteSous("Historique_p1", "Libelle"), "un envoi encore parti n'entre pas dans l'historique");
             foreach (string t in ecran.RenderedTexts)
                 StringAssert.DoesNotContain("Coup n°", t, "aucun rang tant que `strike_index` n'est pas servi");
         }
@@ -555,6 +565,8 @@ namespace MafiaCleanCity.Operational.Tests
             yield return null;
 
             Assert.AreEqual("On a reculé", TexteSous("Rentre_r1", "Droite"));
+            Assert.AreEqual("un envoi", TexteSous("Historique_r1", "Libelle"));
+            Assert.AreEqual("On a reculé", TexteSous("Historique_r1", "Issue"));
             Assert.IsNull(TexteSous("Cout", "Mot"), "coût null : pas de ligne « ça nous a coûté »");
             Assert.IsNull(TexteSous("Chaleur", "Mot"), "chaleur null : pas de ligne « la ville a chauffé »");
             CollectionAssert.DoesNotContain(ecran.RenderedTexts, "Ce qui est en cours", "aucun envoi parti : pas de section");
@@ -759,6 +771,18 @@ namespace MafiaCleanCity.Operational.Tests
                     if (t.name == enfant) return t.text;
             }
             return null;
+        }
+
+        private Color32 CouleurSous(string ligne, string enfant)
+        {
+            foreach (Transform tr in RacineEcran().GetComponentsInChildren<Transform>(true))
+            {
+                if (tr.name != ligne) continue;
+                foreach (TMPro.TextMeshProUGUI t in tr.GetComponentsInChildren<TMPro.TextMeshProUGUI>(true))
+                    if (t.name == enfant) return t.color;
+            }
+            Assert.Fail($"texte {enfant} introuvable sous {ligne}");
+            return default;
         }
 
         /// <summary>Le texte du nœud `enfant` sous la ligne `ligne` de la table, ou null s'il n'existe pas. Cherché sous
