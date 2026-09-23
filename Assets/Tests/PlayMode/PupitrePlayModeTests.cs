@@ -142,6 +142,13 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.AreEqual(BuildingCardController.GesteSelonLEtat(feu.cook_stage_band, etagere.stock_band, delegue), fiche.GesteDuPupitreAffiche,
                 $"le geste de l'état servi (feu {feu.cook_stage_band}, étagère {etagere.stock_band}, appro délégué : {delegue})");
 
+            // ② bulle : la jointure lieutenant → bâtiment, faite À PART (me/buildings déjà lu ci-dessus + le roster), égale à celle de l'écran.
+            GetLieutenantsResponseDto roster = null; string e5 = null;
+            yield return new DelegationClient { BaseUrl = BaseUrl }.GetLieutenants(jeton, d => roster = d, refus => e5 = refus.message);
+            Assert.IsNull(e5, $"GET /v1/lieutenants : {e5}");
+            LieutenantRowDto attendu = BuildingCardController.LieutenantDuBatiment(possedes, labo.building, roster.lieutenants);
+            Assert.AreEqual(attendu?.lieutenant_id, fiche.CurrentLieutenant?.lieutenant_id, "l'écran parle par le même lieutenant");
+
             Transform r = host.transform;
             Assert.AreEqual((BuildingCardController.CransDuFeu(feu.cook_stage_band), 5, "le feu",
                              BuildingCardController.CookStageLabel(feu.cook_stage_band)), Lire(Ligne(r, "le_feu")),

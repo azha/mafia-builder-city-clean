@@ -77,6 +77,10 @@ namespace MafiaCleanCity.Operational
         /// hors pupitre ou sur erreur : l'approvisionnement est alors lu comme tenu par le joueur (le 409 CATEGORY_DELEGATED dirait le
         /// reste, en mots, par `LigneDAction`).</summary>
         public GetMetaTaskCategoriesResponseDto CurrentTaskCategories { get; private set; }
+        /// <summary>② bulle (B1) — le lieutenant qui parle au pupitre : le premier des `lieutenant_ids` de CE bâtiment (GET
+        /// /v1/me/buildings) présent au roster (GET /v1/lieutenants, `archetype`). Null : pas de lieutenant, ou non lu — et alors
+        /// AUCUNE réplique n'est posée (une réplique sans locuteur est une voix de nulle part).</summary>
+        public LieutenantRowDto CurrentLieutenant { get; private set; }
 
         // ---- Phase-2b raid/repair test hooks -------------------------------
         /// <summary>The player's qualitative wallet band (GET /v1/economy/wallet) used ONLY to gate Repair
@@ -367,9 +371,11 @@ namespace MafiaCleanCity.Operational
         /// chargement, mêmes hooks. Les données absentes (null) le sont comme après une erreur de route.</summary>
         public void RendrePourTest(BuildingCardDto card, StorageDto storage = null, LabCookDto lab = null,
                                    GetOperationalPrecursorsResponseDto precursors = null, GrowSessionDto grow = null,
-                                   GetMetaTaskCategoriesResponseDto charges = null, AppointmentDto rendezVous = null)
+                                   GetMetaTaskCategoriesResponseDto charges = null, AppointmentDto rendezVous = null,
+                                   LieutenantRowDto lieutenant = null)
         {
             EnsureInitialized();
+            CurrentLieutenant = lieutenant;
             CurrentTaskCategories = charges;
             CurrentAppointment = rendezVous;
             CurrentCard = card;
@@ -388,6 +394,7 @@ namespace MafiaCleanCity.Operational
             CurrentLab = null;
             CurrentPrecursors = null;
             CurrentTaskCategories = null;
+            CurrentLieutenant = null;
             if (!APupitre(operationalType)) yield break;
             LabCookDto lab = null;
             yield return client.GetLab(id, Token, l => lab = l, (code, msg) => lab = null);
@@ -398,6 +405,13 @@ namespace MafiaCleanCity.Operational
             GetMetaTaskCategoriesResponseDto charges = null;
             yield return delegation.GetMetaTaskCategories(Token, c => charges = c, refus => charges = null);
             CurrentTaskCategories = charges;
+            // ② bulle : la jointure lieutenant → bâtiment, faite ICI (mesure du back 23/09 : `me/buildings` sert `lieutenant_ids`,
+            // `/v1/lieutenants` sert l'archétype) — deux routes déjà déclarées, clients RÉUTILISÉS.
+            MafiaCleanCity.Shell.BatimentPossedeDto[] mes = null;
+            yield return new MafiaCleanCity.Shell.MesBatimentsClient { BaseUrl = client.BaseUrl }.Lire(Token, b => mes = b, (code, msg) => mes = null);
+            GetLieutenantsResponseDto roster = null;
+            if (mes != null) yield return delegation.GetLieutenants(Token, r => roster = r, refus => roster = null);
+            CurrentLieutenant = LieutenantDuBatiment(mes, id, roster?.lieutenants);
         }
 
         /// <summary>Fetch the qualitative wallet band (REUSE the economy projection). Conservative on failure.</summary>
@@ -1538,6 +1552,22 @@ namespace MafiaCleanCity.Operational
         /// <summary>② lot 3 — la charge SUPPLY_SOURCING est-elle retirée au joueur ? Le garde serveur refuse dès que `delegation_state`
         /// n'est pas `SELF` (category-delegation-guard.service.ts:59-64 : DELEGATED ET RETIRED). Charges non lues, ou catégorie
         /// absente ⇒ false : on ne dit pas « délégué » sans l'avoir lu.</summary>
+        /// <summary>② bulle — le lieutenant de CE bâtiment : le premier de ses `lieutenant_ids`, dans l'ordre servi, présent au roster.
+        /// Un id sans ligne au roster est sauté (jamais un UUID à l'écran) ; aucun ⇒ null.</summary>
+        public static LieutenantRowDto LieutenantDuBatiment(MafiaCleanCity.Shell.BatimentPossedeDto[] mesBatiments, string buildingId, LieutenantRowDto[] roster)
+        {
+            if (mesBatiments == null || roster == null || string.IsNullOrEmpty(buildingId)) return null;
+            foreach (MafiaCleanCity.Shell.BatimentPossedeDto b in mesBatiments)
+            {
+                if (b == null || b.building != buildingId || b.lieutenant_ids == null) continue;
+                foreach (string lid in b.lieutenant_ids)
+                    foreach (LieutenantRowDto l in roster)
+                        if (l != null && !string.IsNullOrEmpty(lid) && l.lieutenant_id == lid) return l;
+                return null;
+            }
+            return null;
+        }
+
         public static bool ApprovisionnementDelegue(GetMetaTaskCategoriesResponseDto charges)
         {
             if (charges?.task_categories == null) return false;
@@ -2188,11 +2218,13 @@ namespace MafiaCleanCity.Operational
         ///              pas une deuxième cuve… » : le refus 409 DIT avant, pas un bouton qui échoue (cadre 41) ;
         ///   FaireSortir « Faire sortir la marchandise » GRISÉ + « vers les coursiers » + la réplique « C'est tiré… » (cadre 43) — le geste
         ///              attend sa destination et sa quantité (manque du back n°5) : dessiné, pas vivant.
-        /// ⚠️ Les répliques sont posées ici SANS nom de locuteur : la bulle du lieutenant (B1, jointure lieutenant → bâtiment) est un
-        /// lot à part. La réplique du cadre 39 (« Nestor : … », appro.bloc.nestor_…) attend la décision de l'user sur Nestor.</summary>
+        /// Les répliques passent par la BULLE du lieutenant (B1, `AddReplique`) : l'archétype servi en tête, SANS article (D13) et sans
+        /// nom (les noms attendent la décision de l'user) ; sans lieutenant, aucune réplique. La réplique du cadre 39 (« Nestor : … »,
+        /// appro.bloc.nestor_…) attend la décision de l'user sur Nestor.</summary>
         private void AddGesteDuPupitre(BuildingCardDto card)
         {
             bool ash = card.operational_type == "specialized_lab";
+            locuteurPose = false;
             GesteDuPupitre geste = GesteSelonLEtat(CurrentLab?.cook_stage_band, CurrentPrecursors?.stock_band,
                 ApprovisionnementDelegue(CurrentTaskCategories));
             GesteDuPupitreAffiche = geste;
@@ -2208,7 +2240,7 @@ namespace MafiaCleanCity.Operational
                 case GesteDuPupitre.ApprovisionnementDelegue:
                     // ② lot 3 (cadre 44) : AUCUN bouton — la commande est au lieutenant ; le joueur sait où reprendre la main. La ligne
                     // « l'approvisionnement · J11 » de la maquette attend la bulle du lieutenant (et « J11 » n'est porté par aucun champ).
-                    AddLigneDuGeste("Replique", Cle("replique",
+                    AddReplique(Cle("replique",
                         "«\u00A0L’approvisionnement, c’est moi maintenant — vous me l’avez confié. Je commande quand il faut.\u00A0»"));
                     AddLigneDuGeste("Bloc", Cle("bloc", "Vous ne passez plus les commandes vous-même."));
                     AddLigneDuGeste("Bloc", Cle("bloc", "Reprendre la main se fait depuis la Famille, pas depuis le labo."));
@@ -2216,7 +2248,7 @@ namespace MafiaCleanCity.Operational
                 case GesteDuPupitre.Allumer:
                     if (ash)
                     {
-                        AddLigneDuGeste("Replique", Cle("replique", "«\u00A0L’étagère est refaite. Dites-moi combien de passes, et j’allume.\u00A0»"));
+                        AddReplique(Cle("replique", "«\u00A0L’étagère est refaite. Dites-moi combien de passes, et j’allume.\u00A0»"));
                         AddRefiningPassesSelector(actionBar);
                     }
                     AddActionButton(actionBar, "allumer_le_feu", Cle("action", "Allumer le feu"),
@@ -2224,14 +2256,14 @@ namespace MafiaCleanCity.Operational
                     if (ash) AddLigneDuGeste("Bloc", Cle("bloc", "ça consomme un lot de lys de verre"));
                     break;
                 case GesteDuPupitre.EnCuisson:
-                    AddLigneDuGeste("Replique", Cle("replique", "«\u00A0Ça monte comme il faut. Si j’ouvre maintenant, je perds tout.\u00A0»"));
-                    AddLigneDuGeste("Replique", Cle("replique", "— et ne me lancez pas une deuxième cuve tant que celle-là tourne."));
+                    AddReplique(Cle("replique", "«\u00A0Ça monte comme il faut. Si j’ouvre maintenant, je perds tout.\u00A0»"));
+                    AddReplique(Cle("replique", "— et ne me lancez pas une deuxième cuve tant que celle-là tourne."));
                     AddLigneDuGeste("Bloc", Cle("bloc", "Rien à faire ici."));
                     AddLigneDuGeste("Bloc", Cle("bloc", "Repassez quand ce sera tiré"));
                     break;
                 case GesteDuPupitre.FaireSortir:
                 {
-                    AddLigneDuGeste("Replique", Cle("replique",
+                    AddReplique(Cle("replique",
                         "«\u00A0C’est tiré. Ça ne peut pas dormir ici — chaque nuit que ça reste, c’est une nuit de trop.\u00A0»"));
                     Button sortir = AddActionButton(actionBar, "faire_sortir_la_marchandise", Cle("action", "Faire sortir la marchandise"), () => { });
                     SetButtonInteractable(sortir, false);
@@ -2239,6 +2271,25 @@ namespace MafiaCleanCity.Operational
                     break;
                 }
             }
+        }
+
+        private bool locuteurPose;
+
+        /// <summary>② bulle — une réplique du lieutenant : l'archétype du locuteur en tête (une fois par rendu), puis la réplique. Sans
+        /// lieutenant connu, RIEN : on ne fait pas parler quelqu'un qui n'est pas là.</summary>
+        private void AddReplique(string texte)
+        {
+            if (CurrentLieutenant == null) return;
+            if (!locuteurPose)
+            {
+                locuteurPose = true;
+                TextMeshProUGUI qui = NewText("Locuteur", actionBar, FamilleLabels.Archetype(CurrentLieutenant.archetype), 12, TextAlignmentOptions.Left);
+                qui.color = DesignTokens.Current.onSurfaceMuted;
+                qui.fontStyle = FontStyles.Bold;
+                AddLayoutElement(qui.gameObject, minHeight: 16, flexibleHeight: 0);
+                TrackText(qui, qui.text);
+            }
+            AddLigneDuGeste("Replique", texte);
         }
 
         /// <summary>Une ligne de texte du geste (bloc ou réplique) sous la barre d'actions.</summary>
