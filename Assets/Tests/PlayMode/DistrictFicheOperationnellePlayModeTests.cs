@@ -20,8 +20,9 @@ namespace MafiaCleanCity.CityMap.Tests
     //   D1     sur la fiche de ①, AMÉLIORER transmet le bâtiment AFFICHÉ (couture d'ouvreur) ; absent sur un autre type
     //   D2     l'ouverture monte l'écran AVEC son bâtiment : `BuildingId` posé avant `Start`, et la requête ÉMISE nomme ce
     //          bâtiment ; un id vide ne monte rien
-    //   D3     garde de source : aucun chemin ne monte `BuildingCardController` sans bâtiment, sauf le bouton « La fiche » de
-    //          l'Accueil, EXCEPTION CONNUE (décision de l'user attendue) ; contrôle positif sur une source fabriquée
+    //   D3     garde de source : `BuildingCardController` ne se monte QUE par `OuvertureFicheOperationnelle` (avec son bâtiment) —
+    //          le bouton « La fiche » de l'Accueil, qui la montait vide, est retiré (ruling A du 25/08) ; contrôle positif sur une
+    //          source fabriquée
     [Category("EcranDistrict")]
     public class DistrictFicheOperationnellePlayModeTests
     {
@@ -146,7 +147,7 @@ namespace MafiaCleanCity.CityMap.Tests
         }
 
         [Test]
-        public void D3_AucunMontageSansBatiment_SaufLExceptionConnue()
+        public void D3_LaFicheOperationnelle_NeSeMontePlusQueParSonGeste()
         {
             const string fabrique =
                 "var c = nav.MonterLocataireEnSurimpression<BuildingCardController>();\n" +
@@ -158,10 +159,10 @@ namespace MafiaCleanCity.CityMap.Tests
             foreach (string f in Directory.GetFiles(Path.Combine(Application.dataPath, "Scripts"), "*.cs", SearchOption.AllDirectories))
                 sites.AddRange(Montages(File.ReadAllText(f), Path.GetFileName(f)));
             sites.Sort(System.StringComparer.Ordinal);
-            // OuvertureFicheOperationnelle : le seul geste qui monte AVEC le bâtiment. DashboardController (×2, shell et repli
-            // autonome) : le bouton « La fiche » de l'Accueil, EXCEPTION CONNUE — décision de l'user attendue (orchestrateur, 23/09).
+            // OuvertureFicheOperationnelle : le SEUL geste, et il monte AVEC le bâtiment. Le bouton « La fiche » de l'Accueil
+            // (DashboardController ×2) est retiré le 23/09 (ruling A du 25/08, « un bouton qui ment est pire qu'un bouton absent »).
             CollectionAssert.AreEqual(
-                new[] { "DashboardController.cs", "DashboardController.cs", "OuvertureFicheOperationnelle.cs" }, sites,
+                new[] { "OuvertureFicheOperationnelle.cs" }, sites,
                 "un NOUVEAU chemin monte la fiche opérationnelle : qu'il passe par OuvertureFicheOperationnelle (avec son bâtiment)");
         }
     }

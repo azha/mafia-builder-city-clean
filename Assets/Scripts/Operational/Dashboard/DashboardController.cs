@@ -97,7 +97,11 @@ namespace MafiaCleanCity.Operational
         private Transform mountParent;
         public void SetMountParent(Transform parent) => mountParent = parent;
 
-        public enum NavTarget { None, CityMap, BuildingCard, Pipeline, Exceptions, Autonomy }
+        // ⛔ `BuildingCard` RETIRÉ (2026-09-23, ruling A du 25/08 « un bouton qui ment est pire qu'un bouton absent ») : le bouton
+        //    « La fiche » montait `BuildingCardController` SANS bâtiment — `Boot()` n'y chargeait rien, l'écran restait vide
+        //    (écart ① `e2bd7681` §0.2). La fiche opérationnelle ne s'ouvre plus que par `OuvertureFicheOperationnelle`, AVEC le
+        //    bâtiment (AMÉLIORER, sur la fiche de ①).
+        public enum NavTarget { None, CityMap, Pipeline, Exceptions, Autonomy }
 
         private readonly List<string> renderedTexts = new List<string>();
 
@@ -294,7 +298,6 @@ namespace MafiaCleanCity.Operational
         /// <summary>Open the City Map screen (REUSE CityMapController — it self-builds its Canvas).</summary>
         public void OpenCityMap() => OpenNav(NavTarget.CityMap);
         /// <summary>Open the Building Card screen (REUSE BuildingCardController).</summary>
-        public void OpenBuildingCard() => OpenNav(NavTarget.BuildingCard);
         /// <summary>Open the Laundering Pipeline screen (REUSE LaunderingController).</summary>
         public void OpenPipeline() => OpenNav(NavTarget.Pipeline);
         /// <summary>Open the Exception Queue screen (Phase-20 — ExceptionQueueController self-builds its Canvas).</summary>
@@ -339,7 +342,6 @@ namespace MafiaCleanCity.Operational
                 switch (target)
                 {
                     case NavTarget.CityMap: LastNavGameObject = nav.MonterLocataireEnSurimpression<CityMapController>().gameObject; break;
-                    case NavTarget.BuildingCard: LastNavGameObject = nav.MonterLocataireEnSurimpression<BuildingCardController>().gameObject; break;
                     case NavTarget.Pipeline: LastNavGameObject = nav.MonterLocataireEnSurimpression<LaunderingController>().gameObject; break;
                     case NavTarget.Exceptions: LastNavGameObject = nav.MonterLocataireEnSurimpression<ExceptionQueueController>().gameObject; break;
                     case NavTarget.Autonomy: LastNavGameObject = nav.MonterLocataireEnSurimpression<AutonomyInboxController>().gameObject; break;
@@ -350,7 +352,6 @@ namespace MafiaCleanCity.Operational
             switch (target)
             {
                 case NavTarget.CityMap: host.AddComponent<CityMapController>(); break;
-                case NavTarget.BuildingCard: host.AddComponent<BuildingCardController>(); break;
                 case NavTarget.Pipeline: host.AddComponent<LaunderingController>(); break;
                 case NavTarget.Exceptions: host.AddComponent<ExceptionQueueController>(); break;
                 case NavTarget.Autonomy: host.AddComponent<AutonomyInboxController>(); break;
@@ -465,7 +466,6 @@ namespace MafiaCleanCity.Operational
             TrackText(null, label);
 
             AddNavButton(navBar, "CityMap", "La carte", OpenCityMap);
-            AddNavButton(navBar, "BuildingCard", "La fiche", OpenBuildingCard);
             AddNavButton(navBar, "Filière", "Filière", OpenPipeline);
             AddNavButton(navBar, "Exceptions", "L'ardoise", OpenExceptions);
             AddNavButton(navBar, "Autonomy", "Les télégrammes", OpenAutonomy);

@@ -359,11 +359,13 @@ namespace MafiaCleanCity.Shell.Tests
             var dashboardHarnaisGo = new GameObject("F0_4a_DashboardHarnaisHorsShell");
             DashboardController dashboard = dashboardHarnaisGo.AddComponent<DashboardController>();
 
-            // ── Les gestes de PRODUCTION (design §3) : les 5 OpenNav du Dashboard... ──
+            // ── Les gestes de PRODUCTION (design §3) : les 4 OpenNav du Dashboard (5 avant le 23/09, `OpenBuildingCard` retiré)... ──
             dashboard.OpenCityMap();
             yield return null;
-            dashboard.OpenBuildingCard();
-            yield return null;
+            // ⚠️ `OpenBuildingCard` RETIRÉ (2026-09-23, ruling A) : il montait la fiche opérationnelle SANS bâtiment. Son seul geste
+            //    de production est désormais `AppShell.OuvrirFicheOperationnelle(id)`, qui exige un vrai bâtiment (un id fabriqué y
+            //    produirait un 404 et un « load failed ») ; le montage passe par le MÊME `MonterLocataireEnSurimpression` que les
+            //    cinq autres locataires de ce scénario, et le geste lui-même est gardé par EcranDistrict D2/D3.
             dashboard.OpenPipeline();
             yield return null;
             dashboard.OpenExceptions();
@@ -420,11 +422,11 @@ namespace MafiaCleanCity.Shell.Tests
             // (`>= 2`) reste VERT même si la plupart des gestes de production ci-dessus ne montent
             // plus rien. AMENDÉ (items 0.2/0.3) : `DashboardController` n'entre plus dans cet
             // ensemble — ce n'est plus un locataire monté PAR le shell (débranché, item 0.5), et il
-            // a été détruit juste au-dessus. Le scénario monte EXACTEMENT 6 locataires nommés (les 5
+            // a été détruit juste au-dessus. Le scénario monte EXACTEMENT 5 locataires nommés (les 4
             // OpenNav + le détail d'exception) : asserter l'ENSEMBLE des TYPES, pas un compte.
             var typesAttendus = new List<string>
             {
-                nameof(CityMapController), nameof(BuildingCardController),
+                nameof(CityMapController),
                 nameof(LaunderingController), nameof(ExceptionQueueController), nameof(AutonomyInboxController),
                 nameof(ExceptionDetailController),
                 // ⚠️ 2026-09-02 : ㊲ n'est plus monté par `Tab.More` (qui ouvre un menu) — il ne
@@ -608,7 +610,6 @@ namespace MafiaCleanCity.Shell.Tests
             var typeParMembre = new Dictionary<DashboardController.NavTarget, Type>
             {
                 { DashboardController.NavTarget.CityMap, typeof(CityMapController) },
-                { DashboardController.NavTarget.BuildingCard, typeof(BuildingCardController) },
                 { DashboardController.NavTarget.Pipeline, typeof(LaunderingController) },
                 { DashboardController.NavTarget.Exceptions, typeof(ExceptionQueueController) },
                 { DashboardController.NavTarget.Autonomy, typeof(AutonomyInboxController) },
@@ -620,7 +621,7 @@ namespace MafiaCleanCity.Shell.Tests
             // Garde de PORTÉE de l'exhaustivité elle-même (même famille que le socle sur les
             // résolveurs exhaustifs) : si un 7e membre apparaît demain, ce test doit d'abord
             // rougir ICI, pas passer silencieusement à côté d'un membre non couvert par la table.
-            Assert.AreEqual(6, membres.Length,
+            Assert.AreEqual(5, membres.Length,   // 6 → 5 le 2026-09-23 : `BuildingCard` retiré (ruling A, une fiche vide)
                 "DashboardController.NavTarget a changé de taille — ce test doit être relu (table " +
                 "typeParMembre + branche None) AVANT d'être considéré exhaustif sur le nouveau membre");
 

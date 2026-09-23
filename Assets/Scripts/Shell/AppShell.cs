@@ -1066,8 +1066,8 @@ namespace MafiaCleanCity.Shell
         }
 
         /// <summary>①-0 (additif, 2026-09-23) — la fiche opérationnelle d'un bâtiment, AVEC ce bâtiment (`IOuvreurDeFicheOperationnelle`).
-        /// La fiche de ① y passe pour AMÉLIORER ; le bouton « La fiche » de l'Accueil, lui, ne change pas (exception connue, décision
-        /// de l'user attendue).</summary>
+        /// La fiche de ① y passe pour AMÉLIORER ; c'est le seul geste qui monte la fiche opérationnelle (le bouton « La fiche » de
+        /// l'Accueil, qui la montait vide, est retiré — ruling A du 25/08).</summary>
         public bool OuvrirFicheOperationnelle(string buildingId) =>
             OuvertureFicheOperationnelle.Ouvrir(this, buildingId) != null;
 
