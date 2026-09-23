@@ -20,6 +20,12 @@ namespace MafiaCleanCity.Shell.Tests
     [Category("ScreenCarte")] // la catégorie de l'écran ③ (chantier C, 2026-09-02) — une seule par écran
     public class CarteVillePlayModeTests
     {
+        // ⛔ TD-576, CLASSE « CATALOGUE » (2026-09-23) — `Capture_CarteVille_1080x2400` charge la scène du BUILD par son chemin ; son
+        // AppShell amorce le catalogue i18n, et la classe ne le rendait pas. Nommée par la garde de sortie AVEC ATTRIBUTION (partie 1
+        // du 23/09 03:51 : « chargé pendant …Capture_CarteVille_1080x2400 ») — la même classe que la garde avait, à 02:44, montrée en
+        // VICTIME d'AppShell : les deux étaient vrais. Le balayage statique la ratait (il ne cherchait que `LoadSceneAsync(0`).
+        [TearDown] public void OublierLeCatalogue() => MafiaCleanCity.I18n.I18nCatalog.Oublier();
+
         private GameObject controllerGo;
         private string sceneDeDemarrage;
 

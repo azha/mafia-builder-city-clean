@@ -18,7 +18,9 @@ for p in sorted(pathlib.Path('Assets/Tests').rglob('*.cs')):
         b=t[j:k]
         direct=bool(re.search(r'I18nCatalog\.(ChargerPourTest|Amorcer)\(|\.AmorcerLeDictionnaire\(',b))
         monte=sorted({c for c in CHARGEURS if re.search(rf'(AddComponent|MonterLocataire\w*)<\s*(?:[\w.]+\.)?{c}\s*>',b)})
-        scene='LoadSceneAsync(0' in b or 'ChargerLaSceneDeDemarrageDuBuild' in b
+        # toute scène chargée (par index OU par chemin — `GetScenePathByBuildIndex`) : la scène du build porte un AppShell qui amorce.
+        # La v1 ne cherchait que `LoadSceneAsync(0` : CarteVille (par chemin) lui a échappé, la garde de sortie l'a nommée.
+        scene=bool(re.search(r'LoadScene(?:Async)?\(|ChargerLaSceneDeDemarrageDuBuild',b))
         if not (direct or monte or scene): continue
         oublie=bool(re.search(r'I18nCatalog\.Oublier\(',b))
         rows.append((cls,p.name,direct,monte,scene,oublie))
