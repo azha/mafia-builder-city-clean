@@ -1084,7 +1084,11 @@ namespace MafiaCleanCity.Operational
         {
             switch (state)
             {
-                case "active": return MafiaCleanCity.I18n.Libelle.De("distribution", "bloc", "tient"); // m-55 — lecture retenue, voir implementation-notes.md
+                case "active": return MafiaCleanCity.I18n.Libelle.De("distribution", "bloc", "tient");
+                // atelier 29 (7746e0bb), servies : le mot de la maison, « tendre » une route ; « saturé, ou coupé » du trajet.
+                case "draft": return MafiaCleanCity.I18n.Libelle.De("distribution", "bloc", "pas encore tendue");
+                case "saturated": return MafiaCleanCity.I18n.Libelle.De("distribution", "bloc", "saturée");
+                case "severed": return MafiaCleanCity.I18n.Libelle.De("distribution", "bloc", "coupée"); // m-55 — lecture retenue, voir implementation-notes.md
                 default: return MafiaCleanCity.I18n.Repli.Etat(state);   // hors domaine : le mot de la famille (atelier 28) ; absent : « — » ; jamais la valeur brute
             }
         }

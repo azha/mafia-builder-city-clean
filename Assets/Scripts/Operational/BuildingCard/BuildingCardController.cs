@@ -1158,6 +1158,7 @@ namespace MafiaCleanCity.Operational
                 case "OPERATIONAL": return Cle("structural", "Intact");
                 case "DAMAGED": return Cle("structural", "Damaged");
                 case "REPAIRING": return Cle("structural", "Repairing");
+                case "FAILED": return Cle("structural", "Failed");   // atelier 29 (7746e0bb), servi : « Hors service »
                 default: return MafiaCleanCity.I18n.Repli.Etat(s);   // hors domaine : le mot de la famille, jamais la valeur brute (atelier 28)
             }
         }
@@ -1268,6 +1269,7 @@ namespace MafiaCleanCity.Operational
                 case "BASIC": return Bande("lab_tier", "BASIC", "Simple");
                 case "REFINED": return Bande("lab_tier", "REFINED", "Affiné");
                 case "MASTER": return Bande("lab_tier", "MASTER", "Maître");
+                case "NONE": return Bande("lab_tier", "NONE", "Pas de labo");   // atelier 29 (7746e0bb), servi (NONE = la bande ne s'applique pas à ce bâtiment)
                 default: return MafiaCleanCity.I18n.Repli.Etat(b);   // hors domaine : le mot de la famille, jamais la valeur brute (atelier 28)
             }
         }
@@ -1474,6 +1476,7 @@ namespace MafiaCleanCity.Operational
                 case "LARGE": return Bande("hub_tier", "LARGE", "Grand");
                 case "MAJOR": return Bande("hub_tier", "MAJOR", "Majeur");
                 case "MAX": return Bande("hub_tier", "MAX", "Maximal");
+                case "NONE": return Bande("hub_tier", "NONE", "Pas de relais");   // atelier 29 (7746e0bb), servi
                 default: return MafiaCleanCity.I18n.Repli.Etat(b);   // hors domaine : le mot de la famille, jamais la valeur brute (atelier 28)
             }
         }
@@ -1505,6 +1508,7 @@ namespace MafiaCleanCity.Operational
                 case "OPEN": return Bande("roster", "OPEN", "Ouverte");
                 case "BUSY": return Bande("roster", "BUSY", "Occupée");
                 case "FULL": return Bande("roster", "FULL", "Pleine");
+                case "NONE": return Bande("roster", "NONE", "Pas d’équipe");   // atelier 29 (7746e0bb), servi
                 default: return MafiaCleanCity.I18n.Repli.Etat(b);   // hors domaine : le mot de la famille, jamais la valeur brute (atelier 28)
             }
         }
@@ -1556,6 +1560,7 @@ namespace MafiaCleanCity.Operational
                 case "LARGE": return Bande("money_holding_tier", "LARGE", "Grand");
                 case "MAJOR": return Bande("money_holding_tier", "MAJOR", "Majeur");
                 case "MAX": return Bande("money_holding_tier", "MAX", "Maximal");
+                case "NONE": return Bande("money_holding_tier", "NONE", "Pas de banque");   // atelier 29 (7746e0bb), servi
                 default: return MafiaCleanCity.I18n.Repli.Etat(b);   // hors domaine : le mot de la famille, jamais la valeur brute (atelier 28)
             }
         }
@@ -1618,6 +1623,7 @@ namespace MafiaCleanCity.Operational
                 case "OPEN": return Bande("capacity", "OPEN", "Ouverte");
                 case "BUSY": return Bande("capacity", "BUSY", "Occupée");
                 case "FULL": return Bande("capacity", "FULL", "Pleine");
+                case "NONE": return Bande("capacity", "NONE", "Pas de banque");   // atelier 29 (7746e0bb), servi
                 default: return MafiaCleanCity.I18n.Repli.Etat(b);   // hors domaine : le mot de la famille, jamais la valeur brute (atelier 28)
             }
         }
@@ -1643,6 +1649,7 @@ namespace MafiaCleanCity.Operational
             {
                 case "IDLE": return Bande("yield", "IDLE", "rien ne rentre");
                 case "EARNING": return Bande("yield", "EARNING", "ça rapporte");
+                case "NONE": return Bande("yield", "NONE", "Pas de banque");   // atelier 29 (7746e0bb), servi
                 default: return MafiaCleanCity.I18n.Repli.Etat(b);   // hors domaine : le mot de la famille, jamais la valeur brute (atelier 28)
             }
         }

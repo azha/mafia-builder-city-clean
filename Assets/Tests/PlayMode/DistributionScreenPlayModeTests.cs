@@ -461,7 +461,9 @@ namespace MafiaCleanCity.Operational.Tests
         public void EcranDistributionR4_ResolveurRouteState_CouvreLaSeuleValeurMesureeEtReplieGracieusement()
         {
             Assert.AreEqual("tient", DistributionResolvers.TexteRouteState("active"));
-            Assert.AreEqual(MafiaCleanCity.I18n.Repli.EtatInconnu, DistributionResolvers.TexteRouteState("severed"),
+            // `severed` a reçu son mot (atelier 29, servi) : « coupée ». Une valeur NON servie, elle, reste « état inconnu ».
+            Assert.AreEqual("coupée", DistributionResolvers.TexteRouteState("severed"));
+            Assert.AreEqual(MafiaCleanCity.I18n.Repli.EtatInconnu, DistributionResolvers.TexteRouteState("zzz_hors_domaine"),
                 "une valeur non mappée : « état inconnu » — ni la valeur brute, ni un texte inventé (règle f2, atelier 28)");
         }
 

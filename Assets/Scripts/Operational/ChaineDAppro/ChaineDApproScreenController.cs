@@ -941,6 +941,10 @@ namespace MafiaCleanCity.Operational
             switch (band)
             {
                 case "NONE": return MafiaCleanCity.I18n.Libelle.De("appro", "bloc", "il n’y a plus rien");   // m-48, MESURÉ
+                // atelier 29 (7746e0bb), servies — dans la voix de la valeur déjà nommée.
+                case "LOW": return MafiaCleanCity.I18n.Libelle.De("appro", "bloc", "il en reste peu");
+                case "MEDIUM": return MafiaCleanCity.I18n.Libelle.De("appro", "bloc", "il en reste");
+                case "HIGH": return MafiaCleanCity.I18n.Libelle.De("appro", "bloc", "il y en a assez");
                 default: return MafiaCleanCity.I18n.Repli.Etat(band);   // hors domaine : le mot de la famille (atelier 28) ; absent : « — » ; jamais la valeur brute
             }
         }
