@@ -15,7 +15,8 @@ namespace MafiaCleanCity.CityMap.Tests
     //   G1  la table des états : la cuisson prime (une cuve qui tourne n'appelle aucun geste, même étagère vide) ; à IDLE l'étagère décide ;
     //       cuisson non lue ou hors domaine ⇒ aucun geste
     //   G2  étagère vide ⇒ UN bouton « Commander du {précurseur SERVI} » (la clé dérive du précurseur servi) + « il en faut avant de
-    //       rallumer » ; pas d'« Allumer ». L'Ash (lys de verre) : AUCUN geste tant que le back n'a pas dit s'il se commande
+    //       rallumer » ; pas d'« Allumer ». L'Ash commande AUSSI (le back accepte les 6 précurseurs, 23/09) ; le mot vient de la famille
+    //       `building.commande.<precursor_type>`, jamais d'une composition « Commander » + nom (D12)
     //   G3  « Allumer le feu » : le `lab` Brindle sans passes ; le `specialized_lab` Ash avec sa réplique, « Passes » (4 crans = 0..3,
     //       tranché (e)) et « ça consomme un lot de lys de verre »
     //   G4  en cuisson : AUCUN bouton du pupitre, le refus DIT avant (« Rien à faire ici. », « Repassez quand ce sera tiré »)
@@ -93,18 +94,17 @@ namespace MafiaCleanCity.CityMap.Tests
             Transform[] b = Boutons(r);
             Assert.AreEqual(1, b.Length, "UN geste");
             Assert.AreEqual("Action_commander", b[0].name);
-            Assert.AreEqual("Commander du Pyralin", Texte(b[0]), "le mot du précurseur SERVI (repli : le mot du catalogue)");
+            Assert.AreEqual("Commander du Pyralin", Texte(b[0]), "le mot du précurseur SERVI");
+            Assert.IsTrue(Libelle.ClesEnRepli.Contains("building.commande.pyralin"), "la famille indexée par la valeur servie");
             CollectionAssert.Contains(Lignes(r, "Bloc"), "il en faut avant de rallumer");
 
-            // Le mot vient du précurseur SERVI (repli composé avec `building.precursor.*`, compté) — jamais d'un nom écrit ici.
-            Assert.AreEqual("Commander du Lys de verre", BuildingCardController.CommanderLabel("GLASS_LILY"));
-            Assert.IsTrue(Libelle.ClesEnRepli.Contains("building.action.commander_du_glass_lily"),
-                "la clé du geste dérive du précurseur servi — non servie pour le lys : elle se voit, elle ne se cache pas");
-
-            // ⛔ Mais l'Ash n'a PAS de geste « Commander » tant que le back n'a pas dit si le lys se commande (question du 23/09).
+            // L'Ash à étagère vide commande SON précurseur servi (GLASS_LILY), avec la clé de SA valeur.
             var (ash, ra) = Rendre("specialized_lab", "IDLE", "NONE", "GLASS_LILY");
-            Assert.AreEqual(Geste.Aucun, ash.GesteDuPupitreAffiche);
-            Assert.IsEmpty(Boutons(ra), "aucun geste inventé sur un specialized_lab à étagère vide");
+            Assert.AreEqual(Geste.Commander, ash.GesteDuPupitreAffiche);
+            Assert.AreEqual("Commander du lys de verre", Texte(Boutons(ra).Single()));
+            Assert.IsTrue(Libelle.ClesEnRepli.Contains("building.commande.glass_lily"));
+            Assert.IsFalse(Libelle.ClesEnRepli.Any(k => k.StartsWith("building.action.commander_du_")),
+                "plus de clé dérivée « commander_du_<x> » : la famille est `building.commande.*`");
         }
 
         [Test]
@@ -179,9 +179,8 @@ namespace MafiaCleanCity.CityMap.Tests
         {
             var attendues = new Dictionary<(string type, string feu, string etagere), string[]>
             {
-                // le repli du geste demande AUSSI le mot du précurseur (`building.precursor.*`) : c'est lui qu'il compose
-                [("lab", "IDLE", "NONE")] = new[] { "building.action.commander_du_pyralin", "building.precursor.pyralin",
-                    "building.bloc.il_en_faut_avant_de_rallumer" },
+                [("lab", "IDLE", "NONE")] = new[] { "building.commande.pyralin", "building.bloc.il_en_faut_avant_de_rallumer" },
+                [("specialized_lab", "IDLE", "NONE")] = new[] { "building.commande.glass_lily", "building.bloc.il_en_faut_avant_de_rallumer" },
                 [("lab", "IDLE", "LOW")] = new[] { "building.action.allumer_le_feu" },
                 [("specialized_lab", "IDLE", "LOW")] = new[] { "building.action.allumer_le_feu", "building.replique.l_etagere_est_refaite_dites_moi_combien_de_passes_et_j_allume",
                     "building.row.passes", "building.bloc.passes_compte", "building.bloc.ca_consomme_un_lot_de_lys_de_verre" },

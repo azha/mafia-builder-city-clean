@@ -1467,28 +1467,24 @@ namespace MafiaCleanCity.Operational
             }
         }
 
-        /// <summary>Le mot d'un précurseur SERVI (`precursor_type`, en majuscules : precursors.projection.service.ts:40) — famille
-        /// `building.precursor.*` (table 39, D12). Domaine : l'enum `precursor_type` (substance-config.ts:40-53).</summary>
-        public static string PrecursorLabel(string p)
+        /// <summary>Le geste « Commander » : une FAMILLE indexée par le précurseur SERVI, `building.commande.<precursor_type>` (décision
+        /// de l'orchestrateur du 23/09, table 54 de l'atelier à venir), par `ParValeur` — plus la clé dérivée `commander_du_<x>`, et
+        /// JAMAIS « Commander » + un nom (D12 : une composition casse l'article et la langue). Les replis sont des phrases ENTIÈRES, une
+        /// par valeur, comptées tant que la famille n'est pas servie ; seule PYRALIN reprend un mot déjà servi (« Commander du Pyralin »,
+        /// `building.action.commander_du_pyralin`) — les cinq autres sont PROPOSÉES, à l'atelier de trancher.</summary>
+        public static string CommanderLabel(string precursorType)
         {
-            switch (p)
+            switch (precursorType)
             {
-                case "PYRALIN": return Bande("precursor", "PYRALIN", "Pyralin");
-                case "THALMITE": return Bande("precursor", "THALMITE", "Thalmite");
-                case "GARNET_SALT": return Bande("precursor", "GARNET_SALT", "Sel de grenat");
-                case "VERDANT_ROOT_EXTRACT": return Bande("precursor", "VERDANT_ROOT_EXTRACT", "Racine verdoyante");
-                case "LULL_RESIN": return Bande("precursor", "LULL_RESIN", "Résine de lull");
-                case "GLASS_LILY": return Bande("precursor", "GLASS_LILY", "Lys de verre");
-                default: return MafiaCleanCity.I18n.Repli.Type(p);
+                case "PYRALIN": return Bande("commande", "PYRALIN", "Commander du Pyralin");
+                case "THALMITE": return Bande("commande", "THALMITE", "Commander de la Thalmite");
+                case "GARNET_SALT": return Bande("commande", "GARNET_SALT", "Commander du sel de grenat");
+                case "VERDANT_ROOT_EXTRACT": return Bande("commande", "VERDANT_ROOT_EXTRACT", "Commander de la racine verdoyante");
+                case "LULL_RESIN": return Bande("commande", "LULL_RESIN", "Commander de la résine de lull");
+                case "GLASS_LILY": return Bande("commande", "GLASS_LILY", "Commander du lys de verre");
+                default: return MafiaCleanCity.I18n.Repli.Type(precursorType);
             }
         }
-
-        /// <summary>« Commander du Pyralin » : la clé se DÉRIVE du précurseur servi (`building.action.commander_du_<precursor>`), jamais
-        /// d'un nom écrit ici (décision de l'orchestrateur du 23/09). Servie aujourd'hui pour PYRALIN seul ; pour un autre précurseur le
-        /// repli COMPTÉ compose avec le mot du catalogue — la clé manquante se voit à la garde, elle ne se cache pas.</summary>
-        public static string CommanderLabel(string precursorType) =>
-            MafiaCleanCity.I18n.Libelle.ParValeur("building", "action", "commander_du_" + precursorType,
-                "Commander du " + PrecursorLabel(precursorType));
 
         /// <summary>Le nombre de passes CHOISI par le joueur (0..3 — R2.2 le PERMET : c'est son réglage, pas une donnée cachée), dit par
         /// la clé ICU servie `building.bloc.passes_compte` (« pas du tout » / « 1 passe » / « 3 passes »). Le repli est le MÊME motif,
@@ -2106,10 +2102,6 @@ namespace MafiaCleanCity.Operational
         {
             bool ash = card.operational_type == "specialized_lab";
             GesteDuPupitre geste = GesteSelonLEtat(CurrentLab?.cook_stage_band, CurrentPrecursors?.stock_band);
-            // ⛔ PAS DE « COMMANDER » SUR L'ASH tant que le back n'a pas dit si le lys de verre se COMMANDE ou ne se cultive qu'à la serre
-            // (question posée le 23/09 ; « n'invente pas de geste », orchestrateur). Avant ② le specialized_lab n'avait aucun geste de
-            // commande : on n'en crée pas un sans route confirmée ni clé servie.
-            if (geste == GesteDuPupitre.Commander && ash) geste = GesteDuPupitre.Aucun;
             GesteDuPupitreAffiche = geste;
             switch (geste)
             {
