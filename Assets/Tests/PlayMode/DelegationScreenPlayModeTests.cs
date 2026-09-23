@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.UI;
@@ -270,19 +271,13 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.IsNotNull(token, "signup n'a pas rendu de jeton");
         }
 
-        /// <summary>⛔ LE DÉTECTEUR DE TD-530, ET C'EST LE SEUL TEST DE CE FICHIER QUI PEUT
-        /// L'ATTRAPER. `GET /v1/meta/task-categories` sert `category_key` (une chaîne) ; les trois
-        /// routes d'action exigent `category_id` (un entier) que cette réponse n'inclut PAS. Le
-        /// client porte donc une table clé→code en pis-aller (`DelegationCatalogue`).
-        ///
-        /// ⚠️ CE QUI REND CE TEST NON TAUTOLOGIQUE : le dénominateur vient du RÉSEAU, pas de la
-        /// table. Comparer la table à elle-même serait vert pour toujours ; comparer la table à ce
-        /// que le back rend VRAIMENT rougit le jour où une 5ᵉ catégorie devient LIVE — c'est-à-dire
-        /// exactement le jour où le client se mettrait à envoyer un code faux, donc à déléguer la
-        /// MAUVAISE charge. Le contrôle positif est inclus : on exige que la route ait rendu au
-        /// moins une clé, sinon l'assertion serait vraie À VIDE sur une réponse creuse.</summary>
+        /// <summary>㉜ lot 1 (2026-09-23) — TD-530 EST FERMÉE CÔTÉ BACK : `category_id` est SERVI par la projection
+        /// (`meta-progression.projection.service.ts:70`) et c'est lui qui part vers les trois routes d'action ; la copie client des
+        /// codes est retirée. Ce test lit le RÉSEAU (compte frais) et épingle la VALEUR servie de chaque charge LIVE contre le catalogue
+        /// du back (`task-category-catalogue.ts` : 1, 2, 4, 5 — « 3 » est LEK_CONTEST, en réserve). Il rougit si le champ disparaît
+        /// (0), si deux charges partagent un code, ou si le catalogue bouge.</summary>
         [UnityTest]
-        public IEnumerator EcranDelegationG1_ToutesLesClesServiesOntUnCodeCoteClient()
+        public IEnumerator EcranDelegationG1_ChaqueChargeServiePorteSonCode()
         {
             yield return OuvrirJoueurFrais();
 
@@ -292,25 +287,67 @@ namespace MafiaCleanCity.Operational.Tests
             yield return client.GetMetaTaskCategories(token, d => corps = d, r => erreur = r.message);
 
             Assert.IsNull(erreur, $"GET /v1/meta/task-categories a échoué : {erreur}");
-            Assert.IsNotNull(corps, "corps nul");
-            Assert.IsNotNull(corps.task_categories, "`task_categories` absent du corps");
-            // Garde anti-vacuité : sans elle, une réponse vide rendrait la boucle suivante vraie.
-            Assert.Greater(corps.task_categories.Length, 0,
-                "0 catégorie servie — l'assertion de couverture qui suit serait vraie À VIDE");
+            Assert.IsNotNull(corps?.task_categories, "corps ou `task_categories` nul");
+            Assert.Greater(corps.task_categories.Length, 0, "anti-vacuité : 0 charge servie");
 
-            var inconnues = new List<string>();
+            var attendus = new Dictionary<string, int>
+            {
+                ["ROUTE_ASSIGNMENT"] = 1, ["LIEUTENANT_HIRING"] = 2, ["SUPPLY_SOURCING"] = 4, ["HEAT_MANAGEMENT"] = 5,
+            };
             foreach (TaskCategoryRowDto r in corps.task_categories)
             {
-                bool trouve = false;
-                foreach (string cle in DelegationCatalogue.ToutesLesCles())
-                    if (cle == r.category_key) { trouve = true; break; }
-                if (!trouve) inconnues.Add(r.category_key);
+                Assert.IsTrue(DelegationScreenController.CodeServi(r), $"{r.category_key} : `category_id` absent (0) — forme G perdue");
+                Assert.IsTrue(attendus.ContainsKey(r.category_key), $"charge LIVE inconnue du test : {r.category_key}");
+                Assert.AreEqual(attendus[r.category_key], r.category_id, $"{r.category_key} : le code SERVI");
             }
-            Assert.IsEmpty(inconnues,
-                "le back sert des catégories que la table CLIENT ignore : " +
-                string.Join(", ", inconnues) + ". Le client enverrait un code faux, donc " +
-                "délèguerait la MAUVAISE charge. C'est TD-530 qui se rappelle à nous — la " +
-                "réparation est d'ajouter `category_id` à la projection, pas d'étendre la table.");
+            Assert.AreEqual(corps.task_categories.Length, corps.task_categories.Select(r => r.category_id).Distinct().Count(),
+                "deux charges ne partagent jamais un code");
+        }
+
+        /// <summary>㉜ lot 1 — sans réseau : « La lui confier » envoie le code SERVI de la ligne visée (un code FABRIQUÉ, 42, qu'aucune
+        /// copie client ne connaît — la preuve que rien d'autre ne le fournit) ; une ligne sans code (0) n'offre AUCUN geste vivant.</summary>
+        [UnityTest]
+        public IEnumerator EcranDelegationL1_LaLuiConfier_EnvoieLeCodeServi_EtSansCodeRienNePart()
+        {
+            UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;   // le port fermé fait échouer la requête : on lit le code PARTI
+            var ecran = MonterEcran();
+            ecran.SetBaseUrl("http://127.0.0.1:9");
+            yield return null;
+            var roster = new GetLieutenantsResponseDto { lieutenants = new[] { new LieutenantRowDto { lieutenant_id = "lt-1", name = "Lt. Vesk" } } };
+            GetMetaTaskCategoriesResponseDto Corps(int code) => new GetMetaTaskCategoriesResponseDto
+            {
+                task_categories = new[]
+                {
+                    new TaskCategoryRowDto { category_key = "SUPPLY_SOURCING", category_id = code, mastery_bucket = "ELIGIBLE",
+                                             progress_band = "HIGH", delegation_state = "SELF" },
+                },
+                delegated = new DelegatedSummaryDto[0],
+            };
+
+            ecran.RendrePourTest(Corps(42), roster, jetonDepense: false);
+            ecran.AllerA(DelegationScreenController.EtatEcran.Confier, "SUPPLY_SOURCING");
+            yield return null;
+            Button confier = GesteVivant();
+            Assert.IsNotNull(confier, "une charge prête, un candidat, le jeton libre : « La lui confier » est vivant");
+            confier.onClick.Invoke();
+            Assert.AreEqual(42, ecran.DerniereCategorieDemandee, "le code SERVI de la ligne part, pas une copie client");
+
+            ecran.RendrePourTest(Corps(0), roster, jetonDepense: false);
+            ecran.AllerA(DelegationScreenController.EtatEcran.Confier, "SUPPLY_SOURCING");
+            yield return null;
+            Assert.IsNull(GesteVivant(), "sans code servi, aucun geste vivant : on n'envoie ni 0 ni un code deviné");
+        }
+
+        /// <summary>Le bouton du geste (`Geste` → sa zone `Touche`), s'il est vivant — un geste mort n'a AUCUN gestionnaire.</summary>
+        private Button GesteVivant()
+        {
+            foreach (Transform t in RacineEcran().GetComponentsInChildren<Transform>(true))
+                if (t.name == "Geste" && t.gameObject.activeInHierarchy)
+                {
+                    Transform touche = t.Find("Touche");
+                    if (touche != null) return touche.GetComponent<Button>();
+                }
+            return null;
         }
 
         /// <summary>Le corps réel MESURÉ sur un compte frais, épinglé : quatre charges, toutes en

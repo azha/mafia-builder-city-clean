@@ -49,6 +49,17 @@ namespace MafiaCleanCity.Operational
         [Header("Backend")]
         [SerializeField] private string baseUrl = "http://localhost";
 
+        /// <summary>Pointe l'écran sur une autre pile (un test sans réseau : un port fermé). Re-pointe le client déjà construit.</summary>
+        public void SetBaseUrl(string url)
+        {
+            baseUrl = url;
+            if (client != null) client.BaseUrl = url;
+        }
+
+        /// <summary>㉜ lot 1 — le code de charge de la DERNIÈRE requête partie (confier, reprendre, aperçu) : le code SERVI de la
+        /// ligne, jamais une copie client. Posé AVANT l'envoi.</summary>
+        public int DerniereCategorieDemandee { get; private set; }
+
         // ═══ Contrat de locataire ════════════════════════════════════════════════════════════
 
         private Transform mountParent;
@@ -509,7 +520,7 @@ namespace MafiaCleanCity.Operational
                       + "les commandes. »   ▸ un autre",
                       () => { candidatIndex++; AppliquerEtat(DernierChargement); });
 
-            bool possible = visee != null && EstPrete(visee) && JetonDisponible;
+            bool possible = visee != null && EstPrete(visee) && JetonDisponible && CodeServi(visee);
             ConstruireGeste(pied, "LA LUI CONFIER",
                             possible ? "c'est votre décision du jour" : RaisonDuRefus(visee),
                             !possible,
@@ -541,7 +552,7 @@ namespace MafiaCleanCity.Operational
                       " « Vous pouvez la reprendre. Il ne le prendra pas bien, et ce qu'il savait faire, "
                       + "vous devrez le réapprendre. »");
 
-            bool possible = visee != null && visee.delegation_state != "SELF" && JetonDisponible;
+            bool possible = visee != null && visee.delegation_state != "SELF" && JetonDisponible && CodeServi(visee);
             ConstruireGeste(pied, "LA REPRENDRE QUAND MÊME",
                             possible ? "c'est votre décision du jour" : "plus de décision aujourd'hui",
                             !possible,
@@ -588,7 +599,9 @@ namespace MafiaCleanCity.Operational
         private IEnumerator Confier(TaskCategoryRowDto visee, LieutenantRowDto candidat)
         {
             refusAffiche = null;
-            int code = DelegationCatalogue.CodePour(visee.category_key);
+            if (!CodeServi(visee)) yield break;
+            int code = visee.category_id;
+            DerniereCategorieDemandee = code;
             yield return client.PostMetaGraduation(token,
                 new PostMetaGraduationBody { category_id = code, lieutenant_id = candidat.lieutenant_id },
                 _ => { },
@@ -601,7 +614,9 @@ namespace MafiaCleanCity.Operational
         private IEnumerator Reprendre(TaskCategoryRowDto visee)
         {
             refusAffiche = null;
-            int code = DelegationCatalogue.CodePour(visee.category_key);
+            if (!CodeServi(visee)) yield break;
+            int code = visee.category_id;
+            DerniereCategorieDemandee = code;
             yield return client.PostMetaRecall(token,
                 new PostMetaRecallBody { category_id = code },
                 _ => { },
@@ -621,7 +636,10 @@ namespace MafiaCleanCity.Operational
             EtatCourant = EtatEcran.Reprendre;
             AppliquerEtat(DernierChargement);
 
-            yield return client.GetMetaRecallPreview(token, DelegationCatalogue.CodePour(cleCategorie),
+            TaskCategoryRowDto ligne = Trouver(DernierChargement?.task_categories, cleCategorie);
+            if (!CodeServi(ligne)) yield break;
+            DerniereCategorieDemandee = ligne.category_id;
+            yield return client.GetMetaRecallPreview(token, ligne.category_id,
                 dto => apercuCourant = dto,
                 refus => refusAffiche = refus.message);
 
@@ -645,6 +663,10 @@ namespace MafiaCleanCity.Operational
             foreach (TaskCategoryRowDto r in rangs) if (EstPrete(r)) return r;
             return null;
         }
+
+        /// <summary>㉜ lot 1 — une ligne porte-t-elle un code SERVI ? (`category_id` > 0 : `JsonUtility` rend 0 pour un champ absent.)
+        /// Sans code, aucune action ne part : envoyer 0, ou deviner un code, ferait agir le serveur sur la MAUVAISE charge.</summary>
+        public static bool CodeServi(TaskCategoryRowDto r) => r != null && r.category_id > 0;
 
         private static TaskCategoryRowDto Trouver(TaskCategoryRowDto[] rangs, string cle)
         {
@@ -1433,43 +1455,29 @@ namespace MafiaCleanCity.Operational
 
     }
 
-    /// <summary>㉜ — la copie CLIENT du catalogue de catégories. **C'est un pis-aller, et il est
-    /// déclaré comme tel.**
-    ///
-    /// ⛔ POURQUOI IL EXISTE. `GET /v1/meta/task-categories` sert `category_key` (une chaîne) ;
-    /// les trois routes d'action exigent `category_id` (un entier) — mesuré, un envoi de la clé
-    /// rend 422. La correspondance clé→code n'est servie par AUCUNE route : elle vit dans
-    /// `services/game-back/src/meta_progression/task-category-catalogue.ts` (codes lus le
-    /// 2026-09-03 : 1, 2, 4, 5 pour les LIVE — noter que **3 manque**, il appartient à
-    /// `LEK_CONTEST`, en réserve). Sans cette table, l'écran peut TOUT afficher et ne peut RIEN
-    /// faire.
-    /// ⇒ Dette **TD-530** : ajouter `category_id` à la projection (un champ additif, la valeur est
-    /// déjà l'index de la boucle qui construit la réponse), puis SUPPRIMER cette table.
-    /// ⚠️ Le jour où le back ajoute une 5ᵉ catégorie LIVE, cette table ne la connaîtra pas et
-    /// `CodePour` jettera — bruyamment, et c'est voulu : un repli silencieux enverrait un code
-    /// faux, donc déléguerait la MAUVAISE charge. Le test de classe
-    /// `Toutes_les_categories_servies_ont_un_code` est le détecteur : il compare la table aux
-    /// clés que la route rend VRAIMENT.
-    ///
-    /// Les libellés et sous-titres, eux, viennent de la maquette (`generateur-service.py`,
-    /// `CAT` et `RESERVE`) : ce sont des textes d'écran, aucune route n'en sert.</summary>
+    /// <summary>㉜ — les TEXTES des charges, côté client. ✅ Ce n'est PLUS une copie du catalogue du back : les CODES en sont retirés
+    /// (lot 1, 2026-09-23) — `category_id` est SERVI par `GET /v1/meta/task-categories` depuis TD-530
+    /// (`meta-progression.projection.service.ts:70`), et c'est lui qui part vers les trois routes d'action. Cette table portait
+    /// `CodePour`, qui JETAIT sur une charge inconnue : une cinquième charge LIVE aurait fait tomber l'écran, là où le code servi
+    /// la fait simplement fonctionner.
+    /// Les libellés et sous-titres restent ici en attendant le lot 2 (les clés servies `delegation.charge.*` / `delegation.bloc.*`
+    /// de la table 44) ; la réserve (cadre 78) attend son retrait (tranché (a) du 23/09).</summary>
     public static class DelegationCatalogue
     {
         public struct Charge
         {
             public string cle;
-            public int code;
             public string libelle;
             public string sous;
         }
 
-        /// <summary>Les 4 LIVE — clé, code, et les textes de la planche.</summary>
+        /// <summary>Les 4 LIVE — clé et textes de la planche.</summary>
         public static readonly Charge[] Live =
         {
-            new Charge { cle = "ROUTE_ASSIGNMENT",  code = 1, libelle = "Les tournées",          sous = "qui livre quoi, et par où" },
-            new Charge { cle = "LIEUTENANT_HIRING", code = 2, libelle = "L'embauche",            sous = "qui entre dans la maison" },
-            new Charge { cle = "SUPPLY_SOURCING",   code = 4, libelle = "L'approvisionnement",   sous = "ce qu'on commande, et à qui" },
-            new Charge { cle = "HEAT_MANAGEMENT",   code = 5, libelle = "La chaleur",            sous = "ce qu'on fait quand la ville s'échauffe" },
+            new Charge { cle = "ROUTE_ASSIGNMENT",  libelle = "Les tournées",          sous = "qui livre quoi, et par où" },
+            new Charge { cle = "LIEUTENANT_HIRING", libelle = "L'embauche",            sous = "qui entre dans la maison" },
+            new Charge { cle = "SUPPLY_SOURCING",   libelle = "L'approvisionnement",   sous = "ce qu'on commande, et à qui" },
+            new Charge { cle = "HEAT_MANAGEMENT",   libelle = "La chaleur",            sous = "ce qu'on fait quand la ville s'échauffe" },
         };
 
         /// <summary>Les 8 RESERVED. Elles ne sont projetées par AUCUNE route (la projection filtre
@@ -1479,24 +1487,15 @@ namespace MafiaCleanCity.Operational
         /// dans un écran que le joueur va lire.</summary>
         public static readonly Charge[] Reserve =
         {
-            new Charge { cle = "LEK_CONTEST",             code = 3,   libelle = "Le Lek",                       sous = "les contestations de coin" },
-            new Charge { cle = "CASH_LAUNDERING",         code = 6,   libelle = "Le blanchiment",               sous = "faire rentrer l'argent" },
-            new Charge { cle = "NODE_RETOOLING",          code = 7,   libelle = "Le réoutillage",               sous = "changer ce que produit un site" },
-            new Charge { cle = "ROUTE_NETWORK_TOPOLOGY",  code = 101, libelle = "La topologie du réseau",       sous = "redessiner les routes" },
-            new Charge { cle = "DELEGATION_ARCHITECTURE", code = 102, libelle = "L'architecture de délégation", sous = "déléguer la délégation elle-même" },
-            new Charge { cle = "LEK_NETWORK_DESIGN",      code = 103, libelle = "Le dessin du réseau Lek",      sous = "où poser les coins" },
-            new Charge { cle = "SUPPLY_WEB_DESIGN",       code = 104, libelle = "La toile d'appro",             sous = "plusieurs fournisseurs à la fois" },
-            new Charge { cle = "HEAT_POSTURE_DOCTRINE",   code = 105, libelle = "La doctrine de chaleur",       sous = "la posture, pas le geste du jour" },
+            new Charge { cle = "LEK_CONTEST",             libelle = "Le Lek",                       sous = "les contestations de coin" },
+            new Charge { cle = "CASH_LAUNDERING",         libelle = "Le blanchiment",               sous = "faire rentrer l'argent" },
+            new Charge { cle = "NODE_RETOOLING",          libelle = "Le réoutillage",               sous = "changer ce que produit un site" },
+            new Charge { cle = "ROUTE_NETWORK_TOPOLOGY",  libelle = "La topologie du réseau",       sous = "redessiner les routes" },
+            new Charge { cle = "DELEGATION_ARCHITECTURE", libelle = "L'architecture de délégation", sous = "déléguer la délégation elle-même" },
+            new Charge { cle = "LEK_NETWORK_DESIGN",      libelle = "Le dessin du réseau Lek",      sous = "où poser les coins" },
+            new Charge { cle = "SUPPLY_WEB_DESIGN",       libelle = "La toile d'appro",             sous = "plusieurs fournisseurs à la fois" },
+            new Charge { cle = "HEAT_POSTURE_DOCTRINE",   libelle = "La doctrine de chaleur",       sous = "la posture, pas le geste du jour" },
         };
-
-        public static int CodePour(string cle)
-        {
-            foreach (Charge c in Live) if (c.cle == cle) return c.code;
-            foreach (Charge c in Reserve) if (c.cle == cle) return c.code;
-            throw new System.ArgumentOutOfRangeException(nameof(cle), cle,
-                "DelegationCatalogue : catégorie inconnue du client. Le back en sert une que cette "
-                + "table ignore — c'est TD-530 qui se rappelle à nous, pas un cas à replier en silence.");
-        }
 
         public static string LibellePour(string cle)
         {
@@ -1512,12 +1511,6 @@ namespace MafiaCleanCity.Operational
             return "";
         }
 
-        /// <summary>Les clés que la table connaît — le dénominateur du test de couverture.</summary>
-        public static IEnumerable<string> ToutesLesCles()
-        {
-            foreach (Charge c in Live) yield return c.cle;
-            foreach (Charge c in Reserve) yield return c.cle;
-        }
     }
 
     /// <summary>㉜ — les correspondances « valeur du domaine → apparence / phrase », chacune en

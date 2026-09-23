@@ -24,8 +24,11 @@ namespace MafiaCleanCity.Operational
     /// chaîne absente et `false`/`null` pour un objet absent, ce que le rendu doit traiter comme
     /// « pas applicable » et jamais comme une valeur.
     ///
-    /// ⛔⛔ CE QUE CETTE PROJECTION NE SERT PAS, ET C'EST LE DÉFAUT QUI COMMANDE TOUT L'ÉCRAN :
-    /// **elle ne sert pas le `category_id`**. Les trois routes d'action l'exigent, et l'exigent
+    /// ✅ TD-530 FERMÉE CÔTÉ BACK (mesuré le 2026-09-23, écart ㉜ `1b45be42`) : `category_id` EST servi
+    /// (`meta-progression.projection.service.ts:70`), déclaré ci-dessous (forme G), et la copie client des codes est retirée.
+    /// Le paragraphe suivant est l'HISTOIRE de ce défaut, gardée pour ce qu'elle apprend.
+    /// ⛔⛔ CE QUE CETTE PROJECTION NE SERVAIT PAS, ET C'ÉTAIT LE DÉFAUT QUI COMMANDAIT TOUT L'ÉCRAN :
+    /// **elle ne servait pas le `category_id`**. Les trois routes d'action l'exigent, et l'exigent
     /// en ENTIER (`intField(..., 'int4')`, `meta-progression.controller.ts:127`/`:167` ;
     /// `@Param('categoryId', IntParam)` `:184`). Mesuré : `POST /v1/meta/recall` avec
     /// `{"category_id":"ROUTE_ASSIGNMENT"}` rend **422 VALIDATION_FAILED**, message
@@ -44,6 +47,11 @@ namespace MafiaCleanCity.Operational
         /// (`meta-progression.projection.service.ts:115`). C'est pourquoi le cadre m-78 (« ce qui
         /// n'est pas encore à confier ») ne peut pas venir du réseau.</summary>
         public string category_key;
+
+        /// <summary>Le CODE de la charge (`TASK_CATEGORY_CATALOGUE.code` : 1, 2, 4, 5 pour les LIVE), SERVI depuis TD-530
+        /// (`meta-progression.projection.service.ts:70`) — celui que les trois routes d'action exigent. ⚠️ `JsonUtility` rend 0
+        /// pour un champ absent : 0 n'est jamais un code, et aucune action ne part avec lui.</summary>
+        public int category_id;
 
         /// <summary>`NASCENT` · `LEARNING` · `PRACTICED` · `ELIGIBLE` (`mastery-bucket.ts:33`).
         /// ⛔ `ELIGIBLE` N'EST PAS UN LIBELLÉ, C'EST LE PRÉDICAT D'ÉLIGIBILITÉ LUI-MÊME : la garde
