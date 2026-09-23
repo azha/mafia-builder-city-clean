@@ -234,7 +234,6 @@ namespace MafiaCleanCity.Shell
         // ---- chrome VISIBLE (money left / gauge center / clock right) ------
         private TextMeshProUGUI moneyLabelText;
         private TextMeshProUGUI moneyValueText;
-        private Image moneyUnderline;
         private RectTransform moneyClusterRect;
         private TextMeshProUGUI dayLabelText;
         private TextMeshProUGUI phaseValueText;
@@ -464,7 +463,6 @@ namespace MafiaCleanCity.Shell
         /// ★ *Une constante partagée par deux rôles est vraie pour celui qui l'a nommée et fausse
         ///   pour l'autre* — et rien ne le signale, puisqu'elle est correcte quelque part.</summary>
         private const float FiletBarreEpaisseurPx = 1f;
-        private const float MoneyUnderlineWidthPx = 74f; // REUSE exact — hud-brennar.html:59 `.ratio{width:74px}`
         private const float ZoneRowWidth = 34f;
         private const float ZoneRowHeight = 9f;
         // ⛔ 0 ET NON 10. Le canon donne `.barre{height:52px;background:linear-gradient(...)}`
@@ -1044,11 +1042,9 @@ namespace MafiaCleanCity.Shell
 
         /// <summary>Écart (1) — « L'argent, seul or de l'écran » (doctrine, hud-brennar.html annexe
         /// §1) : coin GAUCHE de la barre, cluster à 3 éléments — label petites capitales (ARGENT,
-        /// `hudCremeSecondary`), montant serif (`hudMoneyGold`), soulignement décoratif 2px
-        /// (`hudMoneyUnderlineGold`, REUSE `--or`, DISTINCT du laiton de l'anneau — mesuré tour 2 sur
-        /// le rendu pixel). Le soulignement N'ENCODE PAS un ratio propre/sale — aucune donnée
-        /// client ne porte cette information (voir Deviations) ; sa présence/largeur est un choix
-        /// visuel FIXE, jamais une valeur dérivée d'un champ inexistant (R2.2).</summary>
+        /// `hudCremeSecondary`), montant serif (`hudMoneyGold`). ⛔ Le fil propre/sale de la maquette (`.ratio`) n'est PAS
+        /// dessiné : aucune donnée ne le porte (S1-c) ; le soulignement décoratif qui en reprenait la forme est retiré
+        /// (2026-09-23, M2).</summary>
         private void BuildMoneyCluster()
         {
             GameObject clusterGo = new GameObject("MoneyCluster", typeof(RectTransform));
@@ -1088,16 +1084,11 @@ namespace MafiaCleanCity.Shell
                 parent: clusterGo.transform);
             moneyValueText.font = DesignTokens.Current.hudSerifFont;
 
-            GameObject underlineGo = new GameObject("Underline", typeof(RectTransform));
-            underlineGo.transform.SetParent(clusterGo.transform, false);
-            RectTransform underlineRect = (RectTransform)underlineGo.transform;
-            underlineRect.anchorMin = underlineRect.anchorMax = new Vector2(0f, 1f);
-            underlineRect.pivot = new Vector2(0f, 1f);
-            underlineRect.anchoredPosition = new Vector2(0f, -37f);
-            underlineRect.sizeDelta = new Vector2(MoneyUnderlineWidthPx, HairlineThicknessPx);
-            moneyUnderline = underlineGo.AddComponent<Image>();
-            moneyUnderline.color = DesignTokens.Current.hudMoneyUnderlineGold; // --or, DISTINCT du laiton (tour 2, mesuré)
-            moneyUnderline.raycastTarget = false;
+            // ⛔ M2 (2026-09-23, décision de l'orchestrateur sur l'écart ① `e2bd7681`) : PLUS DE SOULIGNEMENT. Il reprenait la
+            // géométrie EXACTE de `.ratio` (74 px, l'or, sous le montant) sans porter AUCUNE donnée — le back ne sert ni argent
+            // sale ni ratio (`back.md` S1-c, wallet = 3 clés) — et un fil plein se lit comme un ratio à 100 % (juge-données
+            // D8, juge ⊥ r9 M12). Un fil plein sans donnée est une donnée inventée. Si l'user veut le ratio : un lot back
+            // (S1-c), puis un fil qui LIT une valeur.
         }
 
         /// <summary>Écart (3) — l'horloge passe à l'aile DROITE : petites capitales "JOUR {N}" en
