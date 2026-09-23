@@ -64,7 +64,7 @@ Données **lues** (47) et **non lues** (136) : `25-annexe-04-accueil.md`. Le cœ
 | `backlog_badge` | des cartes s'accumulent au-delà de ce que la file montre | passé à côté ? (c'est aussi un candidat au point or de Famille, `22-…` §7.3) |
 | `queue_pressure_band` (normal · tendue · saturée — mots servis `exceptions.queue_pressure.*`) | la file est-elle calme ? | passé à côté ? |
 | `queue[].priority_band`, `queue[].confidence_band` | l'urgence d'une carte, l'assurance du lieutenant | passé à côté ? (la gravité, elle, est lue) |
-| `queue[].event_descriptor_i18n`, `candidate_actions[].label_i18n` | le TEXTE traduit de la carte et de ses gestes | ⚠️ **non lus** : l'Accueil lit `event_descriptor` et `label` — la **prose anglaise machine** (« Teach: pause on high heat », « Citywide heat is high… ») — au lieu des clés servies. C'est un défaut de langue, pas une question |
+| `queue[].event_descriptor_i18n` | la réplique traduite de la carte | ⚠️ **non lue** : `ExceptionQueuePanelController.cs:161-163` affiche `card.event_descriptor` — la chaîne brute du serveur (prose anglaise « Citywide heat is high… », ou un identifiant `exc_demo_…`) — au lieu de la clé servie. Défaut de langue, pas une question. (Les gestes de la carte ne sont pas affichés ici : le « label » que l'instrument compte comme lu est une variable locale, pas le champ.) |
 | `queue[].candidate_actions[].effect` (`type`, `target_building_id`) | ce que fait le geste, et sur quel bâtiment | passé à côté ? |
 | `flag_review` (`pending_review_count`, `auto_open`) | des drapeaux attendent une relecture | passé à côté ? |
 | `settling_glance` (`settling_count`, `all_clear`) | des changements ne sont pas encore « posés » | passé à côté ? |
@@ -101,5 +101,5 @@ elle suit dans `26-…`.
 
 - Ce document et ses cinq annexes générées ; `inventaire-donnees-servies.py` (`--fichier-seul`, `--aussi`, `--post`).
 - **Pour f2** : (1) quel écran porte la filière (§1, reco : l'onglet Filière monte ㊵) ; (2) le périmètre de ④ avant dessin (§2, trois
-  états) ; (3) l'Accueil lit la prose anglaise au lieu des clés servies — pour CLIENT-2 ; (4) le point 2 est périmé pour `la_filiere`.
+  états) ; (3) l'Accueil affiche `event_descriptor` brut au lieu de `event_descriptor_i18n` (`ExceptionQueuePanelController.cs:161-163`) — pour CLIENT-2 ; (4) le point 2 est périmé pour `la_filiere`.
 - Aucun rendu.
