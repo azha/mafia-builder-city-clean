@@ -138,9 +138,10 @@ namespace MafiaCleanCity.Operational.Tests
             MafiaCleanCity.Shell.WalletBandResolver.Label(b);
         private static string HeatLabelFor(string b) =>
             MafiaCleanCity.Shell.HeatBucketResolver.Label(b);
+        // ⛔ DÉLÉGUÉ au producteur unique (2026-09-23) — la copie anglaise (« Dirty »/« Partial »…) est restée derrière la
+        //    traduction de ⑪ ; `PureteResolvers.Libelle` est ce que l'écran rend (« Sale », « À demi propre »…).
         private static string CleanlinessLabelFor(string b) =>
-            b == "DIRTY" ? "Dirty" : b == "PARTIAL" ? "Partial" : b == "MOSTLY_CLEAN" ? "Mostly clean" :
-            b == "CLEAN" ? "Clean" : b;
+            MafiaCleanCity.Operational.PureteResolvers.Libelle(b);
 
         // The recursive no-raw-scalar guard the per-screen tests use: every rendered token must be
         // a band / label / glyph / boolean — never a bare integer/decimal (R2.2 / P5).
@@ -183,6 +184,9 @@ namespace MafiaCleanCity.Operational.Tests
         // ── the capstone ────────────────────────────────────────────────────────────────────────
 
         [UnityTest]
+        // Catégorie PROPRE, sur la MÉTHODE (2026-09-23) : ce test n'en portait aucune, donc aucun filtre ne le lançait, et ses épingles
+        // ont pourri derrière les traductions. Sur la classe, elle emporterait aussi la capture `Screenshot` (TD-625).
+        [Category("BoucleOperationnelle")]
         public IEnumerator Loop_IsObservable_AcrossDashboard_BuildingCard_Pipeline_AndCityMap()
         {
             // ── (1) sign in ONCE via the Dashboard controller (the loop's landing screen). ──
@@ -229,8 +233,11 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.IsTrue(dashTexts.Any(t => t == "Portefeuille"), "Dashboard renders the Wallet caption");
             Assert.IsTrue(dashTexts.Any(t => t == HeatLabelFor(liveHeatBand)),
                 $"Dashboard renders the live citywide heat band label '{HeatLabelFor(liveHeatBand)}' in {Dump(dashTexts)}");
-            Assert.IsTrue(dashTexts.Any(t => t == "Citywide heat"), "Dashboard renders the citywide heat row");
-            Assert.IsTrue(dashTexts.Any(t => t == (liveEscalated ? "Escalating" : "Steady")),
+            // ⛔ Épingles relues dans le code du 2026-09-23 (DashboardController:392-394, ffe5fba5), MÊMES littéraux que
+            //    DashboardPlayModeTests:273-275 (vert au créneau du 23/09) — elles étaient restées en anglais.
+            Assert.IsTrue(dashTexts.Any(t => t == "Chaleur de la ville"), "Dashboard renders the citywide heat row");
+            Assert.IsTrue(dashTexts.Any(t => t == "Descente"), "Dashboard renders the escalation row");
+            Assert.IsTrue(dashTexts.Any(t => t == (liveEscalated ? "en cours" : "rien en cours")),
                 $"Dashboard renders the live escalation flag (live escalated={liveEscalated})");
             AssertNoRawScalar(dashTexts, "Dashboard");
 
@@ -251,8 +258,11 @@ namespace MafiaCleanCity.Operational.Tests
 
             var cardTexts = buildingCard.RenderedTexts;
             Assert.IsTrue(cardTexts.Any(t => t.Contains("Labo")), "Building Card renders the 'Lab' type label");
-            Assert.IsTrue(cardTexts.Any(t => t == "Operational"), "Building Card renders the 'Operational' band");
-            Assert.IsTrue(cardTexts.Any(t => t == "Yes"), "Building Card renders operational=true as 'Yes'");
+            // ⛔ Relu dans le code du 2026-09-23 : la bande de mise en place passe par `SetupLabel` (DÉLÉGUÉ, pas recopié), et
+            //    « en service » s'écrit « oui » (BuildingCardController:643) — l'épingle « Yes » était restée en anglais.
+            Assert.IsTrue(cardTexts.Any(t => t == BuildingCardController.SetupLabel("OPERATIONAL")),
+                "Building Card renders the OPERATIONAL setup band");
+            Assert.IsTrue(cardTexts.Any(t => t == "oui"), "Building Card renders operational=true as « oui »");
             AssertNoRawScalar(cardTexts, "BuildingCard");
 
             // ── SCREEN 3 — LAUNDERING PIPELINE (the node): the "launder" anchor, mid-pipeline. ──

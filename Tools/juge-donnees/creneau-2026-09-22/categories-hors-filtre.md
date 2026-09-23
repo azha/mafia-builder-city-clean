@@ -64,4 +64,11 @@ Filtre par défaut : 55 catégories / 591 tests → **61 / 639**.
   « Dirty »/« Partial »/« Mostly clean » (`OperationalLoopPlayModeTests.cs:142`, 96890e08/8dbe1eef, à relire). Réparation
   ENTIÈRE en statique après exc_demo (toutes les épingles, lues dans le code actuel, pas au fil des rouges), puis une catégorie,
   puis le créneau. Une réparation partielle a été tentée puis ANNULÉE (un test à moitié réparé ne s'inscrit pas).
+- ✅ Réparée EN STATIQUE (2026-09-23, après l'arrêt d'exc_demo) : toutes les épingles d'OperationalLoop relues dans le code actuel —
+  « Chaleur de la ville », « Descente », « en cours »/« rien en cours » (DashboardController:392-394), la bande de mise en place par
+  `BuildingCardController.SetupLabel` et « oui » (:643), la propreté par `PureteResolvers.Libelle` (délégués, plus recopiés).
+  Catégorie PROPRE `BoucleOperationnelle` sur la MÉTHODE (hors filtre jusqu'à un run vert).
+- ⛔ MÊME CLASSE, nommée non corrigée : `BuildingCardPlayModeTests:237-239` (« Operational », « Yes », « Weak ») et
+  `LaunderingPlayModeTests:235` (« Dirty ») — tests SANS catégorie, épingles anglaises derrière les traductions (TD-490 : fichiers
+  sans catégorie). À réparer de la même façon, sur ordre.
 
