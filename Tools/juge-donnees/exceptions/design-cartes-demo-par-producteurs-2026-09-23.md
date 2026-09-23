@@ -1,6 +1,6 @@
-# DESIGN v6.1 — les cartes d'exception de démo naissent des producteurs de production (2026-09-23)
+# DESIGN v6.2 — les cartes d'exception de démo naissent des producteurs de production (2026-09-23)
 
-Statut : **v6, réponse à la revue ⊥ n°5 (§ 13 : 1 BLOQUANT — la propagation est scopée au JOUEUR, pas à `lab2` ; 1 IMPORTANT — les écrivains de `buildings.heat` ; 1 MINEUR) et au verdict du back `f87301bd` (`heat-inject` = chemin de production après l'émission ; magnitude `MICRO` pour imiter une cuisson) — la précondition d'ouverture est LEVÉE** ; v5 était la réponse à la revue ⊥ n°4 (§ 12 : 1 BLOQUANT — la chaleur est hors de portée par la production, pour H ET pour P ; 1 IMPORTANT)** — **PRÉCONDITION D'OUVERTURE : verdict du back sur `_test/citysim/heat-inject`** ; v4 répondait à la revue ⊥ n°3 (§ 11 : 1 BLOQUANT neuf — la chaleur de `lab2` —, 1 IMPORTANT, 2 MINEURS)** ; v3 répondait à la revue ⊥ n°2 (NOT_APPROVED : 1 BLOQUANT neuf, 1 IMPORTANT, 3 MINEURS ; les 11 de la revue n°1 refermés)** — tables de réponse au § 9 (n°1) et au § 10 (n°2).
+Statut : **v6.2 — option (a) tranchée par f2 le 23/09 après l'arrêt de la Phase 0 (§ 15, M2c = 0 dans le district 16) : `lab2` dans un AUTRE district, bloc à y ≥ 4 ; delta à juger par une revue ⊥ FRAÎCHE (§ 16)** ; v6 : réponse à la revue ⊥ n°5 (§ 13 : 1 BLOQUANT — la propagation est scopée au JOUEUR, pas à `lab2` ; 1 IMPORTANT — les écrivains de `buildings.heat` ; 1 MINEUR) et au verdict du back `f87301bd` (`heat-inject` = chemin de production après l'émission ; magnitude `MICRO` pour imiter une cuisson) — la précondition d'ouverture est LEVÉE** ; v5 était la réponse à la revue ⊥ n°4 (§ 12 : 1 BLOQUANT — la chaleur est hors de portée par la production, pour H ET pour P ; 1 IMPORTANT)** — **PRÉCONDITION D'OUVERTURE : verdict du back sur `_test/citysim/heat-inject`** ; v4 répondait à la revue ⊥ n°3 (§ 11 : 1 BLOQUANT neuf — la chaleur de `lab2` —, 1 IMPORTANT, 2 MINEURS)** ; v3 répondait à la revue ⊥ n°2 (NOT_APPROVED : 1 BLOQUANT neuf, 1 IMPORTANT, 3 MINEURS ; les 11 de la revue n°1 refermés)** — tables de réponse au § 9 (n°1) et au § 10 (n°2).
 Plan d'origine : `plan-cartes-demo-par-producteurs-2026-09-23.md` (`a550891f`, décision `e4f6c330`). Verdict du back sur
 `_test/citysim/raid` : recevable pour le seeder de démo (`back.md`, S6-h ; TD-692 corrigé).
 
@@ -33,10 +33,17 @@ INÉVITABLE tant que le back n'ajoute pas le jumeau i18n à `exception-producer`
   le seuil est ignoré. Texte : **`WHEN EVENT(heat,>=,5) THEN PAUSE_OPS @1;`** — compile (aucune
   borne [0..1] dans le compilateur) ; jamais vrai : la chaleur est bornée à [0,1] (`citysim/heat/heat-propagation.service.ts:314`,
   `clamp01`), comparaison numérique directe (`dsl/executor.service.ts:285`). ⇒ l'ordre des ticks (raid avant ou après un `LIEUTENANT_TICK`) ne change plus rien.
-- **COOK₂ sur `lab2`**, un SECOND labo : acquis par **`operationalBuilding(blocHorsRayon(), 'lab')` placé APRÈS toutes les autres
-  acquisitions du seeder** ; `blocHorsRayon()` (neuf, § 13 n°1) prend le premier bloc libre du district 16 dont la distance de tuile
-  (Chebyshev, la même que `tileDistance`, `heat-propagation.service.ts:382-384`) à CHAQUE bâtiment du joueur est > au rayon de
-  propagation, et échoue en le disant s'il n'y en a aucun ; le seeder imprime la distance minimale obtenue et ASSERTE bloc ≠ `raidBlockId`. → sa seule carte possible est **H** : son script ne couvre ni `heat` ni
+- **COOK₂ sur `lab2`**, un SECOND labo, **dans le district `LAB2_DISTRICT = 17`** (v6.2, § 16) : acquis par
+  **`operationalBuilding(blocLab2(), 'lab')` placé APRÈS toutes les autres acquisitions du seeder**. `blocLab2()` (neuf, remplace
+  `blocHorsRayon()` de v6) prend le premier bloc du district 17 (ordre d'`id`) qui (1) n'est tenu par AUCUN bâtiment (tous joueurs),
+  (2) a `y ≥ 4`, (3) est à Chebyshev > rayon de CHAQUE bloc du joueur **en coordonnées LOCALES, sans regarder le district** — la
+  distance d'aujourd'hui (`tileDistance`, `heat-propagation.service.ts:382-384` ; `tile_x/tile_y` = `{x,y}` du bloc, `heat.repository.ts:88`,
+  coordonnées LOCALES au district, § 15). Hors rayon avec cette distance, il l'est a fortiori avec une distance corrigée par district
+  (autre district ⇒ jamais voisin) : l'option tient dans les DEUX cas. Échec qui le dit s'il n'y en a aucun ; le seeder imprime la
+  distance minimale obtenue. Pourquoi 17 : même profil `verge` que le 16 (aucune atténuation `stack` à raisonner), hors des districts du
+  dégradé de chaleur de la carte (3/7/11), sans bâtiment du joueur ; mesuré (§ 16) : 5 blocs à y ≥ 4, libres de tout bâtiment,
+  distance minimale 3. L'injection de chaleur passe `district_id=17` (`heat-inject?player_id&building_id&district_id&magnitude`).
+  Assertion bloc ≠ `raidBlockId` gardée (vraie par construction : autre district). → sa seule carte possible est **H** : son script ne couvre ni `heat` ni
   `building_damaged` et ne peut jamais se déclencher. Texte : **`WHEN STATE(source_has_product,==,true) THEN PAUSE_OPS @1;`** — un champ
   du binding LOGISTICS, ABSENT du snapshot COOK (« every other field stays absent → a false trigger », `cook-binding.ts:105`) : faux
   QUOI QUE porte `lab2` (produit, pureté, précurseurs) et même sans ligne `building_operational_state`. v3 prenait
@@ -76,7 +83,7 @@ INÉVITABLE tant que le back n'ajoute pas le jumeau i18n à `exception-producer`
   soit ≈ 19 événements — et reste HOT (≥ 0.5, donc SOURCE de propagation) ≈ 252 ticks, ≈ 8 min 24 s réelles à 2 s par minute de jeu.
   **Ce que ces nombres touchent AU-DELÀ de `lab2` (§ 13 n°1)** — la propagation est scopée au JOUEUR (`listBuildings(playerId)`,
   bâtiments `operational` seulement, `heat.repository.ts`), rayon 2 tuiles (Chebyshev), `+0.036` par tick à chaque bâtiment dans le rayon,
-  cumulatif (un voisin monte, passe HOT et devient source) : d'où `blocHorsRayon()`. ⚠️ `lab` RESTE dans cet ensemble après le
+  cumulatif (un voisin monte, passe HOT et devient source) : d'où `blocLab2()` (v6.2 ; `blocHorsRayon()` en v6). ⚠️ `lab` RESTE dans cet ensemble après le
   raid (revue n°6, n°3, CONTREDITE par le code) : le raid écrit `building_operational_state.structural_state = 'damaged'`
   (`raid.repository.ts:199`), alors que `listBuildings` filtre `buildings.structural_state` (`heat.repository.ts:141`, table
   `city_state.ts:143`) — « DISTINCT de buildings.structural_state city-state » (`operational_chain.ts:53`). `lab` compte donc parmi les
@@ -116,11 +123,10 @@ INÉVITABLE tant que le back n'ajoute pas le jumeau i18n à `exception-producer`
   sachant que `provision-demo-riche.mjs:54,100` lit `MAFIA_DEMO_IDENTIFIER` alors que le seeder lit `MAFIA_SEED_IDENTIFIER`. Résultat
   transmis au back, qui décide (§ 9 n°7).
 - **M1** : la règle de COOK₂ passe `validate` au palier 1 ; celle de COOK₁ aussi.
-- **M2c — faisabilité de `blocHorsRayon()`, AVANT toute écriture** (revue n°6, n°1) : un `SELECT` en lecture seule sur `blocks`
-  (`coordinates` jsonb `{x,y}`, propriété du BLOC, `world_geography.ts:57`) et `buildings` : nombre de blocs libres du district 16 à
-  Chebyshev > rayon de TOUS les blocs que le décor du seeder occupera (les blocs actuels du joueur + ceux que `freeBlock` prendra, calculés
-  dans le même ordre). Imprimé. **Zéro ⇒ le lot s'arrête AVANT d'écrire quoi que ce soit** et demande au back un repli (rayon, ou
-  district d'accueil de `lab2`) ; l'assertion du seeder reste, en ceinture.
+- **M2c — faisabilité de `blocLab2()`, AVANT toute écriture** (revue n°6, n°1 ; v6.2) : un `SELECT` en lecture seule sur `blocks`
+  (`coordinates` jsonb `{x,y}`, propriété du BLOC, `world_geography.ts:57`) et `buildings` : nombre de blocs du district 17, libres de tout
+  bâtiment, à y ≥ 4 et à Chebyshev LOCAL > rayon de TOUS les blocs que le décor du seeder occupera. Imprimé. **Zéro ⇒ le lot s'arrête
+  AVANT d'écrire** ; l'assertion du seeder reste, en ceinture. v6 (district 16) a rendu 0 le 23/09 06:36 (§ 15) ; v6.2 mesuré : 5 (§ 16).
 - **M2 — PORTE, pas relevé** : D'ABORD la rampe citée par `LieutenantRuleEditorPlayModeTests.cs:480-487` (chaleur de CHAQUE bâtiment du
   joueur sur 3 `advance(1)`, sans injection) — si elle se reproduit, arrêt (§ 2, écrivains) ; valeur effective des tunables lus par le
   § 2 (rayon, facteur, demi-vie, seuil, `cookHeatHighBand`, `tick.real_seconds_per_game_minute` : surcharge DB > env > défaut) — un
@@ -146,8 +152,10 @@ INÉVITABLE tant que le back n'ajoute pas le jumeau i18n à `exception-producer`
   et les cartes SUPPLÉMENTAIRES éventuelles) est collée dans le rapport : c'est la source unique des épingles.
 
 **Phase 1 — seeder** (`Tools/seed_operational_demo.mjs`)
-1. **`lab2`, dans CET ordre (§ 11 n°2, n°3)** : `operationalBuilding(blocHorsRayon(), 'lab')` APRÈS toutes les autres acquisitions ;
-   assertion bloc ≠ `raidBlockId` et distance minimale > rayon, imprimée ; son `setup_remaining_ticks=1` + `advance(1)` DÉDIÉS (le nudge de :668-673 est déjà passé) ;
+1. **`lab2`, dans CET ordre (§ 11 n°2, n°3)** : `operationalBuilding(blocLab2(), 'lab')` (district 17, § 2) APRÈS toutes les autres
+   acquisitions ; assertion bloc ≠ `raidBlockId` et distance minimale > rayon, imprimée ; **purge** : une clause CIBLÉE neuve dans
+   `sqlDePurge` pour les bâtiments du joueur dans `LAB2_DISTRICT`, sur le modèle des clauses du labo `glass` et du hub (même ordre : après
+   les lieutenants, dont COOK₂ tient la FK `assigned_building_id` sur `lab2`), et comptée par `controlerAtomiciteDeLaPurge` ; son `setup_remaining_ticks=1` + `advance(1)` DÉDIÉS (le nudge de :668-673 est déjà passé) ;
    assertion `conversion_stage='operational'` (PAS de cuisson : la chaleur vient de `heat-inject`, § 2). Tout ceci AVANT l'étape 2 (recrutements), donc
    avant l'étape 13 (raid) et avant les re-pins de l'étape 5.
 2. Le recrutement « Phase-20 » se DÉPLACE avant l'étape 13 : COOK₁ sur `lab`, COOK₂ sur `lab2`, chacun + attache de son script (§ 2).
@@ -272,4 +280,29 @@ dans les districts 1, 11, 13 et 16). La propagation traverse les districts — c
 17-18) — hors rayon avec la distance d'aujourd'hui ET avec une distance corrigée par district ; exige d'étendre la purge du seeder à ce
 bloc ; (b) un rayon plus petit pour ce compte (tunable `T.city.heat_propagation_radius_tiles`, surcharge DB) — touche tout le joueur ;
 (c) accepter la propagation et la BORNER (injections minimales, M2b(e) relève tous les bâtiments) — ce que la revue n°5 a refusé.
+
+## 16. v6.2 — option (a) tranchée par f2 (2026-09-23), delta à juger par une revue ⊥ FRAÎCHE
+**Décision** : `lab2` dans un AUTRE district, sur un bloc à y ≥ 4 — hors rayon avec la distance d'aujourd'hui (coordonnées locales, sans
+district) ET avec une distance corrigée par district. Le constat `tileDistance` est au back (mesure et classement, pas de code) ; l'option
+tient dans les deux cas.
+**Mesure M2c pour v6.2** (06:4x, lecture seule, `operational_demo`, blocs libres de TOUT bâtiment à y ≥ 4, districts 3/7/11/16 exclus) :
+| district | profil | blocs | premier `id` | distance min. aux blocs du joueur |
+|---|---|---|---|---|
+| 2 | tidewater | 2 | 142 | 3 |
+| 4 | spine | 15 | 343 | 3 |
+| 5 | spine | 20 | 442 | 3 |
+| 6 | spine | 26 | 542 | 3 |
+| 9 | lattice | 1 | 842 | 3 |
+| 10 | lattice | 8 | 941 | 3 |
+| 12 | stack | 21 | 1141 | 3 |
+| 13 | glass | 26 | 1243 | 3 |
+| 14 | glass | 35 | 1341 | 3 |
+| **17** | **verge** | **5** | **1643** | **3** |
+| 18 | verge | 13 | 1741 | 3 |
+Choix : **17** (profil `verge` comme le 16 ; pas de `stack`, dont le facteur de propagation est atténué — sans voisin, sans effet, mais
+un raisonnement de moins) ; le joueur n'y a aucun bâtiment.
+**Delta de v6.1 à v6.2** : § 2 (COOK₂ : `blocLab2()` dans le district 17, `district_id=17` à l'injection), M2c (critère et mesure),
+Phase 1.1 (purge ciblée neuve + contrôle d'atomicité). M2b (e) inchangé mais son objet change : le seau de district forcé BURNING par
+l'escalade (Inv 7) est celui du district **17** du joueur (carte de la ville : le district 17 d'`operational_demo` passera BURNING le
+temps de l'escalade, ≈ 19 ticks) — relevé avant/après avec le reste.
 
