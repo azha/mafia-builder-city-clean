@@ -79,12 +79,10 @@ namespace MafiaCleanCity.Operational
     [Serializable] public class PostEngagementsPayload { public PostEngagementsResponseDto data; }
     [Serializable] public class PostEngagementsEnvelope { public PostEngagementsPayload payload; }
 
-    /// <summary>Le corps d'un REFUS (GlobalExceptionFilter du back) : `{payload: {error: {code, http_status, …}}}`. Seul `code` est
-    /// lu : il sépare les refus que le statut HTTP confond (un 409 est `MUSCLE_LIEUTENANT_REQUIRED` OU
-    /// `IDEMPOTENCY_REQUEST_IN_FLIGHT`, intercepteur global).</summary>
-    [Serializable] public class ApiErreurDto { public string code; public int http_status; }
-    [Serializable] public class ApiErreurPayload { public ApiErreurDto error; }
-    [Serializable] public class ApiErreurEnvelope { public ApiErreurPayload payload; }
+    // Le corps d'un REFUS (`{payload: {error: {code, http_status, …}}}`) : `ApiErreurEnvelope` de `DelegationDtos.cs`, RÉUTILISÉE
+    // (même namespace ; une redéclaration ici collisionnait, CS0101 mesuré au typecheck du 23/09). `ConflitClient.CodeApi` n'en lit
+    // que `code` : il sépare les refus que le statut confond (un 409 est `MUSCLE_LIEUTENANT_REQUIRED` OU
+    // `IDEMPOTENCY_REQUEST_IN_FLIGHT`).
 
     /// <summary>Corps envoyé à `POST /v1/me/engagements` : `{lieutenant_id, target_rival_key, target_holding_id?}`.
     /// `target_rival_key` : coil · tarcum · iron_throat · saltline. `target_holding_id` est FACULTATIF et, s'il est
