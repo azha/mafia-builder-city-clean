@@ -77,7 +77,7 @@ namespace MafiaCleanCity.Shell
     // jamais sur un joueur qui a déjà navigué ailleurs). Toujours PAS un onglet du dock. CORRIGÉ
     // (item 0.5 §2, C2) — l'énoncé précédent disait que son propre écran (les 4 panneaux orphelins)
     // restait ENTIÈREMENT hors périmètre : FAUX depuis ce chunk — voir `MonterPanneauxAccueil`.
-    public class AppShell : MonoBehaviour, IShellSessionSink, IShellNavigator, IOuvreurDeFicheOperationnelle
+    public class AppShell : MonoBehaviour, IShellSessionSink, IShellNavigator, IOuvreurDeFicheOperationnelle, IFermetureDuCoffre
     {
         public enum Tab { Empire, Org, Pipeline, More }
 
@@ -526,7 +526,10 @@ namespace MafiaCleanCity.Shell
                 // obtenu) : chacun rend son état vide NOMMÉ (§2, point (c)) — jamais "atteint et
                 // blanc". BuildingCard/ExceptionQueue(plein écran)/Autonomy/ExceptionDetail restent
                 // hors périmètre (ce ne sont pas des panneaux de l'Accueil).
-                bool pasEncoreActiveEchec = CurrentTab == (Tab)(-1) && MontagesEffectues == 0;
+                // ⑲ (23/09) : après « Rouvrir le coffre », le lancement est REJOUÉ — `MontagesEffectues` n'est plus nul, mais personne n'a
+                // navigué depuis la fermeture (le coffre démonte tout et remet l'onglet au sentinel) : la relance vaut « pas encore activé ».
+                bool pasEncoreActiveEchec = CurrentTab == (Tab)(-1) && (MontagesEffectues == 0 || relanceApresFermeture);
+                relanceApresFermeture = false;
                 if (pasEncoreActiveEchec)
                 {
                     ActivateTab(Tab.Empire); // repli : le locataire signera lui-même
@@ -669,7 +672,8 @@ namespace MafiaCleanCity.Shell
             // monté, uniquement si c'est CE montage-ci qui vient d'activer l'onglet par défaut
             // (jamais un joueur qui a déjà navigué ailleurs pendant l'acquisition). Capturé AVANT
             // `ActivateTab` : après lui, `CurrentTab` n'est plus le sentinel `(Tab)(-1)`.
-            bool pasEncoreActive = CurrentTab == (Tab)(-1) && MontagesEffectues == 0;
+            bool pasEncoreActive = CurrentTab == (Tab)(-1) && (MontagesEffectues == 0 || relanceApresFermeture);   // ⑲ : voir la branche d'échec
+            relanceApresFermeture = false;
             if (pasEncoreActive)
             {
                 ActivateTab(Tab.Empire);
@@ -1125,6 +1129,97 @@ namespace MafiaCleanCity.Shell
         /// <summary>①-0 (additif, 2026-09-23) — la fiche opérationnelle d'un bâtiment, AVEC ce bâtiment (`IOuvreurDeFicheOperationnelle`).
         /// La fiche de ① y passe pour AMÉLIORER ; c'est le seul geste qui monte la fiche opérationnelle (le bouton « La fiche » de
         /// l'Accueil, qui la montait vide, est retiré — ruling A du 25/08).</summary>
+        // ───────────────────────────────────────────── ⑲ « Fermer le coffre » (23/09, décision f2)
+        // Aucune maquette ne dessine l'entrée (atelier : séries 1 à 6 balayées). Forme minimale : après une sortie CONFIRMÉE
+        // (`signed_out: true`), le shell démonte ses locataires, dit « Le coffre est fermé. » et n'offre qu'UN geste, « Rouvrir le
+        // coffre », qui REJOUE le chemin du lancement tel quel (`AcquireSessionThenActivateHome` : même source d'identité, puis
+        // `session/open`, puis l'Accueil). Aucun écran de saisie inventé.
+        // ⛔ GARDE DE VALEUR : entre les deux, AUCUN appel authentifié — le jeton est oublié, aucun locataire ne vit, et la barre
+        //    d'onglets est éteinte (un onglet monterait un locataire qui, sans jeton, signerait lui-même : `IShellTenant`).
+
+        /// <summary>Vrai tant que le coffre est fermé (entre la sortie et le geste).</summary>
+        public bool CoffreFermeAffiche { get; private set; }
+        /// <summary>Garde : le jeton de la session FERMÉE — le jeton rouvert doit en différer.</summary>
+        public string JetonAvantFermeture { get; private set; }
+        private bool relanceApresFermeture;
+        private GameObject panneauCoffreFerme;
+
+        public void CoffreFerme()
+        {
+            EnsureInitialized();
+            JetonAvantFermeture = Token;
+            Token = null;
+            UnmountCurrentTenant();                       // l'onglet ET les surimpressions : tous sont enfants de ContentSlot
+            CurrentTab = (Tab)(-1);                       // « rien d'activé » : c'est ce que le lancement rejoué attend
+            if (TopBar != null) TopBar.SetLeadingAction(TopBarController.LeadingAction.None, null);
+            ActiverBarreDOnglets(false);
+            CoffreFermeAffiche = true;
+
+            panneauCoffreFerme = new GameObject("CoffreFerme", typeof(RectTransform));
+            panneauCoffreFerme.transform.SetParent(ContentSlot, false);
+            var rt = (RectTransform)panneauCoffreFerme.transform;
+            rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one; rt.offsetMin = rt.offsetMax = Vector2.zero;
+            Image voile = panneauCoffreFerme.AddComponent<Image>();
+            voile.color = DesignTokens.Current.surfaceBase;
+            VerticalLayoutGroup v = panneauCoffreFerme.AddComponent<VerticalLayoutGroup>();
+            v.childAlignment = TextAnchor.MiddleCenter;
+            v.spacing = 24f;
+            v.childControlWidth = true; v.childControlHeight = true;
+            v.childForceExpandWidth = false; v.childForceExpandHeight = false;
+            TexteDuCoffre("Phrase", MafiaCleanCity.I18n.Libelle.De("reglages", "bloc", "Le coffre est fermé."), 44f,
+                          DesignTokens.Current.hudCremeSecondary);
+            GameObject geste = new GameObject("RouvrirLeCoffre", typeof(RectTransform));
+            geste.transform.SetParent(panneauCoffreFerme.transform, false);
+            Image cadre = geste.AddComponent<Image>();
+            cadre.sprite = ProceduralUI.RoundedRectOutline(36, 4f, DesignTokens.Current.hudMoneyUnderlineGold);
+            cadre.type = Image.Type.Sliced;
+            HorizontalLayoutGroup h = geste.AddComponent<HorizontalLayoutGroup>();
+            h.padding = new RectOffset(48, 48, 24, 24);
+            h.childControlWidth = true; h.childControlHeight = true;
+            TextMeshProUGUI l = TexteDuCoffre("L", MafiaCleanCity.I18n.Libelle.De("reglages", "bloc", "Rouvrir le coffre"), 36f,
+                                              DesignTokens.Current.hudMoneyUnderlineGold, geste.transform);
+            l.fontStyle = FontStyles.UpperCase;
+            l.characterSpacing = 10f;
+            Button b = geste.AddComponent<Button>();
+            b.targetGraphic = cadre;
+            b.onClick.AddListener(RouvrirLeCoffre);
+        }
+
+        /// <summary>« Rouvrir le coffre » : le lancement REJOUÉ tel quel. Le jeton obtenu est NEUF (différent de `JetonAvantFermeture`).</summary>
+        public void RouvrirLeCoffre()
+        {
+            if (!CoffreFermeAffiche) return;
+            CoffreFermeAffiche = false;
+            if (panneauCoffreFerme != null) { panneauCoffreFerme.transform.SetParent(null, false); Destroy(panneauCoffreFerme); }
+            panneauCoffreFerme = null;
+            ActiverBarreDOnglets(true);
+            relanceApresFermeture = true;
+            StartCoroutine(AcquireSessionThenActivateHome());
+        }
+
+        private void ActiverBarreDOnglets(bool active)
+        {
+            if (TabBarRoot == null) return;
+            CanvasGroup g = TabBarRoot.GetComponent<CanvasGroup>();
+            if (g == null) g = TabBarRoot.gameObject.AddComponent<CanvasGroup>();
+            g.interactable = active;
+            g.blocksRaycasts = active;
+        }
+
+        private TextMeshProUGUI TexteDuCoffre(string nom, string texte, float taille, Color couleur, Transform parent = null)
+        {
+            var go = new GameObject(nom, typeof(RectTransform));
+            go.transform.SetParent(parent != null ? parent : panneauCoffreFerme.transform, false);
+            TextMeshProUGUI t = go.AddComponent<TextMeshProUGUI>();
+            t.font = DesignTokens.Current.hudSerifFont;
+            t.text = texte;
+            t.fontSize = taille;
+            t.color = couleur;
+            t.alignment = TextAlignmentOptions.Center;
+            t.raycastTarget = false;
+            return t;
+        }
+
         public bool OuvrirFicheOperationnelle(string buildingId) =>
             OuvertureFicheOperationnelle.Ouvrir(this, buildingId) != null;
 

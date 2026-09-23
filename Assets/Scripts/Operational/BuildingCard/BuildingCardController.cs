@@ -65,6 +65,19 @@ namespace MafiaCleanCity.Operational
         /// non-empty temperature_status — a cold-chain substance like Crick in a refinery).</summary>
         public bool ColdChainShown { get; private set; }
 
+        // ---- ② lot 1 (2026-09-23) : le PUPITRE du labo, trois échelles de crans -------------------------------------
+        /// <summary>La cuisson du bâtiment (GET /v1/operational/lab/:id). Null hors pupitre, ou sur erreur : pas de ligne « le feu ».</summary>
+        public LabCookDto CurrentLab { get; private set; }
+        /// <summary>② lot 2 — le geste que le pupitre a posé au dernier rendu (`Aucun` hors pupitre).</summary>
+        public GesteDuPupitre GesteDuPupitreAffiche { get; private set; }
+        /// <summary>Le stock de précurseur du bâtiment (GET /v1/operational/precursors?building_id — le DTO de la chaîne d'appro,
+        /// RÉUTILISÉ). Null hors pupitre, ou sur erreur : pas de ligne « l'étagère ».</summary>
+        public GetOperationalPrecursorsResponseDto CurrentPrecursors { get; private set; }
+        /// <summary>② lot 3 — l'état de délégation des charges (GET /v1/meta/task-categories, le DTO de la Délégation RÉUTILISÉ). Null
+        /// hors pupitre ou sur erreur : l'approvisionnement est alors lu comme tenu par le joueur (le 409 CATEGORY_DELEGATED dirait le
+        /// reste, en mots, par `LigneDAction`).</summary>
+        public GetMetaTaskCategoriesResponseDto CurrentTaskCategories { get; private set; }
+
         // ---- Phase-2b raid/repair test hooks -------------------------------
         /// <summary>The player's qualitative wallet band (GET /v1/economy/wallet) used ONLY to gate Repair
         /// affordability (repair_cost band vs this band — never raw cents; R2.2). Null until first loaded.</summary>
@@ -178,6 +191,8 @@ namespace MafiaCleanCity.Operational
             baseUrl = url;
             if (auth != null) auth.BaseUrl = url;
             if (client != null) client.BaseUrl = url;
+            if (appro != null) appro.BaseUrl = url;
+            if (delegation != null) delegation.BaseUrl = url;
         }
 
         private readonly List<string> renderedTexts = new List<string>();
@@ -194,6 +209,8 @@ namespace MafiaCleanCity.Operational
 
         private AuthClient auth;
         private BuildingCardClient client;
+        private ChaineDApproClient appro;   // ② lot 1 : la route des précurseurs a UN client, celui de la chaîne d'appro
+        private DelegationClient delegation;   // ② lot 3 : les charges déléguées ont UN client, celui de la Délégation
 
         // Slate palette (mirrors CityMap + global_conventions_core direction).
         private static Color SurfaceBg => DesignTokens.Current.surfaceCard; // #16191b
@@ -244,6 +261,8 @@ namespace MafiaCleanCity.Operational
             font = DesignTokens.Current.primaryFont;
             auth = new AuthClient { BaseUrl = baseUrl };
             client = new BuildingCardClient { BaseUrl = baseUrl };
+            appro = new ChaineDApproClient { BaseUrl = baseUrl };
+            delegation = new DelegationClient { BaseUrl = baseUrl };
             BuildLayout();
             EnsureEventSystem();
         }
@@ -317,6 +336,10 @@ namespace MafiaCleanCity.Operational
             // refinery, temperature_status != null) renders the cold-chain status row. Never blocks the card load.
             yield return RefreshStorage(id);
 
+            // ② lot 1 : le pupitre du labo lit deux routes de plus — la cuisson et l'étagère. Seulement pour un type à pupitre
+            // (tranché (a) du 23/09) : pour les autres, les deux routes répondraient 404 et on ne les appelle pas.
+            yield return RefreshPupitre(id, CurrentCard.operational_type);
+
             // Phase-3 vector #3 (grow_house): also fetch the active grow's qualitative projection (grow_stage_band +
             // husbandry_band + tend_due) when a grow_session is tracked for this grow_house (set on Plant or by a test).
             // A non-grow_house card, or a grow_house with no tracked grow, leaves CurrentGrow null → no grow rows render.
@@ -340,6 +363,42 @@ namespace MafiaCleanCity.Operational
             CurrentStorage = storage;
         }
 
+        /// <summary>⛔ Réservé aux tests (② lot 1) : rend la fiche depuis des données DONNÉES, sans réseau — même `Render` que le
+        /// chargement, mêmes hooks. Les données absentes (null) le sont comme après une erreur de route.</summary>
+        public void RendrePourTest(BuildingCardDto card, StorageDto storage = null, LabCookDto lab = null,
+                                   GetOperationalPrecursorsResponseDto precursors = null, GrowSessionDto grow = null,
+                                   GetMetaTaskCategoriesResponseDto charges = null)
+        {
+            EnsureInitialized();
+            CurrentTaskCategories = charges;
+            CurrentCard = card;
+            CurrentStorage = storage;
+            CurrentLab = lab;
+            CurrentPrecursors = precursors;
+            CurrentGrow = grow;
+            CardLoaded = true;
+            Render(card);
+        }
+
+        /// <summary>② lot 1 — la cuisson (`lab/:id`) et l'étagère (`precursors?building_id`) d'un bâtiment à pupitre. Une erreur laisse
+        /// la donnée à null : la ligne correspondante n'est pas dessinée, plutôt que d'afficher un cran qu'on n'a pas reçu.</summary>
+        public IEnumerator RefreshPupitre(string id, string operationalType)
+        {
+            CurrentLab = null;
+            CurrentPrecursors = null;
+            CurrentTaskCategories = null;
+            if (!APupitre(operationalType)) yield break;
+            LabCookDto lab = null;
+            yield return client.GetLab(id, Token, l => lab = l, (code, msg) => lab = null);
+            CurrentLab = lab;
+            GetOperationalPrecursorsResponseDto pre = null;
+            yield return appro.GetOperationalPrecursors(Token, id, p => pre = p, (code, msg) => pre = null);
+            CurrentPrecursors = pre;
+            GetMetaTaskCategoriesResponseDto charges = null;
+            yield return delegation.GetMetaTaskCategories(Token, c => charges = c, refus => charges = null);
+            CurrentTaskCategories = charges;
+        }
+
         /// <summary>Fetch the qualitative wallet band (REUSE the economy projection). Conservative on failure.</summary>
         public IEnumerator RefreshWalletBand()
         {
@@ -351,10 +410,13 @@ namespace MafiaCleanCity.Operational
         // ----------------------------------------------------------- actions API
 
         /// <summary>Lab action: order Pyralin precursors (the lab's first step). Genuinely 2xx-able.</summary>
-        public IEnumerator OrderPyralin(int quantityUnits = 10)
+        /// <summary>② lot 2 — commande le précurseur SERVI de ce bâtiment (`CurrentPrecursors.precursor_type`), jamais un type écrit
+        /// en dur. Sans précurseur servi, rien ne part.</summary>
+        public IEnumerator OrderPrecursor(string precursorType, int quantityUnits = 10)
         {
-            yield return RunAction(c => client.OrderPrecursors(buildingId, quantityUnits, Token, c),
-                "Pyralin commandé", "Impossible de commander");
+            if (string.IsNullOrEmpty(precursorType)) yield break;
+            yield return RunAction(c => client.OrderPrecursors(buildingId, precursorType, quantityUnits, Token, c),
+                "Précurseur commandé", "Impossible de commander");
         }
 
         /// <summary>Lab action: start a Brindle cook.</summary>
@@ -395,7 +457,7 @@ namespace MafiaCleanCity.Operational
         /// at 0 client-side; the server enforces the real ceiling (passes &gt; max → 422). Test/UI convenience.</summary>
         public void SetRefiningPasses(int passes)
         {
-            RefiningPasses = passes < 0 ? 0 : passes;
+            RefiningPasses = passes < 0 ? 0 : passes > MaxRefiningPassesUi ? MaxRefiningPassesUi : passes;   // ② lot 2 : borné au domaine 0..3
             // Re-render the actions so the cook-start label reflects the chosen passes (only if the card is loaded).
             if (CardLoaded && CurrentCard != null) BuildActions(CurrentCard);
         }
@@ -661,12 +723,31 @@ namespace MafiaCleanCity.Operational
             // Raid-risk band gauge (LOW → IMMINENT) — a filled-bar glyph + worded band label.
             AddStatusRow("risque_de_descente", "Risque de descente", RaidRiskLabel(card.raid_risk), RaidRiskAccent(card.raid_risk));
 
-            // Raid notification/flag — shown only when this building was recently raided. The seized amount is a
-            // qualitative band (NEVER raw grams; R2.2). A warning glyph carries the alert alongside colour (F2).
+            // La SAISIE — seulement quand le bâtiment a subi une descente. La quantité saisie est une bande (jamais des grammes ; R2.2).
+            // ② lot 6 (2026-09-23, écart ② `c4520078`, cadre 47 F3 « STOCK SAISI ») : la ligne est `building.row.saisie` suivie du mot
+            // servi `building.seized_amount.*` (table 37 : « Saisie · {une petite prise …} »). Elle était « Alerte » avec un préfixe
+            // « Descente — saisi : » écrit en dur, hors de toute clé. Une descente qui n'a RIEN pris dit « rien », en ambre : la descente
+            // a eu lieu, la marchandise est restée (choix du client, déclaré).
             if (card.recently_raided)
+                AddStatusRow("stock_saisi", "Saisie", SeizedLabel(card.seized_amount),
+                    card.seized_amount == "NONE" ? AccentModerate : AccentSevere);
+
+            // ----- ② lot 1 (2026-09-23) : LE PUPITRE — trois échelles de crans, « le feu » sur 5, « l'étagère » sur 4, « les caisses »
+            // sur 4 ; le premier cran est TOUJOURS allumé (écart ② `c4520078`, cadres 39-44, bloc B2). Le pupitre suit le TYPE (tranché (a)
+            // du 23/09) : `lab` et `specialized_lab`. Chaque échelle porte son MOT à côté des crans (la couleur n'est jamais seule). Une
+            // échelle dont la donnée n'est pas arrivée n'est pas dessinée : un cran allumé affirmerait un état qu'on n'a pas reçu.
+            if (APupitre(card.operational_type))
             {
-                string notif = $"Descente — saisi : {SeizedLabel(card.seized_amount)}";
-                AddStatusRow("alerte", "Alerte", notif, AccentSevere);
+                if (CurrentLab != null)
+                    AddEchelle("le_feu", "le feu", CransDuFeu(CurrentLab.cook_stage_band), CransFeu,
+                        CookStageLabel(CurrentLab.cook_stage_band), CookStageAccent(CurrentLab.cook_stage_band));
+                if (CurrentPrecursors != null)
+                    AddEchelle("l_etagere", "l’étagère", CransDuStock(CurrentPrecursors.stock_band), CransStock,
+                        StockLabel(CurrentPrecursors.stock_band), EtagereAccent(CurrentPrecursors.stock_band));
+                // ⚠️ `product_band` ARRIVAIT déjà (RefreshStorage) et n'était jamais lu (écart ② cadre 39 B2).
+                if (CurrentStorage != null)
+                    AddEchelle("les_caisses", "les caisses", CransDuStock(CurrentStorage.product_band), CransStock,
+                        StockLabel(CurrentStorage.product_band), CaissesAccent(CurrentStorage.product_band));
             }
 
             // ----- Phase-2b vector #2 (Crick) cold-chain surface — ONLY when the storage projection carries a
@@ -742,8 +823,10 @@ namespace MafiaCleanCity.Operational
             if (card.operational_type == "grow_house" && CurrentGrow != null
                 && !string.IsNullOrEmpty(CurrentGrow.grow_stage_band))
             {
-                // Crop row — surfaces which growable precursor this grow_house is cultivating (the planted substance).
-                AddStatusRow("culture", "Culture", GrowablePrecursorLabel(SelectedPrecursor), AccentMild);
+                // ⛔ PLUS DE RANGÉE « CULTURE » (② lot 4, 2026-09-23 — écart ② `c4520078`, cadre 36, verdict FAUX) : elle lisait
+                // `SelectedPrecursor`, une valeur LOCALE (le sélecteur de plantation, `verdant_root_extract` par défaut), et affirmait
+                // une culture que rien ne sert — la projection de la pousse n'a pas de `precursor_type` (grow.projection.service.ts:52-61 ;
+                // manque du back n°4, forme F). Tant qu'elle n'est pas servie, la culture n'est PAS affichée : rien plutôt qu'un faux.
                 // Grow-stage band row — the qualitative growth phase (EARLY → DONE) with a rising filled-bar glyph.
                 GrowStageShown = true;
                 AddStatusRow("pousse", "Pousse", GrowStageLabel(CurrentGrow.grow_stage_band), GrowStageAccent(CurrentGrow.grow_stage_band));
@@ -865,6 +948,7 @@ namespace MafiaCleanCity.Operational
             repairButton = null;
             RepairButtonShown = false;
             RepairButtonAffordable = false;
+            GesteDuPupitreAffiche = GesteDuPupitre.Aucun;   // ② lot 2 : posé seulement par le pupitre (lab, specialized_lab)
             // Phase-3 vector #3: reset the grow_house affordance flags (set only in the grow_house case below).
             PlantSelectorShown = false;
             TendButtonShown = false;
@@ -971,15 +1055,10 @@ namespace MafiaCleanCity.Operational
             switch (card.operational_type)
             {
                 case "lab":
-                    AddActionButton(actionBar, "commander_du_pyralin", "Commander du pyralin", () => StartCoroutine(OrderPyralin()));
-                    AddActionButton(actionBar, "lancer_une_cuisson", "Lancer une cuisson", () => StartCoroutine(StartCook()));
+                    AddGesteDuPupitre(card);
                     break;
                 case "specialized_lab":
-                    // Ash cook — the refining-passes selector (the time↔purity lever) + the Start Ash Cook button. The
-                    // selector worded count (no raw number leaks — it's a deliberate label "+N passes" inside our own UI,
-                    // but to keep the no-raw-scalar guard simple we word the passes count rather than print a bare digit).
-                    AddRefiningPassesSelector(actionBar);
-                    AddActionButton(actionBar, "lancer_une_cuisson_d_ash", "Lancer une cuisson d'ash", () => StartCoroutine(StartCookAsh()));
+                    AddGesteDuPupitre(card);
                     // Honor affordance — only when a SCHEDULED appointment is tracked for this lab (the Ash sale path).
                     if (CurrentAppointment != null && CurrentAppointment.status == "SCHEDULED")
                         AddActionButton(actionBar, "honorer_le_rendez_vous", "Honorer le rendez-vous", () => StartCoroutine(HonorAppointment()));
@@ -1299,16 +1378,154 @@ namespace MafiaCleanCity.Operational
         {
             switch (b)
             {
-                case "EARLY": return Bande("grow_stage", "EARLY", "Début");
-                case "MID": return Bande("grow_stage", "MID", "Milieu");
-                case "LATE": return Bande("grow_stage", "LATE", "Fin");
-                case "DONE": return Bande("grow_stage", "DONE", "À récolter");
+                // ② lot 4 : les replis recopiés À L'OCTET des mots D14 servis (ST `building.grow_stage.*`) — « Début / Milieu / Fin /
+                // À récolter » étaient périmés (écart ② cadre 36) : sans catalogue, l'écran disait autre chose que le jeu.
+                case "EARLY": return Bande("grow_stage", "EARLY", "Bouture");
+                case "MID": return Bande("grow_stage", "MID", "Croissance");
+                case "LATE": return Bande("grow_stage", "LATE", "Floraison");
+                case "DONE": return Bande("grow_stage", "DONE", "Récolte");
                 default: return MafiaCleanCity.I18n.Repli.Etat(b);   // hors domaine : le mot de la famille, jamais la valeur brute (atelier 28)
             }
         }
         // EARLY/MID = amber (still growing), LATE = cyan (nearly there), DONE = premium violet (a finished crop).
         private static Color GrowStageAccent(string b) =>
             b == "DONE" ? AccentPremium : b == "LATE" ? AccentMild : AccentModerate;
+
+        // ----- ② lot 1 (2026-09-23) : le pupitre du labo — les mots de ses trois échelles (atelier 37, `6c5de8d5`, servis) -----
+        /// <summary>Les types qui ont un pupitre (tranché (a) du 23/09) : le `lab` (Brindle) et le `specialized_lab` (Ash). ⚠️ La
+        /// raffinerie a aussi une cuisson servie par `lab/:id`, mais aucune maquette ne lui dessine de pupitre.</summary>
+        public static bool APupitre(string operationalType) => operationalType == "lab" || operationalType == "specialized_lab";
+
+        public const int CransFeu = 5;     // le domaine de `cook_stage_band` : IDLE, EARLY, MID, LATE, DONE (production.projection.service.ts:53)
+        public const int CransStock = 4;   // le domaine de `stock_band` et de `product_band` : NONE, LOW, MEDIUM, HIGH (:56 ; precursors :36)
+
+        /// <summary>« le feu » : cook_stage_band ⇒ son mot (famille `building.cook_stage.*`).</summary>
+        public static string CookStageLabel(string b)
+        {
+            switch (b)
+            {
+                case "IDLE": return Bande("cook_stage", "IDLE", "Éteint");
+                case "EARLY": return Bande("cook_stage", "EARLY", "Début");
+                case "MID": return Bande("cook_stage", "MID", "Montée");
+                case "LATE": return Bande("cook_stage", "LATE", "Affinage");
+                case "DONE": return Bande("cook_stage", "DONE", "Prêt");
+                default: return MafiaCleanCity.I18n.Repli.Etat(b);   // hors domaine : le mot de la famille, jamais la valeur brute (atelier 28)
+            }
+        }
+
+        /// <summary>« l'étagère » ET « les caisses » : les deux bandes ont le MÊME domaine (NONE à HIGH) et la table 37 leur donne la MÊME
+        /// famille de mots, `building.stock.*` (le fourneau lit `product_band` sous « Stock · Faible », cadre 45).</summary>
+        public static string StockLabel(string b)
+        {
+            switch (b)
+            {
+                case "NONE": return Bande("stock", "NONE", "Vide");
+                case "LOW": return Bande("stock", "LOW", "Faible");
+                case "MEDIUM": return Bande("stock", "MEDIUM", "Moyen");
+                case "HIGH": return Bande("stock", "HIGH", "Haut");
+                default: return MafiaCleanCity.I18n.Repli.Etat(b);
+            }
+        }
+
+        /// <summary>Les crans allumés de « le feu », sur 5. Le premier est TOUJOURS allumé (cadre 39 : un labo éteint montre 1/5) ; une
+        /// valeur hors domaine n'allume que lui — le mot du repli dit le reste.</summary>
+        public static int CransDuFeu(string b)
+        {
+            switch (b)
+            {
+                case "EARLY": return 2;
+                case "MID": return 3;
+                case "LATE": return 4;
+                case "DONE": return 5;
+                default: return 1;   // IDLE, et le hors-domaine
+            }
+        }
+
+        /// <summary>Les crans allumés de « l'étagère » ou « les caisses », sur 4 ; le premier toujours allumé (cadre 39 : vide = 1/4).</summary>
+        public static int CransDuStock(string b)
+        {
+            switch (b)
+            {
+                case "LOW": return 2;
+                case "MEDIUM": return 3;
+                case "HIGH": return 4;
+                default: return 1;   // NONE, et le hors-domaine
+            }
+        }
+
+        // Le feu : éteint = neutre, en cours = ambre, prêt = cyan. L'étagère : vide = rouge (on ne rallume pas sans), peu = ambre.
+        // Les caisses : vides = neutre, pleines = cyan. ⚠️ Choix du client, déclarés : la table 37 donne les mots, pas les couleurs.
+        private static Color CookStageAccent(string b) =>
+            b == "DONE" ? AccentMild : b == "EARLY" || b == "MID" || b == "LATE" ? AccentModerate : DesignTokens.Current.onSurfaceMuted;
+        private static Color EtagereAccent(string b) =>
+            b == "NONE" ? AccentSevere : b == "LOW" ? AccentModerate : b == "MEDIUM" || b == "HIGH" ? AccentMild : DesignTokens.Current.onSurfaceMuted;
+        private static Color CaissesAccent(string b) =>
+            b == "LOW" || b == "MEDIUM" || b == "HIGH" ? AccentMild : DesignTokens.Current.onSurfaceMuted;
+
+        // ----- ② lot 2 (2026-09-23) : UN geste selon l'état du pupitre (écart ② `c4520078`, cadres 39, 40, 41, 43) -----
+        public enum GesteDuPupitre { Aucun, Commander, Allumer, EnCuisson, FaireSortir, ApprovisionnementDelegue }
+
+        /// <summary>Le geste que l'état appelle — un seul à la fois. La cuisson prime : une cuve qui tourne n'appelle ni commande ni
+        /// allumage (le 409 « une cuve à la fois » est DIT avant, pas codé). À IDLE, l'étagère décide : vide ⇒ commander, sinon allumer.
+        /// ⚠️ Étagère non lue (route en erreur) à IDLE ⇒ « Allumer » : le serveur tranche (422 sans précurseur), le client ne devine pas
+        /// un vide. Cuisson non lue ou hors domaine ⇒ AUCUN geste : on ne propose pas d'agir sur un état qu'on ne connaît pas.
+        /// ② lot 3 : `approvisionnementDelegue` — la charge SUPPLY_SOURCING n'est plus tenue par le joueur ; la commande lui est alors
+        /// refusée (`assertNotDelegated(SUPPLY_SOURCING)`, precursors.controller.ts:73) : le geste « Commander » devient l'état délégué
+        /// (cadre 44). Les autres gestes ne dépendent pas de cette charge : allumer ou sortir restent au joueur.</summary>
+        public static GesteDuPupitre GesteSelonLEtat(string cookStageBand, string stockBand, bool approvisionnementDelegue = false)
+        {
+            switch (cookStageBand)
+            {
+                case "EARLY": case "MID": case "LATE": return GesteDuPupitre.EnCuisson;
+                case "DONE": return GesteDuPupitre.FaireSortir;
+                case "IDLE":
+                    if (stockBand != "NONE") return GesteDuPupitre.Allumer;
+                    return approvisionnementDelegue ? GesteDuPupitre.ApprovisionnementDelegue : GesteDuPupitre.Commander;
+                default: return GesteDuPupitre.Aucun;
+            }
+        }
+
+        /// <summary>② lot 3 — la charge SUPPLY_SOURCING est-elle retirée au joueur ? Le garde serveur refuse dès que `delegation_state`
+        /// n'est pas `SELF` (category-delegation-guard.service.ts:59-64 : DELEGATED ET RETIRED). Charges non lues, ou catégorie
+        /// absente ⇒ false : on ne dit pas « délégué » sans l'avoir lu.</summary>
+        public static bool ApprovisionnementDelegue(GetMetaTaskCategoriesResponseDto charges)
+        {
+            if (charges?.task_categories == null) return false;
+            foreach (TaskCategoryRowDto c in charges.task_categories)
+                if (c != null && c.category_key == "SUPPLY_SOURCING")
+                    return !string.IsNullOrEmpty(c.delegation_state) && c.delegation_state != "SELF";
+            return false;
+        }
+
+        /// <summary>Le geste « Commander » : une FAMILLE indexée par le précurseur SERVI, `building.commande.<precursor_type>` (décision
+        /// de l'orchestrateur du 23/09, table 54 de l'atelier à venir), par `ParValeur` — plus la clé dérivée `commander_du_<x>`, et
+        /// JAMAIS « Commander » + un nom (D12 : une composition casse l'article et la langue). Les replis sont des phrases ENTIÈRES, une
+        /// par valeur, comptées tant que la famille n'est pas servie ; seule PYRALIN reprend un mot déjà servi (« Commander du Pyralin »,
+        /// `building.action.commander_du_pyralin`) — les cinq autres sont PROPOSÉES, à l'atelier de trancher.</summary>
+        public static string CommanderLabel(string precursorType)
+        {
+            switch (precursorType)
+            {
+                case "PYRALIN": return Bande("commande", "PYRALIN", "Commander du Pyralin");
+                case "THALMITE": return Bande("commande", "THALMITE", "Commander de la Thalmite");
+                case "GARNET_SALT": return Bande("commande", "GARNET_SALT", "Commander du sel de grenat");
+                case "VERDANT_ROOT_EXTRACT": return Bande("commande", "VERDANT_ROOT_EXTRACT", "Commander de la racine verdoyante");
+                case "LULL_RESIN": return Bande("commande", "LULL_RESIN", "Commander de la résine de lull");
+                case "GLASS_LILY": return Bande("commande", "GLASS_LILY", "Commander du lys de verre");
+                default: return MafiaCleanCity.I18n.Repli.Type(precursorType);
+            }
+        }
+
+        /// <summary>Le nombre de passes CHOISI par le joueur (0..3 — R2.2 le PERMET : c'est son réglage, pas une donnée cachée), dit par
+        /// la clé ICU servie `building.bloc.passes_compte` (« pas du tout » / « 1 passe » / « 3 passes »). Le repli est le MÊME motif,
+        /// formaté par le même moteur ICU. Hors 0..`MaxRefiningPassesUi` : le mot de la famille, jamais un cran faux affirmé.</summary>
+        public static string RefiningPassesLabel(int passes)
+        {
+            if (passes < 0 || passes > MaxRefiningPassesUi) return MafiaCleanCity.I18n.Repli.EtatInconnu;
+            var p = new Dictionary<string, string> { ["passes"] = passes.ToString(System.Globalization.CultureInfo.InvariantCulture) };
+            return MafiaCleanCity.I18n.Libelle.Gabarit("building.bloc.passes_compte",
+                MafiaCleanCity.I18n.IcuFormat.Formater("{passes, plural, =0 {pas du tout} one {# passe} other {# passes}}", p), p);
+        }
 
         // ----- Phase-3 vector #3 (grow_house — T7): husbandry_band (WITHERED | ON_TRACK | THRIVING) — the tend trajectory -----
         // R2.2: the husbandry payoff trajectory as a band, NEVER the raw tend_count. WITHERED (neglected — low yield) <
@@ -1318,9 +1535,11 @@ namespace MafiaCleanCity.Operational
         {
             switch (b)
             {
-                case "WITHERED": return Bande("husbandry", "WITHERED", "Flétrie");
-                case "ON_TRACK": return Bande("husbandry", "ON_TRACK", "En bonne voie");
-                case "THRIVING": return Bande("husbandry", "THRIVING", "Florissante");
+                // ② lot 4 : replis = mots D14 servis (ST `building.husbandry.*`). « À soigner » est le MOT de WITHERED (tranché (c) du
+                // 23/09) ; `tend_due` pilote le GESTE (Soigner actif ou grisé, BuildActions), pas ce mot — les deux coexistent.
+                case "WITHERED": return Bande("husbandry", "WITHERED", "À soigner");
+                case "ON_TRACK": return Bande("husbandry", "ON_TRACK", "Correcte");
+                case "THRIVING": return Bande("husbandry", "THRIVING", "Vigoureuse");
                 default: return MafiaCleanCity.I18n.Repli.Etat(b);   // hors domaine : le mot de la famille, jamais la valeur brute (atelier 28)
             }
         }
@@ -1761,6 +1980,53 @@ namespace MafiaCleanCity.Operational
             TrackText(v, value);
         }
 
+        /// <summary>② lot 1 — une échelle du pupitre : le libellé, `total` crans dont `allumes` en couleur, puis le MOT dans la même
+        /// couleur (G2 : la valeur en couleur porte un mot). Les crans s'appellent `CranAllume` / `CranEteint` : la garde les compte.</summary>
+        private void AddEchelle(string idStable, string label, int allumes, int total, string value, Color accent)
+        {
+            GameObject row = NewUI("Row_" + idStable, statusRows);
+            row.AddComponent<Image>().color = RowBg;
+            HorizontalLayoutGroup hlg = row.AddComponent<HorizontalLayoutGroup>();
+            hlg.padding = new RectOffset(10, 10, 6, 6);
+            hlg.spacing = 10;
+            hlg.childAlignment = TextAnchor.MiddleLeft;
+            hlg.childControlWidth = true;
+            hlg.childControlHeight = true;
+            hlg.childForceExpandWidth = false;
+            hlg.childForceExpandHeight = true;
+            AddLayoutElement(row, minHeight: 30, flexibleHeight: 0);
+
+            string libelle = Cle("row", label);
+            TextMeshProUGUI l = NewText("Label", row.transform, libelle, 15, TextAlignmentOptions.Left);
+            l.color = DesignTokens.Current.onSurfaceMuted;
+            AddLayoutElement(l.gameObject, minWidth: 120, flexibleWidth: 1);
+
+            GameObject crans = NewUI("Crans", row.transform);
+            HorizontalLayoutGroup ch = crans.AddComponent<HorizontalLayoutGroup>();
+            ch.spacing = 4;
+            ch.childAlignment = TextAnchor.MiddleCenter;
+            ch.childControlWidth = true;
+            ch.childControlHeight = true;
+            ch.childForceExpandWidth = false;
+            ch.childForceExpandHeight = false;
+            for (int i = 0; i < total; i++)
+            {
+                bool allume = i < allumes;
+                GameObject cran = NewUI(allume ? "CranAllume" : "CranEteint", crans.transform);
+                Image img = cran.AddComponent<Image>();
+                img.color = allume ? accent : DesignTokens.Current.surfaceRaised;
+                img.raycastTarget = false;
+                AddLayoutElement(cran, minWidth: 14, preferredWidth: 14, minHeight: 10, preferredHeight: 10);
+            }
+
+            TextMeshProUGUI v = NewText("Value", row.transform, value, 16, TextAlignmentOptions.Right);
+            v.color = accent;
+            v.fontStyle = FontStyles.Bold;
+            AddLayoutElement(v.gameObject, minWidth: 140, flexibleWidth: 0);
+            TrackText(l, libelle);
+            TrackText(v, value);
+        }
+
         private string NewSectionLabel(Transform parent, string text)
         {
             TextMeshProUGUI t = NewText("Section", parent, text, 13, TextAlignmentOptions.Left);
@@ -1794,51 +2060,135 @@ namespace MafiaCleanCity.Operational
         // numbers anywhere). The server enforces the real max (passes > max → 422); the client clamps only at 0 and at the
         // max-words ceiling. More passes = a longer cook = a higher purity band.
         public const int MaxRefiningPassesUi = 3; // mirrors the server's production.ash.max_refining_passes default (3).
+
+        /// <summary>② lot 2 — le sélecteur « Passes » du cadre 40 (tranché (e) : 4 crans = le domaine 0..3) : le libellé servi
+        /// `building.row.passes`, 4 crans dont `passes + 1` allumés (le premier toujours, comme les échelles du pupitre), le compte dit
+        /// par `building.bloc.passes_compte`, et « − » / « + ». Remplace « PASSES DE RAFFINAGE » et « - Refine » / « + Refine » (anglais,
+        /// FAUX à l'écart) et les mots « None / Light / Standard / Deep ». `specialized_lab` seulement (tranché (a) : un `lab` Brindle
+        /// n'a pas de passes — le serveur refuse tout `refining_passes` non nul, 422).</summary>
         private void AddRefiningPassesSelector(Transform parent)
         {
-            string label = NewSectionLabel(parent, "PASSES DE RAFFINAGE (temps ↔ pureté)");
-            TrackText(null, label);
-
-            GameObject row = NewUI("RefiningPassesRow", parent);
+            GameObject row = NewUI("Row_passes", parent);
+            row.AddComponent<Image>().color = RowBg;
             HorizontalLayoutGroup hlg = row.AddComponent<HorizontalLayoutGroup>();
+            hlg.padding = new RectOffset(10, 10, 4, 4);
             hlg.spacing = 8;
-            hlg.childAlignment = TextAnchor.MiddleCenter;
+            hlg.childAlignment = TextAnchor.MiddleLeft;
             hlg.childControlWidth = true;
             hlg.childControlHeight = true;
-            hlg.childForceExpandWidth = true;
+            hlg.childForceExpandWidth = false;
             hlg.childForceExpandHeight = true;
             AddLayoutElement(row, minHeight: 32, flexibleHeight: 0);
 
-            Button minus = AddActionButton(row.transform, "refine_moins", "- Refine",
-                () => SetRefiningPasses(RefiningPasses - 1));
+            string libelle = Cle("row", "Passes");
+            TextMeshProUGUI l = NewText("Label", row.transform, libelle, 15, TextAlignmentOptions.Left);
+            l.color = DesignTokens.Current.onSurfaceMuted;
+            AddLayoutElement(l.gameObject, minWidth: 80, flexibleWidth: 1);
+            TrackText(l, libelle);
+
+            Button minus = AddActionButton(row.transform, "passes_moins", "−", () => SetRefiningPasses(RefiningPasses - 1));
             SetButtonInteractable(minus, RefiningPasses > 0);
 
-            string passesWord = RefiningPassesLabel(RefiningPasses);
-            TextMeshProUGUI passesText = NewText("RefiningPassesValue", row.transform, passesWord, 15, TextAlignmentOptions.Center);
-            passesText.color = AccentMild;
-            passesText.fontStyle = FontStyles.Bold;
-            AddLayoutElement(passesText.gameObject, minWidth: 110, flexibleWidth: 0);
-            TrackText(passesText, passesWord);
+            GameObject crans = NewUI("Crans", row.transform);
+            HorizontalLayoutGroup ch = crans.AddComponent<HorizontalLayoutGroup>();
+            ch.spacing = 4;
+            ch.childAlignment = TextAnchor.MiddleCenter;
+            ch.childControlWidth = true;
+            ch.childControlHeight = true;
+            ch.childForceExpandWidth = false;
+            ch.childForceExpandHeight = false;
+            for (int i = 0; i <= MaxRefiningPassesUi; i++)
+            {
+                bool allume = i <= RefiningPasses;
+                GameObject cran = NewUI(allume ? "CranAllume" : "CranEteint", crans.transform);
+                Image img = cran.AddComponent<Image>();
+                img.color = allume ? AccentMild : DesignTokens.Current.surfaceRaised;
+                img.raycastTarget = false;
+                AddLayoutElement(cran, minWidth: 14, preferredWidth: 14, minHeight: 10, preferredHeight: 10);
+            }
 
-            Button plus = AddActionButton(row.transform, "refine_plus", "+ Refine",
-                () => SetRefiningPasses(RefiningPasses + 1));
+            Button plus = AddActionButton(row.transform, "passes_plus", "+", () => SetRefiningPasses(RefiningPasses + 1));
             SetButtonInteractable(plus, RefiningPasses < MaxRefiningPassesUi);
+
+            string compte = RefiningPassesLabel(RefiningPasses);
+            TextMeshProUGUI v = NewText("Value", row.transform, compte, 15, TextAlignmentOptions.Right);
+            v.color = AccentMild;
+            v.fontStyle = FontStyles.Bold;
+            AddLayoutElement(v.gameObject, minWidth: 90, flexibleWidth: 0);
+            TrackText(v, compte);
         }
 
-        // Word the refining-passes count (the time↔purity lever) as a qualitative choice — None / Light / Standard / Deep —
-        // so the selector shows no bare digit (R2.2 keeps the no-raw-scalar guard simple). More = a longer cook, purer Ash.
-        public static string RefiningPassesLabel(int passes)
+        /// <summary>② lot 2 — UN geste selon l'état (`GesteSelonLEtat`), tous ses mots par les clés servies de la table 37 :
+        ///   Commander  « Commander du {précurseur} » + « il en faut avant de rallumer » (cadre 39) ;
+        ///   Allumer    (Ash) la réplique « L'étagère est refaite… » et « Passes », puis « Allumer le feu » (+ « ça consomme un lot de lys de
+        ///              verre », Ash seulement : la phrase nomme SON précurseur) (cadre 40) ;
+        ///   EnCuisson  AUCUN bouton : « Rien à faire ici. », « Repassez quand ce sera tiré », et la réplique « Ça monte… — et ne me lancez
+        ///              pas une deuxième cuve… » : le refus 409 DIT avant, pas un bouton qui échoue (cadre 41) ;
+        ///   FaireSortir « Faire sortir la marchandise » GRISÉ + « vers les coursiers » + la réplique « C'est tiré… » (cadre 43) — le geste
+        ///              attend sa destination et sa quantité (manque du back n°5) : dessiné, pas vivant.
+        /// ⚠️ Les répliques sont posées ici SANS nom de locuteur : la bulle du lieutenant (B1, jointure lieutenant → bâtiment) est un
+        /// lot à part. La réplique du cadre 39 (« Nestor : … », appro.bloc.nestor_…) attend la décision de l'user sur Nestor.</summary>
+        private void AddGesteDuPupitre(BuildingCardDto card)
         {
-            switch (passes)
+            bool ash = card.operational_type == "specialized_lab";
+            GesteDuPupitre geste = GesteSelonLEtat(CurrentLab?.cook_stage_band, CurrentPrecursors?.stock_band,
+                ApprovisionnementDelegue(CurrentTaskCategories));
+            GesteDuPupitreAffiche = geste;
+            switch (geste)
             {
-                case 0: return "None";
-                case 1: return "Light";
-                case 2: return "Standard";
-                case 3: return "Deep";   // le max de l'UI (`MaxRefiningPassesUi`)
-                // ⛔ PLUS « Deep » pour tout le reste : 4 ou −1 se disaient « Deep », un cran faux affirmé (règle f2, atelier 28).
-                default: return MafiaCleanCity.I18n.Repli.EtatInconnu;
+                case GesteDuPupitre.Commander:
+                {
+                    string precurseur = CurrentPrecursors.precursor_type;
+                    AddActionButton(actionBar, "commander", CommanderLabel(precurseur), () => StartCoroutine(OrderPrecursor(precurseur)));
+                    AddLigneDuGeste("Bloc", Cle("bloc", "il en faut avant de rallumer"));
+                    break;
+                }
+                case GesteDuPupitre.ApprovisionnementDelegue:
+                    // ② lot 3 (cadre 44) : AUCUN bouton — la commande est au lieutenant ; le joueur sait où reprendre la main. La ligne
+                    // « l'approvisionnement · J11 » de la maquette attend la bulle du lieutenant (et « J11 » n'est porté par aucun champ).
+                    AddLigneDuGeste("Replique", Cle("replique",
+                        "«\u00A0L’approvisionnement, c’est moi maintenant — vous me l’avez confié. Je commande quand il faut.\u00A0»"));
+                    AddLigneDuGeste("Bloc", Cle("bloc", "Vous ne passez plus les commandes vous-même."));
+                    AddLigneDuGeste("Bloc", Cle("bloc", "Reprendre la main se fait depuis la Famille, pas depuis le labo."));
+                    break;
+                case GesteDuPupitre.Allumer:
+                    if (ash)
+                    {
+                        AddLigneDuGeste("Replique", Cle("replique", "«\u00A0L’étagère est refaite. Dites-moi combien de passes, et j’allume.\u00A0»"));
+                        AddRefiningPassesSelector(actionBar);
+                    }
+                    AddActionButton(actionBar, "allumer_le_feu", Cle("action", "Allumer le feu"),
+                        () => StartCoroutine(ash ? StartCookAsh() : StartCook()));
+                    if (ash) AddLigneDuGeste("Bloc", Cle("bloc", "ça consomme un lot de lys de verre"));
+                    break;
+                case GesteDuPupitre.EnCuisson:
+                    AddLigneDuGeste("Replique", Cle("replique", "«\u00A0Ça monte comme il faut. Si j’ouvre maintenant, je perds tout.\u00A0»"));
+                    AddLigneDuGeste("Replique", Cle("replique", "— et ne me lancez pas une deuxième cuve tant que celle-là tourne."));
+                    AddLigneDuGeste("Bloc", Cle("bloc", "Rien à faire ici."));
+                    AddLigneDuGeste("Bloc", Cle("bloc", "Repassez quand ce sera tiré"));
+                    break;
+                case GesteDuPupitre.FaireSortir:
+                {
+                    AddLigneDuGeste("Replique", Cle("replique",
+                        "«\u00A0C’est tiré. Ça ne peut pas dormir ici — chaque nuit que ça reste, c’est une nuit de trop.\u00A0»"));
+                    Button sortir = AddActionButton(actionBar, "faire_sortir_la_marchandise", Cle("action", "Faire sortir la marchandise"), () => { });
+                    SetButtonInteractable(sortir, false);
+                    AddLigneDuGeste("Bloc", Cle("bloc", "vers les coursiers"));
+                    break;
+                }
             }
         }
+
+        /// <summary>Une ligne de texte du geste (bloc ou réplique) sous la barre d'actions.</summary>
+        private void AddLigneDuGeste(string nom, string texte)
+        {
+            TextMeshProUGUI t = NewText(nom, actionBar, texte, 13, TextAlignmentOptions.Left);
+            t.color = DesignTokens.Current.onSurfaceSecondaryAlt;
+            if (nom == "Replique") t.fontStyle = FontStyles.Italic;
+            AddLayoutElement(t.gameObject, minHeight: 18, flexibleHeight: 0);
+            TrackText(t, texte);
+        }
+
 
         // Phase-3 vector #3: the plant selector (choose which growable precursor to cultivate). Three controls on one row:
         //   [< Crop] [<worded crop>] [Crop >]

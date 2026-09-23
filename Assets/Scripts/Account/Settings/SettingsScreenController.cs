@@ -4,6 +4,7 @@ using UnityEngine.UI;
 using MafiaCleanCity.Shell;
 using MafiaCleanCity.Theme;
 using MafiaCleanCity.Account.Profile;
+using MafiaCleanCity.Onboarding;
 using TMPro;
 
 namespace MafiaCleanCity.Account.Settings
@@ -30,6 +31,14 @@ namespace MafiaCleanCity.Account.Settings
     // exister.*
     //
     // ⚠️ Aucun `GET /v1/me/settings` n'existe : l'état courant vient de `GET /v1/me`.
+    //
+    // ✅ 23/09 (inventaire de l'atelier 35, `d9b57e55`) — l'en-tête ci-dessus est DATÉ : trois éléments SERVIS et DESSINÉS par la porte
+    //    ratifiée (le Profil, série 6, cadres 95-97) sont désormais branchés, dans le tiroir « Le jeu » :
+    //    · « On vous explique encore » — `tutorials_opt_out` (`GET /v1/ui/tutorial-state`, `PATCH /v1/ui/tutorial-opt-out`), la MÊME
+    //      bascule que ㉕, par le même client (`TutorialClient`) et la même inversion (`BasculeTutoriels`, ShellContracts) ;
+    //    · « Dire mes prix au marché » — `meta_market_visibility_enabled` (`GET /v1/me`, `PUT /v1/me/meta-market/visibility`, L1) ;
+    //    · « Fermer le coffre · cette session seulement » — `POST /v1/auth/signout` : « Se déconnecter — pas encore » était FAUX.
+    //    Restent éteints, avec leur raison, les gestes que le back NE sert PAS : « Fermer partout » (L11), « Tout effacer » (L10).
     // ⛔ NON REVU — jalon 2026-09-05.
     public class SettingsScreenController : MonoBehaviour, IShellTenant
     {
@@ -47,6 +56,30 @@ namespace MafiaCleanCity.Account.Settings
         /// dépend d'aucun champ, d'aucun ordre de requêtes, et elle survivra à l'ajout d'un appel.</summary>
         public int RendusEffectues { get; private set; }
         public string DerniereErreur { get; private set; }
+        /// <summary>L'état des tutoriels (`GET /v1/ui/tutorial-state`), pour la bascule « On vous explique encore ».</summary>
+        public TutorielData Tutoriels { get; private set; }
+        /// <summary>Gardes : les gestes DEMANDÉS (la valeur envoyée), null avant tout geste.</summary>
+        public bool? DernierOptOutDemande { get; private set; }
+        public bool? DerniereVisibiliteDemandee { get; private set; }
+        public bool DeconnexionDemandee { get; private set; }
+        /// <summary>Vrai après une sortie CONFIRMÉE par le back (`signed_out: true`).</summary>
+        public bool CoffreFerme { get; private set; }
+        /// <summary>Gardes : l'état AFFICHÉ des deux bascules.</summary>
+        public bool BasculeTutorielsAffichee { get; private set; }
+        public bool BasculeMarcheAffichee { get; private set; }
+
+        private TutorialClient tutoriels;
+
+        /// <summary>Couture de test : rend un état fabriqué, sans réseau.</summary>
+        public void RendrePourTest(ProfilData profil, TutorielData etatTutoriels)
+        {
+            Init();
+            Profil = profil;
+            LangueCourante = profil != null ? profil.locale : null;
+            Tutoriels = etatTutoriels;
+            DerniereErreur = null;
+            Rendre();
+        }
 
         private const float K = 1280f / 300f;
         private static float Px(float cssPx) => cssPx * K;
@@ -85,6 +118,7 @@ namespace MafiaCleanCity.Account.Settings
             if (initialise) return;
             initialise = true;
             client = new SettingsClient { BaseUrl = baseUrl };
+            tutoriels = new TutorialClient { BaseUrl = baseUrl };
             Construire();
         }
 
@@ -111,6 +145,8 @@ namespace MafiaCleanCity.Account.Settings
         {
             yield return client.LireProfil(bearer, p => { Profil = p; LangueCourante = p.locale; },
                                            (c, m) => DerniereErreur = $"{c}: {m}");
+            yield return tutoriels.LireEtat(bearer, e => Tutoriels = e,
+                                            (c, m) => DerniereErreur = $"tutoriels {c}: {m}");
             Rendre();
         }
 
@@ -130,20 +166,139 @@ namespace MafiaCleanCity.Account.Settings
                 return;
             }
 
-            Section("LA LANGUE");
+            // « La langue de la maison » : le mot RATIFIÉ (D14, Profil série 6 cadres 95-97), plus « LA LANGUE ».
+            Section(Lib("La langue de la maison"));
             foreach (string l in SettingsClient.Langues) Langue(l);
 
-            Section("CE QUI NE S'OUVRE PAS ENCORE");
-            Manque("Se déconnecter", "pas encore : la session se ferme avec l'appareil, pas d'ici");
-            Manque("Tout effacer", "pas encore : « et ne plus jamais revenir » n'a pas encore de guichet");
-            Manque("Les autres préférences", "pas encore : chaque réglage se prend là où il sert, il n'y a pas encore de tiroir pour les ranger ensemble");
+            // Le tiroir « Le jeu » : les deux préférences SERVIES, chacune sur sa route.
+            Section(Lib("Le jeu"));
+            if (Tutoriels != null)
+            {
+                bool allumee = BasculeTutoriels.Allumee(Tutoriels.tutorials_opt_out);   // le SEUL lieu de l'inversion, partagé avec ㉕
+                BasculeTutorielsAffichee = allumee;
+                Bascule("Bascule_Tutoriels", Lib("On vous explique encore"),
+                        Lib("décochez le jour où vous n’avez plus besoin qu’on vous tienne la main"), allumee,
+                        () => StartCoroutine(DefinirOptOut(BasculeTutoriels.OptOutPour(!allumee))));
+            }
+            bool visible = Profil.meta_market_visibility_enabled;
+            BasculeMarcheAffichee = visible;
+            Bascule("Bascule_Marche", Lib("Dire mes prix au marché"),
+                    Lib("sans ça, le marché de région ne vous dit rien non plus"), visible,
+                    () => StartCoroutine(DefinirVisibilite(!visible)));
+
+            // La sortie : « Fermer le coffre · cette session seulement » (ratifié, cadres 95-96), VIVANTE (`POST /v1/auth/signout`).
+            if (CoffreFerme)
+                Texte(corps, "CoffreFerme", Lib("Le coffre est fermé."), Px(11f), Creme2,
+                      DesignTokens.Current.hudSerifFont, TextAlignmentOptions.Center);
+            else
+                Geste("FermerLeCoffre", Lib("Fermer le coffre"), Lib("cette session seulement"),
+                      () => StartCoroutine(FermerLeCoffre()));
+
+            // Ce que le back NE sert PAS : dessiné par la porte ratifiée, éteint, avec sa raison — le client dit vrai.
+            Section(Lib("Ce qui ne s’ouvre pas encore"));
+            // D17 (atelier 38, `d75bb64e`) : l'espace INSÉCABLE U+00A0 avant « : » et à l'intérieur des « », comme le fr servi — un repli
+            // à espace ordinaire réintroduirait la coupure de ligne que D17 corrige. Écrit en `\u00A0`, visible dans la source.
+            Manque(Lib("Fermer partout"), Lib("pas encore\u00A0: toutes les sessions ouvertes n’ont pas encore de guichet"));
+            Manque(Lib("Tout effacer"), Lib("pas encore\u00A0: «\u00A0et ne plus jamais revenir\u00A0» n’a pas encore de guichet"));
             RendusEffectues++;
         }
 
         private void Section(string titre)
         {
-            Texte(corps, "S_" + titre, titre, Px(7.5f), Eteint,
-                  DesignTokens.Current.primaryFont).characterSpacing = 14f;
+            TextMeshProUGUI t = Texte(corps, "S_" + titre, titre, Px(7.5f), Eteint, DesignTokens.Current.primaryFont);
+            t.characterSpacing = 14f;
+            t.fontStyle = FontStyles.UpperCase;   // la casse est au RENDU : le catalogue garde « La langue de la maison »
+        }
+
+        /// <summary>Une bascule du tiroir « Le jeu » : libellé, sous-ligne, interrupteur (allumé : or, curseur à droite).</summary>
+        private void Bascule(string nom, string libelle, string sous, bool allumee, UnityEngine.Events.UnityAction geste)
+        {
+            GameObject ligne = Bloc(nom, corps, true, Px(8f));
+            var h = ligne.GetComponent<HorizontalLayoutGroup>();
+            h.childAlignment = TextAnchor.MiddleLeft;
+            h.childForceExpandWidth = false;
+            h.padding = new RectOffset((int)Px(10f), (int)Px(10f), (int)Px(6f), (int)Px(6f));
+            GameObject textes = Bloc("Textes", ligne.transform, false, Px(2f));
+            textes.AddComponent<LayoutElement>().flexibleWidth = 1f;
+            Texte(textes.transform, "Libelle", libelle, Px(10.5f), Creme, DesignTokens.Current.primaryFont).enableWordWrapping = true;
+            Texte(textes.transform, "Sous", sous, Px(7.5f), Creme2, DesignTokens.Current.primaryFont).enableWordWrapping = true;
+
+            GameObject piste = new GameObject("Interrupteur", typeof(RectTransform));
+            piste.transform.SetParent(ligne.transform, false);
+            LayoutElement pl = piste.AddComponent<LayoutElement>();
+            pl.preferredWidth = pl.minWidth = Px(22f);
+            pl.preferredHeight = pl.minHeight = Px(12f);
+            Image fond = piste.AddComponent<Image>();
+            fond.sprite = ProceduralUI.RoundedRectMask((int)Px(6f));
+            fond.type = Image.Type.Sliced;
+            fond.color = allumee ? Or : Eteint;
+            GameObject curseur = new GameObject("Curseur", typeof(RectTransform));
+            curseur.transform.SetParent(piste.transform, false);
+            var crt = (RectTransform)curseur.transform;
+            crt.anchorMin = crt.anchorMax = crt.pivot = new Vector2(allumee ? 1f : 0f, 0.5f);
+            crt.sizeDelta = new Vector2(Px(10f), Px(10f));
+            crt.anchoredPosition = new Vector2(allumee ? -Px(1f) : Px(1f), 0f);
+            Image rond = curseur.AddComponent<Image>();
+            rond.sprite = ProceduralUI.RoundedRectMask((int)Px(5f));
+            rond.type = Image.Type.Sliced;
+            rond.color = Creme;
+            rond.raycastTarget = false;
+
+            Image zone = ligne.AddComponent<Image>();
+            Color transparent = Color.white; transparent.a = 0f;
+            zone.color = transparent;
+            Button b = ligne.AddComponent<Button>();
+            b.targetGraphic = zone;
+            b.onClick.AddListener(geste);
+        }
+
+        /// <summary>Un geste VIVANT de la porte (« Fermer le coffre ») : contour or, libellé, sous-ligne.</summary>
+        private void Geste(string nom, string libelle, string sous, UnityEngine.Events.UnityAction action)
+        {
+            GameObject b = Bloc(nom, corps, false, Px(1f));
+            var v = b.GetComponent<VerticalLayoutGroup>();
+            v.childAlignment = TextAnchor.MiddleCenter;
+            v.padding = new RectOffset((int)Px(8f), (int)Px(8f), (int)Px(6f), (int)Px(6f));
+            Image bf = b.AddComponent<Image>();
+            bf.sprite = ProceduralUI.RoundedRectOutline((int)Px(9f), Px(1f), Or);
+            bf.type = Image.Type.Sliced;
+            TextMeshProUGUI l = Texte(b.transform, "L", libelle, Px(9f), Or, DesignTokens.Current.primaryFont, TextAlignmentOptions.Center);
+            l.characterSpacing = 10f;
+            l.fontStyle = FontStyles.UpperCase;
+            Texte(b.transform, "R", sous, Px(6.8f), Creme2, DesignTokens.Current.primaryFont, TextAlignmentOptions.Center);
+            b.AddComponent<Button>().onClick.AddListener(action);
+        }
+
+        private IEnumerator DefinirOptOut(bool optOut)
+        {
+            DernierOptOutDemande = optOut;
+            if (string.IsNullOrEmpty(token)) yield break;
+            yield return tutoriels.DefinirRefus(optOut, token, _ => { }, (c, m) => DerniereErreur = $"tutoriels {c}: {m}");
+            yield return Charger(token);   // le serveur seul décide de ce qui a été écrit
+        }
+
+        private IEnumerator DefinirVisibilite(bool enabled)
+        {
+            DerniereVisibiliteDemandee = enabled;
+            if (string.IsNullOrEmpty(token)) yield break;
+            yield return client.DefinirVisibiliteMarche(enabled, token, _ => { }, (c, m) => DerniereErreur = $"marché {c}: {m}");
+            yield return Charger(token);
+        }
+
+        /// <summary>`POST /v1/auth/signout` : la session courante est RÉVOQUÉE. Le jeton du shell ne vaut plus rien ensuite. Le SHELL
+        /// ferme le coffre (`IFermetureDuCoffre`) : il démonte ses locataires et n'offre qu'un geste, « Rouvrir le coffre », qui rejoue
+        /// le lancement. Monté seul, l'écran dit « Le coffre est fermé. » et ne relit rien.</summary>
+        private IEnumerator FermerLeCoffre()
+        {
+            DeconnexionDemandee = true;
+            if (string.IsNullOrEmpty(token)) yield break;
+            yield return client.Deconnecter(token, () => CoffreFerme = true, (c, m) => DerniereErreur = $"sortie {c}: {m}");
+            if (!CoffreFerme) yield break;
+            // Le SHELL ferme le coffre (décision f2 du 23/09) : il démonte tout — cet écran compris — et n'offre plus que « Rouvrir le
+            // coffre ». Monté seul (un test), l'écran le dit lui-même.
+            IFermetureDuCoffre shell = FermetureDuCoffreLocator.Find();
+            if (shell != null) shell.CoffreFerme();
+            else Rendre();
         }
 
         /// <summary>Un choix de langue. ⚠️ Les libellés sont écrits en DUR et c'est assumé : il

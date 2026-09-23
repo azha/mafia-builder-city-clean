@@ -50,7 +50,7 @@ VERDICTS = [
 
  (R, "AND_IF",                                  1, "RETIRÉ DE C — c'est le token de la GRAMMAIRE BACK que le joueur écrit dans ses règles. LieutenantUiExtensionPlayModeTests:607 asserte que ces tokens sont exposés « grounded VERBATIM in the backend grammar », et RuleEditorTier2:219 épingle la source sérialisée. L'afficher est délibéré."),
  (R, "(sans clé)",                              2, "RETIRÉ DE C — HorizonScreenController:180 porte, en code, « Le titre EST la clé : c'est ce que la maquette ratifiée montre »."),
- (R, "l'identifiant tient lieu de contenu",     1, "RETIRÉ DE C — même doctrine du trou honnête : l'écran DIT que l'identifiant remplace un texte non écrit. Aucun commentaire ne le ratifie explicitement ⇒ laissé en l'état plutôt que tranché sans maquette."),
+ (R, "l'identifiant tient lieu de contenu",     0, "CLOS 23/09 (㉕, 049a863e : D10-h close, le TEXTE servi remplace l'identifiant ; la note sort) — était : RETIRÉ DE C — même doctrine du trou honnête : l'écran DIT que l'identifiant remplace un texte non écrit. Aucun commentaire ne le ratifie explicitement ⇒ laissé en l'état plutôt que tranché sans maquette."),
 
  (B, "la route n'a rien rendu",                 0, "CLOS lot C 22/09 (㊳ le journal) — était : « route » = endpoint · lot C 22/09 : ㉞ les ordres du soir (4→3) · lot C 22/09 : ㊵ la filière (3→2) · lot C 22/09 : ㊴ le dossier (2→1)"),
  (B, "aucune route ne dit ce qu'elles",         0, "CLOS lot C 22/09 (㉙ le conflit) — était : « route » · lot C 22/09 : ㉙ le conflit (2→1)"),
