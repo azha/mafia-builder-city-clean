@@ -58,7 +58,7 @@ TABLE = [
       confiance="mesurée", note="référence = Tools/family-organigramme-reference-1120.png (1120×1850) et famille/ecran-canon.png ; ⑦ ⑧ sont des sections du même contrôleur"),
  dict(sym="⑪", ctl="LaunderingController", dossier="coffre", chemin="onglet FILIÈRE",
       cadres=[], nominal=None, planche="planche_la_filiere_1080x2400.png",
-      confiance="aucune", note="aucun cadre de série 4/6 ne dessine le pipeline ; coffre/ecran-canon.png est le seul canon. "
+      confiance="aucune", note="⛔ NE PLUS JUGER (2026-09-23, tranché par l'orchestrateur, atelier 25-… §1) : ⑪ SORT du chemin joueur — l'onglet Filière monte ㊵ (front.md §4 A, « le bouton ne ment pas ») ; ⑪ ⑫ ㊵ lisaient les mêmes 6 champs. Montage : CLIENT-1. — aucun cadre de série 4/6 ne dessine le pipeline ; coffre/ecran-canon.png est le seul canon. "
                                "✅ PLANCHE RÉTABLIE le 2026-09-07, par MESURE cette fois : la suite écrit "
                                "CapturerLocataire<LaunderingController>(shell, \"la_filiere\", …) "
                                "(PlancheEcransManquantsCapturePlayModeTests.cs:128) et le fichier existe. "
@@ -111,7 +111,7 @@ TABLE = [
       extras=[("screen_c1/reference-vocabulaire-1080x2102.png", "cadre 145, LES 11 CRANS — `fading` et `lingering` sont servis et n'avaient aucun dessin")]),
  dict(sym="㊵", ctl="FiliereScreenController", dossier="screen_c2", chemin="Plus → LA FILIÈRE",
       cadres=[(S6, list(range(137, 143)))], nominal=(S6, 137), planche="screen_c2_filiere_sous_chrome_1080x2400.png",
-      confiance="mesurée", note="le contrôleur cite le cadre 142 (« ce qui manque encore »)"),
+      confiance="mesurée", note="★ PORTE LA FILIÈRE (2026-09-23, tranché) : l'onglet Filière du dock monte ㊵ ; ⑪ (LaunderingController) et ⑫ (PipelineOverviewController) sortent du chemin joueur et ne sont PLUS À JUGER (atelier 25-… §1). Deux conditions à vérifier au jugement : ㊵ lit `deviation_active` (seul ⑪ le lisait), et l'ordre des étapes vient de `stage_index` (0 lecteur au 23/09 : l'ordre affiché était DÉDUIT). — le contrôleur cite le cadre 142 (« ce qui manque encore »)"),
  dict(sym="㉕", ctl="TutorialScreenController", dossier="compte", chemin="Plus → LA PREMIÈRE FOIS",
       cadres=[], nominal=None, planche="planche_la_premiere_fois_1080x2400.png",
       confiance="aucune", note="canon compte/tutoriel-canon.png ; aucun cadre de série 4/6 identifié"),

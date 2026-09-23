@@ -83,6 +83,25 @@ disent une surimpression courte. Je propose de dessiner **trois états** seuleme
 pression — avec les données déjà servies (`hl_card`, `queue[0]`, `queue_pressure_band`, `backlog_badge`), et de laisser les glances
 (`flag_review`, `settling`, `friction`, `compression`, `onboarding`) à leurs écrans. À f2 de valider ce périmètre avant que je dessine.
 
+### 2.1 Tranché par l'orchestrateur (2026-09-23)
+
+- **Périmètre de ④ VALIDÉ** : trois états — rien à trancher · une carte de tête · la file sous pression — avec `hl_card`, `queue[0]`,
+  `queue_pressure_band`, `backlog_badge`. **Ajout** : quand `hl_card.decision_type_key` vaut `AUTONOMY_REPORTS_PENDING`, l'état « carte de
+  tête » montre l'**entrée du rapport** (le lieutenant, « a un rapport pour vous » — les mots du bandeau, `22-…` §7.1 C) ; « une annonce sans
+  suite ment ». Le nom du lieutenant arrive au lot F du back.
+- **Questions pour l'user** (servies, non lues, NON dessinées — f2 les lui présente) :
+  1. `flag_review` (`pending_review_count`, `auto_open`) : des drapeaux attendent une relecture — l'ouverture de session doit-elle le dire ?
+  2. `settling_glance` (`settling_count`, `all_clear`) : des changements pas encore posés — le dire à l'ouverture ?
+  3. `friction_glance.penalty_active` : la friction coûte déjà — le dire, en plus de la bande ?
+  4. `onboarding` (`funnel_step`, `first_decision_recorded`) : un accueil différent pour le joueur neuf ?
+  5. `queue[].priority_band` : l'urgence d'une carte, à côté de sa gravité ?
+  6. `queue[].confidence_band` : l'assurance du lieutenant sur sa suggestion ?
+- **Défaut de langue** (`ExceptionQueuePanelController.cs:161-163`) : confié à CLIENT-1, avec balayage de la classe (tout lecteur de
+  `event_descriptor` brut).
+- **Filière** (§1) : reco (a) retenue — l'onglet Filière monte ㊵ ; ⑪ et ⑫ sortent du chemin joueur et ne sont plus à juger (inscrit
+  dans le générateur des dossiers, `construire-dossiers.py`, notes de ⑪ et de ㊵) ; conditions : ㊵ lit `deviation_active`, l'ordre vient de
+  `stage_index`. Montage : CLIENT-1.
+
 ## 3. ⑦ la fiche du lieutenant : la base de sa maquette
 
 `GET /v1/lieutenants/{id}` (famille, `25-annexe-07-lieutenant.md`) — ce que `LieutenantScreenController` (⑥ et ⑦) lit et ne lit pas :
