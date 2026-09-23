@@ -128,3 +128,12 @@ Tous deux sans clé servie à ce jour.
 | `tutorial.graduation` | 08c natif | — | un événement de promotion | Un lieutenant a fini son apprentissage. Il décide seul, dans le cadre que vous fixez. | A lieutenant has finished their apprenticeship. They decide alone, within the limits you set. | annexe |
 | `tutorial.compression_week` | 08c natif | — | un événement de compression | Semaine de compression : l'organisation est sous tension. Réduisez, ou encaissez. | Compression week: the organization is under strain. Cut back, or take the hit. | annexe |
 | `tutorial.vacancy` | 08c natif | — | jamais : `return false` | Un poste est vacant. Sans titulaire, la routine s'arrête là. | A post is vacant. With no one in it, the routine stops there. | annexe |
+
+## 8. Rendus (2026-09-23, tour de f2)
+
+- **Les 4 cadres**, en MAQUETTE À RATIFIER (jamais une référence) : `Tools/juge-visuel/compte/maquette-25-2026-09-23/cadre-{0..3}-1080x2102.png`.
+  Rendus de 06:46:31 à 06:46:35.
+- **Le premier rendu (06:44:25-06:44:30) n'a pas été commité**. Mes classes `.page` et `.texte` entraient en collision avec la tête de la
+  série 6 (`max-width:1380px`, `opacity:.7`) : la page touchait les bords, le cadre 3 était coupé, les bulles étaient atténuées.
+  Corrigé en suffixant les classes (atelier `bd6c3be`).
+- **Cadre 0** : le « : » de « bloquée : plus de solvant » tombe en début de ligne. C'est le défaut du servi (D17), montré tel qu'il est.
