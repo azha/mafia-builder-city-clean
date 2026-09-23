@@ -160,7 +160,7 @@ servie gardée 7, absent 2 · enseignes = 7 servies gardées + 40 à patronyme +
 Ligne 11, remplacer la phrase sur l'époque et le vocabulaire par :
 
 > Time period is **late 1980s – early 1990s** (era 1B — user ruling of 2026-09-06, « sombre / napolitain / mafieux »,
-> which supersedes the earlier « modern-indeterminate » wording). No specific technology or brand is name-checked.
+> which supersedes the earlier undated wording). No specific technology or brand is name-checked.
 > Brennar stays fictional and is **not located in any real country**: the ruling sets the *register* of names and
 > mood, not a real place.
 
