@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Text;
+using System.Text.RegularExpressions;
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -171,6 +172,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
                     catch (Exception ex) { onErr?.Invoke(req.responseCode, "parse error: " + ex.Message); yield break; }
 
                     if (bands == null) { onErr?.Invoke(req.responseCode, "empty lieutenant-bands payload"); yield break; }
+                    bands.cue_bands = ExtraireCueBands(req.downloadHandler.text);   // la map que JsonUtility ne lit pas (forme G)
                     onOk?.Invoke(bands);
                 }
                 else
@@ -179,6 +181,71 @@ namespace MafiaCleanCity.Operational.Lieutenant
                 }
             }
         }
+
+        // ------------------------------------------------------------- ⑦ les deux décisions (2026-09-23)
+
+        /// <summary>Les repères du back (`signal-drift-cues.ts:21`, CUE_KINDS) — ÉCRITS ici (domaine fermé) ; `DIRECT_ORDER` est l'ordre
+        /// direct lui-même, jamais un repère à brouiller (atelier 26 §3).</summary>
+        public static readonly string[] Reperes =
+            { "DIRECT_ORDER", "TERRITORY_STATE", "RESOURCE_AVAILABILITY", "TIME_SLOT", "PEER_BEHAVIOR" };
+
+        /// <summary>`cue_bands` est une MAP JSON (JsonUtility ne la lit pas). Clés ET valeurs sont des domaines FERMÉS : l'extraction
+        /// par clé sur le corps brut est exacte — le patron de `AutonomyClient.ExtractBudgetBands`.</summary>
+        internal static System.Collections.Generic.List<System.Collections.Generic.KeyValuePair<string, string>> ExtraireCueBands(string json)
+        {
+            var res = new System.Collections.Generic.List<System.Collections.Generic.KeyValuePair<string, string>>();
+            Match bloc = Regex.Match(json ?? "", "\"cue_bands\"\\s*:\\s*\\{([^}]*)\\}");
+            if (!bloc.Success) return res;
+            foreach (string cue in Reperes)
+            {
+                Match m = Regex.Match(bloc.Groups[1].Value, "\"" + cue + "\"\\s*:\\s*\"(dormant|partial|reliable|dominant)\"");
+                if (m.Success) res.Add(new System.Collections.Generic.KeyValuePair<string, string>(cue, m.Groups[1].Value));
+            }
+            return res;
+        }
+
+        /// <summary>`POST /v1/lieutenants/:id/signal-drift/decision` — kind ∈ reinforce_direct_order | reset_observation_window |
+        /// disrupt_cue ; `targetCue` EXIGÉ pour disrupt_cue (∈ Reperes), OMIS sinon. 200 `{ applied: true }` : la réponse ne porte
+        /// AUCUN état — l'appelant re-lit le lieutenant (GetBands) et rend CE corps. 409 cooldown, 422 geste/repère, 404 non possédé.</summary>
+        public IEnumerator SignalDriftDecision(string lieutenantId, string kind, string targetCue, string bearer,
+            Action onOk, Action<long, string> onErr)
+        {
+            string body = string.IsNullOrEmpty(targetCue)
+                ? JsonUtility.ToJson(new SignalDriftDecisionSansRepere { kind = kind })
+                : JsonUtility.ToJson(new SignalDriftDecisionAvecRepere { kind = kind, target_cue = targetCue });
+            yield return PosterDecision(Url($"/{lieutenantId}/signal-drift/decision"), body, bearer, onOk, onErr);
+        }
+
+        /// <summary>`POST /v1/lieutenants/:id/standing-order/decision` — kind ∈ RENEW | REVOKE | PROMOTE_TO_DEFAULT. 200
+        /// `{ applied: true }` (aucun état : re-lire). 409 : aucun ordre en cours, cooldown, ou PROMOTE sans « à promouvoir ».</summary>
+        public IEnumerator StandingOrderDecision(string lieutenantId, string kind, string bearer,
+            Action onOk, Action<long, string> onErr)
+        {
+            string body = JsonUtility.ToJson(new StandingOrderDecisionRequest { kind = kind });
+            yield return PosterDecision(Url($"/{lieutenantId}/standing-order/decision"), body, bearer, onOk, onErr);
+        }
+
+        /// <summary>Le POST commun aux deux décisions — Bearer + Idempotency-Key UUID v4, le patron de `ReassignLieutenant`.</summary>
+        private IEnumerator PosterDecision(string url, string body, string bearer, Action onOk, Action<long, string> onErr)
+        {
+            DerniereRequeteDecision = url + " " + body;
+            using (var req = new UnityWebRequest(url, UnityWebRequest.kHttpVerbPOST))
+            {
+                req.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(body));
+                req.downloadHandler = new DownloadHandlerBuffer();
+                req.timeout = TimeoutSeconds;
+                req.SetRequestHeader("Content-Type", "application/json");
+                if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
+                req.SetRequestHeader("Idempotency-Key", Guid.NewGuid().ToString());
+                yield return req.SendWebRequest();
+                if (req.result == UnityWebRequest.Result.Success) onOk?.Invoke();
+                else onErr?.Invoke(req.responseCode, ReadableError(req));
+            }
+        }
+
+        /// <summary>Crochet de test : l'URL et le corps de la DERNIÈRE décision envoyée — la garde de valeur compare la décision
+        /// ENVOYÉE à celle TOUCHÉE.</summary>
+        public string DerniereRequeteDecision { get; private set; }
 
         // ------------------------------------------------------------- roster (B2)
 

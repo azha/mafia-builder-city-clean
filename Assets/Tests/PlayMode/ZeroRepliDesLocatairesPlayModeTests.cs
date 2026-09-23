@@ -38,7 +38,40 @@ namespace MafiaCleanCity.Operational.Tests
         /// 0, et les 53 inscrites toutes servies (y compris les 2 que seule la garde voyait). Histoire : 24 → 26 → 42 → 48 → 53 → 0.
         /// Vide, la garde est un ZÉRO STRICT : tout repli observé rougit, nommé avec son écran. Elle ne se rallonge que par décision
         /// nommée, datée, avec la table qui la mesure.</summary>
-        private static readonly HashSet<string> DetteDatee = new HashSet<string>();
+        private static readonly HashSet<string> DetteDatee = new HashSet<string>
+        {
+            // ⑦ LES DEUX DÉCISIONS (2026-09-23) — 28 clés PROPOSÉES par l'atelier (26, page `ecrans-brennar-7-lieutenant.html` ; 41 §4, fd34321c), non
+            // ratifiées, NON servies au back d8e41362 (vérifié sur `string_table.ts` à d8e41362 : 0 sur 28). La dette ne fait que
+            // rétrécir : la règle (2) rougit dès qu'une est servie, pour la retirer d'ici.
+            "famille.ecran.signal",
+            "famille.ecran.ordre_permanent",
+            "famille.signal.a_l_ecoute",
+            "famille.signal.derive",
+            "famille.signal.n_ecoute_que_le_terrain",
+            "famille.signal.se_recale",
+            "famille.ordre.aucun_ordre",
+            "famille.ordre.expire_bientot",
+            "famille.repere.l_etat_du_terrain",
+            "famille.repere.ce_qu_il_reste",
+            "famille.repere.l_heure",
+            "famille.repere.ce_que_font_les_autres",
+            "famille.ecran.il_ecoute_autre_chose_que_vos_ordres",
+            "famille.ecran.rappeler_l_ordre_direct",
+            "famille.ecran.remettre_l_ecoute_a_zero",
+            "famille.ecran.brouiller_un_repere",
+            "famille.ecran.ce_qu_il_ecoute_a_la_place",
+            "famille.question.en_faire_la_regle",
+            "famille.ecran.son_ordre_du_moment_a_tenu_vous_pouvez_le_renouveler_le_retirer_ou_en_faire_sa_regle_par_defaut",
+            "famille.ecran.en_faire_la_regle",
+            "famille.ecran.renouveler",
+            "famille.ecran.retirer",
+            "famille.ordre.en_cours",
+            "famille.ordre.echu",
+            "famille.refus.trop_tot_pour_refaire_ce_geste",
+            "famille.refus.il_n_y_a_pas_d_ordre_en_cours",
+            "famille.refus.cet_ordre_n_a_pas_encore_fait_ses_preuves",
+            "famille.refus.ce_geste_n_est_pas_reconnu",
+        };
 
         /// <summary>Les locataires MESURÉS — écrits à la main (anti-tautologie), et leur couverture vérifiée par réflexion.</summary>
         private static readonly (string nom, Func<AppShell, MonoBehaviour> monter)[] Mesures =

@@ -316,7 +316,22 @@ namespace MafiaCleanCity.Operational.Lieutenant
 
         // ---- Phase-21 autonomy rows container --------------------------------
         private RectTransform autonomyRows;   // the container the per-category budget-band rows render into
-        private TextMeshProUGUI decisionErrorText;       // Phase-21 F2: cooldown failure detail — CHROME (component-tracked only, never in scan corpus)
+        private TextMeshProUGUI decisionErrorText;
+        // ⑦ LES DEUX DÉCISIONS (2026-09-23) — le signal qui dérive (cadre 1) et l'ordre permanent (cadre 2), maquette atelier 26.
+        private RectTransform signalSection, ordreSection, reperesListe;
+        private Button promouvoirButton;
+        private TextMeshProUGUI decisionsRefusText;
+        /// <summary>Crochet de test : la dernière décision TOUCHÉE (« signal:kind[:repère] » ou « ordre:kind ») — la garde compare
+        /// l'envoyée (`LieutenantClient.DerniereRequeteDecision`) à celle-ci.</summary>
+        public string DerniereDecisionTouchee { get; private set; }
+        /// <summary>Crochet de test : la classe du dernier refus (cooldown | aucun_ordre | promotion_refusee | invalide | autre), null si
+        /// la dernière décision a réussi.</summary>
+        public string DerniereClasseDeRefus { get; private set; }
+        /// <summary>Crochet de test : le client (pour lire la requête réellement envoyée).</summary>
+        public LieutenantClient ClientDesDecisions => client;
+        public bool SectionSignalVisible => signalSection != null && signalSection.gameObject.activeSelf;
+        public bool SectionOrdreVisible => ordreSection != null && ordreSection.gameObject.activeSelf;
+        public bool PromouvoirVisible => promouvoirButton != null && promouvoirButton.gameObject.activeSelf;       // Phase-21 F2: cooldown failure detail — CHROME (component-tracked only, never in scan corpus)
 
         // Slate palette (mirrors BuildingCardController + global_conventions_core direction).
         private static Color SurfaceBg => DesignTokens.Current.surfaceCard; // #16191b
@@ -949,6 +964,13 @@ namespace MafiaCleanCity.Operational.Lieutenant
             // role_efficiency_bonus (BONUS_NONE..BONUS_CAP) — the tenure yield REWARD (lost on a reassignment).
             AddStatusRow("gain_de_rendement", Lib("Gain de rendement"), EfficiencyBonusLabel(b.role_efficiency_bonus), EfficiencyBonusAccent(b.role_efficiency_bonus));
 
+            // ⑦ (2026-09-23) — les deux lignes que le back servait et qu'aucun écran ne lisait (atelier 26, cadre 0).
+            AddStatusRow("signal", Lib("Signal"), FamilleLabels.Signal(b.drift_phase),
+                b.drift_phase == "DRIFTING" ? AccentSevere : AccentMild);
+            AddStatusRow("ordre_permanent", Lib("Ordre permanent"),
+                FamilleLabels.OrdrePermanent(b.standing_order != null ? b.standing_order.freshness : null), AccentMild);
+            RenderDecisions();
+
             RenderScriptSource(b.script_source);
 
             // Refresh the reassign confirmation if it's open (the projected disruption + bonus-loss bands follow the fresh bands).
@@ -1337,6 +1359,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             AddLayoutElement(autonomySectionGo, flexibleHeight: 0);
             BuildAutonomySection((RectTransform)autonomySectionGo.transform);
             sectionsDetail.Add((RectTransform)autonomySectionGo.transform);
+            BuildDecisionsSections(card.transform);
 
             // Reassign section (B2 / Phase-11): the section label + the new-building inputs + the "Reassign…" button + the
             // confirmation block. Built BELOW the status section (the tenure chips it references) and ABOVE the rule-builder.
@@ -3053,6 +3076,160 @@ namespace MafiaCleanCity.Operational.Lieutenant
             if (decisionErrorText != null) decisionErrorText.text = "";
             SetOutcome(Lib("Décision appliquée ✓"), AccentMild);
             yield return RefreshAutonomy();
+        }
+
+        // ===================================================== ⑦ les deux décisions (2026-09-23) =====================================
+        // Maquette atelier 26 (`ecrans-brennar-7-lieutenant.html`, cadres 1 et 2), mots RECOPIÉS de la page (proposés, non ratifiés). La
+        // MÉCANIQUE et les données, pas le visuel au pixel (la maquette n'est pas ratifiée). Chaque décision : POST, puis RE-LECTURE du
+        // lieutenant (`RefreshBands`) — les deux routes rendent `{ applied: true }`, AUCUN état : l'écran rend le GET, jamais une supposition.
+        private void BuildDecisionsSections(Transform parent)
+        {
+            // Cadre 1 — « Il écoute autre chose que vos ordres » : visible ssi drift_phase == DRIFTING.
+            GameObject sig = NewUI("SignalDeriveSection", parent);
+            ConfigurerPile(sig);
+            signalSection = (RectTransform)sig.transform;
+            NewSectionLabel(signalSection, Lib("Il écoute autre chose que vos ordres"));
+            AddActionButton(signalSection, "rappeler_l_ordre_direct", Lib("Rappeler l’ordre direct"),
+                () => StartCoroutine(DecideSignal("reinforce_direct_order", null)));
+            AddActionButton(signalSection, "remettre_l_ecoute_a_zero", Lib("Remettre l’écoute à zéro"),
+                () => StartCoroutine(DecideSignal("reset_observation_window", null)));
+            AddActionButton(signalSection, "brouiller_un_repere", Lib("Brouiller un repère"),
+                () => { if (reperesListe != null) reperesListe.gameObject.SetActive(!reperesListe.gameObject.activeSelf); });
+            GameObject liste = NewUI("ReperesABrouiller", signalSection);
+            ConfigurerPile(liste);
+            reperesListe = (RectTransform)liste.transform;
+            NewSectionLabel(reperesListe, Lib("ce qu’il écoute à la place :"));
+            foreach (string cue in FamilleLabels.ReperesBrouillables)
+            {
+                string repere = cue;   // capture par itération
+                AddActionButton(reperesListe, "brouiller_" + repere.ToLowerInvariant(), FamilleLabels.Repere(repere),
+                    () => StartCoroutine(DecideSignal("disrupt_cue", repere)));
+            }
+            reperesListe.gameObject.SetActive(false);
+            sig.SetActive(false);
+            sectionsDetail.Add(signalSection);
+
+            // Cadre 2 — « En faire la règle ? » : visible ssi un ordre existe (freshness ≠ NONE) ; « En faire la règle » ssi
+            // promotion_suggested (sinon le back refuse PROMOTE_TO_DEFAULT en 409 — un geste qu'on ne laisse pas toucher).
+            GameObject ord = NewUI("OrdrePermanentSection", parent);
+            ConfigurerPile(ord);
+            ordreSection = (RectTransform)ord.transform;
+            NewSectionLabel(ordreSection, MafiaCleanCity.I18n.Libelle.De("famille", "question", "En faire la règle ?"));
+            TextMeshProUGUI phrase = NewText("OrdreQuestion", ordreSection,
+                Lib("Son ordre du moment a tenu. Vous pouvez le renouveler, le retirer, ou en faire sa règle par défaut."),
+                13, TextAlignmentOptions.Left);
+            if (!textComponents.Contains(phrase)) textComponents.Add(phrase);
+            promouvoirButton = AddActionButton(ordreSection, "en_faire_la_regle", Lib("En faire la règle"),
+                () => StartCoroutine(DecideOrdre("PROMOTE_TO_DEFAULT")));
+            AddActionButton(ordreSection, "renouveler", Lib("Renouveler"), () => StartCoroutine(DecideOrdre("RENEW")));
+            AddActionButton(ordreSection, "retirer", Lib("Retirer"), () => StartCoroutine(DecideOrdre("REVOKE")));
+            ord.SetActive(false);
+            sectionsDetail.Add(ordreSection);
+
+            // Le refus, en mots (une seule fonction : MotDuRefus) — le message serveur reste du CHROME, suivi par composant seulement.
+            decisionsRefusText = NewText("DecisionsRefus", parent, "", 12, TextAlignmentOptions.Left);
+            decisionsRefusText.color = AccentSevere;
+            AddLayoutElement(decisionsRefusText.gameObject, minHeight: 18, flexibleHeight: 0);
+            if (!textComponents.Contains(decisionsRefusText)) textComponents.Add(decisionsRefusText);
+        }
+
+        private static void ConfigurerPile(GameObject go)
+        {
+            VerticalLayoutGroup v = go.AddComponent<VerticalLayoutGroup>();
+            v.spacing = 6;
+            v.childControlWidth = true;
+            v.childControlHeight = true;
+            v.childForceExpandWidth = true;
+            v.childForceExpandHeight = false;
+            AddLayoutElement(go, flexibleHeight: 0);
+        }
+
+        /// <summary>Crochet de test : rend des bandes FABRIQUÉES (sans réseau) — pour les états des cadres 1 et 2 qu'un compte réel
+        /// n'atteint pas à coup sûr (DRIFTING naît du tick ; un ordre n'existe que si on l'émet). Ne prouve jamais ce que le back sert.</summary>
+        public void RendreBandesPourTest(LieutenantBands bandes)
+        {
+            EnsureInitialized();
+            CurrentBands = bandes;
+            RenderBands();
+        }
+
+        /// <summary>La visibilité des deux cadres suit le DERNIER GET (jamais la décision envoyée).</summary>
+        private void RenderDecisions()
+        {
+            LieutenantBands b = CurrentBands;
+            bool derive = b != null && b.drift_phase == "DRIFTING";
+            string fraicheur = b != null && b.standing_order != null ? b.standing_order.freshness : null;
+            bool ordre = !string.IsNullOrEmpty(fraicheur) && fraicheur != "NONE";
+            if (signalSection != null) signalSection.gameObject.SetActive(derive);
+            if (ordreSection != null) ordreSection.gameObject.SetActive(ordre);
+            if (promouvoirButton != null) promouvoirButton.gameObject.SetActive(ordre && b.standing_order.promotion_suggested);
+        }
+
+        /// <summary>Cadre 1 — une décision sur le signal. PUBLIC : la garde la pilote. `repere` exigé pour disrupt_cue, null sinon.</summary>
+        public IEnumerator DecideSignal(string kind, string repere)
+        {
+            EnsureInitialized();
+            if (!IsAuthenticated || string.IsNullOrEmpty(LastRecruitedId)) yield break;
+            DerniereDecisionTouchee = "signal:" + kind + (string.IsNullOrEmpty(repere) ? "" : ":" + repere);
+            bool ok = false; long code = 0; string msg = null;
+            yield return client.SignalDriftDecision(LastRecruitedId, kind, repere, Token, () => ok = true, (c, m) => { code = c; msg = m; });
+            if (Destroyed) yield break;
+            yield return ApresDecision(ok, code, msg);
+        }
+
+        /// <summary>Cadre 2 — une décision sur l'ordre permanent (RENEW | REVOKE | PROMOTE_TO_DEFAULT). PUBLIC : la garde la pilote.</summary>
+        public IEnumerator DecideOrdre(string kind)
+        {
+            EnsureInitialized();
+            if (!IsAuthenticated || string.IsNullOrEmpty(LastRecruitedId)) yield break;
+            DerniereDecisionTouchee = "ordre:" + kind;
+            bool ok = false; long code = 0; string msg = null;
+            yield return client.StandingOrderDecision(LastRecruitedId, kind, Token, () => ok = true, (c, m) => { code = c; msg = m; });
+            if (Destroyed) yield break;
+            yield return ApresDecision(ok, code, msg);
+        }
+
+        private IEnumerator ApresDecision(bool ok, long code, string msg)
+        {
+            if (!ok)
+            {
+                DerniereClasseDeRefus = ClasserRefus(code, msg);
+                SetOutcome(MotDuRefus(DerniereClasseDeRefus), AccentSevere);
+                if (decisionsRefusText != null) decisionsRefusText.text = msg ?? "";   // chrome : le motif serveur, jamais dans le corpus
+                yield break;
+            }
+            DerniereClasseDeRefus = null;
+            if (decisionsRefusText != null) decisionsRefusText.text = "";
+            SetOutcome(Lib("Décision appliquée ✓"), AccentMild);
+            yield return RefreshBands();   // l'écran rend CE que le back dit maintenant (RenderBands → RenderDecisions)
+        }
+
+        /// <summary>La classe d'un refus des deux routes, lue sur le code ET le message EXACT du back (les trois 409 partagent le code
+        /// `RESOURCE_STATE_CONFLICT`) : `standing-order.service.ts:234` (aucun ordre), `:248` et `signal-drift.service.ts:175`
+        /// (cooldown), `standing-order.service.ts:265` (promotion refusée) ; 422 : geste ou repère invalide.</summary>
+        public static string ClasserRefus(long code, string message)
+        {
+            string m = message ?? "";
+            if (code == 422) return "invalide";
+            if (code == 409 && m.Contains("is on cooldown")) return "cooldown";
+            if (code == 409 && m.Contains("has no standing order")) return "aucun_ordre";
+            if (code == 409 && m.Contains("not flagged for promotion")) return "promotion_refusee";
+            return "autre";
+        }
+
+        /// <summary>LE MOT d'un refus — UNE seule fonction, les codes jamais à l'écran. Mots de l'atelier 41 §4 (fd34321c, PROPOSÉS) ;
+        /// « autre » garde le mot SERVI « Échec de la décision. », le motif serveur restant en chrome. (Le refus « un ordre est déjà en
+        /// cours » vient de l'ÉMISSION d'un ordre, que ⑦ n'offre pas encore : il entrera avec elle, option (a).)</summary>
+        public static string MotDuRefus(string classe)
+        {
+            switch (classe)
+            {
+                case "cooldown":          return MafiaCleanCity.I18n.Libelle.De("famille", "refus", "Trop tôt pour refaire ce geste.");
+                case "aucun_ordre":       return MafiaCleanCity.I18n.Libelle.De("famille", "refus", "Il n’y a pas d’ordre en cours.");
+                case "promotion_refusee": return MafiaCleanCity.I18n.Libelle.De("famille", "refus", "Cet ordre n’a pas encore fait ses preuves.");
+                case "invalide":          return MafiaCleanCity.I18n.Libelle.De("famille", "refus", "Ce geste n’est pas reconnu.");
+                default: return Lib("Échec de la décision.");
+            }
         }
 
         // Map backend category keys to readable player-facing labels (TRACKED — digit-free).

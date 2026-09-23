@@ -119,7 +119,37 @@ namespace MafiaCleanCity.Operational.Lieutenant
         public string script_revision_cost;   // COST_1 | COST_2 | COST_3 | COST_MAX — how expensive re-scripting is (the inertia COST), DERIVED from the bucket
         public string reassignment_disruption;// DISRUPT_SHORT | DISRUPT_MED | DISRUPT_LONG | DISRUPT_MAX — the settling-window drag after a move, DERIVED from the bucket
         public string role_efficiency_bonus;  // BONUS_NONE | BONUS_LOW | BONUS_MID | BONUS_CAP — the tenure yield reward (NONE = no change for a FRESH one), DERIVED from the bucket
+        // ----- ⑦ LES DEUX DÉCISIONS (2026-09-23, forme G) — servis par `lieutenant.projection.service.ts:177-182`, jamais déclarés
+        //       jusqu'ici (0 occurrence dans Assets/Scripts) : le joueur ne pouvait prendre AUCUNE des 3 + 3 décisions que le back sert.
+        /// <summary>Phase-22 L2a : DIRECT_ALIGNED | DRIFTING | INCIDENTAL_LOCKED | RESETTING — la phase de dérive du signal. Le neutre
+        /// DIRECT_ALIGNED pour un lieutenant jamais observé.</summary>
+        public string drift_phase;
+        /// <summary>Phase-25 L3 : l'ordre permanent en BANDE (freshness NONE | FRESH | EXPIRES_SOON | EXPIRED, promotion_suggested).
+        /// ⚠️ JsonUtility rend une INSTANCE VIDE pour un objet absent : freshness null ⇒ absence (« — »), jamais « aucun ordre ».</summary>
+        public StandingOrderBandDto standing_order;
+        /// <summary>Phase-22 L2a : la fiabilité PAR REPÈRE (`{ CUE: dormant | partial | reliable | dominant }`, clés = CUE_KINDS). Une
+        /// MAP JSON, que JsonUtility ne lit pas : remplie par `LieutenantClient.ExtraireCueBands` depuis le corps brut (domaine fermé,
+        /// extraction exacte). Vide si le lieutenant n'a jamais été observé. Déclarée et LUE ; pas encore affichée (atelier 26 §2 :
+        /// « à redessiner quand un corps réel l'aura »).</summary>
+        [NonSerialized] public System.Collections.Generic.List<System.Collections.Generic.KeyValuePair<string, string>> cue_bands =
+            new System.Collections.Generic.List<System.Collections.Generic.KeyValuePair<string, string>>();
     }
+
+    /// <summary>`standing_order` de `GET /v1/lieutenants/:id` (Phase-25 L3 T5 ; R2.2 : la bande, jamais le tick d'expiration).</summary>
+    [Serializable]
+    public class StandingOrderBandDto
+    {
+        public string freshness;              // NONE | FRESH | EXPIRES_SOON | EXPIRED
+        public bool promotion_suggested;      // l'ordre est « à promouvoir » (motif de péremptions) — seule condition de PROMOTE_TO_DEFAULT
+    }
+
+    /// <summary>`POST /v1/lieutenants/:id/signal-drift/decision` — corps AVEC repère (disrupt_cue l'EXIGE).</summary>
+    [Serializable] public class SignalDriftDecisionAvecRepere { public string kind; public string target_cue; }
+    /// <summary>Le même corps SANS repère (reinforce_direct_order, reset_observation_window l'ignorent ; un repère présent mais
+    /// invalide serait un 422 — on ne l'envoie donc pas).</summary>
+    [Serializable] public class SignalDriftDecisionSansRepere { public string kind; }
+    /// <summary>`POST /v1/lieutenants/:id/standing-order/decision` — corps `{ kind }` ∈ RENEW | REVOKE | PROMOTE_TO_DEFAULT.</summary>
+    [Serializable] public class StandingOrderDecisionRequest { public string kind; }
 
     [Serializable] public class LieutenantBandsEnvelope { public LieutenantBandsPayload payload; }
     [Serializable] public class LieutenantBandsPayload { public LieutenantBands data; }

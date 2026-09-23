@@ -125,6 +125,53 @@ namespace MafiaCleanCity.Operational
         /// correspond à ce que le back en dit, sans en inventer le sens.</summary>
         /// <summary>L'ancienneté — la puce sous le nom dans l'organigramme, et le chip d'ancienneté
         /// des bandes de détail. Cinq paliers côté back (`tenure_bucket`).</summary>
+        /// <summary>⑦ — la phase du signal (`drift_phase`, Phase-22). Mots de l'atelier (26 §3, page `ecrans-brennar-7-lieutenant.html`,
+        /// cadres 0-1 ; « n’écoute que le terrain » et « se recale » : 26 §3, qui cite la 12) — PROPOSÉS, non ratifiés, non servis
+        /// avant le back d8e41362 (dette datée de `ZeroRepliDesLocatairesPlayModeTests`).</summary>
+        public static string Signal(string phase)
+        {
+            switch (phase)
+            {
+                case "DIRECT_ALIGNED":    return MafiaCleanCity.I18n.Libelle.De("famille", "signal", "à l’écoute");
+                case "DRIFTING":          return MafiaCleanCity.I18n.Libelle.De("famille", "signal", "dérive");
+                case "INCIDENTAL_LOCKED": return MafiaCleanCity.I18n.Libelle.De("famille", "signal", "n’écoute que le terrain");
+                case "RESETTING":         return MafiaCleanCity.I18n.Libelle.De("famille", "signal", "se recale");
+                default: return string.IsNullOrEmpty(phase) ? "—" : MafiaCleanCity.I18n.Repli.Etat(phase);
+            }
+        }
+
+        /// <summary>⑦ — l'ordre permanent (`standing_order.freshness`, Phase-25). NONE « aucun ordre » et EXPIRES_SOON « expire bientôt » :
+        /// la page (cadres 0 et 2) ; FRESH « en cours » et EXPIRED « échu » : atelier 41 §4 (fd34321c, PROPOSÉS ; EXPIRED ne se voit
+        /// que si lapse_action = HOLD_LAST). Hors domaine : `Repli.Etat` ; absent (objet vide) : « — ».</summary>
+        public static string OrdrePermanent(string freshness)
+        {
+            switch (freshness)
+            {
+                case "NONE":         return MafiaCleanCity.I18n.Libelle.De("famille", "ordre", "aucun ordre");
+                case "FRESH":        return MafiaCleanCity.I18n.Libelle.De("famille", "ordre", "en cours");
+                case "EXPIRES_SOON": return MafiaCleanCity.I18n.Libelle.De("famille", "ordre", "expire bientôt");
+                case "EXPIRED":      return MafiaCleanCity.I18n.Libelle.De("famille", "ordre", "échu");
+                default: return string.IsNullOrEmpty(freshness) ? "—" : MafiaCleanCity.I18n.Repli.Etat(freshness);
+            }
+        }
+
+        /// <summary>⑦ — les repères qu'on peut brouiller (`target_cue` de `disrupt_cue`), mots de la page (cadre 1). `DIRECT_ORDER` n'en
+        /// est pas un : c'est l'ordre direct lui-même (atelier 26 §3).</summary>
+        public static string Repere(string cue)
+        {
+            switch (cue)
+            {
+                case "TERRITORY_STATE":       return MafiaCleanCity.I18n.Libelle.De("famille", "repere", "l’état du terrain");
+                case "RESOURCE_AVAILABILITY": return MafiaCleanCity.I18n.Libelle.De("famille", "repere", "ce qu’il reste");
+                case "TIME_SLOT":             return MafiaCleanCity.I18n.Libelle.De("famille", "repere", "l’heure");
+                case "PEER_BEHAVIOR":         return MafiaCleanCity.I18n.Libelle.De("famille", "repere", "ce que font les autres");
+                default: return string.IsNullOrEmpty(cue) ? "—" : MafiaCleanCity.I18n.Repli.Etat(cue);
+            }
+        }
+
+        /// <summary>Les repères BROUILLABLES, dans l'ordre de la page (cadre 1).</summary>
+        public static readonly string[] ReperesBrouillables = { "TERRITORY_STATE", "RESOURCE_AVAILABILITY", "TIME_SLOT", "PEER_BEHAVIOR" };
+
         public static string Anciennete(string bucket)
         {
             switch (bucket)
