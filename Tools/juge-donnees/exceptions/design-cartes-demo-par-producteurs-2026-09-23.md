@@ -254,3 +254,22 @@ cartes supplémentaires du créneau joueur (M4 + liste nommée) · seuils de pro
 | 2 MINEUR | « un seul abonné » à `HeatInjectionEvent` repris sans recompte | recompté : 3 abonnés, dont 2 crochets de capture de test sans écriture, avec leurs `fichier:ligne` (§ 2) |
 | 3 MINEUR | « après le raid, `lab` sort de l'ensemble de propagation » | **CONTREDIT par le code, écrit au § 2** : le raid écrit `building_operational_state.structural_state` (`raid.repository.ts:199`), l'ensemble lit `buildings.structural_state` (`heat.repository.ts:141`) — deux colonnes distinctes (`operational_chain.ts:53`). `lab` RESTE source et cible ; il est donc compté par `blocHorsRayon()` et par M2c |
 
+## 15. Exécution — Phase 0, 2026-09-23 06:35 : M0 fait, **M2c = 0 ⇒ ARRÊT avant toute écriture**
+**M0** (06:35:33, avant tout geste du lot) : `empreinte-compte.sh demo_capture@example.test` → horloge 72155, 20 bâtiments,
+3 lieutenants, 2 planques, 8 highest_leverage_cards, 1 autonomy_report, 4 cartes non résolues / 6. Cartes classées par producteur
+(lecture seule, `BEGIN READ ONLY`) : **une P en attente** (`fa051b50`, `exception.heat_pressure.card.descriptor`, source
+`HEAT_PRESSURE`, actions acknowledge/escalate/lay_low) ⇒ la MUTE visera P, `candidate_actions[0]` (Phase 3) ; les autres en attente :
+`exc_demo_raid_style`, `exc_demo_teach_idle` (fabriquées, sans jumeau), `onboarding.preseed_exception.card`. Empreinte APRÈS l'arrêt
+(06:36:44) : **identique**.
+**M2c** (lecture seule, compte `operational_demo`) : **0 bloc libre sur 31** du district 16 à Chebyshev > 2 de tous les bâtiments du
+joueur (le meilleur est à 2). C'est GÉOMÉTRIQUE : le district 16 a y ∈ [0,3], x ∈ [0,9], et le joueur occupe x = 0,2,4,6,7,8 sur
+y = 0-1. ⇒ **Le lot s'arrête ici, rien n'est écrit** (règle du § 4, M2c).
+⚠️ **Constat pour le back** : les coordonnées de bloc sont LOCALES au district (`{x,y}` de 0-9 × 0-7, répétées dans les 18 districts)
+et `tileDistance` (`heat-propagation.service.ts:382-384`, `heat.repository.ts:88`) les compare SANS le district. Les bâtiments du joueur
+aux mêmes coordonnées locales dans des districts différents sont donc « voisins » (mesuré : `operational_demo` a un bâtiment en (0,0)
+dans les districts 1, 11, 13 et 16). La propagation traverse les districts — c'est peut-être voulu, peut-être un défaut : au back.
+**Replis possibles, à trancher par le back / f2** : (a) `lab2` dans un AUTRE district, sur un bloc à y ≥ 4 (districts 2-7, 9-14,
+17-18) — hors rayon avec la distance d'aujourd'hui ET avec une distance corrigée par district ; exige d'étendre la purge du seeder à ce
+bloc ; (b) un rayon plus petit pour ce compte (tunable `T.city.heat_propagation_radius_tiles`, surcharge DB) — touche tout le joueur ;
+(c) accepter la propagation et la BORNER (injections minimales, M2b(e) relève tous les bâtiments) — ce que la revue n°5 a refusé.
+
