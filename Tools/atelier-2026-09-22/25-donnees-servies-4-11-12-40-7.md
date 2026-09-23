@@ -102,6 +102,17 @@ pression — avec les données déjà servies (`hl_card`, `queue[0]`, `queue_pre
   dans le générateur des dossiers, `construire-dossiers.py`, notes de ⑪ et de ㊵) ; conditions : ㊵ lit `deviation_active`, l'ordre vient de
   `stage_index`. Montage : CLIENT-1.
 
+### 2.2 La maquette de ④ (dessinée le 2026-09-23, atelier `b4c6475`)
+
+`~/project/atelier3d-mafia/ecrans-brennar-accueil.html` (générée par `generer-maquette-4-2026-09-23.py`) : l'ouverture de session en VERRE sur la
+ville (série 6), quatre cadres — **rien à trancher** (« Rien à signaler », « Aucune décision en attente · Aucune exception en attente »,
+« Personne ne fait la queue — la routine tient ») · **une carte de tête** (`decision.type.*` « Un local à remettre en état », « Portée
+modérée · Urgence faible » — les mots de ⑤ ratifié, série 4 — et ses deux options `hl.option.*`) · **des rapports à lire** (l'entrée :
+« Lt. Quist a un rapport pour vous », « Lire maintenant » / « Laisser en attente ») · **la file sous pression** (« Les exceptions »,
+« saturée », « Plusieurs attendent encore »). Sous la carte, la suivante de la file : « {nom} attend vos ordres » · « grave » · « trancher ».
+Mots : 27 non marqués, tous servis ou ratifiés (vérifié contre `FR_MESSAGES` du back `e355ba63`) ; proposés : « la ville › » (la sortie vers
+la ville) et « d'autres attendent au-delà de ce que la file montre » (`backlog_badge`). Aucun rendu : lot `Tools/juge-visuel/rendre-lot-2026-09-23.py`.
+
 ## 3. ⑦ la fiche du lieutenant : la base de sa maquette
 
 `GET /v1/lieutenants/{id}` (famille, `25-annexe-07-lieutenant.md`) — ce que `LieutenantScreenController` (⑥ et ⑦) lit et ne lit pas :
