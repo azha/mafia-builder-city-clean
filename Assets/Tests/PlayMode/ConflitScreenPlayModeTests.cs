@@ -302,8 +302,8 @@ namespace MafiaCleanCity.Operational.Tests
             CollectionAssert.DoesNotContain(ecran.RenderedTexts, "jamais", "à 0, pas de doublon « jamais » + « on ne les a pas croisés »");
             foreach (string t in ecran.RenderedTexts)
                 StringAssert.DoesNotContain("une_5e_famille", t, "une famille hors domaine ne s'affiche nulle part, ni sa sentinelle");
-            CollectionAssert.DoesNotContain(ecran.RenderedTexts, "les ferrailleurs de Spine",
-                "sous-titres de lore retirés : aucune clé dans la table 40 (arbitrage du 23/09, point 19)");
+            Assert.AreEqual("les ferrailleurs de Spine", TexteDe(ecran, "Famille_coil", "SousTitre"),
+                "sous-titre de la maquette ratifiée, clé servie (balayage 34)");
         }
 
         [UnityTest]
@@ -356,6 +356,16 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.AreEqual("type inconnu", ConflitResolvers.NomFamille("BOGUS_5E_VALEUR"),
                 "une 5ᵉ valeur fabriquée tombe dans le mot de la famille, comme partout");
             Assert.AreEqual("—", ConflitResolvers.NomFamille(""), "absente : « — »");
+        }
+
+        [Test]
+        public void EcranConflitR2bis_SousTitreFamille_CouvreLesQuatreValeurs_EtUneCinquiemeTombeDansTypeInconnu()
+        {
+            Assert.AreEqual("les ferrailleurs de Spine", ConflitResolvers.SousTitreFamille("coil"));
+            Assert.AreEqual("le port, et ce qui y entre", ConflitResolvers.SousTitreFamille("tarcum"));
+            Assert.AreEqual("les docks du nord", ConflitResolvers.SousTitreFamille("iron_throat"));
+            Assert.AreEqual("la ligne de sel, à l’est", ConflitResolvers.SousTitreFamille("saltline"));   // D10 : apostrophe typographique
+            Assert.AreEqual("type inconnu", ConflitResolvers.SousTitreFamille("BOGUS_5E_VALEUR"));
         }
 
         [Test]

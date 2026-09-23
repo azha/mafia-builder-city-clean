@@ -359,10 +359,21 @@ namespace MafiaCleanCity.Operational
 
                 // Pâle : `onSurfaceDim`, jamais `onSurfacePrimary` — la couleur PORTE l'absence de
                 // donnée (aucune route ne dit ce qu'elles préparent), pas seulement la note ci-dessus.
-                TextMeshProUGUI nom = NouveauTexteFiche(ligne.transform, "Nom",
+                GameObject identite = NouveauUI("Identite", ligne.transform);
+                VerticalLayoutGroup vi = identite.AddComponent<VerticalLayoutGroup>();
+                vi.childControlWidth = true; vi.childControlHeight = true;
+                vi.childForceExpandWidth = true; vi.childForceExpandHeight = false;
+                AddLayoutElement(identite, flexibleWidth: 1);
+
+                TextMeshProUGUI nom = NouveauTexteFiche(identite.transform, "Nom",
                     ConflitResolvers.NomFamille(cle), 10.5f, DesignTokens.Current.onSurfaceDim, true);
-                AddLayoutElement(nom.gameObject, flexibleWidth: 1);
                 TrackText(nom.text);
+
+                // Sous-titre de la maquette ratifiée (cadres 59-61), clé SERVIE (balayage 34 : classe « servi »).
+                TextMeshProUGUI sousTitre = NouveauTexteFiche(identite.transform, "SousTitre",
+                    ConflitResolvers.SousTitreFamille(cle), 7.5f, DesignTokens.Current.onSurfaceMuted, false);
+                sousTitre.fontStyle = FontStyles.Italic;
+                TrackText(sousTitre.text);
 
                 // Compte indisponible : AUCUNE ligne de compte — la phrase d'erreur au-dessus le dit, un compte à zéro mentirait.
                 if (indisponible) continue;
@@ -724,6 +735,20 @@ namespace MafiaCleanCity.Operational
                 case "tarcum": return MafiaCleanCity.I18n.Libelle.De("conflit", "bloc", "Tarcum");
                 case "iron_throat": return MafiaCleanCity.I18n.Libelle.De("conflit", "bloc", "Gorge-de-Fer");
                 case "saltline": return MafiaCleanCity.I18n.Libelle.De("conflit", "bloc", "Saltline");
+                default: return MafiaCleanCity.I18n.Repli.Type(cle);
+            }
+        }
+
+        /// <summary>Le sous-titre de chaque famille — maquette ratifiée (cadres 59-61), clés servies `conflit.bloc.*` (balayage 34 de
+        /// l'atelier : classe « servi »). Hors des 4 ⇒ « type inconnu », comme `NomFamille`.</summary>
+        public static string SousTitreFamille(string cle)
+        {
+            switch (cle)
+            {
+                case "coil": return MafiaCleanCity.I18n.Libelle.De("conflit", "bloc", "les ferrailleurs de Spine");
+                case "tarcum": return MafiaCleanCity.I18n.Libelle.De("conflit", "bloc", "le port, et ce qui y entre");
+                case "iron_throat": return MafiaCleanCity.I18n.Libelle.De("conflit", "bloc", "les docks du nord");
+                case "saltline": return MafiaCleanCity.I18n.Libelle.De("conflit", "bloc", "la ligne de sel, à l’est");
                 default: return MafiaCleanCity.I18n.Repli.Type(cle);
             }
         }
