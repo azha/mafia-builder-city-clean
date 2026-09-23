@@ -290,7 +290,7 @@ namespace MafiaCleanCity.Operational.Tests
             yield return null;
 
             // Les quatre valeurs de la fiche (m-48), le bouton, et la pénurie (scarcity_active).
-            CollectionAssert.Contains(ecran.RenderedTexts, "il n'y a plus rien · 0 L",
+            CollectionAssert.Contains(ecran.RenderedTexts, "il n’y a plus rien · 0 L",
                 "ligne CE QU'IL EN RESTE absente ou mal composée");
             CollectionAssert.Contains(ecran.RenderedTexts, "le prix monte", "résolveur prix (UP) muet");
             CollectionAssert.Contains(ecran.RenderedTexts, "il vous fait attendre exprès",

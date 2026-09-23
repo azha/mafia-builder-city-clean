@@ -201,7 +201,8 @@ namespace MafiaCleanCity.Operational.Tests
         //    `days_until_maintenance_due` en mots — « Dans N j », « En retard de N j » (`BuildingCardController.EcheanceLabel`). Cette
         //    garde est plus ancienne, et le test ne tournait sous aucun filtre (TD-490) : elle a rougi le 23/09 06:48 sur « Dans 30 j ».
         //    Exemption ÉTROITE, ces deux formes EXACTES ; tout autre nombre nu reste un rouge.
-        private static bool EcheanceEnJours(string t) =>
+        // `internal` : la même exemption sert à la garde d'AshLuxury (même fiche ②, même ligne d'entretien) — une source.
+        internal static bool EcheanceEnJours(string t) =>
             Regex.IsMatch(t, @"^(Dans \d+ j|En retard de \d+ j)$");
 
         [UnityTest]

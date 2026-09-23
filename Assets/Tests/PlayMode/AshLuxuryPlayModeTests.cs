@@ -84,6 +84,10 @@ namespace MafiaCleanCity.Operational.Tests
         {
             foreach (string t in texts)
             {
+                // L'échéance d'entretien (« Dans N j », « En retard de N j », servie depuis 1eadfd3f) est un compte de jours DIT EN MOTS :
+                // la MÊME exemption étroite que la fiche ② (`BuildingCardPlayModeTests.EcheanceEnJours`). Mesuré au créneau du 23/09 :
+                // les deux tests réels d'AshLuxury rougissaient sur « Dans 30 j ».
+                if (BuildingCardPlayModeTests.EcheanceEnJours(t)) continue;
                 Assert.IsFalse(Regex.IsMatch(t, @"(?<![A-Za-z])\d+(\.\d+)?(?![A-Za-z])"),
                     $"no raw scalar may be shown client-side, but rendered text was: '{t}'");
             }
