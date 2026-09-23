@@ -23,6 +23,10 @@ namespace MafiaCleanCity.CityMap.Tests
     //   G5  prêt : « Faire sortir la marchandise » DESSINÉ mais GRISÉ (manque du back n°5), « vers les coursiers »
     //   G6  les passes : crans et compte suivent le réglage ; le compte passe par la clé ICU servie `building.bloc.passes_compte`
     //   G7  chaque état demande EXACTEMENT ses clés servies de la table 37 (aucune clé inventée par le client)
+    //   G8  ② lot 3 (cadre 44) : la charge SUPPLY_SOURCING retirée au joueur (DELEGATED ou RETIRED : tout sauf SELF, comme le garde
+    //       serveur) — lue dans `GET /v1/meta/task-categories` ; non lue ⇒ tenue par le joueur
+    //   G9  étagère vide + approvisionnement délégué ⇒ AUCUN bouton « Commander », la réplique du lieutenant et « où reprendre la main » ;
+    //       allumer et sortir restent au joueur
     [Category("FicheBatiment")]
     public class GesteDuPupitrePlayModeTests
     {
@@ -46,7 +50,7 @@ namespace MafiaCleanCity.CityMap.Tests
         };
 
         private (BuildingCardController fiche, Transform racine) Rendre(string type, string feu, string etagere, string precurseur,
-                                                                       int passes = 0)
+                                                                       int passes = 0, string etatAppro = null)
         {
             var host = new GameObject("FicheHost", typeof(RectTransform), typeof(Canvas));   // un Canvas À NOUS : aucun ne fuit
             montes.Add(host);
@@ -56,9 +60,15 @@ namespace MafiaCleanCity.CityMap.Tests
             fiche.SetRefiningPasses(passes);   // avant le rendu : le sélecteur lit ce réglage
             fiche.RendrePourTest(Carte(type), null,
                 feu == null ? null : new LabCookDto { building = "b-lab", cook_stage_band = feu },
-                etagere == null ? null : new GetOperationalPrecursorsResponseDto { building = "b-lab", stock_band = etagere, precursor_type = precurseur });
+                etagere == null ? null : new GetOperationalPrecursorsResponseDto { building = "b-lab", stock_band = etagere, precursor_type = precurseur },
+                charges: etatAppro == null ? null : Charges(("SUPPLY_SOURCING", etatAppro), ("ROUTE_ASSIGNMENT", "SELF")));
             return (fiche, host.transform);
         }
+
+        private static GetMetaTaskCategoriesResponseDto Charges(params (string cle, string etat)[] lignes) => new GetMetaTaskCategoriesResponseDto
+        {
+            task_categories = lignes.Select(l => new TaskCategoryRowDto { category_key = l.cle, delegation_state = l.etat }).ToArray(),
+        };
 
         private static readonly string[] BoutonsDuPupitre = { "Action_commander", "Action_allumer_le_feu", "Action_faire_sortir_la_marchandise" };
 
@@ -82,6 +92,11 @@ namespace MafiaCleanCity.CityMap.Tests
             foreach (string s in new[] { "NONE", "HIGH", null })
                 Assert.AreEqual(Geste.EnCuisson, BuildingCardController.GesteSelonLEtat(f, s), $"{f}/{s} : la cuisson prime");
             Assert.AreEqual(Geste.FaireSortir, BuildingCardController.GesteSelonLEtat("DONE", "NONE"));
+            // ② lot 3 : la délégation ne remplace QUE « Commander » — le seul geste que le garde SUPPLY_SOURCING refuse
+            Assert.AreEqual(Geste.ApprovisionnementDelegue, BuildingCardController.GesteSelonLEtat("IDLE", "NONE", true));
+            Assert.AreEqual(Geste.Allumer, BuildingCardController.GesteSelonLEtat("IDLE", "LOW", true));
+            Assert.AreEqual(Geste.EnCuisson, BuildingCardController.GesteSelonLEtat("MID", "NONE", true));
+            Assert.AreEqual(Geste.FaireSortir, BuildingCardController.GesteSelonLEtat("DONE", "NONE", true));
             foreach (string f in new[] { null, "", "__HORS_DOMAINE__" })
                 Assert.AreEqual(Geste.Aucun, BuildingCardController.GesteSelonLEtat(f, "HIGH"), $"« {f} » : aucun geste");
         }
@@ -204,6 +219,53 @@ namespace MafiaCleanCity.CityMap.Tests
                                                              && !k.StartsWith("building.cook_stage.")).ToArray();
                 CollectionAssert.AreEquivalent(kv.Value, propres, $"{kv.Key} : les clés du geste, exactement");
             }
+
+            // ② lot 3 : l'état délégué, mesuré contre le MÊME fond (même fiche, cuisson non lue)
+            Libelle.RemettreLesCompteurs();
+            Rendre("lab", null, "NONE", "PYRALIN", etatAppro: "DELEGATED");
+            var fondDelegue = new HashSet<string>(Libelle.ClesEnRepli);
+            Libelle.RemettreLesCompteurs();
+            Rendre("lab", "IDLE", "NONE", "PYRALIN", etatAppro: "DELEGATED");
+            CollectionAssert.AreEquivalent(new[]
+            {
+                "building.replique.l_approvisionnement_c_est_moi_maintenant_vous_me_l_avez_confie_je_commande_quand_il_faut",
+                "building.bloc.vous_ne_passez_plus_les_commandes_vous_meme",
+                "building.bloc.reprendre_la_main_se_fait_depuis_la_famille_pas_depuis_le_labo",
+            }, Libelle.ClesEnRepli.Where(k => !fondDelegue.Contains(k) && k != "building.row.le_feu" && !k.StartsWith("building.cook_stage.")).ToArray(),
+                "délégué : les clés du cadre 44, exactement — et PAS `building.commande.*`");
+        }
+
+        [Test]
+        public void G8_LApprovisionnementDelegue_ToutSaufSelf_NonLuVautTenu()
+        {
+            Assert.IsFalse(BuildingCardController.ApprovisionnementDelegue(null), "charges non lues : tenu par le joueur");
+            Assert.IsFalse(BuildingCardController.ApprovisionnementDelegue(new GetMetaTaskCategoriesResponseDto()));
+            Assert.IsFalse(BuildingCardController.ApprovisionnementDelegue(Charges(("SUPPLY_SOURCING", "SELF"))));
+            Assert.IsTrue(BuildingCardController.ApprovisionnementDelegue(Charges(("SUPPLY_SOURCING", "DELEGATED"))));
+            Assert.IsTrue(BuildingCardController.ApprovisionnementDelegue(Charges(("SUPPLY_SOURCING", "RETIRED"))),
+                "RETIRED aussi : le garde serveur refuse tout sauf SELF");
+            Assert.IsFalse(BuildingCardController.ApprovisionnementDelegue(Charges(("ROUTE_ASSIGNMENT", "DELEGATED"), ("SUPPLY_SOURCING", "SELF"))),
+                "une AUTRE charge déléguée ne retire pas la commande");
+            Assert.IsFalse(BuildingCardController.ApprovisionnementDelegue(Charges(("SUPPLY_SOURCING", null))), "état absent : non lu");
+        }
+
+        [Test]
+        public void G9_Delegue_AucunCommander_LeLieutenantParle_EtOnSaitOuReprendreLaMain()
+        {
+            var (fiche, r) = Rendre("lab", "IDLE", "NONE", "PYRALIN", etatAppro: "DELEGATED");
+            Assert.AreEqual(Geste.ApprovisionnementDelegue, fiche.GesteDuPupitreAffiche);
+            Assert.IsEmpty(Boutons(r), "la commande est au lieutenant : aucun bouton qui finirait en 409 CATEGORY_DELEGATED");
+            CollectionAssert.AreEqual(new[] { "« L’approvisionnement, c’est moi maintenant — vous me l’avez confié. Je commande quand il faut. »" },
+                Lignes(r, "Replique"));
+            CollectionAssert.AreEqual(new[] { "Vous ne passez plus les commandes vous-même.",
+                                              "Reprendre la main se fait depuis la Famille, pas depuis le labo." }, Lignes(r, "Bloc"));
+
+            var (allume, ra) = Rendre("lab", "IDLE", "HIGH", "PYRALIN", etatAppro: "DELEGATED");
+            Assert.AreEqual(Geste.Allumer, allume.GesteDuPupitreAffiche, "l'allumage n'est pas la charge déléguée");
+            Assert.AreEqual("Allumer le feu", Texte(Boutons(ra).Single()));
+
+            var (tenu, _) = Rendre("lab", "IDLE", "NONE", "PYRALIN", etatAppro: "SELF");
+            Assert.AreEqual(Geste.Commander, tenu.GesteDuPupitreAffiche, "contrôle : SELF commande");
         }
     }
 }

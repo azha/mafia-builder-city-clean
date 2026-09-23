@@ -23,6 +23,7 @@ namespace MafiaCleanCity.CityMap.Tests
     //   P5  RÉEL, LECTURE SEULE (demande de l'orchestrateur, 23/09) : sur un vrai labo du compte `operational_demo`, `LoadBuilding`
     //       remplit les trois échelles depuis `lab/:id`, `precursors?building_id` et `storage/:id`, et chaque échelle dit la VALEUR
     //       que le back sert (vérité terrain lue À PART, par une connexion et trois GET indépendants). Aucune mutation, aucune semence.
+    //       + ② lots 2-3 : les charges (`meta/task-categories`) lues à part aussi, et le geste posé est celui de l'état servi.
     [Category("FicheBatiment")]
     public class PupitrePlayModeTests
     {
@@ -111,6 +112,11 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.IsNull(e1, $"GET lab/{labo.building} ({labo.operational_type}) : {e1}");
             Assert.IsNull(e2, $"GET precursors?building_id={labo.building} : {e2}");
             Assert.IsNull(e3, $"GET storage/{labo.building} : {e3}");
+            GetMetaTaskCategoriesResponseDto charges = null; string e4 = null;
+            yield return new DelegationClient { BaseUrl = BaseUrl }.GetMetaTaskCategories(jeton, d => charges = d, refus => e4 = refus.message);
+            Assert.IsNull(e4, $"GET /v1/meta/task-categories : {e4}");
+            Assert.IsTrue(charges.task_categories.Any(c => c.category_key == "SUPPLY_SOURCING"),
+                "② lot 3 : la charge SUPPLY_SOURCING est servie (une des 4 LIVE)");
             CollectionAssert.Contains(DomaineFeu, feu.cook_stage_band, "la forme G déclarée : cook_stage_band dans son domaine");
             CollectionAssert.Contains(DomaineStock, etagere.stock_band);
             CollectionAssert.Contains(DomaineStock, caisses.product_band);
@@ -129,6 +135,12 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.AreEqual(feu.cook_stage_band, fiche.CurrentLab?.cook_stage_band, "l'écran a lu `lab/:id`");
             Assert.AreEqual(etagere.stock_band, fiche.CurrentPrecursors?.stock_band, "l'écran a lu `precursors`");
             Assert.AreEqual(caisses.product_band, fiche.CurrentStorage?.product_band);
+
+            // ② lots 2-3 : la fiche a lu les MÊMES charges, et pose le geste que l'état servi appelle.
+            bool delegue = BuildingCardController.ApprovisionnementDelegue(charges);
+            Assert.AreEqual(delegue, BuildingCardController.ApprovisionnementDelegue(fiche.CurrentTaskCategories), "l'écran a lu task-categories");
+            Assert.AreEqual(BuildingCardController.GesteSelonLEtat(feu.cook_stage_band, etagere.stock_band, delegue), fiche.GesteDuPupitreAffiche,
+                $"le geste de l'état servi (feu {feu.cook_stage_band}, étagère {etagere.stock_band}, appro délégué : {delegue})");
 
             Transform r = host.transform;
             Assert.AreEqual((BuildingCardController.CransDuFeu(feu.cook_stage_band), 5, "le feu",

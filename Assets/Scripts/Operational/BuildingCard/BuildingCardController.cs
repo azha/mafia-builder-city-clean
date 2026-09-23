@@ -73,6 +73,10 @@ namespace MafiaCleanCity.Operational
         /// <summary>Le stock de précurseur du bâtiment (GET /v1/operational/precursors?building_id — le DTO de la chaîne d'appro,
         /// RÉUTILISÉ). Null hors pupitre, ou sur erreur : pas de ligne « l'étagère ».</summary>
         public GetOperationalPrecursorsResponseDto CurrentPrecursors { get; private set; }
+        /// <summary>② lot 3 — l'état de délégation des charges (GET /v1/meta/task-categories, le DTO de la Délégation RÉUTILISÉ). Null
+        /// hors pupitre ou sur erreur : l'approvisionnement est alors lu comme tenu par le joueur (le 409 CATEGORY_DELEGATED dirait le
+        /// reste, en mots, par `LigneDAction`).</summary>
+        public GetMetaTaskCategoriesResponseDto CurrentTaskCategories { get; private set; }
 
         // ---- Phase-2b raid/repair test hooks -------------------------------
         /// <summary>The player's qualitative wallet band (GET /v1/economy/wallet) used ONLY to gate Repair
@@ -188,6 +192,7 @@ namespace MafiaCleanCity.Operational
             if (auth != null) auth.BaseUrl = url;
             if (client != null) client.BaseUrl = url;
             if (appro != null) appro.BaseUrl = url;
+            if (delegation != null) delegation.BaseUrl = url;
         }
 
         private readonly List<string> renderedTexts = new List<string>();
@@ -205,6 +210,7 @@ namespace MafiaCleanCity.Operational
         private AuthClient auth;
         private BuildingCardClient client;
         private ChaineDApproClient appro;   // ② lot 1 : la route des précurseurs a UN client, celui de la chaîne d'appro
+        private DelegationClient delegation;   // ② lot 3 : les charges déléguées ont UN client, celui de la Délégation
 
         // Slate palette (mirrors CityMap + global_conventions_core direction).
         private static Color SurfaceBg => DesignTokens.Current.surfaceCard; // #16191b
@@ -256,6 +262,7 @@ namespace MafiaCleanCity.Operational
             auth = new AuthClient { BaseUrl = baseUrl };
             client = new BuildingCardClient { BaseUrl = baseUrl };
             appro = new ChaineDApproClient { BaseUrl = baseUrl };
+            delegation = new DelegationClient { BaseUrl = baseUrl };
             BuildLayout();
             EnsureEventSystem();
         }
@@ -359,9 +366,11 @@ namespace MafiaCleanCity.Operational
         /// <summary>⛔ Réservé aux tests (② lot 1) : rend la fiche depuis des données DONNÉES, sans réseau — même `Render` que le
         /// chargement, mêmes hooks. Les données absentes (null) le sont comme après une erreur de route.</summary>
         public void RendrePourTest(BuildingCardDto card, StorageDto storage = null, LabCookDto lab = null,
-                                   GetOperationalPrecursorsResponseDto precursors = null, GrowSessionDto grow = null)
+                                   GetOperationalPrecursorsResponseDto precursors = null, GrowSessionDto grow = null,
+                                   GetMetaTaskCategoriesResponseDto charges = null)
         {
             EnsureInitialized();
+            CurrentTaskCategories = charges;
             CurrentCard = card;
             CurrentStorage = storage;
             CurrentLab = lab;
@@ -377,6 +386,7 @@ namespace MafiaCleanCity.Operational
         {
             CurrentLab = null;
             CurrentPrecursors = null;
+            CurrentTaskCategories = null;
             if (!APupitre(operationalType)) yield break;
             LabCookDto lab = null;
             yield return client.GetLab(id, Token, l => lab = l, (code, msg) => lab = null);
@@ -384,6 +394,9 @@ namespace MafiaCleanCity.Operational
             GetOperationalPrecursorsResponseDto pre = null;
             yield return appro.GetOperationalPrecursors(Token, id, p => pre = p, (code, msg) => pre = null);
             CurrentPrecursors = pre;
+            GetMetaTaskCategoriesResponseDto charges = null;
+            yield return delegation.GetMetaTaskCategories(Token, c => charges = c, refus => charges = null);
+            CurrentTaskCategories = charges;
         }
 
         /// <summary>Fetch the qualitative wallet band (REUSE the economy projection). Conservative on failure.</summary>
@@ -1450,21 +1463,38 @@ namespace MafiaCleanCity.Operational
             b == "LOW" || b == "MEDIUM" || b == "HIGH" ? AccentMild : DesignTokens.Current.onSurfaceMuted;
 
         // ----- ② lot 2 (2026-09-23) : UN geste selon l'état du pupitre (écart ② `c4520078`, cadres 39, 40, 41, 43) -----
-        public enum GesteDuPupitre { Aucun, Commander, Allumer, EnCuisson, FaireSortir }
+        public enum GesteDuPupitre { Aucun, Commander, Allumer, EnCuisson, FaireSortir, ApprovisionnementDelegue }
 
         /// <summary>Le geste que l'état appelle — un seul à la fois. La cuisson prime : une cuve qui tourne n'appelle ni commande ni
         /// allumage (le 409 « une cuve à la fois » est DIT avant, pas codé). À IDLE, l'étagère décide : vide ⇒ commander, sinon allumer.
         /// ⚠️ Étagère non lue (route en erreur) à IDLE ⇒ « Allumer » : le serveur tranche (422 sans précurseur), le client ne devine pas
-        /// un vide. Cuisson non lue ou hors domaine ⇒ AUCUN geste : on ne propose pas d'agir sur un état qu'on ne connaît pas.</summary>
-        public static GesteDuPupitre GesteSelonLEtat(string cookStageBand, string stockBand)
+        /// un vide. Cuisson non lue ou hors domaine ⇒ AUCUN geste : on ne propose pas d'agir sur un état qu'on ne connaît pas.
+        /// ② lot 3 : `approvisionnementDelegue` — la charge SUPPLY_SOURCING n'est plus tenue par le joueur ; la commande lui est alors
+        /// refusée (`assertNotDelegated(SUPPLY_SOURCING)`, precursors.controller.ts:73) : le geste « Commander » devient l'état délégué
+        /// (cadre 44). Les autres gestes ne dépendent pas de cette charge : allumer ou sortir restent au joueur.</summary>
+        public static GesteDuPupitre GesteSelonLEtat(string cookStageBand, string stockBand, bool approvisionnementDelegue = false)
         {
             switch (cookStageBand)
             {
                 case "EARLY": case "MID": case "LATE": return GesteDuPupitre.EnCuisson;
                 case "DONE": return GesteDuPupitre.FaireSortir;
-                case "IDLE": return stockBand == "NONE" ? GesteDuPupitre.Commander : GesteDuPupitre.Allumer;
+                case "IDLE":
+                    if (stockBand != "NONE") return GesteDuPupitre.Allumer;
+                    return approvisionnementDelegue ? GesteDuPupitre.ApprovisionnementDelegue : GesteDuPupitre.Commander;
                 default: return GesteDuPupitre.Aucun;
             }
+        }
+
+        /// <summary>② lot 3 — la charge SUPPLY_SOURCING est-elle retirée au joueur ? Le garde serveur refuse dès que `delegation_state`
+        /// n'est pas `SELF` (category-delegation-guard.service.ts:59-64 : DELEGATED ET RETIRED). Charges non lues, ou catégorie
+        /// absente ⇒ false : on ne dit pas « délégué » sans l'avoir lu.</summary>
+        public static bool ApprovisionnementDelegue(GetMetaTaskCategoriesResponseDto charges)
+        {
+            if (charges?.task_categories == null) return false;
+            foreach (TaskCategoryRowDto c in charges.task_categories)
+                if (c != null && c.category_key == "SUPPLY_SOURCING")
+                    return !string.IsNullOrEmpty(c.delegation_state) && c.delegation_state != "SELF";
+            return false;
         }
 
         /// <summary>Le geste « Commander » : une FAMILLE indexée par le précurseur SERVI, `building.commande.<precursor_type>` (décision
@@ -2101,7 +2131,8 @@ namespace MafiaCleanCity.Operational
         private void AddGesteDuPupitre(BuildingCardDto card)
         {
             bool ash = card.operational_type == "specialized_lab";
-            GesteDuPupitre geste = GesteSelonLEtat(CurrentLab?.cook_stage_band, CurrentPrecursors?.stock_band);
+            GesteDuPupitre geste = GesteSelonLEtat(CurrentLab?.cook_stage_band, CurrentPrecursors?.stock_band,
+                ApprovisionnementDelegue(CurrentTaskCategories));
             GesteDuPupitreAffiche = geste;
             switch (geste)
             {
@@ -2112,6 +2143,14 @@ namespace MafiaCleanCity.Operational
                     AddLigneDuGeste("Bloc", Cle("bloc", "il en faut avant de rallumer"));
                     break;
                 }
+                case GesteDuPupitre.ApprovisionnementDelegue:
+                    // ② lot 3 (cadre 44) : AUCUN bouton — la commande est au lieutenant ; le joueur sait où reprendre la main. La ligne
+                    // « l'approvisionnement · J11 » de la maquette attend la bulle du lieutenant (et « J11 » n'est porté par aucun champ).
+                    AddLigneDuGeste("Replique", Cle("replique",
+                        "«\u00A0L’approvisionnement, c’est moi maintenant — vous me l’avez confié. Je commande quand il faut.\u00A0»"));
+                    AddLigneDuGeste("Bloc", Cle("bloc", "Vous ne passez plus les commandes vous-même."));
+                    AddLigneDuGeste("Bloc", Cle("bloc", "Reprendre la main se fait depuis la Famille, pas depuis le labo."));
+                    break;
                 case GesteDuPupitre.Allumer:
                     if (ash)
                     {
