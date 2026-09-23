@@ -221,7 +221,7 @@ namespace MafiaCleanCity.Operational
         /// 10 types RÉELLEMENT rencontrés sur ce compte (2026-09-03) sont nommés ; repli GRACIEUX
         /// (littéral brut) pour les 2 restants du domaine à 12 membres, jamais un throw : ce
         /// n'est pas un domaine fermé annoncé par une erreur, juste une énumération observée.</summary>
-        private static string NomTypeBatiment(string operationalType)
+        public static string NomTypeBatiment(string operationalType)
         {
             switch (operationalType)
             {

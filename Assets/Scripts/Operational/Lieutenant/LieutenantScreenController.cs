@@ -1122,7 +1122,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
         // Every label below is a closed-domain WORD/phrase — never a tick count, never a multiplier number.
 
         // ----- tenure_bucket (FRESH | ACCLIMATED | SEASONED | SENIOR | ENTRENCHED) — EXHAUSTIVE over TenureBucketBand. -----
-        private static string TenureBucketLabel(string b)
+        public static string TenureBucketLabel(string b)
         {
             // « i18n partout » (ruling user) : un seul résolveur nommé pour l'ancienneté, partagé
             // avec l'organigramme. Les libellés anglais vivaient ici en dur.
@@ -3101,7 +3101,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
         }
 
         // Map backend category keys to readable player-facing labels (TRACKED — digit-free).
-        private static string CategoryLabel(string c)
+        public static string CategoryLabel(string c)
         {
             switch (c) {
                 case "PRODUCTION_OPS": return MafiaCleanCity.I18n.Libelle.De("famille", "category", "Opérations de production");
@@ -3116,7 +3116,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
         }
 
         // Map budget band values to player-facing gauge labels (TRACKED — closed-domain, digit-free strings).
-        private static string BandLabel(string b)
+        public static string BandLabel(string b)
         {
             switch (b) {
                 case "full": return MafiaCleanCity.I18n.Libelle.De("famille", "band", "[####] Plein");

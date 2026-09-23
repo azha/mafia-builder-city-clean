@@ -1102,6 +1102,10 @@ namespace MafiaCleanCity.Operational
                 case "grow_house": return Bande("type", "grow_house", "Serre");
                 case "distribution_hub": return Bande("type", "distribution_hub", "Relais");
                 case "money_holding": return Bande("type", "money_holding", "Banque");
+                // 23/09 — les deux types que la couverture de domaine a trouvés sans mot (le back les sert : `operational_chain.ts:26-30`) ;
+                // mots de l'atelier 22 (§7.1 B), clés `building.type.press_house` / `.office` SERVIES.
+                case "press_house": return Bande("type", "press_house", "Imprimerie");
+                case "office": return Bande("type", "office", "Agence");
                 case "": case null: return "Pas encore ouvert";   // aucune valeur servie ⇒ aucune clé ; famille « Ouvrir » (orchestration 22/09)
                 default: return MafiaCleanCity.I18n.Repli.Type(t);   // hors domaine : le mot de la famille, jamais la valeur brute (atelier 28)
             }
