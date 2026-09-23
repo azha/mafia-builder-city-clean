@@ -406,7 +406,8 @@ namespace MafiaCleanCity.Shell.Tests
             var typesAttendus = new List<string>
             {
                 nameof(CityMapController),
-                nameof(LaunderingController), nameof(ExceptionQueueController), nameof(AutonomyInboxController),
+                // ㊵ remplace ⑪ sur la nav Filière (2026-09-23, ruling de f2 : ⑪ et ⑫ sortent du chemin joueur).
+                nameof(FiliereScreenController), nameof(ExceptionQueueController), nameof(AutonomyInboxController),
                 nameof(ExceptionDetailController),
                 // ⚠️ 2026-09-02 : ㊲ n'est plus monté par `Tab.More` (qui ouvre un menu) — il ne
                 // fait donc plus partie des locataires vivants de ce scénario.
@@ -589,7 +590,7 @@ namespace MafiaCleanCity.Shell.Tests
             var typeParMembre = new Dictionary<DashboardController.NavTarget, Type>
             {
                 { DashboardController.NavTarget.CityMap, typeof(CityMapController) },
-                { DashboardController.NavTarget.Pipeline, typeof(LaunderingController) },
+                { DashboardController.NavTarget.Pipeline, typeof(FiliereScreenController) },   // ㊵ depuis le 2026-09-23 (ruling de f2)
                 { DashboardController.NavTarget.Exceptions, typeof(ExceptionQueueController) },
                 { DashboardController.NavTarget.Autonomy, typeof(AutonomyInboxController) },
                 // NavTarget.None volontairement ABSENT de cette table : son comportement nommé est
@@ -677,7 +678,7 @@ namespace MafiaCleanCity.Shell.Tests
             {
                 { AppShell.Tab.Empire, typeof(CityMapController) },
                 { AppShell.Tab.Org, typeof(LieutenantScreenController) },
-                { AppShell.Tab.Pipeline, typeof(LaunderingController) },
+                { AppShell.Tab.Pipeline, typeof(FiliereScreenController) },   // ㊵ depuis le 2026-09-23 (ruling de f2)
                 // ⚠️ MISE À JOUR 2026-09-02 (merge `pilote-B`) — `Tab.More` N'EST PLUS la
                 // destination vide : il monte ㊲ La réputation. Son comportement reste NOMMÉ, il a
                 // changé de NATURE — d'où une entrée dans cette table plutôt qu'une branche à part.
@@ -816,7 +817,7 @@ namespace MafiaCleanCity.Shell.Tests
             {
                 { AppShell.Tab.Empire, typeof(CityMapController) },
                 { AppShell.Tab.Org, typeof(LieutenantScreenController) },
-                { AppShell.Tab.Pipeline, typeof(LaunderingController) },
+                { AppShell.Tab.Pipeline, typeof(FiliereScreenController) },   // ㊵ depuis le 2026-09-23 (ruling de f2)
                 // ⚠️ 2026-09-02 : SECONDE table du même fichier. La première a été corrigée d'abord
                 // et celle-ci est restée rouge — *fermer l'instance qu'on a sous les yeux laisse la
                 // classe ouverte*, y compris à onze lignes d'intervalle dans le même fichier.
