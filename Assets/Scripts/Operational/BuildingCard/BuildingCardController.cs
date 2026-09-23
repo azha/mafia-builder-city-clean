@@ -2106,6 +2106,10 @@ namespace MafiaCleanCity.Operational
         {
             bool ash = card.operational_type == "specialized_lab";
             GesteDuPupitre geste = GesteSelonLEtat(CurrentLab?.cook_stage_band, CurrentPrecursors?.stock_band);
+            // ⛔ PAS DE « COMMANDER » SUR L'ASH tant que le back n'a pas dit si le lys de verre se COMMANDE ou ne se cultive qu'à la serre
+            // (question posée le 23/09 ; « n'invente pas de geste », orchestrateur). Avant ② le specialized_lab n'avait aucun geste de
+            // commande : on n'en crée pas un sans route confirmée ni clé servie.
+            if (geste == GesteDuPupitre.Commander && ash) geste = GesteDuPupitre.Aucun;
             GesteDuPupitreAffiche = geste;
             switch (geste)
             {

@@ -15,7 +15,7 @@ namespace MafiaCleanCity.CityMap.Tests
     //   G1  la table des états : la cuisson prime (une cuve qui tourne n'appelle aucun geste, même étagère vide) ; à IDLE l'étagère décide ;
     //       cuisson non lue ou hors domaine ⇒ aucun geste
     //   G2  étagère vide ⇒ UN bouton « Commander du {précurseur SERVI} » (la clé dérive du précurseur servi) + « il en faut avant de
-    //       rallumer » ; pas d'« Allumer »
+    //       rallumer » ; pas d'« Allumer ». L'Ash (lys de verre) : AUCUN geste tant que le back n'a pas dit s'il se commande
     //   G3  « Allumer le feu » : le `lab` Brindle sans passes ; le `specialized_lab` Ash avec sa réplique, « Passes » (4 crans = 0..3,
     //       tranché (e)) et « ça consomme un lot de lys de verre »
     //   G4  en cuisson : AUCUN bouton du pupitre, le refus DIT avant (« Rien à faire ici. », « Repassez quand ce sera tiré »)
@@ -96,11 +96,15 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.AreEqual("Commander du Pyralin", Texte(b[0]), "le mot du précurseur SERVI (repli : le mot du catalogue)");
             CollectionAssert.Contains(Lignes(r, "Bloc"), "il en faut avant de rallumer");
 
-            // Le précurseur vient du SERVI : un specialized_lab à étagère vide commande SON précurseur.
-            var (_, ra) = Rendre("specialized_lab", "IDLE", "NONE", "GLASS_LILY");
-            Assert.AreEqual("Commander du Lys de verre", Texte(Boutons(ra).Single()));
+            // Le mot vient du précurseur SERVI (repli composé avec `building.precursor.*`, compté) — jamais d'un nom écrit ici.
+            Assert.AreEqual("Commander du Lys de verre", BuildingCardController.CommanderLabel("GLASS_LILY"));
             Assert.IsTrue(Libelle.ClesEnRepli.Contains("building.action.commander_du_glass_lily"),
                 "la clé du geste dérive du précurseur servi — non servie pour le lys : elle se voit, elle ne se cache pas");
+
+            // ⛔ Mais l'Ash n'a PAS de geste « Commander » tant que le back n'a pas dit si le lys se commande (question du 23/09).
+            var (ash, ra) = Rendre("specialized_lab", "IDLE", "NONE", "GLASS_LILY");
+            Assert.AreEqual(Geste.Aucun, ash.GesteDuPupitreAffiche);
+            Assert.IsEmpty(Boutons(ra), "aucun geste inventé sur un specialized_lab à étagère vide");
         }
 
         [Test]
