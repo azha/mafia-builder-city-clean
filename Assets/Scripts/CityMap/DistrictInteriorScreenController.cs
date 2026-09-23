@@ -306,6 +306,8 @@ namespace MafiaCleanCity.CityMap
             ClearContent();
             renderedTexts.Clear();
             RenderedBuildingCount = 0;
+            cellulesParBatiment.Clear();   // ①-5 — M6 : la sélection vise une cellule de CE rendu
+            BatimentSelectionne = null;
             RenderedWindowLightCount = 0;
             RenderedNeonGlowCount = 0;
             RenderedSmokeCount = 0;
@@ -653,6 +655,9 @@ namespace MafiaCleanCity.CityMap
                 }
                 foreach (List<string> l in rangsParBloc.Values)
                     l.Sort(System.StringComparer.Ordinal);
+                // ①-5 (r9 B1) — les TYPES d'une ancre partagée, dans l'ordre des rangs : un seul libellé les dira tous.
+                var typeParBatiment = new Dictionary<string, string>();
+                foreach (DistrictInteriorBuildingDto b3 in ordered) typeParBatiment[b3.building] = b3.operational_type;
 
                 ancragesParPivot = 0; ancragesParGrille = 0; ancrages.Clear(); identitesBadges.Clear();
                 foreach (DistrictInteriorBuildingDto building in ordered)
@@ -666,8 +671,11 @@ namespace MafiaCleanCity.CityMap
                     //    rien et l'ordre serait celui du serveur. On classe donc sur l'identifiant.
                     int total = rangsParBloc.TryGetValue(building.block_id, out var rangs) ? rangs.Count : 1;
                     int rang = rangs != null ? rangs.IndexOf(building.building) : 0;
+                    List<string> typesDeLAncre = rangs != null
+                        ? rangs.ConvertAll(id => typeParBatiment.TryGetValue(id, out string t) ? t : null) : null;
                     GameObject cell = BuildBuildingCell(cellsRt, block.x, block.y, building, anchorMap, scaleFactor,
-                                                        rang < 0 ? 0 : rang, total);
+                                                        rang < 0 ? 0 : rang, total, typesDeLAncre);
+                    cellulesParBatiment[building.building] = (RectTransform)cell.transform;   // ①-5 — M6
                     // ⚠️ AVANT CE LOT, AUCUN BÂTIMENT N'ÉTAIT CLIQUABLE — mesuré, zéro `Button` et
                     // zéro `onClick` dans tout l'écran principal du jeu. Le badge de possession
                     // était décoratif.
@@ -905,7 +913,8 @@ namespace MafiaCleanCity.CityMap
         public System.Collections.Generic.IReadOnlyList<string> NoeudsHorsCadre => horsCadre;
 
         private GameObject BuildBuildingCell(RectTransform sceneRt, int x, int y, DistrictInteriorBuildingDto building,
-            DistrictBackgroundAnchorDto anchorMap, float scaleFactor, int rangDansBloc = 0, int totalDansBloc = 1)
+            DistrictBackgroundAnchorDto anchorMap, float scaleFactor, int rangDansBloc = 0, int totalDansBloc = 1,
+            IList<string> typesDeLAncre = null)
         {
             BuildingSpriteSlots slots = BuildingSpriteSlots.Current;
             Sprite baseSprite = slots != null ? slots.Resolve(building.operational_type) : null;
@@ -943,6 +952,7 @@ namespace MafiaCleanCity.CityMap
                             ? $" px[{parcelleLue.pivot_px[0]:0.0},{parcelleLue.pivot_px[1]:0.0}]"
                             : " GRILLE"));
             Vector2 localPos = pivotLocal ?? new Vector2(x * 100f, -y * 100f);
+            float xAncre = localPos.x;   // ①-5 — le libellé d'une ancre partagée se centre sur L'ANCRE, pas sur une cellule étalée
             // ⛔ DEUX BÂTIMENTS D'UN MÊME BLOC PARTAGENT LEUR PIVOT — `FindParcel` est clé par (x,y).
             //    Mesuré en jeu le 2026-09-07 : 13 bâtiments pour 11 blocs distincts. Sans cet
             //    étalement ils se posent AU MÊME PIXEL : un seul bâtiment visible, les libellés en
@@ -1087,15 +1097,28 @@ namespace MafiaCleanCity.CityMap
             bool spriteDiscrimine = !FondPorteDejaLesBatiments
                                     && baseSprite != null
                                     && (slots == null || baseSprite != slots.fallback);
-            if (!spriteDiscrimine)
+            // ①-5 (r9 B1) — UN libellé par ANCRE. Deux bâtiments d'un même bloc partagent leur pivot ; l'étalement
+            // (`EtalementDansParcelle`) écarte leurs CELLULES dans la largeur de la parcelle, mais un libellé est plus large que
+            // cet écart : les deux mots se chevauchaient toujours (le « pâté » de B03). Le premier rang porte donc le libellé
+            // de l'ancre, qui nomme chaque type UNE fois (un par ligne) ; les autres rangs n'en portent pas.
+            List<string> motsDeLAncre = LibellesDeLAncre(typesDeLAncre, building.operational_type, totalDansBloc);
+            if (!spriteDiscrimine && rangDansBloc == 0)
             {
-                TextMeshProUGUI label = NewText("TypeLabel", cell.transform, TypeLabel(building.operational_type),
+                TextMeshProUGUI label = NewText("TypeLabel", cell.transform, string.Join("\n", motsDeLAncre),
                     9, TextAlignmentOptions.Bottom);
+                // ①-5 (r9 B3) — le corps était 9 unités de CANVAS, pas 9 px de maquette : capitale mesurée à 1,81 CSS (5 px),
+                // 29 % des libellés du dock du canon (6,33 CSS). Le corps passe par `EchelleMaquette`, comme la fiche : 9 px
+                // CSS (capitale ≈ 6,3 CSS, celle du dock). Une ligne par mot, jamais coupée : la boîte suit le texte.
+                label.fontSize = FD(9f);
+                label.enableWordWrapping = false;
+                label.overflowMode = TextOverflowModes.Overflow;
+                Vector2 encre = label.GetPreferredValues(label.text);
+                float largeurLabel = Mathf.Max(cellW, encre.x);
+                float hauteurLabel = Mathf.Max(cellH * 0.2f, encre.y);
                 RectTransform labelRt = (RectTransform)label.transform;
-                labelRt.anchorMin = new Vector2(0f, 0f);
-                labelRt.anchorMax = new Vector2(1f, 0f);
+                labelRt.anchorMin = labelRt.anchorMax = new Vector2(0.5f, 0f);
                 labelRt.pivot = new Vector2(0.5f, 0f);
-                labelRt.sizeDelta = new Vector2(0, cellH * 0.2f);
+                labelRt.sizeDelta = new Vector2(largeurLabel, hauteurLabel);
                 // ⛔ LE LIBELLÉ SE PLIE, L'ANCRE NON. Une parcelle du fond est à 2,66 px du bord
                 //    (mesuré sur `VERGE_D_JOUR_FINAL.json`), et le semis en rapproche d'autres :
                 //    un libellé centré sur elle sort du cadre et devient illisible. Borner le
@@ -1107,7 +1130,7 @@ namespace MafiaCleanCity.CityMap
                 //    l'écart entre le centre replié et le centre réel.
                 float demiCadreX = anchorMap?.image != null && scaleFactor > 0f
                     ? (anchorMap.image.w / scaleFactor) * 0.5f : 0f;
-                float replieX = DistrictBackgroundAnchor.ReplierDansLeCadre(localPos.x, cellW, demiCadreX);
+                float replieX = DistrictBackgroundAnchor.ReplierDansLeCadre(xAncre, largeurLabel, demiCadreX);
                 labelRt.anchoredPosition = new Vector2(replieX - localPos.x, 0f);
                 label.color = DesignTokens.Current.onSurfacePrimary;
                 TrackText(label);
@@ -1124,7 +1147,8 @@ namespace MafiaCleanCity.CityMap
                 //    n'a pas d'icône (couverture 11/12) : lui donner le glyphe d'un voisin
                 //    remettrait deux types sous la même image — le défaut exact que le libellé
                 //    ci-dessus existe pour réparer. Un glyphe faux est pire qu'un glyphe absent.
-                Sprite glyphe = BuildingIcons.Pour(building.operational_type);
+                // ①-5 — une ancre qui porte PLUSIEURS types n'a pas de glyphe : celui d'un seul mentirait sur les autres.
+                Sprite glyphe = motsDeLAncre.Count == 1 ? BuildingIcons.Pour(building.operational_type) : null;
                 if (glyphe != null)
                 {
                     var iconGo = new GameObject("TypeIcon", typeof(RectTransform));
@@ -1144,7 +1168,7 @@ namespace MafiaCleanCity.CityMap
                     // Posé SUR la bande du libellé, jamais dedans : le libellé occupe cellH*0.2.
                     // Le glyphe SUIT le libellé : ils se lisent comme un bloc, et les séparer
                     // serait un défaut pire que celui qu'on répare.
-                    iconRt.anchoredPosition = new Vector2(replieX - localPos.x, cellH * 0.2f);
+                    iconRt.anchoredPosition = new Vector2(replieX - localPos.x, hauteurLabel);
                 }
             }
 
@@ -2330,10 +2354,67 @@ namespace MafiaCleanCity.CityMap
 
         /// <summary>Ouvre la fiche sur un bâtiment. Les trois cases gardent la POSITION et le RÔLE
         /// du canon ; leur contenu est la bande RÉELLE, jamais un montant inventé.</summary>
+        /// <summary>①-5 (r9 B1) — les mots du libellé d'une ancre : chaque type UNE fois, dans l'ordre des rangs. Une ancre seule
+        /// (ou sans liste) : le mot de son bâtiment. Aucun chiffre (R2.2) : deux Labos sous une ancre disent « Labo ».</summary>
+        public static List<string> LibellesDeLAncre(IList<string> typesDeLAncre, string typeDuBatiment, int total)
+        {
+            var mots = new List<string>();
+            if (total > 1 && typesDeLAncre != null)
+                foreach (string t in typesDeLAncre)
+                {
+                    string mot = TypeLabel(t);
+                    if (!mots.Contains(mot)) mots.Add(mot);
+                }
+            if (mots.Count == 0) mots.Add(TypeLabel(typeDuBatiment));
+            return mots;
+        }
+
+        // ①-5 (r9 M6) — le retour de sélection : la fiche ouverte dit de QUEL bâtiment elle parle. Un anneau crème autour du
+        // badge du bâtiment, posé à l'ouverture, retiré à la fermeture. Le canon n'a ni marqueur ni sélection : c'est une
+        // décision CLIENT, déclarée (crème et non or : l'or est l'argent ; plus large que le badge, pour ne pas le confondre
+        // avec son anneau laiton).
+        private readonly Dictionary<string, RectTransform> cellulesParBatiment = new Dictionary<string, RectTransform>();
+        private const float SelectionMargePx = 10f, SelectionTraitPx = 2f;
+        /// <summary>Le bâtiment dont la fiche est ouverte ET dont l'anneau de sélection est posé ; null sinon.</summary>
+        public string BatimentSelectionne { get; private set; }
+
+        private void Selectionner(string buildingId)
+        {
+            Deselectionner();
+            if (string.IsNullOrEmpty(buildingId) || !cellulesParBatiment.TryGetValue(buildingId, out RectTransform cell)
+                || cell == null) return;
+            float d = BadgeDiametrePx + SelectionMargePx;
+            GameObject go = NewUI("Selection", cell);
+            var rt = (RectTransform)go.transform;
+            rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0f);
+            rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.sizeDelta = new Vector2(d, d);
+            // Centré sur le badge : son pied est à `BadgeDiametrePx * 0.55`, son centre un rayon plus haut.
+            rt.anchoredPosition = new Vector2(0f, BadgeDiametrePx * 0.55f + BadgeDiametrePx * 0.5f);
+            Image anneau = go.AddComponent<Image>();
+            anneau.sprite = ProceduralUI.Ring(BadgeTextureResPx, BadgeTextureResPx * SelectionTraitPx / d,
+                DesignTokens.Current.hudCreme);
+            anneau.color = Color.white;
+            anneau.raycastTarget = false;
+            BatimentSelectionne = buildingId;
+        }
+
+        private void Deselectionner()
+        {
+            if (BatimentSelectionne != null && cellulesParBatiment.TryGetValue(BatimentSelectionne, out RectTransform cell)
+                && cell != null)
+            {
+                Transform sel = cell.Find("Selection");
+                if (sel != null) { sel.SetParent(null, false); Destroy(sel.gameObject); }   // détaché : pas deux « Selection » le temps d'une image
+            }
+            BatimentSelectionne = null;
+        }
+
         public void OuvrirFiche(DistrictInteriorBuildingDto b)
         {
             if (ficheRoot == null || b == null) return;
             FicheBuildingId = b.building;
+            Selectionner(b.building);   // ①-5 — M6
             ficheOperationalType = b.operational_type;
             FicheDealerId = null;
             DerniereCollecte = null;
@@ -2405,6 +2486,7 @@ namespace MafiaCleanCity.CityMap
 
         public void FermerFiche()
         {
+            Deselectionner();   // ①-5 — M6
             FicheBuildingId = null;
             ficheOperationalType = null;
             FicheDealerId = null;
