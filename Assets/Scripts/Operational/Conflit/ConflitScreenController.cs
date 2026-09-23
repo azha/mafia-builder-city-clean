@@ -387,12 +387,15 @@ namespace MafiaCleanCity.Operational
         /// distribution » (㉛/㉘).</summary>
         private void RendreTitre()
         {
-            titreTexte.text = Libelle.De("conflit", "titre", "Le conflit");
+            // Le titre est le geste de l'écran, comme dans les six cadres `.cfl6` de la maquette.
+            // « Le conflit » reste le nom de destination dans le menu Plus ; le répéter ici
+            // transformait une table où l'on décide en page documentaire (juge visuel r1 M10).
+            titreTexte.text = Libelle.Gabarit("conflit.bloc.le_coup_de_ce_soir", "Le coup de ce soir");
             // Clé SERVIE explicite, repli = valeur du back à 78faf9b4 (atelier 40 v3.1, 31c95595, D13) : un `Libelle.De` dériverait la
             // clé du NOUVEAU texte et orphelinerait la clé servie.
             sousTitreTexte.text = Libelle.Gabarit(
                 "conflit.sous_titre.ce_que_vos_hommes_rapportent_des_familles_rivales_et_qui_vous_reste_pour_y_retourner",
-                "Ce que vos envois rapportent des familles rivales, et qui vous reste pour y retourner.");
+                "On choisit une famille, on choisit un homme, et on l’envoie. On saura\ndemain.");
             TrackText(titreTexte.text);
             TrackText(sousTitreTexte.text);
         }
@@ -608,7 +611,7 @@ namespace MafiaCleanCity.Operational
         /// lieutenants, mais pas le médaillon du comptoir : ce dessin-ci est rond, gris et sans liseré laiton.</summary>
         private void AjouterAvatar(Transform parent, bool clair = false)
         {
-            float taille = Px(30f);
+            float taille = Px(clair ? 34f : 30f);
             GameObject avatar = NouveauUI("Avatar", parent);
             avatar.transform.SetSiblingIndex(0);
             AddLayoutElement(avatar, minWidth: taille, preferredWidth: taille, minHeight: taille, preferredHeight: taille,
@@ -634,7 +637,8 @@ namespace MafiaCleanCity.Operational
                 RectTransform brt = (RectTransform)buste.transform;
                 brt.anchorMin = brt.anchorMax = new Vector2(0.5f, 0f);
                 brt.pivot = new Vector2(0.5f, 0f);
-                brt.sizeDelta = new Vector2(Px(26f), Px(26f));
+                float tailleBuste = clair ? 30f : 26f;
+                brt.sizeDelta = new Vector2(Px(tailleBuste), Px(tailleBuste));
                 brt.anchoredPosition = Vector2.zero;
             }
 
@@ -679,16 +683,10 @@ namespace MafiaCleanCity.Operational
             // Table 40 : « Les quatre familles de Brennar » (D14, le mot ratifié) ; la clé servie reste (exception à la dérivation).
             TextMeshProUGUI label = NouveauTexteFiche(tableRoot, "TableLabel",
                 Libelle.Gabarit("conflit.bloc.les_quatre_familles", "Les quatre familles de Brennar"), 8.5f,
-                DesignTokens.Current.onSurfaceSecondary, false);
+                CouleurLocale("#8a7f6b"), true);
             label.characterSpacing = 4f;
+            label.fontStyle |= FontStyles.UpperCase;
             TrackText(label.text);
-
-            TextMeshProUGUI note = NouveauTexteFiche(tableRoot, "TableNote",
-                Libelle.De("conflit", "bloc",
-                    "Dessinées, pas renseignées : personne ne vous dit ce qu'elles préparent ni ce qu'elles possèdent — on frappe à l'aveugle."),
-                7.5f, DesignTokens.Current.onSurfaceMuted, false);
-            note.enableWordWrapping = true;
-            TrackText(note.text);
 
             if (indisponible)
             {
@@ -706,18 +704,19 @@ namespace MafiaCleanCity.Operational
             {
                 GameObject ligne = NouveauUI("Famille_" + cle, tableRoot);
                 bool choisie = cle == ChoixFamille;
-                Image fondLigne = AjouterFond(ligne, choisie ? CouleurLocale("#2e2114") : DesignTokens.Current.surfaceRow);
-                if (choisie)
-                {
-                    GameObject bord = NouveauUI("BordChoisi", ligne.transform);
-                    bord.AddComponent<LayoutElement>().ignoreLayout = true;
-                    Image filet = AjouterImage(bord);
-                    filet.sprite = ProceduralUI.RoundedRectOutline(Mathf.Max(1, PxTrait(3f)), Mathf.Max(1f, Px(1f)),
-                        CouleurLocale("#8a6a22"));
-                    filet.type = Image.Type.Sliced;
-                    filet.raycastTarget = false;
-                    Etirer((RectTransform)bord.transform);
-                }
+                Image fondLigne = AjouterImage(ligne);
+                fondLigne.sprite = ProceduralUI.RoundedRectMask(Mathf.Max(1, PxTrait(3f)));
+                fondLigne.type = Image.Type.Sliced;
+                fondLigne.color = choisie ? CouleurLocale("#2e2114") : CouleurLocale("#241c14");
+                fondLigne.raycastTarget = false;
+                GameObject bord = NouveauUI(choisie ? "BordChoisi" : "Bord", ligne.transform);
+                bord.AddComponent<LayoutElement>().ignoreLayout = true;
+                Image filet = AjouterImage(bord);
+                filet.sprite = ProceduralUI.RoundedRectOutline(Mathf.Max(1, PxTrait(3f)), Mathf.Max(1f, Px(1f)),
+                    choisie ? CouleurLocale("#8a6a22") : CouleurLocale("#3d3024"));
+                filet.type = Image.Type.Sliced;
+                filet.raycastTarget = false;
+                Etirer((RectTransform)bord.transform);
                 // Cadres 59-61 : on choisit la famille DANS la table — seulement s'il y a un gros bras à envoyer.
                 if (muscleLieutenants.Count > 0)
                 {
@@ -728,8 +727,8 @@ namespace MafiaCleanCity.Operational
                     choix.onClick.AddListener(() => ChoisirFamille(famille));
                 }
                 HorizontalLayoutGroup hl = ligne.AddComponent<HorizontalLayoutGroup>();
-                hl.padding = new RectOffset(PxTrait(10f), PxTrait(10f), PxTrait(6f), PxTrait(6f));
-                hl.spacing = Px(8f);
+                hl.padding = new RectOffset(PxTrait(9f), PxTrait(9f), PxTrait(8.25f), PxTrait(8.25f));
+                hl.spacing = Px(9f);
                 hl.childControlWidth = true; hl.childControlHeight = true;
                 hl.childForceExpandWidth = false; hl.childForceExpandHeight = false;
                 hl.childAlignment = TextAnchor.MiddleLeft;
@@ -746,13 +745,13 @@ namespace MafiaCleanCity.Operational
                 AddLayoutElement(identite, flexibleWidth: 1);
 
                 TextMeshProUGUI nom = NouveauTexteFiche(identite.transform, "Nom",
-                    ConflitResolvers.NomFamille(cle), 9.5f, DesignTokens.Current.onSurfaceDim, true);
+                    ConflitResolvers.NomFamille(cle), 9.5f, CouleurLocale("#efe6d4"), true);
+                nom.font = DesignTokens.Current.hudSerifFont;
                 TrackText(nom.text);
 
                 // Sous-titre de la maquette ratifiée (cadres 59-61), clé SERVIE (balayage 34 : classe « servi »).
                 TextMeshProUGUI sousTitre = NouveauTexteFiche(identite.transform, "SousTitre",
-                    ConflitResolvers.SousTitreFamille(cle), 6.4f, DesignTokens.Current.onSurfaceMuted, false);
-                sousTitre.fontStyle = FontStyles.Italic;
+                    ConflitResolvers.SousTitreFamille(cle), 6.4f, CouleurLocale("#6f6350"), false);
                 TrackText(sousTitre.text);
 
                 // Compte indisponible : AUCUNE ligne de compte — la phrase d'erreur au-dessus le dit, un compte à zéro mentirait.
@@ -771,21 +770,39 @@ namespace MafiaCleanCity.Operational
                 if (n > 0)
                 {
                     TextMeshProUGUI fois = NouveauTexteFiche(bloc.transform, "Fois", ConflitResolvers.FoisChezEux(n), 8.5f,
-                        DesignTokens.Current.onSurfacePrimary, true);
+                        RougeMauvais, true);
                     fois.alignment = TextAlignmentOptions.Right;
                     TrackText(fois.text);
+                }
+                else
+                {
+                    TextMeshProUGUI jamais = NouveauTexteFiche(bloc.transform, "Fois",
+                        Libelle.Gabarit("conflit.bloc.jamais", "jamais"), 8.5f,
+                        CouleurLocale("#574433"), true);
+                    jamais.alignment = TextAlignmentOptions.Right;
+                    TrackText(jamais.text);
                 }
                 TextMeshProUGUI visites = NouveauTexteFiche(bloc.transform, "Visites",
                     n > 0 ? Libelle.Gabarit("conflit.bloc.on_est_alles_chez_eux", "on leur a rendu visite")
                           : Libelle.Gabarit("conflit.bloc.on_ne_les_a_pas_croises", "on n’a jamais croisé leur route"),
-                    6.2f, DesignTokens.Current.onSurfaceMuted, false);
-                visites.fontStyle = FontStyles.Italic;
+                    6.2f, CouleurLocale("#6f6350"), false);
                 visites.alignment = TextAlignmentOptions.Right;
                 TrackText(visites.text);
 
                 if (cle == ChoixFamille)
                 {
-                    TextMeshProUGUI ceSoir = NouveauTexteFiche(ligne.transform, "CeSoir",
+                    GameObject tag = NouveauUI("CeSoirCadre", ligne.transform);
+                    Image tagFond = AjouterImage(tag);
+                    tagFond.sprite = ProceduralUI.RoundedRectOutline(Mathf.Max(1, PxTrait(2f)), Mathf.Max(1f, Px(1f)),
+                        CouleurLocale("#8a6a22"));
+                    tagFond.type = Image.Type.Sliced;
+                    tagFond.raycastTarget = false;
+                    HorizontalLayoutGroup tagLayout = tag.AddComponent<HorizontalLayoutGroup>();
+                    tagLayout.padding = new RectOffset(PxTrait(5f), PxTrait(5f), PxTrait(3f), PxTrait(3f));
+                    tagLayout.childAlignment = TextAnchor.MiddleCenter;
+                    tagLayout.childControlWidth = true; tagLayout.childControlHeight = true;
+                    tagLayout.childForceExpandWidth = false; tagLayout.childForceExpandHeight = false;
+                    TextMeshProUGUI ceSoir = NouveauTexteFiche(tag.transform, "CeSoir",
                         Libelle.Gabarit("conflit.bloc.ce_soir", "Ce soir"), 6.4f, Or, true);
                     ceSoir.characterSpacing = 1f;
                     ceSoir.fontStyle |= FontStyles.UpperCase;
@@ -819,12 +836,24 @@ namespace MafiaCleanCity.Operational
 
             string nom = ConflitResolvers.NomFamille(cle);
             TextMeshProUGUI initiale = NouveauTexteFiche(ecu.transform, "Initiale",
-                string.IsNullOrEmpty(nom) ? "?" : nom.Substring(0, 1), 10f,
-                choisi ? CouleurLocale("#f0dfc4") : DesignTokens.Current.onSurfaceMuted, true);
+                InitialeFamille(cle, nom), 10f,
+                choisi ? CouleurLocale("#f0dfc4") : CouleurLocale("#c9a86a"), true);
             initiale.font = DesignTokens.Current.hudSerifFont;
             initiale.alignment = TextAlignmentOptions.Center;
             Etirer((RectTransform)initiale.transform);
             TrackText(initiale.text);
+        }
+
+        private static string InitialeFamille(string cle, string nom)
+        {
+            switch (cle)
+            {
+                case "coil": return "C";
+                case "tarcum": return "T";
+                case "iron_throat": return "G";
+                case "saltline": return "S";
+                default: return string.IsNullOrEmpty(nom) ? "?" : nom.Substring(0, 1);
+            }
         }
 
         /// <summary>Le compte des envois RENTRÉS (`status == "resolved"`) par `target_rival_key`, côté client. `engagements`
@@ -863,28 +892,10 @@ namespace MafiaCleanCity.Operational
         private void RendreCoup(EngagementDto[] engagements)
         {
             ViderEnfants(coupRoot);
-            EnTeteDeSection(coupRoot, Libelle.Gabarit("conflit.bloc.le_coup_de_ce_soir", "Le coup de ce soir"),
-                Libelle.Gabarit("conflit.bloc.on_choisit_une_famille_on_choisit_un_homme_et_on_l_envoie_on_saura_demain", "On choisit une famille, on choisit qui y envoyer. On saura demain."));
 
             if (muscleLieutenants.Count == 0)
             {
-                TextMeshProUGUI vide = NouveauTexteFiche(coupRoot, "PiedVide",
-                    Libelle.De("conflit", "bloc", "Aucun de vos lieutenants n'est du genre Gros bras."), 9f,
-                    DesignTokens.Current.onSurfacePrimary, true);
-                vide.enableWordWrapping = true;
-                TrackText(vide.text);
-                TextMeshProUGUI noteVide = NouveauTexteFiche(coupRoot, "PiedNote",
-                    Libelle.Gabarit(   // clé SERVIE explicite, repli = valeur à 78faf9b4 (40 v3.1, D13)
-                        "conflit.bloc.c_est_lui_qui_part_la_nuit_il_vous_en_manque_un_ce_n_est_pas_casse_vous_n_en_avez_tout_simplement_pas_encore",
-                        "C’est le gros bras qui part la nuit. Il vous en manque un — ce n’est pas cassé, " +
-                        "vous n’en avez tout simplement pas encore."),
-                    8f, DesignTokens.Current.onSurfaceMuted, false);
-                noteVide.enableWordWrapping = true;
-                TrackText(noteVide.text);
-                // L7 (23/09) : le chemin existe — un joueur recrute un gros bras (`POST /v1/lieutenants {archetype: 'MUSCLE', …}`).
-                // Le geste ouvre la Famille, panneau de recrutement déplié ; le mot est la clé SERVIE de ce geste là-bas.
-                BoutonGeste(coupRoot, "Recruter", Libelle.De("famille", "ecran", "Recruter un nouveau lieutenant"), null, true,
-                    OuvrirRecrutement);
+                RendreOrdreIncomplet();
                 return;
             }
 
@@ -893,7 +904,14 @@ namespace MafiaCleanCity.Operational
             LieutenantRowDto choisi = null;
             foreach (LieutenantRowDto l in muscleLieutenants)
                 if (l.lieutenant_id == ChoixLieutenant) { choisi = l; break; }
-            if (EnvoiPossible && choisi != null) RendreOrdreChoisi(engagements, choisi);
+            if (EnvoiPossible && choisi != null)
+            {
+                RendreOrdreChoisi(engagements, choisi);
+                // Le cadre nominal est la fiche d'ordre terminée, pas le formulaire qui l'a
+                // produite. La table reste interactive pour changer de famille ; l'homme et l'axe
+                // reparaissent lorsqu'on repart de zéro après un envoi.
+                return;
+            }
 
             // L'homme : une ligne par gros bras, le choisi sur fond surélevé.
             foreach (LieutenantRowDto l in muscleLieutenants)
@@ -955,19 +973,56 @@ namespace MafiaCleanCity.Operational
             hl.childForceExpandWidth = false; hl.childForceExpandHeight = false;
             AjouterAvatar(ligne.transform, clair: true);
 
-            TextMeshProUGUI phrase = NouveauTexteFiche(ligne.transform, "PhraseDEnvoi",
-                Libelle.Gabarit("conflit.bloc.on_envoie_nom_chez_famille_sur_axe", "On envoie {nom} chez {famille}, sur {axe}.",
-                    new Dictionary<string, string>
-                    {
-                        { "nom", choisi.name },
-                        { "famille", ConflitResolvers.NomFamille(ChoixFamille) },
-                        { "axe", ConflitResolvers.AxeDeValeur(ChoixAxe) },
-                    }),
+            string nomFamille = ConflitResolvers.NomFamille(ChoixFamille);
+            string axeVise = ConflitResolvers.AxeDeValeur(ChoixAxe);
+            string phraseSimple = Libelle.Gabarit(
+                "conflit.bloc.on_envoie_nom_chez_famille_sur_axe", "On envoie {nom} chez {famille}, sur {axe}.",
+                new Dictionary<string, string>
+                {
+                    { "nom", choisi.name },
+                    { "famille", nomFamille },
+                    { "axe", axeVise },
+                });
+            string phraseAvecFamilleRouge = Libelle.Gabarit(
+                "conflit.bloc.on_envoie_nom_chez_famille_sur_axe", "On envoie {nom} chez {famille}, sur {axe}.",
+                new Dictionary<string, string>
+                {
+                    { "nom", choisi.name },
+                    { "famille", $"<color=#8c2f36><b>{nomFamille}</b></color>" },
+                    { "axe", axeVise },
+                });
+            TextMeshProUGUI phrase = NouveauTexteFiche(ligne.transform, "PhraseDEnvoi", phraseAvecFamilleRouge,
                 9.5f, CouleurLocale("#2a2118"), false);
             phrase.font = DesignTokens.Current.hudSerifFont;
             phrase.enableWordWrapping = true;
             AddLayoutElement(phrase.gameObject, flexibleWidth: 1);
-            TrackText(phrase.text);
+            // Le crochet fonctionnel reste sans balises ; la couleur rouge est une hiérarchie
+            // typographique de la fiche, pas une partie de la phrase métier.
+            TrackText(phraseSimple);
+
+            GameObject separateur = NouveauUI("SeparateurPrise", ordre.transform);
+            AjouterFond(separateur, CouleurLocale("#cbbfa4"));
+            AddLayoutElement(separateur, minHeight: Mathf.Max(1f, Px(1f)),
+                preferredHeight: Mathf.Max(1f, Px(1f)), flexibleHeight: 0);
+
+            GameObject prise = NouveauUI("Prise", ordre.transform);
+            HorizontalLayoutGroup hp = prise.AddComponent<HorizontalLayoutGroup>();
+            hp.spacing = Px(8f);
+            hp.childAlignment = TextAnchor.MiddleLeft;
+            hp.childControlWidth = true; hp.childControlHeight = true;
+            hp.childForceExpandWidth = false; hp.childForceExpandHeight = false;
+            TextMeshProUGUI priseLabel = NouveauTexteFiche(prise.transform, "Libelle",
+                Libelle.De("conflit", "bloc", "Ce qu’on prend si ça marche"), 6.4f,
+                CouleurLocale("#756854"), false);
+            priseLabel.fontStyle |= FontStyles.UpperCase;
+            priseLabel.characterSpacing = 1f;
+            AddLayoutElement(priseLabel.gameObject, flexibleWidth: 1);
+            TrackText(priseLabel.text);
+            TextMeshProUGUI priseValeur = NouveauTexteFiche(prise.transform, "Valeur",
+                ConflitResolvers.PriseDeValeur(ChoixAxe), 9f, CouleurLocale("#8c2f36"), true);
+            priseValeur.font = DesignTokens.Current.hudSerifFont;
+            priseValeur.alignment = TextAlignmentOptions.Right;
+            TrackText(priseValeur.text);
 
             string laDerniereFois = ConflitResolvers.LaDerniereFoisChezEux(
                 ConflitResolvers.DerniereRentreeChez(engagements, ChoixFamille));
@@ -980,13 +1035,60 @@ namespace MafiaCleanCity.Operational
             TrackText(fois.text);
         }
 
+        /// <summary>L'état réel du compte de capture n'a aucun gros bras. La maquette conserve une
+        /// serviette comme premier arrêt de l'œil dans tous ses états d'ordre : on garde donc la
+        /// même matière et on y écrit honnêtement ce qui manque, au lieu de laisser un trou noir.</summary>
+        private void RendreOrdreIncomplet()
+        {
+            GameObject ordre = NouveauUI("OrdreIncomplet", coupRoot);
+            Image papier = AjouterImage(ordre);
+            papier.sprite = ProceduralUI.RoundedRectMask(Mathf.Max(1, PxTrait(2f)));
+            papier.type = Image.Type.Sliced;
+            papier.color = CouleurLocale("#f2ece0");
+            papier.raycastTarget = false;
+            HorizontalLayoutGroup ligne = ordre.AddComponent<HorizontalLayoutGroup>();
+            ligne.padding = new RectOffset(PxTrait(11f), PxTrait(11f), PxTrait(10f), PxTrait(10f));
+            ligne.spacing = Px(8f);
+            ligne.childAlignment = TextAnchor.MiddleLeft;
+            ligne.childControlWidth = true; ligne.childControlHeight = true;
+            ligne.childForceExpandWidth = false; ligne.childForceExpandHeight = false;
+            AddLayoutElement(ordre, flexibleHeight: 0);
+            AjouterAvatar(ordre.transform, clair: true);
+            TextMeshProUGUI manque = NouveauTexteFiche(ordre.transform, "PiedVide",
+                Libelle.De("conflit", "bloc", "Aucun de vos lieutenants n'est du genre Gros bras."),
+                9.5f, CouleurLocale("#2a2118"), false);
+            manque.font = DesignTokens.Current.hudSerifFont;
+            manque.enableWordWrapping = true;
+            AddLayoutElement(manque.gameObject, flexibleWidth: 1);
+            TrackText(manque.text);
+        }
+
         /// <summary>Sous la table : la réplique de l'homme (v2, sans orateur) et « L’envoyer ce soir », inactif tant que les trois
         /// choix ne sont pas faits. Rien sans gros bras (le panneau le dit déjà).</summary>
         private void RendrePied()
         {
             ViderEnfants(piedRoot);
-            if (muscleLieutenants.Count == 0) return;
-            Replique(piedRoot, "Replique", Libelle.Gabarit("conflit.bloc.dites_moi_qui_j_envoie_et_sur_quoi_je_pars_ce_soir_on_saura_demain", "«\u00A0Dites-moi seulement chez qui. Je pars ce soir, on saura demain.\u00A0»"));
+            AjouterFondDePied();
+            if (muscleLieutenants.Count == 0)
+            {
+                TextMeshProUGUI manque = NouveauTexteFiche(piedRoot, "PiedNote",
+                    Libelle.Gabarit(
+                        "conflit.bloc.c_est_lui_qui_part_la_nuit_il_vous_en_manque_un_ce_n_est_pas_casse_vous_n_en_avez_tout_simplement_pas_encore",
+                        "C’est le gros bras qui part la nuit. Il vous en manque un — recrutez-en un pour préparer le coup."),
+                    8f, CouleurLocale("#8d99a6"), false);
+                manque.enableWordWrapping = true;
+                TrackText(manque.text);
+                BoutonGeste(piedRoot, "Recruter", Libelle.De("famille", "ecran", "Recruter un nouveau lieutenant"),
+                    Libelle.De("conflit", "bloc", "pour préparer le coup"), true, OuvrirRecrutement);
+                return;
+            }
+            string replique = Libelle.Gabarit("conflit.bloc.dites_moi_qui_j_envoie_et_sur_quoi_je_pars_ce_soir_on_saura_demain", "«\u00A0Dites-moi seulement chez qui. Je pars ce soir, on saura demain.\u00A0»");
+            LieutenantRowDto orateur = null;
+            foreach (LieutenantRowDto l in muscleLieutenants)
+                if (l.lieutenant_id == ChoixLieutenant) { orateur = l; break; }
+            if (orateur == null && muscleLieutenants.Count > 0) orateur = muscleLieutenants[0];
+            Replique(piedRoot, "Replique", orateur != null && !string.IsNullOrEmpty(orateur.name)
+                ? $"{orateur.name} : {replique}" : replique);
             string refus = ConflitResolvers.MotDuRefusDEnvoi(DerniereClasseDeRefus);
             if (refus != null)
             {
@@ -995,12 +1097,36 @@ namespace MafiaCleanCity.Operational
                 TrackText(r.text);
             }
             BoutonGeste(piedRoot, "LEnvoyerCeSoir", Libelle.Gabarit("conflit.bloc.l_envoyer_ce_soir", "L’envoyer ce soir"),
-                Libelle.Gabarit("conflit.bloc.on_ne_pourra_plus_le_rappeler", "pas de rappel possible"), EnvoiPossible, EnvoyerLeCoup);
+                Libelle.Gabarit("conflit.bloc.on_ne_pourra_plus_le_rappeler", "on ne pourra plus le rappeler"), EnvoiPossible, EnvoyerLeCoup);
+        }
+
+        private void AjouterFondDePied()
+        {
+            GameObject fond = NouveauUI("Fond", piedRoot);
+            fond.AddComponent<LayoutElement>().ignoreLayout = true;
+            Image image = AjouterFond(fond, CouleurLocale("#141a21"));
+            image.raycastTarget = false;
+            RectTransform rt = (RectTransform)fond.transform;
+            Etirer(rt);
+            // Le parent suit les gouttières du contenu, mais la bande froide est une rupture de
+            // bord à bord dans la maquette.
+            rt.offsetMin = new Vector2(-PxTrait(13f), 0f);
+            rt.offsetMax = new Vector2(PxTrait(13f), 0f);
+            GameObject filet = NouveauUI("Filet", fond.transform);
+            Image trait = AjouterFond(filet, CouleurLocale("#2c3640"));
+            trait.raycastTarget = false;
+            RectTransform frt = (RectTransform)filet.transform;
+            frt.anchorMin = new Vector2(0f, 1f); frt.anchorMax = Vector2.one;
+            frt.pivot = new Vector2(0.5f, 1f);
+            frt.offsetMin = new Vector2(0f, -Px(2f));
+            frt.offsetMax = Vector2.zero;
+            fond.transform.SetAsFirstSibling();
         }
 
         private void Replique(Transform parent, string nom, string texte)
         {
-            TextMeshProUGUI q = NouveauTexteFiche(parent, nom, texte, 9f, DesignTokens.Current.onSurfaceSecondary, false);
+            TextMeshProUGUI q = NouveauTexteFiche(parent, nom, texte, 8.6f, CouleurLocale("#cdd6e0"), false);
+            q.font = DesignTokens.Current.hudSerifFont;
             q.fontStyle = FontStyles.Italic;
             q.enableWordWrapping = true;
             TrackText(q.text);
@@ -1028,20 +1154,23 @@ namespace MafiaCleanCity.Operational
             b.targetGraphic = fond;
             b.interactable = actif;
             b.onClick.AddListener(geste);
-            VerticalLayoutGroup vb = bouton.AddComponent<VerticalLayoutGroup>();
-            vb.padding = new RectOffset(PxTrait(12f), PxTrait(12f), PxTrait(8f), PxTrait(8f));
+            HorizontalLayoutGroup vb = bouton.AddComponent<HorizontalLayoutGroup>();
+            vb.padding = new RectOffset(PxTrait(11f), PxTrait(11f), PxTrait(9f), PxTrait(9f));
+            vb.spacing = Px(8f);
             vb.childAlignment = TextAnchor.MiddleCenter;
             vb.childControlWidth = true; vb.childControlHeight = true;
-            vb.childForceExpandWidth = true; vb.childForceExpandHeight = false;
+            vb.childForceExpandWidth = false; vb.childForceExpandHeight = false;
             AddLayoutElement(bouton, flexibleHeight: 0);
             Color encre = actif ? Or : DesignTokens.Current.onSurfaceDisabled;
             TextMeshProUGUI l = NouveauTexteFiche(bouton.transform, "Libelle", libelle, 10f, encre, true);
-            l.alignment = TextAlignmentOptions.Center;
+            l.fontStyle |= FontStyles.UpperCase;
+            l.alignment = TextAlignmentOptions.Left;
+            AddLayoutElement(l.gameObject, flexibleWidth: 1);
             TrackText(l.text);
             if (precision == null) return;
             TextMeshProUGUI p = NouveauTexteFiche(bouton.transform, "Precision", precision, 7f,
                 actif ? CouleurLocale("#9a8a6a") : encre, false);
-            p.alignment = TextAlignmentOptions.Center;
+            p.alignment = TextAlignmentOptions.Right;
             TrackText(p.text);
         }
 
@@ -1115,7 +1244,10 @@ namespace MafiaCleanCity.Operational
             GameObject racine = NouveauUI("ConflitRoot", root);
             racinePleinEcran = (RectTransform)racine.transform;
             Etirer(racinePleinEcran);
-            AjouterFond(racine, DesignTokens.Current.surfaceBase);
+            racine.AddComponent<CanvasRenderer>();
+            VerticalGradientImage matiere = racine.AddComponent<VerticalGradientImage>();
+            matiere.SetColors(CouleurLocale("#2a1e14"), CouleurLocale("#141014"));
+            matiere.raycastTarget = false;
             racinePleinEcran.SetAsLastSibling();
 
             // ⛔ L'ÉCHELLE AVANT TOUTE CONVERSION — un RectTransform qui vient d'être étiré n'a
@@ -1127,12 +1259,15 @@ namespace MafiaCleanCity.Operational
             // (bornée aux insets du chrome, `RectMask2D` : rien ne dessine sur le dock, `ScrollRect` vertical : rien n'est
             // injoignable) ; `Contenu` est ce qui défile, dimensionné sur ses enfants (`ContentSizeFitter`) — patron
             // `DelegationScreenController.ConstruireZoneCentrale`. Toutes les sections se parentent sous `Contenu`.
+            float hauteurScene = Px(56f);
+            float recouvrementSousManometre = Px(25f);
+            ConstruireSceneHaute(racine.transform, hauteurScene, recouvrementSousManometre);
             GameObject corpsGo = NouveauUI("Corps", racine.transform);
             RectTransform corps = (RectTransform)corpsGo.transform;
             corps.anchorMin = Vector2.zero;
             corps.anchorMax = Vector2.one;
             corps.offsetMin = new Vector2(0f, ShellChrome.BottomInsetPx);
-            corps.offsetMax = new Vector2(0f, -ShellChrome.TopInsetPx);
+            corps.offsetMax = new Vector2(0f, -(ShellChrome.TopInsetPx + hauteurScene));
             corpsGo.AddComponent<RectMask2D>();
             ScrollRect defilement = corpsGo.AddComponent<ScrollRect>();
             defilement.horizontal = false;
@@ -1153,20 +1288,49 @@ namespace MafiaCleanCity.Operational
             ajuste.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
             VerticalLayoutGroup pile = contenuGo.AddComponent<VerticalLayoutGroup>();
-            pile.padding = new RectOffset(PxTrait(16f), PxTrait(16f), PxTrait(14f), PxTrait(14f));
-            pile.spacing = Px(12f);
+            pile.padding = new RectOffset(PxTrait(13f), PxTrait(13f), PxTrait(11f), PxTrait(15f));
+            // Les sections Rentre/EnCours/Coup sont mutuellement exclusives dans les cadres de
+            // référence. Un spacing porté par leur parent créait pourtant trois blancs quand deux
+            // sections étaient vides. Chaque section porte désormais son propre rythme interne.
+            pile.spacing = 0f;
             pile.childControlWidth = true; pile.childControlHeight = true;
             pile.childForceExpandWidth = true; pile.childForceExpandHeight = false;
             pile.childAlignment = TextAnchor.UpperCenter;
 
             titreTexte = NouveauTexteFiche(contenuGo.transform, "Titre", "",
-                17f, DesignTokens.Current.onSurfacePrimary, true);
+                12f, CouleurLocale("#f0dfc4"), true);
+            titreTexte.font = DesignTokens.Current.hudSerifFont;
             titreTexte.enableWordWrapping = true;
 
             sousTitreTexte = NouveauTexteFiche(contenuGo.transform, "SousTitre", "",
-                10f, DesignTokens.Current.onSurfaceSecondary, false);
+                7f, CouleurLocale("#9a8a6a"), false);
             sousTitreTexte.enableWordWrapping = true;
             AddLayoutElement(sousTitreTexte.gameObject, flexibleHeight: 0);
+
+            // Surface de l'en-tête `.cfl6 .entete`, derrière les deux textes directs (leurs noms
+            // et leur chemin restent stables pour les gardes fonctionnelles du chantier).
+            GameObject entete = NouveauUI("EnteteFond", contenuGo.transform);
+            LayoutElement enteteLe = entete.AddComponent<LayoutElement>();
+            enteteLe.ignoreLayout = true;
+            Image enteteImage = AjouterFond(entete, CouleurLocale("#20180f"));
+            enteteImage.raycastTarget = false;
+            RectTransform ert = (RectTransform)entete.transform;
+            ert.anchorMin = new Vector2(0f, 1f); ert.anchorMax = new Vector2(1f, 1f);
+            ert.pivot = new Vector2(0.5f, 1f);
+            ert.sizeDelta = new Vector2(Px(26f), Px(68.5f));
+            ert.anchoredPosition = new Vector2(0f, Px(11f));
+            entete.transform.SetAsFirstSibling();
+            GameObject enteteFilet = NouveauUI("Filet", entete.transform);
+            Image enteteTrait = AjouterFond(enteteFilet, CouleurLocale("#3d3024"));
+            enteteTrait.raycastTarget = false;
+            RectTransform efrt = (RectTransform)enteteFilet.transform;
+            efrt.anchorMin = Vector2.zero; efrt.anchorMax = new Vector2(1f, 0f);
+            efrt.pivot = new Vector2(0.5f, 0f);
+            efrt.sizeDelta = new Vector2(0f, Px(1f));
+            efrt.anchoredPosition = new Vector2(0f, -Px(1f));
+
+            GameObject finEntete = NouveauUI("FinEntete", contenuGo.transform);
+            AddLayoutElement(finEntete, preferredHeight: Px(28f), flexibleHeight: 0);
 
             rentreRoot = NouvelleSection(contenuGo.transform, "Rentre");
             enCoursRoot = NouvelleSection(contenuGo.transform, "EnCours");
@@ -1174,18 +1338,22 @@ namespace MafiaCleanCity.Operational
 
             GameObject tableGo = NouveauUI("Table", contenuGo.transform);
             VerticalLayoutGroup vtb = tableGo.AddComponent<VerticalLayoutGroup>();
-            vtb.spacing = Px(6f);
+            vtb.spacing = Px(4f);
             vtb.childControlWidth = true; vtb.childControlHeight = true;
             vtb.childForceExpandWidth = true; vtb.childForceExpandHeight = false;
             AddLayoutElement(tableGo, flexibleHeight: 0);
             tableRoot = tableGo.transform;
 
+            // `.cfl6 .bas` suit immédiatement la dernière famille. Elle appartient donc au flux
+            // défilant : sur un écran haut elle ne se détache pas du dossier, et sur un écran court
+            // elle reste atteignable avec le reste du contenu au lieu de masquer Saltline.
             GameObject piedGo = NouveauUI("Pied", contenuGo.transform);
             VerticalLayoutGroup vp = piedGo.AddComponent<VerticalLayoutGroup>();
             vp.spacing = Px(8f);
+            vp.padding = new RectOffset(PxTrait(1f), PxTrait(1f), PxTrait(9f), PxTrait(15f));
             vp.childControlWidth = true; vp.childControlHeight = true;
             vp.childForceExpandWidth = true; vp.childForceExpandHeight = false;
-            AddLayoutElement(piedGo, flexibleHeight: 1);
+            AddLayoutElement(piedGo, flexibleHeight: 0);
             piedRoot = piedGo.transform;
 
             GameObject erreurGo = NouveauUI("Erreur", contenuGo.transform);
@@ -1197,6 +1365,38 @@ namespace MafiaCleanCity.Operational
         }
 
         private Transform tableRoot, piedRoot, erreurRoot, rentreRoot, enCoursRoot, coupRoot;
+
+        /// <summary>La maquette fait vivre le chrome dans une silhouette de Brennar. Le TopBar
+        /// partagé reste intact ; cette tranche en prolonge seulement la scène jusqu'au début du
+        /// dossier, avec des masses procédurales (aucune donnée de district fabriquée).</summary>
+        private void ConstruireSceneHaute(Transform parent, float hauteurSousChrome, float recouvrementSousManometre)
+        {
+            GameObject scene = NouveauUI("SceneHaute", parent);
+            RectTransform rt = (RectTransform)scene.transform;
+            rt.anchorMin = new Vector2(0f, 1f);
+            rt.anchorMax = new Vector2(1f, 1f);
+            rt.pivot = new Vector2(0.5f, 1f);
+            rt.offsetMin = new Vector2(0f, -ShellChrome.TopInsetPx - hauteurSousChrome);
+            rt.offsetMax = new Vector2(0f, -ShellChrome.TopInsetPx + recouvrementSousManometre);
+            Image ciel = AjouterFond(scene, CouleurLocale("#090d14"));
+            ciel.raycastTarget = false;
+
+            float[] debuts = { -0.04f, 0.08f, 0.23f, 0.36f, 0.51f, 0.67f, 0.82f };
+            float[] fins =   {  0.12f, 0.27f, 0.41f, 0.56f, 0.72f, 0.87f, 1.04f };
+            float[] hauts =  {  0.38f, 0.67f, 0.49f, 0.82f, 0.58f, 0.74f, 0.45f };
+            for (int i = 0; i < debuts.Length; i++)
+            {
+                GameObject masse = NouveauUI("Silhouette_" + i, scene.transform);
+                Image encre = AjouterFond(masse, CouleurLocale(i % 2 == 0 ? "#05080d" : "#070a10"));
+                encre.raycastTarget = false;
+                RectTransform mrt = (RectTransform)masse.transform;
+                mrt.anchorMin = new Vector2(debuts[i], 0f);
+                mrt.anchorMax = new Vector2(fins[i], hauts[i]);
+                mrt.offsetMin = Vector2.zero;
+                mrt.offsetMax = Vector2.zero;
+                mrt.localRotation = Quaternion.Euler(0f, 0f, i % 2 == 0 ? -3f : 3f);
+            }
+        }
 
         /// <summary>Une section verticale vide (hauteur nulle tant qu'elle n'a pas d'enfant).</summary>
         private Transform NouvelleSection(Transform parent, string nom)
@@ -1350,7 +1550,7 @@ namespace MafiaCleanCity.Operational
         {
             switch (cle)
             {
-                case "coil": return MafiaCleanCity.I18n.Libelle.Gabarit("conflit.bloc.les_ferrailleurs_de_spine", "la ferraille, à Spine");   // 40 v3.1 (78faf9b4)
+                case "coil": return MafiaCleanCity.I18n.Libelle.Gabarit("conflit.bloc.les_ferrailleurs_de_spine", "les ferrailleurs de Spine");
                 case "tarcum": return MafiaCleanCity.I18n.Libelle.De("conflit", "bloc", "le port, et ce qui y entre");
                 case "iron_throat": return MafiaCleanCity.I18n.Libelle.De("conflit", "bloc", "les docks du nord");
                 case "saltline": return MafiaCleanCity.I18n.Libelle.De("conflit", "bloc", "la ligne de sel, à l’est");
@@ -1533,6 +1733,22 @@ namespace MafiaCleanCity.Operational
                 case "conflit.axe.infrastructure": return MafiaCleanCity.I18n.Libelle.Gabarit(axe.key, "leurs installations");
                 case "conflit.axe.leadership":     return MafiaCleanCity.I18n.Libelle.Gabarit(axe.key, "leur tête");
                 default: return MafiaCleanCity.I18n.Repli.Type(axe.key);
+            }
+        }
+
+        /// <summary>Formulation de la PRISE promise par la fiche papier. L'axe dit où l'on frappe ;
+        /// cette phrase le rend comme un gain sans inventer de possession, de bâtiment ou de
+        /// district que l'API ne sert pas encore.</summary>
+        public static string PriseDeValeur(string axe)
+        {
+            switch (axe)
+            {
+                case "muscle":         return MafiaCleanCity.I18n.Libelle.De("conflit", "bloc", "leurs armes");
+                case "finance":        return MafiaCleanCity.I18n.Libelle.De("conflit", "bloc", "leur argent");
+                case "intel":          return MafiaCleanCity.I18n.Libelle.De("conflit", "bloc", "leurs informations");
+                case "infrastructure": return MafiaCleanCity.I18n.Libelle.De("conflit", "bloc", "la ferraille de leurs installations");
+                case "leadership":     return MafiaCleanCity.I18n.Libelle.De("conflit", "bloc", "leurs secrets");
+                default:               return MafiaCleanCity.I18n.Repli.Type(axe);
             }
         }
 
