@@ -385,6 +385,7 @@ namespace MafiaCleanCity.Operational
 
             MajCompteur(0, etapes.Length, Lib("ÉTAPES"));
             MajCompteur(1, propres, Lib("PROPRE AU BOUT"));
+            compteurNombre[1].text = propres.ToString("00") + "<size=55%>/" + etapes.Length + "</size>";
             MajCompteur(2, ecarts, Lib("ÉCARTS"));
             EcartsAffiches = ecarts;
 
@@ -416,6 +417,7 @@ namespace MafiaCleanCity.Operational
         {
             GameObject go = NouveauUI("Etape" + rang, listeRoot);
             AjouterFond(go, DesignTokens.Current.surfaceCard);
+            AjouterLisere(go);
             var le = go.AddComponent<LayoutElement>();
             le.minHeight = Px(66f); le.preferredHeight = -1f; le.flexibleHeight = 0f;
             var v = go.AddComponent<VerticalLayoutGroup>();
@@ -684,6 +686,7 @@ namespace MafiaCleanCity.Operational
             // L'enseigne
             GameObject ens = NouveauUI("Enseigne", racine.transform);
             AjouterFond(ens, DesignTokens.Current.surfaceCard);
+            AjouterLisere(ens);
             var ve = ens.AddComponent<VerticalLayoutGroup>();
             ve.padding = new RectOffset((int)Px(8f), (int)Px(8f), (int)Px(7f), (int)Px(7f));
             ve.childControlWidth = true; ve.childControlHeight = true;
@@ -696,6 +699,10 @@ namespace MafiaCleanCity.Operational
                 DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont);
             sousTitre.alignment = TextAlignmentOptions.Center;
             sousTitre.characterSpacing = 18f;
+            GameObject filet = NouveauUI("FiletOr", ens.transform);
+            AjouterFond(filet, DesignTokens.Current.hudHairlineGold);
+            LayoutElement filetLe = filet.AddComponent<LayoutElement>();
+            filetLe.minHeight = PxTrait(2f); filetLe.preferredHeight = PxTrait(2f); filetLe.flexibleHeight = 0f;
 
             // Les trois compteurs
             GameObject bande = NouveauUI("Compteurs", racine.transform);
@@ -717,6 +724,7 @@ namespace MafiaCleanCity.Operational
             {
                 GameObject c = NouveauUI("Compteur" + i, bande.transform);
                 AjouterFond(c, DesignTokens.Current.surfaceCard);
+                AjouterLisere(c);
                 LayoutElement largeurEgale = c.AddComponent<LayoutElement>();
                 largeurEgale.minWidth = 0f;
                 largeurEgale.preferredWidth = 0f;
@@ -758,6 +766,7 @@ namespace MafiaCleanCity.Operational
             // Le panneau
             GameObject pan = NouveauUI("Panneau", racine.transform);
             AjouterFond(pan, DesignTokens.Current.surfaceCard);
+            AjouterLisere(pan);
             var lep = pan.AddComponent<LayoutElement>();
             lep.minHeight = Px(92f); lep.preferredHeight = -1f; lep.flexibleHeight = 0f;
             var vp = pan.AddComponent<VerticalLayoutGroup>();
@@ -808,6 +817,15 @@ namespace MafiaCleanCity.Operational
             img.color = couleur;
             img.raycastTarget = false;
             return img;
+        }
+
+        private void AjouterLisere(GameObject go)
+        {
+            Outline lisere = go.AddComponent<Outline>();
+            lisere.effectColor = DesignTokens.Current.surfaceRaised;
+            float trait = Mathf.Max(1f, PxTrait(1f));
+            lisere.effectDistance = new Vector2(trait, -trait);
+            lisere.useGraphicAlpha = false;
         }
 
         private static TextMeshProUGUI NouveauTexte(Transform parent, string nom, string texte,
