@@ -91,3 +91,24 @@ Aucun de ces mots n'a de clé servie aujourd'hui : `34-…` compte 41 mots disti
    - « Fermer partout » et « Tout effacer » éteints, avec leur lot.
 
    Proposé : **un cadre de mise à jour de la porte**, pas un écran neuf.
+
+## 7. Tranché par f2 (23/09)
+
+- **Une porte pour deux entrées** (㉒ « Le compte », ⑲ « Le jeu ») : **on garde**, c'est la porte ratifiée.
+- **Les 3 éléments servis** (visibilité du méta-marché, bascule des tutoriels, déconnexion) : CLIENT-2 les branche, avec les mots ratifiés
+  (« Fermer le coffre · cette session seulement », « La langue de la maison »). La langue n'est plus « réglée à l'ouverture du compte ».
+- **Dettes de maquette** : dessinées, non servies. Le client dit vrai en les montrant éteintes.
+
+  | lot | élément ratifié | cadre | ce qui manque au back |
+  |---|---|---|---|
+  | L5 | « Depuis ce matin » : 12 décisions · 4 exceptions tranchées · 1 engagement pris | 97 | une route qui compte la journée du joueur |
+  | L10 | « TOUT EFFACER » : et ne plus jamais revenir | 97 | l'effacement du compte (`DELETED_TOMBSTONE` n'a pas d'écrivain joueur) |
+  | L11 | « FERMER PARTOUT » : toutes les sessions ouvertes | 97 | la révocation de toutes les sessions |
+
+- **Le cadre de mise à jour** (GO f2) : `~/project/atelier3d-mafia/ecrans-brennar-porte-2026-09-23.html`, 1 cadre, généré par
+  `generer-porte-19-2026-09-23.py`.
+  - Il part du cadre 97 lu dans la page, avec 7 remplacements vérifiés.
+  - L1 et L8 perdent leur lot.
+  - La bascule des tutoriels et « Fermer le coffre » reviennent du cadre 95.
+  - L5, L10 et L11 sont éteints, avec leur lot.
+  - Le rendu vient **après le gate back** : `rendre-porte-2026-09-23.py`.
