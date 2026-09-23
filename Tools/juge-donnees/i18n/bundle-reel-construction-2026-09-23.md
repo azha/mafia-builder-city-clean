@@ -156,3 +156,12 @@ Dette = direct (0) ∪ flux (40) ∪ vu par la garde (30) = **42**. Vus par la g
 - `distribution.sous_titre.on_choisit_d_ou_ca_part_ou_ca_va_et_par_quel_chemin`
 - `distribution.titre.c_est_livre`
 - `distribution.titre.l_envoi_de_ce_soir`
+
+## + 6 → 48 (2026-09-23 ~03:00) : le merge de CLIENT-2 (b909fbae) apporte 6 clés ⑨/⑩ non servies par 83b4f291
+La partie 1 de 02:44 a rougi sur `exceptions.bloc.rien_a_relire` ; `sites-libelle.py` sur l'arbre fusionné en voit 6 :
+- `exception_detail.bloc.appui_long_la_carte_se_ferme`
+- `exception_detail.bloc.appui_long_la_carte_se_ferme_le_batiment_lui_se_repare_avec_le_temps`
+- `exception_detail.bloc.je_fais_quoi`
+- `exceptions.bloc.ce_soir_au_verge_d_or`
+- `exceptions.bloc.retourne_au_travail`
+- `exceptions.bloc.rien_a_relire`

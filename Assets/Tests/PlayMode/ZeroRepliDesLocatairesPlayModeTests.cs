@@ -84,6 +84,14 @@ namespace MafiaCleanCity.Operational.Tests
             "loi.bloc.la_filiere",
             "loi.bloc.un_cabinet",
             "loi.bouton.mettre_sous_retention",
+            // + 6 (2026-09-23 ~03:00) : apportées par le merge de CLIENT-2 (b909fbae, ⑨/⑩), non servies par 83b4f291 ;
+            //   `rien_a_relire` vue par la garde (partie 1 de 02:44), les 6 par sites-libelle.py sur l'arbre fusionné.
+            "exception_detail.bloc.appui_long_la_carte_se_ferme",
+            "exception_detail.bloc.appui_long_la_carte_se_ferme_le_batiment_lui_se_repare_avec_le_temps",
+            "exception_detail.bloc.je_fais_quoi",
+            "exceptions.bloc.ce_soir_au_verge_d_or",
+            "exceptions.bloc.retourne_au_travail",
+            "exceptions.bloc.rien_a_relire",
         };
 
         /// <summary>Les locataires MESURÉS — écrits à la main (anti-tautologie), et leur couverture vérifiée par réflexion.</summary>
