@@ -94,20 +94,20 @@ namespace MafiaCleanCity.Operational.Exceptions.Tests
         }
 
         [Test]
-        public void LeRang_DiscrimineLesTroisCrans_EtLeGlypheAvecLui()
+        public void LeRang_DiscrimineLesTroisCrans_EtLeMotAvecLui()
         {
             var rangs = ExceptionBandes.DomaineGravite.Select(ExceptionBandes.RangGravite).ToList();
             CollectionAssert.AllItemsAreUnique(rangs,
                 "deux gravités de même rang : la teinte et le glyphe ne peuvent plus les séparer");
             CollectionAssert.DoesNotContain(rangs, -1, "une valeur du domaine réel classée hors domaine");
 
-            var glyphes = ExceptionBandes.DomaineGravite.Select(ExceptionBandes.Glyphe).ToList();
-            CollectionAssert.AllItemsAreUnique(glyphes,
-                "deux gravités partagent un glyphe — c'est le défaut mesuré, où les trois rendaient "
-                + "`[?]`, et il serait invisible sur une capture d'une seule carte");
-            CollectionAssert.DoesNotContain(glyphes, ExceptionBandes.Glyphe("HIGH"),
-                "un cran réel rend le même glyphe que le domaine mort : le glyphe d'inconnu ne "
-                + "signale plus rien");
+            // 23/09 (décision f2 D11) : le glyphe « [!..] » est retiré ; la propriété qu'il portait — trois crans DISTINCTS, et
+            // l'inconnu distinct d'eux — est REMPLACÉE sur ce qui reste à l'écran : le MOT de la gravité.
+            var mots = ExceptionBandes.DomaineGravite.Select(ExceptionBandes.Gravite).ToList();
+            CollectionAssert.AllItemsAreUnique(mots,
+                "deux gravités partagent un mot — il serait invisible sur une capture d'une seule carte");
+            CollectionAssert.DoesNotContain(mots, ExceptionBandes.Gravite("HIGH"),
+                "un cran réel rend le même mot que le domaine mort : le mot d'inconnu ne signale plus rien");
         }
 
         [Test]

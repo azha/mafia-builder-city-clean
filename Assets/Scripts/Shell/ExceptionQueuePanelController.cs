@@ -150,10 +150,10 @@ namespace MafiaCleanCity.Shell
             LayoutElement rowLe = row.AddComponent<LayoutElement>();
             rowLe.minHeight = 36;
 
-            // Severity — VALUE + LABEL together (design C5-F1: colour is never the sole differentiator).
-            TextMeshProUGUI glyph = NewText(row.transform, SeverityGlyph(card.severity_band), 60);
-            glyph.color = SeverityAccent(card.severity_band);
+            // Gravité — le MOT, dans la couleur de sa gravité (C5-F1 : la couleur n'est jamais seule). 23/09 (décision f2 D11) : le glyphe
+            // « [!..] » qui portait la couleur à côté du mot est RETIRÉ ; la couleur passe au mot lui-même.
             TextMeshProUGUI label = NewText(row.transform, SeverityLabel(card.severity_band), 90);
+            label.color = SeverityAccent(card.severity_band);
             renderedSeverityLabels.Add(label.text);
 
             // ⛔ Le descripteur partait BRUT ici — ni règle, ni guillemets, ni tiret sur le vide.
@@ -181,8 +181,6 @@ namespace MafiaCleanCity.Shell
         //    (`HIGH|MEDIUM|LOW` contre `MILD|MODERATE|SEVERE`), donc en pratique elle recrachait
         //    la valeur BRUTE du serveur, et « Unknown » quand elle était vide. Trois mots anglais
         //    sur un chemin qui n'en tolère aucun. Le domaine vit dans `ExceptionBandes`.
-        private static string SeverityGlyph(string b) =>
-            MafiaCleanCity.Operational.Exceptions.ExceptionBandes.Glyphe(b);
         private static string SeverityLabel(string b) =>
             MafiaCleanCity.Operational.Exceptions.ExceptionBandes.Gravite(b);
         private static Color SeverityAccent(string b)

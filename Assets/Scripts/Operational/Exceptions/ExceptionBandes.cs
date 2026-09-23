@@ -157,18 +157,6 @@ namespace MafiaCleanCity.Operational.Exceptions
             return -1;
         }
 
-        /// <summary>Le glyphe d'une gravité. Trois crans PLUS un état inconnu qui se voit — la même
-        /// règle que `Inconnue` : un trou se montre, il ne se déguise pas en cran le plus doux.</summary>
-        public static string Glyphe(string bande)
-        {
-            switch (RangGravite(bande))
-            {
-                case 0: return "[!..]";
-                case 1: return "[!!.]";
-                case 2: return "[!!!]";
-                default: return "[?]";
-            }
-        }
 
         /// <summary>⛔⛔ LA RÈGLE DU DESCRIPTEUR, SORTIE DE L'ÉCRAN QUI LA PORTAIT SEUL.
         ///

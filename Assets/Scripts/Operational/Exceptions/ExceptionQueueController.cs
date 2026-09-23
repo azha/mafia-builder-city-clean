@@ -1029,7 +1029,6 @@ namespace MafiaCleanCity.Operational.Exceptions
         //    n'émet jamais (sa projection rend `MILD|MODERATE|SEVERE`). Elles tombaient donc
         //    TOUJOURS dans leur défaut — glyphe `[?]` et teinte neutre pour chaque carte, quelle
         //    que soit la gravité. Le domaine vit désormais dans `ExceptionBandes`, une seule fois.
-        private static string SeverityGlyph(string b) => ExceptionBandes.Glyphe(b);
         private static Color SeverityAccent(string b)
         {
             switch (ExceptionBandes.RangGravite(b))
