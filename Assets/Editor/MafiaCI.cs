@@ -243,6 +243,11 @@ public static class MafiaCI
         // servi au lieu de l'identifiant, « null » n'est pas « tout vu », la bascule dans le sens du joueur. Sans réseau. Aucune relation de
         // préfixe (vérifié). Validé par l'orchestrateur. ⚠️ Reglages n'entre PAS encore : K2 passe d'abord sur un compte neuf.
         "Tutoriel",
+        // ⑲ les réglages (2026-09-23, CLIENT-2) — 7/7 vert AVANT inscription au créneau de 08:25 (tête 97b1ed00, pile e7f52351) : les deux
+        // bascules servies (tutoriels, marché), « Fermer le coffre » vivant, la forme G ; K1-K3 le coffre rouvert. K2 est RÉEL et fait une
+        // vraie sortie : sur un compte NEUF depuis 81dc18b5 (jamais le compte de démo partagé). Aucune relation de préfixe (vérifié).
+        // Validé par l'orchestrateur.
+        "Reglages",
     };
     // ⚠️ UNION AU MERGE (3e fois sur cette ligne le 2026-09-03) — et la règle est
     // toujours la même : on unit ce qui est PORTÉ, jamais les deux listes. Une entrée
