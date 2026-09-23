@@ -17,6 +17,10 @@ namespace MafiaCleanCity.Shell
     // simple (non destructif, "carry semantics", design §8) — jamais gardé par une confirmation.
     public class HighestLeverageCardController : MonoBehaviour
     {
+        /// <summary>Le CTA de la carte ([Tamponner], [Lire maintenant]) — UNE liaison `accentGold` pour le fichier (allowlist D5,
+        /// `C5F2_AccentGoldBindings` compte les occurrences, patron `CtaColor` d'AutonomyInbox/Exceptions).</summary>
+        private static Color CtaColor => DesignTokens.Current.accentGold;
+
         public enum CardState { NoCard, Available, CapBlocked }
 
         // canon: "l'utilisateur tape un mot-clé de confirmation" (localisé F1 — EN MVP, D4 différé).
@@ -342,7 +346,7 @@ namespace MafiaCleanCity.Shell
 
             GameObject commitGo = new GameObject("CommitButton", typeof(RectTransform));
             commitGo.transform.SetParent(actions.transform, false);
-            commitGo.AddComponent<Image>().color = DesignTokens.Current.accentGold;
+            commitGo.AddComponent<Image>().color = CtaColor;
             CommitButton = commitGo.AddComponent<LongPressButton>();
             CommitButton.OnLongPressCompleted += () => StartCoroutine(RequestCommit());
             commitLabel = NewChildText(commitGo.transform, "Tamponner — appui long", 15);
@@ -402,7 +406,7 @@ namespace MafiaCleanCity.Shell
             lireGo.transform.SetParent(actions.transform, false);
             lireGo.transform.SetSiblingIndex(0);
             Image lireImg = lireGo.AddComponent<Image>();
-            lireImg.color = DesignTokens.Current.accentGold;
+            lireImg.color = CtaColor;   // même CTA que [Tamponner]
             lireButton = lireGo.AddComponent<Button>();
             lireButton.targetGraphic = lireImg;
             lireButton.onClick.AddListener(OuvrirLesRapports);

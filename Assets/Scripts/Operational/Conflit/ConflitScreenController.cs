@@ -661,7 +661,7 @@ namespace MafiaCleanCity.Operational
                 if (cle == ChoixFamille)
                 {
                     TextMeshProUGUI ceSoir = NouveauTexteFiche(ligne.transform, "CeSoir",
-                        Libelle.Gabarit("conflit.bloc.ce_soir", "Ce soir"), 7f, DesignTokens.Current.accentGold, true);
+                        Libelle.Gabarit("conflit.bloc.ce_soir", "Ce soir"), 7f, Or, true);
                     ceSoir.characterSpacing = 2f;
                     TrackText(ceSoir.text);
                 }
@@ -759,7 +759,7 @@ namespace MafiaCleanCity.Operational
                 string a = axe;
                 GameObject chip = LigneChoisissable(axes.transform, "Axe_" + a, a == ChoixAxe, () => ChoisirAxe(a));
                 TextMeshProUGUI mot = NouveauTexteFiche(chip.transform, "Mot", ConflitResolvers.AxeDeValeur(a), 7.5f,
-                    a == ChoixAxe ? DesignTokens.Current.accentGold : DesignTokens.Current.onSurfaceSecondary, a == ChoixAxe);
+                    a == ChoixAxe ? Or : DesignTokens.Current.onSurfaceSecondary, a == ChoixAxe);
                 mot.alignment = TextAlignmentOptions.Center;
                 mot.enableWordWrapping = true;
                 TrackText(mot.text);
@@ -821,7 +821,7 @@ namespace MafiaCleanCity.Operational
         {
             GameObject bouton = NouveauUI(nom, parent);
             Image fond = AjouterImage(bouton);
-            fond.color = actif ? DesignTokens.Current.accentGold : DesignTokens.Current.surfaceRaised;
+            fond.color = actif ? Or : DesignTokens.Current.surfaceRaised;
             fond.raycastTarget = true;
             Button b = bouton.AddComponent<Button>();
             b.targetGraphic = fond;
@@ -1010,6 +1010,9 @@ namespace MafiaCleanCity.Operational
         private TextMeshProUGUI titreTexte, sousTitreTexte;
 
         private static Color RougeMauvais => DesignTokens.Current.accentDanger;
+        /// <summary>Le laiton des gestes et du choix courant — le jeton des écrans voisins du chantier (`ChaineDApproScreenController.Or`),
+        /// jamais `accentGold` (jaune CTA #ffd23f, liaisons gardées par `C5F2_AccentGoldBindings` ; D5).</summary>
+        private static Color Or => DesignTokens.Current.hudMoneyUnderlineGold;
 
         // ═══ Primitives — dupliquées par convention (aucun fichier du dépôt ne les partage,
         // mesuré sur `main` le 2026-09-02) ═════════════════════════════════════════════════════
