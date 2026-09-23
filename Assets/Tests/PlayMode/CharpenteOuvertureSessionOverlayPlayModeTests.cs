@@ -205,7 +205,8 @@ namespace MafiaCleanCity.Shell.Tests
                 // `BuildingCardController` n'est plus atteint par l'Accueil (2026-09-23, ruling A : le bouton « La fiche » la montait
                 // VIDE) ; son seul geste est AMÉLIORER sur la fiche de ①, avec le bâtiment (EcranDistrict D1-D3).
                 nameof(DashboardController), nameof(CityMapController),
-                nameof(LaunderingController), nameof(ExceptionQueueController), nameof(AutonomyInboxController),
+                // ㊵ remplace ⑪ sur la nav Filière (2026-09-23, ruling de f2 : ⑪ et ⑫ sortent du chemin joueur).
+                nameof(FiliereScreenController), nameof(ExceptionQueueController), nameof(AutonomyInboxController),
                 nameof(ExceptionDetailController),
             };
             var ecransAtteints = new List<string>();
@@ -259,9 +260,9 @@ namespace MafiaCleanCity.Shell.Tests
 
             CliquerBoutonNav("Nav_Filière");
             yield return null;
-            Assert.IsNotNull(dashboard.LastNavGameObject?.GetComponent<LaunderingController>(),
-                "Nav_Filière doit atteindre LaunderingController (clic réel sur le bouton du Dashboard)");
-            ecransAtteints.Add(nameof(LaunderingController));
+            Assert.IsNotNull(dashboard.LastNavGameObject?.GetComponent<FiliereScreenController>(),
+                "Nav_Filière doit atteindre ㊵ FiliereScreenController (clic réel sur le bouton du Dashboard)");
+            ecransAtteints.Add(nameof(FiliereScreenController));
 
             // Capturé ICI, AVANT que le clic Autonomy n'écrase `LastNavGameObject` (même ordre que
             // F0.4-a, précédent maison : « dernier nav », pas un registre).

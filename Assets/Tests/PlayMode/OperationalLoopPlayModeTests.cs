@@ -313,14 +313,14 @@ namespace MafiaCleanCity.Operational.Tests
             cityMap.SetHeatOverlay(true);
             Assert.IsTrue(burning.HeatBadge.activeSelf, "toggle ON restores the heat badge");
 
-            // ── (final) the nav affordance: the Dashboard's Pipeline nav opens the LaunderingController
+            // ── (final) the nav affordance: the Dashboard's Pipeline nav opens ㊵ FiliereScreenController (⑪ until 2026-09-23)
             //    (the loop is navigable, not just observable). ──
             Assert.AreEqual(DashboardController.NavTarget.None, dashboard.LastNavTarget, "no nav fired yet");
             dashboard.OpenPipeline();
             Assert.AreEqual(DashboardController.NavTarget.Pipeline, dashboard.LastNavTarget, "Pipeline nav fired");
             Assert.IsNotNull(dashboard.LastNavGameObject, "Pipeline nav opened a host GameObject");
-            Assert.IsNotNull(dashboard.LastNavGameObject.GetComponent<LaunderingController>(),
-                "Pipeline nav opened the LaunderingController");
+            Assert.IsNotNull(dashboard.LastNavGameObject.GetComponent<FiliereScreenController>(),
+                "la nav Filière ouvre ㊵ FiliereScreenController (ruling de f2, 23/09)");
             spawned.Add(dashboard.LastNavGameObject); // tidy up in TearDown.
 
             Debug.Log($"[CapstoneE2E] LOOP OBSERVABLE — wallet={liveWalletBand} heat={liveHeatBand} " +
