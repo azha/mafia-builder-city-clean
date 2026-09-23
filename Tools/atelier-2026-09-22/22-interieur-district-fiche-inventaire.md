@@ -287,7 +287,7 @@ Le 3ᵉ titre suit les points 11 et 19 du 07/09 : « Heat » devient « Chaleur 
 | `chrome.bandeau.les_indics_parlent` | Les indics parlent : la brigade s’agite | The informants are talking: the squad is stirring | `citywide_bucket` ∈ HOT, BURNING sans `escalated` (état C du canon, mot pour mot) |
 | `chrome.bandeau.attend_vos_ordres` | {nom} attend vos ordres | {nom} is waiting for your orders | la 1ʳᵉ carte de `queue` porte un lieutenant (« vos ordres » : `exceptions.file.ambiance`, servi) |
 | `chrome.bandeau.la_ville_attend_vos_ordres` | La ville attend vos ordres | The city is waiting for your orders | la 1ʳᵉ carte n'a pas de lieutenant (⑨ : c'est la ville qui parle) |
-| `chrome.bandeau.rapport` | {nom} a un rapport pour vous | {nom} has a report for you | un rapport d'autonomie non lu (état N du canon : « Sal a un rapport du soir ») |
+| `chrome.bandeau.rapport` | {nom} a un rapport pour vous | {nom} has a report for you | un rapport d'autonomie **OUVERT** — en attente de votre décision — annoncé **une fois par session** ; le back ne tient aucun état lu / non lu, d'où ce déclencheur (tranché par l'orchestrateur le 2026-09-23 ; état N du canon : « Sal a un rapport du soir ») |
 | `chrome.bandeau.trancher` | trancher | decide | le mot d'action en or, après une carte (le canon met « lire » en or) |
 | `chrome.bandeau.lire` | lire | read | le mot d'action après un rapport (canon) |
 
@@ -355,7 +355,7 @@ Lu dans la source et la note de la maquette :
 - **Les registres** ne le disent pas non plus : `front.md` §4 A écrit « Famille (+ point or discret) », sans sens. Les juges l'ont lu
   chacun à leur façon : r2 (25/08) « notification, vraisemblablement pilotée par la donnée » ; juge-données (07/09, D7) « ● (6 en
   attente) ».
-- ⇒ **À poser à l'user.** Les candidats servis aujourd'hui : un **rapport d'autonomie non lu** (le plus proche de l'indice ; route
+- ⇒ **À poser à l'user.** Les candidats servis aujourd'hui : un **rapport d'autonomie ouvert** (en attente de décision ; le back ne tient aucun état lu / non lu) (le plus proche de l'indice ; route
   `GET /v1/autonomy-reports`), ou des **cartes en attente** (`backlog_badge` / `queue` ; mais la file n'est pas le contenu de Famille).
 
 ### 7.4 Les arbitrages ouverts du r9 — d'abord dans les registres
