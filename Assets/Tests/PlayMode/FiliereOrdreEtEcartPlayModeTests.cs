@@ -135,5 +135,50 @@ namespace MafiaCleanCity.Operational.Tests
             CollectionAssert.AreEqual(new[] { "b", "a", "x" }, ecran.OrdreAffiche.ToList(), "ordre du serveur gardé tel quel");
             Assert.AreEqual(0, ecran.EcartsAffiches);
         }
+        // ═══ La propreté d'une étape : table 48 de l'atelier (edf98ebf), `filiere.proprete.<valeur>` ════════════════════
+
+        /// <summary>Couverture du domaine servi (`CleanlinessBucket`, 4 valeurs) avec les mots EXACTS de la table 48 ; hors domaine,
+        /// « état inconnu » (jamais la valeur brute) ; absente, « — » ; quatre mots distincts.</summary>
+        [Test]
+        public void Proprete_CouvreLeDomaine_AvecLesMotsDeLaTable48()
+        {
+            CollectionAssert.AreEqual(new[] { "DIRTY", "PARTIAL", "MOSTLY_CLEAN", "CLEAN" }, PureteResolvers.Domaine,
+                "le domaine du back (city-event-bus.ts:331), dans l'ordre de l'échelle");
+            Assert.AreEqual("sale", PureteResolvers.Libelle("DIRTY"));
+            Assert.AreEqual("à moitié", PureteResolvers.Libelle("PARTIAL"));
+            Assert.AreEqual("presque propre", PureteResolvers.Libelle("MOSTLY_CLEAN"));
+            Assert.AreEqual("propre", PureteResolvers.Libelle("CLEAN"));
+            Assert.AreEqual(4, PureteResolvers.Domaine.Select(PureteResolvers.Libelle).Distinct().Count(), "quatre mots distincts");
+            Assert.AreEqual("état inconnu", PureteResolvers.Libelle("SPOTLESS"), "hors domaine : le mot de la famille des bandes");
+            Assert.AreEqual("—", PureteResolvers.Libelle(null));
+            Assert.AreEqual("—", PureteResolvers.Libelle(""));
+        }
+
+        /// <summary>⛔ GARDE DE VALEUR SUR UN CORPS RÉEL — `GET /v1/operational/laundering/{node}/pipeline` capturé sur la pile le
+        /// 2026-09-07 (`Tools/juge-donnees/ecran-principal/cloture-2026-09-07/mesures/14-laundering-pipeline.json`, enveloppe
+        /// complète), désérialisé par l'enveloppe du client et rendu par ㊵ : la bande servie `PARTIAL` s'affiche « à moitié »,
+        /// jamais « PARTIAL ». Contrôle positif : le corps porte bien une bande (sinon la garde ne mesurerait rien).</summary>
+        [UnityTest]
+        public IEnumerator Proprete_CorpsReel_LaBandeServieSAfficheAvecSonMot()
+        {
+            string chemin = System.IO.Path.Combine(Application.dataPath, "..",
+                "Tools/juge-donnees/ecran-principal/cloture-2026-09-07/mesures/14-laundering-pipeline.json");
+            Assert.IsTrue(System.IO.File.Exists(chemin), "le corps réel capturé est présent");
+            LaunderingPipelineDto dto = JsonUtility.FromJson<LaunderingPipelineEnvelope>(System.IO.File.ReadAllText(chemin))?.payload?.data;
+            Assert.IsNotNull(dto?.stages, "le corps réel se lit par l'enveloppe du client");
+            Assert.AreEqual(1, dto.stages.Length);
+            Assert.AreEqual("PARTIAL", dto.stages[0].cleanliness_band, "contrôle positif : la bande servie est là");
+
+            var ecran = MonterEcran();
+            ecran.RendrePourTest(dto);
+            yield return null;
+
+            Transform etape = GameObject.Find("FiliereRoot").GetComponentsInChildren<Transform>(true).FirstOrDefault(t => t.name == "Etape1");
+            Assert.IsNotNull(etape, "Etape1 rendue");
+            var titre = etape.Find("Titre")?.GetComponent<TMPro.TextMeshProUGUI>();
+            Assert.IsNotNull(titre, "le titre de l'étape");
+            Assert.AreEqual("à moitié", titre.text, "le mot de la table 48, jamais la valeur brute « PARTIAL »");
+        }
+
     }
 }

@@ -423,8 +423,8 @@ namespace MafiaCleanCity.Operational
             v.childControlWidth = true; v.childControlHeight = true;
             v.childForceExpandWidth = true; v.childForceExpandHeight = false;
 
-            // ⛔ Le libellé de propreté vient du PRODUCTEUR UNIQUE, jamais d'un `switch` local :
-            // ⑪ et ⑫ affichent la même échelle, et deux copies finiraient par diverger.
+            // ⛔ Le libellé de propreté vient du PRODUCTEUR UNIQUE (`PureteResolvers`, table 48 : `filiere.proprete.*`), jamais
+            // d'un `switch` local.
             string bande = PureteResolvers.Libelle(e != null ? e.cleanliness_band : null);
             string rangTexte = Lib("ÉTAPE") + "   " + rang.ToString("00");
             if (e != null && e.terminal) rangTexte += "   ·   " + Lib("LA SORTIE");
