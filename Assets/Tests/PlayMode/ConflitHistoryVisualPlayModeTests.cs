@@ -56,6 +56,13 @@ namespace MafiaCleanCity.Operational.Tests
             GameObject racine = GameObject.Find("ConflitRoot");
             Assert.IsNotNull(racine);
             Assert.AreEqual(4, CompterNoms(racine.transform, "Historique_r"));
+            Assert.IsNotNull(GameObject.Find("Rentre_r4").transform.Find("Avatar/Buste"));
+            Assert.IsNotNull(GameObject.Find("Rentre_r4").transform.Find("DroiteCadre"));
+            Assert.IsNull(GameObject.Find("Historique_r4").transform.Find("Avatar"),
+                "les lignes d'historique ne répètent pas le portrait du dernier retour");
+            Assert.AreEqual(new Color32(0x24, 0x1c, 0x11, 0xff),
+                (Color32)GameObject.Find("YRetourner").GetComponent<Image>().color,
+                "le geste actif est sombre au filet laiton, jamais un aplat jaune");
             foreach (string texte in ecran.RenderedTexts)
                 StringAssert.DoesNotContain("Coup n°", texte);
 

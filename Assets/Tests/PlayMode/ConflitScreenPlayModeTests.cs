@@ -517,8 +517,14 @@ namespace MafiaCleanCity.Operational.Tests
             CollectionAssert.Contains(ecran.RenderedTexts, "En route, pas encore de retour");
             Assert.AreEqual("Lt. Voss", TexteSous("Parti_p1", "Lieutenant"));
             Assert.AreEqual("en route vers Tarcum", TexteSous("Parti_p1", "Lieu"), "le nom SERVI de la famille, dans le gabarit");
+            Assert.IsNotNull(GameObject.Find("Parti_p1").transform.Find("Avatar/Buste"),
+                "un lieutenant servi porte le petit portrait de la maquette");
+            Assert.AreEqual(TMPro.FontStyles.Normal, TexteComposantSous("Parti_p1", "Lieu").fontStyle,
+                "le lieu est droit dans `.env .q i` malgré le nom historique de la balise CSS");
             Assert.AreEqual("plus de rappel possible", TexteSous("Parti_p1", "Droite"));
             Assert.IsNull(TexteSous("Parti_p2", "Lieutenant"), "lieutenant null (disparu) : la ligne s'affiche SANS nom, sans repli");
+            Assert.IsNull(GameObject.Find("Parti_p2").transform.Find("Avatar"),
+                "lieutenant absent : aucun portrait inventé");
             Assert.AreEqual("en route vers Gorge-de-Fer", TexteSous("Parti_p2", "Lieu"));
             CollectionAssert.Contains(ecran.RenderedTexts, "Déjà de retour");
             Assert.AreEqual("était chez La Coil", TexteSous("DejaRentre_r1", "Lieu"));
@@ -541,6 +547,8 @@ namespace MafiaCleanCity.Operational.Tests
             CollectionAssert.Contains(ecran.RenderedTexts, "Depuis le début, chez La Coil");
             Assert.AreEqual("un envoi", TexteSous("Historique_r1", "Libelle"));
             Assert.AreEqual("Rien obtenu", TexteSous("Historique_r1", "Issue"));
+            Assert.IsNotNull(GameObject.Find("Historique_r1").transform.Find("IssueCadre"),
+                "l'issue est le badge bordé de la maquette, pas une colonne de texte nue");
             Assert.AreEqual("un envoi", TexteSous("Historique_r0", "Libelle"));
             Assert.AreEqual("Percée", TexteSous("Historique_r0", "Issue"));
             Assert.AreEqual(new Color32(0x98, 0x79, 0x79, 0xff), CouleurSous("Historique_r1", "Issue"),
@@ -770,6 +778,18 @@ namespace MafiaCleanCity.Operational.Tests
                 foreach (TMPro.TextMeshProUGUI t in tr.GetComponentsInChildren<TMPro.TextMeshProUGUI>(true))
                     if (t.name == enfant) return t.text;
             }
+            return null;
+        }
+
+        private TMPro.TextMeshProUGUI TexteComposantSous(string ligne, string enfant)
+        {
+            foreach (Transform tr in RacineEcran().GetComponentsInChildren<Transform>(true))
+            {
+                if (tr.name != ligne) continue;
+                foreach (TMPro.TextMeshProUGUI t in tr.GetComponentsInChildren<TMPro.TextMeshProUGUI>(true))
+                    if (t.name == enfant) return t;
+            }
+            Assert.Fail($"texte {enfant} introuvable sous {ligne}");
             return null;
         }
 

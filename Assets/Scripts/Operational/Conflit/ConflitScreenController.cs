@@ -517,6 +517,7 @@ namespace MafiaCleanCity.Operational
         {
             TextMeshProUGUI e = NouveauTexteFiche(parent, nom, texte, 8.5f, DesignTokens.Current.onSurfaceSecondary, false);
             e.characterSpacing = 4f;
+            e.fontStyle |= FontStyles.UpperCase;
             TrackText(e.text);
         }
 
@@ -544,21 +545,26 @@ namespace MafiaCleanCity.Operational
             string lieutenant = ConflitResolvers.NomDuLieutenant(e.lieutenant);
             if (lieutenant != null)
             {
+                AjouterAvatar(ligne.transform);
                 TextMeshProUGUI nom = NouveauTexteFiche(gauche.transform, "Lieutenant", lieutenant, 10f,
                     DesignTokens.Current.onSurfacePrimary, true);
                 TrackText(nom.text);
             }
             TextMeshProUGUI ou = NouveauTexteFiche(gauche.transform, "Lieu", lieu, 8f, DesignTokens.Current.onSurfaceMuted, false);
-            ou.fontStyle = FontStyles.Italic;
             TrackText(ou.text);
 
             if (droite == null) return;
-            TextMeshProUGUI d = NouveauTexteFiche(ligne.transform, "Droite", droite, 8.5f,
-                issueBucket == null ? DesignTokens.Current.onSurfaceSecondary : CouleurIssue(issueBucket), false);
-            d.alignment = TextAlignmentOptions.Right;
-            d.enableWordWrapping = true;
-            AddLayoutElement(d.gameObject, preferredWidth: Px(90f));
-            TrackText(d.text);
+            if (issueBucket != null)
+                AjouterBadgeIssue(ligne.transform, "Droite", droite, issueBucket);
+            else
+            {
+                TextMeshProUGUI d = NouveauTexteFiche(ligne.transform, "Droite", droite, 8.5f,
+                    DesignTokens.Current.onSurfaceSecondary, false);
+                d.alignment = TextAlignmentOptions.Right;
+                d.enableWordWrapping = true;
+                AddLayoutElement(d.gameObject, preferredWidth: Px(90f));
+                TrackText(d.text);
+            }
         }
 
         /// <summary>« ça nous a coûté un peu » (cadre 63) : le libellé, puis le mot de la bande en gras.</summary>
@@ -595,11 +601,71 @@ namespace MafiaCleanCity.Operational
             AddLayoutElement(gauche.gameObject, flexibleWidth: 1);
             TrackText(gauche.text);
             if (issue == null) return;
-            TextMeshProUGUI droite = NouveauTexteFiche(ligne.transform, "Issue", issue, 8.5f,
-                CouleurIssue(issueBucket), true);
-            droite.alignment = TextAlignmentOptions.Right;
-            AddLayoutElement(droite.gameObject, preferredWidth: Px(90f));
-            TrackText(droite.text);
+            AjouterBadgeIssue(ligne.transform, "Issue", issue, issueBucket);
+        }
+
+        /// <summary>Le petit portrait de `.env .av` (cadres 62-63). On réemploie le buste unique déjà arbitré pour les
+        /// lieutenants, mais pas le médaillon du comptoir : ce dessin-ci est rond, gris et sans liseré laiton.</summary>
+        private void AjouterAvatar(Transform parent)
+        {
+            float taille = Px(30f);
+            GameObject avatar = NouveauUI("Avatar", parent);
+            avatar.transform.SetSiblingIndex(0);
+            AddLayoutElement(avatar, minWidth: taille, preferredWidth: taille, minHeight: taille, preferredHeight: taille,
+                flexibleWidth: 0f, flexibleHeight: 0f);
+            Image masque = AjouterImage(avatar);
+            masque.sprite = ProceduralUI.RoundedRectMask(Mathf.Max(1, Mathf.RoundToInt(taille * 0.5f)));
+            masque.type = Image.Type.Sliced;
+            masque.color = DesignTokens.Current.surfaceRow;
+            masque.raycastTarget = false;
+            avatar.AddComponent<Mask>().showMaskGraphic = true;
+
+            Sprite silhouette = Resources.Load<Sprite>(MedaillonAuComptoir.CheminBusteLieutenant);
+            if (silhouette != null)
+            {
+                GameObject buste = NouveauUI("Buste", avatar.transform);
+                Image dessin = AjouterImage(buste);
+                dessin.sprite = silhouette;
+                // Le PNG commun est cuit en beige pour le comptoir (#cfc4a6). Ici la maquette `.env .av .buste-t`
+                // demande #95a1ae : cette multiplication locale neutralise le beige sans repeindre les autres écrans.
+                dessin.color = CouleurLocale("#b8d1ff");
+                dessin.preserveAspect = true;
+                dessin.raycastTarget = false;
+                RectTransform brt = (RectTransform)buste.transform;
+                brt.anchorMin = brt.anchorMax = new Vector2(0.5f, 0f);
+                brt.pivot = new Vector2(0.5f, 0f);
+                brt.sizeDelta = new Vector2(Px(26f), Px(26f));
+                brt.anchoredPosition = Vector2.zero;
+            }
+
+            GameObject bord = NouveauUI("Bord", avatar.transform);
+            Image filet = AjouterImage(bord);
+            filet.sprite = ProceduralUI.RoundedRectOutline(Mathf.Max(1, Mathf.RoundToInt(taille * 0.5f)),
+                Mathf.Max(1f, Px(1f)), CouleurLocale("#3b4650"));
+            filet.type = Image.Type.Sliced;
+            filet.raycastTarget = false;
+            Etirer((RectTransform)bord.transform);
+        }
+
+        /// <summary>Le résultat de l'envoi est un badge compact bordé par sa propre couleur (`.env .res`), pas un texte gris
+        /// occupant une colonne entière.</summary>
+        private void AjouterBadgeIssue(Transform parent, string nomTexte, string texte, string bucket)
+        {
+            Color couleur = CouleurIssue(bucket);
+            GameObject badge = NouveauUI(nomTexte + "Cadre", parent);
+            Image filet = AjouterImage(badge);
+            filet.sprite = ProceduralUI.RoundedRectOutline(Mathf.Max(1, PxTrait(2f)), Mathf.Max(1f, Px(1f)), couleur);
+            filet.type = Image.Type.Sliced;
+            filet.raycastTarget = false;
+            HorizontalLayoutGroup hb = badge.AddComponent<HorizontalLayoutGroup>();
+            hb.padding = new RectOffset(PxTrait(6f), PxTrait(6f), PxTrait(4f), PxTrait(4f));
+            hb.childAlignment = TextAnchor.MiddleCenter;
+            hb.childControlWidth = true; hb.childControlHeight = true;
+            hb.childForceExpandWidth = false; hb.childForceExpandHeight = false;
+            TextMeshProUGUI libelle = NouveauTexteFiche(badge.transform, nomTexte, texte, 8f, couleur, true);
+            libelle.alignment = TextAlignmentOptions.Center;
+            libelle.enableWordWrapping = false;
+            TrackText(libelle.text);
         }
 
         /// <summary>§1/§2 — La table des 4 familles (cadres 59-61) : le domaine clos de `target_rival_key`
@@ -867,8 +933,18 @@ namespace MafiaCleanCity.Operational
         {
             GameObject bouton = NouveauUI(nom, parent);
             Image fond = AjouterImage(bouton);
-            fond.color = actif ? Or : DesignTokens.Current.surfaceRaised;
+            fond.sprite = ProceduralUI.RoundedRectMask(Mathf.Max(1, PxTrait(3f)));
+            fond.type = Image.Type.Sliced;
+            fond.color = actif ? CouleurLocale("#241c11") : DesignTokens.Current.surfaceRaised;
             fond.raycastTarget = true;
+            GameObject bord = NouveauUI("Bord", bouton.transform);
+            bord.AddComponent<LayoutElement>().ignoreLayout = true;
+            Image filet = AjouterImage(bord);
+            filet.sprite = ProceduralUI.RoundedRectOutline(Mathf.Max(1, PxTrait(3f)), Mathf.Max(1f, Px(1f)),
+                actif ? CouleurLocale("#5a4a2a") : DesignTokens.Current.onSurfaceDisabled);
+            filet.type = Image.Type.Sliced;
+            filet.raycastTarget = false;
+            Etirer((RectTransform)bord.transform);
             Button b = bouton.AddComponent<Button>();
             b.targetGraphic = fond;
             b.interactable = actif;
@@ -879,12 +955,13 @@ namespace MafiaCleanCity.Operational
             vb.childControlWidth = true; vb.childControlHeight = true;
             vb.childForceExpandWidth = true; vb.childForceExpandHeight = false;
             AddLayoutElement(bouton, flexibleHeight: 0);
-            Color encre = actif ? DesignTokens.Current.surfaceBase : DesignTokens.Current.onSurfaceDisabled;
+            Color encre = actif ? Or : DesignTokens.Current.onSurfaceDisabled;
             TextMeshProUGUI l = NouveauTexteFiche(bouton.transform, "Libelle", libelle, 10f, encre, true);
             l.alignment = TextAlignmentOptions.Center;
             TrackText(l.text);
             if (precision == null) return;
-            TextMeshProUGUI p = NouveauTexteFiche(bouton.transform, "Precision", precision, 7f, encre, false);
+            TextMeshProUGUI p = NouveauTexteFiche(bouton.transform, "Precision", precision, 7f,
+                actif ? CouleurLocale("#9a8a6a") : encre, false);
             p.alignment = TextAlignmentOptions.Center;
             TrackText(p.text);
         }
