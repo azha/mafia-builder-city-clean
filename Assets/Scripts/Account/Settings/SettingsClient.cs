@@ -62,6 +62,55 @@ namespace MafiaCleanCity.Account.Settings
             }
         }
 
+        /// <summary>⑲ L1 — `PUT /v1/me/meta-market/visibility { enabled }` (`meta-market.controller.ts:113`, sous JWT) → `{ visibilityEnabled }`.
+        /// Le back refuse tout autre champ (`rejectUnknownFields`) et tout non-booléen (VALIDATION_FAILED). GARDE DE VALEUR : `onOk`
+        /// reçoit la valeur RELUE dans la réponse, jamais celle qu'on a envoyée.</summary>
+        public IEnumerator DefinirVisibiliteMarche(bool enabled, string bearer, Action<bool> onOk, Action<long, string> onErr)
+        {
+            var req = new UnityWebRequest($"{BaseUrl.TrimEnd('/')}/v1/me/meta-market/visibility", "PUT");
+            req.uploadHandler = new UploadHandlerRaw(
+                System.Text.Encoding.UTF8.GetBytes("{\"enabled\":" + (enabled ? "true" : "false") + "}"));
+            req.downloadHandler = new DownloadHandlerBuffer();
+            req.SetRequestHeader("Content-Type", "application/json");
+            req.timeout = TimeoutSeconds;
+            if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
+            using (req)
+            {
+                yield return req.SendWebRequest();
+                if (req.result != UnityWebRequest.Result.Success)
+                { onErr?.Invoke(req.responseCode, req.error ?? "network error"); yield break; }
+                VisibiliteData dto = null;
+                try { dto = JsonUtility.FromJson<VisibiliteEnvelope>(req.downloadHandler.text)?.payload?.data; }
+                catch (Exception ex) { onErr?.Invoke(req.responseCode, "parse error: " + ex.Message); yield break; }
+                if (dto == null) { onErr?.Invoke(req.responseCode, "corps sans `payload.data`"); yield break; }
+                onOk?.Invoke(dto.visibilityEnabled);
+            }
+        }
+
+        /// <summary>⑲ — `POST /v1/auth/signout` (`auth.controller.ts:315`, lot-5 TD-001c) : révoque la SESSION COURANTE (celle du jeton ;
+        /// jamais un identifiant dans le corps). → `{ signed_out: true }`. GARDE DE VALEUR : `onOk` seulement si le corps dit
+        /// `signed_out` VRAI — un 200 sans la valeur n'est pas une sortie.</summary>
+        public IEnumerator Deconnecter(string bearer, Action onOk, Action<long, string> onErr)
+        {
+            var req = new UnityWebRequest($"{BaseUrl.TrimEnd('/')}/v1/auth/signout", "POST");
+            req.uploadHandler = new UploadHandlerRaw(new byte[0]);
+            req.downloadHandler = new DownloadHandlerBuffer();
+            req.timeout = TimeoutSeconds;
+            if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
+            using (req)
+            {
+                yield return req.SendWebRequest();
+                if (req.result != UnityWebRequest.Result.Success)
+                { onErr?.Invoke(req.responseCode, req.error ?? "network error"); yield break; }
+                SortieData dto = null;
+                try { dto = JsonUtility.FromJson<SortieEnvelope>(req.downloadHandler.text)?.payload?.data; }
+                catch (Exception ex) { onErr?.Invoke(req.responseCode, "parse error: " + ex.Message); yield break; }
+                if (dto == null || !dto.signed_out)
+                { onErr?.Invoke(req.responseCode, "la réponse ne dit pas `signed_out: true`"); yield break; }
+                onOk?.Invoke();
+            }
+        }
+
         /// <summary>GET /v1/me — l'état courant, faute de `GET /v1/me/settings`.</summary>
         public IEnumerator LireProfil(string bearer, Action<ProfilData> onOk, Action<long, string> onErr)
         {
@@ -71,6 +120,13 @@ namespace MafiaCleanCity.Account.Settings
     }
 
     [Serializable] public class LangueData { public string locale; }
+    // ⑲ (23/09) — formes recopiées du back : `meta-market.controller.ts` (`{ visibilityEnabled }`), `auth.controller.ts` (`{ signed_out }`).
+    [Serializable] public class VisibiliteData { public bool visibilityEnabled; }
+    [Serializable] public class VisibiliteEnvelope { public VisibilitePayload payload; }
+    [Serializable] public class VisibilitePayload { public VisibiliteData data; }
+    [Serializable] public class SortieData { public bool signed_out; }
+    [Serializable] public class SortieEnvelope { public SortiePayload payload; }
+    [Serializable] public class SortiePayload { public SortieData data; }
     [Serializable] public class LangueEnvelope { public LanguePayload payload; }
     [Serializable] public class LanguePayload { public LangueData data; }
 }

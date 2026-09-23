@@ -160,8 +160,9 @@ namespace MafiaCleanCity.Account.Profile
                   DesignTokens.Current.primaryFont, TextAlignmentOptions.Center).characterSpacing = 12f;
 
             Champ("Adresse", Masquer(Profil.email), null);
-            Champ("Langue", Profil.locale,
-                  "réglée le jour où vous avez ouvert le compte — elle ne se change pas encore");
+            // 23/09 (atelier 35) : « réglée le jour où vous avez ouvert le compte — elle ne se change pas encore » était FAUX depuis
+            // `PATCH /v1/me/settings` (L8, fermé) : la langue se change dans les réglages. La sous-ligne sort.
+            Champ("Langue", Profil.locale, null);
             Champ("Compte", Court(Profil.account_id), null);
 
             Manque("Changer le mot de passe", "pas encore : la clé est celle du premier jour");

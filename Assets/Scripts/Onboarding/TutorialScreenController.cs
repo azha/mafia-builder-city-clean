@@ -28,7 +28,8 @@ namespace MafiaCleanCity.Onboarding
     // ⛔ `next_tutorial_id` NULL NE VEUT PAS DIRE « FINI » : au plus un tutoriel par session (`hasShownAnySince`), et rien n'est
     //    désigné avant la première décision. « Tout vu » seulement si plus rien n'est éligible (`PhraseSansSuivant`).
     // ⛔ LA BASCULE EST DANS LE SENS DU JOUEUR : « On vous explique encore » (mot RATIFIÉ, Profil, série 6 cadres 95-96) est ALLUMÉE
-    //    quand `tutorials_opt_out` est FAUX. La clé est un opt-OUT : l'inversion vit ici, en un seul lieu (`BasculeAllumee`).
+    //    quand `tutorials_opt_out` est FAUX. La clé est un opt-OUT : l'inversion vit en UN seul lieu, `BasculeTutoriels`
+    //    (ShellContracts), partagé avec ⑲ Réglages.
     //
     // ⚠️ Le 3ᵉ endpoint canon (`PATCH /v1/me/settings`) est ABSENT (S10-a) — non câblé.
     // ⛔ NON REVU — jalon 2026-09-05.
@@ -54,10 +55,6 @@ namespace MafiaCleanCity.Onboarding
 
         private static string Lib(string litteral) => MafiaCleanCity.I18n.Libelle.De("tutoriel", "ecran", litteral);
 
-        /// <summary>La bascule, dans le sens du JOUEUR : allumée ⇔ on lui explique encore ⇔ `tutorials_opt_out` FAUX.</summary>
-        public static bool BasculeAllumee(bool tutorialsOptOut) => !tutorialsOptOut;
-        /// <summary>La valeur à envoyer à `PATCH /v1/ui/tutorial-opt-out` pour une bascule mise à `allumee`.</summary>
-        public static bool RefusPourBascule(bool allumee) => !allumee;
 
         /// <summary>Le TEXTE servi d'un tutoriel : `next_tutorial_id` EST sa clé (`tutorial.queue_runs_dry`). Jamais l'identifiant ;
         /// une clé non servie (ou un id vide) rend « — ».</summary>
@@ -248,7 +245,7 @@ namespace MafiaCleanCity.Onboarding
         /// Allumée ⇔ `tutorials_opt_out` faux. Le toucher la bascule et envoie l'opt-out INVERSE (`RefusPourBascule`).</summary>
         private void Bascule()
         {
-            bool allumee = BasculeAllumee(Etat.tutorials_opt_out);
+            bool allumee = BasculeTutoriels.Allumee(Etat.tutorials_opt_out);   // le SEUL lieu de l'inversion (ShellContracts), partagé avec ⑲
             BasculeAffichee = allumee;
             GameObject ligne = Bloc("Bascule", corps, true, Px(8f));
             var h = ligne.GetComponent<HorizontalLayoutGroup>();
@@ -290,7 +287,7 @@ namespace MafiaCleanCity.Onboarding
             Color transparent = Color.white; transparent.a = 0f;
             zone.color = transparent;
             b.targetGraphic = zone;
-            b.onClick.AddListener(() => StartCoroutine(Refuser(RefusPourBascule(!allumee))));
+            b.onClick.AddListener(() => StartCoroutine(Refuser(BasculeTutoriels.OptOutPour(!allumee))));
         }
 
         /// <summary>⛔ Le SEUL écrivain de `shown_tutorial_ids`. Sans cet appel, le même overlay

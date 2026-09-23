@@ -81,10 +81,10 @@ namespace MafiaCleanCity.CityMap.Tests
         [Test]
         public void U3_LaBascule_DansLeSensDuJoueur_LesDeuxEtats()
         {
-            Assert.IsTrue(TutorialScreenController.BasculeAllumee(false), "opt-out FAUX ⇒ on vous explique encore : allumée");
-            Assert.IsFalse(TutorialScreenController.BasculeAllumee(true), "opt-out VRAI ⇒ éteinte");
-            Assert.IsTrue(TutorialScreenController.RefusPourBascule(false), "l'éteindre ⇒ tutorials_opt_out = true");
-            Assert.IsFalse(TutorialScreenController.RefusPourBascule(true), "l'allumer ⇒ tutorials_opt_out = false");
+            Assert.IsTrue(MafiaCleanCity.Shell.BasculeTutoriels.Allumee(false), "opt-out FAUX ⇒ on vous explique encore : allumée");
+            Assert.IsFalse(MafiaCleanCity.Shell.BasculeTutoriels.Allumee(true), "opt-out VRAI ⇒ éteinte");
+            Assert.IsTrue(MafiaCleanCity.Shell.BasculeTutoriels.OptOutPour(false), "l'éteindre ⇒ tutorials_opt_out = true");
+            Assert.IsFalse(MafiaCleanCity.Shell.BasculeTutoriels.OptOutPour(true), "l'allumer ⇒ tutorials_opt_out = false");
 
             foreach (bool optOut in new[] { false, true })
             {

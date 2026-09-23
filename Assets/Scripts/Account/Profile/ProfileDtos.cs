@@ -11,6 +11,9 @@ namespace MafiaCleanCity.Account.Profile
         public string email;
         public string lifecycle_state;
         public string locale;
+        /// <summary>⑲ L1 (back, `auth.service.ts:557`) — la visibilité au méta-marché, TOUJOURS un booléen servi (`isMetaMarketVisible`
+        /// résout le `null` du registre, « on » par défaut). ⚠️ Forme G : sans cette déclaration, JsonUtility JETTE le champ.</summary>
+        public bool meta_market_visibility_enabled;
     }
     [Serializable] public class ProfilEnvelope { public ProfilPayload payload; }
     [Serializable] public class ProfilPayload { public ProfilData data; }
